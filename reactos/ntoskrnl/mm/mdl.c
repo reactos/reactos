@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.36 2002/04/27 19:24:45 hbirr Exp $
+/* $Id: mdl.c,v 1.37 2002/05/07 22:35:02 hbirr Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -251,8 +251,8 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
 	      {
 		for (j = 0; j < i; j++)
 		  {
-		    MmUnlockPage((PVOID)MdlPages[i]);
-		    MmDereferencePage((PVOID)MdlPages[i]);
+		    MmUnlockPage((PVOID)MdlPages[j]);
+		    MmDereferencePage((PVOID)MdlPages[j]);
 		  }
 		ExRaiseStatus(Status);
 	      }
@@ -269,8 +269,8 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
 	      {
 		for (j = 0; j < i; j++)
 		  {
-			MmUnlockPage((PVOID)MdlPages[i]);
-			MmDereferencePage((PVOID)MdlPages[i]);
+			MmUnlockPage((PVOID)MdlPages[j]);
+			MmDereferencePage((PVOID)MdlPages[j]);
 		  }
 		ExRaiseStatus(Status);
 	      }
