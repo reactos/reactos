@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: computername.c,v 1.2 2003/07/10 18:50:51 chorns Exp $
+/* $Id: computername.c,v 1.3 2003/09/12 17:51:47 vizzini Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -44,7 +44,6 @@ GetComputerNameA (LPSTR lpBuffer,
 {
   UNICODE_STRING UnicodeString;
   ANSI_STRING AnsiString;
-  BOOL Result;
 
   AnsiString.MaximumLength = *lpnSize;
   AnsiString.Length = 0;

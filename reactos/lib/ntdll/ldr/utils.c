@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.70 2003/07/27 14:00:04 hbirr Exp $
+/* $Id: utils.c,v 1.71 2003/09/12 17:51:47 vizzini Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -279,7 +279,6 @@ LdrpMapKnownDll(IN PUNICODE_STRING DllName,
 		OUT PHANDLE SectionHandle)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING ObjectDirName;
   NTSTATUS Status;
 
   DPRINT("LdrpMapKnownDll() called\n");
@@ -803,7 +802,6 @@ LdrFixupForward(PCHAR ForwardName)
 {
    CHAR NameBuffer[128];
    UNICODE_STRING DllName;
-   UNICODE_STRING FunctionName;
    NTSTATUS Status;
    PCHAR p;
    PVOID BaseAddress;
@@ -1081,7 +1079,6 @@ static NTSTATUS LdrPerformRelocations (PIMAGE_NT_HEADERS        NTHeaders,
   NTSTATUS Status;
   PIMAGE_SECTION_HEADER Sections;
   ULONG MaxExtend;
-  ULONG LastOffset;
 
   if (NTHeaders->FileHeader.Characteristics & IMAGE_FILE_RELOCS_STRIPPED)
     {

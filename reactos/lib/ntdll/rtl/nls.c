@@ -1,4 +1,4 @@
-/* $Id: nls.c,v 1.14 2003/07/26 23:25:17 royce Exp $
+/* $Id: nls.c,v 1.15 2003/09/12 17:51:48 vizzini Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -309,7 +309,7 @@ RtlOemToUnicodeN (PWCHAR UnicodeString,
 
       for (i = 0; i < Size; i++)
 	{
-	  *UnicodeString = NlsOemToUnicodeTable[*OemString];
+	  *UnicodeString = NlsOemToUnicodeTable[(INT)*OemString];
 	  UnicodeString++;
 	  OemString++;
 	}
@@ -681,7 +681,7 @@ RtlUpperChar (IN CHAR Source)
       /* single-byte code page */
 
       /* ansi->unicode */
-      Unicode = NlsAnsiToUnicodeTable[Source];
+      Unicode = NlsAnsiToUnicodeTable[(INT)Source];
 
       /* upcase conversion */
       Unicode = RtlUpcaseUnicodeChar (Unicode);

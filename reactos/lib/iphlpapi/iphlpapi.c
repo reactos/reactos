@@ -1043,3 +1043,63 @@ Icmp6ParseReplies(
     UNIMPLEMENTED
     return 0L;
 }
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL AllocateAndGetIfTableFromStack(PMIB_IFTABLE *ppIfTable,
+ BOOL bOrder, HANDLE heap, DWORD flags)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL AllocateAndGetIpAddrTableFromStack(PMIB_IPADDRTABLE *ppIpAddrTable,
+ BOOL bOrder, HANDLE heap, DWORD flags)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL AllocateAndGetIpForwardTableFromStack(PMIB_IPFORWARDTABLE *
+ ppIpForwardTable, BOOL bOrder, HANDLE heap, DWORD flags)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL AllocateAndGetIpNetTableFromStack(PMIB_IPNETTABLE *ppIpNetTable,
+ BOOL bOrder, HANDLE heap, DWORD flags)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL AllocateAndGetTcpTableFromStack(PMIB_TCPTABLE *ppTcpTable,
+ BOOL bOrder, HANDLE heap, DWORD flags)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL AllocateAndGetUdpTableFromStack(PMIB_UDPTABLE *ppUdpTable,
+ BOOL bOrder, HANDLE heap, DWORD flags)
+{
+    UNIMPLEMENTED
+    return 0L;
+}

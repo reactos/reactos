@@ -103,7 +103,7 @@ CreateWindowExW@48
 CreateWindowStationA@16
 CreateWindowStationW@16
 CsrBroadcastSystemMessageExW@24
-;CtxInitUser32
+CtxInitUser32@0
 DdeAbandonTransaction@12
 DdeAccessData@8
 DdeAddData@16
@@ -165,7 +165,7 @@ DialogBoxParamW@20
 DisableProcessWindowsGhosting@0
 DispatchMessageA@4
 DispatchMessageW@4
-;DisplayExitWindowsWarnings
+DisplayExitWindowsWarnings@4
 DlgDirListA@20
 DlgDirListComboBoxA@20
 DlgDirListComboBoxW@20
@@ -204,7 +204,7 @@ EndDialog@8
 EndMenu@0
 EndPaint@8
 EndTask@12
-;EnterReaderModeHelper
+EnterReaderModeHelper@4
 EnumChildWindows@12
 EnumClipboardFormats@4
 EnumDesktopWindows@12
@@ -244,7 +244,7 @@ GetAltTabInfoA@20
 GetAltTabInfoW@20
 GetAncestor@8
 GetAppCompatFlags@4
-;GetAppCompatFlags2
+GetAppCompatFlags2@4
 GetAsyncKeyState@4
 GetCapture@0
 GetCaretBlinkTime@0
@@ -398,7 +398,7 @@ ImpersonateDdeClientWindow@8
 InSendMessage@0
 InSendMessageEx@4
 InflateRect@12
-;InitializeLpkHooks
+InitializeLpkHooks@4
 ;InitializeWin32EntryTable
 InsertMenuA@20
 InsertMenuItemA@16
@@ -484,8 +484,8 @@ MessageBoxExA@20
 MessageBoxExW@20
 MessageBoxIndirectA@4
 MessageBoxIndirectW@4
-;MessageBoxTimeoutA
-;MessageBoxTimeoutW
+MessageBoxTimeoutA@24
+MessageBoxTimeoutW@24
 MessageBoxW@16
 ModifyMenuA@20
 ModifyMenuW@20
@@ -533,8 +533,8 @@ PtInRect@12
 RealChildWindowFromPoint@12
 RealGetWindowClassA@12
 RealGetWindowClassW@12
-;ReasonCodeNeedsBugID
-;ReasonCodeNeedsComment
+ReasonCodeNeedsBugID@4
+ReasonCodeNeedsComment@4
 ;RecordShutdownReason
 RedrawWindow@16
 RegisterClassA@4

@@ -1,4 +1,4 @@
-/* $Id: sprintf.c,v 1.12 2003/09/02 18:19:41 hbirr Exp $
+/* $Id: sprintf.c,v 1.13 2003/09/12 17:51:48 vizzini Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -248,7 +248,7 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 {
 	int len;
 	unsigned long long num;
-	int i, base;
+	int base;
 	char *str, *end;
 	const char *s;
 	const wchar_t *sw;

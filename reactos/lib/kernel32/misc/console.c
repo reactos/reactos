@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.68 2003/08/18 10:47:04 hbirr Exp $
+/* $Id: console.c,v 1.69 2003/09/12 17:51:47 vizzini Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -32,14 +32,11 @@ static BOOL IgnoreCtrlEvents = FALSE;
 
 static PHANDLER_ROUTINE* CtrlHandlers = NULL;
 static ULONG NrCtrlHandlers = 0;
-static ULONG CtrlHandlersArraySize = 0;
 
 /* Default Console Control Handler *******************************************/
 
 BOOL WINAPI DefaultConsoleCtrlHandler(DWORD Event)
 {
-	UINT ExitCode;
-
 	switch(Event)
 	{
 	case CTRL_C_EVENT:
@@ -1280,7 +1277,6 @@ WINBOOL STDCALL FreeConsole(VOID)
    CSRSS_API_REQUEST Request;
    CSRSS_API_REPLY Reply;
    NTSTATUS Status;
-   HANDLE hStdError;
 
    Request.Type = CSRSS_FREE_CONSOLE;
    Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
@@ -1794,8 +1790,6 @@ WriteConsoleOutputA(HANDLE		 hConsoleOutput,
   CSRSS_API_REPLY Reply;
   NTSTATUS Status;
   ULONG Size;
-  BOOLEAN Result;
-  ULONG i, j;
   PVOID BufferBase;
   PVOID BufferTargetBase;
 

@@ -109,9 +109,9 @@ sendto@24
 setsockopt@20
 shutdown@8
 socket@12
-;WEP
+WEP@0
 WSANSPIoctl@32
-;WSApSetPostRoutine
+WSApSetPostRoutine@4
 WSCUpdateProvider@20
 WSCWriteNameSpaceOrder@8
 freeaddrinfo@4

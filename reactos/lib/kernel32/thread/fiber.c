@@ -1,4 +1,4 @@
-/* $Id: fiber.c,v 1.7 2003/07/22 20:10:04 hyperion Exp $
+/* $Id: fiber.c,v 1.8 2003/09/12 17:51:47 vizzini Exp $
  *
  * FILE: lib/kernel32/thread/fiber.c
  *
@@ -64,6 +64,7 @@ BOOL WINAPI ConvertFiberToThread(void)
   RtlFreeHeap(pTeb->Peb->ProcessHeap, 0, pTeb->Tib.Fib.FiberData);
 
  /* success */
+ return TRUE;
 }
 
 
@@ -147,8 +148,6 @@ LPVOID WINAPI CreateFiberEx
  PSIZE_T pnStackCommit = NULL;
  USER_STACK usFiberStack;
  CONTEXT ctxFiberContext;
- PCHAR pStackBase;
- PCHAR pStackLimit;
  PTEB pTeb = NtCurrentTeb();
 
  /* allocate the fiber */

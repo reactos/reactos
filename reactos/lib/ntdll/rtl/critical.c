@@ -1,4 +1,4 @@
-/* $Id: critical.c,v 1.14 2003/08/21 22:40:18 hbirr Exp $
+/* $Id: critical.c,v 1.15 2003/09/12 17:51:48 vizzini Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -35,7 +35,6 @@ VOID STDCALL
 RtlEnterCriticalSection(PCRITICAL_SECTION CriticalSection)
 {
    HANDLE Thread = (HANDLE)NtCurrentTeb()->Cid.UniqueThread;
-   ULONG ret;
  
    if (InterlockedIncrement(&CriticalSection->LockCount))
      {
@@ -161,7 +160,7 @@ BOOLEAN STDCALL
 RtlTryEnterCriticalSection(PCRITICAL_SECTION CriticalSection)
 {
    if (InterlockedCompareExchange((PVOID*)&CriticalSection->LockCount, 
-				  (PVOID)0, (PVOID)-1 ) == -1)
+				  (PVOID)0, (PVOID)-1 ) == (PVOID)-1)
      {
 	CriticalSection->OwningThread = 
 	  (HANDLE) NtCurrentTeb()->Cid.UniqueThread;

@@ -1,4 +1,4 @@
-; $Id: advapi32.edf,v 1.25 2003/09/08 09:56:56 weiden Exp $
+; $Id: advapi32.edf,v 1.26 2003/09/12 17:51:46 vizzini Exp $
 ;
 ; advapi32.edf
 ;
@@ -8,9 +8,9 @@
 ;
 LIBRARY advapi32.dll
 EXPORTS
-;A_SHAFinal
-;A_SHAInit
-;A_SHAUpdate
+A_SHAFinal=A_SHAFinal@8
+A_SHAInit=A_SHAInit@4
+A_SHAUpdate=A_SHAUpdate@12
 AbortSystemShutdownA=AbortSystemShutdownA@4
 AbortSystemShutdownW=AbortSystemShutdownW@4
 AccessCheck=AccessCheck@32
@@ -408,12 +408,12 @@ LsaNtStatusToWinError=NTDLL.RtlNtStatusToDosError
 MakeAbsoluteSD=MakeAbsoluteSD@44
 MakeSelfRelativeSD=MakeSelfRelativeSD@12
 MapGenericMask=MapGenericMask@8
-;MD4Final
-;MD4Init
-;MD4Update
-;MD5Final
-;MD5Init
-;MD5Update
+MD4Final=MD4Final@4
+MD4Init=MD4Init@4
+MD4Update=MD4Update@12
+MD5Final=MD5Final@4
+MD5Init=MD5Init@4
+MD5Update=MD5Update@12
 ;MSChapSrvChangePassword
 ;MSChapSrvChangePassword2
 MakeAbsoluteSD2=MakeAbsoluteSD2@8
@@ -464,7 +464,7 @@ QueryServiceStatusEx=QueryServiceStatusEx@20
 ;QueryTraceA
 ;QueryTraceW
 ;QueryUsersOnEncryptedFile
-;QueryWindows31FilesMigration=QueryWindows31FilesMigration@4
+QueryWindows31FilesMigration=QueryWindows31FilesMigration@4
 ReadEncryptedFileRaw=ReadEncryptedFileRaw@12
 ReadEventLogA=ReadEventLogA@28
 ReadEventLogW=ReadEventLogW@28
@@ -597,7 +597,7 @@ StartServiceW=StartServiceW@12
 ;StartTraceW
 ;StopTraceA
 ;StopTraceW
-;SynchronizeWindows31FilesAndWindowsNTRegistry=SynchronizeWindows31FilesAndWindowsNTRegistry@16
+ynchronizeWindows31FilesAndWindowsNTRegistry=SynchronizeWindows31FilesAndWindowsNTRegistry@16
 SystemFunction001=SystemFunction001@12
 SystemFunction002=SystemFunction002@12
 SystemFunction003=SystemFunction003@8

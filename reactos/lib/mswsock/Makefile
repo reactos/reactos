@@ -1,10 +1,10 @@
-# $Id: Makefile,v 1.3 2003/09/12 17:51:48 vizzini Exp $
+# $Id: Makefile,v 1.1 2003/09/12 17:51:47 vizzini Exp $
 
 PATH_TO_TOP = ../..
 
 TARGET_TYPE = dynlink
 
-TARGET_NAME = wsock32
+TARGET_NAME = mswsock
 
 TARGET_BASE = 0x75050000
 
@@ -22,7 +22,7 @@ TARGET_CFLAGS += -D_DISABLE_TIDENTS
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
 
-TARGET_SDKLIBS = kernel32.a ws2_32.a mswsock.a
+TARGET_SDKLIBS = kernel32.a
 
 TARGET_OBJECTS = stubs.o
 

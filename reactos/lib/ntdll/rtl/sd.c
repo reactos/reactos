@@ -1,4 +1,4 @@
-/* $Id: sd.c,v 1.11 2003/07/11 13:50:23 royce Exp $
+/* $Id: sd.c,v 1.12 2003/09/12 17:51:48 vizzini Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -697,7 +697,6 @@ RtlSelfRelativeToAbsoluteSD(PSECURITY_DESCRIPTOR RelSD,
 			    PSID Group,
 			    PDWORD GroupSize)
 {
-  ULONG TotalSize;
   ULONG OwnerLength;
   ULONG GroupLength;
   ULONG DaclLength;

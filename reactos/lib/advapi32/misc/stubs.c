@@ -1454,3 +1454,82 @@ LPBOOL pfGenerateOnClose
 {
   return(FALSE);
 }
+
+/*
+ * @unimplemented
+ */
+VOID STDCALL MD4Init(PMD4_CONTEXT Context)
+{
+}
+
+/*
+ * @unimplemented
+ */
+VOID STDCALL MD4Update(PMD4_CONTEXT Context, PVOID Buffer, UINT BufferSize)
+{
+}
+
+/*
+ * @unimplemented
+ */
+VOID STDCALL MD4Final(PMD4_CONTEXT Context)
+{
+}
+
+/*
+ * @unimplemented
+ */
+VOID STDCALL MD5Init(PMD5_CONTEXT Context)
+{
+}
+
+/*
+ * @unimplemented
+ */
+VOID STDCALL MD5Update(PMD5_CONTEXT Context, PVOID Buffer, UINT BufferSize)
+{
+}
+
+/*
+ * @unimplemented
+ */
+VOID STDCALL MD5Final(PMD5_CONTEXT Context)
+{
+}
+
+/*
+ * @unimplemented
+ */
+VOID STDCALL A_SHAInit(PSHA_CONTEXT Context)
+{
+}
+
+/*
+ * @unimplemented
+ */
+VOID STDCALL A_SHAUpdate(PSHA_CONTEXT Context, PVOID Buffer, UINT BufferSize)
+{
+}
+
+/*
+ * @unimplemented
+ */
+VOID STDCALL A_SHAFinal(PSHA_CONTEXT Context, PVOID Result)
+{
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL SynchronizeWindows31FilesAndWindowsNTRegistry( DWORD x1, DWORD x2, DWORD x3,DWORD x4 )
+{
+  return(FALSE);
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL QueryWindows31FilesMigration( DWORD x1 )
+{
+  return(FALSE);
+}

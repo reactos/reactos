@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.31 2003/07/20 18:05:46 royce Exp $
+/* $Id: volume.c,v 1.32 2003/09/12 17:51:47 vizzini Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -604,7 +604,6 @@ GetVolumeInformationW(
   PFILE_FS_VOLUME_INFORMATION FileFsVolume;
   PFILE_FS_ATTRIBUTE_INFORMATION FileFsAttribute;
   IO_STATUS_BLOCK IoStatusBlock;
-  OBJECT_ATTRIBUTES ObjectAttributes;
   UCHAR Buffer[max(FS_VOLUME_BUFFER_SIZE, FS_ATTRIBUTE_BUFFER_SIZE)];
 
   HANDLE hFile;

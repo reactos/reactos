@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.35 2003/09/09 15:49:59 gvg Exp $
+/* $Id: stubs.c,v 1.36 2003/09/12 17:51:47 vizzini Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -5240,4 +5240,12 @@ GdiPlayPrivatePageEMF
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
+}
+
+/*
+ * @unimplemented
+ */
+VOID STDCALL GdiInitializeLanguagePack(DWORD InitParam)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 }

@@ -1827,6 +1827,28 @@ INT
 STDCALL
 WSARecvEx(SOCKET s,LPSTR buf,INT len,LPINT flags);
 
+struct netent * STDCALL getnetbyname(const char *name);
+void STDCALL s_perror(LPCSTR message);
+UINT STDCALL inet_network(const char *cp);
+BOOL STDCALL WSApSetPostRoutine(PVOID Routine);
+
+typedef  DWORD (* LPFN_NSPAPI) (VOID ) ;
+
+typedef struct _NS_ROUTINE {
+    DWORD        dwFunctionCount;
+    LPFN_NSPAPI *alpfnFunctions;
+    DWORD        dwNameSpace;
+    DWORD        dwPriority;
+} NS_ROUTINE, *PNS_ROUTINE, * FAR LPNS_ROUTINE;
+
+INT
+APIENTRY
+NPLoadNameSpaces (
+    IN OUT LPDWORD         lpdwVersion,
+    IN OUT LPNS_ROUTINE    nsrBuffer,
+    IN OUT LPDWORD         lpdwBufferLength
+    );
+
 #ifdef __cplusplus
 };
 #endif /* __cplusplus */

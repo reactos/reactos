@@ -1,4 +1,4 @@
-; $Id: gdi32.edf,v 1.7 2003/08/28 19:36:59 gvg Exp $
+; $Id: gdi32.edf,v 1.8 2003/09/12 17:51:46 vizzini Exp $
 ;
 ; gdi32.def
 ;
@@ -307,7 +307,7 @@ GdiGetSpoolFileHandle=GdiGetSpoolFileHandle@12
 ;GdiGetSpoolMessage
 GdiGradientFill=GdiGradientFill@24
 GdiInitSpool=GdiInitSpool@0
-;GdiInitializeLanguagePack
+GdiInitializeLanguagePack=GdiInitializeLanguagePack@4
 GdiIsMetaFileDC=GdiIsMetaFileDC@4
 GdiIsMetaPrintDC=GdiIsMetaPrintDC@4
 GdiIsPlayMetafileDC=GdiIsPlayMetafileDC@4

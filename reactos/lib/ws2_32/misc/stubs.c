@@ -666,7 +666,7 @@ freeaddrinfo(
  * @unimplemented
  */
 INT
-STDCALL
+EXPORT
 getaddrinfo(
     const char FAR * nodename,
     const char FAR * servname,
@@ -693,6 +693,24 @@ getnameinfo(
     DWORD           servlen,
     INT             flags
     )
+{
+    UNIMPLEMENTED
+
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+VOID EXPORT WEP()
+{
+    UNIMPLEMENTED
+}
+
+/*
+ * @unimplemented
+ */
+BOOL EXPORT WSApSetPostRoutine(PVOID Routine)
 {
     UNIMPLEMENTED
 

@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.44 2003/08/07 03:29:44 royce Exp $
+/* $Id: thread.c,v 1.45 2003/09/12 17:51:47 vizzini Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -99,7 +99,6 @@ CreateRemoteThread
  LPDWORD lpThreadId
 )
 {
- PSECURITY_DESCRIPTOR pSD = NULL;
  HANDLE hThread;
  CLIENT_ID cidClientId;
  NTSTATUS nErrCode;

@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.39 2003/05/31 11:07:00 ekohl Exp $
+/* $Id: rtl.h,v 1.40 2003/09/12 17:51:46 vizzini Exp $
  *
  */
 
@@ -56,6 +56,10 @@ typedef struct _CRITICAL_SECTION {
     HANDLE LockSemaphore;
     DWORD Reserved;
 } CRITICAL_SECTION, *PCRITICAL_SECTION, *LPCRITICAL_SECTION;
+
+typedef CRITICAL_SECTION RTL_CRITICAL_SECTION;
+typedef PCRITICAL_SECTION PRTL_CRITICAL_SECTION;
+typedef LPCRITICAL_SECTION LPRTL_CRITICAL_SECTION;
 
 #endif /* !__USE_W32API */
 

@@ -38,7 +38,6 @@ VfatFormat(
   DISK_GEOMETRY DiskGeometry;
   IO_STATUS_BLOCK Iosb;
   HANDLE FileHandle;
-  SCSI_ADDRESS ScsiAddress;
   PARTITION_INFORMATION PartitionInfo;
   NTSTATUS Status;
 

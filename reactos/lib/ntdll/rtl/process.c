@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.34 2003/07/11 13:50:23 royce Exp $
+/* $Id: process.c,v 1.35 2003/09/12 17:51:48 vizzini Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -261,11 +261,9 @@ RtlCreateUserProcess(PUNICODE_STRING ImageFileName,
 {
    HANDLE hSection;
    NTSTATUS Status;
-   LPTHREAD_START_ROUTINE lpStartAddress = NULL;
    PROCESS_BASIC_INFORMATION ProcessBasicInfo;
    ULONG retlen;
    CHAR FileName[8];
-   ANSI_STRING ProcedureName;
    SECTION_IMAGE_INFORMATION Sii;
    ULONG ResultLength;
    PVOID ImageBaseAddress;

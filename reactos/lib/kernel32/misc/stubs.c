@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.57 2003/09/08 09:56:56 weiden Exp $
+/* $Id: stubs.c,v 1.58 2003/09/12 17:51:47 vizzini Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -3441,6 +3441,155 @@ WINBOOL STDCALL GetConsoleKeyboardLayoutNameA(LPSTR name)
  * @unimplemented
  */
 WINBOOL STDCALL GetConsoleKeyboardLayoutNameW(LPWSTR name)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL SetConsoleIcon(HICON hicon)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL GetHandleContext(HANDLE hnd)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE STDCALL CreateSocketHandle(VOID)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL SetHandleContext(HANDLE hnd,DWORD context)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL SetConsoleInputExeNameA(LPCSTR name)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL SetConsoleInputExeNameW(LPCWSTR name)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL UTRegister( HMODULE hModule, LPSTR lpsz16BITDLL,
+                        LPSTR lpszInitName, LPSTR lpszProcName,
+                        FARPROC *ppfn32Thunk, FARPROC pfnUT32CallBack,
+                        LPVOID lpBuff )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+VOID STDCALL UTUnRegister( HMODULE hModule )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+}
+
+/*
+ * @unimplemented
+ */
+FARPROC STDCALL DelayLoadFailureHook(unsigned int dliNotify, PDelayLoadInfo pdli)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS STDCALL CreateNlsSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,ULONG Size,ULONG AccessMask)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL GetConsoleInputExeNameA(ULONG length,LPCSTR name)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL GetConsoleInputExeNameW(ULONG length,LPCWSTR name)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL IsValidUILanguage(LANGID langid)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+VOID STDCALL NlsConvertIntegerToString(ULONG Value,ULONG Base,ULONG strsize, LPWSTR str, ULONG strsize2)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+}
+
+/*
+ * @unimplemented
+ */
+UINT STDCALL SetCPGlobal(UINT CodePage)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+SetClientTimeZoneInformation(
+		       CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation
+		       )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;

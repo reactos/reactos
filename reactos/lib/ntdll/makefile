@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.93 2003/09/02 13:18:22 ekohl Exp $
+# $Id: makefile,v 1.94 2003/09/12 17:51:47 vizzini Exp $
 
 PATH_TO_TOP = ../..
 
@@ -8,7 +8,7 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = ntdll
 
-TARGET_CFLAGS = -g -D__NTDLL__
+TARGET_CFLAGS = -g -D__NTDLL__ -Werror -Wall
 
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS

@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.20 2003/07/11 13:50:23 royce Exp $
+/* $Id: env.c,v 1.21 2003/09/12 17:51:48 vizzini Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -29,7 +29,6 @@ NTSTATUS STDCALL
 RtlCreateEnvironment(BOOLEAN Inherit,
 		     PWSTR *Environment)
 {
-  MEMORY_BASIC_INFORMATION MemInfo;
   PVOID EnvPtr = NULL;
   NTSTATUS Status = STATUS_SUCCESS;
   ULONG RegionSize = PAGE_SIZE;

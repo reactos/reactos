@@ -125,7 +125,7 @@ CreateMutexA@12
 CreateMutexW@12
 CreateNamedPipeA@32
 CreateNamedPipeW@32
-;CreateNlsSecurityDescriptor
+CreateNlsSecurityDescriptor@12
 CreatePipe@16
 CreateProcessA@40
 ;CreateProcessInternalA
@@ -134,7 +134,7 @@ CreateProcessW@40
 CreateRemoteThread@28
 CreateSemaphoreA@16
 CreateSemaphoreW@16
-;CreateSocketHandle
+CreateSocketHandle@0
 CreateTapePartition@16
 CreateThread@24
 CreateTimerQueue@0
@@ -151,7 +151,7 @@ DebugBreakProcess@4
 DebugSetProcessKillOnExit@4
 DefineDosDeviceA@12
 DefineDosDeviceW@12
-;DelayLoadFailureHook
+DelayLoadFailureHook@8
 DeleteAtom@4
 DeleteCriticalSection@4
 DeleteFiber@4
@@ -323,11 +323,11 @@ GetConsoleDisplayMode@4
 GetConsoleFontInfo@16
 GetConsoleFontSize@8
 GetConsoleHardwareState@12
-;GetConsoleInputExeNameA
-;GetConsoleInputExeNameW
+GetConsoleInputExeNameA@8
+GetConsoleInputExeNameW@8
 GetConsoleInputWaitHandle@0
-;GetConsoleKeyboardLayoutNameA
-;GetConsoleKeyboardLayoutNameW
+GetConsoleKeyboardLayoutNameA@4
+GetConsoleKeyboardLayoutNameW@4
 GetConsoleMode@8
 ;GetConsoleNlsMode
 GetConsoleOutputCP@0
@@ -384,7 +384,7 @@ GetFullPathNameA@16
 GetFullPathNameW@16
 GetGeoInfoA@20
 GetGeoInfoW@20
-;GetHandleContext
+GetHandleContext@4
 GetHandleInformation@8
 GetLargestConsoleWindowSize@4
 GetLastError@0
@@ -586,7 +586,7 @@ IsSystemResumeAutomatic@0
 IsValidCodePage@4
 IsValidLanguageGroup@8
 IsValidLocale@8
-;IsValidUILanguage
+IsValidUILanguage@4
 IsWow64Process@8
 LCMapStringA@24
 LCMapStringW@24
@@ -638,7 +638,7 @@ MoveFileW@8
 MoveFileWithProgressW@20
 MulDiv@12
 MultiByteToWideChar@24
-;NlsConvertIntegerToString
+NlsConvertIntegerToString@20
 ;NlsGetCacheUpdateCount
 ;NlsResetProcessLocale
 ;NumaVirtualQueryNode
@@ -738,10 +738,10 @@ ScrollConsoleScreenBufferA@20
 ScrollConsoleScreenBufferW@20
 SearchPathA@24
 SearchPathW@24
-;SetCPGlobal
+SetCPGlobal@4
 SetCalendarInfoA@16
 SetCalendarInfoW@16
-;SetClientTimeZoneInformation
+SetClientTimeZoneInformation@4
 ;SetComPlusPackageInstallStatus
 SetCommBreak@4
 SetCommConfig@12
@@ -763,9 +763,9 @@ SetConsoleCursorPosition@8
 SetConsoleDisplayMode@12
 SetConsoleFont@8
 SetConsoleHardwareState@12
-;SetConsoleIcon
-;SetConsoleInputExeNameA
-;SetConsoleInputExeNameW
+SetConsoleIcon@4
+SetConsoleInputExeNameA@4
+SetConsoleInputExeNameW@4
 SetConsoleKeyShortcuts@16
 ;SetConsoleLocalEUDC
 SetConsoleMaximumWindowSize@8
@@ -806,7 +806,7 @@ SetFileTime@16
 SetFileValidData@12
 SetFirmwareEnvironmentVariableA@16
 SetFirmwareEnvironmentVariableW@16
-;SetHandleContext
+SetHandleContext@8
 SetHandleCount@4
 SetHandleInformation@12
 SetInformationJobObject@16
@@ -883,8 +883,8 @@ UnlockFileEx@20
 UnmapViewOfFile@4
 UpdateResourceA@24
 UpdateResourceW@24
-;UTRegister
-;UTUnRegister
+UTRegister@28
+UTUnRegister@4
 ;UnregisterConsoleIME
 UnregisterWait@4
 UnregisterWaitEx@8

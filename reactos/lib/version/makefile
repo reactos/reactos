@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.12 2003/08/07 04:03:24 royce Exp $
+# $Id: makefile,v 1.13 2003/09/12 17:51:48 vizzini Exp $
 
 PATH_TO_TOP = ../..
 
@@ -8,7 +8,7 @@ TARGET_NAME = version
 
 TARGET_BASE = 0x77a90000
 
-TARGET_CFLAGS = -fno-builtin
+TARGET_CFLAGS = -fno-builtin -Werror -Wall
 
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS

@@ -1,4 +1,4 @@
-/* $Id: event.c,v 1.14 2003/07/10 18:50:51 chorns Exp $
+/* $Id: event.c,v 1.15 2003/09/12 17:51:47 vizzini Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -68,7 +68,6 @@ CreateEventW(LPSECURITY_ATTRIBUTES lpEventAttributes,
    NTSTATUS Status;
    HANDLE hEvent;
    UNICODE_STRING EventNameString;
-   POBJECT_ATTRIBUTES PtrObjectAttributes;
    OBJECT_ATTRIBUTES ObjectAttributes;
 
    ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);

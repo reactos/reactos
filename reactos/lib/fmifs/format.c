@@ -1,4 +1,4 @@
-/* $Id: format.c,v 1.2 2003/04/05 23:17:21 chorns Exp $
+/* $Id: format.c,v 1.3 2003/09/12 17:51:46 vizzini Exp $
  *
  * COPYING:	See the top level directory
  * PROJECT:	ReactOS 
@@ -14,6 +14,7 @@
 #include <windows.h>
 #include <fmifs.h>
 #include <fslib/vfatlib.h>
+#include <string.h>
 
 #define NDEBUG
 #include <debug.h>

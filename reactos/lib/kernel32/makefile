@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.69 2003/08/28 19:34:10 gvg Exp $
+# $Id: makefile,v 1.70 2003/09/12 17:51:47 vizzini Exp $
 
 PATH_TO_TOP = ../..
 
@@ -9,7 +9,7 @@ TARGET_NAME = kernel32
 TARGET_BASE = 0x77f00000
 
 # require os code to explicitly request A/W version of structs/functions
-TARGET_CFLAGS += -D_DISABLE_TIDENTS
+TARGET_CFLAGS += -D_DISABLE_TIDENTS -Wall -Werror
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
 

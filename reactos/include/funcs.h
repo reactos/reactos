@@ -1025,6 +1025,1650 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #endif /* UNICODE and ASCII defines */
 #endif /* _DISABLE_TIDENTS */
 
+NTSTATUS STDCALL CreateNlsSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,ULONG Size,ULONG AccessMask);
+
+BOOL STDCALL GetConsoleInputExeNameA(ULONG length,LPCSTR name);
+
+BOOL STDCALL GetConsoleInputExeNameW(ULONG length,LPCWSTR name);
+
+BOOL STDCALL IsValidUILanguage(LANGID langid);
+
+VOID STDCALL NlsConvertIntegerToString(ULONG Value,ULONG Base,ULONG strsize, LPWSTR str, ULONG strsize2);
+
+UINT STDCALL SetCPGlobal(UINT CodePage);
+
+BOOL
+STDCALL
+SetClientTimeZoneInformation(
+		       CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation
+		       );
+
+NTSTATUS STDCALL DbgUiDebugActiveProcess(HANDLE process);
+
+NTSTATUS STDCALL DbgUiStopDebugging(HANDLE process);
+
+VOID
+STDCALL
+RtlInitializeSListHead (
+    PSLIST_HEADER ListHead
+    );
+PSLIST_ENTRY
+STDCALL
+RtlInterlockedFlushSList (
+    PSLIST_HEADER ListHead
+    );
+PSLIST_ENTRY
+STDCALL
+RtlInterlockedPopEntrySList (
+    PSLIST_HEADER ListHead
+    );
+PSLIST_ENTRY
+STDCALL
+RtlInterlockedPushEntrySList (
+    PSLIST_HEADER ListHead,
+    PSLIST_ENTRY ListEntry
+    );
+USHORT
+STDCALL
+RtlQueryDepthSList (
+    PSLIST_HEADER ListHead
+    );
+NTSTATUS
+STDCALL
+RtlCreateTimer(HANDLE TimerQueue,PHANDLE phNewTimer, WAITORTIMERCALLBACK Callback,PVOID Parameter,DWORD DueTime,DWORD Period,ULONG Flags);
+
+NTSTATUS
+STDCALL
+RtlCreateTimerQueue(PHANDLE TimerQueue);
+
+NTSTATUS
+STDCALL
+RtlDeleteTimer(HANDLE TimerQueue,HANDLE Timer,HANDLE CompletionEvent);
+
+NTSTATUS
+STDCALL
+RtlUpdateTimer(HANDLE TimerQueue,HANDLE Timer,ULONG DueTime,ULONG Period);
+
+NTSTATUS
+STDCALL
+RtlDeleteTimerQueueEx(HANDLE TimerQueue,HANDLE CompletionEvent);
+
+NTSTATUS
+STDCALL
+RtlDeleteTimerQueue(HANDLE TimerQueue);
+
+NTSTATUS
+STDCALL
+RtlRegisterWait(PHANDLE hOutput, HANDLE hObject,WAITORTIMERCALLBACK Callback,PVOID Context,ULONG dwMilliseconds,ULONG dwFlags);
+
+NTSTATUS
+STDCALL
+RtlDeregisterWait(
+    HANDLE WaitHandle
+    );
+
+NTSTATUS
+STDCALL
+RtlDeregisterWaitEx(
+    HANDLE WaitHandle,
+    HANDLE CompletionEvent
+    );
+
+NTSTATUS
+STDCALL
+RtlSetHeapInformation(
+    HANDLE HeapHandle,
+    HEAP_INFORMATION_CLASS HeapInformationClass,
+    PVOID HeapInformation OPTIONAL,
+    SIZE_T HeapInformationLength OPTIONAL
+    );
+
+NTSTATUS
+STDCALL
+RtlQueryHeapInformation(
+    HANDLE HeapHandle, 
+    HEAP_INFORMATION_CLASS HeapInformationClass,
+    PVOID HeapInformation OPTIONAL,
+    SIZE_T HeapInformationLength OPTIONAL,
+    PSIZE_T ReturnLength OPTIONAL
+    );
+
+NTSTATUS
+STDCALL
+NtCreateJobSet(
+    ULONG NumJob,
+    PJOB_SET_ARRAY UserJobSet,
+    ULONG Flags);
+
+NTSTATUS
+STDCALL
+ZwCreateJobSet(
+    ULONG NumJob,
+    PJOB_SET_ARRAY UserJobSet,
+    ULONG Flags);
+
+VOID
+STDCALL
+RtlReleaseActivationContext(
+    HANDLE hActCtx
+    );
+
+NTSTATUS
+STDCALL
+RtlQueryInformationActivationContext(
+    DWORD dwFlags,
+    HANDLE hActCtx,
+    PVOID pvSubInstance,
+    ULONG ulInfoClass,
+    PVOID pvBuffer,
+    SIZE_T cbBuffer OPTIONAL,
+    SIZE_T *pcbWrittenOrRequired OPTIONAL
+    );
+
+VOID
+STDCALL
+RtlAddRefActivationContext(
+    HANDLE hActCtx
+    );
+
+NTSTATUS
+STDCALL
+RtlGetActiveActivationContext(
+    HANDLE *lphActCtx);
+
+NTSTATUS
+STDCALL
+RtlZombifyActivationContext(
+    HANDLE hActCtx
+    );
+
+NTSTATUS
+STDCALL
+RtlDeactivateActivationContext(
+    DWORD dwFlags,
+    ULONG_PTR ulCookie
+    );
+
+ULONG 
+STDCALL
+RtlCreateTagHeap(	
+	IN HANDLE HeapHandle,
+	IN ULONG Flags,
+	IN PCWSTR TagName,
+	IN PCWSTR TagSubName
+	);
+
+PRTL_SPLAY_LINKS
+STDCALL
+RtlDelete(
+	IN PRTL_SPLAY_LINKS Links
+	);
+
+BOOLEAN
+STDCALL
+RtlDeleteElementGenericTable(
+	IN PRTL_GENERIC_TABLE Table,
+	IN PVOID Buffer
+	);
+
+VOID
+STDCALL
+RtlDeleteNoSplay(
+	IN PRTL_SPLAY_LINKS Links,
+	OUT PRTL_SPLAY_LINKS *Root
+	);
+
+PVOID
+STDCALL
+RtlEnumerateGenericTable(
+	IN PRTL_GENERIC_TABLE Table,
+	IN BOOLEAN Restart
+	);
+
+PVOID
+STDCALL
+RtlEnumerateGenericTableWithoutSplaying(
+	IN PRTL_GENERIC_TABLE Table,
+	IN PVOID *RestartKey
+	);
+
+VOID
+STDCALL
+RtlGetElementGenericTable(
+	IN PRTL_GENERIC_TABLE Table,
+	IN ULONG I
+	);
+
+PVOID
+STDCALL
+RtlLookupElementGenericTable(
+	IN PRTL_GENERIC_TABLE Table,
+	IN PVOID Buffer
+	);
+
+PVOID
+STDCALL
+RtlProtectHeap(
+	IN HANDLE Heap,
+	IN BOOLEAN ReadOnly
+	);
+
+PCWSTR 
+STDCALL
+RtlQueryTagHeap(
+	IN HANDLE HeapHandle,
+	IN ULONG Flags,
+	IN USHORT TagNumber,
+	IN BOOLEAN ZeroInternalTagInfo,
+	OUT PRTL_HEAP_TAG_INFO HeapTagInfo OPTIONAL
+	);
+
+PRTL_SPLAY_LINKS
+STDCALL
+RtlRealPredecessor(
+	IN PRTL_SPLAY_LINKS Links
+	);
+
+PRTL_SPLAY_LINKS
+STDCALL
+RtlRealSuccessor(
+	IN PRTL_SPLAY_LINKS Links
+	);
+
+PRTL_SPLAY_LINKS
+STDCALL
+RtlSplay(
+	IN PRTL_SPLAY_LINKS Links
+	);
+
+NTSTATUS
+STDCALL
+NtAccessCheckByType(
+	IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+	IN PSID PrincipalSelfSid,
+	IN HANDLE TokenHandle,
+	IN ULONG DesiredAccess,
+	IN POBJECT_TYPE_LIST ObjectTypeList,
+	IN ULONG ObjectTypeListLength,
+	IN PGENERIC_MAPPING GenericMapping,
+	IN PPRIVILEGE_SET PrivilegeSet,
+	IN PULONG PrivilegeSetLength,
+	OUT PACCESS_MASK GrantedAccess,
+	OUT PULONG AccessStatus
+	);
+
+NTSTATUS
+STDCALL
+NtAccessCheckByTypeAndAuditAlarm(
+	IN PUNICODE_STRING SubsystemName,
+	IN PVOID HandleId,
+	IN PUNICODE_STRING ObjectTypeName,
+	IN PUNICODE_STRING ObjectName,
+	IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+	IN PSID PrincipalSelfSid,
+	IN ACCESS_MASK DesiredAccess,
+	IN AUDIT_EVENT_TYPE AuditType,
+	IN ULONG Flags,
+	IN POBJECT_TYPE_LIST ObjectTypeList,
+	IN ULONG ObjectTypeListLength,
+	IN PGENERIC_MAPPING GenericMapping,
+	IN BOOLEAN ObjectCreation,
+	OUT PACCESS_MASK GrantedAccess,
+	OUT PULONG AccessStatus,
+	OUT PBOOLEAN GenerateOnClose
+	);
+
+NTSTATUS
+STDCALL
+NtAccessCheckByTypeResultList(
+	IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+	IN PSID PrincipalSelfSid,
+	IN HANDLE TokenHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_TYPE_LIST ObjectTypeList,
+	IN ULONG ObjectTypeListLength,
+	IN PGENERIC_MAPPING GenericMapping,
+	IN PPRIVILEGE_SET PrivilegeSet,
+	IN PULONG PrivilegeSetLength,
+	OUT PACCESS_MASK GrantedAccessList,
+	OUT PULONG AccessStatusList
+	);
+
+NTSTATUS
+STDCALL
+NtAccessCheckByTypeResultListAndAuditAlarm(
+	IN PUNICODE_STRING SubsystemName,
+	IN PVOID HandleId,
+	IN PUNICODE_STRING ObjectTypeName,
+	IN PUNICODE_STRING ObjectName,
+	IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+	IN PSID PrincipalSelfSid,
+	IN ACCESS_MASK DesiredAccess,
+	IN AUDIT_EVENT_TYPE AuditType,
+	IN ULONG Flags,
+	IN POBJECT_TYPE_LIST ObjectTypeList,
+	IN ULONG ObjectTypeListLength,
+	IN PGENERIC_MAPPING GenericMapping,
+	IN BOOLEAN ObjectCreation,
+	OUT PACCESS_MASK GrantedAccessList,
+	OUT PULONG AccessStatusList,
+	OUT PULONG GenerateOnClose
+	);
+
+NTSTATUS
+STDCALL
+NtAccessCheckByTypeResultListAndAuditAlarmByHandle(
+	IN PUNICODE_STRING SubsystemName,
+	IN PVOID HandleId,
+	IN HANDLE TokenHandle,
+	IN PUNICODE_STRING ObjectTypeName,
+	IN PUNICODE_STRING ObjectName,
+	IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+	IN PSID PrincipalSelfSid,
+	IN ACCESS_MASK DesiredAccess,
+	IN AUDIT_EVENT_TYPE AuditType,
+	IN ULONG Flags,
+	IN POBJECT_TYPE_LIST ObjectTypeList,
+	IN ULONG ObjectTypeListLength,
+	IN PGENERIC_MAPPING GenericMapping,
+	IN BOOLEAN ObjectCreation,
+	OUT PACCESS_MASK GrantedAccessList,
+	OUT PULONG AccessStatusList,
+	OUT PULONG GenerateOnClose
+	);
+
+NTSTATUS
+STDCALL
+NtAllocateUserPhysicalPages(
+	IN HANDLE ProcessHandle,
+	IN PULONG NumberOfPages,
+	OUT PULONG PageFrameNumbers
+	);
+
+NTSTATUS
+STDCALL
+NtAreMappedFilesTheSame(
+	IN PVOID Address1,
+	IN PVOID Address2
+	);
+
+NTSTATUS
+STDCALL
+NtCreateJobObject(
+	OUT PHANDLE JobHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes
+	);
+
+NTSTATUS
+STDCALL
+NtCreateKeyedEvent(
+	OUT PHANDLE KeyedEventHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
+	ULONG Reserved
+	);
+
+NTSTATUS
+STDCALL
+NtFilterToken(
+	IN HANDLE ExistingTokenHandle,
+	IN ULONG Flags,
+	IN PTOKEN_GROUPS SidsToDisable,
+	IN PTOKEN_PRIVILEGES PrivilegesToDelete,
+	IN PTOKEN_GROUPS SidsToRestricted,
+	OUT PHANDLE NewTokenHandle
+	);
+
+NTSTATUS
+STDCALL
+NtFreeUserPhysicalPages(
+	IN HANDLE ProcessHandle,
+	IN OUT PULONG NumberOfPages,
+	IN PULONG PageFrameNumbers
+	);
+
+NTSTATUS
+STDCALL
+NtGetWriteWatch(
+	IN HANDLE ProcessHandle,
+	IN ULONG Flags,
+	IN PVOID BaseAddress,
+	IN ULONG RegionSize,
+	OUT PULONG Buffer,
+	IN OUT PULONG BufferEntries,
+	OUT PULONG Granularity
+	);
+
+NTSTATUS
+STDCALL
+NtImpersonateAnonymousToken(
+	IN HANDLE ThreadHandle
+	);
+
+NTSTATUS
+STDCALL
+NtIsProcessInJob(
+	IN HANDLE JobHandle,
+	IN HANDLE ProcessHandle
+	);
+
+NTSTATUS
+STDCALL
+NtMakePermanentObject(
+	IN HANDLE Object
+	);
+
+NTSTATUS
+STDCALL
+NtMapUserPhysicalPages(
+	IN PVOID BaseAddress,
+	IN PULONG NumberOfPages,
+	IN PULONG PageFrameNumbers
+	);
+
+NTSTATUS
+STDCALL
+NtMapUserPhysicalPagesScatter(
+	IN PVOID *BaseAddresses,
+	IN PULONG NumberOfPages,
+	IN PULONG PageFrameNumbers
+	);
+
+NTSTATUS
+STDCALL
+NtOpenJobObject(
+	OUT PHANDLE JobHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes
+	);
+
+NTSTATUS
+STDCALL
+NtOpenKeyedEvent(
+	OUT PHANDLE KeyedEventHandle,
+	IN PACCESS_MASK DesiredAccess,
+	IN PUNICODE_STRING KeyedEventName
+	);
+
+NTSTATUS
+STDCALL
+NtOpenProcessTokenEx(
+	IN HANDLE ProcessHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN ULONG HandleAttributes,
+	OUT PHANDLE TokenHandle
+	);
+
+NTSTATUS
+STDCALL
+NtOpenThreadTokenEx(
+	IN HANDLE ThreadHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN BOOLEAN OpenAsSelf,
+	IN ULONG HandleAttributes,
+	OUT PHANDLE TokenHandle
+	);
+
+NTSTATUS
+STDCALL
+NtQueryDefaultUILanguage(
+	OUT PLANGID LanguageId
+	);
+
+NTSTATUS
+STDCALL
+NtQueryInformationJobObject(
+	IN HANDLE JobHandle,
+	IN JOBOBJECTINFOCLASS JobInformationClass,
+	OUT PVOID JobInformation,
+	IN ULONG JobInformationLength,
+	OUT PULONG ReturnLength OPTIONAL
+	);
+
+NTSTATUS
+STDCALL
+NtQueryInstallUILanguage(
+	OUT PLANGID LanguageId
+	);
+
+ULONG
+STDCALL
+NtQueryPortInformationProcess(
+	VOID
+	);
+
+NTSTATUS
+STDCALL
+NtReleaseKeyedEvent(
+	IN HANDLE KeyedEventHandle,
+	IN ULONG Requested,
+	IN BOOLEAN Alertable,
+	IN PLARGE_INTEGER Timeout OPTIONAL
+	);
+
+NTSTATUS
+STDCALL
+NtReplyWaitReceivePortEx(
+	IN HANDLE PortHandle,
+	OUT PULONG PortIdentifier OPTIONAL,
+	IN PPORT_MESSAGE ReplyMessage OPTIONAL,
+	OUT PPORT_MESSAGE Message,
+	IN PLARGE_INTEGER Timeout
+	);
+
+NTSTATUS
+STDCALL
+NtResetWriteWatch(
+	IN HANDLE ProcessHandle,
+	IN PVOID BaseAddress,
+	IN ULONG RegionSize
+	);
+
+NTSTATUS
+STDCALL
+NtResumeProcess(
+	IN HANDLE Process
+	);
+
+NTSTATUS
+STDCALL
+NtSecureConnectPort(
+	OUT PHANDLE PortHandle,
+	IN PUNICODE_STRING PortName,
+	IN PSECURITY_QUALITY_OF_SERVICE SecurityQos,
+	IN OUT PPORT_SECTION_WRITE WriteSection OPTIONAL,
+	IN PSID ServerSid OPTIONAL,
+	IN OUT PPORT_SECTION_READ ReadSection OPTIONAL,
+	OUT PULONG MaxMessageSize OPTIONAL,
+	IN OUT PVOID ConnectData OPTIONAL,
+	IN OUT PULONG ConnectDataLength OPTIONAL
+	);
+
+NTSTATUS
+STDCALL
+NtSetDefaultUILanguage(
+	IN LANGID LanguageId
+	);
+
+NTSTATUS
+STDCALL
+NtSetHighWaitLowThread(
+	VOID
+	);
+
+NTSTATUS
+STDCALL
+NtSetInformationJobObject(
+	IN HANDLE JobHandle,
+	IN JOBOBJECTINFOCLASS JobInformationClass,
+	IN PVOID JobInformation,
+	IN ULONG JobInformationLength
+	);
+
+NTSTATUS
+STDCALL
+NtSetLowWaitHighThread(
+	VOID
+	);
+
+NTSTATUS
+STDCALL
+NtSetQuotaInformationFile(
+	IN HANDLE FileHandle,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	IN PFILE_USER_QUOTA_INFORMATION Buffer,
+	IN ULONG BufferLength
+	);
+
+NTSTATUS
+STDCALL
+NtSetUuidSeed(
+	IN PUCHAR UuidSeed
+	);
+
+NTSTATUS
+STDCALL
+NtSuspendProcess(
+	IN HANDLE Process
+	);
+
+NTSTATUS
+STDCALL
+NtTerminateJobObject(
+	IN HANDLE JobHandle,
+	IN NTSTATUS ExitStatus
+	);
+
+NTSTATUS
+STDCALL
+NtWaitForKeyedEvent(
+	IN HANDLE KeyedEventHandle,
+	IN ULONG Requested,
+	IN BOOLEAN Alertable,
+	IN PLARGE_INTEGER Timeout OPTIONAL
+	);
+
+BOOLEAN
+STDCALL
+RtlDllShutdownInProgress(
+	VOID
+	);
+
+PPEB
+STDCALL
+RtlGetCurrentPeb(
+	VOID
+	);
+
+NTSTATUS
+STDCALL
+RtlGetLastNtStatus(
+	VOID
+	);
+
+ULONG
+STDCALL
+RtlGetLastWin32Error(
+	VOID
+	);
+
+NTSTATUS
+STDCALL
+RtlGetNativeSystemInformation(
+	IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
+	IN OUT PVOID SystemInformation,
+	IN ULONG SystemInformationLength,
+	OUT PULONG ReturnLength OPTIONAL
+	);
+
+USHORT
+STDCALL
+RtlLogStackBackTrace(
+	VOID
+	);
+
+NTSTATUS
+STDCALL
+RtlQueueWorkItem(
+	LPTHREAD_START_ROUTINE Function,
+	PVOID Context,
+	ULONG Flags
+	);
+
+VOID
+STDCALL
+RtlRestoreLastWin32Error(
+	IN ULONG Win32Error
+	);
+
+ULONG
+STDCALL
+RtlSetCriticalSectionSpinCount(
+   IN PRTL_CRITICAL_SECTION CriticalSection
+   );
+
+typedef
+VOID
+(CALLBACK *POVERLAPPED_COMPLETION_ROUTINE)(
+    DWORD dwErrorCode,
+    DWORD dwNumberOfBytesTransfered,
+    LPOVERLAPPED lpOverlapped
+    );
+
+
+NTSTATUS
+STDCALL
+RtlSetIoCompletionCallback(
+	IN HANDLE FileHandle,
+	IN POVERLAPPED_COMPLETION_ROUTINE CompletionRoutine,
+	IN ULONG Flags
+	);
+
+VOID
+STDCALL
+RtlSetLastWin32Error(
+	IN ULONG Win32Error
+	);
+
+VOID
+STDCALL
+RtlSetLastWin32ErrorAndNtStatusFromNtStatus(
+	IN NTSTATUS NtStatus
+	);
+
+NTSTATUS
+STDCALL
+ZwAccessCheckByType(
+	IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+	IN PSID PrincipalSelfSid,
+	IN HANDLE TokenHandle,
+	IN ULONG DesiredAccess,
+	IN POBJECT_TYPE_LIST ObjectTypeList,
+	IN ULONG ObjectTypeListLength,
+	IN PGENERIC_MAPPING GenericMapping,
+	IN PPRIVILEGE_SET PrivilegeSet,
+	IN PULONG PrivilegeSetLength,
+	OUT PACCESS_MASK GrantedAccess,
+	OUT PULONG AccessStatus
+	);
+
+NTSTATUS
+STDCALL
+ZwAccessCheckByTypeAndAuditAlarm(
+	IN PUNICODE_STRING SubsystemName,
+	IN PVOID HandleId,
+	IN PUNICODE_STRING ObjectTypeName,
+	IN PUNICODE_STRING ObjectName,
+	IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+	IN PSID PrincipalSelfSid,
+	IN ACCESS_MASK DesiredAccess,
+	IN AUDIT_EVENT_TYPE AuditType,
+	IN ULONG Flags,
+	IN POBJECT_TYPE_LIST ObjectTypeList,
+	IN ULONG ObjectTypeListLength,
+	IN PGENERIC_MAPPING GenericMapping,
+	IN BOOLEAN ObjectCreation,
+	OUT PACCESS_MASK GrantedAccess,
+	OUT PULONG AccessStatus,
+	OUT PBOOLEAN GenerateOnClose
+	);
+
+NTSTATUS
+STDCALL
+ZwAccessCheckByTypeResultList(
+	IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+	IN PSID PrincipalSelfSid,
+	IN HANDLE TokenHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_TYPE_LIST ObjectTypeList,
+	IN ULONG ObjectTypeListLength,
+	IN PGENERIC_MAPPING GenericMapping,
+	IN PPRIVILEGE_SET PrivilegeSet,
+	IN PULONG PrivilegeSetLength,
+	OUT PACCESS_MASK GrantedAccessList,
+	OUT PULONG AccessStatusList
+	);
+
+NTSTATUS
+STDCALL
+ZwAccessCheckByTypeResultListAndAuditAlarm(
+	IN PUNICODE_STRING SubsystemName,
+	IN PVOID HandleId,
+	IN PUNICODE_STRING ObjectTypeName,
+	IN PUNICODE_STRING ObjectName,
+	IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+	IN PSID PrincipalSelfSid,
+	IN ACCESS_MASK DesiredAccess,
+	IN AUDIT_EVENT_TYPE AuditType,
+	IN ULONG Flags,
+	IN POBJECT_TYPE_LIST ObjectTypeList,
+	IN ULONG ObjectTypeListLength,
+	IN PGENERIC_MAPPING GenericMapping,
+	IN BOOLEAN ObjectCreation,
+	OUT PACCESS_MASK GrantedAccessList,
+	OUT PULONG AccessStatusList,
+	OUT PULONG GenerateOnClose
+	);
+
+NTSTATUS
+STDCALL
+ZwAccessCheckByTypeResultListAndAuditAlarmByHandle(
+	IN PUNICODE_STRING SubsystemName,
+	IN PVOID HandleId,
+	IN HANDLE TokenHandle,
+	IN PUNICODE_STRING ObjectTypeName,
+	IN PUNICODE_STRING ObjectName,
+	IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+	IN PSID PrincipalSelfSid,
+	IN ACCESS_MASK DesiredAccess,
+	IN AUDIT_EVENT_TYPE AuditType,
+	IN ULONG Flags,
+	IN POBJECT_TYPE_LIST ObjectTypeList,
+	IN ULONG ObjectTypeListLength,
+	IN PGENERIC_MAPPING GenericMapping,
+	IN BOOLEAN ObjectCreation,
+	OUT PACCESS_MASK GrantedAccessList,
+	OUT PULONG AccessStatusList,
+	OUT PULONG GenerateOnClose
+	);
+
+NTSTATUS
+STDCALL
+ZwAllocateUserPhysicalPages(
+	IN HANDLE ProcessHandle,
+	IN PULONG NumberOfPages,
+	OUT PULONG PageFrameNumbers
+	);
+
+NTSTATUS
+STDCALL
+ZwAreMappedFilesTheSame(
+	IN PVOID Address1,
+	IN PVOID Address2
+	);
+
+NTSTATUS
+STDCALL
+ZwAssignProcessToJobObject(
+	IN HANDLE JobHandle,
+	IN HANDLE ProcessHandle
+	);
+
+NTSTATUS
+STDCALL
+ZwCreateJobObject(
+	OUT PHANDLE JobHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes
+	);
+
+NTSTATUS
+STDCALL
+ZwCreateKeyedEvent(
+	OUT PHANDLE KeyedEventHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
+	ULONG Reserved
+	);
+
+NTSTATUS
+STDCALL
+ZwCreateWaitablePort(
+	OUT PHANDLE PortHandle,
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
+	IN ULONG MaxDataSize,
+	IN ULONG MaxMessageSize,
+	IN ULONG Reserved
+	);
+
+NTSTATUS
+STDCALL
+ZwFilterToken(
+	IN HANDLE ExistingTokenHandle,
+	IN ULONG Flags,
+	IN PTOKEN_GROUPS SidsToDisable,
+	IN PTOKEN_PRIVILEGES PrivilegesToDelete,
+	IN PTOKEN_GROUPS SidsToRestricted,
+	OUT PHANDLE NewTokenHandle
+	);
+
+NTSTATUS
+STDCALL
+ZwFreeUserPhysicalPages(
+	IN HANDLE ProcessHandle,
+	IN OUT PULONG NumberOfPages,
+	IN PULONG PageFrameNumbers
+	);
+
+NTSTATUS
+STDCALL
+ZwGetWriteWatch(
+	IN HANDLE ProcessHandle,
+	IN ULONG Flags,
+	IN PVOID BaseAddress,
+	IN ULONG RegionSize,
+	OUT PULONG Buffer,
+	IN OUT PULONG BufferEntries,
+	OUT PULONG Granularity
+	);
+
+NTSTATUS
+STDCALL
+ZwImpersonateAnonymousToken(
+	IN HANDLE ThreadHandle
+	);
+
+NTSTATUS
+STDCALL
+ZwIsProcessInJob(
+	IN HANDLE JobHandle,
+	IN HANDLE ProcessHandle
+	);
+
+NTSTATUS
+STDCALL
+ZwMakePermanentObject(
+	IN HANDLE Object
+	);
+
+NTSTATUS
+STDCALL
+ZwMapUserPhysicalPages(
+	IN PVOID BaseAddress,
+	IN PULONG NumberOfPages,
+	IN PULONG PageFrameNumbers
+	);
+
+NTSTATUS
+STDCALL
+ZwMapUserPhysicalPagesScatter(
+	IN PVOID *BaseAddresses,
+	IN PULONG NumberOfPages,
+	IN PULONG PageFrameNumbers
+	);
+
+NTSTATUS
+STDCALL
+ZwOpenJobObject(
+	OUT PHANDLE JobHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes
+	);
+
+NTSTATUS
+STDCALL
+ZwOpenKeyedEvent(
+	OUT PHANDLE KeyedEventHandle,
+	IN PACCESS_MASK DesiredAccess,
+	IN PUNICODE_STRING KeyedEventName
+	);
+
+NTSTATUS
+STDCALL
+ZwOpenProcessTokenEx(
+	IN HANDLE ProcessHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN ULONG HandleAttributes,
+	OUT PHANDLE TokenHandle
+	);
+
+NTSTATUS
+STDCALL
+ZwOpenThreadTokenEx(
+	IN HANDLE ThreadHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN BOOLEAN OpenAsSelf,
+	IN ULONG HandleAttributes,
+	OUT PHANDLE TokenHandle
+	);
+
+NTSTATUS
+STDCALL
+ZwQueryDefaultUILanguage(
+	OUT PLANGID LanguageId
+	);
+
+NTSTATUS
+STDCALL
+ZwQueryInformationJobObject(
+	IN HANDLE JobHandle,
+	IN JOBOBJECTINFOCLASS JobInformationClass,
+	OUT PVOID JobInformation,
+	IN ULONG JobInformationLength,
+	OUT PULONG ReturnLength OPTIONAL
+	);
+
+NTSTATUS
+STDCALL
+ZwQueryInstallUILanguage(
+	OUT PLANGID LanguageId
+	);
+
+ULONG
+STDCALL
+ZwQueryPortInformationProcess(
+	VOID
+	);
+
+NTSTATUS
+STDCALL
+ZwQueryQuotaInformationFile(
+	IN HANDLE FileHandle,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	OUT PFILE_USER_QUOTA_INFORMATION Buffer,
+	IN ULONG BufferLength,
+	IN BOOLEAN ReturnSingleEntry,
+	IN PFILE_QUOTA_LIST_INFORMATION QuotaList OPTIONAL,
+	IN ULONG QuotaListLength,
+	IN PSID ResumeSid OPTIONAL,
+	IN BOOLEAN RestartScan
+	);
+
+NTSTATUS
+STDCALL
+ZwReleaseKeyedEvent(
+	IN HANDLE KeyedEventHandle,
+	IN ULONG Requested,
+	IN BOOLEAN Alertable,
+	IN PLARGE_INTEGER Timeout OPTIONAL
+	);
+
+NTSTATUS
+STDCALL
+ZwReplyWaitReceivePortEx(
+	IN HANDLE PortHandle,
+	OUT PULONG PortIdentifier OPTIONAL,
+	IN PPORT_MESSAGE ReplyMessage OPTIONAL,
+	OUT PPORT_MESSAGE Message,
+	IN PLARGE_INTEGER Timeout
+	);
+
+NTSTATUS
+STDCALL
+ZwResetWriteWatch(
+	IN HANDLE ProcessHandle,
+	IN PVOID BaseAddress,
+	IN ULONG RegionSize
+	);
+
+NTSTATUS
+STDCALL
+ZwResumeProcess(
+	IN HANDLE Process
+	);
+
+NTSTATUS
+STDCALL
+ZwSecureConnectPort(
+	OUT PHANDLE PortHandle,
+	IN PUNICODE_STRING PortName,
+	IN PSECURITY_QUALITY_OF_SERVICE SecurityQos,
+	IN OUT PPORT_SECTION_WRITE WriteSection OPTIONAL,
+	IN PSID ServerSid OPTIONAL,
+	IN OUT PPORT_SECTION_READ ReadSection OPTIONAL,
+	OUT PULONG MaxMessageSize OPTIONAL,
+	IN OUT PVOID ConnectData OPTIONAL,
+	IN OUT PULONG ConnectDataLength OPTIONAL
+	);
+
+NTSTATUS
+STDCALL
+ZwSetDefaultUILanguage(
+	IN LANGID LanguageId
+	);
+
+NTSTATUS
+STDCALL
+ZwSetHighWaitLowThread(
+	VOID
+	);
+
+NTSTATUS
+STDCALL
+ZwSetInformationJobObject(
+	IN HANDLE JobHandle,
+	IN JOBOBJECTINFOCLASS JobInformationClass,
+	IN PVOID JobInformation,
+	IN ULONG JobInformationLength
+	);
+
+NTSTATUS
+STDCALL
+ZwSetLowWaitHighThread(
+	VOID
+	);
+
+NTSTATUS
+STDCALL
+ZwSetQuotaInformationFile(
+	IN HANDLE FileHandle,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	IN PFILE_USER_QUOTA_INFORMATION Buffer,
+	IN ULONG BufferLength
+	);
+
+NTSTATUS
+STDCALL
+ZwSetUuidSeed(
+	IN PUCHAR UuidSeed
+	);
+
+NTSTATUS
+STDCALL
+ZwSuspendProcess(
+	IN HANDLE Process
+	);
+
+NTSTATUS
+STDCALL
+ZwTerminateJobObject(
+	IN HANDLE JobHandle,
+	IN NTSTATUS ExitStatus
+	);
+
+NTSTATUS
+STDCALL
+ZwWaitForKeyedEvent(
+	IN HANDLE KeyedEventHandle,
+	IN ULONG Requested,
+	IN BOOLEAN Alertable,
+	IN PLARGE_INTEGER Timeout OPTIONAL
+	);
+DWORD
+STDCALL
+GetAppCompatFlags2(HTASK hTask);
+VOID STDCALL InitializeLpkHooks(FARPROC *hookfuncs);
+BOOL STDCALL EnterReaderModeHelper(HWND hwnd);
+BOOL STDCALL CtxInitUser32(VOID);
+BOOL STDCALL ReasonCodeNeedsBugID(ULONG reasoncode);
+BOOL STDCALL ReasonCodeNeedsComment(ULONG reasoncode);
+int
+STDCALL
+MessageBoxTimeoutW(
+    HWND hWnd,
+    LPCWSTR lpText,
+    LPCWSTR lpCaption,
+    UINT uType,
+    WORD wLanguageId,
+    DWORD dwTime);
+
+int
+STDCALL
+MessageBoxTimeoutA(
+    HWND hWnd,
+    LPCSTR lpText,
+    LPCSTR lpCaption,
+    UINT uType,
+    WORD wLanguageId,
+    DWORD dwTime);
+BOOL STDCALL DisplayExitWindowsWarnings(ULONG flags);
+FARPROC STDCALL DelayLoadFailureHook(unsigned int dliNotify, PDelayLoadInfo pdli);
+VOID STDCALL WEP();
+DWORD STDCALL RtlDeleteSecurityObject(DWORD x1);
+DWORD     STDCALL RtlNewSecurityObject(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5,DWORD x6);
+NTSTATUS  STDCALL RtlWalkHeap( HANDLE heap, PVOID entry_ptr );
+NTSTATUS  STDCALL RtlpUnWaitCriticalSection(RTL_CRITICAL_SECTION *crit);
+NTSTATUS  STDCALL RtlpWaitForCriticalSection(RTL_CRITICAL_SECTION *crit);
+NTSTATUS STDCALL LdrLockLoaderLock(ULONG flags, ULONG *result, ULONG *magic);
+NTSTATUS STDCALL LdrUnlockLoaderLock(ULONG flags, ULONG magic);
+NTSTATUS  STDCALL RtlAddAccessAllowedAceEx(
+	IN OUT PACL pAcl,
+	IN DWORD dwAceRevision, 
+	IN DWORD AceFlags,
+	IN DWORD AccessMask,
+	IN PSID pSid);
+NTSTATUS  STDCALL RtlAddAccessDeniedAceEx(
+	IN OUT PACL pAcl,
+	IN DWORD dwAceRevision,
+	IN DWORD AceFlags,
+	IN DWORD AccessMask,
+	IN PSID pSid);
+DWORD     STDCALL RtlComputeCrc32(DWORD dwInitial, PBYTE pData, INT iLen);
+WCHAR     STDCALL RtlDowncaseUnicodeChar(WCHAR wch);
+NTSTATUS  STDCALL RtlDuplicateUnicodeString(
+    int add_nul,
+    const UNICODE_STRING *source,
+    UNICODE_STRING *destination);
+NTSTATUS  STDCALL RtlFindCharInUnicodeString(
+    int flags,
+    const UNICODE_STRING *main_str,
+    const UNICODE_STRING *search_chars,
+    USHORT *pos);
+ULONG     STDCALL RtlFindClearRuns(PCRTL_BITMAP lpBits, PRTL_BITMAP_RUN lpSeries,
+                              ULONG ulCount, BOOLEAN bLongest);
+ULONG     STDCALL RtlFindLastBackwardRunClear(PCRTL_BITMAP lpBits, ULONG ulStart, PULONG lpPos);
+CCHAR     STDCALL RtlFindLeastSignificantBit(ULONGLONG ulLong);
+CCHAR     STDCALL RtlFindMostSignificantBit(ULONGLONG ulLong);
+ULONG     STDCALL RtlFindNextForwardRunClear(PCRTL_BITMAP lpBits, ULONG ulStart, PULONG lpPos);
+VOID      STDCALL RtlFreeOemString(POEM_STRING str);
+NTSTATUS  STDCALL RtlInitUnicodeStringEx(PUNICODE_STRING target,PCWSTR source);
+NTSTATUS  STDCALL RtlInitializeCriticalSectionAndSpinCount(RTL_CRITICAL_SECTION *crit, DWORD spincount);
+NTSTATUS  STDCALL RtlInt64ToUnicodeString(ULONGLONG value,ULONG base,UNICODE_STRING *str);
+void  *_lfind(const void* match, const void* start,unsigned int* array_size, unsigned int elem_size,int (*cf)(const void*,const void*));
+
+ULONG
+__cdecl
+DbgPrintEx(
+    IN ULONG ComponentId,
+    IN ULONG Level,
+    IN PCH Format,
+    ...
+    );
+ULONG
+__cdecl
+DbgPrintReturnControlC(
+    PCH Format,
+    ...
+    );
+NTSTATUS
+STDCALL
+DbgQueryDebugFilterState(
+    IN ULONG ComponentId,
+    IN ULONG Level
+    );
+NTSTATUS
+STDCALL
+DbgSetDebugFilterState(
+    IN ULONG ComponentId,
+    IN ULONG Level,
+    IN BOOL State
+    );
+NTSTATUS
+STDCALL
+NtCancelDeviceWakeupRequest(
+    IN HANDLE Device
+    );
+NTSTATUS
+STDCALL
+NtCompactKeys(
+    IN ULONG Count,
+    IN HANDLE KeyArray[]
+            );
+NTSTATUS
+STDCALL
+NtCompressKey(
+    IN HANDLE Key
+            );
+NTSTATUS
+STDCALL
+NtGetDevicePowerState(
+    IN HANDLE Device,
+    OUT DEVICE_POWER_STATE *State
+    );
+NTSTATUS
+STDCALL
+NtInitiatePowerAction(
+    IN POWER_ACTION SystemAction,
+    IN SYSTEM_POWER_STATE MinSystemState,
+    IN ULONG Flags,
+    IN BOOL Asynchronous
+    );
+BOOL
+STDCALL
+NtIsSystemResumeAutomatic(
+    VOID
+    );
+NTSTATUS
+STDCALL
+NtLockProductActivationKeys(
+    ULONG   *pPrivateVer,
+    ULONG   *pIsSafeMode
+    );
+NTSTATUS
+STDCALL
+NtLockRegistryKey(
+    IN HANDLE           KeyHandle
+    );
+NTSTATUS
+STDCALL
+NtNotifyChangeMultipleKeys(
+    IN HANDLE MasterKeyHandle,  		
+    IN ULONG Count,
+    IN OBJECT_ATTRIBUTES SlaveObjects[],
+    IN HANDLE Event OPTIONAL,
+    IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+    IN PVOID ApcContext OPTIONAL,
+    OUT PIO_STATUS_BLOCK IoStatusBlock,
+    IN ULONG CompletionFilter,
+    IN BOOL WatchTree,
+    OUT PVOID Buffer,
+    IN ULONG BufferSize,
+    IN BOOL Asynchronous
+    );
+NTSTATUS
+STDCALL
+NtQueryOpenSubKeys(
+    IN POBJECT_ATTRIBUTES TargetKey,
+    OUT PULONG  HandleCount
+    );
+NTSTATUS
+STDCALL
+NtRenameKey(
+    IN HANDLE           KeyHandle,
+    IN PUNICODE_STRING  NewName
+    );
+NTSTATUS
+STDCALL
+NtRequestDeviceWakeup(
+    IN HANDLE Device
+    );
+NTSTATUS
+STDCALL
+NtRequestWakeupLatency(
+    IN LATENCY_TIME latency
+    );
+NTSTATUS
+STDCALL
+NtSaveKeyEx(
+    IN HANDLE KeyHandle,
+    IN HANDLE FileHandle,
+    IN ULONG  Format
+    );
+NTSTATUS
+STDCALL
+NtSaveMergedKeys(
+    IN HANDLE HighPrecedenceKeyHandle,
+    IN HANDLE LowPrecedenceKeyHandle,
+    IN HANDLE FileHandle
+    );
+NTSTATUS
+STDCALL
+NtSetThreadExecutionState(
+    IN EXECUTION_STATE esFlags,
+    OUT EXECUTION_STATE *PreviousFlags
+    );
+NTSTATUS
+STDCALL
+NtUnloadKeyEx(
+    IN POBJECT_ATTRIBUTES TargetKey,
+    IN HANDLE Event OPTIONAL
+    );
+NTSTATUS
+STDCALL
+RtlAddRange(
+    IN OUT PRTL_RANGE_LIST RangeList,
+    IN ULONGLONG Start,
+    IN ULONGLONG End,
+    IN UCHAR Attributes,
+    IN ULONG Flags,
+    IN PVOID UserData,  OPTIONAL
+    IN PVOID Owner      OPTIONAL
+    );
+NTSTATUS
+STDCALL
+RtlCopyRangeList(
+    OUT PRTL_RANGE_LIST CopyRangeList,
+    IN PRTL_RANGE_LIST RangeList
+    );
+NTSTATUS
+STDCALL
+RtlDeleteOwnersRanges(
+    IN OUT PRTL_RANGE_LIST RangeList,
+    IN PVOID Owner
+    );
+NTSTATUS
+STDCALL
+RtlDeleteRange(
+    IN OUT PRTL_RANGE_LIST RangeList,
+    IN ULONGLONG Start,
+    IN ULONGLONG End,
+    IN PVOID Owner
+    );
+NTSTATUS
+STDCALL
+RtlFindRange(
+    IN PRTL_RANGE_LIST RangeList,
+    IN ULONGLONG Minimum,
+    IN ULONGLONG Maximum,
+    IN ULONG Length,
+    IN ULONG Alignment,
+    IN ULONG Flags,
+    IN UCHAR AttributeAvailableMask,
+    IN PVOID Context OPTIONAL,
+    IN PRTL_CONFLICT_RANGE_CALLBACK Callback OPTIONAL,
+    OUT PULONGLONG Start
+    );
+VOID
+STDCALL
+RtlFreeRangeList(
+    IN PRTL_RANGE_LIST RangeList
+    );
+NTSTATUS
+STDCALL
+RtlGUIDFromString(
+    IN PUNICODE_STRING GuidString,
+    OUT GUID* Guid
+    );
+NTSTATUS
+STDCALL
+RtlGetFirstRange(
+    IN PRTL_RANGE_LIST RangeList,
+    OUT PRTL_RANGE_LIST_ITERATOR Iterator,
+    OUT PRTL_RANGE *Range
+    );
+NTSTATUS
+STDCALL
+RtlGetNextRange(
+    IN OUT PRTL_RANGE_LIST_ITERATOR Iterator,
+    OUT PRTL_RANGE *Range,
+    IN BOOL MoveForwards
+    );
+NTSTATUS
+STDCALL
+RtlGetVersion(
+    OUT PRTL_OSVERSIONINFOW lpVersionInformation
+    );
+NTSTATUS
+STDCALL
+RtlHashUnicodeString(
+    IN const UNICODE_STRING *String,
+    IN BOOL CaseInSensitive,
+    IN ULONG HashAlgorithm,
+    OUT PULONG HashValue
+    );
+VOID
+STDCALL
+RtlInitializeRangeList(
+    IN OUT PRTL_RANGE_LIST RangeList
+    );
+NTSTATUS
+STDCALL
+RtlInvertRangeList(
+    OUT PRTL_RANGE_LIST InvertedRangeList,
+    IN PRTL_RANGE_LIST RangeList
+    );
+NTSTATUS
+STDCALL
+RtlIsRangeAvailable(
+    IN PRTL_RANGE_LIST RangeList,
+    IN ULONGLONG Start,
+    IN ULONGLONG End,
+    IN ULONG Flags,
+    IN UCHAR AttributeAvailableMask,
+    IN PVOID Context OPTIONAL,
+    IN PRTL_CONFLICT_RANGE_CALLBACK Callback OPTIONAL,
+    OUT PBOOL Available
+    );
+NTSTATUS
+STDCALL
+RtlMergeRangeLists(
+    OUT PRTL_RANGE_LIST MergedRangeList,
+    IN PRTL_RANGE_LIST RangeList1,
+    IN PRTL_RANGE_LIST RangeList2,
+    IN ULONG Flags
+    );
+NTSTATUS
+STDCALL
+RtlStringFromGUID(
+    IN REFGUID Guid,
+    OUT PUNICODE_STRING GuidString
+    );
+USHORT
+FASTCALL
+RtlUshortByteSwap(
+    IN USHORT Source
+    );
+ULONG
+FASTCALL
+RtlUlongByteSwap(
+    IN ULONG Source
+    );
+ULONGLONG
+FASTCALL
+RtlUlonglongByteSwap(
+    IN ULONGLONG Source
+    );
+BOOL
+STDCALL
+RtlValidRelativeSecurityDescriptor (
+    IN PSECURITY_DESCRIPTOR SecurityDescriptorInput,
+    IN ULONG SecurityDescriptorLength,
+    IN SECURITY_INFORMATION RequiredInformation
+    );
+NTSTATUS
+STDCALL
+RtlVerifyVersionInfo(
+    IN PRTL_OSVERSIONINFOEXW VersionInfo,
+    IN ULONG TypeMask,
+    IN ULONGLONG  ConditionMask
+    );
+ULONG
+STDCALL
+RtlWalkFrameChain (
+    OUT PVOID *Callers,
+    IN ULONG Count,
+    IN ULONG Flags
+    );
+ULONG
+vDbgPrintEx(
+    IN ULONG ComponentId,
+    IN ULONG Level,
+    IN PCH Format,
+    va_list arglist
+    );
+ULONG
+vDbgPrintExWithPrefix(
+    IN PCH Prefix,
+    IN ULONG ComponentId,
+    IN ULONG Level,
+    IN PCH Format,
+    va_list arglist
+    );
+NTSTATUS
+STDCALL
+ZwCancelDeviceWakeupRequest(
+    IN HANDLE Device
+    );
+NTSTATUS
+STDCALL
+ZwCompactKeys(
+    IN ULONG Count,
+    IN HANDLE KeyArray[]
+            );
+NTSTATUS
+STDCALL
+ZwCompressKey(
+    IN HANDLE Key
+            );
+NTSTATUS
+STDCALL
+ZwGetDevicePowerState(
+    IN HANDLE Device,
+    OUT DEVICE_POWER_STATE *State
+    );
+NTSTATUS
+STDCALL
+ZwInitiatePowerAction(
+    IN POWER_ACTION SystemAction,
+    IN SYSTEM_POWER_STATE MinSystemState,
+    IN ULONG Flags,
+    IN BOOL Asynchronous
+    );
+BOOL
+STDCALL
+ZwIsSystemResumeAutomatic(
+    VOID
+    );
+NTSTATUS
+STDCALL
+ZwLockProductActivationKeys(
+    ULONG   *pPrivateVer,
+    ULONG   *pIsSafeMode
+    );
+NTSTATUS
+STDCALL
+ZwLockRegistryKey(
+    IN HANDLE           KeyHandle
+    );
+NTSTATUS
+STDCALL
+ZwNotifyChangeMultipleKeys(
+    IN HANDLE MasterKeyHandle,  		
+    IN ULONG Count,
+    IN OBJECT_ATTRIBUTES SlaveObjects[],
+    IN HANDLE Event OPTIONAL,
+    IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+    IN PVOID ApcContext OPTIONAL,
+    OUT PIO_STATUS_BLOCK IoStatusBlock,
+    IN ULONG CompletionFilter,
+    IN BOOL WatchTree,
+    OUT PVOID Buffer,
+    IN ULONG BufferSize,
+    IN BOOL Asynchronous
+    );
+NTSTATUS
+STDCALL
+ZwQueryOpenSubKeys(
+    IN POBJECT_ATTRIBUTES TargetKey,
+    OUT PULONG  HandleCount
+    );
+NTSTATUS
+STDCALL
+ZwRenameKey(
+    IN HANDLE           KeyHandle,
+    IN PUNICODE_STRING  NewName
+    );
+NTSTATUS
+STDCALL
+ZwRequestDeviceWakeup(
+    IN HANDLE Device
+    );
+NTSTATUS
+STDCALL
+ZwRequestWakeupLatency(
+    IN LATENCY_TIME latency
+    );
+NTSTATUS
+STDCALL
+ZwSaveKeyEx(
+    IN HANDLE KeyHandle,
+    IN HANDLE FileHandle,
+    IN ULONG  Format
+    );
+NTSTATUS
+STDCALL
+ZwSaveMergedKeys(
+    IN HANDLE HighPrecedenceKeyHandle,
+    IN HANDLE LowPrecedenceKeyHandle,
+    IN HANDLE FileHandle
+    );
+NTSTATUS
+STDCALL
+ZwSetThreadExecutionState(
+    IN EXECUTION_STATE esFlags,
+    OUT EXECUTION_STATE *PreviousFlags
+    );
+NTSTATUS
+STDCALL
+ZwUnloadKeyEx(
+    IN POBJECT_ATTRIBUTES TargetKey,
+    IN HANDLE Event OPTIONAL
+    );
+BOOL STDCALL LdrFlushAlternateResourceModules(VOID);
+BOOL STDCALL LdrAlternateResourcesEnabled(VOID);
+
+VOID STDCALL MD4Init(PMD4_CONTEXT Context);
+VOID STDCALL MD4Update(PMD4_CONTEXT Context, PVOID Buffer, UINT BufferSize);
+VOID STDCALL MD4Final(PMD4_CONTEXT Context);
+
+VOID STDCALL MD5Init(PMD5_CONTEXT Context);
+VOID STDCALL MD5Update(PMD5_CONTEXT Context, PVOID Buffer, UINT BufferSize);
+VOID STDCALL MD5Final(PMD5_CONTEXT Context);
+
+VOID STDCALL A_SHAInit(PSHA_CONTEXT Context);
+VOID STDCALL A_SHAUpdate(PSHA_CONTEXT Context, PVOID Buffer, UINT BufferSize);
+VOID STDCALL A_SHAFinal(PSHA_CONTEXT Context, PVOID Result);
+
+VOID STDCALL GdiInitializeLanguagePack(DWORD InitParam);
+BOOL STDCALL SetConsoleIcon(HICON hicon);
+NTSTATUS STDCALL NtPowerInformation(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5);
+NTSTATUS STDCALL ZwPowerInformation(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5);
+double __cdecl _CIpow(double x,double y);
+LPSTR __cdecl _ui64toa(
+    ULONGLONG value,
+    LPSTR str,
+    INT radix);
+LPWSTR __cdecl _ui64tow(
+    ULONGLONG value,
+    LPWSTR str,
+    INT radix);
+INT __cdecl iswdigit( WCHAR wc );
+INT __cdecl iswlower( WCHAR wc );
+INT __cdecl iswxdigit( WCHAR wc );
+DWORD STDCALL GetHandleContext(HANDLE hnd);
+HANDLE STDCALL CreateSocketHandle(VOID);
+BOOL STDCALL SetHandleContext(HANDLE hnd,DWORD context);
+BOOL STDCALL SetConsoleInputExeNameA(LPCSTR name);
+BOOL STDCALL SetConsoleInputExeNameW(LPCWSTR name);
+BOOL STDCALL UTRegister( HMODULE hModule, LPSTR lpsz16BITDLL,
+                        LPSTR lpszInitName, LPSTR lpszProcName,
+                        FARPROC *ppfn32Thunk, FARPROC pfnUT32CallBack,
+                        LPVOID lpBuff );
+VOID STDCALL UTUnRegister( HMODULE hModule );
+BOOL STDCALL SynchronizeWindows31FilesAndWindowsNTRegistry( DWORD x1, DWORD x2, DWORD x3,DWORD x4 );
+BOOL STDCALL QueryWindows31FilesMigration( DWORD x1 );
+
 WINBOOL STDCALL GetConsoleKeyboardLayoutNameA(LPSTR name);
 WINBOOL STDCALL GetConsoleKeyboardLayoutNameW(LPWSTR name);
 
@@ -1972,7 +3616,7 @@ HeapQueryInformation (
 WINBOOL
 STDCALL
 HeapSetInformation (
-    HANDLE HeapHandle, 
+    HANDLE HeapHandle,
     HEAP_INFORMATION_CLASS HeapInformationClass,
     PVOID HeapInformation OPTIONAL,
     SIZE_T HeapInformationLength OPTIONAL
@@ -2101,9 +3745,9 @@ QueueUserAPC(
     ULONG_PTR dwData
     );
 
-WINBOOL
+NTSTATUS
 STDCALL
-QueueUserWorkItem(
+RtlQueueWorkItem(
     LPTHREAD_START_ROUTINE Function,
     PVOID Context,
     ULONG Flags

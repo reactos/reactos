@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.69 2003/08/18 10:47:04 hbirr Exp $
+/* $Id: create.c,v 1.70 2003/09/12 17:51:47 vizzini Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -680,7 +680,6 @@ CreateProcessW
 {
    HANDLE hSection, hProcess, hThread;
    NTSTATUS Status;
-   LPTHREAD_START_ROUTINE  lpStartAddress = NULL;
    WCHAR ImagePathName[256];
    UNICODE_STRING ImagePathName_U;
    PROCESS_BASIC_INFORMATION ProcessBasicInfo;
@@ -691,8 +690,7 @@ CreateProcessW
    CSRSS_API_REPLY CsrReply;
    CHAR ImageFileName[8];
    PWCHAR s, e;
-   ULONG i, len;
-   ANSI_STRING ProcedureName;
+   ULONG i;
    UNICODE_STRING CurrentDirectory_U;
    SECTION_IMAGE_INFORMATION Sii;
    WCHAR TempCurrentDirectoryW[256];
@@ -945,12 +943,6 @@ CreateProcessW
    {
       if (lpStartupInfo->lpReserved2)
       {
-         ULONG i, Count = *(ULONG*)lpStartupInfo->lpReserved2;
-         HANDLE * hFile;  
-	 HANDLE hTemp;
-	 PRTL_USER_PROCESS_PARAMETERS CurrPpb = NtCurrentPeb()->ProcessParameters;  
-
-
          /* FIXME:
 	  *    ROUND_UP(xxx,2) + 2 is a dirty hack. RtlCreateProcessParameters assumes that
 	  *    the runtimeinfo is a unicode string and use RtlCopyUnicodeString for duplication.

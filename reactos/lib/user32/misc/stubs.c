@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.42 2003/09/08 09:56:57 weiden Exp $
+/* $Id: stubs.c,v 1.43 2003/09/12 17:51:48 vizzini Exp $
  *
  * COPYRIGHT:       See COPYING WINBOOLthe top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1594,4 +1594,102 @@ SendIMEMessageExA(HWND hwnd, LPARAM lparam)
 {
   UNIMPLEMENTED;
   return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+int
+STDCALL
+MessageBoxTimeoutW(
+    HWND hWnd,
+    LPCWSTR lpText,
+    LPCWSTR lpCaption,
+    UINT uType,
+    WORD wLanguageId,
+    DWORD dwTime)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+int
+STDCALL
+MessageBoxTimeoutA(
+    HWND hWnd,
+    LPCSTR lpText,
+    LPCSTR lpCaption,
+    UINT uType,
+    WORD wLanguageId,
+    DWORD dwTime)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL DisplayExitWindowsWarnings(ULONG flags)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL ReasonCodeNeedsBugID(ULONG reasoncode)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL ReasonCodeNeedsComment(ULONG reasoncode)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL CtxInitUser32(VOID)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL EnterReaderModeHelper(HWND hwnd)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+GetAppCompatFlags2(HTASK hTask)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+VOID STDCALL InitializeLpkHooks(FARPROC *hookfuncs)
+{
+  UNIMPLEMENTED;
 }

@@ -1,4 +1,4 @@
-/* $Id: exception.c,v 1.5 2003/07/11 13:50:23 royce Exp $
+/* $Id: exception.c,v 1.6 2003/09/12 17:51:48 vizzini Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -171,7 +171,7 @@ RtlpDispatchException(IN PEXCEPTION_RECORD  ExceptionRecord,
       Context,
       &DispatcherContext,
       RegistrationFrame->handler);
-
+#ifdef DEBUG
     DPRINT("Exception handler said 0x%X\n", ReturnValue);
 	DPRINT("RegistrationFrame == 0x%.08x\n", RegistrationFrame);
 	{
@@ -184,7 +184,7 @@ RtlpDispatchException(IN PEXCEPTION_RECORD  ExceptionRecord,
 		DPRINT("TryLevel == 0x%.08x\n", sp[5]);
 		DPRINT("EBP == 0x%.08x\n", sp[6]);
 	}
-
+#endif
     if (RegistrationFrame == NULL)
     {
       ExceptionRecord->ExceptionFlags &= ~EXCEPTION_NESTED_CALL;  // Turn off flag

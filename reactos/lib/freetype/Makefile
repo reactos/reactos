@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.5 2003/08/07 04:03:22 royce Exp $
+# $Id: Makefile,v 1.6 2003/09/12 17:51:46 vizzini Exp $
 
 PATH_TO_TOP = ../..
 
@@ -18,7 +18,7 @@ else
 CFLAGS_DBG :=
 endif
 
-TARGET_CFLAGS = $(CFLAGS_DBG) -Iinclude -Wall
+TARGET_CFLAGS = $(CFLAGS_DBG) -Iinclude -Wall -Werror
 
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS

@@ -9,7 +9,7 @@ TARGET_BASE = 0x701a0000
 TARGET_CFLAGS = -fno-builtin -D__USE_W32API
 
 # require os code to explicitly request A/W version of structs/functions
-TARGET_CFLAGS += -DUNICODE -D_UNICODE
+TARGET_CFLAGS += -DUNICODE -D_UNICODE -Wall -Werror
 
 TARGET_LFLAGS = -nostdlib -nostartfiles
 

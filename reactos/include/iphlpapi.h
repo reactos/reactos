@@ -26,6 +26,28 @@ extern "C" {
 #include <ipexport.h>
 #include <iptypes.h>
 
+DWORD
+STDCALL
+NhpAllocateAndGetInterfaceInfoFromStack(
+    OUT IP_INTERFACE_NAME_INFO **ppTable,
+    OUT PDWORD                 pdwCount,
+    IN BOOL                    bOrder,
+    IN HANDLE                  hHeap,
+    IN DWORD                   dwFlags
+    );
+DWORD STDCALL AllocateAndGetIfTableFromStack(PMIB_IFTABLE *ppIfTable,
+ BOOL bOrder, HANDLE heap, DWORD flags);
+DWORD STDCALL AllocateAndGetIpAddrTableFromStack(PMIB_IPADDRTABLE *ppIpAddrTable,
+ BOOL bOrder, HANDLE heap, DWORD flags);
+DWORD STDCALL AllocateAndGetIpForwardTableFromStack(PMIB_IPFORWARDTABLE *
+ ppIpForwardTable, BOOL bOrder, HANDLE heap, DWORD flags);
+DWORD STDCALL AllocateAndGetIpNetTableFromStack(PMIB_IPNETTABLE *ppIpNetTable,
+ BOOL bOrder, HANDLE heap, DWORD flags);
+DWORD STDCALL AllocateAndGetTcpTableFromStack(PMIB_TCPTABLE *ppTcpTable,
+ BOOL bOrder, HANDLE heap, DWORD flags);
+DWORD STDCALL AllocateAndGetUdpTableFromStack(PMIB_UDPTABLE *ppUdpTable,
+ BOOL bOrder, HANDLE heap, DWORD flags);
+
 DWORD STDCALL GetNumberOfInterfaces(PDWORD pdwNumIf);
 
 DWORD STDCALL GetIfEntry(PMIB_IFROW pIfRow);

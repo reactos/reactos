@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.15 2003/07/10 18:50:51 chorns Exp $
+/* $Id: copy.c,v 1.16 2003/09/12 17:51:47 vizzini Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -210,7 +210,6 @@ CopyFileExW (
    IO_STATUS_BLOCK IoStatusBlock;
    FILE_STANDARD_INFORMATION FileStandard;
    FILE_BASIC_INFORMATION FileBasic;
-   FILE_DISPOSITION_INFORMATION FileDispInfo;
    WINBOOL RC = FALSE;
    WINBOOL KeepDestOnError = FALSE;
    DWORD SystemError;

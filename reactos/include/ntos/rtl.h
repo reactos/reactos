@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.18 2003/09/02 11:14:15 ekohl Exp $
+/* $Id: rtl.h,v 1.19 2003/09/12 17:51:46 vizzini Exp $
  * 
  */
 
@@ -386,6 +386,7 @@ RtlEqualUnicodeString (
 	);
 
 VOID
+STDCALL
 RtlGetCallersAddress (
 	PVOID	* CallersAddress
 	);

@@ -681,6 +681,12 @@ VOID
     ULONG_PTR dwParam
     );
 
+#ifdef __cplusplus
+#define REFGUID const GUID &
+#else
+#define REFGUID const GUID *
+#endif
+
 typedef DWORD (CALLBACK *PFE_EXPORT_FUNC)(PBYTE pbData,PVOID pvCallbackContext,ULONG ulLength);
 
 typedef DWORD (CALLBACK *PFE_IMPORT_FUNC)(PBYTE pbData,PVOID pvCallbackContext,PULONG ulLength);
@@ -705,6 +711,7 @@ typedef FARPROC ENHMFENUMPROC;
 typedef DWORD CCSTYLE, *PCCSTYLE, *LPCCSTYLE;
 typedef DWORD CCSTYLEFLAGA, *PCCSTYLEFLAGA, *LPCCSTYLEFLAGA;
 #define DECLARE_HANDLE(s) typedef HANDLE s
+typedef LANGID *PLANGID;
 
 #endif /* ! defined (RC_INVOKED) */
 

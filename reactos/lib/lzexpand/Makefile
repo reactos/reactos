@@ -8,7 +8,7 @@ TARGET_NAME = lz32
 TARGET_BASE=0x76380000
 
 # require os code to explicitly request A/W version of structs/functions
-TARGET_CFLAGS += -D_DISABLE_TIDENTS
+TARGET_CFLAGS += -D_DISABLE_TIDENTS -Wall -Werror
 
 TARGET_SDKLIBS = ntdll.a kernel32.a
 

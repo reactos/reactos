@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.54 2003/08/21 12:49:23 weiden Exp $
+/* $Id: startup.c,v 1.55 2003/09/12 17:51:47 vizzini Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -194,7 +194,6 @@ __true_LdrInitializeThunk (ULONG Unknown1,
    PIMAGE_NT_HEADERS NTHeaders;
    PEPFUNC EntryPoint;
    PIMAGE_DOS_HEADER PEDosHeader;
-   NTSTATUS Status;
    PVOID ImageBase;
    PPEB Peb;
    PLDR_MODULE NtModule;  // ntdll

@@ -13,6 +13,7 @@
 #define NTOS_MODE_USER
 #include <ntos.h>
 #include <ddk/ntddscsi.h>
+#include <mem.h>
 #include "vfatlib.h"
 
 
@@ -54,9 +55,7 @@ static NTSTATUS
 Fat32WriteBootSector(IN HANDLE FileHandle,
   IN PFAT32_BOOT_SECTOR BootSector)
 {
-  OBJECT_ATTRIBUTES ObjectAttributes;
   IO_STATUS_BLOCK IoStatusBlock;
-  UNICODE_STRING Name;
   NTSTATUS Status;
   PUCHAR NewBootSector;
   LARGE_INTEGER FileOffset;
@@ -126,9 +125,7 @@ static NTSTATUS
 Fat32WriteFsInfo(IN HANDLE FileHandle,
   IN PFAT32_BOOT_SECTOR BootSector)
 {
-  OBJECT_ATTRIBUTES ObjectAttributes;
   IO_STATUS_BLOCK IoStatusBlock;
-  UNICODE_STRING Name;
   NTSTATUS Status;
   PFAT32_FSINFO FsInfo;
   LARGE_INTEGER FileOffset;
@@ -179,9 +176,7 @@ Fat32WriteFAT(IN HANDLE FileHandle,
   ULONG SectorOffset,
   IN PFAT32_BOOT_SECTOR BootSector)
 {
-  OBJECT_ATTRIBUTES ObjectAttributes;
   IO_STATUS_BLOCK IoStatusBlock;
-  UNICODE_STRING Name;
   NTSTATUS Status;
   PUCHAR Buffer;
   LARGE_INTEGER FileOffset;
@@ -276,7 +271,6 @@ static NTSTATUS
 Fat32WriteRootDirectory(IN HANDLE FileHandle,
   IN PFAT32_BOOT_SECTOR BootSector)
 {
-  OBJECT_ATTRIBUTES ObjectAttributes;
   IO_STATUS_BLOCK IoStatusBlock;
   NTSTATUS Status;
   PUCHAR Buffer;

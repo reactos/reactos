@@ -1,4 +1,4 @@
-; $Id: kernel32.edf,v 1.28 2003/09/08 09:56:56 weiden Exp $
+; $Id: kernel32.edf,v 1.29 2003/09/12 17:51:47 vizzini Exp $
 ;
 ; kernel32.edf
 ;
@@ -129,7 +129,7 @@ CreateMutexA=CreateMutexA@12
 CreateMutexW=CreateMutexW@12
 CreateNamedPipeA=CreateNamedPipeA@32
 CreateNamedPipeW=CreateNamedPipeW@32
-;CreateNlsSecurityDescriptor
+CreateNlsSecurityDescriptor=CreateNlsSecurityDescriptor@12
 CreatePipe=CreatePipe@16
 CreateProcessA=CreateProcessA@40
 ;CreateProcessInternalA
@@ -138,7 +138,7 @@ CreateProcessW=CreateProcessW@40
 CreateRemoteThread=CreateRemoteThread@28
 CreateSemaphoreA=CreateSemaphoreA@16
 CreateSemaphoreW=CreateSemaphoreW@16
-;CreateSocketHandle
+CreateSocketHandle=CreateSocketHandle@0
 CreateTapePartition=CreateTapePartition@16
 CreateThread=CreateThread@24
 CreateTimerQueue=CreateTimerQueue@0
@@ -155,7 +155,7 @@ DebugBreakProcess=DebugBreakProcess@4
 DebugSetProcessKillOnExit=DebugSetProcessKillOnExit@4
 DefineDosDeviceA=DefineDosDeviceA@12
 DefineDosDeviceW=DefineDosDeviceW@12
-;DelayLoadFailureHook
+DelayLoadFailureHook=DelayLoadFailureHook@8
 DeleteAtom=DeleteAtom@4
 DeleteCriticalSection=NTDLL.RtlDeleteCriticalSection
 DeleteFiber=DeleteFiber@4
@@ -327,11 +327,11 @@ GetConsoleDisplayMode=GetConsoleDisplayMode@4
 GetConsoleFontInfo=GetConsoleFontInfo@16
 GetConsoleFontSize=GetConsoleFontSize@8
 GetConsoleHardwareState=GetConsoleHardwareState@12
-;GetConsoleInputExeNameA
-;GetConsoleInputExeNameW
+GetConsoleInputExeNameA=GetConsoleInputExeNameA@8
+GetConsoleInputExeNameW=GetConsoleInputExeNameW@8
 GetConsoleInputWaitHandle=GetConsoleInputWaitHandle@0
-;GetConsoleKeyboardLayoutNameA
-;GetConsoleKeyboardLayoutNameW
+GetConsoleKeyboardLayoutNameA=GetConsoleKeyboardLayoutNameA@4
+GetConsoleKeyboardLayoutNameW=GetConsoleKeyboardLayoutNameW@4
 GetConsoleMode=GetConsoleMode@8
 ;GetConsoleNlsMode
 GetConsoleOutputCP=GetConsoleOutputCP@0
@@ -389,7 +389,7 @@ GetFullPathNameA=GetFullPathNameA@16
 GetFullPathNameW=GetFullPathNameW@16
 GetGeoInfoA=GetGeoInfoA@20
 GetGeoInfoW=GetGeoInfoW@20
-;GetHandleContext
+GetHandleContext=GetHandleContext@4
 GetHandleInformation=GetHandleInformation@8
 GetLargestConsoleWindowSize=GetLargestConsoleWindowSize@4
 GetLastError=GetLastError@0
@@ -591,7 +591,7 @@ IsSystemResumeAutomatic=IsSystemResumeAutomatic@0
 IsValidCodePage=IsValidCodePage@4
 IsValidLanguageGroup=IsValidLanguageGroup@8
 IsValidLocale=IsValidLocale@8
-;IsValidUILanguage
+IsValidUILanguage=IsValidUILanguage@4
 IsWow64Process=IsWow64Process@8
 LCMapStringA=LCMapStringA@24
 LCMapStringW=LCMapStringW@24
@@ -643,7 +643,7 @@ MoveFileW=MoveFileW@8
 MoveFileWithProgressW=MoveFileWithProgressW@20
 MulDiv=MulDiv@12
 MultiByteToWideChar=MultiByteToWideChar@24
-;NlsConvertIntegerToString
+NlsConvertIntegerToString=NlsConvertIntegerToString@20
 ;NlsGetCacheUpdateCount
 ;NlsResetProcessLocale
 ;NumaVirtualQueryNode
@@ -744,10 +744,10 @@ ScrollConsoleScreenBufferA=ScrollConsoleScreenBufferA@20
 ScrollConsoleScreenBufferW=ScrollConsoleScreenBufferW@20
 SearchPathA=SearchPathA@24
 SearchPathW=SearchPathW@24
-;SetCPGlobal
+SetCPGlobal=SetCPGlobal@4
 SetCalendarInfoA=SetCalendarInfoA@16
 SetCalendarInfoW=SetCalendarInfoW@16
-;SetClientTimeZoneInformation
+SetClientTimeZoneInformation=SetClientTimeZoneInformation@4
 ;SetComPlusPackageInstallStatus
 SetCommBreak=SetCommBreak@4
 SetCommConfig=SetCommConfig@12
@@ -769,9 +769,9 @@ SetConsoleCursorPosition=SetConsoleCursorPosition@8
 SetConsoleDisplayMode=SetConsoleDisplayMode@12
 SetConsoleFont=SetConsoleFont@8
 SetConsoleHardwareState=SetConsoleHardwareState@12
-;SetConsoleIcon
-;SetConsoleInputExeNameA
-;SetConsoleInputExeNameW
+SetConsoleIcon=SetConsoleIcon@4
+SetConsoleInputExeNameA=SetConsoleInputExeNameA@4
+SetConsoleInputExeNameW=SetConsoleInputExeNameW@4
 SetConsoleKeyShortcuts=SetConsoleKeyShortcuts@16
 ;SetConsoleLocalEUDC
 SetConsoleMaximumWindowSize=SetConsoleMaximumWindowSize@8
@@ -812,7 +812,7 @@ SetFileTime=SetFileTime@16
 SetFileValidData=SetFileValidData@12
 SetFirmwareEnvironmentVariableA=SetFirmwareEnvironmentVariableA@16
 SetFirmwareEnvironmentVariableW=SetFirmwareEnvironmentVariableW@16
-;SetHandleContext
+SetHandleContext=SetHandleContext@8
 SetHandleCount=SetHandleCount@4
 SetHandleInformation=SetHandleInformation@12
 SetInformationJobObject=SetInformationJobObject@16
@@ -889,8 +889,8 @@ UnlockFileEx=UnlockFileEx@20
 UnmapViewOfFile=UnmapViewOfFile@4
 UpdateResourceA=UpdateResourceA@24
 UpdateResourceW=UpdateResourceW@24
-;UTRegister
-;UTUnRegister
+UTRegister=UTRegister@28
+UTUnRegister=UTUnRegister@4
 ;UnregisterConsoleIME
 UnregisterWait=UnregisterWait@4
 UnregisterWaitEx=UnregisterWaitEx@8

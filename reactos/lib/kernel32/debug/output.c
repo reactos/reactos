@@ -1,4 +1,4 @@
-/* $Id: output.c,v 1.2 2003/07/10 18:50:50 chorns Exp $
+/* $Id: output.c,v 1.3 2003/09/12 17:51:47 vizzini Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -16,8 +16,8 @@
 /* Open or create the mutex used to communicate with the debug monitor */
 HANDLE K32CreateDBMonMutex(void)
 {
- static SID_IDENTIFIER_AUTHORITY siaNTAuth = SECURITY_NT_AUTHORITY;
- static SID_IDENTIFIER_AUTHORITY siaWorldAuth = SECURITY_WORLD_SID_AUTHORITY;
+	static SID_IDENTIFIER_AUTHORITY siaNTAuth = {SECURITY_NT_AUTHORITY};
+	static SID_IDENTIFIER_AUTHORITY siaWorldAuth = {SECURITY_WORLD_SID_AUTHORITY};
 
  HANDLE hMutex;
 

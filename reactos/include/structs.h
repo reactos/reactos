@@ -363,6 +363,22 @@ typedef struct tagPOINTS {
   SHORT y;
 } POINTS;
 
+typedef struct {
+	ULONG State[4];
+	ULONG Unknown[2];
+} MD4_CONTEXT, *PMD4_CONTEXT;
+
+typedef struct {
+	ULONG Unknown[2];
+	ULONG State[4];
+} MD5_CONTEXT, *PMD5_CONTEXT;
+
+typedef struct {
+	ULONG Unknown1[6];
+	ULONG State[5];
+	ULONG Unknown2[2];
+} SHA_CONTEXT, *PSHA_CONTEXT;
+
 typedef struct _tagCANDIDATEFORM {
   DWORD  dwIndex;
   DWORD  dwStyle;
@@ -457,24 +473,54 @@ typedef_tident(LPIMEPRO)
 typedef_tident(PIMEPRO)
 
 typedef struct _cpinfoexA {
-    UINT    MaxCharSize;                    // max length (in bytes) of a char
-    BYTE    DefaultChar[MAX_DEFAULTCHAR];   // default character (MB)
-    BYTE    LeadByte[MAX_LEADBYTES];        // lead byte ranges
-    WCHAR   UnicodeDefaultChar;             // default character (Unicode)
-    UINT    CodePage;                       // code page id
-    CHAR    CodePageName[MAX_PATH];         // code page name (Unicode)
+    UINT    MaxCharSize;
+    BYTE    DefaultChar[MAX_DEFAULTCHAR];
+    BYTE    LeadByte[MAX_LEADBYTES];
+    WCHAR   UnicodeDefaultChar;
+    UINT    CodePage;
+    CHAR    CodePageName[MAX_PATH];
 } CPINFOEXA, *LPCPINFOEXA;
 typedef struct _cpinfoexW {
-    UINT    MaxCharSize;                    // max length (in bytes) of a char
-    BYTE    DefaultChar[MAX_DEFAULTCHAR];   // default character (MB)
-    BYTE    LeadByte[MAX_LEADBYTES];        // lead byte ranges
-    WCHAR   UnicodeDefaultChar;             // default character (Unicode)
-    UINT    CodePage;                       // code page id
-    WCHAR   CodePageName[MAX_PATH];         // code page name (Unicode)
+    UINT    MaxCharSize;
+    BYTE    DefaultChar[MAX_DEFAULTCHAR];
+    BYTE    LeadByte[MAX_LEADBYTES];
+    WCHAR   UnicodeDefaultChar;
+    UINT    CodePage;
+    WCHAR   CodePageName[MAX_PATH];
 } CPINFOEXW, *LPCPINFOEXW;
 
 typedef_tident(CPINFOEX)
 typedef_tident(LPCPINFOEX)
+
+typedef struct _RTL_RANGE_LIST {
+    LIST_ENTRY ListHead;
+    ULONG Flags;
+    ULONG Count;
+    ULONG Stamp;
+} RTL_RANGE_LIST, *PRTL_RANGE_LIST;
+
+typedef struct _RTL_RANGE {
+    ULONGLONG Start;
+    ULONGLONG End;
+    PVOID UserData;
+    PVOID Owner;
+    UCHAR Attributes;
+    UCHAR Flags;
+} RTL_RANGE, *PRTL_RANGE;
+
+typedef
+BOOLEAN
+(CALLBACK *PRTL_CONFLICT_RANGE_CALLBACK) (
+PVOID Context,
+PRTL_RANGE Range
+    );
+
+typedef struct _RANGE_LIST_ITERATOR {
+    PLIST_ENTRY RangeListHead;
+    PLIST_ENTRY MergedHead;
+    PVOID Current;
+    ULONG Stamp;
+} RTL_RANGE_LIST_ITERATOR, *PRTL_RANGE_LIST_ITERATOR;
 
 typedef struct tagCBT_CREATEWNDA {
   LPCREATESTRUCTA lpcs;
@@ -949,6 +995,13 @@ typedef struct tagACTCTX_SECTION_KEYED_DATA {
     ACTCTX_SECTION_KEYED_DATA_ASSEMBLY_METADATA AssemblyMetadata;
 } ACTCTX_SECTION_KEYED_DATA, *PACTCTX_SECTION_KEYED_DATA;
 typedef const ACTCTX_SECTION_KEYED_DATA * PCACTCTX_SECTION_KEYED_DATA;
+
+typedef struct tagRTL_BITMAP_RUN {
+    ULONG StartOfRun;
+    ULONG SizeOfRun;
+} RTL_BITMAP_RUN, *PRTL_BITMAP_RUN;
+
+typedef const RTL_BITMAP *PCRTL_BITMAP;
 
 typedef struct _cpinfo {
   UINT MaxCharSize;
@@ -3890,7 +3943,7 @@ typedef struct _OSVERSIONINFOW {
   DWORD dwBuildNumber;
   DWORD dwPlatformId;
   WCHAR szCSDVersion[ 128 ];
-} OSVERSIONINFOW, *POSVERSIONINFOW, *LPOSVERSIONINFOW;
+} OSVERSIONINFOW, *POSVERSIONINFOW, *LPOSVERSIONINFOW, RTL_OSVERSIONINFOW, *PRTL_OSVERSIONINFOW;
 
 typedef_tident(OSVERSIONINFO)
 
@@ -3938,7 +3991,7 @@ typedef struct _OSVERSIONINFOEXW
  WORD wSuiteMask;
  BYTE wProductType;
  BYTE wReserved;
-} OSVERSIONINFOEXW, *POSVERSIONINFOEXW, *LPOSVERSIONINFOEXW;
+} OSVERSIONINFOEXW, *POSVERSIONINFOEXW, *LPOSVERSIONINFOEXW, RTL_OSVERSIONINFOEXW, *PRTL_OSVERSIONINFOEXW;
 
 typedef_tident(OSVERSIONINFOEX)
 
@@ -6151,6 +6204,89 @@ typedef struct tagTRACKMOUSEEVENT {
   HWND  hwndTrack;
   DWORD dwHoverTime;
 } TRACKMOUSEEVENT, *LPTRACKMOUSEEVENT;
+
+typedef IMAGE_THUNK_DATA *          PImgThunkData;
+typedef const IMAGE_THUNK_DATA *    PCImgThunkData;
+
+typedef struct ImgDelayDescr {
+    DWORD           grAttrs;
+    LPCSTR          szName;
+    HMODULE *       phmod;
+    PImgThunkData   pIAT;
+    PCImgThunkData  pINT;
+    PCImgThunkData  pBoundIAT;
+    PCImgThunkData  pUnloadIAT;
+    DWORD           dwTimeStamp;
+    } ImgDelayDescr, * PImgDelayDescr;
+
+typedef const ImgDelayDescr *   PCImgDelayDescr;
+
+typedef struct DelayLoadProc {
+    BOOL                fImportByName;
+    union {
+        LPCSTR          szProcName;
+        DWORD           dwOrdinal;
+        };
+    } DelayLoadProc;
+
+typedef struct DelayLoadInfo {
+    DWORD               cb;
+    PCImgDelayDescr     pidd;
+    FARPROC *           ppfn;
+    LPCSTR              szDll;
+    DelayLoadProc       dlp;
+    HMODULE             hmodCur;
+    FARPROC             pfnCur;
+    DWORD               dwLastError;
+    } DelayLoadInfo, * PDelayLoadInfo;
+
+typedef struct _RTL_HEAP_TAG_INFO {
+	ULONG AllocCount;
+	ULONG FreeCount;
+	ULONG MemoryUsed;
+} RTL_HEAP_TAG_INFO, *LPRTL_HEAP_TAG_INFO, *PRTL_HEAP_TAG_INFO;
+
+typedef struct _PORT_MESSAGE {
+	USHORT DataSize;
+	USHORT MessageSize;
+	USHORT MessageType;
+	USHORT VirtualRangesOffset;
+	CLIENT_ID ClientId;
+	ULONG MessageId;
+	ULONG SectionSize;
+//	UCHAR Data [];
+} PORT_MESSAGE,*PPORT_MESSAGE;
+
+typedef struct _PORT_SECTION_WRITE {
+	ULONG Length;
+	HANDLE SectionHandle;
+	ULONG SectionOffset;
+	ULONG ViewSize;
+	PVOID ViewBase;
+	PVOID TargetViewBase;
+} PORT_SECTION_WRITE,*PPORT_SECTION_WRITE;
+
+typedef struct _PORT_SECTION_READ {
+	ULONG Length;
+	ULONG ViewSize;
+	ULONG ViewBase;
+} PORT_SECTION_READ,*PPORT_SECTION_READ;
+
+typedef struct _FILE_USER_QUOTA_INFORMATION {
+	ULONG NextEntryOffset;
+	ULONG SidLength;
+	LARGE_INTEGER ChangeTime;
+	LARGE_INTEGER QuotaUsed;
+	LARGE_INTEGER QuotaThreshold;
+	LARGE_INTEGER QuotaLimit;
+	SID Sid [1 ];
+} FILE_USER_QUOTA_INFORMATION,*PFILE_USER_QUOTA_INFORMATION;
+
+typedef struct _FILE_QUOTA_LIST_INFORMATION {
+	ULONG NextEntryOffset;
+	ULONG SidLength;
+	SID Sid [1 ];
+} FILE_QUOTA_LIST_INFORMATION,*PFILE_QUOTA_LIST_INFORMATION;
 
 typedef struct _BLENDFUNCTION {
   BYTE     BlendOp;

@@ -103,7 +103,7 @@ CreateWindowExW=CreateWindowExW@48
 CreateWindowStationA=CreateWindowStationA@16
 CreateWindowStationW=CreateWindowStationW@16
 CsrBroadcastSystemMessageExW=CsrBroadcastSystemMessageExW@24
-;CtxInitUser32
+CtxInitUser32=CtxInitUser32@0
 DdeAbandonTransaction=DdeAbandonTransaction@12
 DdeAccessData=DdeAccessData@8
 DdeAddData=DdeAddData@16
@@ -165,7 +165,7 @@ DialogBoxParamW=DialogBoxParamW@20
 DisableProcessWindowsGhosting=DisableProcessWindowsGhosting@0
 DispatchMessageA=DispatchMessageA@4
 DispatchMessageW=DispatchMessageW@4
-;DisplayExitWindowsWarnings
+DisplayExitWindowsWarnings=DisplayExitWindowsWarnings@4
 DlgDirListA=DlgDirListA@20
 DlgDirListComboBoxA=DlgDirListComboBoxA@20
 DlgDirListComboBoxW=DlgDirListComboBoxW@20
@@ -204,7 +204,7 @@ EndDialog=EndDialog@8
 EndMenu=EndMenu@0
 EndPaint=EndPaint@8
 EndTask=EndTask@12
-;EnterReaderModeHelper
+EnterReaderModeHelper=EnterReaderModeHelper@4
 EnumChildWindows=EnumChildWindows@12
 EnumClipboardFormats=EnumClipboardFormats@4
 EnumDesktopWindows=EnumDesktopWindows@12
@@ -245,7 +245,7 @@ GetAltTabInfoA=GetAltTabInfoA@20
 GetAltTabInfoW=GetAltTabInfoW@20
 GetAncestor=GetAncestor@8
 GetAppCompatFlags=GetAppCompatFlags@4
-;GetAppCompatFlags2
+GetAppCompatFlags2=GetAppCompatFlags2@4
 GetAsyncKeyState=GetAsyncKeyState@4
 GetCapture=GetCapture@0
 GetCaretBlinkTime=GetCaretBlinkTime@0
@@ -399,7 +399,7 @@ ImpersonateDdeClientWindow=ImpersonateDdeClientWindow@8
 InSendMessage=InSendMessage@0
 InSendMessageEx=InSendMessageEx@4
 InflateRect=InflateRect@12
-;InitializeLpkHooks
+InitializeLpkHooks=InitializeLpkHooks@4
 ;InitializeWin32EntryTable
 InsertMenuA=InsertMenuA@20
 InsertMenuItemA=InsertMenuItemA@16
@@ -485,8 +485,8 @@ MessageBoxExA=MessageBoxExA@20
 MessageBoxExW=MessageBoxExW@20
 MessageBoxIndirectA=MessageBoxIndirectA@4
 MessageBoxIndirectW=MessageBoxIndirectW@4
-;MessageBoxTimeoutA
-;MessageBoxTimeoutW
+MessageBoxTimeoutA=MessageBoxTimeoutA@24
+MessageBoxTimeoutW=MessageBoxTimeoutW@24
 MessageBoxW=MessageBoxW@16
 ModifyMenuA=ModifyMenuA@20
 ModifyMenuW=ModifyMenuW@20
@@ -535,8 +535,8 @@ RealChildWindowFromPoint=RealChildWindowFromPoint@12
 RealGetWindowClass=RealGetWindowClassA@12
 RealGetWindowClassA=RealGetWindowClassA@12
 RealGetWindowClassW=RealGetWindowClassW@12
-;ReasonCodeNeedsBugID
-;ReasonCodeNeedsComment
+ReasonCodeNeedsBugID=ReasonCodeNeedsBugID@4
+ReasonCodeNeedsComment=ReasonCodeNeedsComment@4
 ;RecordShutdownReason
 RedrawWindow=RedrawWindow@16
 RegisterClassA=RegisterClassA@4

@@ -1,4 +1,4 @@
-/* $Id: debug.c,v 1.10 2003/07/11 13:50:23 royce Exp $
+/* $Id: debug.c,v 1.11 2003/09/12 17:51:47 vizzini Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -191,6 +191,7 @@ NTSTATUS STDCALL DbgUiRemoteBreakin(VOID)
  RtlExitUserThread(0);
 
  DbgBreakPoint();
+ return STATUS_SUCCESS;
 }
 
 NTSTATUS STDCALL DbgUiIssueRemoteBreakin(HANDLE Process)
