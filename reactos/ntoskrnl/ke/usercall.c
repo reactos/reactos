@@ -1,37 +1,28 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ps/w32call.c
- * PURPOSE:         Thread managment
+ * FILE:            ntoskrnl/ke/usercall.c
+ * PURPOSE:         User-Mode callbacks. Portable part.
  * 
- * PROGRAMMERS:     David Welch (welch@mcmail.com)
- *                  Phillip Susi
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
 
-/*
- * NOTE:
- * 
- * All of the routines that manipulate the thread queue synchronize on
- * a single spinlock
- * 
- */
-
-/* INCLUDES ****************************************************************/
+/* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 
-#if defined(__GNUC__)
-/* void * alloca(size_t size); */
-#elif defined(_MSC_VER)
-void* _alloca(size_t size);
-#else
-#error Unknown compiler for alloca intrinsic stack allocation "function"
-#endif
+/* FUNCTIONS *****************************************************************/
 
-/* TYPES *******************************************************************/
+#if ALEX_CB_REWRITE
+
+NTSTATUS 
+STDCALL 
+KiSwitchToUserMode(IN PVOID *OutputBuffer,
+                   IN PULONG OutputLength);
+
+#else
 
 typedef struct _NTW32CALL_SAVED_STATE
 {
@@ -55,97 +46,11 @@ typedef struct
 KSPIN_LOCK CallbackStackListLock;
 static LIST_ENTRY CallbackStackListHead;
 
-/* FUNCTIONS ***************************************************************/
-
 VOID INIT_FUNCTION
 PsInitialiseW32Call(VOID)
 {
   InitializeListHead(&CallbackStackListHead);
   KeInitializeSpinLock(&CallbackStackListLock);
-}
-
-NTSTATUS STDCALL
-NtCallbackReturn (PVOID		Result,
-		  ULONG		ResultLength,
-		  NTSTATUS	Status)
-{
-  PULONG OldStack;
-  PETHREAD Thread;
-  PNTSTATUS CallbackStatus;
-  PULONG CallerResultLength;
-  PVOID* CallerResult;
-  PVOID InitialStack;
-  PVOID StackBase;
-  ULONG_PTR StackLimit;
-  KIRQL oldIrql;
-  PNTW32CALL_SAVED_STATE State;
-  PKTRAP_FRAME SavedTrapFrame;
-  PVOID SavedCallbackStack;
-  PVOID SavedExceptionStack;
-  
-  PAGED_CODE();
-
-  Thread = PsGetCurrentThread();
-  if (Thread->Tcb.CallbackStack == NULL)
-    {
-      return(STATUS_NO_CALLBACK_ACTIVE);
-    }
-
-  OldStack = (PULONG)Thread->Tcb.CallbackStack;
-
-  /*
-   * Get the values that NtW32Call left on the inactive stack for us.
-   */
-  State = (PNTW32CALL_SAVED_STATE)OldStack[0];  
-  CallbackStatus = State->CallbackStatus;
-  CallerResultLength = State->CallerResultLength;
-  CallerResult = State->CallerResult;
-  InitialStack = State->SavedInitialStack;
-  StackBase = State->SavedStackBase;
-  StackLimit = State->SavedStackLimit;
-  SavedTrapFrame = State->SavedTrapFrame;
-  SavedCallbackStack = State->SavedCallbackStack;
-  SavedExceptionStack = State->SavedExceptionStack;
-
-  /*
-   * Copy the callback status and the callback result to NtW32Call
-   */
-  *CallbackStatus = Status;
-  if (CallerResult != NULL && CallerResultLength != NULL)
-    {
-      if (Result == NULL)
-	{
-	  *CallerResultLength = 0;
-	}
-      else
-	{
-	  *CallerResultLength = min(ResultLength, *CallerResultLength);
-	  RtlCopyMemory(*CallerResult, Result, *CallerResultLength);
-	}
-    }
-
-  /*
-   * Restore the old stack.
-   */
-  KeRaiseIrql(HIGH_LEVEL, &oldIrql);
-  if ((Thread->Tcb.NpxState & NPX_STATE_VALID) &&
-      ETHREAD_TO_KTHREAD(Thread) != KeGetCurrentPrcb()->NpxThread)
-    {
-      RtlCopyMemory((char*)InitialStack - sizeof(FX_SAVE_AREA),
-                    (char*)Thread->Tcb.InitialStack - sizeof(FX_SAVE_AREA),
-                    sizeof(FX_SAVE_AREA));
-    }
-  Thread->Tcb.InitialStack = InitialStack;
-  Thread->Tcb.StackBase = StackBase;
-  Thread->Tcb.StackLimit = StackLimit;
-  Thread->Tcb.TrapFrame = SavedTrapFrame;
-  Thread->Tcb.CallbackStack = SavedCallbackStack;
-  KeGetCurrentKPCR()->TSS->Esp0 = (ULONG)SavedExceptionStack;
-  KeStackSwitchAndRet((PVOID)(OldStack + 1));
-
-  /* Should never return. */
-  KEBUGCHECK(0);
-  return(STATUS_UNSUCCESSFUL);
 }
 
 VOID STATIC
@@ -244,14 +149,19 @@ PsAllocateCallbackStack(ULONG StackSize)
     }
   return(KernelStack);
 }
+#endif
 
-NTSTATUS STDCALL
-NtW32Call (IN ULONG RoutineIndex,
-	   IN PVOID Argument,
-	   IN ULONG ArgumentLength,
-	   OUT PVOID* Result OPTIONAL,
-	   OUT PULONG ResultLength OPTIONAL)
-{
+/*
+ * @implemented
+ */
+NTSTATUS
+STDCALL
+KeUserModeCallback(IN ULONG RoutineIndex,
+                   IN PVOID Argument,
+                   IN ULONG ArgumentLength,
+                   OUT PVOID *Result,
+                   OUT PULONG ResultLength)
+{ 
   PETHREAD Thread;
   PVOID NewStack;
   ULONG_PTR StackSize;
@@ -264,7 +174,7 @@ NtW32Call (IN ULONG RoutineIndex,
   
   PAGED_CODE();
 
-  DPRINT("NtW32Call(RoutineIndex %d, Argument %X, ArgumentLength %d)\n",
+  DPRINT("KeUserModeCallback(RoutineIndex %d, Argument %X, ArgumentLength %d)\n",
 	  RoutineIndex, Argument, ArgumentLength);
 
   Thread = PsGetCurrentThread();
@@ -338,6 +248,6 @@ NtW32Call (IN ULONG RoutineIndex,
   InsertTailList(&CallbackStackListHead, &AssignedStack->ListEntry);
   KeReleaseSpinLock(&CallbackStackListLock, PASSIVE_LEVEL);
   return(CallbackStatus);
-} 
-
+}
+  
 /* EOF */

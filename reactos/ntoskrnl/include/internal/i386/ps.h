@@ -43,6 +43,7 @@
 #define KPCR_BASE                 0xFF000000
 
 #define KPCR_EXCEPTION_LIST       0x0
+#define KPCR_INITIAL_STACK        0x4
 #define KPCR_SELF                 0x1C
 #define KPCR_TSS                  0x40
 #define KPCR_CURRENT_THREAD       0x124	

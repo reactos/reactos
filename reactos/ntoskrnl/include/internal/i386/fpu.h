@@ -20,6 +20,11 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_I386_FPU_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_I386_FPU_H
 
+#define FN_CONTROL_WORD        0x0
+#define FN_STATUS_WORD         0x4
+#define FN_TAG_WORD            0x8
+#define FN_DATA_SELECTOR       0x18
+#define FN_CR0_NPX_STATE       0x20C
 #define SIZEOF_FX_SAVE_AREA    528
 
 #ifndef __ASM__

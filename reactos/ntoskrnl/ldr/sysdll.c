@@ -18,11 +18,11 @@
 
 /* GLOBALS *******************************************************************/
 
-static PVOID SystemDllEntryPoint = NULL;
-static PVOID SystemDllApcDispatcher = NULL;
-static PVOID SystemDllCallbackDispatcher = NULL;
-static PVOID SystemDllExceptionDispatcher = NULL;
-static PVOID SystemDllRaiseExceptionDispatcher = NULL;
+PVOID SystemDllEntryPoint = NULL;
+PVOID SystemDllApcDispatcher = NULL;
+PVOID SystemDllCallbackDispatcher = NULL;
+PVOID SystemDllExceptionDispatcher = NULL;
+PVOID SystemDllRaiseExceptionDispatcher = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
