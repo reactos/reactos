@@ -66,6 +66,7 @@ ExSystemTimeToLocalTime
 ExTryToAcquireFastMutex
 ExTryToAcquireResourceExclusiveLite
 HalGetInterruptVector
+HalRegisterServiceTable
 KeBugCheck
 KeBugCheckEx
 KeFlushIoBuffers

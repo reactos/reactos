@@ -5,6 +5,8 @@
 #ifndef __INTERNAL_HAL_HAL_H
 #define __INTERNAL_HAL_HAL_H
 
+#include <internal/service.h>
+
 typedef struct
 {
    unsigned short previous_task;
@@ -71,5 +73,9 @@ VOID Hal_bios32_probe(VOID);
  */
 BOOLEAN Hal_bios32_is_service_present(ULONG service);
 
+NTSTATUS HalRegisterServiceTable(DWORD  Mask, 
+                                 DWORD  Value, 
+                                 PSERVICE_TABLE  Table,
+                                 DWORD  Count);
 
 #endif /* __INTERNAL_HAL_HAL_H */
