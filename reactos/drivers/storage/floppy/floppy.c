@@ -205,8 +205,6 @@ static NTSTATUS NTAPI CreateClose(PDEVICE_OBJECT DeviceObject,
 {
   KdPrint(("floppy: CreateClose called\n"));
 
-  ASSERT(0);
-
   Irp->IoStatus.Status = STATUS_SUCCESS;
   Irp->IoStatus.Information = FILE_OPENED;
 

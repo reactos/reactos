@@ -496,22 +496,26 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
   /* Set up parameters for read or write */
   if(Stack->MajorFunction == IRP_MJ_READ)
     {
+      /*
       if(Stack->Parameters.Read.Length > PAGE_SIZE * DriveInfo->ControllerInfo->MapRegisters)
 	{
 	  KdPrint(("floppy: ReadWritePassive(): unable to transfer; would have to split\n"));
 	  ASSERT(0);
 	}
+        */
       Length = Stack->Parameters.Read.Length;
       DiskByteOffset = Stack->Parameters.Read.ByteOffset.u.LowPart;
       WriteToDevice = FALSE;
     }
   else
     {
+      /*
       if(Stack->Parameters.Write.Length > PAGE_SIZE * DriveInfo->ControllerInfo->MapRegisters)
 	{
 	  KdPrint(("floppy: ReadWritePassive(): unable to transfer; would have to split\n"));
 	  ASSERT(0);
 	}
+        */
       Length = Stack->Parameters.Write.Length;
       DiskByteOffset = Stack->Parameters.Write.ByteOffset.u.LowPart;
       WriteToDevice = TRUE;
@@ -579,9 +583,10 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
    */ 
 
   /* Get map registers for DMA */
+  /* FIXME: Just request all of our map regiters for now */
   KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
   Status = IoAllocateAdapterChannel(DriveInfo->ControllerInfo->AdapterObject, DeviceObject,
-                                    DriveInfo->ControllerInfo->MapRegisters, MapRegisterCallback, DriveInfo->ControllerInfo);
+				    DriveInfo->ControllerInfo->MapRegisters, MapRegisterCallback, DriveInfo->ControllerInfo);
   KeLowerIrql(OldIrql);
 
   if(Status != STATUS_SUCCESS)
@@ -592,13 +597,13 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
       return ;
     }
 
+
   /*
    * Read from (or write to) the device
    *
    * This has to be called in a loop, as you can only transfer data to/from a single track at
    * a time.
    */
-
   TransferByteOffset = 0;
   while(TransferByteOffset < Length)
     {
@@ -607,7 +612,10 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
       UCHAR StartSector;
       ULONG CurrentTransferBytes;
       UCHAR CurrentTransferSectors;
-      
+
+      KdPrint(("floppy: ReadWritePassive(): iterating in while (TransferByteOffset = 0x%x of 0x%x total) - allocating %d registers\n", 
+	       TransferByteOffset, Length, DriveInfo->ControllerInfo->MapRegisters));
+  
       KeClearEvent(&DriveInfo->ControllerInfo->SynchEvent); 
 
       /*
@@ -643,12 +651,36 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
        * We can only ask for a transfer up to the end of the track.  Then we have to re-seek and do more.
        * TODO: Support the MT bit
        */
-      if( (DriveInfo->DiskGeometry.SectorsPerTrack - StartSector) < Length / DriveInfo->DiskGeometry.BytesPerSector)
-	  CurrentTransferSectors = (UCHAR)DriveInfo->DiskGeometry.SectorsPerTrack - StartSector;
+      KdPrint(("floppy: ReadWritePassive(): computing number of sectors to transfer (StartSector 0x%x): ", StartSector));
+
+      /* 1-based sector number */
+      if( (DriveInfo->DiskGeometry.SectorsPerTrack - StartSector + 1) < Length / DriveInfo->DiskGeometry.BytesPerSector)
+	  CurrentTransferSectors = (UCHAR)DriveInfo->DiskGeometry.SectorsPerTrack - StartSector + 1;
       else
 	  CurrentTransferSectors = (UCHAR)(Length / DriveInfo->DiskGeometry.BytesPerSector);
 
+      KdPrint(("0x%x\n", CurrentTransferSectors));
+
       CurrentTransferBytes = CurrentTransferSectors * DriveInfo->DiskGeometry.BytesPerSector;
+
+      /*
+       * Adjust to map registers
+       * BUG: Does this take into account page crossings?
+       */
+      KdPrint(("floppy: ReadWritePassive(): Trying to transfer 0x%x bytes\n", CurrentTransferBytes));
+
+      ASSERT(CurrentTransferBytes);
+
+      if(BYTES_TO_PAGES(CurrentTransferBytes) > DriveInfo->ControllerInfo->MapRegisters)
+        {
+          CurrentTransferSectors = (UCHAR)((DriveInfo->ControllerInfo->MapRegisters * PAGE_SIZE) / 
+	                                    DriveInfo->DiskGeometry.BytesPerSector);
+
+          CurrentTransferBytes = CurrentTransferSectors * DriveInfo->DiskGeometry.BytesPerSector;
+
+	  KdPrint(("floppy: ReadWritePassive: limiting transfer to 0x%x bytes (0x%x sectors) due to map registers\n",
+		   CurrentTransferBytes, CurrentTransferSectors));
+        }
 
       /* set up this round's dma operation */
       /* param 2 is ReadOperation --> opposite of WriteToDevice that IoMapTransfer takes.  BAD MS. */
