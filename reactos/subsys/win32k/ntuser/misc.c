@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.33 2003/12/13 15:49:32 weiden Exp $
+/* $Id: misc.c,v 1.34 2003/12/14 12:39:32 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -22,6 +22,7 @@
 #include <include/caret.h>
 #include <include/object.h>
 #include <include/focus.h>
+#include <include/clipboard.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -156,6 +157,8 @@ NtUserCallOneParam(
     case ONEPARAM_ROUTINE_SETCARETBLINKTIME:
       return (DWORD)IntSetCaretBlinkTime((UINT)Param);
 
+    case ONEPARAM_ROUTINE_ENUMCLIPBOARDFORMATS:
+      return (DWORD)IntEnumClipboardFormats((UINT)Param);
   }
   DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam()\n Param=0x%x\n", 
           Routine, Param);

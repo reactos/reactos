@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: caret.c,v 1.4 2003/10/17 20:50:59 weiden Exp $
+/* $Id: caret.c,v 1.5 2003/12/14 12:39:32 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/caret.c
@@ -120,7 +120,7 @@ HideCaret(HWND hWnd)
 WINBOOL STDCALL
 SetCaretBlinkTime(UINT uMSeconds)
 {
-  return (WINBOOL)NtUserCallOneParam(ONEPARAM_ROUTINE_SETCARETBLINKTIME, (DWORD)uMSeconds);
+  return (WINBOOL)NtUserCallOneParam((DWORD)uMSeconds, ONEPARAM_ROUTINE_SETCARETBLINKTIME);
 }
 
 

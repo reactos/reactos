@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.41 2003/12/07 12:59:34 chorns Exp $
+/* $Id: stubs.c,v 1.42 2003/12/14 12:39:32 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -111,17 +111,6 @@ NtUserCallMsgFilter(
   return 0;
 }
 
-DWORD
-STDCALL
-NtUserChangeClipboardChain(
-  DWORD Unknown0,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
 LONG
 STDCALL
 NtUserChangeDisplaySettings(
@@ -138,27 +127,9 @@ NtUserChangeDisplaySettings(
 
 DWORD
 STDCALL
-NtUserCloseClipboard(VOID)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserConvertMemHandle(
   DWORD Unknown0,
   DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserCountClipboardFormats(VOID)
 {
   UNIMPLEMENTED
 
@@ -273,15 +244,6 @@ NtUserDrawCaptionTemp(
   return 0;
 }
 
-DWORD
-STDCALL
-NtUserEmptyClipboard(VOID)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
 WINBOOL
 STDCALL
 NtUserEnumDisplayDevices (
@@ -361,56 +323,6 @@ DWORD
 STDCALL
 NtUserGetAsyncKeyState(
   DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserGetClipboardData(
-  DWORD Unknown0,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserGetClipboardFormatName(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserGetClipboardOwner(VOID)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserGetClipboardSequenceNumber(VOID)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserGetClipboardViewer(VOID)
 {
   UNIMPLEMENTED
 
@@ -525,17 +437,6 @@ NtUserGetMouseMovePointsEx(
 
 DWORD
 STDCALL
-NtUserGetPriorityClipboardFormat(
-  DWORD Unknown0,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserGetTitleBarInfo(
   DWORD Unknown0,
   DWORD Unknown1)
@@ -583,16 +484,6 @@ NtUserInitTask(
   DWORD Unknown8,
   DWORD Unknown9,
   DWORD Unknown10)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserIsClipboardFormatAvailable(
-  DWORD Unknown0)
 {
   UNIMPLEMENTED
 
@@ -693,17 +584,6 @@ NtUserNotifyWinEvent(
 
 DWORD
 STDCALL
-NtUserOpenClipboard(
-  DWORD Unknown0,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserQueryUserCounters(
   DWORD Unknown0,
   DWORD Unknown1,
@@ -747,28 +627,6 @@ NtUserSendInput(
   DWORD Unknown0,
   DWORD Unknown1,
   DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserSetClipboardData(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserSetClipboardViewer(
-  DWORD Unknown0)
 {
   UNIMPLEMENTED
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.160 2003/12/14 11:36:43 gvg Exp $
+/* $Id: window.c,v 1.161 2003/12/14 12:39:32 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1928,18 +1928,6 @@ NtUserGetLastActivePopup(HWND hWnd)
 #else
    return NULL;
 #endif
-}
-
-
-/*
- * @unimplemented
- */
-DWORD STDCALL
-NtUserGetOpenClipboardWindow(VOID)
-{
-  UNIMPLEMENTED
-
-  return 0;
 }
 
 /*
