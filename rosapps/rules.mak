@@ -85,6 +85,8 @@ AR = $(PREFIX)ar
 RC = $(PREFIX)windres
 RCINC = --include-dir ../reactos/include --include-dir ../../reactos/include --include-dir ../../../reactos/include
 
+%.o: %.cpp
+	$(CC) $(CFLAGS) -c $< -o $@
 %.o: %.cc
 	$(CC) $(CFLAGS) -c $< -o $@
 %.o: %.c
