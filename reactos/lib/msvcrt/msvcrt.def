@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.36 2004/08/27 03:08:23 navaraf Exp $
+; $Id: msvcrt.def,v 1.37 2004/12/18 22:15:07 gvg Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -183,15 +183,15 @@ _abnormal_termination
 _access
 _acmdln DATA
 ;_adj_fdiv_m16i
-;_adj_fdiv_m32
-;_adj_fdiv_m32i
-;_adj_fdiv_m64
-;_adj_fdiv_r
+_adj_fdiv_m32 = _adj_fdiv_m32@4
+_adj_fdiv_m32i = _adj_fdiv_m32i@4
+_adj_fdiv_m64 = _adj_fdiv_m64@8
+_adj_fdiv_r
 ;_adj_fdivr_m16i
-;_adj_fdivr_m32
-;_adj_fdivr_m32i
-;_adj_fdivr_m64
-;_adj_fpatan
+_adj_fdivr_m32 = _adj_fdivr_m32@4
+_adj_fdivr_m32i = _adj_fdivr_m32i@4
+_adj_fdivr_m64 = _adj_fdivr_m64@8
+_adj_fpatan
 ;_adj_fprem
 ;_adj_fprem1
 ;_adj_fptan
