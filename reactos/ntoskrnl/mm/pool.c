@@ -1,4 +1,4 @@
-/* $Id: pool.c,v 1.26 2003/12/30 18:52:05 fireball Exp $
+/* $Id: pool.c,v 1.27 2004/02/26 18:54:52 navaraf Exp $
  * 
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -23,11 +23,7 @@
 
 /* FUNCTIONS ***************************************************************/
 
-#if defined(__GNUC__)
-PVOID STDCALL STATIC
-#else
 STATIC PVOID STDCALL
-#endif
 EiAllocatePool(POOL_TYPE PoolType,
 	       ULONG NumberOfBytes,
 	       ULONG Tag,

@@ -718,7 +718,7 @@ MmIsUsablePage(PHYSICAL_ADDRESS PhysicalAddress)
 {
    ULONG Start = PhysicalAddress.u.LowPart / PAGE_SIZE;
 
-   DPRINT("MmGetReferenceCountPage(PhysicalAddress %x)\n", PhysicalAddress);
+   DPRINT("MmIsUsablePage(PhysicalAddress %x)\n", PhysicalAddress);
 
    if (PhysicalAddress.u.LowPart == 0)
      {
