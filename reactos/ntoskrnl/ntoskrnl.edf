@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.65 2000/07/01 18:22:14 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.66 2000/07/02 10:47:28 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -23,7 +23,6 @@ ExAcquireSharedStarveExclusive=ExAcquireSharedStarveExclusive@8
 ExAcquireSharedWaitForExclusive=ExAcquireSharedWaitForExclusive@8
 ExAllocateFromNPagedLookasideList=ExAllocateFromNPagedLookasideList@4
 ExAllocateFromPagedLookasideList=ExAllocateFromPagedLookasideList@4
-ExAllocateFromZone=ExAllocateFromZone@4
 ExAllocatePool=ExAllocatePool@8
 ExAllocatePoolWithQuota=ExAllocatePoolWithQuota@8
 ExAllocatePoolWithQuotaTag=ExAllocatePoolWithQuotaTag@12
@@ -41,8 +40,6 @@ ExExtendZone=ExExtendZone@12
 ExFreePool=ExFreePool@4
 ExFreeToNPagedLookasideList=ExFreeToNPagedLookasideList@8
 ExFreeToPagedLookasideList=ExFreeToPagedLookasideList@8
-ExFreeToZone=ExFreeToZone@8
-ExGetCurrentResourceThread=ExGetCurrentResourceThread@0
 ExGetExclusiveWaiterCount=ExGetExclusiveWaiterCount@4
 ;ExGetPreviousMode
 ExGetSharedWaiterCount=ExGetSharedWaiterCount@4
@@ -50,17 +47,14 @@ ExInitializeNPagedLookasideList=ExInitializeNPagedLookasideList@28
 ExInitializePagedLookasideList=ExInitializePagedLookasideList@28
 ExInitializeResource=ExInitializeResource@4
 ExInitializeResourceLite=ExInitializeResourceLite@4
-ExInitializeSListHead=ExInitializeSListHead@4
 ExInitializeZone=ExInitializeZone@16
 ExInterlockedAddLargeInteger=ExInterlockedAddLargeInteger@16
 ;ExInterlockedAddLargeStatistic
 ExInterlockedAddUlong=ExInterlockedAddUlong@12
-ExInterlockedAllocateFromZone=ExInterlockedAllocateFromZone@8
 ;ExInterlockedCompareExchange64
 ExInterlockedDecrementLong=ExInterlockedDecrementLong@8
 ExInterlockedExchangeUlong=ExInterlockedExchangeUlong@12
 ExInterlockedExtendZone=ExInterlockedExtendZone@16
-ExInterlockedFreeToZone=ExInterlockedFreeToZone@12
 ExInterlockedIncrementLong=ExInterlockedIncrementLong@8
 ExInterlockedInsertHeadList=ExInterlockedInsertHeadList@12
 ExInterlockedInsertTailList=ExInterlockedInsertTailList@12
@@ -69,8 +63,6 @@ ExInterlockedPopEntrySList=ExInterlockedPopEntrySList@8
 ExInterlockedPushEntryList=ExInterlockedPushEntryList@12
 ExInterlockedPushEntrySList=ExInterlockedPushEntrySList@12
 ExInterlockedRemoveHeadList=ExInterlockedRemoveHeadList@8
-ExIsFullZone=ExIsFullZone@4
-ExIsObjectInFirstZoneSegment=ExIsObjectInFirstZoneSegment@8
 ;ExIsProcessorFeaturePresent
 ExIsResourceAcquiredExclusiveLite=ExIsResourceAcquiredExclusiveLite@4
 ExIsResourceAcquiredSharedLite=ExIsResourceAcquiredSharedLite@4
@@ -78,7 +70,6 @@ ExLocalTimeToSystemTime=ExLocalTimeToSystemTime@8
 ;ExNotifyCallback
 ;ExPostSystemEvent
 ;ExQueryPoolBlockSize
-ExQueryDepthSListHead=ExQueryDepthSListHead@4
 ExQueueWorkItem=ExQueueWorkItem@8
 ExRaiseAccessViolation=ExRaiseAccessViolation@0
 ExRaiseDatatypeMisalignment=ExRaiseDatatypeMisalignment@0
@@ -86,10 +77,9 @@ ExRaiseStatus=ExRaiseStatus@4
 ;ExRegisterCallback
 ExReinitializeResourceLite=ExReinitializeResourceLite@4
 ExReleaseFastMutexUnsafe=ExReleaseFastMutexUnsafe@4
-ExReleaseResource=ExReleaseResource@4
-ExReleaseResourceLite=ExReleaseResourceLite@4
 ExReleaseResourceForThread=ExReleaseResourceForThread@8
 ExReleaseResourceForThreadLite=ExReleaseResourceForThreadLite@8
+ExReleaseResourceLite=ExReleaseResourceLite@4
 ;ExSetResourceOwnerPointer
 ;ExSystemExceptionFilter
 ExSystemTimeToLocalTime=ExSystemTimeToLocalTime@8
@@ -950,6 +940,12 @@ wctomb
 ;
 ;	ReactOS Extensions
 ;
+ExAllocateFromZone=ExAllocateFromZone@4
+ExFreeToZone=ExFreeToZone@8
+ExInterlockedAllocateFromZone=ExInterlockedAllocateFromZone@8
+ExInterlockedFreeToZone=ExInterlockedFreeToZone@12
+ExIsFullZone=ExIsFullZone@4
+ExIsObjectInFirstZoneSegment=ExIsObjectInFirstZoneSegment@8
 MmGetSystemAddressForMdl
 ;
 ;

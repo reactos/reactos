@@ -1,4 +1,4 @@
-/* $Id: bug.c,v 1.12 2000/07/01 18:26:10 ekohl Exp $
+/* $Id: bug.c,v 1.13 2000/07/02 10:49:30 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -37,11 +37,6 @@ STDCALL
 KeDeregisterBugCheckCallback (
 	PKBUGCHECK_CALLBACK_RECORD	CallbackRecord
 	)
-{
-   UNIMPLEMENTED;
-}
-
-VOID KeInitializeCallbackRecord(PKBUGCHECK_CALLBACK_RECORD CallbackRecord)
 {
    UNIMPLEMENTED;
 }

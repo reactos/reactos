@@ -155,16 +155,24 @@ ExFreeToZone (
 	PZONE_HEADER	Zone,
 	PVOID		Block
 	);
+
+/*
 ERESOURCE_THREAD
 STDCALL
 ExGetCurrentResourceThread (
 	VOID
 	);
+*/
+#define ExGetCurrentResourceThread() \
+	((ERESOURCE_THREAD)PsGetCurrentThread())
+
+
 ULONG
 STDCALL
 ExGetExclusiveWaiterCount (
 	PERESOURCE	Resource
 	);
+
 ULONG
 STDCALL
 ExGetSharedWaiterCount (
@@ -217,11 +225,15 @@ STDCALL
 ExInitializeResourceLite (
 	PERESOURCE	Resource
 	);
-VOID
-STDCALL
-ExInitializeSListHead (
-	PSLIST_HEADER	SListHead
-	);
+
+/*
+ * VOID
+ * ExInitializeSListHead (
+ *	PSLIST_HEADER	SListHead
+ *	);
+*/
+#define ExInitializeSListHead(ListHead) \
+	(ListHead)->Alignment = 0
 
 /*
  * VOID
@@ -230,8 +242,17 @@ ExInitializeSListHead (
  *	PWORKER_THREAD_ROUTINE	Routine,
  *	PVOID			Context
  *	);
+ *
+ * FUNCTION:
+ *	Initializes a work item to be processed by one of the system
+ *	worker threads
+ *
+ * ARGUMENTS:
+ *	Item = Pointer to the item to be initialized
+ *	Routine = Routine to be called by the worker thread
+ *	Context = Parameter to be passed to the callback
  */
-#define ExInitializeWorkItem (Item, Routine, Context) \
+#define ExInitializeWorkItem(Item, Routine, Context) \
 	ASSERT_IRQL(DISPATCH_LEVEL); \
 	(Item)->WorkerRoutine = (Routine); \
 	(Item)->Parameter = (Context); \
@@ -381,11 +402,16 @@ ExLocalTimeToSystemTime (
 	PLARGE_INTEGER	LocalTime,
 	PLARGE_INTEGER	SystemTime
 	);
-USHORT
-STDCALL
-ExQueryDepthSListHead (
-	PSLIST_HEADER	SListHead
-	);
+
+/*
+ * USHORT
+ * ExQueryDepthSListHead (
+ *	PSLIST_HEADER	SListHead
+ *	);
+*/
+#define ExQueryDepthSListHead(ListHead) \
+	(USHORT)(ListHead)->Depth
+
 VOID
 STDCALL
 ExQueueWorkItem (
@@ -424,11 +450,16 @@ FASTCALL
 ExReleaseFastMutexUnsafe (
 	PFAST_MUTEX	Mutex
 	);
+/*
 VOID
 STDCALL
 ExReleaseResource (
 	PERESOURCE	Resource
 	);
+*/
+#define ExReleaseResource(Resource) \
+	(ExReleaseResourceLite (Resource))
+
 VOID
 STDCALL
 ExReleaseResourceLite (
@@ -509,11 +540,6 @@ InterlockedIncrement (
 	PLONG	Addend
 	);
 
-VOID
-RemoveEntryFromList (
-	PLIST_ENTRY	ListHead,
-	PLIST_ENTRY	Entry
-	);
 /*---*/
 
 typedef

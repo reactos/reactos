@@ -161,7 +161,7 @@ typedef struct _KAPC
    BOOLEAN Inserted;
 } KAPC, *PKAPC;
 
-typedef struct
+typedef struct _KBUGCHECK_CALLBACK_RECORD
 {
    LIST_ENTRY Entry;
    PKBUGCHECK_CALLBACK_ROUTINE CallbackRoutine;

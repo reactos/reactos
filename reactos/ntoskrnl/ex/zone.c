@@ -1,4 +1,4 @@
-/* $Id: zone.c,v 1.3 2000/06/07 13:04:53 ekohl Exp $
+/* $Id: zone.c,v 1.1 2000/07/02 10:48:31 ekohl Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel

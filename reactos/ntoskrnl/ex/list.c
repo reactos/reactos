@@ -1,9 +1,10 @@
-/* $Id: list.c,v 1.7 2000/06/18 15:21:53 ekohl Exp $
+/* $Id: list.c,v 1.1 2000/07/02 10:48:31 ekohl Exp $
  *
  * COPYRIGHT:           See COPYING in the top level directory
  * PROJECT:             ReactOS kernel
- * FILE:                ntoskrnl/rtl/list.c
- * PURPOSE:             Manages linked lists
+ * FILE:                ntoskrnl/ex/list.c
+ * PURPOSE:             Manages double linked lists, single linked lists and
+ *                      sequenced lists
  * PROGRAMMER:          David Welch (welch@mcmail.com)
  */
 
@@ -16,73 +17,6 @@
 
 /* FUNCTIONS *************************************************************/
 
-#if 0
-static BOOLEAN CheckEntry(PLIST_ENTRY ListEntry)
-{
-   assert(ListEntry!=NULL);
-   assert(ListEntry->Blink!=NULL);
-   assert(ListEntry->Blink->Flink==ListEntry);
-   assert(ListEntry->Flink!=NULL);
-   assert(ListEntry->Flink->Blink==ListEntry);
-   return(TRUE);
-}
-
-PLIST_ENTRY RemoveTailList(PLIST_ENTRY ListHead)
-/*
- * FUNCTION: Remove the tail entry from a double linked list
- * ARGUMENTS:
- *         ListHead = Head of the list to remove from
- * RETURNS: The removed entry
- */
-{
-   PLIST_ENTRY Old = ListHead->Blink;
-   RemoveEntryList(ListHead->Blink);
-   return(Old);
-}
-
-PLIST_ENTRY RemoveHeadList(PLIST_ENTRY ListHead)
-{
-   PLIST_ENTRY Old;
-
-   DPRINT("RemoveHeadList(ListHead %x)\n",ListHead);
-
-   assert(CheckEntry(ListHead));
-
-   Old = ListHead->Flink;
-   RemoveEntryList(ListHead->Flink);
-
-   DPRINT("RemoveHeadList()\n");
-
-   return(Old);
-}
-#endif
-
-
-PLIST_ENTRY
-STDCALL
-ExInterlockedInsertTailList (
-	PLIST_ENTRY	ListHead,
-	PLIST_ENTRY	ListEntry,
-	PKSPIN_LOCK	Lock
-	)
-{
-   PLIST_ENTRY Old;
-   KIRQL oldlvl;
-
-   KeAcquireSpinLock(Lock,&oldlvl);
-   if (IsListEmpty(ListHead))
-     {
-	Old = NULL;
-     }
-   else
-     {
-	Old = ListHead->Blink;
-     }
-   InsertTailList(ListHead,ListEntry);
-   KeReleaseSpinLock(Lock,oldlvl);
-
-   return(Old);
-}
 
 PLIST_ENTRY
 STDCALL
@@ -113,6 +47,33 @@ ExInterlockedInsertHeadList (
 	Old = ListHead->Flink;
      }
    InsertHeadList(ListHead,ListEntry);
+   KeReleaseSpinLock(Lock,oldlvl);
+
+   return(Old);
+}
+
+
+PLIST_ENTRY
+STDCALL
+ExInterlockedInsertTailList (
+	PLIST_ENTRY	ListHead,
+	PLIST_ENTRY	ListEntry,
+	PKSPIN_LOCK	Lock
+	)
+{
+   PLIST_ENTRY Old;
+   KIRQL oldlvl;
+
+   KeAcquireSpinLock(Lock,&oldlvl);
+   if (IsListEmpty(ListHead))
+     {
+	Old = NULL;
+     }
+   else
+     {
+	Old = ListHead->Blink;
+     }
+   InsertTailList(ListHead,ListEntry);
    KeReleaseSpinLock(Lock,oldlvl);
 
    return(Old);
@@ -174,6 +135,65 @@ ExInterlockedRemoveTailList (
      {
 	ret = RemoveTailList(Head);
      }
+   KeReleaseSpinLock(Lock,oldlvl);
+   return(ret);
+}
+
+
+PSINGLE_LIST_ENTRY
+STDCALL
+ExInterlockedPopEntrySList (
+	PSLIST_HEADER	ListHead,
+	PKSPIN_LOCK	Lock
+	)
+{
+   UNIMPLEMENTED;
+}
+
+
+PSINGLE_LIST_ENTRY
+STDCALL
+ExInterlockedPushEntrySList (
+	PSLIST_HEADER		ListHead,
+	PSINGLE_LIST_ENTRY	ListEntry,
+	PKSPIN_LOCK		Lock
+	)
+{
+   UNIMPLEMENTED;
+}
+
+
+PSINGLE_LIST_ENTRY
+STDCALL
+ExInterlockedPopEntryList (
+	PSINGLE_LIST_ENTRY	ListHead,
+	PKSPIN_LOCK		Lock
+	)
+{
+   PSINGLE_LIST_ENTRY ret;
+   KIRQL oldlvl;
+
+   KeAcquireSpinLock(Lock,&oldlvl);
+   ret = PopEntryList(ListHead);
+   KeReleaseSpinLock(Lock,oldlvl);
+   return(ret);
+}
+
+
+PSINGLE_LIST_ENTRY
+STDCALL
+ExInterlockedPushEntryList (
+	PSINGLE_LIST_ENTRY	ListHead,
+	PSINGLE_LIST_ENTRY	ListEntry,
+	PKSPIN_LOCK		Lock
+	)
+{
+   KIRQL oldlvl;
+   PSINGLE_LIST_ENTRY ret;
+
+   KeAcquireSpinLock(Lock,&oldlvl);
+   ret=ListHead->Next;
+   PushEntryList(ListHead,ListEntry);
    KeReleaseSpinLock(Lock,oldlvl);
    return(ret);
 }

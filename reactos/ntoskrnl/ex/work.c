@@ -1,4 +1,4 @@
-/* $Id: work.c,v 1.6 2000/06/09 20:02:59 ekohl Exp $
+/* $Id: work.c,v 1.7 2000/07/02 10:48:31 ekohl Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -134,32 +134,6 @@ VOID ExInitializeWorkerThreads(VOID)
    ExInitializeWorkQueue(&EiHyperCriticalWorkQueue,
 			 HIGH_PRIORITY);
 }
-
-#if 0
-VOID
-STDCALL
-ExInitializeWorkItem (
-	PWORK_QUEUE_ITEM	Item,
-	PWORKER_THREAD_ROUTINE	Routine,
-	PVOID			Context
-	)
-/*
- * FUNCTION: Initializes a work item to be processed by one of the system
- * worker threads
- * ARGUMENTS:
- *         Item = Pointer to the item to be initialized
- *         Routine = Routine to be called by the worker thread
- *         Context = Parameter to be passed to the callback
- */
-{
-   ASSERT_IRQL(DISPATCH_LEVEL);
-   
-   Item->Routine = Routine;
-   Item->Context = Context;
-   Item->Entry.Flink = NULL;
-   Item->Entry.Blink = NULL;
-}
-#endif
 
 VOID
 STDCALL

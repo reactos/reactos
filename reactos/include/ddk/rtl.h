@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.36 2000/06/29 23:35:12 dwelch Exp $
+/* $Id: rtl.h,v 1.37 2000/07/02 10:46:35 ekohl Exp $
  * 
  */
 
@@ -235,10 +235,12 @@ extern BOOLEAN NLS_MB_OEM_CODE_PAGE_TAG;
  *		PLIST_ENTRY	Entry
  *		);
  *
- * FUNCTION: Inserts an entry in a double linked list
+ * FUNCTION:
+ *	Inserts an entry in a double linked list
+ *
  * ARGUMENTS:
- *        ListHead = Head of the list
- *        Entry = Entry to insert
+ *	ListHead = Head of the list
+ *	Entry = Entry to insert
  */
 #define InsertTailList(ListHead, ListEntry) \
 { \
@@ -271,10 +273,21 @@ extern BOOLEAN NLS_MB_OEM_CODE_PAGE_TAG;
 	((ListHead)->Flink == (ListHead))
 
 
-PSINGLE_LIST_ENTRY
-PopEntryList (
-	PSINGLE_LIST_ENTRY	ListHead
-	);
+/*
+ * PSINGLE_LIST_ENTRY
+ * PopEntryList (
+ *	PSINGLE_LIST_ENTRY	ListHead
+ *	);
+ *
+ * FUNCTION:
+ *	Removes an entry from the head of a single linked list
+ *
+ * ARGUMENTS:
+ *	ListHead = Head of the list
+ *
+ * RETURNS:
+ *	The removed entry
+ */
 /*
 #define PopEntryList(ListHead) \
 	(ListHead)->Next; \
@@ -287,17 +300,47 @@ PopEntryList (
 		} \
 	}
 */
+static
+inline
+PSINGLE_LIST_ENTRY
+PopEntryList (
+	PSINGLE_LIST_ENTRY	ListHead
+	)
+{
+	PSINGLE_LIST_ENTRY ListEntry;
 
+	ListEntry = ListHead->Next;
+	if (ListEntry!=NULL)
+	{
+		ListHead->Next = ListEntry->Next;
+	}
+	return ListEntry;
+}
+
+
+/*
 VOID
 PushEntryList (
 	PSINGLE_LIST_ENTRY	ListHead,
 	PSINGLE_LIST_ENTRY	Entry
 	);
+*/
 /*
 #define PushEntryList(ListHead,Entry) \
-    (Entry)->Next = (ListHead)->Next; \
-    (ListHead)->Next = (Entry)
+	(Entry)->Next = (ListHead)->Next; \
+	(ListHead)->Next = (Entry)
 */
+static
+inline
+VOID
+PushEntryList (
+	PSINGLE_LIST_ENTRY	ListHead,
+	PSINGLE_LIST_ENTRY	Entry
+	)
+{
+	Entry->Next = ListHead->Next;
+	ListHead->Next = Entry;
+}
 
 
 /*
@@ -388,6 +431,7 @@ RemoveHeadList (
  *
  * ARGUMENTS:
  *	ListHead = Head of the list
+ *
  * RETURNS:
  *	The removed entry
  */

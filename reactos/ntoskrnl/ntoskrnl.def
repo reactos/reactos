@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.78 2000/07/01 18:22:14 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.79 2000/07/02 10:47:28 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -23,7 +23,6 @@ ExAcquireSharedStarveExclusive@8
 ExAcquireSharedWaitForExclusive@8
 ExAllocateFromNPagedLookasideList@4
 ExAllocateFromPagedLookasideList@4
-ExAllocateFromZone@4
 ExAllocatePool@8
 ExAllocatePoolWithQuota@8
 ExAllocatePoolWithQuotaTag@12
@@ -41,8 +40,6 @@ ExExtendZone@12
 ExFreePool@4
 ExFreeToNPagedLookasideList@8
 ExFreeToPagedLookasideList@8
-ExFreeToZone@8
-ExGetCurrentResourceThread@0
 ExGetExclusiveWaiterCount@4
 ;ExGetPreviousMode
 ExGetSharedWaiterCount@4
@@ -50,18 +47,14 @@ ExInitializeNPagedLookasideList
 ExInitializePagedLookasideList
 ExInitializeResource@4
 ExInitializeResourceLite@4
-;FIXME: ExInitializeSListHead is a macro!
-ExInitializeSListHead@4
 ExInitializeZone@16
 ExInterlockedAddLargeInteger@16
 ;ExInterlockedAddLargeStatistic
 ExInterlockedAddUlong@12
-ExInterlockedAllocateFromZone@8
 ;ExInterlockedCompareExchange64
 ExInterlockedDecrementLong@8
 ExInterlockedExchangeUlong@12
 ExInterlockedExtendZone@16
-ExInterlockedFreeToZone@12
 ExInterlockedIncrementLong@8
 ExInterlockedInsertHeadList@12
 ExInterlockedInsertTailList@12
@@ -70,8 +63,6 @@ ExInterlockedPopEntrySList@8
 ExInterlockedPushEntryList@12
 ExInterlockedPushEntrySList@12
 ExInterlockedRemoveHeadList@8
-ExIsFullZone@4
-ExIsObjectInFirstZoneSegment@8
 ;ExIsProcessorFeaturePresent
 ExIsResourceAcquiredExclusiveLite@4
 ExIsResourceAcquiredSharedLite@4
@@ -79,18 +70,18 @@ ExLocalTimeToSystemTime@8
 ;ExNotifyCallback
 ;ExPostSystemEvent
 ;ExQueryPoolBlockSize
-ExQueryDepthSListHead@4
 ExQueueWorkItem@8
 ExRaiseAccessViolation@0
 ExRaiseDatatypeMisalignment@0
+;ExRaiseException
+;ExRaiseHardError
 ExRaiseStatus@4
 ;ExRegisterCallback
 ExReinitializeResourceLite@4
 ExReleaseFastMutexUnsafe@4
-ExReleaseResource@4
-ExReleaseResourceLite@4
 ExReleaseResourceForThread@8
 ExReleaseResourceForThreadLite@8
+ExReleaseResourceLite@4
 ;ExSetResourceOwnerPointer
 ;ExSystemExceptionFilter
 ExSystemTimeToLocalTime@8
@@ -1013,6 +1004,12 @@ wctomb
 ;
 ;	ReactOS Extensions (these should be macros!)
 ;
+ExAllocateFromZone@4
+ExFreeToZone@8
+ExInterlockedAllocateFromZone@8
+ExInterlockedFreeToZone@12
+ExIsFullZone@4
+ExIsObjectInFirstZoneSegment@8
 MmGetSystemAddressForMdl
 ;
 ;

@@ -1,8 +1,8 @@
-/* $Id: lookas.c,v 1.2 2000/06/07 13:05:09 ekohl Exp $
+/* $Id: lookas.c,v 1.1 2000/07/02 10:48:31 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/rtl/lookas.c
+ * FILE:            ntoskrnl/ex/lookas.c
  * PURPOSE:         Lookaside lists
  * PROGRAMMER:      David Welch (welch@mcmail.com)
  * UPDATE HISTORY:

@@ -138,7 +138,14 @@ KeGetCurrentIrql (
 	VOID
 	);
 
-ULONG KeGetCurrentProcessorNumber(VOID);
+/*
+ * ULONG
+ * KeGetCurrentProcessorNumber(VOID);
+ */
+/*
+ * FIXME: This should be an inline function on x86 systems
+ */
+#define KeGetCurrentProcessorNumber() 0UL
 
 PKTHREAD
 STDCALL
@@ -173,8 +180,14 @@ KeInitializeApc (
 	PVOID			Context
 	);
 
-
-VOID KeInitializeCallbackRecord(PKBUGCHECK_CALLBACK_RECORD CallbackRecord);
+/*
+ * VOID
+ * KeInitializeCallbackRecord (
+ *      PKBUGCHECK_CALLBACK_RECORD CallbackRecord
+ *      );
+ */
+#define KeInitializeCallbackRecord(CallbackRecord) \
+	(CallbackRecord)->State = BufferEmpty
 
 VOID
 STDCALL
@@ -524,15 +537,6 @@ KeWaitForSingleObject (
 	PLARGE_INTEGER	Timeout
 	);
 
-
-/*
- * FUNCTION: Sets the current irql without altering the current processor 
- * state
- * ARGUMENTS:
- *          newlvl = IRQ level to set
- * NOTE: This is for internal use only
- */
-//VOID KeSetCurrentIrql(KIRQL newlvl);
 
 
 // io permission map has a 8k size

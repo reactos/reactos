@@ -1,4 +1,4 @@
-/* $Id: mp.c,v 1.4 2000/04/05 15:49:52 ekohl Exp $
+/* $Id: mp.c,v 1.5 2000/07/02 10:49:04 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,14 +16,6 @@
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/
-
-ULONG KeGetCurrentProcessorNumber(VOID)
-/*
- * FUNCTION: Returns the system assigned number of the current processor
- */
-{
-   return(0);
-}
 
 VOID
 STDCALL

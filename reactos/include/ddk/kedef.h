@@ -1,6 +1,15 @@
 #ifndef __INCLUDE_DDK_KEDEF_H
 #define __INCLUDE_DDK_KEDEF_H
 
+typedef enum _KBUGCHECK_BUFFER_DUMP_STATE
+{
+	BufferEmpty,
+	BufferInserted,
+	BufferStarted,
+	BufferFinished,
+	BufferIncomplete
+}KBUGCHECK_BUFFER_DUMP_STATE;
+
 typedef enum _KINTERRUPT_MODE
 {
    LevelSensitive,

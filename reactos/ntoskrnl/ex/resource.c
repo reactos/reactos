@@ -1,4 +1,4 @@
-/* $Id: resource.c,v 1.12 2000/06/07 13:04:34 ekohl Exp $
+/* $Id: resource.c,v 1.13 2000/07/02 10:48:31 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -536,15 +536,6 @@ ExDeleteResourceLite (
    return(STATUS_SUCCESS);;
 }
 
-ERESOURCE_THREAD
-STDCALL
-ExGetCurrentResourceThread (
-	VOID
-	)
-{
-   return((ERESOURCE_THREAD)PsGetCurrentThread());
-}
-
 ULONG
 STDCALL
 ExGetSharedWaiterCount (
@@ -672,15 +663,6 @@ ExReleaseResourceLite (
 {
   return(ExReleaseResourceForThreadLite(Resource,
 					ExGetCurrentResourceThread()));
-}
-
-VOID
-STDCALL
-ExReleaseResource (
-	PERESOURCE	Resource
-	)
-{
-  return ExReleaseResourceForThreadLite(Resource,ExGetCurrentResourceThread());
 }
 
 VOID

@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.76 2000/06/30 22:50:53 ekohl Exp $
+# $Id: makefile_rex,v 1.77 2000/07/02 10:47:28 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -41,8 +41,6 @@ OBJECTS_RTL = \
 	rtl/ctype.o \
 	rtl/interlck.o \
 	rtl/largeint.o \
-	rtl/list.o \
-	rtl/lookas.o \
 	rtl/mem.o \
 	rtl/memchr.o \
 	rtl/memcpy.o \
@@ -51,8 +49,6 @@ OBJECTS_RTL = \
 	rtl/nls.o \
 	rtl/qsort.o \
 	rtl/regio.o \
-	rtl/return.o \
-	rtl/slist.o \
 	rtl/sprintf.o \
 	rtl/stdlib.o \
 	rtl/string.o \
@@ -110,7 +106,6 @@ OBJECTS_MM = \
 	mm/ppool.o \
 	mm/section.o \
 	mm/virtual.o \
-	mm/zone.o \
 	mm/pager.o \
 #	mm/kmap.o
 
@@ -182,14 +177,16 @@ OBJECTS_EX = \
 	ex/fmutex.o \
 	ex/init.o \
 	ex/interlck.o \
+	ex/list.o \
 	ex/locale.o \
+	ex/lookas.o \
 	ex/napi.o \
 	ex/power.o \
 	ex/resource.o \
 	ex/time.o \
-	ex/stamp.o \
 	ex/sysinfo.o \
-	ex/work.o
+	ex/work.o \
+	ex/zone.o
 
 # Installable File System Run-Time Library (FsRtl)
 OBJECTS_FS = \
