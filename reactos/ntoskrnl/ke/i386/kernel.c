@@ -41,7 +41,8 @@
 ULONG KiPcrInitDone = 0;
 static ULONG PcrsAllocated = 0;
 static PHYSICAL_ADDRESS PcrPages[MAXIMUM_PROCESSORS];
-ULONG Ke386CpuidFlags, Ke386CpuidFlags2, Ke386CpuidExFlags, Ke386Cpuid;
+ULONG Ke386CpuidFlags, Ke386CpuidFlags2, Ke386CpuidExFlags;
+ULONG Ke386Cpuid = 300;
 
 #define X86_EFLAGS_ID       (1 << 21)
 
