@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.53 2002/06/05 19:38:08 hbirr Exp $
+/* $Id: kill.c,v 1.54 2002/06/10 21:37:45 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -228,10 +228,12 @@ PiTerminateProcess(PEPROCESS Process,
 	   Process, ExitStatus, ObGetObjectPointerCount(Process),
 	   ObGetObjectHandleCount(Process));
    
+   ObReferenceObject(Process);
    if (InterlockedExchange((PLONG)&Process->Pcb.State, 
 			   PROCESS_STATE_TERMINATED) == 
        PROCESS_STATE_TERMINATED)
      {
+        ObDereferenceObject(Process);
 	return(STATUS_SUCCESS);
      }
    KeAttachProcess( Process );
@@ -241,6 +243,7 @@ PiTerminateProcess(PEPROCESS Process,
    Process->Pcb.DispatcherHeader.SignalState = TRUE;
    KeDispatcherObjectWake(&Process->Pcb.DispatcherHeader);
    KeReleaseDispatcherDatabaseLock(FALSE);
+   ObDereferenceObject(Process);
    return(STATUS_SUCCESS);
 }
 
