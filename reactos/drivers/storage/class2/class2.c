@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.42 2003/11/01 10:42:32 hbirr Exp $
+/* $Id: class2.c,v 1.43 2003/11/01 16:33:39 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -40,12 +40,12 @@
 #include <debug.h>
 
 
-#define VERSION "0.0.1"
+#define VERSION "0.0.2"
 
 #define TAG_SRBT  TAG('S', 'r', 'b', 'T')
 
-#define INQUIRY_DATA_SIZE 2048
-
+#define INQUIRY_DATA_SIZE  2048
+#define START_UNIT_TIMEOUT   30
 
 static NTSTATUS STDCALL
 ScsiClassCreateClose(IN PDEVICE_OBJECT DeviceObject,
@@ -120,14 +120,37 @@ ScsiClassDebugPrint(IN ULONG DebugPrintLevel,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS STDCALL
 ScsiClassAsynchronousCompletion(IN PDEVICE_OBJECT DeviceObject,
 				IN PIRP Irp,
 				IN PVOID Context)
 {
-  UNIMPLEMENTED;
+  PCOMPLETION_CONTEXT CompletionContext;
+  PSCSI_REQUEST_BLOCK Srb;
+
+  CompletionContext = (PCOMPLETION_CONTEXT) Context;
+  Srb = &CompletionContext->Srb;
+
+  /* Release the queue if it is frozen */
+  if (Srb->Function == SRB_FUNCTION_EXECUTE_SCSI &&
+      Srb->SrbStatus & SRB_STATUS_QUEUE_FROZEN)
+    {
+      ScsiClassReleaseQueue (CompletionContext->DeviceObject);
+    }
+
+  /* Release the completion context and the IRP */
+  if (Irp->MdlAddress != NULL)
+    {
+      MmUnlockPages (Irp->MdlAddress);
+      IoFreeMdl (Irp->MdlAddress);
+      Irp->MdlAddress = NULL;
+    }
+  ExFreePool (CompletionContext);
+  IoFreeIrp (Irp);
+
+  return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
 
@@ -1230,6 +1253,13 @@ ScsiClassIoComplete(IN PDEVICE_OBJECT DeviceObject,
     }
   else
     {
+      /* Release the queue if it is frozen */
+      if (Srb->SrbStatus & SRB_STATUS_QUEUE_FROZEN)
+	{
+	  ScsiClassReleaseQueue (DeviceObject);
+	}
+
+      /* Get more detailed status information */
       Retry = ScsiClassInterpretSenseInfo(DeviceObject,
 					  Srb,
 					  IrpStack->MajorFunction,
@@ -1330,6 +1360,12 @@ ScsiClassIoCompleteAssociated(IN PDEVICE_OBJECT DeviceObject,
     }
   else
     {
+      /* Release the queue if it is frozen */
+      if (Srb->SrbStatus & SRB_STATUS_QUEUE_FROZEN)
+	{
+	  ScsiClassReleaseQueue (DeviceObject);
+	}
+
       /* Get more detailed status information */
       Retry = ScsiClassInterpretSenseInfo(DeviceObject,
 					  Srb,
@@ -1644,12 +1680,78 @@ ScsiClassReadDriveCapacity(IN PDEVICE_OBJECT DeviceObject)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID STDCALL
 ScsiClassReleaseQueue(IN PDEVICE_OBJECT DeviceObject)
 {
-  UNIMPLEMENTED;
+  PDEVICE_EXTENSION DeviceExtension;
+  PCOMPLETION_CONTEXT Context;
+  PIO_STACK_LOCATION Stack;
+  PSCSI_REQUEST_BLOCK Srb;
+  KIRQL Irql;
+  PCDB Cdb;
+  PIRP Irp;
+
+  DPRINT("ScsiClassReleaseQueue() called\n");
+
+  DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+  /* Allocate and initialize the completion context */
+  Context = ExAllocatePool (NonPagedPoolMustSucceed,
+			    sizeof (COMPLETION_CONTEXT));
+  Context->DeviceObject = DeviceObject;
+
+  /* Initialize the SRB */
+  Srb = &Context->Srb;
+  RtlZeroMemory (Srb,
+		 sizeof (SCSI_REQUEST_BLOCK));
+  Srb->Length = sizeof (SCSI_REQUEST_BLOCK);
+  Srb->PathId = DeviceExtension->PathId;
+  Srb->TargetId = DeviceExtension->TargetId;
+  Srb->Lun = DeviceExtension->Lun;
+  Srb->Function = SRB_FUNCTION_EXECUTE_SCSI;
+  Srb->TimeOutValue = START_UNIT_TIMEOUT;
+  Srb->SrbFlags = SRB_FLAGS_NO_DATA_TRANSFER |
+		  SRB_FLAGS_DISABLE_AUTOSENSE |
+		  SRB_FLAGS_DISABLE_SYNCH_TRANSFER;
+  Srb->CdbLength = 6;
+
+  /* Initialize the CDB */
+  Cdb = (PCDB)&Srb->Cdb;
+  Cdb->START_STOP.OperationCode = SCSIOP_START_STOP_UNIT;
+  Cdb->START_STOP.Start = 1;
+  Cdb->START_STOP.LogicalUnitNumber = Srb->Lun;
+
+  /* Build the IRP */
+  Irp = IoAllocateIrp (DeviceObject->StackSize, FALSE);
+  IoSetCompletionRoutine (Irp,
+			  (PIO_COMPLETION_ROUTINE)ScsiClassAsynchronousCompletion,
+			  Context,
+			  NULL,
+			  NULL,
+			  NULL);
+
+  /* Attach SRB to the IRP */
+  Stack = IoGetNextIrpStackLocation(Irp);
+  Stack->MajorFunction = IRP_MJ_SCSI;
+  Stack->Parameters.Scsi.Srb = Srb;
+  Srb->OriginalRequest = Irp;
+
+  /* Call the port driver */
+  Irql = KeGetCurrentIrql ();
+  if (Irql < DISPATCH_LEVEL)
+    {
+      KeRaiseIrql (DISPATCH_LEVEL, &Irql);
+      IoCallDriver (DeviceExtension->PortDeviceObject, Irp);
+      KeLowerIrql (Irql);
+    }
+  else
+    {
+      IoCallDriver (DeviceExtension->PortDeviceObject, Irp);
+    }
+
+  DPRINT("ScsiClassReleaseQueue() done\n");
 }
 
 
@@ -1843,6 +1945,13 @@ TryAgain:
 
   if (SRB_STATUS(Srb->SrbStatus) != SRB_STATUS_SUCCESS)
     {
+      /* Release the queue if it is frozen */
+      if (Srb->SrbStatus & SRB_STATUS_QUEUE_FROZEN)
+	{
+	  ScsiClassReleaseQueue (DeviceObject);
+	}
+
+      /* Get more detailed status information */
       Retry = ScsiClassInterpretSenseInfo(DeviceObject,
 					  Srb,
 					  IRP_MJ_SCSI,

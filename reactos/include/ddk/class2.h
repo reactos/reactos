@@ -1,4 +1,4 @@
-/* $Id: class2.h,v 1.3 2003/07/11 14:07:30 ekohl Exp $
+/* $Id: class2.h,v 1.4 2003/11/01 16:32:47 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -7,8 +7,8 @@
  * PROGRAMMER:      Eric Kohl (ekohl@rz-online.de)
  */
 
-#ifndef __STORAGE_INCLUDE_CLASS2_H
-#define __STORAGE_INCLUDE_CLASS2_H
+#ifndef __INCLUDE_DDK_CLASS2_H
+#define __INCLUDE_DDK_CLASS2_H
 
 #include "ntddscsi.h"
 #include "srb.h"
@@ -108,6 +108,13 @@ typedef struct _DEVICE_EXTENSION
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
 
+typedef struct _COMPLETION_CONTEXT
+{
+  PDEVICE_OBJECT DeviceObject;
+  SCSI_REQUEST_BLOCK Srb;
+} COMPLETION_CONTEXT, *PCOMPLETION_CONTEXT;
+
+
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS STDCALL
@@ -197,6 +204,9 @@ ScsiClassQueryTimeOutRegistryValue(IN PUNICODE_STRING RegistryPath);
 NTSTATUS STDCALL
 ScsiClassReadDriveCapacity(IN PDEVICE_OBJECT DeviceObject);
 
+VOID STDCALL
+ScsiClassReleaseQueue(IN PDEVICE_OBJECT DeviceObject);
+
 NTSTATUS STDCALL
 ScsiClassSendSrbAsynchronous(PDEVICE_OBJECT DeviceObject,
 			     PSCSI_REQUEST_BLOCK Srb,
@@ -217,6 +227,6 @@ ScsiClassSplitRequest(IN PDEVICE_OBJECT DeviceObject,
 		      IN PIRP Irp,
 		      IN ULONG MaximumBytes);
 
-#endif /* __STORAGE_INCLUDE_CLASS2_H */
+#endif /* __INCLUDE_DDK_CLASS2_H */
 
 /* EOF */
