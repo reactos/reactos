@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.105 2003/04/05 13:19:05 gvg Exp $
+/* $Id: section.c,v 1.106 2003/04/05 21:57:13 gvg Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -3455,6 +3455,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
 
        MmUnlockAddressSpace(AddressSpace);
 
+#if 0
        /*
         * Zero-fill the end of initialized data segments which are not completely
         * present in the file
@@ -3471,6 +3472,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
 	                     Section->Segments[i].Length - Section->Segments[i].RawLength);
 	     }
 	 }
+#endif
      }
    else
      {
