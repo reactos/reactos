@@ -1,5 +1,7 @@
 - Fix the Explorer Bar/Start Menu. Currently it is almost nothing like Windows.
 - paint desktop background: configurable colors, background image, ...
 - Drag Drop on desktop does not work.
+- implment Drag Drop from the tree view.
+- activate accelerator keys like <DEL> in shell view
 - extend shell view code in Wine
 
