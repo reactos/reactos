@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.18 2003/12/21 20:37:42 navaraf Exp $
+/* $Id: timer.c,v 1.19 2003/12/23 21:34:52 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -392,7 +392,7 @@ TimerThreadMain(PVOID StartContext)
   PMSG_TIMER_ENTRY MsgTimer, MsgTimer2;
   PETHREAD Thread;
   PETHREAD *ThreadsToDereference;
-  ULONG ThreadsToDereferenceCount, ThreadsToDereferencePos;
+  ULONG ThreadsToDereferenceCount, ThreadsToDereferencePos, i;
   
   for(;;)
   {
@@ -543,10 +543,8 @@ TimerThreadMain(PVOID StartContext)
     
     ExReleaseFastMutex(&Mutex);
 
-    for (ThreadsToDereferencePos = 0;
-         ThreadsToDereferencePos < ThreadsToDereferenceCount;
-         ThreadsToDereferencePos++)
-       ObDereferenceObject(ThreadsToDereference[ThreadsToDereferencePos]);
+    for (i = 0; i < ThreadsToDereferencePos; i++)
+       ObDereferenceObject(ThreadsToDereference[i]);
 
      ExFreePool(ThreadsToDereference);
   }
