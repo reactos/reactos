@@ -1,7 +1,8 @@
 1. Build environment
 
 To build the system you need either mingw32 installed on Windows or a mingw32
-cross compiler running on unix.
+cross compiler running on unix.  You may obtain MinGW binaries that build
+ReactOS from http://www.reactos.com. 
 
 
 2. Building ReactOS
