@@ -104,7 +104,6 @@
 #include "batch.h"
 
 
-
 SHORT maxx;
 SHORT maxy;
 
@@ -237,11 +236,11 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 			case VK_TAB:
 #ifdef FEATURE_UNIX_FILENAME_COMPLETION
 				/* expand current file name */
-				if (current == charcount) // only works at end of line
+				if (current == charcount) /* only works at end of line*/
 				{
 					if (wLastKey != VK_TAB)
 					{
-						// if first TAB, complete filename
+						/* if first TAB, complete filename*/
 						CompleteFilename (str, charcount);
 						charcount = _tcslen (str);
 						current = charcount;
@@ -253,13 +252,14 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 					}
 					else
 					{
-						//if second TAB, list matches
+						/*if second TAB, list matches*/
 						if (ShowCompletionMatches (str, charcount))
 						{
 							PrintPrompt ();
 							GetCursorXY (&orgx, &orgy);
 							ConOutPrintf (_T("%s"), str);
 						}
+						
 					}
 				}
 				else
@@ -302,9 +302,10 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 				ClearCommandLine (str, maxlen, orgx, orgy);
 				current = charcount = 0;
 				break;
-			case VK_F3: 
-			case VK_UP:
 #ifdef FEATURE_HISTORY
+			case VK_F3:
+				History_move_to_bottom();
+			case VK_UP:
 				/* get previous command from buffer */
 				ClearCommandLine (str, maxlen, orgx, orgy);
 				History (-1, str);

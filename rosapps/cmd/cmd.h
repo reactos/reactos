@@ -129,6 +129,8 @@ typedef struct tagCOMMAND
 	INT    (*func) (LPTSTR, LPTSTR);
 } COMMAND, *LPCOMMAND;
 
+extern COMMAND cmds[];		/* The internal command table */
+
 
 /* Prototypes for COLOR.C */
 VOID SetScreenColor(WORD wArgColor, BOOL bFill);
@@ -244,6 +246,8 @@ INT cmd_goto (LPTSTR, LPTSTR);
 /* Prototypes for HISTORY.C */
 #ifdef FEATURE_HISTORY
 VOID History (INT, LPTSTR);
+VOID History_move_to_bottom(VOID);
+VOID InitHistory(VOID);
 #endif
 
 

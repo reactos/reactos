@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.14 1999/11/04 11:29:36 ekohl Exp $
+/* $Id: cmd.c,v 1.15 1999/12/06 19:26:49 paolopan Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -140,9 +140,6 @@ HANDLE hOut;
 WORD wColor = FOREGROUND_BLUE | FOREGROUND_RED | FOREGROUND_GREEN; /* current color */
 WORD wDefColor = FOREGROUND_BLUE | FOREGROUND_RED | FOREGROUND_GREEN; /* default color */
 #endif
-
-
-extern COMMAND cmds[];		/* The internal command table */
 
 
 /*
@@ -1024,6 +1021,11 @@ Initialize (int argc, char *argv[])
 #ifdef FEATURE_DIR_STACK
 	/* initialize directory stack */
 	InitDirectoryStack ();
+#endif
+
+
+#ifdef FEATURE_HISTORY
+	InitHistory();
 #endif
 
 	/* Set COMSPEC environment variable */

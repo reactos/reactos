@@ -32,6 +32,9 @@
 /* Define to enable history */
 #define FEATURE_HISTORY
 
+/*Define to enable history wrap (4nt's style)*/
+#define WRAP_HISTORY
+
 
 /* Define one of these to enable filename completion */
 #define FEATURE_UNIX_FILENAME_COMPLETION
