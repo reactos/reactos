@@ -4,7 +4,6 @@
 #include <ntos/minmax.h>
 #include "vgavideo.h"
 
-#include "../../../../ntoskrnl/include/internal/i386/io.h"
 
 INT abs(INT nm)
 {
@@ -373,11 +372,11 @@ void BltFromVGA(int x, int y, int w, int h, void *b, int bw)
 	ASSIGNVP4(x, y, vpP)
 	ASSIGNMK4(x, y, maskP)
 	get_masks(x, w);
-	outb(GRA_I, 0x05);	/* read mode 0 */
-	saved_GC_mode = inb(GRA_D);
-	outb(GRA_D, 0x00);
-	outb(GRA_I, 0x04);	/* read map select */
-	saved_GC_rmap = inb(GRA_D);
+	WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x05);	/* read mode 0 */
+	saved_GC_mode = READ_PORT_UCHAR((PUCHAR)GRA_D);
+	WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0x00);
+	WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x04);	/* read map select */
+	saved_GC_rmap = READ_PORT_UCHAR((PUCHAR)GRA_D);
 	/* clear buffer */
 	bp=b;
 	for (j=h; j>0; j--) {
@@ -385,7 +384,7 @@ void BltFromVGA(int x, int y, int w, int h, void *b, int bw)
 		bp += bw;
 	}
 	for (plane=0, plane_mask=1; plane<4; plane++, plane_mask<<=1) {
-		outb(GRA_D, plane);	/* read map select */
+		WRITE_PORT_UCHAR((PUCHAR)GRA_D, plane);	/* read map select */
 		vpY = vpP;
 		bpY = b;
 		for (j=h; j>0; j--) {
@@ -436,9 +435,9 @@ void BltFromVGA(int x, int y, int w, int h, void *b, int bw)
 		}
 	}
 	/* reset GC register */
-	outb(GRA_D, saved_GC_rmap);
-	outb(GRA_I, 0x05);
-	outb(GRA_D, saved_GC_mode);
+	WRITE_PORT_UCHAR((PUCHAR)GRA_D, saved_GC_rmap);
+	WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x05);
+	WRITE_PORT_UCHAR((PUCHAR)GRA_D, saved_GC_mode);
 }
 
 
@@ -455,16 +454,16 @@ void BltToVGA(int x, int y, int w, int h, void *b, int bw)
 	ASSIGNVP4(x, y, vpX)
 	ASSIGNMK4(x, y, mask)
 	byte_per_line = SCREEN_X >> 3;
-	outb(GRA_I, 0x05);      /* write mode 2 */
-	saved_GC_mode = inb(GRA_D);
-	outb(GRA_D, 0x02);
-	outb(GRA_I, 0x03);      /* replace */
-	saved_GC_fun = inb(GRA_D);
-	outb(GRA_D, 0x00);
-	outb(GRA_I, 0x08);      /* bit mask */
-	saved_GC_mask = inb(GRA_D);
+	WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x05);      /* write mode 2 */
+	saved_GC_mode = READ_PORT_UCHAR((PUCHAR)GRA_D);
+	WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0x02);
+	WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x03);      /* replace */
+	saved_GC_fun = READ_PORT_UCHAR((PUCHAR)GRA_D);
+	WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0x00);
+	WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x08);      /* bit mask */
+	saved_GC_mask = READ_PORT_UCHAR((PUCHAR)GRA_D);
 	for (i=w; i>0; i--) {
-		outb(GRA_D, mask);
+		WRITE_PORT_UCHAR((PUCHAR)GRA_D, mask);
 		bp = bpX;
 		vp = vpX;
 		for (j=h; j>0; j--) {
@@ -479,9 +478,9 @@ void BltToVGA(int x, int y, int w, int h, void *b, int bw)
 		}
 	}
 	/* reset GC register */
-	outb(GRA_D, saved_GC_mask);
-	outb(GRA_I, 0x03);
-	outb(GRA_D, saved_GC_fun);
-	outb(GRA_I, 0x05);
-	outb(GRA_D, saved_GC_mode);
+	WRITE_PORT_UCHAR((PUCHAR)GRA_D, saved_GC_mask);
+	WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x03);
+	WRITE_PORT_UCHAR((PUCHAR)GRA_D, saved_GC_fun);
+	WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x05);
+	WRITE_PORT_UCHAR((PUCHAR)GRA_D, saved_GC_mode);
 }

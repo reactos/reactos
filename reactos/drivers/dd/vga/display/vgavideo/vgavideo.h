@@ -51,7 +51,7 @@ BOOL VGADDIIntersectRect(PRECTL prcDst, PRECTL prcSrc1, PRECTL prcSrc2);
 
 #define LowByte(w)  (*((unsigned char *)&(w) + 0))
 #define HighByte(w) (*((unsigned char *)&(w) + 1))
- 
+
 #define ASSIGNVP4(x, y, vp) vp = vidmem /* VBUF */ + (((x) + (y)*SCREEN_X) >> 3);
 #define ASSIGNMK4(x, y, mask) mask = 0x80 >> ((x) & 7);
 
@@ -65,30 +65,3 @@ static unsigned char leftMask;
 static int byteCounter;
 static unsigned char rightMask;
 
-static void
-get_masks(int x, int w)
-{
-	register int tmp;
-
-	leftMask = rightMask = 0;
-	byteCounter = w;
-	/* right margin */
-	tmp = (x+w) & 7;
-	if (tmp) {
-		byteCounter -= tmp;
-		rightMask = (unsigned char)(0xff00 >> tmp);
-	}
-	/* left margin */
-	tmp = x & 7;
-	if (tmp) {
-		byteCounter -= (8 - tmp);
-		leftMask = (0xff >> tmp);
-	}
-	/* too small ? */
-	if (byteCounter < 0) {
-		leftMask &= rightMask;
-		rightMask = 0;
-		byteCounter = 0;
-	}
-	byteCounter /= 8;
-}
