@@ -1,4 +1,4 @@
-/* $Id: scrollbar.c,v 1.5 2002/12/21 19:23:50 jfilby Exp $
+/* $Id: scrollbar.c,v 1.6 2003/01/02 23:37:28 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -304,7 +304,7 @@ SCROLL_DrawScrollBar (HWND hwnd, HDC hdc, INT nBar,
 	  SetCaretPos (info.rcScrollBar.top + 1, thumbPos + 1);
 	}
     } */
-END:
+END:;
 /*    WIN_ReleaseWndPtr(wndPtr); */
 }
 

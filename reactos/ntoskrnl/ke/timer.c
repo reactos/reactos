@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.54 2002/12/09 20:15:25 hbirr Exp $
+/* $Id: timer.c,v 1.55 2003/01/02 23:37:28 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -421,7 +421,7 @@ KeExpireTimers(PKDPC Dpc,
        current = CONTAINING_RECORD(current_entry, KTIMER, TimerListEntry);
 	
        current_entry = current_entry->Flink;
-       if (SystemTime.QuadPart >= current->DueTime.QuadPart)
+       if ((ULONGLONG) SystemTime.QuadPart >= current->DueTime.QuadPart)
 	 {
 	   HandleExpiredTimer(current);
 	 }

@@ -1,3 +1,10 @@
+2003-01-02  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* ntoskrnl/ke/timer.c (KeExpireTimers): Avoid signed/unsigned comparison
+	warning.
+	* lib/user32/controls/scrollbar.c (SCROLL_DrawScrollBar): Put a statement
+	at end.
+
 2002-12-15  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* drivers/fs/vfat/cleanup.c (VfatCleanupFile): Only uninitialize caching
