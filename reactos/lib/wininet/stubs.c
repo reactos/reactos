@@ -235,3 +235,37 @@ InternetOpenA( LPCSTR lpszAgent,
 	
 	return FALSE;	
 }
+
+
+HINTERNET WINAPI
+InternetOpenUrlA(
+   HINTERNET hInternet,
+   LPCSTR Url,
+   LPCSTR Headers,
+   DWORD dwHeadersLength,
+   DWORD dwFlags,
+   DWORD_PTR dwContext
+)
+{
+   DPRINT1("InternetOpenUrlA not implemented\n");
+   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+   
+   return FALSE;  
+}
+
+
+HINTERNET WINAPI
+InternetOpenUrlW(
+   HINTERNET hInternet,
+   LPCWSTR Url,
+   LPCWSTR Headers,
+   DWORD dwHeadersLength,
+   DWORD dwFlags,
+   DWORD_PTR dwContext
+)
+{
+   DPRINT1("InternetOpenUrlW not implemented\n");
+   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+   
+   return FALSE;  
+}
