@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.33 2004/08/17 21:47:36 weiden Exp $
+/* $Id: desktop.c,v 1.34 2004/08/21 19:50:39 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -10,6 +10,7 @@
  */
 
 #include "user32.h"
+#include "winsta.h"
 #include <string.h>
 #include <debug.h>
 #include <rosrtl/devmode.h>
@@ -370,32 +371,30 @@ CreateDesktopW(LPCWSTR lpszDesktop,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 EnumDesktopsA(
-  HWINSTA hwinsta,
-  DESKTOPENUMPROCA lpEnumFunc,
-  LPARAM lParam)
+  HWINSTA WindowStation,
+  DESKTOPENUMPROCA EnumFunc,
+  LPARAM Context)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+   return EnumNamesA(WindowStation, EnumFunc, Context, TRUE);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 EnumDesktopsW(
-  HWINSTA hwinsta,
-  DESKTOPENUMPROCW lpEnumFunc,
-  LPARAM lParam)
+  HWINSTA WindowStation,
+  DESKTOPENUMPROCW EnumFunc,
+  LPARAM Context)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+   return EnumNamesW(WindowStation, EnumFunc, Context, TRUE);
 }
 
 
