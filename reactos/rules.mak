@@ -21,7 +21,6 @@ KM_SPECS = $(TOPDIR)/specs
 endif
 
 ifeq ($(HOST),mingw32-windows)
-
 NASM_FORMAT = win32
 PREFIX = 
 EXE_POSTFIX = .exe
@@ -29,7 +28,7 @@ CP = copy
 DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
 NASM_CMD = nasm
 RM = DELETE
-KM_SPECS = $(TOPDIR)/specs
+KM_SPECS = specs
 endif
 
 #

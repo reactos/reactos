@@ -25,6 +25,7 @@ ntdll.a: $(OBJECTS)
 
 ntdll.dll: $(DLLMAIN) $(OBJECTS) 
 	$(LD) -r $(DLLMAIN) $(OBJECTS) -o ntdll.o
+	$(AR) rcs ntdll.a $(OBJECTS) 
 	$(DLLTOOL) --dllname ntdll.dll --def def/ntdll.def \
 	           --output-lib ntdll.lib
 	$(CC) -specs=../../specs -mdll -o junk.tmp -Wl,--defsym,_end=end \

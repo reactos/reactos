@@ -3,9 +3,9 @@
 :
 : copy files to HD...
 :
-COPY /Y SHELL.BIN C:\reactos\system\SHELL.bin
-COPY /Y BLUES.o C:\reactos\system\drivers\BLUES.o
-COPY /Y KEYBOARD.o C:\reactos\system\drivers\KEYBOARD.o
+COPY /Y SHELL.EXE C:\reactos\system\SHELL.bin
+COPY /Y BLUES.O C:\reactos\system\drivers\blues.O
+COPY /Y KEYBOARD.O C:\reactos\system\drivers\KEYBOARD.O
 
 :
 : present a menu to the booter...
@@ -19,17 +19,17 @@ IF ERRORLEVEL 2 GOTO :L2
 
 :L1
 CLS
-LOADROS KIMAGE.BIN KEYBOARD.O IDE.O VFATFSD.O
+LOADROS NTOSKRNL.EXE KEYBOARD.O IDE.SYS VFATFSD.SYS
 GOTO :END
 
 :L2
 CLS
-LOADROS KIMAGE.BIN IDE.O VFATFSD.O
+LOADROS NTOSKRNL.EXE IDE.SYS VFATFSD.SYS
 GOTO :END
 
 :L3
 CLS
-LOADROS KIMAGE.BIN
+LOADROS NTOSKRNL.EXE
 GOTO :END
 
 :END

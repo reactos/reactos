@@ -1,9 +1,10 @@
 
 #include <windows.h>
 
-/* FIXME: Should this function be called DllEntryPoint?  */
-
-BOOL WINAPI STDCALL DllMainCRTStartup(HINSTANCE hDLLInst, DWORD fdwReason, LPVOID lpvReserved)
+BOOL WINAPI
+DllMainCRTStartup(HINSTANCE hinstDll, DWORD fdwReason, LPVOID fImpLoad)
 {
-  return 0;
+  return TRUE;
 }
+
+
