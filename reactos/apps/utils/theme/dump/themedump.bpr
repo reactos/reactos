@@ -5,7 +5,7 @@
     <VERSION value="BCB.06.00"/>
     <PROJECT value="themedump.exe"/>
     <OBJFILES value="themedump.obj"/>
-    <RESFILES value=""/>
+    <RESFILES value="themedump.res"/>
     <IDLFILES value=""/>
     <IDLGENFILES value=""/>
     <DEFFILE value=""/>
@@ -25,7 +25,7 @@
     <RELEASELIBPATH value="$(BCB)\lib\release"/>
     <LINKER value="ilink32"/>
     <USERDEFINES value="_DEBUG"/>
-    <SYSDEFINES value="NO_STRICT;_NO_VCL;_RTLDLL;USEPACKAGES"/>
+    <SYSDEFINES value="NO_STRICT;_NO_VCL;USEPACKAGES"/>
     <MAINSOURCE value="themedump.cpp"/>
     <INCLUDEPATH value=".;$(BCB)\include;$(BCB)\include\vcl"/>
     <LIBPATH value=".;$(BCB)\lib\obj;$(BCB)\lib"/>
@@ -45,11 +45,12 @@
   <LINKER>
     <ALLOBJ value="c0x32.obj $(PACKAGES) $(OBJFILES)"/>
     <ALLRES value="$(RESFILES)"/>
-    <ALLLIB value="$(LIBFILES) $(LIBRARIES) import32.lib cw32mti.lib"/>
+    <ALLLIB value="$(LIBFILES) $(LIBRARIES) uxtheme.lib import32.lib cw32mt.lib"/>
     <OTHERFILES value=""/>
   </LINKER>
   <FILELIST>
       <FILE FILENAME="themedump.cpp" FORMNAME="" UNITNAME="themedump" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="themedump.rc" FORMNAME="" UNITNAME="themedump.rc" CONTAINERID="RCCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
   </FILELIST>
   <BUILDTOOLS>
   </BUILDTOOLS>

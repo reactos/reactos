@@ -10,8 +10,10 @@
 #include <map>
 
 #define WIN32_LEAN_AND_MEAN
+#define UNICODE
 #include <windows.h>
-
+#include <commctrl.h>
+#include <uxtheme.h>
 #include <tmschema.h>
 
 #ifdef __BORLANDC__
@@ -38,7 +40,10 @@ namespace tmdump
  };
 
  static tm_enums_t tm_enums;
- static std::list<tm_property_t> tm_properties;
+
+ typedef std::list<tm_property_t> tm_properties_t;
+
+ static tm_properties_t tm_properties;
 
  typedef std::map<int, std::wstring> tm_states_t;
  typedef std::map<std::wstring, tm_states_t> tm_state_enums_t;
@@ -286,6 +291,128 @@ namespace tmdump
   LPWSTR states;
  };
 
+ static const tmdump::state_mapping_t state_map[] =
+ {
+  { L"BUTTON", 0, NULL },
+   { NULL, BP_CHECKBOX, L"CHECKBOX" },
+   { NULL, BP_GROUPBOX, L"GROUPBOX" },
+   { NULL, BP_PUSHBUTTON, L"PUSHBUTTON" },
+   { NULL, BP_RADIOBUTTON, L"RADIOBUTTON" },
+  { L"CLOCK", CLP_TIME, L"CLOCK" },
+  { L"COMBOBOX", CP_DROPDOWNBUTTON, L"COMBOBOX" },
+  { L"EDIT", EP_EDITTEXT, L"EDITTEXT" },
+  { L"EXPLORERBAR", 0, NULL },
+   { NULL, EBP_HEADERCLOSE, L"HEADERCLOSE" },
+   { NULL, EBP_HEADERPIN, L"HEADERPIN" },
+   { NULL, EBP_IEBARMENU, L"IEBARMENU" },
+   { NULL, EBP_NORMALGROUPCOLLAPSE, L"NORMALGROUPCOLLAPSE" },
+   { NULL, EBP_NORMALGROUPEXPAND, L"NORMALGROUPEXPAND" },
+   { NULL, EBP_SPECIALGROUPCOLLAPSE, L"SPECIALGROUPCOLLAPSE"},
+   { NULL, EBP_SPECIALGROUPEXPAND, L"SPECIALGROUPEXPAND" },
+  { L"HEADER", 0, NULL },
+   { NULL, HP_HEADERITEM, L"HEADERITEM" },
+   { NULL, HP_HEADERITEMLEFT, L"HEADERITEMLEFT" },
+   { NULL, HP_HEADERITEMRIGHT, L"HEADERITEMRIGHT" },
+   { NULL, HP_HEADERSORTARROW, L"HEADERSORTARROW" },
+  { L"LISTVIEW", LVP_LISTITEM, L"LISTITEM " },
+  { L"MENU", 0, NULL },
+   { NULL, MP_MENUBARDROPDOWN, L"MENU" },
+   { NULL, MP_MENUBARITEM, L"MENU" },
+   { NULL, MP_CHEVRON, L"MENU" },
+   { NULL, MP_MENUDROPDOWN, L"MENU" },
+   { NULL, MP_MENUITEM, L"MENU" },
+   { NULL, MP_SEPARATOR, L"MENU" },
+  { L"MENUBAND", MDP_NEWAPPBUTTON, L"MENUBAND" },
+  { L"PAGE", 0, NULL },
+   { NULL, PGRP_DOWN, L"DOWN" },
+   { NULL, PGRP_DOWNHORZ, L"DOWNHORZ" },
+   { NULL, PGRP_UP, L"UP" },
+   { NULL, PGRP_UPHORZ, L"UPHORZ" },
+  { L"REBAR", RP_CHEVRON, L"CHEVRON" },
+  { L"SCROLLBAR", 0, NULL },
+   { NULL, SBP_ARROWBTN, L"ARROWBTN" },
+   { NULL, SBP_LOWERTRACKHORZ, L"SCROLLBAR" },
+   { NULL, SBP_LOWERTRACKVERT, L"SCROLLBAR" },
+   { NULL, SBP_THUMBBTNHORZ, L"SCROLLBAR" },
+   { NULL, SBP_THUMBBTNVERT, L"SCROLLBAR" },
+   { NULL, SBP_UPPERTRACKHORZ, L"SCROLLBAR" },
+   { NULL, SBP_UPPERTRACKVERT, L"SCROLLBAR" },
+   { NULL, SBP_SIZEBOX, L"SIZEBOX" },
+  { L"SPIN", 0, NULL },
+   { NULL, SPNP_DOWN, L"DOWN" },
+   { NULL, SPNP_DOWNHORZ, L"DOWNHORZ" },
+   { NULL, SPNP_UP, L"UP" },
+   { NULL, SPNP_UPHORZ, L"UPHORZ" },
+  { L"STARTPANEL", 0, NULL },
+   { NULL, SPP_LOGOFFBUTTONS, L"LOGOFFBUTTONS" },
+   { NULL, SPP_MOREPROGRAMSARROW, L"MOREPROGRAMSARROW" },
+  { L"TAB", 0, NULL },
+   { NULL, TABP_TABITEM, L"TABITEM" },
+   { NULL, TABP_TABITEMBOTHEDGE, L"TABITEMBOTHEDGE" },
+   { NULL, TABP_TABITEMLEFTEDGE, L"TABITEMLEFTEDGE" },
+   { NULL, TABP_TABITEMRIGHTEDGE, L"TABITEMRIGHTEDGE" },
+   { NULL, TABP_TOPTABITEM, L"TOPTABITEM" },
+   { NULL, TABP_TOPTABITEMBOTHEDGE, L"TOPTABITEMBOTHEDGE" },
+   { NULL, TABP_TOPTABITEMLEFTEDGE, L"TOPTABITEMLEFTEDGE" },
+   { NULL, TABP_TOPTABITEMRIGHTEDGE, L"TOPTABITEMRIGHTEDGE" },
+  { L"TOOLBAR", 0, NULL },
+   { NULL, TP_BUTTON, L"TOOLBAR" },
+   { NULL, TP_DROPDOWNBUTTON, L"TOOLBAR" },
+   { NULL, TP_SPLITBUTTON, L"TOOLBAR" },
+   { NULL, TP_SPLITBUTTONDROPDOWN, L"TOOLBAR" },
+   { NULL, TP_SEPARATOR, L"TOOLBAR" },
+   { NULL, TP_SEPARATORVERT, L"TOOLBAR" },
+  { L"TOOLTIP", 0, NULL },
+   { NULL, TTP_BALLOON, L"BALLOON" },
+   { NULL, TTP_BALLOONTITLE, L"BALLOON" },
+   { NULL, TTP_CLOSE, L"CLOSE" },
+   { NULL, TTP_STANDARD, L"STANDARD" },
+   { NULL, TTP_STANDARDTITLE, L"STANDARD" },
+  { L"TRACKBAR", 0, NULL },
+   { NULL, TKP_THUMB, L"THUMB" },
+   { NULL, TKP_THUMBBOTTOM, L"THUMBBOTTOM" },
+   { NULL, TKP_THUMBLEFT, L"THUMBLEFT" },
+   { NULL, TKP_THUMBRIGHT, L"THUMBRIGHT" },
+   { NULL, TKP_THUMBTOP, L"THUMBTOP" },
+   { NULL, TKP_THUMBVERT, L"THUMBVERT" },
+   { NULL, TKP_TICS, L"TICS" },
+   { NULL, TKP_TICSVERT, L"TICSVERT" },
+   { NULL, TKP_TRACK, L"TRACK" },
+   { NULL, TKP_TRACKVERT, L"TRACKVERT" },
+  { L"TREEVIEW", 0, NULL },
+   { NULL, TVP_GLYPH, L"GLYPH" },
+   { NULL, TVP_TREEITEM, L"TREEITEM" },
+  { L"WINDOW", 0, NULL },
+   { NULL, WP_CAPTION, L"CAPTION" },
+   { NULL, WP_CLOSEBUTTON, L"CLOSEBUTTON" },
+   { NULL, WP_FRAMEBOTTOM, L"FRAME" },
+   { NULL, WP_FRAMELEFT, L"FRAME" },
+   { NULL, WP_FRAMERIGHT, L"FRAME" },
+   { NULL, WP_HELPBUTTON, L"HELPBUTTON" },
+   { NULL, WP_HORZSCROLL, L"HORZSCROLL" },
+   { NULL, WP_HORZTHUMB, L"HORZTHUMB" },
+   { NULL, WP_MAXBUTTON, L"MAXBUTTON" },
+   { NULL, WP_MAXCAPTION, L"MAXCAPTION" },
+   { NULL, WP_MDICLOSEBUTTON, L"CLOSEBUTTON" },
+   { NULL, WP_MDIHELPBUTTON, L"HELPBUTTON" },
+   { NULL, WP_MDIMINBUTTON, L"MINBUTTON" },
+   { NULL, WP_MDIRESTOREBUTTON, L"RESTOREBUTTON" },
+   { NULL, WP_MDISYSBUTTON, L"SYSBUTTON" },
+   { NULL, WP_MINBUTTON, L"MINBUTTON" },
+   { NULL, WP_MINCAPTION, L"MINCAPTION" },
+   { NULL, WP_RESTOREBUTTON, L"RESTOREBUTTON" },
+   { NULL, WP_SMALLCAPTION, L"CAPTION" },
+   { NULL, WP_SMALLCLOSEBUTTON, L"CLOSEBUTTON" },
+   { NULL, WP_SMALLFRAMEBOTTOM, L"FRAME" },
+   { NULL, WP_SMALLFRAMELEFT, L"FRAME" },
+   { NULL, WP_SMALLFRAMERIGHT, L"FRAME" },
+   { NULL, WP_SMALLMAXCAPTION, L"MAXCAPTION" },
+   { NULL, WP_SMALLMINCAPTION, L"MINCAPTION" },
+   { NULL, WP_SYSBUTTON, L"SYSBUTTON" },
+   { NULL, WP_VERTSCROLL, L"HORZSCROLL" },
+   { NULL, WP_VERTTHUMB, L"HORZTHUMB" },
+ };
+
  class state_link: public std::unary_function<struct state_mapping_t, void>
  {
   private:
@@ -332,135 +459,175 @@ int main(int argc, char * argv[])
    tmdump::schema_scan()
   );
 
-  static const tmdump::state_mapping_t state_map[] =
-  {
-   { L"BUTTON", 0, NULL },
-    { NULL, BP_CHECKBOX, L"CHECKBOX" },
-    { NULL, BP_GROUPBOX, L"GROUPBOX" },
-    { NULL, BP_PUSHBUTTON, L"PUSHBUTTON" },
-    { NULL, BP_RADIOBUTTON, L"RADIOBUTTON" },
-   { L"CLOCK", CLP_TIME, L"CLOCK" },
-   { L"COMBOBOX", CP_DROPDOWNBUTTON, L"COMBOBOX" },
-   { L"EDIT", EP_EDITTEXT, L"EDITTEXT" },
-   { L"EXPLORERBAR", 0, NULL },
-    { NULL, EBP_HEADERCLOSE, L"HEADERCLOSE" },
-    { NULL, EBP_HEADERPIN, L"HEADERPIN" },
-    { NULL, EBP_IEBARMENU, L"IEBARMENU" },
-    { NULL, EBP_NORMALGROUPCOLLAPSE, L"NORMALGROUPCOLLAPSE" },
-    { NULL, EBP_NORMALGROUPEXPAND, L"NORMALGROUPEXPAND" },
-    { NULL, EBP_SPECIALGROUPCOLLAPSE, L"SPECIALGROUPCOLLAPSE"},
-    { NULL, EBP_SPECIALGROUPEXPAND, L"SPECIALGROUPEXPAND" },
-   { L"HEADER", 0, NULL },
-    { NULL, HP_HEADERITEM, L"HEADERITEM" },
-    { NULL, HP_HEADERITEMLEFT, L"HEADERITEMLEFT" },
-    { NULL, HP_HEADERITEMRIGHT, L"HEADERITEMRIGHT" },
-    { NULL, HP_HEADERSORTARROW, L"HEADERSORTARROW" },
-   { L"LISTVIEW", LVP_LISTITEM, L"LISTITEM " },
-   { L"MENU", 0, NULL },
-    { NULL, MP_MENUBARDROPDOWN, L"MENU" },
-    { NULL, MP_MENUBARITEM, L"MENU" },
-    { NULL, MP_CHEVRON, L"MENU" },
-    { NULL, MP_MENUDROPDOWN, L"MENU" },
-    { NULL, MP_MENUITEM, L"MENU" },
-    { NULL, MP_SEPARATOR, L"MENU" },
-   { L"MENUBAND", MDP_NEWAPPBUTTON, L"MENUBAND" },
-   { L"PAGE", 0, NULL },
-    { NULL, PGRP_DOWN, L"DOWN" },
-    { NULL, PGRP_DOWNHORZ, L"DOWNHORZ" },
-    { NULL, PGRP_UP, L"UP" },
-    { NULL, PGRP_UPHORZ, L"UPHORZ" },
-   { L"REBAR", RP_CHEVRON, L"CHEVRON" },
-   { L"SCROLLBAR", 0, NULL },
-    { NULL, SBP_ARROWBTN, L"ARROWBTN" },
-    { NULL, SBP_LOWERTRACKHORZ, L"SCROLLBAR" },
-    { NULL, SBP_LOWERTRACKVERT, L"SCROLLBAR" },
-    { NULL, SBP_THUMBBTNHORZ, L"SCROLLBAR" },
-    { NULL, SBP_THUMBBTNVERT, L"SCROLLBAR" },
-    { NULL, SBP_UPPERTRACKHORZ, L"SCROLLBAR" },
-    { NULL, SBP_UPPERTRACKVERT, L"SCROLLBAR" },
-    { NULL, SBP_SIZEBOX, L"SIZEBOX" },
-   { L"SPIN", 0, NULL },
-    { NULL, SPNP_DOWN, L"DOWN" },
-    { NULL, SPNP_DOWNHORZ, L"DOWNHORZ" },
-    { NULL, SPNP_UP, L"UP" },
-    { NULL, SPNP_UPHORZ, L"UPHORZ" },
-   { L"STARTPANEL", 0, NULL },
-    { NULL, SPP_LOGOFFBUTTONS, L"LOGOFFBUTTONS" },
-    { NULL, SPP_MOREPROGRAMSARROW, L"MOREPROGRAMSARROW" },
-   { L"TAB", 0, NULL },
-    { NULL, TABP_TABITEM, L"TABITEM" },
-    { NULL, TABP_TABITEMBOTHEDGE, L"TABITEMBOTHEDGE" },
-    { NULL, TABP_TABITEMLEFTEDGE, L"TABITEMLEFTEDGE" },
-    { NULL, TABP_TABITEMRIGHTEDGE, L"TABITEMRIGHTEDGE" },
-    { NULL, TABP_TOPTABITEM, L"TOPTABITEM" },
-    { NULL, TABP_TOPTABITEMBOTHEDGE, L"TOPTABITEMBOTHEDGE" },
-    { NULL, TABP_TOPTABITEMLEFTEDGE, L"TOPTABITEMLEFTEDGE" },
-    { NULL, TABP_TOPTABITEMRIGHTEDGE, L"TOPTABITEMRIGHTEDGE" },
-   { L"TOOLBAR", 0, NULL },
-    { NULL, TP_BUTTON, L"TOOLBAR" },
-    { NULL, TP_DROPDOWNBUTTON, L"TOOLBAR" },
-    { NULL, TP_SPLITBUTTON, L"TOOLBAR" },
-    { NULL, TP_SPLITBUTTONDROPDOWN, L"TOOLBAR" },
-    { NULL, TP_SEPARATOR, L"TOOLBAR" },
-    { NULL, TP_SEPARATORVERT, L"TOOLBAR" },
-   { L"TOOLTIP", 0, NULL },
-    { NULL, TTP_BALLOON, L"BALLOON" },
-    { NULL, TTP_BALLOONTITLE, L"BALLOON" },
-    { NULL, TTP_CLOSE, L"CLOSE" },
-    { NULL, TTP_STANDARD, L"STANDARD" },
-    { NULL, TTP_STANDARDTITLE, L"STANDARD" },
-   { L"TRACKBAR", 0, NULL },
-    { NULL, TKP_THUMB, L"THUMB" },
-    { NULL, TKP_THUMBBOTTOM, L"THUMBBOTTOM" },
-    { NULL, TKP_THUMBLEFT, L"THUMBLEFT" },
-    { NULL, TKP_THUMBRIGHT, L"THUMBRIGHT" },
-    { NULL, TKP_THUMBTOP, L"THUMBTOP" },
-    { NULL, TKP_THUMBVERT, L"THUMBVERT" },
-    { NULL, TKP_TICS, L"TICS" },
-    { NULL, TKP_TICSVERT, L"TICSVERT" },
-    { NULL, TKP_TRACK, L"TRACK" },
-    { NULL, TKP_TRACKVERT, L"TRACKVERT" },
-   { L"TREEVIEW", 0, NULL },
-    { NULL, TVP_GLYPH, L"GLYPH" },
-    { NULL, TVP_TREEITEM, L"TREEITEM" },
-   { L"WINDOW", 0, NULL },
-    { NULL, WP_CAPTION, L"CAPTION" },
-    { NULL, WP_CLOSEBUTTON, L"CLOSEBUTTON" },
-    { NULL, WP_FRAMEBOTTOM, L"FRAME" },
-    { NULL, WP_FRAMELEFT, L"FRAME" },
-    { NULL, WP_FRAMERIGHT, L"FRAME" },
-    { NULL, WP_HELPBUTTON, L"HELPBUTTON" },
-    { NULL, WP_HORZSCROLL, L"HORZSCROLL" },
-    { NULL, WP_HORZTHUMB, L"HORZTHUMB" },
-    { NULL, WP_MAXBUTTON, L"MAXBUTTON" },
-    { NULL, WP_MAXCAPTION, L"MAXCAPTION" },
-    { NULL, WP_MDICLOSEBUTTON, L"CLOSEBUTTON" },
-    { NULL, WP_MDIHELPBUTTON, L"HELPBUTTON" },
-    { NULL, WP_MDIMINBUTTON, L"MINBUTTON" },
-    { NULL, WP_MDIRESTOREBUTTON, L"RESTOREBUTTON" },
-    { NULL, WP_MDISYSBUTTON, L"SYSBUTTON" },
-    { NULL, WP_MINBUTTON, L"MINBUTTON" },
-    { NULL, WP_MINCAPTION, L"MINCAPTION" },
-    { NULL, WP_RESTOREBUTTON, L"RESTOREBUTTON" },
-    { NULL, WP_SMALLCAPTION, L"CAPTION" },
-    { NULL, WP_SMALLCLOSEBUTTON, L"CLOSEBUTTON" },
-    { NULL, WP_SMALLFRAMEBOTTOM, L"FRAME" },
-    { NULL, WP_SMALLFRAMELEFT, L"FRAME" },
-    { NULL, WP_SMALLFRAMERIGHT, L"FRAME" },
-    { NULL, WP_SMALLMAXCAPTION, L"MAXCAPTION" },
-    { NULL, WP_SMALLMINCAPTION, L"MINCAPTION" },
-    { NULL, WP_SYSBUTTON, L"SYSBUTTON" },
-    { NULL, WP_VERTSCROLL, L"HORZSCROLL" },
-    { NULL, WP_VERTTHUMB, L"HORZTHUMB" },
-  };
-
+  // link parts to states
   std::for_each
   (
-   state_map,
-   state_map + sizeof(state_map) / sizeof(state_map[0]),
+   tmdump::state_map,
+   tmdump::state_map + sizeof(tmdump::state_map) / sizeof(tmdump::state_map[0]),
    tmdump::state_link()
   );
 
+  ::InitCommonControls();
+  ::SetThemeAppProperties(STAP_ALLOW_NONCLIENT | STAP_ALLOW_CONTROLS);
+
+  // dump the current values of all properties
+  for
+  (
+   tmdump::tm_classes_t::iterator p = tmdump::tm_classes.begin();
+   p != tmdump::tm_classes.end();
+   ++ p
+  )
+  {
+   const std::wstring& class_name = p->first;
+
+   // open the theme data for the current class
+   class htheme_t
+   {
+    public:
+     HTHEME m_handle;
+     
+     htheme_t(HTHEME handle_): m_handle(handle_) { }
+     ~htheme_t() { ::CloseThemeData(m_handle); }
+
+     operator HTHEME() { return m_handle; }
+   }
+   data = ::OpenThemeData(NULL, class_name.c_str());
+
+   // failure
+   if(data == NULL)
+   {
+    std::fwprintf
+    (
+     stderr,
+     L"OpenThemeData(\"%s\") failed, error %d\n",
+     class_name.c_str(),
+     GetLastError()
+    );
+
+    continue;
+   }
+
+   // class name
+   std::fwprintf(stdout, L"%s\n", p->first.c_str());
+
+   // dump system properties
+   for
+   (
+    tmdump::tm_properties_t::iterator p = tmdump::tm_properties.begin();
+    p != tmdump::tm_properties.end();
+    ++ p
+   )
+   {
+    switch(p->type)
+    {
+     case TMT_POSITION:
+     case TMT_MARGINS:
+     case TMT_RECT:
+     case TMT_INTLIST:
+      continue;
+    }
+
+    // property name
+    std::fwprintf(stdout, L"\t%s = ", p->name.c_str());
+
+    HRESULT hres;
+
+    switch(p->type)
+    {
+     // string
+     case TMT_STRING:
+     case TMT_FILENAME: // FIXME
+     {
+      WCHAR buffer[256];
+      if(FAILED(hres = GetThemeSysString(data, p->id, buffer, 256))) break;
+      std::fwprintf(stdout, L"string: \"%s\"", buffer);
+      break;
+     }
+
+     // integer
+     case TMT_INT:
+     {
+      int val;
+      if(FAILED(hres = GetThemeSysInt(data, p->id, &val))) break;
+      std::fwprintf(stdout, L"int: %d", val);
+      break;
+     }
+
+     // boolean
+     case TMT_BOOL:
+     {
+      SetLastError(0);
+      BOOL val = GetThemeSysBool(data, p->id);
+      if(FAILED(hres = GetLastError())) break;
+      std::fwprintf(stdout, L"bool: %s", val ? L"true" : L"false");
+      break;
+     }
+
+     // color
+     case TMT_COLOR:
+     {
+      SetLastError(0);
+
+      COLORREF val = GetThemeSysColor(data, p->id);
+
+      if(FAILED(hres = GetLastError())) break;
+
+      std::fwprintf
+      (
+       stdout,
+       L"rgb: %d, %d, %d",
+       GetRValue(val),
+       GetGValue(val),
+       GetBValue(val)
+      );
+
+      break;
+     }
+
+     // size
+     case TMT_SIZE:
+     {
+      SetLastError(0);
+      int val = GetThemeSysSize(data, p->id);
+      if(FAILED(hres = GetLastError())) break;
+      std::fwprintf(stdout, L"size: %d", val);
+      break;
+     }
+
+     // font
+     case TMT_FONT:
+     {
+      LOGFONTW val;
+      if(FAILED(hres = GetThemeSysFont(data, p->id, &val))) break;
+      std::fwprintf(stdout, L"font: %s", val.lfFaceName);
+      break;
+     }
+
+     // enumerated integer
+     case TMT_ENUM:
+     {
+      int val;
+      if(FAILED(hres = GetThemeSysInt(data, p->id, &val))) break;
+
+      std::fwprintf(stdout, L"enum(%s): ", p->enum_type->first.c_str());
+
+      tmdump::tm_enum_t::iterator enumval = p->enum_type->second.find(val);
+
+      if(enumval == p->enum_type->second.end())
+       std::fwprintf(stdout, L"<%d>", val);
+      else
+       std::fwprintf(stdout, L"%s", enumval->second.c_str());
+
+      break;
+     }
+    }
+
+    if(FAILED(hres)) std::fwprintf(stdout, L"<error %08X>", hres);
+
+    std::fputwc(L'\n', stdout);
+   }
+
+  }
  }
  catch(std::exception e)
  {
