@@ -1,4 +1,5 @@
-/*
+/* $Id: iomgr.c,v 1.9 2000/03/26 19:38:25 ea Exp $
+ *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/io/iomgr.c
@@ -19,9 +20,14 @@
 
 /* GLOBALS *******************************************************************/
 
-POBJECT_TYPE IoDeviceType = NULL;
-POBJECT_TYPE IoFileType = NULL;
-                           
+/* DATA ********************************************************************/
+
+
+POBJECT_TYPE EXPORTED IoDeviceObjectType = NULL;
+POBJECT_TYPE EXPORTED IoFileObjectType = NULL;
+ULONG        EXPORTED IoWriteTransferCount = 0;	/* FIXME: unknown type */
+ULONG        EXPORTED IoStatisticsLock = 0;	/* FIXME: unknown type */
+
 /* FUNCTIONS ****************************************************************/
 
 VOID IopCloseFile(PVOID ObjectBody, ULONG HandleCount)
@@ -40,7 +46,7 @@ VOID IopCloseFile(PVOID ObjectBody, ULONG HandleCount)
    
    ObReferenceObjectByPointer(FileObject,
 			      STANDARD_RIGHTS_REQUIRED,
-			      IoFileType,
+			      IoFileObjectType,
 			      UserMode);
    
    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_CLEANUP,
@@ -67,7 +73,7 @@ VOID IopDeleteFile(PVOID ObjectBody)
    
    ObReferenceObjectByPointer(ObjectBody,
 			      STANDARD_RIGHTS_REQUIRED,
-			      IoFileType,
+			      IoFileObjectType,
 			      UserMode);
    
    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_CLOSE,
@@ -93,72 +99,137 @@ VOID IoShutdownIoManager(VOID)
 {
 }
 
-VOID IoInit(VOID)
+
+VOID IoInit (VOID)
 {
-   OBJECT_ATTRIBUTES attr;
-   HANDLE handle;
-   UNICODE_STRING UnicodeString;
-   ANSI_STRING AnsiString;
-   
-   /*
-    * Register iomgr types
-    */
-   IoDeviceType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
-   
-   IoDeviceType->TotalObjects = 0;
-   IoDeviceType->TotalHandles = 0;
-   IoDeviceType->MaxObjects = ULONG_MAX;
-   IoDeviceType->MaxHandles = ULONG_MAX;
-   IoDeviceType->PagedPoolCharge = 0;
-   IoDeviceType->NonpagedPoolCharge = sizeof(DEVICE_OBJECT);
-   IoDeviceType->Dump = NULL;
-   IoDeviceType->Open = NULL;
-   IoDeviceType->Close = NULL;   
-   IoDeviceType->Delete = NULL;
-   IoDeviceType->Parse = NULL;
-   IoDeviceType->Security = NULL;
-   IoDeviceType->QueryName = NULL;
-   IoDeviceType->OkayToClose = NULL;
-   IoDeviceType->Create = IopCreateDevice;
-   
-   RtlInitAnsiString(&AnsiString,"Device");
-   RtlAnsiStringToUnicodeString(&IoDeviceType->TypeName,&AnsiString,TRUE);
-   
-   IoFileType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
-   
-   IoFileType->TotalObjects = 0;
-   IoFileType->TotalHandles = 0;
-   IoFileType->MaxObjects = ULONG_MAX;
-   IoFileType->MaxHandles = ULONG_MAX;
-   IoFileType->PagedPoolCharge = 0;
-   IoFileType->NonpagedPoolCharge = sizeof(FILE_OBJECT);
-   IoFileType->Dump = NULL;
-   IoFileType->Open = NULL;
-   IoFileType->Close = IopCloseFile;
-   IoFileType->Delete = IopDeleteFile;
-   IoFileType->Parse = NULL;
-   IoFileType->Security = NULL;
-   IoFileType->QueryName = NULL;
-   IoFileType->OkayToClose = NULL;
-   IoFileType->Create = IopCreateFile;
-   
-   RtlInitAnsiString(&AnsiString,"File");
-   RtlAnsiStringToUnicodeString(&IoFileType->TypeName,&AnsiString,TRUE);
+	OBJECT_ATTRIBUTES	attr;
+	HANDLE			handle;
+	UNICODE_STRING		UnicodeString;
+	ANSI_STRING		AnsiString;
 
-   /*
-    * Create the device directory
-    */
-   RtlInitAnsiString(&AnsiString,"\\Device");
-   RtlAnsiStringToUnicodeString(&UnicodeString,&AnsiString,TRUE);
-   InitializeObjectAttributes(&attr,&UnicodeString,0,NULL,NULL);
-   ZwCreateDirectoryObject(&handle,0,&attr);
+	/*
+	 * Register iomgr types: DeviceObjectType
+	 */
+	IoDeviceObjectType = ExAllocatePool (
+		   		NonPagedPool,
+				sizeof (OBJECT_TYPE)
+				);
    
-   RtlInitAnsiString(&AnsiString,"\\??");
-   RtlAnsiStringToUnicodeString(&UnicodeString,&AnsiString,TRUE);
-   InitializeObjectAttributes(&attr,&UnicodeString,0,NULL,NULL);
-   ZwCreateDirectoryObject(&handle,0,&attr);
+	IoDeviceObjectType->TotalObjects = 0;
+	IoDeviceObjectType->TotalHandles = 0;
+	IoDeviceObjectType->MaxObjects = ULONG_MAX;
+	IoDeviceObjectType->MaxHandles = ULONG_MAX;
+	IoDeviceObjectType->PagedPoolCharge = 0;
+	IoDeviceObjectType->NonpagedPoolCharge = sizeof (DEVICE_OBJECT);
+	IoDeviceObjectType->Dump = NULL;
+	IoDeviceObjectType->Open = NULL;
+	IoDeviceObjectType->Close = NULL;   
+	IoDeviceObjectType->Delete = NULL;
+	IoDeviceObjectType->Parse = NULL;
+	IoDeviceObjectType->Security = NULL;
+	IoDeviceObjectType->QueryName = NULL;
+	IoDeviceObjectType->OkayToClose = NULL;
+	IoDeviceObjectType->Create = IopCreateDevice;
+   
+	RtlInitAnsiString (
+		& AnsiString,
+		"Device"
+		);
+	RtlAnsiStringToUnicodeString (
+		& IoDeviceObjectType->TypeName,
+		& AnsiString,
+		TRUE
+		);
+	/*
+	 * Register iomgr types: FileObjectType
+	 * (alias DriverObjectType)
+	 */
+	IoFileObjectType = ExAllocatePool (
+				NonPagedPool,
+				sizeof (OBJECT_TYPE)
+				);
+   
+	IoFileObjectType->TotalObjects = 0;
+	IoFileObjectType->TotalHandles = 0;
+	IoFileObjectType->MaxObjects = ULONG_MAX;
+	IoFileObjectType->MaxHandles = ULONG_MAX;
+	IoFileObjectType->PagedPoolCharge = 0;
+	IoFileObjectType->NonpagedPoolCharge = sizeof(FILE_OBJECT);
+	IoFileObjectType->Dump = NULL;
+	IoFileObjectType->Open = NULL;
+	IoFileObjectType->Close = IopCloseFile;
+	IoFileObjectType->Delete = IopDeleteFile;
+	IoFileObjectType->Parse = NULL;
+	IoFileObjectType->Security = NULL;
+	IoFileObjectType->QueryName = NULL;
+	IoFileObjectType->OkayToClose = NULL;
+	IoFileObjectType->Create = IopCreateFile;
+   
+	RtlInitAnsiString (
+		& AnsiString,
+		"File"
+		);
+	RtlAnsiStringToUnicodeString (
+		& IoFileObjectType->TypeName,
+		& AnsiString,
+		TRUE
+		);
 
-   IoInitCancelHandling();
-   IoInitSymbolicLinkImplementation();
-   IoInitFileSystemImplementation();
+	/*
+	 * Create the device directory
+	 */
+	RtlInitAnsiString (
+		& AnsiString,
+		"\\Device"
+		);
+	RtlAnsiStringToUnicodeString (
+		& UnicodeString,
+		& AnsiString,
+		TRUE
+		);
+	InitializeObjectAttributes (
+		& attr,
+		& UnicodeString,
+		0,
+		NULL,
+		NULL
+		);
+	ZwCreateDirectoryObject (
+		& handle,
+		0,
+		& attr
+		);
+	/*
+	 * Create the \?? directory
+	 */
+	RtlInitAnsiString (
+		& AnsiString,
+		"\\??"
+		);
+	RtlAnsiStringToUnicodeString (
+		& UnicodeString,
+		& AnsiString,
+		TRUE
+		);
+	InitializeObjectAttributes (
+		& attr,
+		& UnicodeString,
+		0,
+		NULL,
+		NULL
+		);
+	ZwCreateDirectoryObject (
+		& handle,
+		0,
+		& attr
+		);
+   	/*
+	 * Initialize remaining subsubsystem
+	 */
+	IoInitCancelHandling ();
+	IoInitSymbolicLinkImplementation ();
+	IoInitFileSystemImplementation ();
 }
+
+
+/* EOF */

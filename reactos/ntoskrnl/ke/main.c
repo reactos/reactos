@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.41 2000/03/20 18:00:24 ekohl Exp $
+/* $Id: main.c,v 1.42 2000/03/26 19:38:27 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -30,10 +30,8 @@
 
 /* DATA *********************************************************************/
 
-USHORT __declspec(dllexport) NtBuildNumber = KERNEL_VERSION_BUILD;	
-/* EXPORTED */
-
-ULONG __declspec(dllexport) NtGlobalFlag = 0; /* FIXME: EXPORTED */
+USHORT EXPORTED NtBuildNumber = KERNEL_VERSION_BUILD;	
+ULONG EXPORTED NtGlobalFlag = 0;
 
 /* FUNCTIONS ****************************************************************/
 

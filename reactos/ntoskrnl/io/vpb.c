@@ -1,4 +1,5 @@
-/*
+/* $Id: vpb.c,v 1.9 2000/03/26 19:38:26 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/vpb.c
@@ -95,9 +96,11 @@ PIRP IoBuildVolumeInformationIrp(ULONG MajorFunction,
    return(Irp);
 }
 
+
 NTSTATUS
 STDCALL
 NtQueryVolumeInformationFile (
+
 	IN	HANDLE			FileHandle,
 	OUT	PIO_STATUS_BLOCK	IoStatusBlock,
 	OUT	PVOID			FSInformation,
@@ -167,6 +170,22 @@ NtQueryVolumeInformationFile (
    return(Status);
 }
 
+
+NTSTATUS
+STDCALL
+IoQueryVolumeInformation (
+	IN	PFILE_OBJECT		FileObject,
+	IN	FS_INFORMATION_CLASS	FsInformationClass,
+	IN	ULONG			Length,
+	OUT	PVOID			FsInformation,
+	OUT	PULONG			ReturnedLength
+	)
+{
+	UNIMPLEMENTED;
+	return (STATUS_NOT_IMPLEMENTED);
+}
+
+
 NTSTATUS
 STDCALL
 NtSetVolumeInformationFile (
@@ -211,3 +230,38 @@ NtSetVolumeInformationFile (
      }
    return(Status);
 }
+
+
+VOID
+STDCALL
+IoAcquireVpbSpinLock (
+	PKIRQL	Irpl
+	)
+{
+	UNIMPLEMENTED;
+}
+
+
+VOID
+STDCALL
+IoReleaseVpbSpinLock (
+	IN	KIRQL	Irql
+	)
+{
+	UNIMPLEMENTED;
+}
+
+
+NTSTATUS
+STDCALL
+IoVerifyVolume (
+	IN	PDEVICE_OBJECT	DeviceObject,
+	IN	BOOLEAN		AllowRawMount
+	)
+{
+	UNIMPLEMENTED;
+	return (STATUS_NOT_IMPLEMENTED);
+}
+
+
+/* EOF */

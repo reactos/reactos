@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.15 2000/03/05 19:17:42 ea Exp $
+/* $Id: device.c,v 1.16 2000/03/26 19:38:22 ea Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -21,6 +21,7 @@
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* FUNCTIONS ***************************************************************/
 
@@ -54,14 +55,18 @@ NTSTATUS STDCALL NtLoadDriver (PUNICODE_STRING	DriverServiceName)
 }
 
 
-NTSTATUS IoAttachDeviceByPointer(PDEVICE_OBJECT	SourceDevice,
+NTSTATUS
+STDCALL
+IoAttachDeviceByPointer(PDEVICE_OBJECT	SourceDevice,
 				 PDEVICE_OBJECT	TargetDevice)
 {
 	UNIMPLEMENTED;
 }
 
 
-VOID IoDeleteDevice(PDEVICE_OBJECT DeviceObject)
+VOID
+STDCALL
+IoDeleteDevice(PDEVICE_OBJECT DeviceObject)
 {
 	UNIMPLEMENTED;
 }
@@ -77,7 +82,9 @@ IoGetRelatedDeviceObject (
 }
 
 
-NTSTATUS IoGetDeviceObjectPointer(PUNICODE_STRING ObjectName,
+NTSTATUS
+STDCALL
+IoGetDeviceObjectPointer(PUNICODE_STRING ObjectName,
 				  ACCESS_MASK DesiredAccess,
 				  PFILE_OBJECT* FileObject,
 				  PDEVICE_OBJECT* DeviceObject)
@@ -85,12 +92,16 @@ NTSTATUS IoGetDeviceObjectPointer(PUNICODE_STRING ObjectName,
    UNIMPLEMENTED;
 }
 
-VOID IoDetachDevice(PDEVICE_OBJECT TargetDevice)
+VOID
+STDCALL
+IoDetachDevice(PDEVICE_OBJECT TargetDevice)
 {
    UNIMPLEMENTED;
 }
 
-PDEVICE_OBJECT IoGetAttachedDevice(PDEVICE_OBJECT DeviceObject)
+PDEVICE_OBJECT
+STDCALL
+IoGetAttachedDevice(PDEVICE_OBJECT DeviceObject)
 {
    PDEVICE_OBJECT Current = DeviceObject;
    
@@ -106,7 +117,9 @@ PDEVICE_OBJECT IoGetAttachedDevice(PDEVICE_OBJECT DeviceObject)
    return(Current);
 }
 
-PDEVICE_OBJECT IoAttachDeviceToDeviceStack(PDEVICE_OBJECT SourceDevice,
+PDEVICE_OBJECT
+STDCALL
+IoAttachDeviceToDeviceStack(PDEVICE_OBJECT SourceDevice,
 					   PDEVICE_OBJECT TargetDevice)
 {
    PDEVICE_OBJECT AttachedDevice;
@@ -122,7 +135,9 @@ PDEVICE_OBJECT IoAttachDeviceToDeviceStack(PDEVICE_OBJECT SourceDevice,
    return(AttachedDevice);
 }
 
-VOID IoRegisterDriverReinitialization(PDRIVER_OBJECT DriverObject,
+VOID
+STDCALL
+IoRegisterDriverReinitialization(PDRIVER_OBJECT DriverObject,
 				      PDRIVER_REINITIALIZE ReinitRoutine,
 				      PVOID Context)
 {
@@ -174,7 +189,9 @@ NTSTATUS IoInitializeDriver(PDRIVER_INITIALIZE DriverEntry)
    return(Status);
 }
 
-NTSTATUS IoAttachDevice(PDEVICE_OBJECT SourceDevice,
+NTSTATUS
+STDCALL
+IoAttachDevice(PDEVICE_OBJECT SourceDevice,
 			PUNICODE_STRING TargetDevice,
 			PDEVICE_OBJECT* AttachedDevice)
 /*
@@ -210,7 +227,9 @@ NTSTATUS IopCreateDevice(PVOID ObjectBody,
 }
 
 
-NTSTATUS IoCreateDevice(PDRIVER_OBJECT DriverObject,
+NTSTATUS
+STDCALL
+IoCreateDevice(PDRIVER_OBJECT DriverObject,
 			ULONG DeviceExtensionSize,
 			PUNICODE_STRING DeviceName,
 			DEVICE_TYPE DeviceType,
@@ -258,14 +277,14 @@ NTSTATUS IoCreateDevice(PDRIVER_OBJECT DriverObject,
 	CreatedDeviceObject = ObCreateObject(&DeviceHandle,
 					     0,
 					     &ObjectAttributes,
-					     IoDeviceType);
+					     IoDeviceObjectType);
      }
    else
      {
 	CreatedDeviceObject = ObCreateObject(&DeviceHandle,
 					     0,
 					     NULL,
-					     IoDeviceType);
+					     IoDeviceObjectType);
      }
 					      
    *DeviceObject = NULL;
@@ -315,5 +334,42 @@ NTSTATUS IoCreateDevice(PDRIVER_OBJECT DriverObject,
    return(STATUS_SUCCESS);
 }
 
+
+NTSTATUS
+STDCALL
+IoOpenDeviceInstanceKey (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3,
+	DWORD	Unknown4
+	)
+{
+	UNIMPLEMENTED;
+	return (STATUS_NOT_IMPLEMENTED);
+}
+
+
+DWORD
+STDCALL
+IoQueryDeviceEnumInfo (
+	DWORD	Unknown0,
+	DWORD	Unknown1
+	)
+{
+	UNIMPLEMENTED;
+	return 0;
+}
+
+
+VOID
+STDCALL
+IoSetDeviceToVerify (
+	DWORD	Unknown0,
+	DWORD	Unknown1
+	)
+{
+	UNIMPLEMENTED;
+}
 
 /* EOF */

@@ -1,4 +1,5 @@
-/*
+/* $Id: resource.c,v 1.3 2000/03/26 19:38:26 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/resource.c
@@ -21,12 +22,16 @@ static CONFIGURATION_INFORMATION SystemConfigurationInformation =
 
 /* FUNCTIONS *****************************************************************/
 
-PCONFIGURATION_INFORMATION IoGetConfigurationInformation(VOID)
+PCONFIGURATION_INFORMATION
+STDCALL
+IoGetConfigurationInformation(VOID)
 {
    return(&SystemConfigurationInformation);
 }
 
-NTSTATUS IoReportResourceUsage(PUNICODE_STRING DriverClassName,
+NTSTATUS
+STDCALL
+IoReportResourceUsage(PUNICODE_STRING DriverClassName,
 			       PDRIVER_OBJECT DriverObject,
 			       PCM_RESOURCE_LIST DriverList,
 			       ULONG DriverListSize,
@@ -39,7 +44,9 @@ NTSTATUS IoReportResourceUsage(PUNICODE_STRING DriverClassName,
    UNIMPLEMENTED;
 }
 
-NTSTATUS IoAssignResources(PUNICODE_STRING RegistryPath,
+NTSTATUS
+STDCALL
+IoAssignResources(PUNICODE_STRING RegistryPath,
 			   PUNICODE_STRING DriverClassName,
 			   PDRIVER_OBJECT DriverObject,
 			   PDEVICE_OBJECT DeviceObject,
@@ -49,7 +56,9 @@ NTSTATUS IoAssignResources(PUNICODE_STRING RegistryPath,
    UNIMPLEMENTED;
 }
 
-NTSTATUS IoQueryDeviceDescription(PINTERFACE_TYPE BusType,
+NTSTATUS
+STDCALL
+IoQueryDeviceDescription(PINTERFACE_TYPE BusType,
 				  PULONG BusNumber,
 				  PCONFIGURATION_TYPE ControllerType,
 				  PULONG ControllerNumber,
@@ -60,3 +69,5 @@ NTSTATUS IoQueryDeviceDescription(PINTERFACE_TYPE BusType,
 {
    UNIMPLEMENTED;
 }
+
+/* EOF */

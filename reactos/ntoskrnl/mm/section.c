@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.24 2000/03/19 09:14:51 ea Exp $
+/* $Id: section.c,v 1.25 2000/03/26 19:38:32 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -202,7 +202,7 @@ NTSTATUS STDCALL NtCreateSection (OUT PHANDLE SectionHandle,
      {
 	Status = ObReferenceObjectByHandle(FileHandle,
 					   FILE_READ_DATA,
-					   IoFileType,
+					   IoFileObjectType,
 					   UserMode,
 					   (PVOID*)&Section->FileObject,
 					   NULL);

@@ -1,4 +1,5 @@
-/*
+/* $Id: pagefile.c,v 1.3 2000/03/26 19:38:32 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -194,7 +195,7 @@ NTSTATUS STDCALL NtCreatePagingFile(IN	PUNICODE_STRING	PageFileName,
    
    Status = ObReferenceObjectByHandle(FileHandle,
 				      FILE_ALL_ACCESS,
-				      IoFileType,
+				      IoFileObjectType,
 				      UserMode,
 				      (PVOID*)&FileObject,
 				      NULL);
@@ -245,3 +246,6 @@ NTSTATUS STDCALL NtCreatePagingFile(IN	PUNICODE_STRING	PageFileName,
    
    return(STATUS_SUCCESS);
 }
+
+
+/* EOF */

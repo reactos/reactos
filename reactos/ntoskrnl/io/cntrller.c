@@ -1,4 +1,5 @@
-/*
+/* $Id: cntrller.c,v 1.4 2000/03/26 19:38:21 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/cntrller.c
@@ -29,7 +30,9 @@ typedef struct
 
 /* FUNCTIONS *****************************************************************/
 
-VOID IoAllocateController(PCONTROLLER_OBJECT ControllerObject,
+VOID
+STDCALL
+IoAllocateController(PCONTROLLER_OBJECT ControllerObject,
 			  PDEVICE_OBJECT DeviceObject,
 			  PDRIVER_CONTROL ExecutionRoutine,
 			  PVOID Context)
@@ -71,7 +74,9 @@ VOID IoAllocateController(PCONTROLLER_OBJECT ControllerObject,
    ExFreePool(entry);
 }
 
-PCONTROLLER_OBJECT IoCreateController(ULONG Size)
+PCONTROLLER_OBJECT
+STDCALL
+IoCreateController(ULONG Size)
 /*
  * FUNCTION: Allocates memory and initializes a controller object
  * ARGUMENTS:
@@ -100,7 +105,9 @@ PCONTROLLER_OBJECT IoCreateController(ULONG Size)
    return(controller);
 }
 
-VOID IoDeleteController(PCONTROLLER_OBJECT ControllerObject)
+VOID
+STDCALL
+IoDeleteController(PCONTROLLER_OBJECT ControllerObject)
 /*
  * FUNCTION: Removes a given controller object from the system
  * ARGUMENTS:
@@ -113,7 +120,9 @@ VOID IoDeleteController(PCONTROLLER_OBJECT ControllerObject)
    ExFreePool(ControllerObject);
 }
 
-VOID IoFreeController(PCONTROLLER_OBJECT ControllerObject)
+VOID
+STDCALL
+IoFreeController(PCONTROLLER_OBJECT ControllerObject)
 /*
  * FUNCTION: Releases a previously allocated controller object when a 
  * device has finished an I/O request
@@ -141,3 +150,5 @@ VOID IoFreeController(PCONTROLLER_OBJECT ControllerObject)
      } while (Result == DeallocateObject);
 }
 
+
+/* EOF */

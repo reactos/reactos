@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.27 1999/11/02 08:55:40 dwelch Exp $
+/* $Id: rw.c,v 1.28 2000/03/26 19:38:26 ea Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -19,6 +19,10 @@
 
 #define NDEBUG
 #include <internal/debug.h>
+
+/* DATA ********************************************************************/
+
+
 
 /* FUNCTIONS ***************************************************************/
 
@@ -61,7 +65,7 @@ NTSTATUS STDCALL NtReadFile(HANDLE			FileHandle,
    
    Status = ObReferenceObjectByHandle(FileHandle,
 				      FILE_READ_DATA,
-				      IoFileType,
+				      IoFileObjectType,
 				      UserMode,
 				      (PVOID *) & FileObject,
 				      NULL);
@@ -187,7 +191,7 @@ NtWriteFile (
 	Status = ObReferenceObjectByHandle(
 			FileHandle,
 			FILE_WRITE_DATA,
-			IoFileType,
+			IoFileObjectType,
 			UserMode,
 			(PVOID *) & FileObject,
 			NULL

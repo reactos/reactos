@@ -1,4 +1,5 @@
-/*
+/* $Id: page.c,v 1.6 2000/03/26 19:38:26 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/bug.c
@@ -18,10 +19,15 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS IoPageRead(PFILE_OBJECT FileObject,
-		    PMDL Mdl,
-		    PLARGE_INTEGER Offset,
-		    PIO_STATUS_BLOCK StatusBlock)
+NTSTATUS
+STDCALL
+IoPageRead (
+	PFILE_OBJECT		FileObject,
+	PMDL			Mdl,
+	PLARGE_INTEGER		Offset,
+	PIO_STATUS_BLOCK	StatusBlock,
+	DWORD			Unknown4
+	)
 {
    PIRP Irp;
    KEVENT Event;
@@ -33,7 +39,7 @@ NTSTATUS IoPageRead(PFILE_OBJECT FileObject,
    
    ObReferenceObjectByPointer(FileObject,
 			      STANDARD_RIGHTS_REQUIRED,
-			      IoFileType,
+			      IoFileObjectType,
 			      UserMode);
    
    KeInitializeEvent(&Event,NotificationEvent,FALSE);
@@ -64,3 +70,21 @@ NTSTATUS IoPageRead(PFILE_OBJECT FileObject,
      }
    return(Status);
 }
+
+
+NTSTATUS
+STDCALL
+IoSynchronousPageWrite (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3,
+	DWORD	Unknown4
+	)
+{
+	UNIMPLEMENTED;
+	return (STATUS_NOT_IMPLEMENTED);
+}
+
+
+/* EOF */

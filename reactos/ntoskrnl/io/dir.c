@@ -1,4 +1,5 @@
-/*
+/* $Id: dir.c,v 1.10 2000/03/26 19:38:22 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/dir.c
@@ -91,7 +92,7 @@ NtQueryDirectoryFile(
    
    Status = ObReferenceObjectByHandle(FileHandle,
 				      FILE_LIST_DIRECTORY,
-				      IoFileType,
+				      IoFileObjectType,
 				      UserMode,
 				      (PVOID *)&FileObject,
 				      NULL);
@@ -163,3 +164,6 @@ NTSTATUS STDCALL NtQueryOleDirectoryFile(VOID)
 {
    UNIMPLEMENTED;
 }
+
+
+/* EOF */

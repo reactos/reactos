@@ -1,4 +1,4 @@
-/* $Id: irq.c,v 1.9 2000/03/20 17:59:42 ekohl Exp $
+/* $Id: irq.c,v 1.10 2000/03/26 19:38:18 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -233,7 +233,9 @@ static VOID KeDumpIrqList(VOID)
      }
 }
 
-NTSTATUS IoConnectInterrupt(PKINTERRUPT* InterruptObject,
+NTSTATUS
+STDCALL
+IoConnectInterrupt(PKINTERRUPT* InterruptObject,
 			    PKSERVICE_ROUTINE ServiceRoutine,
 			    PVOID ServiceContext,
 			    PKSPIN_LOCK SpinLock,
@@ -350,7 +352,9 @@ NTSTATUS IoConnectInterrupt(PKINTERRUPT* InterruptObject,
 }
 
 
-VOID IoDisconnectInterrupt(PKINTERRUPT InterruptObject)
+VOID
+STDCALL
+IoDisconnectInterrupt(PKINTERRUPT InterruptObject)
 /*
  * FUNCTION: Releases a drivers isr
  * ARGUMENTS:

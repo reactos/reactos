@@ -1,4 +1,5 @@
-/*
+/* $Id: adapter.c,v 1.2 2000/03/26 19:38:20 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/adapter.c
@@ -14,45 +15,30 @@
 
 #include <internal/debug.h>
 
+/* DATA **********************************************************************/
+
+POBJECT_TYPE EXPORTED IoAdapterObjectType = NULL;	/* FIXME */
+POBJECT_TYPE EXPORTED IoDeviceHandlerObjectType = NULL;	/* FIXME */
+USHORT       EXPORTED IoDeviceHandlerObjectSize = 0;	/* FIXME */
+ULONG        EXPORTED IoReadOperationCount = 0;		/* FIXME */
+
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS IoAllocateAdapterChannel(PADAPTER_OBJECT AdapterObject,
-				  PDEVICE_OBJECT DeviceObject,
-				  ULONG NumberOfMapRegisters,
-				  PDRIVER_CONTROL ExecutionRoutine,
-				  PVOID Context)
+NTSTATUS
+STDCALL
+IoAllocateAdapterChannel (
+	PADAPTER_OBJECT	AdapterObject,
+	PDEVICE_OBJECT	DeviceObject,
+	ULONG		NumberOfMapRegisters,
+	PDRIVER_CONTROL	ExecutionRoutine,
+	PVOID		Context
+	)
 {
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 
-BOOLEAN IoFlushAdapterBuffers(PADAPTER_OBJECT AdapterObject,
-			      PMDL Mdl,
-			      PVOID MapRegisterBase,
-			      PVOID CurrentVa,
-			      ULONG Length,
-			      BOOLEAN WriteToDevice)
-{
-   UNIMPLEMENTED;
-}
 
-PHYSICAL_ADDRESS IoMapTransfer(PADAPTER_OBJECT AdapterObject,
-			       PMDL Mdl,
-			       PVOID MapRegisterBase,
-			       PVOID CurrentVa,
-			       PULONG Length,
-			       BOOLEAN WriteToDevice)
-{
-   UNIMPLEMENTED;
-}
+/* NOTE: Missing IoXXXAdapter finctions in HAL.DLL */
 
-VOID IoFreeAdapterChannel(PADAPTER_OBJECT AdapterObject)
-{
-   UNIMPLEMENTED;
-}
 
-VOID IoFreeMapRegisters(PADAPTER_OBJECT AdapterObject,
-			PVOID MapRegisterBase,
-			ULONG NumberOfMapRegisters)
-{
-   UNIMPLEMENTED;
-}
+/* EOF */

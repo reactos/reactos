@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.13 2000/03/12 01:22:37 ekohl Exp $
+/* $Id: iotypes.h,v 1.14 2000/03/26 19:38:13 ea Exp $
  * 
  */
 
@@ -605,5 +605,27 @@ typedef struct
    CM_FULL_RESOURCE_DESCRIPTOR List[1];
 } CM_RESOURCE_LIST, *PCM_RESOURCE_LIST;
 
+
+typedef
+IO_ALLOCATION_ACTION
+(*PDRIVER_CONTROL) (
+	PDEVICE_OBJECT	DeviceObject,
+	PIRP		irp,
+	PVOID		MapRegisterBase,
+	PVOID		Context
+	);
+#if (_WIN32_WINNT >= 0x0400)
+typedef
+VOID
+(*PFSDNOTIFICATIONPROC) (
+	IN	PDEVICE_OBJECT	PtrTargetFileSystemDeviceObject,
+	IN	BOOLEAN		DriverActive
+	);
+#endif // (_WIN32_WINNT >= 0x0400)
+
+enum
+{
+	IO_NO_INCREMENT,
+};
 
 #endif __INCLUDE_DDK_IOTYPES_H

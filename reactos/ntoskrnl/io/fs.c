@@ -1,4 +1,4 @@
-/* $Id: fs.c,v 1.11 2000/03/06 01:02:30 ea Exp $
+/* $Id: fs.c,v 1.12 2000/03/26 19:38:24 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -234,7 +234,9 @@ NTSTATUS IoTryToMountStorageDevice(PDEVICE_OBJECT DeviceObject)
    return(STATUS_UNRECOGNIZED_VOLUME);
 }
 
-VOID IoRegisterFileSystem(PDEVICE_OBJECT DeviceObject)
+VOID
+STDCALL
+IoRegisterFileSystem(PDEVICE_OBJECT DeviceObject)
 {
    FILE_SYSTEM_OBJECT* fs;
    
@@ -248,7 +250,9 @@ VOID IoRegisterFileSystem(PDEVICE_OBJECT DeviceObject)
 			       &FileSystemListLock);
 }
 
-VOID IoUnregisterFileSystem(PDEVICE_OBJECT DeviceObject)
+VOID
+STDCALL
+IoUnregisterFileSystem(PDEVICE_OBJECT DeviceObject)
 {
    KIRQL oldlvl;
    PLIST_ENTRY current_entry;
@@ -331,6 +335,29 @@ IoGetBaseFileSystemDeviceObject (
 			? DeviceObject
 			: Vpb->DeviceObject
 		);
+}
+
+
+NTSTATUS
+STDCALL
+IoRegisterFsRegistrationChange (
+	IN	PDRIVER_OBJECT		DriverObject,
+	IN	PFSDNOTIFICATIONPROC	FSDNotificationProc
+	)
+{
+	UNIMPLEMENTED;
+	return (STATUS_NOT_IMPLEMENTED);
+}
+
+
+VOID
+STDCALL
+IoUnregisterFsRegistrationChange (
+	DWORD	Unknown0,
+	DWORD	Unknown1
+	)
+{
+	UNIMPLEMENTED;
 }
 
 

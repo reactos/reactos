@@ -105,12 +105,12 @@ NtQueryEaFile			ZwQueryEaFile			  36
 NtQueryEvent			ZwQueryEvent			  20          
 NtQueryFullAttributesFile	ZwQueryFullAttributesFile	  8           
 NtQueryInformationFile		ZwQueryInformationFile		  20          
-NtQueryIoCompletion		ZwQueryIoCompletion		  20          
 NtQueryInformationPort		ZwQueryInformationPort		  20          
 NtQueryInformationProcess	ZwQueryInformationProcess	  20          
 NtQueryInformationThread	ZwQueryInformationThread	  20          
 NtQueryInformationToken		ZwQueryInformationToken		  20          
 NtQueryIntervalProfile		ZwQueryIntervalProfile		  8           
+NtQueryIoCompletion		ZwQueryIoCompletion		  20          
 NtQueryKey			ZwQueryKey			  20          
 NtQueryMultipleValueKey		ZwQueryMultipleValueKey		  24          
 NtQueryMutant			ZwQueryMutant			  20          

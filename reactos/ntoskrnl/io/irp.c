@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.26 2000/03/06 01:02:30 ea Exp $
+/* $Id: irp.c,v 1.27 2000/03/26 19:38:25 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -455,6 +455,47 @@ IoIsOperationSynchronous (
 	 * asynchronous operation.
 	 */
 	return FALSE;
+}
+
+
+VOID
+STDCALL
+IoEnqueueIrp (
+	PIRP	Irp
+	)
+{
+	UNIMPLEMENTED;
+}
+
+
+VOID
+STDCALL
+IoSetTopLevelIrp (
+	IN	PIRP	Irp
+	)
+{
+	UNIMPLEMENTED;
+}
+
+
+PIRP
+STDCALL
+IoGetTopLevelIrp (
+	VOID
+	)
+{
+	UNIMPLEMENTED;
+	return (NULL);
+}
+
+
+VOID
+STDCALL
+IoQueueThreadIrp (
+	PVOID	Unknown0
+	)
+{
+	UNIMPLEMENTED;
 }
 
 

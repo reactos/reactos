@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.49 2000/03/19 13:35:38 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.50 2000/03/26 19:38:18 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -164,41 +164,110 @@ FsRtlUninitializeFileLock=FsRtlUninitializeFileLock@4
 FsRtlUninitializeLargeMcb=FsRtlUninitializeLargeMcb@4
 FsRtlUninitializeMcb=FsRtlUninitializeMcb@4
 FsRtlUninitializeOplock=FsRtlUninitializeOplock@4
+IoAcquireCancelSpinLock=IoAcquireCancelSpinLock@4
+IoAcquireVpbSpinLock=IoAcquireVpbSpinLock@4
+IoAllocateAdapterChannel=IoAllocateAdapterChannel@20
 IoAllocateIrp=IoAllocateIrp@8
-IoAllocateController
-IoAttachDeviceToDeviceStack
-IoBuildDeviceIoControlRequest
-IoBuildSynchronousFsdRequest
+IoAllocateMdl=IoAllocateMdl@20
+IoAllocateController=IoAllocateController@16
+IoAllocateErrorLogEntry=IoAllocateErrorLogEntry@8
+IoAssignResources=IoAssignResources@24
+IoAttachDevice=IoAttachDevice@12
+IoAttachDeviceByPointer=IoAttachDeviceByPointer@8
+IoAttachDeviceToDeviceStack=IoAttachDeviceToDeviceStack@8
+IoBuildAsynchronousFsdRequest=IoBuildAsynchronousFsdRequest@24
+IoBuildDeviceIoControlRequest=IoBuildDeviceIoControlRequest@36
+IoBuildPartialMdl=IoBuildPartialMdl@16
+IoBuildSynchronousFsdRequest=IoBuildSynchronousFsdRequest@28
 IoCallDriver=IoCallDriver@8
+IoCancelIrp=IoCancelIrp@4
+IoCheckDesiredAccess=IoCheckDesiredAccess@8
+IoCheckEaBufferValidity=IoCheckEaBufferValidity@12
+IoCheckFunctionAccess=IoCheckFunctionAccess@24
+IoCheckShareAccess=IoCheckShareAccess@20
 IoCompleteRequest=IoCompleteRequest@8
-IoConnectInterrupt
-IoCreateController
-IoCreateDevice
+IoConnectInterrupt=IoConnectInterrupt@44
+IoCreateController=IoCreateController@4
+IoCreateDevice=IoCreateDevice@28
 IoCreateFile=IoCreateFile@56
-IoCreateStreamFileObject
+IoCreateNotificationEvent=IoCreateNotificationEvent@8
+IoCreateStreamFileObject=IoCreateStreamFileObject@8
 IoCreateSymbolicLink=IoCreateSymbolicLink@8
-IoDeleteController
-IoDeleteDevice
-IoDisconnectInterrupt
-IoFreeController
+IoCreateSynchronizationEvent=IoCreateSynchronizationEvent@8
+IoCreateUnprotectedSymbolicLink=IoCreateUnprotectedSymbolicLink@8
+IoDeleteController=IoDeleteController@4
+IoDeleteDevice=IoDeleteDevice@4
+IoDeleteSymbolicLink=IoDeleteSymbolicLink@4
+IoDetachDevice=IoDetachDevice@4
+IoDeviceHandlerObjectSize DATA
+IoDeviceHandlerObjectType DATA
+IoDeviceObjectType DATA
+IoDisconnectInterrupt=IoDisconnectInterrupt@4
+IoDriverObjectType=IoFileObjectType DATA
+IoEnqueueIrp=IoEnqueueIrp@4
+IoFastQueryNetworkAttributes=IoFastQueryNetworkAttributes@20
+IoFileObjectType DATA
+IoFreeController=IoFreeController@4
 IoFreeIrp=IoFreeIrp@4
+IoFreeMdl=IoFreeMdl@4
+IoGetAttachedDevice=IoGetAttachedDevice@4
 IoGetBaseFileSystemDeviceObject=IoGetBaseFileSystemDeviceObject@4
-IoGetCurrentIrpStackLocation
+IoGetConfigurationInformation=IoGetConfigurationInformation@0
+IoGetCurrentProcess=IoGetCurrentProcess@0
+IoGetDeviceObjectPointer=IoGetDeviceObjectPointer@16
 IoGetDeviceToVerify=IoGetDeviceToVerify@4
+IoGetFileObjectGenericMapping=IoGetFileObjectGenericMapping@0
+IoGetInitialStack=IoGetInitialStack@0
 IoGetRelatedDeviceObject=IoGetRelatedDeviceObject@4
-IoInitializeDpcRequest
+IoGetRequestorProcess=IoGetRequestorProcess@4
+IoGetStackLimits=IoGetStackLimits@8
+IoGetTopLevelIrp=IoGetTopLevelIrp@0
 IoInitializeIrp=IoInitializeIrp@12
-IoInitializeTimer
+IoInitializeTimer=IoInitializeTimer@12
 IoIsOperationSynchronous=IoIsOperationSynchronous@4
-IoMakeAssociatedIrp@8
-IoMarkIrpPending
-IoRegisterFileSystem
-IoRequestDpc
-IoStartPacket
-IoStartNextPacket
-IoStartNextPacketByKey
-IoStartTimer
-IoStopTimer
+IoMakeAssociatedIrp=IoMakeAssociatedIrp@8
+IoOpenDeviceInstanceKey=IoOpenDeviceInstanceKey@20
+IoPageRead=IoPageRead@20
+IoQueryDeviceDescription=IoQueryDeviceDescription@32
+IoQueryDeviceEnumInfo=IoQueryDeviceEnumInfo@8
+IoQueryFileInformation=IoQueryFileInformation@20
+IoQueryVolumeInformation=IoQueryVolumeInformation@20
+IoQueueThreadIrp=IoQueueThreadIrp@4
+IoRaiseHardError=IoRaiseHardError@12
+IoRaiseInformationalHardError=IoRaiseInformationalHardError@12
+IoReadOperationCount DATA
+IoReadTransferCount=IoAdapterObjectType DATA
+IoRegisterDriverReinitialization=IoRegisterDriverReinitialization@12
+IoRegisterFileSystem=IoRegisterFileSystem@4
+IoRegisterFsRegistrationChange=IoRegisterFsRegistrationChange@8
+IoRegisterShutdownNotification=IoRegisterShutdownNotification@4
+IoReleaseCancelSpinLock=IoReleaseCancelSpinLock@4
+IoReleaseVpbSpinLock=IoReleaseVpbSpinLock@4
+IoRemoveShareAccess=IoRemoveShareAccess@8
+;IoReportHalResourceUsage
+IoReportResourceUsage=IoReportResourceUsage@36
+IoSetDeviceToVerify=IoSetDeviceToVerify@8
+IoSetHardErrorOrVerifyDevice=IoSetHardErrorOrVerifyDevice@8
+IoSetInformation=IoSetInformation@16
+IoSetShareAccess=IoSetShareAccess@16
+IoSetThreadHardErrorMode=IoSetThreadHardErrorMode@4
+IoSetTopLevelIrp=IoSetTopLevelIrp@4
+IoStartNextPacket=IoStartNextPacket@8
+IoStartNextPacketByKey=IoStartNextPacketByKey@12
+IoStartPacket=IoStartPacket@16
+IoStartTimer=IoStartTimer@4
+IoStatisticsLock DATA
+IoStopTimer=IoStopTimer@4
+IoSynchronousPageWrite=IoSynchronousPageWrite@20
+IoThreadToProcess=IoThreadToProcess@4
+IoUnregisterFileSystem=IoUnregisterFileSystem@4
+IoUnregisterFsRegistrationChange=IoUnregisterFsRegistrationChange@8
+IoUnregisterShutdownNotification=IoUnregisterShutdownNotification@4
+IoUpdateShareAccess=IoUpdateShareAccess@8
+IoVerifyVolume=IoVerifyVolume@8
+IoWriteErrorLogEntry=IoWriteErrorLogEntry@4
+IoWriteOperationCount=IoDeviceObjectType DATA
+IoWriteTransferCount DATA
 ;IofCallDriver=@IofCallDriver@0
 IofCallDriver=IofCallDriver@8
 ;IofCompleteRequest=@IofCompleteRequest@0
@@ -579,6 +648,13 @@ wcsstr
 wcstombs
 wctomb
 ;
+;	ReactOS Extensions
+;
+IoGetCurrentIrpStackLocation
+IoInitializeDpcRequest
+IoMarkIrpPending
+IoRequestDpc
+;
 ;
 ; exports from hal.dll
 ;
@@ -631,14 +707,14 @@ HalSetRealTimeClock=HalSetRealTimeClock@4
 ;HalStopProfileInterrupt
 ;HalSystemVectorDispatchEntry
 HalTranslateBusAddress=HalTranslateBusAddress@24
-;IoAssignDriveLetters
-;IoFlushAdapterBuffers
-;IoFreeAdapterChannel
-;IoFreeMapRegisters
-;IoMapTransfer
-;IoReadPartitionTable
-;IoSetPartitionInformation
-;IoWritePartitionTable
+IoAssignDriveLetters=IoAssignDriveLetters@16
+IoFlushAdapterBuffers=IoFlushAdapterBuffers@24
+IoFreeAdapterChannel=IoFreeAdapterChannel@4
+IoFreeMapRegisters=IoFreeMapRegisters@12
+IoMapTransfer=IoMapTransfer@24
+IoReadPartitionTable=IoReadPartitionTable@16
+IoSetPartitionInformation=IoSetPartitionInformation@16
+IoWritePartitionTable=IoWritePartitionTable@20
 KdComPortInUse DATA
 KdPortGetByte=KdPortGetByte@4
 KdPortInitialize=KdPortInitialize@12
@@ -675,3 +751,4 @@ WRITE_PORT_ULONG=WRITE_PORT_ULONG@8
 WRITE_PORT_USHORT=WRITE_PORT_USHORT@8
 InsertTailList
 RemoveEntryList
+

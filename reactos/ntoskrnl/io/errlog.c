@@ -1,4 +1,5 @@
-/*
+/* $Id: errlog.c,v 1.4 2000/03/26 19:38:22 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/errlog.c
@@ -198,12 +199,12 @@ NTSTATUS IoInitErrorLog(VOID)
 }
 
 
-PVOID IoAllocateErrorLogEntry(PVOID IoObject, UCHAR EntrySize)
+PVOID STDCALL IoAllocateErrorLogEntry(PVOID IoObject, UCHAR EntrySize)
 {
    UNIMPLEMENTED;
 }
 
-VOID IoWriteErrorLogEntry(PVOID ElEntry)
+VOID STDCALL IoWriteErrorLogEntry(PVOID ElEntry)
 {
    KIRQL oldIrql;
    PIO_ERROR_LOG_MESSAGE Message;
@@ -223,3 +224,5 @@ VOID IoWriteErrorLogEntry(PVOID ElEntry)
    KeReleaseSpinLock(&ErrorLogListLock, oldIrql);
 } 
 
+
+/* EOF */

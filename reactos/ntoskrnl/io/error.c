@@ -1,4 +1,5 @@
-/*
+/* $Id: error.c,v 1.2 2000/03/26 19:38:22 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            kernel/base/bug.c
@@ -32,12 +33,12 @@ BOOLEAN IoIsErrorUserInduced(NTSTATUS Status)
    return(FALSE);
 }
 
-VOID IoSetHardErrorOrVerifyDevice(PIRP Irp, PDEVICE_OBJECT DeviceObject)
+VOID STDCALL IoSetHardErrorOrVerifyDevice(PIRP Irp, PDEVICE_OBJECT DeviceObject)
 {
    UNIMPLEMENTED;
 }
 
-VOID IoRaiseHardError(PIRP Irp, PVPB Vpb, PDEVICE_OBJECT RealDeviceObject)
+VOID STDCALL IoRaiseHardError(PIRP Irp, PVPB Vpb, PDEVICE_OBJECT RealDeviceObject)
 {
    UNIMPLEMENTED;
 }
@@ -47,9 +48,12 @@ BOOLEAN IoIsTotalDeviceFailure(NTSTATUS Status)
    UNIMPLEMENTED;
 }
 
-BOOLEAN IoRaiseInformationalHardError(NTSTATUS ErrorStatus,
+BOOLEAN STDCALL IoRaiseInformationalHardError(NTSTATUS ErrorStatus,
 				      PUNICODE_STRING String,
 				      PKTHREAD Thread)
 {
    UNIMPLEMENTED;
 }
+
+
+/* EOF */

@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.9 1999/08/29 06:59:06 ea Exp $
+/* $Id: file.c,v 1.10 2000/03/26 19:38:22 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,6 +18,7 @@
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/
+
 
 NTSTATUS
 STDCALL
@@ -45,7 +46,7 @@ NtQueryInformationFile (
    
    Status = ObReferenceObjectByHandle(FileHandle,
                                       FILE_READ_ATTRIBUTES,
-                                      IoFileType,
+                                      IoFileObjectType,
                                       UserMode,
 				      (PVOID *)&FileObject,
 				      NULL);
@@ -91,6 +92,21 @@ NtQueryInformationFile (
 }
 
 
+NTSTATUS 
+STDCALL
+IoQueryFileInformation (
+	IN	PFILE_OBJECT		FileObject,
+	IN	FILE_INFORMATION_CLASS	FileInformationClass,
+	IN	ULONG			Length,
+	OUT	PVOID			FileInformation,
+	OUT	PULONG			ReturnedLength	
+	)
+{
+	UNIMPLEMENTED;
+	return (STATUS_NOT_IMPLEMENTED);
+}
+
+
 NTSTATUS
 STDCALL
 NtSetInformationFile (
@@ -120,7 +136,7 @@ NtSetInformationFile (
 	Status = ObReferenceObjectByHandle(
 			FileHandle,
                         FILE_WRITE_ATTRIBUTES,
-                        IoFileType,
+                        IoFileObjectType,
                         UserMode,
                         (PVOID *) & FileObject,
                         NULL
@@ -189,6 +205,7 @@ NtSetInformationFile (
 
 
 PGENERIC_MAPPING
+STDCALL
 IoGetFileObjectGenericMapping(VOID)
 {
 	UNIMPLEMENTED;

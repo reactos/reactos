@@ -1,4 +1,4 @@
-/* $Id: mm.c,v 1.24 2000/03/20 18:00:55 ekohl Exp $
+/* $Id: mm.c,v 1.25 2000/03/26 19:38:30 ea Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -203,7 +203,9 @@ NTSTATUS MmSectionHandleFault(MEMORY_AREA* MemoryArea,
    Status = IoPageRead(MemoryArea->Data.SectionData.Section->FileObject,
 		       Mdl,
 		       &Offset,
-		       &IoStatus);
+		       &IoStatus,
+		       0 /* FIXME: UNKNOWN ARG */
+		       );
    
    if (!NT_SUCCESS(Status))
      {

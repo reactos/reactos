@@ -1,4 +1,5 @@
-/*
+/* $Id: shutdown.c,v 1.2 2000/03/26 19:38:26 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/shutdown.c
@@ -16,12 +17,14 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS IoRegisterShutdownNotification(PDEVICE_OBJECT DeviceObject)
+NTSTATUS STDCALL IoRegisterShutdownNotification(PDEVICE_OBJECT DeviceObject)
 {
    UNIMPLEMENTED;
 }
 
-VOID IoUnregisterShutdownNotification(PDEVICE_OBJECT DeviceObject)
+VOID STDCALL IoUnregisterShutdownNotification(PDEVICE_OBJECT DeviceObject)
 {
    UNIMPLEMENTED;
 }
+
+/* EOF */

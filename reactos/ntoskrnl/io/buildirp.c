@@ -1,4 +1,5 @@
-/*
+/* $Id: buildirp.c,v 1.20 2000/03/26 19:38:21 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/buildirp.c
@@ -121,7 +122,9 @@ PIRP IoBuildFilesystemControlRequest(ULONG MinorFunction,
    return(Irp);
 }
 
-PIRP IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
+PIRP
+STDCALL
+IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
 				   PDEVICE_OBJECT DeviceObject,
 				   PVOID Buffer,
 				   ULONG Length,
@@ -208,7 +211,9 @@ PIRP IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
    return(Irp);
 }
 
-PIRP IoBuildDeviceIoControlRequest(ULONG IoControlCode,
+PIRP
+STDCALL
+IoBuildDeviceIoControlRequest(ULONG IoControlCode,
 				   PDEVICE_OBJECT DeviceObject,
 				   PVOID InputBuffer,
 				   ULONG InputBufferLength,
@@ -367,7 +372,9 @@ PIRP IoBuildDeviceIoControlRequest(ULONG IoControlCode,
    return(Irp);
 }
 
-PIRP IoBuildSynchronousFsdRequest(ULONG MajorFunction,
+PIRP
+STDCALL
+IoBuildSynchronousFsdRequest(ULONG MajorFunction,
 				  PDEVICE_OBJECT DeviceObject,
 				  PVOID Buffer,
 				  ULONG Length,
@@ -538,3 +545,6 @@ PIRP IoBuildSynchronousFsdRequestWithMdl(ULONG MajorFunction,
 
    return(Irp);
 }
+
+
+/* EOF */

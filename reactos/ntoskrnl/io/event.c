@@ -1,4 +1,5 @@
-/*
+/* $Id: event.c,v 1.2 2000/03/26 19:38:22 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/event.c
@@ -16,15 +17,21 @@
 
 /* FUNCTIONS *****************************************************************/
 
-PKEVENT IoCreateNotificationEvent(PUNICODE_STRING EventName,
+PKEVENT
+STDCALL
+IoCreateNotificationEvent(PUNICODE_STRING EventName,
 				  PHANDLE EventHandle)
 {
    UNIMPLEMENTED;
 }
 
-PKEVENT IoCreateSynchronizationEvent(PUNICODE_STRING EventName,
+PKEVENT
+STDCALL
+IoCreateSynchronizationEvent(PUNICODE_STRING EventName,
 				     PHANDLE EventHandle)
 {
    UNIMPLEMENTED;
 }
 
+
+/* EOF */

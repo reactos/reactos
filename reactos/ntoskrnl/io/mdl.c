@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.4 2000/03/05 19:17:43 ea Exp $
+/* $Id: mdl.c,v 1.5 2000/03/26 19:38:25 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,7 +18,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
-PMDL IoAllocateMdl(PVOID VirtualAddress,
+PMDL
+STDCALL
+IoAllocateMdl(PVOID VirtualAddress,
 		   ULONG Length,
 		   BOOLEAN SecondaryBuffer,
 		   BOOLEAN ChargeQuota,
@@ -44,7 +46,9 @@ PMDL IoAllocateMdl(PVOID VirtualAddress,
    return(Mdl);
 }
 
-VOID IoBuildPartialMdl(PMDL SourceMdl,
+VOID
+STDCALL
+IoBuildPartialMdl(PMDL SourceMdl,
 		       PMDL TargetMdl,
 		       PVOID VirtualAddress,
 		       ULONG Length)
@@ -61,7 +65,9 @@ VOID IoBuildPartialMdl(PMDL SourceMdl,
      }
 }
 
-VOID IoFreeMdl(PMDL Mdl)
+VOID
+STDCALL
+IoFreeMdl(PMDL Mdl)
 {   
    MmUnmapLockedPages(MmGetSystemAddressForMdl(Mdl),Mdl);
    MmUnlockPages(Mdl);

@@ -1,23 +1,23 @@
-/* $Id: io.h,v 1.8 2000/03/05 19:17:39 ea Exp $
+/* $Id: io.h,v 1.9 2000/03/26 19:38:14 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            include/internal/iomgr.h
+ * FILE:            include/internal/io.h
  * PURPOSE:         Internal io manager declarations
  * PROGRAMMER:      David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
  *               28/05/97: Created
  */
 
-#ifndef __INCLUDE_INTERNAL_IOMGR_H
-#define __INCLUDE_INTERNAL_IOMGR_H
+#ifndef __INCLUDE_INTERNAL_IO_H
+#define __INCLUDE_INTERNAL_IO_H
 
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
 
-extern POBJECT_TYPE IoDeviceType;
-extern POBJECT_TYPE IoFileType;
-extern POBJECT_TYPE IoSymbolicLinkType;
+extern POBJECT_TYPE EXPORTED	IoDeviceObjectType;
+extern POBJECT_TYPE EXPORTED	IoFileObjectType;
+extern POBJECT_TYPE		IoSymbolicLinkObjectType;
 
 /*
  * FUNCTION: Called to initalize a loaded driver
@@ -44,10 +44,13 @@ PIRP IoBuildFilesystemControlRequest(ULONG MinorFunction,
 				     PDEVICE_OBJECT DeviceToMount);
 VOID IoSecondStageCompletion(PIRP Irp, CCHAR PriorityBoost);
 
-NTSTATUS IopCreateFile(PVOID ObjectBody,
-		       PVOID Parent,
-		       PWSTR RemainingPath,
-		       POBJECT_ATTRIBUTES ObjectAttributes);
+NTSTATUS
+IopCreateFile (
+	PVOID			ObjectBody,
+	PVOID			Parent,
+	PWSTR			RemainingPath,
+	POBJECT_ATTRIBUTES	ObjectAttributes
+	);
 NTSTATUS IopCreateDevice(PVOID ObjectBody,
 			 PVOID Parent,
 			 PWSTR RemainingPath,

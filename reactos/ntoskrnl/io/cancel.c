@@ -1,4 +1,5 @@
-/*
+/* $Id: cancel.c,v 1.4 2000/03/26 19:38:21 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/cancel.c
@@ -31,7 +32,7 @@ NtCancelIoFile (
 	UNIMPLEMENTED;
 }
 
-BOOLEAN IoCancelIrp(PIRP Irp)
+BOOLEAN STDCALL IoCancelIrp(PIRP Irp)
 {
    KIRQL oldlvl;
    
@@ -53,12 +54,12 @@ VOID IoInitCancelHandling(VOID)
    KeInitializeSpinLock(&CancelSpinLock);
 }
 
-VOID IoAcquireCancelSpinLock(PKIRQL Irql)
+VOID STDCALL IoAcquireCancelSpinLock(PKIRQL Irql)
 {
    KeAcquireSpinLock(&CancelSpinLock,Irql);
 }
 
-VOID IoReleaseCancelSpinLock(KIRQL Irql)
+VOID STDCALL IoReleaseCancelSpinLock(KIRQL Irql)
 {
    KeReleaseSpinLock(&CancelSpinLock,Irql);
 }
@@ -68,3 +69,6 @@ PDRIVER_CANCEL IoSetCancelRoutine(PIRP Irp, PDRIVER_CANCEL CancelRoutine)
    return((PDRIVER_CANCEL)InterlockedExchange((PULONG)&Irp->CancelRoutine,
 					      (ULONG)CancelRoutine));
 }
+
+
+/* EOF */

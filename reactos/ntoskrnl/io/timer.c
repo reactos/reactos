@@ -1,4 +1,5 @@
-/*
+/* $Id: timer.c,v 1.5 2000/03/26 19:38:26 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/timer.c
@@ -17,7 +18,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS IoInitializeTimer(PDEVICE_OBJECT DeviceObject, 
+NTSTATUS
+STDCALL
+IoInitializeTimer(PDEVICE_OBJECT DeviceObject, 
 			   PIO_TIMER_ROUTINE TimerRoutine,
 			   PVOID Context)
 /*
@@ -39,7 +42,9 @@ NTSTATUS IoInitializeTimer(PDEVICE_OBJECT DeviceObject,
    return(STATUS_SUCCESS);
 }
 
-VOID IoStartTimer(PDEVICE_OBJECT DeviceObject)
+VOID
+STDCALL
+IoStartTimer(PDEVICE_OBJECT DeviceObject)
 /*
  * FUNCTION: Starts a timer so the driver-supplied IoTimer routine will be
  * called once per second
@@ -59,7 +64,9 @@ VOID IoStartTimer(PDEVICE_OBJECT DeviceObject)
                 &(DeviceObject->Timer->dpc));
 }
 
-VOID IoStopTimer(PDEVICE_OBJECT DeviceObject)
+VOID
+STDCALL
+IoStopTimer(PDEVICE_OBJECT DeviceObject)
 /*
  * FUNCTION: Disables for a specified device object so the driver-supplied
  * IoTimer is not called
@@ -69,3 +76,6 @@ VOID IoStopTimer(PDEVICE_OBJECT DeviceObject)
 {
    KeCancelTimer(&(DeviceObject->Timer->timer));
 }
+
+
+/* EOF */

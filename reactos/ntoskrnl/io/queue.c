@@ -1,4 +1,5 @@
-/*
+/* $Id: queue.c,v 1.10 2000/03/26 19:38:26 ea Exp $
+ *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel
  * FILE:                     ntoskrnl/io/queue.c
@@ -15,7 +16,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID IoStartNextPacketByKey(PDEVICE_OBJECT DeviceObject,
+VOID
+STDCALL
+IoStartNextPacketByKey(PDEVICE_OBJECT DeviceObject,
 			    BOOLEAN Cancelable,
 			    ULONG Key)
 /*
@@ -50,7 +53,9 @@ VOID IoStartNextPacketByKey(PDEVICE_OBJECT DeviceObject,
      }   
 }
 
-VOID IoStartNextPacket(PDEVICE_OBJECT DeviceObject, BOOLEAN Cancelable)
+VOID
+STDCALL
+IoStartNextPacket(PDEVICE_OBJECT DeviceObject, BOOLEAN Cancelable)
 /*
  * FUNCTION: Removes the next packet from the device's queue and calls
  * the driver's StartIO
@@ -79,7 +84,9 @@ VOID IoStartNextPacket(PDEVICE_OBJECT DeviceObject, BOOLEAN Cancelable)
      }
 }
 
-VOID IoStartPacket(PDEVICE_OBJECT DeviceObject,
+VOID
+STDCALL
+IoStartPacket(PDEVICE_OBJECT DeviceObject,
 		   PIRP Irp, PULONG Key, PDRIVER_CANCEL CancelFunction)
 /*
  * FUNCTION: Either call the device's StartIO routine with the packet or,
@@ -128,3 +135,4 @@ VOID IoStartPacket(PDEVICE_OBJECT DeviceObject,
 }
 
 
+/* EOF */

@@ -4,4 +4,5 @@ HAL_OBJECTS = hal/x86/irq.o hal/x86/isa.o \
   hal/x86/mp.o hal/x86/dma.o hal/x86/bus.o hal/x86/mbr.o \
   hal/x86/sysinfo.o hal/x86/time.o hal/x86/beep.o \
   hal/x86/display.o hal/x86/reboot.o hal/x86/kdbg.o \
-  hal/x86/portio.o hal/x86/misc.o
+  hal/x86/portio.o hal/x86/misc.o hal/x86/parttab.o \
+  hal/x86/adapter.o hal/x86/drive.o

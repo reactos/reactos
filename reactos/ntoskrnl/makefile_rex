@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.63 2000/03/24 22:25:37 dwelch Exp $
+# $Id: makefile_rex,v 1.64 2000/03/26 19:38:17 ea Exp $
 #
 # ReactOS Operating System
 #
@@ -44,7 +44,7 @@ MM_I386_OBJECTS = mm/i386/page.o mm/i386/memsafe.o
 
 IO_OBJECTS = io/iomgr.o io/create.o io/irp.o io/device.o io/rw.o \
              io/queue.o io/drvlck.o io/timer.o io/share.o io/errlog.o \
-	     io/shutdown.o io/fdisk.o io/cancel.o io/error.o io/arc.o \
+	     io/shutdown.o io/cancel.o io/error.o io/arc.o \
 	     io/dpc.o io/symlink.o io/adapter.o io/cntrller.o io/mdl.o \
 	     io/resource.o io/event.o io/process.o io/file.o io/ioctrl.o \
 	     io/fs.o io/vpb.o io/buildirp.o io/flush.o io/dir.o io/iocomp.o \
