@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: handle.c,v 1.54 2003/10/21 21:46:02 ekohl Exp $
+/* $Id: handle.c,v 1.55 2004/05/02 04:40:25 jimtabor Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -947,6 +947,37 @@ ObInsertObject(IN PVOID Object,
 			Access,
 			ObjectHeader->Inherit,
 			Handle));
+}
+
+
+ULONG 
+ObpGetHandleCountbyHandleTable(PHANDLE_TABLE HandleTable)
+{
+unsigned int i, Count=0;
+PHANDLE_BLOCK blk;
+POBJECT_HEADER Header;
+PVOID ObjectBody;
+PLIST_ENTRY current = HandleTable->ListHead.Flink;
+
+  while (current != &HandleTable->ListHead)
+       {
+	  blk = CONTAINING_RECORD(current, HANDLE_BLOCK, entry);
+
+	  for ( i=0; i<HANDLE_BLOCK_ENTRIES; i++)
+	     {
+	         ObjectBody = OB_ENTRY_TO_POINTER(blk->handles[i].ObjectBody);
+	     
+	         if (ObjectBody != NULL)
+	           {
+		     Header = BODY_TO_HEADER(ObjectBody);
+		     /* Make sure this is real. */
+		     if (Header->ObjectType != NULL)
+		         Count++;
+		   }
+	     }
+          current = current->Flink;
+       }
+  return (Count);	
 }
 
 /* EOF */

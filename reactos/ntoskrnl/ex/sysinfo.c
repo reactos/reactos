@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.32 2004/04/28 20:50:02 hbirr Exp $
+/* $Id: sysinfo.c,v 1.33 2004/05/02 04:40:24 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -552,7 +552,7 @@ QSI_DEF(SystemProcessInformation)
 		SpiCur->BasePriority = pr->Pcb.BasePriority;
 		SpiCur->ProcessId = pr->UniqueProcessId;
 		SpiCur->InheritedFromProcessId = (DWORD)(pr->InheritedFromUniqueProcessId);
-		SpiCur->HandleCount = ObGetObjectHandleCount(pr);
+		SpiCur->HandleCount = ObpGetHandleCountbyHandleTable(&pr->HandleTable);
 		SpiCur->VmCounters.PeakVirtualSize = pr->PeakVirtualSize;
 		SpiCur->VmCounters.VirtualSize = pr->VirtualSize.QuadPart;
 		SpiCur->VmCounters.PageFaultCount = pr->LastFaultCount;

@@ -133,4 +133,8 @@ ObDuplicateObject(PEPROCESS SourceProcess,
 		  BOOLEAN InheritHandle,
 		  ULONG	Options);
 
+ULONG 
+ObpGetHandleCountbyHandleTable(PHANDLE_TABLE HandleTable);
+
+
 #endif /* __INCLUDE_INTERNAL_OBJMGR_H */
