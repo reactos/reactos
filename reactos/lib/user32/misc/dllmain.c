@@ -99,8 +99,6 @@ DllMain(
 	PVOID  reserved
 	)
 {
-  DbgPrint("hinstDll (0x%X)  dwReason (0x%X)\n", hinstDll, dwReason);
-
   switch (dwReason)
     {
     case DLL_PROCESS_ATTACH:
