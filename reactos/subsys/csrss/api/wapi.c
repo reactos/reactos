@@ -1,4 +1,4 @@
-/* $Id: wapi.c,v 1.7 2000/04/23 17:44:53 phreak Exp $
+/* $Id: wapi.c,v 1.8 2000/05/26 05:40:20 phreak Exp $
  * 
  * reactos/subsys/csrss/api/wapi.c
  *
@@ -21,6 +21,28 @@
 HANDLE CsrssApiHeap;
 
 /* FUNCTIONS *****************************************************************/
+
+typedef NTSTATUS (*CsrFunc)( PCSRSS_PROCESS_DATA, PCSRSS_API_REQUEST, PCSRSS_API_REPLY );
+
+static const CsrFunc CsrFuncs[] = {
+   CsrCreateProcess,
+   CsrTerminateProcess,
+   CsrWriteConsole,
+   CsrReadConsole,
+   CsrAllocConsole,
+   CsrFreeConsole,
+   CsrConnectProcess,
+   CsrGetScreenBufferInfo,
+   CsrSetCursor,
+   CsrFillOutputChar,
+   CsrReadInputEvent,
+   CsrWriteConsoleOutputChar,
+   CsrWriteConsoleOutputAttrib,
+   CsrFillOutputAttrib,
+   CsrGetCursorInfo,
+   CsrSetCursorInfo,
+   CsrSetTextAttrib,
+   0 };
 
 static void Thread_Api2(HANDLE ServerPort)
 {
@@ -46,7 +68,6 @@ static void Thread_Api2(HANDLE ServerPort)
 	
 	if (LpcRequest.Header.MessageType == LPC_PORT_CLOSED)
 	  {
-	     DbgPrint("Client closed port\n");
 	     CsrFreeProcessData( LpcRequest.Header.Cid.UniqueProcess );
 	     NtClose(ServerPort);
 	     NtTerminateThread(NtCurrentThread(), STATUS_SUCCESS);
@@ -59,57 +80,9 @@ static void Thread_Api2(HANDLE ServerPort)
 				  (ULONG)LpcRequest.Header.Cid.UniqueProcess);
 	
 //	DisplayString(L"CSR: Received request\n");
-	
-	switch (Request->Type)
-	  {
-	   case CSRSS_CREATE_PROCESS:
-	     Status = CsrCreateProcess(ProcessData, 
-				       &Request->Data.CreateProcessRequest,
-				       Reply);
-	     break;
-	     
-	   case CSRSS_TERMINATE_PROCESS:
-	     Status = CsrTerminateProcess(ProcessData, 
-					  Request,
-					  Reply);
-	     break;
-	     
-	   case CSRSS_WRITE_CONSOLE:
-	     Status = CsrWriteConsole(ProcessData, 
-				      Request,
-				      Reply);
-	     break;
-	     
-	   case CSRSS_READ_CONSOLE:
-	     Status = CsrReadConsole(ProcessData, 
-				     Request,
-				     Reply);
-	     break;
-	     
-	   case CSRSS_ALLOC_CONSOLE:
-	     Status = CsrAllocConsole(ProcessData, 
-				      Request,
-				      Reply);
-	     break;
-	     
-	   case CSRSS_FREE_CONSOLE:
-	     Status = CsrFreeConsole(ProcessData, 
-				     Request,
-				     Reply);
-	     break;
-	     
-	   case CSRSS_CONNECT_PROCESS:
-	     Status = CsrConnectProcess(ProcessData, 
-					Request,
-					Reply);
-	     break;
-	     
-	   default:
-	     Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
-	       sizeof(LPC_MESSAGE_HEADER);
-	     Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-	     Reply->Status = STATUS_NOT_IMPLEMENTED;
-	  }
+	if( Request->Type >= (sizeof( CsrFuncs ) / sizeof( CsrFunc )) - 1 )
+	    Reply->Status = STATUS_INVALID_SYSTEM_SERVICE;
+	else CsrFuncs[ Request->Type ]( ProcessData, Request, Reply );
      }
 }
 

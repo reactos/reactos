@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.8 2000/04/23 17:44:53 phreak Exp $
+/* $Id: init.c,v 1.9 2000/05/26 05:40:20 phreak Exp $
  * 
  * reactos/subsys/csrss/init.c
  *
@@ -47,11 +47,11 @@ CsrParseCommandLine (
 
    ULONG i;
 
-   DbgPrint ("Arguments: %ld\n", ArgumentCount);
+   /*   DbgPrint ("Arguments: %ld\n", ArgumentCount);
    for (i = 0; i < ArgumentCount; i++)
      {
 	DbgPrint ("Argument %ld: %S\n", i, ArgumentArray[i]);
-     }
+	}*/
 
 
 	/* create object directory ('\Windows') */

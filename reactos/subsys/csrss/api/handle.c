@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.6 2000/04/23 17:44:53 phreak Exp $
+/* $Id: handle.c,v 1.7 2000/05/26 05:40:20 phreak Exp $
  *
  * reactos/subsys/csrss/api/handle.c
  *
@@ -26,15 +26,10 @@ NTSTATUS CsrGetObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle, Object_t 
        return STATUS_INVALID_HANDLE;
      }
    *Object = ProcessData->HandleTable[(((ULONG)Handle) >> 2) - 1];
-   RtlEnterCriticalSection( &(*Object)->Lock );
    //   DbgPrint( "CsrGetObject returning\n" );
    return *Object ? STATUS_SUCCESS : STATUS_INVALID_HANDLE;
 }
 
-VOID CsrUnlockObject( Object_t *Object )
-{
-   RtlLeaveCriticalSection( &Object->Lock );
-}
 
 NTSTATUS CsrReleaseObject(PCSRSS_PROCESS_DATA ProcessData,
 			  HANDLE Handle)
@@ -45,18 +40,14 @@ NTSTATUS CsrReleaseObject(PCSRSS_PROCESS_DATA ProcessData,
       return STATUS_INVALID_HANDLE;
    /* dec ref count */
    Object = ProcessData->HandleTable[(((ULONG)Handle) >> 2) - 1];
-   RtlEnterCriticalSection( &Object->Lock );
    if( --Object->ReferenceCount == 0 )
       switch( Object->Type )
 	 {
 	 case CSRSS_CONSOLE_MAGIC: CsrDeleteConsole( ProcessData, (PCSRSS_CONSOLE) Object );
-	   DbgPrint( "Deleting Console\n" );
 	    break;
 	 default: DbgPrint( "CSR: Error: releaseing unknown object type" );
 	 }
-   DbgPrint( "Deleting object, refcount: %d\n", Object->ReferenceCount );
    ProcessData->HandleTable[(((ULONG)Handle) >> 2) - 1] = 0;
-   RtlLeaveCriticalSection( &Object->Lock );
    return STATUS_SUCCESS;
 }
 

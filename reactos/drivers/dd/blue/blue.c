@@ -1,4 +1,4 @@
-/* $Id: blue.c,v 1.22 2000/05/08 23:25:36 ekohl Exp $
+/* $Id: blue.c,v 1.23 2000/05/26 05:43:33 phreak Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -64,13 +64,6 @@ typedef struct _DEVICE_EXTENSION
     WORD  Columns;        /* Number of columns     */
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
-#pragma pack(push,1)
-typedef struct _CHAR_CELL
-{
-	UCHAR Character;
-	UCHAR Attribute;
-} CHAR_CELL, *PCHAR_CELL;
-#pragma pack(pop)
 
 /* FUNCTIONS **************************************************************/
 
@@ -184,7 +177,6 @@ ScrWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
     cursory = offset / columns;
     cursorx = offset % columns;
-
     if( processed == 0 )
        {
 	  /* raw output mode */
@@ -242,7 +234,6 @@ ScrWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 		      }
 		   break;
 		}
-	     
 	     if (cursory >= rows)
 		{
 		   unsigned short *LinePtr;
@@ -281,47 +272,6 @@ ScrWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
     IoCompleteRequest (Irp, IO_NO_INCREMENT);
 
     return (Status);
-}
-
-
-static
-NTSTATUS
-BlueDraw (
-	PDEVICE_EXTENSION	DeviceExtension,
-	PIRP			Irp,
-	PIO_STACK_LOCATION	Stack
-	)
-{
-	PCONSOLE_DRAW DrawInfo;
-	PCHAR_INFO CharBuffer;
-	PCHAR_CELL VideoMemory;
-	ULONG ScreenIndex;
-	ULONG BufferIndex;
-	ULONG x;
-	ULONG y;
-
-	DrawInfo = (PCONSOLE_DRAW)Irp->AssociatedIrp.SystemBuffer;
-	CharBuffer = (PCHAR_INFO)MmGetSystemAddressForMdl(Irp->MdlAddress);
-	VideoMemory = (PCHAR_CELL)DeviceExtension->VideoMemory;
-
-	for (y = 0; y < DeviceExtension->Rows; y++)
-	{
-		for (x = 0; x < DeviceExtension->Columns; x++)
-		{
-			ScreenIndex = y *DeviceExtension->Columns + x;
-			BufferIndex = (DrawInfo->Y + y) * DrawInfo->SizeX
-			              + DrawInfo->X + x;
-
-			VideoMemory[ScreenIndex].Character =
-				(CHAR)CharBuffer[BufferIndex].Char.UnicodeChar;
-			VideoMemory[ScreenIndex].Attribute =
-				(CHAR)CharBuffer[BufferIndex].Attributes;
-		}
-	}
-
-	Irp->IoStatus.Information = 0;
-
-	return STATUS_SUCCESS;
 }
 
 
@@ -378,7 +328,6 @@ ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
                 unsigned int offset;
 
                 DeviceExtension->CharAttribute = pcsbi->wAttributes;
-
                 offset = (pcsbi->dwCursorPosition.Y * DeviceExtension->Columns) +
                           pcsbi->dwCursorPosition.X;
 
@@ -610,10 +559,6 @@ ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
             }
             break;
 
-
-	case IOCTL_CONSOLE_DRAW:
-		Status = BlueDraw (DeviceExtension, Irp, stk);
-		break;
 
         default:
             Status = STATUS_NOT_IMPLEMENTED;

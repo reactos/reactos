@@ -12,7 +12,6 @@ typedef struct Object_tt
 {
    DWORD Type;
    DWORD ReferenceCount;
-   CRITICAL_SECTION Lock;
 } Object_t;
 
 typedef struct ConsoleInput_t
@@ -25,16 +24,16 @@ typedef struct CSRSS_CONSOLE_t
 {
    DWORD Type;
    DWORD ReferenceCount;              /* Inherited from Object_t */
-   CRITICAL_SECTION Lock;
    struct CSRSS_CONSOLE_t *Prev, *Next; /* Next and Prev consoles in console wheel */
    HANDLE ActiveEvent;
-   PCHAR_INFO Buffer;
+   BYTE *Buffer;
    USHORT MaxX, MaxY;          /* size of the entire scrollback buffer */
    USHORT ShowX, ShowY;        /* beginning offset for the actual display area */
    ULONG CurrentX;
    ULONG CurrentY;
-   WORD DefaultAttrib;        /* default char attribute */
+   BYTE DefaultAttrib;        /* default char attribute */
    LIST_ENTRY InputEvents;    /* List head for input event queue */
+   CONSOLE_CURSOR_INFO CursorInfo;
 } CSRSS_CONSOLE, *PCSRSS_CONSOLE;
 
 typedef struct
@@ -46,10 +45,11 @@ typedef struct
    HANDLE ConsoleEvent;
 } CSRSS_PROCESS_DATA, *PCSRSS_PROCESS_DATA;
 
+
 VOID CsrInitProcessData(VOID);
 
 NTSTATUS CsrCreateProcess (PCSRSS_PROCESS_DATA ProcessData,
-			   PCSRSS_CREATE_PROCESS_REQUEST Request,
+			   PCSRSS_API_REQUEST Request,
 			   PCSRSS_API_REPLY Reply);
 
 NTSTATUS CsrTerminateProcess(PCSRSS_PROCESS_DATA ProcessData,
@@ -75,6 +75,26 @@ NTSTATUS CsrReadConsole(PCSRSS_PROCESS_DATA ProcessData,
 NTSTATUS CsrConnectProcess(PCSRSS_PROCESS_DATA ProcessData,
 			   PCSRSS_API_REQUEST Request,
 			   PCSRSS_API_REPLY Reply);
+
+NTSTATUS CsrGetScreenBufferInfo( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply );
+
+NTSTATUS CsrSetCursor( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply );
+
+NTSTATUS CsrFillOutputChar( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply );
+
+NTSTATUS CsrReadInputEvent( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply );
+
+NTSTATUS CsrWriteConsoleOutputChar( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply );
+
+NTSTATUS CsrWriteConsoleOutputAttrib( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply );
+
+NTSTATUS CsrFillOutputAttrib( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply );
+
+NTSTATUS CsrGetCursorInfo( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply );
+
+NTSTATUS CsrSetCursorInfo( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply );
+
+NTSTATUS CsrSetTextAttrib( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply );
 
 /* print.c */
 VOID DisplayString(LPCWSTR lpwString);
@@ -102,7 +122,6 @@ NTSTATUS CsrGetObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle, Object_t 
 BOOL STDCALL CsrServerInitialization (ULONG ArgumentCount,
 				      PWSTR *ArgumentArray);
 NTSTATUS CsrReleaseObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Object );
-VOID CsrUnlockObject( Object_t *Object );
 VOID CsrDrawConsole( PCSRSS_CONSOLE Console );
 
 

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.8 2000/04/23 17:44:53 phreak Exp $
+/* $Id: process.c,v 1.9 2000/05/26 05:40:20 phreak Exp $
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -19,6 +19,8 @@
 
 static ULONG NrProcess;
 static PCSRSS_PROCESS_DATA ProcessData[256];
+extern CRITICAL_SECTION ActiveConsoleLock;
+CRITICAL_SECTION ProcessDataLock;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -31,17 +33,20 @@ VOID CsrInitProcessData(VOID)
 	ProcessData[i] = NULL;
      }
    NrProcess = 256;
+   RtlInitializeCriticalSection( &ProcessDataLock );
 }
 
 PCSRSS_PROCESS_DATA CsrGetProcessData(ULONG ProcessId)
 {
    ULONG i;
-   
+
+   RtlEnterCriticalSection( &ProcessDataLock );
    for (i=0; i<NrProcess; i++)
      {
 	if (ProcessData[i] &&
 	    ProcessData[i]->ProcessId == ProcessId)
 	  {
+	     RtlLeaveCriticalSection( &ProcessDataLock );
 	     return(ProcessData[i]);
 	  }
      }
@@ -54,19 +59,23 @@ PCSRSS_PROCESS_DATA CsrGetProcessData(ULONG ProcessId)
 					      sizeof(CSRSS_PROCESS_DATA));
 	     if (ProcessData[i] == NULL)
 	       {
+		  RtlLeaveCriticalSection( &ProcessDataLock );
 		  return(NULL);
 	       }
 	     ProcessData[i]->ProcessId = ProcessId;
+	     RtlLeaveCriticalSection( &ProcessDataLock );
 	     return(ProcessData[i]);
 	  }
      }
 //   DbgPrint("CSR: CsrGetProcessData() failed\n");
+   RtlLeaveCriticalSection( &ProcessDataLock );
    return(NULL);
 }
 
 NTSTATUS CsrFreeProcessData( ULONG Pid )
 {
    int i;
+   RtlEnterCriticalSection( &ProcessDataLock );
    for( i = 0; i < NrProcess; i++ )
       {
 	 if( ProcessData[i] && ProcessData[i]->ProcessId == Pid )
@@ -81,25 +90,27 @@ NTSTATUS CsrFreeProcessData( ULONG Pid )
 		  }
 	       if( ProcessData[i]->Console )
 		  {
-		     RtlEnterCriticalSection( &ProcessData[i]->Console->Lock );
+		     RtlEnterCriticalSection( &ActiveConsoleLock );
 		     if( --ProcessData[i]->Console->ReferenceCount == 0 )
 			{
-			   RtlLeaveCriticalSection( &ProcessData[i]->Console->Lock );
+			   RtlLeaveCriticalSection( &ActiveConsoleLock );
 			   CsrDeleteConsole( ProcessData[i], ProcessData[i]->Console );
 			}
-		     RtlLeaveCriticalSection( &ProcessData[i]->Console->Lock );
+		     RtlLeaveCriticalSection( &ActiveConsoleLock );
 		  }
 	       RtlFreeHeap( CsrssApiHeap, 0, ProcessData[i] );
 	       ProcessData[i] = 0;
+	       RtlLeaveCriticalSection( &ProcessDataLock );
 	       return STATUS_SUCCESS;
 	    }
       }
+   RtlLeaveCriticalSection( &ProcessDataLock );
    return STATUS_INVALID_PARAMETER;
 }
 
 
 NTSTATUS CsrCreateProcess (PCSRSS_PROCESS_DATA ProcessData,
-			   PCSRSS_CREATE_PROCESS_REQUEST Request,
+			   PCSRSS_API_REQUEST Request,
 			   PCSRSS_API_REPLY Reply)
 {
    PCSRSS_PROCESS_DATA NewProcessData;
@@ -110,19 +121,19 @@ NTSTATUS CsrCreateProcess (PCSRSS_PROCESS_DATA ProcessData,
      sizeof(LPC_MESSAGE_HEADER);
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    
-   NewProcessData = CsrGetProcessData(Request->NewProcessId);
-   
+   NewProcessData = CsrGetProcessData(Request->Data.CreateProcessRequest.NewProcessId);
+   DbgPrint( "CreateProcess\n" );
    if (NewProcessData == NULL)
      {
 	Reply->Status = STATUS_NO_MEMORY;
 	return(STATUS_NO_MEMORY);
      }
    
-   if (Request->Flags & DETACHED_PROCESS)
+   if (Request->Data.CreateProcessRequest.Flags & DETACHED_PROCESS)
      {
 	NewProcessData->Console = NULL;
      }
-   else if (Request->Flags & CREATE_NEW_CONSOLE)
+   else if (Request->Data.CreateProcessRequest.Flags & CREATE_NEW_CONSOLE)
      {
 	PCSRSS_CONSOLE Console;
 
@@ -137,9 +148,9 @@ NTSTATUS CsrCreateProcess (PCSRSS_PROCESS_DATA ProcessData,
    else
      {
 	NewProcessData->Console = ProcessData->Console;
-	RtlEnterCriticalSection( &ProcessData->Console->Lock );
+	RtlEnterCriticalSection( &ActiveConsoleLock );
 	ProcessData->Console->ReferenceCount++;
-	RtlLeaveCriticalSection( &ProcessData->Console->Lock );
+	RtlLeaveCriticalSection( &ActiveConsoleLock );
      }
    
    if( NewProcessData->Console )
@@ -160,7 +171,7 @@ NTSTATUS CsrCreateProcess (PCSRSS_PROCESS_DATA ProcessData,
        Status = NtDuplicateObject( NtCurrentProcess(), &NewProcessData->Console->ActiveEvent, Process, &NewProcessData->ConsoleEvent, SYNCHRONIZE, FALSE, 0 );
        if( !NT_SUCCESS( Status ) )
 	 {
-	   DbgPrint( "CSR: NtDuplicateObject() failed\n" );
+	   DbgPrint( "CSR: NtDuplicateObject() failed: %x\n", Status );
 	   NtClose( Process );
 	   CsrFreeProcessData( NewProcessData->ProcessId );
 	   Reply->Status = Status;
