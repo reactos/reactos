@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.65 2003/08/15 10:12:22 rcampbell Exp $
+/* $Id: defwnd.c,v 1.66 2003/08/15 10:51:23 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -465,9 +465,7 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
   int wFrame = 0;
 
     // This won't work because it conflicts with BS_BITMAP :
-//  Active = GetWindowLongW(hWnd, GWL_STYLE) & WIN_NCACTIVATED;
   if (GetActiveWindow() == hWnd) Active = TRUE;
-  DbgPrint("Window:\t%d\nActiveWindow:\t%d\n\n\n\n");
   Style = GetWindowLongW(hWnd, GWL_STYLE);
   ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
 
@@ -1444,7 +1442,6 @@ User32DefWindowProc(HWND hWnd,
       }
     case WM_WINDOWPOSCHANGING:
       {
-        DbgPrint("WM_WINDOWPOSCHANGING\n\n");
         break;
       }
     case WM_NCHITTEST:
