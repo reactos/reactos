@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.71 2003/12/26 13:06:34 weiden Exp $
+/* $Id: winpos.c,v 1.72 2003/12/26 14:50:29 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -67,14 +67,14 @@
 
 #define HAS_DLGFRAME(Style, ExStyle) \
             (((ExStyle) & WS_EX_DLGMODALFRAME) || \
-            (((Style) & WS_DLGFRAME) && (!((Style) & WS_THICKFRAME))))
+            (((Style) & WS_DLGFRAME) && (!((Style) & (WS_THICKFRAME | WS_MINIMIZE)))))
 
 #define HAS_THICKFRAME(Style, ExStyle) \
-            (((Style) & WS_THICKFRAME) && \
+            (((Style) & WS_THICKFRAME) && !((Style) & WS_MINIMIZE) && \
             (!(((Style) & (WS_DLGFRAME | WS_BORDER)) == WS_DLGFRAME)))
 
 #define HAS_THINFRAME(Style, ExStyle) \
-            (((Style) & WS_BORDER) || (!((Style) & (WS_CHILD | WS_POPUP))))
+            (((Style) & (WS_BORDER | WS_MINIMIZE)) || (!((Style) & (WS_CHILD | WS_POPUP))))
 
 BOOL FASTCALL
 IntGetClientOrigin(HWND hWnd, LPPOINT Point)
@@ -1278,11 +1278,6 @@ WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, POINT Point,
 	    {
 		  ExReleaseFastMutexUnsafe(&ScopeWin->ChildrenListLock);
 	      return(HTERROR);
-	    }
-	  if (Current->Style & WS_MINIMIZE)
-	    {
-		  ExReleaseFastMutexUnsafe(&ScopeWin->ChildrenListLock);
-	      return(HTCAPTION);
 	    }
 	  if (Point.x >= Current->ClientRect.left &&
 	      Point.x < Current->ClientRect.right &&

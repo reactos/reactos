@@ -48,6 +48,17 @@ Already defined in makefile now.
 #define NDEBUG
 #include <debug.h>
 
+#define HAS_DLGFRAME(Style, ExStyle) \
+            (((ExStyle) & WS_EX_DLGMODALFRAME) || \
+            (((Style) & WS_DLGFRAME) && (!((Style) & (WS_THICKFRAME | WS_MINIMIZE)))))
+
+#define HAS_THICKFRAME(Style, ExStyle) \
+            (((Style) & WS_THICKFRAME) && !((Style) & WS_MINIMIZE) && \
+            (!(((Style) & (WS_DLGFRAME | WS_BORDER)) == WS_DLGFRAME)))
+
+#define HAS_THINFRAME(Style, ExStyle) \
+            (((Style) & (WS_BORDER | WS_MINIMIZE)) || (!((Style) & (WS_CHILD | WS_POPUP))))
+
 /*
  * FIXME: This should be moved to a header
  */
@@ -65,6 +76,8 @@ extern ATOM AtomInternalPos;
 BOOL
 UserHasWindowEdge(DWORD Style, DWORD ExStyle)
 {
+   if (Style & WS_MINIMIZE)
+      return TRUE;
    if (ExStyle & WS_EX_DLGMODALFRAME)
       return TRUE;
    if (ExStyle & WS_EX_STATICEDGE)
@@ -91,7 +104,7 @@ UserGetWindowBorders(DWORD Style, DWORD ExStyle, SIZE *Size, BOOL WithClient)
    if (Style & WS_CAPTION || ExStyle & WS_EX_DLGMODALFRAME)
       Border ++;
    Size->cx = Size->cy = Border;
-   if (Style & WS_THICKFRAME)
+   if ((Style & WS_THICKFRAME) && !(Style & WS_MINIMIZE))
    {
       Size->cx += GetSystemMetrics(SM_CXFRAME) - GetSystemMetrics(SM_CXDLGFRAME);
       Size->cy += GetSystemMetrics(SM_CYFRAME) - GetSystemMetrics(SM_CYDLGFRAME);
@@ -176,7 +189,8 @@ UserDrawCaptionButton(LPRECT Rect, DWORD Style, DWORD ExStyle, HDC hDC, BOOL bDo
          TempRect.right -= 1;
 
          DrawFrameControl(hDC, &TempRect, DFC_CAPTION,
-                          DFCS_CAPTIONMIN | (bDown ? DFCS_PUSHED : 0) |
+                          ((Style & WS_MINIMIZE) ? DFCS_CAPTIONRESTORE : DFCS_CAPTIONMIN) | 
+                          (bDown ? DFCS_PUSHED : 0) |
                           ((Style & WS_MINIMIZEBOX) ? 0 : DFCS_INACTIVE));
          break;
       }
@@ -285,7 +299,7 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn)
    }
     
    /* Firstly the "thick" frame */
-   if (Style & WS_THICKFRAME)
+   if ((Style & WS_THICKFRAME) && !(Style & WS_MINIMIZE))
    {
       DWORD Width =
          (GetSystemMetrics(SM_CXFRAME) - GetSystemMetrics(SM_CXDLGFRAME)) *
@@ -540,10 +554,6 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
    {      
       return HTNOWHERE;
    }
-   if (Style & WS_MINIMIZE)
-   {
-      return HTCAPTION;
-   }
 
    if (UserHasWindowEdge(Style, ExStyle))
    {
@@ -560,6 +570,8 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
          ThickFrame = (Style & WS_THICKFRAME);
          if (Point.y < WindowRect.top)
          {
+            if(Style & WS_MINIMIZE)
+              return HTCAPTION;
             if(!ThickFrame)
               return HTBORDER;
             if (Point.x < (WindowRect.left + XSize))
@@ -570,6 +582,8 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
          }
          if (Point.y >= WindowRect.bottom)
          {
+            if(Style & WS_MINIMIZE)
+              return HTCAPTION;
             if(!ThickFrame)
               return HTBORDER;
             if (Point.x < (WindowRect.left + XSize))
@@ -580,6 +594,8 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
          }
          if (Point.x < WindowRect.left)
          {
+            if(Style & WS_MINIMIZE)
+              return HTCAPTION;
             if(!ThickFrame)
               return HTBORDER;
             if (Point.y < (WindowRect.top + YSize))
@@ -590,6 +606,8 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
          }
          if (Point.x >= WindowRect.right)
          {
+            if(Style & WS_MINIMIZE)
+              return HTCAPTION;
             if(!ThickFrame)
               return HTBORDER;
             if (Point.y < (WindowRect.top + YSize))
@@ -610,7 +628,7 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
          return HTBORDER;
    }
 
-   if ((Style & WS_CAPTION) == WS_CAPTION)
+   if (Style & WS_CAPTION)
    {
       if (ExStyle & WS_EX_TOOLWINDOW)
          WindowRect.top += GetSystemMetrics(SM_CYSMCAPTION);
@@ -645,80 +663,83 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
          return HTCAPTION;
       }
    }
-
-   ClientPoint = Point;
-   ScreenToClient(hWnd, &ClientPoint);
-   GetClientRect(hWnd, &ClientRect);
-
-   if (PtInRect(&ClientRect, ClientPoint))
+   
+   if(!(Style & WS_MINIMIZE))
    {
-      return HTCLIENT;
-   }
-    
-   if (UserHasMenu(hWnd, Style))
-   {
-      if (Point.y < 0 && Point.x >= 0 && Point.x <= WindowRect.right)
-         return HTMENU;
-   }
+     ClientPoint = Point;
+     ScreenToClient(hWnd, &ClientPoint);
+     GetClientRect(hWnd, &ClientRect);
+   
+     if (PtInRect(&ClientRect, ClientPoint))
+     {
+        return HTCLIENT;
+     }
+     
+     if (UserHasMenu(hWnd, Style))
+     {
+        if (Point.y < 0 && Point.x >= 0 && Point.x <= WindowRect.right)
+           return HTMENU;
+     }
 
-   if (ExStyle & WS_EX_CLIENTEDGE)
-   {
-      InflateRect(&WindowRect, -2 * GetSystemMetrics(SM_CXBORDER),
-         -2 * GetSystemMetrics(SM_CYBORDER));
-   }
+     if (ExStyle & WS_EX_CLIENTEDGE)
+     {
+        InflateRect(&WindowRect, -2 * GetSystemMetrics(SM_CXBORDER),
+           -2 * GetSystemMetrics(SM_CYBORDER));
+     }
 
-   if ((Style & WS_VSCROLL) && (Style & WS_HSCROLL) &&
-       (WindowRect.bottom - WindowRect.top) > GetSystemMetrics(SM_CYHSCROLL))
-   {
-      RECT TempRect = WindowRect, TempRect2 = WindowRect;
+     if ((Style & WS_VSCROLL) && (Style & WS_HSCROLL) &&
+         (WindowRect.bottom - WindowRect.top) > GetSystemMetrics(SM_CYHSCROLL))
+     {
+        RECT TempRect = WindowRect, TempRect2 = WindowRect;
 
-      TempRect.bottom -= GetSystemMetrics(SM_CYHSCROLL);
-      if ((ExStyle & WS_EX_LEFTSCROLLBAR) != 0)
-         TempRect.right = TempRect.left + GetSystemMetrics(SM_CXVSCROLL);
-      else
-         TempRect.left = TempRect.right - GetSystemMetrics(SM_CXVSCROLL);
-      if (PtInRect(&TempRect, Point))
-         return HTVSCROLL;
+        TempRect.bottom -= GetSystemMetrics(SM_CYHSCROLL);
+        if ((ExStyle & WS_EX_LEFTSCROLLBAR) != 0)
+           TempRect.right = TempRect.left + GetSystemMetrics(SM_CXVSCROLL);
+        else
+           TempRect.left = TempRect.right - GetSystemMetrics(SM_CXVSCROLL);
+        if (PtInRect(&TempRect, Point))
+           return HTVSCROLL;
 
-      TempRect2.top = TempRect2.bottom - GetSystemMetrics(SM_CYHSCROLL);
-      if ((ExStyle & WS_EX_LEFTSCROLLBAR) != 0)
-         TempRect2.left += GetSystemMetrics(SM_CXVSCROLL);
-      else
-         TempRect2.right -= GetSystemMetrics(SM_CXVSCROLL);
-      if (PtInRect(&TempRect, Point))
-         return HTHSCROLL;
+        TempRect2.top = TempRect2.bottom - GetSystemMetrics(SM_CYHSCROLL);
+        if ((ExStyle & WS_EX_LEFTSCROLLBAR) != 0)
+           TempRect2.left += GetSystemMetrics(SM_CXVSCROLL);
+        else
+           TempRect2.right -= GetSystemMetrics(SM_CXVSCROLL);
+        if (PtInRect(&TempRect, Point))
+           return HTHSCROLL;
 
-      TempRect.top = TempRect2.top;
-      TempRect.bottom = TempRect2.bottom;
-      if (PtInRect(&TempRect, Point) && 
-          (!(Style & WS_CHILD) || (ExStyle & WS_EX_MDICHILD)))
-      {
-         if ((ExStyle & WS_EX_LEFTSCROLLBAR) != 0)
-            return HTBOTTOMLEFT;
-         else
-            return HTBOTTOMRIGHT;
-      }
-   }
-   else
-   {
-      if (Style & WS_VSCROLL)
-      {
-         RECT TempRect = WindowRect;
+        TempRect.top = TempRect2.top;
+        TempRect.bottom = TempRect2.bottom;
+        if (PtInRect(&TempRect, Point) && 
+            (!(Style & WS_CHILD) || (ExStyle & WS_EX_MDICHILD)))
+        {
+           if ((ExStyle & WS_EX_LEFTSCROLLBAR) != 0)
+              return HTBOTTOMLEFT;
+           else
+              return HTBOTTOMRIGHT;
+        }
+     }
+     else
+     {
+        if (Style & WS_VSCROLL)
+        {
+           RECT TempRect = WindowRect;
 
-         if ((ExStyle & WS_EX_LEFTSCROLLBAR) != 0)
-            TempRect.right = TempRect.left + GetSystemMetrics(SM_CXVSCROLL);
-         else
-            TempRect.left = TempRect.right - GetSystemMetrics(SM_CXVSCROLL);
-         if (PtInRect(&TempRect, Point))
-            return HTVSCROLL;
-      } else
-      if (Style & WS_HSCROLL)
-      {
-         RECT TempRect = WindowRect;
-         TempRect.top = TempRect.bottom - GetSystemMetrics(SM_CYHSCROLL);
-         if (PtInRect(&TempRect, Point))
-            return HTHSCROLL;
-      }
+           if ((ExStyle & WS_EX_LEFTSCROLLBAR) != 0)
+              TempRect.right = TempRect.left + GetSystemMetrics(SM_CXVSCROLL);
+           else
+              TempRect.left = TempRect.right - GetSystemMetrics(SM_CXVSCROLL);
+           if (PtInRect(&TempRect, Point))
+              return HTVSCROLL;
+        } else
+        if (Style & WS_HSCROLL)
+        {
+           RECT TempRect = WindowRect;
+           TempRect.top = TempRect.bottom - GetSystemMetrics(SM_CYHSCROLL);
+           if (PtInRect(&TempRect, Point))
+              return HTHSCROLL;
+        }
+     }
    }
   
    return HTNOWHERE;
@@ -756,7 +777,7 @@ DefWndDoButton(HWND hWnd, WPARAM wParam)
       break;
     case HTMINBUTTON:
       Btn = DFCS_CAPTIONMIN;
-      SCMsg = SC_MINIMIZE;
+      SCMsg = ((Style & WS_MINIMIZE) ? SC_RESTORE : SC_MINIMIZE);
       HasBtn = (Style & WS_MINIMIZEBOX);
       break;
     case HTMAXBUTTON:
