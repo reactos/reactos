@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.34 2003/12/13 23:59:45 gvg Exp $
+/* $Id: reg.c,v 1.35 2003/12/23 21:18:31 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -2757,12 +2757,12 @@ RegSetValueExW (HKEY hKey,
     {
       RtlInitUnicodeString (&ValueName,
 			    lpValueName);
-      pValueName = &ValueName;
     }
   else
     {
-      pValueName = NULL;
+      RtlInitUnicodeString (&ValueName, L"");
     }
+  pValueName = &ValueName;
 
   Status = NtSetValueKey (KeyHandle,
 			  pValueName,
