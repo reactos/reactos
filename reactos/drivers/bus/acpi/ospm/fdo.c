@@ -190,8 +190,8 @@ FdoQueryBusRelations(
 
       PdoDeviceExtension->Common.DevicePowerState = PowerDeviceD0;
 
-      PdoDeviceExtension->Common.Ldo = IoAttachDeviceToDeviceStack(DeviceObject,
-                                                                   Device->Pdo);
+//      PdoDeviceExtension->Common.Ldo = IoAttachDeviceToDeviceStack(DeviceObject,
+//                                                                   Device->Pdo);
 
       RtlInitUnicodeString(&PdoDeviceExtension->DeviceID, NULL);
       RtlInitUnicodeString(&PdoDeviceExtension->InstanceID, NULL);
