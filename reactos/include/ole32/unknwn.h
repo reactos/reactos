@@ -1,11 +1,11 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            include\ole32\basetyps.h
- * PURPOSE:         Base type and interface macros
+ * FILE:            include\ole32\unknwn.h
+ * PURPOSE:         Defines IUnknown and IClassFactory interface
  * PROGRAMMER:      jurgen van gael [jurgen.vangael@student.kuleuven.ac.be]
  * UPDATE HISTORY:
- *                  Created 05/01/2001
+ *                  Created 01/05/2001
  */
 /********************************************************************
 
@@ -27,11 +27,11 @@ Cambridge, MA 02139, USA.
 
 
 ********************************************************************/
-#ifndef _BASETYPS
-#define _BASETYPS
+#ifndef _UNKNWN_H
+#define _UNKNWN_H
 
 #include <ole32\objbase.h>
 
 
-#endif
 
+#endif

@@ -1,11 +1,11 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            include\ole32\basetyps.h
- * PURPOSE:         Base type and interface macros
+ * FILE:            include\ole32\winerror.h
+ * PURPOSE:         Defines windows error codes
  * PROGRAMMER:      jurgen van gael [jurgen.vangael@student.kuleuven.ac.be]
  * UPDATE HISTORY:
- *                  Created 05/01/2001
+ *                  Created 01/05/2001
  */
 /********************************************************************
 
@@ -27,11 +27,32 @@ Cambridge, MA 02139, USA.
 
 
 ********************************************************************/
-#ifndef _BASETYPS
-#define _BASETYPS
+#ifndef _WINERROR_H
+#define _WINERROR_H
 
-#include <ole32\objbase.h>
+//
+//	Return Code macros
+//
+#define	SUCCEEDED(Status)	((HRESULT)(Status) >= 0)
+#define	FAILED(Status)		((HRESULT)(Status)<0)
+
+//
+//	Success Codes
+//
+#define S_OK						0x00000000L
+#define S_FALSE						0x00000001L
+
+//
+//	Error Codes
+//
+#define E_NOINTERFACE				0x80000004L
+#define E_POINTER					0x80004003L
+#define	E_FAIL						0x80004005L
+#define E_UNEXPECTED				0x8000FFFFL
+#define	CLASS_E_NOAGGREGATION		0x80040110L
+#define	CLASS_E_CLASSNOTAVAILABLE	0x80040111L
+#define	E_OUTOFMEMORY				0x8007000EL
+#define E_INVALIDARG				0x80070057L
 
 
 #endif
-
