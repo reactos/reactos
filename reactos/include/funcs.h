@@ -4992,6 +4992,7 @@ GlobalAlloc(
 	    );
 
 HGLOBAL
+STDCALL
 GlobalDiscard(
 	      HGLOBAL hglbMem
 	      );
