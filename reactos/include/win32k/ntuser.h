@@ -1538,7 +1538,7 @@ STDCALL
 NtUserSwitchDesktop(
   HDESK hDesktop);
 
-DWORD
+BOOL
 STDCALL
 NtUserSystemParametersInfo(
   UINT uiAction,

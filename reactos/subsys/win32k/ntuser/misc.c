@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.79 2004/06/20 00:45:36 navaraf Exp $
+/* $Id: misc.c,v 1.80 2004/06/24 09:44:06 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -16,12 +16,6 @@
 
 /* registered Logon process */
 PW32PROCESS LogonProcess = NULL;
-
-/* FIXME - not yet defined in w32api :( */
-#define SPI_GETFOCUSBORDERWIDTH	(8206)
-#define SPI_SETFOCUSBORDERWIDTH	(8207)
-#define SPI_GETFOCUSBORDERHEIGHT	(8208)
-#define SPI_SETFOCUSBORDERHEIGHT	(8209)
 
 void W32kRegisterPrimitiveMessageQueue() {
   extern PUSER_MESSAGE_QUEUE pmPrimitiveMessageQueue;
@@ -819,7 +813,7 @@ IntSystemParametersInfo(
 /*
  * @implemented
  */
-DWORD
+BOOL
 STDCALL
 NtUserSystemParametersInfo(
   UINT uiAction,
