@@ -18,7 +18,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dpc.c,v 1.42 2004/10/31 13:20:58 hbirr Exp $
+/* $Id: dpc.c,v 1.43 2004/10/31 15:31:40 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -84,10 +84,44 @@ KiDispatchInterrupt(VOID)
    PKTHREAD CurrentThread;
    PKPROCESS CurrentProcess;
 
-   ASSERT_IRQL(DISPATCH_LEVEL);
+   ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
 
    Pcr = KeGetCurrentKPCR();
 
+   if (Pcr->PrcbData.DpcData[0].DpcQueueDepth > 0)
+     {
+
+       KeRaiseIrql(HIGH_LEVEL, &oldlvl);
+       KiAcquireSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
+
+       while (!IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead))
+       {
+         ASSERT(Pcr->PrcbData.DpcData[0].DpcQueueDepth > 0);
+
+         current_entry = RemoveHeadList(&Pcr->PrcbData.DpcData[0].DpcListHead);
+         Pcr->PrcbData.DpcData[0].DpcQueueDepth--;
+         Pcr->PrcbData.DpcData[0].DpcCount++;
+
+         ASSERT((Pcr->PrcbData.DpcData[0].DpcQueueDepth == 0 && IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead)) ||
+                (Pcr->PrcbData.DpcData[0].DpcQueueDepth > 0 && !IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead)));	     
+
+         current = CONTAINING_RECORD(current_entry,KDPC,DpcListEntry);
+         current->Lock=FALSE;
+         Pcr->PrcbData.DpcRoutineActive=1;
+         KiReleaseSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
+         KeLowerIrql(oldlvl);
+         current->DeferredRoutine(current,current->DeferredContext,
+			          current->SystemArgument1,
+			          current->SystemArgument2);
+
+         KeRaiseIrql(HIGH_LEVEL, &oldlvl);
+         KiAcquireSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
+         Pcr->PrcbData.DpcRoutineActive=0;
+       }
+
+       KiReleaseSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
+       KeLowerIrql(oldlvl);
+     }
    if (Pcr->PrcbData.QuantumEnd)
      {
        /*
@@ -99,44 +133,8 @@ KiDispatchInterrupt(VOID)
        CurrentThread->Quantum = CurrentProcess->ThreadQuantum;
        Pcr->PrcbData.QuantumEnd = FALSE;
        PsDispatchThread(THREAD_STATE_READY);
-       return;
      }
 
-   if (Pcr->PrcbData.DpcData[0].DpcQueueDepth == 0)
-     {
-       return;
-     }
-
-   KeRaiseIrql(HIGH_LEVEL, &oldlvl);
-   KiAcquireSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
-
-   while (!IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead))
-   {
-      ASSERT(Pcr->PrcbData.DpcData[0].DpcQueueDepth > 0);
-
-      current_entry = RemoveHeadList(&Pcr->PrcbData.DpcData[0].DpcListHead);
-      Pcr->PrcbData.DpcData[0].DpcQueueDepth--;
-      Pcr->PrcbData.DpcData[0].DpcCount++;
-
-      ASSERT((Pcr->PrcbData.DpcData[0].DpcQueueDepth == 0 && IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead)) ||
-             (Pcr->PrcbData.DpcData[0].DpcQueueDepth > 0 && !IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead)));	     
-
-      current = CONTAINING_RECORD(current_entry,KDPC,DpcListEntry);
-      current->Lock=FALSE;
-      Pcr->PrcbData.DpcRoutineActive = 1;
-      KiReleaseSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
-      KeLowerIrql(oldlvl);
-      current->DeferredRoutine(current,current->DeferredContext,
-			       current->SystemArgument1,
-			       current->SystemArgument2);
-
-      KeRaiseIrql(HIGH_LEVEL, &oldlvl);
-      KiAcquireSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
-      Pcr->PrcbData.DpcRoutineActive = 0;
-   }
-
-   KiReleaseSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
-   KeLowerIrql(oldlvl);
 }
 
 /*
@@ -180,9 +178,8 @@ KeRemoveQueueDpc (PKDPC	Dpc)
    BOOLEAN WasInQueue;
    PKPCR Pcr;
 
-   Pcr = KeGetCurrentKPCR();
-
    KeRaiseIrql(HIGH_LEVEL, &oldIrql);
+   Pcr = KeGetCurrentKPCR();
    KiAcquireSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
    WasInQueue = Dpc->Lock ? TRUE : FALSE;
    if (WasInQueue)
@@ -235,8 +232,8 @@ KeInsertQueueDpc (PKDPC	Dpc,
 	return(FALSE);
      }
 
-   Pcr = KeGetCurrentKPCR();
    KeRaiseIrql(HIGH_LEVEL, &oldlvl);
+   Pcr = KeGetCurrentKPCR();
    KiAcquireSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
    ASSERT((Pcr->PrcbData.DpcData[0].DpcQueueDepth == 0 && IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead)) ||
           (Pcr->PrcbData.DpcData[0].DpcQueueDepth > 0 && !IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead)));	     
