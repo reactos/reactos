@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_OBTYPES_H
 #define _INCLUDE_DDK_OBTYPES_H
-/* $Id: obtypes.h,v 1.2 2003/06/01 14:59:01 chorns Exp $ */
+/* $Id: obtypes.h,v 1.3 2003/06/02 10:02:16 ekohl Exp $ */
 struct _DIRECTORY_OBJECT;
 struct _OBJECT_ATTRIBUTES;
 
@@ -8,9 +8,15 @@ struct _OBJECT_ATTRIBUTES;
 
 typedef ULONG ACCESS_STATE, *PACCESS_STATE;
 
-typedef struct _OBJECT_HANDLE_INFORMATION {
-    ULONG HandleAttributes;
-    ACCESS_MASK GrantedAccess;
+typedef struct _OBJECT_NAME_INFORMATION
+{
+  UNICODE_STRING Name;
+} OBJECT_NAME_INFORMATION, *POBJECT_NAME_INFORMATION;
+
+typedef struct _OBJECT_HANDLE_INFORMATION
+{
+  ULONG HandleAttributes;
+  ACCESS_MASK GrantedAccess;
 } OBJECT_HANDLE_INFORMATION, *POBJECT_HANDLE_INFORMATION;
 
 #endif /* __USE_W32API */
@@ -110,16 +116,22 @@ typedef struct _OBJECT_TYPE
 				    SECURITY_INFORMATION SecurityInformation,
 				    PSECURITY_DESCRIPTOR SecurityDescriptor,
 				    PULONG BufferLength);
-  
+
   /*
+   * PURPOSE: Called to query the name of the object
+   * RETURNS
+   *     STATUS_SUCCESS       NextObject was found
    */
-  VOID STDCALL_FUNC (*QueryName)(VOID);
-   
+  NTSTATUS STDCALL_FUNC (*QueryName)(PVOID ObjectBody,
+				     POBJECT_NAME_INFORMATION ObjectNameInfo,
+				     ULONG Length,
+				     PULONG ReturnLength);
+
   /*
    * PURPOSE: Called when a process asks to close the object
    */
   VOID STDCALL_FUNC (*OkayToClose)(VOID);
-  
+
   NTSTATUS STDCALL_FUNC (*Create)(PVOID ObjectBody,
 			     PVOID Parent,
 			     PWSTR RemainingPath,

@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.33 2003/05/22 00:47:04 gdalsnes Exp $
+/* $Id: iomgr.c,v 1.34 2003/06/02 10:02:56 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -86,6 +86,7 @@ IopCloseFile(PVOID ObjectBody,
    }
 }
 
+
 VOID STDCALL
 IopDeleteFile(PVOID ObjectBody)
 {
@@ -132,6 +133,71 @@ IopDeleteFile(PVOID ObjectBody)
 }
 
 
+NTSTATUS STDCALL
+IopQueryNameFile(PVOID ObjectBody,
+		 POBJECT_NAME_INFORMATION ObjectNameInfo,
+		 ULONG Length,
+		 PULONG ReturnLength)
+{
+  POBJECT_NAME_INFORMATION LocalInfo;
+  PFILE_NAME_INFORMATION FileNameInfo;
+  PFILE_OBJECT FileObject;
+  ULONG LocalReturnLength;
+  NTSTATUS Status;
+
+  DPRINT ("IopQueryNameFile() called\n");
+
+  FileObject = (PFILE_OBJECT)ObjectBody;
+
+  LocalInfo = ExAllocatePool (NonPagedPool,
+			      sizeof(OBJECT_NAME_INFORMATION) +
+				MAX_PATH * sizeof(WCHAR));
+  if (LocalInfo == NULL)
+    return STATUS_INSUFFICIENT_RESOURCES;
+
+  Status = ObQueryNameString (FileObject->DeviceObject->Vpb->RealDevice,
+			      LocalInfo,
+			      MAX_PATH * sizeof(WCHAR),
+			      &LocalReturnLength);
+  if (!NT_SUCCESS (Status))
+    {
+      ExFreePool (LocalInfo);
+      return Status;
+    }
+  DPRINT ("Device path: %wZ\n", &LocalInfo->Name);
+
+  Status = RtlAppendUnicodeStringToString (&ObjectNameInfo->Name,
+					   &LocalInfo->Name);
+
+  ExFreePool (LocalInfo);
+
+  FileNameInfo = ExAllocatePool (NonPagedPool,
+				 MAX_PATH * sizeof(WCHAR) + sizeof(ULONG));
+  if (FileNameInfo == NULL)
+    return STATUS_INSUFFICIENT_RESOURCES;
+
+  Status = IoQueryFileInformation (FileObject,
+				   FileNameInformation,
+				   MAX_PATH * sizeof(WCHAR) + sizeof(ULONG),
+				   FileNameInfo,
+				   NULL);
+  if (Status != STATUS_SUCCESS)
+    {
+      ExFreePool (FileNameInfo);
+      return Status;
+    }
+
+  Status = RtlAppendUnicodeToString (&ObjectNameInfo->Name,
+				     FileNameInfo->FileName);
+
+  DPRINT ("Total path: %wZ\n", &ObjectNameInfo->Name);
+
+  ExFreePool (FileNameInfo);
+
+  return Status;
+}
+
+
 VOID IoInit (VOID)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
@@ -144,7 +210,7 @@ VOID IoInit (VOID)
   /*
    * Register iomgr types: DeviceObjectType
    */
-  IoDeviceObjectType = ExAllocatePool (NonPagedPool, 
+  IoDeviceObjectType = ExAllocatePool (NonPagedPool,
 				       sizeof (OBJECT_TYPE));
   
   IoDeviceObjectType->Tag = TAG_DEVICE_TYPE;
@@ -188,7 +254,7 @@ VOID IoInit (VOID)
   IoFileObjectType->Delete = IopDeleteFile;
   IoFileObjectType->Parse = NULL;
   IoFileObjectType->Security = NULL;
-  IoFileObjectType->QueryName = NULL;
+  IoFileObjectType->QueryName = IopQueryNameFile;
   IoFileObjectType->OkayToClose = NULL;
   IoFileObjectType->Create = IopCreateFile;
   IoFileObjectType->DuplicationNotify = NULL;

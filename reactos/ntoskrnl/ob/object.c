@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.59 2003/05/11 19:41:22 ekohl Exp $
+/* $Id: object.c,v 1.60 2003/06/02 10:03:52 ekohl Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -21,12 +21,14 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+
 /* FUNCTIONS ************************************************************/
 
 PVOID HEADER_TO_BODY(POBJECT_HEADER obj)
 {
    return(((void *)obj)+sizeof(OBJECT_HEADER)-sizeof(COMMON_BODY_HEADER));
 }
+
 
 POBJECT_HEADER BODY_TO_HEADER(PVOID body)
 {
@@ -221,6 +223,122 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 
 /**********************************************************************
  * NAME							EXPORTED
+ * 	ObQueryNameString@16
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ */
+NTSTATUS STDCALL
+ObQueryNameString (IN PVOID Object,
+		   OUT POBJECT_NAME_INFORMATION ObjectNameInfo,
+		   IN ULONG Length,
+		   OUT PULONG ReturnLength)
+{
+  POBJECT_NAME_INFORMATION LocalInfo;
+  POBJECT_HEADER ObjectHeader;
+  ULONG LocalReturnLength;
+  NTSTATUS Status;
+
+  *ReturnLength = 0;
+
+  if (Length < sizeof(OBJECT_NAME_INFORMATION) + sizeof(WCHAR))
+    return STATUS_INVALID_BUFFER_SIZE;
+
+  ObjectNameInfo->Name.MaximumLength = Length - sizeof(OBJECT_NAME_INFORMATION);
+  ObjectNameInfo->Name.Length = 0;
+  ObjectNameInfo->Name.Buffer =
+    (PWCHAR)((ULONG_PTR)ObjectNameInfo + sizeof(OBJECT_NAME_INFORMATION));
+  ObjectNameInfo->Name.Buffer[0] = 0;
+
+  ObjectHeader = BODY_TO_HEADER(Object);
+
+  if (ObjectHeader->ObjectType != NULL &&
+      ObjectHeader->ObjectType->QueryName != NULL)
+    {
+      DPRINT ("Calling %x\n", ObjectHeader->ObjectType->QueryName);
+      Status = ObjectHeader->ObjectType->QueryName (Object,
+						    ObjectNameInfo,
+						    Length,
+						    ReturnLength);
+      if (!NT_SUCCESS (Status))
+	return Status;
+
+      Status = RtlAppendUnicodeStringToString (&ObjectNameInfo->Name,
+					       &ObjectHeader->Name);
+    }
+  else if (ObjectHeader->Name.Length > 0 && ObjectHeader->Name.Buffer != NULL)
+    {
+      DPRINT ("Object does not have a 'QueryName' function\n");
+
+      if (ObjectHeader->Parent == NameSpaceRoot)
+	{
+	  DPRINT ("Reached the root directory\n");
+	  ObjectNameInfo->Name.Buffer[0] = 0;
+	  Status = STATUS_SUCCESS;
+	}
+      else if (ObjectHeader->Parent != NULL)
+	{
+	  LocalInfo = ExAllocatePool (NonPagedPool,
+				      sizeof(OBJECT_NAME_INFORMATION) +
+				      MAX_PATH * sizeof(WCHAR));
+	  if (LocalInfo == NULL)
+	    return STATUS_INSUFFICIENT_RESOURCES;
+
+	  Status = ObQueryNameString (ObjectHeader->Parent,
+				      LocalInfo,
+				      MAX_PATH * sizeof(WCHAR),
+				      &LocalReturnLength);
+	  if (!NT_SUCCESS (Status))
+	    {
+	      ExFreePool (LocalInfo);
+	      return Status;
+	    }
+
+	  Status = RtlAppendUnicodeStringToString (&ObjectNameInfo->Name,
+						   &LocalInfo->Name);
+
+	  ExFreePool (LocalInfo);
+
+	  if (!NT_SUCCESS (Status))
+	    return Status;
+	}
+
+      DPRINT ("Object path %wZ\n", &ObjectHeader->Name);
+      Status = RtlAppendUnicodeToString (&ObjectNameInfo->Name,
+					 L"\\");
+      if (!NT_SUCCESS (Status))
+	return Status;
+
+      Status = RtlAppendUnicodeStringToString (&ObjectNameInfo->Name,
+					       &ObjectHeader->Name);
+    }
+  else
+    {
+      DPRINT1 ("Object is unnamed\n");
+
+      /* FIXME */
+
+      Status = STATUS_UNSUCCESSFUL;
+    }
+
+  if (NT_SUCCESS (Status))
+    {
+      ObjectNameInfo->Name.MaximumLength =
+	ObjectNameInfo->Name.Length + sizeof(WCHAR);
+      *ReturnLength =
+	sizeof(OBJECT_NAME_INFORMATION) + ObjectNameInfo->Name.MaximumLength;
+      DPRINT ("Returned object path: %wZ\n", &ObjectNameInfo->Name);
+    }
+
+  return Status;
+}
+
+
+/**********************************************************************
+ * NAME							EXPORTED
  * 	ObCreateObject@36
  *
  * DESCRIPTION
@@ -230,11 +348,11 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
  * RETURN VALUE
  */
 NTSTATUS STDCALL
-ObCreateObject(OUT PHANDLE Handle,
-	       IN ACCESS_MASK DesiredAccess,
-	       IN POBJECT_ATTRIBUTES ObjectAttributes,
-	       IN POBJECT_TYPE Type,
-	       OUT PVOID *Object)
+ObCreateObject (OUT PHANDLE Handle,
+		IN ACCESS_MASK DesiredAccess,
+		IN POBJECT_ATTRIBUTES ObjectAttributes,
+		IN POBJECT_TYPE Type,
+		OUT PVOID *Object)
 {
   PVOID Parent = NULL;
   UNICODE_STRING RemainingPath;

@@ -1,4 +1,4 @@
-/* $Id: dirobj.c,v 1.16 2002/09/08 10:23:38 chorns Exp $
+/* $Id: dirobj.c,v 1.17 2003/06/02 10:03:52 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -45,9 +45,10 @@
  * NOTES
  * 	Undocumented.
  */
-NTSTATUS STDCALL NtOpenDirectoryObject(PHANDLE DirectoryHandle,
-				       ACCESS_MASK DesiredAccess,
-				       POBJECT_ATTRIBUTES ObjectAttributes)
+NTSTATUS STDCALL
+NtOpenDirectoryObject (OUT PHANDLE DirectoryHandle,
+		       IN ACCESS_MASK DesiredAccess,
+		       IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
    PVOID Object;
    NTSTATUS Status;
@@ -121,14 +122,14 @@ NTSTATUS STDCALL NtOpenDirectoryObject(PHANDLE DirectoryHandle,
  * 		G.Nebbett "WNT/W2k Native API Reference".
  * 		Mostly rewritten.
  */
-NTSTATUS STDCALL NtQueryDirectoryObject (IN HANDLE DirObjHandle,
-					 OUT POBJDIR_INFORMATION 
-					            DirObjInformation, 
-					 IN ULONG BufferLength, 
-					 IN BOOLEAN ReturnSingleEntry,
-					 IN BOOLEAN RestartScan, 
-					 IN OUT PULONG ObjectIndex,
-					 OUT PULONG DataWritten OPTIONAL)
+NTSTATUS STDCALL
+NtQueryDirectoryObject (IN HANDLE DirObjHandle,
+			OUT POBJDIR_INFORMATION DirObjInformation,
+			IN ULONG BufferLength,
+			IN BOOLEAN ReturnSingleEntry,
+			IN BOOLEAN RestartScan,
+			IN OUT PULONG ObjectIndex,
+			OUT PULONG DataWritten OPTIONAL)
 {
     PDIRECTORY_OBJECT   dir = NULL;
     PLIST_ENTRY         current_entry = NULL;
@@ -326,9 +327,9 @@ NTSTATUS STDCALL NtQueryDirectoryObject (IN HANDLE DirObjHandle,
  * 	Status.
  */
 NTSTATUS STDCALL
-NtCreateDirectoryObject(PHANDLE DirectoryHandle,
-			ACCESS_MASK DesiredAccess,
-			POBJECT_ATTRIBUTES ObjectAttributes)
+NtCreateDirectoryObject (OUT PHANDLE DirectoryHandle,
+			 IN ACCESS_MASK DesiredAccess,
+			 IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
    PDIRECTORY_OBJECT dir;
 

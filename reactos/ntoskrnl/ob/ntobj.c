@@ -1,4 +1,4 @@
-/* $Id: ntobj.c,v 1.12 2003/06/01 15:09:34 ekohl Exp $
+/* $Id: ntobj.c,v 1.13 2003/06/02 10:03:52 ekohl Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -43,41 +43,6 @@ NtSetInformationObject (IN HANDLE ObjectHandle,
 }
 
 
-NTSTATUS
-internalNameBuilder(POBJECT_HEADER ObjectHeader,
-		    PUNICODE_STRING String)
-/* So, what's the purpose of this function?
-   It will take any OBJECT_HEADER and traverse the Parent structure up to the root
-   and form the name, i.e. this will only work on objects where the Parent/Name fields
-   have any meaning (not files) */
-{
-  NTSTATUS Status;
-
-  if (ObjectHeader->Parent)
-    {
-      Status = internalNameBuilder(BODY_TO_HEADER(ObjectHeader->Parent),
-				   String);
-      if (Status != STATUS_SUCCESS)
-	{
-	  return Status;
-	}
-    }
-
-  if (ObjectHeader->Name.Buffer)
-    {
-      Status = RtlAppendUnicodeToString(String,
-					L"\\");
-      if (Status != STATUS_SUCCESS)
-	return Status;
-
-      return RtlAppendUnicodeStringToString(String,
-					    &ObjectHeader->Name);
-    }
-
-  return STATUS_SUCCESS;
-}
-
-
 /*Very, very, very new implementation. Test it!
 
   Probably we should add meaning to QueryName in POBJECT_TYPE, no matter if we know
@@ -107,13 +72,10 @@ NtQueryObject (IN HANDLE ObjectHandle,
 	       IN ULONG Length,
 	       OUT PULONG ReturnLength)
 {
-  POBJECT_NAME_INFORMATION NameInfo;
   POBJECT_TYPE_INFORMATION typeinfo;
-  PFILE_NAME_INFORMATION filenameinfo;
+  POBJECT_HEADER ObjectHeader;
   PVOID Object;
   NTSTATUS Status;
-  POBJECT_HEADER ObjectHeader;
-  PFILE_OBJECT fileob;
 
   Status = ObReferenceObjectByHandle (ObjectHandle,
 				      0,
@@ -131,87 +93,10 @@ NtQueryObject (IN HANDLE ObjectHandle,
   switch (ObjectInformationClass)
     {
       case ObjectNameInformation:
-#if 0
 	Status = ObQueryNameString (Object,
 				    (POBJECT_NAME_INFORMATION)ObjectInformation,
 				    Length,
 				    ReturnLength);
-	break;
-#endif
-
-	if (Length < sizeof(OBJECT_NAME_INFORMATION) + sizeof(WCHAR))
-	  return STATUS_INVALID_BUFFER_SIZE;
-
-	NameInfo = (POBJECT_NAME_INFORMATION)ObjectInformation;
-	*ReturnLength = 0;
-
-	NameInfo->Name.MaximumLength = sizeof(WCHAR);
-	NameInfo->Name.Length = 0;
-	NameInfo->Name.Buffer = (PWCHAR)((ULONG_PTR)NameInfo + sizeof(OBJECT_NAME_INFORMATION));
-	NameInfo->Name.Buffer[0] = 0;
-
-	// FIXME: Temporary QueryName implementation, or at least separate functions
-	if (ObjectHeader->Type==InternalFileType)
-	  {
-	    NameInfo->Name.MaximumLength = Length - sizeof(OBJECT_NAME_INFORMATION);
-	    fileob = (PFILE_OBJECT) Object;
-	    Status = internalNameBuilder(BODY_TO_HEADER(fileob->DeviceObject->Vpb->RealDevice),
-					 &NameInfo->Name);
-	    if (Status != STATUS_SUCCESS)
-	      {
-		NameInfo->Name.MaximumLength = 0;
-		break;
-	      }
-
-	    filenameinfo = ExAllocatePool (NonPagedPool,
-					   MAX_PATH * sizeof(WCHAR) + sizeof(ULONG));
-	    if (filenameinfo == NULL)
-	      {
-		NameInfo->Name.MaximumLength = 0;
-		Status = STATUS_INSUFFICIENT_RESOURCES;
-		break;
-	      }
-
-	    Status = IoQueryFileInformation (fileob,
-					     FileNameInformation,
-					     MAX_PATH * sizeof(WCHAR) + sizeof(ULONG),
-					     filenameinfo,
-					     NULL);
-	    if (Status != STATUS_SUCCESS)
-	      {
-		NameInfo->Name.MaximumLength = 0;
-		ExFreePool (filenameinfo);
-		break;
-	      }
-
-	    Status = RtlAppendUnicodeToString (&(NameInfo->Name),
-					       filenameinfo->FileName);
-
-	    ExFreePool (filenameinfo);
-
-	    if (NT_SUCCESS(Status))
-	      {
-	        NameInfo->Name.MaximumLength = NameInfo->Name.Length + sizeof(WCHAR);
-	        *ReturnLength = sizeof(OBJECT_NAME_INFORMATION) + NameInfo->Name.MaximumLength;
-	      }
-	  }
-	else if (ObjectHeader->Name.Buffer)
-	  {
-	    // If it's got a name there, we can probably just make the full path through Name and Parent
-	    NameInfo->Name.MaximumLength = Length - sizeof(OBJECT_NAME_INFORMATION);
-
-	    Status = internalNameBuilder (ObjectHeader,
-					  &NameInfo->Name);
-	    if (NT_SUCCESS(Status))
-	      {
-	        NameInfo->Name.MaximumLength = NameInfo->Name.Length + sizeof(WCHAR);
-	        *ReturnLength = sizeof(OBJECT_NAME_INFORMATION) + NameInfo->Name.MaximumLength;
-	      }
-	  }
-	else
-	  {
-	    Status = STATUS_NOT_IMPLEMENTED;
-	  }
 	break;
 
       case ObjectTypeInformation:
