@@ -27,33 +27,33 @@ TARGET		=	i386
 DEBUG		=	no
 
 OBJDIR		=	obj
-OUTPUT_DIR	=	$(OBJDIR)$(SEP)$(TARGET)
+OUTPUT_DIR	=	$(OBJDIR)/$(TARGET)
 
-BOOTCD_DIR	=	..$(SEP)..$(SEP)bootcd
+BOOTCD_DIR	=	../../bootcd
 
 #############################################
 # COMPILER AND LINKER PROGRAMS
 #
-TOOLSDIR	= $(SRCDIR)$(SEP)..$(SEP)tools
+TOOLSDIR	= $(SRCDIR)/../tools
 
-RM			= $(TOOLSDIR)$(SEP)rdel
-CP			= $(TOOLSDIR)$(SEP)rcopy
-MKDIR		= $(TOOLSDIR)$(SEP)rmkdir
-RMDIR		= $(TOOLSDIR)$(SEP)rrmdir
+RM		= $(subst /,$(SEP),$(TOOLSDIR))$(SEP)rdel
+CP		= $(subst /,$(SEP),$(TOOLSDIR))$(SEP)rcopy
+MKDIR		= $(subst /,$(SEP),$(TOOLSDIR))$(SEP)rmkdir
+RMDIR		= $(subst /,$(SEP),$(TOOLSDIR))$(SEP)rrmdir
 NASM_CMD	= nasm
 OBJCOPY		= objcopy
-DEPTOOL		= $(TOOLSDIR)$(SEP)deptool
-HOSTTOOL	= $(TOOLSDIR)$(SEP)hosttype
+DEPTOOL		= $(subst /,$(SEP),$(TOOLSDIR))$(SEP)deptool
+HOSTTOOL	= $(subst /,$(SEP),$(TOOLSDIR))$(SEP)hosttype
 TOOLS		= $(DEPTOOL) $(HOSTTOOL)
 
-HOSTTYPE		= $(shell $(HOSTTOOL))
+HOSTTYPE	= $(shell $(HOSTTOOL))
 
 #-----------------------------------------------------------------------------------------------------
 # TEST IF WE ARE IN THE TARGET DIRECTORY
 # IF NOT WE WILL CHANGE TO THE TARGET DIRECTORY AND RUN MAKE FROM THERE
 #-----------------------------------------------------------------------------------------------------
-#ifeq (,$(filter $(CURDIR)$(SEP)$(OUTPUT_DIR),$(notdir $(CURDIR))))
-ifneq ($(CURDIR), $(SRCDIR)$(SEP)$(OUTPUT_DIR))
+#ifeq (,$(filter $(CURDIR)/$(OUTPUT_DIR),$(notdir $(CURDIR))))
+ifneq ($(CURDIR), $(SRCDIR)/$(OUTPUT_DIR))
 
 SRCDIR		= $(CURDIR)
 
@@ -63,10 +63,10 @@ SRCDIR		= $(CURDIR)
 # VARIABLE TO CHANGE TO TARGET DIRECTORY AND INVOKE MAKE FROM THERE
 #
 MAKETARGET	= $(MAKE) --no-print-directory -C $(OUTPUT_DIR) \
-			  -f ..$(SEP)..$(SEP)Makefile SRCDIR=$(CURDIR) $(MAKECMDGOALS)
+			  -f ../../Makefile SRCDIR=$(CURDIR) $(MAKECMDGOALS)
 
 .PHONY: CHANGE_TO_TARGET
-CHANGE_TO_TARGET setupldr : BUILD_TOOLS $(OBJDIR) $(OBJDIR)$(SEP)$(TARGET)
+CHANGE_TO_TARGET setupldr : BUILD_TOOLS $(OBJDIR) $(OBJDIR)/$(TARGET)
 	@echo Calculating source file dependencies...
 	+@$(MAKETARGET)
 
@@ -78,9 +78,9 @@ $(OBJDIR):
 	@echo Creating directory: $(OBJDIR)
 	@$(MKDIR) $(OBJDIR)
 
-$(OBJDIR)$(SEP)$(TARGET): $(OBJDIR)
-	@echo Creating directory: $(OBJDIR)$(SEP)$(TARGET)
-	@$(MKDIR) $(OBJDIR)$(SEP)$(TARGET)
+$(OBJDIR)/$(TARGET): $(OBJDIR)
+	@echo Creating directory: $(OBJDIR)/$(TARGET)
+	@$(MKDIR) $(OBJDIR)/$(TARGET)
 
 
 Makefile : ;
@@ -92,10 +92,10 @@ Makefile : ;
 .PHONY : clean
 clean:
 	@$(MAKE) --no-print-directory -C $(TOOLSDIR)
-	@echo Cleaning directory $(OBJDIR)$(SEP)$(TARGET)
-	@-$(RM) $(OBJDIR)$(SEP)$(TARGET)$(SEP)*
-	@echo Removing directory $(OBJDIR)$(SEP)$(TARGET)
-	@-$(RMDIR) $(OBJDIR)$(SEP)$(TARGET)
+	@echo Cleaning directory $(OBJDIR)/$(TARGET)
+	@-$(RM) $(OBJDIR)/$(TARGET)/*
+	@echo Removing directory $(OBJDIR)/$(TARGET)
+	@-$(RMDIR) $(OBJDIR)/$(TARGET)
 	@-$(RMDIR) $(OBJDIR)
 	@echo Clean ALL done.
 
@@ -107,20 +107,20 @@ bootcd : bootcd_dirs setup_loader boot_loader
 .PHONY : bootcd_dirs
 bootcd_dirs:
 	$(MKDIR) $(BOOTCD_DIR)
-	$(MKDIR) $(BOOTCD_DIR)$(SEP)disk
-	$(MKDIR) $(BOOTCD_DIR)$(SEP)disk$(SEP)reactos
-	$(MKDIR) $(BOOTCD_DIR)$(SEP)disk$(SEP)install
-	$(MKDIR) $(BOOTCD_DIR)$(SEP)disk$(SEP)bootdisk
-	$(MKDIR) $(BOOTCD_DIR)$(SEP)disk$(SEP)loader
+	$(MKDIR) $(BOOTCD_DIR)/disk
+	$(MKDIR) $(BOOTCD_DIR)/disk/reactos
+	$(MKDIR) $(BOOTCD_DIR)/disk/install
+	$(MKDIR) $(BOOTCD_DIR)/disk/bootdisk
+	$(MKDIR) $(BOOTCD_DIR)/disk/loader
 
 .PHONY : boot_loader
-boot_loader : $(OBJDIR)$(SEP)$(TARGET)$(SEP)freeldr.sys
-	$(CP) $(OBJDIR)$(SEP)$(TARGET)$(SEP)freeldr.sys $(BOOTCD_DIR)$(SEP)disk$(SEP)loader$(SEP)freeldr.sys
-	$(CP) ..$(SEP)freeldr.ini $(BOOTCD_DIR)$(SEP)disk$(SEP)loader$(SEP)freeldr.ini
+boot_loader : $(OBJDIR)/$(TARGET)/freeldr.sys
+	$(CP) $(OBJDIR)/$(TARGET)/freeldr.sys $(BOOTCD_DIR)/disk/loader/freeldr.sys
+	$(CP) ../freeldr.ini $(BOOTCD_DIR)/disk/loader/freeldr.ini
 
 .PHONY : setup_loader
-setup_loader : $(OBJDIR)$(SEP)$(TARGET)$(SEP)setupldr.sys
-	$(CP) $(OBJDIR)$(SEP)$(TARGET)$(SEP)setupldr.sys $(BOOTCD_DIR)$(SEP)disk$(SEP)loader$(SEP)setupldr.sys
+setup_loader : $(OBJDIR)/$(TARGET)/setupldr.sys
+	$(CP) $(OBJDIR)/$(TARGET)/setupldr.sys $(BOOTCD_DIR)/disk/loader/setupldr.sys
 
 #############################################
 
@@ -149,7 +149,7 @@ COMPILER_DEFINES = -D__$(TARGET)__ $(COMPILER_DEBUG_DEFINES)
 #############################################
 # INCLUDE DIRECTORY OPTIONS
 #
-COMPILER_INCLUDES	=	-I$(SRCDIR)$(SEP)include
+COMPILER_INCLUDES	=	-I$(SRCDIR)/include
 
 #############################################
 # COMPILER FLAGS
@@ -321,21 +321,21 @@ ALL_OBJS	=	$(COMMON_OBJS)		\
 #############################################
 # SET THE VPATH SO MAKE CAN FIND THE SOURCE FILES
 #
-VPATH		=	$(SRCDIR)$(SEP)					\
-				$(SRCDIR)$(SEP)arch$(SEP)$(TARGET)	\
-				$(SRCDIR)$(SEP)rtl				\
-				$(SRCDIR)$(SEP)fs				\
-				$(SRCDIR)$(SEP)ui				\
-				$(SRCDIR)$(SEP)reactos			\
-				$(SRCDIR)$(SEP)comm				\
-				$(SRCDIR)$(SEP)disk				\
-				$(SRCDIR)$(SEP)mm				\
-				$(SRCDIR)$(SEP)cache				\
-				$(SRCDIR)$(SEP)inifile			\
-				$(SRCDIR)$(SEP)inffile			\
-				$(SRCDIR)$(SEP)video				\
-				$(SRCDIR)$(SEP)math				\
-				$(SRCDIR)$(SEP)include
+VPATH		=	$(SRCDIR)/					\
+				$(SRCDIR)/arch/$(TARGET)	\
+				$(SRCDIR)/rtl				\
+				$(SRCDIR)/fs				\
+				$(SRCDIR)/ui				\
+				$(SRCDIR)/reactos			\
+				$(SRCDIR)/comm				\
+				$(SRCDIR)/disk				\
+				$(SRCDIR)/mm				\
+				$(SRCDIR)/cache				\
+				$(SRCDIR)/inifile			\
+				$(SRCDIR)/inffile			\
+				$(SRCDIR)/video				\
+				$(SRCDIR)/math				\
+				$(SRCDIR)/include
 
 #############################################
 

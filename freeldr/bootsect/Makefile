@@ -17,7 +17,7 @@
 #  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 
-BOOTCD_DIR	= ..$(SEP)..$(SEP)bootcd
+BOOTCD_DIR	= ../../bootcd
 
 .PHONY : clean bootcd
 
@@ -55,20 +55,20 @@ ext2.bin : ext2.asm
 .PHONY : bootcd
 bootcd: bootcd_dirs isoboot.bin
 	$(CP) isoboot.bin $(BOOTCD_DIR)
-	$(CP) dosmbr.bin $(BOOTCD_DIR)$(SEP)disk$(SEP)loader
-	$(CP) ext2.bin $(BOOTCD_DIR)$(SEP)disk$(SEP)loader
-	$(CP) fat.bin $(BOOTCD_DIR)$(SEP)disk$(SEP)loader
-	$(CP) fat32.bin $(BOOTCD_DIR)$(SEP)disk$(SEP)loader
-	$(CP) isoboot.bin $(BOOTCD_DIR)$(SEP)disk$(SEP)loader
+	$(CP) dosmbr.bin $(BOOTCD_DIR)/disk/loader
+	$(CP) ext2.bin $(BOOTCD_DIR)/disk/loader
+	$(CP) fat.bin $(BOOTCD_DIR)/disk/loader
+	$(CP) fat32.bin $(BOOTCD_DIR)/disk/loader
+	$(CP) isoboot.bin $(BOOTCD_DIR)/disk/loader
 
 .PHONY : bootcd_dirs
 bootcd_dirs:
 	$(MKDIR) $(BOOTCD_DIR)
-	$(MKDIR) $(BOOTCD_DIR)$(SEP)disk
-	$(MKDIR) $(BOOTCD_DIR)$(SEP)disk$(SEP)reactos
-	$(MKDIR) $(BOOTCD_DIR)$(SEP)disk$(SEP)install
-	$(MKDIR) $(BOOTCD_DIR)$(SEP)disk$(SEP)bootdisk
-	$(MKDIR) $(BOOTCD_DIR)$(SEP)disk$(SEP)loader
+	$(MKDIR) $(BOOTCD_DIR)/disk
+	$(MKDIR) $(BOOTCD_DIR)/disk/reactos
+	$(MKDIR) $(BOOTCD_DIR)/disk/install
+	$(MKDIR) $(BOOTCD_DIR)/disk/bootdisk
+	$(MKDIR) $(BOOTCD_DIR)/disk/loader
 
 clean:
 	@-$(RM) *.bin

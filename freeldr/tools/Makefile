@@ -31,13 +31,13 @@ endif
 
 #############################################
 
-TOOLS	=	deptool	\
-			bin2c \
-			hosttype \
-			rdel \
-			rcopy \
-			rmkdir \
-			rrmdir
+TOOLS	=	deptool$(EXE_POSTFIX)	\
+			bin2c$(EXE_POSTFIX) \
+			hosttype$(EXE_POSTFIX) \
+			rdel$(EXE_POSTFIX) \
+			rcopy$(EXE_POSTFIX) \
+			rmkdir$(EXE_POSTFIX) \
+			rrmdir$(EXE_POSTFIX)
 
 #############################################
 
@@ -48,7 +48,7 @@ all : $(TOOLS)
 
 #############################################
 
-%: %.c
+%$(EXE_POSTFIX): %.c
 	@echo ===================================================== Compiling $*
 	@$(CC) -Wall -O3 -o $@ $<
 
@@ -58,5 +58,4 @@ all : $(TOOLS)
 .PHONY : clean
 clean:
 	@-$(RM) $(TOOLS)
-	@-$(RM) *.exe
 	@echo Clean ALL done.

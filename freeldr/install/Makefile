@@ -25,10 +25,10 @@ LIBS = -lkernel32
 
 .PHONY : clean
 
-all: ..$(SEP)bootsect$(SEP)fat.h ..$(SEP)bootsect$(SEP)fat32.h install.exe
+all: ../bootsect/fat.h ../bootsect/fat32.h install.exe
 
-..$(SEP)bootsect$(SEP)fat.h ..$(SEP)bootsect$(SEP)fat32.h :
-	@$(MAKE) --no-print-directory -C ..$(SEP)bootsect
+../bootsect/fat.h ../bootsect/fat32.h :
+	@$(MAKE) --no-print-directory -C ../bootsect
 
 install.exe: $(OBJS)
 	@echo ===================================================== LINKING install
