@@ -212,7 +212,7 @@ WaitForMultipleObjects(DWORD nCount,
                        BOOL  bWaitAll,
                        DWORD dwMilliseconds)
 {
-   return WaitForMultipleObjectsEx(nCount,lpHandles,bWaitAll,dwMilliseconds,FALSE);
+    return WaitForMultipleObjectsEx( nCount, lpHandles, bWaitAll ? WaitAll : WaitAny, dwMilliseconds, FALSE );
 }
 
 
