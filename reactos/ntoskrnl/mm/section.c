@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.143 2004/01/30 23:57:58 hbirr Exp $
+/* $Id: section.c,v 1.144 2004/01/31 00:16:55 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -1223,18 +1223,10 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
   /*
    * Check if the page has been paged out or has already been set readwrite
    */
-   if (!MmIsPagePresent(AddressSpace->Process, Address))
+   if (!MmIsPagePresent(AddressSpace->Process, Address) ||
+       MmGetPageProtect(AddressSpace->Process, Address) & PAGE_READWRITE)
      {
        DPRINT("Address 0x%.8X\n", Address);
-       return(STATUS_SUCCESS);
-     }
-   if (MmGetPageProtect(AddressSpace->Process, Address) & PAGE_READWRITE)
-     {
-       DPRINT("Address 0x%.8X\n", Address);
-       if (Locked)
-         {
-	   MmLockPage(MmGetPhysicalAddressForProcess(AddressSpace->Process, Address));
-	 }
        return(STATUS_SUCCESS);
      }  
 
@@ -1275,10 +1267,6 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
      {
        /* This is a private page. We must only change the page protection. */
        MmSetPageProtect(AddressSpace->Process, (PVOID)PAddress, Region->Protect);
-       if (Locked)
-         {
-	   MmLockPage(OldPage);
-	 }
        return(STATUS_SUCCESS);
      }
 
