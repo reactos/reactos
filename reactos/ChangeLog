@@ -1,5 +1,15 @@
 2004-07-21  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* w32api/include/(GdiPlus.h, GdiPlusBase.h, GdiPlusBrush.h, GdiPlusColor.h,
+	GdiPlusColorMatrix.h, GdiPlusEffects.h, GdiPlusEnums.h, GdiPlusFlat.h,
+	GdiPlusGpStubs.h, GdiPlusGraphics.h, GdiPlusHeaders.h,
+	GdiPlusImageAttributes.h, GdiPlusImaging.h GdiPlusInit.h,
+	GdiPlusLineCaps.h, GdiPlusMatrix.h, GdiPlusMem.h, GdiPlusMetaFile.h,
+	GdiPlusMetaHeader.h, GdiPlusPath.h, GdiPlusPen.h, GdiPlusPixelFormats.h,
+	GdiPlusStringFormat.h, GdiPlusTypes.h): New files.
+
+2004-07-21  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* rules.mak, iface/addsys/makefile, iface/native/makefile,
 	tools/Makefile: Be quiet if VERBOSE=no.
 	* tools/helper.mk: Print module name if it was successfully built.
