@@ -197,6 +197,7 @@ typedef struct tagVARIANT {
 	WORD wReserved3;
 	_ANONYMOUS_UNION union {
 		long lVal;
+		LONGLONG llVal;
 		unsigned char bVal;
 		short iVal;
 		float fltVal;
@@ -228,6 +229,7 @@ typedef struct tagVARIANT {
 		CHAR cVal;
 		USHORT uiVal;
 		ULONG ulVal;
+		ULONGLONG ullVal;
 		INT intVal;
 		UINT uintVal;
 		DECIMAL *pdecVal;
@@ -256,6 +258,7 @@ typedef struct _wireVARIANT {
 	USHORT wReserved3;
 	_ANONYMOUS_UNION union {
 		LONG lVal;
+		LONGLONG llVal;
 		BYTE bVal;
 		SHORT iVal;
 		FLOAT fltVal;
@@ -286,6 +289,7 @@ typedef struct _wireVARIANT {
 		CHAR cVal;
 		USHORT uiVal;
 		ULONG ulVal;
+		ULONGLONG ullVal;
 		INT intVal;
 		UINT uintVal;
 		DECIMAL decVal;

@@ -44,7 +44,9 @@
 
 
 #ifdef __REACTOS__ /*FIXME*/
-#include "ros-mingw-fixes.h"
+/* problems with decVal member of VARIANT union in MinGW headers */
+#undef V_DECIMAL
+#define V_DECIMAL(X) (X->__VARIANT_NAME_1.decVal)
 #endif
 
 
@@ -541,10 +543,8 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_UI1:      return VarDecFromUI1(V_UI1(ps), &V_DECIMAL(pd));
     case VT_UI2:      return VarDecFromUI2(V_UI2(ps), &V_DECIMAL(pd));
     case VT_UI4:      return VarDecFromUI4(V_UI4(ps), &V_DECIMAL(pd));
-#ifndef __REACTOS__	/*FIXME: hVal missing in VARIANT union of MinGW header */
     case VT_I8:       return VarDecFromI8(V_I8(ps), &V_DECIMAL(pd));
     case VT_UI8:      return VarDecFromUI8(V_UI8(ps), &V_DECIMAL(pd));
-#endif
     case VT_R4:       return VarDecFromR4(V_R4(ps), &V_DECIMAL(pd));
     case VT_R8:       return VarDecFromR8(V_R8(ps), &V_DECIMAL(pd));
     case VT_DATE:     return VarDecFromDate(V_DATE(ps), &V_DECIMAL(pd));

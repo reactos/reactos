@@ -31,7 +31,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
 
 #ifdef __REACTOS__ /*FIXME*/
-#include "ros-mingw-fixes.h"
+/* problems with decVal member of VARIANT union in MinGW headers */
+#undef V_DECIMAL
+#define V_DECIMAL(X) (X->__VARIANT_NAME_1.decVal)
 #endif
 
 

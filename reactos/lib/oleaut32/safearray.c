@@ -46,11 +46,6 @@
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
 
-#ifdef __REACTOS__ /*FIXME*/
-#include "ros-mingw-fixes.h"
-#endif
-
-
 /************************************************************************
  * SafeArray {OLEAUT32}
  *
