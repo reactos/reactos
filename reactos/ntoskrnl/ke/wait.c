@@ -495,6 +495,8 @@ KeWaitForMultipleObjects(ULONG Count,
    DPRINT("Entering KeWaitForMultipleObjects(Count %lu Object[] %p) "
           "PsGetCurrentThread() %x\n", Count, Object, PsGetCurrentThread());
 
+   assert(0 < Count && Count <= EX_MAXIMUM_WAIT_OBJECTS);
+
    CurrentThread = KeGetCurrentThread();
    WaitIrql = KeGetCurrentIrql();
 
@@ -745,6 +747,8 @@ NtWaitForMultipleObjects(IN ULONG Count,
 
    if (Count > EX_MAXIMUM_WAIT_OBJECTS)
      return STATUS_UNSUCCESSFUL;
+   if (0 == Count)
+     return STATUS_INVALID_PARAMETER;
 
    if (UnsafeTime)
      {
