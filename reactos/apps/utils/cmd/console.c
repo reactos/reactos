@@ -20,13 +20,6 @@
 
 
 
-/* internal variables for paged output */
-SHORT sLineCount;
-SHORT sMaxLines;
-BOOL  bPageable;
-
-
-
 #ifdef _DEBUG
 VOID DebugPrintf (LPTSTR szFormat, ...)
 {
@@ -38,7 +31,9 @@ VOID DebugPrintf (LPTSTR szFormat, ...)
 	va_end (arg_ptr);
 
 	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), szOut, _tcslen(szOut), &dwWritten, NULL);
-//        OutputDebugString (szOut);
+#if 0
+	OutputDebugString (szOut);
+#endif
 }
 #endif /* _DEBUG */
 
@@ -70,9 +65,6 @@ VOID ConInKey (PINPUT_RECORD lpBuffer)
 
 	do
 	{
-#ifndef __REACTOS__
-                WaitForSingleObject (hInput, INFINITE);
-#endif
 		ReadConsoleInput (hInput, lpBuffer, 1, &dwRead);
 		if ((lpBuffer->EventType == KEY_EVENT) &&
 			(lpBuffer->Event.KeyEvent.bKeyDown == TRUE))
@@ -127,8 +119,10 @@ VOID ConOutPuts (LPTSTR szText)
 	DWORD dwWritten;
 
 	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), szText, _tcslen(szText), &dwWritten, NULL);
-//        WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), "\x0a\x0d", 2, &dwWritten, NULL);
-        WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), "\n", 1, &dwWritten, NULL);
+#if 0
+	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), "\x0a\x0d", 2, &dwWritten, NULL);
+#endif
+	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), "\n", 1, &dwWritten, NULL);
 }
 
 
@@ -159,8 +153,10 @@ VOID ConErrPuts (LPTSTR szText)
 	DWORD dwWritten;
 
 	WriteFile (GetStdHandle (STD_ERROR_HANDLE), szText, _tcslen(szText), &dwWritten, NULL);
-//        WriteFile (GetStdHandle (STD_ERROR_HANDLE), "\x0a\x0d", 2, &dwWritten, NULL);
-        WriteFile (GetStdHandle (STD_ERROR_HANDLE), "\n", 1, &dwWritten, NULL);
+#if 0
+	WriteFile (GetStdHandle (STD_ERROR_HANDLE), "\x0a\x0d", 2, &dwWritten, NULL);
+#endif
+	WriteFile (GetStdHandle (STD_ERROR_HANDLE), "\n", 1, &dwWritten, NULL);
 }
 
 
@@ -176,8 +172,6 @@ VOID ConErrPrintf (LPTSTR szFormat, ...)
 
 	WriteFile (GetStdHandle (STD_ERROR_HANDLE), szOut, _tcslen(szOut), &dwWritten, NULL);
 }
-
-
 
 
 VOID SetCursorXY (SHORT x, SHORT y)
@@ -241,5 +235,5 @@ VOID SetCursorType (BOOL bInsert, BOOL bVisible)
 	cci.dwSize = bInsert ? 10 : 100;
 	cci.bVisible = bVisible;
 
-        SetConsoleCursorInfo (GetStdHandle (STD_OUTPUT_HANDLE), &cci);
+	SetConsoleCursorInfo (GetStdHandle (STD_OUTPUT_HANDLE), &cci);
 }

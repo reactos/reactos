@@ -63,7 +63,10 @@
  *
  *    26-Feb-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Replaced find_which() by SearchForExecutable().
- *        Now files are serched with the right order of extensions.
+ *        Now files are searched using the right extension order.
+ *
+ *    20-Apr-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *        Some minor changes and improvements.
  */
 
 #include "config.h"
@@ -89,24 +92,19 @@ BOOL
 SearchForExecutable (LPCTSTR pFileName, LPTSTR pFullName)
 {
 	TCHAR  szPathBuffer[MAX_PATH];
-        LPTSTR pszBuffer = NULL;
-	DWORD  dwBuffer;
+	LPTSTR pszBuffer = NULL;
+	DWORD  dwBuffer, len;
 	INT    n;
 	LPTSTR p,s,f;
 
 	/* load environment varable PATH into buffer */
 	pszBuffer = (LPTSTR)malloc (ENV_BUFFER_SIZE * sizeof(TCHAR));
 	dwBuffer = GetEnvironmentVariable (_T("PATH"), pszBuffer, ENV_BUFFER_SIZE);
-	if (dwBuffer == 0)
-	{
-                ConErrPrintf (_T("No PATH environment variable found!\n"));
-	}
-	else if (dwBuffer > ENV_BUFFER_SIZE)
+	if (dwBuffer > ENV_BUFFER_SIZE)
 	{
 		pszBuffer = (LPTSTR)realloc (pszBuffer, dwBuffer * sizeof (TCHAR));
 		GetEnvironmentVariable (_T("PATH"), pszBuffer, dwBuffer * sizeof (TCHAR));
 	}
-
 
 	/* initialize full name buffer */
 	*pFullName = _T('\0');
@@ -120,9 +118,12 @@ SearchForExecutable (LPCTSTR pFileName, LPTSTR pFullName)
 #endif
 
 		/* search in current directory */
-		GetCurrentDirectory (MAX_PATH, szPathBuffer);
-		if (szPathBuffer[_tcslen(szPathBuffer)-1] != _T('\\'))
-			_tcscat (szPathBuffer, _T("\\"));
+		len = GetCurrentDirectory (MAX_PATH, szPathBuffer);
+		if (szPathBuffer[len - 1] != _T('\\'))
+		{
+			szPathBuffer[len] = _T('\\');
+			szPathBuffer[len + 1] = _T('\0');
+		}
 		_tcscat (szPathBuffer, pFileName);
 
 		p = szPathBuffer + _tcslen (szPathBuffer);
@@ -134,7 +135,6 @@ SearchForExecutable (LPCTSTR pFileName, LPTSTR pFullName)
 #ifdef _DEBUG
 			DebugPrintf (_T("Testing: \'%s\'\n"), szPathBuffer);
 #endif
-ConOutPrintf(_T("Testing: \'%s\'\n"), szPathBuffer);
 
 			if (IsValidFileName (szPathBuffer))
 			{
@@ -165,8 +165,12 @@ ConOutPrintf(_T("Testing: \'%s\'\n"), szPathBuffer);
 				s = NULL;
 			}
 
-			if (szPathBuffer[_tcslen(szPathBuffer)-1] != _T('\\'))
-				_tcscat (szPathBuffer, _T("\\"));
+			len = _tcslen(szPathBuffer);
+			if (szPathBuffer[len - 1] != _T('\\'))
+			{
+				szPathBuffer[len] = _T('\\');
+				szPathBuffer[len + 1] = _T('\0');
+			}
 			_tcscat (szPathBuffer, pFileName);
 
 			p = szPathBuffer + _tcslen (szPathBuffer);
@@ -200,9 +204,12 @@ ConOutPrintf(_T("Testing: \'%s\'\n"), szPathBuffer);
 #endif
 
 		/* search in current directory */
-		GetCurrentDirectory (MAX_PATH, szPathBuffer);
-		if (szPathBuffer[_tcslen(szPathBuffer)-1] != _T('\\'))
-			_tcscat (szPathBuffer, _T("\\"));
+		len = GetCurrentDirectory (MAX_PATH, szPathBuffer);
+		if (szPathBuffer[len - 1] != _T('\\'))
+		{
+			szPathBuffer[len] = _T('\\');
+			szPathBuffer[len + 1] = _T('\0');
+		}
 		_tcscat (szPathBuffer, pFileName);
 
 #ifdef _DEBUG
@@ -237,8 +244,12 @@ ConOutPrintf(_T("Testing: \'%s\'\n"), szPathBuffer);
 				s = NULL;
 			}
 
-			if (szPathBuffer[_tcslen(szPathBuffer)-1] != _T('\\'))
-				_tcscat (szPathBuffer, _T("\\"));
+			len = _tcslen(szPathBuffer);
+			if (szPathBuffer[len - 1] != _T('\\'))
+			{
+				szPathBuffer[len] = _T('\\');
+				szPathBuffer[len + 1] = _T('\0');
+			}
 			_tcscat (szPathBuffer, pFileName);
 
 #ifdef _DEBUG

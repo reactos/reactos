@@ -21,7 +21,7 @@
 #include <ntdll/ldr.h>
 #include <internal/teb.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <kernel32/kernel32.h>
 
 /* FUNCTIONS ****************************************************************/
@@ -218,7 +218,8 @@ HANDLE KERNEL32_MapFile(LPCWSTR lpApplicationName,
    PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
    NTSTATUS Status;
    HANDLE hSection;
-   
+   DWORD len = 0;
+
    hFile = NULL;
    
    /*
@@ -250,7 +251,12 @@ HANDLE KERNEL32_MapFile(LPCWSTR lpApplicationName,
      }
    if (TempFileName[1] != ':')
      {
-	GetCurrentDirectoryW(MAX_PATH,TempDirectoryName);
+        len = GetCurrentDirectoryW(MAX_PATH,TempDirectoryName);
+        if (TempDirectoryName[len - 1] != L'\\')
+	  {
+                TempDirectoryName[len] = L'\\';
+                TempDirectoryName[len + 1] = 0;
+	  }
 	wcscat(TempApplicationName,TempDirectoryName);
      }
    wcscat(TempApplicationName,TempFileName);

@@ -419,7 +419,7 @@ DWORD STDCALL GetFileAttributesW(LPCWSTR lpFileName)
      {
 	CloseHandle(hFile);
 	SetLastError(RtlNtStatusToDosError(errCode));
-	return 0;
+        return 0;
      }
    CloseHandle(hFile);
    return (DWORD)FileBasic.FileAttributes;  

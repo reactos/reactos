@@ -19,7 +19,7 @@
 #include <string.h>
 #include <wchar.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <kernel32/kernel32.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -168,7 +168,84 @@ DWORD STDCALL GetFullPathNameA(LPCSTR lpFileName,
 			       LPSTR lpBuffer,
 			       LPSTR *lpFilePart)
 {
-	
+   PSTR p;
+   PSTR prev = NULL;
+   
+   DPRINT("GetFullPathNameA(lpFileName %s, nBufferLength %d, lpBuffer %s, "
+	  "lpFilePart %x)\n",lpFileName,nBufferLength,lpBuffer,lpFilePart);
+   
+   if (!lpFileName || !lpBuffer)
+        return 0;
+   
+   if (isalpha(lpFileName[0]) && lpFileName[1] == ':')
+     {
+        lstrcpyA(lpBuffer, lpFileName);
+     }
+   else if (lpFileName[0] == '\\')
+     {
+        GetCurrentDirectoryA(nBufferLength, lpBuffer);
+        lstrcpyA(&lpBuffer[2], lpFileName);
+     }
+   else
+     {
+        DWORD len;
+        len = GetCurrentDirectoryA(nBufferLength, lpBuffer);
+        if (lpBuffer[len - 1] != '\\')
+          {
+                lpBuffer[len] = '\\';
+                lpBuffer[len + 1] = 0;
+          }
+        lstrcatA(lpBuffer, lpFileName);
+     }
+   
+   DPRINT("lpBuffer %s\n",lpBuffer);
+   
+   p = lpBuffer + 2;
+   
+   while ((*p) != 0) 
+     {
+        DPRINT("prev %s p %s\n",prev,p);
+	if (p[1] == '.' && (p[2] == '\\' || p[2] == 0))
+	  {
+             lstrcpyA(p, p+2);
+	  }
+        else if (p[1] == '.' && p[2] == '.' && (p[3] == '\\' || p[3] == 0) &&
+		 prev != NULL)
+	  {
+             lstrcpyA(prev, p+3);
+	     p = prev;
+	     if (prev == (lpBuffer+2))
+	       {
+		  prev = NULL;
+	       }
+	     else
+	       {
+		  prev--;
+		  while ((*prev) != '\\')
+		    {
+		       prev--;
+		    }
+	       }
+	  }
+	else
+	  {
+	     prev = p;
+	     do
+	       {
+		  p++;
+	       } 
+	     while ((*p) != 0 && (*p) != '\\');
+	  }
+     }
+   
+   if (lpFilePart != NULL)
+     {
+	(*lpFilePart) = prev;
+     }
+   
+   DPRINT("lpBuffer %s\n",lpBuffer);
+   
+   return strlen(lpBuffer);
 }
 
 DWORD STDCALL GetFullPathNameW(LPCWSTR lpFileName,
@@ -182,7 +259,8 @@ DWORD STDCALL GetFullPathNameW(LPCWSTR lpFileName,
    DPRINT("GetFullPathNameW(lpFileName %w, nBufferLength %d, lpBuffer %w, "
 	  "lpFilePart %x)\n",lpFileName,nBufferLength,lpBuffer,lpFilePart);
    
-   if (!lpFileName || !lpBuffer) return 0;
+   if (!lpFileName || !lpBuffer)
+        return 0;
    
    if (isalpha(lpFileName[0]) && lpFileName[1] == ':')
      {
@@ -190,10 +268,18 @@ DWORD STDCALL GetFullPathNameW(LPCWSTR lpFileName,
      }
    else if (lpFileName[0] == '\\')
      {
+        GetCurrentDirectoryW(nBufferLength, lpBuffer);
 	lstrcpyW(&lpBuffer[2], lpFileName);
      }
    else
      {
+        DWORD len;
+        len = GetCurrentDirectoryW(nBufferLength, lpBuffer);
+        if (lpBuffer[len - 1] != L'\\')
+          {
+                lpBuffer[len] = L'\\';
+                lpBuffer[len + 1] = 0;
+          }
 	lstrcatW(lpBuffer, lpFileName);
      }
    
@@ -246,13 +332,6 @@ DWORD STDCALL GetFullPathNameW(LPCWSTR lpFileName,
    
    return wcslen(lpBuffer);
 }
-
-
-
-
-	
-		
-
 
 DWORD
 STDCALL

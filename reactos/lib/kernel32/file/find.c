@@ -112,11 +112,20 @@ HANDLE STDCALL InternalFindFirstFile(LPCWSTR lpFileName,
    OBJECT_ATTRIBUTES ObjectAttributes;
    UNICODE_STRING DirectoryNameStr;
    IO_STATUS_BLOCK IoStatusBlock;
+   DWORD Len = 0;
    
    DPRINT("FindFirstFileW(lpFileName %w, lpFindFileData %x)\n",
 	   lpFileName, lpFindFileData);
-   
-   GetCurrentDirectoryW(MAX_PATH, CurrentDirectory);
+
+/*   
+   Len = GetCurrentDirectoryW(MAX_PATH, CurrentDirectory);
+   if (CurrentDirectory[Len - 1] != L'\\')
+     {
+	CurrentDirectory[Len] = L'\\';
+	CurrentDirectory[Len + 1] = 0;
+     }
+*/
+   GetFullPathNameW(lpFileName, MAX_PATH, CurrentDirectory, NULL);
    Directory[0] = '\\';
    Directory[1] = '?';
    Directory[2] = '?';
@@ -125,8 +134,8 @@ HANDLE STDCALL InternalFindFirstFile(LPCWSTR lpFileName,
    DPRINT("Directory %w\n",Directory);
    wcscat(Directory, CurrentDirectory);
    DPRINT("Directory %w\n",Directory);
-   wcscat(Directory, lpFileName);
-   DPRINT("Directory %w\n",Directory);
+//   wcscat(Directory, lpFileName);
+//   DPRINT("Directory %w\n",Directory);
    End = wcsrchr(Directory, '\\');
    *End = 0;
    
@@ -270,7 +279,12 @@ BOOL FindClose(HANDLE hFindFile)
    PKERNEL32_FIND_FILE_DATA IData;
    
    DPRINT("FindClose(hFindFile %x)\n",hFindFile);
-   
+
+   if (hFindFile || hFindFile == INVALID_HANDLE_VALUE)
+     {
+       SetLastError (ERROR_INVALID_HANDLE);
+       return(FALSE);
+     }
    IData = (PKERNEL32_FIND_FILE_DATA)hFindFile;
    CloseHandle(IData->DirectoryHandle);
    HeapFree(GetProcessHeap(), 0, IData);

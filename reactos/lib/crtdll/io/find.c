@@ -9,13 +9,16 @@ int _findfirst(const char *_name, struct _finddata_t *result)
 {
 	WIN32_FIND_DATA FindFileData;
 	char dir[MAX_PATH];
-
-
 	long hFindFile;
+	int len = 0;
 	
 	if ( _name == NULL || _name[0] == 0 ) {
-		GetCurrentDirectory(MAX_PATH,dir);
-		strcat(dir,"\\*.*");
+		len = GetCurrentDirectory(MAX_PATH,dir);
+                if (dir[len-1] != '\\') {
+			dir[len] = '\\';
+			dir[len+1] = 0;
+		}
+		strcat(dir,"*.*");
 	}
 	else 
 		strcpy(dir,_name);
@@ -48,9 +51,8 @@ int  _findnext(int handle, struct _finddata_t  *result)
 	strncpy(result->name,FindFileData.cFileName,260);
 	return 0;
 }
+
 int  _findclose(int handle)
 {
 	return FindClose((void *)handle);
 }
-
-

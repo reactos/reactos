@@ -316,8 +316,14 @@ INT cmd_attrib (LPTSTR cmd, LPTSTR param)
 
 	if (argc == 0)
 	{
-		GetCurrentDirectory (MAX_PATH, szPath);
-		_tcscat (szPath, _T("\\"));
+                DWORD len;
+
+                len = GetCurrentDirectory (MAX_PATH, szPath);
+                if (szPath[len-1] != _T('\\'))
+                {
+                        szPath[len] = _T('\\');
+                        szPath[len + 1] = 0;
+                }
 		_tcscpy (szFileName, _T("*.*"));
 		PrintAttribute (szPath, szFileName, bRecurse);
 	}

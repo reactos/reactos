@@ -48,7 +48,6 @@ TCHAR cgetchar (VOID)
 
 	do
 	{
-		WaitForSingleObject (hInput, INFINITE);
 		ReadConsoleInput (hInput, &irBuffer, 1, &dwRead);
 		if ((irBuffer.EventType == KEY_EVENT) &&
 			(irBuffer.Event.KeyEvent.bKeyDown == TRUE))

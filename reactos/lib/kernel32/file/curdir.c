@@ -11,6 +11,8 @@
 /* INCLUDES ******************************************************************/
 
 #include <windows.h>
+#include <string.h>
+#include <ctype.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
@@ -78,6 +80,11 @@ DWORD STDCALL GetCurrentDirectoryW(DWORD nBufferLength, LPWSTR lpBuffer)
 	lpBuffer[1] = ':';
 	lpBuffer[2] = 0;
 	lstrcpyW(&lpBuffer[2], DriveDirectoryW[CurrentDrive]);
+     }
+   if (uSize > 3 && lpBuffer[uSize - 1] == L'\\')
+     {
+        lpBuffer[uSize - 1] = 0;
+        uSize--;
      }
    DPRINT("GetCurrentDirectoryW() = '%w'\n",lpBuffer);
    return uSize;
@@ -164,7 +171,12 @@ WINBOOL STDCALL SetCurrentDirectoryW(LPCWSTR lpPathName)
 	return(TRUE);
      }
    
-   GetCurrentDirectoryW(MAX_PATH, PathName);
+   len = GetCurrentDirectoryW(MAX_PATH, PathName);
+   if (PathName[len-1] != '\\')
+     {
+	PathName[len] = '\\';
+	PathName[len+1] = 0;
+     }
    lstrcatW(PathName, lpPathName);
    len = lstrlenW(PathName);
    if (PathName[len-1] != '\\')
