@@ -1008,11 +1008,11 @@ GetKeyboardLayoutNameA(
 HDESK
 STDCALL
 CreateDesktopA(
-    LPSTR lpszDesktop,
-    LPSTR lpszDevice,
+    LPCSTR lpszDesktop,
+    LPCSTR lpszDevice,
     LPDEVMODE pDevmode,
     DWORD dwFlags,
-    DWORD dwDesiredAccess,
+    ACCESS_MASK dwDesiredAccess,
     LPSECURITY_ATTRIBUTES lpsa);
  
 HDESK
@@ -1085,7 +1085,7 @@ GetMessageA(
     UINT wMsgFilterMin,
     UINT wMsgFilterMax);
  
-LONG
+LRESULT
 STDCALL
 DispatchMessageA(
     CONST MSG *lpMsg);
@@ -1116,7 +1116,7 @@ SendMessageTimeoutA(
     LPARAM lParam,
     UINT fuFlags,
     UINT uTimeout,
-    LPDWORD lpdwResult);
+    PDWORD_PTR lpdwResult);
  
 WINBOOL
 STDCALL
@@ -1134,7 +1134,7 @@ SendMessageCallbackA(
     WPARAM wParam,
     LPARAM lParam,
     SENDASYNCPROC lpResultCallBack,
-    DWORD dwData);
+    ULONG_PTR dwData);
  
 WINBOOL
 STDCALL
@@ -1262,7 +1262,7 @@ GetDlgItemTextA(
     LPSTR lpString,
     int nMaxCount);
  
-LONG
+LRESULT
 STDCALL
 SendDlgItemMessageA(
     HWND hDlg,
@@ -1511,11 +1511,10 @@ GetMenuItemInfoA(
 WINBOOL
 STDCALL
 SetMenuItemInfoA(
-    HMENU,
-    UINT,
-    WINBOOL,
-    LPCMENUITEMINFO
-    );
+  HMENU hMenu,
+  UINT uItem,
+  WINBOOL fByPosition,
+  LPMENUITEMINFO lpmii);
  
 int
 STDCALL
@@ -1731,12 +1730,6 @@ LoadStringA(
     LPSTR lpBuffer,
     int nBufferMax);
  
-WINBOOL
-STDCALL
-IsDialogMessageA(
-    HWND hDlg,
-    LPMSG lpMsg);
- 
 int
 STDCALL
 DlgDirListA(
@@ -1791,8 +1784,8 @@ DefMDIChildProcA(
 HWND
 STDCALL
 CreateMDIWindowA(
-    LPSTR lpClassName,
-    LPSTR lpWindowName,
+    LPCSTR lpClassName,
+    LPCSTR lpWindowName,
     DWORD dwStyle,
     int X,
     int Y,

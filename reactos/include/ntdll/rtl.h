@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.24 2001/02/17 17:40:05 ekohl Exp $
+/* $Id: rtl.h,v 1.25 2001/05/07 22:03:26 chorns Exp $
  *
  */
 
@@ -71,7 +71,7 @@ RtlTryEnterCriticalSection (
 	PCRITICAL_SECTION	CriticalSection
 	);
 
-UINT
+DWORD
 STDCALL
 RtlCompactHeap (
 	HANDLE	heap,

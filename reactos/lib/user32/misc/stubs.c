@@ -1,1262 +1,5610 @@
+/* $Id: stubs.c,v 1.2 2001/05/07 22:03:27 chorns Exp $
+ *
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS user32.dll
+ * FILE:            lib/user32/misc/stubs.c
+ * PURPOSE:         User32.dll stubs
+ * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
+ * NOTES:           If you implement a function, remove it from this file
+ * UPDATE HISTORY:
+ *      08-05-2001  CSH  Created
+ */
 #include <windows.h>
-#ifdef WIN95
 
 HKL
 STDCALL
 ActivateKeyboardLayout(
-		       HKL hkl,
-		       UINT Flags) { return 0; }
-#else
-WINBOOL
-STDCALL
-ActivateKeyboardLayout(
-		       HKL hkl,
-		       UINT Flags) { return 0; }
-#endif /* WIN95 */
-
-int
-STDCALL
-ToUnicode(
-	  UINT wVirtKey,
-	  UINT wScanCode,
-	  PBYTE lpKeyState,
-	  LPWSTR pwszBuff,
-	  int cchBuff,
-	  UINT wFlags) { return 0; }
- 
-int
-STDCALL
-ToUnicodeEx(
-	    UINT wVirtKey,
-	    UINT wScanCode,
-	    PBYTE lpKeyState,
-	    LPWSTR pwszBuff,
-	    int cchBuff,
-	    UINT wFlags,
-	    HKL dwhkl) { return 0; }
+  HKL hkl,
+  UINT Flags)
+{
+  return (HKL)0;
+}
 
 WINBOOL
 STDCALL
-OpenIcon(
-	 HWND hWnd) { return FALSE; } 
+AdjustWindowRect(
+  LPRECT lpRect,
+  DWORD dwStyle,
+  WINBOOL bMenu)
+{
+  return FALSE;
+}
 
 WINBOOL
 STDCALL
-CloseWindow(
-	    HWND hWnd) { return FALSE; }
-
-
-WINBOOL
-STDCALL
-RegisterHotKey(
-	       HWND hWnd ,
-	       int anID,
-	       UINT fsModifiers,
-	       UINT vk) { return FALSE; }
-
-
-
- 
-WINBOOL
-STDCALL
-UnregisterHotKey(
-		 HWND hWnd,
-		 int anID) { return FALSE; }
+AdjustWindowRectEx( 
+  LPRECT lpRect, 
+  DWORD dwStyle, 
+  WINBOOL bMenu, 
+  DWORD dwExStyle)
+{
+  return FALSE;
+}
 
 WINBOOL
 STDCALL
-ExitWindowsEx(
-	      UINT uFlags,
-	      DWORD dwReserved) { return TRUE; }
-
-WORD
-STDCALL
-GetWindowWord(
-	      HWND hWnd,
-	      int nIndex) { return 0; }
+AllowSetForegroundWindow(
+  DWORD dwProcessId)
+{
+  return FALSE;
+}
 
 WINBOOL
 STDCALL
-LockWindowUpdate(
-		 HWND hWndLock) { return FALSE; }
+AnimateWindow(
+  HWND hwnd,
+  DWORD dwTime,
+  DWORD dwFlags)
+{
+  return FALSE;
+}
 
 WINBOOL
 STDCALL
-UnloadKeyboardLayout(
-		     HKL hkl) { return 0; }
-
- 
-int
-STDCALL
-GetKeyboardLayoutList(
-		      int nBuff,
-		      HKL *lpList) { return 0; }
-
-
+AnyPopup(VOID)
+{
+  return FALSE;
+}
 
 WINBOOL
 STDCALL
-SetWindowContextHelpId(HWND hWnd, DWORD Id) { return FALSE; }
-
-DWORD
-STDCALL
-GetWindowContextHelpId(HWND hWnd) { return 0; } 
-HKL
-STDCALL
-GetKeyboardLayout(
-		  DWORD dwLayout
-		  ) { return 0; }
-
- 
-
-
- 
-WINBOOL
-STDCALL
-SetUserObjectSecurity(
-		      HANDLE hObj,
-		      PSECURITY_INFORMATION pSIRequested,
-		      PSECURITY_DESCRIPTOR pSID) { return 0; }
-
- 
-WINBOOL
-STDCALL
-GetUserObjectSecurity(
-		      HANDLE hObj,
-		      PSECURITY_INFORMATION pSIRequested,
-		      PSECURITY_DESCRIPTOR pSID,
-		      DWORD nLength,
-		      LPDWORD lpnLengthNeeded) { return 0; }
-
- 
-
-#if 0
-WINBOOL
-STDCALL
-SetMessageQueue(
-		int cMessagesMax) { return 0; }
-
- 
-
- 
-WINBOOL
-STDCALL
-ExitWindowsEx(
-	      UINT uFlags,
-	      DWORD dwReserved) { return 0; }
-
-#endif
+AppendMenuA(
+  HMENU hMenu,
+  UINT uFlags,
+  UINT_PTR uIDNewItem,
+  LPCSTR lpNewItem)
+{
+  return FALSE;
+}
 
 WINBOOL
 STDCALL
-SwapMouseButton(
-		WINBOOL fSwap) { return 0; }
+AppendMenuW(
+  HMENU hMenu,
+  UINT uFlags,
+  UINT_PTR uIDNewItem,
+  LPCWSTR lpNewItem)
+{
+  return FALSE;
+}
 
-#if 0 
-DWORD
+UINT
 STDCALL
-GetMessagePos(
-	      VOID) { return 0; }
+ArrangeIconicWindows(
+  HWND hWnd)
+{
+  return 0;
+}
 
- 
-LONG
-STDCALL
-GetMessageTime(
-	       VOID) { return 0; }
-
- 
-LONG
-STDCALL
-GetMessageExtraInfo(
-		    VOID) { return 0; }
-
- 
-LPARAM
-STDCALL
-SetMessageExtraInfo(
-		    LPARAM lParam) { return 0; }
-
- 
-long  
-STDCALL  
-BroadcastSystemMessage(
-		       DWORD x, 
-		       LPDWORD y, 
-		       UINT z, 
-		       WPARAM wParam, 
-		       LPARAM lParam) { return 0; }
-
-#endif
 WINBOOL
 STDCALL
 AttachThreadInput(
-		  DWORD idAttach,
-		  DWORD idAttachTo,
-		  WINBOOL fAttach) { return 0; }
+  DWORD idAttach,
+  DWORD idAttachTo,
+  WINBOOL fAttach)
+{
+  return FALSE;
+}
 
-#if 0
-WINBOOL
-STDCALL
-ReplyMessage(
-	     LRESULT lResult) { return 0; }
-
- 
-WINBOOL
-STDCALL
-WaitMessage(
-	    VOID) { return 0; }
-
- 
-DWORD
-STDCALL
-WaitForInputIdle(
-		 HANDLE hProcess,
-		 DWORD dwMilliseconds) { return 0; }
-
-
-WINBOOL
-STDCALL
-InSendMessage(
-	      VOID) { return 0; }
-
- 
- 
-WINBOOL
-STDCALL
-IsMenu(
-       HMENU hMenu) { return 0; }
-
- 
-
-#endif
- 
-
- 
 HDWP
 STDCALL
 BeginDeferWindowPos(
-		    int nNumWindows) { return 0; }
-
- 
-HDWP
-STDCALL
-DeferWindowPos(
-	       HDWP hWinPosInfo,
-	       HWND hWnd,
-	       HWND hWndInsertAfter,
-	       int x,
-	       int y,
-	       int cx,
-	       int cy,
-	       UINT uFlags) { return 0; }
-
- 
-WINBOOL
-STDCALL
-EndDeferWindowPos(
-		  HDWP hWinPosInfo) { return 0; }
-
-
- 
-WINBOOL
-STDCALL
-AnyPopup(
-	 VOID) { return 0; }
-
-
-WINBOOL
-STDCALL
-ShowOwnedPopups(
-		HWND hWnd,
-		WINBOOL fShow)
+  int nNumWindows)
 {
-	return FALSE;
+  return (HDWP)0;
 }
-
-
-#if 0
-
- 
-WINBOOL
-STDCALL
-SetDlgItemInt(
-	      HWND hDlg,
-	      int nIDDlgItem,
-	      UINT uValue,
-	      WINBOOL bSigned) { return 0; }
-
- 
-UINT
-STDCALL
-GetDlgItemInt(
-	      HWND hDlg,
-	      int nIDDlgItem,
-	      WINBOOL *lpTranslated,
-	      WINBOOL bSigned) { return 0; }
-
- 
-WINBOOL
-STDCALL
-CheckDlgButton(
-	       HWND hDlg,
-	       int nIDButton,
-	       UINT uCheck) { return 0; }
-
- 
-WINBOOL
-STDCALL
-CheckRadioButton(
-		 HWND hDlg,
-		 int nIDFirstButton,
-		 int nIDLastButton,
-		 int nIDCheckButton) { return 0; }
-
- 
-UINT
-STDCALL
-IsDlgButtonChecked(
-		   HWND hDlg,
-		   int nIDButton) { return 0; }
-
- 
-HWND
-STDCALL
-GetNextDlgGroupItem(
-		    HWND hDlg,
-		    HWND hCtl,
-		    WINBOOL bPrevious) { return 0; }
-
- 
-HWND
-STDCALL
-GetNextDlgTabItem(
-		  HWND hDlg,
-		  HWND hCtl,
-		  WINBOOL bPrevious) { return 0; }
-
- 
-int
-STDCALL
-GetDlgCtrlID(
-	     HWND hWnd) { return 0; }
-
- 
-long
-STDCALL
-GetDialogBaseUnits(VOID) { return 0; }
-
-#endif
-
-
- 
-DWORD
-STDCALL
-OemKeyScan(
-	   WORD wOemChar) { return 0; }
-
- 
-VOID
-STDCALL
-keybd_event(
-	    BYTE bVk,
-	    BYTE bScan,
-	    DWORD dwFlags,
-	    DWORD dwExtraInfo) { return; }
-
- 
-VOID
-STDCALL
-mouse_event(
-	    DWORD dwFlags,
-	    DWORD dx,
-	    DWORD dy,
-	    DWORD cButtons,
-	    DWORD dwExtraInfo) { return; }
-
-#if 0
-WINBOOL
-STDCALL
-GetInputState(
-	      VOID) { return 0; }
-
- 
-DWORD
-STDCALL
-GetQueueStatus(
-	       UINT flags) { return 0; }
-
- 
-HWND
-STDCALL
-GetCapture(
-	   VOID) { return 0; }
-
- 
-HWND
-STDCALL
-SetCapture(
-	   HWND hWnd) { return 0; }
-
- 
-WINBOOL
-STDCALL
-ReleaseCapture(
-	       VOID) { return 0; }
-
- 
-DWORD
-STDCALL
-MsgWaitForMultipleObjects(
-			  DWORD nCount,
-			  LPHANDLE pHandles,
-			  WINBOOL fWaitAll,
-			  DWORD dwMilliseconds,
-			  DWORD dwWakeMask) { return 0; }
-
- 
-UINT
-STDCALL
-SetTimer(
-	 HWND hWnd ,
-	 UINT nIDEvent,
-	 UINT uElapse,
-	 TIMERPROC lpTimerFunc) { return 0; }
-
- 
-WINBOOL
-STDCALL
-KillTimer(
-	  HWND hWnd,
-	  UINT uIDEvent) { return 0; }
-
-
-#endif
-WINBOOL
-STDCALL
-DestroyAcceleratorTable(
-			HACCEL hAccel) { return 0; }
-
-#if 0
-HMENU
-STDCALL
-GetMenu(
-	HWND hWnd) { return 0; }
-
- 
- 
-WINBOOL
-STDCALL
-HiliteMenuItem(
-	       HWND hWnd,
-	       HMENU hMenu,
-	       UINT uIDHiliteItem,
-	       UINT uHilite) { return 0; }
-
- 
-UINT
-STDCALL
-GetMenuState(
-	     HMENU hMenu,
-	     UINT uId,
-	     UINT uFlags) { return 0; }
-
- 
-WINBOOL
-STDCALL
-DrawMenuBar(
-	    HWND hWnd) { return 0; }
-
- 
-HMENU
-STDCALL
-GetSystemMenu(
-	      HWND hWnd,
-	      WINBOOL bRevert) { return 0; }
-
- 
-HMENU
-STDCALL
-CreateMenu(
-	   VOID) { return 0; }
-
- 
-HMENU
-STDCALL
-CreatePopupMenu(
-		VOID) { return 0; }
-
- 
-WINBOOL
-STDCALL
-DestroyMenu(
-	    HMENU hMenu) { return 0; }
-
- 
-DWORD
-STDCALL
-CheckMenuItem(
-	      HMENU hMenu,
-	      UINT uIDCheckItem,
-	      UINT uCheck) { return 0; }
-
- 
-WINBOOL
-STDCALL
-EnableMenuItem(
-	       HMENU hMenu,
-	       UINT uIDEnableItem,
-	       UINT uEnable) { return 0; }
-
- 
-HMENU
-STDCALL
-GetSubMenu(
-	   HMENU hMenu,
-	   int nPos) { return 0; }
-
- 
-UINT
-STDCALL
-GetMenuItemID(
-	      HMENU hMenu,
-	      int nPos) { return 0; }
-
- 
-int
-STDCALL
-GetMenuItemCount(
-		 HMENU hMenu) { return 0; }
-
-WINBOOL
-STDCALL RemoveMenu(
-		   HMENU hMenu,
-		   UINT uPosition,
-		   UINT uFlags) { return 0; }
-
- 
-WINBOOL
-STDCALL
-DeleteMenu(
-	   HMENU hMenu,
-	   UINT uPosition,
-	   UINT uFlags) { return 0; }
-
- 
-WINBOOL
-STDCALL
-SetMenuItemBitmaps(
-		   HMENU hMenu,
-		   UINT uPosition,
-		   UINT uFlags,
-		   HBITMAP hBitmapUnchecked,
-		   HBITMAP hBitmapChecked) { return 0; }
-
- 
-LONG
-STDCALL
-GetMenuCheckMarkDimensions(
-			   VOID) { return 0; }
-
- 
-WINBOOL
-STDCALL
-TrackPopupMenu(
-	       HMENU hMenu,
-	       UINT uFlags,
-	       int x,
-	       int y,
-	       int nReserved,
-	       HWND hWnd,
-	       CONST RECT *prcRect) { return 0; }
-
-UINT
-STDCALL
-GetMenuDefaultItem(
-		   HMENU hMenu, 
-		   UINT fByPos, 
-		   UINT gmdiFlags) { return 0; }
-
-WINBOOL
-STDCALL
-SetMenuDefaultItem(
-		   HMENU hMenu, 
-		   UINT uItem, 
-		   UINT fByPos) { return 0; }
-
-WINBOOL
-STDCALL
-GetMenuItemRect(HWND hWnd, 
-		HMENU hMenu, 
-		UINT uItem, 
-		LPRECT lprcItem) { return 0; }
-
-#endif
-
-int
-STDCALL
-MenuItemFromPoint(HWND hWnd, 
-		  HMENU hMenu, 
-		  POINT ptScreen) { return 0; }
-
- 
-DWORD
-STDCALL
-DragObject(HWND hWndFrom, HWND hWndTo, UINT u, DWORD d, HCURSOR c) { return 0; }
-
- 
-WINBOOL
-STDCALL
-DragDetect(HWND hwnd, 
-	   POINT pt) { return 0; }
-
-
- 
-HWND
-STDCALL
-GetForegroundWindow(
-		    VOID) { return 0; }
-
-
-
-WINBOOL
-STDCALL
-PaintDesktop(HDC hdc) { return 0; }
-
-HWND
-STDCALL
-WindowFromDC(
-	     HDC hDC){ return 0; }
-
-
-
-#if 0  
-HDC
-STDCALL
-GetDC(
-      HWND hWnd){ return 0; }
-
- 
-HDC
-STDCALL
-GetDCEx(
-	HWND hWnd ,
-	HRGN hrgnClip,
-	DWORD flags){ return 0; }
-
-
-
- 
-int
-STDCALL
-ReleaseDC(
-	  HWND hWnd,
-	  HDC hDC){ return 0; }
- 
 
 HDC
 STDCALL
 BeginPaint(
-	   HWND hWnd,
-	   LPPAINTSTRUCT lpPaint) { return 0; }
-
- 
-WINBOOL
-STDCALL
-EndPaint(
-	 HWND hWnd,
-	 CONST PAINTSTRUCT *lpPaint) { return 0; }
+  HWND hwnd,
+  LPPAINTSTRUCT lpPaint)
+{
+  return (HDC)0;
+}
 
 WINBOOL
 STDCALL
-SetForegroundWindow(
-		    HWND hWnd) { return 0; }
+BlockInput(
+  WINBOOL fBlockIt)
+{
+  return FALSE;
+}
 
- 
-
-
-
- 
 WINBOOL
 STDCALL
-GetUpdateRect(
-	      HWND hWnd,
-	      LPRECT lpRect,
-	      WINBOOL bErase) { return 0; }
+BringWindowToTop(
+  HWND hWnd)
+{
+  return FALSE;
+}
 
- 
+long
+STDCALL
+BroadcastSystemMessage(
+  DWORD dwFlags,
+  LPDWORD lpdwRecipients,
+  UINT uiMessage,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  return 0;
+}
+
+long
+STDCALL
+BroadcastSystemMessageA(
+  DWORD dwFlags,
+  LPDWORD lpdwRecipients,
+  UINT uiMessage,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  return 0;
+}
+
+long
+STDCALL
+BroadcastSystemMessageW(
+  DWORD dwFlags,
+  LPDWORD lpdwRecipients,
+  UINT uiMessage,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  return 0;
+}
+
+#if 0
+WINBOOL
+STDCALL
+CallMsgFilter(
+  LPMSG lpMsg,
+  int nCode)
+{
+  return FALSE;
+}
+#endif
+
+WINBOOL
+STDCALL
+CallMsgFilterA(
+  LPMSG lpMsg,
+  int nCode)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+CallMsgFilterW(
+  LPMSG lpMsg,
+  int nCode)
+{
+  return FALSE;
+}
+
+LRESULT
+STDCALL
+CallNextHookEx(
+  HHOOK hhk,
+  int nCode,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  return (LRESULT)0;
+}
+
+LRESULT
+STDCALL
+CallWindowProcA(
+  WNDPROC lpPrevWndFunc,
+  HWND hWnd,
+  UINT Msg,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  return (LRESULT)0;
+}
+
+LRESULT
+STDCALL
+CallWindowProcW(
+  WNDPROC lpPrevWndFunc,
+  HWND hWnd,
+  UINT Msg,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  return (LRESULT)0;
+}
+
+WORD
+STDCALL
+CascadeWindows(
+  HWND hwndParent,
+  UINT wHow,
+  CONST RECT *lpRect,
+  UINT cKids,
+  const HWND *lpKids)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+ChangeClipboardChain(
+  HWND hWndRemove,
+  HWND hWndNewNext)
+{
+  return FALSE;
+}
+
+LONG
+STDCALL
+ChangeDisplaySettingsA(
+  LPDEVMODE lpDevMode,
+  DWORD dwflags)
+{
+  return 0;
+}
+
+LONG
+STDCALL
+ChangeDisplaySettingsExA(
+  LPCSTR lpszDeviceName,
+  LPDEVMODE lpDevMode,
+  HWND hwnd,
+  DWORD dwflags,
+  LPVOID lParam)
+{
+  return 0;
+}
+
+LONG
+STDCALL
+ChangeDisplaySettingsExW(
+  LPCWSTR lpszDeviceName,
+  LPDEVMODE lpDevMode,
+  HWND hwnd,
+  DWORD dwflags,
+  LPVOID lParam)
+{
+  return 0;
+}
+
+LONG
+STDCALL
+ChangeDisplaySettingsW(
+  LPDEVMODE lpDevMode,
+  DWORD dwflags)
+{
+  return 0;
+}
+
+LPSTR
+STDCALL
+CharLowerA(
+  LPSTR lpsz)
+{
+  return (LPSTR)NULL;
+}
+
+DWORD
+STDCALL
+CharLowerBuffA(
+  LPSTR lpsz,
+  DWORD cchLength)
+{
+  return 0;
+}
+
+DWORD
+STDCALL
+CharLowerBuffW(
+  LPWSTR lpsz,
+  DWORD cchLength)
+{
+  return 0;
+}
+
+LPWSTR
+STDCALL
+CharLowerW(
+  LPWSTR lpsz)
+{
+  return (LPWSTR)NULL;
+}
+
+LPSTR
+STDCALL
+CharNextA(
+  LPCSTR lpsz)
+{
+  return (LPSTR)NULL;
+}
+
+LPSTR
+STDCALL
+CharNextExA(
+  WORD CodePage,
+  LPCSTR lpCurrentChar,
+  DWORD dwFlags)
+{
+}
+
+LPWSTR
+STDCALL
+CharNextW(
+  LPCWSTR lpsz)
+{
+  return (LPWSTR)NULL;
+}
+
+LPSTR
+STDCALL
+CharPrevA(
+  LPCSTR lpszStart,
+  LPCSTR lpszCurrent)
+{
+  return (LPSTR)NULL;
+}
+
+LPWSTR
+STDCALL
+CharPrevW(
+  LPCWSTR lpszStart,
+  LPCWSTR lpszCurrent)
+{
+  return (LPWSTR)NULL;
+}
+
+LPSTR
+STDCALL
+CharPrevExA(
+  WORD CodePage,
+  LPCSTR lpStart,
+  LPCSTR lpCurrentChar,
+  DWORD dwFlags)
+{
+  return (LPSTR)NULL;
+}
+
+WINBOOL
+STDCALL
+CharToOemA(
+  LPCSTR lpszSrc,
+  LPSTR lpszDst)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+CharToOemBuffA(
+  LPCSTR lpszSrc,
+  LPSTR lpszDst,
+  DWORD cchDstLength)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+CharToOemBuffW(
+  LPCWSTR lpszSrc,
+  LPSTR lpszDst,
+  DWORD cchDstLength)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+CharToOemW(
+  LPCWSTR lpszSrc,
+  LPSTR lpszDst)
+{
+  return FALSE;
+}
+
+LPSTR
+STDCALL
+CharUpperA(
+  LPSTR lpsz)
+{
+  return (LPSTR)NULL;
+}
+
+DWORD
+STDCALL
+CharUpperBuffA(
+  LPSTR lpsz,
+  DWORD cchLength)
+{
+  return 0;
+}
+
+DWORD
+STDCALL
+CharUpperBuffW(
+  LPWSTR lpsz,
+  DWORD cchLength)
+{
+  return 0;
+}
+
+LPWSTR
+STDCALL
+CharUpperW(
+  LPWSTR lpsz)
+{
+  return (LPWSTR)NULL;
+}
+
+WINBOOL
+STDCALL
+CheckDlgButton(
+  HWND hDlg,
+  int nIDButton,
+  UINT uCheck)
+{
+  return FALSE;
+}
+
+DWORD
+STDCALL
+CheckMenuItem(
+  HMENU hmenu,
+  UINT uIDCheckItem,
+  UINT uCheck)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+CheckMenuRadioItem(
+  HMENU hmenu,
+  UINT idFirst,
+  UINT idLast,
+  UINT idCheck,
+  UINT uFlags)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+CheckRadioButton(
+  HWND hDlg,
+  int nIDFirstButton,
+  int nIDLastButton,
+  int nIDCheckButton)
+{
+  return FALSE;
+}
+
+HWND
+STDCALL
+ChildWindowFromPoint(
+  HWND hWndParent,
+  POINT Point)
+{
+  return (HWND)0;
+}
+
+HWND
+STDCALL
+ChildWindowFromPointEx(
+  HWND hwndParent,
+  POINT pt,
+  UINT uFlags)
+{
+  return (HWND)0;
+}
+
+WINBOOL
+STDCALL
+ClientToScreen(
+  HWND hWnd,
+  LPPOINT lpPoint)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+ClipCursor(
+  CONST RECT *lpRect)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+CloseClipboard(VOID)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+CloseDesktop(
+  HDESK hDesktop)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+CloseWindow(
+  HWND hWnd)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+CloseWindowStation(
+  HWINSTA hWinSta)
+{
+  return FALSE;
+}
+
 int
 STDCALL
-GetUpdateRgn(
-	     HWND hWnd,
-	     HRGN hRgn,
-	     WINBOOL bErase) { return 0; }
+CopyAcceleratorTableA(
+  HACCEL hAccelSrc,
+  LPACCEL lpAccelDst,
+  int cAccelEntries)
+{
+  return 0;
+}
 
- 
 int
 STDCALL
-SetWindowRgn(
-	     HWND hWnd,
-	     HRGN hRgn,
-	     WINBOOL bRedraw) { return 0; }
+CopyAcceleratorTableW(
+  HACCEL hAccelSrc,
+  LPACCEL lpAccelDst,
+  int cAccelEntries)
+{
+  return 0;
+}
 
- 
+HICON
+STDCALL
+CopyIcon(
+  HICON hIcon)
+{
+  return (HICON)0;
+}
+
+HANDLE
+STDCALL
+CopyImage(
+  HANDLE hImage,
+  UINT uType,
+  int cxDesired,
+  int cyDesired,
+  UINT fuFlags)
+{
+  return (HANDLE)0;
+}
+
+WINBOOL
+STDCALL
+CopyRect(
+  LPRECT lprcDst,
+  CONST RECT *lprcSrc)
+{
+  return FALSE;
+}
+
 int
 STDCALL
-GetWindowRgn(
-	     HWND hWnd,
-	     HRGN hRgn) { return 0; }
+CountClipboardFormats(VOID)
+{
+  return 0;
+}
 
- 
+HACCEL
+STDCALL
+CreateAcceleratorTableA(
+  LPACCEL lpaccl,
+  int cEntries)
+{
+  return (HACCEL)0;
+}
+
+HACCEL
+STDCALL
+CreateAcceleratorTableW(
+  LPACCEL lpaccl,
+  int cEntries)
+{
+  return (HACCEL)0;
+}
+
+WINBOOL
+STDCALL
+CreateCaret(
+  HWND hWnd,
+  HBITMAP hBitmap,
+  int nWidth,
+  int nHeight)
+{
+  return FALSE;
+}
+
+HCURSOR
+STDCALL
+CreateCursor(
+  HINSTANCE hInst,
+  int xHotSpot,
+  int yHotSpot,
+  int nWidth,
+  int nHeight,
+  CONST VOID *pvANDPlane,
+  CONST VOID *pvXORPlane)
+{
+  return (HCURSOR)0;
+}
+
+HDESK
+STDCALL
+CreateDesktopA(
+  LPCSTR lpszDesktop,
+  LPCSTR lpszDevice,
+  LPDEVMODE pDevmode,
+  DWORD dwFlags,
+  ACCESS_MASK dwDesiredAccess,
+  LPSECURITY_ATTRIBUTES lpsa)
+{
+  return (HDESK)0;
+}
+
+HDESK
+STDCALL
+CreateDesktopW(
+  LPCWSTR lpszDesktop,
+  LPCWSTR lpszDevice,
+  LPDEVMODE pDevmode,
+  DWORD dwFlags,
+  ACCESS_MASK dwDesiredAccess,
+  LPSECURITY_ATTRIBUTES lpsa)
+{
+  return (HDESK)0;
+}
+
+HWND
+STDCALL
+CreateDialogIndirectParamA(
+  HINSTANCE hInstance,
+  LPCDLGTEMPLATE lpTemplate,
+  HWND hWndParent,
+  DLGPROC lpDialogFunc,
+  LPARAM lParamInit)
+{
+  return (HWND)0;
+}
+
+HWND
+STDCALL
+CreateDialogIndirectParamAorW(
+  HINSTANCE hInstance,
+  LPCDLGTEMPLATE lpTemplate,
+  HWND hWndParent,
+  DLGPROC lpDialogFunc,
+  LPARAM lParamInit)
+{
+  return (HWND)0;
+}
+
+HWND
+STDCALL
+CreateDialogIndirectParamW(
+  HINSTANCE hInstance,
+  LPCDLGTEMPLATE lpTemplate,
+  HWND hWndParent,
+  DLGPROC lpDialogFunc,
+  LPARAM lParamInit)
+{
+  return (HWND)0;
+}
+
+HWND
+STDCALL
+CreateDialogParamA(
+  HINSTANCE hInstance,
+  LPCSTR lpTemplateName,
+  HWND hWndParent,
+  DLGPROC lpDialogFunc,
+  LPARAM dwInitParam)
+{
+  return (HWND)0;
+}
+
+HWND
+STDCALL
+CreateDialogParamW(
+  HINSTANCE hInstance,
+  LPCWSTR lpTemplateName,
+  HWND hWndParent,
+  DLGPROC lpDialogFunc,
+  LPARAM dwInitParam)
+{
+  return (HWND)0;
+}
+
+HICON
+STDCALL
+CreateIcon(
+  HINSTANCE hInstance,
+  int nWidth,
+  int nHeight,
+  BYTE cPlanes,
+  BYTE cBitsPixel,
+  CONST BYTE *lpbANDbits,
+  CONST BYTE *lpbXORbits)
+{
+  return (HICON)0;
+}
+
+HICON
+STDCALL
+CreateIconFromResource(
+  PBYTE presbits,
+  DWORD dwResSize,
+  WINBOOL fIcon,
+  DWORD dwVer)
+{
+  return (HICON)0;
+}
+
+HICON
+STDCALL
+CreateIconFromResourceEx(
+  PBYTE pbIconBits,
+  DWORD cbIconBits,
+  WINBOOL fIcon,
+  DWORD dwVersion,
+  int cxDesired,
+  int cyDesired,
+  UINT uFlags)
+{
+  return (HICON)0;
+}
+
+HICON
+STDCALL
+CreateIconIndirect(
+  PICONINFO piconinfo)
+{
+  return (HICON)0;
+}
+
+HWND
+STDCALL
+CreateMDIWindowA(
+  LPCSTR lpClassName,
+  LPCSTR lpWindowName,
+  DWORD dwStyle,
+  int X,
+  int Y,
+  int nWidth,
+  int nHeight,
+  HWND hWndParent,
+  HINSTANCE hInstance,
+  LPARAM lParam)
+{
+  return (HWND)0;
+}
+
+HWND
+STDCALL
+CreateMDIWindowW(
+  LPCWSTR lpClassName,
+  LPCWSTR lpWindowName,
+  DWORD dwStyle,
+  int X,
+  int Y,
+  int nWidth,
+  int nHeight,
+  HWND hWndParent,
+  HINSTANCE hInstance,
+  LPARAM lParam)
+{
+  return (HWND)0;
+}
+
+HMENU
+STDCALL
+CreateMenu(VOID)
+{
+  return (HMENU)0;
+}
+
+HMENU
+STDCALL
+CreatePopupMenu(VOID)
+{
+  return (HMENU)0;
+}
+
+HWND
+STDCALL
+CreateWindowExA(
+  DWORD dwExStyle,
+  LPCSTR lpClassName,
+  LPCSTR lpWindowName,
+  DWORD dwStyle,
+  int x,
+  int y,
+  int nWidth,
+  int nHeight,
+  HWND hWndParent,
+  HMENU hMenu,
+  HINSTANCE hInstance,
+  LPVOID lpParam)
+{
+  return (HWND)0;
+}
+
+HWND
+STDCALL
+CreateWindowExW(
+  DWORD dwExStyle,
+  LPCWSTR lpClassName,
+  LPCWSTR lpWindowName,
+  DWORD dwStyle,
+  int x,
+  int y,
+  int nWidth,
+  int nHeight,
+  HWND hWndParent,
+  HMENU hMenu,
+  HINSTANCE hInstance,
+  LPVOID lpParam)
+{
+  return (HWND)0;
+}
+
+HWINSTA
+STDCALL
+CreateWindowStationA(
+  LPSTR lpwinsta,
+  DWORD dwReserved,
+  ACCESS_MASK dwDesiredAccess,
+  LPSECURITY_ATTRIBUTES lpsa)
+{
+  return (HWINSTA)0;
+}
+
+HWINSTA
+STDCALL
+CreateWindowStationW(
+  LPWSTR lpwinsta,
+  DWORD dwReserved,
+  ACCESS_MASK dwDesiredAccess,
+  LPSECURITY_ATTRIBUTES lpsa)
+{
+  return (HWINSTA)0;
+}
+
+WINBOOL
+STDCALL
+DdeAbandonTransaction(
+  DWORD idInst,
+  HCONV hConv,
+  DWORD idTransaction)
+{
+  return FALSE;
+}
+
+LPBYTE
+STDCALL
+DdeAccessData(
+  HDDEDATA hData,
+  LPDWORD pcbDataSize)
+{
+  return (LPBYTE)0;
+}
+
+HDDEDATA
+STDCALL
+DdeAddData(
+  HDDEDATA hData,
+  LPBYTE pSrc,
+  DWORD cb,
+  DWORD cbOff)
+{
+  return (HDDEDATA)0;
+}
+
+HDDEDATA
+STDCALL
+DdeClientTransaction(
+  LPBYTE pData,
+  DWORD cbData,
+  HCONV hConv,
+  HSZ hszItem,
+  UINT wFmt,
+  UINT wType,
+  DWORD dwTimeout,
+  LPDWORD pdwResult)
+{
+  return (HDDEDATA)0;
+}
+
 int
 STDCALL
-ExcludeUpdateRgn(
-		 HDC hDC,
-		 HWND hWnd) { return 0; }
+DdeCmpStringHandles(
+  HSZ hsz1,
+  HSZ hsz2)
+{
+  return 0;
+}
 
- 
+HCONV
+STDCALL
+DdeConnect(
+  DWORD idInst,
+  HSZ hszService,
+  HSZ hszTopic,
+  PCONVCONTEXT pCC)
+{
+  return (HCONV)0;
+}
+
+HCONVLIST
+STDCALL
+DdeConnectList(
+  DWORD idInst,
+  HSZ hszService,
+  HSZ hszTopic,
+  HCONVLIST hConvList,
+  PCONVCONTEXT pCC)
+{
+  return (HCONVLIST)0;
+}
+
+HDDEDATA
+STDCALL
+DdeCreateDataHandle(
+  DWORD idInst,
+  LPBYTE pSrc,
+  DWORD cb,
+  DWORD cbOff,
+  HSZ hszItem,
+  UINT wFmt,
+  UINT afCmd)
+{
+  return (HDDEDATA)0;
+}
+
+HSZ
+STDCALL
+DdeCreateStringHandleA(
+  DWORD idInst,
+  LPSTR psz,
+  int iCodePage)
+{
+  return (HSZ)0;
+}
+
+HSZ
+STDCALL
+DdeCreateStringHandleW(
+  DWORD idInst,
+  LPWSTR psz,
+  int iCodePage)
+{
+  return (HSZ)0;
+}
+
 WINBOOL
 STDCALL
-InvalidateRect(
-	       HWND hWnd ,
-	       CONST RECT *lpRect,
-	       WINBOOL bErase) { return 0; }
+DdeDisconnect(
+  HCONV hConv)
+{
+  return FALSE;
+}
 
- 
 WINBOOL
 STDCALL
-ValidateRect(
-	     HWND hWnd ,
-	     CONST RECT *lpRect) { return 0; }
+DdeDisconnectList(
+  HCONVLIST hConvList)
+{
+  return FALSE;
+}
 
- 
 WINBOOL
 STDCALL
-InvalidateRgn(
-	      HWND hWnd,
-	      HRGN hRgn,
-	      WINBOOL bErase) { return 0; }
+DdeEnableCallback(
+  DWORD idInst,
+  HCONV hConv,
+  UINT wCmd)
+{
+  return FALSE;
+}
 
- 
 WINBOOL
 STDCALL
-ValidateRgn(
-	    HWND hWnd,
-	    HRGN hRgn) { return 0; }
+DdeFreeDataHandle(
+  HDDEDATA hData)
+{
+  return FALSE;
+}
 
- 
+BOOL
+DdeFreeStringHandle(
+  DWORD idInst,
+  HSZ hsz)
+{
+  return FALSE;
+}
 
+DWORD
+STDCALL
+DdeGetData(
+  HDDEDATA hData,
+  LPBYTE pDst,
+  DWORD cbMax,
+  DWORD cbOff)
+{
+  return 0;
+}
 
- 
+UINT
+STDCALL
+DdeGetLastError(
+  DWORD idInst)
+{
+  return 0;
+}
+
 WINBOOL
 STDCALL
-LockWindowUpdate(
-		 HWND hWndLock) { return 0; }
+DdeImpersonateClient(
+  HCONV hConv)
+{
+  return FALSE;
+}
 
- 
+UINT
+STDCALL
+DdeInitializeA(
+  LPDWORD pidInst,
+  PFNCALLBACK pfnCallback,
+  DWORD afCmd,
+  DWORD ulRes)
+{
+  return 0;
+}
+
+UINT
+STDCALL
+DdeInitializeW(
+  LPDWORD pidInst,
+  PFNCALLBACK pfnCallback,
+  DWORD afCmd,
+  DWORD ulRes)
+{
+  return 0;
+}
+
 WINBOOL
 STDCALL
-ScrollWindow(
-	     HWND hWnd,
-	     int XAmount,
-	     int YAmount,
-	     CONST RECT *lpRect,
-	     CONST RECT *lpClipRect) { return 0; }
+DdeKeepStringHandle(
+  DWORD idInst,
+  HSZ hsz)
+{
+  return FALSE;
+}
 
- 
+HDDEDATA
+STDCALL
+DdeNameService(
+  DWORD idInst,
+  HSZ hsz1,
+  HSZ hsz2,
+  UINT afCmd)
+{
+  return (HDDEDATA)0;
+}
+
 WINBOOL
 STDCALL
-ScrollDC(
-	 HDC hDC,
-	 int dx,
-	 int dy,
-	 CONST RECT *lprcScroll,
-	 CONST RECT *lprcClip ,
-	 HRGN hrgnUpdate,
-	 LPRECT lprcUpdate) { return 0; }
+DdePostAdvise(
+  DWORD idInst,
+  HSZ hszTopic,
+  HSZ hszItem)
+{
+  return FALSE;
+}
 
- 
+UINT
+STDCALL
+DdeQueryConvInfo(
+  HCONV hConv,
+  DWORD idTransaction,
+  PCONVINFO pConvInfo)
+{
+  return 0;
+}
+
+HCONV
+STDCALL
+DdeQueryNextServer(
+  HCONVLIST hConvList,
+  HCONV hConvPrev)
+{
+  return (HCONV)0;
+}
+
+DWORD
+STDCALL
+DdeQueryStringA(
+  DWORD idInst,
+  HSZ hsz,
+  LPSTR psz,
+  DWORD cchMax,
+  int iCodePage)
+{
+  return 0;
+}
+
+DWORD
+STDCALL
+DdeQueryStringW(
+  DWORD idInst,
+  HSZ hsz,
+  LPWSTR psz,
+  DWORD cchMax,
+  int iCodePage)
+{
+  return 0;
+}
+
+HCONV
+STDCALL
+DdeReconnect(
+  HCONV hConv)
+{
+  return (HCONV)0;
+}
+
+WINBOOL
+STDCALL
+DdeSetQualityOfService(
+  HWND hwndClient,
+  CONST SECURITY_QUALITY_OF_SERVICE *pqosNew,
+  PSECURITY_QUALITY_OF_SERVICE pqosPrev)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+DdeSetUserHandle(
+  HCONV hConv,
+  DWORD id,
+  DWORD_PTR hUser)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+DdeUnaccessData(
+  HDDEDATA hData)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+DdeUninitialize(
+  DWORD idInst)
+{
+  return FALSE;
+}
+
+LRESULT
+STDCALL
+DefDlgProcA(
+  HWND hDlg,
+  UINT Msg,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  return (LRESULT)0;
+}
+
+LRESULT
+STDCALL
+DefDlgProcW(
+  HWND hDlg,
+  UINT Msg,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  return (LRESULT)0;
+}
+
+LRESULT
+STDCALL
+DefFrameProcA(
+  HWND hWnd,
+  HWND hWndMDIClient,
+  UINT uMsg,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  return (LRESULT)0;
+}
+
+LRESULT
+STDCALL
+DefFrameProcW(
+  HWND hWnd,
+  HWND hWndMDIClient,
+  UINT uMsg,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  return (LRESULT)0;
+}
+
+LRESULT
+STDCALL
+DefMDIChildProcA(
+  HWND hWnd,
+  UINT uMsg,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  return (LRESULT)0;
+}
+
+LRESULT
+STDCALL
+DefMDIChildProcW(
+  HWND hWnd,
+  UINT uMsg,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  return (LRESULT)0;
+}
+
+LRESULT
+STDCALL
+DefWindowProcA(
+  HWND hWnd,
+  UINT Msg,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  return (LRESULT)0;
+}
+
+LRESULT
+STDCALL
+DefWindowProcW(
+  HWND hWnd,
+  UINT Msg,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  return (LRESULT)0;
+}
+
+HDWP
+STDCALL
+DeferWindowPos(
+  HDWP hWinPosInfo,
+  HWND hWnd,
+  HWND hWndInsertAfter,
+  int x,
+  int y,
+  int cx,
+  int cy,
+  UINT uFlags)
+{
+  return (HDWP)0;
+}
+
+WINBOOL
+STDCALL
+DeleteMenu(
+  HMENU hMenu,
+  UINT uPosition,
+  UINT uFlags)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+DestroyAcceleratorTable(
+  HACCEL hAccel)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+DestroyCaret(VOID)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+DestroyCursor(
+  HCURSOR hCursor)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+DestroyIcon(
+  HICON hIcon)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+DestroyMenu(
+  HMENU hMenu)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+DestroyWindow(
+  HWND hWnd)
+{
+  return FALSE;
+}
+
+INT_PTR
+STDCALL
+DialogBoxIndirectParamA(
+  HINSTANCE hInstance,
+  LPCDLGTEMPLATE hDialogTemplate,
+  HWND hWndParent,
+  DLGPROC lpDialogFunc,
+  LPARAM dwInitParam)
+{
+  return (INT_PTR)NULL;
+}
+
+INT_PTR
+STDCALL
+DialogBoxIndirectParamAorW(
+  HINSTANCE hInstance,
+  LPCDLGTEMPLATE hDialogTemplate,
+  HWND hWndParent,
+  DLGPROC lpDialogFunc,
+  LPARAM dwInitParam)
+{
+  return (INT_PTR)NULL;
+}
+
+INT_PTR
+STDCALL
+DialogBoxIndirectParamW(
+  HINSTANCE hInstance,
+  LPCDLGTEMPLATE hDialogTemplate,
+  HWND hWndParent,
+  DLGPROC lpDialogFunc,
+  LPARAM dwInitParam)
+{
+  return (INT_PTR)NULL;
+}
+
+INT_PTR
+STDCALL
+DialogBoxParamA(
+  HINSTANCE hInstance,
+  LPCSTR lpTemplateName,
+  HWND hWndParent,
+  DLGPROC lpDialogFunc,
+  LPARAM dwInitParam)
+{
+  return (INT_PTR)0;
+}
+
+INT_PTR
+STDCALL
+DialogBoxParamW(
+  HINSTANCE hInstance,
+  LPCWSTR lpTemplateName,
+  HWND hWndParent,
+  DLGPROC lpDialogFunc,
+  LPARAM dwInitParam)
+{
+  return (INT_PTR)0;
+}
+
+LRESULT
+STDCALL
+DispatchMessageA(
+  CONST MSG *lpmsg)
+{
+  return (LRESULT)0;
+}
+
+LRESULT
+STDCALL
+DispatchMessageW(
+  CONST MSG *lpmsg)
+{
+  return (LRESULT)0;
+}
+
 int
 STDCALL
-ScrollWindowEx(
-	       HWND hWnd,
-	       int dx,
-	       int dy,
-	       CONST RECT *prcScroll,
-	       CONST RECT *prcClip ,
-	       HRGN hrgnUpdate,
-	       LPRECT prcUpdate,
-	       UINT flags) { return 0; }
+DlgDirListA(
+  HWND hDlg,
+  LPSTR lpPathSpec,
+  int nIDListBox,
+  int nIDStaticPath,
+  UINT uFileType)
+{
+  return 0;
+}
 
- 
 int
 STDCALL
-SetScrollPos(
-	     HWND hWnd,
-	     int nBar,
-	     int nPos,
-	     WINBOOL bRedraw) { return 0; }
+DlgDirListComboBoxA(
+  HWND hDlg,
+  LPSTR lpPathSpec,
+  int nIDComboBox,
+  int nIDStaticPath,
+  UINT uFiletype)
+{
+  return 0;
+}
 
- 
 int
 STDCALL
-GetScrollPos(
-	     HWND hWnd,
-	     int nBar) { return 0; }
+DlgDirListComboBoxW(
+  HWND hDlg,
+  LPWSTR lpPathSpec,
+  int nIDComboBox,
+  int nIDStaticPath,
+  UINT uFiletype)
+{
+  return 0;
+}
 
- 
+int
+STDCALL
+DlgDirListW(
+  HWND hDlg,
+  LPWSTR lpPathSpec,
+  int nIDListBox,
+  int nIDStaticPath,
+  UINT uFileType)
+{
+  return 0;
+}
+
 WINBOOL
 STDCALL
-SetScrollRange(
-	       HWND hWnd,
-	       int nBar,
-	       int nMinPos,
-	       int nMaxPos,
-	       WINBOOL bRedraw) { return 0; }
+DlgDirSelectComboBoxExA(
+  HWND hDlg,
+  LPSTR lpString,
+  int nCount,
+  int nIDComboBox)
+{
+  return FALSE;
+}
 
- 
 WINBOOL
 STDCALL
-GetScrollRange(
-	       HWND hWnd,
-	       int nBar,
-	       LPINT lpMinPos,
-	       LPINT lpMaxPos) { return 0; }
+DlgDirSelectComboBoxExW(
+  HWND hDlg,
+  LPWSTR lpString,
+  int nCount,
+  int nIDComboBox)
+{
+  return FALSE;
+}
 
- 
 WINBOOL
 STDCALL
-ShowScrollBar(
-	      HWND hWnd,
-	      int wBar,
-	      WINBOOL bShow) { return 0; }
+DlgDirSelectExA(
+  HWND hDlg,
+  LPSTR lpString,
+  int nCount,
+  int nIDListBox)
+{
+  return FALSE;
+}
 
- 
+WINBOOL
+STDCALL
+DlgDirSelectExW(
+  HWND hDlg,
+  LPWSTR lpString,
+  int nCount,
+  int nIDListBox)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+DragDetect(
+  HWND hwnd,
+  POINT pt)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+DrawAnimatedRects(
+  HWND hwnd,
+  int idAni,
+  CONST RECT *lprcFrom,
+  CONST RECT *lprcTo)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+DrawCaption(
+  HWND hwnd,
+  HDC hdc,
+  LPRECT lprc,
+  UINT uFlags)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+DrawEdge(
+  HDC hdc,
+  LPRECT qrc,
+  UINT edge,
+  UINT grfFlags)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+DrawFocusRect(
+  HDC hDC,
+  CONST RECT *lprc)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+DrawIcon(
+  HDC hDC,
+  int X,
+  int Y,
+  HICON hIcon)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+DrawIconEx(
+  HDC hdc,
+  int xLeft,
+  int yTop,
+  HICON hIcon,
+  int cxWidth,
+  int cyWidth,
+  UINT istepIfAniCur,
+  HBRUSH hbrFlickerFreeDraw,
+  UINT diFlags)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+DrawMenuBar(
+  HWND hWnd)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+DrawStateA(
+  HDC hdc,
+  HBRUSH hbr,
+  DRAWSTATEPROC lpOutputFunc,
+  LPARAM lData,
+  WPARAM wData,
+  int x,
+  int y,
+  int cx,
+  int cy,
+  UINT fuFlags)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+DrawStateW(
+  HDC hdc,
+  HBRUSH hbr,
+  DRAWSTATEPROC lpOutputFunc,
+  LPARAM lData,
+  WPARAM wData,
+  int x,
+  int y,
+  int cx,
+  int cy,
+  UINT fuFlags)
+{
+  return FALSE;
+}
+
+int
+STDCALL
+DrawTextA(
+  HDC hDC,
+  LPCSTR lpString,
+  int nCount,
+  LPRECT lpRect,
+  UINT uFormat)
+{
+  return 0;
+}
+
+int
+STDCALL
+DrawTextExA(
+  HDC hdc,
+  LPSTR lpchText,
+  int cchText,
+  LPRECT lprc,
+  UINT dwDTFormat,
+  LPDRAWTEXTPARAMS lpDTParams)
+{
+  return 0;
+}
+
+int
+STDCALL
+DrawTextExW(
+  HDC hdc,
+  LPWSTR lpchText,
+  int cchText,
+  LPRECT lprc,
+  UINT dwDTFormat,
+  LPDRAWTEXTPARAMS lpDTParams)
+{
+  return 0;
+}
+
+int
+STDCALL
+DrawTextW(
+  HDC hDC,
+  LPCWSTR lpString,
+  int nCount,
+  LPRECT lpRect,
+  UINT uFormat)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+EmptyClipboard(VOID)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+EnableMenuItem(
+  HMENU hMenu,
+  UINT uIDEnableItem,
+  UINT uEnable)
+{
+  return FALSE;
+}
+
 WINBOOL
 STDCALL
 EnableScrollBar(
-		HWND hWnd,
-		UINT wSBflags,
-		UINT wArrows) { return 0; }
-
-
-
-
- 
+  HWND hWnd,
+  UINT wSBflags,
+  UINT wArrows)
+{
+  return FALSE;
+}
 
 WINBOOL
 STDCALL
-SetWindowContextHelpId(HWND hWnd, DWORD dw) { return 0; }
-
-DWORD
-STDCALL
-GetWindowContextHelpId(HWND hWnd ) { return 0; }
+EnableWindow(
+  HWND hWnd,
+  WINBOOL bEnable)
+{
+  return FALSE;
+}
 
 WINBOOL
 STDCALL
-SetMenuContextHelpId(HMENU hMenu, DWORD dw) { return 0; }
+EndDeferWindowPos(
+  HDWP hWinPosInfo)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+EndDialog(
+  HWND hDlg,
+  INT_PTR nResult)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+EndMenu(VOID)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+EndPaint(
+  HWND hWnd,
+  CONST PAINTSTRUCT *lpPaint)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+EnumChildWindows(
+  HWND hWndParent,
+  ENUMWINDOWSPROC lpEnumFunc,
+  LPARAM lParam)
+{
+  return FALSE;
+}
+
+UINT
+STDCALL
+EnumClipboardFormats(
+  UINT format)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+EnumDesktopWindows(
+  HDESK hDesktop,
+  ENUMWINDOWSPROC lpfn,
+  LPARAM lParam)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+EnumDesktopsA(
+  HWINSTA hwinsta,
+  DESKTOPENUMPROC lpEnumFunc,
+  LPARAM lParam)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+EnumDesktopsW(
+  HWINSTA hwinsta,
+  DESKTOPENUMPROC lpEnumFunc,
+  LPARAM lParam)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+EnumDisplayDevicesA(
+  LPCSTR lpDevice,
+  DWORD iDevNum,
+  PDISPLAY_DEVICE lpDisplayDevice,
+  DWORD dwFlags)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+EnumDisplayDevicesW(
+  LPCWSTR lpDevice,
+  DWORD iDevNum,
+  PDISPLAY_DEVICE lpDisplayDevice,
+  DWORD dwFlags)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+EnumDisplayMonitors(
+  HDC hdc,
+  LPRECT lprcClip,
+  MONITORENUMPROC lpfnEnum,
+  LPARAM dwData)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+EnumDisplaySettingsA(
+  LPCSTR lpszDeviceName,
+  DWORD iModeNum,
+  LPDEVMODE lpDevMode)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+EnumDisplaySettingsExA(
+  LPCSTR lpszDeviceName,
+  DWORD iModeNum,
+  LPDEVMODE lpDevMode,
+  DWORD dwFlags)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+EnumDisplaySettingsExW(
+  LPCWSTR lpszDeviceName,
+  DWORD iModeNum,
+  LPDEVMODE lpDevMode,
+  DWORD dwFlags)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+EnumDisplaySettingsW(
+  LPCWSTR lpszDeviceName,
+  DWORD iModeNum,
+  LPDEVMODE lpDevMode)
+{
+  return FALSE;
+}
+
+int
+STDCALL
+EnumPropsA(
+  HWND hWnd,
+  PROPENUMPROC lpEnumFunc)
+{
+  return 0;
+}
+
+int
+STDCALL
+EnumPropsExA(
+  HWND hWnd,
+  PROPENUMPROCEX lpEnumFunc,
+  LPARAM lParam)
+{
+  return 0;
+}
+
+int
+STDCALL
+EnumPropsExW(
+  HWND hWnd,
+  PROPENUMPROCEX lpEnumFunc,
+  LPARAM lParam)
+{
+  return 0;
+}
+
+int
+STDCALL
+EnumPropsW(
+  HWND hWnd,
+  PROPENUMPROC lpEnumFunc)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+EnumThreadWindows(
+  DWORD dwThreadId,
+  ENUMWINDOWSPROC lpfn,
+  LPARAM lParam)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+EnumWindowStationsA(
+  ENUMWINDOWSTATIONPROC lpEnumFunc,
+  LPARAM lParam)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+EnumWindowStationsW(
+  ENUMWINDOWSTATIONPROC lpEnumFunc,
+  LPARAM lParam)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+EnumWindows(
+  ENUMWINDOWSPROC lpEnumFunc,
+  LPARAM lParam)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+EqualRect(
+  CONST RECT *lprc1,
+  CONST RECT *lprc2)
+{
+  return FALSE;
+}
+
+int
+STDCALL
+ExcludeUpdateRgn(
+  HDC hDC,
+  HWND hWnd)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+ExitWindowsEx(
+  UINT uFlags,
+  DWORD dwReserved)
+{
+  return FALSE;
+}
+
+int
+STDCALL
+FillRect(
+  HDC hDC,
+  CONST RECT *lprc,
+  HBRUSH hbr)
+{
+  return 0;
+}
+
+HWND
+STDCALL
+FindWindowA(
+  LPCSTR lpClassName,
+  LPCSTR lpWindowName)
+{
+  return (HWND)0;
+}
+
+HWND
+STDCALL
+FindWindowExA(
+  HWND hwndParent,
+  HWND hwndChildAfter,
+  LPCSTR lpszClass,
+  LPCSTR lpszWindow)
+{
+  return (HWND)0;
+}
+
+HWND
+STDCALL
+FindWindowExW(
+  HWND hwndParent,
+  HWND hwndChildAfter,
+  LPCWSTR lpszClass,
+  LPCWSTR lpszWindow)
+{
+  return (HWND)0;
+}
+
+HWND
+STDCALL
+FindWindowW(
+  LPCWSTR lpClassName,
+  LPCWSTR lpWindowName)
+{
+  return (HWND)0;
+}
+
+WINBOOL
+STDCALL
+FlashWindow(
+  HWND hWnd,
+  WINBOOL bInvert)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+FlashWindowEx(
+  PFLASHWINFO pfwi)
+{
+  return FALSE;
+}
+
+int
+STDCALL
+FrameRect(
+  HDC hDC,
+  CONST RECT *lprc,
+  HBRUSH hbr)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+FreeDDElParam(
+  UINT msg,
+  LPARAM lParam)
+{
+  return FALSE;
+}
+
+HWND
+STDCALL
+GetActiveWindow(VOID)
+{
+  return (HWND)0;
+}
+
+WINBOOL
+STDCALL
+GetAltTabInfo(
+  HWND hwnd,
+  int iItem,
+  PALTTABINFO pati,
+  LPTSTR pszItemText,
+  UINT cchItemText)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+GetAltTabInfoA(
+  HWND hwnd,
+  int iItem,
+  PALTTABINFO pati,
+  LPSTR pszItemText,
+  UINT cchItemText)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+GetAltTabInfoW(
+  HWND hwnd,
+  int iItem,
+  PALTTABINFO pati,
+  LPWSTR pszItemText,
+  UINT cchItemText)
+{
+  return FALSE;
+}
+
+HWND
+STDCALL
+GetAncestor(
+  HWND hwnd,
+  UINT gaFlags)
+{
+  return (HWND)0;
+}
+
+SHORT
+STDCALL
+GetAsyncKeyState(
+  int vKey)
+{
+  return 0;
+}
+
+HWND
+STDCALL
+GetCapture(VOID)
+{
+  return (HWND)0;
+}
+
+UINT
+STDCALL
+GetCaretBlinkTime(VOID)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+GetCaretPos(
+  LPPOINT lpPoint)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+GetClassInfoA(
+  HINSTANCE hInstance,
+  LPCSTR lpClassName,
+  LPWNDCLASS lpWndClass)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+GetClassInfoExA(
+  HINSTANCE hinst,
+  LPCSTR lpszClass,
+  LPWNDCLASSEX lpwcx)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+GetClassInfoExW(
+  HINSTANCE hinst,
+  LPCWSTR lpszClass,
+  LPWNDCLASSEX lpwcx)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+GetClassInfoW(
+  HINSTANCE hInstance,
+  LPCWSTR lpClassName,
+  LPWNDCLASS lpWndClass)
+{
+  return FALSE;
+}
 
 DWORD
 STDCALL
-GetMenuContextHelpId(HMENU hMenu) { return 0; }
+GetClassLongA(
+  HWND hWnd,
+  int nIndex)
+{
+  return 0;
+}
 
- 
-#endif
+DWORD
+STDCALL
+GetClassLongW(
+  HWND hWnd,
+  int nIndex)
+{
+  return 0;
+}
+
+int
+STDCALL
+GetClassNameA(
+  HWND hWnd,
+  LPSTR lpClassName,
+  int nMaxCount)
+{
+  return 0;
+}
+
+int
+STDCALL
+GetClassNameW(
+  HWND hWnd,
+  LPWSTR lpClassName,
+  int nMaxCount)
+{
+  return 0;
+}
+
+WORD
+STDCALL
+GetClassWord(
+  HWND hWnd,
+  int nIndex)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+GetClientRect(
+  HWND hWnd,
+  LPRECT lpRect)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+GetClipCursor(
+  LPRECT lpRect)
+{
+  return FALSE;
+}
+
+HANDLE
+STDCALL
+GetClipboardData(
+  UINT uFormat)
+{
+  return (HANDLE)0;
+}
+
+int
+STDCALL
+GetClipboardFormatNameA(
+  UINT format,
+  LPSTR lpszFormatName,
+  int cchMaxCount)
+{
+  return 0;
+}
+
+int
+STDCALL
+GetClipboardFormatNameW(
+  UINT format,
+  LPWSTR lpszFormatName,
+  int cchMaxCount)
+{
+  return 0;
+}
+
+HWND
+STDCALL
+GetClipboardOwner(VOID)
+{
+  return (HWND)0;
+}
+
+DWORD
+STDCALL
+GetClipboardSequenceNumber(VOID)
+{
+  return 0;
+}
+
+HWND
+STDCALL
+GetClipboardViewer(VOID)
+{
+  return (HWND)0;
+}
+
+WINBOOL
+STDCALL
+GetComboBoxInfo(
+  HWND hwndCombo,
+  PCOMBOBOXINFO pcbi)
+{
+  return FALSE;
+}
+
+HCURSOR
+STDCALL
+GetCursor(VOID)
+{
+  return (HCURSOR)0;
+}
+
+WINBOOL
+STDCALL
+GetCursorInfo(
+  PCURSORINFO pci)
+{
+  return FALSE;
+}
 
 WINBOOL
 STDCALL
 GetCursorPos(
-	     LPPOINT lpPoint) { return 0; }
+  LPPOINT lpPoint)
+{
+  return FALSE;
+}
 
- 
-WINBOOL
+HDC
 STDCALL
-ClipCursor(
-	   CONST RECT *lpRect) { return 0; }
+GetDC(
+  HWND hWnd)
+{
+  return (HDC)0;
+}
 
- 
-WINBOOL
+HDC
 STDCALL
-GetClipCursor(
-	      LPRECT lpRect) { return 0; }
+GetDCEx(
+  HWND hWnd,
+  HRGN hrgnClip,
+  DWORD flags)
+{
+  return (HDC)0;
+}
 
- 
-HCURSOR
-STDCALL
-GetCursor(
-	  VOID) { return 0; }
-
-#if 0
- 
-WINBOOL
-STDCALL
-ClientToScreen(
-	       HWND hWnd,
-	       LPPOINT lpPoint) { return 0; }
-
- 
-WINBOOL
-STDCALL
-ScreenToClient(
-	       HWND hWnd,
-	       LPPOINT lpPoint) { return 0; }
-
- 
-
- 
 HWND
 STDCALL
-WindowFromPoint(
-		POINT Point) { return 0; }
+GetDesktopWindow(VOID)
+{
+  return (HWND)0;
+}
 
- 
+LONG
+STDCALL
+GetDialogBaseUnits(VOID)
+{
+  return 0;
+}
+
+int
+STDCALL
+GetDlgCtrlID(
+  HWND hwndCtl)
+{
+  return 0;
+}
+
 HWND
 STDCALL
-ChildWindowFromPoint(
-		     HWND hWndParent,
-		     POINT Point) { return 0; }
+GetDlgItem(
+  HWND hDlg,
+  int nIDDlgItem)
+{
+  return (HWND)0;
+}
 
- 
-
- 
-WORD
+UINT
 STDCALL
-GetClassWord(
-	     HWND hWnd,
-	     int nIndex) { return 0; }
+GetDlgItemInt(
+  HWND hDlg,
+  int nIDDlgItem,
+  WINBOOL *lpTranslated,
+  WINBOOL bSigned)
+{
+  return 0;
+}
 
- 
-WORD
+UINT
 STDCALL
-SetClassWord(
-	     HWND hWnd,
-	     int nIndex,
-	     WORD wNewWord) { return 0; }
+GetDlgItemTextA(
+  HWND hDlg,
+  int nIDDlgItem,
+  LPSTR lpString,
+  int nMaxCount)
+{
+  return 0;
+}
 
-#endif
- 
+UINT
+STDCALL
+GetDlgItemTextW(
+  HWND hDlg,
+  int nIDDlgItem,
+  LPWSTR lpString,
+  int nMaxCount)
+{
+  return 0;
+}
+
+UINT
+STDCALL
+GetDoubleClickTime(VOID)
+{
+  return 0;
+}
+
+HWND
+STDCALL
+GetFocus(VOID)
+{
+  return (HWND)0;
+}
+
+HWND
+STDCALL
+GetForegroundWindow(VOID)
+{
+  return (HWND)0;
+}
+
 WINBOOL
 STDCALL
-EnumChildWindows(
-		 HWND hWndParent,
-		 ENUMWINDOWSPROC lpEnumFunc,
-		 LPARAM lParam) { return 0; }
+GetGUIThreadInfo(
+  DWORD idThread,
+  LPGUITHREADINFO lpgui)
+{
+  return FALSE;
+}
 
- 
+DWORD
+STDCALL
+GetGuiResources(
+  HANDLE hProcess,
+  DWORD uiFlags)
+{
+  return 0;
+}
+
 WINBOOL
 STDCALL
-EnumWindows(
-	    ENUMWINDOWSPROC lpEnumFunc,
-	    LPARAM lParam) { return 0; }
+GetIconInfo(
+  HICON hIcon,
+  PICONINFO piconinfo)
+{
+  return FALSE;
+}
 
- 
 WINBOOL
 STDCALL
-EnumThreadWindows(
-		  DWORD dwThreadId,
-		  ENUMWINDOWSPROC lpfn,
-		  LPARAM lParam) { return 0; }
+GetInputState(VOID)
+{
+  return FALSE;
+}
 
+UINT
+STDCALL
+GetKBCodePage(VOID)
+{
+  return 0;
+}
 
+int
+STDCALL
+GetKeyNameTextA(
+  LONG lParam,
+  LPSTR lpString,
+  int nSize)
+{
+  return 0;
+}
+
+int
+STDCALL
+GetKeyNameTextW(
+  LONG lParam,
+  LPWSTR lpString,
+  int nSize)
+{
+  return 0;
+}
+
+SHORT
+STDCALL
+GetKeyState(
+  int nVirtKey)
+{
+  return 0;
+}
+
+HKL
+STDCALL
+GetKeyboardLayout(
+  DWORD idThread)
+{
+  return (HKL)0;
+}
+
+UINT
+STDCALL
+GetKeyboardLayoutList(
+  int nBuff,
+  HKL FAR *lpList)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+GetKeyboardLayoutNameA(
+  LPSTR pwszKLID)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+GetKeyboardLayoutNameW(
+  LPWSTR pwszKLID)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+GetKeyboardState(
+  PBYTE lpKeyState)
+{
+  return FALSE;
+}
+
+int
+STDCALL
+GetKeyboardType(
+  int nTypeFlag)
+{
+  return 0;
+}
 
 HWND
 STDCALL
 GetLastActivePopup(
-		   HWND hWnd) { return 0; }
+  HWND hWnd)
+{
+  return (HWND)0;
+}
 
- 
+WINBOOL
+STDCALL
+GetLastInputInfo(
+  PLASTINPUTINFO plii)
+{
+  return FALSE;
+}
+
+DWORD
+STDCALL
+GetListBoxInfo(
+  HWND hwnd)
+{
+  return 0;
+}
+
+HMENU
+STDCALL
+GetMenu(
+  HWND hWnd)
+{
+  return (HMENU)0;
+}
+
+WINBOOL
+STDCALL
+GetMenuBarInfo(
+  HWND hwnd,
+  LONG idObject,
+  LONG idItem,
+  PMENUBARINFO pmbi)
+{
+  return FALSE;
+}
+
+LONG
+STDCALL
+GetMenuCheckMarkDimensions(VOID)
+{
+  return 0;
+}
+
+UINT
+STDCALL
+GetMenuDefaultItem(
+  HMENU hMenu,
+  UINT fByPos,
+  UINT gmdiFlags)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+GetMenuInfo(
+  HMENU hmenu,
+  LPCMENUINFO lpcmi)
+{
+  return FALSE;
+}
+
+int
+STDCALL
+GetMenuItemCount(
+  HMENU hMenu)
+{
+  return 0;
+}
+
+UINT
+STDCALL
+GetMenuItemID(
+  HMENU hMenu,
+  int nPos)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+GetMenuItemInfoA(
+  HMENU hMenu,
+  UINT uItem,
+  WINBOOL fByPosition,
+  LPMENUITEMINFO lpmii)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+GetMenuItemInfoW(
+  HMENU hMenu,
+  UINT uItem,
+  WINBOOL fByPosition,
+  LPMENUITEMINFO lpmii)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+GetMenuItemRect(
+  HWND hWnd,
+  HMENU hMenu,
+  UINT uItem,
+  LPRECT lprcItem)
+{
+  return FALSE;
+}
+
+UINT
+STDCALL
+GetMenuState(
+  HMENU hMenu,
+  UINT uId,
+  UINT uFlags)
+{
+  return 0;
+}
+
+int
+STDCALL
+GetMenuStringA(
+  HMENU hMenu,
+  UINT uIDItem,
+  LPSTR lpString,
+  int nMaxCount,
+  UINT uFlag)
+{
+  return 0;
+}
+
+int
+STDCALL
+GetMenuStringW(
+  HMENU hMenu,
+  UINT uIDItem,
+  LPWSTR lpString,
+  int nMaxCount,
+  UINT uFlag)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+GetMessageA(
+  LPMSG lpMsg,
+  HWND hWnd,
+  UINT wMsgFilterMin,
+  UINT wMsgFilterMax)
+{
+  return FALSE;
+}
+
+LPARAM
+STDCALL
+GetMessageExtraInfo(VOID)
+{
+  return (LPARAM)0;
+}
+
+DWORD
+STDCALL
+GetMessagePos(VOID)
+{
+  return 0;
+}
+
+LONG
+STDCALL
+GetMessageTime(VOID)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+GetMessageW(
+  LPMSG lpMsg,
+  HWND hWnd,
+  UINT wMsgFilterMin,
+  UINT wMsgFilterMax)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+GetMonitorInfoA(
+  HMONITOR hMonitor,
+  LPMONITORINFO lpmi)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+GetMonitorInfoW(
+  HMONITOR hMonitor,
+  LPMONITORINFO lpmi)
+{
+  return FALSE;
+}
+
+int
+STDCALL
+GetMouseMovePointsEx(
+  UINT cbSize,
+  LPMOUSEMOVEPOINT lppt,
+  LPMOUSEMOVEPOINT lpptBuf,
+  int nBufPoints,
+  DWORD resolution)
+{
+  return 0;
+}
+
+HWND
+STDCALL
+GetNextDlgGroupItem(
+  HWND hDlg,
+  HWND hCtl,
+  WINBOOL bPrevious)
+{
+  return (HWND)0;
+}
+
+HWND
+STDCALL
+GetNextDlgTabItem(
+  HWND hDlg,
+  HWND hCtl,
+  WINBOOL bPrevious)
+{
+  return (HWND)0;
+}
+
+HWND
+STDCALL
+GetOpenClipboardWindow(VOID)
+{
+  return (HWND)0;
+}
+
+HWND
+STDCALL
+GetParent(
+  HWND hWnd)
+{
+  return (HWND)0;
+}
+
+int
+STDCALL
+GetPriorityClipboardFormat(
+  UINT *paFormatPriorityList,
+  int cFormats)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+GetProcessDefaultLayout(
+  DWORD *pdwDefaultLayout)
+{
+  return FALSE;
+}
+
+HWINSTA
+STDCALL
+GetProcessWindowStation(VOID)
+{
+  return (HWINSTA)0;
+}
+
+HANDLE
+STDCALL
+GetPropA(
+  HWND hWnd,
+  LPCSTR lpString)
+{
+  return (HANDLE)0;
+}
+
+HANDLE
+STDCALL
+GetPropW(
+  HWND hWnd,
+  LPCWSTR lpString)
+{
+  return (HANDLE)0;
+}
+
+DWORD
+STDCALL
+GetQueueStatus(
+  UINT flags)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+GetScrollBarInfo(
+  HWND hwnd,
+  LONG idObject,
+  PSCROLLBARINFO psbi)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+GetScrollInfo(
+  HWND hwnd,
+  int fnBar,
+  LPSCROLLINFO lpsi)
+{
+  return FALSE;
+}
+
+int
+STDCALL
+GetScrollPos(
+  HWND hWnd,
+  int nBar)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+GetScrollRange(
+  HWND hWnd,
+  int nBar,
+  LPINT lpMinPos,
+  LPINT lpMaxPos)
+{
+  return FALSE;
+}
+
+HMENU
+STDCALL
+GetSubMenu(
+  HMENU hMenu,
+  int nPos)
+{
+  return (HMENU)0;
+}
+
+DWORD
+STDCALL
+GetSysColor(
+  int nIndex)
+{
+  return 0;
+}
+
+HBRUSH
+STDCALL
+GetSysColorBrush(
+  int nIndex)
+{
+  return (HBRUSH)0;
+}
+
+HMENU
+STDCALL
+GetSystemMenu(
+  HWND hWnd,
+  WINBOOL bRevert)
+{
+  return (HMENU)0;
+}
+
+int
+STDCALL
+GetSystemMetrics(
+  int nIndex)
+{
+}
+
+DWORD
+STDCALL
+GetTabbedTextExtentA(
+  HDC hDC,
+  LPCSTR lpString,
+  int nCount,
+  int nTabPositions,
+  CONST LPINT lpnTabStopPositions)
+{
+  return 0;
+}
+
+DWORD
+STDCALL
+GetTabbedTextExtentW(
+  HDC hDC,
+  LPCWSTR lpString,
+  int nCount,
+  int nTabPositions,
+  CONST LPINT lpnTabStopPositions)
+{
+  return 0;
+}
+
+HDESK
+STDCALL
+GetThreadDesktop(
+  DWORD dwThreadId)
+{
+  return (HDESK)0;
+}
+
+WINBOOL
+STDCALL
+GetTitleBarInfo(
+  HWND hwnd,
+  PTITLEBARINFO pti)
+{
+  return FALSE;
+}
+
+HWND
+STDCALL
+GetTopWindow(
+  HWND hWnd)
+{
+  return (HWND)0;
+}
+
+WINBOOL
+STDCALL
+GetUpdateRect(
+  HWND hWnd,
+  LPRECT lpRect,
+  WINBOOL bErase)
+{
+  return FALSE;
+}
+
+int
+STDCALL
+GetUpdateRgn(
+  HWND hWnd,
+  HRGN hRgn,
+  WINBOOL bErase)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+GetUserObjectInformationA(
+  HANDLE hObj,
+  int nIndex,
+  PVOID pvInfo,
+  DWORD nLength,
+  LPDWORD lpnLengthNeeded)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+GetUserObjectInformationW(
+  HANDLE hObj,
+  int nIndex,
+  PVOID pvInfo,
+  DWORD nLength,
+  LPDWORD lpnLengthNeeded)
+{
+  return FALSE;
+}
+
+HWND
+STDCALL
+GetWindow(
+  HWND hWnd,
+  UINT uCmd)
+{
+  return (HWND)0;
+}
+
+HDC
+STDCALL
+GetWindowDC(
+  HWND hWnd)
+{
+  return (HDC)0;
+}
+
+WINBOOL
+STDCALL
+GetWindowInfo(
+  HWND hwnd,
+  PWINDOWINFO pwi)
+{
+  return FALSE;
+}
+
+LONG
+STDCALL
+GetWindowLongA(
+  HWND hWnd,
+  int nIndex)
+{
+  return 0;
+}
+
+LONG
+STDCALL
+GetWindowLongW(
+  HWND hWnd,
+  int nIndex)
+{
+  return 0;
+}
+
+UINT
+STDCALL
+GetWindowModuleFileName(
+  HWND hwnd,
+  LPSTR lpszFileName,
+  UINT cchFileNameMax)
+{
+  return 0;
+}
+
+UINT
+STDCALL
+GetWindowModuleFileNameA(
+  HWND hwnd,
+  LPSTR lpszFileName,
+  UINT cchFileNameMax)
+{
+  return 0;
+}
+
+UINT
+STDCALL
+GetWindowModuleFileNameW(
+  HWND hwnd,
+  LPWSTR lpszFileName,
+  UINT cchFileNameMax)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+GetWindowPlacement(
+  HWND hWnd,
+  WINDOWPLACEMENT *lpwndpl)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+GetWindowRect(
+  HWND hWnd,
+  LPRECT lpRect)
+{
+  return FALSE;
+}
+
+int
+STDCALL
+GetWindowRgn(
+  HWND hWnd,
+  HRGN hRgn)
+{
+  return 0;
+}
+
+int
+STDCALL
+GetWindowTextA(
+  HWND hWnd,
+  LPSTR lpString,
+  int nMaxCount)
+{
+  return 0;
+}
+
+int
+STDCALL
+GetWindowTextLengthA(
+  HWND hWnd)
+{
+  return 0;
+}
+
+int
+STDCALL
+GetWindowTextLengthW(
+  HWND hWnd)
+{
+  return 0;
+}
+
+int
+STDCALL
+GetWindowTextW(
+  HWND hWnd,
+  LPWSTR lpString,
+  int nMaxCount)
+{
+  return 0;
+}
+
+DWORD
+STDCALL
+GetWindowThreadProcessId(
+  HWND hWnd,
+  LPDWORD lpdwProcessId)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+GrayStringA(
+  HDC hDC,
+  HBRUSH hBrush,
+  GRAYSTRINGPROC lpOutputFunc,
+  LPARAM lpData,
+  int nCount,
+  int X,
+  int Y,
+  int nWidth,
+  int nHeight)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+GrayStringW(
+  HDC hDC,
+  HBRUSH hBrush,
+  GRAYSTRINGPROC lpOutputFunc,
+  LPARAM lpData,
+  int nCount,
+  int X,
+  int Y,
+  int nWidth,
+  int nHeight)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+HideCaret(
+  HWND hWnd)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+HiliteMenuItem(
+  HWND hwnd,
+  HMENU hmenu,
+  UINT uItemHilite,
+  UINT uHilite)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+ImpersonateDdeClientWindow(
+  HWND hWndClient,
+  HWND hWndServer)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+InSendMessage(VOID)
+{
+  return FALSE;
+}
+
+DWORD
+STDCALL
+InSendMessageEx(
+  LPVOID lpReserved)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+InflateRect(
+  LPRECT lprc,
+  int dx,
+  int dy)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+InsertMenuA(
+  HMENU hMenu,
+  UINT uPosition,
+  UINT uFlags,
+  UINT_PTR uIDNewItem,
+  LPCSTR lpNewItem)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+InsertMenuItemA(
+  HMENU hMenu,
+  UINT uItem,
+  WINBOOL fByPosition,
+  LPCMENUITEMINFO lpmii)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+InsertMenuItemW(
+  HMENU hMenu,
+  UINT uItem,
+  WINBOOL fByPosition,
+  LPCMENUITEMINFO lpmii)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+InsertMenuW(
+  HMENU hMenu,
+  UINT uPosition,
+  UINT uFlags,
+  UINT_PTR uIDNewItem,
+  LPCWSTR lpNewItem)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+IntersectRect(
+  LPRECT lprcDst,
+  CONST RECT *lprcSrc1,
+  CONST RECT *lprcSrc2)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+InvalidateRect(
+  HWND hWnd,
+  CONST RECT *lpRect,
+  WINBOOL bErase)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+InvalidateRgn(
+  HWND hWnd,
+  HRGN hRgn,
+  WINBOOL bErase)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+InvertRect(
+  HDC hDC,
+  CONST RECT *lprc)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+IsCharAlphaA(
+  CHAR ch)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+IsCharAlphaNumericA(
+  CHAR ch)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+IsCharAlphaNumericW(
+  WCHAR ch)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+IsCharAlphaW(
+  WCHAR ch)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+IsCharLowerA(
+  CHAR ch)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+IsCharLowerW(
+  WCHAR ch)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+IsCharUpperA(
+  CHAR ch)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+IsCharUpperW(
+  WCHAR ch)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+IsChild(
+  HWND hWndParent,
+  HWND hWnd)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+IsClipboardFormatAvailable(
+  UINT format)
+{
+  return FALSE;
+}
+
 #if 0
-
 WINBOOL
 STDCALL
-UnhookWindowsHook(
-		  int nCode,
-		  HOOKPROC pfnFilterProc) { return 0; }
-
-WINBOOL
-STDCALL
-UnhookWindowsHookEx(
-		    HHOOK hhk) { return 0; }
-
- 
-LRESULT
-STDCALL
-CallNextHookEx(
-	       HHOOK hhk,
-	       int nCode,
-	       WPARAM wParam,
-	       LPARAM lParam) { return 0; }
-
- 
-WINBOOL
-STDCALL
-CheckMenuRadioItem(HMENU hMenu, UINT i, UINT j, UINT k, UINT l) { return 0; }
-
+IsDialogMessage(
+  HWND hDlg,
+  LPMSG lpMsg)
+{
+  return FALSE;
+}
 #endif
+
+WINBOOL
+STDCALL
+IsDialogMessageA(
+  HWND hDlg,
+  LPMSG lpMsg)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+IsDialogMessageW(
+  HWND hDlg,
+  LPMSG lpMsg)
+{
+  return FALSE;
+}
+
+UINT
+STDCALL
+IsDlgButtonChecked(
+  HWND hDlg,
+  int nIDButton)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+IsIconic(
+  HWND hWnd)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+IsMenu(
+  HMENU hMenu)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+IsRectEmpty(
+  CONST RECT *lprc)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+IsWindow(
+  HWND hWnd)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+IsWindowEnabled(
+  HWND hWnd)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+IsWindowUnicode(
+  HWND hWnd)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+IsWindowVisible(
+  HWND hWnd)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+IsZoomed(
+  HWND hWnd)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+KillTimer(
+  HWND hWnd,
+  UINT_PTR uIDEvent)
+{
+  return FALSE;
+}
+
+HACCEL
+STDCALL
+LoadAcceleratorsA(
+  HINSTANCE hInstance,
+  LPCSTR lpTableName)
+{
+  return (HACCEL)0;
+}
+
+HACCEL
+STDCALL
+LoadAcceleratorsW(
+  HINSTANCE hInstance,
+  LPCWSTR lpTableName)
+{
+  return (HACCEL)0;
+}
+
+HBITMAP
+STDCALL
+LoadBitmapA(
+  HINSTANCE hInstance,
+  LPCSTR lpBitmapName)
+{
+  return (HBITMAP)0;
+}
+
+HBITMAP
+STDCALL
+LoadBitmapW(
+  HINSTANCE hInstance,
+  LPCWSTR lpBitmapName)
+{
+  return (HBITMAP)0;
+}
+
 HCURSOR
 STDCALL
-CreateCursor(
-	     HINSTANCE hInst,
-	     int xHotSpot,
-	     int yHotSpot,
-	     int nWidth,
-	     int nHeight,
-	     CONST VOID *pvANDPlane,
-	     CONST VOID *pvXORPlane) { return 0; }
+LoadCursorA(
+  HINSTANCE hInstance,
+  LPCSTR lpCursorName)
+{
+  return (HCURSOR)0;
+}
 
- 
+HCURSOR
+STDCALL
+LoadCursorFromFileA(
+  LPCSTR lpFileName)
+{
+  return (HCURSOR)0;
+}
 
- 
+HCURSOR
+STDCALL
+LoadCursorFromFileW(
+  LPCWSTR lpFileName)
+{
+  return (HCURSOR)0;
+}
+
+HCURSOR
+STDCALL
+LoadCursorW(
+  HINSTANCE hInstance,
+  LPCWSTR lpCursorName)
+{
+  return (HCURSOR)0;
+}
+
+HICON
+STDCALL
+LoadIconA(
+  HINSTANCE hInstance,
+  LPCSTR lpIconName)
+{
+  return (HICON)0;
+}
+
+HICON
+STDCALL
+LoadIconW(
+  HINSTANCE hInstance,
+  LPCWSTR lpIconName)
+{
+  return (HICON)0;
+}
+
+HANDLE
+STDCALL
+LoadImageA(
+  HINSTANCE hinst,
+  LPCSTR lpszName,
+  UINT uType,
+  int cxDesired,
+  int cyDesired,
+  UINT fuLoad)
+{
+  return (HANDLE)0;
+}
+
+HANDLE
+STDCALL
+LoadImageW(
+  HINSTANCE hinst,
+  LPCWSTR lpszName,
+  UINT uType,
+  int cxDesired,
+  int cyDesired,
+  UINT fuLoad)
+{
+  return (HANDLE)0;
+}
+
+HKL
+STDCALL
+LoadKeyboardLayoutA(
+  LPCSTR pwszKLID,
+  UINT Flags)
+{
+  return (HKL)0;
+}
+
+HKL
+STDCALL
+LoadKeyboardLayoutW(
+  LPCWSTR pwszKLID,
+  UINT Flags)
+{
+  return (HKL)0;
+}
+
+HMENU
+STDCALL
+LoadMenuA(
+  HINSTANCE hInstance,
+  LPCSTR lpMenuName)
+{
+  return (HMENU)0;
+}
+
+HMENU
+STDCALL
+LoadMenuIndirectA(
+  CONST MENUTEMPLATE *lpMenuTemplate)
+{
+  return (HMENU)0;
+}
+
+HMENU
+STDCALL
+LoadMenuIndirectW(
+  CONST MENUTEMPLATE *lpMenuTemplate)
+{
+  return (HMENU)0;
+}
+
+HMENU
+STDCALL
+LoadMenuW(
+  HINSTANCE hInstance,
+  LPCWSTR lpMenuName)
+{
+  return (HMENU)0;
+}
+
+int
+STDCALL
+LoadStringA(
+  HINSTANCE hInstance,
+  UINT uID,
+  LPSTR lpBuffer,
+  int nBufferMax)
+{
+  return 0;
+}
+
+int
+STDCALL
+LoadStringW(
+  HINSTANCE hInstance,
+  UINT uID,
+  LPWSTR lpBuffer,
+  int nBufferMax)
+{
+  return 0;
+}
+
 WINBOOL
 STDCALL
-SetSystemCursor(
-		HCURSOR hcur,
-		DWORD   anID) { return 0; }
+LockSetForegroundWindow(
+  UINT uLockCode)
+{
+  return FALSE;
+}
 
- 
+WINBOOL
+STDCALL
+LockWindowUpdate(
+  HWND hWndLock)
+{
+  return FALSE;
+}
 
+WINBOOL
+STDCALL
+LockWorkStation(VOID)
+{
+  return FALSE;
+}
 
- 
 int
 STDCALL
 LookupIconIdFromDirectory(
-			  PBYTE presbits,
-			  WINBOOL fIcon) { return 0; }
+  PBYTE presbits,
+  WINBOOL fIcon)
+{
+  return 0;
+}
 
- 
 int
 STDCALL
 LookupIconIdFromDirectoryEx(
-			    PBYTE presbits,
-			    WINBOOL  fIcon,
-			    int   cxDesired,
-			    int   cyDesired,
-			    UINT  Flags) { return 0; }
-
- 
-
-
- 
-HICON
-STDCALL
-CopyImage(
-	  HANDLE hImage,
-	  UINT u,
-	  int i,
-	  int j,
-	  UINT k) { return 0; }
-
- 
-
-
-
- 
-
+  PBYTE presbits,
+  WINBOOL fIcon,
+  int cxDesired,
+  int cyDesired,
+  UINT Flags)
+{
+  return 0;
+}
 
 WINBOOL
 STDCALL
-TranslateMDISysAccel(
-		     HWND hWndClient,
-		     LPMSG lpMsg) { return 0; }
+MapDialogRect(
+  HWND hDlg,
+  LPRECT lpRect)
+{
+  return FALSE;
+}
 
- 
 UINT
 STDCALL
-ArrangeIconicWindows(
-		     HWND hWnd) { return 0; }
+MapVirtualKeyA(
+  UINT uCode,
+  UINT uMapType)
+{
+  return 0;
+}
+
+UINT
+STDCALL
+MapVirtualKeyExA(
+  UINT uCode,
+  UINT uMapType,
+  HKL dwhkl)
+{
+  return 0;
+}
+
+UINT
+STDCALL
+MapVirtualKeyExW(
+  UINT uCode,
+  UINT uMapType,
+  HKL dwhkl)
+{
+  return 0;
+}
+
+UINT
+STDCALL
+MapVirtualKeyW(
+  UINT uCode,
+  UINT uMapType)
+{
+  return 0;
+}
+
+int
+STDCALL
+MapWindowPoints(
+  HWND hWndFrom,
+  HWND hWndTo,
+  LPPOINT lpPoints,
+  UINT cPoints)
+{
+  return 0;
+}
+
+int
+STDCALL
+MenuItemFromPoint(
+  HWND hWnd,
+  HMENU hMenu,
+  POINT ptScreen)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+MessageBeep(
+  UINT uType)
+{
+  return FALSE;
+}
+
+int
+STDCALL
+MessageBoxA(
+  HWND hWnd,
+  LPCSTR lpText,
+  LPCSTR lpCaption,
+  UINT uType)
+{
+  return 0;
+}
+
+int
+STDCALL
+MessageBoxExA(
+  HWND hWnd,
+  LPCSTR lpText,
+  LPCSTR lpCaption,
+  UINT uType,
+  WORD wLanguageId)
+{
+  return 0;
+}
+
+int
+STDCALL
+MessageBoxExW(
+  HWND hWnd,
+  LPCWSTR lpText,
+  LPCWSTR lpCaption,
+  UINT uType,
+  WORD wLanguageId)
+{
+  return 0;
+}
+
+int
+STDCALL
+MessageBoxIndirectA(
+  CONST LPMSGBOXPARAMS lpMsgBoxParams)
+{
+  return 0;
+}
+
+int
+STDCALL
+MessageBoxIndirectW(
+  CONST LPMSGBOXPARAMS lpMsgBoxParams)
+{
+  return 0;
+}
+
+int
+STDCALL
+MessageBoxW(
+  HWND hWnd,
+  LPCWSTR lpText,
+  LPCWSTR lpCaption,
+  UINT uType)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+ModifyMenuA(
+  HMENU hMnu,
+  UINT uPosition,
+  UINT uFlags,
+  UINT_PTR uIDNewItem,
+  LPCSTR lpNewItem)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+ModifyMenuW(
+  HMENU hMnu,
+  UINT uPosition,
+  UINT uFlags,
+  UINT_PTR uIDNewItem,
+  LPCWSTR lpNewItem)
+{
+  return FALSE;
+}
+
+HMONITOR
+STDCALL
+MonitorFromPoint(
+  POINT pt,
+  DWORD dwFlags)
+{
+  return (HMONITOR)0;
+}
+
+HMONITOR
+STDCALL
+MonitorFromRect(
+  LPRECT lprc,
+  DWORD dwFlags)
+{
+  return (HMONITOR)0;
+}
+
+HMONITOR
+STDCALL
+MonitorFromWindow(
+  HWND hwnd,
+  DWORD dwFlags)
+{
+  return (HMONITOR)0;
+}
+
+WINBOOL
+STDCALL
+MoveWindow(
+  HWND hWnd,
+  int X,
+  int Y,
+  int nWidth,
+  int nHeight,
+  WINBOOL bRepaint)
+{
+  return FALSE;
+}
+
+DWORD
+STDCALL
+MsgWaitForMultipleObjects(
+  DWORD nCount,
+  CONST LPHANDLE pHandles,
+  WINBOOL fWaitAll,
+  DWORD dwMilliseconds,
+  DWORD dwWakeMask)
+{
+  return 0;
+}
+
+DWORD
+STDCALL
+MsgWaitForMultipleObjectsEx(
+  DWORD nCount,
+  CONST HANDLE pHandles,
+  DWORD dwMilliseconds,
+  DWORD dwWakeMask,
+  DWORD dwFlags)
+{
+  return 0;
+}
+
+DWORD
+STDCALL
+OemKeyScan(
+  WORD wOemChar)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+OemToCharA(
+  LPCSTR lpszSrc,
+  LPSTR lpszDst)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+OemToCharBuffA(
+  LPCSTR lpszSrc,
+  LPSTR lpszDst,
+  DWORD cchDstLength)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+OemToCharBuffW(
+  LPCSTR lpszSrc,
+  LPWSTR lpszDst,
+  DWORD cchDstLength)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+OemToCharW(
+  LPCSTR lpszSrc,
+  LPWSTR lpszDst)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+OffsetRect(
+  LPRECT lprc,
+  int dx,
+  int dy)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+OpenClipboard(
+  HWND hWndNewOwner)
+{
+  return FALSE;
+}
+
+HDESK
+STDCALL
+OpenDesktopA(
+  LPSTR lpszDesktop,
+  DWORD dwFlags,
+  WINBOOL fInherit,
+  ACCESS_MASK dwDesiredAccess)
+{
+  return (HDESK)0;
+}
+
+HDESK
+STDCALL
+OpenDesktopW(
+  LPWSTR lpszDesktop,
+  DWORD dwFlags,
+  WINBOOL fInherit,
+  ACCESS_MASK dwDesiredAccess)
+{
+  return (HDESK)0;
+}
+
+WINBOOL
+STDCALL
+OpenIcon(
+  HWND hWnd)
+{
+  return FALSE;
+}
+
+HDESK
+STDCALL
+OpenInputDesktop(
+  DWORD dwFlags,
+  WINBOOL fInherit,
+  ACCESS_MASK dwDesiredAccess)
+{
+  return (HDESK)0;
+}
+
+HWINSTA
+STDCALL
+OpenWindowStationA(
+  LPSTR lpszWinSta,
+  WINBOOL fInherit,
+  ACCESS_MASK dwDesiredAccess)
+{
+  return (HWINSTA)0;
+}
+
+HWINSTA
+STDCALL
+OpenWindowStationW(
+  LPWSTR lpszWinSta,
+  WINBOOL fInherit,
+  ACCESS_MASK dwDesiredAccess)
+{
+  return (HWINSTA)0;
+}
+
+LPARAM
+STDCALL
+PackDDElParam(
+  UINT msg,
+  UINT_PTR uiLo,
+  UINT_PTR uiHi)
+{
+  return (LPARAM)0;
+}
+
+WINBOOL
+STDCALL
+PaintDesktop(
+  HDC hdc)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+PeekMessageA(
+  LPMSG lpMsg,
+  HWND hWnd,
+  UINT wMsgFilterMin,
+  UINT wMsgFilterMax,
+  UINT wRemoveMsg)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+PeekMessageW(
+  LPMSG lpMsg,
+  HWND hWnd,
+  UINT wMsgFilterMin,
+  UINT wMsgFilterMax,
+  UINT wRemoveMsg)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+PostMessageA(
+  HWND hWnd,
+  UINT Msg,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+PostMessageW(
+  HWND hWnd,
+  UINT Msg,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  return FALSE;
+}
+
+VOID
+STDCALL
+PostQuitMessage(
+  int nExitCode)
+{
+}
+
+WINBOOL
+STDCALL
+PostThreadMessageA(
+  DWORD idThread,
+  UINT Msg,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+PostThreadMessageW(
+  DWORD idThread,
+  UINT Msg,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+PtInRect(
+  CONST RECT *lprc,
+  POINT pt)
+{
+  return FALSE;
+}
+
+HWND
+STDCALL
+RealChildWindowFromPoint(
+  HWND hwndParent,
+  POINT ptParentClientCoords)
+{
+  return (HWND)0;
+}
+
+UINT
+STDCALL
+RealGetWindowClass(
+  HWND  hwnd,
+  LPSTR pszType,
+  UINT  cchType)
+{
+  return 0;
+}
+
+UINT
+STDCALL
+RealGetWindowClassA(
+  HWND  hwnd,
+  LPSTR pszType,
+  UINT  cchType)
+{
+  return 0;
+}
+
+UINT
+STDCALL
+RealGetWindowClassW(
+  HWND  hwnd,
+  LPWSTR pszType,
+  UINT  cchType)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+RedrawWindow(
+  HWND hWnd,
+  CONST RECT *lprcUpdate,
+  HRGN hrgnUpdate,
+  UINT flags)
+{
+  return FALSE;
+}
+
+ATOM
+STDCALL
+RegisterClassA(
+  CONST WNDCLASS *lpWndClass)
+{
+  return (ATOM)0;
+}
+
+ATOM
+STDCALL
+RegisterClassExA(
+  CONST WNDCLASSEX *lpwcx)
+{
+  return (ATOM)0;
+}
+
+ATOM
+STDCALL
+RegisterClassExW(
+  CONST WNDCLASSEX *lpwcx)
+{
+  return (ATOM)0;
+}
+
+ATOM
+STDCALL
+RegisterClassW(
+  CONST WNDCLASS *lpWndClass)
+{
+  return (ATOM)0;
+}
+
+UINT
+STDCALL
+RegisterClipboardFormatA(
+  LPCSTR lpszFormat)
+{
+  return 0;
+}
+
+UINT
+STDCALL
+RegisterClipboardFormatW(
+  LPCWSTR lpszFormat)
+{
+  return 0;
+}
+#if 0
+HDEVNOTIFY
+STDCALL
+RegisterDeviceNotificationA(
+  HANDLE hRecipient,
+  LPVOID NotificationFilter,
+  DWORD Flags)
+{
+  return (HDEVNOTIFY)0;
+}
+
+HDEVNOTIFY
+STDCALL
+RegisterDeviceNotificationW(
+  HANDLE hRecipient,
+  LPVOID NotificationFilter,
+  DWORD Flags)
+{
+  return (HDEVNOTIFY)0;
+}
+#endif
+WINBOOL
+STDCALL
+RegisterHotKey(
+  HWND hWnd,
+  int id,
+  UINT fsModifiers,
+  UINT vk)
+{
+  return FALSE;
+}
+
+UINT
+STDCALL
+RegisterWindowMessageA(
+  LPCSTR lpString)
+{
+  return 0;
+}
+
+UINT
+STDCALL
+RegisterWindowMessageW(
+  LPCWSTR lpString)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+ReleaseCapture(VOID)
+{
+  return FALSE;
+}
+
+int
+STDCALL
+ReleaseDC(
+  HWND hWnd,
+  HDC hDC)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+RemoveMenu(
+  HMENU hMenu,
+  UINT uPosition,
+  UINT uFlags)
+{
+  return FALSE;
+}
+
+HANDLE
+STDCALL
+RemovePropA(
+  HWND hWnd,
+  LPCSTR lpString)
+{
+  return (HANDLE)0;
+}
+
+HANDLE
+STDCALL
+RemovePropW(
+  HWND hWnd,
+  LPCWSTR lpString)
+{
+  return (HANDLE)0;
+}
+
+WINBOOL
+STDCALL
+ReplyMessage(
+  LRESULT lResult)
+{
+  return FALSE;
+}
+
+LPARAM
+STDCALL
+ReuseDDElParam(
+  LPARAM lParam,
+  UINT msgIn,
+  UINT msgOut,
+  UINT_PTR uiLo,
+  UINT_PTR uiHi)
+{
+  return (LPARAM)0;
+}
+
+WINBOOL
+STDCALL
+ScrollDC(
+  HDC hDC,
+  int dx,
+  int dy,
+  CONST RECT *lprcScroll,
+  CONST RECT *lprcClip,
+  HRGN hrgnUpdate,
+  LPRECT lprcUpdate)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+ScrollWindow(
+  HWND hWnd,
+  int XAmount,
+  int YAmount,
+  CONST RECT *lpRect,
+  CONST RECT *lpClipRect)
+{
+  return FALSE;
+}
+
+int
+STDCALL
+ScrollWindowEx(
+  HWND hWnd,
+  int dx,
+  int dy,
+  CONST RECT *prcScroll,
+  CONST RECT *prcClip,
+  HRGN hrgnUpdate,
+  LPRECT prcUpdate,
+  UINT flags)
+{
+  return 0;
+}
+
+LRESULT
+STDCALL
+SendDlgItemMessageA(
+  HWND hDlg,
+  int nIDDlgItem,
+  UINT Msg,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  return (LRESULT)0;
+}
+
+LRESULT
+STDCALL
+SendDlgItemMessageW(
+  HWND hDlg,
+  int nIDDlgItem,
+  UINT Msg,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  return (LRESULT)0;
+}
+
+UINT
+STDCALL
+SendInput(
+  UINT nInputs,
+  LPINPUT pInputs,
+  int cbSize)
+{
+  return 0;
+}
+
+LRESULT
+STDCALL
+SendMessageA(
+  HWND hWnd,
+  UINT Msg,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  return (LRESULT)0;
+}
+
+WINBOOL
+STDCALL
+SendMessageCallbackA(
+  HWND hWnd,
+  UINT Msg,
+  WPARAM wParam,
+  LPARAM lParam,
+  SENDASYNCPROC lpCallBack,
+  ULONG_PTR dwData)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+SendMessageCallbackW(
+  HWND hWnd,
+  UINT Msg,
+  WPARAM wParam,
+  LPARAM lParam,
+  SENDASYNCPROC lpCallBack,
+  ULONG_PTR dwData)
+{
+  return FALSE;
+}
+
+LRESULT
+STDCALL
+SendMessageTimeoutA(
+  HWND hWnd,
+  UINT Msg,
+  WPARAM wParam,
+  LPARAM lParam,
+  UINT fuFlags,
+  UINT uTimeout,
+  PDWORD_PTR lpdwResult)
+{
+  return (LRESULT)0;
+}
+
+LRESULT
+STDCALL
+SendMessageTimeoutW(
+  HWND hWnd,
+  UINT Msg,
+  WPARAM wParam,
+  LPARAM lParam,
+  UINT fuFlags,
+  UINT uTimeout,
+  PDWORD_PTR lpdwResult)
+{
+  return (LRESULT)0;
+}
+
+
+LRESULT
+STDCALL
+SendMessageW(
+  HWND hWnd,
+  UINT Msg,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  return (LRESULT)0;
+}
+
+WINBOOL
+STDCALL
+SendNotifyMessageA(
+  HWND hWnd,
+  UINT Msg,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+SendNotifyMessageW(
+  HWND hWnd,
+  UINT Msg,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  return FALSE;
+}
+
+HWND
+STDCALL
+SetActiveWindow(
+  HWND hWnd)
+{
+  return (HWND)0;
+}
+
+HWND
+STDCALL
+SetCapture(
+  HWND hWnd)
+{
+  return (HWND)0;
+}
+
+WINBOOL
+STDCALL
+SetCaretBlinkTime(
+  UINT uMSeconds)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+SetCaretPos(
+  int X,
+  int Y)
+{
+  return FALSE;
+}
+
+DWORD
+STDCALL
+SetClassLongA(
+  HWND hWnd,
+  int nIndex,
+  LONG dwNewLong)
+{
+  return 0;
+}
+
+DWORD
+STDCALL
+SetClassLongW(
+  HWND hWnd,
+  int nIndex,
+  LONG dwNewLong)
+{
+  return 0;
+}
 
 WORD
 STDCALL
-TileWindows(HWND hwndParent, UINT wHow, CONST RECT * lpRect, UINT cKids, const HWND *lpKids) { return 0; }
+SetClassWord(
+  HWND hWnd,
+  int nIndex,
+  WORD wNewWord)
+{
+  return 0;
+}
 
-WORD
+HANDLE
 STDCALL
-CascadeWindows(HWND hwndParent, UINT wHow, CONST RECT * lpRect, UINT cKids,  const HWND *lpKids) { return 0; }
+SetClipboardData(
+  UINT uFormat,
+  HANDLE hMem)
+{
+  return (HANDLE)0;
+}
 
- 
+HWND
+STDCALL
+SetClipboardViewer(
+  HWND hWndNewViewer)
+{
+  return (HWND)0;
+}
 
+HCURSOR
+STDCALL
+SetCursor(
+  HCURSOR hCursor)
+{
+  return (HCURSOR)0;
+}
+
+WINBOOL
+STDCALL
+SetCursorPos(
+  int X,
+  int Y)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+SetDlgItemInt(
+  HWND hDlg,
+  int nIDDlgItem,
+  UINT uValue,
+  WINBOOL bSigned)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+SetDlgItemTextA(
+  HWND hDlg,
+  int nIDDlgItem,
+  LPCSTR lpString)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+SetDlgItemTextW(
+  HWND hDlg,
+  int nIDDlgItem,
+  LPCWSTR lpString)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+SetDoubleClickTime(
+  UINT uInterval)
+{
+  return FALSE;
+}
+
+HWND
+STDCALL
+SetFocus(
+  HWND hWnd)
+{
+  return (HWND)0;
+}
+
+WINBOOL
+STDCALL
+SetForegroundWindow(
+  HWND hWnd)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+SetKeyboardState(
+  LPBYTE lpKeyState)
+{
+  return FALSE;
+}
 
 VOID
 STDCALL
 SetLastErrorEx(
-	       DWORD dwErrCode,
-	       DWORD dwType
-	       ) { return; }
-
- 
-VOID
-STDCALL
-SetDebugErrorLevel(
-		   DWORD dwLevel
-		   ) { return; }
-
-
-
-WINBOOL
-STDCALL
-CalcChildScroll(HANDLE hWnd, DWORD x) { return 0; }
-
-void WINAPI CascadeChildWindows( HWND parent, WORD action )
+  DWORD dwErrCode,
+  DWORD dwType)
 {
-   return;
 }
 
-#if 0
 WINBOOL
 STDCALL
-DrawEdge(HDC hdc, LPRECT qrc, UINT edge, UINT grfFlags) { return 0; }
-
-#endif
-
-
-
-WINBOOL
-STDCALL
-DrawFrameControl(HDC hDC, LPRECT lpRect, UINT i, UINT j) { return 0; }
-
-
+SetLayeredWindowAttributes(
+  HWND hwnd,
+  COLORREF crKey,
+  BYTE bAlpha,
+  DWORD dwFlags)
+{
+  return FALSE;
+}
 
 WINBOOL
 STDCALL
-DrawCaption(HWND hWnd, HDC hDC, CONST RECT *r, UINT u) { return 0; }
+SetMenu(
+  HWND hWnd,
+  HMENU hMenu)
+{
+  return FALSE;
+}
 
 WINBOOL
 STDCALL
-DrawAnimatedRects(HWND hwnd, int idAni, CONST RECT * lprcFrom, CONST RECT * lprcTo) { return 0; }
+SetMenuDefaultItem(
+  HMENU hMenu,
+  UINT uItem,
+  UINT fByPos)
+{
+  return FALSE;
+}
 
-#if 0
 WINBOOL
 STDCALL
-TrackPopupMenuEx(HMENU hMenu, UINT u, int i, int j, HWND hwnd, LPTPMPARAMS l) { return 0; }
+SetMenuInfo(
+  HMENU hmenu,
+  LPCMENUINFO lpcmi)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+SetMenuItemBitmaps(
+  HMENU hMenu,
+  UINT uPosition,
+  UINT uFlags,
+  HBITMAP hBitmapUnchecked,
+  HBITMAP hBitmapChecked)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+SetMenuItemInfoA(
+  HMENU hMenu,
+  UINT uItem,
+  WINBOOL fByPosition,
+  LPMENUITEMINFO lpmii)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+SetMenuItemInfoW(
+  HMENU hMenu,
+  UINT uItem,
+  WINBOOL fByPosition,
+  LPMENUITEMINFO lpmii)
+{
+  return FALSE;
+}
+
+LPARAM
+STDCALL
+SetMessageExtraInfo(
+  LPARAM lParam)
+{
+  return (LPARAM)0;
+}
 
 HWND
 STDCALL
-ChildWindowFromPointEx(HWND hWnd, POINT p, UINT u) { return 0; }
+SetParent(
+  HWND hWndChild,
+  HWND hWndNewParent)
+{
+  return (HWND)0;
+}
 
-
-#endif
-
-#undef CallMsgFilter
 WINBOOL
 STDCALL
-CallMsgFilter(LPMSG lpMsg, int nCode) { return 0; }
+SetProcessDefaultLayout(
+  DWORD dwDefaultLayout)
+{
+  return FALSE;
+}
 
-#undef TranslateAccelerator
+WINBOOL
+STDCALL
+SetProcessWindowStation(
+  HWINSTA hWinSta)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+SetPropA(
+  HWND hWnd,
+  LPCSTR lpString,
+  HANDLE hData)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+SetPropW(
+  HWND hWnd,
+  LPCWSTR lpString,
+  HANDLE hData)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+SetRect(
+  LPRECT lprc,
+  int xLeft,
+  int yTop,
+  int xRight,
+  int yBottom)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+SetRectEmpty(
+  LPRECT lprc)
+{
+  return FALSE;
+}
+
+int
+STDCALL
+SetScrollInfo(
+  HWND hwnd,
+  int fnBar,
+  LPCSCROLLINFO lpsi,
+  WINBOOL fRedraw)
+{
+  return 0;
+}
+
+int
+STDCALL
+SetScrollPos(
+  HWND hWnd,
+  int nBar,
+  int nPos,
+  WINBOOL bRedraw)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+SetScrollRange(
+  HWND hWnd,
+  int nBar,
+  int nMinPos,
+  int nMaxPos,
+  WINBOOL bRedraw)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+SetSysColors(
+  int cElements,
+  CONST INT *lpaElements,
+  CONST COLORREF *lpaRgbValues)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+SetSystemCursor(
+  HCURSOR hcur,
+  DWORD id)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+SetThreadDesktop(
+  HDESK hDesktop)
+{
+  return FALSE;
+}
+
+UINT_PTR
+STDCALL
+SetTimer(
+  HWND hWnd,
+  UINT_PTR nIDEvent,
+  UINT uElapse,
+  TIMERPROC lpTimerFunc)
+{
+  return (UINT_PTR)0;
+}
+
+WINBOOL
+STDCALL
+SetUserObjectInformationA(
+  HANDLE hObj,
+  int nIndex,
+  PVOID pvInfo,
+  DWORD nLength)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+SetUserObjectInformationW(
+  HANDLE hObj,
+  int nIndex,
+  PVOID pvInfo,
+  DWORD nLength)
+{
+  return FALSE;
+}
+
+LONG
+STDCALL
+SetWindowLongA(
+  HWND hWnd,
+  int nIndex,
+  LONG dwNewLong)
+{
+  return 0;
+}
+
+LONG
+STDCALL
+SetWindowLongW(
+  HWND hWnd,
+  int nIndex,
+  LONG dwNewLong)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+SetWindowPlacement(
+  HWND hWnd,
+  CONST WINDOWPLACEMENT *lpwndpl)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+SetWindowPos(
+  HWND hWnd,
+  HWND hWndInsertAfter,
+  int X,
+  int Y,
+  int cx,
+  int cy,
+  UINT uFlags)
+{
+  return FALSE;
+}
+
+int
+STDCALL
+SetWindowRgn(
+  HWND hWnd,
+  HRGN hRgn,
+  WINBOOL bRedraw)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+SetWindowTextA(
+  HWND hWnd,
+  LPCSTR lpString)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+SetWindowTextW(
+  HWND hWnd,
+  LPCWSTR lpString)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+ShowCaret(
+  HWND hWnd)
+{
+  return FALSE;
+}
+
+int
+STDCALL
+ShowCursor(
+  WINBOOL bShow)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+ShowOwnedPopups(
+  HWND hWnd,
+  WINBOOL fShow)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+ShowScrollBar(
+  HWND hWnd,
+  int wBar,
+  WINBOOL bShow)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+ShowWindow(
+  HWND hWnd,
+  int nCmdShow)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+ShowWindowAsync(
+  HWND hWnd,
+  int nCmdShow)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+SubtractRect(
+  LPRECT lprcDst,
+  CONST RECT *lprcSrc1,
+  CONST RECT *lprcSrc2)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+SwapMouseButton(
+  WINBOOL fSwap)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+SwitchDesktop(
+  HDESK hDesktop)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+SystemParametersInfoA(
+  UINT uiAction,
+  UINT uiParam,
+  PVOID pvParam,
+  UINT fWinIni)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+SystemParametersInfoW(
+  UINT uiAction,
+  UINT uiParam,
+  PVOID pvParam,
+  UINT fWinIni)
+{
+  return FALSE;
+}
+
+LONG
+STDCALL
+TabbedTextOutA(
+  HDC hDC,
+  int X,
+  int Y,
+  LPCSTR lpString,
+  int nCount,
+  int nTabPositions,
+  CONST LPINT lpnTabStopPositions,
+  int nTabOrigin)
+{
+  return 0;
+}
+
+LONG
+STDCALL
+TabbedTextOutW(
+  HDC hDC,
+  int X,
+  int Y,
+  LPCWSTR lpString,
+  int nCount,
+  int nTabPositions,
+  CONST LPINT lpnTabStopPositions,
+  int nTabOrigin)
+{
+  return 0;
+}
+
+WORD
+STDCALL
+TileWindows(
+  HWND hwndParent,
+  UINT wHow,
+  CONST RECT *lpRect,
+  UINT cKids,
+  const HWND *lpKids)
+{
+  return 0;
+}
+
+int
+STDCALL
+ToAscii(
+  UINT uVirtKey,
+  UINT uScanCode,
+  CONST PBYTE lpKeyState,
+  LPWORD lpChar,
+  UINT uFlags)
+{
+  return 0;
+}
+
+int
+STDCALL
+ToAsciiEx(
+  UINT uVirtKey,
+  UINT uScanCode,
+  CONST PBYTE lpKeyState,
+  LPWORD lpChar,
+  UINT uFlags,
+  HKL dwhkl)
+{
+  return 0;
+}
+
+int
+STDCALL
+ToUnicode(
+  UINT wVirtKey,
+  UINT wScanCode,
+  CONST PBYTE lpKeyState,
+  LPWSTR pwszBuff,
+  int cchBuff,
+  UINT wFlags)
+{
+  return 0;
+}
+
+int
+STDCALL
+ToUnicodeEx(
+  UINT wVirtKey,
+  UINT wScanCode,
+  CONST PBYTE lpKeyState,
+  LPWSTR pwszBuff,
+  int cchBuff,
+  UINT wFlags,
+  HKL dwhkl)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+TrackMouseEvent(
+  LPTRACKMOUSEEVENT lpEventTrack)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+TrackPopupMenu(
+  HMENU hMenu,
+  UINT uFlags,
+  int x,
+  int y,
+  int nReserved,
+  HWND hWnd,
+  CONST RECT *prcRect)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+TrackPopupMenuEx(
+  HMENU hmenu,
+  UINT fuFlags,
+  int x,
+  int y,
+  HWND hwnd,
+  LPTPMPARAMS lptpm)
+{
+  return FALSE;
+}
+
+#if 0
 int
 STDCALL
 TranslateAccelerator(
-    HWND hWnd,
-    HACCEL hAccTable,
-    LPMSG lpMsg) { return 0; }
-
-typedef struct _TRACKMOUSEEVENT 
+  HWND hWnd,
+  HACCEL hAccTable,
+  LPMSG lpMsg)
 {
-	DWORD cbSize; 
-	DWORD dwFlags; 
-	HWND  hwndTrack; 
-	DWORD dwHoverTime; 
-} TRACKMOUSEEVENT; 
- 
-WINBOOL WINAPI TrackMouseEvent( TRACKMOUSEEVENT *lpEventTrack ) { return 0;}
+  return 0;
+}
+#endif
 
-WINBOOL  WINAPI DrawFrame(HDC hDC,LPRECT r,UINT u,UINT v) { return 0;}
+int
+STDCALL
+TranslateAcceleratorA(
+  HWND hWnd,
+  HACCEL hAccTable,
+  LPMSG lpMsg)
+{
+  return 0;
+}
 
+int
+STDCALL
+TranslateAcceleratorW(
+  HWND hWnd,
+  HACCEL hAccTable,
+  LPMSG lpMsg)
+{
+  return 0;
+}
 
-
-#undef IsDialogMessage
 WINBOOL
 STDCALL
-IsDialogMessage(
-    HWND hDlg,
-    LPMSG lpMsg) { return 0; }
+TranslateMDISysAccel(
+  HWND hWndClient,
+  LPMSG lpMsg)
+{
+  return FALSE;
+}
 
-HWND STDCALL SetShellWindow(HWND hwndshell) { return 0; }
-
-HWND STDCALL GetShellWindow(void) { return 0; }
-
-WINBOOL STDCALL KillSystemTimer(HWND hwnd, UINT id) { return FALSE; }
-
-UINT STDCALL SetSystemTimer(HWND hwnd, UINT id, UINT timeout, TIMERPROC proc) { return 0; }
-
-DWORD STDCALL MsgWaitForMultipleObjectsEx( 
-     DWORD nCount, 
-     LPHANDLE pHandles, 
-     DWORD dwMilliseconds, 
-     DWORD dwWakeMask, 
-     DWORD dwFlags 
-    ) {
-	return 0;
-} 
-// not correct
-WINBOOL 
+WINBOOL
 STDCALL
-ScrollChildren
-(
-        HWND hWnd,
- //       UINT uMsg,
-        WPARAM wParam,
-        LPARAM lParam
-)
+TranslateMessage(
+  CONST MSG *lpMsg)
 {
-	return FALSE;
+  return FALSE;
 }
 
-
-// not correct
-VOID STDCALL TileChildWindows(HWND hwndParent, DWORD dwUnknown) { return; }
-
-
-
-WINBOOL STDCALL
-SetDeskWallpaper(LPCSTR WallPaper ) { return FALSE; }
-HCONV WINAPI	DdeConnect (DWORD dw, HSZ h1, HSZ h2, CONVCONTEXT *c) { return 0; }
-WINBOOL WINAPI	DdeDisconnect (HCONV h) { return 0; }
-WINBOOL WINAPI	DdeFreeDataHandle (HDDEDATA h) { return 0; }
-DWORD WINAPI	DdeGetData (HDDEDATA h, BYTE *b, DWORD d, DWORD w) { return 0; }
-UINT WINAPI	DdeGetLastError (DWORD d) { return 0; }
-HDDEDATA WINAPI	DdeNameService (DWORD d, HSZ h1, HSZ h2, UINT u) { return 0; }
-WINBOOL WINAPI	DdePostAdvise (DWORD dw, HSZ h1, HSZ h2) { return 0; }
-HCONV WINAPI	DdeReconnect (HCONV h) { return 0; }
-WINBOOL WINAPI	DdeUninitialize (DWORD dw) { return 0; }
-int WINAPI	DdeCmpStringHandles (HSZ h1, HSZ h2) { return 0; }
-HDDEDATA WINAPI	DdeCreateDataHandle (DWORD dw, LPBYTE b, DWORD x, DWORD y, HSZ h, 
-				UINT i, UINT j) { return 0; }
-WINBOOL WINAPI DdeAbandonTransaction(DWORD i, HCONV h, DWORD tr) { return 0; } 
-
-
-HDDEDATA WINAPI DdeAddData(HDDEDATA hData, LPBYTE pSrc, DWORD cb, DWORD cbOff) { return 0; } 
-LPBYTE WINAPI DdeAccessData(HDDEDATA hData, LPDWORD pcbDataSize) { return 0; } 
-WINBOOL WINAPI DdeUnaccessData(HDDEDATA hData) { return 0; } 
-
-HDDEDATA WINAPI DdeClientTransaction(LPBYTE pData, DWORD cbData, 
-        HCONV hConv, HSZ hszItem, UINT wFmt, UINT wType, 
-        DWORD dwTimeout, LPDWORD pdwResult) { return 0; }
-
-HCONVLIST WINAPI DdeConnectList(DWORD idInst, HSZ hszService, HSZ hszTopic, 
-        HCONVLIST hConvList, PCONVCONTEXT pCC) { return 0; }
-HCONV WINAPI DdeQueryNextServer(HCONVLIST hConvList, HCONV hConvPrev) { return 0; }
-WINBOOL WINAPI DdeDisconnectList(HCONVLIST hConvList) { return 0; } 
- 
- 
-WINBOOL WINAPI DdeEnableCallback(DWORD idInst, HCONV hConv, UINT wCmd) { return 0; } 
-WINBOOL WINAPI DdeImpersonateClient(HCONV hConv) { return 0; } 
- 
-WINBOOL WINAPI DdeFreeStringHandle(DWORD idInst, HSZ hsz) { return 0; }
-WINBOOL WINAPI DdeKeepStringHandle(DWORD idInst, HSZ hsz) { return 0; } 
-
-WINBOOL WINAPI DdeGetQualityOfService(HCONV h, PVOID SecurityQualityOfService, UINT y) { return 0; }
-WINBOOL WINAPI DdeSetQualityOfService(HCONV h, PVOID SecurityQualityOfService, UINT y) { return 0; }
-
-#define PCONVINFO void*
-UINT WINAPI DdeQueryConvInfo(HCONV hConv, DWORD idTransaction, PCONVINFO pConvInfo) { return 0; }
-WINBOOL WINAPI DdeSetUserHandle(HCONV hConv, DWORD id, DWORD hUser) { return 0; }
-
-WINBOOL STDCALL ImpersonateDdeClientWindow( HWND hWndClient, HWND hWndServer  )
+WINBOOL
+STDCALL
+UnhookWindowsHookEx(
+  HHOOK hhk)
 {
-	return FALSE;
+  return FALSE;
 }
 
-WINBOOL WINAPI FreeDDElParam(    UINT msg, LONG lParam  ) { return 0; } 
-LONG WINAPI PackDDElParam(UINT msg, UINT uiLo, UINT uiHi) { return 0; }
-WINBOOL WINAPI UnpackDDElParam( UINT msg, LONG lParam, PUINT puiLo, PUINT puiHi  )  { return FALSE; }
-LONG WINAPI ReuseDDElParam(LONG lParam, UINT msgIn, UINT msgOut, UINT uiLo, UINT uiHi) { return 0; }
- 
+WINBOOL
+STDCALL
+UnionRect(
+  LPRECT lprcDst,
+  CONST RECT *lprcSrc1,
+  CONST RECT *lprcSrc2)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+UnloadKeyboardLayout(
+  HKL hkl)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+UnpackDDElParam(
+  UINT msg,
+  LPARAM lParam,
+  PUINT_PTR puiLo,
+  PUINT_PTR puiHi)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+UnregisterClassA(
+  LPCSTR lpClassName,
+  HINSTANCE hInstance)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+UnregisterClassW(
+  LPCWSTR lpClassName,
+  HINSTANCE hInstance)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+UnregisterDeviceNotification(
+  HDEVNOTIFY Handle)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+UnregisterHotKey(
+  HWND hWnd,
+  int id)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+UpdateLayeredWindow(
+  HWND hwnd,
+  HDC hdcDst,
+  POINT *pptDst,
+  SIZE *psize,
+  HDC hdcSrc,
+  POINT *pptSrc,
+  COLORREF crKey,
+  BLENDFUNCTION *pblend,
+  DWORD dwFlags)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+UpdateWindow(
+  HWND hWnd)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+UserHandleGrantAccess(
+  HANDLE hUserHandle,
+  HANDLE hJob,
+  WINBOOL bGrant)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+ValidateRect(
+  HWND hWnd,
+  CONST RECT *lpRect)
+{
+  return FALSE;
+}
+
+WINBOOL
+STDCALL
+ValidateRgn(
+  HWND hWnd,
+  HRGN hRgn)
+{
+  return FALSE;
+}
+
+SHORT
+STDCALL
+VkKeyScanA(
+  CHAR ch)
+{
+  return 0;
+}
+
+SHORT
+STDCALL
+VkKeyScanExA(
+  CHAR ch,
+  HKL dwhkl)
+{
+  return 0;
+}
+
+SHORT
+STDCALL
+VkKeyScanExW(
+  WCHAR ch,
+  HKL dwhkl)
+{
+  return 0;
+}
+
+SHORT
+STDCALL
+VkKeyScanW(
+  WCHAR ch)
+{
+  return 0;
+}
+
+DWORD
+STDCALL
+WaitForInputIdle(
+  HANDLE hProcess,
+  DWORD dwMilliseconds)
+{
+  return 0;
+}
+
+WINBOOL
+STDCALL
+WaitMessage(VOID)
+{
+  return FALSE;
+}
+
+HWND
+STDCALL
+WindowFromDC(
+  HDC hDC)
+{
+  return (HWND)0;
+}
+
+HWND
+STDCALL
+WindowFromPoint(
+  POINT Point)
+{
+  return (HWND)0;
+}
+
+/* EOF */

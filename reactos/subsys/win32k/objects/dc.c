@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.20 2001/05/02 12:33:42 jfilby Exp $
+/* $Id: dc.c,v 1.21 2001/05/07 22:03:27 chorns Exp $
  *
  * DC.C - Device context functions
  * 
@@ -213,7 +213,11 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
 
   /*  Get the DDI driver's entry point  */
   /*  FIXME: Retrieve DDI driver name from registry */
+#ifdef DDRIVE_FIX
+  if ((GDEnableDriver = DRIVER_FindDDIDriver(L"\\??\\D:\\reactos\\system32\\drivers\\vgaddi.dll")) == NULL)
+#else
   if ((GDEnableDriver = DRIVER_FindDDIDriver(L"\\??\\C:\\reactos\\system32\\drivers\\vgaddi.dll")) == NULL)
+#endif
   {
     DPRINT("FindDDIDriver failed\n");
     goto Failure;

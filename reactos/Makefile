@@ -17,7 +17,8 @@ include rules.mak
 #
 COMPONENTS = iface_native iface_additional ntoskrnl
 BUS = acpi isapnp
-DLLS = ntdll kernel32 crtdll advapi32 fmifs gdi32 secur32 user32 ws2_32 msafd msvcrt
+DLLS = ntdll kernel32 crtdll advapi32 fmifs gdi32 secur32 user32 ws2_32 \
+       msafd msvcrt
 SUBSYS = smss win32k csrss
 
 #
@@ -41,8 +42,8 @@ DEVICE_DRIVERS = vidport vga blue ide null floppy
 #INPUT_DRIVERS = keyboard
 INPUT_DRIVERS = keyboard
 
-#FS_DRIVERS = vfat minix ext2 template
-FS_DRIVERS = vfat ms
+#FS_DRIVERS = vfat minix ms np ext2 template
+FS_DRIVERS = vfat ms np
 
 #NET_DRIVERS = ndis tdi tcpip tditest wshtcpip afd
 NET_DRIVERS = ndis tcpip tditest wshtcpip afd

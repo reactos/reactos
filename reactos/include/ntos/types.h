@@ -4,33 +4,94 @@
  * FILE:         include/types.h
  * PURPOSE:      Types used by all the parts of the system
  * PROGRAMMER:   David Welch <welch@cwcom.net>
- * UPDATE HISTORY: 
+ * DEFINES:      _WIN64: 64-bit architecture
+ *               _WIN32: 32-bit architecture (default)
+ * UPDATE HISTORY:
  *               27/06/00: Created
+ *               01/05/01: Portabillity changes
  */
 
 #ifndef __INCLUDE_TYPES_H
 #define __INCLUDE_TYPES_H
 
+/* Fixed precision types */
+typedef signed char         INT8, *PINT8;
+typedef signed short        INT16, *PINT16;
+typedef signed int          INT32, *PINT32;
+typedef signed long long    INT64, *PINT64;
+typedef unsigned char       UINT8, *PUINT8;
+typedef unsigned short      UINT16, *PUINT16;
+typedef unsigned int        UINT32, *PUINT32;
+typedef unsigned long long  UINT64, *PUINT64;
+
+typedef signed long int     LONG32, *PLONG32;
+typedef unsigned long int   ULONG32, *PULONG32;
+typedef unsigned long int   DWORD32, *PDWORD32;
+
+
+#ifdef _WIN64
+
+/* 64-bit architecture */
+
+typedef INT64 INT, *PINT;
+typedef LONG64 LONG, *PLONG;
+typedef DWORD64 DWORD, *PDWORD;
+typedef UINT64 UINT, *PUINT;
+typedef ULONG64 ULONG, *PULONG;
+
+/* Pointer precision types */
+typedef long long           INT_PTR, *PINT_PTR;
+typedef unsigned long long  UINT_PTR, *PUINT_PTR;
+typedef long long           LONG_PTR, *PLONG_PTR;
+typedef unsigned long long  ULONG_PTR, *PULONG_PTR;
+typedef unsigned long long  HANDLE_PTR;
+typedef unsigned int        UHALF_PTR, *PUHALF_PTR;
+typedef int                 HALF_PTR, *PHALF_PTR;
+
+#else /* _WIN64 */
+
+/* 32-bit architecture */
+
+typedef INT32 INT, *PINT;
+typedef LONG32 LONG, *PLONG;
+typedef DWORD32 DWORD, *PDWORD;
+typedef UINT32 UINT, *PUINT;
+typedef ULONG32 ULONG, *PULONG;
+
+
+/* Pointer precision types */
+typedef int               INT_PTR, *PINT_PTR;
+typedef unsigned int      UINT_PTR, *PUINT_PTR;
+typedef long              LONG_PTR, *PLONG_PTR;
+typedef unsigned long     ULONG_PTR, *PULONG_PTR;
+typedef unsigned short    UHALF_PTR, *PUHALF_PTR;
+typedef short             HALF_PTR, *PHALF_PTR;
+typedef unsigned long     HANDLE_PTR;
+
+#endif /* _WIN64 */
+
+typedef ULONG_PTR DWORD_PTR, *PDWORD_PTR;
+
+typedef long long LONG64, *PLONG64;
+
+typedef unsigned long long ULONG64, *PULONG64;
+typedef unsigned long long DWORD64, *PDWORD64;
+
+
 typedef unsigned char UCHAR;
-typedef unsigned int UINT;
-typedef unsigned long ULONG;
 typedef unsigned short USHORT;
 typedef unsigned short WCHAR;
 typedef unsigned short WORD;
 typedef int BOOL;
 typedef unsigned char BOOLEAN;
 typedef BOOLEAN* PBOOLEAN;
-typedef unsigned int DWORD; /* was unsigned long */
 typedef unsigned short *LPWSTR;
 typedef unsigned short *PWSTR;
 typedef unsigned char *PUCHAR;
-typedef unsigned int *PUINT;
-typedef unsigned long *PULONG;
 typedef unsigned short *PUSHORT;
 typedef void *PVOID;
 typedef unsigned char BYTE;
 typedef void *LPVOID;
-typedef DWORD *PDWORD;
 typedef float *PFLOAT;
 typedef unsigned short *PWCH;
 typedef unsigned short *PWORD;
@@ -40,12 +101,11 @@ typedef unsigned long long ULONGLONG;
 typedef long long *PLONGLONG;
 typedef unsigned long long *PULONGLONG;
 
-/* Check VOID before defining CHAR, SHORT, and LONG */
+/* Check VOID before defining CHAR, SHORT */
 #ifndef VOID
 #define VOID void
 typedef char CHAR;
 typedef short SHORT;
-typedef long LONG;
 #endif
 
 typedef CHAR *PCHAR;
@@ -314,8 +374,6 @@ typedef struct _EXCEPTION_RECORD {
   DWORD NumberParameters;
   DWORD ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
 } EXCEPTION_RECORD, *PEXCEPTION_RECORD, *LPEXCEPTION_RECORD;
-
-typedef long *PLONG;
 
 typedef const void *LPCVOID;
 typedef BYTE *LPBYTE;

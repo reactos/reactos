@@ -1,4 +1,4 @@
-/* $Id: mount.c,v 1.5 2001/05/01 11:09:01 ekohl Exp $
+/* $Id: mount.c,v 1.6 2001/05/07 22:03:27 chorns Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -22,7 +22,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject,
+NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT DriverObject,
 		     PUNICODE_STRING RegistryPath)
 {
    PDEVICE_OBJECT DeviceObject;

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2001/05/01 11:09:01 ekohl Exp $
+# $Id: Makefile,v 1.5 2001/05/07 22:03:27 chorns Exp $
 #
 # Named Pipes File System
 #
@@ -42,7 +42,7 @@ $(TARGETNAME).sys: $(OBJECTS)
 	$(CC) \
 		--verbose \
 		-Wl,--image-base,0x10000 \
-		-Wl,-e,_DriverEntry \
+		-Wl,-e,_DriverEntry@8 \
 		-specs=../../svc_specs \
 		-mdll \
 		-o $(TARGETNAME).sys \

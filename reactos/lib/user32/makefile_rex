@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.15 2001/05/05 18:09:30 phreak Exp $
+# $Id: makefile_rex,v 1.16 2001/05/07 22:03:27 chorns Exp $
 #
 # ReactOS Operating System
 #
@@ -6,44 +6,23 @@
 #
 PATH_TO_TOP = ../..
 
-BASE_CFLAGS = -I../../include
-
-include ../../rules.mak
+CFLAGS = -I../../include -DDBG
 
 TARGET=user32
 
-DLLTARGET=$(TARGET).dll
-
-all: $(DLLTARGET)
-
 MISC_OBJECTS = \
-	misc/sprintf.o		\
-	misc/dllmain.o		\
-	misc/string.o		\
-	misc/winstat.o		\
-	misc/stubs.o		\
-	misc/stubsa.o		\
-	misc/stubsw.o           \
+	misc/dllmain.o  \
+	misc/sprintf.o  \
+	misc/stubs.o    \
 	misc/win32k.o
-
-
-CONTROLS_OBJECTS = \
-	controls/button.o	\
-	controls/combo.o	\
-	controls/edit.o		\
-	controls/icontitle.o	\
-	controls/listbox.o	\
-	controls/widgets.o	\
-	controls/menu.o		\
-	controls/scroll.o	\
-	controls/static.o
-
-RESOURCE_OBJECTS = \
-	resources/sysres.o
 
 RESOURCE_OBJECT = $(TARGET).coff
 
-OBJECTS = $(MISC_OBJECTS) $(RESOURCE_OBJECTS) $(RESOURCE_OBJECT)
+OBJECTS = $(MISC_OBJECTS) $(RESOURCE_OBJECT)
+
+LIBS = ../ntdll/ntdll.a \
+       ../kernel32/kernel32.a \
+       ../gdi32/gdi32.a
 
 ifeq ($(DOSCLI),yes)
 CLEAN_FILES = misc\*.o windows\*.o internal\*.o controls\*.o graphics\*.o resources\*.o \
@@ -53,12 +32,14 @@ CLEAN_FILES = misc/*.o windows/*.o internal/*.o controls/*.o graphics/*.o resour
               $(TARGET).o $(TARGET).a junk.tmp base.tmp temp.exp $(TARGET).dll $(TARGET).sym
 endif
 
+all: $(TARGET).dll
+
 $(TARGET).coff: $(TARGET).rc ../../include/reactos/resource.h
 
 $(TARGET).a: $(OBJECTS)
-	$(AR) csr $(TARGET).a $(OBJECTS)
+	$(LD) -r $(OBJECTS) -o $(TARGETNAME).a
 
-$(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
+$(TARGET).dll: $(LIBS) $(OBJECTS) $(TARGET).def
 	$(LD) -r $(OBJECTS) -o $(TARGET).o
 	$(DLLTOOL) \
 		--dllname $(TARGET).dll \
@@ -66,9 +47,8 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 		--output-lib $(TARGET).a \
 		--kill-at
 	$(CC) $(TARGET).o \
-		../ntdll/ntdll.a \
-		../kernel32/kernel32.a \
-		../gdi32/gdi32.a \
+	  $(LIBS) \
+	  -e _DllMain@12 \
 		-specs=$(TARGET)_specs \
 		-mdll \
 		-o junk.tmp \
@@ -77,24 +57,21 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 	$(DLLTOOL) \
 		--dllname $(TARGET).dll \
 		--base-file base.tmp \
-	        --output-exp temp.exp \
+    --output-exp temp.exp \
 		--def $(TARGET).edf
 	- $(RM) base.tmp
 	$(CC) $(TARGET).o \
-		../ntdll/ntdll.a\
-		../kernel32/kernel32.a \
-		../gdi32/gdi32.a \
+	  $(LIBS) \
+ 		-o $(TARGET).dll \
 		-specs=$(TARGET)_specs \
 		-mdll \
-		-o $(TARGET).dll \
+		-e _DllMain@12 \
 		-Wl,--image-base,0x77e70000 \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
 		-Wl,temp.exp
 	- $(RM) temp.exp
 	$(NM) --numeric-sort $(TARGET).dll > $(TARGET).sym
-
-$(TARGET).coff: $(TARGET).rc
 
 clean: $(CLEAN_FILES:%=%_clean)
 
@@ -112,5 +89,7 @@ dist: $(DIST_DIR)/dlls/$(TARGET).dll
 
 $(DIST_DIR)/dlls/$(TARGET).dll: $(TARGET).dll
 	$(CP) $(TARGET).dll ../../$(DIST_DIR)/dlls/$(TARGET).dll
+
+include ../../rules.mak
 
 # EOF

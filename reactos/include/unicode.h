@@ -1009,11 +1009,11 @@ GetKeyboardLayoutNameW(
 HDESK
 STDCALL
 CreateDesktopW(
-    LPWSTR lpszDesktop,
-    LPWSTR lpszDevice,
+    LPCWSTR lpszDesktop,
+    LPCWSTR lpszDevice,
     LPDEVMODE pDevmode,
     DWORD dwFlags,
-    DWORD dwDesiredAccess,
+    ACCESS_MASK dwDesiredAccess,
     LPSECURITY_ATTRIBUTES lpsa);
 
 HDESK
@@ -1082,7 +1082,7 @@ GetMessageW(
     UINT wMsgFilterMin,
     UINT wMsgFilterMax);
 
-LONG
+LRESULT
 STDCALL
 DispatchMessageW(
     CONST MSG *lpMsg);
@@ -1113,7 +1113,7 @@ SendMessageTimeoutW(
     LPARAM lParam,
     UINT fuFlags,
     UINT uTimeout,
-    LPDWORD lpdwResult);
+    PDWORD_PTR lpdwResult);
 
 WINBOOL
 STDCALL
@@ -1131,7 +1131,7 @@ SendMessageCallbackW(
     WPARAM wParam,
     LPARAM lParam,
     SENDASYNCPROC lpResultCallBack,
-    DWORD dwData);
+    ULONG_PTR dwData);
 
 WINBOOL
 STDCALL
@@ -1259,7 +1259,7 @@ GetDlgItemTextW(
     LPWSTR lpString,
     int nMaxCount);
 
-LONG
+LRESULT
 STDCALL
 SendDlgItemMessageW(
     HWND hDlg,
@@ -1508,11 +1508,10 @@ GetMenuItemInfoW(
 WINBOOL
 STDCALL
 SetMenuItemInfoW(
-    HMENU,
-    UINT,
-    WINBOOL,
-    LPCMENUITEMINFO
-    );
+  HMENU hMenu,
+  UINT uItem,
+  WINBOOL fByPosition,
+  LPMENUITEMINFO lpmii);
 
 int
 STDCALL
@@ -1786,8 +1785,8 @@ DefMDIChildProcW(
 HWND
 STDCALL
 CreateMDIWindowW(
-    LPWSTR lpClassName,
-    LPWSTR lpWindowName,
+    LPCWSTR lpClassName,
+    LPCWSTR lpWindowName,
     DWORD dwStyle,
     int X,
     int Y,
@@ -2996,14 +2995,24 @@ ShellExecuteW (HWND, const LPCWSTR, const LPCWSTR, LPCWSTR, const LPCWSTR, int);
 /* -------------------------------------------------- */
 /* From ddeml.h in old Cygnus headers */
 
-HSZ WINAPI
-DdeCreateStringHandleW (DWORD, LPCWSTR, int);
+HSZ
+WINAPI
+DdeCreateStringHandleW(
+  DWORD idInst,
+  LPWSTR psz,
+  int iCodePage);
 
 UINT WINAPI
 DdeInitializeW (DWORD *, CALLB, DWORD, DWORD);
 
-DWORD WINAPI
-DdeQueryStringW (DWORD, HSZ, LPCWSTR, DWORD, int);
+DWORD
+WINAPI
+DdeQueryStringW(
+  DWORD idInst,
+  HSZ hsz,
+  LPWSTR psz,
+  DWORD cchMax,
+  int iCodePage);
 
 /* end of stuff from ddeml.h in old Cygnus headers */
 /* ----------------------------------------------- */

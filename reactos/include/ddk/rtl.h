@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.48 2001/03/01 15:33:39 ekohl Exp $
+/* $Id: rtl.h,v 1.49 2001/05/07 22:03:26 chorns Exp $
  * 
  */
 
@@ -636,7 +636,7 @@ RtlClearBits (
 	IN	ULONG		NumberToClear
 	);
 
-UINT
+DWORD
 STDCALL
 RtlCompactHeap (
 	HANDLE	hheap,

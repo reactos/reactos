@@ -197,21 +197,11 @@ typedef struct _CM_EISA_FUNCTION_INFORMATION
 
 typedef CONST CHAR *PCSTR;
 
-/* Could be defined in tdi.h */
-#ifndef __TDI_H
-typedef signed int INT, *PINT;
-#endif /* __TDI_H */
-
 #endif /* NDIS_MINIPORT_DRIVER */
 
 #include "netevent.h"
 #include "ndisoid.h"
 #include "ntddndis.h"
-
-
-/* More types */
-
-typedef ULONG ULONG_PTR, *PULONG_PTR;
 
 
 #if defined(NDIS_MINIPORT_DRIVER) || !defined(_MSC_VER)

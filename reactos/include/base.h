@@ -152,7 +152,6 @@ typedef HANDLE HSTMT;
 typedef HANDLE HSZ;
 typedef HANDLE HWINSTA;
 typedef HANDLE HWND;
-typedef int INT;
 typedef unsigned short LANGID;
 //typedef DWORD LCID;
 typedef DWORD LCTYPE;
@@ -176,8 +175,8 @@ typedef DWORD *LPDWORD;
 /* typedef LPFRHOOKPROC; */
 typedef HANDLE *LPHANDLE;
 /* typedef LPHANDLER_FUNCTION; */
-typedef int *LPINT;
-typedef long *LPLONG;
+typedef PINT LPINT;
+typedef PLONG LPLONG;
 
 typedef long LRESULT;
 typedef unsigned short *LPWCH;
@@ -189,7 +188,6 @@ typedef const CHAR *PCCH;
 typedef const char *PCSTR;
 typedef const unsigned short *PCWCH;
 /* typedef PHKEY; */
-typedef int *PINT;
 /* typedef LCID *PLCID; */
 typedef short *PSHORT;
 /* typedef PSID; */

@@ -647,7 +647,7 @@ typedef struct tagCONVINFO {
   CONVCONTEXT ConvCtxt; 
   HWND        hwnd; 
   HWND        hwndPartner; 
-} CONVINFO; 
+} CONVINFO, *PCONVINFO;
 
 typedef struct tagCOPYDATASTRUCT { 
   DWORD dwData; 
@@ -4230,6 +4230,187 @@ typedef struct
 /* PE executable header.  */
 /* Windows.h now includes pe.h to avoid conflicts! */
 
+typedef struct _DISPLAY_DEVICE {
+  DWORD cb;
+  WCHAR DeviceName[32];
+  WCHAR DeviceString[128];
+  DWORD StateFlags;
+  WCHAR DeviceID[128];
+  WCHAR DeviceKey[128];
+} DISPLAY_DEVICE, *PDISPLAY_DEVICE;
+
+typedef HANDLE HMONITOR;
+typedef HANDLE HDEVNOTIFY;
+
+typedef BOOL CALLBACK (*MonitorEnumProc)(
+  HMONITOR hMonitor,
+  HDC hdcMonitor,
+  LPRECT lprcMonitor,
+  LPARAM dwData);
+
+typedef MonitorEnumProc MONITORENUMPROC;
+
+typedef struct {
+  UINT  cbSize;
+  HWND  hwnd;
+  DWORD dwFlags;
+  UINT  uCount;
+  DWORD dwTimeout;
+} FLASHWINFO, *PFLASHWINFO;
+
+typedef struct tagALTTABINFO {
+  DWORD cbSize;
+  int   cItems;
+  int   cColumns;
+  int   cRows;
+  int   iColFocus;
+  int   iRowFocus;
+  int   cxItem;
+  int   cyItem;
+  POINT ptStart;
+} ALTTABINFO, *PALTTABINFO, *LPALTTABINFO;
+
+typedef struct tagCOMBOBOXINFO {
+  DWORD cbSize;
+  RECT  rcItem;
+  RECT  rcButton;
+  DWORD stateButton;
+  HWND  hwndCombo;
+  HWND  hwndItem;
+  HWND  hwndList;
+} COMBOBOXINFO, *PCOMBOBOXINFO, *LPCOMBOBOXINFO;
+
+typedef struct tagCURSORINFO {
+  DWORD   cbSize;
+  DWORD   flags;
+  HCURSOR hCursor;
+  POINT   ptScreenPos;
+} CURSORINFO, *PCURSORINFO, *LPCURSORINFO;
+
+typedef struct tagGUITHREADINFO {
+  DWORD   cbSize;
+  DWORD   flags;
+  HWND    hwndActive;
+  HWND    hwndFocus;
+  HWND    hwndCapture;
+  HWND    hwndMenuOwner;
+  HWND    hwndMoveSize;
+  HWND    hwndCaret;
+  RECT    rcCaret;
+} GUITHREADINFO, *PGUITHREADINFO, *LPGUITHREADINFO;
+
+typedef struct tagLASTINPUTINFO {
+  UINT cbSize;
+  DWORD dwTime;
+} LASTINPUTINFO, *PLASTINPUTINFO;
+
+typedef struct tagMENUBARINFO {
+  DWORD cbSize;
+  RECT  rcBar;
+  HMENU hMenu;
+  HWND  hwndMenu;
+  BOOL  fBarFocused:1;
+  BOOL  fFocused:1;
+} MENUBARINFO, *PMENUBARINFO;
+
+typedef struct tagMENUINFO {
+  DWORD   cbSize;
+  DWORD   fMask;
+  DWORD   dwStyle;
+  UINT    cyMax;
+  HBRUSH  hbrBack;
+  DWORD   dwContextHelpID;
+  ULONG_PTR  dwMenuData;
+} MENUINFO, FAR *LPMENUINFO;
+typedef MENUINFO CONST FAR *LPCMENUINFO; 
+
+typedef struct tagMONITORINFO {
+  DWORD cbSize;
+  RECT rcMonitor;
+  RECT rcWork;
+  DWORD dwFlags;
+} MONITORINFO, *LPMONITORINFO;
+
+typedef struct tagMOUSEMOVEPOINT {
+  int       x;
+  int       y;
+  DWORD     time;
+  ULONG_PTR dwExtraInfo;
+} MOUSEMOVEPOINT, *PMOUSEMOVEPOINT, *LPMOUSEMOVEPOINT;
+
+#define CCHILDREN_SCROLLBAR 5
+
+typedef struct tagSCROLLBARINFO {
+  DWORD cbSize;
+  RECT  rcScrollBar;
+  int   dxyLineButton;
+  int   xyThumbTop;
+  int   xyThumbBottom;
+  int   reserved;
+  DWORD rgstate[CCHILDREN_SCROLLBAR+1];
+} SCROLLBARINFO, *PSCROLLBARINFO, *LPSCROLLBARINFO;
+
+#define CCHILDREN_TITLEBAR 5
+
+typedef struct tagTITLEBARINFO {
+  DWORD cbSize;
+  RECT  rcTitleBar;
+  DWORD rgstate[CCHILDREN_TITLEBAR+1];
+} TITLEBARINFO, *PTITLEBARINFO, *LPTITLEBARINFO;
+
+typedef struct { 
+  HWND hwnd; 
+  LPCTSTR szWindowName; 
+  UINT32 fToBeClosed; 
+  UINT32 fToBeTerminated;
+} WINDOWINFO, *PWINDOWINFO, *LPWINDOWINFO;
+
+typedef struct tagMOUSEINPUT {
+  LONG    dx;
+  LONG    dy;
+  DWORD   mouseData;
+  DWORD   dwFlags;
+  DWORD   time;
+  ULONG_PTR   dwExtraInfo;
+} MOUSEINPUT, *PMOUSEINPUT;
+
+typedef struct tagKEYBDINPUT {
+  WORD      wVk;
+  WORD      wScan;
+  DWORD     dwFlags;
+  DWORD     time;
+  ULONG_PTR dwExtraInfo;
+} KEYBDINPUT, *PKEYBDINPUT;
+
+typedef struct tagHARDWAREINPUT {
+  DWORD   uMsg;
+  WORD    wParamL;
+  WORD    wParamH;
+} HARDWAREINPUT, *PHARDWAREINPUT;
+
+typedef struct tagINPUT {
+  DWORD type;
+  union
+  {
+    MOUSEINPUT mi;
+    KEYBDINPUT ki;
+    HARDWAREINPUT hi;
+  } u;
+} INPUT, *PINPUT, FAR* LPINPUT;
+
+typedef struct tagTRACKMOUSEEVENT {
+  DWORD cbSize;
+  DWORD dwFlags;
+  HWND  hwndTrack;
+  DWORD dwHoverTime;
+} TRACKMOUSEEVENT, *LPTRACKMOUSEEVENT;
+
+typedef struct _BLENDFUNCTION {
+  BYTE     BlendOp;
+  BYTE     BlendFlags;
+  BYTE     SourceConstantAlpha;
+  BYTE     AlphaFormat;
+}BLENDFUNCTION, *PBLENDFUNCTION, *LPBLENDFUNCTION;
 
 #ifdef __cplusplus
 }

@@ -21,7 +21,7 @@ typedef struct t_SSPT   {
 
 typedef struct t_KeServiceDescriptorTableEntry {
                 PSSDT               SSDT;
-                unsigned long*      ServiceCounterTable;
+                PULONG              ServiceCounterTable;
                 unsigned int        NumberOfServices;
                 PSSPT               SSPT;
 

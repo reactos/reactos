@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.22 2000/10/11 20:50:32 dwelch Exp $
+/* $Id: thread.c,v 1.23 2001/05/07 22:03:26 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -217,7 +217,7 @@ DWORD STDCALL GetCurrentThreadId()
    return((DWORD)(NtCurrentTeb()->Cid).UniqueThread);
 }
 
-VOID STDCALL ExitThread(UINT uExitCode)
+VOID STDCALL ExitThread(DWORD uExitCode)
 {
    NTSTATUS errCode;
    BOOLEAN LastThread;

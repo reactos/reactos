@@ -3667,14 +3667,14 @@ ZeroMemory (
 #define FillMemory(p, c, v) memset ((p), (v), (c))
 #define ZeroMemory(p, c) memset ((p), 0, (c))
 
-#ifdef WIN95
-HKL
+#ifdef WINNT351
+WINBOOL
 STDCALL
 ActivateKeyboardLayout(
 		       HKL hkl,
 		       UINT Flags);
 #else
-WINBOOL
+HKL
 STDCALL
 ActivateKeyboardLayout(
 		       HKL hkl,
@@ -3700,7 +3700,7 @@ UnloadKeyboardLayout(
 		     HKL hkl);
 
  
-int
+UINT
 STDCALL
 GetKeyboardLayoutList(
 		      int nBuff,
@@ -3840,7 +3840,7 @@ GetMessageTime(
 	       VOID);
 
  
-LONG
+LPARAM
 STDCALL
 GetMessageExtraInfo(
 		    VOID);
@@ -4146,7 +4146,7 @@ GetDlgCtrlID(
 	     HWND hWnd);
 
  
-long
+LONG
 STDCALL
 GetDialogBaseUnits(VOID);
 
@@ -5496,7 +5496,11 @@ DrawFrameControl(HDC, LPRECT, UINT, UINT);
 
 WINBOOL
 STDCALL
-DrawCaption(HWND, HDC, CONST RECT *, UINT);
+DrawCaption(
+  HWND hwnd,
+  HDC hdc,
+  LPRECT lprc,
+  UINT uFlags);
 
 WINBOOL
 STDCALL
