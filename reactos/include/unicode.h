@@ -2107,14 +2107,14 @@ HANDLE
 STDCALL
 FindFirstFileW(
     LPCWSTR lpFileName,
-    LPWIN32_FIND_DATA lpFindFileData
+    LPWIN32_FIND_DATAW lpFindFileData
     );
 
 WINBOOL
 STDCALL
 FindNextFileW(
     HANDLE hFindFile,
-    LPWIN32_FIND_DATA lpFindFileData
+    LPWIN32_FIND_DATAW lpFindFileData
     );
 
 WINBOOL

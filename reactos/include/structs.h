@@ -39,6 +39,11 @@ typedef union _LARGE_INTEGER
   {
     DWORD LowPart;
     LONG  HighPart;
+  };
+  struct
+  {
+    DWORD LowPart;
+    LONG  HighPart;
   } u;
   LONGLONG QuadPart;
 } LARGE_INTEGER, *PLARGE_INTEGER;
@@ -49,34 +54,36 @@ typedef union _ULARGE_INTEGER
   {
     DWORD LowPart;
     DWORD HighPart;
+  };
+  struct
+  {
+    DWORD LowPart;
+    DWORD HighPart;
   } u;
   ULONGLONG QuadPart;
 } ULARGE_INTEGER, *PULARGE_INTEGER;
 
 #include <security.h>
 
-typedef struct _LIST_ENTRY { 
-  struct _LIST_ENTRY *Flink; 
-  struct _LIST_ENTRY *Blink; 
-} LIST_ENTRY, *PLIST_ENTRY; 
+typedef struct _LIST_ENTRY {
+  struct _LIST_ENTRY *Flink;
+  struct _LIST_ENTRY *Blink;
+} LIST_ENTRY, *PLIST_ENTRY;
 
+typedef struct _PARTITION_INFORMATION {
+  BYTE PartitionType;
+  BOOLEAN BootIndicator;
+  BOOLEAN RecognizedPartition;
+  BOOLEAN RewritePartition;
+  LARGE_INTEGER StartingOffset;
+  LARGE_INTEGER PartitionLength;
+  LARGE_INTEGER HiddenSectors;
+} PARTITION_INFORMATION;
 
+typedef struct _SINGLE_LIST_ENTRY {
+  struct _SINGLE_LIST_ENTRY *Next;
+} SINGLE_LIST_ENTRY, *PSINGLE_LIST_ENTRY;
 
-typedef struct _PARTITION_INFORMATION { 
-  BYTE PartitionType; 
-  BOOLEAN BootIndicator; 
-  BOOLEAN RecognizedPartition; 
-  BOOLEAN RewritePartition; 
-  LARGE_INTEGER StartingOffset; 
-  LARGE_INTEGER PartitionLength; 
-  LARGE_INTEGER HiddenSectors; 
-} PARTITION_INFORMATION ; 
-
-typedef struct _SINGLE_LIST_ENTRY { 
-  struct _SINGLE_LIST_ENTRY *Next; 
-} SINGLE_LIST_ENTRY, *PSINGLE_LIST_ENTRY; 
-
- 
 typedef struct _CRITICAL_SECTION_DEBUG {
     WORD   Type;
     WORD   CreatorBackTraceIndex;
@@ -97,18 +104,18 @@ typedef struct _CRITICAL_SECTION {
     DWORD Reserved;
 } CRITICAL_SECTION, *PCRITICAL_SECTION, *LPCRITICAL_SECTION;
 
-typedef struct _GENERIC_MAPPING { 
-  ACCESS_MASK GenericRead; 
-  ACCESS_MASK GenericWrite; 
-  ACCESS_MASK GenericExecute; 
-  ACCESS_MASK GenericAll; 
-} GENERIC_MAPPING, *PGENERIC_MAPPING; 
+typedef struct _GENERIC_MAPPING {
+  ACCESS_MASK GenericRead;
+  ACCESS_MASK GenericWrite;
+  ACCESS_MASK GenericExecute;
+  ACCESS_MASK GenericAll;
+} GENERIC_MAPPING, *PGENERIC_MAPPING;
 
-typedef struct _PRIVILEGE_SET { 
-  DWORD PrivilegeCount; 
-  DWORD Control; 
-  LUID_AND_ATTRIBUTES Privilege[ANYSIZE_ARRAY]; 
-} PRIVILEGE_SET, *PPRIVILEGE_SET, *LPPRIVILEGE_SET; 
+typedef struct _PRIVILEGE_SET {
+  DWORD PrivilegeCount;
+  DWORD Control;
+  LUID_AND_ATTRIBUTES Privilege[ANYSIZE_ARRAY];
+} PRIVILEGE_SET, *PPRIVILEGE_SET, *LPPRIVILEGE_SET;
 
 #ifdef __i386__
 
@@ -150,7 +157,7 @@ typedef struct _CONTEXT {
 
     DWORD   Ebp;
     DWORD   Eip;
-    DWORD   SegCs; 
+    DWORD   SegCs;
     DWORD   EFlags;
     DWORD   Esp;
     DWORD   SegSs;
@@ -4137,7 +4144,7 @@ typedef struct _textrange {
   LPSTR lpstrText; 
 } TEXTRANGE; 
  
-typedef struct tagTOGGLEKEYS {   
+typedef struct tagTOGGLEKEYS {
   DWORD cbSize; 
   DWORD dwFlags; 
 } TOGGLEKEYS; 
@@ -4148,17 +4155,17 @@ typedef struct _TOKEN_CONTROL {
   LUID ModifiedId; 
   TOKEN_SOURCE TokenSource; 
 } TOKEN_CONTROL, *PTOKEN_CONTROL ; 
-     
-typedef struct {  
-  UINT      cbSize;    
-  UINT      uFlags;    
-  HWND      hwnd;      
-  UINT      uId;       
-  RECT      rect;      
-  HINSTANCE hinst;     
-  LPTSTR     lpszText;  
-} TOOLINFO,   *PTOOLINFO,   *LPTOOLINFO; 
- 
+
+typedef struct {
+  UINT      cbSize;
+  UINT      uFlags;
+  HWND      hwnd;
+  UINT      uId;
+  RECT      rect;
+  HINSTANCE hinst;
+  LPTSTR     lpszText;
+} TOOLINFO, *PTOOLINFO, *LPTOOLINFO;
+
 typedef struct { 
   NMHDR     hdr;        
   LPTSTR    lpszText;   
@@ -4240,85 +4247,108 @@ typedef struct tagUSEROBJECTFLAGS {
   WINBOOL fReserved; 
   DWORD dwFlags; 
 } USEROBJECTFLAGS; 
- 
+
 typedef struct _VERIFY_INFORMATION { 
   LARGE_INTEGER  StartingOffset; 
   DWORD  Length; 
 } VERIFY_INFORMATION ; 
- 
-typedef struct _VS_FIXEDFILEINFO { 
-  DWORD dwSignature; 
-  DWORD dwStrucVersion; 
-  DWORD dwFileVersionMS; 
-  DWORD dwFileVersionLS; 
-  DWORD dwProductVersionMS; 
-  DWORD dwProductVersionLS; 
-  DWORD dwFileFlagsMask; 
-  DWORD dwFileFlags; 
-  DWORD dwFileOS; 
-  DWORD dwFileType; 
-  DWORD dwFileSubtype; 
-  DWORD dwFileDateMS; 
-  DWORD dwFileDateLS; 
-} VS_FIXEDFILEINFO; 
- 
-typedef struct _WIN32_FIND_DATA { 
-  DWORD dwFileAttributes; 
-  FILETIME ftCreationTime; 
-  FILETIME ftLastAccessTime; 
-  FILETIME ftLastWriteTime; 
-  DWORD    nFileSizeHigh; 
-  DWORD    nFileSizeLow; 
-  DWORD    dwReserved0; 
-  DWORD    dwReserved1; 
-  TCHAR    cFileName[ MAX_PATH ]; 
-  TCHAR    cAlternateFileName[ 14 ]; 
-} WIN32_FIND_DATA, *LPWIN32_FIND_DATA, *PWIN32_FIND_DATA; 
- 
-typedef struct _WIN32_STREAM_ID { 
-  DWORD dwStreamId; 
-  DWORD dwStreamAttributes; 
-  LARGE_INTEGER Size; 
-  DWORD dwStreamNameSize; 
-  WCHAR *cStreamName ; 
+
+typedef struct _VS_FIXEDFILEINFO {
+  DWORD dwSignature;
+  DWORD dwStrucVersion;
+  DWORD dwFileVersionMS;
+  DWORD dwFileVersionLS;
+  DWORD dwProductVersionMS;
+  DWORD dwProductVersionLS;
+  DWORD dwFileFlagsMask;
+  DWORD dwFileFlags;
+  DWORD dwFileOS;
+  DWORD dwFileType;
+  DWORD dwFileSubtype;
+  DWORD dwFileDateMS;
+  DWORD dwFileDateLS;
+} VS_FIXEDFILEINFO;
+
+typedef struct _WIN32_FIND_DATAA {
+  DWORD    dwFileAttributes;
+  FILETIME ftCreationTime;
+  FILETIME ftLastAccessTime;
+  FILETIME ftLastWriteTime;
+  DWORD    nFileSizeHigh;
+  DWORD    nFileSizeLow;
+  DWORD    dwReserved0;
+  DWORD    dwReserved1;
+  CHAR     cFileName[ MAX_PATH ];
+  CHAR     cAlternateFileName[ 14 ];
+} WIN32_FIND_DATAA, *LPWIN32_FIND_DATAA, *PWIN32_FIND_DATAA;
+
+typedef struct _WIN32_FIND_DATAW {
+  DWORD dwFileAttributes;
+  FILETIME ftCreationTime;
+  FILETIME ftLastAccessTime;
+  FILETIME ftLastWriteTime;
+  DWORD    nFileSizeHigh;
+  DWORD    nFileSizeLow;
+  DWORD    dwReserved0;
+  DWORD    dwReserved1;
+  WCHAR    cFileName[ MAX_PATH ];
+  WCHAR    cAlternateFileName[ 14 ];
+} WIN32_FIND_DATAW, *LPWIN32_FIND_DATAW, *PWIN32_FIND_DATAW;
+
+#ifdef UNICODE
+#define WIN32_FIND_DATA WIN32_FIND_DATAW
+#define PWIN32_FIND_DATA PWIN32_FIND_DATAW
+#define LPWIN32_FIND_DATA LPWIN32_FIND_DATAW
+#else
+#define WIN32_FIND_DATA WIN32_FIND_DATAA
+#define PWIN32_FIND_DATA PWIN32_FIND_DATAA
+#define LPWIN32_FIND_DATA LPWIN32_FIND_DATAA
+#endif
+
+typedef struct _WIN32_STREAM_ID {
+  DWORD dwStreamId;
+  DWORD dwStreamAttributes;
+  LARGE_INTEGER Size;
+  DWORD dwStreamNameSize;
+  WCHAR *cStreamName;
 } WIN32_STREAM_ID;
- 
-typedef struct _WINDOWPLACEMENT {  
-  UINT  length;               
-  UINT  flags;                
-  UINT  showCmd;              
-  POINT ptMinPosition;        
-  POINT ptMaxPosition;        
-  RECT  rcNormalPosition;     
-} WINDOWPLACEMENT; 
- 
-typedef struct _WNDCLASS {  
-  UINT    style; 
-  WNDPROC lpfnWndProc; 
-  int     cbClsExtra; 
-  int     cbWndExtra; 
-  HANDLE  hInstance; 
-  HICON   hIcon; 
-  HCURSOR hCursor; 
-  HBRUSH  hbrBackground; 
-  LPCTSTR lpszMenuName; 
-  LPCTSTR lpszClassName; 
-} WNDCLASS, *LPWNDCLASS; 
- 
-typedef struct _WNDCLASSEX { 
-  UINT    cbSize; 
-  UINT    style; 
-  WNDPROC lpfnWndProc; 
-  int     cbClsExtra; 
-  int     cbWndExtra; 
-  HANDLE  hInstance; 
-  HICON   hIcon; 
-  HCURSOR hCursor; 
-  HBRUSH  hbrBackground; 
-  LPCTSTR lpszMenuName; 
-  LPCTSTR lpszClassName; 
-  HICON   hIconSm; 
-} WNDCLASSEX, *LPWNDCLASSEX; 
+
+typedef struct _WINDOWPLACEMENT {
+  UINT  length;
+  UINT  flags;
+  UINT  showCmd;
+  POINT ptMinPosition;
+  POINT ptMaxPosition;
+  RECT  rcNormalPosition;
+} WINDOWPLACEMENT;
+
+typedef struct _WNDCLASS {
+  UINT    style;
+  WNDPROC lpfnWndProc;
+  int     cbClsExtra;
+  int     cbWndExtra;
+  HANDLE  hInstance;
+  HICON   hIcon;
+  HCURSOR hCursor;
+  HBRUSH  hbrBackground;
+  LPCTSTR lpszMenuName;
+  LPCTSTR lpszClassName;
+} WNDCLASS, *LPWNDCLASS;
+
+typedef struct _WNDCLASSEX {
+  UINT    cbSize;
+  UINT    style;
+  WNDPROC lpfnWndProc;
+  int     cbClsExtra;
+  int     cbWndExtra;
+  HANDLE  hInstance;
+  HICON   hIcon;
+  HCURSOR hCursor;
+  HBRUSH  hbrBackground;
+  LPCTSTR lpszMenuName;
+  LPCTSTR lpszClassName;
+  HICON   hIconSm;
+} WNDCLASSEX, *LPWNDCLASSEX;
 
 typedef struct _CONNECTDLGSTRUCT {
   DWORD cbStructure;
@@ -4372,7 +4402,7 @@ typedef VOID CALLBACK (*LPOVERLAPPED_COMPLETION_ROUTINE) (DWORD, DWORD,
 /*
   Structures for the extensions to OpenGL
   */
-typedef struct _POINTFLOAT 
+typedef struct _POINTFLOAT
 {
   FLOAT   x;
   FLOAT   y;
@@ -4389,31 +4419,31 @@ typedef struct _GLYPHMETRICSFLOAT
 
 typedef struct tagLAYERPLANEDESCRIPTOR
 {
-  WORD  nSize; 
-  WORD  nVersion; 
-  DWORD dwFlags; 
-  BYTE  iPixelType; 
-  BYTE  cColorBits; 
-  BYTE  cRedBits; 
-  BYTE  cRedShift; 
-  BYTE  cGreenBits; 
-  BYTE  cGreenShift; 
-  BYTE  cBlueBits; 
-  BYTE  cBlueShift; 
-  BYTE  cAlphaBits; 
-  BYTE  cAlphaShift; 
-  BYTE  cAccumBits; 
-  BYTE  cAccumRedBits; 
-  BYTE  cAccumGreenBits; 
-  BYTE  cAccumBlueBits; 
-  BYTE  cAccumAlphaBits; 
-  BYTE  cDepthBits; 
-  BYTE  cStencilBits; 
-  BYTE  cAuxBuffers; 
+  WORD  nSize;
+  WORD  nVersion;
+  DWORD dwFlags;
+  BYTE  iPixelType;
+  BYTE  cColorBits;
+  BYTE  cRedBits;
+  BYTE  cRedShift;
+  BYTE  cGreenBits;
+  BYTE  cGreenShift;
+  BYTE  cBlueBits;
+  BYTE  cBlueShift;
+  BYTE  cAlphaBits;
+  BYTE  cAlphaShift;
+  BYTE  cAccumBits;
+  BYTE  cAccumRedBits;
+  BYTE  cAccumGreenBits;
+  BYTE  cAccumBlueBits;
+  BYTE  cAccumAlphaBits;
+  BYTE  cDepthBits;
+  BYTE  cStencilBits;
+  BYTE  cAuxBuffers;
   BYTE  iLayerPlane;
-  BYTE  bReserved; 
-  COLORREF crTransparent; 
-} LAYERPLANEDESCRIPTOR, *PLAYERPLANEDESCRIPTOR, *LPLAYERPLANEDESCRIPTOR; 
+  BYTE  bReserved;
+  COLORREF crTransparent;
+} LAYERPLANEDESCRIPTOR, *PLAYERPLANEDESCRIPTOR, *LPLAYERPLANEDESCRIPTOR;
 
 typedef struct tagPIXELFORMATDESCRIPTOR
 {
