@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.103 2001/09/01 11:55:37 dwelch Exp $
+/* $Id: main.c,v 1.104 2001/09/01 15:36:44 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -45,6 +45,7 @@
 #include <internal/kd.h>
 #include <internal/trap.h>
 #include "../dbg/kdb.h"
+#include <internal/registry.h>
 
 #ifdef HALDBG
 #include <internal/ntosdbg.h>
@@ -73,7 +74,296 @@ volatile BOOLEAN Initialized = FALSE;
 
 extern PVOID Ki386InitialStackArray[MAXIMUM_PROCESSORS];
 
+typedef struct
+{
+  LPWSTR ServiceName;
+  LPWSTR DeviceDesc;
+  LPWSTR Group;
+  DWORD Start;
+  DWORD Type;
+} SERVICE, *PSERVICE;
+
+SERVICE Services[] = {
+  {L"keyboard", L"Standard Keyboard Driver", L"Base", 0, 1},
+  {L"blue", L"Bluescreen Driver", L"Base", 0, 1},
+  {L"vidport", L"Video Port Driver", L"Base", 0, 1},
+  {L"vgamp", L"VGA Miniport", L"Base", 0, 1},
+  {L"minixfs", L"Minix File System", L"File system", 0, 1},
+  {L"msfs", L"Mail Slot File System", L"File system", 0, 1},
+  {L"npfs", L"Named Pipe File System", L"File system", 0, 1},
+  {L"psaux", L"PS/2 Auxillary Port Driver", L"", 0, 1},
+  {L"mouclass", L"Mouse Class Driver", L"Pointer Class", 0, 1},
+  {L"ndis", L"NDIS System Driver", L"NDIS Wrapper", 0, 1},
+  {L"ne2000", L"Novell Eagle 2000 Driver", L"NDIS", 0, 1},
+  {L"afd", L"AFD Networking Support Environment", L"TDI", 0, 1},
+  {NULL,}
+};
+
 /* FUNCTIONS ****************************************************************/
+
+VOID CreateDefaultRegistryForLegacyDriver(
+  PSERVICE Service)
+{
+  WCHAR LegacyDriver[] = L"LegacyDriver";
+  WCHAR InstancePath[MAX_PATH];
+  WCHAR KeyNameBuffer[MAX_PATH];
+  WCHAR Name[MAX_PATH];
+  UNICODE_STRING KeyName;
+  HANDLE KeyHandle;
+  DWORD DwordData;
+  ULONG Length;
+  NTSTATUS Status;
+  WCHAR ImagePath[MAX_PATH];
+ 
+  /* Enum section */
+  wcscpy(Name, Service->ServiceName);
+  _wcsupr(Name);
+  wcscpy(InstancePath, L"Root\\LEGACY_");
+  wcscat(InstancePath, Name);
+  wcscat(InstancePath, L"\\0000");
+
+  wcscpy(KeyNameBuffer, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
+  wcscat(KeyNameBuffer, InstancePath);
+
+  RtlInitUnicodeString(&KeyName, KeyNameBuffer);
+
+  DPRINT("Key name is %S\n", KeyName.Buffer);
+
+  Status = RtlpCreateRegistryKeyPath(KeyName.Buffer);
+  if (!NT_SUCCESS(Status))
+    {
+  DPRINT1("RtlpCreateRegistryKeyPath() failed with status %x\n", Status);
+  return;
+    }
+
+  Status = RtlpGetRegistryHandle(
+    RTL_REGISTRY_ENUM,
+	  InstancePath,
+		TRUE,
+		&KeyHandle);
+  if (!NT_SUCCESS(Status))
+    {
+  DPRINT1("RtlpGetRegistryHandle() failed (Status %x)\n", Status);
+  return;
+    }
+
+  DwordData = 0;
+  Length = sizeof(DWORD);
+  Status = RtlWriteRegistryValue(
+    RTL_REGISTRY_HANDLE,
+    (PWSTR)KeyHandle,
+		L"Capabilities",
+		REG_DWORD,
+		(LPWSTR)&DwordData,
+		Length);
+  if (!NT_SUCCESS(Status))
+    {
+  DPRINT1("RtlWriteRegistryValue() failed (Status %x)\n", Status);
+	NtClose(KeyHandle);
+	return;
+    }
+
+  Length = (wcslen(LegacyDriver) + 1) * sizeof(WCHAR);
+  Status = RtlWriteRegistryValue(
+    RTL_REGISTRY_HANDLE,
+    (PWSTR)KeyHandle,
+		L"Class",
+		REG_SZ,
+		LegacyDriver,
+		Length);
+  if (!NT_SUCCESS(Status))
+    {
+  DPRINT1("RtlWriteRegistryValue() failed (Status %x)\n", Status);
+	NtClose(KeyHandle);
+	return;
+    }
+
+  Length = (wcslen(Service->DeviceDesc) + 1) * sizeof(WCHAR);
+  Status = RtlWriteRegistryValue(
+    RTL_REGISTRY_HANDLE,
+		(PWSTR)KeyHandle,
+		L"DeviceDesc",
+		REG_SZ,
+		Service->DeviceDesc,
+		Length);
+  if (!NT_SUCCESS(Status))
+    {
+  DPRINT1("RtlWriteRegistryValue() failed (Status %x)\n", Status);
+	NtClose(KeyHandle);
+	return;
+    }
+
+  DwordData = 0;
+  Length = Length = sizeof(DWORD);
+  Status = RtlWriteRegistryValue(
+    RTL_REGISTRY_HANDLE,
+    (PWSTR)KeyHandle,
+		L"Legacy",
+		REG_DWORD,
+		(LPWSTR)&DwordData,
+		sizeof(DWORD));
+  if (!NT_SUCCESS(Status))
+    {
+  DPRINT1("RtlWriteRegistryValue() failed (Status %x)\n", Status);
+	NtClose(KeyHandle);
+	return;
+    }
+
+  Length = (wcslen(Service->ServiceName) + 1) * sizeof(WCHAR);
+  Status = RtlWriteRegistryValue(
+    RTL_REGISTRY_HANDLE,
+		(PWSTR)KeyHandle,
+		L"Service",
+		REG_SZ,
+		Service->ServiceName,
+		Length);
+  if (!NT_SUCCESS(Status))
+    {
+  DPRINT1("RtlWriteRegistryValue() failed (Status %x)\n", Status);
+	NtClose(KeyHandle);
+	return;
+    }
+
+  NtClose(KeyHandle);
+
+  /* Services section */
+
+  Status = RtlpGetRegistryHandle(
+    RTL_REGISTRY_SERVICES,
+	  Service->ServiceName,
+		TRUE,
+		&KeyHandle);
+  if (!NT_SUCCESS(Status))
+    {
+  DPRINT1("RtlpGetRegistryHandle() failed (Status %x)\n", Status);
+  return;
+    }
+
+  Length = (wcslen(Service->DeviceDesc) + 1) * sizeof(WCHAR);
+  Status = RtlWriteRegistryValue(
+    RTL_REGISTRY_HANDLE,
+		(PWSTR)KeyHandle,
+		L"DisplayName",
+		REG_SZ,
+		Service->DeviceDesc,
+		Length);
+  if (!NT_SUCCESS(Status))
+    {
+  DPRINT1("RtlWriteRegistryValue() failed (Status %x)\n", Status);
+	NtClose(KeyHandle);
+	return;
+    }
+
+  DwordData = 1;
+  Length = sizeof(DWORD);
+  Status = RtlWriteRegistryValue(
+    RTL_REGISTRY_HANDLE,
+    (PWSTR)KeyHandle,
+		L"ErrorControl",
+		REG_DWORD,
+		(LPWSTR)&DwordData,
+		Length);
+  if (!NT_SUCCESS(Status))
+    {
+  DPRINT1("RtlWriteRegistryValue() failed (Status %x)\n", Status);
+	NtClose(KeyHandle);
+	return;
+    }
+
+  Length = (wcslen(Service->Group) + 1) * sizeof(WCHAR);
+  Status = RtlWriteRegistryValue(
+    RTL_REGISTRY_HANDLE,
+		(PWSTR)KeyHandle,
+		L"Group",
+		REG_SZ,
+		Service->Group,
+		Length);
+  if (!NT_SUCCESS(Status))
+    {
+  DPRINT1("RtlWriteRegistryValue() failed (Status %x)\n", Status);
+	NtClose(KeyHandle);
+	return;
+    }
+
+  wcscpy(ImagePath, L"\\SystemRoot\\System32\\drivers\\");
+  wcscat(ImagePath, Service->ServiceName);
+  wcscat(ImagePath, L".sys");
+
+  Length = (wcslen(ImagePath) + 1) * sizeof(WCHAR);
+  Status = RtlWriteRegistryValue(
+    RTL_REGISTRY_HANDLE,
+		(PWSTR)KeyHandle,
+		L"ImagePath",
+		REG_SZ,
+		ImagePath,
+		Length);
+  if (!NT_SUCCESS(Status))
+    {
+  DPRINT1("RtlWriteRegistryValue() failed (Status %x)\n", Status);
+	NtClose(KeyHandle);
+	return;
+    }
+
+  DwordData = Service->Start;
+  Length = sizeof(DWORD);
+  Status = RtlWriteRegistryValue(
+    RTL_REGISTRY_HANDLE,
+    (PWSTR)KeyHandle,
+		L"Start",
+		REG_DWORD,
+		(LPWSTR)&DwordData,
+		Length);
+  if (!NT_SUCCESS(Status))
+    {
+  DPRINT1("RtlWriteRegistryValue() failed (Status %x)\n", Status);
+	NtClose(KeyHandle);
+	return;
+    }
+
+  DwordData = Service->Type;
+  Length = sizeof(DWORD);
+  Status = RtlWriteRegistryValue(
+    RTL_REGISTRY_HANDLE,
+    (PWSTR)KeyHandle,
+		L"Type",
+		REG_DWORD,
+		(LPWSTR)&DwordData,
+		Length);
+  if (!NT_SUCCESS(Status))
+    {
+  DPRINT1("RtlWriteRegistryValue() failed (Status %x)\n", Status);
+	NtClose(KeyHandle);
+	return;
+    }
+
+  NtClose(KeyHandle);
+}
+
+VOID CreateDefaultRegistry()
+{
+  NTSTATUS Status;
+  ULONG i;
+
+  Status = RtlpCreateRegistryKeyPath(L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT1("RtlpCreateRegistryKeyPath() (Status %x)\n", Status);
+    return;
+  }
+
+  Status = RtlpCreateRegistryKeyPath(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\");
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT1("RtlpCreateRegistryKeyPath() (Status %x)\n", Status);
+    return;
+  }
+
+  for (i = 0; Services[i].ServiceName != NULL; i++)
+  {
+    CreateDefaultRegistryForLegacyDriver(&Services[i]);
+  }
+}
+
 
 static BOOLEAN
 RtlpCheckFileNameExtension(PCHAR FileName,
@@ -660,23 +950,27 @@ ExpInitializeExecutive(VOID)
 
   CmInitializeRegistry2();
 
+#if 0
+  CreateDefaultRegistry();
+#endif
+
   PiInitDefaultLocale();
 
   /*
    * Start the motherboard enumerator (the HAL)
    */
   HalInitSystem(2, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
-
+#if 0
   /*
    * Load boot start drivers
    */
   IopLoadBootStartDrivers();
-
+#else
   /*
    * Load Auto configured drivers
    */
   LdrLoadAutoConfigDrivers();
-
+#endif
   /*
    * Assign drive letters
    */
@@ -756,7 +1050,7 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
    * This should be done by the boot loader.
    */
   strcpy (KeLoaderCommandLine,
-	  "multi(0)disk(0)rdisk(0)partition(1)\\reactos /DEBUGPORT=SCREEN");
+	  "multi(0)disk(0)rdisk(0)partition(1)\\reactos /DEBUGPORT=COM1");
   strcat (KeLoaderCommandLine, (PUCHAR)KeLoaderBlock.CommandLine);
   
   KeLoaderBlock.CommandLine = (ULONG)KeLoaderCommandLine;

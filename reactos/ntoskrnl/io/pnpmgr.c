@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.2 2001/05/01 23:08:19 chorns Exp $
+/* $Id: pnpmgr.c,v 1.3 2001/09/01 15:36:44 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -280,13 +280,13 @@ NTSTATUS
 IopCreateDeviceNode(PDEVICE_NODE ParentNode,
   PDEVICE_OBJECT PhysicalDeviceObject,
   PDEVICE_NODE *DeviceNode)
-/* */
 {
   PDEVICE_NODE Node;
   NTSTATUS Status;
   KIRQL OldIrql;
 
-  DPRINT("ParentNode %x PhysicalDeviceObject %x\n");
+  DPRINT("ParentNode %x PhysicalDeviceObject %x\n",
+    ParentNode, PhysicalDeviceObject);
 
   Node = (PDEVICE_NODE)ExAllocatePool(PagedPool, sizeof(DEVICE_NODE));
   if (!Node)
@@ -358,92 +358,226 @@ IopFreeDeviceNode(PDEVICE_NODE DeviceNode)
 
   KeReleaseSpinLock(&IopDeviceTreeLock, OldIrql);
 
+  RtlFreeUnicodeString(&DeviceNode->InstancePath);
+
+  RtlFreeUnicodeString(&DeviceNode->ServiceName);
+
+  /* FIXME: Other fields may need to be released */
+
   ExFreePool(DeviceNode);
 
   return STATUS_SUCCESS;
 }
 
 NTSTATUS
-IopInterrogateBusExtender(PDEVICE_NODE DeviceNode,
-  PDEVICE_OBJECT FunctionDeviceObject,
-  BOOLEAN BootDriversOnly)
+IopInitiatePnpIrp(
+  PDEVICE_OBJECT DeviceObject,
+  PIO_STATUS_BLOCK IoStatusBlock,
+  ULONG MinorFunction,
+  PIO_STACK_LOCATION Stack)
 {
-	IO_STATUS_BLOCK	IoStatusBlock;
+  PDEVICE_OBJECT TopDeviceObject;
   PIO_STACK_LOCATION IrpSp;
   NTSTATUS Status;
   KEVENT Event;
   PIRP Irp;
 
-  DPRINT("Sending IRP_MN_QUERY_DEVICE_RELATIONS to bus driver\n");
+  /* Always call the top of the device stack */
+  TopDeviceObject = IoGetAttachedDeviceReference(DeviceObject);
 
-  KeInitializeEvent(&Event,
+  KeInitializeEvent(
+    &Event,
 	  NotificationEvent,
 	  FALSE);
 
-  Irp = IoBuildSynchronousFsdRequest(IRP_MJ_PNP,
-    FunctionDeviceObject,
+  /* PNP IRPs are always initialized with a status code of
+     STATUS_NOT_IMPLEMENTED */
+  IoStatusBlock->Status = STATUS_NOT_IMPLEMENTED;
+
+  Irp = IoBuildSynchronousFsdRequest(
+    IRP_MJ_PNP,
+    TopDeviceObject,
 	  NULL,
 	  0,
 	  NULL,
 	  &Event,
-	  &IoStatusBlock);
+	  IoStatusBlock);
 
   IrpSp = IoGetNextIrpStackLocation(Irp);
-  IrpSp->MinorFunction = IRP_MN_QUERY_DEVICE_RELATIONS;
-  IrpSp->Parameters.QueryDeviceRelations.Type = BusRelations;
+  IrpSp->MinorFunction = MinorFunction;
+  RtlMoveMemory(
+    &IrpSp->Parameters,
+    &Stack->Parameters,
+    sizeof(Stack->Parameters));
 
-	Status = IoCallDriver(FunctionDeviceObject, Irp);
+	Status = IoCallDriver(TopDeviceObject, Irp);
 	if (Status == STATUS_PENDING)
 	  {
-		  KeWaitForSingleObject(&Event,
+		  KeWaitForSingleObject(
+        &Event,
         Executive,
 		    KernelMode,
 		    FALSE,
 		    NULL);
-        Status = IoStatusBlock.Status;
+      Status = IoStatusBlock->Status;
     }
+
+  return Status;
+}
+
+NTSTATUS
+IopInterrogateBusExtender(
+  PDEVICE_NODE DeviceNode,
+  PDEVICE_OBJECT FunctionDeviceObject,
+  BOOLEAN BootDriversOnly)
+{
+  PDEVICE_RELATIONS DeviceRelations;
+	IO_STATUS_BLOCK	IoStatusBlock;
+  UNICODE_STRING DriverName;
+  IO_STACK_LOCATION Stack;
+  NTSTATUS Status;
+
+  DPRINT("Sending IRP_MN_QUERY_DEVICE_RELATIONS to bus driver\n");
+
+  Stack.Parameters.QueryDeviceRelations.Type = BusRelations;
+
+  Status = IopInitiatePnpIrp(
+    FunctionDeviceObject,
+    &IoStatusBlock,
+    IRP_MN_QUERY_DEVICE_RELATIONS,
+    &Stack);
   if (!NT_SUCCESS(Status))
     {
-      CPRINT("IoCallDriver() failed\n");
+      DPRINT("IopInitiatePnpIrp() failed\n");
     }
+
+  DeviceRelations = (PDEVICE_RELATIONS)IoStatusBlock.Information;
+
+  DPRINT("Got %d PDOs\n", DeviceRelations->Count);
+
+  if (DeviceRelations->Count <= 0)
+    {
+      DPRINT("No PDOs\n");
+      ExFreePool(DeviceRelations);
+      return STATUS_SUCCESS;
+    }
+
+  Status = IopCreateDeviceNode(DeviceNode, NULL, &DeviceNode);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("No resources\n");
+      ExFreePool(DeviceRelations);
+      return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+  /* FIXME: Use registry to find name of driver and only load driver if not
+            already loaded. If loaded, just call AddDevice() */
+  Status = LdrLoadDriver(&DriverName, DeviceNode, FALSE);
+  if (!NT_SUCCESS(Status))
+    {
+      /* Don't free the device node, just log the error and return */
+      /* FIXME: Log the error */
+	    CPRINT("Driver load failed, status (%x)\n", Status);
+      ExFreePool(DeviceRelations);
+      return Status;
+    }
+
+  ExFreePool(DeviceRelations);
 
   return Status;
 }
 
 VOID IopLoadBootStartDrivers(VOID)
 {
-  UNICODE_STRING DriverName;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  PKEY_BASIC_INFORMATION KeyInfo;
   PDEVICE_NODE DeviceNode;
+  UNICODE_STRING KeyName;
+  HANDLE KeyHandle;
+  ULONG BufferSize;
+  ULONG ResultSize;
   NTSTATUS Status;
+  ULONG Index;
 
   DPRINT("Loading boot start drivers\n");
 
-return;
+  BufferSize = sizeof(KEY_BASIC_INFORMATION) + (MAX_PATH+1) * sizeof(WCHAR);
+  KeyInfo = ExAllocatePool(PagedPool, BufferSize);
+  if (!KeyInfo)
+  {
+    return;
+  }
 
-  /* FIXME: Get these from registry */
+  RtlInitUnicodeString(
+    &KeyName,
+    L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\");
 
-  /* Use IopRootDeviceNode for now */
-  Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &DeviceNode);
+  InitializeObjectAttributes(
+    &ObjectAttributes,
+		&KeyName,
+		OBJ_CASE_INSENSITIVE,
+		NULL,
+		NULL);
+
+  Status = NtOpenKey(&KeyHandle, KEY_ALL_ACCESS, &ObjectAttributes);
   if (!NT_SUCCESS(Status))
     {
+  DPRINT("NtOpenKey() failed (Status %x)\n", Status);
+  ExFreePool(KeyInfo);
   return;
     }
 
-  /*
-   * ISA Plug and Play driver
-   */
-  RtlInitUnicodeString(&DriverName,
-    L"\\SystemRoot\\system32\\drivers\\isapnp.sys");
-  Status = LdrLoadDriver(&DriverName, DeviceNode, TRUE);
-  if (!NT_SUCCESS(Status))
+  Index = 0;
+  do {
+    Status = ZwEnumerateKey(
+      KeyHandle,
+      Index,
+      KeyBasicInformation,
+      KeyInfo,
+      BufferSize,
+      &ResultSize);
+    if (!NT_SUCCESS(Status))
     {
-	    IopFreeDeviceNode(DeviceNode);
-
-      /* FIXME: Write an entry in the system error log */
-      DbgPrint("Could not load boot start driver: %wZ, status 0x%X\n",
-        &DriverName, Status);
-      return;
+      DPRINT("ZwEnumerateKey() (Status %x)\n", Status);
+      break;
     }
+
+    /* Terminate the string */
+    KeyInfo->Name[KeyInfo->NameLength / sizeof(WCHAR)] = 0;
+
+    /* Use IopRootDeviceNode for now */
+    Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &DeviceNode);
+    if (!NT_SUCCESS(Status))
+    {
+      CPRINT("IopCreateDeviceNode() failed with status 0x%X\n", Status);
+      break;
+    }
+
+    if (!RtlCreateUnicodeString(&DeviceNode->ServiceName, KeyInfo->Name))
+    {
+      CPRINT("RtlCreateUnicodeString() failed\n");
+      IopFreeDeviceNode(DeviceNode);
+      break;
+    }
+
+    Status = IopInitializeDeviceNodeService(DeviceNode);
+    if (!NT_SUCCESS(Status))
+    {
+      /* FIXME: Write an entry in the system error log */
+      CPRINT("Could not load boot start driver: %wZ, status 0x%X\n",
+        &DeviceNode->ServiceName, Status);
+
+      IopFreeDeviceNode(DeviceNode);
+    }
+
+    Index++;
+  } while (TRUE);
+
+  DPRINT("Services found: %d\n", Index);
+
+  NtClose(KeyHandle);
+
+  ExFreePool(KeyInfo);
 }
 
 VOID PnpInit(VOID)
@@ -457,7 +591,7 @@ VOID PnpInit(VOID)
   Status = IopCreateDriverObject(&IopRootDriverObject);
   if (!NT_SUCCESS(Status))
     {
-      DbgPrint("IoCreateDriverObject() failed\n");
+      CPRINT("IoCreateDriverObject() failed\n");
       KeBugCheck(0);
     }
 
@@ -467,7 +601,7 @@ VOID PnpInit(VOID)
     FILE_DEVICE_CONTROLLER, 0, FALSE, &IopRootDeviceNode->Pdo);
   if (!NT_SUCCESS(Status))
     {
-      DbgPrint("IoCreateDevice() failed\n");
+      CPRINT("IoCreateDevice() failed\n");
       KeBugCheck(0);
     }
 

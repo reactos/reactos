@@ -133,7 +133,151 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		       IN PVOID Context,
 		       IN PVOID Environment)
 {
-	UNIMPLEMENTED;
+   NTSTATUS Status;
+   HANDLE BaseKeyHandle;
+   HANDLE CurrentKeyHandle;
+   PRTL_QUERY_REGISTRY_TABLE QueryEntry;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   UNICODE_STRING KeyName;
+   PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
+   ULONG BufferSize;
+   ULONG ResultSize;
+   
+   DPRINT("RtlQueryRegistryValues() called\n");
+   
+   Status = RtlpGetRegistryHandle(RelativeTo,
+				  Path,
+				  FALSE,
+				  &BaseKeyHandle);
+   if (!NT_SUCCESS(Status))
+    {
+      DPRINT("RtlpGetRegistryHandle() failed with status %x\n", Status);
+      return Status;
+    }
+
+   CurrentKeyHandle = BaseKeyHandle;
+   QueryEntry = QueryTable;
+   while ((QueryEntry->QueryRoutine != NULL) ||
+	  (QueryEntry->Name != NULL))
+     {
+    //CSH: Was:
+    //if ((QueryEntry->QueryRoutine == NULL) &&
+	  //  ((QueryEntry->Flags & (RTL_QUERY_REGISTRY_SUBKEY | RTL_QUERY_REGISTRY_DIRECT)) != 0))
+    // Which is more correct?
+	if ((QueryEntry->QueryRoutine == NULL) &&
+	    ((QueryEntry->Flags & RTL_QUERY_REGISTRY_SUBKEY) != 0))
+	  {
+       DPRINT("Bad parameters\n");
+	     Status = STATUS_INVALID_PARAMETER;
+	     break;
+	  }
+
+	DPRINT("Name: %S\n", QueryEntry->Name);
+
+	if (((QueryEntry->Flags & (RTL_QUERY_REGISTRY_SUBKEY | RTL_QUERY_REGISTRY_TOPKEY)) != 0) &&
+	    (BaseKeyHandle != CurrentKeyHandle))
+	  {
+	     NtClose(CurrentKeyHandle);
+	     CurrentKeyHandle = BaseKeyHandle;
+	  }
+
+	if (QueryEntry->Flags & RTL_QUERY_REGISTRY_SUBKEY)
+	  {
+	     DPRINT("Open new subkey: %S\n", QueryEntry->Name);
+	  
+	     RtlInitUnicodeString(&KeyName,
+				  QueryEntry->Name);
+	     InitializeObjectAttributes(&ObjectAttributes,
+					&KeyName,
+					OBJ_CASE_INSENSITIVE,
+					BaseKeyHandle,
+					NULL);
+	     Status = NtOpenKey(&CurrentKeyHandle,
+				KEY_ALL_ACCESS,
+				&ObjectAttributes);
+	     if (!NT_SUCCESS(Status))
+	       break;
+	  }
+	else if (QueryEntry->Flags & RTL_QUERY_REGISTRY_DIRECT)
+	  {
+	     DPRINT("Query value directly: %S\n", QueryEntry->Name);
+	  
+	     RtlInitUnicodeString(&KeyName,
+				  QueryEntry->Name);
+	  
+	     BufferSize = sizeof (KEY_VALUE_PARTIAL_INFORMATION) + 4096;
+	     ValueInfo = ExAllocatePool(PagedPool, BufferSize);
+	     if (ValueInfo == NULL)
+	       {
+		  Status = STATUS_NO_MEMORY;
+		  break;
+	       }
+
+	     Status = ZwQueryValueKey(CurrentKeyHandle,
+				      &KeyName,
+				      KeyValuePartialInformation,
+				      ValueInfo,
+				      BufferSize,
+				      &ResultSize);
+	     if (!NT_SUCCESS(Status))
+	       {
+      DPRINT("ZwQueryValueKey() failed with status %x\n", Status);
+		  ExFreePool(ValueInfo);
+		  break;
+	       }
+	     else
+	       {
+		  if (ValueInfo->Type == REG_SZ)
+		    {
+		       PUNICODE_STRING ValueString;
+		       ValueString = (PUNICODE_STRING)QueryEntry->EntryContext;
+		       if (ValueString->Buffer == 0)
+			 {
+          RtlInitUnicodeString(ValueString, NULL);
+			    ValueString->MaximumLength = 256 * sizeof(WCHAR);
+			    ValueString->Buffer = ExAllocatePool(PagedPool, ValueString->MaximumLength);
+          if (!ValueString->Buffer)
+            break;
+          ValueString->Buffer[0] = 0;
+			 }
+		       ValueString->Length = RtlMin(ValueInfo->DataLength,
+						 ValueString->MaximumLength - sizeof(WCHAR));
+		       memcpy(ValueString->Buffer,
+			      ValueInfo->Data,
+			      ValueInfo->DataLength);
+			((PWSTR)ValueString->Buffer)[ValueString->Length / sizeof(WCHAR)] = 0;
+		    }
+		  else
+		    {
+		       memcpy(QueryEntry->EntryContext,
+			      ValueInfo->Data,
+			      ValueInfo->DataLength);
+		    }
+	       }
+
+	     ExFreePool (ValueInfo);
+	  }
+	else
+	  {
+	     DPRINT("Query value via query routine: %S\n", QueryEntry->Name);
+	     
+	  }
+
+	if (QueryEntry->Flags & RTL_QUERY_REGISTRY_DELETE)
+	  {
+	     DPRINT("Delete value: %S\n", QueryEntry->Name);
+	     
+	  }
+
+	QueryEntry++;
+     }
+
+   if (CurrentKeyHandle != BaseKeyHandle)
+     NtClose(CurrentKeyHandle);
+
+   NtClose(BaseKeyHandle);
+
+   return Status;
 }
 
 
@@ -197,8 +341,15 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
 
    if (RelativeTo & RTL_REGISTRY_HANDLE)
      {
-	*KeyHandle = (HANDLE)Path;
-	return STATUS_SUCCESS;
+   Status = NtDuplicateObject(
+      PsGetCurrentProcessId(),
+      (PHANDLE)&Path,
+      PsGetCurrentProcessId(),
+      KeyHandle,
+      0,
+      FALSE,
+      DUPLICATE_SAME_ACCESS);
+   return Status;
      }
 
    if (RelativeTo & RTL_REGISTRY_OPTIONAL)
@@ -239,14 +390,25 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
 	  if (!NT_SUCCESS(Status))
 	    return Status;
 	  break;
+
+  /* ReactOS specific */
+  case RTL_REGISTRY_ENUM:
+	  RtlAppendUnicodeToString(&KeyName,
+		       L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
+    break;
      }
 
    if (Path[0] != L'\\')
-     RtlAppendUnicodeToString(&KeyName,
-			      L"\\");
-
-   RtlAppendUnicodeToString(&KeyName,
-			    Path);
+     {
+	RtlAppendUnicodeToString(&KeyName,
+				 Path);
+     }
+   else
+     {
+	Path++;
+	RtlAppendUnicodeToString(&KeyName,
+				 Path);
+     }
 
    InitializeObjectAttributes(&ObjectAttributes,
 			      &KeyName,
@@ -273,3 +435,77 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
 
    return Status;
 }
+
+
+NTSTATUS
+RtlpCreateRegistryKeyPath(PWSTR Path)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  WCHAR KeyBuffer[MAX_PATH];
+  UNICODE_STRING KeyName;
+  HANDLE KeyHandle;
+  NTSTATUS Status;
+  PWCHAR Current;
+  PWCHAR Next;
+
+  if (_wcsnicmp(Path, L"\\Registry\\", 10) != 0)
+    {
+   return STATUS_INVALID_PARAMETER;
+    }
+
+  wcsncpy(KeyBuffer, Path, MAX_PATH-1);
+  RtlInitUnicodeString(&KeyName, KeyBuffer);
+
+  /* Skip \\Registry\\ */
+  Current = KeyName.Buffer;
+  Current = wcschr(Current, '\\') + 1;
+  Current = wcschr(Current, '\\') + 1;
+
+  do {
+    Next = wcschr(Current, '\\');
+    if (Next == NULL)
+      {
+    /* The end */
+      }
+    else
+      {
+    *Next = 0;
+      }
+
+    InitializeObjectAttributes(
+      &ObjectAttributes,
+	    &KeyName,
+	    OBJ_CASE_INSENSITIVE,
+	    NULL,
+	    NULL);
+
+    DPRINT("Create '%S'\n", KeyName.Buffer);
+
+    Status = NtCreateKey(
+      &KeyHandle,
+      KEY_ALL_ACCESS,
+	    &ObjectAttributes,
+	    0,
+	    NULL,
+	    0,
+	    NULL);
+    if (!NT_SUCCESS(Status))
+      {
+        DPRINT("NtCreateKey() failed with status %x\n", Status);
+        return Status;
+      }
+
+    NtClose(KeyHandle);
+
+    if (Next != NULL)
+      {
+    *Next = L'\\';
+      }
+
+    Current = Next + 1;
+  } while (Next != NULL);
+
+  return STATUS_SUCCESS;
+}
+
+/* EOF */

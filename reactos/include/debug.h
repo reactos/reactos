@@ -24,7 +24,7 @@
 #endif
 
 #ifndef NASSERT
-#define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); KeBugCheck(0); }
+#define assert(x) if (!(x)) {RtlAssert("#x",__FILE__,__LINE__, ""); }
 #else
 #define assert(x)
 #endif

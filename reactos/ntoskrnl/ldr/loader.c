@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.88 2001/08/30 20:38:20 dwelch Exp $
+/* $Id: loader.c,v 1.89 2001/09/01 15:36:44 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -814,7 +814,10 @@ VOID LdrLoadUserModuleSymbols(PLDR_MODULE ModuleObject)
   ExFreePool(FileBuffer);
 }
 
-NTSTATUS LdrpFindModuleObject(
+#endif /* KDBG */
+
+
+NTSTATUS LdrFindModuleObject(
   PUNICODE_STRING ModuleName,
   PMODULE_OBJECT *ModuleObject)
 {
@@ -851,8 +854,6 @@ NTSTATUS LdrpFindModuleObject(
   return STATUS_SUCCESS;
 }
 
-#endif /* KDBG */
-
 VOID LdrLoadAutoConfigDrivers (VOID)
 {
 
@@ -866,18 +867,19 @@ VOID LdrLoadAutoConfigDrivers (VOID)
      is created after their module entries */
 
   RtlInitUnicodeString(&ModuleName, KERNEL_MODULE_NAME);
-  Status = LdrpFindModuleObject(&ModuleName, &ModuleObject);
+  Status = LdrFindModuleObject(&ModuleName, &ModuleObject);
   if (NT_SUCCESS(Status))
   {
     LdrpLoadModuleSymbols(ModuleObject);
   }
 
   RtlInitUnicodeString(&ModuleName, HAL_MODULE_NAME);
-  Status = LdrpFindModuleObject(&ModuleName, &ModuleObject);
+  Status = LdrFindModuleObject(&ModuleName, &ModuleObject);
   if (NT_SUCCESS(Status))
   {
     LdrpLoadModuleSymbols(ModuleObject);
   }
+
 #endif /* KDBG */
 
    /*
@@ -949,7 +951,7 @@ VOID LdrLoadAutoConfigDrivers (VOID)
    /*
     * Ancillary Function Driver
     */
-   LdrLoadAutoConfigDriver(L"afd.sys");
+   //LdrLoadAutoConfigDriver(L"afd.sys");
 #endif
 }
 
@@ -996,8 +998,7 @@ NTSTATUS LdrLoadDriver(PUNICODE_STRING Filename,
       return STATUS_UNSUCCESSFUL;
     }
 
-  Status = IopInitializeDriver(ModuleObject->EntryPoint,
-    DeviceNode, Filename, BootDriversOnly);
+  Status = IopInitializeDriver(ModuleObject->EntryPoint, DeviceNode);
   if (!NT_SUCCESS(Status))
     {
       ObDereferenceObject(ModuleObject);
@@ -1180,7 +1181,7 @@ LdrProcessDriver(PVOID ModuleLoadBase, PCHAR FileName, ULONG ModuleLength)
   DPRINT("dasdsad: %s\n", TmpFileName);
 
   RtlAnsiStringToUnicodeString(&ModuleName, &AnsiString, TRUE);
-  Status = LdrpFindModuleObject(&ModuleName, &ModuleObject);
+  Status = LdrFindModuleObject(&ModuleName, &ModuleObject);
   RtlFreeUnicodeString(&ModuleName);
   if (!NT_SUCCESS(Status))
     {
@@ -1188,7 +1189,7 @@ LdrProcessDriver(PVOID ModuleLoadBase, PCHAR FileName, ULONG ModuleLength)
       strcat(TmpFileName, ".exe");
       RtlInitAnsiString(&AnsiString, TmpFileName);
       RtlAnsiStringToUnicodeString(&ModuleName, &AnsiString, TRUE);
-      Status = LdrpFindModuleObject(&ModuleName, &ModuleObject);
+      Status = LdrFindModuleObject(&ModuleName, &ModuleObject);
       RtlFreeUnicodeString(&ModuleName);
     }
   if (NT_SUCCESS(Status))
@@ -1227,7 +1228,7 @@ LdrProcessDriver(PVOID ModuleLoadBase, PCHAR FileName, ULONG ModuleLength)
    return(STATUS_UNSUCCESSFUL);
      }
 
-   Status = IopInitializeDriver(ModuleObject->EntryPoint, DeviceNode, NULL, FALSE);
+   Status = IopInitializeDriver(ModuleObject->EntryPoint, DeviceNode);
    if (!NT_SUCCESS(Status))
      {
 	 IopFreeDeviceNode(DeviceNode);

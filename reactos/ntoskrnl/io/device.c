@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.32 2001/08/30 20:38:19 dwelch Exp $
+/* $Id: device.c,v 1.33 2001/09/01 15:36:44 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -19,6 +19,8 @@
 #include <internal/id.h>
 #include <internal/ps.h>
 #include <internal/pool.h>
+#include <internal/registry.h>
+
 #include <roscfg.h>
 
 #define NDEBUG
@@ -324,64 +326,24 @@ IopCreateDriverObject(PDRIVER_OBJECT *DriverObject)
   return STATUS_SUCCESS;
 }
 
+NTSTATUS
+IopAttachFilterDrivers(PDEVICE_NODE DeviceNode,
+                       BOOLEAN Lower)
+{
+  return STATUS_SUCCESS;
+}
+
 NTSTATUS 
-IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
-                    PDEVICE_NODE DeviceNode,
-                    PUNICODE_STRING Filename,
+IopInitializeDevice(PDEVICE_NODE DeviceNode,
                     BOOLEAN BootDriversOnly)
-/*
- * FUNCTION: Called to initalize a loaded driver
- * ARGUMENTS:
- */
 {
   IO_STATUS_BLOCK	IoStatusBlock;
   PDRIVER_OBJECT DriverObject;
-  PIO_STACK_LOCATION IrpSp;
+  IO_STACK_LOCATION Stack;
   PDEVICE_OBJECT Fdo;
   NTSTATUS Status;
-  KEVENT Event;
-  PIRP Irp;
-  WCHAR DriverName [MAX_PATH];
-  WCHAR RegistryKeyBuffer [MAX_PATH];
-  UNICODE_STRING  RegistryKey;
 
-  DPRINT("IopInitializeDriver (DriverEntry %08lx, DeviceNode %08lx, "
-    "BootDriversOnly %d)\n", DriverEntry, DeviceNode, BootDriversOnly);
-
-  Status = IopCreateDriverObject(&DriverObject);
-  if (!NT_SUCCESS(Status))
-    {
-  return(Status);
-    }
-
-  if (Filename != 0)
-  {
-    if (wcsrchr (Filename->Buffer, '\\') != 0)
-    {
-      wcscpy (DriverName, wcsrchr (Filename->Buffer, '\\'));
-    }
-    else
-    {
-      wcscpy (DriverName, Filename->Buffer);
-    }
-    if (wcsrchr (DriverName, '.') != 0)
-    {
-      *(wcsrchr (DriverName, '.')) = 0;
-    }
-    wcscpy (RegistryKeyBuffer, DRIVER_REGISTRY_KEY_BASENAME);
-    wcscpy (RegistryKeyBuffer, DriverName);
-    RtlInitUnicodeString (&RegistryKey, RegistryKeyBuffer);
-    DPRINT("RegistryKey: %wZ\n", &RegistryKey);
-  }
-
-  DPRINT("Calling driver entrypoint at %08lx\n", DriverEntry);
-  Status = DriverEntry(DriverObject, Filename != 0 ? &RegistryKey : 0);
-  if (!NT_SUCCESS(Status))
-    {
-  ExFreePool(DriverObject->DriverExtension);
-	ExFreePool(DriverObject);
-	return(Status);
-    }
+  DriverObject = DeviceNode->DriverObject;
 
   if (DriverObject->DriverExtension->AddDevice)
     {
@@ -411,36 +373,18 @@ IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
           KeBugCheck(0);
         }
 
-      KeInitializeEvent(&Event,
-	      NotificationEvent,
-	      FALSE);
-
-      Irp = IoBuildSynchronousFsdRequest(IRP_MJ_PNP,
-        Fdo,
-	      NULL,
-	      0,
-	      NULL,
-	      &Event,
-	      &IoStatusBlock);
-
-      IrpSp = IoGetNextIrpStackLocation(Irp);
-      IrpSp->MinorFunction = IRP_MN_START_DEVICE;
-
       /* FIXME: Put some resources in the IRP for the device */
+      Stack.Parameters.StartDevice.AllocatedResources = NULL;
+      Stack.Parameters.StartDevice.AllocatedResourcesTranslated = NULL;
 
-	    Status = IoCallDriver(Fdo, Irp);
-
-	    if (Status == STATUS_PENDING)
-	      {
-		      KeWaitForSingleObject(&Event,
-		                       Executive,
-		                       KernelMode,
-		                       FALSE,
-		                       NULL);
-          Status = IoStatusBlock.Status;
-	      }
+      Status = IopInitiatePnpIrp(
+        Fdo,
+        &IoStatusBlock,
+        IRP_MN_START_DEVICE,
+        &Stack);
       if (!NT_SUCCESS(Status))
         {
+          DPRINT("IopInitiatePnpIrp() failed\n");
           ObDereferenceObject(Fdo);
           ExFreePool(DriverObject->DriverExtension);
 	        ExFreePool(DriverObject);
@@ -466,8 +410,7 @@ IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
 #ifdef ACPI
           static BOOLEAN SystemPowerDeviceNodeCreated = FALSE;
 
-          /* The system power device node is the first bus enumerator
-             device node created after the root device node */
+          /* There can be only one system power device */
           if (!SystemPowerDeviceNodeCreated)
             {
               PopSystemPowerDeviceNode = DeviceNode;
@@ -477,6 +420,143 @@ IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
         }
       ObDereferenceObject(Fdo);
     }
+
+  return STATUS_SUCCESS;
+}
+
+NTSTATUS
+IopInitializeService(
+  PDEVICE_NODE DeviceNode,
+  PUNICODE_STRING ImagePath)
+{
+  PMODULE_OBJECT ModuleObject;
+  NTSTATUS Status;
+
+  Status = LdrFindModuleObject(&DeviceNode->ServiceName, &ModuleObject);
+  if (!NT_SUCCESS(Status))
+  {
+    /* The module is currently not loaded, so load it now */
+
+    ModuleObject = LdrLoadModule(ImagePath);
+    if (!ModuleObject)
+    {
+      /* FIXME: Log the error */
+	    CPRINT("Driver load failed\n");
+      return STATUS_UNSUCCESSFUL;
+    }
+
+    Status = IopInitializeDriver(ModuleObject->EntryPoint, DeviceNode);
+    if (!NT_SUCCESS(Status))
+    {
+      /* FIXME: Log the error */
+	    CPRINT("A driver failed to initialize\n");
+      return Status;
+    }
+  }
+
+  ObDereferenceObject(ModuleObject);
+
+  return STATUS_SUCCESS;
+}
+
+NTSTATUS
+IopInitializeDeviceNodeService(
+  PDEVICE_NODE DeviceNode)
+{
+  RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+  UNICODE_STRING ImagePath;
+  HANDLE KeyHandle;
+  NTSTATUS Status; 
+
+  Status = RtlpGetRegistryHandle(
+    RTL_REGISTRY_SERVICES,
+	  DeviceNode->ServiceName.Buffer,
+		TRUE,
+		&KeyHandle);
+  if (!NT_SUCCESS(Status))
+    {
+  DPRINT("RtlpGetRegistryHandle() failed (Status %x)\n", Status);
+  return Status;
+    }
+
+  RtlZeroMemory(QueryTable, sizeof(QueryTable));
+
+  RtlInitUnicodeString(&ImagePath, NULL);
+
+  QueryTable[0].Name = L"ImagePath";
+  QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
+  QueryTable[0].EntryContext = &ImagePath;
+
+  Status = RtlQueryRegistryValues(
+    RTL_REGISTRY_HANDLE,
+	 	(PWSTR)KeyHandle,
+	 	QueryTable,
+	 	NULL,
+	 	NULL);
+  NtClose(KeyHandle);
+
+  DPRINT("RtlQueryRegistryValues() returned status %x\n", Status);
+
+  if (NT_SUCCESS(Status))
+  {
+    DPRINT("Got ImagePath %S\n", ImagePath.Buffer);
+
+    Status = IopInitializeService(DeviceNode, &ImagePath);
+
+    RtlFreeUnicodeString(&ImagePath);
+  }
+
+  return Status;
+}
+
+NTSTATUS 
+IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
+                    PDEVICE_NODE DeviceNode)
+/*
+ * FUNCTION: Called to initalize a loaded driver
+ * ARGUMENTS:
+ */
+{
+  WCHAR RegistryKeyBuffer[MAX_PATH];
+  PDRIVER_OBJECT DriverObject;
+  UNICODE_STRING RegistryKey;
+  NTSTATUS Status;
+
+  DPRINT("IopInitializeDriver(DriverEntry %08lx, DeviceNode %08lx)\n",
+    DriverEntry, DeviceNode);
+
+  Status = IopCreateDriverObject(&DriverObject);
+  if (!NT_SUCCESS(Status))
+    {
+  return(Status);
+    }
+
+  DeviceNode->DriverObject = DriverObject;
+
+  if (DeviceNode->ServiceName.Buffer)
+  {
+    wcscpy(RegistryKeyBuffer, DRIVER_REGISTRY_KEY_BASENAME);
+    wcscat(RegistryKeyBuffer, DeviceNode->ServiceName.Buffer);
+    RtlInitUnicodeString(&RegistryKey, RegistryKeyBuffer);
+  }
+  else
+  {
+    RtlInitUnicodeString(&RegistryKey, NULL);
+  }
+
+  DPRINT("RegistryKey: %wZ\n", &RegistryKey);
+  DPRINT("Calling driver entrypoint at %08lx\n", DriverEntry);
+
+  Status = DriverEntry(DriverObject, &RegistryKey);
+  if (!NT_SUCCESS(Status))
+    {
+  DeviceNode->DriverObject = NULL;
+  ExFreePool(DriverObject->DriverExtension);
+	ExFreePool(DriverObject);
+	return(Status);
+    }
+
+  Status = IopInitializeDevice(DeviceNode, TRUE);
 
   return(Status);
 }

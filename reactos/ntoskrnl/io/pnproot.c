@@ -1,4 +1,4 @@
-/* $Id: pnproot.c,v 1.4 2001/08/27 01:20:50 ekohl Exp $
+/* $Id: pnproot.c,v 1.5 2001/09/01 15:36:44 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -163,7 +163,10 @@ PnpRootPnpControl(
 
   DPRINT("Called\n");
 
+  Status = Irp->IoStatus.Status;
+
   IrpSp = IoGetCurrentIrpStackLocation(Irp);
+
   switch (IrpSp->MinorFunction)
     {
   case IRP_MN_QUERY_DEVICE_RELATIONS:

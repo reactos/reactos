@@ -627,6 +627,7 @@ CmiScanKeyForValue(IN PREGISTRY_FILE  RegistryFile,
                    OUT PVALUE_BLOCK  *ValueBlock,
 		   OUT BLOCK_OFFSET *VBOffset)
 {
+  ULONG Length;
  ULONG  Idx;
  PVALUE_LIST_BLOCK  ValueListBlock;
  PVALUE_BLOCK  CurValueBlock;
@@ -635,6 +636,7 @@ CmiScanKeyForValue(IN PREGISTRY_FILE  RegistryFile,
   *ValueBlock = NULL;
   if (ValueListBlock == NULL)
     {
+      DPRINT("ValueListBlock is NULL\n");
       return  STATUS_SUCCESS;
     }
   for (Idx = 0; Idx < KeyBlock->NumberOfValues; Idx++)
@@ -643,12 +645,14 @@ CmiScanKeyForValue(IN PREGISTRY_FILE  RegistryFile,
                                   ValueListBlock->Values[Idx],NULL);
       /* FIXME : perhaps we must not ignore case if NtCreateKey has not been */
       /*         called with OBJ_CASE_INSENSITIVE flag ? */
-      if (CurValueBlock != NULL &&
-          CurValueBlock->NameSize == strlen(ValueName) &&
-          !_strnicmp(CurValueBlock->Name, ValueName,strlen(ValueName)))
+      Length = strlen(ValueName);
+      if ((CurValueBlock != NULL) &&
+          (CurValueBlock->NameSize == Length) &&
+          (_strnicmp(CurValueBlock->Name, ValueName, Length) == 0))
         {
           *ValueBlock = CurValueBlock;
 	  if(VBOffset) *VBOffset = ValueListBlock->Values[Idx];
+        DPRINT("Found value %s\n", ValueName);
           break;
         }
       CmiReleaseBlock(RegistryFile, CurValueBlock);

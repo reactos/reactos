@@ -81,7 +81,6 @@ typedef struct
    HANDLE ConsoleEvent;
 } CSRSS_PROCESS_DATA, *PCSRSS_PROCESS_DATA;
 
-
 #define CSR_API(n) NTSTATUS n (\
 PCSRSS_PROCESS_DATA ProcessData,\
 PCSRSS_API_REQUEST Request,\
@@ -114,6 +113,9 @@ CSR_API(CsrCreateScreenBuffer);
 CSR_API(CsrSetScreenBuffer);
 CSR_API(CsrSetTitle);
 CSR_API(CsrGetTitle);
+CSR_API(CsrWriteConsoleOutput);
+CSR_API(CsrFlushInputBuffer);
+CSR_API(CsrScrollConsoleScreenBuffer);
 
 /* print.c */
 VOID STDCALL DisplayString(LPCWSTR lpwString);

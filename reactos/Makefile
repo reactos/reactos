@@ -492,6 +492,7 @@ install_dirs:
 install_before:
 	$(CP) boot.bat $(INSTALL_DIR)/boot.bat
 	$(CP) aboot.bat $(INSTALL_DIR)/aboot.bat
+	$(CP) boot.hiv $(INSTALL_DIR)/system32/boot.hiv
 	$(CP) media/fonts/helb____.ttf $(INSTALL_DIR)/media/fonts/helb____.ttf
 	$(CP) media/fonts/timr____.ttf $(INSTALL_DIR)/media/fonts/timr____.ttf
 

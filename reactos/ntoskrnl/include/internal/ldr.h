@@ -11,6 +11,7 @@
 #include <pe.h>
 #include <internal/io.h>
 #include <ntdll/ldr.h>
+#include <internal/module.h>
 
 NTSTATUS
 LdrLoadDriver (
@@ -89,6 +90,13 @@ PVOID LdrSafePEProcessModule(
   PVOID DriverBase,
  	PVOID ImportModuleBase,
  	PULONG DriverSize);
+
+PMODULE_OBJECT
+LdrLoadModule(PUNICODE_STRING Filename);
+
+NTSTATUS LdrFindModuleObject(
+  PUNICODE_STRING ModuleName,
+  PMODULE_OBJECT *ModuleObject);
 
 extern ULONG_PTR LdrHalBase;
 

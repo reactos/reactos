@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.56 2001/08/03 17:07:56 ekohl Exp $
+/* $Id: rtl.h,v 1.57 2001/09/01 15:36:43 chorns Exp $
  * 
  */
 
@@ -190,7 +190,8 @@ typedef struct _RTL_QUERY_REGISTRY_TABLE
 #define RTL_REGISTRY_WINDOWS_NT 3
 #define RTL_REGISTRY_DEVICEMAP  4
 #define RTL_REGISTRY_USER       5
-#define RTL_REGISTRY_MAXIMUM    6
+#define RTL_REGISTRY_ENUM       6   // ReactOS specific: Used internally in kernel only
+#define RTL_REGISTRY_MAXIMUM    7
 
 #define RTL_REGISTRY_HANDLE     0x40000000
 #define RTL_REGISTRY_OPTIONAL   0x80000000
@@ -228,6 +229,15 @@ typedef struct _RTL_QUERY_REGISTRY_TABLE
 
 extern BOOLEAN NLS_MB_CODE_PAGE_TAG;
 extern BOOLEAN NLS_MB_OEM_CODE_PAGE_TAG;
+
+
+/*
+ * NOTE: ReactOS extensions
+ */
+#define RtlMin(X,Y) (((X) < (Y))? (X) : (Y))
+#define RtlMax(X,Y) (((X) > (Y))? (X) : (Y))
+#define RtlMin3(X,Y,Z) (((X) < (Y)) ? RtlMin(X,Z) : RtlMin(Y,Z))
+#define RtlMax3(X,Y,Z) (((X) > (Y)) ? RtlMax(X,Z) : RtlMax(Y,Z))
 
 
 /*

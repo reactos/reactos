@@ -264,8 +264,9 @@ NtEnumerateKey (
     {
     case KeyBasicInformation:
       /*  Check size of buffer  */
-      if (Length < sizeof(KEY_BASIC_INFORMATION) + 
-          (SubKeyBlock->NameSize ) * sizeof(WCHAR))
+      *ResultLength = sizeof(KEY_BASIC_INFORMATION) + 
+          (SubKeyBlock->NameSize ) * sizeof(WCHAR);
+      if (Length < *ResultLength)
         {
           Status = STATUS_BUFFER_OVERFLOW;
         }
@@ -281,16 +282,15 @@ NtEnumerateKey (
                   SubKeyBlock->Name, 
                   SubKeyBlock->NameSize*2);
 //          BasicInformation->Name[SubKeyBlock->NameSize] = 0;
-          *ResultLength = sizeof(KEY_BASIC_INFORMATION) + 
-            SubKeyBlock->NameSize * sizeof(WCHAR);
         }
       break;
       
     case KeyNodeInformation:
       /*  Check size of buffer  */
-      if (Length < sizeof(KEY_NODE_INFORMATION) +
+      *ResultLength = sizeof(KEY_NODE_INFORMATION) +
           (SubKeyBlock->NameSize ) * sizeof(WCHAR) +
-          (SubKeyBlock->ClassSize ))
+          (SubKeyBlock->ClassSize );
+      if (Length < *ResultLength)
         {
           Status = STATUS_BUFFER_OVERFLOW;
         }
@@ -318,16 +318,14 @@ NtEnumerateKey (
                       SubKeyBlock->ClassSize);
               CmiReleaseBlock(RegistryFile, pClassData);
             }
-          *ResultLength = sizeof(KEY_NODE_INFORMATION) +
-            (SubKeyBlock->NameSize) * sizeof(WCHAR) +
-            (SubKeyBlock->ClassSize );
         }
       break;
       
     case KeyFullInformation:
       /*  check size of buffer  */
-      if (Length < sizeof(KEY_FULL_INFORMATION) +
-          SubKeyBlock->ClassSize)
+      *ResultLength = sizeof(KEY_FULL_INFORMATION) +
+          SubKeyBlock->ClassSize;
+      if (Length < *ResultLength)
         {
           Status = STATUS_BUFFER_OVERFLOW;
         }
@@ -360,8 +358,6 @@ NtEnumerateKey (
                       SubKeyBlock->ClassSize);
               CmiReleaseBlock(RegistryFile, pClassData);
             }
-          *ResultLength = sizeof(KEY_FULL_INFORMATION) +
-            SubKeyBlock->ClassSize ;
         }
       break;
     }
@@ -873,6 +869,9 @@ NtQueryValueKey (
   PKEY_VALUE_FULL_INFORMATION  ValueFullInformation;
   char ValueName2[MAX_PATH];
 
+  DPRINT("NtQueryValueKey(KeyHandle %x  ValueName %S  Length %x )\n",
+    KeyHandle, ValueName->Buffer, Length);
+
   wcstombs(ValueName2,ValueName->Buffer,ValueName->Length>>1);
   ValueName2[ValueName->Length>>1]=0;
 
@@ -885,6 +884,7 @@ NtQueryValueKey (
                                      NULL);
   if (!NT_SUCCESS(Status))
     {
+      DPRINT("ObReferenceObjectByHandle() failed with status %x\n", Status);
       return  Status;
     }
 
@@ -898,6 +898,7 @@ NtQueryValueKey (
                               &ValueBlock,NULL);
   if (!NT_SUCCESS(Status))
     {
+      DPRINT("CmiScanKeyForValue() failed with status %x\n", Status);
       ObDereferenceObject(KeyObject);
       return  Status;
     }
@@ -910,7 +911,7 @@ NtQueryValueKey (
             ValueBlock->NameSize * sizeof(WCHAR);
           if (Length < *ResultLength)
             {
-              Status = STATUS_BUFFER_OVERFLOW;
+              Status = STATUS_BUFFER_TOO_SMALL;
             }
           else
             {
@@ -930,7 +931,7 @@ NtQueryValueKey (
             (ValueBlock->DataSize & LONG_MAX);
           if (Length < *ResultLength)
             {
-              Status = STATUS_BUFFER_OVERFLOW;
+              Status = STATUS_BUFFER_TOO_SMALL;
             }
           else
             {
@@ -962,7 +963,7 @@ NtQueryValueKey (
                  + (ValueBlock->DataSize & LONG_MAX);
           if (Length < *ResultLength)
             {
-              Status = STATUS_BUFFER_OVERFLOW;
+              Status = STATUS_BUFFER_TOO_SMALL;
             }
           else
             {
@@ -1001,7 +1002,7 @@ NtQueryValueKey (
     }
   else
     {
-      Status = STATUS_UNSUCCESSFUL;
+      Status = STATUS_OBJECT_NAME_NOT_FOUND;
     }
   ObDereferenceObject(KeyObject);
   
@@ -1031,6 +1032,9 @@ NtSetValueKey (
  PHEAP_BLOCK pHeap;
 // KIRQL  OldIrql;
 
+  DPRINT1("KeyHandle %x  ValueName %S  Type %d\n",
+    KeyHandle, ValueName->Buffer, Type);
+
   wcstombs(ValueName2,ValueName->Buffer,ValueName->Length>>1);
   ValueName2[ValueName->Length>>1]=0;
 
@@ -1041,6 +1045,7 @@ NtSetValueKey (
                                      UserMode,
                                      (PVOID *)&KeyObject,
                                      NULL);
+  DPRINT1("Status 0x%X\n", Status);
   if (!NT_SUCCESS(Status))
     return  Status;
 
@@ -1053,6 +1058,8 @@ NtSetValueKey (
                               &ValueBlock, &VBOffset);
   if (!NT_SUCCESS(Status))
   {
+    DPRINT1("Not found Status 0x%X\n", Status);
+
     ObDereferenceObject (KeyObject);
     return  Status;
   }
@@ -1067,6 +1074,7 @@ NtSetValueKey (
   }
   if (!NT_SUCCESS(Status))
   {
+    DPRINT1("Cannot Add Status 0x%X\n", Status);
     ObDereferenceObject (KeyObject);
     return  Status;
   }
@@ -1123,6 +1131,8 @@ NtSetValueKey (
 //  KeReleaseSpinLock(&RegistryFile->RegLock, OldIrql);
   ObDereferenceObject (KeyObject);
   
+  DPRINT1("Return Status 0x%X\n", Status);
+
   return  Status;
 }
 

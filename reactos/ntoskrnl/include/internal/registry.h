@@ -8,4 +8,7 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
 		      BOOLEAN Create,
 		      PHANDLE KeyHandle);
 
+NTSTATUS
+RtlpCreateRegistryKeyPath(PWSTR Path);
+
 #endif /* __INCLUDE_INTERNAL_REGISTRY_H */

@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.6 2001/06/19 15:08:46 ekohl Exp $
+/* $Id: registry.c,v 1.7 2001/09/01 15:36:43 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -176,7 +176,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 	  (QueryEntry->Name != NULL))
      {
 	if ((QueryEntry->QueryRoutine == NULL) &&
-	    (QueryEntry->Flags & (RTL_QUERY_REGISTRY_SUBKEY | RTL_QUERY_REGISTRY_DIRECT) != 0))
+	    ((QueryEntry->Flags & RTL_QUERY_REGISTRY_SUBKEY) != 0))
 	  {
 	     Status = STATUS_INVALID_PARAMETER;
 	     break;
@@ -244,9 +244,14 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		       ValueString = (PUNICODE_STRING)QueryEntry->EntryContext;
 		       if (ValueString->Buffer == 0)
 			 {
-			    /* FIXME: allocate buffer !!! */
-//			    ValueString->MaximumLength =
-//			    ValueString->Buffer =
+          RtlInitUnicodeString(ValueString, NULL);
+			    ValueString->MaximumLength = 256 * sizeof(WCHAR);
+			    ValueString->Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+					  0,
+					  ValueString->MaximumLength);
+          if (!ValueString->Buffer)
+            break;
+          ValueString->Buffer[0] = 0;
 			 }
 		       ValueString->Length = min(ValueInfo->DataLength,
 						 ValueString->MaximumLength - sizeof(WCHAR));
@@ -514,8 +519,15 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
    
    if (RelativeTo & RTL_REGISTRY_HANDLE)
      {
-	*KeyHandle = (HANDLE)Path;
-	return STATUS_SUCCESS;
+   Status = NtDuplicateObject(
+      NtCurrentProcess(),
+      (HANDLE)Path,
+      NtCurrentProcess(),
+      KeyHandle,
+      0,
+      FALSE,
+      DUPLICATE_SAME_ACCESS);
+   return Status;
      }
 
    if (RelativeTo & RTL_REGISTRY_OPTIONAL)
@@ -561,6 +573,13 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
 	  if (!NT_SUCCESS(Status))
 	    return Status;
 	  break;
+
+  /* ReactOS specific */
+  case RTL_REGISTRY_ENUM:
+	  RtlAppendUnicodeToString(&KeyName,
+		       L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
+	  break;
+
      }
 
    if (Path[0] != L'\\')

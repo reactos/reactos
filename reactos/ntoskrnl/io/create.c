@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.47 2001/08/26 17:27:00 ekohl Exp $
+/* $Id: create.c,v 1.48 2001/09/01 15:36:44 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -125,7 +125,6 @@ IopCreateFile(PVOID			ObjectBody,
 	    && (DeviceObject->DeviceType != FILE_DEVICE_MAILSLOT))
 	  {
 	     CPRINT ("Device was wrong type\n");
-	     assert(FALSE);
 	     return (STATUS_UNSUCCESSFUL);
 	  }
 

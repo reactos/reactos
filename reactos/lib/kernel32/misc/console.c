@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.34 2001/08/14 12:57:15 ea Exp $
+/* $Id: console.c,v 1.35 2001/09/01 15:36:43 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -978,6 +978,7 @@ ReadConsoleInputA(
 {
    CSRSS_API_REQUEST Request;
    CSRSS_API_REPLY Reply;
+   DWORD NumEventsRead;
    NTSTATUS Status;
 
    Request.Type = CSRSS_READ_INPUT;
@@ -988,23 +989,54 @@ ReadConsoleInputA(
 	 SetLastErrorByStatus ( Status );
 	 return FALSE;
       }
-   while( Status == STATUS_PENDING )
+
+   while (Status == STATUS_PENDING)
       {
-	 Status = NtWaitForSingleObject( Reply.Data.ReadInputReply.Event, FALSE, 0 );
+
+   Status = NtWaitForSingleObject( Reply.Data.ReadInputReply.Event, FALSE, 0 );
 	 if( !NT_SUCCESS( Status ) )
 	    {
 	       SetLastErrorByStatus ( Status );
 	       return FALSE;
 	    }
+
+   Request.Type = CSRSS_READ_INPUT;
+   Request.Data.ReadInputRequest.ConsoleHandle = hConsoleInput;
+   Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
+   if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
+      {
+	 SetLastErrorByStatus ( Status );
+	 return FALSE;
+      }
+      }
+
+   NumEventsRead = 0;
+   *lpBuffer = Reply.Data.ReadInputReply.Input;
+   lpBuffer++;
+   NumEventsRead++;
+
+   while( ( NumEventsRead < nLength ) && ( Reply.Data.ReadInputReply.MoreEvents ) )
+      {
+
 	 Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
 	 if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
 	    {
 	       SetLastErrorByStatus ( Status );
 	       return FALSE;
 	    }
-      }
-   *lpNumberOfEventsRead = 1;
+
+   if( Status == STATUS_PENDING )
+	    {
+         break;
+	    }
+
    *lpBuffer = Reply.Data.ReadInputReply.Input;
+   lpBuffer++;
+   NumEventsRead++;
+
+      }
+   *lpNumberOfEventsRead = NumEventsRead;
+
    return TRUE;
 }
 
@@ -1114,8 +1146,37 @@ WriteConsoleOutputA(
 	PSMALL_RECT	 lpWriteRegion
 	)
 {
-/* TO DO */
-	return FALSE;
+   PCSRSS_API_REQUEST Request;
+   CSRSS_API_REPLY Reply;
+   NTSTATUS Status;
+   DWORD Size;
+
+   Size = dwBufferSize.Y * dwBufferSize.X * sizeof(CHAR_INFO);
+
+   Request = RtlAllocateHeap(GetProcessHeap(), 0, sizeof(CSRSS_API_REQUEST) + Size);
+   if( !Request )
+     {
+       SetLastError( ERROR_OUTOFMEMORY );
+       return FALSE;
+     }
+   Request->Type = CSRSS_WRITE_CONSOLE_OUTPUT;
+   Request->Data.WriteConsoleOutputRequest.ConsoleHandle = hConsoleOutput;
+   Request->Data.WriteConsoleOutputRequest.BufferSize = dwBufferSize;
+   Request->Data.WriteConsoleOutputRequest.BufferCoord = dwBufferCoord;
+   Request->Data.WriteConsoleOutputRequest.WriteRegion = *lpWriteRegion;
+   RtlCopyMemory(&Request->Data.WriteConsoleOutputRequest.CharInfo, lpBuffer, Size);
+
+   Status = CsrClientCallServer( Request, &Reply, sizeof( CSRSS_API_REQUEST ) + Size, sizeof( CSRSS_API_REPLY ) );
+	 if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
+	    {
+         RtlFreeHeap( GetProcessHeap(), 0, Request );
+	       SetLastErrorByStatus ( Status );
+	       return FALSE;
+	    }
+
+   *lpWriteRegion = Reply.Data.WriteConsoleOutputReply.WriteRegion;
+
+   return TRUE;
 }
 
 
@@ -1237,6 +1298,7 @@ WriteConsoleOutputCharacterA(
 	 Status = CsrClientCallServer( Request, &Reply, sizeof( CSRSS_API_REQUEST ) + Size, sizeof( CSRSS_API_REPLY ) );
 	 if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
 	    {
+         RtlFreeHeap( GetProcessHeap(), 0, Request );
 	       SetLastErrorByStatus ( Status );
 	       return FALSE;
 	    }
@@ -1310,6 +1372,7 @@ WriteConsoleOutputAttribute(
 	 Status = CsrClientCallServer( Request, &Reply, sizeof( CSRSS_API_REQUEST ) + (Size * 2), sizeof( CSRSS_API_REPLY ) );
 	 if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
 	    {
+         RtlFreeHeap( GetProcessHeap(), 0, Request );
 	       SetLastErrorByStatus ( Status );
 	       return FALSE;
 	    }
@@ -1437,6 +1500,7 @@ GetConsoleCursorInfo(
    Request.Type = CSRSS_GET_CURSOR_INFO;
    Request.Data.GetCursorInfoRequest.ConsoleHandle = hConsoleOutput;
    Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
+
    if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
       {
 	 SetLastErrorByStatus ( Status );
@@ -1526,8 +1590,19 @@ FlushConsoleInputBuffer(
 	HANDLE		hConsoleInput
 	)
 {
-/* TO DO */
-	return FALSE;
+   CSRSS_API_REQUEST Request;
+   CSRSS_API_REPLY Reply;
+   NTSTATUS Status;
+
+   Request.Type = CSRSS_FLUSH_INPUT_BUFFER;
+   Request.Data.FlushInputBufferRequest.ConsoleInput = hConsoleInput;
+   Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
+   if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
+      {
+	 SetLastErrorByStatus ( Status );
+	 return FALSE;
+      }
+   return TRUE;
 }
 
 
@@ -1565,6 +1640,7 @@ SetConsoleCursorInfo(
    Request.Data.SetCursorInfoRequest.ConsoleHandle = hConsoleOutput;
    Request.Data.SetCursorInfoRequest.Info = *lpConsoleCursorInfo;
    Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
+
    if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
       {
 	 SetLastErrorByStatus ( Status );
@@ -1588,8 +1664,34 @@ ScrollConsoleScreenBufferA(
 	CONST CHAR_INFO		*lpFill
 	)
 {
-/* TO DO */
+  CSRSS_API_REQUEST Request;
+  CSRSS_API_REPLY Reply;
+  NTSTATUS Status;
+
+  Request.Type = CSRSS_SCROLL_CONSOLE_SCREEN_BUFFER;
+  Request.Data.ScrollConsoleScreenBufferRequest.ConsoleHandle = hConsoleOutput;
+  Request.Data.ScrollConsoleScreenBufferRequest.ScrollRectangle = *lpScrollRectangle;
+
+  if (lpClipRectangle != NULL)
+    {
+  Request.Data.ScrollConsoleScreenBufferRequest.UseClipRectangle = TRUE;
+  Request.Data.ScrollConsoleScreenBufferRequest.ClipRectangle = *lpClipRectangle;
+    }
+  else
+    {
+  Request.Data.ScrollConsoleScreenBufferRequest.UseClipRectangle = FALSE;
+    }
+
+  Request.Data.ScrollConsoleScreenBufferRequest.DestinationOrigin = dwDestinationOrigin;
+  Request.Data.ScrollConsoleScreenBufferRequest.Fill = *lpFill;
+  Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
+
+  if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
+    {
+  SetLastErrorByStatus ( Status );
 	return FALSE;
+    }
+  return TRUE;
 }
 
 
