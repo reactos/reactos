@@ -4,6 +4,7 @@
 *.o
 *.sym
 *.map
+bin
 Debug
 Release
 DRelease

@@ -4,7 +4,7 @@
 
 # TARGTYPE "Win32 (x86) External Target" 0x0106
 
-CFG=make_explorer - Win32 doxy docu
+CFG=make_explorer - Win32 bjam
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
@@ -13,7 +13,7 @@ CFG=make_explorer - Win32 doxy docu
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "make_explorer.mak" CFG="make_explorer - Win32 doxy docu"
+!MESSAGE NMAKE /f "make_explorer.mak" CFG="make_explorer - Win32 bjam"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
@@ -22,6 +22,7 @@ CFG=make_explorer - Win32 doxy docu
 !MESSAGE "make_explorer - Win32 Unicode Debug" (based on "Win32 (x86) External Target")
 !MESSAGE "make_explorer - Win32 Unicode Release" (based on "Win32 (x86) External Target")
 !MESSAGE "make_explorer - Win32 doxy docu" (based on "Win32 (x86) External Target")
+!MESSAGE "make_explorer - Win32 bjam" (based on "Win32 (x86) External Target")
 !MESSAGE 
 
 # Begin Project
@@ -134,6 +135,27 @@ CFG=make_explorer - Win32 doxy docu
 # PROP Bsc_Name ""
 # PROP Target_Dir ""
 
+!ELSEIF  "$(CFG)" == "make_explorer - Win32 bjam"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "Debug"
+# PROP BASE Intermediate_Dir "Debug"
+# PROP BASE Cmd_Line "msdevfilt -gcc -pipe "perl d:\tools\gSTLFilt.pl" make -f Makefile.MinGW DEBUG=1"
+# PROP BASE Rebuild_Opt "clean all"
+# PROP BASE Target_File "explorer.exe"
+# PROP BASE Bsc_Name ""
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "Debug"
+# PROP Intermediate_Dir "Debug"
+# PROP Cmd_Line "msdevfilt -gcc -pipe "perl d:\tools\gSTLFilt.pl" bjam"
+# PROP Rebuild_Opt "clean&bjam release"
+# PROP Target_File "explorer.exe"
+# PROP Bsc_Name ""
+# PROP Target_Dir ""
+
 !ENDIF 
 
 # Begin Target
@@ -143,6 +165,7 @@ CFG=make_explorer - Win32 doxy docu
 # Name "make_explorer - Win32 Unicode Debug"
 # Name "make_explorer - Win32 Unicode Release"
 # Name "make_explorer - Win32 doxy docu"
+# Name "make_explorer - Win32 bjam"
 
 !IF  "$(CFG)" == "make_explorer - Win32 Release"
 
@@ -154,11 +177,17 @@ CFG=make_explorer - Win32 doxy docu
 
 !ELSEIF  "$(CFG)" == "make_explorer - Win32 doxy docu"
 
+!ELSEIF  "$(CFG)" == "make_explorer - Win32 bjam"
+
 !ENDIF 
 
 # Begin Source File
 
 SOURCE=..\..\..\ChangeLog
+# End Source File
+# Begin Source File
+
+SOURCE=.\Jamfile
 # End Source File
 # Begin Source File
 
