@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.97 2003/09/02 11:21:59 ekohl Exp $
+; $Id: ntdll.edf,v 1.98 2003/09/03 10:03:50 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -412,6 +412,7 @@ RtlFormatCurrentUserKeyPath=RtlFormatCurrentUserKeyPath@4
 RtlFreeAnsiString=RtlFreeAnsiString@4
 RtlFreeHandle=RtlFreeHandle@8
 RtlFreeHeap=RtlFreeHeap@12
+RtlFreeOemString=RtlFreeOemString@4
 RtlFreeSid=RtlFreeSid@4
 RtlFreeUnicodeString=RtlFreeUnicodeString@4
 RtlFreeUserThreadStack=RtlFreeUserThreadStack@8
