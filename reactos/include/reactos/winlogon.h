@@ -1,17 +1,10 @@
-/* $Id: winlogon.h,v 1.1 2004/07/12 20:09:35 gvg Exp $
+/* $Id: winlogon.h,v 1.2 2004/08/09 17:54:56 gvg Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS kernel
  * FILE:        include/reactos/winlogon.h
- * PURPOSE:     Interface to winlogon
- * PROGRAMMER:  David Welch (welch@mcmail.com)
- * REVISIONS:
- * 	1999-11-06 (ea)
- * 		Moved from include/internal in include/reactos
- *		to be used by buildno.
- *	2002-01-17 (ea)
- *		KERNEL_VERSION removed. Use
- *		reactos/buildno.h:KERNEL_VERSION_STR instead.
+ * PURPOSE:     Private interface between CSRSS and WinLogon
+ * PROGRAMMER:  Ge van Geldorp (gvg@reactos.com)
  */
 
 #ifndef REACTOS_WINLOGON_H_INCLUDED
@@ -22,6 +15,10 @@
 #define WINLOGON_SAS_TITLE L"SAS"
 
 #define PM_WINLOGON_EXITWINDOWS WM_APP
+
+#define EWX_INTERNAL_FLAG          0x10000
+#define EWX_INTERNAL_KILL_USER_APPS (EWX_INTERNAL_FLAG | 0x100)
+#define EWX_INTERNAL_KILL_ALL_APPS  (EWX_INTERNAL_FLAG | 0x200)
 
 #endif /* REACTOS_WINLOGON_H_INCLUDED */
 
