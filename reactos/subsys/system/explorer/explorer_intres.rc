@@ -81,7 +81,7 @@ BEGIN
     POPUP "²é¿´(&V)"
     BEGIN
         MENUITEM "¹¤¾ßÀ¸(&T)",                  ID_VIEW_TOOL_BAR
-        MENUITEM "²à±ßÀ¸(&S)",                  ID_VIEW_SIDE_BAR
+        MENUITEM "²à±ßÀ¸(&S)",                  ID_VIEW_SIDE_BAR, GRAYED
         MENUITEM "×´Ì¬À¸(&S)",                  ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
         MENUITEM "Ë¢ÐÂ(&R)\tF5",                ID_REFRESH
@@ -486,8 +486,8 @@ BEGIN
     POPUP "&Prezentare"
     BEGIN
         MENUITEM "&Bara cu instrumente",        ID_VIEW_TOOL_BAR
+        MENUITEM "&Side Bar",                   ID_VIEW_SIDE_BAR, GRAYED
         MENUITEM "&Bara de stare",              ID_VIEW_STATUSBAR
-        MENUITEM "&Side Bar",                   ID_VIEW_SIDE_BAR
         MENUITEM SEPARATOR
         MENUITEM "&Resetare\tF5",               ID_REFRESH
         MENUITEM "F&ull Screen\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
@@ -802,7 +802,7 @@ BEGIN
     POPUP "&Ansicht"
     BEGIN
         MENUITEM "&Toolbar",                    ID_VIEW_TOOL_BAR
-        MENUITEM "S&ide Bar",                   ID_VIEW_SIDE_BAR
+        MENUITEM "S&ide Bar",                   ID_VIEW_SIDE_BAR, GRAYED
         MENUITEM "&Status Bar",                 ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
         MENUITEM "&Aktualisieren\tF5",          ID_REFRESH
@@ -1072,7 +1072,7 @@ BEGIN
     POPUP "&View"
     BEGIN
         MENUITEM "&Toolbar",                    ID_VIEW_TOOL_BAR
-        MENUITEM "&Side Bar",                   ID_VIEW_SIDE_BAR
+        MENUITEM "&Side Bar",                   ID_VIEW_SIDE_BAR, GRAYED
         MENUITEM "&Status Bar",                 ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
         MENUITEM "&Refresh\tF5",                ID_REFRESH
@@ -1524,7 +1524,7 @@ BEGIN
     POPUP "&Affichage"
     BEGIN
         MENUITEM "Barre d'&outils",             ID_VIEW_TOOL_BAR
-        MENUITEM "&Side Bar",                   ID_VIEW_SIDE_BAR
+        MENUITEM "&Side Bar",                   ID_VIEW_SIDE_BAR, GRAYED
         MENUITEM "Barre d'&état",               ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
         MENUITEM "&Refresh\tF5",                ID_REFRESH
