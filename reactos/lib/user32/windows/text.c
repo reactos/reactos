@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.10 2004/08/15 21:36:30 chorns Exp $
+/* $Id: text.c,v 1.11 2004/08/22 20:51:57 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -273,25 +273,8 @@ CharToOemW(LPCWSTR s, LPSTR d)
 LPSTR WINAPI CharUpperA(LPSTR x)
 {
     if (!HIWORD(x)) return (LPSTR)toupper((char)(int)x);
-/*
-    __TRY
-    {
-        LPSTR s = x;
-        while (*s)
-        {
-            *s=toupper(*s);
-            s++;
-        }
-    }
-    __EXCEPT(page_fault)
-    {
-        SetLastError( ERROR_INVALID_PARAMETER );
-        return NULL;
-    }
-    __ENDTRY
+    CharUpperBuffA(x, strlen(x));
     return x;
- */
-  return (LPSTR)NULL;
 }
 
 //DWORD STDCALL CharUpperBuffA(LPSTR lpsz, DWORD cchLength)
