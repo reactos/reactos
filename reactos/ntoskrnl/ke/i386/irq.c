@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: irq.c,v 1.50 2004/10/31 12:49:37 hbirr Exp $
+/* $Id: irq.c,v 1.51 2004/10/31 23:57:15 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/irq.c
@@ -289,8 +289,6 @@ KeTrapFrameToIRQTrapFrame(PKTRAP_FRAME TrapFrame,
    IrqTrapFrame->Eflags = TrapFrame->Eflags;
 }
 
-#ifdef MP
-
 VOID STDCALL
 KiInterruptDispatch2 (ULONG vector, KIRQL old_level)
 /*
@@ -304,7 +302,7 @@ KiInterruptDispatch2 (ULONG vector, KIRQL old_level)
   PKINTERRUPT isr;
   PLIST_ENTRY current;
 
-  DPRINT1("I(0x%.08x, 0x%.08x)\n", vector, old_level);
+  DPRINT("I(0x%.08x, 0x%.08x)\n", vector, old_level);
 
   /*
    * Iterate the list until one of the isr tells us its device interrupted
@@ -319,6 +317,8 @@ KiInterruptDispatch2 (ULONG vector, KIRQL old_level)
       isr = CONTAINING_RECORD(current,KINTERRUPT,Entry);
     }
 }
+
+#ifdef MP
 
 VOID
 KiInterruptDispatch (ULONG Vector, PKIRQ_TRAPFRAME Trapframe)
@@ -389,38 +389,6 @@ KiInterruptDispatch (ULONG Vector, PKIRQ_TRAPFRAME Trapframe)
 
 #else /* MP */
 
-VOID STDCALL
-KiInterruptDispatch2 (ULONG Irq, KIRQL old_level)
-/*
- * FUNCTION: Calls all the interrupt handlers for a given irq.
- * ARGUMENTS:
- *        Irq - The number of the irq to call handlers for.
- *        old_level - The irql of the processor when the irq took place.
- * NOTES: Must be called at DIRQL.
- */
-{
-  PKINTERRUPT isr;
-  PLIST_ENTRY current;
-
-  /*
-   * Iterate the list until one of the isr tells us its device interrupted
-   */
-  current = isr_table[Irq].Flink;
-  while (current != &isr_table[Irq])
-  { 
-     isr = CONTAINING_RECORD(current,KINTERRUPT,Entry);
-#if 0
-     if (isr->ServiceRoutine(isr, isr->ServiceContext))
-     {
-        break;
-     }
-#else
-     isr->ServiceRoutine(isr, isr->ServiceContext);
-#endif
-     current = current->Flink;
-  }
-}
-
 VOID 
 KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
 /*
@@ -464,6 +432,9 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
    {
       KeIRQTrapFrameToTrapFrame(Trapframe, &KernelTrapFrame);
       KeUpdateSystemTime(&KernelTrapFrame, PROFILE_LEVEL);
+#ifdef KDBG
+      KdbProfileInterrupt(Trapframe->Eip);
+#endif /* KDBG */
    }
    else
    {
@@ -472,13 +443,6 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
       */
      KiInterruptDispatch2(irq, old_level);
    }
-
-#ifdef KDBG
-   if (irq == 0)
-     {
-       KdbProfileInterrupt(Trapframe->Eip);
-     }
-#endif /* KDBG */
 
    /*
     * End the system interrupt.
