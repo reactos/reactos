@@ -805,7 +805,7 @@ struct StrRetW : public STRRET
 };
 
 
- /// Retreival of file system paths of ShellPath objects
+ /// Retrieval of file system paths of ShellPath objects
 class FileSysShellPath : public ShellPath
 {
 	TCHAR	_fullpath[MAX_PATH];
