@@ -93,6 +93,7 @@ enum ModuleType
 	NativeDLL,
 	NativeCUI,
 	Win32DLL,
+	Win32CUI,
 	Win32GUI,
 	BootLoader,
 	BootSector,

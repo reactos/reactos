@@ -275,6 +275,8 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return NativeCUI;
 	if ( attribute.value == "win32dll" )
 		return Win32DLL;
+	if ( attribute.value == "win32cui" )
+		return Win32CUI;
 	if ( attribute.value == "win32gui" )
 		return Win32GUI;
 	if ( attribute.value == "bootloader" )
@@ -301,6 +303,7 @@ Module::GetDefaultModuleExtension () const
 			return ".o";
 		case Kernel:
 		case NativeCUI:
+		case Win32CUI:
 		case Win32GUI:
 			return ".exe";
 		case KernelModeDLL:
@@ -326,8 +329,6 @@ Module::GetDefaultModuleEntrypoint () const
 	{
 		case Kernel:
 			return "_NtProcessStartup";
-		case Win32GUI:
-			return "_WinMainCRTStartup";
 		case KernelModeDLL:
 			return "_DriverEntry@8";
 		case NativeDLL:
@@ -336,6 +337,10 @@ Module::GetDefaultModuleEntrypoint () const
 			return "_NtProcessStartup@4";
 		case Win32DLL:
 			return "_DllMain@12";
+		case Win32CUI:
+			return "_mainCRTStartup";
+		case Win32GUI:
+			return "_WinMainCRTStartup";
 		case KernelModeDriver:
 			return "_DriverEntry@8";
 		case BuildTool:

@@ -243,6 +243,16 @@ private:
 };
 
 
+class MingwWin32CUIModuleHandler : public MingwModuleHandler
+{
+public:
+	MingwWin32CUIModuleHandler ();
+	virtual void Process ( const Module& module );
+private:
+	void GenerateWin32CUIModuleTarget ( const Module& module );
+};
+
+
 class MingwWin32GUIModuleHandler : public MingwModuleHandler
 {
 public:

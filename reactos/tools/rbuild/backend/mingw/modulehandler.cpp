@@ -1720,6 +1720,58 @@ MingwWin32DLLModuleHandler::GenerateWin32DLLModuleTarget ( const Module& module 
 }
 
 
+static MingwWin32CUIModuleHandler win32cui_handler;
+
+MingwWin32CUIModuleHandler::MingwWin32CUIModuleHandler ()
+	: MingwModuleHandler ( Win32CUI )
+{
+}
+
+void
+MingwWin32CUIModuleHandler::Process ( const Module& module )
+{
+	GeneratePreconditionDependencies ( module );
+	GenerateWin32CUIModuleTarget ( module );
+	GenerateInvocations ( module );
+}
+
+void
+MingwWin32CUIModuleHandler::GenerateWin32CUIModuleTarget ( const Module& module )
+{
+	static string ros_junk ( "$(ROS_TEMPORARY)" );
+	string target ( FixupTargetFilename ( module.GetPath () ) );
+	string workingDirectory = GetWorkingDirectory ( );
+	string objectFilenames = GetObjectFilenames ( module );
+	string importLibraryDependencies = GetImportLibraryDependencies ( module );
+
+	GenerateImportLibraryTargetIfNeeded ( module );
+
+	if ( module.files.size () > 0 )
+	{
+		GenerateMacrosAndTargetsTarget ( module );
+
+		fprintf ( fMakefile, "%s: %s %s\n",
+		          target.c_str (),
+		          objectFilenames.c_str (),
+		          importLibraryDependencies.c_str () );
+
+		string linkerParameters = ssprintf ( "-Wl,--subsystem,console -Wl,--entry,%s -Wl,--image-base,0x00400000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000",
+		                                     module.entrypoint.c_str () );
+		GenerateLinkerCommand ( module,
+		                        "${gcc}",
+		                        linkerParameters,
+		                        objectFilenames );
+	}
+	else
+	{
+		fprintf ( fMakefile, ".PHONY: %s\n\n",
+		          target.c_str ());
+		fprintf ( fMakefile, "%s:\n\n",
+		          target.c_str ());
+	}
+}
+
+
 static MingwWin32GUIModuleHandler win32gui_handler;
 
 MingwWin32GUIModuleHandler::MingwWin32GUIModuleHandler ()

@@ -1,6 +1,9 @@
 <directory name="csrss">
 	<xi:include href="csrss/csrss.xml" />
 </directory>
+<directory name="ntvdm">
+	<xi:include href="ntvdm/ntvdm.xml" />
+</directory>
 <directory name="system">
 	<xi:include href="system/directory.xml" />
 </directory>
