@@ -41,9 +41,10 @@ int TCPSocketState(void *ClientData,
 
     TI_DbgPrint(MID_TRACE,("Connection signalled: %d\n", 
 			   Connection->Signalled));
+
+    Connection->SignalState |= NewState;
     if( !Connection->Signalled ) {
 	Connection->Signalled = TRUE;
-	Connection->SignalState = NewState;
 	InsertTailList( &SignalledConnections, &Connection->SignalList );
     }
 

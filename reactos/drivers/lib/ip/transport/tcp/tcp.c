@@ -34,24 +34,31 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
                            Connection, Connection->SocketContext));
                 
     /* Things that can happen when we try the initial connection */
-    if( ((NewState & SEL_CONNECT) || (NewState & SEL_FIN)) &&
-	!(Connection->State & (SEL_CONNECT | SEL_FIN)) ) {
-
+    if( NewState & SEL_CONNECT ) {
 	while( !IsListEmpty( &Connection->ConnectRequest ) ) {
-	    Connection->State |= NewState & (SEL_CONNECT | SEL_FIN);
-	    Entry = RemoveHeadList( &Connection->ConnectRequest );
-	    Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
-	    Complete = Bucket->Request.RequestNotifyObject;
-	    TI_DbgPrint(DEBUG_TCP,
-			("Completing Connect Request %x\n", Bucket->Request));
-	    if( NewState & SEL_FIN ) Status = STATUS_CONNECTION_REFUSED;
-	    Complete( Bucket->Request.RequestContext, Status, 0 );
-	    /* Frees the bucket allocated in TCPConnect */
-	    PoolFreeBuffer( Bucket );
-	}
+            Connection->State |= NewState;
+            Entry = RemoveHeadList( &Connection->ConnectRequest );
+            TI_DbgPrint(DEBUG_TCP, ("Connect Event\n"));
+            
+            Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
+            Complete = Bucket->Request.RequestNotifyObject;
+            TI_DbgPrint(DEBUG_TCP,
+                        ("Completing Request %x\n", Bucket->Request));
+            
+            if( (NewState & (SEL_CONNECT | SEL_FIN)) == 
+                (SEL_CONNECT | SEL_FIN) ) 
+                Status = STATUS_CONNECTION_REFUSED;
+            else
+                Status = STATUS_SUCCESS;
+            
+            Complete( Bucket->Request.RequestContext, Status, 0 );
+            
+            /* Frees the bucket allocated in TCPConnect */
+            PoolFreeBuffer( Bucket );
+        }
     }
 
-    if( (NewState & SEL_ACCEPT) ) {
+    if( NewState & SEL_ACCEPT ) {
 	/* Handle readable on a listening socket -- 
 	 * TODO: Implement filtering 
 	 */
@@ -88,7 +95,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
     }
 
     /* Things that happen after we're connected */
-    if( (NewState & SEL_READ) ) {
+    if( NewState & SEL_READ ) {
 	TI_DbgPrint(DEBUG_TCP,("Readable: irp list %s\n",
 			       IsListEmpty(&Connection->ReceiveRequest) ?
 			       "empty" : "nonempty"));
@@ -146,6 +153,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
 	    }
 	}
     }
+
     if( NewState & SEL_FIN ) {
 	TI_DbgPrint(DEBUG_TCP, ("EOF From socket\n"));
 	
