@@ -997,7 +997,7 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW psei, SHELL_ExecuteW32 execfu
     }
 
     /* process the IDList */
-    if (sei_tmp.fMask & SEE_MASK_INVOKEIDLIST) /* 0x0c: includes SEE_MASK_IDLIST */
+    if (sei_tmp.fMask & SEE_MASK_IDLIST)
     {
 	IShellExecuteHookW* pSEH;
 
