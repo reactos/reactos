@@ -1,0 +1,830 @@
+Index: dinput_main.c
+===================================================================
+RCS file: /home/wine/wine/dlls/dinput/dinput_main.c,v
+retrieving revision 1.48
+diff -u -r1.48 dinput_main.c
+--- dinput_main.c	7 Oct 2004 03:06:51 -0000	1.48
++++ dinput_main.c	7 Dec 2004 21:59:12 -0000
+@@ -30,6 +30,8 @@
+  */
+ 
+ #include "config.h"
++#include "wine/port.h"
++
+ #include <assert.h>
+ #include <stdarg.h>
+ #include <string.h>
+@@ -72,7 +74,6 @@
+     return TRUE;
+ }
+ 
+-
+ /* register a direct draw driver. We better not use malloc for we are in
+  * the ELF startup initialisation at this point.
+  */
+@@ -161,10 +162,12 @@
+ {
+ 	IDirectInputImpl* This;
+ 	TRACE("(0x%08lx,%04lx,%p,%p)\n", (DWORD)hinst,dwVersion,ppDI,punkOuter);
++
++	//trace:dinput:DirectInputCreateA (0x00400000,0500,0x42bafc54,(nil))
+ 	This = (IDirectInputImpl*)HeapAlloc(GetProcessHeap(),0,sizeof(IDirectInputImpl));
+ 	This->lpVtbl = &ddi7avt;
+ 	This->ref = 1;
+-	if (dwVersion >= 0x0800) {
++	if (dwVersion > 0x0700) {
+ 	    This->version = 8;
+ 	} else {
+ 	    /* We do not differientiate between version 1, 2 and 7 */
+@@ -245,12 +248,21 @@
+     TRACE("(this=%p,0x%04lx '%s',%p,%p,%04lx)\n",
+ 	  This, dwDevType, _dump_DIDEVTYPE_value(dwDevType),
+ 	  lpCallback, pvRef, dwFlags);
++
++	if (nrof_dinput_devices==0){
++	  scan_mouse();
++	  scan_keyboard();
++	}
++	
+     TRACE(" flags: "); _dump_EnumDevices_dwFlags(dwFlags); TRACE("\n");
+     
++
+     for (i = 0; i < nrof_dinput_devices; i++) {
+         for (j = 0, r = -1; r != 0; j++) {
+ 	    devInstance.dwSize = sizeof(devInstance);
+ 	    TRACE("  - checking device %d ('%s')\n", i, dinput_devices[i]->name);
++		
++
+ 	    if ((r = dinput_devices[i]->enum_deviceA(dwDevType, dwFlags, &devInstance, This->version, j))) {
+ 	        if (lpCallback(&devInstance,pvRef) == DIENUM_STOP)
+ 		    return 0;
+@@ -271,11 +283,17 @@
+     DIDEVICEINSTANCEW devInstance;
+     int i, j, r;
+     
++		if (nrof_dinput_devices==0){
++	  scan_mouse();
++	  scan_keyboard();
++	}
++
+     TRACE("(this=%p,0x%04lx '%s',%p,%p,%04lx)\n",
+ 	  This, dwDevType, _dump_DIDEVTYPE_value(dwDevType),
+ 	  lpCallback, pvRef, dwFlags);
+     TRACE(" flags: "); _dump_EnumDevices_dwFlags(dwFlags); TRACE("\n");
+-    
++
++
+     for (i = 0; i < nrof_dinput_devices; i++) {
+         for (j = 0, r = -1; r != 0; j++) {
+ 	    devInstance.dwSize = sizeof(devInstance);
+@@ -347,7 +365,12 @@
+ 	int i;
+ 
+ 	TRACE("(this=%p,%s,%p,%p)\n",This,debugstr_guid(rguid),pdev,punk);
+-
++	
++	if (nrof_dinput_devices==0){
++	  scan_mouse();
++	  scan_keyboard();
++	}
++	
+ 	/* Loop on all the devices to see if anyone matches the given GUID */
+ 	for (i = 0; i < nrof_dinput_devices; i++) {
+ 	  HRESULT ret;
+@@ -366,9 +389,14 @@
+         IDirectInputImpl *This = (IDirectInputImpl *)iface;
+ 	HRESULT ret_value = DIERR_DEVICENOTREG;
+ 	int i;
+-
++    
+ 	TRACE("(this=%p,%s,%p,%p)\n",This,debugstr_guid(rguid),pdev,punk);
+ 
++	if (nrof_dinput_devices==0){
++	  scan_mouse();
++	  scan_keyboard();
++	}
++	
+ 	/* Loop on all the devices to see if anyone matches the given GUID */
+ 	for (i = 0; i < nrof_dinput_devices; i++) {
+ 	  HRESULT ret;
+@@ -429,6 +457,11 @@
+ 
+   TRACE("(%p)->(%s, %s, %p, %p)\n", This, debugstr_guid(rguid), debugstr_guid(riid), pvOut, lpUnknownOuter);
+ 
++  if (nrof_dinput_devices==0){
++    scan_mouse();
++    scan_keyboard();
++  }  
++
+   /* Loop on all the devices to see if anyone matches the given GUID */
+   for (i = 0; i < nrof_dinput_devices; i++) {
+     HRESULT ret;
+@@ -450,6 +483,13 @@
+   int i;
+ 
+   TRACE("(%p)->(%s, %s, %p, %p)\n", This, debugstr_guid(rguid), debugstr_guid(riid), pvOut, lpUnknownOuter);
++
++  	if (nrof_dinput_devices==0){
++	  scan_mouse();
++	  scan_keyboard();
++	}
++  
++
+ 
+   /* Loop on all the devices to see if anyone matches the given GUID */
+   for (i = 0; i < nrof_dinput_devices; i++) {
+Index: dinput_private.h
+===================================================================
+RCS file: /home/wine/wine/dlls/dinput/dinput_private.h,v
+retrieving revision 1.13
+diff -u -r1.13 dinput_private.h
+--- dinput_private.h	13 Sep 2004 19:16:47 -0000	1.13
++++ dinput_private.h	7 Dec 2004 21:59:12 -0000
+@@ -52,4 +52,7 @@
+ 
+ extern HINSTANCE DINPUT_instance;
+ 
++void scan_keyboard();
++void scan_mouse();
++
+ #endif /* __WINE_DLLS_DINPUT_DINPUT_PRIVATE_H */
+Index: joystick_linux.c
+===================================================================
+RCS file: /home/wine/wine/dlls/dinput/joystick_linux.c,v
+retrieving revision 1.17
+diff -u -r1.17 joystick_linux.c
+--- joystick_linux.c	17 Sep 2004 18:10:41 -0000	1.17
++++ joystick_linux.c	7 Dec 2004 21:59:13 -0000
+@@ -656,6 +656,8 @@
+ 
+ DECL_GLOBAL_CONSTRUCTOR(joydev_register) { dinput_register_device(&joydev); }
+ 
++
++
+ /******************************************************************************
+  *	Joystick
+  */
+Index: keyboard.c
+===================================================================
+RCS file: /home/wine/wine/dlls/dinput/keyboard.c,v
+retrieving revision 1.10
+diff -u -r1.10 keyboard.c
+--- keyboard.c	28 Oct 2004 21:01:44 -0000	1.10
++++ keyboard.c	7 Dec 2004 21:59:13 -0000
+@@ -37,6 +37,14 @@
+ 
+ WINE_DEFAULT_DEBUG_CHANNEL(dinput);
+ 
++//fast fix misning from mingw headers
++#ifdef __REACTOS__
++#define LLKHF_EXTENDED       (KF_EXTENDED >> 8)
++#define LLKHF_INJECTED       0x00000010
++//#define LLKHF_ALTDOWN        (KF_ALTDOWN >> 8)
++#define LLKHF_UP             (KF_UP >> 8)
++#endif
++
+ static IDirectInputDevice8AVtbl SysKeyboardAvt;
+ static IDirectInputDevice8WVtbl SysKeyboardWvt;
+ 
+@@ -84,8 +92,59 @@
+ static CRITICAL_SECTION keyboard_crit = { &critsect_debug, -1, 0, 0, 0, 0 };
+ 
+ static DWORD keyboard_users;
++
++#ifndef __REACTOS__
+ static HHOOK keyboard_hook;
++#endif
++
++#ifdef __REACTOS__
++void reactos_input_keyboard();
++
++void reactos_input_keyboard()
++{
++  MSG msg;
++  BOOL fDone;
++  int disk_code = -1;
++  BOOL down;
++  BYTE oldDInputKeyState[256];
++  int t;
++  
++  memcpy(&oldDInputKeyState,&DInputKeyState,256);
++  GetKeyboardState(DInputKeyState);
++  
++  for( t=0;t<255;t++)
++  {
++	  if (oldDInputKeyState[t]!=DInputKeyState[t]) disk_code=t;	  
++  }
++  	
++
++  if (disk_code!=-1) {
++	  if (current->buffer != NULL)
++     {
++      int n;
++      n = (current->start + current->count) % current->buffersize;
++
++      current->buffer[n].dwOfs = (BYTE) disk_code;
++      current->buffer[n].dwData = DInputKeyState[disk_code];
++      current->buffer[n].dwTimeStamp = 10;
++      current->buffer[n].dwSequence = current->dinput->evsequence++;
++
++	  
++      if (current->count == current->buffersize)
++                {
++                  current->start = ++current->start % current->buffersize;
++                  current->overflow = TRUE;
++                }
++              else
++                current->count++;
++              
++            }
++  }
++
+ 
++}
++#endif
++#ifndef __REACTOS__
+ LRESULT CALLBACK KeyboardCallback( int code, WPARAM wparam, LPARAM lparam )
+ {
+   TRACE("(%d,%d,%ld)\n", code, wparam, lparam);
+@@ -143,6 +202,7 @@
+ 
+   return CallNextHookEx(keyboard_hook, code, wparam, lparam);
+ }
++#endif
+ 
+ static GUID DInput_Wine_Keyboard_GUID = { /* 0ab8648a-7735-11d2-8c73-71df54a96441 */
+   0x0ab8648a,
+@@ -235,7 +295,7 @@
+   return FALSE;
+ }
+ 
+-static SysKeyboardImpl *alloc_device(REFGUID rguid, LPVOID kvt, IDirectInputImpl *dinput)
++static SysKeyboardImpl *alloc_device_keyboard(REFGUID rguid, LPVOID kvt, IDirectInputImpl *dinput)
+ {
+     SysKeyboardImpl* newDevice;
+     newDevice = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(SysKeyboardImpl));
+@@ -244,11 +304,14 @@
+     memcpy(&(newDevice->guid),rguid,sizeof(*rguid));
+     newDevice->dinput = dinput;
+ 
++#ifndef __REACTOS__
+     EnterCriticalSection(&keyboard_crit);
++
+     if (!keyboard_users++)
+         keyboard_hook = SetWindowsHookExW( WH_KEYBOARD_LL, KeyboardCallback, DINPUT_instance, 0 );
+-    LeaveCriticalSection(&keyboard_crit);
+ 
++    LeaveCriticalSection(&keyboard_crit);
++#endif
+     return newDevice;
+ }
+ 
+@@ -262,7 +325,7 @@
+ 	IsEqualGUID(&IID_IDirectInputDevice2A,riid) ||
+ 	IsEqualGUID(&IID_IDirectInputDevice7A,riid) ||
+ 	IsEqualGUID(&IID_IDirectInputDevice8A,riid)) {
+-      *pdev = (IDirectInputDeviceA*) alloc_device(rguid, &SysKeyboardAvt, dinput);
++      *pdev = (IDirectInputDeviceA*) alloc_device_keyboard(rguid, &SysKeyboardAvt, dinput);
+       TRACE("Creating a Keyboard device (%p)\n", *pdev);
+       return DI_OK;
+     } else
+@@ -280,7 +343,7 @@
+ 	IsEqualGUID(&IID_IDirectInputDevice2W,riid) ||
+ 	IsEqualGUID(&IID_IDirectInputDevice7W,riid) ||
+ 	IsEqualGUID(&IID_IDirectInputDevice8W,riid)) {
+-      *pdev = (IDirectInputDeviceW*) alloc_device(rguid, &SysKeyboardWvt, dinput);
++      *pdev = (IDirectInputDeviceW*) alloc_device_keyboard(rguid, &SysKeyboardWvt, dinput);
+       TRACE("Creating a Keyboard device (%p)\n", *pdev);
+       return DI_OK;
+     } else
+@@ -289,7 +352,7 @@
+   return DIERR_DEVICENOTREG;
+ }
+ 
+-static dinput_device keyboarddev = {
++dinput_device keyboarddev = {
+   100,
+   "Wine keyboard driver",
+   keyboarddev_enum_deviceA,
+@@ -298,6 +361,11 @@
+   keyboarddev_create_deviceW
+ };
+ 
++void scan_keyboard()
++{
++    dinput_register_device(&keyboarddev);
++}
++
+ DECL_GLOBAL_CONSTRUCTOR(keyboarddev_register) { dinput_register_device(&keyboarddev); }
+ 
+ static ULONG WINAPI SysKeyboardAImpl_Release(LPDIRECTINPUTDEVICE8A iface)
+@@ -309,12 +377,14 @@
+ 	if (ref)
+ 		return ref;
+ 
++#ifndef __REACTOS__
+ 	EnterCriticalSection(&keyboard_crit);
+ 	if (!--keyboard_users) {
+ 	    UnhookWindowsHookEx( keyboard_hook );
+ 	    keyboard_hook = 0;
+ 	}
+ 	LeaveCriticalSection(&keyboard_crit);
++#endif
+ 
+ 	/* Free the data queue */
+ 	if (This->buffer != NULL)
+@@ -357,11 +427,16 @@
+ 	return DI_OK;
+ }
+ 
++
+ static HRESULT WINAPI SysKeyboardAImpl_GetDeviceState(
+ 	LPDIRECTINPUTDEVICE8A iface,DWORD len,LPVOID ptr
+ )
+ {
+     TRACE("(%p)->(%ld,%p)\n", iface, len, ptr);
++	
++#ifdef __REACTOS__
++	reactos_input_keyboard();
++#endif
+ 
+     /* Note: device does not need to be acquired */
+     if (len != 256)
+@@ -387,8 +462,12 @@
+ 	LPDWORD entries,DWORD flags
+ )
+ {
++	
+ 	SysKeyboardImpl *This = (SysKeyboardImpl *)iface;
+ 	int ret = DI_OK, i = 0;
++#ifdef __REACTOS__
++     reactos_input_keyboard();
++#endif
+ 
+ 	TRACE("(this=%p,%ld,%p,%p(%ld)),0x%08lx)\n",
+ 	      This,dodsize,dod,entries,entries?*entries:0,flags);
+@@ -523,6 +602,7 @@
+           }
+         else
+           This->buffer = NULL;
++
+ 
+ 	return DI_OK;
+ }
+Index: mouse.c
+===================================================================
+RCS file: /home/wine/wine/dlls/dinput/mouse.c,v
+retrieving revision 1.12
+diff -u -r1.12 mouse.c
+--- mouse.c	21 Sep 2004 20:04:37 -0000	1.12
++++ mouse.c	7 Dec 2004 21:59:14 -0000
+@@ -40,6 +40,13 @@
+ #define MOUSE_HACK
+ 
+ WINE_DEFAULT_DEBUG_CHANNEL(dinput);
++typedef struct {
++                     POINT pt;
++                     DWORD mouseData;
++                     DWORD flags;
++                     DWORD time;
++                     ULONG_PTR dwExtraInfo;
++} MSLLHOOKSTRUCT, *PMSLLHOOKSTRUCT;
+ 
+ /* Wine mouse driver object instances */
+ #define WINE_MOUSE_X_AXIS_INSTANCE   0
+@@ -148,6 +155,9 @@
+ /* FIXME: This is ugly and not thread safe :/ */
+ static IDirectInputDevice8A* current_lock = NULL;
+ 
++/* FIXME: This is ugly but needed on Windows */
++static int mouse_set = 0;
++
+ static GUID DInput_Wine_Mouse_GUID = { /* 9e573ed8-7734-11d2-8d4a-23903fb6bdf7 */
+     0x9e573ed8,
+     0x7734,
+@@ -239,7 +249,7 @@
+     return FALSE;
+ }
+ 
+-static SysMouseImpl *alloc_device(REFGUID rguid, LPVOID mvt, IDirectInputImpl *dinput)
++static SysMouseImpl *alloc_device_mouse(REFGUID rguid, LPVOID mvt, IDirectInputImpl *dinput)
+ {
+     int offset_array[WINE_INTERNALMOUSE_NUM_OBJS] = {
+ 	FIELD_OFFSET(Wine_InternalMouseData, lX),
+@@ -253,7 +263,9 @@
+     newDevice = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(SysMouseImpl));
+     newDevice->ref = 1;
+     newDevice->lpVtbl = mvt;
++#ifndef __REACTOS__
+     InitializeCriticalSection(&(newDevice->crit));
++#endif
+     memcpy(&(newDevice->guid),rguid,sizeof(*rguid));
+ 
+     /* Per default, Wine uses its internal data format */
+@@ -277,7 +289,7 @@
+ 	    IsEqualGUID(&IID_IDirectInputDevice2A,riid) ||
+ 	    IsEqualGUID(&IID_IDirectInputDevice7A,riid) ||
+ 	    IsEqualGUID(&IID_IDirectInputDevice8A,riid)) {
+-	    *pdev = (IDirectInputDeviceA*) alloc_device(rguid, &SysMouseAvt, dinput);
++	    *pdev = (IDirectInputDeviceA*) alloc_device_mouse(rguid, &SysMouseAvt, dinput);
+ 	    TRACE("Creating a Mouse device (%p)\n", *pdev);
+ 	    return DI_OK;
+ 	} else
+@@ -296,7 +308,7 @@
+ 	    IsEqualGUID(&IID_IDirectInputDevice2W,riid) ||
+ 	    IsEqualGUID(&IID_IDirectInputDevice7W,riid) ||
+ 	    IsEqualGUID(&IID_IDirectInputDevice8W,riid)) {
+-	    *pdev = (IDirectInputDeviceW*) alloc_device(rguid, &SysMouseWvt, dinput);
++	    *pdev = (IDirectInputDeviceW*) alloc_device_mouse(rguid, &SysMouseWvt, dinput);
+ 	    TRACE("Creating a Mouse device (%p)\n", *pdev);
+ 	    return DI_OK;
+ 	} else
+@@ -305,6 +317,7 @@
+     
+     return DIERR_DEVICENOTREG;
+ }
++
+ static dinput_device mousedev = {
+     100,
+     "Wine mouse driver",
+@@ -314,6 +327,11 @@
+     mousedev_create_deviceW
+ };
+ 
++void scan_mouse()
++{
++    dinput_register_device(&mousedev);
++}
++
+ DECL_GLOBAL_CONSTRUCTOR(mousedev_register) { dinput_register_device(&mousedev); }
+ 
+ /******************************************************************************
+@@ -335,14 +353,21 @@
+     /* Free the data queue */
+     if (This->data_queue != NULL)
+ 	HeapFree(GetProcessHeap(),0,This->data_queue);
+-    
++
++#ifndef __REACTOS__
+     if (This->hook) {
+ 	UnhookWindowsHookEx( This->hook );
+ 	if (This->dwCoopLevel & DISCL_EXCLUSIVE)
+             ShowCursor(TRUE); /* show cursor */
+     }
+     DeleteCriticalSection(&(This->crit));
++#endif
++
++#ifdef __REACTOS__
++if (This->dwCoopLevel & DISCL_EXCLUSIVE)
++            ShowCursor(TRUE); /* show cursor */
+     
++#endif
+     /* Free the DataFormat */
+     if (This->df != &(Wine_InternalMouseFormat)) {
+ 	HeapFree(GetProcessHeap(), 0, This->df->rgodf);
+@@ -585,9 +610,13 @@
+     
+     TRACE("(this=%p)\n",This);
+     
++	
++
+     if (This->acquired == 0) {
+ 	POINT point;
+ 	
++	
++
+ 	/* Store (in a global variable) the current lock */
+ 	current_lock = (IDirectInputDevice8A*)This;
+ 	
+@@ -611,8 +640,9 @@
+ 	/* Install our mouse hook */
+ 	if (This->dwCoopLevel & DISCL_EXCLUSIVE)
+ 	    ShowCursor(FALSE); /* hide cursor */
++#ifndef __REACTOS__
+ 	This->hook = SetWindowsHookExA( WH_MOUSE_LL, dinput_mouse_hook, DINPUT_instance, 0 );
+-	
++#endif	
+ 	/* Get the window dimension and find the center */
+ 	GetWindowRect(This->win, &rect);
+ 	This->win_centerX = (rect.right  - rect.left) / 2;
+@@ -649,6 +679,8 @@
+     
+     if (This->acquired) {
+ 	/* Reinstall previous mouse event handler */
++
++#ifndef __REACTOS__
+ 	if (This->hook) {
+ 	    UnhookWindowsHookEx( This->hook );
+ 	    This->hook = 0;
+@@ -656,7 +688,12 @@
+ 	    if (This->dwCoopLevel & DISCL_EXCLUSIVE)
+ 		ShowCursor(TRUE); /* show cursor */
+         }
+-	
++#endif
++#ifdef __REACTOS__
++	if (This->dwCoopLevel & DISCL_EXCLUSIVE)
++		ShowCursor(TRUE); /* show cursor */
++#endif
++
+         /* No more locks */
+         current_lock = NULL;
+ 	
+@@ -675,6 +712,76 @@
+     return DI_OK;
+ }
+ 
++// if you call poll then to getdevicestate
++// it did not send back right value in windows 
++int poll_mouse=0;
++
++#ifdef __REACTOS__
++void getmousesvalue(LPDIRECTINPUTDEVICE8A iface);
++int filp=0;
++void getmousesvalue(LPDIRECTINPUTDEVICE8A iface)
++{
++	static long last_event = 0;
++
++    POINT point;
++	SysMouseImpl *This = (SysMouseImpl *)iface;        
++
++	This->m_state.rgbButtons[0] =  ((GetKeyState(VK_LBUTTON) & 0x80) ? 0xFF : 0x00);	
++	This->m_state.rgbButtons[1] =  ((GetKeyState(VK_RBUTTON) & 0x80) ? 0xFF : 0x00);	
++	This->m_state.rgbButtons[2] =  ((GetKeyState(VK_MBUTTON) & 0x80) ? 0xFF : 0x00);	
++	This->m_state.rgbButtons[3] =  ((GetKeyState(VK_XBUTTON1) & 0x80) ? 0xFF : 0x00);	
++	This->m_state.rgbButtons[4] =  ((GetKeyState(VK_XBUTTON2) & 0x80) ? 0xFF : 0x00);	
++
++    
++	
++
++	if (poll_mouse==1) filp=0;
++	if (filp==2) filp=0;
++	if (filp==0) {
++                  GetCursorPos( &point );   	
++		
++	if (This->prevX == point.x) This->m_state.lX = 0;
++	else {
++          This->prevX = point.x;
++          This->m_state.lX = point.x - This->org_coords.x; 
++	      } 
++
++	if (This->prevY == point.y) This->m_state.lY = 0;
++	else {
++         This->prevY = point.y;
++          This->m_state.lY = point.y - This->org_coords.y; 
++	    } 
++
++   	}
++	else 
++	{
++	 This->m_state.lX = 0;
++     This->m_state.lY = 0;	 
++	}
++    filp++;
++    
++// check see if buffer have been set
++
++}
++
++#endif
++
++static HRESULT WINAPI SysMouseAImpl_Poll(LPDIRECTINPUTDEVICE8A iface)
++{
++ int retValue = DI_OK;
++ 
++SysMouseImpl *This = (SysMouseImpl *)iface;           
++ if (poll_mouse==0) {
++	                 retValue=SysMouseAImpl_Acquire(iface);	
++                     poll_mouse=1; 
++					 if (retValue!=DI_OK) retValue=DIERR_NOTACQUIRED;
++                     else retValue = DI_OK;
++                     }
++
++ return retValue;
++}
++	
++
+ /******************************************************************************
+   *     GetDeviceState : returns the "state" of the mouse.
+   *
+@@ -684,26 +791,42 @@
+ static HRESULT WINAPI SysMouseAImpl_GetDeviceState(
+ 	LPDIRECTINPUTDEVICE8A iface,DWORD len,LPVOID ptr
+ ) {
+-    SysMouseImpl *This = (SysMouseImpl *)iface;
+-    
++    SysMouseImpl *This = (SysMouseImpl *)iface;        
++    POINT point;    	 
++
++#ifndef __REACTOS__
+     EnterCriticalSection(&(This->crit));
++#endif
++
++#ifdef __REACTOS__
++getmousesvalue(iface);
++#endif
+     TRACE("(this=%p,0x%08lx,%p): \n",This,len,ptr);
+-    
+-    /* Copy the current mouse state */
++    	
++    /* Copy the current mouse state */	   
+     fill_DataFormat(ptr, &(This->m_state), This->wine_df);
+-    
+-    /* Initialize the buffer when in relative mode */
+-    if (This->absolute == 0) {
+-	This->m_state.lX = 0;
+-	This->m_state.lY = 0;
+-	This->m_state.lZ = 0;
+-    }
+-    
++
++
++	// this fix windows bugs when 
++	// some program calling on mouse poll
++	if (poll_mouse==1) poll_mouse=0;		 
++	else {
++	      if (This->absolute == 0) {
++	                       This->m_state.lX = 0;
++	                       This->m_state.lY = 0;
++	                       This->m_state.lZ = 0;
++	                       } 
++	     }
++	
++	
+     /* Check if we need to do a mouse warping */
+     if (This->need_warp == WARP_NEEDED) {
+ 	dinput_window_check(This);
+-	TRACE("Warping mouse to %ld - %ld\n", This->mapped_center.x, This->mapped_center.y);
+-	SetCursorPos( This->mapped_center.x, This->mapped_center.y );
++	TRACE("Warping mouse to %ld - %ld\n", This->mapped_center.x, This->mapped_center.y);	
++        if (mouse_set==0){
++           SetCursorPos( This->mapped_center.x, This->mapped_center.y );
++           mouse_set++;
++           }
+ 	
+ #ifdef MOUSE_HACK
+ 	This->need_warp = WARP_DONE;
+@@ -711,9 +834,11 @@
+ 	This->need_warp = WARP_STARTED;
+ #endif
+     }
+-    
++
++#ifndef __REACTOS__
+     LeaveCriticalSection(&(This->crit));
+-    
++#endif
++
+     TRACE("(X: %ld - Y: %ld - Z: %ld  L: %02x M: %02x R: %02x)\n",
+ 	  This->m_state.lX, This->m_state.lY, This->m_state.lZ,
+ 	  This->m_state.rgbButtons[0], This->m_state.rgbButtons[2], This->m_state.rgbButtons[1]);
+@@ -724,6 +849,7 @@
+ /******************************************************************************
+   *     GetDeviceState : gets buffered input data.
+   */
++
+ static HRESULT WINAPI SysMouseAImpl_GetDeviceData(LPDIRECTINPUTDEVICE8A iface,
+ 						  DWORD dodsize,
+ 						  LPDIDEVICEOBJECTDATA dod,
+@@ -733,16 +859,73 @@
+     SysMouseImpl *This = (SysMouseImpl *)iface;
+     DWORD len;
+     int nqtail;
++#ifdef __REACTOS__
++static int last_event=0;
++const int size = sizeof(DIDEVICEOBJECTDATA) * 1;
++static count=0;
++static DWORD time=0;
++#endif
++
+     
+     TRACE("(%p)->(dods=%ld,entries=%ld,fl=0x%08lx)\n",This,dodsize,*entries,flags);
+     
++#ifdef __REACTOS__
++getmousesvalue(iface);
++#endif
++
++	// windows does not get any data if 
++	// we do not call manual to mouse Acquire
++	// this is only need if some apps calling on getdevice data direcly
++	// in windows GetdeviceData does always update first the data
++	// then return it.
++	SysMouseAImpl_Acquire(iface);
++
++
+     if (This->acquired == 0) {
+ 	WARN(" application tries to get data from an unacquired device !\n");
+ 	return DIERR_NOTACQUIRED;
+     }
+     
++#ifdef __REACTOS__	
++  FIXME("This is broken in Tribes, need right implant of the buffer!!!!!!!!\n"); 
++
++  *entries = 5;
++  if (GetTickCount()-time <50) return DI_OK;
++  time = GetTickCount();
++   
++  dod[0].dwOfs =   DIMOFS_X;
++  dod[0].dwData =   This->m_state.lX;
++  dod[0].dwTimeStamp =  0;
++  dod[0].dwSequence = last_event++;
++   
++  dod[1].dwOfs =   DIMOFS_Y;
++  dod[1].dwData =   This->m_state.lY;
++  dod[1].dwTimeStamp =  0;
++  dod[1].dwSequence = last_event++;
++  
++  dod[2].dwOfs =   DIMOFS_BUTTON0;
++  dod[2].dwData =   This->m_state.rgbButtons[0];
++  dod[2].dwTimeStamp =  0;
++  dod[2].dwSequence = last_event++;
++  
++  dod[3].dwOfs =   DIMOFS_BUTTON1;
++  dod[3].dwData =   This->m_state.rgbButtons[1];
++  dod[3].dwTimeStamp =  0;
++  dod[0].dwSequence = last_event++;
++  
++  dod[4].dwOfs =   DIMOFS_BUTTON2;
++  dod[4].dwData =   This->m_state.rgbButtons[2];
++  dod[4].dwTimeStamp =  50;
++  dod[4].dwSequence = last_event++;
++
++#endif
++
++#ifndef __REACTOS__
+     EnterCriticalSection(&(This->crit));
+-    
++
++
++	// FIXME mouse are bit choppy here. 
++
+     len = ((This->queue_head < This->queue_tail) ? This->queue_len : 0)
+ 	+ (This->queue_head - This->queue_tail);
+     if (len > *entries) len = *entries;
+@@ -757,7 +940,9 @@
+     } else {
+ 	if (dodsize < sizeof(DIDEVICEOBJECTDATA_DX3)) {
+ 	    ERR("Wrong structure size !\n");
++
+ 	    LeaveCriticalSection(&(This->crit));
++
+ 	    return DIERR_INVALIDPARAM;
+ 	}
+ 	
+@@ -773,6 +958,7 @@
+ 	    
+ 	    /* Copy the buffered data into the application queue */
+ 	    memcpy(dod + *entries, This->data_queue + nqtail, span * dodsize);
++
+ 	    /* Advance position */
+ 	    nqtail += span;
+ 	    if (nqtail >= This->queue_len) nqtail -= This->queue_len;
+@@ -782,14 +968,19 @@
+     }
+     if (!(flags & DIGDD_PEEK))
+ 	This->queue_tail = nqtail;
+-    
++
+     LeaveCriticalSection(&(This->crit));
+-    
++
+     /* Check if we need to do a mouse warping */
++   
++
+     if (This->need_warp == WARP_NEEDED) {
+ 	dinput_window_check(This);
+ 	TRACE("Warping mouse to %ld - %ld\n", This->mapped_center.x, This->mapped_center.y);
+-	SetCursorPos( This->mapped_center.x, This->mapped_center.y );
++        if (mouse_set==0){
++           SetCursorPos( This->mapped_center.x, This->mapped_center.y );
++           mouse_set++;
++           }
+ 	
+ #ifdef MOUSE_HACK
+ 	This->need_warp = WARP_DONE;
+@@ -797,6 +988,7 @@
+ 	This->need_warp = WARP_STARTED;
+ #endif
+     }
++#endif    
+     return DI_OK;
+ }
+ 
+@@ -1110,7 +1302,7 @@
+     IDirectInputDevice2AImpl_SendForceFeedbackCommand,
+     IDirectInputDevice2AImpl_EnumCreatedEffectObjects,
+     IDirectInputDevice2AImpl_Escape,
+-    IDirectInputDevice2AImpl_Poll,
++    SysMouseAImpl_Poll,
+     IDirectInputDevice2AImpl_SendDeviceData,
+     IDirectInputDevice7AImpl_EnumEffectsInFile,
+     IDirectInputDevice7AImpl_WriteEffectToFile,
+@@ -1152,7 +1344,7 @@
+     XCAST(SendForceFeedbackCommand)IDirectInputDevice2AImpl_SendForceFeedbackCommand,
+     XCAST(EnumCreatedEffectObjects)IDirectInputDevice2AImpl_EnumCreatedEffectObjects,
+     XCAST(Escape)IDirectInputDevice2AImpl_Escape,
+-    XCAST(Poll)IDirectInputDevice2AImpl_Poll,
++    XCAST(Poll)SysMouseAImpl_Poll,
+     XCAST(SendDeviceData)IDirectInputDevice2AImpl_SendDeviceData,
+     IDirectInputDevice7WImpl_EnumEffectsInFile,
+     IDirectInputDevice7WImpl_WriteEffectToFile,
