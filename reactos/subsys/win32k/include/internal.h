@@ -106,7 +106,7 @@ typedef struct _THRDCARETINFO
   InterlockedIncrement((LONG*)(ClassObj))
 
 #define ClassDereferenceObject(ClassObj) \
-  if(InterlockedDecrement((LONG*)((ClassObj)->RefCount)) == 0) \
+  if(InterlockedDecrement((LONG*)&((ClassObj)->RefCount)) == 0) \
   { \
     ExFreePool(ClassObj); \
   }
