@@ -22,60 +22,32 @@
  * MA 02139, USA.  
  *
  * --------------------------------------------------------------------
- * 
- * 	19990529 (Emanuele Aliberti)
- * 		Compiled successfully with egcs 1.1.2
  */
-#include <ddk/ntddk.h>
-#include <sm/api.h>
 #include "smss.h"
+//#include <ntdll/rtl.h>
+#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <debug.h>
-
-
-void
-DisplayString(LPCWSTR lpwString)
-{
-  UNICODE_STRING us;
-
-  RtlInitUnicodeString(&us, lpwString);
-  NtDisplayString(&us);
-}
-
-
-void
-PrintString(char* fmt,...)
-{
-  char buffer[512];
-  va_list ap;
-  UNICODE_STRING UnicodeString;
-  ANSI_STRING AnsiString;
-
-  va_start(ap, fmt);
-  vsprintf(buffer, fmt, ap);
-  va_end(ap);
-
-  RtlInitAnsiString(&AnsiString, buffer);
-  RtlAnsiStringToUnicodeString(&UnicodeString,
-			       &AnsiString,
-			       TRUE);
-  NtDisplayString(&UnicodeString);
-  RtlFreeUnicodeString(&UnicodeString);
-}
-
 
 /* Native image's entry point */
 
 VOID STDCALL
 NtProcessStartup(PPEB Peb)
 {
-  HANDLE Children[2]; /* csrss, winlogon */
   NTSTATUS Status;
 
   Status = InitSessionManager(Children);
   if (!NT_SUCCESS(Status))
     {
+      int i;
+      for (i=0; i < (sizeof Children / sizeof Children[0]); i++)
+      {
+        if (Children[i])
+        {
+          NtTerminateProcess(Children[i],0);
+        }
+      }
       DPRINT1("SM: Initialization failed!\n");
       goto ByeBye;
     }

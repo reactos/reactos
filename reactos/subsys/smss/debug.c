@@ -1,6 +1,6 @@
 /* $Id: smss.c 12852 2005-01-06 13:58:04Z mf $
  *
- * client.c - Session Manager client Management
+ * debug.c - Session Manager debug messages switch and router
  * 
  * ReactOS Operating System
  * 
@@ -36,8 +36,8 @@ HANDLE DbgUiApiPort = INVALID_HANDLE_VALUE;
 
 /* FUNCTIONS *********************************************************/
 
-NTSTATUS STDCALL
-SmpInitializeDbgSs (VOID)
+NTSTATUS
+SmInitializeDbgSs (VOID)
 {
   NTSTATUS Status;
   UNICODE_STRING UnicodeString;

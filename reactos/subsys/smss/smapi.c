@@ -19,7 +19,7 @@
 
 static HANDLE SmApiPort = INVALID_HANDLE_VALUE;
 
-/* SM API **********************************************************************/
+/* SM API *******************************************************************/
 
 #define SMAPI(n) \
 NTSTATUS FASTCALL n (PSM_PORT_MESSAGE Request)
@@ -128,14 +128,18 @@ SmpApiThread(HANDLE Port)
 	}
 }
 
+
+/* LPC PORT INITIALIZATION **************************************************/
+
+
 /**********************************************************************
  * NAME
- * 	SmpCreateApiPort/0
+ * 	SmCreateApiPort/0
  *
  * DECRIPTION
  */
 NTSTATUS
-SmpCreateApiPort(VOID)
+SmCreateApiPort(VOID)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING UnicodeString;

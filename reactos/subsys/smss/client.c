@@ -25,7 +25,6 @@
  */
 #define NTOS_MODE_USER
 #include <ntos.h>
-#include <sm/api.h>
 #include "smss.h"
 
 /* Private ADT */
@@ -51,14 +50,37 @@ struct _SM_CLIENT_DIRECTORY
 } SmpClientDirectory;
 
 /**********************************************************************
- *	SmpInitializeClientManagement/0
+ *	SmInitializeClientManagement/0
  */
-VOID STDCALL
-SmpInitializeClientManagement (VOID)
+NTSTATUS
+SmInitializeClientManagement (VOID)
 {
 	RtlInitializeCriticalSection(& SmpClientDirectory.Lock);
 	SmpClientDirectory.Count = 0;
 	SmpClientDirectory.Client = NULL;
+	return STATUS_SUCCESS;
+}
+
+/**********************************************************************
+ *	SmpLookupClient/1
+ */
+PSM_CLIENT_DATA STDCALL
+SmpLookupClient (USHORT SubsystemId)
+{
+	PSM_CLIENT_DATA Client = NULL;
+
+	if (SmpClientDirectory.Count > 0)
+	{
+		RtlEnterCriticalSection (& SmpClientDirectory.Lock);
+		Client = SmpClientDirectory.Client;
+		while (NULL != Client->Next)
+		{
+			if (SubsystemId == Client->SubsystemId) break;
+			Client = Client->Next;
+		}
+		RtlLeaveCriticalSection (& SmpClientDirectory.Lock);
+	}
+	return Client;
 }
 
 /**********************************************************************
@@ -70,6 +92,14 @@ SmpCreateClient(SM_PORT_MESSAGE Request)
 	PSM_CLIENT_DATA pClient = NULL;
 
 	/*
+	 * Check if a client for the ID already exist.
+	 */
+	if (SmpLookupClient(0)) //FIXME
+	{
+		DbgPrint("SMSS: %s: attempt to register again subsystem %d.\n",__FUNCTION__,0);
+		return STATUS_UNSUCCESSFUL;
+	}
+	/*
 	 * Allocate the storage for client data
 	 */
 	pClient = RtlAllocateHeap (SmpHeap,
@@ -79,6 +109,8 @@ SmpCreateClient(SM_PORT_MESSAGE Request)
 	/*
 	 * Initialize the client data
 	 */
+//	pClient->SubsystemId = Request->Subsystem;
+	pClient->Initialized = FALSE;
 	// TODO
 	/*
 	 * Insert the new descriptor in the
