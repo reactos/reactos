@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.80 2004/07/08 00:40:30 weiden Exp $
+/* $Id: stubs.c,v 1.81 2004/07/30 19:18:39 jimtabor Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -906,21 +906,6 @@ GetSystemRegistryQuota(
  */
 BOOL
 STDCALL
-GetSystemTimes(
-    LPFILETIME lpIdleTime,
-    LPFILETIME lpKernelTime,
-    LPFILETIME lpUserTime
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
 GetThreadIOPendingFlag(
     HANDLE hThread,
     PBOOL lpIOIsPending
@@ -1047,21 +1032,6 @@ MapUserPhysicalPagesScatter(
     PVOID *VirtualAddresses,
     ULONG_PTR NumberOfPages,
     PULONG_PTR PageArray OPTIONAL
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-HANDLE
-STDCALL
-OpenThread(
-    DWORD dwDesiredAccess,
-    BOOL bInheritHandle,
-    DWORD dwThreadId
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

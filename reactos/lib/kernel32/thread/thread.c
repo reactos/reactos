@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.50 2004/06/13 20:04:56 navaraf Exp $
+/* $Id: thread.c,v 1.51 2004/07/30 19:18:39 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -246,6 +246,49 @@ CreateRemoteThread
  /* success */
  if(lpThreadId) *lpThreadId = (DWORD)cidClientId.UniqueThread;
  return hThread;
+}
+
+
+/*
+ * @implemented
+ */
+HANDLE
+STDCALL
+OpenThread(
+    DWORD dwDesiredAccess,
+    BOOL bInheritHandle,
+    DWORD dwThreadId
+    )
+{
+   NTSTATUS errCode;
+   HANDLE ThreadHandle;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   CLIENT_ID ClientId ;
+   
+   ClientId.UniqueProcess = INVALID_HANDLE_VALUE;
+   ClientId.UniqueThread = (HANDLE)dwThreadId;
+   
+   ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
+   ObjectAttributes.RootDirectory = (HANDLE)NULL;
+   ObjectAttributes.SecurityDescriptor = NULL;
+   ObjectAttributes.SecurityQualityOfService = NULL;
+   ObjectAttributes.ObjectName = NULL;
+   
+   if (bInheritHandle == TRUE)
+     ObjectAttributes.Attributes = OBJ_INHERIT;
+   else
+     ObjectAttributes.Attributes = 0;
+   
+   errCode = NtOpenThread(&ThreadHandle,
+			   dwDesiredAccess,
+			   &ObjectAttributes,
+			   &ClientId);
+   if (!NT_SUCCESS(errCode))
+     {
+	SetLastErrorByStatus (errCode);
+	return NULL;
+     }
+   return ThreadHandle;
 }
 
 

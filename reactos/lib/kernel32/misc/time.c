@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.29 2004/07/22 06:28:52 jimtabor Exp $
+/* $Id: time.c,v 1.30 2004/07/30 19:18:39 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -462,6 +462,47 @@ SetSystemTimeAdjustment(DWORD dwTimeAdjustment,
 	SetLastErrorByStatus(Status);
 	return FALSE;
      }
+   
+   return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+GetSystemTimes(
+    LPFILETIME lpIdleTime,
+    LPFILETIME lpKernelTime,
+    LPFILETIME lpUserTime
+    )
+{
+   SYSTEM_PROCESSORTIME_INFO SysProcTime;
+   NTSTATUS Status;
+   
+   Status = ZwQuerySystemInformation(SystemProcessorPerformanceInformation,
+                                     &SysProcTime,
+                                     sizeof(SysProcTime),
+                                     NULL);
+                                     
+   if (!NT_SUCCESS(Status))
+     {
+        SetLastErrorByStatus(Status);
+        return FALSE;
+     }   
+/*
+	Good only for one processor system.
+ */
+
+   lpIdleTime->dwLowDateTime = SysProcTime.TotalProcessorRunTime.LowPart;
+   lpIdleTime->dwHighDateTime = SysProcTime.TotalProcessorRunTime.HighPart;
+
+   lpKernelTime->dwLowDateTime = SysProcTime.TotalProcessorTime.LowPart;
+   lpKernelTime->dwHighDateTime = SysProcTime.TotalProcessorTime.HighPart;
+
+   lpUserTime->dwLowDateTime = SysProcTime.TotalProcessorUserTime.LowPart;
+   lpUserTime->dwHighDateTime = SysProcTime.TotalProcessorUserTime.HighPart;
    
    return TRUE;
 }
