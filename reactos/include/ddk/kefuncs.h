@@ -10,6 +10,10 @@
 
 VOID STDCALL KeAttachProcess (struct _EPROCESS*	Process);
 
+VOID FASTCALL KiAcquireSpinLock(PKSPIN_LOCK SpinLock);
+
+VOID FASTCALL KiReleaseSpinLock(PKSPIN_LOCK SpinLock);
+
 VOID KeDrainApcQueue(VOID);
 struct _KPROCESS* KeGetCurrentProcess(VOID);
 
@@ -516,8 +520,8 @@ KfReleaseSpinLock (
 
 
 VOID STDCALL KiDeliverApc(ULONG Unknown1,
-			  ULONG Unknown2,
-			  ULONG Unknown3);
+        ULONG Unknown2,
+        ULONG Unknown3);
 
 VOID STDCALL KiDispatchInterrupt(VOID);
 

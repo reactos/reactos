@@ -1,4 +1,4 @@
-/* $Id: spinlock.c,v 1.19 2003/09/25 15:54:42 navaraf Exp $
+/* $Id: spinlock.c,v 1.20 2004/01/18 22:41:53 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -44,12 +44,12 @@ KeSynchronizeExecution (PKINTERRUPT		Interrupt,
    KIRQL oldlvl;
    BOOLEAN ret;
    
-   KeRaiseIrql(Interrupt->SynchLevel,&oldlvl);
-   KeAcquireSpinLockAtDpcLevel(Interrupt->IrqLock);
+   KeRaiseIrql(Interrupt->SynchLevel, &oldlvl);
+   KiAcquireSpinLock(Interrupt->IrqLock);
    
    ret = SynchronizeRoutine(SynchronizeContext);
    
-   KeReleaseSpinLockFromDpcLevel(Interrupt->IrqLock);
+   KiReleaseSpinLock(Interrupt->IrqLock);
    KeLowerIrql(oldlvl);
    
    return(ret);
@@ -77,27 +77,8 @@ KeInitializeSpinLock (PKSPIN_LOCK	SpinLock)
 VOID FASTCALL
 KefAcquireSpinLockAtDpcLevel(PKSPIN_LOCK SpinLock)
 {
-   ULONG i;
-
-   /*
-    * FIXME: This depends on gcc assembling this test to a single load from
-    * the spinlock's value.
-    */
-   if (*SpinLock >= 2)
-     {
-	DbgPrint("Lock %x has bad value %x\n", SpinLock, *SpinLock);
-	KEBUGCHECK(0);
-     }
-   
-   while ((i = InterlockedExchange((LONG *)SpinLock, 1)) == 1)
-     {
-#ifndef MP
-       DbgPrint("Spinning on spinlock %x current value %x\n", SpinLock, i);
-       KEBUGCHECK(0);
-#else /* not MP */
-       /* Avoid reading the value again too fast */
-#endif /* MP */
-     }
+  assert(KeGetCurrentIrql() == DISPATCH_LEVEL);
+  KiAcquireSpinLock(SpinLock);
 }
 
 #undef KeAcquireSpinLockAtDpcLevel
@@ -114,7 +95,7 @@ KeAcquireSpinLockAtDpcLevel (PKSPIN_LOCK	SpinLock)
  *        SpinLock = Spinlock to acquire
  */
 {
-   KefAcquireSpinLockAtDpcLevel(SpinLock);
+  KefAcquireSpinLockAtDpcLevel(SpinLock);
 }
 
 #undef KefReleaseSpinLockFromDpcLevel
@@ -125,12 +106,8 @@ KeAcquireSpinLockAtDpcLevel (PKSPIN_LOCK	SpinLock)
 VOID FASTCALL
 KefReleaseSpinLockFromDpcLevel(PKSPIN_LOCK SpinLock)
 {
-   if (*SpinLock != 1)
-     {
-	DbgPrint("Releasing unacquired spinlock %x\n", SpinLock);
-	KEBUGCHECK(0);
-     }
-   (void)InterlockedExchange((LONG *)SpinLock, 0);
+  assert(KeGetCurrentIrql() == DISPATCH_LEVEL);
+  KiReleaseSpinLock(SpinLock);  
 }
 
 #undef KeReleaseSpinLockFromDpcLevel
@@ -147,7 +124,52 @@ KeReleaseSpinLockFromDpcLevel (PKSPIN_LOCK	SpinLock)
  *         SpinLock = Spinlock to release
  */
 {
-   KefReleaseSpinLockFromDpcLevel(SpinLock);
+  KefReleaseSpinLockFromDpcLevel(SpinLock);
+}
+
+
+/*
+ * @implemented
+ */
+VOID FASTCALL
+KiAcquireSpinLock(PKSPIN_LOCK SpinLock)
+{
+  ULONG i;
+
+  /*
+   * FIXME: This depends on gcc assembling this test to a single load from
+   * the spinlock's value.
+   */
+  if (*SpinLock >= 2)
+  {
+    DbgPrint("Lock %x has bad value %x\n", SpinLock, *SpinLock);
+    KEBUGCHECK(0);
+  }
+   
+  while ((i = InterlockedExchange((LONG *)SpinLock, 1)) == 1)
+  {
+#ifndef MP
+    DbgPrint("Spinning on spinlock %x current value %x\n", SpinLock, i);
+    KEBUGCHECK(0);
+#else /* not MP */
+       /* Avoid reading the value again too fast */
+#endif /* MP */
+  }
+}
+
+
+/*
+ * @implemented
+ */
+VOID FASTCALL
+KiReleaseSpinLock(PKSPIN_LOCK SpinLock)
+{
+  if (*SpinLock != 1)
+  {
+    DbgPrint("Releasing unacquired spinlock %x\n", SpinLock);
+    KEBUGCHECK(0);
+  }
+  (void)InterlockedExchange((LONG *)SpinLock, 0);
 }
 
 /* EOF */

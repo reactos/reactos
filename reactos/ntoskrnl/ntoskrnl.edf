@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.158 2003/12/31 05:33:03 jfilby Exp $
+; $Id: ntoskrnl.edf,v 1.159 2004/01/18 22:34:05 gdalsnes Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -476,14 +476,14 @@ KeWaitForSingleObject=KeWaitForSingleObject@20
 KefAcquireSpinLockAtDpcLevel=@KefAcquireSpinLockAtDpcLevel@4
 KefReleaseSpinLockFromDpcLevel=@KefReleaseSpinLockFromDpcLevel@4
 ;Kei386EoiHelper
-;KiAcquireSpinLock@4
+KiAcquireSpinLock=@KiAcquireSpinLock@4
 ;KiBugCheckData DATA
 ;KiCoprocessorError@0
 KiDeliverApc=KiDeliverApc@12
 KiDispatchInterrupt=KiDispatchInterrupt@0
 KiInterruptDispatch2=KiInterruptDispatch2@8
 ;KiIpiServiceRoutine@8
-;KiReleaseSpinLock@4
+KiReleaseSpinLock=@KiReleaseSpinLock@4
 ;KiUnexpectedInterrupt
 ;Kii386SpinOnSpinLock
 KiRawTicks DATA
