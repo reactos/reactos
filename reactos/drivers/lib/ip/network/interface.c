@@ -209,3 +209,28 @@ PIP_INTERFACE FindOnLinkInterface(PIP_ADDRESS Address)
 
     return NULL;
 }
+
+NTSTATUS GetInterfaceConnectionStatus
+( PIP_INTERFACE Interface, PDWORD Result ) {
+    NTSTATUS Status = TcpipLanGetDwordOid
+        ( Interface, OID_GEN_HARDWARE_STATUS, Result );
+    if( NT_SUCCESS(Status) ) switch( *Result ) {
+    case NdisHardwareStatusReady:
+        *Result = MIB_IF_OPER_STATUS_OPERATIONAL;
+        break;
+    case NdisHardwareStatusInitializing:
+        *Result = MIB_IF_OPER_STATUS_CONNECTING;
+        break;
+    case NdisHardwareStatusReset:
+        *Result = MIB_IF_OPER_STATUS_DISCONNECTED;
+        break;
+    case NdisHardwareStatusNotReady:
+        *Result = MIB_IF_OPER_STATUS_DISCONNECTED;
+        break;
+    case NdisHardwareStatusClosing:
+    default:
+        *Result = MIB_IF_OPER_STATUS_NON_OPERATIONAL;
+        break;
+    }
+    return Status;
+}
