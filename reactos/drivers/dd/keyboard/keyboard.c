@@ -377,7 +377,7 @@ static BYTE VirtualToAscii(WORD keyCode,BOOL isDown)
       case VK_SPACE:
          return ' ';
       case VK_RETURN:
-         return 13;
+         return '\n';
       case VK_BACK:
          return 8;
       case VK_TAB:
@@ -689,6 +689,8 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
    PDEVICE_OBJECT DeviceObject;
    ANSI_STRING adevice_name;
    UNICODE_STRING device_name;
+   ANSI_STRING asymlink_name;
+   UNICODE_STRING symlink_name;
    
    DbgPrint("Keyboard Driver 0.0.4\n");
    InitializeKeyboard();
@@ -703,6 +705,10 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
    IoCreateDevice(DriverObject,0,&device_name,FILE_DEVICE_KEYBOARD,0,
 		  TRUE,&DeviceObject);
    DeviceObject->Flags = DO_BUFFERED_IO;
+   
+   RtlInitAnsiString(&asymlink_name,"\\??\\Keyboard");
+   RtlAnsiStringToUnicodeString(&symlink_name,&asymlink_name,TRUE);
+   IoCreateSymbolicLink(&symlink_name,&device_name);
    
    return(STATUS_SUCCESS);
 }

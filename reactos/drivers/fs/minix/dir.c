@@ -164,6 +164,24 @@ NTSTATUS MinixClose(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    return(STATUS_SUCCESS);
 }
 
+NTSTATUS MinixDirectoryControl(PDEVICE_OBJECT DeviceObject,
+			       PIRP Irp)
+{
+   PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
+   PFILE_OBJECT FileObject = Stack->FileObject;
+   
+   if (Stack->MinorFunction != IRP_MN_QUERY_DIRECTORY)
+     {
+	return(STATUS_NOT_IMPLEMENTED);
+     }
+   
+   Irp->IoStatus.Status = STATUS_SUCCESS;
+   Irp->IoStatus.Information = 0;
+   
+   IoCompleteRequest(Irp, IO_NO_INCREMENT);
+   return(STATUS_SUCCESS);
+}
+
 NTSTATUS MinixCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);

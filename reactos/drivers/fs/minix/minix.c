@@ -445,6 +445,8 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT _DriverObject,
    DriverObject->MajorFunction[IRP_MJ_WRITE] = MinixWrite;
    DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] = 
                       MinixFileSystemControl;
+   DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] =
+                      MinixDirectoryControl;
    DriverObject->DriverUnload = NULL;
    
    IoRegisterFileSystem(DeviceObject);

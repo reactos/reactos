@@ -58,8 +58,6 @@ ULONG Fat16GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
    ULONG FATsector;
    ULONG FATeis;
    PUSHORT Block;
-
-   Block = ExAllocatePool(NonPagedPool,BLOCKSIZE);
    
    FATsector=CurrentCluster/(512/sizeof(USHORT));
    FATeis=CurrentCluster-(FATsector*256);
@@ -67,8 +65,8 @@ ULONG Fat16GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
    
 //   VFATReadSectors(DeviceExt->StorageDevice,DeviceExt->FATStart+FATsector, 1,
 //		  (UCHAR *)Block);
-
-   memcpy(Block,DeviceExt->FAT+FATsector*BLOCKSIZE, BLOCKSIZE);
+   
+   Block = (PUSHORT)(DeviceExt->FAT + (FATsector * BLOCKSIZE));
    
    CurrentCluster = Block[FATeis];
 
@@ -76,9 +74,7 @@ ULONG Fat16GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
      {
 	CurrentCluster = 0;
      }	
-   
-   ExFreePool(Block);
-
+  
    DPRINT("Returning %x\n",CurrentCluster);
    
    return(CurrentCluster);
@@ -91,14 +87,13 @@ ULONG Fat12GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
    ULONG FATOffset;
    ULONG Entry;
 
-   CBlock = ExAllocatePool(NonPagedPool,1024);
    
    FATsector = (CurrentCluster * 12) / (512 * 8);
 	
 //   VFATReadSectors(DeviceExt->StorageDevice,DeviceExt->FATStart
 //		  +FATsector,1,CBlock);
 
-   memcpy(CBlock,DeviceExt->FAT+FATsector*BLOCKSIZE, BLOCKSIZE);
+   CBlock = (unsigned char *)(DeviceExt->FAT + (FATsector * BLOCKSIZE));
    
    FATOffset = (CurrentCluster * 12) % (512 * 8);
    
@@ -123,8 +118,6 @@ ULONG Fat12GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
      }
    
    CurrentCluster = Entry;
-   
-   ExFreePool(CBlock);
 
    DPRINT("Returning %x\n",CurrentCluster);
    
@@ -571,7 +564,8 @@ void VFATLoadCluster(PDEVICE_EXTENSION DeviceExt, PVOID Buffer, ULONG Cluster)
 }
 
 NTSTATUS FsdReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
-		     PVOID Buffer, ULONG Length, ULONG ReadOffset)
+		     PVOID Buffer, ULONG Length, ULONG ReadOffset,
+		     PULONG LengthRead)
 /*
  * FUNCTION: Reads data from a file
  */
@@ -590,6 +584,16 @@ NTSTATUS FsdReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    FirstCluster = ReadOffset / DeviceExt->BytesPerCluster;
    Fcb = FileObject->FsContext;
    CurrentCluster = Fcb->entry.FirstCluster;
+   
+   if (ReadOffset >= Fcb->entry.FileSize)
+     {
+	return(STATUS_END_OF_FILE);
+     }
+   if ((ReadOffset + Length) > Fcb->entry.FileSize)
+     {
+	Length = Fcb->entry.FileSize - ReadOffset;
+     }
+   *LengthRead = 0;
    
    DPRINT("DeviceExt->BytesPerCluster %x\n",DeviceExt->BytesPerCluster);
    
@@ -611,6 +615,7 @@ NTSTATUS FsdReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	memcpy(Buffer, Temp + ReadOffset % DeviceExt->BytesPerCluster,
 	       TempLength);
 	
+	(*LengthRead) = (*LengthRead) + TempLength;
 	Length = Length - TempLength;
 	Buffer = Buffer + TempLength;	     
      }
@@ -622,18 +627,22 @@ NTSTATUS FsdReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	
 	if (CurrentCluster == 0)
 	  {
+	     ExFreePool(Temp);
 	     return(STATUS_SUCCESS);
 	  }
 	
+	(*LengthRead) = (*LengthRead) + DeviceExt->BytesPerCluster;
 	Buffer = Buffer + DeviceExt->BytesPerCluster;
 	Length = Length - DeviceExt->BytesPerCluster;
      }
    CHECKPOINT;
    if (Length > 0)
      {
+	(*LengthRead) = (*LengthRead) + Length;
 	VFATLoadCluster(DeviceExt, Temp, CurrentCluster);
 	memcpy(Buffer, Temp, Length);
      }
+   ExFreePool(Temp);
    return(STATUS_SUCCESS);
 }
 
@@ -692,6 +701,7 @@ NTSTATUS FsdRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    PFILE_OBJECT FileObject = Stack->FileObject;
    PDEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
    NTSTATUS Status;
+   ULONG LengthRead;
    
    DPRINT("FsdRead(DeviceObject %x, Irp %x)\n",DeviceObject,Irp);
    
@@ -699,10 +709,12 @@ NTSTATUS FsdRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
    Offset = Stack->Parameters.Read.ByteOffset.LowPart;
    
-   Status = FsdReadFile(DeviceExt,FileObject,Buffer,Length,Offset);
+   Status = FsdReadFile(DeviceExt,FileObject,Buffer,Length,Offset,
+			&LengthRead);
    
    Irp->IoStatus.Status = Status;
-   Irp->IoStatus.Information = Length;
+   Irp->IoStatus.Information = LengthRead;
+   
    IoCompleteRequest(Irp,IO_NO_INCREMENT);
 
    return(Status);

@@ -49,7 +49,7 @@ void dprintf(char* fmt, ...)
    
    va_start(va_args,fmt);
    vsprintf(buffer,fmt,va_args);
-   OutputDebugString(buffer);
+   OutputDebugStringA(buffer);
    va_end(fmt);
 }
 
