@@ -1,62 +1,21 @@
-Last updated 30/09/98
+DIRECTORIES
 
--- Compiling
-
-Type 'make' to build the kernel on linux using a djgpp cross compiler, or
-'make -fmakefile.dos' to build the kernel from dos using djgpp. No other 
-configuration are supported at the moment, sorry.
-
--- Running
-
-To run the kernel start from a clean dos system (no emm386 or windows) and
-run 'boot.bat'. The kernel should boot, print diagnostic messages and begin
-executing a simple user-mode shell. By default the kernel boots with a
-minimum set of drivers but additional ones can be specified as the arguments
-to 'boot.bat'.
-
--- Problems
-
-This is strictly alpha quality software so expect plenty of those. If you
-are submitting a bug report, please see the section below. If you have a fix 
-for the problem, even better, please send all patches, fixes, enhancements etc 
-to me (David Welch), our coordinator Dennis Winkley or the kernel mailing
-list. (See contact addresses below)
-
--- Bug Reports
-
-Thank you for taking the time to do this, we can only fix the bugs we know
-about, however please include as much information as possible. Say what you
-were trying to do at the time, what messages (if any) were displayed. If the
-kernel crashed, it should print a message like this
-
-     Exception s(r)
-     CS:EIP    p(q)
-     DS xxxxx ES xxxx FS xxxx
-     ...
-     Frames: xxxxx xxxxx xxxxx
-
-Please include the exception type and error code (s and r). The eip 
-address (q) is specific to your kernel, to be of use in fixing the problem
-it needs to be translated to a function name. Do this by running
-
-      nm --numeric-sort kimage > kernel.sym
-
-kernel.sym should include a list of functions and their address, look for the
-last function with an address less than the eip value. The functions should
-sorted in ascending order by address.
-
-If you suspect the problem is hardware related also include details of what
-hardware devices you have installed.  
-
--- Contact addresses
-
-Overall coordinator, Jason Filby (jasonfilby@yahoo.com)
-Kernel coordinator, Dennis Winkley (dwinkley@mail.whitworth.edu)
-Me, David Welch (welch@mcmail.com)
-
-Specific components will probably have contact details for the authors in
-the source file, a partial list of those working on the kernel can be found
-on the kernel website. 
-
--- Additional documentation
-
+system           : compiled versions of the various system components and
+                   libraries
+ntoskrnl          : microkernel source
+ntoskrnl/hal      : hardware abstraction layer source
+ntoskrnl/mm       : memory managment subsystem source
+ntoskrnl/io      : IO manager subsystem source
+include          : win32 headers
+include/internal : kernel private header files
+include/ntdll    : system library private header files
+include/kernel32 : system library private header files
+include/user32   : user interface private header files
+include/gdi32    : graphics interface private header files
+include/ddk      : header files for modules
+lib/ntdll        : NT dll source
+lib/kernel32     : kernel32 source
+doc              : documentation
+loaders/dos      : DOS based loader
+loaders/boot     : boot loader
+services         : various services (device drivers, filesystems etc)

@@ -127,7 +127,7 @@ asmlinkage void _main(boot_param* _bp)
    /*
     * Initalize the console (before printing anything)
     */
-   HalInitConsole(&_bp);
+   HalInitConsole(&bp);
    
    DbgPrint("Starting ReactOS "KERNEL_VERSION"\n");
 

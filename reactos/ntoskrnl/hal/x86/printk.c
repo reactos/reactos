@@ -16,7 +16,7 @@
 #include <internal/mmhal.h>
 #include <internal/halio.h>
 
-#define BOCHS_DEBUGGING 1
+//#define BOCHS_DEBUGGING 1
 //#define SERIAL_DEBUGGING
 #define SERIAL_PORT 0x03f8
 #define SERIAL_BAUD_RATE 19200
