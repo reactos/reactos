@@ -1,0 +1,290 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#include "resource.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_CONTROL             ICON    DISCARDABLE     "res/control.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_CONTROL_MENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Open",                       ID_FILE_OPEN
+        MENUITEM "&Create Shortcut",            ID_FILE_CREATE_SHORTCUT, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_FILE_EXIT
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Tool Bar",                   ID_VIEW_TOOLBAR, GRAYED
+        MENUITEM "Status &Bar",                 ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "Lar&ge Icons",                ID_VIEW_LARGE_ICONS
+        MENUITEM "S&mall Icons",                ID_VIEW_SMALL_ICONS
+        MENUITEM "&List",                       ID_VIEW_LIST
+        MENUITEM "&Details",                    ID_VIEW_DETAILS
+        MENUITEM SEPARATOR
+        POPUP "Arrange &Icons"
+        BEGIN
+            MENUITEM "by &Name",                    ID_VIEW_ARRANGE_BY_NAME
+            MENUITEM "by &Comment",                 ID_VIEW_ARRANGE_BY_COMMENT
+
+            MENUITEM SEPARATOR
+            MENUITEM "&Auto-Arrange",               ID_VIEW_ARRANGE_AUTO
+        END
+        MENUITEM "Line &Up Icons",              ID_VIEW_LINE_UP_ICONS
+        MENUITEM SEPARATOR
+        MENUITEM "&Refresh\tF5",                ID_VIEW_REFRESH
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About ...",                  ID_HELP_ABOUT
+    END
+END
+
+IDR_CONTROL_CONTEXT MENU DISCARDABLE 
+BEGIN
+    POPUP "DUMMY"
+    BEGIN
+        POPUP "&View"
+        BEGIN
+            MENUITEM "Lar&ge Icons",                ID_VIEW_LARGE_ICONS
+            MENUITEM "S&mall Icons",                ID_VIEW_SMALL_ICONS
+            MENUITEM "&List",                       ID_VIEW_LIST
+            MENUITEM "&Details",                    ID_VIEW_DETAILS
+        END
+        MENUITEM SEPARATOR
+        POPUP "Arrange &Icons"
+        BEGIN
+            MENUITEM "by &Name",                    ID_VIEW_ARRANGE_BY_NAME
+            MENUITEM "by &Comment",                 ID_VIEW_ARRANGE_BY_COMMENT
+
+            MENUITEM SEPARATOR
+            MENUITEM "&Auto-Arrange",               ID_VIEW_ARRANGE_AUTO
+        END
+        MENUITEM "Line &Up Icons",              ID_VIEW_LINE_UP_ICONS
+        MENUITEM SEPARATOR
+        MENUITEM "&Refresh",                    ID_VIEW_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "&Paste",                      ID_FILE_PASTE, GRAYED
+        MENUITEM "Paste &Shortcut",             ID_FILE_PASTE_SHORTCUT
+        , GRAYED
+    END
+END
+
+IDR_CONTROL_CONTEXT_APPLET MENU DISCARDABLE 
+BEGIN
+    POPUP "DUMMY"
+    BEGIN
+        MENUITEM "&Open",                       ID_FILE_OPEN
+        MENUITEM SEPARATOR
+        MENUITEM "&Create Shortcut",            ID_FILE_CREATE_SHORTCUT
+        , GRAYED
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOG DISCARDABLE  22, 17, 230, 75
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "About Control Panel"
+FONT 8, "System"
+BEGIN
+    ICON            IDI_CONTROL,IDC_MYICON,14,9,16,16
+    LTEXT           "Control Panel Version 1.0",IDC_STATIC,49,10,119,8,
+                    SS_NOPREFIX
+    LTEXT           "Copyright (C) 2002",IDC_STATIC,49,20,119,8
+    DEFPUSHBUTTON   "OK",IDOK,195,6,30,11,WS_GROUP
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""resource.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+(1) VERSIONINFO
+ FILEVERSION 0,0,19,154
+ PRODUCTVERSION 0,0,19,0
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "Comments", "Absolutely no warranties whatsoever - Use at your own risk\0"
+            VALUE "CompanyName", "ReactOS Development Team\0"
+            VALUE "FileDescription", "ReactOS Shell32 Dynamic Link Library\0"
+            VALUE "FileVersion", "1, 0, 0, 1\0"
+            VALUE "InternalName", "shell32\0"
+            VALUE "LegalCopyright", "Copyright © 2002 Robert Dickenson\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "OriginalFilename", "shell32.dll\0"
+            VALUE "PrivateBuild", "\0"
+            VALUE "ProductName", "ReactOS Operating System\0"
+            VALUE "ProductVersion", "0.0.19\0"
+            VALUE "SpecialBuild", "Non-versioned Development Beta Release\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0xc09, 1200
+    END
+END
+
+#endif    // !_MAC
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_LIST_COLUMN_NAME    "Name"
+    IDS_LIST_COLUMN_COMMENT "Comment"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_FILE_MENU            "Contains commands for working with the selected items"
+    ID_VIEW_MENU            "Contains commands for manipulating the view"
+    ID_HELP_MENU            "Contains commands for displaying help"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_VIEW_TOOLBAR         "Shows or hides the tool bar"
+    ID_VIEW_STATUSBAR       "Shows or hides the status bar"
+    ID_VIEW_LARGE_ICONS     "Displays items using large icons"
+    ID_VIEW_SMALL_ICONS     "Displays items using small icons"
+    ID_VIEW_LIST            "Displays items in a list"
+    ID_VIEW_DETAILS         "Displays information about each item in the list"
+    ID_VIEW_ARRANGE_ICONS   "Contains commands for arranging items in the window"
+    ID_VIEW_ARRANGE_BY_NAME "Sorts items alphabetically by name"
+    ID_VIEW_ARRANGE_BY_COMMENT "Sorts items by the thier comment property"
+    ID_VIEW_ARRANGE_AUTO    "Arranges the items automatically"
+    ID_VIEW_LINE_UP_ICONS   "Arranges icons in a grid layout"
+    ID_VIEW_REFRESH         "Refreshes the contents of the current page"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_APP_TITLE           "ReactOS Control Panel"
+    IDC_CONTROL             "CONTROL"
+    IDS_APP_REG_KEY         "\\Control Panel"
+    IDS_APP_REG_PATH        "Software\\ReactWare"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (Australia) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENA)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_AUS
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English (Australia) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
