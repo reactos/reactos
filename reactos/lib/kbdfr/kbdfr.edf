@@ -1,4 +1,4 @@
-LIBRARY user32.dll
+LIBRARY kbdfr.dll
 
 EXPORTS
 KbdLayerDescriptor=KbdLayerDescriptor@0
