@@ -503,7 +503,7 @@ typedef struct tagLOGFONTW {
   BYTE lfClipPrecision;
   BYTE lfQuality;
   BYTE lfPitchAndFamily;
-  LPWSTR lfFaceName;
+  WCHAR lfFaceName[LF_FACESIZE];
 } LOGFONTW, *LPLOGFONTW, *PLOGFONTW;
 
 typedef struct {
