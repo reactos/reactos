@@ -22,7 +22,10 @@
 
 #define _ALPHA      0x0103
 
+#ifndef _WCTYPE_T_DEFINED
 typedef wchar_t wctype_t;
+#define _WCTYPE_T_DEFINED
+#endif
 
 
 #if defined(_MSC_VER)
