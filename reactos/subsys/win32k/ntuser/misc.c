@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.17 2003/09/13 13:58:38 weiden Exp $
+/* $Id: misc.c,v 1.18 2003/09/24 21:09:22 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -12,6 +12,7 @@
 #include <ddk/ntddmou.h>
 #include <win32k/win32k.h>
 #include <win32k/dc.h>
+#include <internal/safe.h>
 #include <include/error.h>
 #include <include/window.h>
 #include <include/painting.h>
@@ -134,7 +135,7 @@ NtUserCallTwoParam(
   PWINDOW_OBJECT WindowObject;
   PSYSTEM_CURSORINFO CurInfo;
   PWINSTATION_OBJECT WinStaObject;
-  PPOINT Pos;
+  POINT Pos;
   
   switch(Routine)
   {
@@ -179,20 +180,26 @@ NtUserCallTwoParam(
                                            &WinStaObject);
       if (!NT_SUCCESS(Status))
         return (DWORD)FALSE;
-        
-      Pos = (PPOINT)Param1;
       
       if(Param2)
       {
         /* set cursor position */
         
+        Status = MmCopyFromCaller(&Pos, (PPOINT)Param1, sizeof(POINT));
+        if(!NT_SUCCESS(Status))
+        {
+          ObDereferenceObject(WinStaObject);
+          SetLastNtError(Status);
+          return FALSE;
+        }
+        
         CurInfo = &WinStaObject->SystemCursor;
         /* FIXME - check if process has WINSTA_WRITEATTRIBUTES */
         
         //CheckClipCursor(&Pos->x, &Pos->y, CurInfo);  
-        if((Pos->x != CurInfo->x) || (Pos->y != CurInfo->y))
+        if((Pos.x != CurInfo->x) || (Pos.y != CurInfo->y))
         {
-          MouseMoveCursor(Pos->x, Pos->y);
+          MouseMoveCursor(Pos.x, Pos.y);
         }
 
       }
@@ -200,8 +207,17 @@ NtUserCallTwoParam(
       {
         /* get cursor position */
         /* FIXME - check if process has WINSTA_READATTRIBUTES */
-        Pos->x = WinStaObject->SystemCursor.x;
-        Pos->y = WinStaObject->SystemCursor.y;
+        Pos.x = WinStaObject->SystemCursor.x;
+        Pos.y = WinStaObject->SystemCursor.y;
+        
+        Status = MmCopyToCaller((PPOINT)Param1, &Pos, sizeof(POINT));
+        if(!NT_SUCCESS(Status))
+        {
+          ObDereferenceObject(WinStaObject);
+          SetLastNtError(Status);
+          return FALSE;
+        }
+        
       }
       
       ObDereferenceObject(WinStaObject);
@@ -235,6 +251,7 @@ NtUserSystemParametersInfo(
     0, 0, DEFAULT_QUALITY, FF_MODERN, L"Bitstream Vera Sans Bold" };*/
   NTSTATUS Status;
   PWINSTATION_OBJECT WinStaObject;
+  RECT Rect;
   
   switch(uiAction)
   {
@@ -271,19 +288,34 @@ NtUserSystemParametersInfo(
 
     case SPI_GETWORKAREA:
       {
-        ((PRECT)pvParam)->left = 0;
-        ((PRECT)pvParam)->top = 0;
-        ((PRECT)pvParam)->right = 640;
-        ((PRECT)pvParam)->bottom = 480;
+        /* FIXME */
+        Rect.left = 0;
+        Rect.top = 0;
+        Rect.right = 640;
+        Rect.bottom = 480;
+        
+        Status = MmCopyToCaller((PRECT)pvParam, &Rect, sizeof(RECT));
+        if(!NT_SUCCESS(Status))
+        {
+          SetLastNtError(Status);
+          return FALSE;
+        }
+        
         return TRUE;
       }
     case SPI_GETICONTITLELOGFONT:
       {
-        memcpy(pvParam, &CaptionFont, sizeof(CaptionFont));
+        Status = MmCopyToCaller(pvParam, &CaptionFont, sizeof(CaptionFont));
+        if(!NT_SUCCESS(Status))
+        {
+          SetLastNtError(Status);
+          return FALSE;
+        }
         return TRUE;
       }
     case SPI_GETNONCLIENTMETRICS:
       {
+        /* FIXME - use MmCopyToCaller() !!! */
         LPNONCLIENTMETRICSW pMetrics = (LPNONCLIENTMETRICSW)pvParam;
     
         if (pMetrics->cbSize != sizeof(NONCLIENTMETRICSW) || 

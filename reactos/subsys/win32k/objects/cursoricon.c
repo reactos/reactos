@@ -326,14 +326,16 @@ NtUserGetClipCursor(
   /* FIXME - check if process has WINSTA_READATTRIBUTES */
   
   PWINSTATION_OBJECT WinStaObject;
+  RECT Rect;
+  NTSTATUS Status;
   
   if(!lpRect)
     return FALSE;
 
-  NTSTATUS Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-				       KernelMode,
-				       0,
-				       &WinStaObject);
+  Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+	       KernelMode,
+	       0,
+	       &WinStaObject);
   if (!NT_SUCCESS(Status))
   {
     DPRINT("Validation of window station handle (0x%X) failed\n",
@@ -344,17 +346,25 @@ NtUserGetClipCursor(
   
   if(WinStaObject->SystemCursor.CursorClipInfo.IsClipped)
   {
-    lpRect->left = WinStaObject->SystemCursor.CursorClipInfo.Left;
-    lpRect->top = WinStaObject->SystemCursor.CursorClipInfo.Top;
-    lpRect->right = WinStaObject->SystemCursor.CursorClipInfo.Right;
-    lpRect->bottom = WinStaObject->SystemCursor.CursorClipInfo.Bottom;
+    Rect.left = WinStaObject->SystemCursor.CursorClipInfo.Left;
+    Rect.top = WinStaObject->SystemCursor.CursorClipInfo.Top;
+    Rect.right = WinStaObject->SystemCursor.CursorClipInfo.Right;
+    Rect.bottom = WinStaObject->SystemCursor.CursorClipInfo.Bottom;
   }
   else
   {
-    lpRect->left = 0;
-    lpRect->top = 0;
-    lpRect->right = NtUserGetSystemMetrics(SM_CXSCREEN);
-    lpRect->bottom = NtUserGetSystemMetrics(SM_CYSCREEN);
+    Rect.left = 0;
+    Rect.top = 0;
+    Rect.right = NtUserGetSystemMetrics(SM_CXSCREEN);
+    Rect.bottom = NtUserGetSystemMetrics(SM_CYSCREEN);
+  }
+  
+  Status = MmCopyToCaller((PRECT)lpRect, &Rect, sizeof(RECT));
+  if(!NT_SUCCESS(Status))
+  {
+    ObDereferenceObject(WinStaObject);
+    SetLastNtError(Status);
+    return FALSE;
   }
     
   ObDereferenceObject(WinStaObject);

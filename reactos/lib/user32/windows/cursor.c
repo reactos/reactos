@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursor.c,v 1.12 2003/08/29 08:46:20 weiden Exp $
+/* $Id: cursor.c,v 1.13 2003/09/24 21:09:22 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/cursor.c
@@ -94,20 +94,7 @@ DestroyCursor(HCURSOR hCursor)
 WINBOOL STDCALL
 GetClipCursor(LPRECT lpRect)
 {
-  RECT rc;
-  WINBOOL res;
-  
-  if(!lpRect)
-  {
-    SetLastError(ERROR_NOACCESS);
-    return FALSE;
-  }
-  
-  RtlCopyMemory(&rc, lpRect, sizeof(RECT));
-  res = NtUserGetClipCursor(&rc);
-  RtlCopyMemory(lpRect, &rc, sizeof(RECT));
-  
-  return res;
+  return NtUserGetClipCursor(lpRect);
 }
 
 
@@ -139,7 +126,6 @@ GetCursorInfo(PCURSORINFO pci)
 WINBOOL STDCALL
 GetCursorPos(LPPOINT lpPoint)
 {
-  POINT pos;
   WINBOOL res;
   /* Windows doesn't check if lpPoint == NULL, we do */
   if(!lpPoint)
@@ -148,13 +134,9 @@ GetCursorPos(LPPOINT lpPoint)
     return FALSE;
   }
   
-  res = (WINBOOL)NtUserCallTwoParam((DWORD)&pos, (DWORD)FALSE, 
+  res = (WINBOOL)NtUserCallTwoParam((DWORD)lpPoint, (DWORD)FALSE, 
                                     TWOPARAM_ROUTINE_CURSORPOSITION);
-  if(res)
-  {
-    lpPoint->x = pos.x;
-    lpPoint->y = pos.y;
-  }
+
   return res;
 }
 
