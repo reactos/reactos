@@ -1,35 +1,74 @@
-/* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#ifndef __dj_include_time_h_
-#define __dj_include_time_h_
+/* 
+ * time.h
+ *
+ * Date and time functions and types.
+ *
+ * This file is part of the Mingw32 package.
+ *
+ * Contributors:
+ *  Created by Colin Peters <colin@bird.fu.is.saga-u.ac.jp>
+ *
+ *  THIS SOFTWARE IS NOT COPYRIGHTED
+ *
+ *  This source code is offered for use in the public domain. You may
+ *  use, modify or distribute it freely.
+ *
+ *  This code is distributed in the hope that it will be useful but
+ *  WITHOUT ANY WARRANTY. ALL WARRANTIES, EXPRESS OR IMPLIED ARE HEREBY
+ *  DISCLAMED. This includes but is not limited to warranties of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ * $Revision: 1.1.2.2 $
+ * $Author: dwelch $
+ * $Date: 1999/03/15 16:19:26 $
+ *
+ */
+/* Appropriated for Reactos Crtdll by Ariadne */
+#ifndef	_TIME_H_
+#define	_TIME_H_
 
-#ifdef __cplusplus
+#define __need_wchar_t
+#define __need_size_t
+#include <stddef.h>
+
+#ifdef	__cplusplus
 extern "C" {
 #endif
 
-#ifndef __dj_ENFORCE_ANSI_FREESTANDING
+/*
+ * Number of clock ticks per second. A clock tick is the unit by which
+ * processor time is measured and is returned by 'clock'.
+ */
+#define	CLOCKS_PER_SEC	1000.0
+#define	CLK_TICK	CLOCKS_PER_SEC
 
-/* 65536(tics/hour) / 3600(sec/hour) * 5(scale) = 91.02
-   The 5 is to make it a whole number (18.2*5=91) so that
-   floating point ops aren't required to use it. */
-#define CLOCKS_PER_SEC	91
-
-#include <sys/djtypes.h>
-#include <internal/types.h>
-#ifndef NULL
-#define NULL 0
+/*
+ * A type for measuring processor time (in clock ticks).
+ */
+#ifndef _CLOCK_T_
+#define _CLOCK_T_
+typedef	long	clock_t;
 #endif
-__DJ_clock_t
-#undef __DJ_clock_t
-#define __DJ_clock_t
-//__DJ_size_t
-#undef __DJ_size_t
-#define __DJ_size_t
-__DJ_time_t
-#undef __DJ_time_t
-#define __DJ_time_t
 
+/*
+ * Need a definition of time_t.
+ */
+#include <sys/types.h>
 
-#ifndef _TM_DEFINED
+/*
+ * A type for storing the current time and date. This is the number of
+ * seconds since midnight Jan 1, 1970.
+ * NOTE: Normally this is defined by the above include of sys/types.h
+ */
+#ifndef _TIME_T_
+#define _TIME_T_
+typedef	long	time_t;
+#endif
+
+/*
+ * A structure for storing all kinds of useful information about the
+ * current (or another) time.
+ */
 struct tm {
   int tm_sec;
   int tm_min;
@@ -43,62 +82,38 @@ struct tm {
   char *tm_zone;
   int tm_gmtoff;
 };
-#define _TM_DEFINED
-#endif
 
-char *		asctime(const struct tm *_tptr);
-clock_t		clock(void);
-char *		ctime(const time_t *_cal);
-double		difftime(time_t _t1, time_t _t0);
-struct tm *	gmtime(const time_t *_tod);
-struct tm *	localtime(const time_t *_tod);
-time_t		mktime(struct tm *_tptr);
-size_t		strftime(char *_s, size_t _n, const char *_format, const struct tm *_tptr);
-time_t		time(time_t *_tod);
 
-#ifndef __STRICT_ANSI__
 
-#define CLK_TCK	CLOCKS_PER_SEC
+clock_t	clock (void);
+time_t	time (time_t* tp);
+double	difftime (time_t t2, time_t t1);
+time_t	mktime (struct tm* tmsp);
 
-extern char *tzname[2];
+/*
+ * These functions write to and return pointers to static buffers that may
+ * be overwritten by other function calls. Yikes!
+ *
+ * NOTE: localtime, and perhaps the others of the four functions grouped
+ * below may return NULL if their argument is not 'acceptable'. Also note
+ * that calling asctime with a NULL pointer will produce an Invalid Page
+ * Fault and crap out your program. Guess how I know. Hint: stat called on
+ * a directory gives 'invalid' times in st_atime etc...
+ */
+char*		asctime (const struct tm* tmsp);
+char*		ctime (const time_t* tp);
+struct tm*	gmtime (const time_t* tm);
+struct tm*	localtime (const time_t* tm);
 
-void	tzset(void);
 
-#ifndef _POSIX_SOURCE
+size_t	strftime (char* caBuffer, size_t sizeMax, const char* szFormat,
+		  const struct tm* tpPrint);
 
-//#define tm_zone __tm_zone
-//#define tm_gmtoff __tm_gmtoff
+size_t	wcsftime (wchar_t* wcaBuffer, size_t sizeMax,
+		  const wchar_t* wsFormat, const struct tm* tpPrint);
 
-struct timeval {
-  time_t tv_sec;
-  long tv_usec;
-};
-
-struct timezone {
-  int tz_minuteswest;
-  int tz_dsttime;
-};
-
-#include <sys/types.h>
-
-typedef long long uclock_t;
-#define UCLOCKS_PER_SEC 1193180
-
-int		gettimeofday(struct timeval *_tp, struct timezone *_tzp);
-unsigned long	rawclock(void);
-int		select(int _nfds, fd_set *_readfds, fd_set *_writefds, fd_set *_exceptfds, struct timeval *_timeout);
-int		settimeofday(struct timeval *_tp, ...);
-uclock_t	uclock(void);
-
-#endif /* !_POSIX_SOURCE */
-#endif /* !__STRICT_ANSI__ */
-#endif /* !__dj_ENFORCE_ANSI_FREESTANDING */
-
-#ifndef __dj_ENFORCE_FUNCTION_CALLS
-#endif /* !__dj_ENFORCE_FUNCTION_CALLS */
-
-#ifdef __cplusplus
+#ifdef	__cplusplus
 }
 #endif
 
-#endif /* !__dj_include_time_h_ */
+#endif
