@@ -95,13 +95,19 @@ _KiSystemService:
     pushl %gs                                                          // + 0x48
     sub $0x28, %esp                                                    // + 0x70
 
+#if 0
 #ifdef DBG
     /* Trick gdb 6 into backtracing over the system call */
+    /* FIXME: %ebp is *never* initialized */
     pushl 4(%ebp)    /* DebugEIP */                                    // + 0x74
     pushl (%ebp)     /* DebugEBP */                                    // + 0x78
 #else
     pushl 0x60(%esp) /* DebugEIP */                                    // + 0x74
     pushl %ebp       /* DebugEBP */                                    // + 0x78
+#endif
+#else
+    pushl $0         /* DebugEIP */                                    // + 0x74
+    pushl $0         /* DebugEBP */                                    // + 0x78
 #endif
 
     /* Load the segment registers */
