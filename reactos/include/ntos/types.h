@@ -68,6 +68,11 @@ typedef union _LARGE_INTEGER
     DWORD LowPart;
     LONG  HighPart;
   } u;
+  struct
+  {
+    DWORD LowPart;
+    LONG  HighPart;
+  };
   LONGLONG QuadPart;
 } LARGE_INTEGER, *PLARGE_INTEGER;
 
@@ -78,6 +83,11 @@ typedef union _ULARGE_INTEGER
     DWORD LowPart;
     DWORD HighPart;
   } u;
+  struct
+  {
+    DWORD LowPart;
+    DWORD HighPart;
+  };
   ULONGLONG QuadPart;
 } ULARGE_INTEGER, *PULARGE_INTEGER;
 
