@@ -395,6 +395,7 @@ KiDoubleFaultHandler(VOID)
    
    DbgPrint("\n");
    for(;;);
+   return 0;
 }
 
 VOID

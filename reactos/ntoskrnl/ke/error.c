@@ -33,6 +33,7 @@ NTSTATUS STDCALL
 NtSetDefaultHardErrorPort(IN HANDLE PortHandle)
 {
    UNIMPLEMENTED;
+   return(STATUS_NOT_IMPLEMENTED);
 }
 
 /* EOF */
