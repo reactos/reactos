@@ -156,6 +156,7 @@ typedef struct
 
 #include <pshpack1.h>
 
+/* This needs to be fixed ASAP! */
 typedef struct _ETHREAD
 {
   KTHREAD Tcb;
@@ -169,7 +170,10 @@ typedef struct _ETHREAD
   NTSTATUS ExitStatus;
   PVOID OfsChain;
   LIST_ENTRY PostBlockList;
-  LIST_ENTRY TerminationPortList;
+  union {
+    struct _TERMINATION_PORT *TerminationPort;
+    struct _ETHREAD* ReaperLink;  
+  };
   KSPIN_LOCK ActiveTimerListLock;
   LIST_ENTRY ActiveTimerListHead;
   CLIENT_ID Cid;

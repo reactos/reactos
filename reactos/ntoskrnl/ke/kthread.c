@@ -25,6 +25,7 @@ LIST_ENTRY PriorityListHead[MAXIMUM_PRIORITY];
 static ULONG PriorityListMask = 0;
 ULONG IdleProcessorMask = 0;
 extern BOOLEAN DoneInitYet;
+extern PETHREAD PspReaperList;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -331,13 +332,13 @@ KiSuspendThreadNormalRoutine(PVOID NormalContext,
     PKTHREAD CurrentThread = KeGetCurrentThread();
     
     /* Non-alertable kernel-mode suspended wait */
-    DPRINT1("Waiting...\n");
+    DPRINT("Waiting...\n");
     KeWaitForSingleObject(&CurrentThread->SuspendSemaphore,
                           Suspended,
                           KernelMode,
                           FALSE,
                           NULL);
-    DPRINT1("Done Waiting\n");
+    DPRINT("Done Waiting\n");
 }
 
 VOID
@@ -389,7 +390,7 @@ KeResumeThread(PKTHREAD Thread)
     ULONG PreviousCount;
     KIRQL OldIrql;
     
-    DPRINT1("KeResumeThread (Thread %p called). %x, %x\n", Thread, Thread->SuspendCount, Thread->FreezeCount);
+    DPRINT("KeResumeThread (Thread %p called). %x, %x\n", Thread, Thread->SuspendCount, Thread->FreezeCount);
 
     /* Lock the Dispatcher */
     OldIrql = KeAcquireDispatcherDatabaseLock();
@@ -428,7 +429,7 @@ KeSuspendThread(PKTHREAD Thread)
     ULONG PreviousCount;
     KIRQL OldIrql;
 
-    DPRINT1("KeSuspendThread (Thread %p called). %x, %x\n", Thread, Thread->SuspendCount, Thread->FreezeCount);
+    DPRINT("KeSuspendThread (Thread %p called). %x, %x\n", Thread, Thread->SuspendCount, Thread->FreezeCount);
     
     /* Lock the Dispatcher */
     OldIrql = KeAcquireDispatcherDatabaseLock();
@@ -802,6 +803,7 @@ KeInitializeThread(PKPROCESS Process,
     /* Set up the Suspend Counts */
     Thread->FreezeCount = 0;
     Thread->SuspendCount = 0;
+    ((PETHREAD)Thread)->ReaperLink = NULL; /* Union. Will also clear termination port */
    
     /* Do x86 specific part */
 }
@@ -1194,18 +1196,21 @@ KeTerminateThread(IN KPRIORITY Increment)
     PKTHREAD Thread = KeGetCurrentThread();
     
     /* Lock the Dispatcher Database and the APC Queue */
-    DPRINT1("Terminating\n");
+    DPRINT("Terminating\n");
     OldIrql = KeAcquireDispatcherDatabaseLock();
     
     /* Insert into the Reaper List */
-    InsertTailList(&PspReaperListHead, &((PETHREAD)Thread)->TerminationPortList);
+    DPRINT("List: %p\n", PspReaperList);
+    ((PETHREAD)Thread)->ReaperLink = PspReaperList;
+    PspReaperList = (PETHREAD)Thread;
+    DPRINT("List: %p\n", PspReaperList);
     
     /* Check if it's active */
     if (PspReaping == FALSE) {
         
         /* Activate it. We use the internal function for speed, and use the Hyper Critical Queue */
         PspReaping = TRUE;
-        DPRINT1("Terminating\n");
+        DPRINT("Terminating\n");
         KiInsertQueue(&ExWorkerQueue[HyperCriticalWorkQueue].WorkerQueue,
                       &PspReaperWorkItem.List,
                       FALSE);
@@ -1214,7 +1219,7 @@ KeTerminateThread(IN KPRIORITY Increment)
     /* Handle Kernel Queues */
     if (Thread->Queue) {
                  
-        DPRINT1("Waking Queue\n");
+        DPRINT("Waking Queue\n");
         RemoveEntryList(&Thread->QueueListEntry);
         KiWakeQueue(Thread->Queue);
     }

@@ -18,7 +18,7 @@
       
 #define TAG_TERMINATE_APC   TAG('T', 'A', 'P', 'C')
 
-LIST_ENTRY PspReaperListHead;
+PETHREAD PspReaperList = NULL;
 WORK_QUEUE_ITEM PspReaperWorkItem;
 BOOLEAN PspReaping = FALSE;
 extern LIST_ENTRY PsActiveProcessHead;
@@ -31,30 +31,51 @@ VOID
 PspReapRoutine(PVOID Context)
 {
     KIRQL OldIrql;
-    PETHREAD Thread;
-    PLIST_ENTRY ListEntry;
+    PETHREAD Thread, NewThread;
  
     /* Acquire lock */
     DPRINT("Evil reaper running!!\n");
     OldIrql = KeAcquireDispatcherDatabaseLock();
     
-    /* Loop the reap list */
-    while((ListEntry = RemoveHeadList(&PspReaperListHead)) != &PspReaperListHead) {
-        
-        /* Get the Current Thread to Terminate */
-        Thread = CONTAINING_RECORD(ListEntry, ETHREAD, TerminationPortList);
+    /* Get the first Thread Entry */
+    Thread = PspReaperList;
+    PspReaperList = NULL;
+    DPRINT("PspReaperList: %x\n", Thread);
     
+    /* Check to see if the list is empty */
+    do {
+        
         /* Unlock the Dispatcher */
         KeReleaseDispatcherDatabaseLock(OldIrql);
- 
-        /* Remove the Reference */
-        ObDereferenceObject(Thread);
         
-        /* Reacquire the Lock */
+        /* Is there a thread on the list? */
+        while (Thread) {
+            
+            /* Get the next Thread */
+            DPRINT("Thread: %x\n", Thread);
+            DPRINT("Thread: %x\n", Thread->ReaperLink);
+            NewThread = Thread->ReaperLink;
+            
+            /* Remove reference to current thread */
+            ObDereferenceObject(Thread);
+        
+            /* Move to next Thread */
+            Thread = NewThread;
+        }
+        
+        /* No more linked threads... Reacquire the Lock */
         OldIrql = KeAcquireDispatcherDatabaseLock();
-    }
+        
+        /* Now try to get a new thread from the list */
+        Thread = PspReaperList;
+        PspReaperList = NULL;
+        DPRINT("PspReaperList: %x\n", Thread);
+        
+        /* Loop again if there is a new thread */
+    } while (Thread);
     
     PspReaping = FALSE;
+    DPRINT("Done reaping\n");
     KeReleaseDispatcherDatabaseLock(OldIrql);
 }
 
@@ -158,7 +179,6 @@ PspExitThread(NTSTATUS ExitStatus)
     PEPROCESS CurrentProcess;
     SIZE_T Length = PAGE_SIZE;
     PVOID TebBlock;
-    PLIST_ENTRY CurrentEntry;
     PTERMINATION_PORT TerminationPort;
 
     DPRINT("PsTerminateCurrentThread(ExitStatus %x)\n", ExitStatus);
@@ -204,19 +224,19 @@ PspExitThread(NTSTATUS ExitStatus)
     }
     
     /* Process the Termination Ports */  
-    while ((CurrentEntry = RemoveHeadList(&CurrentThread->TerminationPortList)) != 
-                           &CurrentThread->TerminationPortList) {
-        
-        /* Get the Termination Port */
-        TerminationPort = CONTAINING_RECORD(CurrentEntry,
-                                            TERMINATION_PORT,
-                                            Links);
+    TerminationPort = CurrentThread->TerminationPort;
+    DPRINT("TerminationPort: %p\n", TerminationPort);
+    while (TerminationPort) {
         
         /* Send the LPC Message */
         LpcSendTerminationPort(TerminationPort->Port, CurrentThread->CreateTime);
         
         /* Free the Port */
         ExFreePool(TerminationPort);
+        
+        /* Get the next one */
+        TerminationPort = TerminationPort->Next;
+        DPRINT("TerminationPort: %p\n", TerminationPort);
     }
       
     /* Rundown Win32 Structures */
@@ -508,6 +528,7 @@ NtRegisterThreadTerminatePort(HANDLE PortHandle)
     NTSTATUS Status;
     PTERMINATION_PORT TerminationPort;
     PVOID TerminationLpcPort;
+    PETHREAD Thread;
    
     PAGED_CODE();
     
@@ -530,8 +551,12 @@ NtRegisterThreadTerminatePort(HANDLE PortHandle)
                                                 TAG('P', 's', 'T', '=')))) {
         
         /* Associate the Port */
+        Thread = PsGetCurrentThread();
         TerminationPort->Port = TerminationLpcPort;
-        InsertTailList(&PsGetCurrentThread()->TerminationPortList, &TerminationPort->Links);
+        DPRINT("TerminationPort: %p\n", TerminationPort);
+        TerminationPort->Next = Thread->TerminationPort;
+        Thread->TerminationPort = TerminationPort;
+        DPRINT("TerminationPort: %p\n", Thread->TerminationPort);
 
         /* Return success */
         return(STATUS_SUCCESS);

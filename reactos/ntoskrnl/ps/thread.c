@@ -473,7 +473,6 @@ PsInitThreadManagment(VOID)
 
    DoneInitYet = TRUE;
    
-   InitializeListHead(&PspReaperListHead);
    ExInitializeWorkItem(&PspReaperWorkItem, PspReapRoutine, NULL);
 }
 

@@ -93,7 +93,6 @@ PsInitializeThread(PEPROCESS Process,
    DPRINT("Thread = %x\n",Thread);
 
    KeInitializeThread(&Process->Pcb, &Thread->Tcb, First);
-   InitializeListHead(&Thread->TerminationPortList);
    InitializeListHead(&Thread->ActiveTimerListHead);
    KeInitializeSpinLock(&Thread->ActiveTimerListLock);
    InitializeListHead(&Thread->IrpList);

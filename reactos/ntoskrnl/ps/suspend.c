@@ -40,8 +40,8 @@ NtResumeThread(IN HANDLE ThreadHandle,
   
     PAGED_CODE();
 
-    DPRINT1("NtResumeThead(ThreadHandle %lx  SuspendCount %p)\n",
-            ThreadHandle, SuspendCount);
+    DPRINT("NtResumeThead(ThreadHandle %lx  SuspendCount %p)\n",
+           ThreadHandle, SuspendCount);
 
     /* Get the Thread Object */
     Status = ObReferenceObjectByHandle(ThreadHandle,
