@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.18 2001/06/18 03:07:37 phreak Exp $
+/* $Id: conio.c,v 1.19 2001/06/22 02:11:44 phreak Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -353,7 +353,7 @@ NTSTATUS CsrInitConsoleScreenBuffer( PCSRSS_SCREEN_BUFFER Console )
   Console->Header.Type = CSRSS_SCREEN_BUFFER_MAGIC;
   Console->Header.ReferenceCount = 0;
   Console->MaxX = PhysicalConsoleSize.X;
-  Console->MaxY = PhysicalConsoleSize.Y;
+  Console->MaxY = PhysicalConsoleSize.Y * 2;
   Console->ShowX = 0;
   Console->ShowY = 0;
   Console->CurrentX = 0;
@@ -389,6 +389,11 @@ VOID CsrDeleteScreenBuffer( PCSRSS_SCREEN_BUFFER Buffer )
 NTSTATUS CsrInitConsole(PCSRSS_CONSOLE Console)
 {
   NTSTATUS Status;
+
+  Console->Title.MaximumLength = Console->Title.Length = 0;
+  Console->Title.Buffer = 0;
+  
+  RtlCreateUnicodeString( &Console->Title, L"Command Prompt" );
   
   Console->Header.ReferenceCount = 0;
   Console->WaitingChars = 0;
@@ -506,6 +511,7 @@ VOID CsrDrawConsole( PCSRSS_SCREEN_BUFFER Buff )
 VOID CsrDeleteConsole( PCSRSS_CONSOLE Console )
 {
    ConsoleInput *Event;
+   DPRINT1( "CsrDeleteConsole\n" );
    RtlEnterCriticalSection( &ActiveConsoleLock );
    /* Drain input event queue */
    while( Console->InputEvents.Flink != &Console->InputEvents )
@@ -532,6 +538,7 @@ VOID CsrDeleteConsole( PCSRSS_CONSOLE Console )
    if( !--Console->ActiveBuffer->Header.ReferenceCount )
      CsrDeleteScreenBuffer( Console->ActiveBuffer );
    NtClose( Console->ActiveEvent );
+   RtlFreeUnicodeString( &Console->Title );
    RtlFreeHeap( CsrssApiHeap, 0, Console );
 }
 
@@ -602,6 +609,7 @@ VOID Console_Api( DWORD RefreshEvent )
   HANDLE Events[2];     // 0 = keyboard, 1 = refresh
   int c;
   int updown;
+  PCSRSS_CONSOLE SwapConsole = 0; // console we are thinking about swapping with
 
   Events[0] = 0;
   Status = NtCreateEvent( &Events[0], STANDARD_RIGHTS_ALL, NULL, FALSE, FALSE );
@@ -649,23 +657,91 @@ VOID Console_Api( DWORD RefreshEvent )
 	      else break;
 	    }
 	}
-      if( KeyEventRecord->InputEvent.Event.KeyEvent.dwControlKeyState & ( RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED )&&  KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar == 'q' )
+      if( KeyEventRecord->InputEvent.Event.KeyEvent.dwControlKeyState & ( RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED )&&  KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode == VK_TAB )
 	 if( KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown == TRUE )
 	    {
+	      ANSI_STRING Title;
+	      void * Buffer;
+	      COORD *pos;
+	      unsigned int src, dst;
+	      
 	       /* alt-tab, swap consoles */
-	       RtlEnterCriticalSection( &ActiveConsoleLock );
-	       if( ActiveConsole->Next != ActiveConsole )
-		  ActiveConsole = ActiveConsole->Next;
-	       CsrDrawConsole( ActiveConsole->ActiveBuffer );
-	       RtlLeaveCriticalSection( &ActiveConsoleLock );
-	       RtlFreeHeap( CsrssApiHeap, 0, KeyEventRecord );
-	       continue;
+	       // move SwapConsole to next console, and print its title
+	      RtlEnterCriticalSection( &ActiveConsoleLock );
+	      if( !SwapConsole )
+		SwapConsole = ActiveConsole;
+	      
+	      if( KeyEventRecord->InputEvent.Event.KeyEvent.dwControlKeyState & SHIFT_PRESSED )
+		SwapConsole = SwapConsole->Prev;
+	      else SwapConsole = SwapConsole->Next;
+	      Title.MaximumLength = RtlUnicodeStringToAnsiSize( &SwapConsole->Title );
+	      Title.Length = 0;
+	      Buffer = RtlAllocateHeap( CsrssApiHeap,
+					0,
+					sizeof( COORD ) + Title.MaximumLength );
+	      pos = (COORD *)Buffer;
+	      Title.Buffer = Buffer + sizeof( COORD );
+
+	      /* this does not seem to work
+		 RtlUnicodeStringToAnsiString( &Title, &SwapConsole->Title, FALSE ); */
+	      // temp hack
+	      for( src = 0, dst = 0; src < SwapConsole->Title.Length; src++, dst++ )
+		Title.Buffer[dst] = (char)SwapConsole->Title.Buffer[dst];
+	      
+	      pos->Y = PhysicalConsoleSize.Y / 2;
+	      pos->X = ( PhysicalConsoleSize.X - Title.MaximumLength ) / 2;
+	      // redraw the console to clear off old title
+	      CsrDrawConsole( ActiveConsole->ActiveBuffer );
+	      Status = NtDeviceIoControlFile( ConsoleDeviceHandle,
+					      NULL,
+					      NULL,
+					      NULL,
+					      &Iosb,
+					      IOCTL_CONSOLE_WRITE_OUTPUT_CHARACTER,
+					      0,
+					      0,
+					      Buffer,
+					      sizeof (COORD) + Title.MaximumLength );
+	      if( !NT_SUCCESS( Status ) )
+		{
+		  DPRINT1( "Error writing to console\n" );
+		}
+	      RtlFreeHeap( CsrssApiHeap, 0, Buffer );
+	      
+	      RtlLeaveCriticalSection( &ActiveConsoleLock );
+	      RtlFreeHeap( CsrssApiHeap, 0, KeyEventRecord );
+	      continue;
 	    }
 	 else {
 	    RtlFreeHeap( CsrssApiHeap, 0, KeyEventRecord );
 	    continue;
 	 }
-      else if( KeyEventRecord->InputEvent.Event.KeyEvent.dwControlKeyState & ( RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED ) && (KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode == VK_UP || KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode == VK_DOWN) )
+      else if( SwapConsole &&
+	       KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode == VK_MENU &&
+	       KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown == FALSE )
+	{
+	  // alt key released, swap consoles
+	  PCSRSS_CONSOLE tmp;
+
+	  RtlEnterCriticalSection( &ActiveConsoleLock );
+	  if( SwapConsole != ActiveConsole )
+	    {
+	      // first remove swapconsole from the list
+	      SwapConsole->Prev->Next = SwapConsole->Next;
+	      SwapConsole->Next->Prev = SwapConsole->Prev;
+	      // now insert before activeconsole
+	      SwapConsole->Next = ActiveConsole;
+	      SwapConsole->Prev = ActiveConsole->Prev;
+	      ActiveConsole->Prev->Next = SwapConsole;
+	      ActiveConsole->Prev = SwapConsole;
+	    }
+	  ActiveConsole = SwapConsole;
+	  SwapConsole = 0;
+	  CsrDrawConsole( ActiveConsole->ActiveBuffer );
+
+	  RtlLeaveCriticalSection( &ActiveConsoleLock );
+	}
+      if( KeyEventRecord->InputEvent.Event.KeyEvent.dwControlKeyState & ( RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED ) && (KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode == VK_UP || KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode == VK_DOWN) )
 	 {
 	    if( KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown == TRUE )
 	       {
@@ -787,6 +863,8 @@ VOID Console_Api( DWORD RefreshEvent )
 	    }
       }
       ActiveConsole->WaitingChars++;
+      if( !(ActiveConsole->Mode & ENABLE_LINE_INPUT) )
+	NtSetEvent( ActiveConsole->ActiveEvent, 0 );
       RtlLeaveCriticalSection( &ActiveConsoleLock );
     }
 }
@@ -1296,3 +1374,25 @@ NTSTATUS CsrSetScreenBuffer( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST
    RtlLeaveCriticalSection( &ActiveConsoleLock );
    return Reply->Status;
 }
+
+NTSTATUS CsrSetTitle( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply )
+{
+  NTSTATUS Status;
+  PCSRSS_CONSOLE Console;
+  
+  Reply->Header.MessageSize = sizeof( CSRSS_API_REPLY );
+  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE_HEADER);
+  RtlEnterCriticalSection( &ActiveConsoleLock );
+  Status = CsrGetObject( ProcessData, Request->Data.SetTitleRequest.Console, (Object_t **)&Console );
+  if( !NT_SUCCESS( Status ) )
+    Reply->Status = Status;  
+  else {
+    // copy title to console
+    RtlFreeUnicodeString( &Console->Title );
+    RtlCreateUnicodeString( &Console->Title, Request->Data.SetTitleRequest.Title );
+    Reply->Status = STATUS_SUCCESS;
+  }
+  RtlLeaveCriticalSection( &ActiveConsoleLock );
+  return Reply->Status;
+}
+

@@ -62,6 +62,7 @@ typedef struct CSRSS_CONSOLE_t
    PCSRSS_SCREEN_BUFFER ActiveBuffer;    /* Pointer to currently active screen buffer */
    WORD Mode;                            /* Console mode flags */
    WORD EchoCount;                       /* count of chars to echo, in line buffered mode */
+   UNICODE_STRING Title;                 /* Title of console */
 } CSRSS_CONSOLE, *PCSRSS_CONSOLE;
 
 typedef struct
@@ -131,6 +132,8 @@ NTSTATUS CsrGetConsoleMode( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST 
 NTSTATUS CsrCreateScreenBuffer( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply );
 
 NTSTATUS CsrSetScreenBuffer( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply );
+
+NTSTATUS CsrSetTitle( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply );
 
 /* print.c */
 VOID DisplayString(LPCWSTR lpwString);

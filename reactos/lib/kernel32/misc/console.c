@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.32 2001/04/04 22:21:30 dwelch Exp $
+/* $Id: console.c,v 1.33 2001/06/22 02:11:43 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -1814,8 +1814,43 @@ SetConsoleTitleW(
 	LPCWSTR		lpConsoleTitle
 	)
 {
-/* --- TO DO --- */
-	return FALSE;
+  PCSRSS_API_REQUEST Request;
+  CSRSS_API_REPLY Reply;
+  NTSTATUS Status;
+  unsigned int c;
+  
+  Request = RtlAllocateHeap(GetProcessHeap(),
+			    HEAP_ZERO_MEMORY,
+			    sizeof(CSRSS_API_REQUEST) + CSRSS_MAX_SET_TITLE_REQUEST);
+  if (Request == NULL)
+    {
+      return(FALSE);
+    }
+  
+  Request->Type = CSRSS_SET_TITLE;
+  Request->Data.SetTitleRequest.Console = GetStdHandle( STD_INPUT_HANDLE );
+  
+  for( c = 0; lpConsoleTitle[c] && c < CSRSS_MAX_TITLE_LENGTH; c++ )
+    Request->Data.SetTitleRequest.Title[c] = lpConsoleTitle[c];
+  // add null
+  Request->Data.SetTitleRequest.Title[c] = 0;
+  Request->Data.SetTitleRequest.Length = c;  
+  Status = CsrClientCallServer(Request,
+			       &Reply,
+			       sizeof(CSRSS_SET_TITLE_REQUEST) +
+			       c +
+			       sizeof( LPC_MESSAGE_HEADER ) +
+			       sizeof( ULONG ),
+			       sizeof(CSRSS_API_REPLY));
+  
+  if (!NT_SUCCESS(Status) || !NT_SUCCESS( Status = Reply.Status ) )
+    {
+      RtlFreeHeap( GetProcessHeap(), 0, Request );
+      SetLastErrorByStatus (Status);
+      return(FALSE);
+    }
+  RtlFreeHeap( GetProcessHeap(), 0, Request );
+  return TRUE;
 }
 
 
@@ -1831,36 +1866,43 @@ SetConsoleTitleA(
 	LPCSTR		lpConsoleTitle
 	)
 {
-	wchar_t	WideTitle [MAX_CONSOLE_TITLE_LENGTH];
-	char	AnsiTitle [MAX_CONSOLE_TITLE_LENGTH];
-	INT	nWideTitle;
-	
-	if (!lpConsoleTitle) return FALSE;
-	ZeroMemory( WideTitle, sizeof WideTitle );
-	nWideTitle = lstrlenA(lpConsoleTitle);
-	if (!lstrcpynA(
-		AnsiTitle,
-		lpConsoleTitle,
-		nWideTitle
-		)) 
-	{
-		return FALSE;
-	}
-	AnsiTitle[nWideTitle] = '\0';
-#if 0
-	if ( MultiByteToWideChar(
-		CP_ACP,			// ANSI code page 
-		MB_PRECOMPOSED,		// character-type options 
-		AnsiTitle,		// address of string to map 
-		nWideTitle,		// number of characters in string 
-		(LPWSTR) WideTitle,	// address of wide-character buffer 
-		(-1)			// size of buffer: -1=...\0
-		))
-	{
-		return SetConsoleTitleW( (LPWSTR) WideTitle ); 
-	}
-#endif
-	return FALSE;
+  PCSRSS_API_REQUEST Request;
+  CSRSS_API_REPLY Reply;
+  NTSTATUS Status;
+  unsigned int c;
+  
+  Request = RtlAllocateHeap(GetProcessHeap(),
+			    HEAP_ZERO_MEMORY,
+			    sizeof(CSRSS_API_REQUEST) + CSRSS_MAX_SET_TITLE_REQUEST);
+  if (Request == NULL)
+    {
+      return(FALSE);
+    }
+  
+  Request->Type = CSRSS_SET_TITLE;
+  Request->Data.SetTitleRequest.Console = GetStdHandle( STD_INPUT_HANDLE );
+  
+  for( c = 0; lpConsoleTitle[c] && c < CSRSS_MAX_TITLE_LENGTH; c++ )
+    Request->Data.SetTitleRequest.Title[c] = lpConsoleTitle[c];
+  // add null
+  Request->Data.SetTitleRequest.Title[c] = 0;
+  Request->Data.SetTitleRequest.Length = c;
+  Status = CsrClientCallServer(Request,
+			       &Reply,
+			       sizeof(CSRSS_SET_TITLE_REQUEST) +
+			       c +
+			       sizeof( LPC_MESSAGE_HEADER ) +
+			       sizeof( ULONG ),
+			       sizeof(CSRSS_API_REPLY));
+  
+  if (!NT_SUCCESS(Status) || !NT_SUCCESS( Status = Reply.Status ) )
+    {
+      RtlFreeHeap( GetProcessHeap(), 0, Request );
+      SetLastErrorByStatus (Status);
+      return(FALSE);
+    }
+  RtlFreeHeap( GetProcessHeap(), 0, Request );
+  return TRUE;
 }
 
 
