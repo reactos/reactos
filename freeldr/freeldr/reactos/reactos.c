@@ -227,16 +227,19 @@ static VOID
 LoadBootDrivers(PCHAR szSystemRoot, int nPos)
 {
   S32 rc = 0;
-  HKEY hGroupKey, hServiceKey, hDriverKey;
-  char ValueBuffer[512];
+  HKEY hGroupKey, hOrderKey, hServiceKey, hDriverKey;
+  char GroupNameBuffer[512];
   char ServiceName[256];
+  U32 OrderList[128];
   U32 BufferSize;
   U32 Index;
+  U32 TagIndex;
   char *GroupName;
 
   U32 ValueSize;
   U32 ValueType;
   U32 StartValue;
+  U32 TagValue;
   UCHAR DriverGroup[256];
   U32 DriverGroupSize;
 
@@ -249,7 +252,17 @@ LoadBootDrivers(PCHAR szSystemRoot, int nPos)
 		  &hGroupKey);
   if (rc != ERROR_SUCCESS)
     {
-      DbgPrint((DPRINT_REACTOS, "Failed to open the 'ServiceGroupOrder key (rc %d)\n", (int)rc));
+      DbgPrint((DPRINT_REACTOS, "Failed to open the 'ServiceGroupOrder' key (rc %d)\n", (int)rc));
+      return;
+    }
+  
+  /* get 'group order list' key */
+  rc = RegOpenKey(NULL,
+                  "\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\GroupOrderList",
+		  &hOrderKey);
+  if (rc != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_REACTOS, "Failed to open the 'GroupOrderList' key (rc %d)\n", (int)rc));
       return;
     }
 
@@ -263,26 +276,110 @@ LoadBootDrivers(PCHAR szSystemRoot, int nPos)
       return;
     }
 
-  BufferSize = sizeof(ValueBuffer);
-  rc = RegQueryValue(hGroupKey, "List", NULL, (PUCHAR)ValueBuffer, &BufferSize);
+  BufferSize = sizeof(GroupNameBuffer);
+  rc = RegQueryValue(hGroupKey, "List", NULL, (PUCHAR)GroupNameBuffer, &BufferSize);
   DbgPrint((DPRINT_REACTOS, "RegQueryValue(): rc %d\n", (int)rc));
   if (rc != ERROR_SUCCESS)
     return;
 
   DbgPrint((DPRINT_REACTOS, "BufferSize: %d \n", (int)BufferSize));
 
-  DbgPrint((DPRINT_REACTOS, "ValueBuffer: '%s' \n", ValueBuffer));
+  DbgPrint((DPRINT_REACTOS, "GroupNameBuffer: '%s' \n", GroupNameBuffer));
 
-  GroupName = ValueBuffer;
+  GroupName = GroupNameBuffer;
   while (*GroupName)
     {
       DbgPrint((DPRINT_REACTOS, "Driver group: '%s'\n", GroupName));
 
-      /* enumerate all drivers */
+      BufferSize = sizeof(OrderList);
+      rc = RegQueryValue(hOrderKey, GroupName, NULL, (PUCHAR)OrderList, &BufferSize);
+      if (rc != ERROR_SUCCESS)
+        {
+	  OrderList[0] = 0;
+	}
+      
+      for (TagIndex = 1; TagIndex <= OrderList[0]; TagIndex++)
+        {
+	  /* enumerate all drivers */
+	  Index = 0;
+	  while (TRUE)
+	    {
+	      ValueSize = sizeof(ServiceName);
+	      rc = RegEnumKey(hServiceKey, Index, ServiceName, &ValueSize);
+	      DbgPrint((DPRINT_REACTOS, "RegEnumKey(): rc %d\n", (int)rc));
+	      if (rc == ERROR_NO_MORE_ITEMS)
+	        break;
+	      if (rc != ERROR_SUCCESS)
+	        return;
+	      DbgPrint((DPRINT_REACTOS, "Service %d: '%s'\n", (int)Index, ServiceName));
+
+	      /* open driver Key */
+	      rc = RegOpenKey(hServiceKey, ServiceName, &hDriverKey);
+
+	      ValueSize = sizeof(U32);
+	      rc = RegQueryValue(hDriverKey, "Start", &ValueType, (PUCHAR)&StartValue, &ValueSize);
+	      DbgPrint((DPRINT_REACTOS, "  Start: %x  \n", (int)StartValue));
+
+	      ValueSize = sizeof(U32);
+	      rc = RegQueryValue(hDriverKey, "Tag", &ValueType, (PUCHAR)&TagValue, &ValueSize);
+	      if (rc != ERROR_SUCCESS)
+	        {
+		  TagValue = (U32)-1;
+		}
+	      DbgPrint((DPRINT_REACTOS, "  Tag:   %x  \n", (int)TagValue));
+		  
+
+	      DriverGroupSize = 256;
+	      rc = RegQueryValue(hDriverKey, "Group", NULL, (PUCHAR)DriverGroup, &DriverGroupSize);
+	      DbgPrint((DPRINT_REACTOS, "  Group: '%s'  \n", DriverGroup));
+
+	      if ((StartValue == 0) && (TagValue == OrderList[TagIndex]) &&(stricmp(DriverGroup, GroupName) == 0))
+	        {
+	          ValueSize = 256;
+	          rc = RegQueryValue(hDriverKey,
+				     "ImagePath",
+				     NULL,
+				     (PUCHAR)TempImagePath,
+				     &ValueSize);
+	          if (rc != ERROR_SUCCESS)
+		    {
+		      DbgPrint((DPRINT_REACTOS, "  ImagePath: not found\n"));
+		      strcpy(ImagePath, szSystemRoot);
+		      strcat(ImagePath, "system32\\drivers\\");
+		      strcat(ImagePath, ServiceName);
+		      strcat(ImagePath, ".sys");
+		    }
+	          else if (TempImagePath[0] != '\\')
+		    {
+		      strcpy(ImagePath, szSystemRoot);
+		      strcat(ImagePath, TempImagePath);
+		    }
+	          else
+		    {
+		      strcpy(ImagePath, TempImagePath);
+		      DbgPrint((DPRINT_REACTOS, "  ImagePath: '%s'\n", ImagePath));
+		    }
+	          DbgPrint((DPRINT_REACTOS, "  Loading driver: '%s'\n", ImagePath));
+
+	          if (nPos < 100)
+		    nPos += 5;
+
+	          LoadDriver(ImagePath, nPos);
+	          LoadSymbolFile(szSystemRoot, ImagePath, nPos);
+	        }
+	      else
+	        {
+	          DbgPrint((DPRINT_REACTOS, "  Skipping driver '%s' with Start %d, Tag %d and Group '%s' (Current Tag %d, current group '%s')\n",
+	                   ServiceName, StartValue, TagValue, DriverGroup, OrderList[TagIndex], GroupName));
+	        }
+	      Index++;
+	    }
+	}  
+
       Index = 0;
       while (TRUE)
 	{
-	  ValueSize = sizeof(ValueBuffer);
+	  ValueSize = sizeof(ServiceName);
 	  rc = RegEnumKey(hServiceKey, Index, ServiceName, &ValueSize);
 	  DbgPrint((DPRINT_REACTOS, "RegEnumKey(): rc %d\n", (int)rc));
 	  if (rc == ERROR_NO_MORE_ITEMS)
@@ -298,11 +395,25 @@ LoadBootDrivers(PCHAR szSystemRoot, int nPos)
 	  rc = RegQueryValue(hDriverKey, "Start", &ValueType, (PUCHAR)&StartValue, &ValueSize);
 	  DbgPrint((DPRINT_REACTOS, "  Start: %x  \n", (int)StartValue));
 
+	  ValueSize = sizeof(U32);
+	  rc = RegQueryValue(hDriverKey, "Tag", &ValueType, (PUCHAR)&TagValue, &ValueSize);
+	  if (rc != ERROR_SUCCESS)
+	    {
+	      TagValue = (U32)-1;
+	    }
+	  DbgPrint((DPRINT_REACTOS, "  Tag:   %x  \n", (int)TagValue));
+
 	  DriverGroupSize = 256;
 	  rc = RegQueryValue(hDriverKey, "Group", NULL, (PUCHAR)DriverGroup, &DriverGroupSize);
 	  DbgPrint((DPRINT_REACTOS, "  Group: '%s'  \n", DriverGroup));
 
-	  if ((StartValue == 0) && (stricmp(DriverGroup, GroupName) == 0))
+          for (TagIndex = 1; TagIndex <= OrderList[0]; TagIndex++)
+	    {
+	      if (TagValue == OrderList[TagIndex])
+	        break;
+	    }
+
+	  if ((StartValue == 0) && (TagIndex > OrderList[0]) && (stricmp(DriverGroup, GroupName) == 0))
 	    {
 	      ValueSize = 256;
 	      rc = RegQueryValue(hDriverKey,
@@ -338,8 +449,8 @@ LoadBootDrivers(PCHAR szSystemRoot, int nPos)
 	    }
 	  else
 	    {
-	      DbgPrint((DPRINT_REACTOS, "  Skipping driver '%s' with Start %d and Group '%s' (Current group '%s')\n",
-	          ImagePath, StartValue, DriverGroup, GroupName));
+	      DbgPrint((DPRINT_REACTOS, "  Skipping driver '%s' with Start %d, Tag %d and Group '%s' (Current group '%s')\n",
+	               ServiceName, StartValue, TagValue, DriverGroup, GroupName));
 	    }
 	  Index++;
 	}

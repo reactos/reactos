@@ -1,3 +1,8 @@
+Changes in v1.8.24 (09/20/2004) (hbirr)
+
+- Implemented the driver loading by the sequence of tag entries 
+  in the GroupOrderList key.
+
 Changes in v1.8.23 (30/08/2004) (ekohl)
 
 - Fixed some compiler warnings.
