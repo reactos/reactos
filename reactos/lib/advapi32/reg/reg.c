@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.36 2003/12/23 22:00:54 navaraf Exp $
+/* $Id: reg.c,v 1.37 2003/12/24 21:23:03 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -2123,7 +2123,7 @@ RegQueryValueExW (HKEY hKey,
 			lpValueName);
   BufferSize = sizeof (KEY_VALUE_PARTIAL_INFORMATION) + *lpcbData;
   ValueInfo = RtlAllocateHeap (ProcessHeap,
-			       HEAP_ZERO_MEMORY,
+			       0,
 			       BufferSize);
   if (ValueInfo == NULL)
     {
@@ -2142,11 +2142,13 @@ RegQueryValueExW (HKEY hKey,
     {
       /* Return ERROR_SUCCESS and the buffer space needed for a successful call */
       ErrorCode = ERROR_SUCCESS;
+      ValueInfo->DataLength = 0;
     }
   else if (!NT_SUCCESS(Status))
     {
       ErrorCode = RtlNtStatusToDosError (Status);
       SetLastError (ErrorCode);
+      ValueInfo->DataLength = 0;
     }
   else
     {
