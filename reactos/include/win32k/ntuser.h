@@ -698,7 +698,7 @@ NtUserGetKeyboardLayoutName(
 DWORD
 STDCALL
 NtUserGetKeyboardState(
-  DWORD Unknown0);
+  LPBYTE Unknown0);
 
 DWORD
 STDCALL
@@ -1309,7 +1309,7 @@ NtUserSetInternalWindowPos(
 DWORD
 STDCALL
 NtUserSetKeyboardState(
-  DWORD Unknown0);
+  LPBYTE Unknown0);
 
 DWORD
 STDCALL

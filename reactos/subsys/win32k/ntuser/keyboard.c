@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: keyboard.c,v 1.4 2003/07/05 16:04:01 chorns Exp $
+/* $Id: keyboard.c,v 1.5 2003/07/20 05:32:19 jimtabor Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -31,6 +31,7 @@
 
 #include <ddk/ntddk.h>
 #include <win32k/win32k.h>
+#include <internal/safe.h>
 #include <include/guicheck.h>
 #include <include/msgqueue.h>
 #include <include/window.h>
@@ -245,5 +246,45 @@ NtUserSetFocus(HWND hWnd)
 {
   return W32kSetFocusWindow(hWnd);
 }
+
+
+DWORD
+STDCALL
+NtUserGetKeyState(
+  DWORD key)
+{
+DWORD ret;
+
+    if (key >= 'a' && key <= 'z') key += 'A' - 'a';
+    ret = ((DWORD)(QueueKeyStateTable[key] & 0x80) << 8 ) |
+              (QueueKeyStateTable[key] & 0x80) |
+              (QueueKeyStateTable[key] & 0x01);
+    return ret;
+}
+
+DWORD
+STDCALL
+NtUserGetKeyboardState(
+  LPBYTE lpKeyState)
+{
+  if (lpKeyState) {
+	if(!NT_SUCCESS(MmCopyToCaller(lpKeyState, QueueKeyStateTable, 256)))
+		return FALSE;
+  }
+  return TRUE;
+}
+
+DWORD
+STDCALL
+NtUserSetKeyboardState(
+  LPBYTE lpKeyState)
+{
+	if (lpKeyState) {
+		if(! NT_SUCCESS(MmCopyFromCaller(QueueKeyStateTable, lpKeyState, 256)))
+			return FALSE;
+	}
+    return TRUE;
+}
+
 
 /* EOF */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.8 2003/07/10 21:04:32 chorns Exp $
+/* $Id: input.c,v 1.9 2003/07/20 05:32:19 jimtabor Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -144,8 +144,7 @@ GetKeyNameTextW(LONG lParam,
 SHORT STDCALL
 GetKeyState(int nVirtKey)
 {
-  UNIMPLEMENTED;
-  return 0;
+ return (SHORT) NtUserGetKeyState((DWORD) nVirtKey);
 }
 
 
@@ -189,8 +188,8 @@ GetKeyboardLayoutNameW(LPWSTR pwszKLID)
 WINBOOL STDCALL
 GetKeyboardState(PBYTE lpKeyState)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  
+  return (WINBOOL) NtUserGetKeyboardState((LPBYTE) lpKeyState);
 }
 
 
@@ -317,8 +316,7 @@ SetFocus(HWND hWnd)
 WINBOOL STDCALL
 SetKeyboardState(LPBYTE lpKeyState)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+ return (WINBOOL) NtUserSetKeyboardState((LPBYTE)lpKeyState);
 }
 
 

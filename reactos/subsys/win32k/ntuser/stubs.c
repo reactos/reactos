@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.15 2003/07/19 04:10:30 royce Exp $
+/* $Id: stubs.c,v 1.16 2003/07/20 05:32:19 jimtabor Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -781,30 +781,10 @@ NtUserGetKeyboardLayoutName(
 
 DWORD
 STDCALL
-NtUserGetKeyboardState(
-  DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserGetKeyNameText(
   DWORD Unknown0,
   DWORD Unknown1,
   DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserGetKeyState(
-  DWORD Unknown0)
 {
   UNIMPLEMENTED
 
@@ -1276,15 +1256,6 @@ NtUserSetImeHotKey(
   return 0;
 }
 
-DWORD
-STDCALL
-NtUserSetKeyboardState(
-  DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
 
 DWORD
 STDCALL
