@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.72 2003/12/26 14:50:29 weiden Exp $
+/* $Id: winpos.c,v 1.73 2003/12/26 16:19:15 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -67,14 +67,14 @@
 
 #define HAS_DLGFRAME(Style, ExStyle) \
             (((ExStyle) & WS_EX_DLGMODALFRAME) || \
-            (((Style) & WS_DLGFRAME) && (!((Style) & (WS_THICKFRAME | WS_MINIMIZE)))))
+            (((Style) & WS_DLGFRAME) && (!((Style) & WS_THICKFRAME))))
 
 #define HAS_THICKFRAME(Style, ExStyle) \
-            (((Style) & WS_THICKFRAME) && !((Style) & WS_MINIMIZE) && \
+            (((Style) & WS_THICKFRAME) && \
             (!(((Style) & (WS_DLGFRAME | WS_BORDER)) == WS_DLGFRAME)))
 
 #define HAS_THINFRAME(Style, ExStyle) \
-            (((Style) & (WS_BORDER | WS_MINIMIZE)) || (!((Style) & (WS_CHILD | WS_POPUP))))
+            (((Style) & WS_BORDER) || (!((Style) & (WS_CHILD | WS_POPUP))))
 
 BOOL FASTCALL
 IntGetClientOrigin(HWND hWnd, LPPOINT Point)
@@ -164,7 +164,7 @@ WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT pt, PRECT RestoreRect)
         return NULL;
       }
       WindowObject->InternalPos->NormalRect = WindowObject->WindowRect;
-      if (HAS_DLGFRAME(WindowObject->Style, WindowObject->ExStyle))
+      if (HAS_DLGFRAME(WindowObject->Style, WindowObject->ExStyle) && !(WindowObject->Style & WS_MINIMIZE))
       {
         XInc = NtUserGetSystemMetrics(SM_CXDLGFRAME);
         YInc = NtUserGetSystemMetrics(SM_CYDLGFRAME);
@@ -172,7 +172,7 @@ WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT pt, PRECT RestoreRect)
       else
       {
         XInc = YInc = 0;
-        if (HAS_THICKFRAME(WindowObject->Style, WindowObject->ExStyle))
+        if (HAS_THICKFRAME(WindowObject->Style, WindowObject->ExStyle)&& !(WindowObject->Style & WS_MINIMIZE))
         {
           XInc += NtUserGetSystemMetrics(SM_CXFRAME);
           YInc += NtUserGetSystemMetrics(SM_CYFRAME);

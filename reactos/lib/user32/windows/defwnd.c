@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.117 2003/12/26 12:37:53 weiden Exp $
+/* $Id: defwnd.c,v 1.118 2003/12/26 16:19:15 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -468,7 +468,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
   POINT capturePoint, pt;
   ULONG Style = GetWindowLongW(hwnd, GWL_STYLE);
   ULONG ExStyle = GetWindowLongW(hwnd, GWL_EXSTYLE); 
-  BOOL thickframe = UserHasThickFrameStyle(Style, ExStyle);
+  BOOL thickframe;
   BOOL iconic = Style & WS_MINIMIZE;
   BOOL moved = FALSE;
   DWORD dwPoint = GetMessagePos();
@@ -486,6 +486,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
       return;
     }
   
+  thickframe = UserHasThickFrameStyle(Style, ExStyle) && !(Style & WS_MINIMIZE);
   if ((wParam & 0xfff0) == SC_MOVE)
     {
       if (!hittest) 
@@ -596,7 +597,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
       UserDrawMovingFrame( hdc, &sizingRect, thickframe );
     }
   
-  while(1)
+  for(;;)
     {
       int dx = 0, dy = 0;
 

@@ -799,7 +799,7 @@ DefWndDoButton(HWND hWnd, WPARAM wParam)
     UserDrawCaptionButtonWnd(hWnd, WindowDC, HasBtn , Btn);
   }
   
-  while(1)
+ for(;;)
   {
     GetMessageW(&Msg, 0, 0, 0);
     switch(Msg.message)
