@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.75 2004/02/21 20:26:54 navaraf Exp $ */
+/* $Id: text.c,v 1.76 2004/02/21 21:15:22 navaraf Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -602,9 +602,6 @@ NtGdiExtTextOut(HDC hDC, int XStart, int YStart, UINT fuOptions,
  
    SurfObj = (SURFOBJ*)AccessUserObject((ULONG) dc->Surface);
 
-   if (dc->w.backgroundMode == OPAQUE)
-      fuOptions |= ETO_OPAQUE;
-
    XStart += dc->w.DCOrgX;
    YStart += dc->w.DCOrgY;
    TextLeft = XStart;
@@ -671,7 +668,7 @@ NtGdiExtTextOut(HDC hDC, int XStart, int YStart, UINT fuOptions,
    XlateObj = (PXLATEOBJ)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL);
    hBrushFg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->w.textColor));
    BrushFg = BRUSHOBJ_LockBrush(hBrushFg);
-   if (fuOptions & ETO_OPAQUE)
+   if ((fuOptions & ETO_OPAQUE) || dc->w.backgroundMode == OPAQUE)
    {
       hBrushBg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->w.backgroundColor));
       if (hBrushBg)
@@ -712,6 +709,14 @@ NtGdiExtTextOut(HDC hDC, int XStart, int YStart, UINT fuOptions,
          BrushBg,
          &BrushOrigin,
          PATCOPY);
+      fuOptions &= ~ETO_OPAQUE;
+   }
+   else
+   {
+      if (dc->w.backgroundMode == OPAQUE)
+      {
+         fuOptions |= ETO_OPAQUE;
+      }
    }
 
   // Determine the yoff from the dc's w.textAlign
@@ -769,7 +774,7 @@ NtGdiExtTextOut(HDC hDC, int XStart, int YStart, UINT fuOptions,
       pitch = glyph->bitmap.width;
     }
 
-    if ((fuOptions & ETO_OPAQUE) && !lprc)
+    if (fuOptions & ETO_OPAQUE)
       {
 	DestRect.left = BackgroundLeft;
 	DestRect.right = TextLeft + (glyph->advance.x + 32) / 64;
