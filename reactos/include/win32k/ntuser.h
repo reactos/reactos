@@ -179,9 +179,9 @@ NtUserChangeDisplaySettings(
 DWORD
 STDCALL
 NtUserCheckMenuItem(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+  HMENU hmenu,
+  UINT uIDCheckItem,
+  UINT uCheck);
 
 DWORD STDCALL
 NtUserChildWindowFromPointEx(HWND Parent,
@@ -256,7 +256,7 @@ NtUserCreateLocalMemHandle(
   DWORD Unknown2,
   DWORD Unknown3);
 
-DWORD
+HMENU
 STDCALL
 NtUserCreateMenu(VOID);
 
@@ -325,12 +325,12 @@ NtUserDefSetText(
   DWORD Unknown0,
   DWORD Unknown1);
 
-DWORD
+BOOL
 STDCALL
 NtUserDeleteMenu(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+  HMENU hMenu,
+  UINT uPosition,
+  UINT uFlags);
 
 BOOL
 STDCALL
@@ -343,10 +343,10 @@ NtUserDestroyCursor(
   DWORD Unknown0,
   DWORD Unknown1);
 
-DWORD
+BOOL
 STDCALL
 NtUserDestroyMenu(
-  DWORD Unknown0);
+  HMENU hMenu);
 
 BOOLEAN STDCALL
 NtUserDestroyWindow(HWND Wnd);
@@ -426,12 +426,20 @@ DWORD
 STDCALL
 NtUserEmptyClipboard(VOID);
 
-DWORD
+BOOL
 STDCALL
 NtUserEnableMenuItem(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+  HMENU hMenu,
+  UINT uIDEnableItem,
+  UINT uEnable);
+  
+/*DWORD
+STDCALL
+NtUserInsertMenuItem(
+  HMENU hMenu,
+  UINT uItem,
+  WINBOOL fByPosition,
+  LPCMENUITEMINFO lpmii);*/
 
 DWORD
 STDCALL
@@ -446,7 +454,7 @@ NtUserEndDeferWindowPosEx(
   DWORD Unknown0,
   DWORD Unknown1);
 
-DWORD
+BOOL
 STDCALL
 NtUserEndMenu(VOID);
 
@@ -721,13 +729,13 @@ STDCALL
 NtUserGetListBoxInfo(
   DWORD Unknown0);
 
-DWORD
+BOOL
 STDCALL
 NtUserGetMenuBarInfo(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+  HWND hwnd,
+  LONG idObject,
+  LONG idItem,
+  PMENUBARINFO pmbi);
 
 DWORD
 STDCALL
@@ -735,13 +743,13 @@ NtUserGetMenuIndex(
   DWORD Unknown0,
   DWORD Unknown1);
 
-DWORD
+BOOL
 STDCALL
 NtUserGetMenuItemRect(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+  HWND hWnd,
+  HMENU hMenu,
+  UINT uItem,
+  LPRECT lprcItem);
 
 BOOL
 STDCALL
@@ -846,13 +854,13 @@ STDCALL
 NtUserHideCaret(
   DWORD Unknown0);
 
-DWORD
+BOOL
 STDCALL
 NtUserHiliteMenuItem(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+  HWND hwnd,
+  HMENU hmenu,
+  UINT uItemHilite,
+  UINT uHilite);
 
 DWORD
 STDCALL
@@ -950,13 +958,13 @@ NtUserMapVirtualKeyEx(
   DWORD Unknown2,
   DWORD Unknown3);
 
-DWORD
+int
 STDCALL
 NtUserMenuItemFromPoint(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+  HWND hWnd,
+  HMENU hMenu,
+  DWORD X,
+  DWORD Y);
 
 DWORD
 STDCALL
@@ -1137,12 +1145,12 @@ NtUserRegisterTasklist(
 UINT STDCALL
 NtUserRegisterWindowMessage(PUNICODE_STRING MessageName);
 
-DWORD
+BOOL
 STDCALL
 NtUserRemoveMenu(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+  HMENU hMenu,
+  UINT uPosition,
+  UINT uFlags);
 
 HANDLE STDCALL
 NtUserRemoveProp(HWND hWnd, ATOM Atom);
@@ -1335,23 +1343,23 @@ NtUserSetMenu(
   DWORD Unknown1,
   DWORD Unknown2);
 
-DWORD
+BOOL
 STDCALL
 NtUserSetMenuContextHelpId(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  HMENU hmenu,
+  DWORD dwContextHelpId);
 
-DWORD
+BOOL
 STDCALL
 NtUserSetMenuDefaultItem(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+  HMENU hMenu,
+  UINT uItem,
+  UINT fByPos);
 
-DWORD
+BOOL
 STDCALL
 NtUserSetMenuFlagRtoL(
-  DWORD Unknown0);
+  HMENU hMenu);
 
 BOOL
 STDCALL
@@ -1592,15 +1600,15 @@ STDCALL
 NtUserTrackMouseEvent(
   DWORD Unknown0);
 
-DWORD
+BOOL
 STDCALL
 NtUserTrackPopupMenuEx(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5);
+  HMENU hmenu,
+  UINT fuFlags,
+  int x,
+  int y,
+  HWND hwnd,
+  LPTPMPARAMS lptpm);
 
 int
 STDCALL
