@@ -50,6 +50,8 @@ ShellBrowser::ShellBrowser(HWND hwnd, HWND left_hwnd, WindowHandle& right_hwnd, 
 
 ShellBrowser::~ShellBrowser()
 {
+	TreeView_SetImageList(_left_hwnd, 0, TVSIL_NORMAL);
+
 	if (_pShellView)
 		_pShellView->Release();
 
