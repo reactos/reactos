@@ -15,6 +15,7 @@
 #include <stdlib.h>
 
 #include <winsock2.h>
+#include <ws2tcpip.h>
 #include <iptypes.h>
 #include <ipexport.h>
 #include <iphlpapi.h>
@@ -395,8 +396,8 @@ static void EnumNameServers( HANDLE RegHandle, PWCHAR Interface,
  */
 
 static void EnumInterfaces( PVOID Data, EnumInterfacesFunc cb ) {
-  HANDLE RegHandle;
-  HANDLE ChildKeyHandle = 0;
+  HKEY RegHandle;
+  HKEY ChildKeyHandle = 0;
   PWCHAR RegKeyToEnumerate = 
     L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces";
   PWCHAR ChildKeyName = 0;

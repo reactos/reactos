@@ -1,6 +1,6 @@
 #ifndef _NTOS_H
 #define _NTOS_H
-/* $Id: ntos.h,v 1.18 2004/01/06 16:05:47 ekohl Exp $ */
+/* $Id: ntos.h,v 1.19 2004/01/11 20:46:05 navaraf Exp $ */
 
 #if defined(NTOS_MODE_USER)
 /* 
@@ -9,6 +9,7 @@
  */
 #include <windows.h>
 #include <ddk/ntddk.h>
+#include <ddk/ntifs.h>
 #include "ntos/types.h"
 #include "ntos/cdrom.h"
 #include "ntos/console.h"

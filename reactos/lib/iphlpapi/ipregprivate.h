@@ -4,7 +4,7 @@
 int GetLongestChildKeyName( HANDLE RegHandle );
 LONG OpenChildKeyRead( HANDLE RegHandle,
 		       PWCHAR ChildKeyName,
-		       HANDLE *ReturnHandle );
+		       PHKEY ReturnHandle );
 PWCHAR GetNthChildKeyName( HANDLE RegHandle, DWORD n );
 void ConsumeChildKeyName( PWCHAR Name );
 PWCHAR QueryRegistryValueString( HANDLE RegHandle, PWCHAR ValueName );

@@ -9,9 +9,11 @@
 
 #include <winsock2.h>
 #include <ddk/ntddk.h>
+#include <ddk/ntifs.h>
 #include <net/tdikrnl.h>
 #include <net/tdiinfo.h>
 #include <afd/shared.h>
+#include <ntos.h>
 #include <debug.h>
 
 /* Forward declarations */

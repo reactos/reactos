@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.5 2003/11/14 17:13:31 weiden Exp $
+# $Id: makefile,v 1.6 2004/01/11 20:46:06 navaraf Exp $
 
 PATH_TO_TOP = ../..
 
@@ -8,7 +8,7 @@ TARGET_NAME = packet
 
 TARGET_BASE = 0x77780000
 
-TARGET_CFLAGS = -I./include -DUNICODE -D_UNICODE -DLE -DDBG -D_DEBUG -Wall -Werror
+TARGET_CFLAGS = -I./include -DUNICODE -D_UNICODE -DLE -DDBG -D_DEBUG -D__USE_W32API -Wall -Werror
 
 TARGET_SDKLIBS = ntdll.a kernel32.a advapi32.a
 

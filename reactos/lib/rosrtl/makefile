@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.10 2003/12/30 05:10:32 hyperion Exp $
+# $Id: makefile,v 1.11 2004/01/11 20:46:06 navaraf Exp $
 
 PATH_TO_TOP = ../..
 
@@ -28,10 +28,7 @@ TARGET_TYPE = library
 
 TARGET_NAME = rosrtl
 
-TARGET_CFLAGS = -Wall -Werror
-
-# require os code to explicitly request A/W version of structs/functions
-TARGET_CFLAGS += -D_DISABLE_TIDENTS
+TARGET_CFLAGS = -D__USE_W32API -Wall -Werror
 
 TARGET_OBJECTS = $(THREAD_OBJECTS) $(MISC_OBJECTS)
  

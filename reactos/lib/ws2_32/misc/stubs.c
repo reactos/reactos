@@ -573,7 +573,7 @@ SOCKET
 EXPORT
 WSAJoinLeaf(
     IN  SOCKET s,
-    IN  CONST LPSOCKADDR name,
+    IN  CONST struct sockaddr *name,
     IN  INT namelen,
     IN  LPWSABUF lpCallerData,
     OUT LPWSABUF lpCalleeData,
@@ -919,7 +919,7 @@ WSCWriteNameSpaceOrder (
 VOID
 EXPORT
 freeaddrinfo(
-    LPADDRINFO      pAddrInfo
+    struct addrinfo *pAddrInfo
     )
 {
     UNIMPLEMENTED

@@ -13,7 +13,7 @@ TARGET_SDKLIBS = dnsapi.a ws2_32.a kernel32.a
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 
-TARGET_CFLAGS = -Wall -Werror -g
+TARGET_CFLAGS = -D__USE_W32API -Wall -Werror -g
 
 include $(PATH_TO_TOP)/rules.mak
 

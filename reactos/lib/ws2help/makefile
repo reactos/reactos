@@ -13,7 +13,8 @@ TARGET_CFLAGS = \
  -Wall \
  -Werror \
  -fno-builtin \
- -DUNICODE
+ -DUNICODE \
+ -D__USE_W32API
 
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS

@@ -22,7 +22,7 @@ int GetLongestChildKeyName( HANDLE RegHandle ) {
 			    NULL, 
 			    NULL, 
 			    NULL);
-  if (Status == STATUS_SUCCESS) 
+  if (Status == ERROR_SUCCESS) 
     return MaxAdapterName + 1;
   else
     return -1;
@@ -30,7 +30,7 @@ int GetLongestChildKeyName( HANDLE RegHandle ) {
 
 LONG OpenChildKeyRead( HANDLE RegHandle, 
 		       PWCHAR ChildKeyName, 
-		       HANDLE *ReturnHandle ) {
+		       PHKEY ReturnHandle ) {
   return RegOpenKeyExW( RegHandle, 
 			ChildKeyName, 
 			0,
@@ -57,7 +57,7 @@ PWCHAR GetNthChildKeyName( HANDLE RegHandle, DWORD n ) {
   Value = (PWCHAR)malloc( MaxAdapterName * sizeof(WCHAR) );
   Status = RegEnumKeyExW( RegHandle, n, Value, &ValueLen, 
 			  NULL, NULL, NULL, NULL );
-  if (Status != STATUS_SUCCESS)
+  if (Status != ERROR_SUCCESS)
     return 0;
   else {
     Value[ValueLen] = 0;

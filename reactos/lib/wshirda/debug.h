@@ -42,11 +42,13 @@ extern DWORD DebugTraceLevel;
 
 #define WSH_DbgPrint(_t_, _x_)
 
+#undef ASSERT
 #define ASSERT(x)
 
 #endif /* DBG */
 
 
+#undef assert
 #define assert(x) ASSERT(x)
 #define assert_irql(x) ASSERT_IRQL(x)
 

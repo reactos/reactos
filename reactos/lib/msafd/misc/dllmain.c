@@ -113,7 +113,7 @@ NTSTATUS OpenSocket(
     NULL,
     NULL);
 
-  Status = NtCreateFile(
+  Status = ZwCreateFile(
     &FileHandle,
     FILE_GENERIC_READ | FILE_GENERIC_WRITE,
     &ObjectAttributes,
@@ -683,7 +683,7 @@ NTSTATUS OpenCommandChannel(
     NULL,
     NULL);
 
-  Status = NtCreateFile(
+  Status = ZwCreateFile(
     &FileHandle,
     FILE_GENERIC_READ | FILE_GENERIC_WRITE,
     &ObjectAttributes,
@@ -783,11 +783,11 @@ WSPStartup(
     lpProcTable->lpWSPAccept = WSPAccept;
     lpProcTable->lpWSPAddressToString = WSPAddressToString;
     lpProcTable->lpWSPAsyncSelect = WSPAsyncSelect;
-    lpProcTable->lpWSPBind = WSPBind;
+    lpProcTable->lpWSPBind = (LPWSPBIND)WSPBind;
     lpProcTable->lpWSPCancelBlockingCall = WSPCancelBlockingCall;
     lpProcTable->lpWSPCleanup = WSPCleanup;
     lpProcTable->lpWSPCloseSocket = WSPCloseSocket;
-    lpProcTable->lpWSPConnect = WSPConnect;
+    lpProcTable->lpWSPConnect = (LPWSPCONNECT)WSPConnect;
     lpProcTable->lpWSPDuplicateSocket = WSPDuplicateSocket;
     lpProcTable->lpWSPEnumNetworkEvents = WSPEnumNetworkEvents;
     lpProcTable->lpWSPEventSelect = WSPEventSelect;
@@ -797,7 +797,7 @@ WSPStartup(
     lpProcTable->lpWSPGetSockOpt = WSPGetSockOpt;
     lpProcTable->lpWSPGetQOSByName = WSPGetQOSByName;
     lpProcTable->lpWSPIoctl = WSPIoctl;
-    lpProcTable->lpWSPJoinLeaf = WSPJoinLeaf;
+    lpProcTable->lpWSPJoinLeaf = (LPWSPJOINLEAF)WSPJoinLeaf;
     lpProcTable->lpWSPListen = WSPListen;
     lpProcTable->lpWSPRecv = WSPRecv;
     lpProcTable->lpWSPRecvDisconnect = WSPRecvDisconnect;
@@ -805,7 +805,7 @@ WSPStartup(
     lpProcTable->lpWSPSelect = WSPSelect;
     lpProcTable->lpWSPSend = WSPSend;
     lpProcTable->lpWSPSendDisconnect = WSPSendDisconnect;
-    lpProcTable->lpWSPSendTo = WSPSendTo;
+    lpProcTable->lpWSPSendTo = (LPWSPSENDTO)WSPSendTo;
     lpProcTable->lpWSPSetSockOpt = WSPSetSockOpt;
     lpProcTable->lpWSPShutdown = WSPShutdown;
     lpProcTable->lpWSPSocket = WSPSocket;

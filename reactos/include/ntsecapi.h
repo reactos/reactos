@@ -16,6 +16,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifdef __USE_W32API
+#include_next <ntsecapi.h>
+#else
+
 #ifndef __WINE_NTSECAPI_H
 #define __WINE_NTSECAPI_H
 
@@ -570,3 +574,5 @@ HANDLE NotificationEventHandle
 #endif /* defined(__cplusplus) */
 
 #endif /* !defined(__WINE_NTSECAPI_H) */
+
+#endif /* __USE_W32API */

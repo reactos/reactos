@@ -3,6 +3,7 @@
 #define __INCLUDE_INTERNAL_TEB
 
 #include <napi/types.h>
+#include <w32api.h>
 
 #ifdef __USE_W32API
 #include <ddk/ntapi.h>
@@ -232,6 +233,8 @@ typedef struct _TEB
    PVOID WineDebugInfo;                /* Needed for WINE DLL's  */
 } TEB, *PTEB;
 
+#if (!defined(__USE_W32API) || __W32API_MAJOR_VERSION < 2 || __W32API_MINOR_VERSION < 5)
+
 /* FIXME: at least NtCurrentTeb should be defined in winnt.h */
 
 #ifndef NtCurrentTeb
@@ -287,6 +290,8 @@ unsigned __gregister_get(unsigned const regnum);
 #endif
 
 #endif
+
+#endif /* !defined(__USE_W32API) || __W32API_MAJOR_VERSION < 2 || __W32API_MINOR_VERSION < 5 */
 
 #ifdef _M_IX86
 

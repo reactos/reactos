@@ -8,11 +8,12 @@
 #define __MSAFD_H
 
 #include <stdlib.h>
+#include <windows.h>
+#include <ddk/ntddk.h>
+#include <ddk/ntifs.h>
 #include <wsahelp.h>
 #include <winsock2.h>
 #include <ws2spi.h>
-#include <ddk/ntddk.h>
-#include <windows.h>
 #include <net/tdi.h>
 #include <afd/shared.h>
 #include <debug.h>

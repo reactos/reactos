@@ -8,9 +8,9 @@
 #define __WS2HELP_H
 
 #include <stdlib.h>
+#include <ddk/ntddk.h>
 #include <wsahelp.h>
 #include <windows.h>
-#include <ddk/ntddk.h>
 #include <debug.h>
 
 #define EXPORT STDCALL

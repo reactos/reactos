@@ -8,10 +8,7 @@ TARGET_NAME = wshirda
 
 TARGET_BASE = 0x777c0000
 
-TARGET_CFLAGS = -DUNICODE
-
-# require os code to explicitly request A/W version of structs/functions
-TARGET_CFLAGS += -D_DISABLE_TIDENTS -Werror -Wall
+TARGET_CFLAGS = -DUNICODE -D__USE_W32API -Werror -Wall
 
 TARGET_SDKLIBS = ntdll.a kernel32.a
 

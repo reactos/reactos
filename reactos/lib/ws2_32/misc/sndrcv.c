@@ -100,7 +100,7 @@ sendto(
   IN  CONST CHAR FAR* buf,
   IN  INT len,
   IN  INT flags,
-  IN  CONST LPSOCKADDR to, 
+  IN  CONST struct sockaddr *to, 
   IN  INT tolen)
 {
   DWORD BytesSent;
@@ -279,7 +279,7 @@ WSASendTo(
   IN  DWORD dwBufferCount,
   OUT LPDWORD lpNumberOfBytesSent,
   IN  DWORD dwFlags,
-  IN  CONST LPSOCKADDR lpTo,
+  IN  CONST struct sockaddr *lpTo,
   IN  INT iToLen,
   IN  LPWSAOVERLAPPED lpOverlapped,
   IN  LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.2 2003/09/13 21:15:03 vizzini Exp $
+/* $Id: stubs.c,v 1.3 2004/01/11 20:46:06 navaraf Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock DLL
@@ -11,7 +11,17 @@
 #include <windows.h>
 #include <stdlib.h>
 #include <winsock2.h>
+#include <mswsock.h>
 #include <ws2spi.h>
+#include <nspapi.h>
+
+typedef DWORD (* LPFN_NSPAPI)(VOID);
+typedef struct _NS_ROUTINE {
+    DWORD        dwFunctionCount;
+    LPFN_NSPAPI *alpfnFunctions;
+    DWORD        dwNameSpace;
+    DWORD        dwPriority;
+} NS_ROUTINE, *PNS_ROUTINE, * FAR LPNS_ROUTINE;
 
 /*
  * @unimplemented

@@ -305,7 +305,7 @@ select(
     IN OUT  LPFD_SET readfds, 
     IN OUT  LPFD_SET writefds, 
     IN OUT  LPFD_SET exceptfds, 
-    IN      CONST LPTIMEVAL timeout)
+    IN      CONST struct timeval *timeout)
 /*
  * FUNCTION: Returns status of one or more sockets
  * ARGUMENTS:
@@ -355,7 +355,7 @@ select(
   }
 
   Count = Provider->ProcTable.lpWSPSelect(
-    nfds, readfds, writefds, exceptfds, timeout, &Errno);
+    nfds, readfds, writefds, exceptfds, (LPTIMEVAL)timeout, &Errno);
 
   WS_DbgPrint(MAX_TRACE, ("Provider (0x%X).\n", Provider));
 
@@ -377,7 +377,7 @@ INT
 EXPORT
 bind(
   IN  SOCKET s,
-  IN  CONST LPSOCKADDR name,
+  IN  CONST struct sockaddr *name,
   IN  INT namelen)
 {
   PCATALOG_ENTRY Provider;
@@ -503,7 +503,7 @@ INT
 EXPORT
 connect(
   IN  SOCKET s,
-  IN  CONST LPSOCKADDR name,
+  IN  CONST struct sockaddr *name,
   IN  INT namelen)
 {
   return WSAConnect(s, name, namelen, NULL, NULL, NULL, NULL);
@@ -517,7 +517,7 @@ INT
 EXPORT
 WSAConnect(
   IN  SOCKET s,
-  IN  CONST LPSOCKADDR name,
+  IN  CONST struct sockaddr *name,
   IN  INT namelen,
   IN  LPWSABUF lpCallerData,
   OUT LPWSABUF lpCalleeData,
