@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.1 2003/04/03 22:44:19 gvg Exp $
+/* $Id: stubs.c,v 1.2 2003/07/10 21:41:56 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock DLL
@@ -11,6 +11,9 @@
 #include <windows.h>
 #include <winsock2.h>
 
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 AcceptEx(SOCKET ListenSocket,
@@ -27,6 +30,10 @@ AcceptEx(SOCKET ListenSocket,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 STDCALL
 EnumProtocolsA(LPINT ProtocolCount,
@@ -38,6 +45,10 @@ EnumProtocolsA(LPINT ProtocolCount,
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 STDCALL
 EnumProtocolsW(LPINT ProtocolCount,
@@ -49,6 +60,10 @@ EnumProtocolsW(LPINT ProtocolCount,
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 VOID
 STDCALL
 GetAcceptExSockaddrs(PVOID OutputBuffer,
@@ -63,6 +78,10 @@ GetAcceptExSockaddrs(PVOID OutputBuffer,
   OutputDebugString(L"w32sock GetAcceptExSockaddrs stub called\n");
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 STDCALL
 GetAddressByNameA(DWORD NameSpace,
@@ -81,6 +100,10 @@ GetAddressByNameA(DWORD NameSpace,
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 STDCALL
 GetAddressByNameW(DWORD NameSpace,
@@ -99,6 +122,10 @@ GetAddressByNameW(DWORD NameSpace,
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 STDCALL
 GetNameByTypeA(LPGUID ServiceType,
@@ -110,6 +137,10 @@ GetNameByTypeA(LPGUID ServiceType,
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 STDCALL
 GetNameByTypeW(LPGUID ServiceType,
@@ -121,6 +152,10 @@ GetNameByTypeW(LPGUID ServiceType,
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 STDCALL
 GetServiceA(DWORD NameSpace,
@@ -136,6 +171,10 @@ GetServiceA(DWORD NameSpace,
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 STDCALL
 GetServiceW(DWORD NameSpace,
@@ -151,6 +190,10 @@ GetServiceW(DWORD NameSpace,
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 STDCALL
 GetTypeByNameA(LPSTR ServiceName,
@@ -161,6 +204,10 @@ GetTypeByNameA(LPSTR ServiceName,
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 STDCALL
 GetTypeByNameW(LPWSTR ServiceName,
@@ -171,6 +218,10 @@ GetTypeByNameW(LPWSTR ServiceName,
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 STDCALL
 SetServiceA(DWORD NameSpace,
@@ -185,6 +236,10 @@ SetServiceA(DWORD NameSpace,
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 STDCALL
 SetServiceW(DWORD NameSpace,
@@ -199,6 +254,10 @@ SetServiceW(DWORD NameSpace,
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 TransmitFile(SOCKET Socket,
@@ -214,6 +273,10 @@ TransmitFile(SOCKET Socket,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 HANDLE
 STDCALL
 WSAAsyncGetHostByAddr(HWND Wnd,
@@ -229,6 +292,10 @@ WSAAsyncGetHostByAddr(HWND Wnd,
   return NULL;
 }
 
+
+/*
+ * @unimplemented
+ */
 HANDLE
 STDCALL
 WSAAsyncGetHostByName(HWND Wnd,
@@ -242,6 +309,10 @@ WSAAsyncGetHostByName(HWND Wnd,
   return NULL;
 }
 
+
+/*
+ * @unimplemented
+ */
 HANDLE
 STDCALL
 WSAAsyncGetProtoByName(HWND Wnd,
@@ -255,6 +326,10 @@ WSAAsyncGetProtoByName(HWND Wnd,
   return NULL;
 }
 
+
+/*
+ * @unimplemented
+ */
 HANDLE
 STDCALL
 WSAAsyncGetProtoByNumber(HWND Wnd,
@@ -268,6 +343,10 @@ WSAAsyncGetProtoByNumber(HWND Wnd,
   return NULL;
 }
 
+
+/*
+ * @unimplemented
+ */
 HANDLE
 STDCALL
 WSAAsyncGetServByName(HWND Wnd,
@@ -282,6 +361,10 @@ WSAAsyncGetServByName(HWND Wnd,
   return NULL;
 }
 
+
+/*
+ * @unimplemented
+ */
 HANDLE
 STDCALL
 WSAAsyncGetServByPort(HWND Wnd,
@@ -296,6 +379,10 @@ WSAAsyncGetServByPort(HWND Wnd,
   return NULL;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 STDCALL
 WSAAsyncSelect(SOCKET Sock,
@@ -308,6 +395,10 @@ WSAAsyncSelect(SOCKET Sock,
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 WSACancelAsyncRequest(HANDLE AsyncTaskHandle)
@@ -317,6 +408,10 @@ WSACancelAsyncRequest(HANDLE AsyncTaskHandle)
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 WSACancelBlockingCall()
@@ -326,6 +421,10 @@ WSACancelBlockingCall()
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 WSACleanup()
@@ -335,6 +434,10 @@ WSACleanup()
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 WSAGetLastError(void)
@@ -344,6 +447,10 @@ WSAGetLastError(void)
   return WSANOTINITIALISED;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 WSAIsBlocking(VOID)
@@ -353,6 +460,10 @@ WSAIsBlocking(VOID)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 WSARecvEx(SOCKET Sock,
@@ -365,6 +476,10 @@ WSARecvEx(SOCKET Sock,
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 FARPROC
 STDCALL
 WSASetBlockingHook(FARPROC BlockFunc)
@@ -374,12 +489,20 @@ WSASetBlockingHook(FARPROC BlockFunc)
   return NULL;
 }
 
+
+/*
+ * @unimplemented
+ */
 void
 STDCALL WSASetLastError(int Error)
 {
   OutputDebugString(L"w32sock WSASetLastError stub called\n");
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 WSAStartup(WORD VersionRequested,
@@ -390,6 +513,10 @@ WSAStartup(WORD VersionRequested,
   return WSASYSNOTREADY;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 WSAUnhookBlockingHook(void)
@@ -399,6 +526,10 @@ WSAUnhookBlockingHook(void)
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 WSApSetPostRoutine(LPVOID /* really LPWPUPOSTMESSAGE */ PostRoutine)
@@ -408,6 +539,10 @@ WSApSetPostRoutine(LPVOID /* really LPWPUPOSTMESSAGE */ PostRoutine)
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 __WSAFDIsSet(SOCKET Sock,
@@ -418,6 +553,10 @@ __WSAFDIsSet(SOCKET Sock,
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 SOCKET
 STDCALL
 accept(SOCKET Sock,
@@ -429,6 +568,10 @@ accept(SOCKET Sock,
   return INVALID_SOCKET;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 STDCALL
 bind(SOCKET Sock,
@@ -440,6 +583,10 @@ bind(SOCKET Sock,
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 closesocket(SOCKET Sock)
@@ -449,6 +596,10 @@ closesocket(SOCKET Sock)
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 STDCALL
 connect(SOCKET Sock,
@@ -460,6 +611,10 @@ connect(SOCKET Sock,
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 dn_expand(unsigned char *MessagePtr,
@@ -473,6 +628,10 @@ dn_expand(unsigned char *MessagePtr,
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 LPHOSTENT
 STDCALL
 gethostbyaddr(CONST CHAR *Addr,
@@ -484,6 +643,10 @@ gethostbyaddr(CONST CHAR *Addr,
   return NULL;
 }
 
+
+/*
+ * @unimplemented
+ */
 struct hostent *
 STDCALL
 gethostbyname(const char *Name)
@@ -493,6 +656,10 @@ gethostbyname(const char *Name)
   return NULL;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 gethostname(char *Name,
@@ -503,6 +670,10 @@ gethostname(char *Name,
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 struct netent *
 STDCALL
 getnetbyname(char *Name)
@@ -512,6 +683,10 @@ getnetbyname(char *Name)
   return NULL;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 getpeername(SOCKET Sock,
@@ -523,6 +698,10 @@ getpeername(SOCKET Sock,
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 LPPROTOENT
 STDCALL
 getprotobyname(CONST CHAR *Name)
@@ -532,6 +711,10 @@ getprotobyname(CONST CHAR *Name)
   return NULL;
 }
 
+
+/*
+ * @unimplemented
+ */
 LPPROTOENT
 STDCALL
 getprotobynumber(INT Number)
@@ -541,6 +724,10 @@ getprotobynumber(INT Number)
   return NULL;
 }
 
+
+/*
+ * @unimplemented
+ */
 struct servent *
 STDCALL
 getservbyname(const char *Name,
@@ -551,6 +738,10 @@ getservbyname(const char *Name,
   return NULL;
 }
 
+
+/*
+ * @unimplemented
+ */
 struct servent *
 STDCALL
 getservbyport(int Port,
@@ -561,6 +752,10 @@ getservbyport(int Port,
   return NULL;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 getsockname(SOCKET Sock,
@@ -572,6 +767,10 @@ getsockname(SOCKET Sock,
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 getsockopt(SOCKET Sock,
@@ -585,6 +784,10 @@ getsockopt(SOCKET Sock,
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 ULONG
 STDCALL
 htonl(ULONG HostLong)
@@ -595,6 +798,10 @@ htonl(ULONG HostLong)
           ((HostLong >> 24) & 0x000000ff));
 }
 
+
+/*
+ * @unimplemented
+ */
 USHORT
 STDCALL
 htons(USHORT HostShort)
@@ -603,6 +810,10 @@ htons(USHORT HostShort)
           ((HostShort >> 8) & 0x00ff));
 }
 
+
+/*
+ * @unimplemented
+ */
 ULONG
 STDCALL
 inet_addr(CONST CHAR *cp)
@@ -612,6 +823,10 @@ inet_addr(CONST CHAR *cp)
   return INADDR_NONE;
 }
 
+
+/*
+ * @unimplemented
+ */
 unsigned long
 STDCALL
 inet_network(const char *cp)
@@ -621,6 +836,10 @@ inet_network(const char *cp)
   return INADDR_NONE;
 }
 
+
+/*
+ * @unimplemented
+ */
 char *
 STDCALL
 inet_ntoa(struct in_addr in)
@@ -630,6 +849,10 @@ inet_ntoa(struct in_addr in)
   return NULL;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 STDCALL
 ioctlsocket(SOCKET Sock,
@@ -641,6 +864,10 @@ ioctlsocket(SOCKET Sock,
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 listen(SOCKET Sock,
@@ -652,6 +879,9 @@ listen(SOCKET Sock,
 }
 
 
+/*
+ * @implemented
+ */
 ULONG
 STDCALL
 ntohl(ULONG NetLong)
@@ -662,6 +892,10 @@ ntohl(ULONG NetLong)
           ((NetLong >> 24) & 0x000000ff));
 }
 
+
+/*
+ * @implemented
+ */
 USHORT
 STDCALL
 ntohs(USHORT NetShort)
@@ -670,6 +904,10 @@ ntohs(USHORT NetShort)
           ((NetShort >> 8) & 0x00ff));
 }
 
+
+/*
+ * @unimplemented
+ */
 SOCKET
 STDCALL
 rcmd(char **AHost,
@@ -684,6 +922,10 @@ rcmd(char **AHost,
   return INVALID_SOCKET;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 recv(SOCKET Sock,
@@ -696,6 +938,10 @@ recv(SOCKET Sock,
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 recvfrom(SOCKET Sock,
@@ -710,6 +956,10 @@ recvfrom(SOCKET Sock,
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 SOCKET
 STDCALL
 rexec(char **AHost,
@@ -725,6 +975,9 @@ rexec(char **AHost,
 }
 
 
+/*
+ * @unimplemented
+ */
 SOCKET
 STDCALL
 rresvport(int *port)
@@ -734,6 +987,10 @@ rresvport(int *port)
   return INVALID_SOCKET;
 }
 
+
+/*
+ * @unimplemented
+ */
 void
 STDCALL
 s_perror(const char *str)
@@ -741,6 +998,10 @@ s_perror(const char *str)
   OutputDebugString(L"w32sock s_perror stub called\n");
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 STDCALL
 select(INT NumFds, 
@@ -754,6 +1015,10 @@ select(INT NumFds,
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 send(SOCKET Sock,
@@ -766,6 +1031,10 @@ send(SOCKET Sock,
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 STDCALL
 sendto(SOCKET Sock,
@@ -780,6 +1049,10 @@ sendto(SOCKET Sock,
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 sethostname(char *Name, int NameLen)
@@ -789,6 +1062,10 @@ sethostname(char *Name, int NameLen)
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 setsockopt(SOCKET Sock,
@@ -802,6 +1079,10 @@ setsockopt(SOCKET Sock,
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 shutdown(SOCKET Sock,
@@ -812,6 +1093,10 @@ shutdown(SOCKET Sock,
   return SOCKET_ERROR;
 }
 
+
+/*
+ * @unimplemented
+ */
 SOCKET
 STDCALL
 socket(int AF,
@@ -823,6 +1108,10 @@ socket(int AF,
   return INVALID_SOCKET;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 DllMain(HINSTANCE InstDLL,
@@ -831,4 +1120,3 @@ DllMain(HINSTANCE InstDLL,
 {
   return TRUE;
 }
-
