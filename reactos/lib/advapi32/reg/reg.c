@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.38 2003/12/24 21:51:38 gvg Exp $
+/* $Id: reg.c,v 1.39 2003/12/28 08:47:28 arty Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -191,12 +191,14 @@ OpenClassesRootKey (PHANDLE KeyHandle)
 		    &Attributes);
 }
 
+#undef NDEBUG
 
 static NTSTATUS
 OpenLocalMachineKey (PHANDLE KeyHandle)
 {
   OBJECT_ATTRIBUTES Attributes;
   UNICODE_STRING KeyName = ROS_STRING_INITIALIZER(L"\\Registry\\Machine");
+  NTSTATUS Status;
 
   DPRINT("OpenLocalMachineKey()\n");
 
@@ -205,11 +207,15 @@ OpenLocalMachineKey (PHANDLE KeyHandle)
 			      OBJ_CASE_INSENSITIVE,
 			      NULL,
 			      NULL);
-  return NtOpenKey (KeyHandle,
-                    MAXIMUM_ALLOWED,
-		    &Attributes);
+  Status = NtOpenKey (KeyHandle,
+		      MAXIMUM_ALLOWED,
+		      &Attributes);
+
+  DPRINT("NtOpenKey(%wZ) => %08x\n", &KeyName, Status);
+  return Status;
 }
 
+#define NDEBUG
 
 static NTSTATUS
 OpenUsersKey (PHANDLE KeyHandle)
@@ -2100,6 +2106,7 @@ RegQueryValueExW (HKEY hKey,
   ULONG BufferSize;
   ULONG ResultSize;
   HKEY KeyHandle;
+  ULONG MaxCopy = lpcbData ? *lpcbData : 0;
 
   DPRINT("hKey 0x%X  lpValueName %S  lpData 0x%X  lpcbData %d\n",
 	 hKey, lpValueName, lpData, lpcbData ? *lpcbData : 0);
@@ -2121,7 +2128,7 @@ RegQueryValueExW (HKEY hKey,
 
   RtlInitUnicodeString (&ValueName,
 			lpValueName);
-  BufferSize = sizeof (KEY_VALUE_PARTIAL_INFORMATION) + *lpcbData;
+  BufferSize = sizeof (KEY_VALUE_PARTIAL_INFORMATION) + MaxCopy;
   ValueInfo = RtlAllocateHeap (ProcessHeap,
 			       0,
 			       BufferSize);
@@ -2141,37 +2148,46 @@ RegQueryValueExW (HKEY hKey,
   if (Status == STATUS_BUFFER_TOO_SMALL)
     {
       /* Return ERROR_SUCCESS and the buffer space needed for a successful call */
-      ErrorCode = ERROR_SUCCESS;
-      ValueInfo->DataLength = 0;
+      MaxCopy = 0;
+      ErrorCode = ERROR_MORE_DATA;
     }
   else if (!NT_SUCCESS(Status))
     {
       ErrorCode = RtlNtStatusToDosError (Status);
       SetLastError (ErrorCode);
-      ValueInfo->DataLength = 0;
+      MaxCopy = 0;
+    }
+
+  if (lpType != NULL)
+    {
+      *lpType = ValueInfo->Type;
+    }
+
+  if (NT_SUCCESS(Status))
+    RtlMoveMemory (lpData,
+		   ValueInfo->Data,
+		   min(ValueInfo->DataLength,MaxCopy));
+
+  if ((ValueInfo->Type == REG_SZ) ||
+      (ValueInfo->Type == REG_MULTI_SZ) ||
+      (ValueInfo->Type == REG_EXPAND_SZ))
+    {
+      if (MaxCopy > ValueInfo->DataLength / sizeof(WCHAR))
+	((PWSTR)lpData)[ValueInfo->DataLength / sizeof(WCHAR)] = 0;
+      
+      if (lpcbData) {
+	*lpcbData = (ResultSize - sizeof(*ValueInfo)) / sizeof(WCHAR);
+	DPRINT("(string) Returning Size: %d\n", *lpcbData);
+      }
     }
   else
-    {
-      if (lpType != NULL)
-	{
-	  *lpType = ValueInfo->Type;
-	}
-      RtlMoveMemory (lpData,
-		     ValueInfo->Data,
-		     ValueInfo->DataLength);
-      if ((ValueInfo->Type == REG_SZ) ||
-	  (ValueInfo->Type == REG_MULTI_SZ) ||
-	  (ValueInfo->Type == REG_EXPAND_SZ))
-	{
-	  ((PWSTR)lpData)[ValueInfo->DataLength / sizeof(WCHAR)] = 0;
-	}
+    if (lpcbData) {
+      *lpcbData = ResultSize - sizeof(*ValueInfo);
+      DPRINT("(other) Returning Size: %d\n", *lpcbData);
     }
+
   DPRINT("Type %d  Size %d\n", ValueInfo->Type, ValueInfo->DataLength);
 
-  if (NULL != lpcbData)
-    {
-      *lpcbData = (DWORD)ValueInfo->DataLength;
-    }
   RtlFreeHeap (ProcessHeap,
 	       0,
 	       ValueInfo);
