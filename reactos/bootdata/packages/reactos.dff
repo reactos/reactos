@@ -115,6 +115,7 @@ lib\richedit\riched32.dll               1
 lib\rpcrt4\rpcrt4.dll                   1
 lib\samlib\samlib.dll                   1
 lib\secur32\secur32.dll                 1
+lib\serialui\serialui.dll               1
 lib\setupapi\setupapi.dll               1
 lib\shdocvw\shdocvw.dll                 1
 lib\shell32\shell32.dll                 1
