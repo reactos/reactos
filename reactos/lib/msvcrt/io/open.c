@@ -13,6 +13,9 @@
 // possibly store extra information at the handle
 
 #include <windows.h>
+#if !defined(NDEBUG) && defined(DBG)
+#include <msvcrt/stdarg.h>
+#endif
 #include <msvcrt/io.h>
 #include <msvcrt/fcntl.h>
 #include <msvcrt/sys/stat.h>
@@ -20,6 +23,10 @@
 #include <msvcrt/internal/file.h>
 #include <msvcrt/string.h>
 #include <msvcrt/share.h>
+#include <msvcrt/errno.h>
+
+#define NDEBUG
+#include <msvcrt/msvcrtdbg.h>
 
 typedef struct _fileno_modes_type
 {
@@ -43,11 +50,23 @@ char __is_text_file(FILE *p)
 
 int _open(const char *_path, int _oflag,...)
 {
+#if !defined(NDEBUG) && defined(DBG)
+   va_list arg;
+   int pmode;
+#endif
    HANDLE hFile;
    DWORD dwDesiredAccess = 0;
    DWORD dwShareMode = 0;
    DWORD dwCreationDistribution = 0;
    DWORD dwFlagsAndAttributes = 0;
+   DWORD dwLastError;
+
+#if !defined(NDEBUG) && defined(DBG)
+   va_start(arg, _oflag);
+   pmode = va_arg(arg, int);
+#endif
+
+   DPRINT("_open('%s', %x, (%x))\n", _path, _oflag, pmode);
 
    if (( _oflag & S_IREAD ) == S_IREAD)
      dwShareMode = FILE_SHARE_READ;
@@ -97,10 +116,16 @@ int _open(const char *_path, int _oflag,...)
      dwFlagsAndAttributes |= FILE_FLAG_SEQUENTIAL_SCAN;
    
    if (( _oflag &  _O_TEMPORARY ) == _O_TEMPORARY )
+   {
      dwFlagsAndAttributes |= FILE_FLAG_DELETE_ON_CLOSE;
+     DPRINT("FILE_FLAG_DELETE_ON_CLOSE\n");
+   }
    
    if (( _oflag &  _O_SHORT_LIVED ) == _O_SHORT_LIVED )
+   {
      dwFlagsAndAttributes |= FILE_FLAG_DELETE_ON_CLOSE;
+     DPRINT("FILE_FLAG_DELETE_ON_CLOSE\n");
+   }
    
    hFile = CreateFileA(_path,
 		       dwDesiredAccess,
@@ -110,18 +135,43 @@ int _open(const char *_path, int _oflag,...)
 		       dwFlagsAndAttributes,
 		       NULL);
    if (hFile == (HANDLE)-1)
+   {
+     dwLastError = GetLastError();
+     if (dwLastError == ERROR_ALREADY_EXISTS)
+     {
+	DPRINT("ERROR_ALREADY_EXISTS\n");
+	__set_errno(EEXIST);
+     }
+     else 
+     {
+	DPRINT("%x\n", dwLastError);
+        __set_errno(ENOFILE);
+     }
      return -1;
+   }
+   DPRINT("OK\n");
    return  __fileno_alloc(hFile,_oflag);
 }
 
 
 int _wopen(const wchar_t *_path, int _oflag,...)
 {
+#if !defined(NDEBUG) && defined(DBG)
+   va_list arg;
+   int pmode;
+#endif
    HANDLE hFile;
    DWORD dwDesiredAccess = 0;
    DWORD dwShareMode = 0;
    DWORD dwCreationDistribution = 0;
    DWORD dwFlagsAndAttributes = 0;
+
+#if !defined(NDEBUG) && defined(DBG)
+   va_start(arg, _oflag);
+   pmode = va_arg(arg, int);
+#endif
+
+   DPRINT("_wopen('%S', %x, (%x))\n", _path, _oflag, pmode);
 
    if (( _oflag & S_IREAD ) == S_IREAD)
      dwShareMode = FILE_SHARE_READ;
@@ -223,7 +273,7 @@ __fileno_alloc(HANDLE hFile, int mode)
 	memcpy(fileno_modes, old_fileno_modes, oldcount * sizeof(fileno_modes_type));
         free ( old_fileno_modes );
     }
-    memset(fileno_modes + oldcount, 0, (maxfno-oldcount)*sizeof(fileno_modes));
+    memset(fileno_modes + oldcount, -1, (maxfno-oldcount)*sizeof(fileno_modes));
   }
 
   /* Fill in the value */
