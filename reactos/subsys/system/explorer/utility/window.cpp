@@ -186,14 +186,10 @@ LRESULT CALLBACK Window::WindowWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPAR
 
 LRESULT Window::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
-	if (nmsg == WM_SETFOCUS) {
-		 // close startup menu and other popup menus
-		 // This functionality is for tray notification icons missing in MS Windows.
-		if (wparam)
-			PostMessage((HWND)wparam, WM_CANCELMODE, 0, 0);
-		else
-			PostMessage(HWND_BROADCAST, WM_CANCELMODE, 0, 0);
-	}
+	 // close startup menu and other popup menus
+	 // This functionality is for tray notification icons missing in MS Windows.
+	if (nmsg == WM_SETFOCUS)
+		CancelModes((HWND)wparam);
 
 	return DefWindowProc(_hwnd, nmsg, wparam, lparam);
 }
@@ -208,6 +204,14 @@ int Window::Notify(int id, NMHDR* pnmh)
 	return 0;
 }
 
+void Window::CancelModes(HWND hwnd)
+{
+	if (hwnd)
+		PostMessage(hwnd, WM_CANCELMODE, 0, 0);
+	else
+		PostMessage(HWND_BROADCAST, WM_CANCELMODE, 0, 0);
+}
+
 
 SubclassedWindow::SubclassedWindow(HWND hwnd)
  :	super(hwnd)
@@ -220,14 +224,10 @@ SubclassedWindow::SubclassedWindow(HWND hwnd)
 
 LRESULT SubclassedWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
-	if (nmsg == WM_SETFOCUS) {
-		 // close startup menu and other popup menus
-		 // This functionality is for tray notification icons missing in MS Windows.
-		if (wparam)
-			PostMessage((HWND)wparam, WM_CANCELMODE, 0, 0);
-		else
-			PostMessage(HWND_BROADCAST, WM_CANCELMODE, 0, 0);
-	}
+	 // close startup menu and other popup menus
+	 // This functionality is for tray notification icons missing in MS Windows.
+	if (nmsg == WM_SETFOCUS)
+		CancelModes((HWND)wparam);
 
 	return CallWindowProc(_orgWndProc, _hwnd, nmsg, wparam, lparam);
 }

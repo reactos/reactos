@@ -78,6 +78,8 @@ struct NotifyArea : public Window
 	NotifyArea(HWND hwnd);
 	~NotifyArea();
 
+	static HWND Create(HWND hwndParent);
+
 //	DesktopBar*	_desktop_bar;
 
 	LRESULT	ProcessTrayNotification(int notify_code, NOTIFYICONDATA* pnid);
@@ -95,7 +97,7 @@ protected:
 	void	Refresh();
 	void	Paint();
 	void	TimerTick();
-	void	CancelModes(HWND hwnd);
+	void	CancelModes();
 
 	NotifyIconSet::iterator IconHitTest(const POINT& pos);
 };
@@ -107,6 +109,8 @@ struct ClockWindow : public Window
 	typedef Window super;
 
 	ClockWindow(HWND hwnd);
+
+	static HWND Create(HWND hwndParent);
 
 	void	TimerTick();
 

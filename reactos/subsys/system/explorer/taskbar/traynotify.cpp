@@ -91,12 +91,8 @@ LRESULT NotifyArea::Init(LPCREATESTRUCT pcs)
 	if (super::Init(pcs))
 		return 1;
 
-	ClientRect clnt(_hwnd);
-
 	 // create clock window
-	_hwndClock = Window::Create(WINDOW_CREATOR(ClockWindow), 0,
-							BtnWindowClass(CLASSNAME_CLOCKWINDOW,CS_DBLCLKS), NULL, WS_CHILD|WS_VISIBLE,
-							clnt.right-(CLOCKWINDOW_WIDTH+1), 1, CLOCKWINDOW_WIDTH, clnt.bottom-2, _hwnd);
+	_hwndClock = ClockWindow::Create(_hwnd);
 
 	SetTimer(_hwnd, 0, 1000, NULL);
 
@@ -106,6 +102,15 @@ LRESULT NotifyArea::Init(LPCREATESTRUCT pcs)
 NotifyArea::~NotifyArea()
 {
 	KillTimer(_hwnd, 0);
+}
+
+HWND NotifyArea::Create(HWND hwndParent)
+{
+	ClientRect clnt(hwndParent);
+
+	return Window::Create(WINDOW_CREATOR(NotifyArea), WS_EX_STATICEDGE,
+							BtnWindowClass(CLASSNAME_TRAYNOTIFY,CS_DBLCLKS), TITLE_TRAYNOTIFY, WS_CHILD|WS_VISIBLE,
+							clnt.right-(NOTIFYAREA_WIDTH+1), 1, NOTIFYAREA_WIDTH, clnt.bottom-2, hwndParent);
 }
 
 LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
@@ -133,7 +138,7 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 				|| nmsg==WM_XBUTTONDOWN
 #endif
 				)
-				CancelModes(0);
+				CancelModes();
 
 			NotifyIconSet::iterator found = IconHitTest(Point(lparam));
 
@@ -154,16 +159,12 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	return 0;
 }
 
-void NotifyArea::CancelModes(HWND hwnd)
+void NotifyArea::CancelModes()
 {
-	if (hwnd)
-		PostMessage(hwnd, WM_CANCELMODE, 0, 0);
-	else {
-		PostMessage(HWND_BROADCAST, WM_CANCELMODE, 0, 0);
+	PostMessage(HWND_BROADCAST, WM_CANCELMODE, 0, 0);
 
-		for(NotifyIconSet::const_iterator it=_sorted_icons.begin(); it!=_sorted_icons.end(); ++it)
-			PostMessage(it->_hWnd, WM_CANCELMODE, 0, 0);
-	}
+	for(NotifyIconSet::const_iterator it=_sorted_icons.begin(); it!=_sorted_icons.end(); ++it)
+		PostMessage(it->_hWnd, WM_CANCELMODE, 0, 0);
 }
 
 LRESULT NotifyArea::ProcessTrayNotification(int notify_code, NOTIFYICONDATA* pnid)
@@ -213,13 +214,16 @@ void NotifyArea::Refresh()
 			_sorted_icons.insert(entry);
 	}
 
-	InvalidateRect(_hwnd, NULL, TRUE);	// refresh icon display
+	InvalidateRect(_hwnd, NULL, FALSE);	// refresh icon display
 	UpdateWindow(_hwnd);
 }
 
 void NotifyArea::Paint()
 {
-	PaintCanvas canvas(_hwnd);
+	BufferedPaintCanvas canvas(_hwnd);
+
+	 // first fill with the background color
+	FillRect(canvas, &canvas.rcPaint, GetSysColorBrush(COLOR_BTNFACE));
 
 	 // draw icons
 	int x = 2;
@@ -277,6 +281,15 @@ ClockWindow::ClockWindow(HWND hwnd)
 {
 	*_time = _T('\0');
 	FormatTime();
+}
+
+HWND ClockWindow::Create(HWND hwndParent)
+{
+	ClientRect clnt(hwndParent);
+
+	return Window::Create(WINDOW_CREATOR(ClockWindow), 0,
+							BtnWindowClass(CLASSNAME_CLOCKWINDOW,CS_DBLCLKS), NULL, WS_CHILD|WS_VISIBLE,
+							clnt.right-(CLOCKWINDOW_WIDTH+1), 1, CLOCKWINDOW_WIDTH, clnt.bottom-2, hwndParent);
 }
 
 LRESULT ClockWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)

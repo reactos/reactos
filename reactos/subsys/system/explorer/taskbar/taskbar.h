@@ -76,6 +76,8 @@ struct TaskBar : public Window
 	TaskBar(HWND hwnd);
 	~TaskBar();
 
+	static HWND Create(HWND hwndParent);
+
 	DesktopBar*	_desktop_bar;	// may be not necessary
 
 protected:

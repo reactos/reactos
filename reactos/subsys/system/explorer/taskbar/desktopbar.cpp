@@ -81,20 +81,14 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 	new PictureButton(Button(_hwnd, ResString(IDS_START), 2, 2, STARTBUTTON_WIDTH, DESKTOPBARBAR_HEIGHT-8, IDC_START, WS_VISIBLE|WS_CHILD|BS_OWNERDRAW),
 						SmallIcon(IDI_STARTMENU));
 
-	ClientRect clnt(_hwnd);
-
 	 // create task bar
-	_hwndTaskBar = Window::Create(WINDOW_CREATOR(TaskBar), 0,
-							BtnWindowClass(CLASSNAME_TASKBAR), TITLE_TASKBAR, WS_CHILD|WS_VISIBLE,
-							TASKBAR_LEFT, 0, clnt.right-TASKBAR_LEFT-(NOTIFYAREA_WIDTH+1), DESKTOPBARBAR_HEIGHT, _hwnd);
+	_hwndTaskBar = TaskBar::Create(_hwnd);
 
 	TaskBar* taskbar = static_cast<TaskBar*>(get_window(_hwndTaskBar));
 	taskbar->_desktop_bar = this;
 
 	 // create tray notification area
-	_hwndNotify = Window::Create(WINDOW_CREATOR(NotifyArea), WS_EX_STATICEDGE,
-							BtnWindowClass(CLASSNAME_TRAYNOTIFY,CS_DBLCLKS), TITLE_TRAYNOTIFY, WS_CHILD|WS_VISIBLE,
-							clnt.right-(NOTIFYAREA_WIDTH+1), 1, NOTIFYAREA_WIDTH, clnt.bottom-2, _hwnd);
+	_hwndNotify = NotifyArea::Create(_hwnd);
 
 //	NotifyArea* notify_area = static_cast<NotifyArea*>(get_window(_hwndNotify));
 //	notify_area->_desktop_bar = this;

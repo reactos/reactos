@@ -186,6 +186,79 @@ protected:
 	HWND	_hwnd;
 };
 
+
+ // double buffering classes
+
+struct Canvas
+{
+	Canvas(HDC hdc) : _hdc(hdc) {}
+
+	operator HDC() {return _hdc;}
+
+protected:
+	HDC _hdc;
+};
+
+struct MemCanvas : public Canvas
+{
+	MemCanvas(HDC hdc=0)
+	 :	Canvas(CreateCompatibleDC(hdc)) {assert(_hdc);}
+
+	~MemCanvas() {DeleteDC(_hdc);}
+};
+
+struct SelectedBitmap
+{
+	SelectedBitmap(HDC hdc, HBITMAP hbmp)
+	 :	_hdc(hdc), _old_hbmp(SelectBitmap(hdc, hbmp)) {}
+
+	~SelectedBitmap() {SelectBitmap(_hdc, _old_hbmp);}
+
+protected:
+	HDC		_hdc;
+	HBITMAP	_old_hbmp;
+};
+
+struct BufferCanvas : public MemCanvas
+{
+	BufferCanvas(HDC hdc, int x, int y, int w, int h)
+	 :	MemCanvas(hdc), _hdctarg(hdc),
+		_x(x), _y(y), _w(w), _h(h),
+		_bmp(_hdc, CreateCompatibleBitmap(hdc, w, h)) {}
+
+	BufferCanvas(HDC hdc, const RECT& rect)
+	 :	MemCanvas(hdc), _hdctarg(hdc),
+		_x(rect.left), _y(rect.top), _w(rect.right-rect.left), _h(rect.bottom-rect.top),
+		_bmp(_hdc, CreateCompatibleBitmap(hdc, _w, _h)) {}
+
+protected:
+	HDC 	_hdctarg;
+	int 	_x, _y, _w, _h;
+	SelectedBitmap _bmp;
+};
+
+struct BufferedCanvas : public BufferCanvas
+{
+	BufferedCanvas(HDC hdc, int x, int y, int w, int h, DWORD mode=SRCCOPY)
+	 :	BufferCanvas(hdc, x, y, w, h), _mode(mode) {}
+
+	BufferedCanvas(HDC hdc, const RECT& rect, DWORD mode=SRCCOPY)
+	 :	BufferCanvas(hdc, rect), _mode(mode) {}
+
+	~BufferedCanvas() {BitBlt(_hdctarg, _x, _y, _w, _h, _hdc, 0, 0, _mode);}
+
+	DWORD	_mode;
+};
+
+struct BufferedPaintCanvas : public PaintCanvas, public BufferedCanvas
+{
+	BufferedPaintCanvas(HWND hwnd)
+	 :	PaintCanvas(hwnd), BufferedCanvas(hdc, 0, 0, rcPaint.right, rcPaint.bottom) {}
+
+	operator HDC() {return BufferedCanvas::_hdc;}
+};
+
+
 struct TextColor
 {
 	TextColor(HDC hdc, COLORREF color)
