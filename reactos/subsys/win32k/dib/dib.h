@@ -12,13 +12,13 @@ VOID    DIB_1BPP_VLine(SURFOBJ* SurfObj, LONG x, LONG y1, LONG y2, ULONG c);
 BOOLEAN DIB_1BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                         SURFGDI *DestGDI, SURFGDI *SourceGDI,
                         RECTL* DestRect, POINTL *SourcePoint,
-          			    BRUSHOBJ* Brush, POINTL* BrushOrigin,
-			            XLATEOBJ *ColorTranslation, ULONG Rop4);
+                        BRUSHOBJ* Brush, POINTL BrushOrigin,
+                        XLATEOBJ *ColorTranslation, ULONG Rop4);
 BOOLEAN DIB_1BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                             SURFGDI *DestGDI, SURFGDI *SourceGDI,
                             RECTL* DestRect, RECTL *SourceRect,
-                            POINTL* MaskOrigin, POINTL* BrushOrigin,
-			                XLATEOBJ *ColorTranslation, ULONG Mode);
+                            POINTL* MaskOrigin, POINTL BrushOrigin,
+                            XLATEOBJ *ColorTranslation, ULONG Mode);
 BOOLEAN DIB_1BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                                 PSURFGDI DestGDI,  PSURFGDI SourceGDI,
                                 RECTL*  DestRect,  POINTL  *SourcePoint,
@@ -31,13 +31,13 @@ VOID    DIB_4BPP_VLine(SURFOBJ* SurfObj, LONG x, LONG y1, LONG y2, ULONG c);
 BOOLEAN DIB_4BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                         SURFGDI *DestGDI, SURFGDI *SourceGDI,
                         RECTL* DestRect, POINTL *SourcePoint,
-			            BRUSHOBJ* Brush, POINTL* BrushOrigin,
+                        BRUSHOBJ* Brush, POINTL BrushOrigin,
                         XLATEOBJ *ColorTranslation, ULONG Rop4);
 BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                             SURFGDI *DestGDI, SURFGDI *SourceGDI,
                             RECTL* DestRect, RECTL *SourceRect,
-                            POINTL* MaskOrigin, POINTL* BrushOrigin,
-			                XLATEOBJ *ColorTranslation, ULONG Mode);
+                            POINTL* MaskOrigin, POINTL BrushOrigin,
+                            XLATEOBJ *ColorTranslation, ULONG Mode);
 BOOLEAN DIB_4BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                                 PSURFGDI DestGDI,  PSURFGDI SourceGDI,
                                 RECTL*  DestRect,  POINTL  *SourcePoint,
@@ -50,13 +50,13 @@ VOID    DIB_8BPP_VLine(SURFOBJ* SurfObj, LONG x, LONG y1, LONG y2, ULONG c);
 BOOLEAN DIB_8BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                         SURFGDI *DestGDI, SURFGDI *SourceGDI,
                         RECTL* DestRect, POINTL *SourcePoint,
-			            BRUSHOBJ* Brush, POINTL* BrushOrigin,
-			            XLATEOBJ *ColorTranslation, ULONG Rop4);
+                        BRUSHOBJ* Brush, POINTL BrushOrigin,
+                        XLATEOBJ *ColorTranslation, ULONG Rop4);
 BOOLEAN DIB_8BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                             SURFGDI *DestGDI, SURFGDI *SourceGDI,
                             RECTL* DestRect, RECTL *SourceRect,
-                            POINTL* MaskOrigin, POINTL* BrushOrigin,
-			                XLATEOBJ *ColorTranslation, ULONG Mode);
+                            POINTL* MaskOrigin, POINTL BrushOrigin,
+                            XLATEOBJ *ColorTranslation, ULONG Mode);
 BOOLEAN DIB_8BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                                 PSURFGDI DestGDI,  PSURFGDI SourceGDI,
                                 RECTL*  DestRect,  POINTL  *SourcePoint,
@@ -69,13 +69,13 @@ VOID    DIB_16BPP_VLine(SURFOBJ* SurfObj, LONG x, LONG y1, LONG y2, ULONG c);
 BOOLEAN DIB_16BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                          SURFGDI *DestGDI, SURFGDI *SourceGDI,
                          RECTL* DestRect, POINTL *SourcePoint,
-			             BRUSHOBJ* Brush, POINTL* BrushOrigin,
-			             XLATEOBJ *ColorTranslation, ULONG Rop4);
+                         BRUSHOBJ* Brush, POINTL BrushOrigin,
+                         XLATEOBJ *ColorTranslation, ULONG Rop4);
 BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
-                            SURFGDI *DestGDI, SURFGDI *SourceGDI,
-                            RECTL* DestRect, RECTL *SourceRect,
-                            POINTL* MaskOrigin, POINTL* BrushOrigin,
-			                XLATEOBJ *ColorTranslation, ULONG Mode);
+                             SURFGDI *DestGDI, SURFGDI *SourceGDI,
+                             RECTL* DestRect, RECTL *SourceRect,
+                             POINTL* MaskOrigin, POINTL BrushOrigin,
+                             XLATEOBJ *ColorTranslation, ULONG Mode);
 BOOLEAN DIB_16BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                                  PSURFGDI DestGDI,  PSURFGDI SourceGDI,
                                  RECTL*  DestRect,  POINTL  *SourcePoint,
@@ -88,13 +88,13 @@ VOID    DIB_24BPP_VLine(SURFOBJ* SurfObj, LONG x, LONG y1, LONG y2, ULONG c);
 BOOLEAN DIB_24BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                          SURFGDI *DestGDI, SURFGDI *SourceGDI,
                          RECTL* DestRect, POINTL *SourcePoint,
-			             BRUSHOBJ* Brush, POINTL* BrushOrigin,
-			             XLATEOBJ *ColorTranslation, ULONG Rop4);
+                         BRUSHOBJ* Brush, POINTL BrushOrigin,
+                         XLATEOBJ *ColorTranslation, ULONG Rop4);
 BOOLEAN DIB_24BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
-                            SURFGDI *DestGDI, SURFGDI *SourceGDI,
-                            RECTL* DestRect, RECTL *SourceRect,
-                            POINTL* MaskOrigin, POINTL* BrushOrigin,
-			                XLATEOBJ *ColorTranslation, ULONG Mode);
+                             SURFGDI *DestGDI, SURFGDI *SourceGDI,
+                             RECTL* DestRect, RECTL *SourceRect,
+                             POINTL* MaskOrigin, POINTL BrushOrigin,
+                             XLATEOBJ *ColorTranslation, ULONG Mode);
 BOOLEAN DIB_24BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                                  PSURFGDI DestGDI,  PSURFGDI SourceGDI,
                                  RECTL*  DestRect,  POINTL  *SourcePoint,
@@ -107,13 +107,13 @@ VOID    DIB_32BPP_VLine(SURFOBJ* SurfObj, LONG x, LONG y1, LONG y2, ULONG c);
 BOOLEAN DIB_32BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                          SURFGDI *DestGDI, SURFGDI *SourceGDI,
                          RECTL* DestRect, POINTL *SourcePoint,
-			             BRUSHOBJ* Brush, POINTL* BrushOrigin,
-			             XLATEOBJ *ColorTranslation, ULONG Rop4);
+                         BRUSHOBJ* Brush, POINTL BrushOrigin,
+                         XLATEOBJ *ColorTranslation, ULONG Rop4);
 BOOLEAN DIB_32BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
-                            SURFGDI *DestGDI, SURFGDI *SourceGDI,
-                            RECTL* DestRect, RECTL *SourceRect,
-                            POINTL* MaskOrigin, POINTL* BrushOrigin,
-			                XLATEOBJ *ColorTranslation, ULONG Mode);			             
+                             SURFGDI *DestGDI, SURFGDI *SourceGDI,
+                             RECTL* DestRect, RECTL *SourceRect,
+                             POINTL* MaskOrigin, POINTL BrushOrigin,
+                             XLATEOBJ *ColorTranslation, ULONG Mode);			             
 BOOLEAN DIB_32BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                                  PSURFGDI DestGDI,  PSURFGDI SourceGDI,
                                  RECTL*  DestRect,  POINTL  *SourcePoint,
