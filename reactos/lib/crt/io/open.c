@@ -608,14 +608,20 @@ BOOL __fileno_init(void)
 
    if (fdinfo(0)->hFile == INVALID_HANDLE_VALUE || !(fdinfo(0)->fdflags & FOPEN)) {
       fdinfo(0)->hFile = GetStdHandle(STD_INPUT_HANDLE);
+      if (fdinfo(0)->hFile == NULL)
+         fdinfo(0)->hFile = INVALID_HANDLE_VALUE;
       fdinfo(0)->fdflags = FOPEN|FTEXT;
    }
    if (fdinfo(1)->hFile == INVALID_HANDLE_VALUE || !(fdinfo(1)->fdflags & FOPEN)) {
       fdinfo(1)->hFile = GetStdHandle(STD_OUTPUT_HANDLE);
+      if (fdinfo(1)->hFile == NULL)
+         fdinfo(1)->hFile = INVALID_HANDLE_VALUE;
       fdinfo(1)->fdflags = FOPEN|FTEXT;
    }
    if (fdinfo(2)->hFile == INVALID_HANDLE_VALUE || !(fdinfo(2)->fdflags & FOPEN)) {
       fdinfo(2)->hFile = GetStdHandle(STD_ERROR_HANDLE);
+      if (fdinfo(2)->hFile == NULL)
+         fdinfo(2)->hFile = INVALID_HANDLE_VALUE;
       fdinfo(2)->fdflags = FOPEN|FTEXT;
    }
 
