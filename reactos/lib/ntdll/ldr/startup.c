@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.19 2000/02/25 00:35:06 ekohl Exp $
+/* $Id: startup.c,v 1.20 2000/02/27 02:05:53 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -29,7 +29,6 @@
 
 DLL LdrDllListHead;
 extern unsigned int _image_base__;
-extern HANDLE __ProcessHeap;
 
 
 /* FUNCTIONS *****************************************************************/
@@ -52,7 +51,6 @@ VOID LdrStartup(VOID)
    PEDosHeader = (PIMAGE_DOS_HEADER)LdrDllListHead.BaseAddress;
    LdrDllListHead.Headers = (PIMAGE_NT_HEADERS)(LdrDllListHead.BaseAddress +
 						PEDosHeader->e_lfanew);
-   
    
    Peb = (PPEB)(PEB_BASE);
    DPRINT("Peb %x\n", Peb);
@@ -79,30 +77,27 @@ VOID LdrStartup(VOID)
    RtlNormalizeProcessParams (Peb->ProcessParameters);
 
    NTHeaders = (PIMAGE_NT_HEADERS)(ImageBase + PEDosHeader->e_lfanew);
-   __ProcessHeap = RtlCreateHeap(0,
-				 (PVOID)HEAP_BASE,
-				 NTHeaders->OptionalHeader.SizeOfHeapCommit,
-				 NTHeaders->OptionalHeader.SizeOfHeapReserve,
-				 NULL,
-				 NULL);
-   Peb->ProcessHeap = __ProcessHeap;
-   EntryPoint = LdrPEStartup((PVOID)ImageBase, NULL);
 
+   /* create process heap */
+   Peb->ProcessHeap = RtlCreateHeap(0,
+				    (PVOID)HEAP_BASE,
+				    NTHeaders->OptionalHeader.SizeOfHeapCommit,
+				    NTHeaders->OptionalHeader.SizeOfHeapReserve,
+				    NULL,
+				    NULL);
+   if (Peb->ProcessHeap == 0)
+     {
+	DbgPrint("Failed to create process heap\n");
+	ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
+     }
+
+   EntryPoint = LdrPEStartup((PVOID)ImageBase, NULL);
    if (EntryPoint == NULL)
      {
 	DbgPrint("Failed to initialize image\n");
 	ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
      }
-   
-   /*
-    * 
-    */
-   Status = CsrConnectToServer();
-   if (!NT_SUCCESS(Status))
-     {
-	DbgPrint("Failed to connect to csrss.exe: expect trouble\n");
-     }
-   
+
    DbgPrint("Transferring control to image at %x\n",EntryPoint);
    Status = EntryPoint(Peb);
    ZwTerminateProcess(NtCurrentProcess(),Status);

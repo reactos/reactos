@@ -3,14 +3,14 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-ULONG DbgService( ULONG Service, PVOID Context1, PVOID Context2 );
+/*
+ * NOTE: Don't call DbgService()!
+ *       It's a ntdll internal function and is NOT exported!
+ */
 
 VOID STDCALL OutputDebugStringA(LPCSTR lpOutputString)
 {
-  ANSI_STRING AnsiString;
-  AnsiString.Buffer = lpOutputString;
-  AnsiString.Length = AnsiString.MaximumLength = lstrlenA( lpOutputString );
-  DbgService( 1, &AnsiString, NULL );
+   DbgPrint( (PSTR)lpOutputString );
 }
 
 VOID STDCALL OutputDebugStringW(LPCWSTR lpOutputString)
@@ -28,7 +28,7 @@ VOID STDCALL OutputDebugStringW(LPCWSTR lpOutputString)
    if( UnicodeOutput.Length > 512 )
      UnicodeOutput.Length = 512;
    if( NT_SUCCESS( RtlUnicodeStringToAnsiString( &AnsiString, &UnicodeOutput, FALSE ) ) )
-     DbgService( 1, &AnsiString, NULL );
+     DbgPrint( AnsiString.Buffer );
 }
 
 

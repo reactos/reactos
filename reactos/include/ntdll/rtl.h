@@ -1,7 +1,9 @@
-/* $Id: rtl.h,v 1.11 2000/02/25 23:57:21 ekohl Exp $
+/* $Id: rtl.h,v 1.12 2000/02/27 02:01:24 ekohl Exp $
  *
  */
 
+#ifndef __INCLUDE_NTDLL_RTL_H
+#define __INCLUDE_NTDLL_RTL_H
 
 /*
  * Preliminary data type!!
@@ -23,9 +25,6 @@ typedef struct _RTL_USER_PROCESS_INFO
 } RTL_USER_PROCESS_INFO, *PRTL_USER_PROCESS_INFO;
 
 
-//VOID WINAPI __RtlInitHeap(PVOID	base,
-//			  ULONG	minsize,
-//			  ULONG	maxsize);
 
 #define HEAP_BASE (0xa0000000)
 
@@ -241,5 +240,7 @@ STDCALL
 RtlNormalizeProcessParams (
 	IN OUT	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters
 	);
+
+#endif /* __INCLUDE_NTDLL_RTL_H */
 
 /* EOF */

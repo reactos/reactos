@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.4 1999/12/30 01:51:41 dwelch Exp $
+# $Id: makefile,v 1.5 2000/02/27 02:11:54 ekohl Exp $
 #
 # CSRSS: Client/server runtime subsystem
 #
@@ -42,6 +42,27 @@ $(TARGET).exe: $(OBJECTS) $(LIBS)
 		-o $(TARGET).exe \
 		--subsystem native
 	$(NM) --numeric-sort $(TARGET).exe > $(TARGET).sym
+
+
+floppy: $(FLOPPY_DIR)/subsys/$(TARGET).exe
+
+$(FLOPPY_DIR)/subsys/$(TARGET).exe: $(TARGET).exe
+ifeq ($(DOSCLI),yes)
+	$(CP) $(TARGET).exe $(FLOPPY_DIR)\subsys\$(TARGET).exe
+else
+	$(CP) $(TARGET).exe $(FLOPPY_DIR)/subsys/$(TARGET).exe
+endif
+
+
+dist: $(DIST_DIR)/subsys/$(TARGET).exe
+
+$(DIST_DIR)/subsys/$(TARGET).exe: $(TARGET).exe
+ifeq ($(DOSCLI),yes)
+	$(CP) $(TARGET).exe ..\..\$(DIST_DIR)\subsys\$(TARGET).exe
+else
+	$(CP) $(TARGET).exe ../../$(DIST_DIR)/subsys/$(TARGET).exe
+endif
+
 
 include ../../rules.mak
 

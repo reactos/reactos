@@ -1,4 +1,4 @@
-/* $Id: api.c,v 1.2 1999/12/30 01:51:38 dwelch Exp $
+/* $Id: api.c,v 1.3 2000/02/27 02:05:06 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -9,6 +9,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <ntdll/csr.h>
 #include <string.h>
 
 #include <csrss/csrss.h>
@@ -22,8 +23,12 @@ static HANDLE WindowsApiPort;
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS CsrClientCallServer(PCSRSS_API_REQUEST Request,
-			     PCSRSS_API_REPLY Reply)
+NTSTATUS
+STDCALL
+CsrClientCallServer(PCSRSS_API_REQUEST Request,
+		    PCSRSS_API_REPLY Reply,
+		    ULONG Unknown3,
+		    ULONG Unknown4)
 {
    LPCMESSAGE LpcRequest;
    LPCMESSAGE LpcReply;
@@ -39,7 +44,14 @@ NTSTATUS CsrClientCallServer(PCSRSS_API_REQUEST Request,
    return(Status);
 }
 
-NTSTATUS CsrConnectToServer(VOID)
+NTSTATUS
+STDCALL
+CsrClientConnectToServer(ULONG Unknown1,
+			 ULONG Unknown2,
+			 ULONG Unknown3,
+			 ULONG Unknown4,
+			 ULONG Unknown5,
+			 ULONG Unknown6)
 {
    NTSTATUS Status;
    UNICODE_STRING PortName;
@@ -64,7 +76,8 @@ NTSTATUS CsrConnectToServer(VOID)
    
    Request.Type = CSRSS_CONNECT_PROCESS;
    Status = CsrClientCallServer(&Request,
-				&Reply);
+				&Reply,
+				0, 0);
    if (!NT_SUCCESS(Status))
      {
 	return(Status);

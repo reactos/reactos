@@ -33,9 +33,11 @@ typedef struct
    ULONG Flags;
 } CSRSS_CREATE_PROCESS_REQUEST, *PCSRSS_CREATE_PROCESS_REQUEST;
 
-/*
- * lib/ntdll/csr/api.c
- */
-NTSTATUS CsrConnectToServer(VOID);
+BOOL
+STDCALL
+CsrServerInitialization (
+	ULONG ArgumentCount,
+	PWSTR *ArgumentArray
+	);
 
-#endif
+#endif /* __INCLUDE_CSRSS_CSRSS_H */

@@ -1,4 +1,4 @@
-/* $Id: kdbg.c,v 1.5 2000/02/26 22:41:35 ea Exp $
+/* $Id: kdbg.c,v 1.6 2000/02/27 02:08:53 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -47,6 +47,7 @@
 #define     SR_MCR_DTR 0x01
 #define     SR_MCR_RTS 0x02
 #define   SER_LSR(x)   ((x)+5)
+#define     SR_LSR_DR  0x01
 #define     SR_LSR_TBE 0x20
 #define   SER_MSR(x)   ((x)+6)
 #define     SR_MSR_CTS 0x10
@@ -264,7 +265,10 @@ KdPortGetByte (
 	if (PortInitialized == FALSE)
 		return 0;
 
-	return (BYTE) 0;
+	if ((READ_PORT_UCHAR (SER_LSR(PortBase)) & SR_LSR_DR))
+		return (BYTE)READ_PORT_UCHAR (SER_RBR(PortBase));
+
+	return 0;
 }
 
 
@@ -275,7 +279,13 @@ KdPortPollByte (
 	VOID
 	)
 {
-	return  (BYTE) 0;
+	if (PortInitialized == FALSE)
+		return 0;
+
+	while ((READ_PORT_UCHAR (SER_LSR(PortBase)) & SR_LSR_DR) == 0)
+		;
+
+	return (BYTE)READ_PORT_UCHAR (SER_RBR(PortBase));
 }
 
 

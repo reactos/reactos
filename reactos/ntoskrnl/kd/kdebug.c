@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.5 2000/02/26 22:41:35 ea Exp $
+/* $Id: kdebug.c,v 1.6 2000/02/27 02:09:40 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -48,15 +48,8 @@
 
 /* VARIABLES ***************************************************************/
 
-//BYTE STDCALL KdPortPollByte(VOID);
-
-/* DATA */
-
-BOOLEAN
-KdDebuggerEnabled = FALSE;
-
-BOOLEAN
-KdDebuggerNotPresent = TRUE;
+BOOLEAN KdDebuggerEnabled = FALSE;		/* EXPORTED */
+BOOLEAN KdDebuggerNotPresent = TRUE;		/* EXPORTED */
 
 
 /* PRIVATE FUNCTIONS ********************************************************/

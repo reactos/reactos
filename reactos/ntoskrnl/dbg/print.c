@@ -1,4 +1,4 @@
-/* $Id: print.c,v 1.7 2000/02/13 16:05:17 dwelch Exp $
+/* $Id: print.c,v 1.8 2000/02/27 02:08:33 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,10 +13,12 @@
 
 #include <ddk/ntddk.h>
 #include <string.h>
+#include <internal/kd.h>
 
 
 /* FUNCTIONS ****************************************************************/
 
+#if 0
 ULONG DbgService (ULONG Service, PVOID Context1, PVOID Context2);
 __asm__ ("\n\t.global _DbgService\n\t"
          "_DbgService:\n\t"
@@ -25,6 +27,13 @@ __asm__ ("\n\t.global _DbgService\n\t"
          "mov 12(%esp), %edx\n\t"
          "int $0x2D\n\t"
          "ret\n\t");
+#endif
+
+/*
+ * Note: DON'T CHANGE THIS FUNCTION!!!
+ *       DON'T CALL HalDisplayString OR SOMETING ELSE!!!
+ *       You'll only break the serial/bochs debugging feature!!!
+ */
 
 ULONG DbgPrint(PCH Format, ...)
 {
@@ -40,8 +49,8 @@ ULONG DbgPrint(PCH Format, ...)
    DebugString.Length = vsprintf (Buffer, Format, ap);
    va_end (ap);
 
-   HalDisplayString(Buffer);
-   
+   KdpPrintString (&DebugString);
+
    return (ULONG)DebugString.Length;
 }
 

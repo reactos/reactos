@@ -1,4 +1,5 @@
-/*
+/* $Id: dllmain.c,v 1.10 2000/02/27 02:04:06 ekohl Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/misc/dllmain.c
@@ -9,15 +10,14 @@
  */
 
 #include <ddk/ntddk.h>
+#include <ntdll/csr.h>
 #include <windows.h>
 #include <wchar.h>
-#include <kernel32/proc.h>
-#include <internal/teb.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
 
-WINBOOL STDCALL DllMain (HANDLE hInst, 
+WINBOOL STDCALL DllMain (HANDLE hInst,
 			 ULONG ul_reason_for_call,
 			 LPVOID lpReserved);
 
@@ -28,44 +28,43 @@ BOOL WINAPI DllMainCRTStartup(HANDLE hDll, DWORD dwReason, LPVOID lpReserved)
    return(DllMain(hDll,dwReason,lpReserved));
 }
 
-VOID WINAPI __HeapInit(LPVOID base, ULONG minsize, ULONG maxsize);
-
-WINBOOL STDCALL DllMain(HANDLE hInst, 
+WINBOOL STDCALL DllMain(HANDLE hInst,
 			ULONG ul_reason_for_call,
 			LPVOID lpReserved)
 {
    DPRINT("DllMain(hInst %x, ul_reason_for_call %d)\n",
 	  hInst, ul_reason_for_call);
-   switch (ul_reason_for_call) 
+
+   switch (ul_reason_for_call)
      {
       case DLL_PROCESS_ATTACH:
-	  {     
-	     DPRINT("DLL_PROCESS_ATTACH\n");
-	     AllocConsole();
-	     break;
-	  }
-    	case DLL_THREAD_ATTACH:
 	  {
-	     //		Teb = HeapAlloc(GetProcessHeap(),0,sizeof(NT_TEB));
-	     //		Teb->Peb = GetCurrentPeb();
-	     //		Teb->HardErrorMode = SEM_NOGPFAULTERRORBOX;
-	     //		Teb->dwTlsIndex=0;
+	     NTSTATUS Status;
+	     DPRINT("DLL_PROCESS_ATTACH\n");
+
+	     /*
+	      * 
+	      */
+	     Status = CsrClientConnectToServer(0,0,0,0,0,0);
+	     if (!NT_SUCCESS(Status))
+	       {
+		  DbgPrint("Failed to connect to csrss.exe: expect trouble\n");
+		  /* return FALSE; */
+	       }
+
+	     AllocConsole();
 	     break;
 	  }
       case DLL_PROCESS_DETACH:
 	  {
-//	     HeapFree(GetProcessHeap(),0,Teb);
+	     DPRINT("DLL_PROCESS_DETACH\n");
 	     HeapDestroy(NtCurrentPeb()->ProcessHeap);
-	     break;
-	  }
-      case DLL_THREAD_DETACH:
-	  {
-	     //		HeapFree(GetProcessHeap(),0,Teb);
 	     break;
 	  }
       default:
 	break;
-	
     }
-   return TRUE;  
+   return TRUE;
 }
+
+/* EOF */

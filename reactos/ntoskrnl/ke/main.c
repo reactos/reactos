@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.36 2000/02/26 22:41:35 ea Exp $
+/* $Id: main.c,v 1.37 2000/02/27 02:10:09 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -17,7 +17,6 @@
 #include <internal/mm.h>
 #include <string.h>
 #include <internal/string.h>
-#include <internal/symbol.h>
 #include <internal/module.h>
 #include <internal/ldr.h>
 #include <internal/ex.h>

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.33 2000/02/26 22:41:34 ea Exp $
+; $Id: ntoskrnl.edf,v 1.34 2000/02/27 02:08:12 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -155,6 +155,9 @@ IoStartNextPacket
 IoStartNextPacketByKey
 IoStartTimer
 IoStopTimer
+KdDebuggerEnabled		DATA
+KdDebuggerNotPresent	DATA
+KdPollBreakIn=KdPollBreakIn@0
 KeAddSystemServiceTable
 KeBugCheck
 KeBugCheckEx
@@ -245,11 +248,13 @@ RtlAppendUnicodeStringToString=RtlAppendUnicodeStringToString@8
 RtlAppendUnicodeToString=RtlAppendUnicodeToString@8
 RtlCharToInteger=RtlCharToInteger@12
 RtlCompareMemory=RtlCompareMemory@12
+RtlCompareMemoryUlong=RtlCompareMemoryUlong@12
 RtlCompareString=RtlCompareString@12
 RtlCompareUnicodeString=RtlCompareUnicodeString@12
 RtlConvertLongToLargeInteger=RtlConvertLongToLargeInteger@4
 RtlConvertUlongToLargeInteger=RtlConvertUlongToLargeInteger@4
 RtlCopyLuid=RtlCopyLuid@8
+RtlCopySid=RtlCopySid@12
 RtlCopyString=RtlCopyString@8
 RtlCopyUnicodeString=RtlCopyUnicodeString@8
 RtlCreateUnicodeString=RtlCreateUnicodeString@8
@@ -258,6 +263,7 @@ RtlEnlargedIntegerMultiply=RtlEnlargedIntegerMultiply@8
 RtlEnlargedUnsignedDivide=RtlEnlargedUnsignedDivide@16
 RtlEnlargedUnsignedMultiply=RtlEnlargedUnsignedMultiply@8
 RtlEqualLuid=RtlEqualLuid@8
+RtlEqualSid=RtlEqualSid@8
 RtlEqualString=RtlEqualString@12
 RtlEqualUnicodeString=RtlEqualUnicodeString@12
 RtlExtendedIntegerMultiply=RtlExtendedIntegerMultiply@12
@@ -269,9 +275,11 @@ RtlFreeAnsiString=RtlFreeAnsiString@4
 RtlFreeOemString=RtlFreeOemString@4
 RtlFreeUnicodeString=RtlFreeUnicodeString@4
 RtlGetDefaultCodePage=RtlGetDefaultCodePage@8
+;RtlImageNtHeader=RtlImageNtHeader@4
 RtlInitAnsiString=RtlInitAnsiString@8
 RtlInitString=RtlInitString@8
 RtlInitUnicodeString=RtlInitUnicodeString@8
+RtlInitializeSid=RtlInitializeSid@12
 RtlIntegerToChar=RtlIntegerToChar@16
 RtlIntegerToUnicodeString=RtlIntegerToUnicodeString@12
 RtlLargeIntegerAdd=RtlLargeIntegerAdd@16
@@ -281,6 +289,8 @@ RtlLargeIntegerNegate=RtlLargeIntegerNegate@8
 RtlLargeIntegerShiftLeft=RtlLargeIntegerShiftLeft@12
 RtlLargeIntegerShiftRight=RtlLargeIntegerShiftRight@12
 RtlLargeIntegerSubtract=RtlLargeIntegerSubtract@16
+RtlLengthRequiredSid=RtlLengthRequiredSid@4
+RtlLengthSid=RtlLengthSid@4
 RtlMoveMemory=RtlMoveMemory@12
 RtlMultiByteToUnicodeN=RtlMultiByteToUnicodeN@20
 RtlMultiByteToUnicodeSize=RtlMultiByteToUnicodeSize@12
@@ -288,6 +298,8 @@ RtlOemStringToUnicodeSize=RtlOemStringToUnicodeSize@4
 RtlOemStringToUnicodeString=RtlOemStringToUnicodeString@12
 RtlSecondsSince1970ToTime=RtlSecondsSince1970ToTime@8
 RtlSecondsSince1980ToTime=RtlSecondsSince1980ToTime@8
+RtlSubAuthorityCountSid=RtlSubAuthorityCountSid@4
+RtlSubAuthoritySid=RtlSubAuthoritySid@8
 RtlTimeFieldsToTime=RtlTimeFieldsToTime@8
 RtlTimeToSecondsSince1970=RtlTimeToSecondsSince1970@8
 RtlTimeToSecondsSince1980=RtlTimeToSecondsSince1980@8
@@ -307,6 +319,7 @@ RtlUpcaseUnicodeToMultiByteN=RtlUpcaseUnicodeToMultiByteN@20
 RtlUpcaseUnicodeToOemN=RtlUpcaseUnicodeToOemN@20
 RtlUpperChar=RtlUpperChar@4
 RtlUpperString=RtlUpperString@8
+RtlValidSid=RtlValidSid@4
 RtlZeroMemory=RtlZeroMemory@8
 RtlxAnsiStringToUnicodeSize=RtlxAnsiStringToUnicodeSize@4
 RtlxOemStringToUnicodeSize=RtlxOemStringToUnicodeSize@4
@@ -537,7 +550,6 @@ HalSetRealTimeClock
 ;IoSetPartitionInformation
 ;IoWritePartitionTable
 KdComPortInUse DATA
-KdPollBreakIn=KdPollBreakIn@0
 KdPortGetByte=KdPortGetByte@0
 KdPortInitialize=KdPortInitialize@12
 KdPortPollByte=KdPortPollByte@0

@@ -21,6 +21,8 @@ typedef struct
    ULONG ProcessId;
 } CSRSS_PROCESS_DATA, *PCSRSS_PROCESS_DATA;
 
+VOID CsrInitProcessData(VOID);
+
 NTSTATUS CsrCreateProcess (PCSRSS_PROCESS_DATA ProcessData,
 			   PCSRSS_API_REQUEST LpcMessage);
 

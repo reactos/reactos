@@ -1,4 +1,4 @@
-/* $Id: csrss.c,v 1.4 1999/12/30 01:51:41 dwelch Exp $
+/* $Id: csrss.c,v 1.5 2000/02/27 02:11:54 ekohl Exp $
  *
  * csrss.c - Client/Server Runtime subsystem
  * 
@@ -32,37 +32,88 @@
  * 		actually does nothing but running).
  */
 #include <ddk/ntddk.h>
+#include <ntdll/rtl.h>
+#include <csrss/csrss.h>
 
-BOOL TerminationRequestPending = FALSE;
-
-BOOL InitializeServer(void);
-
+VOID PrintString (char* fmt, ...);
 
 /* Native process' entry point */
 
 VOID NtProcessStartup(PPEB Peb)
 {
+   PRTL_USER_PROCESS_PARAMETERS ProcParams;
+   PWSTR ArgBuffer;
+   PWSTR *argv;
+   ULONG argc = 0;
+   int i = 0;
+   int afterlastspace = 0;
+
    DisplayString(L"Client/Server Runtime Subsystem\n");
 
-   if (InitializeServer() == TRUE)
+   ProcParams = RtlNormalizeProcessParams (Peb->ProcessParameters);
+
+   argv = (PWSTR *)RtlAllocateHeap (Peb->ProcessHeap,
+                                    0, 512 * sizeof(PWSTR));
+   ArgBuffer = (PWSTR)RtlAllocateHeap (Peb->ProcessHeap,
+                                       0,
+                                       ProcParams->CommandLine.Length + sizeof(WCHAR));
+   memcpy (ArgBuffer,
+           ProcParams->CommandLine.Buffer,
+           ProcParams->CommandLine.Length + sizeof(WCHAR));
+
+   while (ArgBuffer[i])
      {
-	while (FALSE == TerminationRequestPending)
+	if (ArgBuffer[i] == L' ')
 	  {
-	     /* Do nothing! Should it
-	      * be the SbApi port's
-	      * thread instead?
-	      */
-	     NtYieldExecution();
+	     argc++;
+	     ArgBuffer[i] = L'\0';
+	     argv[argc-1] = &(ArgBuffer[afterlastspace]);
+	     i++;
+	     while (ArgBuffer[i] == L' ')
+		i++;
+	     afterlastspace = i;
 	  }
+	else
+	  {
+	     i++;
+	  }
+     }
+
+   if (ArgBuffer[afterlastspace] != L'\0')
+     {
+	argc++;
+	ArgBuffer[i] = L'\0';
+	argv[argc-1] = &(ArgBuffer[afterlastspace]);
+     }
+
+   if (CsrServerInitialization (argc, argv) == TRUE)
+     {
+	DisplayString( L"CSR: Subsystem initialized.\n" );
+
+	RtlFreeHeap (Peb->ProcessHeap,
+	             0, argv);
+	RtlFreeHeap (Peb->ProcessHeap,
+	             0,
+	             ArgBuffer);
+
+	/* terminate the current thread only */
+	NtTerminateThread( NtCurrentThread(), 0 );
      }
    else
      {
 	DisplayString( L"CSR: Subsystem initialization failed.\n" );
+
+	RtlFreeHeap (Peb->ProcessHeap,
+	             0, argv);
+	RtlFreeHeap (Peb->ProcessHeap,
+	             0,
+	             ArgBuffer);
+
 	/*
 	 * Tell SM we failed.
 	 */
+	NtTerminateProcess( NtCurrentProcess(), 0 );
      }
-   NtTerminateProcess( NtCurrentProcess(), 0 );
 }
 
 /* EOF */

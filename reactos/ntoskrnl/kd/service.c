@@ -1,4 +1,4 @@
-/* $Id: service.c,v 1.1 2000/01/17 21:02:06 ekohl Exp $
+/* $Id: service.c,v 1.2 2000/02/27 02:09:40 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -15,6 +15,12 @@
 
 /* FUNCTIONS ***************************************************************/
 
+/*
+ * Note: DON'T CHANGE THIS FUNCTION!!!
+ *       DON'T CALL HalDisplayString OR SOMETING ELSE!!!
+ *       You'll only break the serial/bochs debugging feature!!!
+ */
+
 ULONG
 KdpServiceDispatcher (
         ULONG Service,
@@ -27,7 +33,6 @@ KdpServiceDispatcher (
     {
         case 1: /* DbgPrint */
             Result = KdpPrintString ((PANSI_STRING)Context1);
-//            HalDisplayString (((PANSI_STRING)Context1)->Buffer);
             break;
 
         default:

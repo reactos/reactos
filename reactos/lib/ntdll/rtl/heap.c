@@ -88,7 +88,6 @@ typedef struct tagHEAP
 #define HEAP_DEF_SIZE        0x110000   /* Default heap size = 1Mb + 64Kb */
 #define HEAP_MIN_BLOCK_SIZE  (8+sizeof(ARENA_FREE))  /* Min. heap block size */
 
-HANDLE __ProcessHeap = 0;
 
 /***********************************************************************
  *           HEAP_Dump
@@ -1268,6 +1267,6 @@ BOOL WINAPI RtlValidateHeap(
 HANDLE WINAPI RtlGetProcessHeap(VOID)
 {
    DPRINT("RtlGetProcessHeap()\n");
-   return (HANDLE) __ProcessHeap;
+   return (HANDLE)NtCurrentPeb()->ProcessHeap;
 }
 

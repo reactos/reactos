@@ -1,4 +1,4 @@
-/* $Id: wapi.c,v 1.2 1999/12/30 01:51:42 dwelch Exp $
+/* $Id: wapi.c,v 1.3 2000/02/27 02:12:07 ekohl Exp $
  * 
  * reactos/subsys/csrss/init.c
  *
@@ -123,7 +123,9 @@ void Thread_Api(PVOID PortHandle)
 	PrintString("Failed to create private heap, aborting\n");
 	return;
      }
-   
+
+   CsrInitProcessData();
+
    for (;;)
      {
 	Status = NtListenPort(PortHandle, &Request);
@@ -170,4 +172,4 @@ void Thread_Api(PVOID PortHandle)
 	  }
      }
 }
-	
+

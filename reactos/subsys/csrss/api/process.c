@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.4 1999/12/30 01:51:42 dwelch Exp $
+/* $Id: process.c,v 1.5 2000/02/27 02:12:07 ekohl Exp $
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -22,13 +22,24 @@ static PCSRSS_PROCESS_DATA ProcessData[256];
 
 /* FUNCTIONS *****************************************************************/
 
+VOID CsrInitProcessData(VOID)
+{
+   ULONG i;
+
+   for (i=0; i<256; i++)
+     {
+	ProcessData[i] = NULL;
+     }
+}
+
 PCSRSS_PROCESS_DATA CsrGetProcessData(ULONG ProcessId)
 {
    ULONG i;
    
-   for (i=0; i<NrProcess; i++)
+   for (i=0; i<256/*NrProcess*/; i++)
      {
-	if (ProcessData[i]->ProcessId == ProcessId)
+	if (ProcessData[i] &&
+	    ProcessData[i]->ProcessId == ProcessId)
 	  {
 	     return(ProcessData[i]);
 	  }
@@ -62,7 +73,7 @@ NTSTATUS CsrCreateProcess (PCSRSS_PROCESS_DATA ProcessData,
    
    if (Request->Flags & DETACHED_PROCESS)
      {
-	NewProcessData->Console = NULL;	
+	NewProcessData->Console = NULL;
      }
    else if (Request->Flags & CREATE_NEW_CONSOLE)
      {
