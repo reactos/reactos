@@ -24,7 +24,6 @@
 #define SECSPERMIN         60
 #define MINSPERHOUR        60
 #define HOURSPERDAY        24
-  /* FIXME: get the correct day of week for the epoch date */
 #define EPOCHWEEKDAY       0
 #define DAYSPERWEEK        7
 #define EPOCHYEAR          1601
