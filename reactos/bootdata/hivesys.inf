@@ -8,6 +8,15 @@ HKLM,"SYSTEM\CurrentControlSet\Control\ComputerName",,0x00000012
 HKLM,"SYSTEM\CurrentControlSet\Control\ComputerName\ComputerName","ComputerName",0x00000002,"COMPUTERNAME"
 
 ; NLS Codepage settings
+
+;; Currently selected language for input
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","(Default)",0x00000000,"00000409"
+
+;; Keyboard Layouts
+HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000409","Layout File",0x00000000,"kbdus.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000409","Layout Text",0x00000000,"US"
+
+;; NLS Files
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","10000",0x00000000,"c_10000.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","1252",0x00000000,"c_1252.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","437",0x00000000,"c_437.nls"
