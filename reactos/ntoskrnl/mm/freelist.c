@@ -549,17 +549,20 @@ MmAllocPage(SWAPENTRY SavedSwapEntry)
    ULONG offset;
    PLIST_ENTRY ListEntry;
    PPHYSICAL_PAGE PageDescriptor;
-   
+   KIRQL oldIrql;
+
    DPRINT("MmAllocPage()\n");
-   
-   ListEntry = ExInterlockedRemoveTailList(&FreePageListHead, 
-					   &PageListLock);
-   DPRINT("ListEntry %x\n",ListEntry);
-   if (ListEntry == NULL)
+
+   KeAcquireSpinLock(&PageListLock, &oldIrql);
+   if (IsListEmpty(&FreePageListHead))
      {
 	DPRINT("MmAllocPage(): Out of memory\n");
+	KeReleaseSpinLock(&PageListLock, oldIrql);
 	return(NULL);
      }
+   ListEntry = RemoveTailList(&FreePageListHead);
+   KeReleaseSpinLock(&PageListLock, oldIrql);
+
    PageDescriptor = CONTAINING_RECORD(ListEntry, PHYSICAL_PAGE, ListEntry);
    DPRINT("PageDescriptor %x\n",PageDescriptor);
    if (PageDescriptor->Flags != MM_PHYSICAL_PAGE_FREE)
