@@ -1,4 +1,4 @@
-/* $Id: w32call.c,v 1.11 2003/12/31 05:33:04 jfilby Exp $
+/* $Id: w32call.c,v 1.12 2004/02/29 11:51:49 hbirr Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -52,6 +52,7 @@ typedef struct
   LIST_ENTRY ListEntry;
 } NTW32CALL_CALLBACK_STACK, *PNTW32CALL_CALLBACK_STACK;
 
+KSPIN_LOCK CallbackStackListLock;
 static LIST_ENTRY CallbackStackListHead;
 
 /* FUNCTIONS ***************************************************************/
@@ -60,6 +61,7 @@ VOID INIT_FUNCTION
 PsInitialiseW32Call(VOID)
 {
   InitializeListHead(&CallbackStackListHead);
+  KeInitializeSpinLock(&CallbackStackListLock);
 }
 
 NTSTATUS STDCALL
@@ -244,8 +246,10 @@ NtW32Call (IN ULONG RoutineIndex,
 
   /* Set up the new kernel and user environment. */
   StackSize = (ULONG)((char*)Thread->Tcb.StackBase - Thread->Tcb.StackLimit);
+  KeAcquireSpinLock(&CallbackStackListLock, &oldIrql);
   if (IsListEmpty(&CallbackStackListHead))
     {
+      KeReleaseSpinLock(&CallbackStackListLock, oldIrql);
       NewStack = PsAllocateCallbackStack(StackSize);
       AssignedStack = ExAllocatePool(NonPagedPool,
 				     sizeof(NTW32CALL_CALLBACK_STACK));
@@ -256,6 +260,7 @@ NtW32Call (IN ULONG RoutineIndex,
       PLIST_ENTRY StackEntry;
 
       StackEntry = RemoveHeadList(&CallbackStackListHead);
+      KeReleaseSpinLock(&CallbackStackListLock, oldIrql);
       AssignedStack = CONTAINING_RECORD(StackEntry, NTW32CALL_CALLBACK_STACK, 
 					ListEntry);
       NewStack = AssignedStack->BaseAddress;
@@ -293,8 +298,10 @@ NtW32Call (IN ULONG RoutineIndex,
    * The callback return will have already restored most of the state we 
    * modified.
    */
-  KeLowerIrql(PASSIVE_LEVEL);
+  KeLowerIrql(DISPATCH_LEVEL);
+  KeAcquireSpinLockAtDpcLevel(&CallbackStackListLock);
   InsertTailList(&CallbackStackListHead, &AssignedStack->ListEntry);
+  KeReleaseSpinLock(&CallbackStackListLock, PASSIVE_LEVEL);
   return(CallbackStatus);
 } 
 
