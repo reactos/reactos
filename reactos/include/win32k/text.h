@@ -55,21 +55,6 @@ NtGdiCreateScalableFontResource(DWORD  Hidden,
 
 int
 STDCALL
-NtGdiEnumFontFamilies(HDC  hDC,
-                          LPCWSTR  Family,
-                          FONTENUMPROCW EnumFontFamProc,
-                          LPARAM  lParam);
-
-int
-STDCALL
-NtGdiEnumFontFamiliesEx(HDC  hDC,
-                            LPLOGFONTW  Logfont,
-                            FONTENUMEXPROCW  EnumFontFamExProc,
-                            LPARAM  lParam,
-                            DWORD  Flags);
-
-int
-STDCALL
 NtGdiEnumFonts(HDC  hDC,
                    LPCWSTR FaceName,
                    FONTENUMPROCW  FontFunc,
@@ -249,12 +234,6 @@ NtGdiTextOut(HDC  hDC,
                   int  YStart,
                   LPCWSTR  String,
                   int  Count);
-
-UINT
-STDCALL
-NtGdiTranslateCharsetInfo(PDWORD  Src,
-                               LPCHARSETINFO  CSI,
-                               DWORD  Flags);
 
 #endif
 

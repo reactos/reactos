@@ -1,4 +1,4 @@
-/* $Id: stubsa.c,v 1.27 2004/01/24 08:23:12 ekohl Exp $
+/* $Id: stubsa.c,v 1.28 2004/03/23 00:18:54 gvg Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -172,66 +172,6 @@ DeviceCapabilitiesExA(
 {
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-EnumFontFamiliesExA (
-	HDC		hdc,
-	LPLOGFONTA	lpLogFont,
-	FONTENUMEXPROCA	lpEnumFontFamProc,
-	LPARAM		lParam,
-	DWORD		dwFlags
-	)
-{
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return 0;
-#if 0
-  LOGFONTW LogFontW;
-
-  RosRtlLogFontA2W ( &LogFontW, lpLogFont );
-
-  /* no need to convert LogFontW back to lpLogFont b/c it's an [in] parameter only */
-  return NtGdiEnumFontFamiliesEx ( hdc, &LogFontW, lpEnumFontFamProc, lParam, dwFlags );
-#endif
-}
-
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-EnumFontFamiliesA(
-	HDC		hdc,
-	LPCSTR		lpszFamily,
-	FONTENUMPROCA	lpEnumFontFamProc,
-	LPARAM		lParam
-	)
-{
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return 0;
-#if 0
-  NTSTATUS Status;
-  LPWSTR lpszFamilyW;
-  int rc = 0;
-
-  Status = HEAP_strdupA2W ( &lpszFamilyW, lpszFamily );
-  if (!NT_SUCCESS (Status))
-    SetLastError (RtlNtStatusToDosError(Status));
-  else
-    {
-      rc = NtGdiEnumFontFamilies ( hdc, lpszFamilyW, lpEnumFontFamProc, lParam );
-
-      HEAP_free ( lpszFamilyW );
-    }
-
-  return rc;
-#endif
 }
 
 

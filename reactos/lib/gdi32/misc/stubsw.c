@@ -1,4 +1,4 @@
-/* $Id: stubsw.c,v 1.24 2004/01/24 08:23:12 ekohl Exp $
+/* $Id: stubsw.c,v 1.25 2004/03/23 00:18:54 gvg Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -105,49 +105,6 @@ DeviceCapabilitiesExW(
 				  fwCapability,
 				  pOutput,
 				  pDevMode );
-#else
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return 0;
-#endif
-}
-
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-EnumFontFamiliesExW(
-	HDC		hdc,
-	LPLOGFONTW	lpLogFont,
-	FONTENUMEXPROCW	lpEnumFontFamProc,
-	LPARAM		lParam,
-	DWORD		dwFlags
-	)
-{
-#if 0
-  return NtGdiEnumFontFamiliesEx ( hdc, lpLogFont, lpEnumFontFamProc, lParam, dwFlags );
-#else
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return 0;
-#endif
-}
-
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-EnumFontFamiliesW(
-	HDC		hdc,
-	LPCWSTR		lpszFamily,
-	FONTENUMPROCW	lpEnumFontFamProc,
-	LPARAM		lParam
-	)
-{
-#if 0
-  return NtGdiEnumFontFamilies ( hdc, lpszFamily, lpEnumFontFamProc, lParam );
 #else
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return 0;

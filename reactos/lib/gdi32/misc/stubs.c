@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.49 2004/02/14 00:31:38 sedwards Exp $
+/* $Id: stubs.c,v 1.50 2004/03/23 00:18:54 gvg Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -377,22 +377,6 @@ GetTextCharsetInfo(
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-TranslateCharsetInfo(
-	DWORD FAR	*lpSrc,
-	LPCHARSETINFO	lpCs,
-	DWORD		dwFlags
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
 }
 
 

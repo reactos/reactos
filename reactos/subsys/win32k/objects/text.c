@@ -1,22 +1,28 @@
 /*
- *  ReactOS W32 Subsystem
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
+ * ReactOS W32 Subsystem
+ * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * Parts based on Wine code
+ * Copyright 1993 Alexandre Julliard
+ *           1997 Alex Korobka
+ * Copyright 2002,2003 Shachar Shemesh
+ * Copyright 2001 Huw D M Davies for CodeWeavers.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.81 2004/03/18 22:03:40 royce Exp $ */
+/* $Id: text.c,v 1.82 2004/03/23 00:18:54 gvg Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -62,6 +68,74 @@ static LIST_ENTRY FontListHead;
 static FAST_MUTEX FontListLock;
 static INT FontsLoaded = 0; /* number of all fonts loaded (including private fonts */
 static BOOL RenderingEnabled = TRUE;
+
+static PWCHAR ElfScripts[32] = { /* these are in the order of the fsCsb[0] bits */
+  L"Western", /*00*/
+  L"Central_European",
+  L"Cyrillic",
+  L"Greek",
+  L"Turkish",
+  L"Hebrew",
+  L"Arabic",
+  L"Baltic",
+  L"Vietnamese", /*08*/
+  NULL, NULL, NULL, NULL, NULL, NULL, NULL, /*15*/
+  L"Thai",
+  L"Japanese",
+  L"CHINESE_GB2312",
+  L"Hangul",
+  L"CHINESE_BIG5",
+  L"Hangul(Johab)",
+  NULL, NULL, /*23*/
+  NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+  L"Symbol" /*31*/
+};
+
+/*
+ *  For NtGdiTranslateCharsetInfo
+ */
+#define FS(x) {{0,0,0,0},{0x1<<(x),0}}
+#define MAXTCIINDEX 32
+static CHARSETINFO FontTci[MAXTCIINDEX] = {
+  /* ANSI */
+  { ANSI_CHARSET, 1252, FS(0)},
+  { EASTEUROPE_CHARSET, 1250, FS(1)},
+  { RUSSIAN_CHARSET, 1251, FS(2)},
+  { GREEK_CHARSET, 1253, FS(3)},
+  { TURKISH_CHARSET, 1254, FS(4)},
+  { HEBREW_CHARSET, 1255, FS(5)},
+  { ARABIC_CHARSET, 1256, FS(6)},
+  { BALTIC_CHARSET, 1257, FS(7)},
+  { VIETNAMESE_CHARSET, 1258, FS(8)},
+  /* reserved by ANSI */
+  { DEFAULT_CHARSET, 0, FS(0)},
+  { DEFAULT_CHARSET, 0, FS(0)},
+  { DEFAULT_CHARSET, 0, FS(0)},
+  { DEFAULT_CHARSET, 0, FS(0)},
+  { DEFAULT_CHARSET, 0, FS(0)},
+  { DEFAULT_CHARSET, 0, FS(0)},
+  { DEFAULT_CHARSET, 0, FS(0)},
+  /* ANSI and OEM */
+  { THAI_CHARSET,  874,  FS(16)},
+  { SHIFTJIS_CHARSET, 932, FS(17)},
+  { GB2312_CHARSET, 936, FS(18)},
+  { HANGEUL_CHARSET, 949, FS(19)},
+  { CHINESEBIG5_CHARSET, 950, FS(20)},
+  { JOHAB_CHARSET, 1361, FS(21)},
+  /* reserved for alternate ANSI and OEM */
+  { DEFAULT_CHARSET, 0, FS(0)},
+  { DEFAULT_CHARSET, 0, FS(0)},
+  { DEFAULT_CHARSET, 0, FS(0)},
+  { DEFAULT_CHARSET, 0, FS(0)},
+  { DEFAULT_CHARSET, 0, FS(0)},
+  { DEFAULT_CHARSET, 0, FS(0)},
+  { DEFAULT_CHARSET, 0, FS(0)},
+  { DEFAULT_CHARSET, 0, FS(0)},
+  /* reserved for system */
+  { DEFAULT_CHARSET, 0, FS(0)},
+  { SYMBOL_CHARSET, CP_SYMBOL, FS(31)},
+};
+
 
 BOOL FASTCALL
 IntIsFontRenderingEnabled(VOID)
@@ -546,25 +620,839 @@ NtGdiCreateScalableFontResource(DWORD  Hidden,
   UNIMPLEMENTED;
 }
 
-int
-STDCALL
-NtGdiEnumFontFamilies(HDC  hDC,
-                          LPCWSTR  Family,
-                          FONTENUMPROCW  EnumFontFamProc,
-                          LPARAM  lParam)
+/*************************************************************************
+ * TranslateCharsetInfo
+ *
+ * Fills a CHARSETINFO structure for a character set, code page, or
+ * font. This allows making the correspondance between different labelings
+ * (character set, Windows, ANSI, and OEM codepages, and Unicode ranges)
+ * of the same encoding.
+ *
+ * Only one codepage will be set in Cs->fs. If TCI_SRCFONTSIG is used,
+ * only one codepage should be set in *Src.
+ *
+ * RETURNS
+ *   TRUE on success, FALSE on failure.
+ *
+ */
+static BOOLEAN STDCALL
+IntTranslateCharsetInfo(PDWORD Src, /* [in]
+                         if flags == TCI_SRCFONTSIG: pointer to fsCsb of a FONTSIGNATURE
+                         if flags == TCI_SRCCHARSET: a character set value
+                         if flags == TCI_SRCCODEPAGE: a code page value */
+                        LPCHARSETINFO Cs, /* [out] structure to receive charset information */
+                        DWORD Flags /* [in] determines interpretation of lpSrc */)
 {
-  UNIMPLEMENTED;
+  int Index = 0;
+
+  switch (Flags)
+    {
+      case TCI_SRCFONTSIG:
+	while (0 == (*Src >> Index & 0x0001) && Index < MAXTCIINDEX)
+          {
+            Index++;
+          }
+        break;
+      case TCI_SRCCODEPAGE:
+        while ((UINT) (Src) != FontTci[Index].ciACP && Index < MAXTCIINDEX)
+          {
+            Index++;
+          }
+        break;
+      case TCI_SRCCHARSET:
+        while ((UINT) (Src) != FontTci[Index].ciCharset && Index < MAXTCIINDEX)
+          {
+            Index++;
+          }
+        break;
+      default:
+        return FALSE;
+    }
+
+  if (MAXTCIINDEX <= Index || DEFAULT_CHARSET == FontTci[Index].ciCharset)
+    {
+      return FALSE;
+    }
+
+  memcpy(Cs, &FontTci[Index], sizeof(CHARSETINFO));
+
+  return TRUE;
 }
 
-int
-STDCALL
-NtGdiEnumFontFamiliesEx(HDC  hDC,
-                            LPLOGFONTW  Logfont,
-                            FONTENUMEXPROCW  EnumFontFamExProc,
-                            LPARAM  lParam,
-                            DWORD  Flags)
+BOOL STDCALL
+NtGdiTranslateCharsetInfo(PDWORD Src,
+                          LPCHARSETINFO UnsafeCs,
+                          DWORD Flags)
 {
-  UNIMPLEMENTED;
+  CHARSETINFO Cs;
+  BOOLEAN Ret;
+  NTSTATUS Status;
+
+  Ret = IntTranslateCharsetInfo(Src, &Cs, Flags);
+  if (Ret)
+    {
+      Status = MmCopyToCaller(UnsafeCs, &Cs, sizeof(CHARSETINFO));
+      if (! NT_SUCCESS(Status))
+        {
+          SetLastWin32Error(ERROR_INVALID_PARAMETER);
+          return FALSE;
+        }
+    }
+
+  return (BOOL) Ret;
+}
+
+
+/*************************************************************
+ * IntGetOutlineTextMetrics
+ *
+ */
+static unsigned FASTCALL
+IntGetOutlineTextMetrics(PFONTGDI FontGDI, UINT Size,
+                         OUTLINETEXTMETRICW *Otm)
+{
+  unsigned Needed;
+  TT_OS2 *pOS2;
+  TT_HoriHeader *pHori;
+  TT_Postscript *pPost;
+  FT_Fixed XScale, YScale;
+  ANSI_STRING FamilyNameA, StyleNameA;
+  UNICODE_STRING FamilyNameW, StyleNameW, Regular;
+  char *Cp;
+  int Ascent, Descent;
+  TEXTMETRICW *TM;
+
+  Needed = sizeof(OUTLINETEXTMETRICW);
+
+  RtlInitAnsiString(&FamilyNameA, FontGDI->face->family_name);
+  RtlAnsiStringToUnicodeString(&FamilyNameW, &FamilyNameA, TRUE);
+
+  RtlInitAnsiString(&StyleNameA, FontGDI->face->style_name);
+  RtlAnsiStringToUnicodeString(&StyleNameW, &StyleNameA, TRUE);
+
+  /* These names should be read from the TT name table */
+
+  /* length of otmpFamilyName */
+  Needed += FamilyNameW.Length + sizeof(WCHAR);
+
+  RtlInitUnicodeString(&Regular, L"regular");
+  /* length of otmpFaceName */
+  if (0 == RtlCompareUnicodeString(&StyleNameW, &Regular, TRUE))
+    {
+      Needed += FamilyNameW.Length + sizeof(WCHAR); /* just the family name */
+    }
+  else
+    {
+      Needed += FamilyNameW.Length + StyleNameW.Length + 2 * sizeof(WCHAR); /* family + " " + style */
+    }
+
+  /* length of otmpStyleName */
+  Needed += StyleNameW.Length + sizeof(WCHAR);
+
+  /* length of otmpFullName */
+  Needed += FamilyNameW.Length + StyleNameW.Length + 2 * sizeof(WCHAR);
+
+  if (Size < Needed)
+    {
+      RtlFreeUnicodeString(&FamilyNameW);
+      RtlFreeUnicodeString(&StyleNameW);
+      return Needed;
+    }
+
+  XScale = FontGDI->face->size->metrics.x_scale;
+  YScale = FontGDI->face->size->metrics.y_scale;
+
+  IntLockFreeType;
+  pOS2 = FT_Get_Sfnt_Table(FontGDI->face, ft_sfnt_os2);
+  if (NULL == pOS2)
+    {
+      IntUnLockFreeType;
+      DPRINT1("Can't find OS/2 table - not TT font?\n");
+      RtlFreeUnicodeString(&StyleNameW);
+      RtlFreeUnicodeString(&FamilyNameW);
+      return 0;
+    }
+
+  pHori = FT_Get_Sfnt_Table(FontGDI->face, ft_sfnt_hhea);
+  if (NULL == pHori)
+    {
+      IntUnLockFreeType;
+      DPRINT1("Can't find HHEA table - not TT font?\n");
+      RtlFreeUnicodeString(&StyleNameW);
+      RtlFreeUnicodeString(&FamilyNameW);
+      return 0;
+    }
+
+  pPost = FT_Get_Sfnt_Table(FontGDI->face, ft_sfnt_post); /* we can live with this failing */
+  IntUnLockFreeType;
+
+  Otm->otmSize = Needed;
+
+  if (0 == pOS2->usWinAscent + pOS2->usWinDescent)
+    {
+      Ascent = pHori->Ascender;
+      Descent = -pHori->Descender;
+    }
+  else
+    {
+      Ascent = pOS2->usWinAscent;
+      Descent = pOS2->usWinDescent;
+    }
+
+  TM = &Otm->otmTextMetrics;
+  TM->tmAscent = (FT_MulFix(Ascent, YScale) + 32) >> 6;
+  TM->tmDescent = (FT_MulFix(Descent, YScale) + 32) >> 6;
+  TM->tmInternalLeading = (FT_MulFix(Ascent + Descent
+                                     - FontGDI->face->units_per_EM, YScale) + 32) >> 6;
+
+  TM->tmHeight = TM->tmAscent + TM->tmDescent;
+
+  /* MSDN says:
+   *  el = MAX(0, LineGap - ((WinAscent + WinDescent) - (Ascender - Descender)))
+   */
+  TM->tmExternalLeading = max(0, (FT_MulFix(pHori->Line_Gap
+                                            - ((Ascent + Descent)
+                                               - (pHori->Ascender - pHori->Descender)),
+                                            YScale) + 32) >> 6);
+
+  TM->tmAveCharWidth = (FT_MulFix(pOS2->xAvgCharWidth, XScale) + 32) >> 6;
+  if (0 == TM->tmAveCharWidth)
+    {
+      TM->tmAveCharWidth = 1; 
+    }
+  TM->tmMaxCharWidth = (FT_MulFix(FontGDI->face->bbox.xMax - FontGDI->face->bbox.xMin,
+                                 XScale) + 32) >> 6;
+  TM->tmWeight = pOS2->usWeightClass;
+  TM->tmOverhang = 0;
+  TM->tmDigitizedAspectX = 300;
+  TM->tmDigitizedAspectY = 300;
+  TM->tmFirstChar = pOS2->usFirstCharIndex;
+  TM->tmLastChar = pOS2->usLastCharIndex;
+  TM->tmDefaultChar = pOS2->usDefaultChar;
+  TM->tmBreakChar = L'\0' != pOS2->usBreakChar ? pOS2->usBreakChar : ' ';
+  TM->tmItalic = (FontGDI->face->style_flags & FT_STYLE_FLAG_ITALIC) ? 255 : 0;
+  TM->tmUnderlined = 0; /* entry in OS2 table */
+  TM->tmStruckOut = 0; /* entry in OS2 table */
+
+  /* Yes TPMF_FIXED_PITCH is correct; braindead api */
+  if (! FT_IS_FIXED_WIDTH(FontGDI->face))
+    {
+      TM->tmPitchAndFamily = TMPF_FIXED_PITCH;
+    }
+  else
+    {
+      TM->tmPitchAndFamily = 0;
+    }
+
+  switch (pOS2->panose[PAN_FAMILYTYPE_INDEX])
+    {
+      case PAN_FAMILY_SCRIPT:
+        TM->tmPitchAndFamily |= FF_SCRIPT;
+        break;
+      case PAN_FAMILY_DECORATIVE:
+      case PAN_FAMILY_PICTORIAL:
+        TM->tmPitchAndFamily |= FF_DECORATIVE;
+        break;
+      case PAN_FAMILY_TEXT_DISPLAY:
+        if (0 == TM->tmPitchAndFamily) /* fixed */
+          {
+            TM->tmPitchAndFamily = FF_MODERN;
+          }
+        else
+          {
+            switch (pOS2->panose[PAN_SERIFSTYLE_INDEX])
+              {
+                case PAN_SERIF_NORMAL_SANS:
+                case PAN_SERIF_OBTUSE_SANS:
+                case PAN_SERIF_PERP_SANS:
+                  TM->tmPitchAndFamily |= FF_SWISS;
+                  break;
+                default:
+                  TM->tmPitchAndFamily |= FF_ROMAN;
+                  break;
+              }
+          }
+        break;
+      default:
+        TM->tmPitchAndFamily |= FF_DONTCARE;
+    }
+
+  if (FT_IS_SCALABLE(FontGDI->face))
+    {
+      TM->tmPitchAndFamily |= TMPF_VECTOR;
+    }
+  if (FT_IS_SFNT(FontGDI->face))
+    {
+      TM->tmPitchAndFamily |= TMPF_TRUETYPE;
+    }
+
+#ifndef TODO
+  TM->tmCharSet = DEFAULT_CHARSET;
+#endif
+
+  Otm->otmFiller = 0;
+  memcpy(&Otm->otmPanoseNumber, pOS2->panose, PANOSE_COUNT);
+  Otm->otmfsSelection = pOS2->fsSelection;
+  Otm->otmfsType = pOS2->fsType;
+  Otm->otmsCharSlopeRise = pHori->caret_Slope_Rise;
+  Otm->otmsCharSlopeRun = pHori->caret_Slope_Run;
+  Otm->otmItalicAngle = 0; /* POST table */
+  Otm->otmEMSquare = FontGDI->face->units_per_EM;
+  Otm->otmAscent = (FT_MulFix(pOS2->sTypoAscender, YScale) + 32) >> 6;
+  Otm->otmDescent = (FT_MulFix(pOS2->sTypoDescender, YScale) + 32) >> 6;
+  Otm->otmLineGap = (FT_MulFix(pOS2->sTypoLineGap, YScale) + 32) >> 6;
+  Otm->otmsCapEmHeight = (FT_MulFix(pOS2->sCapHeight, YScale) + 32) >> 6;
+  Otm->otmsXHeight = (FT_MulFix(pOS2->sxHeight, YScale) + 32) >> 6;
+  Otm->otmrcFontBox.left = (FT_MulFix(FontGDI->face->bbox.xMin, XScale) + 32) >> 6;
+  Otm->otmrcFontBox.right = (FT_MulFix(FontGDI->face->bbox.xMax, XScale) + 32) >> 6;
+  Otm->otmrcFontBox.top = (FT_MulFix(FontGDI->face->bbox.yMax, YScale) + 32) >> 6;
+  Otm->otmrcFontBox.bottom = (FT_MulFix(FontGDI->face->bbox.yMin, YScale) + 32) >> 6;
+  Otm->otmMacAscent = 0; /* where do these come from ? */
+  Otm->otmMacDescent = 0;
+  Otm->otmMacLineGap = 0;
+  Otm->otmusMinimumPPEM = 0; /* TT Header */
+  Otm->otmptSubscriptSize.x = (FT_MulFix(pOS2->ySubscriptXSize, XScale) + 32) >> 6;
+  Otm->otmptSubscriptSize.y = (FT_MulFix(pOS2->ySubscriptYSize, YScale) + 32) >> 6;
+  Otm->otmptSubscriptOffset.x = (FT_MulFix(pOS2->ySubscriptXOffset, XScale) + 32) >> 6;
+  Otm->otmptSubscriptOffset.y = (FT_MulFix(pOS2->ySubscriptYOffset, YScale) + 32) >> 6;
+  Otm->otmptSuperscriptSize.x = (FT_MulFix(pOS2->ySuperscriptXSize, XScale) + 32) >> 6;
+  Otm->otmptSuperscriptSize.y = (FT_MulFix(pOS2->ySuperscriptYSize, YScale) + 32) >> 6;
+  Otm->otmptSuperscriptOffset.x = (FT_MulFix(pOS2->ySuperscriptXOffset, XScale) + 32) >> 6;
+  Otm->otmptSuperscriptOffset.y = (FT_MulFix(pOS2->ySuperscriptYOffset, YScale) + 32) >> 6;
+  Otm->otmsStrikeoutSize = (FT_MulFix(pOS2->yStrikeoutSize, YScale) + 32) >> 6;
+  Otm->otmsStrikeoutPosition = (FT_MulFix(pOS2->yStrikeoutPosition, YScale) + 32) >> 6;
+  if (NULL == pPost)
+    {
+      Otm->otmsUnderscoreSize = 0;
+      Otm->otmsUnderscorePosition = 0;
+    }
+  else
+    {
+      Otm->otmsUnderscoreSize = (FT_MulFix(pPost->underlineThickness, YScale) + 32) >> 6;
+      Otm->otmsUnderscorePosition = (FT_MulFix(pPost->underlinePosition, YScale) + 32) >> 6;
+    }
+
+  /* otmp* members should clearly have type ptrdiff_t, but M$ knows best */
+  Cp = (char*) Otm + sizeof(OUTLINETEXTMETRICW);
+  Otm->otmpFamilyName = (LPSTR)(Cp - (char*) Otm);
+  wcscpy((WCHAR*) Cp, FamilyNameW.Buffer);
+  Cp += FamilyNameW.Length + sizeof(WCHAR);
+  Otm->otmpStyleName = (LPSTR)(Cp - (char*) Otm);
+  wcscpy((WCHAR*) Cp, StyleNameW.Buffer);
+  Cp += StyleNameW.Length + sizeof(WCHAR);
+  Otm->otmpFaceName = (LPSTR)(Cp - (char*) Otm);
+  wcscpy((WCHAR*) Cp, FamilyNameW.Buffer);
+  if (0 != RtlCompareUnicodeString(&StyleNameW, &Regular, TRUE))
+    {
+      wcscat((WCHAR*) Cp, L" ");
+      wcscat((WCHAR*) Cp, StyleNameW.Buffer);
+      Cp += FamilyNameW.Length + StyleNameW.Length + 2 * sizeof(WCHAR);
+    }
+  else
+    {
+      Cp += FamilyNameW.Length + sizeof(WCHAR);
+    }
+  Otm->otmpFullName = (LPSTR)(Cp - (char*) Otm);
+  wcscpy((WCHAR*) Cp, FamilyNameW.Buffer);
+  wcscat((WCHAR*) Cp, L" ");
+  wcscat((WCHAR*) Cp, StyleNameW.Buffer);
+
+  RtlFreeUnicodeString(&StyleNameW);
+  RtlFreeUnicodeString(&FamilyNameW);
+
+  return Needed;
+}
+
+static PFONTGDI FASTCALL
+FindFaceNameInList(PUNICODE_STRING FaceName, PLIST_ENTRY Head)
+{
+  PLIST_ENTRY Entry;
+  PFONT_ENTRY CurrentEntry;
+  ANSI_STRING EntryFaceNameA;
+  UNICODE_STRING EntryFaceNameW;
+  PFONTGDI FontGDI;
+
+  Entry = Head->Flink;
+  while (Entry != Head)
+    {
+      CurrentEntry = (PFONT_ENTRY) CONTAINING_RECORD(Entry, FONT_ENTRY, ListEntry);
+
+      if (NULL == (FontGDI = AccessInternalObject((ULONG) CurrentEntry->hFont)))
+        {
+          Entry = Entry->Flink;
+          continue;
+        }
+      RtlInitAnsiString(&EntryFaceNameA, FontGDI->face->family_name);
+      RtlAnsiStringToUnicodeString(&EntryFaceNameW, &EntryFaceNameA, TRUE);
+      if ((LF_FACESIZE - 1) * sizeof(WCHAR) < EntryFaceNameW.Length)
+        {
+          EntryFaceNameW.Length = (LF_FACESIZE - 1) * sizeof(WCHAR);
+          EntryFaceNameW.Buffer[LF_FACESIZE - 1] = L'\0';
+        }
+
+      if (0 == RtlCompareUnicodeString(FaceName, &EntryFaceNameW, TRUE))
+        {
+          RtlFreeUnicodeString(&EntryFaceNameW);
+          return FontGDI;
+        }
+
+      RtlFreeUnicodeString(&EntryFaceNameW);
+      Entry = Entry->Flink;
+    }
+
+  return NULL;
+}
+
+static PFONTGDI FASTCALL
+FindFaceNameInLists(PUNICODE_STRING FaceName)
+{
+  PW32PROCESS Win32Process;
+  PFONTGDI Font;
+
+  /* Search the process local list */
+  Win32Process = PsGetWin32Process();
+  IntLockProcessPrivateFonts(Win32Process);
+  Font = FindFaceNameInList(FaceName, &Win32Process->PrivateFontListHead);
+  IntUnLockProcessPrivateFonts(Win32Process);
+  if (NULL != Font)
+    {
+      return Font;
+    }
+
+  /* Search the global list */
+  IntLockGlobalFonts;
+  Font = FindFaceNameInList(FaceName, &FontListHead);
+  IntUnLockGlobalFonts;
+
+  return Font;
+}
+
+static void FASTCALL
+FontFamilyFillInfo(PFONTFAMILYINFO Info, PCWSTR FaceName, PFONTGDI FontGDI)
+{
+  ANSI_STRING StyleA;
+  UNICODE_STRING StyleW;
+  TT_OS2 *pOS2;
+  FONTSIGNATURE fs;
+  DWORD fs_fsCsb0;
+  CHARSETINFO CharSetInfo;
+  unsigned i, Size;
+  OUTLINETEXTMETRICW *Otm;
+  LOGFONTW *Lf;
+  TEXTMETRICW *TM;
+  NEWTEXTMETRICW *Ntm;
+  
+  ZeroMemory(Info, sizeof(FONTFAMILYINFO));
+  Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
+  Otm = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
+  if (NULL == Otm)
+    {
+      return;
+    }
+  IntGetOutlineTextMetrics(FontGDI, Size, Otm);
+
+  Lf = &Info->EnumLogFontEx.elfLogFont;
+  TM = &Otm->otmTextMetrics;
+
+  Lf->lfHeight = TM->tmHeight;
+  Lf->lfWidth = TM->tmAveCharWidth;
+  Lf->lfWeight = TM->tmWeight;
+  Lf->lfPitchAndFamily = (TM->tmPitchAndFamily & 0xf1) + 1;
+  Lf->lfCharSet = TM->tmCharSet;
+  Lf->lfOutPrecision = OUT_STROKE_PRECIS;
+  Lf->lfClipPrecision = CLIP_STROKE_PRECIS;
+  Lf->lfQuality = DRAFT_QUALITY;
+
+  Ntm = &Info->NewTextMetricEx.ntmTm;
+  Ntm->tmHeight = TM->tmHeight;
+  Ntm->tmAscent = TM->tmAscent;
+  Ntm->tmDescent = TM->tmDescent;
+  Ntm->tmInternalLeading = TM->tmInternalLeading;
+  Ntm->tmExternalLeading = TM->tmExternalLeading;
+  Ntm->tmAveCharWidth = TM->tmAveCharWidth;
+  Ntm->tmMaxCharWidth = TM->tmMaxCharWidth;
+  Ntm->tmWeight = TM->tmWeight;
+  Ntm->tmOverhang = TM->tmOverhang;
+  Ntm->tmDigitizedAspectX = TM->tmDigitizedAspectX;
+  Ntm->tmDigitizedAspectY = TM->tmDigitizedAspectY;
+  Ntm->tmFirstChar = TM->tmFirstChar;
+  Ntm->tmLastChar = TM->tmLastChar;
+  Ntm->tmDefaultChar = TM->tmDefaultChar;
+  Ntm->tmBreakChar = TM->tmBreakChar;
+  Ntm->tmItalic = TM->tmItalic;
+  Ntm->tmUnderlined = TM->tmUnderlined;
+  Ntm->tmStruckOut = TM->tmStruckOut;
+  Ntm->tmPitchAndFamily = TM->tmPitchAndFamily;
+  Ntm->tmCharSet = TM->tmCharSet;
+  Ntm->ntmFlags = TM->tmItalic ? NTM_ITALIC : 0;
+  if (550 < TM->tmWeight)
+    {
+      Ntm->ntmFlags |= NTM_BOLD;
+    }
+  if (0 == Ntm->ntmFlags)
+    {
+      Ntm->ntmFlags = NTM_REGULAR;
+    }
+
+  Ntm->ntmSizeEM = Otm->otmEMSquare;
+  Ntm->ntmCellHeight = 0;
+  Ntm->ntmAvgWidth = 0;
+
+  Info->FontType = (0 != (TM->tmPitchAndFamily & TMPF_TRUETYPE)
+                    ? TRUETYPE_FONTTYPE : 0);
+  if (0 == (TM->tmPitchAndFamily & TMPF_VECTOR))
+    {
+      Info->FontType |= RASTER_FONTTYPE;
+    }
+
+  ExFreePool(Otm);
+
+  wcsncpy(Info->EnumLogFontEx.elfLogFont.lfFaceName, FaceName, LF_FACESIZE);
+  wcsncpy(Info->EnumLogFontEx.elfFullName, FaceName, LF_FULLFACESIZE);
+  RtlInitAnsiString(&StyleA, FontGDI->face->style_name);
+  RtlAnsiStringToUnicodeString(&StyleW, &StyleA, TRUE);
+  wcsncpy(Info->EnumLogFontEx.elfStyle, StyleW.Buffer, LF_FACESIZE);
+  RtlFreeUnicodeString(&StyleW);
+
+  Info->EnumLogFontEx.elfLogFont.lfCharSet = DEFAULT_CHARSET;
+  Info->EnumLogFontEx.elfScript[0] = L'\0';
+  IntLockFreeType;
+  pOS2 = FT_Get_Sfnt_Table(FontGDI->face, ft_sfnt_os2);
+  IntUnLockFreeType;
+  if (NULL != pOS2)
+    {
+      Info->NewTextMetricEx.ntmFontSig.fsCsb[0] = pOS2->ulCodePageRange1;
+      Info->NewTextMetricEx.ntmFontSig.fsCsb[1] = pOS2->ulCodePageRange2;
+      Info->NewTextMetricEx.ntmFontSig.fsUsb[0] = pOS2->ulUnicodeRange1;
+      Info->NewTextMetricEx.ntmFontSig.fsUsb[1] = pOS2->ulUnicodeRange2;
+      Info->NewTextMetricEx.ntmFontSig.fsUsb[2] = pOS2->ulUnicodeRange3;
+      Info->NewTextMetricEx.ntmFontSig.fsUsb[3] = pOS2->ulUnicodeRange4;
+
+      fs_fsCsb0 = pOS2->ulCodePageRange1;
+      if (0 == pOS2->version)
+        {
+          FT_UInt Dummy;
+	
+          if (FT_Get_First_Char(FontGDI->face, &Dummy) < 0x100)
+            {
+              fs_fsCsb0 |= 1;
+            }
+          else
+            {
+              fs_fsCsb0 |= 1L << 31;
+            }
+        }
+      if (0 == fs_fsCsb0)
+        { /* let's see if we can find any interesting cmaps */
+          for (i = 0; i < FontGDI->face->num_charmaps; i++)
+            {
+              switch (FontGDI->face->charmaps[i]->encoding)
+                {
+                  case ft_encoding_unicode:
+                  case ft_encoding_apple_roman:
+                    fs_fsCsb0 |= 1;
+                    break;
+                  case ft_encoding_symbol:
+                    fs_fsCsb0 |= 1L << 31;
+                    break;
+                  default:
+                    break;
+                }
+            }
+        }
+
+      for(i = 0; i < 32; i++)
+        {
+          if (0 != (fs_fsCsb0 & (1L << i)))
+            {
+              fs.fsCsb[0] = 1L << i;
+              fs.fsCsb[1] = 0;
+              if (! IntTranslateCharsetInfo(fs.fsCsb, &CharSetInfo, TCI_SRCFONTSIG))
+                {
+                  CharSetInfo.ciCharset = DEFAULT_CHARSET;
+                }
+              if (31 == i)
+                {
+                  CharSetInfo.ciCharset = SYMBOL_CHARSET;
+                }
+              if (DEFAULT_CHARSET != CharSetInfo.ciCharset)
+                {
+                  Info->EnumLogFontEx.elfLogFont.lfCharSet = CharSetInfo.ciCharset;
+                  if (NULL != ElfScripts[i])
+                    {
+                      wcscpy(Info->EnumLogFontEx.elfScript, ElfScripts[i]);
+                    }
+                  else
+                    {
+                      DPRINT1("Unknown elfscript for bit %d\n", i);
+                    }
+                }
+            }
+        }
+    }
+}
+
+static int FASTCALL
+FindFaceNameInInfo(PUNICODE_STRING FaceName, PFONTFAMILYINFO Info, DWORD InfoEntries)
+{
+  DWORD i;
+  UNICODE_STRING InfoFaceName;
+
+  for (i = 0; i < InfoEntries; i++)
+    {
+      RtlInitUnicodeString(&InfoFaceName, Info[i].EnumLogFontEx.elfLogFont.lfFaceName);
+      if (0 == RtlCompareUnicodeString(&InfoFaceName, FaceName, TRUE))
+        {
+          return i;
+        }
+    }
+
+  return -1;
+}
+
+static BOOLEAN FASTCALL
+FontFamilyInclude(LPLOGFONTW LogFont, PUNICODE_STRING FaceName,
+                  PFONTFAMILYINFO Info, DWORD InfoEntries)
+{
+  UNICODE_STRING LogFontFaceName;
+
+  RtlInitUnicodeString(&LogFontFaceName, LogFont->lfFaceName);
+  if (0 != LogFontFaceName.Length
+      && 0 != RtlCompareUnicodeString(&LogFontFaceName, FaceName, TRUE))
+    {
+      return FALSE;
+    }
+
+  return FindFaceNameInInfo(FaceName, Info, InfoEntries) < 0;
+}
+
+static BOOLEAN FASTCALL
+GetFontFamilyInfoForList(LPLOGFONTW LogFont,
+                         PFONTFAMILYINFO Info,
+                         DWORD *Count,
+                         DWORD Size,
+                         PLIST_ENTRY Head)
+{
+  PLIST_ENTRY Entry;
+  PFONT_ENTRY CurrentEntry;
+  ANSI_STRING EntryFaceNameA;
+  UNICODE_STRING EntryFaceNameW;
+  PFONTGDI FontGDI;
+
+  Entry = Head->Flink;
+  while (Entry != Head)
+    {
+      CurrentEntry = (PFONT_ENTRY) CONTAINING_RECORD(Entry, FONT_ENTRY, ListEntry);
+
+      if (NULL == (FontGDI = AccessInternalObject((ULONG) CurrentEntry->hFont)))
+        {
+          Entry = Entry->Flink;
+          continue;
+        }
+      RtlInitAnsiString(&EntryFaceNameA, FontGDI->face->family_name);
+      RtlAnsiStringToUnicodeString(&EntryFaceNameW, &EntryFaceNameA, TRUE);
+      if ((LF_FACESIZE - 1) * sizeof(WCHAR) < EntryFaceNameW.Length)
+        {
+          EntryFaceNameW.Length = (LF_FACESIZE - 1) * sizeof(WCHAR);
+          EntryFaceNameW.Buffer[LF_FACESIZE - 1] = L'\0';
+        }
+
+      if (FontFamilyInclude(LogFont, &EntryFaceNameW, Info, min(*Count, Size)))
+        {
+          if (*Count < Size)
+            {
+              FontFamilyFillInfo(Info + *Count, EntryFaceNameW.Buffer, FontGDI);
+            }
+          (*Count)++;
+        }
+      RtlFreeUnicodeString(&EntryFaceNameW);
+      Entry = Entry->Flink;
+    }
+
+  return TRUE;
+}
+
+typedef struct FontFamilyInfoCallbackContext
+{
+  LPLOGFONTW LogFont;
+  PFONTFAMILYINFO Info;
+  DWORD Count;
+  DWORD Size;
+} FONT_FAMILY_INFO_CALLBACK_CONTEXT, *PFONT_FAMILY_INFO_CALLBACK_CONTEXT;
+
+static NTSTATUS STDCALL
+FontFamilyInfoQueryRegistryCallback(IN PWSTR ValueName, IN ULONG ValueType,
+                                    IN PVOID ValueData, IN ULONG ValueLength,
+                                    IN PVOID Context, IN PVOID EntryContext)
+{
+  PFONT_FAMILY_INFO_CALLBACK_CONTEXT InfoContext;
+  UNICODE_STRING RegistryName, RegistryValue;
+  int Existing;
+  PFONTGDI FontGDI;
+
+  if (REG_SZ != ValueType)
+    {
+      return STATUS_SUCCESS;
+    }
+  InfoContext = (PFONT_FAMILY_INFO_CALLBACK_CONTEXT) Context;
+  RtlInitUnicodeString(&RegistryName, ValueName);
+
+  /* Do we need to include this font family? */
+  if (FontFamilyInclude(InfoContext->LogFont, &RegistryName, InfoContext->Info,
+                        min(InfoContext->Count, InfoContext->Size)))
+    {
+      RtlInitUnicodeString(&RegistryValue, (PCWSTR) ValueData);
+      Existing = FindFaceNameInInfo(&RegistryValue, InfoContext->Info,
+                                    min(InfoContext->Count, InfoContext->Size));
+      if (0 <= Existing)
+        {
+          /* We already have the information about the "real" font. Just copy it */
+          if (InfoContext->Count < InfoContext->Size)
+            {
+              InfoContext->Info[InfoContext->Count] = InfoContext->Info[Existing];
+              wcsncpy(InfoContext->Info[InfoContext->Count].EnumLogFontEx.elfLogFont.lfFaceName,
+                      RegistryName.Buffer, LF_FACESIZE);
+            }
+          InfoContext->Count++;
+          return STATUS_SUCCESS;
+        }
+
+      /* Try to find information about the "real" font */
+      FontGDI = FindFaceNameInLists(&RegistryValue);
+      if (NULL == FontGDI)
+        {
+          /* "Real" font not found, discard this registry entry */
+          return STATUS_SUCCESS;
+        }
+
+      /* Return info about the "real" font but with the name of the alias */
+      if (InfoContext->Count < InfoContext->Size)
+        {
+          FontFamilyFillInfo(InfoContext->Info + InfoContext->Count,
+                             RegistryName.Buffer, FontGDI);
+        }
+      InfoContext->Count++;
+      return STATUS_SUCCESS;
+    }
+
+  return STATUS_SUCCESS;
+}
+
+static BOOLEAN FASTCALL
+GetFontFamilyInfoForSubstitutes(LPLOGFONTW LogFont,
+                                PFONTFAMILYINFO Info,
+                                DWORD *Count,
+                                DWORD Size)
+{
+  RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+  FONT_FAMILY_INFO_CALLBACK_CONTEXT Context;
+  NTSTATUS Status;
+
+  /* Enumerate font families found in HKLM\Software\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes
+     The real work is done in the registry callback function */
+  Context.LogFont = LogFont;
+  Context.Info = Info;
+  Context.Count = *Count;
+  Context.Size = Size;
+
+  QueryTable[0].QueryRoutine = FontFamilyInfoQueryRegistryCallback;
+  QueryTable[0].Flags = 0;
+  QueryTable[0].Name = NULL;
+  QueryTable[0].EntryContext = NULL;
+  QueryTable[0].DefaultType = REG_NONE;
+  QueryTable[0].DefaultData = NULL;
+  QueryTable[0].DefaultLength = 0;
+
+  QueryTable[1].QueryRoutine = NULL;
+  QueryTable[1].Name = NULL;
+
+  Status = RtlQueryRegistryValues(RTL_REGISTRY_WINDOWS_NT,
+                                  L"SysFontSubstitutes",
+                                  QueryTable,
+                                  &Context,
+                                  NULL);
+  if (NT_SUCCESS(Status))
+    {
+      *Count = Context.Count;
+    }
+
+  return NT_SUCCESS(Status) || STATUS_OBJECT_NAME_NOT_FOUND == Status;
+}
+
+int STDCALL
+NtGdiGetFontFamilyInfo(HDC Dc,
+                       LPLOGFONTW UnsafeLogFont,
+                       PFONTFAMILYINFO UnsafeInfo,
+                       DWORD Size)
+{
+  NTSTATUS Status;
+  LOGFONTW LogFont;
+  PFONTFAMILYINFO Info;
+  DWORD Count;
+  PW32PROCESS Win32Process;
+
+  /* Make a safe copy */
+  Status = MmCopyFromCaller(&LogFont, UnsafeLogFont, sizeof(LOGFONTW));
+  if (! NT_SUCCESS(Status))
+    {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return -1;
+    }
+
+  /* Allocate space for a safe copy */
+  Info = ExAllocatePoolWithTag(PagedPool, Size * sizeof(FONTFAMILYINFO), TAG_GDITEXT);
+  if (NULL == Info)
+    {
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return -1;
+    }
+
+  /* Enumerate font families in the global list */
+  IntLockGlobalFonts;
+  Count = 0;
+  if (! GetFontFamilyInfoForList(&LogFont, Info, &Count, Size, &FontListHead) )
+    {
+      IntUnLockGlobalFonts;
+      ExFreePool(Info);
+      return -1;
+    }
+  IntUnLockGlobalFonts;
+
+  /* Enumerate font families in the process local list */
+  Win32Process = PsGetWin32Process();
+  IntLockProcessPrivateFonts(Win32Process);
+  if (! GetFontFamilyInfoForList(&LogFont, Info, &Count, Size, 
+                                 &Win32Process->PrivateFontListHead))
+    {
+      IntUnLockProcessPrivateFonts(Win32Process);
+      ExFreePool(Info);
+      return -1;
+    }
+  IntUnLockProcessPrivateFonts(Win32Process);
+
+  /* Enumerate font families in the registry */
+  if (! GetFontFamilyInfoForSubstitutes(&LogFont, Info, &Count, Size))
+    {
+      ExFreePool(Info);
+      return -1;
+    }
+
+  /* Return data to caller */
+  if (0 != Count)
+    {
+      Status = MmCopyToCaller(UnsafeInfo, Info,
+                              (Count < Size ? Count : Size) * sizeof(FONTFAMILYINFO));
+      if (! NT_SUCCESS(Status))
+        {
+          ExFreePool(Info);
+          SetLastWin32Error(ERROR_INVALID_PARAMETER);
+          return -1;
+        }
+    }
+
+  ExFreePool(Info);
+
+  return Count;
 }
 
 int
@@ -1687,15 +2575,6 @@ NtGdiTextOut(
    INT Count)
 {
    return NtGdiExtTextOut(hDC, XStart, YStart, 0, NULL, String, Count, NULL);
-}
-
-UINT
-STDCALL
-NtGdiTranslateCharsetInfo(PDWORD  Src,
-                               LPCHARSETINFO  CSI,
-                               DWORD  Flags)
-{
-  UNIMPLEMENTED;
 }
 
 NTSTATUS FASTCALL

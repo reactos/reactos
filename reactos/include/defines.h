@@ -468,10 +468,12 @@ extern "C" {
 #define SYMBOL_CHARSET	(2)
 #define SHIFTJIS_CHARSET	(128)
 #define HANGEUL_CHARSET	(129)
+#define JOHAB_CHARSET	(130)
 #define GB2312_CHARSET	(134)
 #define CHINESEBIG5_CHARSET	(136)
 #define GREEK_CHARSET	(161)
 #define TURKISH_CHARSET	(162)
+#define VIETNAMESE_CHARSET	(163)
 #define HEBREW_CHARSET	(177)
 #define ARABIC_CHARSET	(178)
 #define BALTIC_CHARSET	(186)
@@ -3276,6 +3278,18 @@ extern "C" {
 #define PAN_XHEIGHT_DUCKING_SMALL	(5)
 #define PAN_XHEIGHT_DUCKING_STD	(6)
 #define PAN_XHEIGHT_DUCKING_LARGE	(7)
+#define PANOSE_COUNT	(10)
+#define PAN_FAMILYTYPE_INDEX	(0)
+#define PAN_SERIFSTYLE_INDEX	(1)
+#define PAN_WEIGTH_INDEX	(2)
+#define PAN_PROPORTION_INDEX	(3)
+#define PAN_CONTRAST_INDEX	(4)
+#define PAN_STROKEVARIATION_INDEX	(5)
+#define PAN_ARMSTYLE_INDEX	(6)
+#define PAN_LETTERFORM_INDEX	(7)
+#define PAN_MIDLINE_INDEX	(8)
+#define PAN_XHEIGHT_INDEX	(9)
+#define PAN_CULTURE_LATIN	(0)
 
 /* PALETTENTRY structure */
 #define PC_EXPLICIT	(2)
@@ -4776,6 +4790,11 @@ extern "C" {
 #define TMPF_VECTOR		(0x2)
 #define TMPF_TRUETYPE		(0x4)
 #define TMPF_DEVICE		(0x8)
+
+/* NEWTEXTMETRIC structure */
+#define NTM_ITALIC		(0x01)
+#define NTM_BOLD		(0x20)
+#define NTM_REGULAR		(0x40)
 
 /* CopyFileEx options */
 #define COPY_FILE_FAIL_IF_EXISTS	(1)

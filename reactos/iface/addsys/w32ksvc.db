@@ -66,8 +66,6 @@ NtGdiEndDoc				1
 NtGdiEndPage				1
 NtGdiEndPath				1
 NtGdiEnumEnhMetaFile			5
-NtGdiEnumFontFamilies			4
-NtGdiEnumFontFamiliesEx			5
 NtGdiEnumFonts				4
 NtGdiEnumICMProfiles			3
 NtGdiEnumMetaFile			4
@@ -126,6 +124,7 @@ NtGdiGetEnhMetaFileDescription		3
 NtGdiGetEnhMetaFileHeader		3
 NtGdiGetEnhMetaFilePaletteEntries	3
 NtGdiGetEnhMetaFilePixelFormat		3
+NtGdiGetFontFamilyInfo			4
 NtGdiGetFontLanguageInfo			1
 #NtGdiGetFontResourceInfo		?
 NtGdiGetGlyphOutline			7

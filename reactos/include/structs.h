@@ -3634,13 +3634,13 @@ typedef struct tagNEWTEXTMETRICW {
 typedef_tident(NEWTEXTMETRIC)
 
 typedef struct tagNEWTEXTMETRICEXA {
-  NEWTEXTMETRICA ntmentm;
-  FONTSIGNATURE  ntmeFontSignature;
+  NEWTEXTMETRICA ntmTm;
+  FONTSIGNATURE  ntmFontSig;
 } NEWTEXTMETRICEXA;
 
 typedef struct tagNEWTEXTMETRICEXW {
-  NEWTEXTMETRICW ntmentm;
-  FONTSIGNATURE  ntmeFontSignature;
+  NEWTEXTMETRICW ntmTm;
+  FONTSIGNATURE  ntmFontSig;
 } NEWTEXTMETRICEXW;
 
 typedef_tident(NEWTEXTMETRICEX)

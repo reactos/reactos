@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.35 2003/11/16 22:44:39 sedwards Exp $
+# $Id: makefile,v 1.36 2004/03/23 00:18:54 gvg Exp $
 
 PATH_TO_TOP = ../..
 
@@ -38,6 +38,7 @@ OBJECTS_OBJECTS = \
  objects/clip.o \
  objects/dc.o \
  objects/fillshap.o \
+ objects/font.o \
  objects/line.o \
  objects/linedda.o \
  objects/metafile.o \

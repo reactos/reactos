@@ -37,4 +37,10 @@ HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\Winlogon","StartServices",0x000
 HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\Winlogon","StartGUI",0x00010001,0x00000000
 HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\Winlogon","Userinit",0x00020000,"%SystemRoot%\system32\userinit.exe"
 
+; Font substitutes
+; SysFontSubstitutes are also returned by EnumFontFamilies, FontSubstitutes aren't
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Bitstream Vera Sans"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"Bitstream Vera Sans Mono"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Bitstream Vera Serif"
+
 ; EOF
