@@ -1,6 +1,6 @@
 ; FATHELP.ASM
 ; FAT12/16 Boot Sector Helper Code
-; Copyright (c) 1998, 2001, 2002 Brian Palmer
+; Copyright (c) 1998, 2001, 2002, 2003 Brian Palmer
 
 
 
@@ -195,28 +195,30 @@ GetFatEntry12_Done:
 ; Otherwise CF = 0 for FAT16
 IsFat12:
 
-		mov   bx,[BYTE bp-DataAreaStartLow]
-		mov   cx,[BYTE bp-DataAreaStartHigh]
-        ; CX:BX now has the number of the starting sector of the data area
+		mov   ebx,DWORD [BYTE bp-DataAreaStartLow]
+        ; EBX now has the number of the starting sector of the data area
+		; starting from the beginning of the disk, so subtrace hidden sectors
+		sub   ebx,DWORD [BYTE bp+HiddenSectors]
 
-		xor   dx,dx
+
+		xor   eax,eax
 		mov   ax,WORD [BYTE bp+TotalSectors]
 		cmp   ax,byte 0
 		jnz   IsFat12_2
-		mov   ax,WORD [BYTE bp+TotalSectorsBig]
-		mov   dx,WORD [BYTE bp+TotalSectorsBig+2]
+		mov   eax,DWORD [BYTE bp+TotalSectorsBig]
 
-		; DX:AX now contains the number of sectors on the volume
+		; EAX now contains the number of sectors on the volume
+
 IsFat12_2:
-		sub   ax,bx				; Subtract data area start sector
-		sub   dx,cx				; from total sectors of volume
+		sub   eax,ebx				; Subtract data area start sector
+		xor   edx,edx				; from total sectors of volume
 
-		; DX:AX now contains the number of data sectors on the volume
-		movzx bx,BYTE [BYTE bp+SectsPerCluster]
-		div   bx
-		; AX now has the number of clusters on the volume
+		; EDX:EAX now contains the number of data sectors on the volume
+		movzx ebx,BYTE [BYTE bp+SectsPerCluster]
+		div   ebx
+		; EAX now has the number of clusters on the volume
 		stc
-		cmp   ax,4085
+		cmp   eax,4085
 		jb    IsFat12_Done
 		clc
 

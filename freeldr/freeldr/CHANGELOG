@@ -1,3 +1,8 @@
+Changes in v1.8.6 (4/14/2003) (brianp)
+
+- Fixed a bug in fathelp.asm where is wasn't adding the hidden sector
+  count before performing a subtraction.
+
 Changes in v1.8.5 (4/10/2003) (ekohl)
 
 - Added support for binary system hive.
