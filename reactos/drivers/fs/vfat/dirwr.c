@@ -1,4 +1,4 @@
-/* $Id: dirwr.c,v 1.43 2004/12/05 16:31:50 gvg Exp $
+/* $Id: dirwr.c,v 1.44 2004/12/25 11:18:38 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -595,7 +595,7 @@ FATXAddEntry (PDEVICE_EXTENSION DeviceExt,
    DirContext.DirEntry.FatX.FileSize = 0;
    
    /* set file name */
-   NameA.Buffer = DirContext.DirEntry.FatX.Filename;
+   NameA.Buffer = (PCHAR)DirContext.DirEntry.FatX.Filename;
    NameA.Length = 0;
    NameA.MaximumLength = 42;
    RtlUnicodeStringToOemString(&NameA, &DirContext.LongNameU, FALSE);

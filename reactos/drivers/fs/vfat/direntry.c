@@ -1,4 +1,4 @@
-/* $Id: direntry.c,v 1.18 2004/12/05 16:31:50 gvg Exp $
+/* $Id: direntry.c,v 1.19 2004/12/25 11:18:38 navaraf Exp $
  *
  *
  * FILE:             DirEntry.c
@@ -455,7 +455,7 @@ NTSTATUS FATXGetNextDirEntry(PVOID * pContext,
    }
    DirContext->ShortNameU.Buffer[0] = 0;
    DirContext->ShortNameU.Length = 0;
-   StringO.Buffer = fatxDirEntry->Filename;
+   StringO.Buffer = (PCHAR)fatxDirEntry->Filename;
    StringO.Length = StringO.MaximumLength = fatxDirEntry->FilenameLength;
    RtlOemStringToUnicodeString(&DirContext->LongNameU, &StringO, FALSE);
    return STATUS_SUCCESS;

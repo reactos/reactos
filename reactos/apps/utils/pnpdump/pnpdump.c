@@ -290,7 +290,7 @@ GetPnpKey(PHKEY PnpKey)
 			       "Identifier",
 			       NULL,
 			       &dwType,
-			       szBuffer,
+			       (LPBYTE)szBuffer,
 			       &dwSize);
       if (lError != ERROR_SUCCESS)
 	{
@@ -547,7 +547,7 @@ PnpDecodeFixedMemory(unsigned char *Ptr)
 
 void PrintDeviceData (PCM_PNP_BIOS_DEVICE_NODE DeviceNode)
 {
-  unsigned char PnpId[8];
+  char PnpId[8];
   unsigned char *Ptr;
   unsigned int TagSize;
   unsigned int TagType;
@@ -719,7 +719,7 @@ int main (int argc, char *argv[])
 			   "Configuration Data",
 			   NULL,
 			   &dwType,
-			   (LPSTR)lpBuffer,
+			   (LPBYTE)lpBuffer,
 			   &dwSize);
   if (lError != ERROR_SUCCESS)
     {
@@ -753,13 +753,13 @@ int main (int argc, char *argv[])
 //  printf("ResourceSize: %lu\n", dwResourceSize);
 
   lpPnpInst = (PCM_PNP_BIOS_INSTALLATION_CHECK)
-	((DWORD)(&lpBuffer->PartialResourceList.PartialDescriptors[0]) +
+	((ULONG_PTR)(&lpBuffer->PartialResourceList.PartialDescriptors[0]) +
 	  sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
 
 //  printf("lpPnpInst %p\n", lpPnpInst);
 
   printf("Signature '%.4s'\n", lpPnpInst->Signature);
-  if (strncmp(lpPnpInst->Signature, "$PnP", 4))
+  if (strncmp((PCHAR)lpPnpInst->Signature, "$PnP", 4))
     {
       printf("Error: Invalid PnP signature\n");
       free(lpBuffer);

@@ -27,18 +27,18 @@
 static const unsigned char CRYPT_LMhash_Magic[8] =
     { 'K', 'G', 'S', '!', '@', '#', '$', '%' };
 
-static void CRYPT_LMhash(unsigned char *dst, const unsigned char *pwd, const int len)
+static void CRYPT_LMhash(LPSTR dst, LPCSTR pwd, const int len)
 {
     int i, max = 14;
-    unsigned char tmp_pwd[14] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
+    CHAR tmp_pwd[14] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 
     max = len > max ? max : len;
 
     for (i = 0; i < max; i++)
         tmp_pwd[i] = pwd[i];
 
-    CRYPT_DEShash(dst, tmp_pwd, CRYPT_LMhash_Magic);
-    CRYPT_DEShash(&dst[8], &tmp_pwd[7], CRYPT_LMhash_Magic);
+    CRYPT_DEShash((PUCHAR)dst, (PUCHAR)tmp_pwd, CRYPT_LMhash_Magic);
+    CRYPT_DEShash((PUCHAR)&dst[8], (PUCHAR)&tmp_pwd[7], CRYPT_LMhash_Magic);
 }
 
 NTSTATUS WINAPI SystemFunction006(LPCSTR password, LPSTR hash)

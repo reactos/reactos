@@ -641,7 +641,7 @@ VOID NICUpdateCounters(
 VOID NICReadDataAlign(
     PNIC_ADAPTER Adapter,
     PUSHORT Target,
-    ULONG Source,
+    ULONG_PTR Source,
     USHORT Length)
 /*
  * FUNCTION: Copies data from a NIC's RAM into a buffer
@@ -697,7 +697,7 @@ VOID NICReadDataAlign(
 
 VOID NICWriteDataAlign(
     PNIC_ADAPTER Adapter,
-    ULONG Target,
+    ULONG_PTR Target,
     PUSHORT Source,
     USHORT Length)
 /*
@@ -790,7 +790,7 @@ VOID NICWriteDataAlign(
 VOID NICReadData(
     PNIC_ADAPTER Adapter,
     PUCHAR Target,
-    ULONG Source,
+    ULONG_PTR Source,
     USHORT Length)
 /*
  * FUNCTION: Copies data from a NIC's RAM into a buffer
@@ -831,7 +831,7 @@ VOID NICReadData(
 
 VOID NICWriteData(
     PNIC_ADAPTER Adapter,
-    ULONG Target,
+    ULONG_PTR Target,
     PUCHAR Source,
     USHORT Length)
 /*
@@ -858,7 +858,7 @@ VOID NICWriteData(
 
         /* Update pointers */
         Source = (PUCHAR) ((ULONG_PTR) Source + 1);
-        (ULONG_PTR)Target += 1;
+        Target += 1;
         Length--;
     }
 
@@ -866,8 +866,8 @@ VOID NICWriteData(
         /* Transfer as many words as we can without exceeding the transfer length */
         Tmp = Length & 0xFFFE;
         NICWriteDataAlign(Adapter, Target, (PUSHORT)Source, Tmp);
-        Source            += Tmp;
-        (ULONG_PTR)Target += Tmp;
+        Source += Tmp;
+        Target += Tmp;
 
         /* Read one word */
         NICReadDataAlign(Adapter, &Tmp, Target, 0x02);

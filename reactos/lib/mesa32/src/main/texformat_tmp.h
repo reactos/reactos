@@ -1,6 +1,7 @@
+/* $XFree86$ */
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.2
  *
  * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
@@ -44,46 +45,34 @@
 #if DIM == 1
 
 #define CHAN_SRC( t, i, j, k, sz )					\
-	((void) (j), (void) (k),      					\
-	 ((GLchan *)(t)->Data + (i) * (sz)))
+	((GLchan *)(t)->Data + (i) * (sz))
 #define UBYTE_SRC( t, i, j, k, sz )					\
-	((void) (j), (void) (k),      					\
-	 ((GLubyte *)(t)->Data + (i) * (sz)))
+	((GLubyte *)(t)->Data + (i) * (sz))
 #define USHORT_SRC( t, i, j, k )					\
-	((void) (j), (void) (k),      					\
-	 ((GLushort *)(t)->Data + (i)))
+	((GLushort *)(t)->Data + (i))
 #define UINT_SRC( t, i, j, k )						\
-	((void) (j), (void) (k),      					\
-	 ((GLuint *)(t)->Data + (i)))
+	((GLuint *)(t)->Data + (i))
 #define FLOAT_SRC( t, i, j, k, sz )					\
-	((void) (j), (void) (k),      					\
-	 ((GLfloat *)(t)->Data + (i) * (sz)))
+	((GLfloat *)(t)->Data + (i) * (sz))
 #define HALF_SRC( t, i, j, k, sz )					\
-	((void) (j), (void) (k),      					\
-	 ((GLhalfARB *)(t)->Data + (i) * (sz)))
+	((GLhalfARB *)(t)->Data + (i) * (sz))
 
 #define FETCH(x) fetch_texel_1d_##x
 
 #elif DIM == 2
 
 #define CHAN_SRC( t, i, j, k, sz )					\
-	((void) (k),                  					\
-	 ((GLchan *)(t)->Data + ((t)->RowStride * (j) + (i)) * (sz)))
+	((GLchan *)(t)->Data + ((t)->RowStride * (j) + (i)) * (sz))
 #define UBYTE_SRC( t, i, j, k, sz )					\
-	((void) (k),                  					\
-	 ((GLubyte *)(t)->Data + ((t)->RowStride * (j) + (i)) * (sz)))
+	((GLubyte *)(t)->Data + ((t)->RowStride * (j) + (i)) * (sz))
 #define USHORT_SRC( t, i, j, k )					\
-	((void) (k),                  					\
-	 ((GLushort *)(t)->Data + ((t)->RowStride * (j) + (i))))
+	((GLushort *)(t)->Data + ((t)->RowStride * (j) + (i)))
 #define UINT_SRC( t, i, j, k )						\
-	((void) (k),                  					\
-	 ((GLuint *)(t)->Data + ((t)->RowStride * (j) + (i))))
+	((GLuint *)(t)->Data + ((t)->RowStride * (j) + (i)))
 #define FLOAT_SRC( t, i, j, k, sz )					\
-	((void) (k),                  					\
-	 ((GLfloat *)(t)->Data + ((t)->RowStride * (j) + (i)) * (sz)))
+	((GLfloat *)(t)->Data + ((t)->RowStride * (j) + (i)) * (sz))
 #define HALF_SRC( t, i, j, k, sz )					\
-	((void) (k),                  					\
-	 ((GLhalfARB *)(t)->Data + ((t)->RowStride * (j) + (i)) * (sz)))
+	((GLhalfARB *)(t)->Data + ((t)->RowStride * (j) + (i)) * (sz))
 
 #define FETCH(x) fetch_texel_2d_##x
 
@@ -1023,9 +1012,9 @@ static void FETCH(ci8)( const struct gl_texture_image *texImage,
 			GLint i, GLint j, GLint k, GLchan *texel )
 {
    const GLubyte *src = UBYTE_SRC( texImage, i, j, k, 1 );
-   const GLuint index = *src;
    const struct gl_color_table *palette;
    const GLchan *table;
+   GLuint index;
    GET_CURRENT_CONTEXT(ctx);
 
    if (ctx->Texture.SharedPalette) {
@@ -1038,6 +1027,9 @@ static void FETCH(ci8)( const struct gl_texture_image *texImage,
       return; /* undefined results */
    ASSERT(palette->Type != GL_FLOAT);
    table = (const GLchan *) palette->Table;
+
+   /* Mask the index against size of palette to avoid going out of bounds */
+   index = (*src) & (palette->Size - 1);
 
    switch (palette->Format) {
       case GL_ALPHA:

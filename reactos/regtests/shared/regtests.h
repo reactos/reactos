@@ -147,8 +147,6 @@ typedef struct _ROS_TEST
   TestRoutine Routine;
 } ROS_TEST, *PROS_TEST;
 
-extern LIST_ENTRY AllTests;
-
 extern VOID InitializeTests();
 extern VOID RegisterTests();
 extern VOID PerformTests(TestOutputRoutine OutputRoutine, LPSTR TestName);

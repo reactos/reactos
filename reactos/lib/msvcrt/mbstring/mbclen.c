@@ -26,7 +26,7 @@ int mblen( const char *s, size_t count )
 	if ( s == NULL )
 		return 0;
 
-	l =  _mbclen(s);
+	l =  _mbclen((const unsigned char *)s);
 	if ( l < count )
 		return -1;
 	return l;

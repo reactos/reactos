@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ntfs.c,v 1.7 2003/01/16 11:58:15 ekohl Exp $
+/* $Id: ntfs.c,v 1.8 2004/12/25 11:18:38 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -79,7 +79,7 @@ FsRecIsNtfsVolume(IN PDEVICE_OBJECT DeviceObject)
     }
 
   DPRINT("NTFS-identifier: [%.8s]\n", &Buffer[3]);
-  if (strncmp(&Buffer[3], "NTFS    ", 8) == 0)
+  if (RtlCompareMemory(&Buffer[3], "NTFS    ", 8) == 8)
     {
       Status = STATUS_SUCCESS;
     }

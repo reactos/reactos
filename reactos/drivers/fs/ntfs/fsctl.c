@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.10 2004/06/05 08:28:37 navaraf Exp $
+/* $Id: fsctl.c,v 1.11 2004/12/25 11:18:38 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -108,7 +108,7 @@ NtfsHasFileSystem(PDEVICE_OBJECT DeviceToMount)
   if (NT_SUCCESS(Status))
     {
       DPRINT1("NTFS-identifier: [%.8s]\n", BootSector->OemName);
-      if (strncmp(BootSector->OemName, "NTFS    ", 8) != 0)
+      if (RtlCompareMemory(BootSector->OemName, "NTFS    ", 8) != 8)
 	{
 	  Status = STATUS_UNRECOGNIZED_VOLUME;
 	}

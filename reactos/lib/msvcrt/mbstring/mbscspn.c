@@ -7,7 +7,7 @@
  */
 size_t _mbscspn(const unsigned char *s1, const unsigned char *s2)
 {
-  const char *p, *spanp;
+  const unsigned char *p, *spanp;
   char c, sc;
 
   for (p = s1;;)

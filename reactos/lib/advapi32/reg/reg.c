@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.65 2004/12/18 22:54:37 gvg Exp $
+/* $Id: reg.c,v 1.66 2004/12/25 11:18:50 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -2216,7 +2216,7 @@ RegQueryMultipleValuesA (HKEY hKey,
 					val_list[i].ve_valuename,
 					NULL,
 					&val_list[i].ve_type,
-					bufptr,
+					(LPBYTE)bufptr,
 					&val_list[i].ve_valuelen);
 	  if (ErrorCode != ERROR_SUCCESS)
 	    {
@@ -2280,7 +2280,7 @@ RegQueryMultipleValuesW (HKEY hKey,
 					val_list[i].ve_valuename,
 					NULL,
 					&val_list[i].ve_type,
-					bufptr,
+					(LPBYTE)bufptr,
 					&val_list[i].ve_valuelen);
 	  if (ErrorCode != ERROR_SUCCESS)
 	    {
@@ -2496,7 +2496,7 @@ RegQueryValueExA (HKEY hKey,
 	  if (ErrorCode == ERROR_SUCCESS && ValueData.Buffer != NULL)
 	    {
 	      RtlInitAnsiString(&AnsiString, NULL);
-	      AnsiString.Buffer = lpData;
+	      AnsiString.Buffer = (LPSTR)lpData;
 	      AnsiString.MaximumLength = *lpcbData;
 	      ValueData.Length = Length;
 	      ValueData.MaximumLength = ValueData.Length + sizeof(WCHAR);

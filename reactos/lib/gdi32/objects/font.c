@@ -1,4 +1,4 @@
-/* $Id: font.c,v 1.9 2004/09/06 21:15:46 weiden Exp $
+/* $Id: font.c,v 1.10 2004/12/25 11:18:50 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -16,7 +16,7 @@
 #define INITIAL_FAMILY_COUNT 64
 
 static BOOL FASTCALL
-MetricsCharConvert(WCHAR w, CHAR *b)
+MetricsCharConvert(WCHAR w, UCHAR *b)
   {
   UNICODE_STRING WString;
   WCHAR WBuf[2];
@@ -243,11 +243,11 @@ IntEnumFontFamilies(HDC Dc, LPLOGFONTW LogFont, PVOID EnumProc, LPARAM lParam,
         {
           RosRtlLogFontW2A(&EnumLogFontExA.elfLogFont, &Info[i].EnumLogFontEx.elfLogFont);
           WideCharToMultiByte(CP_THREAD_ACP, 0, Info[i].EnumLogFontEx.elfFullName, -1,
-                              EnumLogFontExA.elfFullName, LF_FULLFACESIZE, NULL, NULL);
+                              (LPSTR)EnumLogFontExA.elfFullName, LF_FULLFACESIZE, NULL, NULL);
           WideCharToMultiByte(CP_THREAD_ACP, 0, Info[i].EnumLogFontEx.elfStyle, -1,
-                              EnumLogFontExA.elfStyle, LF_FACESIZE, NULL, NULL);
+                              (LPSTR)EnumLogFontExA.elfStyle, LF_FACESIZE, NULL, NULL);
           WideCharToMultiByte(CP_THREAD_ACP, 0, Info[i].EnumLogFontEx.elfScript, -1,
-                              EnumLogFontExA.elfScript, LF_FACESIZE, NULL, NULL);
+                              (LPSTR)EnumLogFontExA.elfScript, LF_FACESIZE, NULL, NULL);
           NewTextMetricExW2A(&NewTextMetricExA,
                              &Info[i].NewTextMetricEx);
           Ret = ((FONTENUMPROCA) EnumProc)(

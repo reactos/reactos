@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.77 2004/12/06 00:26:47 gdalsnes Exp $
+/* $Id: create.c,v 1.78 2004/12/25 11:18:38 navaraf Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/fs/vfat/create.c
@@ -141,7 +141,7 @@ ReadVolumeLabel (PDEVICE_EXTENSION DeviceExt, PVPB Vpb)
           /* copy volume label */
           if (DeviceExt->Flags & VCB_IS_FATX)
           {
-            StringO.Buffer = Entry->FatX.Filename;
+            StringO.Buffer = (PCHAR)Entry->FatX.Filename;
             StringO.MaximumLength = StringO.Length = Entry->FatX.FilenameLength;
             RtlOemStringToUnicodeString(&NameU, &StringO, FALSE);
           }

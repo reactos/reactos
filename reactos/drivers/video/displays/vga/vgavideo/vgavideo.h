@@ -21,7 +21,7 @@ extern int endmasks[8];
 
 extern UCHAR PreCalcReverseByte[256];
 
-extern char* vidmem;
+extern PBYTE vidmem;
 
 #define MISC     0x3c2
 #define SEQ      0x3c4

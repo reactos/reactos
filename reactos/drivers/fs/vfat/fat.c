@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.47 2004/12/05 16:31:50 gvg Exp $
+ * $Id: fat.c,v 1.48 2004/12/25 11:18:38 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -606,9 +606,9 @@ WriteCluster(PDEVICE_EXTENSION DeviceExt,
   if (DeviceExt->AvailableClustersValid)
   {
       if (OldValue && NewValue == 0)
-        InterlockedIncrement(&DeviceExt->AvailableClusters);
+        InterlockedIncrement((PLONG)&DeviceExt->AvailableClusters);
       else if (OldValue == 0 && NewValue)
-        InterlockedDecrement(&DeviceExt->AvailableClusters);
+        InterlockedDecrement((PLONG)&DeviceExt->AvailableClusters);
   }
   ExReleaseResourceLite(&DeviceExt->FatResource);
   return(Status);

@@ -17,7 +17,7 @@ int toupper(int c)
 /*
  * @implemented
  */
-int towupper(wint_t c)
+wchar_t towupper(wchar_t c)
 {
    if (iswctype (c, _LOWER))
       return (c + (L'A' - L'a'));

@@ -1,4 +1,3 @@
-/* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 #include <msvcrt/stdlib.h>
 
 /*
@@ -6,16 +5,14 @@
  */
 void _swab (const char* caFrom, char* caTo, size_t sizeToCopy)
 {
-  unsigned long temp;
+  if (sizeToCopy > 1)
+  {
+    sizeToCopy = sizeToCopy >> 1;
 
-  sizeToCopy >>= 1; sizeToCopy++;
-#define	STEP	temp = *((const char *)caFrom)++,*((char *)caTo)++ = *((const char *)caFrom)++,*((char *)caTo)++ = temp
-  /* round to multiple of 8 */
-  while ((--sizeToCopy) & 07)
-    STEP;
-  sizeToCopy >>= 3;
-  while (--sizeToCopy >= 0) {
-    STEP; STEP; STEP; STEP;
-    STEP; STEP; STEP; STEP;
+    while (sizeToCopy--) {
+      *caTo++ = caFrom[1];
+      *caTo++ = *caFrom++;
+      caFrom++;
+    }
   }
 }

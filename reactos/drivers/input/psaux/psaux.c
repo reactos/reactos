@@ -156,7 +156,7 @@ VOID PS2MouseIsrDpc(PKDPC Dpc, PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Cont
    ULONG Queue;
 
    Queue = DeviceExtension->ActiveQueue % 2;
-   InterlockedIncrement(&DeviceExtension->ActiveQueue);
+   InterlockedIncrement((PLONG)&DeviceExtension->ActiveQueue);
    (*(PSERVICE_CALLBACK_ROUTINE)DeviceExtension->ClassInformation.CallBack)(
 			DeviceExtension->ClassInformation.DeviceObject,
 			DeviceExtension->MouseInputData[Queue],

@@ -1,4 +1,4 @@
-/* $Id: fputs.c,v 1.8 2004/08/15 18:16:38 chorns Exp $
+/* $Id: fputs.c,v 1.9 2004/12/25 11:18:50 navaraf Exp $
  *
  *  ReactOS msvcrt library
  *
@@ -76,7 +76,7 @@ fputws(const wchar_t* s, FILE* f)
   if (unbuffered)
   {
     f->_flag &= ~_IONBF;
-    f->_ptr = f->_base = (unsigned char*)localbuf;
+    f->_ptr = f->_base = (char*)localbuf;
     f->_bufsiz = BUFSIZ;
   }
 

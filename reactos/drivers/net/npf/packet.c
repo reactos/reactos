@@ -706,7 +706,7 @@ NPF_IoControl(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
 	case BIOCSENDPACKETSNOSYNC:
 
 		WriteRes = NPF_BufferedWrite(Irp,
-			(PUCHAR)Irp->AssociatedIrp.SystemBuffer,
+			(PCHAR)Irp->AssociatedIrp.SystemBuffer,
 			IrpSp->Parameters.DeviceIoControl.InputBufferLength,
 			SyncWrite);
 

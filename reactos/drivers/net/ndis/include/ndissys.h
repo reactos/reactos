@@ -61,27 +61,27 @@ typedef struct _ATM_ADDRESS *PATM_ADDRESS;
  * VOID ReferenceObject(
  *     PVOID Object)
  */
-#define ReferenceObject(Object)                  \
-{                                                \
-    DEBUG_REFCHECK(Object);                      \
+#define ReferenceObject(Object)                         \
+{                                                       \
+    DEBUG_REFCHECK(Object);                             \
     NDIS_DbgPrint(DEBUG_REFCOUNT, ("Referencing object at (0x%X). RefCount (%d).\n", \
-        (Object), (Object)->RefCount));          \
-                                                 \
-    InterlockedIncrement(&((Object)->RefCount)); \
+        (Object), (Object)->RefCount));                 \
+                                                        \
+    InterlockedIncrement((PLONG)&((Object)->RefCount)); \
 }
 
 /*
  * VOID DereferenceObject(
  *     PVOID Object)
  */
-#define DereferenceObject(Object)                         \
-{                                                         \
-    DEBUG_REFCHECK(Object);                               \
+#define DereferenceObject(Object)                                \
+{                                                                \
+    DEBUG_REFCHECK(Object);                                      \
     NDIS_DbgPrint(DEBUG_REFCOUNT, ("Dereferencing object at (0x%X). RefCount (%d).\n", \
-        (Object), (Object)->RefCount));                   \
-                                                          \
-    if (InterlockedDecrement(&((Object)->RefCount)) == 0) \
-        PoolFreeBuffer(Object);                           \
+        (Object), (Object)->RefCount));                          \
+                                                                 \
+    if (InterlockedDecrement((PLONG)&((Object)->RefCount)) == 0) \
+        PoolFreeBuffer(Object);                                  \
 }
 
 

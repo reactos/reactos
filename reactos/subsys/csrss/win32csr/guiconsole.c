@@ -1,4 +1,4 @@
-/* $Id: guiconsole.c,v 1.25 2004/12/18 19:23:05 gvg Exp $
+/* $Id: guiconsole.c,v 1.26 2004/12/25 11:22:37 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -317,7 +317,7 @@ GuiConsoleUpdateBitmap(HWND hWnd, RECT rc)
                       LastAttribute = Attribute;
                     }
                 }  
-              MultiByteToWideChar(Console->OutputCodePage, 0, From, 1, To, 1);
+              MultiByteToWideChar(Console->OutputCodePage, 0, (PCHAR)From, 1, To, 1);
               To++;
               From += 2;
             }

@@ -11,7 +11,7 @@ int xconv[640];
 int bit8[640];
 int startmasks[8];
 int endmasks[8];
-char* vidmem;
+PBYTE vidmem;
 static ULONG UnpackPixel[256];
 
 static unsigned char leftMask;

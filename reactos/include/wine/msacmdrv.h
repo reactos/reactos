@@ -23,7 +23,7 @@
 
 #include <stdarg.h>
 
-#include "windef.h"
+#include <windef.h>
 #include "winbase.h"
 #include "mmsystem.h"
 #include "mmreg.h"

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.23 2004/11/23 18:58:44 navaraf Exp $
+# $Id: Makefile,v 1.24 2004/12/25 11:18:40 navaraf Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -8,7 +8,7 @@ TARGET_NAME = ndis
 
 TARGET_PCH = include/ndissys.h
 
-TARGET_CFLAGS = -I./include -D__USE_W32API -Wall -Werror
+TARGET_CFLAGS = -I./include -D__USE_W32API -Wall
 
 TARGET_CFLAGS += -DNDIS_WRAPPER -DNDIS50 -DNDIS50_MINIPORT -DBINARY_COMPATIBLE
 

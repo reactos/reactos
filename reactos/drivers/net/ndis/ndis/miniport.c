@@ -1256,7 +1256,8 @@ NdisIForwardIrpAndWait(PLOGICAL_ADAPTER Adapter, PIRP Irp)
 
   KeInitializeEvent(&Event, NotificationEvent, FALSE);
   IoCopyCurrentIrpStackLocationToNext(Irp);
-  IoSetCompletionRoutine(Irp, NdisIForwardIrpAndWaitCompletionRoutine, &Event, TRUE, TRUE, TRUE);
+  IoSetCompletionRoutine(Irp, NdisIForwardIrpAndWaitCompletionRoutine, &Event,
+                         TRUE, TRUE, TRUE);
   Status = IoCallDriver(Adapter->NdisMiniportBlock.NextDeviceObject, Irp);
   if (Status == STATUS_PENDING)
     {

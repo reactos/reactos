@@ -1,4 +1,4 @@
-/* $Id: tuiconsole.c,v 1.2 2004/07/20 11:06:47 navaraf Exp $
+/* $Id: tuiconsole.c,v 1.3 2004/12/25 11:22:37 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -61,7 +61,7 @@ static void FASTCALL
 TuiCopyRect(char *Dest, PCSRSS_SCREEN_BUFFER Buff, RECT *Region)
 {
   UINT SrcDelta, DestDelta, i;
-  char *Src, *SrcEnd;
+  PBYTE Src, SrcEnd;
 
   Src = Buff->Buffer + (((Region->top + Buff->ShowY) % Buff->MaxY) * Buff->MaxX
                         + Region->left + Buff->ShowX) * 2;

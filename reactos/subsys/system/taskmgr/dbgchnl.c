@@ -249,7 +249,7 @@ static int enum_channel(HANDLE hProcess, EnumChannelCB ce, void* user, unsigned 
     struct dll_option_layout    dol;
     int                         i, j, ret = 1;
     void*                       buf_addr;
-    unsigned char               buffer[32];
+    char                        buffer[32];
     void*                       addr;
     const char**                cache = NULL;
     unsigned                    num_cache, used_cache;
