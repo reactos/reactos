@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.3 2003/08/07 09:27:42 hbirr Exp $
+/* $Id: dir.c,v 1.4 2003/10/18 17:59:29 ekohl Exp $
  *
  *  DIR.C - dir internal command.
  *
@@ -381,7 +381,11 @@ DirParsePathspec (LPTSTR szPathspec, LPTSTR szPath, LPTSTR szFilespec)
 
 		szRootPath[0] = szPathspec[0];
 		start = szPathspec + 2;
-		SetCurrentDirectory (szRootPath);
+		if (!SetCurrentDirectory (szRootPath))
+		{
+			ErrorMessage (GetLastError(), NULL);
+			return 1;
+		}
 	}
 	else
 	{
