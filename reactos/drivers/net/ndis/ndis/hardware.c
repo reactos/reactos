@@ -112,11 +112,13 @@ NdisMQueryAdapterResources(
  */
 {
   PNDIS_WRAPPER_CONTEXT WrapperContext = (PNDIS_WRAPPER_CONTEXT)WrapperConfigurationContext;
-  PNDIS_MINIPORT_BLOCK MiniportBlock = WrapperContext->PhysicalDeviceObject->DeviceExtension;
+  PNDIS_MINIPORT_BLOCK MiniportBlock = WrapperContext->DeviceObject->DeviceExtension;
   ULONG ResourceListSize;
 
   PAGED_CODE();
   ASSERT(Status && ResourceList);
+
+  NDIS_DbgPrint(MAX_TRACE, ("Called\n"));
 
   /* FIXME: We can't do anything in this case. It shouldn't really happen. */
   if (MiniportBlock->AllocatedResources == NULL)

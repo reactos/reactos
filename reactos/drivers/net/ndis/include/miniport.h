@@ -64,7 +64,7 @@ typedef struct _MINIPORT_SHARED_MEMORY {
    Windows one). */
 typedef struct _NDIS_WRAPPER_CONTEXT {
     HANDLE            RegistryHandle;
-    PDEVICE_OBJECT    PhysicalDeviceObject;
+    PDEVICE_OBJECT    DeviceObject;
 } NDIS_WRAPPER_CONTEXT, *PNDIS_WRAPPER_CONTEXT;
 
 #define GET_MINIPORT_DRIVER(Handle)((PMINIPORT_DRIVER)Handle)

@@ -1299,8 +1299,7 @@ NdisIPnPStartDevice(
 
   NDIS_DbgPrint(MAX_TRACE, ("opened device reg key\n"));
 
-  WrapperContext.PhysicalDeviceObject = 
-     Adapter->NdisMiniportBlock.PhysicalDeviceObject;
+  WrapperContext.DeviceObject = Adapter->NdisMiniportBlock.DeviceObject;
 
   /*
    * Store the adapter resources used by HW routines such as
