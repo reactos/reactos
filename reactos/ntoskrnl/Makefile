@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.34 2001/04/13 16:12:24 chorns Exp $
+# $Id: Makefile,v 1.35 2001/04/16 00:48:04 chorns Exp $
 #
 # ReactOS Operating System
 #
@@ -174,6 +174,7 @@ OBJECTS_IO = \
 	io/mdl.o \
 	io/npipe.o \
 	io/page.o \
+	io/pnpmgr.o \
 	io/process.o \
 	io/queue.o \
 	io/resource.o \

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.102 2001/03/31 15:58:23 phreak Exp $
+; $Id: ntoskrnl.def,v 1.103 2001/04/16 00:48:04 chorns Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -574,9 +574,15 @@ ObAddEntryDirectory@12
 ;PfxInitialize
 ;PfxInsertPrefix
 ;PfxRemovePrefix
-PoQueryPowerSequence@0
-PoRequestPowerChange@12
-PoSetDeviceIdleDetection@8
+PoCallDriver@8
+PoRegisterDeviceForIdleDetection@16
+PoRegisterSystemState@8
+PoRequestPowerIrp@24
+PoSetDeviceBusy@4
+PoSetPowerState@12
+PoSetSystemState@4
+PoStartNextPowerIrp@4
+PoUnregisterSystemState@4
 ;ProbeForWrite@12
 PsAssignImpersonationToken@8
 ;PsChargePoolQuota@12
@@ -1066,6 +1072,27 @@ IoMapTransfer@24
 IoReadPartitionTable@16
 IoSetPartitionInformation@16
 IoWritePartitionTable@20
+IoInitializeRemoveLockEx@20
+IoAcquireRemoveLockEx@20
+IoReleaseRemoveLockEx@12
+IoReleaseRemoveLockAndWaitEx@12
+IoAdjustPagingPathCount@8
+IoGetDeviceInterfaceAlias@12
+IoGetDeviceInterfaces@16
+IoGetDeviceProperty@20
+IoInvalidateDeviceRelations@8
+IoInvalidateDeviceState@4
+IoOpenDeviceInterfaceRegistryKey@12
+IoOpenDeviceRegistryKey@16
+IoRegisterDeviceInterface@16
+IoRegisterPlugPlayNotification@28
+IoReportDetectedDevice@32
+IoReportResourceForDetection@28
+IoReportTargetDeviceChange@8
+IoReportTargetDeviceChangeAsynchronous@16
+IoRequestDeviceEject@4
+IoSetDeviceInterfaceState@8
+IoUnregisterPlugPlayNotification@4
 KdComPortInUse DATA
 KdPortGetByte@4
 KdPortInitialize@12

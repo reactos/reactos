@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.87 2001/04/13 16:12:25 chorns Exp $
+/* $Id: main.c,v 1.88 2001/04/16 00:48:04 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -499,7 +499,7 @@ ExpInitializeExecutive(VOID)
      __asm__ ("sti\n\t");
 
 #ifdef MP
-   Phase1Initialization(NULL);
+   //Phase1Initialization(NULL);
 #endif
    }
 }

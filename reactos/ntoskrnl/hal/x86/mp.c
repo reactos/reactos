@@ -1,4 +1,4 @@
-/* $Id: mp.c,v 1.6 2001/04/13 16:12:25 chorns Exp $
+/* $Id: mp.c,v 1.7 2001/04/16 00:48:04 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -2313,7 +2313,7 @@ HalpInitMPS(
     DPRINT("CPU %d says it is now booted.\n", CPU);
 
     APICSetup();
-    APICCalibrateTimer(CPU);
+    //APICCalibrateTimer(CPU);
 
     /* This processor is now booted */
     CPUMap[CPU].Flags |= CPU_ENABLED;
