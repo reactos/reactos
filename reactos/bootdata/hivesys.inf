@@ -587,6 +587,7 @@ HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSe
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\vmx_svga\Device0","DefaultSettings.BitsPerPel",0x00010001,16
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\vmx_svga\Device0","DefaultSettings.XResolution",0x00010001,800
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\vmx_svga\Device0","DefaultSettings.YResolution",0x00010001,600
+HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_15AD&DEV_0405&SUBSYS_040515AD&REV_00\0000","Service",0x00000000,"vmx_svga"
 
 ; Kernel-mode regression test driver
 HKLM,"SYSTEM\CurrentControlSet\Services\kmregtests","ErrorControl",0x00010001,0x00000000
