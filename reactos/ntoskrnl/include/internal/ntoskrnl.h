@@ -53,6 +53,8 @@ VOID CmShutdownRegistry(VOID);
 VOID CmImportHive(PCHAR ChunkBase, ULONG ChunkSize);
 VOID KdInitSystem(ULONG Reserved, PLOADER_PARAMETER_BLOCK LoaderBlock);
 
+VOID RtlpInitNlsTables(VOID);
+
 NTSTATUS RtlpInitNlsSections(ULONG Mod1Start,
 			     ULONG Mod1End,
 			     ULONG Mod2Start,

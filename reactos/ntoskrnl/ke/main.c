@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.107 2001/09/24 00:51:16 chorns Exp $
+/* $Id: main.c,v 1.108 2001/11/02 09:09:50 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -943,6 +943,9 @@ ExpInitializeExecutive(VOID)
     LastKernelAddress,
     (PADDRESS_RANGE)&KeMemoryMap,
     KeMemoryMapRangeCount);
+  
+  /* create default nls tables */
+  RtlpInitNlsTables();
   
   /*
    * Initialize the kernel debugger
