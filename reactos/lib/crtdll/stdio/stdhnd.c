@@ -5,7 +5,7 @@
 
 
 
-FILE _crtdll_iob[5] =
+FILE _iob[5] =
 {
 	// stdin
 {
@@ -39,6 +39,5 @@ FILE _crtdll_iob[5] =
 }
 };
 
-FILE (*_iob)[] = &_crtdll_iob;
 
 
