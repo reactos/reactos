@@ -16,7 +16,7 @@
 #include <internal/string.h>
 #include <internal/objmgr.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 #ifndef NDEBUG
@@ -87,24 +87,24 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
    StackPtr->Control = 0;
    StackPtr->DeviceObject = FileObject->DeviceObject;
    StackPtr->FileObject = FileObject;
-   StackPtr->Parameters.Write.Length = Length;
+   StackPtr->Parameters.Read.Length = Length;
    if (ByteOffset!=NULL)
    {
-        StackPtr->Parameters.Write.ByteOffset.LowPart = ByteOffset->LowPart;
-        StackPtr->Parameters.Write.ByteOffset.HighPart = ByteOffset->HighPart;
+        StackPtr->Parameters.Read.ByteOffset.LowPart = ByteOffset->LowPart;
+        StackPtr->Parameters.Read.ByteOffset.HighPart = ByteOffset->HighPart;
    }
    else
    {
-        StackPtr->Parameters.Write.ByteOffset.LowPart = 0;
-        StackPtr->Parameters.Write.ByteOffset.HighPart = 0;
+        StackPtr->Parameters.Read.ByteOffset.LowPart = 0;
+        StackPtr->Parameters.Read.ByteOffset.HighPart = 0;
    }
    if (Key!=NULL)
    {
-         StackPtr->Parameters.Write.Key = *Key;
+         StackPtr->Parameters.Read.Key = *Key;
    }
    else
    {
-        StackPtr->Parameters.Write.Key = 0;
+        StackPtr->Parameters.Read.Key = 0;
    }
    
    DPRINT("FileObject->DeviceObject %x\n",FileObject->DeviceObject);
@@ -112,9 +112,13 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
    if (NT_SUCCESS(Status))
      {
        KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
-       if (FileObject->DeviceObject->Flags&DO_BUFFERED_IO)
+       Status = Irp->IoStatus.Status;
+       if (NT_SUCCESS(Status))
          {
-           memcpy(Buffer,Irp->AssociatedIrp.SystemBuffer,Length);
+           if (FileObject->DeviceObject->Flags&DO_BUFFERED_IO)
+             {
+               memcpy(Buffer,Irp->AssociatedIrp.SystemBuffer,Length);
+             }
          }
      }
    return(Status);
