@@ -153,8 +153,6 @@ LONG RtlCompareString(PSTRING String1, PSTRING String2,
 LONG RtlCompareUnicodeString(PUNICODE_STRING String1,
 			     PUNICODE_STRING String2,
 			     BOOLEAN BaseInsensitive);
-LARGE_INTEGER RtlConvertLongToLargeInteger(LONG SignedInteger);
-LARGE_INTEGER RtlConvertUlongToLargeInteger(ULONG UnsignedInteger);
 VOID RtlCopyBytes(PVOID Destination, CONST VOID* Source, ULONG Length);
 VOID RtlCopyMemory(VOID* Destination, VOID* Source, ULONG Length);
 VOID RtlCopyString(PSTRING DestinationString, PSTRING SourceString);
@@ -167,27 +165,12 @@ NTSTATUS RtlCreateSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
 NTSTATUS RtlDeleteRegistryValue(ULONG RelativeTo,
 				PWSTR Path,
 				PWSTR ValueName);
-LARGE_INTEGER RtlEnlargedIntegerMultiply(LONG Multiplicand,
-					 LONG Multiplier);
-ULONG RtlEnlargedUnsignedDivide(ULARGE_INTEGER Dividend,
-				ULONG Divisor,
-				PULONG Remainder);
-LARGE_INTEGER RtlEnlargedUnsignedMultiply(ULONG Multiplicand,
-					  ULONG Multiplier);
 BOOLEAN RtlEqualString(PSTRING String1,
 		       PSTRING String2,
 		       BOOLEAN CaseInSensitive);
 BOOLEAN RtlEqualUnicodeString(PUNICODE_STRING String1,
 			      PUNICODE_STRING String2,
 			      BOOLEAN CaseInSensitive);
-LARGE_INTEGER RtlExtendedIntegerMultiply(LARGE_INTEGER Multiplicand,
-					 LONG Multiplier);
-LARGE_INTEGER RtlExtendedLargeIntegerDivide(LARGE_INTEGER Dividend,
-					    ULONG Divisor,
-					    PULONG Remainder);
-LARGE_INTEGER RtlExtendedMagicDivide(LARGE_INTEGER Dividend,
-				     LARGE_INTEGER MagicDivisor,
-				     CCHAR ShiftCount);
 VOID RtlFillMemory(PVOID Destination, ULONG Length, UCHAR Fill);
 VOID RtlFreeAnsiString(PANSI_STRING AnsiString);
 VOID RtlFreeUnicodeString(PUNICODE_STRING UnicodeString);
@@ -199,11 +182,63 @@ VOID RtlInitUnicodeString(PUNICODE_STRING DestinationString,
 NTSTATUS RtlIntegerToUnicodeString(ULONG Value,
 				   ULONG Base,
 				   PUNICODE_STRING String);
+
+/**  LARGE_INTEGER Functions  *******************************************/
+LARGE_INTEGER RtlConvertLongToLargeInteger(LONG SignedInteger);
+LARGE_INTEGER RtlConvertUlongToLargeInteger(ULONG UnsignedInteger);
+LARGE_INTEGER RtlEnlargedIntegerMultiply(LONG Multiplicand,
+                                         LONG Multiplier);
+ULONG RtlEnlargedUnsignedDivide(ULARGE_INTEGER Dividend,
+				ULONG Divisor,
+				PULONG Remainder);
+LARGE_INTEGER RtlEnlargedUnsignedMultiply(ULONG Multiplicand,
+					  ULONG Multipler);
+LARGE_INTEGER RtlExtendedIntegerMultiply(LARGE_INTEGER Multiplicand,
+                                         LONG Multiplier);
+LARGE_INTEGER RtlExtendedLargeIntegerDivide(LARGE_INTEGER Dividend,
+					    ULONG Divisor,
+					    PULONG Remainder);
+LARGE_INTEGER RtlExtendedMagicDivide(LARGE_INTEGER Dividend,
+				     LARGE_INTEGER MagicDivisor,
+				     CCHAR ShiftCount);
+LARGE_INTEGER ExInterlockedAddLargeInteger(PLARGE_INTEGER Addend,
+					   LARGE_INTEGER Increment,
+					   PKSPIN_LOCK Lock);
 LARGE_INTEGER RtlLargeIntegerAdd(LARGE_INTEGER Addend1,
-				 LARGE_INTEGER Addend2);
+                                 LARGE_INTEGER Addend2);
 VOID RtlLargeIntegerAnd(PLARGE_INTEGER Result,
 			LARGE_INTEGER Source,
 			LARGE_INTEGER Mask);
+LARGE_INTEGER RtlLargeIntegerArithmeticShift(LARGE_INTEGER LargeInteger,
+					     CCHAR ShiftCount);
+LARGE_INTEGER RtlLargeIntegerDivide(LARGE_INTEGER Dividend,
+				    LARGE_INTEGER Divisor,
+				    PLARGE_INTEGER Remainder);
+BOOLEAN RtlLargeIntegerEqualTo(LARGE_INTEGER Operand1,
+                               LARGE_INTEGER Operand2);
+BOOLEAN RtlLargeIntegerEqualToZero(LARGE_INTEGER Operand);
+BOOLEAN RtlLargeIntegerGreaterThan(LARGE_INTEGER Operand1,
+                                   LARGE_INTEGER Operand2);
+BOOLEAN RtlLargeIntegerGreaterThanOrEqualTo(LARGE_INTEGER Operand1,
+                                            LARGE_INTEGER Operand2);
+BOOLEAN RtlLargeIntegerGreaterThanOrEqualToZero(LARGE_INTEGER Operand1);
+BOOLEAN RtlLargeIntegerGreaterThanZero(LARGE_INTEGER Operand1);
+BOOLEAN RtlLargeIntegerLessThan(LARGE_INTEGER Operand1,
+                                LARGE_INTEGER Operand2);
+BOOLEAN RtlLargeIntegerLessThanOrEqualTo(LARGE_INTEGER Operand1,
+                                         LARGE_INTEGER Operand2);
+BOOLEAN RtlLargeIntegerLessThanOrEqualToZero(LARGE_INTEGER Operand);
+BOOLEAN RtlLargeIntegerLessThanZero(LARGE_INTEGER Operand);
+LARGE_INTEGER RtlLargeIntegerNegate(LARGE_INTEGER Subtrahend);
+BOOLEAN RtlLargeIntegerNotEqualTo(LARGE_INTEGER Operand1,
+                                  LARGE_INTEGER Operand2);
+BOOLEAN RtlLargeIntegerNotEqualToZero(LARGE_INTEGER Operand);
+LARGE_INTEGER RtlLargeIntegerShiftLeft(LARGE_INTEGER LargeInteger,
+				       CCHAR ShiftCount);
+LARGE_INTEGER RtlLargeIntegerShiftRight(LARGE_INTEGER LargeInteger,
+					CCHAR ShiftCount);
+LARGE_INTEGER RtlLargeIntegerSubtract(LARGE_INTEGER Minuend,
+				      LARGE_INTEGER Subtrahend);
 
 /* MISSING FUNCTIONS GO HERE */
 

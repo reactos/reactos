@@ -30,15 +30,18 @@ LOADERS = dos
 #
 # Select the device drivers and filesystems you want
 #
-KERNEL_SERVICES = parallel keyboard null mouse serial sound ide
+KERNEL_SERVICES = parallel keyboard null mouse serial sound test ide ide-test
 
 all: $(COMPONENTS) $(LOADERS) $(KERNEL_SERVICES)
 
 #
 # Device driver rules
 #
-ide: dummy
-	make -C services/ide	
+test: dummy
+	make -C services/test
+
+test1: dummy
+	make -C services/test1
 
 null: dummy
 	make -C services/null
@@ -57,6 +60,12 @@ serial: dummy
 
 sound: dummy
 	make -C services/sound
+
+ide: dummy
+	make -C services/ide
+
+ide-test: dummy
+	make -C services/ide-test
 
 #
 # Kernel loaders
