@@ -1,4 +1,4 @@
-/* $Id: database.c,v 1.1 2002/06/07 20:09:56 ekohl Exp $
+/* $Id: database.c,v 1.2 2002/06/12 23:33:15 ekohl Exp $
  *
  * service control manager
  * 
@@ -42,7 +42,7 @@
 typedef struct _SERVICE_GROUP
 {
   LIST_ENTRY GroupListEntry;
-  PWSTR GroupName;
+  UNICODE_STRING GroupName;
 
   BOOLEAN ServicesRunning;
 
@@ -52,17 +52,16 @@ typedef struct _SERVICE_GROUP
 typedef struct _SERVICE
 {
   LIST_ENTRY ServiceListEntry;
-  PWSTR ServiceName;
-  PWSTR GroupName;
-
-  PWSTR ImagePath;
+  UNICODE_STRING ServiceName;
+  UNICODE_STRING RegistryPath;
+  UNICODE_STRING ServiceGroup;
 
   ULONG Start;
   ULONG Type;
   ULONG ErrorControl;
   ULONG Tag;
 
-  BOOLEAN ServiceRunning;	// needed ??
+  BOOLEAN ServiceRunning;
 
 } SERVICE, *PSERVICE;
 
@@ -70,12 +69,10 @@ typedef struct _SERVICE
 /* GLOBALS *******************************************************************/
 
 LIST_ENTRY GroupListHead = {NULL, NULL};
-
 LIST_ENTRY ServiceListHead  = {NULL, NULL};
 
 
 /* FUNCTIONS *****************************************************************/
-
 
 static NTSTATUS STDCALL
 CreateGroupListRoutine(PWSTR ValueName,
@@ -95,23 +92,19 @@ CreateGroupListRoutine(PWSTR ValueName,
 					HEAP_ZERO_MEMORY,
 					sizeof(SERVICE_GROUP));
       if (Group == NULL)
-	return(STATUS_INSUFFICIENT_RESOURCES);
+	{
+	  return(STATUS_INSUFFICIENT_RESOURCES);
+	}
 
-
-      Group->GroupName = (PWSTR)HeapAlloc(GetProcessHeap(),
-					  HEAP_ZERO_MEMORY,
-					  ValueLength);
-      if (Group->GroupName == NULL)
-	return(STATUS_INSUFFICIENT_RESOURCES);
-
-      wcscpy(Group->GroupName,
-	     (PWSTR)ValueData);
+      if (!RtlCreateUnicodeString(&Group->GroupName,
+				  (PWSTR)ValueData))
+	{
+	  return(STATUS_INSUFFICIENT_RESOURCES);
+	}
 
 
       InsertTailList(&GroupListHead,
 		     &Group->GroupListEntry);
-
-
     }
 
   return(STATUS_SUCCESS);
@@ -122,50 +115,49 @@ static NTSTATUS STDCALL
 CreateServiceListEntry(PUNICODE_STRING ServiceName)
 {
   RTL_QUERY_REGISTRY_TABLE QueryTable[6];
-  WCHAR ServiceGroupBuffer[MAX_PATH];
-  WCHAR ImagePathBuffer[MAX_PATH];
-  UNICODE_STRING ServiceGroup;
-  UNICODE_STRING ImagePath;
-  PSERVICE_GROUP Group;
-  PSERVICE Service;
+  PSERVICE Service = NULL;
   NTSTATUS Status;
 
 //  PrintString("Service: '%wZ'\n", ServiceName);
 
-  Service = (PSERVICE)HeapAlloc(GetProcessHeap(),
-				HEAP_ZERO_MEMORY,
-				sizeof(SERVICE));
+  /* Allocate service entry */
+  Service = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+		      sizeof(SERVICE));
   if (Service == NULL)
     {
-      PrintString(" - HeapAlloc() (1) failed\n");
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
-  Service->ServiceName = (PWSTR)HeapAlloc(GetProcessHeap(),
-					  HEAP_ZERO_MEMORY,
-					  ServiceName->Length);
-  if (Service->ServiceName == NULL)
+  /* Copy service name */
+  Service->ServiceName.Length = ServiceName->Length;
+  Service->ServiceName.MaximumLength = ServiceName->Length + sizeof(WCHAR);
+  Service->ServiceName.Buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+					  Service->ServiceName.MaximumLength);
+  if (Service->ServiceName.Buffer == NULL)
     {
-      PrintString(" - HeapAlloc() (2) failed\n");
+      HeapFree(GetProcessHeap(), 0, Service);
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
+  RtlCopyMemory(Service->ServiceName.Buffer,
+		ServiceName->Buffer,
+		ServiceName->Length);
+  Service->ServiceName.Buffer[ServiceName->Length / sizeof(WCHAR)] = 0;
 
-  wcscpy(Service->ServiceName,
-	 ServiceName->Buffer);
-
-
-  ServiceGroup.Length = 0;
-  ServiceGroup.MaximumLength = MAX_PATH * sizeof(WCHAR);
-  ServiceGroup.Buffer = ServiceGroupBuffer;
-  RtlZeroMemory(ServiceGroupBuffer,
-		MAX_PATH * sizeof(WCHAR));
-
-  ImagePath.Length = 0;
-  ImagePath.MaximumLength = MAX_PATH * sizeof(WCHAR);
-  ImagePath.Buffer = ImagePathBuffer;
-  RtlZeroMemory(ImagePathBuffer,
-		MAX_PATH * sizeof(WCHAR));
-
+  /* Build registry path */
+  Service->RegistryPath.MaximumLength = MAX_PATH * sizeof(WCHAR);
+  Service->RegistryPath.Buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+					   MAX_PATH * sizeof(WCHAR));
+  if (Service->ServiceName.Buffer == NULL)
+    {
+      HeapFree(GetProcessHeap(), 0, Service->ServiceName.Buffer);
+      HeapFree(GetProcessHeap(), 0, Service);
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
+  wcscpy(Service->RegistryPath.Buffer,
+	 L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\");
+  wcscat(Service->RegistryPath.Buffer,
+	 Service->ServiceName.Buffer);
+  Service->RegistryPath.Length = wcslen(Service->RegistryPath.Buffer) * sizeof(WCHAR);
 
   /* Get service data */
   RtlZeroMemory(&QueryTable,
@@ -185,12 +177,7 @@ CreateServiceListEntry(PUNICODE_STRING ServiceName)
 
   QueryTable[3].Name = L"Group";
   QueryTable[3].Flags = RTL_QUERY_REGISTRY_DIRECT;
-  QueryTable[3].EntryContext = &ServiceGroup;
-
-  QueryTable[4].Name = L"ImagePath";
-  QueryTable[4].Flags = RTL_QUERY_REGISTRY_DIRECT;
-  QueryTable[4].EntryContext = &ImagePath;
-
+  QueryTable[3].EntryContext = &Service->ServiceGroup;
 
   Status = RtlQueryRegistryValues(RTL_REGISTRY_SERVICES,
 				  ServiceName->Buffer,
@@ -200,60 +187,23 @@ CreateServiceListEntry(PUNICODE_STRING ServiceName)
   if (!NT_SUCCESS(Status))
     {
       PrintString("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
+      RtlFreeUnicodeString(&Service->RegistryPath);
+      RtlFreeUnicodeString(&Service->ServiceName);
+      HeapFree(GetProcessHeap(), 0, Service);
       return(Status);
     }
 
-  /* Copy the service group name */
-  if (ServiceGroup.Length > 0)
-    {
-      Service->GroupName = (PWSTR)HeapAlloc(GetProcessHeap(),
-					    HEAP_ZERO_MEMORY,
-					    ServiceGroup.Length + sizeof(WCHAR));
-      if (Service->GroupName == NULL)
-	{
-	  PrintString(" - HeapAlloc() (3) failed\n");
-	  return(STATUS_INSUFFICIENT_RESOURCES);
-	}
-
-      memcpy(Service->GroupName,
-	     ServiceGroup.Buffer,
-	     ServiceGroup.Length);
-    }
-  else
-    {
-      Service->GroupName = NULL;
-    }
-
-  /* Copy the image path */
-  if (ImagePath.Length > 0)
-    {
-      Service->ImagePath = (PWSTR)HeapAlloc(GetProcessHeap(),
-					    HEAP_ZERO_MEMORY,
-					    ImagePath.Length + sizeof(WCHAR));
-      if (Service->ImagePath == NULL)
-	{
-	  PrintString(" - HeapAlloc() (4) failed\n");
-	  return(STATUS_INSUFFICIENT_RESOURCES);
-	}
-
-      memcpy(Service->ImagePath,
-	     ImagePath.Buffer,
-	     ImagePath.Length);
-    }
-  else
-    {
-      Service->ImagePath = NULL;
-    }
-
-//  PrintString("  Type: %lx\n", Service->Type);
-//  PrintString("  Start: %lx\n", Service->Start);
-//  PrintString("  Group: '%wZ'\n", &ServiceGroup);
-
+#if 0
+  PrintString("ServiceName: '%wZ'\n", &Service->ServiceName);
+  PrintString("RegistryPath: '%wZ'\n", &Service->RegistryPath);
+  PrintString("ServiceGroup: '%wZ'\n", &Service->ServiceGroup);
+  PrintString("Start %lx  Type %lx  ErrorControl %lx\n",
+	      Service->Start, Service->Type, Service->ErrorControl);
+#endif
 
   /* Append service entry */
   InsertTailList(&ServiceListHead,
 		 &Service->ServiceListEntry);
-
 
   return(STATUS_SUCCESS);
 }
@@ -268,8 +218,14 @@ ScmCreateServiceDataBase(VOID)
   UNICODE_STRING ServicesKeyName;
   UNICODE_STRING SubKeyName;
   HKEY ServicesKey;
-  NTSTATUS Status;
   ULONG Index;
+  NTSTATUS Status;
+
+  PKEY_BASIC_INFORMATION KeyInfo = NULL;
+  ULONG KeyInfoLength = 0;
+  ULONG ReturnedLength;
+
+//  PrintString("ScmCreateServiceDataBase() called\n");
 
   /* Initialize basic variables */
   InitializeListHead(&GroupListHead);
@@ -291,7 +247,6 @@ ScmCreateServiceDataBase(VOID)
   if (!NT_SUCCESS(Status))
     return(Status);
 
-
   RtlInitUnicodeString(&ServicesKeyName,
 		       L"\\Registry\\Machine\\System\\CurrentControlSet\\Services");
 
@@ -308,24 +263,47 @@ ScmCreateServiceDataBase(VOID)
   if (!NT_SUCCESS(Status))
     return(Status);
 
-  SubKeyName.Length = 0;
-  SubKeyName.MaximumLength = MAX_PATH * sizeof(WCHAR);
-  SubKeyName.Buffer = NameBuffer;
+  /* Allocate key info buffer */
+  KeyInfoLength = sizeof(KEY_BASIC_INFORMATION) + MAX_PATH * sizeof(WCHAR);
+  KeyInfo = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, KeyInfoLength);
+  if (KeyInfo == NULL)
+    {
+      NtClose(ServicesKey);
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
 
   Index = 0;
   while (TRUE)
     {
-      Status = RtlpNtEnumerateSubKey(ServicesKey,
-				     &SubKeyName,
-				     Index,
-				     0);
+      Status = NtEnumerateKey(ServicesKey,
+			      Index,
+			      KeyBasicInformation,
+			      KeyInfo,
+			      KeyInfoLength,
+			      &ReturnedLength);
+      if (NT_SUCCESS(Status))
+	{
+	  if (KeyInfo->NameLength < MAX_PATH * sizeof(WCHAR))
+	    {
+
+	      SubKeyName.Length = KeyInfo->NameLength;
+	      SubKeyName.MaximumLength = KeyInfo->NameLength + sizeof(WCHAR);
+	      SubKeyName.Buffer = KeyInfo->Name;
+	      SubKeyName.Buffer[SubKeyName.Length / sizeof(WCHAR)] = 0;
+
+//	      PrintString("KeyName: '%wZ'\n", &SubKeyName);
+	      Status = CreateServiceListEntry(&SubKeyName);
+	    }
+	}
+
       if (!NT_SUCCESS(Status))
 	break;
 
-      CreateServiceListEntry(&SubKeyName);
-
       Index++;
     }
+
+  HeapFree(GetProcessHeap(), 0, KeyInfo);
+  NtClose(ServicesKey);
 
 //  PrintString("ScmCreateServiceDataBase() done\n");
 
@@ -341,34 +319,6 @@ ScmGetBootAndSystemDriverState(VOID)
 
 
 static NTSTATUS
-ScmLoadDriver(PSERVICE Service)
-{
-  WCHAR ServicePath[MAX_PATH];
-  UNICODE_STRING DriverPath;
-
-//  PrintString("ScmLoadDriver(%S) called\n", Service->ServiceName);
-
-  if (Service->ImagePath == NULL)
-    {
-      wcscpy(ServicePath, L"\\SystemRoot\\system32\\drivers\\");
-      wcscat(ServicePath, Service->ServiceName);
-      wcscat(ServicePath, L".sys");
-    }
-  else
-    {
-      wcscpy(ServicePath, L"\\SystemRoot\\");
-      wcscat(ServicePath, Service->ImagePath);
-    }
-
-  RtlInitUnicodeString(&DriverPath, ServicePath);
-
-//  PrintString("  DriverPath: '%wZ'\n", &DriverPath);
-
-  return(NtLoadDriver(&DriverPath));
-}
-
-
-static NTSTATUS
 ScmStartService(PSERVICE Service)
 {
 #if 0
@@ -376,11 +326,9 @@ ScmStartService(PSERVICE Service)
   STARTUPINFO StartupInfo;
   WCHAR CommandLine[MAX_PATH];
   BOOL Result;
-#endif
 
-  PrintString("ScmStartService(%S) called\n", Service->ServiceName);
+  PrintString("ScmStartService() called\n");
 
-#if 0
   GetSystemDirectoryW(CommandLine, MAX_PATH);
   _tcscat(CommandLine, "\\");
   _tcscat(CommandLine, FileName);
@@ -436,14 +384,14 @@ ScmAutoStartServices(VOID)
     {
       CurrentGroup = CONTAINING_RECORD(GroupEntry, SERVICE_GROUP, GroupListEntry);
 
-//      PrintString("  %S\n", CurrentGroup->GroupName);
+//      PrintString("Group '%wZ'\n", &CurrentGroup->GroupName);
 
       ServiceEntry = ServiceListHead.Flink;
       while (ServiceEntry != &ServiceListHead)
 	{
 	  CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
 
-	  if ((wcsicmp(CurrentGroup->GroupName, CurrentService->GroupName) == 0) &&
+	  if ((RtlCompareUnicodeString(&CurrentGroup->GroupName, &CurrentService->ServiceGroup, TRUE) == 0) &&
 	      (CurrentService->Start == SERVICE_AUTO_START))
 	    {
 	      if (CurrentService->Type == SERVICE_KERNEL_DRIVER ||
@@ -451,7 +399,8 @@ ScmAutoStartServices(VOID)
 		  CurrentService->Type == SERVICE_RECOGNIZER_DRIVER)
 		{
 		  /* Load driver */
-		  Status = ScmLoadDriver(CurrentService);
+//		  PrintString("  Path: %wZ\n", &CurrentService->RegistryPath);
+		  Status = NtLoadDriver(&CurrentService->RegistryPath);
 		}
 	      else
 		{
@@ -499,10 +448,8 @@ ScmAutoStartServices(VOID)
 	    }
 	  ServiceEntry = ServiceEntry->Flink;
 	}
-
       GroupEntry = GroupEntry->Flink;
     }
 }
-
 
 /* EOF */
