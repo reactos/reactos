@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.53 2004/03/11 14:47:44 weiden Exp $
+/* $Id: message.c,v 1.54 2004/03/11 16:17:25 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -483,7 +483,6 @@ NtUserPostMessage(HWND hWnd,
 {
   PWINDOW_OBJECT Window;
   MSG Mesg;
-  PUSER_MESSAGE Message;
   LARGE_INTEGER LargeTickCount;
 
   if (WM_QUIT == Msg)
@@ -522,8 +521,7 @@ NtUserPostMessage(HWND hWnd,
       Mesg.pt.y = PsGetWin32Process()->WindowStation->SystemCursor.y;
       KeQueryTickCount(&LargeTickCount);
       Mesg.time = LargeTickCount.u.LowPart;
-      Message = MsqCreateMessage(&Mesg);
-      MsqPostMessage(Window->MessageQueue, Message);
+      MsqPostMessage(Window->MessageQueue, &Mesg);
       IntReleaseWindowObject(Window);
     }
 
@@ -538,7 +536,6 @@ NtUserPostThreadMessage(DWORD idThread,
 {
   MSG Mesg;
 
-  PUSER_MESSAGE Message;
   PETHREAD peThread;
   PW32THREAD pThread;
   NTSTATUS Status;
@@ -556,8 +553,7 @@ NtUserPostThreadMessage(DWORD idThread,
     Mesg.message = Msg;
     Mesg.wParam = wParam;
     Mesg.lParam = lParam;
-    Message = MsqCreateMessage(&Mesg);
-    MsqPostMessage(pThread->MessageQueue, Message);
+    MsqPostMessage(pThread->MessageQueue, &Mesg);
     ObDereferenceObject( peThread );
     return TRUE;
   } else {

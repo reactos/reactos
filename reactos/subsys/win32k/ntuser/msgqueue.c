@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.75 2004/03/11 14:47:44 weiden Exp $
+/* $Id: msgqueue.c,v 1.76 2004/03/11 16:17:25 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -667,7 +667,6 @@ VOID STDCALL
 MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   PUSER_MESSAGE_QUEUE FocusMessageQueue;
-  PUSER_MESSAGE Message;
   MSG Msg;
 
   DPRINT("MsqPostKeyboardMessage(uMsg 0x%x, wParam 0x%x, lParam 0x%x)\n",
@@ -682,8 +681,7 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
   FocusMessageQueue = IntGetFocusMessageQueue();
   if( !IntGetScreenDC() ) {
     if( W32kGetPrimitiveMessageQueue() ) {
-      Message = MsqCreateMessage(&Msg);
-      MsqPostMessage(W32kGetPrimitiveMessageQueue(), Message);
+      MsqPostMessage(W32kGetPrimitiveMessageQueue(), &Msg);
     }
   } else {
     if (FocusMessageQueue == NULL)
@@ -696,8 +694,7 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
       {
 	Msg.hwnd = FocusMessageQueue->FocusWindow;
         DPRINT("Msg.hwnd = %x\n", Msg.hwnd);
-	Message = MsqCreateMessage(&Msg);
-	MsqPostMessage(FocusMessageQueue, Message);
+	MsqPostMessage(FocusMessageQueue, &Msg);
       }
     else
       {
@@ -710,7 +707,6 @@ VOID STDCALL
 MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
   PWINDOW_OBJECT Window;
-  PUSER_MESSAGE Message;
   PW32THREAD Win32Thread;
   PW32PROCESS Win32Process;
   MSG Mesg;
@@ -753,8 +749,7 @@ MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
 //      Mesg.pt.y = PsGetWin32Process()->WindowStation->SystemCursor.y;
 //      KeQueryTickCount(&LargeTickCount);
 //      Mesg.time = LargeTickCount.u.LowPart;
-  Message = MsqCreateMessage(&Mesg);
-  MsqPostMessage(Window->MessageQueue, Message);
+  MsqPostMessage(Window->MessageQueue, &Mesg);
   ObmDereferenceObject(Window);
   ObDereferenceObject (Thread);
 
@@ -764,13 +759,6 @@ MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
 //  KeSetEvent(&pThread->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
 //  IntUnLockMessageQueue(pThread->MessageQueue);
 
-}
-
-VOID FASTCALL
-MsqInitializeMessage(PUSER_MESSAGE Message,
-		     LPMSG Msg)
-{
-  RtlMoveMemory(&Message->Msg, Msg, sizeof(MSG));
 }
 
 PUSER_MESSAGE FASTCALL
@@ -784,7 +772,7 @@ MsqCreateMessage(LPMSG Msg)
       return NULL;
     }
 
-  MsqInitializeMessage(Message, Msg);
+  RtlMoveMemory(&Message->Msg, Msg, sizeof(MSG));
 
   return Message;
 }
@@ -956,8 +944,14 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 }
 
 VOID FASTCALL
-MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, PUSER_MESSAGE Message)
+MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, MSG* Msg)
 {
+  PUSER_MESSAGE Message;
+  
+  if(!(Message = MsqCreateMessage(Msg)))
+  {
+    return;
+  }
   IntLockMessageQueue(MessageQueue);
   InsertTailList(&MessageQueue->PostedMessagesListHead,
 		 &Message->ListEntry);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.26 2004/03/06 23:09:23 hbirr Exp $
+/* $Id: timer.c,v 1.27 2004/03/11 16:17:25 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -385,7 +385,7 @@ TimerThreadMain(PVOID StartContext)
           continue;
         }
         
-        MsqPostMessage(((PW32THREAD)Thread->Win32Thread)->MessageQueue, MsqCreateMessage(&MsgTimer->Msg));
+        MsqPostMessage(((PW32THREAD)Thread->Win32Thread)->MessageQueue, &MsgTimer->Msg);
         
         ThreadsToDereference[ThreadsToDereferencePos] = Thread;
         ++ThreadsToDereferencePos;
