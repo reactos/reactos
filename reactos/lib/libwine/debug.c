@@ -23,6 +23,9 @@
 #include <stdio.h>
 #include <tchar.h>
 
+#include <wine/config.h>
+#include <wine/port.h>
+
 /* ---------------------------------------------------------------------- */
 
 struct debug_info
