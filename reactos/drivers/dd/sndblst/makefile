@@ -2,6 +2,8 @@ PATH_TO_TOP = ../../..
 
 TARGET_BOOTSTRAP = yes
 
+TARGET_CFLAGS = -Wall #-Werror
+
 TARGET_TYPE = driver
 
 TARGET_NAME = sndblst

@@ -101,6 +101,11 @@ WORD InitSoundCard(UINT BasePort)
 
     DPRINT("DSP v%d.%d\n", DSP_Major, DSP_Minor);
 
+    // if audio is disabled,
+    // version tests return 0xFF everywhere
+    if (DSP_Major == 0xFF && DSP_Minor == 0xFF)
+        return FALSE;
+
     DPRINT("Sound card initialized!\n");
     
     return (DSP_Major * 256) + DSP_Minor;
