@@ -1,6 +1,8 @@
 LIBRARY userenv.dll
 EXPORTS
 InitializeProfiles=InitializeProfiles@0 @100 NONAME
+CreateGroupA=CreateGroupA@8 @101 NONAME
+CreateGroupW=CreateGroupW@8 @102 NONAME
 CreateUserProfileA=CreateUserProfileA@8 @109 NONAME
 CreateUserProfileW=CreateUserProfileW@8 @110 NONAME
 AddDesktopItemA=AddDesktopItemA@32 @113 NONAME

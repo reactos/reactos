@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.1 2004/04/29 14:41:26 ekohl Exp $
+/* $Id: desktop.c,v 1.2 2004/05/01 11:55:01 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -66,6 +66,60 @@ GetDesktopPath (BOOL bCommonPath,
     }
 
   DPRINT ("GetDesktopPath() done\n");
+
+  return TRUE;
+}
+
+
+static BOOL
+GetProgramsPath (BOOL bCommonPath,
+		 LPWSTR lpProgramsPath)
+{
+  WCHAR szPath[MAX_PATH];
+  DWORD dwLength;
+  DWORD dwType;
+  HKEY hKey;
+
+  DPRINT ("GetProgramsPath() called\n");
+
+  if (RegOpenKeyExW (HKEY_CURRENT_USER,
+		     L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders",
+		     0,
+		     KEY_ALL_ACCESS,
+		     &hKey))
+    {
+      DPRINT1 ("RegOpenKeyExW() failed\n");
+      return FALSE;
+    }
+
+  dwLength = MAX_PATH * sizeof(WCHAR);
+  if (RegQueryValueExW (hKey,
+			bCommonPath ? L"Common Programs" : L"Programs",
+			0,
+			&dwType,
+			(LPBYTE)szPath,
+			&dwLength))
+    {
+      DPRINT1 ("RegQueryValueExW() failed\n");
+      RegCloseKey (hKey);
+      return FALSE;
+    }
+
+  RegCloseKey (hKey);
+
+  if (dwType == REG_EXPAND_SZ)
+    {
+      ExpandEnvironmentStringsW (szPath,
+				 lpProgramsPath,
+				 MAX_PATH);
+    }
+  else
+    {
+      wcscpy (lpProgramsPath,
+	      szPath);
+    }
+
+  DPRINT ("GetProgramsPath() done\n");
 
   return TRUE;
 }
@@ -241,6 +295,49 @@ DeleteDesktopItemW (BOOL bCommonItem,
   DPRINT ("Link path: '%S'\n", szLinkPath);
 
   return DeleteFile (szLinkPath);
+}
+
+
+BOOL WINAPI
+CreateGroupA (LPCSTR lpGroupName,
+	      BOOL bCommonGroup)
+{
+  DPRINT1 ("CreateGroupA() not implemented!\n");
+  return FALSE;
+}
+
+
+BOOL WINAPI
+CreateGroupW (LPCWSTR lpGroupName,
+	      BOOL bCommonGroup)
+{
+  WCHAR szGroupPath[MAX_PATH];
+
+  DPRINT ("CreateGroupW() called\n");
+
+  if (lpGroupName == NULL || *lpGroupName == 0)
+    return TRUE;
+
+  if (!GetProgramsPath (bCommonGroup, szGroupPath))
+    {
+      DPRINT1 ("GetProgramsPath() failed\n");
+      return FALSE;
+    }
+  DPRINT ("Programs path: '%S'\n", szGroupPath);
+
+  wcscat (szGroupPath, L"\\");
+  wcscat (szGroupPath, lpGroupName);
+  DPRINT ("Group path: '%S'\n", szGroupPath);
+
+  /* FIXME: Create nested directories */
+  if (!CreateDirectory (szGroupPath, NULL))
+    return FALSE;
+
+  /* FIXME: Notify the shell */
+
+  DPRINT ("CreateGroupW() done\n");
+
+  return TRUE;
 }
 
 /* EOF */

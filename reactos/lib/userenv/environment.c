@@ -1,4 +1,4 @@
-/* $Id: environment.c,v 1.2 2004/03/24 16:00:01 ekohl Exp $
+/* $Id: environment.c,v 1.3 2004/05/01 11:55:01 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -268,6 +268,16 @@ CreateEnvironmentBlock (LPVOID *lpEnvironment,
       DPRINT1 ("GetCurrentUserKey() failed\n");
       RtlDestroyEnvironment (*lpEnvironment);
       return FALSE;
+    }
+
+  /* Set 'ALLUSERSPROFILE' variable */
+  Length = MAX_PATH;
+  if (GetAllUsersProfileDirectoryW (Buffer,
+				    &Length))
+    {
+      SetUserEnvironmentVariable (lpEnvironment,
+				  L"ALLUSERSPROFILE",
+				  Buffer);
     }
 
   /* Set 'USERPROFILE' variable */
