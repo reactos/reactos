@@ -48,8 +48,17 @@ VOID CompleteFilename (LPTSTR str, INT charcount)
 		count = 0;
 
 	/* find front of word */
-	while (count > 0 && str[count] != _T(' '))
+	if (str[count] == _T('"'))
+	{
 		count--;
+		while (count > 0 && str[count] != _T('"'))
+			count--;
+	}
+	else
+	{
+		while (count > 0 && str[count] != _T(' '))
+			count--;
+	}
 
 	/* if not at beginning, go forward 1 */
 	if (str[count] == _T(' '))
@@ -57,17 +66,24 @@ VOID CompleteFilename (LPTSTR str, INT charcount)
 
 	start = count;
 
+	if (str[count] == _T('"'))
+		count++;	/* don't increment start */
+
 	/* extract directory from word */
-	_tcscpy (directory, &str[start]);
+	_tcscpy (directory, &str[count]);
 	curplace = _tcslen (directory) - 1;
+
+	if (curplace >= 0 && directory[curplace] == _T('"'))
+		directory[curplace--] = _T('\0');
+
+	_tcscpy (path, directory);
+
 	while (curplace >= 0 && directory[curplace] != _T('\\') &&
 		   directory[curplace] != _T(':'))
 	{
 		directory[curplace] = 0;
 		curplace--;
 	}
-
-	_tcscpy (path, &str[start]);
 
 	/* look for a '.' in the filename */
 	for (count = _tcslen (directory); path[count] != _T('\0'); count++)
@@ -102,8 +118,6 @@ VOID CompleteFilename (LPTSTR str, INT charcount)
 
 			if (file.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 				_tcscat (fname, _T("\\"));
-			else
-				_tcscat (fname, _T(" "));
 
 			if (!maxmatch[0] && perfectmatch)
 			{
@@ -120,25 +134,49 @@ VOID CompleteFilename (LPTSTR str, INT charcount)
 						break;
 					}
 				}
+
+				if (maxmatch[count] == _T('\0') &&
+				    fname[count] != _T('\0'))
+					perfectmatch = FALSE;
 			}
 		}
 		while (FindNextFile (hFile, &file));
 
 		FindClose (hFile);
-                if( perfectmatch )
-                {
-		    str[start] = '\"';
-		    _tcscpy (&str[start+1], directory);
-		    _tcscat (&str[start], maxmatch);
-                    _tcscat (&str[start], "\"" );
-                }
 
+		/* only quote if the filename contains spaces */
+		if (_tcschr(directory, _T(' ')) ||
+		    _tcschr(maxmatch, _T(' ')))
+		{
+			str[start] = _T('\"');
+			_tcscpy (&str[start+1], directory);
+			_tcscat (&str[start], maxmatch);
+			_tcscat (&str[start], _T("\"") );
+		}
 		else
+		{
+			_tcscpy (&str[start], directory);
+			_tcscat (&str[start], maxmatch);
+		}
+
+		/* append a space if last word is not a directory */
+		if(perfectmatch)
+		{
+			curplace = _tcslen(&str[start]);
+			if(str[start+curplace-1] == _T('"'))
+				curplace--;
+
+			if(str[start+curplace-1] != _T('\\'))
+				_tcscat(&str[start], _T(" "));
+		}
+		else
+		{
 #ifdef __REACTOS__
 			Beep (440, 50);
 #else
 			MessageBeep (-1);
 #endif
+		}
 	}
 	else
 	{
@@ -186,8 +224,17 @@ BOOL ShowCompletionMatches (LPTSTR str, INT charcount)
 		count = 0;
 
 	/* find front of word */
-	while (count > 0 && str[count] != _T(' '))
+	if (str[count] == _T('"'))
+	{
 		count--;
+		while (count > 0 && str[count] != _T('"'))
+			count--;
+	}
+	else
+	{
+		while (count > 0 && str[count] != _T(' '))
+			count--;
+	}
 
 	/* if not at beginning, go forward 1 */
 	if (str[count] == _T(' '))
@@ -195,9 +242,18 @@ BOOL ShowCompletionMatches (LPTSTR str, INT charcount)
 
 	start = count;
 
+	if (str[count] == _T('"'))
+		count++;	/* don't increment start */
+
 	/* extract directory from word */
-	_tcscpy (directory, &str[start]);
+	_tcscpy (directory, &str[count]);
 	curplace = _tcslen (directory) - 1;
+
+	if (curplace >= 0 && directory[curplace] == _T('"'))
+		directory[curplace--] = _T('\0');
+	
+	_tcscpy (path, directory);
+	
 	while (curplace >= 0 &&
 		   directory[curplace] != _T('\\') &&
 		   directory[curplace] != _T(':'))
@@ -205,8 +261,6 @@ BOOL ShowCompletionMatches (LPTSTR str, INT charcount)
 		directory[curplace] = 0;
 		curplace--;
 	}
-
-	_tcscpy (path, &str[start]);
 
 	/* look for a . in the filename */
 	for (count = _tcslen (directory); path[count] != _T('\0'); count++)

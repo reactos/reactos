@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.1 2003/03/20 19:19:22 rcampbell Exp $
+/* $Id: cmd.c,v 1.2 2003/04/26 16:38:05 ekohl Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -245,8 +245,8 @@ Execute (LPTSTR first, LPTSTR rest)
 		stui.wShowWindow = SW_SHOWDEFAULT;
 
 		// return console to standard mode
-		SetConsoleMode( GetStdHandle( STD_INPUT_HANDLE ),
-				  ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_ECHO_INPUT );
+		SetConsoleMode (GetStdHandle(STD_INPUT_HANDLE),
+		                ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_ECHO_INPUT );
 		
 		if (CreateProcess (szFullName,
 		                   szFullCmdLine,
@@ -321,9 +321,21 @@ DoCommand (LPTSTR line)
 	/* Anything to do ? */
 	if (*rest)
 	{
-		/* Copy over 1st word as lower case */
-		while (!IsDelimiter (*rest))
-			*cp++ = _totlower (*rest++);
+		if (*rest == _T('"'))
+		{
+			/* treat quoted words specially */
+
+			rest++;
+
+			while(*rest != _T('\0') && *rest != _T('"'))
+				*cp++ = _totlower (*rest++);
+		}
+		else
+		{
+			while (!IsDelimiter (*rest))
+				*cp++ = _totlower (*rest++);
+		}
+
 
 		/* Terminate first word */
 		*cp = _T('\0');

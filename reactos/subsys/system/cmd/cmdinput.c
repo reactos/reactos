@@ -288,7 +288,9 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 			case VK_TAB:
 #ifdef FEATURE_UNIX_FILENAME_COMPLETION
 				/* expand current file name */
-				if (current == charcount) /* only works at end of line*/
+				if ((current == charcount) ||
+				    (current == charcount - 1 &&
+				     str[current] == _T('"'))) /* only works at end of line*/
 				{
 					if (wLastKey != VK_TAB)
 					{
@@ -297,10 +299,18 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 						charcount = _tcslen (str);
 						current = charcount;
 
+						if (current > 0 &&
+						    str[current-1] == _T('"'))
+							current--;
+
 						SetCursorXY (orgx, orgy);
 						ConOutPrintf (_T("%s"), str);
-						if ((_tcslen (str) > (USHORT)(maxx - orgx)) && (orgy == maxy + 1))
+						if ((charcount > (USHORT)(maxx - orgx)) && (orgy == maxy + 1))
 							orgy--;
+
+						/* set cursor position */
+						SetCursorXY ((orgx + current) % maxx,
+							     orgy + (orgx + current) / maxx);
 					}
 					else
 					{
@@ -310,6 +320,10 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 							PrintPrompt ();
 							GetCursorXY (&orgx, &orgy);
 							ConOutPrintf (_T("%s"), str);
+
+							/* set cursor position */
+							SetCursorXY ((orgx + current) % maxx,
+								     orgy + (orgx + current) / maxx);
 						}
 						
 					}
