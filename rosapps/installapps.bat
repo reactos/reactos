@@ -5,17 +5,17 @@ goto Install
 :NoParameter
 set ROS_INSTALL=c:\reactos
 :Install
-echo on
-echo Installing winelib programs to %ROS_INSTALL%\bin
+echo Installing ReactOS user programs to %ROS_INSTALL%\bin
 @echo off
 
 copy cmd\cmd.exe		%ROS_INSTALL%\bin
 copy dflat32\edit.exe		%ROS_INSTALL%\bin
 copy mc\release\mc.exe		%ROS_INSTALL%\bin
+copy net\finger\finger.exe 	%ROS_INSTALL%\bin
 copy net\ncftp\ncftp.exe 	%ROS_INSTALL%\bin
 copy net\ping\ping.exe		%ROS_INSTALL%\bin
 copy net\telnet\telnet.exe 	%ROS_INSTALL%\bin
-copy net\telnet\keys.cfg 	%ROS_INSTALL%\bin
+copy net\telnet\telnet.cfg 	%ROS_INSTALL%\bin
 copy net\telnet\telnet.ini 	%ROS_INSTALL%\bin
 copy net\whois\whois.exe 	%ROS_INSTALL%\bin
 copy notevil\notevil.exe	%ROS_INSTALL%\bin
