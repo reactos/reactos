@@ -179,7 +179,7 @@ typedef struct  tagRPCOLEMESSAGE {
 	ULONG iMethod;
 	PVOID reserved2[5];
 	ULONG rpcFlags;
-} RPCOLEMESSAGE;
+} RPCOLEMESSAGE, *PRPCOLEMESSAGE;
 typedef enum tagMKSYS {
 	MKSYS_NONE,
 	MKSYS_GENERICCOMPOSITE,
