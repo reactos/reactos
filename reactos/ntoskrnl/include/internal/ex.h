@@ -39,6 +39,12 @@ typedef struct _SYSTEM_CURSORINFO
   FAST_MUTEX CursorMutex;
   CURSORCLIP_INFO CursorClipInfo;
   SYSCURSOR SystemCursors[SYSCURSORCOUNT];
+  UINT DblClickSpeed;
+  UINT DblClickWidth;
+  UINT DblClickHeight;
+  DWORD LastBtnDown;
+  LONG LastBtnDownX;
+  LONG LastBtnDownY;
 } SYSTEM_CURSORINFO, *PSYSTEM_CURSORINFO;
 
 typedef struct _WINSTATION_OBJECT

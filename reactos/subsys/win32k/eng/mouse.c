@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.37 2003/08/28 14:22:05 weiden Exp $
+/* $Id: mouse.c,v 1.38 2003/08/28 16:33:22 weiden Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -133,6 +133,40 @@ IntCheckClipCursor(LONG *x, LONG *y, PSYSTEM_CURSORINFO CurInfo)
     return TRUE;
   }
   return TRUE;
+}
+
+BOOL FASTCALL
+IntDetectDblClick(PSYSTEM_CURSORINFO CurInfo, DWORD TickCount)
+{
+  LONG dX, dY;
+  BOOL res = ((TickCount - CurInfo->LastBtnDown) < CurInfo->DblClickSpeed);
+  if(res)
+  {
+    /* check if the second click is within the DblClickWidth and DblClickHeight values */
+    dX = CurInfo->LastBtnDownX - CurInfo->x;
+    dY = CurInfo->LastBtnDownY - CurInfo->y;
+    if(dX < 0) dX = -dX;
+    if(dY < 0) dY = -dY;
+    
+    res = (dX <= CurInfo->DblClickWidth) &&
+          (dY <= CurInfo->DblClickHeight);
+
+    if(res)
+      CurInfo->LastBtnDown = 0; /* prevent sending 2 or more DBLCLK messages */
+    else
+    {
+      CurInfo->LastBtnDown = TickCount;
+      CurInfo->LastBtnDownX = CurInfo->x;
+      CurInfo->LastBtnDownY = CurInfo->y;
+    }
+  }
+  else
+  {
+    CurInfo->LastBtnDown = TickCount;
+    CurInfo->LastBtnDownX = CurInfo->x;
+    CurInfo->LastBtnDownY = CurInfo->y;
+  }
+  return res;
 }
 
 BOOL FASTCALL
@@ -418,27 +452,48 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
     
     if (Data[i].ButtonFlags != 0)
     {
-    
-      if ((0 != Data[i].LastX) || (0 != Data[i].LastY))
-      {
-        MsqInsertSystemMessage(&Msg, FALSE);
-        MouseMoveAdded = TRUE;
-      }
-      
+
       if ((Data[i].ButtonFlags & MOUSE_LEFT_BUTTON_DOWN) > 0)
       {
+        /* insert WM_MOUSEMOVE messages before Button down messages */
+        if ((0 != Data[i].LastX) || (0 != Data[i].LastY))
+        {
+          MsqInsertSystemMessage(&Msg, FALSE);
+          MouseMoveAdded = TRUE;
+        }
       	Msg.wParam  = CurInfo->SwapButtons ? MK_RBUTTON : MK_LBUTTON;
-        Msg.message = CurInfo->SwapButtons ? WM_RBUTTONDOWN : WM_LBUTTONDOWN;
+      	if(IntDetectDblClick(CurInfo, TickCount))
+          Msg.message = CurInfo->SwapButtons ? WM_RBUTTONDBLCLK : WM_LBUTTONDBLCLK;
+        else
+          Msg.message = CurInfo->SwapButtons ? WM_RBUTTONDOWN : WM_LBUTTONDOWN;
       }
       if ((Data[i].ButtonFlags & MOUSE_MIDDLE_BUTTON_DOWN) > 0)
       {
+        /* insert WM_MOUSEMOVE messages before Button down messages */
+        if ((0 != Data[i].LastX) || (0 != Data[i].LastY))
+        {
+          MsqInsertSystemMessage(&Msg, FALSE);
+          MouseMoveAdded = TRUE;
+        }
       	Msg.wParam  = MK_MBUTTON;
-        Msg.message = WM_MBUTTONDOWN;
+      	if(IntDetectDblClick(CurInfo, TickCount))
+      	  Msg.message = WM_MBUTTONDBLCLK;
+      	else
+          Msg.message = WM_MBUTTONDOWN;
       }
       if ((Data[i].ButtonFlags & MOUSE_RIGHT_BUTTON_DOWN) > 0)
       {
+        /* insert WM_MOUSEMOVE messages before Button down messages */
+        if ((0 != Data[i].LastX) || (0 != Data[i].LastY))
+        {
+          MsqInsertSystemMessage(&Msg, FALSE);
+          MouseMoveAdded = TRUE;
+        }
       	Msg.wParam  = CurInfo->SwapButtons ? MK_LBUTTON : MK_RBUTTON;
-        Msg.message = CurInfo->SwapButtons ? WM_LBUTTONDOWN : WM_RBUTTONDOWN;
+      	if(IntDetectDblClick(CurInfo, TickCount))
+      	  Msg.message = CurInfo->SwapButtons ? WM_LBUTTONDBLCLK : WM_RBUTTONDBLCLK;
+      	else
+          Msg.message = CurInfo->SwapButtons ? WM_LBUTTONDOWN : WM_RBUTTONDOWN;
       }
 
       if ((Data[i].ButtonFlags & MOUSE_LEFT_BUTTON_UP) > 0)
@@ -458,6 +513,15 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
       }
 
       MsqInsertSystemMessage(&Msg, FALSE);
+      
+      /* insert WM_MOUSEMOVE messages after Button up messages */
+      if(!MouseMoveAdded && ((0 != Data[i].LastX) || (0 != Data[i].LastY)))
+      {
+        Msg.wParam = ButtonsDown;
+        Msg.message = WM_MOUSEMOVE;
+        MsqInsertSystemMessage(&Msg, FALSE);
+        MouseMoveAdded = TRUE;
+      }
     }
   }
 

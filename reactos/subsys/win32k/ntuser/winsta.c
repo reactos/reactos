@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winsta.c,v 1.31 2003/08/28 14:22:05 weiden Exp $
+/* $Id: winsta.c,v 1.32 2003/08/28 16:33:22 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -354,14 +354,22 @@ NtUserCreateWindowStation(PUNICODE_STRING lpszWindowStationName,
     
   ExInitializeFastMutex(&WinStaObject->SystemCursor.CursorMutex);
   WinStaObject->SystemCursor.Enabled = FALSE;
-  WinStaObject->SystemCursor.SwapButtons = FALSE;
   WinStaObject->SystemCursor.CurrentCursor = 0;
   WinStaObject->SystemCursor.x = (LONG)0;
   WinStaObject->SystemCursor.y = (LONG)0;
+  WinStaObject->SystemCursor.CursorClipInfo.IsClipped = FALSE;
+  WinStaObject->SystemCursor.LastBtnDown = 0;
+  
+  /* FIXME Obtain the following information from the registry */
+  WinStaObject->SystemCursor.SwapButtons = FALSE;
   WinStaObject->SystemCursor.SafetySwitch = FALSE;
   WinStaObject->SystemCursor.SafetySwitch2 = TRUE;
-  WinStaObject->SystemCursor.CursorClipInfo.IsClipped = FALSE;
+  WinStaObject->SystemCursor.DblClickSpeed = 500;
+  WinStaObject->SystemCursor.DblClickWidth = 4;
+  WinStaObject->SystemCursor.DblClickHeight = 4;
   
+  /* FIXME tell user32 to load the cursors from it's rosource file or
+           to load the user's cursor scheme */
   WinStaObject->SystemCursor.SystemCursors[0].hCursor = (HANDLE)1;
   WinStaObject->SystemCursor.SystemCursors[0].cx = 32;
   WinStaObject->SystemCursor.SystemCursors[0].cy = 32;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.15 2003/08/28 14:22:05 weiden Exp $
+/* $Id: input.c,v 1.16 2003/08/28 16:33:22 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -94,6 +94,18 @@ EnableWindow(HWND hWnd,
  */
 SHORT STDCALL
 GetAsyncKeyState(int vKey)
+{
+  UNIMPLEMENTED;
+  return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+UINT
+STDCALL
+GetDoubleClickTime(VOID)
 {
   UNIMPLEMENTED;
   return 0;
@@ -307,6 +319,19 @@ OemKeyScan(WORD wOemChar)
 {
   UNIMPLEMENTED;
   return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+SetDoubleClickTime(
+  UINT uInterval)
+{
+  UNIMPLEMENTED;
+  return FALSE;
 }
 
 

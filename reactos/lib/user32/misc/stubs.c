@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.38 2003/08/28 14:22:05 weiden Exp $
+/* $Id: stubs.c,v 1.39 2003/08/28 16:33:22 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -140,17 +140,6 @@ EnableScrollBar(
 {
   UNIMPLEMENTED;
   return FALSE;
-}
-
-/*
- * @unimplemented
- */
-UINT
-STDCALL
-GetDoubleClickTime(VOID)
-{
-  UNIMPLEMENTED;
-  return 0;
 }
 
 
@@ -370,18 +359,6 @@ ScrollWindowEx(
 {
   UNIMPLEMENTED;
   return 0;
-}
-
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-SetDoubleClickTime(
-  UINT uInterval)
-{
-  UNIMPLEMENTED;
-  return FALSE;
 }
 
 
