@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.110 2004/04/13 16:48:45 weiden Exp $
+/* $Id: window.c,v 1.111 2004/04/14 23:17:55 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -665,7 +665,7 @@ EnumDesktopWindows(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HWND STDCALL
 FindWindowExA(HWND hwndParent,
@@ -731,9 +731,6 @@ FindWindowExW(HWND hwndParent,
    {
       RtlInitUnicodeString(&ucClassName, lpszClass);
    }
-
-   // Window names can't be atoms, and if lpszWindow = NULL,
-   // RtlInitUnicodeString will clear it
 	
    RtlInitUnicodeString(&ucWindowName, lpszWindow);
 
