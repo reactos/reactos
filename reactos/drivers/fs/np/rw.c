@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.12 2004/04/12 13:03:29 navaraf Exp $
+/* $Id: rw.c,v 1.13 2004/05/05 18:30:16 navaraf Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -290,7 +290,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
           DPRINT("Finished waiting (%S)! Status: %x\n", Pipe->PipeName.Buffer, Status);
           KeAcquireSpinLock(&Fcb->DataListLock, &OldIrql);
         }
-      if (Pipe->PipeReadMode == FILE_PIPE_BYTE_STREAM_MODE)
+      if (Pipe->PipeWriteMode == FILE_PIPE_BYTE_STREAM_MODE)
         {
           DPRINT("Byte stream mode\n");
 	  while (Length > 0 && Fcb->WriteQuotaAvailable > 0)

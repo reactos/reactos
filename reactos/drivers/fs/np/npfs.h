@@ -1,4 +1,4 @@
-/* $Id: npfs.h,v 1.15 2004/04/12 13:03:29 navaraf Exp $ */
+/* $Id: npfs.h,v 1.16 2004/05/05 18:30:16 navaraf Exp $ */
 
 #ifndef __SERVICES_FS_NP_NPFS_H
 #define __SERVICES_FS_NP_NPFS_H
@@ -17,10 +17,9 @@ typedef struct
 {
   UNICODE_STRING PipeName;
   LIST_ENTRY PipeListEntry;
-  KSPIN_LOCK FcbListLock;
+  KMUTEX FcbListLock;
   LIST_ENTRY ServerFcbListHead;
   LIST_ENTRY ClientFcbListHead;
-  ULONG ReferenceCount;
   ULONG PipeType;
   ULONG PipeReadMode;
   ULONG PipeWriteMode;

@@ -1,4 +1,4 @@
-/* $Id: fsctrl.c,v 1.14 2004/04/12 13:03:29 navaraf Exp $
+/* $Id: fsctrl.c,v 1.15 2004/05/05 18:30:16 navaraf Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -25,12 +25,14 @@ NpfsConnectPipe(PNPFS_FCB Fcb)
    PLIST_ENTRY current_entry;
    PNPFS_FCB ClientFcb;
    NTSTATUS Status;
-   KIRQL oldIrql;
 
    DPRINT("NpfsConnectPipe()\n");
 
    if (Fcb->PipeState == FILE_PIPE_CONNECTED_STATE)
+   {
+     KeResetEvent(&Fcb->ConnectEvent);
      return STATUS_PIPE_CONNECTED;
+   }
 
    if (Fcb->PipeState == FILE_PIPE_CLOSING_STATE)
      return STATUS_PIPE_CLOSING;
@@ -41,7 +43,7 @@ NpfsConnectPipe(PNPFS_FCB Fcb)
 
    /* search for a listening client fcb */
 
-   KeAcquireSpinLock(&Pipe->FcbListLock, &oldIrql);
+   KeLockMutex(&Pipe->FcbListLock);
    current_entry = Pipe->ClientFcbListHead.Flink;
    while (current_entry != &Pipe->ClientFcbListHead)
      {
@@ -70,20 +72,22 @@ NpfsConnectPipe(PNPFS_FCB Fcb)
 	Fcb->PipeState = FILE_PIPE_CONNECTED_STATE;
 	ClientFcb->PipeState = FILE_PIPE_CONNECTED_STATE;
 
-        KeReleaseSpinLock(&Pipe->FcbListLock, oldIrql);
+        KeUnlockMutex(&Pipe->FcbListLock);
 
 	/* FIXME: create and initialize data queues */
 
 	/* signal client's connect event */
+        DPRINT("Setting the ConnectEvent for %x\n", ClientFcb);
 	KeSetEvent(&ClientFcb->ConnectEvent, IO_NO_INCREMENT, FALSE);
 
+	Status = STATUS_PIPE_CONNECTED;
      }
    else
      {
 	/* no listening client fcb found */
 	DPRINT("No listening client fcb found -- waiting for client\n");
 
-        KeReleaseSpinLock(&Pipe->FcbListLock, oldIrql);
+        KeUnlockMutex(&Pipe->FcbListLock);
 
 	Fcb->PipeState = FILE_PIPE_LISTENING_STATE;
 
@@ -93,13 +97,18 @@ NpfsConnectPipe(PNPFS_FCB Fcb)
 				       FALSE,
 				       NULL);
 
+	if (NT_SUCCESS(Status))
+	  {
+	    Status = STATUS_PIPE_CONNECTED;
+	    Fcb->PipeState = FILE_PIPE_CONNECTED_STATE;
+	  }
+
 	DPRINT("Finished waiting! Status: %x\n", Status);
      }
 
-
    DPRINT("Client Fcb: %p\n", Fcb->OtherSide);
 
-   return STATUS_PIPE_CONNECTED;
+   return Status;
 }
 
 
@@ -114,6 +123,7 @@ NpfsDisconnectPipe(PNPFS_FCB Fcb)
   if (Fcb->PipeState == FILE_PIPE_CONNECTED_STATE)
     {
       Fcb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
+      /* FIXME: Shouldn't this be FILE_PIPE_CLOSING_STATE? */
       Fcb->OtherSide->PipeState = FILE_PIPE_DISCONNECTED_STATE;
 
       /* FIXME: remove data queue(s) */
@@ -128,6 +138,7 @@ NpfsDisconnectPipe(PNPFS_FCB Fcb)
   if (Fcb->PipeState == FILE_PIPE_CLOSING_STATE)
     {
       Fcb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
+      Fcb->OtherSide = NULL;
 
       /* FIXME: remove data queue(s) */
 
