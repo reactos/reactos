@@ -2923,33 +2923,33 @@ typedef OSVERSIONINFOW OSVERSIONINFO;
 #endif
 
 typedef struct _OSVERSIONINFOEXA
-#ifdef __cplusplus
-: public OSVERSIONINFOA
 {
-#else
-{
- OSVERSIONINFOA;
-#endif
- WORD wServicePackMajor;
- WORD wServicePackMinor;
- WORD wSuiteMask;
- BYTE wProductType;
- BYTE wReserved;
+  DWORD dwOSVersionInfoSize;
+  DWORD dwMajorVersion;
+  DWORD dwMinorVersion;
+  DWORD dwBuildNumber;
+  DWORD dwPlatformId;
+  CHAR szCSDVersion[ 128 ];
+  WORD wServicePackMajor;
+  WORD wServicePackMinor;
+  WORD wSuiteMask;
+  BYTE wProductType;
+  BYTE wReserved;
 } OSVERSIONINFOEXA, *POSVERSIONINFOEXA, *LPOSVERSIONINFOEXA;
 
 typedef struct _OSVERSIONINFOEXW
-#ifdef __cplusplus
-: public OSVERSIONINFOW
 {
-#else
-{
- OSVERSIONINFOW;
-#endif
- WORD wServicePackMajor;
- WORD wServicePackMinor;
- WORD wSuiteMask;
- BYTE wProductType;
- BYTE wReserved;
+  DWORD dwOSVersionInfoSize;
+  DWORD dwMajorVersion;
+  DWORD dwMinorVersion;
+  DWORD dwBuildNumber;
+  DWORD dwPlatformId;
+  WCHAR szCSDVersion[ 128 ];
+  WORD wServicePackMajor;
+  WORD wServicePackMinor;
+  WORD wSuiteMask;
+  BYTE wProductType;
+  BYTE wReserved;
 } OSVERSIONINFOEXW, *POSVERSIONINFOEXW, *LPOSVERSIONINFOEXW;
 
 #ifdef UNICODE

@@ -131,10 +131,10 @@ PCATALOG_ENTRY LocateProvider(
                                  ListEntry);
 
     for (i = 0; i < Provider->Mapping->Rows; i++) {
-      if ((lpProtocolInfo->iAddressFamily == Provider->Mapping->Mapping[i].AddressFamily) &&
-        (lpProtocolInfo->iSocketType    == Provider->Mapping->Mapping[i].SocketType) &&
-        ((lpProtocolInfo->iProtocol     == Provider->Mapping->Mapping[i].Protocol) ||
-        (lpProtocolInfo->iSocketType    == SOCK_RAW))) {
+      if ((lpProtocolInfo->iAddressFamily == (INT) Provider->Mapping->Mapping[i].AddressFamily) &&
+        (lpProtocolInfo->iSocketType      == (INT) Provider->Mapping->Mapping[i].SocketType) &&
+        ((lpProtocolInfo->iProtocol       == (INT) Provider->Mapping->Mapping[i].Protocol) ||
+        (lpProtocolInfo->iSocketType      == SOCK_RAW))) {
         //LeaveCriticalSection(&CatalogLock);
 				WS_DbgPrint(MID_TRACE, ("Returning provider at (0x%X).\n", Provider));
         return Provider;

@@ -80,9 +80,9 @@ PWSHELPER_DLL LocateHelperDLL(
                                       ListEntry);
 
         for (i = 0; i < HelperDLL->Mapping->Rows; i++) {
-            if ((lpProtocolInfo->iAddressFamily == HelperDLL->Mapping->Mapping[i].AddressFamily) &&
-                (lpProtocolInfo->iSocketType    == HelperDLL->Mapping->Mapping[i].SocketType) &&
-                ((lpProtocolInfo->iProtocol     == HelperDLL->Mapping->Mapping[i].Protocol) ||
+            if ((lpProtocolInfo->iAddressFamily == (INT) HelperDLL->Mapping->Mapping[i].AddressFamily) &&
+                (lpProtocolInfo->iSocketType    == (INT) HelperDLL->Mapping->Mapping[i].SocketType) &&
+                ((lpProtocolInfo->iProtocol     == (INT) HelperDLL->Mapping->Mapping[i].Protocol) ||
                 (lpProtocolInfo->iSocketType    == SOCK_RAW))) {
                 LeaveCriticalSection(&HelperDLLDatabaseLock);
                 AFD_DbgPrint(MAX_TRACE, ("Returning helper DLL at (0x%X).\n", HelperDLL));
