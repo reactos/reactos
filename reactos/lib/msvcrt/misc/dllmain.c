@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.18 2003/04/24 16:34:26 hbirr Exp $
+/* $Id: dllmain.c,v 1.19 2003/06/01 17:08:03 hbirr Exp $
  *
  * dllmain.c
  *
@@ -14,9 +14,9 @@
  *  DISCLAMED. This includes but is not limited to warrenties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.18 $
+ * $Revision: 1.19 $
  * $Author: hbirr $
- * $Date: 2003/04/24 16:34:26 $
+ * $Date: 2003/06/01 17:08:03 $
  *
  */
 
@@ -128,6 +128,7 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
             {
 		if (__initenv && __initenv != _environ)
 		{
+                    FreeEnvironmentStringsA(__initenv[0]);
 		    free(__initenv);
 		    __initenv = NULL;
 		}
