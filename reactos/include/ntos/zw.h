@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.25 2004/06/13 10:35:51 navaraf Exp $
+/* $Id: zw.h,v 1.26 2004/07/12 12:00:15 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -4544,7 +4544,10 @@ NtQueryOleDirectoryFile (
  *	  ReturnLength = Bytes written
  *	  GrantedAccess = 
  *	  AccessStatus = Indicates if the ClientToken allows the requested access
- * REMARKS: The arguments map to the win32 AccessCheck 
+ * REMARKS: The arguments map to the win32 AccessCheck
+ *	 Gary Nebbett is wrong:
+ *	   The 7th argument is a PACCESS_MASK, not a PULONG.
+ *	   The 8th argument is a PNTSTATUS, not a PBOOLEAN.
  * RETURNS: Status
  */
 
@@ -4557,8 +4560,8 @@ NtAccessCheck(
 	IN PGENERIC_MAPPING GenericMapping,
 	OUT PPRIVILEGE_SET PrivilegeSet,
 	OUT PULONG ReturnLength,
-	OUT PULONG GrantedAccess,
-	OUT PBOOLEAN AccessStatus
+	OUT PACCESS_MASK GrantedAccess,
+	OUT PNTSTATUS AccessStatus
 	);
 
 NTSTATUS
@@ -4570,8 +4573,8 @@ ZwAccessCheck(
 	IN PGENERIC_MAPPING GenericMapping,
 	OUT PPRIVILEGE_SET PrivilegeSet,
 	OUT PULONG ReturnLength,
-	OUT PULONG GrantedAccess,
-	OUT PBOOLEAN AccessStatus
+	OUT PACCESS_MASK GrantedAccess,
+	OUT PNTSTATUS AccessStatus
 	);
 
 NTSTATUS

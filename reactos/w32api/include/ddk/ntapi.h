@@ -2402,7 +2402,7 @@ ZwAccessCheck(
 	IN PPRIVILEGE_SET  PrivilegeSet,
 	IN PULONG  PrivilegeSetLength,
 	OUT PACCESS_MASK  GrantedAccess,
-	OUT PBOOLEAN  AccessStatus);
+	OUT PNTSTATUS  AccessStatus);
 
 NTOSAPI
 NTSTATUS

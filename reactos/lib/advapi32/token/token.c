@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.11 2004/07/06 22:07:25 gvg Exp $
+/* $Id: token.c,v 1.12 2004/07/12 12:05:49 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -143,6 +143,7 @@ AccessCheck (PSECURITY_DESCRIPTOR pSecurityDescriptor,
 	     LPBOOL AccessStatus)
 {
   NTSTATUS Status;
+  NTSTATUS AccessStat;
 
   Status = NtAccessCheck (pSecurityDescriptor,
 			  ClientToken,
@@ -150,13 +151,22 @@ AccessCheck (PSECURITY_DESCRIPTOR pSecurityDescriptor,
 			  GenericMapping,
 			  PrivilegeSet,
 			  (PULONG)PrivilegeSetLength,
-			  (PULONG)GrantedAccess,
-			  (PBOOLEAN)AccessStatus);
+			  (PACCESS_MASK)GrantedAccess,
+			  &AccessStat);
   if (!NT_SUCCESS (Status))
     {
       SetLastError (RtlNtStatusToDosError (Status));
       return FALSE;
     }
+
+  if (!NT_SUCCESS (AccessStat))
+    {
+      SetLastError (RtlNtStatusToDosError (Status));
+      *AccessStatus = FALSE;
+      return TRUE;
+    }
+
+  *AccessStatus = TRUE;
 
   return TRUE;
 }

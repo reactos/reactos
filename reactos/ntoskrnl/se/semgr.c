@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.30 2004/05/20 12:42:11 ekohl Exp $
+/* $Id: semgr.c,v 1.31 2004/07/12 12:04:17 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -208,8 +208,8 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 	      IN PGENERIC_MAPPING GenericMapping,
 	      OUT PPRIVILEGE_SET PrivilegeSet,
 	      OUT PULONG ReturnLength,
-	      OUT PULONG GrantedAccess,
-	      OUT PBOOLEAN AccessStatus)
+	      OUT PACCESS_MASK GrantedAccess,
+	      OUT PNTSTATUS AccessStatus)
 {
   UNIMPLEMENTED;
   return(STATUS_NOT_IMPLEMENTED);
