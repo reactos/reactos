@@ -401,6 +401,12 @@ IDEResetController(IN WORD CommandPort,
     //  Assert drive reset line
   IDEWriteDriveControl(ControlPort, IDE_DC_SRST);
 
+    //  Wait for min. 25 microseconds
+  KeStallExecutionProcessor(IDE_RESET_PULSE_LENGTH);
+
+    //  Negate drive reset line
+  IDEWriteDriveControl(ControlPort, 0);
+
     //  Wait for BUSY assertion
   for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++) 
     {
@@ -414,9 +420,6 @@ IDEResetController(IN WORD CommandPort,
     {
       return FALSE;
     }
-
-    //  Negate drive reset line
-  IDEWriteDriveControl(ControlPort, 0);
 
     //  Wait for BUSY negation
   for (Retries = 0; Retries < IDE_RESET_BUSY_TIMEOUT * 1000; Retries++) 
@@ -439,7 +442,7 @@ IDEResetController(IN WORD CommandPort,
           IDEReadSectorNum(CommandPort) == 1 &&
           IDEReadCylinderLow(CommandPort) == 0 &&
           IDEReadCylinderHigh(CommandPort) == 0 &&
-          IDEReadDriveHead(CommandPort) == 0;
+          (IDEReadDriveHead(CommandPort) & 0x1F) == 0;
 }
 
 //    IDECreateDevices
