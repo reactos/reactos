@@ -161,3 +161,23 @@ FONT 8, "MS Shell Dlg"
 	PUSHBUTTON		"Abbrechen" , 2, 158, 23, 47, 14
 	PUSHBUTTON		"&Hilfe" , 254, 158, 43, 47, 14
 }
+
+STRINGTABLE
+{
+	IDS_FONT_SEL_DLG_NAME	"Anwenden der Schriftarteinstellung"
+	IDS_FONT_SEL_ERROR	"Fehler während der Schriftart-Auswahl."
+}
+
+STRINGTABLE
+{
+	IDS_WINEFILE	"Winefile"
+	IDS_ERROR		"Fehler"
+	IDS_ROOT_FS		"root fs"
+	IDS_UNIXFS		"unixfs"
+	IDS_DESKTOP		"Desktop"
+	IDS_SHELL		"Shell"
+	IDS_TITLEFMT	"%s - %s"
+	IDS_NO_IMPL		"Noch nicht implementiert"
+	IDS_WINE		"WINE"
+	IDS_WINE_FILE	"Wine File"
+}
