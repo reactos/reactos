@@ -1,11 +1,24 @@
 #include <windows.h>
 #include "resource.h"
 
+#ifndef GetCursorInfo
+  #define _GetCursorInfo
+#endif
+
 const char titleDrwIco[] = "DrawIcon Output";
 const char titleMask[] = "Mask(AND image)";
 const char titleXor[] = "XOR(color image)";
 const char file[] = "Icon from file:";
 const char res[] = "Icon from Resorce:";
+const char cursor[] = "Current Cursor:";
+const char cursormask[] = "Cursor Mask Bitmap";
+const char cursorcolor[] = "Cursor Color Bitmap";
+
+#ifdef _GetCursorInfo
+typedef BOOL (__stdcall *GETCURSORINFO) (CURSORINFO *CursorInfo);
+
+static GETCURSORINFO GetCursorInfo = NULL;
+#endif
 
 HFONT tf;
 HINSTANCE hInst;
@@ -23,6 +36,10 @@ WinMain(HINSTANCE hInstance,
   HWND hWnd;
 
   hInst = hInstance;
+  
+  #ifdef _GetCursorInfo
+  GetCursorInfo = (GETCURSORINFO)GetProcAddress(GetModuleHandleW(L"user32.dll"), "GetCursorInfo");
+  #endif
 
   wc.lpszClassName = "IconTestClass";
   wc.lpfnWndProc = MainWndProc;
@@ -30,7 +47,7 @@ WinMain(HINSTANCE hInstance,
   wc.hInstance = hInstance;
   wc.hIcon = LoadIcon(NULL, (LPCTSTR)IDI_APPLICATION);
   wc.hCursor = LoadCursor(NULL, (LPCTSTR)IDC_ARROW);
-  wc.hbrBackground = (HBRUSH)GetStockObject(GRAY_BRUSH);
+  wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
   wc.lpszMenuName = NULL;
   wc.cbClsExtra = 0;
   wc.cbWndExtra = 0;
@@ -45,8 +62,8 @@ WinMain(HINSTANCE hInstance,
               WS_OVERLAPPEDWINDOW|WS_HSCROLL|WS_VSCROLL,
               CW_USEDEFAULT,
               CW_USEDEFAULT,
-              455,
-              320,
+              480,
+              480,
               NULL,
               NULL,
               hInstance,
@@ -62,6 +79,8 @@ WinMain(HINSTANCE hInstance,
                    DEFAULT_QUALITY, FIXED_PITCH|FF_DONTCARE, "Timmons");
 
   ShowWindow(hWnd, nCmdShow);
+  
+  SetTimer(hWnd, 1, 1000, NULL);
 
   while(GetMessage(&msg, NULL, 0, 0))
   {
@@ -79,9 +98,13 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     HICON hIcon;
     HGDIOBJ hOld;
     HDC hMemDC;
+    CURSORINFO cursorinfo;
     ICONINFO iconinfo;
     HBITMAP hMaskBitmap;
-    HBITMAP hColorBitmap;    
+    HBITMAP hColorBitmap;  
+    BITMAP bmp;
+    RECT rc;
+    CHAR str[20];
         
     switch(msg)
     {
@@ -95,7 +118,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
       TextOut(hDC, 160, 85, titleMask, strlen(titleMask));
       TextOut(hDC, 300, 85, titleXor, strlen(titleXor));
       
-      hIcon = LoadImage(NULL, "icon.ICO", IMAGE_ICON, 0, 0, LR_DEFAULTSIZE|LR_LOADFROMFILE);
+      hIcon = LoadImage(NULL, "icon.ico", IMAGE_ICON, 0, 0, LR_DEFAULTSIZE|LR_LOADFROMFILE);
       DrawIcon(hDC,50,50,hIcon);
 
       hMemDC = CreateCompatibleDC(hDC);
@@ -109,8 +132,6 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
       DeleteObject(iconinfo.hbmMask);
       DeleteObject(iconinfo.hbmColor);
-
-      SelectObject(hMemDC, hOld);
       
       TextOut(hDC, 145, 150, res, strlen(res));
       TextOut(hDC, 15, 225, titleDrwIco, strlen(titleDrwIco));
@@ -123,16 +144,66 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
       GetIconInfo(hIcon, &iconinfo);
       DestroyIcon(hIcon);          
           
-      hOld = SelectObject(hMemDC, iconinfo.hbmMask);
+      SelectObject(hMemDC, iconinfo.hbmMask);
       BitBlt(hDC, 200, 190, 32, 32, hMemDC, 0, 0, SRCCOPY);
       SelectObject(hMemDC, iconinfo.hbmColor);
       BitBlt(hDC, 350, 190, 32, 32, hMemDC, 0, 0, SRCCOPY);
 
       DeleteObject(iconinfo.hbmMask);
       DeleteObject(iconinfo.hbmColor);
+      
+      cursorinfo.cbSize = sizeof(CURSORINFO);
+      if(GetCursorInfo(&cursorinfo))
+      {
+        if(cursorinfo.hCursor && cursorinfo.flags)
+        {
+          TextOut(hDC, 160, 290, cursor, strlen(cursor));
+          DrawIcon(hDC, 50, 330, cursorinfo.hCursor);
+          GetIconInfo(cursorinfo.hCursor, &iconinfo);
+          TextOut(hDC, 15, 365, titleDrwIco, strlen(titleDrwIco));
+          
+          sprintf(str, "Hotspot: %d; %d", iconinfo.xHotspot, iconinfo.yHotspot);
+          TextOut(hDC, 15, 380, str, strlen(str));
+          
+          if(iconinfo.hbmMask)
+          {
+            GetObjectW(iconinfo.hbmMask, sizeof(BITMAP), &bmp);
+            SelectObject(hMemDC, iconinfo.hbmMask);
+            BitBlt(hDC, 200, 330, bmp.bmWidth, bmp.bmHeight, hMemDC, 0, 0, SRCCOPY);
+            DeleteObject(iconinfo.hbmMask);
+            TextOut(hDC, 160, 365 - 32 + bmp.bmHeight, cursormask, strlen(cursormask));
+            
+            sprintf(str, "%dBPP", bmp.bmBitsPixel);
+            TextOut(hDC, 160, 380 - 32 + bmp.bmHeight, str, strlen(str));
+          }
+          
+          if(iconinfo.hbmColor)
+          {
+            GetObjectW(iconinfo.hbmColor, sizeof(BITMAP), &bmp);
+            SelectObject(hMemDC, iconinfo.hbmColor);
+            BitBlt(hDC, 350, 330, bmp.bmWidth, bmp.bmHeight, hMemDC, 0, 0, SRCCOPY);
+            DeleteObject(iconinfo.hbmColor);
+            TextOut(hDC, 300, 365 - 32 + bmp.bmHeight, cursorcolor, strlen(cursorcolor));
+            
+            sprintf(str, "%dBPP", bmp.bmBitsPixel);
+            TextOut(hDC, 300, 380 - 32 + bmp.bmHeight, str, strlen(str));
+          }
+        }
+      }
+      
+      SelectObject(hMemDC, hOld);
+      
       DeleteObject(hMemDC);          
       EndPaint(hWnd, &ps);
     break;
+    
+    case WM_TIMER:
+      rc.left = 0;
+      rc.top = 330;
+      rc.right = 480;
+      rc.bottom = 480;
+      InvalidateRect(hWnd, &rc, TRUE);
+      break;
 
     case WM_DESTROY:
       PostQuitMessage(0);
