@@ -1,0 +1,13 @@
+*.coff
+*.dll
+*.d
+*.a
+*.o
+*.sym
+*.map
+*.tmp
+*.~*
+*.il?
+*.res
+*.tds
+*.lib
