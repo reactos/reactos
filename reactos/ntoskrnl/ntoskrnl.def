@@ -846,6 +846,7 @@ ObDereferenceObject@4
 ;PfxInsertPrefix
 ;PfxRemovePrefix
 PoCallDriver@8
+PoQueueShutdownWorkItem@4
 PoRegisterDeviceForIdleDetection@16
 PoRegisterSystemState@8
 PoRequestPowerIrp@24
