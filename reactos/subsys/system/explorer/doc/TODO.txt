@@ -1,5 +1,6 @@
 - read "DESCRIPT.ION" files to display file descriptions
 - tool tip texts for notification icons
+- hiding of notification icons
 - context menus for quick launch bar
 - detect display mode changes and adjust desktop bar size
 - handling of full screen applications
@@ -18,7 +19,7 @@
 - close start start menu when resizing explorer bar
 - adjust already open windows of all running applications when resizing explorer bar
 - implement blink effect in task bar for SetForegoundWindow() requests
-- implement more than one column for very crowded start menus
+- implement more than one column or scrolling in start menus for very crowded start menus
 - Execute selected programs with additional command line options ("Run" dialog with pre-filled edit field)
 
 - autostart doesn't work on NT4 ?
@@ -34,4 +35,21 @@
 - Vollbildfenster suchen -> Taskleiste ausblenden
 - Desktop-Manager: Speicherung der Verteilung von Applikations-Fenstern auf die verschiedenen Desktops; Desktop-Namen
 - neuer Startmenü-Eintrag: "Filemanager" neben "Explore"  ->  Anzeige von C: und D:
+
+> When minimizing window such as Sleipnir; a popular
+> IE-based tab browser in Japan:
+> http://www20.pos.to/~sleipnir/software/sleipnir/index.html
+> the window'll  not stored into the notification area but just minimized; instead of the setting.
+> This might be a problem of application which doesn't handle the event, but it works under MS-explorer.
+> I tested on 1.42JA, but I also tested and it reproduced on 1.41EN.
+> The setting are: Tools->Sleipnir Options->System Tray->turn both settings on
+> When you click the minimize button on the top-right of the window, it
+> minimizes successfully into SysTray, but on the other hand, when you minimize the
+> window by clicking the taskbutton, it minimizes but doesn't go into SysTray.
+
+> mIRC doesn't expect to be on two desktops at the same time.
+> There may be a internal variables, which say: "I am minimized or not." and
+> "I am visible or not." So I will have to adjust desktop switching in a
+> way, that applications are either visible or not - but not mixed between  two
+> different desktops.
 
