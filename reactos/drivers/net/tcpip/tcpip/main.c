@@ -16,12 +16,19 @@
 #include <udp.h>
 #include <tcp.h>
 
+//#define _USE_NE2000
+
 #ifdef DBG
 
 /* See debug.h for debug/trace constants */
+#ifdef _USE_NE2000
+DWORD DebugTraceLevel = MID_TRACE;
+//DWORD DebugTraceLevel = (MAX_TRACE + DEBUG_DATALINK);
+#else
 DWORD DebugTraceLevel = MIN_TRACE;
 //DWORD DebugTraceLevel = MAX_TRACE;
 //DWORD DebugTraceLevel = DEBUG_ULTRA;
+#endif
 
 #endif /* DBG */
 
@@ -818,7 +825,7 @@ DriverEntry(
   /* FIXME: Get binding information from registry */
 
   /* Put your own NDIS adapter device name here */
-#if 0
+#ifdef _USE_NE2000
   /* ReactOS */
   NdisInitUnicodeString(&DeviceName, L"\\Device\\ne2000");
 
