@@ -44,9 +44,9 @@ STDAPI_(BOOL) Button_IsPartDefined
 
 const UXTHEME_VTABLE Button_Vt =
 {
- (void *)Button_DrawBackground, /* why (void *)? because GCC is stupid */
- (void *)Button_DrawText,
- (void *)Button_GetBackgroundContentRect
+ Button_DrawBackground,
+ Button_DrawText,
+ Button_GetBackgroundContentRect
 };
 
 /*
@@ -201,7 +201,7 @@ STDAPI_(BOOL) Button_TextGrayed
  IN DWORD dwTextFlags2
 )
 {
- if(dwTextFlags2 & DTT_GRAYED == DTT_GRAYED) return TRUE;
+ if((dwTextFlags2 & DTT_GRAYED) == DTT_GRAYED) return TRUE;
 
  switch(iPartId)
  {

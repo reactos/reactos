@@ -17,7 +17,7 @@ struct UXTHEME_VTABLE_;
 
 struct UXTHEME_VTABLE_
 {
- HRESULT STDAPICALLTYPE (* p_DrawBackground)
+ HRESULT (STDAPICALLTYPE * p_DrawBackground)
  (
   IN OUT struct UXTHEME_DATA_ * pData,
   IN HDC hdc,
@@ -27,7 +27,7 @@ struct UXTHEME_VTABLE_
   IN const RECT * pClipRect
  );
 
- HRESULT STDAPICALLTYPE (* p_DrawText)
+ HRESULT (STDAPICALLTYPE * p_DrawText)
  (
   IN OUT struct UXTHEME_DATA_ * pData,
   IN HDC hdc,
@@ -40,7 +40,7 @@ struct UXTHEME_VTABLE_
   IN const RECT * pRect
  );
 
- HRESULT STDAPICALLTYPE (* p_GetBackgroundContentRect)
+ HRESULT (STDAPICALLTYPE * p_GetBackgroundContentRect)
  (
   IN OUT struct UXTHEME_DATA_ * pData,
   IN HDC hdc,

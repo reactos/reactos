@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.2 2003/10/25 00:46:01 hyperion Exp $
+# $Id: makefile,v 1.3 2003/12/17 01:39:21 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -12,7 +12,7 @@ TARGET_SDKLIBS = kernel32.a user32.a gdi32.a
 
 TARGET_CFLAGS = -Wall -Werror -D_DISABLE_TIDENTS -D__USE_W32API -I./include
 
-TARGET_LFLAGS = -nostartfiles --enable-stdcall-fixup
+TARGET_LFLAGS = -nostartfiles -Wl,--enable-stdcall-fixup
 
 TARGET_BASE = 0x5B180000
 
