@@ -1,4 +1,4 @@
-/* $Id: error.cpp,v 1.2 2002/09/04 22:19:47 robertk Exp $
+/* $Id: error.cpp,v 1.3 2003/01/07 16:23:11 robd Exp $
 */
 /*
  *
@@ -119,7 +119,7 @@ APIRET STDCALL DosBeep(ULONG freq, ULONG dur)
 
       0         NO_ERROR 
       87        ERROR_INVALID_PARAMETER 
-/*******************************************/
+*******************************************/
 APIRET DosError( ULONG error)
 {
 	return ERROR_CALL_NOT_IMPLEMENTED;
@@ -161,12 +161,5 @@ APIRET DosMove(PSZ pszOld, PSZ pszNew)
 {
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
-
- 
-
-
- 
-
-
 
 /* EOF */

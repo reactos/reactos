@@ -1,4 +1,4 @@
-/* $Id: process.cpp,v 1.5 2002/09/04 22:19:47 robertk Exp $
+/* $Id: process.cpp,v 1.6 2003/01/07 16:23:11 robd Exp $
 */
 /*
  *
@@ -15,6 +15,7 @@
  */
 
 
+//#if defined (INCL_DOS)
 #define INCL_DOSPROCESS
 #define INCL_DOSERRORS
 #include "ros2.h"
@@ -30,7 +31,7 @@ APIRET STDCALL DosSleep(ULONG msec)
 }
 
 
-/* $Id: process.cpp,v 1.5 2002/09/04 22:19:47 robertk Exp $ */
+/* $Id: process.cpp,v 1.6 2003/01/07 16:23:11 robd Exp $ */
 /* Terminates the current thread or the current Process.
 	Decission is made by action 
 	FIXME:	move this code to OS2.EXE */

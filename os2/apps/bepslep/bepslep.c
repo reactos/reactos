@@ -1,6 +1,7 @@
 
 #define INCL_DOSPROCESS
 #include "../../include/os2.h"
+//#include "../../include/ros2.h"
 
 void Eingang()
 {

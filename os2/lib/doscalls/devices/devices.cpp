@@ -1,4 +1,4 @@
-/* $Id: devices.cpp,v 1.3 2002/09/04 22:19:47 robertk Exp $
+/* $Id: devices.cpp,v 1.4 2003/01/07 16:23:11 robd Exp $
 */
 /*
  *
@@ -61,7 +61,5 @@ APIRET STDCALL Dos32DevIOCtl(HFILE hDevice, ULONG category, ULONG function,
 {
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
-
-
 
 /* EOF */

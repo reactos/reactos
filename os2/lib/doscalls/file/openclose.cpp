@@ -1,4 +1,4 @@
-/* $Id: openclose.cpp,v 1.3 2002/09/04 22:19:47 robertk Exp $
+/* $Id: openclose.cpp,v 1.4 2003/01/07 16:23:11 robd Exp $
 */
 /*
  *
@@ -18,7 +18,6 @@
 #define INCL_DOSFILEMGR
 #define INCL_DOSERRORS
 #include "ros2.h"
-
 
 
 APIRET STDCALL  Dos32Open(PSZ    pszFileName,  PHFILE pHf,
@@ -130,12 +129,14 @@ APIRET STDCALL  Dos32Close(HFILE hFile)
 	nErrCode = NT::ZwClose( (NT::HANDLE)hFile );
 	switch( nErrCode )
 	{
+/*
 	case STATUS_SUCCESS:
 		return NO_ERROR;
 	case STATUS_INVALID_HANDLE:
 		return ERROR_INVALID_HANDLE;
 	case STATUS_HANDLE_NOT_CLOSABLE:
 		return ERROR_FILE_NOT_FOUND;
+ */
 	}
 	return nErrCode;
 }
@@ -155,9 +156,11 @@ APIRET STDCALL  Dos32Read(HFILE hFile, PVOID pBuffer,
 	*pcbActual = isbStatus.Information;
 	switch(nErrCode)
 	{
+/*
 	case STATUS_INVALID_HANDLE:
 		return ERROR_INVALID_HANDLE;
 		// FIXME: complete this
+ */
 	}
 	return NO_ERROR;
 }
@@ -175,12 +178,14 @@ APIRET STDCALL  Dos32Write(HFILE hFile, PVOID pBuffer,
 	return ERROR_CALL_NOT_IMPLEMENTED;
 	switch(nErrCode)
 	{
+/*
 	case STATUS_SUCCESS:
 	case STATUS_PENDING:
 	case STATUS_ACCESS_DENIED:
 	case STATUS_INVALID_HANDLE:
 	case STATUS_FILE_LOCK_CONFLICT:
 		return 0;
+ */
 	}
 	return 0;
 }

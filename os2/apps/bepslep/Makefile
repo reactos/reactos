@@ -1,32 +1,37 @@
-# $Id: Makefile,v 1.1 2002/03/23 19:23:27 robertk Exp $
+# $Id: Makefile,v 1.2 2003/01/07 16:23:10 robd Exp $
 #
-# To run it in Win32 console mode, undefine __SUBSYSTEM_WINDOWS__
-# and pass "console" in the ld's --subsystem option.
-# 
 #
-PATH_TO_TOP=../../../..
 
-PATH_TO_OS2_TOP=../..
+PATH_TO_TOP = ../../../reactos
 
-TARGET_NAME=bepslep
+PATH_TO_OS2_TOP = ../..
 
-CFLAGS=-D__SUBSYSTEM_WINDOWS__
+TARGET_TYPE = program
 
-OBJECTS=$(TARGET_NAME).o
+TARGET_NORC = yes
 
-LIBRARIES=\
-	$(PATH_TO_OS2_TOP)/dll/doscalls.dll 
+#TARGET_APPTYPE = console
+TARGET_APPTYPE = windows
 
-$(TARGET_NAME): $(OBJECTS) $(LIBRARIES)
-	$(CC) \
-		$(CFLAGS) \
-		$(OBJECTS) \
-		$(LIBRARIES)\
-		-o $@ \
-		-Wl,--subsystem,windows\
-		-nostartfiles \
-		-nostdlib
+TARGET_NAME = bepslep
+
+TARGET_CFLAGS = -D__SUBSYSTEM_WINDOWS__
+
+TARGET_LFLAGS = -nostartfiles
+
+TARGET_SDKLIBS = doscalls.a
+
+TARGET_GCCLIBS = stdc++
+
+#TARGET_LIBS = $(PATH_TO_OS2_TOP)/lib/crt0w32.o \
+#	      $(PATH_TO_TOP)/dk/psx/lib/psxdll.a
+
+#	$(PATH_TO_OS2_TOP)/dll/doscalls.dll 
+
+TARGET_OBJECTS = $(TARGET_NAME).o
 
 include $(PATH_TO_TOP)/rules.mak
+
+include $(TOOLS_PATH)/helper.mk
 
 # EOF

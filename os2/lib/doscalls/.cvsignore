@@ -1,0 +1,5 @@
+*.exe
+*.o
+*.sym
+*.dll
+*.coff

@@ -3,6 +3,10 @@
 #ifndef _OS2EMX_H
 #define _OS2EMX_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 #pragma pack(1)
 
 /* ------------------------ INCL_ SYMBOLS --------------------------------- */
@@ -2656,7 +2660,18 @@ ULONG DosKillProcess (ULONG ulAction, PID pid);
 ULONG DosKillThread (TID tid);
 ULONG DosResumeThread (TID tid);
 ULONG DosSetPriority (ULONG ulScope, ULONG ulClass, LONG lDelta, ULONG ulID);
+
+#define STDCALL     __attribute__ ((stdcall))
+//#define CDECL       __attribute__ ((cdecl))
+//#define CALLBACK    WINAPI
+//#define PASCAL      WINAPI
+
+#define WINAPI      STDCALL
+//#define APIENTRY    STDCALL
+
+//ULONG WINAPI DosSleep (ULONG ulInterval);
 ULONG DosSleep (ULONG ulInterval);
+
 ULONG DosSuspendThread (TID tid);
 ULONG DosVerifyPidTid (PID pid, TID tid);
 ULONG DosWaitChild (ULONG ulAction, ULONG ulWait, PRESULTCODES pReturnCodes,
@@ -12566,6 +12581,10 @@ USHORT MouSynch (USHORT fWait);
 
 #pragma pack(4)
 
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+
 #endif /* not _OS2EMX_H */
 
 /* Note 1:
@@ -12581,3 +12600,4 @@ USHORT MouSynch (USHORT fWait);
  * indent-tabs-mode: t
  * end:
  */
+
