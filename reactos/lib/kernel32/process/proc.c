@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.59 2004/01/23 21:16:04 ekohl Exp $
+/* $Id: proc.c,v 1.60 2004/03/14 11:11:17 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -311,6 +311,23 @@ InternalGetProcessId(HANDLE hProcess,
   memcpy(lpProcessId, &ProcessBasic.UniqueProcessId, sizeof(DWORD));
 
   return(TRUE);
+}
+
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+GetProcessId(HANDLE Process)
+{
+  DWORD ProcessId;
+  
+  if(!InternalGetProcessId(Process, &ProcessId))
+  {
+    return 0;
+  }
+  return ProcessId;
 }
 
 
