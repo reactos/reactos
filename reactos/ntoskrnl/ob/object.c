@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.32 2001/02/02 20:46:36 ekohl Exp $
+/* $Id: object.c,v 1.33 2001/02/03 23:25:06 ekohl Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -334,6 +334,7 @@ NTSTATUS STDCALL ObReferenceObjectByPointer(PVOID ObjectBody,
    return(STATUS_SUCCESS);
 }
 
+
 NTSTATUS STDCALL
 ObOpenObjectByPointer(IN POBJECT Object,
 		      IN ULONG HandleAttributes,
@@ -343,8 +344,28 @@ ObOpenObjectByPointer(IN POBJECT Object,
 		      IN KPROCESSOR_MODE AccessMode,
 		      OUT PHANDLE Handle)
 {
-   UNIMPLEMENTED;
-   return STATUS_NOT_IMPLEMENTED;
+   NTSTATUS Status;
+   
+   DPRINT("ObOpenObjectByPointer()\n");
+   
+   Status = ObReferenceObjectByPointer(Object,
+				       0,
+				       ObjectType,
+				       AccessMode);
+   if (!NT_SUCCESS(Status))
+     {
+	return Status;
+     }
+   
+   Status = ObCreateHandle(PsGetCurrentProcess(),
+			   Object,
+			   DesiredAccess,
+			   FALSE,
+			   Handle);
+   
+   ObDereferenceObject(Object);
+   
+   return STATUS_SUCCESS;
 }
 
 
