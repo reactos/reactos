@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.2 2004/07/18 22:49:17 arty Exp $
+/* $Id: connect.c,v 1.3 2004/07/18 22:53:59 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/connect.c
@@ -129,7 +129,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PAFD_CONNECT_INFO ConnectReq;
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 
-    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
     if( !(ConnectReq = LockRequest( Irp, IrpSp )) ) 
 	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp, 
 				       0, NULL, TRUE );

@@ -1,4 +1,4 @@
-/* $Id: listen.c,v 1.2 2004/07/18 22:49:17 arty Exp $
+/* $Id: listen.c,v 1.3 2004/07/18 22:53:59 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/listen.c
@@ -32,7 +32,7 @@ NTSTATUS AfdListenSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("Called\n"));
 
-    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, TRUE );
     if( !(ListenReq = LockRequest( Irp, IrpSp )) ) 
 	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp, 
 				       0, NULL, FALSE );

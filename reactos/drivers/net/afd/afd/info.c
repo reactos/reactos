@@ -1,4 +1,4 @@
-/* $Id: info.c,v 1.2 2004/07/18 22:49:17 arty Exp $
+/* $Id: info.c,v 1.3 2004/07/18 22:53:59 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/info.c
@@ -23,7 +23,7 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     AFD_DbgPrint(MID_TRACE,("Called %x %x\n", InfoReq, 
 			    InfoReq ? InfoReq->InformationClass : 0));
     
-    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, TRUE );
 
     switch( InfoReq->InformationClass ) {
     case AFD_INFO_RECEIVE_WINDOW_SIZE:
