@@ -1,7 +1,7 @@
 // strpool.c
 
 #include <windows.h>
-#include <ddk\ntddk.h>
+#include <ddk/ntddk.h>
 #include <strpool.h>
 #include <string.h>
 
