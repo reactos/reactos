@@ -13,7 +13,6 @@
 STUB(KiRaiseUserExceptionDispatcher)
 STUB(LdrEnumResources)
 STUB(LdrProcessRelocationBlock)
-STUB(LdrQueryImageFileExecutionOptions)
 STUB(NPXEMULATORTABLE)
 STUB(PfxFindPrefix)
 STUB(PfxInitialize)

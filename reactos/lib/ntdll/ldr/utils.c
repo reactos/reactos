@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.68 2003/07/26 12:44:20 hbirr Exp $
+/* $Id: utils.c,v 1.69 2003/07/27 11:39:18 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -2062,6 +2062,175 @@ LdrVerifyImageMatchesChecksum (IN HANDLE FileHandle,
 			BaseAddress);
 
   NtClose (SectionHandle);
+
+  return Status;
+}
+
+
+/***************************************************************************
+ * NAME                                                         EXPORTED
+ *      LdrQueryImageFileExecutionOptions
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ *
+ * REVISIONS
+ *
+ * NOTE
+ *
+ * @implemented
+ */
+NTSTATUS STDCALL
+LdrQueryImageFileExecutionOptions (IN PUNICODE_STRING SubKey,
+				   IN PCWSTR ValueName,
+				   IN ULONG ValueSize,
+				   OUT PVOID Buffer,
+				   IN ULONG BufferSize,
+				   OUT PULONG ReturnedLength OPTIONAL)
+{
+  PKEY_VALUE_PARTIAL_INFORMATION KeyInfo;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING ValueNameString;
+  UNICODE_STRING ValueString;
+  UNICODE_STRING KeyName;
+  WCHAR NameBuffer[256];
+  HANDLE KeyHandle;
+  ULONG KeyInfoSize;
+  ULONG ResultSize;
+  PWCHAR Ptr;
+  NTSTATUS Status;
+
+  wcscpy (NameBuffer,
+	  L"\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\");
+  Ptr = wcsrchr (SubKey->Buffer, L'\\');
+  if (Ptr == NULL)
+    {
+      Ptr = SubKey->Buffer;
+    }
+  else
+    {
+      Ptr++;
+    }
+  wcscat (NameBuffer, Ptr);
+  RtlInitUnicodeString (&KeyName,
+			NameBuffer);
+
+  InitializeObjectAttributes (&ObjectAttributes,
+			      &KeyName,
+			      OBJ_CASE_INSENSITIVE,
+			      NULL,
+			      NULL);
+
+  Status = NtOpenKey (&KeyHandle,
+		      KEY_READ,
+		      &ObjectAttributes);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1 ("NtOpenKey() failed (Status %lx)\n", Status);
+      return Status;
+    }
+
+  KeyInfoSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 32;
+  KeyInfo = RtlAllocateHeap (RtlGetProcessHeap(),
+			     HEAP_ZERO_MEMORY,
+			     KeyInfoSize);
+
+  RtlInitUnicodeString (&ValueNameString,
+			(PWSTR)ValueName);
+  Status = NtQueryValueKey (KeyHandle,
+			    &ValueNameString,
+			    KeyValuePartialInformation,
+			    KeyInfo,
+			    KeyInfoSize,
+			    &ResultSize);
+  if (Status == STATUS_BUFFER_OVERFLOW)
+    {
+      KeyInfoSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + KeyInfo->DataLength;
+      RtlFreeHeap (RtlGetProcessHeap(),
+		   0,
+		   KeyInfo);
+      KeyInfo = RtlAllocateHeap (RtlGetProcessHeap(),
+				 HEAP_ZERO_MEMORY,
+				 KeyInfoSize);
+      if (KeyInfo == NULL)
+	{
+	  NtClose (KeyHandle);
+	  return Status;
+	}
+
+      Status = NtQueryValueKey (KeyHandle,
+				&ValueNameString,
+				KeyValuePartialInformation,
+				KeyInfo,
+				KeyInfoSize,
+				&ResultSize);
+    }
+  NtClose (KeyHandle);
+
+  if (!NT_SUCCESS(Status))
+    {
+      if (KeyInfo != NULL)
+	{
+	  RtlFreeHeap (RtlGetProcessHeap(),
+		       0,
+		       KeyInfo);
+	}
+      return Status;
+    }
+
+  if (KeyInfo->Type != REG_SZ)
+    {
+      RtlFreeHeap (RtlGetProcessHeap(),
+		   0,
+		   KeyInfo);
+      return STATUS_OBJECT_TYPE_MISMATCH;
+    }
+
+  if (ValueSize == sizeof(ULONG))
+    {
+      if (BufferSize != sizeof(ULONG))
+	{
+	  ResultSize = 0;
+	  Status = STATUS_INFO_LENGTH_MISMATCH;
+	}
+      else
+	{
+	  ResultSize = sizeof(ULONG);
+	  ValueString.Length = (USHORT)KeyInfo->DataLength - sizeof(WCHAR);
+	  ValueString.MaximumLength = (USHORT)KeyInfo->DataLength;
+	  ValueString.Buffer = (PWSTR)&KeyInfo->Data;
+	  Status = RtlUnicodeStringToInteger (&ValueString,
+					      0,
+					      Buffer);
+	}
+    }
+  else
+    {
+      ResultSize = BufferSize;
+      if (ResultSize < KeyInfo->DataLength)
+	{
+	  Status = STATUS_BUFFER_OVERFLOW;
+	}
+      else
+	{
+	  ResultSize = KeyInfo->DataLength;
+	}
+      RtlCopyMemory (Buffer,
+		     &KeyInfo->Data,
+		     ResultSize);
+    }
+
+  RtlFreeHeap (RtlGetProcessHeap(),
+	       0,
+	       KeyInfo);
+
+  if (ReturnedLength != NULL)
+    {
+      *ReturnedLength = ResultSize;
+    }
 
   return Status;
 }

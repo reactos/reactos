@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.105 2003/07/24 14:25:32 royce Exp $
+; $Id: ntdll.def,v 1.106 2003/07/27 11:40:01 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -47,7 +47,7 @@ LdrGetProcedureAddress@16
 LdrInitializeThunk@16
 LdrLoadDll@16
 ;LdrProcessRelocationBlock@16
-;LdrQueryImageFileExecutionOptions@24
+LdrQueryImageFileExecutionOptions@24
 LdrQueryProcessModuleInformation@12
 LdrShutdownProcess@0
 LdrShutdownThread@0
@@ -158,7 +158,6 @@ NtPrivilegedServiceAuditAlarm@20
 NtPrivilegeObjectAuditAlarm@24
 NtProtectVirtualMemory@20
 NtPulseEvent@8
-NtQueueApcThread@20
 NtQueryAttributesFile@8	
 NtQueryDefaultLocale@8	
 NtQueryDirectoryFile@44	
@@ -192,6 +191,7 @@ NtQueryTimerResolution@12
 NtQueryValueKey@24
 NtQueryVirtualMemory@24
 NtQueryVolumeInformationFile@20
+NtQueueApcThread@20
 NtRaiseException@12
 NtRaiseHardError@24
 NtReadFile@36

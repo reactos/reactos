@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.94 2003/07/24 14:25:32 royce Exp $
+; $Id: ntdll.edf,v 1.95 2003/07/27 11:40:01 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -47,7 +47,7 @@ LdrGetProcedureAddress=LdrGetProcedureAddress@16
 LdrInitializeThunk=LdrInitializeThunk@16
 LdrLoadDll=LdrLoadDll@16
 ;LdrProcessRelocationBlock
-;LdrQueryImageFileExecutionOptions
+LdrQueryImageFileExecutionOptions=LdrQueryImageFileExecutionOptions@24
 LdrQueryProcessModuleInformation=LdrQueryProcessModuleInformation@12
 LdrShutdownProcess=LdrShutdownProcess@0
 LdrShutdownThread=LdrShutdownThread@0
@@ -158,7 +158,6 @@ NtPrivilegedServiceAuditAlarm=NtPrivilegedServiceAuditAlarm@20
 NtPrivilegeObjectAuditAlarm=NtPrivilegeObjectAuditAlarm@24
 NtProtectVirtualMemory=NtProtectVirtualMemory@20
 NtPulseEvent=NtPulseEvent@8
-NtQueueApcThread=NtQueueApcThread@20
 NtQueryAttributesFile=NtQueryAttributesFile@8	
 NtQueryDefaultLocale=NtQueryDefaultLocale@8	
 NtQueryDirectoryFile=NtQueryDirectoryFile@44	
@@ -192,6 +191,7 @@ NtQueryTimerResolution=NtQueryTimerResolution@12
 NtQueryValueKey=NtQueryValueKey@24
 NtQueryVirtualMemory=NtQueryVirtualMemory@24
 NtQueryVolumeInformationFile=NtQueryVolumeInformationFile@20
+NtQueueApcThread=NtQueueApcThread@20
 NtRaiseException=NtRaiseException@12
 NtRaiseHardError=NtRaiseHardError@24
 NtReadFile=NtReadFile@36

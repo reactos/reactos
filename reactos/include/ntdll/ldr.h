@@ -118,6 +118,14 @@ LdrLoadDll(IN PWSTR SearchPath OPTIONAL,
 	   OUT PVOID *BaseAddress OPTIONAL);
 
 NTSTATUS STDCALL
+LdrQueryImageFileExecutionOptions (IN PUNICODE_STRING SubKey,
+				   IN PCWSTR ValueName,
+				   IN ULONG ValueSize,
+				   OUT PVOID Buffer,
+				   IN ULONG BufferSize,
+				   OUT PULONG RetunedLength OPTIONAL);
+
+NTSTATUS STDCALL
 LdrQueryProcessModuleInformation(IN PMODULE_INFORMATION ModuleInformation OPTIONAL,
 				 IN ULONG Size OPTIONAL,
 				 OUT PULONG ReturnedSize);
