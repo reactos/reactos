@@ -1,4 +1,4 @@
-/* $Id: ioctrl.c,v 1.11 2000/06/12 14:57:10 ekohl Exp $
+/* $Id: ioctrl.c,v 1.12 2001/03/21 23:27:18 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -78,6 +78,7 @@ NTSTATUS STDCALL NtDeviceIoControlFile (IN HANDLE DeviceHandle,
    Irp->Overlay.AsynchronousParameters.UserApcContext = UserApcContext;
 
    StackPtr = IoGetNextIrpStackLocation(Irp);
+   StackPtr->FileObject = FileObject;
    StackPtr->DeviceObject = DeviceObject;
    StackPtr->Parameters.DeviceIoControl.InputBufferLength = InputBufferSize;
    StackPtr->Parameters.DeviceIoControl.OutputBufferLength = OutputBufferSize;
