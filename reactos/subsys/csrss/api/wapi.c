@@ -1,4 +1,4 @@
-/* $Id: wapi.c,v 1.13 2001/06/29 19:33:39 ekohl Exp $
+/* $Id: wapi.c,v 1.14 2001/08/14 12:57:16 ea Exp $
  * 
  * reactos/subsys/csrss/api/wapi.c
  *
@@ -48,6 +48,7 @@ static const CsrFunc CsrFuncs[] = {
    CsrCreateScreenBuffer,
    CsrSetScreenBuffer,
    CsrSetTitle,
+   CsrGetTitle,
    0 };
 
 static void Thread_Api2(HANDLE ServerPort)
@@ -159,3 +160,4 @@ void Thread_Api(PVOID PortHandle)
      }
 }
 
+/* EOF */

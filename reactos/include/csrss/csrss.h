@@ -203,6 +203,17 @@ typedef struct
   WCHAR Title[1];
 } CSRSS_SET_TITLE_REQUEST, *PCSRSS_SET_TITLE_REQUEST;
 
+typedef struct
+{
+   HANDLE ConsoleHandle;
+} CSRSS_GET_TITLE_REQUEST, *PCSRSS_GET_TITLE_REQUEST;
+
+typedef struct
+{
+  HANDLE ConsoleHandle;
+  DWORD Length;
+  WCHAR Title[1];
+} CSRSS_GET_TITLE_REPLY, *PCSRSS_GET_TITLE_REPLY;
 
 #define CSRSS_MAX_WRITE_CONSOLE_REQUEST       (MAX_MESSAGE_DATA - sizeof( ULONG ) - sizeof( CSRSS_WRITE_CONSOLE_REQUEST))
 
@@ -214,6 +225,7 @@ typedef struct
 
 #define CSRSS_MAX_READ_CONSOLE_REQUEST        (MAX_MESSAGE_DATA - sizeof( ULONG ) - sizeof( CSRSS_READ_CONSOLE_REQUEST ))
 
+// FIXME: it should be 80. Is this a limit due to LPC msg size?
 #define CSRSS_MAX_TITLE_LENGTH          50
 
 #define CSRSS_CREATE_PROCESS            (0x0)
@@ -238,6 +250,7 @@ typedef struct
 #define CSRSS_CREATE_SCREEN_BUFFER      (0x13)
 #define CSRSS_SET_SCREEN_BUFFER         (0x14)
 #define CSRSS_SET_TITLE                 (0x15)
+#define CSRSS_GET_TITLE                 (0x16)
 
 typedef struct
 {
@@ -264,6 +277,7 @@ typedef struct
 	CSRSS_CREATE_SCREEN_BUFFER_REQUEST CreateScreenBufferRequest;
 	CSRSS_SET_ACTIVE_SCREEN_BUFFER_REQUEST SetActiveScreenBufferRequest;
         CSRSS_SET_TITLE_REQUEST SetTitleRequest;
+        CSRSS_GET_TITLE_REQUEST GetTitleRequest;
      } Data;
 } CSRSS_API_REQUEST, *PCSRSS_API_REQUEST;
 
@@ -285,6 +299,7 @@ typedef struct
 	CSRSS_GET_CURSOR_INFO_REPLY GetCursorInfoReply;
 	CSRSS_GET_CONSOLE_MODE_REPLY GetConsoleModeReply;
 	CSRSS_CREATE_SCREEN_BUFFER_REPLY CreateScreenBufferReply;
+        CSRSS_GET_TITLE_REPLY GetTitleReply;
      } Data;
 } CSRSS_API_REPLY, *PCSRSS_API_REPLY;
 

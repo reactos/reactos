@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.12 2001/03/20 16:09:44 dwelch Exp $
+/* $Id: process.c,v 1.13 2001/08/14 12:57:16 ea Exp $
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -15,6 +15,9 @@
 #include <ntdll/rtl.h>
 #include "api.h"
 
+#define LOCK   RtlEnterCriticalSection(&ProcessDataLock)
+#define UNLOCK RtlLeaveCriticalSection(&ProcessDataLock)
+
 /* GLOBALS *******************************************************************/
 
 static ULONG NrProcess;
@@ -24,29 +27,31 @@ CRITICAL_SECTION ProcessDataLock;
 
 /* FUNCTIONS *****************************************************************/
 
-VOID CsrInitProcessData(VOID)
+VOID STDCALL CsrInitProcessData(VOID)
 {
-   ULONG i;
+/*   ULONG i;
 
    for (i=0; i<256; i++)
      {
 	ProcessData[i] = NULL;
      }
-   NrProcess = 256;
+*/
+   RtlZeroMemory (ProcessData, sizeof ProcessData);
+   NrProcess = sizeof ProcessData / sizeof ProcessData[0];
    RtlInitializeCriticalSection( &ProcessDataLock );
 }
 
-PCSRSS_PROCESS_DATA CsrGetProcessData(ULONG ProcessId)
+PCSRSS_PROCESS_DATA STDCALL CsrGetProcessData(ULONG ProcessId)
 {
    ULONG i;
 
-   RtlEnterCriticalSection( &ProcessDataLock );
+   LOCK;
    for (i=0; i<NrProcess; i++)
      {
 	if (ProcessData[i] &&
 	    ProcessData[i]->ProcessId == ProcessId)
 	  {
-	     RtlLeaveCriticalSection( &ProcessDataLock );
+	     UNLOCK;
 	     return(ProcessData[i]);
 	  }
      }
@@ -59,23 +64,23 @@ PCSRSS_PROCESS_DATA CsrGetProcessData(ULONG ProcessId)
 					      sizeof(CSRSS_PROCESS_DATA));
 	     if (ProcessData[i] == NULL)
 	       {
-		  RtlLeaveCriticalSection( &ProcessDataLock );
+		  UNLOCK;
 		  return(NULL);
 	       }
 	     ProcessData[i]->ProcessId = ProcessId;
-	     RtlLeaveCriticalSection( &ProcessDataLock );
+	     UNLOCK;
 	     return(ProcessData[i]);
 	  }
      }
 //   DbgPrint("CSR: CsrGetProcessData() failed\n");
-   RtlLeaveCriticalSection(&ProcessDataLock);
+   UNLOCK;
    return(NULL);
 }
 
-NTSTATUS CsrFreeProcessData(ULONG Pid)
+NTSTATUS STDCALL CsrFreeProcessData(ULONG Pid)
 {
    int i;
-   RtlEnterCriticalSection( &ProcessDataLock );
+   LOCK;
    for( i = 0; i < NrProcess; i++ )
       {
 	 if( ProcessData[i] && ProcessData[i]->ProcessId == Pid )
@@ -95,18 +100,20 @@ NTSTATUS CsrFreeProcessData(ULONG Pid)
 		  }
 	       RtlFreeHeap( CsrssApiHeap, 0, ProcessData[i] );
 	       ProcessData[i] = 0;
-	       RtlLeaveCriticalSection( &ProcessDataLock );
+	       UNLOCK;
 	       return STATUS_SUCCESS;
 	    }
       }
-   RtlLeaveCriticalSection( &ProcessDataLock );
+   UNLOCK;
    return STATUS_INVALID_PARAMETER;
 }
 
 
-NTSTATUS CsrCreateProcess (PCSRSS_PROCESS_DATA ProcessData,
-			   PCSRSS_API_REQUEST Request,
-			   PCSRSS_API_REPLY Reply)
+/**********************************************************************
+ *	CSRSS API
+ *********************************************************************/
+
+CSR_API(CsrCreateProcess)
 {
    PCSRSS_PROCESS_DATA NewProcessData;
    NTSTATUS Status;
@@ -186,22 +193,20 @@ NTSTATUS CsrCreateProcess (PCSRSS_PROCESS_DATA ProcessData,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS CsrTerminateProcess(PCSRSS_PROCESS_DATA ProcessData,
-			     PCSRSS_API_REQUEST LpcMessage,
-			     PCSRSS_API_REPLY Reply)
+CSR_API(CsrTerminateProcess)
 {
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY) 
      - sizeof(LPC_MESSAGE_HEADER);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY);
-   
+  
+   DbgPrint("CSR: %s not implemented.\n", __FUNCTION__);
+
    Reply->Status = STATUS_NOT_IMPLEMENTED;
    
    return(STATUS_NOT_IMPLEMENTED);
 }
 
-NTSTATUS CsrConnectProcess(PCSRSS_PROCESS_DATA ProcessData,
-			   PCSRSS_API_REQUEST Request,
-			   PCSRSS_API_REPLY Reply)
+CSR_API(CsrConnectProcess)
 {
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - 

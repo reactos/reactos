@@ -1,4 +1,4 @@
-/* $Id: print.c,v 1.2 1999/12/30 01:51:41 dwelch Exp $
+/* $Id: print.c,v 1.3 2001/08/14 12:57:16 ea Exp $
  *
  * smss.c - Session Manager
  * 
@@ -32,7 +32,7 @@
 #include <csrss/csrss.h>
 
 
-VOID DisplayString(LPCWSTR lpwString)
+VOID STDCALL DisplayString(LPCWSTR lpwString)
 {
    UNICODE_STRING us;
    
@@ -40,7 +40,7 @@ VOID DisplayString(LPCWSTR lpwString)
    NtDisplayString (&us);
 }
 
-VOID PrintString (char* fmt, ...)
+VOID STDCALL PrintString (char* fmt, ...)
 {
    char buffer[512];
    va_list ap;
@@ -59,3 +59,5 @@ VOID PrintString (char* fmt, ...)
    NtDisplayString(&UnicodeString);
    RtlFreeUnicodeString (&UnicodeString);
 }
+
+/* EOF */

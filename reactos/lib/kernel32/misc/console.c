@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.33 2001/06/22 02:11:43 phreak Exp $
+/* $Id: console.c,v 1.34 2001/08/14 12:57:15 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -1759,8 +1759,60 @@ GetConsoleTitleW(
 	DWORD		nSize
 	)
 {
-/* TO DO */
-	return 0;
+	union {
+	CSRSS_API_REQUEST	quest;
+	CSRSS_API_REPLY		ply;
+	} Re;
+	NTSTATUS		Status;
+
+	/* Marshall data */
+	Re.quest.Type = CSRSS_GET_TITLE;
+	Re.quest.Data.GetTitleRequest.ConsoleHandle =
+		GetStdHandle (STD_INPUT_HANDLE);
+
+	/* Call CSRSS */
+	Status = CsrClientCallServer (
+			& Re.quest,
+			& Re.ply,
+			(sizeof (CSRSS_GET_TITLE_REQUEST) +
+			sizeof (LPC_MESSAGE_HEADER) +
+			sizeof (ULONG)),
+			sizeof (CSRSS_API_REPLY)
+			);
+	if (	!NT_SUCCESS(Status)
+		|| !NT_SUCCESS (Status = Re.ply.Status)
+		)
+	{
+		SetLastErrorByStatus (Status);
+		return (0);
+	}
+
+	/* Convert size in characters to size in bytes */
+	nSize = sizeof (WCHAR) * nSize;
+
+	/* Unmarshall data */
+	if (nSize < Re.ply.Data.GetTitleReply.Length)
+	{
+		DbgPrint ("%s: ret=%d\n", __FUNCTION__, Re.ply.Data.GetTitleReply.Length);
+		nSize /= sizeof (WCHAR);
+		if (nSize > 1)
+		{
+			wcsncpy (
+				lpConsoleTitle,
+				Re.ply.Data.GetTitleReply.Title,
+				(nSize - 1)
+				);
+			/* Add null */
+			lpConsoleTitle [nSize --] = L'\0';
+		}
+	}
+	else
+	{
+		nSize = Re.ply.Data.GetTitleReply.Length / sizeof (WCHAR);
+		wcscpy (lpConsoleTitle, Re.ply.Data.GetTitleReply.Title);
+	}
+
+	return nSize;
 }
 
 

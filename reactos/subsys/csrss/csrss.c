@@ -1,4 +1,4 @@
-/* $Id: csrss.c,v 1.8 2000/05/26 05:40:20 phreak Exp $
+/* $Id: csrss.c,v 1.9 2001/08/14 12:57:16 ea Exp $
  *
  * csrss.c - Client/Server Runtime subsystem
  * 
@@ -36,8 +36,6 @@
 #include <csrss/csrss.h>
 
 #include "api.h"
-
-VOID PrintString (char* fmt, ...);
 
 /* Native process' entry point */
 

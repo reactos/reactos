@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.8 2001/01/21 00:11:54 phreak Exp $
+/* $Id: handle.c,v 1.9 2001/08/14 12:57:16 ea Exp $
  *
  * reactos/subsys/csrss/api/handle.c
  *
@@ -17,7 +17,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS CsrGetObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle, Object_t **Object )
+NTSTATUS STDCALL CsrGetObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle, Object_t **Object )
 {
   //   DbgPrint( "CsrGetObject, Object: %x, %x, %x\n", Object, Handle, ProcessData->HandleTableSize );
    if( (((ULONG)Handle) >> 2) - 1 > ProcessData->HandleTableSize )
@@ -31,7 +31,7 @@ NTSTATUS CsrGetObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle, Object_t 
 }
 
 
-NTSTATUS CsrReleaseObject(PCSRSS_PROCESS_DATA ProcessData,
+NTSTATUS STDCALL CsrReleaseObject(PCSRSS_PROCESS_DATA ProcessData,
 			  HANDLE Handle)
 {
    Object_t *Object;
@@ -52,7 +52,7 @@ NTSTATUS CsrReleaseObject(PCSRSS_PROCESS_DATA ProcessData,
    return STATUS_SUCCESS;
 }
 
-NTSTATUS CsrInsertObject( PCSRSS_PROCESS_DATA ProcessData, PHANDLE Handle, Object_t *Object )
+NTSTATUS STDCALL CsrInsertObject( PCSRSS_PROCESS_DATA ProcessData, PHANDLE Handle, Object_t *Object )
 {
    ULONG i;
    PVOID* NewBlock;
@@ -88,4 +88,4 @@ NTSTATUS CsrInsertObject( PCSRSS_PROCESS_DATA ProcessData, PHANDLE Handle, Objec
 }
 
 
-
+/* EOF */

@@ -1,3 +1,7 @@
+/* $Id: video.c,v 1.3 2001/08/14 12:57:16 ea Exp $
+ *
+ * ReactOS Project
+ */
 #include <ddk/ntddk.h>
 
 ULONG
@@ -117,3 +121,6 @@ InitializeVideoAddressSpace(VOID)
 
    return(1);
 }
+
+
+/* EOF */

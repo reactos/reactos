@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.22 2001/07/31 20:47:44 ea Exp $
+/* $Id: conio.c,v 1.23 2001/08/14 12:57:16 ea Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -20,6 +20,7 @@
 #define LOCK   RtlEnterCriticalSection(&ActiveConsoleLock)
 #define UNLOCK RtlLeaveCriticalSection(&ActiveConsoleLock)
 
+
 /* GLOBALS *******************************************************************/
 
 static HANDLE ConsoleDeviceHandle;
@@ -30,53 +31,51 @@ static COORD PhysicalConsoleSize;
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS CsrAllocConsole(PCSRSS_PROCESS_DATA ProcessData,
-			 PCSRSS_API_REQUEST LpcMessage,
-			 PCSRSS_API_REPLY LpcReply)
+CSR_API(CsrAllocConsole)
 {
    PCSRSS_CONSOLE Console;
    HANDLE Process;
    NTSTATUS Status;
    CLIENT_ID ClientId;
 
-   LpcReply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-   LpcReply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
+   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
      sizeof(LPC_MESSAGE_HEADER);
    if( ProcessData->Console )
       {
-	 LpcReply->Status = STATUS_INVALID_PARAMETER;
+	 Reply->Status = STATUS_INVALID_PARAMETER;
 	 return STATUS_INVALID_PARAMETER;
       }
-   LpcReply->Status = STATUS_SUCCESS;
+   Reply->Status = STATUS_SUCCESS;
    Console = RtlAllocateHeap( CsrssApiHeap, 0, sizeof( CSRSS_CONSOLE ) );
    if( Console == 0 )
       {
-	LpcReply->Status = STATUS_INSUFFICIENT_RESOURCES;
+	Reply->Status = STATUS_INSUFFICIENT_RESOURCES;
 	return STATUS_INSUFFICIENT_RESOURCES;
       }
-   LpcReply->Status = CsrInitConsole( Console );
-   if( !NT_SUCCESS( LpcReply->Status ) )
+   Reply->Status = CsrInitConsole( Console );
+   if( !NT_SUCCESS( Reply->Status ) )
      {
        RtlFreeHeap( CsrssApiHeap, 0, Console );
-       return LpcReply->Status;
+       return Reply->Status;
      }
    ProcessData->Console = Console;
    /* add a reference count because the process is tied to the console */
    Console->Header.ReferenceCount++;
-   Status = CsrInsertObject( ProcessData, &LpcReply->Data.AllocConsoleReply.InputHandle, &Console->Header );
+   Status = CsrInsertObject( ProcessData, &Reply->Data.AllocConsoleReply.InputHandle, &Console->Header );
    if( !NT_SUCCESS( Status ) )
       {
 	 CsrDeleteConsole( Console );
 	 ProcessData->Console = 0;
-	 return LpcReply->Status = Status;
+	 return Reply->Status = Status;
       }
-   Status = CsrInsertObject( ProcessData, &LpcReply->Data.AllocConsoleReply.OutputHandle, &Console->ActiveBuffer->Header );
+   Status = CsrInsertObject( ProcessData, &Reply->Data.AllocConsoleReply.OutputHandle, &Console->ActiveBuffer->Header );
    if( !NT_SUCCESS( Status ) )
       {
 	 Console->Header.ReferenceCount--;
-	 CsrReleaseObject( ProcessData, LpcReply->Data.AllocConsoleReply.InputHandle );
+	 CsrReleaseObject( ProcessData, Reply->Data.AllocConsoleReply.InputHandle );
 	 ProcessData->Console = 0;
-	 return LpcReply->Status = Status;
+	 return Reply->Status = Status;
       }
    ClientId.UniqueProcess = (HANDLE)ProcessData->ProcessId;
    Status = NtOpenProcess( &Process, PROCESS_DUP_HANDLE, 0, &ClientId );
@@ -85,9 +84,9 @@ NTSTATUS CsrAllocConsole(PCSRSS_PROCESS_DATA ProcessData,
        DbgPrint( "CSR: NtOpenProcess() failed for handle duplication\n" );
        Console->Header.ReferenceCount--;
        ProcessData->Console = 0;
-       CsrReleaseObject( ProcessData, LpcReply->Data.AllocConsoleReply.OutputHandle );
-       CsrReleaseObject( ProcessData, LpcReply->Data.AllocConsoleReply.InputHandle );
-       LpcReply->Status = Status;
+       CsrReleaseObject( ProcessData, Reply->Data.AllocConsoleReply.OutputHandle );
+       CsrReleaseObject( ProcessData, Reply->Data.AllocConsoleReply.InputHandle );
+       Reply->Status = Status;
        return Status;
      }
    Status = NtDuplicateObject( NtCurrentProcess(), &ProcessData->Console->ActiveEvent, Process, &ProcessData->ConsoleEvent, SYNCHRONIZE, FALSE, 0 );
@@ -96,32 +95,28 @@ NTSTATUS CsrAllocConsole(PCSRSS_PROCESS_DATA ProcessData,
        DbgPrint( "CSR: NtDuplicateObject() failed: %x\n", Status );
        NtClose( Process );
        Console->Header.ReferenceCount--;
-       CsrReleaseObject( ProcessData, LpcReply->Data.AllocConsoleReply.OutputHandle );
-       CsrReleaseObject( ProcessData, LpcReply->Data.AllocConsoleReply.InputHandle );
+       CsrReleaseObject( ProcessData, Reply->Data.AllocConsoleReply.OutputHandle );
+       CsrReleaseObject( ProcessData, Reply->Data.AllocConsoleReply.InputHandle );
        ProcessData->Console = 0;
-       LpcReply->Status = Status;
+       Reply->Status = Status;
        return Status;
      }
    NtClose( Process );
    return STATUS_SUCCESS;
 }
 
-NTSTATUS CsrFreeConsole(PCSRSS_PROCESS_DATA ProcessData,
-			PCSRSS_API_REQUEST LpcMessage,
-			PCSRSS_API_REPLY LpcReply)
+CSR_API(CsrFreeConsole)
 {
-   LpcReply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-   LpcReply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
+   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
      sizeof(LPC_MESSAGE_HEADER);
 
-   LpcReply->Status = STATUS_NOT_IMPLEMENTED;
+   Reply->Status = STATUS_NOT_IMPLEMENTED;
    
    return(STATUS_NOT_IMPLEMENTED);
 }
 
-NTSTATUS CsrReadConsole(PCSRSS_PROCESS_DATA ProcessData,
-			PCSRSS_API_REQUEST LpcMessage,
-			PCSRSS_API_REPLY LpcReply)
+CSR_API(CsrReadConsole)
 {
    ConsoleInput *Input;
    PCHAR Buffer;
@@ -131,23 +126,23 @@ NTSTATUS CsrReadConsole(PCSRSS_PROCESS_DATA ProcessData,
    NTSTATUS Status;
    
    /* truncate length to CSRSS_MAX_READ_CONSOLE_REQUEST */
-   nNumberOfCharsToRead = LpcMessage->Data.ReadConsoleRequest.NrCharactersToRead > CSRSS_MAX_READ_CONSOLE_REQUEST ? CSRSS_MAX_READ_CONSOLE_REQUEST : LpcMessage->Data.ReadConsoleRequest.NrCharactersToRead;
-   LpcReply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-   LpcReply->Header.DataSize = LpcReply->Header.MessageSize -
+   nNumberOfCharsToRead = Request->Data.ReadConsoleRequest.NrCharactersToRead > CSRSS_MAX_READ_CONSOLE_REQUEST ? CSRSS_MAX_READ_CONSOLE_REQUEST : Request->Data.ReadConsoleRequest.NrCharactersToRead;
+   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+   Reply->Header.DataSize = Reply->Header.MessageSize -
      sizeof(LPC_MESSAGE_HEADER);
-   Buffer = LpcReply->Data.ReadConsoleReply.Buffer;
-   LpcReply->Data.ReadConsoleReply.EventHandle = ProcessData->ConsoleEvent;
+   Buffer = Reply->Data.ReadConsoleReply.Buffer;
+   Reply->Data.ReadConsoleReply.EventHandle = ProcessData->ConsoleEvent;
    LOCK;   
-   Status = CsrGetObject( ProcessData, LpcMessage->Data.ReadConsoleRequest.ConsoleHandle, (Object_t **)&Console );
+   Status = CsrGetObject( ProcessData, Request->Data.ReadConsoleRequest.ConsoleHandle, (Object_t **)&Console );
    if( !NT_SUCCESS( Status ) )
       {
-	 LpcReply->Status = Status;
+	 Reply->Status = Status;
 	 UNLOCK;
 	 return Status;
       }
    if( Console->Header.Type != CSRSS_CONSOLE_MAGIC )
       {
-	 LpcReply->Status = STATUS_INVALID_HANDLE;
+	 Reply->Status = STATUS_INVALID_HANDLE;
 	 UNLOCK;
 	 return STATUS_INVALID_HANDLE;
       }
@@ -167,20 +162,20 @@ NTSTATUS CsrReadConsole(PCSRSS_PROCESS_DATA ProcessData,
 	       if( Input->InputEvent.Event.KeyEvent.uChar.AsciiChar == '\b' )
 		  {
 		     // echo if it has not already been done, and either we or the client has chars to be deleted
-		     if( !Input->Echoed && ( i || LpcMessage->Data.ReadConsoleRequest.nCharsCanBeDeleted ) )
+		     if( !Input->Echoed && ( i || Request->Data.ReadConsoleRequest.nCharsCanBeDeleted ) )
 			CsrpWriteConsole( Console->ActiveBuffer, &Input->InputEvent.Event.KeyEvent.uChar.AsciiChar, 1, TRUE );
 		     if( i )
 			i-=2;        // if we already have something to return, just back it up by 2
 		     else
 			{            // otherwise, return STATUS_NOTIFY_CLEANUP to tell client to back up its buffer
-			   LpcReply->Data.ReadConsoleReply.NrCharactersRead = 0;
-			   LpcReply->Status = STATUS_NOTIFY_CLEANUP;
+			   Reply->Data.ReadConsoleReply.NrCharactersRead = 0;
+			   Reply->Status = STATUS_NOTIFY_CLEANUP;
 			   Console->WaitingChars--;
 			   RtlFreeHeap( CsrssApiHeap, 0, Input );
 			   UNLOCK;
 			   return STATUS_NOTIFY_CLEANUP;
 			}
-		     LpcMessage->Data.ReadConsoleRequest.nCharsCanBeDeleted--;
+		     Request->Data.ReadConsoleRequest.nCharsCanBeDeleted--;
 		     Input->Echoed = TRUE;   // mark as echoed so we don't echo it below
 		  }
 	       // do not copy backspace to buffer
@@ -195,29 +190,29 @@ NTSTATUS CsrReadConsole(PCSRSS_PROCESS_DATA ProcessData,
 	 Console->WaitingChars--;
 	 RtlFreeHeap( CsrssApiHeap, 0, Input );
       }
-   LpcReply->Data.ReadConsoleReply.NrCharactersRead = i;
+   Reply->Data.ReadConsoleReply.NrCharactersRead = i;
    if( !i )
-      LpcReply->Status = STATUS_PENDING;    // we didn't read anything
+      Reply->Status = STATUS_PENDING;    // we didn't read anything
    else if( Console->Mode & ENABLE_LINE_INPUT )
       if( !Console->WaitingLines || Buffer[i-1] != '\n' )
 	 {
-	    LpcReply->Status = STATUS_PENDING; // line buffered, didn't get a complete line
+	    Reply->Status = STATUS_PENDING; // line buffered, didn't get a complete line
 	 }
       else {
 	 Console->WaitingLines--;
-	 LpcReply->Status = STATUS_SUCCESS; // line buffered, did get a complete line
+	 Reply->Status = STATUS_SUCCESS; // line buffered, did get a complete line
       }
-   else LpcReply->Status = STATUS_SUCCESS;  // not line buffered, did read something
-   if( LpcReply->Status == STATUS_PENDING )
+   else Reply->Status = STATUS_SUCCESS;  // not line buffered, did read something
+   if( Reply->Status == STATUS_PENDING )
       {
 	 Console->EchoCount = nNumberOfCharsToRead - i;
       }
    else {
       Console->EchoCount = 0;             // if the client is no longer waiting on input, do not echo
    }
-   LpcReply->Header.MessageSize += i;
+   Reply->Header.MessageSize += i;
    UNLOCK;
-   return LpcReply->Status;
+   return Reply->Status;
 }
 
 #define SET_CELL_BUFFER(b,o,c,a)\
@@ -239,7 +234,7 @@ ClearLineBuffer (
 	}
 }
 
-NTSTATUS CsrpWriteConsole( PCSRSS_SCREEN_BUFFER Buff, CHAR *Buffer, DWORD Length, BOOL Attrib )
+NTSTATUS STDCALL CsrpWriteConsole( PCSRSS_SCREEN_BUFFER Buff, CHAR *Buffer, DWORD Length, BOOL Attrib )
 {
    IO_STATUS_BLOCK Iosb;
    NTSTATUS Status;
@@ -293,7 +288,7 @@ NTSTATUS CsrpWriteConsole( PCSRSS_SCREEN_BUFFER Buff, CHAR *Buffer, DWORD Length
 	      break;
 	    /* --- TAB --- */
 	    case '\t':
-	      CsrpWriteConsole(Buff, "        ", (8 - (Buff->CurrentX % 8)), Attrib);
+	      CsrpWriteConsole(Buff, "        ", (8 - (Buff->CurrentX % 8)), FALSE);
 	      break;
 	    /* --- */
 	    default:
@@ -310,13 +305,9 @@ NTSTATUS CsrpWriteConsole( PCSRSS_SCREEN_BUFFER Buff, CHAR *Buffer, DWORD Length
 			{
 			   /* if end of buffer, wrap back to beginning */
 			   Buff->CurrentY = 0;
-			   /* clear new line */
-			   ClearLineBuffer (Buff, 0);
 			}
-		     else {
-			/* clear new line */
-			ClearLineBuffer (Buff, 0);
-		     }
+		     /* clear new line */
+		     ClearLineBuffer (Buff, 0);
 		     /* slide the viewable screen */
 		     if( (Buff->CurrentY - Buff->ShowY) == PhysicalConsoleSize.Y )
 		       if( ++Buff->ShowY == Buff->MaxY )
@@ -336,11 +327,9 @@ NTSTATUS CsrpWriteConsole( PCSRSS_SCREEN_BUFFER Buff, CHAR *Buffer, DWORD Length
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS CsrWriteConsole(PCSRSS_PROCESS_DATA ProcessData,
-			 PCSRSS_API_REQUEST LpcMessage,
-			 PCSRSS_API_REPLY Reply)
+CSR_API(CsrWriteConsole)
 {
-   BYTE *Buffer = LpcMessage->Data.WriteConsoleRequest.Buffer;
+   BYTE *Buffer = Request->Data.WriteConsoleRequest.Buffer;
    PCSRSS_SCREEN_BUFFER Buff;
    
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
@@ -348,18 +337,18 @@ NTSTATUS CsrWriteConsole(PCSRSS_PROCESS_DATA ProcessData,
      sizeof(LPC_MESSAGE_HEADER);
 
    LOCK;
-   if( !NT_SUCCESS( CsrGetObject( ProcessData, LpcMessage->Data.WriteConsoleRequest.ConsoleHandle, (Object_t **)&Buff ) ) || Buff->Header.Type != CSRSS_SCREEN_BUFFER_MAGIC )
+   if( !NT_SUCCESS( CsrGetObject( ProcessData, Request->Data.WriteConsoleRequest.ConsoleHandle, (Object_t **)&Buff ) ) || Buff->Header.Type != CSRSS_SCREEN_BUFFER_MAGIC )
       {
 	 UNLOCK;
 	 return Reply->Status = STATUS_INVALID_HANDLE;
       }
-   CsrpWriteConsole( Buff, Buffer, LpcMessage->Data.WriteConsoleRequest.NrCharactersToWrite, TRUE );
+   CsrpWriteConsole( Buff, Buffer, Request->Data.WriteConsoleRequest.NrCharactersToWrite, TRUE );
    UNLOCK;
    return Reply->Status = STATUS_SUCCESS;
 }
 
 
-NTSTATUS CsrInitConsoleScreenBuffer( PCSRSS_SCREEN_BUFFER Console )
+NTSTATUS STDCALL CsrInitConsoleScreenBuffer( PCSRSS_SCREEN_BUFFER Console )
 {
   Console->Header.Type = CSRSS_SCREEN_BUFFER_MAGIC;
   Console->Header.ReferenceCount = 0;
@@ -386,13 +375,13 @@ NTSTATUS CsrInitConsoleScreenBuffer( PCSRSS_SCREEN_BUFFER Console )
   return STATUS_SUCCESS;
 }
 
-VOID CsrDeleteScreenBuffer( PCSRSS_SCREEN_BUFFER Buffer )
+VOID STDCALL CsrDeleteScreenBuffer( PCSRSS_SCREEN_BUFFER Buffer )
 {
   RtlFreeHeap( CsrssApiHeap, 0, Buffer->Buffer );
   RtlFreeHeap( CsrssApiHeap, 0, Buffer );
 }
 
-NTSTATUS CsrInitConsole(PCSRSS_CONSOLE Console)
+NTSTATUS STDCALL CsrInitConsole(PCSRSS_CONSOLE Console)
 {
   NTSTATUS Status;
 
@@ -452,7 +441,7 @@ NTSTATUS CsrInitConsole(PCSRSS_CONSOLE Console)
  *  CsrDrawConsole blasts the console buffer onto the screen   *
  *  must be called while holding the active console lock       *
  **************************************************************/
-VOID CsrDrawConsole( PCSRSS_SCREEN_BUFFER Buff )
+VOID STDCALL CsrDrawConsole( PCSRSS_SCREEN_BUFFER Buff )
 {
    IO_STATUS_BLOCK Iosb;
    NTSTATUS Status;
@@ -514,7 +503,7 @@ VOID CsrDrawConsole( PCSRSS_SCREEN_BUFFER Buff )
 }
 
 
-VOID CsrDeleteConsole( PCSRSS_CONSOLE Console )
+VOID STDCALL CsrDeleteConsole( PCSRSS_CONSOLE Console )
 {
    ConsoleInput *Event;
    DPRINT1( "CsrDeleteConsole\n" );
@@ -548,7 +537,7 @@ VOID CsrDeleteConsole( PCSRSS_CONSOLE Console )
    RtlFreeHeap( CsrssApiHeap, 0, Console );
 }
 
-VOID CsrInitConsoleSupport(VOID)
+VOID STDCALL CsrInitConsoleSupport(VOID)
 {
    OBJECT_ATTRIBUTES ObjectAttributes;
    UNICODE_STRING DeviceName;
@@ -875,7 +864,7 @@ VOID Console_Api( DWORD RefreshEvent )
     }
 }
 
-NTSTATUS CsrGetScreenBufferInfo( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply )
+CSR_API(CsrGetScreenBufferInfo)
 {
    NTSTATUS Status;
    PCSRSS_SCREEN_BUFFER Buff;
@@ -916,7 +905,7 @@ NTSTATUS CsrGetScreenBufferInfo( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQ
    return Reply->Status;
 }
 
-NTSTATUS CsrSetCursor( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply )
+CSR_API(CsrSetCursor)
 {
    NTSTATUS Status;
    PCSRSS_SCREEN_BUFFER Buff;
@@ -947,7 +936,7 @@ NTSTATUS CsrSetCursor( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Reque
    return Reply->Status = Status;
 }
 
-NTSTATUS CsrWriteConsoleOutputChar( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply )
+CSR_API(CsrWriteConsoleOutputChar)
 {
    BYTE *Buffer = Request->Data.WriteConsoleOutputCharRequest.String;
    PCSRSS_SCREEN_BUFFER Buff;
@@ -993,7 +982,7 @@ NTSTATUS CsrWriteConsoleOutputChar( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_
    return Reply->Status = STATUS_SUCCESS;
 }
 
-NTSTATUS CsrFillOutputChar( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply )
+CSR_API(CsrFillOutputChar)
 {
    PCSRSS_SCREEN_BUFFER Buff;
    DWORD X, Y, i;
@@ -1027,7 +1016,7 @@ NTSTATUS CsrFillOutputChar( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST 
    return Reply->Status;
 }
 
-NTSTATUS CsrReadInputEvent( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply )
+CSR_API(CsrReadInputEvent)
 {
    PCSRSS_CONSOLE Console;
    NTSTATUS Status;
@@ -1068,7 +1057,7 @@ NTSTATUS CsrReadInputEvent( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST 
    return Reply->Status = Status;
 }
 
-NTSTATUS CsrWriteConsoleOutputAttrib( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply )
+CSR_API(CsrWriteConsoleOutputAttrib)
 {
    int c;
    PCSRSS_SCREEN_BUFFER Buff;
@@ -1125,7 +1114,7 @@ NTSTATUS CsrWriteConsoleOutputAttrib( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_AP
    return Reply->Status = STATUS_SUCCESS;
 }
 
-NTSTATUS CsrFillOutputAttrib( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply )
+CSR_API(CsrFillOutputAttrib)
 {
    int c;
    PCSRSS_SCREEN_BUFFER Buff;
@@ -1184,7 +1173,7 @@ NTSTATUS CsrFillOutputAttrib( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUES
 }
 
 
-NTSTATUS CsrGetCursorInfo( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply )
+CSR_API(CsrGetCursorInfo)
 {
    PCSRSS_SCREEN_BUFFER Buff;
    NTSTATUS Status;
@@ -1205,7 +1194,7 @@ NTSTATUS CsrGetCursorInfo( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST R
    return Reply->Status = STATUS_SUCCESS;
 }
 
-NTSTATUS CsrSetCursorInfo( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply )
+CSR_API(CsrSetCursorInfo)
 {
    PCSRSS_SCREEN_BUFFER Buff;
    NTSTATUS Status;
@@ -1236,7 +1225,7 @@ NTSTATUS CsrSetCursorInfo( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST R
    return Reply->Status = STATUS_SUCCESS;
 }
 
-NTSTATUS CsrSetTextAttrib( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply )
+CSR_API(CsrSetTextAttrib)
 {
    NTSTATUS Status;
    CONSOLE_SCREEN_BUFFER_INFO ScrInfo;
@@ -1272,7 +1261,7 @@ NTSTATUS CsrSetTextAttrib( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST R
    return Reply->Status = STATUS_SUCCESS;
 }
 
-NTSTATUS CsrSetConsoleMode( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply )
+CSR_API(CsrSetConsoleMode)
 {
    NTSTATUS Status;
    PCSRSS_CONSOLE Console;
@@ -1303,7 +1292,7 @@ NTSTATUS CsrSetConsoleMode( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST 
    return Reply->Status;
 }
 
-NTSTATUS CsrGetConsoleMode( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply )
+CSR_API(CsrGetConsoleMode)
 {
    NTSTATUS Status;
    PCSRSS_CONSOLE Console;
@@ -1330,7 +1319,7 @@ NTSTATUS CsrGetConsoleMode( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST 
    return Reply->Status;
 }
 
-NTSTATUS CsrCreateScreenBuffer( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply )
+CSR_API(CsrCreateScreenBuffer)
 {
    PCSRSS_SCREEN_BUFFER Buff = RtlAllocateHeap( CsrssApiHeap, 0, sizeof( CSRSS_SCREEN_BUFFER ) );
    NTSTATUS Status;
@@ -1353,7 +1342,7 @@ NTSTATUS CsrCreateScreenBuffer( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQU
    return Reply->Status;
 }
 
-NTSTATUS CsrSetScreenBuffer( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply )
+CSR_API(CsrSetScreenBuffer)
 {
    NTSTATUS Status;
    PCSRSS_SCREEN_BUFFER Buff;
@@ -1381,7 +1370,7 @@ NTSTATUS CsrSetScreenBuffer( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST
    return Reply->Status;
 }
 
-NTSTATUS CsrSetTitle( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply )
+CSR_API(CsrSetTitle)
 {
   NTSTATUS Status;
   PCSRSS_CONSOLE Console;
@@ -1402,3 +1391,40 @@ NTSTATUS CsrSetTitle( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Reques
   return Reply->Status;
 }
 
+CSR_API(CsrGetTitle)
+{
+	NTSTATUS	Status;
+	PCSRSS_CONSOLE	Console;
+  
+	Reply->Header.MessageSize = sizeof (CSRSS_API_REPLY);
+	Reply->Header.DataSize =
+		sizeof (CSRSS_API_REPLY)
+		- sizeof(LPC_MESSAGE_HEADER);
+	LOCK;
+	Status = CsrGetObject (
+			ProcessData,
+			Request->Data.GetTitleRequest.ConsoleHandle,
+			(Object_t **) & Console
+			);
+	if ( !NT_SUCCESS( Status ) )
+	{
+		Reply->Status = Status;
+	}
+	else
+	{
+		/* Copy title of the console to the user title buffer */
+		RtlZeroMemory (
+			& Reply->Data.GetTitleReply,
+			sizeof (CSRSS_GET_TITLE_REPLY)
+			);
+		Reply->Data.GetTitleReply.ConsoleHandle =
+			Request->Data.GetTitleRequest.ConsoleHandle;
+		Reply->Data.GetTitleReply.Length = Console->Title.Length;
+		wcscpy (Reply->Data.GetTitleReply.Title, Console->Title.Buffer);
+		Reply->Status = STATUS_SUCCESS;
+	}
+	UNLOCK;
+	return Reply->Status;
+}
+
+/* EOF */

@@ -1,3 +1,6 @@
+#ifndef _CSRSS_API_H
+#define _CSRSS_API_H
+
 #include <ntos.h>
 
 #include <csrss/csrss.h>
@@ -63,6 +66,10 @@ typedef struct CSRSS_CONSOLE_t
    WORD Mode;                            /* Console mode flags */
    WORD EchoCount;                       /* count of chars to echo, in line buffered mode */
    UNICODE_STRING Title;                 /* Title of console */
+   struct {				/* active code pages */
+	   UINT Input;
+	   UINT Output;
+   } CodePageId;
 } CSRSS_CONSOLE, *PCSRSS_CONSOLE;
 
 typedef struct
@@ -75,69 +82,42 @@ typedef struct
 } CSRSS_PROCESS_DATA, *PCSRSS_PROCESS_DATA;
 
 
-VOID CsrInitProcessData(VOID);
+#define CSR_API(n) NTSTATUS n (\
+PCSRSS_PROCESS_DATA ProcessData,\
+PCSRSS_API_REQUEST Request,\
+PCSRSS_API_REPLY Reply)
 
-NTSTATUS CsrCreateProcess (PCSRSS_PROCESS_DATA ProcessData,
-			   PCSRSS_API_REQUEST Request,
-			   PCSRSS_API_REPLY Reply);
+/* api/process.c */
+CSR_API(CsrConnectProcess);
+CSR_API(CsrCreateProcess);
+CSR_API(CsrTerminateProcess);
 
-NTSTATUS CsrTerminateProcess(PCSRSS_PROCESS_DATA ProcessData,
-			     PCSRSS_API_REQUEST LpcMessage,
-			     PCSRSS_API_REPLY Reply);
-
-NTSTATUS CsrWriteConsole(PCSRSS_PROCESS_DATA ProcessData,
-			 PCSRSS_API_REQUEST LpcMessage,
-			 PCSRSS_API_REPLY Reply);
-
-NTSTATUS CsrAllocConsole(PCSRSS_PROCESS_DATA ProcessData,
-			 PCSRSS_API_REQUEST LpcMessage,
-			 PCSRSS_API_REPLY Reply);
-
-NTSTATUS CsrFreeConsole(PCSRSS_PROCESS_DATA ProcessData,
-			PCSRSS_API_REQUEST LpcMessage,
-			PCSRSS_API_REPLY Reply);
-
-NTSTATUS CsrReadConsole(PCSRSS_PROCESS_DATA ProcessData,
-			PCSRSS_API_REQUEST LpcMessage,
-			PCSRSS_API_REPLY Reply);
-
-NTSTATUS CsrConnectProcess(PCSRSS_PROCESS_DATA ProcessData,
-			   PCSRSS_API_REQUEST Request,
-			   PCSRSS_API_REPLY Reply);
-
-NTSTATUS CsrGetScreenBufferInfo( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply );
-
-NTSTATUS CsrSetCursor( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply );
-
-NTSTATUS CsrFillOutputChar( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply );
-
-NTSTATUS CsrReadInputEvent( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply );
-
-NTSTATUS CsrWriteConsoleOutputChar( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply );
-
-NTSTATUS CsrWriteConsoleOutputAttrib( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply );
-
-NTSTATUS CsrFillOutputAttrib( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply );
-
-NTSTATUS CsrGetCursorInfo( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply );
-
-NTSTATUS CsrSetCursorInfo( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply );
-
-NTSTATUS CsrSetTextAttrib( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply );
-
-NTSTATUS CsrSetConsoleMode( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply );
-
-NTSTATUS CsrGetConsoleMode( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply );
-
-NTSTATUS CsrCreateScreenBuffer( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply );
-
-NTSTATUS CsrSetScreenBuffer( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply );
-
-NTSTATUS CsrSetTitle( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply );
+/* api/conio.c */
+CSR_API(CsrWriteConsole);
+CSR_API(CsrAllocConsole);
+CSR_API(CsrFreeConsole);
+CSR_API(CsrReadConsole);
+CSR_API(CsrConnectProcess);
+CSR_API(CsrGetScreenBufferInfo);
+CSR_API(CsrSetCursor);
+CSR_API(CsrFillOutputChar);
+CSR_API(CsrReadInputEvent);
+CSR_API(CsrWriteConsoleOutputChar);
+CSR_API(CsrWriteConsoleOutputAttrib);
+CSR_API(CsrFillOutputAttrib);
+CSR_API(CsrGetCursorInfo);
+CSR_API(CsrSetCursorInfo);
+CSR_API(CsrSetTextAttrib);
+CSR_API(CsrSetConsoleMode);
+CSR_API(CsrGetConsoleMode);
+CSR_API(CsrCreateScreenBuffer);
+CSR_API(CsrSetScreenBuffer);
+CSR_API(CsrSetTitle);
+CSR_API(CsrGetTitle);
 
 /* print.c */
-VOID DisplayString(LPCWSTR lpwString);
-VOID PrintString (char* fmt, ...);
+VOID STDCALL DisplayString(LPCWSTR lpwString);
+VOID STDCALL PrintString (char* fmt, ...);
 
 /* api/wapi.c */
 VOID Thread_Api(PVOID PortHandle);
@@ -146,21 +126,23 @@ VOID Console_Api( DWORD Ignored );
 extern HANDLE CsrssApiHeap;
 
 /* api/conio.c */
-NTSTATUS CsrInitConsole(PCSRSS_CONSOLE Console);
-VOID CsrDeleteConsole( PCSRSS_CONSOLE Console );
-VOID CsrDeleteScreenBuffer( PCSRSS_SCREEN_BUFFER Buffer );
-NTSTATUS CsrInitConsoleScreenBuffer( PCSRSS_SCREEN_BUFFER Console );
-VOID CsrInitConsoleSupport(VOID);
+NTSTATUS STDCALL CsrInitConsole(PCSRSS_CONSOLE Console);
+VOID STDCALL CsrDeleteConsole( PCSRSS_CONSOLE Console );
+VOID STDCALL CsrDeleteScreenBuffer( PCSRSS_SCREEN_BUFFER Buffer );
+NTSTATUS STDCALL CsrInitConsoleScreenBuffer( PCSRSS_SCREEN_BUFFER Console );
+VOID STDCALL CsrInitConsoleSupport(VOID);
 
 /* api/process.c */
-PCSRSS_PROCESS_DATA CsrGetProcessData(ULONG ProcessId);
-NTSTATUS CsrFreeProcessData( ULONG Pid );
-/* api/handle.c */
-NTSTATUS CsrInsertObject( PCSRSS_PROCESS_DATA ProcessData, PHANDLE Handle, Object_t *Object );
-NTSTATUS CsrGetObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle, Object_t **Object );
+VOID STDCALL CsrInitProcessData(VOID);
+PCSRSS_PROCESS_DATA STDCALL CsrGetProcessData(ULONG ProcessId);
+NTSTATUS STDCALL CsrFreeProcessData( ULONG Pid );
 
-BOOL STDCALL CsrServerInitialization (ULONG ArgumentCount,
-				      PWSTR *ArgumentArray);
-NTSTATUS CsrReleaseObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Object );
-VOID CsrDrawConsole( PCSRSS_SCREEN_BUFFER Console );
-NTSTATUS CsrpWriteConsole( PCSRSS_SCREEN_BUFFER Buff, CHAR *Buffer, DWORD Length, BOOL Attrib );
+/* api/handle.c */
+NTSTATUS STDCALL CsrInsertObject( PCSRSS_PROCESS_DATA ProcessData, PHANDLE Handle, Object_t *Object );
+NTSTATUS STDCALL CsrGetObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle, Object_t **Object );
+BOOL STDCALL CsrServerInitialization (ULONG ArgumentCount, PWSTR *ArgumentArray);
+NTSTATUS STDCALL CsrReleaseObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Object );
+VOID STDCALL CsrDrawConsole( PCSRSS_SCREEN_BUFFER Console );
+NTSTATUS STDCALL CsrpWriteConsole( PCSRSS_SCREEN_BUFFER Buff, CHAR *Buffer, DWORD Length, BOOL Attrib );
+
+#endif /* ndef _CSRSS_API_H */
