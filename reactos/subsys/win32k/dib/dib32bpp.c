@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib32bpp.c,v 1.8 2003/12/18 18:09:48 fireball Exp $ */
+/* $Id: dib32bpp.c,v 1.9 2003/12/18 18:30:48 fireball Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -301,13 +301,6 @@ typedef unsigned long PIXEL;
 /* 32-bit Color (___ format) */
 inline PIXEL average32(PIXEL a, PIXEL b)
 {
-/*
-  if (a == b) {
-    return a;
-  } else {
-    unsigned short mask = ~ (((a | b) & 0x0410) << 1);
-    return ((a & mask) + (b & mask)) >> 1;
-  }*/ /* if */
   return a; // FIXME: Temp hack to remove "PCB-effect" from the image
 }
 

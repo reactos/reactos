@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib8bpp.c,v 1.9 2003/12/08 18:05:30 fireball Exp $ */
+/* $Id: dib8bpp.c,v 1.10 2003/12/18 18:30:48 fireball Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -341,14 +341,167 @@ DIB_8BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
   return TRUE;
 }
 
+/*
+=======================================
+ Stretching functions goes below
+ Some parts of code are based on an
+ article "Bresenhame image scaling"
+ Dr. Dobb Journal, May 2002
+=======================================
+*/
+
+typedef unsigned char PIXEL;
+
+/* 16-bit HiColor (565 format) */
+inline PIXEL average8(PIXEL a, PIXEL b)
+{
+  return a; // FIXME: Depend on SetStretchMode
+}
+
+//NOTE: If you change something here, please do the same in other dibXXbpp.c files!
+void ScaleLineAvg8(PIXEL *Target, PIXEL *Source, int SrcWidth, int TgtWidth)
+{
+  int NumPixels = TgtWidth;
+  int IntPart = SrcWidth / TgtWidth;
+  int FractPart = SrcWidth % TgtWidth;
+  int Mid = TgtWidth / 2;
+  int E = 0;
+  int skip;
+  PIXEL p;
+
+  skip = (TgtWidth < SrcWidth) ? 0 : (TgtWidth / (2*SrcWidth) + 1);
+  NumPixels -= skip;
+
+  while (NumPixels-- > 0) {
+    p = *Source;
+    if (E >= Mid)
+      p = average8(p, *(Source+1));
+    *Target++ = p;
+    Source += IntPart;
+    E += FractPart;
+    if (E >= TgtWidth) {
+      E -= TgtWidth;
+      Source++;
+    } /* if */
+  } /* while */
+  while (skip-- > 0)
+    *Target++ = *Source;
+}
+
+//NOTE: If you change something here, please do the same in other dibXXbpp.c files!
+void ScaleRectAvg8(PIXEL *Target, PIXEL *Source, int SrcWidth, int SrcHeight,
+                  int TgtWidth, int TgtHeight, int srcPitch, int dstPitch)
+{
+  int NumPixels = TgtHeight;
+  int IntPart = (SrcHeight / TgtHeight) * (SrcWidth+1);
+  int FractPart = SrcHeight % TgtHeight;
+  int Mid = TgtHeight / 2;
+  int E = 0;
+  int skip;
+  PIXEL *ScanLine, *ScanLineAhead;
+  PIXEL *PrevSource = NULL;
+  PIXEL *PrevSourceAhead = NULL;
+
+  skip = (TgtHeight < SrcHeight) ? 0 : (TgtHeight / (2*SrcHeight) + 1);
+  NumPixels -= skip;
+
+  ScanLine = (PIXEL*)ExAllocatePool(NonPagedPool, TgtWidth*sizeof(PIXEL)); // FIXME: Should we use PagedPool here?
+  ScanLineAhead = (PIXEL *)ExAllocatePool(NonPagedPool, TgtWidth*sizeof(PIXEL));
+
+  while (NumPixels-- > 0) {
+    if (Source != PrevSource) {
+      if (Source == PrevSourceAhead) {
+        /* the next scan line has already been scaled and stored in
+         * ScanLineAhead; swap the buffers that ScanLine and ScanLineAhead
+         * point to
+         */
+        PIXEL *tmp = ScanLine;
+        ScanLine = ScanLineAhead;
+        ScanLineAhead = tmp;
+      } else {
+        ScaleLineAvg8(ScanLine, Source, SrcWidth, TgtWidth);
+      } /* if */
+      PrevSource = Source;
+    } /* if */
+    
+    if (E >= Mid && PrevSourceAhead != (PIXEL *)((BYTE *)Source + srcPitch)) {
+      int x;
+      ScaleLineAvg8(ScanLineAhead, (PIXEL *)((BYTE *)Source + srcPitch), SrcWidth, TgtWidth);
+      for (x = 0; x < TgtWidth; x++)
+        ScanLine[x] = average8(ScanLine[x], ScanLineAhead[x]);
+      PrevSourceAhead = (PIXEL *)((BYTE *)Source + srcPitch);
+    } /* if */
+    
+    memcpy(Target, ScanLine, TgtWidth*sizeof(PIXEL));
+    Target = (PIXEL *)((BYTE *)Target + dstPitch);
+    Source += IntPart;
+    E += FractPart;
+    if (E >= TgtHeight) {
+      E -= TgtHeight;
+      Source = (PIXEL *)((BYTE *)Source + srcPitch);
+    } /* if */
+  } /* while */
+
+  if (skip > 0 && Source != PrevSource)
+    ScaleLineAvg8(ScanLine, Source, SrcWidth, TgtWidth);
+  while (skip-- > 0) {
+    memcpy(Target, ScanLine, TgtWidth*sizeof(PIXEL));
+    Target = (PIXEL *)((BYTE *)Target + dstPitch);
+  } /* while */
+
+  ExFreePool(ScanLine);
+  ExFreePool(ScanLineAhead);
+}
+
 BOOLEAN DIB_8BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                             SURFGDI *DestGDI, SURFGDI *SourceGDI,
                             RECTL* DestRect, RECTL *SourceRect,
                             POINTL* MaskOrigin, POINTL* BrushOrigin,
 			                XLATEOBJ *ColorTranslation, ULONG Mode)
 {
-  DbgPrint("DIB_8BPP_StretchBlt: Source BPP: %u\n", SourceGDI->BitsPerPixel);
-  return FALSE;
+  BYTE *SourceLine, *DestLine;
+  
+  DbgPrint("DIB_8BPP_StretchBlt: Source BPP: %u, srcRect: (%d,%d)-(%d,%d), dstRect: (%d,%d)-(%d,%d)\n",
+     SourceGDI->BitsPerPixel, SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom,
+     DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
+
+    switch(SourceGDI->BitsPerPixel)
+    {
+      case 1:
+         return FALSE;      
+      break;
+  
+      case 4:
+         return FALSE;
+      break;
+  
+      case 8:
+	    SourceLine = SourceSurf->pvScan0 + (SourceRect->top * SourceSurf->lDelta) + SourceRect->left;
+	    DestLine = DestSurf->pvScan0 + (DestRect->top * DestSurf->lDelta) + DestRect->left;
+
+        ScaleRectAvg8((PIXEL *)DestLine, (PIXEL *)SourceLine,
+           SourceRect->right-SourceRect->left, SourceRect->bottom-SourceRect->top, 
+           DestRect->right-DestRect->left, DestRect->bottom-DestRect->top, SourceSurf->lDelta, DestSurf->lDelta);
+      break;
+
+      case 16:
+         return FALSE;
+      break;
+    
+      case 24:
+         return FALSE;
+      break;
+      
+      case 32:
+         return FALSE;
+      break;
+      
+      default:
+         DbgPrint("DIB_8BPP_StretchBlt: Unhandled Source BPP: %u\n", SourceGDI->BitsPerPixel);
+      return FALSE;
+    }
+    
+  return TRUE;
 }
 
 /* EOF */

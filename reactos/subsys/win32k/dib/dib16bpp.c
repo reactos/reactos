@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib16bpp.c,v 1.14 2003/12/18 18:09:48 fireball Exp $ */
+/* $Id: dib16bpp.c,v 1.15 2003/12/18 18:30:48 fireball Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -352,7 +352,7 @@ DIB_16BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 typedef unsigned short PIXEL;
 
 /* 16-bit HiColor (565 format) */
-inline PIXEL average(PIXEL a, PIXEL b)
+inline PIXEL average16(PIXEL a, PIXEL b)
 {
 // This one doesn't work
 /*
@@ -404,7 +404,7 @@ void ScaleLineAvg16(PIXEL *Target, PIXEL *Source, int SrcWidth, int TgtWidth)
   while (NumPixels-- > 0) {
     p = *Source;
     if (E >= Mid)
-      p = average(p, *(Source+1));
+      p = average16(p, *(Source+1));
     *Target++ = p;
     Source += IntPart;
     E += FractPart;
@@ -418,7 +418,7 @@ void ScaleLineAvg16(PIXEL *Target, PIXEL *Source, int SrcWidth, int TgtWidth)
 }
 
 //NOTE: If you change something here, please do the same in other dibXXbpp.c files!
-void ScaleRectAvg(PIXEL *Target, PIXEL *Source, int SrcWidth, int SrcHeight,
+void ScaleRectAvg16(PIXEL *Target, PIXEL *Source, int SrcWidth, int SrcHeight,
                   int TgtWidth, int TgtHeight, int srcPitch, int dstPitch)
 {
   int NumPixels = TgtHeight;
@@ -457,7 +457,7 @@ void ScaleRectAvg(PIXEL *Target, PIXEL *Source, int SrcWidth, int SrcHeight,
       int x;
       ScaleLineAvg16(ScanLineAhead, (PIXEL *)((BYTE *)Source + srcPitch), SrcWidth, TgtWidth);
       for (x = 0; x < TgtWidth; x++)
-        ScanLine[x] = average(ScanLine[x], ScanLineAhead[x]);
+        ScanLine[x] = average16(ScanLine[x], ScanLineAhead[x]);
       PrevSourceAhead = (PIXEL *)((BYTE *)Source + srcPitch);
     } /* if */
     
@@ -513,7 +513,7 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 	    SourceLine = SourceSurf->pvScan0 + (SourceRect->top * SourceSurf->lDelta) + 2 * SourceRect->left;
 	    DestLine = DestSurf->pvScan0 + (DestRect->top * DestSurf->lDelta) + 2 * DestRect->left;
 
-        ScaleRectAvg((PIXEL *)DestLine, (PIXEL *)SourceLine,
+        ScaleRectAvg16((PIXEL *)DestLine, (PIXEL *)SourceLine,
            SourceRect->right-SourceRect->left, SourceRect->bottom-SourceRect->top, 
            DestRect->right-DestRect->left, DestRect->bottom-DestRect->top, SourceSurf->lDelta, DestSurf->lDelta);
       break;
