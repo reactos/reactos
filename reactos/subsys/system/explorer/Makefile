@@ -9,13 +9,17 @@ ifeq ($(HOST),)
 HOST = mingw32-windows
 endif
 
-ifeq ($(HOST),mingw32-linux)
-CC = mingw32-gcc
-CXX = mingw32-g++
-LINK = mingw32-g++
-RC = mingw32-windres
-CD_PREFIX := ./
+# Set up default prefix
+ifeq ($(PREFIX),)
 PREFIX = mingw32-
+endif
+
+ifeq ($(HOST),mingw32-linux)
+CC = $(PREFIX)gcc
+CXX = $(PREFIX)g++
+LINK = $(PREFIX)g++
+RC = $(PREFIX)windres
+CD_PREFIX := ./
 EXE_POSTFIX :=
 EXE_PREFIX := ./
 endif
