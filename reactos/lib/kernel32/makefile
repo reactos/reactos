@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.44 2001/02/17 17:41:17 ekohl Exp $
+# $Id: makefile,v 1.45 2001/03/30 15:14:52 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -8,7 +8,7 @@ TARGET = kernel32
 
 KERNEL32_BASE = 0x77f00000
 
-CFLAGS = -DKERNEL32_BASE=$(KERNEL32_BASE)
+CFLAGS := -DKERNEL32_BASE=$(KERNEL32_BASE) -g
 
 DLLTARGET=$(TARGET).dll
 

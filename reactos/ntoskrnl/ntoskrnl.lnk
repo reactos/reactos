@@ -80,10 +80,12 @@ SECTIONS
     *(COMMON)
     __bss_end__ = . ;
   }
+/*
   .reloc BLOCK(__section_alignment__) :
   { 					
     *(.reloc) 
   }
+*/
   .stab BLOCK(__section_alignment__) (NOLOAD) :
   {
     [ .stab ]

@@ -313,6 +313,7 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
    PULONG stack;
    NTSTATUS Status;
    ULONG Esp0;
+   ULONG StackLimit;
    static char *TypeStrings[] = 
      {
        "Divide Error",
@@ -437,6 +438,15 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
        stack = (PULONG)(((ULONG)stack) & (~0x3));
        
        DbgPrint("stack<%p>: ", stack);
+
+       if (PsGetCurrentThread() != NULL)
+	 {
+	   StackLimit = (ULONG)PsGetCurrentThread()->Tcb.StackBase;
+	 }
+       else
+	 {
+	   StackLimit = (ULONG)&init_stack_top;
+	 }
 	 
        for (i = 0; i < 18; i = i + 6)
 	 {
@@ -446,7 +456,7 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 		     stack[i+4], stack[i+5]);
 	 }
        DbgPrint("Frames:\n");
-       for (i = 0; i < 32; i++)
+       for (i = 0; i < 32 && ((ULONG)&stack[i] < StackLimit); i++)
 	 {
 	    if (stack[i] > ((unsigned int) &_text_start__) &&
 	      !(stack[i] >= ((ULONG)&init_stack) &&
@@ -508,10 +518,12 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
    for(;;);
 }
 
-VOID KeDumpStackFrames(PVOID _Stack, ULONG NrFrames)
+VOID 
+KeDumpStackFrames(PVOID _Stack, ULONG NrFrames)
 {
    PULONG Stack = (PULONG)_Stack;
    ULONG i;
+   ULONG StackLimit;
    
    Stack = (PVOID)(((ULONG)Stack) & (~0x3));
    DbgPrint("Stack: %x\n", Stack);
@@ -520,14 +532,21 @@ VOID KeDumpStackFrames(PVOID _Stack, ULONG NrFrames)
 	DbgPrint("kernel stack base %x\n",
 		 PsGetCurrentThread()->Tcb.StackLimit);
      }
+
+   if (PsGetCurrentThread() != NULL)
+     {
+       StackLimit = (ULONG)PsGetCurrentThread()->Tcb.StackBase;
+     }
+   else
+     {
+       StackLimit = (ULONG)&init_stack_top;
+     }
    
    DbgPrint("Frames:\n");
-   for (i=0; i<NrFrames; i++)
+   for (i=0; i<NrFrames && ((ULONG)&Stack[i] < StackLimit); i++)
      {
-//	if (Stack[i] > KERNEL_BASE && Stack[i] < ((ULONG)&etext))
 	if (Stack[i] > KERNEL_BASE)
 	  {
-//	     DbgPrint("%.8x  ",Stack[i]);
 	     print_address((PVOID)Stack[i]);
 	     DbgPrint(" ");
 	  }

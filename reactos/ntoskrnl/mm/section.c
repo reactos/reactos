@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.53 2001/03/29 17:24:43 dwelch Exp $
+/* $Id: section.c,v 1.54 2001/03/30 15:14:53 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -1557,7 +1557,6 @@ MmMapViewOfSegment(PEPROCESS Process,
 			      FALSE);
    if (!NT_SUCCESS(Status))
      {
-	MmUnlockAddressSpace(AddressSpace);
 	return(Status);
      }
    
@@ -1680,27 +1679,30 @@ NtMapViewOfSection(HANDLE SectionHandle,
 	 {
 	   PVOID SBaseAddress;
 
-	   SBaseAddress = (PVOID)
-	     ((ULONG)Section->ImageBase + 
-	      (ULONG)Section->Segments[i].VirtualAddress);
-
-	   MmLockSectionSegment(&Section->Segments[i]);
-	   Status = MmMapViewOfSegment(Process,
-				       &Process->AddressSpace,
-				       Section,
-				       &Section->Segments[i],
-				       &SBaseAddress,
-				       Section->Segments[i].Length,
-				       Section->Segments[i].Protection,
-				       Section->Segments[i].FileOffset);
-	   MmUnlockSectionSegment(&Section->Segments[i]);
-	   if (!NT_SUCCESS(Status))
+	   if (!(Section->Segments[i].Characteristics & IMAGE_SECTION_NOLOAD))
 	     {
-	       MmUnlockSection(Section);
-	       MmUnlockAddressSpace(AddressSpace);	       
-	       ObDereferenceObject(Section);
-	       ObDereferenceObject(Process);
-	       return(Status);
+	       SBaseAddress = (PVOID)
+		 ((ULONG)Section->ImageBase + 
+		  (ULONG)Section->Segments[i].VirtualAddress);
+
+	       MmLockSectionSegment(&Section->Segments[i]);
+	       Status = MmMapViewOfSegment(Process,
+					   &Process->AddressSpace,
+					   Section,
+					   &Section->Segments[i],
+					   &SBaseAddress,
+					   Section->Segments[i].Length,
+					   Section->Segments[i].Protection,
+					   Section->Segments[i].FileOffset);
+	       MmUnlockSectionSegment(&Section->Segments[i]);
+	       if (!NT_SUCCESS(Status))
+		 {
+		   MmUnlockSection(Section);
+		   MmUnlockAddressSpace(AddressSpace);	       
+		   ObDereferenceObject(Section);
+		   ObDereferenceObject(Process);
+		   return(Status);
+		 }
 	     }
 	 }
        *BaseAddress = Section->ImageBase;
