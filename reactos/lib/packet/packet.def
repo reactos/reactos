@@ -3,27 +3,32 @@ LIBRARY packet
 DESCRIPTION 'Packet driver dll'
 
 EXPORTS
-PacketLibraryVersion
-PacketGetVersion
-PacketOpenAdapter
-PacketSendPacket
-PacketAllocatePacket
-PacketInitPacket
-PacketFreePacket
-PacketReceivePacket
-PacketCloseAdapter
-PacketSetHwFilter
-PacketGetAdapterNames
-PacketRequest
-PacketSetBuff
-PacketSetBpf
-PacketGetStats
-PacketGetNetType
-PacketSetReadTimeout
-PacketSetMode
-PacketSetNumWrites
-PacketGetNetInfo
-PacketGetNetInfoEx
-PacketSetMinToCopy
-PacketGetReadEvent
-PacketStopDriver
+		PacketLibraryVersion
+		PacketGetVersion
+		PacketOpenAdapter
+		PacketSendPacket
+		PacketSendPackets
+		PacketAllocatePacket
+		PacketInitPacket
+		PacketFreePacket
+		PacketReceivePacket
+		PacketCloseAdapter
+		PacketSetHwFilter
+		PacketGetAdapterNames
+		PacketRequest
+		PacketSetBuff
+		PacketSetBpf
+		PacketGetStats
+		PacketGetStatsEx
+		PacketGetNetType
+		PacketSetReadTimeout
+		PacketSetMode
+		PacketSetNumWrites
+		PacketGetNetInfo
+		PacketGetNetInfoEx
+		PacketSetMinToCopy
+		PacketGetReadEvent
+		PacketStopDriver
+		PacketSetDumpName
+		PacketSetDumpLimits
+		PacketIsDumpEnded
