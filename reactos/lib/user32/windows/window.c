@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.118 2004/05/21 10:09:31 weiden Exp $
+/* $Id: window.c,v 1.119 2004/05/23 14:04:58 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -193,9 +193,6 @@ CreateWindowExA(DWORD dwExStyle,
       ControlsInitialized = ControlsInit(ClassName.Buffer);
     }
 
-  if ( hInstance == NULL )
-    hInstance = GetModuleHandleW(NULL);
-
   if (dwExStyle & WS_EX_MDICHILD)
   {
      if (!IS_ATOM(lpClassName))
@@ -280,9 +277,6 @@ CreateWindowExW(DWORD dwExStyle,
     {
       ControlsInitialized = ControlsInit(lpClassName);
     }
-
-  if ( hInstance == NULL )
-    hInstance = GetModuleHandleW(NULL);
 
   if (dwExStyle & WS_EX_MDICHILD)
      return CreateMDIWindowW(lpClassName, lpWindowName, dwStyle, x, y,

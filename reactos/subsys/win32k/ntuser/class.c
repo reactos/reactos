@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.55 2004/05/17 16:38:58 navaraf Exp $
+/* $Id: class.c,v 1.56 2004/05/23 14:04:58 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -63,7 +63,7 @@ ClassReferenceClassByAtom(
    {
       Current = CONTAINING_RECORD(CurrentEntry, WNDCLASS_OBJECT, ListEntry);
       
-      if (Current->Atom == Atom && Current->hInstance == hInstance)
+      if (Current->Atom == Atom && (hInstance == NULL || Current->hInstance == hInstance))
       {
          *Class = Current;
          ObmReferenceObject(Current);
