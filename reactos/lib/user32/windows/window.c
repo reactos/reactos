@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.19 2003/03/06 23:57:00 gvg Exp $
+/* $Id: window.c,v 1.20 2003/03/09 15:08:33 jfilby Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -925,8 +925,8 @@ MapWindowPoints(HWND hWndFrom, HWND hWndTo, LPPOINT lpPoints, UINT cPoints)
 
   NtUserGetClientOrigin(hWndFrom, &FromOffset);
   NtUserGetClientOrigin(hWndTo, &ToOffset);
-  XMove = ToOffset.x - FromOffset.x;
-  YMove = ToOffset.y - FromOffset.y;
+  XMove = FromOffset.x - ToOffset.x;
+  YMove = FromOffset.y - ToOffset.y;
   for (i = 0; i < cPoints; i++)
     {
       lpPoints[i].x += XMove;
