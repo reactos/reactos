@@ -85,6 +85,7 @@ using namespace _com_util;
 #define	BUFFER_LEN				1024
 
 
+ /// initialization of windows common controls
 struct CommonControlInit
 {
 	CommonControlInit(DWORD flags=ICC_LISTVIEW_CLASSES|ICC_TREEVIEW_CLASSES|ICC_BAR_CLASSES|ICC_PROGRESS_CLASS|ICC_COOL_CLASSES)
@@ -115,6 +116,7 @@ protected:
 };
 
 
+ /// base of all structures storing a window handle
 struct WindowHandle
 {
 	WindowHandle(HWND hwnd=0)
@@ -128,6 +130,7 @@ protected:
 };
 
 
+ /// locally hide a window
 struct HiddenWindow : public WindowHandle
 {
 	HiddenWindow(HWND hwnd)
@@ -233,6 +236,7 @@ protected:
 
  // window utilities
 
+ /// ClientRect retreives the client area rectangle of a window.
 struct ClientRect : public RECT
 {
 	ClientRect(HWND hwnd)
@@ -245,6 +249,7 @@ struct ClientRect : public RECT
 	POINT& pos() {return *(LPPOINT)this;}
 };
 
+ /// ClientRect retreives the window rectangle of a window.
 struct WindowRect : public RECT
 {
 	WindowRect(HWND hwnd)
@@ -257,6 +262,7 @@ struct WindowRect : public RECT
 	POINT& pos() {return *(LPPOINT)this;}
 };
 
+ /// PointL encapsulates the POINT structure into a C++ object.
 struct Point : public POINT
 {
 	Point(LONG x_, LONG y_)
@@ -276,13 +282,16 @@ struct Point : public POINT
 };
 
 
+ /// transform coordinates in a RECT from client to screen coordiantes
 inline void ClientToScreen(HWND hwnd, RECT* prect)
  {::ClientToScreen(hwnd,(LPPOINT)&prect->left); ::ClientToScreen(hwnd,(LPPOINT)&prect->right);}
 
+ /// transform coordinates in a RECT from screen to client coordiantes
 inline void ScreenToClient(HWND hwnd, RECT* prect)
  {::ScreenToClient(hwnd,(LPPOINT)&prect->left); ::ScreenToClient(hwnd,(LPPOINT)&prect->right);}
 
 
+ /// structure containing information about full screen display of the frame window
 struct FullScreenParameters
 {
 	FullScreenParameters()
@@ -298,6 +307,7 @@ struct FullScreenParameters
 
  // drawing utilities
 
+ /// PaintCanvas is a encapsulation of device contexts managed by BeginPaint()/EndPaint().
 struct PaintCanvas : public PAINTSTRUCT
 {
 	PaintCanvas(HWND hwnd)
@@ -317,6 +327,7 @@ protected:
 	HWND	_hwnd;
 };
 
+ /// Canvas is a encapsulation of device contexts.
 struct Canvas
 {
 	Canvas(HDC hdc) : _hdc(hdc) {}
@@ -327,6 +338,7 @@ protected:
 	HDC _hdc;
 };
 
+ /// WindowCanvas is a encapsulation of client area device contexts.
 struct WindowCanvas : public Canvas
 {
 	WindowCanvas(HWND hwnd)
@@ -341,6 +353,7 @@ protected:
 
  // double buffering classes
 
+ /// Memory Canvas creates and destroys memory devoce contexts.
 struct MemCanvas : public Canvas
 {
 	MemCanvas(HDC hdc=0)
@@ -349,6 +362,7 @@ struct MemCanvas : public Canvas
 	~MemCanvas() {DeleteDC(_hdc);}
 };
 
+ /// SelectedBitmap is used to localy select bitmaps into device contexts.
 struct SelectedBitmap
 {
 	SelectedBitmap(HDC hdc, HBITMAP hbmp)
@@ -361,6 +375,7 @@ protected:
 	HBITMAP	_old_hbmp;
 };
 
+ /// BufferCanvas manages offscreen bitmaps selected into memory device contexts.
 struct BufferCanvas : public MemCanvas
 {
 	BufferCanvas(HDC hdc, int x, int y, int w, int h)
@@ -379,6 +394,7 @@ protected:
 	SelectedBitmap _bmp;
 };
 
+ /// BufferedCanvas enables double buffering for a device context.
 struct BufferedCanvas : public BufferCanvas
 {
 	BufferedCanvas(HDC hdc, int x, int y, int w, int h, DWORD mode=SRCCOPY)
@@ -392,6 +408,7 @@ struct BufferedCanvas : public BufferCanvas
 	DWORD	_mode;
 };
 
+ /// BufferedPaintCanvas extends PaintCanvas for double buffering.
 struct BufferedPaintCanvas : public PaintCanvas, public BufferedCanvas
 {
 	BufferedPaintCanvas(HWND hwnd)
@@ -404,6 +421,7 @@ struct BufferedPaintCanvas : public PaintCanvas, public BufferedCanvas
 };
 
 
+ /// TextColor locally selects a text color for drawing.
 struct TextColor
 {
 	TextColor(HDC hdc, COLORREF color)
@@ -416,6 +434,7 @@ protected:
 	COLORREF _old_color;
 };
 
+ /// TextColor locally sets the background mode for drawing.
 struct BkMode
 {
 	BkMode(HDC hdc, int bkmode)
@@ -428,6 +447,7 @@ protected:
 	COLORREF _old_bkmode;
 };
 
+ /// TextColor locally selects a font for drawing.
 struct FontSelection
 {
 	FontSelection(HDC hdc, HFONT hFont)
@@ -440,6 +460,7 @@ protected:
 	HFONT	_old_hFont;
 };
 
+ /// TextColor locally selects a bitmap into a device context.
 struct BitmapSelection
 {
 	BitmapSelection(HDC hdc, HBITMAP hBmp)
@@ -453,6 +474,7 @@ protected:
 };
 
 
+ /// string class for convenience
 struct String
 #ifdef UNICODE
  : public wstring
