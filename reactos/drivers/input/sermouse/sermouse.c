@@ -26,8 +26,6 @@
 #define SERMOUSE_COM1_SUPPORT
 /* Check for mouse on COM2? */
 /* #define SERMOUSE_COM2_SUPPORT */
-/* Create \??\Mouse* symlink for device? */
-#define SERMOUSE_MOUSESYMLINK_SUPPORT
 
 /*
  * Definitions
@@ -511,7 +509,6 @@ AllocatePointerDevice(PDRIVER_OBJECT DriverObject)
 	PDEVICE_OBJECT DeviceObject;
 	UNICODE_STRING DeviceName;
 	UNICODE_STRING SuffixString;
-	UNICODE_STRING SymlinkName;
 	PDEVICE_EXTENSION DeviceExtension;
 	ULONG Suffix;
 	NTSTATUS Status;
@@ -541,27 +538,15 @@ AllocatePointerDevice(PDRIVER_OBJECT DriverObject)
 	}
 
 	ExFreePool(DeviceName.Buffer);
+	ExFreePool(SuffixString.Buffer);
 
 	/* Couldn't create device */
 	if (!NT_SUCCESS(Status))
 	{
-		ExFreePool(SuffixString.Buffer);
 		return NULL;
 	}
 
 	DeviceObject->Flags = DeviceObject->Flags | DO_BUFFERED_IO;
-
-#ifdef SERMOUSE_MOUSESYMLINK_SUPPORT
-	/* Create symlink */
-	/* FIXME: Why? FiN 20/08/2003 */
-	RtlInitUnicodeString(&SymlinkName, NULL);
-	SymlinkName.MaximumLength = sizeof(L"\\??\\Mouse") + SUFFIX_MAXIMUM_SIZE + sizeof(UNICODE_NULL);
-	SymlinkName.Buffer = ExAllocatePool(PagedPool, SymlinkName.MaximumLength);
-	RtlAppendUnicodeToString(&SymlinkName, L"\\??\\Mouse");
-	RtlAppendUnicodeToString(&DeviceName, SuffixString.Buffer);
-	IoCreateSymbolicLink(&SymlinkName, &DeviceName);
-#endif
-	ExFreePool(SuffixString.Buffer);
 
 	DeviceExtension = DeviceObject->DeviceExtension;
 	KeInitializeDpc(&DeviceExtension->IsrDpc, (PKDEFERRED_ROUTINE)SerialMouseIsrDpc, DeviceObject);
