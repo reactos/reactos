@@ -90,12 +90,7 @@ typedef struct _KTIMER
     LONG Period;
 } KTIMER, *PKTIMER;
 
-struct _KSPIN_LOCK;
-
-typedef struct _KSPIN_LOCK
-{
-   ULONG Lock;
-} KSPIN_LOCK, *PKSPIN_LOCK;
+typedef ULONG_PTR KSPIN_LOCK, *PKSPIN_LOCK;
 
 typedef struct _KDEVICE_QUEUE
 {

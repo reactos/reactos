@@ -1,4 +1,4 @@
-/* $Id: spinlock.c,v 1.14 2003/04/26 23:13:31 hyperion Exp $
+/* $Id: spinlock.c,v 1.15 2003/06/07 10:37:50 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -60,7 +60,7 @@ KeInitializeSpinLock (PKSPIN_LOCK	SpinLock)
  *           SpinLock = Caller supplied storage for the spinlock
  */
 {
-   SpinLock->Lock = 0;
+   *SpinLock = 0;
 }
 
 VOID STDCALL
@@ -78,13 +78,13 @@ KeAcquireSpinLockAtDpcLevel (PKSPIN_LOCK	SpinLock)
     * FIXME: This depends on gcc assembling this test to a single load from
     * the spinlock's value.
     */
-   if ((ULONG)SpinLock->Lock >= 2)
+   if (*SpinLock >= 2)
      {
-	DbgPrint("Lock %x has bad value %x\n", SpinLock, SpinLock->Lock);
+	DbgPrint("Lock %x has bad value %x\n", SpinLock, *SpinLock);
 	KeBugCheck(0);
      }
    
-   while ((i = InterlockedExchange((LONG *)&SpinLock->Lock, 1)) == 1)
+   while ((i = InterlockedExchange((LONG *)SpinLock, 1)) == 1)
      {
 #ifndef MP
        DbgPrint("Spinning on spinlock %x current value %x\n", SpinLock, i);
@@ -104,12 +104,12 @@ KeReleaseSpinLockFromDpcLevel (PKSPIN_LOCK	SpinLock)
  *         SpinLock = Spinlock to release
  */
 {
-   if (SpinLock->Lock != 1)
+   if (*SpinLock != 1)
      {
 	DbgPrint("Releasing unacquired spinlock %x\n", SpinLock);
 	KeBugCheck(0);
      }
-   (void)InterlockedExchange((LONG *)&SpinLock->Lock, 0);
+   (void)InterlockedExchange((LONG *)SpinLock, 0);
 }
 
 /* EOF */

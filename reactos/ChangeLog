@@ -2,6 +2,14 @@
 
 	Changes for compiling with w32api
 
+	* include/ddk/ketypes.h (KSPIN_LOCK, PKSPIN_LOCK): Match w32api
+	structures.
+	* ntoskrnl/ke/spinlock.c: Use new structures.
+
+2003-06-07  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	Changes for compiling with w32api
+
 	* include/ddk/service.h: Move ...
 	* include/ntos/service.h: ... here.
 	* include/ddk/kdfuncs.h: Move ...
