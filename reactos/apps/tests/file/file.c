@@ -21,33 +21,34 @@ int main( void )
 		     0, 
 		     0);
    
-  if (file == INVALID_HANDLE_VALUE)
-     {
-	printf("Error opening file (Status %x)\n", GetLastError());
-	return 1;
-     }
-      
+   if (file == INVALID_HANDLE_VALUE)
+      {
+	 printf("Error opening file (Status %x)\n", GetLastError());
+	 return 1;
+      }
+   for( c = 0; c < sizeof( buffer ); c++ )
+      buffer[c] = (char)c;
    printf("Writing file\n");
-   for (c = 0; c < 1024; c++)
+   if (WriteFile( file, buffer, 4096, &wrote, NULL) == FALSE)
      {
-	if (WriteFile( file, buffer, 4096, &wrote, NULL) == FALSE)
-	  {
-	     printf("Error writing file (Status %x)\n", GetLastError());
-	     exit(2);
-	  }
-    }
-   
+       printf("Error writing file (Status %x)\n", GetLastError());
+       exit(2);
+       }
    printf("Reading file\n");
-   for (c = 0; c < 1024; c++)
+   SetFilePointer( file, 0, 0, FILE_BEGIN );
+   if (ReadFile( file, buffer, 4096, &wrote, NULL) == FALSE)
      {
-	if (ReadFile( file, buffer, 4096, &wrote, NULL) == FALSE)
-	  {
-	     printf("Error reading file (Status %x)\n", GetLastError());
-	     exit(3);
-	  }
+       printf("Error reading file (Status %x)\n", GetLastError());
+       exit(3);
      }
-   
-   printf("Finished\n");
-
+   for( c = 0; c < sizeof( buffer ); c++ )
+      if( buffer[c] != (char)c )
+	 {
+	    printf( "Error: data read back is not what was written\n" );
+	    CloseHandle( file );
+	    return 0;
+	 }
+   printf("Finished, works fine\n");
+   CloseHandle( file );
    return 0;
 }
