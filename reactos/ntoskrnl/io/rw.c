@@ -171,6 +171,10 @@ NTSTATUS ZwWriteFile(HANDLE FileHandle,
      {
 	return(Status);
      }
+   if (ByteOffset==NULL)
+     {
+	ByteOffset = &(FileObject->CurrentByteOffset);
+     }
    
    KeInitializeEvent(&Event,NotificationEvent,FALSE);
    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_WRITE,
@@ -181,6 +185,26 @@ NTSTATUS ZwWriteFile(HANDLE FileHandle,
 				      &Event,
 				      IoStatusBlock);
    DPRINT("FileObject->DeviceObject %x\n",FileObject->DeviceObject);
+   StackPtr = IoGetNextIrpStackLocation(Irp);
+   StackPtr->FileObject = FileObject;
+   StackPtr->Parameters.Write.Length = Length;
+   if (ByteOffset!=NULL)
+   {
+        StackPtr->Parameters.Write.ByteOffset = *ByteOffset;
+   }
+   else
+   {
+        SET_LARGE_INTEGER_LOW_PART(StackPtr->Parameters.Write.ByteOffset, 0);
+        SET_LARGE_INTEGER_HIGH_PART(StackPtr->Parameters.Write.ByteOffset, 0);
+   }
+   if (Key!=NULL)
+   {
+         StackPtr->Parameters.Write.Key = *Key;
+   }
+   else
+   {
+        StackPtr->Parameters.Write.Key = 0;
+   }
    Status = IoCallDriver(FileObject->DeviceObject,Irp);
    if (Status==STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
      {
