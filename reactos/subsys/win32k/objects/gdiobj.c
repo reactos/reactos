@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.72 2004/09/29 03:36:52 arty Exp $
+ * $Id: gdiobj.c,v 1.73 2004/10/02 16:48:12 navaraf Exp $
  *
  */
 #include <w32k.h>
@@ -194,10 +194,8 @@ GDIOBJ_iAllocHandleTable (WORD Size)
   
   MemSize = sizeof(GDI_HANDLE_TABLE) + sizeof(PGDIOBJ) * Size;
 
-  /* prevent APC delivery for the *FastMutexUnsafe calls */
-  const KIRQL PrevIrql = KfRaiseIrql(APC_LEVEL);
-  ExAcquireFastMutexUnsafe (&HandleTableMutex);
-  handleTable = ExAllocatePoolWithTag(NonPagedPool, MemSize, TAG_GDIHNDTBLE);
+  ExAcquireFastMutex(&HandleTableMutex);
+  handleTable = ExAllocatePoolWithTag(PagedPool, MemSize, TAG_GDIHNDTBLE);
   ASSERT( handleTable );
   memset (handleTable, 0, MemSize);
 #if GDI_COUNT_OBJECTS
@@ -205,14 +203,13 @@ GDIOBJ_iAllocHandleTable (WORD Size)
 #endif
   handleTable->wTableSize = Size;
   handleTable->AllocationHint = 1;
-  handleTable->LookasideLists = ExAllocatePoolWithTag(NonPagedPool,
+  handleTable->LookasideLists = ExAllocatePoolWithTag(PagedPool,
                                                       OBJTYPE_COUNT * sizeof(PAGED_LOOKASIDE_LIST),
                                                       TAG_GDIHNDTBLE);
   if (NULL == handleTable->LookasideLists)
     {
       ExFreePool(handleTable);
-      ExReleaseFastMutexUnsafe (&HandleTableMutex);
-      KfLowerIrql(PrevIrql);
+      ExReleaseFastMutex(&HandleTableMutex);
       return NULL;
     }
   for (ObjType = 0; ObjType < OBJTYPE_COUNT; ObjType++)
@@ -220,8 +217,7 @@ GDIOBJ_iAllocHandleTable (WORD Size)
       ExInitializePagedLookasideList(handleTable->LookasideLists + ObjType, NULL, NULL, 0,
                                      ObjSizes[ObjType].Size + sizeof(GDIOBJHDR), TAG_GDIOBJ, 0);
     }
-  ExReleaseFastMutexUnsafe (&HandleTableMutex);
-  KfLowerIrql(PrevIrql);
+  ExReleaseFastMutex(&HandleTableMutex);
 
   return handleTable;
 }
