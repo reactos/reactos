@@ -252,10 +252,10 @@ NtPrivilegeCheck (IN HANDLE ClientToken,
   Privilege = 0;
   Status = SeCaptureLuidAndAttributesArray (RequiredPrivileges->Privilege,
 					    PrivilegeCount,
-					    1,
+					    UserMode,
+					    NULL,
 					    0,
-					    0,
-					    1,
+					    PagedPool,
 					    1,
 					    &Privilege,
 					    &Length);
