@@ -35,7 +35,7 @@
 #include "../externals.h"
 #include "../explorer_intres.h"
 
-#include "taskbar.h"
+#include "desktopbar.h"
 #include "startmenu.h"
 
 

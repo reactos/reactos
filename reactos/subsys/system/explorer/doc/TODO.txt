@@ -1,6 +1,5 @@
 - extend shell view code in Wine
 - implement additional deskbands
-- paint desktop background: configurable colors, background image, ...
 - Drag Drop on desktop does not work.
 - implement Drag Drop from the tree view.
 - activate accelerator keys like <DEL> in shell view folders

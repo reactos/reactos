@@ -32,7 +32,14 @@
 #include <shellapi.h>
 #include <shlobj.h>
 
-#ifndef _INC_COMUTIL	// is comutil.h of MS headers available?
+/*@@
+#if _MSC_VER>=1300	// VS.Net
+#include <comdefsp.h>
+using namespace _com_util;
+#endif
+*/
+
+#ifndef _INC_COMUTIL	// is comutil.h of MS headers not available?
 #ifndef _NO_COMUTIL
 #define	_NO_COMUTIL
 #endif
@@ -353,7 +360,7 @@ protected:
 
 #ifndef _NO_COMUTIL	// _com_ptr available?
 
-struct ShellFolder : public IShellFolderPtr	// IShellFolderPtr uses intrinsic extensions of the vc++ compiler.
+struct ShellFolder : public IShellFolderPtr	// IShellFolderPtr uses intrinsic extensions of the VC++ compiler.
 {
 	typedef IShellFolderPtr super;
 

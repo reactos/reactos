@@ -19,3 +19,4 @@
 18.08.2003	m. fuchs	first draft of explorer start menu
 21.08.2003	m. fuchs	working start menu; beginning of tray notification area
 						Start menu popup is now closed when clicking in another window.
+22.08.2003	m. fuchs	implemented clock display in tray notification area

@@ -46,7 +46,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "_ROS_" /D _WIN32_IE=0x0501 /D _WIN32_WINNT=0x0501 /YX /FD /c
+# ADD CPP /nologo /MT /W3 /GX /O1 /D "NDEBUG" /D "WIN32" /D "_ROS_" /D _WIN32_IE=0x0501 /D _WIN32_WINNT=0x0501 /YX /FD /c
 # ADD BASE RSC /l 0x407 /d "NDEBUG"
 # ADD RSC /l 0x407 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -400,6 +400,14 @@ SOURCE=.\res\toolbar.bmp
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=.\taskbar\desktopbar.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\taskbar\desktopbar.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\taskbar\startmenu.cpp
 # End Source File
 # Begin Source File
@@ -413,6 +421,14 @@ SOURCE=.\taskbar\taskbar.cpp
 # Begin Source File
 
 SOURCE=.\taskbar\taskbar.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\taskbar\traynotify.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\taskbar\traynotify.h
 # End Source File
 # End Group
 # Begin Group "desktop"

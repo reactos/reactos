@@ -252,7 +252,7 @@ LRESULT ChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		BeginPaint(_hwnd, &ps);
 		rt.left = _split_pos-SPLIT_WIDTH/2;
 		rt.right = _split_pos+SPLIT_WIDTH/2+1;
-		lastBrush = SelectBrush(ps.hdc, (HBRUSH)GetStockObject(COLOR_SPLITBAR));
+		lastBrush = SelectBrush(ps.hdc, GetStockBrush(COLOR_SPLITBAR));
 		Rectangle(ps.hdc, rt.left, rt.top-1, rt.right, rt.bottom+1);
 		SelectObject(ps.hdc, lastBrush);
 		EndPaint(_hwnd, &ps);

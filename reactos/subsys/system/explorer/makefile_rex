@@ -64,8 +64,10 @@ TARGET_OBJECTS = \
 	pane.o \
 	shellbrowser.o \
 	desktop.o \
+	desktopbar.o \
 	taskbar.o \
-	startmenu.o
+	startmenu.o \
+	traynotify.o
 
 include $(PATH_TO_TOP)/rules.mak
 

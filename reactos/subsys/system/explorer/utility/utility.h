@@ -62,6 +62,10 @@
 #include <iostream>
 using namespace std;
 
+#if _MSC_VER>=1300	// VS.Net
+#define _NO_COMUTIL	//@@
+#endif
+
 #if defined(_MSC_VER) && !defined(_NO_COMUTIL)
 
  // COM utility headers
@@ -115,6 +119,8 @@ struct ClientRect : public RECT
 	{
 		GetClientRect(hwnd, this);
 	}
+
+	operator LPRECT() {return this;}
 };
 
 struct WindowRect : public RECT
@@ -123,6 +129,8 @@ struct WindowRect : public RECT
 	{
 		GetWindowRect(hwnd, this);
 	}
+
+	operator LPRECT() {return this;}
 };
 
 struct Point : public POINT
@@ -139,6 +147,8 @@ struct Point : public POINT
 		x = GET_X_LPARAM(lparam);
 		y = GET_Y_LPARAM(lparam);
 	}
+
+	operator LPPOINT() {return this;}
 };
 
 
@@ -260,7 +270,7 @@ extern "C" {
 
 #ifndef _stprintf
 #ifdef UNICODE
-#define	_stprintf wcsrintf
+#define	_stprintf wcsprintf
 #else
 #define	_stprintf sprintf
 #endif
