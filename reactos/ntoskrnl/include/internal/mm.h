@@ -50,6 +50,9 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
 #define MM_LOWEST_USER_ADDRESS (4096)
 #endif
 
+#define MM_VIRTMEM_GRANULARITY (64 * 1024) /* Although Microsoft says this isn't hardcoded anymore,
+                                              they won't be able to change it. Stuff depends on it */
+
 #define STATUS_MM_RESTART_OPERATION       ((NTSTATUS)0xD0000001)
 
 /*
@@ -354,7 +357,7 @@ MEMORY_AREA* MmOpenMemoryAreaByRegion(PMADDRESS_SPACE AddressSpace,
 				      PVOID Address,
 				      ULONG Length);
 
-PVOID MmFindGap(PMADDRESS_SPACE AddressSpace, ULONG Length, BOOL TopDown);
+PVOID MmFindGap(PMADDRESS_SPACE AddressSpace, ULONG Length, ULONG Granularity, BOOL TopDown);
 
 /* npool.c *******************************************************************/
 

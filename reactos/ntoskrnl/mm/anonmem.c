@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: anonmem.c,v 1.31 2004/08/15 16:39:06 chorns Exp $
+/* $Id: anonmem.c,v 1.32 2004/09/28 19:49:20 gvg Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/anonmem.c
@@ -636,17 +636,17 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
       return(Status);
    }
    MmInitialiseRegion(&MemoryArea->Data.VirtualMemoryData.RegionListHead,
-                      RegionSize, Type, Protect);
+                      MemoryArea->Length, Type, Protect);
 
    if ((AllocationType & MEM_COMMIT) &&
          ((Protect & PAGE_READWRITE) ||
           (Protect & PAGE_EXECUTE_READWRITE)))
    {
-      MmReserveSwapPages(RegionSize);
+      MmReserveSwapPages(MemoryArea->Length);
    }
 
    *UBaseAddress = BaseAddress;
-   *URegionSize = RegionSize;
+   *URegionSize = MemoryArea->Length;
    DPRINT("*UBaseAddress %x  *URegionSize %x\n", BaseAddress, RegionSize);
 
    MmUnlockAddressSpace(AddressSpace);

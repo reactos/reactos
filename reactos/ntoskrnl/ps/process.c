@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.142 2004/09/28 15:02:29 weiden Exp $
+/* $Id: process.c,v 1.143 2004/09/28 19:49:21 gvg Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -431,7 +431,20 @@ PsCreatePeb(HANDLE ProcessHandle,
 				   (PVOID*)&Peb,
 				   0,
 				   &PebSize,
-				   MEM_RESERVE | MEM_COMMIT,
+				   MEM_RESERVE,
+				   PAGE_READWRITE);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("NtAllocateVirtualMemory() failed (Status %lx)\n", Status);
+      return(Status);
+    }
+  Peb = (PPEB)PEB_BASE;
+  PebSize = PAGE_SIZE;
+  Status = NtAllocateVirtualMemory(ProcessHandle,
+				   (PVOID*)&Peb,
+				   0,
+				   &PebSize,
+				   MEM_COMMIT,
 				   PAGE_READWRITE);
   if (!NT_SUCCESS(Status))
     {
