@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.34 2003/12/14 12:39:32 navaraf Exp $
+/* $Id: misc.c,v 1.35 2003/12/19 19:30:05 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -23,6 +23,7 @@
 #include <include/object.h>
 #include <include/focus.h>
 #include <include/clipboard.h>
+#include <include/msgqueue.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -72,6 +73,10 @@ NtUserCallNoParam(DWORD Routine)
 
     case NOPARAM_ROUTINE_UNINIT_MESSAGE_PUMP:
       Result = (DWORD)IntUninitMessagePumpHook();
+      break;
+    
+    case NOPARAM_ROUTINE_GETMESSAGEEXTRAINFO:
+      Result = (DWORD)MsqGetMessageExtraInfo();
       break;
 
     default:
@@ -159,6 +164,9 @@ NtUserCallOneParam(
 
     case ONEPARAM_ROUTINE_ENUMCLIPBOARDFORMATS:
       return (DWORD)IntEnumClipboardFormats((UINT)Param);
+    
+    case ONEPARAM_ROUTINE_SETMESSAGEEXTRAINFO:
+      return (DWORD)MsqSetMessageExtraInfo((LPARAM)Param);
   }
   DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam()\n Param=0x%x\n", 
           Routine, Param);

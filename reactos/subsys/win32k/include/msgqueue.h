@@ -82,6 +82,9 @@ typedef struct _USER_MESSAGE_QUEUE
   WORD WakeMask;
   WORD ChangedBits;
   WORD ChangedMask;
+  
+  /* extra message information */
+  LPARAM ExtraInfo;
 
 } USER_MESSAGE_QUEUE, *PUSER_MESSAGE_QUEUE;
 
@@ -155,6 +158,9 @@ BOOL IntUninitMessagePumpHook();
 
 PHOOKTABLE FASTCALL MsqGetHooks(PUSER_MESSAGE_QUEUE Queue);
 VOID FASTCALL MsqSetHooks(PUSER_MESSAGE_QUEUE Queue, PHOOKTABLE Hooks);
+
+LPARAM FASTCALL MsqSetMessageExtraInfo(LPARAM lParam);
+LPARAM FASTCALL MsqGetMessageExtraInfo(VOID);
 
 #endif /* _WIN32K_MSGQUEUE_H */
 

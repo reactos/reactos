@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.30 2003/12/14 14:01:38 gvg Exp $
+/* $Id: message.c,v 1.31 2003/12/19 19:30:05 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -20,8 +20,7 @@ LPARAM
 STDCALL
 GetMessageExtraInfo(VOID)
 {
-  UNIMPLEMENTED;
-  return (LPARAM)0;
+  return (LPARAM)NtUserCallNoParam(NOPARAM_ROUTINE_GETMESSAGEEXTRAINFO);
 }
 
 
@@ -86,15 +85,14 @@ ReplyMessage(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 LPARAM
 STDCALL
 SetMessageExtraInfo(
   LPARAM lParam)
 {
-  UNIMPLEMENTED;
-  return (LPARAM)0;
+  return (LPARAM)NtUserCallOneParam((DWORD)lParam, ONEPARAM_ROUTINE_SETMESSAGEEXTRAINFO);
 }
 
 

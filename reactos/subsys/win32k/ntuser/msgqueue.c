@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.50 2003/12/15 21:51:10 weiden Exp $
+/* $Id: msgqueue.c,v 1.51 2003/12/19 19:30:05 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -874,6 +874,38 @@ VOID FASTCALL
 MsqSetHooks(PUSER_MESSAGE_QUEUE Queue, PHOOKTABLE Hooks)
 {
   Queue->Hooks = Hooks;
+}
+
+LPARAM FASTCALL
+MsqSetMessageExtraInfo(LPARAM lParam)
+{
+  LPARAM Ret;
+  PUSER_MESSAGE_QUEUE MessageQueue;
+  
+  MessageQueue = PsGetWin32Thread()->MessageQueue;
+  if(!MessageQueue)
+  {
+    return 0;
+  }
+  
+  Ret = MessageQueue->ExtraInfo;
+  MessageQueue->ExtraInfo = lParam;
+  
+  return Ret;
+}
+
+LPARAM FASTCALL
+MsqGetMessageExtraInfo(VOID)
+{
+  PUSER_MESSAGE_QUEUE MessageQueue;
+  
+  MessageQueue = PsGetWin32Thread()->MessageQueue;
+  if(!MessageQueue)
+  {
+    return 0;
+  }
+  
+  return MessageQueue->ExtraInfo;
 }
 
 /* EOF */
