@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 1999/12/04 20:58:42 ea Exp $
+# $Id: Makefile,v 1.3 2000/04/01 14:20:21 ea Exp $
 #
 # Named Pipes File System
 #
@@ -7,7 +7,7 @@ TARGETNAME=npfs
 
 BASE_CFLAGS = -I../../../include
 
-OBJECTS = create.o mount.o \
+OBJECTS = create.o mount.o npfs.coff \
           ../../../ntoskrnl/ntoskrnl.a
 
 all: $(TARGETNAME).sys
@@ -48,5 +48,7 @@ $(TARGETNAME).sys: $(OBJECTS)
 		$(OBJECTS) \
 		-Wl,temp.exp
 	$(RM) temp.exp
+
+npfs.coff: ../../../include/reactos/buildno.h npfs.rc
 
 include ../../../rules.mak
