@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.83 2002/09/08 10:23:15 chorns Exp $
+# $Id: Makefile,v 1.84 2002/10/03 19:29:09 robd Exp $
 #
 # ReactOS Operating System
 #
@@ -186,6 +186,7 @@ OBJECTS_IO = \
 	io/iocomp.o \
 	io/ioctrl.o \
 	io/iomgr.o \
+	io/iowork.o \
 	io/irp.o \
 	io/lock.o \
 	io/mailslot.o \
