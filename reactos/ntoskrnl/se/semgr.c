@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.45 2004/09/25 06:41:16 arty Exp $
+/* $Id: semgr.c,v 1.46 2004/09/25 08:49:06 gvg Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -852,16 +852,16 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
   /* Lock subject context */
   SeLockSubjectContext(&SubjectSecurityContext);
 
-  if (!SeAccessCheck(SecurityDescriptor,
-		     &SubjectSecurityContext,
-		     TRUE,
-		     DesiredAccess,
-		     0,
-		     &PrivilegeSet,
-		     GenericMapping,
-		     PreviousMode,
-		     GrantedAccess,
-		     AccessStatus))
+  if (SeAccessCheck(SecurityDescriptor,
+		    &SubjectSecurityContext,
+		    TRUE,
+		    DesiredAccess,
+		    0,
+		    &PrivilegeSet,
+		    GenericMapping,
+		    PreviousMode,
+		    GrantedAccess,
+		    AccessStatus))
     {
       Status = *AccessStatus;
     }
