@@ -1,4 +1,4 @@
-/* $Id: read.c,v 1.14 2004/12/04 23:29:54 arty Exp $
+/* $Id: read.c,v 1.15 2004/12/19 10:26:01 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/read.c
@@ -275,7 +275,7 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	AFD_DbgPrint(MID_TRACE,("EOF Happened already\n"));
 	FCB->Recv.Content = 0;
 	FCB->Recv.BytesUsed = 0;
-	Status = STATUS_SUCCESS;
+	Status = STATUS_END_OF_FILE;
 
 	ProcessClose( FCB );
     }
