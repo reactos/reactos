@@ -169,6 +169,29 @@ static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValB
               ListView_SetItemText(hwndLV, index, 2, ValBuf);
             }
             break;
+        case REG_MULTI_SZ:
+            {
+              LPTSTR src, str, cursrc;
+              if(dwCount >= 2)
+              {
+	          src = (LPTSTR)ValBuf;
+		  str = HeapAlloc(GetProcessHeap(), 0, dwCount);
+                  if(str != NULL)
+                  {
+                      *str = _T('\0');
+		      /* concatenate all srings */
+                      while(*src != _T('\0'))
+                      {
+                          _tcscat(str, _T(" "));
+			  _tcscat(str, src);
+			  src += _tcslen(src) + 1;
+                      }
+                      ListView_SetItemText(hwndLV, index, 2, str);
+		      HeapFree(GetProcessHeap(), 0, str);
+                  }
+              }
+            }
+            break;
         case REG_DWORD: {
                 TCHAR buf[64];
                 wsprintf(buf, _T("0x%08X (%d)"), *(DWORD*)ValBuf, *(DWORD*)ValBuf);
@@ -176,6 +199,7 @@ static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValB
             }
             /*            lpsRes = convertHexToDWORDStr(lpbData, dwLen); */
             break;
+        case REG_NONE:
         case REG_BINARY: {
                 unsigned int i;
                 LPBYTE pData = (LPBYTE)ValBuf;
