@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: debug.c,v 1.8 2003/06/05 23:36:35 gdalsnes Exp $
+/* $Id: debug.c,v 1.9 2003/06/07 19:13:43 gvg Exp $
  *
  * PROJECT:                ReactOS kernel
  * FILE:                   ntoskrnl/ps/debug.c
@@ -44,6 +44,7 @@
 #include <string.h>
 #include <internal/ps.h>
 #include <internal/ob.h>
+#include <internal/safe.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -157,15 +158,15 @@ KeTrapFrameToContext(PKTRAP_FRAME TrapFrame,
 }
 
 VOID STDCALL
-KeGetContextRundownRoutine(PKAPC Apc)
+KeGetSetContextRundownRoutine(PKAPC Apc)
 {
-   PKEVENT Event;
-   PNTSTATUS Status;
-   
-   Event = (PKEVENT)Apc->SystemArgument1;
-   Status = (PNTSTATUS)Apc->SystemArgument2;
-   (*Status) = STATUS_THREAD_IS_TERMINATING;
-   KeSetEvent(Event, IO_NO_INCREMENT, FALSE);
+  PKEVENT Event;
+  PNTSTATUS Status;
+
+  Event = (PKEVENT)Apc->SystemArgument1;   
+  Status = (PNTSTATUS)Apc->SystemArgument2;
+  (*Status) = STATUS_THREAD_IS_TERMINATING;
+  KeSetEvent(Event, IO_NO_INCREMENT, FALSE);
 }
 
 VOID STDCALL
@@ -179,97 +180,189 @@ KeGetContextKernelRoutine(PKAPC Apc,
  * copy the context of a thread into a buffer.
  */
 {
-   PKEVENT Event;
-   PCONTEXT Context;
-   PNTSTATUS Status;
+  PKEVENT Event;
+  PCONTEXT Context;
+  PNTSTATUS Status;
    
-   Context = (PCONTEXT)(*NormalContext);
-   Event = (PKEVENT)(*SystemArgument1);
-   Status = (PNTSTATUS)(*SystemArgument2);
+  Context = (PCONTEXT)(*NormalContext);
+  Event = (PKEVENT)(*SystemArgument1);
+  Status = (PNTSTATUS)(*SystemArgument2);
    
-   KeTrapFrameToContext(KeGetCurrentThread()->TrapFrame, Context);
+  KeTrapFrameToContext(KeGetCurrentThread()->TrapFrame, Context);
    
-   *Status = STATUS_SUCCESS;
-   KeSetEvent(Event, IO_NO_INCREMENT, FALSE);
+  *Status = STATUS_SUCCESS;
+  KeSetEvent(Event, IO_NO_INCREMENT, FALSE);
 }
 
 NTSTATUS STDCALL
 NtGetContextThread(IN HANDLE ThreadHandle,
-		   OUT PCONTEXT Context)
+		   OUT PCONTEXT UnsafeContext)
 {
-   PETHREAD Thread;
-   NTSTATUS Status;
+  PETHREAD Thread;
+  NTSTATUS Status;
+  CONTEXT Context;
+  KAPC Apc;
+  KEVENT Event;
+  NTSTATUS AStatus;
+
+  Status = MmCopyFromCaller(&Context, UnsafeContext, sizeof(CONTEXT));
+  if (! NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+  Status = ObReferenceObjectByHandle(ThreadHandle,
+                                     THREAD_GET_CONTEXT,
+                                     PsThreadType,
+                                     UserMode,
+                                     (PVOID*)&Thread,
+                                     NULL);
+  if (! NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+  if (Thread == PsGetCurrentThread())
+    {
+      /*
+       * I don't know if trying to get your own context makes much
+       * sense but we can handle it more efficently.
+       */
+	
+      KeTrapFrameToContext(Thread->Tcb.TrapFrame, &Context);
+      Status = STATUS_SUCCESS;
+    }
+  else
+    {
+      KeInitializeEvent(&Event,
+                        NotificationEvent,
+                        FALSE);	
+      AStatus = STATUS_SUCCESS;
+	
+      KeInitializeApc(&Apc,
+                      &Thread->Tcb,
+                      OriginalApcEnvironment,
+                      KeGetContextKernelRoutine,
+                      KeGetSetContextRundownRoutine,
+                      NULL,
+                      KernelMode,
+                      (PVOID)&Context);
+      KeInsertQueueApc(&Apc,
+                       (PVOID)&Event,
+                       (PVOID)&AStatus,
+                       IO_NO_INCREMENT);
+      Status = KeWaitForSingleObject(&Event,
+                                     0,
+                                     UserMode,
+                                     FALSE,
+                                     NULL);
+      if (NT_SUCCESS(Status) && ! NT_SUCCESS(AStatus))
+	{
+	  Status = AStatus;
+	}
+    }
+
+  if (NT_SUCCESS(Status))
+    {
+      Status = MmCopyToCaller(UnsafeContext, &Context, sizeof(Context));
+    }
+
+  ObDereferenceObject(Thread);
+  return Status;
+}
+
+VOID STDCALL
+KeSetContextKernelRoutine(PKAPC Apc,
+			  PKNORMAL_ROUTINE* NormalRoutine,
+			  PVOID* NormalContext,
+			  PVOID* SystemArgument1,
+			  PVOID* SystemArgument2)
+/*
+ * FUNCTION: This routine is called by an APC sent by NtSetContextThread to
+ * set the context of a thread from a buffer.
+ */
+{
+  PKEVENT Event;
+  PCONTEXT Context;
+  PNTSTATUS Status;
    
-   Status = ObReferenceObjectByHandle(ThreadHandle,
-				      THREAD_GET_CONTEXT,
-				      PsThreadType,
-				      UserMode,
-				      (PVOID*)&Thread,
-				      NULL);
-   if (!NT_SUCCESS(Status))
-     {
-	return(Status);
-     }
-   if (Thread == PsGetCurrentThread())
-     {
-	/*
-	 * I don't know if trying to get your own context makes much
-	 * sense but we can handle it more efficently.
-	 */
-	
-	KeTrapFrameToContext(Thread->Tcb.TrapFrame, Context);
-	ObDereferenceObject(Thread);
-	return(STATUS_SUCCESS);
-     }
-   else
-     {
-	KAPC Apc;
-	KEVENT Event;
-	NTSTATUS AStatus;
-	CONTEXT KContext;
-	
-	KContext.ContextFlags = Context->ContextFlags;
-	KeInitializeEvent(&Event,
-			  NotificationEvent,
-			  FALSE);	
-	AStatus = STATUS_SUCCESS;
-	
-	KeInitializeApc(&Apc,
-			&Thread->Tcb,
-         OriginalApcEnvironment,
-			KeGetContextKernelRoutine,
-			KeGetContextRundownRoutine,
-			NULL,
-			KernelMode,
-			(PVOID)&KContext);
-	KeInsertQueueApc(&Apc,
-			 (PVOID)&Event,
-			 (PVOID)&AStatus,
-			 IO_NO_INCREMENT);
-	Status = KeWaitForSingleObject(&Event,
-				       0,
-				       UserMode,
-				       FALSE,
-				       NULL);
-	if (!NT_SUCCESS(Status))
-	  {
-	     return(Status);
-	  }
-	if (!NT_SUCCESS(AStatus))
-	  {
-	     return(AStatus);
-	  }
-	memcpy(Context, &KContext, sizeof(CONTEXT));
-	ObDereferenceObject(Thread);
-	return(STATUS_SUCCESS);
-     }
+  Context = (PCONTEXT)(*NormalContext);
+  Event = (PKEVENT)(*SystemArgument1);
+  Status = (PNTSTATUS)(*SystemArgument2);
+   
+  KeContextToTrapFrame(Context, KeGetCurrentThread()->TrapFrame);
+   
+  *Status = STATUS_SUCCESS;
+  KeSetEvent(Event, IO_NO_INCREMENT, FALSE);
 }
 
 NTSTATUS STDCALL
 NtSetContextThread(IN HANDLE ThreadHandle,
-		   IN PCONTEXT Context)
+		   IN PCONTEXT UnsafeContext)
 {
-   UNIMPLEMENTED;
+  PETHREAD Thread;
+  NTSTATUS Status;
+  KAPC Apc;
+  KEVENT Event;
+  NTSTATUS AStatus;
+  CONTEXT Context;
+
+  Status = MmCopyFromCaller(&Context, UnsafeContext, sizeof(CONTEXT));
+  if (! NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+  Status = ObReferenceObjectByHandle(ThreadHandle,
+                                     THREAD_SET_CONTEXT,
+                                     PsThreadType,
+                                     UserMode,
+                                     (PVOID*)&Thread,
+                                     NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+
+  if (Thread == PsGetCurrentThread())
+    {
+      /*
+       * I don't know if trying to set your own context makes much
+       * sense but we can handle it more efficently.
+       */
+	
+      KeContextToTrapFrame(&Context, Thread->Tcb.TrapFrame);
+      Status = STATUS_SUCCESS;
+    }
+  else
+    {
+      KeInitializeEvent(&Event,
+                        NotificationEvent,
+                        FALSE);	
+      AStatus = STATUS_SUCCESS;
+	
+      KeInitializeApc(&Apc,
+                      &Thread->Tcb,
+                      OriginalApcEnvironment,
+                      KeSetContextKernelRoutine,
+                      KeGetSetContextRundownRoutine,
+                      NULL,
+                      KernelMode,
+                      (PVOID)&Context);
+      KeInsertQueueApc(&Apc,
+                       (PVOID)&Event,
+                       (PVOID)&AStatus,
+                       IO_NO_INCREMENT);
+      Status = KeWaitForSingleObject(&Event,
+                                     0,
+                                     UserMode,
+                                     FALSE,
+                                     NULL);
+      if (NT_SUCCESS(Status) && ! NT_SUCCESS(AStatus))
+	{
+	  Status = AStatus;
+	}
+    }
+
+  ObDereferenceObject(Thread);
+  return Status;
 }
 
 /* EOF */

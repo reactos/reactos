@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: irq.c,v 1.30 2003/06/07 10:14:40 chorns Exp $
+/* $Id: irq.c,v 1.31 2003/06/07 19:13:43 gvg Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/irq.c
@@ -270,14 +270,12 @@ typedef struct _KIRQ_TRAPFRAME
    ULONG Eflags;
 } KIRQ_TRAPFRAME, *PKIRQ_TRAPFRAME;
 
-#ifdef DBG
-
 VOID
 KeIRQTrapFrameToTrapFrame(PKIRQ_TRAPFRAME IrqTrapFrame,
   PKTRAP_FRAME TrapFrame)
 {
    TrapFrame->Fs     = IrqTrapFrame->Fs;
-   TrapFrame->Fs     = IrqTrapFrame->Es;
+   TrapFrame->Es     = IrqTrapFrame->Es;
    TrapFrame->Ds     = IrqTrapFrame->Ds;
    TrapFrame->Eax    = IrqTrapFrame->Eax;
    TrapFrame->Ecx    = IrqTrapFrame->Ecx;
@@ -292,7 +290,25 @@ KeIRQTrapFrameToTrapFrame(PKIRQ_TRAPFRAME IrqTrapFrame,
    TrapFrame->Eflags = IrqTrapFrame->Eflags;
 }
 
-#endif
+VOID
+KeTrapFrameToIRQTrapFrame(PKTRAP_FRAME TrapFrame,
+  PKIRQ_TRAPFRAME IrqTrapFrame)
+{
+   IrqTrapFrame->Fs     = TrapFrame->Fs;
+   IrqTrapFrame->Es     = TrapFrame->Es;
+   IrqTrapFrame->Ds     = TrapFrame->Ds;
+   IrqTrapFrame->Eax    = TrapFrame->Eax;
+   IrqTrapFrame->Ecx    = TrapFrame->Ecx;
+   IrqTrapFrame->Edx    = TrapFrame->Edx;
+   IrqTrapFrame->Ebx    = TrapFrame->Ebx;
+   IrqTrapFrame->Esp    = TrapFrame->Esp;
+   IrqTrapFrame->Ebp    = TrapFrame->Ebp;
+   IrqTrapFrame->Esi    = TrapFrame->Esi;
+   IrqTrapFrame->Edi    = TrapFrame->Edi;
+   IrqTrapFrame->Eip    = TrapFrame->Eip;
+   IrqTrapFrame->Cs     = TrapFrame->Cs;
+   IrqTrapFrame->Eflags = TrapFrame->Eflags;
+}
 
 #ifdef MP
 
@@ -449,6 +465,17 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
  */
 {
    KIRQL old_level;
+   KTRAP_FRAME KernelTrapFrame;
+   PKTHREAD CurrentThread;
+   PKTRAP_FRAME OldTrapFrame;
+
+   CurrentThread = KeGetCurrentThread();
+   if (NULL != CurrentThread && NULL == CurrentThread->TrapFrame)
+      {
+	OldTrapFrame = CurrentThread->TrapFrame;
+	KeIRQTrapFrameToTrapFrame(Trapframe, &KernelTrapFrame);
+	CurrentThread->TrapFrame = &KernelTrapFrame;
+      }
 
    /*
     * At this point we have interrupts disabled, nothing has been done to
@@ -498,6 +525,13 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
     */
    __asm__("cli\n\t");
    HalEndSystemInterrupt (old_level, 0);
+
+   assert(KeGetCurrentThread() == CurrentThread);
+   if (NULL != CurrentThread && CurrentThread->TrapFrame == &KernelTrapFrame)
+      {
+	KeTrapFrameToIRQTrapFrame(&KernelTrapFrame, Trapframe);
+	CurrentThread->TrapFrame = OldTrapFrame;
+      }
 }
 
 #endif /* MP */
