@@ -1,4 +1,4 @@
-/* $Id: notevil.c,v 1.2 1999/10/03 22:10:15 ekohl Exp $
+/* $Id: notevil.c,v 1.3 2001/01/16 20:58:58 phreak Exp $
  *
  * notevil.c
  * 
@@ -212,14 +212,10 @@ main(
 {
 	myself = GetModuleHandle(NULL);
 
-#if 1
 	GetConsoleScreenBufferInfo (GetStdHandle(STD_OUTPUT_HANDLE),
 	                            &ScreenBufferInfo);
-#else
-	ScreenBufferInfo.dwSize.X = 80;
-	ScreenBufferInfo.dwSize.Y = 25;
-#endif
-
+	ScreenBufferInfo.dwSize.X = ScreenBufferInfo.srWindow.Right - ScreenBufferInfo.srWindow.Left;
+	ScreenBufferInfo.dwSize.Y = ScreenBufferInfo.srWindow.Bottom - ScreenBufferInfo.srWindow.Top;
 	ScreenBuffer = CreateConsoleScreenBuffer(
 			GENERIC_WRITE,
 			0,
