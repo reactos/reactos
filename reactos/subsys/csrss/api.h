@@ -79,6 +79,8 @@ typedef struct
   ULONG HandleTableSize;
   Object_t ** HandleTable;
   ULONG ProcessId;
+  ULONG ShutdownLevel;
+  ULONG ShutdownFlags;
   HANDLE ConsoleEvent;
   PVOID CsrSectionViewBase;
   ULONG CsrSectionViewSize;
@@ -124,6 +126,8 @@ CSR_API(CsrReadConsoleOutputAttrib);
 CSR_API(CsrGetNumberOfConsoleInputEvents);
 CSR_API(CsrRegisterServicesProcess);
 CSR_API(CsrExitReactos);
+CSR_API(CsrGetShutdownParameters);
+CSR_API(CsrSetShutdownParameters);
 
 /* print.c */
 VOID STDCALL DisplayString(LPCWSTR lpwString);

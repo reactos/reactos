@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.20 2002/10/01 06:41:56 ei Exp $
+/* $Id: process.c,v 1.21 2002/10/20 16:40:12 ekohl Exp $
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -134,6 +134,10 @@ CSR_API(CsrCreateProcess)
 	return(STATUS_NO_MEMORY);
      }
 
+   /* Set default shutdown parameters */
+   NewProcessData->ShutdownLevel = 0x280;
+   NewProcessData->ShutdownFlags = 0;
+
    if (Request->Data.CreateProcessRequest.Flags & DETACHED_PROCESS)
      {
 	NewProcessData->Console = NULL;
@@ -224,5 +228,34 @@ CSR_API(CsrConnectProcess)
 
    return(STATUS_SUCCESS);
 }
+
+CSR_API(CsrGetShutdownParameters)
+{
+  Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
+    sizeof(LPC_MESSAGE_HEADER);
+
+  Reply->Data.GetShutdownParametersReply.Level = ProcessData->ShutdownLevel;
+  Reply->Data.GetShutdownParametersReply.Flags = ProcessData->ShutdownFlags;
+
+  Reply->Status = STATUS_SUCCESS;
+
+  return(STATUS_SUCCESS);
+}
+
+CSR_API(CsrSetShutdownParameters)
+{
+  Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
+    sizeof(LPC_MESSAGE_HEADER);
+
+  ProcessData->ShutdownLevel = Request->Data.SetShutdownParametersRequest.Level;
+  ProcessData->ShutdownFlags = Request->Data.SetShutdownParametersRequest.Flags;
+
+  Reply->Status = STATUS_SUCCESS;
+
+  return(STATUS_SUCCESS);
+}
+
 
 /* EOF */

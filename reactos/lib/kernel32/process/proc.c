@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.47 2002/10/20 11:56:00 chorns Exp $
+/* $Id: proc.c,v 1.48 2002/10/20 16:39:06 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -44,166 +44,185 @@ RegisterWaitForInputIdle (WaitForInputIdleType	lpfnRegisterWaitForInputIdle);
 WINBOOL STDCALL
 GetProcessId (HANDLE	hProcess, LPDWORD	lpProcessId);
 
-WINBOOL
-STDCALL
-GetProcessAffinityMask (
-	HANDLE	hProcess,
-	LPDWORD	lpProcessAffinityMask,
-	LPDWORD lpSystemAffinityMask
-	)
+WINBOOL STDCALL
+GetProcessAffinityMask(HANDLE hProcess,
+		       LPDWORD lpProcessAffinityMask,
+		       LPDWORD lpSystemAffinityMask)
 {
-	if (	(NULL == lpProcessAffinityMask)
-		|| (NULL == lpSystemAffinityMask)
-		)
-	{
-		SetLastError(ERROR_BAD_ARGUMENTS);
-		return FALSE;
-	}
-	/* FIXME: check hProcess is actually a process */
-	/* FIXME: query the kernel process object */
-	*lpProcessAffinityMask = 0x00000001;
-	*lpSystemAffinityMask  = 0x00000001;
-	return TRUE;
-}
+  if ((NULL == lpProcessAffinityMask)
+      || (NULL == lpSystemAffinityMask))
+    {
+      SetLastError(ERROR_BAD_ARGUMENTS);
+      return(FALSE);
+    }
 
+  /* FIXME: check hProcess is actually a process */
+  /* FIXME: query the kernel process object */
+  *lpProcessAffinityMask = 0x00000001;
+  *lpSystemAffinityMask  = 0x00000001;
 
-WINBOOL
-STDCALL
-GetProcessShutdownParameters (
-	LPDWORD	lpdwLevel,
-	LPDWORD	lpdwFlags
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-GetProcessWorkingSetSize (
-	HANDLE	hProcess,
-	LPDWORD	lpMinimumWorkingSetSize,
-	LPDWORD	lpMaximumWorkingSetSize
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-WINBOOL
-STDCALL
-SetProcessShutdownParameters (
-	DWORD	dwLevel,
-	DWORD	dwFlags
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-SetProcessWorkingSetSize (
-	HANDLE	hProcess,
-	DWORD	dwMinimumWorkingSetSize,
-	DWORD	dwMaximumWorkingSetSize
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  return(TRUE);
 }
 
 
 WINBOOL STDCALL
-GetProcessTimes (HANDLE		hProcess,
-		 LPFILETIME	lpCreationTime,
-		 LPFILETIME	lpExitTime,
-		 LPFILETIME	lpKernelTime,
-		 LPFILETIME	lpUserTime)
+GetProcessShutdownParameters(LPDWORD lpdwLevel,
+			     LPDWORD lpdwFlags)
 {
-  NTSTATUS		Status;
-  KERNEL_USER_TIMES	Kut;
-  
-  Status = NtQueryInformationProcess (hProcess,
-				      ProcessTimes,
-				      &Kut,
-				      sizeof(Kut),
-				      NULL
-				      );
+  CSRSS_API_REQUEST CsrRequest;
+  CSRSS_API_REPLY CsrReply;
+  NTSTATUS Status;
+
+  CsrRequest.Type = CSRSS_GET_SHUTDOWN_PARAMETERS;
+  Status = CsrClientCallServer(&CsrRequest,
+			       &CsrReply,
+			       sizeof(CSRSS_API_REQUEST),
+			       sizeof(CSRSS_API_REPLY));
+  if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrReply.Status))
+    {
+      SetLastError(Status);
+      return(FALSE);
+    }
+
+  *lpdwLevel = CsrReply.Data.GetShutdownParametersReply.Level;
+  *lpdwFlags = CsrReply.Data.GetShutdownParametersReply.Flags;
+
+  return(TRUE);
+}
+
+
+WINBOOL STDCALL
+SetProcessShutdownParameters(DWORD dwLevel,
+			     DWORD dwFlags)
+{
+  CSRSS_API_REQUEST CsrRequest;
+  CSRSS_API_REPLY CsrReply;
+  NTSTATUS Status;
+
+  CsrRequest.Data.SetShutdownParametersRequest.Level = dwLevel;
+  CsrRequest.Data.SetShutdownParametersRequest.Flags = dwFlags;
+
+  CsrRequest.Type = CSRSS_SET_SHUTDOWN_PARAMETERS;
+  Status = CsrClientCallServer(&CsrRequest,
+			       &CsrReply,
+			       sizeof(CSRSS_API_REQUEST),
+			       sizeof(CSRSS_API_REPLY));
+  if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrReply.Status))
+    {
+      SetLastError(Status);
+      return(FALSE);
+    }
+
+  return(TRUE);
+}
+
+
+WINBOOL STDCALL
+GetProcessWorkingSetSize(HANDLE hProcess,
+			 LPDWORD lpMinimumWorkingSetSize,
+			 LPDWORD lpMaximumWorkingSetSize)
+{
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return(FALSE);
+}
+
+
+WINBOOL STDCALL
+SetProcessWorkingSetSize(HANDLE hProcess,
+			 DWORD dwMinimumWorkingSetSize,
+			 DWORD dwMaximumWorkingSetSize)
+{
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return(FALSE);
+}
+
+
+WINBOOL STDCALL
+GetProcessTimes(HANDLE hProcess,
+		LPFILETIME lpCreationTime,
+		LPFILETIME lpExitTime,
+		LPFILETIME lpKernelTime,
+		LPFILETIME lpUserTime)
+{
+  KERNEL_USER_TIMES Kut;
+  NTSTATUS Status;
+
+  Status = NtQueryInformationProcess(hProcess,
+				     ProcessTimes,
+				     &Kut,
+				     sizeof(Kut),
+				     NULL);
   if (!NT_SUCCESS(Status))
     {
-      SetLastErrorByStatus (Status);
-      return (FALSE);
+      SetLastErrorByStatus(Status);
+      return(FALSE);
     }
-  
+
   lpCreationTime->dwLowDateTime	= Kut.CreateTime.u.LowPart;
   lpCreationTime->dwHighDateTime = Kut.CreateTime.u.HighPart;
-  
+
   lpExitTime->dwLowDateTime = Kut.ExitTime.u.LowPart;
   lpExitTime->dwHighDateTime = Kut.ExitTime.u.HighPart;
-	
+
   lpKernelTime->dwLowDateTime = Kut.KernelTime.u.LowPart;
   lpKernelTime->dwHighDateTime = Kut.KernelTime.u.HighPart;
-  
+
   lpUserTime->dwLowDateTime = Kut.UserTime.u.LowPart;
   lpUserTime->dwHighDateTime = Kut.UserTime.u.HighPart;
-  
-  return (TRUE);
+
+  return(TRUE);
 }
 
 
-HANDLE STDCALL GetCurrentProcess (VOID)
+HANDLE STDCALL
+GetCurrentProcess(VOID)
 {
-	return((HANDLE)NtCurrentProcess());
+  return((HANDLE)NtCurrentProcess());
 }
 
 
-HANDLE STDCALL GetCurrentThread (VOID)
+HANDLE STDCALL
+GetCurrentThread(VOID)
 {
-   return((HANDLE)NtCurrentThread());
+  return((HANDLE)NtCurrentThread());
 }
 
 
-DWORD STDCALL GetCurrentProcessId (VOID)
+DWORD STDCALL
+GetCurrentProcessId(VOID)
 {
-   return((DWORD)GetTeb()->Cid.UniqueProcess);
+  return((DWORD)GetTeb()->Cid.UniqueProcess);
 }
 
 
-WINBOOL
-STDCALL
-GetExitCodeProcess (
-	HANDLE	hProcess,
-	LPDWORD	lpExitCode
-	)
+WINBOOL STDCALL
+GetExitCodeProcess(HANDLE hProcess,
+		   LPDWORD lpExitCode)
 {
-   NTSTATUS errCode;
-   PROCESS_BASIC_INFORMATION ProcessBasic;
-   ULONG BytesWritten;
-   
-   errCode = NtQueryInformationProcess(hProcess,
-				       ProcessBasicInformation,
-				       &ProcessBasic,
-				       sizeof(PROCESS_BASIC_INFORMATION),
-				       &BytesWritten);
-   if (!NT_SUCCESS(errCode))
-     {
-	SetLastErrorByStatus (errCode);
-	return FALSE;
+  PROCESS_BASIC_INFORMATION ProcessBasic;
+  ULONG BytesWritten;
+  NTSTATUS Status;
+
+  Status = NtQueryInformationProcess(hProcess,
+				     ProcessBasicInformation,
+				     &ProcessBasic,
+				     sizeof(PROCESS_BASIC_INFORMATION),
+				     &BytesWritten);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return(FALSE);
      }
-   memcpy(lpExitCode, &ProcessBasic.ExitStatus, sizeof(DWORD));
-   return TRUE;
+
+  memcpy(lpExitCode, &ProcessBasic.ExitStatus, sizeof(DWORD));
+
+  return(TRUE);
 }
 
 
-WINBOOL
-STDCALL
-GetProcessId (
-	HANDLE	hProcess,
-	LPDWORD	lpProcessId 
-	)
+WINBOOL STDCALL
+GetProcessId(HANDLE hProcess,
+	     LPDWORD lpProcessId)
 {
    NTSTATUS errCode;
    PROCESS_BASIC_INFORMATION ProcessBasic;
@@ -224,13 +243,10 @@ GetProcessId (
 }
 
 
-HANDLE
-STDCALL
-OpenProcess (
-	DWORD	dwDesiredAccess,
-	WINBOOL	bInheritHandle,
-	DWORD	dwProcessId
-	)
+HANDLE STDCALL
+OpenProcess(DWORD dwDesiredAccess,
+	    WINBOOL bInheritHandle,
+	    DWORD dwProcessId)
 {
    NTSTATUS errCode;
    HANDLE ProcessHandle;
@@ -264,12 +280,9 @@ OpenProcess (
 }
 
 
-UINT
-STDCALL
-WinExec (
-	LPCSTR	lpCmdLine,
-	UINT	uCmdShow
-	)
+UINT STDCALL
+WinExec(LPCSTR lpCmdLine,
+	UINT uCmdShow)
 {
    STARTUPINFOA StartupInfo;
    PROCESS_INFORMATION  ProcessInformation;
@@ -308,8 +321,7 @@ WinExec (
 }
 
 
-VOID
-STDCALL
+VOID STDCALL
 RegisterWaitForInputIdle (
 	WaitForInputIdleType	lpfnRegisterWaitForInputIdle
 	)
@@ -319,8 +331,7 @@ RegisterWaitForInputIdle (
 }
 
 
-DWORD
-STDCALL
+DWORD STDCALL
 WaitForInputIdle (
 	HANDLE	hProcess,
 	DWORD	dwMilliseconds
@@ -330,20 +341,17 @@ WaitForInputIdle (
 }
 
 
-VOID
-STDCALL
-Sleep (
-	DWORD	dwMilliseconds
-	)
+VOID STDCALL
+Sleep(DWORD dwMilliseconds)
 {
-   SleepEx (dwMilliseconds, FALSE);
-   return;
+  SleepEx(dwMilliseconds, FALSE);
+  return;
 }
 
 
 DWORD STDCALL
-SleepEx (DWORD	dwMilliseconds,
-	 BOOL	bAlertable)
+SleepEx(DWORD dwMilliseconds,
+	BOOL bAlertable)
 {
   TIME Interval;
   NTSTATUS errCode;
@@ -376,56 +384,56 @@ SleepEx (DWORD	dwMilliseconds,
 VOID STDCALL
 GetStartupInfoW(LPSTARTUPINFOW lpStartupInfo)
 {
-   PRTL_USER_PROCESS_PARAMETERS Params;
+  PRTL_USER_PROCESS_PARAMETERS Params;
 
-   if (lpStartupInfo == NULL)
-     {
-	SetLastError(ERROR_INVALID_PARAMETER);
-	return;
-     }
+  if (lpStartupInfo == NULL)
+    {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return;
+    }
 
-   Params = NtCurrentPeb ()->ProcessParameters;
+  Params = NtCurrentPeb()->ProcessParameters;
 
-   lpStartupInfo->cb = sizeof(STARTUPINFOW);
-   lpStartupInfo->lpDesktop = Params->DesktopInfo.Buffer;
-   lpStartupInfo->lpTitle = Params->WindowTitle.Buffer;
-   lpStartupInfo->dwX = Params->dwX;
-   lpStartupInfo->dwY = Params->dwY;
-   lpStartupInfo->dwXSize = Params->dwXSize;
-   lpStartupInfo->dwYSize = Params->dwYSize;
-   lpStartupInfo->dwXCountChars = Params->dwXCountChars;
-   lpStartupInfo->dwYCountChars = Params->dwYCountChars;
-   lpStartupInfo->dwFillAttribute = Params->dwFillAttribute;
-   lpStartupInfo->dwFlags = Params->dwFlags;
-   lpStartupInfo->wShowWindow = Params->wShowWindow;
-   lpStartupInfo->lpReserved = Params->ShellInfo.Buffer;
-   lpStartupInfo->cbReserved2 = Params->RuntimeInfo.Length;
-   lpStartupInfo->lpReserved2 = (LPBYTE)Params->RuntimeInfo.Buffer;
+  lpStartupInfo->cb = sizeof(STARTUPINFOW);
+  lpStartupInfo->lpDesktop = Params->DesktopInfo.Buffer;
+  lpStartupInfo->lpTitle = Params->WindowTitle.Buffer;
+  lpStartupInfo->dwX = Params->dwX;
+  lpStartupInfo->dwY = Params->dwY;
+  lpStartupInfo->dwXSize = Params->dwXSize;
+  lpStartupInfo->dwYSize = Params->dwYSize;
+  lpStartupInfo->dwXCountChars = Params->dwXCountChars;
+  lpStartupInfo->dwYCountChars = Params->dwYCountChars;
+  lpStartupInfo->dwFillAttribute = Params->dwFillAttribute;
+  lpStartupInfo->dwFlags = Params->dwFlags;
+  lpStartupInfo->wShowWindow = Params->wShowWindow;
+  lpStartupInfo->lpReserved = Params->ShellInfo.Buffer;
+  lpStartupInfo->cbReserved2 = Params->RuntimeInfo.Length;
+  lpStartupInfo->lpReserved2 = (LPBYTE)Params->RuntimeInfo.Buffer;
 
-   lpStartupInfo->hStdInput = Params->hStdInput;
-   lpStartupInfo->hStdOutput = Params->hStdOutput;
-   lpStartupInfo->hStdError = Params->hStdError;
+  lpStartupInfo->hStdInput = Params->hStdInput;
+  lpStartupInfo->hStdOutput = Params->hStdOutput;
+  lpStartupInfo->hStdError = Params->hStdError;
 }
 
 
 VOID STDCALL
 GetStartupInfoA(LPSTARTUPINFOA lpStartupInfo)
 {
-   PRTL_USER_PROCESS_PARAMETERS Params;
-   ANSI_STRING AnsiString;
+  PRTL_USER_PROCESS_PARAMETERS Params;
+  ANSI_STRING AnsiString;
 
-   if (lpStartupInfo == NULL)
-     {
+  if (lpStartupInfo == NULL)
+    {
 	SetLastError(ERROR_INVALID_PARAMETER);
 	return;
-     }
+    }
 
-   Params = NtCurrentPeb ()->ProcessParameters;
+  Params = NtCurrentPeb ()->ProcessParameters;
 
-   RtlAcquirePebLock ();
+  RtlAcquirePebLock ();
 
-   if (lpLocalStartupInfo == NULL)
-     {
+  if (lpLocalStartupInfo == NULL)
+    {
 	/* create new local startup info (ansi) */
 	lpLocalStartupInfo = RtlAllocateHeap (RtlGetProcessHeap (),
 	                                      0,
@@ -482,14 +490,14 @@ FlushInstructionCache (HANDLE	hProcess,
 		       LPCVOID	lpBaseAddress,
 		       DWORD	dwSize)
 {
-  NTSTATUS	errCode;
+  NTSTATUS Status;
   
-  errCode = NtFlushInstructionCache (hProcess,
-				     (PVOID) lpBaseAddress,
-				     dwSize);
-  if (!NT_SUCCESS(errCode))
+  Status = NtFlushInstructionCache(hProcess,
+				   (PVOID)lpBaseAddress,
+				   dwSize);
+  if (!NT_SUCCESS(Status))
     {
-      SetLastErrorByStatus (errCode);
+      SetLastErrorByStatus(Status);
       return FALSE;
     }
   return TRUE;
@@ -497,7 +505,7 @@ FlushInstructionCache (HANDLE	hProcess,
 
 
 VOID STDCALL
-ExitProcess (UINT	uExitCode)
+ExitProcess(UINT uExitCode)
 {
   CSRSS_API_REQUEST CsrRequest;
   CSRSS_API_REPLY CsrReply;
@@ -528,8 +536,9 @@ WINBOOL STDCALL
 TerminateProcess (HANDLE	hProcess,
 		  UINT	uExitCode)
 {
-  NTSTATUS Status = NtTerminateProcess (hProcess, uExitCode);
-      
+  NTSTATUS Status;
+
+  Status = NtTerminateProcess (hProcess, uExitCode);
   if (NT_SUCCESS(Status))
     {
       return TRUE;
@@ -559,8 +568,8 @@ FatalAppExitA (UINT	uAction,
 
 
 VOID STDCALL
-FatalAppExitW (UINT	uAction,
-	       LPCWSTR	lpMessageText)
+FatalAppExitW(UINT uAction,
+	      LPCWSTR lpMessageText)
 {
   return;
 }
