@@ -5,3 +5,4 @@ objects
 *.sym
 *.sys
 *.map
+*.tmp
