@@ -45,6 +45,8 @@ typedef struct _USER_MESSAGE_QUEUE
   LIST_ENTRY NotifyMessagesListHead;
   /* Queue for hardware messages for the queue. */
   LIST_ENTRY HardwareMessagesListHead;
+  /* Lock for the hardware message list. */
+  FAST_MUTEX HardwareLock;
   /* Lock for the queue. */
   FAST_MUTEX Lock;
   /* True if a WM_QUIT message is pending. */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.40 2003/12/07 19:29:33 weiden Exp $
+/* $Id: msgqueue.c,v 1.41 2003/12/08 20:40:41 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -279,10 +279,10 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
 
   if (Window->MessageQueue != PsGetWin32Thread()->MessageQueue)
   {
-    ExAcquireFastMutex(&Window->MessageQueue->Lock);
+    ExAcquireFastMutex(&Window->MessageQueue->HardwareLock);
     InsertTailList(&Window->MessageQueue->HardwareMessagesListHead,
                    &Message->ListEntry);
-    ExReleaseFastMutex(&Window->MessageQueue->Lock);
+    ExReleaseFastMutex(&Window->MessageQueue->HardwareLock);
     KeSetEvent(&Window->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
     return(FALSE);
   }
@@ -364,7 +364,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
   DesktopWindow = IntGetWindowObject(IntGetDesktopWindow());
 
   /* Process messages in the message queue itself. */
-  ExAcquireFastMutex(&MessageQueue->Lock);
+  ExAcquireFastMutex(&MessageQueue->HardwareLock);
   CurrentEntry = MessageQueue->HardwareMessagesListHead.Flink;
   while (CurrentEntry != &MessageQueue->HardwareMessagesListHead)
     {
@@ -384,14 +384,14 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 		{
 		  RemoveEntryList(&Current->ListEntry);
 		}
-	      ExReleaseFastMutex(&MessageQueue->Lock);
+	      ExReleaseFastMutex(&MessageQueue->HardwareLock);
 	      *Message = Current;
 	      IntReleaseWindowObject(DesktopWindow);
 	      return(TRUE);
 	    }
 	}
     }
-  ExReleaseFastMutex(&MessageQueue->Lock);
+  ExReleaseFastMutex(&MessageQueue->HardwareLock);
 
   /* Now try the global queue. */
   ExAcquireFastMutex(&HardwareMessageQueueLock);
@@ -456,8 +456,10 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 	      */
 	      if (!Remove)
 		{
+                  ExAcquireFastMutex(&MessageQueue->HardwareLock);
 		  InsertTailList(&MessageQueue->HardwareMessagesListHead,
 				 &Current->ListEntry);
+                  ExReleaseFastMutex(&MessageQueue->HardwareLock);
 		}
 	      ExReleaseFastMutex(&HardwareMessageQueueLock);
 	      *Message = Current;
@@ -808,6 +810,7 @@ MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQu
   InitializeListHead(&MessageQueue->PostedMessagesListHead);
   InitializeListHead(&MessageQueue->SentMessagesListHead);
   InitializeListHead(&MessageQueue->HardwareMessagesListHead);
+  ExInitializeFastMutex(&MessageQueue->HardwareLock);
   ExInitializeFastMutex(&MessageQueue->Lock);
   MessageQueue->QuitPosted = FALSE;
   MessageQueue->QuitExitCode = 0;
