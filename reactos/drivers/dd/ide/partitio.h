@@ -21,58 +21,6 @@
     (c) = (lba) & 0xff, \
     (s) |= ((lba) >> 2) & 0xc0)
 
-/* taken from linux fdisk src */
-typedef enum PartitionTypes {
-  PTEmpty = 0,
-  PTDOS3xPrimary,  /*  1 */
-  PTXENIXRoot,     /*  2 */
-  PTXENIXUsr,      /*  3 */
-  PTOLDDOS16Bit,   /*  4 */
-  PTDosExtended,   /*  5 */
-  PTDos5xPrimary,  /*  6 */
-  PTOS2HPFS,       /*  7 */
-  PTAIX,           /*  8 */
-  PTAIXBootable,   /*  9 */
-  PTOS2BootMgr,    /* 10 */
-  PTWin95FAT32,
-  PTWin95FAT32LBA,
-  PTWin95FAT16LBA,
-  PTWin95ExtendedLBA,
-  PTVenix286 =      0x40,
-  PTNovell =        0x51,
-  PTMicroport =     0x52,
-  PTGnuHurd =       0x63,
-  PTNetware286 =    0x64,
-  PTNetware386 =    0x65,
-  PTPCIX =          0x75,
-  PTOldMinix =      0x80,
-  PTMinix =         0x81,
-  PTLinuxSwap =     0x82,
-  PTLinuxExt2 =     0x83,
-  PTAmoeba =        0x93,
-  PTAmoebaBBT =     0x94,
-  PTBSD =           0xa5,
-  PTBSDIFS =        0xb7,
-  PTBSDISwap =      0xb8,
-  PTSyrinx =        0xc7,
-  PTCPM =           0xdb,
-  PTDOSAccess =     0xe1,
-  PTDOSRO =         0xe3,
-  PTDOSSecondary =  0xf2,
-  PTBBT =           0xff
-} PARTITIONTYPES;
-
-#define PartitionIsSupported(P)  \
-    ((P)->PartitionType == PTDOS3xPrimary ||  \
-    (P)->PartitionType == PTOLDDOS16Bit ||    \
-    (P)->PartitionType == PTDos5xPrimary ||   \
-    (P)->PartitionType == PTWin95FAT32 ||     \
-    (P)->PartitionType == PTWin95FAT32LBA ||  \
-    (P)->PartitionType == PTWin95FAT16LBA ||  \
-    (P)->PartitionType == PTLinuxExt2)
-
-#define PartitionIsExtended(P)  \
-    ((P)->PartitionType == PTDosExtended)
 
 typedef struct Partition {
   unsigned char   BootFlags;

@@ -1,4 +1,4 @@
-/* $Id: ide.c,v 1.29 2000/06/29 23:35:48 dwelch Exp $
+/* $Id: ide.c,v 1.30 2000/08/18 17:24:17 ekohl Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
@@ -66,10 +66,6 @@
 
 #include <ddk/ntddk.h>
 
-//  --------------------------------  This stuff should be defined in NTDDK.H
-
-typedef DISK_GEOMETRY *PDISK_GEOMETRY;
-
 //  -------------------------------------------------------------------------
 
 #include "../../../ntoskrnl/include/internal/i386/io.h"
@@ -79,7 +75,6 @@ typedef DISK_GEOMETRY *PDISK_GEOMETRY;
 #include <debug.h>
 
 #include "ide.h"
-#include "idep.h"
 #include "partitio.h"
 
 #define  VERSION  "V0.1.4"
@@ -601,7 +596,7 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
           p = &PrimaryPartitionTable[PartitionIdx];
 
             //  if the partition entry is in use, create a device for it
-          if (PartitionIsSupported(p)) 
+          if (IsRecognizedPartition(p))
             {
               DPRINT("%s ptbl entry:%d type:%02x Offset:%d Size:%d\n",
                      DeviceDirName,
@@ -638,7 +633,7 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
 
                 //  Create devices for logical partitions within an extended partition
             } 
-          else if (PartitionIsExtended(p)) 
+          else if (IsExtendedPartition(p)) 
             {
               ExtOffset = p->StartingBlock;
 
@@ -657,7 +652,7 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
                   for (ExtPartitionIdx = 0; ExtPartitionIdx < 4; ExtPartitionIdx++) 
                     {
                       ep = &ExtendedPartitionTable[ExtPartitionIdx];
-                      if (PartitionIsSupported(ep)) 
+                      if (IsRecognizedPartition(ep))
                         {
                           DPRINT("Harddisk%d: Type:%02x Offset:%d Size:%d\n", 
                                  HarddiskIdx, 
