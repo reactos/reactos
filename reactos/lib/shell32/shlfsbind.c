@@ -58,8 +58,8 @@ static struct ICOM_VTABLE(IFileSystemBindData) sbvt =
     IFileSystemBindData_fnQueryInterface,
     IFileSystemBindData_fnAddRef,
     IFileSystemBindData_fnRelease,
-    IFileSystemBindData_fnGetFindData,
     IFileSystemBindData_fnSetFindData,
+    IFileSystemBindData_fnGetFindData,
 };
 
 static WCHAR wFileSystemBindData[] = {'F','i','l','e',' ','S','y','s','t','e','m',' ','B','i','n','d','D','a','t','a',0};
