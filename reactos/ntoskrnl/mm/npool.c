@@ -101,7 +101,7 @@ PVOID ExAllocatePage(VOID)
 	     MmSetPage(NULL,
 		       (PVOID)addr,
 		       PAGE_READWRITE,
-		       get_free_page());
+		       (ULONG)MmAllocPage());
 	     KeReleaseSpinLock(&AllocMapLock, oldlvl);
 	     return((PVOID)addr);
 	  }
@@ -459,7 +459,7 @@ static block_hdr* grow_kernel_pool(unsigned int size)
 	MmSetPage(NULL,
 		  (PVOID)(start + (i*PAGESIZE)),
 		  PAGE_READWRITE,
-		  get_free_page());
+		  (ULONG)MmAllocPage());
      }
 
    

@@ -12,10 +12,7 @@ __goxy
 __wherex
 __wherey
 __getscreensize
-free_page
-get_dma_page
 DbgPrint
-printk
 ExAcquireFastMutex
 ExAcquireFastMutexUnsafe
 ExAcquireResourceExclusive

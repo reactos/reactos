@@ -50,41 +50,13 @@ struct _KDPC;
 
 typedef struct _KTIMER
 {
-   /*
-    * Pointers to maintain the linked list of activated timers
-    */
    LIST_ENTRY entry;
-   
-   /*
-    * Absolute expiration time in system time units
-    */
    signed long long expire_time;
-
-   /*
-    * Optional dpc associated with the timer 
-    */
    struct _KDPC* dpc;
-   
-   /*
-    * True if the timer is signaled
-    */
    BOOLEAN signaled;
-   
-   /*
-    * True if the timer is in the system timer queue
-    */
    BOOLEAN running;
-   
-   /*
-    * Type of the timer either Notification or Synchronization
-    */
    TIMER_TYPE type;
-   
-   /*
-    * Period of the timer in milliseconds (zero if once-only)
-    */
-   ULONG period;
-   
+   ULONG period;   
 } KTIMER, *PKTIMER;
 
 struct _KSPIN_LOCK;

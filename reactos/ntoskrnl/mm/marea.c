@@ -395,6 +395,7 @@ NTSTATUS MmFreeMemoryArea(PEPROCESS Process,
    MEMORY_AREA* MemoryArea;
    ULONG i;
    KIRQL oldlvl;
+   LARGE_INTEGER PhysicalAddr;
    
    DPRINT("MmFreeMemoryArea(Process %x, BaseAddress %x, Length %x,"
           "FreePages %d)\n",Process,BaseAddress,Length,FreePages);			    
@@ -412,9 +413,10 @@ NTSTATUS MmFreeMemoryArea(PEPROCESS Process,
      {
 	for (i=0;i<=(MemoryArea->Length/PAGESIZE);i++)
 	  {
-	     free_page(GET_LARGE_INTEGER_LOW_PART(
-               MmGetPhysicalAddress(MemoryArea->BaseAddress + (i*PAGESIZE))), 
-                       1);
+	     PhysicalAddr = MmGetPhysicalAddress(MemoryArea->BaseAddress + 
+						 (i*PAGESIZE));
+	     MmFreePage((PVOID)(ULONG)
+			(GET_LARGE_INTEGER_LOW_PART(PhysicalAddr)), 1);
 	  }
      }
    for (i=0; i<=(MemoryArea->Length/PAGESIZE); i++)

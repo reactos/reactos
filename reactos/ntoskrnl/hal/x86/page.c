@@ -57,6 +57,20 @@ static ULONG ProtectToPTE(ULONG flProtect)
                                 (((ULONG)v / (1024 * 1024))&(~0x3)))
 #define ADDR_TO_PTE(v) (PULONG)(PAGETABLE_MAP + ((ULONG)v / 1024))
 
+VOID MmDeletePageTable(PEPROCESS Process, PVOID Address)
+{
+   if (Process != NULL && Process != PsGetCurrentProcess())
+     {
+	KeAttachProcess(Process);
+     }
+   *(ADDR_TO_PDE(Address)) = 0;
+   FLUSH_TLB;
+   if (Process != NULL && Process != PsGetCurrentProcess())
+     {
+	KeDetachProcess();
+     }
+}
+
 ULONG MmGetPageEntryForProcess(PEPROCESS Process, PVOID Address)
 {
    ULONG Entry;
@@ -88,8 +102,7 @@ PULONG MmGetPageEntry(PVOID PAddress)
    DPRINT("page_dir %x *page_dir %x\n",page_dir,*page_dir);
    if ((*page_dir) == 0)
      {
-//	(*page_dir) = get_free_page() | (PA_READ | PA_WRITE);
-	(*page_dir) = get_free_page() | 0x7;
+	(*page_dir) = ((ULONG)MmAllocPage()) | 0x7;
 	FLUSH_TLB;
      }
    page_tlb = ADDR_TO_PTE(Address);

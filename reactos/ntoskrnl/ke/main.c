@@ -119,6 +119,7 @@ asmlinkage void _main(boot_param* _bp)
    unsigned int start;
    unsigned int start1;
    boot_param bp;
+   unsigned int last_kernel_address;
    
    memset((void *)&edata,0,((int)&end)-((int)&edata));
    
@@ -143,13 +144,19 @@ asmlinkage void _main(boot_param* _bp)
 	for(;;);
      }   
    start1 = start+PAGE_ROUND_UP(bp.module_length[1]);
-
+   
+   last_kernel_address = KERNEL_BASE;
+   for (i=0; i<=bp.nr_files; i++)
+     {
+	last_kernel_address = last_kernel_address +
+	  PAGE_ROUND_UP(bp.module_length[i]);
+     }
    
    /*
     * Initalize various critical subsystems
     */
    HalInit(&bp);
-   MmInitialize(&bp);
+   MmInitialize(&bp, last_kernel_address);
    KeInit();
    ObInit();
    PsInit();

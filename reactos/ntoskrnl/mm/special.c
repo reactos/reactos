@@ -45,7 +45,7 @@ PVOID MmAllocateSection(ULONG Length)
 	MmSetPage(NULL,
 		  Result+(i*PAGESIZE),
 		  PAGE_READWRITE,
-		  get_free_page());
+		  (ULONG)MmAllocPage());
      }
    return((PVOID)Result);
 }
@@ -93,7 +93,8 @@ PVOID MmMapIoSpace(PHYSICAL_ADDRESS PhysicalAddress,
 	MmSetPage(NULL,
 		  Result + (i * PAGESIZE),
 		  PAGE_READWRITE,
-		  GET_LARGE_INTEGER_LOW_PART(PhysicalAddress));
+		  GET_LARGE_INTEGER_LOW_PART(PhysicalAddress) + 
+		  (i * PAGESIZE));
      }
    return((PVOID)Result);
 }
@@ -128,7 +129,7 @@ PVOID MmAllocateNonCachedMemory(ULONG NumberOfBytes)
 	MmSetPage(NULL,
 		  Result+(i*PAGESIZE),
 		  PAGE_READWRITE,
-		  get_free_page());
+		  (ULONG)MmAllocPage());
      }
    return((PVOID)Result);
 }

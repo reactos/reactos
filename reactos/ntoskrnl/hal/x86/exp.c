@@ -214,11 +214,11 @@ asmlinkage void exception_handler(unsigned int edi,
    __asm__("movl %%cr2,%0\n\t"
 	   : "=d" (cr2));
    DbgPrint("cr2 %x\n",cr2);
+   for(;;);
    DbgPrint("Process: %x\n",PsGetCurrentProcess());
    DbgPrint("Thread: %x\n",PsGetCurrentThread()->Cid.UniqueThread);
    DbgPrint("DS %x ES %x FS %x GS %x\n",ds&0xffff,es&0xffff,fs&0xffff,
 	    gs&0xfff);
-   //   for(;;);
    DbgPrint("EAX: %.8x   EBX: %.8x   ECX: %.8x\n",eax,ebx,ecx);
    DbgPrint("EDX: %.8x   EBP: %.8x   ESI: %.8x\n",edx,ebp,esi);
    DbgPrint("EDI: %.8x   EFLAGS: %.8x ",edi,eflags);

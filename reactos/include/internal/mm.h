@@ -73,37 +73,6 @@ NTSTATUS MmLockMemoryArea(MEMORY_AREA* MemoryArea);
 NTSTATUS MmUnlockMemoryArea(MEMORY_AREA* MemoryArea);
 NTSTATUS MmInitSectionImplementation(VOID);
 
-
-/*
- * FUNCTION: Gets a page with a restricted max physical address (i.e.
- * suitable for dma)
- * RETURNS:
- *      The physical address of the page if it succeeds
- *      NULL if it fails.
- * NOTES: This is very inefficent because the list isn't sorted. On the
- * other hand sorting the list would be quite expensive especially if dma
- * is only used infrequently. Perhaps a special cache of dma pages should
- * be maintained?
- */
-unsigned int get_dma_page(unsigned int max_address);
-
-/*
- * FUNCTION: Allocate a page and return its physical address
- * RETURNS: The physical address of the page allocated
- */
-asmlinkage unsigned int get_free_page(void);
-
-/*
- * FUNCTION: Adds pages to the free list
- * ARGUMENTS:
- *          physical_base = Physical address of the base of the region to
- *                          be freed
- *          nr = number of continuous pages to free
- */
-asmlinkage void free_page(unsigned int physical_base, unsigned int nr);
-
-void mark_page_not_writable(unsigned int vaddr);
-
 void VirtualInit(boot_param* bp);
 
 #define MM_LOWEST_USER_ADDRESS (4096)
@@ -114,5 +83,12 @@ PMEMORY_AREA MmSplitMemoryArea(PEPROCESS Process,
 			       ULONG Length,
 			       ULONG NewType,
 			       ULONG NewAttributes);
+PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
+			   PVOID LastPhysKernelAddress,
+			   ULONG MemorySizeInPages,
+			   ULONG LastKernelBase);
 
+PVOID MmAllocPage(VOID);
+VOID MmFreePage(PVOID PhysicalAddress, ULONG Nr);
+VOID MmDeletePageTable(PEPROCESS Process, PVOID Address);
 #endif

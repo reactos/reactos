@@ -3,18 +3,10 @@
  * PROJECT:      ReactOS kernel
  * FILE:         ntoskrnl/mm/freelist.c
  * PURPOSE:      Handle the list of free physical pages
- * PROGRAMMER:   David Welch (welch@mcmail.com)
+ * PROGRAMMER:   David Welch (welch@cwcom.net)
  * UPDATE HISTORY:
  *               27/05/98: Created
  *               18/08/98: Added a fix from Robert Bergkvist
- */
-
-/*
- * NOTE: The list of free pages is implemented as an unsorted double linked 
- * list. This should make added or removing pages fast when you don't care
- * about the physical address. Because the entirety of physical memory is
- * mapped from 0xd0000000 upwards it is easy to do a mapping between 
- * physical and linear address. 
  */
 
 /* INCLUDES ****************************************************************/
@@ -24,6 +16,7 @@
 #include <internal/mm.h>
 #include <internal/ntoskrnl.h>
 #include <internal/bitops.h>
+#include <internal/i386/io.h>
 #include <ddk/ntddk.h>
 
 #define NDEBUG
@@ -31,175 +24,175 @@
 
 /* TYPES *******************************************************************/
 
-typedef struct _free_page
-/*
- * PURPOSE: At the start of every region of free physical pages
- */
+#define PHYSICAL_PAGE_FREE    (0x1)
+#define PHYSICAL_PAGE_INUSE   (0x2)
+#define PHYSICAL_PAGE_BIOS    (0x4)
+
+typedef struct _PHYSICAL_PAGE
 {
-        struct _free_page* next;
-        struct _free_page* previous;
-        unsigned int nr_pages;
-} free_page_hdr;
+   ULONG Flags;
+   LIST_ENTRY ListEntry;
+} PHYSICAL_PAGE, *PPHYSICAL_PAGE;
 
 /* GLOBALS ****************************************************************/
 
-/*
- * PURPOSE: Points to the first page in the free list
- */
-free_page_hdr* free_page_list_head=NULL;
+static PPHYSICAL_PAGE MmPageArray;
+
+static LIST_ENTRY UsedPageListHead;
+static KSPIN_LOCK UsedPageListLock;
+static LIST_ENTRY FreePageListHead;
+static KSPIN_LOCK FreePageListLock;
+static LIST_ENTRY BiosPageListHead;
+static KSPIN_LOCK BiosPageListLock;
 
 /* FUNCTIONS *************************************************************/
 
-void free_page(unsigned int physical_base, unsigned int nr)
+PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
+			   PVOID LastPhysKernelAddress,
+			   ULONG MemorySizeInPages,
+			   ULONG LastKernelAddress)
 /*
- * FUNCTION: Add a physically continuous range of pages to the free list
+ * FUNCTION: Initializes the page list with all pages free
+ * except those known to be reserved and those used by the kernel
  * ARGUMENTS:
- *         physical_base = The first physical address to free
- *         nr = the size of the region (in pages) to free
- * NOTES: This function attempts to keep the list partially unfragmented 
+ *         PageBuffer = Page sized buffer
+ *         FirstKernelAddress = First physical address used by the kernel
+ *         LastKernelAddress = Last physical address used by the kernel
  */
 {
-   unsigned int eflags;           
-   free_page_hdr* hdr=NULL;
-
-   DPRINT("Freeing %x to %x\n",physical_base,physical_base
-	  + (nr*PAGESIZE));
+   ULONG i;
+   ULONG Reserved;
    
-   /*
-    * This must be atomic
-    */
-   __asm__("pushf\n\tpop %0\n\tcli\n\t"
-	   : "=d" (eflags));
+   DPRINT("MmInitializePageList(FirstPhysKernelAddress %x, "
+	  "LastPhysKernelAddress %x, "
+	  "MemorySizeInPages %x, LastKernelAddress %x)\n",
+	  FirstPhysKernelAddress,
+	  LastPhysKernelAddress,
+	  MemorySizeInPages,
+	  LastKernelAddress);
    
-   /*
-    * 
-    */
-   hdr = (free_page_hdr *)physical_to_linear(physical_base);
+   InitializeListHead(&UsedPageListHead);
+   KeInitializeSpinLock(&UsedPageListLock);
+   InitializeListHead(&FreePageListHead);
+   KeInitializeSpinLock(&FreePageListLock);
+   InitializeListHead(&BiosPageListHead);
+   KeInitializeSpinLock(&BiosPageListLock);
    
-   DPRINT("free_page_hdr %x\n",hdr);
-   DPRINT("free_page_list_head %x\n",free_page_list_head);
+   Reserved = (MemorySizeInPages * sizeof(PHYSICAL_PAGE)) / PAGESIZE;
+   MmPageArray = (PHYSICAL_PAGE *)LastKernelAddress;
    
-   if (free_page_list_head!=NULL)
+   DPRINT("Reserved %d\n", Reserved);
+   
+   i = 1;
+   if ((ULONG)FirstPhysKernelAddress < 0xa0000)
      {
-	free_page_list_head->previous=hdr;
-     }
-   hdr->next=free_page_list_head;
-   hdr->previous=NULL;
-   hdr->nr_pages = nr;
-   free_page_list_head=hdr;
-   
-   __asm__("push %0\n\tpopf\n\t"
-	   :
-	   : "d" (eflags));
-}
-
-unsigned int get_dma_page(unsigned int max_address)
-/*
- * FUNCTION: Gets a page with a restricted max physical address (i.e.
- * suitable for dma)
- * ARGUMENTS:
- *         max_address = The maximum address usable by the caller
- * RETURNS:
- *      The physical address of the page if it succeeds
- *      NULL if it fails.
- * NOTES: This is very inefficent because the list isn't sorted. On the
- * other hand sorting the list would be quite expensive especially if dma
- * is only used infrequently. Perhaps a special cache of dma pages should
- * be maintained?
- */
-{
-   free_page_hdr* current=NULL;
-
-   if (free_page_list_head==NULL)
-     {
-	printk("CRITICAL: Unable to allocate page\n");
-	KeBugCheck(KBUG_OUT_OF_MEMORY);
-     }
-   
-   /*
-    * Walk the free page list looking for suitable memory
-    */
-   current = free_page_list_head;
-   while (current!=NULL)
-     {
-	if ( ((int)current) < max_address)
+	for (; i<((ULONG)FirstPhysKernelAddress/PAGESIZE); i++)
 	  {
-	     /*
-	      * We take the first page from the region 
-	      */
-	     free_page_hdr* nhdr = (free_page_hdr *)(((int)current)+PAGESIZE);
-	     if (current->previous!=NULL)
-	       {
-		  current->previous->next=nhdr;
-	       }
-	     if (current->next!=NULL)
-	       {
-		  current->next->previous=nhdr;
-	       }
-	     nhdr->next=current->next;
-	     nhdr->previous=current->previous;
-	     nhdr->nr_pages=current->nr_pages-1;
-	     if (free_page_list_head==current)
-	       {
-		  free_page_list_head=nhdr;
-	       }
-	     
-	     return ((int)current);
+	     MmPageArray[i].Flags = PHYSICAL_PAGE_FREE;
+	     InsertTailList(&FreePageListHead,
+			    &MmPageArray[i].ListEntry);
 	  }
-	
-	current=current->next;
-     }
-   return(NULL);
-}
-
-unsigned int get_free_page(void)
-/*
- * FUNCTION: Allocates a page 
- * RETURNS: The physical address of the page allocated
- */
-{
-   unsigned int addr;
-
-   /*
-    * This must be atomic wrt everything
-    */
-   unsigned int eflags;
-   __asm__("pushf\n\tpop %0\n\tcli\n\t"
-	   : "=d" (eflags));
-
-   /*
-    * If we are totally out of memory then panic
-    */
-   if (free_page_list_head==NULL)
-     {
-	printk("CRITICAL: Unable to allocate page\n");
-	KeBugCheck(KBUG_OUT_OF_MEMORY);
-     }
-
-   addr = 0;
-
-   if (free_page_list_head->nr_pages>1)
-     {
-	free_page_list_head->nr_pages--;
-	addr = ((unsigned int)free_page_list_head) +
-	  (free_page_list_head->nr_pages * PAGESIZE);
+	for (; i<(0xa0000 / PAGESIZE); i++)
+	  {
+	     MmPageArray[i].Flags = PHYSICAL_PAGE_INUSE;
+	     InsertTailList(&UsedPageListHead,
+			    &MmPageArray[i].ListEntry);
+	  }
+	for (; i<(0x100000 / PAGESIZE); i++)
+	  {
+	     MmPageArray[i].Flags = PHYSICAL_PAGE_BIOS;
+	     InsertTailList(&BiosPageListHead,
+			    &MmPageArray[i].ListEntry);
+	  }
      }
    else
      {
-	addr = (unsigned int)free_page_list_head;
-	free_page_list_head = free_page_list_head -> next;
+	for (; i<(0xa0000 / PAGESIZE); i++)
+	  {
+	     MmPageArray[i].Flags = PHYSICAL_PAGE_FREE;
+	     InsertTailList(&FreePageListHead,
+			    &MmPageArray[i].ListEntry);
+	  }
+	for (; i<(0x100000 / PAGESIZE); i++)
+	  {
+	     MmPageArray[i].Flags = PHYSICAL_PAGE_BIOS;
+	     InsertTailList(&BiosPageListHead,
+			    &MmPageArray[i].ListEntry);
+	  }
+	for (; i<((ULONG)FirstPhysKernelAddress/PAGESIZE); i++)
+	  {
+	     MmPageArray[i].Flags = PHYSICAL_PAGE_FREE;
+	     InsertTailList(&FreePageListHead,
+			    &MmPageArray[i].ListEntry);
+	  }
+	for (; i<((ULONG)LastPhysKernelAddress/PAGESIZE); i++)
+	  {
+	     MmPageArray[i].Flags = PHYSICAL_PAGE_INUSE;
+	     InsertTailList(&UsedPageListHead,
+			    &MmPageArray[i].ListEntry);
+	  }
      }
-
-   __asm__("push %0\n\tpopf\n\t"
-	   :
-	   : "d" (eflags));
    
-   addr = addr - (IDMAP_BASE);
-   DPRINT("allocated %x\n",addr);
+   for (; i<MemorySizeInPages; i++)
+     {
+	MmPageArray[i].Flags = PHYSICAL_PAGE_FREE;
+	InsertTailList(&FreePageListHead,
+		       &MmPageArray[i].ListEntry);
+     }
+   DPRINT("\nMmInitializePageList() = %x\n",
+	  LastKernelAddress + Reserved * PAGESIZE);
+   return((PVOID)(LastKernelAddress + Reserved * PAGESIZE));
+}
 
-   return(addr);
+VOID MmFreePage(PVOID PhysicalAddress, ULONG Nr)
+{
+   ULONG i;
+   ULONG Start = (ULONG)PhysicalAddress / PAGESIZE;
+   KIRQL oldIrql;
+   
+   DPRINT("MmFreePage(PhysicalAddress %x, Nr %x)\n", PhysicalAddress, Nr);
+   
+   for (i=0; i<Nr; i++)
+     {
+	KeAcquireSpinLock(&UsedPageListLock, &oldIrql);
+	RemoveEntryList(&MmPageArray[Start + i].ListEntry);
+   	MmPageArray[Start + i].Flags = PHYSICAL_PAGE_FREE;
+	KeReleaseSpinLock(&UsedPageListLock, oldIrql);
+	
+	ExInterlockedInsertTailList(&FreePageListHead, 
+				    &MmPageArray[Start + i].ListEntry,
+				    &FreePageListLock);
+     }
 }
 
 
-
-
+PVOID MmAllocPage(VOID)
+{
+   ULONG offset;
+   PLIST_ENTRY ListEntry;
+   PPHYSICAL_PAGE PageDescriptor;
+   
+   DPRINT("MmAllocPage()\n");
+   
+   ListEntry = ExInterlockedRemoveHeadList(&FreePageListHead, 
+					   &FreePageListLock);
+   DPRINT("ListEntry %x\n",ListEntry);
+   PageDescriptor = CONTAINING_RECORD(ListEntry, PHYSICAL_PAGE, ListEntry);
+   if (PageDescriptor == NULL)
+     {
+	return(NULL);
+     }
+   DPRINT("PageDescriptor %x\n",PageDescriptor);
+   PageDescriptor->Flags = PHYSICAL_PAGE_INUSE;
+   ExInterlockedInsertTailList(&UsedPageListHead, ListEntry, 
+			       &UsedPageListLock);
+   
+   DPRINT("PageDescriptor %x MmPageArray %x\n", PageDescriptor, MmPageArray);
+   offset = (ULONG)((ULONG)PageDescriptor - (ULONG)MmPageArray);
+   DPRINT("offset %x\n",offset);
+   offset = offset / sizeof(PHYSICAL_PAGE) * PAGESIZE;
+   DPRINT("offset %x\n",offset);
+   
+   DPRINT("MmAllocPage() = %x\n",offset);
+   return((PVOID)offset);
+}

@@ -84,7 +84,7 @@ VOID NtInit(VOID);
 /*
  * Initalization functions (called once by main())
  */
-VOID MmInitialize(boot_param* bp);
+VOID MmInitialize(boot_param* bp, ULONG LastKernelAddress);
 VOID HalInit(boot_param* bp);
 VOID IoInit(VOID);
 VOID ObInit(VOID);

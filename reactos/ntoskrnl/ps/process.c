@@ -29,6 +29,22 @@ POBJECT_TYPE PsProcessType = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
+#define IDMAP_BASE         (0xd0000000)
+
+/*
+ * Return a linear address which can be used to access the physical memory
+ * starting at x 
+ */
+extern inline unsigned int physical_to_linear(unsigned int x)
+{
+        return(x+IDMAP_BASE);
+}
+
+extern inline unsigned int linear_to_physical(unsigned int x)
+{
+        return(x-IDMAP_BASE);
+}
+
 PEPROCESS PsGetSystemProcess(VOID)
 {
    return(SystemProcess);
@@ -195,7 +211,7 @@ NTSTATUS STDCALL ZwCreateProcess(
 		       InheritObjectTable,
 		       Process);
    
-   PhysicalPageDirectory = (PULONG)get_free_page();
+   PhysicalPageDirectory = (PULONG)MmAllocPage();
    PageDirectory = (PULONG)physical_to_linear((ULONG)PhysicalPageDirectory);
    KProcess->PageTableDirectory = PhysicalPageDirectory;
    

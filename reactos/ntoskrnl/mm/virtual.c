@@ -98,7 +98,7 @@ ULONG MmCommitedSectionHandleFault(MEMORY_AREA* MemoryArea, PVOID Address)
    MmSetPage(PsGetCurrentProcess(),
 	     Address,
 	     MemoryArea->Attributes,
-	     get_free_page());
+	     (ULONG)MmAllocPage());
    return(TRUE);
 }
 
@@ -113,7 +113,7 @@ NTSTATUS MmSectionHandleFault(MEMORY_AREA* MemoryArea, PVOID Address)
    MmSetPage(NULL,
 	     Address,
 	     MemoryArea->Attributes,
-	     get_free_page());
+	     (ULONG)MmAllocPage());
    
    LARGE_INTEGER_QUAD_PART(Offset) = (Address - MemoryArea->BaseAddress) + 
      MemoryArea->Data.SectionData.ViewOffset;

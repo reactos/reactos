@@ -33,3 +33,7 @@ typedef struct _MDL
    ULONG ByteCount;
    ULONG ByteOffset;
 } MDL, *PMDL;
+
+#define MmSmallSystem (0)
+#define MmMediumSystem (1)
+#define MmLargeSystem (2)

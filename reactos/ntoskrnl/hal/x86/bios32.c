@@ -65,6 +65,7 @@ static struct
 
 #define BIOS32_SIGNATURE (('_' << 0)+('3'<<8)+('2'<<16)+('_'<<24))
 
+#if 0
 BOOL static checksum(bios32* service_entry)
 /*
  * FUNCTION: Checks the checksum of a bios32 service entry
@@ -89,6 +90,7 @@ BOOL static checksum(bios32* service_entry)
      }
    return(FALSE);
 }
+#endif
 
 BOOLEAN Hal_bios32_is_service_present(ULONG service)
 {
@@ -118,11 +120,13 @@ VOID Hal_bios32_probe()
  * RETURNS: True if detected
  */
 {
+   return;
+#if 0
    int i;
    
    for (i=0xe0000;i<=0xffff0;i++)
      {
-	bios32* service_entry = (bios32 *)physical_to_linear(i);
+///	bios32* service_entry = (bios32 *)physical_to_linear(i);
 	if ( service_entry->signature != BIOS32_SIGNATURE )
 	  {
 	     continue;
@@ -136,4 +140,5 @@ VOID Hal_bios32_probe()
 	bios32_indirect.address = service_entry->entry;
 	bios32_detected=TRUE;
      }
+#endif
 }

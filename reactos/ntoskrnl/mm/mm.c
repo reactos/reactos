@@ -3,7 +3,7 @@
  * PROJECT:     ReactOS kernel 
  * FILE:        ntoskrnl/mm/mm.c
  * PURPOSE:     kernel memory managment functions
- * PROGRAMMER:  David Welch
+ * PROGRAMMER:  David Welch (welch@cwcom.net)
  * UPDATE HISTORY:
  *              Created 9/4/98
  */
@@ -37,39 +37,38 @@ extern unsigned int stext;
 extern unsigned int etext;
 extern unsigned int end;
 
+static BOOLEAN IsThisAnNtAsSystem = FALSE;
+static MM_SYSTEM_SIZE MmSystemSize = MmSmallSystem;
+
 /* FUNCTIONS ****************************************************************/
 
-BOOLEAN MmIsThisAnNtAsSystem()
+BOOLEAN MmIsThisAnNtAsSystem(VOID)
 {
-   UNIMPLEMENTED
+   return(IsThisAnNtAsSystem);
 }
 
-MM_SYSTEM_SIZE MmQuerySystemSize()
+MM_SYSTEM_SIZE MmQuerySystemSize(VOID)
 {
-   UNIMPLEMENTED;
+   return(MmSystemSize);
 }
 
-void MmInitialize(boot_param* bp)
+void MmInitialize(boot_param* bp, ULONG LastKernelAddress)
 /*
  * FUNCTION: Initalize memory managment
  */
 {
-   unsigned int kernel_len = bp->end_mem - bp->start_mem;
    unsigned int first_krnl_phys_addr;
    unsigned int last_krnl_phys_addr;
    int i;
-   PULONG page_directory = (PULONG)physical_to_linear(
-						  (ULONG)get_page_directory());
+   unsigned int kernel_len;
    
-   DPRINT("InitalizeMM()\n");
+   DPRINT("MmInitialize(bp %x, LastKernelAddress %x)\n", bp, 
+	  LastKernelAddress);
 
-   CHECKPOINT;
    /*
     * Unmap low memory
     */
-   page_directory[0]=0;
-   FLUSH_TLB;
-   CHECKPOINT;
+   MmDeletePageTable(NULL, 0);
    
    /*
     * Free all pages not used for kernel memory
@@ -84,23 +83,12 @@ void MmInitialize(boot_param* bp)
    /*
     * Free physical memory not used by the kernel
     */
-   if (first_krnl_phys_addr < 0xa0000)
-     {
-	free_page(0x2000,(first_krnl_phys_addr/PAGESIZE)-2);
-	free_page(last_krnl_phys_addr+PAGESIZE,
-		  (0xa0000 - last_krnl_phys_addr - PAGESIZE)/PAGESIZE);
-	free_page(1024*1024,EXTENDED_MEMORY_SIZE/4096);                                
-     }
-   else
-     {
-	free_page(0x2000,(0xa0000/PAGESIZE)-2);
-	free_page(1024*1024,
-		  (first_krnl_phys_addr-(1024*1024))/PAGESIZE);
-	free_page(last_krnl_phys_addr+PAGESIZE,
-		  ((EXTENDED_MEMORY_SIZE+(1024*1024))
-		   -last_krnl_phys_addr)/PAGESIZE);
-     }
-   CHECKPOINT;
+   LastKernelAddress = (ULONG)MmInitializePageList(
+						   (PVOID)first_krnl_phys_addr,
+						   (PVOID)last_krnl_phys_addr,
+						   1024,
+					      PAGE_ROUND_UP(LastKernelAddress));
+   kernel_len = last_krnl_phys_addr - first_krnl_phys_addr;
    
    /*
     * Create a trap for null pointer references and protect text
@@ -115,17 +103,17 @@ void MmInitialize(boot_param* bp)
 			 (PVOID)i,
 			 PAGE_EXECUTE_READ);
      }
-   DPRINT("end %x\n",(int)&end);
-   for (i=PAGE_ROUND_UP(KERNEL_BASE+kernel_len);
-	i<(KERNEL_BASE+PAGE_TABLE_SIZE);i=i+PAGESIZE)
-     {
-	MmSetPage(NULL,
-		  (PVOID)i,
-		  PAGE_NOACCESS,
-		  0);
-     }
-   FLUSH_TLB;
    
+   DPRINT("Invalidating between %x and %x\n",
+	  LastKernelAddress,
+	  KERNEL_BASE + PAGE_TABLE_SIZE);
+   for (i=(LastKernelAddress); 
+	i<(KERNEL_BASE + PAGE_TABLE_SIZE); 
+	i=i+PAGESIZE)
+     {
+	MmSetPage(NULL, (PVOID)(i), PAGE_NOACCESS, 0);
+     }
+   DPRINT("Almost done MmInit()\n");
    /*
     * Intialize memory areas
     */
