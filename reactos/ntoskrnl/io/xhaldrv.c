@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.43 2004/01/05 14:28:20 weiden Exp $
+/* $Id: xhaldrv.c,v 1.44 2004/05/02 22:54:45 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -138,21 +138,9 @@ xHalQueryDriveLayout(IN PUNICODE_STRING DeviceName,
   DPRINT("DiskGeometry.BytesPerSector: %d\n",
 	 DiskGeometry.BytesPerSector);
 
-  /* Read the partition table */
-  Status = IoReadPartitionTable(DeviceObject,
-				DiskGeometry.BytesPerSector,
-				FALSE,
-				LayoutInfo);
-
-  if ((!NT_SUCCESS(Status) || (*LayoutInfo)->PartitionCount == 0) &&
-      DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA)
+  if (DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA)
     {
       PDRIVE_LAYOUT_INFORMATION Buffer;
-
-      if (NT_SUCCESS(Status))
-	{
-	  ExFreePool(*LayoutInfo);
-	}
 
       /* Allocate a partition list for a single entry. */
       Buffer = ExAllocatePool(NonPagedPool,
@@ -166,6 +154,18 @@ xHalQueryDriveLayout(IN PUNICODE_STRING DeviceName,
 
 	  Status = STATUS_SUCCESS;
 	}
+      else
+        {
+	  Status = STATUS_UNSUCCESSFUL;
+	}
+    }
+  else
+    {
+      /* Read the partition table */
+      Status = IoReadPartitionTable(DeviceObject,
+				    DiskGeometry.BytesPerSector,
+				    FALSE,
+				    LayoutInfo);
     }
 
   ObDereferenceObject(FileObject);
