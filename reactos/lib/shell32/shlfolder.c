@@ -64,6 +64,52 @@ WINE_DEFAULT_DEBUG_CHANNEL (shell);
 #define _CALL_TRACE
 #endif
 
+static const WCHAR wszDotShellClassInfo[] = {'.','S','h','e','l','l','C','l','a','s','s','I','n','f','o',0};
+
+/***************************************************************************
+ *  SHELL32_GetCustomFolderAttribute (internal function)
+ *
+ * Gets a value from the folder's desktop.ini file, if one exists.
+ *
+ * PARAMETERS
+ *  pidl          [I] Folder containing the desktop.ini file.
+ *  pwszHeading   [I] Heading in .ini file.
+ *  pwszAttribute [I] Attribute in .ini file.
+ *  pwszValue     [O] Buffer to store value into.
+ *  cchValue      [I] Size in characters including NULL of buffer pointed to
+ *                    by pwszValue.
+ *
+ *  RETURNS
+ *    TRUE if returned non-NULL value.
+ *    FALSE otherwise.
+ */
+BOOL SHELL32_GetCustomFolderAttribute(
+    LPCITEMIDLIST pidl, LPCWSTR pwszHeading, LPCWSTR pwszAttribute,
+    LPWSTR pwszValue, DWORD cchValue)
+{
+#if 0 /* Hack around not having system attribute on non-Windows file systems */
+    DWORD dwAttrib = _ILGetFileAttributes(pidl, NULL, 0);
+#else
+    DWORD dwAttrib = FILE_ATTRIBUTE_SYSTEM;
+#endif
+    if (dwAttrib & FILE_ATTRIBUTE_SYSTEM)
+    {
+        DWORD ret;
+        WCHAR wszDesktopIniPath[MAX_PATH];
+        static const WCHAR wszDesktopIni[] =
+            {'d','e','s','k','t','o','p','.','i','n','i',0};
+        if (!SHGetPathFromIDListW(pidl, wszDesktopIniPath))
+            return FALSE;
+        PathAppendW(wszDesktopIniPath, wszDesktopIni);
+        ret = GetPrivateProfileStringW(pwszHeading, pwszAttribute,
+            NULL, pwszValue, cchValue, wszDesktopIniPath);
+        if (!ret) return FALSE;
+        return TRUE;
+    }
+    return FALSE;
+}
+
+
 /***************************************************************************
  *  GetNextElement (internal function)
  *
@@ -143,67 +189,30 @@ HRESULT SHELL32_ParseNextElement (IShellFolder2 * psf, HWND hwndOwner, LPBC pbc,
 /***********************************************************************
  *	SHELL32_CoCreateInitSF
  *
- * Creates a shell folder and initializes it with a pidl via IPersistFolder.
- * This function is meant for virtual folders not backed by a file system
- * folder.
- */
-HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot,
-				LPCITEMIDLIST pidlChild, REFCLSID clsid, REFIID iid, LPVOID * ppvOut)
-{
-    HRESULT hr;
-
-    TRACE ("%p %p\n", pidlRoot, pidlChild);
-
-    if (SUCCEEDED ((hr = SHCoCreateInstance (NULL, clsid, NULL, iid, ppvOut)))) {
-	IPersistFolder *pPF;
-
-	if (SUCCEEDED ((hr = IUnknown_QueryInterface ((IUnknown *) * ppvOut, &IID_IPersistFolder, (LPVOID *) & pPF)))) {
-	    LPITEMIDLIST pidlAbsolute;
-
-	    pidlAbsolute = ILCombine (pidlRoot, pidlChild);
-	    IPersistFolder_Initialize (pPF, pidlAbsolute);
-	    IPersistFolder_Release (pPF);
-	    SHFree (pidlAbsolute);
-
-	    if (!pidlAbsolute)
-		hr = E_OUTOFMEMORY;
-	}
-    }
-
-    TRACE ("-- (%p) ret=0x%08lx\n", *ppvOut, hr);
-    return hr;
-}
-
-/***********************************************************************
- *	SHELL32_CoCreateInitSFEx
- *
  * Creates a shell folder and initializes it with a pidl and a root folder
- * via IPersistFolder3.
- * This function is meant for virtual folders backed by a file system
- * folder.
+ * via IPersistFolder3 or IPersistFolder.
  *
  * NOTES
  *   pathRoot can be NULL for Folders beeing a drive.
  *   In this case the absolute path is build from pidlChild (eg. C:)
  */
-HRESULT SHELL32_CoCreateInitSFEx (LPCITEMIDLIST pidlRoot,
-				  LPCSTR pathRoot, LPCITEMIDLIST pidlChild, REFCLSID clsid, REFIID riid, LPVOID * ppvOut)
+HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot,	LPCSTR pathRoot,
+    LPCITEMIDLIST pidlChild, REFCLSID clsid, REFIID riid, LPVOID * ppvOut)
 {
     HRESULT hr;
-    IPersistFolder3 *ppf;
 
     TRACE ("%p %s %p\n", pidlRoot, pathRoot, pidlChild);
 
-    if (SUCCEEDED ((hr = SHCoCreateInstance (NULL, &CLSID_ShellFSFolder, NULL, riid, ppvOut)))) {
+    if (SUCCEEDED ((hr = SHCoCreateInstance (NULL, clsid, NULL, riid, ppvOut)))) {
+	LPITEMIDLIST pidlAbsolute = ILCombine (pidlRoot, pidlChild);
+	IPersistFolder *pPF;
+	IPersistFolder3 *ppf;
+
 	if (SUCCEEDED (IUnknown_QueryInterface ((IUnknown *) * ppvOut, &IID_IPersistFolder3, (LPVOID *) & ppf))) {
 	    PERSIST_FOLDER_TARGET_INFO ppfti;
-	    LPITEMIDLIST pidlAbsolute;
 	    char szDestPath[MAX_PATH];
 
 	    ZeroMemory (&ppfti, sizeof (ppfti));
-
-	    /* combine pidls */
-	    pidlAbsolute = ILCombine (pidlRoot, pidlChild);
 
 	    /* build path */
 	    if (pathRoot) {
@@ -229,8 +238,12 @@ HRESULT SHELL32_CoCreateInitSFEx (LPCITEMIDLIST pidlRoot,
 
 	    IPersistFolder3_InitializeEx (ppf, NULL, pidlAbsolute, &ppfti);
 	    IPersistFolder3_Release (ppf);
-	    ILFree (pidlAbsolute);
 	}
+	else if (SUCCEEDED ((hr = IUnknown_QueryInterface ((IUnknown *) * ppvOut, &IID_IPersistFolder, (LPVOID *) & pPF)))) {
+	    IPersistFolder_Initialize (pPF, pidlAbsolute);
+	    IPersistFolder_Release (pPF);
+	}
+	ILFree (pidlAbsolute);
     }
     TRACE ("-- (%p) ret=0x%08lx\n", *ppvOut, hr);
     return hr;
@@ -259,11 +272,20 @@ HRESULT SHELL32_BindToChild (LPCITEMIDLIST pidlRoot,
 
     if ((clsid = _ILGetGUIDPointer (pidlChild))) {
 	/* virtual folder */
-	hr = SHELL32_CoCreateInitSF (pidlRoot, pidlChild, clsid, &IID_IShellFolder, (LPVOID *) & pSF);
+	hr = SHELL32_CoCreateInitSF (pidlRoot, pathRoot, pidlChild, clsid, &IID_IShellFolder, (LPVOID *) & pSF);
     } else {
-	/* file system folder */
-	hr = SHELL32_CoCreateInitSFEx (pidlRoot, pathRoot, pidlChild, &CLSID_ShellFSFolder, &IID_IShellFolder,
-				       (LPVOID *) & pSF);
+        /* file system folder */
+        CLSID clsidFolder = CLSID_ShellFSFolder;
+        static const WCHAR wszCLSID[] = {'C','L','S','I','D',0};
+        WCHAR wszCLSIDValue[CHARS_IN_GUID];
+        LPITEMIDLIST pidlAbsolute = ILCombine (pidlRoot, pidlChild);
+        /* see if folder CLSID should be overridden by desktop.ini file */
+        if (SHELL32_GetCustomFolderAttribute (pidlAbsolute,
+            wszDotShellClassInfo, wszCLSID, wszCLSIDValue, CHARS_IN_GUID))
+            CLSIDFromString (wszCLSIDValue, &clsidFolder);
+        ILFree (pidlAbsolute);
+        hr = SHELL32_CoCreateInitSF (pidlRoot, pathRoot, pidlChild,
+            &clsidFolder, &IID_IShellFolder, (LPVOID *)&pSF);
     }
     ILFree (pidlChild);
 

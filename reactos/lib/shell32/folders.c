@@ -27,6 +27,7 @@
 
 #include "windef.h"
 #include "winbase.h"
+#include "winerror.h"
 #include "objbase.h"
 #include "undocshell.h"
 #include "shlguid.h"
@@ -34,10 +35,11 @@
 #include "shlwapi.h"
 
 #include "wine/debug.h"
-#include "winerror.h"
+#include "wine/unicode.h"
 
 #include "pidl.h"
 #include "shell32_main.h"
+#include "shfldr.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -156,64 +158,36 @@ static HRESULT getIconLocationForFolder(IExtractIconW *iface, UINT uFlags,
  LPWSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags)
 {
     IExtractIconWImpl *This = (IExtractIconWImpl *)iface;
-
-    WCHAR path[MAX_PATH];
-    BOOL found = FALSE;
     DWORD dwNr;
+    WCHAR wszPath[MAX_PATH];
+    WCHAR wszCLSIDValue[CHARS_IN_GUID];
+    static const WCHAR shellClassInfo[] = { '.','S','h','e','l','l','C','l','a','s','s','I','n','f','o',0 };
+    static const WCHAR iconFile[] = { 'I','c','o','n','F','i','l','e',0 };
+    static const WCHAR clsid[] = { 'C','L','S','I','D',0 };
+    static const WCHAR clsid2[] = { 'C','L','S','I','D','2',0 };
+    static const WCHAR iconIndex[] = { 'I','c','o','n','I','n','d','e','x',0 };
 
-    if (SUCCEEDED(SHGetPathFromIDListW(This->pidl, path)))
+    if (SHELL32_GetCustomFolderAttribute(This->pidl, shellClassInfo, iconFile,
+        wszPath, MAX_PATH))
     {
-        static const WCHAR desktopIni[] = { 'D','e','s','k','t','o','p','.',
-         'i','n','i',0 };
-        HANDLE hFile;
-
-        PathAppendW(path, desktopIni);
-        if ((hFile = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, NULL,
-         OPEN_EXISTING, 0, NULL)) != INVALID_HANDLE_VALUE)
-        {
-            static const WCHAR shellClassInfo[] = { '.','S','h','e','l','l',
-             'C','l','a','s','s','I','n','f','o',0 };
-            static const WCHAR iconFile[] =
-             { 'I','c','o','n','F','i','l','e',0 };
-            static const WCHAR clsid[] = { 'C','L','S','I','D',0 };
-            static const WCHAR clsid2[] = { 'C','L','S','I','D','2',0 };
-            static const WCHAR defStr[] = { 0 };
-            WCHAR clsidStr[39];
-
-            CloseHandle(hFile);
-            if (GetPrivateProfileStringW(shellClassInfo, iconFile, defStr,
-             szIconFile, cchMax, path) && strlenW(szIconFile))
-            {
-                static const WCHAR iconIndex[] = { 'I','c','o','n',
-                 'I','n','d','e','x',0 };
-
-                found = TRUE;
-                *piIndex = (int)GetPrivateProfileIntW(shellClassInfo, iconIndex,
-                 0, path);
-            }
-            else if (GetPrivateProfileStringW(shellClassInfo, clsid, defStr,
-             clsidStr, sizeof(clsidStr) / sizeof(WCHAR), path) &&
-             strlenW(clsidStr))
-            {
-                if (HCR_GetDefaultIconW(clsidStr, szIconFile, cchMax, &dwNr))
-                {
-                    *piIndex = dwNr;
-                    found = TRUE;
-                }
-            }
-            else if (GetPrivateProfileStringW(shellClassInfo, clsid2, defStr,
-             clsidStr, sizeof(clsidStr) / sizeof(WCHAR), path) &&
-             strlenW(clsidStr))
-            {
-                if (HCR_GetDefaultIconW(clsidStr, szIconFile, cchMax, &dwNr))
-                {
-                    *piIndex = dwNr;
-                    found = TRUE;
-                }
-            }
-        }
+        WCHAR wszIconIndex[10];
+        SHELL32_GetCustomFolderAttribute(This->pidl, shellClassInfo, iconIndex,
+            wszIconIndex, 10);
+        *piIndex = atoiW(wszIconIndex);
     }
-    if (!found)
+    else if (SHELL32_GetCustomFolderAttribute(This->pidl, shellClassInfo, clsid,
+        wszCLSIDValue, CHARS_IN_GUID) &&
+        HCR_GetDefaultIconW(wszCLSIDValue, szIconFile, cchMax, &dwNr))
+    {
+       *piIndex = dwNr;
+    }
+    else if (SHELL32_GetCustomFolderAttribute(This->pidl, shellClassInfo, clsid2,
+        wszCLSIDValue, CHARS_IN_GUID) &&
+        HCR_GetDefaultIconW(wszCLSIDValue, szIconFile, cchMax, &dwNr))
+    {
+       *piIndex = dwNr;
+    }
+    else
     {
         static const WCHAR folder[] = { 'F','o','l','d','e','r',0 };
 
