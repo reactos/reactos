@@ -13,6 +13,7 @@
 #include <internal/ob.h>
 #include <internal/registry.h>
 #include <ntos/minmax.h>
+#include <reactos/bugcodes.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -269,13 +270,15 @@ CmiObjectCreate(PVOID ObjectBody,
 VOID STDCALL
 CmiObjectDelete(PVOID DeletedObject)
 {
+  PKEY_OBJECT ParentKeyObject;
   PKEY_OBJECT KeyObject;
 
   DPRINT("Delete key object (%p)\n", DeletedObject);
 
   KeyObject = (PKEY_OBJECT) DeletedObject;
- 
-  ObReferenceObject(KeyObject->ParentKey);
+  ParentKeyObject = KeyObject->ParentKey;
+
+  ObReferenceObject (ParentKeyObject);
 
   if (!NT_SUCCESS(CmiRemoveKeyFromList(KeyObject)))
     {
@@ -289,24 +292,31 @@ CmiObjectDelete(PVOID DeletedObject)
       DPRINT("delete really key\n");
 
       CmiRemoveSubKey(KeyObject->RegistryHive,
-		      KeyObject->ParentKey,
+		      ParentKeyObject,
 		      KeyObject);
 
-      if (!IsNoFileHive(KeyObject->RegistryHive))
+      NtQuerySystemTime (&ParentKeyObject->KeyCell->LastWriteTime);
+      CmiMarkBlockDirty (ParentKeyObject->RegistryHive,
+			 ParentKeyObject->KeyCellOffset);
+
+      if (!IsNoFileHive (KeyObject->RegistryHive) ||
+	  !IsNoFileHive (ParentKeyObject->RegistryHive))
 	{
-	  CmiSyncHives();
+	  CmiSyncHives ();
 	}
     }
-  ObDereferenceObject(KeyObject->ParentKey);
+
+  ObDereferenceObject (ParentKeyObject);
+
   if (KeyObject->NumberOfSubKeys)
     {
-      KEBUGCHECK(0);
+      KEBUGCHECK(REGISTRY_ERROR);
     }
+
   if (KeyObject->SizeOfSubKeys)
     {
       ExFreePool(KeyObject->SubKeys);
     }
-
 }
 
 

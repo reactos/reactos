@@ -471,7 +471,7 @@ CmiScanForSubKey(IN PREGISTRY_HIVE  RegistryHive,
 
 NTSTATUS
 CmiAddSubKey(IN PREGISTRY_HIVE  RegistryHive,
-	     IN PKEY_OBJECT Parent,
+	     IN PKEY_OBJECT ParentKey,
 	     OUT PKEY_OBJECT SubKey,
 	     IN PUNICODE_STRING SubKeyName,
 	     IN ULONG  TitleIndex,
@@ -521,10 +521,11 @@ PHASH_TABLE_CELL  HashBlock,
 ULONG  Index);
 
 NTSTATUS
-CmiAddKeyToHashTable(PREGISTRY_HIVE  RegistryHive,
-  PHASH_TABLE_CELL  HashBlock,
-  PKEY_CELL  NewKeyCell,
-  BLOCK_OFFSET  NKBOffset);
+CmiAddKeyToHashTable(PREGISTRY_HIVE RegistryHive,
+		     PHASH_TABLE_CELL HashCell,
+		     BLOCK_OFFSET HashCellOffset,
+		     PKEY_CELL  NewKeyCell,
+		     BLOCK_OFFSET  NKBOffset);
 
 NTSTATUS
 CmiRemoveKeyFromHashTable(PREGISTRY_HIVE RegistryHive,

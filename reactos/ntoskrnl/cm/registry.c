@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.111 2003/10/12 17:05:44 hbirr Exp $
+/* $Id: registry.c,v 1.112 2003/10/13 20:53:42 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -979,6 +979,13 @@ CmShutdownRegistry(VOID)
 
   /* Stop automatic hive synchronization */
   CmiHiveSyncEnabled = FALSE;
+
+  /* Cancel pending hive synchronization */
+  if (CmiHiveSyncPending == TRUE)
+    {
+      KeCancelTimer(&CmiHiveSyncTimer);
+      CmiHiveSyncPending = FALSE;
+    }
 
   /* Acquire hive list lock exclusively */
   ExAcquireResourceExclusiveLite(&CmiHiveListLock, TRUE);

@@ -1308,13 +1308,6 @@ NtSetValueKey(IN HANDLE KeyHandle,
       RtlCopyMemory(DataCell->Data, Data, DataSize);
       ValueCell->DataSize = DataSize;
       ValueCell->DataType = Type;
-
-      /* Update time of heap */
-      if (!IsNoFileHive(RegistryHive))
-	{
-	  NtQuerySystemTime(&pBin->DateModified);
-	}
-      CmiMarkBlockDirty(RegistryHive, ValueCell->DataOffset);
     }
   else
     {
@@ -1359,18 +1352,14 @@ NtSetValueKey(IN HANDLE KeyHandle,
     }
 
   /* Mark link key */
-  if ((_wcsicmp(ValueName->Buffer, L"SymbolicLinkValue") == 0) &&
-      (Type == REG_LINK))
+  if ((Type == REG_LINK) &&
+      (_wcsicmp(ValueName->Buffer, L"SymbolicLinkValue") == 0))
     {
       KeyCell->Flags |= REG_KEY_LINK_CELL;
-      CmiMarkBlockDirty(RegistryHive, KeyObject->KeyCellOffset);
     }
 
-  /* Update time of heap */
-  if (!IsNoFileHive(RegistryHive) && CmiGetCell (RegistryHive, ValueCellOffset, &pBin))
-    {
-      NtQuerySystemTime(&pBin->DateModified);
-    }
+  NtQuerySystemTime (&KeyCell->LastWriteTime);
+  CmiMarkBlockDirty (RegistryHive, KeyObject->KeyCellOffset);
 
   ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
   ObDereferenceObject(KeyObject);
@@ -1412,12 +1401,15 @@ NtDeleteValueKey (IN HANDLE KeyHandle,
 				 KeyObject->KeyCellOffset,
 				 ValueName);
 
+  NtQuerySystemTime (&KeyObject->KeyCell->LastWriteTime);
+  CmiMarkBlockDirty (KeyObject->RegistryHive, KeyObject->KeyCellOffset);
+
   /* Release hive lock */
-  ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+  ExReleaseResourceLite (&KeyObject->RegistryHive->HiveResource);
 
-  ObDereferenceObject(KeyObject);
+  ObDereferenceObject (KeyObject);
 
-  CmiSyncHives();
+  CmiSyncHives ();
 
   return Status;
 }
@@ -1788,12 +1780,53 @@ NtSaveKey (IN HANDLE KeyHandle,
 
 NTSTATUS STDCALL
 NtSetInformationKey (IN HANDLE KeyHandle,
-		     IN CINT KeyInformationClass,
+		     IN KEY_SET_INFORMATION_CLASS KeyInformationClass,
 		     IN PVOID KeyInformation,
 		     IN ULONG KeyInformationLength)
 {
-	UNIMPLEMENTED;
-	return(STATUS_NOT_IMPLEMENTED);
+  PKEY_OBJECT KeyObject;
+  NTSTATUS Status;
+
+  if (KeyInformationClass != KeyLastWriteTimeInformation)
+    return STATUS_INVALID_INFO_CLASS;
+
+  if (KeyInformationLength != sizeof (KEY_LAST_WRITE_TIME_INFORMATION))
+    return STATUS_INFO_LENGTH_MISMATCH;
+
+  /* Verify that the handle is valid and is a registry key */
+  Status = ObReferenceObjectByHandle (KeyHandle,
+				      KEY_SET_VALUE,
+				      CmiKeyType,
+				      UserMode,
+				      (PVOID *)&KeyObject,
+				      NULL);
+  if (!NT_SUCCESS (Status))
+    {
+      DPRINT ("ObReferenceObjectByHandle() failed with status %x\n", Status);
+      return Status;
+    }
+
+  /* Acquire hive lock */
+  ExAcquireResourceExclusiveLite (&KeyObject->RegistryHive->HiveResource, TRUE);
+
+  VERIFY_KEY_OBJECT(KeyObject);
+
+  KeyObject->KeyCell->LastWriteTime.QuadPart =
+    ((PKEY_LAST_WRITE_TIME_INFORMATION)KeyInformation)->LastWriteTime.QuadPart;
+
+  CmiMarkBlockDirty (KeyObject->RegistryHive,
+		     KeyObject->KeyCellOffset);
+
+  /* Release hive lock */
+  ExReleaseResourceLite (&KeyObject->RegistryHive->HiveResource);
+
+  ObDereferenceObject (KeyObject);
+
+  CmiSyncHives ();
+
+  DPRINT ("NtSaveKey() done\n");
+
+  return STATUS_SUCCESS;
 }
 
 

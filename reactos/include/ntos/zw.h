@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.18 2003/10/04 17:10:55 ekohl Exp $
+/* $Id: zw.h,v 1.19 2003/10/13 20:52:31 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -4724,11 +4724,11 @@ NtRaiseHardError(
  * ARGUMENTS: 
  *       KeyHandle = Handle to the registry key
  *       KeyInformationClass =  Index to the a certain information structure.
-			Can be one of the following values:
-
- *	 KeyWriteTimeInformation  KEY_WRITE_TIME_INFORMATION
-
-	 KeyInformation	= Storage for the new information
+ *              Can be one of the following values:
+ *
+ *       KeyLastWriteTimeInformation  KEY_LAST_WRITE_TIME_INFORMATION
+ *
+ *       KeyInformation	= Storage for the new information
  *       KeyInformationLength = Size of the information strucure
  * RETURNS: Status
  */
@@ -4737,7 +4737,7 @@ NTSTATUS
 STDCALL
 NtSetInformationKey(
 	IN HANDLE KeyHandle,
-	IN CINT KeyInformationClass,
+	IN KEY_SET_INFORMATION_CLASS KeyInformationClass,
 	IN PVOID KeyInformation,
 	IN ULONG KeyInformationLength
 	);
@@ -5446,7 +5446,7 @@ ZwRaiseHardError(
  *       KeyInformationClass =  Index to the a certain information structure.
 			Can be one of the following values:
 
- *	 KeyWriteTimeInformation  KEY_WRITE_TIME_INFORMATION
+ *	 KeyLastWriteTimeInformation  KEY_LAST_WRITE_TIME_INFORMATION
 
 	 KeyInformation	= Storage for the new information
  *       KeyInformationLength = Size of the information strucure
@@ -5457,7 +5457,7 @@ NTSTATUS
 STDCALL
 ZwSetInformationKey(
 	IN HANDLE KeyHandle,
-	IN CINT KeyInformationClass,
+	IN KEY_SET_INFORMATION_CLASS KeyInformationClass,
 	IN PVOID KeyInformation,
 	IN ULONG KeyInformationLength
 	);
