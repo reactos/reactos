@@ -1,4 +1,4 @@
-/* $Id: syssetup.rc,v 1.8 2004/11/22 11:01:45 gvg Exp $ */
+/* $Id: syssetup.rc,v 1.9 2004/11/28 21:52:08 blight Exp $ */
 
 #include <windows.h>
 #include "resource.h"
@@ -26,7 +26,10 @@ BEGIN
                     "Xbox Linux - http://www.xbox-linux.org\n"\
                     "MinGW - http://www.mingw.org\n"\
                     "Bochs - http://bochs.sourceforge.net\n"\
-                    "QEMU - http://fabrice.bellard.free.fr/qemu\n"
+                    "QEMU - http://fabrice.bellard.free.fr/qemu\n"\
+                    "Mesa3D - http://www.mesa3d.org\n"\
+                    "FreeBSD - http://www.freebsd.org\n"\
+                    "adns - http://adns.jgaa.com\n"
 END
 
 IDR_GPL RT_TEXT "COPYING"
