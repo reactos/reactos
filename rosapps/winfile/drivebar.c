@@ -51,7 +51,7 @@ void ConfigureDriveBar(HWND hDriveBar)
     DWORD dwLogicalDrives = GetLogicalDrives();
 
     if (!hDriveBar) return;
-
+#ifndef __GNUC__
     if (dwLogicalDrives != dwLogicalDrivesSaved) {
 	    TBBUTTON drivebarBtn = {0, 0, TBSTATE_ENABLED, TBSTYLE_SEP};
         COMBOBOXEXITEM cbei;
@@ -118,6 +118,7 @@ void ConfigureDriveBar(HWND hDriveBar)
         dwLogicalDrivesSaved = dwLogicalDrives;
 //        SendMessage(Globals.hDriveCombo, CB_SHOWDROPDOWN, (WPARAM)TRUE, (LPARAM)0);
     }
+#endif
 }
 /*
 #ifndef __GNUC__

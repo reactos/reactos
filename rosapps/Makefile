@@ -13,9 +13,30 @@ include rules.mak
 #
 # Available applications
 #
-APPS = cmd cmdutils cmdutils\touch dflat32 hcalc mc notevil sysutils \
-	sysutils\regexpl sysutils\tlist net\finger net\ncftp net\niclist \
-	net\ping net\telnet net\whois regedit regedt32 taskmgr winfile calc
+APPS = 	calc \
+	cmd \
+	cmdutils \
+	cmdutils\touch \
+	dflat32 \
+	hcalc \
+	mc \
+	notevil \
+	sysutils \
+	sysutils\regexpl \
+	sysutils\tlist \
+	net\arp \
+	net\finger \
+	net\ipconfig \
+	net\ncftp \
+	net\netstat \
+	net\niclist \
+	net\ping \
+	net\telnet \
+	net\whois \
+	regedit \
+	regedt32 \
+	taskmgr \
+	winfile
 
 all: $(APPS)
 .PHONY: all

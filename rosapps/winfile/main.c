@@ -276,6 +276,7 @@ typedef struct _TBBUTTON {
                 WS_CHILD | WS_BORDER | WS_VISIBLE | CBS_DROPDOWNLIST | ES_LEFT | ES_AUTOVSCROLL | ES_MULTILINE, 
                 10, 0, DRIVEBOX_WIDTH, DRIVEBOX_HEIGHT, Globals.hMainWnd, (HMENU)IDW_DRIVEBOX, hInstance, 0);
 #else
+#ifndef __GNUC__
     Globals.hDriveCombo = CreateWindowEx(0, WC_COMBOBOXEX, NULL,
 					WS_CHILD | WS_BORDER | WS_VISIBLE | CBS_DROPDOWN,
 					// No size yet--resize after setting image list.
@@ -287,6 +288,7 @@ typedef struct _TBBUTTON {
 					(HMENU)IDW_DRIVEBOX,
 					hInstance,
 					NULL);
+#endif
 #endif
             // Set the toolbar window as the parent of the edit control
             // window. You must set the toolbar as the parent of the edit
