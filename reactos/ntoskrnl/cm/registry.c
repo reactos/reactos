@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.47 2000/10/24 12:13:12 jean Exp $
+/* $Id: registry.c,v 1.48 2000/11/10 15:35:40 jean Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -348,6 +348,7 @@ CmInitializeRegistry(VOID)
 
   /*  Build the Root Key Object  */
   RtlInitUnicodeString(&RootKeyName, REG_ROOT_KEY_NAME);
+DPRINT("Creating root\n");
   InitializeObjectAttributes(&ObjectAttributes, &RootKeyName, 0, NULL, NULL);
   NewKey=ObCreateObject(&RootKeyHandle,
                                 STANDARD_RIGHTS_REQUIRED,
@@ -378,6 +379,7 @@ CmInitializeRegistry(VOID)
   /*  Create initial predefined symbolic links  */
   /* HKEY_LOCAL_MACHINE  */
   RtlInitUnicodeString(&RootKeyName, REG_MACHINE_KEY_NAME);
+DPRINT("Creating HKLM\n");
   InitializeObjectAttributes(&ObjectAttributes, &RootKeyName, 0, NULL, NULL);
   NewKey=ObCreateObject(&KeyHandle,
                                 STANDARD_RIGHTS_REQUIRED,
@@ -404,6 +406,7 @@ CmInitializeRegistry(VOID)
 
   /* HKEY_USERS  */
   RtlInitUnicodeString(&RootKeyName, REG_USERS_KEY_NAME);
+DPRINT("Creating HKU\n");
   InitializeObjectAttributes(&ObjectAttributes, &RootKeyName, 0, NULL, NULL);
   NewKey=ObCreateObject(&KeyHandle,
                                 STANDARD_RIGHTS_REQUIRED,
@@ -445,8 +448,8 @@ NTSTATUS CmConnectHive(PWSTR FileName,PWSTR FullName,CHAR *KeyName,PKEY_OBJECT P
   if( RegistryFile )
   {
     RtlInitUnicodeString(&uKeyName, FullName);
-    InitializeObjectAttributes(&ObjectAttributes, &uKeyName, 0, NULL, NULL);
 DPRINT("CCH %S ;",FullName);
+    InitializeObjectAttributes(&ObjectAttributes, &uKeyName, 0, NULL, NULL);
     NewKey=ObCreateObject(&KeyHandle,
                  STANDARD_RIGHTS_REQUIRED,
                  &ObjectAttributes,
@@ -468,9 +471,6 @@ DPRINT("CCH %S ;",FullName);
     return STATUS_UNSUCCESSFUL;
   return STATUS_SUCCESS;
 }
-/* TESTS
-#define dprintf DbgPrint
-*/
 
 VOID
 CmInitializeRegistry2(VOID)
@@ -480,12 +480,6 @@ CmInitializeRegistry2(VOID)
   /* connect the SYSTEM Hive */
   Status=CmConnectHive(SYSTEM_REG_FILE,REG_SYSTEM_KEY_NAME
 			,"System",CmiMachineKey);
-/*
-for(;;)
-{
-__asm__ ("hlt\n\t");
-}
-*/
   if (!NT_SUCCESS(Status))
   {
     /* FIXME : search SYSTEM.alt, or create new */
@@ -524,6 +518,12 @@ __asm__ ("hlt\n\t");
     DbgPrint(" warning : registry file %S not found\n",USER_REG_FILE);
   }
   /* FIXME : initialize standards symbolic links */
+/*
+for(;;)
+{
+__asm__ ("hlt\n\t");
+}
+*/
 }
 
 VOID 
@@ -554,120 +554,94 @@ NtCreateKey (
  NTSTATUS	Status;
  PVOID		Object;
  PKEY_OBJECT key;
+ UNICODE_STRING RemainingPath;
+ PWSTR end;
 
 //  DPRINT("NtCreateKey (Name %wZ),KeyHandle=%x,Root=%x\n",
 //         ObjectAttributes->ObjectName,KeyHandle
 //	,ObjectAttributes->RootDirectory);
-/*
-  Status = ObReferenceObjectByName(
-  		ObjectAttributes->ObjectName,
-  		ObjectAttributes->Attributes,
-  		NULL,
-  		DesiredAccess,
-  		CmiKeyType,
-  		UserMode,
-  		NULL,
-  		& Object
-  		);
-  if (NT_SUCCESS(Status))
+  Status = ObFindObject(ObjectAttributes,&Object,&RemainingPath,CmiKeyType);
+  if (!NT_SUCCESS(Status))
+  {
+	return Status;
+  }
+DPRINT("RP=%wZ\n",&RemainingPath);
+  if(RemainingPath.Buffer[0] ==0)
   {
     if (Disposition) *Disposition = REG_OPENED_EXISTING_KEY;
     Status = ObCreateHandle(
-  		PsGetCurrentProcess(),
-  		Object,
-  		DesiredAccess,
-  		FALSE,
-  		KeyHandle
-  		);
+		PsGetCurrentProcess(),
+		Object,
+		DesiredAccess,
+		FALSE,
+		KeyHandle
+		);
     ObDereferenceObject(Object);
   }
+  /* if RemainingPath contains \ : must return error */
+  if((RemainingPath.Buffer[0])=='\\')
+    end = wcschr((RemainingPath.Buffer)+1, '\\');
   else
-*/
+    end = wcschr((RemainingPath.Buffer), '\\');
+  if (end != NULL)
   {
-   UNICODE_STRING RemainingPath;
-   PWSTR end;
-    Status = ObFindObject(ObjectAttributes,&Object,&RemainingPath,CmiKeyType);
-    if (!NT_SUCCESS(Status))
-    {
-  	return Status;
-    }
-DPRINT("RP=%wZ\n",&RemainingPath);
-    if(RemainingPath.Buffer[0] ==0)
-    {
-    if (Disposition) *Disposition = REG_OPENED_EXISTING_KEY;
-    Status = ObCreateHandle(
-  		PsGetCurrentProcess(),
-  		Object,
-  		DesiredAccess,
-  		FALSE,
-  		KeyHandle
-  		);
     ObDereferenceObject(Object);
-    }
-    /* if RemainingPath contains \ : must return error */
-    if((RemainingPath.Buffer[0])=='\\')
-      end = wcschr((RemainingPath.Buffer)+1, '\\');
-    else
-      end = wcschr((RemainingPath.Buffer), '\\');
-    if (end != NULL)
-    {
-      /* FIXME : deref Object ? */
-      return STATUS_UNSUCCESSFUL;
-    }
-    /*   because NtCreateKey don't create tree */
+    return STATUS_UNSUCCESSFUL;
+  }
+  /*   because NtCreateKey don't create tree */
 
-DPRINT("NCK %S ;",RemainingPath.Buffer);
-    key = ObCreateObject(
-  		KeyHandle,
-  		DesiredAccess,
-  		NULL,
-  		CmiKeyType
-  		);
+DPRINT("NCK %S parent=%x\n",RemainingPath.Buffer,Object);
+  key = ObCreateObject(
+		KeyHandle,
+		DesiredAccess,
+		NULL,
+		CmiKeyType
+		);
 
-    if (key == NULL)
-  	return STATUS_INSUFFICIENT_RESOURCES;
-    key->ParentKey = Object;
+  if (key == NULL)
+	return STATUS_INSUFFICIENT_RESOURCES;
+  key->ParentKey = Object;
 //    if ( (key->ParentKey ==NULL))
 //      key->ParentKey = ObjectAttributes->RootDirectory;
-    if (CreateOptions & REG_OPTION_VOLATILE)
-      key->RegistryFile=CmiVolatileFile;
-    else
-      key->RegistryFile=key->ParentKey->RegistryFile;
-    key->Flags = 0;
-    key->NumberOfSubKeys = 0;
-    key->SizeOfSubKeys = 0;
-    key->SubKeys = NULL;
-    /* add key to subkeys of parent if needed */
-    Status = CmiAddSubKey(key->RegistryFile,
-                        key->ParentKey,
-                        key,
-                        RemainingPath.Buffer,
-                        RemainingPath.Length,
-                        TitleIndex,
-                        Class,
-                        CreateOptions);
-    key->Name = key->KeyBlock->Name;
-    key->NameSize = key->KeyBlock->NameSize;
-    if (key->RegistryFile == key->ParentKey->RegistryFile)
-    {
-      key->KeyBlock->ParentKeyOffset = key->ParentKey->BlockOffset;
-      key->KeyBlock->SecurityKeyOffset = key->ParentKey->KeyBlock->SecurityKeyOffset;
-    }
-    else
-    {
-      key->KeyBlock->ParentKeyOffset = -1;
-      key->KeyBlock->SecurityKeyOffset = -1;
-      /* this key must rest in memory unless it is deleted */
-      /* , or file is unloaded*/
-      ObReferenceObjectByPointer(key,
+  if (CreateOptions & REG_OPTION_VOLATILE)
+    key->RegistryFile=CmiVolatileFile;
+  else
+    key->RegistryFile=key->ParentKey->RegistryFile;
+  key->Flags = 0;
+  key->NumberOfSubKeys = 0;
+  key->SizeOfSubKeys = 0;
+  key->SubKeys = NULL;
+  /* add key to subkeys of parent if needed */
+  Status = CmiAddSubKey(key->RegistryFile,
+                      key->ParentKey,
+                      key,
+                      RemainingPath.Buffer,
+                      RemainingPath.Length,
+                      TitleIndex,
+                      Class,
+                      CreateOptions);
+  key->Name = key->KeyBlock->Name;
+  key->NameSize = key->KeyBlock->NameSize;
+  if (key->RegistryFile == key->ParentKey->RegistryFile)
+  {
+    key->KeyBlock->ParentKeyOffset = key->ParentKey->BlockOffset;
+    key->KeyBlock->SecurityKeyOffset = key->ParentKey->KeyBlock->SecurityKeyOffset;
+  }
+  else
+  {
+    key->KeyBlock->ParentKeyOffset = -1;
+    key->KeyBlock->SecurityKeyOffset = -1;
+    /* this key must rest in memory unless it is deleted */
+    /* , or file is unloaded*/
+    ObReferenceObjectByPointer(key,
 			      STANDARD_RIGHTS_REQUIRED,
 			      NULL,
 			      UserMode);
-    }
-    CmiAddKeyToList(key->ParentKey,key);
-    ObDereferenceObject(key);
-    if (Disposition) *Disposition = REG_CREATED_NEW_KEY;
   }
+  CmiAddKeyToList(key->ParentKey,key);
+  ObDereferenceObject(key);
+  ObDereferenceObject(Object);
+  if (Disposition) *Disposition = REG_CREATED_NEW_KEY;
 
   if (!NT_SUCCESS(Status))
   {
@@ -1110,14 +1084,25 @@ NtOpenKey (
   		);
    }
 */
+   RemainingPath.Buffer=NULL;
    Status = ObFindObject(ObjectAttributes,&Object,&RemainingPath,CmiKeyType);
-/*
-   if ( RemainingPath.Buffer != NULL )
+DPRINT("NTOpenKey : after ObFindObject\n");
+DPRINT("RB.B=%x\n",RemainingPath.Buffer);
+   if(RemainingPath.Buffer != 0 && RemainingPath.Buffer[0] !=0)
    {
+DPRINT("NTOpenKey3 : after ObFindObject\n");
+     ObDereferenceObject(Object);
+DPRINT("RP=%wZ\n",&RemainingPath);
      return STATUS_UNSUCCESSFUL;
    }
-*/
-
+DPRINT("NTOpenKey2 : after ObFindObject\n");
+  /*  Fail if the key has been deleted  */
+  if (((PKEY_OBJECT)Object)->Flags & KO_MARKED_FOR_DELETE)
+  {
+     ObDereferenceObject(Object);
+    return STATUS_UNSUCCESSFUL;
+  }
+      
   Status = ObCreateHandle(
 			PsGetCurrentProcess(),
 			Object,
@@ -1126,21 +1111,12 @@ NtOpenKey (
 			KeyHandle
 			);
   ObDereferenceObject(Object);
-  ObDereferenceObject(Object);
   if (!NT_SUCCESS(Status))
   {
     return Status;
   }
 
   return STATUS_SUCCESS;
-  /*  FIXME : Fail if the key has been deleted  */
-//      if (CurKey->Flags & KO_MARKED_FOR_DELETE)
-//        {
-//          ExFreePool(KeyNameBuf);
-//          
-//          return STATUS_UNSUCCESSFUL;
-//        }
-      
 }
 
 
@@ -1338,6 +1314,7 @@ NtQueryValueKey (
                               &ValueBlock);
   if (!NT_SUCCESS(Status))
     {
+      ObDereferenceObject(KeyObject);
       return  Status;
     }
   else if (ValueBlock != NULL)
@@ -1981,11 +1958,12 @@ DPRINT("COP %s;",cPath);
        FoundObject->RegistryFile = ParsedKey->RegistryFile;
        CmiAddKeyToList(ParsedKey,FoundObject);
    }
-DPRINT("COP %5.5s ;",FoundObject->Name);   
-   ObReferenceObjectByPointer(FoundObject,
+   else
+     ObReferenceObjectByPointer(FoundObject,
 			      STANDARD_RIGHTS_REQUIRED,
 			      NULL,
 			      UserMode);
+DPRINT("COP %6.6s ;",FoundObject->Name);   
    if (end != NULL)
      {
 	*end = '\\';
@@ -2040,7 +2018,7 @@ DPRINT("delete object key\n");
   }
   if (KeyObject->Flags & KO_MARKED_FOR_DELETE)
     {
-DPRINT("delete really key\n");
+DPRINT1("delete really key\n");
       CmiDestroyKeyBlock(KeyObject->RegistryFile,
                          KeyObject->KeyBlock);
     }
@@ -2088,12 +2066,13 @@ CmiRemoveKeyFromList(PKEY_OBJECT  KeyToRemove)
 
   ParentKey=KeyToRemove->ParentKey;
   KeAcquireSpinLock(&CmiKeyListLock, &OldIrql);
+  /* FIXME : if list maintained in alphabetic order, use dichotomic search */
   for (Index=0; Index < ParentKey->NumberOfSubKeys; Index++)
   {
     if(ParentKey->SubKeys[Index] == KeyToRemove)
     {
       if (Index < ParentKey->NumberOfSubKeys-1)
-        memcpy(&ParentKey->SubKeys[Index]
+        memmove(&ParentKey->SubKeys[Index]
 		,&ParentKey->SubKeys[Index+1]
 		,(ParentKey->NumberOfSubKeys-Index-1)*sizeof(PKEY_OBJECT));
       ParentKey->NumberOfSubKeys--;
@@ -2115,6 +2094,7 @@ CmiScanKeyList(PKEY_OBJECT Parent,PCHAR  KeyName)
  WORD NameSize;
   NameSize=strlen(KeyName);
   KeAcquireSpinLock(&CmiKeyListLock, &OldIrql);
+  /* FIXME : if list maintained in alphabetic order, use dichotomic search */
   for (Index=0; Index < Parent->NumberOfSubKeys; Index++)
   {
     CurKey=Parent->SubKeys[Index];
@@ -2448,14 +2428,16 @@ CmiScanForSubKey(IN PREGISTRY_FILE  RegistryFile,
   for (Idx = 0; Idx < KeyBlock->NumberOfSubKeys
 		&& Idx < HashBlock->HashTableSize; Idx++)
     {
+      /* FIXME : perhaps we must not ignore case if NtCreateKey has not been */
+      /*         called with OBJ_CASE_INSENSITIVE flag ? */
       if (HashBlock->Table[Idx].KeyOffset != 0 &&
            HashBlock->Table[Idx].KeyOffset != -1 &&
-          !strncmp(KeyName, (PCHAR) &HashBlock->Table[Idx].HashValue, 4))
+          !_strnicmp(KeyName, (PCHAR) &HashBlock->Table[Idx].HashValue, 4))
         {
           CurSubKeyBlock = CmiGetBlock(RegistryFile,
                                           HashBlock->Table[Idx].KeyOffset,NULL);
           if ( CurSubKeyBlock->NameSize == KeyLength
-                && !memcmp(KeyName, CurSubKeyBlock->Name, KeyLength))
+                && !_strnicmp(KeyName, CurSubKeyBlock->Name, KeyLength))
             {
               *SubKeyBlock = CurSubKeyBlock;
 	      *BlockOffset = HashBlock->Table[Idx].KeyOffset;
@@ -2614,6 +2596,8 @@ CmiScanKeyForValue(IN PREGISTRY_FILE  RegistryFile,
     {
       CurValueBlock = CmiGetBlock(RegistryFile,
                                   ValueListBlock->Values[Idx],NULL);
+      /* FIXME : perhaps we must not ignore case if NtCreateKey has not been */
+      /*         called with OBJ_CASE_INSENSITIVE flag ? */
       if (CurValueBlock != NULL &&
           CurValueBlock->NameSize == strlen(ValueName) &&
           !_strnicmp(CurValueBlock->Name, ValueName,strlen(ValueName)))
@@ -2796,7 +2780,7 @@ CmiDestroyKeyBlock(PREGISTRY_FILE  RegistryFile,
   else
     {  
       KeyBlock->SubBlockSize = -KeyBlock->SubBlockSize;
-      /* FIXME : set first dword to block_offset of another free bloc */
+      /* FIXME : set first dword to block_offset of another free bloc ? */
       /* FIXME : concatenate with previous and next block if free */
     }
 
@@ -2888,7 +2872,8 @@ CmiDestroyHashTableBlock(PREGISTRY_FILE  RegistryFile,
                          PHASH_TABLE_BLOCK  HashBlock,
 			 BLOCK_OFFSET Offset)
 {
-  NTSTATUS  Status;
+ NTSTATUS  Status;
+ PHEAP_BLOCK pHeap;
 
   Status = STATUS_SUCCESS;
 
@@ -2903,8 +2888,9 @@ CmiDestroyHashTableBlock(PREGISTRY_FILE  RegistryFile,
       HashBlock->SubBlockSize = HashBlock->SubBlockSize;
     CmiAddFree(RegistryFile, (PFREE_SUB_BLOCK) HashBlock, Offset);
     CmiReleaseBlock(RegistryFile, HashBlock);
-    /* FIXME : update time of heap */
-      Status = STATUS_NOT_IMPLEMENTED;
+    /* update time of heap */
+    if(RegistryFile->Filename && CmiGetBlock(RegistryFile, Offset,&pHeap))
+      ZwQuerySystemTime((PTIME) &pHeap->DateModified);
   }
 
   return  Status;
@@ -3018,11 +3004,15 @@ CmiDestroyValueBlock(PREGISTRY_FILE  RegistryFile,
     {
       return  Status;
     }
-    ZwQuerySystemTime((PTIME) &pHeap->DateModified);
+    /* update time of heap */
+    if(RegistryFile->Filename)
+      ZwQuerySystemTime((PTIME) &pHeap->DateModified);
   }
 
   Status = CmiDestroyBlock(RegistryFile, ValueBlock, VBOffset);
-  /* FIXME : update time of heap */
+  /* update time of heap */
+  if(RegistryFile->Filename && CmiGetBlock(RegistryFile, VBOffset,&pHeap))
+    ZwQuerySystemTime((PTIME) &pHeap->DateModified);
   return  Status;
 }
 
@@ -3073,6 +3063,7 @@ CmiAllocateBlock(PREGISTRY_FILE  RegistryFile,
 {
  NTSTATUS  Status;
  PFREE_SUB_BLOCK NewBlock;
+ PHEAP_BLOCK pHeap;
 
   Status = STATUS_SUCCESS;
   /* round to 16 bytes  multiple */
@@ -3107,6 +3098,10 @@ CmiAllocateBlock(PREGISTRY_FILE  RegistryFile,
          NewBlock = RegistryFile->FreeList[i];
          if(pBlockOffset)
 	   *pBlockOffset = RegistryFile->FreeListOffset[i];
+         /* update time of heap */
+         if(RegistryFile->Filename
+           && CmiGetBlock(RegistryFile, RegistryFile->FreeListOffset[i],&pHeap))
+           ZwQuerySystemTime((PTIME) &pHeap->DateModified);
          memmove( &RegistryFile->FreeList[i]
 	   ,&RegistryFile->FreeList[i+1]
 	   ,sizeof(RegistryFile->FreeList[0])*RegistryFile->FreeListSize);
@@ -3114,7 +3109,6 @@ CmiAllocateBlock(PREGISTRY_FILE  RegistryFile,
 	   ,&RegistryFile->FreeListOffset[i+1]
 	   ,sizeof(RegistryFile->FreeListOffset[0])*RegistryFile->FreeListSize);
          RegistryFile->FreeListSize--;
-	 /* FIXME : update date of heap */
          break;
       }
     }
@@ -3147,7 +3141,8 @@ static NTSTATUS
 CmiDestroyBlock(PREGISTRY_FILE  RegistryFile,
                 PVOID  Block,BLOCK_OFFSET Offset)
 {
-  NTSTATUS  Status;
+ NTSTATUS  Status;
+ PHEAP_BLOCK pHeap;
 
   Status = STATUS_SUCCESS;
 
@@ -3163,7 +3158,9 @@ CmiDestroyBlock(PREGISTRY_FILE  RegistryFile,
       pFree->SubBlockSize = pFree->SubBlockSize;
     CmiAddFree(RegistryFile,Block,Offset);
     CmiReleaseBlock(RegistryFile, Block);
-    /* FIXME : update time of heap */
+    /* update time of heap */
+    if(RegistryFile->Filename && CmiGetBlock(RegistryFile, Offset,&pHeap))
+      ZwQuerySystemTime((PTIME) &pHeap->DateModified);
   }
 
   return  Status;
