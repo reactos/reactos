@@ -89,3 +89,4 @@ void TNetwork::SetLocalAddress(char *buf) {
 	local_address = new char[strlen(buf) + 1];
 	strcpy(local_address, buf);
 }
+

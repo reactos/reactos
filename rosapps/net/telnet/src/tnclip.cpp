@@ -57,3 +57,4 @@ void Tnclip::Paste() {
 	
 	CloseClipboard();
 }
+

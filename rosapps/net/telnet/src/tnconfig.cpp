@@ -701,3 +701,4 @@ void TConfig::set_bool(bool *boolval, const char *str) {
    else if(!stricmp(str, "on")) *boolval = true;
 	else *boolval = (bool)atoi(str);
 }
+

@@ -60,3 +60,4 @@ void TScript::initScript (char *filename) {
 	if(fp) fclose(fp);
 	fp = fopen(filename, "rt");
 }
+
