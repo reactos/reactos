@@ -1,4 +1,4 @@
-/* $Id: pdata.c,v 1.1 2002/03/10 17:04:07 hyperion Exp $
+/* $Id: pdata.c,v 1.2 2002/03/11 20:45:07 hyperion Exp $
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -10,14 +10,147 @@
  *              06/03/2002: Created
  *              07/03/2002: Added __PdxUnserializeProcessData() (KJK::Hyperion
  *                          <noog@libero.it>)
+ *              11/03/2002: Added __PdxProcessDataToProcessParameters()
+ *                          (KJK::Hyperion <noog@libero.it>)
  */
 
 #include <ddk/ntddk.h>
 #include <string.h>
+#include <unistd.h>
 #include <psx/fdtable.h>
 #include <psx/pdata.h>
 #include <psx/stdlib.h>
 #include <psx/debug.h>
+
+NTSTATUS
+STDCALL
+__PdxProcessDataToProcessParameters
+(
+ OUT PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
+ IN __PPDX_PDATA ProcessData,
+ IN PUNICODE_STRING ImageFile
+)
+{
+ UNICODE_STRING wstrEmpty = {0, 0, NULL};
+ UNICODE_STRING wstrCommandLine = {0, 0, NULL};
+ NTSTATUS     nErrCode;
+ __fildes_t * fdDescriptor;
+ int i;
+
+ /* TODO: error checking */
+
+ /* build the command line string from argument count and argument vector */
+ if(ProcessData->ArgVect)
+ {
+  BOOL bQuoteArg;
+  BOOL bFirstArg;
+  ANSI_STRING strArgument;
+  PWCHAR      pwcBufferTail;
+
+  for(i = 0; i < ProcessData->ArgCount; i ++)
+  {
+   RtlInitAnsiString(&strArgument, ProcessData->ArgVect[i]);
+
+   bFirstArg = (i == 0);
+   bQuoteArg = (strchr(strArgument.Buffer, ' ') != 0);
+
+   /* allocate buffer space for the argument, a blank space if the argument is
+      not the first, and two quotes if the argument contains a space */
+   /* TODO: check this operation for overflow */
+   wstrCommandLine.MaximumLength +=
+    (strArgument.Length + (bFirstArg ? 0 : 1) + (bQuoteArg ? 2 : 0)) *
+    sizeof(WCHAR);
+
+   if(bFirstArg)
+   {
+    wstrCommandLine.Buffer = __malloc(wstrCommandLine.MaximumLength);
+   }
+   else
+   {
+    wstrCommandLine.Buffer =
+     __realloc(wstrCommandLine.Buffer, wstrCommandLine.MaximumLength);
+   }
+
+   /* buffer tail */
+   pwcBufferTail =
+    (PWCHAR)((ULONG)wstrCommandLine.Buffer + wstrCommandLine.Length);
+
+   /* append the separator if the argument isn't the first */
+   if(!bFirstArg)
+   {
+    *pwcBufferTail = L' ';
+    pwcBufferTail ++;
+   }
+    
+   /* append the opening quote if the argument contains spaces */
+   if(bQuoteArg)
+   {
+    *pwcBufferTail = L'"';
+    pwcBufferTail ++;
+   }
+
+   mbstowcs(pwcBufferTail, strArgument.Buffer, strArgument.Length);
+
+   /* append closing quote */
+   if(bQuoteArg)
+   {
+    pwcBufferTail = (PWCHAR)((ULONG)pwcBufferTail + strArgument.Length * sizeof(WCHAR));
+    *pwcBufferTail = L'"';
+   }
+
+   wstrCommandLine.Length = wstrCommandLine.MaximumLength;
+  }
+ }
+
+#ifndef NDEBUG
+ wstrCommandLine.MaximumLength = wstrCommandLine.Length + sizeof(WCHAR);
+ wstrCommandLine.Buffer = __realloc(wstrCommandLine.Buffer, wstrCommandLine.MaximumLength);
+ wstrCommandLine.Buffer[wstrCommandLine.Length / sizeof(WCHAR)] = 0;
+
+ INFO("command line is \"%ls\"\n", wstrCommandLine.Buffer);
+#endif
+
+ RtlCreateProcessParameters
+ (
+  ProcessParameters,
+  ImageFile,
+  &wstrEmpty,
+  &wstrEmpty,
+  &wstrCommandLine,
+  0,
+  &wstrEmpty,
+  &wstrEmpty,
+  &wstrEmpty,
+  &wstrEmpty
+ );
+
+ /* standard input handle */
+ fdDescriptor = __fdtable_entry_get(&ProcessData->FdTable, STDIN_FILENO);
+
+ if(fdDescriptor != NULL)
+  (*ProcessParameters)->InputHandle = fdDescriptor->FileHandle;
+
+ /* standard output handle */
+ fdDescriptor = __fdtable_entry_get(&ProcessData->FdTable, STDOUT_FILENO);
+
+ if(fdDescriptor != NULL)
+  (*ProcessParameters)->OutputHandle = fdDescriptor->FileHandle;
+
+ /* standard error handle */
+ fdDescriptor = __fdtable_entry_get(&ProcessData->FdTable, STDERR_FILENO);
+
+ if(fdDescriptor != NULL)
+  (*ProcessParameters)->ErrorHandle = fdDescriptor->FileHandle;
+
+ /* POSIX+ and NT environments are incompatible, we set the environment to
+    nothing */
+ (*ProcessParameters)->Environment = NULL;
+
+ (*ProcessParameters)->ConsoleHandle = (PVOID)-1;
+ (*ProcessParameters)->ConsoleFlags = 0;
+
+ return (STATUS_SUCCESS);
+}
 
 /* serialize a process data block in a contiguous, page-aligned block, suitable
    for transfer across processes */
@@ -42,63 +175,89 @@ __PdxSerializeProcessData
  /* FIXME please! this is the most inefficient way to do it */
 
  /* argv */
- pnArgLengths = __malloc(ProcessData->ArgCount * sizeof(size_t));
+ INFO("serializing arguments\n");
 
- for(i = 0; i < ProcessData->ArgCount; i ++)
+ if(ProcessData->ArgVect != 0)
  {
-  int nStrLen = strlen(ProcessData->ArgVect[i]) + 1;
-  ulAllocSize += nStrLen;
-  pnArgLengths[i] = nStrLen;
+  pnArgLengths = __malloc(ProcessData->ArgCount * sizeof(size_t));
 
-  INFO
-  (
-   "argument %d: \"%s\", length %d\n",
-   i,
-   ProcessData->ArgVect[i],
-   nStrLen
-  );
+  for(i = 0; i < ProcessData->ArgCount; i ++)
+  {
+   int nStrLen;
+
+   if(ProcessData->ArgVect[i] == 0)
+   {
+    INFO("argument %d is NULL\n", i);
+    pnArgLengths[i] = 0;
+    continue;
+   }
+
+   nStrLen = strlen(ProcessData->ArgVect[i]) + 1;
+   ulAllocSize += nStrLen;
+   pnArgLengths[i] = nStrLen;
+
+   INFO
+   (
+    "argument %d: \"%s\", length %d\n",
+    i,
+    ProcessData->ArgVect[i],
+    nStrLen
+   );
+  }
+
  }
+ else
+  INFO("arguments vector is NULL\n");
 
  /* environ */
- pnEnvVarsLengths = 0;
+ pnEnvVarsLengths = NULL;
  nEnvVarsCount = 0;
 
- for(i = 0; *(ProcessData->Environment)[i] != 0; i++)
+ if(ProcessData->Environment == 0)
+  INFO("pointer to environ is NULL\n");
+ else if((ProcessData->Environment) == 0)
+  INFO("environ is NULL\n");
+ else
  {
-  int nStrLen = strlen(*(ProcessData->Environment)[i]) + 1;
-  ulAllocSize += nStrLen;
+  for(i = 0; *(ProcessData->Environment)[i] != 0; i++)
+  {
+   int nStrLen = strlen(*(ProcessData->Environment)[i]) + 1;
+   ulAllocSize += nStrLen;
+ 
+   nEnvVarsCount ++;
+   __realloc(pnEnvVarsLengths, nEnvVarsCount * sizeof(size_t));
+   pnEnvVarsLengths[i] = nStrLen;
+ 
+   INFO
+   (
+    "environment variable %d: \"%s\", length %d\n",
+    i,
+    *(ProcessData->Environment)[i],
+    nStrLen
+   );
+  }
 
-  nEnvVarsCount ++;
-  __realloc(pnEnvVarsLengths, nEnvVarsCount * sizeof(size_t));
-  pnEnvVarsLengths[i] = nStrLen;
-
-  INFO
-  (
-   "environment variable %d: \"%s\", length %d\n",
-   i,
-   *(ProcessData->Environment)[i],
-   nStrLen
-  );
+  INFO("(%d environment variables were found)\n", nEnvVarsCount);
  }
-
- INFO("(%d environment variables were found)\n", nEnvVarsCount);
 
  /* current directory */
  ulAllocSize += ProcessData->CurDir.Length;
+
  INFO
  (
-  "current directory: \"%Z\", length %d\n",
-  &ProcessData->CurDir,
-  ProcessData->CurDir.Length
+  "current directory: \"%.*ls\"\n",
+  ProcessData->CurDir.Length / sizeof(WCHAR),
+  ProcessData->CurDir.Buffer
  );
 
  /* root directory */
  ulAllocSize += ProcessData->RootPath.Length;
+
  INFO
  (
-  "root directory: \"%Z\", length %d\n",
-  &ProcessData->RootPath,
-  ProcessData->RootPath.Length
+  "root directory: \"%.*ls\"\n",
+  ProcessData->RootPath.Length / sizeof(WCHAR),
+  ProcessData->RootPath.Buffer
  );
 
  /* file descriptors table */
@@ -217,9 +376,10 @@ __PdxSerializeProcessData
  /* current directory */
  INFO
  (
-  "copying %d bytes of current directory (\"%Z\") to 0x%08X\n",
+  "copying %d bytes of current directory (\"%.*ls\") to 0x%08X\n",
   ProcessData->CurDir.Length,
-  &ProcessData->CurDir,
+  ProcessData->CurDir.Length / sizeof(WCHAR),
+  ProcessData->CurDir.Buffer,
   pBufferTail
  );
 
@@ -236,9 +396,10 @@ __PdxSerializeProcessData
  /* root directory */
  INFO
  (
-  "copying %d bytes of root directory (\"%Z\") to 0x%08X\n",
+  "copying %d bytes of root directory (\"%.*ls\") to 0x%08X\n",
   ProcessData->RootPath.Length,
-  &ProcessData->RootPath,
+  ProcessData->RootPath.Length / sizeof(WCHAR),
+  ProcessData->RootPath.Buffer,
   pBufferTail
  );
 
