@@ -4269,7 +4269,7 @@ TOOLBAR_ReplaceBitmap (HWND hwnd, WPARAM wParam, LPARAM lParam)
     LPTBREPLACEBITMAP lpReplace = (LPTBREPLACEBITMAP) lParam;
     HBITMAP hBitmap;
     int i = 0, nOldButtons = 0, pos = 0;
-    int nOldBitmaps, nNewBitmaps;
+    int nOldBitmaps, nNewBitmaps = 0;
     HIMAGELIST himlDef = 0;
 
     TRACE("hInstOld %p nIDOld %x hInstNew %p nIDNew %x nButtons %x\n",
@@ -4322,6 +4322,7 @@ TOOLBAR_ReplaceBitmap (HWND hwnd, WPARAM wParam, LPARAM lParam)
     for (i = pos + nOldBitmaps - 1; i >= pos; i--)
         ImageList_Remove(himlDef, i);
 
+    if (hBitmap)
     {
        BITMAP  bmp;
        HBITMAP hOldBitmapBitmap, hOldBitmapLoad, hbmLoad;
