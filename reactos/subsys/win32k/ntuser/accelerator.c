@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: accelerator.c,v 1.11 2004/11/13 01:52:56 rcampbell Exp $
+/* $Id: accelerator.c,v 1.12 2004/11/13 01:57:45 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -479,7 +479,6 @@ NtUserTranslateAccelerator(
   if (!NT_SUCCESS(Status))
   {
     SetLastNtError(STATUS_ACCESS_DENIED);
-    DPRINT1("E1\n");
     return 0;
   }
 
@@ -491,13 +490,10 @@ NtUserTranslateAccelerator(
   {
     SetLastWin32Error(ERROR_INVALID_ACCEL_HANDLE);
     ObDereferenceObject(WindowStation);
-    DPRINT1("E2\n");
     return 0;
   }
 
   /* FIXME: Associate AcceleratorTable with the current thread */
-
-  /* FIXME: If hWnd is active and no hWnd has focus, translate WM_SYSKEYUP and WM_SYSKEY_DOWN instead */
 
   for (i = 0; i < AcceleratorTable->Count; i++)
     {
