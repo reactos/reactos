@@ -52,19 +52,19 @@ VOID NBSendPackets( PNEIGHBOR_CACHE_ENTRY NCE ) {
     }
 }
 
+/* Must be called with table lock acquired */
 VOID NBFlushPacketQueue( PNEIGHBOR_CACHE_ENTRY NCE, 
 			 BOOL CallComplete,
 			 NTSTATUS ErrorCode ) {
     PLIST_ENTRY PacketEntry;
     PNEIGHBOR_PACKET Packet;
 	
-    PacketEntry = ExInterlockedRemoveHeadList(&NCE->PacketQueue,
-                                              &NCE->Table->Lock);
-    while( PacketEntry != NULL ) {
+    while( !IsListEmpty(&NCE->PacketQueue) ) {
+        PacketEntry = RemoveHeadList(&NCE->PacketQueue);
 	Packet = CONTAINING_RECORD
 	    ( PacketEntry, NEIGHBOR_PACKET, Next );
 
-  ASSERT_KM_POINTER(Packet);
+        ASSERT_KM_POINTER(Packet);
 	
 	TI_DbgPrint
 	    (MID_TRACE,
@@ -72,16 +72,14 @@ VOID NBFlushPacketQueue( PNEIGHBOR_CACHE_ENTRY NCE,
 	      PacketEntry, Packet->Packet));
 
 	if( CallComplete )
-    {
-      ASSERT_KM_POINTER(Packet->Complete);
+        {
+            ASSERT_KM_POINTER(Packet->Complete);
 	    Packet->Complete( Packet->Context,
 			      Packet->Packet,
 			      NDIS_STATUS_REQUEST_ABORTED );
-    }
+        }
 	
 	PoolFreeBuffer( Packet );
-	PacketEntry = ExInterlockedRemoveHeadList(&NCE->PacketQueue,
-	                                          &NCE->Table->Lock);
     }
 }
 
