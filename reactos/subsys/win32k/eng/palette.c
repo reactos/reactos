@@ -10,7 +10,10 @@
 
 #include <ddk/winddi.h>
 #include <include/object.h>
-#include "objects.h"
+#include "handle.h"
+
+//#define NDEBUG
+#include <win32k/debug1.h>
 
 HPALETTE STDCALL
 EngCreatePalette(ULONG Mode,
@@ -21,13 +24,14 @@ EngCreatePalette(ULONG Mode,
 		 ULONG Blue)
 {
   HPALETTE NewPalette;
-  PALOBJ *PalObj;
   PALGDI *PalGDI;
 
-  PalObj = EngAllocMem(FL_ZERO_MEMORY, sizeof(PALOBJ), 0);
-  PalGDI = EngAllocMem(FL_ZERO_MEMORY, sizeof(PALGDI), 0);
+  NewPalette = (HPALETTE)CreateGDIHandle(sizeof(PALGDI), sizeof(PALOBJ));
+  if( !ValidEngHandle( NewPalette ) )
+	return 0;
 
-  NewPalette = (HPALETTE)CreateGDIHandle(PalGDI, PalObj);
+  PalGDI = (PALGDI*) AccessInternalObject( NewPalette );
+  ASSERT( PalGDI );
 
   PalGDI->Mode = Mode;
 
@@ -55,16 +59,7 @@ EngCreatePalette(ULONG Mode,
 BOOL STDCALL
 EngDeletePalette(IN HPALETTE Palette)
 {
-  PALOBJ *PalObj;
-  PALGDI *PalGDI;
-
-  PalGDI = (PALGDI*)AccessInternalObject((ULONG)Palette);
-  PalObj = (PALOBJ*)AccessUserObject((ULONG)Palette);
-
-  EngFreeMem(PalGDI);
-  EngFreeMem(PalObj);
   FreeGDIHandle((ULONG)Palette);
-
   return TRUE;
 }
 

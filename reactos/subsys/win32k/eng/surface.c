@@ -17,7 +17,10 @@
 #include <include/dib.h>
 #include <include/object.h>
 #include <include/paint.h>
-#include "objects.h"
+#include "handle.h"
+
+//#define NDEBUG
+#include <win32k/debug1.h>
 
 INT BitsPerFormat(ULONG Format)
 {
@@ -92,10 +95,15 @@ EngCreateBitmap(IN SIZEL Size,
   SURFOBJ *SurfObj;
   SURFGDI *SurfGDI;
 
-  SurfObj = EngAllocMem(FL_ZERO_MEMORY, sizeof(SURFOBJ), 0);
-  SurfGDI = EngAllocMem(FL_ZERO_MEMORY, sizeof(SURFGDI), 0);
 
-  NewBitmap = (PVOID)CreateGDIHandle(SurfGDI, SurfObj);
+  NewBitmap = (PVOID)CreateGDIHandle(sizeof(SURFGDI), sizeof(SURFOBJ));
+  if( !ValidEngHandle( NewBitmap ) )
+	return 0;
+
+  SurfObj = (SURFOBJ*) AccessUserObject( NewBitmap );
+  SurfGDI = (SURFGDI*) AccessInternalObject( NewBitmap );
+  ASSERT( SurfObj );
+  ASSERT( SurfGDI );
 
   InitializeHooks(SurfGDI);
 
@@ -141,10 +149,14 @@ EngCreateDeviceSurface(IN DHSURF dhsurf,
   SURFOBJ *SurfObj;
   SURFGDI *SurfGDI;
 
-  SurfObj = EngAllocMem(FL_ZERO_MEMORY, sizeof(SURFOBJ), 0);
-  SurfGDI = EngAllocMem(FL_ZERO_MEMORY, sizeof(SURFGDI), 0);
+  NewSurface = (HSURF)CreateGDIHandle(sizeof( SURFGDI ), sizeof( SURFOBJ ));
+  if( !ValidEngHandle( NewSurface ) )
+	return 0;
 
-  NewSurface = (HSURF)CreateGDIHandle(SurfGDI, SurfObj);
+  SurfObj = (SURFOBJ*) AccessUserObject( NewSurface );
+  SurfGDI = (SURFGDI*) AccessInternalObject( NewSurface );
+  ASSERT( SurfObj );
+  ASSERT( SurfGDI );
 
   InitializeHooks(SurfGDI);
 
@@ -212,16 +224,7 @@ EngAssociateSurface(IN HSURF Surface,
 BOOL STDCALL
 EngDeleteSurface(IN HSURF Surface)
 {
-  SURFOBJ *SurfObj;
-  SURFGDI *SurfGDI;
-
-  SurfGDI = (SURFGDI*)AccessInternalObject((ULONG)Surface);
-  SurfObj = (SURFOBJ*)AccessUserObject((ULONG)Surface);
-
-  EngFreeMem(SurfGDI);
-  EngFreeMem(SurfObj);
   FreeGDIHandle((ULONG)Surface);
-
   return TRUE;
 }
 

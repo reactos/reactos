@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <win32k/bitmaps.h>
 //#include <win32k/debug.h>
-#include "../eng/objects.h"
+#include "../eng/handle.h"
 
 //#define NDEBUG
 #include <win32k/debug1.h>

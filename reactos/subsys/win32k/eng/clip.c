@@ -14,48 +14,6 @@
 #include "clip.h"
 #include <include/object.h>
 
-// FIXME: Complex clipping doesn't work
-
-CLIPOBJ *EngCreateClipRegion(ULONG NumRects, RECTL Rects[],
-                             ULONG Mode, ULONG Options)
-{
-  HCLIP NewClip;
-  CLIPOBJ *ClipObj;
-  CLIPGDI *ClipGDI;
-
-  ClipObj = EngAllocMem(FL_ZERO_MEMORY, sizeof(CLIPOBJ), 0);
-  ClipGDI = EngAllocMem(FL_ZERO_MEMORY, sizeof(CLIPGDI), 0);
-
-  NewClip = CreateGDIHandle(ClipGDI, ClipObj);
-
-  ClipGDI->NumRegionRects  = NumRects;
-  ClipGDI->RegionRects     = Rects;
-  ClipObj->iMode           = Mode;
-  ClipObj->fjOptions       = Options;
-  ClipObj->iDComplexity    = DC_TRIVIAL;
-
-  if(NumRects == 1)
-  {
-    ClipObj->iFComplexity = FC_RECT;
-    ClipObj->iDComplexity = DC_RECT;
-
-    // FIXME: Is this correct??
-    ClipObj->rclBounds = Rects[0];
-  } else
-  {
-    ClipObj->iDComplexity = DC_COMPLEX;
-    if(NumRects <= 4)
-    {
-      ClipObj->iFComplexity = FC_RECT4;
-    } else
-    {
-      ClipObj->iFComplexity = FC_COMPLEX;
-    }
-  }
-
-  return ClipObj;
-}
-
 VOID EngDeleteClipRegion(CLIPOBJ *ClipObj)
 {
   HCLIP HClip      = AccessHandleFromUserObject(ClipObj);
@@ -66,23 +24,6 @@ VOID EngDeleteClipRegion(CLIPOBJ *ClipObj)
   FreeGDIHandle(HClip);
 }
 
-VOID EngIntersectClipRegion(CLIPOBJ *ClipObj, ULONG NumRects, RECTL *IntersectRects)
-{
-  CLIPGDI *ClipGDI = (CLIPGDI*)AccessInternalObjectFromUserObject(ClipObj);
-
-  ClipGDI->NumIntersectRects = NumRects;
-  ClipGDI->IntersectRects    = IntersectRects;
-
-  if(NumRects == 1)
-  {
-    ClipObj->iDComplexity = DC_RECT;
-    ClipObj->rclBounds = IntersectRects[0];
-  } else
-  {
-    ClipObj->iDComplexity = DC_COMPLEX;
-    ClipGDI->IntersectRects = IntersectRects;
-  }
-}
 
 CLIPOBJ * STDCALL
 EngCreateClip(VOID)

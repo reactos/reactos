@@ -101,12 +101,14 @@ VOID
 ObmDestroyHandleTable(
   PUSER_HANDLE_TABLE HandleTable);
 
-PVOID AccessInternalObjectFromUserObject(PVOID UserObject);
-PVOID AccessUserObject(ULONG Handle);
-ULONG CreateGDIHandle(PVOID InternalObject, PVOID UserObject);
+ULONG CreateGDIHandle(ULONG InternalSize, ULONG UserSize);
 VOID FreeGDIHandle(ULONG Handle);
-ULONG AccessHandleFromUserObject(PVOID UserObject);
+
+PVOID AccessUserObject(ULONG Handle);
 PVOID AccessInternalObject(ULONG Handle);
+
+PVOID AccessInternalObjectFromUserObject(PVOID UserObject);
+ULONG AccessHandleFromUserObject(PVOID UserObject);
 
 #endif /* __WIN32K_OBJECT_H */
 

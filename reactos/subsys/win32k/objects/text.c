@@ -8,7 +8,7 @@
 #include <win32k/kapi.h>
 #include <freetype/freetype.h>
 
-#include "../eng/objects.h"
+#include "../eng/handle.h"
 
 // #define NDEBUG
 #include <win32k/debug1.h>
@@ -61,9 +61,9 @@ W32kAddFontResource(LPCWSTR  Filename)
   UNICODE_STRING StringU;
   IO_STATUS_BLOCK Iosb;
 
-  FontObj = EngAllocMem(FL_ZERO_MEMORY, sizeof(FONTOBJ), 0);
-  FontGDI = EngAllocMem(FL_ZERO_MEMORY, sizeof(FONTGDI), 0);
-  NewFont = (HFONT)CreateGDIHandle(FontGDI, FontObj);
+  NewFont = (HFONT)CreateGDIHandle(sizeof( FONTGDI ), sizeof( FONTOBJ ));
+  FontObj = (PFONTOBJ) AccessUserObject( NewFont );
+  FontGDI = (PFONTGDI) AccessInternalObject( NewFont );
 
   RtlCreateUnicodeString(&uFileName, (LPWSTR)Filename);
 

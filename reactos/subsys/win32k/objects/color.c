@@ -6,7 +6,7 @@
 #include <ddk/winddi.h>
 #include <win32k/dc.h>
 #include <win32k/color.h>
-#include "../eng/objects.h"
+#include "../eng/handle.h"
 
 // #define NDEBUG
 #include <win32k/debug1.h>

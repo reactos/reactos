@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.32 2002/07/13 21:37:26 ei Exp $
+/* $Id: dc.c,v 1.33 2002/08/04 09:55:11 ei Exp $
  *
  * DC.C - Device context functions
  *
@@ -17,7 +17,7 @@
 #include <win32k/gdiobj.h>
 #include <win32k/pen.h>
 #include <win32k/text.h>
-#include "../eng/objects.h"
+#include "../eng/handle.h"
 
 //#define NDEBUG
 #include <win32k/debug1.h>
@@ -943,11 +943,12 @@ HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
 
       // setup mem dc for drawing into bitmap
       pb   = BITMAPOBJ_HandleToPtr (hGDIObj);
-      surfobj = ExAllocatePool(PagedPool, sizeof(SURFOBJ));
-      surfgdi = ExAllocatePool(PagedPool, sizeof(SURFGDI));
+      dc->w.hBitmap = CreateGDIHandle(sizeof( SURFGDI ), sizeof( SURFOBJ )); // Assign the DC's bitmap
 
+      surfobj = (PSURFOBJ) AccessUserObject( dc->w.hBitmap );
+      surfgdi = (PSURFGDI) AccessInternalObject( dc->w.hBitmap );
       BitmapToSurf(hDC, surfgdi, surfobj, pb); // Put the bitmap in a surface
-      dc->w.hBitmap = CreateGDIHandle(surfgdi, surfobj); // Assign the DC's bitmap
+
       dc->Surface = dc->w.hBitmap;
 
       // if we're working with a DIB, get the palette [fixme: only create if the selected palette is null]

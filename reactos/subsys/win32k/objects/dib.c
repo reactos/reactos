@@ -4,7 +4,7 @@
 #include <win32k/bitmaps.h>
 #include <win32k/debug.h>
 #include <debug.h>
-#include "../eng/objects.h"
+#include "../eng/handle.h"
 #include <ntos/minmax.h>
 
 VOID BitmapToSurf(HDC hdc, PSURFGDI SurfGDI, PSURFOBJ SurfObj, PBITMAPOBJ Bitmap);
@@ -96,9 +96,10 @@ INT STDCALL W32kSetDIBits(HDC  hDC,
     lpRGB = &bmi->bmiColors[0];
 
   // Create a temporary surface for the destination bitmap
-  DestSurf   = ExAllocatePool(PagedPool, sizeof(SURFOBJ));
-  DestGDI    = ExAllocatePool(PagedPool, sizeof(SURFGDI));
-  DestBitmap = (HBITMAP)CreateGDIHandle(DestGDI, DestSurf);
+  DestBitmap = (HBITMAP)CreateGDIHandle(sizeof(SURFGDI), sizeof(SURFOBJ));
+
+  DestSurf   = (PSURFOBJ) AccessUserObject( DestBitmap );
+  DestGDI    = (PSURFGDI) AccessInternalObject( DestBitmap );
 
   BitmapToSurf(hDC, DestGDI, DestSurf, bitmap);
 

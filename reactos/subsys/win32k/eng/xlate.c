@@ -15,7 +15,10 @@
 #include <ddk/ntddvid.h>
 
 #include <include/object.h>
-#include "objects.h"
+#include "handle.h"
+
+//#define NDEBUG
+#include <win32k/debug1.h>
 
 ULONG CCMLastSourceColor = 0, CCMLastColorMatch = 0;
 
@@ -106,10 +109,14 @@ XLATEOBJ *EngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
   PALGDI   *SourcePalGDI, *DestPalGDI;
   ULONG    IndexedColors;
 
-  XlateObj = EngAllocMem(FL_ZERO_MEMORY, sizeof(XLATEOBJ), 0);
-  XlateGDI = EngAllocMem(FL_ZERO_MEMORY, sizeof(XLATEGDI), 0);
+  NewXlate = (HPALETTE)CreateGDIHandle(sizeof( XLATEGDI ), sizeof( XLATEOBJ ));
+  if( !ValidEngHandle( NewXlate ) )
+	return NULL;
 
-  NewXlate = (HPALETTE)CreateGDIHandle(XlateGDI, XlateObj);
+  XlateObj = (XLATEOBJ*) AccessUserObject( NewXlate );
+  XlateGDI = (XLATEGDI*) AccessInternalObject( NewXlate );
+  ASSERT( XlateObj );
+  ASSERT( XlateGDI );
 
   if(SourcePalType == PAL_INDEXED)
     SourcePalGDI = (PALGDI*)AccessInternalObject((ULONG)PaletteSource);
@@ -202,8 +209,6 @@ VOID EngDeleteXlate(XLATEOBJ *XlateObj)
     EngFreeMem(XlateGDI->translationTable);
   }
 
-  EngFreeMem(XlateGDI);
-  EngFreeMem(XlateObj);
   FreeGDIHandle((ULONG)HXlate);
 }
 

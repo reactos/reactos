@@ -7,17 +7,21 @@
  * REVISION HISTORY:
  *                 29/8/1999: Created
  */
+#ifndef __ENG_HANDLE_H
+#define __ENG_HANDLE_H
+
+#include "objects.h"
+#include <include/object.h>
 
 typedef struct _GDI_HANDLE {
-  ULONG Handle;
-  PVOID InternalObject;
-  PVOID UserObject;
+  PENGOBJ		pEngObj;
 } GDI_HANDLE, *PGDI_HANDLE;
 
 #define INVALID_HANDLE  0
 #define MAX_GDI_HANDLES 4096
 
 GDI_HANDLE GDIHandles[MAX_GDI_HANDLES];
-ULONG HandleCounter = 1;
 
+#define ValidEngHandle( x )  (!( (x) == INVALID_HANDLE ))
 
+#endif

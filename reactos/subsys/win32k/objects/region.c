@@ -804,7 +804,13 @@ static void REGION_RegionOp(
 			ASSERT( newReg->Buffer );
 		}
     }
-    ExFreePool( oldRects );
+
+	if( newReg->rdh.nCount == 0 )
+		newReg->rdh.iType = NULLREGION;
+	else
+		newReg->rdh.iType = (newReg->rdh.nCount > 1)? COMPLEXREGION : SIMPLEREGION;
+
+	ExFreePool( oldRects );
     return;
 }
 
@@ -1540,7 +1546,7 @@ W32kCreateRectRgn(INT  LeftRect,
     	ASSERT(pRect);
 
     	// Fill in the region data header
-    	pRgnData->rdh.iType = RDH_RECTANGLES;
+    	pRgnData->rdh.iType = SIMPLEREGION;
     	W32kSetRect(&(pRgnData->rdh.rcBound), LeftRect, TopRect, RightRect, BottomRect);
 
     	// use W32kCopyRect when implemented

@@ -7,14 +7,40 @@
  * REVISION HISTORY:
  *                 21/8/1999: Created
  */
+#ifndef __ENG_OBJECTS_H
+#define __ENG_OBJECTS_H
 
 #include <freetype/freetype.h>
 
-typedef struct _BRUSHGDI {
+/* Structure of internal gdi objects that win32k manages for ddi engine:
+   |---------------------------------|
+   |           EngObj                |
+   |---------------------------------|
+   |         Public part             |
+   |      accessed from engine       |
+   |---------------------------------|
+   |        Private part             |
+   |       managed by gdi            |
+   |_________________________________|
 
+---------------------------------------------------------------------------*/
+
+typedef struct _ENGOBJ {
+	ULONG  hObj;
+	ULONG  InternalSize;
+	ULONG  UserSize;
+}ENGOBJ, *PENGOBJ;
+
+
+
+typedef struct _BRUSHGDI {
+  ENGOBJ 		Header;
+  BRUSHOBJ	BrushObj;
 } BRUSHGDI;
 
 typedef struct _CLIPGDI {
+  ENGOBJ 		Header;
+  CLIPOBJ		ClipObj;
   ULONG NumRegionRects;
   ULONG NumIntersectRects;
   RECTL *RegionRects;
@@ -24,6 +50,7 @@ typedef struct _CLIPGDI {
   ENUMRECTS EnumRects;
 } CLIPGDI, *PCLIPGDI;
 
+/*ei What is this for? */
 typedef struct _DRVFUNCTIONSGDI {
   HDEV  hdev;
   DRVFN Functions[INDEX_LAST];
@@ -34,12 +61,18 @@ typedef struct _FLOATGDI {
 } FLOATGDI;
 
 typedef struct _FONTGDI {
+  ENGOBJ 		Header;
+  FONTOBJ		FontObj;
+
   LPCWSTR Filename;
   FT_Face face;
   TEXTMETRIC TextMetric;
 } FONTGDI, *PFONTGDI;
 
 typedef struct _PALGDI {
+  ENGOBJ 		Header;
+  PALOBJ		PalObj;
+
   ULONG Mode; // PAL_INDEXED, PAL_BITFIELDS, PAL_RGB, PAL_BGR
   ULONG NumColors;
   ULONG *IndexedColors;
@@ -49,11 +82,14 @@ typedef struct _PALGDI {
 } PALGDI, *PPALGDI;
 
 typedef struct _PATHGDI {
-
+  ENGOBJ 		Header;
+  PATHOBJ		PathObj;
 } PATHGDI;
 
+/*ei Fixme! Fix STROBJ */
 typedef struct _STRGDI {
-
+  ENGOBJ 		Header;
+  //STROBJ		StrObj;
 } STRGDI;
 
 typedef BOOL STDCALL (*PFN_BitBlt)(PSURFOBJ, PSURFOBJ, PSURFOBJ, PCLIPOBJ,
@@ -100,6 +136,9 @@ typedef HBITMAP STDCALL (*PFN_CreateDeviceBitmap)(DHPDEV, SIZEL, ULONG);
 typedef BOOL STDCALL (*PFN_SetPalette)(DHPDEV, PALOBJ*, ULONG, ULONG, ULONG);
 
 typedef struct _SURFGDI {
+  ENGOBJ 		Header;
+  SURFOBJ		SurfObj;
+
   INT BitsPerPixel;
 
   PFN_BitBlt BitBlt;
@@ -121,10 +160,13 @@ typedef struct _SURFGDI {
 } SURFGDI, *PSURFGDI;
 
 typedef struct _XFORMGDI {
-
+  ENGOBJ 		Header;
+  /* XFORMOBJ has no public members */
 } XFORMGDI;
 
 typedef struct _XLATEGDI {
+  ENGOBJ 		Header;
+  XLATEOBJ		XlateObj;
   HPALETTE DestPal;
   HPALETTE SourcePal;
 
@@ -145,3 +187,5 @@ typedef struct _XLATEGDI {
 #define MAX_GDI_SURFS        255
 #define MAX_GDI_XFORMS       255
 #define MAX_GDI_XLATES       255
+
+#endif //__ENG_OBJECTS_H

@@ -11,57 +11,96 @@
 #include <ddk/winddi.h>
 #include "handle.h"
 
-// FIXME: Total rewrite..
-// Place User and GDI objects in ONE object with the user items shown first
-// See ..\objects\gdiobj
-// To switch between user and gdi objects, just -\+ the size of all the user items
+//#define NDEBUG
+#include <win32k/debug1.h>
 
-ULONG CreateGDIHandle(PVOID InternalObject, PVOID UserObject)
+
+ULONG CreateGDIHandle(ULONG InternalSize, ULONG UserSize)
 {
-  ULONG NewHandle = HandleCounter++;
+  ULONG size;
+  PENGOBJ pObj;
+  int i;
 
-  GDIHandles[NewHandle].InternalObject = InternalObject;
-  GDIHandles[NewHandle].UserObject     = UserObject;
+  size = sizeof( ENGOBJ ) + InternalSize + UserSize;
+  pObj = EngAllocMem( FL_ZERO_MEMORY, size, 0 );
 
-  return NewHandle;
+  if( !pObj )
+	return 0;
+
+  pObj->InternalSize = InternalSize;
+  pObj->UserSize = UserSize;
+
+  for( i=1; i < MAX_GDI_HANDLES; i++ ){
+	if( GDIHandles[ i ].pEngObj == NULL ){
+		pObj->hObj = i;
+		GDIHandles[ i ].pEngObj = pObj;
+		DPRINT("CreateGDIHandle: obj: %x, handle: %d, usersize: %d\n", pObj, i, UserSize );
+		return i;
+	}
+  }
+  DPRINT("CreateGDIHandle: Out of available handles!!!\n");
+  EngFreeMem( pObj );
+  return 0;
 }
 
 VOID FreeGDIHandle(ULONG Handle)
 {
-  GDIHandles[Handle].InternalObject = NULL;
-  GDIHandles[Handle].UserObject     = NULL;
+  if( Handle == 0 || Handle >= MAX_GDI_HANDLES ){
+	DPRINT("FreeGDIHandle: invalid handle!!!!\n");
+	return;
+  }
+  DPRINT("FreeGDIHandle: handle: %d\n", Handle);
+  EngFreeMem( GDIHandles[Handle].pEngObj );
+  GDIHandles[Handle].pEngObj = NULL;
 }
 
 PVOID AccessInternalObject(ULONG Handle)
 {
-  return GDIHandles[Handle].InternalObject;
+  PENGOBJ pEngObj;
+
+  if( Handle == 0 || Handle >= MAX_GDI_HANDLES ){
+	DPRINT("AccessInternalObject: invalid handle: %d!!!!\n", Handle);
+	return NULL;
+  }
+
+  pEngObj = GDIHandles[Handle].pEngObj;
+  return (PVOID)((PCHAR)pEngObj + sizeof( ENGOBJ ) + pEngObj->UserSize);
 }
 
 PVOID AccessUserObject(ULONG Handle)
 {
-  return GDIHandles[Handle].UserObject;
-}
+  PENGOBJ pEngObj;
 
-PVOID AccessInternalObjectFromUserObject(PVOID UserObject)
-{
-  ULONG i;
-
-  for(i=0; i<MAX_GDI_HANDLES; i++)
-  {
-    if(GDIHandles[i].UserObject == UserObject) return GDIHandles[i].InternalObject;
+  if( Handle == 0 || Handle >= MAX_GDI_HANDLES ){
+	DPRINT("AccessUserObject: invalid handle: %d!!!!\n", Handle);
+	return NULL;
   }
 
-  return NULL;
+  pEngObj = GDIHandles[Handle].pEngObj;
+  return (PVOID)( (PCHAR)pEngObj + sizeof( ENGOBJ ) );
 }
 
 ULONG AccessHandleFromUserObject(PVOID UserObject)
 {
-  ULONG i;
+  PENGOBJ pEngObj;
+  ULONG Handle;
 
-  for(i=0; i<MAX_GDI_HANDLES; i++)
-  {
-    if(GDIHandles[i].UserObject == UserObject) return i;
+  if( !UserObject )
+	return INVALID_HANDLE;
+
+  pEngObj = (PENGOBJ)((PCHAR) UserObject - sizeof( ENGOBJ ));
+  Handle = pEngObj->hObj;
+
+  if( Handle == 0 || Handle >= MAX_GDI_HANDLES ){
+	DPRINT("AccessHandleFromUserObject: inv handle: %d, obj: %x!!!!\n", Handle, pEngObj);
+  	return INVALID_HANDLE;
   }
-
-  return INVALID_HANDLE;
+  return Handle;
 }
+
+PVOID AccessInternalObjectFromUserObject(PVOID UserObject)
+{
+
+  return AccessInternalObject( AccessHandleFromUserObject( UserObject ) );
+}
+
