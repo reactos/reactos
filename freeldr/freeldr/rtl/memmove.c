@@ -17,29 +17,38 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef __VERSION_H
-#define __VERSION_H
+#include <freeldr.h>
 
+void *memmove(void *dest, const void *src, size_t count)
+{
+	char *char_dest = (char *)dest;
+	char *char_src = (char *)src;
 
-/* just some stuff */
-#define VERSION			"FreeLoader v1.8.8"
-#define COPYRIGHT		"Copyright (C) 1998-2003 Brian Palmer <brianp@sginet.com>"
-#define AUTHOR_EMAIL	"<brianp@sginet.com>"
-#define BY_AUTHOR		"by Brian Palmer"
+	if ((char_dest <= char_src) || (char_dest >= (char_src+count)))
+	{
+		/*  non-overlapping buffers */
+		while(count > 0)
+		{
+			*char_dest = *char_src;
+			char_dest++;
+			char_src++;
+			count--;
+		}
+	}
+	else
+	{
+		/* overlaping buffers */
+		char_dest = (char *)dest + count - 1;
+		char_src = (char *)src + count - 1;
 
-// FreeLoader version defines
-//
-// NOTE:
-// If you fix bugs then you increment the patch version
-// If you add features then you increment the minor version and zero the patch version
-// If you add major functionality then you increment the major version and zero the minor & patch versions
-//
-#define FREELOADER_MAJOR_VERSION	1
-#define FREELOADER_MINOR_VERSION	8
-#define FREELOADER_PATCH_VERSION	8
+		while(count > 0)
+		{
+			*char_dest = *char_src;
+			char_dest--;
+			char_src--;
+			count--;
+		}
+	}
 
-
-PUCHAR	GetFreeLoaderVersionString(VOID);
-
-
-#endif  // defined __VERSION_H
+	return dest;
+}
