@@ -13,6 +13,33 @@
  */
 int
 STDCALL
+GetGraphicsMode(
+        HDC     a0
+        )
+{
+        return W32kGetGraphicsMode(a0);
+}
+
+
+/*
+ * @implemented
+ */
+int
+STDCALL
+SetGraphicsMode(
+        HDC     hdc,
+        int     iMode
+        )
+{
+        return W32kSetGraphicsMode(hdc, iMode);
+}
+
+
+/*
+ * @implemented
+ */
+int
+STDCALL
 GetMapMode(
         HDC     a0
         )
@@ -58,7 +85,6 @@ GetBkMode(
 {
         return W32kGetBkMode(a0);
 }
-
 
 /*
  * @implemented

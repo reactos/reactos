@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.24 2003/07/20 00:33:55 jimtabor Exp $
+/* $Id: stubs.c,v 1.25 2003/07/20 00:42:55 jimtabor Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -503,20 +503,6 @@ GetFontData(
 	DWORD	a2,
 	LPVOID	a3,
 	DWORD	a4
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-GetGraphicsMode(
-	HDC	a0
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1069,21 +1055,6 @@ STDCALL
 SetMapperFlags(
 	HDC	a0,
 	DWORD	a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-SetGraphicsMode(
-	HDC	hdc,
-	int	iMode
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
