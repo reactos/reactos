@@ -246,8 +246,8 @@ PspExitThread(NTSTATUS ExitStatus)
         DPRINT("TerminationPort: %p\n", TerminationPort);
     }
       
-    /* Rundown Win32 Structures */DPRINT1("Terminating win32 thread 0x%x (proc 0x%x)\n", CurrentThread, CurrentThread->ThreadsProcess);
-    PsTerminateWin32Thread(CurrentThread);if (Last) {DPRINT1("Terminating win32 process 0x%x (thread 0x%x)\n", CurrentProcess, CurrentThread); }
+    /* Rundown Win32 Structures */
+    PsTerminateWin32Thread(CurrentThread);
     if (Last) PsTerminateWin32Process(CurrentProcess);
    
     /* Cancel I/O for the thread. */
@@ -282,10 +282,10 @@ PspExitThread(NTSTATUS ExitStatus)
         ExReleaseFastMutex(&CurrentProcess->TebLock);
     }
    
-    /* The last Thread shuts down the Process */if (Last) {DPRINT1("calling PspExitProcess\n");}
+    /* The last Thread shuts down the Process */
     if (Last) PspExitProcess(CurrentProcess);
     
-    /* Unlock the Process */DPRINT1("Released process 0x%x lock by 0x%x\n", CurrentProcess, PsGetCurrentThread());
+    /* Unlock the Process */
     PsUnlockProcess(CurrentProcess);
     
     /* Rundown Timers */
