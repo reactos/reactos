@@ -29,7 +29,7 @@ APPS = 	calc \
 	net$(SEP)ncftp \
 	regedt32 \
 	welcome \
-#	winfile
+	winfile
 
 # Removed due to dependance on C++ compiler
 #
