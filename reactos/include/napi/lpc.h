@@ -46,19 +46,19 @@ typedef struct _LPC_SECTION_READ
    PVOID ViewBase;
 } LPC_SECTION_READ, *PLPC_SECTION_READ;
 
-typedef struct _LPC_MESSAGE_HEADER
+typedef struct _LPC_MESSAGE
 {
    USHORT DataSize;
    USHORT MessageSize;
-//   LPC_TYPE MessageType;
    USHORT MessageType;
    USHORT VirtualRangesOffset;
    CLIENT_ID Cid;
    ULONG MessageId;
-   ULONG SharedSectionSize;
+   ULONG SharedSectionSize; // CallbackID
 } LPC_MESSAGE, *PLPC_MESSAGE;
 
 #endif /* !__USE_W32API */
+
 
 typedef struct _LPC_TERMINATION_MESSAGE
 {

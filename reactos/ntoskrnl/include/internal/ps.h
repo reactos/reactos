@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.49 2003/07/15 16:26:18 silverblade Exp $
+/* $Id: ps.h,v 1.50 2003/07/17 16:57:38 silverblade Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -315,8 +315,14 @@ struct _EPROCESS
   KEVENT                LockEvent;                    /* 06C */
   /* Unknown. */
   ULONG                 LockCount;                    /* 07C */
+
   /* Time of process creation. */
+#ifdef __USE_W32API
+  LARGE_INTEGER                  CreateTime;                   /* 080 */
+#else
   TIME                  CreateTime;                   /* 080 */
+#endif
+
   /* Time of process exit. */
   TIME                  ExitTime;                     /* 088 */
   /* Unknown. */

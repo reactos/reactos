@@ -23,23 +23,29 @@ struct _KPROCESS* KeGetCurrentProcess(VOID);
 VOID STDCALL KeAcquireSpinLock (PKSPIN_LOCK	SpinLock,
 				PKIRQL		OldIrql);
 
-//VOID STDCALL KeAcquireSpinLockAtDpcLevel (PKSPIN_LOCK	SpinLock);
+#ifndef __USE_W32API
+
+VOID STDCALL KeAcquireSpinLockAtDpcLevel (IN PKSPIN_LOCK	SpinLock);
 
 //NTOSAPI
 //DDKFASTAPI
-STDCALL
-VOID
-KeAcquireSpinLockAtDpcLevel(
-  IN PKSPIN_LOCK  SpinLock);
+
+//STDCALL
+//VOID
+//KefAcquireSpinLockAtDpcLevel(
+// IN PKSPIN_LOCK  SpinLock);
   
 #define KefAcquireSpinLockAtDpcLevel KeAcquireSpinLockAtDpcLevel
 
 //NTOSAPI
 //DDKFASTAPI
+
 STDCALL
 VOID
 KeReleaseSpinLockFromDpcLevel(
   IN PKSPIN_LOCK  SpinLock);
+
+#endif
   
 /*
  * FUNCTION: Brings the system down in a controlled manner when an 

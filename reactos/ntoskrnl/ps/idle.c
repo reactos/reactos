@@ -53,7 +53,7 @@ VOID PsInitIdleThread(VOID)
 			NULL,
 			NULL,
 			NULL,
-			PsIdleThreadMain,
+			(PKSTART_ROUTINE) PsIdleThreadMain,
 			NULL);
    
    Priority = LOW_PRIORITY;

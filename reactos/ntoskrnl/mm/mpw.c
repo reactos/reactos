@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mpw.c,v 1.14 2003/07/11 01:23:15 royce Exp $
+/* $Id: mpw.c,v 1.15 2003/07/17 16:57:39 silverblade Exp $
  *
  * PROJECT:      ReactOS kernel
  * FILE:         ntoskrnl/mm/mpw.c
@@ -127,7 +127,7 @@ NTSTATUS MmInitMpwThread(VOID)
 				NULL,
 				NULL,
 				&MpwThreadId,
-				MmMpwThreadMain,
+				(PKSTART_ROUTINE) MmMpwThreadMain,
 				NULL);
   if (!NT_SUCCESS(Status))
     {

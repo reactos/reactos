@@ -172,6 +172,11 @@ typedef union _ULARGE_INTEGER
   ULONGLONG QuadPart;
 } ULARGE_INTEGER, *PULARGE_INTEGER;
 
+
+// Moved here by AG
+// typedef ULARGE_INTEGER TIME, *PTIME;
+
+
 typedef struct _FILETIME
 {
   DWORD dwLowDateTime;

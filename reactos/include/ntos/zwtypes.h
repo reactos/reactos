@@ -202,113 +202,111 @@ enum _SYSTEM_INFORMATION_CLASS
 } SYSTEM_INFORMATION_CLASS;
 
 // SystemBasicInformation (0)
+// Modified by Andrew Greenwood (15th July 2003) to match Win 32 API headers
 typedef
 struct _SYSTEM_BASIC_INFORMATION
 {
-	ULONG		Reserved;
-	ULONG		TimerResolution;
-	ULONG		PageSize;
+	ULONG		Unknown;
+	ULONG		MaximumIncrement;
+	ULONG		PhysicalPageSize;
 	ULONG		NumberOfPhysicalPages;
-	ULONG		LowestPhysicalPageNumber;
-	ULONG		HighestPhysicalPageNumber;
+	ULONG		LowestPhysicalPage;
+	ULONG		HighestPhysicalPage;
 	ULONG		AllocationGranularity;
-	ULONG		MinimumUserModeAddress;
-	ULONG		MaximumUserModeAddress;
-	KAFFINITY	ActiveProcessorsAffinityMask;
-	CCHAR		NumberOfProcessors;
+	ULONG		LowestUserAddress;
+	ULONG		HighestUserAddress;
+	KAFFINITY	ActiveProcessors;
+	CCHAR		NumberProcessors;
 } SYSTEM_BASIC_INFORMATION, *PSYSTEM_BASIC_INFORMATION;
 
 // SystemProcessorInformation (1)
-typedef
-struct _SYSTEM_PROCESSOR_INFORMATION
-{
-	USHORT	ProcessorArchitecture;
-	USHORT	ProcessorLevel;
-	USHORT	ProcessorRevision;
-	USHORT	Reserved;
-	ULONG	ProcessorFeatureBits;
+// Modified by Andrew Greenwood (15th July 2003) to match Win 32 API headers
+typedef struct _SYSTEM_PROCESSOR_INFORMATION {
+	USHORT  ProcessorArchitecture;
+	USHORT  ProcessorLevel;
+	USHORT  ProcessorRevision;
+	USHORT  Unknown;
+	ULONG  FeatureBits;
 } SYSTEM_PROCESSOR_INFORMATION, *PSYSTEM_PROCESSOR_INFORMATION;
 
 // SystemPerformanceInfo (2)
-typedef
-struct _SYSTEM_PERFORMANCE_INFORMATION
-{
-	LARGE_INTEGER	IdleProcessorTime;
-	LARGE_INTEGER	IoReadTransferCount;
-	LARGE_INTEGER	IoWriteTransferCount;
-	LARGE_INTEGER	IoOtherTransferCount;
-	ULONG		IoReadOperationCount;
-	ULONG		IoWriteOperationCount;
-	ULONG		IoOtherOperationCount;
-	ULONG		AvailablePages;
-	ULONG		CommitedPages;
-	ULONG		CommitLimit;
-	ULONG		PeakCommitment;
-	ULONG		PageFaultCount;
-	ULONG		CopyOnWriteCount;
-	ULONG		TransitionCount;
-	ULONG		CacheTransitionCount;
-	ULONG		DemandZeroCount;
-	ULONG		PageReadCount;
-	ULONG		PageReadIoCount;
-	ULONG		CacheReadCount;
-	ULONG		CacheIoCount;
-	ULONG		DirtyPagesWriteCount;
-	ULONG		DirtyWriteIoCount;
-	ULONG		MappedPagesWriteCount;
-	ULONG		MappedWriteIoCount;
-	ULONG		PagedPoolPages;
-	ULONG		NonPagedPoolPages;
-	ULONG		Unknown6;
-	ULONG		Unknown7;
-	ULONG		Unknown8;
-	ULONG		Unknown9;
-	ULONG		MmTotalSystemFreePtes;
-	ULONG		MmSystemCodepage;
-	ULONG		MmTotalSystemDriverPages;
-	ULONG		MmTotalSystemCodePages;
-	ULONG		Unknown10;
-	ULONG		Unknown11;
-	ULONG		Unknown12;
-	ULONG		MmSystemCachePage;
-	ULONG		MmPagedPoolPage;
-	ULONG		MmSystemDriverPage;
-	ULONG		CcFastReadNoWait;
-	ULONG		CcFastReadWait;
-	ULONG		CcFastReadResourceMiss;
-	ULONG		CcFastReadNotPossible;
-	ULONG		CcFastMdlReadNoWait;
-	ULONG		CcFastMdlReadWait;
-	ULONG		CcFastMdlReadResourceMiss;
-	ULONG		CcFastMdlReadNotPossible;
-	ULONG		CcMapDataNoWait;
-	ULONG		CcMapDataWait;
-	ULONG		CcMapDataNoWaitMiss;
-	ULONG		CcMapDataWaitMiss;
-	ULONG		CcPinMappedDataCount;
-	ULONG		CcPinReadNoWait;
-	ULONG		CcPinReadWait;
-	ULONG		CcPinReadNoWaitMiss;
-	ULONG		CcPinReadWaitMiss;
-	ULONG		CcCopyReadNoWait;
-	ULONG		CcCopyReadWait;
-	ULONG		CcCopyReadNoWaitMiss;
-	ULONG		CcCopyReadWaitMiss;
-	ULONG		CcMdlReadNoWait;
-	ULONG		CcMdlReadWait;
-	ULONG		CcMdlReadNoWaitMiss;
-	ULONG		CcMdlReadWaitMiss;
-	ULONG		CcReadaheadIos;
-	ULONG		CcLazyWriteIos;
-	ULONG		CcLazyWritePages;
-	ULONG		CcDataFlushes;
-	ULONG		CcDataPages;
-	ULONG		ContextSwitches;
-	ULONG		Unknown13;
-	ULONG		Unknown14;
-	ULONG		SystemCalls;
-
-} SYSTEM_PERFORMANCE_INFO, *PSYSTEM_PERFORMANCE_INFO;
+// Modified by Andrew Greenwood (15th July 2003) to match Win 32 API headers
+typedef struct _SYSTEM_PERFORMANCE_INFORMATION {
+	LARGE_INTEGER  IdleTime;
+	LARGE_INTEGER  ReadTransferCount;
+	LARGE_INTEGER  WriteTransferCount;
+	LARGE_INTEGER  OtherTransferCount;
+	ULONG  ReadOperationCount;
+	ULONG  WriteOperationCount;
+	ULONG  OtherOperationCount;
+	ULONG  AvailablePages;
+	ULONG  TotalCommittedPages;
+	ULONG  TotalCommitLimit;
+	ULONG  PeakCommitment;
+	ULONG  PageFaults;
+	ULONG  WriteCopyFaults;
+	ULONG  TransitionFaults;
+	ULONG  CacheTransitionFaults;
+	ULONG  DemandZeroFaults;
+	ULONG  PagesRead;
+	ULONG  PageReadIos;
+	ULONG	 CacheReads;
+	ULONG	 CacheIos;
+	ULONG  PagefilePagesWritten;
+	ULONG  PagefilePageWriteIos;
+	ULONG  MappedFilePagesWritten;
+	ULONG  MappedFilePageWriteIos;
+	ULONG  PagedPoolUsage;
+	ULONG  NonPagedPoolUsage;
+	ULONG  PagedPoolAllocs;
+	ULONG  PagedPoolFrees;
+	ULONG  NonPagedPoolAllocs;
+	ULONG  NonPagedPoolFrees;
+	ULONG  TotalFreeSystemPtes;
+	ULONG  SystemCodePage;
+	ULONG  TotalSystemDriverPages;
+	ULONG  TotalSystemCodePages;
+	ULONG  SmallNonPagedLookasideListAllocateHits;
+	ULONG  SmallPagedLookasideListAllocateHits;
+	ULONG  Reserved3;
+	ULONG  MmSystemCachePage;
+	ULONG  PagedPoolPage;
+	ULONG  SystemDriverPage;
+	ULONG  FastReadNoWait;
+	ULONG  FastReadWait;
+	ULONG  FastReadResourceMiss;
+	ULONG  FastReadNotPossible;
+	ULONG  FastMdlReadNoWait;
+	ULONG  FastMdlReadWait;
+	ULONG  FastMdlReadResourceMiss;
+	ULONG  FastMdlReadNotPossible;
+	ULONG  MapDataNoWait;
+	ULONG  MapDataWait;
+	ULONG  MapDataNoWaitMiss;
+	ULONG  MapDataWaitMiss;
+	ULONG  PinMappedDataCount;
+	ULONG  PinReadNoWait;
+	ULONG  PinReadWait;
+	ULONG  PinReadNoWaitMiss;
+	ULONG  PinReadWaitMiss;
+	ULONG  CopyReadNoWait;
+	ULONG  CopyReadWait;
+	ULONG  CopyReadNoWaitMiss;
+	ULONG  CopyReadWaitMiss;
+	ULONG  MdlReadNoWait;
+	ULONG  MdlReadWait;
+	ULONG  MdlReadNoWaitMiss;
+	ULONG  MdlReadWaitMiss;
+	ULONG  ReadAheadIos;
+	ULONG  LazyWriteIos;
+	ULONG  LazyWritePages;
+	ULONG  DataFlushes;
+	ULONG  DataPages;
+	ULONG  ContextSwitches;
+	ULONG  FirstLevelTbFills;
+	ULONG  SecondLevelTbFills;
+	ULONG  SystemCalls;
+} SYSTEM_PERFORMANCE_INFORMATION, *PSYSTEM_PERFORMANCE_INFORMATION;
 
 // SystemModuleInformation (11)
 typedef struct _SYSTEM_MODULE_INFORMATION_ENTRY {
@@ -457,7 +455,7 @@ struct _SYSTEM_SET_TIME_ADJUSTMENT
 	ULONG	TimeAdjustment;
 	BOOLEAN	TimeSynchronization;
 	
-} SYSTEM_TIME_ADJUSTMENT_INFO, *PSYSTEM_TIME_ADJUSTMENT_INFO;
+} SYSTEM_SET_TIME_ADJUSTMENT, *PSYSTEM_SET_TIME_ADJUSTMENT;
 
 // atom information
 

@@ -1,4 +1,4 @@
-/* $Id: extypes.h,v 1.17 2003/07/15 16:26:18 silverblade Exp $ */
+/* $Id: extypes.h,v 1.18 2003/07/17 16:57:38 silverblade Exp $ */
 
 #ifndef __INCLUDE_DDK_EXTYPES_H
 #define __INCLUDE_DDK_EXTYPES_H
@@ -68,26 +68,25 @@ typedef struct _ZONE_HEADER
    ULONG TotalSegmentSize;
 } ZONE_HEADER, *PZONE_HEADER;
 
-typedef struct _ZONE_SEGMENT
+typedef struct _ZONE_SEGMENT_HEADER
 {
-   SINGLE_LIST_ENTRY Entry;
-   ULONG size;
-} ZONE_SEGMENT, *PZONE_SEGMENT;
+   SINGLE_LIST_ENTRY SegmentList; // was Entry
+   PVOID Reserved;  // was ULONG Size;
+} ZONE_SEGMENT_HEADER, *PZONE_SEGMENT_HEADER;
 
-typedef struct _ZONE_ENTRY
-{
-   SINGLE_LIST_ENTRY Entry;
-} ZONE_ENTRY, *PZONE_ENTRY;
 
 
 typedef VOID STDCALL_FUNC
 (*PWORKER_THREAD_ROUTINE)(PVOID Parameter);
 
+
+// Modified by Andrew Greenwood, 16th July 2003:
+
 typedef struct _WORK_QUEUE_ITEM
 {
-   LIST_ENTRY Entry;
-   PWORKER_THREAD_ROUTINE Routine;
-   PVOID Context;
+   LIST_ENTRY List;
+   PWORKER_THREAD_ROUTINE WorkerRoutine;
+   PVOID Parameter;
 } WORK_QUEUE_ITEM, *PWORK_QUEUE_ITEM;
 
 typedef PVOID STDCALL_FUNC

@@ -1,4 +1,4 @@
-/* $Id: global.c,v 1.12 2003/07/10 18:50:51 chorns Exp $
+/* $Id: global.c,v 1.13 2003/07/17 16:57:38 silverblade Exp $
  *
  * Win32 Global/Local heap functions (GlobalXXX, LocalXXX).
  * These functions included in Win32 for compatibility with 16 bit Windows
@@ -244,7 +244,7 @@ VOID STDCALL
 GlobalMemoryStatus(LPMEMORYSTATUS lpBuffer)
 {
 	NTSTATUS		Status;
-	SYSTEM_PERFORMANCE_INFO	Spi;
+	SYSTEM_PERFORMANCE_INFORMATION	Spi;
 	QUOTA_LIMITS		Ql;
 	VM_COUNTERS		Vmc;
 	PIMAGE_NT_HEADERS	ImageNtHeader;

@@ -1,4 +1,4 @@
-/* $Id: work.c,v 1.16 2003/07/10 06:27:13 royce Exp $
+/* $Id: work.c,v 1.17 2003/07/17 16:57:38 silverblade Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -60,8 +60,9 @@ WORK_QUEUE EiHyperCriticalWorkQueue;
 
 /* FUNCTIONS ****************************************************************/
 
-static NTSTATUS STDCALL
-ExWorkerThreadEntryPoint(PVOID context)
+//static NTSTATUS STDCALL
+static VOID STDCALL
+ExWorkerThreadEntryPoint(IN PVOID context)
 /*
  * FUNCTION: Entry point for a worker thread
  * ARGUMENTS:
@@ -81,8 +82,8 @@ ExWorkerThreadEntryPoint(PVOID context)
 					      &queue->Lock);
 	if (current!=NULL)
 	  {
-	     item = CONTAINING_RECORD(current,WORK_QUEUE_ITEM,Entry);
-	     item->Routine(item->Context);
+	     item = CONTAINING_RECORD(current,WORK_QUEUE_ITEM,List);
+	     item->WorkerRoutine(item->Parameter);
 	  }
 	else
 	  {
@@ -152,46 +153,51 @@ ExQueueWorkItem (PWORK_QUEUE_ITEM	WorkItem,
  *        QueueType = Queue to insert it in
  */
 {
-   assert(WorkItem!=NULL);
-   ASSERT_IRQL(DISPATCH_LEVEL);
+    assert(WorkItem!=NULL);
+    ASSERT_IRQL(DISPATCH_LEVEL);
    
    /*
     * Insert the item in the appropiate queue and wake up any thread
     * waiting for something to do
     */
-   switch(QueueType)
-     {
-      case DelayedWorkQueue:
-	ExInterlockedInsertTailList(&EiNormalWorkQueue.Head,
-				    &WorkItem->Entry,
+    switch(QueueType)
+    {
+    case DelayedWorkQueue:
+	    ExInterlockedInsertTailList(&EiNormalWorkQueue.Head,
+				    &WorkItem->List,
 				    &EiNormalWorkQueue.Lock);
-	KeReleaseSemaphore(&EiNormalWorkQueue.Sem,
+	    KeReleaseSemaphore(&EiNormalWorkQueue.Sem,
 			   IO_NO_INCREMENT,
 			   1,
 			   FALSE);
 	break;
 	
-      case CriticalWorkQueue:
-	ExInterlockedInsertTailList(&EiCriticalWorkQueue.Head,
-				    &WorkItem->Entry,
+    case CriticalWorkQueue:
+        ExInterlockedInsertTailList(&EiCriticalWorkQueue.Head,
+				    &WorkItem->List,
 				    &EiCriticalWorkQueue.Lock);
-	KeReleaseSemaphore(&EiCriticalWorkQueue.Sem,
-			   IO_NO_INCREMENT,
-			   1,
-			   FALSE);
-	break;
+        KeReleaseSemaphore(&EiCriticalWorkQueue.Sem,
+	       	  	   IO_NO_INCREMENT,
+	       		   1,
+	       		   FALSE);
+	    break;
 
-      case HyperCriticalWorkQueue:
-	ExInterlockedInsertTailList(&EiHyperCriticalWorkQueue.Head,
-				    &WorkItem->Entry,
+    case HyperCriticalWorkQueue:
+	    ExInterlockedInsertTailList(&EiHyperCriticalWorkQueue.Head,
+				    &WorkItem->List,
 				    &EiHyperCriticalWorkQueue.Lock);
-	KeReleaseSemaphore(&EiHyperCriticalWorkQueue.Sem,
+	    KeReleaseSemaphore(&EiHyperCriticalWorkQueue.Sem,
 			   IO_NO_INCREMENT,
 			   1,
 			   FALSE);
-	break;
+    	break;
 
-     }
+#ifdef __USE_W32API
+	case MaximumWorkQueue:
+	   // Unimplemented
+	   break;
+#endif
+    }
 }
 
 /* EOF */

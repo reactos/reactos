@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdrom.c,v 1.21 2003/07/16 11:51:56 ekohl Exp $
+/* $Id: cdrom.c,v 1.22 2003/07/17 16:57:38 silverblade Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -289,13 +289,13 @@ CdromClassFindDevices(IN PDRIVER_OBJECT DriverObject,
 						    RegistryPath,
 						    PortDeviceObject,
 						    PortNumber,
-						    ConfigInfo->CDRomCount,
+						    ConfigInfo->CdRomCount,
 						    PortCapabilities,
 						    UnitInfo,
 						    InitializationData);
 	      if (NT_SUCCESS(Status))
 		{
-		  ConfigInfo->CDRomCount++;
+		  ConfigInfo->CdRomCount++;
 		  FoundDevice = TRUE;
 		}
 	    }

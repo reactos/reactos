@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fs_rec.c,v 1.5 2003/01/16 11:58:15 ekohl Exp $
+/* $Id: fs_rec.c,v 1.6 2003/07/17 16:57:38 silverblade Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -208,7 +208,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 
   ConfigInfo = IoGetConfigurationInformation();
 
-  if (ConfigInfo->CDRomCount > 0)
+  if (ConfigInfo->CdRomCount > 0)
     {
       Status = FsRecRegisterFs(DriverObject,
 			       L"\\Cdfs",

@@ -1,4 +1,4 @@
-/* $Id: zone.c,v 1.5 2003/07/10 06:27:13 royce Exp $
+/* $Id: zone.c,v 1.6 2003/07/17 16:57:38 silverblade Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -13,6 +13,15 @@
 
 /* FUNCTIONS ***************************************************************/
 
+// undocumented? from extypes.h in here for now...
+
+//typedef struct _ZONE_ENTRY
+//{
+//   SINGLE_LIST_ENTRY Entry;
+//} ZONE_ENTRY, *PZONE_ENTRY;
+
+
+
 /*
  * @implemented
  */
@@ -24,21 +33,21 @@ ExExtendZone (
 	ULONG		SegmentSize
 	)
 {
-   PZONE_ENTRY entry;
-   PZONE_SEGMENT seg;
+   PZONE_SEGMENT_HEADER entry;
+   PZONE_SEGMENT_HEADER seg;
    unsigned int i;
    
-   seg = (PZONE_SEGMENT)Segment;
-   seg->size = SegmentSize;
+   seg = (PZONE_SEGMENT_HEADER)Segment;
+   seg->Reserved = (PVOID) SegmentSize;
    
-   PushEntryList(&Zone->SegmentList,&seg->Entry);
+   PushEntryList(&Zone->SegmentList,&seg->SegmentList);
    
-   entry = (PZONE_ENTRY)( ((PVOID)seg) + sizeof(ZONE_SEGMENT) );
+   entry = (PZONE_SEGMENT_HEADER)( ((PVOID)seg) + sizeof(ZONE_SEGMENT_HEADER) );
    
    for (i=0;i<(SegmentSize / Zone->BlockSize);i++)
      {
-	PushEntryList(&Zone->FreeList,&entry->Entry);
-	entry = (PZONE_ENTRY)(((PVOID)entry) + sizeof(ZONE_ENTRY) + 
+	PushEntryList(&Zone->FreeList,&entry->SegmentList);
+	entry = (PZONE_SEGMENT_HEADER)(((PVOID)entry) + sizeof(PZONE_SEGMENT_HEADER) + 
 			      Zone->BlockSize);
      }
    return(STATUS_SUCCESS);
@@ -89,25 +98,25 @@ ExInitializeZone (
  */
 {
    unsigned int i;
-   PZONE_SEGMENT seg;
-   PZONE_ENTRY entry;
+   PZONE_SEGMENT_HEADER seg;
+   PZONE_SEGMENT_HEADER entry;
    
    Zone->FreeList.Next=NULL;
    Zone->SegmentList.Next=NULL;
    Zone->BlockSize=BlockSize;
    Zone->TotalSegmentSize = InitialSegmentSize;
    
-   seg = (PZONE_SEGMENT)InitialSegment;
-   seg->size = InitialSegmentSize;
+   seg = (PZONE_SEGMENT_HEADER)InitialSegment;
+   seg->Reserved = (PVOID*) InitialSegmentSize;
    
-   PushEntryList(&Zone->SegmentList,&seg->Entry);
+   PushEntryList(&Zone->SegmentList,&seg->SegmentList);
    
-   entry = (PZONE_ENTRY)( ((PVOID)seg) + sizeof(ZONE_SEGMENT) );
+   entry = (PZONE_SEGMENT_HEADER)( ((PVOID)seg) + sizeof(ZONE_SEGMENT_HEADER) );
    
    for (i=0;i<(InitialSegmentSize / BlockSize);i++)
      {
-	PushEntryList(&Zone->FreeList,&entry->Entry);
-	entry = (PZONE_ENTRY)(((PVOID)entry) + sizeof(ZONE_ENTRY) + BlockSize);
+	PushEntryList(&Zone->FreeList,&entry->SegmentList);
+	entry = (PZONE_SEGMENT_HEADER)(((PVOID)entry) + sizeof(PZONE_SEGMENT_HEADER) + BlockSize);
      }
 
    return(STATUS_SUCCESS);

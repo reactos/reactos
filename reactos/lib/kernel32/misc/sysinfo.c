@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.8 2003/07/10 18:50:51 chorns Exp $
+/* $Id: sysinfo.c,v 1.9 2003/07/17 16:57:38 silverblade Exp $
  *
  * reactos/lib/kernel32/misc/sysinfo.c
  *
@@ -58,11 +58,11 @@ GetSystemInfo (
 	Si->u.s.wProcessorArchitecture	= Spi.ProcessorArchitecture;
 	/* For future use: always zero */
 	Si->u.s.wReserved		= 0;
-	Si->dwPageSize			= Sbi.PageSize;
-	Si->lpMinimumApplicationAddress	= (PVOID)Sbi.MinimumUserModeAddress;
-	Si->lpMaximumApplicationAddress	= (PVOID)Sbi.MaximumUserModeAddress;
-	Si->dwActiveProcessorMask	= Sbi.ActiveProcessorsAffinityMask;
-	Si->dwNumberOfProcessors	= Sbi.NumberOfProcessors;
+	Si->dwPageSize			= Sbi.PhysicalPageSize;
+	Si->lpMinimumApplicationAddress	= (PVOID)Sbi.LowestUserAddress;
+	Si->lpMaximumApplicationAddress	= (PVOID)Sbi.HighestUserAddress;
+	Si->dwActiveProcessorMask	= Sbi.ActiveProcessors;
+	Si->dwNumberOfProcessors	= Sbi.NumberProcessors;
 	/*
 	 * Compatibility (no longer relevant):
 	 *	PROCESSOR_INTEL_386	386

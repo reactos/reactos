@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.22 2003/07/10 18:50:51 chorns Exp $
+/* $Id: time.c,v 1.23 2003/07/17 16:57:38 silverblade Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -460,14 +460,14 @@ SetSystemTimeAdjustment(DWORD dwTimeAdjustment,
 			WINBOOL bTimeAdjustmentDisabled)
 {
    NTSTATUS Status;
-   SYSTEM_TIME_ADJUSTMENT_INFO Buffer;
+   SYSTEM_SET_TIME_ADJUSTMENT Buffer;
    
    Buffer.TimeAdjustment = (ULONG)dwTimeAdjustment;
    Buffer.TimeSynchronization = (BOOLEAN)bTimeAdjustmentDisabled;
    
    Status = NtSetSystemInformation(SystemTimeAdjustmentInformation,
 				   &Buffer,
-				   sizeof(SYSTEM_TIME_ADJUSTMENT_INFO));
+				   sizeof(SYSTEM_SET_TIME_ADJUSTMENT));
    if (!NT_SUCCESS(Status))
      {
 	SetLastErrorByStatus(Status);

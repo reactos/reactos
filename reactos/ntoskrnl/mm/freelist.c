@@ -1002,7 +1002,7 @@ NTSTATUS MmInitZeroPageThread(VOID)
 				NULL,
 				NULL,
 				&ZeroPageThreadId,
-				MmZeroPageThreadMain,
+				(PKSTART_ROUTINE) MmZeroPageThreadMain,
 				NULL);
   if (!NT_SUCCESS(Status))
     {

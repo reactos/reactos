@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_HALFUNCS_H
 #define __INCLUDE_DDK_HALFUNCS_H
-/* $Id: halfuncs.h,v 1.9 2003/07/15 16:26:18 silverblade Exp $ */
+/* $Id: halfuncs.h,v 1.10 2003/07/17 16:57:38 silverblade Exp $ */
 
 #include <ntos/haltypes.h>
 
@@ -106,6 +106,7 @@ ULONG STDCALL
 HalGetDmaAlignmentRequirement( 
   VOID);
 
+			   
 BOOLEAN STDCALL
 HalGetEnvironmentVariable(IN PCH Name,
 			  OUT PCH Value,

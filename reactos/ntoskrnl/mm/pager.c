@@ -1,4 +1,4 @@
-/* $Id: pager.c,v 1.13 2003/07/13 14:36:32 dwelch Exp $
+/* $Id: pager.c,v 1.14 2003/07/17 16:57:39 silverblade Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -99,7 +99,7 @@ NTSTATUS MmInitPagerThread(VOID)
 				 NULL,
 				 NULL,
 				 &PagerThreadId,
-				 MmPagerThreadMain,
+				 (PKSTART_ROUTINE) MmPagerThreadMain,
 				 NULL);
    if (!NT_SUCCESS(Status))
      {

@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.33 2003/06/27 00:16:33 ekohl Exp $
+/* $Id: xhaldrv.c,v 1.34 2003/07/17 16:57:39 silverblade Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -664,8 +664,8 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     }
 
   /* Assign cdrom drives */
-  DPRINT("CD-Rom drives: %d\n", ConfigInfo->CDRomCount);
-  for (i = 0; i < ConfigInfo->CDRomCount; i++)
+  DPRINT("CD-Rom drives: %d\n", ConfigInfo->CdRomCount);
+  for (i = 0; i < ConfigInfo->CdRomCount; i++)
     {
       swprintf(Buffer1,
 	       L"\\Device\\CdRom%d",

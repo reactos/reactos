@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.49 2003/06/07 11:34:36 chorns Exp $
+/* $Id: iotypes.h,v 1.50 2003/07/17 16:57:38 silverblade Exp $
  *
  */
 
@@ -847,7 +847,7 @@ typedef struct _CONFIGURATION_INFORMATION
 {
    ULONG DiskCount;
    ULONG FloppyCount;
-   ULONG CDRomCount;
+   ULONG CdRomCount;
    ULONG TapeCount;
    ULONG ScsiPortCount;
    ULONG SerialCount;

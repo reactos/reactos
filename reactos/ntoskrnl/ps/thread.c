@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.113 2003/07/11 01:23:15 royce Exp $
+/* $Id: thread.c,v 1.114 2003/07/17 16:57:39 silverblade Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -465,7 +465,7 @@ PsInitThreadManagment(VOID)
 				 NULL,
 				 NULL,
 				 NULL,
-				 PiReaperThreadMain,
+				 (PKSTART_ROUTINE) PiReaperThreadMain,
 				 NULL);
    if (!NT_SUCCESS(Status))
      {

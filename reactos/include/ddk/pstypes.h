@@ -23,7 +23,7 @@ struct _KTHREAD;
 
 typedef struct _KTHREAD *PKTHREAD, *PRKTHREAD;
 
-typedef NTSTATUS STDCALL_FUNC
+typedef VOID STDCALL_FUNC
 (*PKSTART_ROUTINE)(PVOID StartContext);
 
 typedef VOID STDCALL_FUNC
