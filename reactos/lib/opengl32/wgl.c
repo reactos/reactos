@@ -15,22 +15,23 @@
 #include "opengl32.h"
 
 
-BOOL wglCopyContext( HGLRC src, HGLRC dst, UINT mask )
+BOOL WINAPI wglCopyContext( HGLRC src, HGLRC dst, UINT mask )
 {
+	return FALSE;
 }
 
 
-HGLRC wglCreateContext( HDC hdc )
+HGLRC WINAPI wglCreateContext( HDC hdc )
 {
 	return wglCreateLayerContext( hdc, 0 );
 }
 
 
-HGLRC wglCreateLayerContext( HDC hdc, int layer )
+HGLRC WINAPI wglCreateLayerContext( HDC hdc, int layer )
 {
 	HKEY hKey;
 	WCHAR subKey[1024] = L"SOFTWARE\\Microsoft\\Windows NT\\"
-	                      "CurrentVersion\\OpenGLDrivers");
+	                      "CurrentVersion\\OpenGLDrivers";
 	LONG ret;
 	WCHAR driver[256];
 	DWORD size;
@@ -38,7 +39,8 @@ HGLRC wglCreateLayerContext( HDC hdc, int layer )
 	FILETIME time;
 
 	GLDRIVERDATA *icd;
-	GLRC *hglrc, *drvHglrc = NULL;
+	HGLRC drvHglrc = NULL;
+	GLRC *hglrc;
 
 	if (GetObjectType( hdc ) != OBJ_DC)
 	{
@@ -66,7 +68,7 @@ HGLRC wglCreateLayerContext( HDC hdc, int layer )
 		if (ret != ERROR_SUCCESS )
 			break;
 
-		icd = OPENGL32_LoadICDW( driver );
+		icd = OPENGL32_LoadICD( driver );
 		if (!icd)
 			continue;
 
@@ -92,7 +94,7 @@ HGLRC wglCreateLayerContext( HDC hdc, int layer )
 	}
 
 	/* we have our GLRC in hglrc and the ICDs in drvHglrc */
-	hglrc->hglrc = drcHglrc;
+	hglrc->hglrc = drvHglrc;
 	hglrc->iFormat = -1; /* what is this used for? */
 	hglrc->icd = icd;
 	hglrc->threadid = 0xFFFFFFFF; /* TODO: make sure this is the "invalid" value */
@@ -104,84 +106,99 @@ HGLRC wglCreateLayerContext( HDC hdc, int layer )
 }
 
 
-BOOL wglDeleteContext( HGLRC hglrc )
+BOOL WINAPI wglDeleteContext( HGLRC hglrc )
 {
+	return FALSE;
 }
 
 
-BOOL wglDescribeLayerPlane( HDC hdc, int iPixelFormat, int iLayerPlane,
-                            UINT nBytes, LPLAYERPLANEDESCRIPTOR plpd )
+BOOL WINAPI wglDescribeLayerPlane( HDC hdc, int iPixelFormat, int iLayerPlane,
+                                   UINT nBytes, LPLAYERPLANEDESCRIPTOR plpd )
 {
+	return FALSE;
 }
 
 
-HGLRC wglGetCurrentContext()
+HGLRC WINAPI wglGetCurrentContext()
 {
+	return NULL;
 }
 
 
-HDC wglGetCurrentDC()
+HDC WINAPI wglGetCurrentDC()
 {
+	return NULL;
 }
 
 
-int wglGetLayerPaletteEntries( HDC hdc, int iLayerPlane, int iStart,
-                               int cEntries, CONST COLORREF *pcr )
+int WINAPI wglGetLayerPaletteEntries( HDC hdc, int iLayerPlane, int iStart,
+                                      int cEntries, COLORREF *pcr )
 {
+	return 0;
 }
 
 
-PROC wglGetProcAddress( LPCSTR proc )
+PROC WINAPI wglGetProcAddress( LPCSTR proc )
 {
+	return NULL;
 }
 
 
-BOOL wglMakeCurrent( HDC hdc, HGLRC hglrc )
+BOOL WINAPI wglMakeCurrent( HDC hdc, HGLRC hglrc )
 {
+	return FALSE;
 }
 
 
-BOOL wglRealizeLayerPalette( HDC hdc, int iLayerPlane, BOOL bRealize )
+BOOL WINAPI wglRealizeLayerPalette( HDC hdc, int iLayerPlane, BOOL bRealize )
 {
+	return FALSE;
 }
 
 
-int wglSetLayerPaletteEntries( HDC hdc, int iLayerPlane, int iStart,
-                               int cEntries, CONST COLORREF *pcr )
+int WINAPI wglSetLayerPaletteEntries( HDC hdc, int iLayerPlane, int iStart,
+                                      int cEntries, CONST COLORREF *pcr )
 {
+	return 0;
 }
 
 
-BOOL wglShareLists( HGLRC hglrc1, HGLRC hglrc2 )
+BOOL WINAPI wglShareLists( HGLRC hglrc1, HGLRC hglrc2 )
 {
+	return FALSE;
 }
 
 
-BOOL wglSwapLayerBuffers( HDC hdc, UINT fuPlanes )
+BOOL WINAPI wglSwapLayerBuffers( HDC hdc, UINT fuPlanes )
 {
+	return FALSE;
 }
 
 
-BOOL wglUseFontBitmapsA( HDC hdc, DWORD  first, DWORD count, DWORD listBase )
+BOOL WINAPI wglUseFontBitmapsA( HDC hdc, DWORD  first, DWORD count, DWORD listBase )
 {
+	return FALSE;
 }
 
 
-BOOL wglUseFontBitmapsW( HDC hdc, DWORD  first, DWORD count, DWORD listBase )
+BOOL WINAPI wglUseFontBitmapsW( HDC hdc, DWORD  first, DWORD count, DWORD listBase )
 {
+	return FALSE;
 }
 
 
-BOOL wglUseFontOutlinesA( HDC hdc, DWORD first, DWORD count, DWORD listBase,
-                          FLOAT deviation, FLOAT extrusion, int  format,
-                          LPGLYPHMETRICSFLOAT  lpgmf )
+BOOL WINAPI wglUseFontOutlinesA( HDC hdc, DWORD first, DWORD count, DWORD listBase,
+                                 FLOAT deviation, FLOAT extrusion, int  format,
+                                 LPGLYPHMETRICSFLOAT  lpgmf )
 {
+	return FALSE;
 }
 
 
-BOOL wglUseFontOutlinesW( HDC hdc, DWORD first, DWORD count, DWORD listBase,
-                          FLOAT deviation, FLOAT extrusion, int  format,
-                          LPGLYPHMETRICSFLOAT  lpgmf )
+BOOL WINAPI wglUseFontOutlinesW( HDC hdc, DWORD first, DWORD count, DWORD listBase,
+                                 FLOAT deviation, FLOAT extrusion, int  format,
+                                 LPGLYPHMETRICSFLOAT  lpgmf )
 {
+	return FALSE;
 }
 

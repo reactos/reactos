@@ -1,4 +1,4 @@
-/* $Id: opengl32.c,v 1.5 2004/02/02 06:01:35 royce Exp $
+/* $Id: opengl32.c,v 1.6 2004/02/02 17:59:23 navaraf Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -20,12 +20,6 @@
 #define EXPORT __declspec(dllexport)
 #define NAKED __attribute__((naked))
 
-#ifdef DEBUG_OPENGL32
-# define DBGPRINT( fmt, args... ) DbgPrint( "OpenGL32.DLL: "fmt, args )
-#else
-# define DBGPRINT( ... ) do {} while (0)
-#endif
-
 /* function prototypes */
 static BOOL OPENGL32_LoadDrivers();
 static void OPENGL32_AppendICD( GLDRIVERDATA *icd );
@@ -44,12 +38,14 @@ const char* OPENGL32_funcnames[GLIDX_COUNT]
 };
 
 GLPROCESSDATA OPENGL32_processdata;
-
+DWORD OPENGL32_tls;
 
 static void OPENGL32_ThreadDetach()
 {
+        GLTHREADDATA *lpvData;
+
 	/* FIXME - do we need to release some HDC or something? */
-	lpvData = (OPENGL32_ThreadData*)TlsGetValue ( OPENGL32_tls );
+	lpvData = (GLTHREADDATA *)TlsGetValue ( OPENGL32_tls );
 	if ( lpvData != NULL )
 		LocalFree((HLOCAL) lpvData );
 }
@@ -84,9 +80,11 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 			memset ( lpData, 0, sizeof(GLTHREADDATA) );
 			(void)TlsSetValue ( OPENGL32_tls, lpData );
 		}
+#if 0
 		lpData->hdc = NULL;
 		/* FIXME - defaulting to mesa3d, but shouldn't */
 		lpData->list = OPENGL32_processdata.list[0];
+#endif
 		break;
 
 	/* The thread of the attached process terminates. */
@@ -155,16 +153,17 @@ static BOOL OPENGL32_LoadDrivers()
 		"CurrentVersion\\OpenGLDrivers\\";
 	HKEY hkey;
 	WCHAR name[1024];
+	int i;
 
 	/* FIXME - detect if we've already done this from another process */
-	/* FIXME - special-case load of MESA3D as generic implementation ICD.
+	/* FIXME - special-case load of MESA3D as generic implementation ICD. */
 
-	if ( ERROR_SUCCESS != RegOpenKey ( HKEY_LOCAL_MACHINE, OpenGLDrivers, &hkey ) )
+	if ( ERROR_SUCCESS != RegOpenKeyW( HKEY_LOCAL_MACHINE, OpenGLDrivers, &hkey ) )
 		return FALSE;
-	for ( int i = 0; RegEnumKeyW(hkey,i,name,sizeof(name)/sizeof(name[0])) == ERROR_SUCCESS; i++ )
+	for ( i = 0; RegEnumKeyW(hkey,i,name,sizeof(name)/sizeof(name[0])) == ERROR_SUCCESS; i++ )
 	{
-		/* ignoring return value, because OPENGL32_LoadICD() is doing *all* the work...
-		/*GLDRIVERDATA* gldd =*/ OPENGL32_LoadICD ( name );
+		/* ignoring return value, because OPENGL32_LoadICD() is doing *all* the work... */
+		/* GLDRIVERDATA* gldd =*/ OPENGL32_LoadICD ( name );
 	}
 	RegCloseKey ( hkey );
 	if ( i > 0 )
@@ -183,7 +182,7 @@ static GLDRIVERDATA *OPENGL32_LoadDriver ( LPCWSTR driver )
 {
 	HKEY hKey;
 	WCHAR subKey[1024] = L"SOFTWARE\\Microsoft\\Windows NT\\"
-	                      "CurrentVersion\\OpenGLDrivers\\");
+	                      "CurrentVersion\\OpenGLDrivers\\";
 	LONG ret;
 	DWORD type, size;
 
@@ -204,7 +203,7 @@ static GLDRIVERDATA *OPENGL32_LoadDriver ( LPCWSTR driver )
 
 	/* query values */
 	size = sizeof (dll);
-	ret = RegQueryValueExW( hKey, L"Dll", 0, &type, dll, &size );
+	ret = RegQueryValueExW( hKey, L"Dll", 0, &type, (LPBYTE)dll, &size );
 	if (ret != ERROR_SUCCESS || type != REG_SZ)
 	{
 		DBGPRINT( "Error: Couldn't query Dll value or not a string\n" );
@@ -213,7 +212,7 @@ static GLDRIVERDATA *OPENGL32_LoadDriver ( LPCWSTR driver )
 	}
 
 	size = sizeof (DWORD);
-	ret = RegQueryValueExW( hKey, L"Version", 0, &type, &version, &size );
+	ret = RegQueryValueExW( hKey, L"Version", 0, &type, (LPBYTE)&version, &size );
 	if (ret != ERROR_SUCCESS || type != REG_DWORD)
 	{
 		DBGPRINT( "Warning: Couldn't query Version value or not a DWORD\n" );
@@ -222,7 +221,7 @@ static GLDRIVERDATA *OPENGL32_LoadDriver ( LPCWSTR driver )
 
 	size = sizeof (DWORD);
 	ret = RegQueryValueExW( hKey, L"DriverVersion", 0, &type,
-	                        &driverVersion, &size );
+	                        (LPBYTE)&driverVersion, &size );
 	if (ret != ERROR_SUCCESS || type != REG_DWORD)
 	{
 		DBGPRINT( "Warning: Couldn't query DriverVersion value or not a DWORD\n" );
@@ -230,7 +229,7 @@ static GLDRIVERDATA *OPENGL32_LoadDriver ( LPCWSTR driver )
 	}
 
 	size = sizeof (DWORD);
-	ret = RegQueryValueExW( hKey, L"Flags", 0, &type, &flags, &size );
+	ret = RegQueryValueExW( hKey, L"Flags", 0, &type, (LPBYTE)&flags, &size );
 	if (ret != ERROR_SUCCESS || type != REG_DWORD)
 	{
 		DBGPRINT( "Warning: Couldn't query Flags value or not a DWORD\n" );
@@ -294,7 +293,7 @@ static DWORD OPENGL32_InitializeDriver( GLDRIVERDATA *icd )
 	UINT i;
 
 	/* load dll */
-	icd->handle = LoadLibraryW( dll );
+	icd->handle = LoadLibraryW( icd->dll );
 	if (!icd->handle)
 	{
 		DBGPRINT( "Error: Couldn't load DLL! (%d)\n", GetLastError() );

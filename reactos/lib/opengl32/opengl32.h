@@ -1,4 +1,4 @@
-/* $Id: opengl32.h,v 1.5 2004/02/02 06:01:35 royce Exp $
+/* $Id: opengl32.h,v 1.6 2004/02/02 17:59:23 navaraf Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -16,6 +16,13 @@
 #define DEBUG_OPENGL32
 #define DEBUG_OPENGL32_ICD_EXPORTS	/* dumps the list of supported glXXX
                                        functions when an ICD is loaded. */
+
+#ifdef DEBUG_OPENGL32
+ULONG DbgPrint(PCH Format,...);
+# define DBGPRINT DbgPrint( "OpenGL32.DLL: " ), DbgPrint
+#else
+# define DBGPRINT( ... ) do {} while (0)
+#endif
 
 /* gl function list */
 #define GLFUNCS_MACRO \
@@ -392,16 +399,16 @@ typedef struct tagGLDRIVERDATA
 	BOOL    (*DrvDeleteContext)( HGLRC );
 	BOOL    (*DrvDescribeLayerPlane)( HDC, int, int, UINT, LPLAYERPLANEDESCRIPTOR );
 	int     (*DrvDescribePixelFormat)( IN HDC, IN int, IN UINT, OUT LPPIXELFORMATDESCRIPTOR );
-	int     (*DrvGetLayerPaletteEntries)( HDC, int, int, int, COLORREF * )
+	int     (*DrvGetLayerPaletteEntries)( HDC, int, int, int, COLORREF * );
 	FARPROC (*DrvGetProcAddress)( LPCSTR lpProcName );
 	void    (*DrvReleaseContext)();
-	BOOL    (*DrvRealizeLayerPalette)( HDC, int, BOOL )
-	int     (*DrvSetContext)( HDC hdc, HGLRC hglrc, SetContextCallBack callback )
-	int     (*DrvSetLayerPaletteEntries)( HDC, int, int, int, CONST COLORREF * )
-	BOOL    (*DrvSetPixelFormat)( IN HDC, IN int, IN CONST PIXELFORMATDESCRIPTOR * )
-	BOOL    (*DrvShareLists)( HGLRC, HGLRC )
-	BOOL    (*DrvSwapBuffers)( HDC )
-	BOOL    (*DrvSwapLayerBuffers)( HDC, UINT )
+	BOOL    (*DrvRealizeLayerPalette)( HDC, int, BOOL );
+	int     (*DrvSetContext)( HDC hdc, HGLRC hglrc, SetContextCallBack callback );
+	int     (*DrvSetLayerPaletteEntries)( HDC, int, int, int, CONST COLORREF * );
+	BOOL    (*DrvSetPixelFormat)( IN HDC, IN int, IN CONST PIXELFORMATDESCRIPTOR * );
+	BOOL    (*DrvShareLists)( HGLRC, HGLRC );
+	BOOL    (*DrvSwapBuffers)( HDC );
+	BOOL    (*DrvSwapLayerBuffers)( HDC, UINT );
 	void    (*DrvValidateVersion)();
 
 	PVOID   func_list[GLIDX_COUNT]; /* glXXX functions supported by ICD */

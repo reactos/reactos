@@ -12,9 +12,7 @@ TARGET_CFLAGS = -D__USE_W32API
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS -Wall -Werror
 
-TARGET_LFLAGS =
-
-TARGET_SDKLIBS = opengl32.a
+TARGET_SDKLIBS = ntdll.a gdi32.a
 
 TARGET_OBJECTS = \
 	opengl32.o \
