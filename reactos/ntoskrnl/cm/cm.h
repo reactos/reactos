@@ -18,18 +18,20 @@
 #define  REG_SOFTWARE_KEY_NAME		L"\\Registry\\Machine\\Software"
 #define  REG_SAM_KEY_NAME		L"\\Registry\\Machine\\Sam"
 #define  REG_SEC_KEY_NAME		L"\\Registry\\Machine\\Security"
-#define  REG_USERS_KEY_NAME		L"\\Registry\\User"
-#define  REG_USER_KEY_NAME		L"\\Registry\\User\\CurrentUser"
+#define  REG_USER_KEY_NAME		L"\\Registry\\User"
+#define  REG_DEFAULT_USER_KEY_NAME	L"\\Registry\\User\\.Default"
+#define  REG_CURRENT_USER_KEY_NAME	L"\\Registry\\User\\CurrentUser"
+
 #define  SYSTEM_REG_FILE		L"\\SystemRoot\\System32\\Config\\SYSTEM"
 #define  SYSTEM_LOG_FILE		L"\\SystemRoot\\System32\\Config\\SYSTEM.log"
 #define  SOFTWARE_REG_FILE		L"\\SystemRoot\\System32\\Config\\SOFTWARE"
-#define  USER_REG_FILE			L"\\SystemRoot\\System32\\Config\\DEFAULT"
+#define  DEFAULT_USER_REG_FILE		L"\\SystemRoot\\System32\\Config\\DEFAULT"
 #define  SAM_REG_FILE			L"\\SystemRoot\\System32\\Config\\SAM"
 #define  SEC_REG_FILE			L"\\SystemRoot\\System32\\Config\\SECURITY"
 
 #define  REG_SYSTEM_FILE_NAME		L"\\SYSTEM"
 #define  REG_SOFTWARE_FILE_NAME		L"\\SOFTWARE"
-#define  REG_USER_FILE_NAME		L"\\DEFAULT"
+#define  REG_DEFAULT_USER_FILE_NAME	L"\\DEFAULT"
 #define  REG_SAM_FILE_NAME		L"\\SAM"
 #define  REG_SEC_FILE_NAME		L"\\SECURITY"
 
@@ -45,15 +47,6 @@
 #define  REG_VALUE_CELL_ID             0x6b76
 #define  REG_HIVE_ID                   0x66676572
 
-#define  REGISTRY_FILE_MAGIC    "REGEDIT4"
-
-#define  REG_MACHINE_STD_HANDLE_NAME  "HKEY_LOCAL_MACHINE"
-#define  REG_CLASSES_STD_HANDLE_NAME  "HKEY_CLASSES_ROOT"
-#define  REG_USERS_STD_HANDLE_NAME    "HKEY_USERS"
-#define  REG_USER_STD_HANDLE_NAME     "HKEY_CURRENT_USER"
-#define  REG_CONFIG_STD_HANDLE_NAME   "HKEY_CURRENT_CONFIG"
-#define  REG_DYN_STD_HANDLE_NAME      "HKEY_DYN_DATA"
-#define  MAX_REG_STD_HANDLE_NAME      19
 
 // BLOCK_OFFSET = offset in file after header block
 typedef ULONG BLOCK_OFFSET;

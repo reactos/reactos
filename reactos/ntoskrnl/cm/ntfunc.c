@@ -245,16 +245,13 @@ NtDeleteKey(IN HANDLE KeyHandle)
 
 
 NTSTATUS STDCALL
-NtEnumerateKey(
-	IN	HANDLE			KeyHandle,
-	IN	ULONG			  Index,
-	IN	KEY_INFORMATION_CLASS	KeyInformationClass,
-	OUT	PVOID			  KeyInformation,
-	IN	ULONG			  Length,
-	OUT	PULONG			ResultLength
-	)
+NtEnumerateKey(IN HANDLE KeyHandle,
+	       IN ULONG Index,
+	       IN KEY_INFORMATION_CLASS KeyInformationClass,
+	       OUT PVOID KeyInformation,
+	       IN ULONG Length,
+	       OUT PULONG ResultLength)
 {
-  NTSTATUS  Status;
   PKEY_OBJECT  KeyObject;
   PREGISTRY_HIVE  RegistryHive;
   PKEY_CELL  KeyCell, SubKeyCell;
@@ -262,7 +259,9 @@ NtEnumerateKey(
   PKEY_BASIC_INFORMATION  BasicInformation;
   PKEY_NODE_INFORMATION  NodeInformation;
   PKEY_FULL_INFORMATION  FullInformation;
-  PDATA_CELL pClassData;
+  PDATA_CELL ClassData;
+  ULONG NameSize;
+  NTSTATUS Status;
 
   DPRINT("KH %x  I %d  KIC %x KI %x  L %d  RL %x\n",
 	 KeyHandle,
@@ -362,102 +361,136 @@ NtEnumerateKey(
   Status = STATUS_SUCCESS;
   switch (KeyInformationClass)
     {
-    case KeyBasicInformation:
-      /* Check size of buffer */
-      *ResultLength = sizeof(KEY_BASIC_INFORMATION) + 
-        (SubKeyCell->NameSize ) * sizeof(WCHAR);
-      if (Length < *ResultLength)
-        {
-          Status = STATUS_BUFFER_OVERFLOW;
-        }
-      else
-        {
-          /* Fill buffer with requested info */
-          BasicInformation = (PKEY_BASIC_INFORMATION) KeyInformation;
-          BasicInformation->LastWriteTime.u.LowPart = SubKeyCell->LastWriteTime.dwLowDateTime;
-          BasicInformation->LastWriteTime.u.HighPart = SubKeyCell->LastWriteTime.dwHighDateTime;
-          BasicInformation->TitleIndex = Index;
-          BasicInformation->NameLength = SubKeyCell->NameSize * sizeof(WCHAR);
-          mbstowcs(BasicInformation->Name, 
-            SubKeyCell->Name, 
-            SubKeyCell->NameSize * 2);
-        }
-      break;
-      
-    case KeyNodeInformation:
-      /* Check size of buffer */
-      *ResultLength = sizeof(KEY_NODE_INFORMATION) +
-        SubKeyCell->NameSize * sizeof(WCHAR) +
-        SubKeyCell->ClassSize;
-      if (Length < *ResultLength)
-        {
-          Status = STATUS_BUFFER_OVERFLOW;
-        }
-      else
-        {
-          /* Fill buffer with requested info */
-          NodeInformation = (PKEY_NODE_INFORMATION) KeyInformation;
-          NodeInformation->LastWriteTime.u.LowPart = SubKeyCell->LastWriteTime.dwLowDateTime;
-          NodeInformation->LastWriteTime.u.HighPart = SubKeyCell->LastWriteTime.dwHighDateTime;
-          NodeInformation->TitleIndex = Index;
-          NodeInformation->ClassOffset = sizeof(KEY_NODE_INFORMATION) + 
-            SubKeyCell->NameSize * sizeof(WCHAR);
-          NodeInformation->ClassLength = SubKeyCell->ClassSize;
-          NodeInformation->NameLength = SubKeyCell->NameSize * sizeof(WCHAR);
-          mbstowcs(NodeInformation->Name, 
-            SubKeyCell->Name,
-            SubKeyCell->NameSize * 2);
-          if (SubKeyCell->ClassSize != 0)
-            {
-              pClassData=CmiGetBlock(KeyObject->RegistryHive,
-                SubKeyCell->ClassNameOffset,
-                NULL);
-              wcsncpy(NodeInformation->Name + SubKeyCell->NameSize ,
-                      (PWCHAR) pClassData->Data,
-                      SubKeyCell->ClassSize);
-            }
-        }
-      break;
-      
-    case KeyFullInformation:
-      /*  check size of buffer  */
-      *ResultLength = sizeof(KEY_FULL_INFORMATION) +
-          SubKeyCell->ClassSize;
-      if (Length < *ResultLength)
-        {
-          Status = STATUS_BUFFER_OVERFLOW;
-        }
-      else
-        {
-          /* fill buffer with requested info  */
-          FullInformation = (PKEY_FULL_INFORMATION) KeyInformation;
-          FullInformation->LastWriteTime.u.LowPart = SubKeyCell->LastWriteTime.dwLowDateTime;
-          FullInformation->LastWriteTime.u.HighPart = SubKeyCell->LastWriteTime.dwHighDateTime;
-          FullInformation->TitleIndex = Index;
-          FullInformation->ClassOffset = sizeof(KEY_FULL_INFORMATION) - 
-            sizeof(WCHAR);
-          FullInformation->ClassLength = SubKeyCell->ClassSize;
-          FullInformation->SubKeys = SubKeyCell->NumberOfSubKeys;
-          FullInformation->MaxNameLen = 
-            CmiGetMaxNameLength(RegistryHive, SubKeyCell);
-          FullInformation->MaxClassLen = 
-            CmiGetMaxClassLength(RegistryHive, SubKeyCell);
-          FullInformation->Values = SubKeyCell->NumberOfValues;
-          FullInformation->MaxValueNameLen = 
-            CmiGetMaxValueNameLength(RegistryHive, SubKeyCell);
-          FullInformation->MaxValueDataLen = 
-            CmiGetMaxValueDataLength(RegistryHive, SubKeyCell);
-          if (SubKeyCell->ClassSize != 0)
-            {
-              pClassData = CmiGetBlock(KeyObject->RegistryHive,
-                SubKeyCell->ClassNameOffset,
-                NULL);
-              wcsncpy(FullInformation->Class,
-                (PWCHAR) pClassData->Data,
-                SubKeyCell->ClassSize);
-            }
-        }
-      break;
+      case KeyBasicInformation:
+	/* Check size of buffer */
+	NameSize = SubKeyCell->NameSize;
+	if (SubKeyCell->Flags & REG_KEY_NAME_PACKED)
+	  {
+	    NameSize *= sizeof(WCHAR);
+	  }
+	*ResultLength = sizeof(KEY_BASIC_INFORMATION) + NameSize;
+
+	if (Length < *ResultLength)
+	  {
+	    Status = STATUS_BUFFER_OVERFLOW;
+	  }
+	else
+	  {
+	    /* Fill buffer with requested info */
+	    BasicInformation = (PKEY_BASIC_INFORMATION) KeyInformation;
+	    BasicInformation->LastWriteTime.u.LowPart = SubKeyCell->LastWriteTime.dwLowDateTime;
+	    BasicInformation->LastWriteTime.u.HighPart = SubKeyCell->LastWriteTime.dwHighDateTime;
+	    BasicInformation->TitleIndex = Index;
+	    BasicInformation->NameLength = NameSize;
+
+	    if (SubKeyCell->Flags & REG_KEY_NAME_PACKED)
+	      {
+		CmiCopyPackedName(BasicInformation->Name,
+				  SubKeyCell->Name,
+				  SubKeyCell->NameSize);
+	      }
+	    else
+	      {
+		RtlCopyMemory(BasicInformation->Name,
+			      SubKeyCell->Name,
+			      SubKeyCell->NameSize);
+	      }
+	  }
+	break;
+
+      case KeyNodeInformation:
+	/* Check size of buffer */
+	if (SubKeyCell->Flags & REG_KEY_NAME_PACKED)
+	  {
+	    NameSize = SubKeyCell->NameSize * sizeof(WCHAR);
+	  }
+	else
+	  {
+	    NameSize = SubKeyCell->NameSize;
+	  }
+	*ResultLength = sizeof(KEY_NODE_INFORMATION) +
+	  NameSize + SubKeyCell->ClassSize;
+
+	if (Length < *ResultLength)
+	  {
+	    Status = STATUS_BUFFER_OVERFLOW;
+	  }
+	else
+	  {
+	    /* Fill buffer with requested info */
+	    NodeInformation = (PKEY_NODE_INFORMATION) KeyInformation;
+	    NodeInformation->LastWriteTime.u.LowPart = SubKeyCell->LastWriteTime.dwLowDateTime;
+	    NodeInformation->LastWriteTime.u.HighPart = SubKeyCell->LastWriteTime.dwHighDateTime;
+	    NodeInformation->TitleIndex = Index;
+	    NodeInformation->ClassOffset = sizeof(KEY_NODE_INFORMATION) + NameSize;
+	    NodeInformation->ClassLength = SubKeyCell->ClassSize;
+	    NodeInformation->NameLength = NameSize;
+
+	    if (SubKeyCell->Flags & REG_KEY_NAME_PACKED)
+	      {
+		CmiCopyPackedName(BasicInformation->Name,
+				  SubKeyCell->Name,
+				  SubKeyCell->NameSize);
+	      }
+	    else
+	      {
+		RtlCopyMemory(BasicInformation->Name,
+			      SubKeyCell->Name,
+			      SubKeyCell->NameSize);
+	      }
+
+	    if (SubKeyCell->ClassSize != 0)
+	      {
+		ClassData=CmiGetBlock(KeyObject->RegistryHive,
+				      SubKeyCell->ClassNameOffset,
+				      NULL);
+		wcsncpy(NodeInformation->Name + SubKeyCell->NameSize,
+			(PWCHAR)ClassData->Data,
+			SubKeyCell->ClassSize);
+	      }
+	  }
+	break;
+
+      case KeyFullInformation:
+	/* Check size of buffer */
+	*ResultLength = sizeof(KEY_FULL_INFORMATION) +
+	  SubKeyCell->ClassSize;
+
+	if (Length < *ResultLength)
+	  {
+	    Status = STATUS_BUFFER_OVERFLOW;
+	  }
+	else
+	  {
+	    /* Fill buffer with requested info */
+	    FullInformation = (PKEY_FULL_INFORMATION) KeyInformation;
+	    FullInformation->LastWriteTime.u.LowPart = SubKeyCell->LastWriteTime.dwLowDateTime;
+	    FullInformation->LastWriteTime.u.HighPart = SubKeyCell->LastWriteTime.dwHighDateTime;
+	    FullInformation->TitleIndex = Index;
+	    FullInformation->ClassOffset = sizeof(KEY_FULL_INFORMATION) -
+	      sizeof(WCHAR);
+	    FullInformation->ClassLength = SubKeyCell->ClassSize;
+	    FullInformation->SubKeys = SubKeyCell->NumberOfSubKeys;
+	    FullInformation->MaxNameLen =
+	      CmiGetMaxNameLength(RegistryHive, SubKeyCell);
+	    FullInformation->MaxClassLen =
+	      CmiGetMaxClassLength(RegistryHive, SubKeyCell);
+	    FullInformation->Values = SubKeyCell->NumberOfValues;
+	    FullInformation->MaxValueNameLen =
+	      CmiGetMaxValueNameLength(RegistryHive, SubKeyCell);
+	    FullInformation->MaxValueDataLen =
+	      CmiGetMaxValueDataLength(RegistryHive, SubKeyCell);
+	    if (SubKeyCell->ClassSize != 0)
+	      {
+		ClassData = CmiGetBlock(KeyObject->RegistryHive,
+					SubKeyCell->ClassNameOffset,
+					NULL);
+		wcsncpy(FullInformation->Class,
+			(PWCHAR)ClassData->Data,
+			SubKeyCell->ClassSize);
+	      }
+	  }
+	break;
     }
 
   ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
@@ -802,7 +835,7 @@ NtQueryKey(IN HANDLE KeyHandle,
   PKEY_NODE_INFORMATION NodeInformation;
   PKEY_FULL_INFORMATION FullInformation;
   PREGISTRY_HIVE RegistryHive;
-  PDATA_CELL pClassData;
+  PDATA_CELL ClassData;
   PKEY_OBJECT KeyObject;
   PKEY_CELL KeyCell;
   NTSTATUS Status;
@@ -838,104 +871,104 @@ NtQueryKey(IN HANDLE KeyHandle,
   Status = STATUS_SUCCESS;
   switch (KeyInformationClass)
     {
-    case KeyBasicInformation:
-      /* Check size of buffer */
-      if (Length < sizeof(KEY_BASIC_INFORMATION) + 
-          KeyObject->Name.Length)
-        {
-          Status = STATUS_BUFFER_OVERFLOW;
-        }
-      else
-        {
-          /* Fill buffer with requested info */
-          BasicInformation = (PKEY_BASIC_INFORMATION) KeyInformation;
-          BasicInformation->LastWriteTime.u.LowPart = KeyCell->LastWriteTime.dwLowDateTime;
-          BasicInformation->LastWriteTime.u.HighPart = KeyCell->LastWriteTime.dwHighDateTime;
-          BasicInformation->TitleIndex = 0;
-          BasicInformation->NameLength = KeyObject->Name.Length;
-          RtlCopyMemory(BasicInformation->Name,
-                        KeyObject->Name.Buffer,
-                        KeyObject->Name.Length);
-          *ResultLength = sizeof(KEY_BASIC_INFORMATION) + 
-            KeyObject->Name.Length;
-        }
-      break;
+      case KeyBasicInformation:
+	/* Check size of buffer */
+	*ResultLength = sizeof(KEY_BASIC_INFORMATION) +
+	  KeyObject->Name.Length;
 
-    case KeyNodeInformation:
-      /* Check size of buffer */
-      if (Length < sizeof(KEY_NODE_INFORMATION)
-         + KeyObject->Name.Length
-         + KeyCell->ClassSize)
-        {
-          Status = STATUS_BUFFER_OVERFLOW;
-        }
-      else
-        {
-          /* Fill buffer with requested info */
-          NodeInformation = (PKEY_NODE_INFORMATION) KeyInformation;
-          NodeInformation->LastWriteTime.u.LowPart = KeyCell->LastWriteTime.dwLowDateTime;
-          NodeInformation->LastWriteTime.u.HighPart = KeyCell->LastWriteTime.dwHighDateTime;
-          NodeInformation->TitleIndex = 0;
-          NodeInformation->ClassOffset = sizeof(KEY_NODE_INFORMATION) + 
-            KeyObject->Name.Length;
-          NodeInformation->ClassLength = KeyCell->ClassSize;
-          NodeInformation->NameLength = KeyObject->Name.Length;
-          RtlCopyMemory(NodeInformation->Name,
-                        KeyObject->Name.Buffer,
-                        KeyObject->Name.Length);
+	if (Length < *ResultLength)
+	  {
+	    Status = STATUS_BUFFER_OVERFLOW;
+	  }
+	else
+	  {
+	    /* Fill buffer with requested info */
+	    BasicInformation = (PKEY_BASIC_INFORMATION) KeyInformation;
+	    BasicInformation->LastWriteTime.u.LowPart = KeyCell->LastWriteTime.dwLowDateTime;
+	    BasicInformation->LastWriteTime.u.HighPart = KeyCell->LastWriteTime.dwHighDateTime;
+	    BasicInformation->TitleIndex = 0;
+	    BasicInformation->NameLength = KeyObject->Name.Length;
+	    RtlCopyMemory(BasicInformation->Name,
+			  KeyObject->Name.Buffer,
+			  KeyObject->Name.Length);
+	  }
+	break;
 
-          if (KeyCell->ClassSize != 0)
-            {
-              pClassData = CmiGetBlock(KeyObject->RegistryHive,
-                KeyCell->ClassNameOffset,
-                NULL);
-              wcsncpy(NodeInformation->Name + KeyObject->Name.Length,
-                (PWCHAR)pClassData->Data,
-                KeyCell->ClassSize);
-            }
-          *ResultLength = sizeof(KEY_NODE_INFORMATION)
-            + KeyObject->Name.Length
-            + KeyCell->ClassSize;
-        }
-      break;
+      case KeyNodeInformation:
+	/* Check size of buffer */
+	*ResultLength = sizeof(KEY_NODE_INFORMATION) +
+	  KeyObject->Name.Length + KeyCell->ClassSize;
 
-    case KeyFullInformation:
-      /* Check size of buffer */
-      if (Length < sizeof(KEY_FULL_INFORMATION) + KeyCell->ClassSize)
-        {
-          Status = STATUS_BUFFER_OVERFLOW;
-        }
-      else
-        {
-          /* Fill buffer with requested info */
-          FullInformation = (PKEY_FULL_INFORMATION) KeyInformation;
-          FullInformation->LastWriteTime.u.LowPart = KeyCell->LastWriteTime.dwLowDateTime;
-          FullInformation->LastWriteTime.u.HighPart = KeyCell->LastWriteTime.dwHighDateTime;
-          FullInformation->TitleIndex = 0;
-          FullInformation->ClassOffset = sizeof(KEY_FULL_INFORMATION) - sizeof(WCHAR);
-          FullInformation->ClassLength = KeyCell->ClassSize;
-          FullInformation->SubKeys = KeyCell->NumberOfSubKeys;
-          FullInformation->MaxNameLen =
-            CmiGetMaxNameLength(RegistryHive, KeyCell);
-          FullInformation->MaxClassLen =
-            CmiGetMaxClassLength(RegistryHive, KeyCell);
-          FullInformation->Values = KeyCell->NumberOfValues;
-          FullInformation->MaxValueNameLen =
-            CmiGetMaxValueNameLength(RegistryHive, KeyCell);
-          FullInformation->MaxValueDataLen = 
-            CmiGetMaxValueDataLength(RegistryHive, KeyCell);
-          if (KeyCell->ClassSize != 0)
-            {
-              pClassData=CmiGetBlock(KeyObject->RegistryHive,
-                KeyCell->ClassNameOffset,
-                NULL);
-              wcsncpy(FullInformation->Class,
-                (PWCHAR)pClassData->Data,
-                KeyCell->ClassSize);
-            }
-          *ResultLength = sizeof(KEY_FULL_INFORMATION) + KeyCell->ClassSize;
-        }
-      break;
+	if (Length < *ResultLength)
+	  {
+	    Status = STATUS_BUFFER_OVERFLOW;
+	  }
+	else
+	  {
+	    /* Fill buffer with requested info */
+	    NodeInformation = (PKEY_NODE_INFORMATION) KeyInformation;
+	    NodeInformation->LastWriteTime.u.LowPart = KeyCell->LastWriteTime.dwLowDateTime;
+	    NodeInformation->LastWriteTime.u.HighPart = KeyCell->LastWriteTime.dwHighDateTime;
+	    NodeInformation->TitleIndex = 0;
+	    NodeInformation->ClassOffset = sizeof(KEY_NODE_INFORMATION) +
+	      KeyObject->Name.Length;
+	    NodeInformation->ClassLength = KeyCell->ClassSize;
+	    NodeInformation->NameLength = KeyObject->Name.Length;
+	    RtlCopyMemory(NodeInformation->Name,
+			  KeyObject->Name.Buffer,
+			  KeyObject->Name.Length);
+
+	    if (KeyCell->ClassSize != 0)
+	      {
+		ClassData = CmiGetBlock(KeyObject->RegistryHive,
+					KeyCell->ClassNameOffset,
+					NULL);
+		wcsncpy(NodeInformation->Name + KeyObject->Name.Length,
+			(PWCHAR)ClassData->Data,
+			KeyCell->ClassSize);
+	      }
+	  }
+	break;
+
+      case KeyFullInformation:
+	/* Check size of buffer */
+	*ResultLength = sizeof(KEY_FULL_INFORMATION) +
+	  KeyCell->ClassSize;
+
+	if (Length < *ResultLength)
+	  {
+	    Status = STATUS_BUFFER_OVERFLOW;
+	  }
+	else
+	  {
+	    /* Fill buffer with requested info */
+	    FullInformation = (PKEY_FULL_INFORMATION) KeyInformation;
+	    FullInformation->LastWriteTime.u.LowPart = KeyCell->LastWriteTime.dwLowDateTime;
+	    FullInformation->LastWriteTime.u.HighPart = KeyCell->LastWriteTime.dwHighDateTime;
+	    FullInformation->TitleIndex = 0;
+	    FullInformation->ClassOffset = sizeof(KEY_FULL_INFORMATION) - sizeof(WCHAR);
+	    FullInformation->ClassLength = KeyCell->ClassSize;
+	    FullInformation->SubKeys = KeyCell->NumberOfSubKeys;
+	    FullInformation->MaxNameLen =
+	      CmiGetMaxNameLength(RegistryHive, KeyCell);
+	    FullInformation->MaxClassLen =
+	      CmiGetMaxClassLength(RegistryHive, KeyCell);
+	    FullInformation->Values = KeyCell->NumberOfValues;
+	    FullInformation->MaxValueNameLen =
+	      CmiGetMaxValueNameLength(RegistryHive, KeyCell);
+	    FullInformation->MaxValueDataLen =
+	      CmiGetMaxValueDataLength(RegistryHive, KeyCell);
+	    if (KeyCell->ClassSize != 0)
+	      {
+		ClassData=CmiGetBlock(KeyObject->RegistryHive,
+				      KeyCell->ClassNameOffset,
+				      NULL);
+		wcsncpy(FullInformation->Class,
+			(PWCHAR)ClassData->Data,
+			KeyCell->ClassSize);
+	      }
+	  }
+	break;
     }
 
   ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);

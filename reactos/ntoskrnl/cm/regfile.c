@@ -2099,21 +2099,43 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
   NTSTATUS Status;
   USHORT NameSize;
   PWSTR NamePtr;
+  BOOLEAN Packable;
+  ULONG i;
 
   KeyCell = Parent->KeyCell;
 
   VERIFY_KEY_CELL(KeyCell);
 
+  /* Skip leading backslash */
   if (SubKeyName->Buffer[0] == L'\\')
     {
       NamePtr = &SubKeyName->Buffer[1];
-      NameSize = SubKeyName->Length / 2 - 1;
+      NameSize = SubKeyName->Length - sizeof(WCHAR);
     }
   else
     {
       NamePtr = SubKeyName->Buffer;
-      NameSize = SubKeyName->Length / 2;
+      NameSize = SubKeyName->Length;
     }
+
+  /* Check whether key name can be packed */
+  Packable = TRUE;
+  for (i = 0; i < NameSize / sizeof(WCHAR); i++)
+    {
+      if (NamePtr[i] & 0xFF00)
+	{
+	  Packable = FALSE;
+	  break;
+	}
+    }
+
+  /* Adjust name size */
+  if (Packable)
+    {
+      NameSize = NameSize / sizeof(WCHAR);
+    }
+
+  DPRINT("Key %S  Length %lu  %s\n", NamePtr, NameSize, (Packable)?"True":"False");
 
   Status = STATUS_SUCCESS;
 
@@ -2130,7 +2152,7 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
     {
       NewKeyCell->Id = REG_KEY_CELL_ID;
       NewKeyCell->Flags = 0;
-      ZwQuerySystemTime((PTIME) &NewKeyCell->LastWriteTime);
+      NtQuerySystemTime((PTIME) &NewKeyCell->LastWriteTime);
       NewKeyCell->ParentKeyOffset = -1;
       NewKeyCell->NumberOfSubKeys = 0;
       NewKeyCell->HashTableOffset = -1;
@@ -2139,9 +2161,22 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
       NewKeyCell->SecurityKeyOffset = -1;
       NewKeyCell->ClassNameOffset = -1;
 
-      NewKeyCell->Flags |= REG_KEY_NAME_PACKED;
+      /* Pack the key name */
       NewKeyCell->NameSize = NameSize;
-      wcstombs(NewKeyCell->Name, NamePtr, NameSize);
+      if (Packable)
+	{
+	  NewKeyCell->Flags |= REG_KEY_NAME_PACKED;
+	  for (i = 0; i < NameSize; i++)
+	    {
+	      NewKeyCell->Name[i] = (CHAR)(NamePtr[i] & 0x00FF);
+	    }
+	}
+      else
+	{
+	  RtlCopyMemory(NewKeyCell->Name,
+			NamePtr,
+			NameSize);
+	}
 
       VERIFY_KEY_CELL(NewKeyCell);
 
@@ -2151,10 +2186,12 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
 
 	  NewKeyCell->ClassSize = Class->Length + sizeof(WCHAR);
 	  Status = CmiAllocateBlock(RegistryHive,
-				    (PVOID) &pClass,
+				    (PVOID)&pClass,
 				    NewKeyCell->ClassSize,
 				    &NewKeyCell->ClassNameOffset);
-	  wcsncpy((PWSTR) pClass->Data, Class->Buffer, Class->Length);
+	  wcsncpy((PWSTR)pClass->Data,
+		  Class->Buffer,
+		  Class->Length);
 	  ((PWSTR) (pClass->Data))[Class->Length] = 0;
 	}
     }
@@ -3424,17 +3461,17 @@ CmiGetPackedNameLength(IN PUNICODE_STRING Name,
   if (Packable != NULL)
     *Packable = TRUE;
 
-  for (i = 0; i < Name->Length; i++)
+  for (i = 0; i < Name->Length / sizeof(WCHAR); i++)
     {
-      if (Name->Buffer[i] > 0xFF)
+      if (Name->Buffer[i] & 0xFF00)
 	{
 	  if (Packable != NULL)
 	    *Packable = FALSE;
-	  return(Name->Length);
+	  return Name->Length;
 	}
     }
 
-  return(Name->Length / sizeof(WCHAR));
+  return (Name->Length / sizeof(WCHAR));
 }
 
 
@@ -3525,7 +3562,7 @@ CmiCompareKeyNames(PUNICODE_STRING KeyName,
   PWCHAR UnicodeName;
   USHORT i;
 
-  DPRINT1("Flags: %hx\n", KeyCell->Flags);
+  DPRINT("Flags: %hx\n", KeyCell->Flags);
 
   if (KeyCell->Flags & REG_KEY_NAME_PACKED)
     {
@@ -3562,7 +3599,7 @@ CmiCompareKeyNamesI(PUNICODE_STRING KeyName,
   PWCHAR UnicodeName;
   USHORT i;
 
-  DPRINT1("Flags: %hx\n", KeyCell->Flags);
+  DPRINT("Flags: %hx\n", KeyCell->Flags);
 
   if (KeyCell->Flags & REG_KEY_NAME_PACKED)
     {

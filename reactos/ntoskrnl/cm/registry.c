@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.97 2003/05/28 16:09:51 ekohl Exp $
+/* $Id: registry.c,v 1.98 2003/05/29 14:09:41 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -874,11 +874,11 @@ CmiInitHives(BOOLEAN SetupBoot)
     }
 
   /* Connect the DEFAULT hive */
-  wcscpy(EndPtr, REG_USER_FILE_NAME);
+  wcscpy(EndPtr, REG_DEFAULT_USER_FILE_NAME);
   DPRINT ("ConfigPath: %S\n", ConfigPath);
 
   RtlInitUnicodeString (&KeyName,
-			REG_USER_KEY_NAME);
+			REG_DEFAULT_USER_KEY_NAME);
   Status = CmiInitializeHive(ConfigPath,
 			     &KeyName,
 			     SetupBoot);
