@@ -1,4 +1,4 @@
-/* $Id: pci.c,v 1.11 2003/12/28 22:38:09 fireball Exp $
+/* $Id: pci.c,v 1.12 2004/10/22 20:08:22 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -717,7 +717,7 @@ HalpAssignPciSlotResources(IN PBUS_HANDLER BusHandler,
 	    }
 	  else
 	    {
-	      assert(FALSE);
+	      ASSERT(FALSE);
 	      return STATUS_UNSUCCESSFUL;
 	    }
 	  Descriptor++;
@@ -736,7 +736,7 @@ HalpAssignPciSlotResources(IN PBUS_HANDLER BusHandler,
       Descriptor++;
     }
 
-  assert(Descriptor == (*AllocatedResources)->List[0].PartialResourceList.PartialDescriptors + ResourceCount);
+  ASSERT(Descriptor == (*AllocatedResources)->List[0].PartialResourceList.PartialDescriptors + ResourceCount);
 
   /* FIXME: Should store the resources in the registry resource map */
 

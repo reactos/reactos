@@ -1,4 +1,4 @@
-/* $Id: adapter.c,v 1.11 2004/07/22 18:49:18 navaraf Exp $
+/* $Id: adapter.c,v 1.12 2004/10/22 20:08:21 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -54,7 +54,7 @@ HalAllocateAdapterChannel(
   LARGE_INTEGER BoundryAddressMultiple;
   IO_ALLOCATION_ACTION Retval;
   
-  assert(KeGetCurrentIrql() == DISPATCH_LEVEL);
+  ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
   
   /*
   FIXME: return STATUS_INSUFFICIENT_RESOURCES if the NumberOfMapRegisters 
@@ -157,7 +157,7 @@ IoFlushAdapterBuffers (
  *     - This is only meaningful on a read operation.  Return immediately for a write.
  */
 {
-  assert(KeGetCurrentIrql() <= DISPATCH_LEVEL);
+  ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
   
   /* this can happen if the card supports scatter/gather */
   if(!MapRegisterBase)
@@ -317,9 +317,9 @@ IoMapTransfer (
   {
 #if 0
     /* channel 0 is reserved for DRAM refresh */
-    assert(AdapterObject->Channel != 0);
+    ASSERT(AdapterObject->Channel != 0);
     /* channel 4 is reserved for cascade */
-    assert(AdapterObject->Channel != 4);
+    ASSERT(AdapterObject->Channel != 4);
 #endif
 
     KeAcquireSpinLock(&AdapterObject->SpinLock, &OldIrql);
