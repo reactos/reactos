@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2003/08/21 15:33:48 ekohl Exp $
+# $Id: Makefile,v 1.4 2003/08/22 13:53:02 ekohl Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -11,6 +11,7 @@ TARGET_CFLAGS += -D_DISABLE_TIDENTS
 
 TARGET_OBJECTS = \
  fat16.o \
+ fat32.o \
  vfatlib.o
  
 include $(PATH_TO_TOP)/rules.mak

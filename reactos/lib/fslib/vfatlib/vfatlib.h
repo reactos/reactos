@@ -95,3 +95,12 @@ Fat16Format (HANDLE  FileHandle,
 	     BOOL  QuickFormat,
 	     DWORD  ClusterSize,
 	     PFMIFSCALLBACK  Callback);
+
+NTSTATUS
+Fat32Format (HANDLE  FileHandle,
+	     PPARTITION_INFORMATION  PartitionInfo,
+	     PDISK_GEOMETRY DiskGeometry,
+	     PUNICODE_STRING Label,
+	     BOOL  QuickFormat,
+	     DWORD  ClusterSize,
+	     PFMIFSCALLBACK  Callback);

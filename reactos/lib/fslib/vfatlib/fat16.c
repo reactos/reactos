@@ -297,7 +297,7 @@ Fat16Format (HANDLE  FileHandle,
   BootSector.FATSectors = 0;  /* Set later. See below. */
   BootSector.SectorsPerTrack = DiskGeometry->SectorsPerTrack;
   BootSector.Heads = DiskGeometry->TracksPerCylinder;
-  BootSector.HiddenSectors = PartitionInfo->HiddenSectors;
+  BootSector.HiddenSectors = DiskGeometry->SectorsPerTrack; //PartitionInfo->HiddenSectors; /* FIXME: Hack! */
   BootSector.SectorsHuge = PartitionInfo->PartitionLength.QuadPart >>
     GetShiftCount(BootSector.BytesPerSector); /* Use shifting to avoid 64-bit division */
   BootSector.Drive = 0xff; /* No BIOS boot drive available */
