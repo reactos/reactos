@@ -31,5 +31,7 @@ void* calloc(size_t _nmemb, size_t _size)
  */
 void* realloc(void* _ptr, size_t _size)
 {
+   if (!_ptr)
+      return(HeapAlloc(GetProcessHeap(),0,_size));
    return(HeapReAlloc(GetProcessHeap(),0,_ptr,_size));
 }

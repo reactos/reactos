@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.78 2004/08/24 17:21:11 navaraf Exp $
+/* $Id: console.c,v 1.79 2004/08/28 22:14:08 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -2682,11 +2682,17 @@ AddConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine)
   else
     {
       NrCtrlHandlers++;
-      CtrlHandlers = 
-	RtlReAllocateHeap(RtlGetProcessHeap(),
-			   HEAP_ZERO_MEMORY,
-			   (PVOID)CtrlHandlers,
-			   NrCtrlHandlers * sizeof(PHANDLER_ROUTINE)); 
+      if (CtrlHandlers == NULL)
+        {
+          CtrlHandlers = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY,
+                                         NrCtrlHandlers * sizeof(PHANDLER_ROUTINE)); 
+        }
+      else
+        {
+          CtrlHandlers = RtlReAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY,
+                                           (PVOID)CtrlHandlers,
+                                           NrCtrlHandlers * sizeof(PHANDLER_ROUTINE)); 
+        }
       if (CtrlHandlers == NULL)
 	{
 	  NrCtrlHandlers = 0;

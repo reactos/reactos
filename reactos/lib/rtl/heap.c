@@ -1296,7 +1296,7 @@ LPVOID STDCALL RtlReAllocateHeap(
    SUBHEAP *subheap;
 
    if (!ptr)
-      return RtlAllocateHeap( heap, flags, size );  /* FIXME: correct? */
+      return FALSE;
    if (!(heapPtr = HEAP_GetPtr( heap )))
       return FALSE;
 
