@@ -11,7 +11,7 @@ TARGET_SDKLIBS = pseh.a epsapi.a ntdll.a kernel32.a
 TARGET_CFLAGS = -I./include -Wall -Werror
 
 # require os code to explicitly request A/W version of structs/functions
-TARGET_CFLAGS += -D_DISABLE_TIDENTS -D_SEH_NO_NATIVE_NLG
+TARGET_CFLAGS += -D_DISABLE_TIDENTS -D_SEH_NO_NATIVE_NLG -D__USE_W32API
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
 
