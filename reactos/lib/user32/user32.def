@@ -656,8 +656,8 @@ SetWindowTextA@8
 SetWindowTextW@8
 SetWindowWord@12
 SetWindowsHookA@8
-SetWindowsHookExA
-SetWindowsHookExW
+SetWindowsHookExA@16
+SetWindowsHookExW@16
 SetWindowsHookW@8
 ShowCaret@4
 ShowCursor@4
