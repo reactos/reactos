@@ -59,114 +59,6 @@ SetFileApisToOEM(VOID)
 	return;	
 }
 
-HANDLE STDCALL CreateFileA(LPCSTR lpFileName,
-			   DWORD dwDesiredAccess,
-			   DWORD dwShareMode,
-			   LPSECURITY_ATTRIBUTES lpSecurityAttributes,
-			   DWORD dwCreationDisposition,
-			   DWORD dwFlagsAndAttributes,
-			   HANDLE hTemplateFile)
-{
-
-   WCHAR FileNameW[MAX_PATH];
-   ULONG i = 0;
-   
-   OutputDebugStringA("CreateFileA\n");
-   
-   while ((*lpFileName)!=0 && i < MAX_PATH)
-     {
-	FileNameW[i] = *lpFileName;
-	lpFileName++;
-	i++;
-     }
-   FileNameW[i] = 0;
- 
-   return CreateFileW(FileNameW,dwDesiredAccess,dwShareMode, lpSecurityAttributes,
-	dwCreationDisposition,dwFlagsAndAttributes, hTemplateFile);
-}
-
-
-HANDLE STDCALL CreateFileW(LPCWSTR lpFileName,
-			   DWORD dwDesiredAccess,
-			   DWORD dwShareMode,
-			   LPSECURITY_ATTRIBUTES lpSecurityAttributes,
-			   DWORD dwCreationDisposition,
-			   DWORD dwFlagsAndAttributes,
-			   HANDLE hTemplateFile)
-{
-   HANDLE FileHandle;
-   NTSTATUS Status;
-  
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   IO_STATUS_BLOCK IoStatusBlock;
-   UNICODE_STRING FileNameString;
-   ULONG Flags = 0;
-   WCHAR PathNameW[MAX_PATH];
-   WCHAR *FilePart;
-   UINT Len = 0;
-   
-   OutputDebugStringA("CreateFileW\n");
-   
-   if (!(dwFlagsAndAttributes & FILE_FLAG_OVERLAPPED))
-     {
-	Flags |= FILE_SYNCHRONOUS_IO_ALERT;
-     }
-
-   #if 0
-   
-   if ( ( ( dwCreationDisposition & OPEN_EXISTING ) == OPEN_EXISTING ) ||
-	 ( ( dwCreationDisposition & TRUNCATE_EXISTING ) == TRUNCATE_EXISTING ) )
-  	 Len = SearchPathW(NULL,lpFileName,NULL,MAX_PATH,PathNameW,&FilePart); 
-	 if ( Len == 0 )
-		return NULL;
-   else  {
-	 Len =  GetCurrentDirectoryW(MAX_PATH,PathNameW);
-	 if ( Len == 0 )
-		return NULL;
-	 if ( PathNameW[Len-1] != L'\\' ) {
-		PathNameW[Len] = L'\\';
-		PathNameW[Len+1] = 0;
-	 }
-	 lstrcatW(PathNameW,lpFileName); 
-   }
-   FileNameString.Length = lstrlenW( PathNameW)*sizeof(WCHAR);
-	 
-   if ( FileNameString.Length == 0 )
-	return NULL;
-
-   if ( FileNameString.Length > MAX_PATH )
-	return NULL;
-   
-   FileNameString.Buffer = (WCHAR *)PathNameW;
-   FileNameString.MaximumLength = FileNameString.Length;
-   #endif
-     
-     FileNameString.Buffer = lpFileName;
-     FileNameString.Length = 
-     FileNameString.MaximumLength = lstrlenW(lpFileName) * sizeof(WCHAR);
-     
-   ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-   ObjectAttributes.RootDirectory = NULL;
-   ObjectAttributes.ObjectName = &FileNameString;
-   ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE;
-   ObjectAttributes.SecurityDescriptor = NULL;
-   ObjectAttributes.SecurityQualityOfService = NULL;
-   
-   Status = NtCreateFile(&FileHandle,
-			 dwDesiredAccess,
-			 &ObjectAttributes,
-			 &IoStatusBlock,
-			 NULL,
-			 dwFlagsAndAttributes,
-			 dwShareMode,
-			 dwCreationDisposition,
-			 Flags,
-			 NULL,
-			 0);
-   return(FileHandle);			 
-}
-
-
 WINBASEAPI
 VOID
 WINAPI
@@ -230,16 +122,18 @@ WINBOOL STDCALL ReadFile(HANDLE hFile,
 {
 
    HANDLE hEvent = NULL;
-   LARGE_INTEGER Offset;
+   PLARGE_INTEGER Offset;
+   LARGE_INTEGER ByteOffset;
    NTSTATUS errCode;
    PIO_STATUS_BLOCK IoStatusBlock;
    IO_STATUS_BLOCK IIosb;
 
    
-   if ( lpOverLapped != NULL ) 
+   if ( lpOverLapped != NULL )
      {
-	Offset.LowPart = lpOverLapped->Offset;
-	Offset.HighPart = lpOverLapped->OffsetHigh;
+	ByteOffset.LowPart = lpOverLapped->Offset;
+	ByteOffset.HighPart = lpOverLapped->OffsetHigh;
+	Offset = &ByteOffset;
 	lpOverLapped->Internal = STATUS_PENDING;
 	hEvent = lpOverLapped->hEvent;
 	IoStatusBlock = (PIO_STATUS_BLOCK)lpOverLapped;
@@ -247,6 +141,7 @@ WINBOOL STDCALL ReadFile(HANDLE hFile,
    else
      {
 	IoStatusBlock = &IIosb;
+	Offset = NULL;
      }
 				 	     
    errCode = NtReadFile(hFile,
@@ -256,8 +151,8 @@ WINBOOL STDCALL ReadFile(HANDLE hFile,
 			IoStatusBlock,
 			lpBuffer,
 			nNumberOfBytesToRead,
-			&Offset,
-			NULL);
+			Offset,			
+			NULL);   
    if ( !NT_SUCCESS(errCode) )  
      {      
 	SetLastError(RtlNtStatusToDosError(errCode));

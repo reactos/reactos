@@ -16,7 +16,7 @@
 /* GLOBALS *******************************************************************/
 
 
-static unsigned short CurrentDirectoryW[MAX_PATH];
+static unsigned short CurrentDirectoryW[MAX_PATH] = {0,};
 
 static unsigned short SystemDirectoryW[MAX_PATH];
 
@@ -24,9 +24,7 @@ static unsigned short WindowsDirectoryW[MAX_PATH];
 
 /* FUNCTIONS *****************************************************************/
  
-DWORD 
-STDCALL
-GetCurrentDirectoryA(DWORD nBufferLength, LPSTR lpBuffer)
+DWORD STDCALL GetCurrentDirectoryA(DWORD nBufferLength, LPSTR lpBuffer)
 {
    UINT uSize,i;
    if ( lpBuffer == NULL ) 
@@ -44,32 +42,32 @@ GetCurrentDirectoryA(DWORD nBufferLength, LPSTR lpBuffer)
    return uSize;
 }
 
-DWORD
-STDCALL
-GetCurrentDirectoryW(
-    DWORD nBufferLength,
-    LPWSTR lpBuffer
-    )
+DWORD STDCALL GetCurrentDirectoryW(DWORD nBufferLength, LPWSTR lpBuffer)
 {
    UINT uSize;
+   
+   dprintf("CurrentDirectoryW %w\n",CurrentDirectoryW);
+   
    if ( lpBuffer == NULL ) 
 	return 0;
    uSize = lstrlenW(CurrentDirectoryW); 
    if ( nBufferLength > uSize )
    	lstrcpynW(lpBuffer,CurrentDirectoryW,uSize);
    
+   dprintf("GetCurrentDirectoryW() = %w\n",lpBuffer);
+   
    return uSize;
 }
 
-BOOL 
-STDCALL
-SetCurrentDirectoryA(LPCSTR lpPathName)
+BOOL STDCALL SetCurrentDirectoryA(LPCSTR lpPathName)
 {
    UINT i;
 
-   if ( lpPathName == NULL ); 
+   dprintf("SetCurrentDirectoryA(lpPathName %s)\n",lpPathName);
+   
+   if ( lpPathName == NULL )
 	return FALSE;
-   if ( lstrlenA(lpPathName) > MAX_PATH ); 
+   if ( lstrlenA(lpPathName) > MAX_PATH )
 	return FALSE;
    i = 0;
    while ((lpPathName[i])!=0 && i < MAX_PATH)
@@ -78,7 +76,9 @@ SetCurrentDirectoryA(LPCSTR lpPathName)
 	i++;
    }
    CurrentDirectoryW[i] = 0;
-
+   
+   dprintf("CurrentDirectoryW = '%w'\n",CurrentDirectoryW);
+   
    return(TRUE);
 }
 
@@ -89,9 +89,9 @@ SetCurrentDirectoryW(
     LPCWSTR lpPathName
     )
 {
-   if ( lpPathName == NULL ); 
+   if ( lpPathName == NULL )
 	return FALSE;
-   if ( lstrlenW(lpPathName) > MAX_PATH ); 
+   if ( lstrlenW(lpPathName) > MAX_PATH )
 	return FALSE;
    lstrcpyW(CurrentDirectoryW,lpPathName);
    return(TRUE);
