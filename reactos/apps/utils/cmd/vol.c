@@ -31,15 +31,19 @@
 #include "cmd.h"
 
 
-static VOID
+static INT
 PrintVolumeHeader (LPTSTR pszRootPath)
 {
 	TCHAR szVolName[80];
 	DWORD dwSerialNr;
 
 	/* get the volume information of the drive */
-	GetVolumeInformation (pszRootPath, szVolName, 80, &dwSerialNr,
-						  NULL, NULL, NULL, 0);
+        if(!GetVolumeInformation (pszRootPath, szVolName, 80, &dwSerialNr,
+                                  NULL, NULL, NULL, 0))
+        {
+                ErrorMessage (GetLastError (), _T(""));
+                return 1;
+        }
 
 	/* print drive info */
 	ConOutPrintf (_T(" Volume in drive %c:"), pszRootPath[0]);
@@ -52,6 +56,7 @@ PrintVolumeHeader (LPTSTR pszRootPath)
 	/* print the volume serial number */
 	ConOutPrintf (_T(" Volume Serial Number is %04X-%04X\n"),
 				  HIWORD(dwSerialNr), LOWORD(dwSerialNr));
+        return 0;
 }
 
 
@@ -91,7 +96,8 @@ INT cmd_vol (LPTSTR cmd, LPTSTR param)
 	}
 
 	/* print the header */
-	PrintVolumeHeader (szRootPath);
+        if (!PrintVolumeHeader (szRootPath))
+            return 1;
 
 	return 0;
 }

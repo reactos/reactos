@@ -65,9 +65,7 @@
 /*#define INCLUDE_CMD_CTTY*/
 #define INCLUDE_CMD_DATE
 #define INCLUDE_CMD_DEL
-#ifndef __REACTOS__
 #define INCLUDE_CMD_DIR
-#endif
 #define INCLUDE_CMD_LABEL
 #define INCLUDE_CMD_MKDIR
 #define INCLUDE_CMD_MOVE
