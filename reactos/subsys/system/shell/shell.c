@@ -1,4 +1,4 @@
-/* $Id: shell.c,v 1.8 2002/02/08 02:57:06 chorns Exp $
+/* $Id: shell.c,v 1.9 2002/05/02 09:10:00 jfilby Exp $
  *
  * PROJECT    : ReactOS Operating System
  * DESCRIPTION: ReactOS' Native Shell
@@ -16,7 +16,7 @@
 
 
 HANDLE InputHandle, OutputHandle;
-BOOL   bCanExit = TRUE;
+BOOL   bCanExit = TRUE, bCanLinespace = TRUE;
 
 
 void debug_printf(char* fmt, ...)
@@ -31,6 +31,20 @@ void debug_printf(char* fmt, ...)
    WriteConsoleA(OutputHandle, buffer, strlen(buffer), &nbChar, NULL);
 }
 
+void ExecuteCls(void)
+{
+   DWORD dwWritten;
+   CONSOLE_SCREEN_BUFFER_INFO csbi;
+   COORD coPos;
+
+   GetConsoleScreenBufferInfo (OutputHandle, &csbi);
+
+   coPos.X = 0;
+   coPos.Y = 0;
+   FillConsoleOutputAttribute (OutputHandle, csbi.wAttributes, (csbi.dwSize.X)*(csbi.dwSize.Y), coPos, &dwWritten);
+   FillConsoleOutputCharacter (OutputHandle, _T(' '), (csbi.dwSize.X)*(csbi.dwSize.Y), coPos, &dwWritten);
+   SetConsoleCursorPosition (OutputHandle, coPos);
+}
 
 void ExecuteVer(void)
 {
@@ -69,7 +83,7 @@ void ExecuteDir(char* cmdline)
 
    if (shandle==INVALID_HANDLE_VALUE)
      {
-	debug_printf("File not found\n\n");
+	debug_printf("File not found\n");
 	return;
      }
    do
@@ -88,7 +102,7 @@ void ExecuteDir(char* cmdline)
 
 	debug_printf("%s\n",FindData.cFileName);
      } while(FindNextFile(shandle,&FindData));
-   debug_printf("\n    %d files\n    %d directories\n\n",nFile,nRep);
+   debug_printf("\n    %d files\n    %d directories\n",nFile,nRep);
    FindClose(shandle);
 }
 
@@ -284,7 +298,7 @@ void ExecuteHelp (void * dummy)
 		"type [file]\t\tPrint the file on console\n"
 		"validate\t\tValidate the process' heap\n"
 		"ver\t\t\tPrint version information\n"
-		"[program.exe]\t\tStart synchronously program.exe\n\n"
+		"[program.exe]\t\tStart synchronously program.exe\n"
 		);
 }
 
@@ -412,6 +426,12 @@ void ExecuteCommand(char* line)
           }
 	return;
      }
+   if (strcmp(cmd,"cls") == 0)
+     {
+	ExecuteCls();
+        bCanLinespace = FALSE;
+	return;
+     }
    if (ExecuteProcess(cmd,tail,FALSE))
      {
 	return;
@@ -466,6 +486,11 @@ int main(void)
      {
 	ReadLine(line);
 	ExecuteCommand(line);
+        if(bCanLinespace)
+        {
+           printf("\n");
+        } else
+           bCanLinespace = TRUE;
      }
 
    return 0;
