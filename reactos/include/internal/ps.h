@@ -11,10 +11,10 @@ extern POBJECT_TYPE	PsThreadType;
 extern POBJECT_TYPE	PsProcessType;
 extern PETHREAD		CurrentThread;
 
-void PsInitThreadManagment(void);
+VOID PsInitThreadManagment(VOID);
 VOID PsInitProcessManagment(VOID);
 VOID PsInitIdleThread(VOID);
-VOID PsDispatchThread(VOID);
+VOID PsDispatchThread(ULONG NewThreadStatus);
 VOID PiTerminateProcessThreads(PEPROCESS Process, NTSTATUS ExitStatus);
 VOID PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus);
 VOID PsReleaseThread(PETHREAD Thread);

@@ -29,7 +29,7 @@
 #include <internal/symbol.h>
 #include <internal/teb.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 #include "syspath.h"
@@ -457,56 +457,56 @@ NTSTATUS LdrLoadImage(HANDLE		ProcessHandle,
 		sizeof (DupSectionHandle),
 		& BytesWritten
 		);
-	/*
-	 * Create a peb (grungy)
-	 */ 
-	Status = LdrCreatePeb(ProcessHandle);
-	if (!NT_SUCCESS(Status))
-	{
-		DbgPrint("LDR: Failed to create initial peb\n");
-		return (Status);
-	}
-	/*
-	 * Initialize context to point to LdrStartup
-	 */
-	memset(&Context,0,sizeof(CONTEXT));
-	Context.SegSs = USER_DS;
-	Context.Esp = STACK_TOP - 16;
-	Context.EFlags = 0x202;
-	Context.SegCs = USER_CS;
-	Context.Eip = LdrStartupAddr;
-	Context.SegDs = USER_DS;
-	Context.SegEs = USER_DS;
-	Context.SegFs = USER_DS;
-	Context.SegGs = USER_DS;
+   /*
+    * Create a peb (grungy)
+    */ 
+   Status = LdrCreatePeb(ProcessHandle);
+   if (!NT_SUCCESS(Status))
+     {
+	DbgPrint("LDR: Failed to create initial peb\n");
+	return (Status);
+     }
    
-	DPRINT("LdrStartupAddr %x\n",LdrStartupAddr);
-	/*
-	 * FIXME: Create process and let 'er rip
-	 */
-	Status = ZwCreateThread(
-			& ThreadHandle,
-			THREAD_ALL_ACCESS,
-			NULL,
-			ProcessHandle,
-			NULL,
-			& Context,
-			NULL,
-			FALSE
-			);
-	if (!NT_SUCCESS(Status))
-	{
-		DPRINT("Thread creation failed ");
-		DbgPrintErrorMessage(Status);
+   /*
+    * Initialize context to point to LdrStartup
+    */
+   memset(&Context,0,sizeof(CONTEXT));
+   Context.SegSs = USER_DS;
+   Context.Esp = STACK_TOP - 16;
+   Context.EFlags = 0x202;
+   Context.SegCs = USER_CS;
+   Context.Eip = LdrStartupAddr;
+   Context.SegDs = USER_DS;
+   Context.SegEs = USER_DS;
+   Context.SegFs = USER_DS;
+   Context.SegGs = USER_DS;
+   
+   DPRINT("LdrStartupAddr %x\n",LdrStartupAddr);
+   /*
+    * FIXME: Create process and let 'er rip
+    */
+   DPRINT("Creating thread for initial process\n");
+   Status = ZwCreateThread(&ThreadHandle,
+			   THREAD_ALL_ACCESS,
+			   NULL,
+			   ProcessHandle,
+			   NULL,
+			   &Context,
+			   NULL,
+			   FALSE);
+   if (!NT_SUCCESS(Status))
+     {
+	DPRINT("Thread creation failed ");
+	DbgPrintErrorMessage(Status);
+	
+	/* FIXME: destroy the stack memory block here  */
+	/* FIXME: unmap the section here  */
+	/* FIXME: destroy the section here  */
+	
+	return Status;
+     }
 
-		/* FIXME: destroy the stack memory block here  */
-		/* FIXME: unmap the section here  */
-		/* FIXME: destroy the section here  */
-
-		return Status;
-	}
-
-	return STATUS_SUCCESS;
+   return STATUS_SUCCESS;
 }
 
 

@@ -91,6 +91,7 @@ HANDLE STDCALL CreateRemoteThread(HANDLE hProcess,
    StackSize = (dwStackSize == 0) ? 4096 : dwStackSize;
 
    BaseAddress = 0;
+
    Status = NtAllocateVirtualMemory(hProcess,
                                     &BaseAddress,
                                     0,
@@ -102,6 +103,7 @@ HANDLE STDCALL CreateRemoteThread(HANDLE hProcess,
         DPRINT("Could not allocate stack space!\n");
         return NULL;
      }
+
 
    DPRINT("Stack base address: %p\n", BaseAddress);
    

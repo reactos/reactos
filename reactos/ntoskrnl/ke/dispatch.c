@@ -25,5 +25,5 @@ VOID KiDispatchInterrupt(ULONG irq)
 	KeExpireTimers();
      }
    KeDrainDpcQueue();
-   PsDispatchThread();
+   PsDispatchThread(THREAD_STATE_RUNNABLE);
 }

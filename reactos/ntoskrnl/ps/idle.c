@@ -20,6 +20,7 @@
 
 HANDLE PsIdleThreadHandle = NULL;
 extern ULONG DpcQueueSize;
+PETHREAD PiIdleThread;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -29,7 +30,9 @@ static NTSTATUS PsIdleThreadMain(PVOID Context)
    
    for(;;)
      {
-        DPRINT("Idling.... DpcQueueSize %d\n",DpcQueueSize);
+//        DPRINT1("Idling DpcQueueSize %d, Irql\n",DpcQueueSize, 
+//	       KeGetCurrentIrql());
+//	DbgPrint(".");
 	if (DpcQueueSize > 0)
 	  {
 	     KeRaiseIrql(DISPATCH_LEVEL,&oldlvl);

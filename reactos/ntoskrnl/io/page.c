@@ -46,6 +46,7 @@ NTSTATUS IoPageRead(PFILE_OBJECT FileObject,
 				      StatusBlock);
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->FileObject = FileObject;
+   DPRINT("Before IoCallDriver\n");
    Status = IoCallDriver(FileObject->DeviceObject,Irp);
    DPRINT("Status %d STATUS_PENDING %d\n",Status,STATUS_PENDING);
    if (Status==STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))

@@ -31,17 +31,19 @@ start:
 
 _idt_descr:
         .word (256*8)-1
-        .long _idt
+        .long _KiIdt
 
 _gdt_descr:
         .word ((6+NR_TASKS)*8)-1
         .long _KiGdt
 
-_idt:
-        .fill 256,8,0
+/*_idt:
+        .fill 256,8,0 */
+
+.text
 
 _init_stack:
-        .fill 4096,1,0
+        .fill 16384,1,0
 _init_stack_top:
 
 #if 0

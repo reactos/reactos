@@ -268,7 +268,7 @@ VOID IoCompleteRequest(PIRP Irp, CCHAR PriorityBoost)
    PKTHREAD Thread;
    
    DPRINT("IoCompleteRequest(Irp %x, PriorityBoost %d)\n",
-	  Irp,PriorityBoost);
+	   Irp,PriorityBoost);
 
    for (i=0;i<Irp->StackCount;i++)
      {

@@ -178,7 +178,8 @@ NTSTATUS HalInitTaskWithContext(PETHREAD Thread, PCONTEXT Context)
       
    length = sizeof(hal_thread_state) - 1;
    base = (unsigned int)(&(Thread->Tcb.Context));
-   kernel_stack = ExAllocatePool(NonPagedPool,PAGESIZE);
+//   kernel_stack = ExAllocatePool(NonPagedPool,PAGESIZE);
+   kernel_stack = ExAllocatePool(NonPagedPool, 3*PAGESIZE);
    
    /*
     * Setup a TSS descriptor
@@ -237,12 +238,15 @@ NTSTATUS HalInitTask(PETHREAD thread, PKSTART_ROUTINE fn, PVOID StartContext)
    unsigned int desc;
    unsigned int length = sizeof(hal_thread_state) - 1;
    unsigned int base = (unsigned int)(&(thread->Tcb.Context));
-   PULONG KernelStack = ExAllocatePool(NonPagedPool,4096);
+//   PULONG KernelStack = ExAllocatePool(NonPagedPool,4096);
+   PULONG KernelStack;
    ULONG GdtDesc[2];
    
    DPRINT("HalInitTask(Thread %x, fn %x, StartContext %x)\n",
           thread,fn,StartContext);
    DPRINT("thread->ThreadsProcess %x\n",thread->ThreadsProcess);
+   
+   KernelStack = ExAllocatePool(NonPagedPool, 3*PAGESIZE);
    
    /*
     * Make sure

@@ -416,6 +416,7 @@ IDEResetController(IN WORD CommandPort,
         }
       KeStallExecutionProcessor(10);
     }
+   CHECKPOINT;
   if (Retries >= IDE_MAX_BUSY_RETRIES)
     {
       return FALSE;
@@ -430,11 +431,13 @@ IDEResetController(IN WORD CommandPort,
         }
       KeStallExecutionProcessor(10);
     }
+   CHECKPOINT;
   if (Retries >= IDE_RESET_BUSY_TIMEOUT * 1000)
     {
       return FALSE;
     }
-
+   
+   CHECKPOINT;
     //  return TRUE if controller came back to life. and
     //  the registers are initialized correctly
   return  IDEReadError(CommandPort) == 1 &&
@@ -1185,26 +1188,26 @@ IDEDispatchReadWrite(IN PDEVICE_OBJECT pDO,
 DPRINT("Offset:%ld * BytesPerSector:%ld  = AdjOffset:%ld:%ld\n",
        DeviceExtension->Offset, 
        DeviceExtension->BytesPerSector,
-       (unsigned long) AdjustedOffset.HighPart,
-       (unsigned long) AdjustedOffset.LowPart);
+       (unsigned long) AdjustedOffset.u.HighPart,
+       (unsigned long) AdjustedOffset.u.LowPart);
 DPRINT("AdjOffset:%ld:%ld + ByteOffset:%ld:%ld = ",
-       (unsigned long) AdjustedOffset.HighPart,
-       (unsigned long) AdjustedOffset.LowPart,
-       (unsigned long) IrpStack->Parameters.Read.ByteOffset.HighPart,
-       (unsigned long) IrpStack->Parameters.Read.ByteOffset.LowPart);
+       (unsigned long) AdjustedOffset.u.HighPart,
+       (unsigned long) AdjustedOffset.u.LowPart,
+       (unsigned long) IrpStack->Parameters.Read.ByteOffset.u.HighPart,
+       (unsigned long) IrpStack->Parameters.Read.ByteOffset.u.LowPart);
   AdjustedOffset = RtlLargeIntegerAdd(AdjustedOffset, 
                                       IrpStack->Parameters.Read.ByteOffset);
 DPRINT("AdjOffset:%ld:%ld\n",
-       (unsigned long) AdjustedOffset.HighPart,
-       (unsigned long) AdjustedOffset.LowPart);
+       (unsigned long) AdjustedOffset.u.HighPart,
+       (unsigned long) AdjustedOffset.u.LowPart);
   AdjustedExtent = RtlLargeIntegerAdd(AdjustedOffset, 
                                       RtlConvertLongToLargeInteger(IrpStack->Parameters.Read.Length));
 DPRINT("AdjOffset:%ld:%ld + Length:%ld = AdjExtent:%ld:%ld\n",
-       (unsigned long) AdjustedOffset.HighPart,
-       (unsigned long) AdjustedOffset.LowPart,
+       (unsigned long) AdjustedOffset.u.HighPart,
+       (unsigned long) AdjustedOffset.u.LowPart,
        IrpStack->Parameters.Read.Length,
-       (unsigned long) AdjustedExtent.HighPart,
-       (unsigned long) AdjustedExtent.LowPart);
+       (unsigned long) AdjustedExtent.u.HighPart,
+       (unsigned long) AdjustedExtent.u.LowPart);
     /* FIXME: this assumption will fail on drives bigger than 1TB */
   PartitionExtent.QuadPart = DeviceExtension->Offset + DeviceExtension->Size;
   PartitionExtent = RtlExtendedIntegerMultiply(PartitionExtent, 
@@ -1214,10 +1217,10 @@ DPRINT("AdjOffset:%ld:%ld + Length:%ld = AdjExtent:%ld:%ld\n",
     {
       DPRINT("Request failed on bad parameters\n",0);
       DPRINT("AdjustedExtent=%d:%d PartitionExtent=%d:%d ReadLength=%d\n", 
-             (unsigned int) AdjustedExtent.HighPart,
-             (unsigned int) AdjustedExtent.LowPart,
-             (unsigned int) PartitionExtent.HighPart,
-             (unsigned int) PartitionExtent.LowPart,
+             (unsigned int) AdjustedExtent.u.HighPart,
+             (unsigned int) AdjustedExtent.u.LowPart,
+             (unsigned int) PartitionExtent.u.HighPart,
+             (unsigned int) PartitionExtent.u.LowPart,
              IrpStack->Parameters.Read.Length);
       Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
       IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -1905,6 +1908,7 @@ IDEDpcForIsr(IN PKDPC Dpc,
              IN PIRP DpcIrp, 
              IN PVOID DpcContext)
 {
+   DPRINT("IDEDpcForIsr()\n");
   IDEFinishOperation((PIDE_CONTROLLER_EXTENSION) DpcContext);
 }
 

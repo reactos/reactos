@@ -1,4 +1,4 @@
-/* $Id: usercall.c,v 1.4 1999/10/07 23:35:10 ekohl Exp $
+/* $Id: usercall.c,v 1.5 1999/11/02 08:55:39 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -19,6 +19,10 @@
 #define NDEBUG
 #include <internal/debug.h>
 #include <internal/service.h>
+
+#include <ddk/defines.h>
+
+extern SERVICE_TABLE _SystemServiceTable[];
 
 /* The service dispatcher will take the service number passed in
  * by the user mode process, logical and it with ServiceNumberMask
@@ -70,9 +74,10 @@ void PsBeginThreadWithContextInternal(void);
    __asm__(
      "\n\t.global _PsBeginThreadWithContextInternal\n\t"
      "_PsBeginThreadWithContextInternal:\n\t"
-     "pushl $0\n\t"
-     "call _KeLowerIrql\n\t"
-     "popl %eax\n\t"
+//     "pushl $1\n\t"
+//     "call _KeLowerIrql\n\t"
+     "call _PiBeforeBeginThread\n\t"
+//     "popl %eax\n\t"
      "popl %eax\n\t"
      "popl %eax\n\t"
      "popl %eax\n\t"
@@ -93,6 +98,13 @@ void PsBeginThreadWithContextInternal(void);
      "popl %eax\n\t"
      "popl %ebp\n\t"
      "iret\n\t");
+
+VOID KiSystemCallHook(ULONG Nr)
+{
+//   DbgPrint("KiSystemCallHook(Nr %d) %d\n", Nr, KeGetCurrentIrql());
+//   DbgPrint("SystemCall %x\n", _SystemServiceTable[Nr].Function);
+   assert_irql(PASSIVE_LEVEL);
+}
 
 void interrupt_handler2e(void);
    __asm__("\n\t.global _interrupt_handler2e\n\t"
@@ -130,6 +142,11 @@ void interrupt_handler2e(void);
            /*  DS is now also kernel segment  */
            "movw %bx,%ds\n\t"
            
+	   /* Call system call hook */
+	   "pushl %eax\n\t"
+	   "call _KiSystemCallHook\n\t"
+	   "popl %eax\n\t"
+	   
            /*  Make the system service call  */
            "movl %ds:__SystemServiceTable+4(,%eax,8),%eax\n\t"
            "call *%eax\n\t"

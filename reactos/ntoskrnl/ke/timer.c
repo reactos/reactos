@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.18 1999/10/30 21:24:37 ea Exp $
+/* $Id: timer.c,v 1.19 1999/11/02 08:55:40 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -74,7 +74,7 @@ volatile ULONGLONG KiTimerTicks;
 static LIST_ENTRY timer_list_head = {NULL,NULL};
 static KSPIN_LOCK timer_list_lock = {0,};
 
-
+extern ULONG PiNrRunnableThreads;
 
 #define MICROSECONDS_PER_TICK (54945)
 #define TICKS_TO_CALIBRATE (1)
@@ -398,16 +398,16 @@ BOOLEAN KeCancelTimer(PKTIMER Timer)
    
    DPRINT("KeCancelTimer(Timer %x)\n",Timer);
    
-   KeAcquireSpinLock(&timer_list_lock,&oldlvl);
+   KeAcquireSpinLock(&timer_list_lock, &oldlvl);
 		     
    if (!Timer->running)
      {
-	KeReleaseSpinLock(&timer_list_lock,oldlvl);
+	KeReleaseSpinLock(&timer_list_lock, oldlvl);
 	return FALSE;
      }
    RemoveEntryList(&Timer->entry);
    Timer->running = FALSE;
-   KeReleaseSpinLock(&timer_list_lock,oldlvl);
+   KeReleaseSpinLock(&timer_list_lock, oldlvl);
 
    return TRUE;
 }
@@ -552,10 +552,10 @@ BOOLEAN KiTimerInterrupt(VOID)
      }
 //   sprintf(str,"%.8u %.8u",EiFreeNonPagedPool,ticks);
    memset(str, 0, sizeof(str));
-   sprintf(str,"%.8u %.8u",(unsigned int)EiNrUsedBlocks,
-	   (unsigned int)EiFreeNonPagedPool);
+//   sprintf(str,"%.8u %.8u",(unsigned int)EiNrUsedBlocks,
+//	   (unsigned int)EiFreeNonPagedPool);
 //   sprintf(str,"%.8u %.8u",EiFreeNonPagedPool,EiUsedNonPagedPool);
-//   sprintf(str,"%.8u %.8u",PiNrThreads,KiTimerTicks);
+   sprintf(str,"%.8u %.8u",PiNrRunnableThreads,KiTimerTicks);
    for (i=0;i<17;i++)
      {
 	*vidmem=str[i];

@@ -226,8 +226,8 @@ typedef struct _KTHREAD
 
    /* Provisionally added by David Welch */
    hal_thread_state                   Context;
-   LIST_ENTRY Entry;
-   ULONG LastTick;
+//   LIST_ENTRY Entry;
+//   ULONG LastTick;
 
 } KTHREAD, *PKTHREAD;
 

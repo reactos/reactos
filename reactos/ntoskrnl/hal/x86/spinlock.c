@@ -84,7 +84,7 @@ VOID KeReleaseSpinLockFromDpcLevel(PKSPIN_LOCK SpinLock)
 {
    if (SpinLock->Lock != 1)
      {
-	DbgPrint("Releasing unacquired spinlock\n");
+	DbgPrint("Releasing unacquired spinlock %x\n", SpinLock);
 	KeBugCheck(0);
      }
    (void)InterlockedExchange(&SpinLock->Lock, 0);

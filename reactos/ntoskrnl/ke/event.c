@@ -20,6 +20,7 @@
 
 VOID KeClearEvent(PKEVENT Event)
 {
+   DPRINT("KeClearEvent(Event %x)\n", Event);
    Event->Header.SignalState=FALSE;   
 }
 

@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.26 1999/08/29 06:59:06 ea Exp $
+/* $Id: rw.c,v 1.27 1999/11/02 08:55:40 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -36,138 +36,111 @@
  * REVISIONS
  *
  */
-NTSTATUS
-STDCALL
-NtReadFile (
-	HANDLE			FileHandle,
-	HANDLE			EventHandle,
-	PIO_APC_ROUTINE		ApcRoutine,
-	PVOID			ApcContext,
-	PIO_STATUS_BLOCK	IoStatusBlock,
-	PVOID			Buffer,
-	ULONG			Length,
-	PLARGE_INTEGER		ByteOffset,
-	PULONG			Key
-	)
+NTSTATUS STDCALL NtReadFile(HANDLE			FileHandle,
+			    HANDLE			EventHandle,
+			    PIO_APC_ROUTINE		ApcRoutine,
+			    PVOID			ApcContext,
+			    PIO_STATUS_BLOCK	IoStatusBlock,
+			    PVOID			Buffer,
+			    ULONG			Length,
+			    PLARGE_INTEGER		ByteOffset,
+			    PULONG			Key)
 {
-	NTSTATUS		Status;
-	PFILE_OBJECT		FileObject;
-	PIRP			Irp;
-	PIO_STACK_LOCATION	StackPtr;
-	PKEVENT			ptrEvent = NULL;
-	KEVENT			Event;
+   NTSTATUS		Status;
+   PFILE_OBJECT		FileObject;
+   PIRP			Irp;
+   PIO_STACK_LOCATION	StackPtr;
+   PKEVENT			ptrEvent = NULL;
+   KEVENT			Event;
    
-	DPRINT(
-		"NtReadFile(FileHandle %x Buffer %x Length %x ByteOffset %x, "
-		"IoStatusBlock %x)\n",
-		FileHandle,
-		Buffer,
-		Length,
-		ByteOffset,
-		IoStatusBlock
-		);
+   DPRINT("NtReadFile(FileHandle %x Buffer %x Length %x ByteOffset %x, "
+	  "IoStatusBlock %x)\n", FileHandle, Buffer, Length, ByteOffset,
+	  IoStatusBlock);
 
-	assert_irql(PASSIVE_LEVEL);
+   assert_irql(PASSIVE_LEVEL);
    
-	Status = ObReferenceObjectByHandle(
-			FileHandle,
-			FILE_READ_DATA,
-			IoFileType,
-			UserMode,
-			(PVOID *) & FileObject,
-			NULL
-			);
-	if (!NT_SUCCESS(Status))
-	{
-		DPRINT("NtReadFile() = %x\n",Status);
-		return Status;
-	}
-   
-	DPRINT(
-		"ByteOffset %x FileObject->CurrentByteOffset %d\n",
-		ByteOffset,
-		FileObject->CurrentByteOffset.LowPart
-		);
-	if (ByteOffset == NULL)
-	{
-		ByteOffset = & (FileObject->CurrentByteOffset);
-	}
-   
-	if (EventHandle != NULL)
-	{
-		Status = ObReferenceObjectByHandle(
-				EventHandle,
-				SYNCHRONIZE,
-				ExEventType,
-				UserMode,
-				(PVOID *) ptrEvent,
-				NULL
-				);
-		if (!NT_SUCCESS(Status))
-		{
-			return Status;
-		}
-	}
-	else
-	{
-		KeInitializeEvent(
-			& Event,
-			NotificationEvent,
-			FALSE
-			);
-		ptrEvent = & Event;
-	}
-					   
-	DPRINT("FileObject %x\n",FileObject);
-	
-	Irp = IoBuildSynchronousFsdRequest(
-			IRP_MJ_READ,
-			FileObject->DeviceObject,
-			Buffer,
-			Length,
-			ByteOffset,
-			ptrEvent,
-			IoStatusBlock
-			);
-   
-	Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
-	Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
-   
-	StackPtr = IoGetNextIrpStackLocation(Irp);
-	StackPtr->FileObject = FileObject;
-	if (Key != NULL)
-	{
-		StackPtr->Parameters.Read.Key = *Key;
-	}
-	else
-	{
-		StackPtr->Parameters.Read.Key = 0;
-	}
-   
-	Status = IoCallDriver(
-			FileObject->DeviceObject,
-			Irp
-			);
-	if (
-		(Status == STATUS_PENDING)
-		&& (FileObject->Flags & FO_SYNCHRONOUS_IO)
-		)
-	{
-		KeWaitForSingleObject(
-			& Event,
-			Executive,
-			KernelMode,
-			FALSE,
-			NULL
-			);
-		Status = IoStatusBlock->Status;
-	}
-	
+   Status = ObReferenceObjectByHandle(FileHandle,
+				      FILE_READ_DATA,
+				      IoFileType,
+				      UserMode,
+				      (PVOID *) & FileObject,
+				      NULL);
+   if (!NT_SUCCESS(Status))
+     {
 	DPRINT("NtReadFile() = %x\n",Status);
-	
-	assert_irql(PASSIVE_LEVEL);
-	
 	return Status;
+     }
+   
+   DPRINT("ByteOffset %x FileObject->CurrentByteOffset %d\n",
+	  ByteOffset, FileObject->CurrentByteOffset.u.LowPart);
+   if (ByteOffset == NULL)
+     {
+	ByteOffset = &(FileObject->CurrentByteOffset);
+     }
+   
+   if (EventHandle != NULL)
+     {
+	Status = ObReferenceObjectByHandle(EventHandle,
+					   SYNCHRONIZE,
+					   ExEventType,
+					   UserMode,
+					   (PVOID *) ptrEvent,
+					   NULL);
+	if (!NT_SUCCESS(Status))
+	  {
+	     return Status;
+	  }
+     }
+   else
+     {
+	KeInitializeEvent(&Event,
+			  NotificationEvent,
+			  FALSE);
+	ptrEvent = &Event;
+     }
+   
+   DPRINT("FileObject %x\n",FileObject);
+   
+   Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
+				      FileObject->DeviceObject,
+				      Buffer,
+				      Length,
+				      ByteOffset,
+				      ptrEvent,
+				      IoStatusBlock);
+   
+   Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
+   Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
+   
+   StackPtr = IoGetNextIrpStackLocation(Irp);
+   StackPtr->FileObject = FileObject;
+   if (Key != NULL)
+     {
+	StackPtr->Parameters.Read.Key = *Key;
+     }
+   else
+     {
+	StackPtr->Parameters.Read.Key = 0;
+     }
+   
+   Status = IoCallDriver(FileObject->DeviceObject,
+			 Irp);
+   if ((Status == STATUS_PENDING)
+       && (FileObject->Flags & FO_SYNCHRONOUS_IO))
+     {
+	KeWaitForSingleObject(&Event,
+			      Executive,
+			      KernelMode,
+			      FALSE,
+			      NULL);
+	Status = IoStatusBlock->Status;
+     }
+   
+   DPRINT("NtReadFile() = %x\n",Status);
+   
+   assert_irql(PASSIVE_LEVEL);
+	
+   return Status;
 }
 
 

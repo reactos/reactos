@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.36 1999/10/28 06:58:05 rex Exp $
+/* $Id: loader.c,v 1.37 1999/11/02 08:55:41 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -29,7 +29,7 @@
 #include <internal/string.h>
 #include <internal/symbol.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 #include "syspath.h"
@@ -162,48 +162,29 @@ VOID LdrInitModuleManagement(VOID)
 /*
  * load the auto config drivers.
  */
-static
-VOID
-LdrLoadAutoConfigDriver (
-	LPWSTR	RelativeDriverName
-	)
+static VOID LdrLoadAutoConfigDriver (LPWSTR	RelativeDriverName)
 {
-	WCHAR		TmpFileName [MAX_PATH];
-	NTSTATUS	Status;
-	UNICODE_STRING	DriverName;
+   WCHAR		TmpFileName [MAX_PATH];
+   NTSTATUS	Status;
+   UNICODE_STRING	DriverName;
+   
+   DbgPrint("Loading %w\n",RelativeDriverName);
+   
+   LdrGetSystemDirectory(TmpFileName, (MAX_PATH * sizeof(WCHAR)));
+   wcscat(TmpFileName, L"\\drivers\\");
+   wcscat(TmpFileName, RelativeDriverName);
 
-	LdrGetSystemDirectory(
-		TmpFileName,
-		(MAX_PATH * sizeof(WCHAR))
-		);
-	wcscat(
-		TmpFileName,
-		L"\\drivers\\"
-		);
-	wcscat(
-		TmpFileName,
-		RelativeDriverName
-		);
+   DriverName.Buffer = TmpFileName;
+   DriverName.Length = wcslen(TmpFileName) * sizeof (WCHAR);
+   DriverName.MaximumLength = DriverName.Length + sizeof(WCHAR);
 
-	DriverName.Buffer = 
-		TmpFileName;
-	DriverName.Length = 
-		wcslen(TmpFileName) 
-		* sizeof (WCHAR);
-	DriverName.MaximumLength = 
-		DriverName.Length 
-		+ sizeof(WCHAR);
 	
-	Status = LdrLoadDriver(&DriverName);
-	if (!NT_SUCCESS(Status))
-	{
-		DbgPrint(
-			"driver load failed, status;%d(%x)\n",
-			Status,
-			Status
-			);
-		DbgPrintErrorMessage(Status);
-	}
+   Status = LdrLoadDriver(&DriverName);
+   if (!NT_SUCCESS(Status))
+     {
+	DbgPrint("driver load failed, status;%d(%x)\n", Status, Status);
+	DbgPrintErrorMessage(Status);
+     }
 }
 
 
@@ -366,7 +347,8 @@ LdrLoadModule(PUNICODE_STRING Filename)
     }
   ModuleName.Length = ModuleName.MaximumLength = wcslen(NameBuffer);
   ModuleName.Buffer = NameBuffer;
-
+   
+   
   ModuleObject = LdrProcessModule(ModuleLoadBase, &ModuleName);
 
   /*  Cleanup  */
@@ -561,7 +543,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING pModuleName)
       return 0;
     }
   CHECKPOINT;
-   DPRINT("Module is at base %x\n",DriverBase);
+   DPRINT1("Module is at base %x\n",DriverBase);
    
   /*  Copy image sections into virtual section  */
   memcpy(DriverBase, ModuleLoadBase, PESectionHeaders[0].PointerToRawData);

@@ -1,4 +1,4 @@
-/* $Id: interlck.c,v 1.3 1999/08/29 06:59:11 ea Exp $
+/* $Id: interlck.c,v 1.4 1999/11/02 08:55:43 dwelch Exp $
  *
  * reactos/ntoskrnl/rtl/interlck.c
  *
@@ -9,18 +9,36 @@
 #include <ntos.h>
 #include <internal/debug.h>
 
+LONG FASTCALL InterlockedIncrement(PLONG Addend)
+{
+   LONG r;
+   (*Addend)++;
+   r = (*Addend);
+   return(r);
+}
+
+LONG FASTCALL InterlockedDecrement(PLONG Addend)
+{
+   LONG r;
+   (*Addend)--;
+   r = (*Addend);
+   return(r);
+}
 
 /**********************************************************************
  * FASTCALL: @InterlockedIncrement@0
  * STDCALL : _InterlockedIncrement@4
  */
-LONG
-FASTCALL
-InterlockedIncrement (
-	PLONG	Addend
-	);
-__asm__(
-	"\n\t.global _InterlockedIncrement@4\n\t"
+#if 0
+LONG FASTCALL InterlockedIncrement (PLONG Addend);
+/*
+ * FUNCTION: Increments a caller supplied variable of type LONG as an 
+ * atomic operation
+ * ARGUMENTS;
+ *     Addend = Points to a variable whose value is to be increment
+ * RETURNS: The incremented value
+ */
+__asm__("\n\t.global _InterlockedIncrement@4\n\t"
 	"_InterlockedIncrement@4:\n\t"
 	"pushl %ebp\n\t"
 	"movl  %esp,%ebp\n\t"
@@ -28,11 +46,14 @@ __asm__(
 	"movl $1,%eax\n\t"
 	"movl 8(%ebp),%ebx\n\t"
 	"xaddl %eax,(%ebx)\n\t"
+	"incl %eax\n\t"
 	"popl %ebx\n\t"
 	"movl %ebp,%esp\n\t"
 	"popl %ebp\n\t"
-	"ret $4\n\t"
-	);
+	"ret $4\n\t");
+#endif
+
+#if 0
 /*
 __asm__(
 #ifndef CONFIG_USE_FASTCALL 
@@ -51,26 +72,28 @@ __asm__(
 #endif
 	);
 */
-       
+#endif       
        
 /**********************************************************************
  * FASTCALL: @InterlockedDecrement@0
  * STDCALL : _InterlockedDecrement@4
  */
-LONG
-FASTCALL
-InterlockedDecrement (
-	PLONG	Addend
-	);
-__asm__(
-	"\n\t.global _InterlockedDecrement@4\n\t"
+#if 0
+LONG FASTCALL InterlockedDecrement(PLONG Addend);
+__asm__("\n\t.global _InterlockedDecrement@4\n\t"
 	"_InterlockedDecrement@4:\n\t"
-	"movl $0xffffffff,%eax\n\t"
-	"movl 4(%esp),%ebx\n\t"
+	"pushl %ebp\n\t"
+	"movl  %esp,%ebp\n\t"
+	"pushl %ebx\n\t"
+	"movl $-1,%eax\n\t"
+	"movl 8(%ebp),%ebx\n\t"
 	"xaddl %eax,(%ebx)\n\t"
 	"decl %eax\n\t"
-	"ret $4\n\t"
-	);
+	"popl %ebx\n\t"
+	"movl %ebp,%esp\n\t"
+	"popl %ebp\n\t"
+	"ret $4\n\t");
+#endif
  
 /**********************************************************************
  * FASTCALL: @InterlockedExchange@0

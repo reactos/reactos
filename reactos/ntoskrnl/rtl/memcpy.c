@@ -16,6 +16,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
+#undef memcpy
 void *memcpy (void *to, const void *from, size_t count)
 {
   const char *f = from;

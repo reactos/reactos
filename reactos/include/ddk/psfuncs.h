@@ -25,7 +25,7 @@ NTSTATUS PsCreateSystemThread(PHANDLE ThreadHandle,
 			      PKSTART_ROUTINE StartRoutine,
                               PVOID StartContext);
 NTSTATUS PsTerminateSystemThread(NTSTATUS ExitStatus);
-VOID PsSuspendThread(PETHREAD Thread);
-VOID PsResumeThread(PETHREAD Thread);
+ULONG PsSuspendThread(PETHREAD Thread);
+ULONG PsResumeThread(PETHREAD Thread);
 PETHREAD PsGetCurrentThread(VOID);
 struct _EPROCESS* PsGetCurrentProcess(VOID);

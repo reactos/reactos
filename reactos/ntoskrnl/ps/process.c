@@ -20,7 +20,7 @@
 #include <internal/id.h>
 #include <internal/teb.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS ******************************************************************/

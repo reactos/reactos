@@ -1,10 +1,10 @@
-# $Id: makefile_rex,v 1.33 1999/10/21 11:10:26 ekohl Exp $
+# $Id: makefile_rex,v 1.34 1999/11/02 08:55:38 dwelch Exp $
 #
 # ReactOS Operating System
 #
 TARGET=ntoskrnl
 
-BASE_CFLAGS = -I../include
+BASE_CFLAGS = -I../include -D__NTOSKRNL__
 
 all: objects $(TARGET).exe
 
@@ -27,7 +27,7 @@ KE_OBJECTS = ke/main.o ke/timer.o ke/error.o ke/catch.o \
              ke/dpc.o ke/wait.o ke/kqueue.o ke/dispatch.o \
 	     ke/sem.o ke/critical.o ke/event.o ke/apc.o ke/bug.o \
 	     ke/mutex.o ke/kernel.o ke/ldt.o ke/apchelp.o \
-	     ke/process.o ke/gdt.o
+	     ke/process.o ke/gdt.o ke/idt.o
 
 MM_OBJECTS = mm/mm.o mm/freelist.o mm/pool.o mm/virtual.o \
              mm/mdl.o mm/zone.o mm/special.o mm/paging.o \

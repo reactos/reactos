@@ -22,7 +22,7 @@
 
 /* GLOBALS ******************************************************************/
 
-static KSPIN_LOCK DispatcherDatabaseLock = {0,};
+static KSPIN_LOCK DispatcherDatabaseLock;
 static BOOLEAN WaitSet = FALSE;
 static KIRQL oldlvl = PASSIVE_LEVEL;
 static PKTHREAD Owner = NULL; 
@@ -47,7 +47,7 @@ VOID KeAcquireDispatcherDatabaseLock(BOOLEAN Wait)
  * PURPOSE: Acquires the dispatcher database lock for the caller
  */
 {
-//   DPRINT("KeAcquireDispatcherDatabaseLock(Wait %x)\n",Wait);
+   DPRINT("KeAcquireDispatcherDatabaseLock(Wait %x)\n",Wait);
    if (WaitSet && Owner == KeGetCurrentThread())
      {
 	return;
@@ -59,12 +59,12 @@ VOID KeAcquireDispatcherDatabaseLock(BOOLEAN Wait)
 
 VOID KeReleaseDispatcherDatabaseLock(BOOLEAN Wait)
 {
-//   DPRINT("KeReleaseDispatcherDatabaseLock(Wait %x)\n",Wait);  
+   DPRINT("KeReleaseDispatcherDatabaseLock(Wait %x)\n",Wait);  
    assert(Wait==WaitSet);
    if (!Wait)
      {
 	Owner = NULL;
-	KeReleaseSpinLock(&DispatcherDatabaseLock,oldlvl);
+	KeReleaseSpinLock(&DispatcherDatabaseLock, oldlvl);
      }
 }
 
@@ -144,7 +144,7 @@ static BOOLEAN KeDispatcherObjectWakeOne(DISPATCHER_HEADER* hdr)
      {
 	return(FALSE);
      }
-   current_entry=RemoveHeadList(&(hdr->WaitListHead));
+   current_entry = RemoveHeadList(&(hdr->WaitListHead));
    current = CONTAINING_RECORD(current_entry,KWAIT_BLOCK,
 			       WaitListEntry);
    DPRINT("current_entry %x current %x\n",current_entry,current);
@@ -188,8 +188,10 @@ static BOOLEAN KeDispatcherObjectWakeOne(DISPATCHER_HEADER* hdr)
      }
 
    DPRINT("Waking %x\n",current->Thread);
+   
    if (hdr->Type == SemaphoreType)
       hdr->SignalState--;
+   
    PsResumeThread(CONTAINING_RECORD(current->Thread,ETHREAD,Tcb));
    return(TRUE);
 }
@@ -493,16 +495,11 @@ VOID KeInitializeDispatcher(VOID)
    KeInitializeSpinLock(&DispatcherDatabaseLock);
 }
 
-
-NTSTATUS
-STDCALL
-NtWaitForMultipleObjects (
-	IN	ULONG		Count,
-	IN	HANDLE		Object [],
-	IN	CINT		WaitType,
-	IN	BOOLEAN		Alertable,
-	IN	PLARGE_INTEGER	Time
-	)
+NTSTATUS STDCALL NtWaitForMultipleObjects(IN ULONG Count,
+					  IN HANDLE Object [],
+					  IN CINT WaitType,
+					  IN BOOLEAN Alertable,
+					  IN PLARGE_INTEGER Time)
 {
    KWAIT_BLOCK WaitBlockArray[64]; /* FIXME: use MAXIMUM_WAIT_OBJECTS instead */
    PVOID ObjectPtrArray[64];       /* FIXME: use MAXIMUM_WAIT_OBJECTS instead */

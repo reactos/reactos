@@ -42,8 +42,8 @@ BOOLEAN VFATReadSectors(IN PDEVICE_OBJECT pDeviceObject,
            DiskSector,
            Buffer);
     DPRINT("sectorNumber %08lx:%08lx sectorSize %ld\n", 
-           (unsigned long int)sectorNumber.LowPart,
-           (unsigned long int)sectorNumber.HighPart,
+           (unsigned long int)sectorNumber.u.LowPart,
+           (unsigned long int)sectorNumber.u.HighPart,
            sectorSize);
 
 

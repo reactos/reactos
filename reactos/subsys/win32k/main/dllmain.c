@@ -298,7 +298,12 @@ SERVICE_TABLE W32kServiceTable[] =
   {4, (ULONG) W32kWidenPath},
 };
 
-WINBOOL STDCALL  DllMain(VOID)
+/*
+ * This definition doesn't work
+ */
+// WINBOOL STDCALL DllMain(VOID)
+STDCALL NTSTATUS DllMain(IN PDRIVER_OBJECT DriverObject,
+			     IN PUNICODE_STRING RegistryPath)
 {
   NTSTATUS  Status;
   

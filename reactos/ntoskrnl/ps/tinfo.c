@@ -125,11 +125,10 @@ NtQueryInformationThread (
 }
 
 
-ULONG
-KeGetPreviousMode (VOID)
+ULONG KeGetPreviousMode(VOID)
 {
-	/* CurrentThread is in ntoskrnl/ps/thread.c */
-	return (ULONG) CurrentThread->Tcb.PreviousMode;
+   /* CurrentThread is in ntoskrnl/ps/thread.c */
+   return (ULONG)PsGetCurrentThread()->Tcb.PreviousMode;
 }
 
 

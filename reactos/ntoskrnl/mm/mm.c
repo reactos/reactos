@@ -167,16 +167,18 @@ asmlinkage int page_fault_handler(unsigned int cs,
    MEMORY_AREA* MemoryArea;
    KIRQL oldlvl;
    NTSTATUS Status;
+   unsigned int cr2;
    
    /*
     * Get the address for the page fault
     */
-   unsigned int cr2;
    __asm__("movl %%cr2,%0\n\t" : "=d" (cr2));                
    DPRINT("Page fault at address %x with eip %x in process %x\n",cr2,eip,
 	  PsGetCurrentProcess());
 
    cr2 = PAGE_ROUND_DOWN(cr2);
+   
+//   DbgPrint("(%%");
    
    if (KeGetCurrentIrql() >= DISPATCH_LEVEL)
      {
@@ -237,6 +239,7 @@ asmlinkage int page_fault_handler(unsigned int cs,
      {
 	KeLowerIrql(oldlvl);
      }
+//   DbgPrint("%%)");
    return(NT_SUCCESS(Status));
 }
 

@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.12 1999/10/07 23:38:08 ekohl Exp $
+/* $Id: handle.c,v 1.13 1999/11/02 08:55:42 dwelch Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -36,10 +36,7 @@ typedef struct
 /* FUNCTIONS ***************************************************************/
 
 
-static
-PHANDLE_REP
-ObpGetObjectByHandle(PEPROCESS Process,
-					HANDLE h)
+static PHANDLE_REP ObpGetObjectByHandle(PEPROCESS Process, HANDLE h)
 /*
  * FUNCTION: Get the data structure for a handle
  * ARGUMENTS:
@@ -192,8 +189,7 @@ ObDeleteHandleTable(PEPROCESS Process)
 }
 
 
-VOID
-ObCreateHandleTable(PEPROCESS Parent,
+VOID ObCreateHandleTable(PEPROCESS Parent,
 			 BOOLEAN Inherit,
 			 PEPROCESS Process)
 /*
@@ -204,6 +200,11 @@ ObCreateHandleTable(PEPROCESS Parent,
  *       Process = Process whose handle table is to be created
  */
 {
+   PHANDLE_TABLE ParentHandleTable;
+   KIRQL oldIrql;
+   PLIST_ENTRY parent_current;
+   ULONG i;
+   
    DPRINT("ObCreateHandleTable(Parent %x, Inherit %d, Process %x)\n",
 	  Parent,Inherit,Process);
    
@@ -212,12 +213,48 @@ ObCreateHandleTable(PEPROCESS Parent,
    
    if (Parent != NULL)
      {
+	ParentHandleTable = &Parent->Pcb.HandleTable;
+	
+	KeAcquireSpinLock(&Parent->Pcb.HandleTable.ListLock, &oldIrql);
+	
+	parent_current = ParentHandleTable->ListHead.Flink;
+	
+	while (parent_current != &ParentHandleTable->ListHead)
+	  {
+	     HANDLE_BLOCK* current_block = CONTAINING_RECORD(parent_current,
+							     HANDLE_BLOCK,
+							     entry);
+	     HANDLE NewHandle;
+	     
+	     for (i=0; i<HANDLE_BLOCK_ENTRIES; i++)
+	       {
+		  if (Inherit || current_block->handles[i].Inherit)
+		    {
+		       ObCreateHandle(Process,
+				      current_block->handles[i].ObjectBody,
+				      current_block->handles[i].GrantedAccess,
+				      current_block->handles[i].Inherit,
+				      &NewHandle);
+		    }
+		  else
+		    {
+		       ObCreateHandle(Process,
+				      NULL,
+				      0,
+				      current_block->handles[i].Inherit,
+				      &NewHandle);
+		    }
+	       }
+	     
+	     parent_current = parent_current->Flink;
+	  }
+	
+	KeReleaseSpinLock(&Parent->Pcb.HandleTable.ListLock, oldIrql);
      }
 }
 
 
-	VOID
-ObDeleteHandle(HANDLE Handle)
+VOID ObDeleteHandle(HANDLE Handle)
 {
    PHANDLE_REP Rep;
    
@@ -229,8 +266,7 @@ ObDeleteHandle(HANDLE Handle)
 }
 
 
-NTSTATUS
-ObCreateHandle(PEPROCESS Process,
+NTSTATUS ObCreateHandle(PEPROCESS Process,
 			PVOID ObjectBody,
 			ACCESS_MASK GrantedAccess,
 			BOOLEAN Inherit,

@@ -25,7 +25,6 @@
 asmlinkage int page_fault_handler(unsigned int cs,
                                   unsigned int eip);
 
-extern descriptor idt[256];
 static exception_hook* exception_hooks[256]={NULL,};
 
 #define _STR(x) #x
@@ -150,7 +149,7 @@ asmlinkage void exception_handler(unsigned int edi,
  *        Complete CPU context
  */
 {
-   unsigned int cr2;
+   unsigned int cr2, cr3;
    unsigned int i, j, sym;
    unsigned int* stack;
    static char *TypeStrings[] = 
@@ -213,11 +212,20 @@ asmlinkage void exception_handler(unsigned int edi,
    DbgPrint("CS:EIP %x:%x\n",cs&0xffff,eip);
    __asm__("movl %%cr2,%0\n\t"
 	   : "=d" (cr2));
-   DbgPrint("cr2 %x\n",cr2);
+   __asm__("movl %%cr3,%0\n\t"
+	   : "=d" (cr3));
+   DbgPrint("cr2 %x cr3 %x\n",cr2,cr3);
+//   for(;;);
    DbgPrint("Process: %x\n",PsGetCurrentProcess());
+   if (PsGetCurrentProcess() != NULL)
+     {
+	DbgPrint("Process id: %x\n", PsGetCurrentProcess()->UniqueProcessId);
+     }
    if (PsGetCurrentThread() != NULL)
      {
-	DbgPrint("Thread: %x\n",PsGetCurrentThread()->Cid.UniqueThread);
+	DbgPrint("Thread: %x Thread id: %x\n",
+		 PsGetCurrentThread(),
+		 PsGetCurrentThread()->Cid.UniqueThread);
      }
    DbgPrint("DS %x ES %x FS %x GS %x\n",ds&0xffff,es&0xffff,fs&0xffff,
 	    gs&0xfff);
@@ -238,7 +246,6 @@ asmlinkage void exception_handler(unsigned int edi,
      {
 	DbgPrint("kernel ESP %.8x\n",esp);
      }
-   
   if ((cs & 0xffff) == KERNEL_CS)
     {
       DbgPrint("ESP %x\n",esp);
@@ -282,7 +289,7 @@ asmlinkage void exception_handler(unsigned int edi,
         }
      }
    
-   DPRINT("Killing current task\n");
+   DPRINT1("Killing current task\n");
    KeLowerIrql(PASSIVE_LEVEL);
    if ((cs&0xffff) == USER_CS)
      {
@@ -319,18 +326,18 @@ VOID KeDumpStackFrames(ULONG DummyArg, ULONG NrFrames)
 static void set_system_call_gate(unsigned int sel, unsigned int func)
 {
    DPRINT("sel %x %d\n",sel,sel);
-        idt[sel].a = (((int)func)&0xffff) +
+        KiIdt[sel].a = (((int)func)&0xffff) +
                            (KERNEL_CS << 16);
-        idt[sel].b = 0xef00 + (((int)func)&0xffff0000);
-   DPRINT("idt[sel].b %x\n",idt[sel].b);
+        KiIdt[sel].b = 0xef00 + (((int)func)&0xffff0000);
+   DPRINT("idt[sel].b %x\n",KiIdt[sel].b);
 }
 
 static void set_interrupt_gate(unsigned int sel, unsigned int func)
 {
    DPRINT("set_interrupt_gate(sel %d, func %x)\n",sel,func);
-        idt[sel].a = (((int)func)&0xffff) +
+        KiIdt[sel].a = (((int)func)&0xffff) +
                            (KERNEL_CS << 16);
-        idt[sel].b = 0x8f00 + (((int)func)&0xffff0000);         
+        KiIdt[sel].b = 0x8f00 + (((int)func)&0xffff0000);         
 }
 
 asmlinkage unsigned int ExHookException(exception_hook fn, unsigned int exp)

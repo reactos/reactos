@@ -1164,6 +1164,7 @@ void VFATLoadCluster(PDEVICE_EXTENSION DeviceExt, PVOID Buffer, ULONG Cluster)
  	           Sector,
                    DeviceExt->Boot->SectorsPerCluster,
 	           Buffer);
+   DPRINT("Finished VFATReadSectors\n");
 }
 
 void VFATWriteCluster(PDEVICE_EXTENSION DeviceExt, PVOID Buffer, ULONG Cluster)

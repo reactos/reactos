@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.13 1999/10/31 22:43:40 ea Exp $
+# $Id: makefile,v 1.14 1999/11/02 08:55:45 dwelch Exp $
 #
 # WIN32K.SYS build spec
 #
@@ -44,7 +44,7 @@ $(TARGET).sys: $(OBJECTS) $(TARGET).def
 		--subsystem=native \
 		-mdll \
 		--dll \
-		-e _DllMain@12 \
+		-e _DllMain@8 \
 		-o junk.tmp \
 		-Wl,--image-base,0x0 \
 		-Wl,--file-alignment,0x1000 \
@@ -66,7 +66,7 @@ $(TARGET).sys: $(OBJECTS) $(TARGET).def
 		--subsystem=native \
 		-mdll \
 		--dll \
-		-e _DllMain@12 \
+		-e _DllMain@8 \
 		-o $(TARGET).sys \
 		$(TARGET).o \
 		../../ntoskrnl/ntoskrnl.a \

@@ -16,12 +16,14 @@
 #include <internal/mm.h>
 #include <internal/ob.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS *******************************************************************/
 
 extern ULONG PiNrThreads;
+extern ULONG PiNrRunnableThreads;
+extern KSPIN_LOCK PiThreadListLock;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -43,11 +45,16 @@ VOID PsTerminateCurrentThread(NTSTATUS ExitStatus)
    ObDereferenceObject(CurrentThread->ThreadsProcess);
    CurrentThread->ThreadsProcess = NULL;
    KeRaiseIrql(DISPATCH_LEVEL,&oldlvl);
+
+   PsDispatchThread(THREAD_STATE_TERMINATED);
+   KeBugCheck(0);
+#if 0
    CurrentThread->Tcb.State = THREAD_STATE_TERMINATED;
    CurrentThread->Tcb.DispatcherHeader.SignalState = TRUE;
    KeDispatcherObjectWake(&CurrentThread->Tcb.DispatcherHeader);
    ZwYieldExecution();
    for(;;);
+#endif
 }
 
 VOID PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus)
@@ -55,25 +62,26 @@ VOID PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus)
  * FUNCTION: Terminate a thread when calling from that thread's context
  */
 {
-   KIRQL oldlvl;
+   KIRQL oldIrql;
    
+   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
    PiNrThreads--;
-   KeRaiseIrql(DISPATCH_LEVEL, &oldlvl);
+   if (Thread->Tcb.State == THREAD_STATE_RUNNABLE)
+     {
+	PiNrRunnableThreads--;
+	RemoveEntryList(&Thread->Tcb.QueueListEntry);
+     }
    Thread->Tcb.State = THREAD_STATE_TERMINATED;
    Thread->Tcb.DispatcherHeader.SignalState = TRUE;
    KeDispatcherObjectWake(&Thread->Tcb.DispatcherHeader);
    ObDereferenceObject(Thread->ThreadsProcess);
    Thread->ThreadsProcess = NULL;
-   KeLowerIrql(oldlvl);
+   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 }
 
 
-NTSTATUS
-STDCALL
-NtTerminateProcess (
-	IN	HANDLE		ProcessHandle,
-	IN	NTSTATUS	ExitStatus
-	)
+NTSTATUS STDCALL NtTerminateProcess(IN	HANDLE		ProcessHandle,
+				    IN	NTSTATUS	ExitStatus)
 {
    NTSTATUS Status;
    PEPROCESS Process;
@@ -152,7 +160,7 @@ VOID PsReleaseThread(PETHREAD Thread)
 {
    DPRINT("PsReleaseThread(Thread %x)\n",Thread);
    
-   RemoveEntryList(&Thread->Tcb.Entry);
+//   RemoveEntryList(&Thread->Tcb.QueueListEntry);
    HalReleaseTask(Thread);
    ObDereferenceObject(Thread);
 }

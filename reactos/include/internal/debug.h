@@ -16,12 +16,8 @@
 #ifndef __INTERNAL_DEBUG
 #define __INTERNAL_DEBUG
 
-
-#ifndef NDEBUG
-#define DPRINT1(x) DbgPrint(x)
-#else
-#define DPRINT1(x)
-#endif
+#include <internal/string.h>
+#include <internal/ntoskrnl.h>
 
 #define UNIMPLEMENTED do {DbgPrint("%s at %s:%d is unimplemented, have a nice day\n",__FUNCTION__,__FILE__,__LINE__); for(;;);  } while(0);
 
@@ -36,11 +32,26 @@
 #define assert(x)
 #endif
 
+#define DPRINT1(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); ExAllocatePool(NonPagedPool,0); } while(0);
+
+extern unsigned int old_idt[256][2];
+//extern unsigned int idt;
+extern unsigned int old_idt_valid;
+
+#ifdef __NTOSKRNL__
+//#define DPRINT_CHECKS ExAllocatePool(NonPagedPool,0); assert(old_idt_valid || (!memcmp(old_idt,KiIdt,256*2)));
+//#define DPRINT_CHECKS ExAllocatePool(NonPagedPool,0);
+#define DPRINT_CHECKS
+#else
+#define DPRINT_CHECKS
+#endif
+
 #ifndef NDEBUG
 #define OLD_DPRINT(fmt,args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(fmt,args); } while(0);
-#define DPRINT(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); ExAllocatePool(NonPagedPool,0); } while(0);
+#define DPRINT(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); DPRINT_CHECKS  } while(0);
 #define CHECKPOINT do { DbgPrint("%s:%d\n",__FILE__,__LINE__); ExAllocatePool(NonPagedPool,0); } while(0);
 #else
+//#define DPRINT(args...) do { DPRINT_CHECKS } while (0);
 #define DPRINT(args...)
 #define OLD_DPRINT(args...)
 #define CHECKPOINT

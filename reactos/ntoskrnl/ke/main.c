@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.27 1999/10/26 04:52:38 rex Exp $
+/* $Id: main.c,v 1.28 1999/11/02 08:55:40 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -21,11 +21,12 @@
 #include <internal/module.h>
 #include <internal/ldr.h>
 #include <internal/ex.h>
+#include <internal/ps.h>
 
 #include <internal/mmhal.h>
 #include <internal/i386/segment.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS ****************************************************************/
@@ -121,6 +122,10 @@ static char * INIData =
   "\r\n"
   "";
 
+unsigned int old_idt[256][2];
+//extern unsigned int idt[];
+unsigned int old_idt_valid = 1;
+
 asmlinkage void _main(boot_param* _bp)
 /*
  * FUNCTION: Called by the boot loader to start the kernel
@@ -185,6 +190,9 @@ asmlinkage void _main(boot_param* _bp)
    LdrInitModuleManagement();
    CmInitializeRegistry();
       
+   memcpy(old_idt, KiIdt, sizeof(old_idt));
+   old_idt_valid = 0;
+   
    /*
     * Initalize services loaded at boot time
     */
@@ -219,8 +227,7 @@ asmlinkage void _main(boot_param* _bp)
     * Load Auto configured drivers
     */
    LdrLoadAutoConfigDrivers();
-
-      
+   
   /*
    *  Launch initial process
    */

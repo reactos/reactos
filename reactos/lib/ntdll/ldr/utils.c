@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.12 1999/10/17 18:16:31 ariadne Exp $
+/* $Id: utils.c,v 1.13 1999/11/02 08:55:38 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -295,7 +295,7 @@ LdrFindDll (
 	PIMAGE_OPTIONAL_HEADER	OptionalHeader;
 
 
-	DPRINT("NTDLL.LdrFindDll(Name %s)\n", Name);
+//	DPRINT("NTDLL.LdrFindDll(Name %s)\n", Name);
    
 	current = & LdrDllListHead;
 	do
@@ -307,14 +307,14 @@ LdrFindDll (
 		ExportDir = (PIMAGE_EXPORT_DIRECTORY)
 			((ULONG)ExportDir + (ULONG)current->BaseAddress);
 	
-		DPRINT("Scanning  %x %x %x\n",
-			ExportDir->Name,
-			current->BaseAddress,
-			(ExportDir->Name + current->BaseAddress)
-			);
-		DPRINT("Scanning %s\n",
-			ExportDir->Name + current->BaseAddress
-			);
+//		DPRINT("Scanning  %x %x %x\n",
+//			ExportDir->Name,
+//			current->BaseAddress,
+//			(ExportDir->Name + current->BaseAddress)
+//			);
+//		DPRINT("Scanning %s\n",
+//			ExportDir->Name + current->BaseAddress
+//			);
 		if (strcmp(ExportDir->Name + current->BaseAddress, Name) == 0)
 		{
 			*Dll = current;
@@ -476,11 +476,11 @@ LdrGetExportByName (
 	PVOID			ExName;
 	ULONG			Ordinal;
    
-	DPRINT(
-		"LdrFindExport(Module %x, SymbolName %s)\n",
-		Module,
-		SymbolName
-		);
+//	DPRINT(
+//		"LdrFindExport(Module %x, SymbolName %s)\n",
+//		Module,
+//		SymbolName
+//		);
    
 	ExportDir = (
 		Module->BaseAddress
@@ -516,11 +516,11 @@ LdrGetExportByName (
 				Module->BaseAddress,
 				ExNames[i]
 				);
-		DPRINT(
-			"Comparing '%s' '%s'\n",
-			ExName,
-			SymbolName
-			);
+//		DPRINT(
+//			"Comparing '%s' '%s'\n",
+//			ExName,
+//			SymbolName
+//			);
 		if (strcmp(ExName,SymbolName) == 0)
 		{
 			Ordinal = ExOrdinals[i];

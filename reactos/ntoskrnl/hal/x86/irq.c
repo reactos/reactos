@@ -100,7 +100,9 @@ asmlinkage VOID KiInterruptDispatch(ULONG irq)
    KIRQL old_level;
    PKINTERRUPT isr;
    PLIST_ENTRY current;
-
+   
+//   DbgPrint("{");
+   
    /*
     * Notify the rest of the kernel of the raised irq level
     */
@@ -175,7 +177,12 @@ asmlinkage VOID KiInterruptDispatch(ULONG irq)
 	__asm__("sti\n\t");
 	KiDispatchInterrupt(irq);
      }
+   else
+     {
+//	DbgPrint("$");
+     }
    KeSetCurrentIrql(old_level);
+//   DbgPrint("}");
 }
 
 void KeInitIRQ(void)
@@ -196,9 +203,9 @@ void KeInitIRQ(void)
     */
    for (i=0;i<NR_IRQS;i++)
      {
-	idt[IRQ_BASE+i].a=(irq_handler[i]&0xffff)+(KERNEL_CS<<16);
-	idt[IRQ_BASE+i].b=(irq_handler[i]&0xffff0000)+PRESENT+
-	                  I486_INTERRUPT_GATE;
+	KiIdt[IRQ_BASE+i].a=(irq_handler[i]&0xffff)+(KERNEL_CS<<16);
+	KiIdt[IRQ_BASE+i].b=(irq_handler[i]&0xffff0000)+PRESENT+
+	                    I486_INTERRUPT_GATE;
 	InitializeListHead(&isr_table[i]);
      }
 }

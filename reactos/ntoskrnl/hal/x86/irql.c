@@ -107,7 +107,7 @@ VOID KeSetCurrentIrql(KIRQL newlvl)
  * PURPOSE: Sets the current irq level without taking any action
  */
 {
-   DPRINT("KeSetCurrentIrql(newlvl %x)\n",newlvl);
+//   DPRINT("KeSetCurrentIrql(newlvl %x)\n",newlvl);
    CurrentIrql = newlvl;
 }
 
@@ -128,10 +128,16 @@ VOID KeLowerIrql(KIRQL NewIrql)
  */
 {
    KIRQL oldIrql;
-  
+   
+//   DbgPrint(">");
+   
    __asm__("cli\n\t");
    
-   DPRINT("NewIrql %x CurrentIrql %x\n",NewIrql,CurrentIrql);
+   DPRINT("KeLowerIrql(NewIrql %d)\n", NewIrql);
+//   DbgPrint("{");
+//   KeDumpStackFrames(0,32);
+//   DbgPrint("}\n");
+   //DPRINT("NewIrql %x CurrentIrql %x\n",NewIrql,CurrentIrql);
    if (NewIrql > CurrentIrql)
      {
 	DbgPrint("(%s:%d) NewIrql %x CurrentIrql %x\n",
@@ -155,8 +161,16 @@ VOID KeRaiseIrql(KIRQL NewIrql, PKIRQL OldIrql)
    /*
     * sanity check
     */
-  DPRINT("CurrentIrql %x NewIrql %x OldIrql %x\n",CurrentIrql,NewIrql,
-	 OldIrql);
+   
+//   DbgPrint("<");
+   
+//  DPRINT("CurrentIrql %x NewIrql %x OldIrql %x\n",CurrentIrql,NewIrql,
+//	 OldIrql);
+//   DbgPrint("{");
+//   KeDumpStackFrames(0,32);
+//   DbgPrint("}\n");
+   DPRINT("KeRaiseIrql(NewIrql %d, OldIrql %x, *OldIrql %d)\n",
+	    NewIrql, OldIrql, *OldIrql);
    if (NewIrql < CurrentIrql)
      {
 	DbgPrint("%s:%d CurrentIrql %x NewIrql %x OldIrql %x\n",
