@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.37 2003/05/29 08:50:23 ekohl Exp $
+# $Id: helper.mk,v 1.38 2003/06/17 19:40:07 hbirr Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -578,10 +578,31 @@ endif
 	  $(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS) $(MK_GCCLIBS)
 	- $(RM) temp.exp
 	- $(RSYM) $(MK_NOSTRIPNAME) $(MK_BASENAME).sym
+ifeq ($(FULL_MAP),yes)
+	$(OBJDUMP) -d -S $(MK_NOSTRIPNAME) > $(MK_BASENAME).map
+else
+	$(NM) --numeric-sort $(MK_NOSTRIPNAME) > $(MK_BASENAME).map
+endif
 
 $(MK_FULLNAME): $(MK_NOSTRIPNAME)
-	 $(CP) $(MK_NOSTRIPNAME) $(MK_FULLNAME)
-#	 $(STRIP) --strip-debug $(MK_FULLNAME)
+ifeq ($(MK_EXETYPE),dll)
+	$(CC) -Wl,--base-file,base.tmp \
+		-Wl,--entry,$(TARGET_ENTRY) \
+		$(TARGET_LFLAGS) \
+		-o junk.tmp \
+		$(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS) $(MK_GCCLIBS)
+	- $(RM) junk.tmp
+	$(DLLTOOL) --dllname $(MK_FULLNAME) \
+		--base-file base.tmp \
+		--output-exp temp.exp $(MK_EXTRACMD)
+	- $(RM) base.tmp
+endif
+	$(CC) $(TARGET_LFLAGS) \
+		-Wl,--entry,$(TARGET_ENTRY) $(MK_EXTRACMD2) \
+	  -o $(MK_FULLNAME) \
+	  -Wl,--strip-debug \
+	  $(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS) $(MK_GCCLIBS)
+	- $(RM) temp.exp
 
 endif # KM_MODE
 
@@ -618,6 +639,11 @@ $(MK_NOSTRIPNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_LIBS)
 	  $(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS) $(MK_GCCLIBS)
 	- $(RM) temp.exp
 	$(RSYM) $(MK_NOSTRIPNAME) $(MK_BASENAME).sym
+ifeq ($(FULL_MAP),yes)
+	$(OBJDUMP) -d -S $(MK_NOSTRIPNAME) > $(MK_BASENAME).map
+else
+	$(NM) --numeric-sort $(MK_NOSTRIPNAME) > $(MK_BASENAME).map
+endif
 
 $(MK_FULLNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_LIBS) $(MK_NOSTRIPNAME)
 	$(LD) -r -o $(MK_STRIPPED_OBJECT) $(MK_OBJECTS)
@@ -691,7 +717,7 @@ MK_CLEANDEPS := $(join $(dir $(MK_CLEANFILTERED)), $(addprefix ., $(notdir $(MK_
 
 clean:
 	- $(RM) *.o depend.d *.pch $(MK_BASENAME).sym $(MK_BASENAME).a $(TARGET_PATH)/$(MK_RES_BASE).coff \
-	  $(MK_FULLNAME) $(MK_NOSTRIPNAME) $(MK_CLEANFILES) $(MK_CLEANDEPS) \
+	  $(MK_FULLNAME) $(MK_NOSTRIPNAME) $(MK_CLEANFILES) $(MK_CLEANDEPS) $(MK_BASENAME).map \
 	  junk.tmp base.tmp temp.exp \
 	  $(TARGET_CLEAN)
 
@@ -718,14 +744,14 @@ else # MK_IMPLIBONLY
 ifeq ($(MK_MODE),static)
 
 install:
-	-
+	
+dist:
+
+bootcd:	
 
 else # MK_MODE
 
 install: $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME)
-
-endif # MK_MODE
-
 
 ifeq ($(INSTALL_SYMBOLS),no)
 
@@ -734,19 +760,9 @@ $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME):
 
 else # INSTALL_SYMBOLS
 
-# Don't install static libraries
-ifeq ($(MK_MODE),static)
-
-install:
-	-
-
-else # MK_MODE
-
 $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME): $(MK_FULLNAME) $(MK_BASENAME).sym
 	$(CP) $(MK_FULLNAME) $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME)
 	$(CP) $(MK_BASENAME).sym $(INSTALL_DIR)/symbols/$(MK_BASENAME).sym
-
-endif # MK_MODE
 
 endif # INSTALL_SYMBOLS
 
@@ -775,6 +791,8 @@ else # TARGET_BOOTSTRAP
 bootcd:
 	
 endif # TARGET_BOOTSTRAP
+    
+endif # MK_MODE     
 
 endif # MK_IMPLIBONLY
 

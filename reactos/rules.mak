@@ -8,6 +8,9 @@ ifeq ($(HOST),)
 HOST = mingw32-windows
 endif
 
+# Build map files which includes source and asm code
+# FULL_MAP = yes
+
 # Default to no PCH support
 ifeq ($(ROS_USE_PCH),)
 ROS_USE_PCH = no
@@ -82,6 +85,7 @@ RC = $(PREFIX)windres
 WRC = $(WINE_TOP)/tools/wrc/wrc
 RCINC = --include-dir $(PATH_TO_TOP)/include
 OBJCOPY = $(PREFIX)objcopy
+OBJDUMP =$(PREFIX)objdump
 TOOLS_PATH = $(PATH_TO_TOP)/tools
 CP = $(TOOLS_PATH)/rcopy
 RM = $(TOOLS_PATH)/rdel
