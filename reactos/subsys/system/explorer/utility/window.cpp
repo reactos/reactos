@@ -467,7 +467,7 @@ Button::Button(HWND parent, LPCTSTR text, int left, int top, int width, int heig
 }
 
 
-static RECT s_MyDrawText_Rect = {0, 0};
+static RECT s_MyDrawText_Rect = {0, 0, 0, 0};
 
 static BOOL CALLBACK MyDrawText(HDC hdc, LPARAM data, int cnt)
 {
