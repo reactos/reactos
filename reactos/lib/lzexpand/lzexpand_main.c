@@ -128,6 +128,8 @@ static INT read_header(HFILE fd,struct lzfileheader *head)
 
 /***********************************************************************
  *           LZStart   (LZ32.@)
+ *
+ * @unimplemented
  */
 INT WINAPI LZStart(void)
 {
@@ -146,6 +148,8 @@ INT WINAPI LZStart(void)
  *
  * since _llseek uses the same types as libc.lseek, we just use the macros of
  *  libc
+ *
+ * @implemented
  */
 HFILE WINAPI LZInit( HFILE hfSrc )
 {
@@ -192,6 +196,8 @@ HFILE WINAPI LZInit( HFILE hfSrc )
 /***********************************************************************
  *           LZDone   (LZEXPAND.9)
  *           LZDone   (LZ32.@)
+ *
+ * @unimplemented
  */
 void WINAPI LZDone(void)
 {
@@ -208,6 +214,8 @@ void WINAPI LZDone(void)
  * "file." is being translated to "file"
  * "file.bl_" (with lastchar 'a') is being translated to "file.bla"
  * "FILE.BL_" (with lastchar 'a') is being translated to "FILE.BLA"
+ *
+ * @implemented
  */
 
 INT WINAPI GetExpandedNameA( LPSTR in, LPSTR out )
@@ -279,6 +287,8 @@ INT WINAPI GetExpandedNameA( LPSTR in, LPSTR out )
 
 /***********************************************************************
  *           GetExpandedNameW   (LZ32.@)
+ *
+ * @implemented
  */
 INT WINAPI GetExpandedNameW( LPWSTR in, LPWSTR out )
 {
@@ -297,6 +307,8 @@ INT WINAPI GetExpandedNameW( LPWSTR in, LPWSTR out )
 
 /***********************************************************************
  *           LZRead   (LZ32.@)
+ *
+ * @implemented
  */
 INT WINAPI LZRead( HFILE fd, LPSTR vbuf, INT toread )
 {
@@ -388,6 +400,8 @@ INT WINAPI LZRead( HFILE fd, LPSTR vbuf, INT toread )
 
 /***********************************************************************
  *           LZSeek   (LZ32.@)
+ *
+ * @implemented
  */
 LONG WINAPI LZSeek( HFILE fd, LONG off, INT type )
 {
@@ -424,6 +438,8 @@ LONG WINAPI LZSeek( HFILE fd, LONG off, INT type )
  * Copies everything from src to dest
  * if src is a LZ compressed file, it will be uncompressed.
  * will return the number of bytes written to dest or errors.
+ *
+ * @implemented
  */
 LONG WINAPI LZCopy( HFILE src, HFILE dest )
 {
@@ -496,6 +512,8 @@ static LPSTR LZEXPAND_MangleName( LPCSTR fn )
  *           LZOpenFileA   (LZ32.@)
  *
  * Opens a file. If not compressed, open it as a normal file.
+ *
+ * @implemented
  */
 HFILE WINAPI LZOpenFileA( LPSTR fn, LPOFSTRUCT ofs, WORD mode )
 {
@@ -522,6 +540,8 @@ HFILE WINAPI LZOpenFileA( LPSTR fn, LPOFSTRUCT ofs, WORD mode )
 
 /***********************************************************************
  *           LZOpenFileW   (LZ32.@)
+ *
+ * @implemented
  */
 HFILE WINAPI LZOpenFileW( LPWSTR fn, LPOFSTRUCT ofs, WORD mode )
 {
@@ -537,6 +557,8 @@ HFILE WINAPI LZOpenFileW( LPWSTR fn, LPOFSTRUCT ofs, WORD mode )
 
 /***********************************************************************
  *           LZClose   (LZ32.@)
+ *
+ * @implemented
  */
 void WINAPI LZClose( HFILE fd )
 {
@@ -559,6 +581,8 @@ void WINAPI LZClose( HFILE fd )
  *
  * Copy src to dest (including uncompressing src).
  * NOTE: Yes. This is exactly the same function as LZCopy.
+ *
+ * @implemented
  */
 LONG WINAPI CopyLZFile( HFILE src, HFILE dest )
 {
