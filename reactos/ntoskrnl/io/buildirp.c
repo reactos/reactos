@@ -1,4 +1,4 @@
-/* $Id: buildirp.c,v 1.39 2004/03/04 00:07:00 navaraf Exp $
+/* $Id: buildirp.c,v 1.40 2004/06/19 08:53:35 vizzini Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -56,6 +56,10 @@ NTSTATUS IoPrepareIrpBuffer(PIRP Irp,
 	DPRINT("Doing direct i/o\n");
 	
 	Irp->MdlAddress = MmCreateMdl(NULL,Buffer,Length);
+	if(Irp->MdlAddress == NULL) {
+		DPRINT("MmCreateMdl: Out of memory!");
+		return(STATUS_NO_MEMORY);
+	}	
 	if (MajorFunction == IRP_MJ_READ)
 	  {
 	     MmProbeAndLockPages(Irp->MdlAddress,UserMode,IoWriteAccess);
@@ -298,6 +302,10 @@ IoBuildDeviceIoControlRequest(ULONG IoControlCode,
 					     FALSE,
 					     FALSE,
 					     Irp);
+	     if(Irp->MdlAddress == NULL) {
+		IoFreeIrp(Irp);
+		return(NULL);
+	     }
 	     MmProbeAndLockPages (Irp->MdlAddress,UserMode,IoReadAccess);
 	  }
 	break;

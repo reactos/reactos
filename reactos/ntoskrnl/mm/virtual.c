@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: virtual.c,v 1.75 2004/06/13 10:35:52 navaraf Exp $
+/* $Id: virtual.c,v 1.76 2004/06/19 08:53:35 vizzini Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/virtual.c
@@ -59,6 +59,12 @@ NtFlushVirtualMemory(IN HANDLE ProcessHandle,
    return(STATUS_NOT_IMPLEMENTED);
 }
 
+/* (tMk 2004.II.4)
+ * FUNCTION: Locks range of process virtual memory.
+ * Called from VirtualLock (lib\kernel32\mem\virtual.c)
+ *
+ * NOTE: This function will be correct if MmProbeAndLockPages() would be fully IMPLEMENTED.
+ */
 NTSTATUS STDCALL
 NtLockVirtualMemory(HANDLE ProcessHandle,
                     PVOID BaseAddress,
@@ -82,7 +88,7 @@ NtLockVirtualMemory(HANDLE ProcessHandle,
                                       UserMode,
                                       (PVOID*)(&Process),
                                       NULL);
-   if (Status != STATUS_SUCCESS)
+   if (!NT_SUCCESS(Status))
    {
       return(Status);
    }
@@ -90,6 +96,11 @@ NtLockVirtualMemory(HANDLE ProcessHandle,
    Mdl = MmCreateMdl(NULL,
                      BaseAddress,
                      NumberOfBytesToLock);
+   if(Mdl == NULL) 
+   {
+      ObDereferenceObject(Process);
+      return(STATUS_NO_MEMORY);
+   }
    MmProbeAndLockPages(Mdl,
                        UserMode,
                        IoWriteAccess);
@@ -102,7 +113,13 @@ NtLockVirtualMemory(HANDLE ProcessHandle,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL
+
+/* (tMk 2004.II.4)
+ * FUNCTION: 
+ * Called from VirtualQueryEx (lib\kernel32\mem\virtual.c)
+ *
+ */
+NTSTATUS STDCALL 
 NtQueryVirtualMemory (IN HANDLE ProcessHandle,
                       IN PVOID Address,
                       IN CINT VirtualMemoryInformationClass,
@@ -204,6 +221,12 @@ NtQueryVirtualMemory (IN HANDLE ProcessHandle,
    return(Status);
 }
 
+
+/* (tMk 2004.II.5)
+ * FUNCTION: 
+ * Called from VirtualProtectEx (lib\kernel32\mem\virtual.c)
+ *
+ */
 NTSTATUS STDCALL
 NtProtectVirtualMemory(IN HANDLE ProcessHandle,
                        IN PVOID *UnsafeBaseAddress,
@@ -226,6 +249,13 @@ NtProtectVirtualMemory(IN HANDLE ProcessHandle,
    if (!NT_SUCCESS(Status))
       return Status;
 
+   // (tMk 2004.II.5) in Microsoft SDK I read: 
+   // 'if this parameter is NULL or does not point to a valid variable, the function fails'
+   if(UnsafeOldAccessProtection == NULL) 
+   {
+      return(STATUS_INVALID_PARAMETER);
+   }
+   
    NumberOfBytesToProtect =
       PAGE_ROUND_UP(BaseAddress + NumberOfBytesToProtect) -
       PAGE_ROUND_DOWN(BaseAddress);
@@ -279,6 +309,13 @@ NtProtectVirtualMemory(IN HANDLE ProcessHandle,
    return(Status);
 }
 
+
+/* (tMk 2004.II.05)
+ * FUNCTION: 
+ * Called from ReadProcessMemory (lib\kernel32\mem\procmem.c) and KlInitPeb(lib\kernel32\process\create.c)
+ *
+ * NOTE: This function will be correct if MmProbeAndLockPages() would be fully IMPLEMENTED.
+ */
 NTSTATUS STDCALL
 NtReadVirtualMemory(IN HANDLE ProcessHandle,
                     IN PVOID BaseAddress,
@@ -301,7 +338,7 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
                                       UserMode,
                                       (PVOID*)(&Process),
                                       NULL);
-   if (Status != STATUS_SUCCESS)
+   if (!NT_SUCCESS(Status))
    {
       return(Status);
    }
@@ -309,6 +346,11 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
    Mdl = MmCreateMdl(NULL,
                      Buffer,
                      NumberOfBytesToRead);
+   if(Mdl == NULL) 
+   {
+      ObDereferenceObject(Process);
+      return(STATUS_NO_MEMORY);
+   }
    MmProbeAndLockPages(Mdl,
                        UserMode,
                        IoWriteAccess);
@@ -331,10 +373,13 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
 
    if (NumberOfBytesRead)
       *NumberOfBytesRead = NumberOfBytesToRead;
-
    return(STATUS_SUCCESS);
 }
 
+/* (tMk 2004.II.05)
+ * FUNCTION:  THIS function doesn't make a sense...
+ * Called from VirtualUnlock (lib\kernel32\mem\virtual.c)
+ */
 NTSTATUS STDCALL
 NtUnlockVirtualMemory(HANDLE ProcessHandle,
                       PVOID BaseAddress,
@@ -358,7 +403,7 @@ NtUnlockVirtualMemory(HANDLE ProcessHandle,
                                       UserMode,
                                       (PVOID*)(&Process),
                                       NULL);
-   if (Status != STATUS_SUCCESS)
+   if (!NT_SUCCESS(Status))
    {
       return(Status);
    }
@@ -366,6 +411,11 @@ NtUnlockVirtualMemory(HANDLE ProcessHandle,
    Mdl = MmCreateMdl(NULL,
                      BaseAddress,
                      NumberOfBytesToUnlock);
+   if(Mdl == NULL) 
+   {
+      ObDereferenceObject(Process);
+      return(STATUS_NO_MEMORY);
+   }
 
    ObDereferenceObject(Process);
 
@@ -382,6 +432,12 @@ NtUnlockVirtualMemory(HANDLE ProcessHandle,
 }
 
 
+/* (tMk 2004.II.05)
+ * FUNCTION:
+ * Called from WriteProcessMemory (lib\kernel32\mem\procmem.c) and KlInitPeb(lib\kernel32\process\create.c)
+ * 
+ * NOTE: This function will be correct if MmProbeAndLockPages() would be fully IMPLEMENTED.
+ */
 NTSTATUS STDCALL
 NtWriteVirtualMemory(IN HANDLE ProcessHandle,
                      IN PVOID BaseAddress,
@@ -404,7 +460,7 @@ NtWriteVirtualMemory(IN HANDLE ProcessHandle,
                                       UserMode,
                                       (PVOID*)(&Process),
                                       NULL);
-   if (Status != STATUS_SUCCESS)
+   if (!NT_SUCCESS(Status))
    {
       return(Status);
    }
@@ -415,7 +471,11 @@ NtWriteVirtualMemory(IN HANDLE ProcessHandle,
    MmProbeAndLockPages(Mdl,
                        UserMode,
                        IoReadAccess);
-
+   if(Mdl == NULL)
+   {
+      ObDereferenceObject(Process);
+      return(STATUS_NO_MEMORY);
+   }
    KeAttachProcess(Process);
 
    SystemAddress = MmGetSystemAddressForMdl(Mdl);
@@ -437,7 +497,8 @@ NtWriteVirtualMemory(IN HANDLE ProcessHandle,
    return(STATUS_SUCCESS);
 }
 
-/*
+/* FUNCTION:
+ * Called from EngSecureMem (subsys\win32k\eng\mem.c)
  * @unimplemented
  */
 PVOID STDCALL
@@ -457,7 +518,8 @@ MmSecureVirtualMemory (PVOID  Address,
 }
 
 
-/*
+/* FUNCTION:
+ * Called from EngUnsecureMem (subsys\win32k\eng\mem.c)
  * @unimplemented
  */
 VOID STDCALL

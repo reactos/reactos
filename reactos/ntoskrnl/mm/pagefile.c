@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.47 2004/06/06 09:13:21 hbirr Exp $
+/* $Id: pagefile.c,v 1.48 2004/06/19 08:53:35 vizzini Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -376,18 +376,13 @@ MiAllocPageFromPagingFile(PPAGINGFILE PagingFile)
       {
          if (!(PagingFile->AllocMap[i] & (1 << j)))
          {
-            break;
+            PagingFile->AllocMap[i] |= (1 << j);
+            PagingFile->UsedPages++;
+            PagingFile->FreePages--;
+            KeReleaseSpinLock(&PagingFile->AllocMapLock, oldIrql);
+            return((i * 32) + j);
          }
       }
-      if (j == 32)
-      {
-         continue;
-      }
-      PagingFile->AllocMap[i] |= (1 << j);
-      PagingFile->UsedPages++;
-      PagingFile->FreePages--;
-      KeReleaseSpinLock(&PagingFile->AllocMapLock, oldIrql);
-      return((i * 32) + j);
    }
 
    KeReleaseSpinLock(&PagingFile->AllocMapLock, oldIrql);
@@ -403,6 +398,12 @@ MmFreeSwapPage(SWAPENTRY Entry)
 
    i = FILE_FROM_ENTRY(Entry);
    off = OFFSET_FROM_ENTRY(Entry);
+   
+   if (i >= MAX_PAGING_FILES)
+   {
+	DPRINT1("Bad swap entry 0x%.8X\n", Entry);
+	KEBUGCHECK(0);
+   }
 
    KeAcquireSpinLock(&PagingFileListLock, &oldIrql);
    if (PagingFileList[i] == NULL)
@@ -410,9 +411,9 @@ MmFreeSwapPage(SWAPENTRY Entry)
       KEBUGCHECK(0);
    }
    KeAcquireSpinLockAtDpcLevel(&PagingFileList[i]->AllocMapLock);
-
-   PagingFileList[i]->AllocMap[off / 32] &= (~(1 << (off % 32)));
-
+   
+   PagingFileList[i]->AllocMap[off >> 5] &= (~(1 << (off % 32)));
+   
    PagingFileList[i]->FreePages++;
    PagingFileList[i]->UsedPages--;
 
@@ -685,6 +686,12 @@ MmInitializeCrashDump(HANDLE PageFileHandle, ULONG PageFileNum)
                                        FALSE,
                                        &Event,
                                        &Iosb);
+   if(Irp == NULL) 
+   {
+      ObDereferenceObject(PageFile);
+      return(STATUS_NO_MEMORY);// tMk - is this correct return code ???
+   }
+
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->FileObject = PageFile;
    StackPtr->DeviceObject = PageFileDevice;

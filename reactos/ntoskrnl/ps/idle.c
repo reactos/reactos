@@ -26,6 +26,9 @@ extern CHAR KiTimerSystemAuditing;
 
 /* FUNCTIONS *****************************************************************/
 
+/** System idle thread procedure
+ *
+ */
 VOID STDCALL
 PsIdleThreadMain(PVOID Context)
 {
@@ -50,28 +53,46 @@ PsIdleThreadMain(PVOID Context)
      }
 }
 
+
+/** Initialization of system idle thread
+ *
+ */ 
 VOID INIT_FUNCTION
 PsInitIdleThread(VOID)
 {
    KPRIORITY Priority;
    ULONG Affinity;
-
-   PsCreateSystemThread(&PsIdleThreadHandle,
+   NTSTATUS Status;
+   
+   Status = PsCreateSystemThread(&PsIdleThreadHandle,
 			THREAD_ALL_ACCESS,
 			NULL,
 			NULL,
 			NULL,
 			PsIdleThreadMain,
 			NULL);
-   
+   if(!NT_SUCCESS(Status)) {
+	DPRINT("Couldn't create Idle System Thread!");
+	KEBUGCHECK(0);
+	return;
+   }   
+
    Priority = LOW_PRIORITY;
-   NtSetInformationThread(PsIdleThreadHandle,
+   Status = NtSetInformationThread(PsIdleThreadHandle,
 			  ThreadPriority,
 			  &Priority,
 			  sizeof(Priority));
+   if(!NT_SUCCESS(Status)) {
+	DPRINT("Couldn't set Priority to Idle System Thread!");
+	return;
+   }
+   
    Affinity = 1 << 0;
-   NtSetInformationThread(PsIdleThreadHandle,
+   Status = NtSetInformationThread(PsIdleThreadHandle,
 			  ThreadAffinityMask,
 			  &Affinity,
 			  sizeof(Affinity));
+   if(!NT_SUCCESS(Status)) {
+	DPRINT("Couldn't set Affinity Mask to Idle System Thread!");
+   }   
 }

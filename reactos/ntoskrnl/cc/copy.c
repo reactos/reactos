@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.24 2004/06/19 05:04:33 sedwards Exp $
+/* $Id: copy.c,v 1.25 2004/06/19 08:53:35 vizzini Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -139,7 +139,12 @@ ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
 	  /*
 	   * Create an MDL which contains all their pages.
 	   */
-          MmInitializeMdl(Mdl, NULL, current_size);
+	  Mdl = MmCreateMdl(NULL, NULL, current_size);
+	  if(Mdl == NULL) {
+		DPRINT("MmCreateMdl: Out of memory!");
+		return(STATUS_NO_MEMORY);
+	  }
+
 	  Mdl->MdlFlags |= (MDL_PAGES_LOCKED | MDL_IO_PAGE_READ);
 	  current2 = current;
 	  offset = 0;
@@ -222,8 +227,14 @@ ReadCacheSegment(PCACHE_SEGMENT CacheSeg)
     {
       Size = CacheSeg->Bcb->CacheSegmentSize;
     }
-  Mdl = alloca(MmSizeOfMdl(CacheSeg->BaseAddress, Size));
-  MmInitializeMdl(Mdl, CacheSeg->BaseAddress, Size);
+
+  Mdl = MmCreateMdl(NULL, CacheSeg->BaseAddress, Size);
+  if(Mdl == NULL) 
+    {
+      DPRINT("MmCreateMdl: Out of memory!");
+      return(STATUS_NO_MEMORY);
+    }  
+
   MmBuildMdlForNonPagedPool(Mdl);
   Mdl->MdlFlags |= MDL_IO_PAGE_READ;
   KeInitializeEvent(&Event, NotificationEvent, FALSE);
@@ -264,8 +275,14 @@ WriteCacheSegment(PCACHE_SEGMENT CacheSeg)
     {
       Size = CacheSeg->Bcb->CacheSegmentSize;
     }
-  Mdl = alloca(MmSizeOfMdl(CacheSeg->BaseAddress, Size));
-  MmInitializeMdl(Mdl, CacheSeg->BaseAddress, Size);
+
+  Mdl = MmCreateMdl(NULL, CacheSeg->BaseAddress, Size);
+  if(Mdl == NULL) 
+    {
+      DPRINT("MmCreateMdl: Out of memory!");
+      return(STATUS_NO_MEMORY);
+    }  
+
   MmBuildMdlForNonPagedPool(Mdl);
   Mdl->MdlFlags |= MDL_IO_PAGE_READ;
   KeInitializeEvent(&Event, NotificationEvent, FALSE);

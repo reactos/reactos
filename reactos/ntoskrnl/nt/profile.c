@@ -482,6 +482,10 @@ NtCreateProfile(OUT PHANDLE UnsafeProfileHandle,
   Profile->Size = ImageSize;
   Profile->BucketShift = Granularity;
   Profile->BufferMdl = MmCreateMdl(NULL, Buffer, BufferSize);
+  if(Profile->BufferMdl == NULL) {
+	DPRINT("MmCreateMdl: Out of memory!");
+	return(STATUS_NO_MEMORY);
+  }  
   MmProbeAndLockPages(Profile->BufferMdl, UserMode, IoWriteAccess);
   Profile->Buffer = MmGetSystemAddressForMdl(Profile->BufferMdl);
   Profile->BufferSize = BufferSize;
