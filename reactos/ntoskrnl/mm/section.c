@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.92 2002/08/20 20:37:13 hyperion Exp $
+/* $Id: section.c,v 1.93 2002/08/27 06:40:32 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -339,7 +339,6 @@ MiReadPage(PMEMORY_AREA MemoryArea,
       PVOID BaseAddress;
       BOOLEAN UptoDate;
       PCACHE_SEGMENT CacheSeg;
-      LARGE_INTEGER SegOffset;
       PHYSICAL_ADDRESS Addr;
 
       /*
@@ -363,21 +362,11 @@ MiReadPage(PMEMORY_AREA MemoryArea,
 	   * If the cache segment isn't up to date then call the file
 	   * system to read in the data.
 	   */
-
-	  Mdl = MmCreateMdl(NULL, BaseAddress, Fcb->Bcb->CacheSegmentSize);
-	  MmBuildMdlForNonPagedPool(Mdl);
-	  SegOffset.QuadPart = BaseOffset;
-	  Status = IoPageRead(FileObject,
-			      Mdl,
-			      &SegOffset,
-			      &IoStatus,
-			      TRUE);
-	  if (!NT_SUCCESS(Status) && Status != STATUS_END_OF_FILE)
-	    {
-	      CcRosReleaseCacheSegment(Fcb->Bcb, CacheSeg, FALSE, FALSE, 
-				       FALSE);
-	      return(Status);
-	    }
+          Status = ReadCacheSegment(CacheSeg);
+	  if (!NT_SUCCESS(Status))
+	  {
+	      return Status;
+	  }
 	}
       /*
        * Retrieve the page from the cache segment that we actually want.
@@ -406,7 +395,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
        * Create an mdl to hold the page we are going to read data into.
        */
       Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
-      MmBuildMdlFromPages(Mdl, (PULONG)Page);
+      MmBuildMdlFromPages(Mdl, &Page->u.LowPart);
       /*
        * Call the FSD to read the page
        */
@@ -547,7 +536,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 
 	   Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
 					   Address,
-					   Attributes,
+					   MemoryArea->Attributes,
 					   Page,
 					   FALSE);
 	   if (!NT_SUCCESS(Status))
@@ -2946,7 +2935,6 @@ MmUnmapViewOfSection(PEPROCESS Process,
 					  BaseAddress);
    if (MemoryArea == NULL)
      {
-	MmUnlockAddressSpace(AddressSpace);
 	return(STATUS_UNSUCCESSFUL);
      }
 
