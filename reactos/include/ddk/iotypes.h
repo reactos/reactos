@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.44 2002/11/07 02:44:49 robd Exp $
+/* $Id: iotypes.h,v 1.45 2002/11/24 18:26:40 robd Exp $
  *
  */
 
@@ -62,12 +62,12 @@ typedef struct _SHARE_ACCESS
 
 /* FUNCTION TYPES ************************************************************/
 
-typedef VOID STDCALL
+typedef VOID STDCALL_FUNC
 (*PDRIVER_REINITIALIZE)(struct _DRIVER_OBJECT* DriverObject,
 			PVOID Context,
 			ULONG Count);
 
-typedef NTSTATUS STDCALL
+typedef NTSTATUS STDCALL_FUNC
 (*PIO_QUERY_DEVICE_ROUTINE)(PVOID Context,
 			    PUNICODE_STRING Pathname,
 			    INTERFACE_TYPE BusType,
@@ -80,12 +80,12 @@ typedef NTSTATUS STDCALL
 			    ULONG PeripheralNumber,
 			    PKEY_VALUE_FULL_INFORMATION* PI);
 
-typedef NTSTATUS STDCALL
+typedef NTSTATUS STDCALL_FUNC
 (*PIO_COMPLETION_ROUTINE)(struct _DEVICE_OBJECT* DeviceObject,
 			  struct _IRP* Irp,
 			  PVOID Context);
 
-typedef VOID STDCALL
+typedef VOID STDCALL_FUNC
 (*PIO_APC_ROUTINE)(PVOID ApcContext,
 		   struct _IO_STATUS_BLOCK* IoStatusBlock,
 		   ULONG Reserved);
@@ -489,14 +489,14 @@ typedef struct _IO_MAILSLOT_CREATE_BUFFER
 /*
  * Driver entry point declaration
  */
-typedef NTSTATUS STDCALL
+typedef NTSTATUS STDCALL_FUNC
 (*PDRIVER_INITIALIZE)(struct _DRIVER_OBJECT* DriverObject,
 		      PUNICODE_STRING RegistryPath);
 
 /*
  * Driver cancel declaration
  */
-typedef NTSTATUS STDCALL
+typedef NTSTATUS STDCALL_FUNC
 (*PDRIVER_CANCEL)(struct _DEVICE_OBJECT* DeviceObject,
 		  struct _IRP* RegistryPath);
 
@@ -689,7 +689,7 @@ typedef struct _DEVICE_OBJECT
  */
 //typedef NTSTATUS (*PFAST_IO_DISPATCH)(struct _DEVICE_OBJECT*, IRP*);
 //FIXME : this type is ok for read and write, but not for all routines
-typedef BOOLEAN STDCALL
+typedef BOOLEAN STDCALL_FUNC
 (*PFAST_IO_ROUTINE)(IN struct _FILE_OBJECT *FileObject,
 		    IN PLARGE_INTEGER FileOffset,
 		    IN ULONG Length,
@@ -733,27 +733,27 @@ typedef struct _FAST_IO_DISPATCH {
 /*
  * Dispatch routine type declaration
  */
-typedef NTSTATUS STDCALL
+typedef NTSTATUS STDCALL_FUNC
 (*PDRIVER_DISPATCH)(IN struct _DEVICE_OBJECT *DeviceObject,
 		   IN struct _IRP *Irp);
 
 /*
  * StartIo routine type declaration
  */
-typedef VOID STDCALL
+typedef VOID STDCALL_FUNC
 (*PDRIVER_STARTIO)(IN PDEVICE_OBJECT DeviceObject,
 		   IN PIRP Irp);
 
 /*
  * Unload routine type declaration
  */
-typedef VOID STDCALL
+typedef VOID STDCALL_FUNC
 (*PDRIVER_UNLOAD)(IN struct _DRIVER_OBJECT *DriverObject);
 
 /*
  * AddDevice routine type declaration
  */
-typedef NTSTATUS STDCALL
+typedef NTSTATUS STDCALL_FUNC
 (*PDRIVER_ADD_DEVICE)(IN struct _DRIVER_OBJECT *DriverObject,
 		      IN struct _DEVICE_OBJECT *PhysicalDeviceObject);
 
@@ -813,13 +813,13 @@ typedef struct _CONFIGURATION_INFORMATION
    BOOLEAN AtDiskSecondaryAddressClaimed;
 } CONFIGURATION_INFORMATION, *PCONFIGURATION_INFORMATION;
 
-typedef VOID STDCALL
+typedef VOID STDCALL_FUNC
 (*PIO_DPC_ROUTINE)(PKDPC Dpc,
 		   PDEVICE_OBJECT DeviceObject,
 		   PIRP Irp,
 		   PVOID Context);
 
-typedef VOID STDCALL
+typedef VOID STDCALL_FUNC
 (*PIO_TIMER_ROUTINE)(PDEVICE_OBJECT DeviceObject,
 		     PVOID Context);
 
@@ -848,13 +848,13 @@ typedef struct _DRIVER_LAYOUT_INFORMATION
 } DRIVER_LAYOUT_INFORMATION, *PDRIVER_LAYOUT_INFORMATION;
 
 
-typedef IO_ALLOCATION_ACTION STDCALL
+typedef IO_ALLOCATION_ACTION STDCALL_FUNC
 (*PDRIVER_CONTROL)(PDEVICE_OBJECT DeviceObject,
 		   PIRP Irp,
 		   PVOID MapRegisterBase,
 		   PVOID Context);
 #if (_WIN32_WINNT >= 0x0400)
-typedef VOID STDCALL
+typedef VOID STDCALL_FUNC
 (*PFSDNOTIFICATIONPROC)(IN PDEVICE_OBJECT PtrTargetFileSystemDeviceObject,
 			IN BOOLEAN DriverActive);
 #endif // (_WIN32_WINNT >= 0x0400)

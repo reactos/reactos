@@ -18,13 +18,13 @@ struct _KPROCESS;
 struct _ETHREAD;
 struct _KTHREAD;
 
-typedef NTSTATUS STDCALL (*PKSTART_ROUTINE)(PVOID StartContext);
+typedef NTSTATUS STDCALL_FUNC (*PKSTART_ROUTINE)(PVOID StartContext);
 
-typedef VOID STDCALL (*PCREATE_PROCESS_NOTIFY_ROUTINE)(HANDLE ParentId,
+typedef VOID STDCALL_FUNC (*PCREATE_PROCESS_NOTIFY_ROUTINE)(HANDLE ParentId,
 						       HANDLE ProcessId,
 						       BOOLEAN Create);
 
-typedef VOID STDCALL (*PCREATE_THREAD_NOTIFY_ROUTINE)(HANDLE ProcessId,
+typedef VOID STDCALL_FUNC (*PCREATE_THREAD_NOTIFY_ROUTINE)(HANDLE ProcessId,
 						      HANDLE ThreadId,
 						      BOOLEAN Create);
 
@@ -49,9 +49,11 @@ extern struct _EPROCESS* EXPORTED PsInitialSystemProcess;
 extern POBJECT_TYPE EXPORTED PsProcessType;
 extern POBJECT_TYPE EXPORTED PsThreadType;
 #else
+#ifdef __GNU__ // robd
 extern struct _EPROCESS* IMPORTED PsInitialSystemProcess;
 extern POBJECT_TYPE IMPORTED PsProcessType;
 extern POBJECT_TYPE IMPORTED PsThreadType;
+#endif
 #endif
 
 #endif /* __INCLUDE_DDK_PSTYPES_H */

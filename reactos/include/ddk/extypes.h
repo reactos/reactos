@@ -1,4 +1,4 @@
-/* $Id: extypes.h,v 1.11 2002/09/08 10:47:43 chorns Exp $ */
+/* $Id: extypes.h,v 1.12 2002/11/24 18:26:40 robd Exp $ */
 
 #ifndef __INCLUDE_DDK_EXTYPES_H
 #define __INCLUDE_DDK_EXTYPES_H
@@ -78,7 +78,7 @@ typedef struct _ZONE_ENTRY
 } ZONE_ENTRY, *PZONE_ENTRY;
 
 
-typedef VOID STDCALL
+typedef VOID STDCALL_FUNC
 (*PWORKER_THREAD_ROUTINE)(PVOID Parameter);
 
 typedef struct _WORK_QUEUE_ITEM
@@ -88,12 +88,12 @@ typedef struct _WORK_QUEUE_ITEM
    PVOID Context;
 } WORK_QUEUE_ITEM, *PWORK_QUEUE_ITEM;
 
-typedef PVOID STDCALL
+typedef PVOID STDCALL_FUNC
 (*PALLOCATE_FUNCTION)(POOL_TYPE PoolType,
 		      ULONG NumberOfBytes,
 		      ULONG Tag);
 
-typedef VOID STDCALL
+typedef VOID STDCALL_FUNC
 (*PFREE_FUNCTION)(PVOID Buffer);
 
 typedef union _SLIST_HEADER
@@ -153,7 +153,7 @@ typedef struct _PAGED_LOOKASIDE_LIST
 
 typedef struct _CALLBACK_OBJECT *PCALLBACK_OBJECT;
 
-typedef VOID STDCALL
+typedef VOID STDCALL_FUNC
 (*PCALLBACK_FUNCTION)(PVOID CallbackContext,
 		      PVOID Argument1,
 		      PVOID Argument2);
@@ -166,11 +166,11 @@ typedef enum _TRAVERSE_METHOD {
   TraverseMethodPostorder
 } TRAVERSE_METHOD;
 
-typedef LONG STDCALL
+typedef LONG STDCALL_FUNC
 (*PKEY_COMPARATOR)(IN PVOID  Key1,
   IN PVOID  Key2);
 
-typedef BOOLEAN STDCALL
+typedef BOOLEAN STDCALL_FUNC
 (*PTRAVERSE_ROUTINE)(IN PVOID  Context,
   IN PVOID  Key,
   IN PVOID  Value);

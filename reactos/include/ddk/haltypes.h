@@ -1,4 +1,4 @@
-/* $Id: haltypes.h,v 1.7 2002/11/18 22:39:02 ekohl Exp $
+/* $Id: haltypes.h,v 1.8 2002/11/24 18:26:40 robd Exp $
  *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel
@@ -302,23 +302,23 @@ typedef struct _BUS_HANDLER *PBUS_HANDLER;
 typedef struct _DEVICE_HANDLER_OBJECT *PDEVICE_HANDLER_OBJECT;
 
 
-typedef BOOLEAN STDCALL
+typedef BOOLEAN STDCALL_FUNC
 (*PHAL_RESET_DISPLAY_PARAMETERS)(ULONG Columns, ULONG Rows);
 
-typedef NTSTATUS STDCALL
+typedef NTSTATUS STDCALL_FUNC
 (*pHalQuerySystemInformation)(IN HAL_QUERY_INFORMATION_CLASS InformationClass,
 			      IN ULONG BufferSize,
 			      IN OUT PVOID Buffer,
 			      OUT PULONG ReturnedLength);
 
 
-typedef NTSTATUS STDCALL
+typedef NTSTATUS STDCALL_FUNC
 (*pHalSetSystemInformation)(IN HAL_SET_INFORMATION_CLASS InformationClass,
 			    IN ULONG BufferSize,
 			    IN PVOID Buffer);
 
 
-typedef NTSTATUS STDCALL
+typedef NTSTATUS STDCALL_FUNC
 (*pHalQueryBusSlots)(IN PBUS_HANDLER BusHandler,
 		     IN ULONG BufferSize,
 		     OUT PULONG SlotNumbers,
@@ -361,11 +361,11 @@ typedef struct _DEVICE_CONTROL_CONTEXT
 } DEVICE_CONTROL_CONTEXT, *PDEVICE_CONTROL_CONTEXT;
 
 
-typedef VOID STDCALL
+typedef VOID STDCALL_FUNC
 (*PDEVICE_CONTROL_COMPLETION)(IN PDEVICE_CONTROL_CONTEXT ControlContext);
 
 
-typedef NTSTATUS STDCALL
+typedef NTSTATUS STDCALL_FUNC
 (*pHalDeviceControl)(IN PDEVICE_HANDLER_OBJECT DeviceHandler,
 		     IN PDEVICE_OBJECT DeviceObject,
 		     IN ULONG ControlCode,

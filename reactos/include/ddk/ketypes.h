@@ -69,28 +69,27 @@ struct _KMUTANT;
 
 typedef LONG KPRIORITY;
 
-typedef VOID STDCALL
-(*PKBUGCHECK_CALLBACK_ROUTINE)(PVOID Buffer,
-			       ULONG Length);
+typedef VOID STDCALL_FUNC
+(*PKBUGCHECK_CALLBACK_ROUTINE)(PVOID Buffer, ULONG Length);
 
-typedef BOOLEAN STDCALL
+typedef BOOLEAN STDCALL_FUNC
 (*PKSYNCHRONIZE_ROUTINE)(PVOID SynchronizeContext);
 
 struct _KAPC;
 
-typedef VOID STDCALL
+typedef VOID STDCALL_FUNC
 (*PKNORMAL_ROUTINE)(PVOID NormalContext,
 		    PVOID SystemArgument1,
 		    PVOID SystemArgument2);
 
-typedef VOID STDCALL
+typedef VOID STDCALL_FUNC
 (*PKKERNEL_ROUTINE)(struct _KAPC* Apc,
 		    PKNORMAL_ROUTINE* NormalRoutine,
 		    PVOID* NormalContext,
 		    PVOID* SystemArgument1,
 		    PVOID* SystemArgument2);
 
-typedef VOID STDCALL
+typedef VOID STDCALL_FUNC
 (*PKRUNDOWN_ROUTINE)(struct _KAPC* Apc);
 
 struct _DISPATCHER_HEADER;
@@ -222,7 +221,7 @@ struct _KDPC;
  *      SystemArgument[1-2] = Undocumented. 
  * 
  */
-typedef VOID STDCALL
+typedef VOID STDCALL_FUNC
 (*PKDEFERRED_ROUTINE)(struct _KDPC* Dpc,
 		      PVOID DeferredContext,
 		      PVOID SystemArgument1,
@@ -255,11 +254,12 @@ typedef struct _KDEVICE_QUEUE_ENTRY
 
 typedef struct _WAIT_CONTEXT_BLOCK
 {
+    int unknown;
 } WAIT_CONTEXT_BLOCK, *PWAIT_CONTEXT_BLOCK;
 
 struct _KINTERRUPT;
 
-typedef BOOLEAN STDCALL
+typedef BOOLEAN STDCALL_FUNC
 (*PKSERVICE_ROUTINE)(struct _KINTERRUPT* Interrupt,
 		     PVOID ServiceContext);
 

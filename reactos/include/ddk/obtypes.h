@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_OBTYPES_H
 #define _INCLUDE_DDK_OBTYPES_H
-/* $Id: obtypes.h,v 1.18 2002/09/08 10:47:45 chorns Exp $ */
+/* $Id: obtypes.h,v 1.19 2002/11/24 18:26:40 robd Exp $ */
 struct _DIRECTORY_OBJECT;
 struct _OBJECT_ATTRIBUTES;
 
@@ -62,24 +62,24 @@ typedef struct _OBJECT_TYPE
    * PURPOSE: Dumps the object
    * NOTE: To be defined
    */
-  VOID STDCALL (*Dump)(VOID);
+  VOID STDCALL_FUNC (*Dump)(VOID);
   
   /*
    * PURPOSE: Opens the object
    * NOTE: To be defined
    */
-  VOID STDCALL (*Open)(VOID);
+  VOID STDCALL_FUNC (*Open)(VOID);
   
    /*
     * PURPOSE: Called to close an object if OkayToClose returns true
     */
-  VOID STDCALL (*Close)(PVOID ObjectBody,
+  VOID STDCALL_FUNC (*Close)(PVOID ObjectBody,
 			ULONG HandleCount);
   
   /*
    * PURPOSE: Called to delete an object when the last reference is removed
    */
-  VOID STDCALL (*Delete)(PVOID ObjectBody);
+  VOID STDCALL_FUNC (*Delete)(PVOID ObjectBody);
   
   /*
    * PURPOSE: Called when an open attempts to open a file apparently
@@ -89,7 +89,7 @@ typedef struct _OBJECT_TYPE
    *     STATUS_UNSUCCESSFUL  NextObject not found
    *     STATUS_REPARSE       Path changed, restart parsing the path
    */
-   NTSTATUS STDCALL (*Parse)(PVOID ParsedObject,
+   NTSTATUS STDCALL_FUNC (*Parse)(PVOID ParsedObject,
 			     PVOID *NextObject,
 			     PUNICODE_STRING FullPath,
 			     PWSTR *Path,
@@ -97,26 +97,26 @@ typedef struct _OBJECT_TYPE
   
    /*
     */
-  NTSTATUS STDCALL (*Security)(PVOID Object,
+  NTSTATUS STDCALL_FUNC (*Security)(PVOID Object,
 			       ULONG InfoClass,
 			       PVOID Info,
 			       PULONG InfoLength);
   
   /*
    */
-  VOID STDCALL (*QueryName)(VOID);
+  VOID STDCALL_FUNC (*QueryName)(VOID);
    
   /*
    * PURPOSE: Called when a process asks to close the object
    */
-  VOID STDCALL (*OkayToClose)(VOID);
+  VOID STDCALL_FUNC (*OkayToClose)(VOID);
   
-  NTSTATUS STDCALL (*Create)(PVOID ObjectBody,
+  NTSTATUS STDCALL_FUNC (*Create)(PVOID ObjectBody,
 			     PVOID Parent,
 			     PWSTR RemainingPath,
 			     struct _OBJECT_ATTRIBUTES* ObjectAttributes);
 
-  VOID STDCALL (*DuplicationNotify)(PEPROCESS DuplicateTo,
+  VOID STDCALL_FUNC (*DuplicationNotify)(PEPROCESS DuplicateTo,
 				    PEPROCESS DuplicateFrom,
 				    PVOID Object);
 } OBJECT_TYPE, *POBJECT_TYPE;

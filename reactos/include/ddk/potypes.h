@@ -59,7 +59,7 @@ typedef enum _POWER_STATE_TYPE {
 } POWER_STATE_TYPE, *PPOWER_STATE_TYPE;
 
 // CompletionFunction for PoRequestPowerIrp
-typedef VOID STDCALL
+typedef VOID STDCALL_FUNC
 (*PREQUEST_POWER_COMPLETE) (
   IN struct _DEVICE_OBJECT *DeviceObject,
   IN UCHAR MinorFunction,
@@ -74,8 +74,8 @@ typedef struct _POWER_SEQUENCE {
   ULONG SequenceD3;
 } POWER_SEQUENCE, *PPOWER_SEQUENCE;
 
-typedef VOID STDCALL (*PINTERFACE_REFERENCE)(PVOID Context);
-typedef VOID STDCALL (*PINTERFACE_DEREFERENCE)(PVOID Context);
+typedef VOID STDCALL_FUNC (*PINTERFACE_REFERENCE)(PVOID Context);
+typedef VOID STDCALL_FUNC (*PINTERFACE_DEREFERENCE)(PVOID Context);
 
 typedef struct _INTERFACE {
   USHORT Size;
