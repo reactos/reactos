@@ -849,6 +849,7 @@ getmousesvalue(iface);
   *     GetDeviceState : gets buffered input data.
   */
 
+
 static HRESULT WINAPI SysMouseAImpl_GetDeviceData(LPDIRECTINPUTDEVICE8A iface,
 						  DWORD dodsize,
 						  LPDIDEVICEOBJECTDATA dod,
@@ -861,15 +862,37 @@ static HRESULT WINAPI SysMouseAImpl_GetDeviceData(LPDIRECTINPUTDEVICE8A iface,
 #ifdef __REACTOS__
 static int last_event=0;
 const int size = sizeof(DIDEVICEOBJECTDATA) * 1;
-static count=0;
+int count=0;
+DWORD count_ent=0;
 static DWORD time=0;
+static int save_x;
+static int save_y;
+static int save_z;
+static int save_b0;
+static int save_b1;
+static int save_b2;
+static int save_b3;
+static int save_b4;
+static int save_b5;
+static int save_b6;
+int calc;
 #endif
 
     
     TRACE("(%p)->(dods=%ld,entries=%ld,fl=0x%08lx)\n",This,dodsize,*entries,flags);
     
 #ifdef __REACTOS__
-if (flags == DIGDD_PEEK ) getmousesvalue(iface);
+save_x = This->m_state.lX;
+save_y = This->m_state.lY;
+save_z = This->m_state.lZ;
+save_b0 = This->m_state.rgbButtons[0];
+save_b1 = This->m_state.rgbButtons[1];
+save_b2 = This->m_state.rgbButtons[2];
+save_b3 = This->m_state.rgbButtons[3];
+save_b4 = This->m_state.rgbButtons[4];
+save_b5 = This->m_state.rgbButtons[5];
+save_b6 = This->m_state.rgbButtons[6];
+getmousesvalue(iface);
 #endif
 
 	// windows does not get any data if 
@@ -889,9 +912,7 @@ if (flags == DIGDD_PEEK ) getmousesvalue(iface);
 
 #ifdef __REACTOS__	
      
-	if (dodsize == sizeof(DIDEVICEOBJECTDATA_DX3)) {
 	    
-
   FIXME("This is broken in Tribes, need right implant of the buffer!!!!!!!!\n"); 
 
   
@@ -901,84 +922,94 @@ if (flags == DIGDD_PEEK ) getmousesvalue(iface);
   time = GetTickCount();
   if (*entries == 0) return DIERR_INVALIDPARAM;
   
+ 
+  for (count=0;count<*entries;count++) {
+	  
+	 if (save_x != This->m_state.lX) {
+         dod[count].dwOfs =   DIMOFS_X;         
+		 dod[count].dwData =  This->m_state.lX - This->offset_array[0];         
+         dod[count].dwTimeStamp =  time +1; 
+         dod[count].dwSequence = last_event++;  
+		 count_ent++;
+         }
 
-  if (*entries == 1) {
-  dod[0].dwOfs =   DIMOFS_X;
-  dod[0].dwData =   This->m_state.lX;
-  dod[0].dwTimeStamp =  time +1; 
-  dod[0].dwSequence = last_event++;  
-  }
+     if (save_y != This->m_state.lY) {
+        dod[count].dwOfs =   DIMOFS_Y;
+        dod[count].dwData =   This->m_state.lY;
+        dod[count].dwTimeStamp =  time +1;
+        dod[count].dwSequence = last_event++;
+		count_ent++;
+	    }
+     if (save_z != This->m_state.lZ) {
+        dod[count].dwOfs =   DIMOFS_Z;
+        dod[count].dwData =   This->m_state.lZ;
+        dod[count].dwTimeStamp =  time +1;
+        dod[count].dwSequence = last_event++;
+		count_ent++;
+	    }
   
-  if (*entries == 2) {
-  dod[1].dwOfs =   DIMOFS_Y;
-  dod[1].dwData =   This->m_state.lY;
-  dod[1].dwTimeStamp =  time +1;
-  dod[1].dwSequence = last_event++;
-  }
+	 if (save_b0 != This->m_state.rgbButtons[0]) {
+        dod[count].dwOfs =   DIMOFS_BUTTON0;
+        dod[count].dwData =   This->m_state.rgbButtons[0];
+        dod[count].dwTimeStamp =  time +1;
+        dod[count].dwSequence = last_event++;
+		count_ent++;
+	    }
 
-  if (*entries == 3) {
-  dod[2].dwOfs =   DIMOFS_2;
-  dod[2].dwData =   This->m_state.lZ;
-  dod[2].dwTimeStamp =  time +1;
-  dod[2].dwSequence = last_event++;
-  }
+	 if (save_b1 != This->m_state.rgbButtons[1]) {
+        dod[count].dwOfs =   DIMOFS_BUTTON1;
+        dod[count].dwData =   This->m_state.rgbButtons[1];
+        dod[count].dwTimeStamp =  time +1;
+        dod[count].dwSequence = last_event++;
+		count_ent++;
+	    }
 
-  if (*entries == 4) {
-  dod[3].dwOfs =   DIMOFS_BUTTON0;
-  dod[3].dwData =   This->m_state.rgbButtons[0];
-  dod[3].dwTimeStamp =  time +1;
-  dod[3].dwSequence = last_event++;
-  }
+ 	 if (save_b2 != This->m_state.rgbButtons[2]) {
+        dod[count].dwOfs =   DIMOFS_BUTTON2;
+        dod[count].dwData =   This->m_state.rgbButtons[2];
+        dod[count].dwTimeStamp =  time +1;
+        dod[count].dwSequence = last_event++;
+		count_ent++;
+	    }
 
-  if (*entries == 5) {
-  dod[4].dwOfs =   DIMOFS_BUTTON1;
-  dod[4].dwData =   This->m_state.rgbButtons[1];
-  dod[4].dwTimeStamp =  time +1;
-  dod[4].dwSequence = last_event++;
-  }
+ 	 if (save_b3 != This->m_state.rgbButtons[3]) {
+        dod[count].dwOfs =   DIMOFS_BUTTON3;
+        dod[count].dwData =   This->m_state.rgbButtons[3];
+        dod[count].dwTimeStamp =  time +1;
+        dod[count].dwSequence = last_event++;
+		count_ent++;
+	    }
 
-  if (*entries == 6) {
-  dod[5].dwOfs =   DIMOFS_BUTTON2;
-  dod[5].dwData =   This->m_state.rgbButtons[2];
-  dod[5].dwTimeStamp =  time +1;
-  dod[5].dwSequence = last_event++;
-  }
+ 	 if (save_b4 != This->m_state.rgbButtons[4]) {
+        dod[count].dwOfs =   DIMOFS_BUTTON4;
+        dod[count].dwData =   This->m_state.rgbButtons[4];
+        dod[count].dwTimeStamp =  time +1;
+        dod[count].dwSequence = last_event++;
+		count_ent++;
+	    }
 
-  if (*entries == 7) {
-  dod[6].dwOfs =   DIMOFS_BUTTON3;
-  dod[6].dwData =   This->m_state.rgbButtons[3];
-  dod[6].dwTimeStamp =  time +1;
-  dod[6].dwSequence = last_event++;
-  }
+	 if (save_b5 != This->m_state.rgbButtons[5]) {
+        dod[count].dwOfs =   DIMOFS_BUTTON5;
+        dod[count].dwData =   This->m_state.rgbButtons[5];
+        dod[count].dwTimeStamp =  time +1;
+        dod[count].dwSequence = last_event++;
+		count_ent++;
+	    }
 
-  if (*entries == 8) {
-  dod[7].dwOfs =   DIMOFS_BUTTON4;
-  dod[7].dwData =   This->m_state.rgbButtons[4];
-  dod[7].dwTimeStamp =  time +1;
-  dod[7].dwSequence = last_event++;
-  }
+	 if (save_b6 != This->m_state.rgbButtons[6]) {
+        dod[count].dwOfs =   DIMOFS_BUTTON6;
+        dod[count].dwData =   This->m_state.rgbButtons[6];
+        dod[count].dwTimeStamp =  time +1;
+        dod[count].dwSequence = last_event++;
+		count_ent++;
+	    }
 
-  if (*entries == 9) {
-  dod[8].dwOfs =   DIMOFS_BUTTON5;
-  dod[8].dwData =   This->m_state.rgbButtons[5];
-  dod[8].dwTimeStamp =  time +1;
-  dod[8].dwSequence = last_event++;
-  }
+  }  // end for
 
-  if (*entries == 10) {
-  dod[9].dwOfs =   DIMOFS_BUTTON6;
-  dod[9].dwData =   This->m_state.rgbButtons[6];
-  dod[9].dwTimeStamp =  time +1;
-  dod[9].dwSequence = last_event++;
-  }
 
-  }
+*entries = count_ent;
+  
 
-	else {
-		ERR("Wrong structure size !\n");	   
-	    return DIERR_INVALIDPARAM;
-	}
-  //LeaveCriticalSection(&(This->crit));
 #endif
 
 #ifndef __REACTOS__
