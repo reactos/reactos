@@ -502,15 +502,16 @@ CmiGetValueFromKeyByIndex(IN PREGISTRY_HIVE  RegistryHive,
   OUT PVALUE_CELL  *ValueCell);
 
 NTSTATUS
-CmiAddValueToKey(IN PREGISTRY_HIVE  RegistryHive,
-  IN PKEY_CELL  KeyCell,
-  IN PUNICODE_STRING ValueName,
-  OUT PVALUE_CELL *pValueCell,
-  OUT BLOCK_OFFSET *pVBOffset);
+CmiAddValueToKey(IN PREGISTRY_HIVE RegistryHive,
+		 IN PKEY_CELL KeyCell,
+		 IN BLOCK_OFFSET KeyCellOffset,
+		 IN PUNICODE_STRING ValueName,
+		 OUT PVALUE_CELL *pValueCell,
+		 OUT BLOCK_OFFSET *pValueCellOffset);
 
 NTSTATUS
-CmiDeleteValueFromKey(IN PREGISTRY_HIVE  RegistryHive,
-		      IN PKEY_CELL  KeyCell,
+CmiDeleteValueFromKey(IN PREGISTRY_HIVE RegistryHive,
+		      IN PKEY_CELL KeyCell,
 		      IN BLOCK_OFFSET KeyCellOffset,
 		      IN PUNICODE_STRING ValueName);
 
