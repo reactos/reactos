@@ -896,6 +896,10 @@ extern "C" {
 #define PBM_SETBKCOLOR	CCM_SETBKCOLOR
 #define PBS_SMOOTH	1
 #define PBS_VERTICAL	4
+#if (_WIN32_WINNT >= 0x0501)
+#define PBS_MARQUEE	8
+#define PBM_SETMARQUEE	(WM_USER+10)
+#endif
 #define LVS_ICON	0
 #define LVS_REPORT	1
 #define LVS_SMALLICON	2
