@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmap.c,v 1.33 2004/10/05 22:08:56 gvg Exp $
+/* $Id: bitmap.c,v 1.34 2004/12/19 05:00:22 royce Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -582,7 +582,7 @@ LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
     }
 
   RtlFreeHeap(GetProcessHeap(), 0, PrivateInfo);
-  /*DeleteDC(hScreenDc);*/
+  DeleteDC(hScreenDc);
   if (fuLoad & LR_LOADFROMFILE)
     {
       UnmapViewOfFile(BitmapInfo);
