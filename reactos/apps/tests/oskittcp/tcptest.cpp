@@ -270,22 +270,21 @@ int main( int argc, char **argv ) {
 			char* dst = p;
 			while ( *src )
 			{
-				if ( *src == '\\' )
+				char c = *src++;
+				if ( c == '\r' || c == '\n' ) break;
+				if ( c == '\\' )
 				{
-					src++;
-					char c = *src++;
+					c = *src++;
 					switch ( c )
 					{
-					case 'b': *dst++ = '\b'; break;
-					case 'n': *dst++ = '\n'; break;
-					case 'r': *dst++ = '\r'; break;
-					case 't': *dst++ = '\t'; break;
-					case 'v': *dst++ = '\v'; break;
-					default: *dst++ = c; break;
+					case 'b': c = '\b'; break;
+					case 'n': c = '\n'; break;
+					case 'r': c = '\r'; break;
+					case 't': c = '\t'; break;
+					case 'v': c = '\v'; break;
 					}
 				}
-				else
-					*dst++ = *src++;
+				*dst++ = c;
 			}
 			*dst = '\0';
 			if ( (err = OskitTCPSend ( conn, (OSK_PCHAR)p, strlen(p), (OSK_UINT*)&bytin, 0 ))
