@@ -59,7 +59,6 @@
 #  define typedef_tident(ident)
 #endif
 
-
 typedef struct _VALENT_A {
    LPSTR ve_valuename;
    DWORD ve_valuelen;
@@ -167,6 +166,11 @@ typedef struct _RECT {
   LONG bottom;
 } RECT, *LPRECT, *LPCRECT, *PRECT,
 RECTL, *LPRECTL, *LPCRECTL, *PRECTL;
+
+typedef struct _PATRECT {
+	RECT r;
+	HBRUSH hBrush;
+} PATRECT, * PPATRECT;
 
 #if 0
 typedef struct _RECTL {

@@ -334,6 +334,27 @@ PatBlt(HDC hDC, INT Top, INT Left, INT Width, INT Height, ULONG Rop)
   return(W32kPatBlt(hDC, Top, Left, Width, Height, Rop));
 }
 
+/*
+ * @implemented
+ */
+WINBOOL 
+STDCALL 
+PolyPatBlt(HDC hDC,DWORD dwRop,PPATRECT pRects,int cRects,ULONG Reserved)
+{
+	int i;
+	PATRECT r;
+	HBRUSH hBrOld;
+	for (i = 0;i<cRects;i++)
+	{
+		hBrOld = SelectObject(hDC,r.hBrush);
+		r = *pRects;
+		PatBlt(hDC,r.r.top,r.r.left,r.r.bottom-r.r.top,r.r.right-r.r.left,dwRop);
+		pRects+=sizeof(PATRECT);
+		SelectObject(hDC,hBrOld);
+	}
+	return TRUE;
+}
+
 
 
 

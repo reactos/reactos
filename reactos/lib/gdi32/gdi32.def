@@ -1,4 +1,4 @@
-; $Id: gdi32.def,v 1.6 2003/07/21 01:59:51 royce Exp $
+; $Id: gdi32.def,v 1.7 2003/08/14 20:25:52 royce Exp $
 ;
 ; gdi32.def
 ;
@@ -242,6 +242,7 @@ OffsetViewportOrgEx@16
 OffsetWindowOrgEx@16
 PaintRgn@8
 PatBlt@24
+PolyPatBlt@20
 PathToRegion@4
 Pie@36
 PlayEnhMetaFile@12

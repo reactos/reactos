@@ -35,6 +35,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <windows.h>
+#include "strpool.h"
 
 #define WPRINTF_LEFTALIGN   0x0001  /* Align output on the left ('-' prefix) */
 #define WPRINTF_PREFIX_HEX  0x0002  /* Prefix hex with 0x ('#' prefix) */
@@ -530,4 +531,77 @@ INT CDECL wsprintfW( LPWSTR buffer, LPCWSTR spec, ... )
     res = wvsnprintfW( buffer, 1024, spec, valist );
     va_end( valist );
     return ( res == -1 ) ? 1024 : res;
+}
+/*
+ * @implemented
+ */
+DWORD STDCALL WCSToMBEx(WORD CodePage,LPWSTR UnicodeString,LONG UnicodeSize,LPSTR *MBString,LONG MBSize,BOOL Allocate)
+{
+	DWORD Size;
+	if (UnicodeSize == -1)
+	{
+		UnicodeSize = wcslen(UnicodeString)+1;
+	}
+	if (MBSize == -1)
+	{
+		if (!Allocate)
+		{
+			return 0;
+		}
+		MBSize = UnicodeSize * 2;
+	}
+	if (Allocate)
+	{
+		*MBString = HEAP_alloc(MBSize);
+	}
+	if ((CodePage == 0) || (CodePage == NLS_ANSI_CODE_PAGE))
+	{
+		RtlUnicodeToMultiByteN(*MBString,MBSize,&Size,UnicodeString,UnicodeSize);
+	}
+	else
+	{
+		WideCharToMultiByte(CodePage,0,UnicodeString,UnicodeSize,*MBString,MBSize,0,0);
+	}
+	return UnicodeSize;
+}
+/*
+ * @implemented
+ */
+DWORD STDCALL MBToWCSEx(WORD CodePage,LPSTR MBString,LONG MBSize,LPWSTR *UnicodeString,LONG UnicodeSize,BOOL Allocate)
+{
+	DWORD Size;
+	if (MBSize == -1)
+	{
+		MBSize = strlen(MBString)+1;
+	}
+	if (UnicodeSize == -1)
+	{
+		if (!Allocate)
+		{
+			return 0;
+		}
+		UnicodeSize = MBSize;
+	}
+	if (Allocate)
+	{
+		*UnicodeString = HEAP_alloc(UnicodeSize);
+	}
+	UnicodeSize *= sizeof(WCHAR);
+	if ((CodePage == 0) || (CodePage == NLS_ANSI_CODE_PAGE))
+	{
+		RtlMultiByteToUnicodeN(*UnicodeString,UnicodeSize,&Size,MBString,MBSize);
+	}
+	else
+	{
+		Size = MultiByteToWideChar(CodePage,0,MBString,MBSize,*UnicodeString,UnicodeSize);
+	}
+	return Size;
+}
+const LPWSTR strings[14] = {L"OK",L"Cancel",L"&Abort",L"&Retry",L"&Ignore",L"&Yes",L"&No",L"&Close",L"Help",L"&Try Again",L"&Continue"};
+/*
+ * @implemented
+ */
+LPWSTR STDCALL MB_GetString(DWORD string)
+{
+	return heap_string_poolW(strings[string],wcslen(strings[string]));
 }

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.29 2003/08/04 16:56:49 gdalsnes Exp $
+/* $Id: stubs.c,v 1.30 2003/08/14 20:25:52 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -610,3 +610,716 @@ SetDebugErrorLevel( DWORD dwLevel )
 }
 
 /* EOF */
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+ChangeMenuW(
+    HMENU hMenu,
+    UINT cmd,
+    LPCWSTR lpszNewItem,
+    UINT cmdInsert,
+    UINT flags)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+ChangeMenuA(
+    HMENU hMenu,
+    UINT cmd,
+    LPCSTR lpszNewItem,
+    UINT cmdInsert,
+    UINT flags)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+DeregisterShellHookWindow(HWND hWnd)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+RegisterShellHookWindow(HWND hWnd)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+EndTask(
+	HWND    hWnd,
+	WINBOOL fShutDown,
+	WINBOOL fForce)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+UINT
+STDCALL
+PrivateExtractIconsW(
+		     LPCWSTR szFileName,
+		     int     nIconIndex,
+		     int     cxIcon,
+		     int     cyIcon,
+		     HICON  *phicon,
+		     UINT   *piconid,
+		     UINT    nIcons,
+		     UINT    flags
+		     )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+UINT
+STDCALL
+PrivateExtractIconsA(
+		     LPCSTR szFileName,
+		     int    nIconIndex,
+		     int    cxIcon,
+		     int    cyIcon,
+		     HICON *phicon,
+		     UINT  *piconid,
+		     UINT   nIcons,
+		     UINT   flags
+		     )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+LRESULT
+STDCALL
+MenuWindowProcA(
+		HWND   hWnd,
+		UINT   Msg,
+		WPARAM wParam,
+		LPARAM lParam
+		)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+LRESULT
+STDCALL
+MenuWindowProcW(
+		HWND   hWnd,
+		UINT   Msg,
+		WPARAM wParam,
+		LPARAM lParam
+		)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+DrawCaptionTempW(
+		 HWND        hwnd,
+		 HDC         hdc,
+		 const RECT *rect,
+		 HFONT       hFont,
+		 HICON       hIcon,
+		 LPCWSTR     str,
+		 UINT        uFlags
+		 )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+DrawCaptionTempA(
+		 HWND        hwnd,
+		 HDC         hdc,
+		 const RECT *rect,
+		 HFONT       hFont,
+		 HICON       hIcon,
+		 LPCSTR      str,
+		 UINT        uFlags
+		 )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+HHOOK
+STDCALL
+SetWindowsHookW ( int idHook, HOOKPROC lpfn )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+HHOOK
+STDCALL
+SetWindowsHookA ( int idHook, HOOKPROC lpfn )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+HRESULT
+STDCALL
+PrivateExtractIconExW(
+		      DWORD u,
+		      DWORD v,
+		      DWORD w,
+		      DWORD x,
+		      DWORD y
+		      )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+HRESULT
+STDCALL
+PrivateExtractIconExA(
+		      DWORD u,
+		      DWORD v,
+		      DWORD w,
+		      DWORD x,
+		      DWORD y
+		      )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+NotifyWinEvent(
+	       DWORD event,
+	       HWND  hwnd,
+	       LONG  idObject,
+	       LONG  idChild
+	       )
+{
+  UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+HWINEVENTHOOK
+STDCALL
+SetWinEventHook(
+		DWORD        eventMin,
+		DWORD        eventMax,
+		HMODULE      hmodWinEventProc,
+		WINEVENTPROC pfnWinEventProc,
+		DWORD        idProcess,
+		DWORD        idThread,
+		DWORD        dwFlags
+		)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+SwitchToThisWindow ( HWND hwnd, WINBOOL fUnknown )
+{
+  UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+UnhookWinEvent ( HWINEVENTHOOK hWinEventHook )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+LRESULT
+STDCALL
+EditWndProc(
+	    HWND   hWnd,
+	    UINT   Msg,
+	    WPARAM wParam,
+	    LPARAM lParam
+	    )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+GetAppCompatFlags ( HTASK hTask )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+UINT
+STDCALL
+GetInternalWindowPos(
+		     HWND hwnd,
+		     LPRECT rectWnd,
+		     LPPOINT ptIcon
+		     )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+HRESULT
+STDCALL
+GetProgmanWindow ( VOID )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+HRESULT
+STDCALL
+GetTaskmanWindow ( VOID )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+SetWindowStationUser ( DWORD x1, DWORD x2 )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+UINT
+STDCALL
+SetSystemTimer(
+	       HWND      hwnd,
+	       UINT      id,
+	       UINT      timeout,
+	       TIMERPROC proc
+	       )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+SetSystemMenu ( HWND hwnd, HMENU hMenu )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+HRESULT
+STDCALL
+SetTaskmanWindow ( DWORD x )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+HRESULT
+STDCALL
+SetProgmanWindow ( DWORD x )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+ScrollChildren(
+	       HWND   hWnd,
+	       UINT   uMsg,
+	       WPARAM wParam,
+	       LPARAM lParam
+	       )
+{
+  UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+LoadLocalFonts ( VOID )
+{
+  UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+LoadRemoteFonts ( VOID )
+{
+  UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+SetInternalWindowPos(
+		     HWND    hwnd,
+		     UINT    showCmd,
+		     LPRECT  rect,
+		     LPPOINT pt
+		     )
+{
+  UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+RegisterSystemThread ( DWORD flags, DWORD reserved )
+{
+  UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+RegisterLogonProcess ( HANDLE hprocess, BOOL x )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+KillSystemTimer ( HWND hwnd, UINT id )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+RegisterTasklist ( DWORD x )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+SetLogonNotifyWindow ( HWINSTA hwinsta, HWND hwnd )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+DragObject(
+	   HWND    hwnd1,
+	   HWND    hwnd2,
+	   UINT    u1,
+	   DWORD   dw1,
+	   HCURSOR hc1
+	   )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+GetUserObjectSecurity(
+		      HANDLE                hObj,
+		      PSECURITY_INFORMATION pSIRequested,
+		      PSECURITY_DESCRIPTOR  pSID,
+		      DWORD                 nLength,
+		      LPDWORD               lpnLengthNeeded
+		      )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+SetUserObjectSecurity(
+		      HANDLE                hObj,
+		      PSECURITY_INFORMATION pSIRequested,
+		      PSECURITY_DESCRIPTOR  pSID
+		      )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+UnhookWindowsHook ( int nCode, HOOKPROC pfnFilterProc )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+UINT
+STDCALL
+UserRealizePalette ( HDC hDC )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+DrawMenuBarTemp(
+		HWND   hwnd,
+		HDC    hDC,
+		LPRECT lprect,
+		HMENU  hMenu,
+		HFONT  hFont
+		)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+WINAPI
+SetSysColorsTemp(
+		 const COLORREF *pPens,
+		 const HBRUSH   *pBrushes,
+		 DWORD           n
+		 )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WORD
+STDCALL
+CascadeChildWindows ( HWND hWndParent, WORD wFlags )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WORD
+STDCALL
+TileChildWindows ( HWND hWndParent, WORD wFlags )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+HDESK
+STDCALL
+GetInputDesktop ( VOID )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+DrawFrame(
+	  HDC    hDc,
+	  RECT  *r,
+	  DWORD  width,
+	  DWORD  type
+	  )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+LockWindowStation ( HWINSTA hWinSta )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+UnlockWindowStation ( HWINSTA hWinSta )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+GetAccCursorInfo ( PCURSORINFO pci )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+ClientThreadSetup ( VOID )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}

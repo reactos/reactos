@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.23 2003/08/11 10:30:19 gvg Exp $
+/* $Id: message.c,v 1.24 2003/08/14 20:25:52 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -689,7 +689,16 @@ SendNotifyMessageW(
 WINBOOL STDCALL
 TranslateMessage(CONST MSG *lpMsg)
 {
-  return(NtUserTranslateMessage((LPMSG)lpMsg, 0));
+  return(TranslateMessageEx((LPMSG)lpMsg, 0));
+}
+
+/*
+ * @implemented
+ */
+WINBOOL STDCALL
+TranslateMessageEx(CONST MSG *lpMsg, DWORD unk)
+{
+  return(NtUserTranslateMessage((LPMSG)lpMsg, unk));
 }
 
 
@@ -812,6 +821,15 @@ WINBOOL STDCALL GetInputState(VOID)
    wake_bits = HIWORD(ret);
 
    return wake_bits & (QS_KEY | QS_MOUSEBUTTON);
+}
+
+/*
+ * @implemented
+ */
+WINBOOL STDCALL SetMessageQueue(int cMessagesMax)
+{
+  /* Function does nothing on 32 bit windows */
+  return TRUE;
 }
 
 

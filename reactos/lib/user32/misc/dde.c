@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dde.c,v 1.5 2003/07/10 21:04:31 chorns Exp $
+/* $Id: dde.c,v 1.6 2003/08/14 20:25:52 royce Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/dde.c
@@ -224,7 +224,7 @@ DdeFreeDataHandle(HDDEDATA hData)
 /*
  * @unimplemented
  */
-BOOL
+WINBOOL STDCALL
 DdeFreeStringHandle(DWORD idInst,
 		    HSZ hsz)
 {

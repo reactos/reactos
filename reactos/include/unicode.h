@@ -38,6 +38,75 @@ extern "C" {
 
 WINBOOL
 STDCALL
+GetAltTabInfoW(
+	       HWND hwnd,
+	       int iItem,
+	       PALTTABINFO pati,
+	       LPWSTR pszItemText,
+	       UINT cchItemText
+	       );
+
+UINT
+STDCALL
+PrivateExtractIconsW(
+		     LPCWSTR szFileName,
+		     int nIconIndex,
+		     int cxIcon,
+		     int cyIcon,
+		     HICON *phicon,
+		     UINT *piconid,
+		     UINT nIcons,
+		     UINT flags
+		     );
+
+UINT
+STDCALL
+RealGetWindowClassW(
+		    HWND hwnd,
+		    LPWSTR pszType,
+		    UINT cchType
+		    );
+
+LRESULT
+STDCALL
+MenuWindowProcW(
+		HWND hWnd,
+		UINT Msg,
+		WPARAM wParam,
+		LPARAM lParam
+		);
+
+WINBOOL
+STDCALL
+DrawCaptionTempW(
+		 HWND hwnd,
+		 HDC hdc,
+		 const RECT *rect,
+		 HFONT hFont,
+		 HICON hIcon,
+		 LPCWSTR str,
+		 UINT uFlags
+		 );
+
+HHOOK
+STDCALL
+SetWindowsHookW(
+		int idHook,
+		HOOKPROC lpfn
+		);
+
+HRESULT
+STDCALL
+PrivateExtractIconExW(
+		      DWORD u,
+		      DWORD v,
+		      DWORD w,
+		      DWORD x,
+		      DWORD y
+		      );
+
+WINBOOL
+STDCALL
 GetBinaryTypeW(
     LPCWSTR lpApplicationName,
     LPDWORD lpBinaryType

@@ -109,6 +109,7 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define FindWindowEx  FindWindowExW
 #define GetClassName  GetClassNameW
 #define SetWindowsHookEx  SetWindowsHookExW
+#define SetWindowsHook  SetWindowsHookW
 #define LoadBitmap  LoadBitmapW
 #define LoadCursor  LoadCursorW
 #define LoadCursorFromFile  LoadCursorFromFileW
@@ -207,7 +208,6 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define GetDlgItemText  GetDlgItemTextW
 #define SendDlgItemMessage  SendDlgItemMessageW
 #define DefDlgProc  DefDlgProcW
-#define CallMsgFilter  CallMsgFilterW
 #define GetClipboardFormatName  GetClipboardFormatNameW
 #define CharToOem  CharToOemW
 #define OemToChar  OemToCharW
@@ -300,6 +300,8 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define ReportEvent  ReportEventW
 #define CreateProcess  CreateProcessW
 #define FatalAppExit  FatalAppExitW
+#define CallMessageFilter CallMessageFilterW
+#define GetAltTabInfo GetAltTabInfoW
 #define GetStartupInfo  GetStartupInfoW
 #define GetEnvironmentVariable  GetEnvironmentVariableW
 #define GetCommandLine  GetCommandLineW
@@ -313,6 +315,7 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define EnumResourceLanguages  EnumResourceLanguagesW
 #define BeginUpdateResource  BeginUpdateResourceW
 #define UpdateResource  UpdateResourceW
+#define PrivateExtractIcons  PrivateExtractIconsW
 #define EndUpdateResource  EndUpdateResourceW
 #define GlobalAddAtom  GlobalAddAtomW
 #define GlobalFindAtom  GlobalFindAtomW
@@ -521,6 +524,7 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define FindWindowEx  FindWindowExA
 #define GetClassName  GetClassNameA
 #define SetWindowsHookEx  SetWindowsHookExA
+#define SetWindowsHook  SetWindowsHookA
 #define LoadBitmap  LoadBitmapA
 #define LoadCursor  LoadCursorA
 #define LoadCursorFromFile  LoadCursorFromFileA
@@ -616,7 +620,6 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define GetDlgItemText  GetDlgItemTextA
 #define SendDlgItemMessage  SendDlgItemMessageA
 #define DefDlgProc  DefDlgProcA
-#define CallMsgFilter  CallMsgFilterA
 #define GetClipboardFormatName  GetClipboardFormatNameA
 #define CharToOem  CharToOemA
 #define OemToChar  OemToCharA
@@ -683,6 +686,8 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define SetComputerName  SetComputerNameA
 #define GetUserName  GetUserNameA
 #define CreateMailslot  CreateMailslotA
+#define CallMessageFilter CallMessageFilterA
+#define GetAltTabInfo GetAltTabInfoA
 #define FormatMessage  FormatMessageA
 #define GetEnvironmentStrings  GetEnvironmentStringsA
 #define FreeEnvironmentStrings  FreeEnvironmentStringsA
@@ -791,6 +796,7 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define GetModuleFileName  GetModuleFileNameA
 #define GetModuleHandle  GetModuleHandleA
 #define GetUserObjectInformation  GetUserObjectInformationA
+#define PrivateExtractIcons  PrivateExtractIconsA
 #define SetUserObjectInformation  SetUserObjectInformationA
 #define RegisterWindowMessage  RegisterWindowMessageA
 #define GetMessage  GetMessageA
@@ -884,22 +890,331 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #endif /* UNICODE and ASCII defines */
 #endif /* _DISABLE_TIDENTS */
 
-  HWND STDCALL GetAncestor(HWND hWnd, UINT GaFlags);
-WINBOOL STDCALL AbnormalTermination(VOID);
-int STDCALL AbortDoc(HDC);
-WINBOOL STDCALL AbortPath(HDC);
-WINBOOL STDCALL AbortPrinter(HANDLE);
-WINBOOL CALLBACK AbortProc(HDC, int);
-WINBOOL STDCALL AccessCheck(
-		    PSECURITY_DESCRIPTOR  pSecurityDescriptor,
-		    HANDLE  ClientToken,
-		    DWORD  DesiredAccess,
-		    PGENERIC_MAPPING  GenericMapping,
-		    PPRIVILEGE_SET  PrivilegeSet,
-		    LPDWORD  PrivilegeSetLength,
-		    LPDWORD  GrantedAccess,
-		    LPBOOL  AccessStatus
-		    );
+DWORD
+WINAPI
+SetSysColorsTemp(
+		 const COLORREF *pPens,
+		 const HBRUSH *pBrushes,
+		 DWORD n
+		 );
+
+INT
+STDCALL
+UserClientDllInitialize(
+			HINSTANCE inst,
+			DWORD reason,
+			LPVOID reserved
+			);
+
+DWORD
+STDCALL
+DrawMenuBarTemp(
+		HWND hwnd,
+		HDC hDC,
+		LPRECT lprect,
+		HMENU hMenu,
+		HFONT hFont
+		);
+
+UINT
+STDCALL
+UserRealizePalette ( HDC hDC );
+
+WINBOOL
+STDCALL
+DdeFreeStringHandle ( DWORD idInst, HSZ hsz );
+
+WINBOOL
+STDCALL
+DeregisterShellHookWindow ( HWND hWnd );
+
+WINBOOL
+STDCALL
+RegisterShellHookWindow ( HWND hWnd );
+
+WINBOOL
+STDCALL
+EndTask(
+	HWND hWnd,
+	WINBOOL fShutDown,
+	WINBOOL fForce
+	);
+
+DWORD
+STDCALL
+InternalGetWindowText(
+		      HWND hWnd,
+		      LPWSTR lpString,
+		      int nMaxCount
+		      );
+
+WINBOOL
+STDCALL
+IsHungAppWindow ( HWND hwnd );
+
+VOID
+STDCALL
+NotifyWinEvent(
+	       DWORD event,
+	       HWND hwnd,
+	       LONG idObject,
+	       LONG idChild
+	       );
+
+HWINEVENTHOOK
+STDCALL
+SetWinEventHook(
+		DWORD eventMin,
+		DWORD eventMax,
+		HMODULE hmodWinEventProc,
+		WINEVENTPROC pfnWinEventProc,
+		DWORD idProcess,
+		DWORD idThread,
+		DWORD dwFlags
+		);
+
+VOID
+STDCALL
+SwitchToThisWindow(
+		   HWND hwnd,
+		   WINBOOL fUnknown );
+
+WINBOOL
+STDCALL
+UnhookWinEvent ( HWINEVENTHOOK hWinEventHook );
+
+LRESULT
+STDCALL
+EditWndProc(
+	    HWND hWnd,
+	    UINT Msg,
+	    WPARAM wParam,
+	    LPARAM lParam
+	    );
+
+WINBOOL
+STDCALL
+SetDeskWallpaper ( LPCSTR filename );
+
+DWORD
+STDCALL
+GetAppCompatFlags ( HTASK hTask );
+
+HDESK
+STDCALL
+GetInputDesktop ( VOID );
+
+UINT
+STDCALL
+GetInternalWindowPos(
+		     HWND hwnd,
+		     LPRECT rectWnd,
+		     LPPOINT ptIcon
+		     );
+
+HRESULT
+STDCALL
+GetProgmanWindow ( VOID );
+
+HRESULT
+STDCALL
+GetTaskmanWindow ( VOID );
+
+DWORD
+STDCALL
+SetWindowStationUser(
+		     DWORD x1,
+		     DWORD x2
+		     );
+
+UINT
+STDCALL
+SetSystemTimer(
+	       HWND hwnd,
+	       UINT id,
+	       UINT timeout,
+	       TIMERPROC proc
+	       );
+
+WINBOOL
+STDCALL
+SetSystemMenu(
+	      HWND hwnd,
+	      HMENU hMenu
+	      );
+
+HRESULT
+STDCALL
+SetTaskmanWindow ( DWORD x );
+
+HRESULT
+STDCALL
+SetProgmanWindow ( DWORD x );
+
+VOID
+STDCALL
+ScrollChildren(
+	       HWND hWnd,
+	       UINT uMsg,
+	       WPARAM wParam,
+	       LPARAM lParam
+	       );
+
+VOID
+STDCALL
+LoadLocalFonts ( VOID );
+
+VOID
+STDCALL
+LoadRemoteFonts ( VOID );
+
+VOID
+STDCALL
+SetInternalWindowPos(
+		     HWND hwnd,
+		     UINT showCmd,
+		     LPRECT rect,
+		     LPPOINT pt
+		     );
+
+VOID
+STDCALL
+RegisterSystemThread(
+		     DWORD flags,
+		     DWORD reserved
+		     );
+
+DWORD
+STDCALL
+RegisterLogonProcess(
+		     HANDLE hprocess,
+		     BOOL x
+		     );
+
+WINBOOL
+STDCALL
+KillSystemTimer(
+		HWND hwnd,
+		UINT id
+		);
+
+DWORD
+STDCALL
+RegisterTasklist ( DWORD x );
+
+DWORD
+STDCALL
+SetLogonNotifyWindow ( HWINSTA hwinsta, HWND hwnd );
+
+WORD
+STDCALL
+CascadeChildWindows ( HWND hWndParent, WORD wFlags );
+
+WORD
+STDCALL
+TileChildWindows ( HWND hWndParent, WORD wFlags );
+
+WINBOOL
+STDCALL
+TranslateMessageEx ( CONST MSG *lpMsg, DWORD unk );
+
+WINBOOL
+STDCALL
+DrawFrame(
+	  HDC hDc,
+	  RECT *r,
+	  DWORD width,
+	  DWORD type
+	  );
+
+WINBOOL
+STDCALL
+LockWindowStation ( HWINSTA hWinSta );
+
+WINBOOL
+STDCALL
+UnlockWindowStation ( HWINSTA hWinSta );
+
+WINBOOL
+STDCALL
+GetAccCursorInfo ( PCURSORINFO pci );
+
+LPWSTR
+STDCALL
+MB_GetString ( DWORD string );
+
+WINBOOL
+STDCALL
+ClientThreadSetup ( VOID );
+
+WINBOOL
+STDCALL
+PolyPatBlt(
+	   HDC hDC,
+	   DWORD dwRop,
+	   PPATRECT pRects,
+	   int cRects,
+	   ULONG Reserved
+	   );
+
+DWORD
+STDCALL
+WCSToMBEx(
+	  WORD CodePage,
+	  LPWSTR UnicodeString,
+	  LONG UnicodeSize,
+	  LPSTR *MBString,
+	  LONG MBSize,
+	  BOOL Allocate
+	  );
+
+DWORD
+STDCALL
+MBToWCSEx(
+	  WORD CodePage,
+	  LPSTR MBString,
+	  LONG MBSize,
+	  LPWSTR *UnicodeString,
+	  LONG UnicodeSize,
+	  BOOL Allocate
+	  );
+
+HWND
+STDCALL
+GetAncestor ( HWND hWnd, UINT GaFlags );
+
+WINBOOL
+STDCALL
+AbnormalTermination ( VOID );
+
+int
+STDCALL
+AbortDoc ( HDC );
+
+WINBOOL
+STDCALL
+AbortPath ( HDC );
+
+WINBOOL
+STDCALL
+AbortPrinter ( HANDLE );
+
+WINBOOL
+CALLBACK
+AbortProc ( HDC, int );
+
+WINBOOL
+STDCALL
+AccessCheck(
+	    PSECURITY_DESCRIPTOR  pSecurityDescriptor,
+	    HANDLE  ClientToken,
+	    DWORD  DesiredAccess,
+	    PGENERIC_MAPPING  GenericMapping,
+	    PPRIVILEGE_SET  PrivilegeSet,
+	    LPDWORD  PrivilegeSetLength,
+	    LPDWORD  GrantedAccess,
+	    LPBOOL  AccessStatus
+	    );
 
 #ifndef __NTDRIVER__
 LONG

@@ -102,16 +102,18 @@ Cleanup(VOID)
 
 
 INT STDCALL
-DllMain(PVOID	hinstDll,
-	ULONG	dwReason,
-	PVOID	reserved)
+DllMain(
+	PVOID  hinstDll,
+	ULONG  dwReason,
+	PVOID  reserved
+	)
 {
   D(MAX_TRACE, ("hinstDll (0x%X)  dwReason (0x%X)\n", hinstDll, dwReason));
 
   switch (dwReason)
     {
     case DLL_PROCESS_ATTACH:
-	  hProcessHeap = RtlGetProcessHeap();
+      hProcessHeap = RtlGetProcessHeap();
       Init();
       InitThread();
       break;
@@ -128,4 +130,3 @@ DllMain(PVOID	hinstDll,
     }
   return(1);
 }
-

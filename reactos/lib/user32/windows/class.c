@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.28 2003/08/09 07:09:57 jimtabor Exp $
+/* $Id: class.c,v 1.29 2003/08/14 20:25:52 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -241,8 +241,9 @@ GetClassWord(
 /*
  * @implemented
  */
-LONG STDCALL
-GetWindowLongA(HWND hWnd, int nIndex)
+LONG
+STDCALL
+GetWindowLongA ( HWND hWnd, int nIndex )
 {
   return NtUserGetWindowLong(hWnd, nIndex, TRUE);
 }
@@ -251,7 +252,8 @@ GetWindowLongA(HWND hWnd, int nIndex)
 /*
  * @implemented
  */
-LONG STDCALL
+LONG
+STDCALL
 GetWindowLongW(HWND hWnd, int nIndex)
 {
   return NtUserGetWindowLong(hWnd, nIndex, FALSE);
@@ -260,10 +262,21 @@ GetWindowLongW(HWND hWnd, int nIndex)
 /*
  * @implemented
  */
-WORD STDCALL
+WORD
+STDCALL
 GetWindowWord(HWND hWnd, int nIndex)
 {
   return (WORD)NtUserGetWindowLong(hWnd, nIndex,  TRUE);
+}
+
+/*
+ * @implemented
+ */
+WORD
+STDCALL
+SetWindowWord ( HWND hWnd,int nIndex,WORD wNewWord )
+{
+  return (WORD)NtUserSetWindowLong ( hWnd, nIndex, (LONG)wNewWord, TRUE );
 }
 
 /*
@@ -298,7 +311,8 @@ RealGetWindowClassA(
 /*
  * @implemented
  */
-ATOM STDCALL
+ATOM
+STDCALL
 RegisterClassA(CONST WNDCLASSA *lpWndClass)
 {
   WNDCLASSEXA Class;
