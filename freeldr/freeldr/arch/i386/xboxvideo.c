@@ -1,4 +1,4 @@
-/* $Id: xboxvideo.c,v 1.4 2004/11/23 11:28:02 gvg Exp $
+/* $Id: xboxvideo.c,v 1.5 2004/11/28 21:54:11 gvg Exp $
  *
  *  FreeLoader
  *
@@ -25,6 +25,9 @@
 #include "rtl.h"
 #include "machine.h"
 #include "machxbox.h"
+#include "portio.h"
+
+#define I2C_IO_BASE 0xc000
 
 static PVOID FrameBuffer;
 static U32 ScreenWidth;
@@ -121,11 +124,122 @@ XboxVideoPutChar(int Ch, U8 Attr, unsigned X, unsigned Y)
   XboxVideoOutputChar(Ch, X, Y, FgColor, BgColor);
 }
 
+static BOOL
+ReadfromSMBus(UCHAR Address, UCHAR bRegister, UCHAR Size, U32 *Data_to_smbus)
+{
+  int nRetriesToLive=50;
+
+  while (0 != (READ_PORT_USHORT((PU16) (I2C_IO_BASE + 0)) & 0x0800))
+    {
+      ;  /* Franz's spin while bus busy with any master traffic */
+    }
+
+  while (0 != nRetriesToLive--)
+    {
+      UCHAR b;
+      int temp;
+
+      WRITE_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 4), (Address << 1) | 1);
+      WRITE_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 8), bRegister);
+
+      temp = READ_PORT_USHORT((U16 *) (I2C_IO_BASE + 0));
+      WRITE_PORT_USHORT((PU16) (I2C_IO_BASE + 0), temp);  /* clear down all preexisting errors */
+
+      switch (Size)
+        {
+          case 4:
+            WRITE_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 2), 0x0d);      /* DWORD modus ? */
+            break;
+          case 2:
+            WRITE_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 2), 0x0b);      /* WORD modus */
+            break;
+          default:
+            WRITE_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 2), 0x0a);      // BYTE
+            break;
+        }
+
+      b = 0;
+
+      while (0 == (b & 0x36))
+        {
+          b = READ_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 0));
+        }
+
+      if (0 != (b & 0x24))
+        {
+          /* printf("I2CTransmitByteGetReturn error %x\n", b); */
+        }
+
+      if(0 == (b & 0x10))
+        {
+          /* printf("I2CTransmitByteGetReturn no complete, retry\n"); */
+        }
+      else
+        {
+          switch (Size)
+            {
+              case 4:
+                READ_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 6));
+                READ_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 9));
+                READ_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 9));
+                READ_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 9));
+                READ_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 9));
+                break;
+              case 2:
+                *Data_to_smbus = READ_PORT_USHORT((U16 *) (I2C_IO_BASE + 6));
+                break;
+              default:
+                *Data_to_smbus = READ_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 6));
+                break;
+            }
+
+
+          return TRUE;
+        }
+    }
+
+  return FALSE;
+}
+
+
+static BOOL
+I2CTransmitByteGetReturn(UCHAR bPicAddressI2cFormat, UCHAR bDataToWrite, U32 *Return)
+{
+  return ReadfromSMBus(bPicAddressI2cFormat, bDataToWrite, 1, Return);
+}
+
+
 VOID
 XboxVideoInit(VOID)
 {
+  U32 AvMode;
+
   FrameBuffer = (PVOID)((U32) XboxMemReserveMemory(FB_SIZE_MB) | 0xf0000000);
-  ScreenWidth = 640;
+
+  if (I2CTransmitByteGetReturn(0x10, 0x04, &AvMode))
+    {
+      if (1 == AvMode) /* HDTV */
+        {
+          ScreenWidth = 720;
+        }
+      else
+        {
+          /* FIXME Other possible values of AvMode:
+           * 0 - AV_SCART_RGB
+           * 2 - AV_VGA_SOG
+           * 4 - AV_SVIDEO
+           * 6 - AV_COMPOSITE
+           * 7 - AV_VGA
+           * other AV_COMPOSITE
+           */
+          ScreenWidth = 640;
+        }
+    }
+  else
+    {
+      ScreenWidth = 640;
+    }
+
   ScreenHeight = 480;
   BytesPerPixel = 4;
   Delta = (ScreenWidth * BytesPerPixel + 3) & ~ 0x3;
