@@ -1,4 +1,4 @@
-/* $Id: environment.c,v 1.4 2004/06/25 11:42:00 ekohl Exp $
+/* $Id: environment.c,v 1.5 2004/06/29 12:06:01 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -21,6 +21,7 @@ SetUserEnvironmentVariable (LPVOID *Environment,
 			    LPWSTR lpValue,
 			    BOOL bExpand)
 {
+  WCHAR ShortName[MAX_PATH];
   UNICODE_STRING Name;
   UNICODE_STRING SrcValue;
   UNICODE_STRING DstValue;
@@ -36,8 +37,8 @@ SetUserEnvironmentVariable (LPVOID *Environment,
 
       DstValue.Length = 0;
       DstValue.MaximumLength = Length;
-      DstValue.Buffer = LocalAlloc (LPTR,
-				    Length);
+      DstValue.Buffer = LocalAlloc(LPTR,
+				   Length);
       if (DstValue.Buffer == NULL)
 	{
 	  DPRINT1("LocalAlloc() failed\n");
@@ -50,8 +51,8 @@ SetUserEnvironmentVariable (LPVOID *Environment,
 					     &Length);
       if (!NT_SUCCESS(Status))
 	{
-	  DPRINT1 ("RtlExpandEnvironmentStrings_U() failed (Status %lx)\n", Status);
-	  DPRINT1 ("Length %lu\n", Length);
+	  DPRINT1("RtlExpandEnvironmentStrings_U() failed (Status %lx)\n", Status);
+	  DPRINT1("Length %lu\n", Length);
 	  return FALSE;
 	}
     }
@@ -61,14 +62,27 @@ SetUserEnvironmentVariable (LPVOID *Environment,
 			   lpValue);
     }
 
-  RtlInitUnicodeString (&Name,
-			lpName);
+  if (!_wcsicmp (lpName, L"temp") || !_wcsicmp (lpName, L"tmp"))
+    {
+      if (!GetShortPathNameW(DstValue.Buffer, ShortName, MAX_PATH))
+	{
+	  DPRINT1("GetShortPathNameW() failed (Error %lu)\n", GetLastError());
+	  return FALSE;
+	}
+
+      DPRINT("Buffer: %S\n", ShortName);
+      RtlInitUnicodeString(&DstValue,
+			   ShortName);
+    }
+
+  RtlInitUnicodeString(&Name,
+		       lpName);
 
   DPRINT("Value: %wZ\n", &DstValue);
 
-  Status = RtlSetEnvironmentVariable ((PWSTR*)Environment,
-				      &Name,
-				      &DstValue);
+  Status = RtlSetEnvironmentVariable((PWSTR*)Environment,
+				     &Name,
+				     &DstValue);
 
   if (bExpand)
     {
@@ -77,7 +91,7 @@ SetUserEnvironmentVariable (LPVOID *Environment,
 
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1 ("RtlSetEnvironmentVariable() failed (Status %lx)\n", Status);
+      DPRINT1("RtlSetEnvironmentVariable() failed (Status %lx)\n", Status);
       return FALSE;
     }
 
