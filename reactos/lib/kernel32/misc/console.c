@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.51 2003/01/18 00:10:59 mdill Exp $
+/* $Id: console.c,v 1.52 2003/02/24 23:24:55 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -536,13 +536,32 @@ CloseConsoleHandle(HANDLE Handle)
       * Undocumented
       */
 {
+  CSRSS_API_REQUEST Request;
+  CSRSS_API_REPLY Reply;
+  NTSTATUS Status;
+
   if (IsConsoleHandle (Handle) == FALSE)
     {
       SetLastError (ERROR_INVALID_PARAMETER);
       return FALSE;
     }
-  /* FIXME: call CSRSS */
-  return TRUE/*FALSE*/;
+
+  Request.Type = CSRSS_CLOSE_HANDLE;
+  Request.Data.CloseHandleRequest.Handle = Handle;
+  Status = CsrClientCallServer(&Request,
+			       &Reply,
+			       sizeof(CSRSS_API_REQUEST),
+			       sizeof(CSRSS_API_REPLY));
+
+  if (NT_SUCCESS(Status))
+  {
+     return TRUE;
+  }
+  else
+  {
+     SetLastErrorByStatus(Status);
+     return FALSE;
+  }
 }
 
 BOOLEAN STDCALL 
