@@ -17,6 +17,8 @@ HANDLE STDCALL
 NtUserGetProp(HWND hWnd, ATOM Atom);
 BOOL STDCALL
 NtUserGetClientOrigin(HWND hWnd, LPPOINT Point);
+HWND STDCALL
+NtUserGetDesktopWindow();
 
 NTSTATUS
 STDCALL

@@ -108,7 +108,6 @@ BOOL     FASTCALL W32kIsChildWindow (HWND Parent, HWND Child);
 HWND     FASTCALL W32kGetDesktopWindow (VOID);
 HWND     FASTCALL W32kGetFocusWindow (VOID);
 VOID     FASTCALL W32kSetFocusWindow (HWND hWnd);
-
 #endif /* __WIN32K_WINDOW_H */
 
 /* EOF */

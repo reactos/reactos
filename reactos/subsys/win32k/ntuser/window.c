@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.45 2003/05/18 17:16:17 ea Exp $
+/* $Id: window.c,v 1.46 2003/05/23 16:44:12 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1389,4 +1389,9 @@ NtUserWindowFromPoint(DWORD Unknown0,
   return 0;
 }
 
+HWND STDCALL
+NtUserGetDesktopWindow()
+{
+	return W32kGetDesktopWindow();
+}
 /* EOF */

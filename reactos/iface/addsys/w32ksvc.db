@@ -542,5 +542,6 @@ NtUserWaitMessage                       0
 NtUserWin32PoolAllocationStats          6
 NtUserWindowFromPoint                   2
 NtUserYieldTask                         0
+NtUserGetDesktopWindow			0
 # ReactOS only system calls
 NtUserAcquireOrReleaseInputOwnership    1
