@@ -22,4 +22,7 @@ WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, POINT WinPoint,
 		      PWINDOW_OBJECT* Window);
 VOID FASTCALL WinPosActivateOtherWindow(PWINDOW_OBJECT Window);
 
+PINTERNALPOS FASTCALL WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, 
+                                            POINT pt, PRECT RestoreRect);
+
 #endif /* _WIN32K_WINPOS_H */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.172 2003/12/23 08:48:59 navaraf Exp $
+/* $Id: window.c,v 1.173 2003/12/23 18:12:38 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2644,6 +2644,8 @@ NtUserGetWindowPlacement(HWND hWnd,
 			 WINDOWPLACEMENT *lpwndpl)
 {
   PWINDOW_OBJECT WindowObject;
+  PINTERNALPOS InternalPos;
+  POINT Size;
   WINDOWPLACEMENT Safepl;
   NTSTATUS Status;
   
@@ -2669,11 +2671,21 @@ NtUserGetWindowPlacement(HWND hWnd,
   
   Safepl.flags = 0;
   Safepl.showCmd = ((WindowObject->Flags & WINDOWOBJECT_RESTOREMAX) ? SW_MAXIMIZE : SW_SHOWNORMAL);
-  if (WindowObject->InternalPos)
+  
+  Size.x = WindowObject->WindowRect.left;
+  Size.y = WindowObject->WindowRect.top;
+  InternalPos = WinPosInitInternalPos(WindowObject, Size, 
+				      &WindowObject->WindowRect);
+  if (InternalPos)
   {
-    Safepl.rcNormalPosition = WindowObject->InternalPos->NormalRect;
-    Safepl.ptMinPosition = WindowObject->InternalPos->IconPos;
-    Safepl.ptMaxPosition = WindowObject->InternalPos->MaxPos;
+    Safepl.rcNormalPosition = InternalPos->NormalRect;
+    Safepl.ptMinPosition = InternalPos->IconPos;
+    Safepl.ptMaxPosition = InternalPos->MaxPos;
+  }
+  else
+  {
+    IntReleaseWindowObject(WindowObject);
+    return FALSE;
   }
   
   Status = MmCopyToCaller(lpwndpl, &Safepl, sizeof(WINDOWPLACEMENT));

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.63 2003/12/23 17:56:55 weiden Exp $
+/* $Id: winpos.c,v 1.64 2003/12/23 18:12:38 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -165,7 +165,7 @@ WinPosShowIconTitle(PWINDOW_OBJECT WindowObject, BOOL Show)
   return(FALSE);
 }
 
-PINTERNALPOS STATIC STDCALL
+PINTERNALPOS FASTCALL
 WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT pt, PRECT RestoreRect)
 {
   INT XInc, YInc;
@@ -291,6 +291,13 @@ WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos)
 		    WindowObject->Style |= WS_MAXIMIZE;
 		    NtGdiSetRect(NewPos, InternalPos->MaxPos.x,
 				InternalPos->MaxPos.y, Size.x, Size.y);
+		    break;
+		  }
+		else
+		  {
+		    *NewPos = InternalPos->NormalRect;
+		    NewPos->right -= NewPos->left;
+		    NewPos->bottom -= NewPos->top;
 		    break;
 		  }
 	      }
