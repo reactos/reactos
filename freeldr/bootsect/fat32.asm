@@ -315,8 +315,6 @@ FoundFile:
         mov  si,msgLoading				; Loading message
         call PutChars					; Display it
 
-		popad
-
         xor  di,di						; ES:DI has dir entry
         xor  dx,dx
         mov  ax,WORD [es:di+14h]        ; Get start cluster high word
