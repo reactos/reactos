@@ -196,7 +196,7 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   { 'E',         CAPS,   'e', 'E' },
   { 'R',         CAPS,   'r', 'R' },
   { 'T',         CAPS,   't', 'T' },
-  { 'T',         CAPS,   'y', 'Y' },
+  { 'Y',         CAPS,   'y', 'Y' },
   { 'U',         CAPS,   'u', 'U' },
   { 'I',         CAPS,   'i', 'I' },
   { 'O',         CAPS,   'o', 'O' },
@@ -270,6 +270,7 @@ ROSDATA VK_TO_WCHARS1 keypad_numbers[] = {
   { VK_NUMPAD7, 0, '7' },
   { VK_NUMPAD8, 0, '8' },
   { VK_NUMPAD9, 0, '9' },
+  { VK_BACK,    0, '\010' },
   { 0,0 }
 };
 
