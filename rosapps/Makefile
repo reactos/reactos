@@ -8,8 +8,7 @@ include rules.mak
 # Available applications
 #
  
-APPS = 	calc \
-	cmdutils \
+APPS = cmdutils \
 	cmdutils$(SEP)mode \
     	cmdutils$(SEP)touch \
 	demos$(SEP)maze \
@@ -35,8 +34,6 @@ APPS = 	calc \
 	net$(SEP)ncftp \
         net$(SEP)netstat \
 	net$(SEP)ipconfig \
-	regedt32 \
-	regsvr32 \
 	sysutils$(SEP)regexpl \
 	tests \
 	welcome \
