@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.22 2000/06/18 12:25:00 jfilby Exp $
+# $Id: makefile,v 1.23 2000/06/18 17:37:57 ekohl Exp $
 #
 # WIN32K.SYS build spec
 #
@@ -34,11 +34,13 @@ $(TARGET).coff: $(TARGET).rc ../../include/reactos/resource.h
 
 ifeq ($(DOSCLI),yes)
 CLEAN_FILES = eng\*.o main\*.o misc\*.o ldr\*.o stubs\*.o objects\*.o  \
+              freetype\*.o  \
               $(TARGET).coff $(TARGET).o $(TARGET).a  \
               junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).sym
 else
-CLEAN_FILES = eng/*.o main/*.o ldr\*.o misc/*.o stubs/*.o objects/*.o  \
-              $(TARGET).coff $(TARGET).o $(TARGET).a ldr/*.o \
+CLEAN_FILES = eng/*.o main/*.o ldr/*.o misc/*.o stubs/*.o objects/*.o  \
+              freetype/*.o  \
+              $(TARGET).coff $(TARGET).o $(TARGET).a  \
               junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).sym
 endif
 
