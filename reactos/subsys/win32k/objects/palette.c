@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: palette.c,v 1.15 2004/02/19 21:12:10 weiden Exp $ */
+/* $Id: palette.c,v 1.16 2004/03/27 00:35:02 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -158,7 +158,7 @@ static void FASTCALL PALETTE_FormatSystemPalette(void)
   int i, j = PALETTE_firstFree = NB_RESERVED_COLORS/2;
 
   COLOR_sysPal[j].peFlags = 0;
-  for(i = NB_RESERVED_COLORS/2 + 1 ; i < 256 - NB_RESERVED_COLORS/2 ; i++)
+  for(i = (NB_RESERVED_COLORS>>1) + 1 ; i < 256 - (NB_RESERVED_COLORS>>1) ; i++)
   {
     if( i < COLOR_gapStart || i > COLOR_gapEnd )
     {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: color.c,v 1.34 2004/02/24 13:27:03 weiden Exp $ */
+/* $Id: color.c,v 1.35 2004/03/27 00:35:02 weiden Exp $ */
 
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
 
@@ -120,7 +120,7 @@ HPALETTE STDCALL NtGdiCreateHalftonePalette(HDC  hDC)
 
    for (i = 216; i < 246; i++)
    {
-      int v = (i - 216) * 8;
+      int v = (i - 216) << 3;
       Palette.aEntries[i].peRed = v;
       Palette.aEntries[i].peGreen = v;
       Palette.aEntries[i].peBlue = v;

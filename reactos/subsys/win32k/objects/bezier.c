@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bezier.c,v 1.5 2004/02/19 21:12:10 weiden Exp $ */
+/* $Id: bezier.c,v 1.6 2004/03/27 00:35:02 weiden Exp $ */
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <math.h>
@@ -62,8 +62,8 @@
  * */
 
 #define BEZIERMIDDLE(Mid, P1, P2) \
-  (Mid).x=((P1).x+(P2).x + 1)/2;\
-  (Mid).y=((P1).y+(P2).y + 1)/2;
+  (Mid).x=((P1).x+(P2).x + 1) >> 1;\
+  (Mid).y=((P1).y+(P2).y + 1) >> 1;
 
 static int abs ( int __x )
 {

@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.43 2004/03/15 22:06:55 gvg Exp $
+ * $Id: dib.c,v 1.44 2004/03/27 00:35:02 weiden Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -1190,12 +1190,12 @@ INT FASTCALL DIB_GetDIBWidthBytes (INT width, INT depth)
 
   switch(depth)
   {
-    case 1:  words = (width + 31) / 32; break;
-    case 4:  words = (width + 7) / 8; break;
-    case 8:  words = (width + 3) / 4; break;
+    case 1:  words = (width + 31) >> 5; break;
+    case 4:  words = (width + 7) >> 3; break;
+    case 8:  words = (width + 3) >> 2; break;
     case 15:
-    case 16: words = (width + 1) / 2; break;
-    case 24: words = (width * 3 + 3)/4; break;
+    case 16: words = (width + 1) >> 1; break;
+    case 24: words = (width * 3 + 3) >> 2; break;
 
     default:
       DPRINT("(%d): Unsupported depth\n", depth );
@@ -1203,7 +1203,7 @@ INT FASTCALL DIB_GetDIBWidthBytes (INT width, INT depth)
     case 32:
       words = width;
   }
-  return 4 * words;
+  return words << 2;
 }
 
 /***********************************************************************

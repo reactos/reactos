@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.84 2004/03/23 19:46:50 gvg Exp $ */
+/* $Id: text.c,v 1.85 2004/03/27 00:35:02 weiden Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -743,14 +743,14 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI, UINT Size,
     }
   else
     {
-      Needed += FamilyNameW.Length + StyleNameW.Length + 2 * sizeof(WCHAR); /* family + " " + style */
+      Needed += FamilyNameW.Length + StyleNameW.Length + (sizeof(WCHAR) << 1); /* family + " " + style */
     }
 
   /* length of otmpStyleName */
   Needed += StyleNameW.Length + sizeof(WCHAR);
 
   /* length of otmpFullName */
-  Needed += FamilyNameW.Length + StyleNameW.Length + 2 * sizeof(WCHAR);
+  Needed += FamilyNameW.Length + StyleNameW.Length + (sizeof(WCHAR) << 1);
 
   if (Size < Needed)
     {
@@ -946,7 +946,7 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI, UINT Size,
     {
       wcscat((WCHAR*) Cp, L" ");
       wcscat((WCHAR*) Cp, StyleNameW.Buffer);
-      Cp += FamilyNameW.Length + StyleNameW.Length + 2 * sizeof(WCHAR);
+      Cp += FamilyNameW.Length + StyleNameW.Length + (sizeof(WCHAR) << 1);
     }
   else
     {

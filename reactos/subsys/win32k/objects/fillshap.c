@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fillshap.c,v 1.44 2004/03/04 01:50:26 royce Exp $ */
+/* $Id: fillshap.c,v 1.45 2004/03/27 00:35:02 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -435,7 +435,7 @@ CirclePoints(UINT *PointCount, PSHAPEPOINT ShapePoints, int Left, int Top,
   Even = (0 == (Right - Left) % 2);
   Right--;
   Bottom--;
-  Radius = (Right - Left) / 2;
+  Radius = (Right - Left) >> 1;
 
   if (Even)
     {
@@ -443,8 +443,8 @@ CirclePoints(UINT *PointCount, PSHAPEPOINT ShapePoints, int Left, int Top,
       Y = Radius;
       d = 2 - Radius;
       X18 = Right;
-      X27 = (Left + Right) / 2 + 1;
-      X36 = (Left + Right) / 2;
+      X27 = ((Left + Right) >> 1) + 1;
+      X36 = (Left + Right) >> 1;
       X45 = Left;
       Y14 = Top + Radius;
       Y23 = Top;
@@ -466,8 +466,8 @@ CirclePoints(UINT *PointCount, PSHAPEPOINT ShapePoints, int Left, int Top,
       Y = Radius;
       d = 1 - Radius;
       X18 = Right;
-      X27 = (Left + Right) / 2;
-      X36 = (Left + Right) / 2;
+      X27 = (Left + Right) >> 1;
+      X36 = (Left + Right) >> 1;
       X45 = Left;
       Y14 = Top + Radius;
       Y23 = Top;
@@ -483,7 +483,7 @@ CirclePoints(UINT *PointCount, PSHAPEPOINT ShapePoints, int Left, int Top,
     {
       if (d < 0)
 	{
-	  d += 2 * X + (Even ? 4 : 3);
+	  d += (X << 1) + (Even ? 4 : 3);
 
 	  X27++;
 	  X36--;
@@ -492,7 +492,7 @@ CirclePoints(UINT *PointCount, PSHAPEPOINT ShapePoints, int Left, int Top,
 	}
       else
 	{
-	  d += 2 * (X - Y) + 5;
+	  d += ((X - Y) << 1) + 5;
 	  Y--;
 
 	  Y23++;
@@ -524,8 +524,8 @@ LinePoints(UINT *PointCount, PSHAPEPOINT ShapePoints, int Left, int Top,
   LONG x, y, deltax, deltay, i, xchange, ychange, error;
   int Type;
 
-  x = (Right + Left) / 2;
-  y = (Bottom + Top) / 2;
+  x = (Right + Left) >> 1;
+  y = (Bottom + Top) >> 1;
   deltax = XTo - x;
   deltay = YTo - y;
 
