@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.197 2004/09/26 15:07:43 hbirr Exp $
+/* $Id: main.c,v 1.198 2004/10/03 03:03:54 ion Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -303,9 +303,7 @@ ExpInitializeExecutive(VOID)
 
   assert(FIELD_OFFSET(KPCR, Tib.ExceptionList) == KPCR_EXCEPTION_LIST);
   assert(FIELD_OFFSET(KPCR, Self) == KPCR_SELF);
-  assert(FIELD_OFFSET(IKPCR, Tib.ExceptionList) == KPCR_EXCEPTION_LIST);
-  assert(FIELD_OFFSET(IKPCR, Self) == KPCR_SELF);
-  assert(FIELD_OFFSET(IKPCR, CurrentThread) == KPCR_CURRENT_THREAD);  
+  assert(FIELD_OFFSET(KPCR, PrcbData) + FIELD_OFFSET(KPRCB, CurrentThread) == KPCR_CURRENT_THREAD);  
 
   LdrInit1();
 

@@ -1,4 +1,4 @@
-/* $Id: extypes.h,v 1.23 2004/08/09 01:26:10 ion Exp $ */
+/* $Id: extypes.h,v 1.24 2004/10/03 03:03:53 ion Exp $ */
 
 #ifndef __INCLUDE_DDK_EXTYPES_H
 #define __INCLUDE_DDK_EXTYPES_H
@@ -149,6 +149,11 @@ typedef struct _PAGED_LOOKASIDE_LIST
    ULONG LastAllocateMisses;
    FAST_MUTEX Obsoleted;
 } PAGED_LOOKASIDE_LIST, *PPAGED_LOOKASIDE_LIST;
+
+typedef struct _PP_LOOKASIDE_LIST {
+   struct _GENERAL_LOOKASIDE *P;
+   struct _GENERAL_LOOKASIDE *L;
+} PP_LOOKASIDE_LIST, *PPP_LOOKASIDE_LIST;
 
 typedef enum _EX_POOL_PRIORITY {
     LowPoolPriority,

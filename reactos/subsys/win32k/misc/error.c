@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: error.c,v 1.7 2004/03/14 11:25:33 gvg Exp $
+/* $Id: error.c,v 1.8 2004/10/03 03:03:54 ion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -27,6 +27,7 @@
  *       06-06-2001  CSH  Created
  */
 #include <ddk/ntddk.h>
+#include <ddk/ntpoapi.h>
 #include <internal/ps.h>
 #include <include/error.h>
 
@@ -51,7 +52,6 @@ SetLastWin32Error(DWORD Status)
 NTSTATUS FASTCALL
 GetLastNtError()
 {
-  // FIXME - not 100% sure this is correct
   PTEB Teb = PsGetCurrentThread()->Tcb.Teb;
 
   if ( NULL != Teb )

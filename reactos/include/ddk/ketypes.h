@@ -209,6 +209,12 @@ typedef struct _KDPC
 
 #include <poppack.h>
 
+typedef struct _KDPC_DATA {
+  LIST_ENTRY  DpcListHead;
+  ULONG  DpcLock;
+  ULONG  DpcQueueDepth;
+  ULONG  DpcCount;
+} KDPC_DATA, *PKDPC_DATA;
 
 typedef struct _KDEVICE_QUEUE_ENTRY
 {

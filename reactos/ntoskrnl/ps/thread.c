@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.134 2004/09/28 15:02:29 weiden Exp $
+/* $Id: thread.c,v 1.135 2004/10/03 03:03:54 ion Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -57,7 +57,7 @@ static GENERIC_MAPPING PiThreadMapping = {THREAD_READ,
  */
 PKTHREAD STDCALL KeGetCurrentThread(VOID)
 {
-   return(((PIKPCR) KeGetCurrentKPCR())->CurrentThread);
+   return(KeGetCurrentKPCR()->PrcbData.CurrentThread);
 }
 
 /*
@@ -372,7 +372,7 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
    KPRIORITY CurrentPriority;
    PETHREAD Candidate;
    ULONG Affinity;
-   PKTHREAD KCurrentThread = ((PIKPCR) KeGetCurrentKPCR())->CurrentThread;
+   PKTHREAD KCurrentThread = KeGetCurrentThread();
    PETHREAD CurrentThread = CONTAINING_RECORD(KCurrentThread, ETHREAD, Tcb);
 
    DPRINT("PsDispatchThread() %d/%d/%d/%d\n", KeGetCurrentProcessorNumber(),
@@ -437,7 +437,7 @@ PsDispatchThread(ULONG NewThreadStatus)
    /*
     * Save wait IRQL
     */
-   ((PIKPCR) KeGetCurrentKPCR())->CurrentThread->WaitIrql = oldIrql;
+   KeGetCurrentThread()->WaitIrql = oldIrql;
    PsDispatchThreadNoLock(NewThreadStatus);
    KeLowerIrql(oldIrql);
 }
@@ -483,7 +483,7 @@ PsBlockThread(PNTSTATUS Status, UCHAR Alertable, ULONG WaitMode,
 
   KeAcquireSpinLock(&PiThreadLock, &oldIrql);
 
-  KThread = ((PIKPCR) KeGetCurrentKPCR())->CurrentThread;
+  KThread = KeGetCurrentThread();
   Thread = CONTAINING_RECORD (KThread, ETHREAD, Tcb);
   if (KThread->ApcState.KernelApcPending)
   {
@@ -630,7 +630,7 @@ PsSetThreadWin32Thread(
 VOID
 PsApplicationProcessorInit(VOID)
 {
-  ((PIKPCR) KeGetCurrentKPCR())->CurrentThread =
+  KeGetCurrentKPCR()->PrcbData.CurrentThread =
     (PVOID)IdleThreads[KeGetCurrentProcessorNumber()];
 }
 
@@ -704,7 +704,7 @@ PsInitThreadManagment(VOID)
 		      THREAD_ALL_ACCESS,NULL, TRUE);
    FirstThread->Tcb.State = THREAD_STATE_RUNNING;
    FirstThread->Tcb.FreezeCount = 0;
-   ((PIKPCR) KeGetCurrentKPCR())->CurrentThread = (PVOID)FirstThread;
+   KeGetCurrentKPCR()->PrcbData.CurrentThread = (PVOID)FirstThread;
    NtClose(FirstThreadHandle);
 
    DPRINT("FirstThread %x\n",FirstThread);
@@ -793,7 +793,7 @@ KeSetPriorityThread (PKTHREAD Thread, KPRIORITY Priority)
          {
 	   PsRemoveFromThreadList((PETHREAD)Thread);
 	   PsInsertIntoThreadList(Priority, (PETHREAD)Thread);
-	   CurrentThread = ((PIKPCR) KeGetCurrentKPCR())->CurrentThread;
+	   CurrentThread = KeGetCurrentThread();
 	   if (CurrentThread->Priority < Priority)
 	     {
                PsDispatchThreadNoLock(THREAD_STATE_READY);

@@ -193,6 +193,18 @@ typedef struct _MADDRESS_SPACE
   ULONG PageTableRefCountTableSize;
 } MADDRESS_SPACE, *PMADDRESS_SPACE;
 
+typedef struct _KNODE {
+   ULONG ProcessorMask;
+   ULONG Color;
+   ULONG MmShiftedColor;
+   ULONG FreeCount[2];
+   SLIST_HEADER DeadStackList;
+   SLIST_HEADER PfnDereferenceSListHead;
+   struct _SINGLE_LIST_ENTRY *PfnDeferredList;
+   UCHAR Seed;
+   UCHAR NodeNumber;
+   ULONG Flags;
+} KNODE, *PKNODE;
 
 #ifndef __USE_W32API
 /* VARIABLES */
