@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.45.8.1 2004/07/07 18:03:01 weiden Exp $
+/* $Id: stubs.c,v 1.45.8.2 2004/07/11 11:10:01 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -791,22 +791,6 @@ NtUserGetQueueStatus(BOOL ClearChanges)
 
 BOOL STDCALL
 NtUserUpdateWindow(HWND hWnd)
-{
-   UNIMPLEMENTED;
-   return FALSE;
-}
-
-
-INT STDCALL
-NtUserGetUpdateRgn(HWND hWnd, HRGN hRgn, BOOL bErase)
-{
-   UNIMPLEMENTED;
-   return FALSE;
-}
-
-
-BOOL STDCALL
-NtUserGetUpdateRect(HWND Wnd, LPRECT UnsafeRect, BOOL Erase)
 {
    UNIMPLEMENTED;
    return FALSE;

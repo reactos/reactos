@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ntuser.c,v 1.1.2.1 2004/07/07 18:14:43 weiden Exp $
+/* $Id: ntuser.c,v 1.1.2.2 2004/07/11 11:10:01 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -981,6 +981,43 @@ NtUserGetSystemMetrics(INT Index)
   Result = IntGetSystemMetrics(Index);
   LEAVE_CRITICAL();
    
+  END_NTUSER();
+}
+
+BOOL STDCALL
+NtUserGetUpdateRect(HWND hWnd, LPRECT lpRect, BOOL bErase)
+{
+  RECT SafeRect;
+  NTUSER_USER_OBJECT(WINDOW, Window);
+  BEGIN_BUFFERS();
+  BEGIN_NTUSER(BOOL, FALSE);
+  
+  /* FIXME - if bErase == FALSE, should we do ENTER_CRITICAL_SHARED() instead? */
+  ENTER_CRITICAL();
+  VALIDATE_USER_OBJECT(WINDOW, hWnd, Window);
+  Result = IntGetUpdateRect(Window, &SafeRect, bErase);
+  LEAVE_CRITICAL();
+  
+  if(lpRect != NULL)
+  {
+    NTUSER_COPY_BUFFER_BACK_NTERROR(lpRect, &SafeRect, sizeof(RECT));
+  }
+  
+  END_NTUSER();
+}
+
+INT STDCALL
+NtUserGetUpdateRgn(HWND hWnd, HRGN hRgn, BOOL bErase)
+{
+  NTUSER_USER_OBJECT(WINDOW, Window);
+  BEGIN_NTUSER(INT, ERROR);
+  
+  /* FIXME - if bErase == FALSE, should we do ENTER_CRITICAL_SHARED() instead? */
+  ENTER_CRITICAL();
+  VALIDATE_USER_OBJECT(WINDOW, hWnd, Window);
+  Result = IntGetUpdateRgn(Window, hRgn, bErase);
+  LEAVE_CRITICAL();
+  
   END_NTUSER();
 }
 

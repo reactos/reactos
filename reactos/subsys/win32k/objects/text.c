@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.102 2004/07/03 17:40:27 navaraf Exp $ */
+/* $Id: text.c,v 1.102.2.1 2004/07/11 11:10:01 weiden Exp $ */
 #include <w32k.h>
 
 #include <ft2build.h>
@@ -2016,9 +2016,16 @@ NtGdiGetCharWidth32(HDC  hDC,
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
    }
-   TextObj = TEXTOBJ_LockText(hFont);
    hFont = dc->w.hFont;
+   TextObj = TEXTOBJ_LockText(hFont);
    DC_UnlockDc(hDC);
+
+   if (TextObj == NULL)
+   {
+      ExFreePool(SafeBuffer);
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return FALSE;
+   }
 
    if (!NT_SUCCESS(GetFontObjectsFromTextObj(TextObj, NULL, NULL, &FontGDI)))
    {
@@ -2498,13 +2505,31 @@ NtGdiGetTextExtentPoint32(HDC hDC,
   return TRUE;
 }
 
-int
-STDCALL
-NtGdiGetTextFace(HDC  hDC,
-                     int  Count,
-                     LPWSTR  FaceName)
+INT STDCALL
+NtGdiGetTextFace(HDC hDC, INT Count, LPWSTR FaceName)
 {
-  UNIMPLEMENTED;
+   PDC Dc;
+   PTEXTOBJ TextObj;
+   NTSTATUS Status;
+
+   Dc = DC_LockDc(hDC);
+   if (Dc == NULL)
+   {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return FALSE;
+   }
+   TextObj = TEXTOBJ_LockText(Dc->w.hFont);
+   DC_UnlockDc(hDC);
+
+   Count = min(Count, wcslen(TextObj->logfont.lfFaceName));
+   Status = MmCopyToCaller(FaceName, TextObj->logfont.lfFaceName, Count * sizeof(WCHAR));
+   if (!NT_SUCCESS(Status))
+   {
+      SetLastNtError(Status);
+      return 0;
+   }
+
+   return Count;
 }
 
 BOOL
@@ -2678,6 +2703,63 @@ NtGdiTextOut(
    INT Count)
 {
    return NtGdiExtTextOut(hDC, XStart, YStart, 0, NULL, String, Count, NULL);
+}
+
+DWORD STDCALL
+NtGdiGetFontData(
+   HDC hDC,
+   DWORD Table,
+   DWORD Offset,
+   LPVOID Buffer,
+   DWORD Size)
+{
+   PDC Dc;
+   HFONT hFont;
+   PTEXTOBJ TextObj;
+   PFONTGDI FontGdi;
+   DWORD Result = GDI_ERROR;
+   NTSTATUS Status;
+
+   Dc = DC_LockDc(hDC);
+   if (Dc == NULL)
+   {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return GDI_ERROR;
+   }
+   hFont = Dc->w.hFont;
+   TextObj = TEXTOBJ_LockText(hFont);
+   DC_UnlockDc(hDC);
+
+   if (TextObj == NULL)
+   {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return GDI_ERROR;
+   }
+   
+   Status = GetFontObjectsFromTextObj(TextObj, NULL, NULL, &FontGdi);
+   if (NT_SUCCESS(Status))
+   {
+      IntLockFreeType;
+
+      if (FT_IS_SFNT(FontGdi->face))
+      {
+         if (Table)
+            Table = Table >> 24 | Table << 24 | (Table >> 8 & 0xFF00) |
+                    (Table << 8 & 0xFF0000);
+
+         if (Buffer == NULL)
+            Size = 0;
+
+         if (!FT_Load_Sfnt_Table(FontGdi->face, Table, Offset, Buffer, &Size))
+            Result = Size;
+      }
+
+      IntUnLockFreeType;
+   }
+
+   TEXTOBJ_UnlockText(hFont);
+
+   return Result; 
 }
 
 static UINT FASTCALL

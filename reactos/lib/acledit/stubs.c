@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.1 2004/07/09 20:18:49 weiden Exp $
+/* $Id: stubs.c,v 1.1.2.1 2004/07/11 11:10:01 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Access Control List Editor

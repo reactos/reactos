@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.13 2004/06/13 10:35:52 navaraf Exp $
+/* $Id: virtual.c,v 1.13.6.1 2004/07/11 11:09:59 weiden Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -198,7 +198,7 @@ VirtualQueryEx(HANDLE hProcess,
   if (!NT_SUCCESS(Status))
     {
       SetLastErrorByStatus(Status);
-      return(ResultLength);
+      return 0;
     }
   return(ResultLength);
 }

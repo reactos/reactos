@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.62.2.1 2004/07/07 18:03:02 weiden Exp $ */
+/* $Id: cursoricon.c,v 1.62.2.2 2004/07/11 11:10:01 weiden Exp $ */
 #include <w32k.h>
 
 #define COLORCURSORS_ALLOWED FALSE
@@ -605,6 +605,8 @@ IntDrawIconEx(HDC hdc, int xLeft, int yTop, PCURSOR_OBJECT Cursor, int cxWidth, 
   #if CANSTRETCHBLT
   SetStretchBltMode(hdcOff, nStretchMode);
   #endif
+  
+  Ret = TRUE;
   
   cleanup:
   if(DoFlickerFree)

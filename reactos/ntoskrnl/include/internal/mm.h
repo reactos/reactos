@@ -203,6 +203,8 @@ NTSTATUS MmCreateMemoryArea(struct _EPROCESS* Process,
 			    PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL);
 MEMORY_AREA* MmOpenMemoryAreaByAddress(PMADDRESS_SPACE AddressSpace, 
 				       PVOID Address);
+ULONG MmFindGapAtAddress(PMADDRESS_SPACE AddressSpace, 
+			 PVOID Address);
 NTSTATUS MmInitMemoryAreas(VOID);
 VOID MiInitializeNonPagedPool(VOID);
 NTSTATUS MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: acledit.c,v 1.1 2004/07/09 20:18:49 weiden Exp $
+/* $Id: acledit.c,v 1.1.2.1 2004/07/11 11:10:01 weiden Exp $
  *
  * PROJECT:         ReactOS Access Control List Editor
  * FILE:            lib/acledit/acledit.c

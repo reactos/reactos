@@ -1,0 +1,162 @@
+
+acledit.nostrip.dll:     file format pei-i386
+
+Disassembly of section .text:
+
+10001000 <_DllMain@12>:
+DllMain(
+	HINSTANCE hinstDLL,
+	DWORD     dwReason,
+	LPVOID    lpvReserved)
+{
+10001000:	55                   	push   %ebp
+10001001:	89 e5                	mov    %esp,%ebp
+  switch (dwReason)
+10001003:	8b 45 0c             	mov    0xc(%ebp),%eax
+10001006:	83 f8 01             	cmp    $0x1,%eax
+10001009:	74 02                	je     1000100d <_DllMain@12+0xd>
+1000100b:	eb 08                	jmp    10001015 <_DllMain@12+0x15>
+  {
+    case DLL_PROCESS_ATTACH:
+      hDllInstance = hinstDLL;
+1000100d:	8b 45 08             	mov    0x8(%ebp),%eax
+10001010:	a3 00 30 00 10       	mov    %eax,0x10003000
+      break;
+    case DLL_THREAD_ATTACH:
+      break;
+    case DLL_THREAD_DETACH:
+      break;
+    case DLL_PROCESS_DETACH:
+      break;
+  }
+  return TRUE;
+10001015:	b8 01 00 00 00       	mov    $0x1,%eax
+}
+1000101a:	c9                   	leave  
+1000101b:	c2 0c 00             	ret    $0xc
+1000101e:	90                   	nop    
+1000101f:	90                   	nop    
+
+10001020 <_EditAuditInfo@4>:
+10001020:	55                   	push   %ebp
+10001021:	89 e5                	mov    %esp,%ebp
+10001023:	83 ec 08             	sub    $0x8,%esp
+10001026:	6a 1c                	push   $0x1c
+10001028:	68 0e 20 00 10       	push   $0x1000200e
+1000102d:	68 00 20 00 10       	push   $0x10002000
+10001032:	68 18 20 00 10       	push   $0x10002018
+10001037:	e8 04 01 00 00       	call   10001140 <_DbgPrint>
+1000103c:	83 c4 10             	add    $0x10,%esp
+1000103f:	b8 00 00 00 00       	mov    $0x0,%eax
+10001044:	c9                   	leave  
+10001045:	c2 04 00             	ret    $0x4
+
+10001048 <_EditOwnerInfo@4>:
+10001048:	55                   	push   %ebp
+10001049:	89 e5                	mov    %esp,%ebp
+1000104b:	83 ec 08             	sub    $0x8,%esp
+1000104e:	6a 24                	push   $0x24
+10001050:	68 0e 20 00 10       	push   $0x1000200e
+10001055:	68 41 20 00 10       	push   $0x10002041
+1000105a:	68 18 20 00 10       	push   $0x10002018
+1000105f:	e8 dc 00 00 00       	call   10001140 <_DbgPrint>
+10001064:	83 c4 10             	add    $0x10,%esp
+10001067:	b8 00 00 00 00       	mov    $0x0,%eax
+1000106c:	c9                   	leave  
+1000106d:	c2 04 00             	ret    $0x4
+
+10001070 <_EditPermissionInfo@4>:
+10001070:	55                   	push   %ebp
+10001071:	89 e5                	mov    %esp,%ebp
+10001073:	83 ec 08             	sub    $0x8,%esp
+10001076:	6a 2c                	push   $0x2c
+10001078:	68 0e 20 00 10       	push   $0x1000200e
+1000107d:	68 4f 20 00 10       	push   $0x1000204f
+10001082:	68 18 20 00 10       	push   $0x10002018
+10001087:	e8 b4 00 00 00       	call   10001140 <_DbgPrint>
+1000108c:	83 c4 10             	add    $0x10,%esp
+1000108f:	b8 00 00 00 00       	mov    $0x0,%eax
+10001094:	c9                   	leave  
+10001095:	c2 04 00             	ret    $0x4
+
+10001098 <_FMExtensionProcW@12>:
+10001098:	55                   	push   %ebp
+10001099:	89 e5                	mov    %esp,%ebp
+1000109b:	83 ec 08             	sub    $0x8,%esp
+1000109e:	8b 45 0c             	mov    0xc(%ebp),%eax
+100010a1:	66 89 45 fe          	mov    %ax,0xfffffffe(%ebp)
+100010a5:	6a 36                	push   $0x36
+100010a7:	68 0e 20 00 10       	push   $0x1000200e
+100010ac:	68 62 20 00 10       	push   $0x10002062
+100010b1:	68 18 20 00 10       	push   $0x10002018
+100010b6:	e8 85 00 00 00       	call   10001140 <_DbgPrint>
+100010bb:	83 c4 10             	add    $0x10,%esp
+100010be:	b8 00 00 00 00       	mov    $0x0,%eax
+100010c3:	c9                   	leave  
+100010c4:	c2 0c 00             	ret    $0xc
+
+100010c7 <_SedDiscretionaryAclEditor@52>:
+
+100010c7:	55                   	push   %ebp
+100010c8:	89 e5                	mov    %esp,%ebp
+100010ca:	83 ec 08             	sub    $0x8,%esp
+100010cd:	6a 4a                	push   $0x4a
+100010cf:	68 0e 20 00 10       	push   $0x1000200e
+100010d4:	68 73 20 00 10       	push   $0x10002073
+100010d9:	68 18 20 00 10       	push   $0x10002018
+100010de:	e8 5d 00 00 00       	call   10001140 <_DbgPrint>
+100010e3:	83 c4 10             	add    $0x10,%esp
+100010e6:	b8 00 00 00 00       	mov    $0x0,%eax
+100010eb:	c9                   	leave  
+100010ec:	c2 34 00             	ret    $0x34
+
+100010ef <_SedTakeOwnership@56>:
+100010ef:	55                   	push   %ebp
+100010f0:	89 e5                	mov    %esp,%ebp
+100010f2:	83 ec 08             	sub    $0x8,%esp
+100010f5:	6a 5f                	push   $0x5f
+100010f7:	68 0e 20 00 10       	push   $0x1000200e
+100010fc:	68 8d 20 00 10       	push   $0x1000208d
+10001101:	68 18 20 00 10       	push   $0x10002018
+10001106:	e8 35 00 00 00       	call   10001140 <_DbgPrint>
+1000110b:	83 c4 10             	add    $0x10,%esp
+1000110e:	b8 00 00 00 00       	mov    $0x0,%eax
+10001113:	c9                   	leave  
+10001114:	c2 38 00             	ret    $0x38
+
+10001117 <_SedSystemAclEditor@48>:
+10001117:	55                   	push   %ebp
+10001118:	89 e5                	mov    %esp,%ebp
+1000111a:	83 ec 08             	sub    $0x8,%esp
+1000111d:	6a 72                	push   $0x72
+1000111f:	68 0e 20 00 10       	push   $0x1000200e
+10001124:	68 9e 20 00 10       	push   $0x1000209e
+10001129:	68 18 20 00 10       	push   $0x10002018
+1000112e:	e8 0d 00 00 00       	call   10001140 <_DbgPrint>
+10001133:	83 c4 10             	add    $0x10,%esp
+10001136:	b8 00 00 00 00       	mov    $0x0,%eax
+1000113b:	c9                   	leave  
+1000113c:	c2 30 00             	ret    $0x30
+1000113f:	90                   	nop    
+
+10001140 <_DbgPrint>:
+10001140:	ff 25 38 50 00 10    	jmp    *0x10005038
+10001146:	90                   	nop    
+10001147:	90                   	nop    
+	...
+
+10001150 <__CTOR_LIST__>:
+10001150:	ff                   	(bad)  
+10001151:	ff                   	(bad)  
+10001152:	ff                   	(bad)  
+10001153:	ff 00                	incl   (%eax)
+10001155:	00 00                	add    %al,(%eax)
+	...
+
+10001158 <__DTOR_LIST__>:
+10001158:	ff                   	(bad)  
+10001159:	ff                   	(bad)  
+1000115a:	ff                   	(bad)  
+1000115b:	ff 00                	incl   (%eax)
+1000115d:	00 00                	add    %al,(%eax)
+	...

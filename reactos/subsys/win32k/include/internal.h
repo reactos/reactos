@@ -286,6 +286,7 @@ NTSTATUS            FASTCALL CleanupDesktopImpl(VOID);
 VOID                FASTCALL IntGetDesktopWorkArea(PDESKTOP_OBJECT Desktop, PRECT Rect);
 HDC                 FASTCALL IntGetScreenDC(VOID);
 PWINDOW_OBJECT      FASTCALL IntGetDesktopWindow (VOID);
+PWINDOW_OBJECT      FASTCALL IntGetCurrentThreadDesktopWindow(VOID);
 PUSER_MESSAGE_QUEUE FASTCALL IntGetActiveMessageQueue(VOID);
 PUSER_MESSAGE_QUEUE FASTCALL IntSetActiveMessageQueue(PUSER_MESSAGE_QUEUE NewQueue);
 PDESKTOP_OBJECT     FASTCALL IntGetActiveDesktop(VOID);
@@ -656,6 +657,8 @@ BOOL FASTCALL IntGetPaintMessage(PWINDOW_OBJECT Window, UINT MsgFilterMin, UINT 
                                  PW32THREAD Thread, MSG *Message, BOOL Remove);
 HDC  FASTCALL IntBeginPaint(PWINDOW_OBJECT Window, PAINTSTRUCT* lPs);
 BOOL FASTCALL IntEndPaint(PWINDOW_OBJECT Window, CONST PAINTSTRUCT* lPs);
+BOOL FASTCALL IntGetUpdateRect(PWINDOW_OBJECT Window, LPRECT Rect, BOOL Erase);
+INT  FASTCALL IntGetUpdateRgn(PWINDOW_OBJECT Window, HRGN hRgn, BOOL bErase);
 
 /* WINDOW PROPERTIES **********************************************************/
 

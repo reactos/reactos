@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.73 2004/03/24 22:00:39 ea Exp $
+/* $Id: create.c,v 1.73.8.1 2004/07/11 11:10:01 weiden Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -481,7 +481,7 @@ PsCreateTeb(HANDLE ProcessHandle,
 
    while (TRUE)
      {
-	Status = NtQueryVirtualMemory(ProcessHandle,
+	Status = ZwQueryVirtualMemory(ProcessHandle,
 				      TebBase,
 				      MemoryBasicInformation,
 				      &Info,
@@ -489,14 +489,14 @@ PsCreateTeb(HANDLE ProcessHandle,
 				      &ResultLength);
 	if (!NT_SUCCESS(Status))
 	  {
-	     CPRINT("NtQueryVirtualMemory (Status %x)\n", Status);
+	     CPRINT("ZwQueryVirtualMemory (Status %x)\n", Status);
 	     KEBUGCHECK(0);
 	  }
 	/* FIXME: Race between this and the above check */
 	if (Info.State == MEM_FREE)
 	  {
 	     /* The TEB must reside in user space */
-	     Status = NtAllocateVirtualMemory(ProcessHandle,
+	     Status = ZwAllocateVirtualMemory(ProcessHandle,
 					      &TebBase,
 					      0,
 					      &TebSize,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: desktop.c,v 1.16.2.1 2004/07/07 18:03:01 weiden Exp $
+ *  $Id: desktop.c,v 1.16.2.2 2004/07/11 11:10:01 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -135,6 +135,14 @@ PDESKTOP_OBJECT FASTCALL
 IntGetActiveDesktop(VOID)
 {
   return InputDesktop;
+}
+
+PWINDOW_OBJECT FASTCALL
+IntGetCurrentThreadDesktopWindow(VOID)
+{
+  PDESKTOP_OBJECT pdo = PsGetWin32Thread()->Desktop;
+  
+  return (pdo != NULL ? pdo->DesktopWindow : NULL);
 }
 
 /*
