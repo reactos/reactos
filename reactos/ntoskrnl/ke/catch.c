@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.52 2004/11/13 23:00:15 blight Exp $
+/* $Id: catch.c,v 1.53 2004/11/14 16:00:02 blight Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -46,7 +46,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 {
   EXCEPTION_DISPOSITION Value;
   CONTEXT TContext;
-  KD_CONTINUE_TYPE Action = kdContinue;
+  KD_CONTINUE_TYPE Action = kdHandleException;
 
   DPRINT("KiDispatchException() called\n");
 
@@ -165,10 +165,6 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
               KEBUGCHECKWITHTF(KMODE_EXCEPTION_NOT_HANDLED, 0, 0, 0, 0, Tf);
 	    }
 	}
-    }
-  else
-    {
-      KeContextToTrapFrame (Context, KeGetCurrentThread()->TrapFrame);
     }
 }
 

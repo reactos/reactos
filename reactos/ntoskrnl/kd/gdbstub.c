@@ -1337,7 +1337,8 @@ KdEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
                     KeLowerIrql(OldIrql);
                   }
 
-                return kdHandleException;
+                KeContextToTrapFrame(Context, TrapFrame);
+                return ((SigVal == 5) ? (kdContinue) : (kdHandleException));
                 break;
               }
 
@@ -1411,7 +1412,9 @@ KdEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
         }
     }
 
-  return ((SigVal == 5) ? (kdContinue) : (kdHandleException));
+    /* not reached */
+    ASSERT(0);
+    return kdHandleException;
 }
 
 
