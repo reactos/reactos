@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.46 2004/06/06 07:52:22 hbirr Exp $
+/* $Id: pagefile.c,v 1.47 2004/06/06 09:13:21 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -191,13 +191,15 @@ MmGetOffsetPageFile(PGET_RETRIEVAL_DESCRIPTOR RetrievalPointers, LARGE_INTEGER O
 #endif
 }
 
-NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
+NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PHYSICAL_ADDRESS* Page)
 {
    ULONG i, offset;
    LARGE_INTEGER file_offset;
    IO_STATUS_BLOCK Iosb;
    NTSTATUS Status;
    KEVENT Event;
+   UCHAR MdlBase[sizeof(MDL) + sizeof(ULONG)];
+   PMDL Mdl = (PMDL)MdlBase;
 
    DPRINT("MmWriteToSwapPage\n");
 
@@ -222,6 +224,9 @@ NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
       KEBUGCHECK(0);
    }
 
+   MmInitializeMdl(Mdl, NULL, PAGE_SIZE);
+   MmBuildMdlFromPages(Mdl, (PULONG)Page);
+
    file_offset.QuadPart = offset * PAGE_SIZE;
    file_offset = MmGetOffsetPageFile(PagingFileList[i]->RetrievalPointers, file_offset);
 
@@ -234,18 +239,21 @@ NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
    if (Status == STATUS_PENDING)
    {
       KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-      return(Iosb.Status);
+      Status = Iosb.Status;
    }
+   MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);            
    return(Status);
 }
 
-NTSTATUS MmReadFromSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
+NTSTATUS MmReadFromSwapPage(SWAPENTRY SwapEntry, PHYSICAL_ADDRESS* Page)
 {
    ULONG i, offset;
    LARGE_INTEGER file_offset;
    IO_STATUS_BLOCK Iosb;
    NTSTATUS Status;
    KEVENT Event;
+   UCHAR MdlBase[sizeof(MDL) + sizeof(ULONG)];
+   PMDL Mdl = (PMDL)MdlBase;
 
    DPRINT("MmReadFromSwapPage\n");
 
@@ -270,6 +278,9 @@ NTSTATUS MmReadFromSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
       KEBUGCHECK(0);
    }
 
+   MmInitializeMdl(Mdl, NULL, PAGE_SIZE);
+   MmBuildMdlFromPages(Mdl, (PULONG)Page);
+
    file_offset.QuadPart = offset * PAGE_SIZE;
    file_offset = MmGetOffsetPageFile(PagingFileList[i]->RetrievalPointers, file_offset);
 
@@ -282,8 +293,9 @@ NTSTATUS MmReadFromSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
    if (Status == STATUS_PENDING)
    {
       KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-      return(Iosb.Status);
+      Status = Iosb.Status;
    }
+   MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);            
    return(Status);
 }
 
@@ -538,14 +550,8 @@ MmDumpToPagingFile(ULONG BugCode,
    }
 
    /* Initialize the MDL. */
-   Mdl->Next = NULL;
-   Mdl->Size = sizeof(MDL) + sizeof(PVOID);
-   Mdl->MdlFlags = MDL_SOURCE_IS_NONPAGED_POOL;
-   Mdl->Process = NULL;
-   Mdl->MappedSystemVa = MmCoreDumpPageFrame;
-   Mdl->StartVa = NULL;
-   Mdl->ByteCount = PAGE_SIZE;
-   Mdl->ByteOffset = 0;
+   MmInitializeMdl(Mdl, MmCoreDumpPageFrame, PAGE_SIZE);
+   Mdl->MdlFlags = MDL_PAGES_LOCKED|MDL_IO_PAGE_READ|MDL_SOURCE_IS_NONPAGED_POOL;
    MdlMap = (PULONG)(Mdl + 1);
 
 
