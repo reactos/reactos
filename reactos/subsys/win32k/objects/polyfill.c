@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: polyfill.c,v 1.7 2003/08/15 18:51:32 royce Exp $
+/* $Id: polyfill.c,v 1.8 2003/08/16 04:47:41 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -40,12 +40,12 @@
 #define NDEBUG
 #include <win32k/debug1.h>
 
-#define PFILL_EDGE_ALLOC_TAG 0x45465044
+#define FILL_EDGE_ALLOC_TAG 0x45465044
 
 /*
 ** This struct is used for book keeping during polygon filling routines.
 */
-typedef struct _tagPFILL_EDGE
+typedef struct _tagFILL_EDGE
 {
   /*Basic line information*/
   int FromX;
@@ -54,51 +54,48 @@ typedef struct _tagPFILL_EDGE
   int ToY;
   int dx;
   int dy;
-  int MinX;
-  int MaxX;
-  int MinY;
-  int MaxY;
+  int absdx, absdy;
+  int x, y;
+  int xmajor;
 
   /*Active Edge List information*/
-  int XIntercept;
+  int XIntercept[2];
   int Error;
-  int ErrorInc;
   int ErrorMax;
-  int XPerY;
-  int XDirection;
-  int YDirection; // used for Winding
+  int XDirection, YDirection;
 
-  /* The next edge in the Edge List*/
-  struct _tagPFILL_EDGE * pNext;
-} PFILL_EDGE, *PPFILL_EDGE;
+  /* The next edge in the active Edge List*/
+  struct _tagFILL_EDGE * pNext;
+} FILL_EDGE;
 
-typedef PPFILL_EDGE PFILL_EDGE_LIST;
+typedef struct _FILL_EDGE_LIST
+{
+  int Count;
+  FILL_EDGE** Edges;
+} FILL_EDGE_LIST;
 
+#if 0
 static
-inline
-int
-abs ( int a )
-{
-  return a < 0 ? -a : a;
-}
-
-/*static
 void
-DEBUG_PRINT_EDGELIST(PFILL_EDGE_LIST list)
+DEBUG_PRINT_ACTIVE_EDGELIST ( FILL_EDGE* list )
 {
-    PPFILL_EDGE pThis = list;
-    if (0 == list)
-    {
-        DPRINT("List is NULL\n");
-        return;
-    }
-    
-    while(0 != pThis)
-    {
-        DPRINT("EDGE: (%d, %d) to (%d, %d)\n", pThis->FromX, pThis->FromY, pThis->ToX, pThis->ToY);
-        pThis = pThis->pNext;
-    }
-}*/
+  FILL_EDGE* pThis = list;
+  if (0 == list)
+  {
+    DPRINT1("List is NULL\n");
+    return;
+  }
+
+  while(0 != pThis)
+  {
+    //DPRINT1("EDGE: (%d, %d) to (%d, %d)\n", pThis->FromX, pThis->FromY, pThis->ToX, pThis->ToY);
+    DPRINT1("EDGE: [%d,%d]\n", pThis->XIntercept[0], pThis->XIntercept[1] );
+    pThis = pThis->pNext;
+  }
+}
+#else
+#define DEBUG_PRINT_ACTIVE_EDGELIST(x)
+#endif
 
 /*
 **  Hide memory clean up.
@@ -106,30 +103,21 @@ DEBUG_PRINT_EDGELIST(PFILL_EDGE_LIST list)
 static
 void
 FASTCALL
-POLYGONFILL_DestroyEdge(PPFILL_EDGE pEdge)
+POLYGONFILL_DestroyEdgeList(FILL_EDGE_LIST* list)
 {
-  if (0 != pEdge)
-    EngFreeMem(pEdge);
-}
-
-/*
-** Clean up a list.
-*/
-static
-void
-FASTCALL
-POLYGONFILL_DestroyEdgeList(PFILL_EDGE_LIST list)
-{
-  PPFILL_EDGE pThis = 0;
-  PPFILL_EDGE pNext = 0;
-
-  pThis = list;
-  while (0 != pThis)
+  int i;
+  if ( list )
   {
-    //DPRINT("Destroying Edge\n");
-    pNext = pThis->pNext;
-    POLYGONFILL_DestroyEdge(pThis);
-    pThis = pNext;
+    if ( list->Edges )
+    {
+      for ( i = 0; i < list->Count; i++ )
+      {
+	if ( list->Edges[i] )
+	  EngFreeMem ( list->Edges[i] );
+      }
+      EngFreeMem ( list->Edges );
+    }
+    EngFreeMem ( list );
   }
 }
 
@@ -137,17 +125,16 @@ POLYGONFILL_DestroyEdgeList(PFILL_EDGE_LIST list)
 ** This makes and initiaizes an Edge struct for a line between two points.
 */
 static
-PPFILL_EDGE
+FILL_EDGE*
 FASTCALL
 POLYGONFILL_MakeEdge(POINT From, POINT To)
 {
-  int absdx, absdy;
-  PPFILL_EDGE rc = (PPFILL_EDGE)EngAllocMem(FL_ZERO_MEMORY, sizeof(PFILL_EDGE), PFILL_EDGE_ALLOC_TAG);
+  FILL_EDGE* rc = (FILL_EDGE*)EngAllocMem(FL_ZERO_MEMORY, sizeof(FILL_EDGE), FILL_EDGE_ALLOC_TAG);
 
   if (0 == rc)
     return NULL;
 
-  //DPRINT ("Making Edge: (%d, %d) to (%d, %d)\n", From.x, From.y, To.x, To.y);
+  //DPRINT1("Making Edge: (%d, %d) to (%d, %d)\n", From.x, From.y, To.x, To.y);
   //Now Fill the struct.
   if ( To.y < From.y )
   {
@@ -166,22 +153,16 @@ POLYGONFILL_MakeEdge(POINT From, POINT To)
     rc->YDirection = 1;
   }
 
+  rc->x = rc->FromX;
+  rc->y = rc->FromY;
   rc->dx   = rc->ToX - rc->FromX;
   rc->dy   = rc->ToY - rc->FromY;
-  absdx = abs(rc->dx);
-  absdy = abs(rc->dy);
-  rc->MinX = MIN(To.x, From.x);
-  rc->MaxX = MAX(To.x, From.x);
-  rc->MinY = MIN(To.y, From.y);
-  rc->MaxY = MAX(To.y, From.y);
+  rc->absdx = abs(rc->dx);
+  rc->absdy = abs(rc->dy);
 
-  if (rc->MinY == To.y)
-    rc->XIntercept = To.x;
-  else
-    rc->XIntercept = From.x;
+  rc->xmajor = rc->absdx > rc->absdy;
 
-  rc->ErrorMax = absdy;
-  rc->ErrorInc = absdx;
+  rc->ErrorMax = MAX(rc->absdx,rc->absdy);
 
   rc->Error = rc->ErrorMax / 2;
 
@@ -189,8 +170,25 @@ POLYGONFILL_MakeEdge(POINT From, POINT To)
 
   rc->pNext = 0;
 
-  DPRINT ("MakeEdge (%i,%i)->(%i,%i) d=(%i,%i) dir=%i err=%i max=%i\n",
-    From.x, From.y, To.x, To.y, rc->dx, rc->dy, rc->Direction, rc->Error, rc->ErrorMax );
+  rc->XIntercept[0] = rc->x;
+  rc->XIntercept[1] = rc->x;
+
+  if ( rc->xmajor && rc->absdy )
+  {
+    int x1 = rc->x;
+    int steps = (rc->ErrorMax-rc->Error-1) / rc->absdy;
+    if ( steps )
+    {
+      rc->x += steps * rc->XDirection;
+      rc->Error += steps * rc->absdy;
+      ASSERT ( rc->Error < rc->ErrorMax );
+      rc->XIntercept[0] = MIN(x1,rc->x);
+      rc->XIntercept[1] = MAX(x1,rc->x);
+    }
+  }
+
+  DPRINT("MakeEdge (%i,%i)->(%i,%i) d=(%i,%i) dir=(%i,%i) err=%i max=%i\n",
+    From.x, From.y, To.x, To.y, rc->dx, rc->dy, rc->XDirection, rc->YDirection, rc->Error, rc->ErrorMax );
 
   return rc;
 }
@@ -211,30 +209,12 @@ POLYGONFILL_MakeEdge(POINT From, POINT To)
 static
 INT
 FASTCALL
-PFILL_EDGE_Compare(PPFILL_EDGE Edge1, PPFILL_EDGE Edge2)
+FILL_EDGE_Compare(FILL_EDGE* Edge1, FILL_EDGE* Edge2)
 {
-  //DPRINT("In PFILL_EDGE_Compare()\n");
-  if (Edge1->MinY == Edge2->MinY)
-  {
-    //DPRINT("In PFILL_EDGE_Compare() MinYs are equal\n");
-    if (Edge1->MinX == Edge2->MinX)
-    {
-      if (0 == Edge2->dx || 0 == Edge1->dx)
-      {
-	return Edge1->dx - Edge2->dx;
-      }
-      else
-      {
-	return (Edge1->dy/Edge1->dx) - (Edge2->dy/Edge2->dx);
-      }
-    }
-    else
-    {
-      return Edge1->MinX - Edge2->MinX;
-    }
-  }
-  //DPRINT("In PFILL_EDGE_Compare() returning: %d\n",Edge1->MinY - Edge2->MinY);
-  return Edge1->MinY - Edge2->MinY;
+  int e1 = Edge1->XIntercept[0] + Edge1->XIntercept[1];
+  int e2 = Edge2->XIntercept[0] + Edge2->XIntercept[1];
+
+  return e1 - e2;
 }
 
 
@@ -244,79 +224,91 @@ PFILL_EDGE_Compare(PPFILL_EDGE Edge1, PPFILL_EDGE Edge2)
 static
 void
 FASTCALL
-POLYGONFILL_ListInsert(PFILL_EDGE_LIST *list, PPFILL_EDGE NewEdge)
+POLYGONFILL_ActiveListInsert(FILL_EDGE** activehead, FILL_EDGE* NewEdge )
 {
-  PPFILL_EDGE pThis;
-  if (0 != list && 0 != NewEdge)
+  FILL_EDGE *pPrev, *pThis;
+  //DPRINT1("In POLYGONFILL_ActiveListInsert()\n");
+  ASSERT ( activehead && NewEdge );
+  if ( !*activehead )
   {
-    pThis = *list;
-    //DPRINT("In POLYGONFILL_ListInsert()\n");
-    /*
-    ** First lets check to see if we have a new smallest value.
-    */
-    if (0 < PFILL_EDGE_Compare(pThis, NewEdge))
-    {
-      NewEdge->pNext = pThis;
-      *list = NewEdge;
-      return;
-    }
-    /*
-    ** Ok, now scan to the next spot to put this item.
-    */
-    while (0 > PFILL_EDGE_Compare(pThis, NewEdge))
-    {
-      if (0 == pThis->pNext)
-	break;
-
-      pThis = pThis->pNext;
-    }
-    
-    NewEdge->pNext = pThis->pNext;
-    pThis->pNext = NewEdge;
-    //DEBUG_PRINT_EDGELIST(*list);
+    NewEdge->pNext = NULL;
+    *activehead = NewEdge;
+    return;
   }
+  /*
+  ** First lets check to see if we have a new smallest value.
+  */
+  if (FILL_EDGE_Compare(NewEdge, *activehead) <= 0)
+  {
+    NewEdge->pNext = *activehead;
+    *activehead = NewEdge;
+    return;
+  }
+  /*
+  ** Ok, now scan to the next spot to put this item.
+  */
+  pThis = *activehead;
+  pPrev = NULL;
+  while ( pThis && FILL_EDGE_Compare(pThis, NewEdge) < 0 )
+  {
+    pPrev = pThis;
+    pThis = pThis->pNext;
+  }
+
+  ASSERT(pPrev);
+  NewEdge->pNext = pPrev->pNext;
+  pPrev->pNext = NewEdge;
+  //DEBUG_PRINT_ACTIVE_EDGELIST(*activehead);
 }
 
 /*
 ** Create a list of edges for a list of points.
 */
 static
-PFILL_EDGE_LIST
+FILL_EDGE_LIST*
 FASTCALL
 POLYGONFILL_MakeEdgeList(PPOINT Points, int Count)
 {
   int CurPt = 0;
-  int SeqNum = 0;
-  PPFILL_EDGE rc = 0;
-  PPFILL_EDGE NextEdge = 0;
+  FILL_EDGE_LIST* list = 0;
+  FILL_EDGE* e = 0;
 
   if ( 0 == Points || 2 > Count )
-    return rc;
+    return 0;
 
-  //Establish the list with the first two points.
-  rc = POLYGONFILL_MakeEdge ( Points[0], Points[1] );
-  if (0 == rc) return rc;
+  list = (FILL_EDGE_LIST*)EngAllocMem(FL_ZERO_MEMORY, sizeof(FILL_EDGE_LIST), FILL_EDGE_ALLOC_TAG);
+  if ( 0 == list )
+    goto fail;
+  list->Count = 0;
+  list->Edges = (FILL_EDGE**)EngAllocMem(FL_ZERO_MEMORY, Count*sizeof(FILL_EDGE*), FILL_EDGE_ALLOC_TAG);
+  if ( !list->Edges )
+    goto fail;
+  memset ( list->Edges, 0, Count * sizeof(FILL_EDGE*) );
 
-  for ( CurPt = 1; CurPt < Count; ++CurPt,++SeqNum )
+  for ( CurPt = 1; CurPt < Count; ++CurPt )
   {
-    if (CurPt == Count - 1 )
-    {
-      NextEdge = POLYGONFILL_MakeEdge(Points[CurPt],Points[0]);
-    }
+    e = POLYGONFILL_MakeEdge ( Points[CurPt-1], Points[CurPt] );
+    if ( !e )
+      goto fail;
+    // if a straight horizontal line - who cares?
+    if ( !e->absdy )
+      EngFreeMem ( e );
     else
-    {
-      NextEdge = POLYGONFILL_MakeEdge(Points[CurPt],Points[CurPt + 1]);
-    }
-    if (0 != NextEdge)
-    {
-      POLYGONFILL_ListInsert(&rc, NextEdge);
-    }
-    else
-    {
-      DPRINT1("Out Of MEMORY!! NextEdge = 0\n");
-    }
+      list->Edges[list->Count++] = e;
   }
-  return rc;
+  e = POLYGONFILL_MakeEdge ( Points[CurPt-1], Points[0] );
+  if ( !e )
+    goto fail;
+  if ( !e->absdy )
+    EngFreeMem ( e );
+  else
+    list->Edges[list->Count++] = e;
+  return list;
+
+fail:
+  DPRINT1("Out Of MEMORY!!\n");
+  POLYGONFILL_DestroyEdgeList ( list );
+  return 0;
 }
 
 
@@ -329,187 +321,88 @@ POLYGONFILL_MakeEdgeList(PPOINT Points, int Count)
 static
 void
 FASTCALL
-POLYGONFILL_UpdateScanline(PPFILL_EDGE pEdge, int Scanline)
+POLYGONFILL_UpdateScanline(FILL_EDGE* pEdge, int Scanline)
 {
   if ( 0 == pEdge->dy )
     return;
 
-  if ( pEdge->ErrorMax )
+  ASSERT ( pEdge->FromY < Scanline && pEdge->ToY >= Scanline );
+
+  if ( pEdge->xmajor )
   {
-    pEdge->Error += pEdge->ErrorInc;
+    int steps;
+    // we should require exactly 1 step to step onto current scanline...
+    ASSERT ( (pEdge->ErrorMax-pEdge->Error-1) / pEdge->absdy == 0 );
+    pEdge->x += pEdge->XDirection;
+    pEdge->Error += pEdge->absdy;
+    ASSERT ( pEdge->Error >= pEdge->ErrorMax );
+
+    // now step onto current scanline...
+    pEdge->Error -= pEdge->absdx;
+    pEdge->y++;
+
+    ASSERT ( pEdge->y == Scanline );
+
+    // now shoot to end of scanline collision
+    steps = (pEdge->ErrorMax-pEdge->Error-1)/pEdge->absdy;
+    if ( steps )
+    {
+      // record first collision with scanline
+      int x1 = pEdge->x;
+      pEdge->x += steps * pEdge->XDirection;
+      pEdge->Error += steps * pEdge->absdy;
+      ASSERT ( pEdge->Error < pEdge->ErrorMax );
+      pEdge->XIntercept[0] = MIN(x1,pEdge->x);
+      pEdge->XIntercept[1] = MAX(x1,pEdge->x);
+    }
+    else
+    {
+      pEdge->XIntercept[0] = pEdge->x;
+      pEdge->XIntercept[1] = pEdge->x;
+    }
+  }
+  else // then this is a y-major line
+  {
+    pEdge->Error += pEdge->absdx;
+    pEdge->y++;
+
     if ( pEdge->Error >= pEdge->ErrorMax )
     {
-      int steps = pEdge->Error / pEdge->ErrorMax;
-      pEdge->XIntercept += steps * pEdge->XDirection;
-      pEdge->Error -= steps * pEdge->ErrorMax;
+      pEdge->Error -= pEdge->ErrorMax;
+      pEdge->x += pEdge->XDirection;
+      ASSERT ( pEdge->Error < pEdge->ErrorMax );
     }
+
+    pEdge->XIntercept[0] = pEdge->x;
+    pEdge->XIntercept[1] = pEdge->x;
   }
 
-  DPRINT ("Line (%d, %d) to (%d, %d) intersects scanline %d at %d\n",
-          pEdge->FromX, pEdge->FromY, pEdge->ToX, pEdge->ToY, Scanline, pEdge->XIntercept );
+  DPRINT("Line (%d, %d) to (%d, %d) intersects scanline %d at (%d,%d)\n",
+          pEdge->FromX, pEdge->FromY, pEdge->ToX, pEdge->ToY, Scanline, pEdge->XIntercept[0], pEdge->XIntercept[1] );
 }
 
-/*
-** This routine removes an edge from the global edge list and inserts it into
-** the active edge list (preserving the order).
-** An edge is considered Active if the current scanline intersects it.
-**
-** Note: once an edge is no longer active, it is deleted.
-*/
-static
-void
-FASTCALL
-POLYGONFILL_AECInsertInOrder(PFILL_EDGE_LIST *list, PPFILL_EDGE pEdge)
-{
-  BOOL Done = FALSE;
-  PPFILL_EDGE pThis = 0;
-  PPFILL_EDGE pPrev = 0;
-  pThis = *list;
-  while(0 != pThis && !Done)
-  {
-    /*pEdge goes before pThis*/
-    if (pThis->XIntercept > pEdge->XIntercept)
-    {
-      if (*list == pThis)
-      {
-	*list = pEdge;
-      }
-      else
-      {
-	pPrev->pNext = pEdge;
-      }
-      pEdge->pNext = pThis;
-      Done = TRUE;
-    }
-    pPrev = pThis;
-    pThis = pThis->pNext;
-  }
-}
-
-/*
-** This routine reorders the Active Edge collection (list) after all
-** the now inactive edges have been removed.
-*/
-static
-void
-FASTCALL
-POLYGONFILL_AECReorder(PFILL_EDGE_LIST *AEC)
-{
-  PPFILL_EDGE pThis = 0;
-  PPFILL_EDGE pPrev = 0;
-  PPFILL_EDGE pTarg = 0; 
-  pThis = *AEC;
-
-  while (0 != pThis)
-  {
-    /*We are at the end of the list*/
-    if ( 0 == pThis->pNext )
-      return;
-
-    /*If the next item is out of order, pull it from the list and
-    re-insert it, and don't advance pThis.*/
-    if (pThis->XIntercept > pThis->pNext->XIntercept)
-    {
-      pTarg = pThis->pNext;
-      pThis->pNext = pTarg->pNext;
-      pTarg->pNext = 0;
-      POLYGONFILL_AECInsertInOrder(AEC, pTarg);
-    }
-    else/*In order, advance pThis*/
-    {
-      pPrev = pThis;
-      pThis = pThis->pNext;
-    }
-  }
-}
 /*
 ** This method updates the Active edge collection for the scanline Scanline.
 */
 static
 void
 STDCALL
-POLYGONFILL_UpdateActiveEdges(int Scanline, PFILL_EDGE_LIST *GEC, PFILL_EDGE_LIST *AEC)
+POLYGONFILL_BuildActiveList ( int Scanline, FILL_EDGE_LIST* list, FILL_EDGE** ActiveHead )
 {
-  PPFILL_EDGE pThis = 0;
-  PPFILL_EDGE pAECLast = 0;
-  PPFILL_EDGE pPrev = 0;
-  DPRINT("In POLYGONFILL_UpdateActiveEdges() Scanline: %d\n", Scanline);
-  /*First scan through GEC and look for any edges that have become active*/
-  pThis = *GEC;
-  while (0 != pThis && pThis->MinY <= Scanline)
+  int i;
+
+  ASSERT ( list && ActiveHead );
+  *ActiveHead = 0;
+  for ( i = 0; i < list->Count; i++ )
   {
-    //DPRINT("Moving Edge to AEC\n");
-    /*Remove the edge from GEC and put it into AEC*/
-    if (pThis->MinY <= Scanline)
+    FILL_EDGE* pEdge = list->Edges[i];
+    ASSERT(pEdge);
+    if ( pEdge->FromY < Scanline && pEdge->ToY >= Scanline )
     {
-      /*Always peel off the front of the GEC*/
-      *GEC = pThis->pNext;
-
-      /*Now put this edge at the end of AEC*/
-      if (0 == *AEC)
-      {
-	*AEC = pThis;
-	pThis->pNext = 0;
-	pAECLast = pThis;
-      }
-      else if(0 == pAECLast)
-      {
-	pAECLast = *AEC;
-	while(0 != pAECLast->pNext)
-	{
-	  pAECLast = pAECLast->pNext;
-	}
-
-	pAECLast->pNext = pThis;
-	pThis->pNext = 0;
-	pAECLast = pThis;
-      }
-      else
-      {
-	pAECLast->pNext = pThis;
-	pThis->pNext = 0;
-	pAECLast = pThis;
-	
-      }
-    }
-
-    pThis = *GEC;
-  }
-  /*Now remove any edges in the AEC that are no longer active and Update the XIntercept in the AEC*/
-  pThis = *AEC;
-  while (0 != pThis)
-  {
-    /*First check to see if this item is deleted*/
-    if (pThis->MaxY <= Scanline)
-    {
-      //DPRINT("Removing Edge from AEC\n");
-      if (0 == pPrev)/*First element in the list*/
-      {
-	*AEC = pThis->pNext;
-      }
-      else
-      {
-	pPrev->pNext = pThis->pNext;
-      }
-      POLYGONFILL_DestroyEdge(pThis);
-    }
-    else/*Otherwise, update the scanline*/
-    {
-      POLYGONFILL_UpdateScanline(pThis, Scanline);
-      pPrev = pThis; 
-    }
-    /*List Upkeep*/
-    if (0 == pPrev)/*First element in the list*/
-    {
-      pThis = *AEC;
-    }
-    else
-    {
-      pThis = pPrev->pNext;
+      POLYGONFILL_UpdateScanline ( pEdge, Scanline );
+      POLYGONFILL_ActiveListInsert ( ActiveHead, pEdge );
     }
   }
-  /*Last re Xintercept order the AEC*/
-  POLYGONFILL_AECReorder(AEC);
 }
 
 /*
@@ -519,138 +412,137 @@ POLYGONFILL_UpdateActiveEdges(int Scanline, PFILL_EDGE_LIST *GEC, PFILL_EDGE_LIS
 static
 void
 STDCALL
-POLYGONFILL_FillScanLineAlternate(PDC dc, int ScanLine, PFILL_EDGE_LIST ActiveEdges, SURFOBJ *SurfObj, PBRUSHOBJ BrushObj, MIX RopMode)
+POLYGONFILL_FillScanLineAlternate(
+  PDC dc,
+  int ScanLine,
+  FILL_EDGE* ActiveHead,
+  SURFOBJ *SurfObj,
+  PBRUSHOBJ BrushObj,
+  MIX RopMode )
 {
-  BOOL OnOdd = TRUE;
-  RECTL BoundRect;
-  int XInterceptOdd,XInterceptEven,ret;
-  PPFILL_EDGE pThis = ActiveEdges;
+  FILL_EDGE *pLeft, *pRight;
 
-  while (NULL != pThis)
+  if ( !ActiveHead )
+    return;
+
+  pLeft = ActiveHead;
+  pRight = pLeft->pNext;
+  ASSERT(pRight);
+
+  while ( NULL != pRight )
   {
-    if (OnOdd)
+    int x1 = pLeft->XIntercept[1];
+    int x2 = pRight->XIntercept[0]+1;
+    if ( x2 > x1 )
     {
-      XInterceptOdd = pThis->XIntercept;
-      OnOdd = FALSE;
-    }
-    else
-    {
-      XInterceptEven = pThis->XIntercept+1;
-      if ( XInterceptEven > XInterceptOdd )
-      {
-	BoundRect.top = ScanLine;
-	BoundRect.bottom = ScanLine + 1;
-	BoundRect.left = XInterceptOdd;
-	BoundRect.right = XInterceptEven;
+      RECTL BoundRect;
+      BoundRect.top = ScanLine;
+      BoundRect.bottom = ScanLine + 1;
+      BoundRect.left = x1;
+      BoundRect.right = x2;
 
-	DPRINT ("Fill Line (%d, %d) to (%d, %d)\n",XInterceptOdd, ScanLine, XInterceptEven, ScanLine);
-	ret = IntEngLineTo( SurfObj,
-			    dc->CombinedClip,
-			    BrushObj,
-			    XInterceptOdd,
-			    ScanLine, 
-			    XInterceptEven,
-			    ScanLine,
-			    &BoundRect, /* Bounding rectangle */
-			    RopMode); /* MIX */
-      }
-      OnOdd = TRUE;
+      DPRINT("Fill Line (%d, %d) to (%d, %d)\n",x1, ScanLine, x2, ScanLine);
+      IntEngLineTo( SurfObj,
+			  dc->CombinedClip,
+			  BrushObj,
+			  x1,
+			  ScanLine,
+			  x2,
+			  ScanLine,
+			  &BoundRect, // Bounding rectangle
+			  RopMode); // MIX
     }
-    pThis = pThis->pNext;
+    pLeft = pRight->pNext;
+    pRight = pLeft ? pLeft->pNext : NULL;
   }
 }
 
 static
 void
 STDCALL
-POLYGONFILL_FillScanLineWinding(PDC dc, int ScanLine, PFILL_EDGE_LIST ActiveEdges, SURFOBJ *SurfObj, PBRUSHOBJ BrushObj, MIX RopMode)
+POLYGONFILL_FillScanLineWinding(
+  PDC dc,
+  int ScanLine,
+  FILL_EDGE* ActiveHead,
+  SURFOBJ *SurfObj,
+  PBRUSHOBJ BrushObj,
+  MIX RopMode )
 {
-  RECTL BoundRect;
-  int XPrevIntercept,XIntercept,ret;
-  PPFILL_EDGE pThis = ActiveEdges;
+  FILL_EDGE *pLeft, *pRight;
   int winding = 0;
 
-  XPrevIntercept = pThis->XIntercept;
-  winding += pThis->YDirection;
-  pThis = pThis->pNext;
+  if ( !ActiveHead )
+    return;
 
-  while (NULL != pThis)
+  pLeft = ActiveHead;
+  winding = pLeft->YDirection;
+  pRight = pLeft->pNext;
+  ASSERT(pRight);
+
+  while ( NULL != pRight )
   {
-    XIntercept = pThis->XIntercept + 1;
-    if ( winding && XIntercept > XPrevIntercept )
+    int x1 = pLeft->XIntercept[1];
+    int x2 = pRight->XIntercept[0]+1;
+    if ( winding && x2 > x1 )
     {
+      RECTL BoundRect;
       BoundRect.top = ScanLine;
       BoundRect.bottom = ScanLine + 1;
-      BoundRect.left = XPrevIntercept;
-      BoundRect.right = XIntercept;
+      BoundRect.left = x1;
+      BoundRect.right = x2;
 
-      DPRINT ("Fill Line (%d, %d) to (%d, %d)\n",XPrevIntercept, ScanLine, XIntercept, ScanLine);
-      ret = IntEngLineTo( SurfObj,
+      DPRINT("Fill Line (%d, %d) to (%d, %d)\n",x1, ScanLine, x2, ScanLine);
+      IntEngLineTo( SurfObj,
 			  dc->CombinedClip,
 			  BrushObj,
-			  XPrevIntercept,
-			  ScanLine, 
-			  XIntercept,
+			  x1,
+			  ScanLine,
+			  x2,
 			  ScanLine,
 			  &BoundRect, // Bounding rectangle
 			  RopMode); // MIX
     }
-    XPrevIntercept = XIntercept - 1;
-    winding += pThis->YDirection;
-    pThis = pThis->pNext;
+    pLeft = pRight;
+    pRight = pLeft->pNext;
+    winding += pLeft->YDirection;
   }
 }
 
-//ALTERNATE Selects alternate mode (fills the area between odd-numbered and even-numbered 
-//polygon sides on each scan line). 
 //When the fill mode is ALTERNATE, GDI fills the area between odd-numbered and 
 //even-numbered polygon sides on each scan line. That is, GDI fills the area between the 
 //first and second side, between the third and fourth side, and so on. 
-BOOL
-STDCALL
-FillPolygon_ALTERNATE(PDC dc, SURFOBJ *SurfObj, PBRUSHOBJ BrushObj, MIX RopMode, CONST PPOINT Points, int Count, RECTL BoundRect)
-{
-  PFILL_EDGE_LIST list = 0;
-  PFILL_EDGE_LIST ActiveEdges = 0;
-  int ScanLine;
-
-  DPRINT("FillPolygon_ALTERNATE\n");
-
-  /* Create Edge List. */
-  list = POLYGONFILL_MakeEdgeList(Points, Count);
-  /* DEBUG_PRINT_EDGELIST(list); */
-  if (NULL == list)
-    return FALSE;
-
-  /* For each Scanline from BoundRect.bottom to BoundRect.top, 
-   * determine line segments to draw
-   */
-  for ( ScanLine = BoundRect.top + 1; ScanLine < BoundRect.bottom; ++ScanLine )
-  {
-    POLYGONFILL_UpdateActiveEdges(ScanLine, &list, &ActiveEdges);
-    /* DEBUG_PRINT_EDGELIST(ActiveEdges); */
-    POLYGONFILL_FillScanLineAlternate(dc, ScanLine, ActiveEdges, SurfObj, BrushObj, RopMode);
-  }
-
-  /* Free Edge List. If any are left. */
-  POLYGONFILL_DestroyEdgeList(list);
-
-  return TRUE;
-}
 
 //WINDING Selects winding mode (fills any region with a nonzero winding value). 
-//When the fill mode is WINDING, GDI fills any region that has a nonzero winding value. 
-//This value is defined as the number of times a pen used to draw the polygon would go around the region. 
+//When the fill mode is WINDING, GDI fills any region that has a nonzero winding value.
+//This value is defined as the number of times a pen used to draw the polygon would go around the region.
 //The direction of each edge of the polygon is important. 
+
 BOOL
 STDCALL
-FillPolygon_WINDING(PDC dc, SURFOBJ *SurfObj, PBRUSHOBJ BrushObj,MIX RopMode, CONST PPOINT Points, int Count, RECTL BoundRect)
+FillPolygon(
+  PDC dc,
+  SURFOBJ *SurfObj,
+  PBRUSHOBJ BrushObj,
+  MIX RopMode,
+  CONST PPOINT Points,
+  int Count,
+  RECTL BoundRect )
 {
-  PFILL_EDGE_LIST list = 0;
-  PFILL_EDGE_LIST ActiveEdges = 0;
+  FILL_EDGE_LIST *list = 0;
+  FILL_EDGE *ActiveHead = 0;
   int ScanLine;
 
-  DPRINT("FillPolygon_ALTERNATE\n");
+  void
+  STDCALL
+  (*FillScanLine)(
+    PDC dc,
+    int ScanLine,
+    FILL_EDGE* ActiveHead,
+    SURFOBJ *SurfObj,
+    PBRUSHOBJ BrushObj,
+    MIX RopMode );
+
+  DPRINT("FillPolygon\n");
 
   /* Create Edge List. */
   list = POLYGONFILL_MakeEdgeList(Points, Count);
@@ -658,14 +550,19 @@ FillPolygon_WINDING(PDC dc, SURFOBJ *SurfObj, PBRUSHOBJ BrushObj,MIX RopMode, CO
   if (NULL == list)
     return FALSE;
 
+  if ( WINDING == dc->w.polyFillMode )
+    FillScanLine = POLYGONFILL_FillScanLineWinding;
+  else /* default */
+    FillScanLine = POLYGONFILL_FillScanLineAlternate;
+
   /* For each Scanline from BoundRect.bottom to BoundRect.top, 
    * determine line segments to draw
    */
   for ( ScanLine = BoundRect.top + 1; ScanLine < BoundRect.bottom; ++ScanLine )
   {
-    POLYGONFILL_UpdateActiveEdges(ScanLine, &list, &ActiveEdges);
-    /* DEBUG_PRINT_EDGELIST(ActiveEdges); */
-    POLYGONFILL_FillScanLineWinding(dc, ScanLine, ActiveEdges, SurfObj, BrushObj, RopMode);
+    POLYGONFILL_BuildActiveList(ScanLine, list, &ActiveHead);
+    //DEBUG_PRINT_ACTIVE_EDGELIST(ActiveHead);
+    FillScanLine ( dc, ScanLine, ActiveHead, SurfObj, BrushObj, RopMode );
   }
 
   /* Free Edge List. If any are left. */

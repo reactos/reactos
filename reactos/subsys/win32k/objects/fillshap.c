@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fillshap.c,v 1.22 2003/08/15 18:51:32 royce Exp $ */
+/* $Id: fillshap.c,v 1.23 2003/08/16 04:47:41 royce Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -77,12 +77,16 @@ W32kPie(HDC  hDC,
 
 #if 0
 
-//ALTERNATE Selects alternate mode (fills the area between odd-numbered and even-numbered 
-//polygon sides on each scan line). 
 //When the fill mode is ALTERNATE, GDI fills the area between odd-numbered and 
 //even-numbered polygon sides on each scan line. That is, GDI fills the area between the 
 //first and second side, between the third and fourth side, and so on. 
-extern BOOL FillPolygon_ALTERNATE(PDC dc,
+
+//WINDING Selects winding mode (fills any region with a nonzero winding value). 
+//When the fill mode is WINDING, GDI fills any region that has a nonzero winding value.
+//This value is defined as the number of times a pen used to draw the polygon would go around the region.
+//The direction of each edge of the polygon is important. 
+
+extern BOOL FillPolygon(PDC dc,
 				  SURFOBJ *SurfObj,
 				  PBRUSHOBJ BrushObj,
 				  MIX RopMode,
@@ -90,17 +94,6 @@ extern BOOL FillPolygon_ALTERNATE(PDC dc,
 				  int Count,
 				  RECTL BoundRect);
 
-
-//WINDING Selects winding mode (fills any region with a nonzero winding value). 
-//When the fill mode is WINDING, GDI fills any region that has a nonzero winding value. 
-//This value is defined as the number of times a pen used to draw the polygon would go around the region. 
-//The direction of each edge of the polygon is important. 
-extern BOOL FillPolygon_WINDING(PDC dc,
-				SURFOBJ *SurfObj,
-				PBRUSHOBJ BrushObj,MIX RopMode,
-				CONST PPOINT Points,
-				int Count,
-				RECTL BoundRect);
 #endif
 
 //This implementation is blatantly ripped off from W32kRectangle
@@ -181,16 +174,9 @@ W32kPolygon(HDC  hDC,
 	
       /* Now fill the polygon with the current brush. */
       FillBrushObj = (BRUSHOBJ*) GDIOBJ_LockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
-      /* determine the fill mode to fill the polygon. */
+
 #if 1
-      if (WINDING == dc->w.polyFillMode)
-	{
-	  ret = FillPolygon_WINDING(dc, SurfObj,  FillBrushObj, dc->w.ROPmode, Points, Count, DestRect);
-	}
-      else /* default */
-	{
-	  ret = FillPolygon_ALTERNATE(dc, SurfObj,  FillBrushObj, dc->w.ROPmode, Points, Count, DestRect);
-	}
+      ret = FillPolygon ( dc, SurfObj,  FillBrushObj, dc->w.ROPmode, Points, Count, DestRect);
 #endif
       // Draw the Polygon Edges with the current pen
       for (CurrentPoint = 0; CurrentPoint < Count; ++CurrentPoint)
@@ -224,15 +210,7 @@ W32kPolygon(HDC  hDC,
 		  
 	}
 #if 0
-      /* determine the fill mode to fill the polygon. */
-      if (WINDING == dc->w.polyFillMode)
-      {
-	ret = FillPolygon_WINDING(dc, SurfObj,  FillBrushObj, dc->w.ROPmode, Points, Count, DestRect);
-      }
-      else /* default */
-      {
-	ret = FillPolygon_ALTERNATE(dc, SurfObj,  FillBrushObj, dc->w.ROPmode, Points, Count, DestRect);
-      }
+      ret = FillPolygon ( dc, SurfObj,  FillBrushObj, dc->w.ROPmode, Points, Count, DestRect);
 #endif
       GDIOBJ_UnlockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
     }

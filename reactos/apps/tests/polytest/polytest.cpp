@@ -19,24 +19,50 @@
 #define FASTCALL
 #define STDCALL
 #define INT int
+#define CLIPOBJ int
+#define SURFOBJ int
+#define PBRUSHOBJ int
+#define MIX char
 #define BOOL bool
 #define TRUE true
 #define FALSE false
 #define CONST const
 #define MmCopyFromCaller memmove
+#define ALTERNATE 0
+#define WINDING 1
 
 #define ASSERT assert
 
-#define EngFreeMem free
+typedef struct W
+{
+  int polyFillMode;
+} W;
 
-#define FILL_EDGE_ALLOC_TAG 0x45465044
+typedef struct DC
+{
+  CLIPOBJ CombinedClip;
+  W w;
+} DC, *PDC;
+
+typedef struct tagPOINT
+{
+  long x, y;
+} POINT, *PPOINT, *LPPOINT;
+
+typedef struct RECTL
+{
+  long left, top, right, bottom;
+} RECTL, *PRECTL;
+
+#define EngFreeMem free
 
 #define FL_ZERO_MEMORY 1
 
 #define DPRINT1 printf("%i:",__LINE__);printf
+inline void DPRINT(...){}
 
-#define SCREENX 16
-#define SCREENY 16
+#define SCREENX 25
+#define SCREENY 25
 char screen[SCREENY][SCREENX];
 
 #define EDGE_CHAR '*'
@@ -79,7 +105,13 @@ void putpixel ( int x, int y, char c )
     screen[y][x] = '#';
 }
 
-void Line ( int x1, int y1, int x2, int y2, char c )
+void IntEngLineTo (
+  SURFOBJ*,
+  CLIPOBJ,
+  PBRUSHOBJ,
+  int x1, int y1, int x2, int y2,
+  RECTL*,
+  MIX mix )
 {
   int dx = x2 - x1;
   int dy = y2 - y1;
@@ -93,7 +125,7 @@ void Line ( int x1, int y1, int x2, int y2, char c )
   {
     while ( x1 != x2 )
     {
-      putpixel ( x1, y1, c );
+      putpixel ( x1, y1, mix );
       x1 += xinc;
     }
     return;
@@ -102,14 +134,14 @@ void Line ( int x1, int y1, int x2, int y2, char c )
   {
     while ( y1 != y2 )
     {
-      putpixel ( x1, y1, c );
+      putpixel ( x1, y1, mix );
       y1 += yinc;
     }
     return;
   }
   for ( int i = 0; i < EMax; i++ )
   {
-    putpixel ( x1, y1, c );
+    putpixel ( x1, y1, mix );
     if ( absdy > absdx )
     {
       y1 += yinc;
@@ -133,15 +165,7 @@ void Line ( int x1, int y1, int x2, int y2, char c )
   }
 }
 
-typedef struct tagPOINT
-{
-	long x, y;
-} POINT, *PPOINT, *LPPOINT;
-
-typedef struct tagRECTL
-{
-	long left, top, right, bottom;
-} RECTL, *PRECTL;
+#define FILL_EDGE_ALLOC_TAG 0x45465044
 
 /*
 ** This struct is used for book keeping during polygon filling routines.
@@ -288,7 +312,7 @@ POLYGONFILL_MakeEdge(POINT From, POINT To)
     }
   }
 
-  DPRINT1("MakeEdge (%i,%i)->(%i,%i) d=(%i,%i) dir=(%i,%i) err=%i max=%i\n",
+  DPRINT("MakeEdge (%i,%i)->(%i,%i) d=(%i,%i) dir=(%i,%i) err=%i max=%i\n",
     From.x, From.y, To.x, To.y, rc->dx, rc->dy, rc->XDirection, rc->YDirection, rc->Error, rc->ErrorMax );
 
   return rc;
@@ -478,7 +502,7 @@ POLYGONFILL_UpdateScanline(FILL_EDGE* pEdge, int Scanline)
     pEdge->XIntercept[1] = pEdge->x;
   }
 
-  DPRINT1("Line (%d, %d) to (%d, %d) intersects scanline %d at (%d,%d)\n",
+  DPRINT("Line (%d, %d) to (%d, %d) intersects scanline %d at (%d,%d)\n",
           pEdge->FromX, pEdge->FromY, pEdge->ToX, pEdge->ToY, Scanline, pEdge->XIntercept[0], pEdge->XIntercept[1] );
 }
 
@@ -513,7 +537,13 @@ POLYGONFILL_BuildActiveList ( int Scanline, FILL_EDGE_LIST* list, FILL_EDGE** Ac
 static
 void
 STDCALL
-POLYGONFILL_FillScanLineAlternate ( int ScanLine, FILL_EDGE* ActiveHead )
+POLYGONFILL_FillScanLineAlternate(
+  PDC dc,
+  int ScanLine,
+  FILL_EDGE* ActiveHead,
+  SURFOBJ *SurfObj,
+  PBRUSHOBJ BrushObj,
+  MIX RopMode )
 {
   FILL_EDGE *pLeft, *pRight;
 
@@ -536,17 +566,16 @@ POLYGONFILL_FillScanLineAlternate ( int ScanLine, FILL_EDGE* ActiveHead )
       BoundRect.left = x1;
       BoundRect.right = x2;
 
-      DPRINT1("Fill Line (%d, %d) to (%d, %d)\n",x1, ScanLine, x2, ScanLine);
-      Line ( x1, ScanLine, x2, ScanLine, FILL_CHAR );
-      /*ret = IntEngLineTo( SurfObj,
+      DPRINT("Fill Line (%d, %d) to (%d, %d)\n",x1, ScanLine, x2, ScanLine);
+      IntEngLineTo( SurfObj,
 			  dc->CombinedClip,
 			  BrushObj,
 			  x1,
-			  ScanLine, 
+			  ScanLine,
 			  x2,
 			  ScanLine,
 			  &BoundRect, // Bounding rectangle
-			  RopMode);*/ // MIX
+			  RopMode); // MIX
     }
     pLeft = pRight->pNext;
     pRight = pLeft ? pLeft->pNext : NULL;
@@ -556,7 +585,13 @@ POLYGONFILL_FillScanLineAlternate ( int ScanLine, FILL_EDGE* ActiveHead )
 static
 void
 STDCALL
-POLYGONFILL_FillScanLineWinding ( int ScanLine, FILL_EDGE* ActiveHead )
+POLYGONFILL_FillScanLineWinding(
+  PDC dc,
+  int ScanLine,
+  FILL_EDGE* ActiveHead,
+  SURFOBJ *SurfObj,
+  PBRUSHOBJ BrushObj,
+  MIX RopMode )
 {
   FILL_EDGE *pLeft, *pRight;
   int winding = 0;
@@ -581,80 +616,69 @@ POLYGONFILL_FillScanLineWinding ( int ScanLine, FILL_EDGE* ActiveHead )
       BoundRect.left = x1;
       BoundRect.right = x2;
 
-      DPRINT1("Fill Line (%d, %d) to (%d, %d)\n",x1, ScanLine, x2, ScanLine);
-      Line ( x1, ScanLine, x2, ScanLine, FILL_CHAR );
-      /*ret = IntEngLineTo( SurfObj,
+      DPRINT("Fill Line (%d, %d) to (%d, %d)\n",x1, ScanLine, x2, ScanLine);
+      IntEngLineTo( SurfObj,
 			  dc->CombinedClip,
 			  BrushObj,
 			  x1,
-			  ScanLine, 
+			  ScanLine,
 			  x2,
 			  ScanLine,
 			  &BoundRect, // Bounding rectangle
-			  RopMode);*/ // MIX
+			  RopMode); // MIX
     }
     pLeft = pRight;
     pRight = pLeft->pNext;
-    winding += pLeft->XDirection;
+    winding += pLeft->YDirection;
   }
 }
 
-//ALTERNATE Selects alternate mode (fills the area between odd-numbered and even-numbered 
-//polygon sides on each scan line). 
 //When the fill mode is ALTERNATE, GDI fills the area between odd-numbered and 
 //even-numbered polygon sides on each scan line. That is, GDI fills the area between the 
 //first and second side, between the third and fourth side, and so on. 
-BOOL
-STDCALL
-FillPolygon_ALTERNATE(CONST PPOINT Points, int Count, RECTL BoundRect)
-{
-  FILL_EDGE_LIST *list = 0;
-  FILL_EDGE *ActiveHead = 0;
-  int ScanLine;
-
-  DPRINT1("FillPolygon_ALTERNATE\n");
-
-  /* Create Edge List. */
-  list = POLYGONFILL_MakeEdgeList(Points, Count);
-  /* DEBUG_PRINT_EDGELIST(list); */
-  if (NULL == list)
-    return FALSE;
-
-  /* For each Scanline from BoundRect.bottom to BoundRect.top, 
-   * determine line segments to draw
-   */
-  for ( ScanLine = BoundRect.top + 1; ScanLine < BoundRect.bottom; ++ScanLine )
-  {
-    POLYGONFILL_BuildActiveList(ScanLine, list, &ActiveHead);
-    //DEBUG_PRINT_ACTIVE_EDGELIST(ActiveHead);
-    POLYGONFILL_FillScanLineAlternate(ScanLine, ActiveHead);
-  }
-
-  /* Free Edge List. If any are left. */
-  POLYGONFILL_DestroyEdgeList(list);
-
-  return TRUE;
-}
 
 //WINDING Selects winding mode (fills any region with a nonzero winding value). 
-//When the fill mode is WINDING, GDI fills any region that has a nonzero winding value. 
-//This value is defined as the number of times a pen used to draw the polygon would go around the region. 
+//When the fill mode is WINDING, GDI fills any region that has a nonzero winding value.
+//This value is defined as the number of times a pen used to draw the polygon would go around the region.
 //The direction of each edge of the polygon is important. 
+
 BOOL
 STDCALL
-FillPolygon_WINDING(CONST PPOINT Points, int Count, RECTL BoundRect)
+FillPolygon(
+  PDC dc,
+  SURFOBJ *SurfObj,
+  PBRUSHOBJ BrushObj,
+  MIX RopMode,
+  CONST PPOINT Points,
+  int Count,
+  RECTL BoundRect )
 {
   FILL_EDGE_LIST *list = 0;
   FILL_EDGE *ActiveHead = 0;
   int ScanLine;
 
-  DPRINT1("FillPolygon_WINDING\n");
+  void
+  STDCALL
+  (*FillScanLine)(
+    PDC dc,
+    int ScanLine,
+    FILL_EDGE* ActiveHead,
+    SURFOBJ *SurfObj,
+    PBRUSHOBJ BrushObj,
+    MIX RopMode );
+
+  DPRINT("FillPolygon\n");
 
   /* Create Edge List. */
   list = POLYGONFILL_MakeEdgeList(Points, Count);
   /* DEBUG_PRINT_EDGELIST(list); */
   if (NULL == list)
     return FALSE;
+
+  if ( WINDING == dc->w.polyFillMode )
+    FillScanLine = POLYGONFILL_FillScanLineWinding;
+  else /* default */
+    FillScanLine = POLYGONFILL_FillScanLineAlternate;
 
   /* For each Scanline from BoundRect.bottom to BoundRect.top, 
    * determine line segments to draw
@@ -663,7 +687,7 @@ FillPolygon_WINDING(CONST PPOINT Points, int Count, RECTL BoundRect)
   {
     POLYGONFILL_BuildActiveList(ScanLine, list, &ActiveHead);
     //DEBUG_PRINT_ACTIVE_EDGELIST(ActiveHead);
-    POLYGONFILL_FillScanLineWinding(ScanLine, ActiveHead);
+    FillScanLine ( dc, ScanLine, ActiveHead, SurfObj, BrushObj, RopMode );
   }
 
   /* Free Edge List. If any are left. */
@@ -674,35 +698,22 @@ FillPolygon_WINDING(CONST PPOINT Points, int Count, RECTL BoundRect)
 
 
 
-/*
- *  ReactOS W32 Subsystem
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/* $Id: polytest.cpp,v 1.1 2003/08/16 01:34:29 royce Exp $ */
 
 
-//This implementation is blatantly ripped off from W32kRectangle
+// this is highly hacked from W32kPolygon...
 BOOL
-Polygon ( CONST PPOINT UnsafePoints, int Count )
+Polygon ( CONST PPOINT UnsafePoints, int Count, int polyFillMode )
 {
   BOOL ret;
   RECTL DestRect;
   int CurrentPoint;
   PPOINT Points;
+  SURFOBJ* SurfObj = 0;
+  DC dc;
+  PBRUSHOBJ OutBrushObj = 0;
+
+  dc.CombinedClip = 0;
+  dc.w.polyFillMode = polyFillMode;
 
   DPRINT1("In W32kPolygon()\n");
 
@@ -759,20 +770,18 @@ Polygon ( CONST PPOINT UnsafePoints, int Count )
 	}
 
       DPRINT1("Polygon Making line from (%d,%d) to (%d,%d)\n", From.x, From.y, To.x, To.y );
-      Line ( From.x, From.y, To.x, To.y, EDGE_CHAR );
-      /*ret = IntEngLineTo(SurfObj,
-	                 dc->CombinedClip,
-	                 OutBrushObj,
-	                 From.x, 
-	                 From.y, 
-	                 To.x, 
-	                 To.y,
-	                 &DestRect,
-	                 dc->w.ROPmode);*/ /* MIX */
-	      
+      IntEngLineTo(SurfObj,
+	           dc.CombinedClip,
+	           OutBrushObj,
+	           From.x, 
+	           From.y, 
+	           To.x, 
+	           To.y,
+	           &DestRect,
+	           EDGE_CHAR); /* MIX */
     }
   /* determine the fill mode to fill the polygon. */
-  ret = FillPolygon_ALTERNATE(Points, Count, DestRect);
+  ret = FillPolygon(&dc, SurfObj, OutBrushObj, FILL_CHAR, Points, Count, DestRect );
   free(Points);
 
   return ret;
@@ -789,14 +798,19 @@ void main()
     { 12, 4 },
     { 4, 8 },
 #else
-    { 2, 8 },
-    { 6, 2 },
-    { 9, 8 },
-    { 2, 4 },
-    { 10, 4 }
+    { 4, 16 },
+    { 12, 4 },
+    { 18, 16 },
+    { 4, 8 },
+    { 20, 8 }
 #endif
   };
-  Polygon ( pts,sizeof(pts)/sizeof(pts[0]) );
+  const int pts_count = sizeof(pts)/sizeof(pts[0]);
+
+  // use ALTERNATE or WINDING for 3rd param
+  Polygon ( pts, pts_count, ALTERNATE );
+
+  // print out our "screen"
   for ( int y = 0; y < SCREENY; y++ )
   {
     for ( int x = 0; x < SCREENX; x++ )
@@ -808,4 +822,4 @@ void main()
   DPRINT1("Done!\n");
   (void)getch();
 }
-
+/* EOF */
