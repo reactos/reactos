@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.17 2003/06/26 00:01:34 sedwards Exp $
+# $Id: Makefile,v 1.18 2003/07/11 17:58:51 sedwards Exp $
 
 PATH_TO_TOP = ../..
 
@@ -21,6 +21,7 @@ TARGET_LFLAGS = -nostartfiles -nostdlib
 
 CONTROLS_OBJECTS = \
 	controls/combo.o \
+	controls/edit.o \
 	controls/icontitle.o \
 	controls/listbox.o \
 	controls/scrollbar.o \
