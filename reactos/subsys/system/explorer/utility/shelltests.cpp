@@ -100,7 +100,7 @@ int main()
 		 // example for enumerating shell namespace objects
 
 		cout << "Desktop:\n";
-		dump_shell_namespace(Desktop());
+		dump_shell_namespace(GetDesktopFolder());
 		cout << endl;
 
 		cout << "C:\\\n";

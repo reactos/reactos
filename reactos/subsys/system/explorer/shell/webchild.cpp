@@ -201,10 +201,10 @@ WebChildWindow::WebChildWindow(HWND hwnd, const WebChildWndInfo& info)
 
 	if (SUCCEEDED(hr)) {
 		 // handling events using DWebBrowserEvents
-		_evt_handler1 = new DWebBrowserEventsHandler(_hwnd, _control);
+		_evt_handler1 = auto_ptr<DWebBrowserEventsHandler>(new DWebBrowserEventsHandler(_hwnd, _control));
 
 		 // handling events using DWebBrowserEvents2
-		_evt_handler2 = new DWebBrowserEvents2Handler(_hwnd, _control);
+		_evt_handler2 = auto_ptr<DWebBrowserEvents2Handler>(new DWebBrowserEvents2Handler(_hwnd, _control));
 
 		SIfacePtr<IWebBrowser2> browser(get_browser());
 
@@ -215,12 +215,6 @@ WebChildWindow::WebChildWindow(HWND hwnd, const WebChildWndInfo& info)
 		browser->Navigate(BStr(info._path), &vtMissing, &vtMissing, &vtMissing, &vtMissing);
 		//browser->Navigate2(&Variant(info._path), &vtMissing, &vtMissing, &vtMissing, &vtMissing);
 	}
-}
-
-WebChildWindow::~WebChildWindow()
-{
-	delete _evt_handler2;
-	delete _evt_handler1;
 }
 
 LRESULT WebChildWindow::WndProc(UINT message, WPARAM wparam, LPARAM lparam)

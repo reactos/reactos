@@ -135,9 +135,11 @@ int	DesktopSettingsDlg::Command(int id, int code)
 
 			SendMessage(g_Globals._hwndShellView, PM_SET_ICON_ALGORITHM, alignment, 0);
 		}
+
+		return TRUE;
 	}
 
-	return 1;
+	return FALSE;
 }
 
 

@@ -63,6 +63,8 @@ DesktopBar::~DesktopBar()
 
 HWND DesktopBar::Create()
 {
+	static BtnWindowClass wcDesktopBar(CLASSNAME_EXPLORERBAR);
+
 	RECT rect;
 
 	rect.left = -2;	// hide left border
@@ -75,7 +77,7 @@ HWND DesktopBar::Create()
 	rect.bottom = rect.top + DESKTOPBARBAR_HEIGHT + 2;
 
 	return Window::Create(WINDOW_CREATOR(DesktopBar), WS_EX_PALETTEWINDOW,
-							BtnWindowClass(CLASSNAME_EXPLORERBAR), TITLE_EXPLORERBAR,
+							wcDesktopBar, TITLE_EXPLORERBAR,
 							WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE,
 							rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, 0);
 }
@@ -124,7 +126,7 @@ void DesktopBar::RegisterHotkeys()
 void DesktopBar::ProcessHotKey(int id_hotkey)
 {
 	switch(id_hotkey) {
-	  case 0:	explorer_show_frame(_hwnd, SW_SHOWNORMAL);	break;
+	  case 0:	explorer_show_frame(SW_SHOWNORMAL);	break;
 		///@todo implement all common hotkeys
 	}
 }
@@ -235,9 +237,31 @@ int DesktopBar::Command(int id, int code)
 		ExplorerPropertySheet(_hwnd);
 		break;
 
+	  case ID_MINIMIZE_ALL:
+		;	///@todo minimize/restore all windows on the desktop
+		break;
+
+	  case ID_EXPLORE:
+		explorer_show_frame(SW_SHOWNORMAL);
+		break;
+
+	  case ID_SWITCH_DESKTOP_1:
+	  case ID_SWITCH_DESKTOP_1+1:
+	  case ID_SWITCH_DESKTOP_1+2:
+	  case ID_SWITCH_DESKTOP_1+3: {
+		int desktop_idx = id - ID_SWITCH_DESKTOP_1;
+
+		g_Globals._desktops.SwitchToDesktop(desktop_idx);
+
+		if (_hwndQuickLaunch)
+			PostMessage(_hwndQuickLaunch, PM_UPDATE_DESKTOP, desktop_idx, 0);
+		break;}
+
 	  default:
-		if ((id&~0xFF) == IDC_FIRST_QUICK_ID)
-			SendMessage(_hwndQuickLaunch, WM_COMMAND, MAKEWPARAM(id,code), 0);
+		if (_hwndQuickLaunch)
+			return SendMessage(_hwndQuickLaunch, WM_COMMAND, MAKEWPARAM(id,code), 0);
+		else
+			return 1;
 	}
 
 	return 0;

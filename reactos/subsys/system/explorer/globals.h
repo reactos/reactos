@@ -142,6 +142,65 @@ protected:
 extern HBITMAP create_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd);
 
 
+ /// desktop management
+#ifdef _USE_HDESK
+
+typedef auto_ptr<struct DesktopThread> DesktopThreadPtr;
+
+struct Desktop
+{
+	HDESK	_hdesktop;
+//	HWINSTA	_hwinsta;
+	DesktopThreadPtr _pThread;
+	WindowHandle _hwndDesktop;
+
+	Desktop(HDESK hdesktop=0/*, HWINSTA hwinsta=0*/);
+	~Desktop();
+};
+
+typedef auto_ptr<Desktop> DesktopPtr;
+typedef DesktopPtr DesktopRef;
+
+ /// Thread class for additional desktops
+struct DesktopThread : public Thread
+{
+	DesktopThread(Desktop& desktop)
+	 :	_desktop(desktop)
+	{
+	}
+
+	int	Run();
+
+protected:
+	Desktop&	_desktop;
+};
+
+#else
+
+struct Desktop
+{
+	set<HWND> _windows;
+};
+typedef Desktop DesktopRef;
+
+#endif
+
+
+#define	DESKTOP_COUNT	4
+
+struct Desktops : public vector<DesktopRef>
+{
+	Desktops();
+
+	void	init();
+	void	SwitchToDesktop(int idx);
+
+	DesktopRef& get_current_Desktop() {return (*this)[_current_desktop];}
+
+	int		_current_desktop;
+};
+
+
  /// structure containing global variables of Explorer
 extern struct ExplorerGlobals
 {
@@ -167,6 +226,8 @@ extern struct ExplorerGlobals
 
 	HWND		_hwndDesktopBar;
 	HWND		_hwndShellView;
+
+	Desktops	_desktops;
 } g_Globals;
 
 

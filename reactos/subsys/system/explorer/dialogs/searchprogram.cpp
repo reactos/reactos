@@ -57,7 +57,7 @@ int CollectProgramsThread::Run()
 
 void CollectProgramsThread::collect_programs(const ShellPath& path)
 {
-	ShellDirectory* dir = new ShellDirectory(Desktop(), path, 0);
+	ShellDirectory* dir = new ShellDirectory(GetDesktopFolder(), path, 0);
 	_dirs.push(dir);
 
 	dir->smart_scan(/*SCAN_EXTRACT_ICONS|*/SCAN_FILESYSTEM);
@@ -263,7 +263,7 @@ void FindProgramDlg::add_entry(const FPDEntry& cache_entry)
 
 int FindProgramDlg::Command(int id, int code)
 {
-	if (code == BN_CLICKED)
+	if (code == BN_CLICKED) {
 		switch(id) {
 		  case ID_REFRESH:
 			Refresh(true);
@@ -276,13 +276,20 @@ int FindProgramDlg::Command(int id, int code)
 		  default:
 			return super::Command(id, code);
 		}
-	else if (code == EN_CHANGE)
+
+		return TRUE;
+	}
+	else if (code == EN_CHANGE) {
 		switch(id) {
 		  case IDC_TOPIC:
 			Refresh();
+			break;
 		}
 
-	return TRUE;
+		return TRUE;
+	}
+
+	return FALSE;
 }
 
 void FindProgramDlg::LaunchSelected()

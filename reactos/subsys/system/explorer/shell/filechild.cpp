@@ -111,7 +111,7 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 		lstrcpy(_root._fs, TEXT("Shell"));
 
 		const ShellChildWndInfo& shell_info = static_cast<const ShellChildWndInfo&>(info);
-		_root._entry = new ShellDirectory(Desktop(), DesktopFolderPath(), hwnd);
+		_root._entry = new ShellDirectory(GetDesktopFolder(), DesktopFolderPath(), hwnd);
 		entry = _root._entry->read_tree((LPCTSTR)&*shell_info._shell_path, SORT_NAME);
 		break;}
 
@@ -181,7 +181,7 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 	if (info._etype != ET_SHELL)
 		wsprintf(_root._entry->_data.cFileName, TEXT("%s - %s"), drv, _root._fs);
 /*@@else
-		lstrcpy(_root._entry->_data.cFileName, TEXT("Desktop"));*/
+		lstrcpy(_root._entry->_data.cFileName, TEXT("GetDesktopFolder"));*/
 
 	_root._entry->_data.dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
 
@@ -452,7 +452,7 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 				LPCITEMIDLIST pidl = shell_path;
 
 				///@todo use parent folder instead of desktop -> correct "Properties" dialog, ...
-				CHECKERROR(ShellFolderContextMenu(Desktop(), _hwnd, 1, &pidl, pos.x, pos.y));
+				CHECKERROR(ShellFolderContextMenu(GetDesktopFolder(), _hwnd, 1, &pidl, pos.x, pos.y));
 			}
 			break;}
 

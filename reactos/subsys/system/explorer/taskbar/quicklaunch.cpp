@@ -104,7 +104,7 @@ void QuickLaunchBar::AddShortcuts()
 		_stprintf(path, TEXT("%s\\")QUICKLAUNCH_FOLDER, (LPCTSTR)app_data);
 
 		RecursiveCreateDirectory(path);
-		_dir = new ShellDirectory(Desktop(), path, _hwnd);
+		_dir = new ShellDirectory(GetDesktopFolder(), path, _hwnd);
 
 		_dir->smart_scan(SCAN_EXTRACT_ICONS|SCAN_FILESYSTEM);
 	} catch(COMException&) {
@@ -118,8 +118,38 @@ void QuickLaunchBar::AddShortcuts()
 	COLORREF bk_color = GetSysColor(COLOR_BTNFACE);
 	HBRUSH bk_brush = GetSysColorBrush(COLOR_BTNFACE);
 
-	AddButton(g_Globals._icon_cache.get_icon(ICID_LOGOFF/*@@*/).create_bitmap(bk_color, bk_brush, canvas), ResString(IDS_MINIMIZE_ALL), NULL);
-	AddButton(g_Globals._icon_cache.get_icon(ICID_EXPLORER).create_bitmap(bk_color, bk_brush, canvas), ResString(IDS_TITLE), NULL);
+	AddButton(ID_MINIMIZE_ALL, g_Globals._icon_cache.get_icon(ICID_LOGOFF/*@@*/).create_bitmap(bk_color, bk_brush, canvas), ResString(IDS_MINIMIZE_ALL), NULL);
+	AddButton(ID_EXPLORE, g_Globals._icon_cache.get_icon(ICID_EXPLORER).create_bitmap(bk_color, bk_brush, canvas), ResString(IDS_TITLE), NULL);
+
+	TBBUTTON sep = {0, -1, TBSTATE_ENABLED, BTNS_SEP, {0, 0}, 0, 0};
+	SendMessage(_hwnd, TB_INSERTBUTTON, INT_MAX, (LPARAM)&sep);
+
+	int cur_desktop = g_Globals._desktops._current_desktop;
+	ResString desktop_fmt(IDS_DESKTOP_NUM);
+
+	HDC hdc = CreateCompatibleDC(canvas);
+	DWORD size = SendMessage(_hwnd, TB_GETBUTTONSIZE, 0, 0);
+	int cx = LOWORD(size);
+	int cy = HIWORD(size);
+	RECT rect = {0, 0, cx, cy};
+	RECT textRect = {0, 0, cx-7, cy-7};
+	for(int i=0; i<DESKTOP_COUNT; ++i) {
+		HBITMAP hbmp = CreateCompatibleBitmap(canvas, cx, cy);
+		HBITMAP hbmp_old = SelectBitmap(hdc, hbmp);
+
+		FmtString num_txt(TEXT("%d"), i+1);
+		TextColor color(hdc, RGB(64,64,64));
+		BkMode mode(hdc, TRANSPARENT);
+		FillRect(hdc, &rect, GetSysColorBrush(COLOR_BTNFACE));
+		DrawText(hdc, num_txt, num_txt.length(), &textRect, DT_CENTER|DT_VCENTER|DT_SINGLELINE);
+
+		SelectBitmap(hdc, hbmp_old);
+
+		AddButton(ID_SWITCH_DESKTOP_1+i, hbmp, FmtString(desktop_fmt, i+1), NULL, cur_desktop==i?TBSTATE_ENABLED|TBSTATE_CHECKED:TBSTATE_ENABLED);
+	}
+	DeleteDC(hdc);
+
+	SendMessage(_hwnd, TB_INSERTBUTTON, INT_MAX, (LPARAM)&sep);
 
 	for(Entry*entry=_dir->_down; entry; entry=entry->_next) {
 		 // hide files like "desktop.ini"
@@ -130,7 +160,7 @@ void QuickLaunchBar::AddShortcuts()
 			if (!(entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
 				HBITMAP hbmp = g_Globals._icon_cache.get_icon(entry->_icon_id).create_bitmap(bk_color, bk_brush, canvas);
 
-				AddButton(hbmp, entry->_display_name, entry);	//entry->_etype==ET_SHELL? desktop_folder.get_name(static_cast<ShellEntry*>(entry)->_pidl): entry->_display_name);
+				AddButton(_next_id++, hbmp, entry->_display_name, entry);	//entry->_etype==ET_SHELL? desktop_folder.get_name(static_cast<ShellEntry*>(entry)->_pidl): entry->_display_name);
 			}
 	}
 
@@ -138,14 +168,12 @@ void QuickLaunchBar::AddShortcuts()
 	SendMessage(GetParent(_hwnd), PM_RESIZE_CHILDREN, 0, 0);
 }
 
-void QuickLaunchBar::AddButton(HBITMAP hbmp, LPCTSTR name, Entry* entry)
+void QuickLaunchBar::AddButton(int id, HBITMAP hbmp, LPCTSTR name, Entry* entry, int flags)
 {
 	TBADDBITMAP ab = {0, (UINT_PTR)hbmp};
 	int bmp_idx = SendMessage(_hwnd, TB_ADDBITMAP, 1, (LPARAM)&ab);
 
 	QuickLaunchEntry qle;
-
-	int id = _next_id++;
 
 	qle._hbmp = hbmp;
 	qle._title = name;
@@ -153,13 +181,21 @@ void QuickLaunchBar::AddButton(HBITMAP hbmp, LPCTSTR name, Entry* entry)
 
 	_entries[id] = qle;
 
-	TBBUTTON btn = {0, 0, TBSTATE_ENABLED, BTNS_BUTTON|BTNS_NOPREFIX, {0, 0}, 0, 0};
+	TBBUTTON btn = {0, 0, flags, BTNS_BUTTON|BTNS_NOPREFIX, {0, 0}, 0, 0};
 
 	btn.idCommand = id;
 	btn.iBitmap = bmp_idx;
-	int idx = SendMessage(_hwnd, TB_BUTTONCOUNT, 0, 0);
 
-	SendMessage(_hwnd, TB_INSERTBUTTON, idx, (LPARAM)&btn);
+	SendMessage(_hwnd, TB_INSERTBUTTON, INT_MAX, (LPARAM)&btn);
+}
+
+void QuickLaunchBar::UpdateDesktopButtons(int desktop_idx)
+{
+	for(int i=0; i<DESKTOP_COUNT; ++i) {
+		TBBUTTONINFO tbi = {sizeof(TBBUTTONINFO), TBIF_STATE, 0, 0, desktop_idx==i? TBSTATE_ENABLED|TBSTATE_CHECKED: TBSTATE_ENABLED};
+
+		SendMessage(_hwnd, TB_SETBUTTONINFO, ID_SWITCH_DESKTOP_1+i, (LPARAM)&tbi);
+	}
 }
 
 LRESULT QuickLaunchBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
@@ -172,6 +208,10 @@ LRESULT QuickLaunchBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	  case PM_GET_WIDTH:
 		return _entries.size()*_btn_dist;
 
+	  case PM_UPDATE_DESKTOP:
+		UpdateDesktopButtons(wparam);
+		break;
+
 	  default:
 		return super::WndProc(nmsg, wparam, lparam);
 	}
@@ -183,16 +223,16 @@ int QuickLaunchBar::Command(int id, int code)
 {
 	CONTEXT("QuickLaunchBar::Command()");
 
-	QuickLaunchEntry& qle = _entries[id];
+	if ((id&~0xFF) == IDC_FIRST_QUICK_ID) {
+		QuickLaunchEntry& qle = _entries[id];
 
-	if (qle._entry)
-		qle._entry->launch_entry(_hwnd);
-	else if (id == IDC_FIRST_QUICK_ID)
-		;	///@todo minimize/restore all windows
-	else if (id == IDC_FIRST_QUICK_ID+1)
-		explorer_show_frame(_hwnd, SW_SHOWNORMAL);
+		if (qle._entry) {
+			qle._entry->launch_entry(_hwnd);
+			return 0;
+		}
+	}
 
-	return 0;
+	return 1;
 }
 
 int QuickLaunchBar::Notify(int id, NMHDR* pnmh)

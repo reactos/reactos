@@ -35,6 +35,7 @@
 #define IDS_TASKBAR                     31
 #define IDS_STARTMENU                   32
 #define IDS_MINIMIZE_ALL                33
+#define IDS_DESKTOP_NUM                 34
 #define IDI_REACTOS                     100
 #define IDI_EXPLORER                    101
 #define IDI_STARTMENU                   102
@@ -133,6 +134,9 @@
 #define ID_BROWSE_HOME                  40007
 #define ID_BROWSE_SEARCH                40008
 #define ID_STOP                         40009
+#define ID_MINIMIZE_ALL                 40010
+#define ID_EXPLORE                      40011
+#define ID_SWITCH_DESKTOP_1             40012
 #define ID_WINDOW_NEW                   0xE130
 #define ID_WINDOW_ARRANGE               0xE131
 #define ID_WINDOW_CASCADE               0xE132
@@ -150,7 +154,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        161
-#define _APS_NEXT_COMMAND_VALUE         40006
+#define _APS_NEXT_COMMAND_VALUE         40015
 #define _APS_NEXT_CONTROL_VALUE         1003
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

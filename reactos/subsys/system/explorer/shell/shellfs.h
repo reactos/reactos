@@ -119,5 +119,5 @@ inline IShellFolder* ShellEntry::get_parent_folder() const
 	if (_up)
 		return static_cast<ShellDirectory*>(_up)->_folder;
 	else
-		return Desktop();
+		return GetDesktopFolder();
 }

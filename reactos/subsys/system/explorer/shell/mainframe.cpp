@@ -645,11 +645,11 @@ int MainFrame::Command(int id, int code)
 #ifndef _NO_MDI
 		return DefFrameProc(_hwnd, _hmdiclient, WM_COMMAND, MAKELONG(id,code), 0);
 #else
-		return 0;
+		return 1;
 #endif
 	}
 
-	return 1;
+	return 0;
 }
 
 

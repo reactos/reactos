@@ -11,7 +11,6 @@
 - command line parameters like "/e,/root,c:\" and "::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\::{21EC2020-3AEA-1069-A2DD-08002B30309D}" (launch of control panel)
 - Windows-key combos
 - Application Desktop Toolbars
-- desktop switching
 - command line in explorer windows
 - hide CVS subdirectories, may be even implement a CVS managment plugin
 - printer and RAS connection icons in desktop notification area

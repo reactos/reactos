@@ -64,7 +64,7 @@ StartMenu::StartMenu(HWND hwnd, const StartMenuCreateInfo& create_info)
 {
 	for(StartMenuFolders::const_iterator it=create_info._folders.begin(); it!=create_info._folders.end(); ++it)
 		if (*it)
-			_dirs.push_back(ShellDirectory(Desktop(), *it, _hwnd));
+			_dirs.push_back(ShellDirectory(GetDesktopFolder(), *it, _hwnd));
 
 	_next_id = IDC_FIRST_MENU;
 	_submenu_id = 0;
@@ -1252,7 +1252,7 @@ StartMenuRoot::StartMenuRoot(HWND hwnd)
 #endif
 		try {
 			 // insert directory "All Users\Start Menu"
-			ShellDirectory cmn_startmenu(Desktop(), SpecialFolderPath(CSIDL_COMMON_STARTMENU, _hwnd), _hwnd);
+			ShellDirectory cmn_startmenu(GetDesktopFolder(), SpecialFolderPath(CSIDL_COMMON_STARTMENU, _hwnd), _hwnd);
 			_dirs.push_back(StartMenuDirectory(cmn_startmenu, false));	// don't add subfolders
 		} catch(COMException&) {
 			// ignore exception and don't show additional shortcuts
@@ -1260,7 +1260,8 @@ StartMenuRoot::StartMenuRoot(HWND hwnd)
 
 	try {
 		 // insert directory "<user name>\Start Menu"
-		ShellDirectory usr_startmenu(Desktop(), SpecialFolderPath(CSIDL_STARTMENU, _hwnd), _hwnd);
+
+		ShellDirectory usr_startmenu(GetDesktopFolder(), SpecialFolderPath(CSIDL_STARTMENU, _hwnd), _hwnd);
 		_dirs.push_back(StartMenuDirectory(usr_startmenu, false));	// don't add subfolders
 	} catch(COMException&) {
 		// ignore exception and don't show additional shortcuts
@@ -1529,7 +1530,7 @@ int StartMenuHandler::Command(int id, int code)
 
 	  case IDC_EXPLORE:
 		CloseStartMenu(id);
-		explorer_show_frame(_hwnd, SW_SHOWNORMAL);
+		explorer_show_frame(SW_SHOWNORMAL);
 		break;
 
 	  case IDC_LAUNCH:

@@ -523,7 +523,7 @@ struct ShellLinkPtr : public SIfacePtr<IShellLink>
 #endif
 
 
-extern ShellFolder& Desktop();
+extern ShellFolder& GetDesktopFolder();
 
 
 #ifdef UNICODE
@@ -574,7 +574,7 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 		OBJ_CONTEXT("ShellPath::ShellPath(LPCWSTR)", path);
 
 		if (path)
-			CHECKERROR(Desktop()->ParseDisplayName(0, 0, (LPOLESTR)path, NULL, &_p, 0));
+			CHECKERROR(GetDesktopFolder()->ParseDisplayName(0, 0, (LPOLESTR)path, NULL, &_p, 0));
 		else
 			_p = NULL;
 	}
@@ -600,7 +600,7 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 
 		if (path) {
 			MultiByteToWideChar(CP_ACP, 0, path, -1, b, MAX_PATH);
-			CHECKERROR(Desktop()->ParseDisplayName(0, 0, b, NULL, &_p, 0));
+			CHECKERROR(GetDesktopFolder()->ParseDisplayName(0, 0, b, NULL, &_p, 0));
 		} else
 			_p = NULL;
 	}
@@ -728,7 +728,7 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 
 	void split(ShellPath& parent, ShellPath& obj) const;
 
-	void GetUIObjectOf(REFIID riid, LPVOID* ppvOut, HWND hWnd=0, ShellFolder& sf=Desktop());
+	void GetUIObjectOf(REFIID riid, LPVOID* ppvOut, HWND hWnd=0, ShellFolder& sf=GetDesktopFolder());
 
 	ShellFolder get_folder()
 	{
@@ -891,7 +891,7 @@ struct DesktopFolderPath : public SpecialFolderPath
 struct SpecialFolder : public ShellFolder
 {
 	SpecialFolder(int folder, HWND hwnd)
-	 :	ShellFolder(Desktop(), SpecialFolderPath(folder, hwnd))
+	 :	ShellFolder(GetDesktopFolder(), SpecialFolderPath(folder, hwnd))
 	{
 	}
 };

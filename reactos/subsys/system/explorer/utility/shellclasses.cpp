@@ -102,7 +102,7 @@ CommonShellMalloc ShellMalloc::s_cmn_shell_malloc;
 
  // common desktop object
 
-ShellFolder& Desktop()
+ShellFolder& GetDesktopFolder()
 {
 	static CommonDesktop s_desktop;
 
@@ -222,7 +222,7 @@ ShellFolder::ShellFolder(LPCITEMIDLIST pidl)
 	CONTEXT("ShellFolder::ShellFolder(LPCITEMIDLIST)");
 
 	IShellFolder* ptr;
-	IShellFolder* parent = Desktop();
+	IShellFolder* parent = GetDesktopFolder();
 
 	if (pidl && pidl->mkid.cb)
 		CHECKERROR(parent->BindToObject(pidl, 0, IID_IShellFolder, (LPVOID*)&ptr));
@@ -274,7 +274,7 @@ ShellFolder::ShellFolder(IShellFolder* parent, LPCITEMIDLIST pidl)
 	if (pidl && pidl->mkid.cb)
 		CHECKERROR(parent->BindToObject(pidl, 0, IID_IShellFolder, (LPVOID*)&_p));
 	else
-		_p = Desktop();
+		_p = GetDesktopFolder();
 
 	_p->AddRef();
 }
@@ -284,9 +284,9 @@ ShellFolder::ShellFolder(LPCITEMIDLIST pidl)
 	CONTEXT("ShellFolder::ShellFolder(LPCITEMIDLIST)");
 
 	if (pidl && pidl->mkid.cb)
-		CHECKERROR(Desktop()->BindToObject(pidl, 0, IID_IShellFolder, (LPVOID*)&_p));
+		CHECKERROR(GetDesktopFolder()->BindToObject(pidl, 0, IID_IShellFolder, (LPVOID*)&_p));
 	else
-		_p = Desktop();
+		_p = GetDesktopFolder();
 
 	_p->AddRef();
 }

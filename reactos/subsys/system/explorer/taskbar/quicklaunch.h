@@ -32,6 +32,7 @@
 #define	IDW_QUICKLAUNCHBAR	101
 
 #define	PM_REFRESH			(WM_APP+0x1B)
+#define	PM_UPDATE_DESKTOP	(WM_APP+0x1C)
 
 #define	IDC_FIRST_QUICK_ID	0x4000
 
@@ -78,5 +79,6 @@ protected:
 	int				_btn_dist;
 
 	void	AddShortcuts();
-	void	AddButton(HBITMAP hbmp, LPCTSTR name, Entry* entry);
+	void	AddButton(int id, HBITMAP hbmp, LPCTSTR name, Entry* entry, int flags=TBSTATE_ENABLED);
+	void	UpdateDesktopButtons(int desktop_idx);
 };

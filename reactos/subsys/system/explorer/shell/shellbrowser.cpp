@@ -112,7 +112,7 @@ void ShellBrowserChild::InitializeTree()
 	TreeView_SetImageList(_left_hwnd, _himlSmall, TVSIL_NORMAL);
 	TreeView_SetScrollTime(_left_hwnd, 100);
 
-	const String& root_name = Desktop().get_name(_create_info._root_shell_path, SHGDN_FORPARSING);
+	const String& root_name = GetDesktopFolder().get_name(_create_info._root_shell_path, SHGDN_FORPARSING);
 
 	_root._drive_type = DRIVE_UNKNOWN;
 	lstrcpy(_root._volname, root_name);	// most of the time "Desktop"
@@ -125,7 +125,7 @@ void ShellBrowserChild::InitializeTree()
 	we should call read_tree() here to iterate through the hierarchy and open all folders from shell_info._root_shell_path to shell_info._shell_path
 	-> see FileChildWindow::FileChildWindow()
 */
-	_root._entry = new ShellDirectory(Desktop(), _create_info._root_shell_path, _hwnd);
+	_root._entry = new ShellDirectory(GetDesktopFolder(), _create_info._root_shell_path, _hwnd);
 	_root._entry->read_directory();
 
 	/* already filled by ShellDirectory constructor
@@ -213,7 +213,7 @@ void ShellBrowserChild::Tree_DoItemMenu(HWND hwndTreeView, HTREEITEM hItem, LPPO
 
 		if (entry->_etype == ET_SHELL) {
 			ShellDirectory* dir = static_cast<ShellDirectory*>(entry->_up);
-			ShellFolder folder = dir? dir->_folder: Desktop();
+			ShellFolder folder = dir? dir->_folder: GetDesktopFolder();
 			LPCITEMIDLIST pidl = static_cast<ShellEntry*>(entry)->_pidl;
 
 			CHECKERROR(ShellFolderContextMenu(folder, ::GetParent(hwndTreeView), 1, &pidl, pptScreen->x, pptScreen->y));
@@ -222,7 +222,7 @@ void ShellBrowserChild::Tree_DoItemMenu(HWND hwndTreeView, HTREEITEM hItem, LPPO
 			LPCITEMIDLIST pidl = shell_path;
 
 			///@todo use parent folder instead of desktop
-			CHECKERROR(ShellFolderContextMenu(Desktop(), _hwnd, 1, &pidl, pptScreen->x, pptScreen->y));
+			CHECKERROR(ShellFolderContextMenu(GetDesktopFolder(), _hwnd, 1, &pidl, pptScreen->x, pptScreen->y));
 		}
 	}
 }

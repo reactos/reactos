@@ -121,15 +121,17 @@ NotifyArea::~NotifyArea()
 
 HWND NotifyArea::Create(HWND hwndParent)
 {
+	static BtnWindowClass wcTrayNotify(CLASSNAME_TRAYNOTIFY, CS_DBLCLKS);
+
 	ClientRect clnt(hwndParent);
 
 #ifndef _ROS_
 	return Window::Create(WINDOW_CREATOR(NotifyArea), WS_EX_STATICEDGE,
-							BtnWindowClass(CLASSNAME_TRAYNOTIFY,CS_DBLCLKS), TITLE_TRAYNOTIFY, WS_CHILD|WS_VISIBLE,
+							wcTrayNotify, TITLE_TRAYNOTIFY, WS_CHILD|WS_VISIBLE,
 							clnt.right-(NOTIFYAREA_WIDTH_DEF+1), 1, NOTIFYAREA_WIDTH_DEF, clnt.bottom-2, hwndParent);
 #else
 	return Window::Create(WINDOW_CREATOR(NotifyArea), 0,
-							BtnWindowClass(CLASSNAME_TRAYNOTIFY,CS_DBLCLKS), TITLE_TRAYNOTIFY, WS_CHILD|WS_VISIBLE,
+							wcTrayNotify, TITLE_TRAYNOTIFY, WS_CHILD|WS_VISIBLE,
 							clnt.right-(NOTIFYAREA_WIDTH_DEF+1), 1, NOTIFYAREA_WIDTH_DEF, clnt.bottom-2, hwndParent);
 #endif
 }
@@ -347,6 +349,8 @@ ClockWindow::ClockWindow(HWND hwnd)
 
 HWND ClockWindow::Create(HWND hwndParent)
 {
+	static BtnWindowClass wcClock(CLASSNAME_CLOCKWINDOW, CS_DBLCLKS);
+
 	ClientRect clnt(hwndParent);
 
 	WindowCanvas canvas(hwndParent);
@@ -362,7 +366,7 @@ HWND ClockWindow::Create(HWND hwndParent)
 	int clockwindowWidth = rect.right-rect.left + 4;
 
 	return Window::Create(WINDOW_CREATOR(ClockWindow), 0,
-							BtnWindowClass(CLASSNAME_CLOCKWINDOW,CS_DBLCLKS), NULL, WS_CHILD|WS_VISIBLE,
+							wcClock, NULL, WS_CHILD|WS_VISIBLE,
 							clnt.right-(clockwindowWidth), 1, clockwindowWidth, clnt.bottom-2, hwndParent);
 }
 

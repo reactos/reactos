@@ -427,7 +427,7 @@ ResBitmap::ResBitmap(UINT nid)
 }
 
 
-void explorer_show_frame(HWND hwndDesktop, int cmdshow, LPTSTR lpCmdLine)
+void explorer_show_frame(int cmdshow, LPTSTR lpCmdLine)
 {
 	if (g_Globals._hMainWnd) {
 		if (IsIconic(g_Globals._hMainWnd))
@@ -558,7 +558,7 @@ static void InitInstance(HINSTANCE hInstance)
 }
 
 
-int explorer_main(HINSTANCE hInstance, HWND hwndDesktop, LPTSTR lpCmdLine, int cmdshow)
+int explorer_main(HINSTANCE hInstance, LPTSTR lpCmdLine, int cmdshow)
 {
 	CONTEXT("explorer_main");
 
@@ -568,12 +568,9 @@ int explorer_main(HINSTANCE hInstance, HWND hwndDesktop, LPTSTR lpCmdLine, int c
 	try {
 		InitInstance(hInstance);
 	} catch(COMException& e) {
-		HandleException(e, hwndDesktop);
+		HandleException(e, GetDesktopWindow());
 		return -1;
 	}
-
-	if (hwndDesktop)
-		g_Globals._desktop_mode = true;
 
 	if (cmdshow != SW_HIDE) {
 /*	// don't maximize if being called from the ROS desktop
@@ -582,7 +579,7 @@ int explorer_main(HINSTANCE hInstance, HWND hwndDesktop, LPTSTR lpCmdLine, int c
 			cmdshow = SW_MAXIMIZE;
 */
 
-		explorer_show_frame(hwndDesktop, cmdshow, lpCmdLine);
+		explorer_show_frame(cmdshow, lpCmdLine);
 	}
 
 	return Window::MessageLoop();
@@ -688,12 +685,15 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 
 	HWND hwndDesktop = 0;
 
-	if (startup_desktop)
-	{
-		hwndDesktop = DesktopWindow::Create();
+	if (startup_desktop) {
+		g_Globals._desktops.init();
 
-		if (autostart)
-		{
+		hwndDesktop = DesktopWindow::Create();
+#ifdef _USE_HDESK
+		g_Globals._desktops.get_current_Desktop()->_hwndDesktop = hwndDesktop;
+#endif
+
+		if (autostart) {
 			char* argv[] = {"", "s"};	// call startup routine in SESSION_START mode
 			startup(2, argv);
 		}
@@ -705,7 +705,10 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 		lpCmdLine[_tcslen(lpCmdLine)-1] = '\0';
 	}
 
-	int ret = explorer_main(hInstance, hwndDesktop, lpCmdLine, nShowCmd);
+	if (hwndDesktop)
+		g_Globals._desktop_mode = true;
+
+	int ret = explorer_main(hInstance, lpCmdLine, nShowCmd);
 
 	return ret;
 }

@@ -290,7 +290,7 @@ LRESULT Window::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 int Window::Command(int id, int code)
 {
-	return 1;	// WM_COMMAND not yet handled
+	return 1;	// no command handler found
 }
 
 int Window::Notify(int id, NMHDR* pnmh)
@@ -359,7 +359,7 @@ LRESULT SubclassedWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 int SubclassedWindow::Command(int id, int code)
 {
-	return 1;	// WM_COMMAND not yet handled
+	return 1;	// no command handler found
 }
 
 int SubclassedWindow::Notify(int id, NMHDR* pnmh)

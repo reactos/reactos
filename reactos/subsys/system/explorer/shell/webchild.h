@@ -1341,7 +1341,6 @@ struct WebChildWindow : public IPCtrlWindow<ChildWindow, SIfacePtr<IWebBrowser2>
 	typedef IPCtrlWindow<ChildWindow, SIfacePtr<IWebBrowser2> > super;
 
 	WebChildWindow(HWND hwnd, const WebChildWndInfo& info);
-	~WebChildWindow();
 
 	static WebChildWindow* create(HWND hmdiclient, const FileChildWndInfo& info)
 	{
@@ -1359,8 +1358,8 @@ struct WebChildWindow : public IPCtrlWindow<ChildWindow, SIfacePtr<IWebBrowser2>
 	}
 
 protected:
-	DWebBrowserEventsHandler* _evt_handler1;
-	DWebBrowserEvents2Handler* _evt_handler2;
+	auto_ptr<DWebBrowserEventsHandler> _evt_handler1;
+	auto_ptr<DWebBrowserEvents2Handler> _evt_handler2;
 
 	LRESULT WndProc(UINT message, WPARAM wparam, LPARAM lparam);
 };

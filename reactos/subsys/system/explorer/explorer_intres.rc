@@ -127,6 +127,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_STARTMENU           "Startmenu"
     IDS_MINIMIZE_ALL        "mimimize all windows"
+    IDS_DESKTOP_NUM         "Desktop %d"
 END
 
 #endif    // Romanian resources
@@ -503,6 +504,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_STARTMENU           "Startmenu"
     IDS_MINIMIZE_ALL        "alle Fenster minimieren"
+    IDS_DESKTOP_NUM         "Desktop %d"
 END
 
 #endif    // German (Germany) resources
@@ -846,6 +848,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_STARTMENU           "Startmenu"
     IDS_MINIMIZE_ALL        "mimimize all windows"
+    IDS_DESKTOP_NUM         "Desktop %d"
 END
 
 #endif    // English (U.S.) resources
@@ -967,6 +970,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_STARTMENU           "Startmenu"
     IDS_MINIMIZE_ALL        "mimimize all windows"
+    IDS_DESKTOP_NUM         "Desktop %d"
 END
 
 #endif    // French (France) resources
@@ -1168,6 +1172,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_STARTMENU           "Startmenu"
     IDS_MINIMIZE_ALL        "mimimize all windows"
+    IDS_DESKTOP_NUM         "Desktop %d"
 END
 
 #endif    // Portuguese (Portugal) resources

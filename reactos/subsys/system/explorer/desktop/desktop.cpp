@@ -45,6 +45,157 @@ static BOOL (WINAPI*SetShellWindow)(HWND);
 static BOOL (WINAPI*SetShellWindowEx)(HWND, HWND);
 
 
+#ifdef _USE_HDESK
+
+Desktop::Desktop(HDESK hdesktop/*, HWINSTA hwinsta*/)
+ :	_hdesktop(hdesktop)
+//	_hwinsta(hwinsta)
+{
+}
+
+Desktop::~Desktop()
+{
+	if (_hdesktop)
+		CloseDesktop(_hdesktop);
+
+//	if (_hwinsta)
+//		CloseWindowStation(_hwinsta);
+
+	if (_pThread.get()) {
+		_pThread->Stop();
+		_pThread.release();
+	}
+}
+
+#endif
+
+
+Desktops::Desktops()
+{
+	_current_desktop = 0;
+}
+
+void Desktops::init()
+{
+	resize(DESKTOP_COUNT);
+
+#ifdef _USE_HDESK
+	DesktopPtr& desktop = (*this)[0];
+
+	desktop = DesktopPtr(new Desktop(OpenInputDesktop(0, FALSE, DESKTOP_SWITCHDESKTOP)));
+#endif
+}
+
+#ifdef _USE_HDESK
+
+void Desktops::SwitchToDesktop(int idx)
+{
+	if (_current_desktop == idx)
+		return;
+
+	DesktopPtr& desktop = (*this)[idx];
+
+	DesktopThread* pThread = NULL;
+
+	if (desktop.get()) {
+		if (desktop->_hdesktop)
+			if (!SwitchDesktop(desktop->_hdesktop))
+				return;
+	} else {
+		FmtString desktop_name(TEXT("Desktop %d"), idx);
+
+		SECURITY_ATTRIBUTES saAttr = {sizeof(SECURITY_ATTRIBUTES), 0, TRUE};
+/*
+		HWINSTA hwinsta = CreateWindowStation(TEXT("ExplorerWinStation"), 0, GENERIC_ALL, &saAttr);
+
+		if (!SetProcessWindowStation(hwinsta))
+			return;
+*/
+		HDESK hdesktop = CreateDesktop(desktop_name, NULL, NULL, 0, GENERIC_ALL, &saAttr);
+		if (!hdesktop)
+			return;
+
+		desktop = DesktopPtr(new Desktop(hdesktop/*, hwinsta*/));
+
+		pThread = new DesktopThread(*desktop);
+	}
+
+	_current_desktop = idx;
+
+	if (pThread) {
+		desktop->_pThread = DesktopThreadPtr(pThread);
+		pThread->Start();
+	}
+}
+
+int DesktopThread::Run()
+{
+	if (!SetThreadDesktop(_desktop._hdesktop))
+		return -1;
+
+	HDESK hDesk_old = OpenInputDesktop(0, FALSE, DESKTOP_SWITCHDESKTOP);
+
+	if (!SwitchDesktop(_desktop._hdesktop))
+		return -1;
+
+	if (!_desktop._hwndDesktop)
+		_desktop._hwndDesktop = DesktopWindow::Create();
+
+	int ret = Window::MessageLoop();
+
+	SwitchDesktop(hDesk_old);
+
+	return ret;
+}
+
+#else // _USE_HDESK
+
+static BOOL CALLBACK DesktopEnumFct(HWND hwnd, LPARAM lparam)
+{
+	WindowSet& windows = *(WindowSet*)lparam;
+
+	if (IsWindowVisible(hwnd)) {
+		DWORD pid;
+
+		GetWindowThreadProcessId(hwnd, &pid);
+
+		if (pid != GetCurrentProcessId())
+			windows.insert(hwnd);
+	}
+
+	return TRUE;
+}
+
+void Desktops::SwitchToDesktop(int idx)
+{
+	if (_current_desktop == idx)
+		return;
+
+	Desktop& desktop = (*this)[idx];
+
+	 // save currently visible application windows
+	Desktop& old_desktop = (*this)[_current_desktop];
+	WindowSet& windows = old_desktop._windows;
+
+	windows.clear();
+	EnumWindows(DesktopEnumFct, (LPARAM)&windows);
+
+	 // hide all windows we found
+	for(WindowSet::iterator it=windows.begin(); it!=windows.end(); ++it)
+		ShowWindowAsync(*it, SW_HIDE);
+
+	 // show all windows of the new desktop
+	for(WindowSet::iterator it=desktop._windows.begin(); it!=desktop._windows.end(); ++it)
+		ShowWindowAsync(*it, SW_SHOW);
+
+	desktop._windows.clear();
+
+	_current_desktop = idx;
+}
+
+#endif // _USE_HDESK
+
+
 BOOL IsAnyDesktopRunning()
 {
 	HINSTANCE hUser32 = GetModuleHandle(TEXT("user32"));
@@ -95,7 +246,7 @@ LRESULT	BackgroundWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		return TRUE;
 
 	  case WM_MBUTTONDBLCLK:
-		explorer_show_frame(_hwnd, SW_SHOWNORMAL);
+		explorer_show_frame(SW_SHOWNORMAL);
 		break;
 
 	  default:
@@ -121,7 +272,7 @@ DesktopWindow::~DesktopWindow()
 
 HWND DesktopWindow::Create()
 {
-	IconWindowClass wcDesktop(TEXT("Progman"), IDI_REACTOS, CS_DBLCLKS);
+	static IconWindowClass wcDesktop(TEXT("Progman"), IDI_REACTOS, CS_DBLCLKS);
 	wcDesktop.hbrBackground = (HBRUSH)(COLOR_BACKGROUND+1);
 
 	int width = GetSystemMetrics(SM_CXSCREEN);
@@ -147,12 +298,12 @@ LRESULT	DesktopWindow::Init(LPCREATESTRUCT pcs)
 	if (super::Init(pcs))
 		return 1;
 
-	HRESULT hr = Desktop()->CreateViewObject(_hwnd, IID_IShellView, (void**)&_pShellView);
+	HRESULT hr = GetDesktopFolder()->CreateViewObject(_hwnd, IID_IShellView, (void**)&_pShellView);
 /* also possible:
 	SFV_CREATE sfv_create;
 
 	sfv_create.cbSize = sizeof(SFV_CREATE);
-	sfv_create.pshf = Desktop();
+	sfv_create.pshf = GetDesktopFolder();
 	sfv_create.psvOuter = NULL;
 	sfv_create.psfvcb = NULL;
 
@@ -233,7 +384,7 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	  case WM_LBUTTONDBLCLK:
 	  case WM_RBUTTONDBLCLK:
 	  case WM_MBUTTONDBLCLK:
-		explorer_show_frame(_hwnd, SW_SHOWNORMAL);
+		explorer_show_frame(SW_SHOWNORMAL);
 		break;
 
 	  case WM_GETISHELLBROWSER:
