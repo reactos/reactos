@@ -218,7 +218,7 @@ REGEDIT4
 "ErrorControl"=dword:00000001
 "Group"="PNP_TDI"
 "ImagePath"=expand:"system32\drivers\packet.sys"
-"Start"=dword:00000002
+"Start"=dword:00000004
 "Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\ControlSet001\Services\Packet\Linkage]
@@ -315,7 +315,7 @@ REGEDIT4
 "CmdLine"="setup -newsetup"
 "OsLoaderPath"="\"
 "SetupType"=dword:00000000
-"SystemPartition"="\Device\HarddiskVolume1"
+"SystemPartition"="\Device\Harddisk0\Partition1"
 "SystemSetupInProgress"=dword:00000000
 
 [\Registry\Machine\SOFTWARE]

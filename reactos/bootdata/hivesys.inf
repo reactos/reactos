@@ -54,6 +54,8 @@ HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
  "PNP_TDI", \
  "TDI", \
  "Extended Base"
+
+; Session Manager stuff
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager","BootExecute", 0x00010000, \
  "autocheck autochk *"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager","ObjectDirectories",0x00010000, \
@@ -229,7 +231,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Serial","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Packet","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Packet","Group",0x00000000,"PNP_TDI"
 HKLM,"SYSTEM\CurrentControlSet\Services\Packet","ImagePath",0x00020000,"system32\drivers\packet.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Packet","Start",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\Packet","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\Packet","Type",0x00010001,0x00000001
 ; NOTE: These settings should be added by the network setup
 HKLM,"SYSTEM\CurrentControlSet\Services\Packet\Linkage","Bind",0x00020000,"\Device\ne2000"
