@@ -262,7 +262,12 @@ VOID CreateCatalog(VOID)
 
 	InitializeListHead(&CatalogListHead);
 
-  /* FIXME: Read service provider catalog from registry */
+  /* FIXME: Read service provider catalog from registry 
+  
+  Catalog info is saved somewhere under
+  HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\WinSock2
+  */
+  
 #if 1
     Provider = CreateCatalogEntry(L"msafd.dll");
     if (!Provider) {
