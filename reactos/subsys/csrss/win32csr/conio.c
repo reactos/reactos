@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.10 2004/04/09 20:03:16 navaraf Exp $
+/* $Id: conio.c,v 1.11 2004/07/04 17:22:33 navaraf Exp $
  *
  * reactos/subsys/csrss/win32csr/conio.c
  *
@@ -1125,32 +1125,18 @@ ConioProcessChar(PCSRSS_CONSOLE Console,
 STATIC DWORD FASTCALL
 ConioGetShiftState(PBYTE KeyState)
 {
-  int i;
   DWORD ssOut = 0;
 
-  for (i = 0; i < 0x100; i++)
-    {
-      if (0 != (KeyState[i] & 0x80))
-        {
-          UINT vk = MapVirtualKeyExW(i, 3, 0) & 0xff;
-          switch(vk)
-            {
-              case VK_CAPITAL:
-                ssOut |= CAPSLOCK_ON;
-                break;
+  if (KeyState[VK_CAPITAL] & 1)
+      ssOut |= CAPSLOCK_ON;
 
-              case VK_NUMLOCK:
-                ssOut |= NUMLOCK_ON;
-                break;
+  if (KeyState[VK_NUMLOCK] & 1)
+      ssOut |= NUMLOCK_ON;
 
-              case VK_SCROLL:
-                ssOut |= SCROLLLOCK_ON;
-                break;
-            }
-        }
-    }
+  if (KeyState[VK_SCROLL] & 1)
+      ssOut |= SCROLLLOCK_ON;
 
-  if (KeyState[VK_LSHIFT] & 0x80 || KeyState[VK_RSHIFT] & 0x80)
+  if (KeyState[VK_SHIFT] & 0x80)
       ssOut |= SHIFT_PRESSED;
 
   if (KeyState[VK_LCONTROL] & 0x80)
