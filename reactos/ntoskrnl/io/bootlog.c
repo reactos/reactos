@@ -1,4 +1,4 @@
-/* $Id: bootlog.c,v 1.3 2004/09/24 15:00:34 ekohl Exp $
+/* $Id: bootlog.c,v 1.4 2004/09/26 11:29:50 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -412,8 +412,8 @@ IopSaveBootLogToFile(VOID)
 	}
 
       /* Delete keys */
-//      NtDeleteValueKey(KeyHandle,
-//		       &ValueName);
+      NtDeleteValueKey(KeyHandle,
+		       &ValueName);
     }
 
   NtClose(KeyHandle);
