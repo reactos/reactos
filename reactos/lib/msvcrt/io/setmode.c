@@ -12,8 +12,14 @@
 #include <msvcrt/stdio.h>
 #include <msvcrt/internal/file.h>
 
+#define NDEBUG
+#include <msvcrt/msvcrtdbg.h>
+
 
 int _setmode(int _fd, int _newmode)
 {
+  DPRINT("_setmod(fd %d, newmode %x)\n", _fd, _newmode);
+  if (_fd >= 0 && _fd < 5)
+	  return _O_TEXT;
   return __fileno_setmode(_fd, _newmode);
 }
