@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.36 2003/09/12 17:51:47 vizzini Exp $
+/* $Id: stubs.c,v 1.37 2003/09/12 22:17:06 gvg Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -155,24 +155,6 @@ DrawEscape(
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-Ellipse(
-	HDC		a0,
-	int		a1,
-	int		a2,
-	int		a3,
-	int		a4
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
 }
 
 

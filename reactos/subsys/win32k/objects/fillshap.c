@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fillshap.c,v 1.32 2003/09/09 15:56:06 gvg Exp $ */
+/* $Id: fillshap.c,v 1.33 2003/09/12 22:17:06 gvg Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -36,6 +36,25 @@
 #define NDEBUG
 #include <win32k/debug1.h>
 
+/*
+ * a couple macros to fill a single pixel or a line
+ */
+#define PUTPIXEL(x,y,brushObj)      \
+  ret = ret && IntEngLineTo(SurfObj,  \
+       dc->CombinedClip,              \
+       brushObj,                      \
+       x, y, (x)+1, y,                \
+       &RectBounds,                   \
+       dc->w.ROPmode);
+
+#define PUTLINE(x1,y1,x2,y2,brushObj)  \
+  ret = ret && IntEngLineTo(SurfObj,  \
+       dc->CombinedClip,              \
+       brushObj,                      \
+       x1, y1, x2, y2,                \
+       &RectBounds,                   \
+       dc->w.ROPmode);
+
 BOOL
 STDCALL
 NtGdiChord(HDC  hDC,
@@ -53,13 +72,123 @@ NtGdiChord(HDC  hDC,
 
 BOOL
 STDCALL
-NtGdiEllipse(HDC  hDC,
-                  int  LeftRect,
-                  int  TopRect,
-                  int  RightRect,
-                  int  BottomRect)
+NtGdiEllipse(HDC hDC,
+             int Left,
+             int Top,
+             int Right,
+             int Bottom)
 {
-  UNIMPLEMENTED;
+  PDC dc;
+  int X, X18, X27, X36, X45;
+  int Y, Y14, Y23, Y58, Y67;
+  int d, Radius;
+  RECTL RectBounds;
+  PSURFOBJ SurfObj;
+  BRUSHOBJ PenBrushObj;
+  PBRUSHOBJ FillBrushObj;
+  BOOL ret = TRUE;
+
+  if (Right <= Left || Bottom <= Top)
+    {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return FALSE;
+    }
+
+  if (Right - Left != Bottom - Top)
+    {
+      UNIMPLEMENTED;
+    }
+
+  dc = DC_LockDc ( hDC );
+  if (NULL == dc)
+    {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return FALSE;
+    }
+
+  FillBrushObj = BRUSHOBJ_LockBrush(dc->w.hBrush);
+  if (NULL == FillBrushObj)
+    {
+      DC_UnlockDc(hDC);
+      SetLastWin32Error(ERROR_INTERNAL_ERROR);
+      return FALSE;
+    }
+
+  Left += dc->w.DCOrgX;
+  Right += dc->w.DCOrgX;
+  Top += dc->w.DCOrgY;
+  Bottom += dc->w.DCOrgY;
+
+  RectBounds.left = Left;
+  RectBounds.right = Right;
+  RectBounds.top = Top;
+  RectBounds.bottom = Bottom;
+
+  SurfObj = (PSURFOBJ) AccessUserObject((ULONG)dc->Surface);
+  HPenToBrushObj(&PenBrushObj, dc->w.hPen);
+  Radius = (Right - Left) / 2;
+  X = 0;
+  Y = Radius;
+  X18 = Right;
+  X27 = (Left + Right) / 2;
+  X36 = (Left + Right) / 2;
+  X45 = Left;
+  Y14 = Top + Radius;
+  Y23 = Top;
+  Y58 = Top + Radius;
+  Y67 = Top + (Right - Left);
+  d = 1 - Radius;
+  PUTLINE(X45 + 1, Y14, X18, Y58, FillBrushObj);
+  PUTPIXEL(X27, Y23, &PenBrushObj);
+  PUTPIXEL(X45, Y14, &PenBrushObj);
+  PUTPIXEL(X18, Y58, &PenBrushObj);
+  PUTPIXEL(X27, Y67, &PenBrushObj);
+
+  while (X < Y)
+    {
+      if (d < 0)
+	{
+	  d += 2 * X + 3;
+
+	  X27++;
+	  X36--;
+	  Y14--;
+	  Y58++;
+	}
+      else
+	{
+	  d += 2 * (X - Y) + 5;
+	  Y--;
+
+	  Y23++;
+	  Y67--;
+	  X18--;
+	  X45++;
+	  X27++;
+	  X36--;
+	  Y14--;
+	  Y58++;
+	  PUTLINE(X36 + 1, Y23, X27, Y23, FillBrushObj);
+	  PUTLINE(X36 + 1, Y67, X27, Y67, FillBrushObj);
+	}
+      X++;
+
+      PUTLINE(X45 + 1, Y14, X18, Y14, FillBrushObj);
+      PUTLINE(X45 + 1, Y58, X18, Y58, FillBrushObj);
+      PUTPIXEL(X27, Y23, &PenBrushObj);
+      PUTPIXEL(X36, Y23, &PenBrushObj);
+      PUTPIXEL(X18, Y14, &PenBrushObj);
+      PUTPIXEL(X45, Y14, &PenBrushObj);
+      PUTPIXEL(X18, Y58, &PenBrushObj);
+      PUTPIXEL(X45, Y58, &PenBrushObj);
+      PUTPIXEL(X27, Y67, &PenBrushObj);
+      PUTPIXEL(X36, Y67, &PenBrushObj);
+    }
+
+  BRUSHOBJ_UnlockBrush(dc->w.hBrush);
+  DC_UnlockDc(hDC);
+
+  return TRUE;
 }
 
 BOOL
@@ -405,24 +534,6 @@ NtGdiRectangle(HDC  hDC,
   return ret;
 }
 
-/*
- * a couple macros used by IntRoundRect()
- */
-#define RRPUTPIXEL(x,y,brushObj)      \
-  ret = ret && IntEngLineTo(SurfObj,  \
-       dc->CombinedClip,              \
-       brushObj,                      \
-       x, y, (x)+1, y,                \
-       RectBounds,                    \
-       dc->w.ROPmode);
-
-#define RRLINE(x1,y1,x2,y2,brushObj)  \
-  ret = ret && IntEngLineTo(SurfObj,  \
-       dc->CombinedClip,              \
-       brushObj,                      \
-       x1, y1, x2, y2,                \
-       RectBounds,                    \
-       dc->w.ROPmode);
 
 BOOL
 FASTCALL
@@ -437,7 +548,7 @@ IntRoundRect(
 {
   SURFOBJ   *SurfObj;
   BRUSHOBJ   PenBrush, *PenBrushObj, *FillBrushObj;
-  PRECTL     RectBounds;
+  RECTL      RectBounds;
   int i, col, row, width, height, x1, x1start, x2, x2start, y1, y2;
   //float aspect_square;
   long a_square, b_square,
@@ -457,7 +568,10 @@ IntRoundRect(
   top += dc->w.DCOrgY;
   bottom += dc->w.DCOrgY;
 
-  RectBounds = (PRECTL) RGNDATA_LockRgn(dc->w.hGCClipRgn);
+  RectBounds.left = left;
+  RectBounds.right = right;
+  RectBounds.top = top;
+  RectBounds.bottom = bottom;
 
   SurfObj = (SURFOBJ*)AccessUserObject((ULONG)dc->Surface);
 
@@ -512,20 +626,20 @@ IntRoundRect(
     if ( d >= 0 )
     {
       if ( FillBrushObj )
-        RRLINE ( x1, y1, x2, y1, FillBrushObj );
+        PUTLINE ( x1, y1, x2, y1, FillBrushObj );
       if ( first )
       {
 	if ( PenBrushObj )
 	{
 	  if ( x1start > x1 )
 	  {
-	    RRLINE ( x1, y1, x1start, y1, PenBrushObj );
-	    RRLINE ( x2start+1, y2, x2+1, y2, PenBrushObj );
+	    PUTLINE ( x1, y1, x1start, y1, PenBrushObj );
+	    PUTLINE ( x2start+1, y2, x2+1, y2, PenBrushObj );
 	  }
 	  else
 	  {
-	    RRPUTPIXEL ( x1, y1, PenBrushObj );
-	    RRPUTPIXEL ( x2, y2, PenBrushObj );
+	    PUTPIXEL ( x1, y1, PenBrushObj );
+	    PUTPIXEL ( x2, y2, PenBrushObj );
 	  }
 	}
 	first = FALSE;
@@ -533,18 +647,18 @@ IntRoundRect(
       else
       {
 	if ( FillBrushObj )
-	  RRLINE ( x1, y2, x2, y2, FillBrushObj );
+	  PUTLINE ( x1, y2, x2, y2, FillBrushObj );
 	if ( PenBrushObj )
 	{
 	  if ( x1start >= x1 )
 	  {
-	    RRLINE ( x1, y1, x1start+1, y1, PenBrushObj );
-	    RRLINE ( x2start, y2, x2+1, y2, PenBrushObj );
+	    PUTLINE ( x1, y1, x1start+1, y1, PenBrushObj );
+	    PUTLINE ( x2start, y2, x2+1, y2, PenBrushObj );
 	  }
 	  else
 	  {
-	    RRPUTPIXEL ( x1, y1, PenBrushObj );
-	    RRPUTPIXEL ( x2, y2, PenBrushObj );
+	    PUTPIXEL ( x1, y1, PenBrushObj );
+	    PUTPIXEL ( x2, y2, PenBrushObj );
 	  }
 	}
       }
@@ -552,13 +666,13 @@ IntRoundRect(
       {
 	if ( x1start > x1 )
 	{
-	  RRLINE ( x1, y2, x1start+1, y2, PenBrushObj );
-	  RRLINE ( x2start, y1, x2+1, y1, PenBrushObj );
+	  PUTLINE ( x1, y2, x1start+1, y2, PenBrushObj );
+	  PUTLINE ( x2start, y1, x2+1, y1, PenBrushObj );
 	}
 	else
 	{
-	  RRPUTPIXEL ( x1, y2, PenBrushObj );
-	  RRPUTPIXEL ( x2, y1, PenBrushObj );
+	  PUTPIXEL ( x1, y2, PenBrushObj );
+	  PUTPIXEL ( x2, y1, PenBrushObj );
 	}
       }
       x1start = x1-1;
@@ -588,15 +702,15 @@ IntRoundRect(
   {
     if ( FillBrushObj )
     {
-      RRLINE ( x1, y1, x2, y1, FillBrushObj );
-      RRLINE ( x1, y2, x2, y2, FillBrushObj );
+      PUTLINE ( x1, y1, x2, y1, FillBrushObj );
+      PUTLINE ( x1, y2, x2, y2, FillBrushObj );
     }
     if ( PenBrushObj )
     {
-      RRPUTPIXEL ( x2, y1, PenBrushObj );
-      RRPUTPIXEL ( x1, y2, PenBrushObj );
-      RRPUTPIXEL ( x2, y2, PenBrushObj );
-      RRPUTPIXEL ( x1, y1, PenBrushObj );
+      PUTPIXEL ( x2, y1, PenBrushObj );
+      PUTPIXEL ( x1, y2, PenBrushObj );
+      PUTPIXEL ( x2, y2, PenBrushObj );
+      PUTPIXEL ( x1, y1, PenBrushObj );
     }
 
     if ( d <= 0 )
@@ -611,22 +725,22 @@ IntRoundRect(
 
   if ( FillBrushObj )
   {
-    RRLINE ( left, y1, right, y1, FillBrushObj );
-    RRLINE ( left, y2, right, y2, FillBrushObj );
+    PUTLINE ( left, y1, right, y1, FillBrushObj );
+    PUTLINE ( left, y2, right, y2, FillBrushObj );
   }
   if ( PenBrushObj )
   {
     if ( x1 > (left+1) )
     {
-      RRLINE ( left, y1, x1, y1, PenBrushObj );
-      RRLINE ( x2+1, y1, right, y1, PenBrushObj );
-      RRLINE ( left+1, y2, x1, y2, PenBrushObj );
-      RRLINE ( x2+1, y2, right+1, y2, PenBrushObj );
+      PUTLINE ( left, y1, x1, y1, PenBrushObj );
+      PUTLINE ( x2+1, y1, right, y1, PenBrushObj );
+      PUTLINE ( left+1, y2, x1, y2, PenBrushObj );
+      PUTLINE ( x2+1, y2, right+1, y2, PenBrushObj );
     }
     else
     {
-      RRPUTPIXEL ( left, y1, PenBrushObj );
-      RRPUTPIXEL ( right, y2, PenBrushObj );
+      PUTPIXEL ( left, y1, PenBrushObj );
+      PUTPIXEL ( right, y2, PenBrushObj );
     }
   }
 
@@ -638,15 +752,15 @@ IntRoundRect(
   if ( FillBrushObj )
   {
     for ( i = y1+1; i < y2; i++ )
-      RRLINE ( left, i, right, i, FillBrushObj );
+      PUTLINE ( left, i, right, i, FillBrushObj );
   }
 
   if ( PenBrushObj )
   {
-    RRLINE ( x1,    top,    x2,    top,    PenBrushObj );
-    RRLINE ( right, y1,     right, y2,     PenBrushObj );
-    RRLINE ( x2,    bottom, x1,    bottom, PenBrushObj );
-    RRLINE ( left,  y2,     left,  y1,     PenBrushObj );
+    PUTLINE ( x1,    top,    x2,    top,    PenBrushObj );
+    PUTLINE ( right, y1,     right, y2,     PenBrushObj );
+    PUTLINE ( x2,    bottom, x1,    bottom, PenBrushObj );
+    PUTLINE ( left,  y2,     left,  y1,     PenBrushObj );
   }
 
   BRUSHOBJ_UnlockBrush(dc->w.hBrush);

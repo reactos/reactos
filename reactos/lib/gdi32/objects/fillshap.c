@@ -66,3 +66,18 @@ PolyPolygon(
 {
 	return PolyPolygon(a0,(LPPOINT)a1,(LPINT)a2,a3);
 }
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+Ellipse(HDC hDc,
+        int Left,
+        int Top,
+        int Right,
+        int Bottom)
+{
+  return NtGdiEllipse(hDc, Left, Top, Right, Bottom);
+}
