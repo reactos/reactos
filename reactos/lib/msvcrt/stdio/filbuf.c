@@ -86,8 +86,8 @@ _filbuf(FILE *f)
   
 
 //check for error
-  if (--f->_cnt < 0) {
-    if (f->_cnt == -1) {
+  if (f->_cnt <= 0) {
+    if (f->_cnt == 0) {
       f->_flag |= _IOEOF;
     } else
       f->_flag |= _IOERR;
