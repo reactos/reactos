@@ -122,6 +122,8 @@ typedef struct
    SECURITY_IMPERSONATION_LEVEL Level;               // 0x8
 } PS_IMPERSONATION_INFO, *PPS_IMPERSONATION_INFO;
 
+struct _WIN32THREADDATA;
+
 typedef struct _ETHREAD 
 {
    KTHREAD Tcb;
@@ -158,6 +160,7 @@ typedef struct _ETHREAD
     * Added by David Welch (welch@cwcom.net)
     */
    struct _EPROCESS* OldProcess;
+   struct _WIN32THREADDATA *Win32ThreadData; // Pointer to win32 private thread data
 
 } ETHREAD, *PETHREAD;
 
@@ -180,6 +183,8 @@ typedef struct _KPROCESS
    ULONG		ThreadSeed;
    UCHAR		DisableBoost;
 } KPROCESS, *PKPROCESS;
+
+struct _WIN32PROCESSDATA;
 
 typedef struct _EPROCESS
 {
@@ -240,8 +245,7 @@ typedef struct _EPROCESS
    KMUTANT ProcessMutant;
    CHAR ImageFileName[16];
    LARGE_INTEGER VmTrimFaultValue;
-   PVOID Win32Process;        // Actually 12 bytes
-   PVOID Win32WindowStation;
+   struct _WIN32PROCESSDATA *Win32Process;
    
    /*
     * Added by David Welch (welch@mcmail.com)
