@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.81 2004/12/19 05:03:29 royce Exp $
+ * $Id: gdiobj.c,v 1.82 2004/12/19 16:53:57 weiden Exp $
  */
 #include <w32k.h>
 
@@ -209,7 +209,7 @@ GetObjectSize(DWORD ObjectType)
   return 0;
 }
 
-#ifdef DBG
+#ifdef GDI_DEBUG
 
 static int leak_reported = 0;
 #define GDI_STACK_LEVELS 12
@@ -299,7 +299,7 @@ done:
 	if ( i < n && h[i].count == 1 )
 		DbgPrint ( "(list terminated - the remaining entries have 1 allocation only)\n" );
 }
-#endif /* DBG */
+#endif /* GDI_DEBUG */
 
 /*!
  * Allocate memory for GDI object and return handle to it.
@@ -395,7 +395,7 @@ LockHandle:
           /* unlock the entry */
           InterlockedExchange(&Entry->ProcessId, CurrentProcessId);
 
-#ifdef DBG
+#ifdef GDI_DEBUG
           {
             PULONG Frame;
 			int which;
@@ -412,7 +412,7 @@ LockHandle:
 			for ( ; which < GDI_STACK_LEVELS; which++ )
 				GDIHandleAllocator[Index][which] = 0xDEADBEEF;
           }
-#endif /* DBG */
+#endif /* GDI_DEBUG */
 
           if(W32Process != NULL)
           {
@@ -441,9 +441,9 @@ LockHandle:
 
       ExFreeToPagedLookasideList(LookasideList, newObject);
       DPRINT1("Failed to insert gdi object into the handle table, no handles left!\n");
-#ifdef DBG
+#ifdef GDI_DEBUG
       IntDumpHandleTable();
-#endif /* DBG */
+#endif /* GDI_DEBUG */
     }
     else
     {
