@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.34 2003/07/21 21:53:51 royce Exp $
+/* $Id: catch.c,v 1.35 2003/08/08 21:53:03 royce Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -147,6 +147,8 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 	  if (Value != ExceptionContinueExecution ||
 	      0 != (ExceptionRecord->ExceptionFlags & EXCEPTION_NONCONTINUABLE))
 	    {
+		  DbgPrint("ExceptionRecord->ExceptionAddress = 0x%x\n",
+			  ExceptionRecord->ExceptionAddress );
               KEBUGCHECKWITHTF(KMODE_EXCEPTION_NOT_HANDLED, 0, 0, 0, 0, Tf);	      
 	    }
 	}

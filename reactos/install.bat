@@ -208,8 +208,9 @@ copy apps\tests\tokentest\tokentst.exe %ROS_INSTALL_TESTS%
 copy apps\tests\icontest\icontest.exe %ROS_INSTALL_TESTS%
 copy apps\tests\icontest\icon.ico %ROS_INSTALL_TESTS%
 
-rem echo.
-rem echo installing tests (5)...
+echo.
+echo installing tests (5)...
+copy apps\tests\linetest\linetest.exe %ROS_INSTALL_TESTS%
 rem copy apps\tests\restest\restest.exe %ROS_INSTALL_TESTS%
 rem copy apps\testsets\msvcrt\fileio\fileio.exe %ROS_INSTALL_TESTS%
 rem copy apps\testsets\msvcrt\mbtowc\mbtowc.exe %ROS_INSTALL_TESTS%

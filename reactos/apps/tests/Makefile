@@ -8,7 +8,7 @@ include $(PATH_TO_TOP)/rules.mak
 
 TEST_APPS = alive apc args atomtest bench bitblt button button2 \
 combo consume copymove count dump_shared_data edit enumwnd event file \
-gditest hello isotest lineclip lpc messagebox mstest mutex nptest pteb \
+gditest hello isotest lineclip linetest lpc messagebox mstest mutex nptest pteb \
 regtest sectest shm thread tokentest vmtest winhello dibtest lock SampleWindow \
 hivetest shaptest wm_paint multiwin icontest suspend tests/volinfo terminate 
 
