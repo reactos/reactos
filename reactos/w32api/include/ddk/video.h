@@ -36,8 +36,6 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
 
 #if defined(_VIDEOPORT_)
@@ -1558,8 +1556,6 @@ VideoPortZeroMemory(
 #else
 #define VideoDebugPrint(x)
 #endif
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }
