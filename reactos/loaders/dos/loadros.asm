@@ -298,8 +298,8 @@ entry:
 	;; int 15h opt e801 don't work , try int 15h, option 88h
         mov	ah, 088h
         int	015h
-	cmp	ax,ax
-	jz	.cmosmem
+	cmp	ax, 0
+	je	.cmosmem
 	mov	[_multiboot_mem_upper],ax
 	jmp	.done_mem
 .cmosmem:

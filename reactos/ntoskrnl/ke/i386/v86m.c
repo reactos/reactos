@@ -37,8 +37,11 @@
 
 /* GLOBALS *******************************************************************/
 
+#define IOPL_FLAG          ((1 << 12) | (1 << 13))
 #define INTERRUPT_FLAG     (1 << 9)
 #define TRAP_FLAG          (1 << 8)
+
+#define VALID_FLAGS         (0xDFF)
 
 /* FUNCTIONS *****************************************************************/
 
@@ -46,219 +49,312 @@ ULONG
 KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 {
   PUCHAR ip;
-  PUSHORT sp;
+  PUSHORT sp; 
+  PULONG dsp;
+  BOOL BigDataPrefix = FALSE;
+  BOOL BigAddressPrefix = FALSE;
+  //  BOOL RepPrefix = FALSE;
+  ULONG i = 0;
+  BOOL Exit = FALSE;
 
   ip = (PUCHAR)((Tf->Cs & 0xFFFF) * 16 + (Tf->Eip & 0xFFFF));
   sp = (PUSHORT)((Tf->Ss & 0xFFFF) * 16 + (Tf->Esp & 0xFFFF));
-   
+  dsp = (PULONG)sp;
+
   DPRINT("KeV86GPF handling %x at %x:%x ss:sp %x:%x Flags %x\n",
 	 ip[0], Tf->Cs, Tf->Eip, Tf->Ss, Tf->Esp, VTf->regs->Flags);
  
-  switch (ip[0])
+  while (!Exit)
     {
-      /* sti */
-    case 0xFB:
-      if (VTf->regs->Flags & KV86M_EMULATE_CLI_STI)
+      switch (ip[i])
 	{
+	  /* 32-bit data prefix */
+	case 0x66:
+	  BigDataPrefix = TRUE;
+    	  i++;
 	  Tf->Eip++;
-	  VTf->regs->Vif = 1;
-	  return(0);
-	}
-      break;
+	  break;
 
-      /* cli */
-    case 0xFA:
-      if (VTf->regs->Flags & KV86M_EMULATE_CLI_STI)
-	{
+	  /* 32-bit address prefix */
+	case 0x67:
+	  BigAddressPrefix = TRUE;
+	  i++;
 	  Tf->Eip++;
-	  VTf->regs->Vif = 0;
-	  return(0);
-	}
-      break;
+	  break;
 
-      /* pushf */
-    case 0x9C:
-      if (VTf->regs->Flags & KV86M_EMULATE_CLI_STI)
-	{
-	  Tf->Eip++;
-	  Tf->Esp = Tf->Esp - 2;
-	  sp = sp - 1;
-	  sp[0] = Tf->Eflags & 0xFFFF;
-	  if (VTf->regs->Vif)
+	  /* sti */
+	case 0xFB:
+	  if (BigDataPrefix || BigAddressPrefix)
 	    {
-	      sp[0] = sp[0] | INTERRUPT_FLAG;
+	      return(1);
 	    }
-	  return(0);
-	}
-      break;
-
-      /* popf */
-     case 0x9D:
-       if (VTf->regs->Flags & KV86M_EMULATE_CLI_STI)
-	 {
-	   Tf->Eip++;
-	   Tf->Eflags = Tf->Eflags & (~0xFFFF);
-	   Tf->Eflags = Tf->Eflags | sp[0];
-	   if (Tf->Eflags & INTERRUPT_FLAG)
-	     {
-	       VTf->regs->Vif = 1;
-	     }
-	   else
-	     {
-	       VTf->regs->Vif = 0;
+	  if (VTf->regs->Flags & KV86M_EMULATE_CLI_STI)
+	    {
+	      Tf->Eip++;
+	      VTf->regs->Vif = 1;
+	      return(0);
 	    }
-	   Tf->Eflags = Tf->Eflags & (~INTERRUPT_FLAG);
-	   Tf->Esp = Tf->Esp + 2;
-	   return(0);
-	 }
-       break;
+	  Exit = TRUE;
+	  break;
+	  
+	  /* cli */
+	case 0xFA:
+	  if (BigDataPrefix || BigAddressPrefix)
+	    {
+	      return(1);
+	    }
+	  if (VTf->regs->Flags & KV86M_EMULATE_CLI_STI)
+	    {
+	      Tf->Eip++;
+	      VTf->regs->Vif = 0;
+	      return(0);
+	    }
+	  Exit = TRUE;
+	  break;
+	  
+	  /* pushf */
+	case 0x9C:
+	  if (VTf->regs->Flags & KV86M_EMULATE_CLI_STI)
+	    {
+	      Tf->Eip++;
+	      if (!BigAddressPrefix)
+		{
+		  Tf->Esp = Tf->Esp - 2;
+		  sp = sp - 1;
+		  sp[0] = Tf->Eflags & 0xFFFF;
+		  if (VTf->regs->Vif == 1)
+		    {
+		      sp[0] = sp[0] | INTERRUPT_FLAG;
+		    }
+		  else
+		    {
+		      sp[0] = sp[0] & (~INTERRUPT_FLAG);
+		    }
+		}
+	      else
+		{
+		  Tf->Esp = Tf->Esp - 4;
+		  dsp = dsp - 1;
+		  dsp[0] = Tf->Eflags;
+		  dsp[0] = dsp[0] & VALID_FLAGS;
+		  if (VTf->regs->Vif == 1)
+		    {
+		      dsp[0] = dsp[0] | INTERRUPT_FLAG;
+		    }
+		  else
+		    {
+		      dsp[0] = dsp[0] & (~INTERRUPT_FLAG);
+		    }
+		}
+	      return(0);
+	    }
+	  Exit = TRUE;
+	  break;
+	  
+	  /* popf */
+	case 0x9D:
+	  if (VTf->regs->Flags & KV86M_EMULATE_CLI_STI)
+	    {
+	      Tf->Eip++;
+	      if (!BigAddressPrefix)
+		{
+		  Tf->Eflags = Tf->Eflags & (~0xFFFF);
+		  Tf->Eflags = Tf->Eflags | (sp[0] & VALID_FLAGS);
+		  if (Tf->Eflags & INTERRUPT_FLAG)
+		    {
+		      VTf->regs->Vif = 1;
+		    }
+		  else
+		    {
+		      VTf->regs->Vif = 0;
+		    }		  
+		  Tf->Eflags = Tf->Eflags | INTERRUPT_FLAG;
+		  Tf->Esp = Tf->Esp + 2;
+		}
+	      else
+		{
+		  Tf->Eflags = Tf->Eflags | (dsp[0] & VALID_FLAGS);
+		  if (dsp[0] & INTERRUPT_FLAG)
+		    {
+		      VTf->regs->Vif = 1;
+		    }
+		  else
+		    {
+		      VTf->regs->Vif = 0;
+		    }
+		  Tf->Eflags = Tf->Eflags | INTERRUPT_FLAG;
+		  Tf->Esp = Tf->Esp + 2;
+		}
+	      return(0);
+	    }
+	  Exit = TRUE;
+	  break;
 
       /* iret */
-    case 0xCF:
-      if (VTf->regs->Flags & KV86M_EMULATE_CLI_STI)
-	{
-	  Tf->Eip = sp[0];
-	  Tf->Cs = sp[1];
-	  Tf->Eflags = Tf->Eflags & (~0xFFFF);
-	  Tf->Eflags = Tf->Eflags | sp[2];
-	  if (Tf->Eflags & INTERRUPT_FLAG)
+	case 0xCF:
+	  if (VTf->regs->Flags & KV86M_EMULATE_CLI_STI)
 	    {
-	      VTf->regs->Vif = 1;
+	      Tf->Eip = sp[0];
+	      Tf->Cs = sp[1];
+	      Tf->Eflags = Tf->Eflags & (~0xFFFF);
+	      Tf->Eflags = Tf->Eflags | sp[2];
+	      if (Tf->Eflags & INTERRUPT_FLAG)
+		{
+		  VTf->regs->Vif = 1;
+		}
+	      else
+		{
+		  VTf->regs->Vif = 0;
+		}
+	      Tf->Eflags = Tf->Eflags & (~INTERRUPT_FLAG);
+	      Tf->Esp = Tf->Esp + 6;
+	      return(0);
 	    }
-	  else
+	  Exit = TRUE;
+	  break;
+
+	  /* out imm8, al */
+	case 0xE6:
+	  if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
 	    {
-	      VTf->regs->Vif = 0;
+	      WRITE_PORT_UCHAR((PUCHAR)(ULONG)ip[1], 
+			       Tf->Eax & 0xFF);
+	      Tf->Eip = Tf->Eip + 2;
+	      return(0);
 	    }
-	  Tf->Eflags = Tf->Eflags & (~INTERRUPT_FLAG);
-	  Tf->Esp = Tf->Esp + 6;
-	  return(0);
-	}
-      break;
-
-      /* out imm8, al */
-    case 0xE6:
-      if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
-	{
-	  WRITE_PORT_UCHAR((PUCHAR)(ULONG)ip[1], 
-			   Tf->Eax & 0xFF);
-	  Tf->Eip = Tf->Eip + 2;
-	  return(0);
-	}
-      break;
-
-      /* out imm8, ax */
-    case 0xE7:
-      if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
-	{
-	  WRITE_PORT_USHORT((PUSHORT)(ULONG)ip[1], Tf->Eax & 0xFFFF);
-	  Tf->Eip = Tf->Eip + 2;
-	  return(0);
-	}
-      break;
-
-      /* out dx, al */
-    case 0xEE:
-      if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
-	{
-	  WRITE_PORT_UCHAR((PUCHAR)(Tf->Edx & 0xFFFF), Tf->Eax & 0xFF);
-	  Tf->Eip = Tf->Eip + 1;
-	  return(0);
-	}
-      break;
-
-      /* out dx, ax */
-    case 0xEF:
-      if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
-	{
-	  WRITE_PORT_USHORT((PUSHORT)(Tf->Edx & 0xFFFF), Tf->Eax & 0xFFFF);
-	  Tf->Eip = Tf->Eip + 1;
-	  return(0);
-	}
-      break;
-
-      /* in al, imm8 */
-    case 0xE4:
-      if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
-	{
-	  UCHAR v;
+	  Exit = TRUE;
+	  break;
 	  
-	  v = READ_PORT_UCHAR((PUCHAR)(ULONG)ip[1]);
-	  Tf->Eax = Tf->Eax & (~0xFF);
-	  Tf->Eax = Tf->Eax | v;
-	  Tf->Eip = Tf->Eip + 2;
-	  return(0);
-	}
-      break;
+	  /* out imm8, ax */
+	case 0xE7:
+	  if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
+	    {
+	      WRITE_PORT_USHORT((PUSHORT)(ULONG)ip[1], Tf->Eax & 0xFFFF);
+	      Tf->Eip = Tf->Eip + 2;
+	      return(0);
+	    }
+	  Exit = TRUE;
+	  break;
 
-      /* in ax, imm8 */
-    case 0xE5:
-      if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
-	{
-	  USHORT v;
+	  /* out dx, al */
+	case 0xEE:
+	  if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
+	    {
+	      WRITE_PORT_UCHAR((PUCHAR)(Tf->Edx & 0xFFFF), Tf->Eax & 0xFF);
+	      Tf->Eip = Tf->Eip + 1;
+	      return(0);
+	    }
+	  Exit = TRUE;
+	  break;
+	  
+	  /* out dx, ax */
+	case 0xEF:
+	  if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
+	    {
+	      WRITE_PORT_USHORT((PUSHORT)(Tf->Edx & 0xFFFF), Tf->Eax & 0xFFFF);
+	      Tf->Eip = Tf->Eip + 1;
+	      return(0);
+	    }
+	  Exit = TRUE;
+	  break;
+	  
+	  /* in al, imm8 */
+	case 0xE4:
+	  if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
+	    {
+	      UCHAR v;
+	      
+	      v = READ_PORT_UCHAR((PUCHAR)(ULONG)ip[1]);
+	      Tf->Eax = Tf->Eax & (~0xFF);
+	      Tf->Eax = Tf->Eax | v;
+	      Tf->Eip = Tf->Eip + 2;
+	      return(0);
+	    }
+	  Exit = TRUE;
+	  break;
+	  
+	  /* in ax, imm8 */
+	case 0xE5:
+	  if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
+	    {
+	      USHORT v;
+	      
+	      v = READ_PORT_USHORT((PUSHORT)(ULONG)ip[1]);
+	      Tf->Eax = Tf->Eax & (~0xFFFF);
+	      Tf->Eax = Tf->Eax | v;
+	      Tf->Eip = Tf->Eip + 2;
+	      return(0);
+	    }
+	  Exit = TRUE;
+	  break;
 
-	  v = READ_PORT_USHORT((PUSHORT)(ULONG)ip[1]);
-	  Tf->Eax = Tf->Eax & (~0xFFFF);
-	  Tf->Eax = Tf->Eax | v;
-	  Tf->Eip = Tf->Eip + 2;
-	  return(0);
-	}
-      break;
+	  /* in al, dx */
+	case 0xEC:
+	  if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
+	    {
+	      UCHAR v;
 
-      /* in al, dx */
-    case 0xEC:
-      if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
-	{
-	  UCHAR v;
+	      v = READ_PORT_UCHAR((PUCHAR)(Tf->Edx & 0xFFFF));
+	      Tf->Eax = Tf->Eax & (~0xFF);
+	      Tf->Eax = Tf->Eax | v;
+	      Tf->Eip = Tf->Eip + 1;
+	      return(0);
+	    }
+	  Exit = TRUE;
+	  break;
+	  
+	  /* in ax, dx */
+	case 0xED:
+	  if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
+	    {
+	      USHORT v;
 
-	  v = READ_PORT_UCHAR((PUCHAR)(Tf->Edx & 0xFFFF));
-	  Tf->Eax = Tf->Eax & (~0xFF);
-	  Tf->Eax = Tf->Eax | v;
-	  Tf->Eip = Tf->Eip + 1;
-	  return(0);
-	}
-      break;
-
-      /* in ax, dx */
-    case 0xED:
-      if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
-	{
-	  USHORT v;
-
-	  v = READ_PORT_USHORT((PUSHORT)(Tf->Edx & 0xFFFF));
-	  Tf->Eax = Tf->Eax & (~0xFFFF);
-	  Tf->Eax = Tf->Eax | v;
-	  Tf->Eip = Tf->Eip + 1;
-	  return(0);
-	}
-      break;
-
-      /* Int nn */
-    case 0xCD:
-      {
-	unsigned int inum;
-	unsigned int entry;
-
-	inum = ip[1];
-	entry = ((unsigned int *)0)[inum];
-	
-	Tf->Esp = Tf->Esp - 6;
-	sp = sp - 3;
-
-	sp[0] = (Tf->Eip & 0xFFFF) + 2;
-	sp[1] = Tf->Cs & 0xFFFF;
-	sp[2] = Tf->Eflags & 0xFFFF;
-	if (VTf->regs->Vif == 1)
+	      v = READ_PORT_USHORT((PUSHORT)(Tf->Edx & 0xFFFF));
+	      Tf->Eax = Tf->Eax & (~0xFFFF);
+	      Tf->Eax = Tf->Eax | v;
+	      Tf->Eip = Tf->Eip + 1;
+	      return(0);
+	    }
+	  Exit = TRUE;
+	  break;
+      
+      /* insb */
+	case 0x6C:
+	  if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
+	    {
+	      
+	    }
+	  Exit = TRUE;
+	  break;
+	  
+	  /* Int nn */
+	case 0xCD:
 	  {
-	    sp[2] = sp[2] | INTERRUPT_FLAG;
+	    unsigned int inum;
+	    unsigned int entry;
+	    
+	    inum = ip[1];
+	    entry = ((unsigned int *)0)[inum];
+	    
+	    Tf->Esp = Tf->Esp - 6;
+	    sp = sp - 3;
+	    
+	    sp[0] = (Tf->Eip & 0xFFFF) + 2;
+	    sp[1] = Tf->Cs & 0xFFFF;
+	    sp[2] = Tf->Eflags & 0xFFFF;
+	    if (VTf->regs->Vif == 1)
+	      {
+		sp[2] = sp[2] | INTERRUPT_FLAG;
+	      }
+	    DPRINT("sp[0] %x sp[1] %x sp[2] %x\n", sp[0], sp[1], sp[2]);
+	    Tf->Eip = entry & 0xFFFF;
+	    Tf->Cs = entry >> 16;
+	    Tf->Eflags = Tf->Eflags & (~TRAP_FLAG);
+	    
+	    return(0);
 	  }
-	DPRINT("sp[0] %x sp[1] %x sp[2] %x\n", sp[0], sp[1], sp[2]);
-	Tf->Eip = entry & 0xFFFF;
-	Tf->Cs = entry >> 16;
-	Tf->Eflags = Tf->Eflags & (~TRAP_FLAG);
-
-	return(0);
-      }
-
+	}
+	  
       /* FIXME: Also emulate ins and outs */
       /* FIXME: Handle opcode prefixes */
       /* FIXME: Don't allow the BIOS to write to sensitive I/O ports */
@@ -405,4 +501,6 @@ KeV86Exception(ULONG ExceptionNr, PKTRAP_FRAME Tf, ULONG address)
       return(1);
     }
 }
+
+
 
