@@ -972,6 +972,7 @@ CmiInitNonVolatileRegistryHive (PREGISTRY_HIVE RegistryHive,
       ObDereferenceObject(SectionObject);
       RtlFreeUnicodeString(&RegistryHive->HiveFileName);
       RtlFreeUnicodeString(&RegistryHive->LogFileName);
+      NtClose(FileHandle);
       return(Status);
     }
   DPRINT("ViewBase %p  ViewSize %lx\n", ViewBase, ViewSize);
@@ -995,6 +996,7 @@ CmiInitNonVolatileRegistryHive (PREGISTRY_HIVE RegistryHive,
       ObDereferenceObject(SectionObject);
       RtlFreeUnicodeString(&RegistryHive->HiveFileName);
       RtlFreeUnicodeString(&RegistryHive->LogFileName);
+      NtClose(FileHandle);
       return STATUS_INSUFFICIENT_RESOURCES;
     }
   RtlZeroMemory (RegistryHive->BlockList,
@@ -1011,6 +1013,7 @@ CmiInitNonVolatileRegistryHive (PREGISTRY_HIVE RegistryHive,
       ObDereferenceObject(SectionObject);
       RtlFreeUnicodeString(&RegistryHive->HiveFileName);
       RtlFreeUnicodeString(&RegistryHive->LogFileName);
+      NtClose(FileHandle);
       return Status;
     }
 
@@ -1018,6 +1021,9 @@ CmiInitNonVolatileRegistryHive (PREGISTRY_HIVE RegistryHive,
   MmUnmapViewOfSection(PsGetCurrentProcess(),
                        ViewBase);
   ObDereferenceObject(SectionObject);
+
+  /* Close the hive file */
+  NtClose(FileHandle);
 
   /* Initialize the free cell list */
   Status = CmiCreateHiveFreeCellList (RegistryHive);
