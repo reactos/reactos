@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.19 2003/07/30 04:00:47 jimtabor Exp $
+/* $Id: stubs.c,v 1.20 2003/07/31 23:12:38 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -196,18 +196,6 @@ NtUserChangeDisplaySettings(
 
 DWORD
 STDCALL
-NtUserCheckMenuItem(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserCloseClipboard(VOID)
 {
   UNIMPLEMENTED
@@ -286,16 +274,6 @@ NtUserCreateLocalMemHandle(
 
 DWORD
 STDCALL
-NtUserCreateMenu(VOID)
-{
-   UNIMPLEMENTED
- 
-   return 0;
-   
-}
-
-DWORD
-STDCALL
 NtUserDdeGetQualityOfService(
   DWORD Unknown0,
   DWORD Unknown1,
@@ -345,29 +323,7 @@ NtUserDefSetText(
 
 DWORD
 STDCALL
-NtUserDeleteMenu(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserDestroyAcceleratorTable(
-  DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserDestroyMenu(
   DWORD Unknown0)
 {
   UNIMPLEMENTED
@@ -465,42 +421,7 @@ NtUserDrawIconEx(
 
 DWORD
 STDCALL
-NtUserDrawMenuBarTemp(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserEmptyClipboard(VOID)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserEnableMenuItem(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserEndMenu(VOID)
 {
   UNIMPLEMENTED
 
@@ -798,43 +719,6 @@ NtUserGetListBoxInfo(
 
 DWORD
 STDCALL
-NtUserGetMenuBarInfo(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserGetMenuIndex(
-  DWORD Unknown0,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserGetMenuItemRect(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserGetMouseMovePointsEx(
   DWORD Unknown0,
   DWORD Unknown1,
@@ -906,19 +790,6 @@ DWORD
 STDCALL
 NtUserHideCaret(
   DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserHiliteMenuItem(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
 {
   UNIMPLEMENTED
 
@@ -1006,19 +877,6 @@ NtUserLockWorkStation(VOID)
 DWORD
 STDCALL
 NtUserMapVirtualKeyEx(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserMenuItemFromPoint(
   DWORD Unknown0,
   DWORD Unknown1,
   DWORD Unknown2,
@@ -1145,18 +1003,6 @@ NtUserRegisterTasklist(
   return 0;
 }
 
-DWORD
-STDCALL
-NtUserRemoveMenu(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
 
 DWORD
 STDCALL
@@ -1256,39 +1102,6 @@ NtUserSetMenu(
 
 DWORD
 STDCALL
-NtUserSetMenuContextHelpId(
-  DWORD Unknown0,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserSetMenuDefaultItem(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserSetMenuFlagRtoL(
-  DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserSetParent(
   DWORD Unknown0,
   DWORD Unknown1)
@@ -1369,32 +1182,6 @@ NtUserSystemParametersInfo(
 
 DWORD
 STDCALL
-NtUserThunkedMenuInfo(
-  DWORD Unknown0,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserThunkedMenuItemInfo(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserToUnicodeEx(
   DWORD Unknown0,
   DWORD Unknown1,
@@ -1413,21 +1200,6 @@ DWORD
 STDCALL
 NtUserTrackMouseEvent(
   DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserTrackPopupMenuEx(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5)
 {
   UNIMPLEMENTED
 
