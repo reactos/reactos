@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.28 2001/09/02 15:38:46 dwelch Exp $
+/* $Id: view.c,v 1.29 2001/10/10 21:50:15 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -303,6 +303,11 @@ CcRosInitializeFileCache(PFILE_OBJECT FileObject,
    InitializeListHead(&(*Bcb)->CacheSegmentListHead);
    KeInitializeSpinLock(&(*Bcb)->BcbLock);
    (*Bcb)->CacheSegmentSize = CacheSegmentSize;
+   if (FileObject->FsContext)
+   {
+     (*Bcb)->AllocationSize = ((REACTOS_COMMON_FCB_HEADER*)FileObject->FsContext)->AllocationSize;
+     (*Bcb)->FileSize = ((REACTOS_COMMON_FCB_HEADER*)FileObject->FsContext)->FileSize;
+   }
 
    DPRINT("Finished CcRosInitializeFileCache() = %x\n", *Bcb);
    
