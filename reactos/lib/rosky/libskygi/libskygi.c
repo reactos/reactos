@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-/* $Id: libskygi.c,v 1.12 2004/09/26 15:55:53 weiden Exp $
+/* $Id: libskygi.c,v 1.13 2004/10/20 19:19:12 weiden Exp $
  *
  * PROJECT:         SkyOS GI library
  * FILE:            lib/libskygi/libskygi.c
@@ -223,39 +223,44 @@ IntIsSkyMessage(PSKY_WINDOW skw, MSG *Msg, s_gi_msg *smsg)
       smsg->type = MSG_COMMAND;
       smsg->para1 = LOWORD(Msg->wParam);
       return TRUE;
-  }
-  
-  if(skw->MouseInput)
-  {
-    switch(Msg->message)
-    {
-      case WM_LBUTTONDOWN:
-        smsg->type = MSG_MOUSE_BUT1_PRESSED;
-        goto DoMouseInputMessage;
-      case WM_LBUTTONUP:
-        smsg->type = MSG_MOUSE_BUT1_RELEASED;
-        goto DoMouseInputMessage;
-      case WM_RBUTTONDOWN:
-        smsg->type = MSG_MOUSE_BUT2_PRESSED;
-        goto DoMouseInputMessage;
-      case WM_RBUTTONUP:
-      {
-        POINT pt;
 
-        smsg->type = MSG_MOUSE_BUT2_RELEASED;
+    case WM_MOUSEMOVE:
+      if(skw->MouseInput)
+      {
+        smsg->type = MSG_MOUSE_MOVED;
+        goto DoMouseInputMessage;
+      }
+      break;
+
+    case WM_LBUTTONDOWN:
+      smsg->type = MSG_MOUSE_BUT1_PRESSED;
+      goto DoMouseInputMessage;
+
+    case WM_LBUTTONUP:
+      smsg->type = MSG_MOUSE_BUT1_RELEASED;
+      goto DoMouseInputMessage;
+
+    case WM_RBUTTONDOWN:
+      smsg->type = MSG_MOUSE_BUT2_PRESSED;
+      goto DoMouseInputMessage;
+
+    case WM_RBUTTONUP:
+    {
+      POINT pt;
+
+      smsg->type = MSG_MOUSE_BUT2_RELEASED;
 
 DoMouseInputMessage:
 #if 0
-        pt.x = LOWORD(Msg->lParam);
-        pt.y = HIWORD(Msg->lParam);
+      pt.x = LOWORD(Msg->lParam);
+      pt.y = HIWORD(Msg->lParam);
 #else
-        pt = Msg->pt;
-        MapWindowPoints(NULL, skw->hWnd, &pt, 1);
+      pt = Msg->pt;
+      MapWindowPoints(NULL, skw->hWnd, &pt, 1);
 #endif
-        smsg->para1 = pt.x;
-        smsg->para2 = pt.y;
-        return TRUE;
-      }
+      smsg->para1 = pt.x;
+      smsg->para2 = pt.y;
+      return TRUE;
     }
   }
   
