@@ -1,0 +1,1 @@
+NTSTATUS LdrLoadDriver(PUNICODE_STRING Filename);
