@@ -28,6 +28,13 @@
 
 static VOID ProcessClose( PAFD_FCB FCB );
 
+BOOLEAN CantReadMore( PAFD_FCB FCB ) {
+    UINT BytesAvailable = FCB->Recv.Content - FCB->Recv.BytesUsed;
+    
+    return !BytesAvailable && 
+        (FCB->PollState & (AFD_EVENT_CLOSE | AFD_EVENT_DISCONNECT));
+}
+
 NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
 					    PAFD_RECV_INFO RecvReq,
 					    PUINT TotalBytesCopied ) {
@@ -41,7 +48,7 @@ NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
     AFD_DbgPrint(MID_TRACE,("Called, BytesAvailable = %d\n",
 			    BytesAvailable));
 
-    if( FCB->PollState & AFD_EVENT_CLOSE ) return STATUS_SUCCESS;
+    if( CantReadMore(FCB) ) return STATUS_SUCCESS;
     if( !BytesAvailable ) return STATUS_PENDING;
 
     Map = (PAFD_MAPBUF)(RecvReq->BufferArray + RecvReq->BufferCount);
@@ -213,6 +220,24 @@ NTSTATUS DDKAPI ReceiveComplete
 
 	Status = STATUS_SUCCESS;
     } else {
+        /* Success here means that we got an EOF.  Close all pending reads
+         * with EOF.  Data won't have been available before. */
+        while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_RECV] ) ) {
+            NextIrpEntry = 
+                RemoveHeadList(&FCB->PendingIrpList[FUNCTION_RECV]);
+            NextIrp = 
+                CONTAINING_RECORD(NextIrpEntry, IRP, Tail.Overlay.ListEntry);
+            NextIrpSp = IoGetCurrentIrpStackLocation( NextIrp );
+            RecvReq = NextIrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+            
+            AFD_DbgPrint(MID_TRACE,("Completing recv %x (%d)\n", NextIrp,
+                                    TotalBytesCopied));
+            UnlockBuffers( RecvReq->BufferArray, 
+                           RecvReq->BufferCount, FALSE );
+            NextIrp->IoStatus.Status = Status;
+            NextIrp->IoStatus.Information = 0;
+            IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
+        }
 	ProcessClose( FCB );
     }
 
@@ -272,7 +297,7 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     /* Check if we're not closed down yet */
 
-    if( !(FCB->PollState & AFD_EVENT_CLOSE ) ) {
+    if( !CantReadMore(FCB) ) {
 	AFD_DbgPrint(MID_TRACE,("Not EOF yet\n"));
 	if( FCB->ReceiveIrp.InFlightRequest ) {
 	    AFD_DbgPrint(MID_TRACE,("We're waiting on a previous irp\n"));
@@ -288,6 +313,9 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	Status = STATUS_END_OF_FILE;
 
 	ProcessClose( FCB );
+
+        return UnlockAndMaybeComplete
+            ( FCB, STATUS_SUCCESS, Irp, 0, NULL, FALSE);
     }
 
     if( NT_SUCCESS(Status) ) {
