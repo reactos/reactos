@@ -601,7 +601,7 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
 
   ASSERT_IRQL(APC_LEVEL);
   
-  if(AccessMode == UserMode)
+  if(AccessMode == UserMode && ObjectAttributes != NULL)
   {
     Status = STATUS_SUCCESS;
     _SEH_TRY
