@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.75 2003/12/24 19:57:42 gvg Exp $
+/* $Id: create.c,v 1.76 2003/12/27 23:55:02 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -333,7 +333,7 @@ _except_handler(
     PULONG Frame;
     DPRINT1("Frames:\n");
     Frame = (PULONG)((CONTEXT *)ContextRecord)->Ebp;
-    while (Frame != NULL && Frame != (PULONG)0xdeadbeef)
+    while ((PVOID)Frame[1] != NULL && (PULONG)Frame[1] != (PULONG)0xdeadbeef)
        {
          DPRINT1("%x\n", (PVOID)Frame[1]);
          Frame = (PULONG)Frame[0];
