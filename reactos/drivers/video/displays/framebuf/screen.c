@@ -90,7 +90,7 @@ GetAvailableModes(
 
    while (ulTemp--)
    {
-      if ((ModeInfoPtr->NumberOfPlanes != 1 ) ||
+      if ((ModeInfoPtr->NumberOfPlanes != 1) ||
           !(ModeInfoPtr->AttributeFlags & VIDEO_MODE_GRAPHICS) ||
           ((ModeInfoPtr->BitsPerPlane != 8) &&
            (ModeInfoPtr->BitsPerPlane != 16) &&
@@ -145,6 +145,8 @@ IntInitScreenInfo(
       {
          if (ModeInfoPtr->Length == 0)
          {
+            ModeInfoPtr = (PVIDEO_MODE_INFORMATION)
+               (((PUCHAR)ModeInfoPtr) + ModeInfoSize);
             continue;
          }
          SelectedMode = ModeInfoPtr;
