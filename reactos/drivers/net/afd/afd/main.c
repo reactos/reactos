@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.1.2.4 2004/07/16 14:35:21 arty Exp $
+/* $Id: main.c,v 1.1.2.5 2004/07/17 16:09:10 navaraf Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/main.c
@@ -113,7 +113,7 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     FCB->TdiDeviceName.Buffer = 
       ExAllocatePool( NonPagedPool, FCB->TdiDeviceName.Length );
     RtlCopyMemory( FCB->TdiDeviceName.Buffer,
-		   EaInfoValue,
+		   ConnectInfo->TransportName,
 		   FCB->TdiDeviceName.Length );
 
     if( !FCB->TdiDeviceName.Buffer ) {
