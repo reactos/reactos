@@ -18,9 +18,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.3 $
- * $Author: ariadne $
- * $Date: 1999/04/14 07:10:15 $
+ * $Revision: 1.4 $
+ * $Author: chorns $
+ * $Date: 2000/12/08 22:09:17 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
@@ -188,5 +188,5 @@ wchar_t* wcsupr (wchar_t* wsToConvert);
 #endif
 
 #ifdef __cplusplus
-extern "C" }
+}; /* extern "c" */
 #endif
