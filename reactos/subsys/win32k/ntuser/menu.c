@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.20 2003/08/20 13:02:32 weiden Exp $
+/* $Id: menu.c,v 1.21 2003/08/20 14:01:16 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -47,16 +47,6 @@
 /* maximum number of menu items a menu can contain */
 #define MAX_MENU_ITEMS (0x4000)
 #define MAX_GOINTOSUBMENU (0x10)
-
-#ifndef MIIM_STRING
-#define MIIM_STRING      (0x00000040)
-#endif
-#ifndef MIIM_BITMAP
-#define MIIM_BITMAP      (0x00000080)
-#endif
-#ifndef MIIM_FTYPE
-#define MIIM_FTYPE       (0x00000100)
-#endif
 
 #define UpdateMenuItemState(state, change) \
 {\
@@ -294,23 +284,15 @@ IntCreateMenu(PHANDLE Handle)
 BOOL FASTCALL
 IntSetMenuFlagRtoL(PMENU_OBJECT MenuObject)
 {
-  if(MenuObject)
-  {
-    MenuObject->RtoL = TRUE;
-    return TRUE;
-  }
-  return FALSE;
+  MenuObject->RtoL = TRUE;
+  return TRUE;
 }
 
 BOOL FASTCALL
 IntSetMenuContextHelpId(PMENU_OBJECT MenuObject, DWORD dwContextHelpId)
 {
-  if(MenuObject)
-  {
-    MenuObject->MenuInfo.dwContextHelpID = dwContextHelpId;
-    return TRUE;
-  }
-  return FALSE;
+  MenuObject->MenuInfo.dwContextHelpID = dwContextHelpId;
+  return TRUE;
 }
 
 BOOL FASTCALL
@@ -336,25 +318,21 @@ IntGetMenuInfo(PMENU_OBJECT MenuObject, LPMENUINFO lpmi)
 BOOL FASTCALL
 IntSetMenuInfo(PMENU_OBJECT MenuObject, LPMENUINFO lpmi)
 {
-  if(MenuObject)
+  if(lpmi->fMask & MIM_BACKGROUND)
+    MenuObject->MenuInfo.hbrBack = lpmi->hbrBack;
+  if(lpmi->fMask & MIM_HELPID)
+    MenuObject->MenuInfo.dwContextHelpID = lpmi->dwContextHelpID;
+  if(lpmi->fMask & MIM_MAXHEIGHT)
+    MenuObject->MenuInfo.cyMax = lpmi->cyMax;
+  if(lpmi->fMask & MIM_MENUDATA)
+    MenuObject->MenuInfo.dwMenuData = lpmi->dwMenuData;
+  if(lpmi->fMask & MIM_STYLE)
+    MenuObject->MenuInfo.dwStyle = lpmi->dwStyle;
+  if(lpmi->fMask & MIM_APPLYTOSUBMENUS)
   {
-    if(lpmi->fMask & MIM_BACKGROUND)
-      MenuObject->MenuInfo.hbrBack = lpmi->hbrBack;
-    if(lpmi->fMask & MIM_HELPID)
-      MenuObject->MenuInfo.dwContextHelpID = lpmi->dwContextHelpID;
-    if(lpmi->fMask & MIM_MAXHEIGHT)
-      MenuObject->MenuInfo.cyMax = lpmi->cyMax;
-    if(lpmi->fMask & MIM_MENUDATA)
-      MenuObject->MenuInfo.dwMenuData = lpmi->dwMenuData;
-    if(lpmi->fMask & MIM_STYLE)
-      MenuObject->MenuInfo.dwStyle = lpmi->dwStyle;
-    if(lpmi->fMask & MIM_APPLYTOSUBMENUS)
-    {
-      /* FIXME */
-    }
-    return TRUE;
+    /* FIXME */
   }
-  return FALSE;
+  return TRUE;
 }
 
 
@@ -472,6 +450,49 @@ IntInsertMenuItemToList(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, int pos)
 }
 
 BOOL FASTCALL
+IntGetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, LPMENUITEMINFOW lpmii)
+{
+  if(!MenuItem || !MenuObject || !lpmii)
+  {
+    return FALSE;
+  }
+  
+  lpmii->cch = MenuItem->cch;
+  
+  if(lpmii->fMask & MIIM_BITMAP)
+  {
+    lpmii->hbmpItem = MenuItem->hbmpItem;
+  }
+  if(lpmii->fMask & MIIM_CHECKMARKS)
+  {
+    lpmii->hbmpChecked = MenuItem->hbmpChecked;
+    lpmii->hbmpUnchecked = MenuItem->hbmpUnchecked;
+  }
+  if(lpmii->fMask & MIIM_DATA)
+  {
+    lpmii->dwItemData = MenuItem->dwItemData;
+  }
+  if(lpmii->fMask & (MIIM_FTYPE | MIIM_TYPE))
+  {
+    lpmii->fType = MenuItem->fType;
+  }
+  if(lpmii->fMask & MIIM_ID)
+  {
+    lpmii->wID = MenuItem->wID;
+  }
+  if(lpmii->fMask & MIIM_STATE)
+  {
+    lpmii->fState = MenuItem->fState;
+  }
+  if(lpmii->fMask & MIIM_SUBMENU)
+  {
+    lpmii->hSubMenu = MenuItem->hSubMenu;
+  }
+  
+  return TRUE;
+}
+
+BOOL FASTCALL
 IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, LPCMENUITEMINFOW lpmii)
 {
   if(!MenuItem || !MenuObject || !lpmii)
@@ -515,8 +536,11 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, LPCMENUITEMINFO
   }
   if(lpmii->fMask & MIIM_STATE)
   {
+    /* remove MFS_DEFAULT flag from all other menu items if this item
+       has the MFS_DEFAULT state */
     if(lpmii->fState & MFS_DEFAULT)
       IntSetMenuDefaultItem(MenuObject, -1, 0);
+    /* update the menu item state flags */
     UpdateMenuItemState(MenuItem->fState, lpmii->fState);
   }
   
@@ -783,6 +807,7 @@ IntGetMenuDefaultItem(PMENU_OBJECT MenuObject, UINT fByPos, UINT gmdiFlags,
   while(MenuItem)
   {
     if(MenuItem->fState & MFS_DEFAULT)
+    {
 
       if(!(gmdiFlags & GMDI_USEDISABLED) && (MenuItem->fState & MFS_DISABLED))
         break;
@@ -791,7 +816,6 @@ IntGetMenuDefaultItem(PMENU_OBJECT MenuObject, UINT fByPos, UINT gmdiFlags,
         res = x;
       else
         res = MenuItem->wID;
-      break;
         
       if((*gismc < MAX_GOINTOSUBMENU) && (gmdiFlags & GMDI_GOINTOPOPUPS) && 
          MenuItem->hSubMenu)
@@ -814,9 +838,9 @@ IntGetMenuDefaultItem(PMENU_OBJECT MenuObject, UINT fByPos, UINT gmdiFlags,
         
         if(sres > -1)
           res = sres;
-        break;
       }
-
+      
+      break;
     }
     
     MenuItem = MenuItem->Next;
@@ -1229,7 +1253,7 @@ NtUserMenuItemFromPoint(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -1240,9 +1264,26 @@ NtUserMenuItemInfo(
  LPMENUITEMINFOW lpmii,
  BOOL fsog)
 {
-  UNIMPLEMENTED
+  BOOL res = FALSE;
+  PMENU_OBJECT MenuObject = IntGetMenuObject(hMenu);
+  if(!MenuObject)
+  {
+    SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
+    return FALSE;
+  }
 
-  return 0;
+  if(fsog)
+  {
+    /* Set menu item info */
+  }
+  else
+  {
+    /* Get menu item info */
+  }
+  
+  IntReleaseMenuObject(MenuObject);
+  
+  return res;
 }
 
 

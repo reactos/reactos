@@ -14,10 +14,6 @@
 #define MF_END             (0x0080)
 #endif
 
-#ifndef MIIM_STRING
-#define MIIM_STRING      (0x00000040)
-#endif
-
 typedef struct _MENU_ITEM
 {
   struct _MENU_ITEM *Next;
@@ -82,6 +78,9 @@ IntSetMenuInfo(PMENU_OBJECT MenuObject, LPMENUINFO lpmi);
 int FASTCALL
 IntGetMenuItemByFlag(PMENU_OBJECT MenuObject, UINT uSearchBy, UINT fFlag, 
                       PMENU_ITEM *MenuItem, PMENU_ITEM *PrevMenuItem);
+
+BOOL FASTCALL
+IntGetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, LPMENUITEMINFOW lpmii);
 
 BOOL FASTCALL
 IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, LPCMENUITEMINFOW lpmii);
