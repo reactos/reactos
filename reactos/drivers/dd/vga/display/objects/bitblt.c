@@ -28,19 +28,38 @@ BOOL GDItoVGA(
   alterx = abs(SourcePoint->x - DestRect->left);
   altery = abs(SourcePoint->y - DestRect->top);
 
-  for(j=SourcePoint->y; j<SourcePoint->y+dy; j++)
+  if(ColorTranslation == NULL)
   {
-    initial = GDIpos;
+DbgPrint("GDItoVGA: No color translation\n");
+    // No color translation necessary, we assume BPP = 1
 
-    for(i=SourcePoint->x; i<SourcePoint->x+dx; i++)
+    for(j=SourcePoint->y; j<SourcePoint->y+dy; j++)
     {
-      RtlCopyMemory(&RGBulong, GDIpos, BPP);
-      idxColor = XLATEOBJ_iXlate(ColorTranslation, RGBulong);
-      vgaPutPixel(i+alterx, j+altery, idxColor);
-      GDIpos+=BPP;
+      initial = GDIpos;
+
+      for(i=SourcePoint->x; i<SourcePoint->x+dx; i++)
+      {
+        vgaPutPixel(i+alterx, j+altery, *GDIpos);
+        GDIpos+=BPP;
+      }
+      GDIpos = initial + Source->lDelta;
     }
-    GDIpos = initial + Source->lDelta;
+  } else {
+    // Perform color translation
+    for(j=SourcePoint->y; j<SourcePoint->y+dy; j++)
+    {
+      initial = GDIpos;
+
+      for(i=SourcePoint->x; i<SourcePoint->x+dx; i++)
+      {
+        idxColor = XLATEOBJ_iXlate(ColorTranslation, *GDIpos);
+        vgaPutPixel(i+alterx, j+altery, idxColor);
+        GDIpos+=BPP;
+      }
+      GDIpos = initial + Source->lDelta;
+    }
   }
+DbgPrint("GDItoVGA: Done\n");
 }
 
 BOOL VGAtoGDI(
@@ -53,6 +72,9 @@ BOOL VGAtoGDI(
   // FIXME: Optimize to retrieve entire bytes at a time (see /display/vgavideo/vgavideo.c:vgaGetByte)
 
   BPP = bytesPerPixel(Dest->iBitmapFormat);
+
+DbgPrint("VGAtoGDI: BPP: %u\n", BPP);
+
   GDIpos = Dest->pvBits +
            (DestRect->top * Dest->lDelta) + (DestRect->left * BPP);
 
@@ -61,14 +83,14 @@ BOOL VGAtoGDI(
 
   if(ColorTranslation == NULL)
   {
+DbgPrint("VGAtoGDI: No color translation\n");
     // No color translation necessary, we assume BPP = 1
     for(j=SourcePoint->y; j<SourcePoint->y+dy; j++)
     {
        initial = GDIpos;
        for(i=SourcePoint->x; i<SourcePoint->x+dx; i++)
        {
-         idxColor = vgaGetPixel(i, j);
-         RtlCopyMemory(GDIpos, &idxColor, 1);
+         *GDIpos = vgaGetPixel(i, j);
          GDIpos++;
        }
        GDIpos = initial + Dest->lDelta;
@@ -80,14 +102,13 @@ BOOL VGAtoGDI(
        initial = GDIpos;
        for(i=SourcePoint->x; i<SourcePoint->x+dx; i++)
        {
-         idxColor = vgaGetPixel(i, j);
-         RGBulong = XLATEOBJ_iXlate(ColorTranslation, idxColor);
-         RtlCopyMemory(GDIpos, &RGBulong, BPP);
+         *GDIpos = XLATEOBJ_iXlate(ColorTranslation, vgaGetPixel(i, j));
          GDIpos+=BPP;
        }
        GDIpos = initial + Dest->lDelta;
     }
   }
+DbgPrint("VGAtoGDI: Done\n");
 }
 
 BOOL DFBtoVGA(
@@ -176,25 +197,31 @@ BOOL VGADDIBitBlt(SURFOBJ *Dest, SURFOBJ *Source, SURFOBJ *Mask,
 
    if((Source->iType == STYPE_BITMAP) && (Dest->iType == STYPE_DEVICE))
    {
+DbgPrint("GDI2VGA\n");
       BltOperation = GDItoVGA;
    } else
    if((Source->iType == STYPE_DEVICE) && (Dest->iType == STYPE_BITMAP))
    {
+DbgPrint("VGA2GDI\n");
       BltOperation = VGAtoGDI;
    } else
    if((Source->iType == STYPE_DEVICE) && (Dest->iType == STYPE_DEVICE))
    {
+DbgPrint("VGA2VGA\n");
       BltOperation = VGAtoVGA;
    } else
    if((Source->iType == STYPE_DEVBITMAP) && (Dest->iType == STYPE_DEVICE))
    {
+DbgPrint("DFB2VGA\n");
       BltOperation = DFBtoVGA;
    } else
    if((Source->iType == STYPE_DEVICE) && (Dest->iType == STYPE_DEVBITMAP))
    {
+DbgPrint("VGA2DFB\n");
       BltOperation = VGAtoDFB;
    } else
    {
+DbgPrint("VGA:bitblt.c: Can't handle requested BitBlt operation\n");
       // Cannot handle given surfaces for VGA BitBlt
       return FALSE;
    }

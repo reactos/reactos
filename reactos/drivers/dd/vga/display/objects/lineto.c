@@ -6,12 +6,18 @@
 BOOL VGADDILineTo(SURFOBJ *Surface, CLIPOBJ *Clip, BRUSHOBJ *Brush,
                   LONG x1, LONG y1, LONG x2, LONG y2,
                   RECTL *RectBounds, MIX mix)
+
+// FIXME: Use ClipObj and RectBounds to clip the line where required
+// FIXME: Use Mix to perform ROPs
+
 {
    ULONG x, y, d, i, length, xchange, ychange, error,
          iSolidColor, hx, vy;
    LONG  deltax, deltay;
 
    iSolidColor = Brush->iSolidColor; // FIXME: Brush Realization...
+DbgPrint("Drawing with color %08x ", iSolidColor);
+DbgPrint("%u.%u to %u.%u\n", x1, y1, x2, y2);
 
    // FIXME: Implement clipping
 

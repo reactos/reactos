@@ -1,9 +1,9 @@
 /*
  * entry.c
  *
- * $Revision: 1.5 $
+ * $Revision: 1.6 $
  * $Author: jfilby $
- * $Date: 2000/04/10 20:17:32 $
+ * $Date: 2000/06/16 07:28:19 $
  *
  */
 
@@ -101,6 +101,7 @@ DrvEnableDriver(IN ULONG  EngineVersion,
   EngDebugPrint("VGADDI", "DrvEnableDriver called...\n", 0);
 
   vgaPreCalc();
+
   // FIXME: Use Vidport to map the memory properly
   vidmem = (char *)(0xd0000000 + 0xa0000);
 

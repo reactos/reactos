@@ -331,3 +331,32 @@ BOOL VGADDIIntersectRect(PRECTL prcDst, PRECTL prcSrc1, PRECTL prcSrc2)
 
    return FALSE;
 }
+
+BOOL bltToVga(INT x1, INT y1, INT dx, INT dy, UCHAR *bitmap)
+{
+  // We use vertical stripes because we save some time by setting the mask less often
+  // Prototype code, to be implemented in bitblt.c
+
+  ULONG offset, i;
+  UCHAR a, *initial;
+
+  for(j=x; j<x+dx; j++)
+  {
+    offset = xconv[x]+y80[y];
+
+    WRITE_PORT_UCHAR((PUCHAR)0x3ce,0x08);       // set the mask
+    WRITE_PORT_UCHAR((PUCHAR)0x3cf,maskbit[x]);
+
+    initial = bitmap;
+    for(i=y; i<y+dy; i++)
+    {
+      a = READ_REGISTER_UCHAR(vidmem + offset);
+      WRITE_REGISTER_UCHAR(vidmem + offset, *bitmap);
+      offset+=80;
+      bitmap+=dx;
+    }
+    bitmap = initial + dx;
+  }
+
+  return TRUE;
+}
