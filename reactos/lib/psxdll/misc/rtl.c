@@ -1,4 +1,4 @@
-/* $Id: rtl.c,v 1.1 1999/09/12 21:54:16 ea Exp $
+/* $Id: rtl.c,v 1.2 1999/11/15 16:02:50 ekohl Exp $
  *
  * reactos/lib/psxdll/misc/rtl.c
  *
@@ -15,13 +15,13 @@
 WCHAR
 STDCALL
 RtlAnsiCharToUnicodeChar (
-	CHAR	AnsiChar
+	PCHAR   AnsiChar
 	)
 {
 	/* FIXME: it should probably call RtlMultiByteToUnicodeN
 	 * with length==1.
 	 */
-	return (WCHAR) AnsiChar;
+	return (WCHAR) *AnsiChar;
 }
 
 
@@ -57,31 +57,43 @@ RtlMoveMemory (
 }
 
 
-VOID
+NTSTATUS
 STDCALL
 RtlMultiByteToUnicodeN (
-	VOID
+	PWCHAR UnicodeString,
+	ULONG  UnicodeSize,
+	PULONG ResultSize,
+	PCHAR  MbString,
+	ULONG  MbSize
 	)
 {
+	return STATUS_NOT_IMPLEMENTED;
 }
 
 
-VOID
+NTSTATUS
 STDCALL
 RtlUnicodeToMultiByteN (
-	VOID
+	PCHAR  MbString,
+	ULONG  MbSize,
+	PULONG ResultSize,
+	PWCHAR UnicodeString,
+	ULONG  UnicodeSize
 	)
 {
+	return STATUS_NOT_IMPLEMENTED;
 }
 
 
-ULONG
+NTSTATUS
 STDCALL
 RtlUnicodeToMultiByteSize (
-	VOID
+	PULONG MbSize,
+	PWCHAR UnicodeString,
+	ULONG  UnicodeSize
 	)
 {
-	return 0;
+	return STATUS_NOT_IMPLEMENTED;
 }
 
 

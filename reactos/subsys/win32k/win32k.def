@@ -1,4 +1,4 @@
-; $Id: win32k.def,v 1.5 1999/10/23 22:40:49 rex Exp $
+; $Id: win32k.def,v 1.6 1999/11/15 16:02:00 ekohl Exp $
 ;
 ; win32k.def
 ;
@@ -155,15 +155,15 @@ PATHOBJ_vEnumStart
 PATHOBJ_vEnumStartClipLines
 PATHOBJ_vGetBounds
 ; RtlAnsiCharToUnicodeChar = NTOSKRNL.RtlAnsiCharToUnicodeChar
-RtlAnsiCharToUnicodeChar
+;RtlAnsiCharToUnicodeChar
 ; RtlMultiByteToUnicodeN = NTOSKRNL.RtlMultiByteToUnicodeN
-RtlMultiByteToUnicodeN
+;RtlMultiByteToUnicodeN
 ; RtlRaiseException = NTOSKRNL.RtlRaiseException
 RtlRaiseException
 ; RtlUnicodeToMultiByteN = NTOSKRNL.RtlUnicodeToMultiByteN
-RtlUnicodeToMultiByteN
+;RtlUnicodeToMultiByteN
 ; RtlUnicodeToMultiByteSize = NTOSKRNL.RtlUnicodeToMultiByteSize
-RtlUnicodeToMultiByteSize
+;RtlUnicodeToMultiByteSize
 ; RtlUnwind = NTOSKRNL.RtlUnwind
 RtlUnwind
 ; RtlUpcaseUnicodeChar = NTOSKRNL.RtlUpcaseUnicodeChar

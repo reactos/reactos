@@ -1,4 +1,4 @@
-; $Id: psxdll.edf,v 1.3 1999/10/26 19:47:06 ea Exp $
+; $Id: psxdll.edf,v 1.4 1999/11/15 16:02:36 ekohl Exp $
 ;
 ; psxdll.edf
 ;
@@ -14,9 +14,9 @@ ntdll.RtlSizeHeap@12
 ntdll.RtlAnsiCharToUnicodeChar@4
 ntdll.RtlFillMemory@12
 ntdll.RtlMoveMemory@12
-ntdll.RtlMultiByteToUnicodeN@0
-ntdll.RtlUnicodeToMultiByteN@0
-ntdll.RtlUnicodeToMultiByteSize@0
+ntdll.RtlMultiByteToUnicodeN@20
+ntdll.RtlUnicodeToMultiByteN@20
+ntdll.RtlUnicodeToMultiByteSize@12
 ntdll.RtlUnwind@0
 ntdll.RtlUpcaseUnicodeChar@0
 ntdll.RtlUpcaseUnicodeToMultiByteN@0
@@ -31,9 +31,9 @@ HeapSize=HeapSize@12
 RtlAnsiCharToUnicodeChar=RtlAnsiCharToUnicodeChar@4
 RtlFillMemory=RtlFillMemory@12
 RtlMoveMemory=RtlMoveMemory@12
-RtlMultiByteToUnicodeN=RtlMultiByteToUnicodeN@0
-RtlUnicodeToMultiByteN=RtlUnicodeToMultiByteN@0
-RtlUnicodeToMultiByteSize=RtlUnicodeToMultiByteSize@0
+RtlMultiByteToUnicodeN=RtlMultiByteToUnicodeN@20
+RtlUnicodeToMultiByteN=RtlUnicodeToMultiByteN@20
+RtlUnicodeToMultiByteSize=RtlUnicodeToMultiByteSize@12
 RtlUnwind=RtlUnwind@0
 RtlUpcaseUnicodeChar=RtlUpcaseUnicodeChar@0
 RtlUpcaseUnicodeToMultiByteN=RtlUpcaseUnicodeToMultiByteN@0

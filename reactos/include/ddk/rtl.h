@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.16 1999/10/31 22:44:39 ea Exp $
+/* $Id: rtl.h,v 1.17 1999/11/15 15:55:00 ekohl Exp $
  * 
  */
 
@@ -16,7 +16,7 @@ typedef struct _CONTROLLER_OBJECT
    ULONG Spare1;
    LARGE_INTEGER Spare2;
 } CONTROLLER_OBJECT, *PCONTROLLER_OBJECT;
-   
+
 typedef struct _STRING
 {
    USHORT Length;
@@ -53,6 +53,12 @@ typedef struct _TIME_FIELDS
    CSHORT Milliseconds;
    CSHORT Weekday;
 } TIME_FIELDS, *PTIME_FIELDS;
+
+typedef struct _RTL_BITMAP
+{
+   ULONG  SizeOfBitMap;
+   PULONG Buffer;
+} RTL_BITMAP, *PRTL_BITMAP;
 
 /*
  * PURPOSE: Flags for RtlQueryRegistryValues
@@ -101,6 +107,19 @@ enum
    RTL_REGISTRY_OPTIONAL,
    RTL_REGISTRY_VALUE,
 };
+
+
+#if defined(__NTOSKRNL__) || defined(__NTDLL__)
+#define NLS_MB_CODE_PAGE_TAG     NlsMbCodePageTag
+#define NLS_MB_OEM_CODE_PAGE_TAG NlsMbOemCodePageTag
+#else
+#define NLS_MB_CODE_PAGE_TAG     (*NlsMbCodePageTag)
+#define NLS_MB_OEM_CODE_PAGE_TAG (*NlsMbOemCodePageTag)
+#endif /* __NTOSKRNL__ || __NTDLL__ */
+
+extern BOOLEAN NLS_MB_CODE_PAGE_TAG;
+extern BOOLEAN NLS_MB_OEM_CODE_PAGE_TAG;
+
 
 /*
  * FUNCTION: Sets up a parameter of type OBJECT_ATTRIBUTES for a 
@@ -170,12 +189,20 @@ RemoveTailList (
 	PLIST_ENTRY	ListHead
 	);
 
+WCHAR
+STDCALL
+RtlAnsiCharToUnicodeChar (
+	PCHAR	AnsiChar
+	);
+
 ULONG
+STDCALL
 RtlAnsiStringToUnicodeSize (
 	PANSI_STRING	AnsiString
 	);
 
 NTSTATUS
+STDCALL
 RtlAnsiStringToUnicodeString (
 	PUNICODE_STRING	DestinationString,
 	PANSI_STRING	SourceString,
@@ -183,18 +210,35 @@ RtlAnsiStringToUnicodeString (
 	);
 
 NTSTATUS
+STDCALL
+RtlAppendAsciizToString(
+	PSTRING	Destination,
+	PCSZ	Source
+	);
+
+NTSTATUS
+STDCALL
+RtlAppendStringToString(
+	PSTRING	Destination,
+	PSTRING	Source
+	);
+
+NTSTATUS
+STDCALL
 RtlAppendUnicodeStringToString (
 	PUNICODE_STRING	Destination,
 	PUNICODE_STRING	Source
 	);
 
 NTSTATUS
+STDCALL
 RtlAppendUnicodeToString (
 	PUNICODE_STRING	Destination,
 	PWSTR		Source
 	);
 
 NTSTATUS
+STDCALL
 RtlCharToInteger (
 	PCSZ	String,
 	ULONG	Base,
@@ -209,6 +253,7 @@ RtlCheckRegistryKey (
 	);
 
 ULONG
+STDCALL
 RtlCompareMemory (
 	PVOID	Source1,
 	PVOID	Source2,
@@ -216,13 +261,15 @@ RtlCompareMemory (
 	);
 
 LONG
+STDCALL
 RtlCompareString (
 	PSTRING	String1,
-	PSTRING	String2, 
+	PSTRING	String2,
 	BOOLEAN	CaseInsensitive
 	);
 
 LONG
+STDCALL
 RtlCompareUnicodeString (
 	PUNICODE_STRING	String1,
 	PUNICODE_STRING	String2,
@@ -254,12 +301,14 @@ RtlCopyMemory (
 	);
 
 VOID
+STDCALL
 RtlCopyString (
 	PSTRING	DestinationString,
 	PSTRING	SourceString
 	);
 
 VOID
+STDCALL
 RtlCopyUnicodeString (
 	PUNICODE_STRING	DestinationString,
 	PUNICODE_STRING	SourceString
@@ -276,6 +325,13 @@ NTSTATUS
 RtlCreateSecurityDescriptor (
 	PSECURITY_DESCRIPTOR	SecurityDescriptor,
 	ULONG			Revision
+	);
+
+BOOLEAN
+STDCALL
+RtlCreateUnicodeString (
+	PUNICODE_STRING	Destination,
+	PWSTR		Source
 	);
 
 NTSTATUS
@@ -306,6 +362,7 @@ RtlEnlargedUnsignedMultiply (
 	);
 
 BOOLEAN
+STDCALL
 RtlEqualString (
 	PSTRING	String1,
 	PSTRING	String2,
@@ -313,6 +370,7 @@ RtlEqualString (
 	);
 
 BOOLEAN
+STDCALL
 RtlEqualUnicodeString (
 	PUNICODE_STRING	String1,
 	PUNICODE_STRING	String2,
@@ -348,34 +406,61 @@ RtlFillMemory (
 	);
 
 VOID
+STDCALL
+RtlFillMemoryUlong (
+	PVOID	Destination,
+	ULONG	Length,
+	ULONG	Fill
+	);
+
+VOID
+STDCALL
 RtlFreeAnsiString (
 	PANSI_STRING	AnsiString
 	);
 
 VOID
+STDCALL
+RtlFreeOemString (
+	PSTRING	OemString
+	);
+
+VOID
+STDCALL
 RtlFreeUnicodeString (
 	PUNICODE_STRING	UnicodeString
 	);
 
 VOID
+STDCALL
+RtlGetDefaultCodePage (
+	PUSHORT AnsiCodePage,
+	PUSHORT OemCodePage
+	);
+
+VOID
+STDCALL
 RtlInitAnsiString (
 	PANSI_STRING	DestinationString,
 	PCSZ		SourceString
 	);
 
 VOID
+STDCALL
 RtlInitString (
 	PSTRING	DestinationString,
 	PCSZ	SourceString
 	);
 
 VOID
+STDCALL
 RtlInitUnicodeString (
 	PUNICODE_STRING	DestinationString,
 	PCWSTR		SourceString
 	);
 
 NTSTATUS
+STDCALL
 RtlIntegerToUnicodeString (
 	ULONG		Value,
 	ULONG		Base,
@@ -396,16 +481,6 @@ RtlLargeIntegerAnd (
 	);
 
 /* MISSING FUNCTIONS GO HERE */
-
-LARGE_INTEGER
-RtlConvertLongToLargeInteger (
-	LONG	SignedInteger
-	);
-
-LARGE_INTEGER
-RtlConvertUlongToLargeInteger (
-	ULONG	UnsignedInteger
-	);
 
 LARGE_INTEGER
 RtlEnlargedIntegerMultiply (
@@ -583,9 +658,51 @@ RtlMoveMemory (
 
 NTSTATUS
 STDCALL
+RtlMultiByteToUnicodeN (
+	PWCHAR UnicodeString,
+	ULONG  UnicodeSize,
+	PULONG ResultSize,
+	PCHAR  MbString,
+	ULONG  MbSize
+	);
+
+NTSTATUS
+STDCALL
+RtlMultiByteToUnicodeSize (
+	PULONG UnicodeSize,
+	PCHAR  MbString,
+	ULONG  MbSize
+	);
+
+ULONG
+STDCALL
+RtlOemStringToUnicodeSize (
+	PANSI_STRING	AnsiString
+	);
+
+NTSTATUS
+STDCALL
+RtlOemStringToUnicodeString (
+	PUNICODE_STRING	DestinationString,
+	PANSI_STRING	SourceString,
+	BOOLEAN		AllocateDestinationString
+	);
+
+NTSTATUS
+STDCALL
+RtlOemToUnicodeN (
+	PWCHAR UnicodeString,
+	ULONG  UnicodeSize,
+	PULONG ResultSize,
+	PCHAR  OemString,
+	ULONG  OemSize
+	);
+
+NTSTATUS
+STDCALL
 RtlQueryRegistryValues (
 	ULONG				RelativeTo,
-	PWSTR				Path, 
+	PWSTR				Path,
 	PRTL_QUERY_REGISTRY_TABLE	QueryTable,
 	PVOID				Context,
 	PVOID				Environment
@@ -664,10 +781,10 @@ typedef struct {
 HANDLE
 STDCALL
 RtlCreateHeap (
-	ULONG			Flags, 
-	PVOID			BaseAddress, 
-	ULONG			SizeToReserve, 
-	ULONG			SizeToCommit, 
+	ULONG			Flags,
+	PVOID			BaseAddress,
+	ULONG			SizeToReserve,
+	ULONG			SizeToCommit,
 	PVOID			Unknown,
 	PRTL_HEAP_DEFINITION	Definition
 	);
@@ -675,8 +792,8 @@ RtlCreateHeap (
 PVOID
 STDCALL
 RtlAllocateHeap (
-	HANDLE	Heap, 
-	ULONG	Flags, 
+	HANDLE	Heap,
+	ULONG	Flags,
 	ULONG	Size
 	);
 
@@ -684,12 +801,19 @@ RtlAllocateHeap (
 BOOLEAN
 STDCALL
 RtlFreeHeap (
-	HANDLE	Heap, 
-	ULONG	Flags, 
+	HANDLE	Heap,
+	ULONG	Flags,
 	PVOID	Address
 	);
 
+ULONG
+STDCALL
+RtlUnicodeStringToAnsiSize (
+	IN	PUNICODE_STRING	UnicodeString
+	);
+
 NTSTATUS
+STDCALL
 RtlUnicodeStringToAnsiString (
 	IN OUT	PANSI_STRING	DestinationString,
 	IN	PUNICODE_STRING	SourceString,
@@ -697,20 +821,65 @@ RtlUnicodeStringToAnsiString (
 	);
 
 NTSTATUS
+STDCALL
 RtlUnicodeStringToInteger (
 	IN	PUNICODE_STRING	String,
 	IN	ULONG		Base,
 	OUT	PULONG		Value
 	);
 
+ULONG
+STDCALL
+RtlUnicodeStringToOemSize (
+	IN	PUNICODE_STRING	UnicodeString
+	);
+
 NTSTATUS
-RtlUpcaseUnicodeString (
-	IN OUT	PUNICODE_STRING	DestinationString,
+STDCALL
+RtlUnicodeStringToOemString (
+	IN OUT	PANSI_STRING	DestinationString,
 	IN	PUNICODE_STRING	SourceString,
 	IN	BOOLEAN		AllocateDestinationString
 	);
 
+NTSTATUS
+STDCALL
+RtlUnicodeToMultiByteN (
+	PCHAR  MbString,
+	ULONG  MbSize,
+	PULONG ResultSize,
+	PWCHAR UnicodeString,
+	ULONG  UnicodeSize
+	);
+
+NTSTATUS
+STDCALL
+RtlUnicodeToMultiByteSize (
+	PULONG MbSize,
+	PWCHAR UnicodeString,
+	ULONG UnicodeSize
+	);
+
+NTSTATUS
+STDCALL
+RtlUnicodeToOemN (
+	PCHAR  OemString,
+	ULONG  OemSize,
+	PULONG ResultSize,
+	PWCHAR UnicodeString,
+	ULONG  UnicodeSize
+	);
+
+NTSTATUS
+STDCALL
+RtlUpcaseUnicodeString (
+	PUNICODE_STRING	DestinationString,
+	PUNICODE_STRING	SourceString,
+	BOOLEAN		AllocateDestinationString
+	);
+
 VOID
+STDCALL
 RtlUpperString (
 	PSTRING	DestinationString,
 	PSTRING	SourceString
@@ -846,9 +1015,6 @@ RtlCreateUserProcess(PUNICODE_STRING ApplicationName,
                      PSECURITY_DESCRIPTOR ThreadSd,
                      WINBOOL bInheritHandles,
                      DWORD dwCreationFlags,
-//                     LPVOID lpEnvironment,
-//                     LPCWSTR lpCurrentDirectory,
-//                     LPSTARTUPINFO lpStartupInfo,
                      PCLIENT_ID ClientId,
                      PHANDLE ProcessHandle,
                      PHANDLE ThreadHandle);

@@ -1,4 +1,4 @@
-; $Id: psxdll.def,v 1.4 1999/10/26 19:47:06 ea Exp $
+; $Id: psxdll.def,v 1.5 1999/11/15 16:02:36 ekohl Exp $
 ;
 ; psxdll.def
 ;
@@ -14,9 +14,9 @@ ntdll.RtlSizeHeap@12
 ntdll.RtlAnsiCharToUnicodeChar@4
 ntdll.RtlFillMemory@12
 ntdll.RtlMoveMemory@12
-ntdll.RtlMultiByteToUnicodeN@0
-ntdll.RtlUnicodeToMultiByteN@0
-ntdll.RtlUnicodeToMultiByteSize@0
+ntdll.RtlMultiByteToUnicodeN@20
+ntdll.RtlUnicodeToMultiByteN@20
+ntdll.RtlUnicodeToMultiByteSize@12
 ntdll.RtlUnwind@0
 ntdll.RtlUpcaseUnicodeChar@0
 ntdll.RtlUpcaseUnicodeToMultiByteN@0
@@ -31,9 +31,9 @@ HeapSize@12
 RtlAnsiCharToUnicodeChar@4
 RtlFillMemory@12
 RtlMoveMemory@12
-RtlMultiByteToUnicodeN@0
-RtlUnicodeToMultiByteN@0
-RtlUnicodeToMultiByteSize@0
+RtlMultiByteToUnicodeN@20
+RtlUnicodeToMultiByteN@20
+RtlUnicodeToMultiByteSize@12
 RtlUnwind@0
 RtlUpcaseUnicodeChar@0
 RtlUpcaseUnicodeToMultiByteN@0

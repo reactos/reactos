@@ -1,8 +1,8 @@
-/* $Id: unicode.c,v 1.7 1999/09/12 21:58:32 ea Exp $
+/* $Id: unicode.c,v 1.8 1999/11/15 15:58:24 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/rtl/unicode.c
+ * FILE:            lib/ntdll/rtl/unicode.c
  * PURPOSE:         String functions
  * PROGRAMMER:      Jason Filby (jasonfilby@yahoo.com)
  * UPDATE HISTORY:
@@ -10,232 +10,331 @@
  */
 
 #include <ddk/ntddk.h>
-#include <stdio.h>
-#include <string.h>
 #include <ctype.h>
+
+//#include <internal/nls.h>
+
 
 #define NDEBUG
 #include <internal/debug.h>
 
-#define Aa_Difference ('A'-'a')
 
-extern unsigned long simple_strtoul(const char *cp,
-				    char **endp,
+extern unsigned long simple_strtoul(const char *cp, char **endp,
 				    unsigned int base);
 
-WCHAR wtoupper(WCHAR c)
+
+/* FUNCTIONS *****************************************************************/
+
+WCHAR
+STDCALL
+RtlAnsiCharToUnicodeChar(PCHAR AnsiChar)
 {
-        if((c>='a') && (c<='z')) return c+Aa_Difference;
-        return c;
+        ULONG Size;
+        WCHAR UnicodeChar;
+
+        Size = 1;
+#if 0
+        Size = (NlsLeadByteInfo[*AnsiChar] == 0) ? 1 : 2;
+#endif
+
+        RtlMultiByteToUnicodeN (&UnicodeChar,
+                                sizeof(WCHAR),
+                                NULL,
+                                AnsiChar,
+                                Size);
+
+        return UnicodeChar;
 }
 
-WCHAR wtolower(WCHAR c)
+
+ULONG
+STDCALL
+RtlAnsiStringToUnicodeSize(IN PANSI_STRING AnsiString)
 {
-//   DPRINT("c %c (c-Aa_Difference) %c\n",(char)c,(char)(c-Aa_Difference));
-        if((c>='A') && (c<='Z')) return c-Aa_Difference;
-        return c;
+        ULONG Size;
+
+        RtlMultiByteToUnicodeSize (&Size,
+                                   AnsiString->Buffer,
+                                   AnsiString->Length);
+
+        return Size;
 }
 
-ULONG RtlAnsiStringToUnicodeSize(IN PANSI_STRING AnsiString)
+
+NTSTATUS
+STDCALL
+RtlAnsiStringToUnicodeString(
+        IN OUT PUNICODE_STRING DestinationString,
+        IN PANSI_STRING SourceString,
+        IN BOOLEAN AllocateDestinationString)
 {
-        return AnsiString->Length*2;
+        NTSTATUS Status;
+        ULONG Length;
+
+        if (NlsMbCodePageTag == TRUE)
+                Length = RtlAnsiStringToUnicodeSize (SourceString);
+        else
+                Length = SourceString->Length * sizeof(WCHAR);
+
+        if (Length > 65535)
+                return STATUS_INVALID_PARAMETER_2;
+
+        DestinationString->Length = Length;
+
+        if (AllocateDestinationString == TRUE)
+        {
+                DestinationString->MaximumLength = Length + sizeof(WCHAR);
+                DestinationString->Buffer =
+                        RtlAllocateHeap (RtlGetProcessHeap (),
+                                         0,
+                                         DestinationString->MaximumLength);
+                if (DestinationString->Buffer == NULL)
+                        return STATUS_NO_MEMORY;
+        }
+        else
+        {
+                if (Length > DestinationString->Length)
+                        return STATUS_BUFFER_OVERFLOW;
+        }
+
+        RtlZeroMemory (DestinationString->Buffer,
+                       DestinationString->Length);
+
+        Status = RtlMultiByteToUnicodeN (DestinationString->Buffer,
+                                         DestinationString->Length,
+                                         NULL,
+                                         SourceString->Buffer,
+                                         SourceString->Length);
+        if (!NT_SUCCESS(Status))
+        {
+                if (AllocateDestinationString)
+                        RtlFreeHeap (RtlGetProcessHeap (),
+                                     0,
+                                     DestinationString->Buffer);
+                return Status;
+        }
+
+        DestinationString->Buffer[Length / sizeof(WCHAR)] = 0;
+
+        return STATUS_SUCCESS;
 }
 
-NTSTATUS RtlAnsiStringToUnicodeString(IN OUT PUNICODE_STRING DestinationString,
-				      IN PANSI_STRING SourceString, 
-				      IN BOOLEAN AllocateDestinationString)
-{
-   unsigned long i;
 
-   if (AllocateDestinationString == TRUE)
-     {
-	DestinationString->Buffer=RtlAllocateHeap(RtlGetProcessHeap(), 
-						  0, 
-						  (SourceString->Length+1)*2);
-	DestinationString->MaximumLength=SourceString->Length;
-     }
-
-   DestinationString->Length=SourceString->Length;
-   memset(DestinationString->Buffer, 0, SourceString->Length*2);
-   
-   for (i=0; i<SourceString->Length; i++)
-     {
-	*DestinationString->Buffer=*SourceString->Buffer;
-	
-	SourceString->Buffer++;
-	DestinationString->Buffer++;
-     }
-   *DestinationString->Buffer=0;
-   
-   SourceString->Buffer-=SourceString->Length;
-   DestinationString->Buffer-=SourceString->Length;
-   
-   return STATUS_SUCCESS;
-}
-
-NTSTATUS RtlAppendUnicodeStringToString(IN OUT PUNICODE_STRING Destination,
+NTSTATUS
+STDCALL
+RtlAppendUnicodeStringToString(IN OUT PUNICODE_STRING Destination,
         IN PUNICODE_STRING Source)
 {
-        unsigned long i;
+        PWCHAR Src;
+        PWCHAR Dest;
+        ULONG  i;
 
-        if(Destination->MaximumLength-Destination->Length-Source->Length<0)
+        if ((Source->Length + Destination->Length) >= Destination->MaximumLength)
                 return STATUS_BUFFER_TOO_SMALL;
 
-        Destination->Buffer+=Destination->Length;
-        for(i=0; i<Source->Length; i++) {
-                *Destination->Buffer=*Source->Buffer;
-                Destination->Buffer++;
-                Source->Buffer++;
-        };
-        *Destination->Buffer=0;
-        Destination->Buffer-=(Destination->Length+Source->Length);
-        Source->Buffer-=Source->Length;
+        Src  = Source->Buffer;
+        Dest = Destination->Buffer + (Destination->Length / sizeof (WCHAR));
+        for (i = 0; i < (Source->Length / sizeof(WCHAR)); i++)
+        {
+                *Dest = *Src;
+                Dest++;
+                Src++;
+        }
+        *Dest = 0;
 
-        Destination->Length+=Source->Length;
+        Destination->Length += Source->Length;
+
         return STATUS_SUCCESS;
-};
+}
 
-NTSTATUS RtlAppendUnicodeToString(IN OUT PUNICODE_STRING Destination,
+NTSTATUS
+STDCALL
+RtlAppendUnicodeToString(IN OUT PUNICODE_STRING Destination,
         IN PWSTR Source)
 {
-        unsigned long i, slen=wcslen(Source);
+        PWCHAR Src;
+        PWCHAR Dest;
+        ULONG  i;
+        ULONG  slen;
 
-        if(Destination->MaximumLength-Destination->Length-slen<0)
+        slen = wcslen (Source);
+
+        if (Destination->Length + slen >= Destination->MaximumLength)
                 return STATUS_BUFFER_TOO_SMALL;
 
-        Destination->Buffer+=Destination->Length;
-        for(i=0; i<slen; i++) {
-                *Destination->Buffer=*Source;
-                Destination->Buffer++;
-                Source++;
+        Src = Source;
+        Dest = Destination->Buffer + (Destination->Length / sizeof (WCHAR));
+
+        for (i = 0; i < slen; i++)
+        {
+                *Dest = *Src;
+                Dest++;
+                Src++;
         };
-        *Destination->Buffer=0;
-        Destination->Buffer-=(Destination->Length+slen);
-        Source-=slen;
+        *Dest = 0;
 
-        Destination->Length+=slen;
+        Destination->Length += (slen * sizeof(WCHAR));
+
         return STATUS_SUCCESS;
-};
+}
 
-NTSTATUS RtlCharToInteger(IN PCSZ String, IN ULONG Base, IN OUT PULONG Value)
+NTSTATUS
+STDCALL
+RtlCharToInteger(IN PCSZ String, IN ULONG Base, IN OUT PULONG Value)
 {
-   *Value = simple_strtoul((const char *)String, NULL, Base);
+   *Value=simple_strtoul((const char *)String, NULL, Base);
    return(STATUS_SUCCESS);
 }
 
-LONG RtlCompareString(PSTRING String1, PSTRING String2, BOOLEAN CaseInsensitive)
+LONG
+STDCALL
+RtlCompareString(PSTRING String1,
+                 PSTRING String2,
+                 BOOLEAN CaseInsensitive)
 {
         unsigned long i;
         char c1, c2;
 
-        if(String1->Length!=String2->Length) return String1->Length-String2->Length;
+        if (String1->Length!=String2->Length)
+                return String1->Length-String2->Length;
 
-        for(i=0; i<String1->Length; i++) {
-                if(CaseInsensitive==TRUE) {
+        for (i=0; i<String1->Length; i++)
+        {
+                if(CaseInsensitive==TRUE)
+                {
                         c1=toupper(*String1->Buffer);
                         c2=toupper(*String2->Buffer);
-                } else {
+                }
+                else
+                {
                         c1=*String1->Buffer;
                         c2=*String2->Buffer;
-                };
-                if(c1!=c2) {
+                }
+
+                if(c1!=c2)
+                {
                         String1->Buffer-=i;
                         String2->Buffer-=i;
                         return c1-c2;
-                };
+                }
                 String1->Buffer++;
                 String2->Buffer++;
-        };
+        }
         String1->Buffer-=i;
         String2->Buffer-=i;
 
         return 0;
-};
+}
 
-LONG RtlCompareUnicodeString(PUNICODE_STRING String1, PUNICODE_STRING String2,
-                             BOOLEAN CaseInsensitive)
+LONG
+STDCALL
+RtlCompareUnicodeString(PUNICODE_STRING String1,
+        PUNICODE_STRING String2,
+        BOOLEAN CaseInsensitive)
 {
         unsigned long i;
         WCHAR wc1, wc2;
+        PWCHAR pw1, pw2;
 
-        if(String1->Length!=String2->Length) return
-                String1->Length-String2->Length;
+        if (String1->Length != String2->Length)
+                return String1->Length-String2->Length;
 
-        for(i=0; i<String1->Length; i++) {
-                if(CaseInsensitive==TRUE) {
-                        wc1=wtoupper(*String1->Buffer);
-                        wc2=wtoupper(*String2->Buffer);
-                } else {
-                        wc1=*String1->Buffer;
-                        wc2=*String2->Buffer;
-                };
+        pw1 = String1->Buffer;
+        pw2 = String2->Buffer;
 
-                if(wc1!=wc2) {
-                        String1->Buffer-=i;
-                        String2->Buffer-=i;
-                        return wc1-wc2;
-                };
+        for(i = 0; i < (String1->Length / sizeof(WCHAR)); i++)
+        {
+                if(CaseInsensitive == TRUE)
+                {
+                        wc1 = towupper (*pw1);
+                        wc2 = towupper (*pw2);
+                }
+                else
+                {
+                        wc1 = *pw1;
+                        wc2 = *pw2;
+                }
 
-                String1->Buffer++;
-                String2->Buffer++;
-        };
+                if (wc1 != wc2)
+                {
+                        return wc1 - wc2;
+                }
 
-        String1->Buffer-=i;
-        String2->Buffer-=i;
+                pw1++;
+                pw2++;
+        }
 
         return 0;
-};
+}
 
-VOID RtlCopyString(IN OUT PSTRING DestinationString, IN PSTRING SourceString)
+VOID
+STDCALL
+RtlCopyString(IN OUT PSTRING DestinationString, IN PSTRING SourceString)
 {
         unsigned long copylen, i;
 
-        if(SourceString==NULL) {
+        if(SourceString==NULL)
+        {
                  DestinationString->Length=0;
-        } else {
-                 if(SourceString->Length<DestinationString->MaximumLength) {
+        }
+        else
+        {
+                 if(SourceString->Length<DestinationString->MaximumLength)
+                 {
                          copylen=SourceString->Length;
-                 } else {
+                 }
+                 else
+                 {
                          copylen=DestinationString->MaximumLength;
-                 };
+                 }
+
                  for(i=0; i<copylen; i++)
                  {
                          *DestinationString->Buffer=*SourceString->Buffer;
                          DestinationString->Buffer++;
                          SourceString->Buffer++;
-                 };
+                 }
+
                  *DestinationString->Buffer=0;
                  DestinationString->Buffer-=copylen;
                  SourceString->Buffer-=copylen;
-        };
-};
+        }
+}
 
-VOID RtlCopyUnicodeString(IN OUT PUNICODE_STRING DestinationString,
-                          IN PUNICODE_STRING SourceString)
+VOID
+STDCALL
+RtlCopyUnicodeString(IN OUT PUNICODE_STRING DestinationString,
+                     IN PUNICODE_STRING SourceString)
 {
         unsigned long copylen, i;
+        PWCHAR Src, Dest;
+   
+        if(SourceString==NULL) 
+        {
+                DestinationString->Length=0;
+        } 
+        else 
+        {
+                copylen = min(DestinationString->MaximumLength - sizeof(WCHAR),
+                              SourceString->Length);
+                Src = SourceString->Buffer;
+                Dest = DestinationString->Buffer;
 
-        if(SourceString==NULL) {
-                 DestinationString->Length=0;
-        } else {
-                 if(SourceString->Length<DestinationString->MaximumLength) {
-                         copylen=SourceString->Length;
-                 } else {
-                         copylen=DestinationString->MaximumLength;
-                 };
-                 for(i=0; i<copylen; i++)
-                 {
-                         *DestinationString->Buffer=*SourceString->Buffer;
-                         DestinationString->Buffer++;
-                         SourceString->Buffer++;
-                 };
-                 *DestinationString->Buffer=0;
-                 DestinationString->Buffer-=copylen;
-                 SourceString->Buffer-=copylen;
-        };
-};
+                for (i = 0; i < (copylen / sizeof (WCHAR)); i++)
+                {
+                        *Dest = *Src;
+                        Dest++;
+                        Src++;
+                }
+                *Dest = 0;
 
-BOOLEAN RtlEqualString(PSTRING String1, PSTRING String2, BOOLEAN CaseInsensitive)
+                DestinationString->Length = copylen;
+        }
+}
+
+BOOLEAN
+STDCALL
+RtlEqualString(PSTRING String1, PSTRING String2, BOOLEAN CaseInsensitive)
 {
         unsigned long s1l=String1->Length;
         unsigned long s2l=String2->Length;
@@ -267,123 +366,151 @@ BOOLEAN RtlEqualString(PSTRING String1, PSTRING String2, BOOLEAN CaseInsensitive
         String2->Buffer-=i;
 
         return TRUE;
-};
+}
 
-BOOLEAN RtlEqualUnicodeString(PUNICODE_STRING String1, PUNICODE_STRING String2,
-                              BOOLEAN CaseInsensitive)
+BOOLEAN
+STDCALL
+RtlEqualUnicodeString(PUNICODE_STRING String1,
+                      PUNICODE_STRING String2,
+                      BOOLEAN CaseInsensitive)
 {
-        unsigned long s1l=String1->Length;
-        unsigned long s2l=String2->Length;
+        unsigned long s1l = String1->Length / sizeof(WCHAR);
+        unsigned long s2l = String2->Length / sizeof(WCHAR);
         unsigned long i;
-        char wc1, wc2;
+        WCHAR wc1, wc2;
+        PWCHAR pw1, pw2;
 
-        if(s1l!=s2l) return FALSE;
+        if (s1l != s2l)
+                return FALSE;
 
-        for(i=0; i<s1l; i++) {
-                if(CaseInsensitive==TRUE) {
-                        wc1=wtoupper(*String1->Buffer);
-                        wc2=wtoupper(*String2->Buffer);
-                } else {
-                        wc1=*String1->Buffer;
-                        wc2=*String2->Buffer;
-                };
+        pw1 = String1->Buffer;
+        pw2 = String2->Buffer;
 
-                if(wc1!=wc2) {
-                        String1->Buffer-=i;
-                        String2->Buffer-=i;
+        for (i = 0; i < s1l; i++)
+        {
+                if(CaseInsensitive == TRUE)
+                {
+                        wc1 = towupper (*pw1);
+                        wc2 = towupper (*pw2);
+                }
+                else
+                {
+                        wc1 = *pw1;
+                        wc2 = *pw2;
+                }
+
+                if (wc1 != wc2)
                         return FALSE;
-                };
 
-                String1->Buffer++;
-                String2->Buffer++;
-        };
-
-        String1->Buffer-=i;
-        String2->Buffer-=i;
+                pw1++;
+                pw2++;
+        }
 
         return TRUE;
-};
-
+}
 
 VOID
+STDCALL
 RtlFreeAnsiString(IN PANSI_STRING AnsiString)
 {
-	if (NULL == AnsiString) return;
-//        ExFreePool(AnsiString->Buffer);
-};
-
+        RtlFreeHeap (RtlGetProcessHeap (),
+                     0,
+                     AnsiString->Buffer);
+}
 
 VOID
-RtlFreeUnicodeString (
-	IN	PUNICODE_STRING	UnicodeString
-	)
+STDCALL
+RtlFreeUnicodeString(IN PUNICODE_STRING UnicodeString)
 {
-	if (NULL == UnicodeString) return;
-//        ExFreePool(UnicodeString->Buffer);
+        RtlFreeHeap (RtlGetProcessHeap (),
+                     0,
+                     UnicodeString->Buffer);
+}
+
+VOID
+STDCALL
+RtlInitAnsiString(IN OUT PANSI_STRING DestinationString,
+                  IN PCSZ SourceString)
+{
+        unsigned long DestSize;
+
+        if(SourceString==NULL) {
+                DestinationString->Length=0;
+                DestinationString->MaximumLength=0;
+        } else {
+                DestSize=strlen((const char *)SourceString);
+                DestinationString->Length=DestSize;
+                DestinationString->MaximumLength=DestSize+1;
+        };
+        DestinationString->Buffer=(PCHAR)SourceString;
 };
 
-VOID RtlInitAnsiString(IN OUT PANSI_STRING DestinationString,
-                       IN PCSZ SourceString)
+VOID
+STDCALL
+RtlInitString(IN OUT PSTRING DestinationString,
+              IN PCSZ SourceString)
 {
-   unsigned long DestSize;
-   
-   if(SourceString==NULL) 
-     {
-	DestinationString->Length=0;
-	DestinationString->MaximumLength=0;
-     } 
-   else 
-     {
-	DestSize=strlen((const char *)SourceString);
-	DestinationString->Length=DestSize;
-	DestinationString->MaximumLength=DestSize+1;
-     }
-   DestinationString->Buffer=(PCHAR)SourceString;
+        ULONG DestSize;
+
+        if (SourceString == NULL)
+        {
+                DestinationString->Length = 0;
+                DestinationString->MaximumLength = 0;
+                DestinationString->Buffer = NULL;
+        }
+        else
+        {
+                DestSize = strlen((const char *)SourceString);
+                DestinationString->Length = DestSize;
+                DestinationString->MaximumLength = DestSize + sizeof(CHAR);
+                DestinationString->Buffer = (PCHAR)SourceString;
+        }
 }
 
-VOID RtlInitString(IN OUT PSTRING DestinationString,
-                   IN PCSZ SourceString)
+VOID
+STDCALL
+RtlInitUnicodeString(IN OUT PUNICODE_STRING DestinationString,
+                     IN PCWSTR SourceString)
 {
-        DestinationString->Length=strlen((char *)SourceString);
-        DestinationString->MaximumLength=strlen((char *)SourceString)+1;
-        DestinationString->Buffer=SourceString;
+        ULONG DestSize;
+
+        if (SourceString==NULL)
+        {
+                DestinationString->Length=0;
+                DestinationString->MaximumLength=0;
+                DestinationString->Buffer = NULL;
+        }
+        else
+        {
+                DestSize = wcslen((PWSTR)SourceString) * sizeof(WCHAR);
+                DestinationString->Length = DestSize;
+                DestinationString->MaximumLength = DestSize + sizeof(WCHAR);
+                DestinationString->Buffer = (PWSTR)SourceString;
+        }
 }
 
-VOID RtlInitUnicodeString(IN OUT PUNICODE_STRING DestinationString,
-                          IN PCWSTR SourceString)
+NTSTATUS
+STDCALL
+RtlIntegerToUnicodeString(IN ULONG Value,
+                          IN ULONG Base,                    /* optional */
+                          IN OUT PUNICODE_STRING String)
 {
-   unsigned long DestSize;
-   
-   if (SourceString == NULL)
-     {
-	DestinationString->Length = 0;
-	DestinationString->MaximumLength = 0;
-	DestinationString->Buffer = NULL;
-     } 
-   else 
-     {
-	DestSize = wcslen((PWSTR)SourceString);
-	DestinationString->Length = DestSize;
-	DestinationString->MaximumLength = DestSize+1;
-	DestinationString->Buffer = (PWSTR)SourceString;
-     }
-}
+//        UNIMPLEMENTED;
 
-NTSTATUS RtlIntegerToUnicodeString(IN ULONG Value, IN ULONG Base,                    /* optional */
-                                   IN OUT PUNICODE_STRING String)
-{
+        return STATUS_NOT_IMPLEMENTED;
+#if 0
         char *str;
         unsigned long len, i;
 
-        str = RtlAllocateHeap(RtlGetProcessHeap, 0, 1024);
+        str=ExAllocatePool(NonPagedPool, 1024);
         if(Base==16) {
-                sprintf(str, "%x", (unsigned int)Value);
+                sprintf(str, "%x", Value);
         } else
         if(Base==8) {
-                sprintf(str, "%o", (unsigned int)Value);
+                sprintf(str, "%o", Value);
         } else
         if(Base==2) {
-//                sprintf(str, "%b", Value);
+                sprintf(str, "%b", Value);
         } else {
                 sprintf(str, "%u", (unsigned int)Value);
         };
@@ -400,135 +527,206 @@ NTSTATUS RtlIntegerToUnicodeString(IN ULONG Value, IN ULONG Base,               
         String->Buffer-=len;
         String->Length=len;
         str-=len;
-//        ExFreePool(str);
+        ExFreePool(str);
+
+        return STATUS_SUCCESS;
+#endif
+}
+
+
+ULONG
+STDCALL
+RtlOemStringToUnicodeSize(IN PANSI_STRING OemString)
+{
+        ULONG Size;
+
+        RtlMultiByteToUnicodeSize (&Size,
+                                   OemString->Buffer,
+                                   OemString->Length);
+
+        return Size;
+}
+
+ULONG
+STDCALL
+RtlUnicodeStringToAnsiSize(IN PUNICODE_STRING UnicodeString)
+{
+        ULONG Size;
+
+        RtlUnicodeToMultiByteSize (&Size,
+                                   UnicodeString->Buffer,
+                                   UnicodeString->Length);
+
+        return Size;
+}
+
+NTSTATUS
+STDCALL
+RtlUnicodeStringToAnsiString(IN OUT PANSI_STRING DestinationString,
+                             IN PUNICODE_STRING SourceString,
+                             IN BOOLEAN AllocateDestinationString)
+{
+        NTSTATUS Status;
+        ULONG Length;
+
+        if (NlsMbCodePageTag == TRUE)
+                Length = RtlUnicodeStringToAnsiSize (SourceString);
+        else
+                Length = SourceString->Length / sizeof(WCHAR);
+
+        /* this doesn't make sense */
+//        if (Length > 65535)
+//                return STATUS_INVALID_PARAMETER_2;
+
+        DestinationString->Length = Length;
+
+        if (AllocateDestinationString == TRUE)
+        {
+                DestinationString->MaximumLength = Length + sizeof(CHAR);
+                DestinationString->Buffer =
+                        RtlAllocateHeap (RtlGetProcessHeap (),
+                                         0,
+                                         DestinationString->MaximumLength);
+                if (DestinationString->Buffer == NULL)
+                        return STATUS_NO_MEMORY;
+        }
+        else
+        {
+                if (Length >= DestinationString->Length)
+                        return STATUS_BUFFER_OVERFLOW;
+        }
+
+        RtlZeroMemory (DestinationString->Buffer,
+                       DestinationString->Length);
+
+        Status = RtlUnicodeToMultiByteN (DestinationString->Buffer,
+                                         DestinationString->Length,
+                                         NULL,
+                                         SourceString->Buffer,
+                                         SourceString->Length);
+        if (!NT_SUCCESS(Status))
+        {
+                if (AllocateDestinationString)
+                        RtlFreeHeap (RtlGetProcessHeap (),
+                                     0,
+                                     DestinationString->Buffer);
+                return Status;
+        }
+
+        DestinationString->Buffer[Length] = 0;
 
         return STATUS_SUCCESS;
 }
 
-
-ULONG RtlUnicodeStringToAnsiSize(IN PUNICODE_STRING UnicodeString)
+NTSTATUS
+STDCALL
+RtlUnicodeStringToInteger(IN PUNICODE_STRING String,
+                          IN ULONG Base,
+                          OUT PULONG Value)
 {
-        return UnicodeString->Length/2;
-}
+        return STATUS_NOT_IMPLEMENTED;
+#if 0
+        char *str;
+        unsigned long i, lenmin=0;
+        BOOLEAN addneg=FALSE;
 
+        str = RtlAllocateHeap (RtlGetProcessHeap (),
+                               0,
+                               String->Length+1);
 
-NTSTATUS RtlUnicodeStringToAnsiString(IN OUT PANSI_STRING DestinationString,
-                                      IN PUNICODE_STRING SourceString,
-                                      IN BOOLEAN AllocateDestinationString)
-{
-        unsigned long i;
+        for(i=0; i<String->Length; i++)
+        {
+                *str=*String->Buffer;
 
-        if(AllocateDestinationString==TRUE) {
+                if(*str=='b') { Base=2;  lenmin++; } else
+                if(*str=='o') { Base=8;  lenmin++; } else
+                if(*str=='d') { Base=10; lenmin++; } else
+                if(*str=='x') { Base=16; lenmin++; } else
+                if(*str=='+') { lenmin++; } else
+                if(*str=='-') { addneg=TRUE; lenmin++; } else
+                if((*str>'1') && (Base==2)) {
+                        String->Buffer-=i;
+                        *Value=0;
+                        return STATUS_INVALID_PARAMETER;
+                } else
+                if(((*str>'7') || (*str<'0')) && (Base==8)) {
+                        String->Buffer-=i;
+                        *Value=0;
+                        return STATUS_INVALID_PARAMETER;
+                } else
+                if(((*str>'9') || (*str<'0')) && (Base==10)) {
+                        String->Buffer-=i;
+                        *Value=0;
+                        return STATUS_INVALID_PARAMETER;
+                } else
+                if((((*str>'9') || (*str<'0')) ||
+                    ((toupper(*str)>'F') || (toupper(*str)<'A'))) && (Base==16))
+                {
+                        String->Buffer-=i;
+                        *Value=0;
+                        return STATUS_INVALID_PARAMETER;
+                } else
+                        str++;
 
-                // Causes excetion 14(0) in _Validate_Free_List
-//                DestinationString->Buffer=ExAllocatePool(NonPagedPool, SourceString->Length+1);
-                DestinationString->MaximumLength=SourceString->Length+1;
+                String->Buffer++;
         };
 
-        DestinationString->Length=SourceString->Length;
+        *str=0;
+        String->Buffer-=String->Length;
+        str-=(String->Length-lenmin);
 
-        for(i=0; i<SourceString->Length; i++) {
-                *DestinationString->Buffer=*SourceString->Buffer;
-                DestinationString->Buffer++;
-                SourceString->Buffer++;
-        };
-        *DestinationString->Buffer=0;
-
-        DestinationString->Buffer-=SourceString->Length;
-        SourceString->Buffer-=SourceString->Length;
-
-        return STATUS_SUCCESS;
-}
-
-
-NTSTATUS RtlUnicodeStringToInteger(IN PUNICODE_STRING String, IN ULONG Base,
-                                   OUT PULONG Value)
-{
-   char *str;
-   unsigned long i, lenmin=0;
-   BOOLEAN addneg=FALSE;
-   
-   str=RtlAllocateHeap(RtlGetProcessHeap(), 0, String->Length+1);
-   
-   for(i=0; i<String->Length; i++) 
-     {
-	*str=*String->Buffer;
-	
-	if(*str=='b') { Base=2;  lenmin++; } else
-	  if(*str=='o') { Base=8;  lenmin++; } else
-	  if(*str=='d') { Base=10; lenmin++; } else
-	  if(*str=='x') { Base=16; lenmin++; } else
-	  if(*str=='+') { lenmin++; } else
-	  if(*str=='-') { addneg=TRUE; lenmin++; } else
-	  if((*str>'1') && (Base==2)) {
-	     String->Buffer-=i;
-	     *Value=0;
-	     return STATUS_INVALID_PARAMETER;
-	  } else
-	  if(((*str>'7') || (*str<'0')) && (Base==8)) {
-	     String->Buffer-=i;
-	     *Value=0;
-	     return STATUS_INVALID_PARAMETER;
-	  } else
-	  if(((*str>'9') || (*str<'0')) && (Base==10)) {
-	     String->Buffer-=i;
-	     *Value=0;
-	     return STATUS_INVALID_PARAMETER;
-	  } else
-	  if((((*str>'9') || (*str<'0')) ||
-	      ((toupper(*str)>'F') || (toupper(*str)<'A'))) && (Base==16))
-	  {
-	     String->Buffer-=i;
-	     *Value=0;
-	     return STATUS_INVALID_PARAMETER;
-	  } else
-	  str++;
-	
-	String->Buffer++;
-        };
-   
-   *str=0;
-   String->Buffer-=String->Length;
-   str-=(String->Length-lenmin);
-   
-   if(addneg==TRUE) {
-      *Value=simple_strtoul(str, NULL, Base)*-1;
+        if(addneg==TRUE) {
+          *Value=simple_strtoul(str, NULL, Base)*-1;
         } else
-     *Value=simple_strtoul(str, NULL, Base);
-   
-   //        ExFreePool(str);
-   return(STATUS_SUCCESS);
+          *Value=simple_strtoul(str, NULL, Base);
+
+        RtlFreeHeap (RtlGetProcessHeap (),
+                     0,
+                     str);
+
+        return(STATUS_SUCCESS);
+#endif
 }
 
-NTSTATUS RtlUpcaseUnicodeString(IN OUT PUNICODE_STRING DestinationString,
-                                IN PUNICODE_STRING SourceString,
-                                IN BOOLEAN AllocateDestinationString)
+NTSTATUS
+STDCALL
+RtlUpcaseUnicodeString(IN OUT PUNICODE_STRING DestinationString,
+                       IN PUNICODE_STRING SourceString,
+                       IN BOOLEAN AllocateDestinationString)
 {
-        unsigned long i;
+        ULONG i;
+        PWCHAR Src, Dest;
 
-        if(AllocateDestinationString==TRUE) {
-//                DestinationString->Buffer=ExAllocatePool(NonPagedPool, SourceString->Length*2+1);
+        if(AllocateDestinationString==TRUE)
+        {
+                DestinationString->Buffer =
+                        RtlAllocateHeap (RtlGetProcessHeap (),
+                                         0,
+                                         SourceString->Length + sizeof(WCHAR));
                 DestinationString->Length=SourceString->Length;
-                DestinationString->MaximumLength=SourceString->Length+1;
-        };
+                DestinationString->MaximumLength=SourceString->Length+sizeof(WCHAR);
+        }
 
-        for(i=0; i<SourceString->Length; i++) {
-                *DestinationString->Buffer=wtoupper(*SourceString->Buffer);
-                DestinationString->Buffer++;
-                SourceString->Buffer++;
-        };
-        *DestinationString->Buffer=0;
-
-        DestinationString->Buffer-=SourceString->Length;
-        SourceString->Buffer-=SourceString->Length;
+        Src = SourceString->Buffer;
+        Dest = DestinationString->Buffer;
+        for (i=0; i < SourceString->Length / sizeof(WCHAR); i++)
+        {
+                *Dest = towupper (*Src);
+                Dest++;
+                Src++;
+        }
+        *Dest = 0;
 
         return STATUS_SUCCESS;
-};
+}
 
-VOID RtlUpcaseString(IN OUT PSTRING DestinationString,
-                     IN PSTRING SourceString)
+VOID
+STDCALL
+RtlUpcaseString(IN OUT PSTRING DestinationString,
+                IN PSTRING SourceString)
 {
         unsigned long i, len;
+        PCHAR Src, Dest;
 
         if(SourceString->Length>DestinationString->MaximumLength) {
                 len=DestinationString->MaximumLength;
@@ -547,51 +745,12 @@ VOID RtlUpcaseString(IN OUT PSTRING DestinationString,
         SourceString->Buffer-=len;
 }
 
-/*---*/
-
-#include <wchar.h>
-
-WCHAR
-STDCALL
-RtlAnsiCharToUnicodeChar (
-	CHAR	AnsiChar
-	)
-{
-	/* FIXME: it should probably call RtlMultiByteToUnicodeN
-	 * with length==1.
-	 */
-	return (WCHAR) AnsiChar;
-}
-
-
-
 VOID
 STDCALL
-RtlMultiByteToUnicodeN (
-	VOID
-	)
+RtlUpperString(PSTRING DestinationString, PSTRING SourceString)
 {
+//   UNIMPLEMENTED;
 }
-
-
-VOID
-STDCALL
-RtlUnicodeToMultiByteN (
-	VOID
-	)
-{
-}
-
-
-ULONG
-STDCALL
-RtlUnicodeToMultiByteSize (
-	VOID
-	)
-{
-	return 0;
-}
-
 
 VOID
 STDCALL
@@ -618,6 +777,7 @@ RtlUpcaseUnicodeToMultiByteN (
 	)
 {
 }
+
 
 
 /* EOF */

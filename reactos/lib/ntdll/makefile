@@ -1,10 +1,10 @@
-# $Id: makefile,v 1.25 1999/10/26 19:47:05 ea Exp $
+# $Id: makefile,v 1.26 1999/11/15 15:57:27 ekohl Exp $
 #
 # ReactOS Operating System
 #
 TARGET=ntdll
 
-BASE_CFLAGS = -I../../include
+BASE_CFLAGS = -I../../include -D__NTDLL__
 
 IMAGE_BASE = 0x77f60000
 
@@ -25,7 +25,7 @@ all: $(DLLTARGET)
 
 RTL_OBJECTS = rtl/critical.o rtl/error.o rtl/heap.o rtl/largeint.o \
               rtl/mem.o rtl/namespc.o rtl/security.o rtl/unicode.o \
-              rtl/thread.o rtl/process.o
+              rtl/thread.o rtl/process.o rtl/nls.o
 
 STDLIB_OBJECTS = stdlib/atoi.o stdlib/atol.o stdlib/splitp.o \
                  stdlib/strtol.o stdlib/strtoul.o

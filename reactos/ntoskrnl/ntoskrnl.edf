@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.11 1999/11/09 18:04:26 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.12 1999/11/15 15:56:16 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -120,12 +120,14 @@ KeSynchronizeExecution
 KeWaitForSingleObject
 MmGetSystemAddressForMdl
 MmMapIoSpace
+NlsMbCodePageTag
+NlsMbOemCodePageTag
 NtAddAtom=NtAddAtom@8
 NtAdjustPrivilegesToken=NtAdjustPrivilegesToken@24
 NtAllocateLocallyUniqueId=NtAllocateLocallyUniqueId@4
 NtAllocateUuids=NtAllocateUuids@12
 NtAllocateVirtualMemory=NtAllocateVirtualMemory@24
-;NtBuildNumber <--- variable?
+;NtBuildNumber <--- variable
 NtClose=NtClose@4
 ;NtConnectPort@32
 NtConnectPort=NtConnectPort@8
@@ -140,7 +142,7 @@ NtDuplicateToken=NtDuplicateToken@24
 NtFindAtom=NtFindAtom@8
 NtFreeVirtualMemory=NtFreeVirtualMemory@16
 NtFsControlFile=NtFsControlFile@40
-;NtGlobalFlag <--- variable?
+;NtGlobalFlag <--- variable
 NtLockFile=NtLockFile@40
 NtMapViewOfSection=NtMapViewOfSection@40
 NtNotifyChangeDirectoryFile=NtNotifyChangeDirectoryFile@36
@@ -172,22 +174,41 @@ NtUnlockFile=NtUnlockFile@20
 ;NtVdmControl@8 <--- ?
 NtWaitForSingleObject=NtWaitForSingleObject@12
 NtWriteFile=NtWriteFile@36
-RtlAnsiStringToUnicodeString
+RtlAnsiCharToUnicodeChar=RtlAnsiCharToUnicodeChar@4
+RtlAnsiStringToUnicodeSize=RtlAnsiStringToUnicodeSize@4
+RtlAnsiStringToUnicodeString=RtlAnsiStringToUnicodeString@12
+RtlAppendAsciizToString=RtlAppendAsciizToString@8
+RtlAppendStringToString=RtlAppendStringToString@8
+RtlAppendUnicodeStringToString=RtlAppendUnicodeStringToString@8
+RtlAppendUnicodeToString=RtlAppendUnicodeToString@8
+RtlCharToInteger=RtlCharToInteger@12
 RtlCompareMemory=RtlCompareMemory@12
+RtlCompareString=RtlCompareString@12
+RtlCompareUnicodeString=RtlCompareUnicodeString@12
 RtlConvertLongToLargeInteger
 RtlConvertUlongToLargeInteger
 RtlCopyMemory
+RtlCopyString=RtlCopyString@8
+RtlCopyUnicodeString=RtlCopyUnicodeString@8
+RtlCreateUnicodeString=RtlCreateUnicodeString@8
 RtlEnlargedIntegerMultiply
 RtlEnlargedUnsignedDivide
 RtlEnlargedUnsignedMultiply
+RtlEqualString=RtlEqualString@12
+RtlEqualUnicodeString=RtlEqualUnicodeString@12
 RtlExtendedIntegerMultiply
 RtlExtendedLargeIntegerDivide
 RtlExtendedMagicDivide
 RtlFillMemory=RtlFillMemory@12
 RtlFillMemoryUlong=RtlFillMemoryUlong@12
-RtlFreeUnicodeString
-RtlInitAnsiString
-RtlInitUnicodeString
+RtlFreeAnsiString=RtlFreeAnsiString@4
+RtlFreeOemString=RtlFreeOemString@4
+RtlFreeUnicodeString=RtlFreeUnicodeString@4
+RtlGetDefaultCodePage=RtlGetDefaultCodePage@8
+RtlInitAnsiString=RtlInitAnsiString@8
+RtlInitString=RtlInitString@8
+RtlInitUnicodeString=RtlInitUnicodeString@8
+RtlIntegerToUnicodeString=RtlIntegerToUnicodeString@12
 RtlLargeIntegerAdd
 RtlLargeIntegerArithmeticShift
 RtlLargeIntegerDivide
@@ -196,12 +217,26 @@ RtlLargeIntegerShiftLeft
 RtlLargeIntegerShiftRight
 RtlLargeIntegerSubtract
 RtlMoveMemory=RtlMoveMemory@12
+RtlMultiByteToUnicodeN=RtlMultiByteToUnicodeN@20
+RtlMultiByteToUnicodeSize=RtlMultiByteToUnicodeSize@12
+RtlOemStringToUnicodeSize=RtlOemStringToUnicodeSize@4
+RtlOemStringToUnicodeString=RtlOemStringToUnicodeString@12
 RtlSecondsSince1970ToTime
 RtlSecondsSince1980ToTime
 RtlTimeFieldsToTime
 RtlTimeToSecondsSince1970
 RtlTimeToSecondsSince1980
 RtlTimeToTimeFields
+RtlUnicodeStringToAnsiSize=RtlUnicodeStringToAnsiSize@4
+RtlUnicodeStringToAnsiString=RtlUnicodeStringToAnsiString@12
+RtlUnicodeStringToInteger=RtlUnicodeStringToInteger@12
+RtlUnicodeStringToOemSize=RtlUnicodeStringToOemSize@4
+RtlUnicodeStringToOemString=RtlUnicodeStringToOemString@12
+RtlUnicodeToMultiByteN=RtlUnicodeToMultiByteN@20
+RtlUnicodeToMultiByteSize=RtlUnicodeToMultiByteSize@12
+RtlUpcaseUnicodeString=RtlUpcaseUnicodeString@12
+RtlUpcaseString=RtlUpcaseString@8
+RtlUpperString=RtlUpperString@8
 RtlZeroMemory=RtlZeroMemory@8
 ZwAccessCheckAndAuditAlarm=ZwAccessCheckAndAuditAlarm@44
 ZwAlertThread=ZwAlertThread@4

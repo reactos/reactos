@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.36 1999/11/12 12:01:11 dwelch Exp $
+# $Id: makefile_rex,v 1.37 1999/11/15 15:56:16 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -15,13 +15,13 @@ include hal/x86/sources
 
 NT_OBJECTS = nt/port.o nt/channel.o nt/ntevent.o nt/nttimer.o nt/atom.o \
              nt/evtpair.o nt/ntsem.o nt/mutant.o nt/misc.o nt/plugplay.o \
-	     nt/profile.o nt/nt.o nt/zw.o
+             nt/profile.o nt/nt.o nt/zw.o
 
 RTL_OBJECTS = rtl/vsprintf.o rtl/lookas.o rtl/unicode.o rtl/time.o \
               rtl/unalign.o rtl/mem.o rtl/largeint.o rtl/ctype.o \
               rtl/list.o rtl/slist.o rtl/interlck.o rtl/return.o \
               rtl/wstring.o rtl/memcpy.o rtl/memmove.o rtl/memset.o \
-              rtl/memchr.o rtl/string.o rtl/stdlib.o
+              rtl/memchr.o rtl/nls.o rtl/string.o rtl/stdlib.o
 
 KE_OBJECTS = ke/main.o ke/timer.o ke/error.o ke/catch.o \
              ke/dpc.o ke/wait.o ke/kqueue.o ke/dispatch.o \
