@@ -22,10 +22,6 @@
 
 #include "pshpack4.h"
 
-/* added definitions from the wine source */
-#define WINELIB_NAME_AW(func) func##W
-#define DECL_WINELIB_TYPE_AW(type)  typedef WINELIB_NAME_AW(type) type;
-
 #ifdef __cplusplus
 extern "C" {
 #endif
