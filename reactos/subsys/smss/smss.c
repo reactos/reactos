@@ -25,6 +25,7 @@
  */
 #include "smss.h"
 #include <rosrtl/string.h>
+#include <reactos/buildno.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -35,6 +36,11 @@ VOID STDCALL
 NtProcessStartup(PPEB Peb)
 {
   NTSTATUS Status;
+
+  DisplayString(L"SMSS\n");
+  PrintString("ReactOS Session Manager %s (Build %s)\n",
+	     KERNEL_RELEASE_STR,
+	     KERNEL_VERSION_BUILD_STR);
 
   Status = InitSessionManager();
   if (!NT_SUCCESS(Status))

@@ -1,6 +1,6 @@
-/* $Id: init.c 13449 2005-02-06 21:55:07Z ea $
+/* $Id: print.c 12852 2005-01-06 13:58:04Z mf $
  *
- * initenv.c - Hive loading
+ * print.c - Print on the blue screen
  * 
  * ReactOS Operating System
  * 
@@ -23,19 +23,34 @@
  *
  * --------------------------------------------------------------------
  */
+#define NTOS_MODE_USER
+#include <ntos.h>
 
-#include "smss.h"
-
-#define NDEBUG
-#include <debug.h>
-
-NTSTATUS
-SmInitializeRegistry(VOID)
+VOID STDCALL DisplayString(LPCWSTR lpwString)
 {
-  DPRINT("SM: %s: initializing registry\n", __FUNCTION__);
+   UNICODE_STRING us;
+   
+   RtlInitUnicodeString (&us, lpwString);
+   ZwDisplayString (&us);
+}
 
-  /* Load remaining registry hives */
-  return NtInitializeRegistry(FALSE);
+VOID STDCALL PrintString (char* fmt, ...)
+{
+   char buffer[512];
+   va_list ap;
+   UNICODE_STRING UnicodeString;
+   ANSI_STRING AnsiString;
+   
+   va_start(ap, fmt);
+   vsprintf(buffer, fmt, ap);
+   va_end(ap);
+   
+   RtlInitAnsiString (&AnsiString, buffer);
+   RtlAnsiStringToUnicodeString (&UnicodeString,
+				 &AnsiString,
+				 TRUE);
+   NtDisplayString(&UnicodeString);
+   RtlFreeUnicodeString (&UnicodeString);
 }
 
 /* EOF */
