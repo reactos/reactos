@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.54 2003/03/05 22:51:48 ekohl Exp $
+/* $Id: console.c,v 1.55 2003/03/09 21:37:18 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -56,17 +56,35 @@ ConsoleMenuControl (HANDLE	hConsole,
   return FALSE;
 }
 
-BOOL STDCALL
+HANDLE STDCALL
 DuplicateConsoleHandle (HANDLE	hConsole,
-			DWORD	Unknown1,
-			DWORD	Unknown2,
-			DWORD	Unknown3)
-     /*
-      * Undocumented
-      */
+			DWORD   dwDesiredAccess,
+			BOOL	bInheritHandle,
+			DWORD	dwOptions)
 {
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return FALSE;
+  CSRSS_API_REQUEST Request;
+  CSRSS_API_REPLY Reply;
+  NTSTATUS Status;
+
+  if (IsConsoleHandle (hConsole) == FALSE)
+    {
+      SetLastError (ERROR_INVALID_PARAMETER);
+      return INVALID_HANDLE_VALUE;
+    }
+  
+  Request.Type = CSRSS_DUPLICATE_HANDLE;
+  Request.Data.DuplicateHandleRequest.Handle = hConsole;
+  Request.Data.DuplicateHandleRequest.ProcessId = GetCurrentProcessId();
+  Status = CsrClientCallServer(&Request,
+			       &Reply,
+			       sizeof(CSRSS_API_REQUEST),
+			       sizeof(CSRSS_API_REPLY));
+  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status=Reply.Status))
+    {
+      SetLastErrorByStatus(Status);
+      return INVALID_HANDLE_VALUE;
+    }
+  return Reply.Data.DuplicateHandleReply.Handle;
 }
 
 DWORD STDCALL
@@ -838,6 +856,7 @@ WINBOOL STDCALL AllocConsole(VOID)
    CSRSS_API_REQUEST Request;
    CSRSS_API_REPLY Reply;
    NTSTATUS Status;
+   HANDLE hStdError;
 
    Request.Type = CSRSS_ALLOC_CONSOLE;
    Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
@@ -848,7 +867,11 @@ WINBOOL STDCALL AllocConsole(VOID)
       }
    SetStdHandle( STD_INPUT_HANDLE, Reply.Data.AllocConsoleReply.InputHandle );
    SetStdHandle( STD_OUTPUT_HANDLE, Reply.Data.AllocConsoleReply.OutputHandle );
-   SetStdHandle( STD_ERROR_HANDLE, Reply.Data.AllocConsoleReply.OutputHandle );
+   hStdError = DuplicateConsoleHandle(Reply.Data.AllocConsoleReply.OutputHandle,
+                                      0,
+				      TRUE,
+				      DUPLICATE_SAME_ACCESS);
+   SetStdHandle( STD_ERROR_HANDLE, hStdError );
    return TRUE;
 }
 
@@ -2189,19 +2212,27 @@ GetConsoleTitleW(
    CSRSS_API_REQUEST Request;
    PCSRSS_API_REPLY Reply;
    NTSTATUS Status;
-   
+   HANDLE hConsole;
+
+   hConsole = CreateFileW(L"CONIN$", GENERIC_READ, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+   if (hConsole == INVALID_HANDLE_VALUE)
+   {
+      return 0;
+   }
+
    Reply = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(CSRSS_API_REPLY) + CSRSS_MAX_TITLE_LENGTH * sizeof(WCHAR));
-   
    if(Reply == NULL)
    {
+      CloseHandle(hConsole);   
       SetLastError(ERROR_OUTOFMEMORY);
       return 0;
    }
-   
+
    Request.Type = CSRSS_GET_TITLE;
-   Request.Data.GetTitleRequest.ConsoleHandle = GetStdHandle(STD_INPUT_HANDLE);
+   Request.Data.GetTitleRequest.ConsoleHandle = hConsole;
    
    Status = CsrClientCallServer(&Request, Reply, sizeof(CSRSS_API_REQUEST), sizeof(CSRSS_API_REPLY) + CSRSS_MAX_TITLE_LENGTH * sizeof(WCHAR));
+   CloseHandle(hConsole);
    if(!NT_SUCCESS(Status) || !(NT_SUCCESS(Status = Reply->Status)))
    {
       SetLastErrorByStatus(Status);
@@ -2280,18 +2311,26 @@ SetConsoleTitleW(
   CSRSS_API_REPLY Reply;
   NTSTATUS Status;
   unsigned int c;
+  HANDLE hConsole;
+
+  hConsole = CreateFileW(L"CONIN$", GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+  if (hConsole == INVALID_HANDLE_VALUE)
+  {
+     return FALSE;
+  }
   
   Request = RtlAllocateHeap(GetProcessHeap(),
 			    HEAP_ZERO_MEMORY,
 			    sizeof(CSRSS_API_REQUEST) + CSRSS_MAX_SET_TITLE_REQUEST);
   if (Request == NULL)
     {
+      CloseHandle(hConsole);
       SetLastError(ERROR_OUTOFMEMORY);
       return(FALSE);
     }
   
   Request->Type = CSRSS_SET_TITLE;
-  Request->Data.SetTitleRequest.Console = GetStdHandle( STD_INPUT_HANDLE );
+  Request->Data.SetTitleRequest.Console = hConsole;
   
   for( c = 0; lpConsoleTitle[c] && c < CSRSS_MAX_TITLE_LENGTH; c++ )
     Request->Data.SetTitleRequest.Title[c] = lpConsoleTitle[c];
@@ -2303,7 +2342,7 @@ SetConsoleTitleW(
 			       sizeof(CSRSS_API_REQUEST) + 
 			       c * sizeof(WCHAR),
 			       sizeof(CSRSS_API_REPLY));
-  
+  CloseHandle(hConsole);
   if (!NT_SUCCESS(Status) || !NT_SUCCESS( Status = Reply.Status ) )
     {
       RtlFreeHeap( GetProcessHeap(), 0, Request );
@@ -2331,18 +2370,26 @@ SetConsoleTitleA(
   CSRSS_API_REPLY Reply;
   NTSTATUS Status;
   unsigned int c;
+  HANDLE hConsole;
+
+  hConsole = CreateFileW(L"CONIN$", GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+  if (hConsole == INVALID_HANDLE_VALUE)
+  {
+     return FALSE;
+  }
   
   Request = RtlAllocateHeap(GetProcessHeap(),
 			    HEAP_ZERO_MEMORY,
 			    sizeof(CSRSS_API_REQUEST) + CSRSS_MAX_SET_TITLE_REQUEST);
   if (Request == NULL)
     {
+      CloseHandle(hConsole);
       SetLastError(ERROR_OUTOFMEMORY);
       return(FALSE);
     }
   
   Request->Type = CSRSS_SET_TITLE;
-  Request->Data.SetTitleRequest.Console = GetStdHandle( STD_INPUT_HANDLE );
+  Request->Data.SetTitleRequest.Console = hConsole;
   
   for( c = 0; lpConsoleTitle[c] && c < CSRSS_MAX_TITLE_LENGTH; c++ )
     Request->Data.SetTitleRequest.Title[c] = lpConsoleTitle[c];
@@ -2354,7 +2401,7 @@ SetConsoleTitleA(
 			       sizeof(CSRSS_API_REQUEST) + 
 			       c * sizeof(WCHAR),
 			       sizeof(CSRSS_API_REPLY));
-  
+  CloseHandle(hConsole);
   if (!NT_SUCCESS(Status) || !NT_SUCCESS( Status = Reply.Status ) )
     {
       RtlFreeHeap( GetProcessHeap(), 0, Request );
