@@ -1,4 +1,4 @@
-/* $Id: tdiconn.c,v 1.5 2004/11/15 18:24:57 arty Exp $
+/* $Id: tdiconn.c,v 1.6 2004/12/11 14:59:31 navaraf Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/tdiconn.c
@@ -16,6 +16,7 @@ UINT TdiAddressSizeFromType( UINT AddressType ) {
     case AF_INET:
 	return sizeof(TA_IP_ADDRESS);
     default:
+	AFD_DbgPrint(MID_TRACE,("TdiAddressSizeFromType - invalid type: %x\n", AddressType));
 	KeBugCheck( 0 );
     }
     return 0;

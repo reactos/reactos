@@ -321,7 +321,7 @@ WSPRecvFrom(
 
 	/* Wait for completition of not overlapped */
 	if (Status == STATUS_PENDING && lpOverlapped == NULL) {
-		WaitForSingleObject(SockEvent, 0); // BUGBUG, shouldn wait infintely for receive...
+		WaitForSingleObject(SockEvent, INFINITE); // BUGBUG, shouldn wait infintely for receive...
 		Status = IOSB->Status;
 	}
 
@@ -437,7 +437,7 @@ WSPSend(
 
 	/* Wait for completition of not overlapped */
 	if (Status == STATUS_PENDING && lpOverlapped == NULL) {
-		WaitForSingleObject(SockEvent, 0); // BUGBUG, shouldn wait infintely for send...
+		WaitForSingleObject(SockEvent, INFINITE); // BUGBUG, shouldn wait infintely for send...
 		Status = IOSB->Status;
 	}
 
@@ -563,7 +563,7 @@ WSPSendTo(
 
 	/* Wait for completition of not overlapped */
 	if (Status == STATUS_PENDING && lpOverlapped == NULL) {
-		WaitForSingleObject(SockEvent, 0); // BUGBUG, shouldn wait infintely for send...
+		WaitForSingleObject(SockEvent, INFINITE); // BUGBUG, shouldn wait infintely for send...
 		Status = IOSB->Status;
 	}
 

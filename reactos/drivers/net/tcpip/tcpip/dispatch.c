@@ -554,7 +554,8 @@ NTSTATUS DispTdiQueryInformation(
         }
 
         if (MmGetMdlByteCount(Irp->MdlAddress) <
-            (sizeof(TDI_ADDRESS_INFO) + sizeof(TDI_ADDRESS_IP))) {
+            (FIELD_OFFSET(TDI_ADDRESS_INFO, Address.Address[0].Address) +
+             sizeof(TDI_ADDRESS_IP))) {
           TI_DbgPrint(MID_TRACE, ("MDL buffer too small.\n"));
           return STATUS_BUFFER_OVERFLOW;
         }

@@ -24,4 +24,9 @@ NTSTATUS TdiDisconnect
   PTDI_CONNECTION_INFORMATION RequestConnectionInfo,
   PTDI_CONNECTION_INFORMATION ReturnConnectionInfo );
 
+NTSTATUS TdiQueryInformation(
+    PFILE_OBJECT FileObject,
+    LONG QueryType,
+    PMDL MdlBuffer);
+
 #endif/*_TDI_PROTO_H*/

@@ -1,4 +1,4 @@
-/* $Id: afd.h,v 1.26 2004/11/25 23:36:36 arty Exp $
+/* $Id: afd.h,v 1.27 2004/12/11 14:59:31 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -177,6 +177,10 @@ AfdSetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 NTSTATUS STDCALL
 AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp, 
 	    PIO_STACK_LOCATION IrpSp );
+
+NTSTATUS STDCALL
+AfdGetSockName( PDEVICE_OBJECT DeviceObject, PIRP Irp, 
+		PIO_STACK_LOCATION IrpSp );
 
 /* listen.c */
 
