@@ -556,6 +556,9 @@ ISF_ControlPanel_fnGetAttributesOf(IShellFolder2 * iface, UINT cidl, LPCITEMIDLI
     if ((!cidl) ||(!apidl) ||(!rgfInOut))
 	return E_INVALIDARG;
 
+    if (*rgfInOut == 0)
+	*rgfInOut = ~0;
+
     while(cidl > 0 && *apidl) {
 	pdump(*apidl);
 	SHELL32_GetItemAttributes(_IShellFolder_(This), *apidl, rgfInOut);
