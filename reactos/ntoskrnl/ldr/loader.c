@@ -1079,22 +1079,45 @@ LdrProcessPEImage(HANDLE ProcessHandle,
       return Status;
     }
       
-  /*  Allocate memory in process for image  */
-  Module->Flags = MODULE_FLAG_PE;
-  Module->Base = (PVOID) NTHeaders->OptionalHeader.ImageBase;
-  Module->Size = NTHeaders->OptionalHeader.SizeOfImage;
-  Status = ZwAllocateVirtualMemory(ProcessHandle,
-                                   &Module->Base,
-                                   0,
-                                   NULL,
-                                   MEM_COMMIT,
-                                   PAGE_READWRITE);
+  /*  Create the section for the code  */
+  Status = ZwCreateSection(&SectionHandle,
+                           SECTION_ALL_ACCESS,
+                           NULL,
+                           NULL,
+                           PAGE_READWRITE,
+                           MEM_COMMIT,
+                           FileHandle);
   if (!NT_SUCCESS(Status))
     {
-      ExFreePool(DosHeader);
       return Status;
     }
 
+  /*  Map the Image into the process  */
+  Module->Flags = MODULE_FLAG_PE;
+  Module->Base = (PVOID) NTHeaders->OptionalHeader.ImageBase;
+  Module->Size = NTHeaders->OptionalHeader.SizeOfImage;
+  Status = ZwMapViewOfSection(SectionHandle,
+                              ProcessHandle,
+                              &Module->Base,
+                              0,
+                              Module->Size,
+                              NULL,
+                              &Module->Size,
+                              0,
+                              MEM_COMMIT,
+                              PAGE_READWRITE);
+  if (!NT_SUCCESS(Status))
+    {
+      /* FIXME: destroy the section here  */
+       ExFreePool(DosHeader);
+       return Status;
+    }
+  
+  /* FIXME: create stack and other BSS sections  */
+  /* FIXME: if actual load address is different from ImageBase, then reloc  */
+  /* FIXME: do import fixups/load required libraries  */
+  
+#if 0
   /*  Load headers into virtual memory  */
   Status = ZwReadFile(FileHandle, 
                       NULL, NULL, NULL, NULL,
@@ -1321,7 +1344,8 @@ LdrProcessPEImage(HANDLE ProcessHandle,
             }
         }
     }
-
+#endif
+  
   /* FIXME: Create the stack for the process  */
   /* FIXME: Setup the context for the initial thread  */
   /* FIXME: Create the initial thread  */
