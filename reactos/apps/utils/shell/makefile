@@ -6,6 +6,8 @@ PROGS= shell.exe
 LIBS= ../../lib/kernel32/kernel32.a ../../lib/ntdll/ntdll.a
 CLEAN_FILES= shell.o shell.exe shell.sym
 
+BASE_CFLAGS = -I../../include
+
 all: shell.exe
 
 clean: $(CLEAN_FILES:%=%_clean)

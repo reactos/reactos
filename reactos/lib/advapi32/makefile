@@ -1,7 +1,10 @@
-# $Id: makefile,v 1.6 1999/07/26 20:46:39 ea Exp $
+# $Id: makefile,v 1.7 1999/08/29 13:44:52 dwelch Exp $
 #
 # Makefile for ReactOS advapi32.dll
 #
+
+BASE_CFLAGS = -I../../include
+
 TARGET=advapi32
 ifneq ($(HOST),mingw32-windows)
   ifneq ($(HOST),mingw32-linux)

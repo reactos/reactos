@@ -3,6 +3,8 @@
 #
 TARGET = blue
 
+BASE_CFLAGS = -I../../../include
+
 OBJECTS = blue.o ../../../ntoskrnl/ntoskrnl.a
 
 all: blue.sys
@@ -49,3 +51,4 @@ blue.sys: $(OBJECTS)
 	- $(RM) temp.exp
 
 
+include ../../../rules.mak

@@ -4,6 +4,8 @@
 TARGET=vidport
 OBJECTS = vidport.o ../../../ntoskrnl/ntoskrnl.a
 
+BASE_CFLAGS = -I../../../include
+
 all: vidport.sys vidport.a
 
 .phony: all
@@ -54,3 +56,4 @@ vidport.a: vidport.sys vidport.def
 		--output-lib vidport.a
 
 
+include ../../../rules.mak

@@ -1,8 +1,10 @@
-# $Id: makefile_rex,v 1.30 1999/08/11 23:23:48 ekohl Exp $
+# $Id: makefile_rex,v 1.31 1999/08/29 13:44:58 dwelch Exp $
 #
 # ReactOS Operating System
 #
 TARGET=ntoskrnl
+
+BASE_CFLAGS = -I../include
 
 all: objects $(TARGET).exe
 

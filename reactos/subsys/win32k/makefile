@@ -2,6 +2,8 @@
 # WIN32K.SYS build spec
 #
 
+BASE_CFLAGS = -I../../include
+
 MAIN_OBJECTS = main/dllmain.o
 MISC_OBJECTS = misc/driver.o
 OBJECTS_OBJECTS = objects/bitmaps.o objects/brush.o objects/cliprgn.o  \

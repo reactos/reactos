@@ -1,10 +1,12 @@
-# $Id: makefile,v 1.23 1999/07/17 23:10:20 ea Exp $
+# $Id: makefile,v 1.24 1999/08/29 13:44:56 dwelch Exp $
 #
 # ReactOS Operating System
 #
 TARGET=kernel32
 
 KERNEL32_BASE = 0x77f00000
+
+BASE_CFLAGS = -I../../include
 
 CFLAGS = $(CFLAGS) -DKERNEL32_BASE=$(KERNEL32_BASE)
 

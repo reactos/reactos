@@ -4,6 +4,8 @@
 OBJECTS= args.o
 PROGS= args.exe
 
+BASE_CFLAGS = -I../../include
+
 all: $(PROGS)
 
 .phony: all

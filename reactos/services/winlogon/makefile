@@ -1,10 +1,12 @@
-# $Id: makefile,v 1.1 1999/06/18 22:40:47 ea Exp $
+# $Id: makefile,v 1.2 1999/08/29 13:45:06 dwelch Exp $
 #
 # Logon/login Application
 #
 # ReactOS Operating System
 #
 TARGET=winlogon
+
+BASE_CFLAGS = -I../../include
 
 OBJECTS = $(TARGET).o init.o $(TARGET).coff
 

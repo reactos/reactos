@@ -4,6 +4,8 @@
 TARGET=keyboard
 OBJECTS = keyboard.o ../../../ntoskrnl/ntoskrnl.a
 
+BASE_CFLAGS = -I../../../include
+
 all: keyboard.sys
 
 .phony: all
@@ -46,3 +48,5 @@ keyboard.sys: $(OBJECTS)
 	$(CC) --verbose -Wl,--image-base,0x10000 -Wl,-e,_DriverEntry@8 \
               -specs=../../svc_specs -mdll -o keyboard.sys $(OBJECTS) -Wl,temp.exp
 	- $(RM) temp.exp
+
+include ../../../rules.mak

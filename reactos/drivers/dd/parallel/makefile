@@ -4,6 +4,8 @@
 TARGET=parallel
 OBJECTS= parallel.o ../../../ntoskrnl/ntoskrnl.a
 
+BASE_CFLAGS = -I../../../include
+
 all: parallel.sys
 
 .phony: all
@@ -48,3 +50,4 @@ parallel.sys: $(OBJECTS)
 	- $(RM) temp.exp
 
 
+include ../../../rules.mak

@@ -3,6 +3,8 @@
 #
 OBJECTS = beep.o ../../../ntoskrnl/ntoskrnl.a
 
+BASE_CLAGS = -I../../../include
+
 all: beep.sys
 
 .PHONY: all

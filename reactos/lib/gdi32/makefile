@@ -1,8 +1,10 @@
-# $Id: makefile,v 1.7 1999/07/17 23:10:19 ea Exp $
+# $Id: makefile,v 1.8 1999/08/29 13:44:54 dwelch Exp $
 #
 # Makefile for ReactOS gdi32.dll
 #
 TARGET=gdi32
+
+BASE_CFLAGS = -I../../include
 
 ifneq ($(HOST),mingw32-windows)
   ifneq ($(HOST),mingw32-linux)

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.32 1999/07/16 23:37:04 rex Exp $
+# $Id: makefile,v 1.33 1999/08/29 13:44:53 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -12,6 +12,8 @@ ifneq ($(HOST),mingw32-windows)
 else
   DLLTARGET=$(TARGET).dll
 endif
+
+BASE_CFLAGS = -I../../include
 
 all: $(DLLTARGET)
 

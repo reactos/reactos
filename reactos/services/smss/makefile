@@ -1,10 +1,12 @@
-# $Id: makefile,v 1.1 1999/05/30 20:40:18 ea Exp $
+# $Id: makefile,v 1.2 1999/08/29 13:45:06 dwelch Exp $
 #
 # Session Manager
 #
 # ReactOS Operating System
 #
 TARGET=smss
+
+BASE_CFLAGS = -I../../include
 
 OBJECTS = $(TARGET).o init.o $(TARGET).coff
 

@@ -4,6 +4,8 @@
 TARGET= serial
 OBJECTS= serial.o ../../../ntoskrnl/ntoskrnl.a
 
+BASE_CFLAGS = -I../../../include
+
 all: serial.sys
 
 .phony: all
@@ -48,3 +50,4 @@ serial.sys: $(OBJECTS)
 	- $(RM) temp.exp
 
 
+include ../../../rules.mak

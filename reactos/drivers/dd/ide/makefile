@@ -4,6 +4,8 @@
 TARGET=ide
 OBJECTS = ide.o ../../../ntoskrnl/ntoskrnl.a
 
+BASE_CFLAGS = -I../../../include
+
 all: ide.sys
 
 .phony: all
@@ -47,3 +49,4 @@ ide.sys: $(OBJECTS)
               -specs=../../svc_specs -mdll -o ide.sys $(OBJECTS) -Wl,temp.exp
 	- $(RM) temp.exp
 
+include ../../../rules.mak

@@ -200,6 +200,9 @@ $(SUBSYS:%=%_dist): %_dist:
 # Make an install floppy
 #
 
+install: all
+	./install.sh /mnt/hda1
+
 make_floppy_dirs:
 ifeq ($(DOSCLI),yes)
 	mkdir $(FLOPPY_DIR)\dlls 

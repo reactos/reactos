@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.8 1999/06/17 00:10:30 ea Exp $
+# $Id: makefile,v 1.9 1999/08/29 13:44:52 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -15,10 +15,12 @@ KERNEL_SERVICE_TABLE = ../../include/ntdll/napi.h
 KERNEL_ZW_CALLS = ../../ntoskrnl/nt/zw.c
 NAPI_FILES = $(NTDLL_STUBS) $(KERNEL_SERVICE_TABLE) $(KERNEL_ZW_CALLS)
 
+BASE_CFLAGS = -I../../include
+
 all: $(TARGET)$(EXE_POSTFIX) $(NAPI_FILES)
 
 $(NAPI_FILES): $(SYSTEM_CALLS_DB) $(TARGET)$(EXE_POSTFIX) 
-	$(TARGET)$(EXE_POSTFIX) \
+	./$(TARGET)$(EXE_POSTFIX) \
 		$(SYSTEM_CALLS_DB) \
 		$(NTDLL_STUBS) \
 		$(KERNEL_SERVICE_TABLE) \

@@ -1,8 +1,10 @@
-# $Id: makefile,v 1.21 1999/07/29 21:14:02 ekohl Exp $
+# $Id: makefile,v 1.22 1999/08/29 13:44:57 dwelch Exp $
 #
 # ReactOS Operating System
 #
 TARGET=ntdll
+
+BASE_CFLAGS = -I../../include
 
 IMAGE_BASE = 0x77f60000
 

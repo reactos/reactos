@@ -1,5 +1,7 @@
 LIBRARIES = ntdll kernel32
 
+BASE_CFLAGS = -I../include
+
 all: $(LIBRARIES)
 
 ntdll: dummy

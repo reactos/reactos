@@ -1,6 +1,9 @@
 #
 #
 #
+
+BASE_CFLAGS = -I../../../include
+
 OBJECTS = super.o blockdev.o inode.o file.o dir.o rw.o quota.o security.o \
           attr.o ../../../ntoskrnl/ntoskrnl.a
 
@@ -34,3 +37,4 @@ ext2fs.sys: $(OBJECTS)
 	      -specs=$(KM_SPECS) -mdll -o ext2fs.sys $(OBJECTS) -Wl,temp.exp
 	$(RM) temp.exp
 
+include ../../../rules.mak

@@ -1,8 +1,10 @@
-# $Id: makefile,v 1.1 1999/08/11 19:56:48 ea Exp $
+# $Id: makefile,v 1.2 1999/08/29 13:44:58 dwelch Exp $
 #
 # Makefile for ReactOS version.dll
 #
 TARGET=version
+
+BASE_CFLAGS = -I../../include
 
 ifneq ($(HOST),mingw32-windows)
   ifneq ($(HOST),mingw32-linux)

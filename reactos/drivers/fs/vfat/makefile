@@ -4,6 +4,8 @@
 TARGET=vfatfsd
 OBJECTS = blockdev.o dir.o dirwr.o iface.o ../../../ntoskrnl/ntoskrnl.a
 
+BASE_CFLAGS = -I../../../include
+
 all: vfatfsd.sys
 
 .phony: all
@@ -55,3 +57,4 @@ vfatfsd.sys: $(OBJECTS)
 	- $(RM) temp.exp
 
 
+include ../../../rules.mak

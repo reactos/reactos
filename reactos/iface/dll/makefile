@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1 1999/07/04 11:14:15 ea Exp $
+# $Id: makefile,v 1.2 1999/08/29 13:44:52 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -6,6 +6,8 @@
 # - defedf
 #
 TARGET = defedf
+
+BASE_CFLAGS = -I../../include
 
 all: $(TARGET)$(EXE_POSTFIX)
 

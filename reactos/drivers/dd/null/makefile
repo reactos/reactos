@@ -4,6 +4,8 @@
 TARGET=null
 OBJECTS= null.o ../../../ntoskrnl/ntoskrnl.a
 
+BASE_CFLAGS = -I../../../include
+
 all: null.sys
 
 .phony: all
@@ -48,3 +50,4 @@ null.sys: $(OBJECTS)
 	- $(RM) temp.exp
 
 
+include ../../../rules.mak

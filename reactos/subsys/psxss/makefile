@@ -1,10 +1,12 @@
-# $Id: makefile,v 1.1 1999/07/17 23:10:31 ea Exp $
+# $Id: makefile,v 1.2 1999/08/29 13:45:07 dwelch Exp $
 #
 # CSRSS: Client/server run-time subsystem
 #
 # ReactOS Operating System
 #
 TARGET=csrss
+
+BASE_CFLAGS = -I../../include
 
 OBJECTS = $(TARGET).o init.o $(TARGET).coff
 

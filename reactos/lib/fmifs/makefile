@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.6 1999/07/17 23:10:19 ea Exp $
+# $Id: makefile,v 1.7 1999/08/29 13:44:53 dwelch Exp $
 #
 # Makefile for fmifs.dll
 #
@@ -12,6 +12,8 @@ ifneq ($(HOST),mingw32-windows)
 else
   DLLTARGET=$(TARGET).dll
 endif
+
+BASE_CFLAGS = -I../../include
 
 all: $(DLLTARGET)
 

@@ -5,6 +5,7 @@ OBJECTS = ../common/crt0.o hello.o
 PROGS = hello.exe
 LIBS = ../../lib/kernel32/kernel32.a ../../lib/ntdll/ntdll.a
 CLEAN_FILES = hello.o hello.exe
+BASE_CFLAGS = -I../../include
 
 all: hello.exe
 

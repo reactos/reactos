@@ -61,12 +61,10 @@ endif
 
 CC = $(PREFIX)gcc
 NATIVE_CC = gcc
-CFLAGS = \
+CFLAGS = $(BASE_CFLAGS) \
 	-pipe \
 	-O2 \
-	-I../../../include \
-	-I../../include  \
-	-I../include \
+	-Iinclude \
 	-fno-builtin $(LEAN_AND_MEAN_DEFINE)  \
 	$(DEFINES) -Wall \
 	-Wstrict-prototypes $(DEBUGGING_CFLAGS) \

@@ -1,9 +1,11 @@
-# $Id: makefile_rex,v 1.6 1999/07/17 23:10:25 ea Exp $
+# $Id: makefile_rex,v 1.7 1999/08/29 13:44:58 dwelch Exp $
 #
 # ReactOS Operating System
 #
 # Makefile for user32.dll
 #
+BASE_CFLAGS = -I../../include
+
 include ../../rules.mak
 
 TARGET=user32
