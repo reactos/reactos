@@ -46,8 +46,8 @@ struct domain localdomain;	/* see uipc_domain.c ADDDOMAIN macro */
 struct proc *
 pfind(pid_t pid)
 {
-	printf(__FUNCTION__" called, pid=%d, returning x%p\n", 
-		(int)pid, (void*)&proc0);
+	printf("%s called, pid=%d, returning x%p\n", 
+	       __FUNCTION__, (int)pid, (void*)&proc0);
 	return &proc0;
 }
 
@@ -57,7 +57,7 @@ pfind(pid_t pid)
 void    
 psignal (struct proc *p, int sig)
 {
-	printf(__FUNCTION__" called, proc=x%p sig=%d\n", p, sig);
+    printf("%s called, proc=x%p sig=%d\n", __FUNCTION__, p, sig);
 }
 
 /*
@@ -66,7 +66,7 @@ psignal (struct proc *p, int sig)
 void    
 gsignal (int pgid, int sig)
 {
-	printf(__FUNCTION__" called, pgid=%d sig=%d\n", pgid, sig);
+	printf("%s called, pgid=%d sig=%d\n", __FUNCTION__, pgid, sig);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -97,12 +97,12 @@ copyout (void *kaddr, void *udaddr, u_int len)
  */
 int subyte          (void *base, int byte)
 {
-	return (int)((char *)base = (char)byte);
+    return (int)(base = (char *)byte);
 }
 
 int suibyte         (void *base, int byte)
 {
-	return (int)((char *)base = (char)byte);
+	return (int)(base = (char *)byte);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -194,7 +194,7 @@ sysctl_rdstruct(oldp, oldlenp, newp, sp, len)
  * normally, this is a builtin function in gcc
  * net/if.c doesn't seem to get it, though
  */
-int
+static int
 memcmp(const void *s1v, const void *s2v, size_t size)
 {
         register const char *s1 = s1v, *s2 = s2v;
