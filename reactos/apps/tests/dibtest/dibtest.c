@@ -64,7 +64,7 @@ void DIBTest(void)
   // 1BPP Test
   Test1BPP(Desktop);
 
-  Sleep(10000);
+  Sleep(50000);
 
   // Free up everything
   DeleteDC(Desktop);

@@ -402,7 +402,7 @@ HBITMAP STDCALL W32kCreateDIBSection(HDC hDC,
   if ((dc = DC_HandleToPtr(hDC)))
   {
     hbitmap = DIB_CreateDIBSection(dc, bmi, Usage, Bits, hSection, dwOffset, 0);
-	DC_ReleasePtr( hDC );
+	DC_ReleasePtr(hDC);
   }
 
   if (bDesktopDC)
@@ -419,12 +419,11 @@ HBITMAP DIB_CreateDIBSection(
   HBITMAP res = 0;
   BITMAPOBJ *bmp = NULL;
   DIBSECTION *dib = NULL;
-  int *colorMap = NULL;
-  int nColorMap;
 
   // Fill BITMAP32 structure with DIB data
   BITMAPINFOHEADER *bi = &bmi->bmiHeader;
   INT effHeight, totalSize;
+  UINT Entries = 0;
   BITMAP bm;
 
   DbgPrint("format (%ld,%ld), planes %d, bpp %d, size %ld, colors %ld (%s)\n",
@@ -446,27 +445,27 @@ HBITMAP DIB_CreateDIBSection(
   totalSize = bi->biSizeImage && bi->biCompression != BI_RGB
     ? bi->biSizeImage : bm.bmWidthBytes * effHeight;
 
-/*
   if (section)
-    bm.bmBits = MapViewOfFile(section, FILE_MAP_ALL_ACCESS,
-			      0L, offset, totalSize);
+/*    bm.bmBits = MapViewOfFile(section, FILE_MAP_ALL_ACCESS,
+			      0L, offset, totalSize); */
+    DbgPrint("DIB_CreateDIBSection: Cannot yet handle section DIBs\n");
   else if (ovr_pitch && offset)
     bm.bmBits = (LPVOID) offset;
-  else { */
+  else {
     offset = 0;
-/*    bm.bmBits = VirtualAlloc(NULL, totalSize,
-			     MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE); */
+    bm.bmBits = EngAllocUserMem(totalSize, 0);
+  }
 
-  bm.bmBits = ExAllocatePool(NonPagedPool, totalSize);
+/*  bm.bmBits = ExAllocatePool(NonPagedPool, totalSize); */
 
-/*  } */
-
-  if (usage == DIB_PAL_COLORS) memcpy(bmi->bmiColors, (UINT *)DIB_MapPaletteColors(dc, bmi), sizeof(UINT *));
+  if(usage == DIB_PAL_COLORS) memcpy(bmi->bmiColors, (UINT *)DIB_MapPaletteColors(dc, bmi), sizeof(UINT *));
 
   // Allocate Memory for DIB and fill structure
   if (bm.bmBits)
+  {
     dib = ExAllocatePool(PagedPool, sizeof(DIBSECTION));
     RtlZeroMemory(dib, sizeof(DIBSECTION));
+  }
 
   if (dib)
   {
@@ -515,10 +514,20 @@ HBITMAP DIB_CreateDIBSection(
         bmp->dib = (DIBSECTION *) dib;
       }
     }
+
+    /* WINE NOTE: WINE makes use of a colormap, which is a color translation table between the DIB and the X physical
+                  device. Obviously, this is left out of the ReactOS implementation. Instead, we call
+                  W32kSetDIBColorTable. */
+    if(bi->biBitCount == 1) { Entries = 2; } else
+    if(bi->biBitCount == 4) { Entries = 16; } else
+    if(bi->biBitCount == 8) { Entries = 256; }
+
+    bmp->ColorMap = ExAllocatePool(NonPagedPool, sizeof(RGBQUAD)*Entries);
+    RtlCopyMemory(bmp->ColorMap, bmi->bmiColors, sizeof(RGBQUAD)*Entries);
   }
 
   // Clean up in case of errors
-  if (!res || !bmp || !dib || !bm.bmBits || (bm.bmBitsPixel <= 8 && !colorMap))
+  if (!res || !bmp || !dib || !bm.bmBits)
   {
     DbgPrint("got an error res=%08x, bmp=%p, dib=%p, bm.bmBits=%p\n", res, bmp, dib, bm.bmBits);
 /*      if (bm.bmBits)
@@ -529,7 +538,6 @@ HBITMAP DIB_CreateDIBSection(
       VirtualFree(bm.bmBits, 0L, MEM_RELEASE), bm.bmBits = NULL;
     } */
 
-    if (colorMap) { ExFreePool(colorMap); colorMap = NULL; }
     if (dib) { ExFreePool(dib); dib = NULL; }
     if (bmp) { bmp = NULL; }
     if (res) { GDIOBJ_FreeObj(res, GO_BITMAP_MAGIC); res = 0; }
@@ -558,6 +566,7 @@ HBITMAP DIB_CreateDIBSection(
 
   // Return BITMAP handle and storage location
   if (bm.bmBits && bits) *bits = bm.bmBits;
+
   return res;
 }
 

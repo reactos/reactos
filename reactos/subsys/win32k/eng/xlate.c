@@ -53,7 +53,7 @@ ULONG ClosestColorMatch(ULONG SourceColor, ULONG *DestColors,
   PVIDEO_CLUTDATA cSourceColor;
   PVIDEO_CLUTDATA cDestColors;
   LONG idx = 0, i, rt;
-  ULONG cxRed, cxGreen, cxBlue, BestMatch = 65535;
+  ULONG cxRed, cxGreen, cxBlue, BestMatch = 16777215;
 
   // Simple cache -- only one value because we don't want to waste time
   // if the colors aren't very sequential

@@ -42,6 +42,12 @@ EngLineTo(SURFOBJ *Surface,
   // Assign DIB functions according to bytes per pixel
   switch(BitsPerFormat(Surface->iBitmapFormat))
   {
+    case 1:
+      DIB_PutPixel = (PFN_DIB_PutPixel)DIB_1BPP_PutPixel;
+      DIB_HLine    = (PFN_DIB_HLine)DIB_1BPP_HLine;
+      DIB_VLine    = (PFN_DIB_VLine)DIB_1BPP_VLine;
+      break;
+
     case 4:
       DIB_PutPixel = (PFN_DIB_PutPixel)DIB_4BPP_PutPixel;
       DIB_HLine    = (PFN_DIB_HLine)DIB_4BPP_HLine;

@@ -37,16 +37,17 @@ EngFreeMem(PVOID Mem)
 PVOID STDCALL
 EngAllocUserMem(ULONG cj, ULONG tag)
 {
-/*  PVOID newMem;
+  PVOID newMem = NULL;
+  NTSTATUS status;
 
-  return ZwAllocateVirtualMemory(mycurrentprocess, newMem, 0, cj,
-    MEM_COMMIT, PAGE_READWRITE); */
+  status = ZwAllocateVirtualMemory(NtCurrentProcess(), &newMem, 0, &cj, MEM_COMMIT, PAGE_READWRITE);
 
-  return NULL;
+  if(status != STATUS_SUCCESS) return NULL;
+  return newMem;
 }
 
 VOID STDCALL
 EngFreeUserMem(PVOID pv)
 {
-/*  ZwFreeVirtualMemory (mycurrentprocess, pv, 0, MEM_DECOMMIT); */
+  ZwFreeVirtualMemory (NtCurrentProcess(), &pv, 0, MEM_DECOMMIT);
 }

@@ -22,6 +22,7 @@ typedef struct _BITMAPOBJ
 
   /* For device-independent bitmaps: */
   DIBSECTION *dib;
+  RGBQUAD *ColorMap;
 } BITMAPOBJ, *PBITMAPOBJ;
 
 /*  Internal interface  */

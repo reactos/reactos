@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.41 2002/09/19 22:41:57 jfilby Exp $
+/* $Id: dc.c,v 1.42 2002/09/24 20:22:10 jfilby Exp $
  *
  * DC.C - Device context functions
  *
@@ -939,6 +939,7 @@ HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
   PXLATEOBJ XlateObj;
   PPALGDI PalGDI;
   WORD  objectMagic;
+  ULONG NumColors;
 
   if(!hDC || !hGDIObj) return NULL;
 
@@ -998,6 +999,16 @@ HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       // if we're working with a DIB, get the palette [fixme: only create if the selected palette is null]
       if(pb->dib)
       {
+        dc->w.bitsPerPixel = pb->dib->dsBmih.biBitCount;
+
+        if(pb->dib->dsBmih.biBitCount <= 8)
+        {
+          if(pb->dib->dsBmih.biBitCount == 1) { NumColors = 2; } else
+          if(pb->dib->dsBmih.biBitCount == 4) { NumColors = 16; } else
+          if(pb->dib->dsBmih.biBitCount == 8) { NumColors = 256; }
+
+          dc->w.hPalette = EngCreatePalette(PAL_INDEXED, NumColors, pb->ColorMap, 0, 0, 0);
+        } else
         if((pb->dib->dsBmih.biBitCount > 8) && (pb->dib->dsBmih.biBitCount < 24))
         {
           dc->w.hPalette = EngCreatePalette(PAL_BITFIELDS, pb->dib->dsBmih.biClrUsed, NULL, 0, 0, 0);
@@ -1006,6 +1017,8 @@ HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
         {
           dc->w.hPalette = EngCreatePalette(PAL_RGB, pb->dib->dsBmih.biClrUsed, NULL, 0, 0, 0);
         }
+      } else {
+        dc->w.bitsPerPixel = pb->bitmap.bmBitsPixel;
       }
       break;
 #if UPDATEREGIONS

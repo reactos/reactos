@@ -34,6 +34,11 @@ BOOLEAN CopyBitsCopy(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
   // Assign GetPixel DIB function according to bytes per pixel
   switch(DestGDI->BitsPerPixel)
   {
+    case 1:
+      return DIB_To_1BPP_Bitblt(DestSurf, SourceSurf, DestGDI, SourceGDI,
+                                DestRect, SourcePoint, Delta, ColorTranslation);
+      break;
+
     case 4:
       return DIB_To_4BPP_Bitblt(DestSurf, SourceSurf, DestGDI, SourceGDI,
                                 DestRect, SourcePoint, Delta, ColorTranslation);
