@@ -421,7 +421,7 @@ PsInitializeThread(PEPROCESS Process,
    Status = ObCreateObject(UserMode,
 			   PsThreadType,
 			   ThreadAttributes,
-			   UserMode,
+			   KernelMode,
 			   NULL,
 			   sizeof(ETHREAD),
 			   0,
@@ -443,19 +443,6 @@ PsInitializeThread(PEPROCESS Process,
     }
   Thread->ThreadsProcess = Process;
   Thread->Cid.UniqueProcess = (HANDLE)Thread->ThreadsProcess->UniqueProcessId;
-  
-  Status = ObInsertObject ((PVOID)Thread,
-			   NULL,
-			   DesiredAccess,
-			   0,
-			   NULL,
-			   ThreadHandle);
-  if (!NT_SUCCESS(Status))
-    {
-      ObDereferenceObject (Thread);
-      ObDereferenceObject (Process);
-      return Status;
-    }
 
    DPRINT("Thread = %x\n",Thread);
 
@@ -488,8 +475,14 @@ PsInitializeThread(PEPROCESS Process,
    KeReleaseDispatcherDatabaseLock(oldIrql);
 
    *ThreadPtr = Thread;
-
-   return(STATUS_SUCCESS);
+   
+   Status = ObInsertObject((PVOID)Thread,
+			   NULL,
+			   DesiredAccess,
+			   0,
+			   NULL,
+			   ThreadHandle);
+   return(Status);
 }
 
 
@@ -663,17 +656,64 @@ NtCreateThread(OUT PHANDLE ThreadHandle,
 	       IN ACCESS_MASK DesiredAccess,
 	       IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
 	       IN HANDLE ProcessHandle,
-	       OUT PCLIENT_ID Client,
+	       OUT PCLIENT_ID ClientId,
 	       IN PCONTEXT ThreadContext,
 	       IN PINITIAL_TEB InitialTeb,
 	       IN BOOLEAN CreateSuspended)
 {
+  HANDLE hThread;
+  CONTEXT SafeContext;
+  INITIAL_TEB SafeInitialTeb;
   PEPROCESS Process;
   PETHREAD Thread;
   PTEB TebBase;
-  NTSTATUS Status;
   PKAPC LdrInitApc;
   KIRQL oldIrql;
+  KPROCESSOR_MODE PreviousMode;
+  NTSTATUS Status = STATUS_SUCCESS;
+  
+  if(ThreadContext == NULL)
+  {
+    return STATUS_INVALID_PARAMETER;
+  }
+  
+  PreviousMode = ExGetPreviousMode();
+
+  if(PreviousMode != KernelMode)
+  {
+    _SEH_TRY
+    {
+      ProbeForWrite(ThreadHandle,
+                    sizeof(HANDLE),
+                    sizeof(ULONG));
+      if(ClientId != NULL)
+      {
+        ProbeForWrite(ClientId,
+                      sizeof(CLIENT_ID),
+                      sizeof(ULONG));
+      }
+      ProbeForRead(ThreadContext,
+                   sizeof(CONTEXT),
+                   sizeof(ULONG));
+      SafeContext = *ThreadContext;
+      ThreadContext = &SafeContext;
+      ProbeForRead(InitialTeb,
+                   sizeof(INITIAL_TEB),
+                   sizeof(ULONG));
+      SafeInitialTeb = *InitialTeb;
+      InitialTeb = &SafeInitialTeb;
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    if(!NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+  }
 
   DPRINT("NtCreateThread(ThreadHandle %x, PCONTEXT %x)\n",
 	 ThreadHandle,ThreadContext);
@@ -681,7 +721,7 @@ NtCreateThread(OUT PHANDLE ThreadHandle,
   Status = ObReferenceObjectByHandle(ProcessHandle,
                                      PROCESS_CREATE_THREAD,
                                      PsProcessType,
-                                     UserMode,
+                                     PreviousMode,
                                      (PVOID*)&Process,
                                      NULL);
   if(!NT_SUCCESS(Status))
@@ -691,7 +731,7 @@ NtCreateThread(OUT PHANDLE ThreadHandle,
 
   Status = PsInitializeThread(Process,
 			      &Thread,
-			      ThreadHandle,
+			      &hThread,
 			      DesiredAccess,
 			      ObjectAttributes,
 			      FALSE);
@@ -720,11 +760,6 @@ NtCreateThread(OUT PHANDLE ThreadHandle,
   Thread->Tcb.Teb = TebBase;
 
   Thread->StartAddress = NULL;
-
-  if (Client != NULL)
-    {
-      *Client = Thread->Cid;
-    }
 
   /*
    * Maybe send a message to the process's debugger
@@ -767,8 +802,21 @@ NtCreateThread(OUT PHANDLE ThreadHandle,
   PsUnblockThread(Thread, NULL, 0);
   KeReleaseDispatcherDatabaseLock(oldIrql);
 
+  _SEH_TRY
+  {
+    if(ClientId != NULL)
+    {
+      *ClientId = Thread->Cid;
+    }
+    *ThreadHandle = hThread;
+  }
+  _SEH_HANDLE
+  {
+    Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
 
-  return(STATUS_SUCCESS);
+  return Status;
 }
 
 
