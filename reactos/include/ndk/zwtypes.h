@@ -1,4 +1,4 @@
-/* $Id: zwtypes.h,v 1.1.2.1 2004/10/25 01:24:07 ion Exp $
+/* $Id: zwtypes.h,v 1.1.2.2 2004/10/25 21:52:24 weiden Exp $
  *
  *  ReactOS Headers
  *  Copyright (C) 1998-2004 ReactOS Team

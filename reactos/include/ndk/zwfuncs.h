@@ -1,5 +1,5 @@
 
-/* $Id: zwfuncs.h,v 1.1.2.1 2004/10/25 01:24:07 ion Exp $
+/* $Id: zwfuncs.h,v 1.1.2.2 2004/10/25 21:52:24 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2958,7 +2958,7 @@ ZwQueryMutant(
  *        Counter = Performance counter
  *	  Frequency = Performance frequency
  * REMARKS:
-	This procedure queries a tick count faster than 10ms ( The resolution for  Intel®-based CPUs is about 0.8 microseconds.)
+	This procedure queries a tick count faster than 10ms ( The resolution for  Intel -based CPUs is about 0.8 microseconds.)
 	This procedure maps to the win32 QueryPerformanceCounter, QueryPerformanceFrequency 
  * RETURNS: Status
  *
