@@ -99,6 +99,7 @@ lib\mpr\mpr.dll                         1
 lib\msacm\msacm32.dll                   1
 lib\msafd\msafd.dll                     1
 lib\msgina\msgina.dll                   1
+lib\msi\msi.dll                         1
 lib\msimg32\msimg32.dll                 1
 lib\msvcrt\msvcrt.dll                   1
 lib\msvcrt20\msvcrt20.dll               1
@@ -108,6 +109,7 @@ lib\ole32\ole32.dll                     1
 lib\oleaut32\oleaut32.dll               1
 lib\olepro32\olepro32.dll               1
 lib\psapi\psapi.dll                     1
+lib\riched20\riched20.dll               1
 lib\richedit\riched32.dll               1
 lib\rpcrt4\rpcrt4.dll                   1
 lib\samlib\samlib.dll                   1
@@ -146,8 +148,9 @@ subsys\system\cmd\cmd.exe               1
 subsys\system\explorer\explorer.exe     4
 subsys\system\explorer\explorer-cfg-template.xml 4
 subsys\system\explorer\notifyhook\notifyhook.dll 1
-subsys\system\ibrowser\ibrowser.exe     1
 subsys\system\format\format.exe         1
+subsys\system\ibrowser\ibrowser.exe     1
+subsys\system\msiexec\msiexec.exe       1
 subsys\system\notepad\notepad.exe       1
 subsys\system\regedit\regedit.exe       4
 subsys\system\regsvr32\regsvr32.exe     1
