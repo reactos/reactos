@@ -1,3 +1,4 @@
 Makefile
 winebuild
 winebuild.man
+*.exe
