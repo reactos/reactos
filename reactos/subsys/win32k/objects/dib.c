@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.46 2004/05/10 17:07:20 weiden Exp $
+ * $Id: dib.c,v 1.47 2004/05/15 08:52:25 navaraf Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -20,51 +20,92 @@
  */
 #include <w32k.h>
 
-UINT STDCALL NtGdiSetDIBColorTable(HDC  hDC,
-                           UINT  StartIndex,
-                           UINT  Entries,
-                           CONST RGBQUAD  *Colors)
+UINT STDCALL
+NtGdiSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Colors)
 {
-  PDC dc;
-  PALETTEENTRY * palEntry;
-  PPALGDI palette;
-  const RGBQUAD *end;
+   PDC dc;
+   PBITMAPOBJ BitmapObj;
 
-  if (!(dc = DC_LockDc(hDC))) return 0;
+   if (!(dc = DC_LockDc(hDC))) return 0;
 
-  if (!(palette = PALETTE_LockPalette((ULONG)dc->DevInfo->hpalDefault)))
-  {
-    DC_UnlockDc(hDC);
-    return 0;
-  }
+   BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
+   if (BitmapObj == NULL)
+   {
+      DC_UnlockDc(hDC);
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return 0;
+   }
 
-  // Transfer color info
+   if (BitmapObj->dib == NULL)
+   {
+      BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
+      DC_UnlockDc(hDC);
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return 0;
+   }
 
-  if (dc->w.bitsPerPixel <= 8)
-  {
-    palEntry = palette->IndexedColors + StartIndex;
-    if (StartIndex + Entries > (UINT) (1 << dc->w.bitsPerPixel))
-      Entries = (1 << dc->w.bitsPerPixel) - StartIndex;
+   if (BitmapObj->dib->dsBmih.biBitCount <= 8 &&
+       StartIndex > (1 << BitmapObj->dib->dsBmih.biBitCount))
+   {
+      if (StartIndex + Entries > (1 << BitmapObj->dib->dsBmih.biBitCount))
+         Entries = (1 << BitmapObj->dib->dsBmih.biBitCount) - StartIndex;
 
-    if (StartIndex + Entries > palette->NumColors)
-      Entries = palette->NumColors - StartIndex;
+      MmCopyFromCaller(BitmapObj->ColorMap + StartIndex, Colors, Entries * sizeof(RGBQUAD));
 
-    for (end = Colors + Entries; Colors < end; palEntry++, Colors++)
-    {
-      palEntry->peRed   = Colors->rgbRed;
-      palEntry->peGreen = Colors->rgbGreen;
-      palEntry->peBlue  = Colors->rgbBlue;
-    }
-  }
-  else
-  {
-    Entries = 0;
-  }
+      /* Rebuild the palette. */
+      NtGdiDeleteObject(dc->w.hPalette);
+      dc->w.hPalette = PALETTE_AllocPalette(PAL_INDEXED,
+         1 << BitmapObj->dib->dsBmih.biBitCount,
+         (PULONG)BitmapObj->ColorMap, 0, 0, 0);
+   }
+   else
+      Entries = 0;
 
-  PALETTE_UnlockPalette(dc->DevInfo->hpalDefault);
-  DC_UnlockDc(hDC);
+   BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
+   DC_UnlockDc(hDC);
 
-  return Entries;
+   return Entries;
+}
+
+UINT STDCALL
+NtGdiGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors)
+{
+   PDC dc;
+   PBITMAPOBJ BitmapObj;
+
+   if (!(dc = DC_LockDc(hDC))) return 0;
+
+   BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
+   if (BitmapObj == NULL)
+   {
+      DC_UnlockDc(hDC);
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return 0;
+   }
+
+   if (BitmapObj->dib == NULL)
+   {
+      BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
+      DC_UnlockDc(hDC);
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return 0;
+   }
+
+   if (BitmapObj->dib->dsBmih.biBitCount <= 8 &&
+       StartIndex > (1 << BitmapObj->dib->dsBmih.biBitCount))
+   {
+      if (StartIndex + Entries > (1 << BitmapObj->dib->dsBmih.biBitCount))
+         Entries = (1 << BitmapObj->dib->dsBmih.biBitCount) - StartIndex;
+
+      MmCopyToCaller(Colors, BitmapObj->ColorMap + StartIndex, Entries * sizeof(RGBQUAD));
+   }
+   else
+      Entries = 0;
+
+   BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
+   DC_UnlockDc(hDC);
+
+   return Entries;
 }
 
 // Converts a DIB to a device-dependent bitmap
@@ -248,14 +289,6 @@ NtGdiSetDIBitsToDevice(
 {
   UNIMPLEMENTED;
   return 0;
-}
-
-UINT STDCALL NtGdiGetDIBColorTable(HDC  hDC,
-                           UINT  StartIndex,
-                           UINT  Entries,
-                           RGBQUAD  *Colors)
-{
-  UNIMPLEMENTED;
 }
 
 // Converts a device-dependent bitmap to a DIB
@@ -1021,7 +1054,7 @@ DIB_CreateDIBSection(
   UINT Entries = 0;
   BITMAP bm;
 
-  DPRINT("format (%ld,%ld), planes %d, bpp %d, size %ld, colors %ld (%s)\n",
+  DPRINT1("format (%ld,%ld), planes %d, bpp %d, size %ld, colors %ld (%s)\n",
 	bi->biWidth, bi->biHeight, bi->biPlanes, bi->biBitCount,
 	bi->biSizeImage, bi->biClrUsed, usage == DIB_PAL_COLORS? "PAL" : "RGB");
 

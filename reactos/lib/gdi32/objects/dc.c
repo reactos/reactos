@@ -812,6 +812,22 @@ CombineTransform(
  */
 UINT
 STDCALL
+GetDIBColorTable(
+	HDC		hdc,
+	UINT		uStartIndex,
+	UINT		cEntries,
+	RGBQUAD		*pColors
+	)
+{
+  DbgPrint("GetDIBColorTable\n");
+  return NtGdiGetDIBColorTable(hdc, uStartIndex, cEntries, pColors);
+}
+
+/*
+ * @implemented
+ */
+UINT
+STDCALL
 SetDIBColorTable(
 	HDC		hdc,
 	UINT		uStartIndex,

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.60 2004/04/25 20:05:30 weiden Exp $
+/* $Id: stubs.c,v 1.61 2004/05/15 08:52:25 navaraf Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -752,22 +752,6 @@ AngleArc(
 	return FALSE;
 }
 
-
-/*
- * @unimplemented
- */
-UINT
-STDCALL
-GetDIBColorTable(
-	HDC		hdc,
-	UINT		a1,
-	UINT		a2,
-	RGBQUAD		*a3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
 /*
  * @unimplemented 
