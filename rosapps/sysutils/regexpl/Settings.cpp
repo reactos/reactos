@@ -1,4 +1,4 @@
-/* $Id: Settings.cpp,v 1.1 2001/04/16 05:03:29 narnaoud Exp $
+/* $Id: Settings.cpp,v 1.2 2001/04/24 22:53:00 narnaoud Exp $
  *
  * regexpl - Console Registry Explorer
  *
@@ -28,14 +28,14 @@
 #include "Prompt.h"
 
 #define DEFAULT_NORMAL_TEXT_ATTRIBUTES           FOREGROUND_BLUE|FOREGROUND_GREEN|FOREGROUND_RED
-#define DEFAULT_PROMPT_TEXT_ATTRIBUTES           FOREGROUND_BLUE|FOREGROUND_GREEN|FOREGROUND_RED
+#define DEFAULT_COMMAND_TEXT_ATTRIBUTES           FOREGROUND_BLUE|FOREGROUND_GREEN|FOREGROUND_RED
 
 CSettings::CSettings()
 {
   m_pszPrompt = NULL;
 
   m_wNormalTextAttributes = DEFAULT_NORMAL_TEXT_ATTRIBUTES;
-  m_wPromptTextAttributes = DEFAULT_PROMPT_TEXT_ATTRIBUTES;
+  m_wCommandTextAttributes = DEFAULT_COMMAND_TEXT_ATTRIBUTES;
 }
 
 CSettings::~CSettings()
@@ -107,14 +107,14 @@ HRESULT CSettings::Load(LPCTSTR pszLoadKey)
   }
 
   dwSize = sizeof(DWORD);
-  nError = RegQueryValueEx(hKey,PROMPT_TEXT_ATTRIBUTES_VALUE_NAME,NULL,&dwType,(BYTE *)&w,&dwSize);
+  nError = RegQueryValueEx(hKey,COMMAND_TEXT_ATTRIBUTES_VALUE_NAME,NULL,&dwType,(BYTE *)&w,&dwSize);
   if (nError != ERROR_SUCCESS || dwType != REG_DWORD)
   {
     hr = S_FALSE;
   }
   else
   {
-    m_wPromptTextAttributes = (WORD)w;
+    m_wCommandTextAttributes = (WORD)w;
   }
 
 Exit:
@@ -140,7 +140,7 @@ WORD CSettings::GetNormalTextAttributes()
   return m_wNormalTextAttributes;
 }
 
-WORD CSettings::GetPromptTextAttributes()
+WORD CSettings::GetCommandTextAttributes()
 {
-  return m_wPromptTextAttributes;
+  return m_wCommandTextAttributes;
 }

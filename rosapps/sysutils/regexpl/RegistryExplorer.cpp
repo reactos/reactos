@@ -1,4 +1,4 @@
-/* $Id: RegistryExplorer.cpp,v 1.6 2001/04/16 05:11:54 narnaoud Exp $
+/* $Id: RegistryExplorer.cpp,v 1.7 2001/04/24 22:53:00 narnaoud Exp $
  *
  * regexpl - Console Registry Explorer
  *
@@ -85,61 +85,58 @@ BOOL WINAPI HandlerRoutine(DWORD dwCtrlType)
 //int _tmain(/*int argc, TCHAR* argv[], TCHAR* envp[]*/)
 int main ()
 {
-	CShellCommandsLinkedList CommandsList(Console);
-
-	CShellCommandExit ExitCommand;
-	CommandsList.AddCommand(&ExitCommand);
-
-	CShellCommandVersion VersionCommand;
-	CommandsList.AddCommand(&VersionCommand);
-
-	CShellCommandHelp HelpCommand(CommandsList);
-	CommandsList.AddCommand(&HelpCommand);
-
-	CShellCommandDir DirCommand(Tree);
-	CommandsList.AddCommand(&DirCommand);
-
-	CShellCommandChangeKey ChangeKeyCommand(Tree);
-	CommandsList.AddCommand(&ChangeKeyCommand);
-
-	CShellCommandValue ValueCommand(Tree);
-	CommandsList.AddCommand(&ValueCommand);
-
-	CShellCommandOwner OwnerCommand(Tree);
-	CommandsList.AddCommand(&OwnerCommand);
-
-	CShellCommandDACL DACLCommand(Tree);
-	CommandsList.AddCommand(&DACLCommand);
-
-	CShellCommandSACL SACLCommand(Tree);
-	CommandsList.AddCommand(&SACLCommand);
-
-	//CShellCommandDOKA DOKACommand(Tree);
-	//CommandsList.AddCommand(&DOKACommand);
-
-	CShellCommandConnect ConnectCommand(Tree);
-	CommandsList.AddCommand(&ConnectCommand);
-
-	CShellCommandNewKey NewKeyCommand(Tree);
-	CommandsList.AddCommand(&NewKeyCommand);
-
-	CShellCommandDeleteKey DeleteKeyCommand(Tree);
-	CommandsList.AddCommand(&DeleteKeyCommand);
-
-	CShellCommandSetValue SetValueCommand(Tree);
-	CommandsList.AddCommand(&SetValueCommand);
-
-	CShellCommandDeleteValue DeleteValueCommand(Tree);
-	CommandsList.AddCommand(&DeleteValueCommand);
-
-	CArgumentParser Parser;
-
-	int nRetCode = 0;
+  int nRetCode = 0;
 
   HRESULT hr;
 
   CSettings *pSettings = NULL;
   CPrompt *pPrompt = NULL;
+
+  CShellCommandsLinkedList CommandsList(Console);
+
+  CShellCommandExit ExitCommand;
+  CommandsList.AddCommand(&ExitCommand);
+
+  CShellCommandVersion VersionCommand;
+  CommandsList.AddCommand(&VersionCommand);
+
+  CShellCommandHelp HelpCommand(CommandsList);
+  CommandsList.AddCommand(&HelpCommand);
+
+  CShellCommandDir DirCommand(Tree);
+  CommandsList.AddCommand(&DirCommand);
+
+  CShellCommandChangeKey ChangeKeyCommand(Tree);
+  CommandsList.AddCommand(&ChangeKeyCommand);
+
+  CShellCommandValue ValueCommand(Tree);
+  CommandsList.AddCommand(&ValueCommand);
+
+  CShellCommandOwner OwnerCommand(Tree);
+  CommandsList.AddCommand(&OwnerCommand);
+
+  CShellCommandDACL DACLCommand(Tree);
+  CommandsList.AddCommand(&DACLCommand);
+
+  CShellCommandSACL SACLCommand(Tree);
+  CommandsList.AddCommand(&SACLCommand);
+
+  CShellCommandConnect ConnectCommand(Tree);
+  CommandsList.AddCommand(&ConnectCommand);
+
+  CShellCommandNewKey NewKeyCommand(Tree);
+  CommandsList.AddCommand(&NewKeyCommand);
+
+  CShellCommandDeleteKey DeleteKeyCommand(Tree);
+  CommandsList.AddCommand(&DeleteKeyCommand);
+
+  CShellCommandSetValue SetValueCommand(Tree);
+  CommandsList.AddCommand(&SetValueCommand);
+
+  CShellCommandDeleteValue DeleteValueCommand(Tree);
+  CommandsList.AddCommand(&DeleteValueCommand);
+
+  CArgumentParser Parser;
 
   pSettings = new CSettings();
   if (!pSettings)
@@ -215,7 +212,7 @@ GetCommand:
 	blnCommandExecutionInProgress = FALSE;
 
 	// Set command line color
-  Console.SetTextAttribute(pSettings->GetPromptTextAttributes());
+  Console.SetTextAttribute(pSettings->GetCommandTextAttributes());
 	if (!Console.ReadLine())
     goto Abort;
 
