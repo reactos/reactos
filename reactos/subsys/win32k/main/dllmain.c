@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.33 2003/04/01 08:43:46 gvg Exp $
+/* $Id: dllmain.c,v 1.34 2003/04/02 23:18:48 gdalsnes Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -88,6 +88,13 @@ DllMain (
   if (!NT_SUCCESS(Status))
     {
       DbgPrint("Failed to initialize message queue implementation.\n");
+      return(Status);
+    }
+
+  Status = InitTimerImpl();
+  if (!NT_SUCCESS(Status))
+    {
+      DbgPrint("Failed to initialize timer implementation.\n");
       return(Status);
     }
 
