@@ -1583,30 +1583,41 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 	      switch (FileSystemList->CurrentFileSystem)
 	        {
 		  case FsFat:
-		    if (DiskEntry->UseLba == FALSE)
+		    if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (4200ULL * 1024ULL))
 		      {
-			if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (32ULL * 1024ULL * 1024ULL))
+			/* FAT12 CHS partition (disk is smaller than 4.1MB) */
+			PartEntry->PartInfo[0].PartitionType = PARTITION_FAT_12;
+		      }
+		    else if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (32ULL * 1024ULL * 1024ULL))
+		      {
+			/* FAT16 CHS partition (disk is smaller than 32MB) */
+			PartEntry->PartInfo[0].PartitionType = PARTITION_FAT_16;
+		      }
+		    else if (DiskEntry->UseLba == FALSE)
+		      {
+			if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (512ULL * 1024ULL * 1024ULL))
 			  {
-			    /* FAT16 CHS partition (disk is smaller than 32MB) */
-			    PartEntry->PartInfo[0].PartitionType = PARTITION_FAT_16;
+			    /* FAT16 CHS partition (disk is smaller than 512MB) */
+			    PartEntry->PartInfo[0].PartitionType = PARTITION_HUGE;
 			  }
 			else
 			  {
-			    /* FAT16 CHS partition (disk is smaller than 8.4GB) */
-			    PartEntry->PartInfo[0].PartitionType = PARTITION_HUGE;
+			    /* FAT32 CHS partition (partition size 512MB or larger) */
+			    PartEntry->PartInfo[0].PartitionType = PARTITION_FAT32;
 			  }
-		      }
-		    else if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (512ULL * 1024ULL * 1024ULL))
-		      {
-		        /* FAT16 LBA partition (partition size is smaller than 512MB) */
-		        DPRINT1("%x\n", PartEntry->PartInfo[0].PartitionType);
-		        PartEntry->PartInfo[0].PartitionType = PARTITION_XINT13;
 		      }
 		    else
 		      {
-		        DPRINT1("%x\n", PartEntry->PartInfo[0].PartitionType);
-		        /* FAT32 LBA partition (partition size 512MB or larger) */
-		        PartEntry->PartInfo[0].PartitionType = PARTITION_FAT32_XINT13;
+			if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (512ULL * 1024ULL * 1024ULL))
+			  {
+			    /* FAT16 LBA partition (partition size is smaller than 512MB) */
+			    PartEntry->PartInfo[0].PartitionType = PARTITION_XINT13;
+			  }
+			else
+			  {
+			    /* FAT32 LBA partition (partition size 512MB or larger) */
+			    PartEntry->PartInfo[0].PartitionType = PARTITION_FAT32_XINT13;
+			  }
 		      }
 		    break;
 
@@ -1689,7 +1700,7 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 		    PartitionList->CurrentPartition->PartInfo[0].PartitionNumber);
 	  RtlCreateUnicodeString (&DestinationRootPath,
 				  PathBuffer);
-	  DPRINT1 ("DestinationRootPath: %wZ\n", &DestinationRootPath);
+	  DPRINT ("DestinationRootPath: %wZ\n", &DestinationRootPath);
 
 
 	  /* Set SystemRootPath */
@@ -1700,7 +1711,7 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 		    PartitionList->ActiveBootPartition->PartInfo[0].PartitionNumber);
 	  RtlCreateUnicodeString (&SystemRootPath,
 				  PathBuffer);
-	  DPRINT1 ("SystemRootPath: %wZ\n", &SystemRootPath);
+	  DPRINT ("SystemRootPath: %wZ\n", &SystemRootPath);
 
 
 	  switch (FileSystemList->CurrentFileSystem)
@@ -2036,7 +2047,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
       if (!InfGetData (&FilesContext, &FileKeyName, &FileKeyValue))
 	break;
 
-      DPRINT1("FileKeyName: '%S'  FileKeyValue: '%S'\n", FileKeyName, FileKeyValue);
+      DPRINT ("FileKeyName: '%S'  FileKeyValue: '%S'\n", FileKeyName, FileKeyValue);
 
       /* Lookup target directory */
       if (!InfFindFirstLine (SetupInf, L"Directories", FileKeyValue, &DirContext))
