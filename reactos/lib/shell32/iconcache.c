@@ -317,7 +317,7 @@ void SIC_Destroy(void)
  * Shell_GetImageList			[SHELL32.71]
  *
  * PARAMETERS
- *  imglist[1|2] [OUT] pointer which recive imagelist handles
+ *  imglist[1|2] [OUT] pointer which receives imagelist handles
  *
  */
 BOOL WINAPI Shell_GetImageList(HIMAGELIST * lpBigList, HIMAGELIST * lpSmallList)

@@ -36,8 +36,7 @@
 #define NO_SHLWAPI_REG
 #include "shlwapi.h"
 
-#include "control.h"
-
+#include "cpanel.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shlctrl);
 

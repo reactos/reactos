@@ -17,6 +17,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifndef __WINE_SHELL_CPANEL_H
+#define __WINE_SHELL_CPANEL_H
+
 typedef struct CPlApplet {
     struct CPlApplet*   next;		/* linked list */
     HWND		hWnd;
@@ -39,3 +42,4 @@ typedef struct CPanel {
 CPlApplet* Control_LoadApplet(HWND hWnd, LPCWSTR cmd, CPanel* panel);
 CPlApplet* Control_UnloadApplet(CPlApplet* applet);
 
+#endif /* __WINE_SHELL_CPANEL_H */

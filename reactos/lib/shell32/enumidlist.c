@@ -35,7 +35,7 @@
 #include "pidl.h"
 #include "shlguid.h"
 #include "shell32_main.h"
-#include "control.h"
+#include "cpanel.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
