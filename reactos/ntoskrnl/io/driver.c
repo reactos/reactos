@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.44 2004/04/11 15:31:21 jfilby Exp $
+/* $Id: driver.c,v 1.45 2004/04/12 15:22:53 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -1514,11 +1514,14 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
     * Check security privileges
     */
 
+/* FIXME: Uncomment when privileges will be correctly implemented. */
+#if 0
    if (!SeSinglePrivilegeCheck(SeLoadDriverPrivilege, KeGetPreviousMode()))
    {
       DPRINT("Privilege not held\n");
       return STATUS_PRIVILEGE_NOT_HELD;
    }
+#endif
 
    RtlInitUnicodeString(&ImagePath, NULL);
 
