@@ -1,4 +1,4 @@
-/* $Id: sd.c,v 1.18 2004/08/03 19:20:39 ion Exp $
+/* $Id: sd.c,v 1.19 2004/08/04 02:36:53 ion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -138,10 +138,10 @@ SeQuerySecurityDescriptorInfo(IN PSECURITY_INFORMATION SecurityInformation,
 			      IN PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor OPTIONAL)
 {
   PSECURITY_DESCRIPTOR ObjectSd;
-  PSID Owner;
-  PSID Group;
-  PACL Dacl;
-  PACL Sacl;
+  PSID Owner = 0;
+  PSID Group = 0;
+  PACL Dacl = 0;
+  PACL Sacl = 0;
   ULONG OwnerLength = 0;
   ULONG GroupLength = 0;
   ULONG DaclLength = 0;
