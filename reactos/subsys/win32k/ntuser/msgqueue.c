@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.26 2003/10/09 06:13:05 gvg Exp $
+/* $Id: msgqueue.c,v 1.27 2003/10/30 22:03:00 mtempel Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -179,7 +179,9 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
   PWINDOW_OBJECT Window = NULL;
   HWND Wnd;
   POINT Point;
-  
+
+  LPARAM SpareLParam;
+
   /* handle WM_MOUSEWHEEL messages differently, we don't need to check where
      the mouse cursor is, we just send it to the window with the current focus */
   if(Msg == WM_MOUSEWHEEL)
@@ -203,7 +205,36 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
     ExFreePool(Message);
     return FALSE;
   }
-  
+
+  /*Handle WM_XBUTTONDOWN messages differently too.  We need to check to see 
+  **if the cursor is above an inactive window.
+  */
+  if (Msg == WM_LBUTTONDOWN || 
+      Msg == WM_MBUTTONDOWN ||
+      Msg == WM_RBUTTONDOWN  )
+  {
+    *ScreenPoint = Message->Msg.pt;
+    Wnd = NtUserWindowFromPoint(ScreenPoint->x, ScreenPoint->y);
+    /*
+    **Make sure that we have a window that is not already in focus
+    */
+    if (0 != Wnd && Wnd != IntGetFocusWindow())
+    {
+        DbgPrint("Changing Focus window to 0x%X\n", Wnd);
+        
+        Window = IntGetWindowObject(Wnd);
+        SpareLParam = MAKELONG(WinPosWindowFromPoint(ScopeWin, Message->Msg.pt, &Window), Msg);
+        
+        NtUserPostMessage(Wnd, WM_MOUSEACTIVATE, (WPARAM)Window->ParentHandle, (LPARAM)SpareLParam);
+        NtUserPostMessage(Wnd, Msg, Message->Msg.wParam, Message->Msg.lParam);
+        
+        IntReleaseWindowObject(Window);
+        
+        return FALSE;   
+    }
+
+  }
+
   if ((Window = IntGetCaptureWindow()) == NULL)
   {
     *HitTest = WinPosWindowFromPoint(ScopeWin, Message->Msg.pt, &Window);
