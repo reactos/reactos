@@ -1,4 +1,3 @@
-
 #ifndef _SMSS_H_INCLUDED_
 #define _SMSS_H_INCLUDED_
 
@@ -15,6 +14,9 @@
 /* FUNCTIONS ***********/
 
 /* init.c */
+
+extern HANDLE SmpHeap;
+
 NTSTATUS
 InitSessionManager(HANDLE Children[]);
 
@@ -23,16 +25,32 @@ InitSessionManager(HANDLE Children[]);
 void DisplayString (LPCWSTR lpwString);
 void PrintString (char* fmt,...);
 
-
 /* smapi.c */
 
 NTSTATUS
-SmCreateApiPort(VOID);
+SmpCreateApiPort(VOID);
 
 VOID STDCALL
-SmApiThread(HANDLE Port);
+SmpApiThread(HANDLE Port);
 
+/* client.c */
 
+VOID STDCALL
+SmpInitializeClientManagement(VOID);
+
+NTSTATUS STDCALL
+SmpCreateClient(SM_PORT_MESSAGE);
+
+NTSTATUS STDCALL
+SmpDestroyClient(ULONG);
+
+/* debug.c */
+
+extern HANDLE DbgSsApiPort;
+extern HANDLE DbgUiApiPort;
+
+NTSTATUS STDCALL
+SmpInitializeDbgSs(VOID);
 
 #endif /* _SMSS_H_INCLUDED_ */
 

@@ -33,7 +33,7 @@
 #include <ntdll/rtl.h>
 #include <ntdll/ldr.h>
 #include <rosrtl/string.h>
-
+#include <sm/api.h>
 #include "smss.h"
 
 #define NDEBUG
@@ -41,8 +41,7 @@
 
 /* GLOBALS ******************************************************************/
 
-HANDLE DbgSsApiPort = INVALID_HANDLE_VALUE;
-HANDLE DbgUiApiPort = INVALID_HANDLE_VALUE;
+HANDLE SmpHeap = NULL;
 
 PWSTR SmSystemEnvironment = NULL;
 
@@ -824,6 +823,20 @@ InitSessionManager(HANDLE Children[])
   HANDLE CsrssInitEvent;
   WCHAR UnicodeBuffer[MAX_PATH];
 
+  /* Create our own heap */
+  SmpHeap = RtlCreateHeap(HEAP_GROWABLE,
+                          NULL,
+                          65536,
+                          65536,
+                          NULL,
+                          NULL);
+  if (NULL == SmpHeap)
+    {
+      DbgPrint("SMSS: %s: failed to create private heap, aborting\n",__FUNCTION__);
+      return STATUS_UNSUCCESSFUL;
+    }
+
+
   /* Create object directories */
   Status = SmCreateObjectDirectories();
   if (!NT_SUCCESS(Status))
@@ -832,8 +845,8 @@ InitSessionManager(HANDLE Children[])
       return(Status);
     }
 
-  /* Create the SmApiPort object (LPC) */
-  Status = SmCreateApiPort();
+  /* Create the \SmApiPort object (LPC) */
+  Status = SmpCreateApiPort();
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("SM: Failed to create SmApiPort (Status %lx)\n", Status);
@@ -915,6 +928,13 @@ InitSessionManager(HANDLE Children[])
       return(Status);
     }
 #endif
+
+  /*
+   * Initialize SM client management:
+   * this MUST be done before any
+   * subsystem server is run.
+   */
+  SmpInitializeClientManagement();
 
   DPRINT("SM: loading subsystems\n");
 
@@ -1043,50 +1063,15 @@ InitSessionManager(HANDLE Children[])
     }
   Children[CHILD_WINLOGON] = ProcessInfo.ProcessHandle;
 
-  /* Create the \DbgSsApiPort object (LPC) */
-  RtlRosInitUnicodeStringFromLiteral(&UnicodeString,
-		       L"\\DbgSsApiPort");
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &UnicodeString,
-			     PORT_ALL_ACCESS,
-			     NULL,
-			     NULL);
-
-  Status = NtCreatePort(&DbgSsApiPort,
-			&ObjectAttributes,
-			0,
-			0,
-			0);
-
+  /* Initialize the DBGSS */
+  Status = SmpInitializeDbgSs();
   if (!NT_SUCCESS(Status))
     {
+      DisplayString(L"SM: DbgSs initialization failed!\n");
+      NtTerminateProcess(Children[CHILD_WINLOGON],0);
+      NtTerminateProcess(Children[CHILD_CSRSS],0);
       return(Status);
     }
-#ifndef NDEBUG
-  DisplayString(L"SM: DbgSsApiPort created...\n");
-#endif
-
-  /* Create the \DbgUiApiPort object (LPC) */
-  RtlRosInitUnicodeStringFromLiteral(&UnicodeString,
-		       L"\\DbgUiApiPort");
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &UnicodeString,
-			     PORT_ALL_ACCESS,
-			     NULL,
-			     NULL);
-
-  Status = NtCreatePort(&DbgUiApiPort,
-			&ObjectAttributes,
-			0,
-			0,
-			0);
-  if (!NT_SUCCESS(Status))
-    {
-      return(Status);
-    }
-#ifndef NDEBUG
-  DisplayString (L"SM: DbgUiApiPort created...\n");
-#endif
 
   return(STATUS_SUCCESS);
 }

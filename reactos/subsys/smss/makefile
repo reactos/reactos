@@ -15,7 +15,7 @@ TARGET_CFLAGS = -D__NTAPP__
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS -Wall -Werror
 
-TARGET_OBJECTS = $(TARGET_NAME).o init.o smapi.o
+TARGET_OBJECTS = $(TARGET_NAME).o init.o smapi.o client.o debug.o
 
 include $(PATH_TO_TOP)/rules.mak
 

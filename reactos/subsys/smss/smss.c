@@ -27,7 +27,7 @@
  * 		Compiled successfully with egcs 1.1.2
  */
 #include <ddk/ntddk.h>
-
+#include <sm/api.h>
 #include "smss.h"
 
 #define NDEBUG
