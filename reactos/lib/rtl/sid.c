@@ -1,4 +1,4 @@
-/* $Id: sid.c,v 1.4 2004/07/12 19:39:29 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -22,8 +22,10 @@
 /* FUNCTIONS ***************************************************************/
 
 BOOLEAN STDCALL
-RtlValidSid(IN PSID Sid)
+RtlValidSid(IN PSID Sid_)
 {
+  PISID Sid =  Sid_;
+  
   if ((Sid->Revision != SID_REVISION) ||
       (Sid->SubAuthorityCount > SID_MAX_SUB_AUTHORITIES))
     {
@@ -48,10 +50,12 @@ RtlLengthRequiredSid(IN UCHAR SubAuthorityCount)
  * @implemented
  */
 NTSTATUS STDCALL
-RtlInitializeSid(IN PSID Sid,
+RtlInitializeSid(IN PSID Sid_,
                  IN PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
                  IN UCHAR SubAuthorityCount)
 {
+  PISID Sid =  Sid_;
+  
   Sid->Revision = SID_REVISION;
   Sid->SubAuthorityCount = SubAuthorityCount;
   memcpy(&Sid->IdentifierAuthority,
@@ -66,9 +70,11 @@ RtlInitializeSid(IN PSID Sid,
  * @implemented
  */
 PULONG STDCALL
-RtlSubAuthoritySid(IN PSID Sid,
+RtlSubAuthoritySid(IN PSID Sid_,
                    IN ULONG SubAuthority)
 {
+  PISID Sid =  Sid_;
+  
   return &Sid->SubAuthority[SubAuthority];
 }
 
@@ -77,8 +83,10 @@ RtlSubAuthoritySid(IN PSID Sid,
  * @implemented
  */
 PUCHAR STDCALL
-RtlSubAuthorityCountSid(IN PSID Sid)
+RtlSubAuthorityCountSid(IN PSID Sid_)
 {
+  PISID Sid =  Sid_;
+  
   return &Sid->SubAuthorityCount;
 }
 
@@ -87,9 +95,12 @@ RtlSubAuthorityCountSid(IN PSID Sid)
  * @implemented
  */
 BOOLEAN STDCALL
-RtlEqualSid(IN PSID Sid1,
-            IN PSID Sid2)
+RtlEqualSid(IN PSID Sid1_,
+            IN PSID Sid2_)
 {
+  PISID Sid1 =  Sid1_;
+  PISID Sid2 =  Sid2_;
+    
   if (Sid1->Revision != Sid2->Revision)
    {
       return(FALSE);
@@ -110,8 +121,10 @@ RtlEqualSid(IN PSID Sid1,
  * @implemented
  */
 ULONG STDCALL
-RtlLengthSid(IN PSID Sid)
+RtlLengthSid(IN PSID Sid_)
 {
+  PISID Sid =  Sid_;
+  
   return (sizeof(SID) + (Sid->SubAuthorityCount-1) * sizeof(ULONG));
 }
 
@@ -180,8 +193,10 @@ RtlCopySidAndAttributesArray(ULONG Count,
  * @implemented
  */
 PSID_IDENTIFIER_AUTHORITY STDCALL
-RtlIdentifierAuthoritySid(IN PSID Sid)
+RtlIdentifierAuthoritySid(IN PSID Sid_)
 {
+  PISID Sid =  Sid_;
+  
   return &Sid->IdentifierAuthority;
 }
 
@@ -202,7 +217,7 @@ RtlAllocateAndInitializeSid(PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
 			    ULONG SubAuthority7,
 			    PSID *Sid)
 {
-  PSID pSid;
+  PISID pSid;
 
   if (SubAuthorityCount > 8)
     return STATUS_INVALID_SID;
@@ -267,9 +282,12 @@ RtlFreeSid(IN PSID Sid)
  * @implemented
  */
 BOOLEAN STDCALL
-RtlEqualPrefixSid(IN PSID Sid1,
-                  IN PSID Sid2)
+RtlEqualPrefixSid(IN PSID Sid1_,
+                  IN PSID Sid2_)
 {
+  PISID Sid1 =  Sid1_;
+  PISID Sid2 =  Sid2_;
+    
    return(Sid1->SubAuthorityCount == Sid2->SubAuthorityCount &&
           !RtlCompareMemory(Sid1, Sid2,
                             (Sid1->SubAuthorityCount - 1) * sizeof(DWORD) + 8));
@@ -281,13 +299,14 @@ RtlEqualPrefixSid(IN PSID Sid1,
  */
 NTSTATUS STDCALL
 RtlConvertSidToUnicodeString(PUNICODE_STRING String,
-                             PSID Sid,
+                             PSID Sid_,
                              BOOLEAN AllocateBuffer)
 {
    WCHAR Buffer[256];
    PWSTR wcs;
    ULONG Length;
    ULONG i;
+   PISID Sid =  Sid_;
 
    if (RtlValidSid (Sid) == FALSE)
       return STATUS_INVALID_SID;

@@ -1,4 +1,4 @@
-/* $Id: luid.c,v 1.10 2004/08/15 16:39:11 chorns Exp $
+/* $Id$
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -20,15 +20,15 @@ static KSPIN_LOCK LuidLock;
 static LARGE_INTEGER LuidIncrement;
 static LARGE_INTEGER LuidValue;
 
-#define SYSTEM_LUID   0x3E7;
-
 /* FUNCTIONS *****************************************************************/
 
 VOID INIT_FUNCTION
 SepInitLuid(VOID)
 {
+  LARGE_INTEGER DummyLuidValue = SYSTEM_LUID;
+  
   KeInitializeSpinLock(&LuidLock);
-  LuidValue.QuadPart = SYSTEM_LUID;
+  LuidValue = DummyLuidValue;
   LuidIncrement.QuadPart = 1;
 }
 

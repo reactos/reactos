@@ -83,8 +83,8 @@ typedef struct _OBJECT_ATTRIBUTES
    HANDLE RootDirectory;
    PUNICODE_STRING ObjectName;
    ULONG Attributes;
-   SECURITY_DESCRIPTOR *SecurityDescriptor;
-   SECURITY_QUALITY_OF_SERVICE *SecurityQualityOfService;
+   PVOID SecurityDescriptor;
+   PVOID SecurityQualityOfService;
 } OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
 
 #endif /* __USE_W32API */

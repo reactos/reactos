@@ -193,6 +193,18 @@ RtlpInitDeferedCriticalSection(
     VOID
 );
 
+VOID
+STDCALL
+RtlpFreeDebugInfo(
+    PRTL_CRITICAL_SECTION_DEBUG DebugInfo
+);
+
+PRTL_CRITICAL_SECTION_DEBUG
+STDCALL
+RtlpAllocateDebugInfo(
+    VOID
+);
+
 NTSTATUS STDCALL
 RtlAddAccessAllowedAceEx (IN OUT PACL Acl,
 			  IN ULONG Revision,

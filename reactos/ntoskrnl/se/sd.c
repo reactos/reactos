@@ -1,4 +1,4 @@
-/* $Id: sd.c,v 1.20 2004/08/15 16:39:12 chorns Exp $
+/* $Id$
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -319,7 +319,7 @@ SeValidSecurityDescriptor(IN ULONG Length,
 			  IN PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
   ULONG SdLength;
-  PSID Sid;
+  PISID Sid;
   PACL Acl;
 
   if (Length < SECURITY_DESCRIPTOR_MIN_LENGTH)
@@ -355,7 +355,7 @@ SeValidSecurityDescriptor(IN ULONG Length,
       return FALSE;
     }
 
-  Sid = (PSID)((ULONG_PTR)SecurityDescriptor + (ULONG_PTR)SecurityDescriptor->Owner);
+  Sid = (PISID)((ULONG_PTR)SecurityDescriptor + (ULONG_PTR)SecurityDescriptor->Owner);
   if (Sid->Revision != SID_REVISION)
     {
       DPRINT1("Invalid Owner SID revision\n");

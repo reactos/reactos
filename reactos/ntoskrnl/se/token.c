@@ -11,13 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <limits.h>
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
-#include <internal/ob.h>
-#include <internal/ps.h>
-#include <internal/se.h>
-#include <internal/safe.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -30,8 +24,6 @@ static GENERIC_MAPPING SepTokenMapping = {TOKEN_READ,
 					  TOKEN_WRITE,
 					  TOKEN_EXECUTE,
 					  TOKEN_ALL_ACCESS};
-
-//#define SYSTEM_LUID                      0x3E7;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -1028,6 +1020,7 @@ NtSetInformationToken(IN HANDLE TokenHandle,
  * NOTE: Some sources claim 4th param is ImpersonationLevel, but on W2K
  * this is certainly NOT true, thou i can't say for sure that EffectiveOnly
  * is correct either. -Gunnar
+ * This is true. EffectiveOnly overrides SQOS.EffectiveOnly. - IAI
  */
 NTSTATUS STDCALL
 NtDuplicateToken(IN HANDLE ExistingTokenHandle,
@@ -1060,7 +1053,7 @@ NtDuplicateToken(IN HANDLE ExistingTokenHandle,
 			     EffectiveOnly,
 			     TokenType,
               ObjectAttributes->SecurityQualityOfService ? 
-                  ObjectAttributes->SecurityQualityOfService->ImpersonationLevel : 
+                  ((PSECURITY_QUALITY_OF_SERVICE)(ObjectAttributes->SecurityQualityOfService))->ImpersonationLevel : 
                   0 /*SecurityAnonymous*/,
 			     PreviousMode,
 			     &NewToken);
@@ -1645,7 +1638,8 @@ NtCreateToken(OUT PHANDLE UnsafeTokenHandle,
   AccessToken->Privileges        = 0;
 
   AccessToken->TokenType = TokenType;
-  AccessToken->ImpersonationLevel = ObjectAttributes->SecurityQualityOfService->ImpersonationLevel;
+  AccessToken->ImpersonationLevel = ((PSECURITY_QUALITY_OF_SERVICE)
+                                     (ObjectAttributes->SecurityQualityOfService))->ImpersonationLevel;
 
   /*
    * Normally we would just point these members into the variable information
