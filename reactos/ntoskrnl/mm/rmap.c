@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rmap.c,v 1.9 2002/08/17 14:14:20 dwelch Exp $
+/* $Id: rmap.c,v 1.10 2002/08/27 06:36:32 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -86,8 +86,12 @@ MmWritePagePhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
     {
       KeBugCheck(0);
     }
-  ObReferenceObjectByPointer(Process, PROCESS_ALL_ACCESS, NULL, KernelMode);
+  Status = ObReferenceObjectByPointer(Process, PROCESS_ALL_ACCESS, NULL, KernelMode);
   ExReleaseFastMutex(&RmapListLock);
+  if (!NT_SUCCESS(Status))
+  {
+     return Status;
+  }
 
   /*
    * Lock the address space; then check that the address we are using
@@ -120,12 +124,12 @@ MmWritePagePhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
 	  KeBugCheck(0);
 	}
 
-      ObDereferenceObject(Process);
 
       if (PageOp->Thread != PsGetCurrentThread())
 	{
 	  MmReleasePageOp(PageOp);
 	  MmUnlockAddressSpace(&Process->AddressSpace);
+          ObDereferenceObject(Process);
 	  return(STATUS_UNSUCCESSFUL);
 	}
       
@@ -145,12 +149,12 @@ MmWritePagePhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
       PageOp = MmGetPageOp(MemoryArea, Process->UniqueProcessId,
 			   Address, NULL, 0, MM_PAGEOP_PAGEOUT);
       
-      ObDereferenceObject(Process);
 
       if (PageOp->Thread != PsGetCurrentThread())
 	{
 	  MmReleasePageOp(PageOp);
 	  MmUnlockAddressSpace(&Process->AddressSpace);
+          ObDereferenceObject(Process);
 	  return(STATUS_UNSUCCESSFUL);
 	}
 
@@ -169,6 +173,7 @@ MmWritePagePhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
     {
       KeBugCheck(0);
     }  
+  ObDereferenceObject(Process);
   return(Status);
 }
 
@@ -198,7 +203,12 @@ MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
       KeBugCheck(0);
     }
 
+  Status = ObReferenceObjectByPointer(Process, PROCESS_ALL_ACCESS, NULL, KernelMode);
   ExReleaseFastMutex(&RmapListLock);
+  if (!NT_SUCCESS(Status))
+  {
+      return Status;
+  }
   MmLockAddressSpace(&Process->AddressSpace);
   MemoryArea = MmOpenMemoryAreaByAddress(&Process->AddressSpace, Address);
   Type = MemoryArea->Type;
@@ -223,6 +233,7 @@ MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
 	{
 	  MmReleasePageOp(PageOp);
 	  MmUnlockAddressSpace(&Process->AddressSpace);
+          ObDereferenceObject(Process);
 	  return(STATUS_UNSUCCESSFUL);
 	}
       
@@ -245,6 +256,7 @@ MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
 	{
 	  MmReleasePageOp(PageOp);
 	  MmUnlockAddressSpace(&Process->AddressSpace);
+          ObDereferenceObject(Process);
 	  return(STATUS_UNSUCCESSFUL);
 	}
 
@@ -263,6 +275,7 @@ MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
     {
       KeBugCheck(0);
     }
+  ObDereferenceObject(Process);
   return(Status);
 }
 
