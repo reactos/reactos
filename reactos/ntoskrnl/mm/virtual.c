@@ -49,8 +49,9 @@ NtFlushVirtualMemory(IN HANDLE ProcessHandle,
  * RETURNS: Status
  */
 {
-   UNIMPLEMENTED;
-   return(STATUS_NOT_IMPLEMENTED);
+  /* This should be implemented once we support network filesystems */
+  DPRINT("NtFlushVirtualMemory is UNIMPLEMENTED\n");
+  return(STATUS_SUCCESS);
 }
 
 
