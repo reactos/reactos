@@ -91,8 +91,9 @@ PS2MouseDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    return(Status);
 }
 
-VOID PS2MouseInitializeDataQueue(PVOID Context)
+BOOLEAN STDCALL PS2MouseInitializeDataQueue(PVOID Context)
 {
+   return(TRUE);
 }
 
 NTSTATUS STDCALL
@@ -111,7 +112,7 @@ PS2MouseInternalDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
          // Reinitialize the port input data queue synchronously
          KeSynchronizeExecution(DeviceExtension->MouseInterrupt,
-            (PKSYNCHRONIZE_ROUTINE)PS2MouseInitializeDataQueue, DeviceExtension);
+            PS2MouseInitializeDataQueue, DeviceExtension);
 
          status = STATUS_SUCCESS;
          break;
