@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.13 2002/03/16 16:13:57 ekohl Exp $
+/* $Id: atapi.c,v 1.14 2002/03/19 00:48:52 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -480,7 +480,7 @@ AtapiFindIsaBusController(PVOID DeviceExtension,
   BOOLEAN ChannelFound = FALSE;
   BOOLEAN DeviceFound = FALSE;
 
-  DPRINT1("AtapiFindIsaBusController() called!\n");
+  DPRINT("AtapiFindIsaBusController() called!\n");
 
   *Again = FALSE;
 
@@ -538,7 +538,7 @@ AtapiFindIsaBusController(PVOID DeviceExtension,
     }
   else
     {
-      DPRINT1("AtapiFindIsaBusController() both channels claimed. Returns: SP_RETURN_NOT_FOUND\n");
+      DPRINT("AtapiFindIsaBusController() both channels claimed. Returns: SP_RETURN_NOT_FOUND\n");
       *Again = FALSE;
       return(SP_RETURN_NOT_FOUND);
     }
@@ -550,7 +550,7 @@ AtapiFindIsaBusController(PVOID DeviceExtension,
 				     ConfigInfo);
     }
 
-  DPRINT1("AtapiFindIsaBusController() returns: SP_RETURN_FOUND\n");
+  DPRINT("AtapiFindIsaBusController() returns: SP_RETURN_FOUND\n");
   return(SP_RETURN_FOUND);
 }
 
@@ -655,11 +655,11 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 
   UCHAR DeviceStatus;
   BOOLEAN IsLastBlock;
+  BOOLEAN IsAtapi;
   ULONG Retries;
-  NTSTATUS ErrorStatus;
-  ULONG ErrorInformation;
   PUCHAR TargetAddress;
   ULONG SectorSize;
+  ULONG TransferSize;
 
 
   DPRINT("AtapiInterrupt() called!\n");
@@ -667,21 +667,21 @@ AtapiInterrupt(IN PVOID DeviceExtension)
   DevExt = (PATAPI_MINIPORT_EXTENSION)DeviceExtension;
   if (DevExt->ExpectingInterrupt == FALSE)
     {
+      DPRINT1("AtapiInterrupt(): Unexpected interrupt\n");
       return(FALSE);
     }
 
   Srb = DevExt->CurrentSrb;
-
   DPRINT("Srb: %p\n", Srb);
 
   CommandPortBase = DevExt->CommandPortBase;
   ControlPortBase = DevExt->ControlPortBase;
-
   DPRINT("CommandPortBase: %lx  ControlPortBase: %lx\n", CommandPortBase, ControlPortBase);
 
+  IsAtapi = DevExt->DeviceAtapi[Srb->TargetId];
+  DPRINT("IsAtapi == %s\n", (IsAtapi) ? "TRUE" : "FALSE");
+
   IsLastBlock = FALSE;
-  ErrorStatus = STATUS_SUCCESS;
-  ErrorInformation = 0;
 
   DeviceStatus = IDEReadStatus(CommandPortBase);
 
@@ -699,114 +699,131 @@ AtapiInterrupt(IN PVOID DeviceExtension)
       SectorCount = IDEReadSectorCount(CommandPortBase);
       SectorNum = IDEReadSectorNum(CommandPortBase);
 
-      /* FIXME: should use the NT error logging facility */
-      DbgPrint("ATAPI Error: OP:%02x STAT:%02x ERR:%02x CYLLO:%02x CYLHI:%02x SCNT:%02x SNUM:%02x\n",
-	       0, //DeviceExtension->Operation,
-	       DeviceStatus,
-	       ErrorReg,
-	       CylinderLow,
-	       CylinderHigh,
-	       SectorCount,
-	       SectorNum);
+      DPRINT1("ATAPI Error: STAT:%02x ERR:%02x CYLLO:%02x CYLHI:%02x SCNT:%02x SNUM:%02x\n",
+	      DeviceStatus,
+	      ErrorReg,
+	      CylinderLow,
+	      CylinderHigh,
+	      SectorCount,
+	      SectorNum);
 
-      /* FIXME: should retry the command and perhaps recalibrate the drive */
-
-        //  Set error status information
-      ErrorStatus = STATUS_DISK_OPERATION_FAILED;
-#if 0
-      ErrorInformation = 
-          (((((((CylinderHigh << 8) + CylinderLow) * 
-              DeviceExtension->LogicalHeads) + 
-              (DriveHead % DeviceExtension->LogicalHeads)) * 
-              DeviceExtension->SectorsPerLogTrk) + SectorNum - 1) -
-          DeviceExtension->StartingSector) * DeviceExtension->BytesPerSector;
-#endif
+      /* FIXME: set a useful status code */
+      Srb->SrbStatus = SRB_STATUS_ERROR;
+      IsLastBlock = TRUE;
     }
   else
     {
-      switch (Srb->Cdb[0])
+      if (Srb->SrbFlags & SRB_FLAGS_DATA_IN)
 	{
-	  case SCSIOP_READ:
-	    DPRINT("SCSIOP_READ\n");
+	  DPRINT("Read data\n");
 
-	    /* Update controller/device state variables */
-	    SectorSize = DevExt->DeviceParams[Srb->TargetId].BytesPerSector;
-	    TargetAddress = Srb->DataBuffer;
-	    Srb->DataBuffer += SectorSize;
-	    Srb->DataTransferLength -= SectorSize;
+	  /* Update controller/device state variables */
+	  TargetAddress = Srb->DataBuffer;
 
-	    /* Remember whether DRQ should be low at end (last block read) */
-	    IsLastBlock = (Srb->DataTransferLength == 0);
-	    DPRINT("IsLastBlock == %s\n", (IsLastBlock)?"TRUE":"FALSE");
+	  if (IsAtapi)
+	    {
+	      TransferSize = IDEReadCylinderLow(CommandPortBase);
+	      TransferSize += IDEReadCylinderHigh(CommandPortBase) << 8;
+	    }
+	  else
+	    {
+	      TransferSize = DevExt->DeviceParams[Srb->TargetId].BytesPerSector;
+	    }
 
-	    /* Wait for DRQ assertion */
-	    for (Retries = 0; Retries < IDE_MAX_DRQ_RETRIES &&
-		 !(IDEReadStatus(CommandPortBase) & IDE_SR_DRQ);
-		 Retries++)
-	      {
+	  DPRINT("TransferLength: %lu\n", Srb->DataTransferLength);
+	  DPRINT("TransferSize: %lu\n", TransferSize);
+
+	  if (Srb->DataTransferLength <= TransferSize)
+	    {
+	      Srb->DataTransferLength = 0;
+	      IsLastBlock = TRUE;
+	    }
+	  else
+	    {
+	      Srb->DataTransferLength -= TransferSize;
+	      IsLastBlock = FALSE;
+	    }
+	  Srb->DataBuffer += TransferSize;
+	  DPRINT("IsLastBlock == %s\n", (IsLastBlock) ? "TRUE" : "FALSE");
+
+	  /* Wait for DRQ assertion */
+	  for (Retries = 0; Retries < IDE_MAX_DRQ_RETRIES &&
+	       !(IDEReadStatus(CommandPortBase) & IDE_SR_DRQ);
+	       Retries++)
+	    {
 		KeStallExecutionProcessor(10);
-	      }
+	    }
 
-	    /* Copy the block of data */
-	    IDEReadBlock(CommandPortBase,
-			 TargetAddress,
-			 SectorSize);
+	  /* Copy the block of data */
+	  IDEReadBlock(CommandPortBase,
+		       TargetAddress,
+		       TransferSize);
 
-	    /* check DRQ */
-	    if (IsLastBlock)
-	      {
-		for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES &&
-		     (IDEReadStatus(CommandPortBase) & IDE_SR_BUSY);
-		     Retries++)
-		  {
-		    KeStallExecutionProcessor(10);
-		  }
+	  /* check DRQ */
+	  if (IsLastBlock)
+	    {
+	      for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES &&
+		   (IDEReadStatus(CommandPortBase) & IDE_SR_BUSY);
+		   Retries++)
+		{
+		  KeStallExecutionProcessor(10);
+		}
 
-		/* Check for data overrun */
-		if (IDEReadStatus(CommandPortBase) & IDE_SR_DRQ)
-		  {
-		    /* FIXME: Handle error! */
-		  }
-	      }
-	    break;
+	      /* Check for data overrun */
+	      if (IDEReadStatus(CommandPortBase) & IDE_SR_DRQ)
+		{
+		  /* FIXME: Handle error! */
+		}
+	    }
 
-	  case SCSIOP_WRITE:
-	    DPRINT("SCSIOP_WRITE\n");
-	    if (Srb->DataTransferLength == 0)
-	      {
+	  Srb->SrbStatus = SRB_STATUS_SUCCESS;
+	}
+      else if (Srb->SrbFlags & SRB_FLAGS_DATA_OUT)
+	{
+	  DPRINT("Write data\n");
 
-		for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES &&
-		     (IDEReadStatus(CommandPortBase) & IDE_SR_BUSY);
-		     Retries++)
-		  {
-		    KeStallExecutionProcessor(10);
-		  }
+	  if (Srb->DataTransferLength == 0)
+	    {
 
-		/* Check for data overrun */
-		if (IDEReadStatus(CommandPortBase) & IDE_SR_DRQ)
-		  {
-		    /* FIXME: Handle error! */
-		  }
+	      for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES &&
+		   (IDEReadStatus(CommandPortBase) & IDE_SR_BUSY);
+		   Retries++)
+		{
+		  KeStallExecutionProcessor(10);
+		}
 
-		DevExt->ExpectingInterrupt = FALSE;
-		IsLastBlock = TRUE;
-	      }
-	    else
-	      {
-		/* Update SRB data */
-		SectorSize = DevExt->DeviceParams[Srb->TargetId].BytesPerSector;
+	      /* Check for data overrun */
+	      if (IDEReadStatus(CommandPortBase) & IDE_SR_DRQ)
+		{
+		  /* FIXME: Handle error! */
+		}
 
-		TargetAddress = Srb->DataBuffer;
-		Srb->DataBuffer += SectorSize;
-		Srb->DataTransferLength -= SectorSize;
+	      DevExt->ExpectingInterrupt = FALSE;
+	      IsLastBlock = TRUE;
+	    }
+	  else
+	    {
+	      /* Update SRB data */
+	      SectorSize = DevExt->DeviceParams[Srb->TargetId].BytesPerSector;
 
-		/* Write the sector */
-		IDEWriteBlock(CommandPortBase,
-			      TargetAddress,
-			      SectorSize);
-	      }
-	    break;
-      }
+	      TargetAddress = Srb->DataBuffer;
+	      Srb->DataBuffer += SectorSize;
+	      Srb->DataTransferLength -= SectorSize;
+
+	      /* Write the sector */
+	      IDEWriteBlock(CommandPortBase,
+			    TargetAddress,
+			    SectorSize);
+	    }
+
+	  Srb->SrbStatus = SRB_STATUS_SUCCESS;
+	}
+      else
+	{
+	  DPRINT1("Unspecified transfer direction!\n");
+	  Srb->SrbStatus = SRB_STATUS_ERROR;
+	  IsLastBlock = TRUE;
+	}
     }
 
   /* complete this packet */
@@ -1311,20 +1328,12 @@ static ULONG
 AtapiSendAtapiCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
 		      IN PSCSI_REQUEST_BLOCK Srb)
 {
-#if 0
-//  PIDE_DRIVE_IDENTIFY DeviceParams;
-
-//  ULONG StartingSector,i;
-//  ULONG SectorCount;
   UCHAR ByteCountHigh;
   UCHAR ByteCountLow;
-//  UCHAR DrvHead;
-//  UCHAR SectorNumber;
-//  UCHAR Command;
   ULONG Retries;
   UCHAR Status;
 
-  DPRINT1("AtapiSendAtapiCommand() called!\n");
+  DPRINT("AtapiSendAtapiCommand() called!\n");
 
   if ((Srb->PathId != 0) ||
       (Srb->TargetId > 1) ||
@@ -1334,16 +1343,16 @@ AtapiSendAtapiCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
       return(SRB_STATUS_SELECTION_TIMEOUT);
     }
 
-  DPRINT1("AtapiSendAtapiCommand(): TargetId: %lu\n",
+  DPRINT("AtapiSendAtapiCommand(): TargetId: %lu\n",
 	 Srb->TargetId);
 
+  if (Srb->Cdb[0] == SCSIOP_INQUIRY)
+    return(AtapiInquiry(DeviceExtension,
+			Srb));
 
   /* Set pointer to data buffer. */
   DeviceExtension->DataBuffer = (PUSHORT)Srb->DataBuffer;
-
   DeviceExtension->CurrentSrb = Srb;
-  DeviceExtension->ExpectingInterrupt = TRUE;
-
 
   /*  wait for BUSY to clear  */
   for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++)
@@ -1359,7 +1368,7 @@ AtapiSendAtapiCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
   DPRINT("waited %ld usecs for busy to clear\n", Retries * 10);
   if (Retries >= IDE_MAX_BUSY_RETRIES)
     {
-      DPRINT ("Drive is BUSY for too long\n");
+      DPRINT("Drive is BUSY for too long\n");
       return(SRB_STATUS_BUSY);
 #if 0
       if (++ControllerExtension->Retries > IDE_MAX_CMD_RETRIES)
@@ -1420,18 +1429,18 @@ AtapiSendAtapiCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
 #endif
     }
 
-  ByteCountLow = (UCHAR)(Srb->DataTransferLength & 0xFF);
-  ByteCountHigh = (UCHAR)(Srb->DataTransferLength >> 8);
+  ByteCountLow = 12;
+  ByteCountHigh = 0;
 
+  /* Set command packet length */
   IDEWriteCylinderHigh(DeviceExtension->CommandPortBase, ByteCountHigh);
   IDEWriteCylinderLow(DeviceExtension->CommandPortBase, ByteCountLow);
-//  IDEWriteDriveHead(DeviceExtension->CommandPortBase, IDE_DH_FIXED | DrvHead);
 
   /* Issue command to drive */
   IDEWriteCommand(DeviceExtension->CommandPortBase, 0xA0); /* Packet command */
 
 
-  /*  wait for DRQ to assert */
+  /* Wait for DRQ to assert */
   for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++)
     {
       Status = IDEReadStatus(DeviceExtension->CommandPortBase);
@@ -1442,73 +1451,16 @@ AtapiSendAtapiCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
       ScsiPortStallExecution(10);
     }
 
+  /* Write command packet */
   IDEWriteBlock(DeviceExtension->CommandPortBase,
 		(PUSHORT)Srb->Cdb,
 		12);
 
+  DeviceExtension->ExpectingInterrupt = TRUE;
 
-  DPRINT1("AtapiSendAtapiCommand() done\n");
+  DPRINT("AtapiSendAtapiCommand() done\n");
+
   return(SRB_STATUS_PENDING);
-#endif
-
-//#if 0
-  ULONG SrbStatus = SRB_STATUS_SELECTION_TIMEOUT;
-
-  DPRINT("AtapiSendAtapiCommand() called!\n");
-
-  switch (Srb->Cdb[0])
-    {
-      case SCSIOP_INQUIRY:
-	DPRINT("  SCSIOP_INQUIRY\n");
-	SrbStatus = AtapiInquiry(DeviceExtension,
-				 Srb);
-	break;
-
-      case SCSIOP_READ_CAPACITY:
-	DPRINT1("  SCSIOP_READ_CAPACITY\n");
-	break;
-
-      case SCSIOP_READ:
-	DPRINT1("  SCSIOP_READ\n");
-	break;
-
-      case SCSIOP_WRITE:
-	DPRINT1("  SCSIOP_WRITE\n");
-	break;
-
-      case SCSIOP_MODE_SENSE:
-	DPRINT1("  SCSIOP_MODE_SENSE\n");
-	break;
-
-      case SCSIOP_TEST_UNIT_READY:
-	DPRINT1("  SCSIOP_TEST_UNIT_READY\n");
-	break;
-
-      case SCSIOP_VERIFY:
-	DPRINT1("  SCSIOP_VERIFY\n");
-	break;
-
-      case SCSIOP_START_STOP_UNIT:
-	DPRINT1("  SCSIOP_START_STOP_UNIT\n");
-	break;
-
-      case SCSIOP_REQUEST_SENSE:
-	DPRINT1("  SCSIOP_REQUEST_SENSE\n");
-	break;
-
-     default:
-	DbgPrint("AtapiSendIdeCommand():unknown command %x\n",
-		 Srb->Cdb[0]);
-	break;
-    }
-
-  if (SrbStatus == SRB_STATUS_SELECTION_TIMEOUT)
-    {
-      DPRINT1("Not implemented yet!\n");
-    }
-
-  return(SrbStatus);
-//#endif
 }
 
 
@@ -1571,7 +1523,8 @@ AtapiInquiry(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   PINQUIRYDATA InquiryData;
   ULONG i;
 
-  DPRINT("SCSIOP_INQUIRY: TargetId: %lu\n", Srb->TargetId);
+  DPRINT1("SCSIOP_INQUIRY: DeviceExtension %p  TargetId: %lu\n",
+	  DeviceExtension, Srb->TargetId);
 
   if ((Srb->PathId != 0) ||
       (Srb->TargetId > 1) ||
@@ -1630,6 +1583,8 @@ AtapiInquiry(PATAPI_MINIPORT_EXTENSION DeviceExtension,
       InquiryData->ProductRevisionLevel[i+1] =
 	((PUCHAR)DeviceParams->FirmwareRev)[i+1];
     }
+
+  DPRINT1("VendorId: '%.20s'\n", InquiryData->VendorId);
 
   return(SRB_STATUS_SUCCESS);
 }
@@ -1870,14 +1825,6 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
         }
 #endif
     }
-
-#if 0
-  if (Command == IDE_CMD_WRITE)
-    {
-      DPRINT1("Write not implemented yet!\n");
-      return(SRB_STATUS_SUCCESS);
-    }
-#endif
 
   /* Indicate expecting an interrupt. */
   DeviceExtension->ExpectingInterrupt = TRUE;
