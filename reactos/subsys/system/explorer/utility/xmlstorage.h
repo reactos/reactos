@@ -1395,7 +1395,7 @@ struct XMLDoc : public XMLNode
 		return status != XML_STATUS_ERROR;
 	}
 
-	bool read(XMLReaderBase& reader, const string& display_path)
+	bool read(XMLReaderBase& reader, const std::string& display_path)
 	{
 		XML_Status status = reader.read();
 

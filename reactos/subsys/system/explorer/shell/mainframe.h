@@ -39,6 +39,7 @@ struct MainFrameBase : public PreTranslateWindow
 	~MainFrameBase();
 
 	static HWND Create(LPCTSTR path, bool mdi=true, UINT cmdshow=SW_SHOWNORMAL);
+	static int OpenShellFolders(LPIDA pida, HWND hFrameWnd, bool mdi=true);
 
 	WindowHandle _hwndrebar;
 
@@ -93,7 +94,6 @@ struct MDIMainFrame : public MainFrameBase
 	static HWND Create();
 	static HWND Create(LPCTSTR path, int mode=OWM_EXPLORE|OWM_DETAILS);
 	static HWND Create(LPCITEMIDLIST pidl, int mode=OWM_EXPLORE|OWM_DETAILS|OWM_PIDL);
-	static int OpenShellFolders(LPIDA pida, HWND hFrameWnd);
 
 	ChildWindow* CreateChild(LPCTSTR path=NULL, int mode=OWM_EXPLORE|OWM_DETAILS);
 	ChildWindow* CreateChild(LPCITEMIDLIST pidl, int mode=OWM_EXPLORE|OWM_DETAILS|OWM_PIDL);
@@ -131,6 +131,7 @@ struct SDIMainFrame : public ShellBrowserChildT<MainFrameBase>
 	SDIMainFrame(HWND hwnd);
 
 	static HWND Create();
+	static HWND Create(LPCITEMIDLIST pidl, int mode=OWM_EXPLORE|OWM_DETAILS|OWM_PIDL);
 
 protected:
 	ShellPathInfo _shellpath_info;

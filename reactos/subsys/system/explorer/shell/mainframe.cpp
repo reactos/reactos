@@ -86,6 +86,67 @@ HWND MainFrameBase::Create(LPCTSTR path, bool mdi, UINT cmdshow)
 }
 
 
+int MainFrameBase::OpenShellFolders(LPIDA pida, HWND hFrameWnd, bool mdi)
+{
+	int cnt = 0;
+
+	LPCITEMIDLIST parent_pidl = (LPCITEMIDLIST) ((LPBYTE)pida+pida->aoffset[0]);
+	ShellFolder folder(parent_pidl);
+
+	for(int i=pida->cidl; i>0; --i) {
+		LPCITEMIDLIST pidl = (LPCITEMIDLIST) ((LPBYTE)pida+pida->aoffset[i]);
+
+		SFGAOF attribs = SFGAO_FOLDER;
+		HRESULT hr = folder->GetAttributesOf(1, &pidl, &attribs);
+
+		if (SUCCEEDED(hr))
+			if (attribs & SFGAO_FOLDER) {
+				try {
+					ShellPath pidl_abs = ShellPath(pidl).create_absolute_pidl(parent_pidl);
+
+					if (hFrameWnd) {
+						if (SendMessage(hFrameWnd, PM_OPEN_WINDOW, OWM_PIDL, (LPARAM)(LPCITEMIDLIST)pidl_abs))
+							++cnt;
+					} else {
+						HWND hwnd;
+#ifndef _NO_MDI
+						if (mdi)
+							hwnd = MDIMainFrame::Create(pidl_abs, 0);
+						else
+#endif
+							hwnd = SDIMainFrame::Create(pidl_abs, 0);
+
+						if (hwnd)
+							++cnt;
+					}
+				} catch(COMException& e) {
+					HandleException(e, g_Globals._hMainWnd);
+				}
+			}/*TEST
+			else { // !(attribs & SFGAO_FOLDER))
+				SHELLEXECUTEINFOA shexinfo;
+
+				shexinfo.cbSize = sizeof(SHELLEXECUTEINFOA);
+				shexinfo.fMask = SEE_MASK_INVOKEIDLIST;
+				shexinfo.hwnd = NULL;
+				shexinfo.lpVerb = NULL;
+				shexinfo.lpFile = NULL;
+				shexinfo.lpParameters = NULL;
+				shexinfo.lpDirectory = NULL;
+				shexinfo.nShow = SW_NORMAL;
+				shexinfo.lpIDList = ILCombine(parent_pidl, pidl);
+
+				if (ShellExecuteExA(&shexinfo))
+					++cnt;
+
+				ILFree((LPITEMIDLIST)shexinfo.lpIDList);
+			}*/
+	}
+
+	return cnt;
+}
+
+
 MainFrameBase::MainFrameBase(HWND hwnd)
  :	super(hwnd),
 	_himl(ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ILC_MASK|ILC_COLOR24, 2, 0))
@@ -815,60 +876,6 @@ ChildWindow* MDIMainFrame::CreateChild(LPCITEMIDLIST pidl, int mode)
 }
 
 
-int MDIMainFrame::OpenShellFolders(LPIDA pida, HWND hFrameWnd)
-{
-	int cnt = 0;
-
-	LPCITEMIDLIST parent_pidl = (LPCITEMIDLIST) ((LPBYTE)pida+pida->aoffset[0]);
-	ShellFolder folder(parent_pidl);
-
-	for(int i=pida->cidl; i>0; --i) {
-		LPCITEMIDLIST pidl = (LPCITEMIDLIST) ((LPBYTE)pida+pida->aoffset[i]);
-
-		SFGAOF attribs = SFGAO_FOLDER;
-		HRESULT hr = folder->GetAttributesOf(1, &pidl, &attribs);
-
-		if (SUCCEEDED(hr))
-			if (attribs & SFGAO_FOLDER) {
-				try {
-					ShellPath pidl_abs = ShellPath(pidl).create_absolute_pidl(parent_pidl);
-
-					if (hFrameWnd) {
-						if (SendMessage(hFrameWnd, PM_OPEN_WINDOW, OWM_PIDL, (LPARAM)(LPCITEMIDLIST)pidl_abs))
-							++cnt;
-					} else {
-						if (MDIMainFrame::Create(pidl_abs, 0))
-							++cnt;
-					}
-				} catch(COMException& e) {
-					HandleException(e, g_Globals._hMainWnd);
-				}
-			}/*TEST
-			else { // !(attribs & SFGAO_FOLDER))
-				SHELLEXECUTEINFOA shexinfo;
-
-				shexinfo.cbSize = sizeof(SHELLEXECUTEINFOA);
-				shexinfo.fMask = SEE_MASK_INVOKEIDLIST;
-				shexinfo.hwnd = NULL;
-				shexinfo.lpVerb = NULL;
-				shexinfo.lpFile = NULL;
-				shexinfo.lpParameters = NULL;
-				shexinfo.lpDirectory = NULL;
-				shexinfo.nShow = SW_NORMAL;
-				shexinfo.lpIDList = ILCombine(parent_pidl, pidl);
-
-				if (ShellExecuteExA(&shexinfo))
-					++cnt;
-
-				ILFree((LPITEMIDLIST)shexinfo.lpIDList);
-			}*/
-	}
-
-	return cnt;
-}
-
-
-
 BOOL MDIMainFrame::TranslateMsg(MSG* pmsg)
 {
 	if (_hmdiclient && TranslateMDISysAccel(_hmdiclient, pmsg))
@@ -1282,6 +1289,22 @@ HWND SDIMainFrame::Create()
 				(LPCTSTR)(int)g_Globals._hframeClass, ResString(IDS_TITLE), WS_OVERLAPPEDWINDOW,
 				CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 				0/*hwndDesktop*/, hMenuFrame);
+}
+
+HWND SDIMainFrame::Create(LPCITEMIDLIST pidl, int mode)
+{
+	HWND hFrame = Create();
+	if (!hFrame)
+		return 0;
+
+	ShowWindow(hFrame, SW_SHOW);
+
+	SDIMainFrame* pFrame = GET_WINDOW(SDIMainFrame, hFrame);
+
+	if (pFrame)
+		pFrame->jump_to(pidl, mode);
+
+	return hFrame;
 }
 
 LRESULT SDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
