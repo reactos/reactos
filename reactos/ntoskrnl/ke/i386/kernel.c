@@ -36,6 +36,10 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+/* GLOBALS *******************************************************************/
+
+ULONG KiPcrInitDone = 0;
+
 /* FUNCTIONS *****************************************************************/
 
 VOID 
@@ -72,6 +76,7 @@ KeInit2(VOID)
 			  PAGE_READWRITE,
 			  (ULONG)PcrPage);
    memset((PVOID)KPCR_BASE, 0, 4096);
+   KiPcrInitDone = 1;
 }
 
 

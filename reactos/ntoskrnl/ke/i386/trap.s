@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: trap.s,v 1.7 2001/03/18 19:35:13 dwelch Exp $
+/* $Id: trap.s,v 1.8 2001/03/22 11:14:22 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/trap.s
@@ -79,6 +79,13 @@ _KiTrapProlog:
 	pushl	%edi
 	pushl	%fs
 
+	/* 
+	 * Check that the PCR exits, very early in the boot process it may 
+	 * not 
+	 */
+	cmpl	$0, %ss:_KiPcrInitDone
+	je	.L5
+	
 	/* Load the PCR selector into fs */
 	movl	$PCR_SELECTOR, %ebx
 	movl	%ebx, %fs
@@ -153,6 +160,10 @@ _KiTrapProlog:
 	/* Return to the caller */
 	jmp	_KiTrapEpilog
 
+	/* Handle the no-pcr case out of line */
+.L5:	
+	pushl	$0
+		
 	/* Handle the no-thread case out of line */
 .L4:
 	pushl	$0	
