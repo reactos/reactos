@@ -14,6 +14,7 @@
  *                  KJK (11/02/2003) implemented BuildCommDCB & BuildCommDCBAndTimeouts
  *                  ST  (21/03/2005) implemented GetCommProperties 
  *                  ST  (24/03/2005) implemented ClearCommError. Corrected many functions.
+ *                  ST  (05/04/2005) implemented CommConfigDialog
  *                                      
  */
 
@@ -584,7 +585,7 @@ COMMDCB_PARAM_HANDLER(xon)
  }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -707,7 +708,7 @@ InvalidParam:
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -736,7 +737,7 @@ BuildCommDCBAndTimeoutsA(LPCSTR lpDef, LPDCB lpDCB,	LPCOMMTIMEOUTS lpCommTimeout
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -747,7 +748,7 @@ BuildCommDCBA(LPCSTR lpDef, LPDCB lpDCB)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -833,26 +834,68 @@ ClearCommError(HANDLE hFile, LPDWORD lpErrors, LPCOMSTAT lpComStat)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 CommConfigDialogA(LPCSTR lpszName, HWND hWnd, LPCOMMCONFIG lpCC)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+	BOOL (STDCALL *drvCommDlgA)(LPCSTR, HWND, LPCOMMCONFIG);
+	HMODULE hSerialuiDll;
+	BOOL result;
+	
+	//FIXME: Get dll name from registry. (setupapi needed)
+	if(!(hSerialuiDll = LoadLibraryW(L"serialui.dll")))
+	{
+		DPRINT("CommConfigDialogA: serialui.dll not found.\n");
+		return FALSE;
+	}
+	
+	drvCommDlgA = GetProcAddress(hSerialuiDll, "drvCommConfigDialogA");
+	
+	if(!drvCommDlgA)
+	{
+		DPRINT("CommConfigDialogA: serialui does not export drvCommConfigDialogA\n");
+		FreeLibrary(hSerialuiDll);
+		return FALSE;
+	}
+	
+	result = drvCommDlgA(lpszName, hWnd, lpCC);
+	FreeLibrary(hSerialuiDll);
+	return result;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 CommConfigDialogW(LPCWSTR lpszName, HWND hWnd, LPCOMMCONFIG lpCC)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+	BOOL (STDCALL *drvCommDlgW)(LPCWSTR, HWND, LPCOMMCONFIG);
+	HMODULE hSerialuiDll;
+	BOOL result;
+	
+	//FIXME: Get dll name from registry. (setupapi needed)
+	if(!(hSerialuiDll = LoadLibraryW(L"serialui.dll")))
+	{
+		DPRINT("CommConfigDialogW: serialui.dll not found.\n");
+		return FALSE;
+	}
+	
+	drvCommDlgW = GetProcAddress(hSerialuiDll, "drvCommConfigDialogW");
+	
+	if(!drvCommDlgW)
+	{
+		DPRINT("CommConfigDialogW: serialui does not export drvCommConfigDialogW\n");
+		FreeLibrary(hSerialuiDll);
+		return FALSE;
+	}
+	
+	result = drvCommDlgW(lpszName, hWnd, lpCC);
+	FreeLibrary(hSerialuiDll);
+	return result;
 }
 
 
