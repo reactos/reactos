@@ -1,4 +1,4 @@
-/* $Id: path.c,v 1.9 2001/04/29 21:09:20 cnettel Exp $
+/* $Id: path.c,v 1.10 2001/05/06 16:09:03 cnettel Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -276,6 +276,7 @@ RtlGetCurrentDirectory_U (
 NTSTATUS STDCALL RtlSetCurrentDirectory_U (PUNICODE_STRING name)
 {
    UNICODE_STRING full;
+   UNICODE_STRING envvar;
    OBJECT_ATTRIBUTES Attr;
    IO_STATUS_BLOCK iosb;
    PCURDIR cd;
@@ -287,6 +288,7 @@ NTSTATUS STDCALL RtlSetCurrentDirectory_U (PUNICODE_STRING name)
    PFILE_NAME_INFORMATION filenameinfo;
    ULONG backslashcount = 0;
    PWSTR cntr;
+   WCHAR var[4];
 
    DPRINT ("RtlSetCurrentDirectory %wZ\n", name);
 
@@ -369,7 +371,6 @@ NTSTATUS STDCALL RtlSetCurrentDirectory_U (PUNICODE_STRING name)
 	   {
  	     if (*cntr=='\\') backslashcount++;
 	   }
-
    
 
 	   DPRINT("%d \n",backslashcount);
@@ -408,6 +409,15 @@ NTSTATUS STDCALL RtlSetCurrentDirectory_U (PUNICODE_STRING name)
    if (cd->Handle)
      NtClose (cd->Handle);
    cd->Handle = handle;
+
+   if (cd->DosPath.Buffer[1]==':')
+   {
+      envvar.Length = 2 * swprintf (var, L"=%c:", cd->DosPath.Buffer[0]);
+      envvar.MaximumLength = 8;
+      envvar.Buffer = var;
+
+      RtlSetEnvironmentVariable(NULL,&envvar,&cd->DosPath);
+   }
    
    RtlFreeHeap (RtlGetProcessHeap (),
 		0,
@@ -434,6 +444,7 @@ RtlGetFullPathName_U (
 {
 	WCHAR           *wcs, var[4], drive;
 	int             len;
+	int 		reallen;
 	DWORD           offs, sz, type;
 	UNICODE_STRING  usvar, pfx;
 	PCURDIR cd;
@@ -452,7 +463,8 @@ RtlGetFullPathName_U (
 		len--;
 	if (!len)
 		return 0;
-
+	
+	reallen=len;
 	/* strip trailing path separator (but don't change '\') */
 	if ((len > 1) &&
 	    IS_PATH_SEPARATOR(DosName[len - 1]))
@@ -469,7 +481,7 @@ CHECKPOINT;
 		offs = sz >> 17;
 		sz &= 0x0000FFFF;
 		if (sz + 8 >= size)
-			return sz + 10;
+		return sz + 10;
 		wcscpy (buf, L"\\\\.\\");
 		wcsncat (buf, DosName + offs, sz / sizeof(WCHAR));
 		return sz + 8;
@@ -521,16 +533,6 @@ CHECKPOINT;
 					if (Status == STATUS_BUFFER_TOO_SMALL)
 						return pfx.Length + len * 2 + 2;
 					swprintf (buf, L"%c:\\", drive);
-				}
-				else
-				{
-CHECKPOINT;
-					if (pfx.Length > 6)
-					{
-CHECKPOINT;
-						buf[pfx.Length / 2] = L'\\';
-						pfx.Length += 2;
-					}
 				}
 			}
 			break;
