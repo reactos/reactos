@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib32bpp.c,v 1.11 2003/12/23 19:28:23 navaraf Exp $ */
+/* $Id: dib32bpp.c,v 1.12 2004/02/21 09:06:25 navaraf Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -338,7 +338,7 @@ void ScaleRectAvg32(PIXEL *Target, PIXEL *Source, int SrcWidth, int SrcHeight,
                   int TgtWidth, int TgtHeight, int srcPitch, int dstPitch)
 {
   int NumPixels = TgtHeight;
-  int IntPart = (SrcHeight / TgtHeight) * SrcWidth;
+  int IntPart = ((SrcHeight / TgtHeight) * srcPitch) / 2; //(SrcHeight / TgtHeight) * SrcWidth;
   int FractPart = SrcHeight % TgtHeight;
   int Mid = TgtHeight / 2;
   int E = 0;
