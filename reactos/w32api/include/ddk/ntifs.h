@@ -550,7 +550,7 @@ typedef struct _KAPC_STATE {
     BOOLEAN     KernelApcInProgress;
     BOOLEAN     KernelApcPending;
     BOOLEAN     UserApcPending;
-} KAPC_STATE, *PKAPC_STATE;
+} KAPC_STATE, *PKAPC_STATE, *__restrict PRKAPC_STATE;
 
 typedef struct _KGDTENTRY {
     USHORT LimitLow;
