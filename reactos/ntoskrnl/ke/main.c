@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.66 2000/10/22 16:36:50 ekohl Exp $
+/* $Id: main.c,v 1.67 2000/12/20 18:43:13 jean Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -410,6 +410,12 @@ void _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
    KeInit1();
    KeLowerIrql(DISPATCH_LEVEL);
 
+   {
+    char tmpbuf[80];
+     sprintf(tmpbuf,"system with %d MB extended memory\n"
+	,(unsigned int)(KeLoaderBlock.MemLower)/1024);
+     HalDisplayString(tmpbuf);
+   }
    /*
     * Display version number and copyright/warranty message
     */

@@ -270,6 +270,52 @@ entry:
 	add	dword [_multiboot_mods_addr], _multiboot_modules
 	
 	;;
+	;; get extended memory size in KB
+	;;
+
+	push ebx
+	xor ebx,ebx
+	mov [_multiboot_mem_lower],ebx
+        mov ax, 0xe801
+        int 015h
+	cmp ebx,ebx
+	jz .oldstylemem
+
+        and ebx, 0xffff
+	shl ebx,6
+	mov [_multiboot_mem_lower],ebx
+        and eax,0xffff
+        add dword [_multiboot_mem_lower],eax
+	jmp .done_mem
+
+.oldstylemem:
+	;; int 15h opt e801 don't work , try int 15h, option 88h
+        mov ah, 088h
+        int 015h
+	cmp ax,ax
+	jz .cmosmem
+	mov [_multiboot_mem_lower],ax
+	jmp .done_mem
+.cmosmem:
+	;; int 15h opt 88h don't work , try read cmos
+	xor eax,eax
+	mov  al, 0x31
+	out 0x70, al
+	in  al, 0x71
+        and eax, 0xffff	; clear carry
+	shl eax,8
+	mov [_multiboot_mem_lower],eax
+;;	xor eax,eax
+;;	mov  al, 0x30
+;;	out 0x70, al
+;;	in  al, 0x71
+;;	and eax, 0xffff	; clear carry
+;;	add [_multiboot_mem_lower],eax
+
+.done_mem:
+	pop ebx
+	
+	;;
 	;; Begin the pmode initalization
 	;;
 	
