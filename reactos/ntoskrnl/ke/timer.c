@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.26 1999/12/26 15:50:48 dwelch Exp $
+/* $Id: timer.c,v 1.27 2000/02/14 10:27:40 ariadne Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -210,7 +210,12 @@ VOID KeQuerySystemTime(PLARGE_INTEGER CurrentTime)
 
 NTSTATUS STDCALL NtGetTickCount (PULONG UpTime)
 {
-	UNIMPLEMENTED;
+	LARGE_INTEGER TickCount;
+	if ( UpTime == NULL )
+		return(STATUS_INVALID_PARAMETER);
+	KeQueryTickCount(&TickCount);
+	*UpTime = TickCount.u.LowPart;
+	return (STATUS_SUCCESS);
 }
 
 
