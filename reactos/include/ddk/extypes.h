@@ -1,10 +1,16 @@
-/* $Id: extypes.h,v 1.25 2004/10/22 22:49:00 weiden Exp $ */
+/* $Id$ */
 
 #ifndef __INCLUDE_DDK_EXTYPES_H
 #define __INCLUDE_DDK_EXTYPES_H
 
 typedef ULONG INTERLOCKED_RESULT;
-typedef ULONG WORK_QUEUE_TYPE;
+
+typedef enum _WORK_QUEUE_TYPE {
+    CriticalWorkQueue,
+    DelayedWorkQueue,
+    HyperCriticalWorkQueue,
+    MaximumWorkQueue
+} WORK_QUEUE_TYPE;
 
 typedef ULONG_PTR ERESOURCE_THREAD, *PERESOURCE_THREAD;
 

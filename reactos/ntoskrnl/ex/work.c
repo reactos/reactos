@@ -1,4 +1,4 @@
-/* $Id: work.c,v 1.24 2004/12/24 02:09:12 gdalsnes Exp $
+/* $Id$
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -172,6 +172,9 @@ ExQueueWorkItem (PWORK_QUEUE_ITEM	WorkItem,
              &WorkItem->List
              );
         	break;
+     
+    default:
+        break;
 
     }
 }

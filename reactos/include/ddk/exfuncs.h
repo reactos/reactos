@@ -699,7 +699,7 @@ ExSetResourceOwnerPointer (
 	IN	PVOID		OwnerPointer
 	);
 
-VOID
+ULONG
 STDCALL
 ExSetTimerResolution (
     IN ULONG DesiredTime,

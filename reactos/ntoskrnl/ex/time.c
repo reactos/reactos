@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.28 2004/12/05 00:20:22 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -228,7 +228,7 @@ ExLocalTimeToSystemTime (
 /*
  * @unimplemented
  */
-VOID
+ULONG
 STDCALL
 ExSetTimerResolution (
     IN ULONG DesiredTime,

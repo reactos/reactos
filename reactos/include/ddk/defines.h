@@ -18,16 +18,6 @@
 #define NR_PRIORITY_LEVELS (32)
 
 /*
- * PURPOSE: Type of queue to insert a work item in
- */
-enum
-{
-  CriticalWorkQueue,
-  DelayedWorkQueue,
-  HyperCriticalWorkQueue,
-};
-
-/*
  * Types of memory to allocate
  */
 enum
