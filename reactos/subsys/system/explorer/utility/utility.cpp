@@ -36,7 +36,11 @@ DWORD WINAPI Thread::ThreadProc(void* para)
 {
 	Thread* pThis = (Thread*) para;
 
-	return pThis->Run();
+	int ret = pThis->Run();
+
+	pThis->_alive = false;
+
+	return ret;
 }
 
 

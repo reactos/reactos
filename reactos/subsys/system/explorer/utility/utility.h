@@ -169,7 +169,7 @@ protected:
 struct Thread
 {
 	Thread()
-	 :	_alive(true)
+	 :	_alive(false)
 	{
 		_hThread = INVALID_HANDLE_VALUE;
 	}
@@ -183,7 +183,10 @@ struct Thread
 
 	void Start()
 	{
-		_hThread = CreateThread(NULL, 0, ThreadProc, this, 0, NULL);
+		if (!_alive) {
+			_alive = true;
+			_hThread = CreateThread(NULL, 0, ThreadProc, this, 0, NULL);
+		}
 	}
 
 	void Stop()
