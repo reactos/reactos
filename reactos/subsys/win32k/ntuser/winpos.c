@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.13 2003/07/10 00:24:04 chorns Exp $
+/* $Id: winpos.c,v 1.14 2003/07/27 11:54:42 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -360,7 +360,7 @@ WinPosChangeActiveWindow(HWND hWnd, BOOL MouseMsg)
     WM_ACTIVATE,
 	  MAKELONG(MouseMsg ? WA_CLICKACTIVE : WA_CLICKACTIVE,
       (WindowObject->Style & WS_MINIMIZE) ? 1 : 0),
-    W32kGetDesktopWindow());  /* FIXME: Previous active window */
+      (LPARAM)W32kGetDesktopWindow());  /* FIXME: Previous active window */
 
   W32kReleaseWindowObject(WindowObject);
 
@@ -894,4 +894,110 @@ WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, POINT WinPoint,
 
   return(HitTest);
 }
+
+BOOL
+WinPosSetActiveWindow(PWINDOW_OBJECT Window, BOOL Mouse, BOOL ChangeFocus)
+{
+  PUSER_MESSAGE_QUEUE ActiveQueue;
+  HWND PrevActive;
+
+  ActiveQueue = W32kGetFocusMessageQueue();
+  if (ActiveQueue != NULL)
+    {
+      PrevActive = ActiveQueue->ActiveWindow;
+    }
+  else
+    {
+      PrevActive = NULL;
+    }
+
+  if (Window->Self == W32kGetActiveDesktop() || Window->Self == PrevActive)
+    {
+      return(FALSE);
+    }
+  if (PrevActive != NULL)
+    {
+      PWINDOW_OBJECT PrevActiveWindow = W32kGetWindowObject(PrevActive);
+      WORD Iconised = HIWORD(PrevActiveWindow->Style & WS_MINIMIZE);
+      if (!W32kSendMessage(PrevActive, WM_NCACTIVATE, FALSE, 0, TRUE))
+	{
+	  /* FIXME: Check if the new window is system modal. */
+	  return(FALSE);
+	}
+      W32kSendMessage(PrevActive, 
+		      WM_ACTIVATE, 
+		      MAKEWPARAM(WA_INACTIVE, Iconised), 
+		      (LPARAM)Window->Self,
+		      TRUE);
+      /* FIXME: Check if anything changed while processing the message. */
+      W32kReleaseWindowObject(PrevActiveWindow);
+    }
+
+  if (Window != NULL)
+    {
+      Window->MessageQueue->ActiveWindow = Window->Self;
+    }
+  else if (ActiveQueue != NULL)
+    {
+      ActiveQueue->ActiveWindow = NULL;
+    }
+
+  /* FIXME: Send palette messages. */
+
+  /* FIXME: Redraw icon title of previously active window. */
+
+  /* FIXME: Bring the window to the top. */  
+
+  /* FIXME: Send WM_ACTIVATEAPP */
+  
+  W32kSetFocusMessageQueue(Window->MessageQueue);
+
+  /* FIXME: Send activate messages. */
+
+  /* FIXME: Change focus. */
+
+  /* FIXME: Redraw new window icon title. */
+
+  return(TRUE);
+}
+
+HWND STDCALL
+NtUserGetActiveWindow(VOID)
+{
+  PUSER_MESSAGE_QUEUE ActiveQueue;
+
+  ActiveQueue = W32kGetFocusMessageQueue();
+  if (ActiveQueue == NULL)
+    {
+      return(NULL);
+    }
+  return(ActiveQueue->ActiveWindow);
+}
+
+HWND STDCALL
+NtUserSetActiveWindow(HWND hWnd)
+{
+  PWINDOW_OBJECT Window;
+  PUSER_MESSAGE_QUEUE ThreadQueue;
+  HWND Prev;
+
+  Window = W32kGetWindowObject(hWnd);
+  if (Window == NULL || (Window->Style & (WS_DISABLED | WS_CHILD)))
+    {
+      W32kReleaseWindowObject(Window);
+      return(0);
+    }
+  ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
+  if (Window->MessageQueue != ThreadQueue)
+    {
+      W32kReleaseWindowObject(Window);
+      return(0);
+    }
+  Prev = Window->MessageQueue->ActiveWindow;
+  WinPosSetActiveWindow(Window, FALSE, FALSE);
+  W32kReleaseWindowObject(Window);
+  return(Prev);
+}
+
+
 /* EOF */

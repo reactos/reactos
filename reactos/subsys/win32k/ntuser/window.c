@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.68 2003/07/25 23:02:21 royce Exp $
+/* $Id: window.c,v 1.69 2003/07/27 11:54:42 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -108,9 +108,9 @@ NtUserGetAncestor(HWND hWnd, UINT Flags)
 	  }
 
 	  pChainEnumerator = Window;
-	  while(pChainEnumerator->Parent != NULL)
+	  while(!W32kIsDesktopWindow(pChainEnumerator->Parent->Self))
 	  {
-		  pChainEnumerator = pChainEnumerator->Parent;
+	    pChainEnumerator = pChainEnumerator->Parent;
 	  }
 
 	  hRoot = pChainEnumerator->Self;
@@ -1635,14 +1635,6 @@ NtUserScrollWindowEx(DWORD Unknown0,
 }
 
 DWORD STDCALL
-NtUserSetActiveWindow(DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD STDCALL
 NtUserSetImeOwnerWindow(DWORD Unknown0,
 			DWORD Unknown1)
 {
@@ -1963,7 +1955,55 @@ NtUserWindowFromPoint(DWORD Unknown0,
 HWND STDCALL
 NtUserGetDesktopWindow()
 {
-	return W32kGetDesktopWindow();
+  return W32kGetDesktopWindow();
+}
+
+HWND STDCALL
+NtUserGetCapture(VOID)
+{
+  PWINDOW_OBJECT Window;
+  Window = W32kGetCaptureWindow();
+  if (Window != NULL)
+    {
+      return(Window->Self);
+    }
+  else
+    {
+      return(NULL);
+    }
+}
+
+HWND STDCALL
+NtUserSetCapture(HWND Wnd)
+{
+  PWINDOW_OBJECT Window;
+  PWINDOW_OBJECT Prev;
+
+  Prev = W32kGetCaptureWindow();
+
+  if (Prev != NULL)
+    {
+      W32kSendMessage(Prev->Self, WM_CAPTURECHANGED, 0L, (LPARAM)Wnd, FALSE);
+    }
+
+  if (Wnd == NULL)
+    {
+      W32kSetCaptureWindow(NULL);
+    }
+  else  
+    {
+      Window = W32kGetWindowObject(Wnd);
+      W32kSetCaptureWindow(Window);
+      W32kReleaseWindowObject(Window);
+    }
+  if (Prev != NULL)
+    {
+      return(Prev->Self);
+    }
+  else
+    {
+      return(NULL);
+    }
 }
 
 

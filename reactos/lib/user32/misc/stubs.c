@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.26 2003/07/23 04:52:44 jimtabor Exp $
+/* $Id: stubs.c,v 1.27 2003/07/27 11:54:42 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -162,31 +162,6 @@ EnableScrollBar(
   UNIMPLEMENTED;
   return FALSE;
 }
-
-
-/*
- * @unimplemented
- */
-HWND
-STDCALL
-GetActiveWindow(VOID)
-{
-  UNIMPLEMENTED;
-  return (HWND)0;
-}
-
-
-/*
- * @unimplemented
- */
-HWND
-STDCALL
-GetCapture(VOID)
-{
-  UNIMPLEMENTED;
-  return (HWND)0;
-}
-
 
 /*
  * @unimplemented
@@ -435,19 +410,6 @@ RegisterHotKey(
   return FALSE;
 }
 
-
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-ReleaseCapture(VOID)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
 /*
  * @unimplemented
  */
@@ -483,33 +445,6 @@ ScrollWindowEx(
   UNIMPLEMENTED;
   return 0;
 }
-
-
-/*
- * @unimplemented
- */
-HWND
-STDCALL
-SetActiveWindow(
-  HWND hWnd)
-{
-  UNIMPLEMENTED;
-  return (HWND)0;
-}
-
-
-/*
- * @unimplemented
- */
-HWND
-STDCALL
-SetCapture(
-  HWND hWnd)
-{
-  UNIMPLEMENTED;
-  return (HWND)0;
-}
-
 
 /*
  * @unimplemented

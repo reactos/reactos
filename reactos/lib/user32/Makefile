@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.21 2003/07/21 01:59:51 royce Exp $
+# $Id: Makefile,v 1.22 2003/07/27 11:54:42 dwelch Exp $
 
 PATH_TO_TOP = ../..
 
@@ -68,7 +68,8 @@ WINDOWS_OBJECTS = \
 	windows/paint.o \
 	windows/prop.o \
 	windows/rect.o \
-	windows/text.o
+	windows/text.o \
+	windows/winpos.o
 
 TARGET_OBJECTS = \
   $(MISC_OBJECTS) \

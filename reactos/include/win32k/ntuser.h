@@ -1210,15 +1210,15 @@ NtUserSendNotifyMessage(
   WPARAM wParam,
   LPARAM lParam);
 
-DWORD
-STDCALL
-NtUserSetActiveWindow(
-  DWORD Unknown0);
+HWND STDCALL
+NtUserSetActiveWindow(HWND Wnd);
+HWND STDCALL
+NtUserGetActiveWindow(VOID);
 
-DWORD
-STDCALL
-NtUserSetCapture(
-  DWORD Unknown0);
+HWND STDCALL
+NtUserSetCapture(HWND Wnd);
+HWND STDCALL
+NtUserGetCapture(VOID);
 
 DWORD
 STDCALL

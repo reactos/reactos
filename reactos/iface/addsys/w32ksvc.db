@@ -350,9 +350,11 @@ NtUserFillWindow                        4
 NtUserFindExistingCursorIcon            3
 NtUserFindWindowEx                      4
 NtUserFlashWindowEx                     1
+NtUserGetActiveWindow			0
 NtUserGetAltTabInfo                     6
 NtUserGetAncestor                       2
 NtUserGetAsyncKeyState                  1
+NtUserGetCapture			0
 NtUserGetCaretBlinkTime                 0
 NtUserGetCaretPos                       1
 NtUserGetClassInfo                      5

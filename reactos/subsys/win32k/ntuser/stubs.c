@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.17 2003/07/25 23:02:21 royce Exp $
+/* $Id: stubs.c,v 1.18 2003/07/27 11:54:42 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1167,16 +1167,6 @@ NtUserSendInput(
   DWORD Unknown0,
   DWORD Unknown1,
   DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserSetCapture(
-  DWORD Unknown0)
 {
   UNIMPLEMENTED
 

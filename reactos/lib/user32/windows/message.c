@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.18 2003/07/10 21:04:32 chorns Exp $
+/* $Id: message.c,v 1.19 2003/07/27 11:54:41 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -689,5 +689,36 @@ RegisterWindowMessageW(LPCWSTR lpString)
   RtlInitUnicodeString(&String, lpString);
   return(NtUserRegisterWindowMessage(&String));
 }
+
+/*
+ * @implemented
+ */
+HWND STDCALL
+SetCapture(HWND hWnd)
+{
+  return(NtUserSetCapture(hWnd));
+}
+
+/*
+ * @implemented
+ */
+HWND STDCALL
+GetCapture(VOID)
+{
+  return(NtUserGetCapture());
+}
+
+/*
+ * @implemented
+ */
+WINBOOL STDCALL
+ReleaseCapture(VOID)
+{
+  NtUserSetCapture(NULL);
+  return(TRUE);
+}
+
+
+
 
 /* EOF */

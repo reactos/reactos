@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.47 2003/07/25 23:02:21 royce Exp $
+/* $Id: window.c,v 1.48 2003/07/27 11:54:41 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -24,7 +24,7 @@ static BOOL ControlsInitCalled = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 ULONG
-   WinHasThickFrameStyle(ULONG Style, ULONG ExStyle)
+WinHasThickFrameStyle(ULONG Style, ULONG ExStyle)
 {
   return((Style & WS_THICKFRAME) &&
 	 (!((Style & (WS_DLGFRAME | WS_BORDER)) == WS_DLGFRAME)));
@@ -1601,6 +1601,5 @@ ClientToScreen(HWND hWnd, LPPOINT lpPoint)
 {
     return (MapWindowPoints( hWnd, NULL, lpPoint, 1 ));
 }
-
 
 /* EOF */

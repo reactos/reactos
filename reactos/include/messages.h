@@ -973,6 +973,7 @@ extern "C" {
 #define WM_KEYDOWN	(256)
 #define WM_KEYUP	(257)
 #define WM_KILLFOCUS	(8)
+#define WM_SETVISIBLE   (9)
 #define WM_LBUTTONDBLCLK	(515)
 #define WM_LBUTTONDOWN	(513)
 #define WM_LBUTTONUP	(514)

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.9 2003/07/26 15:48:47 dwelch Exp $
+/* $Id: menu.c,v 1.10 2003/07/27 11:54:41 dwelch Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -64,6 +64,11 @@ typedef struct _POPUP_MENU
   ULONG Flags;
   HWND hWnd;
   HWND hWndOwner;
+  HBRUSH hbrBack;
+  ULONG HelpId;
+  ULONG cyMax;
+  ULONG MenuData;
+  ULONG Style;
 } POPUP_MENU, *PPOPUP_MENU;
 
 static HFONT hMenuFont = 0;
@@ -500,13 +505,11 @@ GetMenu(HWND hWnd)
 /*
  * @unimplemented
  */
-WINBOOL
-STDCALL
-GetMenuBarInfo(
-  HWND hwnd,
-  LONG idObject,
-  LONG idItem,
-  PMENUBARINFO pmbi)
+WINBOOL STDCALL
+GetMenuBarInfo(HWND hwnd,
+	       LONG idObject,
+	       LONG idItem,
+	       PMENUBARINFO pmbi)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -525,66 +528,125 @@ GetMenuCheckMarkDimensions(VOID)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
-UINT
-STDCALL
-GetMenuDefaultItem(
-  HMENU hMenu,
-  UINT fByPos,
-  UINT gmdiFlags)
+UINT STDCALL
+GetMenuDefaultItem(HMENU hMenu,
+		   UINT fByPos,
+		   UINT gmdiFlags)
 {
-  UNIMPLEMENTED;
-  return 0;
+  PPOPUP_MENU Menu;
+  PMENUITEM Item;
+  ULONG i;
+
+  Menu = MenuGetMenu(hMenu);
+  
+  if (Menu->Items == NULL)
+    {
+      return(-1);
+    }
+
+  Item = Menu->Items;
+  while (!(Item->State & MFS_DEFAULT))
+    {
+      i++;
+      Item++;
+      if (i >= Menu->NrItems)
+	{
+	  return(-1);
+	}
+    }
+
+  if (!(gmdiFlags & GMDI_USEDISABLED) && (Item->State & MFS_DISABLED))
+    {
+      return(-1);
+    }
+
+  if ((Item->TypeData & MF_POPUP) && (gmdiFlags & GMDI_GOINTOPOPUPS))
+    {
+      UINT Ret;
+      Ret = GetMenuDefaultItem(Item->SubMenu, fByPos, gmdiFlags);
+      if (Ret != -1)
+	{
+	  return(Ret);
+	}
+    }
+  return(fByPos ? i : Item->Id);
 }
 
 
 /*
  * @unimplemented
  */
-WINBOOL
-STDCALL
-GetMenuInfo(
-  HMENU hmenu,
-  LPCMENUINFO lpcmi)
+WINBOOL STDCALL
+GetMenuInfo(HMENU hmenu,
+	    LPMENUINFO lpcmi)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  PPOPUP_MENU Menu;
+
+  Menu = MenuGetMenu(hmenu);
+
+  if (lpcmi->fMask & MIM_BACKGROUND)
+    {
+      lpcmi->hbrBack = Menu->hbrBack;
+    }
+  if (lpcmi->fMask & MIM_HELPID)
+    {
+      lpcmi->dwContextHelpID = Menu->HelpId;
+    }
+  if (lpcmi->fMask & MIM_MAXHEIGHT)
+    {
+      lpcmi->cyMax = Menu->cyMax;
+    }
+  if (lpcmi->fMask & MIM_MENUDATA)
+    {
+      lpcmi->dwMenuData = Menu->MenuData;
+    }
+  if (lpcmi->fMask & MIM_STYLE)
+    {
+      lpcmi->dwStyle = Menu->Style;
+    }
+  return(TRUE);
+}
+
+
+/*
+ * @implemented
+ */
+int STDCALL
+GetMenuItemCount(HMENU hMenu)
+{
+  PPOPUP_MENU Menu = MenuGetMenu(hMenu);
+  return(Menu->NrItems);
+}
+
+
+/*
+ * @implemented
+ */
+UINT STDCALL
+GetMenuItemID(HMENU hMenu,
+	      int nPos)
+{
+  PMENUITEM Item;
+
+  Item = MenuFindItem(&hMenu, &nPos, MF_BYPOSITION);
+  if (Item == NULL)
+    {
+      return(0);
+    }
+  if (Item->TypeData & MF_POPUP)
+    {
+      return(-1);
+    }
+  return(Item->Id);
 }
 
 
 /*
  * @unimplemented
  */
-int
-STDCALL
-GetMenuItemCount(
-  HMENU hMenu)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
-
-/*
- * @unimplemented
- */
-UINT
-STDCALL
-GetMenuItemID(
-  HMENU hMenu,
-  int nPos)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
-
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
+WINBOOL STDCALL
 GetMenuItemInfoA(
   HMENU hMenu,
   UINT uItem,
@@ -615,16 +677,14 @@ GetMenuItemInfoW(
 /*
  * @unimplemented
  */
-WINBOOL
-STDCALL
-GetMenuItemRect(
-  HWND hWnd,
-  HMENU hMenu,
-  UINT uItem,
-  LPRECT lprcItem)
+WINBOOL STDCALL
+GetMenuItemRect(HWND hWnd,
+		HMENU hMenu,
+		UINT uItem,
+		LPRECT lprcItem)
 {
   UNIMPLEMENTED;
-  return FALSE;
+  return(FALSE);
 }
 
 
@@ -803,25 +863,20 @@ LoadMenuA(HINSTANCE hInstance,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
-HMENU
-STDCALL
-LoadMenuIndirectA(
-  CONST MENUTEMPLATE *lpMenuTemplate)
+HMENU STDCALL
+LoadMenuIndirectA(CONST MENUTEMPLATE *lpMenuTemplate)
 {
-  UNIMPLEMENTED;
-  return (HMENU)0;
+  return(LoadMenuIndirectW(lpMenuTemplate));
 }
 
 
 /*
  * @unimplemented
  */
-HMENU
-STDCALL
-LoadMenuIndirectW(
-  CONST MENUTEMPLATE *lpMenuTemplate)
+HMENU STDCALL
+LoadMenuIndirectW(CONST MENUTEMPLATE *lpMenuTemplate)
 {
   UNIMPLEMENTED;
   return (HMENU)0;
@@ -909,16 +964,40 @@ RemoveMenu(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
-WINBOOL
-STDCALL
-SetMenu(
-  HWND hWnd,
-  HMENU hMenu)
+WINBOOL STDCALL
+SetMenu(HWND hWnd,
+	HMENU hMenu)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  ULONG Style = GetWindowLong(hWnd, GWL_STYLE);
+
+  if (Style & WS_CHILD)
+    {
+      return(FALSE);
+    }
+  if (GetCapture() == hWnd)
+    {
+      ReleaseCapture();
+    }
+  
+  SetWindowLong(hWnd, GWL_ID, (LONG)hMenu);
+      
+  if (hMenu != 0)
+    {
+      PPOPUP_MENU Menu;
+      
+      Menu = MenuGetMenu(hMenu);
+      
+      Menu->hWnd = hWnd;
+      Menu->Height = 0;
+    }
+  if (IsWindowVisible(hWnd))
+    {
+      SetWindowPos(hWnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
+		   SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED);
+    }
+  return(TRUE);
 }
 
 

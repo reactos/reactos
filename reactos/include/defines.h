@@ -4240,6 +4240,14 @@ extern "C" {
 #define FSHIFT	(4)
 #define FVIRTKEY	(1)
 
+/* MENUINFO structure */
+#define MIM_MAXHEIGHT		0x00000001
+#define MIM_BACKGROUND		0x00000002
+#define MIM_HELPID		0x00000004
+#define MIM_MENUDATA		0x00000008
+#define MIM_STYLE		0x00000010
+#define MIM_APPLYTOSUBMENUS	0x80000000
+
 /* MENUITEMINFO structure */
 #define MIIM_CHECKMARKS	(8)
 #define MIIM_DATA	(32)

@@ -113,6 +113,11 @@ HWND     FASTCALL W32kSetFocusWindow (HWND hWnd);
 DWORD FASTCALL
 W32kGetWindowThreadProcessId(PWINDOW_OBJECT Wnd, PDWORD pid);
 
+ULONG
+UserHasDlgFrameStyle(ULONG Style, ULONG ExStyle);
+ULONG
+UserHasThickFrameStyle(ULONG Style, ULONG ExStyle);
+
 #endif /* __WIN32K_WINDOW_H */
 
 /* EOF */

@@ -38,6 +38,7 @@ typedef struct _DESKTOP_OBJECT
   /* Handle of the desktop window. */
   HANDLE DesktopWindow;
   HANDLE PrevActiveWindow;
+  struct _WINDOW_OBJECT* CaptureWindow;
 } DESKTOP_OBJECT, *PDESKTOP_OBJECT;
 
 

@@ -45,6 +45,12 @@ VOID FASTCALL
 W32kEndDesktopGraphics(VOID);
 HDC FASTCALL
 W32kGetScreenDC(VOID);
+VOID STDCALL
+W32kSetFocusMessageQueue(PUSER_MESSAGE_QUEUE NewQueue);
+struct _WINDOW_OBJECT* STDCALL
+W32kGetCaptureWindow(VOID);
+VOID STDCALL
+W32kSetCaptureWindow(struct _WINDOW_OBJECT* Window);
 
 #endif /* __WIN32K_WINSTA_H */
 

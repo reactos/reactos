@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursor.c,v 1.7 2003/07/20 00:06:16 ekohl Exp $
+/* $Id: cursor.c,v 1.8 2003/07/27 11:54:41 dwelch Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/cursor.c
@@ -199,6 +199,13 @@ SetSystemCursor(HCURSOR hcur,
  */
 int STDCALL
 ShowCursor(WINBOOL bShow)
+{
+  UNIMPLEMENTED;
+  return 0;
+}
+
+HCURSOR
+CursorIconToCursor(HICON hIcon, BOOL SemiTransparent)
 {
   UNIMPLEMENTED;
   return 0;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winsta.c,v 1.18 2003/07/25 23:02:21 royce Exp $
+/* $Id: winsta.c,v 1.19 2003/07/27 11:54:42 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -81,6 +81,14 @@ W32kGetDesktopObject ( HDESK hDesk )
   return W32kGetActiveDesktop();
 }
 
+VOID STDCALL
+W32kSetFocusMessageQueue(PUSER_MESSAGE_QUEUE NewQueue)
+{
+  PDESKTOP_OBJECT pdo = W32kGetActiveDesktop();
+
+  pdo->ActiveMessageQueue = NewQueue;
+}
+
 PUSER_MESSAGE_QUEUE FASTCALL
 W32kGetFocusMessageQueue(VOID)
 {
@@ -95,6 +103,28 @@ W32kGetFocusMessageQueue(VOID)
   return (PUSER_MESSAGE_QUEUE)pdo->ActiveMessageQueue;
 }
 
+PWINDOW_OBJECT STDCALL
+W32kGetCaptureWindow(VOID)
+{
+  PDESKTOP_OBJECT pdo = W32kGetActiveDesktop();
+  if (!pdo)
+    {
+      DPRINT("No active desktop\n");
+      return(NULL);
+    }
+  return(pdo->CaptureWindow);
+}
+
+VOID STDCALL
+W32kSetCaptureWindow(PWINDOW_OBJECT Window)
+{
+  PDESKTOP_OBJECT pdo = W32kGetActiveDesktop();
+  if (!pdo)
+    {
+      DPRINT("No active desktop\n");
+    }
+  pdo->CaptureWindow = Window;
+}
 
 NTSTATUS FASTCALL
 InitWindowStationImpl(VOID)

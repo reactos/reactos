@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.11 2003/07/25 23:53:36 dwelch Exp $
+/* $Id: msgqueue.c,v 1.12 2003/07/27 11:54:42 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -138,9 +138,14 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
   POINT Point;
   ULONG Click = 0;
 
-  /* FIXME: Handle window capture. */
-
-  *HitTest = WinPosWindowFromPoint(ScopeWin, Message->Msg.pt, &Window);
+  if ((Window = W32kGetCaptureWindow()) == NULL)
+    {
+      *HitTest = WinPosWindowFromPoint(ScopeWin, Message->Msg.pt, &Window);
+    }
+  else
+    {
+      *HitTest = HTCLIENT;
+    }
   
   if (Window == NULL)
     {
