@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.8 2000/11/04 13:51:03 ekohl Exp $
+/* $Id: sysinfo.c,v 1.9 2001/01/17 02:02:39 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -258,6 +258,7 @@ QSI_DEF(SystemDeviceInformation)
 {
 	PSYSTEM_DEVICE_INFORMATION Sdi 
 		= (PSYSTEM_DEVICE_INFORMATION) Buffer;
+	PCONFIGURATION_INFORMATION ConfigInfo;
 
 	*ReqSize = sizeof (SYSTEM_DEVICE_INFORMATION);
 	/*
@@ -268,12 +269,14 @@ QSI_DEF(SystemDeviceInformation)
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
 
-	Sdi->NumberOfDisks = 0; /* FIXME */
-	Sdi->NumberOfFloppies = 0; /* FIXME */
-	Sdi->NumberOfCdRoms = 0; /* FIXME */
-	Sdi->NumberOfTapes = 0; /* FIXME */
-	Sdi->NumberOfSerialPorts = 0; /* FIXME */
-	Sdi->NumberOfParallelPorts = 0; /* FIXME */
+	ConfigInfo = IoGetConfigurationInformation ();
+
+	Sdi->NumberOfDisks = ConfigInfo->DiskCount;
+	Sdi->NumberOfFloppies = ConfigInfo->FloppyCount;
+	Sdi->NumberOfCdRoms = ConfigInfo->CDRomCount;
+	Sdi->NumberOfTapes = ConfigInfo->TapeCount;
+	Sdi->NumberOfSerialPorts = ConfigInfo->SerialCount;
+	Sdi->NumberOfParallelPorts = ConfigInfo->ParallelCount;
 
 	return (STATUS_SUCCESS);
 }
