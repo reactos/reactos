@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.20 2004/11/08 02:16:06 weiden Exp $
+/* $Id$
  *
  *  CMD.C - command-line interface.
  *
@@ -1151,7 +1151,7 @@ Initialize (int argc, TCHAR* argv[])
 		{
 			if (!_tcsicmp (argv[i], _T("/p")))
 			{
-				if (!IsValidFileName (_T("\\autoexec.bat")))
+				if (!IsExistingFile (_T("\\autoexec.bat")))
 				{
 #ifdef INCLUDE_CMD_DATE
 					cmd_date (_T(""), _T(""));
@@ -1216,11 +1216,11 @@ Initialize (int argc, TCHAR* argv[])
 	}
 
 	/* run cmdstart.bat */
-	if (IsValidFileName (_T("cmdstart.bat")))
+	if (IsExistingFile (_T("cmdstart.bat")))
 	{
 		ParseCommandLine (_T("cmdstart.bat"));
 	}
-	else if (IsValidFileName (_T("\\cmdstart.bat")))
+	else if (IsExistingFile (_T("\\cmdstart.bat")))
 	{
 		ParseCommandLine (_T("\\cmdstart.bat"));
 	}
@@ -1234,7 +1234,7 @@ Initialize (int argc, TCHAR* argv[])
 		p = _tcsrchr (commandline, _T('\\')) + 1;
 		_tcscpy (p, _T("cmdstart.bat"));
 
-		if (IsValidFileName (_T("commandline")))
+		if (IsExistingFile (_T("commandline")))
 		{
 			ConErrPrintf (_T("Running %s...\n", commandline));
 			ParseCommandLine (commandline);
@@ -1268,12 +1268,12 @@ Initialize (int argc, TCHAR* argv[])
 static VOID Cleanup (int argc, TCHAR *argv[])
 {
 	/* run cmdexit.bat */
-	if (IsValidFileName (_T("cmdexit.bat")))
+	if (IsExistingFile (_T("cmdexit.bat")))
 	{
 		ConErrPrintf (_T("Running cmdexit.bat...\n"));
 		ParseCommandLine (_T("cmdexit.bat"));
 	}
-	else if (IsValidFileName (_T("\\cmdexit.bat")))
+	else if (IsExistingFile (_T("\\cmdexit.bat")))
 	{
 		ConErrPrintf (_T("Running \\cmdexit.bat...\n"));
 		ParseCommandLine (_T("\\cmdexit.bat"));
@@ -1289,7 +1289,7 @@ static VOID Cleanup (int argc, TCHAR *argv[])
 		p = _tcsrchr (commandline, _T('\\')) + 1;
 		_tcscpy (p, _T("cmdexit.bat"));
 
-		if (IsValidFileName (_T("commandline")))
+		if (IsExistingFile (_T("commandline")))
 		{
 			ConErrPrintf (_T("Running %s...\n"), commandline);
 			ParseCommandLine (commandline);

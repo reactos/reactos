@@ -117,7 +117,7 @@ SearchForExecutableSingle (LPCTSTR pFileName, LPTSTR pFullName, LPTSTR pExtensio
 		if (pExtension)
 			_tcscat(szPathBuffer, pExtension);
 
-		if (IsValidFileName (szPathBuffer))
+		if (IsExistingFile (szPathBuffer))
 		{
 #ifdef _DEBUG
 			DebugPrintf (_T("Found: \'%s\'\n"), szPathBuffer);
@@ -140,7 +140,7 @@ SearchForExecutableSingle (LPCTSTR pFileName, LPTSTR pFullName, LPTSTR pExtensio
 	if (pExtension)
 		_tcscat (szPathBuffer, pExtension);
 
-	if (IsValidFileName (szPathBuffer))
+	if (IsExistingFile (szPathBuffer))
 	{
 #ifdef _DEBUG
 		DebugPrintf (_T("Found: \'%s\'\n"), szPathBuffer);
@@ -190,7 +190,7 @@ SearchForExecutableSingle (LPCTSTR pFileName, LPTSTR pFullName, LPTSTR pExtensio
 		if (pExtension)
 			_tcscat (szPathBuffer, pExtension);
 
-		if (IsValidFileName (szPathBuffer))
+		if (IsExistingFile (szPathBuffer))
 		{
 #ifdef _DEBUG
 			DebugPrintf (_T("Found: \'%s\'\n"), szPathBuffer);

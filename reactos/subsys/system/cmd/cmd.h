@@ -1,4 +1,4 @@
-/* $Id: cmd.h,v 1.5 2004/06/21 18:57:22 weiden Exp $
+/* $Id$
  *
  *  CMD.H - header file for the modules in CMD.EXE
  *
@@ -309,8 +309,8 @@ LPTSTR *split (LPTSTR, LPINT, BOOL);
 VOID   freep (LPTSTR *);
 LPTSTR _stpcpy (LPTSTR, LPTSTR);
 BOOL   IsValidPathName (LPCTSTR);
-BOOL   IsValidFileName (LPCTSTR);
-BOOL   IsValidDirectory (LPCTSTR);
+BOOL   IsExistingFile (LPCTSTR);
+BOOL   IsExistingDirectory (LPCTSTR);
 BOOL   FileGetString (HANDLE, LPTSTR, INT);
 #ifndef __REACTOS__
 HWND   GetConsoleWindow(VOID);

@@ -348,16 +348,17 @@ BOOL IsValidPathName (LPCTSTR pszPath)
  * Checks if a file exists (accessible)
  */
 
-BOOL IsValidFileName (LPCTSTR pszPath)
+BOOL IsExistingFile (LPCTSTR pszPath)
 {
 	DWORD attr = GetFileAttributes (pszPath);
 	return (attr != 0xFFFFFFFF && (! (attr & FILE_ATTRIBUTE_DIRECTORY)) );
 }
 
 
-BOOL IsValidDirectory (LPCTSTR pszPath)
+BOOL IsExistingDirectory (LPCTSTR pszPath)
 {
-	return (GetFileAttributes (pszPath) & FILE_ATTRIBUTE_DIRECTORY);
+	DWORD attr = GetFileAttributes (pszPath);
+	return (attr != 0xFFFFFFFF && (attr & FILE_ATTRIBUTE_DIRECTORY) );
 }
 
 

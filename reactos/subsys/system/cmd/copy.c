@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.6 2004/11/08 02:16:06 weiden Exp $
+/* $Id$
  *
  *  COPY.C -- copy internal command.
  *
@@ -51,16 +51,6 @@ static BOOL GetDestination (LPFILES, LPFILES);
 static INT  ParseCommand (LPFILES, int, TCHAR **, LPDWORD);
 static VOID DeleteFileList (LPFILES);
 static INT  Overwrite (LPTSTR);
-
-
-
-static BOOL
-IsDirectory (LPTSTR fn)
-{
-	if (!IsValidFileName (fn))
-		return FALSE;
-	return (GetFileAttributes (fn) & FILE_ATTRIBUTE_DIRECTORY);
-}
 
 
 static BOOL
@@ -362,7 +352,7 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 				 *lpdwFlags & ASCII ? "ASCII" : "BINARY");
 #endif
 
-	if (!IsValidFileName (dest))
+	if (!IsExistingFile (dest))
 	{
 #ifdef _DEBUG
 		DebugPrintf (_T("opening/creating\n"));
@@ -529,8 +519,12 @@ SetupCopy (LPFILES sources, TCHAR **p, BOOL bMultiple,
 /*		Force a clean full path
 */
 		GetFullPathName( sources->szFile, 128, (LPTSTR) &temp, NULL);
+		if (IsExistingDirectory(temp))
+		{
+			_tcscat(temp, _T("\\*"));
+		}
 
-		_tsplitpath (sources->szFile, drive_s, dir_s, file_s, ext_s);
+		_tsplitpath (temp, drive_s, dir_s, file_s, ext_s);
 
 		hFind = FindFirstFile ((TCHAR*)&temp, &find);
 		if (hFind == INVALID_HANDLE_VALUE)
@@ -554,7 +548,7 @@ SetupCopy (LPFILES sources, TCHAR **p, BOOL bMultiple,
 
 //			printf("Merge %s, filename %s\n", from_merge, find.cFileName);
 
-			if (IsDirectory (from_merge))
+			if (IsExistingDirectory (from_merge))
 			{
 
 //			printf("Merge DIR\n");
@@ -576,7 +570,7 @@ SetupCopy (LPFILES sources, TCHAR **p, BOOL bMultiple,
 						 sources->dwFlag & ASCII ? _T(", ASCII") : _T(", BINARY"));
 #endif
 
-			if (IsValidFileName (real_dest) && !bAll)
+			if (IsExistingFile (real_dest) && !bAll)
 			{
 				/* Don't prompt in a batch file */
 				if (bc != NULL)
@@ -696,7 +690,7 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 	if (bDestFound)
 	{
 		_tsplitpath (dest.szFile, drive_d, dir_d, file_d, ext_d);
-		if (IsDirectory (dest.szFile))
+		if (IsExistingDirectory (dest.szFile))
 		{
 //		printf("A szFile= %s, Dir = %s, File = %s, Ext = %s\n", dest.szFile, dir_d, file_d, ext_d);
 			_tcscat (dir_d, file_d);
@@ -736,7 +730,7 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 	else if (!bDestFound && !bMultiple)
 	{
 		_tsplitpath (sources->szFile, drive_d, dir_d, file_d, ext_d);
-		if (IsDirectory (sources->szFile))
+		if (IsExistingDirectory (sources->szFile))
 		{
 //		printf("B File = %s, Ext = %s\n", file_d, ext_d);
 
@@ -750,7 +744,7 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 	else
 	{
 		_tsplitpath(sources->szFile, drive_d, dir_d, file_d, ext_d);
-		if (IsDirectory (sources->szFile))
+		if (IsExistingDirectory (sources->szFile))
 		{
 //		printf("C File = %s, Ext = %s\n", file_d, ext_d);
 
