@@ -1,4 +1,4 @@
-/* $Id: scrollbar.c,v 1.8 2003/02/17 19:48:27 jfilby Exp $
+/* $Id: scrollbar.c,v 1.9 2003/02/17 21:03:52 jfilby Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -30,26 +30,18 @@ static HBITMAP hLfArrowI;
 static HBITMAP hRgArrowI;
 */
 #define TOP_ARROW(flags,pressed) \
-   (((flags)&ESB_DISABLE_UP) ? hUpArrowI : ((pressed) ? 
-hUpArrowD:hUpArrow))
+   (((flags)&ESB_DISABLE_UP) ? hUpArrowI : ((pressed) ? hUpArrowD:hUpArrow))
 #define BOTTOM_ARROW(flags,pressed) \
-   (((flags)&ESB_DISABLE_DOWN) ? hDnArrowI : ((pressed) ? 
-hDnArrowD:hDnArrow))
+   (((flags)&ESB_DISABLE_DOWN) ? hDnArrowI : ((pressed) ? hDnArrowD:hDnArrow))
 #define LEFT_ARROW(flags,pressed) \
-   (((flags)&ESB_DISABLE_LEFT) ? hLfArrowI : ((pressed) ? 
-hLfArrowD:hLfArrow))
+   (((flags)&ESB_DISABLE_LEFT) ? hLfArrowI : ((pressed) ? hLfArrowD:hLfArrow))
 #define RIGHT_ARROW(flags,pressed) \
-   (((flags)&ESB_DISABLE_RIGHT) ? hRgArrowI : ((pressed) ? 
-hRgArrowD:hRgArrow))
+   (((flags)&ESB_DISABLE_RIGHT) ? hRgArrowI : ((pressed) ? hRgArrowD:hRgArrow))
 
-#define SCROLL_ARROW_THUMB_OVERLAP 0     /* Overlap between arrows and 
-thumb */
-#define SCROLL_MIN_THUMB 6               /* Minimum size of the thumb 
-in pixels */
-#define SCROLL_FIRST_DELAY   200         /* Delay (in ms) before first 
-repetition when holding the button down */
-#define SCROLL_REPEAT_DELAY  50          /* Delay (in ms) between 
-scroll repetitions */
+#define SCROLL_ARROW_THUMB_OVERLAP 0     /* Overlap between arrows and thumb */
+#define SCROLL_MIN_THUMB 6               /* Minimum size of the thumb in pixels */
+#define SCROLL_FIRST_DELAY   200         /* Delay (in ms) before first repetition when holding the button down */
+#define SCROLL_REPEAT_DELAY  50          /* Delay (in ms) between scroll repetitions */
 #define SCROLL_TIMER   0                 /* Scroll timer id */
 
  /* What to do after SCROLL_SetScrollInfo() */
@@ -65,24 +57,21 @@ enum SCROLL_HITTEST
   SCROLL_TOP_ARROW,		/* Top or left arrow */
   SCROLL_TOP_RECT,		/* Rectangle between the top arrow and the thumb */
   SCROLL_THUMB,			/* Thumb rectangle */
-  SCROLL_BOTTOM_RECT,		/* Rectangle between the thumb and the bottom 
-arrow */
+  SCROLL_BOTTOM_RECT,		/* Rectangle between the thumb and the bottom arrow */
   SCROLL_BOTTOM_ARROW		/* Bottom or right arrow */
 };
 
-static BOOL SCROLL_MovingThumb = FALSE; /* Is the moving thumb being 
-displayed? */
+static BOOL SCROLL_MovingThumb = FALSE; /* Is the moving thumb being displayed? */
 
 /* Thumb-tracking info */
 static HWND SCROLL_TrackingWin = 0;
 static INT SCROLL_TrackingBar = 0;
 static INT SCROLL_TrackingPos = 0;
 /* static INT  SCROLL_TrackingVal = 0; */
-static enum SCROLL_HITTEST SCROLL_trackHitTest; /* Hit test code of the 
-last button-down event */
+static enum SCROLL_HITTEST SCROLL_trackHitTest; /* Hit test code of the last button-down event */
 static BOOL SCROLL_trackVertical;
 
-/* FUNCTIONS 
+/* FUNCTIONS
 *****************************************************************/
 
 HBRUSH DefWndControlColor (HDC hDC, UINT ctlType);
@@ -101,7 +90,7 @@ GetScrollBarInfo (HWND hwnd, LONG idObject, PSCROLLBARINFO psbi)
 /* Ported from WINE20020904 */
 /* Draw the scroll bar interior (everything except the arrows). */
 static void
-SCROLL_DrawInterior (HWND hwnd, HDC hdc, INT nBar, BOOL vertical, INT 
+SCROLL_DrawInterior (HWND hwnd, HDC hdc, INT nBar, BOOL vertical, INT
 arrowSize, PSCROLLBARINFO psbi)
 {
   INT thumbSize = psbi->xyThumbBottom - psbi->xyThumbTop;
@@ -124,13 +113,11 @@ DbgPrint("[SCROLL_DrawInterior:%d]\n", nBar);
    */
   if ( nBar == SB_CTL )
   {
-    hBrush = (HBRUSH) NtUserSendMessage (GetParent (hwnd), 
-WM_CTLCOLORSCROLLBAR,
-                                         (WPARAM) hdc, (LPARAM) hwnd);
+    hBrush = (HBRUSH) NtUserSendMessage (GetParent (hwnd), WM_CTLCOLORSCROLLBAR, (WPARAM) hdc, (LPARAM) hwnd);
   }
   else
   {
-/*    hBrush = NtUserGetControlColor (hdc, CTLCOLOR_SCROLLBAR); FIXME 
+/*    hBrush = NtUserGetControlColor (hdc, CTLCOLOR_SCROLLBAR); FIXME
 */ /* DefWndControlColor */
     hBrush = GetSysColorBrush(COLOR_SCROLLBAR);
   }
@@ -142,14 +129,12 @@ WM_CTLCOLORSCROLLBAR,
   if (vertical)
   {
     psbi->rcScrollBar.top += arrowSize - SCROLL_ARROW_THUMB_OVERLAP;
-    psbi->rcScrollBar.bottom -= (arrowSize - 
-SCROLL_ARROW_THUMB_OVERLAP);
+    psbi->rcScrollBar.bottom -= (arrowSize - SCROLL_ARROW_THUMB_OVERLAP);
   }
   else
   {
     psbi->rcScrollBar.left += arrowSize - SCROLL_ARROW_THUMB_OVERLAP;
-    psbi->rcScrollBar.right -= (arrowSize - 
-SCROLL_ARROW_THUMB_OVERLAP);
+    psbi->rcScrollBar.right -= (arrowSize - SCROLL_ARROW_THUMB_OVERLAP);
   }
 
   /* Draw the scroll rectangles and thumb */
@@ -174,17 +159,14 @@ SCROLL_ARROW_THUMB_OVERLAP);
             psbi->rcScrollBar.left,
             psbi->rcScrollBar.top,
             psbi->rcScrollBar.right - psbi->rcScrollBar.left,
-            psbi->dxyLineButton - (arrowSize - 
-SCROLL_ARROW_THUMB_OVERLAP),
+            psbi->dxyLineButton - (arrowSize - SCROLL_ARROW_THUMB_OVERLAP),
             top_selected ? 0x0f0000 : PATCOPY);
-    psbi->rcScrollBar.top += psbi->dxyLineButton - (arrowSize - 
-SCROLL_ARROW_THUMB_OVERLAP);
+    psbi->rcScrollBar.top += psbi->dxyLineButton - (arrowSize - SCROLL_ARROW_THUMB_OVERLAP);
     PatBlt (hdc,
             psbi->rcScrollBar.left,
             psbi->rcScrollBar.top + thumbSize,
             psbi->rcScrollBar.right - psbi->rcScrollBar.left,
-            psbi->rcScrollBar.bottom - psbi->rcScrollBar.top - 
-thumbSize,
+            psbi->rcScrollBar.bottom - psbi->rcScrollBar.top - thumbSize,
             bottom_selected ? 0x0f0000 : PATCOPY);
     psbi->rcScrollBar.bottom = psbi->rcScrollBar.top + thumbSize;
   }
@@ -193,17 +175,14 @@ thumbSize,
     PatBlt (hdc,
             psbi->rcScrollBar.left,
             psbi->rcScrollBar.top,
-            psbi->dxyLineButton - (arrowSize - 
-SCROLL_ARROW_THUMB_OVERLAP),
+            psbi->dxyLineButton - (arrowSize - SCROLL_ARROW_THUMB_OVERLAP),
             psbi->rcScrollBar.bottom - psbi->rcScrollBar.top,
             top_selected ? 0x0f0000 : PATCOPY);
-    psbi->rcScrollBar.left += psbi->dxyLineButton - (arrowSize - 
-SCROLL_ARROW_THUMB_OVERLAP);
+    psbi->rcScrollBar.left += psbi->dxyLineButton - (arrowSize - SCROLL_ARROW_THUMB_OVERLAP);
     PatBlt (hdc,
             psbi->rcScrollBar.left + thumbSize,
             psbi->rcScrollBar.top,
-            psbi->rcScrollBar.right - psbi->rcScrollBar.left - 
-thumbSize,
+            psbi->rcScrollBar.right - psbi->rcScrollBar.left - thumbSize,
             psbi->rcScrollBar.bottom - psbi->rcScrollBar.top,
             bottom_selected ? 0x0f0000 : PATCOPY);
     psbi->rcScrollBar.right = psbi->rcScrollBar.left + thumbSize;
@@ -219,8 +198,7 @@ thumbSize,
 
 /* Ported from WINE20020904 */
 static void
-SCROLL_DrawMovingThumb (HDC hdc, RECT * rect, BOOL vertical, int
-arrowSize, int thumbSize, PSCROLLBARINFO psbi)
+SCROLL_DrawMovingThumb (HDC hdc, RECT * rect, BOOL vertical, int arrowSize, int thumbSize, PSCROLLBARINFO psbi)
 {
   INT pos = SCROLL_TrackingPos;
   INT max_size;
@@ -237,8 +215,7 @@ arrowSize, int thumbSize, PSCROLLBARINFO psbi)
   else if (pos > max_size)
     pos = max_size;
 
-  SCROLL_DrawInterior (SCROLL_TrackingWin, hdc, SCROLL_TrackingBar, 
-vertical, arrowSize, psbi);
+  SCROLL_DrawInterior (SCROLL_TrackingWin, hdc, SCROLL_TrackingBar, vertical, arrowSize, psbi);
 
   SCROLL_MovingThumb = !SCROLL_MovingThumb;
 }
@@ -270,13 +247,11 @@ SCROLL_DrawArrows (HDC hdc, PSCROLLBARINFO info,
   }
 
   DrawFrameControl (hdc, &r1, DFC_SCROLL,
-            scrollDirFlag1 | (top_pressed ? (DFCS_PUSHED | DFCS_FLAT) : 
-0)
+            scrollDirFlag1 | (top_pressed ? (DFCS_PUSHED | DFCS_FLAT) : 0)
             /* | (info.flags&ESB_DISABLE_LTUP ? DFCS_INACTIVE : 0) */
     );
   DrawFrameControl (hdc, &r2, DFC_SCROLL,
-            scrollDirFlag2 | (bottom_pressed ? (DFCS_PUSHED | 
-DFCS_FLAT) : 0)
+            scrollDirFlag2 | (bottom_pressed ? (DFCS_PUSHED | DFCS_FLAT) : 0)
             /* | (info.flags&ESB_DISABLE_RTDN ? DFCS_INACTIVE : 0) */
     );
 }
@@ -323,11 +298,9 @@ SCROLL_DrawScrollBar (HWND hwnd, HDC hdc, INT nBar,
 
   if (IsRectEmpty (&(info.rcScrollBar))) goto END;
 
-  if (Save_SCROLL_MovingThumb && (SCROLL_TrackingWin == hwnd) && 
-(SCROLL_TrackingBar == nBar))
+  if (Save_SCROLL_MovingThumb && (SCROLL_TrackingWin == hwnd) && (SCROLL_TrackingBar == nBar))
   {
-    SCROLL_DrawMovingThumb (hdc, &(info.rcScrollBar), nBar, vertical, 
-arrowSize, thumbSize, &info);
+    SCROLL_DrawMovingThumb (hdc, &(info.rcScrollBar), vertical, arrowSize, thumbSize, &info);
   }
 
   /* Draw the arrows */
@@ -335,15 +308,13 @@ arrowSize, thumbSize, &info);
   {
     if (SCROLL_trackVertical == TRUE /* && GetCapture () == hwnd */)
     {
-      SCROLL_DrawArrows (hdc, &info, &(info.rcScrollBar), arrowSize, 
-vertical,
+      SCROLL_DrawArrows (hdc, &info, &(info.rcScrollBar), arrowSize, vertical,
                          (SCROLL_trackHitTest == SCROLL_TOP_ARROW),
                          (SCROLL_trackHitTest == SCROLL_BOTTOM_ARROW));
     }
     else
     {
-      SCROLL_DrawArrows (hdc, &info, &(info.rcScrollBar), arrowSize, 
-vertical, FALSE, FALSE);
+      SCROLL_DrawArrows (hdc, &info, &(info.rcScrollBar), arrowSize, vertical, FALSE, FALSE);
     }
   }
 
@@ -354,8 +325,7 @@ vertical, FALSE, FALSE);
 
   if (Save_SCROLL_MovingThumb &&
       (SCROLL_TrackingWin == hwnd) && (SCROLL_TrackingBar == nBar))
-    SCROLL_DrawMovingThumb (hdc, &info.rcScrollBar, nBar, vertical, 
-arrowSize, thumbSize, &info);
+    SCROLL_DrawMovingThumb (hdc, &info.rcScrollBar, vertical, arrowSize, thumbSize, &info);
   /* if scroll bar has focus, reposition the caret */
 
 /*  if (hwnd == GetFocus () && (nBar == SB_CTL))
@@ -395,8 +365,7 @@ GetScrollRange (HWND hWnd, int nBar, LPINT lpMinPos, LPINT lpMaxPos)
 }
 
 int STDCALL
-SetScrollInfo (HWND hwnd, int fnBar, LPCSCROLLINFO lpsi, WINBOOL 
-fRedraw)
+SetScrollInfo (HWND hwnd, int fnBar, LPCSCROLLINFO lpsi, WINBOOL fRedraw)
 {
   UNIMPLEMENTED;
   return 0;
