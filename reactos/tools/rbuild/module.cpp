@@ -197,6 +197,8 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return KernelModeDLL;
 	if ( attribute.value == "nativedll" )
 		return NativeDLL;
+	if ( attribute.value == "win32dll" )
+		return Win32DLL;
 	throw InvalidAttributeValueException ( location,
 	                                       attribute.name,
 	                                       attribute.value );
@@ -214,12 +216,18 @@ Module::GetDefaultModuleExtension () const
 		case Kernel:
 			return ".exe";
 		case KernelModeDLL:
-			return ".dll";
 		case NativeDLL:
+		case Win32DLL:
 			return ".dll";
 	}
-	throw InvalidOperationException (__FILE__,
-	                                 __LINE__);
+	throw InvalidOperationException ( __FILE__,
+	                                  __LINE__ );
+}
+
+bool
+Module::HasImportLibrary () const
+{
+	return importLibrary != NULL;
 }
 
 string
@@ -231,23 +239,16 @@ Module::GetTargetName () const
 string
 Module::GetDependencyPath () const
 {
-	switch ( type )
+	if ( HasImportLibrary () )
 	{
-	case KernelModeDLL:
 		return ssprintf ( "dk%snkm%slib%slib%s.a",
 		                  SSEP,
 		                  SSEP,
 		                  SSEP,
 		                  name.c_str () );
-	case NativeDLL:
-		return ssprintf ( "dk%sw32%slib%slib%s.a",
-		                  SSEP,
-		                  SSEP,
-		                  SSEP,
-		                  name.c_str () );
-	default:
-		return GetPath();
 	}
+	else
+		return GetPath();
 }
 
 string

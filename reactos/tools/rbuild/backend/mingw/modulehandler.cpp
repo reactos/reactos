@@ -395,6 +395,11 @@ MingwModuleHandler::GenerateMacros (
 				"endif\n\n" );
 		}
 	}
+
+	fprintf (
+		fMakefile,
+		"%s_CFLAGS += $(PROJECT_CFLAGS)\n\n",
+		module.name.c_str () );
 }
 
 string
@@ -925,6 +930,67 @@ MingwNativeDLLModuleHandler::GenerateNativeDLLModuleTarget ( const Module& modul
 	
 		fprintf ( fMakefile,
 		          "\t${gcc} -Wl,--subsystem,native -Wl,--entry,_DllMainCRTStartup@12 -Wl,--image-base,0x10000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -nostdlib -mdll -o %s %s %s\n\n",
+		          target.c_str (),
+		          archiveFilename.c_str (),
+		          importLibraryDependencies.c_str () );
+		
+		GenerateMacrosAndTargetsTarget ( module );
+	}
+	else
+	{
+		fprintf ( fMakefile, "%s:\n\n",
+		          target.c_str ());
+		fprintf ( fMakefile, ".PHONY: %s\n\n",
+		          target.c_str ());
+	}
+}
+
+
+static MingwWin32DLLModuleHandler win32dll_handler;
+
+MingwWin32DLLModuleHandler::MingwWin32DLLModuleHandler ()
+	: MingwModuleHandler ( Win32DLL )
+{
+}
+
+void
+MingwWin32DLLModuleHandler::Process ( const Module& module )
+{
+	GeneratePreconditionDependencies ( module );
+	GenerateWin32DLLModuleTarget ( module );
+	GenerateInvocations ( module );
+}
+
+void
+MingwWin32DLLModuleHandler::GenerateWin32DLLModuleTarget ( const Module& module )
+{
+	static string ros_junk ( "$(ROS_TEMPORARY)" );
+	string target ( FixupTargetFilename ( module.GetPath () ) );
+	string workingDirectory = GetWorkingDirectory ( );
+	string archiveFilename = GetModuleArchiveFilename ( module );
+	string importLibraryDependencies = GetImportLibraryDependencies ( module );
+
+	if (module.importLibrary != NULL)
+	{
+		fprintf ( fMakefile, "%s:\n",
+		          module.GetDependencyPath ().c_str () );
+
+		fprintf ( fMakefile,
+		          "\t${dlltool} --dllname %s --def %s --output-lib %s --kill-at\n\n",
+		          module.GetTargetName ().c_str (),
+		          FixupTargetFilename ( module.GetBasePath () + SSEP + module.importLibrary->definition ).c_str (),
+		          FixupTargetFilename ( module.GetDependencyPath () ).c_str () );
+	}
+
+	if (module.files.size () > 0)
+	{
+		fprintf ( fMakefile, "%s: %s %s\n",
+		          target.c_str (),
+		          archiveFilename.c_str (),
+		          importLibraryDependencies.c_str () );
+
+		fprintf ( fMakefile,
+		          "\t${gcc} -Wl,--subsystem,console -Wl,--entry,_DllMain@12 -Wl,--image-base,0x10000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -nostdlib -mdll -o %s %s %s\n",
 		          target.c_str (),
 		          archiveFilename.c_str (),
 		          importLibraryDependencies.c_str () );

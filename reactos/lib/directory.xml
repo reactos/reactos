@@ -1,3 +1,6 @@
+<directory name="kernel32">
+	<xi:include href="kernel32/kernel32.xml" />
+</directory>
 <directory name="kjs">
 	<xi:include href="kjs/kjs.xml" />
 </directory>

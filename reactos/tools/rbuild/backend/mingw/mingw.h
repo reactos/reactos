@@ -14,6 +14,7 @@ private:
 	void CreateMakefile ();
 	void CloseMakefile ();
 	void GenerateHeader ();
+	std::string GenerateProjectCFLAGS ();
 	void GenerateGlobalVariables ();
 	void GenerateAllTarget ();
 	FILE* fMakefile;

@@ -67,7 +67,8 @@ enum ModuleType
 	StaticLibrary,
 	Kernel,
 	KernelModeDLL,
-	NativeDLL
+	NativeDLL,
+	Win32DLL
 };
 
 
@@ -95,6 +96,7 @@ public:
 	~Module ();
 	ModuleType GetModuleType ( const std::string& location,
 	                           const XMLAttribute& attribute );
+	bool HasImportLibrary () const;
 	std::string GetTargetName () const;
 	std::string GetDependencyPath () const;
 	std::string GetBasePath() const;

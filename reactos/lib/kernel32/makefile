@@ -17,7 +17,7 @@ TARGET_LFLAGS = -nostartfiles -nostdlib
 
 TARGET_RCFLAGS += -DWINVER=0x0500
 
-TARGET_SDKLIBS = pseh.a rosrtl.a ntdll.a kernel32.a
+TARGET_SDKLIBS = pseh.a rosrtl.a ntdll.a
 
 TARGET_GCCLIBS = gcc
 

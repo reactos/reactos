@@ -147,4 +147,14 @@ private:
 	void GenerateNativeDLLModuleTarget ( const Module& module );
 };
 
+
+class MingwWin32DLLModuleHandler : public MingwModuleHandler
+{
+public:
+	MingwWin32DLLModuleHandler ();
+	virtual void Process ( const Module& module );
+private:
+	void GenerateWin32DLLModuleTarget ( const Module& module );
+};
+
 #endif /* MINGW_MODULEHANDLER_H */
