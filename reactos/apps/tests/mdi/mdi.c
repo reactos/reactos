@@ -2,6 +2,8 @@
   Thanks to theForger from winprog.org
 */
 #include <windows.h>
+#include <commctrl.h>
+
 #include <string.h>
 #include "resource.h"
 
