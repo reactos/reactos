@@ -1,4 +1,4 @@
-/* $Id: ppool.c,v 1.32 2004/10/02 16:48:05 navaraf Exp $
+/* $Id: ppool.c,v 1.33 2004/11/20 21:16:38 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -449,6 +449,8 @@ ExFreePagedPool(IN PVOID Block)
       (PMM_PPOOL_FREE_BLOCK_HEADER)UsedBlock;
    PMM_PPOOL_FREE_BLOCK_HEADER NextBlock;
    PMM_PPOOL_FREE_BLOCK_HEADER NextNextBlock;
+
+   ASSERT_IRQL(APC_LEVEL);
 
 #if MM_PPOOL_REDZONE_BYTES
    // write out buffer-overrun detection bytes
