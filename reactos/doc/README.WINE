@@ -10,8 +10,8 @@ please add it.
 If you find that a function in ReactOS that is not implemented properly
 and is based on WINE sources, check the latest Winehq CVS and see if
 it has been fixed there. If so, please submit a patch to 
-ros-kernel@reactos.com. Otherwise please send a patch to both 
-wine-patches@winehq.com and ros-kernel@reactos.com
+ros-dev@reactos.com. Otherwise please send a patch to both 
+wine-patches@winehq.com and ros-dev@reactos.com
 
 When porting a dll from WINE to ReactOS please take a look at how
 comctl32 has been imported. We start by creating a makefile that has
@@ -26,51 +26,52 @@ This will allow you to use the WINE tools and librarys with very little
 work to import a new dll.
 
 The following build tools are derived from Wine.
-reactos/tools/makedep		# fast dependancy tool
 reactos/tools/bin2res		# Resource to binary converter
-reactos/tools/winebuild		# Wine Build tool for Creating *.def files
+reactos/tools/winebuild		# Synced to Wine-20050211
 reactos/tools/wmc		# Wine Message Compiler
-
+reactos/tools/wrc		# Synced to Wine-20050211
 
 The following shared libraries are a 100% port from Winehq sources.
 
-reactos/lib/cabinet             # Synced to Wine-20050111
-reactos/lib/comctl32            # Synced to Wine-20050111
-reactos/lib/comdlg32		# Synced to Wine-20050111
-reactos/lib/dinput		# Synced to Wine-20050111
-reactos/lib/dinput8		# Synced to Wine-20050111
-reactos/lib/icmp		# Synced to Wine-20050111
+reactos/lib/cabinet             # Synced to Wine-20050211
+reactos/lib/comctl32            # Synced to Wine-20050211
+reactos/lib/comdlg32		# Synced to Wine-20050211
+reactos/lib/dinput		# Synced to Wine-20050211
+reactos/lib/dinput8		# Synced to Wine-20050211
+reactos/lib/icmp		# Synced to Wine-20050211
 reactos/lib/iphlpapi		# Out of sync
 reactos/lib/imagehlp		# Patches for BindImage need review and submission to winehq.
 reactos/lib/msvcrt20		# Out of sync
-reactos/lib/mpr                 # Synced to Wine-20050111
+reactos/lib/mpr                 # Synced to Wine-20050211
 reactos/lib/msacm		# Out of sync
-reactos/lib/msi			# Synced to Wine-20050111
+reactos/lib/msimg32		# Synced to Wine-20050211
+reactos/lib/msi			# Synced to Wine-20050211
 reactos/lib/msvideo		# Out of sync
 reactos/lib/netapi32		# Out of sync
 reactos/lib/odbc32		# In sync. Depends on port of Linux ODBC.
-reactos/lib/ole32               # Synced to Wine-20050111
-reactos/lib/oleaut32		# Synced to Wine-20050111
-reactos/lib/oledlg              # Synced to Wine-20050111
-reactos/lib/olepro32		# Synced to Wine-20050111
-reactos/lib/richedit		# Synced to Wine-20050111
-reactos/lib/rpcrt4		# Synced to Wine-20050111
+reactos/lib/ole32               # Synced to Wine-20050211
+reactos/lib/oleaut32		# Synced to Wine-20050211
+reactos/lib/oledlg              # Synced to Wine-20050211
+reactos/lib/olepro32		# Synced to Wine-20050211
+reactos/lib/richedit		# Synced to Wine-20050211
+reactos/lib/rpcrt4		# Synced to Wine-20050211
 reactos/lib/setupapi		# Synced to Wine-20050125 # CVS
-reactos/lib/shell32             # Synced to Wine-20050111
-reactos/lib/shdocvw             # Synced to Wine-20050111
-reactos/lib/shlwapi             # Synced to Wine-20050111
+reactos/lib/shell32             # Synced to Wine-20050211
+reactos/lib/shdocvw             # Synced to Wine-20050211
+reactos/lib/shlwapi             # Synced to Wine-20050211
 reactos/lib/twain		# Out of sync
-reactos/lib/unicode		# Dependancy on this lib needs to be removed. Synced to Wine-20050111
-reactos/lib/urlmon		# Synced to Wine-20050111
+reactos/lib/unicode		# Dependancy on this lib needs to be removed. Synced to Wine-20050211
+reactos/lib/urlmon		# Synced to Wine-20050211
 reactos/lib/version		# Out of sync
 reactos/lib/wininet		# Out of sync
-reactos/lib/winmm		# Synced to Wine-20050111
-reactos/lib/winmm/midimap       # Synced to Wine-20050111
-reactos/lib/winmm/wavemap       # Synced to Wine-20050111
+reactos/lib/winmm		# Synced to Wine-20050211
+reactos/lib/winmm/midimap       # Synced to Wine-20050211
+reactos/lib/winmm/wavemap       # Synced to Wine-20050211
 
 ReactOS shares the following programs with Winehq.
 reactos/subsys/system/regedit	# Out of sync
 reactos/subsys/system/expand	# Out of sync
+reactos/subsys/system/msiexec	# Synced to Wine-20050211
 
 In addition the following libs, dlls and source files are mostly based on code ported
 from Winehq CVS. If you are looking to update something in these files
@@ -80,7 +81,7 @@ reactos/lib/imm32		#
 reactos/lib/uuid		#
 
 advapi32 -
-  reactos/lib/advapi32/crypto/*.c	# Synced to Wine-20041201
+  reactos/lib/advapi32/crypt/*.c	# ekohl says we're not sharing this
 
 gdi32 -
   reactos/lib/gdi32/objects/linedda.c	# Out of sync
@@ -100,3 +101,31 @@ User32 -
   reactos/lib/user32/misc/wsprintf.c	# Out of sync
   reactos/lib/user32/windows/mdi.c	# Out of sync
 
+- Cd to the parent directory of your top-level "reactos" directory
+- Check out the Wine release: "cvs -d :pserver:cvs@cvs.winehq.com:2401/home/wine co wine -r Wine-20050211"
+- Create "vendor" directory (as a sibling of your top-level "reactos" directory)
+- Cd to the vendor dir and check out the current vendor drop:
+  "svn co svn://svn.reactos.com/vendor/wine".
+- For each component shared with Wine (e.g. cabinet):
+  "del vendor\wine\dlls\cabinet\current\*"
+  "copy wine\dlls\cabinet vendor\wine\dlls\cabinet\current"
+  "del vendor\wine\dlls\cabinet\current\.cvsignore"
+  Check svn status, svn add/delete files as needed
+  Tag new Wine release "svn copy vendor\wine\dlls\cabinet\current vendor\wine\dlls\cabinet\Wine-20050211"
+- Commit the vendor drop: svn commit vendor\wine -m "Wine-20050211 vendor drop"
+- Determine the revision number of the last Wine tag by looking at http://svn.reactos.com/viewcvs/tags/
+  and finding the last Wine-yyyymmdd-sync tag, e.g. Wine-20050111-sync had rev 13007
+- For each component shared with Wine (e.g. cabinet):
+- "cd reactos\lib\cabinet"
+- Check for changes in the ReactOS tree: "svn diff -r 13007" (13007 is the revno of the previous sync).
+  If any changes are found, see if they're present in the Wine code. If not, submit to WineHQ
+  if apropriate.
+- Merge in Wine changes:
+  "svn merge svn://svn.reactos.com/vendor/wine/dlls/cabinet/Wine-20050111
+   svn://svn.reactos.com/vendor/wine/dlls/cabinet/current"
+- Fix any merge conflicts
+- Build and test (building will sometimes require adjusting header files)
+- Check which files were changed: "svn status"
+- For each of the changed files, get the WineHQ CVS log. Copy author and CVS commit message into a
+  commit log
+- Commit changed files "svn commit" using generated commit log as commit message
