@@ -28,11 +28,12 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.1 $
+ * $Revision: 1.2 $
  * $Author: ariadne $
- * $Date: 1999/02/21 13:29:56 $
+ * $Date: 1999/02/21 17:43:45 $
  *
  */
+
 
 #ifndef _STDDEF_H_
 
@@ -82,6 +83,9 @@ typedef __PTRDIFF_TYPE__	ptrdiff_t;
  * Unsigned type of `sizeof' something.
  */
 
+#ifndef _LINUX_TYPES_H
+#define _LINUX_TYPES_H
+
 /* Define this type if we are doing the whole job,
  * or if we want this type in particular.  */
 #if defined (_STDDEF_H_) || defined (__need_size_t)
@@ -100,7 +104,7 @@ typedef __SIZE_TYPE__		size_t;
 
 #endif /* _STDDEF_H_ or __need_size_t.  */
 
-
+#endif
 /* Wide character type.
    Locale-writers should change this as necessary to
    be big enough to hold unique values not between 0 and 127,

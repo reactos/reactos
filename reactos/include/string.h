@@ -18,13 +18,16 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.3 $
+ * $Revision: 1.4 $
  * $Author: ariadne $
- * $Date: 1999/02/21 13:29:57 $
+ * $Date: 1999/02/21 17:43:45 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
 /* changed prototype for _strerror */
+#ifndef _LINUX_STRING_H_
+#define _LINUX_STRING_H_
+
 #ifndef _STRING_H_
 #define	_STRING_H_
 
@@ -123,7 +126,7 @@ size_t	wcsxfrm(wchar_t* wsTransformed, const wchar_t *wsSource,
 /* NOTE: _wcscmpi not provided by CRTDLL, this define is for portability */
 #define		_wcscmpi	_wcsicmp
 
-wchar_t* _wcsdup (wchar_t* wsToDuplicate);
+wchar_t* _wcsdup (const wchar_t* wsToDuplicate);
 int	_wcsicmp (const wchar_t* ws1, const wchar_t* ws2);
 int	_wcsicoll (const wchar_t* ws1, const wchar_t* ws2);
 wchar_t* _wcslwr (wchar_t* wsToConvert);
@@ -165,7 +168,7 @@ void	swab (const char* caFrom, char* caTo, size_t sizeToCopy);
 
 /* NOTE: There is no _wcscmpi, but this is for compatibility. */
 int	wcscmpi	(const wchar_t* ws1, const wchar_t* ws2);
-wchar_t* wcsdup (wchar_t* wsToDuplicate);
+wchar_t* wcsdup (const wchar_t* wsToDuplicate);
 int	wcsicmp (const wchar_t* ws1, const wchar_t* ws2);
 int	wcsicoll (const wchar_t* ws1, const wchar_t* ws2);
 wchar_t* wcslwr (wchar_t* wsToConvert);
@@ -185,3 +188,4 @@ wchar_t* wcsupr (wchar_t* wsToConvert);
 #endif
 
 #endif /* _STRING_H_ */
+#endif

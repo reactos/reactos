@@ -18,9 +18,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.2 $
+ * $Revision: 1.3 $
  * $Author: ariadne $
- * $Date: 1999/02/21 13:29:57 $
+ * $Date: 1999/02/21 17:43:45 $
  *
  */
 
@@ -29,4 +29,3 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
