@@ -3,9 +3,10 @@
 #include <windows.h>
 #include <stdio.h>
 
+
 int _p_overlay = 2;
 
-int spawnve(int mode, const char *path,const char *const argv[],const char *const envp[])
+int _spawnve(int mode, const char *path,const char *const argv[],const char *const envp[])
 {
 
   char ApplicationName[MAX_PATH];
@@ -35,7 +36,7 @@ int spawnve(int mode, const char *path,const char *const argv[],const char *cons
 
   
   if (mode == P_OVERLAY)
-    exit(i);
+    _exit(i);
 
 // _P_NOWAIT or _P_NOWAITO 
   return ProcessInformation.hProcess;

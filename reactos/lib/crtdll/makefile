@@ -16,7 +16,7 @@ DIRECT_OBJECTS = direct/chdir.o direct/chdrive.o direct/getcwd.o direct/getdrive
 		 direct/rmdir.o direct/mkdir.o direct/getdfree.o
 
 
-MISC_OBJECTS =  misc/sleep.o  misc/getargs.o misc/crtfmode.o misc/crtglob.o
+MISC_OBJECTS =  misc/sleep.o misc/GetArgs.o misc/CRTfmode.o misc/CRTglob.o
 
 STRING_OBJECTS = string/memchr.o string/memcmp.o string/strcat.o \
                  string/strchr.o string/strcmp.o string/strcoll.o \
@@ -54,12 +54,12 @@ IO_OBJECTS = io/access.o io/close.o io/create.o io/dup.o io/dup2.o io/find.o io/
 		io/chmod.o io/chsize.o io/commit.o io/locking.o io/pipe.o io/sopen.o io/filelen.o\
 		io/umask.o io/tell.o io/eof.o
 
-STDLIB_OBJECTS = stdlib/abort.o stdlib/abs.o stdlib/atexit.o stdlib/atof.o stdlib/atoi.o stdlib/atold.o \
-		 stdlib/bsearch.o stdlib/div.o stdlib/errno.o  stdlib/exit.o \
+STDLIB_OBJECTS = stdlib/abort.o stdlib/abs.o stdlib/atexit.o stdlib/atof.o stdlib/atoi.o \
+		 stdlib/bsearch.o stdlib/div.o stdlib/errno.o  stdlib/Exit.o \
 		 stdlib/fullpath.o stdlib/labs.o stdlib/ldiv.o stdlib/llabs.o stdlib/lldiv.o \
 		 stdlib/makepath.o stdlib/malloc.o stdlib/putenv.o stdlib/qsort.o \
 		 stdlib/rand.o stdlib/senv.o stdlib/splitp.o stdlib/strtod.o stdlib/strtol.o \
-		 stdlib/strtoul.o stdlib/strtold.o 
+		 stdlib/strtoul.o 
 
 SIGNAL_OBJECTS = signal/signal.o
 
@@ -67,7 +67,7 @@ PROCESS_OBJECTS = process/cwait.o process/dll.o process/spawnl.o process/spawnlp
 		process/spawnv.o process/spawnve.o process/spawnle.o process/execl.o process/execlp.o process/execlpe.o  \
 		process/execvpe.o process/execvp.o process/execv.o process/execle.o
 
-TIME_OBJECTS = time/ctime.o time/difftime.o time/strftime.o 
+TIME_OBJECTS = time/ctime.o time/difftime.o time/strftime.o time/time.o time/clock.o
 
 FLOAT_OBJECTS = float/fpreset.o float/clearfp.o float/cntrlfp.o float/statfp.o float/logb.o
 

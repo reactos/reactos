@@ -1,8 +1,7 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 
 #include <process.h>
-
-extern char **_environ;
+#include <stdlib.h>
 
 int spawnvp(int mode, const char *path,const char *const argv[])
 {

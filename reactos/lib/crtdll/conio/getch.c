@@ -10,14 +10,11 @@
 #include <conio.h>
 #include <stdio.h>
 #include <windows.h>
+#include <io.h>
 
 extern int char_avail;
 extern int ungot_char;
 
-int getch( void )
-{
-	return _getch();
-}
 
 int
 _getch(void)
@@ -32,7 +29,7 @@ _getch(void)
   }
   else
   {	
-	ReadConsoleA(filehnd(stdin->_file), &c,1,&NumberOfCharsRead ,NULL);
+	ReadConsoleA(_get_osfhandle(stdin->_file), &c,1,&NumberOfCharsRead ,NULL);
 	
   }
   if ( c == 10 )

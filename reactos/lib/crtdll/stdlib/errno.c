@@ -1,3 +1,4 @@
+#include <windows.h>
 #include <errno.h>
 
 #undef errno
@@ -5,6 +6,9 @@ int errno;
 
 #undef _doserrno
 int _doserrno;
+
+#undef _fpecode
+int fpecode;
 
 int *_errno(void)
 {
@@ -22,7 +26,7 @@ int __set_errno (int error)
 
 int * __fpecode ( void )
 {
-        return NULL;
+        return &fpecode;
 }
 
 int*	__doserrno(void)

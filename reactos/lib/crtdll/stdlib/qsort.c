@@ -171,9 +171,8 @@ qst(char *base, char *max)
  * with qst(), and then a cleanup insertion sort ourselves.  Sound simple?
  * It's not...
  */
-
 void
-qsort(void *base0, size_t n, size_t size, int (*compar)(const void *, const void *))
+qsort(const void *base0, size_t n, size_t size, _pfunccmp_t compar)
 {
   char *base = (char *)base0;
   char c, *i, *j, *lo, *hi;

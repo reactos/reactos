@@ -3,12 +3,11 @@
 #include <windows.h>
 #include <libc/file.h>
 
-#undef getc
 int getc(FILE *f)
 {
   int c;
   DWORD NumberOfBytesRead;
-  if ( !ReadFile(filehnd(f->_file),&c, 1, &NumberOfBytesRead,	NULL) )
+  if ( !ReadFile(_get_osfhandle(f->_file),&c, 1, &NumberOfBytesRead,	NULL) )
 	return -1;
   if ( NumberOfBytesRead == 0 )
 	  return -1;

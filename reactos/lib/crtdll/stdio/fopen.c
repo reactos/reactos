@@ -1,17 +1,14 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-//#include <libc/stubs.h>
+
 #include <sys/types.h>
 #include <stdio.h>
 #include <io.h>
 #include <fcntl.h>
-//#include <unistd.h>
 #include <libc/file.h>
-//#include <libc/local.h>
-//#include <libc/dosio.h>
+
 
 FILE *	__alloc_file(void);
 
-extern int _fmode;
 
 FILE *
 fopen(const char *file, const char *mode)

@@ -1,12 +1,21 @@
 #include <io.h>
 #include <windows.h>
 
-#define F_OK	0x01
-#define R_OK	0x02
-#define W_OK	0x04
-#define X_OK	0x08
-#define D_OK	0x10
-
+#ifndef F_OK
+ #define F_OK	0x01
+#endif
+#ifndef R_OK
+ #define R_OK	0x02
+#endif
+#ifndef W_OK
+ #define W_OK	0x04
+#endif
+#ifndef X_OK
+ #define X_OK	0x08
+#endif
+#ifndef D_OK
+ #define D_OK	0x10
+#endif
 
 int _access( const char *_path, int _amode )
 {

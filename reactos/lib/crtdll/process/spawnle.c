@@ -9,8 +9,8 @@
 	u.ccp = *++ptr; \
 	ptr = u.ccpp;
 
-int spawnle(int mode, const char *path, const char *argv0, ... /*, const char **envp */)
+int _spawnle(int mode, const char *path, const char *argv0, ... /*, const char **envp */)
 {
   scan_ptr();
-  return spawnve(mode, path, (char * const *)&argv0, (char * const *)ptr);
+  return _spawnve(mode, path, (char * const *)&argv0, (char * const *)ptr);
 }

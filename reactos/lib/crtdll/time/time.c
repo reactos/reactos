@@ -1,30 +1,27 @@
-/* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#ifndef _TM_DEFINED
-struct tm {
-  int tm_sec;
-  int tm_min;
-  int tm_hour;
-  int tm_mday;
-  int tm_mon;
-  int tm_year;
-  int tm_wday;
-  int tm_yday;
-  int tm_isdst;
-  char *tm_zone;
-  int tm_gmtoff;
-};
-#define _TM_DEFINED
-#endif
+/*
+ * COPYRIGHT:   See COPYING in the top level directory
+ * PROJECT:     ReactOS system libraries
+ * FILE:        lib/crtdll/conio/time.c
+ * PURPOSE:     Get system time
+ * PROGRAMER:   Boudewijn Dekker
+ * UPDATE HISTORY:
+ *              28/12/98: Created
+ */
 
-#include <time.h>
 #include <windows.h>
+#include <time.h>
 
+// should be replace by a call to RtltimeToSecondsSince70
+// and moved to a header
+
+time_t FileTimeToUnixTime( const FILETIME *filetime, DWORD *remainder ); 
 
 time_t
 time(time_t *t)
 {
-	SYSTEMTIME  SystemTime;
-	GetLocalTime(&SystemTime);
-	
-	
+	FILETIME  SystemTime;
+	DWORD Remainder;
+	GetSystemTimeAsFileTime(&SystemTime);
+	return FileTimeToUnixTime( &SystemTime,&Remainder ); 
 }
+

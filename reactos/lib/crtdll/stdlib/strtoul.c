@@ -3,7 +3,8 @@
 #include <ctype.h>
 #include <errno.h>
 #include <stdlib.h>
-#include <libc/unconst.h>
+#include <libc/file.h>
+
 
 /*
  * Convert a string to an unsigned long integer.
@@ -65,11 +66,11 @@ strtoul(const char *nptr, char **endptr, int base)
   if (any < 0)
   {
     acc = ULONG_MAX;
-    errno = ERANGE;
+    __set_errno(ERANGE);
   }
   else if (neg)
     acc = -acc;
   if (endptr != 0)
-    *endptr = any ? unconst(s, char *) - 1 : unconst(nptr, char *);
+    *endptr = any ? (char *)s - 1 : (char *)nptr;
   return acc;
 }

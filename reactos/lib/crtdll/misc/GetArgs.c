@@ -2,15 +2,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-
-char *acmdln_dll;      
-unsigned  int commode_dll;     
+#undef _acmdln_dll
+char *_acmdln_dll;   
+#undef _commode_dll   
+unsigned  int _commode_dll;     
     
-unsigned  int fmode_dll;       
-unsigned  int winmajor_dll;     
-unsigned  int winminor_dll;     
-unsigned  int winver_dll;    
-unsigned  int osver_dll;    
+#undef _winmajor_dll
+unsigned  int _winmajor_dll;   
+#undef _winminor_dll  
+unsigned  int _winminor_dll;
+#undef _winver_dll     
+unsigned  int _winver_dll;    
+#undef _osver_dll
+unsigned  int _osver_dll;    
 
 #undef __argv
 #undef __argc
@@ -19,51 +23,46 @@ char *xargv[1024];
 
 char  **__argv = xargv;
 int   __argc = 0;
-unsigned  int *__argc_dll = &__argc;        
+int *__argc_dll = &__argc;        
 char ***__argv_dll = &__argv;  
 
-char *xenv;
+
+#undef _environ
 char **_environ;
+#undef _environ_dll
 char *** _environ_dll = &_environ;    
-#undef environ
-char **environ; 
+ 
         
 
 int __GetMainArgs(int *argc,char ***argv,char **env,int flag)
 {
-   char *cmdline;
    int i,afterlastspace;
    DWORD   version;
    
-   //	acmdln_dll = cmdline = strdup(  GetCommandLineA() );
+   _acmdln_dll =  GetCommandLineA();
    
    version = GetVersion();
-   osver_dll       = version >> 16;
-   winminor_dll    = version & 0xFF;
-   winmajor_dll    = (version>>8) & 0xFF;
-   winver_dll      = ((version >> 8) & 0xFF) + ((version & 0xFF) << 8);
+   _osver_dll       = version >> 16;
+   _winminor_dll    = version & 0xFF;
+   _winmajor_dll    = (version>>8) & 0xFF;
+   _winver_dll      = ((version >> 8) & 0xFF) + ((version & 0xFF) << 8);
    
    
    /* missing threading init */
    
    i=0;
-   cmdline = GetCommandLineA();
    afterlastspace=0;
    
-   dprintf("cmdline '%s'\n",cmdline);
    
-   while (cmdline[i]) 
-     {
-	if (cmdline[i]==' ') 
-	  {
-	     dprintf("cmdline '%s'\n",cmdline);
+   while (_acmdln_dll[i]) {
+	if (_acmdln_dll[i]==' ') {
 	     __argc++;
-	     cmdline[i]='\0';
-	     __argv[__argc-1] = strdup( cmdline+afterlastspace);
+	     _acmdln_dll[i]='\0';
+	     __argv[__argc-1] = strdup(_acmdln_dll+afterlastspace);
 	     i++;
-	     while (cmdline[i]==' ')
+	     while (_acmdln_dll[i]==' ')
 	       i++;
-	     if (cmdline[i])
+	     if (_acmdln_dll[i])
 	       afterlastspace=i;
 	  } 
 	else
@@ -74,23 +73,21 @@ int __GetMainArgs(int *argc,char ***argv,char **env,int flag)
   
    
    __argc++;
-   cmdline[i]='\0';
-   __argv[__argc-1] = strdup( cmdline+afterlastspace);
+   _acmdln_dll[i]='\0';
+   __argv[__argc-1] = strdup(_acmdln_dll+afterlastspace);
    HeapValidate(GetProcessHeap(),0,NULL);
-    
-   *argc    = __argc;
-   *argv    = __argv;
-   
-   
-//   xenv = GetEnvironmentStringsA();
-   _environ = &xenv;
+
+   _environ = (char **)GetEnvironmentStringsA();;
    _environ_dll = &_environ;    
-   environ = &xenv; 
-   env =  &xenv;
+    
+   argc = __argc_dll;
+   argv = __argv_dll;
+   env  = _environ_dll;
+ 
    return 0;
 }
 
-int _chkstk()
+int _chkstk(void)
 {
 	return 0;
 }

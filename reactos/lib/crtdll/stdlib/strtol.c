@@ -3,7 +3,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <stdlib.h>
-
+#include <libc/file.h>
 
 long
 strtol(const char *nptr, char **endptr, int base)
@@ -81,7 +81,7 @@ strtol(const char *nptr, char **endptr, int base)
   if (any < 0)
   {
     acc = neg ? LONG_MIN : LONG_MAX;
-    errno = ERANGE;
+    __set_errno(ERANGE);
   }
   else if (neg)
     acc = -acc;

@@ -8,8 +8,8 @@
 	u.ccp = *++ptr; \
 	ptr = u.ccpp;
 
-int spawnlpe(int mode, const char *path, const char *argv0, ... /*, const char **envp */)
+int _spawnlpe(int mode, const char *path, const char *argv0, ... /*, const char **envp */)
 {
   scan_ptr();
-  return spawnvpe(mode, path, (char * const *)&argv0, (char * const *)ptr);
+  return _spawnvpe(mode, path, (char * const *)&argv0, (char * const *)ptr);
 }

@@ -1,6 +1,7 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 #include <stdio.h>
 #include <libc/file.h>
+#include <string.h>
 #include <windows.h>
 
 int
@@ -35,7 +36,7 @@ fputs(const char *s, FILE *f)
   return(r);
   */
 	int r = 0;
-	if ( !WriteFile(filehnd(f->_file),s,strlen(s),&r,NULL) ) 
+	if ( !WriteFile(_get_osfhandle(f->_file),s,strlen(s),&r,NULL) ) 
 		return -1;
 
   	return r;
