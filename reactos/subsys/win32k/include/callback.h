@@ -1,0 +1,11 @@
+#ifndef __SUBSYS_WIN32K_INCLUDE_CALLBACK_H
+#define __SUBSYS_WIN32K_INCLUDE_CALLBACK_H
+
+LRESULT STDCALL
+W32kCallWindowProc(WNDPROC Proc,
+		   HWND Wnd,
+		   UINT Message,
+		   WPARAM wParam,
+		   LPARAM lParam);
+
+#endif /* __SUBSYS_WIN32K_INCLUDE_CALLBACK_H */
