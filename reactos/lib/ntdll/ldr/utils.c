@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.61 2003/04/18 08:28:31 gvg Exp $
+/* $Id: utils.c,v 1.62 2003/04/26 10:05:38 gvg Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -227,7 +227,8 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
       *BaseAddress = NtCurrentPeb()->ImageBaseAddress;
       return STATUS_SUCCESS;
     }
-  
+
+
   *BaseAddress = NULL;
   
   DPRINT("LdrLoadDll(Name \"%wZ\" BaseAddress %x)\n",
@@ -517,6 +518,8 @@ LdrFindEntryForName(PUNICODE_STRING Name,
   PLIST_ENTRY ModuleListHead;
   PLIST_ENTRY Entry;
   PLDR_MODULE ModulePtr;
+  BOOLEAN ContainsPath;
+  unsigned i;
 
   DPRINT("NTDLL.LdrFindEntryForName(Name %wZ)\n", Name);
 
@@ -535,13 +538,22 @@ LdrFindEntryForName(PUNICODE_STRING Name,
       return(STATUS_SUCCESS);
     }
 
+  ContainsPath = (2 <= Name->Length && L':' == Name->Buffer[1]);
+  for (i = 0; ! ContainsPath && i < Name->Length; i++)
+    {
+    ContainsPath = L'\\' == Name->Buffer[i] ||
+                   L'/' == Name->Buffer[i];
+    }
   while (Entry != ModuleListHead)
     {
       ModulePtr = CONTAINING_RECORD(Entry, LDR_MODULE, InLoadOrderModuleList);
 
       DPRINT("Scanning %wZ %wZ\n", &ModulePtr->BaseDllName, Name);
 
-      if (RtlCompareUnicodeString(&ModulePtr->BaseDllName, Name, TRUE) == 0)
+      if ((! ContainsPath &&
+           0 == RtlCompareUnicodeString(&ModulePtr->BaseDllName, Name, TRUE)) ||
+          (ContainsPath &&
+           0 == RtlCompareUnicodeString(&ModulePtr->FullDllName, Name, TRUE)))
         {
           *Module = ModulePtr;
           return(STATUS_SUCCESS);
