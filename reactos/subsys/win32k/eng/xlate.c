@@ -58,9 +58,12 @@ ULONG ClosestColorMatch(ULONG SourceColor, ULONG *DestColors,
   {
     cDestColors = (PVIDEO_CLUTDATA)&DestColors[i];
 
-    cxRed = (cSourceColor->Red - cDestColors->Red) ^ 2;
-    cxGreen = (cSourceColor->Green - cDestColors->Green) ^ 2;
-    cxBlue = (cSourceColor->Blue - cDestColors->Blue) ^ 2;
+    cxRed = (cSourceColor->Red - cDestColors->Red);
+	cxRed *= cxRed;  //compute cxRed squared
+    cxGreen = (cSourceColor->Green - cDestColors->Green);
+	cxGreen *= cxGreen;
+    cxBlue = (cSourceColor->Blue - cDestColors->Blue);
+	cxBlue *= cxBlue;
 
     rt = /* sqrt */ (cxRed + cxGreen + cxBlue);
 
