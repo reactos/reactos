@@ -553,7 +553,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\WinSock","MaxSockAddrLe
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\WinSock","MinSockAddrLength",0x00010001,0x00000010
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\WinSock","HelperDllName",0x00000000,"%SystemRoot%\System32\wshtcpip.dll"
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\WinSock","Mapping",0x00000000,0b,00,00,00,03,00,00,00,02,00,00,00,01,00,00,00,06,00,00,00,02,00,00,00,01,00,00,00,00,00,00,00,02,00,00,00,00,00,00,00,06,00,00,00,00,00,00,00,00,00,00,00,06,00,00,00,00,00,00,00,01,00,00,00,06,00,00,00,02,00,00,00,02,00,00,00,11,00,00,00,02,00,00,00,02,00,00,00,00,00,00,00,02,00,00,00,00,00,00,00,11,00,00,00,00,00,00,00,00,00,00,00,11,00,00,00,00,00,00,00,02,00,00,00,11,00,00,00,02,00,00,00,03,00,00,00,00,00,00,00
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\WinSock\Parameters","Transports",0x00000000,54,63,70,69,70,00,4e,65,74,42,49,4f,53,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Winsock\Parameters","Transports",0x00000000,54,63,70,69,70,00,4e,65,74,42,49,4f,53,00,00
 
 ; Virtual FAT filesystem driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Vfatfs","ErrorControl",0x00010001,0x00000000
