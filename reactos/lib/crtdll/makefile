@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.34 1999/12/13 22:04:33 dwelch Exp $
+# $Id: makefile,v 1.35 2000/01/20 22:49:12 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -90,7 +90,7 @@ STDIO_OBJECTS = stdio/getenv.o stdio/filbuf.o  \
 		stdio/stdiohk.o stdio/stdhnd.o stdio/tempnam.o stdio/tmpfile.o stdio/tmpnam.o \
 		stdio/ungetc.o stdio/printf.o stdio/vfprintf.o stdio/vprintf.o stdio/sprintf.o\
 		stdio/fdopen.o stdio/vsprintf.o stdio/frlist.o stdio/fgetchar.o stdio/rmtmp.o\
-		stdio/fsopen.o stdio/popen.o
+		stdio/fsopen.o stdio/popen.o stdio/vfwprint.o
  
 QUAD_OBJECTS =  quad/qdivrem.o quad/divdi3.o quad/moddi3.o quad/udivdi3.o quad/umoddi3.o
 
