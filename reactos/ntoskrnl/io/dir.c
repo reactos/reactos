@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.24 2004/08/22 20:51:43 navaraf Exp $
+/* $Id: dir.c,v 1.25 2004/08/24 17:08:18 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -56,7 +56,6 @@ NtNotifyChangeDirectoryFile (
    
    if (Status != STATUS_SUCCESS)
      {
-	ObDereferenceObject(FileObject);
 	return(Status);
      }
    DeviceObject = FileObject->DeviceObject;
@@ -174,7 +173,6 @@ NtQueryDirectoryFile(
    
    if (Status != STATUS_SUCCESS)
      {
-	ObDereferenceObject(FileObject);
 	return(Status);
      }
    DeviceObject = FileObject->DeviceObject;
