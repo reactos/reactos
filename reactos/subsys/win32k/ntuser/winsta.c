@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winsta.c,v 1.37 2003/10/09 06:13:05 gvg Exp $
+/* $Id: winsta.c,v 1.38 2003/10/12 09:46:51 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -525,6 +525,7 @@ BOOL STDCALL
 NtUserSetProcessWindowStation(HWINSTA hWindowStation)
 {
   PWINSTATION_OBJECT Object;
+  PW32PROCESS Win32Process;
   NTSTATUS Status;
 
   DPRINT("About to set process window station with handle (0x%X)\n", 
@@ -540,8 +541,20 @@ NtUserSetProcessWindowStation(HWINSTA hWindowStation)
 	     hWindowStation);
       return FALSE;
     }
-  
-  ObDereferenceObject(Object);
+
+  Win32Process = PsGetWin32Process();
+  if (NULL == Win32Process)
+    {
+      ObDereferenceObject(Object);
+    }
+  else
+    {
+      if (NULL != Win32Process->WindowStation)
+        {
+          ObDereferenceObject(Win32Process->WindowStation);
+        }
+      Win32Process->WindowStation = Object;
+    }
 
   SET_PROCESS_WINDOW_STATION(hWindowStation);
   DPRINT("IoGetCurrentProcess()->Win32WindowStation 0x%X\n",
