@@ -1,4 +1,4 @@
-/* $Id: blue.c,v 1.19 2000/01/11 17:33:44 ekohl Exp $
+/* $Id: blue.c,v 1.20 2000/02/24 13:16:40 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -19,10 +19,11 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+
 /* DEFINITIONS ***************************************************************/
 
-#define IDMAP_BASE         0xd0000000
 #define VIDMEM_BASE        0xb8000
+#define VIDMEM_SIZE        0x2000
 
 #define CRTC_COMMAND       ((PUCHAR)0x3d4)
 #define CRTC_DATA          ((PUCHAR)0x3d5)
@@ -70,17 +71,17 @@ NTSTATUS
 ScrCreate (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     PDEVICE_EXTENSION DeviceExtension;
+    PHYSICAL_ADDRESS BaseAddress;
     NTSTATUS Status;
     unsigned int offset;
     BYTE data, value;
 
     DeviceExtension = DeviceObject->DeviceExtension;
 
-    /* initialize device extension */
-
     /* get pointer to video memory */
-    /* FIXME : use MmMapIoSpace() */
-    DeviceExtension->VideoMemory = (PBYTE)(IDMAP_BASE + VIDMEM_BASE);
+    BaseAddress.QuadPart = VIDMEM_BASE;
+    DeviceExtension->VideoMemory =
+        (PBYTE)MmMapIoSpace (BaseAddress, VIDMEM_SIZE, FALSE);
 
     /* disable interrupts */
     __asm__("cli\n\t");
