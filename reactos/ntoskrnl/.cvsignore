@@ -3,3 +3,5 @@ junk.tmp
 ntoskrnl.coff
 objects
 temp.exp
+depends
+depends.exe
