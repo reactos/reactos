@@ -14,13 +14,15 @@ BOOL InitPointer(PPDEV ppdev)
   ppdev->PointerAttributes = sizeof(VIDEO_POINTER_ATTRIBUTES) +
     (CursorWidth * CursorHeight) * 2; // space for two cursors (data and mask); we assume 4bpp.. but use 8bpp for speed
 
+  ppdev->pPointerAttributes = EngAllocMem(0, 512, ALLOC_TAG);
+
   // Allocate memory for pointer attributes
   ppdev->pPointerAttributes = EngAllocMem(0, ppdev->PointerAttributes, ALLOC_TAG);
 
   ppdev->pPointerAttributes->Flags = 0; // FIXME: Do this right
   ppdev->pPointerAttributes->Width = CursorWidth;
   ppdev->pPointerAttributes->Height = CursorHeight;
-  ppdev->pPointerAttributes->WidthInBytes = CursorWidth;
+  ppdev->pPointerAttributes->WidthInBytes = CursorWidth / 2;
   ppdev->pPointerAttributes->Enable = 0;
   ppdev->pPointerAttributes->Column = 0;
   ppdev->pPointerAttributes->Row = 0;
@@ -56,18 +58,34 @@ ULONG VGADDISetPointerShape(PSURFOBJ pso, PSURFOBJ psoMask, PSURFOBJ psoColor, P
 			    PRECTL prcl, ULONG fl)
 {
   PPDEV ppdev = (PPDEV)pso->dhpdev;
-  ULONG cursorBytes = ppdev->pPointerAttributes->WidthInBytes * ppdev->pPointerAttributes->Height;
+  PCHAR DFBTmp;
+  ULONG DFBAllocSize;
 
   // Hide the cursor (if it's there -- FIXME?)
   if(ppdev->pPointerAttributes->Enable != 0) vgaHideCursor(ppdev);
 
   // Copy the mask and color bitmaps into the PPDEV
-  RtlCopyMemory(ppdev->pPointerAttributes->Pixels, psoMask->pvBits, cursorBytes);
-  if(psoColor != NULL) RtlCopyMemory(ppdev->pPointerAttributes->Pixels + cursorBytes, psoColor->pvBits, cursorBytes);
+  RtlCopyMemory(ppdev->pPointerAttributes->Pixels, psoMask->pvBits, psoMask->cjBits);
+  if(psoColor != NULL) RtlCopyMemory(ppdev->pPointerAttributes->Pixels + 256, psoColor->pvBits, psoColor->cjBits);
+  ppdev->pPointerAttributes->WidthInBytes = psoMask->lDelta;
+
+  EngFreeMem(behindCursor);
+  behindCursor = EngAllocMem(0, ppdev->pPointerAttributes->WidthInBytes * ppdev->pPointerAttributes->Height, ALLOC_TAG);
 
   // Set the new cursor position
   ppdev->xyCursor.x = x;
   ppdev->xyCursor.y = y;
+
+  // Convert the cursor DIB into a DFB
+  DFBAllocSize = psoMask->cjBits;
+  DFBTmp = EngAllocMem(0, DFBAllocSize, ALLOC_TAG);
+  DIB_BltToDFB(0, 0,
+               ppdev->pPointerAttributes->Width,
+               ppdev->pPointerAttributes->Height,
+               DFBTmp, ppdev->pPointerAttributes->WidthInBytes,
+               ppdev->pPointerAttributes->Pixels, ppdev->pPointerAttributes->WidthInBytes);
+  RtlCopyMemory(ppdev->pPointerAttributes->Pixels, DFBTmp, psoMask->cjBits);
+  EngFreeMem(DFBTmp);
 
   // Show the cursor
   vgaShowCursor(ppdev);
@@ -77,11 +95,15 @@ void vgaHideCursor(PPDEV ppdev)
 {
   ULONG i, j, cx, cy, bitpos;
 
+  // Clip so as not to hide where we are just going to be repainting (if called from vgaShowCursor)
+
+
   // Display what was behind cursor
-  DFB_BltToVGA(oldx, oldx, oldy,
-               ppdev->pPointerAttributes->Width-1,
-               ppdev->pPointerAttributes->Height-1,
-               behindCursor);
+  DFB_BltToVGA(oldx, oldy,
+               ppdev->pPointerAttributes->Width,
+               ppdev->pPointerAttributes->Height,
+               behindCursor,
+               ppdev->pPointerAttributes->WidthInBytes);
 
   oldx = ppdev->xyCursor.x;
   oldy = ppdev->xyCursor.y;
@@ -91,31 +113,25 @@ void vgaHideCursor(PPDEV ppdev)
 
 void vgaShowCursor(PPDEV ppdev)
 {
-  ULONG i, j, cx, cy, bitpos;
+  ULONG i, j, cx, cy;
 
   if(ppdev->pPointerAttributes->Enable != 0) vgaHideCursor(ppdev);
 
   // Capture pixels behind the cursor
   cx = ppdev->xyCursor.x;
   cy = ppdev->xyCursor.y;
-  bitpos = 0;
-  for (j=0; j<ppdev->pPointerAttributes->Height; j++)
-  {
-    cx = ppdev->xyCursor.x;
-    for (i=0; i<ppdev->pPointerAttributes->Width; i++)
-    {
-      behindCursor[bitpos] = vgaGetPixel(cx, cy);
-      bitpos++;
-      cx++;
-    }
-    cy++;
-  }
+
+  // repaint background
+  DFB_BltFromVGA(ppdev->xyCursor.x, ppdev->xyCursor.y,
+                 ppdev->pPointerAttributes->Width, ppdev->pPointerAttributes->Height,
+                 behindCursor, ppdev->pPointerAttributes->WidthInBytes);
 
   // Display the cursor
-  DIB_BltToVGA(ppdev->xyCursor.x, ppdev->xyCursor.x, ppdev->xyCursor.y,
-               ppdev->pPointerAttributes->Width-1,
-               ppdev->pPointerAttributes->Height-1,
-               ppdev->pPointerAttributes->Pixels);
+  DFB_BltToVGA_Transparent(ppdev->xyCursor.x, ppdev->xyCursor.y,
+                           ppdev->pPointerAttributes->Width,
+                           ppdev->pPointerAttributes->Height,
+                           ppdev->pPointerAttributes->Pixels,
+                           ppdev->pPointerAttributes->WidthInBytes);
 
   ppdev->pPointerAttributes->Enable = 1;
 }

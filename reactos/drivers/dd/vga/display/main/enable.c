@@ -1,9 +1,9 @@
 /*
  * entry.c
  *
- * $Revision: 1.12 $
+ * $Revision: 1.13 $
  * $Author: jfilby $
- * $Date: 2001/05/02 12:29:07 $
+ * $Date: 2001/05/26 08:21:02 $
  *
  */
 
@@ -370,6 +370,7 @@ HSURF VGADDIEnableSurface(IN DHPDEV  PDev)
   pdsurf->Scan0       = ppdev->fbScreen;
   pdsurf->BitmapStart = ppdev->fbScreen;
   pdsurf->StartBmp      = ppdev->fbScreen;
+
 /*  pdsurf->Conv          = &ConvertBuffer[0]; */
 
   if (!InitPointer(ppdev)) {

@@ -1,15 +1,3 @@
-//
-//  The current VGA bitblt routines work just fine. However, they put the 4bpp data into 1 byte each.
-//  To solve the problem, whenever assigning to or retrieving data from the buffer, it must pass through
-//  a macro which packs it appropriately.
-//
-//  Possible future enhancements:
-//  * Use putByte function for middlepix when bitbltting to the VGA
-//
-
-//  PROCESS 1: Use 4bpp bitblt instead of 8bpp-bitmap/4bpp-display
-//  
-
 #include <ddk/ntddk.h>
 #include <ddk/ntddvid.h>
 #include <ddk/winddi.h>
@@ -451,8 +439,8 @@ void DIB_BltToVGA(int x, int y, int w, int h, void *b, int Source_lDelta)
       pb++;
     }
 
-    opb += Source_lDelta; // new test code
-    pb = opb; // new test code
+    opb += Source_lDelta;
+    pb = opb;
 
   }
 }
@@ -494,7 +482,7 @@ void DIB_TransparentBltToVGA(int x, int y, int w, int h, void *b, int Source_lDe
       pb++;
     }
 
-    opb += Source_lDelta; // new test code
+    opb += Source_lDelta;
     pb = opb; // new test code
 
   }
@@ -635,4 +623,122 @@ void DFB_BltToVGA(int x, int y, int w, int h, void *b, int bw)
   WRITE_PORT_UCHAR((PUCHAR)GRA_D, saved_GC_fun);
   WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x05);
   WRITE_PORT_UCHAR((PUCHAR)GRA_D, saved_GC_mode);
+}
+
+void DFB_BltToVGA_Transparent(int x, int y, int w, int h, void *b, int bw)
+
+//  This algorithm goes from goes from left to right, and inside that loop, top to bottom.
+//  It also stores each 4BPP pixel in an entire byte.
+{
+  unsigned char *bp, *bpX;
+  unsigned char *vp, *vpX;
+  unsigned char mask;
+  volatile unsigned char dummy;
+  int byte_per_line;
+  int i, j;
+
+  bpX = b;
+  ASSIGNVP4(x, y, vpX)
+  ASSIGNMK4(x, y, mask)
+  byte_per_line = SCREEN_X >> 3;
+  WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x05);      // write mode 2
+  saved_GC_mode = READ_PORT_UCHAR((PUCHAR)GRA_D);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0x02);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x03);      // replace
+  saved_GC_fun = READ_PORT_UCHAR((PUCHAR)GRA_D);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0x00);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x08);      // bit mask
+  saved_GC_mask = READ_PORT_UCHAR((PUCHAR)GRA_D);
+
+  for (i=w; i>0; i--) {
+    WRITE_PORT_UCHAR((PUCHAR)GRA_D, mask);
+    bp = bpX;
+    vp = vpX;
+    for (j=h; j>0; j--) {
+      if (*bp != 0)
+      {
+        dummy = *vp;
+        *vp = *bp;
+      }
+      bp += bw;
+      vp += byte_per_line;
+    }
+    bpX++;
+    if ((mask >>= 1) == 0) {
+      vpX++;
+      mask = 0x80;
+    }
+  }
+
+  // reset GC register
+  WRITE_PORT_UCHAR((PUCHAR)GRA_D, saved_GC_mask);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x03);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_D, saved_GC_fun);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x05);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_D, saved_GC_mode);
+}
+
+void DFB_BltToDIB(int x, int y, int w, int h, void *b, int bw, void *bdib, int dibw)
+
+// This algorithm converts a DFB into a DIB
+// WARNING: This algorithm is buggy
+{
+  unsigned char *bp, *bpX, *dib, *dibTmp;
+  int i, j, dib_shift;
+
+  bpX = b;
+  dib = bdib + y * dibw + (x / 2);
+
+  for (i=w; i>0; i--) {
+
+    // determine the bit shift for the DIB pixel
+    dib_shift = mod(w-i, 2);
+    if(dib_shift > 0) dib_shift = 4;
+    dibTmp = dib;
+
+    bp = bpX;
+    for (j=h; j>0; j--) {
+      *dibTmp = *bp << dib_shift | *(bp + 1);
+      dibTmp += dibw;
+      bp += bw;
+    }
+    bpX++;
+    if(dib_shift == 0) dib++;
+  }
+}
+
+void DIB_BltToDFB(int x, int y, int w, int h, void *b, int bw, void *bdib, int dibw)
+
+// This algorithm converts a DIB into a DFB
+{
+  unsigned char *bp, *bpX, *dib, *dibTmp;
+  int i, j, dib_shift, dib_and;
+
+  bpX = b;
+  dib = bdib + y * dibw + (x / 2);
+
+  for (i=w; i>0; i--) {
+
+    // determine the bit shift for the DIB pixel
+    dib_shift = mod(w-i, 2);
+    if(dib_shift > 0) {
+      dib_shift = 0;
+      dib_and = 0x0f;
+    } else {
+      dib_shift = 4;
+      dib_and = 0xf0;
+    }
+
+    dibTmp = dib;
+    bp = bpX;
+
+    for (j=h; j>0; j--) {
+      *bp = (*dibTmp & dib_and) >> dib_shift;
+      dibTmp += dibw;
+      bp += bw;
+    }
+
+    bpX++;
+    if(dib_shift == 0) dib++;
+  }
 }
