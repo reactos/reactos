@@ -1,4 +1,4 @@
-/* $Id: wopen.c,v 1.3 2003/07/11 21:57:54 royce Exp $
+/* $Id: wopen.c,v 1.4 2003/12/03 17:17:03 navaraf Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -132,8 +132,10 @@ int _wopen(const wchar_t* _path, int _oflag, ...)
                dwCreationDistribution,
                dwFlagsAndAttributes,
                NULL);
-    if (hFile == (HANDLE)-1)
+    if (hFile == (HANDLE)-1) {
+    	_dosmaperr(GetLastError());
         return -1;
+	}
     return __fileno_alloc(hFile,_oflag);
 }
 

@@ -19,10 +19,10 @@
  */
 int _unlink(const char* filename)
 {
-    int result = 0;
     DPRINT("_unlink('%s')\n", filename);
-    if (!DeleteFileA(filename))
-        result = -1;
-    DPRINT("%d\n", result);
-    return result;
+    if (!DeleteFileA(filename)) {
+		_dosmaperr(GetLastError());
+        return -1;
+	}
+    return 0;
 }

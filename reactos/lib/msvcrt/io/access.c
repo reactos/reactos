@@ -13,8 +13,8 @@ int _access( const char *_path, int _amode )
     DWORD Attributes = GetFileAttributesA(_path);
     DPRINT("_access('%s', %x)\n", _path, _amode);
 
-    if (Attributes == -1)   {
-        __set_errno(ENOENT);
+    if (Attributes == -1) {
+    	_dosmaperr(GetLastError());
         return -1;
     }
     if ((_amode & W_OK) == W_OK) {

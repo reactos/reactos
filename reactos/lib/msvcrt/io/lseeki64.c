@@ -21,7 +21,7 @@ __int64 _lseeki64(int _fildes, __int64 _offset, int _whence)
 //    }
     if (SetFilePointerEx((HANDLE)filehnd(_fildes), offset, &new_pos, _whence)) {
     } else {
-        //__set_errno ( EINVAL );
+		_dosmaperr(error);
         return -1L;
     }
     return new_pos.QuadPart;

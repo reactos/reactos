@@ -1,16 +1,16 @@
 #include <windows.h>
 #include <msvcrt/ctype.h>
 #include <msvcrt/direct.h>
-
+#include <msvcrt/internal/file.h>
 
 /*
  * @implemented
  */
 int _chdir(const char* _path)
 {
-    if (_path[1] == ':')
-        _chdrive(tolower(_path[0] - 'a')+1);
-    if (!SetCurrentDirectoryA((char*)_path))
-        return -1;
+    if (!SetCurrentDirectoryA((char*)_path)) {
+    	_dosmaperr(GetLastError());
+		return -1;
+	}
     return 0;
 }

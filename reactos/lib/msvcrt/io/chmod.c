@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <msvcrt/io.h>
+#include <msvcrt/internal/file.h>
 
 #define NDEBUG
 #include <msvcrt/msvcrtdbg.h>
@@ -16,8 +17,10 @@ int _chmod(const char* filename, mode_t mode)
     DPRINT("_chmod('%s', %x)\n", filename, mode);
 
     FileAttributes = GetFileAttributesA(filename);
-    if ( FileAttributes == -1 )
+    if ( FileAttributes == -1 ) {
+    	_dosmaperr(GetLastError());
         return -1;
+	}
 
     if ( mode == 0 )
         return -1;
@@ -29,8 +32,10 @@ int _chmod(const char* filename, mode_t mode)
     else
         FileAttributes &= FILE_ATTRIBUTE_NORMAL;
 
-    if (SetFileAttributesA(filename, FileAttributes) == FALSE)
+    if (SetFileAttributesA(filename, FileAttributes) == FALSE) {
+    	_dosmaperr(GetLastError());
         return -1;
+	}
 
     return 1;
 }

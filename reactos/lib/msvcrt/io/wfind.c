@@ -28,6 +28,7 @@ int _wfindfirst(const wchar_t* _name, struct _wfinddata_t* result)
     hFindFile = (long)FindFirstFileW(dir, &FindFileData);
     if (hFindFile == -1) {
         memset(result,0,sizeof(struct _wfinddata_t));
+        _dosmaperr(GetLastError());
         return -1;
     }
 
@@ -75,6 +76,7 @@ int _findfirsti64(const char *_name, struct _finddatai64_t *result)
   if (hFindFile == -1)
     {
       memset(result,0,sizeof(struct _finddatai64_t));
+      _dosmaperr(GetLastError());
       return -1;
     }
 
@@ -107,8 +109,10 @@ int _findnexti64(int handle, struct _finddatai64_t *result)
   if (handle == 0 || handle == -1)
     return 0;
 
-  if (!FindNextFileA((void *)handle, &FindFileData))
-    return -1;
+	if (!FindNextFileA((void *)handle, &FindFileData)) {
+		_dosmaperr(GetLastError());
+		return -1;
+	}
 
   result->attrib = FindFileData.dwFileAttributes;
   result->time_create = FileTimeToUnixTime(&FindFileData.ftCreationTime,NULL);
@@ -148,6 +152,7 @@ int _wfindfirsti64(const wchar_t *_name, struct _wfinddatai64_t *result)
   if (hFindFile == -1)
     {
       memset(result,0,sizeof(struct _wfinddatai64_t));
+      _dosmaperr(GetLastError());
       return -1;
     }
 

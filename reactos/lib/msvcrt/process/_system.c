@@ -1,4 +1,4 @@
-/* $Id: _system.c,v 1.8 2003/08/05 15:41:03 weiden Exp $
+/* $Id: _system.c,v 1.9 2003/12/03 17:17:03 navaraf Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -110,7 +110,7 @@ int system(const char *command)
 
   if (result == FALSE)
   {
-     __set_errno(ENOEXEC);
+	_dosmaperr(GetLastError());
      return -1;
   }
   

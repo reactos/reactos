@@ -12,6 +12,7 @@
 #include <msvcrt/stdlib.h>
 #include <msvcrt/string.h>
 #include <msvcrt/internal/file.h>
+#include <msvcrt/errno.h>
 
 #define NDEBUG
 #include <msvcrt/msvcrtdbg.h>
@@ -48,7 +49,8 @@ size_t _write(int _fd, const void* _buf, size_t _nbyte)
       result = _nbyte; 
       tmp = (char*) malloc(BUFSIZE);
       if (tmp == NULL) {
-         return -1;
+			__set_errno(ENOMEM);
+			return -1;
       }
       count = BUFSIZE;
       out = tmp;
@@ -76,10 +78,10 @@ size_t _write(int _fd, const void* _buf, size_t _nbyte)
          if (count == 0 || _nbyte == 0) {
             int tmp_len_debug = strlen(tmp);
             if (!WriteFile(_get_osfhandle(_fd), tmp, BUFSIZE - count, &wbyte, NULL)) {
-               //ReportLastError();
-               result = -1; 
-               tmp_len_debug = 0;
-               break;
+				_dosmaperr(GetLastError());
+				result = -1; 
+				tmp_len_debug = 0;
+				break;
             }
             if (wbyte < (BUFSIZE - count)) {
                result = in - (char*)_buf;
@@ -93,8 +95,8 @@ size_t _write(int _fd, const void* _buf, size_t _nbyte)
       return result;
    } else {
       if(!WriteFile(_get_osfhandle(_fd), _buf, _nbyte, &wbyte, NULL)) {
-          //ReportLastError();
-          return -1;
+			_dosmaperr(GetLastError());
+			return -1;
       }
       return wbyte;
    }

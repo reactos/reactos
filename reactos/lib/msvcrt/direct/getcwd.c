@@ -1,6 +1,8 @@
 #include <windows.h>
 #include <msvcrt/direct.h>
 #include <msvcrt/stdlib.h>
+#include <msvcrt/errno.h>
+#include <msvcrt/internal/file.h>
 
 
 /*
@@ -12,13 +14,17 @@ char *_getcwd(char* buffer, int maxlen)
     int len;
 
     if (buffer == NULL) {
-        cwd = malloc(MAX_PATH);
+        if ( (cwd = malloc(MAX_PATH)) == NULL ) {
+        	__set_errno(ENOMEM);
+        	return NULL;
+        }
         len = MAX_PATH;
     } else {
         cwd = buffer;
         len = maxlen;
     }
     if (GetCurrentDirectoryA(len, cwd) == 0) {
+    	_dosmaperr(GetLastError());
         return NULL;
     }
     return cwd;

@@ -68,6 +68,7 @@ typedef struct __file_rec
 
 extern __file_rec* __file_rec_list;
 
+void _dosmaperr(unsigned long oserrcode);
 
 #ifdef __cplusplus
 }

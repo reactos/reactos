@@ -1,4 +1,4 @@
-/* $Id: open.c,v 1.16 2003/08/05 15:41:03 weiden Exp $
+/* $Id: open.c,v 1.17 2003/12/03 17:17:03 navaraf Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -105,7 +105,6 @@ int _open(const char* _path, int _oflag,...)
    DWORD dwShareMode = 0;
    DWORD dwCreationDistribution = 0;
    DWORD dwFlagsAndAttributes = 0;
-   DWORD dwLastError;
    SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
 
 #if !defined(NDEBUG) && defined(DBG)
@@ -185,17 +184,10 @@ int _open(const char* _path, int _oflag,...)
                dwCreationDistribution,
                dwFlagsAndAttributes,
                NULL);
-   if (hFile == (HANDLE)-1) {
-     dwLastError = GetLastError();
-     if (dwLastError == ERROR_ALREADY_EXISTS) {
-        DPRINT("ERROR_ALREADY_EXISTS\n");
-        __set_errno(EEXIST);
-     } else {
-        DPRINT("%x\n", dwLastError);
-        __set_errno(ENOFILE);
-     }
-     return -1;
-   }
+	if (hFile == (HANDLE)-1) {
+		_dosmaperr(GetLastError());
+		return -1;
+	}
    DPRINT("OK\n");
    if (!(_oflag & (_O_TEXT|_O_BINARY))) {
        _oflag |= _fmode;

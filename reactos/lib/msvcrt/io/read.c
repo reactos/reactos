@@ -1,4 +1,4 @@
-/* $Id: read.c,v 1.11 2003/07/11 21:57:54 royce Exp $
+/* $Id: read.c,v 1.12 2003/12/03 17:17:03 navaraf Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -46,6 +46,7 @@ size_t _read(int _fd, void *_buf, size_t _nbyte)
       {
 	 return 0;
       }
+      _dosmaperr(error);
       return -1;
    }
       

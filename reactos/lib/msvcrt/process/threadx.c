@@ -1,4 +1,4 @@
-/* $Id: threadx.c,v 1.5 2003/11/14 17:13:31 weiden Exp $
+/* $Id: threadx.c,v 1.6 2003/12/03 17:17:03 navaraf Exp $
  *
  */
 #include <windows.h>
@@ -29,8 +29,7 @@ unsigned long _beginthreadex(
     arglist, initflag, (PULONG)thrdaddr );
   if (NULL == NewThread)
     {
-    /* FIXME map GetLastError() to errno */
-    __set_errno ( ENOSYS );
+    _dosmaperr( GetLastError() );
     }
 
   return (unsigned long) NewThread;

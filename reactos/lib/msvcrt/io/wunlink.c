@@ -12,7 +12,7 @@
 
 #define NDEBUG
 #include <msvcrt/msvcrtdbg.h>
-
+#include <msvcrt/internal/file.h>
 
 /*
  * @implemented
@@ -20,7 +20,9 @@
 int _wunlink(const wchar_t* filename)
 {
     DPRINT("_wunlink('%S')\n", filename);
-    if (!DeleteFileW(filename))
+    if (!DeleteFileW(filename)) {
+    	_dosmaperr(GetLastError());
         return -1;
+	}
     return 0;
 }

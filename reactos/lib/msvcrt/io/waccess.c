@@ -13,7 +13,7 @@ int _waccess(const wchar_t *_path, int _amode)
     DWORD Attributes = GetFileAttributesW(_path);
 
     if (Attributes == -1) {
-        __set_errno(ENOENT);
+		_dosmaperr(GetLastError());
         return -1;
     }
     if ((_amode & W_OK) == W_OK) {

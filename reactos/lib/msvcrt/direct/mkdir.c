@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <msvcrt/direct.h>
+#include <msvcrt/internal/file.h>
 
 
 /*
@@ -7,7 +8,9 @@
  */
 int _mkdir(const char* _path)
 {
-    if (!CreateDirectoryA(_path, NULL))
+    if (!CreateDirectoryA(_path, NULL)) {
+    	_dosmaperr(GetLastError());
         return -1;
+	}
     return 0;
 }

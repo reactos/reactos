@@ -16,8 +16,10 @@ int _wchmod(const wchar_t* filename, mode_t mode)
     DPRINT("_wchmod('%S', %x)\n", filename, mode);
 
     FileAttributes = GetFileAttributesW(filename);
-    if ( FileAttributes == -1 )
+    if ( FileAttributes == -1 ) {
+		_dosmaperr(GetLastError());
         return -1;
+	}
 
     if ( mode == 0 )
         return -1;
@@ -29,8 +31,10 @@ int _wchmod(const wchar_t* filename, mode_t mode)
     else
         FileAttributes &= FILE_ATTRIBUTE_NORMAL;
 
-    if (SetFileAttributesW(filename, FileAttributes) == FALSE)
+    if (SetFileAttributesW(filename, FileAttributes) == FALSE) {
+		_dosmaperr(GetLastError());
         return -1;
+	}
 
     return 1;
 }
