@@ -1,4 +1,4 @@
-/* $Id: services.c,v 1.3 2001/03/26 20:46:52 dwelch Exp $
+/* $Id: services.c,v 1.4 2001/10/21 19:09:06 chorns Exp $
  *
  * service control manager
  * 
@@ -31,12 +31,16 @@
 
 #define NTOS_MODE_USER
 #include <ntos.h>
+
 #include <windows.h>
 
-#include <services/services.h>
+#define NDEBUG
+#include <debug.h>
 
 /* GLOBALS ******************************************************************/
 
+#define PIPE_BUFSIZE 1024
+#define PIPE_TIMEOUT 1000
 
 
 /* FUNCTIONS *****************************************************************/
@@ -50,7 +54,7 @@ void PrintString (char* fmt,...)
    vsprintf(buffer, fmt, ap);
    va_end(ap);
 
-   OutputDebugString(buffer);
+   OutputDebugStringA(buffer);
 }
 
 
@@ -86,6 +90,131 @@ BOOL ScmCreateStartEvent(PHANDLE StartEvent)
 }
 
 
+BOOL
+ScmNamedPipeHandleRequest(
+  PVOID Request,
+  DWORD RequestSize,
+	PVOID Reply,
+	LPDWORD ReplySize)
+{
+  DbgPrint("SCM READ: %s\n", Request);
+
+  *ReplySize = 0;
+
+  return FALSE;
+}
+
+
+DWORD
+WINAPI
+ScmNamedPipeThread(
+  LPVOID Context)
+{
+  CHAR chRequest[PIPE_BUFSIZE];
+  CHAR chReply[PIPE_BUFSIZE];
+  DWORD cbReplyBytes;
+  DWORD cbBytesRead;
+  DWORD cbWritten;
+  BOOL fSuccess;
+  HANDLE hPipe;
+
+  DPRINT("Accepting SCM commands through named pipe\n");
+   
+  hPipe = (HANDLE)Context;
+
+  for (;;)
+  {
+	  fSuccess = ReadFile(
+      hPipe,
+		  &chRequest,
+			PIPE_BUFSIZE,
+      &cbBytesRead,
+			NULL);
+	  if (!fSuccess || cbBytesRead == 0)
+    {
+	    break;
+    }
+
+	  if (ScmNamedPipeHandleRequest(&chRequest, cbBytesRead, &chReply, &cbReplyBytes))
+    {
+	    fSuccess = WriteFile(
+        hPipe,
+	    	&chReply,
+	    	cbReplyBytes,
+	    	&cbWritten,
+	    	NULL);
+	    if (!fSuccess || cbReplyBytes != cbWritten)
+      {
+	      break;
+      }
+    }
+  }
+
+  FlushFileBuffers(hPipe);
+  DisconnectNamedPipe(hPipe);
+  CloseHandle(hPipe);
+
+  return ERROR_SUCCESS;
+}
+
+
+BOOL ScmCreateNamedPipe(VOID)
+{
+  DWORD dwThreadId;
+  BOOL fConnected;
+  HANDLE hThread;
+  HANDLE hPipe;
+
+  hPipe = CreateNamedPipe(
+    "\\\\.\\pipe\\Ntsvcs",
+		PIPE_ACCESS_DUPLEX,
+    PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
+    PIPE_UNLIMITED_INSTANCES,
+		PIPE_BUFSIZE,
+		PIPE_BUFSIZE,
+		PIPE_TIMEOUT,
+		NULL);
+  if (hPipe == INVALID_HANDLE_VALUE)
+  {
+	  DPRINT("CreateNamedPipe() failed (%d)\n", GetLastError());
+	  return FALSE;
+  }
+
+  fConnected = ConnectNamedPipe(
+    hPipe,
+		NULL) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED);
+  if (fConnected)
+  {
+    DPRINT("Pipe connected\n");
+
+    hThread = CreateThread(
+      NULL,
+		  0,
+			ScmNamedPipeThread,
+			(LPVOID)hPipe,
+			0,
+      &dwThreadId);
+    if (!hThread)
+    {
+      DPRINT("Could not create thread (%d)\n", GetLastError());
+
+      DisconnectNamedPipe(hPipe);
+      CloseHandle(hPipe);
+      return FALSE;
+    }
+	}
+	else
+  {
+    DPRINT("Pipe not connected\n");
+
+    CloseHandle(hPipe);
+    return FALSE;
+	}
+
+  return TRUE;
+}
+
+
 int STDCALL
 WinMain(HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
@@ -114,9 +243,14 @@ WinMain(HINSTANCE hInstance,
 
    /* FIXME: update service database */
 //   ScmGetBootAndSystemDriverState();
-
-   /* FIXME: create pipe "\Pipe\Ntsvcs" */
-
+#if 0
+   /* Create named pipe */
+   if (!ScmCreateNamedPipe())
+     {
+	PrintString("SERVICES: Failed to create named pipe\n");
+	ExitThread(0);
+     }
+#endif
    /* FIXME: create listener thread for pipe */
 
    /* FIXME: register process as service process */
