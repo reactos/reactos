@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.241 2004/08/03 14:50:56 navaraf Exp $
+# $Id: Makefile,v 1.242 2004/08/10 15:49:55 weiden Exp $
 #
 # Global makefile
 #
@@ -42,7 +42,7 @@ DLLS_CPL = cpl
 
 # User mode libraries
 # libpcap packet epsapi
-DLLS = acledit advapi32 cabinet cards comctl32 crtdll comdlg32 d3d8thk expat fmifs freetype \
+DLLS = acledit aclui advapi32 cabinet cards comctl32 crtdll comdlg32 d3d8thk expat fmifs freetype \
 	gdi32 gdiplus imagehlp imm32 iphlpapi kernel32 lzexpand mpr msacm msafd msgina msimg32 msvcrt \
 	msvcrt20 msvideo mswsock netapi32 ntdll ole32 oleaut32 oledlg packet psapi richedit \
 	rpcrt4 samlib secur32 setupapi shell32 shlwapi snmpapi syssetup twain unicode user32 \
