@@ -1,30 +1,32 @@
-/* $Id: tickcount.c,v 1.2 2003/07/06 23:04:18 hyperion Exp $
+/* $Id$
 */
 /*
- tickcount -- Display the kernel tick count in human-readable format
+ tickcount -- Display the kernel tick count (or any tick count passed as an
+ argument or as input) in human-readable format
 
  This is public domain software
 */
 
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <tchar.h>
 #include <windows.h>
 
-typedef __int64 int64_t;
-typedef unsigned __int64 uint64_t;
+typedef __int64 int64_;
+typedef unsigned __int64 uint64_;
 
-#define TICKS_YEAR   (TICKS_DAY * ((uint64_t)365))
-#define TICKS_MONTH  (TICKS_DAY * ((uint64_t)30))
-#define TICKS_WEEK   (TICKS_DAY * ((uint64_t)7))
-#define TICKS_DAY    (TICKS_HOUR * ((uint64_t)24))
-#define TICKS_HOUR   (TICKS_MINUTE * ((uint64_t)60))
-#define TICKS_MINUTE (TICKS_SECOND * ((uint64_t)60))
-#define TICKS_SECOND ((uint64_t)1000)
+#define TICKS_YEAR   (TICKS_DAY * ((uint64_)365))
+#define TICKS_MONTH  (TICKS_DAY * ((uint64_)30))
+#define TICKS_WEEK   (TICKS_DAY * ((uint64_)7))
+#define TICKS_DAY    (TICKS_HOUR * ((uint64_)24))
+#define TICKS_HOUR   (TICKS_MINUTE * ((uint64_)60))
+#define TICKS_MINUTE (TICKS_SECOND * ((uint64_)60))
+#define TICKS_SECOND ((uint64_)1000)
 
 #define SLICES_COUNT (sizeof(ticks_per_slice) / sizeof(ticks_per_slice[0]))
 
-uint64_t ticks_per_slice[] =
+uint64_ ticks_per_slice[] =
 {
  TICKS_YEAR,
  TICKS_MONTH,
@@ -36,7 +38,7 @@ uint64_t ticks_per_slice[] =
  1
 };
 
-_TCHAR * slice_names_singular[] =
+_TCHAR * slice_names_singular[SLICES_COUNT] =
 {
  _T("year"),
  _T("month"),
@@ -48,7 +50,7 @@ _TCHAR * slice_names_singular[] =
  _T("millisecond")
 };
 
-_TCHAR * slice_names_plural[] =
+_TCHAR * slice_names_plural[SLICES_COUNT] =
 {
  _T("years"),
  _T("months"),
@@ -62,16 +64,16 @@ _TCHAR * slice_names_plural[] =
 
 void print_uptime
 (
- uint64_t tickcount,
- uint64_t prevsliceval,
+ uint64_ tickcount,
+ uint64_ prevsliceval,
  _TCHAR * prevsliceunit,
  int curslice
 )
 {
- uint64_t tick_cur = tickcount / ticks_per_slice[curslice];
- uint64_t tick_residual = tickcount % ticks_per_slice[curslice];
+ uint64_ tick_cur = tickcount / ticks_per_slice[curslice];
+ uint64_ tick_residual = tickcount % ticks_per_slice[curslice];
 
- assert(tick_cur <= (~((uint64_t)0)));
+ assert(tick_cur <= (~((uint64_)0)));
 
  if(tick_residual == 0)
  {
@@ -134,9 +136,56 @@ void print_uptime
  }
 }
 
-int _tmain()
+int parse_print(const _TCHAR * str)
 {
- print_uptime((uint64_t)GetTickCount(), 0, NULL, 0);
+ int64_ tickcount;
+ 
+ tickcount = _ttoi64(str);
+ 
+ if(tickcount < 0)
+  tickcount = - tickcount;
+ else if(tickcount == 0)
+  return 1;
+
+ print_uptime(tickcount, 0, NULL, 0);
  _puttc(_T('\n'), stdout);
+
+ return 0;
+}
+
+int _tmain(int argc, _TCHAR * argv[])
+{
+ int r;
+
+ if(argc <= 1)
+ {
+  print_uptime((uint64_)GetTickCount(), 0, NULL, 0);
+  _puttc(_T('\n'), stdout);
+ }
+ else if(argc == 2 && argv[1][0] == _T('-') && argv[1][1] == 0)
+ {
+  while(!feof(stdin))
+  {
+   _TCHAR buf[23];
+   _TCHAR * str;
+
+   str = _fgetts(buf, 22, stdin);
+
+   if(str == NULL)
+    return 0;
+
+   if((r = parse_print(str)) != 0)
+    return r;
+  }
+ }
+ else
+ {
+  int i;
+
+  for(i = 1; i < argc; ++ i)
+   if((r = parse_print(argv[i])) != 0)
+    return r;
+ }
+
  return 0;
 }
