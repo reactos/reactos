@@ -1,8 +1,14 @@
 #ifndef __INCLUDE_DDK_FSTYPES_H
 #define __INCLUDE_DDK_FSTYPES_H
-/* $Id: fstypes.h,v 1.9 2003/01/25 18:53:27 hbirr Exp $ */
+/* $Id: fstypes.h,v 1.10 2003/04/19 17:17:10 ea Exp $ */
 
 #define FSRTL_TAG 	TAG('F','S','r','t')
+
+typedef ULONG LBN;
+typedef LBN *PLBN;
+
+typedef ULONG VBN;
+typedef VBN *PVBN;
 
 typedef struct _FILE_LOCK_INFO {
     LARGE_INTEGER   StartingByte;
@@ -80,6 +86,9 @@ typedef struct _LARGE_MCB
   PVOID Mapping;
 } LARGE_MCB, *PLARGE_MCB;
 
+typedef struct _MCB {
+    LARGE_MCB LargeMcb;
+} MCB, *PMCB;
 
 typedef VOID
 (*POPLOCK_WAIT_COMPLETE_ROUTINE)(PVOID Context,

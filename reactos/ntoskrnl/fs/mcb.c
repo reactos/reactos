@@ -1,4 +1,4 @@
-/* $Id: mcb.c,v 1.5 2002/09/08 10:23:20 chorns Exp $
+/* $Id: mcb.c,v 1.6 2003/04/19 17:16:51 ea Exp $
  *
  * reactos/ntoskrnl/fs/mcb.c
  *
@@ -30,16 +30,14 @@ FsRtlAddLargeMcbEntry(IN PLARGE_MCB Mcb,
 }
 
 
-VOID
-STDCALL
-FsRtlAddMcbEntry (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
-	)
+BOOLEAN STDCALL
+FsRtlAddMcbEntry (IN PMCB     Mcb,
+		  IN VBN      Vbn,
+		  IN LBN      Lbn,
+		  IN ULONG    SectorCount)
 {
-	UNIMPLEMENTED
+  UNIMPLEMENTED
+  return(FALSE);
 }
 
 
@@ -55,17 +53,15 @@ FsRtlGetNextLargeMcbEntry(IN PLARGE_MCB Mcb,
 }
 
 
-VOID
-STDCALL
-FsRtlGetNextMcbEntry (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
-	)
+BOOLEAN STDCALL
+FsRtlGetNextMcbEntry (IN PMCB     Mcb,
+		      IN ULONG    RunIndex,
+		      OUT PVBN    Vbn,
+		      OUT PLBN    Lbn,
+		      OUT PULONG  SectorCount)
 {
-	UNIMPLEMENTED
+  UNIMPLEMENTED
+  return(FALSE);
 }
 
 
@@ -74,18 +70,16 @@ FsRtlInitializeLargeMcb(IN PLARGE_MCB Mcb,
 			IN POOL_TYPE PoolType)
 {
   UNIMPLEMENTED
-	Mcb->PoolType = PoolType;
+  Mcb->PoolType = PoolType;
 }
 
 
-VOID
-STDCALL
-FsRtlInitializeMcb (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	)
+VOID STDCALL
+FsRtlInitializeMcb (IN PMCB         Mcb,
+		    IN POOL_TYPE    PoolType)
 {
-	UNIMPLEMENTED
+  UNIMPLEMENTED
+  Mcb->LargeMcb.PoolType = PoolType;
 }
 
 
@@ -113,29 +107,25 @@ FsRtlLookupLastLargeMcbEntry(IN PLARGE_MCB Mcb,
 }
 
 
-VOID
-STDCALL
-FsRtlLookupLastMcbEntry (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
+BOOLEAN STDCALL
+FsRtlLookupLastMcbEntry (IN PMCB     Mcb,
+			 OUT PVBN    Vbn,
+			 OUT PLBN    Lbn)
 {
-	UNIMPLEMENTED
+  UNIMPLEMENTED
+  return(FALSE);
 }
 
 
-VOID
-STDCALL
-FsRtlLookupMcbEntry (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
-	)
+BOOLEAN STDCALL
+FsRtlLookupMcbEntry (IN PMCB     Mcb,
+		     IN VBN      Vbn,
+		     OUT PLBN    Lbn,
+		     OUT PULONG  SectorCount OPTIONAL,
+		     OUT PULONG  Index)
 {
-	UNIMPLEMENTED
+  UNIMPLEMENTED
+  return(FALSE);
 }
 
 
@@ -147,13 +137,11 @@ FsRtlNumberOfRunsInLargeMcb(IN PLARGE_MCB Mcb)
 }
 
 
-VOID
-STDCALL
-FsRtlNumberOfRunsInMcb (
-	DWORD	Unknown0
-	)
+ULONG STDCALL
+FsRtlNumberOfRunsInMcb (IN PMCB Mcb)
 {
-	UNIMPLEMENTED
+  UNIMPLEMENTED
+  return(0);
 }
 
 
@@ -166,15 +154,12 @@ FsRtlRemoveLargeMcbEntry(IN PLARGE_MCB Mcb,
 }
 
 
-VOID
-STDCALL
-FsRtlRemoveMcbEntry (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
+VOID STDCALL
+FsRtlRemoveMcbEntry (IN PMCB     Mcb,
+		     IN VBN      Vbn,
+		     IN ULONG    SectorCount)
 {
-	UNIMPLEMENTED
+  UNIMPLEMENTED
 }
 
 
@@ -196,14 +181,11 @@ FsRtlTruncateLargeMcb(IN PLARGE_MCB Mcb,
 }
 
 
-VOID
-STDCALL
-FsRtlTruncateMcb (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	)
+VOID STDCALL
+FsRtlTruncateMcb (IN PMCB Mcb,
+		  IN VBN  Vbn)
 {
-	UNIMPLEMENTED
+  UNIMPLEMENTED
 }
 
 
@@ -214,13 +196,10 @@ FsRtlUninitializeLargeMcb(IN PLARGE_MCB Mcb)
 }
 
 
-VOID
-STDCALL
-FsRtlUninitializeMcb (
-	DWORD	Unknown0
-	)
+VOID STDCALL
+FsRtlUninitializeMcb (IN PMCB Mcb)
 {
-	UNIMPLEMENTED
+  UNIMPLEMENTED
 }
 
 

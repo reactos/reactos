@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_FSFUNCS_H
 #define __INCLUDE_DDK_FSFUNCS_H
-/* $Id: fsfuncs.h,v 1.17 2002/11/07 02:44:49 robd Exp $ */
+/* $Id: fsfuncs.h,v 1.18 2003/04/19 17:17:10 ea Exp $ */
 #define FlagOn(x,f) ((x) & (f))
 
 VOID
@@ -24,13 +24,11 @@ FsRtlAddLargeMcbEntry(IN PLARGE_MCB Mcb,
 		      IN LONGLONG Lbn,
 		      IN LONGLONG SectorCount);
 
-VOID STDCALL
-FsRtlAddMcbEntry(
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
-	);
+BOOLEAN STDCALL
+FsRtlAddMcbEntry (IN PMCB     Mcb,
+		  IN VBN      Vbn,
+		  IN LBN      Lbn,
+		  IN ULONG    SectorCount);
 
 VOID STDCALL
 FsRtlAddToTunnelCache (
@@ -250,15 +248,12 @@ FsRtlGetNextLargeMcbEntry(IN PLARGE_MCB Mcb,
 			  OUT PLONGLONG Lbn,
 			  OUT PLONGLONG SectorCount);
 
-VOID
-STDCALL
-FsRtlGetNextMcbEntry (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
-	);
+BOOLEAN STDCALL
+FsRtlGetNextMcbEntry (IN PMCB     Mcb,
+		      IN ULONG    RunIndex,
+		      OUT PVBN    Vbn,
+		      OUT PLBN    Lbn,
+		      OUT PULONG  SectorCount);
 #define FsRtlEnterFileSystem    KeEnterCriticalRegion
 #define FsRtlExitFileSystem     KeLeaveCriticalRegion
 VOID
@@ -273,12 +268,9 @@ VOID STDCALL
 FsRtlInitializeLargeMcb(IN PLARGE_MCB Mcb,
 			IN POOL_TYPE PoolType);
 
-VOID
-STDCALL
-FsRtlInitializeMcb (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	);
+VOID STDCALL
+FsRtlInitializeMcb (IN PMCB         Mcb,
+		    IN POOL_TYPE    PoolType);
 
 VOID STDCALL
 FsRtlInitializeOplock(IN OUT POPLOCK Oplock);
@@ -347,22 +339,17 @@ FsRtlLookupLastLargeMcbEntry(IN PLARGE_MCB Mcb,
 			     OUT PLONGLONG Vbn,
 			     OUT PLONGLONG Lbn);
 
-VOID
-STDCALL
-FsRtlLookupLastMcbEntry (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	);
-VOID
-STDCALL
-FsRtlLookupMcbEntry (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
-	);
+BOOLEAN STDCALL
+FsRtlLookupLastMcbEntry (IN PMCB     Mcb,
+			 OUT PVBN    Vbn,
+			 OUT PLBN    Lbn);
+BOOLEAN STDCALL
+FsRtlLookupMcbEntry (IN PMCB     Mcb,
+		     IN VBN      Vbn,
+		     OUT PLBN    Lbn,
+		     OUT PULONG  SectorCount OPTIONAL,
+		     OUT PULONG  Index);
+
 BOOLEAN
 STDCALL
 FsRtlMdlRead (
@@ -522,11 +509,9 @@ FsRtlNormalizeNtstatus(IN NTSTATUS NtStatusToNormalize,
 ULONG STDCALL
 FsRtlNumberOfRunsInLargeMcb(IN PLARGE_MCB Mcb);
 
-VOID
-STDCALL
-FsRtlNumberOfRunsInMcb (
-	DWORD	Unknown0
-	);
+ULONG STDCALL
+FsRtlNumberOfRunsInMcb (IN PMCB Mcb);
+
 VOID
 STDCALL
 FsRtlPostPagingFileStackOverflow (
@@ -575,13 +560,10 @@ FsRtlRemoveLargeMcbEntry(IN PLARGE_MCB Mcb,
 			 IN LONGLONG Vbn,
 			 IN LONGLONG SectorCount);
 
-VOID
-STDCALL
-FsRtlRemoveMcbEntry (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	);
+VOID STDCALL
+FsRtlRemoveMcbEntry (IN PMCB     Mcb,
+		     IN VBN      Vbn,
+		     IN ULONG    SectorCount);
 
 BOOLEAN STDCALL
 FsRtlSplitLargeMcb(IN PLARGE_MCB Mcb,
@@ -600,26 +582,18 @@ VOID STDCALL
 FsRtlTruncateLargeMcb(IN PLARGE_MCB Mcb,
 		      IN LONGLONG Vbn);
 
-VOID
-STDCALL
-FsRtlTruncateMcb (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	);
-VOID
-STDCALL
-FsRtlUninitializeFileLock (
-    IN PFILE_LOCK FileLock
-    );
+VOID STDCALL
+FsRtlTruncateMcb (IN PMCB Mcb,
+		  IN VBN  Vbn);
+
+VOID STDCALL
+FsRtlUninitializeFileLock (IN PFILE_LOCK FileLock);
 
 VOID STDCALL
 FsRtlUninitializeLargeMcb(IN PLARGE_MCB Mcb);
 
-VOID
-STDCALL
-FsRtlUninitializeMcb (
-	DWORD	Unknown0
-	);
+VOID STDCALL
+FsRtlUninitializeMcb (IN PMCB Mcb);
 
 VOID STDCALL
 FsRtlUninitializeOplock(IN POPLOCK Oplock);
