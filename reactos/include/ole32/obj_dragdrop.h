@@ -79,6 +79,38 @@ ICOM_DEFINE(IDropTarget,IUnknown)
 #define IDropTarget_DragLeave(p)          ICOM_CALL(DragLeave,p)
 #define IDropTarget_Drop(p,a,b,c,d)       ICOM_CALL4(Drop,p,a,b,c,d)
 
+#if _WIN32_IE >= 0x0500
+
+#pragma pack(push,8)
+
+typedef struct
+{
+	SIZE		sizeDragImage;
+	POINT		ptOffset;
+	HBITMAP 	hbmpDragImage;
+	COLORREF	crColorKey;
+} SHDRAGIMAGE, *LPSHDRAGIMAGE;
+
+#pragma pack(pop)
+
+#undef INTERFACE
+#define INTERFACE IDragSourceHelper
+
+DECLARE_INTERFACE_(IDragSourceHelper, IUnknown)
+{
+	STDMETHOD (QueryInterface)(THIS_ REFIID riid, void **ppv) PURE;
+	STDMETHOD_(ULONG, AddRef) (THIS) PURE;
+	STDMETHOD_(ULONG, Release) (THIS) PURE;
+	STDMETHOD (InitializeFromBitmap)(THIS_ LPSHDRAGIMAGE pshdi, IDataObject* pDataObject) PURE;
+	STDMETHOD (InitializeFromWindow)(THIS_ HWND hwnd, POINT* ppt, IDataObject* pDataObject) PURE;
+};
+
+DEFINE_GUID(CLSID_DragDropHelper, 0x4657278AL, 0x411B, 0x11D2, 0x83, 0x9A, 0x00, 0xC0, 0x4F, 0xD9, 0x18, 0xD0);
+DEFINE_GUID(IID_IDropTargetHelper, 0x4657278BL, 0x411B, 0x11D2, 0x83, 0x9A, 0x00, 0xC0, 0x4F, 0xD9, 0x18, 0xD0);
+DEFINE_GUID(IID_IDragSourceHelper, 0xDE5BF786L, 0x477A, 0x11D2, 0x83, 0x9D, 0x00, 0xC0, 0x4F, 0xD9, 0x18, 0xD0);
+
+#endif /* _WIN32_IE >= 0x0500 */
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* defined(__cplusplus) */
