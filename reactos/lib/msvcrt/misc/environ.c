@@ -1,4 +1,4 @@
-/* $Id: environ.c,v 1.1 2002/11/24 18:42:23 robd Exp $
+/* $Id: environ.c,v 1.2 2003/04/24 16:34:26 hbirr Exp $
  *
  * dllmain.c
  *
@@ -44,9 +44,13 @@ int BlockEnvToEnviron(void)
 
     if (_environ) {
         FreeEnvironmentStringsA(_environ[0]);
-        free(_environ);
-        _environ = NULL;
+	if (__initenv == _environ) {
+	    __initenv[0] == NULL;
+	} else {
+	    free(_environ);
+	}
     }
+    _environ = NULL;
     ptr2 = ptr = (char*)GetEnvironmentStringsA();
     if (ptr == NULL) {
         DPRINT("GetEnvironmentStringsA() returnd NULL\n");
@@ -67,6 +71,10 @@ int BlockEnvToEnviron(void)
         while (*ptr++);
     }
     _environ[i] = NULL;
+    if (__initenv == NULL)
+    {
+       __initenv = _environ;
+    }
     return 0;
 }
 

@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.17 2002/11/24 18:42:23 robd Exp $
+/* $Id: dllmain.c,v 1.18 2003/04/24 16:34:26 hbirr Exp $
  *
  * dllmain.c
  *
@@ -14,9 +14,9 @@
  *  DISCLAMED. This includes but is not limited to warrenties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.17 $
- * $Author: robd $
- * $Date: 2002/11/24 18:42:23 $
+ * $Revision: 1.18 $
+ * $Author: hbirr $
+ * $Date: 2003/04/24 16:34:26 $
  *
  */
 
@@ -42,6 +42,7 @@ extern unsigned int _winver;
 extern char* _acmdln;       /* pointer to ascii command line */
 #undef _environ
 extern char** _environ;     /* pointer to environment block */
+extern char** __initenv;    /* pointer to initial environment block */
 
 
 /* LIBRARY GLOBAL VARIABLES ***************************************************/
@@ -125,7 +126,11 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
             /* destroy heap */
             if (nAttachCount == 0)
             {
-
+		if (__initenv && __initenv != _environ)
+		{
+		    free(__initenv);
+		    __initenv = NULL;
+		}
                 if (_environ)
                 {
                     FreeEnvironmentStringsA(_environ[0]);
