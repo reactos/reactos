@@ -1,6 +1,8 @@
 #ifndef MEMTRACK_H
 #define MEMTRACK_H
 
+#include <pool.h>
+
 #ifndef FOURCC
 #define FOURCC(a,b,c,d) (((a)<<24)|((b)<<16)|((c)<<8)|(d))
 #endif
@@ -39,13 +41,13 @@ VOID TrackDumpFL( PCHAR File, DWORD Line );
 VOID TrackTag( DWORD Tag );
 
 static inline PVOID ExAllocatePoolX( POOL_TYPE type, SIZE_T size, PCHAR File, ULONG Line ) {
-    PVOID Out = ExAllocatePool( type, size );
+    PVOID Out = PoolAllocateBuffer( size );
     if( Out ) TrackWithTag( EXALLOC_TAG, Out, File, Line );
     return Out;
 }
 static inline VOID ExFreePoolX( PVOID Data, PCHAR File, ULONG Line ) {
     UntrackFL(File, Line, Data);
-    ExFreePool(Data);
+    PoolFreeBuffer(Data);
 }
 
 #define MEMTRACK_MAX_TAGS_TO_TRACK 64
@@ -57,8 +59,8 @@ static inline VOID ExFreePoolX( PVOID Data, PCHAR File, ULONG Line ) {
 #define Untrack(x)
 #define TrackTag(x)
 #define exAllocatePoolWithTag(x,y,z) ExAllocatePoolWithTag(x,y,z)
-#define exAllocatePool(x,y) ExAllocatePool(x,y)
-#define exFreePool(x) ExFreePool(x)
+#define exAllocatePool(x,y) PoolAllocateBuffer(y)
+#define exFreePool(x) PoolFreeBuffer(x)
 #define TrackWithTag(w,x,y,z)
 #define UntrackFL(x,y,z)
 #endif

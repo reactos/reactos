@@ -166,18 +166,9 @@ VOID DisplayIPPacket(
 	//OskitDumpBuffer( p, Length );
     }
 
-    if (IPPacket->NdisPacket) {
-        NdisQueryPacket(IPPacket->NdisPacket, NULL, NULL, NULL, &Length);
-        Length -= MaxLLHeaderSize;
-        CharBuffer = exAllocatePool(NonPagedPool, Length);
-        Length = CopyPacketToBuffer(CharBuffer, IPPacket->NdisPacket, MaxLLHeaderSize, Length);
-        DisplayIPHeader(CharBuffer, Length);
-        exFreePool(CharBuffer);
-    } else {
-        CharBuffer = IPPacket->Header;
-        Length = IPPacket->ContigSize;
-        DisplayIPHeader(CharBuffer, Length);
-    }
+    CharBuffer = IPPacket->Header;
+    Length = IPPacket->ContigSize;
+    DisplayIPHeader(CharBuffer, Length);
 #endif
 }
 

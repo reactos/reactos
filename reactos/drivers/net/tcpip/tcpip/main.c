@@ -101,46 +101,6 @@ VOID TiWriteErrorLog(
 #endif
 }
 
-
-NTSTATUS TiGetProtocolNumber(
-  PUNICODE_STRING FileName,
-  PULONG Protocol)
-/*
- * FUNCTION: Returns the protocol number from a file name
- * ARGUMENTS:
- *     FileName = Pointer to string with file name
- *     Protocol = Pointer to buffer to put protocol number in
- * RETURNS:
- *     Status of operation
- */
-{
-  UNICODE_STRING us;
-  NTSTATUS Status;
-  ULONG Value;
-  PWSTR Name;
-
-  TI_DbgPrint(MAX_TRACE, ("Called. FileName (%wZ).\n", FileName));
-
-  Name = FileName->Buffer;
-
-  if (*Name++ != (WCHAR)L'\\')
-    return STATUS_UNSUCCESSFUL;
-
-  if (*Name == (WCHAR)NULL)
-    return STATUS_UNSUCCESSFUL;
-
-  RtlInitUnicodeString(&us, Name);
-
-  Status = RtlUnicodeStringToInteger(&us, 10, &Value);
-  if (!NT_SUCCESS(Status) || ((Value > 255)))
-    return STATUS_UNSUCCESSFUL;
-
-  *Protocol = Value;
-
-  return STATUS_SUCCESS;
-}
-
-
 /*
  * FUNCTION: Creates a file object
  * ARGUMENTS:
@@ -149,6 +109,7 @@ NTSTATUS TiGetProtocolNumber(
  * RETURNS:
  *     Status of the operation
  */
+
 NTSTATUS TiCreateFileObject(
   PDEVICE_OBJECT DeviceObject,
   PIRP Irp)
@@ -183,7 +144,6 @@ CP
     return STATUS_INSUFFICIENT_RESOURCES;
   }
 CP
-  Context->RefCount   = 1;
   Context->CancelIrps = FALSE;
   KeInitializeEvent(&Context->CleanupEvent, NotificationEvent, FALSE);
 CP
@@ -217,7 +177,7 @@ CP
 	  TI_DbgPrint(MIN_TRACE, ("AddressType: %\n", 
 				  Address->Address[0].AddressType));
       }
-      ExFreePool(Context);
+      PoolFreeBuffer(Context);
       return STATUS_INVALID_PARAMETER;
     }
 CP
@@ -234,12 +194,12 @@ CP
       Status = TiGetProtocolNumber(&IrpSp->FileObject->FileName, &Protocol);
       if (!NT_SUCCESS(Status)) {
         TI_DbgPrint(MIN_TRACE, ("Raw IP protocol number is invalid.\n"));
-        ExFreePool(Context);
+        PoolFreeBuffer(Context);
         return STATUS_INVALID_PARAMETER;
       }
     } else {
       TI_DbgPrint(MIN_TRACE, ("Invalid device object at (0x%X).\n", DeviceObject));
-      ExFreePool(Context);
+      PoolFreeBuffer(Context);
       return STATUS_INVALID_PARAMETER;
     }
 CP
@@ -261,7 +221,7 @@ CP
 
     if (EaInfo->EaValueLength < sizeof(PVOID)) {
       TI_DbgPrint(MIN_TRACE, ("Parameters are invalid.\n"));
-      ExFreePool(Context);
+      PoolFreeBuffer(Context);
       return STATUS_INVALID_PARAMETER;
     }
 
@@ -269,7 +229,7 @@ CP
 
     if (DeviceObject != TCPDeviceObject) {
       TI_DbgPrint(MIN_TRACE, ("Bad device object.\n"));
-      ExFreePool(Context);
+      PoolFreeBuffer(Context);
       return STATUS_INVALID_PARAMETER;
     }
 
@@ -292,7 +252,7 @@ CP
   }
 
   if (!NT_SUCCESS(Status))
-    ExFreePool(Context);
+    PoolFreeBuffer(Context);
 
   TI_DbgPrint(DEBUG_IRP, ("Leaving. Status = (0x%X).\n", Status));
 
@@ -322,14 +282,6 @@ VOID TiCleanupFileObjectComplete(
   Irp->IoStatus.Status = Status;
   
   IoAcquireCancelSpinLock(&OldIrql);
-
-  /* Remove the initial reference provided at object creation time */
-  TranContext->RefCount--;
-
-#ifdef DBG
-  if (TranContext->RefCount != 0)
-    TI_DbgPrint(DEBUG_REFCOUNT, ("TranContext->RefCount is %i, should be 0.\n", TranContext->RefCount));
-#endif
 
   KeSetEvent(&TranContext->CleanupEvent, 0, FALSE);
 
@@ -449,7 +401,7 @@ TiDispatchOpenClose(
   case IRP_MJ_CLOSE:
     Context = (PTRANSPORT_CONTEXT)IrpSp->FileObject->FsContext;
     if (Context)
-        ExFreePool(Context);
+        PoolFreeBuffer(Context);
     Status = STATUS_SUCCESS;
     break;
 
@@ -648,11 +600,11 @@ VOID STDCALL TiUnload(
 #ifdef DBG
   KIRQL OldIrql;
 
-  KeAcquireSpinLock(&AddressFileListLock, &OldIrql);
+  TcpipAcquireSpinLock(&AddressFileListLock, &OldIrql);
   if (!IsListEmpty(&AddressFileListHead)) {
     TI_DbgPrint(MIN_TRACE, ("Open address file objects exists.\n"));
   }
-  KeReleaseSpinLock(&AddressFileListLock, OldIrql);
+  TcpipReleaseSpinLock(&AddressFileListLock, OldIrql);
 #endif
   /* Cancel timer */
   KeCancelTimer(&IPTimer);
@@ -667,7 +619,6 @@ VOID STDCALL TiUnload(
   TCPShutdown();
   UDPShutdown();
   RawIPShutdown();
-  DGShutdown();
 
   /* Shutdown network level protocol subsystem */
   IPShutdown();
@@ -698,7 +649,7 @@ VOID STDCALL TiUnload(
     IoDeleteDevice(IPDeviceObject);
 
   if (EntityList)
-    ExFreePool(EntityList);
+    PoolFreeBuffer(EntityList);
 
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
@@ -847,7 +798,6 @@ DriverEntry(
   IPStartup(RegistryPath);
 
   /* Initialize transport level protocol subsystems */
-  DGStartup();
   RawIPStartup();
   UDPStartup();
   TCPStartup();

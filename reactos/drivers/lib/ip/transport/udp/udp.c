@@ -169,6 +169,10 @@ NTSTATUS BuildUDPPacket(
     return STATUS_SUCCESS;
 }
 
+VOID UDPSendPacketComplete
+( PVOID Context, PNDIS_PACKET Packet, NDIS_STATUS Status ) {
+    FreeNdisPacket( Packet );
+}
 
 NTSTATUS UDPSendDatagram(
     PADDRESS_FILE AddrFile,
@@ -191,6 +195,8 @@ NTSTATUS UDPSendDatagram(
     PTA_IP_ADDRESS RemoteAddressTa = (PTA_IP_ADDRESS)ConnInfo->RemoteAddress;
     IP_ADDRESS RemoteAddress;
     USHORT RemotePort;
+    NTSTATUS Status;
+    PROUTE_CACHE_NODE RCN;
 
     TI_DbgPrint(MID_TRACE,("Sending Datagram(%x %x %x %d)\n",
 			   AddrFile, ConnInfo, BufferData, DataSize));
@@ -208,19 +214,25 @@ NTSTATUS UDPSendDatagram(
 	return STATUS_UNSUCCESSFUL;
     }
     
-    BuildUDPPacket( &Packet,
-		    &RemoteAddress,
-		    RemotePort,
-		    AddrFile->ADE->Address,
-		    AddrFile->Port,
-		    BufferData,
-		    DataSize );
+    Status = BuildUDPPacket( &Packet,
+			     &RemoteAddress,
+			     RemotePort,
+			     AddrFile->ADE->Address,
+			     AddrFile->Port,
+			     BufferData,
+			     DataSize );
 
-    return DGSendDatagram(AddrFile,
-			  ConnInfo,
-			  Packet.Header,
-			  Packet.TotalSize,
-			  DataUsed);
+    if( !NT_SUCCESS(Status) ) 
+	return Status;
+
+    Status = RouteGetRouteToDestination( &RemoteAddress, NULL, &RCN );
+
+    if( !NT_SUCCESS(Status) )
+	return Status;
+
+    IPSendDatagram( &Packet, RCN, UDPSendPacketComplete, NULL );
+
+    return STATUS_SUCCESS;
 }
 
 
@@ -248,23 +260,78 @@ NTSTATUS UDPReceiveDatagram(
  *     This is the high level interface for receiving UDP datagrams
  */
 {
-  return DGReceiveDatagram(AddrFile,
-			   ConnInfo,
-                           BufferData,
-                           ReceiveLength,
-                           ReceiveFlags,
-                           ReturnInfo,
-                           BytesReceived);
+    KIRQL OldIrql;
+    NTSTATUS Status;
+    PDATAGRAM_RECEIVE_REQUEST ReceiveRequest;
+    
+    TI_DbgPrint(MAX_TRACE, ("Called.\n"));
+    
+    TcpipAcquireSpinLock(&AddrFile->Lock, &OldIrql);
+    
+    if (AF_IS_VALID(AddrFile))
+    {
+	ReceiveRequest = exAllocatePool(NonPagedPool, sizeof(DATAGRAM_RECEIVE_REQUEST));
+	if (ReceiveRequest)
+        {
+	    /* Initialize a receive request */
+	    
+	    /* Extract the remote address filter from the request (if any) */
+	    if (((ConnInfo->RemoteAddressLength != 0)) && (ConnInfo->RemoteAddress))
+            {
+		Status = AddrGetAddress(ConnInfo->RemoteAddress,
+					&ReceiveRequest->RemoteAddress,
+					&ReceiveRequest->RemotePort);
+		if (!NT_SUCCESS(Status))
+                {
+		    TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
+		    exFreePool(ReceiveRequest);
+		    return Status;
+                }
+            }
+	    else
+            {
+		ReceiveRequest->RemotePort    = 0;
+            }
+	    ReceiveRequest->ReturnInfo = ReturnInfo;
+	    ReceiveRequest->Buffer = BufferData;
+	    /* If ReceiveLength is 0, the whole buffer is available to us */
+	    ReceiveRequest->BufferSize = ReceiveLength;
+	    ReceiveRequest->Complete = NULL;
+	    ReceiveRequest->Context = NULL;
+	    
+	    /* Queue receive request */
+	    InsertTailList(&AddrFile->ReceiveQueue, &ReceiveRequest->ListEntry);
+	    AF_SET_PENDING(AddrFile, AFF_RECEIVE);
+	    
+	    TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
+	    
+	    TI_DbgPrint(MAX_TRACE, ("Leaving (pending).\n"));
+	    
+	    return STATUS_PENDING;
+        }
+	else
+        {
+	    Status = STATUS_INSUFFICIENT_RESOURCES;
+        }
+    }
+    else
+    {
+	Status = STATUS_INVALID_ADDRESS;
+    }
+    
+    TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
+    
+    TI_DbgPrint(MAX_TRACE, ("Leaving with errors (0x%X).\n", Status));
+    
+    return Status;
 }
 
 
-VOID UDPReceive(
-   PNET_TABLE_ENTRY NTE,
-   PIP_PACKET IPPacket)
+VOID UDPReceive(PNET_TABLE_ENTRY NTE, PIP_PACKET IPPacket)
 /*
-* FUNCTION: Receives and queues a UDP datagram
-* ARGUMENTS:
-*     NTE      = Pointer to net table entry which the packet was received on
+ * FUNCTION: Receives and queues a UDP datagram
+ * ARGUMENTS:
+ *     NTE      = Pointer to net table entry which the packet was received on
 *     IPPacket = Pointer to an IP packet that was received
 * NOTES:
 *     This is the low level interface for receiving UDP datagrams. It strips

@@ -17,7 +17,6 @@
 
 #include "precomp.h"
 
-
 #if 0
 #include <sys/param.h>
 #include <sys/kernel.h>
@@ -101,6 +100,11 @@ POSK_IFADDR TCPFindInterface( void *ClientData,
 			       NCE, NCE->Interface));
 	return NULL;
     }
+
+    TI_DbgPrint(MID_TRACE,("NCE: %x\n", NCE));
+    TI_DbgPrint(MID_TRACE,("NCE->Interface: %x\n", NCE->Interface));
+    TI_DbgPrint(MID_TRACE,("NCE->Interface->TCPContext: %x\n", 
+			   NCE->Interface->TCPContext));
 
     addr_in = (struct sockaddr_in *)
 	((POSK_IFADDR)NCE->Interface->TCPContext)->ifa_addr;

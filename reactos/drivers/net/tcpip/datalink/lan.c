@@ -180,13 +180,8 @@ VOID STDCALL ProtocolSendComplete(
  *     Status         = Status of the operation
  */
 {
-    PLAN_ADAPTER Adapter = (PLAN_ADAPTER)BindingContext;
-
-    TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
-
-    AdjustPacket(Packet, Adapter->HeaderSize, PC(Packet)->DLOffset);
     TI_DbgPrint(DEBUG_DATALINK, ("Calling completion routine\n"));
-    (*PC(Packet)->DLComplete)(Adapter->Context, Packet, Status);
+    (*PC(Packet)->DLComplete)( PC(Packet)->Context, Packet, Status);
     TI_DbgPrint(DEBUG_DATALINK, ("Finished\n"));
 }
 
@@ -225,7 +220,10 @@ VOID STDCALL LanReceiveWorker( PVOID Context ) {
         /* Determine which upper layer protocol that should receive
            this packet and pass it to the correct receive handler */
 
-        OskitDumpBuffer( IPPacket.Header, BytesTransferred );
+	TI_DbgPrint(MID_TRACE,
+		    ("ContigSize: %d, TotalSize: %d, BytesTransferred: %d\n",
+		     IPPacket.ContigSize, IPPacket.TotalSize,
+		     BytesTransferred));
 
         PacketType = ((PETH_HEADER)IPPacket.Header)->EType;
 	IPPacket.Header = ((PCHAR)IPPacket.Header) + sizeof(ETH_HEADER);
@@ -279,7 +277,7 @@ VOID STDCALL ProtocolTransferDataComplete(
     WQItem = ExAllocatePool( NonPagedPool, sizeof(LAN_WQ_ITEM) );
     if( !WQItem ) return;
 
-    KeAcquireSpinLockAtDpcLevel( &LanWorkLock );
+    TcpipAcquireSpinLockAtDpcLevel( &LanWorkLock );
     WorkStart = IsListEmpty( &LanWorkList );
     WQItem->Packet = Packet;
     WQItem->Adapter = Adapter;
@@ -287,7 +285,7 @@ VOID STDCALL ProtocolTransferDataComplete(
     InsertTailList( &LanWorkList, &WQItem->ListEntry );
     if( WorkStart )
 	ExQueueWorkItem( &LanWorkItem, CriticalWorkQueue );
-    KeReleaseSpinLockFromDpcLevel( &LanWorkLock );
+    TcpipReleaseSpinLockFromDpcLevel( &LanWorkLock );
 }
 
 NDIS_STATUS STDCALL ProtocolReceive(
@@ -314,6 +312,7 @@ NDIS_STATUS STDCALL ProtocolReceive(
 {
     USHORT EType;
     UINT PacketType, BytesTransferred;
+    UINT temp;
     IP_PACKET IPPacket;
     PCHAR BufferData;
     NDIS_STATUS NdisStatus;
@@ -354,32 +353,37 @@ NDIS_STATUS STDCALL ProtocolReceive(
 
     /* Get a transfer data packet */
 
-    KeAcquireSpinLockAtDpcLevel(&Adapter->Lock);
+    TI_DbgPrint(DEBUG_DATALINK, ("Adapter: %x (MTU %d)\n", 
+				 Adapter, Adapter->MTU));
+
+    //TcpipAcquireSpinLockAtDpcLevel(&Adapter->Lock);
     NdisStatus = AllocatePacketWithBuffer( &NdisPacket, NULL, Adapter->MTU );
     if( NdisStatus != NDIS_STATUS_SUCCESS ) {
-	KeReleaseSpinLockFromDpcLevel(&Adapter->Lock);
+	//TcpipReleaseSpinLockFromDpcLevel(&Adapter->Lock);
 	return NDIS_STATUS_NOT_ACCEPTED;
     }
 
     TI_DbgPrint(DEBUG_DATALINK, ("pretransfer LookaheadBufferSize %d packsize %d\n",LookaheadBufferSize,PacketSize));
-	{
-		UINT temp;
-		temp = PacketSize;
+
     GetDataPtr( NdisPacket, 0, &BufferData, &temp );
-	}
 
     IPPacket.NdisPacket = NdisPacket;
     IPPacket.Position = 0;
 	
     if ((LookaheadBufferSize + HeaderBufferSize) < PacketSize)
     {
-        TI_DbgPrint(DEBUG_DATALINK, ("pretransfer LookaheadBufferSize %d packsize %d\n",LookaheadBufferSize,PacketSize));
+        TI_DbgPrint(DEBUG_DATALINK, ("pretransfer LookaheadBufferSize %d packsize %d bufferdata %x\n",LookaheadBufferSize,PacketSize, BufferData));
         /* Get the data */
+
+	*BufferData = 0;
+
+	TI_DbgPrint(DEBUG_DATALINK, ("Poked the buffer\n"));
+
         NdisTransferData(&NdisStatus,
                          Adapter->NdisHandle,
                          MacReceiveContext,
                          0,
-                         PacketSize + HeaderBufferSize,
+                         PacketSize,
                          NdisPacket,
                          &BytesTransferred);
     } else {
@@ -395,7 +399,7 @@ NDIS_STATUS STDCALL ProtocolReceive(
     TI_DbgPrint(DEBUG_DATALINK, ("Calling complete\n"));
 
     /* Release the packet descriptor */
-    KeReleaseSpinLockFromDpcLevel(&Adapter->Lock);
+    //TcpipReleaseSpinLockFromDpcLevel(&Adapter->Lock);
 
     if (NdisStatus != NDIS_STATUS_PENDING)
 	ProtocolTransferDataComplete(BindingContext,
@@ -492,19 +496,28 @@ VOID LANTransmit(
 {
     NDIS_STATUS NdisStatus;
     PETH_HEADER EHeader;
-    PVOID Data;
+    PCHAR Data;
+    UINT Size;
     KIRQL OldIrql;
     PLAN_ADAPTER Adapter = (PLAN_ADAPTER)Context;
 
-    TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
+    TI_DbgPrint(DEBUG_DATALINK, 
+		("Called( NdisPacket %x, Offset %d, Adapter %x )\n",
+		 NdisPacket, Offset, Adapter));
 
-    /* NDIS send routines don't have an offset argument so we
-       must offset the data in upper layers and adjust the
-       packet here. We save the offset in the packet context
-       area so it can be undone before we release the packet */
-    Data = AdjustPacket(NdisPacket, Offset, Adapter->HeaderSize);
-    PC(NdisPacket)->DLOffset = Offset;
-	
+    TI_DbgPrint(DEBUG_DATALINK,
+		("Adapter Address [%02x %02x %02x %02x %02x %02x]\n",
+		 Adapter->HWAddress[0] & 0xff,
+		 Adapter->HWAddress[1] & 0xff,
+		 Adapter->HWAddress[2] & 0xff,
+		 Adapter->HWAddress[3] & 0xff,
+		 Adapter->HWAddress[4] & 0xff,
+		 Adapter->HWAddress[5] & 0xff));
+
+    /* XXX arty -- Handled adjustment in a saner way than before ... 
+     * not needed immediately */
+    GetDataPtr( NdisPacket, 0, &Data, &Size );
+
     if (Adapter->State == LAN_STATE_STARTED) {
         switch (Adapter->Media) {
         case NdisMedium802_3:
@@ -548,9 +561,26 @@ VOID LANTransmit(
             break;
         }
 
-	KeAcquireSpinLock( &Adapter->Lock, &OldIrql );
+	TI_DbgPrint( MID_TRACE, ("LinkAddress: %x\n", LinkAddress));
+	if( LinkAddress ) {
+	    TI_DbgPrint
+		( MID_TRACE, 
+		  ("Link Address [%02x %02x %02x %02x %02x %02x]\n", 
+		   ((PCHAR)LinkAddress)[0] & 0xff,
+		   ((PCHAR)LinkAddress)[1] & 0xff,
+		   ((PCHAR)LinkAddress)[2] & 0xff,
+		   ((PCHAR)LinkAddress)[3] & 0xff,
+		   ((PCHAR)LinkAddress)[4] & 0xff,
+		   ((PCHAR)LinkAddress)[5] & 0xff));
+	}
+
+	OskitDumpBuffer( Data, Size );
+
+	TcpipAcquireSpinLock( &Adapter->Lock, &OldIrql );
+	TI_DbgPrint(MID_TRACE, ("NdisSend\n"));
         NdisSend(&NdisStatus, Adapter->NdisHandle, NdisPacket);
-	KeReleaseSpinLock( &Adapter->Lock, OldIrql );
+	TI_DbgPrint(MID_TRACE, ("NdisSend Done\n"));
+	TcpipReleaseSpinLock( &Adapter->Lock, OldIrql );
 
         if (NdisStatus != NDIS_STATUS_PENDING)
             ProtocolSendComplete((NDIS_HANDLE)Context, NdisPacket, NdisStatus);
@@ -727,10 +757,6 @@ VOID BindAdapter(
     }
 
     Netmask->Free(Netmask);
-
-    /* Reference the interface for the NTE. The reference
-       for the address is just passed on to the NTE */
-    ReferenceObject(IF);
 
     /* Register interface with IP layer */
     IPRegisterInterface(IF);
@@ -957,15 +983,15 @@ NDIS_STATUS LANUnregisterAdapter(
     /* Unbind adapter from IP layer */
     UnbindAdapter(Adapter);
 
-    KeAcquireSpinLock(&Adapter->Lock, &OldIrql);
+    TcpipAcquireSpinLock(&Adapter->Lock, &OldIrql);
     NdisHandle = Adapter->NdisHandle;
     if (NdisHandle) {
         Adapter->NdisHandle = NULL;
-        KeReleaseSpinLock(&Adapter->Lock, OldIrql);
+        TcpipReleaseSpinLock(&Adapter->Lock, OldIrql);
 
         NdisCloseAdapter(&NdisStatus, NdisHandle);
         if (NdisStatus == NDIS_STATUS_PENDING) {
-            KeWaitForSingleObject(&Adapter->Event,
+            TcpipWaitForSingleObject(&Adapter->Event,
                                   UserRequest,
                                   KernelMode,
                                   FALSE,
@@ -973,7 +999,7 @@ NDIS_STATUS LANUnregisterAdapter(
             NdisStatus = Adapter->NdisStatus;
         }
     } else
-        KeReleaseSpinLock(&Adapter->Lock, OldIrql);
+        TcpipReleaseSpinLock(&Adapter->Lock, OldIrql);
 
     FreeAdapter(Adapter);
 
@@ -1051,7 +1077,7 @@ VOID LANUnregisterProtocol(
         PLAN_ADAPTER Current;
         KIRQL OldIrql;
 
-        KeAcquireSpinLock(&AdapterListLock, &OldIrql);
+        TcpipAcquireSpinLock(&AdapterListLock, &OldIrql);
 
         /* Search the list and remove every adapter we find */
         CurrentEntry = AdapterListHead.Flink;
@@ -1063,7 +1089,7 @@ VOID LANUnregisterProtocol(
             CurrentEntry = NextEntry;
         }
 
-        KeReleaseSpinLock(&AdapterListLock, OldIrql);
+        TcpipReleaseSpinLock(&AdapterListLock, OldIrql);
 
         NdisDeregisterProtocol(&NdisStatus, NdisProtocolHandle);
         ProtocolRegistered = FALSE;
@@ -1080,14 +1106,14 @@ VOID LANShutdown() {
     PLAN_WQ_ITEM WorkItem;
     PLIST_ENTRY ListEntry;
 
-    KeAcquireSpinLock( &LanWorkLock, &OldIrql );
+    TcpipAcquireSpinLock( &LanWorkLock, &OldIrql );
     while( !IsListEmpty( &LanWorkList ) ) {
 	ListEntry = RemoveHeadList( &LanWorkList );
 	WorkItem = CONTAINING_RECORD(ListEntry, LAN_WQ_ITEM, ListEntry);
 	FreeNdisPacket( WorkItem->Packet );
 	ExFreePool( WorkItem );
     }
-    KeReleaseSpinLock( &LanWorkLock, OldIrql );
+    TcpipReleaseSpinLock( &LanWorkLock, OldIrql );
 }
 
 /* EOF */

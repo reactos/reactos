@@ -1,6 +1,10 @@
 #ifndef OSKITTCP_H
 #define OSKITTCP_H
 
+#ifdef linux
+#include <netinet/in.h>
+#endif
+
 #ifndef _MSC_VER
 #include <roscfg.h>
 #endif/*_MSC_VER*/

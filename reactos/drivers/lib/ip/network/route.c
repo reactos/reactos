@@ -116,13 +116,6 @@ VOID RemoveAboveExternal(VOID)
         RouteCache      = Sibling;
         Sibling->Parent = NULL;
     }
-
-    DereferenceObject(Parent);
-
-#if 0
-    TI_DbgPrint(MIN_TRACE, ("Displaying tree (after).\n"));
-    PrintTree(RouteCache);
-#endif
 }
 
 
@@ -294,10 +287,6 @@ VOID RemoveRouteToDestination(
 #endif
     }
     
-    /* Dereference NTE and NCE */
-    DereferenceObject(RCN->NTE);
-    DereferenceObject(RCN->NCE);
-
     ExternalRCN->Parent = RemNode->Parent;
 
     RemoveAboveExternal();
@@ -378,20 +367,6 @@ VOID RemoveSubtree(
 
         /* Traverse right subtree */
         RemoveSubtree(Node->Right);
-
-        /* Finally remove the node itself */
-
-        /* It's an internal node, so dereference NTE and NCE */
-        DereferenceObject(Node->NTE);
-        DereferenceObject(Node->NCE);
-
-#ifdef DBG
-        if (Node->RefCount != 1)
-            TI_DbgPrint(MIN_TRACE, ("RCN at (0x%X) has (%d) references (should be 1).\n", Node, Node->RefCount));
-#endif
-
-        /* Remove reference for being alive */
-        DereferenceObject(Node);
     }
 }
 
@@ -453,7 +428,7 @@ NTSTATUS RouteShutdown(
 
     TI_DbgPrint(DEBUG_RCACHE, ("Called.\n"));
 
-    KeAcquireSpinLock(&RouteCacheLock, &OldIrql);
+    TcpipAcquireSpinLock(&RouteCacheLock, &OldIrql);
 #if 0
     TI_DbgPrint(MIN_TRACE, ("Displaying tree.\n"));
     PrintTree(RouteCache);
@@ -463,7 +438,7 @@ NTSTATUS RouteShutdown(
 
     FreeRCN(ExternalRCN);
 
-    KeReleaseSpinLock(&RouteCacheLock, OldIrql);
+    TcpipReleaseSpinLock(&RouteCacheLock, OldIrql);
 
     ExDeleteNPagedLookasideList(&IPRCNList);
 
@@ -500,7 +475,7 @@ UINT RouteGetRouteToDestination(
     TI_DbgPrint(DEBUG_RCACHE, ("Destination (%s)  NTE (%s).\n",
 			       A2S(Destination), NTE ? A2S(NTE->Address) : ""));
 
-    KeAcquireSpinLock(&RouteCacheLock, &OldIrql);
+    TcpipAcquireSpinLock(&RouteCacheLock, &OldIrql);
 
 #if 0
     TI_DbgPrint(MIN_TRACE, ("Displaying tree (before).\n"));
@@ -519,17 +494,15 @@ UINT RouteGetRouteToDestination(
                 NTE = RouterFindBestNTE(Interface, Destination);
                 if (!NTE) {
                     /* We cannot get to the specified destination. Return error */
-                    KeReleaseSpinLock(&RouteCacheLock, OldIrql);
+                    TcpipReleaseSpinLock(&RouteCacheLock, OldIrql);
                     return IP_NO_ROUTE_TO_DESTINATION;
                 }
-            } else
-                ReferenceObject(NTE);
+            }
 
             /* The destination address is on-link. Check our neighbor cache */
             NCE = NBFindOrCreateNeighbor(Interface, Destination);
             if (!NCE) {
-                DereferenceObject(NTE);
-                KeReleaseSpinLock(&RouteCacheLock, OldIrql);
+                TcpipReleaseSpinLock(&RouteCacheLock, OldIrql);
                 return IP_NO_RESOURCES;
             }
         } else {
@@ -537,7 +510,7 @@ UINT RouteGetRouteToDestination(
             NCE = RouterGetRoute(Destination, NTE);
             if (!NCE) {
                 /* We cannot get to the specified destination. Return error */
-                KeReleaseSpinLock(&RouteCacheLock, OldIrql);
+                TcpipReleaseSpinLock(&RouteCacheLock, OldIrql);
                 return IP_NO_ROUTE_TO_DESTINATION;
             }
         }
@@ -549,13 +522,10 @@ UINT RouteGetRouteToDestination(
         } else
             RCN2 = ExpandExternalRCN();
         if (!RCN2) {
-            DereferenceObject(NTE);
-            DereferenceObject(NCE);
-            KeReleaseSpinLock(&RouteCacheLock, OldIrql);
+            TcpipReleaseSpinLock(&RouteCacheLock, OldIrql);
             return IP_NO_RESOURCES;
         }
 
-        RCN2->RefCount    = 1;
         RCN2->State       = RCN_STATE_COMPUTED;
         RCN2->NTE         = NTE;
         RtlCopyMemory(&RCN2->Destination, Destination, sizeof(IP_ADDRESS));
@@ -568,17 +538,10 @@ UINT RouteGetRouteToDestination(
            reference them here */
     }
 
-    /* Reference the RCN for the user */
-    ReferenceObject(RCN2);
-
-#if 0
-    TI_DbgPrint(MIN_TRACE, ("Displaying tree (after).\n"));
-    PrintTree(RouteCache);
-#endif
-
-    KeReleaseSpinLock(&RouteCacheLock, OldIrql);
+    TcpipReleaseSpinLock(&RouteCacheLock, OldIrql);
 
     *RCN = RCN2;
+    TI_DbgPrint(MID_TRACE,("RCN->PathMTU: %d\n", RCN2->PathMTU));
 
     return IP_SUCCESS;
 }
@@ -612,7 +575,7 @@ PROUTE_CACHE_NODE RouteAddRouteToDestination(
 			       A2S(NTE->Address), 
 			       A2S(&NCE->Address)));
 
-    KeAcquireSpinLock(&RouteCacheLock, &OldIrql);
+    TcpipAcquireSpinLock(&RouteCacheLock, &OldIrql);
 
     /* Locate an external RCN we can expand */
     RCN = RouteCache;
@@ -635,7 +598,7 @@ PROUTE_CACHE_NODE RouteAddRouteToDestination(
     } else
         RCN = ExpandExternalRCN();
     if (!RCN) {
-        KeReleaseSpinLock(&RouteCacheLock, OldIrql);
+        TcpipReleaseSpinLock(&RouteCacheLock, OldIrql);
         return NULL;
     }
 
@@ -644,24 +607,13 @@ PROUTE_CACHE_NODE RouteAddRouteToDestination(
     INIT_TAG(RCN, TAG('R','C','N',' '));
 
     /* Reference once for beeing alive */
-    RCN->RefCount    = 1;
     RCN->State       = RCN_STATE_PERMANENT;
     RCN->NTE         = NTE;
     RtlCopyMemory(&RCN->Destination, Destination, sizeof(IP_ADDRESS));
     RCN->PathMTU     = IF->MTU;
     RCN->NCE         = NCE;
 
-    KeReleaseSpinLock(&RouteCacheLock, OldIrql);
-
-    /* The route cache node references the NTE and the NCE */
-    ReferenceObject(NTE);
-    if (NCE)
-        ReferenceObject(NCE);
-
-#if 0
-    TI_DbgPrint(MIN_TRACE, ("Displaying tree.\n"));
-    PrintTree(RouteCache);
-#endif
+    TcpipReleaseSpinLock(&RouteCacheLock, OldIrql);
 
     return RCN;
 }
@@ -679,11 +631,11 @@ VOID RouteRemoveRouteToDestination(
  
     TI_DbgPrint(DEBUG_RCACHE, ("Called. RCN (0x%X).\n", RCN));
 
-    KeAcquireSpinLock(&RouteCacheLock, &OldIrql);
+    TcpipAcquireSpinLock(&RouteCacheLock, &OldIrql);
 
     RemoveRouteToDestination(RCN);
 
-    KeReleaseSpinLock(&RouteCacheLock, OldIrql);
+    TcpipReleaseSpinLock(&RouteCacheLock, OldIrql);
 }
 
 
@@ -699,9 +651,9 @@ VOID RouteInvalidateNTE(
  
     TI_DbgPrint(DEBUG_RCACHE, ("Called. NTE (0x%X).\n", NTE));
 
-    KeAcquireSpinLock(&RouteCacheLock, &OldIrql);
+    TcpipAcquireSpinLock(&RouteCacheLock, &OldIrql);
     InvalidateNTEOnSubtree(NTE, RouteCache);
-    KeReleaseSpinLock(&RouteCacheLock, OldIrql);
+    TcpipReleaseSpinLock(&RouteCacheLock, OldIrql);
 }
 
 
@@ -717,9 +669,9 @@ VOID RouteInvalidateNCE(
  
     TI_DbgPrint(DEBUG_RCACHE, ("Called. NCE (0x%X).\n", NCE));
 
-    KeAcquireSpinLock(&RouteCacheLock, &OldIrql);
+    TcpipAcquireSpinLock(&RouteCacheLock, &OldIrql);
     InvalidateNCEOnSubtree(NCE, RouteCache);
-    KeReleaseSpinLock(&RouteCacheLock, OldIrql);
+    TcpipReleaseSpinLock(&RouteCacheLock, OldIrql);
 }
 
 NTSTATUS
@@ -728,9 +680,9 @@ RouteFriendlyAddRoute( PIPROUTE_ENTRY ire ) {
     
 
     /* Find IF */
-    KeAcquireSpinLock(&InterfaceListLock, &OldIrql);
+    TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
     //RouteAddRouteToDestination(&Dest,Nte,If,Nce);
-    KeReleaseSpinLock(&InterfaceListLock, OldIrql);
+    TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
 
     return STATUS_SUCCESS;
 }

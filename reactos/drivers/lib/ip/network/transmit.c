@@ -10,6 +10,66 @@
 
 #include "precomp.h"
 
+BOOLEAN PrepareNextFragment(PIPFRAGMENT_CONTEXT IFC);
+NTSTATUS IPSendFragment(PNDIS_PACKET NdisPacket,
+			PNEIGHBOR_CACHE_ENTRY NCE,
+			PIPFRAGMENT_CONTEXT IFC);
+
+VOID IPSendComplete
+(PVOID Context, PNDIS_PACKET NdisPacket, NDIS_STATUS NdisStatus)
+/*
+ * FUNCTION: IP datagram fragment send completion handler
+ * ARGUMENTS:
+ *     Context    = Pointer to context information (IP_INTERFACE)
+ *     Packet     = Pointer to NDIS packet that was sent
+ *     NdisStatus = NDIS status of operation
+ * NOTES:
+ *    This routine is called when an IP datagram fragment has been sent
+ */
+{
+    PIPFRAGMENT_CONTEXT IFC = (PIPFRAGMENT_CONTEXT)Context;
+    
+    TI_DbgPrint
+	(MAX_TRACE, 
+	 ("Called. Context (0x%X)  NdisPacket (0x%X)  NdisStatus (0x%X)\n",
+	  Context, NdisPacket, NdisStatus));
+
+    /* FIXME: Stop sending fragments and cleanup datagram buffers if
+       there was an error */
+
+    if (PrepareNextFragment(IFC)) {
+	/* A fragment was prepared for transmission, so send it */
+	IPSendFragment(IFC->NdisPacket, IFC->NCE, IFC);
+    } else {
+	TI_DbgPrint(MAX_TRACE, ("Calling completion handler.\n"));
+	
+	/* There are no more fragments to transmit, so call completion handler */
+	FreeNdisPacket(IFC->NdisPacket);
+	IFC->Complete(IFC->Context, IFC->Datagram, NdisStatus);
+	exFreePool(IFC);
+    }
+}
+
+NTSTATUS IPSendFragment(
+    PNDIS_PACKET NdisPacket,
+    PNEIGHBOR_CACHE_ENTRY NCE,
+    PIPFRAGMENT_CONTEXT IFC)
+/*
+ * FUNCTION: Sends an IP datagram fragment to a neighbor
+ * ARGUMENTS:
+ *     NdisPacket = Pointer to an NDIS packet containing fragment
+ *     NCE        = Pointer to NCE for first hop to destination
+ * RETURNS:
+ *     Status of operation
+ * NOTES:
+ *     Lowest level IP send routine
+ */
+{
+    TI_DbgPrint(MAX_TRACE, ("Called. NdisPacket (0x%X)  NCE (0x%X).\n", NdisPacket, NCE));
+
+    TI_DbgPrint(MAX_TRACE, ("NCE->State = %d.\n", NCE->State));
+    return NBQueuePacket(NCE, NdisPacket, IPSendComplete, IFC);
+}
 
 BOOLEAN PrepareNextFragment(
     PIPFRAGMENT_CONTEXT IFC)
@@ -45,7 +105,10 @@ BOOLEAN PrepareNextFragment(
             MoreFragments = FALSE;
         }
 
-        RtlCopyMemory(IFC->Data, IFC->DatagramData, DataSize);
+	TI_DbgPrint(MID_TRACE,("Copying data from %x to %x (%d)\n", 
+			       IFC->DatagramData, IFC->Data, DataSize));
+
+        RtlCopyMemory(IFC->Data, IFC->DatagramData, DataSize); // SAFE
 
         FragOfs = (USHORT)IFC->Position; // Swap?
         if (MoreFragments)
@@ -75,11 +138,12 @@ BOOLEAN PrepareNextFragment(
     }
 }
 
-
 NTSTATUS SendFragments(
     PIP_PACKET IPPacket,
     PNEIGHBOR_CACHE_ENTRY NCE,
-    UINT PathMTU)
+    UINT PathMTU,
+    PIP_TRANSMIT_COMPLETE Complete,
+    PVOID Context)
 /*
  * FUNCTION: Fragments and sends the first fragment of an IP datagram
  * ARGUMENTS:
@@ -95,182 +159,61 @@ NTSTATUS SendFragments(
     PIPFRAGMENT_CONTEXT IFC;
     NDIS_STATUS NdisStatus;
     PVOID Data;
+    UINT BufferSize = MaxLLHeaderSize + PathMTU, InSize;
+    PCHAR InData;
 
     TI_DbgPrint(MAX_TRACE, ("Called. IPPacket (0x%X)  NCE (0x%X)  PathMTU (%d).\n",
         IPPacket, NCE, PathMTU));
 
+    /* Make a smaller buffer if we will only send one fragment */
+    GetDataPtr( IPPacket->NdisPacket, 0, &InData, &InSize );
+    if( InSize < BufferSize ) BufferSize = InSize;
+
+    TI_DbgPrint(MAX_TRACE, ("Fragment buffer is %d bytes\n", BufferSize));
+			    
     IFC = exAllocatePool(NonPagedPool, sizeof(IPFRAGMENT_CONTEXT));
     if (IFC == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    /* We allocate a buffer for a PathMTU sized packet and reuse
-       it for all fragments */
-    Data = exAllocatePool(NonPagedPool, MaxLLHeaderSize + PathMTU);
-    if (Data == NULL) {
-        exFreePool(IFC);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
     /* Allocate NDIS packet */
     NdisStatus = AllocatePacketWithBuffer
-	( &IFC->NdisPacket, Data, MaxLLHeaderSize + PathMTU );
+	( &IFC->NdisPacket, NULL, BufferSize );
 
-    /* Link NDIS buffer into packet */
-    NdisChainBufferAtFront(IFC->NdisPacket, IFC->NdisBuffer);
+    if( !NT_SUCCESS(NdisStatus) ) {
+	exFreePool( IFC );
+	return NdisStatus;
+    }
 
-    IFC->Header       = (PVOID)((ULONG_PTR)Data + MaxLLHeaderSize);
+    GetDataPtr( IFC->NdisPacket, 0, (PCHAR *)&Data, &InSize );
+
+    IFC->Header       = ((PCHAR)Data) + MaxLLHeaderSize;
     IFC->Datagram     = IPPacket->NdisPacket;
-    IFC->DatagramData = IPPacket->Header;
+    IFC->DatagramData = ((PCHAR)IPPacket->Header) + IPPacket->HeaderSize;
     IFC->HeaderSize   = IPPacket->HeaderSize;
     IFC->PathMTU      = PathMTU;
     IFC->NCE          = NCE;
     IFC->Position     = 0;
     IFC->BytesLeft    = IPPacket->TotalSize - IPPacket->HeaderSize;
     IFC->Data         = (PVOID)((ULONG_PTR)IFC->Header + IPPacket->HeaderSize);
+    IFC->Complete     = Complete;
+    IFC->Context      = Context;
 
-    PC(IFC->NdisPacket)->DLComplete = IPSendComplete;
-    /* Set upper layer completion function to NULL to indicate that
-       this packet is an IP datagram fragment and thus we should
-       check for more fragments to send. If this is NULL the
-       Context field is a pointer to an IPFRAGMENT_CONTEXT structure */
-    PC(IFC->NdisPacket)->Complete = NULL;
-    PC(IFC->NdisPacket)->Context  = IFC;
+    TI_DbgPrint(MID_TRACE,("Copying header from %x to %x (%d)\n", 
+			   IPPacket->Header, IFC->Header, 
+			   IPPacket->HeaderSize));
 
-    /* Copy IP datagram header to fragment buffer */
-    RtlCopyMemory(IFC->Header, IPPacket->Header, IPPacket->HeaderSize);
+    RtlCopyMemory( IFC->Header, IPPacket->Header, IPPacket->HeaderSize );
 
     /* Prepare next fragment for transmission and send it */
 
     PrepareNextFragment(IFC);
-
-    IPSendFragment(IFC->NdisPacket, NCE);
-
-    return STATUS_SUCCESS;
-}
-
-
-VOID IPSendComplete(
-    PVOID Context,
-    PNDIS_PACKET NdisPacket,
-    NDIS_STATUS NdisStatus)
-/*
- * FUNCTION: IP datagram fragment send completion handler
- * ARGUMENTS:
- *     Context    = Pointer to context information (IP_INTERFACE)
- *     Packet     = Pointer to NDIS packet that was sent
- *     NdisStatus = NDIS status of operation
- * NOTES:
- *    This routine is called when an IP datagram fragment has been sent
- */
-{
-    TI_DbgPrint(MAX_TRACE, ("Called. Context (0x%X)  NdisPacket (0x%X)  NdisStatus (0x%X)\n",
-        Context, NdisPacket, NdisStatus));
-
-    /* FIXME: Stop sending fragments and cleanup datagram buffers if
-       there was an error */
-
-    if (PC(NdisPacket) && PC(NdisPacket)->Complete)
-        /* This datagram was only one fragment long so call completion handler now */
-        (*PC(NdisPacket)->Complete)(PC(NdisPacket)->Context, NdisPacket, NdisStatus);
-    else {
-        /* This was one of many fragments of an IP datagram. Prepare
-           next fragment and send it or if there are no more fragments,
-           call upper layer completion routine */
-
-        PIPFRAGMENT_CONTEXT IFC = (PIPFRAGMENT_CONTEXT)PC(NdisPacket)->Context;
-
-        if (PrepareNextFragment(IFC)) {
-            /* A fragment was prepared for transmission, so send it */
-            IPSendFragment(IFC->NdisPacket, IFC->NCE);
-        } else {
-            TI_DbgPrint(MAX_TRACE, ("Calling completion handler.\n"));
-
-            /* There are no more fragments to transmit, so call completion handler */
-            NdisPacket = IFC->Datagram;
-            FreeNdisPacket(IFC->NdisPacket);
-            exFreePool(IFC);
-            (*PC(NdisPacket)->Complete)
-		(PC(NdisPacket)->Context, 
-		 NdisPacket, 
-		 NdisStatus);
-        }
-    }
-}
-
-
-NTSTATUS IPSendFragment(
-    PNDIS_PACKET NdisPacket,
-    PNEIGHBOR_CACHE_ENTRY NCE)
-/*
- * FUNCTION: Sends an IP datagram fragment to a neighbor
- * ARGUMENTS:
- *     NdisPacket = Pointer to an NDIS packet containing fragment
- *     NCE        = Pointer to NCE for first hop to destination
- * RETURNS:
- *     Status of operation
- * NOTES:
- *     Lowest level IP send routine
- */
-{
-    TI_DbgPrint(MAX_TRACE, ("Called. NdisPacket (0x%X)  NCE (0x%X).\n", NdisPacket, NCE));
-
-    TI_DbgPrint(MAX_TRACE, ("NCE->State = %d.\n", NCE->State));
-
-    PC(NdisPacket)->DLComplete = IPSendComplete;
-
-    switch (NCE->State) {
-    case NUD_PERMANENT:
-        /* Neighbor is always valid */
-        break;
-
-    case NUD_REACHABLE:
-        /* Neighbor is reachable */
-        
-        /* FIXME: Set reachable timer */
-
-        break;
-
-    case NUD_STALE:
-        /* Enter delay state and send packet */
-
-        /* FIXME: Enter delay state */
-
-        break;
-
-    case NUD_DELAY:
-    case NUD_PROBE:
-        /* In these states we send the packet and hope the neighbor
-           hasn't changed hardware address */
-        break;
-
-    case NUD_INCOMPLETE:
-        TI_DbgPrint(MAX_TRACE, ("Queueing packet.\n"));
-
-        /* We don't know the hardware address of the first hop to
-           the destination. Queue the packet on the NCE and return */
-        NBQueuePacket(NCE, NdisPacket);
-
-        return STATUS_SUCCESS;
-    default:
-        /* Should not happen */
-        TI_DbgPrint(MIN_TRACE, ("Unknown NCE state.\n"));
-
-        return STATUS_SUCCESS;
-    }
-
-    (*NCE->Interface->Transmit)(NCE->Interface->Context,
-                                NdisPacket,
-                                MaxLLHeaderSize,
-                                NCE->LinkAddress,
-                                LAN_PROTO_IPv4);
+    IPSendFragment(IFC->NdisPacket, NCE, IFC);
 
     return STATUS_SUCCESS;
 }
 
-
-NTSTATUS IPSendDatagram(
-    PIP_PACKET IPPacket,
-    PROUTE_CACHE_NODE RCN)
+NTSTATUS IPSendDatagram(PIP_PACKET IPPacket, PROUTE_CACHE_NODE RCN,
+			PIP_TRANSMIT_COMPLETE Complete, PVOID Context)
 /*
  * FUNCTION: Sends an IP datagram to a remote address
  * ARGUMENTS:
@@ -285,7 +228,6 @@ NTSTATUS IPSendDatagram(
  */
 {
     PNEIGHBOR_CACHE_ENTRY NCE;
-    UINT PathMTU;
 
     TI_DbgPrint(MAX_TRACE, ("Called. IPPacket (0x%X)  RCN (0x%X)\n", IPPacket, RCN));
 
@@ -294,40 +236,26 @@ NTSTATUS IPSendDatagram(
 
     NCE = RCN->NCE;
 
-#ifdef DBG
-    if (!NCE) {
-        TI_DbgPrint(MIN_TRACE, ("No NCE to use.\n"));
-        FreeNdisPacket(IPPacket->NdisPacket);
-        return STATUS_SUCCESS;
-    }
-#endif
-
     /* Fetch path MTU now, because it may change */
-    PathMTU = RCN->PathMTU;
-    TI_DbgPrint(MID_TRACE,("PathMTU: %d\n", PathMTU));
-
-    if (IPPacket->TotalSize > PathMTU) {
-	TI_DbgPrint(MID_TRACE,("Doing SendFragments\n"));
-        return SendFragments(IPPacket, NCE, PathMTU);
+    TI_DbgPrint(MID_TRACE,("PathMTU: %d\n", RCN->PathMTU));
+    
+    if ((IPPacket->Flags & IP_PACKET_FLAG_RAW) == 0) {
+	/* Calculate checksum of IP header */
+	TI_DbgPrint(MID_TRACE,("-> not IP_PACKET_FLAG_RAW\n"));
+	((PIPv4_HEADER)IPPacket->Header)->Checksum = 0;
+	
+	((PIPv4_HEADER)IPPacket->Header)->Checksum = (USHORT)
+	    IPv4Checksum(IPPacket->Header, IPPacket->HeaderSize, 0);
+	TI_DbgPrint(MID_TRACE,("IP Check: %x\n", ((PIPv4_HEADER)IPPacket->Header)->Checksum));
+	
+	TI_DbgPrint(MAX_TRACE, ("Sending packet (length is %d).\n",
+				WN2H(((PIPv4_HEADER)IPPacket->Header)->TotalLength)));
     } else {
-        if ((IPPacket->Flags & IP_PACKET_FLAG_RAW) == 0) {
-            /* Calculate checksum of IP header */
-	    TI_DbgPrint(MID_TRACE,("-> not IP_PACKET_FLAG_RAW\n"));
-            ((PIPv4_HEADER)IPPacket->Header)->Checksum = 0;
-
-            ((PIPv4_HEADER)IPPacket->Header)->Checksum = (USHORT)
-                IPv4Checksum(IPPacket->Header, IPPacket->HeaderSize, 0);
-	    TI_DbgPrint(MID_TRACE,("IP Check: %x\n", ((PIPv4_HEADER)IPPacket->Header)->Checksum));
-
-            TI_DbgPrint(MAX_TRACE, ("Sending packet (length is %d).\n",
-                WN2H(((PIPv4_HEADER)IPPacket->Header)->TotalLength)));
-        } else {
-            TI_DbgPrint(MAX_TRACE, ("Sending raw packet (flags are 0x%X).\n",
-              IPPacket->Flags));
-        }
-
-        return IPSendFragment(IPPacket->NdisPacket, NCE);
+	TI_DbgPrint(MAX_TRACE, ("Sending raw packet (flags are 0x%X).\n",
+				IPPacket->Flags));
     }
+    
+    return SendFragments(IPPacket, NCE, RCN->PathMTU, Complete, Context);
 }
 
 /* EOF */

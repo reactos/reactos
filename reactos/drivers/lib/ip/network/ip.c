@@ -32,7 +32,7 @@ VOID FreePacket(
  *     Object = Pointer to an IP packet structure
  */
 {
-    ExFreeToNPagedLookasideList(&IPPacketList, Object);
+    TcpipFreeToNPagedLookasideList(&IPPacketList, Object);
 }
 
 
@@ -122,7 +122,6 @@ PADDRESS_ENTRY CreateADE(
 
     INIT_TAG(ADE, TAG('A','D','E',' '));
     ADE->Free     = FreeADE;
-    ADE->RefCount = 1;
     ADE->NTE      = NTE;
     ADE->Type     = Type;
     ADE->Address  = Address;
@@ -152,20 +151,6 @@ VOID DestroyADE(
 
     /* Unlink the address entry from the list */
     RemoveEntryList(&ADE->ListEntry);
-
-    /* Dereference the address */
-    DereferenceObject(ADE->Address);
-
-    /* Dereference the NTE */
-    DereferenceObject(ADE->NTE);
-
-#ifdef DBG
-    ADE->RefCount--;
-
-    if (ADE->RefCount != 0) {
-        TI_DbgPrint(MIN_TRACE, ("Address entry at (0x%X) has (%d) references (should be 0).\n", ADE, ADE->RefCount));
-    }
-#endif
 
     /* And free the ADE */
     FreeADE(ADE);
@@ -200,8 +185,7 @@ VOID DestroyADEs(
 }
 
 
-PIP_PACKET IPCreatePacket(
-  ULONG Type)
+PIP_PACKET IPCreatePacket(ULONG Type)
 /*
  * FUNCTION: Creates an IP packet object
  * ARGUMENTS:
@@ -212,7 +196,7 @@ PIP_PACKET IPCreatePacket(
 {
   PIP_PACKET IPPacket;
 
-  IPPacket = ExAllocateFromNPagedLookasideList(&IPPacketList);
+  IPPacket = TcpipAllocateFromNPagedLookasideList(&IPPacketList);
   if (!IPPacket)
     return NULL;
 
@@ -222,7 +206,6 @@ PIP_PACKET IPCreatePacket(
   INIT_TAG(IPPacket, TAG('I','P','K','T'));
 
   IPPacket->Free       = FreePacket;
-  IPPacket->RefCount   = 1;
   IPPacket->Type       = Type;
   IPPacket->HeaderSize = 20;
 
@@ -246,7 +229,6 @@ PIP_PACKET IPInitializePacket(
     INIT_TAG(IPPacket, TAG('I','P','K','T'));
     
     IPPacket->Free     = DontFreePacket;
-    IPPacket->RefCount = 1;
     IPPacket->Type     = Type;
     
     return IPPacket;
@@ -293,16 +275,7 @@ PNET_TABLE_ENTRY IPCreateNTE(
 
     NTE->Interface = IF;
 
-    /* One reference is for beeing alive and one reference is for the ADE */
-    NTE->RefCount = 2;
-
     NTE->Address = Address;
-    /* One reference is for NTE, one reference is given to the
-       address entry, and one reference is given to the prefix
-       list entry */
-    ReferenceObject(Address);
-    ReferenceObject(Address);
-    ReferenceObject(Address);
 
     /* Create an address entry and add it to the list */
     ADE = CreateADE(IF, NTE->Address, ADE_UNICAST, NTE);
@@ -320,14 +293,11 @@ PNET_TABLE_ENTRY IPCreateNTE(
         return NULL;
     }
 
-    /* Reference the interface for the prefix list entry */
-    ReferenceObject(IF);
-
     /* Add NTE to the list on the interface */
     InsertTailList(&IF->NTEListHead, &NTE->IFListEntry);
 
     /* Add NTE to the global net table list */
-    ExInterlockedInsertTailList(&NetTableListHead, &NTE->NTListEntry, &NetTableListLock);
+    TcpipInterlockedInsertTailList(&NetTableListHead, &NTE->NTListEntry, &NetTableListLock);
 
     return NTE;
 }
@@ -353,9 +323,9 @@ VOID DestroyNTE(
     TI_DbgPrint(DEBUG_IP, ("NTE (%s).\n", NTE->Address));
 
     /* Invalidate the prefix list entry for this NTE */
-    KeAcquireSpinLock(&PrefixListLock, &OldIrql);
+    TcpipAcquireSpinLock(&PrefixListLock, &OldIrql);
     DestroyPLE(NTE->PLE);
-    KeReleaseSpinLock(&PrefixListLock, OldIrql);
+    TcpipReleaseSpinLock(&PrefixListLock, OldIrql);
 
     /* Remove NTE from the interface list */
     RemoveEntryList(&NTE->IFListEntry);
@@ -367,16 +337,6 @@ VOID DestroyNTE(
 
  */
 
-    /* Dereference the objects that are referenced */
-    DereferenceObject(NTE->Address);
-    DereferenceObject(NTE->Interface);
-#ifdef DBG
-    NTE->RefCount--;
-
-    if (NTE->RefCount != 0) {
-        TI_DbgPrint(MIN_TRACE, ("Net table entry at (0x%X) has (%d) references (should be 0).\n", NTE, NTE->RefCount));
-    }
-#endif
     /* And free the NTE */
     exFreePool(NTE);
 }
@@ -435,7 +395,9 @@ PNET_TABLE_ENTRY IPLocateNTEOnInterface(
     TI_DbgPrint(DEBUG_IP, ("Called. IF (0x%X)  Address (%s)  AddressType (0x%X).\n",
         IF, A2S(Address), AddressType));
 
-    KeAcquireSpinLock(&IF->Lock, &OldIrql);
+    if( !IF ) return NULL;
+
+    TcpipAcquireSpinLock(&IF->Lock, &OldIrql);
 
     /* Search the list and return the NTE if found */
     CurrentEntry = IF->ADEListHead.Flink;
@@ -447,15 +409,14 @@ PNET_TABLE_ENTRY IPLocateNTEOnInterface(
     while (CurrentEntry != &IF->ADEListHead) {
 	      Current = CONTAINING_RECORD(CurrentEntry, ADDRESS_ENTRY, ListEntry);
         if (AddrIsEqual(Address, Current->Address)) {
-            ReferenceObject(Current->NTE);
             *AddressType = Current->Type;
-            KeReleaseSpinLock(&IF->Lock, OldIrql);
+            TcpipReleaseSpinLock(&IF->Lock, OldIrql);
             return Current->NTE;
         }
         CurrentEntry = CurrentEntry->Flink;
     }
 
-    KeReleaseSpinLock(&IF->Lock, OldIrql);
+    TcpipReleaseSpinLock(&IF->Lock, OldIrql);
 
     return NULL;
 }
@@ -486,7 +447,7 @@ PNET_TABLE_ENTRY IPLocateNTE(
 
 //    TI_DbgPrint(DEBUG_IP, ("Address (%s).\n", A2S(Address)));
 
-    KeAcquireSpinLock(&NetTableListLock, &OldIrql);
+    TcpipAcquireSpinLock(&NetTableListLock, &OldIrql);
 
     /* Search the list and return the NTE if found */
     CurrentEntry = NetTableListHead.Flink;
@@ -494,14 +455,13 @@ PNET_TABLE_ENTRY IPLocateNTE(
 	      Current = CONTAINING_RECORD(CurrentEntry, NET_TABLE_ENTRY, NTListEntry);
         NTE = IPLocateNTEOnInterface(Current->Interface, Address, AddressType);
         if (NTE) {
-            ReferenceObject(NTE);
-            KeReleaseSpinLock(&NetTableListLock, OldIrql);
+            TcpipReleaseSpinLock(&NetTableListLock, OldIrql);
             return NTE;
         }
         CurrentEntry = CurrentEntry->Flink;
     }
 
-    KeReleaseSpinLock(&NetTableListLock, OldIrql);
+    TcpipReleaseSpinLock(&NetTableListLock, OldIrql);
 
     return NULL;
 }
@@ -531,7 +491,7 @@ PADDRESS_ENTRY IPLocateADE(
 
 //    TI_DbgPrint(DEBUG_IP, ("Address (%s).\n", A2S(Address)));
 
-    KeAcquireSpinLock(&InterfaceListLock, &OldIrql);
+    TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
 
     /* Search the interface list */
     ForEachInterface(CurrentIF) {
@@ -539,14 +499,13 @@ PADDRESS_ENTRY IPLocateADE(
 	ForEachADE(CurrentIF->ADEListHead,CurrentADE) {
             if ((AddrIsEqual(Address, CurrentADE->Address)) && 
                 (CurrentADE->Type == AddressType)) {
-                ReferenceObject(CurrentADE);
-                KeReleaseSpinLock(&InterfaceListLock, OldIrql);
+                TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
                 return CurrentADE;
             }
         } EndFor(CurrentADE);
     } EndFor(CurrentIF);
 
-    KeReleaseSpinLock(&InterfaceListLock, OldIrql);
+    TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
 
     return NULL;
 }
@@ -572,7 +531,7 @@ PADDRESS_ENTRY IPGetDefaultADE(
 
     TI_DbgPrint(DEBUG_IP, ("Called. AddressType (0x%X).\n", AddressType));
 
-    KeAcquireSpinLock(&InterfaceListLock, &OldIrql);
+    TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
 
     /* Search the interface list */
     ForEachInterface(CurrentIF) {
@@ -581,8 +540,7 @@ PADDRESS_ENTRY IPGetDefaultADE(
 	    TI_DbgPrint(DEBUG_IP,("Checking interface %x\n", CurrentIF));
 	    ForEachADE(CurrentIF->ADEListHead,CurrentADE) {
                 if (CurrentADE->Type == AddressType) {
-                    ReferenceObject(CurrentADE);
-                    KeReleaseSpinLock(&InterfaceListLock, OldIrql);
+                    TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
                     return CurrentADE;
                 }
 	    } EndFor(CurrentADE);
@@ -594,14 +552,13 @@ PADDRESS_ENTRY IPGetDefaultADE(
     if (LoopbackIsRegistered) {
 	ForEachADE(CurrentIF->ADEListHead,CurrentADE) {
             if (CurrentADE->Type == AddressType) {
-                ReferenceObject(CurrentADE);
-                KeReleaseSpinLock(&InterfaceListLock, OldIrql);
+                TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
                 return CurrentADE;
             }
         } EndFor(CurrentADE);
     }
 
-    KeReleaseSpinLock(&InterfaceListLock, OldIrql);
+    TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
 
     return NULL;
 }
@@ -682,7 +639,6 @@ PIP_INTERFACE IPCreateInterface(
     INIT_TAG(IF, TAG('F','A','C','E'));
 
     IF->Free       = FreeIF;
-    IF->RefCount   = 1;
     IF->Context    = BindInfo->Context;
     IF->HeaderSize = BindInfo->HeaderSize;
 	  if (IF->HeaderSize > MaxLLHeaderSize)
@@ -700,7 +656,7 @@ PIP_INTERFACE IPCreateInterface(
     InitializeListHead(&IF->ADEListHead);
     InitializeListHead(&IF->NTEListHead);
 
-    KeInitializeSpinLock(&IF->Lock);
+    TcpipInitializeSpinLock(&IF->Lock);
 
 #ifdef __NTDRIVER__
     InsertTDIInterfaceEntity( IF );
@@ -727,20 +683,12 @@ VOID IPDestroyInterface(
     RemoveTDIInterfaceEntity( IF );
 #endif
 
-    KeAcquireSpinLock(&NetTableListLock, &OldIrql1);
-    KeAcquireSpinLock(&IF->Lock, &OldIrql2);
+    TcpipAcquireSpinLock(&NetTableListLock, &OldIrql1);
+    TcpipAcquireSpinLock(&IF->Lock, &OldIrql2);
     DestroyADEs(IF);
     DestroyNTEs(IF);
-    KeReleaseSpinLock(&IF->Lock, OldIrql2);
-    KeReleaseSpinLock(&NetTableListLock, OldIrql1);
-
-#ifdef DBG
-    IF->RefCount--;
-
-    if (IF->RefCount != 0) {
-        TI_DbgPrint(MIN_TRACE, ("Interface at (0x%X) has (%d) references (should be 0).\n", IF, IF->RefCount));
-    }
-#endif
+    TcpipReleaseSpinLock(&IF->Lock, OldIrql2);
+    TcpipReleaseSpinLock(&NetTableListLock, OldIrql1);
 
     exFreePool(IF);
 }
@@ -764,7 +712,7 @@ BOOLEAN IPRegisterInterface(
 
     TI_DbgPrint(MID_TRACE, ("Called. IF (0x%X).\n", IF));
 
-    KeAcquireSpinLock(&IF->Lock, &OldIrql);
+    TcpipAcquireSpinLock(&IF->Lock, &OldIrql);
 
     /* Add routes to all NTEs on this interface */
     CurrentEntry = IF->NTEListHead.Flink;
@@ -772,51 +720,37 @@ BOOLEAN IPRegisterInterface(
 	    Current = CONTAINING_RECORD(CurrentEntry, NET_TABLE_ENTRY, IFListEntry);
 
         /* Add a permanent neighbor for this NTE */
-        ReferenceObject(Current->Address);
         NCE = NBAddNeighbor(IF, Current->Address, IF->Address,
             IF->AddressLength, NUD_PERMANENT);
         if (!NCE) {
             TI_DbgPrint(MIN_TRACE, ("Could not create NCE.\n"));
-            DereferenceObject(Current->Address);
-            KeReleaseSpinLock(&IF->Lock, OldIrql);
+            TcpipReleaseSpinLock(&IF->Lock, OldIrql);
             return FALSE;
         }
-
-        /* Reference objects for forward information base */
-        ReferenceObject(Current->Address);
-        ReferenceObject(Current->PLE->Prefix);
-	ReferenceObject(NCE);
 
         /* NCE is already referenced */
         if (!RouterAddRoute(Current->Address, Current->PLE->Prefix, NCE, 1)) {
             TI_DbgPrint(MIN_TRACE, ("Could not add route due to insufficient resources.\n"));
-            DereferenceObject(Current->Address);
-            DereferenceObject(Current->PLE->Prefix);
-            DereferenceObject(NCE);
         }
 
         RCN = RouteAddRouteToDestination(Current->Address, Current, IF, NCE);
         if (!RCN) {
             TI_DbgPrint(MIN_TRACE, ("Could not create RCN.\n"));
-            DereferenceObject(Current->Address);
-            KeReleaseSpinLock(&IF->Lock, OldIrql);
+            TcpipReleaseSpinLock(&IF->Lock, OldIrql);
         }
-        /* Don't need this any more since the route cache references the NCE */
-        DereferenceObject(NCE);
-
         CurrentEntry = CurrentEntry->Flink;
     }
 
     /* Add interface to the global interface list */
     ASSERT(&IF->ListEntry);
-    ExInterlockedInsertTailList(&InterfaceListHead, 
-				&IF->ListEntry, 
-				&InterfaceListLock);
+    TcpipInterlockedInsertTailList(&InterfaceListHead, 
+				   &IF->ListEntry, 
+				   &InterfaceListLock);
 
     /* Allow TCP to hang some configuration on this interface */
     IF->TCPContext = TCPPrepareInterface( IF );
 
-    KeReleaseSpinLock(&IF->Lock, OldIrql);
+    TcpipReleaseSpinLock(&IF->Lock, OldIrql);
 
     return TRUE;
 }
@@ -839,8 +773,8 @@ VOID IPUnregisterInterface(
 
     TI_DbgPrint(DEBUG_IP, ("Called. IF (0x%X).\n", IF));
 
-    KeAcquireSpinLock(&NetTableListLock, &OldIrql1);
-    KeAcquireSpinLock(&IF->Lock, &OldIrql2);
+    TcpipAcquireSpinLock(&NetTableListLock, &OldIrql1);
+    TcpipAcquireSpinLock(&IF->Lock, &OldIrql2);
 
     /* Remove routes to all NTEs on this interface */
     CurrentEntry = IF->NTEListHead.Flink;
@@ -855,22 +789,20 @@ VOID IPUnregisterInterface(
 
         /* Remove permanent NCE, but first we have to find it */
         NCE = NBLocateNeighbor(Current->Address);
-        if (NCE) {
-            DereferenceObject(NCE);
+        if (NCE)
             NBRemoveNeighbor(NCE);
-        }
 
         CurrentEntry = CurrentEntry->Flink;
     }
 
-    KeAcquireSpinLock(&InterfaceListLock, &OldIrql3);
+    TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql3);
     /* Ouch...three spinlocks acquired! Fortunately
        we don't unregister interfaces very often */
     RemoveEntryList(&IF->ListEntry);
-    KeReleaseSpinLock(&InterfaceListLock, OldIrql3);
+    TcpipReleaseSpinLock(&InterfaceListLock, OldIrql3);
 
-    KeReleaseSpinLock(&IF->Lock, OldIrql2);
-    KeReleaseSpinLock(&NetTableListLock, OldIrql1);
+    TcpipReleaseSpinLock(&IF->Lock, OldIrql2);
+    TcpipReleaseSpinLock(&NetTableListLock, OldIrql1);
 }
 
 
@@ -981,11 +913,11 @@ NTSTATUS IPStartup(PUNICODE_STRING RegistryPath)
 
     /* Initialize NTE list and protecting lock */
     InitializeListHead(&NetTableListHead);
-    KeInitializeSpinLock(&NetTableListLock);
+    TcpipInitializeSpinLock(&NetTableListLock);
 
     /* Initialize reassembly list and protecting lock */
     InitializeListHead(&ReassemblyListHead);
-    KeInitializeSpinLock(&ReassemblyListLock);
+    TcpipInitializeSpinLock(&ReassemblyListLock);
 
     InitPLE();
 

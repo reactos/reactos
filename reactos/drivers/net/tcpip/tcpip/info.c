@@ -32,7 +32,7 @@ VOID InsertTDIInterfaceEntity( PIP_INTERFACE Interface ) {
 		("Inserting interface %08x (%d entities already)\n", 
 		 Interface, EntityCount));
 
-    KeAcquireSpinLock( &EntityListLock, &OldIrql );
+    TcpipAcquireSpinLock( &EntityListLock, &OldIrql );
 
     /* Count IP Entities */
     for( i = 0; i < EntityCount; i++ )
@@ -50,14 +50,14 @@ VOID InsertTDIInterfaceEntity( PIP_INTERFACE Interface ) {
     
     EntityCount++;
 
-    KeReleaseSpinLock( &EntityListLock, OldIrql );
+    TcpipReleaseSpinLock( &EntityListLock, OldIrql );
 }
 
 VOID RemoveTDIInterfaceEntity( PIP_INTERFACE Interface ) {
     KIRQL OldIrql;
     UINT i;
 
-    KeAcquireSpinLock( &EntityListLock, &OldIrql );
+    TcpipAcquireSpinLock( &EntityListLock, &OldIrql );
     
     /* Remove entities that have this interface as context
      * In the future, this might include AT_ENTITY types, too
@@ -71,7 +71,7 @@ VOID RemoveTDIInterfaceEntity( PIP_INTERFACE Interface ) {
 	}
     }
 
-    KeReleaseSpinLock( &EntityListLock, OldIrql );
+    TcpipReleaseSpinLock( &EntityListLock, OldIrql );
 }
 
 TDI_STATUS InfoTdiQueryListEntities(PNDIS_BUFFER Buffer,
@@ -83,14 +83,14 @@ TDI_STATUS InfoTdiQueryListEntities(PNDIS_BUFFER Buffer,
     TI_DbgPrint(MAX_TRACE,("About to copy %d TDIEntityIDs to user\n",
 			   EntityCount));
     
-    KeAcquireSpinLock(&EntityListLock, &OldIrql);
+    TcpipAcquireSpinLock(&EntityListLock, &OldIrql);
 
     Size = EntityCount * sizeof(TDIEntityID);
     *BufferSize = Size;
     
     if (BufSize < Size)
     {
-	KeReleaseSpinLock( &EntityListLock, OldIrql );
+	TcpipReleaseSpinLock( &EntityListLock, OldIrql );
 	/* The buffer is too small to contain requested data */
 	return TDI_BUFFER_TOO_SMALL;
     }
@@ -103,7 +103,7 @@ TDI_STATUS InfoTdiQueryListEntities(PNDIS_BUFFER Buffer,
 				sizeof(TDIEntityID));
     }
     
-    KeReleaseSpinLock(&EntityListLock, OldIrql);
+    TcpipReleaseSpinLock(&EntityListLock, OldIrql);
     
     return TDI_SUCCESS;
 }
@@ -152,7 +152,7 @@ TDI_STATUS InfoTdiQueryInformationEx(
         else
 	    Status = InfoTdiQueryListEntities(Buffer, BufferSize);
     } else {
-	KeAcquireSpinLock( &EntityListLock, &OldIrql );
+	TcpipAcquireSpinLock( &EntityListLock, &OldIrql );
 	
 	for( i = 0; i < EntityCount; i++ ) {
 	    if( EntityList[i].tei_entity == ID->toi_entity.tei_entity &&
@@ -164,7 +164,7 @@ TDI_STATUS InfoTdiQueryInformationEx(
 	    }
 	}
 	
-	KeReleaseSpinLock( &EntityListLock, OldIrql );
+	TcpipReleaseSpinLock( &EntityListLock, OldIrql );
 	
 	if( FoundEntity ) {
 	    TI_DbgPrint(MAX_TRACE,

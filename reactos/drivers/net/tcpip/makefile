@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.29 2004/10/23 21:05:11 chorns Exp $
+# $Id: makefile,v 1.30 2004/11/07 20:37:18 arty Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -13,8 +13,8 @@ TARGET_PCH = include/precomp.h
 # -DMEMTRACK
 TARGET_CFLAGS = \
 	-D__USE_W32API \
-	-DNDIS40 \
 	-DMEMTRACK \
+	-DNDIS40 \
 	-Wall -Werror \
 	-I./include \
 	-I$(PATH_TO_TOP)/drivers/lib/oskittcp/include \
@@ -36,9 +36,18 @@ TCPIP_OBJECTS    = tcpip/buffer.o \
 		   tcpip/fileobjs.o \
 		   tcpip/irp.o \
 		   tcpip/main.o \
-                   tcpip/pool.o 
+                   tcpip/pool.o \
+		   tcpip/proto.o \
+		   tcpip/lock.o \
+		   tcpip/wait.o \
+		   tcpip/bug.o
 INFO_OBJECTS     = tcpip/info.o tcpip/ninfo.o tcpip/tinfo.o tcpip/iinfo.o
-DATALINK_OBJECTS = datalink/lan.o datalink/loopback.o
+DATALINK_OBJECTS = datalink/lan.o
+MOCKOBJS         = tcpip/mockbuffer.o \
+		   tcpip/mockwait.o \
+		   tcpip/mocklock.o \
+		   tcpip/mockpool.o \
+		   tcpip/mockbug.o
 
 TARGET_OBJECTS = \
   $(TCPIP_OBJECTS) \
@@ -49,6 +58,7 @@ preall: preclean
 	$(MAKE) -C ../../lib/ip
 	$(MAKE) -C ../../lib/oskittcp
 	$(MAKE) all
+	$(MAKE) $(MOCKOBJS)
 
 preclean:
 	$(RM) 	$(PATH_TO_TOP)/dk/w32/lib/ip.a \

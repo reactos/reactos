@@ -158,6 +158,9 @@ extern ULONG EntityCount;
 extern ULONG EntityMax;
 extern UDP_STATISTICS UDPStats;
 
+extern NTSTATUS TiGetProtocolNumber( PUNICODE_STRING FileName,
+				     PULONG Protocol );
+
 #endif /* __TCPIP_H */
 
 /* EOF */

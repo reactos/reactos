@@ -22,7 +22,6 @@ typedef IPv6_RAW_ADDRESS *PIPv6_RAW_ADDRESS;
 /* IP style address */
 typedef struct IP_ADDRESS {
     DEFINE_TAG
-    ULONG RefCount;                     /* Number of references to this address */
     UCHAR Type;                         /* Type of IP address */
     union {
         IPv4_RAW_ADDRESS IPv4Address;   /* IPv4 address (in network byte order) */
@@ -64,7 +63,6 @@ typedef VOID (*PACKET_COMPLETION_ROUTINE)(
 /* Structure for an IP packet */
 typedef struct _IP_PACKET {
     DEFINE_TAG
-    ULONG RefCount;                     /* Reference count for this object */
     OBJECT_FREE_ROUTINE Free;           /* Routine used to free resources for the object */
     UCHAR Type;                         /* Type of IP packet (see IP_ADDRESS_xx above) */
     UCHAR Flags;                        /* Flags for packet (see IP_PACKET_FLAG_xx below)*/
@@ -98,7 +96,6 @@ typedef struct _PACKET_CONTEXT {
 typedef struct _ADDRESS_ENTRY {
     DEFINE_TAG
     LIST_ENTRY              ListEntry;  /* Entry on list */
-    ULONG                   RefCount;   /* Reference count */
     OBJECT_FREE_ROUTINE     Free;       /* Routine used to free resources for the object */
     struct _NET_TABLE_ENTRY *NTE;       /* NTE associated with this address */
     UCHAR                   Type;       /* Address type */
@@ -119,7 +116,6 @@ typedef struct _NET_TABLE_ENTRY {
     LIST_ENTRY                 NTListEntry; /* Entry on net table list */
     struct _IP_INTERFACE       *Interface;  /* Pointer to interface on this net */
     struct _PREFIX_LIST_ENTRY  *PLE;        /* Pointer to prefix list entry for this net */
-    ULONG                      RefCount;    /* Reference count */
     OBJECT_FREE_ROUTINE        Free;        /* Routine used to free resources for the object */
     PIP_ADDRESS                Address;     /* Pointer to unicast address for this net */
 } NET_TABLE_ENTRY, *PNET_TABLE_ENTRY;
@@ -151,7 +147,6 @@ typedef struct _IP_INTERFACE {
     LIST_ENTRY NTEListHead;       /* List of NTEs on this interface */
     LIST_ENTRY ADEListHead;       /* List of ADEs on this interface */
     LIST_ENTRY ListEntry;         /* Entry on list */
-    ULONG RefCount;               /* Reference count */
     OBJECT_FREE_ROUTINE Free;     /* Routine used to free resources used by the object */
     KSPIN_LOCK Lock;              /* Spin lock for this object */
     PVOID Context;                /* Pointer to link layer context information */

@@ -168,7 +168,6 @@ typedef struct _ADDRESS_FILE {
     DEFINE_TAG
     LIST_ENTRY ListEntry;                 /* Entry on list */
     KSPIN_LOCK Lock;                      /* Spin lock to manipulate this structure */
-    ULONG RefCount;                       /* Number of references to this object */
     OBJECT_FREE_ROUTINE Free;             /* Routine to use to free resources for the object */
     USHORT Flags;                         /* Flags for address file (see below) */
     PADDRESS_ENTRY ADE;                   /* Associated address entry */
@@ -308,7 +307,6 @@ typedef struct _TDI_BUCKET {
 typedef struct _CONNECTION_ENDPOINT {
     LIST_ENTRY ListEntry;       /* Entry on list */
     KSPIN_LOCK Lock;            /* Spin lock to protect this structure */
-    ULONG RefCount;             /* Number of references to this object */
     PVOID ClientContext;        /* Pointer to client context information */
     PADDRESS_FILE AddressFile;  /* Associated address file object (NULL if none) */
     PVOID SocketContext;        /* Context for lower layer */
@@ -335,7 +333,6 @@ typedef struct _CONNECTION_ENDPOINT {
 typedef struct _CONTROL_CHANNEL {
     LIST_ENTRY ListEntry;       /* Entry on list */
     KSPIN_LOCK Lock;            /* Spin lock to protect this structure */
-    ULONG RefCount;             /* Number of references to this object */
 } CONTROL_CHANNEL, *PCONTROL_CHANNEL;
 
 /* Transport (TCP/UDP) endpoint context structure. The FileObject->FsContext
@@ -346,7 +343,6 @@ typedef struct _TRANSPORT_CONTEXT {
         CONNECTION_CONTEXT ConnectionContext;
         HANDLE ControlChannel;
     } Handle;
-    ULONG RefCount;
     BOOL CancelIrps;
     KEVENT CleanupEvent;
 } TRANSPORT_CONTEXT, *PTRANSPORT_CONTEXT;

@@ -10,6 +10,51 @@
 
 #include "precomp.h"
 
+VOID XNdisGetFirstBufferFromPacket(PNDIS_PACKET Packet,                
+				   PNDIS_BUFFER *FirstBuffer,           
+				   PVOID *FirstBufferVA,         
+				   PUINT FirstBufferLength,     
+				   PUINT TotalBufferLength)     
+{                                                           
+    PNDIS_BUFFER _Buffer;                                   
+    
+    _Buffer              = (Packet)->Private.Head;          
+    *(FirstBuffer)       = _Buffer;                         
+    *(FirstBufferVA)     = MmGetMdlVirtualAddress(_Buffer); 
+    if (_Buffer != NULL) {                                  
+        *(FirstBufferLength) = MmGetMdlByteCount(_Buffer);  
+        _Buffer = _Buffer->Next;                            
+    } else                                                  
+        *(FirstBufferLength) = 0;                           
+    *(TotalBufferLength) = *(FirstBufferLength);            
+    while (_Buffer != NULL) {                               
+        *(TotalBufferLength) += MmGetMdlByteCount(_Buffer); 
+        _Buffer = _Buffer->Next;                            
+    }                                                       
+}
+
+/*
+ * @implemented
+ */
+VOID XNdisQueryBuffer
+(PNDIS_BUFFER    Buffer,
+ PVOID           *VirtualAddress,
+ PUINT           Length)
+/*
+ * FUNCTION:
+ *     Queries an NDIS buffer for information
+ * ARGUMENTS:
+ *     Buffer         = Pointer to NDIS buffer to query
+ *     VirtualAddress = Address of buffer to place virtual address
+ *     Length         = Address of buffer to place length of buffer
+ */
+{
+	if (VirtualAddress != NULL)
+	    *(PVOID*)VirtualAddress = Buffer->MappedSystemVa;
+
+	*Length = ((PMDL)Buffer)->ByteCount;
+}
+
 __inline INT SkipToOffset(
     PNDIS_BUFFER Buffer,
     UINT Offset,
@@ -35,7 +80,7 @@ __inline INT SkipToOffset(
         if (!Buffer)
             return -1;
 
-        NdisQueryBuffer(Buffer, (PVOID)Data, Size);
+        XNdisQueryBuffer(Buffer, (PVOID)Data, Size);
 
         if (Offset < *Size) {
             *Data = (PCHAR)((ULONG_PTR) *Data + Offset);
@@ -101,7 +146,7 @@ UINT CopyBufferToBufferChain(
             if (!DstBuffer)
                 break;
 
-            NdisQueryBuffer(DstBuffer, (PVOID)&DstData, &DstSize);
+            XNdisQueryBuffer(DstBuffer, (PVOID)&DstData, &DstSize);
         }
     }
 
@@ -160,7 +205,7 @@ UINT CopyBufferChainToBuffer(
             if (!SrcBuffer)
                 break;
 
-            NdisQueryBuffer(SrcBuffer, (PVOID)&SrcData, &SrcSize);
+            XNdisQueryBuffer(SrcBuffer, (PVOID)&SrcData, &SrcSize);
         }
     }
 
@@ -194,11 +239,11 @@ UINT CopyPacketToBuffer(
 
     TI_DbgPrint(DEBUG_PBUFFER, ("DstData (0x%X)  SrcPacket (0x%X)  SrcOffset (0x%X)  Length (%d)\n", DstData, SrcPacket, SrcOffset, Length));
 
-    NdisGetFirstBufferFromPacket(SrcPacket,
-                                 &FirstBuffer,
-                                 &Address,
-                                 &FirstLength,
-                                 &TotalLength);
+    XNdisGetFirstBufferFromPacket(SrcPacket,
+				  &FirstBuffer,
+				  &Address,
+				  &FirstLength,
+				  &TotalLength);
 
     return CopyBufferChainToBuffer(DstData, FirstBuffer, SrcOffset, Length);
 }
@@ -233,12 +278,12 @@ UINT CopyPacketToBufferChain(
     TI_DbgPrint(DEBUG_PBUFFER, ("DstBuffer (0x%X)  DstOffset (0x%X)  SrcPacket (0x%X)  SrcOffset (0x%X)  Length (%d)\n", DstBuffer, DstOffset, SrcPacket, SrcOffset, Length));
 
     /* Skip DstOffset bytes in the destination buffer chain */
-    NdisQueryBuffer(DstBuffer, (PVOID)&DstData, &DstSize);
+    XNdisQueryBuffer(DstBuffer, (PVOID)&DstData, &DstSize);
     if (SkipToOffset(DstBuffer, DstOffset, &DstData, &DstSize) == -1)
         return 0;
 
     /* Skip SrcOffset bytes in the source packet */
-    NdisGetFirstBufferFromPacket(SrcPacket, &SrcBuffer, &SrcData, &SrcSize, &Total);
+    XNdisGetFirstBufferFromPacket(SrcPacket, &SrcBuffer, (PVOID *)&SrcData, &SrcSize, &Total);
     if (SkipToOffset(SrcBuffer, SrcOffset, &SrcData, &SrcSize) == -1)
         return 0;
 
@@ -267,7 +312,7 @@ UINT CopyPacketToBufferChain(
             if (!DstBuffer)
                 break;
 
-            NdisQueryBuffer(DstBuffer, (PVOID)&DstData, &DstSize);
+            XNdisQueryBuffer(DstBuffer, (PVOID)&DstData, &DstSize);
         }
 
         SrcSize -= Count;
@@ -278,11 +323,46 @@ UINT CopyPacketToBufferChain(
             if (!SrcBuffer)
                 break;
 
-            NdisQueryBuffer(SrcBuffer, (PVOID)&SrcData, &SrcSize);
+            XNdisQueryBuffer(SrcBuffer, (PVOID)&SrcData, &SrcSize);
         }
     }
 
     return Total;
+}
+
+
+PVOID AdjustPacket(
+    PNDIS_PACKET Packet,
+    UINT Available,
+    UINT Needed)
+/*
+ * FUNCTION: Adjusts the amount of unused space at the beginning of the packet
+ * ARGUMENTS:
+ *     Packet    = Pointer to packet
+ *     Available = Number of bytes available at start of first buffer
+ *     Needed    = Number of bytes needed for the header
+ * RETURNS:
+ *     Pointer to start of packet
+ */
+{
+    PNDIS_BUFFER NdisBuffer;
+    INT Adjust;
+
+    TI_DbgPrint(DEBUG_PBUFFER, ("Available = %d, Needed = %d.\n", Available, Needed));
+
+    Adjust = Available - Needed;
+
+    NdisQueryPacket(Packet, NULL, NULL, &NdisBuffer, NULL);
+
+    /* If Adjust is zero there is no need to adjust this packet as
+       there is no additional space at start the of first buffer */
+    if (Adjust != 0) {
+        NdisBuffer->MappedSystemVa  = (PVOID) ((ULONG_PTR)(NdisBuffer->MappedSystemVa) + Adjust);
+        NdisBuffer->ByteOffset     += Adjust;
+        NdisBuffer->ByteCount      -= Adjust;
+    }
+
+    return NdisBuffer->MappedSystemVa;
 }
 
 
@@ -318,7 +398,7 @@ NDIS_STATUS PrependPacket( PNDIS_PACKET Packet, PCHAR Data, UINT Length,
     PCHAR NewBuf;
 
     if( Copy ) {
-	NewBuf = ExAllocatePool( NonPagedPool, Length );
+	NewBuf = PoolAllocateBuffer( Length );
 	if( !NewBuf ) return STATUS_NO_MEMORY;
 	RtlCopyMemory( NewBuf, Data, Length );
     } else NewBuf = Data;
@@ -354,11 +434,11 @@ NDIS_STATUS AllocatePacketWithBufferX( PNDIS_PACKET *NdisPacket,
     if( !NewData ) return NDIS_STATUS_NOT_ACCEPTED; // XXX 
     TrackWithTag(EXALLOC_TAG, NewData, File, Line);
 
-    if( Data ) RtlCopyMemory(NewData, Data, Len);
+    if( Data ) 
+	RtlCopyMemory(NewData, Data, Len);
 
     NdisAllocatePacket( &Status, &Packet, GlobalPacketPool );
     if( Status != NDIS_STATUS_SUCCESS ) {
-	UntrackFL( File, Line, NewData );
 	ExFreePool( NewData );
 	return Status;
     }
@@ -366,9 +446,7 @@ NDIS_STATUS AllocatePacketWithBufferX( PNDIS_PACKET *NdisPacket,
 
     NdisAllocateBuffer( &Status, &Buffer, GlobalBufferPool, NewData, Len );
     if( Status != NDIS_STATUS_SUCCESS ) {
-	UntrackFL( File, Line, NewData );
 	ExFreePool( NewData );
-	UntrackFL( File, Line, Packet );
 	FreeNdisPacket( Packet );
     }
     TrackWithTag(NDIS_BUFFER_TAG, Buffer, File, Line);
@@ -401,11 +479,9 @@ VOID FreeNdisPacketX
         UINT Length;
 
         NdisGetNextBuffer(Buffer, &NextBuffer);
-        NdisQueryBuffer(Buffer, &Data, &Length);
-	TI_DbgPrint(DEBUG_PBUFFER, ("Freeing ndis buffer (0x%X)\n", Buffer));
+        XNdisQueryBuffer(Buffer, &Data, &Length);
 	UntrackFL(File,Line,Buffer);
         NdisFreeBuffer(Buffer);
-	TI_DbgPrint(DEBUG_PBUFFER, ("Freeing exal buffer (0x%X)\n", Data));
 	UntrackFL(File,Line,Data);
         ExFreePool(Data);
     }

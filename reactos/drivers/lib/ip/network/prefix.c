@@ -20,7 +20,7 @@ KSPIN_LOCK PrefixListLock;
 VOID InitPLE() {
     /* Initialize the prefix list and protecting lock */
     InitializeListHead(&PrefixListHead);
-    KeInitializeSpinLock(&PrefixListLock);
+    TcpipInitializeSpinLock(&PrefixListLock);
 }
 
 
@@ -46,14 +46,13 @@ PPREFIX_LIST_ENTRY CreatePLE(PIP_INTERFACE IF, PIP_ADDRESS Prefix, UINT Length)
     TI_DbgPrint(DEBUG_IP, ("Prefix (%s).\n", A2S(Prefix)));
 
     /* Allocate space for an PLE and set it up */
-    PLE = ExAllocatePool(NonPagedPool, sizeof(PREFIX_LIST_ENTRY));
+    PLE = PoolAllocateBuffer(sizeof(PREFIX_LIST_ENTRY));
     if (!PLE) {
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         return NULL;
     }
 
     INIT_TAG(PLE, TAG('P','L','E',' '));
-    PLE->RefCount     = 1;
     PLE->Interface    = IF;
     PLE->Prefix       = Prefix;
     PLE->PrefixLength = Length;
@@ -82,22 +81,8 @@ VOID DestroyPLE(
     /* Unlink the prefix list entry from the list */
     RemoveEntryList(&PLE->ListEntry);
 
-    /* Dereference the address */
-    DereferenceObject(PLE->Prefix);
-
-    /* Dereference the interface */
-    DereferenceObject(PLE->Interface);
-
-#ifdef DBG
-    PLE->RefCount--;
-
-    if (PLE->RefCount != 0) {
-        TI_DbgPrint(MIN_TRACE, ("Prefix list entry at (0x%X) has (%d) references (should be 0).\n", PLE, PLE->RefCount));
-    }
-#endif
-
     /* And free the PLE */
-    ExFreePool(PLE);
+    PoolFreeBuffer(PLE);
 }
 
 
@@ -114,7 +99,7 @@ VOID DestroyPLEs(
 
     TI_DbgPrint(DEBUG_IP, ("Called.\n"));
 
-    KeAcquireSpinLock(&PrefixListLock, &OldIrql);
+    TcpipAcquireSpinLock(&PrefixListLock, &OldIrql);
 
     /* Search the list and remove every PLE we find */
     CurrentEntry = PrefixListHead.Flink;
@@ -125,6 +110,6 @@ VOID DestroyPLEs(
         DestroyPLE(Current);
         CurrentEntry = NextEntry;
     }
-    KeReleaseSpinLock(&PrefixListLock, OldIrql);
+    TcpipReleaseSpinLock(&PrefixListLock, OldIrql);
 }
 

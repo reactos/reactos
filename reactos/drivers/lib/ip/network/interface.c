@@ -32,13 +32,13 @@ UINT CountInterfaces() {
     KIRQL OldIrql;
     IF_LIST_ITER(CurrentIF);
 
-    KeAcquireSpinLock(&InterfaceListLock, &OldIrql);
+    TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
     
     ForEachInterface(CurrentIF) {
 	Count++;
     } EndFor(CurrentIF);
 
-    KeReleaseSpinLock(&InterfaceListLock, OldIrql);
+    TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
 
     return Count;
 }

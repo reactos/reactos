@@ -10,7 +10,6 @@
 
 #include "precomp.h"
 
-
 PVOID PoolAllocateBuffer(
     ULONG Size)
 /*
@@ -24,7 +23,7 @@ PVOID PoolAllocateBuffer(
 
     /* FIXME: Get buffer from a free buffer pool with enough room */
 
-    Buffer = ExAllocatePool(NonPagedPool, Size);
+    Buffer = malloc(Size);
 
     TI_DbgPrint(DEBUG_MEMORY, ("Allocated (%i) bytes at (0x%X).\n", Size, Buffer));
 
@@ -44,16 +43,16 @@ VOID PoolFreeBuffer(
 
     TI_DbgPrint(DEBUG_MEMORY, ("Freeing buffer at (0x%X).\n", Buffer));
 
-    ExFreePool(Buffer);
+    free(Buffer);
 }
 
 PVOID TcpipAllocateFromNPagedLookasideList( PNPAGED_LOOKASIDE_LIST List ) {
-    return ExAllocateFromNPagedLookasideList( List );
+    return PoolAllocateBuffer( List->Size );
 }
 
 VOID TcpipFreeToNPagedLookasideList( PNPAGED_LOOKASIDE_LIST List, 
 				     PVOID Thing ) {
-    ExFreeToNPagedLookasideList( List, Thing );
+    PoolFreeBuffer( Thing );
 }
 
 /* EOF */

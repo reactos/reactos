@@ -10,6 +10,16 @@
 
 #define NB_HASHMASK 0xF /* Hash mask for neighbor cache */
 
+typedef VOID (*PNEIGHBOR_PACKET_COMPLETE)
+    ( PVOID Context, PNDIS_PACKET Packet, NDIS_STATUS Status );
+
+typedef struct _NEIGHBOR_PACKET {
+    LIST_ENTRY Next;
+    PNDIS_PACKET Packet;
+    PNEIGHBOR_PACKET_COMPLETE Complete;
+    PVOID Context;
+} NEIGHBOR_PACKET, *PNEIGHBOR_PACKET;
+
 typedef struct NEIGHBOR_CACHE_TABLE {
     struct NEIGHBOR_CACHE_ENTRY *Cache; /* Pointer to cache */
     KSPIN_LOCK Lock;                    /* Protecting lock */
@@ -20,17 +30,14 @@ typedef struct NEIGHBOR_CACHE_ENTRY {
     DEFINE_TAG
     struct NEIGHBOR_CACHE_ENTRY *Next;  /* Pointer to next entry */
     struct NEIGHBOR_CACHE_TABLE *Table; /* Pointer to table */
-    ULONG RefCount;                     /* Number of references */
-    OBJECT_FREE_ROUTINE Free;           /* Routine to free resources for the object */
     UCHAR State;                        /* State of NCE */
     UINT EventTimer;                    /* Ticks since last event */
     UINT EventCount;                    /* Number of events */
     PIP_INTERFACE Interface;            /* Pointer to interface */
     UINT LinkAddressLength;             /* Length of link address */
     PVOID LinkAddress;                  /* Pointer to link address */
-    PNDIS_PACKET WaitQueue;             /* Pointer to NDIS packets
-                                           waiting to be sent */
     IP_ADDRESS Address;                 /* IP address of neighbor */
+    LIST_ENTRY PacketQueue;             /* Packet queue */
 } NEIGHBOR_CACHE_ENTRY, *PNEIGHBOR_CACHE_ENTRY;
 
 /* NCE states */
@@ -93,7 +100,9 @@ PNEIGHBOR_CACHE_ENTRY NBFindOrCreateNeighbor(
 
 BOOLEAN NBQueuePacket(
     PNEIGHBOR_CACHE_ENTRY NCE,
-    PNDIS_PACKET NdisPacket);
+    PNDIS_PACKET NdisPacket,
+    PNEIGHBOR_PACKET_COMPLETE PacketComplete,
+    PVOID PacketContext);
 
 VOID NBRemoveNeighbor(
     PNEIGHBOR_CACHE_ENTRY NCE);

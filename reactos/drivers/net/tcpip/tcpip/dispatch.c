@@ -34,7 +34,6 @@ NTSTATUS DispPrepareIrpForCancel(
     if (!Irp->Cancel) {
         IoMarkIrpPending(Irp);
         IoSetCancelRoutine(Irp, CancelRoutine);
-        Context->RefCount++;
         IoReleaseCancelSpinLock(OldIrql);
 
         TI_DbgPrint(DEBUG_IRP, ("Leaving (IRP at 0x%X can now be cancelled).\n", Irp));
@@ -74,16 +73,9 @@ VOID DispCancelComplete(
     
     IoAcquireCancelSpinLock(&OldIrql);
 
-    /* Remove the reference taken by the cancel routine */
-    TranContext->RefCount--;
-
-    if (TranContext->RefCount == 0) {
-        TI_DbgPrint(DEBUG_IRP, ("Setting TranContext->CleanupEvent to signaled.\n"));
-        /* Set the cleanup event */
-        KeSetEvent(&TranContext->CleanupEvent, 0, FALSE);
-    }
-
-    TI_DbgPrint(DEBUG_REFCOUNT, ("TranContext->RefCount (%d).\n", TranContext->RefCount));
+    TI_DbgPrint(DEBUG_IRP, ("Setting TranContext->CleanupEvent to signaled.\n"));
+    /* Set the cleanup event */
+    KeSetEvent(&TranContext->CleanupEvent, 0, FALSE);
 
     IoReleaseCancelSpinLock(OldIrql);
 
@@ -121,10 +113,6 @@ VOID DispCancelRequest(
         TI_DbgPrint(MIN_TRACE, ("Irp->Cancel is FALSE, should be TRUE.\n"));
 #endif
 
-    /* Increase reference count to prevent accidential closure
-       of the object while inside the cancel routine */
-    TranContext->RefCount++;
-
     IoReleaseCancelSpinLock(Irp->CancelIrql);
 
     /* Try canceling the request */
@@ -140,7 +128,7 @@ VOID DispCancelRequest(
             break;
         }
 
-        DGCancelSendRequest(TranContext->Handle.AddressHandle, Irp);
+        /*DGCancelSendRequest(TranContext->Handle.AddressHandle, Irp);*/
         break;
 
     case TDI_RECEIVE_DATAGRAM:
@@ -149,7 +137,7 @@ VOID DispCancelRequest(
             break;
         }
 
-        DGCancelReceiveRequest(TranContext->Handle.AddressHandle, Irp);
+        /*DGCancelReceiveRequest(TranContext->Handle.AddressHandle, Irp);*/
         break;
 
     default:
@@ -162,7 +150,6 @@ VOID DispCancelRequest(
 
     TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
-
 
 VOID DispDataRequestComplete(
     PVOID Context,
@@ -191,13 +178,8 @@ VOID DispDataRequestComplete(
     IoAcquireCancelSpinLock(&OldIrql);
 
     IoSetCancelRoutine(Irp, NULL);
-    TranContext->RefCount--;
-    TI_DbgPrint(DEBUG_REFCOUNT, ("TranContext->RefCount (%d).\n", TranContext->RefCount));
-    if (TranContext->RefCount == 0) {
-        TI_DbgPrint(DEBUG_IRP, ("Setting TranContext->CleanupEvent to signaled.\n"));
 
-        KeSetEvent(&TranContext->CleanupEvent, 0, FALSE);
-    }
+    KeSetEvent(&TranContext->CleanupEvent, 0, FALSE);
 
     if (Irp->Cancel || TranContext->CancelIrps) {
         /* The IRP has been cancelled */
@@ -317,8 +299,7 @@ NTSTATUS DispTdiAssociateAddress(
       TI_DbgPrint(MID_TRACE, ("No address file object.\n"));
       return STATUS_INVALID_PARAMETER;
   }
-  /* The connection endpoint references the address file object */
-  ReferenceObject(AddrFile);
+
   Connection->AddressFile = AddrFile;
 
   /* Add connection endpoint to the address file */
@@ -327,7 +308,7 @@ NTSTATUS DispTdiAssociateAddress(
   /* FIXME: Maybe do this in DispTdiDisassociateAddress() instead? */
   ObDereferenceObject(FileObject);
 
-		    return Status;
+  return Status;
 }
 
 
@@ -367,22 +348,12 @@ NTSTATUS DispTdiConnect(
 
   Parameters = (PTDI_REQUEST_KERNEL)&IrpSp->Parameters;
 
-#if 0
-  Status = TCPBind( Connection,
-		    &Connection->SocketContext,
-		    Parameters->RequestConnectionInformation );
-	
-  TI_DbgPrint(MID_TRACE, ("TCP Bind returned %08x\n", Status));
-	    
-  if( NT_SUCCESS(Status) ) 
-#endif
-
-      Status = TCPConnect(
-	  TranContext->Handle.ConnectionContext,
-	  Parameters->RequestConnectionInformation,
-	  Parameters->ReturnConnectionInformation,
-	  DispDataRequestComplete,
-	  Irp );
+  Status = TCPConnect(
+      TranContext->Handle.ConnectionContext,
+      Parameters->RequestConnectionInformation,
+      Parameters->ReturnConnectionInformation,
+      DispDataRequestComplete,
+      Irp );
   
   TI_DbgPrint(MAX_TRACE, ("TCP Connect returned %08x\n", Status));
 
@@ -403,7 +374,6 @@ NTSTATUS DispTdiDisassociateAddress(
   PCONNECTION_ENDPOINT Connection;
   PTRANSPORT_CONTEXT TranContext;
   PIO_STACK_LOCATION IrpSp;
-  KIRQL OldIrql;
 
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
@@ -427,11 +397,6 @@ NTSTATUS DispTdiDisassociateAddress(
     TI_DbgPrint(MID_TRACE, ("No address file is asscociated.\n"));
     return STATUS_INVALID_PARAMETER;
   }
-
-  /* Remove the reference put on the address file object */
-  KeAcquireSpinLock(&Connection->Lock, &OldIrql);
-  DereferenceObject(Connection->AddressFile);
-  KeReleaseSpinLock(&Connection->Lock, OldIrql);
 
   return STATUS_SUCCESS;
 }
@@ -496,9 +461,6 @@ NTSTATUS DispTdiDisconnect(
           TI_DbgPrint(MID_TRACE, ("MDL buffer too small.\n"));
           return STATUS_BUFFER_OVERFLOW;
         }
-
-        /* FIXME: Is this count really the one we should return? */
-        AddressInfo->ActivityCount = AddrFile->RefCount;
 
         Address = (PTA_IP_ADDRESS)&AddressInfo->Address;
         Address->TAAddressCount = 1;
@@ -627,9 +589,6 @@ NTSTATUS DispTdiQueryInformation(
           return STATUS_BUFFER_OVERFLOW;
         }
 
-        /* FIXME: Is this count really the one we should return? */
-        AddressInfo->ActivityCount = AddrFile->RefCount;
-
         Address = (PTA_IP_ADDRESS)&AddressInfo->Address;
         Address->TAAddressCount = 1;
         Address->Address[0].AddressLength = TDI_ADDRESS_LENGTH_IP;
@@ -700,6 +659,7 @@ NTSTATUS DispTdiReceive(
 	  Irp);
       if (Status != STATUS_PENDING)
       {
+	  ASSERT(0);
           DispDataRequestComplete(Irp, Status, BytesReceived);
       }
     }
@@ -961,7 +921,7 @@ NTSTATUS DispTdiSetEventHandler(PIRP Irp)
   Parameters = (PTDI_REQUEST_KERNEL_SET_EVENT)&IrpSp->Parameters;
   Status     = STATUS_SUCCESS;
   
-  KeAcquireSpinLock(&AddrFile->Lock, &OldIrql);
+  TcpipAcquireSpinLock(&AddrFile->Lock, &OldIrql);
 
   /* Set the event handler. if an event handler is associated with
      a specific event, it's flag (RegisteredXxxHandler) is TRUE.
@@ -1082,7 +1042,7 @@ NTSTATUS DispTdiSetEventHandler(PIRP Irp)
     Status = STATUS_INVALID_PARAMETER;
   }
 
-  KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+  TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
 
   return Status;
 }

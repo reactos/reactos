@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.5 2004/10/08 01:28:32 arty Exp $
+# $Id: makefile,v 1.6 2004/11/07 20:37:20 arty Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -24,6 +24,7 @@ TARGET_OBJECTS = \
 	network/address.o \
 	network/arp.o \
 	network/checksum.o \
+	transport/datagram/datagram.o \
 	network/i386/checksum.o \
 	network/icmp.o \
 	network/interface.o \
@@ -37,7 +38,6 @@ TARGET_OBJECTS = \
 	network/router.o \
 	network/routines.o \
 	network/transmit.o \
-	transport/datagram/datagram.o \
 	transport/rawip/rawip.o \
 	transport/tcp/event.o \
 	transport/tcp/if.o \

@@ -45,6 +45,11 @@
 #ifndef KERNEL
 extern int errno;			/* global error number */
 #endif
+#undef _POSIX_SOURCE
+#endif
+
+#ifdef _POSIX_SOURCE
+#error yuck
 #endif
 
 #define	OSK_EPERM		1		/* Operation not permitted */
@@ -62,7 +67,7 @@ extern int errno;			/* global error number */
 #define	OSK_ENOMEM		12		/* Cannot allocate memory */
 #define	OSK_EACCES		13		/* Permission denied */
 #define	OSK_EFAULT		14		/* Bad address */
-#ifndef _POSIX_SOURCOSK_E
+#ifndef _POSIX_SOURCE
 #define	OSK_ENOTBLK		15		/* Block device required */
 #endif
 #define	OSK_EBUSY		16		/* Device busy */

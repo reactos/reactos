@@ -24,7 +24,7 @@ TDI_STATUS InfoTdiQueryGetAddrTable( PNDIS_BUFFER Buffer,
 
     TI_DbgPrint(MAX_TRACE, ("Called.\n"));
     
-    KeAcquireSpinLock(&InterfaceListLock, &OldIrql);
+    TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
     
     ForEachInterface(CurrentIF) {
 	IpCurrent->Index     = Count;
@@ -46,7 +46,7 @@ TDI_STATUS InfoTdiQueryGetAddrTable( PNDIS_BUFFER Buffer,
 	Count++;
     } EndFor(CurrentIF);
     
-    KeReleaseSpinLock(&InterfaceListLock, OldIrql);
+    TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
 
     Status = InfoCopyOut( (PCHAR)IpAddress, sizeof(*IpAddress) * Count,
 			  Buffer, BufferSize );
@@ -108,14 +108,14 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PNDIS_BUFFER Buffer, PUINT BufferSize ) {
 	    RtCurrent->Metric1 = RCacheCur->Metric;
 	    RtCurrent->Type = 2 /* PF_INET */;
 	    
-	    KeAcquireSpinLock(&EntityListLock, &OldIrql);
+	    TcpipAcquireSpinLock(&EntityListLock, &OldIrql);
 	    for( RtCurrent->Index = EntityCount - 1; 
 		 RtCurrent->Index >= 0 &&
 		     RCacheCur->Router->Interface != 
 		     EntityList[RtCurrent->Index].context;
 		 RtCurrent->Index-- );
 	    RtCurrent->Index = EntityList[RtCurrent->Index].tei_instance;
-	    KeReleaseSpinLock(&EntityListLock, OldIrql);
+	    TcpipReleaseSpinLock(&EntityListLock, OldIrql);
 	} else {
 	    TI_DbgPrint(MAX_TRACE, ("%d: BAD: NA %08x NM %08x GW %08x MT %d\n",
 				    RtCurrent - RouteEntries,
@@ -155,14 +155,14 @@ TDI_STATUS InfoTdiQueryGetIPSnmpInfo( PNDIS_BUFFER Buffer,
     
     /* Count number of addresses */
     AddrCount = 0;
-    KeAcquireSpinLock(&InterfaceListLock, &OldIrql);
+    TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
     
     ForEachInterface(CurrentIF) {
 	CurrentIF = CONTAINING_RECORD(CurrentIFEntry, IP_INTERFACE, ListEntry);
 	AddrCount += CountInterfaceAddresses( CurrentIF );
     } EndFor(CurrentIF);
     
-    KeReleaseSpinLock(&InterfaceListLock, OldIrql);
+    TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
     
     SnmpInfo.NumIf = IfCount;
     SnmpInfo.NumAddr = AddrCount;

@@ -222,7 +222,6 @@ VOID ARPReceive(
     AddrInitIPv4(Address, *((PULONG)SenderProtoAddress));
     NCE = NBLocateNeighbor(Address);
     if (NCE) {
-        DereferenceObject(Address);
         /* We know the sender. Update the hardware address 
            and state in our neighbor address cache */
         NBUpdateNeighbor(NCE, SenderHWAddress, NUD_REACHABLE);
@@ -233,8 +232,6 @@ VOID ARPReceive(
         NCE = NBAddNeighbor(Interface, Address, SenderHWAddress,
             Header->HWAddrLen, NUD_REACHABLE);
     }
-    if (NCE)
-        DereferenceObject(NCE)
 
     if (Header->Opcode != ARP_OPCODE_REQUEST)
         return;

@@ -55,7 +55,9 @@ VOID ICMPReceive(
 
 VOID ICMPTransmit(
     PNET_TABLE_ENTRY NTE,
-    PIP_PACKET IPPacket);
+    PIP_PACKET IPPacket,
+    PIP_TRANSMIT_COMPLETE Complete,
+    PVOID Context);
 
 VOID ICMPReply(
     PNET_TABLE_ENTRY NTE,

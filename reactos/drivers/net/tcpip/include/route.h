@@ -25,7 +25,6 @@ typedef struct ROUTE_CACHE_NODE {
     struct ROUTE_CACHE_NODE *Right;  /* Pointer to right child */
     /* Memebers above this line must not be moved */
     DEFINE_TAG
-    ULONG RefCount;                  /* Reference count */
     OBJECT_FREE_ROUTINE Free;        /* Routine used to free resources for the object */
     UCHAR State;                     /* RCN state (RCN_STATE_*) */
     IP_ADDRESS Destination;          /* Destination address */

@@ -10,67 +10,6 @@
 
 #include "precomp.h"
 
-WORK_QUEUE_ITEM LoopWorkItem;
-PIP_INTERFACE Loopback = NULL;
-/* Indicates wether the loopback interface is currently transmitting */
-BOOLEAN LoopBusy = FALSE;
-/* Loopback transmit queue */
-PNDIS_PACKET LoopQueueHead = (PNDIS_PACKET)NULL;
-PNDIS_PACKET LoopQueueTail = (PNDIS_PACKET)NULL;
-/* Spin lock for protecting loopback transmit queue */
-KSPIN_LOCK LoopQueueLock;
-
-
-VOID STDCALL RealTransmit(
-  PVOID Context)
-/*
- * FUNCTION: Transmits one or more packet(s) in loopback queue to ourselves
- * ARGUMENTS:
- *   Context = Pointer to context information (loopback interface)
- */
-{
-  PNDIS_PACKET NdisPacket;
-  PNDIS_BUFFER NdisBuffer;
-  IP_PACKET IPPacket;
-  KIRQL OldIrql;
-
-  TI_DbgPrint(MAX_TRACE, ("Called.\n"));
-
-  KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
-  KeAcquireSpinLockAtDpcLevel(&LoopQueueLock);
-
-  while (TRUE)
-    {
-      /* Get the next packet from the queue (if any) */
-      NdisPacket = LoopQueueHead;
-      if (!NdisPacket)
-        break;
-
-      TI_DbgPrint(MAX_TRACE, ("NdisPacket (0x%X)\n", NdisPacket));
-
-      LoopQueueHead = *(PNDIS_PACKET*)NdisPacket->u.s3.MacReserved;
-      KeReleaseSpinLockFromDpcLevel(&LoopQueueLock);
-      IPPacket.NdisPacket = NdisPacket;
-
-      NdisGetFirstBufferFromPacket(NdisPacket,
-        &NdisBuffer,
-        &IPPacket.Header,
-        &IPPacket.ContigSize,
-        &IPPacket.TotalSize);
-      IPReceive(Context, &IPPacket);
-      AdjustPacket(NdisPacket, 0, PC(NdisPacket)->DLOffset);
-      PC(NdisPacket)->DLComplete(Context, NdisPacket, NDIS_STATUS_SUCCESS);
-      /* Lower IRQL for a moment to prevent starvation */
-      KeLowerIrql(OldIrql);
-      KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
-      KeAcquireSpinLockAtDpcLevel(&LoopQueueLock);
-    }
-
-  LoopBusy = FALSE;
-  KeReleaseSpinLockFromDpcLevel(&LoopQueueLock);
-  KeLowerIrql(OldIrql);
-}
-
 VOID LoopTransmit(
   PVOID Context,
   PNDIS_PACKET NdisPacket,
@@ -87,46 +26,16 @@ VOID LoopTransmit(
  *   Type        = LAN protocol type (unused)
  */
 {
-  PNDIS_PACKET *pNdisPacket;
-  KIRQL OldIrql;
+  IP_PACKET IPPacket;
 
-  TI_DbgPrint(MAX_TRACE, ("Called.\n"));
+  TI_DbgPrint(MAX_TRACE, ("Called (NdisPacket = %x)\n", NdisPacket));
 
-  /* NDIS send routines don't have an offset argument so we
-     must offset the data in upper layers and adjust the
-     packet here. We save the offset in the packet context
-     area so it can be undone before we release the packet */
-  AdjustPacket(NdisPacket, Offset, 0);
-  PC(NdisPacket)->DLOffset = Offset;
-
-  pNdisPacket = (PNDIS_PACKET*)NdisPacket->u.s3.MacReserved;
-  *pNdisPacket = NULL;
-
-  KeAcquireSpinLock(&LoopQueueLock, &OldIrql);
-
-  /* Add packet to transmit queue */
-  if (LoopQueueHead != NULL)
-    {
-      /* Transmit queue is not empty */
-      pNdisPacket = (PNDIS_PACKET*)LoopQueueTail->u.s3.MacReserved;
-      *pNdisPacket = NdisPacket;
-    }
-  else
-    {
-      /* Transmit queue is empty */
-      LoopQueueHead = NdisPacket;
-    }
-
-  LoopQueueTail = NdisPacket;
-
-  /* If RealTransmit is not running (or scheduled to run) then schedule it to run now */
-  if (!LoopBusy)
-    {
-      LoopBusy = TRUE;  /* The loopback interface is now busy */
-      ExQueueWorkItem(&LoopWorkItem, CriticalWorkQueue);
-    }
-
-  KeReleaseSpinLock(&LoopQueueLock, OldIrql);
+  IPPacket.NdisPacket = NdisPacket;
+  
+  IPReceive(Context, &IPPacket);
+  TI_DbgPrint(MAX_TRACE, ("Finished receive\n"));
+  PC(NdisPacket)->DLComplete(Context, NdisPacket, NDIS_STATUS_SUCCESS);
+  TI_DbgPrint(MAX_TRACE, ("Done\n"));
 }
 
 NDIS_STATUS LoopRegisterAdapter(
@@ -171,11 +80,6 @@ NDIS_STATUS LoopRegisterAdapter(
           ReferenceObject(Loopback);
 
           IPRegisterInterface(Loopback);
-
-          ExInitializeWorkItem(&LoopWorkItem, RealTransmit, Loopback);
-
-          KeInitializeSpinLock(&LoopQueueLock);
-          LoopBusy = FALSE;
         }
       else
         {

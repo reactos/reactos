@@ -28,13 +28,10 @@ PCONNECTION_ENDPOINT TCPAllocateConnectionEndpoint( PVOID ClientContext ) {
     RtlZeroMemory(Connection, sizeof(CONNECTION_ENDPOINT));
     
     /* Initialize spin lock that protects the connection endpoint file object */
-    KeInitializeSpinLock(&Connection->Lock);
+    TcpipInitializeSpinLock(&Connection->Lock);
     InitializeListHead(&Connection->ConnectRequest);
     InitializeListHead(&Connection->ListenRequest);
     InitializeListHead(&Connection->ReceiveRequest);
-    
-    /* Reference the object */
-    Connection->RefCount = 1;
     
     /* Save client context pointer */
     Connection->ClientContext = ClientContext;
@@ -58,13 +55,13 @@ NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection,
 			   "Proto %d\n",
 			   Connection, Family, Type, Proto));
 
-    RecursiveMutexEnter( &TCPLock, TRUE );
+    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
     Status = TCPTranslateError( OskitTCPSocket( Connection,
 						&Connection->SocketContext,
 						Family,
 						Type,
 						Proto ) );
-    RecursiveMutexLeave( &TCPLock );
+    TcpipRecursiveMutexLeave( &TCPLock );
 
     return Status;
 }
@@ -83,13 +80,13 @@ VOID TCPReceive(PNET_TABLE_ENTRY NTE, PIP_PACKET IPPacket)
 			   IPPacket->TotalSize,
 			   IPPacket->HeaderSize));
 
-    RecursiveMutexEnter( &TCPLock, TRUE );
+    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
 
     OskitTCPReceiveDatagram( IPPacket->Header, 
 			     IPPacket->TotalSize, 
 			     IPPacket->HeaderSize );
 
-    RecursiveMutexLeave( &TCPLock );
+    TcpipRecursiveMutexLeave( &TCPLock );
 }
 
 /* event.c */
@@ -135,7 +132,7 @@ NTSTATUS TCPStartup(VOID)
  *     Status of operation
  */
 {
-    RecursiveMutexInit( &TCPLock );
+    TcpipRecursiveMutexInit( &TCPLock );
     ExInitializeFastMutex( &SleepingThreadsLock );
     InitializeListHead( &SleepingThreadsList );    
 
@@ -250,7 +247,7 @@ NTSTATUS TCPConnect
     Bucket = ExAllocatePool( NonPagedPool, sizeof(*Bucket) );
     if( !Bucket ) return STATUS_NO_MEMORY;
 
-    RecursiveMutexEnter( &TCPLock, TRUE );
+    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
 
     /* Freed in TCPSocketState */
     Bucket->Request.RequestNotifyObject = (PVOID)Complete;
@@ -290,7 +287,7 @@ NTSTATUS TCPConnect
 			     &AddressToConnect, 
 			     sizeof(AddressToConnect));
 
-    RecursiveMutexLeave( &TCPLock );
+    TcpipRecursiveMutexLeave( &TCPLock );
     
     if( Status == OSK_EINPROGRESS || Status == STATUS_SUCCESS ) 
 	return STATUS_PENDING;
@@ -304,11 +301,11 @@ NTSTATUS TCPClose
     
     TI_DbgPrint(MID_TRACE,("TCPClose started\n"));
 
-    RecursiveMutexEnter( &TCPLock, TRUE );
+    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
 
     Status = TCPTranslateError( OskitTCPClose( Connection->SocketContext ) );
 
-    RecursiveMutexLeave( &TCPLock );
+    TcpipRecursiveMutexLeave( &TCPLock );
     
     TI_DbgPrint(MID_TRACE,("TCPClose finished %x\n", Status));
 
@@ -322,14 +319,14 @@ NTSTATUS TCPListen
   PVOID Context) {
    NTSTATUS Status;
 
-    RecursiveMutexEnter( &TCPLock, TRUE );
-
-    Status =  TCPTranslateError( OskitTCPListen( Connection->SocketContext,
-						 Backlog ) );
-
-    RecursiveMutexLeave( &TCPLock );
-
-    return Status;
+   TcpipRecursiveMutexEnter( &TCPLock, TRUE );
+   
+   Status =  TCPTranslateError( OskitTCPListen( Connection->SocketContext,
+						Backlog ) );
+   
+   TcpipRecursiveMutexLeave( &TCPLock );
+   
+   return Status;
 }
 
 NTSTATUS TCPAccept
@@ -353,7 +350,7 @@ NTSTATUS TCPReceiveData
 
     TI_DbgPrint(MID_TRACE,("Called for %d bytes\n", ReceiveLength));
 
-    RecursiveMutexEnter( &TCPLock, TRUE );
+    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
 
     NdisQueryBuffer( Buffer, &DataBuffer, &DataLen );
 
@@ -390,7 +387,7 @@ NTSTATUS TCPReceiveData
 	*BytesReceived = Received;
     }
 
-    RecursiveMutexLeave( &TCPLock );
+    TcpipRecursiveMutexLeave( &TCPLock );
 
     TI_DbgPrint(MID_TRACE,("Status %x\n", Status));
 
@@ -405,7 +402,7 @@ NTSTATUS TCPSendData
   ULONG Flags) {
     NTSTATUS Status;
 
-    RecursiveMutexEnter( &TCPLock, TRUE );
+    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
 
     TI_DbgPrint(MID_TRACE,("Connection = %x\n", Connection));
     TI_DbgPrint(MID_TRACE,("Connection->SocketContext = %x\n",
@@ -416,7 +413,7 @@ NTSTATUS TCPSendData
     Status = OskitTCPSend( Connection->SocketContext, 
 			   BufferData, PacketSize, (PUINT)DataUsed, 0 );
 
-    RecursiveMutexLeave( &TCPLock );
+    TcpipRecursiveMutexLeave( &TCPLock );
 
     return Status;
 }
@@ -424,9 +421,9 @@ NTSTATUS TCPSendData
 VOID TCPTimeout(VOID) { 
     static int Times = 0;
     if( (Times++ % 5) == 0 ) {
-	RecursiveMutexEnter( &TCPLock, TRUE );
+	TcpipRecursiveMutexEnter( &TCPLock, TRUE );
 	TimerOskitTCP();
-	RecursiveMutexLeave( &TCPLock );
+	TcpipRecursiveMutexLeave( &TCPLock );
     }
 }
 

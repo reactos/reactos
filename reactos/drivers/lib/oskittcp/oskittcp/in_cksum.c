@@ -67,9 +67,6 @@ in_cksum(m, len)
 	} l_util;
 
 	for (;m && len; m = m->m_next) {
-	    OS_DbgPrint(OSK_MID_TRACE,("Processing m %x (%d)\n", m, len));
-	    OskitDumpBuffer( m->m_data, m->m_len );
-
 		if (m->m_len == 0)
 			continue;
 		w = mtod(m, u_short *);

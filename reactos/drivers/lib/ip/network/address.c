@@ -93,7 +93,7 @@ VOID IPAddressFree(
  *     Nothing
  */
 {
-    ExFreePool(Object);
+    PoolFreeBuffer(Object);
 }
 
 
@@ -192,7 +192,7 @@ NTSTATUS AddrBuildAddress(
 
   ValidAddr = (PTDI_ADDRESS_IP)TdiAddress->Address;
 
-  IPAddress = ExAllocatePool(NonPagedPool, sizeof(IP_ADDRESS));
+  IPAddress = PoolAllocateBuffer(sizeof(IP_ADDRESS));
   if (!IPAddress)
     return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -305,9 +305,8 @@ PIP_ADDRESS AddrBuildIPv4(
 {
     PIP_ADDRESS IPAddress;
 
-    IPAddress = ExAllocatePool(NonPagedPool, sizeof(IP_ADDRESS));
+    IPAddress = PoolAllocateBuffer(sizeof(IP_ADDRESS));
     if (IPAddress != NULL) {
-        IPAddress->RefCount            = 1;
         IPAddress->Type                = IP_ADDRESS_V4;
         IPAddress->Address.IPv4Address = Address;
         IPAddress->Free                = IPAddressFree;

@@ -11,7 +11,6 @@
 typedef struct _PREFIX_LIST_ENTRY {
     DEFINE_TAG
     LIST_ENTRY ListEntry;    /* Entry on list */
-    ULONG RefCount;          /* Reference count */
     PIP_INTERFACE Interface; /* Pointer to interface */
     PIP_ADDRESS Prefix;      /* Pointer to prefix */
     UINT PrefixLength;       /* Length of prefix */

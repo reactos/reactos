@@ -74,6 +74,10 @@ NTSTATUS BuildRawIPPacket(
     return STATUS_SUCCESS;
 }
 
+VOID RawIPSendComplete
+( PVOID Context, PNDIS_PACKET Packet, NDIS_STATUS Status ) {
+    FreeNdisPacket( Packet );
+}
 
 NTSTATUS RawIPSendDatagram(
     PADDRESS_FILE AddrFile,
@@ -94,6 +98,8 @@ NTSTATUS RawIPSendDatagram(
 {
     NDIS_STATUS Status;
     IP_PACKET Packet;
+    PROUTE_CACHE_NODE RCN;
+    IP_ADDRESS RemoteAddress;
 
     Status = AllocatePacketWithBuffer( &Packet.NdisPacket,
 				       BufferData,
@@ -108,13 +114,23 @@ NTSTATUS RawIPSendDatagram(
 				   BufferLen,
 				   AddrFile->ADE->Address,
 				   AddrFile->Port );
-    if( Status == NDIS_STATUS_SUCCESS ) 
-	Status = DGSendDatagram(AddrFile, ConnInfo, BufferData, BufferLen, 
-				DataUsed);
-    else
-	FreeNdisPacket( Packet.NdisPacket );
 
-    /* NdisFreeBuffer( Buffer ); */
+    if( Status == NDIS_STATUS_SUCCESS ) {
+	RemoteAddress.Type = IP_ADDRESS_V4;
+	RtlCopyMemory( &RemoteAddress.Address.IPv4Address,
+		       BufferData + FIELD_OFFSET(IPv4_HEADER, DstAddr),
+		       sizeof(IPv4_RAW_ADDRESS) );
+
+	Status = RouteGetRouteToDestination( &RemoteAddress, NULL, &RCN );
+	
+	if( !NT_SUCCESS(Status) ) {
+	    FreeNdisPacket( Packet.NdisPacket );
+	    return Status;
+	}
+	
+	IPSendDatagram( &Packet, RCN, RawIPSendComplete, NULL );
+    } else
+	FreeNdisPacket( Packet.NdisPacket );
 
     return Status;
 }

@@ -27,7 +27,7 @@ VOID FreeFIB(
  *     Object = Pointer to an forward information base structure
  */
 {
-    ExFreePool(Object);
+    PoolFreeBuffer(Object);
 }
 
 
@@ -45,19 +45,6 @@ VOID DestroyFIBE(
 
     /* Unlink the FIB entry from the list */
     RemoveEntryList(&FIBE->ListEntry);
-
-    /* Dereference the referenced objects */
-    DereferenceObject(FIBE->NetworkAddress);
-    DereferenceObject(FIBE->Netmask);
-    DereferenceObject(FIBE->Router);
-
-#ifdef DBG
-    FIBE->RefCount--;
-
-    if (FIBE->RefCount != 0) {
-        TI_DbgPrint(MIN_TRACE, ("FIB entry at (0x%X) has (%d) references (Should be 0).\n", FIBE, FIBE->RefCount));
-    }
-#endif
 
     /* And free the FIB entry */
     FreeFIB(FIBE);
@@ -235,7 +222,7 @@ PNET_TABLE_ENTRY RouterFindBestNTE(
 
     TI_DbgPrint(DEBUG_ROUTER, ("Destination (%s).\n", A2S(Destination)));
 
-    KeAcquireSpinLock(&Interface->Lock, &OldIrql);
+    TcpipAcquireSpinLock(&Interface->Lock, &OldIrql);
 
     CurrentEntry = Interface->NTEListHead.Flink;
     while (CurrentEntry != &Interface->NTEListHead) {
@@ -245,22 +232,17 @@ PNET_TABLE_ENTRY RouterFindBestNTE(
         Length = CommonPrefixLength(Destination, Current->Address);
         if (BestNTE) {
             if (Length > BestLength) {
-                /* This seems to be a better NTE */
-                DereferenceObject(BestNTE);
-                ReferenceObject(Current);
                 BestNTE    = Current;
                 BestLength = Length;
             }
         } else {
-            /* First suitable NTE found, save it */
-            ReferenceObject(Current);
             BestNTE    = Current;
             BestLength = Length;
         }
         CurrentEntry = CurrentEntry->Flink;
     }
 
-    KeReleaseSpinLock(&Interface->Lock, OldIrql);
+    TcpipReleaseSpinLock(&Interface->Lock, OldIrql);
 
     return BestNTE;
 }
@@ -331,7 +313,7 @@ PFIB_ENTRY RouterAddRoute(
 			       A2S(Netmask), 
 			       A2S(&Router->Address)));
 
-    FIBE = ExAllocatePool(NonPagedPool, sizeof(FIB_ENTRY));
+    FIBE = PoolAllocateBuffer(sizeof(FIB_ENTRY));
     if (!FIBE) {
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         return NULL;
@@ -346,7 +328,7 @@ PFIB_ENTRY RouterAddRoute(
     FIBE->Metric         = Metric;
 
     /* Add FIB to the forward information base */
-    ExInterlockedInsertTailList(&FIBListHead, &FIBE->ListEntry, &FIBLock);
+    TcpipInterlockedInsertTailList(&FIBListHead, &FIBE->ListEntry, &FIBLock);
 
     return FIBE;
 }
@@ -381,7 +363,7 @@ PNEIGHBOR_CACHE_ENTRY RouterGetRoute(
     if( NTE )
 	TI_DbgPrint(DEBUG_ROUTER, ("NTE (%s).\n", A2S(NTE->Address)));
 
-    KeAcquireSpinLock(&FIBLock, &OldIrql);
+    TcpipAcquireSpinLock(&FIBLock, &OldIrql);
 
     CurrentEntry = FIBListHead.Flink;
     while (CurrentEntry != &FIBListHead) {
@@ -402,15 +384,12 @@ PNEIGHBOR_CACHE_ENTRY RouterGetRoute(
                     ((State == BestState) &&
                     (Length > BestLength))) {
                     /* This seems to be a better router */
-                    DereferenceObject(BestNCE);
-                    ReferenceObject(NCE);
                     BestNCE    = NCE;
                     BestLength = Length;
                     BestState  = State;
                 }
             } else {
                 /* First suitable router found, save it */
-                ReferenceObject(NCE);
                 BestNCE    = NCE;
                 BestLength = Length;
                 BestState  = State;
@@ -419,7 +398,7 @@ PNEIGHBOR_CACHE_ENTRY RouterGetRoute(
         CurrentEntry = NextEntry;
     }
 
-    KeReleaseSpinLock(&FIBLock, OldIrql);
+    TcpipReleaseSpinLock(&FIBLock, OldIrql);
 
     return BestNCE;
 }
@@ -439,9 +418,9 @@ VOID RouterRemoveRoute(
 
     TI_DbgPrint(DEBUG_ROUTER, ("FIBE (%s).\n", A2S(FIBE->NetworkAddress)));
 
-    KeAcquireSpinLock(&FIBLock, &OldIrql);
+    TcpipAcquireSpinLock(&FIBLock, &OldIrql);
     DestroyFIBE(FIBE);
-    KeReleaseSpinLock(&FIBLock, OldIrql);
+    TcpipReleaseSpinLock(&FIBLock, OldIrql);
 }
 
 
@@ -480,15 +459,12 @@ PFIB_ENTRY RouterCreateRouteIPv4(
     pNetmask = AddrBuildIPv4(Netmask);
     if (!pNetmask) {
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-        DereferenceObject(pNetworkAddress);
         return NULL;
     }
 
     pRouterAddress = AddrBuildIPv4(RouterAddress);
     if (!pRouterAddress) {
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-        DereferenceObject(pNetworkAddress);
-        DereferenceObject(pNetmask);
         return NULL;
     }
 
@@ -500,21 +476,13 @@ PFIB_ENTRY RouterCreateRouteIPv4(
                         NUD_PROBE);
     if (!NCE) {
         /* Not enough free resources */
-        DereferenceObject(pNetworkAddress);
-        DereferenceObject(pNetmask);
-        DereferenceObject(pRouterAddress);
         return NULL;
     }
 
-    ReferenceObject(pNetworkAddress);
-    ReferenceObject(pNetmask);
     FIBE = RouterAddRoute(pNetworkAddress, pNetmask, NCE, 1);
     if (!FIBE) {
         /* Not enough free resources */
         NBRemoveNeighbor(NCE);
-        DereferenceObject(pNetworkAddress);
-        DereferenceObject(pNetmask);
-        DereferenceObject(pRouterAddress);
 
         (pNetworkAddress->Free)(pNetworkAddress);
         (pNetmask->Free)(pNetmask);
@@ -537,7 +505,7 @@ NTSTATUS RouterStartup(
 
     /* Initialize the Forward Information Base */
     InitializeListHead(&FIBListHead);
-    KeInitializeSpinLock(&FIBLock);
+    TcpipInitializeSpinLock(&FIBLock);
 
 #if 0
     /* TEST: Create a test route */
@@ -563,9 +531,9 @@ NTSTATUS RouterShutdown(
     TI_DbgPrint(DEBUG_ROUTER, ("Called.\n"));
 
     /* Clear Forward Information Base */
-    KeAcquireSpinLock(&FIBLock, &OldIrql);
+    TcpipAcquireSpinLock(&FIBLock, &OldIrql);
     DestroyFIBEs();
-    KeReleaseSpinLock(&FIBLock, OldIrql);
+    TcpipReleaseSpinLock(&FIBLock, OldIrql);
 
     return STATUS_SUCCESS;
 }

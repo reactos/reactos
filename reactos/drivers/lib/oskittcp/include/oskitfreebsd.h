@@ -1,6 +1,10 @@
 #ifndef _OSKITFREEBSD_H
 #define _OSKITFREEBSD_H
 
+#ifdef linux
+#include <netinet/in.h>
+#endif
+
 extern void oskittcp_die(const char *file, int line);
 
 #ifdef _MSC_VER

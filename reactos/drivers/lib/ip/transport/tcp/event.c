@@ -42,7 +42,7 @@ int TCPSocketState(void *ClientData,
 			("Completing Connect Request %x\n", Bucket->Request));
 	    Complete( Bucket->Request.RequestContext, STATUS_SUCCESS, 0 );
 	    /* Frees the bucket allocated in TCPConnect */
-	    ExFreePool( Bucket );
+	    PoolFreeBuffer( Bucket );
 	}
     } else if( (NewState & SEL_READ) || (NewState & SEL_FIN) ) {
 	TI_DbgPrint(MID_TRACE,("Readable (or closed): irp list %s\n",
@@ -78,13 +78,21 @@ int TCPSocketState(void *ClientData,
 	    if( NewState & SEL_FIN && !RecvLen ) {
 		Status = STATUS_END_OF_FILE;
 		Received = 0;
-	    } else 
+	    } else {
+		TI_DbgPrint(MID_TRACE, ("Connection: %x\n", Connection));
+		TI_DbgPrint
+		    (MID_TRACE, 
+		     ("Connection->SocketContext: %x\n", 
+		      Connection->SocketContext));
+		TI_DbgPrint(MID_TRACE, ("RecvBuffer: %x\n", RecvBuffer));
+
 		Status = TCPTranslateError
 		    ( OskitTCPRecv( Connection->SocketContext,
 				    RecvBuffer,
 				    RecvLen,
 				    &Received,
 				    0 ) );
+	    }
 
 	    TI_DbgPrint(MID_TRACE,("TCP Bytes: %d\n", Received));
 
@@ -118,7 +126,9 @@ int TCPSocketState(void *ClientData,
 void TCPPacketSendComplete( PVOID Context,
 			    PNDIS_PACKET NdisPacket,
 			    NDIS_STATUS NdisStatus ) {
-    TI_DbgPrint(MID_TRACE,("called\n"));
+    TI_DbgPrint(MID_TRACE,("called %x\n", NdisPacket));
+    FreeNdisPacket(NdisPacket);
+    TI_DbgPrint(MID_TRACE,("done\n"));
 }
 
 #define STRINGIFY(x) #x
@@ -151,35 +161,29 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
 	     LocalAddress.Address.IPv4Address,
 	     RemoteAddress.Address.IPv4Address);
     
-    ASSERT( (LocalAddress.Address.IPv4Address & 0xc0000000) != 0xc0000000 );
-	
-
-    Status = RouteGetRouteToDestination( &RemoteAddress,
-					 NULL,
-					 &RCN );
+    Status = RouteGetRouteToDestination( &RemoteAddress, NULL, &RCN );
     
     if( !NT_SUCCESS(Status) || !RCN ) return OSK_EADDRNOTAVAIL;
 
-    NdisStatus = 
-	AllocatePacketWithBuffer( &Packet.NdisPacket, data, len );
+    NdisStatus = AllocatePacketWithBuffer( &Packet.NdisPacket, NULL, 
+					   MaxLLHeaderSize + len );
     
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
 	TI_DbgPrint(MAX_TRACE, ("Error from NDIS: %08x\n", NdisStatus));
 	return STATUS_NO_MEMORY;
     }
 
-    AdjustPacket( Packet.NdisPacket, 0, MaxLLHeaderSize );
-    GetDataPtr( Packet.NdisPacket, 0, (PCHAR *)&Packet.Header, &Packet.ContigSize );
-    TI_DbgPrint(MAX_TRACE,("PC(Packet.NdisPacket) is %s (%x)\n", STRINGIFY(PC(Packet.NdisPacket)), PC(Packet.NdisPacket)));
-    PC(Packet.NdisPacket)->Complete = TCPPacketSendComplete;
-    OskitDumpBuffer((PCHAR)(PC(Packet.NdisPacket)),sizeof(*(PC(Packet.NdisPacket))));
+    GetDataPtr( Packet.NdisPacket, MaxLLHeaderSize, 
+		(PCHAR *)&Packet.Header, &Packet.ContigSize );
+
+    RtlCopyMemory( Packet.Header, data, len );
 
     Packet.HeaderSize = sizeof(IPv4_HEADER);
     Packet.TotalSize = len;
     Packet.SrcAddr = LocalAddress;
     Packet.DstAddr = RemoteAddress;
 
-    IPSendFragment( Packet.NdisPacket, RCN->NCE );
+    IPSendDatagram( &Packet, RCN, TCPPacketSendComplete, NULL );
 
     if( !NT_SUCCESS(NdisStatus) ) return OSK_EINVAL;
     else return 0;
@@ -187,7 +191,7 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
 
 void *TCPMalloc( void *ClientData,
 		 OSK_UINT Bytes, OSK_PCHAR File, OSK_UINT Line ) {
-    void *v = ExAllocatePool( NonPagedPool, Bytes );
+    void *v = PoolAllocateBuffer( Bytes );
     if( v ) TrackWithTag( FOURCC('f','b','s','d'), v, File, Line );
     return v;
 }
@@ -195,7 +199,7 @@ void *TCPMalloc( void *ClientData,
 void TCPFree( void *ClientData,
 	      void *data, OSK_PCHAR File, OSK_UINT Line ) {
     UntrackFL( File, Line, data );
-    ExFreePool( data );
+    PoolFreeBuffer( data );
 }
 
 int TCPSleep( void *ClientData, void *token, int priority, char *msg,
@@ -206,14 +210,14 @@ int TCPSleep( void *ClientData, void *token, int priority, char *msg,
 		("Called TSLEEP: tok = %x, pri = %d, wmesg = %s, tmio = %x\n",
 		 token, priority, msg, tmio));
 
-    SleepingThread = ExAllocatePool( NonPagedPool, sizeof( *SleepingThread ) );
+    SleepingThread = PoolAllocateBuffer( sizeof( *SleepingThread ) );
     if( SleepingThread ) {
 	KeInitializeEvent( &SleepingThread->Event, NotificationEvent, FALSE );
 	SleepingThread->SleepToken = token;
 
-	ExAcquireFastMutex( &SleepingThreadsLock );
+	TcpipAcquireFastMutex( &SleepingThreadsLock );
 	InsertTailList( &SleepingThreadsList, &SleepingThread->Entry );
-	ExReleaseFastMutex( &SleepingThreadsLock );
+	TcpipReleaseFastMutex( &SleepingThreadsLock );
 
 	TI_DbgPrint(MID_TRACE,("Waiting on %x\n", token));
 	KeWaitForSingleObject( &SleepingThread->Event,
@@ -222,11 +226,11 @@ int TCPSleep( void *ClientData, void *token, int priority, char *msg,
 			       TRUE,
 			       NULL );
 
-	ExAcquireFastMutex( &SleepingThreadsLock );
+	TcpipAcquireFastMutex( &SleepingThreadsLock );
 	RemoveEntryList( &SleepingThread->Entry );
-	ExReleaseFastMutex( &SleepingThreadsLock );
+	TcpipReleaseFastMutex( &SleepingThreadsLock );
 
-	ExFreePool( SleepingThread );
+	PoolFreeBuffer( SleepingThread );
     }
     TI_DbgPrint(MID_TRACE,("Waiting finished: %x\n", token));
     return 0;
@@ -236,7 +240,7 @@ void TCPWakeup( void *ClientData, void *token ) {
     PLIST_ENTRY Entry;
     PSLEEPING_THREAD SleepingThread;
 
-    ExAcquireFastMutex( &SleepingThreadsLock );
+    TcpipAcquireFastMutex( &SleepingThreadsLock );
     Entry = SleepingThreadsList.Flink;
     while( Entry != &SleepingThreadsList ) {
 	SleepingThread = CONTAINING_RECORD(Entry, SLEEPING_THREAD, Entry);
@@ -247,5 +251,5 @@ void TCPWakeup( void *ClientData, void *token ) {
 	}
 	Entry = Entry->Flink;
     }
-    ExReleaseFastMutex( &SleepingThreadsLock );
+    TcpipReleaseFastMutex( &SleepingThreadsLock );
 }

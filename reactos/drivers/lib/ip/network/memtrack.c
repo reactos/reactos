@@ -15,7 +15,7 @@ VOID TrackTag( DWORD Tag ) {
 }
 
 VOID TrackingInit() {
-    KeInitializeSpinLock( &AllocatedObjectsLock );
+    TcpipInitializeSpinLock( &AllocatedObjectsLock );
     InitializeListHead( &AllocatedObjectsList );
 }
 
@@ -23,55 +23,55 @@ VOID ShowTrackedThing( PCHAR What, PALLOCATION_TRACKER Thing,
 		       PCHAR File, UINT Line ) {
     /* if( ShowTag( Thing->Tag ) ) */
     if( File ) {
-	DbgPrint( "[%s] Thing %08x %c%c%c%c (%s:%d) (Called from %s:%d)\n", 
-		  What,
-		  Thing->Thing,
-		  ((PCHAR)&Thing->Tag)[3],
-		  ((PCHAR)&Thing->Tag)[2],
-		  ((PCHAR)&Thing->Tag)[1],
-		  ((PCHAR)&Thing->Tag)[0],
-		  Thing->FileName,
-		  Thing->LineNo,
-		  File, Line );
+	TI_DbgPrint(MAX_TRACE, 
+		    ("[%s] Thing %08x %c%c%c%c (%s:%d) (Called from %s:%d)\n", 
+		     What,
+		     Thing->Thing,
+		     ((PCHAR)&Thing->Tag)[3],
+		     ((PCHAR)&Thing->Tag)[2],
+		     ((PCHAR)&Thing->Tag)[1],
+		     ((PCHAR)&Thing->Tag)[0],
+		     Thing->FileName,
+		     Thing->LineNo,
+		     File, Line));
     } else {
-	DbgPrint( "[%s] Thing %08x %c%c%c%c (%s:%d)\n", 
-		  What,
-		  Thing->Thing,
-		  ((PCHAR)&Thing->Tag)[3],
-		  ((PCHAR)&Thing->Tag)[2],
-		  ((PCHAR)&Thing->Tag)[1],
-		  ((PCHAR)&Thing->Tag)[0],
-		  Thing->FileName,
-		  Thing->LineNo );
+	TI_DbgPrint(MAX_TRACE,
+		    ( "[%s] Thing %08x %c%c%c%c (%s:%d)\n", 
+		      What,
+		      Thing->Thing,
+		      ((PCHAR)&Thing->Tag)[3],
+		      ((PCHAR)&Thing->Tag)[2],
+		      ((PCHAR)&Thing->Tag)[1],
+		      ((PCHAR)&Thing->Tag)[0],
+		      Thing->FileName,
+		      Thing->LineNo ));
     }
 }
 
 VOID TrackWithTag( DWORD Tag, PVOID Thing, PCHAR FileName, DWORD LineNo ) {
     PALLOCATION_TRACKER TrackedThing = 
-	ExAllocatePool( NonPagedPool, sizeof(*TrackedThing) );
+	PoolAllocateBuffer( sizeof(*TrackedThing) );
 
     KIRQL OldIrql;
     PLIST_ENTRY Entry;
     PALLOCATION_TRACKER ThingInList;
 
-    KeAcquireSpinLock( &AllocatedObjectsLock, &OldIrql );
+    TcpipAcquireSpinLock( &AllocatedObjectsLock, &OldIrql );
     Entry = AllocatedObjectsList.Flink;
     while( Entry != &AllocatedObjectsList ) {
 	ThingInList = CONTAINING_RECORD(Entry, ALLOCATION_TRACKER, Entry);
 	if( ThingInList->Thing == Thing ) {
 	    RemoveEntryList(Entry);
 	    
-	    KeReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
+	    TcpipReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
 	    ShowTrackedThing( "Alloc", ThingInList, FileName, LineNo );
-	    ExFreePool( ThingInList );
+	    PoolFreeBuffer( ThingInList );
 	    TrackDumpFL( FileName, LineNo );
 	    DbgPrint("TRACK: SPECIFIED ALREADY ALLOCATED ITEM %x\n", Thing);
-	    KeBugCheck( 0 );
+	    TcpipBugCheck( 0 );
 	}
 	Entry = Entry->Flink;
     }
-
-    KeReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
 
     if( TrackedThing ) {
 	TrackedThing->Tag      = Tag;
@@ -79,11 +79,12 @@ VOID TrackWithTag( DWORD Tag, PVOID Thing, PCHAR FileName, DWORD LineNo ) {
 	TrackedThing->FileName = FileName;
 	TrackedThing->LineNo   = LineNo;
 	
-	ExInterlockedInsertTailList( &AllocatedObjectsList, 
-				     &TrackedThing->Entry,
-				     &AllocatedObjectsLock );
+	
+	InsertTailList( &AllocatedObjectsList, &TrackedThing->Entry );
 	ShowTrackedThing( "Alloc", TrackedThing, FileName, LineNo );
     }
+
+    TcpipReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
 
     /*TrackDumpFL( FileName, LineNo );*/
 }
@@ -101,7 +102,7 @@ VOID UntrackFL( PCHAR File, DWORD Line, PVOID Thing ) {
     PLIST_ENTRY Entry;
     PALLOCATION_TRACKER ThingInList;
 
-    KeAcquireSpinLock( &AllocatedObjectsLock, &OldIrql );
+    TcpipAcquireSpinLock( &AllocatedObjectsLock, &OldIrql );
     Entry = AllocatedObjectsList.Flink;
     while( Entry != &AllocatedObjectsList ) {
 	ThingInList = CONTAINING_RECORD(Entry, ALLOCATION_TRACKER, Entry);
@@ -110,17 +111,17 @@ VOID UntrackFL( PCHAR File, DWORD Line, PVOID Thing ) {
 	    
 	    ShowTrackedThing( "Free ", ThingInList, File, Line );
 	    
-	    ExFreePool( ThingInList );
-	    KeReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
+	    PoolFreeBuffer( ThingInList );
+	    TcpipReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
 	    /* TrackDumpFL( File, Line ); */
 	    return;
 	}
 	Entry = Entry->Flink;
     }
-    KeReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
+    TcpipReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
     TrackDumpFL( File, Line );
     DbgPrint("UNTRACK: SPECIFIED ALREADY FREE ITEM %x\n", Thing);
-    KeBugCheck( 0 );
+    TcpipBugCheck( 0 );
 }
 
 VOID TrackDumpFL( PCHAR File, DWORD Line ) {
@@ -128,16 +129,16 @@ VOID TrackDumpFL( PCHAR File, DWORD Line ) {
     PLIST_ENTRY Entry;
     PALLOCATION_TRACKER Thing;
 
-    DbgPrint("Dump: %s:%d\n", File, Line);
+    TI_DbgPrint(MAX_TRACE,("Dump: %s:%d\n", File, Line));
 
-    KeAcquireSpinLock( &AllocatedObjectsLock, &OldIrql );
+    TcpipAcquireSpinLock( &AllocatedObjectsLock, &OldIrql );
     Entry = AllocatedObjectsList.Flink;
     while( Entry != &AllocatedObjectsList ) {
 	Thing = CONTAINING_RECORD(Entry, ALLOCATION_TRACKER, Entry);
 	ShowTrackedThing( "Dump ", Thing, 0, 0 );
 	Entry = Entry->Flink;
     }
-    KeReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
+    TcpipReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
 }
 
 #endif/*MEMTRACK*/
