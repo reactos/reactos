@@ -26,10 +26,8 @@
  //
 
 
-#include "../utility/utility.h"
-#include "../utility/shellclasses.h"
+#include "precomp.h"
 
-#include "entries.h"
 #include "regfs.h"
 
 

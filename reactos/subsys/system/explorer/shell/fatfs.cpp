@@ -26,11 +26,8 @@
  //
 
 
-#include "../utility/utility.h"
-#include "../utility/shellclasses.h"
-#include "../globals.h"
+#include "precomp.h"
 
-#include "entries.h"
 #include "fatfs.h"
 
 

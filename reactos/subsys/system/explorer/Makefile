@@ -43,7 +43,7 @@ ifndef UNICODE
 UNICODE = 1
 endif
 
-CFLAGS	= -DWIN32 -D_ROS_ -D_WIN32_IE=0x0600 -D_WIN32_WINNT=0x0501 -fexceptions -Wall -I$(W32API_PATH)/include
+CFLAGS	= -DWIN32 -D_ROS_ -D_WIN32_IE=0x0600 -D_WIN32_WINNT=0x0501 -fexceptions -Wall -I. -I$(W32API_PATH)/include
 RCFLAGS	= -DWIN32 -D_ROS_ -D__WINDRES__ --include-dir $(W32API_PATH)/include
 LFLAGS	= -Wl,--subsystem,windows
 

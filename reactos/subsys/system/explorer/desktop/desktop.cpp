@@ -26,20 +26,12 @@
  //
 
 
-#include "../utility/utility.h"
-#include "../utility/shellclasses.h"
-#include "../utility/shellbrowserimpl.h"
-#include "../utility/dragdropimpl.h"
-#include "../utility/window.h"
+#include "precomp.h"
 
-#include "../globals.h"
-#include "../externals.h"
 #include "../explorer_intres.h"
 
-#include "desktop.h"
 #include "../taskbar/desktopbar.h"
 #include "../taskbar/taskbar.h"	// for PM_GET_LAST_ACTIVE
-#include "../shell/mainframe.h"	// for MainFrame::OpenShellFolders()
 
 
 static BOOL (WINAPI*SetShellWindow)(HWND);

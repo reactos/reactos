@@ -26,11 +26,9 @@
  //
 
 
-#include "../utility/utility.h"
-#include "../utility/shellclasses.h"
-#include "../globals.h"	// for _prescan_nodes
+#include "precomp.h"
 
-#include "entries.h"
+//#include "entries.h"
 
 
  // allocate and initialise a directory entry

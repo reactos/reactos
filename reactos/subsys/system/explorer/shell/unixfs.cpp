@@ -28,11 +28,9 @@
 
 #ifdef __WINE__
 
-#include "../utility/utility.h"
-#include "../utility/shellclasses.h"
+#include "precomp.h"
 
-#include "entries.h"
-#include "unixfs.h"
+//#include "unixfs.h"
 
  // for UnixDirectory::read_directory()
 #include <dirent.h>

@@ -26,8 +26,7 @@
  //
 
 
-#include "../utility/utility.h"
-#include "../explorer.h"
+#include "precomp.h"
 
 #include "../explorer_intres.h"
 

@@ -26,11 +26,8 @@
  //
 
 
-#include "utility.h"
-#include "shellclasses.h"
-#include "window.h"
+#include "precomp.h"
 
-#include "../globals.h"
 #include "../explorer_intres.h"	// for ID_GO_BACK, ...
 
 

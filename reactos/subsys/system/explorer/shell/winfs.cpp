@@ -26,12 +26,9 @@
  //
 
 
-#include "../utility/utility.h"
-#include "../utility/shellclasses.h"
-#include "../globals.h"
+#include "precomp.h"
 
-#include "entries.h"
-#include "winfs.h"
+//#include "winfs.h"
 
 
 int ScanNTFSStreams(Entry* entry, HANDLE hFile)

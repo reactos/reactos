@@ -28,10 +28,8 @@
  //
 
 
-#include "../utility/utility.h"
+#include "precomp.h"
 
-#include "../explorer.h"
-#include "../globals.h"
 #include "../explorer_intres.h"
 
 #include "searchprogram.h"

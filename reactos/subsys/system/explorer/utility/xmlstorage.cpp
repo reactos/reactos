@@ -36,9 +36,9 @@
 
 */
 
-#include "utility.h"
+#include "precomp.h"
 
-#include "xmlstorage.h"
+//#include "xmlstorage.h"
 
 
 namespace XMLStorage {

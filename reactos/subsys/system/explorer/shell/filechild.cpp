@@ -26,10 +26,8 @@
  //
 
 
-#include "../utility/utility.h"
+#include "precomp.h"
 
-#include "../explorer.h"
-#include "../globals.h"
 #include "ntobjfs.h"
 #include "regfs.h"
 #include "fatfs.h"

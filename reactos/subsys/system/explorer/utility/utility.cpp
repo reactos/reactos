@@ -26,8 +26,9 @@
  //
 
 
-#include "utility.h"
-#include <shellapi.h>
+#include "precomp.h"
+
+//#include <shellapi.h>
 
 #include <time.h>
 #include <sstream>

@@ -26,14 +26,10 @@
  //
 
 
-#include "../utility/utility.h"
-#include "../utility/shellclasses.h"
+#include "precomp.h"
 
-#include "../globals.h"
-
-#include "entries.h"
-#include "shellfs.h"
-#include "winfs.h"
+//#include "shellfs.h"
+//#include "winfs.h"
 
 #include <shlwapi.h>
 

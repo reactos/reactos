@@ -28,9 +28,7 @@
  //
 
 
-#include "utility.h"
-#include "shellclasses.h"
-#include "shellbrowserimpl.h"
+#include "precomp.h"
 
 
 HRESULT IShellBrowserImpl::QueryInterface(REFIID iid, void** ppvObject)
