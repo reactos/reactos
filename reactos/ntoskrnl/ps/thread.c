@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.50 2000/07/01 22:37:28 ekohl Exp $
+/* $Id: thread.c,v 1.51 2000/07/04 11:11:04 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -106,29 +106,20 @@ VOID PsUnfreezeProcessThreads(PEPROCESS Process)
    KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 }
 
-PKTHREAD
-STDCALL
-KeGetCurrentThread (
-	VOID
-	)
+PKTHREAD STDCALL KeGetCurrentThread(VOID)
 {
    return(&(CurrentThread->Tcb));
 }
 
-/*
 PETHREAD PsGetCurrentThread(VOID)
 {
    return(CurrentThread);
 }
-*/
 
-HANDLE
-STDCALL
-PsGetCurrentThreadId (
-	VOID
-	)
+
+HANDLE STDCALL PsGetCurrentThreadId(VOID)
 {
-   return(CurrentThread->Cid.UniqueThread);
+   return(PsGetCurrentThread()->Cid.UniqueThread);
 }
 
 static VOID PsInsertIntoThreadList(KPRIORITY Priority, PETHREAD Thread)

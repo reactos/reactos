@@ -238,7 +238,7 @@ VOID MmDereserveSwapPages(ULONG Nr);
 SWAPENTRY MmAllocSwapPage(VOID);
 VOID MmFreeSwapPage(SWAPENTRY Entry);
 
-VOID MmInit1(boot_param* bp, ULONG LastKernelAddress);
+VOID MmInit1(PLOADER_PARAMETER_BLOCK bp, ULONG LastKernelAddress);
 VOID MmInit2(VOID);
 VOID MmInit3(VOID);
 NTSTATUS MmInitPagerThread(VOID);

@@ -4,6 +4,8 @@
 
 /* KERNEL FUNCTIONS ********************************************************/
 
+#define KeFlushIoBuffers(Mdl, ReadOperation, DmaOperation)
+
 VOID STDCALL KeAttachProcess (struct _EPROCESS*	Process);
 
 VOID KeDrainApcQueue(VOID);
@@ -59,8 +61,6 @@ BOOLEAN STDCALL KeDeregisterBugCheckCallback (
 VOID STDCALL KeDetachProcess (VOID);
 
 VOID STDCALL KeEnterCriticalRegion (VOID);
-
-VOID KeFlushIoBuffers(PMDL Mdl, BOOLEAN ReadOperation, BOOLEAN DmaOperation);
 
 KIRQL STDCALL KeGetCurrentIrql (VOID);
 
@@ -406,7 +406,6 @@ NTSTATUS KeI386ReleaseGdtSelectors(OUT PULONG SelArray,
 NTSTATUS KeI386AllocateGdtSelectors(OUT PULONG SelArray,
 				    IN ULONG NumOfSelectors);
 
-<<<<<<< kefuncs.h
 /*
  * FUNCTION: Raises a user mode exception
  * ARGUMENTS:

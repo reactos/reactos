@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.51 2000/07/04 08:52:39 dwelch Exp $
+/* $Id: main.c,v 1.52 2000/07/04 11:11:03 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -21,6 +21,7 @@
 #include <internal/ldr.h>
 #include <internal/ex.h>
 #include <internal/ps.h>
+#include <internal/hal.h>
 
 #include <internal/mmhal.h>
 #include <internal/i386/segment.h>
@@ -33,7 +34,7 @@
 ULONG EXPORTED NtBuildNumber = KERNEL_VERSION_BUILD;
 ULONG EXPORTED NtGlobalFlag = 0;
 CHAR  EXPORTED KeNumberProcessors = 1;
-LOADER_PARAMETER_BLOCK EXPORTED KeLoaderBlock;
+LOADER_PARAMETER_BLOCK KeLoaderBlock;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -68,17 +69,14 @@ void _main (PLOADER_PARAMETER_BLOCK LoaderBlock)
    /*
     * Copy the parameters to a local buffer because lowmem will go away
     */
-   memcpy (&KeLoaderBlock,
-	   LoaderBlock,
-	   sizeof(LOADER_PARAMETER_BLOCK));
+   memcpy (&KeLoaderBlock, LoaderBlock, sizeof(LOADER_PARAMETER_BLOCK));
 
    /*
     * FIXME: Preliminary hack!!!!
     * Initializes the kernel parameter line.
     * This should be done by the boot loader.
     */
-   strcpy (KeLoaderBlock.kernel_parameters,
-	   "/DEBUGPORT=SCREEN");
+   strcpy (KeLoaderBlock.kernel_parameters, "/DEBUGPORT=SCREEN");
 
    /*
     * Initialization phase 0
@@ -88,7 +86,7 @@ void _main (PLOADER_PARAMETER_BLOCK LoaderBlock)
    HalDisplayString("Starting ReactOS "KERNEL_VERSION_STR" (Build "KERNEL_VERSION_BUILD_STR")\n");
 
    last_kernel_address = KERNEL_BASE;
-   for (i=0; i<=KeLoaderBlock.nr_files; i++)
+   for (i=0; i <= KeLoaderBlock.nr_files; i++)
      {
 	last_kernel_address = last_kernel_address +
 	  PAGE_ROUND_UP(KeLoaderBlock.module_length[i]);

@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.1 2000/07/04 08:52:42 dwelch Exp $
+/* $Id: mminit.c,v 1.2 2000/07/04 11:11:04 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -69,7 +69,7 @@ VOID MiShutdownMemoryManager(VOID)
 {
 }
 
-VOID MmInitVirtualMemory(boot_param* bp, ULONG LastKernelAddress)
+VOID MmInitVirtualMemory(PLOADER_PARAMETER_BLOCK bp, ULONG LastKernelAddress)
 /*
  * FUNCTION: Intialize the memory areas list
  * ARGUMENTS:

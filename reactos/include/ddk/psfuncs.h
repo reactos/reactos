@@ -1,4 +1,4 @@
-/* $Id: psfuncs.h,v 1.9 2000/07/04 08:52:34 dwelch Exp $
+/* $Id: psfuncs.h,v 1.10 2000/07/04 11:11:03 dwelch Exp $
  */
 #ifndef _INCLUDE_DDK_PSFUNCS_H
 #define _INCLUDE_DDK_PSFUNCS_H
@@ -10,12 +10,8 @@ PACCESS_TOKEN PsReferenceEffectiveToken(struct _ETHREAD* Thread,
 
 NTSTATUS PsOpenTokenOfProcess(HANDLE ProcessHandle,
 			      PACCESS_TOKEN* Token);
-NTSTATUS
-STDCALL
-PsAssignImpersonationToken (
-	PETHREAD	Thread,
-	HANDLE		TokenHandle
-	);
+NTSTATUS STDCALL PsAssignImpersonationToken (struct _ETHREAD* Thread,
+					     HANDLE TokenHandle);
 
 HANDLE STDCALL PsGetCurrentProcessId(VOID);
 HANDLE STDCALL PsGetCurrentThreadId(VOID);
@@ -51,7 +47,7 @@ ULONG PsSuspendThread(struct _ETHREAD* Thread,
 ULONG PsResumeThread(struct _ETHREAD* Thread,
 		     PNTSTATUS WaitStatus);
 struct _ETHREAD* PsGetCurrentThread(VOID);
-struct _EPROCESS* PsGetCurrentProcess(VOID);
+struct _EPROCESS* STDCALL PsGetCurrentProcess(VOID);
 PACCESS_TOKEN STDCALL PsReferenceImpersonationToken(struct _ETHREAD* Thread,
 						    PULONG Unknown1,
 						    PULONG Unknown2,

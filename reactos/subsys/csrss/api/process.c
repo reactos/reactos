@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.9 2000/05/26 05:40:20 phreak Exp $
+/* $Id: process.c,v 1.10 2000/07/04 11:11:06 dwelch Exp $
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -122,7 +122,6 @@ NTSTATUS CsrCreateProcess (PCSRSS_PROCESS_DATA ProcessData,
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    
    NewProcessData = CsrGetProcessData(Request->Data.CreateProcessRequest.NewProcessId);
-   DbgPrint( "CreateProcess\n" );
    if (NewProcessData == NULL)
      {
 	Reply->Status = STATUS_NO_MEMORY;

@@ -1,4 +1,4 @@
-/* $Id: halddk.h,v 1.3 2000/07/01 18:20:41 ekohl Exp $
+/* $Id: halddk.h,v 1.4 2000/07/04 11:11:03 dwelch Exp $
  *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel
@@ -454,13 +454,6 @@ HalGetInterruptVector (
 	ULONG		BusInterruptVector,
 	PKIRQL		Irql,
 	PKAFFINITY	Affinity
-	);
-
-BOOLEAN
-STDCALL
-HalInitSystem (
-	ULONG			BootPhase,
-	PLOADER_PARAMETER_BLOCK	LoaderBlock
 	);
 
 VOID
