@@ -607,8 +607,9 @@ PVOID ExAllocateNonPagedPoolWithTag(ULONG type,
 				    ULONG Tag,
 				    PVOID Caller)
 {
-   block_hdr* current=NULL;
+   block_hdr* current = NULL;
    PVOID block;
+   block_hdr* best = NULL;
    
    POOL_TRACE("ExAllocatePool(NumberOfBytes %d) caller %x ",
 	      size,Caller);
@@ -632,56 +633,30 @@ PVOID ExAllocateNonPagedPoolWithTag(ULONG type,
     */
    current=free_list_head;
    
+//   defrag_free_list();
+   
    while (current!=NULL)
      {
 	OLD_DPRINT("current %x size %x next %x\n",current,current->size,
 	       current->next);
-	if (current->magic != BLOCK_HDR_MAGIC)
+	if (current->size>=size &&
+	    (best == NULL ||
+	     current->size < best->size)) 
 	  {
-	     DbgPrint("Bad block magic (probable pool corruption) at %x\n",
-		      current);
-	     KeBugCheck(KBUG_POOL_FREE_LIST_CORRUPT);
-	  }
-	if (current->size>=size)
-	  {
-	     OLD_DPRINT("found block %x of size %d\n",current,size);
-	     block=take_block(current,size);
-	     VALIDATE_POOL;
-	     memset(block,0,size);
-	     POOL_TRACE("= %x\n",block);
-	     return(block);
+	     best = current;
 	  }
 	current=current->next;
      }
-
-   if(EiFreeNonPagedPool>size+32*PAGESIZE)
-     {//try defrag free list before growing kernel pool
-	defrag_free_list();
-	/*
-	 * reLook after defrag
-	 */
-	current=free_list_head;
-	
-	while (current!=NULL)
-        {
-	   OLD_DPRINT("current %x size %x next %x\n",current,current->size,
-		      current->next);
-	   if (current->magic != BLOCK_HDR_MAGIC)
-	     {
-		DbgPrint("Bad block magic (probable pool corruption)\n");
-		KeBugCheck(KBUG_POOL_FREE_LIST_CORRUPT);
-	     }
-	   if (current->size>=size)
-	     {
-		OLD_DPRINT("found block %x of size %d\n",current,size);
-		block=take_block(current,size);
-		memset(block,0,size);
-		POOL_TRACE("= %x\n",block);
-		return(block);
-	     }
-	   current=current->next;
-        }
+   if (best != NULL)
+     {
+	OLD_DPRINT("found block %x of size %d\n",best,size);
+	block=take_block(best,size);
+	VALIDATE_POOL;
+	memset(block,0,size);
+	POOL_TRACE("= %x\n",block);
+	return(block);
      }
+	  
    
    /*
     * Otherwise create a new block

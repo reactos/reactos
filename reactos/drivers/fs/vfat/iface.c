@@ -626,14 +626,28 @@ NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PVfatFCB Fcb,
  WCHAR name[256];
  ULONG StartingSector;
  ULONG NextCluster;
-   DPRINT("FindFile(Parent %x, FileToFind %w)\n",Parent,FileToFind);
+   WCHAR TempStr[2];
+   
+   DPRINT("FindFile(Parent %x, FileToFind '%w')\n",Parent,FileToFind);
+   
+   if (wcslen(FileToFind)==0)
+     {
+	TempStr[0] = (WCHAR)'.';
+	TempStr[1] = 0;
+	FileToFind=&TempStr;
+     }
+   if (Parent != NULL)
+     {
+	DPRINT("Parent->entry.FirstCluster %d\n",Parent->entry.FirstCluster);
+     }
    
    if (Parent == NULL||Parent->entry.FirstCluster==1)
    {
      Size = DeviceExt->rootDirectorySectors;//FIXME : in fat32, no limit
      StartingSector = DeviceExt->rootStart;
      NextCluster=0;
-     if(FileToFind[0]==0 ||(FileToFind[0]=='\\' && FileToFind[1]==0))
+     if(FileToFind[0]==0 ||(FileToFind[0]=='\\' && FileToFind[1]==0) ||
+	(FileToFind[0]=='.' && FileToFind[1]==0))
      {// it's root : complete essentials fields then return ok
        memset(Fcb,0,sizeof(VfatFCB));
        memset(Fcb->entry.Filename,' ',11);
@@ -684,7 +698,7 @@ NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PVfatFCB Fcb,
        }
        if (GetEntryName((PVOID)block,&i,name,&j,DeviceExt,&StartingSector))
        {
-//		  DPRINT("Comparing %w %w\n",name,FileToFind);
+	 DPRINT("Comparing '%w' '%w'\n",name,FileToFind);
          if (wstrcmpjoki(name,FileToFind))
          {
            /* In the case of a long filename, the firstcluster is stored in
@@ -780,10 +794,11 @@ NTSTATUS FsdOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
  PWSTR AbsFileName=NULL;
  short i,j;
 
-   DPRINT("FsdOpenFile(%08lx, %08lx, %08lx)\n", 
+   DPRINT("FsdOpenFile(%08lx, %08lx, %w)\n", 
           DeviceExt,
           FileObject,
           FileName);
+   
   //FIXME : treat relative name
    if(FileObject->RelatedFileObject)
    {
@@ -833,64 +848,60 @@ DbgPrint("try related for %w\n",FileName);
    Fcb = ExAllocatePool(NonPagedPool, sizeof(VfatFCB));
    memset(Fcb,0,sizeof(VfatFCB));
    Fcb->ObjectName=Fcb->PathName;
-   next = &string[0];
-   current = next+1;
-   
-   if(*next==0) // root
-   {
-     Status = FindFile(DeviceExt,Fcb,ParentFcb,next,NULL,NULL);
-     ParentFcb=Fcb;
-     Fcb=NULL;
-   }
-   else
+   next = &string[0];   
+
    while (next!=NULL)
    {
      *next = '\\';
      current = next+1;
      next = wcschr(next+1,'\\');
      if (next!=NULL)
-       *next=0;
-     Status = FindFile(DeviceExt,Fcb,ParentFcb,current,NULL,NULL);
-     if (Status != STATUS_SUCCESS)
-     {
-       if (Fcb != NULL)
-         ExFreePool(Fcb);
-       if (ParentFcb != NULL)
-         ExFreePool(ParentFcb);
-       if(AbsFileName)ExFreePool(AbsFileName);
-       return(Status);
-     }
-     Temp = Fcb;
-     if (ParentFcb == NULL)
-     {
-       Fcb = ExAllocatePool(NonPagedPool,sizeof(VfatFCB));
-       memset(Fcb,0,sizeof(VfatFCB));
-       Fcb->ObjectName=Fcb->PathName;
-     }
-     else Fcb = ParentFcb;
-     ParentFcb = Temp;
+	{
+	   *next=0;
+	}
+      DPRINT("current '%w'\n",current);
+      Status = FindFile(DeviceExt,Fcb,ParentFcb,current,NULL,NULL);
+      if (Status != STATUS_SUCCESS)
+	{
+	   if (Fcb != NULL)
+	     ExFreePool(Fcb);
+	   if (ParentFcb != NULL)
+	     ExFreePool(ParentFcb);
+	   if(AbsFileName)ExFreePool(AbsFileName);
+		return(Status);
+	}
+      Temp = Fcb;
+      if (ParentFcb == NULL)
+	{
+	   Fcb = ExAllocatePool(NonPagedPool,sizeof(VfatFCB));
+	   memset(Fcb,0,sizeof(VfatFCB));
+	   Fcb->ObjectName=Fcb->PathName;
+	}
+      else Fcb = ParentFcb;
+      ParentFcb = Temp;
    }
-   FileObject->FsContext =(PVOID) &ParentFcb->NTRequiredFCB;
-   newCCB = ExAllocatePool(NonPagedPool,sizeof(VfatCCB));
-   memset(newCCB,0,sizeof(VfatCCB));
-   FileObject->FsContext2 = newCCB;
-   newCCB->pFcb=ParentFcb;
-   newCCB->PtrFileObject=FileObject;
-   ParentFcb->RefCount++;
-   //FIXME : initialize all fields in FCB and CCB
-   ParentFcb->nextFcb=pFirstFcb;
-   pFirstFcb=ParentFcb;
+ FileObject->FsContext =(PVOID) &ParentFcb->NTRequiredFCB;
+ newCCB = ExAllocatePool(NonPagedPool,sizeof(VfatCCB));
+ memset(newCCB,0,sizeof(VfatCCB));
+ FileObject->FsContext2 = newCCB;
+ newCCB->pFcb=ParentFcb;
+ newCCB->PtrFileObject=FileObject;
+ ParentFcb->RefCount++;
+ //FIXME : initialize all fields in FCB and CCB
+ ParentFcb->nextFcb=pFirstFcb;
+ pFirstFcb=ParentFcb;
    vfat_wcsncpy(ParentFcb->PathName,FileName,MAX_PATH);
-   ParentFcb->ObjectName=ParentFcb->PathName+(current-FileName);
-   ParentFcb->pDevExt=DeviceExt;
-   DPRINT("file open, fcb=%x\n",ParentFcb);
-   DPRINT("FileSize %d\n",ParentFcb->entry.FileSize);
-   if(Fcb) ExFreePool(Fcb);
-   if(AbsFileName)ExFreePool(AbsFileName);
+ ParentFcb->ObjectName=ParentFcb->PathName+(current-FileName);
+ ParentFcb->pDevExt=DeviceExt;
+ DPRINT("file open, fcb=%x\n",ParentFcb);
+ DPRINT("FileSize %d\n",ParentFcb->entry.FileSize);
+ if(Fcb) ExFreePool(Fcb);
+ if(AbsFileName)ExFreePool(AbsFileName);
    return(STATUS_SUCCESS);
-}
-
-BOOLEAN FsdHasFileSystem(PDEVICE_OBJECT DeviceToMount)
+ }
+ 
+ 
+ BOOLEAN FsdHasFileSystem(PDEVICE_OBJECT DeviceToMount)
 /*
  * FUNCTION: Tests if the device contains a filesystem that can be mounted 
  *           by this fsd

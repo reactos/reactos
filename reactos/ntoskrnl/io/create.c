@@ -100,7 +100,7 @@ NTSTATUS ZwCreateFile(PHANDLE FileHandle,
    PIO_STACK_LOCATION StackLoc;
    PWSTR Remainder;
    
-   DbgPrint("ZwCreateFile(FileHandle %x, DesiredAccess %x, "
+   DPRINT("ZwCreateFile(FileHandle %x, DesiredAccess %x, "
 	    "ObjectAttributes %x ObjectAttributes->ObjectName->Buffer %w)\n",
 	    FileHandle,DesiredAccess,ObjectAttributes,
 	    ObjectAttributes->ObjectName->Buffer);   

@@ -381,6 +381,7 @@ ZwSetValueKey
 ZwUnmapViewOfSection
 ZwWriteFile
 sprintf
+wcslen
 wcschr
 wcsncat
 wcsncpy
