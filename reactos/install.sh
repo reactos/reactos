@@ -43,4 +43,5 @@ cp apps/uitest/uitest.exe $1/reactos/bin/
 cp apps/gditest/gditest.exe $1/reactos/bin/
 cp apps/ptest/ptest.exe $1/reactos/bin/
 cp apps/timer/timer.exe $1/reactos/bin/
-cp apps/exp/exp.exe $1/reactos/bin
+cp apps/exp/exp.exe $1/reactos/bin/
+cp apps/alive/alive.exe $1/reactos/bin/

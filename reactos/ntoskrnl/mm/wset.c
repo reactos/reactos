@@ -1,4 +1,4 @@
-/* $Id: wset.c,v 1.7 2001/02/06 00:11:19 dwelch Exp $
+/* $Id: wset.c,v 1.8 2001/03/18 21:28:30 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -122,8 +122,8 @@ ULONG MmPageOutPage(PMADDRESS_SPACE AddressSpace,
    return(0);
 }
 
-ULONG MmTrimWorkingSet(PEPROCESS Process,
-		       ULONG ReduceHint)
+ULONG 
+MmTrimWorkingSet(PEPROCESS Process, ULONG ReduceHint)
 {
    ULONG i, j;
    PMADDRESS_SPACE AddressSpace;
@@ -178,14 +178,19 @@ ULONG MmTrimWorkingSet(PEPROCESS Process,
    return(Count);
 }
 
-VOID MmRemovePageFromWorkingSet(PEPROCESS Process,
-				PVOID Address)
+VOID 
+MmRemovePageFromWorkingSet(PEPROCESS Process, PVOID Address)
+     /*
+      * Remove a page from a process's working set
+      */
 {
    ULONG i;
    PMADDRESS_SPACE AddressSpace;
    PVOID* WSet;
    ULONG j;
    
+   MmLockWorkingSet(Process);
+
    WSet = (PVOID*)Process->WorkingSetPage;
    AddressSpace = &Process->AddressSpace;
    
@@ -204,6 +209,7 @@ VOID MmRemovePageFromWorkingSet(PEPROCESS Process,
 		  AddressSpace->WorkingSetLruLast = 
 		    AddressSpace->WorkingSetMaximumLength;
 	       }
+	     MmUnlockWorkingSet(Process);
 	     return;
 	  }
 	j = (j + 1) % AddressSpace->WorkingSetMaximumLength;
@@ -214,6 +220,9 @@ VOID MmRemovePageFromWorkingSet(PEPROCESS Process,
 VOID
 MmAddPageToWorkingSet(PEPROCESS Process,
 		      PVOID Address)
+     /*
+      * Insert a page into a process's working set 
+      */
 {
    PVOID* WSet;
    PMADDRESS_SPACE AddressSpace;
@@ -230,6 +239,11 @@ MmAddPageToWorkingSet(PEPROCESS Process,
      {
        KeBugCheck(0);
      }
+
+   /*
+    * Lock the working set
+    */
+   MmLockWorkingSet(Process);
    
    WSet = (PVOID*)Process->WorkingSetPage;
    
@@ -246,6 +260,7 @@ MmAddPageToWorkingSet(PEPROCESS Process,
        PVOID Page;
        NTSTATUS Status;
 
+       /* FIXME: This isn't correct */
        Page = MmAllocPageMaybeSwap(0);
        if (Page == 0)
 	 {
@@ -270,6 +285,11 @@ MmAddPageToWorkingSet(PEPROCESS Process,
    AddressSpace->WorkingSetLruLast = 
      (Current + 1) % AddressSpace->WorkingSetMaximumLength;
    AddressSpace->WorkingSetSize++;
+
+   /*
+    * And unlock
+    */
+   MmUnlockWorkingSet(Process);
 }
 
 

@@ -66,7 +66,7 @@ MmGetContinuousPages(ULONG NumberOfBytes,
    length = 0;
    for (i = 0; i < (HighestAcceptableAddress.QuadPart / PAGESIZE); )
      {
-	if (MmPageArray[i].Flags & MM_PHYSICAL_PAGE_FREE)
+	if (MM_PTYPE(MmPageArray[i].Flags) ==  MM_PHYSICAL_PAGE_FREE)
 	  {
 	     if (start == -1)
 	       {
