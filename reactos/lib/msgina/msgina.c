@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgina.c,v 1.7 2003/12/27 11:09:58 weiden Exp $
+/* $Id: msgina.c,v 1.8 2004/03/27 23:24:51 weiden Exp $
  *
  * PROJECT:         ReactOS msgina.dll
  * FILE:            lib/msgina/msgina.c
@@ -203,7 +203,7 @@ WlxActivateUserShell(
   if(RegOpenKeyExW(HKEY_LOCAL_MACHINE, 
                   L"SOFTWARE\\ReactOS\\Windows NT\\CurrentVersion\\Winlogon", 
                   0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
-  {
+  {DbgPrint("GINA: Failed: 1\n");
     VirtualFree(pEnvironment, 0, MEM_RELEASE);
     return FALSE;
   }
@@ -211,7 +211,7 @@ WlxActivateUserShell(
   if((RegQueryValueEx(hKey, L"Userinit", NULL, &ValueType, (LPBYTE)pszUserInitApp, 
                      &BufSize) != ERROR_SUCCESS) || 
                      !((ValueType == REG_SZ) || (ValueType == REG_EXPAND_SZ)))
-  {
+  {DbgPrint("GINA: Failed: 2\n");
     RegCloseKey(hKey);
     VirtualFree(pEnvironment, 0, MEM_RELEASE);
     return FALSE;
@@ -243,7 +243,7 @@ WlxActivateUserShell(
                             NULL,
                             &si,
                             &pi);
-  
+  if(!Ret) DbgPrint("GINA: Failed: 3\n");
   VirtualFree(pEnvironment, 0, MEM_RELEASE);
   return Ret;
 }
@@ -444,6 +444,18 @@ WlxRemoveStatusMessage(
   }
   
   return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+VOID WINAPI
+WlxDisplaySASNotice(
+	PVOID pWlxContext)
+{
+  PGINA_CONTEXT pgContext = (PGINA_CONTEXT)pWlxContext;
+  pgContext->pWlxFuncs->WlxSasNotify(pgContext->hWlx, WLX_SAS_TYPE_CTRL_ALT_DEL);
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.5 2003/12/01 18:21:04 weiden Exp $
+/* $Id: stubs.c,v 1.6 2004/03/27 23:24:51 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS msgina.dll
@@ -43,18 +43,6 @@ ShellShutdownDialog(
  */
 VOID WINAPI
 WlxDisplayLockedNotice(
-	PVOID pWlxContext)
-{
-  UNIMPLEMENTED;
-  return;
-}
-
-
-/*
- * @unimplemented
- */
-VOID WINAPI
-WlxDisplaySASNotice(
 	PVOID pWlxContext)
 {
   UNIMPLEMENTED;
