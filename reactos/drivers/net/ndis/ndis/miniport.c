@@ -1912,13 +1912,6 @@ NdisMSetAttributesEx(
 
   Adapter->NdisMiniportBlock.AdapterType = AdapterType;
   Adapter->AttributesSet = TRUE;
-
-  if(AttributeFlags & NDIS_ATTRIBUTE_DESERIALIZE)
-    {
-      NDIS_DbgPrint(MIN_TRACE, ("Deserialized miniport - UNIMPLEMENTED\n"));
-      /* XXX when this is implemented, be sure to fix ProSend() to not nail the irql up to dispatch_level */
-      ASSERT(0);
-    }
 }
 
 

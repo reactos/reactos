@@ -332,7 +332,7 @@ NdisMAllocateMapRegisters(
 
   /* only bus masters may call this routine */
   ASSERT(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_BUS_MASTER);
-  if(!Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_BUS_MASTER)
+  if(!(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_BUS_MASTER))
     return NDIS_STATUS_SUCCESS;
 
   DeviceObject = Adapter->NdisMiniportBlock.DeviceObject;
@@ -660,7 +660,7 @@ NdisMFreeMapRegisters(
 
   /* only bus masters may call this routine */
   ASSERT(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_BUS_MASTER);
-  if(!Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_BUS_MASTER)
+  if(!(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_BUS_MASTER))
     return;
 
   MapRegistersPerBaseRegister = ((Adapter->NdisMiniportBlock.MaximumPhysicalMapping - 2) / PAGE_SIZE) + 2;

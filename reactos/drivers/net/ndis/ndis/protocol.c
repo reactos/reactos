@@ -321,52 +321,59 @@ ProSend(
    */
   if(Adapter->Miniport->Chars.SendPacketsHandler)
     {
-      /* TODO: support deserialized miniports by checking for attributes */
-      /* SendPackets is called at DISPATCH_LEVEL for all serialized miniports */
-      KeRaiseIrql(DISPATCH_LEVEL, &RaiseOldIrql);
+      if(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_DESERIALIZE)
         {
           NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's SendPackets handler\n"));
           (*Adapter->Miniport->Chars.SendPacketsHandler)(Adapter->NdisMiniportBlock.MiniportAdapterContext, &Packet, 1);
         }
-      KeLowerIrql(RaiseOldIrql);
-
-      /* XXX why the hell do we do this? */
-      NDIS_DbgPrint(MAX_TRACE, ("acquiring miniport block lock\n"));
-      KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &SpinOldIrql);
+      else
         {
-          if (Adapter->WorkQueueHead)
-            KeInsertQueueDpc(&Adapter->MiniportDpc, NULL, NULL);
+          /* SendPackets is called at DISPATCH_LEVEL for all serialized miniports */
+          KeRaiseIrql(DISPATCH_LEVEL, &RaiseOldIrql);
+            {
+              NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's SendPackets handler\n"));
+              (*Adapter->Miniport->Chars.SendPacketsHandler)(Adapter->NdisMiniportBlock.MiniportAdapterContext, &Packet, 1);
+            }
+          KeLowerIrql(RaiseOldIrql);
         }
-      KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, SpinOldIrql);
-
-      NDIS_DbgPrint(MAX_TRACE, ("MiniportDpc queued; returning NDIS_STATUS_SCUCESS\n"));
 
       /* SendPackets handlers return void - they always "succeed" */
       NdisStatus = NDIS_STATUS_SUCCESS;
     }
   else
     {
-      /* Send handlers always run at DISPATCH_LEVEL so we raise here */
-      KeRaiseIrql(DISPATCH_LEVEL, &RaiseOldIrql);
+      /* XXX FIXME THIS IS WRONG */
+      /* uh oh... forgot why i thought that... */
+      if(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_DESERIALIZE)
         {
-          /* XXX FIXME THIS IS WRONG */
-          /* uh oh... forgot why i thought that... */
+          NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's Send handler\n"));
+          NdisStatus = (*Adapter->Miniport->Chars.u1.SendHandler)(Adapter->NdisMiniportBlock.MiniportAdapterContext, Packet, 0);
+          NDIS_DbgPrint(MAX_TRACE, ("back from miniport's send handler\n"));
+        }
+      else
+        {
+          /* Send handlers always run at DISPATCH_LEVEL so we raise here */
+          KeRaiseIrql(DISPATCH_LEVEL, &RaiseOldIrql);
 
           NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's Send handler\n"));
           NdisStatus = (*Adapter->Miniport->Chars.u1.SendHandler)(Adapter->NdisMiniportBlock.MiniportAdapterContext, Packet, 0);
           NDIS_DbgPrint(MAX_TRACE, ("back from miniport's send handler\n"));
 
-          /* XXX why the hell do we do this? */
-          NDIS_DbgPrint(MAX_TRACE, ("acquiring miniport block lock\n"));
-          KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
-            {
-              if (Adapter->WorkQueueHead)
-                KeInsertQueueDpc(&Adapter->MiniportDpc, NULL, NULL);
-            }
-          KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
+          KeLowerIrql(RaiseOldIrql);
         }
-      KeLowerIrql(RaiseOldIrql);
     }
+
+  /* XXX why the hell do we do this? */
+  NDIS_DbgPrint(MAX_TRACE, ("acquiring miniport block lock\n"));
+  KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &SpinOldIrql);
+    {
+      if (Adapter->WorkQueueHead)
+        {
+          KeInsertQueueDpc(&Adapter->MiniportDpc, NULL, NULL);
+          NDIS_DbgPrint(MAX_TRACE, ("MiniportDpc queued; returning NDIS_STATUS_SUCCESS\n"));
+        }
+    }
+  KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, SpinOldIrql);
 
   NDIS_DbgPrint(MAX_TRACE, ("returning 0x%x\n", NdisStatus));
   return NdisStatus;
