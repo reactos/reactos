@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.36 2003/12/12 16:42:16 weiden Exp $
+/* $Id: catch.c,v 1.37 2003/12/12 17:09:27 weiden Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -98,11 +98,8 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 	    {
 	      PULONG Stack;
 	      ULONG CDest;
-#define CATCH_CHECKING_DEST_ADDR
-#if defined(CATCH_CHECKING_DEST_ADDR)
 	      char temp_space[12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT)]; // FIXME: HACKHACK
 	      NTSTATUS StatusOfCopy;
-#endif
 
 	      /* FIXME: Forward exception to user mode debugger */
 
@@ -111,13 +108,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 	      /*
 	       * Let usermode try and handle the exception
 	       */
-#if !defined(CATCH_CHECKING_DEST_ADDR)
-	      Tf->Esp = Tf->Esp - 
-	        (12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT));
-	      Stack = (PULONG)Tf->Esp;
-#else
 	      Stack = (PULONG)temp_space;
-#endif
 	      CDest = 3 + (ROUND_UP(sizeof(EXCEPTION_RECORD), 4) / 4);
 	      /* Return address */
 	      Stack[0] = 0;    
@@ -128,7 +119,6 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 	      memcpy(&Stack[3], ExceptionRecord, sizeof(EXCEPTION_RECORD));
 	      memcpy(&Stack[CDest], Context, sizeof(CONTEXT));
 
-#if defined(CATCH_CHECKING_DEST_ADDR)
 	      StatusOfCopy = MmCopyToCaller((PVOID)(Tf->Esp - (12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT))),
 	                                    temp_space,
 	                                    (12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT)));
@@ -144,7 +134,6 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 	          ZwTerminateThread(NtCurrentThread(), ExceptionRecord->ExceptionCode);
 	          DPRINT1("User-mode stack was invalid. Terminating target thread\nn");
 	        }
-#endif
 	      Tf->Eip = (ULONG)LdrpGetSystemDllExceptionDispatcher();
 	      return;
 	    }
