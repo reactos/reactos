@@ -34,6 +34,8 @@
 typedef DWORD PTRDIFF;
 #endif
 
+typedef struct _ENG_EVENT *PEVENT;
+
 #define DM_SPECVERSION 0x0320
 
 #define DDI_DRIVER_VERSION_NT4 0x20000
