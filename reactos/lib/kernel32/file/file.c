@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.28 2001/11/01 10:35:15 hbirr Exp $
+/* $Id: file.c,v 1.29 2002/03/25 21:07:17 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -172,7 +172,18 @@ SetFilePointer(HANDLE hFile,
 	  hFile,lDistanceToMove,dwMoveMethod);
 
    Distance.u.LowPart = lDistanceToMove;
-   Distance.u.HighPart = (lpDistanceToMoveHigh) ? *lpDistanceToMoveHigh : 0;
+   if (lpDistanceToMoveHigh)
+   {
+      Distance.u.HighPart = *lpDistanceToMoveHigh;
+   }
+   else if (lDistanceToMove >= 0)
+   {
+      Distance.u.HighPart = 0;
+   }
+   else
+   {
+      Distance.u.HighPart = -1;
+   }
 
    if (dwMoveMethod == FILE_CURRENT)
      {
