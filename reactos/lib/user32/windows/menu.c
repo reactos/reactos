@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.64 2004/04/15 23:36:02 weiden Exp $
+/* $Id: menu.c,v 1.65 2004/05/03 22:16:09 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -3726,33 +3726,63 @@ GetMenuItemID(HMENU hMenu,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 GetMenuItemInfoA(
-  HMENU hMenu,
-  UINT uItem,
-  BOOL fByPosition,
-  LPMENUITEMINFOA lpmii)
+  HMENU Menu,
+  UINT Item,
+  BOOL ByPosition,
+  LPMENUITEMINFOA mii)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  LPSTR AString;
+  UINT ACch;
+
+  if (0 == (mii->fMask & (MIIM_STRING | MIIM_TYPE)))
+    {
+      /* No text requested, just pass on */
+      return NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO) mii, FALSE);
+    }
+
+  AString = mii->dwTypeData;
+  ACch = mii->cch;
+  mii->dwTypeData = HeapAlloc(GetProcessHeap(), 0, mii->cch * sizeof(WCHAR));
+  if (NULL == mii->dwTypeData)
+    {
+      mii->dwTypeData = AString;
+      return FALSE;
+    }
+  if (! NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO) mii, FALSE))
+    {
+      HeapFree(GetProcessHeap(), 0, mii->dwTypeData);
+      mii->dwTypeData = AString;
+      return FALSE;
+    }
+  
+  if (IS_STRING_ITEM(mii->fType))
+    {
+      WideCharToMultiByte(CP_ACP, 0, (LPWSTR) mii->dwTypeData, mii->cch, AString, ACch,
+                          NULL, NULL);
+    }
+  HeapFree(GetProcessHeap(), 0, mii->dwTypeData);
+  mii->dwTypeData = AString;
+
+  return TRUE;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 GetMenuItemInfoW(
-  HMENU hMenu,
-  UINT uItem,
-  BOOL fByPosition,
-  LPMENUITEMINFOW lpmii)
+  HMENU Menu,
+  UINT Item,
+  BOOL ByPosition,
+  LPMENUITEMINFOW mii)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO) mii, FALSE);
 }
 
 
