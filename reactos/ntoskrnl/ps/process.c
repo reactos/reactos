@@ -255,10 +255,6 @@ NtOpenProcessTokenEx(
          Status = _SEH_GetExceptionCode();
        }
        _SEH_END;
-       if (!NT_SUCCESS(Status))
-       {
-         NtClose(hToken);
-       }
      }
    }
    
