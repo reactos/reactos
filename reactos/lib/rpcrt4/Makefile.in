@@ -1,0 +1,29 @@
+EXTRADEFS = -D_RPCRT4_ -DCOM_NO_WINDOWS_H
+TOPSRCDIR = @top_srcdir@
+TOPOBJDIR = ../..
+SRCDIR    = @srcdir@
+VPATH     = @srcdir@
+MODULE    = rpcrt4.dll
+IMPORTS   = iphlpapi advapi32 kernel32 ntdll
+EXTRALIBS = -luuid
+
+C_SRCS = \
+	cproxy.c \
+	cpsf.c \
+	cstub.c \
+	ndr_marshall.c \
+	ndr_midl.c \
+	ndr_ole.c \
+	ndr_stubless.c \
+	rpc_binding.c \
+	rpc_epmap.c \
+	rpc_message.c \
+	rpc_server.c \
+	rpcrt4_main.c \
+	rpcss_np_client.c
+
+SUBDIRS = tests
+
+@MAKE_DLL_RULES@
+
+### Dependencies:

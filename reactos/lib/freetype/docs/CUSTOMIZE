@@ -1,0 +1,125 @@
+How to customize the compilation of the library:
+================================================
+
+  FreeType  is  highly  customizable  to  fit various  needs,  and  this
+  document describes how it is possible to select options and components
+  at compilation time.
+
+
+I. Configuration macros
+
+  The file found in "include/freetype/config/ftoption.h" contains a list
+  of commented configuration macros that can be toggled by developers to
+  indicate which features should be active while building the library.
+  
+  These  options  range from  debug  level  to  availability of  certain
+  features, like native TrueType hinting through a bytecode interpreter.
+  
+  We invite you to read this  file for more information.  You can change
+  the file's content to suit your  needs, or override it with one of the
+  techniques described below.
+
+  
+II. Modules list
+
+  The file found in "include/freetype/config/ftmodule.h" contains a list
+  of  names  corresponding  to  the  modules  and  font  drivers  to  be
+  statically compiled in the FreeType library during the build.
+
+  You can change it to suit your own preferences.  Be aware that certain
+  modules depend  on others, as  described by the file  "modules.txt" in
+  this directory.
+
+  You can modify  the file's content to suit your  needs, or override it
+  at compile time with one of the methods described below.
+
+
+III. System interface
+
+  FreeType's default interface to the  system (i.e., the parts that deal
+  with   memory   management   and    i/o   streams)   is   located   in
+  "src/base/ftsystem.c".
+  
+  The  current implementation uses  standard C  library calls  to manage
+  memory and to read font files.  It is however possible to write custom
+  implementations to suit specific systems.
+
+  To  tell  the GNU  Make-based  build system  to  use  a custom  system
+  interface, you  have to define  the environment variable  FTSYS_SRC to
+  point to the relevant implementation:
+  
+    on Unix:
+
+      ./configure <your options>
+      export FTSYS_SRC=foo/my_ftsystem.c
+      make
+      make install
+   
+    on Windows:
+
+      make setup <compiler>
+      set FTSYS_SRC=foo/my_ftsystem.c
+      make
+     
+     
+IV. Overriding default configuration and module headers
+
+  It  is  possible to  override  the  default  configuration and  module
+  headers without changing the original files.  There are two ways to do
+  that:
+
+
+  1. Using the C include path
+  
+    Use the C include path to ensure that your own versions of the files
+    are used at compile time when the lines
+    
+       #include FT_CONFIG_OPTIONS_H
+       #include FT_CONFIG_MODULES_H
+
+    are       compiled.       Their      default       values      being
+    <freetype/config/ftoption.h>  and  <freetype/config/ftmodule.h>, you
+    can do something like:
+
+       custom/
+         freetype/
+           config/
+             ftoption.h    => custom options header
+             ftmodule.h    => custom modules list
+             
+       include/            => normal FreeType 2 include
+         freetype/
+           ...
+
+    then change the  C include path to always give  the path to "custom"
+    before the FreeType 2 "include".
+
+
+  2. Re-defining FT_CONFIG_OPTIONS_H and FT_CONFIG_MODULES_H
+  
+    Another way to  do the same thing is to redefine  the macros used to
+    name  the  configuration headers.   To  do  so,  you need  a  custom
+    "ft2build.h" whose content can be as simple as:
+   
+      #ifndef __FT2_BUILD_MY_PLATFORM_H__
+      #define __FT2_BUILD_MY_PLATFORM_H__
+
+      #define FT_CONFIG_OPTIONS_H  <custom/my-ftoption.h>
+      #define FT_CONFIG_MODULES_H  <custom/my-ftmodule.h>
+
+      #include <freetype/config/ftheader.h>
+
+      #endif /* __FT2_BUILD_MY_PLATFORM_H__ */
+   
+    Place those files in a separate directory, e.g.:
+   
+      custom/
+        ft2build.h           => custom version described above
+        my-ftoption.h        => custom options header
+        my-ftmodule.h        => custom modules list header
+
+    and  change the C  include path  to ensure  that "custom"  is always
+    placed before the FT2 "include" during compilation.
+
+
+--- end of CUSTOMIZE ---
