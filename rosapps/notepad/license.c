@@ -1,9 +1,7 @@
 /*
- *  ReactOS notepad
+ *  Notepad (license.h)
  *
- *  framewnd.h
- *
- *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
+ *  Copyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,22 +18,23 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __FRAMEWND_H__
-#define __FRAMEWND_H__
+#include <windows.h>
+#include "license.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
-LRESULT CALLBACK FrameWndProc(HWND, UINT, WPARAM, LPARAM);
-
-void SetupStatusBar(HWND hWnd, BOOL bResize);
-void UpdateStatusBar(void);
+VOID WineLicense(HWND Wnd)
+{
+  /* FIXME: should load strings from resources */
+  LICENSE *License = &WineLicense_En;
+  MessageBox(Wnd, License->License, License->LicenseCaption,
+             MB_ICONINFORMATION | MB_OK);
+}
 
 
-#ifdef __cplusplus
-};
-#endif
+VOID WineWarranty(HWND Wnd)
+{
+  /* FIXME: should load strings from resources */
+  LICENSE *License = &WineLicense_En;
+  MessageBox(Wnd, License->Warranty, License->WarrantyCaption,
+             MB_ICONEXCLAMATION | MB_OK);
+}
 
-#endif // __FRAMEWND_H__

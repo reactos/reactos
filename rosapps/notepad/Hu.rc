@@ -1,0 +1,128 @@
+/*
+ *  Notepad (Hungarian resources)
+ *
+ *  Copyright 1997,98 Marcel Baur
+ *  Proofread 1998 by David Lee Lambert
+ *  Copyright 2002 Sylvain Petreolle
+ *  Copyright 2002 Zoly Nagy
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+MAIN_MENU MENU LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
+{
+ POPUP "&Fájl" {
+  MENUITEM "Ú&j",           CMD_NEW
+  MENUITEM "Meg&nyitás...",             CMD_OPEN
+  MENUITEM "&Mentés",             CMD_SAVE
+  MENUITEM "Mentés má&sként...",       CMD_SAVE_AS
+  MENUITEM SEPARATOR
+  MENUITEM "&Oldalbeállítás...",    CMD_PAGE_SETUP
+  MENUITEM "Nyom&tatás...",            CMD_PRINT
+  MENUITEM "Nyomtató &beállítás...", CMD_PRINTER_SETUP
+  MENUITEM SEPARATOR
+  MENUITEM "&Kilépés",             CMD_EXIT
+ }
+POPUP "S&zerkesztés" {
+  MENUITEM "&Visszavonás\tCtrl+Z",     CMD_UNDO
+  MENUITEM SEPARATOR
+  MENUITEM "Kivá&gás\tCtrl+X",      CMD_CUT
+  MENUITEM "&Másolás\tCtrl+C",     CMD_COPY
+  MENUITEM "&Beillesztés\tCtrl+V",    CMD_PASTE
+  MENUITEM "Tör&lés\tDel",      CMD_DELETE
+  MENUITEM SEPARATOR
+  MENUITEM "&Az összes kijelölése",       CMD_SELECT_ALL
+  MENUITEM "&Idõ/dátum\tF5",    CMD_TIME_DATE
+  MENUITEM SEPARATOR
+  MENUITEM "&Hosszú sorok tördelése",  CMD_WRAP
+ }
+POPUP "&Keresés" {
+  MENUITEM "&Keresés...",           CMD_SEARCH
+  MENUITEM "Köve&tkezõ keresése\tF3",  CMD_SEARCH_NEXT
+ }
+POPUP "&Súgó" {
+  MENUITEM "&Témakörök",         CMD_HELP_CONTENTS
+  MENUITEM "&Keresés...",        CMD_HELP_SEARCH
+  MENUITEM "&Használat",     CMD_HELP_ON_HELP
+  MENUITEM SEPARATOR
+  POPUP "Inf&ormáció..." {
+   MENUITEM "&Licenc",         CMD_LICENSE
+   MENUITEM "&SEMMI GARANCIA",     CMD_NO_WARRANTY
+   MENUITEM "&Wine névjegy",      CMD_ABOUT_WINE
+  }
+ }
+}
+
+/* Dialog `Page setup' */
+
+DIALOG_PAGESETUP DIALOG 0, 0, 225, 95
+LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "Helv"
+CAPTION "Oldalbeállítás"
+{
+LTEXT    "&Fejléc:",  0x140,   10, 07, 40, 15
+EDITTEXT                         0x141,       60, 05,110, 12, WS_BORDER | WS_TABSTOP
+LTEXT    "&Lábléc:",  0x142,   10, 24, 40, 15
+EDITTEXT                         0x143,       60, 22,110, 12, WS_BORDER | WS_TABSTOP
+
+GROUPBOX "&Margók:",      0x144,     10, 43,160, 45
+LTEXT    "&Bal:",        0x145,   20, 55, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_LEFTVALUE,*/   0x147,       50, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT    "&Felsõ:",         0x148,    20, 73, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_TOPVALUE,*/    0x14A,        50, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT    "&Jobb:",       0x14B, 100, 55, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_RIGHTVALUE,*/  0x14D,     130, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT    "&Alsó:",      0x14E,100, 73, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,    130, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+
+DEFPUSHBUTTON "OK",         0x151,                   180,  3, 40, 15, WS_TABSTOP
+PUSHBUTTON    "Mégse",     0x152,               180, 21, 40, 15, WS_TABSTOP
+PUSHBUTTON    "&Súgó",       0x153,                180, 39, 40, 15, WS_TABSTOP
+}
+
+STRINGTABLE DISCARDABLE LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
+{
+STRING_PAGESETUP_HEADERVALUE,   "&n"        /* FIXME */
+STRING_PAGESETUP_FOOTERVALUE,   "Oldalszám: &s."   /* FIXME */
+STRING_PAGESETUP_LEFTVALUE,             "20 mm"     /* FIXME */
+STRING_PAGESETUP_RIGHTVALUE,    "20 mm"     /* FIXME */
+STRING_PAGESETUP_TOPVALUE,              "25 mm"     /* FIXME */
+STRING_PAGESETUP_BOTTOMVALUE,   "25 mm"     /* FIXME */
+
+STRING_NOTEPAD,                                 "Jegyzettömb"
+STRING_ERROR,                                   "HIBA"
+STRING_WARNING,                                 "FIGYELMEZTETÉS"
+STRING_INFO,                                    "Információ"
+
+STRING_UNTITLED,                                "(névtelen)"
+
+STRING_ALL_FILES,                               "Minden fájl (*.*)"
+STRING_TEXT_FILES_TXT,                  "Szövegfájlok (*.txt)"
+
+STRING_TOOLARGE,                                "'%s' fájl túl nagy méretû.\n \
+Kérem használjon másik szövegszerkesztõ programot."
+STRING_NOTEXT,                                  "A szöveg nem tartalmaz karaktert! \
+\nKérem gépeljen be néhány karaktert és próbálja újra!"
+STRING_DOESNOTEXIST,                            "A megadott '%s'\nfájl nem létezik!\n\n \
+Kíván létrehozni új fájlt?"
+STRING_NOTSAVED,                                "'%s' fájl\nmódosult\n\n \
+Szeretné menteni a változásokat?"
+STRING_NOTFOUND,                                        "'%s' nem található!"
+STRING_OUT_OF_MEMORY,                   "Nincs elegendõ szabad memória!\
+\nZárjon be néhány alkalmazást, ezzel növelve a szabad memória méretét\
+!"
+
+}

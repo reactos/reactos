@@ -1,0 +1,121 @@
+/*
+ *  Notepad (Thai Resources)
+ *
+ *  Copyright 2003 Jon Griffiths
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+LANGUAGE LANG_THAI, SUBLANG_DEFAULT
+
+MAIN_MENU MENU
+{
+ POPUP "แฟ้ม" {
+  MENUITEM "สร้างใหม่...",        CMD_NEW
+  MENUITEM "เปิด...\tCtrl+O",   CMD_OPEN
+  MENUITEM "บันทืก\tCtrl+S",     CMD_SAVE
+  MENUITEM "บันทืกเป็น...",       CMD_SAVE_AS
+  MENUITEM SEPARATOR
+  MENUITEM "พิมพ์",            CMD_PRINT
+  MENUITEM "ปรับแต่งหน้า...",    CMD_PAGE_SETUP
+  MENUITEM "ปรับแต่งเครื่องพิมพ์...", CMD_PRINTER_SETUP
+  MENUITEM SEPARATOR
+  MENUITEM "ออก",             CMD_EXIT
+ }
+ POPUP "แก้ไข" {
+  MENUITEM "เรียกคืน\tCtrl+Z",     CMD_UNDO
+  MENUITEM SEPARATOR
+  MENUITEM "ตัด\tCtrl+X",      CMD_CUT
+  MENUITEM "ตัดลอก\tCtrl+C",     CMD_COPY
+  MENUITEM "วาง\tCtrl+V",    CMD_PASTE
+  MENUITEM "ลบ\tDel",      CMD_DELETE
+  MENUITEM SEPARATOR
+  MENUITEM "เลือกทั้งหมด\tCtrl+A",       CMD_SELECT_ALL
+  MENUITEM "วันที่/\tF5",    CMD_TIME_DATE
+  MENUITEM SEPARATOR
+  MENUITEM "ห่อบรรทัดยาว",  CMD_WRAP
+  MENUITEM "รูปแบบดัวอักษร...",          CMD_FONT
+ }
+ POPUP "คันหา" {
+  MENUITEM "ค้นหา\tCtrl+F",   CMD_SEARCH
+  MENUITEM "ค้นหาต่อไป\tF3",  CMD_SEARCH_NEXT
+ }
+ POPUP "ช่วยเหลีอ" {
+  MENUITEM "เนื้อหา",         CMD_HELP_CONTENTS
+  MENUITEM "ค้นหา...",        CMD_HELP_SEARCH
+  MENUITEM "เกี่ยวกับช่วยเหลีอ",     CMD_HELP_ON_HELP
+  MENUITEM SEPARATOR
+  POPUP "รายละเอียด..." {
+   MENUITEM "ใบอนุญาต", CMD_LICENSE
+   MENUITEM "ไม่มี WARRANTY", CMD_NO_WARRANTY
+   MENUITEM "เกี่ยวกับ Wine... ", CMD_ABOUT_WINE
+  }
+ }
+}
+
+/* Dialog `Page setup' */
+
+DIALOG_PAGESETUP DIALOG 0, 0, 225, 95
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "Helv"
+CAPTION "ปรับแต่งหน้า"
+{
+LTEXT    "หัว:",  0x140,   10, 07, 40, 15
+EDITTEXT 0x141,       60, 05,110, 12, WS_BORDER | WS_TABSTOP
+LTEXT    "&Footer:",  0x142,   10, 24, 40, 15
+EDITTEXT 0x143,       60, 22,110, 12, WS_BORDER | WS_TABSTOP
+
+GROUPBOX "ขอบกระดาษ:",      0x144,     10, 43,160, 45
+LTEXT    "ฃ้าย:",        0x145,   20, 55, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_LEFTVALUE,*/   0x147,       50, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT    "บน:",         0x148,    20, 73, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_TOPVALUE,*/    0x14A,        50, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT    "ขวา:",       0x14B, 100, 55, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_RIGHTVALUE,*/  0x14D,     130, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT    "ล่าง:",      0x14E,100, 73, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,    130, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+
+DEFPUSHBUTTON "ตกลง",         0x151,                   180,  3, 40, 15, WS_TABSTOP
+PUSHBUTTON    "ยกเลิก",     0x152,               180, 21, 40, 15, WS_TABSTOP
+PUSHBUTTON    "ช่วยเหลีอ",       0x153,                180, 39, 40, 15, WS_TABSTOP
+}
+
+STRINGTABLE DISCARDABLE
+{
+STRING_PAGESETUP_HEADERVALUE, "&n"        /* FIXME */
+STRING_PAGESETUP_FOOTERVALUE, "หน้า &s"   /* FIXME */
+STRING_PAGESETUP_LEFTVALUE,   "20 มม."     /* FIXME */
+STRING_PAGESETUP_RIGHTVALUE,  "20 มม."     /* FIXME */
+STRING_PAGESETUP_TOPVALUE,    "25 มม."     /* FIXME */
+STRING_PAGESETUP_BOTTOMVALUE, "25 มม."     /* FIXME */
+
+STRING_NOTEPAD,       "Notepad"
+STRING_ERROR,         "ความปิด"
+STRING_WARNING,       "คําตือน"
+STRING_INFO,          "รายละเอียด"
+
+STRING_UNTITLED,      "ไม่กําหนดชึ่อ"
+
+STRING_ALL_FILES,       "ทุกแฟ้ม (*.*)"
+STRING_TEXT_FILES_TXT,  "แฟ้มตํารา (*.txt)"
+
+STRING_TOOLARGE,  "แฟ้ม '%s' ใหญ่เกินไป"
+STRING_NOTEXT,    "คุณไม่ใดเขียนอะไร\nกรุณาลองใหม่"
+STRING_DOESNOTEXIST, "ไม่พบแฟ้ม '%s' ที่ต้องการเปิด\nคุณต้องการสร้างใหม่ไม่ ?"
+STRING_NOTSAVED,  "มีการเปลี่ยนแปลงกับเอกสาร\n\n'%s'\n\nคุณต้องการบันทึกมันหรือไม่ ?"
+STRING_NOTFOUND,  "ไม่พบข้อความ '%s' ที่ต้องการค้นหา"
+STRING_OUT_OF_MEMORY, "ความจําหมด\nกรุณาลองใหม่"
+
+}

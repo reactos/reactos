@@ -1,0 +1,125 @@
+/*
+ * Notepad (Slovenian resources)
+ *
+ * Copyright 2002-2003 Rok Mandeljc <rok.mandeljc@gimb.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
+
+MAIN_MENU MENU
+{
+ POPUP "&Datoteka" {
+  MENUITEM "&Nova",           CMD_NEW
+  MENUITEM "&Odpri ...",             CMD_OPEN
+  MENUITEM "&Shrani",             CMD_SAVE
+  MENUITEM "Shrani &kot ...",       CMD_SAVE_AS
+  MENUITEM SEPARATOR
+  MENUITEM "Na&tisni",            CMD_PRINT
+  MENUITEM "P&riprava strani ...",    CMD_PAGE_SETUP
+  MENUITEM "&Tiskalnik ...", CMD_PRINTER_SETUP
+  MENUITEM SEPARATOR
+  MENUITEM "Iz&hod",             CMD_EXIT
+ }
+POPUP "&Urejanje" {
+  MENUITEM "&Razveljavi\tCtrl+Z",     CMD_UNDO
+  MENUITEM SEPARATOR
+  MENUITEM "&Izreži\tCtrl+X",      CMD_CUT
+  MENUITEM "&Kopiraj\tCtrl+C",     CMD_COPY
+  MENUITEM "&Prilepi\tCtrl+V",    CMD_PASTE
+  MENUITEM "Izbri&ši\tDel",      CMD_DELETE
+  MENUITEM SEPARATOR
+  MENUITEM "Izberi &vse",       CMD_SELECT_ALL
+  MENUITEM "Èas/&Datum\tF5",    CMD_TIME_DATE
+  MENUITEM SEPARATOR
+  MENUITEM "Pr&elom vrstice",  CMD_WRAP
+ }
+POPUP "&Iskanje" {
+  MENUITEM "&Najdi ...",           CMD_SEARCH
+  MENUITEM "Na&daljuj iskanje\tF3",  CMD_SEARCH_NEXT
+ }
+POPUP "&Pomoè" {
+  MENUITEM "&Teme pomoèi",         CMD_HELP_CONTENTS
+  MENUITEM "&Najdi ...",        CMD_HELP_SEARCH
+  MENUITEM "&O pomoèi",     CMD_HELP_ON_HELP
+  MENUITEM SEPARATOR
+  POPUP "Inf&ormacije ..." {
+   MENUITEM "&Licenèna pogodba",         CMD_LICENSE
+   MENUITEM "&BREZ GARANCIJE",     CMD_NO_WARRANTY
+   MENUITEM "&O Wine",      CMD_ABOUT_WINE
+  }
+ }
+}
+
+/* Dialog `Page setup' */
+
+DIALOG_PAGESETUP DIALOG 0, 0, 225, 95
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "Priprava strani"
+CAPTION "Page Setup"
+{
+LTEXT    "&Glava:",  0x140,   10, 07, 40, 15
+EDITTEXT                         0x141,       60, 05,110, 12, WS_BORDER | WS_TABSTOP
+LTEXT    "&Noga:",  0x142,   10, 24, 40, 15
+EDITTEXT                         0x143,       60, 22,110, 12, WS_BORDER | WS_TABSTOP
+
+GROUPBOX "Robovi",      0x144,     10, 43,160, 45
+LTEXT    "&Levo:",        0x145,   20, 55, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_LEFTVALUE,*/   0x147,       50, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT    "&Desno:",         0x148,    20, 73, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_TOPVALUE,*/    0x14A,        50, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT    "&Zgoraj:",       0x14B, 100, 55, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_RIGHTVALUE,*/  0x14D,     130, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT    "&Spodaj:",      0x14E,100, 73, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,    130, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+
+DEFPUSHBUTTON "V redu",         0x151,                   180,  3, 40, 15, WS_TABSTOP
+PUSHBUTTON    "Preklièi",     0x152,               180, 21, 40, 15, WS_TABSTOP
+PUSHBUTTON    "&Pomoè",       0x153,                180, 39, 40, 15, WS_TABSTOP
+}
+
+STRINGTABLE DISCARDABLE
+{
+STRING_PAGESETUP_HEADERVALUE,   "&n"        /* FIXME */
+STRING_PAGESETUP_FOOTERVALUE,   "Stran &s"   /* FIXME */
+STRING_PAGESETUP_LEFTVALUE,             "20 mm"     /* FIXME */
+STRING_PAGESETUP_RIGHTVALUE,    "20 mm"     /* FIXME */
+STRING_PAGESETUP_TOPVALUE,              "25 mm"     /* FIXME */
+STRING_PAGESETUP_BOTTOMVALUE,   "25 mm"     /* FIXME */
+
+STRING_NOTEPAD,                                 "Beležnica"
+STRING_ERROR,                                   "NAPAKA"
+STRING_WARNING,                                 "OPOZORILO"
+STRING_INFO,                                    "Informacija"
+
+STRING_UNTITLED,                                "Neimenovana"
+
+STRING_ALL_FILES,                               "Vse datoteke (*.*)"
+STRING_TEXT_FILES_TXT,                  "Datoteke z besedilom (*.txt)"
+
+STRING_TOOLARGE,                                "Datoteka '%s' je prevelika za Beležnico.\n \
+Uporabite drug urejevalnik."
+STRING_NOTEXT,                                  "Niste vnesli besedila. \
+\nVnesite besedilo in poskusite znova."
+STRING_DOESNOTEXIST,                            "Datoteka '%s' ne obstaja.\n\n \
+Ali želite ustvariti novo datoteko?"
+STRING_NOTSAVED,                                "Vsebina datoteke '%s'je bila spremenjena.\n\n \
+Ali želite shraniti spremembe?"
+STRING_NOTFOUND,                                        "Ni mogoèe najti '%s'."
+STRING_OUT_OF_MEMORY,                   "Na voljo ni dovolj pomnilnika, da bi bilo mogoèe dokonèati to \
+operacijo. \nÈe ga želite sprostiti, konèajte enega ali veè programov in poskusite znova. "
+
+}

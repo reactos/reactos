@@ -1,6 +1,4 @@
 /*
- *  Notepad (notepad.h)
- *
  *  Copyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>
  *  Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
  *
@@ -19,35 +17,42 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#define SIZEOF(a) sizeof(a)/sizeof((a)[0])
-
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "main.h"
+#include "winnls.h"
+#include "commctrl.h"
 #include "notepad_res.h"
 
-#define MAX_STRING_LEN      255
-
-typedef struct
+ID_ACCEL ACCELERATORS
 {
-  HANDLE  hInstance;
-  HWND    hMainWnd;
-  HWND    hFindReplaceDlg;
-  HWND    hEdit;
-  HFONT   hFont; /* Font used by the edit control */
-  LOGFONT lfFont;
-  BOOL    bWrapLongLines;
-  WCHAR   szFindText[MAX_PATH];
-  WCHAR   szFileName[MAX_PATH];
-  WCHAR   szFileTitle[MAX_PATH];
-  WCHAR   szFilter[2 * MAX_STRING_LEN + 100];
-  WCHAR   szMarginTop[MAX_PATH];
-  WCHAR   szMarginBottom[MAX_PATH];
-  WCHAR   szMarginLeft[MAX_PATH];
-  WCHAR   szMarginRight[MAX_PATH];
-  WCHAR   szHeader[MAX_PATH];
-  WCHAR   szFooter[MAX_PATH];
+    "^A", CMD_SELECT_ALL
+    "^C", CMD_COPY
+    "^F", CMD_SEARCH
+    "^O", CMD_OPEN
+    "^S", CMD_SAVE
+    "^V", CMD_PASTE
+    "^X", CMD_CUT
+    "^Z", CMD_UNDO
+    VK_F3, CMD_SEARCH_NEXT, VIRTKEY
+    VK_F5, CMD_TIME_DATE, VIRTKEY
+}
 
-  FINDREPLACE find;
-} NOTEPAD_GLOBALS;
-
-extern NOTEPAD_GLOBALS Globals;
-
-VOID SetFileName(LPCWSTR szFileName);
+#include "Da.rc"
+#include "De.rc"
+#include "En.rc"
+#include "Es.rc"
+#include "Fi.rc"
+#include "Fr.rc"
+#include "Hu.rc"
+#include "It.rc"
+#include "Nl.rc"
+#include "Pt.rc"
+#include "Ru.rc"
+#include "Si.rc"
+#include "Sk.rc"
+#include "Sw.rc"
+#include "Th.rc"
+#include "Wa.rc"
+#include "Zh.rc"

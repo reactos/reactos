@@ -1,0 +1,129 @@
+/*
+ *  Notepad (French resources)
+ *
+ *  Copyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>
+ *  Translation by Laurent Buffler <laurent@bluewin.ch>
+ *  Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+MAIN_MENU MENU
+{
+ POPUP "&Fichier" {
+  MENUITEM "&Nouveau...",       CMD_NEW
+  MENUITEM "&Ouvrir\tCtrl+O",   CMD_OPEN
+  MENUITEM "&Enregistrer\tCtrl+S", CMD_SAVE
+  MENUITEM "Enregistrer &sous...", CMD_SAVE_AS
+  MENUITEM SEPARATOR
+  MENUITEM "Im&primer",         CMD_PRINT
+  MENUITEM "&Mise en page...",  CMD_PAGE_SETUP
+  MENUITEM "&Configuration de l'imprimante...", CMD_PRINTER_SETUP
+  MENUITEM SEPARATOR
+  MENUITEM "&Quitter",          CMD_EXIT
+ }
+POPUP "&Edition" {
+  MENUITEM "&Annuler\tCtrl+Z",  CMD_UNDO
+  MENUITEM SEPARATOR
+  MENUITEM "Co&uper\tCtrl+X",   CMD_CUT
+  MENUITEM "&Copier\tCtrl+C",   CMD_COPY
+  MENUITEM "C&oller\tCtrl+V",   CMD_PASTE
+  MENUITEM "&Effacer\tDel",     CMD_DELETE
+  MENUITEM SEPARATOR
+  MENUITEM "Tout &sélectionner\tCtrl+A", CMD_SELECT_ALL
+  MENUITEM "&Heure/Date\tF5",   CMD_TIME_DATE
+  MENUITEM SEPARATOR
+  MENUITEM "&Retour à la ligne", CMD_WRAP
+  MENUITEM "&Police...",        CMD_FONT
+ }
+POPUP "&Rechercher" {
+  MENUITEM "&Rechercher\tCtrl+F", CMD_SEARCH
+  MENUITEM "&Suivant\tF3",      CMD_SEARCH_NEXT
+ }
+POPUP "&Aide" {
+  MENUITEM "&Sommaire",         CMD_HELP_CONTENTS
+  MENUITEM "&Rechercher...",    CMD_HELP_SEARCH
+  MENUITEM "&Utiliser l'aide",  CMD_HELP_ON_HELP
+  MENUITEM SEPARATOR
+  POPUP "Inf&o..." {
+   MENUITEM "&Licence",         CMD_LICENSE
+   MENUITEM "&AUCUNE GARANTIE", CMD_NO_WARRANTY
+   MENUITEM "&A propos de Wine",        CMD_ABOUT_WINE
+  }
+ }
+}
+
+/* Dialog `Page setup' */
+
+DIALOG_PAGESETUP DIALOG 0, 0, 225, 95
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "Helv"
+CAPTION "Mise en page"
+{
+LTEXT    "&En-tête :",  0x140,   10, 07, 40, 15
+EDITTEXT                         0x141,       60, 05,110, 12, WS_BORDER | WS_TABSTOP
+LTEXT    "&Pied de page :",  0x142,   10, 24, 40, 15
+EDITTEXT                         0x143,       60, 22,110, 12, WS_BORDER | WS_TABSTOP
+
+GROUPBOX "&Marges :",      0x144,     10, 43,160, 45
+LTEXT    "&Gauche :",        0x145,   20, 55, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_LEFTVALUE,*/   0x147,       50, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT    "&Haut :",         0x148,    20, 73, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_TOPVALUE,*/    0x14A,        50, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT    "&Droite :",       0x14B, 100, 55, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_RIGHTVALUE,*/  0x14D,     130, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT    "&Bas :",      0x14E,100, 73, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,    130, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+
+DEFPUSHBUTTON "OK",         0x151,                   180,  3, 40, 15, WS_TABSTOP
+PUSHBUTTON    "Annuler",     0x152,               180, 21, 40, 15, WS_TABSTOP
+PUSHBUTTON    "&Aide",       0x153,                180, 39, 40, 15, WS_TABSTOP
+}
+
+STRINGTABLE DISCARDABLE
+{
+STRING_PAGESETUP_HEADERVALUE,   "&n"        /* FIXME */
+STRING_PAGESETUP_FOOTERVALUE,   "Page &s"   /* FIXME */
+STRING_PAGESETUP_LEFTVALUE,     "20 mm"     /* FIXME */
+STRING_PAGESETUP_RIGHTVALUE,    "20 mm"     /* FIXME */
+STRING_PAGESETUP_TOPVALUE,      "25 mm"     /* FIXME */
+STRING_PAGESETUP_BOTTOMVALUE,   "25 mm"     /* FIXME */
+
+STRING_NOTEPAD,                                 "Bloc-notes"
+STRING_ERROR,                                   "ERREUR"
+STRING_WARNING,                                 "ATTENTION"
+STRING_INFO,                                    "Information"
+
+STRING_UNTITLED,                                "(sans-titre)"
+
+STRING_ALL_FILES,                               "Tous fichiers (*.*)"
+STRING_TEXT_FILES_TXT,                          "Fichiers texte (*.txt)"
+
+STRING_TOOLARGE,                                "Le fichier '%s' est trop grand pour le bloc-notes.\n \
+Veuillez utiliser un autre éditeur."
+STRING_NOTEXT,                                  "Vous n'avez pas entré de texte. \
+Veuillez taper quelque chose et recommencer"
+STRING_DOESNOTEXIST,                            "Le fichier '%s'\nn'existe pas.\n\n \
+Voulez-vous créer un nouveau fichier ?"
+STRING_NOTSAVED,                                "Le fichier '%s'\na été modifié\n\n \
+Voulez-vous enregistrer vos modifications ?"
+STRING_NOTFOUND,                                "'%s' non trouvé."
+STRING_OUT_OF_MEMORY,                           "Pas assez de mémoire pour compléter cette \
+tâche. \nFermez une ou plusieurs applications pour libérer\n\
+de la mémoire."
+
+}

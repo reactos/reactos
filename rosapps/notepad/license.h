@@ -1,8 +1,7 @@
 /*
- *  Notepad (notepad.h)
+ *  Notepad (license.h)
  *
  *  Copyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>
- *  Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,35 +18,35 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#define SIZEOF(a) sizeof(a)/sizeof((a)[0])
-
-#include "notepad_res.h"
-
-#define MAX_STRING_LEN      255
+VOID WineLicense(HWND hWnd);
+VOID WineWarranty(HWND hWnd);
 
 typedef struct
 {
-  HANDLE  hInstance;
-  HWND    hMainWnd;
-  HWND    hFindReplaceDlg;
-  HWND    hEdit;
-  HFONT   hFont; /* Font used by the edit control */
-  LOGFONT lfFont;
-  BOOL    bWrapLongLines;
-  WCHAR   szFindText[MAX_PATH];
-  WCHAR   szFileName[MAX_PATH];
-  WCHAR   szFileTitle[MAX_PATH];
-  WCHAR   szFilter[2 * MAX_STRING_LEN + 100];
-  WCHAR   szMarginTop[MAX_PATH];
-  WCHAR   szMarginBottom[MAX_PATH];
-  WCHAR   szMarginLeft[MAX_PATH];
-  WCHAR   szMarginRight[MAX_PATH];
-  WCHAR   szHeader[MAX_PATH];
-  WCHAR   szFooter[MAX_PATH];
+  LPCSTR License, LicenseCaption;
+  LPCSTR Warranty, WarrantyCaption;
+} LICENSE;
 
-  FINDREPLACE find;
-} NOTEPAD_GLOBALS;
+/*
+extern LICENSE WineLicense_Ca;
+extern LICENSE WineLicense_Cz;
+extern LICENSE WineLicense_Da;
+extern LICENSE WineLicense_De;
+*/
 
-extern NOTEPAD_GLOBALS Globals;
+extern LICENSE WineLicense_En;
 
-VOID SetFileName(LPCWSTR szFileName);
+/*
+extern LICENSE WineLicense_Eo;
+extern LICENSE WineLicense_Es;
+extern LICENSE WineLicense_Fi;
+extern LICENSE WineLicense_Fr;
+extern LICENSE WineLicense_Hu;
+extern LICENSE WineLicense_It;
+extern LICENSE WineLicense_Ko;
+extern LICENSE WineLicense_No;
+extern LICENSE WineLicense_Pl;
+extern LICENSE WineLicense_Po;
+extern LICENSE WineLicense_Sw;
+extern LICENSE WineLicense_Va;
+*/

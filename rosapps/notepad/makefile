@@ -1,37 +1,24 @@
-#
-#  ReactOS notepad
-#
-#  Makefile
-#
+# $Id: makefile,v 1.4 2004/03/17 01:28:13 sedwards Exp $
 
 PATH_TO_TOP = ../../reactos
 
+TARGET_NORC = no
+
 TARGET_TYPE = program
 
-TARGET_APPTYPE = console
+TARGET_APPTYPE = windows
 
 TARGET_NAME = notepad
 
-TARGET_CFLAGS = -D_WIN32_IE=0x0400 # -DUNICODE -D_UNICODE
+TARGET_CFLAGS = -Wall -Werror -D__USE_W32API
 
-TARGET_RCFLAGS = -D_WIN32_IE=0x0400
-
-WINE_MODE = yes
-
-WINE_RC = $(TARGET_NAME)
-
-WINE_INCLUDE = ./
-
-TARGET_SDKLIBS = \
-	kernel32.a \
-	user32.a \
-	gdi32.a \
-	comctl32.a \
-	comdlg32.a
+TARGET_SDKLIBS = comdlg32.a shell32.a user32.a gdi32.a
 
 TARGET_OBJECTS = \
-	framewnd.o \
-        main.o
+	License_En.o \
+	dialog.o \
+	license.o \
+	main.o
 
 include $(PATH_TO_TOP)/rules.mak
 
