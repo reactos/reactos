@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_FSFUNCS_H
 #define __INCLUDE_DDK_FSFUNCS_H
-/* $Id: fsfuncs.h,v 1.30 2004/11/21 17:47:22 navaraf Exp $ */
+/* $Id: fsfuncs.h,v 1.31 2004/12/30 18:30:04 ion Exp $ */
 #define FlagOn(x,f) ((x) & (f))
 
 #include <ntos/fstypes.h>
@@ -60,6 +60,7 @@ extern PUCHAR IMPORTED FsRtlLegalAnsiCharacterArray;
 
 #define FSRTL_WILD_CHARACTER  0x08
 
+typedef signed char SCHAR;
 
 VOID
 STDCALL
@@ -414,8 +415,53 @@ FsRtlIsTotalDeviceFailure(IN NTSTATUS NtStatus);
 #define FsRtlIsUnicodeCharacterWild(C) ( \
     (((C) >= 0x40) ? \
     FALSE : \
-    FlagOn((*FsRtlLegalAnsiCharacterArray)[(C)], FSRTL_WILD_CHARACTER )) \
+    FlagOn((FsRtlLegalAnsiCharacterArray)[(C)], FSRTL_WILD_CHARACTER )) \
     )
+
+#define FSRTL_FAT_LEGAL 0x01
+#define FSRTL_HPFS_LEGAL 0x02
+#define FSRTL_NTFS_LEGAL 0x04
+#define FSRTL_WILD_CHARACTER 0x08
+#define FSRTL_OLE_LEGAL 0x10
+#define FSRTL_NTFS_STREAM_LEGAL (FSRTL_NTFS_LEGAL | FSRTL_OLE_LEGAL)
+
+#define FsRtlIsAnsiCharacterWild(C) (                               \
+    FsRtlTestAnsiCharacter((C), FALSE, FALSE, FSRTL_WILD_CHARACTER) \
+    )
+
+#define FsRtlIsAnsiCharacterLegalFat(C,WILD_OK) (                 \
+    FsRtlTestAnsiCharacter((C), TRUE, (WILD_OK), FSRTL_FAT_LEGAL) \
+    )
+
+#define FsRtlIsAnsiCharacterLegalHpfs(C,WILD_OK) (                 \
+    FsRtlTestAnsiCharacter((C), TRUE, (WILD_OK), FSRTL_HPFS_LEGAL) \
+    )
+
+#define FsRtlIsAnsiCharacterLegalNtfs(C,WILD_OK) (                 \
+    FsRtlTestAnsiCharacter((C), TRUE, (WILD_OK), FSRTL_NTFS_LEGAL) \
+    )
+
+#define FsRtlIsAnsiCharacterLegalNtfsStream(C,WILD_OK) (                    \
+    FsRtlTestAnsiCharacter((C), TRUE, (WILD_OK), FSRTL_NTFS_STREAM_LEGAL)   \
+    )
+
+#define FsRtlIsAnsiCharacterLegal(C,FLAGS) (          \
+    FsRtlTestAnsiCharacter((C), TRUE, FALSE, (FLAGS)) \
+    )
+
+#define FsRtlTestAnsiCharacter(C, DEFAULT_RET, WILD_OK, FLAGS) (            \
+        ((SCHAR)(C) < 0) ? DEFAULT_RET :                                    \
+                           FlagOn(FsRtlLegalAnsiCharacterArray[(int)(C)],         \
+                                   (FLAGS) |                                \
+                                   ((WILD_OK) ? FSRTL_WILD_CHARACTER : 0) ) \
+    )
+
+#define FsRtlIsLeadDbcsCharacter(DBCS_CHAR) (                      \
+    (BOOLEAN)((UCHAR)(DBCS_CHAR) < 0x80 ? FALSE :                  \
+              (NLS_MB_CODE_PAGE_TAG &&                             \
+               (NLS_OEM_LEAD_BYTE_INFO[(UCHAR)(DBCS_CHAR)] != 0))) \
+    )
+    
 
 BOOLEAN STDCALL
 FsRtlLookupLargeMcbEntry(IN PLARGE_MCB Mcb,

@@ -1,4 +1,4 @@
-/* $Id: filelock.c,v 1.17 2004/12/30 02:30:40 gdalsnes Exp $
+/* $Id: filelock.c,v 1.18 2004/12/30 18:30:05 ion Exp $
  *
  * reactos/ntoskrnl/fs/filelock.c
  *
@@ -1298,7 +1298,7 @@ FsRtlFreeFileLock(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 STDCALL
@@ -1306,11 +1306,39 @@ FsRtlAcquireFileExclusive(
     IN PFILE_OBJECT FileObject
     )
 {
-    UNIMPLEMENTED;
+    PFAST_IO_DISPATCH FastDispatch;
+    PDEVICE_OBJECT DeviceObject;
+    PFSRTL_COMMON_FCB_HEADER FcbHeader;
+    
+    /* Get the Device Object */
+    DeviceObject = IoGetBaseFileSystemDeviceObject(FileObject);
+    
+    /* Check if we have to do a Fast I/O Dispatch */
+    if ((FastDispatch = DeviceObject->DriverObject->FastIoDispatch)) {
+
+        /* Call the Fast I/O Routine */
+        if (FastDispatch->AcquireFileForNtCreateSection) {
+            FastDispatch->AcquireFileForNtCreateSection(FileObject);
+        }
+           
+        return;
+    }
+    
+    /* Do a normal acquire */
+    if ((FcbHeader = (PFSRTL_COMMON_FCB_HEADER)FileObject->FsContext)) {
+    
+        /* Use a Resource Acquire */
+        ExAcquireResourceExclusive(FcbHeader->Resource, TRUE);
+           
+        return;
+    }
+    
+    /* Return...is there some kind of failure we should raise?? */
+    return;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 STDCALL
@@ -1318,7 +1346,35 @@ FsRtlReleaseFile(
     IN PFILE_OBJECT FileObject
     )
 {
-    UNIMPLEMENTED;
+    PFAST_IO_DISPATCH FastDispatch;
+    PDEVICE_OBJECT DeviceObject;
+    PFSRTL_COMMON_FCB_HEADER FcbHeader;
+    
+    /* Get the Device Object */
+    DeviceObject = IoGetBaseFileSystemDeviceObject(FileObject);
+    
+    /* Check if we have to do a Fast I/O Dispatch */
+    if ((FastDispatch = DeviceObject->DriverObject->FastIoDispatch)) {
+    
+        /* Use Fast I/O */
+        if (FastDispatch->ReleaseFileForNtCreateSection) {
+            FastDispatch->ReleaseFileForNtCreateSection(FileObject);
+        }
+           
+        return;
+    }
+    
+    /* Do a normal acquire */
+    if ((FcbHeader = (PFSRTL_COMMON_FCB_HEADER)FileObject->FsContext)) {
+    
+        /* Use a Resource Release */
+        ExReleaseResource(FcbHeader->Resource);
+           
+        return;
+    }
+    
+    /* Return...is there some kind of failure we should raise?? */
+    return;
 }
 
 

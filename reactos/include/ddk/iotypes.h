@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.72 2004/12/23 12:28:31 ekohl Exp $
+/* $Id: iotypes.h,v 1.73 2004/12/30 18:30:04 ion Exp $
  *
  */
 
@@ -801,6 +801,14 @@ typedef BOOLEAN STDCALL_FUNC
 		    OUT PIO_STATUS_BLOCK IoStatus,
 		    IN struct _DEVICE_OBJECT *DeviceObject);
 
+typedef VOID
+(*PFAST_IO_ACQUIRE_FILE) (
+    IN struct _FILE_OBJECT *FileObject);
+
+typedef VOID
+(*PFAST_IO_RELEASE_FILE) (
+    IN struct _FILE_OBJECT *FileObject);
+
 typedef struct _FAST_IO_DISPATCH {
    ULONG SizeOfFastIoDispatch;
    PFAST_IO_ROUTINE FastIoCheckIfPossible;
@@ -813,8 +821,8 @@ typedef struct _FAST_IO_DISPATCH {
    PFAST_IO_ROUTINE FastIoUnlockAll;
    PFAST_IO_ROUTINE FastIoUnlockAllByKey;
    PFAST_IO_ROUTINE FastIoDeviceControl;
-   PFAST_IO_ROUTINE AcquireFileForNtCreateSection;
-   PFAST_IO_ROUTINE ReleaseFileForNtCreateSection;
+   PFAST_IO_ACQUIRE_FILE AcquireFileForNtCreateSection;
+   PFAST_IO_RELEASE_FILE ReleaseFileForNtCreateSection;
    PFAST_IO_ROUTINE FastIoDetachDevice;
    PFAST_IO_ROUTINE FastIoQueryNetworkOpenInfo;
    PFAST_IO_ROUTINE AcquireForModWrite;
@@ -877,6 +885,15 @@ struct _FAST_IO_DISPATCH_TABLE
 
 } FAST_IO_DISPATCH_TABLE, * PFAST_IO_DISPATCH_TABLE;
 #endif
+
+#define IO_DRIVER_OBJECT 4L
+#define DRVO_UNLOAD_INVOKED 0x1L
+#define DRVO_LEGACY_DRIVER  0x2L
+#define DRVO_BUILTIN_DRIVER 0x4L
+#define DRVO_REINIT_REGISTERED 0x8L
+#define DRVO_INITIALIZED 0x10L
+#define DRVO_BOOTREINIT_REGISTERED 0x20L
+#define DRVO_LEGACY_RESOURCES 0x40L
 
 typedef struct _DRIVER_OBJECT
 {

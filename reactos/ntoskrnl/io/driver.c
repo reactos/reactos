@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.57 2004/12/23 23:33:54 navaraf Exp $
+/* $Id: driver.c,v 1.58 2004/12/30 18:30:05 ion Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -18,6 +18,7 @@
 
 /* ke/main.c */
 extern LOADER_PARAMETER_BLOCK EXPORTED KeLoaderBlock;
+extern ULONG KeTickCount;
 
 NTSTATUS
 LdrProcessModule(PVOID ModuleLoadBase,
@@ -1584,7 +1585,7 @@ IopReinitializeDrivers(VOID)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 STDCALL
@@ -1593,12 +1594,109 @@ IoCreateDriver (
 	IN PDRIVER_INITIALIZE InitializationFunction
 	)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+    WCHAR NameBuffer[100];
+    USHORT NameLength;
+    UNICODE_STRING LocalDriverName; /* To reduce code if no name given */
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    ULONG ObjectSize;
+    PDRIVER_OBJECT DriverObject;
+    UNICODE_STRING ServiceKeyName;
+    HANDLE hDriver;
+    
+    /* First, create a unique name for the driver if we don't have one */
+    if (!DriverName) {
+       
+        /* Create a random name and set up the string*/
+        NameLength = swprintf(NameBuffer, L"\\Driver\\%08u", KeTickCount);
+        LocalDriverName.Length = NameLength * sizeof(WCHAR);
+        LocalDriverName.MaximumLength = LocalDriverName.Length + sizeof(UNICODE_NULL);
+        LocalDriverName.Buffer = NameBuffer;
+    
+    } else {
+        
+        /* So we can avoid another code path, use a local var */
+        LocalDriverName = *DriverName;
+    }
+    
+    /* Initialize the Attributes */
+    ObjectSize = sizeof(DRIVER_OBJECT) + sizeof(DRIVER_EXTENSION);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &LocalDriverName,
+                               OBJ_PERMANENT | OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    
+    /* Create the Object */
+    Status = ObCreateObject(KernelMode,
+                            IoDriverObjectType,
+                            &ObjectAttributes,
+                            KernelMode,
+                            NULL,
+                            ObjectSize,
+                            0,
+                            0,
+                            (PVOID*)&DriverObject);
+    
+    /* Return on failure */
+    if (!NT_SUCCESS(Status)) return Status;
+    
+    /* Set up the Object */
+    RtlZeroMemory(DriverObject, ObjectSize);
+    DriverObject->Type = IO_DRIVER_OBJECT;
+    DriverObject->Size = sizeof(DRIVER_OBJECT);
+    DriverObject->Flags = DRVO_BUILTIN_DRIVER;
+    DriverObject->DriverExtension = (PDRIVER_EXTENSION)(DriverObject + 1);
+    DriverObject->DriverExtension->DriverObject = DriverObject;
+    DriverObject->DriverInit = InitializationFunction;
+    /* FIXME: Invalidate all Major Functions b/c now they are NULL and might crash */
+               
+    /* Set up the Service Key Name */
+    ServiceKeyName.Buffer = ExAllocatePool(PagedPool, LocalDriverName.Length + sizeof(WCHAR));
+    ServiceKeyName.Length = LocalDriverName.Length;
+    ServiceKeyName.MaximumLength = LocalDriverName.MaximumLength;
+    RtlMoveMemory(ServiceKeyName.Buffer, LocalDriverName.Buffer, LocalDriverName.Length);
+    ServiceKeyName.Buffer[ServiceKeyName.Length / sizeof(WCHAR)] = L'\0';
+    DriverObject->DriverExtension->ServiceKeyName =  ServiceKeyName;
+    
+    /* Also store it in the Driver Object. This is a bit of a hack. */
+    RtlMoveMemory(&DriverObject->DriverName, &ServiceKeyName, sizeof(UNICODE_STRING));
+    
+    /* Add the Object and get its handle */
+    Status = ObInsertObject(DriverObject,
+                            NULL,
+                            FILE_READ_DATA,
+                            0,
+                            NULL,
+                            &hDriver);
+    
+    /* Return on Failure */
+    if (!NT_SUCCESS(Status)) return Status;
+    
+    /* Now reference it */
+    Status = ObReferenceObjectByHandle(hDriver,
+                                       0,
+                                       IoDriverObjectType,
+                                       KernelMode,
+                                       (PVOID*)&DriverObject,
+                                       NULL);
+    ZwClose(hDriver);
+    
+    /* Finally, call its init function */
+    Status = (*InitializationFunction)(DriverObject, NULL);
+    
+    if (!NT_SUCCESS(Status)) {
+        /* If it didn't work, then kill the object */
+        ObMakeTemporaryObject(DriverObject);
+        ObDereferenceObject(DriverObject);
+    }
+    
+    /* Return the Status */
+    return Status;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 STDCALL
@@ -1606,7 +1704,8 @@ IoDeleteDriver (
 	IN PDRIVER_OBJECT DriverObject
 	)
 {
-	UNIMPLEMENTED;
+	/* Simply derefence the Object */
+    ObDereferenceObject(DriverObject);
 }
 
 

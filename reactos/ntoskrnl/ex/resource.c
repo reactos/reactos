@@ -1,4 +1,4 @@
-/* $Id: resource.c,v 1.30 2004/11/21 18:38:51 gdalsnes Exp $
+/* $Id: resource.c,v 1.31 2004/12/30 18:30:05 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -809,7 +809,7 @@ ExReleaseResourceForThread (
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 STDCALL
@@ -898,7 +898,7 @@ ExReleaseResourceForThreadLite (
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 STDCALL
@@ -907,7 +907,57 @@ ExSetResourceOwnerPointer (
 	IN	PVOID		OwnerPointer
 	)
 {
-
+    PKTHREAD CurrentThread;
+    KIRQL OldIrql;
+    POWNER_ENTRY OwnerEntry;
+    
+    CurrentThread = KeGetCurrentThread();
+    
+    /* Lock the resource */
+    KeAcquireSpinLock(&Resource->SpinLock, &OldIrql);
+    
+    /* Check if it's exclusive */
+    if (Resource->Flag & ResourceOwnedExclusive) {
+        
+        /* If it's exclusive, set the first entry no matter what */
+        Resource->OwnerThreads[0].OwnerThread = (ULONG_PTR)OwnerPointer;
+        
+    } else {
+        
+        /* Check both entries and see which one matches the current thread */
+        if (Resource->OwnerThreads[0].OwnerThread == (ULONG_PTR)CurrentThread) {
+            
+            Resource->OwnerThreads[0].OwnerThread = (ULONG_PTR)OwnerPointer;
+            
+        } else if (Resource->OwnerThreads[1].OwnerThread == (ULONG_PTR)CurrentThread) {
+            
+            Resource->OwnerThreads[1].OwnerThread = (ULONG_PTR)OwnerPointer;
+            
+        } else { /* None of the entries match, so we need to do a lookup */
+            
+            /* Get the first Entry */
+            OwnerEntry = Resource->OwnerTable;
+            
+            /* Check if the Current Thread is in the Resource Table Entry */
+            if ((CurrentThread->ResourceIndex >= OwnerEntry->TableSize) || 
+                (OwnerEntry[CurrentThread->ResourceIndex].OwnerThread != (ULONG_PTR)CurrentThread)) {
+                
+                /* Loop until we find the current thread in an entry */
+                for (;OwnerEntry->OwnerThread == (ULONG_PTR)CurrentThread;OwnerEntry++);
+                
+            } else {
+            
+                /* It's in the current RTE, so set it */
+                OwnerEntry = &OwnerEntry[CurrentThread->ResourceIndex];
+            }
+     
+            /* Now that we went to the right entry, set the Owner Pointer */       
+            OwnerEntry->OwnerThread = (ULONG_PTR)OwnerPointer;
+        }
+    }
+    
+    /* Release the resource */
+    KeReleaseSpinLock(&Resource->SpinLock, OldIrql);
 }
 
 /* EOF */

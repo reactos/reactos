@@ -1,4 +1,4 @@
-/* $Id: dbcsname.c,v 1.6 2004/09/11 14:48:13 ekohl Exp $
+/* $Id: dbcsname.c,v 1.7 2004/12/30 18:30:05 ion Exp $
  *
  * reactos/ntoskrnl/fs/dbcsname.c
  *
@@ -171,13 +171,49 @@ PUCHAR EXPORTED FsRtlLegalAnsiCharacterArray = LegalAnsiCharacterArray;
  *	FirstPart:	test1
  *	RemainingPart:	test2\test3
  *
- * @unimplemented
+ * @implemented
  */
 VOID STDCALL
 FsRtlDissectDbcs(IN ANSI_STRING Name,
 		 OUT PANSI_STRING FirstPart,
 		 OUT PANSI_STRING RemainingPart)
 {
+    ULONG i;
+    ULONG FirstLoop;
+    
+    /* Initialize the Outputs */
+    RtlZeroMemory(&FirstPart, sizeof(ANSI_STRING));
+    RtlZeroMemory(&RemainingPart, sizeof(ANSI_STRING));
+    
+    /* Bail out if empty */
+    if (!Name.Length) return;
+    
+    /* Ignore backslash */
+    if (Name.Buffer[0] == '\\') {
+        i = 1;
+    } else {
+        i = 0;
+    }
+    
+    /* Loop until we find a backslash */
+    for (FirstLoop = i;i < Name.Length;i++) {
+        if (Name.Buffer[i] != '\\') break;
+        if (FsRtlIsLeadDbcsCharacter(Name.Buffer[i])) i++;
+    }
+    
+    /* Now we have the First Part */
+    FirstPart->Length = (i-FirstLoop);
+    FirstPart->MaximumLength = FirstPart->Length; /* +2?? */
+    FirstPart->Buffer = &Name.Buffer[FirstLoop];
+    
+    /* Make the second part if something is still left */
+    if (i<Name.Length) {
+        RemainingPart->Length = (Name.Length - (i+1));
+        RemainingPart->MaximumLength = RemainingPart->Length; /* +2?? */
+        RemainingPart->Buffer = &Name.Buffer[i+1];
+    }
+    
+    return;
 }
 
 
@@ -191,14 +227,28 @@ FsRtlDissectDbcs(IN ANSI_STRING Name,
  *
  * RETURN VALUE
  *
- * @unimplemented
+ * @implemented
  */
 BOOLEAN STDCALL
 FsRtlDoesDbcsContainWildCards(IN PANSI_STRING Name)
 {
-  return FALSE;
+    ULONG i;
+    
+    /* Check every character */
+    for (i=0;i < Name->Length;i++) {
+        
+        /* First make sure it's not the Lead DBCS */
+        if (FsRtlIsLeadDbcsCharacter(Name->Buffer[i])) {
+            i++;
+        } else if (FsRtlIsAnsiCharacterWild(Name->Buffer[i])) {
+            /* Now return if it has a Wilcard */
+            return TRUE;
+        }
+    }
+    
+    /* We didn't return above...so none found */
+    return FALSE;        
 }
-
 
 /**********************************************************************
  * NAME							EXPORTED

@@ -1,4 +1,4 @@
-/* $Id: name.c,v 1.12 2004/09/11 14:48:13 ekohl Exp $
+/* $Id: name.c,v 1.13 2004/12/30 18:30:05 ion Exp $
  *
  * reactos/ntoskrnl/fs/name.c
  *
@@ -21,7 +21,7 @@
  * NOTE
  * 	From Bo Branten's ntifs.h v25.
  *
- * @unimplemented
+ * @implemented
  */
 BOOLEAN STDCALL
 FsRtlAreNamesEqual (IN PUNICODE_STRING Name1,
@@ -29,7 +29,63 @@ FsRtlAreNamesEqual (IN PUNICODE_STRING Name1,
 		    IN BOOLEAN IgnoreCase,
 		    IN PWCHAR UpcaseTable OPTIONAL)
 {
-  return FALSE;
+
+    UNICODE_STRING UpcaseName1;
+    UNICODE_STRING UpcaseName2;
+    BOOLEAN StringsAreEqual;
+    
+    /* Well, first check their size */
+    if (Name1->Length != Name2->Length) {
+        /* Not equal! */
+        return FALSE;
+    }
+    
+    /* Turn them into Upcase if we don't have a table */
+    if (IgnoreCase && !UpcaseTable) {
+        RtlUpcaseUnicodeString(&UpcaseName1, Name1, TRUE);
+        RtlUpcaseUnicodeString(&UpcaseName2, Name2, TRUE);
+        Name1 = &UpcaseName1;
+        Name2 = &UpcaseName2;
+
+        goto ManualCase;       
+    }
+    
+    /* Do a case-sensitive search */
+    if (!IgnoreCase) {
+        
+ManualCase:
+        /* Use a raw memory compare */
+        StringsAreEqual = RtlEqualMemory(Name1->Buffer,
+                                         Name2->Buffer,
+                                         Name1->Length);
+        
+        /* Clear the strings if we need to */
+        if (IgnoreCase) {
+            RtlFreeUnicodeString(&UpcaseName1);
+            RtlFreeUnicodeString(&UpcaseName2);
+        }
+        
+        /* Return the equality */
+        return StringsAreEqual;
+    
+    } else {
+        
+        /* Case in-sensitive search */
+        
+        LONG i;
+        
+        for (i = Name1->Length / sizeof(WCHAR) - 1; i >= 0; i--) {
+            
+            if (UpcaseTable[Name1->Buffer[i]] != UpcaseTable[Name2->Buffer[i]]) {
+                
+                /* Non-match found! */
+                return FALSE;
+            }
+        }   
+        
+        /* We finished the loop so we are equal */
+        return TRUE;
+    }
 }
 
 
@@ -127,31 +183,22 @@ FsRtlDissectName (IN UNICODE_STRING Name,
 BOOLEAN STDCALL
 FsRtlDoesNameContainWildCards (IN PUNICODE_STRING Name)
 {
-  PWCHAR Ptr;
+    PWCHAR Ptr;
 
-  if (Name->Length == 0)
-    return FALSE;
+    /* Loop through every character */
+    if (Name->Length) {
+        for (Ptr = Name->Buffer + (Name->Length / sizeof(WCHAR))-1;
+             Ptr >= Name->Buffer && *Ptr != L'\\';Ptr--) {
 
-  /* Set pointer to last character of the string */
-  Ptr = Name->Buffer + (Name->Length / sizeof(WCHAR));
-
-  while (Ptr >= Name->Buffer)
-    {
-      /* Stop at backslash */
-      if (*Ptr == L'\\')
-	return FALSE;
-
-      /* Check for wildcards */
-      if ((*Ptr < L'@') &&
-	  (*Ptr == L'\"' || *Ptr == L'*' || *Ptr == L'<' ||
-	   *Ptr == L'>' || *Ptr == L'?'))
-	return TRUE;
-
-      /* Move to previous character */
-      Ptr--;
+            /* Check for Wildcard */
+            if (FsRtlIsUnicodeCharacterWild(*Ptr)) {
+                return TRUE;
+            }
+        }
     }
 
-  return FALSE;
+    /* Nothing Found */
+    return FALSE;
 }
 
 

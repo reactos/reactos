@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.40 2004/12/16 15:10:00 gdalsnes Exp $
+/* $Id: rtl.h,v 1.41 2004/12/30 18:30:03 ion Exp $
  * 
  */
 #ifndef __DDK_RTL_H
@@ -375,6 +375,7 @@ RemoveTailList(
   
 #define IsLastEntry(ListHead, Entry) ((ListHead)->Blink == Entry)
   
+#define RtlEqualMemory(Destination,Source,Length)   (!memcmp((Destination), (Source), (Length)))
 
 NTSTATUS
 STDCALL

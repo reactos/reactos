@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.31 2004/08/25 15:08:28 navaraf Exp $
+/* $Id: copy.c,v 1.32 2004/12/30 18:30:05 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -35,6 +35,9 @@ void* _alloca(size_t size);
 ULONG EXPORTED CcFastMdlReadWait;
 ULONG EXPORTED CcFastReadNotPossible;
 ULONG EXPORTED CcFastReadWait;
+ULONG CcFastReadNoWait;
+ULONG CcFastReadResourceMiss;
+
 
 /* FUNCTIONS *****************************************************************/
 
