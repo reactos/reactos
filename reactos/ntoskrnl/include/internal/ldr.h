@@ -19,6 +19,9 @@
 #define  FILESYSTEM_ROOT_NAME  L"\\FileSystem\\"
 
 
+extern ULONG_PTR LdrHalBase;
+
+
 NTSTATUS
 LdrLoadInitialProcess (
 	VOID
@@ -92,7 +95,6 @@ VOID
 LdrInit1(VOID);
 VOID
 LdrInitDebug(PLOADER_MODULE Module, PWCH Name);
-VOID LdrLoadUserModuleSymbols(PLDR_MODULE ModuleObject);
 
 PVOID LdrSafePEProcessModule(
  	PVOID ModuleLoadBase,
@@ -110,6 +112,13 @@ LdrUnloadModule(PMODULE_OBJECT ModuleObject);
 PMODULE_OBJECT
 LdrGetModuleObject(PUNICODE_STRING ModuleName);
 
-extern ULONG_PTR LdrHalBase;
+
+#ifdef KDBG
+VOID
+LdrpLoadModuleSymbols(PMODULE_OBJECT ModuleObject);
+
+VOID
+LdrLoadUserModuleSymbols(PLDR_MODULE ModuleObject);
+#endif /* KDBG */
 
 #endif /* __INCLUDE_INTERNAL_LDR_H */

@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.71 2002/05/05 14:57:43 chorns Exp $
+/* $Id: registry.c,v 1.72 2002/06/16 11:45:06 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -460,6 +460,48 @@ CmInitializeRegistry(VOID)
 
   /* FIXME: create remaining structure needed for default handles  */
   /* FIXME: load volatile registry data from ROSDTECT  */
+}
+
+
+VOID
+CmInit2(PCHAR CommandLine)
+{
+  PCHAR p1, p2;
+  ULONG PiceStart;
+
+  /* FIXME: Store current command line */
+
+  /* FIXME: Create the 'CurrentControlSet' link. */
+
+  /* Set PICE 'Start' value to 1, if PICE debugging is enabled */
+  PiceStart = 4;
+  p1 = (PCHAR)CommandLine;
+  while (p1 && (p2 = strchr(p1, '/')))
+    {
+      p2++;
+      if (_strnicmp(p2, "DEBUGPORT", 9) == 0)
+	{
+	  p2 += 9;
+	  if (*p2 == '=')
+	    {
+	      p2++;
+	      if (_strnicmp(p2, "PICE", 4) == 0)
+		{
+		  p2 += 4;
+		  PiceStart = 1;
+		}
+	    }
+	}
+      p1 = p2;
+    }
+
+  RtlWriteRegistryValue(RTL_REGISTRY_SERVICES,
+			L"\\Pice",
+			L"Start",
+			REG_DWORD,
+			&PiceStart,
+			sizeof(ULONG));
+
 }
 
 

@@ -40,9 +40,9 @@ REGEDIT4
 [\Registry\Machine\SYSTEM\CurrentControlSet\Control\ServiceGroupOrder]
 "List"=multi:"SCSI Port", "SCSI Miniport", "Primary Disk", "SCSI Class Helper", \
              "SCSI Class", "Boot File System", "Base", "Pointer Port", \
-             "Keyboard Port", "Pointer Class", "Keyboard Class", "Video Init", \
-             "Video", "File System", "Event log", "NDIS", "PNP_TDI", "TDI", \
-             "Extended Base"
+             "Keyboard Port", "Pointer Class", "Keyboard Class", "Debug", \
+             "Video Init", "Video", "File System", "Event log", "NDIS", \
+             "PNP_TDI", "TDI", "Extended Base"
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Control\Session Manager]
 "BootExecute"=multi:"autocheck autochk *"
@@ -198,6 +198,13 @@ REGEDIT4
 "Group"="Base"
 "ImagePath"="system32\drivers\null.sys"
 "Start"=dword:00000001
+"Type"=dword:00000001
+
+[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Pice]
+"ErrorControl"=dword:00000000
+"Group"="Debug"
+"ImagePath"="system32\drivers\pice.sys"
+"Start"=dword:00000004
 "Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Scsiport]

@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.112 2002/06/14 07:46:02 ekohl Exp $
+/* $Id: loader.c,v 1.113 2002/06/16 11:44:34 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -244,38 +244,6 @@ LdrInitModuleManagement(VOID)
 }
 
 
-/*
- * load the auto config drivers.
- */
-#if 0
-static VOID
-LdrLoadAutoConfigDriver(LPWSTR RelativeDriverName)
-{
-   WCHAR TmpFileName [MAX_PATH];
-   CHAR Buffer [256];
-   UNICODE_STRING	DriverName;
-   ULONG x, y, cx, cy;
-
-   HalQueryDisplayParameters(&x, &y, &cx, &cy);
-   RtlFillMemory(Buffer, x, ' ');
-   Buffer[x] = '\0';
-   HalSetDisplayParameters(0, y-1);
-   HalDisplayString(Buffer);
-
-   sprintf(Buffer, "Loading %S...\n",RelativeDriverName);
-   HalSetDisplayParameters(0, y-1);
-   HalDisplayString(Buffer);
-   HalSetDisplayParameters(cx, cy);
-   //CPRINT("Loading %S\n",RelativeDriverName);
-
-   wcscpy(TmpFileName, L"\\SystemRoot\\system32\\drivers\\");
-   wcscat(TmpFileName, RelativeDriverName);
-   RtlInitUnicodeString (&DriverName, TmpFileName);
-
-   NtLoadDriver(&DriverName);
-}
-#endif
-
 #ifdef KDBG
 
 BOOLEAN LdrpReadLine(PCHAR Line,
@@ -426,10 +394,10 @@ PSYMBOL LdrpParseLine(PCHAR Line,
   return Symbol;
 }
 
-VOID LdrpLoadModuleSymbolsFromBuffer(
-  PMODULE_OBJECT ModuleObject,
-  PVOID Buffer,
-  ULONG Length)
+VOID
+LdrpLoadModuleSymbolsFromBuffer(PMODULE_OBJECT ModuleObject,
+				PVOID Buffer,
+				ULONG Length)
 /*
    Symbols must be sorted by address, e.g.
    "nm --numeric-sort module.sys > module.sym"
@@ -486,10 +454,11 @@ VOID LdrpLoadModuleSymbolsFromBuffer(
     }
 }
 
-VOID LdrpLoadUserModuleSymbolsFromBuffer(
-  PLDR_MODULE ModuleObject,
-  PVOID Buffer,
-  ULONG Length)
+
+VOID
+LdrpLoadUserModuleSymbolsFromBuffer(PLDR_MODULE ModuleObject,
+				    PVOID Buffer,
+				    ULONG Length)
 /*
    Symbols must be sorted by address, e.g.
    "nm --numeric-sort module.dll > module.sym"
@@ -538,6 +507,7 @@ VOID LdrpLoadUserModuleSymbolsFromBuffer(
         }
     }
 }
+
 
 VOID
 LdrpLoadModuleSymbols(PMODULE_OBJECT ModuleObject)
@@ -642,7 +612,9 @@ LdrpLoadModuleSymbols(PMODULE_OBJECT ModuleObject)
   ExFreePool(FileBuffer);
 }
 
-VOID LdrLoadUserModuleSymbols(PLDR_MODULE ModuleObject)
+
+VOID
+LdrLoadUserModuleSymbols(PLDR_MODULE ModuleObject)
 {
   FILE_STANDARD_INFORMATION FileStdInfo;
   OBJECT_ATTRIBUTES ObjectAttributes;
@@ -743,99 +715,15 @@ VOID LdrLoadUserModuleSymbols(PLDR_MODULE ModuleObject)
 
   ExFreePool(FileBuffer);
 }
-#endif /* KDBG */
 
 
-#if 0
-VOID LdrLoadAutoConfigDrivers (VOID)
+VOID
+LdrpUnloadModuleSymbols(PMODULE_OBJECT ModuleObject)
 {
-
-#ifdef KDBG
-  NTSTATUS Status;
-  UNICODE_STRING ModuleName;
-  PMODULE_OBJECT ModuleObject;
-
-  /* Load symbols for ntoskrnl.exe and hal.dll because \SystemRoot
-     is created after their module entries */
-
-  RtlInitUnicodeString(&ModuleName, KERNEL_MODULE_NAME);
-  Status = LdrFindModuleObject(&ModuleName, &ModuleObject);
-  if (NT_SUCCESS(Status))
-  {
-    LdrpLoadModuleSymbols(ModuleObject);
-  }
-
-  RtlInitUnicodeString(&ModuleName, HAL_MODULE_NAME);
-  Status = LdrFindModuleObject(&ModuleName, &ModuleObject);
-  if (NT_SUCCESS(Status))
-  {
-    LdrpLoadModuleSymbols(ModuleObject);
-  }
+  /* FIXME: implement me! */
+}
 
 #endif /* KDBG */
-
-   /*
-    * PCI bus driver
-    */
-   //LdrLoadAutoConfigDriver( L"pci.sys" );
-
-   /*
-    * Keyboard driver
-    */
-   LdrLoadAutoConfigDriver( L"keyboard.sys" );
-
-   if ((KdDebuggerEnabled) && (KdDebugState & KD_DEBUG_PICE))
-     {
-			 /*
-			  * Private ICE debugger
-			  */
-		   LdrLoadAutoConfigDriver( L"pice.sys" );
-     }
-   
-   /*
-    * Raw console driver
-    */
-   LdrLoadAutoConfigDriver( L"blue.sys" );
-   
-   /*
-    * 
-    */
-   LdrLoadAutoConfigDriver(L"vidport.sys");
-   
-#if 0
-   /*
-    * Minix filesystem driver
-    */
-   LdrLoadAutoConfigDriver(L"minixfs.sys");
-
-   /*
-    * Mailslot filesystem driver
-    */
-   LdrLoadAutoConfigDriver(L"msfs.sys");
-#endif   
-   /*
-    * Named pipe filesystem driver
-    */
-   LdrLoadAutoConfigDriver(L"npfs.sys");
-
-   /*
-    * Mouse drivers
-    */
-//   LdrLoadAutoConfigDriver(L"l8042prt.sys");
-   LdrLoadAutoConfigDriver(L"psaux.sys");
-   LdrLoadAutoConfigDriver(L"mouclass.sys");
-
-   /*
-    * Networking
-    */
-#if 1
-   /*
-    * NDIS library
-    */
-   LdrLoadAutoConfigDriver(L"ndis.sys");
-#endif
-}
-#endif
 
 
 NTSTATUS
@@ -1029,7 +917,7 @@ LdrUnloadModule(PMODULE_OBJECT ModuleObject)
 
 #ifdef KDBG
   /* Unload symbols for module if available */
-//  LdrpUnloadModuleSymbols(Module);
+  LdrpUnloadModuleSymbols(ModuleObject);
 #endif /* KDBG */
 
   /* Free text section */
@@ -1072,8 +960,7 @@ LdrInitializeBootStartDriver(PVOID ModuleLoadBase,
   CHAR TmpBaseName[MAX_PATH];
   CHAR TmpFileName[MAX_PATH];
   ANSI_STRING AnsiString;
-  ULONG Length;
-  PCHAR Ext;
+  PCHAR FileExt;
 #endif
 
   HalQueryDisplayParameters(&x, &y, &cx, &cy);
@@ -1089,13 +976,13 @@ LdrInitializeBootStartDriver(PVOID ModuleLoadBase,
 
 #ifdef KDBG
   /*  Split the filename into base name and extension  */
-  Ext = strrchr(FileName, '.');
-  if (Ext != NULL)
-    Length = Ext - FileName;
+  FileExt = strrchr(FileName, '.');
+  if (FileExt != NULL)
+    Length = FileExt - FileName;
   else
     Length = strlen(FileName);
 
-  if ((Ext != NULL) && (strcmp(Ext, ".sym") == 0))
+  if ((FileExt != NULL) && (strcmp(FileExt, ".sym") == 0))
     {
       DPRINT("Module %s is a symbol file\n", FileName);
 
@@ -1111,18 +998,18 @@ LdrInitializeBootStartDriver(PVOID ModuleLoadBase,
       DPRINT("dasdsad: %s\n", TmpFileName);
 
       RtlAnsiStringToUnicodeString(&ModuleName, &AnsiString, TRUE);
-      Status = LdrFindModuleObject(&ModuleName, &ModuleObject);
+      ModuleObject = LdrGetModuleObject(&ModuleName);
       RtlFreeUnicodeString(&ModuleName);
-      if (!NT_SUCCESS(Status))
+      if (ModuleObject == NULL)
 	{
 	  strcpy(TmpFileName, TmpBaseName);
 	  strcat(TmpFileName, ".exe");
 	  RtlInitAnsiString(&AnsiString, TmpFileName);
 	  RtlAnsiStringToUnicodeString(&ModuleName, &AnsiString, TRUE);
-	  Status = LdrFindModuleObject(&ModuleName, &ModuleObject);
+	  ModuleObject = LdrGetModuleObject(&ModuleName);
 	  RtlFreeUnicodeString(&ModuleName);
 	}
-      if (NT_SUCCESS(Status))
+      if (ModuleObject != NULL)
 	{
 	  LdrpLoadModuleSymbolsFromBuffer(ModuleObject,
 					  ModuleLoadBase,
