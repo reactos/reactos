@@ -1,4 +1,4 @@
-/* $Id: heap.c,v 1.17 2001/02/17 00:01:26 ekohl Exp $
+/* $Id: heap.c,v 1.18 2001/02/17 17:42:46 ekohl Exp $
  *
  * kernel/heap.c
  * Copyright (C) 1996, Onno Hovers, All rights reserved
@@ -62,14 +62,10 @@ HANDLE WINAPI GetProcessHeap(VOID)
 
 /********************************************************************
 *                   GetProcessHeaps  --  KERNEL32                   *
-*                                                                   *
-* NOTE in Win95 this function is not implemented and just returns   *
-* ERROR_CALL_NOT_IMPLEMENTED                                        *
 ********************************************************************/
 DWORD WINAPI GetProcessHeaps(DWORD maxheaps, PHANDLE phandles )
 {
-   UNIMPLEMENTED;
-   return(ERROR_CALL_NOT_IMPLEMENTED);
+   return(RtlGetProcessHeaps(maxheaps, phandles));
 }
 
 /*********************************************************************
@@ -94,17 +90,13 @@ BOOL WINAPI HeapUnlock(HANDLE hheap)
 * NT uses this function to compact moveable blocks and other things  *
 * Here it does not compact, but it finds the largest free region     *
 *********************************************************************/
-UINT STDCALL
-HeapCompact(HANDLE hheap,
-	    DWORD flags)
+UINT WINAPI HeapCompact(HANDLE hheap, DWORD flags)
 {
    return RtlCompactHeap(hheap, flags);
 }
 
 /*********************************************************************
 *                    HeapValidate  --  KERNEL32                      *
-*                                                                    *
-* NOTE: only implemented in NT                                       *
 *********************************************************************/
 BOOL WINAPI HeapValidate(HANDLE hheap, DWORD flags, LPCVOID pmem)
 {
