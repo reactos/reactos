@@ -20,7 +20,7 @@ TARGET_OBJECTS = \
 	env.o \
 	error.o \
 	heap.o \
-	generictbl.o \
+	generictable.o \
 	largeint.o \
 	luid.o \
 	mem.o \
@@ -37,7 +37,7 @@ TARGET_OBJECTS = \
 	encode.o \
 	image.o \
 	splaytree.o \
-	unicodeprfx.o \
+	unicodeprefix.o \
         exception.o \
         i386/exception.o \
         i386/except.o
