@@ -5286,6 +5286,11 @@ GetDesktopWindow(
  
 HWND
 STDCALL
+GetShellWindow(VOID);
+
+
+HWND
+STDCALL
 GetParent(
 	  HWND hWnd);
 
