@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.50 2004/10/05 10:40:13 ekohl Exp $
+/* $Id: rtl.h,v 1.51 2004/10/30 22:18:16 weiden Exp $
  *
  */
 
@@ -91,20 +91,6 @@ typedef struct _DEBUG_LOCK_INFORMATION {
 	ULONG  NumberOfExclusiveWaiters;
 } DEBUG_LOCK_INFORMATION, *PDEBUG_LOCK_INFORMATION;
 
-
-typedef struct _LOCK_INFORMATION
-{
-  ULONG LockCount;
-  DEBUG_LOCK_INFORMATION LockEntry[1];
-} LOCK_INFORMATION, *PLOCK_INFORMATION;
-
-typedef struct _HEAP_INFORMATION
-{
-  ULONG HelpCount;
-  DEBUG_HEAP_INFORMATION HeapEntry[1];
-} HEAP_INFORMATION, *PHEAP_INFORMATION;
-
-
 typedef struct _CRITICAL_SECTION_DEBUG
 {
   USHORT Type;
@@ -134,6 +120,18 @@ typedef LPCRITICAL_SECTION LPRTL_CRITICAL_SECTION;
 
 #endif /* !__USE_W32API */
 
+
+typedef struct _LOCK_INFORMATION
+{
+  ULONG LockCount;
+  DEBUG_LOCK_INFORMATION LockEntry[1];
+} LOCK_INFORMATION, *PLOCK_INFORMATION;
+
+typedef struct _HEAP_INFORMATION
+{
+  ULONG HeapCount;
+  DEBUG_HEAP_INFORMATION HeapEntry[1];
+} HEAP_INFORMATION, *PHEAP_INFORMATION;
 
 typedef struct _RTL_PROCESS_INFO
 {

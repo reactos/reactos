@@ -336,6 +336,53 @@ typedef struct _SYSTEM_PERFORMANCE_INFORMATION {
 	ULONG  SystemCalls;
 } SYSTEM_PERFORMANCE_INFORMATION, *PSYSTEM_PERFORMANCE_INFORMATION;
 
+// SystemProcessThreadInfo (5)
+typedef struct _SYSTEM_THREAD_INFORMATION
+{
+	TIME		KernelTime;
+	TIME		UserTime;
+	TIME		CreateTime;
+	ULONG		WaitTime;
+	PVOID		StartAddress;
+	CLIENT_ID	ClientId;
+	KPRIORITY	Priority;
+	LONG		BasePriority;
+	ULONG		ContextSwitches;
+	ULONG		ThreadState;
+	KWAIT_REASON	WaitReason;
+} SYSTEM_THREAD_INFORMATION, *PSYSTEM_THREAD_INFORMATION;
+
+typedef struct SYSTEM_PROCESS_INFORMATION
+{
+	ULONG				NextEntryOffset;
+	ULONG				NumberOfThreads;
+	LARGE_INTEGER			SpareLi1;
+	LARGE_INTEGER			SpareLi2;
+	LARGE_INTEGER			SpareLi3;
+	TIME				CreateTime;
+	TIME				UserTime;
+	TIME				KernelTime;
+	UNICODE_STRING			ImageName;
+	ULONG				BasePriority;
+	HANDLE				UniqueProcessId;
+	HANDLE				InheritedFromUniqueProcessId;
+	ULONG				HandleCount;
+	ULONG				SessionId;
+	ULONG				SpareUl3;
+	ULONG				PeakVirtualSize;
+	ULONG				VirtualSize;
+	ULONG				PageFaultCount;
+	ULONG				PeakWorkingSetSize;
+	ULONG				WorkingSetSize;
+	ULONG				QuotaPeakPagedPoolUsage;
+	ULONG				QuotaPagedPoolUsage;
+	ULONG				QuotaPeakNonPagedPoolUsage;
+	ULONG				QuotaNonPagedPoolUsage;
+	ULONG				PagefileUsage;
+	ULONG				PeakPagefileUsage;
+	ULONG				PrivatePageCount;
+} SYSTEM_PROCESS_INFORMATION, *PSYSTEM_PROCESS_INFORMATION;
+
 // SystemModuleInformation (11)
 typedef struct _SYSTEM_MODULE_INFORMATION_ENTRY {
 	ULONG	 Unknown1;

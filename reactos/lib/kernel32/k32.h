@@ -13,6 +13,7 @@
 #include <ddk/ntddbeep.h>
 #include <ddk/ntddser.h>
 #include <windows.h>
+#include <tlhelp32.h>
 #include <ntdll/base.h>
 #include <ntdll/rtl.h>
 #include <ntdll/dbg.h>
@@ -27,6 +28,11 @@
 #include <rosrtl/thread.h>
 #include <rosrtl/string.h>
 #include <ntos/ldrtypes.h>
+#include <ntos/zwtypes.h>
 #include <ddk/ldrfuncs.h>
+#include <ddk/ntifs.h>
+
+#include <rosrtl/string.h>
+#include <rosrtl/registry.h>
 
 #include "include/kernel32.h"

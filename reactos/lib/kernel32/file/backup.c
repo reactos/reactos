@@ -1,4 +1,4 @@
-/* $Id: backup.c,v 1.6 2004/01/23 16:37:11 ekohl Exp $
+/* $Id: backup.c,v 1.7 2004/10/30 22:18:17 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,6 +11,9 @@
 /* INCLUDES *****************************************************************/
 
 #include <k32.h>
+
+#define NDEBUG
+#include "../include/debug.h"
 
 /* FUNCTIONS ****************************************************************/
 

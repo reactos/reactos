@@ -1,4 +1,4 @@
-/* $Id: bintype.c,v 1.1 2004/05/02 14:47:05 weiden Exp $
+/* $Id: bintype.c,v 1.2 2004/10/30 22:18:17 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -13,7 +13,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <k32.h>
-#include <ddk/ntifs.h>
 
 #define NDEBUG
 #include "../include/debug.h"

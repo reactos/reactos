@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.58 2004/09/22 09:31:01 weiden Exp $
+/* $Id: file.c,v 1.59 2004/10/30 22:18:17 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -13,7 +13,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <k32.h>
-#include <ddk/ntifs.h>
 
 #define NDEBUG
 #include "../include/debug.h"

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: computername.c,v 1.6 2004/02/15 07:07:11 arty Exp $
+/* $Id: computername.c,v 1.7 2004/10/30 22:18:17 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -28,8 +28,6 @@
 /* INCLUDES ******************************************************************/
 
 #include <k32.h>
-#include <rosrtl/string.h>
-#include <rosrtl/registry.h>
 
 #define NDEBUG
 #include "../include/debug.h"

@@ -1,4 +1,4 @@
-/* $Id: lfile.c,v 1.10 2004/08/28 22:08:54 navaraf Exp $
+/* $Id: lfile.c,v 1.11 2004/10/30 22:18:17 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -10,6 +10,9 @@
  */
 
 #include <k32.h>
+
+#define NDEBUG
+#include "../include/debug.h"
 
 
 /*
