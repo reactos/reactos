@@ -68,6 +68,7 @@ struct {
 	{&CLSID_ShellLink,	&IShellLink_Constructor},
 	{&CLSID_DragDropHelper, &IDropTargetHelper_Constructor},
 	{&CLSID_ControlPanel,	&IControlPanel_Constructor},
+	{&CLSID_AutoComplete,   &IAutoComplete_Constructor},
 	{NULL,NULL}
 };
 
@@ -171,17 +172,17 @@ LRESULT WINAPI SHCoCreateInstance(
 	    DllGetClassObjectFunc DllGetClassObject;
 
 	    if ((hLibrary = LoadLibraryExW(sDllPath, 0, LOAD_WITH_ALTERED_SEARCH_PATH)) == 0) {
-		ERR("couldn't load InprocServer32 dll %s\n", debugstr_w(sDllPath));
+	        ERR("couldn't load InprocServer32 dll %s\n", debugstr_w(sDllPath));
 		hres = E_ACCESSDENIED;
-		goto end;
+	        goto end;
 	    } else if (!(DllGetClassObject = (DllGetClassObjectFunc)GetProcAddress(hLibrary, "DllGetClassObject"))) {
-		ERR("couldn't find function DllGetClassObject in %s\n", debugstr_w(sDllPath));
-		FreeLibrary( hLibrary );
+	        ERR("couldn't find function DllGetClassObject in %s\n", debugstr_w(sDllPath));
+	        FreeLibrary( hLibrary );
 		hres = E_ACCESSDENIED;
-		goto end;
+	        goto end;
 	    } else if (! SUCCEEDED(hres = DllGetClassObject(myclsid, &IID_IClassFactory, (LPVOID*)&pcf))) {
-		TRACE("GetClassObject failed 0x%08lx\n", hres);
-		goto end;
+		    TRACE("GetClassObject failed 0x%08lx\n", hres);
+		    goto end;
 	    }
 
 	} else {
