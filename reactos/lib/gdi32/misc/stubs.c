@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.54 2004/04/24 14:21:36 weiden Exp $
+/* $Id: stubs.c,v 1.55 2004/04/25 14:46:53 weiden Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -1218,40 +1218,6 @@ ScaleWindowExtEx(
 	int	a3,
 	int	a4,
 	LPSIZE	a5
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-SetBrushOrgEx(
-	HDC	a0,
-	int	a1,
-	int	a2,
-	LPPOINT	a3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-FixBrushOrgEx(
-	HDC	a0,
-	int	a1,
-	int	a2,
-	LPPOINT	a3
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

@@ -17,10 +17,10 @@
 DWORD
 STDCALL
 GetObjectType(
-        HGDIOBJ         a0
+        HGDIOBJ         h
         )
 {
-        return NtGdiGetObjectType(a0);
+  return NtGdiGetObjectType(h);
 }
 
 
@@ -31,12 +31,12 @@ GetObjectType(
 BOOL
 STDCALL
 DPtoLP(
-        HDC     a0,
-        LPPOINT a1,
-        int     a2
+        HDC     hdc,
+        LPPOINT lpPoints,
+        int     nCount
         )
 {
-        return NtGdiDPtoLP(a0, a1, a2);
+  return NtGdiDPtoLP(hdc, lpPoints, nCount);
 }
 
 
@@ -46,11 +46,11 @@ DPtoLP(
 COLORREF
 STDCALL
 SetBkColor(
-        HDC             a0,
-        COLORREF        a1
+        HDC             hdc,
+        COLORREF        crColor
         )
 {
-        return NtGdiSetBkColor(a0, a1);
+  return NtGdiSetBkColor(hdc, crColor);
 }
 
 
@@ -60,10 +60,10 @@ SetBkColor(
 int
 STDCALL
 GetGraphicsMode(
-        HDC     a0
+        HDC     hdc
         )
 {
-        return NtGdiGetGraphicsMode(a0);
+  return NtGdiGetGraphicsMode(hdc);
 }
 
 
@@ -77,7 +77,7 @@ SetGraphicsMode(
         int     iMode
         )
 {
-        return NtGdiSetGraphicsMode(hdc, iMode);
+  return NtGdiSetGraphicsMode(hdc, iMode);
 }
 
 
@@ -87,10 +87,10 @@ SetGraphicsMode(
 int
 STDCALL
 GetMapMode(
-        HDC     a0
+        HDC     hdc
         )
 {
-        return NtGdiGetMapMode(a0);
+  return NtGdiGetMapMode(hdc);
 }
 
 /*
@@ -99,11 +99,11 @@ GetMapMode(
 BOOL
 STDCALL
 GetCurrentPositionEx(
-        HDC     a0,
-        LPPOINT a1
+        HDC     hdc,
+        LPPOINT lpPoint
         )
 {
-        return NtGdiGetCurrentPositionEx(a0, a1);
+  return NtGdiGetCurrentPositionEx(hdc, lpPoint);
 }
 
 
@@ -113,10 +113,10 @@ GetCurrentPositionEx(
 COLORREF
 STDCALL
 GetBkColor(
-        HDC     a0
+        HDC     hdc
         )
 {
-        return NtGdiGetBkColor(a0);
+  return NtGdiGetBkColor(hdc);
 }
 
 
@@ -126,10 +126,10 @@ GetBkColor(
 int
 STDCALL
 GetBkMode(
-        HDC     a0
+        HDC     hdc
         )
 {
-        return NtGdiGetBkMode(a0);
+  return NtGdiGetBkMode(hdc);
 }
 
 /*
@@ -138,11 +138,11 @@ GetBkMode(
 BOOL
 STDCALL
 GetBrushOrgEx(
-        HDC     a0,
-        LPPOINT a1
+        HDC     hdc,
+        LPPOINT lppt
         )
 {
-        return NtGdiGetBrushOrgEx(a0, a1);
+  return NtGdiGetBrushOrgEx(hdc, lppt);
 }
 
 
@@ -152,11 +152,10 @@ GetBrushOrgEx(
 int
 STDCALL
 GetROP2(
-        HDC     a0
+        HDC     hdc
         )
 {
-        return NtGdiGetROP2(a0);
-
+  return NtGdiGetROP2(hdc);
 }
 
 
@@ -166,11 +165,10 @@ GetROP2(
 int
 STDCALL
 GetStretchBltMode(
-        HDC     a0
+        HDC     hdc
         )
 {
-        return NtGdiGetStretchBltMode(a0);
-
+  return NtGdiGetStretchBltMode(hdc);
 }
 
 
@@ -181,11 +179,10 @@ GetStretchBltMode(
 UINT
 STDCALL
 GetTextAlign(
-        HDC     hDc
+        HDC     hdc
         )
 {
-        return NtGdiGetTextAlign(hDc);
-
+  return NtGdiGetTextAlign(hdc);
 }
 
 
@@ -195,11 +192,10 @@ GetTextAlign(
 COLORREF
 STDCALL
 GetTextColor(
-        HDC     hDc
+        HDC     hdc
         )
 {
-        return NtGdiGetTextColor(hDc);
-
+  return NtGdiGetTextColor(hdc);
 }
 
 
@@ -209,12 +205,11 @@ GetTextColor(
 BOOL
 STDCALL
 GetViewportExtEx(
-        HDC     hDc,
+        HDC     hdc,
         LPSIZE  lpSize
         )
 {
-        return NtGdiGetViewportExtEx(hDc, lpSize);
-
+  return NtGdiGetViewportExtEx(hdc, lpSize);
 }
 
 
@@ -224,12 +219,11 @@ GetViewportExtEx(
 BOOL
 STDCALL
 GetViewportOrgEx(
-        HDC             hDc,
+        HDC             hdc,
         LPPOINT         lpPoint
         )
 {
-        return NtGdiGetViewportOrgEx(hDc, lpPoint);
-
+  return NtGdiGetViewportOrgEx(hdc, lpPoint);
 }
 
 
@@ -239,11 +233,11 @@ GetViewportOrgEx(
 BOOL
 STDCALL
 GetWindowExtEx(
-        HDC             hDc,
+        HDC             hdc,
         LPSIZE          lpSize
         )
 {
-        return NtGdiGetWindowExtEx(hDc, lpSize);
+  return NtGdiGetWindowExtEx(hdc, lpSize);
 }
 
 
@@ -253,11 +247,11 @@ GetWindowExtEx(
 BOOL
 STDCALL
 GetWindowOrgEx(
-        HDC             hDc,
+        HDC             hdc,
         LPPOINT         lpPoint
         )
 {
-        return NtGdiGetWindowOrgEx(hDc, lpPoint);
+  return NtGdiGetWindowOrgEx(hdc, lpPoint);
 }
 
 
@@ -267,12 +261,11 @@ GetWindowOrgEx(
 int
 STDCALL
 SetBkMode(
-        HDC     a0,
-        int     a1
+        HDC     hdc,
+        int     iBkMode
         )
 {
-        return NtGdiSetBkMode(a0, a1);
-
+  return NtGdiSetBkMode(hdc, iBkMode);
 }
 
 
@@ -282,11 +275,11 @@ SetBkMode(
 int
 STDCALL
 SetROP2(
-        HDC     a0,
-        int     a1
+        HDC     hdc,
+        int     fnDrawMode
         )
 {
-        return NtGdiSetROP2(a0, a1);
+  return NtGdiSetROP2(hdc, fnDrawMode);
 }
 
 
@@ -296,12 +289,11 @@ SetROP2(
 int
 STDCALL
 SetStretchBltMode(
-        HDC     a0,
-        int     a1
+        HDC     hdc,
+        int     iStretchMode
         )
 {
-        return NtGdiSetStretchBltMode(a0, a1);
-
+  return NtGdiSetStretchBltMode(hdc, iStretchMode);
 }
 
 
@@ -311,12 +303,11 @@ SetStretchBltMode(
 DWORD
 STDCALL
 GetRelAbs(
-         HDC  a0,
-         DWORD a1
+         HDC  hdc,
+         DWORD dwIgnore
            )
 {
-        return NtGdiGetRelAbs(a0);
-
+  return NtGdiGetRelAbs(hdc);
 }
 
 
@@ -324,9 +315,9 @@ GetRelAbs(
  * @implemented
  */
 HGDIOBJ STDCALL
-GetStockObject(int Index)
+GetStockObject(int fnObject)
 {
-  return(NtGdiGetStockObject(Index));
+  return NtGdiGetStockObject(fnObject);
 }
 
 
@@ -334,9 +325,11 @@ GetStockObject(int Index)
  * @implemented
  */
 int STDCALL
-GetClipBox(HDC hDc, LPRECT Rect)
+GetClipBox(
+	HDC hdc, 
+	LPRECT lprc)
 {
-  return(NtGdiGetClipBox(hDc, Rect));
+  return NtGdiGetClipBox(hdc, lprc);
 }
 
 
@@ -346,10 +339,10 @@ GetClipBox(HDC hDc, LPRECT Rect)
 int
 STDCALL
 GetPolyFillMode(
-	HDC	a0
+	HDC	hdc
 	)
 {
-	return NtGdiGetPolyFillMode(a0);
+  return NtGdiGetPolyFillMode(hdc);
 }
 
 
@@ -457,9 +450,9 @@ CreateDCW (
 /*
  * @implemented
  */
-BOOL STDCALL DeleteDC( HDC hDC )
+BOOL STDCALL DeleteDC( HDC hdc )
 {
-  return NtGdiDeleteDC( hDC );
+  return NtGdiDeleteDC(hdc);
 }
 
 
@@ -469,10 +462,10 @@ BOOL STDCALL DeleteDC( HDC hDC )
 HDC
 STDCALL
 CreateCompatibleDC(
-	HDC  hDC
+	HDC  hdc
 	)
 {
-	return NtGdiCreateCompatableDC(hDC);
+  return NtGdiCreateCompatableDC(hdc);
 }
 
 
@@ -482,11 +475,11 @@ CreateCompatibleDC(
 HGDIOBJ
 STDCALL
 SelectObject(
-	HDC	hDC,
-	HGDIOBJ	hGDIObj
+	HDC	hdc,
+	HGDIOBJ	hgdiobj
 	)
 {
-	return NtGdiSelectObject(hDC, hGDIObj);
+  return NtGdiSelectObject(hdc, hgdiobj);
 }
 
 
@@ -496,11 +489,11 @@ SelectObject(
 int
 STDCALL
 SetMapMode(
-	HDC	a0,
-	int	a1
+	HDC	hdc,
+	int	fnMapMode
 	)
 {
-  return NtGdiSetMapMode( a0, a1 );
+  return NtGdiSetMapMode(hdc, fnMapMode);
 }
 
 
@@ -510,13 +503,13 @@ SetMapMode(
 BOOL
 STDCALL
 SetViewportOrgEx(
-	HDC	a0,
-	int	a1,
-	int	a2,
-	LPPOINT	a3
+	HDC	hdc,
+	int	X,
+	int	Y,
+	LPPOINT	lpPoint
 	)
 {
-  return NtGdiSetViewportOrgEx( a0, a1, a2, a3 );
+  return NtGdiSetViewportOrgEx(hdc, X, Y, lpPoint);
 }
 
 
@@ -526,13 +519,13 @@ SetViewportOrgEx(
 BOOL
 STDCALL
 OffsetViewportOrgEx(
-	HDC	DC,
-	int	XOffset,
-	int	YOffset,
-	LPPOINT	Point
+	HDC	hdc,
+	int	nXOffset,
+	int	nYOffset,
+	LPPOINT	lpPoint
 	)
 {
-  return NtGdiOffsetViewportOrgEx(DC, XOffset, YOffset, Point);
+  return NtGdiOffsetViewportOrgEx(hdc, nXOffset, nYOffset, lpPoint);
 }
 
 
@@ -542,13 +535,13 @@ OffsetViewportOrgEx(
 BOOL
 STDCALL
 SetWindowOrgEx(
-	HDC	a0,
-	int	a1,
-	int	a2,
-	LPPOINT	a3
+	HDC	hdc,
+	int	X,
+	int	Y,
+	LPPOINT	lpPoint
 	)
 {
-  return NtGdiSetWindowOrgEx( a0, a1, a2, a3 );
+  return NtGdiSetWindowOrgEx(hdc, X, Y, lpPoint);
 }
 
 
@@ -557,15 +550,15 @@ SetWindowOrgEx(
  */
 BOOL
 STDCALL
-DeleteObject(HGDIOBJ Obj)
+DeleteObject(HGDIOBJ hObject)
 {
-  if (0 != ((DWORD) Obj & 0x00800000))
+  if (0 != ((DWORD) hObject & 0x00800000))
     {
-      DPRINT1("Trying to delete system object 0x%x\n", Obj);
+      DPRINT1("Trying to delete system object 0x%x\n", hObject);
       return FALSE;
     }
 
-  return NtGdiDeleteObject(Obj);
+  return NtGdiDeleteObject(hObject);
 }
 
 
@@ -575,12 +568,12 @@ DeleteObject(HGDIOBJ Obj)
 HPALETTE
 STDCALL
 SelectPalette(
-	HDC		a0,
-	HPALETTE	a1,
-	BOOL		a2
+	HDC		hdc,
+	HPALETTE	hpal,
+	BOOL		bForceBackground
 	)
 {
-	return NtGdiSelectPalette( a0, a1,a2 );
+  return NtGdiSelectPalette(hdc, hpal, bForceBackground);
 }
 
 
@@ -590,10 +583,10 @@ SelectPalette(
 UINT
 STDCALL
 RealizePalette(
-	HDC	a0
+	HDC	hdc
 	)
 {
-	return NtGdiRealizePalette( a0 );
+  return NtGdiRealizePalette(hdc);
 }
 
 
@@ -603,12 +596,12 @@ RealizePalette(
 BOOL
 STDCALL
 LPtoDP(
-	HDC	a0,
-	LPPOINT	a1,
-	int	a2
+	HDC	hdc,
+	LPPOINT	lpPoints,
+	int	nCount
 	)
 {
-	return NtGdiLPtoDP(a0, a1, a2);
+  return NtGdiLPtoDP(hdc, lpPoints, nCount);
 }
 
 
@@ -618,11 +611,11 @@ LPtoDP(
 int
 STDCALL
 SetPolyFillMode(
-	HDC	a0,
-	int	a1
+	HDC	hdc,
+	int	iPolyFillMode
 	)
 {
-	return NtGdiSetPolyFillMode(a0, a1);
+  return NtGdiSetPolyFillMode(hdc, iPolyFillMode);
 }
 
 
@@ -632,11 +625,11 @@ SetPolyFillMode(
 int
 STDCALL
 GetDeviceCaps(
-	HDC	DC,
-	int	Index
+	HDC	hdc,
+	int	nIndex
 	)
 {
-	return NtGdiGetDeviceCaps(DC, Index);
+  return NtGdiGetDeviceCaps(hdc, nIndex);
 }
 
 /*
@@ -645,10 +638,10 @@ GetDeviceCaps(
 HPALETTE
 STDCALL
 CreatePalette(
-	CONST LOGPALETTE	*a0
+	CONST LOGPALETTE	*lplgpl
 	)
 {
-	return NtGdiCreatePalette((CONST PLOGPALETTE)a0);
+  return NtGdiCreatePalette((CONST PLOGPALETTE)lplgpl);
 }
 
 /*
@@ -657,11 +650,11 @@ CreatePalette(
 COLORREF
 STDCALL
 GetNearestColor(
-	HDC		a0,
-	COLORREF	a1
+	HDC		hdc,
+	COLORREF	crColor
 	)
 {
-	return NtGdiGetNearestColor(a0,a1);
+  return NtGdiGetNearestColor(hdc, crColor);
 }
 
 /*
@@ -670,11 +663,11 @@ GetNearestColor(
 UINT
 STDCALL
 GetNearestPaletteIndex(
-	HPALETTE	a0,
-	COLORREF	a1
+	HPALETTE	hpal,
+	COLORREF	crColor
 	)
 {
-	return NtGdiGetNearestPaletteIndex(a0,a1);
+  return NtGdiGetNearestPaletteIndex(hpal, crColor);
 }
 
 /*
@@ -683,13 +676,13 @@ GetNearestPaletteIndex(
 UINT
 STDCALL
 GetPaletteEntries(
-	HPALETTE	a0,
-	UINT		a1,
-	UINT		a2,
-	LPPALETTEENTRY	a3
+	HPALETTE	hpal,
+	UINT		iStartIndex,
+	UINT		nEntries,
+	LPPALETTEENTRY	lppe
 	)
 {
-	return NtGdiGetPaletteEntries(a0,a1,a2,a3);
+  return NtGdiGetPaletteEntries(hpal, iStartIndex, nEntries, lppe);
 }
 
 /*
@@ -698,13 +691,13 @@ GetPaletteEntries(
 UINT
 STDCALL
 GetSystemPaletteEntries(
-	HDC		a0,
-	UINT		a1,
-	UINT		a2,
-	LPPALETTEENTRY	a3
+	HDC		hdc,
+	UINT		iStartIndex,
+	UINT		nEntries,
+	LPPALETTEENTRY	lppe
 	)
 {
-	return NtGdiGetSystemPaletteEntries(a0,a1,a2,a3);
+  return NtGdiGetSystemPaletteEntries(hdc, iStartIndex, nEntries, lppe);
 }
 
 /*
@@ -713,11 +706,11 @@ GetSystemPaletteEntries(
 BOOL
 STDCALL
 RestoreDC(
-	HDC	a0,
-	int	a1
+	HDC	hdc,
+	int	nSavedDC
 	)
 {
-	return NtGdiRestoreDC(a0,a1);
+  return NtGdiRestoreDC(hdc, nSavedDC);
 }
 
 
@@ -727,10 +720,10 @@ RestoreDC(
 int
 STDCALL
 SaveDC(
-	HDC	a0
+	HDC	hdc
 	)
 {
-	return NtGdiSaveDC(a0);
+  return NtGdiSaveDC(hdc);
 }
 
 /*
@@ -739,13 +732,13 @@ SaveDC(
 UINT
 STDCALL
 SetPaletteEntries(
-	HPALETTE		a0,
-	UINT			a1,
-	UINT			a2,
-	CONST PALETTEENTRY	*a3
+	HPALETTE		hpal,
+	UINT			iStart,
+	UINT			cEntries,
+	CONST PALETTEENTRY	*lppe
 	)
 {
-	return NtGdiSetPaletteEntries(a0,a1,a2,(CONST PPALETTEENTRY)a3);
+  return NtGdiSetPaletteEntries(hpal, iStart, cEntries, (CONST PPALETTEENTRY)lppe);
 }
 
 /*
@@ -755,10 +748,10 @@ BOOL
 STDCALL
 GetWorldTransform(
 	HDC		hdc,
-	LPXFORM		a1
+	LPXFORM		lpXform
 	)
 {
-	return NtGdiGetWorldTransform(hdc,a1);
+  return NtGdiGetWorldTransform(hdc, lpXform);
 }
 
 /*
@@ -767,11 +760,11 @@ GetWorldTransform(
 BOOL
 STDCALL
 SetWorldTransform(
-	HDC		a0,
-	CONST XFORM	*a1
+	HDC		hdc,
+	CONST XFORM	*lpXform
 	)
 {
-	return NtGdiSetWorldTransform(a0,(CONST PXFORM)a1);
+  return NtGdiSetWorldTransform(hdc, (CONST PXFORM)lpXform);
 }
 
 /*
@@ -780,12 +773,12 @@ SetWorldTransform(
 BOOL
 STDCALL
 ModifyWorldTransform(
-	HDC		a0,
-	CONST XFORM	*a1,
-	DWORD		a2
+	HDC		hdc,
+	CONST XFORM	*lpXform,
+	DWORD		iMode
 	)
 {
-	return NtGdiModifyWorldTransform(a0,(CONST PXFORM)a1,a2);
+  return NtGdiModifyWorldTransform(hdc, (CONST PXFORM)lpXform, iMode);
 }
 
 /*
@@ -794,12 +787,12 @@ ModifyWorldTransform(
 BOOL
 STDCALL
 CombineTransform(
-	LPXFORM		a0,
-	CONST XFORM	*a1,
-	CONST XFORM	*a2
+	LPXFORM		lpxformResult,
+	CONST XFORM	*lpxform1,
+	CONST XFORM	*lpxform2
 	)
 {
-	return NtGdiCombineTransform(a0,(CONST PXFORM)a1,(CONST PXFORM)a2);
+  return NtGdiCombineTransform(lpxformResult, (CONST PXFORM)lpxform1, (CONST PXFORM)lpxform2);
 }
 
 /*
@@ -809,12 +802,12 @@ UINT
 STDCALL
 SetDIBColorTable(
 	HDC		hdc,
-	UINT		a1,
-	UINT		a2,
-	CONST RGBQUAD	*a3
+	UINT		uStartIndex,
+	UINT		cEntries,
+	CONST RGBQUAD	*pColors
 	)
 {
-	return NtGdiSetDIBColorTable(hdc,a1,a2,(RGBQUAD*)a3);
+  return NtGdiSetDIBColorTable(hdc, uStartIndex, cEntries, (RGBQUAD*)pColors);
 }
 
 /*
@@ -826,7 +819,7 @@ CreateHalftonePalette(
 	HDC	hdc
 	)
 {
-	return NtGdiCreateHalftonePalette(hdc);
+  return NtGdiCreateHalftonePalette(hdc);
 }
 
 /*
@@ -835,13 +828,13 @@ CreateHalftonePalette(
 BOOL
 STDCALL
 SetViewportExtEx(
-	HDC	a0,
-	int	a1,
-	int	a2,
-	LPSIZE	a3
+	HDC	hdc,
+	int	nXExtent,
+	int	nYExtent,
+	LPSIZE	lpSize
 	)
 {
-	return NtGdiSetViewportExtEx(a0,a1,a2,a3);
+  return NtGdiSetViewportExtEx(hdc, nXExtent, nYExtent, lpSize);
 }
 
 /*
@@ -850,13 +843,13 @@ SetViewportExtEx(
 BOOL
 STDCALL
 SetWindowExtEx(
-	HDC	a0,
-	int	a1,
-	int	a2,
-	LPSIZE	a3
+	HDC	hdc,
+	int	nXExtent,
+	int	nYExtent,
+	LPSIZE	lpSize
 	)
 {
-	return NtGdiSetWindowExtEx(a0,a1,a2,a3);
+  return NtGdiSetWindowExtEx(hdc, nXExtent, nYExtent, lpSize);
 }
 
 /*
@@ -865,13 +858,13 @@ SetWindowExtEx(
 BOOL
 STDCALL
 OffsetWindowOrgEx(
-	HDC	a0,
-	int	a1,
-	int	a2,
-	LPPOINT	a3
+	HDC	hdc,
+	int	nXOffset,
+	int	nYOffset,
+	LPPOINT	lpPoint
 	)
 {
-	return NtGdiOffsetWindowOrgEx(a0,a1,a2,a3);
+  return NtGdiOffsetWindowOrgEx(hdc, nXOffset, nYOffset, lpPoint);
 }
 
 /*
@@ -880,13 +873,13 @@ OffsetWindowOrgEx(
 BOOL
 STDCALL
 SetBitmapDimensionEx(
-	HBITMAP	a0,
-	int	a1,
-	int	a2,
-	LPSIZE	a3
+	HBITMAP	hBitmap,
+	int	nWidth,
+	int	nHeight,
+	LPSIZE	lpSize
 	)
 {
-	return NtGdiSetBitmapDimensionEx(a0,a1,a2,a3);
+ return NtGdiSetBitmapDimensionEx(hBitmap, nWidth, nHeight, lpSize);
 }
 
 /*
@@ -895,11 +888,11 @@ SetBitmapDimensionEx(
 BOOL
 STDCALL
 GetDCOrgEx(
-	HDC	a0,
-	LPPOINT	a1
+	HDC	hdc,
+	LPPOINT	lpPoint
 	)
 {
-	return NtGdiGetDCOrgEx(a0,a1);
+  return NtGdiGetDCOrgEx(hdc, lpPoint);
 }
 
 /*
@@ -908,14 +901,14 @@ GetDCOrgEx(
 LONG
 STDCALL
 GetDCOrg(
-    HDC a0
+    HDC hdc
     )
 {
-    // Officially obsolete by Microsoft
-    POINT Pt;
-    if (!NtGdiGetDCOrgEx(a0,&Pt))
-        return 0;
-    return(MAKELONG(Pt.x, Pt.y));
+  // Officially obsolete by Microsoft
+  POINT Pt;
+  if (!NtGdiGetDCOrgEx(hdc, &Pt))
+    return 0;
+  return(MAKELONG(Pt.x, Pt.y));
 }
 
 /*
@@ -924,11 +917,11 @@ GetDCOrg(
 BOOL
 STDCALL
 RectVisible(
-	HDC		a0,
-	CONST RECT	*a1
+	HDC		hdc,
+	CONST RECT	*lprc
 	)
 {
-	return NtGdiRectVisible(a0,(RECT *)a1);
+	return NtGdiRectVisible(hdc, (RECT *)lprc);
 }
 
 /*
@@ -937,15 +930,15 @@ RectVisible(
 int
 STDCALL
 ExtEscape(
-	HDC		a0,
-	int		a1,
-	int		a2,
-	LPCSTR		a3,
-	int		a4,
-	LPSTR		a5
+	HDC		hdc,
+	int		nEscape,
+	int		cbInput,
+	LPCSTR		lpszInData,
+	int		cbOutput,
+	LPSTR		lpszOutData
 	)
 {
-	return NtGdiExtEscape(a0, a1, a2, a3, a4, a5);
+  return NtGdiExtEscape(hdc, nEscape, cbInput, lpszInData, cbOutput, lpszOutData);
 }
 
 
@@ -999,3 +992,41 @@ GetObjectW(HGDIOBJ Handle, int Size, LPVOID Buffer)
 {
   return NtGdiGetObject(Handle, Size, Buffer);
 }
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+SetBrushOrgEx(
+	HDC	hdc,
+	int	nXOrg,
+	int	nYOrg,
+	LPPOINT	lppt
+	)
+{
+  return NtGdiSetBrushOrgEx(hdc, nXOrg, nYOrg, lppt);
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+FixBrushOrgEx(
+	HDC	hdc,
+	int	nXOrg,
+	int	nYOrg,
+	LPPOINT	lppt
+	)
+{
+  #if 0
+  /* FIXME - Check if we're emulating win95, if so, forward to SetBrushOrgEx() */
+  return SetBrushOrgEx(hdc, nXOrg, nYOrg, lppt);
+  #endif
+  
+  return FALSE;
+}
+

@@ -14,12 +14,12 @@
 int
 STDCALL
 OffsetClipRgn(
-        HDC     a0,
-        int     a1,
-        int     a2
+        HDC     hdc,
+        int     nXOffset,
+        int     nYOffset
         )
 {
-        return NtGdiOffsetClipRgn(a0, a1, a2);
+  return NtGdiOffsetClipRgn(hdc, nXOffset, nYOffset);
 }
 
 
@@ -29,14 +29,14 @@ OffsetClipRgn(
 int
 STDCALL
 GetClipRgn(
-        HDC     a0,
-        HRGN    a1
+        HDC     hdc,
+        HRGN    hrgn
         )
 {
-	HRGN rgn = NtGdiGetClipRgn(a0);
+	HRGN rgn = NtGdiGetClipRgn(hdc);
 	if(rgn)
 	{
-		if(NtGdiCombineRgn(a1, rgn, 0, RGN_COPY) != ERROR) return 1;
+		if(NtGdiCombineRgn(hrgn, rgn, 0, RGN_COPY) != ERROR) return 1;
 		else
 			return -1;
 	}
@@ -45,31 +45,31 @@ GetClipRgn(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HRGN
 STDCALL
 CreateEllipticRgn(
-	int			a0,
-	int			a1,
-	int			a2,
-	int			a3
+	int			nLeftRect,
+	int			nTopRect,
+	int			nRightRect,
+	int			nBottomRect
 	)
 {
-	return NtGdiCreateEllipticRgn(a0,a1,a2,a3);
+  return NtGdiCreateEllipticRgn(nLeftRect, nTopRect, nRightRect, nBottomRect);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HRGN
 STDCALL
 CreateEllipticRgnIndirect(
-	CONST RECT		*a0
+	CONST RECT		*lprc
 	)
 {
-	return NtGdiCreateEllipticRgnIndirect((RECT *)a0);
+  return NtGdiCreateEllipticRgnIndirect((RECT *)lprc);
 }
 
 
@@ -93,29 +93,16 @@ CreatePolyPolygonRgn(
 /*
  * @implemented
  */
-HBRUSH
-STDCALL
-CreatePatternBrush(
-	HBITMAP		hbmp
-	)
-{
-  return NtGdiCreatePatternBrush ( hbmp );
-}
-
-
-/*
- * @implemented
- */
 HRGN
 STDCALL
 CreateRectRgn(
-	int		a0,
-	int		a1,
-	int		a2,
-	int		a3
+	int		nLeftRect,
+	int		nTopRect,
+	int		nRightRect,
+	int		nBottomRect
 	)
 {
-	return NtGdiCreateRectRgn(a0,a1,a2,a3);
+  return NtGdiCreateRectRgn(nLeftRect, nTopRect, nRightRect, nBottomRect);
 }
 
 
@@ -125,10 +112,10 @@ CreateRectRgn(
 HRGN
 STDCALL
 CreateRectRgnIndirect(
-	CONST RECT	*a0
+	CONST RECT	*lprc
 	)
 {
-	return NtGdiCreateRectRgnIndirect((RECT *)a0);
+  return NtGdiCreateRectRgnIndirect((RECT *)lprc);
 }
 
 
@@ -146,8 +133,8 @@ CreateRoundRectRgn(
 	int	nHeightEllipse
 	)
 {
-  return NtGdiCreateRoundRectRgn (
-    nLeftRect, nTopRect, nRightRect, nBottomRect, nWidthEllipse, nHeightEllipse );
+  return NtGdiCreateRoundRectRgn(nLeftRect, nTopRect, nRightRect, nBottomRect, 
+                                 nWidthEllipse, nHeightEllipse);
 }
 
 
@@ -157,11 +144,11 @@ CreateRoundRectRgn(
 BOOL
 STDCALL
 EqualRgn(
-	HRGN		a0,
-	HRGN		a1
+	HRGN		hSrcRgn1,
+	HRGN		hSrcRgn2
 	)
 {
-	return NtGdiEqualRgn(a0,a1);
+  return NtGdiEqualRgn(hSrcRgn1, hSrcRgn2);
 }
 
 
@@ -171,12 +158,12 @@ EqualRgn(
 int
 STDCALL
 OffsetRgn(
-	HRGN	a0,
-	int	a1,
-	int	a2
+	HRGN	hrgn,
+	int	nXOffset,
+	int	nYOffset
 	)
 {
-	return NtGdiOffsetRgn(a0,a1,a2);
+  return NtGdiOffsetRgn(hrgn, nXOffset, nYOffset);
 }
 
 
@@ -186,11 +173,11 @@ OffsetRgn(
 int
 STDCALL
 GetRgnBox(
-	HRGN	a0,
-	LPRECT	a1
+	HRGN	hrgn,
+	LPRECT	lprc
 	)
 {
-	return NtGdiGetRgnBox(a0,a1);
+  return NtGdiGetRgnBox(hrgn, lprc);
 }
 
 
@@ -200,14 +187,14 @@ GetRgnBox(
 BOOL
 STDCALL
 SetRectRgn(
-	HRGN	a0,
-	int	a1,
-	int	a2,
-	int	a3,
-	int	a4
+	HRGN	hrgn,
+	int	nLeftRect,
+	int	nTopRect,
+	int	nRightRect,
+	int	nBottomRect
 	)
 {
-	return NtGdiSetRectRgn(a0,a1,a2,a3,a4);
+  return NtGdiSetRectRgn(hrgn, nLeftRect, nTopRect, nRightRect, nBottomRect);
 }
 
 
@@ -217,13 +204,13 @@ SetRectRgn(
 int
 STDCALL
 CombineRgn(
-	HRGN	a0,
-	HRGN	a1,
-	HRGN	a2,
-	int	a3
+	HRGN	hrgnDest,
+	HRGN	hrgnSrc1,
+	HRGN	hrgnSrc2,
+	int	fnCombineMode
 	)
 {
-	return NtGdiCombineRgn(a0,a1,a2,a3);
+  return NtGdiCombineRgn(hrgnDest, hrgnSrc1, hrgnSrc2, fnCombineMode);
 }
 
 
@@ -233,12 +220,12 @@ CombineRgn(
 DWORD
 STDCALL
 GetRegionData(
-	HRGN		a0,
-	DWORD		a1,
-	LPRGNDATA	a2
+	HRGN		hRgn,
+	DWORD		dwCount,
+	LPRGNDATA	lpRgnData
 	)
 {
-	return NtGdiGetRegionData(a0,a1,a2);
+  return NtGdiGetRegionData(hRgn, dwCount, lpRgnData);
 }
 
 
@@ -248,11 +235,11 @@ GetRegionData(
 BOOL
 STDCALL
 PaintRgn(
-	HDC	a0,
-	HRGN	a1
+	HDC	hdc,
+	HRGN	hrgn
 	)
 {
-	return NtGdiPaintRgn( a0, a1 );
+  return NtGdiPaintRgn(hdc, hrgn);
 }
 
 
@@ -262,12 +249,12 @@ PaintRgn(
 BOOL
 STDCALL
 FillRgn(
-	HDC	a0,
-	HRGN	a1,
-	HBRUSH	a2
+	HDC	hdc,
+	HRGN	hrgn,
+	HBRUSH	hbr
 	)
 {
-	return NtGdiFillRgn(a0, a1, a2);
+  return NtGdiFillRgn(hdc, hrgn, hbr);
 }
 
 /*
@@ -276,12 +263,12 @@ FillRgn(
 BOOL
 STDCALL
 PtInRegion(
-	HRGN	a0,
-	int	a1,
-	int	a2
+	HRGN	hrgn,
+	int	X,
+	int	Y
 	)
 {
-	return NtGdiPtInRegion(a0,a1,a2);
+  return NtGdiPtInRegion(hrgn, X, Y);
 }
 
 /*
@@ -290,11 +277,11 @@ PtInRegion(
 BOOL
 STDCALL
 RectInRegion(
-	HRGN		a0,
-	CONST RECT	*a1
+	HRGN		hrgn,
+	CONST RECT	*lprc
 	)
 {
-	return NtGdiRectInRegion(a0,(CONST PRECT)a1);
+  return NtGdiRectInRegion(hrgn, (CONST PRECT)lprc);
 }
 
 /*
@@ -303,11 +290,11 @@ RectInRegion(
 BOOL
 STDCALL
 InvertRgn(
-	HDC	hDc,
-	HRGN	hRgn
+	HDC	hdc,
+	HRGN	hrgn
 	)
 {
-	return NtGdiInvertRgn(hDc, hRgn);
+  return NtGdiInvertRgn(hdc, hrgn);
 }
 
 /*
@@ -323,5 +310,5 @@ FrameRgn(
 	int	nHeight
 	)
 {
-	return NtGdiFrameRgn(hdc, hrgn, hbr, nWidth, nHeight);
+  return NtGdiFrameRgn(hdc, hrgn, hbr, nWidth, nHeight);
 }

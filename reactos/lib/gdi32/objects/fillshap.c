@@ -12,11 +12,11 @@
  */
 BOOL
 STDCALL
-Polygon(HDC	hDC,
+Polygon(HDC	hdc,
 	CONST POINT	*lpPoints,
 	int	nCount)
 {
-	return NtGdiPolygon(hDC, (CONST PPOINT)lpPoints, nCount);
+  return NtGdiPolygon(hdc, (CONST PPOINT)lpPoints, nCount);
 }
 
 
@@ -25,13 +25,13 @@ Polygon(HDC	hDC,
  */
 BOOL
 STDCALL
-Rectangle(HDC  hDC,
-	int  LeftRect,
-	int  TopRect,
-	int  RightRect,
-	int  BottomRect)
+Rectangle(HDC  hdc,
+	int  nLeftRect,
+	int  nTopRect,
+	int  nRightRect,
+	int  nBottomRect)
 {
-   return NtGdiRectangle(hDC, LeftRect, TopRect, RightRect, BottomRect);
+  return NtGdiRectangle(hdc, nLeftRect, nTopRect, nRightRect, nBottomRect);
 }
 
 /*
@@ -41,15 +41,15 @@ BOOL
 STDCALL
 RoundRect(
 	HDC hdc,
-	int left,
-	int top,
-	int right,
-	int bottom,
-	int width,
-	int height
+	int nLeftRect,
+	int nTopRect,
+	int nRightRect,
+	int nBottomRect,
+	int nWidth,
+	int nHeight
 	)
 {
-  return NtGdiRoundRect ( hdc, left, top, right, bottom, width, height );
+  return NtGdiRoundRect(hdc, nLeftRect, nTopRect, nRightRect, nBottomRect, nWidth, nHeight);
 }
 
 /*
@@ -58,13 +58,13 @@ RoundRect(
 BOOL
 STDCALL
 PolyPolygon(
-	HDC		a0,
-	CONST POINT	*a1,
-	CONST INT	*a2,
-	int		a3
+	HDC		hdc,
+	CONST POINT	*lpPoints,
+	CONST INT	*lpPolyCounts,
+	int		nCount
 	)
 {
-	return PolyPolygon(a0,(LPPOINT)a1,(LPINT)a2,a3);
+  return PolyPolygon(hdc, (LPPOINT)lpPoints, (LPINT)lpPolyCounts, nCount);
 }
 
 
@@ -73,13 +73,13 @@ PolyPolygon(
  */
 BOOL
 STDCALL
-Ellipse(HDC hDc,
-        int Left,
-        int Top,
-        int Right,
-        int Bottom)
+Ellipse(HDC hdc,
+        int nLeftRect,
+        int nTopRect,
+        int nRightRect,
+        int nBottomRect)
 {
-  return NtGdiEllipse(hDc, Left, Top, Right, Bottom);
+  return NtGdiEllipse(hdc, nLeftRect, nTopRect, nRightRect, nBottomRect);
 }
 
 
@@ -88,18 +88,18 @@ Ellipse(HDC hDc,
  */
 BOOL
 STDCALL
-Pie(HDC hDc,
-    int Left,
-    int Top,
-    int Right,
-    int Bottom,
-    int XRadialStart,
-    int YRadialStart,
-    int XRadialEnd,
-    int YRadialEnd)
+Pie(HDC hdc,
+    int nLeftRect,
+    int nTopRect,
+    int nRightRect,
+    int nBottomRect,
+    int nXRadial1,
+    int nYRadial1,
+    int nXRadial2,
+    int nYRadial2)
 {
-  return NtGdiPie(hDc, Left, Top, Right, Bottom, XRadialStart, YRadialStart,
-                  XRadialEnd, YRadialEnd);
+  return NtGdiPie(hdc, nLeftRect, nTopRect, nRightRect, nBottomRect, nXRadial1, nYRadial1,
+                  nXRadial2, nYRadial2);
 }
 
 BOOL STDCALL
@@ -111,7 +111,7 @@ ExtFloodFill(
   UINT fuFillType   // fill type
 )
 {
-	return NtGdiExtFloodFill( hdc, nXStart, nYStart, crColor, fuFillType );
+  return NtGdiExtFloodFill(hdc, nXStart, nYStart, crColor, fuFillType);
 }
 
 /*
@@ -125,7 +125,7 @@ FloodFill(
   COLORREF crFill   // fill color
 )
 {
-	return NtGdiFloodFill(hdc,nXStart, nYStart, crFill );
+  return NtGdiFloodFill(hdc, nXStart, nYStart, crFill);
 }
 
 /*
@@ -135,12 +135,12 @@ BOOL STDCALL
 GdiGradientFill(
   HDC hdc,
   PTRIVERTEX pVertex,
-  ULONG uVertex,
+  ULONG dwNumVertex,
   PVOID pMesh,
-  ULONG uMesh,
-  ULONG ulMode
+  ULONG dwNumMesh,
+  ULONG dwMode
 )
 {
-	return NtGdiGradientFill(hdc, pVertex, uVertex, pMesh, uMesh, ulMode);
+  return NtGdiGradientFill(hdc, pVertex, dwNumVertex, pMesh, dwNumMesh, dwMode);
 }
 

@@ -14,10 +14,10 @@
 HBRUSH
 STDCALL
 CreateSolidBrush(
-	COLORREF	a0
+	COLORREF	crColor
 	)
 {
-	return NtGdiCreateSolidBrush(a0);
+  return NtGdiCreateSolidBrush(crColor);
 }
 
 /*
@@ -26,10 +26,10 @@ CreateSolidBrush(
 HBRUSH
 STDCALL
 CreateBrushIndirect(
-	CONST LOGBRUSH	*a0
+	CONST LOGBRUSH	*lplb
 	)
 {
-	return NtGdiCreateBrushIndirect(a0);
+  return NtGdiCreateBrushIndirect(lplb);
 }
 
 /*
@@ -38,11 +38,11 @@ CreateBrushIndirect(
 HBRUSH
 STDCALL
 CreateDIBPatternBrushPt(
-	CONST VOID		*a0,
-	UINT			a1
+	CONST VOID		*lpPackedDIB,
+	UINT			iUsage
 	)
 {
-	return NtGdiCreateDIBPatternBrushPt(a0,a1);
+  return NtGdiCreateDIBPatternBrushPt(lpPackedDIB, iUsage);
 }
 
 /*
@@ -51,9 +51,21 @@ CreateDIBPatternBrushPt(
 HBRUSH
 STDCALL
 CreateHatchBrush(
-	int		a0,
-	COLORREF	a1
+	int		fnStyle,
+	COLORREF	clrref
 	)
 {
-	return NtGdiCreateHatchBrush(a0,a1);
+  return NtGdiCreateHatchBrush(fnStyle, clrref);
+}
+
+/*
+ * @implemented
+ */
+HBRUSH
+STDCALL
+CreatePatternBrush(
+	HBITMAP		hbmp
+	)
+{
+  return NtGdiCreatePatternBrush ( hbmp );
 }

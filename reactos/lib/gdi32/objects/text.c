@@ -17,11 +17,11 @@
 UINT
 STDCALL
 SetTextAlign(
-        HDC     a0,
-        UINT    a1
+        HDC     hdc,
+        UINT    fMode
         )
 {
-        return NtGdiSetTextAlign(a0, a1);
+  return NtGdiSetTextAlign(hdc, fMode);
 }
 
 
@@ -31,24 +31,24 @@ SetTextAlign(
 BOOL  
 STDCALL 
 TextOutA(
-	HDC  hDC,
-	int  XStart,
-	int  YStart,
-	LPCSTR  String,
-	int  Count)
+	HDC  hdc,
+	int  nXStart,
+	int  nYStart,
+	LPCSTR  lpString,
+	int  cbString)
 {
         ANSI_STRING StringA;
         UNICODE_STRING StringU;
 	BOOL ret;
 
-	if (NULL != String)
+	if (NULL != lpString)
 	{
-		RtlInitAnsiString(&StringA, (LPSTR)String);
+		RtlInitAnsiString(&StringA, (LPSTR)lpString);
 		RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
 	} else
 		StringU.Buffer = NULL;
 
-	ret = TextOutW(hDC, XStart, YStart, StringU.Buffer, Count);
+	ret = TextOutW(hdc, nXStart, nYStart, StringU.Buffer, cbString);
 	RtlFreeUnicodeString(&StringU);
 	return ret;
 }
@@ -60,13 +60,13 @@ TextOutA(
 BOOL
 STDCALL
 TextOutW(
-	HDC  hDC,
-	int  XStart,
-	int  YStart,
-	LPCWSTR  String,
-	int  Count)
+	HDC  hdc,
+	int  nXStart,
+	int  nYStart,
+	LPCWSTR  lpString,
+	int  cbString)
 {
-	return NtGdiTextOut(hDC, XStart, YStart, String, Count);
+  return NtGdiTextOut(hdc, nXStart, nYStart, lpString, cbString);
 }
 
 
@@ -74,9 +74,9 @@ TextOutW(
  * @implemented
  */
 COLORREF  STDCALL 
-SetTextColor(HDC hDC, COLORREF color)
+SetTextColor(HDC hdc, COLORREF crColor)
 {
-  return(NtGdiSetTextColor(hDC, color));
+  return NtGdiSetTextColor(hdc, crColor);
 }
 
 
@@ -87,7 +87,7 @@ BOOL
 STDCALL 
 GetTextMetricsA(
 	HDC		hdc, 
-	LPTEXTMETRICA	tm
+	LPTEXTMETRICA	lptm
 	)
 {
   TEXTMETRICW tmw;
@@ -97,7 +97,7 @@ GetTextMetricsA(
       return FALSE;
     }
 
-  return TextMetricW2A(tm, &tmw);
+  return TextMetricW2A(lptm, &tmw);
 }
 
 
@@ -108,10 +108,10 @@ BOOL
 STDCALL 
 GetTextMetricsW(
 	HDC		hdc, 
-	LPTEXTMETRICW	tm
+	LPTEXTMETRICW	lptm
 	)
 {
-  return NtGdiGetTextMetrics(hdc, tm);
+  return NtGdiGetTextMetrics(hdc, lptm);
 }
 
 
@@ -121,20 +121,20 @@ GetTextMetricsW(
 BOOL
 APIENTRY
 GetTextExtentPointA(
-	HDC		hDC,
-	LPCSTR		String,
-	int		Count,
-	LPSIZE		Size
+	HDC		hdc,
+	LPCSTR		lpString,
+	int		cbString,
+	LPSIZE		lpSize
 	)
 {
         ANSI_STRING StringA;
         UNICODE_STRING StringU;
 	BOOL ret;
 
-	RtlInitAnsiString(&StringA, (LPSTR)String);
+	RtlInitAnsiString(&StringA, (LPSTR)lpString);
 	RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
 
-        ret = GetTextExtentPointW(hDC, StringU.Buffer, Count, Size);
+        ret = GetTextExtentPointW(hdc, StringU.Buffer, cbString, lpSize);
 
 	RtlFreeUnicodeString(&StringU);
 
@@ -148,13 +148,13 @@ GetTextExtentPointA(
 BOOL
 APIENTRY
 GetTextExtentPointW(
-	HDC		hDC,
-	LPCWSTR		String,
-	int		Count,
-	LPSIZE		Size
+	HDC		hdc,
+	LPCWSTR		lpString,
+	int		cbString,
+	LPSIZE		lpSize
 	)
 {
-	return NtGdiGetTextExtentPoint(hDC, String, Count, Size);
+  return NtGdiGetTextExtentPoint(hdc, lpString, cbString, lpSize);
 }
 
 
@@ -164,20 +164,20 @@ GetTextExtentPointW(
 BOOL
 APIENTRY
 GetTextExtentPoint32A(
-	HDC		hDC,
-	LPCSTR		String,
-	int		Count,
-	LPSIZE		Size
+	HDC		hdc,
+	LPCSTR		lpString,
+	int		cbString,
+	LPSIZE		lpSize
 	)
 {
   ANSI_STRING StringA;
   UNICODE_STRING StringU;
   BOOL ret;
 
-  RtlInitAnsiString(&StringA, (LPSTR)String);
+  RtlInitAnsiString(&StringA, (LPSTR)lpString);
   RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
 
-  ret = GetTextExtentPoint32W(hDC, StringU.Buffer, Count, Size);
+  ret = GetTextExtentPoint32W(hdc, StringU.Buffer, cbString, lpSize);
 
   RtlFreeUnicodeString(&StringU);
 
@@ -191,13 +191,13 @@ GetTextExtentPoint32A(
 BOOL
 APIENTRY
 GetTextExtentPoint32W(
-	HDC		hDC,
-	LPCWSTR		String,
-	int		Count,
-	LPSIZE		Size
+	HDC		hdc,
+	LPCWSTR		lpString,
+	int		cbString,
+	LPSIZE		lpSize
 	)
 {
-  return NtGdiGetTextExtentPoint32(hDC, String, Count, Size);
+  return NtGdiGetTextExtentPoint32(hdc, lpString, cbString, lpSize);
 }
 
 
@@ -207,24 +207,24 @@ GetTextExtentPoint32W(
 BOOL  
 STDCALL 
 ExtTextOutA(
-	HDC		hDC, 
+	HDC		hdc, 
 	int		X, 
 	int		Y, 
-	UINT		Options, 
-	CONST RECT	*Rect,
-	LPCSTR		String, 
-	UINT		Count, 
-	CONST INT	*Spacings
+	UINT		fuOptions, 
+	CONST RECT	*lprc,
+	LPCSTR		lpString, 
+	UINT		cbCount, 
+	CONST INT	*lpDx
 	)
 {
         ANSI_STRING StringA;
         UNICODE_STRING StringU;
 	BOOL ret;
 
-	RtlInitAnsiString(&StringA, (LPSTR)String);
+	RtlInitAnsiString(&StringA, (LPSTR)lpString);
 	RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
 
-        ret = ExtTextOutW(hDC, X, Y, Options, Rect, StringU.Buffer, Count, Spacings);
+        ret = ExtTextOutW(hdc, X, Y, fuOptions, lprc, StringU.Buffer, cbCount, lpDx);
 
 	RtlFreeUnicodeString(&StringU);
 
@@ -242,13 +242,13 @@ ExtTextOutW(
 	int		X, 
 	int		Y, 
 	UINT		fuOptions,	 
-	CONST RECT	*lpRect,
+	CONST RECT	*lprc,
 	LPCWSTR		lpString, 
 	UINT		cbCount, 
 	CONST INT	*lpDx
 	)
 {
-  return NtGdiExtTextOut(hdc, X, Y, fuOptions, lpRect, lpString, cbCount, lpDx);
+  return NtGdiExtTextOut(hdc, X, Y, fuOptions, lprc, lpString, cbCount, lpDx);
 }
 
 
@@ -258,12 +258,12 @@ ExtTextOutW(
 HFONT
 STDCALL
 CreateFontIndirectA(
-	CONST LOGFONTA		*lf
+	CONST LOGFONTA		*lplf
 	)
 {
   LOGFONTW tlf;
 
-  RosRtlLogFontA2W(&tlf, lf);
+  RosRtlLogFontA2W(&tlf, lplf);
 
   return NtGdiCreateFontIndirect(&tlf);
 }
@@ -275,10 +275,10 @@ CreateFontIndirectA(
 HFONT
 STDCALL
 CreateFontIndirectW(
-	CONST LOGFONTW		*lf
+	CONST LOGFONTW		*lplf
 	)
 {
-	return NtGdiCreateFontIndirect((CONST LPLOGFONTW)lf);
+	return NtGdiCreateFontIndirect((CONST LPLOGFONTW)lplf);
 }
 
 
@@ -288,31 +288,31 @@ CreateFontIndirectW(
 HFONT
 STDCALL
 CreateFontA(
-	int	Height,
-	int	Width,
-	int	Escapement,
-	int	Orientation,
-	int	Weight,
-	DWORD	Italic,
-	DWORD	Underline,
-	DWORD	StrikeOut,
-	DWORD	CharSet,
-	DWORD	OutputPrecision,
-	DWORD	ClipPrecision,
-	DWORD	Quality,
-	DWORD	PitchAndFamily,
-	LPCSTR	Face
+	int	nHeight,
+	int	nWidth,
+	int	nEscapement,
+	int	nOrientation,
+	int	fnWeight,
+	DWORD	fdwItalic,
+	DWORD	fdwUnderline,
+	DWORD	fdwStrikeOut,
+	DWORD	fdwCharSet,
+	DWORD	fdwOutputPrecision,
+	DWORD	fdwClipPrecision,
+	DWORD	fdwQuality,
+	DWORD	fdwPitchAndFamily,
+	LPCSTR	lpszFace
 	)
 {
         ANSI_STRING StringA;
         UNICODE_STRING StringU;
 	HFONT ret;
 
-	RtlInitAnsiString(&StringA, (LPSTR)Face);
+	RtlInitAnsiString(&StringA, (LPSTR)lpszFace);
 	RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
 
-        ret = CreateFontW(Height, Width, Escapement, Orientation, Weight, Italic, Underline, StrikeOut,
-                          CharSet, OutputPrecision, ClipPrecision, Quality, PitchAndFamily, StringU.Buffer);
+        ret = CreateFontW(nHeight, nWidth, nEscapement, nOrientation, fnWeight, fdwItalic, fdwUnderline, fdwStrikeOut,
+                          fdwCharSet, fdwOutputPrecision, fdwClipPrecision, fdwQuality, fdwPitchAndFamily, StringU.Buffer);
 
 	RtlFreeUnicodeString(&StringU);
 
@@ -326,23 +326,23 @@ CreateFontA(
 HFONT
 STDCALL
 CreateFontW(
-	int	Height,
-	int	Width,
-	int	Escapement,
-	int	Orientation,
-	int	Weight,
-	DWORD	Italic,
-	DWORD	Underline,
-	DWORD	StrikeOut,
-	DWORD	CharSet,
-	DWORD	OutputPrecision,
-	DWORD	ClipPrecision,
-	DWORD	Quality,
-	DWORD	PitchAndFamily,
-	LPCWSTR	Face
+	int	nHeight,
+	int	nWidth,
+	int	nEscapement,
+	int	nOrientation,
+	int	nWeight,
+	DWORD	fnItalic,
+	DWORD	fdwUnderline,
+	DWORD	fdwStrikeOut,
+	DWORD	fdwCharSet,
+	DWORD	fdwOutputPrecision,
+	DWORD	fdwClipPrecision,
+	DWORD	fdwQuality,
+	DWORD	fdwPitchAndFamily,
+	LPCWSTR	lpszFace
 	)
 {
-	return NtGdiCreateFont(Height, Width, Escapement, Orientation, Weight, Italic, Underline, StrikeOut,
-                          CharSet, OutputPrecision, ClipPrecision, Quality, PitchAndFamily, Face);
+  return NtGdiCreateFont(nHeight, nWidth, nEscapement, nOrientation, nWeight, fnItalic, fdwUnderline, fdwStrikeOut,
+                         fdwCharSet, fdwOutputPrecision, fdwClipPrecision, fdwQuality, fdwPitchAndFamily, lpszFace);
 }
 

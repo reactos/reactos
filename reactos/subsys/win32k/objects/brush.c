@@ -17,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: brush.c,v 1.35 2004/04/25 11:34:13 weiden Exp $
+ * $Id: brush.c,v 1.36 2004/04/25 14:46:54 weiden Exp $
  */
 
 #undef WIN32_LEAN_AND_MEAN
@@ -336,10 +336,17 @@ NtGdiSetBrushOrgEx(HDC hDC, INT XOrg, INT YOrg, LPPOINT Point)
 
    if (Point != NULL)
    {
+      NTSTATUS Status;
       POINT SafePoint;
       SafePoint.x = dc->w.brushOrgX;
       SafePoint.y = dc->w.brushOrgY;
-      MmCopyToCaller(Point, &SafePoint, sizeof(POINT));
+      Status = MmCopyToCaller(Point, &SafePoint, sizeof(POINT));
+      if(!NT_SUCCESS(Status))
+      {
+        DC_UnlockDc(hDC);
+        SetLastNtError(Status);
+        return FALSE;
+      }
    }
 
    dc->w.brushOrgX = XOrg;

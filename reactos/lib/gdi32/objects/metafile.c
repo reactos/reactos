@@ -19,11 +19,11 @@
 HMETAFILE
 STDCALL
 CopyMetaFileW(
-	HMETAFILE	Src,
-	LPCWSTR		File
+	HMETAFILE	hmfSrc,
+	LPCWSTR		lpszFile
 	)
 {
-	return NtGdiCopyMetaFile ( Src, File );
+  return NtGdiCopyMetaFile (hmfSrc, lpszFile);
 }
 
 
@@ -33,7 +33,7 @@ CopyMetaFileW(
 HMETAFILE
 STDCALL
 CopyMetaFileA(
-	HMETAFILE	Src,
+	HMETAFILE	hmfSrc,
 	LPCSTR		lpszFile
 	)
 {
@@ -46,7 +46,7 @@ CopyMetaFileA(
     SetLastError (RtlNtStatusToDosError(Status));
   else
   {
-    rc = NtGdiCopyMetaFile ( Src, lpszFileW );
+    rc = NtGdiCopyMetaFile ( hmfSrc, lpszFileW );
 
     HEAP_free ( lpszFileW );
   }
@@ -64,7 +64,7 @@ CreateMetaFileW(
 	LPCWSTR		lpszFile
 	)
 {
-	return NtGdiCreateMetaFile ( lpszFile );
+  return NtGdiCreateMetaFile ( lpszFile );
 }
 
 
@@ -181,13 +181,13 @@ CopyEnhMetaFileA(
 HDC
 STDCALL
 CreateEnhMetaFileW(
-	HDC		hdc,
+	HDC		hdcRef,
 	LPCWSTR		lpFileName,
 	CONST RECT	*lpRect,
 	LPCWSTR		lpDescription
 	)
 {
-  return NtGdiCreateEnhMetaFile ( hdc, lpFileName, (CONST LPRECT)lpRect, lpDescription );
+  return NtGdiCreateEnhMetaFile ( hdcRef, lpFileName, (CONST LPRECT)lpRect, lpDescription );
 }
 
 
@@ -197,7 +197,7 @@ CreateEnhMetaFileW(
 HDC
 STDCALL
 CreateEnhMetaFileA(
-	HDC		hdc,
+	HDC		hdcRef,
 	LPCSTR		lpFileName,
 	CONST RECT	*lpRect,
 	LPCSTR		lpDescription
@@ -218,7 +218,7 @@ CreateEnhMetaFileA(
       else
       {
 	rc = NtGdiCreateEnhMetaFile (
-	  hdc, lpFileNameW, (CONST LPRECT)lpRect, lpDescriptionW );
+	  hdcRef, lpFileNameW, (CONST LPRECT)lpRect, lpDescriptionW );
 
 	HEAP_free ( lpDescriptionW );
       }

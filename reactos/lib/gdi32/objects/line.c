@@ -14,18 +14,19 @@
 BOOL
 STDCALL
 Arc(
-	HDC	a0,
-	int	a1,
-	int	a2,
-	int	a3,
-	int	a4,
-	int	a5,
-	int	a6,
-	int	a7,
-	int	a8
+	HDC	hdc,
+	int	nLeftRect,
+	int	nTopRect,
+	int	nRightRect,
+	int	nBottomRect,
+	int	nXStartArc,
+	int	nYStartArc,
+	int	nXEndArc,
+	int	nYEndArc
 	)
 {
-	return NtGdiArc(a0,a1,a2,a3,a4,a5,a6,a7,a8);
+  return NtGdiArc(hdc, nLeftRect, nTopRect, nRightRect, nBottomRect,
+                  nXStartArc, nYStartArc, nXEndArc, nYEndArc);
 }
 
 /*
@@ -35,10 +36,10 @@ int
 STDCALL
 SetArcDirection(
         HDC     hdc,
-        int     a1
+        int     ArcDirection
         )
 {
-        return NtGdiSetArcDirection(hdc, a1);
+  return NtGdiSetArcDirection(hdc, ArcDirection);
 }
 
 
@@ -51,7 +52,7 @@ GetArcDirection(
         HDC     hdc
         )
 {
-        return NtGdiGetArcDirection(hdc);
+  return NtGdiGetArcDirection(hdc);
 }
 
 
@@ -60,9 +61,9 @@ GetArcDirection(
  */
 BOOL
 STDCALL
-LineTo(HDC hDC, int XEnd, int YEnd)
+LineTo(HDC hdc, int nXEnd, int nYEnd)
 {
-   return NtGdiLineTo(hDC, XEnd, YEnd);
+  return NtGdiLineTo(hdc, nXEnd, nYEnd);
 }
 
 
@@ -71,9 +72,9 @@ LineTo(HDC hDC, int XEnd, int YEnd)
  */
 BOOL  
 STDCALL 
-MoveToEx(HDC hDC, int X, int Y, LPPOINT Point)
+MoveToEx(HDC hdc, int X, int Y, LPPOINT lpPoint)
 {
-   return NtGdiMoveToEx(hDC, X, Y, Point);
+  return NtGdiMoveToEx(hdc, X, Y, lpPoint);
 }
 
 
@@ -84,7 +85,7 @@ BOOL
 STDCALL
 Polyline( HDC hdc, CONST POINT *lppt, int cPoints )
 {
-   return NtGdiPolyline(hdc, (CONST LPPOINT) lppt, cPoints);
+  return NtGdiPolyline(hdc, (CONST LPPOINT) lppt, cPoints);
 }
 
 /*
@@ -94,17 +95,18 @@ BOOL
 STDCALL
 ArcTo(
 	HDC	hdc,
-	int	a1,
-	int	a2,
-	int	a3,
-	int	a4,
-	int	a5,
-	int	a6,
-	int	a7,
-	int	a8
+	int	nLeftRect,
+	int	nTopRect,
+	int	nRightRect,
+	int	nBottomRect,
+	int	nXRadial1,
+	int	nYRadial1,
+	int	nXRadial2,
+	int	nYRadial2
 	)
 {
-	return NtGdiArcTo(hdc,a1,a2,a3,a4,a5,a6,a7,a8);
+  return NtGdiArcTo(hdc, nLeftRect, nTopRect, nRightRect, nBottomRect,
+                    nXRadial1, nYRadial1, nXRadial2, nYRadial2);
 }
 
 
@@ -114,12 +116,12 @@ ArcTo(
 BOOL
 STDCALL
 PolyBezier(
-	HDC		a0,
-	CONST POINT	*a1,
-	DWORD		a2
+	HDC		hdc,
+	CONST POINT	*lppt,
+	DWORD		cPoints
 	)
 {
-	return NtGdiPolyBezier(a0,(CONST PPOINT)a1,a2);
+  return NtGdiPolyBezier(hdc, (CONST PPOINT)lppt, cPoints);
 }
 
 /*
@@ -128,12 +130,12 @@ PolyBezier(
 BOOL
 STDCALL
 PolyBezierTo(
-	HDC		a0,
-	CONST POINT	*a1,
-	DWORD		a2
+	HDC		hdc,
+	CONST POINT	*lppt,
+	DWORD		cCount
 	)
 {
-	return NtGdiPolyBezierTo(a0,(CONST PPOINT)a1,a2);
+  return NtGdiPolyBezierTo(hdc, (CONST PPOINT)lppt, cCount);
 }
 
 
@@ -143,12 +145,12 @@ PolyBezierTo(
 BOOL
 STDCALL
 PolylineTo(
-	HDC		a0,
-	CONST POINT	*a1,
-	DWORD		a2
+	HDC		hdc,
+	CONST POINT	*lppt,
+	DWORD		cCount
 	)
 {
-	return NtGdiPolylineTo(a0,(CONST PPOINT)a1,a2);
+  return NtGdiPolylineTo(hdc, (CONST PPOINT)lppt, cCount);
 }
 
 /*
@@ -158,10 +160,10 @@ BOOL
 STDCALL
 PolyPolyline(
 	HDC		hdc,
-	CONST POINT	*a1,
-	CONST DWORD	*a2,
-	DWORD		a3
+	CONST POINT	*lppt,
+	CONST DWORD	*lpdwPolyPoints,
+	DWORD		cCount
 	)
 {
-	return NtGdiPolyPolyline(hdc,(LPPOINT)a1,(LPDWORD)a2,a3);
+  return NtGdiPolyPolyline(hdc, (LPPOINT)lppt, (LPDWORD)lpdwPolyPoints, cCount);
 }

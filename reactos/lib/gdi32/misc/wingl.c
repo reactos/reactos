@@ -99,14 +99,14 @@ static BOOL OpenGLEnable(void)
  */
 INT
 STDCALL
-ChoosePixelFormat(HDC  hDC,
-                  CONST PIXELFORMATDESCRIPTOR * pfd)
+ChoosePixelFormat(HDC  hdc,
+                  CONST PIXELFORMATDESCRIPTOR * ppfd)
 {
   if (glChoosePixelFormat == NULL)
     if (OpenGLEnable() == FALSE)
       return(0);
 
-  return(glChoosePixelFormat(hDC, pfd));
+  return(glChoosePixelFormat(hdc, ppfd));
 }
 
 
@@ -116,16 +116,16 @@ ChoosePixelFormat(HDC  hDC,
  */
 INT
 STDCALL
-DescribePixelFormat(HDC  hDC,
-                    INT  PixelFormat,
-                    UINT  BufSize,
-                    LPPIXELFORMATDESCRIPTOR  pfd)
+DescribePixelFormat(HDC  hdc,
+                    INT  iPixelFormat,
+                    UINT  nBytes,
+                    LPPIXELFORMATDESCRIPTOR  ppfd)
 {
   if (glDescribePixelFormat == NULL)
     if (OpenGLEnable() == FALSE)
       return(0);
 
-  return(glDescribePixelFormat(hDC, PixelFormat, BufSize, pfd));
+  return(glDescribePixelFormat(hdc, iPixelFormat, nBytes, ppfd));
 }
 
 
@@ -135,13 +135,13 @@ DescribePixelFormat(HDC  hDC,
  */
 INT
 STDCALL
-GetPixelFormat(HDC  hDC)
+GetPixelFormat(HDC  hdc)
 {
   if (glGetPixelFormat == NULL)
     if (OpenGLEnable() == FALSE)
       return(0);
 
-  return(glGetPixelFormat(hDC));
+  return(glGetPixelFormat(hdc));
 }
 
 
@@ -151,15 +151,15 @@ GetPixelFormat(HDC  hDC)
  */
 BOOL
 STDCALL
-SetPixelFormat(HDC  hDC,
-               INT  PixelFormat,
-               CONST PIXELFORMATDESCRIPTOR * pfd)
+SetPixelFormat(HDC  hdc,
+               INT  iPixelFormat,
+               CONST PIXELFORMATDESCRIPTOR * ppfd)
 {
   if (glSetPixelFormat == NULL)
     if (OpenGLEnable() == FALSE)
       return(0);
 
-  return(glSetPixelFormat(hDC, PixelFormat, pfd));
+  return(glSetPixelFormat(hdc, iPixelFormat, ppfd));
 }
 
 
@@ -169,14 +169,14 @@ SetPixelFormat(HDC  hDC,
  */
 BOOL
 STDCALL
-SwapBuffers(HDC  hDC)
+SwapBuffers(HDC  hdc)
 {
   if (glSwapBuffers == NULL)
     if (OpenGLEnable() == FALSE)
       return(0);
 
 
-  return(glSwapBuffers(hDC));
+  return(glSwapBuffers(hdc));
 }
 
 
@@ -190,20 +190,20 @@ SwapBuffers(HDC  hDC)
 UINT
 STDCALL
 GetEnhMetaFilePixelFormat(
-	HENHMETAFILE			hEmh,
-	DWORD				cbBufz,
+	HENHMETAFILE			hemf,
+	DWORD				cbBuffer,
 	CONST PIXELFORMATDESCRIPTOR	*ppfd
 	)
 {
 	ENHMETAHEADER pemh;
 
-	if(GetEnhMetaFileHeader(hEmh, sizeof(ENHMETAHEADER), &pemh))
+	if(GetEnhMetaFileHeader(hemf, sizeof(ENHMETAHEADER), &pemh))
 	{
 	if(pemh.bOpenGL)
 	{
 		if(pemh.cbPixelFormat)
 		{
-		memcpy((void*)ppfd, (const void *)pemh.offPixelFormat, cbBufz );
+		memcpy((void*)ppfd, (const void *)pemh.offPixelFormat, cbBuffer );
 		return(pemh.cbPixelFormat);
 		}
 	}

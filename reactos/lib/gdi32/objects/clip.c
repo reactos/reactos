@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: clip.c,v 1.4 2003/12/21 22:41:00 navaraf Exp $
+/* $Id: clip.c,v 1.5 2004/04/25 14:46:54 weiden Exp $
  *
  * PROJECT:         ReactOS gdi32.dll
  * FILE:            lib/gdi32/objects/clip.c
@@ -34,9 +34,9 @@
  */
 int
 STDCALL
-SelectClipRgn(HDC DC, HRGN Rgn)
+SelectClipRgn(HDC hdc, HRGN hrgn)
 {
-  return NtGdiSelectClipRgn(DC, Rgn);
+  return NtGdiSelectClipRgn(hdc, hrgn);
 }
 
 /*
@@ -45,14 +45,14 @@ SelectClipRgn(HDC DC, HRGN Rgn)
 int
 STDCALL
 IntersectClipRect(
-	HDC		hDc,
-	int		a1,
-	int		a2,
-	int		a3,
-	int		a4
+	HDC		hdc,
+	int		nLeftRect,
+	int		nTopRect,
+	int		nRightRect,
+	int		nBottomRect
 	)
 {
-   return NtGdiIntersectClipRect(hDc, a1, a2, a3, a4);
+  return NtGdiIntersectClipRect(hdc, nLeftRect, nTopRect, nRightRect, nBottomRect);
 }
 
 

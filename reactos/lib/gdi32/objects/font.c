@@ -1,4 +1,4 @@
-/* $Id: font.c,v 1.3 2004/04/09 20:03:13 navaraf Exp $
+/* $Id: font.c,v 1.4 2004/04/25 14:46:54 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -194,9 +194,9 @@ NewTextMetricExW2A(NEWTEXTMETRICEXA *tma, NEWTEXTMETRICEXW *tmw)
  */
 BOOL
 STDCALL
-TranslateCharsetInfo(DWORD *Src, LPCHARSETINFO Cs, DWORD Flags)
+TranslateCharsetInfo(DWORD *pSrc, LPCHARSETINFO lpCs, DWORD dwFlags)
 {
-  return NtGdiTranslateCharsetInfo(Src, Cs, Flags);
+  return NtGdiTranslateCharsetInfo(pSrc, lpCs, dwFlags);
 }
 
 static int FASTCALL
@@ -277,10 +277,10 @@ IntEnumFontFamilies(HDC Dc, LPLOGFONTW LogFont, PVOID EnumProc, LPARAM lParam,
  * @implemented
  */
 int STDCALL
-EnumFontFamiliesExW(HDC Dc, LPLOGFONTW LogFont, FONTENUMPROCW EnumFontFamProc,
-                    LPARAM lParam, DWORD Flags)
+EnumFontFamiliesExW(HDC hdc, LPLOGFONTW lpLogfont, FONTENUMPROCW lpEnumFontFamExProc,
+                    LPARAM lParam, DWORD dwFlags)
 {
-  return IntEnumFontFamilies(Dc, LogFont, EnumFontFamProc, lParam, TRUE);
+  return IntEnumFontFamilies(hdc, lpLogfont, lpEnumFontFamExProc, lParam, TRUE);
 }
 
 
@@ -288,19 +288,19 @@ EnumFontFamiliesExW(HDC Dc, LPLOGFONTW LogFont, FONTENUMPROCW EnumFontFamProc,
  * @implemented
  */
 int STDCALL
-EnumFontFamiliesW(HDC Dc, LPCWSTR Family, FONTENUMPROCW EnumFontFamProc,
+EnumFontFamiliesW(HDC hdc, LPCWSTR lpszFamily, FONTENUMPROCW lpEnumFontFamProc,
                   LPARAM lParam)
 {
   LOGFONTW LogFont;
 
   ZeroMemory(&LogFont, sizeof(LOGFONTW));
   LogFont.lfCharSet = DEFAULT_CHARSET;
-  if (NULL != Family)
+  if (NULL != lpszFamily)
     {
-      lstrcpynW(LogFont.lfFaceName, Family, LF_FACESIZE);
+      lstrcpynW(LogFont.lfFaceName, lpszFamily, LF_FACESIZE);
     }
 
-  return IntEnumFontFamilies(Dc, &LogFont, EnumFontFamProc, lParam, TRUE);
+  return IntEnumFontFamilies(hdc, &LogFont, lpEnumFontFamProc, lParam, TRUE);
 }
 
 
@@ -308,15 +308,15 @@ EnumFontFamiliesW(HDC Dc, LPCWSTR Family, FONTENUMPROCW EnumFontFamProc,
  * @implemented
  */
 int STDCALL
-EnumFontFamiliesExA (HDC Dc, LPLOGFONTA LogFont, FONTENUMPROCA EnumFontFamProc,
+EnumFontFamiliesExA (HDC hdc, LPLOGFONTA lpLogfont, FONTENUMPROCA lpEnumFontFamExProc,
                      LPARAM lParam, DWORD dwFlags)
 {
   LOGFONTW LogFontW;
 
-  RosRtlLogFontA2W(&LogFontW, LogFont);
+  RosRtlLogFontA2W(&LogFontW, lpLogfont);
 
   /* no need to convert LogFontW back to lpLogFont b/c it's an [in] parameter only */
-  return IntEnumFontFamilies(Dc, &LogFontW, EnumFontFamProc, lParam, FALSE);
+  return IntEnumFontFamilies(hdc, &LogFontW, lpEnumFontFamExProc, lParam, FALSE);
 }
 
 
@@ -324,19 +324,19 @@ EnumFontFamiliesExA (HDC Dc, LPLOGFONTA LogFont, FONTENUMPROCA EnumFontFamProc,
  * @implemented
  */
 int STDCALL
-EnumFontFamiliesA(HDC Dc, LPCSTR Family, FONTENUMPROCA EnumFontFamProc,
+EnumFontFamiliesA(HDC hdc, LPCSTR lpszFamily, FONTENUMPROCA lpEnumFontFamProc,
                   LPARAM lParam)
 {
   LOGFONTW LogFont;
 
   ZeroMemory(&LogFont, sizeof(LOGFONTW));
   LogFont.lfCharSet = DEFAULT_CHARSET;
-  if (NULL != Family)
+  if (NULL != lpszFamily)
     {
-      MultiByteToWideChar(CP_THREAD_ACP, 0, Family, -1, LogFont.lfFaceName, LF_FACESIZE);
+      MultiByteToWideChar(CP_THREAD_ACP, 0, lpszFamily, -1, LogFont.lfFaceName, LF_FACESIZE);
     }
 
-  return IntEnumFontFamilies(Dc, &LogFont, EnumFontFamProc, lParam, FALSE);
+  return IntEnumFontFamilies(hdc, &LogFont, lpEnumFontFamProc, lParam, FALSE);
 }
 
 

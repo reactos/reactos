@@ -13,9 +13,9 @@
  */
 HPEN
 STDCALL
-CreatePen(INT PenStyle, INT Width, COLORREF Color)
+CreatePen(INT fnPenStyle, INT nWidth, COLORREF crColor)
 {
-   return NtGdiCreatePen(PenStyle, Width, Color);
+  return NtGdiCreatePen(fnPenStyle, nWidth, crColor);
 }
 
 
@@ -24,7 +24,7 @@ CreatePen(INT PenStyle, INT Width, COLORREF Color)
  */
 HPEN
 STDCALL
-CreatePenIndirect(CONST LOGPEN *lgpn)
+CreatePenIndirect(CONST LOGPEN *lplgpn)
 {
-   return NtGdiCreatePenIndirect((CONST PLOGPEN)lgpn);
+  return NtGdiCreatePenIndirect((CONST PLOGPEN)lplgpn);
 }
