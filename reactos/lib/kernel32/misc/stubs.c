@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.90 2004/09/23 18:02:19 weiden Exp $
+/* $Id: stubs.c,v 1.91 2004/09/23 19:03:26 weiden Exp $
  *
  * KERNEL32.DLL stubs (STUB functions)
  * Remove from this file, if you implement them.
@@ -1224,20 +1224,6 @@ ZombifyActCtx(
 /*
  * @unimplemented
  */
-HANDLE
-STDCALL
-CreateJobObjectW(
-    LPSECURITY_ATTRIBUTES lpJobAttributes,
-    LPCWSTR lpName
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
 BOOL
 STDCALL
 DeleteVolumeMountPointW(
@@ -1462,21 +1448,6 @@ GetVolumePathNamesForVolumeNameW(
 /*
  * @unimplemented
  */
-HANDLE
-STDCALL
-OpenJobObjectW(
-    DWORD dwDesiredAccess,
-    BOOL bInheritHandle,
-    LPCWSTR lpName
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
 BOOL
 STDCALL
 ReplaceFileW(
@@ -1558,20 +1529,6 @@ VerifyVersionInfoW(
     LPOSVERSIONINFOEXW lpVersionInformation,
     DWORD dwTypeMask,
     DWORDLONG dwlConditionMask
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-HANDLE
-STDCALL
-CreateJobObjectA(
-    LPSECURITY_ATTRIBUTES lpJobAttributes,
-    LPCSTR lpName
     )
 {
     STUB;
@@ -1796,21 +1753,6 @@ GetVolumePathNamesForVolumeNameA(
     LPSTR lpszVolumePathNames,
     DWORD cchBufferLength,
     PDWORD lpcchReturnLength
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-HANDLE
-STDCALL
-OpenJobObjectA(
-    DWORD dwDesiredAccess,
-    BOOL bInheritHandle,
-    LPCSTR lpName
     )
 {
     STUB;
