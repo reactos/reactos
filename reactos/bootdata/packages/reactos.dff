@@ -89,6 +89,7 @@ lib\mmdrv\mmdrv.dll                     1
 lib\mpr\mpr.dll                         1
 lib\msafd\msafd.dll                     1
 lib\msgina\msgina.dll                   1
+lib\msimg32\msimg32.dll                 1
 lib\msvcrt\msvcrt.dll                   1
 lib\msvcrt20\msvcrt20.dll               1
 lib\netapi32\netapi32.dll               1
