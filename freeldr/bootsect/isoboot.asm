@@ -1,13 +1,37 @@
-
+; ****************************************************************************
+;
+;  isolinux.asm
+;
+;  A program to boot Linux kernels off a CD-ROM using the El Torito
+;  boot standard in "no emulation" mode, making the entire filesystem
+;  available.  It is based on the SYSLINUX boot loader for MS-DOS
+;  floppies.
+;
+;   Copyright (C) 1994-2001  H. Peter Anvin
+;
+;  This program is free software; you can redistribute it and/or modify
+;  it under the terms of the GNU General Public License as published by
+;  the Free Software Foundation, Inc., 675 Mass Ave, Cambridge MA 02139,
+;  USA; either version 2 of the License, or (at your option) any later
+;  version; incorporated herein by reference.
+; 
+; ****************************************************************************
+;
 ; THIS FILE IS A MODIFIED VERSION OF ISOLINUX.ASM
 ; MODIFICATION DONE BY MICHAEL K TER LOUW
 ; LAST UPDATED 3-9-2002
 ; SEE "COPYING" FOR INFORMATION ABOUT THE LICENSE THAT APPLIES TO THIS RELEASE
-
-
+;
+; ****************************************************************************
+;
+; This file is a modified version of ISOLINUX.ASM.
+; Modification done by Eric Kohl
+; Last update 04-25-2002
+;
+; ****************************************************************************
 
 ; Note: The Makefile builds one version with DEBUG_MESSAGES automatically.
-%define DEBUG_MESSAGES                ; Uncomment to get debugging messages
+;%define DEBUG_MESSAGES                ; Uncomment to get debugging messages
 
 
 
@@ -61,6 +85,7 @@ LF		equ 10			; Line Feed
 DriveNo		resb 1			; CD-ROM BIOS drive number
 DiskError	resb 1			; Error code for disk I/O
 RetryCount	resb 1			; Used for disk access retries
+TimeoutCount	resb 1			; Timeout counter
 ISOFlags	resb 1			; Flags for ISO directory search
 RootDir		resb dir_t_size		; Root directory
 CurDir		resb dir_t_size		; Current directory
@@ -96,14 +121,67 @@ start:
 
 relocate:
 	; Display the banner and copyright
+%ifdef DEBUG_MESSAGES
 	mov	si, isolinux_banner		; si points to hello message
 	call	writestr			; display the message
-%ifdef DEBUG_MESSAGES
 	mov	si,copyright_str
 	call	writestr
 %endif
 
 
+	; Make sure the keyboard buffer is empty
+.kbd_buffer_test:
+	call	pollchar
+	jz	.kbd_buffer_empty
+	call	getchar
+	jmp	.kbd_buffer_test
+.kbd_buffer_empty:
+
+	; Display the 'Press key' message and wait for a maximum of 5 seconds
+	call	crlf
+	mov	si, presskey_msg		; si points to 'Press key' message
+	call	writestr			; display the message
+
+	mov	byte [TimeoutCount], 5
+.next_second:
+	mov	eax, [BIOS_timer]		; load current tick counter
+	add	eax, 19				; 
+
+.poll_again:
+	call	pollchar
+	jnz	.boot_cdrom
+
+	mov	ebx, [BIOS_timer]
+	cmp	eax, ebx
+	jnz	.poll_again
+
+	mov	si, dot_msg			; print '.'
+	call	writestr
+	dec	byte [TimeoutCount]		; decrement timeout counter
+	jz	.boot_harddisk
+	jmp	.next_second
+
+.boot_harddisk:
+	; Boot first harddisk (drive 0x80)
+	mov	ax, 0201h
+	mov	dx, 0080h
+	mov	cx, 0001h
+	mov	bx, 7C00h
+	int	13h
+	jnc	.go_hd
+	jmp	kaboom
+.go_hd:
+	mov	ax, cs
+	mov	ds, ax
+	mov	es, ax
+	mov	fs, ax
+	mov	gs, ax
+	mov	dx, 0080h
+
+	jmp	0:0x7C00
+
+
+.boot_cdrom:
 	; Save and display the boot drive number
 	mov	[DriveNo], dl
 %ifdef DEBUG_MESSAGES
@@ -253,7 +331,6 @@ get_fs_structures:
 	call	getfssec			; get the first sector
 	mov	dl, [DriveNo]			; dl = boot drive
 	jmp	0:0x8000			; jump into OSLoader
-
 
 
 
@@ -776,11 +853,22 @@ getchar:
 	ret
 
 
+;
+; pollchar: check if we have an input character pending (ZF = 0)
+;
+pollchar:
+		pushad
+		mov ah,1		; Poll keyboard
+		int 16h
+		popad
+		ret
 
 
 
 isolinux_banner	db CR, LF, 'Loading IsoBoot...', CR, LF, 0
 copyright_str	db ' Copyright (C) 1994-2002 H. Peter Anvin', CR, LF, 0
+presskey_msg	db 'Press any key to boot from CD', 0
+dot_msg		db '.',0
 
 %ifdef DEBUG_MESSAGES
 startup_msg:	db 'Starting up, DL = ', 0
@@ -795,7 +883,6 @@ filesect_msg:	db 'FreeLdr.sys length(sectors): ', 0
 findfail_msg:	db 'Failed to find file!', 0
 %endif
 
-
 nosecsize_msg:	db 'Failed to get sector size, assuming 0800', CR, LF, 0
 spec_err_msg:	db 'Loading spec packet failed, trying to wing it...', CR, LF, 0
 maybe_msg:	db 'Found something at drive = ', 0
@@ -806,13 +893,9 @@ crlf_msg	db CR, LF, 0
 diskerr_msg:	db 'Disk error ', 0
 ondrive_str:	db ', drive ', 0
 err_bootfailed	db CR, LF, 'Boot failed: press a key to retry...'
-;isolinux_dir	db '\bscript', 0
-isolinux_dir	db '\I386', 0
-;no_dir_msg	db 'Could not find the \bscript directory.', CR, LF, 0
-no_dir_msg	db 'Could not find the I386 directory.', CR, LF, 0
-;isolinux_bin	db 'isolinux.bin', 0
+isolinux_dir	db '\REACTOS', 0
+no_dir_msg	db 'Could not find the REACTOS directory.', CR, LF, 0
 isolinux_bin	db 'FREELDR.SYS', 0
-;no_isolinux_msg	db 'Could not find the file isolinux.bin.', CR, LF, 0
 no_isolinux_msg	db 'Could not find the file FREELDR.SYS.', CR, LF, 0
 
 ;
@@ -867,21 +950,6 @@ dapa:		dw 16				; Packet size
 
 		times 2048-($-$$) nop		; Pad to file offset 2048
 
-
-;section .bss
-
-;DriveNo	resb 1			; CD-ROM BIOS drive number
-;DiskError	resb 1			; Error code for disk I/O
-;RetryCount	resb 1			; Used for disk access retries
-;ISOFlags	resb 1			; Flags for ISO directory search
-;RootDir	resb dir_t_size		; Root directory
-;CurDir		resb dir_t_size		; Current directory
-;ISOFileName	resb 64			; ISO filename canonicalization buffer
-;ISOFileNameEnd	equ $
-
-
-;		alignb open_file_t_size
-;Files		resb MAX_OPEN*open_file_t_size
 
 
 
