@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.35 2004/07/19 12:45:56 ekohl Exp $
+/* $Id: semgr.c,v 1.36 2004/07/20 12:08:04 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -353,35 +353,189 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
 		 POOL_TYPE PoolType)
 {
   PSECURITY_DESCRIPTOR Descriptor;
-  ULONG Length;
-  NTSTATUS Status;
+  PACCESS_TOKEN Token;
+  ULONG OwnerLength = 0;
+  ULONG GroupLength = 0;
+  ULONG DaclLength = 0;
+  ULONG SaclLength = 0;
+  ULONG Length = 0;
+  ULONG Control = 0;
+  ULONG Current;
+  PSID Owner = NULL;
+  PSID Group = NULL;
+  PACL Dacl = NULL;
+  PACL Sacl = NULL;
+//  NTSTATUS Status;
 
-  if (ExplicitDescriptor != NULL)
+  /* FIXME: Lock subject context */
+
+  if (SubjectContext->ClientToken != NULL)
     {
-      Length = RtlLengthSecurityDescriptor(ExplicitDescriptor);
+      Token = SubjectContext->ClientToken;
     }
   else
     {
-      DPRINT("No explicit security descriptor\n");
-      return STATUS_UNSUCCESSFUL;
+      Token = SubjectContext->PrimaryToken;
     }
+
+
+  /* Inherit the Owner SID */
+  if (ExplicitDescriptor != NULL && ExplicitDescriptor->Owner != NULL)
+    {
+      DPRINT("Use explicit owner sid!\n");
+      Owner = ExplicitDescriptor->Owner;
+      if (ExplicitDescriptor->Control & SE_SELF_RELATIVE)
+	{
+	  Owner = (PSID)(((ULONG_PTR)Owner) + (ULONG_PTR)ExplicitDescriptor);
+	}
+    }
+  else
+    {
+      if (Token != NULL)
+	{
+	  DPRINT("Use token owner sid!\n");
+	  Owner = Token->UserAndGroups[Token->DefaultOwnerIndex].Sid;
+	}
+      else
+	{
+	  DPRINT("Use default owner sid!\n");
+	  Owner = SeLocalSystemSid;
+	}
+
+      Control |= SE_OWNER_DEFAULTED;
+    }
+
+  OwnerLength = RtlLengthSid(Owner);
+
+
+  /* Inherit the Group SID */
+  if (ExplicitDescriptor != NULL && ExplicitDescriptor->Group != NULL)
+    {
+      DPRINT("Use explicit group sid!\n");
+      Group = ExplicitDescriptor->Group;
+      if (ExplicitDescriptor->Control & SE_SELF_RELATIVE)
+	{
+	  Group = (PSID)(((ULONG_PTR)Group) + (ULONG_PTR)ExplicitDescriptor);
+	}
+    }
+  else
+    {
+      if (Token != NULL)
+	{
+	  DPRINT("Use token group sid!\n");
+	  Group = Token->PrimaryGroup;
+	}
+      else
+	{
+	  DPRINT("Use default group sid!\n");
+	  Group = SeLocalSystemSid;
+	}
+
+      Control |= SE_OWNER_DEFAULTED;
+    }
+
+  GroupLength = RtlLengthSid(Group);
+
+
+  /* Inherit the DACL */
+  /* FIXME */
+  if (ExplicitDescriptor != NULL && (ExplicitDescriptor->Control & SE_DACL_PRESENT))
+    {
+      DPRINT("Use explicit DACL!\n");
+      Dacl = ExplicitDescriptor->Dacl;
+      if (Dacl != NULL && (ExplicitDescriptor->Control & SE_SELF_RELATIVE))
+	{
+	  Dacl = (PACL)(((ULONG_PTR)Dacl) + (ULONG_PTR)ExplicitDescriptor);
+	}
+
+      Control |= SE_DACL_PRESENT;
+      DaclLength = Dacl->AclSize;
+    }
+  else
+    {
+      DPRINT("No DACL!\n");
+      DaclLength = 0;
+    }
+
+
+  /* Inherit the SACL */
+  /* FIXME */
+#if 0
+  if (ExplicitDescriptor != NULL && (ExplicitDescriptor->Control & SE_SACL_PRESENT))
+    {
+      DPRINT("Use explicit SACL!\n");
+      Sacl = ExplicitDescriptor->Sacl;
+      if (Sacl != NULL && (ExplicitDescriptor->Control & SE_SELF_RELATIVE))
+	{
+	  Sacl = (PACL)(((ULONG_PTR)Sacl) + (ULONG_PTR)ExplicitDescriptor);
+	}
+
+      Control |= SE_SACL_PRESENT;
+      SaclLength = Sacl->AclSize;
+    }
+  else
+    {
+      DPRINT("No SACL!\n");
+      SaclLength = 0;
+    }
+#endif
+
+
+  /* Allocate and initialize the new security descriptor */
+  Length = sizeof(SECURITY_DESCRIPTOR) + OwnerLength + GroupLength + DaclLength + SaclLength;
 
   Descriptor = ExAllocatePool(NonPagedPool,
 			      Length);
   if (Descriptor == NULL)
     {
       DPRINT1("ExAlloctePool() failed\n");
+      /* FIXME: Unlock subject context */
       return STATUS_UNSUCCESSFUL;
     }
 
-  Status = RtlMakeSelfRelativeSD(ExplicitDescriptor,
-				 Descriptor,
-				 &Length);
-  if (!NT_SUCCESS(Status))
+  RtlCreateSecurityDescriptor(Descriptor,
+			      SECURITY_DESCRIPTOR_REVISION);
+
+  Descriptor->Control = Control | SE_SELF_RELATIVE;
+
+  Current = (ULONG)Descriptor + sizeof(SECURITY_DESCRIPTOR);
+
+  if (SaclLength != 0)
     {
-      DPRINT1("RtlMakeSelfRelativeSD() failed (Status %lx)\n", Status);
-      return Status;
+      RtlCopyMemory((PVOID)Current,
+		    Sacl,
+		    SaclLength);
+      Descriptor->Sacl = (PACL)((ULONG)Current - (ULONG)Descriptor);
+      Current += SaclLength;
     }
+
+  if (DaclLength != 0)
+    {
+      RtlCopyMemory((PVOID)Current,
+		    Dacl,
+		    DaclLength);
+      Descriptor->Dacl = (PACL)((ULONG)Current - (ULONG)Descriptor);
+      Current += DaclLength;
+    }
+
+  if (OwnerLength != 0)
+    {
+      RtlCopyMemory((PVOID)Current,
+		    Owner,
+		    OwnerLength);
+      Descriptor->Owner = (PSID)((ULONG)Current - (ULONG)Descriptor);
+      Current += OwnerLength;
+    }
+
+  if (GroupLength != 0)
+    {
+      memmove((PVOID)Current,
+              Group,
+              GroupLength);
+      Descriptor->Group = (PSID)((ULONG)Current - (ULONG)Descriptor);
+    }
+
+   /* FIXME: Unlock subject context */
 
   *NewDescriptor = Descriptor;
 
