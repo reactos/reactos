@@ -1,0 +1,12 @@
+LIBRARY acledit.dll
+
+EXPORTS
+EditAuditInfo=EditAuditInfo@4
+EditOwnerInfo=EditOwnerInfo@4
+EditPermissionInfo=EditPermissionInfo@4
+FMExtensionProcW=FMExtensionProcW@12
+SedDiscretionaryAclEditor=SedDiscretionaryAclEditor@52
+SedSystemAclEditor=SedSystemAclEditor@48
+SedTakeOwnership=SedTakeOwnership@56
+
+; EOF
