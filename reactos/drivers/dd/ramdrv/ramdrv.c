@@ -88,8 +88,6 @@ NTSTATUS STDCALL DriverEntry(IN PDRIVER_OBJECT DriverObject,
       Status = STATUS_INSUFFICIENT_RESOURCES;
       goto cleandevice;
     }
-  RtlInitUnicodeString( &LinkName, L"\\ArcName\\virt(0)disk(0)ram(0)" );
-  IoAssignArcName( &LinkName, &DeviceName );
   RtlInitUnicodeString( &LinkName, L"\\??\\Z:" );
   IoCreateSymbolicLink( &LinkName, &DeviceName );
 
