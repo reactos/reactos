@@ -10,17 +10,23 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <winreg.h>
 
 #include "opengl32.h"
 
 
 /* FUNCTION: Append OpenGL Rendering Context (GLRC) to list
  * ARGUMENTS: [IN] glrc: GLRC to append to list
- * TODO: protect from race conditions
  */
 static void WGL_AppendContext( GLRC *glrc )
 {
+	/* synchronize */
+	if (WaitForSingleObject( OPENGL32_processdata.glrc_mutex, INFINITE ) ==
+	    WAIT_FAILED)
+	{
+		DBGPRINT( "Error: WaitForSingleObject() failed (%d)", GetLastError() );
+		return; /* FIXME: do we have to expect such an error and handle it? */
+	}
+
 	if (OPENGL32_processdata.glrc_list == NULL)
 		OPENGL32_processdata.glrc_list = glrc;
 	else
@@ -30,15 +36,26 @@ static void WGL_AppendContext( GLRC *glrc )
 			p = p->next;
 		p->next = glrc;
 	}
+
+	/* release mutex */
+	if (!ReleaseMutex( OPENGL32_processdata.glrc_mutex ))
+		DBGPRINT( "Error: ReleaseMutex() failed (%d)", GetLastError() );
 }
 
 
 /* FUNCTION: Remove OpenGL Rendering Context (GLRC) from list
  * ARGUMENTS: [IN] glrc: GLRC to remove from list
- * TODO: protect from race conditions
  */
 static void WGL_RemoveContext( GLRC *glrc )
 {
+	/* synchronize */
+	if (WaitForSingleObject( OPENGL32_processdata.glrc_mutex, INFINITE ) ==
+	    WAIT_FAILED)
+	{
+		DBGPRINT( "Error: WaitForSingleObject() failed (%d)", GetLastError() );
+		return; /* FIXME: do we have to expect such an error and handle it? */
+	}
+
 	if (glrc == OPENGL32_processdata.glrc_list)
 		OPENGL32_processdata.glrc_list = glrc->next;
 	else
@@ -55,6 +72,10 @@ static void WGL_RemoveContext( GLRC *glrc )
 		}
 		DBGPRINT( "Error: GLRC 0x%08x not found in list!", glrc );
 	}
+
+	/* release mutex */
+	if (!ReleaseMutex( OPENGL32_processdata.glrc_mutex ))
+		DBGPRINT( "Error: ReleaseMutex() failed (%d)", GetLastError() );
 }
 
 /* FUNCTION: Check wether a GLRC is in the list
@@ -75,6 +96,19 @@ static BOOL WGL_ContainsContext( GLRC *glrc )
 }
 
 
+/* FUNCTION: SetContextCallBack passed to DrvSetContext. Gets called whenever
+ *           the current GL context (dispatch table) is to be changed - can
+ *           be multiple times for one DrvSetContext call.
+ * ARGUMENTS: [IN] table  Function pointer table (first DWORD is number of
+ *                        functions)
+ * RETURNS: unkown
+ */
+DWORD CALLBACK WGL_SetContextCallBack( void *table )
+{
+	DBGPRINT( "Function count: %d\n", *(DWORD *)table );
+	DBGBREAK();
+	return ERROR_SUCCESS;
+}
 
 
 /* FUNCTION: Copy data specified by mask from one GLRC to another.
@@ -118,88 +152,7 @@ BOOL WINAPI wglCopyContext( HGLRC hsrc, HGLRC hdst, UINT mask )
  */
 HGLRC WINAPI wglCreateContext( HDC hdc )
 {
-	HKEY hKey;
-	WCHAR subKey[1024] = L"SOFTWARE\\Microsoft\\Windows NT\\"
-	                      "CurrentVersion\\OpenGLDrivers";
-	LONG ret;
-	WCHAR driver[256];
-	DWORD size;
-	DWORD dw;
-	FILETIME time;
-
-	GLDRIVERDATA *icd;
-	GLRC *glrc;
-	HGLRC drvHglrc = NULL;
-
-	if (GetObjectType( hdc ) != OBJ_DC)
-	{
-		DBGPRINT( "Error: hdc is not a DC handle!" );
-		return NULL;
-	}
-
-	/* open "OpenGLDrivers" key */
-	ret = RegOpenKeyExW( HKEY_LOCAL_MACHINE, subKey, 0, KEY_READ, &hKey );
-	if (ret != ERROR_SUCCESS)
-	{
-		DBGPRINT( "Error: Couldn't open registry key '%ws'", subKey );
-		return NULL;
-	}
-
-	/* allocate our GLRC */
-	glrc = (GLRC*)HeapAlloc( GetProcessHeap(),
-	               HEAP_ZERO_MEMORY | HEAP_GENERATE_EXCEPTIONS, sizeof (GLRC) );
-	if (!glrc)
-		return NULL;
-
-	/* try to find an ICD */
-	for (dw = 0; ; dw++)
-	{
-		size = 256;
-		ret = RegEnumKeyExW( hKey, dw, driver, &size, NULL, NULL, NULL, &time );
-		if (ret != ERROR_SUCCESS )
-			break;
-
-		icd = OPENGL32_LoadICD( driver );
-		if (icd == NULL) /* try next ICD */
-			continue;
-
-		drvHglrc = icd->DrvCreateContext( hdc );
-		if (drvHglrc == NULL) /* try next ICD */
-		{
-			DBGPRINT( "Info: DrvCreateContext (driver = %ws) failed: %d",
-			          icd->driver_name, GetLastError() );
-			OPENGL32_UnloadICD( icd );
-			continue;
-		}
-
-		/* the ICD was loaded successfully and we got a HGLRC in drvHglrc */
-		break;
-	}
-	RegCloseKey( hKey );
-
-	if (drvHglrc == NULL) /* no ICD was found */
-	{
-		/* FIXME: fallback to mesa */
-		DBGPRINT( "Error: No ICD found!" );
-		HeapFree( GetProcessHeap(), 0, glrc );
-		return NULL;
-	}
-
-	/* we have our GLRC in glrc and the ICD's GLRC in drvHglrc */
-	glrc->hglrc = drvHglrc;
-	glrc->iFormat = -1; /* what is this used for? */
-	glrc->icd = icd;
-	memcpy( glrc->func_list, icd->func_list, sizeof (PVOID) * GLIDX_COUNT );
-
-	/* FIXME: fill NULL-pointers in glrc->func_list with mesa functions */
-
-	/* append glrc to context list */
-	WGL_AppendContext( glrc );
-
-	return (HGLRC)glrc;
-
-	/* FIXME: dunno if this is right, would be nice :) */
-	/*return wglCreateLayerContext( hdc, 0 );*/
+	return wglCreateLayerContext( hdc, 0 );
 }
 
 
@@ -211,14 +164,9 @@ HGLRC WINAPI wglCreateContext( HDC hdc )
  */
 HGLRC WINAPI wglCreateLayerContext( HDC hdc, int layer )
 {
-	HKEY hKey;
-	WCHAR subKey[1024] = L"SOFTWARE\\Microsoft\\Windows NT\\"
-	                      "CurrentVersion\\OpenGLDrivers";
 	LONG ret;
 	WCHAR driver[256];
-	DWORD size;
-	DWORD dw;
-	FILETIME time;
+	DWORD dw, size;
 
 	GLDRIVERDATA *icd;
 	GLRC *glrc;
@@ -230,36 +178,36 @@ HGLRC WINAPI wglCreateLayerContext( HDC hdc, int layer )
 		return NULL;
 	}
 
-	/* open "OpenGLDrivers" key */
-	ret = RegOpenKeyExW( HKEY_LOCAL_MACHINE, subKey, 0, KEY_READ, &hKey );
-	if (ret != ERROR_SUCCESS)
-	{
-		DBGPRINT( "Error: Couldn't open registry key '%ws'", subKey );
-		return NULL;
-	}
-
 	/* allocate our GLRC */
 	glrc = (GLRC*)HeapAlloc( GetProcessHeap(),
 	               HEAP_ZERO_MEMORY | HEAP_GENERATE_EXCEPTIONS, sizeof (GLRC) );
-	if (!glrc)
+	if (glrc == NULL)
 		return NULL;
 
 	/* try to find an ICD */
-	for (dw = 0; ; dw++)
+	for (dw = 0; drvHglrc == NULL; dw++) /* enumerate values */
 	{
-		size = 256;
-		ret = RegEnumKeyExW( hKey, dw, driver, &size, NULL, NULL, NULL, &time );
-		if (ret != ERROR_SUCCESS )
+		size = sizeof (driver) / sizeof (driver[0]);
+		ret = OPENGL32_RegEnumDrivers( dw, driver, &size );
+		if (ret != ERROR_SUCCESS)
 			break;
 
 		icd = OPENGL32_LoadICD( driver );
 		if (icd == NULL) /* try next ICD */
 			continue;
 
-		drvHglrc = icd->DrvCreateLayerContext( hdc, layer );
+		if (icd->DrvCreateLayerContext)
+			drvHglrc = icd->DrvCreateLayerContext( hdc, layer );
+		else
+		{
+			if (layer == 0)
+				drvHglrc = icd->DrvCreateContext( hdc );
+			else
+				DBGPRINT( "Warning: CreateLayerContext not supported by ICD!" );
+		}
 		if (drvHglrc == NULL) /* try next ICD */
 		{
-			DBGPRINT( "Info: DrvCreateLayerContext (driver = %ws) failed: %d",
+			DBGPRINT( "Info: DrvCreateContext (driver = %ws) failed: %d",
 			          icd->driver_name, GetLastError() );
 			OPENGL32_UnloadICD( icd );
 			continue;
@@ -268,12 +216,11 @@ HGLRC WINAPI wglCreateLayerContext( HDC hdc, int layer )
 		/* the ICD was loaded successfully and we got a HGLRC in drvHglrc */
 		break;
 	}
-	RegCloseKey( hKey );
 
 	if (drvHglrc == NULL) /* no ICD was found */
 	{
 		/* FIXME: fallback to mesa */
-		DBGPRINT( "Error: No ICD found!" );
+		DBGPRINT( "Error: No working ICD found!" );
 		HeapFree( GetProcessHeap(), 0, glrc );
 		return NULL;
 	}
@@ -395,13 +342,14 @@ PROC WINAPI wglGetProcAddress( LPCSTR proc )
 		/* FIXME: go through own functions? */
 		DBGPRINT( "Unsupported GL extension: %s", proc );
 	}
-	else if (proc[0] == 'w' && proc[1] == 'g' && proc[2] == 'l') /* wglXXX */
+	if (proc[0] == 'w' && proc[1] == 'g' && proc[2] == 'l') /* wglXXX */
 	{
 		/* FIXME: support wgl extensions? (there are such IIRC) */
 		DBGPRINT( "Unsupported WGL extension: %s", proc );
 	}
-	else if (proc[0] == 'g' && proc[1] == 'l' && proc[2] == 'u') /* gluXXX */
+	if (proc[0] == 'g' && proc[1] == 'l' && proc[2] == 'u') /* gluXXX */
 	{
+		/* FIXME: do we support these as well? */
 		DBGPRINT( "GLU extension %s requested, returning NULL", proc );
 	}
 
@@ -417,6 +365,8 @@ PROC WINAPI wglGetProcAddress( LPCSTR proc )
 BOOL WINAPI wglMakeCurrent( HDC hdc, HGLRC hglrc )
 {
 	GLRC *glrc = (GLRC *)hglrc;
+
+	/* FIXME: glFlush() current context */
 
 	/* check hdc */
 	if (GetObjectType( hdc ) != OBJ_DC)

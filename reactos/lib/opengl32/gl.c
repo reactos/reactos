@@ -28,33 +28,58 @@
 
 #include "opengl32.h"
 
-/*#if defined(_M_IX86)*/
-#if 1
-#define X(func, ret, args)                                        \
-void WINAPI func ()                                               \
-{                                                                 \
-	__asm__(                                                      \
-		"movl	%%fs:0x18,	%%eax"		"\n\t"                    \
-		"addl	%0,			%%eax"		"\n\t"                    \
-		"jmpl	*(%%eax)"				"\n\t"                    \
-		:                                                         \
-		: "n"(0x714+(GLIDX_##func*sizeof(PVOID))) );              \
+/* GL data types - x86 typedefs */
+typedef unsigned int GLenum;
+typedef unsigned char GLboolean;
+typedef unsigned int GLbitfield;
+typedef signed char GLbyte;
+typedef short GLshort;
+typedef int GLint;
+typedef int GLsizei;
+typedef unsigned char GLubyte;
+typedef unsigned short GLushort;
+typedef unsigned int GLuint;
+typedef unsigned short GLhalf;
+typedef float GLfloat;
+typedef float GLclampf;
+typedef double GLdouble;
+typedef double GLclampd;
+typedef void GLvoid;
+
+#if defined(__GNUC__) && defined(_M_IX86) /* use GCC extended inline asm */
+
+# define X(func, ret, typeargs, args)                                 \
+	void WINAPI func typeargs                                          \
+	{                                                                 \
+		__asm__(                                                      \
+			"movl	%%fs:0x18,	%%eax"		"\n\t"                    \
+			"addl	%0,			%%eax"		"\n\t"                    \
+			"jmpl	*(%%eax)"				"\n\t"                    \
+			:                                                         \
+			: "n"(0x714+(GLIDX_##func*sizeof(PVOID))) );              \
+	}
+
+#elif defined(_MSC_VER) && defined(_M_IX86) /* use MSVC intel inline asm */
+
+# define X(func, ret, typeargs, args)                                 \
+	ret WINAPI func typeargs                                          \
+	{                                                                 \
+		__asm {                                                       \
+			mov		eax,		fs:[00000018]                         \
+			jmp		*GLIDX_##func(eax)                                \
+		}                                                             \
+	}
+
+#else /* use C code */
+#error C
+# define X(func, ret, typeargs, args)                                 \
+ret WINAPI func typeargs                                              \
+{                                                                     \
+	PVOID fn = (PVOID)(NtCurrentTeb()->glDispatch[GLIDX_##func]);     \
+	return (ret)((ret (*) typeargs)fn)args;                           \
 }
 
-#else /* defined(_M_IX86) */
-
-/* FIXME: need more info for X (to pass on arguments) */
-/*
-#define X(func, ret, args)                                        \
-
-ret func args
-{
-	PVOID fn = (PVOID)( ((char *)NtCurrentTeb()) +
-	                    (0x714+(GLIDX_func*sizeof(PVOID))) );
-	return (ret)((ret (*func) args)fn)();
-}*/
-
-#endif /* !defined(_M_IX86) */
+#endif
 
 GLFUNCS_MACRO
 #undef X

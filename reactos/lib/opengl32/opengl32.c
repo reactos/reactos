@@ -1,4 +1,4 @@
-/* $Id: opengl32.c,v 1.8 2004/02/03 14:23:42 royce Exp $
+/* $Id: opengl32.c,v 1.9 2004/02/05 04:28:11 royce Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -21,14 +21,14 @@
 /*static BOOL OPENGL32_LoadDrivers();*/
 static void OPENGL32_AppendICD( GLDRIVERDATA *icd );
 static void OPENGL32_RemoveICD( GLDRIVERDATA *icd );
-static GLDRIVERDATA *OPENGL32_LoadDriver ( LPCWSTR regKey );
+static GLDRIVERDATA *OPENGL32_LoadDriver( LPCWSTR regKey );
 static DWORD OPENGL32_InitializeDriver( GLDRIVERDATA *icd );
 static BOOL OPENGL32_UnloadDriver( GLDRIVERDATA *icd );
 
 /* global vars */
 const char* OPENGL32_funcnames[GLIDX_COUNT] SHARED =
 {
-#define X(func, ret, args) #func,
+#define X(func, ret, typeargs, args) #func,
 	GLFUNCS_MACRO
 #undef X
 };
@@ -54,8 +54,11 @@ static void OPENGL32_ThreadDetach()
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 {
 	GLTHREADDATA* lpData = NULL;
-	DBGPRINT( "Info: Called!" );
+	SECURITY_ATTRIBUTES attrib = { .nLength = sizeof (SECURITY_ATTRIBUTES),
+	                               .lpSecurityDescriptor = NULL,
+	                               .bInheritHandle = TRUE };
 
+	DBGPRINT( "Info: Called!" );
 	switch ( Reason )
 	{
 	/* The DLL is loading due to process
@@ -68,8 +71,23 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 
 		memset( &OPENGL32_processdata, 0, sizeof (OPENGL32_processdata) );
 
-		/* get list of ICDs from registry: -- not needed (blight)*/
-		/*OPENGL32_LoadDrivers();*/
+		/* create driver & glrc list mutex */
+		OPENGL32_processdata.driver_mutex = CreateMutex( &attrib, FALSE, NULL );
+		if (OPENGL32_processdata.driver_mutex == NULL)
+		{
+			DBGPRINT( "Error: Couldn't create driver_list mutex (%d)",
+			          GetLastError() );
+			TlsFree( OPENGL32_tls );
+		}
+		OPENGL32_processdata.glrc_mutex = CreateMutex( &attrib, FALSE, NULL );
+		if (OPENGL32_processdata.glrc_mutex == NULL)
+		{
+			DBGPRINT( "Error: Couldn't create glrc_list mutex (%d)",
+			          GetLastError() );
+			CloseHandle( OPENGL32_processdata.driver_mutex );
+			TlsFree( OPENGL32_tls );
+		}
+
 		/* No break: Initialize the index for first thread. */
 
 	/* The attached process creates a new thread. */
@@ -95,7 +113,10 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 	/* DLL unload due to process termination or FreeLibrary. */
 	case DLL_PROCESS_DETACH:
 		OPENGL32_ThreadDetach();
-		/* FIXME: free resources */
+
+		/* FIXME: free resources (driver list, glrc list) */
+		CloseHandle( OPENGL32_processdata.driver_mutex );
+		CloseHandle( OPENGL32_processdata.glrc_mutex );
 		TlsFree(OPENGL32_tls);
 		break;
 	}
@@ -105,10 +126,17 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 
 /* FUNCTION: Append ICD to linked list.
  * ARGUMENTS: [IN] icd: GLDRIVERDATA to append to list
- * TODO: protect from race conditions
  */
 static void OPENGL32_AppendICD( GLDRIVERDATA *icd )
 {
+	/* synchronize */
+	if (WaitForSingleObject( OPENGL32_processdata.driver_mutex, INFINITE ) ==
+	    WAIT_FAILED)
+	{
+		DBGPRINT( "Error: WaitForSingleObject() failed (%d)", GetLastError() );
+		return; /* FIXME: do we have to expect such an error and handle it? */
+	}
+
 	if (OPENGL32_processdata.driver_list == NULL)
 		OPENGL32_processdata.driver_list = icd;
 	else
@@ -118,15 +146,26 @@ static void OPENGL32_AppendICD( GLDRIVERDATA *icd )
 			p = p->next;
 		p->next = icd;
 	}
+
+	/* release mutex */
+	if (!ReleaseMutex( OPENGL32_processdata.driver_mutex ))
+		DBGPRINT( "Error: ReleaseMutex() failed (%d)", GetLastError() );
 }
 
 
 /* FUNCTION: Remove ICD from linked list.
  * ARGUMENTS: [IN] icd: GLDRIVERDATA to remove from list
- * TODO: protect from race conditions
  */
 static void OPENGL32_RemoveICD( GLDRIVERDATA *icd )
 {
+	/* synchronize */
+	if (WaitForSingleObject( OPENGL32_processdata.driver_mutex, INFINITE ) ==
+	    WAIT_FAILED)
+	{
+		DBGPRINT( "Error: WaitForSingleObject() failed (%d)", GetLastError() );
+		return; /* FIXME: do we have to expect such an error and handle it? */
+	}
+
 	if (icd == OPENGL32_processdata.driver_list)
 		OPENGL32_processdata.driver_list = icd->next;
 	else
@@ -143,35 +182,12 @@ static void OPENGL32_RemoveICD( GLDRIVERDATA *icd )
 		}
 		DBGPRINT( "Error: ICD 0x%08x not found in list!", icd );
 	}
+
+	/* release mutex */
+	if (!ReleaseMutex( OPENGL32_processdata.driver_mutex ))
+		DBGPRINT( "Error: ReleaseMutex() failed (%d)", GetLastError() );
 }
 
-/* FIXME - I'm assuming we want to return TRUE if we find at least *one* ICD */
-/* not needed at the moment -- blight */
-#if 0
-static BOOL OPENGL32_LoadDrivers()
-{
-	const WCHAR* OpenGLDrivers = L"SOFTWARE\\Microsoft\\Windows NT\\"
-		"CurrentVersion\\OpenGLDrivers\\";
-	HKEY hkey;
-	WCHAR name[1024];
-
-	/* FIXME - detect if we've already done this from another process */
-	/* FIXME - special-case load of MESA3D as generic implementation ICD. */
-
-	if ( ERROR_SUCCESS != RegOpenKey ( HKEY_LOCAL_MACHINE, OpenGLDrivers, &hkey ) )
-		return FALSE;
-	for ( int i = 0; RegEnumKeyW(hkey,i,name,sizeof(name)/sizeof(name[0])) == ERROR_SUCCESS; i++ )
-	{
-		/* ignoring return value, because OPENGL32_LoadICD() is doing *all* the work... */
-		/*GLDRIVERDATA* gldd =*/ OPENGL32_LoadICD ( name );
-	}
-	RegCloseKey ( hkey );
-	if ( i > 0 )
-		return TRUE;
-	else
-		return FALSE;
-}
-#endif /* 0 */
 
 /* FUNCTION:  Load an ICD.
  * ARGUMENTS: [IN] driver:  Name of display driver.
@@ -179,71 +195,12 @@ static BOOL OPENGL32_LoadDrivers()
  *
  * TODO: call SetLastError() where appropriate
  */
-static GLDRIVERDATA *OPENGL32_LoadDriver ( LPCWSTR driver )
+static GLDRIVERDATA *OPENGL32_LoadDriver( LPCWSTR driver )
 {
-	HKEY hKey;
-	WCHAR subKey[1024] = L"SOFTWARE\\Microsoft\\Windows NT\\"
-	                      "CurrentVersion\\OpenGLDrivers\\";
 	LONG ret;
-	DWORD type, size;
-
-	DWORD version, driverVersion, flags; /* registry values */
-	WCHAR dll[256];
 	GLDRIVERDATA *icd;
 
 	DBGPRINT( "Info: Loading driver %ws...", driver );
-
-	/* open registry key */
-	wcsncat( subKey, driver, 1024 );
-	ret = RegOpenKeyExW( HKEY_LOCAL_MACHINE, subKey, 0, KEY_READ, &hKey );
-	if (ret != ERROR_SUCCESS)
-	{
-		DBGPRINT( "Error: Couldn't open registry key '%ws'", subKey );
-		return NULL;
-	}
-
-	/* query values */
-	size = sizeof (dll) * sizeof (dll[0]);
-	ret = RegQueryValueExW( hKey, L"Dll", 0, &type, (LPBYTE)dll, &size );
-	if (ret != ERROR_SUCCESS || type != REG_SZ)
-	{
-		DBGPRINT( "Error: Couldn't query Dll value or not a string" );
-		RegCloseKey( hKey );
-		return NULL;
-	}
-
-	size = sizeof (DWORD);
-	ret = RegQueryValueExW( hKey, L"Version", 0, &type, (LPBYTE)&version, &size );
-	if (ret != ERROR_SUCCESS || type != REG_DWORD)
-	{
-		DBGPRINT( "Warning: Couldn't query Version value or not a DWORD" );
-		version = 0;
-	}
-
-	size = sizeof (DWORD);
-	ret = RegQueryValueExW( hKey, L"DriverVersion", 0, &type,
-	                        (LPBYTE)&driverVersion, &size );
-	if (ret != ERROR_SUCCESS || type != REG_DWORD)
-	{
-		DBGPRINT( "Warning: Couldn't query DriverVersion value or not a DWORD" );
-		driverVersion = 0;
-	}
-
-	size = sizeof (DWORD);
-	ret = RegQueryValueExW( hKey, L"Flags", 0, &type, (LPBYTE)&flags, &size );
-	if (ret != ERROR_SUCCESS || type != REG_DWORD)
-	{
-		DBGPRINT( "Warning: Couldn't query Flags value or not a DWORD" );
-		flags = 0;
-	}
-
-	/* close key */
-	RegCloseKey( hKey );
-
-	DBGPRINT( "Info: Dll = %ws", dll );
-	DBGPRINT( "Info: Version = 0x%08x", version );
-	DBGPRINT( "Info: DriverVersion = 0x%08x", driverVersion );
-	DBGPRINT( "Info: Flags = 0x%08x", flags );
 
 	/* allocate driver data */
 	icd = (GLDRIVERDATA*)HeapAlloc( GetProcessHeap(),
@@ -251,23 +208,33 @@ static GLDRIVERDATA *OPENGL32_LoadDriver ( LPCWSTR driver )
 	                                sizeof (GLDRIVERDATA) );
 	if (icd == NULL)
 	{
-		DBGPRINT( "Error: Couldnt allocate GLDRIVERDATA!" );
+		DBGPRINT( "Error: Couldn't allocate GLDRIVERDATA! (%d)", GetLastError() );
 		return NULL;
 	}
-	wcsncpy( icd->driver_name, driver, 256 );
-	wcsncpy( icd->dll, dll, 256 );
-	icd->version = version;
-	icd->driver_version = driverVersion;
-	icd->flags = flags;
 
-	/* load ICD */
-	ret = OPENGL32_InitializeDriver( icd );
+	ret = OPENGL32_RegGetDriverInfo( driver, icd );
 	if (ret != ERROR_SUCCESS)
 	{
+		DBGPRINT( "Error: Couldn't query driver information (%d)", ret );
 		if (!HeapFree( GetProcessHeap(), 0, icd ))
 			DBGPRINT( "Error: HeapFree() returned false, error code = %d",
 			          GetLastError() );
+		return NULL;
+	}
+
+	DBGPRINT( "Info: Dll = %ws", icd->dll );
+	DBGPRINT( "Info: Version = 0x%08x", icd->version );
+	DBGPRINT( "Info: DriverVersion = 0x%08x", icd->driverVersion );
+	DBGPRINT( "Info: Flags = 0x%08x", icd->flags );
+
+	/* load/initialize ICD */
+	ret = OPENGL32_InitializeDriver( icd );
+	if (ret != ERROR_SUCCESS)
+	{
 		DBGPRINT( "Error: Couldnt initialize ICD!" );
+		if (!HeapFree( GetProcessHeap(), 0, icd ))
+			DBGPRINT( "Error: HeapFree() returned false, error code = %d",
+			          GetLastError() );
 		return NULL;
 	}
 
@@ -288,12 +255,15 @@ static GLDRIVERDATA *OPENGL32_LoadDriver ( LPCWSTR driver )
 	((FARPROC)(icd->proc)) = GetProcAddress( icd->handle, #proc ); \
 	if (required && icd->proc == NULL) { \
 		DBGPRINT( "Error: GetProcAddress(\"%s\") failed!", #proc ); \
+		FreeLibrary( icd->handle ); \
 		return GetLastError(); \
 	}
 
 static DWORD OPENGL32_InitializeDriver( GLDRIVERDATA *icd )
 {
-	UINT i;
+	/* check version */
+	if (icd->version > 2)
+		DBGPRINT( "Warning: ICD version > 2 (%d)", icd->version );
 
 	/* load dll */
 	icd->handle = LoadLibraryW( icd->dll );
@@ -304,10 +274,28 @@ static DWORD OPENGL32_InitializeDriver( GLDRIVERDATA *icd )
 		return err;
 	}
 
+	/* validate version */
+	if (icd->driver_version > 1)
+	{
+		LOAD_DRV_PROC(icd, DrvValidateVersion, FALSE);
+		if (icd->DrvValidateVersion != NULL)
+		{
+			if (!icd->DrvValidateVersion( icd->driver_version ))
+			{
+				DBGPRINT( "Error: DrvValidateVersion failed!" );
+				DBGBREAK();
+				FreeLibrary( icd->handle );
+				return ERROR_INVALID_FUNCTION; /* FIXME: use better error code */
+			}
+		}
+		else
+			DBGPRINT( "Info: DrvValidateVersion not exported by ICD" );
+	}
+
 	/* load DrvXXX procs */
 	LOAD_DRV_PROC(icd, DrvCopyContext, TRUE);
-	LOAD_DRV_PROC(icd, DrvCreateContext, TRUE);
-	LOAD_DRV_PROC(icd, DrvCreateLayerContext, TRUE);
+	LOAD_DRV_PROC(icd, DrvCreateContext, FALSE);
+	LOAD_DRV_PROC(icd, DrvCreateLayerContext, FALSE);
 	LOAD_DRV_PROC(icd, DrvDeleteContext, TRUE);
 	LOAD_DRV_PROC(icd, DrvDescribeLayerPlane, TRUE);
 	LOAD_DRV_PROC(icd, DrvDescribePixelFormat, TRUE);
@@ -321,16 +309,13 @@ static DWORD OPENGL32_InitializeDriver( GLDRIVERDATA *icd )
 	LOAD_DRV_PROC(icd, DrvShareLists, TRUE);
 	LOAD_DRV_PROC(icd, DrvSwapBuffers, TRUE);
 	LOAD_DRV_PROC(icd, DrvSwapLayerBuffers, TRUE);
-	LOAD_DRV_PROC(icd, DrvValidateVersion, TRUE);
 
-	/* now load the glXXX functions */
-	for (i = 0; i < GLIDX_COUNT; i++)
+	/* we require at least one of DrvCreateContext and DrvCreateLayerContext */
+	if (icd->DrvCreateContext == NULL || icd->DrvCreateLayerContext == NULL)
 	{
-		icd->func_list[i] = (PVOID)(icd->DrvGetProcAddress( OPENGL32_funcnames[i] ));
-#ifdef DEBUG_OPENGL32_ICD_EXPORTS
-		DBGPRINT( "Info: Function %s %sfound in ICD.", OPENGL32_funcnames[i],
-		          (icd->func_list[i] == NULL) ? ("NOT ") : ("") );
-#endif
+		DBGPRINT( "Error: One of DrvCreateContext/DrvCreateLayerContext is required!" );
+		FreeLibrary( icd->handle );
+		return ERROR_INVALID_FUNCTION; /* FIXME: use better error code... */
 	}
 
 	return ERROR_SUCCESS;
@@ -352,15 +337,23 @@ static BOOL OPENGL32_UnloadDriver( GLDRIVERDATA *icd )
 	if (!FreeLibrary( icd->handle ))
 	{
 		allOk = FALSE;
-		DBGPRINT( "Warning: FreeLibrary on ICD %ws failed!", icd->dll );
+		DBGPRINT( "Warning: FreeLibrary on ICD %ws failed! (%d)", icd->dll,
+		          GetLastError() );
 	}
 
 	/* free resources */
 	OPENGL32_RemoveICD( icd );
-	HeapFree( GetProcessHeap(), 0, icd );
+	if (!HeapFree( GetProcessHeap(), 0, icd ))
+	{
+		allOk = FALSE;
+		DBGPRINT( "Warning: HeapFree() returned FALSE, error code = %d",
+		          GetLastError() );
+	}
 
 	return allOk;
 }
+
+
 
 
 /* FUNCTION: Load ICD (shared ICD data)
@@ -381,7 +374,7 @@ GLDRIVERDATA *OPENGL32_LoadICD ( LPCWSTR driver )
 	}
 
 	/* not found - try to load */
-	icd = OPENGL32_LoadDriver ( driver );
+	icd = OPENGL32_LoadDriver( driver );
 	if (icd != NULL)
 		icd->refcount = 1;
 	return icd;
@@ -400,4 +393,125 @@ BOOL OPENGL32_UnloadICD( GLDRIVERDATA *icd )
 	return TRUE;
 }
 
+
+/* FUNCTION: Enumerate OpenGLDrivers (from registry)
+ * ARGUMENTS: [IN]  idx   Index of the driver to get information about
+ *            [OUT] name  Pointer to an array of WCHARs (can be NULL)
+ *            [I,O] cName Pointer to a DWORD. Input is len of name array;
+ *                        Output is length of the drivername.
+ *                        Can be NULL if name is NULL.
+ * RETURNS: Error code (ERROR_NO_MORE_ITEMS at end of list); On failure all
+ *          OUT vars are left untouched.
+ */
+DWORD OPENGL32_RegEnumDrivers( DWORD idx, LPWSTR name, LPDWORD cName )
+{
+	HKEY hKey;
+	LPCWSTR subKey = L"SOFTWARE\\Microsoft\\Windows NT\\"
+	                  "CurrentVersion\\OpenGLDrivers\\";
+	LONG ret;
+	DWORD size;
+	WCHAR driver[256];
+
+	if (name == NULL)
+		return ERROR_SUCCESS; /* nothing to do */
+
+	if (cName == NULL)
+		return ERROR_INVALID_FUNCTION; /* we need cName when name is given */
+
+	/* open OpenGLDrivers registry key */
+	ret = RegOpenKeyExW( HKEY_LOCAL_MACHINE, subKey, 0, KEY_READ, &hKey );
+	if (ret != ERROR_SUCCESS)
+	{
+		DBGPRINT( "Error: Couldn't open registry key '%ws'", subKey );
+		return ret;
+	}
+
+	/* get subkey name */
+	size = sizeof (driver) / sizeof (driver[0]);
+	ret = RegEnumKeyW( hKey, idx, name, *cName );
+	if (ret != ERROR_SUCCESS)
+	{
+		DBGPRINT( "Error: Couldn't get OpenGLDrivers subkey name (%d)", ret );
+		RegCloseKey( hKey );
+		return ret;
+	}
+	*cName = wcslen( name );
+
+	/* close key */
+	RegCloseKey( hKey );
+	return ERROR_SUCCESS;
+}
+
+
+/* FUNCTION: Get registry values for a driver given a name
+ * ARGUMENTS: [IN]  idx   Index of the driver to get information about
+ *            [OUT] icd   Pointer to GLDRIVERDATA. On success the following
+ *                        fields are filled: driver_name, dll, version,
+ *                        driver_version and flags.
+ * RETURNS: Error code; On failure all OUT vars are left untouched.
+ */
+DWORD OPENGL32_RegGetDriverInfo( LPCWSTR driver, GLDRIVERDATA *icd )
+{
+	HKEY hKey;
+	WCHAR subKey[1024] = L"SOFTWARE\\Microsoft\\Windows NT\\"
+	                      "CurrentVersion\\OpenGLDrivers\\";
+	LONG ret;
+	DWORD type, size;
+
+	/* drivers registry values */
+	DWORD version = 1, driverVersion = 0, flags = 0;
+	WCHAR dll[256];
+
+	/* open driver registry key */
+	wcsncat( subKey, driver, 1024 );
+	ret = RegOpenKeyExW( HKEY_LOCAL_MACHINE, subKey, 0, KEY_READ, &hKey );
+	if (ret != ERROR_SUCCESS)
+	{
+		DBGPRINT( "Error: Couldn't open registry key '%ws'", subKey );
+		return ret;
+	}
+
+	/* query values */
+	size = sizeof (dll);
+	ret = RegQueryValueExW( hKey, L"Dll", 0, &type, (LPBYTE)dll, &size );
+	if (ret != ERROR_SUCCESS || type != REG_SZ)
+	{
+		DBGPRINT( "Error: Couldn't query Dll value or not a string" );
+		RegCloseKey( hKey );
+		return ret;
+	}
+
+	size = sizeof (DWORD);
+	ret = RegQueryValueExW( hKey, L"Version", 0, &type, (LPBYTE)&version, &size );
+	if (ret != ERROR_SUCCESS || type != REG_DWORD)
+		DBGPRINT( "Warning: Couldn't query Version value or not a DWORD" );
+
+	size = sizeof (DWORD);
+	ret = RegQueryValueExW( hKey, L"DriverVersion", 0, &type,
+							(LPBYTE)&driverVersion, &size );
+	if (ret != ERROR_SUCCESS || type != REG_DWORD)
+		DBGPRINT( "Warning: Couldn't query DriverVersion value or not a DWORD" );
+
+	size = sizeof (DWORD);
+	ret = RegQueryValueExW( hKey, L"Flags", 0, &type, (LPBYTE)&flags, &size );
+	if (ret != ERROR_SUCCESS || type != REG_DWORD)
+		DBGPRINT( "Warning: Couldn't query Flags value or not a DWORD" );
+
+	/* close key */
+	RegCloseKey( hKey );
+
+	/* output data */
+	/* FIXME: NUL-terminate strings? */
+	wcsncpy( icd->driver_name, driver,
+	         sizeof (icd->driver_name) / sizeof (icd->driver_name[0]) - 1 );
+	wcsncpy( icd->dll, dll,
+	         sizeof (icd->dll) / sizeof (icd->dll[0]) );
+	icd->version = version;
+	icd->driver_version = driverVersion;
+	icd->flags = flags;
+
+	return ERROR_SUCCESS;
+}
+
 /* EOF */
+
