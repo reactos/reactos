@@ -1,4 +1,4 @@
-/* $Id: read.c,v 1.6 2004/09/23 20:48:40 arty Exp $
+/* $Id: read.c,v 1.7 2004/10/03 20:36:45 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/read.c
@@ -134,7 +134,8 @@ NTSTATUS DDKAPI ReceiveComplete
 	    }
 	}
 
-	if( NT_SUCCESS(Status) && FCB->Recv.Window && !FCB->Recv.Content ) {
+	if( NT_SUCCESS(Status) && FCB->Recv.Window && !FCB->Recv.Content &&
+	    NT_SUCCESS(Irp->IoStatus.Status) ) {
 	    AFD_DbgPrint(MID_TRACE,
 			 ("Exhausted our buffer.  Requesting new: %x\n", FCB));
 
@@ -343,17 +344,19 @@ PacketSocketRecvComplete(
 	PollReeval( FCB->DeviceExt, FCB->FileObject );
     }
 
-    /* Now relaunch the datagram request */
-    Status = TdiReceiveDatagram
-	( &FCB->ReceiveIrp.InFlightRequest,
-	  FCB->AddressFile.Object,
-	  0,
-	  FCB->Recv.Window,
-	  FCB->Recv.Size,
-	  FCB->AddressFrom,
-	  &FCB->ReceiveIrp.Iosb,
-	  PacketSocketRecvComplete,
-	  FCB );
+    if( NT_SUCCESS(Irp->IoStatus.Status) ) {
+	/* Now relaunch the datagram request */
+	Status = TdiReceiveDatagram
+	    ( &FCB->ReceiveIrp.InFlightRequest,
+	      FCB->AddressFile.Object,
+	      0,
+	      FCB->Recv.Window,
+	      FCB->Recv.Size,
+	      FCB->AddressFrom,
+	      &FCB->ReceiveIrp.Iosb,
+	      PacketSocketRecvComplete,
+	      FCB );
+    }
 
     SocketStateUnlock( FCB );
 

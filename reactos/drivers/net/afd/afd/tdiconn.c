@@ -1,4 +1,4 @@
-/* $Id: tdiconn.c,v 1.2 2004/07/18 22:49:17 arty Exp $
+/* $Id: tdiconn.c,v 1.3 2004/10/03 20:36:45 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/tdiconn.c
@@ -13,7 +13,7 @@
 
 UINT TdiAddressSizeFromType( UINT AddressType ) {
     switch( AddressType ) {
-    case TDI_ADDRESS_TYPE_IP:
+    case AF_INET:
 	return sizeof(TA_IP_ADDRESS);
     default:
 	KeBugCheck( 0 );
@@ -129,7 +129,7 @@ NTSTATUS TdiBuildNullConnectionInfo
 NTSTATUS
 TdiBuildConnectionInfoInPlace
 ( PTDI_CONNECTION_INFORMATION ConnectionInfo,
-  PTA_ADDRESS Address ) {
+  PTRANSPORT_ADDRESS Address ) {
     NTSTATUS Status = STATUS_SUCCESS;
     
     RtlCopyMemory( ConnectionInfo->RemoteAddress,
@@ -143,9 +143,9 @@ TdiBuildConnectionInfoInPlace
 NTSTATUS
 TdiBuildConnectionInfo
 ( PTDI_CONNECTION_INFORMATION *ConnectionInfo,
-  PTA_ADDRESS Address ) {
-  NTSTATUS Status = TdiBuildNullConnectionInfo( ConnectionInfo,
-						Address->AddressType );
+  PTRANSPORT_ADDRESS Address ) {
+    NTSTATUS Status = TdiBuildNullConnectionInfo
+	( ConnectionInfo, Address->Address[0].AddressType );
   
   if( NT_SUCCESS(Status) )
     TdiBuildConnectionInfoInPlace( *ConnectionInfo, Address );
@@ -156,7 +156,7 @@ TdiBuildConnectionInfo
 NTSTATUS 
 TdiBuildConnectionInfoPair
 ( PTDI_CONNECTION_INFO_PAIR ConnectionInfo,
-  PTA_ADDRESS From, PTA_ADDRESS To ) 
+  PTRANSPORT_ADDRESS From, PTRANSPORT_ADDRESS To ) 
     /*
      * FUNCTION: Fill a TDI_CONNECTION_INFO_PAIR struct will the two addresses
      *           given.
@@ -173,7 +173,7 @@ TdiBuildConnectionInfoPair
     ULONG TdiAddressSize;
 
     /* FIXME: Get from socket information */
-    TdiAddressSize = TdiAddressSizeFromType(From->AddressType);
+    TdiAddressSize = TdiAddressSizeFromType(From->Address[0].AddressType);
     SizeOfEntry = TdiAddressSize + sizeof(TDI_CONNECTION_INFORMATION);
 
     LayoutFrame = (PCHAR)ExAllocatePool(NonPagedPool, 2 * SizeOfEntry);
@@ -185,20 +185,18 @@ TdiBuildConnectionInfoPair
 
     RtlZeroMemory( LayoutFrame, 2 * SizeOfEntry );
 
-    { 
-      PTDI_CONNECTION_INFORMATION 
+    PTDI_CONNECTION_INFORMATION 
 	FromTdiConn = (PTDI_CONNECTION_INFORMATION)LayoutFrame, 
 	ToTdiConn = (PTDI_CONNECTION_INFORMATION)LayoutFrame + SizeOfEntry;
-      
-      if (From != NULL) {
+    
+    if (From != NULL) {
 	TdiBuildConnectionInfoInPlace( FromTdiConn, From );
-      } else {
+    } else {
 	TdiBuildNullConnectionInfoInPlace( FromTdiConn, 
-					   From->AddressType );
-      }
-
-      TdiBuildConnectionInfoInPlace( ToTdiConn, To );
+					   From->Address[0].AddressType );
     }
+    
+    TdiBuildConnectionInfoInPlace( ToTdiConn, To );
 
     return STATUS_SUCCESS;
 }

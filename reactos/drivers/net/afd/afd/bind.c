@@ -1,4 +1,4 @@
-/* $Id: bind.c,v 1.4 2004/09/05 04:26:29 arty Exp $
+/* $Id: bind.c,v 1.5 2004/10/03 20:36:45 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/bind.c
@@ -68,7 +68,7 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( FCB->Flags & SGID_CONNECTIONLESS ) {
 	/* This will be the from address for subsequent recvfrom calls */
 	TdiBuildConnectionInfo( &FCB->AddressFrom,
-				&FCB->LocalAddress->Address[0] );
+				FCB->LocalAddress );
 	/* Allocate our backup buffer */
 	FCB->Recv.Window = ExAllocatePool( NonPagedPool, FCB->Recv.Size );
 	FCB->PollState |= AFD_EVENT_SEND; 

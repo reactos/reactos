@@ -1,4 +1,4 @@
-/* $Id: write.c,v 1.7 2004/09/23 20:48:40 arty Exp $
+/* $Id: write.c,v 1.8 2004/10/03 20:36:45 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/write.c
@@ -272,6 +272,7 @@ NTSTATUS STDCALL
 AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp, 
 			 PIO_STACK_LOCATION IrpSp) {
     NTSTATUS Status = STATUS_SUCCESS;
+    PTDI_CONNECTION_INFORMATION TargetAddress;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
     PAFD_SEND_INFO_UDP SendReq;
@@ -293,18 +294,25 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		    TAAddressCount,
 		    ((PTRANSPORT_ADDRESS)SendReq->RemoteAddress)->
 		    Address[0].AddressType));
-    
+
+    TdiBuildConnectionInfo( &TargetAddress,
+			    ((PTRANSPORT_ADDRESS)SendReq->RemoteAddress) );
+
     /* Check the size of the Address given ... */
 
-    Status = TdiSendDatagram
-	( &FCB->SendIrp.InFlightRequest,
-	  FCB->AddressFile.Object,
-	  SendReq->BufferArray[0].buf,
-	  SendReq->BufferArray[0].len,
-	  SendReq->RemoteAddress,
-	  &FCB->SendIrp.Iosb,
-	  PacketSocketSendComplete,
-	  FCB );
+    if( TargetAddress ) {
+	Status = TdiSendDatagram
+	    ( &FCB->SendIrp.InFlightRequest,
+	      FCB->AddressFile.Object,
+	      SendReq->BufferArray[0].buf,
+	      SendReq->BufferArray[0].len,
+	      TargetAddress,
+	      &FCB->SendIrp.Iosb,
+	      PacketSocketSendComplete,
+	      FCB );
+    
+	ExFreePool( TargetAddress );
+    }
 
     if( Status == STATUS_PENDING ) Status = STATUS_SUCCESS;
 

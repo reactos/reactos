@@ -1077,6 +1077,7 @@ NTSTATUS TdiSendDatagram(
                         FALSE,          /* Not secondary */
                         FALSE,          /* Don't charge quota */
                         *Irp);          /* Don't use IRP */
+
     if (!Mdl) {
         AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         IoFreeIrp(*Irp);
