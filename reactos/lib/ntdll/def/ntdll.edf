@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.107 2004/02/25 19:34:32 ekohl Exp $
+; $Id: ntdll.edf,v 1.108 2004/03/24 23:42:39 gdalsnes Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -369,6 +369,7 @@ RtlDecompressFragment=RtlDecompressFragment@32
 RtlDeleteAce=RtlDeleteAce@8
 RtlDeleteAtomFromAtomTable=RtlDeleteAtomFromAtomTable@8
 RtlDeleteCriticalSection=RtlDeleteCriticalSection@4
+RtlSetCriticalSectionSpinCount=RtlSetCriticalSectionSpinCount@8
 ;RtlDeleteElementGenericTable
 ;RtlDeleteNoSplay
 RtlDeleteOwnersRanges=RtlDeleteOwnersRanges@8
