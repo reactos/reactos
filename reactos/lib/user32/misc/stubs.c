@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.25 2003/07/10 21:04:31 chorns Exp $
+/* $Id: stubs.c,v 1.26 2003/07/23 04:52:44 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -99,20 +99,6 @@ CheckRadioButton(
   int nIDFirstButton,
   int nIDLastButton,
   int nIDCheckButton)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-ClientToScreen(
-  HWND hWnd,
-  LPPOINT lpPoint)
 {
   UNIMPLEMENTED;
   return FALSE;

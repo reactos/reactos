@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.43 2003/07/10 21:04:32 chorns Exp $
+/* $Id: window.c,v 1.44 2003/07/23 04:52:44 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1506,5 +1506,16 @@ ScreenToClient(HWND hWnd, LPPOINT lpPoint)
 {
   return(MapWindowPoints(NULL, hWnd, lpPoint, 1));
 }
+
+
+/*
+ * @implemented
+ */
+WINBOOL STDCALL
+ClientToScreen(HWND hWnd, LPPOINT lpPoint)
+{
+    return (MapWindowPoints( hWnd, NULL, lpPoint, 1 ));
+}
+
 
 /* EOF */
