@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.20 1999/12/18 10:16:11 ea Exp $
+; $Id: ntdll.edf,v 1.21 1999/12/22 14:48:23 dwelch Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -594,3 +594,4 @@ LdrMapNTDllForProcess
 LdrUnloadDll
 LdrAccessResource
 LdrFindResource_U
+;RtlCopyMemory=RtlCopyMemory@12

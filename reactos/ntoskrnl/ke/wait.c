@@ -314,7 +314,7 @@ BOOLEAN KeDispatcherObjectWake(DISPATCHER_HEADER* hdr)
       case InternalMutexType:
 	return(KeDispatcherObjectWakeOne(hdr));
      }
-   DPRINT("Dispatcher object %x has unknown type\n",hdr);
+   DbgPrint("Dispatcher object %x has unknown type %d\n", hdr, hdr->Type);
    KeBugCheck(0);
    return(FALSE);
 }

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.2 1999/07/17 23:10:30 ea Exp $
+/* $Id: process.c,v 1.3 1999/12/22 14:48:30 dwelch Exp $
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -6,25 +6,39 @@
  *
  * ReactOS Operating System
  */
-#define PROTO_LPC
+
+/* INCLUDES ******************************************************************/
+
 #include <ddk/ntddk.h>
 
+#include <csrss/csrss.h>
 
-DWORD
-CSR_CreateProcess (
-	PLPC_MESSAGE	pLpcMessage
-	)
+#include "api.h"
+
+/* FUNCTIONS *****************************************************************/
+
+NTSTATUS CsrCreateProcess (PCSRSS_PROCESS_DATA ProcessData,
+			   PCSRSS_API_REQUEST LpcMessage)
 {
-	return LPC_ERROR_CALL_NOT_IMPLEMENTED;
+   return(STATUS_NOT_IMPLEMENTED);
 }
 
-
-DWORD
-CSR_TerminateProcess(
-	PLPC_MESSAGE	pLpcMessage
-	)
+NTSTATUS CsrTerminateProcess(PCSRSS_PROCESS_DATA ProcessData,
+			     PCSRSS_API_REQUEST LpcMessage)
 {
-	return LPC_ERROR_CALL_NOT_IMPLEMENTED;
+   return(STATUS_NOT_IMPLEMENTED);
+}
+
+NTSTATUS CsrConnectProcess(CSRSS_PROCESS_DATA ProcessData,
+			   PCSRSS_API_REQUEST Request)
+{
+   HANDLE ConsoleHandle;
+   
+   ConsoleHandle = ((PULONG)Request.MessageData)[0];
+   
+   ProcessData.Console = CsrReferenceConsoleByHandle(ConsoleHandle);
+   
+   return(STATUS_SUCCESS);
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: iface.c,v 1.39 1999/12/11 21:14:49 dwelch Exp $
+/* $Id: iface.c,v 1.40 1999/12/22 14:48:28 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -49,7 +49,8 @@ BOOLEAN FsdHasFileSystem(PDEVICE_OBJECT DeviceToMount)
    Boot = ExAllocatePool(NonPagedPool,512);
 
    VFATReadSectors(DeviceToMount, 0, 1, (UCHAR *)Boot);
-
+   
+   DPRINT("Boot->SysType %.5s\n", Boot->SysType);
    if (strncmp(Boot->SysType,"FAT12",5)==0 ||
        strncmp(Boot->SysType,"FAT16",5)==0 ||
        strncmp(((struct _BootSector32 *)(Boot))->SysType,"FAT32",5)==0)
@@ -174,6 +175,7 @@ NTSTATUS FsdFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
    if (FsdHasFileSystem(DeviceToMount))
      {
+	DPRINT("VFAT: Recognized volume\n");
 	Status = FsdMount(DeviceToMount);
      }
    else
@@ -181,7 +183,6 @@ NTSTATUS FsdFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
         DPRINT("VFAT: Unrecognized Volume\n");
 	Status = STATUS_UNRECOGNIZED_VOLUME;
      }
-   DPRINT("VFAT File system successfully mounted\n");
 
    Irp->IoStatus.Status = Status;
    Irp->IoStatus.Information = 0;

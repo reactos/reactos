@@ -1,4 +1,4 @@
-/* $Id: ide.c,v 1.23 1999/12/04 20:58:36 ea Exp $
+/* $Id: ide.c,v 1.24 1999/12/22 14:48:27 dwelch Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
@@ -1230,7 +1230,8 @@ DPRINT("AdjOffset:%ld:%ld + Length:%ld = AdjExtent:%ld:%ld\n",
   InsertKeyLI = RtlLargeIntegerShiftRight(IrpStack->Parameters.Read.ByteOffset, 9); 
   IrpInsertKey = InsertKeyLI.u.LowPart;
   IoStartPacket(DeviceExtension->DeviceObject, Irp, &IrpInsertKey, NULL);
-
+   
+   DPRINT("Returning STATUS_PENDING\n");
   return  STATUS_PENDING;
 }
 

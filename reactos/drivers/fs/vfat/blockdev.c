@@ -66,7 +66,9 @@ BOOLEAN VFATReadSectors(IN PDEVICE_OBJECT pDeviceObject,
                           irp);
 
     DPRINT("Waiting for IO Operation...\n");
-    if (status == STATUS_PENDING) {
+    if (status == STATUS_PENDING) 
+     {
+	DPRINT("Operation pending\n");
         KeWaitForSingleObject(&event,
                               Suspended,
                               KernelMode,

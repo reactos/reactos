@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.2 1999/07/17 23:10:30 ea Exp $
+/* $Id: init.c,v 1.3 1999/12/22 14:48:29 dwelch Exp $
  * 
  * reactos/subsys/csrss/init.c
  *
@@ -7,83 +7,28 @@
  * ReactOS Operating System
  *
  */
-#define PROTO_LPC
+
+/* INCLUDES ******************************************************************/
+
 #include <ddk/ntddk.h>
-#include "csrss.h"
+#include <ntdll/rtl.h>
+#include <csrss/csrss.h>
 
+#include "api.h"
 
-void Thread_Api(void*);
-void Thread_SbApi(void*);
+/* GLOBALS ******************************************************************/
 
 /*
  * Server's named ports.
  */
-struct _SERVER_PORTS
-Server =
-{
-	{INVALID_HANDLE_VALUE,Thread_Api},
-	{INVALID_HANDLE_VALUE,Thread_SbApi}
-};
-/**********************************************************************
- * NAME
- *	Thread_Api
- *
- * DESCRIPTION
- * 	Handle connection requests from clients to the port
- * 	"\Windows\ApiPort".
- */
-static
-void
-Thread_Api(void * pPort)
-{
-	NTSTATUS	Status;
-	HANDLE		Port;
-	HANDLE		ConnectedPort;
+static HANDLE ApiPortHandle;
 
-	Port = * (HANDLE*) pPort;
-	
-	/*
-	 * Make the CSR API port listen.
-	 */
-	Status = NtListenPort(
-			Port,
-			CSRSS_API_PORT_QUEUE_SIZE
-			);
-	if (!NT_SUCCESS(Status))
-	{
-		/*
-		 * FIXME: notify SM we could not 
-		 * make the port listen.
-		 */
-		return;
-	}
-	/*
-	 * Wait for a client to connect
-	 */
-	while (TRUE)
-	{
-		/*
-		 * Wait for a connection request;
-		 * the new connected port's handle
-		 * is stored in ConnectedPort.
-		 */
-		Status = NtAcceptConnectPort(
-				Port,
-				& ConnectedPort
-				);
-		if (NT_SUCCESS(Status))
-		{
-			if (NT_SUCCESS(NtCompleteConnectPort(ConnectedPort)))
-			{
-				/* dispatch call */
-				continue;
-			}
-			/* error */
-		}
-	}
-}
+#if 0
+static HANDLE SbApiPortHandle;
+#endif
 
 
+#if 0
 /**********************************************************************
  * NAME
  *	Thread_SbApi
@@ -148,40 +93,51 @@ Thread_SbApi(void * pPort)
  * RETURN VALUE
  * 	TRUE: Initialization OK; otherwise FALSE.
  */
-BOOL
-InitializeServer(void)
+BOOL InitializeServer(void)
 {
-	NTSTATUS		Status;
-	OBJECT_ATTRIBUTES	ObAttributes;
-
+   NTSTATUS		Status;
+   OBJECT_ATTRIBUTES	ObAttributes;
+   UNICODE_STRING PortName;
 	
-	/* NEW NAMED PORT: \ApiPort */
-	Status = NtCreatePort(
-			& Server.Api.Port,	/* New port's handle */
-			& ObAttributes,		/* Port object's attributes */
-			...
-			);
-	if (!NT_SUCCESS(Status))
-	{
-		return FALSE;
-	}
-	Status = NtCreateThread(
-			& Server.Api.Thread,
-			0,			/* desired access */
-			& ObAttributes,		/* object attributes */
-			NtCurrentProcess(),	/* process' handle */
-			0,			/* client id */
-			Thread_ApiPort,
-			(void*) & Server.Api.Port
-			);
-	if (!NT_SUCCESS(Status))
-	{
-		NtClose(Server.Api.Port);
-		return FALSE;
-	}
-	/* NEW NAMED PORT: \SbApiPort */
-	Status = NtCreatePort(
-			& Server.SbApi.Port,
+   /* NEW NAMED PORT: \ApiPort */
+   RtlInitUnicodeString(&PortName, L"\\ApiPort");
+   InitializeObjectAttributes(&ObAttributes,
+			      &PortName,
+			      0,
+			      NULL,
+			      NULL);
+   Status = NtCreatePort(&ApiPortHandle,
+			 &ObAttributes,
+			 260,
+			 328,
+			 0);
+   if (!NT_SUCCESS(Status))
+     {
+	DisplayString(L"Unable to create \\ApiPort (Status %x)\n");
+	return(FALSE);
+     }
+
+   Status = RtlCreateUserThread(NtCurrentProcess(),
+				NULL,
+				FALSE,
+				0,
+				NULL,
+				NULL,
+				(PTHREAD_START_ROUTINE)Thread_Api,
+				ApiPortHandle,
+				NULL,
+				NULL);
+   if (!NT_SUCCESS(Status))
+     {
+	DisplayString(L"Unable to create server thread\n");
+	NtClose(ApiPortHandle);
+	return FALSE;
+     }
+   
+#if 0
+   /* NEW NAMED PORT: \SbApiPort */
+   Status = NtCreatePort(
+			 &Server.SbApi.Port,
 			& ObAttributes,
 			...
 			);
@@ -201,7 +157,9 @@ InitializeServer(void)
 		NtClose(Server.SbApi.Port);
 		return FALSE;
 	}
-	return TRUE;
+#endif
+     
+   return TRUE;
 }
 
 

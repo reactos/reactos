@@ -1,5 +1,4 @@
-
-/* $Id: handle.c,v 1.15 1999/12/20 02:14:40 dwelch Exp $
+/* $Id: handle.c,v 1.16 1999/12/22 14:48:25 dwelch Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel

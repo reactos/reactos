@@ -95,8 +95,9 @@ NTSTATUS MmCopyMmInfo(PEPROCESS Src, PEPROCESS Dest)
      {
 	PageDirectory[i] = CurrentPageDirectory[i];
      }
-   DPRINT("Addr %x\n",0xf0000000 / (4*1024*1024));
-   PageDirectory[0xf0000000 / (4*1024*1024)] = (ULONG)PhysPageDirectory | 0x7;
+   DPRINT("Addr %x\n",PAGETABLE_MAP / (4*1024*1024));
+   PageDirectory[PAGETABLE_MAP / (4*1024*1024)] = 
+     (ULONG)PhysPageDirectory | 0x7;
    
    ExUnmapPage(PageDirectory);
    
@@ -170,7 +171,7 @@ VOID MmDeletePageEntry(PEPROCESS Process, PVOID Address, BOOL FreePage)
 	  }	
 	return;
      }
-   page_tlb = ADDR_TO_PTE(Address);   
+   page_tlb = ADDR_TO_PTE(Address);
    if (FreePage && PAGE_MASK(*page_tlb) != 0)
      {
 	if (PAGE_MASK(*page_tlb) >= 0x400000)
@@ -208,6 +209,7 @@ PULONG MmGetPageEntry(PVOID PAddress)
    if ((*page_dir) == 0)
      {
 	(*page_dir) = ((ULONG)MmAllocPage()) | 0x7;
+	memset((PVOID)PAGE_ROUND_DOWN(ADDR_TO_PTE(Address)), 0, PAGESIZE);
 	FLUSH_TLB;
      }
    page_tlb = ADDR_TO_PTE(Address);
@@ -229,7 +231,10 @@ VOID MmSetPage(PEPROCESS Process,
    PEPROCESS CurrentProcess = PsGetCurrentProcess();
    ULONG Attributes = 0;
    
-   if (PAGE_ROUND_DOWN(Address) == 0x77631000)
+   if (PAGE_ROUND_DOWN(Address) == 0x77630000 ||
+       PAGE_ROUND_DOWN(Address) == 0x77631000 ||
+       PAGE_ROUND_DOWN(Address) == 0x77632000 ||
+       PAGE_ROUND_DOWN(Address) == 0x77633000)
      {
 	DPRINT1("MmSetPage(Process %x, Address %x, flProtect %x, "
 		"PhysicalAddress %x)\n",Process,Address,flProtect,
@@ -285,14 +290,14 @@ PHYSICAL_ADDRESS MmGetPhysicalAddress(PVOID vaddr)
  * FUNCTION: Returns the physical address corresponding to a virtual address
  */
 {
-  PHYSICAL_ADDRESS p;
+   PHYSICAL_ADDRESS p;
 
-  p.QuadPart = 0;
-
-  DPRINT("MmGetPhysicalAddress(vaddr %x)\n", vaddr);
+   p.QuadPart = 0;
    
-  p.u.LowPart = PAGE_MASK(*MmGetPageEntry(vaddr));
-  p.u.HighPart = 0;
+   DPRINT("MmGetPhysicalAddress(vaddr %x)\n", vaddr);
    
-  return p;
+   p.u.LowPart = PAGE_MASK(*MmGetPageEntry(vaddr));
+   p.u.HighPart = 0;
+   
+   return p;
 }

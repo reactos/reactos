@@ -26,8 +26,8 @@ typedef struct
 
 /* GLOBALS ******************************************************************/
 
-static KSPIN_LOCK FileSystemListLock = {0,};
-static LIST_ENTRY FileSystemListHead = {NULL,NULL};
+static KSPIN_LOCK FileSystemListLock;
+static LIST_ENTRY FileSystemListHead;
 
 /* FUNCTIONS *****************************************************************/
 

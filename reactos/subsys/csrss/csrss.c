@@ -1,4 +1,4 @@
-/* $Id: csrss.c,v 1.2 1999/07/17 23:10:30 ea Exp $
+/* $Id: csrss.c,v 1.3 1999/12/22 14:48:29 dwelch Exp $
  *
  * csrss.c - Client/Server Runtime subsystem
  * 
@@ -38,46 +38,42 @@ BOOL TerminationRequestPending = FALSE;
 BOOL InitializeServer(void);
 
 
-void
-DisplayString(
-	LPCWSTR	Message
-	)
+void DisplayString(LPCWSTR	Message)
 {
-	UNICODE_STRING title;
+   UNICODE_STRING title;
 
-	title.Buffer = (LPWSTR) Message;
-	title.Length = wcslen(title.Buffer) * sizeof (WCHAR);
-	title.MaximumLength = title.Length + sizeof (WCHAR);
-	NtDisplayString( & title );
+   title.Buffer = (LPWSTR) Message;
+   title.Length = wcslen(title.Buffer) * sizeof (WCHAR);
+   title.MaximumLength = title.Length + sizeof (WCHAR);
+   NtDisplayString(&title);
 }
 
 
 /* Native process' entry point */
 
-void
-NtProcessStartup( PSTARTUP_ARGUMENT StartupArgument )
+VOID NtProcessStartup(PPEB Peb)
 {
-	DisplayString( L"Client/Server Runtime Subsystem\n" );
+   DisplayString(L"Client/Server Runtime Subsystem\n");
 
-	if (TRUE == InitializeServer())
-	{
-		while (FALSE == TerminationRequestPending)
-		{
-			/* Do nothing! Should it
-			 * be the SbApi port's
-			 * thread instead?
-			 */
-			NtYieldExecution();
-		}
-	}
-	else
-	{
-		DisplayString( L"CSR: Subsystem initialization failed.\n" );
-		/*
-		 * Tell SM we failed.
-		 */
-	}
-	NtTerminateProcess( NtCurrentProcess(), 0 );
+   if (InitializeServer() == TRUE)
+     {
+	while (FALSE == TerminationRequestPending)
+	  {
+	     /* Do nothing! Should it
+	      * be the SbApi port's
+	      * thread instead?
+	      */
+	     NtYieldExecution();
+	  }
+     }
+   else
+     {
+	DisplayString( L"CSR: Subsystem initialization failed.\n" );
+	/*
+	 * Tell SM we failed.
+	 */
+     }
+   NtTerminateProcess( NtCurrentProcess(), 0 );
 }
 
 /* EOF */

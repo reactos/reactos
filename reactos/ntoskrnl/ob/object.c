@@ -30,7 +30,15 @@ VOID ObInitializeObject(POBJECT_HEADER ObjectHeader,
    ObjectHeader->HandleCount = 0;
    ObjectHeader->RefCount = 1;
    ObjectHeader->ObjectType = Type;
-   ObjectHeader->Permanent = FALSE;
+   if (ObjectAttributes != NULL &&
+       ObjectAttributes->Attributes & OBJ_PERMANENT)
+     {
+	ObjectHeader->Permanent = TRUE;
+     }
+   else
+     {
+	ObjectHeader->Permanent = FALSE;
+     }
    RtlInitUnicodeString(&(ObjectHeader->Name),NULL);
    if (Handle != NULL)
      {

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.2 1999/08/29 13:45:07 dwelch Exp $
+# $Id: makefile,v 1.3 1999/12/22 14:48:29 dwelch Exp $
 #
 # CSRSS: Client/server runtime subsystem
 #
@@ -6,13 +6,13 @@
 #
 TARGET=csrss
 
-BASE_CFLAGS = -I../../include
+BASE_CFLAGS = -I../../include -I.
 
-OBJECTS_API = api/process.o
+OBJECTS_API = api/process.o api/wapi.o
 
 OBJECTS_SBAPI =
 
-OBJECTS_MISC = $(TARGET).o init.o lpcstub.o $(TARGET).coff 
+OBJECTS_MISC = $(TARGET).o init.o $(TARGET).coff 
 
 OBJECTS = $(OBJECTS_API) $(OBJECTS_SBAPI) $(OBJECTS_MISC)
 

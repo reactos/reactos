@@ -41,6 +41,7 @@ NTSTATUS IopCreateFile(PVOID ObjectBody,
    
    if (DeviceObject == NULL)
      {
+	DPRINT("DeviceObject was NULL\n");
 	return(STATUS_SUCCESS);
      }
    
@@ -74,13 +75,18 @@ NTSTATUS IopCreateFile(PVOID ObjectBody,
 	if (DeviceObject->DeviceType != FILE_DEVICE_FILE_SYSTEM &&
 	    DeviceObject->DeviceType != FILE_DEVICE_DISK)
 	  {
+	     DPRINT("Device was wrong type\n");
 	     return(STATUS_UNSUCCESSFUL);
 	  }
 	if (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
 	  {
+	     DPRINT("Trying to mount storage device\n");
 	     Status = IoTryToMountStorageDevice(DeviceObject);
-	     if (Status!=STATUS_SUCCESS)
+	     DPRINT("Status %x\n", Status);
+	     if (!NT_SUCCESS(Status))
 	       {
+		  DPRINT("Failed to mount storage device (statux %x)\n",
+			 Status);
 		  return(Status);
 	       }
 	     DeviceObject = IoGetAttachedDevice(DeviceObject);
@@ -89,6 +95,7 @@ NTSTATUS IopCreateFile(PVOID ObjectBody,
      }
    DPRINT("FileObject->FileName.Buffer %w\n",FileObject->FileName.Buffer);
    FileObject->DeviceObject = DeviceObject;
+   DPRINT("FileObject %x DeviceObject %x\n", FileObject, DeviceObject);
    FileObject->Vpb = DeviceObject->Vpb;
    FileObject->Type = InternalFileType;
      
@@ -204,6 +211,8 @@ NtCreateFile (
       
    KeInitializeEvent(&Event, NotificationEvent, FALSE);
    
+   DPRINT("FileObject %x\n", FileObject);
+   DPRINT("FileObject->DeviceObject %x\n", FileObject->DeviceObject);
    Irp = IoAllocateIrp(FileObject->DeviceObject->StackSize, FALSE);
    if (Irp==NULL)
      {
@@ -240,16 +249,12 @@ NtCreateFile (
 }
 
 
-NTSTATUS
-STDCALL
-NtOpenFile (
-	PHANDLE			FileHandle,
-	ACCESS_MASK		DesiredAccess,
-	POBJECT_ATTRIBUTES	ObjectAttributes,
-	PIO_STATUS_BLOCK	IoStatusBlock,
-	ULONG			ShareAccess,
-	ULONG			OpenOptions
-	)
+NTSTATUS STDCALL NtOpenFile(PHANDLE			FileHandle,
+			    ACCESS_MASK		DesiredAccess,
+			    POBJECT_ATTRIBUTES	ObjectAttributes,
+			    PIO_STATUS_BLOCK	IoStatusBlock,
+			    ULONG			ShareAccess,
+			    ULONG			OpenOptions)
 /*
  * FUNCTION: Opens a file (simpler than ZwCreateFile)
  * ARGUMENTS:
@@ -264,18 +269,17 @@ NtOpenFile (
  * NOTE: Undocumented
  */
 {
-   return(ZwCreateFile(
-		FileHandle,
-		DesiredAccess,
-		ObjectAttributes,
-		IoStatusBlock,
-		NULL,
-		0,
-		ShareAccess,
-		FILE_OPEN,
-		OpenOptions,
-		NULL,
-		0));
+   return(ZwCreateFile(FileHandle,
+		       DesiredAccess,
+		       ObjectAttributes,
+		       IoStatusBlock,
+		       NULL,
+		       0,
+		       ShareAccess,
+		       FILE_OPEN,
+		       OpenOptions,
+		       NULL,
+		       0));
 }
 
 

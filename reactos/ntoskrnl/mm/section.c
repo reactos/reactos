@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.19 1999/12/20 02:14:39 dwelch Exp $
+/* $Id: section.c,v 1.20 1999/12/22 14:48:25 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -218,8 +218,9 @@ NTSTATUS STDCALL NtCreateSection (OUT PHANDLE SectionHandle,
      {
 	Section->FileObject = NULL;
      }
-   
+      
    DPRINT("NtCreateSection() = STATUS_SUCCESS\n");
+   ObDereferenceObject(Section);
    return(STATUS_SUCCESS);
 }
 
@@ -425,7 +426,6 @@ NTSTATUS STDCALL NtMapViewOfSection(HANDLE SectionHandle,
    
    DPRINT("*BaseAddress %x\n",*BaseAddress);
    ObDereferenceObject(Process);   
-   ObDereferenceObject(Section);
    
    return(STATUS_SUCCESS);
 }
@@ -440,6 +440,7 @@ NTSTATUS MmUnmapViewOfSection(PEPROCESS Process,
    KeAcquireSpinLock(&Section->ViewListLock, &oldIrql);
    RemoveEntryList(&MemoryArea->Data.SectionData.ViewListEntry);
    KeReleaseSpinLock(&Section->ViewListLock, oldIrql);
+   ObDereferenceObject(Section);
    
    return(STATUS_SUCCESS);
 }

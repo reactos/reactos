@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.40 1999/12/13 22:04:37 dwelch Exp $
+/* $Id: loader.c,v 1.41 1999/12/22 14:48:24 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -190,6 +190,7 @@ static VOID LdrLoadAutoConfigDriver (LPWSTR	RelativeDriverName)
      {
 	DbgPrint("driver load failed, status;%d(%x)\n", Status, Status);
 	DbgPrintErrorMessage(Status);
+	KeBugCheck(0);
      }
 }
 
@@ -208,11 +209,11 @@ LdrLoadAutoConfigDrivers (VOID)
         /*
          * VideoPort driver
          */
-        LdrLoadAutoConfigDriver( L"vidport.sys" );
+//        LdrLoadAutoConfigDriver( L"vidport.sys" );
         /*
          * VGA Miniport driver
          */
-        LdrLoadAutoConfigDriver( L"vgamp.sys" );
+//        LdrLoadAutoConfigDriver( L"vgamp.sys" );
 }
 
 
