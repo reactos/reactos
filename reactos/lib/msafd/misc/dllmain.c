@@ -1,3 +1,4 @@
+
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS Ancillary Function Driver DLL
@@ -861,12 +862,12 @@ WSPAccept(
 
 		/* Set up Address in SOCKADDR Format */
 		RtlCopyMemory (RemoteAddress, 
-						&ListenReceiveData->Address.Address[0].AddressType, 
-						sizeof(RemoteAddress));
+                               &ListenReceiveData->Address.Address[0].AddressType, 
+                               sizeof(*RemoteAddress));
 
 		/* Build Caller ID */
 		CallerID.buf = (PVOID)RemoteAddress;
-		CallerID.len = sizeof(RemoteAddress);
+		CallerID.len = sizeof(*RemoteAddress);
 
 		/* Build Caller Data */
 		CallerData.buf = PendingData;
@@ -985,7 +986,7 @@ WSPAccept(
         if( SocketAddress ) {
             RtlCopyMemory (SocketAddress, 
                            &ListenReceiveData->Address.Address[0].AddressType, 
-                           sizeof(RemoteAddress));
+                           sizeof(*RemoteAddress));
             if( *SocketAddressLength )
                 *SocketAddressLength = 
                     ListenReceiveData->Address.Address[0].AddressLength;
