@@ -1,4 +1,4 @@
-/* $Id: pci_xbox.c,v 1.1 2004/12/04 22:52:59 gvg Exp $
+/* $Id: pci_xbox.c,v 1.2 2004/12/08 21:53:24 gvg Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -21,12 +21,18 @@
 
 /* VARIABLES ***************************************************************/
 
-static ULONG (* STDCALL GenericGetPciData)(PBUS_HANDLER BusHandler,
-                                           ULONG BusNumber,
-                                           ULONG SlotNumber,
-                                           PVOID Buffer,
-                                           ULONG Offset,
-                                           ULONG Length);
+static ULONG (STDCALL *GenericGetPciData)(PBUS_HANDLER BusHandler,
+                                          ULONG BusNumber,
+                                          ULONG SlotNumber,
+                                          PVOID Buffer,
+                                          ULONG Offset,
+                                          ULONG Length);
+static ULONG (STDCALL *GenericSetPciData)(PBUS_HANDLER BusHandler,
+                                          ULONG BusNumber,
+                                          ULONG SlotNumber,
+                                          PVOID Buffer,
+                                          ULONG Offset,
+                                          ULONG Length);
 
 /* FUNCTIONS ***************************************************************/
 
@@ -58,6 +64,29 @@ HalpXboxGetPciData(PBUS_HANDLER BusHandler,
   return GenericGetPciData(BusHandler, BusNumber, SlotNumber, Buffer, Offset, Length);
 }
 
+static ULONG STDCALL
+HalpXboxSetPciData(PBUS_HANDLER BusHandler,
+                   ULONG BusNumber,
+                   ULONG SlotNumber,
+                   PVOID Buffer,
+                   ULONG Offset,
+                   ULONG Length)
+{
+  DPRINT("HalpXboxSetPciData() called.\n");
+  DPRINT("  BusNumber %lu\n", BusNumber);
+  DPRINT("  SlotNumber %lu\n", SlotNumber);
+  DPRINT("  Offset 0x%lx\n", Offset);
+  DPRINT("  Length 0x%lx\n", Length);
+
+  if (0 == BusNumber && (1 == ((SlotNumber >> 5) & 0x07) || 2 == ((SlotNumber >> 5) & 0x07)))
+    {
+      DPRINT1("Trying to set data on blacklisted PCI slot\n");
+      return 0;
+    }
+
+  return GenericSetPciData(BusHandler, BusNumber, SlotNumber, Buffer, Offset, Length);
+}
+
 void
 HalpXboxInitPciBus(ULONG BusNumber, PBUS_HANDLER BusHandler)
 {
@@ -65,6 +94,8 @@ HalpXboxInitPciBus(ULONG BusNumber, PBUS_HANDLER BusHandler)
     {
       GenericGetPciData = BusHandler->GetBusData;
       BusHandler->GetBusData = HalpXboxGetPciData;
+      GenericSetPciData = BusHandler->SetBusData;
+      BusHandler->SetBusData = HalpXboxSetPciData;
     }
 }
 
