@@ -26,6 +26,8 @@
  //
  // Martin Fuchs, 19.08.2003
  //
+ // Credits: Thanks to Everaldo (http://www.everaldo.com) for his nice looking icons.
+ //
 
 
 #include "../utility/utility.h"
@@ -792,38 +794,38 @@ LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 
 
 	 // insert hard coded start entries
-	AddButton(ResString(IDS_PROGRAMS),		0, true, IDC_PROGRAMS);
+	AddButton(ResString(IDS_PROGRAMS),		SmallIcon(IDI_APPS), true, IDC_PROGRAMS);
 
-	AddButton(ResString(IDS_DOCUMENTS),		0, true, IDC_DOCUMENTS);
+	AddButton(ResString(IDS_DOCUMENTS),		SmallIcon(IDI_DOCUMENTS), true, IDC_DOCUMENTS);
 
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 	if (!g_Globals._SHRestricted || !SHRestricted(REST_NORECENTDOCSMENU))
 #else
 	if (IS_VALUE_ZERO(hkey, _T("NoRecentDocsMenu")))
 #endif
-		AddButton(ResString(IDS_RECENT),	0, true, IDC_RECENT);
+		AddButton(ResString(IDS_RECENT),	SmallIcon(IDI_DOCUMENTS), true, IDC_RECENT);
 
-	AddButton(ResString(IDS_FAVORITES),		0, true, IDC_FAVORITES);
+	AddButton(ResString(IDS_FAVORITES),		SmallIcon(IDI_FAVORITES), true, IDC_FAVORITES);
 
-	AddButton(ResString(IDS_SETTINGS),		0, true, IDC_SETTINGS);
+	AddButton(ResString(IDS_SETTINGS),		SmallIcon(IDI_CONFIG), true, IDC_SETTINGS);
 
-	AddButton(ResString(IDS_BROWSE),		0, true, IDC_BROWSE);
+	AddButton(ResString(IDS_BROWSE),		SmallIcon(IDI_FOLDER), true, IDC_BROWSE);
 
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 	if (!g_Globals._SHRestricted || !SHRestricted(REST_NOFIND))
 #else
 	if (IS_VALUE_ZERO(hkey, _T("NoFind")))
 #endif
-		AddButton(ResString(IDS_SEARCH),	0, true, IDC_SEARCH);
+		AddButton(ResString(IDS_SEARCH),	SmallIcon(IDI_SEARCH), true, IDC_SEARCH);
 
-	AddButton(ResString(IDS_START_HELP),	0, false, IDC_START_HELP);
+	AddButton(ResString(IDS_START_HELP),	SmallIcon(IDI_INFO), false, IDC_START_HELP);
 
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 	if (!g_Globals._SHRestricted || !SHRestricted(REST_NORUN))
 #else
 	if (IS_VALUE_ZERO(hkey, _T("NoRun")))
 #endif
-		AddButton(ResString(IDS_LAUNCH),	0, false, IDC_LAUNCH);
+		AddButton(ResString(IDS_LAUNCH),	SmallIcon(IDI_ACTION), false, IDC_LAUNCH);
 
 
 	AddSeparator();

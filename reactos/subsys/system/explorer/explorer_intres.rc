@@ -393,6 +393,14 @@ IDI_ARROW_SELECTED      ICON    DISCARDABLE     "res/arrowsel.ico"
 IDI_APPICON             ICON    DISCARDABLE     "res/appicon.ico"
 IDI_FLOATING            ICON    DISCARDABLE     "res/floating.ico"
 IDI_REACTOS_BIG         ICON    DISCARDABLE     "res\\ros-big.ico"
+IDI_CONFIG              ICON    DISCARDABLE     "res\\config.ico"
+IDI_DOCUMENTS           ICON    DISCARDABLE     "res\\documents.ico"
+IDI_FAVORITES           ICON    DISCARDABLE     "res\\favorites.ico"
+IDI_INFO                ICON    DISCARDABLE     "res\\info.ico"
+IDI_APPS                ICON    DISCARDABLE     "res\\apps.ico"
+IDI_SEARCH              ICON    DISCARDABLE     "res\\search.ico"
+IDI_ACTION              ICON    DISCARDABLE     "res\\action.ico"
+IDI_FOLDER              ICON    DISCARDABLE     "res\\folder.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //

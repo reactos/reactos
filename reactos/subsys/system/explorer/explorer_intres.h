@@ -54,6 +54,14 @@
 #define IDI_FLOATING                    135
 #define IDD_ABOUT_EXPLORER              135
 #define IDI_REACTOS_BIG                 137
+#define IDI_CONFIG                      138
+#define IDI_DOCUMENTS                   139
+#define IDI_FAVORITES                   140
+#define IDI_INFO                        141
+#define IDI_APPS                        142
+#define IDI_SEARCH                      143
+#define IDI_ACTION                      144
+#define IDI_FOLDER                      145
 #define ID_VIEW_NAME                    401
 #define ID_VIEW_ALL_ATTRIBUTES          402
 #define ID_VIEW_SELECTED_ATTRIBUTES     403
@@ -93,7 +101,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        138
+#define _APS_NEXT_RESOURCE_VALUE        146
 #define _APS_NEXT_COMMAND_VALUE         40004
 #define _APS_NEXT_CONTROL_VALUE         1001
 #define _APS_NEXT_SYMED_VALUE           101
