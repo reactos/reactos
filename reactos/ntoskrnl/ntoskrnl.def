@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.200 2004/11/12 12:05:27 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.201 2004/11/21 16:34:57 navaraf Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -241,7 +241,7 @@ FsRtlIsTotalDeviceFailure@4
 FsRtlLegalAnsiCharacterArray DATA
 FsRtlLookupLargeMcbEntry@32
 FsRtlLookupLastLargeMcbEntry@12
-FsRtlLookupLastLargeMcbEntryAndInde@16=FsRtlLookupLastLargeMcbEntryAndIndex@16
+FsRtlLookupLastLargeMcbEntryAndIndex@16
 FsRtlLookupLastMcbEntry@12
 FsRtlLookupMcbEntry@20
 FsRtlLookupPerFileObjectContext@12
@@ -282,6 +282,7 @@ FsRtlRemovePerStreamContext@12
 FsRtlResetLargeMcb@8
 FsRtlSplitLargeMcb@20
 FsRtlSyncVolumes@12
+FsRtlTeardownPerStreamContexts@4
 FsRtlTruncateLargeMcb@12
 FsRtlTruncateMcb@8
 FsRtlUninitializeFileLock@4

@@ -1,4 +1,4 @@
-/* $Id: mcb.c,v 1.14 2004/08/21 20:36:38 tamlin Exp $
+/* $Id: mcb.c,v 1.15 2004/11/21 16:34:56 navaraf Exp $
  *
  * reactos/ntoskrnl/fs/mcb.c
  *
@@ -92,11 +92,18 @@ FsRtlGetNextMcbEntry (IN PMCB     Mcb,
  * @unimplemented
  */
 VOID STDCALL
-FsRtlInitializeLargeMcb(IN PLARGE_MCB Mcb,
+FsRtlInitializeLargeMcb(IN PLARGE_MCB *Mcb,
 			IN POOL_TYPE PoolType)
 {
-  UNIMPLEMENTED;
-  Mcb->PoolType = PoolType;
+  PLARGE_MCB NewMcb;
+  NewMcb = ExAllocatePool(PagedPool, sizeof(LARGE_MCB));
+  if (NewMcb != NULL)
+    {
+      ExInitializeFastMutex(&NewMcb->FastMutex);
+      NewMcb->PoolType = PoolType;
+      UNIMPLEMENTED;
+    }
+  *Mcb = NewMcb;
 }
 
 /*
@@ -104,10 +111,10 @@ FsRtlInitializeLargeMcb(IN PLARGE_MCB Mcb,
  * @implemented
  */
 VOID STDCALL
-FsRtlInitializeMcb (IN PMCB         Mcb,
+FsRtlInitializeMcb (IN PMCB        *Mcb,
 		    IN POOL_TYPE    PoolType)
 {
-  FsRtlInitializeLargeMcb(& Mcb->LargeMcb, PoolType);
+  FsRtlInitializeLargeMcb((PLARGE_MCB *)Mcb, PoolType);
 }
 
 
