@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.57 2004/01/07 10:09:03 hbirr Exp $
+/* $Id: startup.c,v 1.58 2004/10/05 10:38:57 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -282,7 +282,7 @@ __true_LdrInitializeThunk (ULONG Unknown1,
        /* create process heap */
        RtlInitializeHeapManager();
        Peb->ProcessHeap = RtlCreateHeap(HEAP_GROWABLE,
-                                        (PVOID)HEAP_BASE,
+                                        NULL,
                                         NTHeaders->OptionalHeader.SizeOfHeapReserve,
                                         NTHeaders->OptionalHeader.SizeOfHeapCommit,
                                         NULL,
