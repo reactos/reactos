@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.36 2004/01/24 11:59:04 navaraf Exp $
+/* $Id: unicode.c,v 1.37 2004/02/02 19:04:11 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1069,7 +1069,7 @@ RtlStringFromGUID(
 	
 	if( Guid == NULL )
 	{
-		return FALSE;
+		return STATUS_INVALID_PARAMETER;
 	}
 
 	swprintf( Buffer, L"{%08lX-%04X-%04X-%02X%02X-",
@@ -1090,9 +1090,7 @@ RtlStringFromGUID(
 	*BufferPtr++ = '}';
 	*BufferPtr++ = '\0';
 		
-	RtlCreateUnicodeString( GuidString, Buffer );
-	
-	return TRUE;
+	return RtlCreateUnicodeString( GuidString, Buffer );
 }
 
 
