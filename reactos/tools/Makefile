@@ -20,7 +20,7 @@ TOOLS = \
 CLEAN_FILES = $(TOOLS)
 
 all: $(TOOLS) zlib_target wmc_target cabman_target cdmake_target mkhive_target rgenstat_target \
-	wine2ros_target pipetools_target winebuild_target bin2res_target
+	wine2ros_target pipetools_target rbuild_target winebuild_target bin2res_target
 
 buildno$(EXE_POSTFIX): buildno.c ../include/reactos/version.h
 	@$(HOST_CC) $(CFLAGS) -o buildno$(EXE_POSTFIX) buildno.c
@@ -124,13 +124,16 @@ ifeq ($(HOST),mingw32-windows)
 	$(MAKE) --silent -C pipetools
 endif
 
+rbuild_target:
+	$(MAKE) --silent -C rbuild rbuild$(EXE_POSTFIX)
+
 winebuild_target:
 	$(MAKE) --silent -C winebuild winebuild$(EXE_POSTFIX)
 
 bin2res_target:
 	$(MAKE) --silent -C bin2res bin2res$(EXE_POSTFIX)
 
-.PHONY: wmc_target cdmake_target mkhive_target rgenstat_target pipetools_target
+.PHONY: wmc_target cdmake_target mkhive_target rgenstat_target pipetools_target rbuild_target
 
 
 ifeq ($(HOST),mingw32-linux)
@@ -141,6 +144,7 @@ clean:
 	$(MAKE) --silent -C wmc clean
 	$(MAKE) --silent -C rgenstat clean
 	$(MAKE) --silent -C wine2ros clean
+	$(MAKE) --silent -C rbuild clean
 	$(MAKE) --silent -C winebuild clean
 	$(MAKE) --silent -C bin2res clean
 	$(MAKE) --silent -C ../lib/zlib -f Makefile.host clean
@@ -156,6 +160,7 @@ clean:
 	$(MAKE) --silent -C wmc clean
 	$(MAKE) --silent -C rgenstat clean
 	$(MAKE) --silent -C pipetools clean
+	$(MAKE) --silent -C rbuild clean
 	$(MAKE) --silent -C wine2ros clean
 	$(MAKE) --silent -C winebuild clean
 	$(MAKE) --silent -C bin2res clean

@@ -311,8 +311,10 @@ int main ( int argc, char** argv )
 	}
 
 	XMLElement* head = XMLParse ( f );
-
-	// REM TODO FIXME actually do something with the parsed info
+  if (head)
+  {
+	  // REM TODO FIXME actually do something with the parsed info
+  }
 
 	return 0;
 }
