@@ -3786,10 +3786,10 @@ REBAR_Destroy (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 	infoPtr->bands = NULL;
     }
 
-    DeleteObject (infoPtr->hcurArrow);
-    DeleteObject (infoPtr->hcurHorz);
-    DeleteObject (infoPtr->hcurVert);
-    DeleteObject (infoPtr->hcurDrag);
+    DestroyCursor (infoPtr->hcurArrow);
+    DestroyCursor (infoPtr->hcurHorz);
+    DestroyCursor (infoPtr->hcurVert);
+    DestroyCursor (infoPtr->hcurDrag);
     if(infoPtr->hDefaultFont) DeleteObject (infoPtr->hDefaultFont);
     SetWindowLongPtrW (infoPtr->hwndSelf, 0, 0);
 
