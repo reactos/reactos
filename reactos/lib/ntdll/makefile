@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.101 2004/05/29 21:55:09 hbirr Exp $
+# $Id: makefile,v 1.102 2004/05/31 19:33:12 gdalsnes Exp $
 
 PATH_TO_TOP = ../..
 
@@ -19,7 +19,7 @@ TARGET_LFLAGS = -Wl,--file-alignment,0x1000 \
   -Wl,--section-alignment,0x1000 \
   -nostartfiles -nostdlib
 
-TARGET_SDKLIBS = string.a rosrtl.a
+TARGET_SDKLIBS = string.a rosrtl.a rtl.a
 
 TARGET_GCCLIBS = gcc
 
@@ -64,48 +64,31 @@ RTL_I386_OBJECTS = \
 
 RTL_OBJECTS = \
 	rtl/access.o \
-	rtl/acl.o \
 	rtl/apc.o \
 	rtl/atom.o \
 	rtl/bitmap.o \
 	rtl/callback.o \
-	rtl/compress.o \
 	rtl/crc32.o \
 	rtl/critical.o \
-	rtl/dos8dot3.o \
-	rtl/error.o \
 	rtl/encode.o \
-	rtl/env.o \
 	rtl/exception.o \
 	rtl/handle.o \
-	rtl/heap.o \
 	rtl/image.o \
 	rtl/intrlck.o \
-	rtl/largeint.o \
-	rtl/luid.o \
 	rtl/math.o \
-	rtl/mem.o \
 	rtl/message.o \
 	rtl/misc.o \
-	rtl/nls.o \
 	rtl/path.o \
 	rtl/ppb.o \
 	rtl/process.o \
 	rtl/propvar.o \
-	rtl/random.o \
 	rtl/rangelist.o \
 	rtl/registry.o \
 	rtl/resource.o \
-	rtl/sd.o \
-	rtl/security.o \
-	rtl/sid.o \
 	rtl/splaytree.o \
 	rtl/teb.o \
 	rtl/thread.o \
-	rtl/time.o \
-	rtl/timezone.o \
-	rtl/unicode.o \
-	rtl/version.o
+	rtl/libsupp.o
 
 STDIO_OBJECTS = \
 	stdio/sprintf.o \
