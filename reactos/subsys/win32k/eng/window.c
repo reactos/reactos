@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.11 2004/05/10 17:07:17 blight Exp $
+/* $Id$
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -57,8 +57,8 @@ IntEngWndChanged(
       pwo = NULL;
     }
 
-  DPRINT1("Calling WNDOBJCHANGEPROC (0x%x), Changed = 0x%x\n",
-           WndObjInt->ChangeProc, flChanged);
+  DPRINT("Calling WNDOBJCHANGEPROC (0x%x), Changed = 0x%x\n",
+         WndObjInt->ChangeProc, flChanged);
   WndObjInt->ChangeProc(pwo, flChanged);
 }
 
@@ -80,7 +80,8 @@ EngCreateWnd(
   PWINDOW_OBJECT Window;
   CLIPOBJ *ClientClipObj;
 
-  DPRINT("EngCreateWnd: WNDOBJCHANGEPROC = 0x%x, Flags = 0x%x\n", pfn, fl);
+  DPRINT("EngCreateWnd: pso = 0x%x, hwnd = 0x%x, pfn = 0x%x, fl = 0x%x, pixfmt = %d\n",
+         pso, hwnd, pfn, fl, iPixelFormat);
 
   /* Get window object */
   Window = IntGetWindowObject(hwnd);
@@ -123,10 +124,8 @@ EngCreateWnd(
   /* release resources */
   IntReleaseWindowObject(Window);
 
-  /* HACKHACKHACK */
-  IntEngWndChanged(WndObjUser, WOC_RGN_CLIENT);
-
   DPRINT("EngCreateWnd: SUCCESS!\n");
+  
   return WndObjUser;
 }
 
@@ -140,7 +139,7 @@ EngDeleteWnd ( IN WNDOBJ *pwo )
 {
   WNDGDI *WndObjInt = ObjToGDI(pwo, WND);
   
-  DPRINT("EngDeleteWnd\n");
+  DPRINT("EngDeleteWnd: pwo = 0x%x\n", pwo);
 
   IntEngDeleteClipRegion(WndObjInt->ClientClipObj);
   EngFreeMem(WndObjInt);
@@ -159,8 +158,13 @@ WNDOBJ_bEnum(
 	)
 {
   WNDGDI *WndObjInt = ObjToGDI(pwo, WND);
-  DPRINT("WNDOBJ_bEnum\n");
-  return CLIPOBJ_bEnum(WndObjInt->ClientClipObj, cj, pul);
+  BOOL Ret;
+  
+  DPRINT("WNDOBJ_bEnum: pwo = 0x%x, cj = %d, pul = 0x%x\n", pwo, cj, pul);
+  Ret = CLIPOBJ_bEnum(WndObjInt->ClientClipObj, cj, pul);
+  
+  DPRINT("WNDOBJ_bEnum: Returning %s\n", Ret ? "True" : "False");
+  return Ret;
 }
 
 
@@ -177,9 +181,16 @@ WNDOBJ_cEnumStart(
 	)
 {
   WNDGDI *WndObjInt = ObjToGDI(pwo, WND);
-  DPRINT("WNDOBJ_cEnumStart\n");
+  ULONG Ret;
+
+  DPRINT("WNDOBJ_cEnumStart: pwo = 0x%x, iType = %d, iDirection = %d, cLimit = %d\n",
+         pwo, iType, iDirection, cLimit);
+
   /* FIXME: Should we enumerate all rectangles or not? */
-  return CLIPOBJ_cEnumStart(WndObjInt->ClientClipObj, FALSE, iType, iDirection, cLimit);
+  Ret = CLIPOBJ_cEnumStart(WndObjInt->ClientClipObj, FALSE, iType, iDirection, cLimit);
+
+  DPRINT("WNDOBJ_cEnumStart: Returning 0x%x\n", Ret);
+  return Ret;
 }
 
 
@@ -193,7 +204,20 @@ WNDOBJ_vSetConsumer(
 	IN PVOID  pvConsumer
 	)
 {
+  BOOL Hack;
+
+  DPRINT("WNDOBJ_vSetConsumer: pwo = 0x%x, pvConsumer = 0x%x\n", pwo, pvConsumer);
+  
+  Hack = (pwo->pvConsumer == NULL);
   pwo->pvConsumer = pvConsumer;
+
+  /* HACKHACKHACK */
+  if (Hack)
+    {
+      IntEngWndChanged(pwo, WOC_RGN_CLIENT);
+      IntEngWndChanged(pwo, WOC_CHANGED);
+      IntEngWndChanged(pwo, WOC_DRAWN);
+    }
 }
 
 /* EOF */

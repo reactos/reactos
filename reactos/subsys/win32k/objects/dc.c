@@ -727,7 +727,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
 
   if (Driver != NULL && Driver->Buffer != NULL)
   {
-    DPRINT("NAME: %S\n", Driver->Buffer); // FIXME: Should not crash if NULL
+    DPRINT("NAME: %ws\n", Driver); // FIXME: Should not crash if NULL
   }
 
   /*  Allocate a DC object  */
