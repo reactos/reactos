@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.146 2004/09/28 20:16:24 hbirr Exp $
+/* $Id: loader.c,v 1.147 2004/10/04 17:27:13 hbirr Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -666,7 +666,7 @@ LdrLookupPageProtection(PVOID PageStart,
    ULONG Length;
    PVOID BaseAddress;
    
-   for (Idx = 0; Idx < PEFileHeader->NumberOfSections; Idx++)
+   for (Idx = 0; Idx < PEFileHeader->NumberOfSections && (!Write || !Execute); Idx++)
    {
       Characteristics = PESectionHeaders[Idx].Characteristics;
       if (!(Characteristics & IMAGE_SECTION_NOLOAD))
@@ -1111,6 +1111,13 @@ LdrSafePEProcessModule(PVOID ModuleLoadBase,
         MmSetPageProtect(NULL, PageAddress, Protect);
 	PageAddress = (PVOID)((ULONG_PTR)PageAddress + PAGE_SIZE);
      }
+     if (DriverBase == ModuleLoadBase &&
+	 Characteristics & IMAGE_SECTION_CHAR_BSS)
+     {
+        /* For ntoskrnl, we must stop after the bss section */
+	break;
+     }
+        
   }
      
   return DriverBase;
