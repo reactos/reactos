@@ -548,6 +548,7 @@ KdbpSymFindCachedFile(IN PUNICODE_STRING FileName)
       DPRINT("Current->FileName %wZ FileName %wZ\n", &Current->FileName, FileName);
       if (RtlEqualUnicodeString(&Current->FileName, FileName, TRUE))
         {
+          Current->RefCount++;
           KeReleaseSpinLock(&SymbolFileListLock, Irql);
           DPRINT("Found cached file!\n");
           return Current;
@@ -690,7 +691,6 @@ KdbpSymLoadModuleSymbols(IN PUNICODE_STRING FileName,
   if (CachedSymbolFile != NULL)
     {
       DPRINT("Found cached symbol file %wZ\n", &SymFileName);
-      CachedSymbolFile->RefCount++;
       SymbolInfo->FileBuffer = CachedSymbolFile->FileBuffer;
       SymbolInfo->SymbolsBase = CachedSymbolFile->SymbolsBase;
       SymbolInfo->SymbolsLength = CachedSymbolFile->SymbolsLength;
@@ -897,76 +897,84 @@ KdbSymUnloadDriverSymbols(IN PMODULE_OBJECT ModuleObject)
  * module.
  * Used to load ntoskrnl and hal symbols before the SystemRoot is available to us.
  *
- * \param ModuleLoadBase  Base address of the loaded symbol file.
- * \param FileName        Filename of the symbol file.
- * \param Length          Length of the loaded symbol file/module.
+ * \param FileName        Filename for which the symbols are loaded.
  */
 VOID
-KdbSymProcessSymbolFile(IN PVOID ModuleLoadBase,
-                        IN PCHAR FileName,
-                        IN ULONG Length)
+KdbSymProcessBootSymbols(IN PCHAR FileName)
 {
   PMODULE_OBJECT ModuleObject;
-  UNICODE_STRING ModuleName;
-  CHAR TmpBaseName[MAX_PATH];
-  CHAR TmpFileName[MAX_PATH];
+  UNICODE_STRING UnicodeString;
+  PLOADER_MODULE KeLoaderModules = (PLOADER_MODULE)KeLoaderBlock.ModsAddr;
+  CHAR SymbolName[MAX_PATH];
   PSYMBOLFILE_HEADER SymbolFileHeader;
   PIMAGE_SYMBOL_INFO SymbolInfo;
   ANSI_STRING AnsiString;
   PCHAR Extension;
   ULONG i;
-  const char *KnownExtension[] = {".exe", ".sys", ".dll"};
 
-  DPRINT("Module %s is a symbol file\n", FileName);
+  DPRINT("KdbSymProcessBootSymbols(%s)\n", FileName);
 
-  strncpy(TmpBaseName, FileName, MAX_PATH-1);
-  TmpBaseName[MAX_PATH-1] = '\0';
-  /* remove the extension '.sym' */
-  Extension = strrchr(TmpBaseName, '.');
-  if (Extension && 0 == _stricmp(Extension, ".sym"))
-    {
-      *Extension = 0;
-    }
+  RtlInitAnsiString(&AnsiString, FileName);
+  RtlAnsiStringToUnicodeString(&UnicodeString, &AnsiString, TRUE);
+  ModuleObject = LdrGetModuleObject(&UnicodeString);
+  RtlFreeUnicodeString(&UnicodeString);
 
-  DPRINT("base: %s (Length %d)\n", TmpBaseName, Length);
-
-  for (i = 0; i < sizeof(KnownExtension) / sizeof(*KnownExtension); i++)
-    {
-      strcpy(TmpFileName, TmpBaseName);
-      strcat(TmpFileName, KnownExtension[i]);
-      RtlInitAnsiString(&AnsiString, TmpFileName);
-
-      RtlAnsiStringToUnicodeString(&ModuleName, &AnsiString, TRUE);
-      ModuleObject = LdrGetModuleObject(&ModuleName);
-      RtlFreeUnicodeString(&ModuleName);
-      if (ModuleObject)
-        {
-	  break;
-	}
-    }
-  
   if (ModuleObject != NULL)
-    {
-      SymbolInfo = (PIMAGE_SYMBOL_INFO) &ModuleObject->TextSection->SymbolInfo;
-      if (SymbolInfo->FileBuffer != NULL)
+  {
+     strcpy(SymbolName, FileName);
+     Extension = strrchr(SymbolName, '.');
+     if (Extension == NULL)
+     {
+        Extension = SymbolName + strlen(SymbolName);
+     }
+     strcpy(Extension, ".sym");
+     for (i = 0; i < KeLoaderBlock.ModsCount; i++)
+     {
+        if (KeLoaderModules[i].Reserved == 0 && !_stricmp(SymbolName, (PCHAR)KeLoaderModules[i].String))
+	{
+	   break;
+	}
+     }
+     if (i < KeLoaderBlock.ModsCount)
+     {
+        KeLoaderModules[i].Reserved = 1;
+        SymbolInfo = (PIMAGE_SYMBOL_INFO) &ModuleObject->TextSection->SymbolInfo;
+        if (SymbolInfo->FileBuffer != NULL)
         {
-          KdbpSymRemoveCachedFile(SymbolInfo);
+           KdbpSymRemoveCachedFile(SymbolInfo);
         }
 
-      SymbolFileHeader = (PSYMBOLFILE_HEADER) ModuleLoadBase;
-      SymbolInfo->FileBuffer = ModuleLoadBase;
-      SymbolInfo->SymbolsBase = ModuleLoadBase + SymbolFileHeader->StabsOffset;
-      SymbolInfo->SymbolsLength = SymbolFileHeader->StabsLength;
-      SymbolInfo->SymbolStringsBase = ModuleLoadBase + SymbolFileHeader->StabstrOffset;
-      SymbolInfo->SymbolStringsLength = SymbolFileHeader->StabstrLength;
-      DPRINT("Installed stabs: %s@%08x-%08x (%08x-%08x,%08x)\n",
+	SymbolFileHeader = ExAllocatePool(NonPagedPool, KeLoaderModules[i].ModEnd - KeLoaderModules[i].ModStart);
+        if (SymbolFileHeader == NULL)
+        {
+           DPRINT("Could not allocate memory for symbol file\n");
+           return;
+        }
+	memcpy(SymbolFileHeader, 
+	       (PVOID)KeLoaderModules[i].ModStart, 
+	       KeLoaderModules[i].ModEnd - KeLoaderModules[i].ModStart);
+ 
+        SymbolInfo->FileBuffer = SymbolFileHeader;
+        SymbolInfo->SymbolsBase = (PVOID)SymbolFileHeader + SymbolFileHeader->StabsOffset;
+        SymbolInfo->SymbolsLength = SymbolFileHeader->StabsLength;
+        SymbolInfo->SymbolStringsBase = (PVOID)SymbolFileHeader + SymbolFileHeader->StabstrOffset;
+        SymbolInfo->SymbolStringsLength = SymbolFileHeader->StabstrLength;
+
+        /* add file to cache */
+        RtlInitAnsiString(&AnsiString, SymbolName);
+	RtlAnsiStringToUnicodeString(&UnicodeString, &AnsiString, TRUE);
+        KdbpSymAddCachedFile(&UnicodeString, SymbolInfo);
+        RtlFreeUnicodeString(&UnicodeString);
+
+        DPRINT("Installed stabs: %s@%08x-%08x (%08x-%08x,%08x)\n",
 	       FileName,
 	       ModuleObject->Base,
 	       ModuleObject->Length + ModuleObject->Base,
 	       SymbolInfo->SymbolsBase,
 	       SymbolInfo->SymbolsLength + SymbolInfo->SymbolsBase,
 	       SymbolInfo->SymbolStringsBase);
-    }
+     }
+  }
 }
 
 /*! \brief Initializes the KDB symbols implementation.

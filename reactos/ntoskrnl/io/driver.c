@@ -448,6 +448,8 @@ IopLoadServiceModule(
                   &ServiceImagePath,
                   ModuleObject);
 
+	       KDB_SYMBOLFILE_HOOK(SearchName);
+
                break;
             }
          }
@@ -1135,6 +1137,9 @@ IopInitializeBuiltinDriver(
       return Status;
    }
 
+   /* Load symbols */
+   KDB_SYMBOLFILE_HOOK(FileName);
+
    /*
     * Strip the file extension from ServiceName
     */
@@ -1205,13 +1210,11 @@ IopInitializeBootDrivers(VOID)
       if (Extension == NULL)
          Extension = "";
 
-      if (!_stricmp(Extension, ".sym"))
+      if (!_stricmp(Extension, ".exe") || !_stricmp(Extension, ".dll"))
       {
-         /* Pass symbol files to kernel debugger */
-         KDB_SYMBOLFILE_HOOK((PVOID)ModuleStart, ModuleName, ModuleSize);
-      }
-      else if (!_stricmp(Extension, ".exe") || !_stricmp(Extension, ".dll"))
-      {
+        /* Process symbols for *.exe and *.dll */
+        KDB_SYMBOLFILE_HOOK(ModuleName);
+
         /* Log *.exe and *.dll files */
         RtlCreateUnicodeStringFromAsciiz(&DriverName, ModuleName);
         IopBootLog(&DriverName, TRUE);
@@ -1232,20 +1235,16 @@ IopInitializeBootDrivers(VOID)
          }
          BootDriverCount++;
       }
+   }
 
-      /*
-       * Free memory for all boot files, except ntoskrnl.exe
-       * and symbol files, if the kernel debugger is active
-       */
-      if (i != 0 /* ntoskrnl.exe is always the first module */
-#if defined(DBG) || defined(KDBG)
-          && _stricmp(Extension, ".sym")
-#endif
-         )
-      {
-         MiFreeBootDriverMemory((PVOID)KeLoaderModules[i].ModStart,
-            KeLoaderModules[i].ModEnd - KeLoaderModules[i].ModStart);
-      }
+   /*
+    * Free memory for all boot files, except ntoskrnl.exe.
+    */
+   for (i = 1; i < KeLoaderBlock.ModsCount; i++)
+   {
+
+       MiFreeBootDriverMemory((PVOID)KeLoaderModules[i].ModStart,
+                              KeLoaderModules[i].ModEnd - KeLoaderModules[i].ModStart);
    }
 
    if (BootDriverCount == 0)
