@@ -3,34 +3,18 @@
 #
 PATH_TO_TOP = ../../../..
 
-PROGS = volinfo
+TARGET_NORC = yes
 
-OBJECTS = volinfo.o
+TARGET_TYPE = program
 
-LIBS =
-CFLAGS =
+TARGET_APPTYPE = console
 
-all: $(PROGS:%=%.exe)
+TARGET_NAME = volinfo
 
-.phony: all
-
-clean:
-	- $(RM) *.o  *.exe *.sym
-
-.phony: clean
-
-install: $(PROGS:%=$(FLOPPY_DIR)/apps/%.exe)
-
-$(PROGS:%=$(FLOPPY_DIR)/apps/%.exe): $(FLOPPY_DIR)/apps/%.exe: %.exe
-	$(CP) $*.exe $(FLOPPY_DIR)/apps/$*.exe
-
-dist: $(PROGS:%=../../$(DIST_DIR)/apps/%.exe)
-
-$(PROGS:%=../../$(DIST_DIR)/apps/%.exe): ../../$(DIST_DIR)/apps/%.exe: %.exe
-	$(CP) $*.exe ../../$(DIST_DIR)/apps/$*.exe
-
-volinfo.exe: $(OBJECTS)
-	$(CC) $(CFLAGS) -Wl,--subsystem,windows $(OBJECTS) $(LIBS) -o volinfo.exe
-	$(NM) --numeric-sort volinfo.exe > volinfo.sym
+TARGET_OBJECTS = $(TARGET_NAME).o
 
 include $(PATH_TO_TOP)/rules.mak
+
+include $(TOOLS_PATH)/helper.mk
+
+# EOF
