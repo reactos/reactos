@@ -1,4 +1,4 @@
-#include <msvcrt/string.h>
+#include <msvcrti.h>
 
 
 void *

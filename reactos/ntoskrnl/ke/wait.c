@@ -16,15 +16,11 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ke.h>
-#include <internal/ps.h>
-#include <internal/ob.h>
-#include <internal/id.h>
-#include <ntos/ntdef.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* GLOBALS ******************************************************************/
 

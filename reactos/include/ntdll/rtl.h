@@ -1,56 +1,13 @@
-/* $Id: rtl.h,v 1.33 2002/07/25 16:57:49 ekohl Exp $
+/* $Id: rtl.h,v 1.34 2002/09/07 15:12:20 chorns Exp $
  *
  */
 
 #ifndef __INCLUDE_NTDLL_RTL_H
 #define __INCLUDE_NTDLL_RTL_H
 
-#include <napi/teb.h>
-#include <ddk/ntddk.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
-typedef struct _DEBUG_BUFFER
-{
-  HANDLE SectionHandle;
-  PVOID SectionBase;
-  PVOID RemoteSectionBase;
-  ULONG SectionBaseDelta;
-  HANDLE EventPairHandle;
-  ULONG Unknown[2];
-  HANDLE RemoteThreadHandle;
-  ULONG InfoClassMask;
-  ULONG SizeOfInfo;
-  ULONG AllocatedSize;
-  ULONG SectionSize;
-  PVOID ModuleInformation;
-  PVOID BackTraceInformation;
-  PVOID HeapInformation;
-  PVOID LockInformation;
-  PVOID Reserved[8];
-} DEBUG_BUFFER, *PDEBUG_BUFFER;
-
-typedef struct _CRITICAL_SECTION_DEBUG {
-    WORD   Type;
-    WORD   CreatorBackTraceIndex;
-    struct _CRITICAL_SECTION *CriticalSection;
-    LIST_ENTRY ProcessLocksList;
-    DWORD EntryCount;
-    DWORD ContentionCount;
-    DWORD Depth;
-    PVOID OwnerBackTrace[ 5 ];
-} CRITICAL_SECTION_DEBUG, *PCRITICAL_SECTION_DEBUG;
-
-typedef struct _CRITICAL_SECTION {
-    PCRITICAL_SECTION_DEBUG DebugInfo;
-    LONG LockCount;
-    LONG RecursionCount;
-    HANDLE OwningThread;
-    HANDLE LockSemaphore;
-    DWORD Reserved;
-} CRITICAL_SECTION, *PCRITICAL_SECTION, *LPCRITICAL_SECTION;
 
 typedef struct _RTL_PROCESS_INFO
 {
@@ -63,7 +20,7 @@ typedef struct _RTL_PROCESS_INFO
 
 typedef struct _RTL_RESOURCE
 {
-   CRITICAL_SECTION Lock;
+   RTL_CRITICAL_SECTION Lock;
    HANDLE SharedSemaphore;
    ULONG SharedWaiters;
    HANDLE ExclusiveSemaphore;
@@ -103,31 +60,31 @@ typedef struct _RTL_HANDLE_TABLE
 VOID
 STDCALL
 RtlDeleteCriticalSection (
-	PCRITICAL_SECTION	CriticalSection
+	PRTL_CRITICAL_SECTION	CriticalSection
 	);
 
 VOID
 STDCALL
 RtlEnterCriticalSection (
-	PCRITICAL_SECTION	CriticalSection
+	PRTL_CRITICAL_SECTION	CriticalSection
 	);
 
 NTSTATUS
 STDCALL
 RtlInitializeCriticalSection (
-	PCRITICAL_SECTION	CriticalSection
+	PRTL_CRITICAL_SECTION	CriticalSection
 	);
 
 VOID
 STDCALL
 RtlLeaveCriticalSection (
-	PCRITICAL_SECTION	CriticalSection
+	PRTL_CRITICAL_SECTION	CriticalSection
 	);
 
 BOOLEAN
 STDCALL
 RtlTryEnterCriticalSection (
-	PCRITICAL_SECTION	CriticalSection
+	PRTL_CRITICAL_SECTION	CriticalSection
 	);
 
 DWORD
@@ -340,10 +297,10 @@ RtlFreeUserThreadStack (
 
 NTSTATUS
 STDCALL
-RtlCreateUserProcess (
+RtlRosCreateUserProcess (
 	IN	PUNICODE_STRING			ImageFileName,
 	IN	ULONG				Attributes,
-	IN	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters,
+	IN	PRTL_ROS_USER_PROCESS_PARAMETERS	ProcessParameters,
 	IN	PSECURITY_DESCRIPTOR		ProcessSecutityDescriptor OPTIONAL,
 	IN	PSECURITY_DESCRIPTOR		ThreadSecurityDescriptor OPTIONAL,
 	IN	HANDLE				ParentProcess OPTIONAL,
@@ -355,8 +312,8 @@ RtlCreateUserProcess (
 
 NTSTATUS
 STDCALL
-RtlCreateProcessParameters (
-	OUT	PRTL_USER_PROCESS_PARAMETERS	*ProcessParameters,
+RtlRosCreateProcessParameters (
+	OUT	PRTL_ROS_USER_PROCESS_PARAMETERS	*ProcessParameters,
 	IN	PUNICODE_STRING	ImagePathName OPTIONAL,
 	IN	PUNICODE_STRING	DllPath OPTIONAL,
 	IN	PUNICODE_STRING	CurrentDirectory OPTIONAL,
@@ -368,22 +325,22 @@ RtlCreateProcessParameters (
 	IN	PUNICODE_STRING	RuntimeInfo OPTIONAL
 	);
 
-PRTL_USER_PROCESS_PARAMETERS
+PRTL_ROS_USER_PROCESS_PARAMETERS
 STDCALL
-RtlDeNormalizeProcessParams (
-	IN	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters
+RtlRosDeNormalizeProcessParams (
+	IN	PRTL_ROS_USER_PROCESS_PARAMETERS	ProcessParameters
 	);
 
 VOID
 STDCALL
-RtlDestroyProcessParameters (
-	IN	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters
+RtlRosDestroyProcessParameters (
+	IN	PRTL_ROS_USER_PROCESS_PARAMETERS	ProcessParameters
 	);
 
-PRTL_USER_PROCESS_PARAMETERS
+PRTL_ROS_USER_PROCESS_PARAMETERS
 STDCALL
-RtlNormalizeProcessParams (
-	IN	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters
+RtlRosNormalizeProcessParams (
+	IN	PRTL_ROS_USER_PROCESS_PARAMETERS	ProcessParameters
 	);
 
 NTSTATUS
@@ -567,44 +524,6 @@ RtlpNtSetValueKey (
 	IN	PVOID	Data,
 	IN	ULONG	DataLength
 	);
-
-#ifndef __NTDRIVER__
-LONG
-STDCALL
-InterlockedIncrement (
-	PLONG Addend
-	);
-
-LONG
-STDCALL
-InterlockedDecrement (
-	PLONG lpAddend
-	);
-
-LONG
-STDCALL
-InterlockedExchange (
-	PLONG Target,
-	LONG Value
-	);
-
-PVOID
-STDCALL
-InterlockedCompareExchange (
-	PVOID *Destination,
-	PVOID Exchange,
-	PVOID Comperand
-	);
-
-LONG
-STDCALL
-InterlockedExchangeAdd (
-	PLONG Addend,
-	LONG Increment
-	);
-
-
-#endif /* __NTDRIVER__ */
 
 #ifdef __cplusplus
 }

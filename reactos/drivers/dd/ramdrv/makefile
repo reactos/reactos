@@ -1,6 +1,6 @@
-# $Id: makefile,v 1.7 2002/02/05 02:30:13 phreak Exp $
+# $Id: makefile,v 1.8 2002/09/07 15:11:59 chorns Exp $
 
-# $Id: makefile,v 1.7 2002/02/05 02:30:13 phreak Exp $
+# $Id: makefile,v 1.8 2002/09/07 15:11:59 chorns Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -12,9 +12,7 @@ TARGET_OBJECTS = ramdrv.o
 
 TARGET_DDKLIBS = unbzip2.a
 
-TARGET_NORC = yes
-
-TARGET_CFLAGS=-I../../../ntoskrnl/include -g
+TARGET_CFLAGS=-I$(PATH_TO_TOP)/ntoskrnl/include -g
 
 include $(PATH_TO_TOP)/rules.mak
 

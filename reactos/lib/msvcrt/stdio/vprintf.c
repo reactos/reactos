@@ -15,11 +15,9 @@ You should have received a copy of the GNU Library General Public
 License along with the GNU C Library; see the file COPYING.LIB.  If
 not, write to the Free Software Foundation, Inc., 675 Mass Ave,
 Cambridge, MA 02139, USA.  */
-
-#include <msvcrt/stdarg.h>
 #undef	__OPTIMIZE__	/* Avoid inline `vprintf' function.  */
-#include <msvcrt/stdio.h>
-#include <msvcrt/wchar.h>
+#include <msvcrti.h>
+
 
 #undef	vprintf
 #undef	vwprintf

@@ -1,4 +1,5 @@
-#include <msvcrt/float.h>
+#include <msvcrti.h>
+
 
 long _ftol(double fl)
 {

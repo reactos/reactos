@@ -1,6 +1,7 @@
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <ddk/ntddk.h>
+#define NTOS_KERNEL_MODE
+#include <ntos.h>
 
 /* FIXME: Surely we should just have one include file that includes all of these.. */
 #include <win32k/bitmaps.h>
@@ -17,7 +18,7 @@
 #include <win32k/debug1.h>
 
 
-PBRUSHOBJ PenToBrushObj(PDC dc, PENOBJ *pen)
+BRUSHOBJ* PenToBrushObj(PDC dc, PENOBJ *pen)
 {
   BRUSHOBJ *BrushObj;
   XLATEOBJ *RGBtoVGA16;
@@ -28,7 +29,7 @@ PBRUSHOBJ PenToBrushObj(PDC dc, PENOBJ *pen)
   return BrushObj;
 }
 
-VOID BitmapToSurf(HDC hdc, PSURFGDI SurfGDI, PSURFOBJ SurfObj, PBITMAPOBJ Bitmap)
+VOID BitmapToSurf(HDC hdc, PSURFGDI SurfGDI, SURFOBJ *SurfObj, PBITMAPOBJ Bitmap)
 {
   ASSERT( SurfGDI );
   if( Bitmap ){

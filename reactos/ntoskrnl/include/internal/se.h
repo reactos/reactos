@@ -20,6 +20,7 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_SE_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_SE_H
 
+#ifndef AS_INVOKED
 
 extern POBJECT_TYPE SepTokenObjectType;
 
@@ -108,8 +109,8 @@ NTSTATUS SepInitializeNewProcess(struct _EPROCESS* NewProcess,
 								 struct _EPROCESS* ParentProcess);
 
 NTSTATUS SeExchangePrimaryToken(struct _EPROCESS* Process,
-				PACCESS_TOKEN NewToken,
-				PACCESS_TOKEN* OldTokenP);
+				PIACCESS_TOKEN NewToken,
+				PIACCESS_TOKEN* OldTokenP);
 
 NTSTATUS SeCaptureLuidAndAttributesArray(PLUID_AND_ATTRIBUTES Src,
 					 ULONG PrivilegeCount,
@@ -121,6 +122,16 @@ NTSTATUS SeCaptureLuidAndAttributesArray(PLUID_AND_ATTRIBUTES Src,
 					 PLUID_AND_ATTRIBUTES* Dest,
 					 PULONG Length);
 
+NTSTATUS STDCALL
+RtlCopySidAndAttributesArray(ULONG Count,
+			     PSID_AND_ATTRIBUTES_ARRAY Src,
+			     ULONG SidAreaSize,
+			     PSID_AND_ATTRIBUTES_ARRAY Dest,
+			     PVOID SidArea,
+			     PVOID* RemainingSidArea,
+			     PULONG RemainingSidAreaSize);
+
+#endif /* !AS_INVOKED */
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_SE_H */
 

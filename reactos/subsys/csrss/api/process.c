@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.17 2002/05/07 22:46:23 hbirr Exp $
+/* $Id: process.c,v 1.18 2002/09/07 15:13:08 chorns Exp $
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -9,10 +9,10 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-
+#include <windows.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 #include <csrss/csrss.h>
-#include <ntdll/rtl.h>
 #include "api.h"
 
 #define LOCK   RtlEnterCriticalSection(&ProcessDataLock)
@@ -22,8 +22,8 @@
 
 static ULONG NrProcess;
 static PCSRSS_PROCESS_DATA ProcessData[256];
-extern CRITICAL_SECTION ActiveConsoleLock;
-CRITICAL_SECTION ProcessDataLock;
+extern RTL_CRITICAL_SECTION ActiveConsoleLock;
+RTL_CRITICAL_SECTION ProcessDataLock;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -120,7 +120,7 @@ CSR_API(CsrCreateProcess)
    HANDLE Process;
 
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - 
-     sizeof(LPC_MESSAGE_HEADER);
+     sizeof(LPC_MESSAGE);
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    
    NewProcessData = CsrGetProcessData(Request->Data.CreateProcessRequest.NewProcessId);
@@ -201,7 +201,7 @@ CSR_API(CsrTerminateProcess)
    NTSTATUS Status;
 
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY) 
-      - sizeof(LPC_MESSAGE_HEADER);
+      - sizeof(LPC_MESSAGE);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY);
 
    Status = CsrFreeProcessData(ProcessData->ProcessId);
@@ -214,7 +214,7 @@ CSR_API(CsrConnectProcess)
 {
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - 
-     sizeof(LPC_MESSAGE_HEADER);
+     sizeof(LPC_MESSAGE);
    
    Reply->Status = STATUS_SUCCESS;
    

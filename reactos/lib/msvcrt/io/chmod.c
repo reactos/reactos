@@ -1,8 +1,8 @@
-#include <windows.h>
-#include <msvcrt/io.h>
+#include <msvcrti.h>
 
 #define NDEBUG
-#include <msvcrt/msvcrtdbg.h>
+#include <msvcrtdbg.h>
+
 
 #define mode_t int
 

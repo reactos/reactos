@@ -1,9 +1,8 @@
-#include <windows.h>
-#include <msvcrt/stddef.h>
-#include <msvcrt/stdio.h>
+#include <msvcrti.h>
 
 #define NDEBUG
-#include <msvcrt/msvcrtdbg.h>
+#include <msvcrtdbg.h>
+
 
 int remove(const char *fn)
 {

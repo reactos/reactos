@@ -1,10 +1,7 @@
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <limits.h>
-#include <msvcrt/ctype.h>
-#include <msvcrt/errno.h>
-#include <msvcrt/stdlib.h>
-//#include <msvcrt/unconst.h>
+#include <msvcrti.h>
+
 
 /* constants used in Solaris */
 #define LLONG_MIN       -9223372036854775807L-1L

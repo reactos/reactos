@@ -1,4 +1,4 @@
-/* $Id: tls.c,v 1.7 2001/03/13 16:25:52 dwelch Exp $
+/* $Id: tls.c,v 1.8 2002/09/07 15:12:28 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,9 +12,9 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
 #include <windows.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 #include <kernel32/thread.h>
 #include <kernel32/error.h>
 

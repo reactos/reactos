@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.6 2002/05/07 22:24:52 hbirr Exp $
+/* $Id: handle.c,v 1.7 2002/09/07 15:12:27 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,8 +11,9 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
 #include <windows.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
@@ -140,7 +141,7 @@ WINBOOL STDCALL DuplicateHandle(HANDLE hSourceProcessHandle,
 			       hTargetProcessHandle,
 			       lpTargetHandle, 
 			       dwDesiredAccess, 
-			       (BOOLEAN)bInheritHandle,
+			       (ULONG)(bInheritHandle ? HANDLE_FLAG_INHERIT : 0),
 			       dwOptions);
    if (!NT_SUCCESS(errCode)) 
      {

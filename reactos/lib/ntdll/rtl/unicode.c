@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.20 2002/04/01 22:13:15 hbirr Exp $
+/* $Id: unicode.c,v 1.21 2002/09/07 15:12:41 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -9,13 +9,12 @@
  *                  Created 10/08/98
  */
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
-//#include <internal/nls.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 #include <ctype.h>
-#include <ntos/minmax.h>
+
 #define NDEBUG
-#include <ntdll/ntdll.h>
+#include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
 
@@ -213,7 +212,7 @@ RtlAppendUnicodeStringToString (
 
 NTSTATUS STDCALL
 RtlAppendUnicodeToString(IN OUT PUNICODE_STRING Destination,
-			 IN PWSTR Source)
+			 IN PCWSTR Source)
 {
   PWCHAR Src;
   PWCHAR Dest;
@@ -225,7 +224,7 @@ RtlAppendUnicodeToString(IN OUT PUNICODE_STRING Destination,
   if (Destination->Length + slen >= Destination->MaximumLength)
     return(STATUS_BUFFER_TOO_SMALL);
 
-  Src = Source;
+  Src = (PWCHAR)Source;
   Dest = Destination->Buffer + (Destination->Length / sizeof(WCHAR));
 
   for (i = 0; i < (slen / sizeof(WCHAR)); i++)
@@ -631,8 +630,8 @@ RtlEqualString (
 BOOLEAN
 STDCALL
 RtlEqualUnicodeString (
-	IN	PUNICODE_STRING	String1,
-	IN	PUNICODE_STRING	String2,
+	IN	CONST UNICODE_STRING	*String1,
+	IN	CONST UNICODE_STRING	*String2,
 	IN	BOOLEAN		CaseInsensitive
 	)
 {

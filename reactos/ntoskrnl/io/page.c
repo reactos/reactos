@@ -1,4 +1,4 @@
-/* $Id: page.c,v 1.17 2002/08/28 07:19:10 hbirr Exp $
+/* $Id: page.c,v 1.18 2002/09/07 15:12:53 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,11 +11,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/io.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* FUNCTIONS *****************************************************************/
 

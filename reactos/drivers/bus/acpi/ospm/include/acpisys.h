@@ -4,11 +4,8 @@
  * PURPOSE: ACPI bus driver definitions
  */
 #define ACPI_DEBUG
-#include <acpi.h>
-#define __INCLUDE_TYPES_H
 #include <platform/types.h>
-#undef ROUND_UP
-#include <ddk/ntddk.h>
+#include <acpi.h>
 #include <bm.h>
 
 typedef ACPI_STATUS (*ACPI_DRIVER_FUNCTION)(VOID);

@@ -1,8 +1,8 @@
-/* $Id: main.c,v 1.2 2000/03/08 22:37:03 ea Exp $
+/* $Id: main.c,v 1.3 2002/09/07 15:12:07 chorns Exp $
  *
  * DESCRIPTION: Entry point for TDI.SYS
  */
-#include <ntos.h>
+#include <ddk/ntddk.h>
 
 NTSTATUS
 STDCALL

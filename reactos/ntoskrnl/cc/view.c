@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.47 2002/08/17 15:14:26 hbirr Exp $
+/* $Id: view.c,v 1.48 2002/09/07 15:12:47 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/view.c
@@ -51,15 +51,12 @@
  */
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ddk/ntifs.h>
-#include <internal/mm.h>
-#include <internal/cc.h>
-#include <internal/pool.h>
-#include <ntos/minmax.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
+extern void * alloca(size_t);
 
 /* GLOBALS *******************************************************************/
 
@@ -76,12 +73,12 @@ static LIST_ENTRY CacheSegmentLRUListHead;
 static FAST_MUTEX ViewLock;
 
 NTSTATUS STDCALL
-CcRosInternalFreeCacheSegment(PBCB Bcb, PCACHE_SEGMENT CacheSeg);
+CcRosInternalFreeCacheSegment(PROS_BCB Bcb, PROS_CACHE_SEGMENT CacheSeg);
 
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS STATIC
-CcRosFlushCacheSegment(PCACHE_SEGMENT CacheSegment)
+CcRosFlushCacheSegment(PROS_CACHE_SEGMENT CacheSegment)
 {
   NTSTATUS Status;
   Status = WriteCacheSegment(CacheSegment);
@@ -97,7 +94,7 @@ NTSTATUS
 CcRosFlushDirtyPages(ULONG Target, PULONG Count)
 {
   PLIST_ENTRY current_entry;
-  PCACHE_SEGMENT current;
+  PROS_CACHE_SEGMENT current;
   ULONG PagesPerSegment;
   BOOLEAN Locked;
   NTSTATUS Status;
@@ -110,7 +107,7 @@ CcRosFlushDirtyPages(ULONG Target, PULONG Count)
   current_entry = DirtySegmentListHead.Flink;
   while (current_entry != &DirtySegmentListHead && Target > 0)
     {
-      current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, 
+      current = CONTAINING_RECORD(current_entry, ROS_CACHE_SEGMENT, 
 				  DirtySegmentListEntry);
       current_entry = current_entry->Flink;
       Locked = ExTryToAcquireFastMutex(&current->Lock);
@@ -126,7 +123,7 @@ CcRosFlushDirtyPages(ULONG Target, PULONG Count)
 	}
       current->ReferenceCount++;
       ExReleaseFastMutex(&ViewLock);
-      PagesPerSegment = current->Bcb->CacheSegmentSize / PAGESIZE;
+      PagesPerSegment = current->Bcb->CacheSegmentSize / PAGE_SIZE;
       Status = CcRosFlushCacheSegment(current);      
       current->ReferenceCount--;
       ExReleaseFastMutex(&current->Lock);
@@ -157,7 +154,7 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
  */
 {
   PLIST_ENTRY current_entry;
-  PCACHE_SEGMENT current;
+  PROS_CACHE_SEGMENT current;
   ULONG PagesPerSegment;
   ULONG PagesFreed;
   BOOLEAN Locked;
@@ -170,7 +167,7 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
   current_entry = CacheSegmentLRUListHead.Flink;
   while (current_entry != &CacheSegmentLRUListHead && Target > 0)
     {
-      current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, 
+      current = CONTAINING_RECORD(current_entry, ROS_CACHE_SEGMENT, 
 				  CacheSegmentLRUListEntry);
       current_entry = current_entry->Flink;
       Locked = ExTryToAcquireFastMutex(&current->Lock);
@@ -187,7 +184,7 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
       ExReleaseFastMutex(&current->Lock);
       DPRINT("current->Bcb->CacheSegmentSize %d\n", 
 	     current->Bcb->CacheSegmentSize);
-      PagesPerSegment = current->Bcb->CacheSegmentSize / PAGESIZE;
+      PagesPerSegment = current->Bcb->CacheSegmentSize / PAGE_SIZE;
       CcRosInternalFreeCacheSegment(current->Bcb, current);      
       DPRINT("CcRosTrimCache(): Freed %d\n", PagesPerSegment);
       PagesFreed = min(PagesPerSegment, Target);
@@ -200,8 +197,8 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
 }
 
 NTSTATUS STDCALL 
-CcRosReleaseCacheSegment(PBCB Bcb,
-			 PCACHE_SEGMENT CacheSeg,
+CcRosReleaseCacheSegment(PROS_BCB Bcb,
+			 PROS_CACHE_SEGMENT CacheSeg,
 			 BOOLEAN Valid,
 			 BOOLEAN Dirty,
 			 BOOLEAN Mapped)
@@ -234,17 +231,17 @@ CcRosReleaseCacheSegment(PBCB Bcb,
   return(STATUS_SUCCESS);
 }
 
-PCACHE_SEGMENT CcRosLookupCacheSegment(PBCB Bcb, ULONG FileOffset)
+PROS_CACHE_SEGMENT CcRosLookupCacheSegment(PROS_BCB Bcb, ULONG FileOffset)
 {
   PLIST_ENTRY current_entry;
-  PCACHE_SEGMENT current;
+  PROS_CACHE_SEGMENT current;
   KIRQL oldIrql;
 
   KeAcquireSpinLock(&Bcb->BcbLock, &oldIrql);
   current_entry = Bcb->BcbSegmentListHead.Flink;
   while (current_entry != &Bcb->BcbSegmentListHead)
     {
-      current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, 
+      current = CONTAINING_RECORD(current_entry, ROS_CACHE_SEGMENT, 
 				  BcbSegmentListEntry);
       if (current->FileOffset <= FileOffset &&
 	  (current->FileOffset + Bcb->CacheSegmentSize) > FileOffset)
@@ -259,9 +256,9 @@ PCACHE_SEGMENT CcRosLookupCacheSegment(PBCB Bcb, ULONG FileOffset)
 }
 
 NTSTATUS
-CcRosMarkDirtyCacheSegment(PBCB Bcb, ULONG FileOffset)
+CcRosMarkDirtyCacheSegment(PROS_BCB Bcb, ULONG FileOffset)
 {
-  PCACHE_SEGMENT CacheSeg;
+  PROS_CACHE_SEGMENT CacheSeg;
 
   ExAcquireFastMutex(&ViewLock);
   CacheSeg = CcRosLookupCacheSegment(Bcb, FileOffset);
@@ -281,9 +278,9 @@ CcRosMarkDirtyCacheSegment(PBCB Bcb, ULONG FileOffset)
 }
 
 NTSTATUS
-CcRosSuggestFreeCacheSegment(PBCB Bcb, ULONG FileOffset, BOOLEAN NowDirty)
+CcRosSuggestFreeCacheSegment(PROS_BCB Bcb, ULONG FileOffset, BOOLEAN NowDirty)
 {
-  PCACHE_SEGMENT CacheSeg;
+  PROS_CACHE_SEGMENT CacheSeg;
 
   ExAcquireFastMutex(&ViewLock);
   CacheSeg = CcRosLookupCacheSegment(Bcb, FileOffset);
@@ -310,9 +307,9 @@ CcRosSuggestFreeCacheSegment(PBCB Bcb, ULONG FileOffset, BOOLEAN NowDirty)
 }
 
 NTSTATUS
-CcRosUnmapCacheSegment(PBCB Bcb, ULONG FileOffset, BOOLEAN NowDirty)
+CcRosUnmapCacheSegment(PROS_BCB Bcb, ULONG FileOffset, BOOLEAN NowDirty)
 {
-  PCACHE_SEGMENT CacheSeg;
+  PROS_CACHE_SEGMENT CacheSeg;
 
   ExAcquireFastMutex(&ViewLock);
   CacheSeg = CcRosLookupCacheSegment(Bcb, FileOffset);
@@ -332,17 +329,17 @@ CcRosUnmapCacheSegment(PBCB Bcb, ULONG FileOffset, BOOLEAN NowDirty)
 }
 
 NTSTATUS STATIC
-CcRosCreateCacheSegment(PBCB Bcb,
+CcRosCreateCacheSegment(PROS_BCB Bcb,
 			ULONG FileOffset,
-			PCACHE_SEGMENT* CacheSeg,
+			PROS_CACHE_SEGMENT* CacheSeg,
 			BOOLEAN Lock)
 {
   ULONG i;
-  PCACHE_SEGMENT current;
+  PROS_CACHE_SEGMENT current;
   NTSTATUS Status;
   KIRQL oldIrql;
 
-  current = ExAllocatePoolWithTag(NonPagedPool, sizeof(CACHE_SEGMENT), 
+  current = ExAllocatePoolWithTag(NonPagedPool, sizeof(ROS_CACHE_SEGMENT), 
 				  TAG_CSEG);
 
   MmLockAddressSpace(MmGetKernelAddressSpace());
@@ -381,7 +378,7 @@ CcRosCreateCacheSegment(PBCB Bcb,
       ExAcquireFastMutex(&current->Lock);
     }
   ExReleaseFastMutex(&ViewLock);
-  for (i = 0; i < (Bcb->CacheSegmentSize / PAGESIZE); i++)
+  for (i = 0; i < (Bcb->CacheSegmentSize / PAGE_SIZE); i++)
     {
       PHYSICAL_ADDRESS Page;
       
@@ -392,7 +389,7 @@ CcRosCreateCacheSegment(PBCB Bcb,
 	}
       
       Status = MmCreateVirtualMapping(NULL,
-				      current->BaseAddress + (i * PAGESIZE),
+				      current->BaseAddress + (i * PAGE_SIZE),
 				      PAGE_READWRITE,
 				      Page,
 				      TRUE);
@@ -406,19 +403,19 @@ CcRosCreateCacheSegment(PBCB Bcb,
 }
 
 NTSTATUS
-CcRosGetCacheSegmentChain(PBCB Bcb,
+CcRosGetCacheSegmentChain(PROS_BCB Bcb,
 			  ULONG FileOffset,
 			  ULONG Length,
-			  PCACHE_SEGMENT* CacheSeg)
+			  PROS_CACHE_SEGMENT* CacheSeg)
 {
-  PCACHE_SEGMENT current;
+  PROS_CACHE_SEGMENT current;
   ULONG i;
-  PCACHE_SEGMENT* CacheSegList;
-  PCACHE_SEGMENT Previous;
+  PROS_CACHE_SEGMENT* CacheSegList;
+  PROS_CACHE_SEGMENT Previous;
 
   Length = ROUND_UP(Length, Bcb->CacheSegmentSize);
 
-  CacheSegList = alloca(sizeof(PCACHE_SEGMENT) * 
+  CacheSegList = alloca(sizeof(PROS_CACHE_SEGMENT) * 
 			(Length / Bcb->CacheSegmentSize));
 
   /*
@@ -470,14 +467,14 @@ CcRosGetCacheSegmentChain(PBCB Bcb,
 }
 
 NTSTATUS
-CcRosGetCacheSegment(PBCB Bcb,
+CcRosGetCacheSegment(PROS_BCB Bcb,
 		     ULONG FileOffset,
 		     PULONG BaseOffset,
 		     PVOID* BaseAddress,
 		     PBOOLEAN UptoDate,
-		     PCACHE_SEGMENT* CacheSeg)
+		     PROS_CACHE_SEGMENT* CacheSeg)
 {
-   PCACHE_SEGMENT current;
+   PROS_CACHE_SEGMENT current;
    NTSTATUS Status;
 
    /*
@@ -525,11 +522,11 @@ CcRosGetCacheSegment(PBCB Bcb,
 }
 
 NTSTATUS STDCALL 
-CcRosRequestCacheSegment(PBCB Bcb,
+CcRosRequestCacheSegment(PROS_BCB Bcb,
 		      ULONG FileOffset,
 		      PVOID* BaseAddress,
 		      PBOOLEAN UptoDate,
-		      PCACHE_SEGMENT* CacheSeg)
+		      PROS_CACHE_SEGMENT* CacheSeg)
 /*
  * FUNCTION: Request a page mapping for a BCB
  */
@@ -563,7 +560,7 @@ CcFreeCachePage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
 }
 
 NTSTATUS STDCALL 
-CcRosInternalFreeCacheSegment(PBCB Bcb, PCACHE_SEGMENT CacheSeg)
+CcRosInternalFreeCacheSegment(PROS_BCB Bcb, PROS_CACHE_SEGMENT CacheSeg)
 /*
  * FUNCTION: Releases a cache segment associated with a BCB
  */
@@ -584,7 +581,7 @@ CcRosInternalFreeCacheSegment(PBCB Bcb, PCACHE_SEGMENT CacheSeg)
 }
 
 NTSTATUS STDCALL 
-CcRosFreeCacheSegment(PBCB Bcb, PCACHE_SEGMENT CacheSeg)
+CcRosFreeCacheSegment(PROS_BCB Bcb, PROS_CACHE_SEGMENT CacheSeg)
 {
   NTSTATUS Status;
   ExAcquireFastMutex(&ViewLock);
@@ -594,13 +591,13 @@ CcRosFreeCacheSegment(PBCB Bcb, PCACHE_SEGMENT CacheSeg)
 }
 
 NTSTATUS STDCALL 
-CcRosDeleteFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
+CcRosDeleteFileCache(PFILE_OBJECT FileObject, PROS_BCB Bcb)
 /*
  * FUNCTION: Releases the BCB associated with a file object
  */
 {
    PLIST_ENTRY current_entry;
-   PCACHE_SEGMENT current;
+   PROS_CACHE_SEGMENT current;
    NTSTATUS Status;
    
    DPRINT("CcRosDeleteFileCache(FileObject %x, Bcb %x)\n", Bcb->FileObject, 
@@ -615,7 +612,7 @@ CcRosDeleteFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
    while (current_entry != &Bcb->BcbSegmentListHead)
      {
        current = 
-	  CONTAINING_RECORD(current_entry, CACHE_SEGMENT, BcbSegmentListEntry);
+	  CONTAINING_RECORD(current_entry, ROS_CACHE_SEGMENT, BcbSegmentListEntry);
        if (current->Dirty)
 	 {
 	   Status = WriteCacheSegment(current);
@@ -637,11 +634,11 @@ CcRosDeleteFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
    while (current_entry != &Bcb->BcbSegmentListHead)
      {
 	current = 
-	  CONTAINING_RECORD(current_entry, CACHE_SEGMENT, BcbSegmentListEntry);
+	  CONTAINING_RECORD(current_entry, ROS_CACHE_SEGMENT, BcbSegmentListEntry);
 	current_entry = current_entry->Flink;
 	CcRosFreeCacheSegment(Bcb, current);
      }
-   FileObject->SectionObjectPointers->SharedCacheMap = NULL;  
+   FileObject->SectionObjectPointer->SharedCacheMap = NULL;  
    ObDereferenceObject (Bcb->FileObject);
    ExFreePool(Bcb);
 
@@ -651,7 +648,7 @@ CcRosDeleteFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
 VOID CcRosReferenceCache(PFILE_OBJECT FileObject)
 {
   KIRQL oldIrql;
-  PBCB Bcb = (PBCB)FileObject->SectionObjectPointers->SharedCacheMap;
+  PROS_BCB Bcb = (PROS_BCB)FileObject->SectionObjectPointer->SharedCacheMap;
   KeAcquireSpinLock(&Bcb->BcbLock, &oldIrql);
   Bcb->RefCount++;
   KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
@@ -660,7 +657,7 @@ VOID CcRosReferenceCache(PFILE_OBJECT FileObject)
 VOID CcRosDereferenceCache(PFILE_OBJECT FileObject)
 {
   KIRQL oldIrql;
-  PBCB Bcb = (PBCB)FileObject->SectionObjectPointers->SharedCacheMap;
+  PROS_BCB Bcb = (PROS_BCB)FileObject->SectionObjectPointer->SharedCacheMap;
   KeAcquireSpinLock(&Bcb->BcbLock, &oldIrql);
   Bcb->RefCount--;
   KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
@@ -671,14 +668,14 @@ VOID CcRosDereferenceCache(PFILE_OBJECT FileObject)
 }
 
 NTSTATUS STDCALL 
-CcRosReleaseFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
+CcRosReleaseFileCache(PFILE_OBJECT FileObject, PROS_BCB Bcb)
 /*
  * FUNCTION: Called by the file system when a handle to a file object
  * has been closed.
  */
 {
   KIRQL oldIrql;
-  if (FileObject->SectionObjectPointers->SharedCacheMap != NULL)
+  if (FileObject->SectionObjectPointer->SharedCacheMap != NULL)
   {
     KeAcquireSpinLock(&Bcb->BcbLock, &oldIrql);
     if (FileObject->PrivateCacheMap != NULL)
@@ -697,7 +694,7 @@ CcRosReleaseFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
 
 NTSTATUS STDCALL 
 CcRosInitializeFileCache(PFILE_OBJECT FileObject,
-			 PBCB* Bcb,
+			 PROS_BCB* Bcb,
 			 ULONG CacheSegmentSize)
 /*
  * FUNCTION: Initializes a BCB for a file object
@@ -706,7 +703,7 @@ CcRosInitializeFileCache(PFILE_OBJECT FileObject,
    KIRQL oldIrql;
    if (*Bcb == NULL)
    {
-      (*Bcb) = ExAllocatePoolWithTag(NonPagedPool, sizeof(BCB), TAG_BCB);
+      (*Bcb) = ExAllocatePoolWithTag(NonPagedPool, sizeof(ROS_BCB), TAG_BCB);
       if ((*Bcb) == NULL)
       {
 	return(STATUS_UNSUCCESSFUL);
@@ -727,7 +724,7 @@ CcRosInitializeFileCache(PFILE_OBJECT FileObject,
       }
       KeInitializeSpinLock(&(*Bcb)->BcbLock);
       InitializeListHead(&(*Bcb)->BcbSegmentListHead);
-      FileObject->SectionObjectPointers->SharedCacheMap = *Bcb;
+      FileObject->SectionObjectPointer->SharedCacheMap = *Bcb;
    }
    KeAcquireSpinLock(&(*Bcb)->BcbLock, &oldIrql);
    if (FileObject->PrivateCacheMap == NULL)

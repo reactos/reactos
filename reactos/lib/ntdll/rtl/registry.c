@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.16 2002/08/20 20:37:10 hyperion Exp $
+/* $Id: registry.c,v 1.17 2002/09/07 15:12:40 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -19,14 +19,11 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
-#include <ntdll/registry.h>
-#include <ntos/minmax.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 
 #define NDEBUG
-#include <ntdll/ntdll.h>
-
+#include <debug.h>
 
 /* FUNCTIONS ***************************************************************/
 
@@ -72,15 +69,15 @@ RtlCreateRegistryKey(IN ULONG RelativeTo,
 
 NTSTATUS STDCALL
 RtlDeleteRegistryValue(IN ULONG RelativeTo,
-		       IN PWSTR Path,
-		       IN PWSTR ValueName)
+		       IN PCWSTR Path,
+		       IN PCWSTR ValueName)
 {
   HANDLE KeyHandle;
   NTSTATUS Status;
   UNICODE_STRING Name;
 
   Status = RtlpGetRegistryHandle(RelativeTo,
-				 Path,
+				 (PWSTR)Path,
 				 FALSE,
 				 &KeyHandle);
   if (!NT_SUCCESS(Status))
@@ -146,7 +143,7 @@ RtlOpenCurrentUser(IN ACCESS_MASK DesiredAccess,
 
 NTSTATUS STDCALL
 RtlQueryRegistryValues(IN ULONG RelativeTo,
-		       IN PWSTR Path,
+		       IN PCWSTR Path,
 		       IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
 		       IN PVOID Context,
 		       IN PVOID Environment)
@@ -171,7 +168,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
   DPRINT("RtlQueryRegistryValues() called\n");
 
   Status = RtlpGetRegistryHandle(RelativeTo,
-				 Path,
+				 (PWSTR)Path,
 				 FALSE,
 				 &BaseKeyHandle);
   if (!NT_SUCCESS(Status))
@@ -655,8 +652,8 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 
 NTSTATUS STDCALL
 RtlWriteRegistryValue(IN ULONG RelativeTo,
-		      IN PWSTR Path,
-		      IN PWSTR ValueName,
+		      IN PCWSTR Path,
+		      IN PCWSTR ValueName,
 		      IN ULONG ValueType,
 		      IN PVOID ValueData,
 		      IN ULONG ValueLength)
@@ -666,7 +663,7 @@ RtlWriteRegistryValue(IN ULONG RelativeTo,
   UNICODE_STRING Name;
 
   Status = RtlpGetRegistryHandle(RelativeTo,
-				 Path,
+				 (PWSTR)Path,
 				 TRUE,
 				 &KeyHandle);
   if (!NT_SUCCESS(Status))
@@ -883,7 +880,7 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
 				 NtCurrentProcess(),
 				 KeyHandle,
 				 0,
-				 FALSE,
+				 0,
 				 DUPLICATE_SAME_ACCESS);
       return(Status);
     }

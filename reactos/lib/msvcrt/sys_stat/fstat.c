@@ -1,4 +1,4 @@
-/* $Id: fstat.c,v 1.10 2002/06/10 21:28:36 hbirr Exp $
+/* $Id: fstat.c,v 1.11 2002/09/07 15:12:37 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -8,15 +8,10 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-#include <windows.h>
-#include <msvcrt/sys/types.h>
-#include <msvcrt/sys/stat.h>
-#include <msvcrt/fcntl.h>
-#include <msvcrt/string.h>
-#include <msvcrt/errno.h>
-#include <msvcrt/internal/file.h>
+#include <msvcrti.h>
 
-int _fstat(int fd, struct stat *statbuf)
+
+int _fstat(int fd, struct _stat *statbuf)
 {
   BY_HANDLE_FILE_INFORMATION  FileInformation;
   DWORD dwFileType;
@@ -28,7 +23,7 @@ int _fstat(int fd, struct stat *statbuf)
     return -1;
   }
 
-  if ((void*)-1 == (handle = _get_osfhandle(fd)))
+  if ((void*)-1 == (handle = (HANDLE)_get_osfhandle(fd)))
   {
     __set_errno(EBADF);
     return -1;
@@ -79,11 +74,11 @@ int _fstat(int fd, struct stat *statbuf)
   return 0;
 }
 
-__int64 _fstati64 (int fd, struct _stati64* statbuf)
+int _fstati64 (int fd, struct _stati64* statbuf)
 {
   BY_HANDLE_FILE_INFORMATION FileInformation;
   DWORD dwFileType;
-  void *handle;
+  HANDLE handle;
 
   if (!statbuf)
   {
@@ -91,7 +86,7 @@ __int64 _fstati64 (int fd, struct _stati64* statbuf)
     return -1;
   }
 
-  if ((void*)-1 == (handle = _get_osfhandle(fd)))
+  if ((HANDLE)-1 == (handle = (HANDLE)_get_osfhandle(fd)))
   {
     __set_errno(EBADF);
     return -1;

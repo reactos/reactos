@@ -1,6 +1,4 @@
-#include <windows.h>
-#include <msvcrt/stdio.h>
-#include <msvcrt/stdlib.h>
+#include <msvcrti.h>
 
 
 char *_tempnam(const char *dir,const char *prefix )

@@ -1,8 +1,6 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
+#include <msvcrti.h>
 
-#include <msvcrt/process.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/stdarg.h>
 
 int _execl(const char* szPath, const char* szArgv0, ...)
 {

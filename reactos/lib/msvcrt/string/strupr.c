@@ -8,9 +8,8 @@
  * Copyright 1997 Uwe Bonnes
  */
 
-
-#include <msvcrt/string.h>
-#include <msvcrt/ctype.h>
+#include <string.h>
+#include <ctype.h>
 
 char *_strupr(char *x)
 {

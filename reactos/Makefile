@@ -46,7 +46,7 @@ LOADERS = dos
 
 # Driver support libraries
 #bzip2 zlib
-DRIVERS_LIB = bzip2 zlib
+DRIVERS_LIB = bzip2
 
 # Kernel mode device drivers
 # beep blue floppy ide keyboard mouse null parallel ramdrv serial vga vidport

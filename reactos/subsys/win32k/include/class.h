@@ -2,8 +2,9 @@
 #define __WIN32K_CLASS_H
 
 #include <windows.h>
-#include <ddk/ntddk.h>
-#include <napi/win32.h>
+#define NTOS_KERNEL_MODE
+#include <ntos.h>
+
 
 #define IS_ATOM(x) \
   (((ULONG_PTR)(x) > 0x0) && ((ULONG_PTR)(x) < 0x10000))

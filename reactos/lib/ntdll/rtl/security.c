@@ -1,4 +1,4 @@
-/* $Id: security.c,v 1.5 2002/02/02 17:14:40 phreak Exp $
+/* $Id: security.c,v 1.6 2002/09/07 15:12:41 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -9,8 +9,11 @@
  *                  21/11/2001 Created
  */
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
+
+#define NDEBUG
+#include <debug.h>
 
 
 NTSTATUS STDCALL

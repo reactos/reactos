@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.10 2002/09/01 20:39:54 dwelch Exp $
+/* $Id: stubs.c,v 1.11 2002/09/07 15:12:24 chorns Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -12,7 +12,6 @@
 #undef UNICODE
 #endif
 #include <windows.h>
-
 
 BOOL
 STDCALL
@@ -256,7 +255,7 @@ STDCALL
 EnumObjects(
 	HDC		a0,
 	int		a1,
-	ENUMOBJECTSPROC	a2,
+	GOBJENUMPROC	a2,
 	LPARAM		a3
 	)
 {
@@ -1426,9 +1425,9 @@ PlayMetaFileRecord(
 BOOL
 STDCALL
 EnumMetaFile(
-	HDC			a0,
-	HMETAFILE		a1,
-	ENUMMETAFILEPROC	a2,
+	HDC			a0, 
+	HMETAFILE		a1, 
+	MFENUMPROC		a2, 
 	LPARAM			a3
 	)
 {
@@ -1467,7 +1466,7 @@ STDCALL
 EnumEnhMetaFile(
 	HDC		a0,
 	HENHMETAFILE	a1,
-	ENHMETAFILEPROC	a2,
+	ENHMFENUMPROC	a2,
 	LPVOID		a3,
 	CONST RECT	*a4
 	)
@@ -1598,8 +1597,7 @@ SetWinMetaFileBits(
 	UINT			a0, 
 	CONST BYTE		*a1, 
 	HDC			a2, 
-//	CONST METAFILEPICT	*a3
-		   PVOID a3
+  CONST METAFILEPICT	*a3
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -2754,12 +2752,12 @@ GetGlyphOutlineWow(
 }
 
 
-DWORD
+int
 STDCALL
 GetRandomRgn(
-	DWORD	a0,
-	DWORD	a1,
-	DWORD	a2
+	HDC	a0,
+	HRGN	a1,
+	INT	a2
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

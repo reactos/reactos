@@ -27,13 +27,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ke.h>
-#include <internal/ps.h>
-#include <internal/i386/segment.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* GLOBALS *******************************************************************/
 
@@ -71,7 +69,7 @@ KiGdtPrepareForApplicationProcessorInit(ULONG Id)
 }
 
 VOID
-KiInitializeGdt(PKPCR Pcr)
+KiInitializeGdt(PIKPCR Pcr)
 {
   PUSHORT Gdt;
   struct
@@ -91,10 +89,10 @@ KiInitializeGdt(PKPCR Pcr)
   /*
    * Allocate a GDT
    */
-  Gdt = KiGdtArray[Pcr->ProcessorNumber];
+  Gdt = KiGdtArray[Pcr->KPCR.ProcessorNumber];
   if (Gdt == NULL)
     {
-      DbgPrint("No GDT (%d)\n", Pcr->ProcessorNumber);
+      DbgPrint("No GDT (%d)\n", Pcr->KPCR.ProcessorNumber);
       KeBugCheck(0);
     }
 
@@ -105,7 +103,7 @@ KiInitializeGdt(PKPCR Pcr)
    * irrelevant.
    */
   memcpy(Gdt, KiBootGdt, sizeof(USHORT) * 4 * 11);
-  Pcr->GDT = Gdt;
+  Pcr->KPCR.GDT = Gdt;
 
   /*
    * Set the base address of the PCR 

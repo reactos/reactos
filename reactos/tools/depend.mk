@@ -5,6 +5,7 @@
 DEP_FILTERED := $(filter-out $(DEP_EXCLUDE_FILTER), $(DEP_OBJECTS:.o=.d))
 DEP_FILES := $(join $(dir $(DEP_FILTERED)), $(addprefix ., $(notdir $(DEP_FILTERED))))
 
+TARGET_CLEAN += $(DEP_FILES)
 
 ifneq ($(MAKECMDGOALS),clean)
 include $(DEP_FILES)

@@ -1,13 +1,6 @@
-#include <msvcrt/sys/types.h>
-#include <msvcrt/sys/stat.h>
-#include <msvcrt/fcntl.h>
-#include <msvcrt/io.h>
-#include <msvcrt/errno.h>
+#include <msvcrti.h>
 
-#include <windows.h>
-
-
-int _stat(const char *path, struct stat *buffer)
+int _stat(const char *path, struct _stat *buffer)
 {
   HANDLE findHandle;
   WIN32_FIND_DATAA findData;
@@ -52,7 +45,7 @@ int _stat(const char *path, struct stat *buffer)
   return 0;
 }
 
-__int64 _stati64 (const char *path, struct _stati64 *buffer)
+int _stati64 (const char *path, struct _stati64 *buffer)
 {
   HANDLE findHandle;
   WIN32_FIND_DATAA findData;
@@ -98,7 +91,7 @@ __int64 _stati64 (const char *path, struct _stati64 *buffer)
   return 0;
 }
 
-int _wstat (const wchar_t *path, struct stat *buffer)
+int _wstat (const wchar_t *path, struct _stat *buffer)
 {
   HANDLE findHandle;
   WIN32_FIND_DATAW findData;
@@ -143,7 +136,7 @@ int _wstat (const wchar_t *path, struct stat *buffer)
   return 0;
 }
 
-__int64 _wstati64 (const wchar_t *path, struct _stati64 *buffer)
+int _wstati64 (const wchar_t *path, struct _stati64 *buffer)
 {
   HANDLE findHandle;
   WIN32_FIND_DATAW findData;

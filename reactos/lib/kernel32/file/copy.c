@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.9 2001/08/07 14:12:34 ekohl Exp $
+/* $Id: copy.c,v 1.10 2002/09/07 15:12:26 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,27 +12,25 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
 #include <windows.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
 #include <kernel32/error.h>
 
 
-#define LPPROGRESS_ROUTINE void*
-
-
 /* FUNCTIONS ****************************************************************/
 
-WINBOOL
+BOOL
 STDCALL
 CopyFileExW (
 	LPCWSTR			lpExistingFileName,
 	LPCWSTR			lpNewFileName,
 	LPPROGRESS_ROUTINE	lpProgressRoutine,
 	LPVOID			lpData,
-	WINBOOL			*pbCancel,
+	LPBOOL			pbCancel,
 	DWORD			dwCopyFlags
 	)
 {
@@ -187,14 +185,14 @@ CopyFileExW (
 }
 
 
-WINBOOL
+BOOL
 STDCALL
 CopyFileExA (
 	LPCSTR			lpExistingFileName,
 	LPCSTR			lpNewFileName,
 	LPPROGRESS_ROUTINE	lpProgressRoutine,
 	LPVOID			lpData,
-	WINBOOL			*pbCancel,
+	LPBOOL			pbCancel,
 	DWORD			dwCopyFlags
 	)
 {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.7 2002/05/23 09:52:00 ekohl Exp $
+/* $Id: fsctl.c,v 1.8 2002/09/07 15:12:00 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -70,7 +70,7 @@ CdfsGetPVDData(PUCHAR Buffer,
   /* Extract the volume label */
   pc = Pvd->VolumeId;
   pw = Vpb->VolumeLabel;
-  for (i = 0; i < MAXIMUM_VOLUME_LABEL_LENGTH && *pc != ' '; i++)
+  for (i = 0; i < (MAXIMUM_VOLUME_LABEL_LENGTH / sizeof(WCHAR)) && *pc != ' '; i++)
     {
       *pw++ = (WCHAR)*pc++;
     }
@@ -327,7 +327,7 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
   DeviceExt->StreamFileObject->Flags = DeviceExt->StreamFileObject->Flags | FO_FCB_IS_VALID | FO_DIRECT_CACHE_PAGING_READ;
   DeviceExt->StreamFileObject->FsContext = (PVOID)&Fcb->RFCB;
   DeviceExt->StreamFileObject->FsContext2 = Ccb;
-  DeviceExt->StreamFileObject->SectionObjectPointers = &Fcb->SectionObjectPointers;
+  DeviceExt->StreamFileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
   DeviceExt->StreamFileObject->PrivateCacheMap = NULL;
   DeviceExt->StreamFileObject->Vpb = DeviceExt->Vpb;
   Ccb->Fcb = Fcb;
@@ -346,7 +346,7 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
 
   Status = CcRosInitializeFileCache(DeviceExt->StreamFileObject,
 				    &Fcb->RFCB.Bcb,
-				    PAGESIZE);
+				    PAGE_SIZE);
   if (!NT_SUCCESS (Status))
     {
       DbgPrint("CcRosInitializeFileCache failed\n");

@@ -1,4 +1,5 @@
-#include <msvcrt/wchar.h>
+#include <msvcrti.h>
+
 
 wchar_t * wcsncpy(wchar_t * dest,const wchar_t *src,size_t count)
 {

@@ -98,7 +98,7 @@ main(int argc, char* argv[])
   strcpy(config, "");
   for (i = 2; i < argc; i++)
     {
-      s = s + sprintf(s, "#define %s\n", argv[i]);
+      s = s + sprintf(s, "#define %s 1\n", argv[i]);
       strcat(config, argv[i]);
       if (i != (argc - 1))
 	{

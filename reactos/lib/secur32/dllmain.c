@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.1 2000/08/12 19:33:19 dwelch Exp $
+/* $Id: dllmain.c,v 1.2 2002/09/07 15:12:43 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,6 +11,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <windows.h>
+#define NTOS_USER_MODE
 #include <ntos.h>
 
 /* GLOBALS *******************************************************************/

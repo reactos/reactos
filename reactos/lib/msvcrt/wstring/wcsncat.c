@@ -1,5 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/wchar.h>
+#include <msvcrti.h>
+
 
 wchar_t *wcsncat(wchar_t *dst, const wchar_t *src, size_t n)
 {

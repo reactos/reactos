@@ -1,6 +1,7 @@
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/string.h>
+#include <msvcrti.h>
+
 
 char *
 strrchr(const char *s, int c)

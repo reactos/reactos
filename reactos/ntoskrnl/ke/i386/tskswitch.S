@@ -26,10 +26,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <internal/i386/segment.h>
-#include <internal/ps.h>
-#include <ddk/i386/tss.h>
-#include <internal/ntoskrnl.h>
+#include <ntoskrnl.h>
 		
 /* FUNCTIONS ****************************************************************/
 	

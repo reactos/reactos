@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.30 2002/08/28 19:31:09 robertk Exp $
+/* $Id: stubs.c,v 1.31 2002/09/07 15:12:27 chorns Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -82,11 +82,10 @@ CreateVirtualBuffer (
 	return 0;
 }
 
-
-WINBOOL
+BOOL
 STDCALL
 EnumCalendarInfoW (
-    CALINFO_ENUMPROC lpCalInfoEnumProc,
+    CALINFO_ENUMPROCW lpCalInfoEnumProc,
     LCID              Locale,
     CALID             Calendar,
     CALTYPE           CalType
@@ -98,10 +97,10 @@ EnumCalendarInfoW (
 
 
 
-WINBOOL
+BOOL
 STDCALL
 EnumCalendarInfoA (
-	CALINFO_ENUMPROC	lpCalInfoEnumProc,
+	CALINFO_ENUMPROCA	lpCalInfoEnumProc,
 	LCID			Locale,
 	CALID			Calendar,
 	CALTYPE			CalType
@@ -112,10 +111,10 @@ EnumCalendarInfoA (
 }
 
 
-WINBOOL
+BOOL
 STDCALL
 EnumDateFormatsW (
-	DATEFMT_ENUMPROC	lpDateFmtEnumProc,
+	DATEFMT_ENUMPROCW	lpDateFmtEnumProc,
 	LCID			Locale,
 	DWORD			dwFlags
 	)
@@ -140,10 +139,10 @@ EnumDateFormatsA (
 
 
 
-WINBOOL
+BOOL
 STDCALL
 EnumSystemCodePagesW (
-	CODEPAGE_ENUMPROC	lpCodePageEnumProc,
+	CODEPAGE_ENUMPROCW	lpCodePageEnumProc,
 	DWORD			dwFlags
 	)
 {
@@ -152,10 +151,10 @@ EnumSystemCodePagesW (
 }
 
 
-WINBOOL
+BOOL
 STDCALL
 EnumSystemCodePagesA (
-	CODEPAGE_ENUMPROC	lpCodePageEnumProc,
+	CODEPAGE_ENUMPROCA	lpCodePageEnumProc,
 	DWORD			dwFlags
 	)
 {
@@ -164,10 +163,10 @@ EnumSystemCodePagesA (
 }
 
 
-WINBOOL
+BOOL
 STDCALL
 EnumSystemLocalesW (
-	LOCALE_ENUMPROC	lpLocaleEnumProc,
+	LOCALE_ENUMPROCW	lpLocaleEnumProc,
 	DWORD		dwFlags
 	)
 {
@@ -176,10 +175,10 @@ EnumSystemLocalesW (
 }
 
 
-WINBOOL
+BOOL
 STDCALL
 EnumSystemLocalesA (
-	LOCALE_ENUMPROC	lpLocaleEnumProc,
+	LOCALE_ENUMPROCA	lpLocaleEnumProc,
 	DWORD		dwFlags
 	)
 {
@@ -188,10 +187,10 @@ EnumSystemLocalesA (
 }
 
 
-WINBOOL
+BOOL
 STDCALL
 EnumTimeFormatsW (
-	TIMEFMT_ENUMPROC	lpTimeFmtEnumProc,
+	TIMEFMT_ENUMPROCW	lpTimeFmtEnumProc,
 	LCID			Locale,
 	DWORD			dwFlags
 	)
@@ -423,14 +422,13 @@ GetComputerNameA (
 
 
 
-
 int
 STDCALL
 GetCurrencyFormatW (
 	LCID			Locale,
 	DWORD			dwFlags,
 	LPCWSTR			lpValue,
-	CONST CURRENCYFMT	* lpFormat,
+	CONST CURRENCYFMTW	* lpFormat,
 	LPWSTR			lpCurrencyStr,
 	int			cchCurrency
 	)
@@ -446,7 +444,7 @@ GetCurrencyFormatA (
 	LCID			Locale,
 	DWORD			dwFlags,
 	LPCSTR			lpValue,
-	CONST CURRENCYFMT	* lpFormat,
+	CONST CURRENCYFMTA	* lpFormat,
 	LPSTR			lpCurrencyStr,
 	int			cchCurrency
 	)
@@ -536,7 +534,7 @@ GetNumberFormatW (
 	LCID		Locale,
 	DWORD		dwFlags,
 	LPCWSTR		lpValue,
-	CONST NUMBERFMT	* lpFormat,
+	CONST NUMBERFMTW	* lpFormat,
 	LPWSTR		lpNumberStr,
 	int		cchNumber
 	)
@@ -552,7 +550,7 @@ GetNumberFormatA (
 	LCID		Locale,
 	DWORD		dwFlags,
 	LPCSTR		lpValue,
-	CONST NUMBERFMT	* lpFormat,
+	CONST NUMBERFMTA	* lpFormat,
 	LPSTR		lpNumberStr,
 	int		cchNumber
 	)
@@ -656,14 +654,14 @@ GetSystemDefaultLangID (VOID)
 }
 
 
-DWORD
+BOOL
 STDCALL
 GetSystemPowerStatus (
-	DWORD	Unknown0
+	LPSYSTEM_POWER_STATUS	lpSystemPowerStatus
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+	return FALSE;
 }
 
 
@@ -1185,11 +1183,12 @@ SetLocaleInfoW (
 }
 
 
-WINBOOL
+
+BOOL
 STDCALL
 SetSystemPowerState (
-	DWORD	Unknown0,
-	DWORD	Unknown1
+	BOOL  fSuspend,
+	BOOL	fForce
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

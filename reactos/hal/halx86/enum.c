@@ -1,4 +1,4 @@
-/* $Id: enum.c,v 1.3 2001/08/23 17:34:00 chorns Exp $
+/* $Id: enum.c,v 1.4 2002/09/07 15:12:10 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,11 +11,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <roscfg.h>
+#include <hal.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 VOID
 HalpStartEnumerator (VOID)

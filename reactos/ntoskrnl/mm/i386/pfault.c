@@ -10,14 +10,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/mm.h>
-#include <internal/ke.h>
-#include <internal/i386/segment.h>
-#include <internal/ps.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* EXTERNS *******************************************************************/
 

@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.41 2002/08/17 15:20:33 hbirr Exp $
+/* $Id: irp.c,v 1.42 2002/09/07 15:12:53 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -30,13 +30,11 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/io.h>
-#include <internal/ps.h>
-#include <internal/pool.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* GLOBALS *******************************************************************/
 
@@ -93,7 +91,7 @@ IoInitializeIrp(PIRP Irp,
   Irp->Size = PacketSize;
   Irp->StackCount = StackSize;
   Irp->CurrentLocation = StackSize;
-  Irp->Tail.Overlay.CurrentStackLocation = &Irp->Stack[(ULONG)StackSize];
+  Irp->Tail.Overlay.CurrentStackLocation = IoGetSpecificIrpStackLocation(Irp, StackSize);
 }
 
 
@@ -127,12 +125,13 @@ IofCallDriver(PDEVICE_OBJECT DeviceObject,
   DPRINT("MajorFunction %d\n", Param->MajorFunction);
   DPRINT("DriverObject->MajorFunction[Param->MajorFunction] %x\n",
 	 DriverObject->MajorFunction[Param->MajorFunction]);
-  Status = DriverObject->MajorFunction[Param->MajorFunction](DeviceObject,
+  Status = ((PDRIVER_DISPATCH)DriverObject->MajorFunction[Param->MajorFunction])(DeviceObject,
 							     Irp);
 
   return(Status);
 }
 
+#undef IoCallDriver
 
 NTSTATUS
 STDCALL
@@ -228,18 +227,18 @@ IofCompleteRequest(PIRP Irp,
 
    for (i=Irp->CurrentLocation;i<Irp->StackCount;i++)
    {
-      if (Irp->Stack[i].CompletionRoutine != NULL)
+      PIO_STACK_LOCATION IrpSp = IoGetSpecificIrpStackLocation(Irp, i);
+      if (IrpSp->CompletionRoutine != NULL)
       {
-	 Status = Irp->Stack[i].CompletionRoutine(
-					     Irp->Stack[i].DeviceObject,
-					     Irp,
-					     Irp->Stack[i].CompletionContext);
+	 Status = IrpSp->CompletionRoutine(IrpSp->DeviceObject,
+					   Irp,
+					   IrpSp->Context);
 	 if (Status == STATUS_MORE_PROCESSING_REQUIRED)
 	 {
 	    return;
 	 }
       }
-      if (Irp->Stack[i].Control & SL_PENDING_RETURNED)
+      if (IrpSp->Control & SL_PENDING_RETURNED)
       {
 	 Irp->PendingReturned = TRUE;
       }
@@ -274,6 +273,7 @@ IofCompleteRequest(PIRP Irp,
      }
 }
 
+#undef IoCompleteRequest
 
 VOID STDCALL
 IoCompleteRequest(PIRP Irp,

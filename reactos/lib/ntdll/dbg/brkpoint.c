@@ -1,4 +1,4 @@
-/* $Id: brkpoint.c,v 1.2 2000/03/03 00:39:38 ekohl Exp $
+/* $Id: brkpoint.c,v 1.3 2002/09/07 15:12:39 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,8 +11,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 
+#define NDEBUG
+#include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
 

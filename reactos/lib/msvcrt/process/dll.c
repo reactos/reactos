@@ -7,9 +7,8 @@
  * UPDATE HISTORY:
  *              04/03/99: Created
  */
+#include <msvcrti.h>
 
-#include <windows.h>
-#include <msvcrt/process.h>
 
 void *_loaddll (char *name)
 {

@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.19 2002/07/13 12:44:09 chorns Exp $
+# $Id: helper.mk,v 1.20 2002/09/07 15:13:13 chorns Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -380,6 +380,7 @@ include $(PATH_TO_TOP)/config
 
 TARGET_CFLAGS += $(MK_CFLAGS)
 TARGET_CFLAGS += -pipe -march=$(ARCH)
+TARGET_CFLAGS += -I$(PATH_TO_TOP)/include
 ifeq ($(DBG),1)
 TARGET_CFLAGS += -g
 TARGET_LFLAGS += -g
@@ -457,14 +458,14 @@ ifeq ($(MK_EXETYPE),dll)
 endif
 	$(CC) $(TARGET_LFLAGS) \
 		-Wl,--entry,$(TARGET_ENTRY) $(MK_EXTRACMD2) \
-	  -o $(MK_NOSTRIPNAME) \
+	-o $(MK_NOSTRIPNAME) \
 	  $(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS) $(MK_GCCLIBS)
 	- $(RM) temp.exp
 	- $(RSYM) $(MK_NOSTRIPNAME) $(MK_BASENAME).sym
 
 $(MK_FULLNAME): $(MK_NOSTRIPNAME)
-	 $(CP) $(MK_NOSTRIPNAME) $(MK_FULLNAME)
-#	 $(STRIP) --strip-debug $(MK_FULLNAME)
+	$(CP) $(MK_NOSTRIPNAME) $(MK_FULLNAME)
+	$(STRIP) --strip-debug $(MK_FULLNAME)
 
 endif # KM_MODE
 

@@ -27,13 +27,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/mm.h>
-#include <internal/ps.h>
-#include <internal/pool.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* GLOBALS *******************************************************************/
 
@@ -271,29 +269,29 @@ MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
 	KeBugCheck(0);
 	return(STATUS_UNSUCCESSFUL);
      }
-   for (i=0; i<(PAGE_ROUND_UP(MemoryArea->Length)/PAGESIZE); i++)
+   for (i=0; i<(PAGE_ROUND_UP(MemoryArea->Length)/PAGE_SIZE); i++)
      {
        PHYSICAL_ADDRESS PhysAddr = (PHYSICAL_ADDRESS)0LL;
        BOOL Dirty;
        SWAPENTRY SwapEntry = 0;
 
        if (MmIsPageSwapEntry(AddressSpace->Process,
-			     MemoryArea->BaseAddress + (i * PAGESIZE)))
+			     MemoryArea->BaseAddress + (i * PAGE_SIZE)))
 	 {
 	   MmDeletePageFileMapping(AddressSpace->Process,
-				   MemoryArea->BaseAddress + (i * PAGESIZE),
+				   MemoryArea->BaseAddress + (i * PAGE_SIZE),
 				   &SwapEntry);
 	 }
        else
 	 {
 	   MmDeleteVirtualMapping(AddressSpace->Process, 
-				  MemoryArea->BaseAddress + (i*PAGESIZE),
+				  MemoryArea->BaseAddress + (i*PAGE_SIZE),
 				  FALSE, &Dirty, &PhysAddr);
 	 }
        if (FreePage != NULL)
 	 {
 	   FreePage(FreePageContext, MemoryArea,
-		    MemoryArea->BaseAddress + (i * PAGESIZE), PhysAddr, 
+		    MemoryArea->BaseAddress + (i * PAGE_SIZE), PhysAddr, 
 		    SwapEntry, Dirty);
 	 }
      }
@@ -383,13 +381,13 @@ NTSTATUS MmCreateMemoryArea(PEPROCESS Process,
    if ((*BaseAddress)==0 && !FixedAddress)
      {
 	*BaseAddress = MmFindGap(AddressSpace,
-				 PAGE_ROUND_UP(Length) +(PAGESIZE*2));
+				 PAGE_ROUND_UP(Length) +(PAGE_SIZE*2));
 	if ((*BaseAddress)==0)
 	  {
 	     DPRINT("No suitable gap\n");
 	     return(STATUS_NO_MEMORY);
 	  }
-	(*BaseAddress)=(*BaseAddress)+PAGESIZE;
+	(*BaseAddress)=(*BaseAddress)+PAGE_SIZE;
      }
    else
      {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: display.c,v 1.2 2002/01/10 01:01:27 ekohl Exp $
+/* $Id: display.c,v 1.3 2002/09/07 15:12:10 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -27,8 +27,11 @@
  *                  Created 08/10/99
  */
 
-#include <ddk/ntddk.h>
-#include <mps.h>
+#include <hal.h>
+
+#define NDEBUG
+#include <internal/debug.h>
+
 
 #define SCREEN_SYNCHRONIZATION
 

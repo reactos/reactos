@@ -11,12 +11,11 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/mm.h>
-#include <internal/ntoskrnl.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* TYPES *******************************************************************/
 
@@ -52,7 +51,7 @@ static LIST_ENTRY BiosPageListHead;
 VOID
 MmTransferOwnershipPage(PHYSICAL_ADDRESS PhysicalAddress, ULONG NewConsumer)
 {
-  ULONG Start = PhysicalAddress.u.LowPart / PAGESIZE;
+  ULONG Start = PhysicalAddress.u.LowPart / PAGE_SIZE;
   KIRQL oldIrql;
    
   KeAcquireSpinLock(&PageListLock, &oldIrql);
@@ -80,7 +79,7 @@ MmGetLRUFirstUserPage(VOID)
     }
   PageDescriptor = CONTAINING_RECORD(NextListEntry, PHYSICAL_PAGE, ListEntry);
   Next.QuadPart = (ULONG)((ULONG)PageDescriptor - (ULONG)MmPageArray);
-  Next.QuadPart = (Next.QuadPart / sizeof(PHYSICAL_PAGE)) * PAGESIZE;   
+  Next.QuadPart = (Next.QuadPart / sizeof(PHYSICAL_PAGE)) * PAGE_SIZE;   
   KeReleaseSpinLock(&PageListLock, oldIrql);
   return(Next);
 }
@@ -88,7 +87,7 @@ MmGetLRUFirstUserPage(VOID)
 PHYSICAL_ADDRESS
 MmGetLRUNextUserPage(PHYSICAL_ADDRESS PreviousPhysicalAddress)
 {
-  ULONG Start = PreviousPhysicalAddress.u.LowPart / PAGESIZE;
+  ULONG Start = PreviousPhysicalAddress.u.LowPart / PAGE_SIZE;
   PLIST_ENTRY NextListEntry;
   PHYSICAL_ADDRESS Next;
   PHYSICAL_PAGE* PageDescriptor;
@@ -110,7 +109,7 @@ MmGetLRUNextUserPage(PHYSICAL_ADDRESS PreviousPhysicalAddress)
     }
   PageDescriptor = CONTAINING_RECORD(NextListEntry, PHYSICAL_PAGE, ListEntry);
   Next.QuadPart = (ULONG)((ULONG)PageDescriptor - (ULONG)MmPageArray);
-  Next.QuadPart = (Next.QuadPart / sizeof(PHYSICAL_PAGE)) * PAGESIZE;   
+  Next.QuadPart = (Next.QuadPart / sizeof(PHYSICAL_PAGE)) * PAGE_SIZE;   
   KeReleaseSpinLock(&PageListLock, oldIrql);
   return(Next);
 }
@@ -126,13 +125,13 @@ MmGetContinuousPages(ULONG NumberOfBytes,
    ULONG length;
    KIRQL oldIrql;
    
-   NrPages = PAGE_ROUND_UP(NumberOfBytes) / PAGESIZE;
+   NrPages = PAGE_ROUND_UP(NumberOfBytes) / PAGE_SIZE;
    
    KeAcquireSpinLock(&PageListLock, &oldIrql);
    
    start = -1;
    length = 0;
-   for (i = 0; i < (HighestAcceptableAddress.QuadPart / PAGESIZE); )
+   for (i = 0; i < (HighestAcceptableAddress.QuadPart / PAGE_SIZE); )
      {
 	if (MM_PTYPE(MmPageArray[i].Flags) ==  MM_PHYSICAL_PAGE_FREE)
 	  {
@@ -157,7 +156,7 @@ MmGetContinuousPages(ULONG NumberOfBytes,
 	     /*
 	      * Fast forward to the base of the next aligned region
 	      */
-	     i = ROUND_UP((i + 1), (Alignment / PAGESIZE));
+	     i = ROUND_UP((i + 1), (Alignment / PAGE_SIZE));
 	  }
      }
    if (start == -1 || length != NrPages)
@@ -192,8 +191,8 @@ MiParseRangeToFreeList(PADDRESS_RANGE Range)
 	 Range->LengthLow,
 	 Range->Type);
   
-  first = (Range->BaseAddrLow + PAGESIZE - 1) / PAGESIZE;
-  last = first + ((Range->LengthLow + PAGESIZE - 1) / PAGESIZE);
+  first = (Range->BaseAddrLow + PAGE_SIZE - 1) / PAGE_SIZE;
+  last = first + ((Range->LengthLow + PAGE_SIZE - 1) / PAGE_SIZE);
   for (i = first; i < last; i++)
     {
       if (MmPageArray[i].Flags == 0)
@@ -218,8 +217,8 @@ MiParseRangeToBiosList(PADDRESS_RANGE Range)
 	 Range->LengthLow,
 	 Range->Type);
   
-  first = (Range->BaseAddrLow + PAGESIZE - 1) / PAGESIZE;
-  last = first + ((Range->LengthLow + PAGESIZE - 1) / PAGESIZE);
+  first = (Range->BaseAddrLow + PAGE_SIZE - 1) / PAGE_SIZE;
+  last = first + ((Range->LengthLow + PAGE_SIZE - 1) / PAGE_SIZE);
   for (i = first; i < last; i++)
     {
       /* Remove the page from the free list if it is there */
@@ -249,7 +248,7 @@ MiParseBIOSMemoryMap(ULONG MemorySizeInPages,
   p = BIOSMemoryMap;
   for (i = 0; i < AddressRangeCount; i++)
     {
-      if (((p->BaseAddrLow + PAGESIZE - 1) / PAGESIZE) < MemorySizeInPages)
+      if (((p->BaseAddrLow + PAGE_SIZE - 1) / PAGE_SIZE) < MemorySizeInPages)
         {
           if (p->Type == 1)
             {
@@ -304,15 +303,15 @@ MmInitializePageList(PVOID FirstPhysKernelAddress,
    LastKernelAddress = PAGE_ROUND_UP(LastKernelAddress);
    
    Reserved = 
-     PAGE_ROUND_UP((MemorySizeInPages * sizeof(PHYSICAL_PAGE))) / PAGESIZE;
+     PAGE_ROUND_UP((MemorySizeInPages * sizeof(PHYSICAL_PAGE))) / PAGE_SIZE;
    MmPageArray = (PHYSICAL_PAGE *)LastKernelAddress;
    
    DPRINT("Reserved %d\n", Reserved);
 
    LastKernelAddress = PAGE_ROUND_UP(LastKernelAddress);
-   LastKernelAddress = ((ULONG)LastKernelAddress + (Reserved * PAGESIZE));
+   LastKernelAddress = ((ULONG)LastKernelAddress + (Reserved * PAGE_SIZE));
    LastPhysKernelAddress = (PVOID)PAGE_ROUND_UP(LastPhysKernelAddress);
-   LastPhysKernelAddress = LastPhysKernelAddress + (Reserved * PAGESIZE);
+   LastPhysKernelAddress = LastPhysKernelAddress + (Reserved * PAGE_SIZE);
      
    MmStats.NrTotalPages = 0;
    MmStats.NrSystemPages = 0;
@@ -323,12 +322,12 @@ MmInitializePageList(PVOID FirstPhysKernelAddress,
    
    for (i = 0; i < Reserved; i++)
      {
-       PVOID Address = (PVOID)(ULONG)MmPageArray + (i * PAGESIZE);
+       PVOID Address = (PVOID)(ULONG)MmPageArray + (i * PAGE_SIZE);
        if (!MmIsPagePresent(NULL, Address))
 	 {
 	   ULONG PhysicalAddress;
 	   PhysicalAddress = (ULONG)LastPhysKernelAddress - 
-	     (Reserved * PAGESIZE) + (i * PAGESIZE);
+	     (Reserved * PAGE_SIZE) + (i * PAGE_SIZE);
 	   Status = 
 	     MmCreateVirtualMappingUnsafe(NULL,
 					  Address,
@@ -341,7 +340,7 @@ MmInitializePageList(PVOID FirstPhysKernelAddress,
 	       KeBugCheck(0);
 	     }
 	 }
-       memset((PVOID)MmPageArray + (i * PAGESIZE), 0, PAGESIZE);
+       memset((PVOID)MmPageArray + (i * PAGE_SIZE), 0, PAGE_SIZE);
      }
    
    /*
@@ -363,8 +362,8 @@ MmInitializePageList(PVOID FirstPhysKernelAddress,
    i = 2;
    if ((ULONG)FirstPhysKernelAddress < 0xa0000)
      {
-	MmStats.NrFreePages += (((ULONG)FirstPhysKernelAddress/PAGESIZE) - 1);
-	for (; i<((ULONG)FirstPhysKernelAddress/PAGESIZE); i++)
+	MmStats.NrFreePages += (((ULONG)FirstPhysKernelAddress/PAGE_SIZE) - 1);
+	for (; i<((ULONG)FirstPhysKernelAddress/PAGE_SIZE); i++)
 	  {
 	     MmPageArray[i].Flags = MM_PHYSICAL_PAGE_FREE;
 	     MmPageArray[i].ReferenceCount = 0;
@@ -372,24 +371,24 @@ MmInitializePageList(PVOID FirstPhysKernelAddress,
 			    &MmPageArray[i].ListEntry);
 	  }
 	MmStats.NrSystemPages += 
-	  ((((ULONG)LastPhysKernelAddress) / PAGESIZE) - i);
-	for (; i<((ULONG)LastPhysKernelAddress / PAGESIZE); i++)
+	  ((((ULONG)LastPhysKernelAddress) / PAGE_SIZE) - i);
+	for (; i<((ULONG)LastPhysKernelAddress / PAGE_SIZE); i++)
 	  {
 	     MmPageArray[i].Flags = MM_PHYSICAL_PAGE_USED;
 	     MmPageArray[i].ReferenceCount = 1;
 	     InsertTailList(&UsedPageListHeads[MC_NPPOOL],
 			    &MmPageArray[i].ListEntry);
 	  }
-	MmStats.NrFreePages += ((0xa0000/PAGESIZE) - i);
-	for (; i<(0xa0000/PAGESIZE); i++)
+	MmStats.NrFreePages += ((0xa0000/PAGE_SIZE) - i);
+	for (; i<(0xa0000/PAGE_SIZE); i++)
 	  {
 	     MmPageArray[i].Flags = MM_PHYSICAL_PAGE_FREE;
 	     MmPageArray[i].ReferenceCount = 0;
 	     InsertTailList(&FreeUnzeroedPageListHead,
 			    &MmPageArray[i].ListEntry);
 	  }
-	MmStats.NrReservedPages += ((0x100000/PAGESIZE) - i);
-	for (; i<(0x100000 / PAGESIZE); i++)
+	MmStats.NrReservedPages += ((0x100000/PAGE_SIZE) - i);
+	for (; i<(0x100000 / PAGE_SIZE); i++)
 	  {
 	     MmPageArray[i].Flags = MM_PHYSICAL_PAGE_BIOS;
 	     MmPageArray[i].ReferenceCount = 1;
@@ -399,24 +398,24 @@ MmInitializePageList(PVOID FirstPhysKernelAddress,
      }
    else
      {
-	MmStats.NrFreePages += ((0xa0000 / PAGESIZE) - 1);	  
-	for (; i<(0xa0000 / PAGESIZE); i++)
+	MmStats.NrFreePages += ((0xa0000 / PAGE_SIZE) - 1);	  
+	for (; i<(0xa0000 / PAGE_SIZE); i++)
 	  {
 	     MmPageArray[i].Flags = MM_PHYSICAL_PAGE_FREE;
 	     MmPageArray[i].ReferenceCount = 0;
 	     InsertTailList(&FreeUnzeroedPageListHead,
 			    &MmPageArray[i].ListEntry);
 	  }
-	MmStats.NrReservedPages += (0x60000 / PAGESIZE);
-	for (; i<(0x100000 / PAGESIZE); i++)
+	MmStats.NrReservedPages += (0x60000 / PAGE_SIZE);
+	for (; i<(0x100000 / PAGE_SIZE); i++)
 	  {
 	     MmPageArray[i].Flags = MM_PHYSICAL_PAGE_BIOS;
 	     MmPageArray[i].ReferenceCount = 1;
 	     InsertTailList(&BiosPageListHead,
 			    &MmPageArray[i].ListEntry);
 	  }
-	MmStats.NrFreePages += (((ULONG)FirstPhysKernelAddress/PAGESIZE) - i);
-	for (; i<((ULONG)FirstPhysKernelAddress/PAGESIZE); i++)
+	MmStats.NrFreePages += (((ULONG)FirstPhysKernelAddress/PAGE_SIZE) - i);
+	for (; i<((ULONG)FirstPhysKernelAddress/PAGE_SIZE); i++)
 	  {
 	     MmPageArray[i].Flags = MM_PHYSICAL_PAGE_FREE;
 	     MmPageArray[i].ReferenceCount = 0;
@@ -424,8 +423,8 @@ MmInitializePageList(PVOID FirstPhysKernelAddress,
 			    &MmPageArray[i].ListEntry);
 	  }
 	MmStats.NrSystemPages += 
-	  (((ULONG)LastPhysKernelAddress/PAGESIZE) - i);
-	for (; i<((ULONG)LastPhysKernelAddress/PAGESIZE); i++)
+	  (((ULONG)LastPhysKernelAddress/PAGE_SIZE) - i);
+	for (; i<((ULONG)LastPhysKernelAddress/PAGE_SIZE); i++)
 	  {
 	     MmPageArray[i].Flags = MM_PHYSICAL_PAGE_USED;
 	     MmPageArray[i].ReferenceCount = 1;
@@ -460,7 +459,7 @@ MmInitializePageList(PVOID FirstPhysKernelAddress,
 VOID 
 MmSetFlagsPage(PHYSICAL_ADDRESS PhysicalAddress, ULONG Flags)
 {
-   ULONG Start = PhysicalAddress.u.LowPart / PAGESIZE;
+   ULONG Start = PhysicalAddress.u.LowPart / PAGE_SIZE;
    KIRQL oldIrql;
    
    KeAcquireSpinLock(&PageListLock, &oldIrql);
@@ -472,7 +471,7 @@ VOID
 MmSetRmapListHeadPage(PHYSICAL_ADDRESS PhysicalAddress, 
 		      struct _MM_RMAP_ENTRY* ListHead)
 {
-   ULONG Start = PhysicalAddress.u.LowPart / PAGESIZE;
+   ULONG Start = PhysicalAddress.u.LowPart / PAGE_SIZE;
 
    MmPageArray[Start].RmapListHead = ListHead;
 }
@@ -480,7 +479,7 @@ MmSetRmapListHeadPage(PHYSICAL_ADDRESS PhysicalAddress,
 struct _MM_RMAP_ENTRY*
 MmGetRmapListHeadPage(PHYSICAL_ADDRESS PhysicalAddress)
 {
-  ULONG Start = PhysicalAddress.u.LowPart / PAGESIZE;
+  ULONG Start = PhysicalAddress.u.LowPart / PAGE_SIZE;
 
   return(MmPageArray[Start].RmapListHead);
 }
@@ -488,7 +487,7 @@ MmGetRmapListHeadPage(PHYSICAL_ADDRESS PhysicalAddress)
 VOID 
 MmMarkPageMapped(PHYSICAL_ADDRESS PhysicalAddress)
 {
-   ULONG Start = PhysicalAddress.u.LowPart / PAGESIZE;
+   ULONG Start = PhysicalAddress.u.LowPart / PAGE_SIZE;
    KIRQL oldIrql;
    
    KeAcquireSpinLock(&PageListLock, &oldIrql);
@@ -499,7 +498,7 @@ MmMarkPageMapped(PHYSICAL_ADDRESS PhysicalAddress)
 VOID 
 MmMarkPageUnmapped(PHYSICAL_ADDRESS PhysicalAddress)
 {
-   ULONG Start = PhysicalAddress.u.LowPart / PAGESIZE;
+   ULONG Start = PhysicalAddress.u.LowPart / PAGE_SIZE;
    KIRQL oldIrql;
    
    KeAcquireSpinLock(&PageListLock, &oldIrql);
@@ -510,7 +509,7 @@ MmMarkPageUnmapped(PHYSICAL_ADDRESS PhysicalAddress)
 ULONG 
 MmGetFlagsPage(PHYSICAL_ADDRESS PhysicalAddress)
 {
-   ULONG Start = PhysicalAddress.u.LowPart / PAGESIZE;
+   ULONG Start = PhysicalAddress.u.LowPart / PAGE_SIZE;
    KIRQL oldIrql;
    ULONG Flags;
    
@@ -526,7 +525,7 @@ VOID
 MmSetSavedSwapEntryPage(PHYSICAL_ADDRESS PhysicalAddress,
 			SWAPENTRY SavedSwapEntry)
 {
-   ULONG Start = PhysicalAddress.u.LowPart / PAGESIZE;
+   ULONG Start = PhysicalAddress.u.LowPart / PAGE_SIZE;
    KIRQL oldIrql;
 
    KeAcquireSpinLock(&PageListLock, &oldIrql);
@@ -537,7 +536,7 @@ MmSetSavedSwapEntryPage(PHYSICAL_ADDRESS PhysicalAddress,
 SWAPENTRY 
 MmGetSavedSwapEntryPage(PHYSICAL_ADDRESS PhysicalAddress)
 {
-   ULONG Start = PhysicalAddress.u.LowPart / PAGESIZE;
+   ULONG Start = PhysicalAddress.u.LowPart / PAGE_SIZE;
    SWAPENTRY SavedSwapEntry;
    KIRQL oldIrql;
    
@@ -551,7 +550,7 @@ MmGetSavedSwapEntryPage(PHYSICAL_ADDRESS PhysicalAddress)
 VOID 
 MmReferencePage(PHYSICAL_ADDRESS PhysicalAddress)
 {
-   ULONG Start = PhysicalAddress.u.LowPart / PAGESIZE;
+   ULONG Start = PhysicalAddress.u.LowPart / PAGE_SIZE;
    KIRQL oldIrql;
    
    DPRINT("MmReferencePage(PhysicalAddress %x)\n", PhysicalAddress);
@@ -576,7 +575,7 @@ MmReferencePage(PHYSICAL_ADDRESS PhysicalAddress)
 ULONG
 MmGetReferenceCountPage(PHYSICAL_ADDRESS PhysicalAddress)
 {
-   ULONG Start = PhysicalAddress.u.LowPart / PAGESIZE;
+   ULONG Start = PhysicalAddress.u.LowPart / PAGE_SIZE;
    KIRQL oldIrql;
    ULONG RCount;
 
@@ -604,7 +603,7 @@ MmGetReferenceCountPage(PHYSICAL_ADDRESS PhysicalAddress)
 BOOLEAN
 MmIsUsablePage(PHYSICAL_ADDRESS PhysicalAddress)
 {
-   ULONG Start = PhysicalAddress.u.LowPart / PAGESIZE;
+   ULONG Start = PhysicalAddress.u.LowPart / PAGE_SIZE;
 
    DPRINT("MmGetReferenceCountPage(PhysicalAddress %x)\n", PhysicalAddress);
 
@@ -625,7 +624,7 @@ MmIsUsablePage(PHYSICAL_ADDRESS PhysicalAddress)
 VOID 
 MmDereferencePage(PHYSICAL_ADDRESS PhysicalAddress)
 {
-   ULONG Start = PhysicalAddress.u.LowPart / PAGESIZE;
+   ULONG Start = PhysicalAddress.u.LowPart / PAGE_SIZE;
    KIRQL oldIrql;
    
    DPRINT("MmDereferencePage(PhysicalAddress %I64x)\n", PhysicalAddress);
@@ -687,7 +686,7 @@ MmDereferencePage(PHYSICAL_ADDRESS PhysicalAddress)
 ULONG 
 MmGetLockCountPage(PHYSICAL_ADDRESS PhysicalAddress)
 {
-   ULONG Start = PhysicalAddress.u.LowPart / PAGESIZE;
+   ULONG Start = PhysicalAddress.u.LowPart / PAGE_SIZE;
    KIRQL oldIrql;
    ULONG LockCount;
    
@@ -715,7 +714,7 @@ MmGetLockCountPage(PHYSICAL_ADDRESS PhysicalAddress)
 VOID 
 MmLockPage(PHYSICAL_ADDRESS PhysicalAddress)
 {
-   ULONG Start = PhysicalAddress.u.LowPart / PAGESIZE;
+   ULONG Start = PhysicalAddress.u.LowPart / PAGE_SIZE;
    KIRQL oldIrql;
    
    DPRINT("MmLockPage(PhysicalAddress %x)\n", PhysicalAddress);
@@ -740,7 +739,7 @@ MmLockPage(PHYSICAL_ADDRESS PhysicalAddress)
 VOID 
 MmUnlockPage(PHYSICAL_ADDRESS PhysicalAddress)
 {
-   ULONG Start = PhysicalAddress.u.LowPart / PAGESIZE;
+   ULONG Start = PhysicalAddress.u.LowPart / PAGE_SIZE;
    KIRQL oldIrql;
    
    DPRINT("MmUnlockPage(PhysicalAddress %llx)\n", PhysicalAddress);
@@ -815,7 +814,7 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SavedSwapEntry)
 
   PageOffset.QuadPart = (ULONG)((ULONG)PageDescriptor - (ULONG)MmPageArray);
   PageOffset.QuadPart = 
-    (PageOffset.QuadPart / sizeof(PHYSICAL_PAGE)) * PAGESIZE;
+    (PageOffset.QuadPart / sizeof(PHYSICAL_PAGE)) * PAGE_SIZE;
   if (NeedClear)
     {
       MiZeroPage(PageOffset);

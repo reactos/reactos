@@ -1,6 +1,7 @@
 #ifndef _CSRSS_API_H
 #define _CSRSS_API_H
 
+#define NTOS_USER_MODE
 #include <ntos.h>
 
 #include <csrss/csrss.h>

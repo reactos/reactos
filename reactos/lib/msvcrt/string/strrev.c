@@ -1,4 +1,5 @@
-#include <msvcrt/string.h>
+#include <msvcrti.h>
+
 
 char * _strrev(char *s)
 {

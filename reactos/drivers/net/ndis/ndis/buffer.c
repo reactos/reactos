@@ -9,7 +9,7 @@
  */
 #include <buffer.h>
 
-
+#define PAGE_ROUND_DOWN(x) (((ULONG)x)&(~0xfff))
 
 __inline ULONG SkipToOffset(
     PNDIS_BUFFER Buffer,
@@ -239,7 +239,7 @@ UINT CopyPacketToBufferChain(
         return 0;
 
     /* Skip SrcOffset bytes in the source packet */
-    NdisGetFirstBufferFromPacket(SrcPacket, &SrcBuffer, (PVOID)&SrcData, &SrcSize, &Total);
+    NdisGetFirstBufferFromPacket((PNDIS_PACKET)SrcPacket, &SrcBuffer, (PVOID*)&SrcData, &SrcSize, &Total);
     if (SkipToOffset(SrcBuffer, SrcOffset, &SrcData, &SrcSize) == -1)
         return 0;
 
@@ -288,8 +288,10 @@ UINT CopyPacketToBufferChain(
 
 
 
+#undef NdisAdjustBufferLength
+
 VOID
-EXPORT
+STDCALL
 NdisAdjustBufferLength(
     IN PNDIS_BUFFER Buffer,
     IN UINT         Length)
@@ -303,9 +305,10 @@ NdisAdjustBufferLength(
     Buffer->ByteCount = Length;
 }
 
+#undef NDIS_BUFFER_TO_SPAN_PAGES
 
 ULONG
-EXPORT
+STDCALL
 NDIS_BUFFER_TO_SPAN_PAGES(
     IN  PNDIS_BUFFER    Buffer)
 /*
@@ -324,7 +327,7 @@ NDIS_BUFFER_TO_SPAN_PAGES(
 
 
 VOID
-EXPORT
+STDCALL
 NdisAllocateBuffer(
     OUT PNDIS_STATUS    Status,
     OUT PNDIS_BUFFER    * Buffer,
@@ -391,7 +394,7 @@ NdisAllocateBuffer(
 
 
 VOID
-EXPORT
+STDCALL
 NdisAllocateBufferPool(
     OUT PNDIS_STATUS    Status,
     OUT PNDIS_HANDLE    PoolHandle,
@@ -437,7 +440,7 @@ NdisAllocateBufferPool(
 
 
 VOID
-EXPORT
+STDCALL
 NdisAllocatePacket(
     OUT PNDIS_STATUS    Status,
     OUT PNDIS_PACKET    * Packet,
@@ -478,7 +481,7 @@ NdisAllocatePacket(
 
 
 VOID
-EXPORT
+STDCALL
 NdisAllocatePacketPool(
     OUT PNDIS_STATUS    Status,
     OUT PNDIS_HANDLE    PoolHandle,
@@ -531,7 +534,7 @@ NdisAllocatePacketPool(
 
 
 VOID
-EXPORT
+STDCALL
 NdisAllocatePacketPoolEx(
     OUT PNDIS_STATUS    Status,
     OUT PNDIS_HANDLE    PoolHandle,
@@ -549,8 +552,10 @@ NdisAllocatePacketPoolEx(
 }
 
 
+#undef NdisBufferLength
+
 ULONG
-EXPORT
+STDCALL
 NdisBufferLength(
     IN  PNDIS_BUFFER    Buffer)
 /*
@@ -569,7 +574,7 @@ NdisBufferLength(
 
 
 PVOID
-EXPORT
+STDCALL
 NdisBufferVirtualAddress(
     IN  PNDIS_BUFFER    Buffer)
 /*
@@ -586,7 +591,7 @@ NdisBufferVirtualAddress(
 
 
 VOID
-EXPORT
+STDCALL
 NdisCopyBuffer(
     OUT PNDIS_STATUS    Status,
     OUT PNDIS_BUFFER    *Buffer,
@@ -610,7 +615,7 @@ NdisCopyBuffer(
 
 
 VOID
-EXPORT
+STDCALL
 NdisCopyFromPacketToPacket(
     IN  PNDIS_PACKET    Destination,
     IN  UINT            DestinationOffset,
@@ -638,12 +643,12 @@ NdisCopyFromPacketToPacket(
     *BytesCopied = 0;
 
     /* Skip DestinationOffset bytes in the destination packet */
-    NdisGetFirstBufferFromPacket(Destination, &DstBuffer, (PVOID)&DstData, &DstSize, &Total);
+    NdisGetFirstBufferFromPacket(Destination, &DstBuffer, (PVOID*)&DstData, &DstSize, &Total);
     if (SkipToOffset(DstBuffer, DestinationOffset, &DstData, &DstSize) == -1)
         return;
 
     /* Skip SourceOffset bytes in the source packet */
-    NdisGetFirstBufferFromPacket(Source, &SrcBuffer, (PVOID)&SrcData, &SrcSize, &Total);
+    NdisGetFirstBufferFromPacket(Source, &SrcBuffer, (PVOID*)&SrcData, &SrcSize, &Total);
     if (SkipToOffset(SrcBuffer, SourceOffset, &SrcData, &SrcSize) == -1)
         return;
 
@@ -692,7 +697,7 @@ NdisCopyFromPacketToPacket(
 
 
 VOID
-EXPORT
+STDCALL
 NdisDprAllocatePacket(
     OUT PNDIS_STATUS    Status,
     OUT PNDIS_PACKET    *Packet,
@@ -709,7 +714,7 @@ NdisDprAllocatePacket(
 
 
 VOID
-EXPORT
+STDCALL
 NdisDprAllocatePacketNonInterlocked(
     OUT PNDIS_STATUS    Status,
     OUT PNDIS_PACKET    *Packet,
@@ -727,7 +732,7 @@ NdisDprAllocatePacketNonInterlocked(
 
 
 VOID
-EXPORT
+STDCALL
 NdisDprFreePacket(
     IN  PNDIS_PACKET    Packet)
 /*
@@ -740,7 +745,7 @@ NdisDprFreePacket(
 
 
 VOID
-EXPORT
+STDCALL
 NdisDprFreePacketNonInterlocked(
     IN  PNDIS_PACKET    Packet)
 /*
@@ -753,7 +758,7 @@ NdisDprFreePacketNonInterlocked(
 
 
 VOID
-EXPORT
+STDCALL
 NdisFreeBufferPool(
     IN  NDIS_HANDLE PoolHandle)
 /*
@@ -767,7 +772,7 @@ NdisFreeBufferPool(
 
 
 VOID
-EXPORT
+STDCALL
 NdisFreePacketPool(
     IN  NDIS_HANDLE PoolHandle)
 /*
@@ -781,7 +786,7 @@ NdisFreePacketPool(
 
 
 VOID
-EXPORT
+STDCALL
 NdisFreeBuffer(
     IN   PNDIS_BUFFER   Buffer)
 /*
@@ -806,7 +811,7 @@ NdisFreeBuffer(
 
 
 VOID
-EXPORT
+STDCALL
 NdisFreePacket(
     IN   PNDIS_PACKET   Packet)
 /*
@@ -826,8 +831,10 @@ NdisFreePacket(
 }
 
 
+#undef NdisGetBufferPhysicalArraySize
+
 VOID
-EXPORT
+STDCALL
 NdisGetBufferPhysicalArraySize(
     IN  PNDIS_BUFFER    Buffer,
     OUT PUINT           ArraySize)
@@ -842,8 +849,10 @@ NdisGetBufferPhysicalArraySize(
 }
 
 
+#undef NdisGetFirstBufferFromPacket
+
 VOID
-EXPORT
+STDCALL
 NdisGetFirstBufferFromPacket(
     IN  PNDIS_PACKET    _Packet,
     OUT PNDIS_BUFFER    *_FirstBuffer,
@@ -882,7 +891,7 @@ NdisGetFirstBufferFromPacket(
 
 
 VOID
-EXPORT
+STDCALL
 NdisReturnPackets(
     IN  PNDIS_PACKET    *PacketsToReturn,
     IN  UINT            NumberOfPackets)
@@ -898,7 +907,7 @@ NdisReturnPackets(
 
 
 UINT
-EXPORT
+STDCALL
 NdisPacketPoolUsage(
     IN  NDIS_HANDLE PoolHandle)
 /*
@@ -914,8 +923,10 @@ NdisPacketPoolUsage(
 }
 
 
+#undef NdisQueryBuffer
+
 VOID
-EXPORT
+STDCALL
 NdisQueryBuffer(
     IN  PNDIS_BUFFER    Buffer,
     OUT PVOID           *VirtualAddress OPTIONAL,
@@ -936,8 +947,10 @@ NdisQueryBuffer(
 }
 
 
+#undef NdisQueryBufferOffset
+
 VOID
-EXPORT
+STDCALL
 NdisQueryBufferOffset(
     IN  PNDIS_BUFFER    Buffer,
     OUT PUINT           Offset,
@@ -948,8 +961,10 @@ NdisQueryBufferOffset(
 }
 
 
+#undef NdisUnchainBufferAtBack
+
 VOID
-EXPORT
+STDCALL
 NdisUnchainBufferAtBack(
     IN OUT  PNDIS_PACKET    Packet,
     OUT     PNDIS_BUFFER    *Buffer)
@@ -993,8 +1008,10 @@ NdisUnchainBufferAtBack(
 }
 
 
+#undef NdisUnchainBufferAtFront
+
 VOID
-EXPORT
+STDCALL
 NdisUnchainBufferAtFront(
     IN OUT  PNDIS_PACKET    Packet,
     OUT     PNDIS_BUFFER    *Buffer)

@@ -1,5 +1,4 @@
-#include <windows.h>
-#include <msvcrt/direct.h>
+#include <msvcrti.h>
 
 
 int _mkdir( const char *_path )

@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: debug.c,v 1.4 2001/08/27 01:22:21 ekohl Exp $
+/* $Id: debug.c,v 1.5 2002/09/07 15:13:05 chorns Exp $
  *
  * PROJECT:                ReactOS kernel
  * FILE:                   ntoskrnl/ps/debug.c
@@ -38,15 +38,11 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ke.h>
-#include <internal/ob.h>
-#include <string.h>
-#include <internal/ps.h>
-#include <internal/ob.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* FUNCTIONS ***************************************************************/
 

@@ -1,6 +1,7 @@
-/* $Id: vfat.h,v 1.45 2002/08/17 15:15:50 hbirr Exp $ */
+/* $Id: vfat.h,v 1.46 2002/09/07 15:12:03 chorns Exp $ */
 
-#include <ddk/ntifs.h>
+#define NTOS_KERNEL_MODE
+#include <ntos.h>
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 #define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
@@ -197,7 +198,9 @@ typedef struct _VFATCCB
 
 } VFATCCB, *PVFATCCB;
 
+#ifndef TAG
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
+#endif
 
 #define TAG_CCB TAG('V', 'C', 'C', 'B')
 
@@ -270,9 +273,9 @@ NTSTATUS VfatDirectoryControl (PVFAT_IRP_CONTEXT);
 
 BOOL FsdDosDateTimeToFileTime (WORD wDosDate,
                                WORD wDosTime,
-                               TIME *FileTime);
+                               LARGE_INTEGER *FileTime);
 
-BOOL FsdFileTimeToDosDateTime (TIME *FileTime,
+BOOL FsdFileTimeToDosDateTime (LARGE_INTEGER *FileTime,
                                WORD *pwDosDate,
                                WORD *pwDosTime);
 

@@ -1,11 +1,14 @@
-/* $Id: mdl.c,v 1.2 2002/03/13 20:41:28 ekohl Exp $
+/* $Id: mdl.c,v 1.3 2002/09/07 15:12:50 chorns Exp $
  *
  * reactos/ntoskrnl/fs/mdl.c
  *
  */
-#include <ntos.h>
-#include <internal/cc.h>
-#include <ddk/ntifs.h>
+
+#include <ntoskrnl.h>
+
+#define NDEBUG
+#include <internal/debug.h>
+
 
 /**********************************************************************
  * NAME							EXPORTED

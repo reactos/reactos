@@ -1,3 +1,6 @@
+#include <msvcrti.h>
+
+#if 0
 struct _exception {
         int type;
         char *name;
@@ -5,6 +8,7 @@ struct _exception {
         double arg2;
         double retval;
         } ;
+#endif
 
 int _matherr(struct _exception *e)
 {

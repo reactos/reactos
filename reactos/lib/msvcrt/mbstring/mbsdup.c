@@ -8,9 +8,7 @@
 		Modified from DJGPP strdup
  *              12/04/99: Created
  */
-
-#include <msvcrt/mbstring.h>
-#include <msvcrt/stdlib.h>
+#include <msvcrti.h>
 
 unsigned char * _mbsdup(const unsigned char *_s)
 {

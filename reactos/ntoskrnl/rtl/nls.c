@@ -1,4 +1,4 @@
-/* $Id: nls.c,v 1.7 2002/08/20 20:37:16 hyperion Exp $
+/* $Id: nls.c,v 1.8 2002/09/07 15:13:06 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -20,11 +20,11 @@
  *   4) Add multi-byte translation code.
  */
 
-#include <ddk/ntddk.h>
-//#include <internal/nls.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* GLOBALS *******************************************************************/
 

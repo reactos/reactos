@@ -28,9 +28,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/cc.h>
+#include <ntoskrnl.h>
 
+#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/

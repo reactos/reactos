@@ -1,4 +1,4 @@
-#include <msvcrt/stdlib.h>
+#include <msvcrti.h>
 
 
 void
@@ -17,9 +17,6 @@ _initterm(void (* fStart[])(void),
 	i++;
      }
 }
-
-
-typedef int (* _onexit_t)(void);
 
 _onexit_t
 __dllonexit(_onexit_t func,

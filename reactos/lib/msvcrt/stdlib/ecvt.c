@@ -1,6 +1,6 @@
 /* Copyright (C) 1998 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/stdlib.h>
-#include <msvcrt/float.h>
+#include <msvcrti.h>
+
 
 char *ecvtbuf (double, int, int *, int *, char *);
 

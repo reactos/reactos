@@ -1,7 +1,5 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/string.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/errno.h>
+#include <msvcrti.h>
 
 
 char __syserr00[] = "No Error";
@@ -51,7 +49,7 @@ char __syserr42[] = "Illegal byte sequence (EILSEQ)";
 
 
 
-const char *_sys_errlist[] = {
+char *_sys_errlist[] = {
 __syserr00, __syserr01, __syserr02, __syserr03, __syserr04,
 __syserr05, __syserr06, __syserr07, __syserr08, __syserr09,
 __syserr10, __syserr11, __syserr12, __syserr13, __syserr14,
@@ -63,9 +61,9 @@ __syserr35, __syserr36, __syserr37, __syserr38, __syserr39,
 __syserr40, __syserr41, __syserr42
 };
 
-int __sys_nerr = sizeof(_sys_errlist) / sizeof(_sys_errlist[0]);
+#undef _sys_nerr
 
-int* _sys_nerr = &__sys_nerr;
+int _sys_nerr = sizeof(_sys_errlist) / sizeof(_sys_errlist[0]);
 
 char *strerror(int errnum)
 {
@@ -73,7 +71,7 @@ char *strerror(int errnum)
   char *cp;
   int v=1000000, lz=0;
 
-  if (errnum >= 0 && errnum < __sys_nerr)
+  if (errnum >= 0 && errnum < _sys_nerr)
     return((char *)_sys_errlist[errnum]);
 
   strcpy(ebuf, "Unknown error: ");

@@ -1,4 +1,4 @@
-/* $Id: _system.c,v 1.2 2002/05/07 22:33:07 hbirr Exp $
+/* $Id: _system.c,v 1.3 2002/09/07 15:12:34 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -8,11 +8,8 @@
  * UPDATE HISTORY:
  *              04/03/99: Created
  */
-#include <windows.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/string.h>
-#include <msvcrt/process.h>
-#include <msvcrt/errno.h>
+#include <msvcrti.h>
+
 
 int system(const char *command)
 {
@@ -46,7 +43,7 @@ int system(const char *command)
 
   if (szComSpec == NULL)
   {
-    szComSpec = strdup("cmd.exe");
+    szComSpec = _strdup("cmd.exe");
     if (szComSpec == NULL)
     {
        __set_errno(ENOMEM);

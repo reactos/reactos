@@ -1,6 +1,5 @@
+#include <msvcrti.h>
 
-#include <msvcrt/ctype.h>
-#include <msvcrt/stdlib.h>
 
 __int64
 _atoi64(const char *nptr)

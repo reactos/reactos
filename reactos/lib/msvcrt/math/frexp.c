@@ -1,6 +1,5 @@
-#include <msvcrt/math.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/internal/ieee.h>
+#include <msvcrti.h>
+
 
 double
 frexp(double __x, int *exptr)

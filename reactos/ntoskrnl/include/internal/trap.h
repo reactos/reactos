@@ -31,8 +31,7 @@
 #define TF_REGS         (0x90)
 #define TF_ORIG_EBP     (0x94)
 
-
-#ifndef __ASM__
+#ifndef AS_INVOKED
 
 #include <internal/ke.h>
 
@@ -53,6 +52,6 @@ typedef struct _KV86M_TRAP_FRAME
 ULONG
 KeV86Exception(ULONG ExceptionNr, PKTRAP_FRAME Tf, ULONG address);
 
-#endif /* not __ASM__ */
+#endif /* !AS_INVOKED */
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_TRAP_H */

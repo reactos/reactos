@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.8 2002/09/03 22:44:20 dwelch Exp $
+/* $Id: message.c,v 1.9 2002/09/07 15:12:45 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -8,9 +8,9 @@
  * UPDATE HISTORY:
  *      06-06-2001  CSH  Created
  */
-#include <windows.h>
+
 #include <user32.h>
-#include <debug.h>
+
 
 LPARAM
 STDCALL

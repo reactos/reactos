@@ -1,4 +1,4 @@
-/* $Id: session.c,v 1.1 2001/12/07 11:19:49 ea Exp $
+/* $Id: session.c,v 1.2 2002/09/07 15:12:28 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -8,7 +8,8 @@
  * UPDATE HISTORY:
  *     2001-12-07 created
  */
-#include <ddk/ntddk.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 
 BOOL STDCALL ProcessIdToSessionId (
   DWORD dwProcessId,

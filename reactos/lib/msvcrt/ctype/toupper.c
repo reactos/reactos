@@ -1,5 +1,5 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/ctype.h>
+#include <msvcrti.h>
 
 
 #undef toupper

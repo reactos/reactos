@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.15 2002/07/06 17:38:06 ekohl Exp $
+/* $Id: env.c,v 1.16 2002/09/07 15:12:40 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,14 +11,12 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
-#include <napi/teb.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 #include <string.h>
 
 #define NDEBUG
-#include <ntdll/ntdll.h>
-
+#include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
 
@@ -29,7 +27,7 @@ RtlCreateEnvironment(BOOLEAN Inherit,
   MEMORY_BASIC_INFORMATION MemInfo;
   PVOID EnvPtr = NULL;
   NTSTATUS Status = STATUS_SUCCESS;
-  ULONG RegionSize = PAGESIZE;
+  ULONG RegionSize = PAGE_SIZE;
 
   if (Inherit == TRUE)
     {
@@ -298,7 +296,7 @@ found:
 	  /* enlarge environment size */
 	  /* check the size of available memory */
 	  new_size += (env_len - hole_len) * sizeof(WCHAR);
-	  new_size = ROUNDUP(new_size, PAGESIZE);
+	  new_size = ROUNDUP(new_size, PAGE_SIZE);
 	  mbi.RegionSize = 0;
 	  DPRINT("new_size %lu\n", new_size);
 

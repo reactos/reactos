@@ -1,4 +1,5 @@
-#include <msvcrt/math.h>
+#include <msvcrti.h>
+
 
 double ceil (double __x)
 {

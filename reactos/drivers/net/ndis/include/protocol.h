@@ -25,7 +25,7 @@ typedef struct _PROTOCOL_BINDING {
 
 
 typedef struct _ADAPTER_BINDING {
-    NDIS_OPEN_BLOCK NdisOpenBlock;                            /* NDIS defined fields */
+    NDIS_OPEN_BLOCK NdisOpenBlock;              /* NDIS defined fields */
 
     LIST_ENTRY        ListEntry;                /* Entry on global list */
     LIST_ENTRY        ProtocolListEntry;        /* Entry on protocol binding adapter list */

@@ -1,4 +1,4 @@
-#include <msvcrt/stdlib.h>
+#include <msvcrti.h>
 
 
 long wcstol(const wchar_t *cp,wchar_t **endp,int base)

@@ -496,4 +496,11 @@ CmiAddFree(PREGISTRY_HIVE  RegistryHive,
 NTSTATUS
 CmiInitHives(BOOLEAN SetUpBoot);
 
+NTSTATUS STDCALL
+CmiObjectParse(PVOID ParsedObject,
+  PVOID *NextObject,
+  PUNICODE_STRING FullPath,
+  PWSTR *Path,
+  ULONG Attributes);
+
 #endif /*__INCLUDE_CM_H*/

@@ -1,4 +1,4 @@
-/* $Id: deviceio.c,v 1.7 2000/06/03 14:47:32 ea Exp $
+/* $Id: deviceio.c,v 1.8 2002/09/07 15:12:26 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -9,8 +9,9 @@
  *                  Created 01/11/98
  */
 
-#include <ddk/ntddk.h>
 #include <windows.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>

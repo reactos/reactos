@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: suspend.c,v 1.8 2002/08/09 17:23:57 dwelch Exp $
+/* $Id: suspend.c,v 1.9 2002/09/07 15:13:05 chorns Exp $
  *
  * PROJECT:                ReactOS kernel
  * FILE:                   ntoskrnl/ps/suspend.c
@@ -26,14 +26,11 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ke.h>
-#include <internal/ob.h>
-#include <internal/ps.h>
-#include <internal/ob.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* NOTES **********************************************************************
  *

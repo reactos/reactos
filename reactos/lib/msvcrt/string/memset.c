@@ -1,4 +1,5 @@
-#include <msvcrt/string.h>
+#include <msvcrti.h>
+
 
 void * memset(void *src,int val,size_t count)
 {

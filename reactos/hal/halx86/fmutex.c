@@ -1,4 +1,4 @@
-/* $Id: fmutex.c,v 1.3 2001/12/31 01:53:44 dwelch Exp $
+/* $Id: fmutex.c,v 1.4 2002/09/07 15:12:10 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,9 +12,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#include <hal.h>
 
+#define NDEBUG
 #include <internal/debug.h>
+
 
 /* FUNCTIONS *****************************************************************/
 

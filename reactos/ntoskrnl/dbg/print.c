@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: print.c,v 1.14 2002/03/17 17:23:03 hbirr Exp $
+/* $Id: print.c,v 1.15 2002/09/07 15:12:49 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -30,8 +30,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/kd.h>
+#include <ntoskrnl.h>
+
+#define NDEBUG
+#include <internal/debug.h>
 
 
 /* FUNCTIONS ****************************************************************/

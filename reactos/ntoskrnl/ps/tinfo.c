@@ -1,4 +1,4 @@
-/* $Id: tinfo.c,v 1.17 2002/01/03 14:03:05 ekohl Exp $
+/* $Id: tinfo.c,v 1.18 2002/09/07 15:13:05 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,10 +11,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ps.h>
+#include <ntoskrnl.h>
 
+#define NDEBUG
 #include <internal/debug.h>
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -26,7 +27,7 @@ NtSetInformationThread(HANDLE		ThreadHandle,
 {
    PETHREAD			Thread;
    NTSTATUS			Status;
-   
+
    Status = ObReferenceObjectByHandle(ThreadHandle,
 				      THREAD_SET_INFORMATION,
 				      PsThreadType,
@@ -192,7 +193,8 @@ NtQueryInformationThread (IN	HANDLE		ThreadHandle,
 	   }
 	 
 	 TBI->ExitStatus = Thread->ExitStatus;
-	 TBI->TebBaseAddress = Thread->Tcb.Teb;
+   /* MINGWFIXME: Use NT_TIB */
+	 TBI->TebBaseAddress = (PNT_TIB)Thread->Tcb.Teb;
 	 TBI->ClientId = Thread->Cid;
 	 TBI->AffinityMask = Thread->Tcb.Affinity;
 	 TBI->Priority = Thread->Tcb.Priority;
@@ -321,16 +323,16 @@ VOID KeSetPreviousMode(ULONG Mode)
    PsGetCurrentThread()->Tcb.PreviousMode = Mode;
 }
 
-ULONG STDCALL
+KPROCESSOR_MODE STDCALL
 KeGetPreviousMode (VOID)
 {
-   return (ULONG)PsGetCurrentThread()->Tcb.PreviousMode;
+   return PsGetCurrentThread()->Tcb.PreviousMode;
 }
 
-ULONG STDCALL
+KPROCESSOR_MODE STDCALL
 ExGetPreviousMode (VOID)
 {
-   return (ULONG)PsGetCurrentThread()->Tcb.PreviousMode;
+   return PsGetCurrentThread()->Tcb.PreviousMode;
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.1 2001/05/27 11:16:09 ekohl Exp $
+/* $Id: handle.c,v 1.2 2002/09/07 15:13:05 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -9,9 +9,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/handle.h>
-#include <internal/pool.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>

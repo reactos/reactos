@@ -1,5 +1,5 @@
 /*
- * $Id: dir.c,v 1.24 2002/03/18 22:37:12 hbirr Exp $
+ * $Id: dir.c,v 1.25 2002/09/07 15:12:03 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -20,7 +20,7 @@
 
 
 // function like DosDateTimeToFileTime
-BOOL FsdDosDateTimeToFileTime (WORD wDosDate, WORD wDosTime, TIME * FileTime)
+BOOL FsdDosDateTimeToFileTime (WORD wDosDate, WORD wDosTime, LARGE_INTEGER * FileTime)
 {
   PDOSTIME pdtime = (PDOSTIME) & wDosTime;
   PDOSDATE pddate = (PDOSDATE) & wDosDate;
@@ -46,7 +46,7 @@ BOOL FsdDosDateTimeToFileTime (WORD wDosDate, WORD wDosTime, TIME * FileTime)
 
 // function like FileTimeToDosDateTime
 BOOL
-FsdFileTimeToDosDateTime (TIME * FileTime, WORD * pwDosDate, WORD * pwDosTime)
+FsdFileTimeToDosDateTime (LARGE_INTEGER * FileTime, WORD * pwDosDate, WORD * pwDosTime)
 {
   PDOSTIME pdtime = (PDOSTIME) pwDosTime;
   PDOSDATE pddate = (PDOSDATE) pwDosDate;
@@ -235,9 +235,11 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
   VFATFCB tmpFcb;
   PVFATCCB pCcb;
   BOOLEAN First = FALSE;
+  PEXTENDED_IO_STACK_LOCATION IoStack;
 
   pCcb = (PVFATCCB) IrpContext->FileObject->FsContext2;
   pFcb = pCcb->pFcb;
+  IoStack = (PEXTENDED_IO_STACK_LOCATION)IrpContext->Stack;
 
   if (!ExAcquireResourceSharedLite(&pFcb->MainResource, IrpContext->Flags & IRPCONTEXT_CANWAIT))
   {
@@ -245,11 +247,11 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
   }
 
   // Obtain the callers parameters
-  BufferLength = IrpContext->Stack->Parameters.QueryDirectory.Length;
-  pSearchPattern = IrpContext->Stack->Parameters.QueryDirectory.FileName;
+  BufferLength = IoStack->Parameters.QueryDirectory.Length;
+  pSearchPattern = IoStack->Parameters.QueryDirectory.FileName;
   FileInformationClass =
-    IrpContext->Stack->Parameters.QueryDirectory.FileInformationClass;
-  FileIndex = IrpContext->Stack->Parameters.QueryDirectory.FileIndex;
+    IoStack->Parameters.QueryDirectory.FileInformationClass;
+  FileIndex = IoStack->Parameters.QueryDirectory.FileIndex;
   if (pSearchPattern)
   {
     if (!pCcb->DirectorySearchPattern)

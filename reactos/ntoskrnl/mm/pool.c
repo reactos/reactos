@@ -1,4 +1,4 @@
-/* $Id: pool.c,v 1.13 2001/12/20 03:56:09 dwelch Exp $
+/* $Id: pool.c,v 1.14 2002/09/07 15:13:00 chorns Exp $
  * 
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -9,12 +9,11 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ntoskrnl.h>
-#include <internal/pool.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* GLOBALS *****************************************************************/
 
@@ -29,7 +28,6 @@ EiAllocatePool(POOL_TYPE PoolType,
 	       PVOID Caller)
 {
    PVOID Block;
-   
    if (PoolType == NonPagedPoolCacheAligned || 
        PoolType == NonPagedPoolCacheAlignedMustS)
      {
@@ -100,7 +98,10 @@ ExAllocatePool (POOL_TYPE PoolType, ULONG NumberOfBytes)
 
 
 PVOID STDCALL
-ExAllocatePoolWithTag (ULONG PoolType, ULONG NumberOfBytes, ULONG Tag)
+ExAllocatePoolWithTag (
+	IN POOL_TYPE  PoolType,
+  IN SIZE_T  NumberOfBytes,
+  IN ULONG  Tag)
 {
    PVOID Block;
    Block = EiAllocatePool(PoolType,

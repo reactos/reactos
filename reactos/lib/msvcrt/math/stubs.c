@@ -1,4 +1,5 @@
-#include <msvcrt/math.h>
+#include <msvcrti.h>
+
 
 double	_CIsin (double x);
 double	_CIcos (double x);

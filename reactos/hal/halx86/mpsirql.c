@@ -11,13 +11,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ke.h>
-#include <internal/ps.h>
-#include <mps.h>
+#include <hal.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* GLOBALS ******************************************************************/;
 

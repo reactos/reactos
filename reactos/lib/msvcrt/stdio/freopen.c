@@ -1,10 +1,5 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-
-#include <msvcrt/sys/types.h>
-#include <msvcrt/stdio.h>
-#include <msvcrt/fcntl.h>
-#include <msvcrt/io.h>
-#include <msvcrt/internal/file.h>
+#include <msvcrti.h>
 
 
 FILE *freopen(const char *file, const char *mode, FILE *f)
@@ -48,7 +43,7 @@ FILE *freopen(const char *file, const char *mode, FILE *f)
     return NULL;
 
   if (*mode == 'a')
-    lseek(fd, 0, SEEK_END);
+    _lseek(fd, 0, SEEK_END);
 
   f->_cnt = 0;
   f->_file = fd;
@@ -105,7 +100,7 @@ FILE *_wfreopen(const wchar_t *file, const wchar_t *mode, FILE *f)
     return NULL;
 
   if (*mode == L'a')
-    lseek(fd, 0, SEEK_END);
+    _lseek(fd, 0, SEEK_END);
 
   f->_cnt = 0;
   f->_file = fd;

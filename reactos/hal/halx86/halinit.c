@@ -1,4 +1,4 @@
-/* $Id: halinit.c,v 1.1 2001/08/21 20:18:27 chorns Exp $
+/* $Id: halinit.c,v 1.2 2002/09/07 15:12:10 chorns Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -11,10 +11,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <roscfg.h>
 #include <hal.h>
-#include <internal/ntoskrnl.h>
+
+#define NDEBUG
+#include <internal/debug.h>
+
 
 #ifdef MP
 #include <mps.h>

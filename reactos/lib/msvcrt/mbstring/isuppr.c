@@ -7,9 +7,8 @@
  * UPDATE HISTORY:
  *              12/04/99: Created
  */
+#include <msvcrti.h>
 
-#include <msvcrt/mbctype.h>
-#include <msvcrt/ctype.h>
 
 // code page 952 only
 int _ismbcupper( unsigned int c )

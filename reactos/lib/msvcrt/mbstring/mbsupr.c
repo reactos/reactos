@@ -7,8 +7,8 @@
  * UPDATE HISTORY:
  *              12/04/99: Created
  */
-#include <msvcrt/mbstring.h>
-#include <msvcrt/ctype.h>
+#include <msvcrti.h>
+
 
 unsigned int _mbbtoupper(unsigned int c)
 {

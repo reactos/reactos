@@ -1,4 +1,4 @@
-/* $Id: zone.c,v 1.2 2000/07/02 17:31:49 ekohl Exp $
+/* $Id: zone.c,v 1.3 2002/09/07 15:12:50 chorns Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -9,7 +9,23 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
+#include <ntoskrnl.h>
+
+#define NDEBUG
+#include <internal/debug.h>
+
+/* VARIABLES ***************************************************************/
+
+typedef struct _ZONE_SEGMENT
+{
+   SINGLE_LIST_ENTRY Entry;
+   ULONG size;
+} ZONE_SEGMENT, *PZONE_SEGMENT;
+
+typedef struct _ZONE_ENTRY
+{
+   SINGLE_LIST_ENTRY Entry;
+} ZONE_ENTRY, *PZONE_ENTRY;
 
 /* FUNCTIONS ***************************************************************/
 

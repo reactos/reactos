@@ -1,6 +1,11 @@
 #ifndef __INTERNAL_HANDLE_H
 #define __INTERNAL_HANDLE_H
 
+#if __GNUC__ >=3
+#pragma GCC system_header
+#endif
+
+#ifndef AS_INVOKED
 
 typedef struct _RTL_HANDLE
 {
@@ -22,5 +27,7 @@ VOID RtlpDestroyHandleTable(PRTL_HANDLE_TABLE HandleTable);
 BOOLEAN RtlpAllocateHandle(PRTL_HANDLE_TABLE HandleTable, PVOID Object, PULONG Index);
 BOOLEAN RtlpFreeHandle(PRTL_HANDLE_TABLE HandleTable, ULONG Index);
 PVOID RtlpMapHandleToPointer(PRTL_HANDLE_TABLE HandleTable, ULONG Index);
+
+#endif /* !AS_INVOKED */
 
 #endif /* __INTERNAL_HANDLE_H */

@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.15 2002/09/03 22:44:21 dwelch Exp $
+/* $Id: window.c,v 1.16 2002/09/07 15:13:12 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -563,7 +563,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   if (WindowObject->Style & (WS_MINIMIZE | WS_MAXIMIZE))
     {
       RECT NewPos;
-      UINT16 SwFlag;
+      USHORT SwFlag;
 
       SwFlag = (WindowObject->Style & WS_MINIMIZE) ? SW_MINIMIZE : 
 	SW_MAXIMIZE;

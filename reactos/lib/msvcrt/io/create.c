@@ -1,8 +1,8 @@
-#include <msvcrt/io.h>
-#include <msvcrt/fcntl.h>
+#include <msvcrti.h>
 
 #define NDEBUG
-#include <msvcrt/msvcrtdbg.h>
+#include <msvcrtdbg.h>
+
 
 int _creat(const char *filename, int mode)
 {

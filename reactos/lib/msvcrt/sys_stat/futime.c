@@ -1,10 +1,5 @@
-#include <msvcrt/alloc.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/sys/utime.h>
-#include <msvcrt/io.h>
-#include <msvcrt/time.h>
-#include <msvcrt/errno.h>
-#include <msvcrt/internal/file.h>
+#include <msvcrti.h>
+
 
 int _futime (int nHandle, struct _utimbuf *pTimes)
 {
@@ -33,7 +28,7 @@ int _futime (int nHandle, struct _utimbuf *pTimes)
 
   UnixTimeToFileTime(pTimes->actime,&LastAccessTime,0);
   UnixTimeToFileTime(pTimes->modtime,&LastWriteTime,0);
-  if (!SetFileTime(_get_osfhandle(nHandle),NULL, &LastAccessTime, &LastWriteTime))
+  if (!SetFileTime((HANDLE)_get_osfhandle(nHandle),NULL, &LastAccessTime, &LastWriteTime))
     {
       __set_errno(EBADF);
       return -1;

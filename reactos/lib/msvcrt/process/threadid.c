@@ -1,5 +1,5 @@
-#include <windows.h>
-#include <msvcrt/process.h>
+#include <msvcrti.h>
+
 
 unsigned long __threadid (void)
 {

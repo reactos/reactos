@@ -1,5 +1,6 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/stdlib.h>
+#include <msvcrti.h>
+
 
 void _swab (const char* caFrom, char* caTo, size_t sizeToCopy)
 {

@@ -1,4 +1,5 @@
-#include <msvcrt/float.h>
+#include <msvcrti.h>
+
 
 unsigned int _clearfp (void)
 {

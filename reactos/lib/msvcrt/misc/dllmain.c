@@ -1,16 +1,20 @@
-/* $Id: dllmain.c,v 1.14 2002/05/07 22:31:25 hbirr Exp $
+/* $Id: dllmain.c,v 1.15 2002/09/07 15:12:34 chorns Exp $
  *
  * ReactOS MSVCRT.DLL Compatibility Library
  */
-#include <windows.h>
-
-#include <msvcrt/internal/tls.h>
-#include <msvcrt/stdlib.h>
+#include <msvcrti.h>
 
 #define NDEBUG
-#include <msvcrt/msvcrtdbg.h>
+#include <msvcrtdbg.h>
+
 
 static int nAttachCount = 0;
+
+#undef _osver
+#undef _winminor
+#undef _winmajor
+#undef _winver
+#undef _pgmptr
 
 unsigned int _osver = 0;
 unsigned int _winminor = 0;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: iospace.c,v 1.13 2002/06/04 15:26:56 dwelch Exp $
+/* $Id: iospace.c,v 1.14 2002/09/07 15:12:59 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/iospace.c
@@ -28,12 +28,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/mm.h>
-#include <internal/ps.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -65,9 +64,10 @@
  *
  */
 PVOID STDCALL 
-MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
-	      IN ULONG NumberOfBytes,
-	      IN BOOLEAN CacheEnable)
+MmMapIoSpace(
+  IN PHYSICAL_ADDRESS  PhysicalAddress,
+  IN ULONG  NumberOfBytes,
+  IN MEMORY_CACHING_TYPE  CacheEnable)
 {
    PVOID Result;
    MEMORY_AREA* marea;
@@ -92,25 +92,25 @@ MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
 	return (NULL);
      }
    Attributes = PAGE_EXECUTE_READWRITE | PAGE_SYSTEM;
-   if (!CacheEnable)
+   if (CacheEnable == MmNonCached)
      {
 	Attributes |= (PAGE_NOCACHE | PAGE_WRITETHROUGH);
      }
-   for (i = 0; (i < ((NumberOfBytes + PAGESIZE - 1) / PAGESIZE)); i++)
+   for (i = 0; (i < ((NumberOfBytes + PAGE_SIZE - 1) / PAGE_SIZE)); i++)
      {
 	Status = 
-	  MmCreateVirtualMappingForKernel(Result + (i * PAGESIZE),
+	  MmCreateVirtualMappingForKernel(Result + (i * PAGE_SIZE),
 					  Attributes,
 					  (PHYSICAL_ADDRESS)
 					  (PhysicalAddress.QuadPart + 
-					   (i * PAGESIZE)));
+					   (i * PAGE_SIZE)));
 	if (!NT_SUCCESS(Status))
 	  {
 	     DbgPrint("Unable to create virtual mapping\n");
 	     KeBugCheck(0);
 	  }
      }
-   return ((PVOID)(Result + PhysicalAddress.QuadPart % PAGESIZE));
+   return ((PVOID)(Result + PhysicalAddress.QuadPart % PAGE_SIZE));
 }
  
 
@@ -142,7 +142,7 @@ MmUnmapIoSpace (IN PVOID BaseAddress,
 		IN ULONG NumberOfBytes)
 {
    (VOID)MmFreeMemoryArea(&PsGetCurrentProcess()->AddressSpace,
-			  (PVOID)(((ULONG)BaseAddress / PAGESIZE) * PAGESIZE),
+			  (PVOID)(((ULONG)BaseAddress / PAGE_SIZE) * PAGE_SIZE),
 			  NumberOfBytes,
 			  NULL,
 			  NULL);

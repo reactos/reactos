@@ -1,11 +1,11 @@
-/* $Id: fiber.c,v 1.1 2000/08/14 14:34:12 ea Exp $
+/* $Id: fiber.c,v 1.2 2002/09/07 15:12:28 chorns Exp $
  *
  * FILE: lib/kernel32/thread/fiber.c
  *
  * ReactOS Kernel32.dll
  *
  */
-#include <windows.h>
+#include <kernel32.h>
 
 
 /**********************************************************************
@@ -57,7 +57,7 @@ DeleteFiber(
  */
 PVOID
 STDCALL
-GetCurrentFiber(VOID)
+InternalGetCurrentFiber(VOID)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return NULL;
@@ -69,7 +69,7 @@ GetCurrentFiber(VOID)
  */
 PVOID
 STDCALL
-GetFiberData(VOID)
+InternalGetFiberData(VOID)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return NULL;

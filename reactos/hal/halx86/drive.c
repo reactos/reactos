@@ -1,4 +1,4 @@
-/* $Id: drive.c,v 1.1 2001/08/21 20:18:27 chorns Exp $
+/* $Id: drive.c,v 1.2 2002/09/07 15:12:10 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,7 +11,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#include <hal.h>
+
+#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -22,7 +24,7 @@ IoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 		     OUT PUCHAR NtSystemPath,
 		     OUT PSTRING NtSystemPathString)
 {
-   HalDispatchTable.HalIoAssignDriveLetters(LoaderBlock,
+   HalDispatchTable->HalIoAssignDriveLetters(LoaderBlock,
 					     NtDeviceName,
 					     NtSystemPath,
 					     NtSystemPathString);

@@ -1,4 +1,4 @@
-/* $Id: wait.c,v 1.16 2001/11/08 13:58:13 ekohl Exp $
+/* $Id: wait.c,v 1.17 2002/09/07 15:12:28 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,9 +11,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <kernel32/error.h>
 #include <windows.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
+#include <kernel32/error.h>
 #include <wchar.h>
 
 #define NDEBUG

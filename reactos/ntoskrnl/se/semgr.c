@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.20 2002/06/04 14:14:07 ekohl Exp $
+/* $Id: semgr.c,v 1.21 2002/09/07 15:13:06 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -11,18 +11,18 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ps.h>
-#include <internal/se.h>
+#include <ntoskrnl.h>
 
+#define NDEBUG
 #include <internal/debug.h>
+
 
 #define TAG_SXPT   TAG('S', 'X', 'P', 'T')
 
 
 /* GLOBALS ******************************************************************/
 
-PSE_EXPORTS EXPORTED SeExports = NULL;
+PSE_EXPORTS SeExports = NULL;
 
 
 /* PROTOTYPES ***************************************************************/
@@ -187,9 +187,10 @@ NtAccessCheckAndAuditAlarm(IN PUNICODE_STRING SubsystemName,
 
 
 NTSTATUS STDCALL
-NtAllocateUuids(PULARGE_INTEGER Time,
-		PULONG Range,
-		PULONG Sequence)
+NtAllocateUuids(OUT PLARGE_INTEGER  UuidLastTimeAllocated,
+  OUT PULONG  UuidDeltaTime,
+  OUT PULONG  UuidSequenceNumber,
+  OUT PUCHAR  UuidSeed)
 {
   UNIMPLEMENTED;
 }
@@ -240,16 +241,16 @@ VOID STDCALL SeReleaseSubjectContext (PSECURITY_SUBJECT_CONTEXT SubjectContext)
 VOID STDCALL SeCaptureSubjectContext (PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
    PEPROCESS Process;
-   ULONG a;
-   ULONG b;
+   BOOLEAN CopyOnUse;
+   BOOLEAN EffectiveOnly;
    
    Process = PsGetCurrentThread()->ThreadsProcess;
    
    SubjectContext->ProcessAuditId = Process;
    SubjectContext->ClientToken = 
      PsReferenceImpersonationToken(PsGetCurrentThread(),
-				   &a,
-				   &b,
+				   &CopyOnUse,
+				   &EffectiveOnly,
 				   &SubjectContext->ImpersonationLevel);
    SubjectContext->PrimaryToken = PsReferencePrimaryToken(Process);
 }
@@ -380,7 +381,7 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor,
 #endif
 }
 
-BOOLEAN SepSidInToken(PACCESS_TOKEN Token,
+BOOLEAN SepSidInToken(PIACCESS_TOKEN Token,
 		      PSID Sid)
 {
    ULONG i;
@@ -392,10 +393,10 @@ BOOLEAN SepSidInToken(PACCESS_TOKEN Token,
    
    for (i=0; i<Token->UserAndGroupCount; i++)
      {
-	if (RtlEqualSid(Sid, Token->UserAndGroups[i].Sid))
+	if (RtlEqualSid(Sid, Token->UserAndGroups[i]->Sid))
 	  {
 	     if (i == 0 ||
-		 (!(Token->UserAndGroups[i].Attributes & SE_GROUP_ENABLED)))
+		 (!(Token->UserAndGroups[i]->Attributes & SE_GROUP_ENABLED)))
 	       {
 		  return(TRUE);
 	       }
@@ -439,7 +440,7 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
    BOOLEAN Present;
    BOOLEAN Defaulted;
    NTSTATUS Status;
-   PACE CurrentAce;
+   PROS_ACE CurrentAce;
    PSID Sid;
    ACCESS_MASK CurrentAccess;
    
@@ -461,7 +462,7 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 	return(Status);
      }
    
-   CurrentAce = (PACE)(Dacl + 1);
+   CurrentAce = (PROS_ACE)(Dacl + 1);
    for (i = 0; i < Dacl->AceCount; i++)
      {
 	Sid = (PSID)(CurrentAce + 1);

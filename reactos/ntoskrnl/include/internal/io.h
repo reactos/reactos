@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.23 2002/08/28 07:13:04 hbirr Exp $
+/* $Id: io.h,v 1.24 2002/09/07 15:12:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -29,6 +29,12 @@
 
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_IO_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_IO_H
+
+#ifndef AS_INVOKED
+
+#if __GNUC__ >=3
+#pragma GCC system_header
+#endif
 
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
@@ -295,7 +301,7 @@ PIRP IoBuildSynchronousFsdRequestWithMdl(ULONG MajorFunction,
 					 PLARGE_INTEGER StartingOffset,
 					 PKEVENT Event,
 					 PIO_STATUS_BLOCK IoStatusBlock,
-					 ULONG PagingIo);
+					 BOOLEAN PagingIo);
 
 VOID IoInitShutdownNotification(VOID);
 VOID IoShutdownRegisteredDevices(VOID);
@@ -346,5 +352,7 @@ PnpRootDriverEntry(
 NTSTATUS
 PnpRootCreateDevice(
   PDEVICE_OBJECT *PhysicalDeviceObject);
+
+#endif /* !AS_INVOKED */
 
 #endif

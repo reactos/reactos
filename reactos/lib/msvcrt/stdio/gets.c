@@ -8,7 +8,8 @@
  *              28/12/98: Appropriated for Reactos
  */
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/stdio.h>
+#include <msvcrti.h>
+
 
 char *gets(char *s)
 {

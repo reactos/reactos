@@ -1,4 +1,4 @@
-/* $Id: list.c,v 1.5 2002/07/27 13:02:13 ekohl Exp $
+/* $Id: list.c,v 1.6 2002/09/07 15:12:50 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,15 +13,16 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
+static KSPIN_LOCK ExpGlobalInterlockedLock = 0;
+
 /* FUNCTIONS *************************************************************/
 
-
-PLIST_ENTRY STDCALL
+PLIST_ENTRY FASTCALL
 ExInterlockedInsertHeadList(PLIST_ENTRY ListHead,
 			    PLIST_ENTRY ListEntry,
 			    PKSPIN_LOCK Lock)
@@ -53,7 +54,7 @@ ExInterlockedInsertHeadList(PLIST_ENTRY ListHead,
 }
 
 
-PLIST_ENTRY STDCALL
+PLIST_ENTRY FASTCALL
 ExInterlockedInsertTailList(PLIST_ENTRY ListHead,
 			    PLIST_ENTRY ListEntry,
 			    PKSPIN_LOCK Lock)
@@ -85,7 +86,7 @@ ExInterlockedInsertTailList(PLIST_ENTRY ListHead,
 }
 
 
-PLIST_ENTRY STDCALL
+PLIST_ENTRY FASTCALL
 ExInterlockedRemoveHeadList(PLIST_ENTRY Head,
 			    PKSPIN_LOCK Lock)
 /*
@@ -112,8 +113,7 @@ ExInterlockedRemoveHeadList(PLIST_ENTRY Head,
   return(ret);
 }
 
-
-PLIST_ENTRY
+PLIST_ENTRY FASTCALL
 ExInterlockedRemoveTailList(PLIST_ENTRY Head,
 			    PKSPIN_LOCK Lock)
 /*
@@ -140,6 +140,7 @@ ExInterlockedRemoveTailList(PLIST_ENTRY Head,
   return(ret);
 }
 
+#undef ExInterlockedPopEntrySList
 
 PSINGLE_LIST_ENTRY FASTCALL
 ExInterlockedPopEntrySList(IN PSLIST_HEADER ListHead,
@@ -156,16 +157,17 @@ ExInterlockedPopEntrySList(IN PSLIST_HEADER ListHead,
   KIRQL oldlvl;
 
   KeAcquireSpinLock(Lock,&oldlvl);
-  ret = PopEntryList(&ListHead->s.Next);
+  ret = PopEntryList(&ListHead->Next);
   if (ret)
     {
-      ListHead->s.Depth--;
-      ListHead->s.Sequence++;
+      ListHead->Depth--;
+      ListHead->Sequence++;
     }
   KeReleaseSpinLock(Lock,oldlvl);
   return(ret);
 }
 
+#undef ExInterlockedPushEntrySList
 
 PSINGLE_LIST_ENTRY FASTCALL
 ExInterlockedPushEntrySList(IN PSLIST_HEADER ListHead,
@@ -184,16 +186,16 @@ ExInterlockedPushEntrySList(IN PSLIST_HEADER ListHead,
   PSINGLE_LIST_ENTRY ret;
 
   KeAcquireSpinLock(Lock,&oldlvl);
-  ret=ListHead->s.Next.Next;
-  PushEntryList(&ListHead->s.Next,ListEntry);
-  ListHead->s.Depth++;
-  ListHead->s.Sequence++;
+  ret=ListHead->Next.Next;
+  PushEntryList(&ListHead->Next,ListEntry);
+  ListHead->Depth++;
+  ListHead->Sequence++;
   KeReleaseSpinLock(Lock,oldlvl);
   return(ret);
 }
 
 
-PSINGLE_LIST_ENTRY STDCALL
+PSINGLE_LIST_ENTRY FASTCALL
 ExInterlockedPopEntryList(IN PSINGLE_LIST_ENTRY ListHead,
 			  IN PKSPIN_LOCK Lock)
 /*
@@ -214,7 +216,7 @@ ExInterlockedPopEntryList(IN PSINGLE_LIST_ENTRY ListHead,
 }
 
 
-PSINGLE_LIST_ENTRY STDCALL
+PSINGLE_LIST_ENTRY FASTCALL
 ExInterlockedPushEntryList(IN PSINGLE_LIST_ENTRY ListHead,
 			   IN PSINGLE_LIST_ENTRY ListEntry,
 			   IN PKSPIN_LOCK Lock)
@@ -372,6 +374,45 @@ ExfInterlockedRemoveHeadList(IN PLIST_ENTRY Head,
     }
   KeReleaseSpinLock(Lock,oldlvl);
   return(ret);
+}
+
+
+PSLIST_ENTRY
+FASTCALL
+InterlockedPopEntrySList(
+  IN PSLIST_HEADER  ListHead)
+{
+	KIRQL OldIrql;
+	PSLIST_ENTRY Value;
+
+	KeAcquireSpinLock(&ExpGlobalInterlockedLock, &OldIrql);
+	Value = PopEntryList(&ListHead->Next);
+	if (Value)
+		{
+			ListHead->Depth--;
+			ListHead->Sequence++;
+	  }
+	KeReleaseSpinLock(&ExpGlobalInterlockedLock, OldIrql);
+	return(Value);
+}
+
+
+PSLIST_ENTRY
+FASTCALL
+InterlockedPushEntrySList(
+  IN PSLIST_HEADER  ListHead,
+  IN PSLIST_ENTRY  ListEntry)
+{
+	KIRQL OldIrql;
+	PSLIST_ENTRY Value;
+
+	KeAcquireSpinLock(&ExpGlobalInterlockedLock, &OldIrql);
+	Value = ListHead->Next.Next;
+	PushEntryList(&ListHead->Next, ListEntry);
+	ListHead->Depth++;
+	ListHead->Sequence++;
+	KeReleaseSpinLock(&ExpGlobalInterlockedLock, OldIrql);
+	return(Value);
 }
 
 /* EOF */

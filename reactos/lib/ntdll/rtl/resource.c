@@ -1,4 +1,4 @@
-/* $Id: resource.c,v 1.1 2001/05/24 11:28:00 ekohl Exp $
+/* $Id: resource.c,v 1.2 2002/09/07 15:12:40 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -18,13 +18,11 @@
  * The code is based on information published in WDJ January 1999 issue.
  */
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
-#include <ntos/synch.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 
 #define NDEBUG
-#include <ntdll/ntdll.h>
-
+#include <debug.h>
 
 /* FUNCTIONS ****************************************************************/
 

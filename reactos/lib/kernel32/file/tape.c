@@ -1,4 +1,4 @@
-/* $Id: tape.c,v 1.1 2001/03/31 01:17:29 dwelch Exp $
+/* $Id: tape.c,v 1.2 2002/09/07 15:12:26 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,8 +12,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
 #include <windows.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 #include <wchar.h>
 #include <string.h>
 

@@ -27,19 +27,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <roscfg.h>
-#include <internal/ntoskrnl.h>
-#include <internal/ke.h>
-#include <internal/i386/segment.h>
-#include <internal/i386/mm.h>
-#include <internal/module.h>
-#include <internal/mm.h>
-#include <internal/ps.h>
-#include <internal/trap.h>
+#include <ntoskrnl.h>
 #include <ntdll/ldr.h>
-#include <internal/safe.h>
-#include <internal/kd.h>
 
 #define NDEBUG
 #include <internal/debug.h>

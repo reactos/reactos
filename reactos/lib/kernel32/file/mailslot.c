@@ -1,4 +1,4 @@
-/* $Id: mailslot.c,v 1.4 2001/05/05 15:21:05 ekohl Exp $
+/* $Id: mailslot.c,v 1.5 2002/09/07 15:12:26 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -10,10 +10,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
 #include <windows.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 
+#define NDEBUG
 #include <kernel32/kernel32.h>
 #include <kernel32/error.h>
 
@@ -124,19 +125,23 @@ GetMailslotInfo(HANDLE hMailslot,
    
    if (lpMaxMessageSize != NULL)
      {
-	*lpMaxMessageSize = Buffer.MaxMessageSize;
+	*lpMaxMessageSize = Buffer.MaximumMessageSize;
      }
    if (lpNextSize != NULL)
      {
-	*lpNextSize = Buffer.NextSize;
+	*lpNextSize = Buffer.NextMessageSize;
      }
    if (lpMessageCount != NULL)
      {
-	*lpMessageCount = Buffer.MessageCount;
+	*lpMessageCount = Buffer.MessagesAvailable;
      }
    if (lpReadTimeout != NULL)
      {
-	*lpReadTimeout = (DWORD)(Buffer.Timeout.QuadPart / -10000);
+  LARGE_INTEGER Dividend;
+  LARGE_INTEGER Result;
+
+  Dividend.QuadPart = -10000;
+  Result = RtlLargeIntegerDivide(Buffer.ReadTimeout, Dividend, NULL);
      }
    
    return(TRUE);
@@ -151,7 +156,7 @@ SetMailslotInfo(HANDLE hMailslot,
    IO_STATUS_BLOCK Iosb;
    NTSTATUS Status;
    
-   Buffer.Timeout.QuadPart = lReadTimeout * -10000;
+   Buffer.ReadTimeout.QuadPart = lReadTimeout * -10000;
    
    Status = NtSetInformationFile(hMailslot,
 				 &Iosb,

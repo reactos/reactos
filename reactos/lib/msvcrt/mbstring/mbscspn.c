@@ -1,4 +1,5 @@
-#include <msvcrt/mbstring.h>
+#include <msvcrti.h>
+
 
 // not correct
 size_t _mbscspn(const unsigned char *s1, const unsigned char *s2)

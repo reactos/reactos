@@ -1,6 +1,4 @@
-#include <windows.h>
-#include <msvcrt/io.h>
-#include <msvcrt/internal/file.h>
+#include <msvcrti.h>
 
 
 long _lseek(int _fildes, long _offset, int _whence)

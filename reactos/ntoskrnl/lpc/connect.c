@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.10 2002/01/03 22:52:29 dwelch Exp $
+/* $Id: connect.c,v 1.11 2002/09/07 15:12:58 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,16 +11,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ob.h>
-#include <internal/port.h>
-#include <internal/dbg.h>
-#include <internal/pool.h>
-#include <internal/safe.h>
-#include <internal/mm.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* GLOBALS *******************************************************************/
 
@@ -62,7 +57,7 @@ EiConnectPort(IN PEPORT* ConnectedPort,
   /*
    * Create a port to represent our side of the connection
    */
-  Status = ObCreateObject (NULL,
+  Status = ObRosCreateObject (NULL,
 			   PORT_ALL_ACCESS,
 			   NULL,
 			   ExPortType,
@@ -90,12 +85,12 @@ EiConnectPort(IN PEPORT* ConnectedPort,
    */
   RequestMessage->MessageHeader.DataSize = 
     sizeof(EPORT_CONNECT_REQUEST_MESSAGE) + RequestConnectDataLength -
-    sizeof(LPC_MESSAGE_HEADER);
+    sizeof(LPC_MESSAGE);
   RequestMessage->MessageHeader.MessageSize = 
     sizeof(EPORT_CONNECT_REQUEST_MESSAGE) + RequestConnectDataLength;
   DPRINT("RequestMessageSize %d\n",
 	 RequestMessage->MessageHeader.MessageSize);
-  RequestMessage->MessageHeader.SharedSectionSize = 0;
+  RequestMessage->MessageHeader.SectionSize = 0;
   RequestMessage->ConnectingProcess = PsGetCurrentProcess();
   ObReferenceObjectByPointer(RequestMessage->ConnectingProcess,
 			     PROCESS_VM_OPERATION,
@@ -502,7 +497,7 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
  * RETURN VALUE
  *
  */
-EXPORTED NTSTATUS STDCALL
+NTSTATUS STDCALL
 NtAcceptConnectPort (PHANDLE			ServerPortHandle,
 		     HANDLE			NamedPortHandle,
 		     PLPC_MESSAGE		LpcMessage,
@@ -542,7 +537,7 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
    */
   if (AcceptIt == 1)
     {
-      Status = ObCreateObject(ServerPortHandle,
+      Status = ObRosCreateObject(ServerPortHandle,
 			      PORT_ALL_ACCESS,
 			      NULL,
 			      ExPortType,
@@ -568,20 +563,20 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
    */
   if (LpcMessage != NULL)
     {
-      memcpy(&CReply->MessageHeader, LpcMessage, sizeof(LPC_MESSAGE_HEADER));
+      memcpy(&CReply->MessageHeader, LpcMessage, sizeof(LPC_MESSAGE));
       memcpy(&CReply->ConnectData, (PVOID)(LpcMessage + 1), 
 	     LpcMessage->DataSize);
       CReply->MessageHeader.MessageSize =
 	sizeof(EPORT_CONNECT_REPLY_MESSAGE) + LpcMessage->DataSize;
       CReply->MessageHeader.DataSize = CReply->MessageHeader.MessageSize -
-	sizeof(LPC_MESSAGE_HEADER);
+	sizeof(LPC_MESSAGE);
       CReply->ConnectDataLength = LpcMessage->DataSize;
     }
   else
     {
       CReply->MessageHeader.MessageSize = sizeof(EPORT_CONNECT_REPLY_MESSAGE);
       CReply->MessageHeader.DataSize = sizeof(EPORT_CONNECT_REPLY_MESSAGE) -
-	sizeof(LPC_MESSAGE_HEADER);
+	sizeof(LPC_MESSAGE);
       CReply->ConnectDataLength = 0;
     }
   if (AcceptIt != 1)

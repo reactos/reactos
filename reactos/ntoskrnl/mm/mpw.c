@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mpw.c,v 1.9 2002/08/17 01:42:02 dwelch Exp $
+/* $Id: mpw.c,v 1.10 2002/09/07 15:13:00 chorns Exp $
  *
  * PROJECT:      ReactOS kernel
  * FILE:         ntoskrnl/mm/mpw.c
@@ -29,13 +29,11 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ps.h>
-#include <internal/mm.h>
-#include <internal/cc.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* GLOBALS *******************************************************************/
 
@@ -71,7 +69,7 @@ MmWriteDirtyPages(ULONG Target, PULONG Actual)
   return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL
+VOID STDCALL
 MmMpwThreadMain(PVOID Ignored)
 {
   NTSTATUS Status;
@@ -91,12 +89,12 @@ MmMpwThreadMain(PVOID Ignored)
 	{
 	  DbgPrint("MpwThread: Wait failed\n");
 	  KeBugCheck(0);
-	  return(STATUS_UNSUCCESSFUL);
+	  return;
 	}
       if (MpwThreadShouldTerminate)
 	{
 	  DbgPrint("MpwThread: Terminating\n");
-	  return(STATUS_SUCCESS);
+	  return;
 	}
       
       PagesWritten = 0;

@@ -1,4 +1,4 @@
-/* $Id: pageop.c,v 1.11 2002/08/10 16:41:19 dwelch Exp $
+/* $Id: pageop.c,v 1.12 2002/09/07 15:13:00 chorns Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -10,13 +10,11 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ps.h>
-#include <internal/mm.h>
-#include <internal/pool.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* GLOBALS *******************************************************************/
 
@@ -82,11 +80,11 @@ MmCheckForPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
    */
   if (MArea->Type == MEMORY_AREA_SECTION_VIEW)
     {
-      Hash = (((ULONG)Segment) | (((ULONG)Offset) / PAGESIZE));
+      Hash = (((ULONG)Segment) | (((ULONG)Offset) / PAGE_SIZE));
     }
   else
     {
-      Hash = (((ULONG)Pid) | (((ULONG)Address) / PAGESIZE));
+      Hash = (((ULONG)Pid) | (((ULONG)Address) / PAGE_SIZE));
     }
   Hash = Hash % PAGEOP_HASH_TABLE_SIZE;
 
@@ -149,11 +147,11 @@ MmGetPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
    */
   if (MArea->Type == MEMORY_AREA_SECTION_VIEW)
     {
-      Hash = (((ULONG)Segment) | (((ULONG)Offset) / PAGESIZE));
+      Hash = (((ULONG)Segment) | (((ULONG)Offset) / PAGE_SIZE));
     }
   else
     {
-      Hash = (((ULONG)Pid) | (((ULONG)Address) / PAGESIZE));
+      Hash = (((ULONG)Pid) | (((ULONG)Address) / PAGE_SIZE));
     }
   Hash = Hash % PAGEOP_HASH_TABLE_SIZE;
 

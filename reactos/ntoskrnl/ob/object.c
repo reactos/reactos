@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.54 2002/08/27 06:34:22 hbirr Exp $
+/* $Id: object.c,v 1.55 2002/09/07 15:13:04 chorns Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -11,15 +11,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <roscfg.h>
-#include <internal/ob.h>
-#include <internal/ps.h>
-#include <internal/id.h>
-#include <internal/ke.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* FUNCTIONS ************************************************************/
 
@@ -217,7 +213,7 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 
 /**********************************************************************
  * NAME							EXPORTED
- * 	ObCreateObject@36
+ * 	ObRosCreateObject@36
  *
  * DESCRIPTION
  *
@@ -226,7 +222,7 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
  * RETURN VALUE
  */
 NTSTATUS STDCALL
-ObCreateObject(OUT PHANDLE Handle,
+ObRosCreateObject(OUT PHANDLE Handle,
 	       IN ACCESS_MASK DesiredAccess,
 	       IN POBJECT_ATTRIBUTES ObjectAttributes,
 	       IN POBJECT_TYPE Type,
@@ -241,7 +237,7 @@ ObCreateObject(OUT PHANDLE Handle,
 
   assert_irql(APC_LEVEL);
 
-  DPRINT("ObCreateObject(Handle %x, ObjectAttributes %x, Type %x)\n",
+  DPRINT("ObRosCreateObject(Handle %x, ObjectAttributes %x, Type %x)\n",
 	 Handle, ObjectAttributes, Type);
 
   if (ObjectAttributes != NULL &&
@@ -265,7 +261,6 @@ ObCreateObject(OUT PHANDLE Handle,
 
   RtlMapGenericMask(&DesiredAccess,
 		    Type->Mapping);
-
   Header = (POBJECT_HEADER)ExAllocatePoolWithTag(NonPagedPool,
 						 OBJECT_ALLOC_SIZE(Type),
 						 Type->Tag);

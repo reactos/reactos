@@ -8,13 +8,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ke.h>
-#include <internal/ps.h>
-#include <ntos/minmax.h>
+#include <hal.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* GLOBALS ******************************************************************/
 
@@ -25,8 +23,6 @@
  * PURPOSE: Current irq level
  */
 static KIRQL CurrentIrql = HIGH_LEVEL;
-
-extern IMPORTED ULONG DpcQueueSize;
 
 static ULONG HalpPendingInterruptCount[NR_IRQS];
 

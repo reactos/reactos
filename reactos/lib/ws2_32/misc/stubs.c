@@ -235,8 +235,8 @@ SOCKET
 EXPORT
 WSAJoinLeaf(
     IN  SOCKET s,
-    IN  CONST LPSOCKADDR name,
-    IN  INT namelen,
+    IN  const struct sockaddr FAR *name,
+    IN  int namelen,
     IN  LPWSABUF lpCallerData,
     OUT LPWSABUF lpCalleeData,
     IN  LPQOS lpSQOS,

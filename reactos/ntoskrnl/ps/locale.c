@@ -1,4 +1,4 @@
-/* $Id: locale.c,v 1.2 2002/08/20 20:37:14 hyperion Exp $
+/* $Id: locale.c,v 1.3 2002/09/07 15:13:05 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,8 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ps.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>

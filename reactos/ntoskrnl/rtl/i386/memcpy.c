@@ -1,4 +1,4 @@
-/* $Id: memcpy.c,v 1.1 2002/08/28 07:03:10 hbirr Exp $
+/* $Id: memcpy.c,v 1.2 2002/09/07 15:13:06 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -9,7 +9,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#include <ntoskrnl.h>
 #include <string.h>
 
 #define NDEBUG

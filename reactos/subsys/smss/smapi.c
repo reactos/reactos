@@ -1,14 +1,12 @@
-/* $Id: smapi.c,v 1.7 2002/08/20 20:37:17 hyperion Exp $
+/* $Id: smapi.c,v 1.8 2002/09/07 15:13:09 chorns Exp $
  *
  * Reactos Session Manager
  *
  *
  */
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
-#include <napi/lpc.h>
-
+#define NTOS_USER_MODE
+#include <ntos.h>
 #include "smss.h"
 
 #define NDEBUG

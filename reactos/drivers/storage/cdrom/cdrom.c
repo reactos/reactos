@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdrom.c,v 1.12 2002/07/18 18:08:59 ekohl Exp $
+/* $Id: cdrom.c,v 1.13 2002/09/07 15:12:08 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -34,10 +34,10 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-
-#include "../include/scsi.h"
+#include <ddk/ntdddisk.h>
+#include <ddk/ntddscsi.h>
+#include <ddk/ntddcdrm.h>
 #include "../include/class2.h"
-#include "../include/ntddscsi.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -253,13 +253,13 @@ CdromClassFindDevices(IN PDRIVER_OBJECT DriverObject,
 						    RegistryPath,
 						    PortDeviceObject,
 						    PortNumber,
-						    ConfigInfo->CDRomCount,
+						    ConfigInfo->CdRomCount,
 						    PortCapabilities,
 						    UnitInfo,
 						    InitializationData);
 	      if (NT_SUCCESS(Status))
 		{
-		  ConfigInfo->CDRomCount++;
+		  ConfigInfo->CdRomCount++;
 		  FoundDevice = TRUE;
 		}
 	    }

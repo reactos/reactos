@@ -1,4 +1,4 @@
-/* $Id: aspace.c,v 1.11 2002/05/17 23:01:56 dwelch Exp $
+/* $Id: aspace.c,v 1.12 2002/09/07 15:12:59 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,12 +11,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/mm.h>
-#include <internal/ps.h>
-#include <internal/pool.h>
+#include <ntoskrnl.h>
 
+#define NDEBUG
 #include <internal/debug.h>
+
 
 /* GLOBALS ******************************************************************/
 
@@ -76,7 +75,7 @@ MmInitializeAddressSpace(PEPROCESS Process,
    ExInitializeFastMutex(&AddressSpace->Lock);
    if (Process != NULL)
      {
-	AddressSpace->LowestAddress = MM_LOWEST_USER_ADDRESS;
+	AddressSpace->LowestAddress = (ULONG_PTR)MM_LOWEST_USER_ADDRESS;
      }
    else
      {

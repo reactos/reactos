@@ -1,4 +1,4 @@
-/* $Id: stdlib.c,v 1.5 2001/02/19 15:04:51 dwelch Exp $
+/* $Id: stdlib.c,v 1.6 2002/09/07 15:13:06 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,11 +11,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ctype.h>
-#include <limits.h>
-#include <stdlib.h>
-#include <string.h>
+#include <ntoskrnl.h>
+
+#define NDEBUG
+#include <internal/debug.h>
+
 
 /* GLOBALS   ****************************************************************/
 

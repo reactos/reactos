@@ -1,4 +1,4 @@
-/* $Id: pnproot.c,v 1.8 2002/08/20 20:37:12 hyperion Exp $
+/* $Id: pnproot.c,v 1.9 2002/09/07 15:12:53 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -11,12 +11,11 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/io.h>
-#include <internal/registry.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* GLOBALS *******************************************************************/
 

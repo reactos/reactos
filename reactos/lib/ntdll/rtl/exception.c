@@ -1,4 +1,4 @@
-/* $Id: exception.c,v 1.8 2002/01/13 22:02:30 ea Exp $
+/* $Id: exception.c,v 1.9 2002/09/07 15:12:40 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -9,9 +9,13 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
 #include <windows.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 #include <string.h>
+
+#define NDEBUG
+#include <debug.h>
 
 /* FUNCTIONS ***************************************************************/
 

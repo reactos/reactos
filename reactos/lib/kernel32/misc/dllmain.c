@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.21 2002/08/20 20:37:10 hyperion Exp $
+/* $Id: dllmain.c,v 1.22 2002/09/07 15:12:27 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,10 +11,9 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntdll/csr.h>
-#include <ntdll/ldr.h>
 #include <windows.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 #include <wchar.h>
 
 #define NDEBUG
@@ -35,7 +34,7 @@ WINBOOL STDCALL DllMain (HANDLE hInst,
 			 LPVOID lpReserved);
 
 /* Critical section for various kernel32 data structures */
-CRITICAL_SECTION DllLock;
+RTL_CRITICAL_SECTION DllLock;
 
 /* FUNCTIONS *****************************************************************/
 

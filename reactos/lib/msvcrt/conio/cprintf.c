@@ -1,5 +1,5 @@
-#include <msvcrt/stdio.h>
-#include <msvcrt/conio.h>
+#include <msvcrti.h>
+
 
 int
 _cprintf(const char *fmt, ...)

@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.15 2002/08/20 20:37:09 hyperion Exp $
+/* $Id: reg.c,v 1.16 2002/09/07 15:12:22 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -9,9 +9,7 @@
  *                  Created 01/11/98
  *                  19990309 EA Stubs
  */
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
-#include <windows.h>
+#include <advapi32.h>
 #include <wchar.h>
 
 #define NDEBUG
@@ -31,13 +29,13 @@
 
 #define MAX_DEFAULT_HANDLES   6
 
-static CRITICAL_SECTION HandleTableCS;
+static RTL_CRITICAL_SECTION HandleTableCS;
 static HANDLE DefaultHandleTable[MAX_DEFAULT_HANDLES];
 
 
 /* PROTOTYPES ****************************************************************/
 
-static NTSTATUS MapDefaultKey (PHKEY ParentKey, HKEY Key);
+static NTSTATUS MapDefaultKey (PHANDLE ParentKey, HKEY Key);
 static VOID CloseDefaultKeys(VOID);
 
 static NTSTATUS OpenClassesRootKey(PHANDLE KeyHandle);
@@ -86,7 +84,7 @@ RegCleanup(VOID)
 
 
 static NTSTATUS
-MapDefaultKey(PHKEY RealKey,
+MapDefaultKey(PHANDLE RealKey,
 	      HKEY Key)
 {
    PHANDLE Handle;
@@ -286,7 +284,7 @@ RegCloseKey(HKEY hKey)
  *	RegConnectRegistryA
  */
 LONG STDCALL
-RegConnectRegistryA(LPSTR lpMachineName,
+RegConnectRegistryA(LPCSTR lpMachineName,
 		    HKEY hKey,
 		    PHKEY phkResult)
 {
@@ -299,7 +297,7 @@ RegConnectRegistryA(LPSTR lpMachineName,
  *	RegConnectRegistryW
  */
 LONG STDCALL
-RegConnectRegistryW(LPWSTR lpMachineName,
+RegConnectRegistryW(LPCWSTR lpMachineName,
 		    HKEY hKey,
 		    PHKEY phkResult)
 {
@@ -366,7 +364,7 @@ RegCreateKeyExA(HKEY hKey,
   UNICODE_STRING ClassString;
   OBJECT_ATTRIBUTES Attributes;
   NTSTATUS Status;
-  HKEY ParentKey;
+  HANDLE ParentKey;
 
   DPRINT("RegCreateKeyExW() called\n");
 
@@ -395,7 +393,7 @@ RegCreateKeyExA(HKEY hKey,
 			     (HANDLE)ParentKey,
 			     (PSECURITY_DESCRIPTOR)lpSecurityAttributes);
 
-  Status = NtCreateKey(phkResult,
+  Status = NtCreateKey((PHANDLE)phkResult,
 		       samDesired,
 		       &Attributes,
 		       0,
@@ -438,7 +436,7 @@ RegCreateKeyExW(HKEY			hKey,
 	UNICODE_STRING ClassString;
 	OBJECT_ATTRIBUTES Attributes;
 	NTSTATUS Status;
-	HKEY ParentKey;
+	HANDLE ParentKey;
 
 	DPRINT("RegCreateKeyExW() called\n");
 
@@ -462,7 +460,7 @@ RegCreateKeyExW(HKEY			hKey,
 				    (HANDLE)ParentKey,
 				    (PSECURITY_DESCRIPTOR)lpSecurityAttributes);
 
-	Status = NtCreateKey (phkResult,
+	Status = NtCreateKey ((PHANDLE)phkResult,
 			      samDesired,
 			      &Attributes,
 			      0,
@@ -856,14 +854,14 @@ RegEnumKeyExW(
 	BufferSize = sizeof (KEY_NODE_INFORMATION) + *lpcbName * sizeof(WCHAR);
 	if (lpClass)
 		BufferSize += *lpcbClass;
-	KeyInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferSize);
+	KeyInfo = (PKEY_NODE_INFORMATION)RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferSize);
 
   /* We don't know the exact size of the data returned, so call
      NtEnumerateKey() with a buffer size determined from parameters
      to this function. If that call fails with a status code of
      STATUS_BUFFER_OVERFLOW, allocate a new buffer and try again */
   while (TRUE) {
-    KeyInfo = RtlAllocateHeap(
+    KeyInfo = (PKEY_NODE_INFORMATION)RtlAllocateHeap(
       RtlGetProcessHeap(),
 	  	0,
 	  	BufferSize);
@@ -1051,7 +1049,7 @@ RegEnumValueW(
      to this function. If that call fails with a status code of
      STATUS_BUFFER_OVERFLOW, allocate a new buffer and try again */
   while (TRUE) {
-    ValueInfo = RtlAllocateHeap(
+    ValueInfo = (PKEY_VALUE_FULL_INFORMATION)RtlAllocateHeap(
       RtlGetProcessHeap(),
 	  	0,
 	  	BufferSize);
@@ -1258,7 +1256,7 @@ RegOpenKeyA(HKEY hKey,
 			     KeyHandle,
 			     NULL);
 
-  Status = NtOpenKey(phkResult,
+  Status = NtOpenKey((PHANDLE)phkResult,
 		     KEY_ALL_ACCESS,
 		     &ObjectAttributes);
 
@@ -1315,7 +1313,7 @@ RegOpenKeyW (
 				   NULL);
 
 	errCode = NtOpenKey(
-			phkResult,
+			(PHANDLE)phkResult,
 			KEY_ALL_ACCESS,
 			& ObjectAttributes
 			);
@@ -1365,7 +1363,7 @@ RegOpenKeyExA(HKEY hKey,
 			     KeyHandle,
 			     NULL);
 
-  Status = NtOpenKey(phkResult,
+  Status = NtOpenKey((PHANDLE)phkResult,
 		     samDesired,
 		     &ObjectAttributes);
 
@@ -1418,7 +1416,7 @@ RegOpenKeyExW(HKEY hKey,
 			     KeyHandle,
 			     NULL);
 
-  Status = NtOpenKey(phkResult,
+  Status = NtOpenKey((PHANDLE)phkResult,
 		     samDesired,
 		     &ObjectAttributes);
   if (!NT_SUCCESS(Status))
@@ -1532,7 +1530,7 @@ RegQueryInfoKeyW(
   if (lpClass)
   {
     FullInfoSize = sizeof(KEY_FULL_INFORMATION) + *lpcbClass;
-    FullInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, FullInfoSize);
+    FullInfo = (PKEY_FULL_INFORMATION)RtlAllocateHeap(RtlGetProcessHeap(), 0, FullInfoSize);
     if (!FullInfo)
     {
 		  SetLastError(ERROR_OUTOFMEMORY);
@@ -1629,7 +1627,7 @@ LONG
 STDCALL
 RegQueryMultipleValuesA(
 	HKEY	hKey,
-	PVALENT	val_list,
+	PVALENTA	val_list,
 	DWORD	num_vals,
 	LPSTR	lpValueBuf,
 	LPDWORD	ldwTotsize
@@ -1648,7 +1646,7 @@ LONG
 STDCALL
 RegQueryMultipleValuesW(
 	HKEY	hKey,
-	PVALENT	val_list,
+	PVALENTW	val_list,
 	DWORD	num_vals,
 	LPWSTR	lpValueBuf,
 	LPDWORD	ldwTotsize
@@ -1700,7 +1698,7 @@ RegQueryValueA(
   {
     ValueSize = *lpcbValue * sizeof(WCHAR);
     Value.MaximumLength = ValueSize;
-    Value.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, ValueSize);
+    Value.Buffer = (PWCHAR)RtlAllocateHeap(RtlGetProcessHeap(), 0, ValueSize);
     if (!Value.Buffer)
     {
 	    SetLastError(ERROR_OUTOFMEMORY);
@@ -1741,11 +1739,12 @@ RegQueryValueA(
 /************************************************************************
  *	RegQueryValueExA
  */
+LONG WINAPI RegQueryValueExA (HKEY,LPCSTR,PDWORD,PDWORD,LPBYTE,LPDWORD);
 LONG
 STDCALL
 RegQueryValueExA(
 	HKEY	hKey,
-	LPSTR	lpValueName,
+	LPCSTR	lpValueName,
 	LPDWORD	lpReserved,
 	LPDWORD	lpType,
 	LPBYTE	lpData,
@@ -1773,7 +1772,7 @@ RegQueryValueExA(
   if (lpData)
   {
     ValueData.MaximumLength = *lpcbData * sizeof(WCHAR);
-	  ValueData.Buffer = RtlAllocateHeap(
+	  ValueData.Buffer = (PWCHAR)RtlAllocateHeap(
       RtlGetProcessHeap(),
       0,
       ValueData.MaximumLength);
@@ -1849,7 +1848,7 @@ LONG
 STDCALL
 RegQueryValueExW(
 	HKEY	hKey,
-	LPWSTR	lpValueName,
+	LPCWSTR	lpValueName,
 	LPDWORD	lpReserved,
 	LPDWORD	lpType,
 	LPBYTE	lpData,
@@ -1885,7 +1884,7 @@ RegQueryValueExW(
 			      lpValueName);
 
 	BufferSize = sizeof (KEY_VALUE_PARTIAL_INFORMATION) + *lpcbData;
-	ValueInfo = RtlAllocateHeap (RtlGetProcessHeap(),
+	ValueInfo = (PKEY_VALUE_PARTIAL_INFORMATION)RtlAllocateHeap (RtlGetProcessHeap(),
 				     0,
 				     BufferSize);
 	if (ValueInfo == NULL)
@@ -2240,7 +2239,7 @@ RegSetValueA(
 
   DataSize = cbData * sizeof(WCHAR);
   Data.MaximumLength = DataSize;
-  Data.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, DataSize);
+  Data.Buffer = (PWCHAR)RtlAllocateHeap(RtlGetProcessHeap(), 0, DataSize);
   if (!Data.Buffer)
   {
 	  SetLastError(ERROR_OUTOFMEMORY);

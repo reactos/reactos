@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.18 2002/07/18 18:09:59 ekohl Exp $
+/* $Id: scsiport.c,v 1.19 2002/09/07 15:12:10 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -28,9 +28,9 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include "../include/srb.h"
-#include "../include/scsi.h"
-#include "../include/ntddscsi.h"
+#include <ddk/scsi.h>
+#include <ddk/srb.h>
+#include <ddk/ntddscsi.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -247,6 +247,7 @@ ScsiPortCompleteRequest(IN PVOID HwDeviceExtension,
   UNIMPLEMENTED;
 }
 
+#undef ScsiPortConvertPhysicalAddressToUlong
 
 ULONG STDCALL
 ScsiPortConvertPhysicalAddressToUlong(IN SCSI_PHYSICAL_ADDRESS Address)
@@ -1159,12 +1160,12 @@ ScsiPortCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
   PortCapabilities->MaximumTransferLength =
     PortDeviceExtension->PortConfig.MaximumTransferLength;
   PortCapabilities->MaximumPhysicalPages =
-    PortCapabilities->MaximumTransferLength / PAGESIZE;
+    PortCapabilities->MaximumTransferLength / PAGE_SIZE;
   PortCapabilities->SupportedAsynchronousEvents = 0; /* FIXME */
   PortCapabilities->AlignmentMask =
     PortDeviceExtension->PortConfig.AlignmentMask;
   PortCapabilities->TaggedQueuing =
-    PortDeviceExtension->PortConfig.TaggedQueuing;
+    PortDeviceExtension->PortConfig.TaggedQueueing;
   PortCapabilities->AdapterScansDown =
     PortDeviceExtension->PortConfig.AdapterScansDown;
   PortCapabilities->AdapterUsesPio = TRUE; /* FIXME */

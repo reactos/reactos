@@ -1,8 +1,9 @@
-/* $Id: loader.c,v 1.7 2002/06/14 07:47:40 ekohl Exp $
+/* $Id: loader.c,v 1.8 2002/09/07 15:13:11 chorns Exp $
  *
  */
 
-#include <ddk/ntddk.h>
+#define NTOS_KERNEL_MODE
+#include <ntos.h>
 #include <ddk/winddi.h>
 
 HANDLE

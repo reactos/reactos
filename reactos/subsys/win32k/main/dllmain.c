@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.27 2002/07/13 21:37:26 ei Exp $
+/* $Id: dllmain.c,v 1.28 2002/09/07 15:13:11 chorns Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -6,16 +6,16 @@
 #undef WIN32_LEAN_AND_MEAN
 #define WIN32_NO_STATUS
 #include <windows.h>
+#define NTOS_KERNEL_MODE
+#include <ntos.h>
 #include <ddk/ntddk.h>
 #include <ddk/winddi.h>
-#include <ddk/service.h>
-
-#include <napi/win32.h>
 #include <win32k/win32k.h>
 
 #include <include/winsta.h>
 #include <include/class.h>
 #include <include/window.h>
+#include <include/input.h>
 
 //#define NDEBUG
 #include <win32k/debug1.h>

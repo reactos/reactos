@@ -6,19 +6,12 @@
  * UPDATE HISTORY:
 */
 
-#include <ddk/ntddk.h>
-#include <roscfg.h>
-#include <internal/ob.h>
-#include <limits.h>
-#include <string.h>
-#include <internal/pool.h>
-#include <internal/registry.h>
-#include <ntos/minmax.h>
+#include <ntoskrnl.h>
+#include "cm.h"
 
 #define NDEBUG
 #include <internal/debug.h>
 
-#include "cm.h"
 
 
 static NTSTATUS
@@ -140,7 +133,7 @@ CmiObjectParse(PVOID ParsedObject,
 
       /* Create new key object and put into linked list */
       DPRINT("CmiObjectParse %s\n", cPath);
-      Status = ObCreateObject(NULL,
+      Status = ObRosCreateObject(NULL,
 			      STANDARD_RIGHTS_REQUIRED,
 			      NULL,
 			      CmiKeyType,

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.21 2002/08/18 07:02:56 ei Exp $
+# $Id: makefile,v 1.22 2002/09/07 15:12:24 chorns Exp $
 
 PATH_TO_TOP = ../..
 
@@ -6,7 +6,7 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = gdi32
 
-TARGET_BASE = 0x77ed0000
+TARGET_BASE = 0x77700000
 
 TARGET_SDKLIBS = ntdll.a kernel32.a advapi32.a
 

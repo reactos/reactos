@@ -1,6 +1,6 @@
 #include <ddk/ntddk.h>
 #include <ddk/winddi.h>
-#include <ddk/ntddvid.h>
+#include <ddk/ntddvdeo.h>
 
 HANDLE GdiHeap;
 

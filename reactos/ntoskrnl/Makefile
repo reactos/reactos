@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.80 2002/08/28 07:03:09 hbirr Exp $
+# $Id: Makefile,v 1.81 2002/09/07 15:12:47 chorns Exp $
 #
 # ReactOS Operating System
 #
@@ -34,10 +34,10 @@ endif
 
 ifeq ($(strip $(SDK_PATH_INC)),)
 ASFLAGS += -I./include
-CFLAGS += -I./include -D__NTOSKRNL__ $(CFLAGS_DBG) -Wall -Werror
+CFLAGS += --I./include -D_NTOSKRNL_ $(CFLAGS_DBG) -Wall -Werror
 else
 ASFLAGS += -I./include -I$(SDK_PATH_INC)
-CFLAGS += -I./include -I$(SDK_PATH_INC) -D__NTOSKRNL__ $(CFLAGS_DBG) -Wall -Werror
+CFLAGS += -I./include -I$(SDK_PATH_INC) -D_NTOSKRNL_ $(CFLAGS_DBG) -Wall -Werror
 endif
 
 #
@@ -350,7 +350,8 @@ TAG_OBJECTS := $(join $(dir $(DEP_OBJECTS)),$(patsubst %.o, .%.TAG, $(notdir $(D
 # Include automatic dependancy tracking
 #
 DEP_EXCLUDE_FILTER := ex/napi.% nt/zw.%
-include $(PATH_TO_TOP)/tools/depend.mk
+# FIXME: Disabled
+#include $(PATH_TO_TOP)/tools/depend.mk
 
 
 # Resources
@@ -514,7 +515,7 @@ CLEAN_FILES = $(OBJECTS_PATH)/*.o cc/*.o cm/*.o dbg/*.o dbg/i386/*.o ex/*.o \
 
 $(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(IE_DATA)
 	$(CC) \
-		-Wl,-T,ntoskrnl.lnk \
+		-g -Wl,-T,ntoskrnl.lnk \
 		-nostartfiles \
 		-nostdlib \
 		-mdll \
@@ -535,7 +536,7 @@ $(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(IE_DATA)
 		--kill-at
 	- $(RM) base.tmp
 	$(CC) \
-		-nostartfiles \
+		-g -nostartfiles \
 		-nostdlib \
 		-Wl,-T,ntoskrnl.lnk \
 		-mdll \

@@ -1,7 +1,7 @@
-/* $Id: string.c,v 1.1 1999/11/20 20:41:29 ea Exp $
+/* $Id: string.c,v 1.2 2002/09/07 15:12:06 chorns Exp $
  *
  */
-#include <ntos.h>
+#include <ddk/ntddk.h>
 
 BOOLEAN
 STDCALL

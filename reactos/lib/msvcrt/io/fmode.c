@@ -1,6 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/fcntl.h>
-#include <msvcrt/io.h>
+#include <msvcrti.h>
+
 
 #undef _fmode
 unsigned int _fmode = O_TEXT;

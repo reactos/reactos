@@ -7,9 +7,8 @@
  * UPDATE HISTORY:
  *              12/04/99: Created
  */
+#include <msvcrti.h>
 
-#include <msvcrt/mbstring.h>
-#include <msvcrt/string.h>
 
 size_t _mbclen2(const unsigned int s);
 

@@ -7,10 +7,8 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-#include <msvcrt/time.h>
-#include <msvcrt/stdio.h>
-#include <msvcrt/errno.h>
-#include <msvcrt/internal/file.h>
+#include <msvcrti.h>
+
 
 char *_strtime(char* buf)
 {

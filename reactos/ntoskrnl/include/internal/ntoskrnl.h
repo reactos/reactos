@@ -5,11 +5,17 @@
 #ifndef __INCLUDE_INTERNAL_NTOSKRNL_H
 #define __INCLUDE_INTERNAL_NTOSKRNL_H
 
-#ifndef __ASM__
+#define MM_STACK_SIZE             (3*4096)
 
-#include <ddk/ntddk.h>
+#ifdef AS_INVOKED
 
-#include <stdarg.h>
+#define KernelMode 	0
+#define UserMode 	1
+
+#endif /* AS_INVOKED */
+
+
+#ifndef AS_INVOKED
 
 /*
  * Use these to place a function in a specific section of the executable
@@ -57,11 +63,6 @@ NTSTATUS RtlpInitNlsSections(ULONG Mod1Start,
 			     ULONG Mod3Start,
 			     ULONG Mod3End);
 
-#endif /* __ASM__ */
-
-/*
- * 
- */
-#define MM_STACK_SIZE             (3*4096)
+#endif /* !AS_INVOKED */
 
 #endif /* INCLUDE_INTERNAL_NTOSKRNL_H */

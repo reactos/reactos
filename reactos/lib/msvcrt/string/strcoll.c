@@ -1,5 +1,5 @@
-#include <windows.h>
-#include <msvcrt/string.h>
+#include <msvcrti.h>
+
 
 /* Compare S1 and S2, returning less than, equal to or
    greater than zero if the collated form of S1 is lexicographically

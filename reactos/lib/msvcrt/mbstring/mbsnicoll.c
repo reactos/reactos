@@ -1,4 +1,5 @@
-#include <msvcrt/mbstring.h>
+#include <msvcrti.h>
+
 
 int _mbsnicoll(const unsigned char *s1, const unsigned char *s2, size_t n)
 {

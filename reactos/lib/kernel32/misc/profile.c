@@ -1,4 +1,4 @@
-/* $Id: profile.c,v 1.3 2001/06/07 21:27:45 ekohl Exp $
+/* $Id: profile.c,v 1.4 2002/09/07 15:12:27 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -10,11 +10,11 @@
  *                  Created 01/11/98
  */
 
-#include <ddk/ntddk.h>
 #include <windows.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 #include <wchar.h>
 #include <string.h>
-//#include <stdlib.h>
 
 
 /* FUNCTIONS *****************************************************************/
@@ -81,9 +81,9 @@ GetPrivateProfileSectionA (
 
 DWORD STDCALL
 GetPrivateProfileSectionNamesW (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
+  LPWSTR lpszReturnBuffer,
+  DWORD nSize,
+  LPCWSTR lpFileName
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -93,9 +93,9 @@ GetPrivateProfileSectionNamesW (
 
 DWORD STDCALL
 GetPrivateProfileSectionNamesA (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
+  LPSTR lpszReturnBuffer,
+  DWORD nSize,
+  LPCSTR lpFileName
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -132,14 +132,13 @@ GetPrivateProfileStringA (
 	return 0;
 }
 
-
-DWORD STDCALL
+BOOL STDCALL
 GetPrivateProfileStructW (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
+  LPCWSTR lpszSection,
+  LPCWSTR lpszKey,
+  LPVOID lpStruct,
+  UINT uSizeStruct,
+  LPCWSTR szFile
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -147,13 +146,13 @@ GetPrivateProfileStructW (
 }
 
 
-DWORD STDCALL
+BOOL STDCALL
 GetPrivateProfileStructA (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
+  LPCSTR lpszSection,
+  LPCSTR lpszKey,
+  LPVOID lpStruct,
+  UINT uSizeStruct,
+  LPCSTR szFile
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -307,28 +306,28 @@ WritePrivateProfileStringW(LPCWSTR lpAppName,
 }
 
 
-WINBOOL STDCALL
-WritePrivateProfileStructA (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
-	)
+BOOL STDCALL
+WritePrivateProfileStructA(
+  LPCSTR lpszSection,
+  LPCSTR lpszKey,
+  LPVOID lpStruct,
+  UINT uSizeStruct,
+  LPCSTR szFile
+  )
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
 
 
-WINBOOL STDCALL
-WritePrivateProfileStructW (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
-	)
+BOOL STDCALL
+WritePrivateProfileStructW(
+  LPCWSTR lpszSection,
+  LPCWSTR lpszKey,
+  LPVOID lpStruct,
+  UINT uSizeStruct,
+  LPCWSTR szFile
+  )
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;

@@ -1,4 +1,4 @@
-/* $Id: namespc.c,v 1.32 2002/08/20 20:37:14 hyperion Exp $
+/* $Id: namespc.c,v 1.33 2002/09/07 15:13:04 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -11,14 +11,11 @@
 
 /* INCLUDES ***************************************************************/
 
-#include <limits.h>
-#include <ddk/ntddk.h>
-#include <internal/ob.h>
-#include <internal/io.h>
-#include <internal/pool.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* GLOBALS ****************************************************************/
 
@@ -383,7 +380,7 @@ ObInit(VOID)
 		       L"ObjectType");
 
   /* create root directory */
-  ObCreateObject(NULL,
+  ObRosCreateObject(NULL,
 		 STANDARD_RIGHTS_REQUIRED,
 		 NULL,
 		 ObDirectoryType,
@@ -397,7 +394,7 @@ ObInit(VOID)
 			     OBJ_PERMANENT,
 			     NULL,
 			     NULL);
-  ObCreateObject(NULL,
+  ObRosCreateObject(NULL,
 		 STANDARD_RIGHTS_REQUIRED,
 		 &ObjectAttributes,
 		 ObDirectoryType,
@@ -428,7 +425,7 @@ ObpCreateTypeObject(POBJECT_TYPE ObjectType)
 			     OBJ_PERMANENT,
 			     NULL,
 			     NULL);
-  Status = ObCreateObject(NULL,
+  Status = ObRosCreateObject(NULL,
 			  STANDARD_RIGHTS_REQUIRED,
 			  &ObjectAttributes,
 			  ObTypeObjectType,

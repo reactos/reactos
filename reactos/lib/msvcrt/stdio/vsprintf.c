@@ -1,8 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/stdio.h>
-#include <msvcrt/stdarg.h>
-#include <limits.h>
-#include <msvcrt/internal/file.h>
+#include <msvcrti.h>
+
 
 int
 vsprintf(char *str, const char *fmt, va_list ap)

@@ -1,6 +1,5 @@
+#include <msvcrti.h>
 
-#include <msvcrt/ctype.h>
-#include <msvcrt/stdlib.h>
 
 __int64
 _wtoi64(const wchar_t *nptr)

@@ -3,6 +3,7 @@
 #include <crtdll/stdarg.h>
 #include <crtdll/malloc.h>
 #include <crtdll/internal/file.h>
+#include <ntdef.h>
 
 int _isnanl(double x);
 int _isinfl(double x);

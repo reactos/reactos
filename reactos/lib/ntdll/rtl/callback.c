@@ -1,4 +1,4 @@
-/* $Id: callback.c,v 1.5 2002/06/18 21:51:09 dwelch Exp $
+/* $Id: callback.c,v 1.6 2002/09/07 15:12:40 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -9,14 +9,16 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 #include <string.h>
-#include <napi/teb.h>
 
+#define NDEBUG
+#include <debug.h>
 
 /* TYPES *********************************************************************/
 
-typedef NTSTATUS STDCALL (*CALLBACK_FUNCTION)(PVOID Argument, 
+typedef NTSTATUS STDCALL (*USER_CALLBACK_FUNCTION)(PVOID Argument, 
 					      ULONG ArgumentLength);
 
 /* FUNCTIONS *****************************************************************/
@@ -28,10 +30,10 @@ KiUserCallbackDispatcher(ULONG RoutineIndex,
 {
    PPEB Peb;
    NTSTATUS Status;
-   CALLBACK_FUNCTION Callback;
+   USER_CALLBACK_FUNCTION Callback;
    
    Peb = NtCurrentPeb();
-   Callback = (CALLBACK_FUNCTION)Peb->KernelCallbackTable[RoutineIndex];
+   Callback = (USER_CALLBACK_FUNCTION)Peb->KernelCallbackTable[RoutineIndex];
    DbgPrint("KiUserCallbackDispatcher(%d, %x, %d)\n", RoutineIndex,
 	    Argument, ArgumentLength);
    Status = Callback(Argument, ArgumentLength);

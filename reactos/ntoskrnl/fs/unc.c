@@ -1,10 +1,12 @@
-/* $Id: unc.c,v 1.2 2002/08/09 22:57:48 ekohl Exp $
+/* $Id: unc.c,v 1.3 2002/09/07 15:12:50 chorns Exp $
  *
  * reactos/ntoskrnl/fs/unc.c
  *
  */
-#include <ddk/ntddk.h>
-#include <ddk/ntifs.h>
+#include <ntoskrnl.h>
+
+#define NDEBUG
+#include <internal/debug.h>
 
 
 /**********************************************************************

@@ -115,12 +115,11 @@ InterlockedExchange(LPLONG target, LONG value )
  * RETURNS
  *	Prior value of value pointed to by Destination
  */
-PVOID 
-STDCALL 
+LONG STDCALL
 InterlockedCompareExchange(
-	    PVOID *Destination, 
-	    PVOID Exchange,     
-            PVOID Comperand     ) 
+  LPLONG Destination,
+  LONG Exchange,
+  LONG Comperand)
 {	
 	PVOID ret;
 	__asm__ ( /* lock for SMP systems */

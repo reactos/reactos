@@ -1,6 +1,9 @@
 #ifndef __SERVICES_FS_MS_MSFS_H
 #define __SERVICES_FS_MS_MSFS_H
 
+#define NTOS_KERNEL_MODE
+#include <ntos.h>
+
 typedef struct _MSFS_DEVICE_EXTENSION
 {
    LIST_ENTRY MailslotListHead;

@@ -1,6 +1,6 @@
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/stdlib.h>
+#include <msvcrti.h>
 
 
 double wcstod(const wchar_t *s, wchar_t **sret)

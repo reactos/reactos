@@ -16,10 +16,11 @@
 #include <include/object.h>
 #include <include/eng.h>
 
-BOOLEAN CopyBitsCopy(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
-                     SURFGDI *DestGDI,  SURFGDI *SourceGDI,
-                     PRECTL  DestRect,  POINTL  *SourcePoint,
-                     ULONG   Delta,     XLATEOBJ *ColorTranslation)
+BOOL
+CopyBitsCopy(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
+             SURFGDI *DestGDI,  SURFGDI *SourceGDI,
+             RECTL  *DestRect,  POINTL  *SourcePoint,
+             ULONG   Delta,     XLATEOBJ *ColorTranslation)
 {
   ULONG DestWidth, DestHeight, CurrentDestLine, CurrentSourceLine, CurrentDestCol, CurrentSourceCol, i, TranslationPixel;
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: process.c,v 1.12 2002/07/24 17:49:31 ekohl Exp $
+/* $Id: process.c,v 1.13 2002/09/07 15:12:53 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -29,10 +29,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ps.h>
+#include <ntoskrnl.h>
 
+#define NDEBUG
 #include <internal/debug.h>
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -79,7 +80,7 @@ IoGetRequestorProcess(IN PIRP Irp)
  * 	Previous value for the current thread's hard errors
  * 	processing policy.
  */
-BOOLEAN STDCALL EXPORTED
+BOOLEAN STDCALL
 IoSetThreadHardErrorMode(IN BOOLEAN HardErrorEnabled)
 {
   BOOLEAN PreviousHEM = NtCurrentTeb()->HardErrorDisabled;

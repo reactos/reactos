@@ -1,9 +1,14 @@
-/* $Id: name.c,v 1.3 2001/04/24 18:36:39 ea Exp $
+/* $Id: name.c,v 1.4 2002/09/07 15:12:50 chorns Exp $
  *
  * reactos/ntoskrnl/fs/name.c
  *
  */
-#include <ntos.h>
+
+#include <ntoskrnl.h>
+
+#define NDEBUG
+#include <internal/debug.h>
+
 
 /* DATA */
 

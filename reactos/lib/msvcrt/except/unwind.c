@@ -1,4 +1,6 @@
-#include <windows.h>
+#include <msvcrti.h>
+
+
 #define PEXCEPTION_FRAME void*
 
 void _global_unwind2( PEXCEPTION_FRAME frame )

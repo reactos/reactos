@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.41 2002/08/22 15:21:06 ekohl Exp $
+/* $Id: console.c,v 1.42 2002/09/07 15:12:27 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -13,14 +13,12 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ddk/ntddblue.h>
-#include <windows.h>
+#include <kernel32.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 #include <assert.h>
 #include <wchar.h>
-
 #include <csrss/csrss.h>
-#include <ntdll/csr.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
@@ -580,7 +578,7 @@ GetStdHandle(DWORD nStdHandle)
       * of the specified device. Otherwise the value is INVALID_HANDLE_VALUE.
       */
 {
-  PRTL_USER_PROCESS_PARAMETERS Ppb;
+  PRTL_ROS_USER_PROCESS_PARAMETERS Ppb;
   
   Ppb = NtCurrentPeb()->ProcessParameters;  
   switch (nStdHandle)
@@ -605,7 +603,7 @@ SetStdHandle(DWORD nStdHandle,
       * RETURNS: TRUE if the function succeeds, FALSE otherwise.
       */
 {
-  PRTL_USER_PROCESS_PARAMETERS Ppb;
+  PRTL_ROS_USER_PROCESS_PARAMETERS Ppb;
    
   Ppb = NtCurrentPeb()->ProcessParameters;
   
@@ -1937,7 +1935,7 @@ GetConsoleTitleW(
 			& Re.quest,
 			& Re.ply,
 			(sizeof (CSRSS_GET_TITLE_REQUEST) +
-			sizeof (LPC_MESSAGE_HEADER) +
+			sizeof (LPC_MESSAGE) +
 			sizeof (ULONG)),
 			sizeof (CSRSS_API_REPLY)
 			);
@@ -2054,7 +2052,7 @@ SetConsoleTitleW(
 			       &Reply,
 			       sizeof(CSRSS_SET_TITLE_REQUEST) +
 			       c +
-			       sizeof( LPC_MESSAGE_HEADER ) +
+			       sizeof( LPC_MESSAGE ) +
 			       sizeof( ULONG ),
 			       sizeof(CSRSS_API_REPLY));
   
@@ -2107,7 +2105,7 @@ SetConsoleTitleA(
 			       &Reply,
 			       sizeof(CSRSS_SET_TITLE_REQUEST) +
 			       c +
-			       sizeof( LPC_MESSAGE_HEADER ) +
+			       sizeof( LPC_MESSAGE ) +
 			       sizeof( ULONG ),
 			       sizeof(CSRSS_API_REPLY));
   
@@ -2203,7 +2201,6 @@ WriteConsoleW(
 #endif
   return(FALSE);
 }
-
 
 /*--------------------------------------------------------------
  *	CreateConsoleScreenBuffer

@@ -1,6 +1,5 @@
-#include <msvcrt/float.h>
-#include <msvcrt/math.h>
-#include <msvcrt/internal/ieee.h>
+#include <msvcrti.h>
+
 
 #define _FPCLASS_SNAN	0x0001	/* signaling NaN */
 #define _FPCLASS_QNAN	0x0002	/* quiet NaN */

@@ -1,6 +1,4 @@
-#include <msvcrt/process.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/stdarg.h>
+#include <msvcrti.h>
 
 
 int _spawnlpe(int mode, const char *path, const char *szArgv0, ... /*, const char **envp */)

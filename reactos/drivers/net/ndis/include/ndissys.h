@@ -12,39 +12,10 @@
 
 #define NDIS50 1    /* Use NDIS 5.0 structures by default */
 
-#ifdef _MSC_VER
-#include <basetsd.h>
-#include <ntddk.h>
-#include <windef.h>
-#include <ndis.h>
-#else /* _MSC_VER */
 #include <ddk/ntddk.h>
-#include <net/ndis.h>
-#endif /* _MSC_VER */
+#include <ddk/ndis.h>
 
 #include <debug.h>
-
-
-#ifndef _MSC_VER
-/* FIXME: The following should be moved to ntddk.h */
-
-/*
- * ULONG MmGetMdlByteCount(
- *     IN  PMDL    Mdl)
- */
-#define MmGetMdlByteCount(Mdl)  \
-    ((Mdl)->ByteCount)
-
-#endif
-
-
-/* Exported functions */
-#ifdef _MSC_VER
-#define EXPORT __declspec(dllexport)
-#else
-#define EXPORT STDCALL
-#endif
-
 
 #ifdef DBG
 

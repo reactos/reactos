@@ -1,13 +1,14 @@
 /*
  * dllmain.c
  *
- * $Revision: 1.4 $
- * $Author: dwelch $
- * $Date: 2002/08/26 13:06:03 $
+ * $Revision: 1.5 $
+ * $Author: chorns $
+ * $Date: 2002/09/07 15:12:24 $
  *
  */
 
 #include <windows.h>
+#include <ntos/gdi.h>
 #include <win32k/win32k.h>
 
 /*

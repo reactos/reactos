@@ -1,5 +1,6 @@
 #include <stdio.h>
-#include <ntddk.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 
 int main()
 {

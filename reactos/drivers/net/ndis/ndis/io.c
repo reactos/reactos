@@ -85,7 +85,7 @@ BOOLEAN STDCALL ServiceRoutine(
 
 
 VOID
-EXPORT
+STDCALL
 NdisCompleteDmaTransfer(
     OUT PNDIS_STATUS    Status,
     IN  PNDIS_HANDLE    NdisDmaHandle,
@@ -99,7 +99,7 @@ NdisCompleteDmaTransfer(
 
 
 VOID
-EXPORT
+STDCALL
 NdisFlushBuffer(
     IN  PNDIS_BUFFER    Buffer,
     IN  BOOLEAN         WriteToDevice)
@@ -109,7 +109,7 @@ NdisFlushBuffer(
 
 
 ULONG
-EXPORT
+STDCALL
 NdisGetCacheFillSize(
     VOID)
 {
@@ -120,7 +120,7 @@ NdisGetCacheFillSize(
 
 
 VOID
-EXPORT
+STDCALL
 NdisImmediateReadPortUchar(
     IN  NDIS_HANDLE WrapperConfigurationContext,
     IN  ULONG       Port,
@@ -131,7 +131,7 @@ NdisImmediateReadPortUchar(
 
 
 VOID
-EXPORT
+STDCALL
 NdisImmediateReadPortUlong(
     IN  NDIS_HANDLE WrapperConfigurationContext,
     IN  ULONG       Port,
@@ -142,7 +142,7 @@ NdisImmediateReadPortUlong(
 
 
 VOID
-EXPORT
+STDCALL
 NdisImmediateReadPortUshort(
     IN  NDIS_HANDLE WrapperConfigurationContext,
     IN  ULONG       Port,
@@ -153,7 +153,7 @@ NdisImmediateReadPortUshort(
 
 
 VOID
-EXPORT
+STDCALL
 NdisImmediateWritePortUchar(
     IN  NDIS_HANDLE WrapperConfigurationContext,
     IN  ULONG       Port,
@@ -164,7 +164,7 @@ NdisImmediateWritePortUchar(
 
 
 VOID
-EXPORT
+STDCALL
 NdisImmediateWritePortUlong(
     IN  NDIS_HANDLE WrapperConfigurationContext,
     IN  ULONG       Port,
@@ -175,7 +175,7 @@ NdisImmediateWritePortUlong(
 
 
 VOID
-EXPORT
+STDCALL
 NdisImmediateWritePortUshort(
     IN  NDIS_HANDLE WrapperConfigurationContext,
     IN  ULONG       Port,
@@ -186,7 +186,7 @@ NdisImmediateWritePortUshort(
 
 
 NDIS_STATUS
-EXPORT
+STDCALL
 NdisMAllocateMapRegisters(
     IN  NDIS_HANDLE MiniportAdapterHandle,
     IN  UINT        DmaChannel,
@@ -201,7 +201,7 @@ NdisMAllocateMapRegisters(
 
 
 VOID
-EXPORT
+STDCALL
 NdisMCompleteDmaTransfer(
     OUT PNDIS_STATUS    Status,
     IN  PNDIS_HANDLE    MiniportDmaHandle,
@@ -215,7 +215,7 @@ NdisMCompleteDmaTransfer(
 
 
 VOID
-EXPORT
+STDCALL
 NdisMDeregisterDmaChannel(
     IN  PNDIS_HANDLE    MiniportDmaHandle)
 {
@@ -224,7 +224,7 @@ NdisMDeregisterDmaChannel(
 
 
 VOID
-EXPORT
+STDCALL
 NdisMDeregisterInterrupt(
     IN  PNDIS_MINIPORT_INTERRUPT    Interrupt)
 /*
@@ -238,7 +238,7 @@ NdisMDeregisterInterrupt(
 
 
 VOID
-EXPORT
+STDCALL
 NdisMDeregisterIoPortRange(
     IN  NDIS_HANDLE MiniportAdapterHandle,
     IN  UINT        InitialPort,
@@ -260,7 +260,7 @@ NdisMDeregisterIoPortRange(
 
 
 VOID
-EXPORT
+STDCALL
 NdisMFreeMapRegisters(
     IN  NDIS_HANDLE MiniportAdapterHandle)
 {
@@ -269,7 +269,7 @@ NdisMFreeMapRegisters(
 
 
 NDIS_STATUS
-EXPORT
+STDCALL
 NdisMMapIoSpace(
     OUT PVOID                   *VirtualAddress,
     IN  NDIS_HANDLE             MiniportAdapterHandle,
@@ -283,7 +283,7 @@ NdisMMapIoSpace(
 
 
 ULONG
-EXPORT
+STDCALL
 NdisMReadDmaCounter(
     IN  NDIS_HANDLE MiniportDmaHandle)
 {
@@ -294,7 +294,7 @@ NdisMReadDmaCounter(
 
 
 NDIS_STATUS
-EXPORT
+STDCALL
 NdisMRegisterDmaChannel(
     OUT PNDIS_HANDLE            MiniportDmaHandle,
     IN  NDIS_HANDLE             MiniportAdapterHandle,
@@ -310,7 +310,7 @@ NdisMRegisterDmaChannel(
 
 
 NDIS_STATUS
-EXPORT
+STDCALL
 NdisMRegisterInterrupt(
     OUT PNDIS_MINIPORT_INTERRUPT    Interrupt,
     IN  NDIS_HANDLE                 MiniportAdapterHandle,
@@ -395,7 +395,7 @@ NdisMRegisterInterrupt(
 
 
 NDIS_STATUS
-EXPORT
+STDCALL
 NdisMRegisterIoPortRange(
     OUT PVOID       *PortOffset,
     IN  NDIS_HANDLE MiniportAdapterHandle,
@@ -441,7 +441,7 @@ NdisMRegisterIoPortRange(
 
 
 VOID
-EXPORT
+STDCALL
 NdisMSetupDmaTransfer(
     OUT	PNDIS_STATUS    Status,
     IN	PNDIS_HANDLE    MiniportDmaHandle,
@@ -455,7 +455,7 @@ NdisMSetupDmaTransfer(
 
 
 VOID
-EXPORT
+STDCALL
 NdisMUnmapIoSpace(
     IN  NDIS_HANDLE MiniportAdapterHandle,
     IN  PVOID       VirtualAddress,

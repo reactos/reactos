@@ -1,6 +1,8 @@
 #ifndef __INCLUDE_INTERNAL_XHAL_H
 #define __INCLUDE_INTERNAL_XHAL_H
 
+#ifndef AS_INVOKED
+
 NTSTATUS
 xHalQueryDriveLayout(IN PUNICODE_STRING DeviceName,
 		     OUT PDRIVE_LAYOUT_INFORMATION *LayoutInfo);
@@ -35,5 +37,7 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
 			  IN ULONG SectorsPerTrack,
 			  IN ULONG NumberOfHeads,
 			  IN PDRIVE_LAYOUT_INFORMATION PartitionBuffer);
+
+#endif /* !AS_INVOKED */
 
 #endif

@@ -7,9 +7,8 @@
  * UPDATE HISTORY:
  *              12/04/99: Created
  */
+#include <msvcrti.h>
 
-#include <crtdll/mbstring.h>
-#include <crtdll/mbctype.h>
 
 int _mbbtype(unsigned char c , int type)
 {
@@ -42,7 +41,7 @@ int _mbbtype(unsigned char c , int type)
 
 int _mbsbtype( const unsigned char *str, size_t n )
 {
-  if (str == NULL)
+  if (str == (void *)0)
     return -1;
   return _mbbtype(*(str+n),1);
 }

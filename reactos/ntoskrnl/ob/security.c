@@ -10,10 +10,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ob.h>
+#include <ntoskrnl.h>
 
+#define NDEBUG
 #include <internal/debug.h>
+
 
 /* FUNCTIONS ***************************************************************/
 
@@ -45,18 +46,18 @@ ObReleaseObjectSecurity(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 
 
 NTSTATUS STDCALL
-NtQuerySecurityObject(IN HANDLE ObjectHandle,
-		      IN CINT SecurityObjectInformationClass,
-		      OUT PVOID SecurityObjectInformation,
-		      IN ULONG Length,
-		      OUT PULONG ReturnLength)
+NtQuerySecurityObject(IN HANDLE Handle,
+  IN SECURITY_INFORMATION  SecurityInformation,
+  OUT PSECURITY_DESCRIPTOR  SecurityDescriptor,
+  IN ULONG  SecurityDescriptorLength,
+  OUT PULONG  ReturnLength)
 {
    NTSTATUS Status;
    PVOID Object;
    OBJECT_HANDLE_INFORMATION HandleInfo;
    POBJECT_HEADER Header;
    
-   Status = ObReferenceObjectByHandle(ObjectHandle,
+   Status = ObReferenceObjectByHandle(Handle,
 				      0,
 				      NULL,
 				      KeGetPreviousMode(),
@@ -72,10 +73,10 @@ NtQuerySecurityObject(IN HANDLE ObjectHandle,
        Header->ObjectType->Security != NULL)
      {
 	Status = Header->ObjectType->Security(Object,
-					      SecurityObjectInformationClass,
-					      SecurityObjectInformation,
-					      &Length);
-	*ReturnLength = Length;
+					      SecurityInformation,
+					      SecurityDescriptor,
+					      &SecurityDescriptorLength);
+	*ReturnLength = SecurityDescriptorLength;
      }
    else
      {

@@ -1,4 +1,5 @@
-#include <msvcrt/stdlib.h>
+#include <msvcrti.h>
+
 
 int _wtoi( const wchar_t *str )
 {

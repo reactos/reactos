@@ -1,10 +1,6 @@
 /* Copyright (C) 1998 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/stdlib.h>
-#include <msvcrt/stdio.h>
-#include <msvcrt/string.h>
-#include <msvcrt/float.h>
-#include <msvcrt/alloc.h>
-// #include <msvcrt/locale.h>
+#include <msvcrti.h>
+
 
 void __ecvround (char *, char *, const char *, int *);
 
@@ -39,7 +35,7 @@ __ecvround (char *numbuf, char *last_digit, const char *after_last, int *decpt)
 char *
 ecvtbuf (double value, int ndigits, int *decpt, int *sign, char *buf)
 {
-  static char INFINITY[] = "Infinity";
+  static char _INFINITY[] = "Infinity";
   char decimal = '.' /* localeconv()->decimal_point[0] */;
   char *cvtbuf = (char *)alloca (ndigits + 20); /* +3 for sign, dot, null; */
 					        /* two extra for rounding */
@@ -60,7 +56,7 @@ ecvtbuf (double value, int ndigits, int *decpt, int *sign, char *buf)
   if (strncmp (s, "Inf", 3) == 0)
     {
       /* SunOS docs says we have return "Infinity" for NDIGITS >= 8.  */
-      memcpy (buf, INFINITY, ndigits >= 8 ? 9 : 3);
+      memcpy (buf, _INFINITY, ndigits >= 8 ? 9 : 3);
       if (ndigits < 8)
 	buf[3] = '\0';
     }

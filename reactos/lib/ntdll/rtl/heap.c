@@ -12,14 +12,13 @@
  * require it.
  */
 
+#define NTOS_USER_MODE
+#include <ntos.h>
 #include <string.h>
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
-#include <ntos/heap.h>
-#include <ntos/minmax.h>
 
 #define NDEBUG
-#include <ntdll/ntdll.h>
+#include <debug.h>
+
 
 #define DPRINTF DPRINT
 #define ERR DPRINT
@@ -38,7 +37,7 @@
 #endif
 
 
-static CRITICAL_SECTION RtlpProcessHeapsListLock;
+static RTL_CRITICAL_SECTION RtlpProcessHeapsListLock;
 
 
 typedef struct tagARENA_INUSE
@@ -101,13 +100,13 @@ typedef struct tagSUBHEAP
 
 typedef struct tagHEAP
 {
-    SUBHEAP          subheap;       /* First sub-heap */
-    struct tagHEAP  *next;          /* Next heap for this process */
+    SUBHEAP          subheap;       	/* First sub-heap */
+    struct tagHEAP  *next;          	/* Next heap for this process */
     FREE_LIST_ENTRY  freeList[HEAP_NB_FREE_LISTS];  /* Free lists */
-    CRITICAL_SECTION critSection;   /* Critical section for serialization */
-    DWORD            flags;         /* Heap flags */
-    DWORD            magic;         /* Magic number */
-    void            *private;       /* Private pointer for the user of the heap */
+    RTL_CRITICAL_SECTION critSection; /* Critical section for serialization */
+    DWORD            flags;         	/* Heap flags */
+    DWORD            magic;         	/* Magic number */
+    void            *private;       	/* Private pointer for the user of the heap */
 } HEAP, *PHEAP;
 
 #define HEAP_MAGIC       ((DWORD)('H' | ('E'<<8) | ('A'<<16) | ('P'<<24)))
@@ -1560,7 +1559,7 @@ RtlInitializeHeapManager(VOID)
    Peb = NtCurrentPeb();
    
    Peb->NumberOfHeaps = 0;
-   Peb->MaximumNumberOfHeaps = (PAGESIZE - sizeof(PEB)) / sizeof(HANDLE);
+   Peb->MaximumNumberOfHeaps = (PAGE_SIZE - sizeof(PEB)) / sizeof(HANDLE);
    Peb->ProcessHeaps = (PVOID)Peb + sizeof(PEB);
    
    RtlInitializeCriticalSection(&RtlpProcessHeapsListLock);

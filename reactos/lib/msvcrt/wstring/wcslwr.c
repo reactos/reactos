@@ -7,8 +7,8 @@
  * Copyright 1996 Jukka Iivonen
  * Copyright 1997 Uwe Bonnes
  */
+#include <msvcrti.h>
 
-#include <msvcrt/wchar.h>
 
 wchar_t * _wcslwr(wchar_t *x)
 {

@@ -1,4 +1,4 @@
-/* $Id: cntrller.c,v 1.7 2001/04/13 16:12:25 chorns Exp $
+/* $Id: cntrller.c,v 1.8 2002/09/07 15:12:52 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,10 +11,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/pool.h>
+#include <ntoskrnl.h>
 
+#define NDEBUG
 #include <internal/debug.h>
+
 
 /* GLOBALS *******************************************************************/
 

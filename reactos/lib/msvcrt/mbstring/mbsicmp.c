@@ -7,9 +7,8 @@
  * UPDATE HISTORY:
  *              12/04/99: Created
  */
-#include <msvcrt/mbstring.h>
-#include <msvcrt/mbctype.h>
-#include <msvcrt/ctype.h>
+#include <msvcrti.h>
+
 
 int _mbsicmp(const unsigned char *str1, const unsigned char *str2)
 {

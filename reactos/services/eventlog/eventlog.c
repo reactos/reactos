@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: eventlog.c,v 1.2 2002/07/20 13:32:26 ekohl Exp $
+/* $Id: eventlog.c,v 1.3 2002/09/07 15:13:07 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -29,9 +29,9 @@
 
 #define UNICODE
 
-#define NTOS_MODE_USER
-#include <ntos.h>
 #include <windows.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 
 #include "eventlog.h"
 

@@ -7,12 +7,13 @@
 #ifndef __MSAFD_H
 #define __MSAFD_H
 
+#include <windows.h>
+#include <ws2spi.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
+#include <ddk/tdi.h>
 #include <wsahelp.h>
 #include <winsock2.h>
-#include <ws2spi.h>
-#include <ddk/ntddk.h>
-#include <windows.h>
-#include <net/tdi.h>
 #include <afd/shared.h>
 #include <debug.h>
 

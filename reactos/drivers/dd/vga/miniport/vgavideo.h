@@ -1,12 +1,13 @@
-#include <ddk/ntddk.h>
-#include <ddk/ntddvid.h>
+#define NTOS_KERNEL_MODE
+#include <ntos.h>
+#include <ntos/ntddvid.h>
+#include <ddk/ntddvdeo.h>
 
 #define VGA_NORMAL 0
 #define VGA_AND    8
 #define VGA_OR     16
 #define VGA_XOR    24
 
-//This is in mingw standard headers
 //typedef struct { int quot, rem; } div_t;
 
 int maskbit[640], y80[480], xconv[640], bit8[640], startmasks[8], endmasks[8];

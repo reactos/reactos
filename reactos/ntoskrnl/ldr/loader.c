@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.120 2002/08/14 20:58:36 dwelch Exp $
+/* $Id: loader.c,v 1.121 2002/09/07 15:12:58 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -23,19 +23,11 @@
 
 /* INCLUDES *****************************************************************/
 
+#include <ntoskrnl.h>
 #include <limits.h>
-#include <ddk/ntddk.h>
-#include <roscfg.h>
-#include <internal/module.h>
-#include <internal/ntoskrnl.h>
-#include <internal/kd.h>
-#include <internal/io.h>
-#include <internal/mm.h>
-#include <internal/ps.h>
-#include <internal/ldr.h>
-#include <internal/pool.h>
-#include <internal/kd.h>
-#include <ntos/minmax.h>
+
+#define NDEBUG
+#include <internal/debug.h>
 
 #ifdef HALDBG
 #include <internal/ntosdbg.h>
@@ -43,8 +35,6 @@
 #define ps(args...)
 #endif
 
-#define NDEBUG
-#include <internal/debug.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -535,6 +525,9 @@ LdrInitializeBootStartDriver(PVOID ModuleLoadBase,
   wcsncpy(Buffer, Start, Length);
   RtlCreateUnicodeString(&DeviceNode->ServiceName, Buffer);
 
+  DPRINT1("Driver loaded at (%.08x) Length (0x%.08x)\n",
+    ModuleObject->Base, ModuleObject->Length);
+
   Status = IopInitializeDriver(ModuleObject->EntryPoint,
 			       DeviceNode, FALSE);
   if (!NT_SUCCESS(Status))
@@ -629,14 +622,14 @@ LdrpQueryModuleInformation(PVOID Buffer,
       current = CONTAINING_RECORD(current_entry,MODULE_OBJECT,ListEntry);
 
       Smi->Module[ModuleCount].Unknown2 = 0;		/* Always 0 */
-      Smi->Module[ModuleCount].BaseAddress = current->Base;
+      Smi->Module[ModuleCount].Base = current->Base;
       Smi->Module[ModuleCount].Size = current->Length;
       Smi->Module[ModuleCount].Flags = 0;		/* Flags ??? (GN) */
-      Smi->Module[ModuleCount].EntryIndex = ModuleCount;
+      Smi->Module[ModuleCount].Index = ModuleCount;
 
       AnsiName.Length = 0;
       AnsiName.MaximumLength = 256;
-      AnsiName.Buffer = Smi->Module[ModuleCount].Name;
+      AnsiName.Buffer = Smi->Module[ModuleCount].ImageName;
       RtlUnicodeStringToAnsiString(&AnsiName,
 				   &current->FullName,
 				   FALSE);
@@ -1117,7 +1110,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
 	{
 	  for (i = 0; i < PAGE_ROUND_DOWN(Length); i++)
 	    {
-	      MmSetPageProtect(NULL, BaseAddress + (i * PAGESIZE), 
+	      MmSetPageProtect(NULL, BaseAddress + (i * PAGE_SIZE), 
 			       PAGE_READONLY);
 	    }
 	}
@@ -1186,7 +1179,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
 
   DPRINT("Loading Module %wZ...\n", FileName);
 
-  if ((KdDebuggerEnabled == TRUE) && (KdDebugState & KD_DEBUG_GDB))
+  if ((*KdDebuggerEnabled == TRUE) && (KdDebugState & KD_DEBUG_GDB))
     {
       DPRINT("Module %wZ loaded at 0x%.08x.\n",
 	      FileName, CreatedModuleObject->Base);

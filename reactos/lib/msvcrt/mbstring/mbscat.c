@@ -1,4 +1,5 @@
-#include <msvcrt/string.h>
+#include <msvcrti.h>
+
 
 unsigned char * _mbscat(unsigned char *dst, const unsigned char *src)
 {

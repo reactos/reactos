@@ -1,5 +1,5 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/string.h>
+#include <string.h>
 
 
 char *strstr(const char *s, const char *find)

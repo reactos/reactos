@@ -9,9 +9,8 @@
  */
 #include <ndissys.h>
 
-
 NDIS_STATUS
-EXPIMP
+STDCALL
 NdisClAddParty(
     IN      NDIS_HANDLE         NdisVcHandle,
     IN      NDIS_HANDLE         ProtocolPartyContext,
@@ -31,7 +30,7 @@ NdisClAddParty(
 
 
 NDIS_STATUS
-EXPIMP
+STDCALL
 NdisClCloseAddressFamily(
     IN  NDIS_HANDLE NdisAfHandle)
 /*
@@ -48,7 +47,7 @@ NdisClCloseAddressFamily(
 
 
 NDIS_STATUS
-EXPIMP
+STDCALL
 NdisClCloseCall(
     IN  NDIS_HANDLE NdisVcHandle,
     IN  NDIS_HANDLE NdisPartyHandle OPTIONAL,
@@ -68,7 +67,7 @@ NdisClCloseCall(
 
 
 NDIS_STATUS
-EXPIMP
+STDCALL
 NdisClDeregisterSap(
     IN  NDIS_HANDLE NdisSapHandle)
 /*
@@ -85,7 +84,7 @@ NdisClDeregisterSap(
 
 
 NDIS_STATUS
-EXPIMP
+STDCALL
 NdisClDropParty(
     IN  NDIS_HANDLE NdisPartyHandle,
     IN  PVOID       Buffer  OPTIONAL,
@@ -104,7 +103,7 @@ NdisClDropParty(
 
 
 VOID
-EXPIMP
+STDCALL
 NdisClIncomingCallComplete(
     IN  NDIS_STATUS         Status,
     IN  NDIS_HANDLE         NdisVcHandle,
@@ -121,7 +120,7 @@ NdisClIncomingCallComplete(
 
 
 NDIS_STATUS
-EXPIMP
+STDCALL
 NdisClMakeCall(
     IN      NDIS_HANDLE         NdisVcHandle,
     IN OUT  PCO_CALL_PARAMETERS CallParameters,
@@ -141,7 +140,7 @@ NdisClMakeCall(
 
 
 NDIS_STATUS 
-EXPIMP
+STDCALL
 NdisClModifyCallQoS(
     IN  NDIS_HANDLE         NdisVcHandle,
     IN  PCO_CALL_PARAMETERS CallParameters)
@@ -159,7 +158,7 @@ NdisClModifyCallQoS(
 
 
 NDIS_STATUS
-EXPIMP
+STDCALL
 NdisClOpenAddressFamily(
     IN  NDIS_HANDLE                     NdisBindingHandle,
     IN  PCO_ADDRESS_FAMILY              AddressFamily,
@@ -181,7 +180,7 @@ NdisClOpenAddressFamily(
 
 
 NDIS_STATUS
-EXPIMP
+STDCALL
 NdisClRegisterSap(
     IN  NDIS_HANDLE     NdisAfHandle,
     IN  NDIS_HANDLE     ProtocolSapContext,

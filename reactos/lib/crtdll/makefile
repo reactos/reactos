@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.46 2001/08/21 20:13:05 chorns Exp $
+# $Id: makefile,v 1.47 2002/09/07 15:12:23 chorns Exp $
 
 PATH_TO_TOP = ../..
 
@@ -10,7 +10,7 @@ TARGET_LFLAGS = -nostartfiles
 
 TARGET_SDKLIBS = kernel32.a
 
-TARGET_BASE = 0x77630000
+TARGET_BASE = 0x77500000
 
 TARGET_DEFONLY = yes
 

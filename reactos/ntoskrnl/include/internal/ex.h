@@ -5,41 +5,7 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_EXECUTIVE_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_EXECUTIVE_H
 
-#include <ddk/ntddk.h>
-#include <ntos/time.h>
-
-typedef struct _WINSTATION_OBJECT
-{   
-  CSHORT Type;
-  CSHORT Size;
-
-  KSPIN_LOCK Lock;
-  UNICODE_STRING Name;
-  LIST_ENTRY DesktopListHead;
-  PRTL_ATOM_TABLE AtomTable;
-  PVOID HandleTable;
-  struct _DESKTOP_OBJECT* ActiveDesktop;
-  /* FIXME: Clipboard */
-} WINSTATION_OBJECT, *PWINSTATION_OBJECT;
-
-typedef struct _DESKTOP_OBJECT
-{   
-  CSHORT Type;
-  CSHORT Size;
-  LIST_ENTRY ListEntry;
-  KSPIN_LOCK Lock;
-  UNICODE_STRING Name;
-  /* Pointer to the associated window station. */
-  struct _WINSTATION_OBJECT *WindowStation;
-  /* Head of the list of windows in this desktop. */
-  LIST_ENTRY WindowListHead;
-  /* Pointer to the active queue. */
-  PVOID ActiveMessageQueue;
-  /* Handle of the desktop window. */
-  HANDLE DesktopWindow;
-  HANDLE PrevActiveWindow;
-} DESKTOP_OBJECT, *PDESKTOP_OBJECT;
-
+#ifndef AS_INVOKED
 
 typedef VOID (*PLOOKASIDE_MINMAX_ROUTINE)(
   POOL_TYPE PoolType,
@@ -64,5 +30,7 @@ VOID
 ExInitializeWorkerThreads(VOID);
 VOID
 ExpInitLookasideLists(VOID);
+
+#endif /* !AS_INVOKED */
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_EXECUTIVE_H */

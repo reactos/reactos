@@ -1,4 +1,4 @@
-/* $Id: read.c,v 1.6 2002/05/07 22:32:13 hbirr Exp $
+/* $Id: read.c,v 1.7 2002/09/07 15:12:32 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -11,14 +11,13 @@
  *                          any amount of data has been read. It's the expected
  *                          behavior for line-buffered streams (KJK::Hyperion)
  */
-#include <windows.h>
-#include <msvcrt/io.h>
-#include <msvcrt/internal/file.h>
+#include <msvcrti.h>
 
 #define NDEBUG
-#include <msvcrt/msvcrtdbg.h>
+#include <msvcrtdbg.h>
 
-size_t _read(int _fd, void *_buf, size_t _nbyte)
+
+int _read(int _fd, void *_buf, unsigned int _nbyte)
 {
    DWORD _rbyte = 0, nbyte = _nbyte;
    char *bufp = (char*)_buf;
@@ -31,7 +30,7 @@ size_t _read(int _fd, void *_buf, size_t _nbyte)
    if(_nbyte == 0)
       return 0;
 
-   hfile = _get_osfhandle(_fd);
+   hfile = (HANDLE)_get_osfhandle(_fd);
    istext = __fileno_getmode(_fd) & O_TEXT;
 
    /* read data */

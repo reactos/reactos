@@ -1,8 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/string.h>
-#include <msvcrt/time.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/wchar.h>
+#include <msvcrti.h>
+
 
 #define TM_YEAR_BASE 1900
 
@@ -196,7 +194,10 @@ _fmt(const char *format, const struct tm *t)
 	  return 0;
 	continue;
       case 'Z':
+#if 0
+  // FIXME: t->tm_zone does not appear to be in MS headers
 	if (!t->tm_zone || !_add(t->tm_zone))
+#endif
 	  return 0;
 	continue;
       case '%':

@@ -1,4 +1,5 @@
-#include <msvcrt/math.h>
+#include <msvcrti.h>
+
 
 double _cabs( struct _complex z )
 {

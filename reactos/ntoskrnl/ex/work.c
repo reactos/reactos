@@ -1,4 +1,4 @@
-/* $Id: work.c,v 1.13 2002/05/14 21:19:16 dwelch Exp $
+/* $Id: work.c,v 1.14 2002/09/07 15:12:50 chorns Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -11,12 +11,11 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-
-#include <internal/ps.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* DEFINES *******************************************************************/
 
@@ -60,7 +59,7 @@ WORK_QUEUE EiHyperCriticalWorkQueue;
 
 /* FUNCTIONS ****************************************************************/
 
-static NTSTATUS STDCALL
+static VOID STDCALL
 ExWorkerThreadEntryPoint(PVOID context)
 /*
  * FUNCTION: Entry point for a worker thread
@@ -81,8 +80,8 @@ ExWorkerThreadEntryPoint(PVOID context)
 					      &queue->Lock);
 	if (current!=NULL)
 	  {
-	     item = CONTAINING_RECORD(current,WORK_QUEUE_ITEM,Entry);
-	     item->Routine(item->Context);
+	     item = CONTAINING_RECORD(current,WORK_QUEUE_ITEM,List);
+	     (item->WorkerRoutine)(item->Parameter);
 	  }
 	else
 	  {
@@ -160,7 +159,7 @@ ExQueueWorkItem (PWORK_QUEUE_ITEM	WorkItem,
      {
       case DelayedWorkQueue:
 	ExInterlockedInsertTailList(&EiNormalWorkQueue.Head,
-				    &WorkItem->Entry,
+				    &WorkItem->List,
 				    &EiNormalWorkQueue.Lock);
 	KeReleaseSemaphore(&EiNormalWorkQueue.Sem,
 			   IO_NO_INCREMENT,
@@ -170,7 +169,7 @@ ExQueueWorkItem (PWORK_QUEUE_ITEM	WorkItem,
 	
       case CriticalWorkQueue:
 	ExInterlockedInsertTailList(&EiCriticalWorkQueue.Head,
-				    &WorkItem->Entry,
+				    &WorkItem->List,
 				    &EiCriticalWorkQueue.Lock);
 	KeReleaseSemaphore(&EiCriticalWorkQueue.Sem,
 			   IO_NO_INCREMENT,
@@ -180,14 +179,15 @@ ExQueueWorkItem (PWORK_QUEUE_ITEM	WorkItem,
 
       case HyperCriticalWorkQueue:
 	ExInterlockedInsertTailList(&EiHyperCriticalWorkQueue.Head,
-				    &WorkItem->Entry,
+				    &WorkItem->List,
 				    &EiHyperCriticalWorkQueue.Lock);
 	KeReleaseSemaphore(&EiHyperCriticalWorkQueue.Sem,
 			   IO_NO_INCREMENT,
 			   1,
 			   FALSE);
 	break;
-
+	default:
+		assert(FALSE);
      }
 }
 

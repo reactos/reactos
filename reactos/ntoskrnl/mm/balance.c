@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: balance.c,v 1.11 2002/08/14 20:58:36 dwelch Exp $
+/* $Id: balance.c,v 1.12 2002/09/07 15:12:59 chorns Exp $
  *
  * PROJECT:     ReactOS kernel 
  * FILE:        ntoskrnl/mm/balance.c
@@ -28,12 +28,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/mm.h>
-#include <ntos/minmax.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* TYPES ********************************************************************/
 

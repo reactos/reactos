@@ -1,4 +1,4 @@
-/* $Id: nls.c,v 1.4 2000/05/25 15:52:53 ekohl Exp $
+/* $Id: nls.c,v 1.5 2002/09/07 15:12:40 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -21,8 +21,11 @@
  *   5) Add multi-byte translation code.
  */
 
-#include <ddk/ntddk.h>
-//#include <internal/nls.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
+
+#define NDEBUG
+#include <debug.h>
 
 
 BOOLEAN

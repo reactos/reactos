@@ -2,8 +2,9 @@
  * isotest - display cdrom information
  */
 
+#include <ddk/ntddk.h>
 #include <windows.h>
-//#include <winioctl.h>
+#include <winioctl.h>
 #include <stdio.h>
 #include <stdlib.h>
 

@@ -1,4 +1,4 @@
-/* $Id: swprintf.c,v 1.5 2001/05/30 14:36:52 ekohl Exp $
+/* $Id: swprintf.c,v 1.6 2002/09/07 15:13:06 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -23,12 +23,7 @@
  * Wirzenius wrote this portably, Torvalds fucked it up :-)
  */
 
-#include <ddk/ntddk.h>
-#include <stdarg.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <wchar.h>
-#include <limits.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>

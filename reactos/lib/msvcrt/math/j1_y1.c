@@ -1,4 +1,5 @@
-#include <msvcrt/math.h>
+#include <msvcrti.h>
+
 
 double _j1(double x)
 {

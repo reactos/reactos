@@ -1,4 +1,4 @@
-/* $Id: beep.c,v 1.12 2002/08/20 20:37:04 hyperion Exp $
+/* $Id: beep.c,v 1.13 2002/09/07 15:11:58 chorns Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -12,7 +12,8 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
+#define NTOS_KERNEL_MODE
+#include <ntos.h>
 #include <ddk/ntddbeep.h>
 
 #define NDEBUG

@@ -1,8 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/assert.h>
-#include <msvcrt/stdio.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/signal.h>
+#include <msvcrti.h>
+
 
 void _assert(const char *msg, const char *file, int line)
 {

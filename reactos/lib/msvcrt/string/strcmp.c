@@ -1,5 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/string.h>
+#include <msvcrti.h>
+
 
 int strcmp(const char *s1, const char *s2)
 {

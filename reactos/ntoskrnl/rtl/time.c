@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.9 1999/12/27 15:05:15 ekohl Exp $
+/* $Id: time.c,v 1.10 2002/09/07 15:13:06 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,10 +12,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 #define TICKSPERMIN        600000000
 #define TICKSPERSEC        10000000

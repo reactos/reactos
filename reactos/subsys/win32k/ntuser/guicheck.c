@@ -1,4 +1,4 @@
- /* $Id: guicheck.c,v 1.6 2002/07/17 21:04:57 dwelch Exp $
+ /* $Id: guicheck.c,v 1.7 2002/09/07 15:13:12 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -15,13 +15,12 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <napi/teb.h>
+#define NTOS_KERNEL_MODE
+#include <ntos.h>
 #include <win32k/win32k.h>
 #include <include/guicheck.h>
 #include <include/msgqueue.h>
 #include <include/object.h>
-#include <napi/win32.h>
 #include <include/winsta.h>
 
 #define NDEBUG

@@ -1,10 +1,6 @@
 /* Copyright (C) 1998 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/stdlib.h>
-#include <msvcrt/stdio.h>
-#include <msvcrt/string.h>
-#include <msvcrt/float.h>
-#include <msvcrt/alloc.h>
-// #include <msvcrt/locale.h>
+#include <msvcrti.h>
+
 
 void __ecvround (char *, char *, const char *, int *);
 char *ecvtbuf (double, int, int *, int *, char *);
@@ -12,7 +8,7 @@ char *ecvtbuf (double, int, int *, int *, char *);
 char *
 fcvtbuf (double value, int ndigits, int *decpt, int *sign, char *buf)
 {
-  static char INFINITY[] = "Infinity";
+  static char _INFINITY[] = "Infinity";
   char decimal = '.' /* localeconv()->decimal_point[0] */;
   int digits = ndigits >= 0 ? ndigits : 0;
   char *cvtbuf = (char *)alloca (2*DBL_MAX_10_EXP + 16);
@@ -35,7 +31,7 @@ fcvtbuf (double value, int ndigits, int *decpt, int *sign, char *buf)
      instead of "Inf".  */
   if (strncmp (s, "Inf", 3) == 0)
     {
-      memcpy (buf, INFINITY, ndigits >= 8 ? 9 : 3);
+      memcpy (buf, _INFINITY, ndigits >= 8 ? 9 : 3);
       if (ndigits < 8)
 	buf[3] = '\0';
       return buf;

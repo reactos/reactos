@@ -8,6 +8,8 @@
 #ifndef __INCLUDE_INTERNAL_LDR_H
 #define __INCLUDE_INTERNAL_LDR_H
 
+#ifndef AS_INVOKED
+
 #include <pe.h>
 #include <internal/io.h>
 #include <ntdll/ldr.h>
@@ -129,5 +131,7 @@ VOID
 LdrUnloadModuleSymbols(PIMAGE_SYMBOL_INFO SymbolInfo);
 
 #endif /* DBG */
+
+#endif /* !AS_INVOKED */
 
 #endif /* __INCLUDE_INTERNAL_LDR_H */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: paint.c,v 1.6 2002/08/27 20:32:03 jfilby Exp $
+/* $Id: paint.c,v 1.7 2002/09/07 15:12:45 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -28,9 +28,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <windows.h>
 #include <user32.h>
-#include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
 

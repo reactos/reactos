@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.42 2002/08/20 20:37:17 hyperion Exp $
+/* $Id: init.c,v 1.43 2002/09/07 15:13:09 chorns Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -29,9 +29,8 @@
 
 /* INCLUDES *****************************************************************/
 
+#define NTOS_USER_MODE
 #include <ntos.h>
-#include <ntdll/rtl.h>
-#include <napi/lpc.h>
 
 #include "smss.h"
 
@@ -198,7 +197,7 @@ SmRunBootAppsQueryRoutine(PWSTR ValueName,
 			  PVOID Context,
 			  PVOID EntryContext)
 {
-  PRTL_USER_PROCESS_PARAMETERS ProcessParameters;
+  PRTL_ROS_USER_PROCESS_PARAMETERS ProcessParameters;
   RTL_PROCESS_INFO ProcessInfo;
   UNICODE_STRING ImagePathString;
   UNICODE_STRING CommandLineString;
@@ -264,7 +263,7 @@ SmRunBootAppsQueryRoutine(PWSTR ValueName,
   RtlInitUnicodeString(&CommandLineString,
 		       CommandLine);
 
-  RtlCreateProcessParameters(&ProcessParameters,
+  RtlRosCreateProcessParameters(&ProcessParameters,
 			     &ImagePathString,
 			     NULL,
 			     NULL,
@@ -275,7 +274,7 @@ SmRunBootAppsQueryRoutine(PWSTR ValueName,
 			     NULL,
 			     NULL);
 
-  Status = RtlCreateUserProcess(&ImagePathString,
+  Status = RtlRosCreateUserProcess(&ImagePathString,
 				OBJ_CASE_INSENSITIVE,
 				ProcessParameters,
 				NULL,
@@ -291,7 +290,7 @@ SmRunBootAppsQueryRoutine(PWSTR ValueName,
       return(STATUS_SUCCESS);
     }
 
-  RtlDestroyProcessParameters(ProcessParameters);
+  RtlRosDestroyProcessParameters(ProcessParameters);
 
   /* Wait for process termination */
   NtWaitForSingleObject(ProcessInfo.ProcessHandle,
@@ -588,7 +587,7 @@ InitSessionManager(HANDLE Children[])
   UNICODE_STRING UnicodeString;
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING CmdLineW;
-  PRTL_USER_PROCESS_PARAMETERS ProcessParameters;
+  PRTL_ROS_USER_PROCESS_PARAMETERS ProcessParameters;
   RTL_PROCESS_INFO ProcessInfo;
   HANDLE CsrssInitEvent;
   WCHAR UnicodeBuffer[MAX_PATH];
@@ -706,7 +705,7 @@ InitSessionManager(HANDLE Children[])
   RtlInitUnicodeString(&UnicodeString,
 		       UnicodeBuffer);
 
-  RtlCreateProcessParameters(&ProcessParameters,
+  RtlRosCreateProcessParameters(&ProcessParameters,
 			     &UnicodeString,
 			     NULL,
 			     NULL,
@@ -717,7 +716,7 @@ InitSessionManager(HANDLE Children[])
 			     NULL,
 			     NULL);
 
-  Status = RtlCreateUserProcess(&UnicodeString,
+  Status = RtlRosCreateUserProcess(&UnicodeString,
 				OBJ_CASE_INSENSITIVE,
 				ProcessParameters,
 				NULL,
@@ -728,7 +727,7 @@ InitSessionManager(HANDLE Children[])
 				NULL,
 				&ProcessInfo);
 
-  RtlDestroyProcessParameters (ProcessParameters);
+  RtlRosDestroyProcessParameters (ProcessParameters);
 
   if (!NT_SUCCESS(Status))
     {
@@ -753,7 +752,7 @@ InitSessionManager(HANDLE Children[])
   RtlInitUnicodeString(&UnicodeString,
 		       UnicodeBuffer);
 
-  RtlCreateProcessParameters(&ProcessParameters,
+  RtlRosCreateProcessParameters(&ProcessParameters,
 			     &UnicodeString,
 			     NULL,
 			     NULL,
@@ -764,7 +763,7 @@ InitSessionManager(HANDLE Children[])
 			     NULL,
 			     NULL);
 
-  Status = RtlCreateUserProcess(&UnicodeString,
+  Status = RtlRosCreateUserProcess(&UnicodeString,
 				OBJ_CASE_INSENSITIVE,
 				ProcessParameters,
 				NULL,
@@ -775,7 +774,7 @@ InitSessionManager(HANDLE Children[])
 				NULL,
 				&ProcessInfo);
 
-  RtlDestroyProcessParameters(ProcessParameters);
+  RtlRosDestroyProcessParameters(ProcessParameters);
 
   if (!NT_SUCCESS(Status))
     {

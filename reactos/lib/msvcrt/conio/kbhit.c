@@ -7,10 +7,7 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-
-#include <windows.h>
-#include <msvcrt/conio.h>
-#include <msvcrt/internal/console.h>
+#include <msvcrti.h>
 
 
 // FIXME PeekCosoleInput returns more than keyboard hits

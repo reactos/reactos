@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.74 2002/08/20 20:37:11 hyperion Exp $
+/* $Id: registry.c,v 1.75 2002/09/07 15:12:48 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,17 +11,12 @@
  *                  Created 22/05/98
  */
 
-#include <ddk/ntddk.h>
-#include <roscfg.h>
-#include <limits.h>
-#include <string.h>
-#include <internal/pool.h>
-#include <internal/registry.h>
+#include <ntoskrnl.h>
+#include "cm.h"
 
 #define NDEBUG
 #include <internal/debug.h>
 
-#include "cm.h"
 
 /*  -------------------------------------------------  File Statics  */
 
@@ -274,7 +269,7 @@ CmInitializeRegistry(VOID)
   /* Build the Root Key Object */
   RtlInitUnicodeString(&RootKeyName, REG_ROOT_KEY_NAME);
   InitializeObjectAttributes(&ObjectAttributes, &RootKeyName, 0, NULL, NULL);
-  Status = ObCreateObject(&RootKeyHandle,
+  Status = ObRosCreateObject(&RootKeyHandle,
 		STANDARD_RIGHTS_REQUIRED,
 		&ObjectAttributes,
 		CmiKeyType,
@@ -304,7 +299,7 @@ CmInitializeRegistry(VOID)
   /* Create initial predefined symbolic links */
 
   /* HKEY_LOCAL_MACHINE */
-  Status = ObCreateObject(&KeyHandle,
+  Status = ObRosCreateObject(&KeyHandle,
     STANDARD_RIGHTS_REQUIRED,
     NULL,
     CmiKeyType,
@@ -331,7 +326,7 @@ CmInitializeRegistry(VOID)
   CmiMachineKey = NewKey;
 
   /* HKEY_USERS */
-  Status = ObCreateObject(&KeyHandle,
+  Status = ObRosCreateObject(&KeyHandle,
 		STANDARD_RIGHTS_REQUIRED,
 		NULL,
 		CmiKeyType,
@@ -358,7 +353,7 @@ CmInitializeRegistry(VOID)
 	CmiUserKey = NewKey;
 
   /* Create '\\Registry\\Machine\\HARDWARE' key. */
-  Status = ObCreateObject(&KeyHandle,
+  Status = ObRosCreateObject(&KeyHandle,
 		STANDARD_RIGHTS_REQUIRED,
 		NULL,
 		CmiKeyType,
@@ -385,7 +380,7 @@ CmInitializeRegistry(VOID)
   CmiHardwareKey = NewKey;
 
   /* Create '\\Registry\\Machine\\HARDWARE\\DESCRIPTION' key. */
-  Status = ObCreateObject(&KeyHandle,
+  Status = ObRosCreateObject(&KeyHandle,
 		STANDARD_RIGHTS_REQUIRED,
 		NULL,
 		CmiKeyType,
@@ -411,7 +406,7 @@ CmInitializeRegistry(VOID)
   CmiAddKeyToList(CmiHardwareKey, NewKey);
 
   /* Create '\\Registry\\Machine\\HARDWARE\\DEVICEMAP' key. */
-  Status = ObCreateObject(&KeyHandle,
+  Status = ObRosCreateObject(&KeyHandle,
 		STANDARD_RIGHTS_REQUIRED,
 		NULL,
 		CmiKeyType,
@@ -437,7 +432,7 @@ CmInitializeRegistry(VOID)
   CmiAddKeyToList(CmiHardwareKey,NewKey);
 
   /* Create '\\Registry\\Machine\\HARDWARE\\RESOURCEMAP' key. */
-  Status = ObCreateObject(&KeyHandle,
+  Status = ObRosCreateObject(&KeyHandle,
 		STANDARD_RIGHTS_REQUIRED,
 		NULL,
 		CmiKeyType,
@@ -633,7 +628,7 @@ CmiConnectHive(PWSTR FileName,
 			     NULL,
 			     NULL);
 
-  Status = ObCreateObject(&KeyHandle,
+  Status = ObRosCreateObject(&KeyHandle,
 			  STANDARD_RIGHTS_REQUIRED,
 			  &ObjectAttributes,
 			  CmiKeyType,

@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.14 2002/09/01 20:39:55 dwelch Exp $
+/* $Id: class.c,v 1.15 2002/09/07 15:12:45 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -8,47 +8,46 @@
  * UPDATE HISTORY:
  *      09-05-2001  CSH  Created
  */
-#include <windows.h>
+
 #include <user32.h>
-#include <debug.h>
 
 
-WINBOOL
+BOOL
 STDCALL
 GetClassInfoA(
   HINSTANCE hInstance,
   LPCSTR lpClassName,
-  LPWNDCLASS lpWndClass)
+  LPWNDCLASSA lpWndClass)
 {
   return FALSE;
 }
 
-WINBOOL
+BOOL
 STDCALL
 GetClassInfoExA(
   HINSTANCE hinst,
   LPCSTR lpszClass,
-  LPWNDCLASSEX lpwcx)
+  LPWNDCLASSEXA lpwcx)
 {
   return FALSE;
 }
 
-WINBOOL
+BOOL
 STDCALL
 GetClassInfoExW(
   HINSTANCE hinst,
   LPCWSTR lpszClass,
-  LPWNDCLASSEX lpwcx)
+  LPWNDCLASSEXW lpwcx)
 {
   return FALSE;
 }
 
-WINBOOL
+BOOL
 STDCALL
 GetClassInfoW(
   HINSTANCE hInstance,
   LPCWSTR lpClassName,
-  LPWNDCLASS lpWndClass)
+  LPWNDCLASSW lpWndClass)
 {
   return FALSE;
 }
@@ -150,9 +149,9 @@ RealGetWindowClassW(
 }
 
 ATOM STDCALL
-RegisterClassA(CONST WNDCLASS *lpWndClass)
+RegisterClassA(CONST WNDCLASSA *lpWndClass)
 {
-  WNDCLASSEX Class;
+  WNDCLASSEXA Class;
 
   RtlMoveMemory(&Class.style, lpWndClass, sizeof(WNDCLASS));
   Class.cbSize = sizeof(WNDCLASSEX);
@@ -161,7 +160,7 @@ RegisterClassA(CONST WNDCLASS *lpWndClass)
 }
 
 ATOM STDCALL
-RegisterClassExA(CONST WNDCLASSEX *lpwcx)
+RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
 {
   UNICODE_STRING MenuName;
   UNICODE_STRING ClassName;
@@ -200,7 +199,7 @@ RegisterClassExA(CONST WNDCLASSEX *lpwcx)
 }
 
 ATOM STDCALL
-RegisterClassExW(CONST WNDCLASSEX *lpwcx)
+RegisterClassExW(CONST WNDCLASSEXW *lpwcx)
 {
   RTL_ATOM Atom;
 
@@ -215,7 +214,7 @@ RegisterClassExW(CONST WNDCLASSEX *lpwcx)
 }
 
 ATOM STDCALL
-RegisterClassW(CONST WNDCLASS *lpWndClass)
+RegisterClassW(CONST WNDCLASSW *lpWndClass)
 {
   WNDCLASSEX Class;
 

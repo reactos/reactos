@@ -1,8 +1,10 @@
-/* $Id: npfs.h,v 1.11 2002/05/07 22:41:22 hbirr Exp $ */
+/* $Id: npfs.h,v 1.12 2002/09/07 15:12:02 chorns Exp $ */
 
 #ifndef __SERVICES_FS_NP_NPFS_H
 #define __SERVICES_FS_NP_NPFS_H
 
+#define NTOS_KERNEL_MODE
+#include <ntos.h>
 
 typedef struct
 {

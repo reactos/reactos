@@ -7,8 +7,7 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-
-#include <msvcrt/stdio.h>
+#include <msvcrti.h>
 
 
 static char *__rt_err_msg[] =

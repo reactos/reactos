@@ -1,4 +1,4 @@
-/* $Id: fsctrl.c,v 1.8 2001/11/20 20:34:29 ekohl Exp $
+/* $Id: fsctrl.c,v 1.9 2002/09/07 15:12:02 chorns Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -10,7 +10,6 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
 #include "npfs.h"
 
 #define NDEBUG
@@ -395,7 +394,7 @@ NTSTATUS STDCALL
 NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 		      PIRP Irp)
 {
-  PIO_STACK_LOCATION IoStack;
+  PEXTENDED_IO_STACK_LOCATION IoStack;
   PFILE_OBJECT FileObject;
   NTSTATUS Status;
   PNPFS_DEVICE_EXTENSION DeviceExt;
@@ -405,7 +404,7 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
   DPRINT("NpfsFileSystemContol(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
   DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-  IoStack = IoGetCurrentIrpStackLocation(Irp);
+  IoStack = (PEXTENDED_IO_STACK_LOCATION)IoGetCurrentIrpStackLocation(Irp);
   DPRINT("IoStack: %p\n", IoStack);
   FileObject = IoStack->FileObject;
   DPRINT("FileObject: %p\n", FileObject);
@@ -415,7 +414,7 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
   DPRINT("Pipe: %p\n", Pipe);
   DPRINT("PipeName: %wZ\n", &Pipe->PipeName);
 
-  switch (IoStack->Parameters.FileSystemControl.IoControlCode)
+  switch (IoStack->Parameters.FileSystemControl.FsControlCode)
     {
       case FSCTL_PIPE_ASSIGN_EVENT:
 	DPRINT("Assign event\n");

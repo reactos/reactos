@@ -1,10 +1,13 @@
-/* $Id: filelock.c,v 1.3 2002/01/13 22:02:31 ea Exp $
+/* $Id: filelock.c,v 1.4 2002/09/07 15:12:50 chorns Exp $
  *
  * reactos/ntoskrnl/fs/filelock.c
  *
  */
-#include <ntos.h>
-#include <ddk/ntifs.h>
+
+#include <ntoskrnl.h>
+
+#define NDEBUG
+#include <internal/debug.h>
 
 
 /**********************************************************************

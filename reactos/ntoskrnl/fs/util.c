@@ -1,10 +1,12 @@
-/* $Id: util.c,v 1.10 2002/08/09 22:57:48 ekohl Exp $
+/* $Id: util.c,v 1.11 2002/09/07 15:12:51 chorns Exp $
  *
  * reactos/ntoskrnl/fs/util.c
  *
  */
-#include <ddk/ntddk.h>
-#include <ddk/ntifs.h>
+#include <ntoskrnl.h>
+
+#define NDEBUG
+#include <internal/debug.h>
 
 
 /**********************************************************************

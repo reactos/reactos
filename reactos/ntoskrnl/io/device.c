@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.46 2002/06/13 15:13:54 ekohl Exp $
+/* $Id: device.c,v 1.47 2002/09/07 15:12:52 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -11,18 +11,11 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/io.h>
-#include <internal/po.h>
-#include <internal/ldr.h>
-#include <internal/id.h>
-#include <internal/pool.h>
-#include <internal/registry.h>
-
-#include <roscfg.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* GLOBALS *******************************************************************/
 
@@ -268,7 +261,7 @@ IopCreateDriverObject(PDRIVER_OBJECT *DriverObject,
 			     NULL);
 
   /*  Create module object  */
-  Status = ObCreateObject(&DriverHandle,
+  Status = ObRosCreateObject(&DriverHandle,
                           STANDARD_RIGHTS_REQUIRED,
                           &ObjectAttributes,
                           IoDriverObjectType,
@@ -333,7 +326,7 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
 
       DPRINT("Calling driver AddDevice entrypoint at %08lx\n",
         DriverObject->DriverExtension->AddDevice);
-      Status = DriverObject->DriverExtension->AddDevice(
+      Status = ((PDRIVER_ADD_DEVICE)DriverObject->DriverExtension->AddDevice)(
         DriverObject, DeviceNode->Pdo);
       if (!NT_SUCCESS(Status))
         {
@@ -622,11 +615,11 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
      {
 	DPRINT("IoCreateDevice(DriverObject %x)\n",DriverObject);
      }
-   
+
    if (DeviceName != NULL)
      {
 	InitializeObjectAttributes(&ObjectAttributes,DeviceName,0,NULL,NULL);
-	Status = ObCreateObject(&DeviceHandle,
+	Status = ObRosCreateObject(&DeviceHandle,
 				0,
 				&ObjectAttributes,
 				IoDeviceObjectType,
@@ -634,12 +627,13 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
      }
    else
      {
-	Status = ObCreateObject(&DeviceHandle,
+	Status = ObRosCreateObject(&DeviceHandle,
 				0,
 				NULL,
 				IoDeviceObjectType,
 				(PVOID*)&CreatedDeviceObject);
      }
+   
    
    *DeviceObject = NULL;
    
@@ -678,7 +672,6 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
       RtlZeroMemory(CreatedDeviceObject->DeviceExtension,
 		    DeviceExtensionSize);
     }
-
   CreatedDeviceObject->AttachedDevice = NULL;
   CreatedDeviceObject->DeviceType = DeviceType;
   CreatedDeviceObject->StackSize = 1;
@@ -696,9 +689,9 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
     {
       IoAttachVpb(CreatedDeviceObject);
     }
-  
+ 
   *DeviceObject = CreatedDeviceObject;
-  
+
   return(STATUS_SUCCESS);
 }
 

@@ -1,6 +1,4 @@
-#include <msvcrt/errno.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/string.h>
+#include <msvcrti.h>
 
 
 wchar_t *_wcsdup(const wchar_t *ptr)

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dos8dot3.c,v 1.4 2002/08/17 15:23:50 hbirr Exp $
+/* $Id: dos8dot3.c,v 1.5 2002/09/07 15:13:05 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -27,8 +27,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntos/minmax.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>

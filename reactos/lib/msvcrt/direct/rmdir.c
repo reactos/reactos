@@ -1,5 +1,5 @@
-#include <windows.h>
-#include <msvcrt/direct.h>
+#include <msvcrti.h>
+
 
 int _rmdir( const char *_path )
 {

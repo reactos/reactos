@@ -294,7 +294,7 @@ ProTransferData(
 
 
 VOID
-EXPORT
+STDCALL
 NdisCloseAdapter(
     OUT PNDIS_STATUS    Status,
     IN  NDIS_HANDLE     NdisBindingHandle)
@@ -327,7 +327,7 @@ NdisCloseAdapter(
 
 
 VOID
-EXPORT
+STDCALL
 NdisDeregisterProtocol(
     OUT PNDIS_STATUS    Status,
     IN NDIS_HANDLE      NdisProtocolHandle)
@@ -357,7 +357,7 @@ NdisDeregisterProtocol(
 
 
 VOID
-EXPORT
+STDCALL
 NdisOpenAdapter(
     OUT PNDIS_STATUS    Status,
     OUT PNDIS_STATUS    OpenErrorStatus,
@@ -428,18 +428,18 @@ NdisOpenAdapter(
 
     AdapterBinding->ProtocolBinding        = Protocol;
     AdapterBinding->Adapter                = Adapter;
-    AdapterBinding->NdisOpenBlock.ProtocolBindingContext = ProtocolBindingContext;
+    AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.ProtocolBindingContext = ProtocolBindingContext;
 
     /* Set fields required by some NDIS macros */
-    AdapterBinding->NdisOpenBlock.MacBindingHandle = (NDIS_HANDLE)AdapterBinding;
+    AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.BindingHandle = (NDIS_HANDLE)AdapterBinding;
     
     /* Set handlers (some NDIS macros require these) */
 
-    AdapterBinding->NdisOpenBlock.RequestHandler      = ProRequest;
-    AdapterBinding->NdisOpenBlock.ResetHandler        = ProReset;
-    AdapterBinding->NdisOpenBlock.u1.SendHandler      = ProSend;
-    AdapterBinding->NdisOpenBlock.SendPacketsHandler  = ProSendPackets;
-    AdapterBinding->NdisOpenBlock.TransferDataHandler = ProTransferData;
+    AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.RequestHandler      = ProRequest;
+    AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.ResetHandler        = ProReset;
+    AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.SendHandler         = ProSend;
+    AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.SendPacketsHandler  = ProSendPackets;
+    AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.TransferDataHandler = ProTransferData;
 
     /* Put on protocol's bound adapters list */
     ExInterlockedInsertTailList(&Protocol->AdapterListHead,
@@ -458,7 +458,7 @@ NdisOpenAdapter(
 
 
 VOID
-EXPORT
+STDCALL
 NdisRegisterProtocol(
     OUT PNDIS_STATUS                    Status,
     OUT PNDIS_HANDLE                    NdisProtocolHandle,
@@ -481,15 +481,15 @@ NdisRegisterProtocol(
 
     switch (ProtocolCharacteristics->MajorNdisVersion) {
     case 0x03:
-        MinSize = sizeof(NDIS30_PROTOCOL_CHARACTERISTICS_S);
+        MinSize = sizeof(NDIS30_PROTOCOL_CHARACTERISTICS);
         break;
 
     case 0x04:
-        MinSize = sizeof(NDIS40_PROTOCOL_CHARACTERISTICS_S);
+        MinSize = sizeof(NDIS40_PROTOCOL_CHARACTERISTICS);
         break;
 
     case 0x05:
-        MinSize = sizeof(NDIS50_PROTOCOL_CHARACTERISTICS_S);
+        MinSize = sizeof(NDIS50_PROTOCOL_CHARACTERISTICS);
         break;
 
     default:
@@ -540,7 +540,7 @@ NdisRegisterProtocol(
 
 
 VOID
-EXPORT
+STDCALL
 NdisRequest(
     OUT PNDIS_STATUS    Status,
     IN  NDIS_HANDLE     NdisBindingHandle,
@@ -558,7 +558,7 @@ NdisRequest(
 
 
 VOID
-EXPORT
+STDCALL
 NdisReset(
     OUT PNDIS_STATUS    Status,
     IN  NDIS_HANDLE     NdisBindingHandle)
@@ -568,7 +568,7 @@ NdisReset(
 
 
 VOID
-EXPORT
+STDCALL
 NdisSend(
     OUT PNDIS_STATUS    Status,
     IN  NDIS_HANDLE     NdisBindingHandle,
@@ -586,7 +586,7 @@ NdisSend(
 
 
 VOID
-EXPORT
+STDCALL
 NdisSendPackets(
     IN  NDIS_HANDLE     NdisBindingHandle,
     IN  PPNDIS_PACKET   PacketArray,
@@ -597,7 +597,7 @@ NdisSendPackets(
 
 
 VOID
-EXPORT
+STDCALL
 NdisTransferData(
     OUT     PNDIS_STATUS    Status,
     IN      NDIS_HANDLE     NdisBindingHandle,

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.1 1999/08/11 19:56:48 ea Exp $
+/* $Id: stubs.c,v 1.2 2002/09/07 15:12:46 chorns Exp $
  *
  * version.dll stubs: remove from this file if
  * you implement one of these functions.
@@ -158,7 +158,7 @@ VerLanguageNameW (
 	return 0;
 }
 
-WINBOOL
+BOOL
 STDCALL
 VerQueryValueA (
 	const LPVOID	pBlock,
@@ -172,7 +172,7 @@ VerQueryValueA (
 }
 
 
-WINBOOL
+BOOL
 STDCALL
 VerQueryValueW (
 	const LPVOID	pBlock,

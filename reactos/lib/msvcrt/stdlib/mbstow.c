@@ -1,4 +1,4 @@
-#include <msvcrt/stdlib.h>
+#include <msvcrti.h>
 
 
 int	mblen		(const char* mbs, size_t sizeString)

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: process.c,v 1.9 2002/06/04 15:26:56 dwelch Exp $
+/* $Id: process.c,v 1.10 2002/09/07 15:12:57 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/process.c
@@ -29,13 +29,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ke.h>
-#include <internal/mm.h>
-#include <internal/ps.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -60,6 +58,7 @@ KeAttachProcess (PEPROCESS Process)
    
    CurrentThread->OldProcess = PsGetCurrentProcess();
    CurrentThread->ThreadsProcess = Process;
+   assert(CurrentThread->ThreadsProcess);
    PageDir = CurrentThread->ThreadsProcess->Pcb.DirectoryTableBase.u.LowPart;
    DPRINT("Switching process context to %x\n",PageDir)
    __asm__("movl %0,%%cr3\n\t"

@@ -27,14 +27,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ke.h>
-#include <internal/mm.h>
-#include <internal/ps.h>
-#include <internal/i386/fpu.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* GLOBALS *******************************************************************/
 
@@ -54,24 +51,24 @@ KePrepareForApplicationProcessorInit(ULONG Id)
 VOID
 KeApplicationProcessorInit(VOID)
 {
-  PKPCR KPCR;
+  PIKPCR KPCR;
   ULONG Offset;
 
   /*
    * Create a PCR for this processor
    */
   Offset = InterlockedIncrement(&PcrsAllocated) - 1;
-  KPCR = (PKPCR)(KPCR_BASE + (Offset * PAGESIZE));
+  KPCR = (PIKPCR)(KPCR_BASE + (Offset * PAGE_SIZE));
   MmCreateVirtualMappingForKernel((PVOID)KPCR,
 				  PAGE_READWRITE,
 				  PcrPages[Offset]);
-  memset(KPCR, 0, PAGESIZE);
-  KPCR->ProcessorNumber = Offset;
-  KPCR->Self = KPCR;
-  KPCR->Irql = HIGH_LEVEL;
+  memset(KPCR, 0, PAGE_SIZE);
+  KPCR->KPCR.ProcessorNumber = Offset;
+  KPCR->KPCR.Self = &KPCR->KPCR;
+  KPCR->KPCR.Irql = HIGH_LEVEL;
 
   /* Mark the end of the exception handler list */
-  KPCR->ExceptionList = (PVOID)-1;
+  KPCR->KPCR.Tib.ExceptionList = (PVOID)-1;
 
   /*
    * Initialize the GDT
@@ -99,7 +96,7 @@ KeApplicationProcessorInit(VOID)
 VOID 
 KeInit1(VOID)
 {
-   PKPCR KPCR;
+   PIKPCR KPCR;
    extern USHORT KiBootGdt[];
    extern KTSS KiBootTss;
 
@@ -115,19 +112,19 @@ KeInit1(VOID)
     * with MmAllocPage() here because MmInit1() has not yet been
     * called, so we use a predefined page in low memory 
     */
-   KPCR = (PKPCR)KPCR_BASE;
-   memset(KPCR, 0, PAGESIZE);
-   KPCR->Self = (PKPCR)KPCR_BASE;
-   KPCR->Irql = HIGH_LEVEL;
-   KPCR->GDT = (PUSHORT)&KiBootGdt;
-   KPCR->IDT = (PUSHORT)&KiIdt;
-   KPCR->TSS = &KiBootTss;
-   KPCR->ProcessorNumber = 0;
+   KPCR = (PIKPCR)KPCR_BASE;
+   memset(KPCR, 0, PAGE_SIZE);
+   KPCR->KPCR.Self = (PKPCR)KPCR_BASE;
+   KPCR->KPCR.Irql = HIGH_LEVEL;
+   KPCR->KPCR.GDT = (PUSHORT)&KiBootGdt;
+   KPCR->KPCR.IDT = (PUSHORT)&KiIdt;
+   KPCR->KPCR.TSS = &KiBootTss;
+   KPCR->KPCR.ProcessorNumber = 0;
    KiPcrInitDone = 1;
    PcrsAllocated++;
 
    /* Mark the end of the exception handler list */
-   KPCR->ExceptionList = (PVOID)-1;
+   KPCR->KPCR.Tib.ExceptionList = (PVOID)-1;
 
    Ki386InitializeLdt();
 }

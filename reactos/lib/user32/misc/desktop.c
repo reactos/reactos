@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.4 2002/08/31 23:18:46 dwelch Exp $
+/* $Id: desktop.c,v 1.5 2002/09/07 15:12:44 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -8,9 +8,8 @@
  * UPDATE HISTORY:
  *      06-06-2001  CSH  Created
  */
-#include <windows.h>
+
 #include <user32.h>
-#include <debug.h>
 
 int STDCALL
 GetSystemMetrics(int nIndex)
@@ -64,8 +63,8 @@ CreateDesktopA(LPCSTR lpszDesktop,
 	       ACCESS_MASK dwDesiredAccess,
 	       LPSECURITY_ATTRIBUTES lpsa)
 {
-  ANSI_STRING DesktopNameA;
   UNICODE_STRING DesktopNameU;
+  ANSI_STRING DesktopNameA;
   HDESK hDesktop;
 
   if (lpszDesktop != NULL) 
@@ -81,7 +80,7 @@ CreateDesktopA(LPCSTR lpszDesktop,
   
   hDesktop = CreateDesktopW(DesktopNameU.Buffer,
 			    NULL,
-			    pDevmode,
+			    (LPDEVMODEW)pDevmode,
 			    dwFlags,
 			    dwDesiredAccess,
 			    lpsa);
@@ -129,7 +128,7 @@ WINBOOL
 STDCALL
 EnumDesktopsA(
   HWINSTA hwinsta,
-  DESKTOPENUMPROC lpEnumFunc,
+  DESKTOPENUMPROCA lpEnumFunc,
   LPARAM lParam)
 {
   return FALSE;
@@ -139,7 +138,7 @@ WINBOOL
 STDCALL
 EnumDesktopsW(
   HWINSTA hwinsta,
-  DESKTOPENUMPROC lpEnumFunc,
+  DESKTOPENUMPROCW lpEnumFunc,
   LPARAM lParam)
 {
   return FALSE;

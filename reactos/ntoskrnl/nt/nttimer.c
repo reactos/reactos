@@ -1,4 +1,4 @@
-/* $Id: nttimer.c,v 1.14 2002/02/19 00:09:24 ekohl Exp $
+/* $Id: nttimer.c,v 1.15 2002/09/07 15:13:04 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,13 +11,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntos/synch.h>
-#include <internal/ke.h>
-#include <limits.h>
-#include <internal/pool.h>
-#include <internal/safe.h>
+#include <ntoskrnl.h>
 
+#define NDEBUG
 #include <internal/debug.h>
 
 
@@ -172,7 +168,7 @@ NtCreateTimer(OUT PHANDLE TimerHandle,
    NTSTATUS Status;
    
    DPRINT("NtCreateTimer()\n");
-   Status = ObCreateObject(TimerHandle,
+   Status = ObRosCreateObject(TimerHandle,
 			   DesiredAccess,
 			   ObjectAttributes,
 			   ExTimerType,

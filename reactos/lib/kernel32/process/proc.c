@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.44 2002/08/26 11:24:28 dwelch Exp $
+/* $Id: proc.c,v 1.45 2002/09/07 15:12:27 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,19 +11,14 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
 #include <windows.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 #include <kernel32/proc.h>
 #include <kernel32/thread.h>
 #include <kernel32/error.h>
 #include <wchar.h>
 #include <string.h>
-#include <napi/i386/segment.h>
-#include <napi/teb.h>
-#include <ntdll/csr.h>
-#include <ntdll/ldr.h>
-
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
@@ -376,7 +371,7 @@ SleepEx (DWORD	dwMilliseconds,
 VOID STDCALL
 GetStartupInfoW(LPSTARTUPINFOW lpStartupInfo)
 {
-   PRTL_USER_PROCESS_PARAMETERS Params;
+   PRTL_ROS_USER_PROCESS_PARAMETERS Params;
 
    if (lpStartupInfo == NULL)
      {
@@ -411,7 +406,7 @@ GetStartupInfoW(LPSTARTUPINFOW lpStartupInfo)
 VOID STDCALL
 GetStartupInfoA(LPSTARTUPINFOA lpStartupInfo)
 {
-   PRTL_USER_PROCESS_PARAMETERS Params;
+   PRTL_ROS_USER_PROCESS_PARAMETERS Params;
    ANSI_STRING AnsiString;
 
    if (lpStartupInfo == NULL)
@@ -586,7 +581,7 @@ GetPriorityClass (HANDLE	hProcess)
 		       GetCurrentProcess(),
 		       &hProcessTmp,
 		       (PROCESS_SET_INFORMATION | PROCESS_QUERY_INFORMATION),
-		       FALSE,
+		       0,
 		       0);
   if (!NT_SUCCESS(Status))
     {
@@ -618,7 +613,7 @@ WINBOOL STDCALL
 SetPriorityClass (HANDLE	hProcess,
 		  DWORD	dwPriorityClass)
 {
-  HANDLE		hProcessTmp;
+  HANDLE	hProcessTmp;
   DWORD		CsrPriorityClass;
   NTSTATUS	Status;
   

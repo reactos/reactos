@@ -1,8 +1,7 @@
-#include <windows.h>
-#include <msvcrt/mbstring.h>
+#include <msvcrti.h>
 
-int isleadbyte(char *mbstr)
+
+int isleadbyte(int c)
 {
 	return 0;
-	//return IsDBCSLeadByteEx(0,*c);
 }

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.127 2002/08/28 07:15:14 hbirr Exp $
+; $Id: ntoskrnl.edf,v 1.128 2002/09/07 15:12:47 chorns Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -29,7 +29,8 @@ ExAcquireResourceExclusiveLite=ExAcquireResourceExclusiveLite@8
 ExAcquireResourceSharedLite=ExAcquireResourceSharedLite@8
 ExAcquireSharedStarveExclusive=ExAcquireSharedStarveExclusive@8
 ExAcquireSharedWaitForExclusive=ExAcquireSharedWaitForExclusive@8
-ExAllocateFromPagedLookasideList=ExAllocateFromPagedLookasideList@4
+ExAllocateFromNPagedLookasideList=ExiAllocateFromNPagedLookasideList@4
+ExAllocateFromPagedLookasideList=ExiAllocateFromPagedLookasideList@4
 ExAllocatePool=ExAllocatePool@8
 ExAllocatePoolWithQuota=ExAllocatePoolWithQuota@8
 ExAllocatePoolWithQuotaTag=ExAllocatePoolWithQuotaTag@12
@@ -45,7 +46,8 @@ ExDisableResourceBoostLite=ExDisableResourceBoostLite@4
 ExEventObjectType DATA
 ExExtendZone=ExExtendZone@12
 ExFreePool=ExFreePool@4
-ExFreeToPagedLookasideList=ExFreeToPagedLookasideList@8
+ExFreeToNPagedLookasideList=ExiFreeToNPagedLookasideList@8
+ExFreeToPagedLookasideList=ExiFreeToPagedLookasideList@8
 ExGetExclusiveWaiterCount=ExGetExclusiveWaiterCount@4
 ExGetPreviousMode=ExGetPreviousMode@0
 ExGetSharedWaiterCount=ExGetSharedWaiterCount@4
@@ -56,19 +58,19 @@ ExInitializeResourceLite=ExInitializeResourceLite@4
 ExInitializeZone=ExInitializeZone@16
 ExInterlockedAddLargeInteger=ExInterlockedAddLargeInteger@16
 ExInterlockedAddLargeStatistic=@ExInterlockedAddLargeStatistic@8
-ExInterlockedAddUlong=ExInterlockedAddUlong@12
+ExInterlockedAddUlong=@ExInterlockedAddUlong@12
 ExInterlockedCompareExchange64=@ExInterlockedCompareExchange64@16
 ExInterlockedDecrementLong=ExInterlockedDecrementLong@8
 ExInterlockedExchangeUlong=ExInterlockedExchangeUlong@12
 ExInterlockedExtendZone=ExInterlockedExtendZone@16
 ExInterlockedIncrementLong=ExInterlockedIncrementLong@8
-ExInterlockedInsertHeadList=ExInterlockedInsertHeadList@12
-ExInterlockedInsertTailList=ExInterlockedInsertTailList@12
-ExInterlockedPopEntryList=ExInterlockedPopEntryList@8
+ExInterlockedInsertHeadList=@ExInterlockedInsertHeadList@12
+ExInterlockedInsertTailList=@ExInterlockedInsertTailList@12
+ExInterlockedPopEntryList=@ExInterlockedPopEntryList@8
 ExInterlockedPopEntrySList=@ExInterlockedPopEntrySList@8
-ExInterlockedPushEntryList=ExInterlockedPushEntryList@12
+ExInterlockedPushEntryList=@ExInterlockedPushEntryList@12
 ExInterlockedPushEntrySList=@ExInterlockedPushEntrySList@12
-ExInterlockedRemoveHeadList=ExInterlockedRemoveHeadList@8
+ExInterlockedRemoveHeadList=@ExInterlockedRemoveHeadList@8
 ExIsProcessorFeaturePresent=ExIsProcessorFeaturePresent@4
 ExIsResourceAcquiredExclusiveLite=ExIsResourceAcquiredExclusiveLite@4
 ExIsResourceAcquiredSharedLite=ExIsResourceAcquiredSharedLite@4
@@ -217,6 +219,8 @@ InterlockedDecrement=@InterlockedDecrement@4
 InterlockedExchange=@InterlockedExchange@8
 InterlockedExchangeAdd=@InterlockedExchangeAdd@8
 InterlockedIncrement=@InterlockedIncrement@4
+InterlockedPopEntrySList=@InterlockedPopEntrySList@4
+InterlockedPushEntrySList=@InterlockedPushEntrySList@8
 IoAcquireCancelSpinLock=IoAcquireCancelSpinLock@4
 IoAcquireVpbSpinLock=IoAcquireVpbSpinLock@4
 IoAdapterObjectType DATA
@@ -446,8 +450,8 @@ KeTickCount DATA
 KeWaitForMultipleObjects=KeWaitForMultipleObjects@32
 KeWaitForMutexObject=KeWaitForMutexObject@20
 KeWaitForSingleObject=KeWaitForSingleObject@20
-;KefAcquireSpinLockAtDpcLevel
-;KefReleaseSpinLockFromDpcLevel
+@KefAcquireSpinLockAtDpcLevel@4
+@KefReleaseSpinLockFromDpcLevel@4
 ;Kei386EoiHelper
 ;KiAcquireSpinLock@4
 ;KiBugCheckData DATA
@@ -526,11 +530,11 @@ NlsLeadByteInfo DATA
 NlsMbCodePageTag DATA
 NlsMbOemCodePageTag DATA
 NlsOemLeadByteInfo DATA
-NtAddAtom=NtAddAtom@8
+NtAddAtom=NtAddAtom@12
 NtAdjustPrivilegesToken=NtAdjustPrivilegesToken@24
 NtAlertThread=NtAlertThread@4
 NtAllocateLocallyUniqueId=NtAllocateLocallyUniqueId@4
-NtAllocateUuids=NtAllocateUuids@12
+NtAllocateUuids=NtAllocateUuids@16
 NtAllocateVirtualMemory=NtAllocateVirtualMemory@24
 NtBuildNumber DATA
 NtClose=NtClose@4
@@ -545,7 +549,7 @@ NtDeleteFile=NtDeleteFile@4
 NtDeviceIoControlFile=NtDeviceIoControlFile@40
 NtDuplicateObject=NtDuplicateObject@28
 NtDuplicateToken=NtDuplicateToken@24
-NtFindAtom=NtFindAtom@8
+NtFindAtom=NtFindAtom@12
 NtFreeVirtualMemory=NtFreeVirtualMemory@16
 NtFsControlFile=NtFsControlFile@40
 NtGlobalFlag DATA
@@ -583,7 +587,7 @@ ObAssignSecurity=ObAssignSecurity@16
 ;ObCheckCreateObjectAccess=ObCheckCreateObjectAccess@28
 ;ObCheckObjectAccess=ObCheckObjectAccess@20
 ;ObCreateObject=ObCreateObject@36
-ObCreateObject=ObCreateObject@20
+ObRosCreateObject=ObRosCreateObject@20
 ;ObFindHandleForObject=ObFindHandleForObject@20
 ObGetObjectPointerCount=ObGetObjectPointerCount@4
 ObGetObjectSecurity=ObGetObjectSecurity@12

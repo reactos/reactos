@@ -1,4 +1,4 @@
-/* $Id: service.c,v 1.3 2000/03/04 22:02:13 ekohl Exp $
+/* $Id: service.c,v 1.4 2002/09/07 15:12:54 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -9,9 +9,11 @@
  *                  17/01/2000: Created
  */
 
-#include <ddk/ntddk.h>
-#include <internal/i386/segment.h>
-#include <internal/kd.h>
+#include <ntoskrnl.h>
+
+#define NDEBUG
+#include <internal/debug.h>
+
 
 /* FUNCTIONS ***************************************************************/
 

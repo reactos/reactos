@@ -1,4 +1,4 @@
-/* $Id: critical.c,v 1.10 2001/02/17 00:02:13 ekohl Exp $
+/* $Id: critical.c,v 1.11 2002/09/07 15:12:28 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -10,8 +10,9 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <windows.h>
-
+#include <kernel32.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 #include <kernel32/kernel32.h>
 
 
@@ -22,7 +23,7 @@ InitializeCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
 {
    NTSTATUS Status;
 
-   Status = RtlInitializeCriticalSection(lpCriticalSection);
+   Status = RtlInitializeCriticalSection((PRTL_CRITICAL_SECTION)lpCriticalSection);
    if (!NT_SUCCESS(Status))
      {
 	RtlRaiseStatus(Status);

@@ -1,4 +1,4 @@
-/* $Id: setmode.c,v 1.4 2002/05/07 22:31:25 hbirr Exp $
+/* $Id: setmode.c,v 1.5 2002/09/07 15:12:32 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -8,13 +8,10 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-
-#include <msvcrt/io.h>
-#include <msvcrt/stdio.h>
-#include <msvcrt/internal/file.h>
+#include <msvcrti.h>
 
 #define NDEBUG
-#include <msvcrt/msvcrtdbg.h>
+#include <msvcrtdbg.h>
 
 
 int _setmode(int _fd, int _newmode)

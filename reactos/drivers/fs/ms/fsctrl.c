@@ -1,4 +1,4 @@
-/* $Id: fsctrl.c,v 1.1 2001/05/05 15:11:57 ekohl Exp $
+/* $Id: fsctrl.c,v 1.2 2002/09/07 15:12:02 chorns Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -9,10 +9,9 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
 #include "msfs.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 
@@ -22,7 +21,7 @@ NTSTATUS STDCALL
 MsfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 		      PIRP Irp)
 {
-   PIO_STACK_LOCATION IoStack;
+   PEXTENDED_IO_STACK_LOCATION IoStack;
    PFILE_OBJECT FileObject;
    PMSFS_MAILSLOT Mailslot;
    PMSFS_FCB Fcb;
@@ -30,14 +29,14 @@ MsfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
    
    DPRINT1("MsfsFileSystemControl(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
    
-   IoStack = IoGetCurrentIrpStackLocation(Irp);
+   IoStack = (PEXTENDED_IO_STACK_LOCATION)IoGetCurrentIrpStackLocation(Irp);
    FileObject = IoStack->FileObject;
    Fcb = FileObject->FsContext;
    Mailslot = Fcb->Mailslot;
    
    DPRINT1("Mailslot name: %wZ\n", &Mailslot->Name);
    
-   switch (IoStack->Parameters.FileSystemControl.IoControlCode)
+   switch (IoStack->Parameters.FileSystemControl.FsControlCode)
      {
 #if 0
       case FSCTL_WAIT_PIPE:

@@ -1,4 +1,4 @@
-/* $Id: atom.c,v 1.2 2001/06/12 17:50:28 chorns Exp $
+/* $Id: atom.c,v 1.3 2002/09/07 15:13:05 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,13 +11,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/handle.h>
-#include <internal/pool.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 
 typedef struct _RTL_ATOM_ENTRY
@@ -66,10 +63,13 @@ static PRTL_ATOM_TABLE GlobalAtomTable = NULL;
 
 
 NTSTATUS STDCALL
-NtAddAtom(IN PWSTR AtomName,
-	  OUT PRTL_ATOM Atom)
+NtAddAtom(IN PWSTR  AtomName,
+  IN ULONG  AtomNameLength,
+  OUT PRTL_ATOM  Atom)
 {
    PRTL_ATOM_TABLE AtomTable;
+
+  /* FIXME: Use AtomNameLength information */
 
    AtomTable = RtlpGetGlobalAtomTable();
    if (AtomTable == NULL)
@@ -96,10 +96,13 @@ NtDeleteAtom(IN RTL_ATOM Atom)
 
 
 NTSTATUS STDCALL
-NtFindAtom(IN PWSTR AtomName,
-	   OUT PRTL_ATOM Atom)
+NtFindAtom(IN PWSTR  AtomName,
+	IN ULONG  AtomNameLength,
+	OUT PRTL_ATOM  Atom)
 {
    PRTL_ATOM_TABLE AtomTable;
+
+  /* FIXME: Use AtomNameLength information */
 
    AtomTable = RtlpGetGlobalAtomTable();
    if (AtomTable == NULL)
@@ -135,7 +138,7 @@ NtQueryInformationAtom(RTL_ATOM Atom,
 					  ReturnLength);
 	break;
 
-     case AtomTableInformation:
+     case AtomListInformation:
 	Status = RtlpQueryAtomTableInformation(AtomTable,
 					       Atom,
 					       AtomInformation,
@@ -828,14 +831,14 @@ RtlpQueryAtomInformation(PRTL_ATOM_TABLE AtomTable,
 {
    NTSTATUS Status;
    ULONG UsageCount;
-   ULONG Flags;
+   ULONG Pinned;
    ULONG NameLength;
 
    NameLength = AtomInformationLength - sizeof(ATOM_BASIC_INFORMATION) + sizeof(WCHAR);
    Status = RtlQueryAtomInAtomTable(AtomTable,
 				    Atom,
 				    &UsageCount,
-				    &Flags,
+				    &Pinned,
 				    AtomInformation->Name,
 				    &NameLength);
    if (!NT_SUCCESS(Status))
@@ -855,8 +858,8 @@ RtlpQueryAtomInformation(PRTL_ATOM_TABLE AtomTable,
 	return STATUS_BUFFER_TOO_SMALL;
      }
 
-   AtomInformation->UsageCount = (USHORT)UsageCount;
-   AtomInformation->Flags = (USHORT)Flags;
+   AtomInformation->ReferenceCount = (USHORT)UsageCount;
+   AtomInformation->Pinned = (USHORT)Pinned;
    AtomInformation->NameLength = (USHORT)NameLength;
 
    return STATUS_SUCCESS;

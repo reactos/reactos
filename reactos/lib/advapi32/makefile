@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.21 2001/11/22 02:37:06 ekohl Exp $
+# $Id: makefile,v 1.22 2002/09/07 15:12:22 chorns Exp $
 
 PATH_TO_TOP = ../..
 
@@ -8,9 +8,9 @@ TARGET_NAME = advapi32
 
 TARGET_SDKLIBS = ntdll.a kernel32.a
 
-# TARGET_CFLAGS = -DUNICODE
+TARGET_CFLAGS = -I./include
 
-TARGET_BASE = 0x77dc0000
+TARGET_BASE = 0x78000000
 
 MISC_OBJECTS=\
 	misc/dllmain.o	\

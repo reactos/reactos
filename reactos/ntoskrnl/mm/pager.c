@@ -1,4 +1,4 @@
-/* $Id: pager.c,v 1.9 2001/12/31 01:53:45 dwelch Exp $
+/* $Id: pager.c,v 1.10 2002/09/07 15:13:00 chorns Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -11,13 +11,11 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ps.h>
-#include <internal/ke.h>
-#include <internal/mm.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* GLOBALS *******************************************************************/
 
@@ -28,7 +26,7 @@ static BOOLEAN PagerThreadShouldTerminate;
 
 /* FUNCTIONS *****************************************************************/
 
-static NTSTATUS STDCALL
+static VOID STDCALL
 MmPagerThreadMain(PVOID Ignored)
 {
    NTSTATUS Status;
@@ -48,7 +46,7 @@ MmPagerThreadMain(PVOID Ignored)
 	if (PagerThreadShouldTerminate)
 	  {
 	     DbgPrint("PagerThread: Terminating\n");
-	     return(STATUS_SUCCESS);
+	     return;
 	  }
      }
 }
@@ -61,7 +59,7 @@ NTSTATUS MmInitPagerThread(VOID)
    KeInitializeEvent(&PagerThreadEvent,
 		     SynchronizationEvent,
 		     FALSE);
-   
+
    Status = PsCreateSystemThread(&PagerThreadHandle,
 				 THREAD_ALL_ACCESS,
 				 NULL,

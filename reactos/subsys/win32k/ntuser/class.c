@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.11 2002/09/01 20:39:56 dwelch Exp $
+/* $Id: class.c,v 1.12 2002/09/07 15:13:12 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -9,10 +9,9 @@
  *       06-06-2001  CSH  Created
  */
 /* INCLUDES ******************************************************************/
-
-#include <ddk/ntddk.h>
+#define NTOS_KERNEL_MODE
+#include <ntos.h>
 #include <win32k/win32k.h>
-#include <napi/win32.h>
 #include <include/class.h>
 #include <include/error.h>
 #include <include/winsta.h>

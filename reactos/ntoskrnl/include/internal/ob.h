@@ -9,7 +9,7 @@
 #ifndef __INCLUDE_INTERNAL_OBJMGR_H
 #define __INCLUDE_INTERNAL_OBJMGR_H
 
-#include <ddk/types.h>
+#ifndef AS_INVOKED
 
 struct _EPROCESS;
 
@@ -108,5 +108,7 @@ ObDuplicateObject(PEPROCESS SourceProcess,
 		  ACCESS_MASK DesiredAccess,
 		  BOOLEAN InheritHandle,
 		  ULONG	Options);
+
+#endif /* !AS_INVOKED */
 
 #endif /* __INCLUDE_INTERNAL_OBJMGR_H */

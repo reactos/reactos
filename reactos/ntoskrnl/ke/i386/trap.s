@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: trap.s,v 1.14 2002/08/30 02:47:36 dwelch Exp $
+/* $Id: trap.s,v 1.15 2002/09/07 15:12:57 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/trap.s
@@ -25,11 +25,8 @@
  */
 
 /* INCLUDES ******************************************************************/
-	
-#include <ddk/status.h>
-#include <internal/i386/segment.h>
-#include <internal/ps.h>
-#include <ddk/defines.h>
+
+#include <ntoskrnl.h>
 
 /* FUNCTIONS *****************************************************************/
 
@@ -170,7 +167,7 @@ _KiTrapProlog:
 	addl	$4, %esp
 
 	/* Get a pointer to the current thread */
-        movl	%fs:0x124, %esi
+        movl	%fs:KPCR_CURRENT_THREAD, %esi
 	
         /* Restore the old trap frame pointer */
 	popl	%ebx

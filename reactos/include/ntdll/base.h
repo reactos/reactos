@@ -1,1 +1,1 @@
-#define NTDLL_BASE (0x77f60000)
+#define NTDLL_BASE (0x78800000)

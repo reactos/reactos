@@ -26,13 +26,12 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <string.h>
-#include <ntos/keyboard.h>
-#include <ntos/minmax.h>
+#include <ntoskrnl.h>
+#include "kdb.h"
 
 #define NDEBUG
-#include <debug.h>
+#include <internal/debug.h>
+
 
 #if 1
 

@@ -1,6 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/string.h>
-#include <msvcrt/ctype.h>
+#include <msvcrti.h>
+
 
 int
 _stricmp(const char *s1, const char *s2)

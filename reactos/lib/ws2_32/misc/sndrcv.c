@@ -79,15 +79,15 @@ send(
 }
 
 
-INT
+int
 EXPORT
 sendto(
   IN  SOCKET s,
-  IN  CONST CHAR FAR* buf,
-  IN  INT len,
-  IN  INT flags,
-  IN  CONST LPSOCKADDR to, 
-  IN  INT tolen)
+  IN  const char FAR *buf,
+  IN  int len,
+  IN  int flags,
+  IN  const struct sockaddr *to, 
+  IN  int tolen)
 {
   DWORD BytesSent;
   WSABUF WSABuf;
@@ -239,7 +239,7 @@ WSASendDisconnect(
 }
 
 
-INT
+int
 EXPORT
 WSASendTo(
   IN  SOCKET s,
@@ -247,8 +247,8 @@ WSASendTo(
   IN  DWORD dwBufferCount,
   OUT LPDWORD lpNumberOfBytesSent,
   IN  DWORD dwFlags,
-  IN  CONST LPSOCKADDR lpTo,
-  IN  INT iToLen,
+  IN  const struct sockaddr *lpTo,
+  IN  int iToLen,
   IN  LPWSAOVERLAPPED lpOverlapped,
   IN  LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
 {
@@ -266,7 +266,7 @@ WSASendTo(
   assert(Provider->ProcTable.lpWSPSendTo);
 
   Code = Provider->ProcTable.lpWSPSendTo(s, lpBuffers, dwBufferCount,
-    lpNumberOfBytesSent, dwFlags, lpTo, iToLen, lpOverlapped,
+    lpNumberOfBytesSent, dwFlags, (CONST LPSOCKADDR) lpTo, iToLen, lpOverlapped,
     lpCompletionRoutine, NULL /* lpThreadId */, &Errno);
 
   DereferenceProviderByPointer(Provider);

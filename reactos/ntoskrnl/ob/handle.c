@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: handle.c,v 1.38 2002/06/11 22:09:02 dwelch Exp $
+/* $Id: handle.c,v 1.39 2002/09/07 15:13:04 chorns Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -29,14 +29,11 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ob.h>
-#include <internal/ps.h>
-#include <internal/pool.h>
-#include <internal/safe.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* TYPES *******************************************************************/
 
@@ -50,7 +47,7 @@ typedef struct
    BOOLEAN Inherit;
 } HANDLE_REP, *PHANDLE_REP;
 
-#define HANDLE_BLOCK_ENTRIES ((PAGESIZE-sizeof(LIST_ENTRY))/sizeof(HANDLE_REP))
+#define HANDLE_BLOCK_ENTRIES ((PAGE_SIZE-sizeof(LIST_ENTRY))/sizeof(HANDLE_REP))
 
 
 /*
@@ -70,7 +67,7 @@ typedef struct
 /* FUNCTIONS ***************************************************************/
 
 
-static PHANDLE_REP ObpGetObjectByHandle(PHANDLE_TABLE HandleTable, HANDLE h)
+static PHANDLE_REP ObpGetObjectByHandle(PROS_HANDLE_TABLE HandleTable, HANDLE h)
 /*
  * FUNCTION: Get the data structure for a handle
  * ARGUMENTS:
@@ -157,9 +154,9 @@ NTSTATUS STDCALL
 NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
 		   IN	HANDLE		SourceHandle,
 		   IN	HANDLE		TargetProcessHandle,
-		   OUT	PHANDLE		UnsafeTargetHandle,
+		   OUT	PHANDLE		UnsafeTargetHandle  OPTIONAL,
 		   IN	ACCESS_MASK	DesiredAccess,
-		   IN	BOOLEAN		InheritHandle,
+		   IN	ULONG		Attributes,
 		   ULONG		Options)
 /*
  * FUNCTION: Copies a handle from one process space to another
@@ -173,8 +170,7 @@ NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
  *	   TargetHandle (OUT) = Caller should supply storage for the 
  *                              duplicated handle. 
  *	   DesiredAccess = The desired access to the handle.
- *	   InheritHandle = Indicates wheter the new handle will be inheritable
- *                         or not.
+ *	   Attritbutes = Attributes. Eg. inheritable.
  *	   Options = Specifies special actions upon duplicating the handle. 
  *                   Can be one of the values DUPLICATE_CLOSE_SOURCE | 
  *                   DUPLICATE_SAME_ACCESS. DUPLICATE_CLOSE_SOURCE specifies 
@@ -249,7 +245,7 @@ NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
    ObCreateHandle(TargetProcess,
 		  ObjectBody,
 		  DesiredAccess,
-		  InheritHandle,
+		  Attributes & HANDLE_FLAG_INHERIT,
 		  &TargetHandle);
    
    if (Options & DUPLICATE_CLOSE_SOURCE)
@@ -273,7 +269,7 @@ NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
 VOID ObCloseAllHandles(PEPROCESS Process)
 {
    KIRQL oldIrql;
-   PHANDLE_TABLE HandleTable;
+   PROS_HANDLE_TABLE HandleTable;
    PLIST_ENTRY current_entry;
    PHANDLE_BLOCK current;
    ULONG i;
@@ -343,7 +339,7 @@ VOID ObDeleteHandleTable(PEPROCESS Process)
  */
 {
    PLIST_ENTRY current = NULL;
-   PHANDLE_TABLE HandleTable = NULL;
+   PROS_HANDLE_TABLE HandleTable = NULL;
    
    ObCloseAllHandles(Process);
    
@@ -374,7 +370,7 @@ VOID ObCreateHandleTable(PEPROCESS Parent,
  *       Process = Process whose handle table is to be created
  */
 {
-   PHANDLE_TABLE ParentHandleTable, HandleTable;
+   PROS_HANDLE_TABLE ParentHandleTable, HandleTable;
    KIRQL oldIrql;
    PLIST_ENTRY parent_current;
    ULONG i;
@@ -439,7 +435,7 @@ PVOID ObDeleteHandle(PEPROCESS Process, HANDLE Handle)
    PHANDLE_REP Rep;
    PVOID ObjectBody;
    KIRQL oldIrql;
-   PHANDLE_TABLE HandleTable;
+   PROS_HANDLE_TABLE HandleTable;
    POBJECT_HEADER Header;
    
    DPRINT("ObDeleteHandle(Handle %x)\n",Handle);
@@ -502,7 +498,7 @@ NTSTATUS ObCreateHandle(PEPROCESS Process,
    unsigned int handle=1;
    unsigned int i;
    HANDLE_BLOCK* new_blk = NULL;
-   PHANDLE_TABLE HandleTable;
+   PROS_HANDLE_TABLE HandleTable;
    KIRQL oldlvl;
 
    DPRINT("ObCreateHandle(Process %x, obj %x)\n",Process,ObjectBody);

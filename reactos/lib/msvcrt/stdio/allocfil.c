@@ -1,8 +1,5 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/stdio.h>
-#include <msvcrt/string.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/internal/file.h>
+#include <msvcrti.h>
 
 
 FILE *	__alloc_file(void);

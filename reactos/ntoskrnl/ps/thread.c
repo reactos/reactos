@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.104 2002/08/20 20:37:14 hyperion Exp $
+/* $Id: thread.c,v 1.105 2002/09/07 15:13:05 chorns Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -20,23 +20,17 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ke.h>
-#include <internal/ob.h>
-#include <internal/ps.h>
-#include <internal/ob.h>
-#include <internal/pool.h>
-#include <ntos/minmax.h>
-#include <internal/ldr.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* TYPES *******************************************************************/
 
 /* GLOBALS ******************************************************************/
 
-POBJECT_TYPE EXPORTED PsThreadType = NULL;
+POBJECT_TYPE PsThreadType = NULL;
 
 KSPIN_LOCK PiThreadListLock;
 
@@ -63,12 +57,14 @@ static GENERIC_MAPPING PiThreadMapping = {THREAD_READ,
 
 PKTHREAD STDCALL KeGetCurrentThread(VOID)
 {
-   return(KeGetCurrentKPCR()->CurrentThread);
+   return((PIKPCR)KeGetCurrentKPCR())->CurrentThread;
 }
+
+#undef PsGetCurrentThread
 
 PETHREAD STDCALL PsGetCurrentThread(VOID)
 {
-  PKTHREAD CurrentThread = KeGetCurrentKPCR()->CurrentThread;
+  PKTHREAD CurrentThread = ((PIKPCR)KeGetCurrentKPCR())->CurrentThread;
   return(CONTAINING_RECORD(CurrentThread, ETHREAD, Tcb));
 }
 
@@ -174,7 +170,7 @@ PiWakeupReaperThread(VOID)
   KeSetEvent(&PiReaperThreadEvent, 0, FALSE);
 }
 
-NTSTATUS STDCALL
+VOID STDCALL
 PiReaperThreadMain(PVOID Ignored)
 {
   while (1)
@@ -197,7 +193,7 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
    KPRIORITY CurrentPriority;
    PETHREAD Candidate;
    ULONG Affinity;
-   PKTHREAD KCurrentThread = KeGetCurrentKPCR()->CurrentThread;
+   PKTHREAD KCurrentThread = ((PIKPCR)KeGetCurrentKPCR())->CurrentThread;
    PETHREAD CurrentThread = CONTAINING_RECORD(KCurrentThread, ETHREAD, Tcb);
 
    DPRINT("PsDispatchThread() %d/%d\n", KeGetCurrentProcessorNumber(),
@@ -264,7 +260,7 @@ PsDispatchThread(ULONG NewThreadStatus)
    /*
     * Save wait IRQL
     */
-   KeGetCurrentKPCR()->CurrentThread->WaitIrql = oldIrql;   
+   ((PIKPCR)KeGetCurrentKPCR())->CurrentThread->WaitIrql = oldIrql;   
    PsDispatchThreadNoLock(NewThreadStatus);
    KeLowerIrql(oldIrql);
 }
@@ -289,7 +285,7 @@ PsBlockThread(PNTSTATUS Status, UCHAR Alertable, ULONG WaitMode,
 	      BOOLEAN DispatcherLock, KIRQL WaitIrql)
 {
   KIRQL oldIrql;
-  PKTHREAD KThread = KeGetCurrentKPCR()->CurrentThread;
+  PKTHREAD KThread = ((PIKPCR)KeGetCurrentKPCR())->CurrentThread;
   PETHREAD Thread = CONTAINING_RECORD (KThread, ETHREAD, Tcb);
   PKWAIT_BLOCK WaitBlock;
 
@@ -366,7 +362,7 @@ PsFreezeAllThreads(PEPROCESS Process)
 VOID
 PsApplicationProcessorInit(VOID)
 {
-  KeGetCurrentKPCR()->CurrentThread = 
+  ((PIKPCR)KeGetCurrentKPCR())->CurrentThread = 
     (PVOID)IdleThreads[KeGetCurrentProcessorNumber()];
 }
 
@@ -439,7 +435,7 @@ PsInitThreadManagment(VOID)
 		      THREAD_ALL_ACCESS,NULL, TRUE);
    FirstThread->Tcb.State = THREAD_STATE_RUNNING;
    FirstThread->Tcb.FreezeCount = 0;
-   KeGetCurrentKPCR()->CurrentThread = (PVOID)FirstThread;
+   ((PIKPCR)KeGetCurrentKPCR())->CurrentThread = (PVOID)FirstThread;
    NtClose(FirstThreadHandle);
    
    DPRINT("FirstThread %x\n",FirstThread);

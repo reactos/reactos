@@ -1,4 +1,4 @@
-/* $Id: winsta.c,v 1.4 2002/08/27 06:40:15 robd Exp $
+/* $Id: winsta.c,v 1.5 2002/09/07 15:12:44 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -8,9 +8,8 @@
  * UPDATE HISTORY:
  *      04-06-2001  CSH  Created
  */
-#include <windows.h>
+
 #include <user32.h>
-#include <debug.h>
 
 
 WINBOOL STDCALL
@@ -65,15 +64,15 @@ CreateWindowStationW(LPWSTR lpwinsta,
 				   lpsa, 0, 0, 0);
 }
 
-WINBOOL STDCALL
-EnumWindowStationsA(ENUMWINDOWSTATIONPROC lpEnumFunc,
+BOOL STDCALL
+EnumWindowStationsA(WINSTAENUMPROCA lpEnumFunc,
 		    LPARAM lParam)
 {
   return FALSE;
 }
 
-WINBOOL STDCALL
-EnumWindowStationsW(ENUMWINDOWSTATIONPROC lpEnumFunc,
+BOOL STDCALL
+EnumWindowStationsW(WINSTAENUMPROCW lpEnumFunc,
 		    LPARAM lParam)
 {
   return FALSE;

@@ -9,9 +9,28 @@
  */
 #include <ndissys.h>
 
+#define FDDI_LENGTH_OF_LONG_ADDRESS     6
+#define FDDI_LENGTH_OF_SHORT_ADDRESS    2
+
+DECLARE_UNKNOWN_PROTOTYPE(FDDI_ADDRESS_CHANGE)
+DECLARE_UNKNOWN_PROTOTYPE(FDDI_FILTER_CHANGE)
+DECLARE_UNKNOWN_PROTOTYPE(FDDI_DEFERRED_CLOSE)
+
+
+#define TR_LENGTH_OF_FUNCTIONAL 4
+#define TR_LENGTH_OF_ADDRESS    6
+
+DECLARE_UNKNOWN_PROTOTYPE(TR_ADDRESS_CHANGE)
+DECLARE_UNKNOWN_PROTOTYPE(TR_GROUP_CHANGE)
+DECLARE_UNKNOWN_PROTOTYPE(TR_FILTER_CHANGE)
+DECLARE_UNKNOWN_PROTOTYPE(TR_DEFERRED_CLOSE)
+
+
+DECLARE_UNKNOWN_STRUCT(ARC_FILTER)
+
 
 VOID
-EXPORT
+STDCALL
 ArcFilterDprIndicateReceive(
     IN  PARC_FILTER Filter,
     IN  PUCHAR      pRawHeader,
@@ -23,7 +42,7 @@ ArcFilterDprIndicateReceive(
 
 
 VOID
-EXPORT
+STDCALL
 ArcFilterDprIndicateReceiveComplete(
     IN  PARC_FILTER Filter)
 {
@@ -32,7 +51,7 @@ ArcFilterDprIndicateReceiveComplete(
 
 
 NDIS_STATUS
-EXPORT
+STDCALL
 EthChangeFilterAddresses(
     IN  PETH_FILTER     Filter,
     IN  NDIS_HANDLE     NdisFilterHandle,
@@ -48,7 +67,7 @@ EthChangeFilterAddresses(
 
 
 BOOLEAN
-EXPORT
+STDCALL
 EthCreateFilter(
     IN  UINT                MaximumMulticastAddresses,
     IN  ETH_ADDRESS_CHANGE  AddressChangeAction,
@@ -65,7 +84,7 @@ EthCreateFilter(
 
 
 VOID
-EXPORT
+STDCALL
 EthDeleteFilter(
     IN  PETH_FILTER Filter)
 {
@@ -74,7 +93,7 @@ EthDeleteFilter(
 
 
 NDIS_STATUS
-EXPORT
+STDCALL
 EthDeleteFilterOpenAdapter(
     IN  PETH_FILTER	Filter,
     IN  NDIS_HANDLE	NdisFilterHandle,
@@ -87,7 +106,7 @@ EthDeleteFilterOpenAdapter(
 
 
 NDIS_STATUS
-EXPORT
+STDCALL
 EthFilterAdjust(
     IN  PETH_FILTER     Filter,
     IN  NDIS_HANDLE     NdisFilterHandle,
@@ -102,7 +121,7 @@ EthFilterAdjust(
 
 
 VOID
-EXPORT
+STDCALL
 EthFilterIndicateReceive(
     IN	PETH_FILTER Filter,
     IN	NDIS_HANDLE MacReceiveContext,
@@ -118,7 +137,7 @@ EthFilterIndicateReceive(
 
 
 VOID
-EXPORT
+STDCALL
 EthFilterIndicateReceiveComplete(
     IN  PETH_FILTER Filter)
 {
@@ -127,7 +146,7 @@ EthFilterIndicateReceiveComplete(
 
 
 BOOLEAN
-EXPORT
+STDCALL
 EthNoteFilterOpenAdapter(
     IN  PETH_FILTER     Filter,
     IN  NDIS_HANDLE     MacBindingHandle,
@@ -141,7 +160,7 @@ EthNoteFilterOpenAdapter(
 
 
 UINT
-EXPORT
+STDCALL
 EthNumberOfOpenFilterAddresses(
     IN  PETH_FILTER Filter,
     IN  NDIS_HANDLE NdisFilterHandle)
@@ -153,7 +172,7 @@ EthNumberOfOpenFilterAddresses(
 
 
 VOID
-EXPORT
+STDCALL
 EthQueryGlobalFilterAddresses (
     OUT PNDIS_STATUS    Status,
     IN  PETH_FILTER     Filter,
@@ -166,7 +185,7 @@ EthQueryGlobalFilterAddresses (
 
 
 VOID
-EXPORT
+STDCALL
 EthQueryOpenFilterAddresses(
     OUT	    PNDIS_STATUS    Status,
     IN	    PETH_FILTER     Filter,
@@ -180,7 +199,7 @@ EthQueryOpenFilterAddresses(
 
 
 BOOLEAN
-EXPORT
+STDCALL
 EthShouldAddressLoopBack(
     IN  PETH_FILTER Filter,
     IN  CHAR        Address [ETH_LENGTH_OF_ADDRESS])
@@ -192,7 +211,7 @@ EthShouldAddressLoopBack(
 
 
 NDIS_STATUS
-EXPORT
+STDCALL
 FddiChangeFilterLongAddresses(
     IN  PFDDI_FILTER    Filter,
     IN  NDIS_HANDLE     NdisFilterHandle,
@@ -208,7 +227,7 @@ FddiChangeFilterLongAddresses(
 
 
 NDIS_STATUS
-EXPORT
+STDCALL
 FddiChangeFilterShortAddresses(
     IN  PFDDI_FILTER    Filter,
     IN  NDIS_HANDLE     NdisFilterHandle,
@@ -224,7 +243,7 @@ FddiChangeFilterShortAddresses(
 
 
 BOOLEAN
-EXPORT
+STDCALL
 FddiCreateFilter(
     IN  UINT                MaximumMulticastLongAddresses,
     IN  UINT                MaximumMulticastShortAddresses,
@@ -243,7 +262,7 @@ FddiCreateFilter(
 
 
 VOID
-EXPORT
+STDCALL
 FddiDeleteFilter(
     IN  PFDDI_FILTER    Filter)
 {
@@ -252,7 +271,7 @@ FddiDeleteFilter(
 
 
 NDIS_STATUS
-EXPORT
+STDCALL
 FddiDeleteFilterOpenAdapter(
     IN  PFDDI_FILTER    Filter,
     IN  NDIS_HANDLE     NdisFilterHandle,
@@ -265,7 +284,7 @@ FddiDeleteFilterOpenAdapter(
 
 
 NDIS_STATUS
-EXPORT
+STDCALL
 FddiFilterAdjust(
     IN  PFDDI_FILTER    Filter,
     IN  NDIS_HANDLE     NdisFilterHandle,
@@ -280,7 +299,7 @@ FddiFilterAdjust(
 
 
 VOID
-EXPORT
+STDCALL
 FddiFilterIndicateReceive(
     IN  PFDDI_FILTER    Filter,
     IN  NDIS_HANDLE     MacReceiveContext,
@@ -297,7 +316,7 @@ FddiFilterIndicateReceive(
 
 
 VOID
-EXPORT
+STDCALL
 FddiFilterIndicateReceiveComplete(
     IN  PFDDI_FILTER    Filter)
 {
@@ -306,7 +325,7 @@ FddiFilterIndicateReceiveComplete(
 
 
 BOOLEAN
-EXPORT
+STDCALL
 FddiNoteFilterOpenAdapter(
     IN  PFDDI_FILTER    Filter,
     IN  NDIS_HANDLE     MacBindingHandle,
@@ -320,7 +339,7 @@ FddiNoteFilterOpenAdapter(
 
 
 UINT
-EXPORT
+STDCALL
 FddiNumberOfOpenFilterLongAddresses(
     IN  PFDDI_FILTER    Filter,
     IN  NDIS_HANDLE     NdisFilterHandle)
@@ -332,7 +351,7 @@ FddiNumberOfOpenFilterLongAddresses(
 
 
 UINT
-EXPORT
+STDCALL
 FddiNumberOfOpenFilterShortAddresses(
     IN  PFDDI_FILTER    Filter,
     IN  NDIS_HANDLE     NdisFilterHandle)
@@ -344,7 +363,7 @@ FddiNumberOfOpenFilterShortAddresses(
 
 
 VOID
-EXPORT
+STDCALL
 FddiQueryGlobalFilterLongAddresses(
     OUT     PNDIS_STATUS    Status,
     IN      PFDDI_FILTER    Filter,
@@ -357,7 +376,7 @@ FddiQueryGlobalFilterLongAddresses(
 
 
 VOID
-EXPORT
+STDCALL
 FddiQueryGlobalFilterShortAddresses(
     OUT     PNDIS_STATUS    Status,
     IN      PFDDI_FILTER    Filter,
@@ -370,7 +389,7 @@ FddiQueryGlobalFilterShortAddresses(
 
 
 VOID
-EXPORT
+STDCALL
 FddiQueryOpenFilterLongAddresses(
     OUT     PNDIS_STATUS    Status,
     IN      PFDDI_FILTER    Filter,
@@ -384,7 +403,7 @@ FddiQueryOpenFilterLongAddresses(
 
 
 VOID
-EXPORT
+STDCALL
 FddiQueryOpenFilterShortAddresses(
     OUT     PNDIS_STATUS    Status,
     IN      PFDDI_FILTER    Filter,
@@ -398,7 +417,7 @@ FddiQueryOpenFilterShortAddresses(
 
 
 BOOLEAN
-EXPORT
+STDCALL
 FddiShouldAddressLoopBack(
     IN  PFDDI_FILTER    Filter,
     IN  CHAR            Address [],
@@ -411,7 +430,7 @@ FddiShouldAddressLoopBack(
 
 
 VOID
-EXPORT
+STDCALL
 NdisAllocateDmaChannel(
     OUT PNDIS_STATUS            Status,
     OUT PNDIS_HANDLE            NdisDmaHandle,
@@ -424,7 +443,7 @@ NdisAllocateDmaChannel(
 
 
 VOID
-EXPORT
+STDCALL
 NdisAllocateSharedMemory(
     IN  NDIS_HANDLE             NdisAdapterHandle,
     IN  ULONG                   Length,
@@ -437,7 +456,7 @@ NdisAllocateSharedMemory(
 
 
 VOID
-EXPORT
+STDCALL
 NdisCompleteBufferPhysicalMapping(
     IN  NDIS_HANDLE     NdisAdapterHandle,
     IN  PNDIS_BUFFER    Buffer,
@@ -448,7 +467,7 @@ NdisCompleteBufferPhysicalMapping(
 
 
 VOID
-EXPORT
+STDCALL
 NdisCompleteRequest(
     IN  NDIS_HANDLE     NdisBindingContext,
     IN  PNDIS_REQUEST   NdisRequest,
@@ -459,7 +478,7 @@ NdisCompleteRequest(
 
 
 VOID
-EXPORT
+STDCALL
 NdisCompleteReset(
     IN  NDIS_HANDLE NdisBindingContext,
     IN  NDIS_STATUS Status)
@@ -469,7 +488,7 @@ NdisCompleteReset(
 
 
 VOID
-EXPORT
+STDCALL
 NdisCompleteSend(
     IN  NDIS_HANDLE     NdisBindingContext,
     IN  PNDIS_PACKET    Packet,
@@ -480,7 +499,7 @@ NdisCompleteSend(
 
 
 VOID
-EXPORT
+STDCALL
 NdisCompleteTransferData(
     IN  NDIS_HANDLE     NdisBindingContext,
     IN  PNDIS_PACKET    Packet,
@@ -492,7 +511,7 @@ NdisCompleteTransferData(
 
 
 VOID
-EXPORT
+STDCALL
 NdisIndicateReceive(
     OUT PNDIS_STATUS    Status,
     IN  NDIS_HANDLE     NdisBindingContext,
@@ -508,7 +527,7 @@ NdisIndicateReceive(
 
 
 VOID
-EXPORT
+STDCALL
 NdisIndicateReceiveComplete(
     IN  NDIS_HANDLE NdisBindingContext)
 {
@@ -517,7 +536,7 @@ NdisIndicateReceiveComplete(
 
 
 VOID
-EXPORT
+STDCALL
 NdisIndicateStatus(
     IN  NDIS_HANDLE NdisBindingContext,
     IN  NDIS_STATUS GeneralStatus,
@@ -529,7 +548,7 @@ NdisIndicateStatus(
 
 
 VOID
-EXPORT
+STDCALL
 NdisIndicateStatusComplete(
     IN  NDIS_HANDLE NdisBindingContext)
 {
@@ -538,7 +557,7 @@ NdisIndicateStatusComplete(
 
 
 NDIS_STATUS
-EXPORT
+STDCALL
 NdisPciAssignResources(
     IN  NDIS_HANDLE         NdisMacHandle,
     IN  NDIS_HANDLE         NdisWrapperHandle,
@@ -553,7 +572,7 @@ NdisPciAssignResources(
 
 
 VOID
-EXPORT
+STDCALL
 NdisReadBindingInformation (
     OUT PNDIS_STATUS    Status,
     OUT PNDIS_STRING    * Binding,
@@ -564,7 +583,7 @@ NdisReadBindingInformation (
 
 
 ULONG
-EXPORT
+STDCALL
 NdisReadDmaCounter(
     IN  NDIS_HANDLE NdisDmaHandle)
 {
@@ -575,7 +594,7 @@ NdisReadDmaCounter(
 
 
 VOID
-EXPORT
+STDCALL
 NdisStartBufferPhysicalMapping(
     IN  NDIS_HANDLE                 NdisAdapterHandle,
     IN  PNDIS_BUFFER                Buffer,
@@ -589,7 +608,7 @@ NdisStartBufferPhysicalMapping(
 
 
 BOOLEAN
-EXPORT
+STDCALL
 NdisSynchronizeWithInterrupt(
     IN  PNDIS_INTERRUPT Interrupt,
     IN  PVOID           SynchronizeFunction,
@@ -602,7 +621,7 @@ NdisSynchronizeWithInterrupt(
 
 
 VOID
-EXPORT
+STDCALL
 NdisUnmapIoSpace(
     IN  NDIS_HANDLE NdisAdapterHandle,
     IN  PVOID       VirtualAddress,
@@ -613,7 +632,7 @@ NdisUnmapIoSpace(
 
 
 NDIS_STATUS
-EXPORT
+STDCALL
 TrChangeFunctionalAddress(
     IN  PTR_FILTER      Filter,
     IN  NDIS_HANDLE     NdisFilterHandle,
@@ -628,7 +647,7 @@ TrChangeFunctionalAddress(
 
 
 NDIS_STATUS
-EXPORT
+STDCALL
 TrChangeGroupAddress(
     IN  PTR_FILTER      Filter,
     IN  NDIS_HANDLE     NdisFilterHandle,
@@ -643,7 +662,7 @@ TrChangeGroupAddress(
 
 
 BOOLEAN
-EXPORT
+STDCALL
 TrCreateFilter(
     IN  TR_ADDRESS_CHANGE   AddressChangeAction,
     IN  TR_GROUP_CHANGE     GroupChangeAction,
@@ -660,7 +679,7 @@ TrCreateFilter(
 
 
 VOID
-EXPORT
+STDCALL
 TrDeleteFilter(
     IN  PTR_FILTER  Filter)
 {
@@ -669,7 +688,7 @@ TrDeleteFilter(
 
 
 NDIS_STATUS
-EXPORT
+STDCALL
 TrDeleteFilterOpenAdapter (
     IN  PTR_FILTER      Filter,
     IN  NDIS_HANDLE     NdisFilterHandle,
@@ -682,7 +701,7 @@ TrDeleteFilterOpenAdapter (
 
 
 NDIS_STATUS
-EXPORT
+STDCALL
 TrFilterAdjust(
     IN  PTR_FILTER      Filter,
     IN  NDIS_HANDLE     NdisFilterHandle,
@@ -697,7 +716,7 @@ TrFilterAdjust(
 
 
 VOID
-EXPORT
+STDCALL
 TrFilterIndicateReceive(
     IN  PTR_FILTER  Filter,
     IN  NDIS_HANDLE MacReceiveContext,
@@ -712,7 +731,7 @@ TrFilterIndicateReceive(
 
 
 VOID
-EXPORT
+STDCALL
 TrFilterIndicateReceiveComplete(
     IN  PTR_FILTER  Filter)
 {
@@ -721,7 +740,7 @@ TrFilterIndicateReceiveComplete(
 
 
 BOOLEAN
-EXPORT
+STDCALL
 TrNoteFilterOpenAdapter(
     IN  PTR_FILTER      Filter,
     IN  NDIS_HANDLE     MacBindingHandle,
@@ -735,7 +754,7 @@ TrNoteFilterOpenAdapter(
 
 
 BOOLEAN
-EXPORT
+STDCALL
 TrShouldAddressLoopBack(
     IN  PTR_FILTER  Filter,
     IN  CHAR        DestinationAddress [TR_LENGTH_OF_ADDRESS],

@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.2 2001/06/26 12:47:26 ekohl Exp $
+/* $Id: volume.c,v 1.3 2002/09/07 15:12:02 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -9,7 +9,6 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
 #include <wchar.h>
 
 #define NDEBUG

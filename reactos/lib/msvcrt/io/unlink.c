@@ -7,11 +7,10 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-#include <windows.h>
-#include <msvcrt/io.h>
+#include <msvcrti.h>
 
 #define NDEBUG
-#include <msvcrt/msvcrtdbg.h>
+#include <msvcrtdbg.h>
 
 
 int _unlink(const char *filename)

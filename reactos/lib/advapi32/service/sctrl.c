@@ -1,4 +1,4 @@
-/* $Id: sctrl.c,v 1.5 2002/08/27 06:41:58 hbirr Exp $
+/* $Id: sctrl.c,v 1.6 2002/09/07 15:12:23 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,8 +12,8 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <windows.h>
-#include <ddk/ntddk.h>
+#include <advapi32.h>
+
 
 #define NDEBUG
 #include <debug.h>

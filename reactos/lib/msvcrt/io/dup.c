@@ -1,7 +1,5 @@
-/* $Id: dup.c,v 1.2 2002/05/07 22:31:25 hbirr Exp $ */
-#include <windows.h>
-#include <msvcrt/io.h>
-#include <msvcrt/internal/file.h>
+/* $Id: dup.c,v 1.3 2002/09/07 15:12:30 chorns Exp $ */
+#include <msvcrti.h>
 
 
 int _dup(int handle)
@@ -11,7 +9,7 @@ int _dup(int handle)
   BOOL result;
   int fd;
   
-  hFile = _get_osfhandle(handle);
+  hFile = (HANDLE)_get_osfhandle(handle);
   if (hFile == INVALID_HANDLE_VALUE)
 	  return -1;
   result = DuplicateHandle(hProcess, 

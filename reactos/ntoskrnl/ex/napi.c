@@ -8,13 +8,14 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <napi/lpc.h>
+#include <ntoskrnl.h>
+
+#define NDEBUG
 #include <internal/debug.h>
+
 
 /* GLOBALS ******************************************************************/
 
-#include <ddk/service.h>
 #include <ntdll/napi.h>
 
 /* GLOBALS *****************************************************************/

@@ -1,4 +1,5 @@
-#include <msvcrt/mbctype.h>
+#include <msvcrti.h>
+
 
 int _ismbbkalpha(unsigned char c)
 {

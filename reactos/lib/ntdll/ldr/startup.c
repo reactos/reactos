@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.42 2002/08/29 22:12:15 dwelch Exp $
+/* $Id: startup.c,v 1.43 2002/09/07 15:12:39 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -10,28 +10,24 @@
 
 /* INCLUDES *****************************************************************/
 
+#define NTOS_USER_MODE
+#include <ntos.h>
+#include <pe.h>
 #include <reactos/config.h>
-#include <ddk/ntddk.h>
-#include <windows.h>
-#include <ntdll/ldr.h>
-#include <ntdll/rtl.h>
 #include <csrss/csrss.h>
-#include <ntdll/csr.h>
 #include <user32/callback.h>
 
 #define NDEBUG
-#include <ntdll/ntdll.h>
-
-
-VOID RtlInitializeHeapManager (VOID);
+#include <debug.h>
 
 /* GLOBALS *******************************************************************/
 
+VOID RtlInitializeHeapManager (VOID);
 
 extern unsigned int _image_base__;
 
-static CRITICAL_SECTION PebLock;
-static CRITICAL_SECTION LoaderLock;
+static RTL_CRITICAL_SECTION PebLock;
+static RTL_CRITICAL_SECTION LoaderLock;
 static RTL_BITMAP TlsBitMap;
 
 ULONG NtGlobalFlag = 0;
@@ -106,7 +102,7 @@ LdrInitializeThunk (ULONG Unknown1,
      }
 
    /* normalize process parameters */
-   RtlNormalizeProcessParams (Peb->ProcessParameters);
+   RtlRosNormalizeProcessParams (Peb->ProcessParameters);
 
 #if 0
    /* initialize NLS data */

@@ -1,7 +1,7 @@
 /******************************************************************************
  *
  * Name: acmacros.h - C macros for the entire subsystem.
- *       $Revision: 1.1 $
+ *       $Revision: 1.2 $
  *
  *****************************************************************************/
 
@@ -163,8 +163,12 @@
  * Rounding macros (Power of two boundaries only)
  */
 
+#ifndef ROUND_DOWN
 #define ROUND_DOWN(value,boundary)      ((value) & (~((boundary)-1)))
+#endif
+#ifndef ROUND_UP
 #define ROUND_UP(value,boundary)        (((value) + ((boundary)-1)) & (~((boundary)-1)))
+#endif
 
 #define ROUND_DOWN_TO_32_BITS(a)        ROUND_DOWN(a,4)
 #define ROUND_DOWN_TO_64_BITS(a)        ROUND_DOWN(a,8)

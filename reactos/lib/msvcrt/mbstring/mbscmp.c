@@ -1,5 +1,5 @@
-#include <msvcrt/mbstring.h>
-#include <msvcrt/string.h>
+#include <msvcrti.h>
+
 
 int _mbscmp(const unsigned char *str1, const unsigned char *str2)
 {

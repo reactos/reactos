@@ -9,6 +9,9 @@
 #ifndef __DEBUG_H
 #define __DEBUG_H
 
+#undef assert
+#undef ASSERT
+
 #define NORMAL_MASK    0x000000FF
 #define SPECIAL_MASK   0xFFFFFF00
 #define MIN_TRACE      0x00000001

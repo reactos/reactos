@@ -1,5 +1,5 @@
-#include <windows.h>
-#include <msvcrt/stdlib.h>
+#include <msvcrti.h>
+
 
 extern HANDLE hHeap;
 

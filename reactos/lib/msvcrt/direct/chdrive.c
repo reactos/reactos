@@ -1,7 +1,5 @@
-#include <windows.h>
-#include <msvcrt/ctype.h>
-#include <msvcrt/direct.h>
-#include <msvcrt/stdlib.h>
+#include <msvcrti.h>
+
 
 int cur_drive = 0;
 

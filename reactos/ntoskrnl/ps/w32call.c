@@ -1,4 +1,4 @@
-/* $Id: w32call.c,v 1.2 2002/08/30 02:47:37 dwelch Exp $
+/* $Id: w32call.c,v 1.3 2002/09/07 15:13:05 chorns Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -20,14 +20,7 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ke.h>
-#include <internal/ob.h>
-#include <internal/ps.h>
-#include <internal/ob.h>
-#include <internal/pool.h>
-#include <ntos/minmax.h>
-#include <internal/ldr.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -169,7 +162,7 @@ PsAllocateCallbackStack(ULONG StackSize)
       DPRINT("Failed to create thread stack\n");
       return(NULL);
     }
-  for (i = 0; i < (StackSize / PAGESIZE); i++)
+  for (i = 0; i < (StackSize / PAGE_SIZE); i++)
     {
       PHYSICAL_ADDRESS Page;
       Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &Page);
@@ -178,7 +171,7 @@ PsAllocateCallbackStack(ULONG StackSize)
 	  return(NULL);
 	}
       Status = MmCreateVirtualMapping(NULL,
-				      KernelStack + (i * PAGESIZE),
+				      KernelStack + (i * PAGE_SIZE),
 				      PAGE_EXECUTE_READWRITE,
 				      Page,
 				      TRUE);

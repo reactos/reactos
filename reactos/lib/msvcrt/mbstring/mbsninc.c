@@ -1,4 +1,5 @@
-#include <msvcrt/mbstring.h>
+#include <msvcrti.h>
+
 
 unsigned char * _mbsninc(const unsigned char *str, size_t n)
 {

@@ -1,6 +1,4 @@
-#include <windows.h>
-#include <msvcrt/direct.h>
-#include <msvcrt/stdlib.h>
+#include <msvcrti.h>
 
 
 char *_getcwd( char *buffer, int maxlen )

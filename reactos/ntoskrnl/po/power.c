@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: power.c,v 1.4 2001/08/30 20:38:20 dwelch Exp $
+/* $Id: power.c,v 1.5 2002/09/07 15:13:04 chorns Exp $
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/po/power.c
  * PURPOSE:         Power Manager
@@ -25,10 +25,8 @@
  *   20/08/1999 EA  Created
  *   16/04/2001 CSH Stubs added
  */
-#include <ddk/ntddk.h>
-#include <roscfg.h>
-#include <internal/io.h>
-#include <internal/po.h>
+
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>

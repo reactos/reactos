@@ -1,4 +1,4 @@
-/* $Id: sprintf.c,v 1.6 2001/07/29 12:42:40 hbirr Exp $
+/* $Id: sprintf.c,v 1.7 2002/09/07 15:12:41 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -22,7 +22,8 @@
  * Wirzenius wrote this portably, Torvalds fucked it up :-)
  */
 
-#include <ddk/ntddk.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -30,7 +31,7 @@
 #include <limits.h>
 
 #define NDEBUG
-#include <ntdll/ntdll.h>
+#include <debug.h>
 
 
 #define ZEROPAD	1		/* pad with zero */

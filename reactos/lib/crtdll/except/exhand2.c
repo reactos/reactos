@@ -1,4 +1,6 @@
 #include <windows.h>
+#include <excpt.h>
+
 
 EXCEPTION_DISPOSITION
 _except_handler2(

@@ -14,12 +14,7 @@
  * Copyright 1993 Erik Bos
  * Copyright 1996 Alexandre Julliard
  */
-
-#include <windows.h>
-#include <msvcrt/time.h>
-#include <msvcrt/internal/file.h>
-
-VOID STDCALL GetSystemTimeAsFileTime(LPFILETIME  lpSystemTimeAsFileTime );
+#include <msvcrti.h>
 
 time_t
 time(time_t *t)

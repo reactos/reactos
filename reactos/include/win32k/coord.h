@@ -4,9 +4,9 @@
 BOOL
 STDCALL
 W32kCombineTransform (
-	LPXFORM		XformResult,
-	CONST LPXFORM	xform1,
-	CONST LPXFORM	xform2
+	PXFORM		XformResult,
+	CONST PXFORM	xform1,
+	CONST PXFORM	xform2
 	);
 BOOL
 STDCALL
@@ -24,7 +24,7 @@ BOOL
 STDCALL
 W32kGetWorldTransform (
 	HDC	hDC,
-	LPXFORM	Xform
+	PXFORM	Xform
 	);
 BOOL
 STDCALL
@@ -37,7 +37,7 @@ BOOL
 STDCALL
 W32kModifyWorldTransform (
 	HDC		hDC,
-	CONST LPXFORM	Xform,
+	CONST PXFORM	Xform,
 	DWORD		Mode
 	);
 BOOL
@@ -124,6 +124,6 @@ BOOL
 STDCALL
 W32kSetWorldTransform (
 	HDC		hDC,
-	CONST LPXFORM	Xform
+	CONST PXFORM	Xform
 	);
 #endif

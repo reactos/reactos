@@ -27,19 +27,15 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <limits.h>
-#include <ddk/ntddk.h>
-#include <internal/id.h>
-#include <ntos/synch.h>
-#include <internal/pool.h>
-#include <internal/safe.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
+
 /* GLOBALS *******************************************************************/
 
-POBJECT_TYPE EXPORTED ExEventObjectType = NULL;
+POBJECT_TYPE ExEventObjectType = NULL;
 
 static GENERIC_MAPPING ExpEventMapping = {
 	STANDARD_RIGHTS_READ | SYNCHRONIZE | EVENT_QUERY_STATE,
@@ -146,7 +142,7 @@ NtCreateEvent(OUT PHANDLE UnsafeEventHandle,
        ObjectAttributes = NULL;
      }
 
-   Status = ObCreateObject(&EventHandle,
+   Status = ObRosCreateObject(&EventHandle,
 			   DesiredAccess,
 			   ObjectAttributes,
 			   ExEventObjectType,

@@ -1,5 +1,5 @@
-/* $Id: tdi.rc,v 1.1 1999/11/20 20:41:29 ea Exp $ */
-#include <defines.h>
+/* $Id: tdi.rc,v 1.2 2002/09/07 15:12:07 chorns Exp $ */
+#include <windows.h>
 #include <reactos/resource.h>
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US

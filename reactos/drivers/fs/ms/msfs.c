@@ -1,4 +1,4 @@
-/* $Id: msfs.c,v 1.3 2002/07/17 22:56:10 dwelch Exp $
+/* $Id: msfs.c,v 1.4 2002/09/07 15:12:02 chorns Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -9,7 +9,6 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
 #include "msfs.h"
 
 #define NDEBUG

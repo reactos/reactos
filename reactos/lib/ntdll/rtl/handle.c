@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.2 2001/08/07 14:10:41 ekohl Exp $
+/* $Id: handle.c,v 1.3 2002/09/07 15:12:40 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -9,11 +9,11 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 
 #define NDEBUG
-#include <ntdll/ntdll.h>
+#include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
 

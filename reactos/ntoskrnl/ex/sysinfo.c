@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.15 2002/06/14 07:43:22 ekohl Exp $
+/* $Id: sysinfo.c,v 1.16 2002/09/07 15:12:50 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,15 +11,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ddk/exfuncs.h>
-#include <ddk/halfuncs.h>
-#include <ddk/iofuncs.h>
-#include <internal/ex.h>
-#include <internal/ldr.h>
-#include <internal/safe.h>
+#include <ntoskrnl.h>
 
+#define NDEBUG
 #include <internal/debug.h>
+
 
 extern ULONG NtGlobalFlag; /* FIXME: it should go in a ddk/?.h */
 
@@ -290,17 +286,17 @@ QSI_DEF(SystemBasicInformation)
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
 
-	Sbi->Reserved = 0;
-	Sbi->TimerResolution = 0; /* FIXME */
-	Sbi->PageSize = PAGESIZE; /* FIXME: it should be PAGE_SIZE */
+	Sbi->Unknown = 0;
+	Sbi->MaximumIncrement = 0; /* FIXME */
+	Sbi->PhysicalPageSize = PAGE_SIZE;
 	Sbi->NumberOfPhysicalPages = 0; /* FIXME */
-	Sbi->LowestPhysicalPageNumber = 0; /* FIXME */
-	Sbi->HighestPhysicalPageNumber = 0; /* FIXME */
+	Sbi->LowestPhysicalPage = 0; /* FIXME */
+	Sbi->HighestPhysicalPage = 0; /* FIXME */
 	Sbi->AllocationGranularity = 65536; /* hard coded on Intel? */
-	Sbi->MinimumUserModeAddress = 0; /* FIXME */
-	Sbi->MaximumUserModeAddress = 0; /* FIXME */
-	Sbi->ActiveProcessorsAffinityMask = 0x00000001; /* FIXME */
-	Sbi->NumberOfProcessors = 1; /* FIXME */
+	Sbi->LowestUserAddress = 0; /* FIXME */
+	Sbi->HighestUserAddress = 0; /* FIXME */
+	Sbi->ActiveProcessors = 0x00000001; /* FIXME */
+	Sbi->NumberProcessors = 1; /* FIXME */
 
 	return (STATUS_SUCCESS);
 }
@@ -324,8 +320,8 @@ QSI_DEF(SystemProcessorInformation)
 	Spi->ProcessorArchitecture = 0; /* FIXME */
 	Spi->ProcessorLevel = 0; /* FIXME */
 	Spi->ProcessorRevision = 0; /* FIXME */
-	Spi->Reserved = 0;
-	Spi->ProcessorFeatureBits = 0x00000000; /* FIXME */
+	Spi->Unknown = 0;
+	Spi->FeatureBits = 0x00000000; /* FIXME */
 	
 	return (STATUS_SUCCESS);
 }
@@ -333,91 +329,91 @@ QSI_DEF(SystemProcessorInformation)
 /* Class 2 - Performance Information */
 QSI_DEF(SystemPerformanceInformation)
 {
-	PSYSTEM_PERFORMANCE_INFO Spi 
-		= (PSYSTEM_PERFORMANCE_INFO) Buffer;
+	PSYSTEM_PERFORMANCE_INFORMATION Spi 
+		= (PSYSTEM_PERFORMANCE_INFORMATION) Buffer;
 
-	*ReqSize = sizeof (SYSTEM_PERFORMANCE_INFO);
+	*ReqSize = sizeof (SYSTEM_PERFORMANCE_INFORMATION);
 	/*
 	 * Check user buffer's size 
 	 */
-	if (Size < sizeof (SYSTEM_PERFORMANCE_INFO))
+	if (Size < sizeof (SYSTEM_PERFORMANCE_INFORMATION))
 	{
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
 	
-	Spi->IdleProcessorTime.QuadPart = 0; /* FIXME */
-	Spi->IoReadTransferCount.QuadPart = 0; /* FIXME */
-	Spi->IoWriteTransferCount.QuadPart = 0; /* FIXME */
-	Spi->IoOtherTransferCount.QuadPart = 0; /* FIXME */
-	Spi->IoReadOperationCount = 0; /* FIXME */
-	Spi->IoWriteOperationCount = 0; /* FIXME */
-	Spi->IoOtherOperationCount = 0; /* FIXME */
+	Spi->IdleTime.QuadPart = 0; /* FIXME */
+	Spi->ReadTransferCount.QuadPart = 0; /* FIXME */
+	Spi->WriteTransferCount.QuadPart = 0; /* FIXME */
+	Spi->OtherTransferCount.QuadPart = 0; /* FIXME */
+	Spi->ReadOperationCount = 0; /* FIXME */
+	Spi->WriteOperationCount = 0; /* FIXME */
+	Spi->OtherOperationCount = 0; /* FIXME */
 	Spi->AvailablePages = 0; /* FIXME */
-	Spi->CommitedPages = 0; /* FIXME */
-	Spi->CommitLimit = 0; /* FIXME */
+	Spi->TotalCommittedPages = 0; /* FIXME */
+	Spi->TotalCommitLimit = 0; /* FIXME */
 	Spi->PeakCommitment = 0; /* FIXME */
-	Spi->PageFaultCount = 0; /* FIXME */
-	Spi->CopyOnWriteCount = 0; /* FIXME */
-	Spi->TransitionCount = 0; /* FIXME */
-	Spi->CacheTransitionCount = 0; /* FIXME */
-	Spi->DemandZeroCount = 0; /* FIXME */
-	Spi->PageReadCount = 0; /* FIXME */
-	Spi->PageReadIoCount = 0; /* FIXME */
-	Spi->CacheReadCount = 0; /* FIXME */
-	Spi->CacheIoCount = 0; /* FIXME */
-	Spi->DirtyPagesWriteCount = 0; /* FIXME */
-	Spi->DirtyWriteIoCount = 0; /* FIXME */
-	Spi->MappedPagesWriteCount = 0; /* FIXME */
-	Spi->MappedWriteIoCount = 0; /* FIXME */
-	Spi->PagedPoolPages = 0; /* FIXME */
-	Spi->NonPagedPoolPages = 0; /* FIXME */
-	Spi->Unknown6 = 0; /* FIXME */
-	Spi->Unknown7 = 0; /* FIXME */
-	Spi->Unknown8 = 0; /* FIXME */
-	Spi->Unknown9 = 0; /* FIXME */
-	Spi->MmTotalSystemFreePtes = 0; /* FIXME */
-	Spi->MmSystemCodepage = 0; /* FIXME */
-	Spi->MmTotalSystemDriverPages = 0; /* FIXME */
-	Spi->MmTotalSystemCodePages = 0; /* FIXME */
-	Spi->Unknown10 = 0; /* FIXME */
-	Spi->Unknown11 = 0; /* FIXME */
-	Spi->Unknown12 = 0; /* FIXME */
+	Spi->PageFaults = 0; /* FIXME */
+	Spi->WriteCopyFaults = 0; /* FIXME */
+	Spi->TransitionFaults = 0; /* FIXME */
+	Spi->CacheTransitionFaults = 0; /* FIXME */
+	Spi->DemandZeroFaults = 0; /* FIXME */
+	Spi->PagesRead = 0; /* FIXME */
+	Spi->PageReadIos = 0; /* FIXME */
+	Spi->CacheReads = 0; /* FIXME */
+	Spi->CacheIos = 0; /* FIXME */
+	Spi->PagefilePagesWritten = 0; /* FIXME */
+	Spi->PagefilePageWriteIos = 0; /* FIXME */
+	Spi->MappedFilePagesWritten = 0; /* FIXME */
+	Spi->MappedFilePageWriteIos = 0; /* FIXME */
+	Spi->PagedPoolUsage = 0; /* FIXME */
+	Spi->NonPagedPoolUsage = 0; /* FIXME */
+	Spi->PagedPoolAllocs = 0; /* FIXME */
+	Spi->PagedPoolFrees = 0; /* FIXME */
+	Spi->NonPagedPoolAllocs = 0; /* FIXME */
+	Spi->NonPagedPoolFrees = 0; /* FIXME */
+	Spi->TotalFreeSystemPtes = 0; /* FIXME */
+	Spi->SystemCodePage = 0; /* FIXME */
+	Spi->TotalSystemDriverPages = 0; /* FIXME */
+	Spi->TotalSystemCodePages = 0; /* FIXME */
+	Spi->SmallNonPagedLookasideListAllocateHits = 0; /* FIXME */
+	Spi->SmallPagedLookasideListAllocateHits = 0; /* FIXME */
+	Spi->Reserved3 = 0; /* FIXME */
 	Spi->MmSystemCachePage = 0; /* FIXME */
-	Spi->MmPagedPoolPage = 0; /* FIXME */
-	Spi->MmSystemDriverPage = 0; /* FIXME */
-	Spi->CcFastReadNoWait = 0; /* FIXME */
-	Spi->CcFastReadWait = 0; /* FIXME */
-	Spi->CcFastReadResourceMiss = 0; /* FIXME */
-	Spi->CcFastReadNotPossible = 0; /* FIXME */
-	Spi->CcFastMdlReadNoWait = 0; /* FIXME */
-	Spi->CcFastMdlReadWait = 0; /* FIXME */
-	Spi->CcFastMdlReadResourceMiss = 0; /* FIXME */
-	Spi->CcFastMdlReadNotPossible = 0; /* FIXME */
-	Spi->CcMapDataNoWait = 0; /* FIXME */
-	Spi->CcMapDataWait = 0; /* FIXME */
-	Spi->CcMapDataNoWaitMiss = 0; /* FIXME */
-	Spi->CcMapDataWaitMiss = 0; /* FIXME */
-	Spi->CcPinMappedDataCount = 0; /* FIXME */
-	Spi->CcPinReadNoWait = 0; /* FIXME */
-	Spi->CcPinReadWait = 0; /* FIXME */
-	Spi->CcPinReadNoWaitMiss = 0; /* FIXME */
-	Spi->CcPinReadWaitMiss = 0; /* FIXME */
-	Spi->CcCopyReadNoWait = 0; /* FIXME */
-	Spi->CcCopyReadWait = 0; /* FIXME */
-	Spi->CcCopyReadNoWaitMiss = 0; /* FIXME */
-	Spi->CcCopyReadWaitMiss = 0; /* FIXME */
-	Spi->CcMdlReadNoWait = 0; /* FIXME */
-	Spi->CcMdlReadWait = 0; /* FIXME */
-	Spi->CcMdlReadNoWaitMiss = 0; /* FIXME */
-	Spi->CcMdlReadWaitMiss = 0; /* FIXME */
-	Spi->CcReadaheadIos = 0; /* FIXME */
-	Spi->CcLazyWriteIos = 0; /* FIXME */
-	Spi->CcLazyWritePages = 0; /* FIXME */
-	Spi->CcDataFlushes = 0; /* FIXME */
-	Spi->CcDataPages = 0; /* FIXME */
+	Spi->PagedPoolPage = 0; /* FIXME */
+	Spi->SystemDriverPage = 0; /* FIXME */
+	Spi->FastReadNoWait = 0; /* FIXME */
+	Spi->FastReadWait = 0; /* FIXME */
+	Spi->FastReadResourceMiss = 0; /* FIXME */
+	Spi->FastReadNotPossible = 0; /* FIXME */
+	Spi->FastMdlReadNoWait = 0; /* FIXME */
+	Spi->FastMdlReadWait = 0; /* FIXME */
+	Spi->FastMdlReadResourceMiss = 0; /* FIXME */
+	Spi->FastMdlReadNotPossible = 0; /* FIXME */
+	Spi->MapDataNoWait = 0; /* FIXME */
+	Spi->MapDataWait = 0; /* FIXME */
+	Spi->MapDataNoWaitMiss = 0; /* FIXME */
+	Spi->MapDataWaitMiss = 0; /* FIXME */
+	Spi->PinMappedDataCount = 0; /* FIXME */
+	Spi->PinReadNoWait = 0; /* FIXME */
+	Spi->PinReadWait = 0; /* FIXME */
+	Spi->PinReadNoWaitMiss = 0; /* FIXME */
+	Spi->PinReadWaitMiss = 0; /* FIXME */
+	Spi->CopyReadNoWait = 0; /* FIXME */
+	Spi->CopyReadWait = 0; /* FIXME */
+	Spi->CopyReadNoWaitMiss = 0; /* FIXME */
+	Spi->CopyReadWaitMiss = 0; /* FIXME */
+	Spi->MdlReadNoWait = 0; /* FIXME */
+	Spi->MdlReadWait = 0; /* FIXME */
+	Spi->MdlReadNoWaitMiss = 0; /* FIXME */
+	Spi->MdlReadWaitMiss = 0; /* FIXME */
+	Spi->ReadAheadIos = 0; /* FIXME */
+	Spi->LazyWriteIos = 0; /* FIXME */
+	Spi->LazyWritePages = 0; /* FIXME */
+	Spi->DataFlushes = 0; /* FIXME */
+	Spi->DataPages = 0; /* FIXME */
 	Spi->ContextSwitches = 0; /* FIXME */
-	Spi->Unknown13 = 0; /* FIXME */
-	Spi->Unknown14 = 0; /* FIXME */
+	Spi->FirstLevelTbFills = 0; /* FIXME */
+	Spi->SecondLevelTbFills = 0; /* FIXME */
 	Spi->SystemCalls = 0; /* FIXME */
 	
 	return (STATUS_SUCCESS);
@@ -488,7 +484,7 @@ QSI_DEF(SystemDeviceInformation)
 
 	Sdi->NumberOfDisks = ConfigInfo->DiskCount;
 	Sdi->NumberOfFloppies = ConfigInfo->FloppyCount;
-	Sdi->NumberOfCdRoms = ConfigInfo->CDRomCount;
+	Sdi->NumberOfCdRoms = ConfigInfo->CdRomCount;
 	Sdi->NumberOfTapes = ConfigInfo->TapeCount;
 	Sdi->NumberOfSerialPorts = ConfigInfo->SerialCount;
 	Sdi->NumberOfParallelPorts = ConfigInfo->ParallelCount;
@@ -690,9 +686,9 @@ SSI_DEF(SystemUnloadImage)
 /* Class 28 - Time Adjustment Information */
 QSI_DEF(SystemTimeAdjustmentInformation)
 {
-	if (sizeof (SYSTEM_TIME_ADJUSTMENT_INFO) > Size)
+	if (sizeof (SYSTEM_SET_TIME_ADJUSTMENT) > Size)
 	{
-		* ReqSize = sizeof (SYSTEM_TIME_ADJUSTMENT_INFO);
+		* ReqSize = sizeof (SYSTEM_SET_TIME_ADJUSTMENT);
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
 	/* FIXME: */
@@ -701,7 +697,7 @@ QSI_DEF(SystemTimeAdjustmentInformation)
 
 SSI_DEF(SystemTimeAdjustmentInformation)
 {
-	if (sizeof (SYSTEM_TIME_ADJUSTMENT_INFO) > Size)
+	if (sizeof (SYSTEM_SET_TIME_ADJUSTMENT) > Size)
 	{
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}

@@ -10,13 +10,15 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#include <hal.h>
 
+#define NDEBUG
 #include <internal/debug.h>
+
 
 /* FUNCTIONS *****************************************************************/
 
-VOID HalExamineMBR(PDEVICE_OBJECT DeviceObject,
+VOID FASTCALL HalExamineMBR(PDEVICE_OBJECT DeviceObject,
 		   ULONG SectorSize,
 		   ULONG MBRTypeIdentifier,
 		   PVOID Buffer)

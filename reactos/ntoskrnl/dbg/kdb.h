@@ -1,4 +1,4 @@
-ULONG
+CHAR
 KdbTryGetCharKeyboard(VOID);
 VOID
 KdbEnter(VOID);

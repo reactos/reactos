@@ -1,4 +1,4 @@
-/* $Id: csrss.c,v 1.11 2002/08/20 20:37:17 hyperion Exp $
+/* $Id: csrss.c,v 1.12 2002/09/07 15:13:07 chorns Exp $
  *
  * csrss.c - Client/Server Runtime subsystem
  * 
@@ -31,10 +31,9 @@
  * 		First standalone run under ReactOS (it
  * 		actually does nothing but running).
  */
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 #include <csrss/csrss.h>
-
 #include "api.h"
 
 /* Native process' entry point */
@@ -52,7 +51,7 @@ VOID NtProcessStartup(PPEB Peb)
    UNICODE_STRING UnicodeString;
    NTSTATUS Status;
 
-   ProcParams = RtlNormalizeProcessParams (Peb->ProcessParameters);
+   ProcParams = RtlRosNormalizeProcessParams (Peb->ProcessParameters);
 
    argv = (PWSTR *)RtlAllocateHeap (Peb->ProcessHeap,
                                     0, 512 * sizeof(PWSTR));

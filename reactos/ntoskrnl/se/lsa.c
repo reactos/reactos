@@ -1,6 +1,11 @@
-/* $Id: lsa.c,v 1.1 2001/09/03 20:42:44 ea Exp $
+/* $Id: lsa.c,v 1.2 2002/09/07 15:13:06 chorns Exp $
  */
-#include <ddk/ntddk.h>
+
+#include <ntoskrnl.h>
+
+#define NDEBUG
+#include <internal/debug.h>
+
 
 /* LsaCallAuthenticationPackage@28 */
 NTSTATUS STDCALL LsaCallAuthenticationPackage (

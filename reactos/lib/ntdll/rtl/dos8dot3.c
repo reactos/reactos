@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dos8dot3.c,v 1.3 2002/06/06 18:57:55 ekohl Exp $
+/* $Id: dos8dot3.c,v 1.4 2002/09/07 15:12:40 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -27,12 +27,11 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntos/minmax.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 
-//#define NDEBUG
-#include <ntdll/ntdll.h>
-
+#define NDEBUG
+#include <debug.h>
 
 /* CONSTANTS *****************************************************************/
 

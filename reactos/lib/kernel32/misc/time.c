@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.14 2002/04/26 13:07:03 ekohl Exp $
+/* $Id: time.c,v 1.15 2002/09/07 15:12:27 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,10 +12,10 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
 #include <windows.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 #include <kernel32/error.h>
-//#include <string.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
@@ -265,18 +265,37 @@ FileTimeToSystemTime(
   int LeapSecondCorrections, SecondsInDay, CurYear;
   int LeapYear, CurMonth;
   long int Days;
-  long long int Time = *((long long int*)lpFileTime);
+  LARGE_INTEGER	Time;
+	LARGE_INTEGER	Dividend;
+	//LARGE_INTEGER	Divisor;
+	LARGE_INTEGER	Remainder;
+  LARGE_INTEGER	Result;
 
-    /* Extract millisecond from time and convert time into seconds */
-  lpSystemTime->wMilliseconds = (WORD)((Time % TICKSPERSEC) / TICKSPERMSEC);
-  Time = Time / TICKSPERSEC;
+  Time.QuadPart = *((PLONGLONG)lpFileTime);
+
+  /* Extract millisecond from time and convert time into seconds */
+
+  Dividend.QuadPart = TICKSPERSEC;
+  RtlLargeIntegerDivide(Time, Dividend, &Remainder);
+
+  Dividend.QuadPart = TICKSPERMSEC;
+  Result = RtlLargeIntegerDivide(Remainder, Dividend, NULL);
+  lpSystemTime->wMilliseconds = (WORD)Dividend.LowPart;
+
+  Dividend.QuadPart = TICKSPERMSEC;
+  Time = RtlLargeIntegerDivide(Time, Dividend, NULL);
 
     /* FIXME: Compute the number of leap second corrections here */
   LeapSecondCorrections = 0;
 
     /* Split the time into days and seconds within the day */
-  Days = Time / SECSPERDAY;
-  SecondsInDay = Time % SECSPERDAY;
+  Dividend.QuadPart = SECSPERDAY;
+  Result = RtlLargeIntegerDivide(Time, Dividend, NULL);
+  Days = (long int)Result.QuadPart;
+
+  Dividend.QuadPart = SECSPERDAY;
+  RtlLargeIntegerDivide(Time, Dividend, &Remainder);
+  SecondsInDay = (long int)Remainder.QuadPart;
 
     /* Adjust the values for GMT and leap seconds */
   SecondsInDay += LeapSecondCorrections;
@@ -323,12 +342,10 @@ FileTimeToSystemTime(
     Days = Days - (long) Months[CurMonth];
   lpSystemTime->wMonth = (WORD) (CurMonth + 1);
   lpSystemTime->wDay = (WORD) (Days + 1);
-
   return TRUE;
 }
 
-
-WINBOOL
+BOOL
 STDCALL
 FileTimeToLocalFileTime(
 			CONST FILETIME *lpFileTime,
@@ -458,6 +475,8 @@ SetTimeZoneInformation(CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation)
 }
 
 
+#undef GetCurrentTime
+
 DWORD STDCALL
 GetCurrentTime(VOID)
 {
@@ -538,14 +557,14 @@ SetSystemTimeAdjustment(DWORD dwTimeAdjustment,
 			WINBOOL bTimeAdjustmentDisabled)
 {
    NTSTATUS Status;
-   SYSTEM_TIME_ADJUSTMENT_INFO Buffer;
+   SYSTEM_SET_TIME_ADJUSTMENT Buffer;
    
    Buffer.TimeAdjustment = (ULONG)dwTimeAdjustment;
    Buffer.TimeSynchronization = (BOOLEAN)bTimeAdjustmentDisabled;
    
    Status = NtSetSystemInformation(SystemTimeAdjustmentInformation,
 				   &Buffer,
-				   sizeof(SYSTEM_TIME_ADJUSTMENT_INFO));
+				   sizeof(SYSTEM_SET_TIME_ADJUSTMENT));
    if (!NT_SUCCESS(Status))
      {
 	SetLastErrorByStatus(Status);

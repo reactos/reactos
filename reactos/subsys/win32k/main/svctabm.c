@@ -1,4 +1,4 @@
-/* $Id: svctabm.c,v 1.1 2002/07/04 20:12:27 dwelch Exp $
+/* $Id: svctabm.c,v 1.2 2002/09/07 15:13:11 chorns Exp $
  * 
  *  Entry Point for win32k.sys
  */
@@ -6,7 +6,8 @@
 #undef WIN32_LEAN_AND_MEAN
 #define WIN32_NO_STATUS
 #include <windows.h>
-#include <ddk/service.h>
+#define NTOS_KERNEL_MODE
+#include <ntos.h>
 #include <win32k/win32k.h>
 
 /*

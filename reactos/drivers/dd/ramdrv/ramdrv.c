@@ -1,4 +1,4 @@
-#include <ntddk.h>
+#include <ddk/ntddk.h>
 #include "ramdrv.h"
 #include <debug.h>
 #include "../../lib/bzip2/bzlib.h"

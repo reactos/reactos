@@ -1,4 +1,4 @@
-/* $Id: move.c,v 1.5 2002/04/27 19:15:43 hbirr Exp $
+/* $Id: move.c,v 1.6 2002/09/07 15:12:26 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,9 +11,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
 #include <windows.h>
-#include <ntos/minmax.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
@@ -129,9 +129,9 @@ MoveFileExW (
 
 	FileRename = (FILE_RENAME_INFORMATION *)Buffer;
 	if ((dwFlags & MOVEFILE_REPLACE_EXISTING) == MOVEFILE_REPLACE_EXISTING)
-		FileRename->Replace = TRUE;
+		FileRename->ReplaceIfExists = TRUE;
 	else
-		FileRename->Replace = FALSE;
+		FileRename->ReplaceIfExists = FALSE;
 
 	FileRename->FileNameLength = wcslen (lpNewFileName);
 	memcpy (FileRename->FileName,
@@ -148,7 +148,7 @@ MoveFileExW (
 	{
 		if (CopyFileW (lpExistingFileName,
 		               lpNewFileName,
-		               FileRename->Replace))
+		               FileRename->ReplaceIfExists))
 			DeleteFileW (lpExistingFileName);
 	}
 	return TRUE;

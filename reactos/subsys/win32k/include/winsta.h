@@ -1,10 +1,9 @@
 #ifndef __WIN32K_WINSTA_H
 #define __WIN32K_WINSTA_H
 
+#define NTOS_KERNEL_MODE
+#include <ntos.h>
 #include <windows.h>
-#include <ddk/ntddk.h>
-#include <internal/ex.h>
-#include <internal/ps.h>
 
 #define PROCESS_WINDOW_STATION() \
   ((HWINSTA)(IoGetCurrentProcess()->Win32WindowStation))

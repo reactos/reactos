@@ -33,7 +33,7 @@ extern WINBOOL bIsFileApiAnsi;
 extern HANDLE hProcessHeap;
 extern HANDLE hBaseDir;
 
-extern CRITICAL_SECTION DllLock;
+extern RTL_CRITICAL_SECTION DllLock;
 
 /* FUNCTION PROTOTYPES *******************************************************/
 

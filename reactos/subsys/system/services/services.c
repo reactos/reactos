@@ -1,4 +1,4 @@
-/* $Id: services.c,v 1.6 2002/06/07 20:09:57 ekohl Exp $
+/* $Id: services.c,v 1.7 2002/09/07 15:13:09 chorns Exp $
  *
  * service control manager
  * 
@@ -29,14 +29,14 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NTOS_MODE_USER
+#define NTOS_USER_MODE
 #include <ntos.h>
 #include <windows.h>
-
+#include <tchar.h>
 #include "services.h"
 
 #define DBG
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 

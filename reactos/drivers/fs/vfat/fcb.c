@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.18 2002/08/17 15:15:50 hbirr Exp $
+/* $Id: fcb.c,v 1.19 2002/09/07 15:12:03 chorns Exp $
  *
  *
  * FILE:             fcb.c
@@ -21,8 +21,9 @@
 #include "vfat.h"
 
 /*  --------------------------------------------------------  DEFINES  */
-
+#ifndef TAG
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
+#endif
 #define TAG_FCB TAG('V', 'F', 'C', 'B')
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
@@ -178,7 +179,7 @@ vfatFCBInitializeCacheFromVolume (PVCB  vcb, PVFATFCB  fcb)
 
   fileObject->Flags = fileObject->Flags | FO_FCB_IS_VALID |
       FO_DIRECT_CACHE_PAGING_READ;
-  fileObject->SectionObjectPointers = &fcb->SectionObjectPointers;
+  fileObject->SectionObjectPointer = &fcb->SectionObjectPointers;
   fileObject->FsContext = (PVOID) &fcb->RFCB;
   fileObject->FsContext2 = newCCB;
   newCCB->pFcb = fcb;
@@ -187,8 +188,8 @@ vfatFCBInitializeCacheFromVolume (PVCB  vcb, PVFATFCB  fcb)
   fcb->pDevExt = vcb;
 
 
-  fileCacheQuantum = (vcb->FatInfo.BytesPerCluster >= PAGESIZE) ?
-      vcb->FatInfo.BytesPerCluster : PAGESIZE;
+  fileCacheQuantum = (vcb->FatInfo.BytesPerCluster >= PAGE_SIZE) ?
+      vcb->FatInfo.BytesPerCluster : PAGE_SIZE;
 
   status = CcRosInitializeFileCache (fileObject,
                                      &fcb->RFCB.Bcb,
@@ -351,12 +352,13 @@ vfatAttachFCBToFileObject (PDEVICE_EXTENSION  vcb,
 
   fileObject->Flags = fileObject->Flags | FO_FCB_IS_VALID |
       FO_DIRECT_CACHE_PAGING_READ;
-  fileObject->SectionObjectPointers = &fcb->SectionObjectPointers;
+  fileObject->SectionObjectPointer = &fcb->SectionObjectPointers;
   fileObject->FsContext = (PVOID) &fcb->RFCB;
   fileObject->FsContext2 = newCCB;
   newCCB->pFcb = fcb;
   newCCB->PtrFileObject = fileObject;
   fcb->pDevExt = vcb;
+
   DPRINT ("file open: fcb:%x file size: %d\n", fcb, fcb->entry.FileSize);
 
   return  STATUS_SUCCESS;

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.21 2002/04/01 21:33:27 hbirr Exp $
+# $Id: Makefile,v 1.22 2002/09/07 15:12:29 chorns Exp $
 
 PATH_TO_TOP = ../..
 
@@ -8,15 +8,15 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = msvcrt
 
-TARGET_LFLAGS = -nostartfiles
+TARGET_LFLAGS = -nostartfiles -nostdlib
 
-TARGET_SDKLIBS = kernel32.a ntdll.a
+TARGET_SDKLIBS = kernel32.a
 
 TARGET_GCCLIBS = gcc
 
-TARGET_BASE = 0x78000000
+TARGET_BASE = 0x77600000
 
-TARGET_CFLAGS = -D__MSVCRT__
+TARGET_CFLAGS = -D__MSVCRT__ -I./include
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 
@@ -32,432 +32,459 @@ include $(PATH_TO_TOP)/rules.mak
 include $(TOOLS_PATH)/helper.mk
 
 
-OBJECTS_CONIO = \
-	conio/cgets.o \
-	conio/cprintf.o \
-	conio/cputs.o \
-	conio/cscanf.o \
-	conio/getch.o \
-	conio/getche.o \
-	conio/kbhit.o \
-	conio/putch.o \
-	conio/ungetch.o
+FILES_CONIO = \
+	conio/cgets.c \
+	conio/cprintf.c \
+	conio/cputs.c \
+	conio/cscanf.c \
+	conio/getch.c \
+	conio/getche.c \
+	conio/kbhit.c \
+	conio/putch.c \
+	conio/ungetch.c
 
-OBJECTS_CTYPE = \
-	ctype/isalnum.o \
-	ctype/isalpha.o \
-	ctype/isascii.o \
-	ctype/iscntrl.o \
-	ctype/isdigit.o \
-	ctype/isgraph.o \
-	ctype/islower.o \
-	ctype/isprint.o \
-	ctype/ispunct.o \
-	ctype/isspace.o \
-	ctype/isupper.o \
-	ctype/isxdigit.o \
-	ctype/toascii.o \
-	ctype/tolower.o \
-	ctype/toupper.o \
-	ctype/iscsym.o \
-	ctype/isctype.o
+FILES_CTYPE = \
+	ctype/isalnum.c \
+	ctype/isalpha.c \
+	ctype/isascii.c \
+	ctype/iscntrl.c \
+	ctype/isdigit.c \
+	ctype/isgraph.c \
+	ctype/islower.c \
+	ctype/isprint.c \
+	ctype/ispunct.c \
+	ctype/isspace.c \
+	ctype/isupper.c \
+	ctype/isxdigit.c \
+	ctype/toascii.c \
+	ctype/tolower.c \
+	ctype/toupper.c \
+	ctype/iscsym.c \
+	ctype/isctype.c
 
-OBJECTS_DIRECT = \
-	direct/chdir.o \
-	direct/chdrive.o \
-	direct/getcwd.o \
-	direct/getdcwd.o \
-	direct/getdfree.o \
-	direct/getdrive.o \
-	direct/mkdir.o \
-	direct/rmdir.o
+FILES_DIRECT = \
+	direct/chdir.c \
+	direct/chdrive.c \
+	direct/getcwd.c \
+	direct/getdcwd.c \
+	direct/getdfree.c \
+	direct/getdrive.c \
+	direct/mkdir.c \
+	direct/rmdir.c
 
-OBJECTS_EXCEPT = \
-	except/abnorter.o \
-	except/exhand2.o \
-	except/exhand3.o \
-	except/matherr.o \
-	except/unwind.o \
-	except/xcptfil.o
+FILES_EXCEPT = \
+	except/abnorter.c \
+	except/exhand2.c \
+	except/exhand3.c \
+	except/matherr.c \
+	except/unwind.c \
+	except/xcptfil.c
 
-OBJECTS_FLOAT = \
-	float/chgsign.o \
-	float/clearfp.o \
-	float/cntrlfp.o \
-	float/copysign.o \
-	float/fpclass.o \
-	float/fpecode.o \
-	float/fpreset.o \
-	float/isnan.o \
-	float/logb.o \
-	float/nafter.o \
-	float/scalb.o \
-	float/statfp.o
+FILES_FLOAT = \
+	float/chgsign.c \
+	float/clearfp.c \
+	float/cntrlfp.c \
+	float/copysign.c \
+	float/fpclass.c \
+	float/fpecode.c \
+	float/fpreset.c \
+	float/isnan.c \
+	float/logb.c \
+	float/nafter.c \
+	float/scalb.c \
+	float/statfp.c
 
-OBJECTS_IO = \
-	io/access.o \
-	io/chmod.o \
-	io/chsize.o \
-	io/close.o \
-	io/commit.o \
-	io/create.o \
-	io/dup.o \
-	io/dup2.o \
-	io/eof.o \
-	io/filelen.o \
-	io/find.o \
-	io/fmode.o \
-	io/isatty.o \
-	io/locking.o \
-	io/lseek.o \
-	io/mktemp.o \
-	io/open.o \
-	io/pipe.o \
-	io/read.o \
-	io/setmode.o \
-	io/sopen.o \
-	io/tell.o \
-	io/umask.o \
-	io/unlink.o \
-	io/utime.o \
-	io/write.o
+FILES_IO = \
+	io/access.c \
+	io/chmod.c \
+	io/chsize.c \
+	io/close.c \
+	io/commit.c \
+	io/create.c \
+	io/dup.c \
+	io/dup2.c \
+	io/eof.c \
+	io/filelen.c \
+	io/find.c \
+	io/fmode.c \
+	io/isatty.c \
+	io/locking.c \
+	io/lseek.c \
+	io/mktemp.c \
+	io/open.c \
+	io/pipe.c \
+	io/read.c \
+	io/setmode.c \
+	io/sopen.c \
+	io/tell.c \
+	io/umask.c \
+	io/unlink.c \
+	io/utime.c \
+	io/write.c
 
-OBJECTS_LOCALE = \
-	locale/locale.o
+FILES_LOCALE = \
+	locale/locale.c
 
-OBJECTS_MATH = \
-	math/acos.o \
-	math/adjust.o \
-	math/asin.o \
-	math/atan.o \
-	math/atan2.o \
-	math/cabs.o \
-	math/ceil.o \
-	math/cos.o \
-	math/cosh.o \
-	math/exp.o \
-	math/fabs.o \
-	math/floor.o \
-	math/fmod.o \
-	math/frexp.o \
-	math/ftol.o \
-	math/huge_val.o \
-	math/hypot.o \
-	math/j0_y0.o \
-	math/j1_y1.o \
-	math/jn_yn.o \
-	math/ldexp.o \
-	math/log.o \
-	math/log10.o \
-	math/modf.o \
-	math/pow.o \
-	math/sin.o \
-	math/sinh.o \
-	math/sqrt.o \
-	math/stubs.o \
-	math/tan.o \
-	math/tanh.o
+FILES_MATH = \
+	math/acos.c \
+	math/adjust.c \
+	math/asin.c \
+	math/atan.c \
+	math/atan2.c \
+	math/cabs.c \
+	math/ceil.c \
+	math/cos.c \
+	math/cosh.c \
+	math/exp.c \
+	math/fabs.c \
+	math/floor.c \
+	math/fmod.c \
+	math/frexp.c \
+	math/ftol.c \
+	math/huge_val.c \
+	math/hypot.c \
+	math/j0_y0.c \
+	math/j1_y1.c \
+	math/jn_yn.c \
+	math/ldexp.c \
+	math/log.c \
+	math/log10.c \
+	math/modf.c \
+	math/pow.c \
+	math/sin.c \
+	math/sinh.c \
+	math/sqrt.c \
+	math/stubs.c \
+	math/tan.c \
+	math/tanh.c
 
-OBJECTS_MBSTRING = \
-	mbstring/hanzen.o \
-	mbstring/ischira.o \
-	mbstring/iskana.o \
-	mbstring/iskpun.o \
-	mbstring/islead.o \
-	mbstring/islwr.o \
-	mbstring/ismbal.o \
-	mbstring/ismbaln.o \
-	mbstring/ismbc.o \
-	mbstring/ismbgra.o \
-	mbstring/ismbkaln.o \
-	mbstring/ismblead.o \
-	mbstring/ismbpri.o \
-	mbstring/ismbpun.o \
-	mbstring/ismbtrl.o \
-	mbstring/isuppr.o \
-	mbstring/jistojms.o \
-	mbstring/jmstojis.o \
-	mbstring/mbbtype.o \
-	mbstring/mbccpy.o \
-	mbstring/mbclen.o \
-	mbstring/mbscat.o \
-	mbstring/mbschr.o \
-	mbstring/mbscmp.o \
-	mbstring/mbscoll.o \
-	mbstring/mbscpy.o \
-	mbstring/mbscspn.o \
-	mbstring/mbsdec.o \
-	mbstring/mbsdup.o \
-	mbstring/mbsicmp.o \
-	mbstring/mbsicoll.o \
-	mbstring/mbsinc.o \
-	mbstring/mbslen.o \
-	mbstring/mbslwr.o \
-	mbstring/mbsncat.o \
-	mbstring/mbsnccnt.o \
-	mbstring/mbsncmp.o \
-	mbstring/mbsncoll.o \
-	mbstring/mbsncpy.o \
-	mbstring/mbsnextc.o \
-	mbstring/mbsnicmp.o \
-	mbstring/mbsnicoll.o \
-	mbstring/mbsninc.o \
-	mbstring/mbsnset.o \
-	mbstring/mbspbrk.o \
-	mbstring/mbsrchr.o \
-	mbstring/mbsrev.o \
-	mbstring/mbsset.o \
-	mbstring/mbsspn.o \
-	mbstring/mbsspnp.o \
-	mbstring/mbsstr.o \
-	mbstring/mbstok.o \
-	mbstring/mbstrlen.o \
-	mbstring/mbsupr.o
+FILES_MBSTRING = \
+	mbstring/hanzen.c \
+	mbstring/ischira.c \
+	mbstring/iskana.c \
+	mbstring/iskpun.c \
+	mbstring/islead.c \
+	mbstring/islwr.c \
+	mbstring/ismbal.c \
+	mbstring/ismbaln.c \
+	mbstring/ismbc.c \
+	mbstring/ismbgra.c \
+	mbstring/ismbkaln.c \
+	mbstring/ismblead.c \
+	mbstring/ismbpri.c \
+	mbstring/ismbpun.c \
+	mbstring/ismbtrl.c \
+	mbstring/isuppr.c \
+	mbstring/jistojms.c \
+	mbstring/jmstojis.c \
+	mbstring/mbbtype.c \
+	mbstring/mbccpy.c \
+	mbstring/mbclen.c \
+	mbstring/mbscat.c \
+	mbstring/mbschr.c \
+	mbstring/mbscmp.c \
+	mbstring/mbscoll.c \
+	mbstring/mbscpy.c \
+	mbstring/mbscspn.c \
+	mbstring/mbsdec.c \
+	mbstring/mbsdup.c \
+	mbstring/mbsicmp.c \
+	mbstring/mbsicoll.c \
+	mbstring/mbsinc.c \
+	mbstring/mbslen.c \
+	mbstring/mbslwr.c \
+	mbstring/mbsncat.c \
+	mbstring/mbsnccnt.c \
+	mbstring/mbsncmp.c \
+	mbstring/mbsncoll.c \
+	mbstring/mbsncpy.c \
+	mbstring/mbsnextc.c \
+	mbstring/mbsnicmp.c \
+	mbstring/mbsnicoll.c \
+	mbstring/mbsninc.c \
+	mbstring/mbsnset.c \
+	mbstring/mbspbrk.c \
+	mbstring/mbsrchr.c \
+	mbstring/mbsrev.c \
+	mbstring/mbsset.c \
+	mbstring/mbsspn.c \
+	mbstring/mbsspnp.c \
+	mbstring/mbsstr.c \
+	mbstring/mbstok.c \
+	mbstring/mbstrlen.c \
+	mbstring/mbsupr.c
 
-OBJECTS_MISC = \
-	misc/amsg.o \
-	misc/assert.o \
-	misc/dllmain.o \
-	misc/getargs.o \
-	misc/initterm.o \
-	misc/purecall.o \
-	misc/tls.o
+FILES_MISC = \
+	misc/amsg.c \
+	misc/assert.c \
+	misc/dllmain.c \
+	misc/getargs.c \
+	misc/initterm.c \
+	misc/purecall.c \
+	misc/tls.c
 
-OBJECTS_PROCESS = \
-	process/_cwait.o \
-	process/_system.o \
-	process/dll.o \
-	process/execl.o \
-	process/execle.o \
-	process/execlp.o \
-	process/execlpe.o \
-	process/execv.o \
-	process/execve.o \
-	process/execvp.o \
-	process/execvpe.o \
-	process/procid.o \
-	process/spawnl.o \
-	process/spawnle.o \
-	process/spawnlp.o \
-	process/spawnlpe.o \
-	process/spawnv.o \
-	process/spawnve.o \
-	process/spawnvp.o \
-	process/spawnvpe.o \
-	process/thread.o \
-	process/threadid.o
+FILES_PROCESS = \
+	process/_cwait.c \
+	process/_system.c \
+	process/dll.c \
+	process/execl.c \
+	process/execle.c \
+	process/execlp.c \
+	process/execlpe.c \
+	process/execv.c \
+	process/execve.c \
+	process/execvp.c \
+	process/execvpe.c \
+	process/procid.c \
+	process/spawnl.c \
+	process/spawnle.c \
+	process/spawnlp.c \
+	process/spawnlpe.c \
+	process/spawnv.c \
+	process/spawnve.c \
+	process/spawnvp.c \
+	process/spawnvpe.c \
+	process/thread.c \
+	process/threadid.c
 
-OBJECTS_SEARCH = \
-	search/lfind.o \
-	search/lsearch.o
+FILES_SEARCH = \
+	search/lfind.c \
+	search/lsearch.c
 
-OBJECTS_SETJMP = \
-	setjmp/setjmp.o
+FILES_SETJMP = \
+	setjmp/setjmp.c
 	
-OBJECTS_SIGNAL = \
-	signal/signal.o
+FILES_SIGNAL = \
+	signal/signal.c
 
-OBJECTS_STDIO = \
-	stdio/allocfil.o \
-	stdio/clearerr.o \
-	stdio/fclose.o \
-	stdio/fdopen.o \
-	stdio/feof.o \
-	stdio/ferror.o \
-	stdio/fflush.o \
-	stdio/fgetc.o \
-	stdio/fgetchar.o \
-	stdio/fgetpos.o \
-	stdio/fgets.o \
-	stdio/filbuf.o \
-	stdio/fileno.o \
-	stdio/flsbuf.o \
-	stdio/fopen.o \
-	stdio/fprintf.o \
-	stdio/fputc.o \
-	stdio/fputchar.o \
-	stdio/fputs.o \
-	stdio/fread.o \
-	stdio/freopen.o \
-	stdio/fscanf.o \
-	stdio/fseek.o \
-	stdio/fsetpos.o \
-	stdio/fsopen.o \
-	stdio/ftell.o \
-	stdio/fwalk.o \
-	stdio/fwrite.o \
-	stdio/getc.o \
-	stdio/getchar.o \
-	stdio/gets.o \
-	stdio/getw.o \
-	stdio/perror.o \
-	stdio/popen.o \
-	stdio/printf.o \
-	stdio/putc.o \
-	stdio/putchar.o \
-	stdio/puts.o \
-	stdio/putw.o \
-	stdio/remove.o \
-	stdio/rename.o \
-	stdio/rewind.o \
-	stdio/rmtmp.o \
-	stdio/scanf.o \
-	stdio/setbuf.o \
-	stdio/setvbuf.o \
-	stdio/sprintf.o \
-	stdio/sscanf.o \
-	stdio/stdhnd.o \
-	stdio/tempnam.o \
-	stdio/tmpfile.o \
-	stdio/tmpnam.o \
-	stdio/ungetc.o \
-	stdio/vfprintf.o \
-	stdio/vfscanf.o \
-	stdio/vfwprint.o \
-	stdio/vprintf.o \
-	stdio/vscanf.o \
-	stdio/vsprintf.o \
-	stdio/vsscanf.o
+FILES_STDIO = \
+	stdio/allocfil.c \
+	stdio/clearerr.c \
+	stdio/fclose.c \
+	stdio/fdopen.c \
+	stdio/feof.c \
+	stdio/ferror.c \
+	stdio/fflush.c \
+	stdio/fgetc.c \
+	stdio/fgetchar.c \
+	stdio/fgetpos.c \
+	stdio/fgets.c \
+	stdio/filbuf.c \
+	stdio/fileno.c \
+	stdio/flsbuf.c \
+	stdio/fopen.c \
+	stdio/fprintf.c \
+	stdio/fputc.c \
+	stdio/fputchar.c \
+	stdio/fputs.c \
+	stdio/fread.c \
+	stdio/freopen.c \
+	stdio/fscanf.c \
+	stdio/fseek.c \
+	stdio/fsetpos.c \
+	stdio/fsopen.c \
+	stdio/ftell.c \
+	stdio/fwalk.c \
+	stdio/fwrite.c \
+	stdio/getc.c \
+	stdio/getchar.c \
+	stdio/gets.c \
+	stdio/getw.c \
+	stdio/perror.c \
+	stdio/popen.c \
+	stdio/printf.c \
+	stdio/putc.c \
+	stdio/putchar.c \
+	stdio/puts.c \
+	stdio/putw.c \
+	stdio/remove.c \
+	stdio/rename.c \
+	stdio/rewind.c \
+	stdio/rmtmp.c \
+	stdio/scanf.c \
+	stdio/setbuf.c \
+	stdio/setvbuf.c \
+	stdio/sprintf.c \
+	stdio/sscanf.c \
+	stdio/stdhnd.c \
+	stdio/tempnam.c \
+	stdio/tmpfile.c \
+	stdio/tmpnam.c \
+	stdio/ungetc.c \
+	stdio/vfprintf.c \
+	stdio/vfscanf.c \
+	stdio/vfwprint.c \
+	stdio/vprintf.c \
+	stdio/vscanf.c \
+	stdio/vsprintf.c \
+	stdio/vsscanf.c
 
-OBJECTS_STDLIB = \
-	stdlib/_exit.o \
-	stdlib/abort.o \
-	stdlib/abs.o \
-	stdlib/atexit.o \
-	stdlib/atof.o \
-	stdlib/atoi.o \
-	stdlib/atoi64.o \
-	stdlib/atol.o \
-	stdlib/bsearch.o \
-	stdlib/div.o \
-	stdlib/ecvt.o \
-	stdlib/ecvtbuf.o \
-	stdlib/errno.o \
-	stdlib/fcvt.o \
-	stdlib/fcvtbuf.o \
-	stdlib/fullpath.o \
-	stdlib/gcvt.o \
-	stdlib/getenv.o \
-	stdlib/itoa.o \
-	stdlib/itow.o \
-	stdlib/labs.o \
-	stdlib/ldiv.o \
-	stdlib/makepath.o \
-	stdlib/malloc.o \
-	stdlib/obsol.o \
-	stdlib/putenv.o \
-	stdlib/qsort.o \
-	stdlib/rand.o \
-	stdlib/rot.o \
-	stdlib/senv.o \
-	stdlib/splitp.o \
-	stdlib/strtod.o \
-	stdlib/strtol.o \
-	stdlib/strtoul.o \
-	stdlib/swab.o \
-	stdlib/wcstod.o \
-	stdlib/wcstol.o \
-	stdlib/wcstoul.o \
-	stdlib/wtoi.o \
-	stdlib/wtoi64.o
+FILES_STDLIB = \
+	stdlib/_exit.c \
+	stdlib/abort.c \
+	stdlib/abs.c \
+	stdlib/atexit.c \
+	stdlib/atof.c \
+	stdlib/atoi.c \
+	stdlib/atoi64.c \
+	stdlib/atol.c \
+	stdlib/bsearch.c \
+	stdlib/div.c \
+	stdlib/ecvt.c \
+	stdlib/ecvtbuf.c \
+	stdlib/errno.c \
+	stdlib/fcvt.c \
+	stdlib/fcvtbuf.c \
+	stdlib/fullpath.c \
+	stdlib/gcvt.c \
+	stdlib/getenv.c \
+	stdlib/itoa.c \
+	stdlib/itow.c \
+	stdlib/labs.c \
+	stdlib/ldiv.c \
+	stdlib/makepath.c \
+	stdlib/malloc.c \
+	stdlib/obsol.c \
+	stdlib/putenv.c \
+	stdlib/qsort.c \
+	stdlib/rand.c \
+	stdlib/rot.c \
+	stdlib/senv.c \
+	stdlib/splitp.c \
+	stdlib/strtod.c \
+	stdlib/strtol.c \
+	stdlib/strtoul.c \
+	stdlib/swab.c \
+	stdlib/wcstod.c \
+	stdlib/wcstol.c \
+	stdlib/wcstoul.c \
+	stdlib/wtoi.c \
+	stdlib/wtoi64.c
 
-OBJECTS_STRING = \
-	string/memccpy.o \
-	string/memchr.o \
-	string/memcmp.o \
-	string/memcpy.o \
-	string/memicmp.o \
-	string/memmove.o \
-	string/memset.o \
-	string/strcat.o \
-	string/strchr.o \
-	string/strcmp.o \
-	string/strcoll.o \
-	string/strcpy.o \
-	string/strcspn.o \
-	string/strdup.o \
-	string/strerror.o \
-	string/stricmp.o \
-	string/strlen.o \
-	string/strlwr.o \
-	string/strncat.o \
-	string/strncmp.o \
-	string/strncpy.o \
-	string/strnicmp.o \
-	string/strnlen.o \
-	string/strpbrk.o \
-	string/strrchr.o \
-	string/strrev.o\
-	string/strset.o \
-	string/strspn.o \
-	string/strstr.o \
-	string/strtok.o \
-	string/strupr.o \
-	string/strxfrm.o 
+FILES_STRING = \
+	string/memccpy.c \
+	string/memchr.c \
+	string/memcmp.c \
+	string/memcpy.c \
+	string/memicmp.c \
+	string/memmove.c \
+	string/memset.c \
+	string/strcat.c \
+	string/strchr.c \
+	string/strcmp.c \
+	string/strcoll.c \
+	string/strcpy.c \
+	string/strcspn.c \
+	string/strdup.c \
+	string/strerror.c \
+	string/stricmp.c \
+	string/strlen.c \
+	string/strlwr.c \
+	string/strncat.c \
+	string/strncmp.c \
+	string/strncpy.c \
+	string/strnicmp.c \
+	string/strnlen.c \
+	string/strpbrk.c \
+	string/strrchr.c \
+	string/strrev.c\
+	string/strset.c \
+	string/strspn.c \
+	string/strstr.c \
+	string/strtok.c \
+	string/strupr.c \
+	string/strxfrm.c 
 
-OBJECTS_SYS_STAT = \
-	sys_stat/fstat.o \
-	sys_stat/futime.o \
-	sys_stat/stat.o
+FILES_SYS_STAT = \
+	sys_stat/fstat.c \
+	sys_stat/futime.c \
+	sys_stat/stat.c
 
-OBJECTS_TIME = \
-	time/clock.o \
-	time/ctime.o \
-	time/difftime.o \
-	time/strdate.o \
-	time/strftime.o \
-	time/strtime.o \
-	time/time.o
+FILES_TIME = \
+	time/clock.c \
+	time/ctime.c \
+	time/difftime.c \
+	time/strdate.c \
+	time/strftime.c \
+	time/strtime.c \
+	time/time.c
 
-OBJECTS_WSTRING = \
-	wstring/wcscat.o \
-	wstring/wcschr.o \
-	wstring/wcscmp.o \
-	wstring/wcscoll.o \
-	wstring/wcscpy.o \
-	wstring/wcscspn.o \
-	wstring/wcsdup.o \
-	wstring/wcsicmp.o \
-	wstring/wcslen.o \
-	wstring/wcslwr.o \
-	wstring/wcsncat.o \
-	wstring/wcsncmp.o \
-	wstring/wcsncpy.o \
-	wstring/wcsnicmp.o \
-	wstring/wcsnlen.o \
-	wstring/wcspbrk.o \
-	wstring/wcsrchr.o \
-	wstring/wcsrev.o \
-	wstring/wcsset.o \
-	wstring/wcsspn.o \
-	wstring/wcsstr.o \
-	wstring/wcstok.o \
-	wstring/wcsupr.o \
-	wstring/wcsxfrm.o
+FILES_WSTRING = \
+	wstring/wcscat.c \
+	wstring/wcschr.c \
+	wstring/wcscmp.c \
+	wstring/wcscoll.c \
+	wstring/wcscpy.c \
+	wstring/wcscspn.c \
+	wstring/wcsdup.c \
+	wstring/wcsicmp.c \
+	wstring/wcslen.c \
+	wstring/wcslwr.c \
+	wstring/wcsncat.c \
+	wstring/wcsncmp.c \
+	wstring/wcsncpy.c \
+	wstring/wcsnicmp.c \
+	wstring/wcsnlen.c \
+	wstring/wcspbrk.c \
+	wstring/wcsrchr.c \
+	wstring/wcsrev.c \
+	wstring/wcsset.c \
+	wstring/wcsspn.c \
+	wstring/wcsstr.c \
+	wstring/wcstok.c \
+	wstring/wcsupr.c \
+	wstring/wcsxfrm.c
+
+FILES = \
+  $(FILES_CONIO) \
+	$(FILES_CTYPE) \
+	$(FILES_DIRECT) \
+	$(FILES_EXCEPT) \
+	$(FILES_FLOAT) \
+	$(FILES_IO) \
+	$(FILES_LOCALE) \
+	$(FILES_MATH) \
+	$(FILES_MBSTRING) \
+	$(FILES_MISC) \
+	$(FILES_PROCESS) \
+	$(FILES_SEARCH) \
+	$(FILES_SETJMP) \
+	$(FILES_SIGNAL) \
+	$(FILES_STDIO) \
+	$(FILES_STDLIB) \
+	$(FILES_STRING) \
+	$(FILES_SYS_STAT) \
+	$(FILES_TIME) \
+	$(FILES_WSTRING)
 
 OBJECTS = \
-	$(OBJECTS_CONIO) \
-	$(OBJECTS_CTYPE) \
-	$(OBJECTS_DIRECT) \
-	$(OBJECTS_EXCEPT) \
-	$(OBJECTS_FLOAT) \
-	$(OBJECTS_IO) \
-	$(OBJECTS_LOCALE) \
-	$(OBJECTS_MATH) \
-	$(OBJECTS_MBSTRING) \
-	$(OBJECTS_MISC) \
-	$(OBJECTS_PROCESS) \
-	$(OBJECTS_SEARCH) \
-	$(OBJECTS_SETJMP) \
-	$(OBJECTS_SIGNAL) \
-	$(OBJECTS_STDIO) \
-	$(OBJECTS_STDLIB) \
-	$(OBJECTS_STRING) \
-	$(OBJECTS_SYS_STAT) \
-	$(OBJECTS_TIME) \
-	$(OBJECTS_WSTRING)
+  conio.o \
+  ctype.o \
+  direct.o \
+  except.o \
+  float.o \
+  io.o \
+  locale/locale.o \
+  math.o \
+  mbstring.o \
+  misc.o \
+  process.o \
+	search/lfind.o \
+	search/lsearch.o \
+	setjmp/setjmp.o \
+	signal/signal.o \
+  stdio.o \
+  stdio/vprintf.o \
+  stdio/vfprintf.o \
+  stdio/vfwprint.o \
+  stdlib.o \
+  string.o \
+  sys_stat.o \
+  time.o \
+  time/ctime.o \
+  wstring.o
 
-$(TARGET_NAME).o: $(OBJECTS)
+$(TARGET_NAME).o: $(OBJECTS) $(FILES)
 	$(LD) -r $(OBJECTS) -o $(TARGET_NAME).o
 
 # EOF

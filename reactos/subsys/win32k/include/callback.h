@@ -1,6 +1,9 @@
 #ifndef __SUBSYS_WIN32K_INCLUDE_CALLBACK_H
 #define __SUBSYS_WIN32K_INCLUDE_CALLBACK_H
 
+#define NTOS_KERNEL_MODE
+#include <ntos.h>
+
 LRESULT STDCALL
 W32kCallWindowProc(WNDPROC Proc,
 		   HWND Wnd,

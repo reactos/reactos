@@ -1,4 +1,5 @@
-#include <msvcrt/stdio.h>
+#include <msvcrti.h>
+
 
 #if 0
 #undef fileno

@@ -7,7 +7,7 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-#include <msvcrt/ctype.h>
+#include <msvcrti.h>
 
 
 #undef isalnum

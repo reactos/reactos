@@ -14,9 +14,10 @@
 
 /* INCLUDES ***************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/mm.h>
-#include <internal/i386/segment.h>
+#include <hal.h>
+
+#define NDEBUG
+#include <internal/debug.h>
 
 
 /* TYPES ******************************************************************/

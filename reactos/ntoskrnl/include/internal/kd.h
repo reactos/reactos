@@ -1,10 +1,12 @@
-/* $Id: kd.h,v 1.14 2002/08/08 17:54:14 dwelch Exp $
+/* $Id: kd.h,v 1.15 2002/09/07 15:12:51 chorns Exp $
  *
  * kernel debugger prototypes
  */
 
 #ifndef __INCLUDE_INTERNAL_KERNEL_DEBUGGER_H
 #define __INCLUDE_INTERNAL_KERNEL_DEBUGGER_H
+
+#ifndef AS_INVOKED
 
 #include <internal/ke.h>
 #include <internal/ldr.h>
@@ -103,5 +105,7 @@ KD_CONTINUE_TYPE
 KdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
 			  PCONTEXT Context,
 			  PKTRAP_FRAME TrapFrame);
+
+#endif /* !AS_INVOKED */
 
 #endif /* __INCLUDE_INTERNAL_KERNEL_DEBUGGER_H */

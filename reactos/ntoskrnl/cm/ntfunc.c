@@ -6,18 +6,12 @@
  * UPDATE HISTORY:
 */
 
-#include <ddk/ntddk.h>
-#include <roscfg.h>
-#include <internal/ob.h>
-#include <limits.h>
-#include <string.h>
-#include <internal/pool.h>
-#include <internal/registry.h>
+#include <ntoskrnl.h>
+#include "cm.h"
 
 #define NDEBUG
 #include <internal/debug.h>
 
-#include "cm.h"
 
 extern POBJECT_TYPE  CmiKeyType;
 extern PREGISTRY_HIVE  CmiVolatileHive;
@@ -92,7 +86,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 
   DPRINT("RemainingPath %S  ParentObject %x\n", RemainingPath.Buffer, Object);
 
-  Status = ObCreateObject(KeyHandle,
+  Status = ObRosCreateObject(KeyHandle,
 			  DesiredAccess,
 			  NULL,
 			  CmiKeyType,
@@ -402,6 +396,8 @@ NtEnumerateKey(
             }
         }
       break;
+		default:
+      assert(FALSE);
     }
   CmiReleaseBlock(RegistryHive, SubKeyCell);
   ObDereferenceObject (KeyObject);
@@ -569,6 +565,8 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
 	              }
             }
           break;
+				default:
+      		assert(FALSE);
         }
     }
   else
@@ -769,7 +767,7 @@ END FIXME*/
 
   /* Change version in header */
   RegistryHive->HiveHeader->VersionOld = RegistryHive->HiveHeader->Version;
-  ZwQuerySystemTime((PTIME) &RegistryHive->HiveHeader->DateModified);
+  ZwQuerySystemTime((PLARGE_INTEGER)&RegistryHive->HiveHeader->DateModified);
 
   /* Calculate checksum */
   RegistryHive->HiveHeader->Checksum = 0;
@@ -1008,6 +1006,8 @@ NtQueryKey(IN	HANDLE KeyHandle,
           *ResultLength = sizeof(KEY_FULL_INFORMATION) + KeyCell->ClassSize;
         }
       break;
+		default:
+			assert(FALSE);
     }
 
   ObDereferenceObject(KeyObject);
@@ -1169,6 +1169,8 @@ NtQueryValueKey(IN HANDLE KeyHandle,
 	              }
             }
           break;
+		    default:
+			    assert(FALSE);
         }
     }
   else
@@ -1289,7 +1291,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
 	  /* Update time of heap */
 	  if (IsPermanentHive(RegistryHive))
 	    {
-	      ZwQuerySystemTime((PTIME) &pBin->DateModified);
+	      ZwQuerySystemTime((PLARGE_INTEGER) &pBin->DateModified);
 	    }
 	}
       else
@@ -1321,7 +1323,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
       /* Update time of heap */
       if (IsPermanentHive(RegistryHive) && CmiGetBlock(RegistryHive, VBOffset, &pBin))
 	{
-	  ZwQuerySystemTime((PTIME) &pBin->DateModified);
+	  ZwQuerySystemTime((PLARGE_INTEGER) &pBin->DateModified);
 	}
     }
 

@@ -7,7 +7,7 @@ BOOLEAN SafetySwitch = FALSE, SafetySwitch2 = FALSE, MouseEnabled = FALSE;
 LONG mouse_x, mouse_y;
 UINT mouse_width = 0, mouse_height = 0;
 
-INT MouseSafetyOnDrawStart(PSURFOBJ SurfObj, PSURFGDI SurfGDI, LONG HazardX1, LONG HazardY1, LONG HazardX2, LONG HazardY2)
+INT MouseSafetyOnDrawStart(SURFOBJ *SurfObj, SURFGDI *SurfGDI, LONG HazardX1, LONG HazardY1, LONG HazardX2, LONG HazardY2)
 {
   RECTL MouseRect;
   LONG tmp;
@@ -32,7 +32,7 @@ INT MouseSafetyOnDrawStart(PSURFOBJ SurfObj, PSURFGDI SurfGDI, LONG HazardX1, LO
   return 1;
 }
 
-INT MouseSafetyOnDrawEnd(PSURFOBJ SurfObj, PSURFGDI SurfGDI)
+INT MouseSafetyOnDrawEnd(SURFOBJ *SurfObj, SURFGDI *SurfGDI)
 {
   RECTL MouseRect;
 

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.12 2002/09/03 22:44:20 dwelch Exp $
+/* $Id: stubs.c,v 1.13 2002/09/07 15:12:44 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -195,8 +195,8 @@ int
 STDCALL
 GetMouseMovePointsEx(
   UINT cbSize,
-  LPMOUSEMOVEPOINT lppt,
-  LPMOUSEMOVEPOINT lpptBuf,
+  PMOUSEMOVEPOINT lppt,
+  PMOUSEMOVEPOINT lpptBuf,
   int nBufPoints,
   DWORD resolution)
 {
@@ -343,7 +343,7 @@ DWORD
 STDCALL
 MsgWaitForMultipleObjects(
   DWORD nCount,
-  CONST LPHANDLE pHandles,
+  CONST HANDLE *pHandles,
   WINBOOL fWaitAll,
   DWORD dwMilliseconds,
   DWORD dwWakeMask)
@@ -355,7 +355,7 @@ DWORD
 STDCALL
 MsgWaitForMultipleObjectsEx(
   DWORD nCount,
-  CONST HANDLE pHandles,
+  CONST HANDLE *pHandles,
   DWORD dwMilliseconds,
   DWORD dwWakeMask,
   DWORD dwFlags)

@@ -66,6 +66,7 @@ extern DWORD DebugTraceLevel;
 
 #endif /* DBG */
 
+#undef assert
 
 #define assert(x) ASSERT(x)
 #define assert_km(x) ASSERT_KM(x)

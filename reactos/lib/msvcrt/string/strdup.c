@@ -1,6 +1,5 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/string.h>
-#include <msvcrt/stdlib.h>
+#include <msvcrti.h>
 
 
 char *_strdup(const char *_s)

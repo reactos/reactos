@@ -1,4 +1,4 @@
-/* $Id: port.c,v 1.9 2002/08/20 20:37:13 hyperion Exp $
+/* $Id: port.c,v 1.10 2002/09/07 15:12:58 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -14,13 +14,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <limits.h>
-
-#include <ddk/ntddk.h>
-#include <internal/ob.h>
-#include <internal/port.h>
-#include <internal/dbg.h>
-#include <internal/pool.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>

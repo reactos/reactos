@@ -5,8 +5,17 @@
 #ifndef __INTERNAL_HAL_HAL_H
 #define __INTERNAL_HAL_HAL_H
 
-//#include <ddk/service.h>
-//#include <internal/ntoskrnl.h>
+#define NTOSAPI extern
+#include <ntoskrnl.h>
+#include <string.h>
+#include <bus.h>
+#include <mps.h>
+
+/* We need to override these and use DECL_IMPORT to get the right _imp_Xxx
+   symbol names */
+extern DECL_IMPORT PHAL_DISPATCH_TABLE HalDispatchTable;
+extern DECL_IMPORT PHAL_PRIVATE_DISPATCH_TABLE HalPrivateDispatchTable;
+
 
 /*
  * FUNCTION: Probes for a BIOS32 extension
@@ -34,15 +43,5 @@ VOID HalpInitPciBus (VOID);
 
 /* enum.c */
 VOID HalpStartEnumerator (VOID);
-
-struct _ADAPTER_OBJECT {
-  int Channel;
-  PVOID PagePort;
-  PVOID CountPort;
-  PVOID OffsetPort;
-  KSPIN_LOCK SpinLock;
-  PVOID Buffer;
-  BOOLEAN Inuse;
-};
 
 #endif /* __INTERNAL_HAL_HAL_H */

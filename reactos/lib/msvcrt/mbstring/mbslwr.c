@@ -1,5 +1,5 @@
-#include <msvcrt/mbstring.h>
-#include <msvcrt/ctype.h>
+#include <msvcrti.h>
+
 
 unsigned int _mbbtolower(unsigned int c)
 {

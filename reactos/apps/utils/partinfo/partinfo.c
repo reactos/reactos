@@ -3,6 +3,8 @@
  */
 
 #include <windows.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 //#include <winioctl.h>
 #include <stdio.h>
 #include <stdlib.h>

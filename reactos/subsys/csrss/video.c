@@ -1,8 +1,10 @@
-/* $Id: video.c,v 1.4 2002/08/20 20:37:17 hyperion Exp $
+/* $Id: video.c,v 1.5 2002/09/07 15:13:07 chorns Exp $
  *
  * ReactOS Project
  */
-#include <ddk/ntddk.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
+
 
 ULONG
 InitializeVideoAddressSpace(VOID)

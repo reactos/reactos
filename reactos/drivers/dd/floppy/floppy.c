@@ -15,6 +15,7 @@
  */
 
 #include <ddk/ntddk.h>
+#include <ddk/ntdddisk.h>
 
 #include "floppy.h"
 #define NDEBUG
@@ -101,7 +102,7 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
    DeviceDescription.Master = FALSE;
    DeviceDescription.ScatterGather = FALSE;
    DeviceDescription.AutoInitialize = FALSE;
-   DeviceDescription.Dma32BitAddress = FALSE;
+   DeviceDescription.Dma32BitAddresses = FALSE;
    DeviceDescription.DmaChannel = ControllerParameters->DmaChannel;
    DeviceDescription.InterfaceType = Isa;
    //   DeviceDescription.DmaWidth = Width8Bits;
@@ -122,7 +123,7 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
 #endif
     
    /* FIXME: Let's assume one drive and one controller for the moment */
-   RtlInitUnicodeStringFromLiteral(&DeviceName, L"\\Device\\Floppy0");
+   RtlInitUnicodeString(&DeviceName, L"\\Device\\Floppy0");
    Status = IoCreateDevice(DriverObject,
 			   sizeof(FLOPPY_DEVICE_EXTENSION),
 			   &DeviceName,
@@ -216,7 +217,7 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
    CHECKPOINT;
    Status = IoAllocateAdapterChannel( ControllerExtension->AdapterObject,
 				      DeviceObject,
-				      0x3000/PAGESIZE,  // max track size is 12k
+				      0x3000/PAGE_SIZE,  // max track size is 12k
 				      FloppyAdapterControl,
 				      ControllerExtension );
    if( !NT_SUCCESS( Status ) )

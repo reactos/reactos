@@ -1,6 +1,4 @@
-#include <windows.h>
-#include <msvcrt/stdio.h>
-#include <msvcrt/string.h>
+#include <msvcrti.h>
 
 
 char *tmpnam(char *s)

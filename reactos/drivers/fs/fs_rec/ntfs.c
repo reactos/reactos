@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ntfs.c,v 1.4 2002/06/12 23:35:55 ekohl Exp $
+/* $Id: ntfs.c,v 1.5 2002/09/07 15:12:01 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -28,6 +28,8 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <ddk/ntifs.h>
+#include <ddk/ntdddisk.h>
 
 #define NDEBUG
 #include <debug.h>

@@ -1,4 +1,8 @@
-#include <string.h>
+#include <ntoskrnl.h>
+
+#define NDEBUG
+#include <internal/debug.h>
+
 
 void * memmove(void *dest,const void *src,size_t count)
 {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: virtual.c,v 1.62 2002/08/10 16:41:19 dwelch Exp $
+/* $Id: virtual.c,v 1.63 2002/09/07 15:13:03 chorns Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/virtual.c
@@ -26,13 +26,7 @@
  
 /* INCLUDE *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/mm.h>
-#include <internal/ob.h>
-#include <internal/io.h>
-#include <internal/ps.h>
-#include <internal/pool.h>
-#include <internal/safe.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -343,10 +337,10 @@ NtWriteVirtualMemory(IN	HANDLE	ProcessHandle,
    return(STATUS_SUCCESS);
 }
 
-DWORD STDCALL
-MmSecureVirtualMemory (DWORD	Unknown0,
-		       DWORD	Unknown1,
-		       DWORD	Unknown2)
+HANDLE STDCALL
+MmSecureVirtualMemory (IN PVOID  Address,
+  IN SIZE_T  Size,
+  IN ULONG  ProbeMode)
 {
   UNIMPLEMENTED;
   return 0;
@@ -354,7 +348,7 @@ MmSecureVirtualMemory (DWORD	Unknown0,
 
 
 VOID STDCALL
-MmUnsecureVirtualMemory (DWORD Unknown0)
+MmUnsecureVirtualMemory (IN HANDLE  SecureHandle)
 {
   UNIMPLEMENTED;
 }

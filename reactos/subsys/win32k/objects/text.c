@@ -1,8 +1,8 @@
-
-
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <ddk/ntddk.h>
+#define NTOS_KERNEL_MODE
+#include <ntos.h>
+#include <wingdi.h>
 #include <win32k/dc.h>
 #include <win32k/text.h>
 #include <win32k/kapi.h>
@@ -46,7 +46,7 @@ STDCALL
 W32kAddFontResource(LPCWSTR  Filename)
 {
   HFONT NewFont;
-  PFONTOBJ FontObj;
+  FONTOBJ *FontObj;
   PFONTGDI FontGDI;
   UNICODE_STRING uFileName;
   NTSTATUS Status;
@@ -62,7 +62,7 @@ W32kAddFontResource(LPCWSTR  Filename)
   IO_STATUS_BLOCK Iosb;
 
   NewFont = (HFONT)CreateGDIHandle(sizeof( FONTGDI ), sizeof( FONTOBJ ));
-  FontObj = (PFONTOBJ) AccessUserObject( NewFont );
+  FontObj = (FONTOBJ*) AccessUserObject( NewFont );
   FontGDI = (PFONTGDI) AccessInternalObject( NewFont );
 
   RtlCreateUnicodeString(&uFileName, (LPWSTR)Filename);
@@ -459,6 +459,7 @@ W32kGetTextExtentPoint(HDC  hDC,
 
   Size->cx = TotalWidth;
   Size->cy = MaxHeight;
+  return TRUE;
 }
 
 BOOL
@@ -497,7 +498,7 @@ W32kGetTextMetrics(HDC  hDC,
 BOOL
 STDCALL
 W32kPolyTextOut(HDC  hDC,
-                      CONST LPPOLYTEXT  txt,
+                      CONST PPOLYTEXTW  txt,
                       int  Count)
 {
   UNIMPLEMENTED;
@@ -585,18 +586,18 @@ W32kTextOut(HDC  hDC,
   RECTL DestRect, MaskRect;
   POINTL SourcePoint, BrushOrigin;
   HBRUSH hBrush = NULL;
-  PBRUSHOBJ Brush = NULL;
+  BRUSHOBJ *Brush = NULL;
   HBITMAP HSourceGlyph;
-  PSURFOBJ SourceGlyphSurf;
+  SURFOBJ *SourceGlyphSurf;
   SIZEL bitSize;
   FT_CharMap found = 0, charmap;
   INT yoff;
   HFONT hFont = 0;
-  PFONTOBJ FontObj;
+  FONTOBJ *FontObj;
   PFONTGDI FontGDI;
   PTEXTOBJ TextObj;
   PPALGDI PalDestGDI;
-  PXLATEOBJ XlateObj;
+  XLATEOBJ *XlateObj;
 
   if( !dc )
 	return FALSE;
@@ -620,7 +621,7 @@ W32kTextOut(HDC  hDC,
 	goto fail;
   }
 
-  FontObj = (PFONTOBJ)AccessUserObject(hFont);
+  FontObj = (FONTOBJ*)AccessUserObject(hFont);
   FontGDI = (PFONTGDI)AccessInternalObject(hFont);
   face = FontGDI->face;
 
@@ -652,7 +653,7 @@ W32kTextOut(HDC  hDC,
 
   // Create the brush
   PalDestGDI = (PPALGDI)AccessInternalObject(dc->w.hPalette);
-  XlateObj = (PXLATEOBJ)EngCreateXlate(PalDestGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
+  XlateObj = (XLATEOBJ*)EngCreateXlate(PalDestGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
   hBrush = W32kCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->w.textColor));
   Brush = BRUSHOBJ_LockBrush(hBrush);
   EngDeleteXlate(XlateObj);
@@ -722,7 +723,7 @@ W32kTextOut(HDC  hDC,
     // Then use memset with 0 to clear it and sourcerect to limit the work of the transbitblt
 
     HSourceGlyph = EngCreateBitmap(bitSize, pitch, BMF_1BPP, 0, glyph->bitmap.buffer);
-    SourceGlyphSurf = (PSURFOBJ)AccessUserObject(HSourceGlyph);
+    SourceGlyphSurf = (SURFOBJ*)AccessUserObject(HSourceGlyph);
 
     // Use the font data as a mask to paint onto the DCs surface using a brush
     EngBitBlt(SurfObj, NULL, SourceGlyphSurf, NULL, NULL, &DestRect, &SourcePoint, &MaskRect, Brush, &BrushOrigin, 0xAACC);

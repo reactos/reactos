@@ -1,4 +1,4 @@
-/* $Id: comm.c,v 1.2 2001/05/27 15:40:31 ekohl Exp $
+/* $Id: comm.c,v 1.3 2002/09/07 15:12:27 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -10,12 +10,14 @@
  *                  Created 01/11/98
  */
 
-#include <ddk/ntddk.h>
+#include <windows.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 #include <kernel32/proc.h>
 #include <kernel32/thread.h>
 #include <wchar.h>
 #include <string.h>
-//#include <stdlib.h>
+
 
 WINBOOL
 STDCALL

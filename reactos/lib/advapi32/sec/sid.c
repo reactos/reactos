@@ -1,4 +1,4 @@
-/* $Id: sid.c,v 1.4 2001/11/22 02:37:32 ekohl Exp $
+/* $Id: sid.c,v 1.5 2002/09/07 15:12:22 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -6,9 +6,7 @@
  * PURPOSE:         Security ID functions
  */
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
-#include <windows.h>
+#include <advapi32.h>
 
 
 BOOL STDCALL

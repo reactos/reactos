@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.15 2002/08/26 13:06:03 dwelch Exp $
+/* $Id: init.c,v 1.16 2002/09/07 15:13:07 chorns Exp $
  * 
  * reactos/subsys/csrss/init.c
  *
@@ -10,10 +10,9 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 #include <csrss/csrss.h>
-
 #include "api.h"
 
 /* GLOBALS ******************************************************************/

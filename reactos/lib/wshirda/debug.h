@@ -17,6 +17,9 @@
 
 #define DEBUG_ULTRA    0xFFFFFFFF
 
+#undef ASSERT
+#undef assert
+
 #ifdef DBG
 
 extern DWORD DebugTraceLevel;
@@ -27,10 +30,6 @@ extern DWORD DebugTraceLevel;
         DbgPrint("(%hS:%d)(%hS) ", __FILE__, __LINE__, __FUNCTION__); \
 		DbgPrint _x_; \
     }
-
-#ifdef ASSERT
-#undef ASSERT
-#endif
 
 #ifdef NASSERT
 #define ASSERT(x)

@@ -1,4 +1,4 @@
-/* $Id: queue.c,v 1.10 2000/03/26 19:38:26 ea Exp $
+/* $Id: queue.c,v 1.11 2002/09/07 15:12:53 chorns Exp $
  *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel
@@ -9,10 +9,11 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -44,7 +45,7 @@ IoStartNextPacketByKey(PDEVICE_OBJECT DeviceObject,
 				Tail.Overlay.DeviceQueueEntry);
         DeviceObject->CurrentIrp = Irp;
 	DPRINT("Next irp is %x\n", Irp);
-	DeviceObject->DriverObject->DriverStartIo(DeviceObject, Irp);
+	((PDRIVER_STARTIO)DeviceObject->DriverObject->DriverStartIo)(DeviceObject, Irp);
      }
    else
      {
@@ -76,7 +77,7 @@ IoStartNextPacket(PDEVICE_OBJECT DeviceObject, BOOLEAN Cancelable)
      {
 	Irp = CONTAINING_RECORD(entry,IRP,Tail.Overlay.DeviceQueueEntry);
         DeviceObject->CurrentIrp = Irp;
-	DeviceObject->DriverObject->DriverStartIo(DeviceObject,Irp);	
+	((PDRIVER_STARTIO)DeviceObject->DriverObject->DriverStartIo)(DeviceObject,Irp);	
      }
    else
      {
@@ -130,7 +131,7 @@ IoStartPacket(PDEVICE_OBJECT DeviceObject,
    if (!stat)
      {			   
         DeviceObject->CurrentIrp = Irp;
-	DeviceObject->DriverObject->DriverStartIo(DeviceObject,Irp);
+	((PDRIVER_STARTIO)DeviceObject->DriverObject->DriverStartIo)(DeviceObject,Irp);
      }
 }
 

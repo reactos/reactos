@@ -7,12 +7,8 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
+#include <msvcrti.h>
 
-#include <windows.h>
-#include <msvcrt/time.h>
-#include <msvcrt/internal/file.h>
-
-VOID STDCALL GetSystemTimeAsFileTime(LPFILETIME  lpSystemTimeAsFileTime );
 
 clock_t clock ( void )
 {

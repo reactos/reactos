@@ -14,14 +14,9 @@ Library General Public License for more details.
 You should have received a copy of the GNU Library General Public
 License along with the GNU C Library; see the file COPYING.LIB.  If
 not, write to the Free Software Foundation, Inc., 675 Mass Ave,
-Cambridge, MA 02139, USA.  */
-
-
-#include <msvcrt/stdarg.h>
-#include <msvcrt/stdio.h>
-#include <msvcrt/wchar.h>
-#include <msvcrt/alloc.h>
-#include <msvcrt/internal/stdio.h>
+Cambridge, MA 02139, USA.
+ */
+#include <msvcrti.h>
 
 
 /* Read formatted input from STREAM according to the format string FORMAT.  */

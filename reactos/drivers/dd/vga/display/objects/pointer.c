@@ -35,10 +35,10 @@ BOOL InitPointer(PPDEV ppdev)
 
 
 VOID STDCALL
-DrvMovePointer(IN PSURFOBJ pso,
+DrvMovePointer(IN SURFOBJ *pso,
 	       IN LONG x,
 	       IN LONG y,
-	       IN PRECTL prcl)
+	       IN RECTL *prcl)
 {
   PPDEV ppdev = (PPDEV)pso->dhpdev;
 
@@ -60,15 +60,15 @@ DrvMovePointer(IN PSURFOBJ pso,
 
 
 ULONG STDCALL
-DrvSetPointerShape(PSURFOBJ pso,
-		   PSURFOBJ psoMask,
-		   PSURFOBJ psoColor,
-		   PXLATEOBJ pxlo,
+DrvSetPointerShape(SURFOBJ *pso,
+		   SURFOBJ *psoMask,
+		   SURFOBJ *psoColor,
+		   XLATEOBJ *pxlo,
 		   LONG xHot,
 		   LONG yHot,
 		   LONG x,
 		   LONG y,
-		   PRECTL prcl,
+		   RECTL *prcl,
 		   ULONG fl)
 {
   PPDEV ppdev = (PPDEV)pso->dhpdev;

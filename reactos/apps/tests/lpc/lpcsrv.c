@@ -1,11 +1,11 @@
-/* $Id: lpcsrv.c,v 1.9 2002/08/20 20:37:04 hyperion Exp $
+/* $Id: lpcsrv.c,v 1.10 2002/09/07 15:11:55 chorns Exp $
  *
  * DESCRIPTION: Simple LPC Server
  * PROGRAMMER:  David Welch
  */
-#include <ddk/ntddk.h>
 #include <windows.h>
-#include <napi/lpc.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 #include <stdarg.h>
 #include <string.h>
 #include <stdio.h>
@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
      printf("%s: Received connection request 0x%08x on port 0x%x.\n", MyName,
         ConnectMsg.Header.MessageId, NamedPortHandle);
      printf("%s: Request from: PID=%x, TID=%x.\n", MyName,
-        ConnectMsg.Header.Cid.UniqueProcess, ConnectMsg.Header.Cid.UniqueThread);
+        ConnectMsg.Header.ClientId.UniqueProcess, ConnectMsg.Header.ClientId.UniqueThread);
    
      printf("%s: Accepting connection request 0x%08x...\n", MyName, 
         ConnectMsg.Header.MessageId);

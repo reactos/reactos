@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.3 2001/11/20 20:34:29 ekohl Exp $
+/* $Id: finfo.c,v 1.4 2002/09/07 15:12:02 chorns Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -9,7 +9,6 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
 #include "npfs.h"
 
 #define NDEBUG

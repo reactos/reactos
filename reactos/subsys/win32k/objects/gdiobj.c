@@ -1,7 +1,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.16 2002/09/01 20:39:56 dwelch Exp $
+ * $Id: gdiobj.c,v 1.17 2002/09/07 15:13:12 chorns Exp $
  *
  */
 
@@ -164,6 +164,8 @@ HGDIOBJ GDIOBJ_AllocObj(WORD Size, WORD Magic)
 {
   	PGDIOBJHDR  newObject;
   	PGDI_HANDLE_ENTRY  handleEntry;
+
+	assert_irql(PASSIVE_LEVEL);
 
 	DPRINT("GDIOBJ_AllocObj: size: %d, magic: %x\n", Size, Magic);
   	newObject = ExAllocatePool (PagedPool, Size + sizeof (GDIOBJHDR));
@@ -408,7 +410,7 @@ WORD  GDIOBJ_GetHandleMagic (HGDIOBJ ObjectHandle)
 }
 
 VOID
-InitGdiObjectHandleTable (void)
+InitGdiObjectHandleTable (VOID)
 {
   DPRINT ("InitGdiObjectHandleTable\n");
   ExInitializeFastMutex (&HandleTableMutex);

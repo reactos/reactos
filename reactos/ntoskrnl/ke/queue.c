@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: queue.c,v 1.1 2002/01/04 13:08:39 ekohl Exp $
+/* $Id: queue.c,v 1.2 2002/09/07 15:12:57 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/queue.c
@@ -28,12 +28,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ke.h>
-#include <internal/id.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -46,7 +45,7 @@ KeInitializeQueue(IN PKQUEUE Queue,
 			       sizeof(KQUEUE)/sizeof(ULONG),
 			       0);
   InitializeListHead(&Queue->EntryListHead);
-  InitializeListHead(&Queue->ThreadListEntry);
+  InitializeListHead(&Queue->ThreadListHead);
   Queue->CurrentCount = 0;
   Queue->MaximumCount = (Count == 0) ? KeNumberProcessors : Count;
 }

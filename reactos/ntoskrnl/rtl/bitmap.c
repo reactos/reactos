@@ -1,4 +1,4 @@
-/* $Id: bitmap.c,v 1.2 2000/03/08 01:54:34 ekohl Exp $
+/* $Id: bitmap.c,v 1.3 2002/09/07 15:13:05 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -8,7 +8,10 @@
  *                  20/08/99 Created by Eric Kohl
  */
 
-#include <ddk/ntddk.h>
+#include <ntoskrnl.h>
+
+#define NDEBUG
+#include <internal/debug.h>
 
 
 #define ALIGN(x,align)	(((x)+(align)-1) / (align))

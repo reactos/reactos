@@ -7,11 +7,7 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-#include <windows.h>
-#include <msvcrt/conio.h>
-#include <msvcrt/stdio.h>
-#include <msvcrt/io.h>
-#include <msvcrt/internal/console.h>
+#include <msvcrti.h>
 
 
 int _getch(void)

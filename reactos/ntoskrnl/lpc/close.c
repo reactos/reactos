@@ -1,4 +1,4 @@
-/* $Id: close.c,v 1.8 2002/03/01 00:47:21 ekohl Exp $
+/* $Id: close.c,v 1.9 2002/09/07 15:12:58 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,12 +11,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/port.h>
-#include <internal/dbg.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* FUNCTIONS *****************************************************************/
 

@@ -1,4 +1,4 @@
-/* $Id: winsta.c,v 1.7 2002/08/20 20:37:19 hyperion Exp $
+/* $Id: winsta.c,v 1.8 2002/09/07 15:13:12 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -17,12 +17,12 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
+#define NTOS_KERNEL_MODE
+#include <ntos.h>
 #include <win32k/win32k.h>
 #include <include/winsta.h>
 #include <include/object.h>
 #include <include/guicheck.h>
-#include <napi/win32.h>
 #include <include/class.h>
 #include <include/window.h>
 
@@ -253,7 +253,7 @@ NtUserCreateWindowStation(PUNICODE_STRING lpszWindowStationName,
   
   DPRINT("Creating window station (%wZ)\n", &WindowStationName);
 
-  Status = ObCreateObject(&WinSta,
+  Status = ObRosCreateObject(&WinSta,
 			  STANDARD_RIGHTS_REQUIRED,
 			  &ObjectAttributes,
 			  ExWindowStationObjectType,
@@ -570,7 +570,7 @@ NtUserCreateDesktop(PUNICODE_STRING lpszDesktopName,
 
   DPRINT("Status for open operation (0x%X)\n", Status);
 
-  Status = ObCreateObject(&Desktop,
+  Status = ObRosCreateObject(&Desktop,
 			  STANDARD_RIGHTS_REQUIRED,
 			  &ObjectAttributes,
 			  ExDesktopObjectType,

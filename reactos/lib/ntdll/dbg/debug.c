@@ -1,4 +1,4 @@
-/* $Id: debug.c,v 1.4 2002/08/20 20:37:10 hyperion Exp $
+/* $Id: debug.c,v 1.5 2002/09/07 15:12:39 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,10 +11,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
-#include <ntdll/dbg.h>
-#include <napi/lpc.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
+
+#define NDEBUG
+#include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
 
@@ -24,7 +25,7 @@ static HANDLE DbgSsReplyPort = NULL;
 
 typedef struct _LPC_DBGSS_MESSAGE
 {
-	LPC_MESSAGE_HEADER Header;
+	LPC_MESSAGE Header;
 	ULONG Unknown1;
 	ULONG Unknown2;
 	ULONG Unknown3;

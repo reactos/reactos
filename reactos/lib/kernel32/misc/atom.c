@@ -1,4 +1,4 @@
-/* $Id: atom.c,v 1.13 2001/05/27 15:40:31 ekohl Exp $
+/* $Id: atom.c,v 1.14 2002/09/07 15:12:27 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -10,8 +10,9 @@
  *                  Full rewrite 27/05/2001
  */
 
-#include <ddk/ntddk.h>
 #include <windows.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 #include <kernel32/error.h>
 
 #define NDEBUG
@@ -48,6 +49,7 @@ GlobalAddAtomA(LPCSTR lpString)
 				    (LPSTR)lpString);
 
    Status = NtAddAtom(AtomName.Buffer,
+          AtomName.Length,
 		      &Atom);
    RtlFreeUnicodeString(&AtomName);
    if (!NT_SUCCESS(Status))
@@ -77,6 +79,7 @@ GlobalAddAtomW(LPCWSTR lpString)
      }
 
    Status = NtAddAtom((LPWSTR)lpString,
+          wcslen(lpString),
 		      &Atom);
    if (!NT_SUCCESS(Status))
      {
@@ -129,6 +132,7 @@ GlobalFindAtomA(LPCSTR lpString)
    RtlCreateUnicodeStringFromAsciiz(&AtomName,
 				    (LPSTR)lpString);
    Status = NtFindAtom(AtomName.Buffer,
+           AtomName.Length,
 		       &Atom);
    RtlFreeUnicodeString(&AtomName);
    if (!NT_SUCCESS(Status))
@@ -158,6 +162,7 @@ GlobalFindAtomW(LPCWSTR lpString)
      }
 
    Status = NtFindAtom((LPWSTR)lpString,
+           wcslen(lpString),
 		       &Atom);
    if (!NT_SUCCESS(Status))
      {

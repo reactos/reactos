@@ -1,4 +1,4 @@
-/* $Id: largeint.c,v 1.10 2001/09/06 20:26:36 dwelch Exp $
+/* $Id: largeint.c,v 1.11 2002/09/07 15:13:05 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,7 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>

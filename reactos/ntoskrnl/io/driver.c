@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.10 2002/08/20 20:37:12 hyperion Exp $
+/* $Id: driver.c,v 1.11 2002/09/07 15:12:52 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -11,16 +11,7 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <limits.h>
-#include <ddk/ntddk.h>
-#include <internal/io.h>
-#include <internal/po.h>
-#include <internal/ldr.h>
-#include <internal/id.h>
-#include <internal/pool.h>
-#include <internal/registry.h>
-
-#include <roscfg.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -59,7 +50,7 @@ typedef struct _SERVICE
 static LIST_ENTRY GroupListHead = {NULL, NULL};
 static LIST_ENTRY ServiceListHead  = {NULL, NULL};
 
-POBJECT_TYPE EXPORTED IoDriverObjectType = NULL;
+POBJECT_TYPE IoDriverObjectType = NULL;
 
 #define TAG_DRIVER             TAG('D', 'R', 'V', 'R')
 #define TAG_DRIVER_EXTENSION   TAG('D', 'R', 'V', 'E')

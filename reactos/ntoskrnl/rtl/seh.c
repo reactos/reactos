@@ -10,10 +10,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntddk.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
-#include <debug.h>
+#include <internal/debug.h>
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -119,12 +120,12 @@ _except_handler3(
   // Clear the direction flag (make no assumptions!)
   __asm__ ("cld");
 
-  // if neither the EXCEPTION_UNWINDING nor EXCEPTION_EXIT_UNWIND bit
+  // if neither the EH_UNWINDING nor EH_EXIT_UNWIND bit
   // is set...  This is true the first time through the handler (the
   // non-unwinding case)
 
   if (!(ExceptionRecord->ExceptionFlags
-     & (EXCEPTION_UNWINDING|EXCEPTION_EXIT_UNWIND)))
+     & (EH_UNWINDING|EH_EXIT_UNWIND)))
   {
     DPRINT("Exception caught\n");
 
@@ -234,7 +235,7 @@ DPRINT("\n");
       ReturnValue = ExceptionContinueSearch;
     }
   }
-  else // Either EXCEPTION_UNWINDING or EXCEPTION_EXIT_UNWIND flags is set
+  else // Either EH_UNWINDING or EH_EXIT_UNWIND flags is set
   {
     DPRINT("Local unwind\n");
 

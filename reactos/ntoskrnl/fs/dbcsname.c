@@ -1,10 +1,13 @@
-/* $Id: dbcsname.c,v 1.1 2000/02/25 23:27:51 ea Exp $
+/* $Id: dbcsname.c,v 1.2 2002/09/07 15:12:50 chorns Exp $
  *
  * reactos/ntoskrnl/fs/dbcsname.c
  *
  */
-#include <ntos.h>
-#include <ddk/ntifs.h>
+
+#include <ntoskrnl.h>
+
+#define NDEBUG
+#include <internal/debug.h>
 
 
 /**********************************************************************

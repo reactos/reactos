@@ -1,8 +1,4 @@
-#include <msvcrt/stdio.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/string.h>
-#include <msvcrt/errno.h>
-#include <msvcrt/internal/file.h>
+#include <msvcrti.h>
 
 
 size_t fread(void *vptr, size_t size, size_t count, FILE *iop)
@@ -57,7 +53,7 @@ size_t fread(void *vptr, size_t size, size_t count, FILE *iop)
 
     if (to_read >= iop->_bufsiz)
     {
-       n_read = _read(fileno(iop), ptr, to_read);
+       n_read = _read(_fileno(iop), ptr, to_read);
 	   if (n_read < 0)
 		  iop->_flag |= _IOERR;
 	   else if (n_read == 0)

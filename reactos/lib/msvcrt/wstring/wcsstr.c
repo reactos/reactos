@@ -1,4 +1,5 @@
-#include <msvcrt/string.h>
+#include <msvcrti.h>
+
 
 wchar_t *wcsstr(const wchar_t *s,const wchar_t *b)
 {

@@ -20,19 +20,15 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_KE_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_KE_H
 
+#define MAXIMUM_PROCESSORS	32
+
 /* INCLUDES *****************************************************************/
 
-#ifndef __ASM__
-#include <ddk/ntddk.h>
-
-#include <stdarg.h>
-#endif /* not __ASM__ */
-
-#include <internal/arch/ke.h>
+#include "arch/ke.h"
 
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 
-#ifndef __ASM__
+#ifndef AS_INVOKED
 
 struct _KTHREAD;
 
@@ -105,8 +101,6 @@ KeBugCheckWithTf(ULONG BugCheckCode,
 VOID
 KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG ExceptionNr, ULONG cr2);
 
-#endif /* not __ASM__ */
-
-#define MAXIMUM_PROCESSORS      32
+#endif /* !AS_INVOKED */
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_KE_H */

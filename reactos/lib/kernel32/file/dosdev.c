@@ -1,4 +1,4 @@
-/* $Id: dosdev.c,v 1.3 2000/06/03 14:47:32 ea Exp $
+/* $Id: dosdev.c,v 1.4 2002/09/07 15:12:26 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -9,8 +9,9 @@
  *                  Created 01/11/98
  */
 
-#include <ddk/ntddk.h>
 #include <windows.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 
 
 WINBOOL

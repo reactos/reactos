@@ -1,6 +1,4 @@
-#include <windows.h>
-#include <msvcrt/ctype.h>
-#include <msvcrt/direct.h>
+#include <msvcrti.h>
 
 
 int _chdir( const char *_path )

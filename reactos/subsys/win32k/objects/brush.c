@@ -1,10 +1,11 @@
-/* $Id: brush.c,v 1.15 2002/09/01 20:39:56 dwelch Exp $
+/* $Id: brush.c,v 1.16 2002/09/07 15:13:12 chorns Exp $
  */
 
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <ddk/ntddk.h>
+#define NTOS_KERNEL_MODE
+#include <ntos.h>
 #include <win32k/bitmaps.h>
 #include <win32k/brush.h>
 //#include <win32k/debug.h>
@@ -15,7 +16,7 @@
 
 HBRUSH STDCALL W32kCreateBrushIndirect(CONST LOGBRUSH  *lb)
 {
-  PBRUSHOBJ  brushPtr;
+  ROS_BRUSHOBJ  *brushPtr;
   HBRUSH  hBrush;
 
   hBrush = BRUSHOBJ_AllocBrush();
@@ -24,7 +25,7 @@ HBRUSH STDCALL W32kCreateBrushIndirect(CONST LOGBRUSH  *lb)
     return 0;
   }
 
-  brushPtr = BRUSHOBJ_LockBrush (hBrush);
+  brushPtr = (ROS_BRUSHOBJ *)BRUSHOBJ_LockBrush (hBrush);
   ASSERT( brushPtr ); //I want to know if this ever occurs
 
   if( brushPtr ){
@@ -44,6 +45,7 @@ HBRUSH STDCALL W32kCreateDIBPatternBrush(HGLOBAL  hDIBPacked,
 {
   UNIMPLEMENTED;
 #if 0
+  // FIXME:
   LOGBRUSH  logbrush;
   PBITMAPINFO  info, newInfo;
   INT  size;
@@ -185,8 +187,8 @@ BOOL STDCALL W32kPatBlt(HDC  hDC,
 			DWORD  ROP)
 {
   RECT DestRect;
-  PBRUSHOBJ BrushObj;
-  PSURFOBJ SurfObj;
+  ROS_BRUSHOBJ *BrushObj;
+  SURFOBJ *SurfObj;
   DC *dc = DC_HandleToPtr(hDC);
   BOOL ret;
 
@@ -197,7 +199,7 @@ BOOL STDCALL W32kPatBlt(HDC  hDC,
 
   SurfObj = (SURFOBJ*)AccessUserObject((ULONG)dc->Surface);
 
-  BrushObj = (BRUSHOBJ*) GDIOBJ_LockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
+  BrushObj = (ROS_BRUSHOBJ*) GDIOBJ_LockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
   assert(BrushObj);
   if (BrushObj->logbrush.lbStyle != BS_NULL)
     {	

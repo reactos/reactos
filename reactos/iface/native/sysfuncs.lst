@@ -1,13 +1,13 @@
 NtAcceptConnectPort		ZwAcceptConnectPort		  24         
 NtAccessCheck			ZwAccessCheck			  32         
 NtAccessCheckAndAuditAlarm	ZwAccessCheckAndAuditAlarm	  44         
-NtAddAtom			ZwAddAtom			  8          
+NtAddAtom			ZwAddAtom			  12          
 NtAdjustGroupsToken		ZwAdjustGroupsToken		  24         
 NtAdjustPrivilegesToken		ZwAdjustPrivilegesToken		  24         
 NtAlertResumeThread		ZwAlertResumeThread		  8          
 NtAlertThread			ZwAlertThread			  4          
 NtAllocateLocallyUniqueId	ZwAllocateLocallyUniqueId	  4          
-NtAllocateUuids			ZwAllocateUuids			  12         
+NtAllocateUuids			ZwAllocateUuids			  16         
 NtAllocateVirtualMemory		ZwAllocateVirtualMemory		  24         
 NtCallbackReturn		ZwCallbackReturn		  12         
 NtCancelIoFile			ZwCancelIoFile			  8          
@@ -51,7 +51,7 @@ NtDuplicateToken		ZwDuplicateToken		  24
 NtEnumerateKey			ZwEnumerateKey			  24         
 NtEnumerateValueKey		ZwEnumerateValueKey		  24         
 NtExtendSection			ZwExtendSection			  8          
-NtFindAtom			ZwFindAtom			  8          
+NtFindAtom			ZwFindAtom			  12          
 NtFlushBuffersFile		ZwFlushBuffersFile		  8          
 NtFlushInstructionCache		ZwFlushInstructionCache		  12         
 NtFlushKey			ZwFlushKey			  4          

@@ -1,4 +1,4 @@
-/* $Id: usercall.c,v 1.20 2001/03/16 18:11:23 dwelch Exp $
+/* $Id: usercall.c,v 1.21 2002/09/07 15:12:57 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,19 +11,11 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ntoskrnl.h>
-#include <internal/ke.h>
-#include <internal/ps.h>
-#include <internal/i386/segment.h>
-#include <internal/i386/mm.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-#include <ddk/service.h>
 
-#include <ddk/defines.h>
-#include <internal/ps.h>
 
 /* FUNCTIONS *****************************************************************/
 

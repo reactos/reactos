@@ -8,6 +8,7 @@
  *                 11/7/1999: Created
  */
 
+#include <ddk/ntddk.h>
 #include <ddk/winddi.h>
 #include <include/object.h>
 #include "handle.h"
@@ -18,7 +19,7 @@
 HPALETTE STDCALL
 EngCreatePalette(ULONG Mode,
 		 ULONG NumColors,
-		 PULONG *Colors, // FIXME: This was implemented with ULONG *Colors!!
+		 ULONG *Colors,
 		 ULONG Red,
 		 ULONG Green,
 		 ULONG Blue)

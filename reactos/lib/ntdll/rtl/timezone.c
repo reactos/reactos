@@ -1,4 +1,4 @@
-/* $Id: timezone.c,v 1.2 2002/08/10 21:58:14 ekohl Exp $
+/* $Id: timezone.c,v 1.3 2002/09/07 15:12:41 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -11,13 +11,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntos/registry.h>
-#include <ntos/time.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 
 #define NDEBUG
-#include <ntdll/ntdll.h>
-
+#include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
 

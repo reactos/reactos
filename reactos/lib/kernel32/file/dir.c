@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.29 2002/03/25 21:09:18 hbirr Exp $
+/* $Id: dir.c,v 1.30 2002/09/07 15:12:26 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -15,9 +15,9 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
 #include <windows.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 #include <string.h>
 #include <wchar.h>
 

@@ -13,12 +13,10 @@
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 
-#include <msvcrt/stdio.h>
-#include <msvcrt/string.h>
-#include <msvcrt/io.h>
+#include <msvcrti.h>
 
 #define NDEBUG
-#include <msvcrt/msvcrtdbg.h>
+#include <msvcrtdbg.h>
 
 
 char* _mktemp (char *_template)

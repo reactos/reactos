@@ -1,8 +1,8 @@
-#include <windows.h>
-#include <msvcrt/io.h>
-#include <msvcrt/errno.h>
+#include <msvcrti.h>
+
 #define NDEBUG
-#include <msvcrt/msvcrtdbg.h>
+#include <msvcrtdbg.h>
+
 
 #ifndef F_OK
  #define F_OK	0x01

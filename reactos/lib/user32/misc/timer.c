@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.2 2002/08/27 06:40:15 robd Exp $
+/* $Id: timer.c,v 1.3 2002/09/07 15:12:44 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/dde.c
@@ -28,9 +28,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <windows.h>
 #include <user32.h>
-#include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
 

@@ -1,4 +1,4 @@
-/* $Id: ac.c,v 1.2 2000/04/05 01:41:01 ekohl Exp $
+/* $Id: ac.c,v 1.3 2002/09/07 15:12:22 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -6,9 +6,7 @@
  * PURPOSE:         ACL/ACE functions
  */
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
-#include <windows.h>
+#include <advapi32.h>
 
 
 /* --- ACL --- */

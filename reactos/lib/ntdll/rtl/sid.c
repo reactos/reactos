@@ -1,4 +1,4 @@
-/* $Id: sid.c,v 1.4 2002/07/29 15:36:20 ekohl Exp $
+/* $Id: sid.c,v 1.5 2002/09/07 15:12:41 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -11,25 +11,29 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 #include <string.h>
 
-//#include <internal/debug.h>
+#define NDEBUG
+#include <debug.h>
 
 /* FUNCTIONS ***************************************************************/
 
 BOOLEAN STDCALL
 RtlValidSid(IN PSID Sid)
 {
-  if ((Sid->Revision & 0xf) != 1)
-    {
-      return(FALSE);
-    }
-  if (Sid->SubAuthorityCount > 15)
-    {
-      return(FALSE);
-    }
-  return(TRUE);
+   PISID iSid = (PISID)Sid;
+
+   if ((iSid->Revision & 0xf) != 1)
+     {
+	return(FALSE);
+     }
+   if (iSid->SubAuthorityCount > 15)
+     {
+	return(FALSE);
+     }
+   return(TRUE);
 }
 
 
@@ -45,12 +49,13 @@ RtlInitializeSid(IN PSID Sid,
 		 IN PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
 		 IN UCHAR SubAuthorityCount)
 {
-  Sid->Revision = 1;
-  Sid->SubAuthorityCount = SubAuthorityCount;
-  memcpy(&Sid->IdentifierAuthority,
-	 IdentifierAuthority,
-	 sizeof(SID_IDENTIFIER_AUTHORITY));
-  return(STATUS_SUCCESS);
+   PISID iSid = (PISID)Sid;
+
+   iSid->Revision = 1;
+   iSid->SubAuthorityCount = SubAuthorityCount;
+   memcpy(&iSid->IdentifierAuthority, IdentifierAuthority, 
+	  sizeof(SID_IDENTIFIER_AUTHORITY));
+   return(STATUS_SUCCESS);
 }
 
 
@@ -58,14 +63,18 @@ PULONG STDCALL
 RtlSubAuthoritySid(IN PSID Sid,
 		   IN ULONG SubAuthority)
 {
-  return(&Sid->SubAuthority[SubAuthority]);
+   PISID iSid = (PISID)Sid;
+
+   return(&iSid->SubAuthority[SubAuthority]);
 }
 
 
 PUCHAR STDCALL
 RtlSubAuthorityCountSid(IN PSID Sid)
 {
-  return(&Sid->SubAuthorityCount);
+   PISID iSid = (PISID)Sid;
+
+   return(&iSid->SubAuthorityCount);
 }
 
 
@@ -73,14 +82,18 @@ BOOLEAN STDCALL
 RtlEqualSid(IN PSID Sid1,
 	    IN PSID Sid2)
 {
-  if (Sid1->Revision != Sid2->Revision)
-    {
-      return(FALSE);
-    }
-  if ((*RtlSubAuthorityCountSid(Sid1)) != (*RtlSubAuthorityCountSid(Sid2)))
-    {
-      return(FALSE);
-    }
+   PISID iSid1 = (PISID)Sid1;
+   PISID iSid2 = (PISID)Sid2;
+
+   if (iSid1->Revision != iSid2->Revision)
+     {
+	return(FALSE);
+     }
+   if ((*RtlSubAuthorityCountSid(Sid1)) !=
+       (*RtlSubAuthorityCountSid(Sid2)))
+     {
+	return(FALSE);
+     }
    if (memcmp(Sid1, Sid2, RtlLengthSid(Sid1)) != 0)
     {
       return(FALSE);
@@ -92,7 +105,9 @@ RtlEqualSid(IN PSID Sid1,
 ULONG STDCALL
 RtlLengthSid(IN PSID Sid)
 {
-  return(sizeof(SID) + (Sid->SubAuthorityCount-1)*4);
+   PISID iSid = (PISID)Sid;
+
+   return(sizeof(SID) + (iSid->SubAuthorityCount-1)*4);
 }
 
 
@@ -151,7 +166,9 @@ RtlCopySidAndAttributesArray(ULONG Count,
 PSID_IDENTIFIER_AUTHORITY STDCALL
 RtlIdentifierAuthoritySid(IN PSID Sid)
 {
-  return(&Sid->IdentifierAuthority);
+  PISID iSid = (PISID)Sid;
+
+  return (&iSid->IdentifierAuthority);
 }
 
 
@@ -171,7 +188,7 @@ RtlAllocateAndInitializeSid (
 	PSID				*Sid
 	)
 {
-	PSID pSid;
+	PISID pSid;
 
 	if (SubAuthorityCount > 8)
 		return STATUS_INVALID_SID;
@@ -179,9 +196,9 @@ RtlAllocateAndInitializeSid (
 	if (Sid == NULL)
 		return STATUS_INVALID_PARAMETER;
 
-	pSid = (PSID)RtlAllocateHeap (RtlGetProcessHeap (),
-	                              0,
-	                              SubAuthorityCount * sizeof(DWORD) + 8);
+	pSid = (PISID)RtlAllocateHeap (RtlGetProcessHeap (),
+	                               0,
+	                               SubAuthorityCount * sizeof(DWORD) + 8);
 	if (pSid == NULL)
 		return STATUS_NO_MEMORY;
 
@@ -212,7 +229,7 @@ RtlAllocateAndInitializeSid (
 			break;
 	}
 
-	*Sid = pSid;
+	*Sid = (PSID)pSid;
 
 	return STATUS_SUCCESS;
 }
@@ -232,9 +249,12 @@ BOOLEAN STDCALL
 RtlEqualPrefixSid(IN PSID Sid1,
 		  IN PSID Sid2)
 {
-  return(Sid1->SubAuthorityCount == Sid2->SubAuthorityCount &&
-	 !memcmp(Sid1, Sid2,
-	         (Sid1->SubAuthorityCount - 1) * sizeof(DWORD) + 8));
+  PISID iSid1 = (PISID)Sid1;
+  PISID iSid2 = (PISID)Sid2;
+
+	return (iSid1->SubAuthorityCount == iSid2->SubAuthorityCount &&
+	        !memcmp (iSid1, iSid2,
+	                 (iSid1->SubAuthorityCount - 1) * sizeof(DWORD) + 8));
 }
 
 
@@ -243,6 +263,7 @@ RtlConvertSidToUnicodeString(PUNICODE_STRING String,
 			     PSID Sid,
 			     BOOLEAN AllocateBuffer)
 {
+  PISID iSid = (PISID)Sid;
 	WCHAR Buffer[256];
 	PWSTR wcs;
 	ULONG Length;
@@ -252,34 +273,34 @@ RtlConvertSidToUnicodeString(PUNICODE_STRING String,
 		return STATUS_INVALID_SID;
 
 	wcs = Buffer;
-	wcs += swprintf (wcs, L"S-%u-", Sid->Revision);
-	if (!Sid->IdentifierAuthority.Value[0] &&
-	    !Sid->IdentifierAuthority.Value[1])
+	wcs += swprintf (wcs, L"S-%u-", iSid->Revision);
+	if (!iSid->IdentifierAuthority.Value[0] &&
+	    !iSid->IdentifierAuthority.Value[1])
 	{
 		wcs += swprintf (wcs,
 		                 L"%u",
-		                 (DWORD)Sid->IdentifierAuthority.Value[2] << 24 |
-		                 (DWORD)Sid->IdentifierAuthority.Value[3] << 16 |
-		                 (DWORD)Sid->IdentifierAuthority.Value[4] << 8 |
-		                 (DWORD)Sid->IdentifierAuthority.Value[5]);
+		                 (DWORD)iSid->IdentifierAuthority.Value[2] << 24 |
+		                 (DWORD)iSid->IdentifierAuthority.Value[3] << 16 |
+		                 (DWORD)iSid->IdentifierAuthority.Value[4] << 8 |
+		                 (DWORD)iSid->IdentifierAuthority.Value[5]);
 	}
 	else
 	{
 		wcs += swprintf (wcs,
 		                 L"0x%02hx%02hx%02hx%02hx%02hx%02hx",
-		                 Sid->IdentifierAuthority.Value[0],
-		                 Sid->IdentifierAuthority.Value[1],
-		                 Sid->IdentifierAuthority.Value[2],
-		                 Sid->IdentifierAuthority.Value[3],
-		                 Sid->IdentifierAuthority.Value[4],
-		                 Sid->IdentifierAuthority.Value[5]);
+		                 iSid->IdentifierAuthority.Value[0],
+		                 iSid->IdentifierAuthority.Value[1],
+		                 iSid->IdentifierAuthority.Value[2],
+		                 iSid->IdentifierAuthority.Value[3],
+		                 iSid->IdentifierAuthority.Value[4],
+		                 iSid->IdentifierAuthority.Value[5]);
 	}
 
-	for (i = 0; i < Sid->SubAuthorityCount; i++)
+	for (i = 0; i < iSid->SubAuthorityCount; i++)
 	{
 		wcs += swprintf (wcs,
 		                 L"-%u",
-		                 Sid->SubAuthority[0]);
+		                 iSid->SubAuthority[0]);
 	}
 
 	Length = (wcs - Buffer) * sizeof(WCHAR);

@@ -1,9 +1,9 @@
-#include <msvcrt/stdio.h>
-#include <msvcrt/internal/file.h>
+#include <msvcrti.h>
+
 
 FILE *	__alloc_file(void);
 
-FILE *_fdopen(int handle, char *mode)
+FILE *_fdopen(int handle, const char *mode)
 {
   FILE *file;
   int rw;

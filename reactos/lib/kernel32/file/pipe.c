@@ -1,4 +1,4 @@
-/* $Id: pipe.c,v 1.5 2002/05/07 22:22:28 hbirr Exp $
+/* $Id: pipe.c,v 1.6 2002/09/07 15:12:26 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -10,7 +10,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 #include <kernel32/error.h>
 
 #include <kernel32/kernel32.h>

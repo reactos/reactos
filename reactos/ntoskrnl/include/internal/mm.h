@@ -5,6 +5,8 @@
 #ifndef __INCLUDE_INTERNAL_MM_H
 #define __INCLUDE_INTERNAL_MM_H
 
+#ifndef AS_INVOKED
+
 #include <internal/ntoskrnl.h>
 #include <internal/arch/mm.h>
 
@@ -87,7 +89,7 @@ typedef struct _MM_SECTION_SEGMENT
   BOOLEAN WriteCopy;
 } MM_SECTION_SEGMENT, *PMM_SECTION_SEGMENT;
 
-typedef struct
+typedef struct _SECTION_OBJECT
 {
   CSHORT Type;
   CSHORT Size;
@@ -141,16 +143,6 @@ typedef struct
   } Data;
 } MEMORY_AREA, *PMEMORY_AREA;
 
-typedef struct _MADDRESS_SPACE
-{
-  LIST_ENTRY MAreaListHead;
-  FAST_MUTEX Lock;
-  ULONG LowestAddress;
-  struct _EPROCESS* Process;
-  PUSHORT PageTableRefCountTable;
-  ULONG PageTableRefCountTableSize;
-} MADDRESS_SPACE, *PMADDRESS_SPACE;
-
 /* FUNCTIONS */
 
 VOID MmLockAddressSpace(PMADDRESS_SPACE AddressSpace);
@@ -185,8 +177,6 @@ VOID MmDumpMemoryAreas(PLIST_ENTRY ListHead);
 NTSTATUS MmLockMemoryArea(MEMORY_AREA* MemoryArea);
 NTSTATUS MmUnlockMemoryArea(MEMORY_AREA* MemoryArea);
 NTSTATUS MmInitSectionImplementation(VOID);
-
-#define MM_LOWEST_USER_ADDRESS (4096)
 
 PMEMORY_AREA MmSplitMemoryArea(struct _EPROCESS* Process,
 			       PMADDRESS_SPACE AddressSpace,
@@ -583,6 +573,7 @@ MmProtectSectionView(PMADDRESS_SPACE AddressSpace,
 		     ULONG Length,
 		     ULONG Protect,
 		     PULONG OldProtect);
+
 NTSTATUS 
 MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
 		       PMEMORY_AREA MArea,
@@ -593,6 +584,7 @@ MmWritePageVirtualMemory(PMADDRESS_SPACE AddressSpace,
 			 PMEMORY_AREA MArea,
 			 PVOID Address,
 			 PMM_PAGEOP PageOp);
+
 VOID
 MmSetCleanAllRmaps(PHYSICAL_ADDRESS PhysicalAddress);
 VOID
@@ -606,5 +598,7 @@ BOOLEAN
 MmIsAvailableSwapPage(VOID);
 VOID
 MmShowOutOfSpaceMessagePagingFile(VOID);
+
+#endif /* !AS_INVOKED */
 
 #endif

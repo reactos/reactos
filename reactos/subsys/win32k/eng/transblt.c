@@ -14,27 +14,23 @@
 #include <include/dib.h>
 #include <include/object.h>
 #include <include/surface.h>
+#include <include/mouse.h>
 
 #include "brush.h"
 #include "clip.h"
 #include "objects.h"
 
-#include <include/mouse.h>
 
 BOOL STDCALL
-EngTransparentBlt(PSURFOBJ Dest,
-		  PSURFOBJ Source,
-		  PCLIPOBJ Clip,
-		  PXLATEOBJ ColorTranslation,
-		  PRECTL DestRect,
-		  PRECTL SourceRect,
-		  ULONG TransparentColor,
-		  ULONG Reserved)
+EngTransparentBlt(SURFOBJ *Dest, SURFOBJ *Source,
+                  CLIPOBJ *Clip, XLATEOBJ *ColorTranslation,
+                  RECTL *DestRect, RECTL *SourceRect,
+                  ULONG TransparentColor, ULONG Reserved)
 {
   PSURFGDI DestGDI   = (PSURFGDI)AccessInternalObjectFromUserObject(Dest),
            SourceGDI = (PSURFGDI)AccessInternalObjectFromUserObject(Source);
   HSURF     hTemp;
-  PSURFOBJ  TempSurf;
+  SURFOBJ   *TempSurf;
   POINTL    TempPoint, SourcePoint;
   RECTL     TempRect;
   SIZEL     TempSize;
@@ -68,7 +64,7 @@ EngTransparentBlt(PSURFOBJ Dest,
     hTemp = EngCreateBitmap(TempSize,
 			    DIB_GetDIBWidthBytes(dx, BitsPerFormat(Dest->iBitmapFormat)),
 			    Dest->iBitmapFormat, 0, NULL);
-    TempSurf = (PSURFOBJ)AccessUserObject((ULONG)hTemp);
+    TempSurf = (SURFOBJ*)AccessUserObject((ULONG)hTemp);
 
     SourcePoint.x = SourceRect->left;
     SourcePoint.y = SourceRect->top;

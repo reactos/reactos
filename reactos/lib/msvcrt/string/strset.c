@@ -1,5 +1,5 @@
-#include <msvcrt/string.h>
-#include <msvcrt/stdlib.h>
+#include <msvcrti.h>
+
 
 char* _strnset (char* szToFill, int szFill, size_t sizeMaxFill)
 {

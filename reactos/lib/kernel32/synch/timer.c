@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.9 2001/02/18 19:43:14 phreak Exp $
+/* $Id: timer.c,v 1.10 2002/09/07 15:12:28 chorns Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -9,9 +9,10 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <kernel32/error.h>
 #include <windows.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
+#include <kernel32/error.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
@@ -20,8 +21,8 @@
 
 HANDLE STDCALL
 CreateWaitableTimerW(LPSECURITY_ATTRIBUTES lpTimerAttributes,
-		     WINBOOL bManualReset,
-		     LPWSTR lpTimerName)
+		     BOOL bManualReset,
+		     LPCWSTR lpTimerName)
 {
    NTSTATUS Status;
    HANDLE TimerHandle;
@@ -57,7 +58,7 @@ CreateWaitableTimerW(LPSECURITY_ATTRIBUTES lpTimerAttributes,
 
 HANDLE STDCALL
 CreateWaitableTimerA(LPSECURITY_ATTRIBUTES lpTimerAttributes,
-		     WINBOOL bManualReset,
+		     BOOL bManualReset,
 		     LPCSTR lpTimerName)
 {
 	UNICODE_STRING TimerNameU;

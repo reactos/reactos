@@ -1,4 +1,4 @@
-/* $Id: dlog.c,v 1.5 2002/08/20 20:37:12 hyperion Exp $
+/* $Id: dlog.c,v 1.6 2002/09/07 15:12:53 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,11 +11,11 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ntoskrnl.h>
-#include <roscfg.h>
-#include <internal/kd.h>
-#include <ntos/minmax.h>
+#include <ntoskrnl.h>
+
+#define NDEBUG
+#include <internal/debug.h>
+
 
 /* GLOBALS *******************************************************************/
 

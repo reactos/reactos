@@ -27,7 +27,7 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_V86M_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_V86M_H
 
-#ifndef __ASM__
+#ifndef AS_INVOKED
 
 /* Emulate cli/sti instructions */
 #define KV86M_EMULATE_CLI_STI          (0x1)
@@ -69,12 +69,12 @@ typedef struct _KV86M_REGISTERS
   ULONG Vif;                  
   ULONG Flags;
   PNTSTATUS PStatus;
-} KV86M_REGISTERS, *PKV86M_REGISTERS;
+} __attribute__((packed)) KV86M_REGISTERS, *PKV86M_REGISTERS;
 
 NTSTATUS STDCALL
 Ke386CallBios(UCHAR Int, PKV86M_REGISTERS Regs);
 
-#else /* ASSEMBLER */
+#endif /* !AS_INVOKED */
 
 /*
  * Definitions for the offsets of members in the KV86M_REGISTERS
@@ -95,7 +95,5 @@ Ke386CallBios(UCHAR Int, PKV86M_REGISTERS Regs);
 #define KV86M_REGISTERS_EFLAGS  (0x34)
 #define	KV86M_REGISTERS_ESP     (0x38)
 #define KV86M_REGISTERS_SS	(0x3C)
-
-#endif /* ASSEMBLER */
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_V86M_H */

@@ -10,12 +10,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ke.h>
-#include <internal/ps.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* GLOBALS *******************************************************************/
 
@@ -25,7 +24,7 @@ PETHREAD PiIdleThread;
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS STDCALL
+VOID STDCALL
 PsIdleThreadMain(PVOID Context)
 {
    KIRQL oldlvl;
@@ -47,6 +46,7 @@ VOID PsInitIdleThread(VOID)
 {
    KPRIORITY Priority;
    ULONG Affinity;
+   NTSTATUS Status;
 
    PsCreateSystemThread(&PsIdleThreadHandle,
 			THREAD_ALL_ACCESS,
@@ -55,15 +55,20 @@ VOID PsInitIdleThread(VOID)
 			NULL,
 			PsIdleThreadMain,
 			NULL);
-   
+
    Priority = LOW_PRIORITY;
-   NtSetInformationThread(PsIdleThreadHandle,
+   Status = NtSetInformationThread(PsIdleThreadHandle,
 			  ThreadPriority,
 			  &Priority,
 			  sizeof(Priority));
+   assertmsg(NT_SUCCESS(Status), ("NtSetInformationThread() failed with "
+	"status 0x%.08x for ThreadPriority", Status));
+
    Affinity = 1 << 0;
-   NtSetInformationThread(PsIdleThreadHandle,
+   Status = NtSetInformationThread(PsIdleThreadHandle,
 			  ThreadAffinityMask,
 			  &Affinity,
 			  sizeof(Affinity));
+   assertmsg(NT_SUCCESS(Status), ("NtSetInformationThread() failed with "
+	"status 0x%.08x for ThreadAffinityMask", Status));
 }

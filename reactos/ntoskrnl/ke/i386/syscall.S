@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: syscall.S,v 1.7 2002/08/08 17:54:15 dwelch Exp $
+/* $Id: syscall.S,v 1.8 2002/09/07 15:12:57 chorns Exp $
  *
  * FILE:            ntoskrnl/hal/x86/syscall.s
  * PURPOSE:         2E trap handler
@@ -25,10 +25,10 @@
  *                  ???
  */
 
-#include <ddk/status.h>
-#include <internal/i386/segment.h>
-#include <internal/ps.h>
-#include <ddk/defines.h>
+#include <ntoskrnl.h>
+
+#undef STATUS_INVALID_SYSTEM_SERVICE
+#define STATUS_INVALID_SYSTEM_SERVICE  0xC000001C
 
 /*
  *
@@ -221,7 +221,7 @@ KeReturnFromSystemCall:
 	
            /* Restore the user context */
 	   /* Get a pointer to the current thread */
-           movl %fs:0x124, %esi
+           movl %fs:KPCR_CURRENT_THREAD, %esi
 	
            /* Restore the old trap frame pointer */
            movl 0x3c(%esp), %ebx

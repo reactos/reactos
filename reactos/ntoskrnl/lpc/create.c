@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.7 2002/02/19 00:09:23 ekohl Exp $
+/* $Id: create.c,v 1.8 2002/09/07 15:12:58 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,12 +11,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/port.h>
-#include <internal/dbg.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 STATIC NTSTATUS STDCALL 
 VerifyCreateParameters (IN	PHANDLE			PortHandle,
@@ -90,7 +89,7 @@ NiCreatePort (PVOID			ObjectBody,
  * RETURN VALUE
  * 
  */
-EXPORTED NTSTATUS STDCALL 
+NTSTATUS STDCALL 
 NtCreatePort (PHANDLE		      PortHandle,
 	      POBJECT_ATTRIBUTES    ObjectAttributes,
 	      ULONG	       MaxConnectInfoLength,
@@ -113,7 +112,7 @@ NtCreatePort (PHANDLE		      PortHandle,
       return (Status);
     }
   /* Ask Ob to create the object */
-  Status = ObCreateObject (PortHandle,
+  Status = ObRosCreateObject (PortHandle,
 			   PORT_ALL_ACCESS,
 			   ObjectAttributes,
 			   ExPortType,
@@ -152,7 +151,7 @@ NtCreatePort (PHANDLE		      PortHandle,
  * RETURN VALUE
  * 
  */
-EXPORTED NTSTATUS STDCALL
+NTSTATUS STDCALL
 NtCreateWaitablePort (OUT	PHANDLE			PortHandle,
 		      IN	POBJECT_ATTRIBUTES	ObjectAttributes,
 		      IN	ULONG			MaxConnectInfoLength,

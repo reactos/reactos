@@ -1,7 +1,5 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-
-#include <msvcrt/process.h>
-#include <msvcrt/errno.h>
+#include <msvcrti.h>
 
 #if 0
 int _spawnvpe(int nMode, const char* szPath, char* const* szaArgv, char* const* szaEnv)

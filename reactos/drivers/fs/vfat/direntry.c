@@ -1,4 +1,4 @@
-/* $Id: direntry.c,v 1.6 2002/03/18 22:37:12 hbirr Exp $
+/* $Id: direntry.c,v 1.7 2002/09/07 15:12:03 chorns Exp $
  *
  *
  * FILE:             DirEntry.c
@@ -20,8 +20,8 @@
 
 #include "vfat.h"
 
-#define  CACHEPAGESIZE(pDeviceExt) ((pDeviceExt)->FatInfo.BytesPerCluster > PAGESIZE ? \
-		   (pDeviceExt)->FatInfo.BytesPerCluster : PAGESIZE)
+#define  CACHEPAGESIZE(pDeviceExt) ((pDeviceExt)->FatInfo.BytesPerCluster > PAGE_SIZE ? \
+		   (pDeviceExt)->FatInfo.BytesPerCluster : PAGE_SIZE)
 
 #define  ENTRIES_PER_CACHEPAGE(pDeviceExt)  (ENTRIES_PER_SECTOR * \
 		   (CACHEPAGESIZE(pDeviceExt) / ((pDeviceExt)->FatInfo.BytesPerSector)))

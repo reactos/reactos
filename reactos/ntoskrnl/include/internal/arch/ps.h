@@ -20,7 +20,7 @@
 #define __NTOSKRNL_INCLUDE_INTERNAL_ARCH_PS_H
 
 #ifdef i386
-#include <internal/i386/ps.h>
+#include "../i386/ps.h"
 #define KiArchContextSwitch          Ki386ContextSwitch
 #define KiArchInitThread             Ke386InitThread
 #define KiArchInitThreadWithContext  Ke386InitThreadWithContext

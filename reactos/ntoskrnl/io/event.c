@@ -1,4 +1,4 @@
-/* $Id: event.c,v 1.4 2000/10/07 18:44:07 dwelch Exp $
+/* $Id: event.c,v 1.5 2002/09/07 15:12:52 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,10 +11,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntos.h>
+#include <ntoskrnl.h>
 
+#define NDEBUG
 #include <internal/debug.h>
+
 
 /* FUNCTIONS *****************************************************************/
 

@@ -12,7 +12,7 @@
 
 #include <ddk/ntddk.h>
 #include <ddk/winddi.h>
-#include <ddk/ntddvid.h>
+#include <ddk/ntddvdeo.h>
 
 #include <include/object.h>
 #include "handle.h"
@@ -199,7 +199,8 @@ XLATEOBJ *EngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
   return XlateObj;
 }
 
-VOID EngDeleteXlate(XLATEOBJ *XlateObj)
+VOID STDCALL
+EngDeleteXlate(XLATEOBJ *XlateObj)
 {
   HPALETTE HXlate    = (HPALETTE)AccessHandleFromUserObject(XlateObj);
   XLATEGDI *XlateGDI = (XLATEGDI*)AccessInternalObject((ULONG)HXlate);
@@ -257,9 +258,9 @@ XLATEOBJ_iXlate(XLATEOBJ *XlateObj,
 
 ULONG STDCALL
 XLATEOBJ_cGetPalette(XLATEOBJ *XlateObj,
-		     ULONG PalOutType,
-		     ULONG cPal,
-		     ULONG *OutPal)
+	ULONG PalOutType,
+	ULONG cPal,
+	ULONG *OutPal)
 {
   ULONG i;
   HPALETTE HPal;

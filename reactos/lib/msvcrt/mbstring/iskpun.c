@@ -7,7 +7,8 @@
  * UPDATE HISTORY:
  *              12/04/99: Created
  */
-#include <msvcrt/mbctype.h>
+#include <msvcrti.h>
+
 
 int _ismbbkpunct( unsigned int c )
 {

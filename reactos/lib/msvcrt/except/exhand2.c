@@ -1,4 +1,5 @@
-#include <windows.h>
+#include <msvcrti.h>
+
 
 EXCEPTION_DISPOSITION
 _except_handler2(

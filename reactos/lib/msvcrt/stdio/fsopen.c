@@ -8,13 +8,7 @@
  *              28/12/98: Created
  */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-
-#include <msvcrt/sys/types.h>
-#include <msvcrt/stdio.h>
-#include <msvcrt/io.h>
-#include <msvcrt/fcntl.h>
-#include <msvcrt/share.h>
-#include <msvcrt/internal/file.h>
+#include <msvcrti.h>
 
 
 FILE *	__alloc_file(void);
@@ -82,7 +76,7 @@ FILE* _fsopen(const char *file, const char *mode, int shflag)
 // ms crtdll ensures that writes will end up at the end of file in append mode
 // we just move the file pointer to the end of file initially
   if (*mode == 'a')
-    lseek(fd, 0, SEEK_END);
+    _lseek(fd, 0, SEEK_END);
 
   f->_cnt = 0;
   f->_file = fd;
@@ -160,7 +154,7 @@ FILE* _wfsopen(const wchar_t *file, const wchar_t *mode, int shflag)
 // ms crtdll ensures that writes will end up at the end of file in append mode
 // we just move the file pointer to the end of file initially
   if (*mode == L'a')
-    lseek(fd, 0, SEEK_END);
+    _lseek(fd, 0, SEEK_END);
 
   f->_cnt = 0;
   f->_file = fd;

@@ -1,13 +1,14 @@
-/* $Id: shell.c,v 1.10 2002/08/14 20:58:39 dwelch Exp $
+/* $Id: shell.c,v 1.11 2002/09/07 15:13:09 chorns Exp $
  *
  * PROJECT    : ReactOS Operating System
  * DESCRIPTION: ReactOS' Native Shell
  * LICENSE    : See top level directory
  *
  */
-#define NTOS_MODE_USER
-#include <ntos.h>
 #include <windows.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
+#include <tchar.h>
 #include <stdarg.h>
 #include <string.h>
 #include <stdio.h>

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: wset.c,v 1.14 2002/06/04 15:26:57 dwelch Exp $
+/* $Id: wset.c,v 1.15 2002/09/07 15:13:03 chorns Exp $
  * 
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/wset.c
@@ -28,13 +28,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/mm.h>
-#include <internal/ps.h>
-#include <ntos/minmax.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* FUNCTIONS *****************************************************************/
 

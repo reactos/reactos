@@ -7,7 +7,8 @@
  * REVISION HISTORY:
  *        2/10/1999: Created
  */
-
+#define NTOS_KERNEL_MODE
+#include <ntos.h>
 #include <ddk/winddi.h>
 #include <ddk/ntddk.h>
 #include <ntos/minmax.h>
@@ -51,10 +52,11 @@ EngBitBlt(SURFOBJ *Dest,
 	  RECTL *DestRect,
 	  POINTL *SourcePoint,
 	  POINTL *MaskRect,
-	  BRUSHOBJ *Brush,
+	  BRUSHOBJ *bo,
 	  POINTL *BrushOrigin,
 	  ROP4 rop4)
 {
+  ROS_BRUSHOBJ* Brush = (ROS_BRUSHOBJ*)bo;
   BOOLEAN   ret;
   BYTE      clippingType;
   RECTL     rclTmp;
@@ -63,7 +65,7 @@ EngBitBlt(SURFOBJ *Dest,
   BOOL      EnumMore;
   PSURFGDI  DestGDI, SourceGDI;
   HSURF     hTemp;
-  PSURFOBJ  TempSurf = NULL;
+  SURFOBJ  *TempSurf = NULL;
   BOOLEAN   canCopyBits;
   POINTL    TempPoint;
   RECTL     TempRect;
@@ -111,7 +113,7 @@ EngBitBlt(SURFOBJ *Dest,
         hTemp = EngCreateBitmap(TempSize,
                      DIB_GetDIBWidthBytes(DestRect->right - DestRect->left, BitsPerFormat(Dest->iBitmapFormat)),
                      Dest->iBitmapFormat, 0, NULL);
-        TempSurf = (PSURFOBJ)AccessUserObject((ULONG)hTemp);
+        TempSurf = (SURFOBJ*)AccessUserObject((ULONG)hTemp);
 
         // FIXME: Skip creating a TempSurf if we have the same BPP and palette
         EngBitBlt(TempSurf, Source, NULL, NULL, ColorTranslation, &TempRect, SourcePoint, NULL, NULL, NULL, 0);

@@ -11,14 +11,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <roscfg.h>
-#include <internal/ps.h>
-#include <internal/io.h>
-#include <internal/mm.h>
-#include <internal/po.h>
+#include <ntoskrnl.h>
 
+#define NDEBUG
 #include <internal/debug.h>
+
 
 /* FUNCTIONS *****************************************************************/
 

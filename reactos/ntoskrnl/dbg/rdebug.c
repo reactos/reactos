@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rdebug.c,v 1.1 2001/05/05 19:13:09 chorns Exp $
+/* $Id: rdebug.c,v 1.2 2002/09/07 15:12:49 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -29,10 +29,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
-#include <debug.h>
+#include <internal/debug.h>
+
 
 /* GLOBALS ******************************************************************/
 

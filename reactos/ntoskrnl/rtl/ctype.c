@@ -1,4 +1,4 @@
-/* $Id: ctype.c,v 1.8 2002/07/13 12:44:08 chorns Exp $
+/* $Id: ctype.c,v 1.9 2002/09/07 15:13:05 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,7 +11,10 @@
  *                              all functions to use ctype table
  */
 
-#include <ctype.h>
+#include <ntoskrnl.h>
+
+#define NDEBUG
+#include <internal/debug.h>
 
 #undef _pctype
 

@@ -1,7 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/stdlib.h>
-#include <msvcrt/ctype.h>
-//#include <msvcrt/unconst.h>
+#include <msvcrti.h>
+
 
 static double powten[] =
 {

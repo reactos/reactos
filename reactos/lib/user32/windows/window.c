@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.11 2002/09/03 22:44:20 dwelch Exp $
+/* $Id: window.c,v 1.12 2002/09/07 15:12:45 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -11,11 +11,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <windows.h>
 #include <user32.h>
-#include <window.h>
-#include <debug.h>
-#include <user32/callback.h>
 
 /* FUNCTIONS *****************************************************************/
 
@@ -545,17 +541,23 @@ FindWindowExW(HWND hwndParent,
   return (HWND)0;
 }
 
-WINBOOL STDCALL
+#undef GetAltTabInfo
+
+BOOL STDCALL
 GetAltTabInfo(HWND hwnd,
 	      int iItem,
 	      PALTTABINFO pati,
-	      LPTSTR pszItemText,
+	      LPSTR pszItemText,
 	      UINT cchItemText)
 {
-  return FALSE;
+  return GetAltTabInfoA(hwnd,
+    iItem,
+	  pati,
+	  pszItemText,
+	  cchItemText);
 }
 
-WINBOOL STDCALL
+BOOL STDCALL
 GetAltTabInfoA(HWND hwnd,
 	       int iItem,
 	       PALTTABINFO pati,
@@ -565,7 +567,7 @@ GetAltTabInfoA(HWND hwnd,
   return FALSE;
 }
 
-WINBOOL STDCALL
+BOOL STDCALL
 GetAltTabInfoW(HWND hwnd,
 	       int iItem,
 	       PALTTABINFO pati,
@@ -600,9 +602,9 @@ GetForegroundWindow(VOID)
   return (HWND)0;
 }
 
-WINBOOL STDCALL
+BOOL STDCALL
 GetGUIThreadInfo(DWORD idThread,
-		 LPGUITHREADINFO lpgui)
+		 PGUITHREADINFO lpgui)
 {
   return FALSE;
 }
@@ -652,12 +654,16 @@ GetWindowInfo(HWND hwnd,
   return FALSE;
 }
 
+#undef GetWindowModuleFileName
+
 UINT STDCALL
 GetWindowModuleFileName(HWND hwnd,
 			LPSTR lpszFileName,
 			UINT cchFileNameMax)
 {
-  return 0;
+  return GetWindowModuleFileNameA(hwnd,
+    lpszFileName,
+    cchFileNameMax);
 }
 
 UINT STDCALL

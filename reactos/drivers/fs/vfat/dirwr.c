@@ -1,4 +1,4 @@
-/* $Id: dirwr.c,v 1.28 2002/08/17 15:15:50 hbirr Exp $
+/* $Id: dirwr.c,v 1.29 2002/09/07 15:12:03 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -427,7 +427,7 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
   /* set dates and times */
   KeQuerySystemTime (&SystemTime);
   ExSystemTimeToLocalTime (&SystemTime, &LocalTime);
-  FsdFileTimeToDosDateTime ((TIME *) & LocalTime, &pEntry->CreationDate,
+  FsdFileTimeToDosDateTime ((LARGE_INTEGER *) & LocalTime, &pEntry->CreationDate,
                             &pEntry->CreationTime);
   pEntry->UpdateDate = pEntry->CreationDate;
   pEntry->UpdateTime = pEntry->CreationTime;
@@ -612,23 +612,23 @@ delEntry (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT pFileObject)
     Offset.u.HighPart = 0;
     for (i = startEntry; i <= Entry; i++)
     {
-      if (Context == NULL || ((i * sizeof(FATDirEntry)) % PAGESIZE) == 0)
+      if (Context == NULL || ((i * sizeof(FATDirEntry)) % PAGE_SIZE) == 0)
       {
         if (Context)
         {
           CcSetDirtyPinnedData(Context, NULL);
           CcUnpinData(Context);
         }
-        Offset.u.LowPart = (i * sizeof(FATDirEntry) / PAGESIZE) * PAGESIZE;
-        CcMapData (pDirFcb->FileObject, &Offset, PAGESIZE, TRUE,
+        Offset.u.LowPart = (i * sizeof(FATDirEntry) / PAGE_SIZE) * PAGE_SIZE;
+        CcMapData (pDirFcb->FileObject, &Offset, PAGE_SIZE, TRUE,
                    &Context, (PVOID*)&pDirEntry);
       }
-      pDirEntry[i % (PAGESIZE / sizeof(FATDirEntry))].Filename[0] = 0xe5;
+      pDirEntry[i % (PAGE_SIZE / sizeof(FATDirEntry))].Filename[0] = 0xe5;
       if (i == Entry)
       {
         CurrentCluster =
           vfatDirEntryGetFirstCluster (DeviceExt,
-            &pDirEntry[i % (PAGESIZE / sizeof(FATDirEntry))]);
+            &pDirEntry[i % (PAGE_SIZE / sizeof(FATDirEntry))]);
       }
     }
     if (Context)

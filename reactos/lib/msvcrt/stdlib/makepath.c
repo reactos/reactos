@@ -1,7 +1,7 @@
-/* $Id: makepath.c,v 1.7 2001/09/09 12:13:15 hbirr Exp $
+/* $Id: makepath.c,v 1.8 2002/09/07 15:12:36 chorns Exp $
  */
-#include <msvcrt/stdlib.h>
-#include <msvcrt/string.h>
+#include <msvcrti.h>
+
 
 void _makepath(char *path, const char *drive, const char *dir, const char *fname, const char *ext)
 {

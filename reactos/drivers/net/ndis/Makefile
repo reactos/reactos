@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.13 2001/08/21 20:13:15 chorns Exp $
+# $Id: Makefile,v 1.14 2002/09/07 15:12:05 chorns Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -6,7 +6,7 @@ TARGET_TYPE = export_driver
 
 TARGET_NAME = ndis
 
-TARGET_CFLAGS = -I./include -DNDIS_WRAPPER -DBINARY_COMPATIBLE=1
+TARGET_CFLAGS = -I./include -D_NDIS_ -DBINARY_COMPATIBLE=1
 
 TARGET_OBJECTS = \
   ndis/main.o \

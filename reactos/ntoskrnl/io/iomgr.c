@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.24 2002/08/20 20:37:12 hyperion Exp $
+/* $Id: iomgr.c,v 1.25 2002/09/07 15:12:53 chorns Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -11,14 +11,17 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <limits.h>
-#include <ddk/ntddk.h>
-#include <internal/ob.h>
-#include <internal/io.h>
-#include <internal/pool.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
+#define xbp(Value) \
+{ \
+  ULONG Port = 0x3f8; \
+__asm__("outb %0, %w1\n\t" : : "a" (Value), "d" (Port)); \
+}
+
 
 /* GLOBALS *******************************************************************/
 
@@ -28,13 +31,13 @@
 /* DATA ********************************************************************/
 
 
-POBJECT_TYPE EXPORTED IoDeviceObjectType = NULL;
-POBJECT_TYPE EXPORTED IoFileObjectType = NULL;
-ULONG        EXPORTED IoReadOperationCount = 0;	/* FIXME: unknown type */
-ULONG        EXPORTED IoReadTransferCount = 0;	/* FIXME: unknown type */
-ULONG        EXPORTED IoWriteOperationCount = 0; /* FIXME: unknown type */
-ULONG        EXPORTED IoWriteTransferCount = 0;	/* FIXME: unknown type */
-ULONG        EXPORTED IoStatisticsLock = 0;	/* FIXME: unknown type */
+POBJECT_TYPE IoDeviceObjectType = NULL;
+POBJECT_TYPE IoFileObjectType = NULL;
+ULONG        IoReadOperationCount = 0;	/* FIXME: unknown type */
+ULONG        IoReadTransferCount = 0;	/* FIXME: unknown type */
+ULONG        IoWriteOperationCount = 0; /* FIXME: unknown type */
+ULONG        IoWriteTransferCount = 0;	/* FIXME: unknown type */
+ULONG        IoStatisticsLock = 0;	/* FIXME: unknown type */
 
 static GENERIC_MAPPING IopFileMapping = {FILE_GENERIC_READ,
 					 FILE_GENERIC_WRITE,
@@ -205,6 +208,8 @@ VOID IoInit (VOID)
   /*
    * Create the '\Device' directory
    */
+  RtlInitUnicodeString(&DirName,
+		       L"\\Device");
   RtlInitUnicodeStringFromLiteral(&DirName,
 		       L"\\Device");
   InitializeObjectAttributes(&ObjectAttributes,
@@ -212,7 +217,8 @@ VOID IoInit (VOID)
 			     0,
 			     NULL,
 			     NULL);
-  ZwCreateDirectoryObject(&Handle,
+
+  NtCreateDirectoryObject(&Handle,
 			  0,
 			  &ObjectAttributes);
 
@@ -226,7 +232,7 @@ VOID IoInit (VOID)
 			     0,
 			     NULL,
 			     NULL);
-  ZwCreateDirectoryObject(&Handle,
+  NtCreateDirectoryObject(&Handle,
 			  0,
 			  &ObjectAttributes);
 
@@ -240,7 +246,7 @@ VOID IoInit (VOID)
 			     0,
 			     NULL,
 			     NULL);
-  ZwCreateDirectoryObject(&Handle,
+  NtCreateDirectoryObject(&Handle,
 			  0,
 			  &ObjectAttributes);
 
@@ -267,6 +273,8 @@ VOID IoInit (VOID)
    * Initialize PnP manager
    */
   PnpInit();
+
+xbp('a');
 }
 
 

@@ -1,6 +1,10 @@
-/* $Id: pagfault.c,v 1.2 2000/07/04 08:52:45 dwelch Exp $ */
-#include <ddk/ntddk.h>
-#include <internal/ps.h>
+/* $Id: pagfault.c,v 1.3 2002/09/07 15:13:00 chorns Exp $ */
+
+#include <ntoskrnl.h>
+
+#define NDEBUG
+#include <internal/debug.h>
+
 
 BOOLEAN
 STDCALL

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.141 2002/08/28 07:15:14 hbirr Exp $
+; $Id: ntoskrnl.def,v 1.142 2002/09/07 15:12:47 chorns Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -29,6 +29,7 @@ ExAcquireResourceExclusiveLite@8
 ExAcquireResourceSharedLite@8
 ExAcquireSharedStarveExclusive@8
 ExAcquireSharedWaitForExclusive@8
+ExAllocateFromNPagedLookasideList@4
 ExAllocateFromPagedLookasideList@4
 ExAllocatePool@8
 ExAllocatePoolWithQuota@8
@@ -45,6 +46,7 @@ ExDisableResourceBoostLite@4
 ExEventObjectType DATA
 ExExtendZone@12
 ExFreePool@4
+ExFreeToNPagedLookasideList@8
 ExFreeToPagedLookasideList@8
 ExGetExclusiveWaiterCount@4
 ExGetPreviousMode@0
@@ -56,19 +58,19 @@ ExInitializeResourceLite@4
 ExInitializeZone@16
 ExInterlockedAddLargeInteger@16
 @ExInterlockedAddLargeStatistic@8
-ExInterlockedAddUlong@12
+@ExInterlockedAddUlong@12
 @ExInterlockedCompareExchange64@16
 ExInterlockedDecrementLong@8
 ExInterlockedExchangeUlong@12
 ExInterlockedExtendZone@16
 ExInterlockedIncrementLong@8
-ExInterlockedInsertHeadList@12
-ExInterlockedInsertTailList@12
-ExInterlockedPopEntryList@8
+@ExInterlockedInsertHeadList@12
+@ExInterlockedInsertTailList@12
+@ExInterlockedPopEntryList@8
 @ExInterlockedPopEntrySList@8
-ExInterlockedPushEntryList@12
+@ExInterlockedPushEntryList@12
 @ExInterlockedPushEntrySList@12
-ExInterlockedRemoveHeadList@8
+@ExInterlockedRemoveHeadList@8
 ExIsProcessorFeaturePresent@4
 ExIsResourceAcquiredExclusiveLite@4
 ExIsResourceAcquiredSharedLite@4
@@ -217,6 +219,8 @@ HalPrivateDispatchTable DATA
 @InterlockedExchange@8
 @InterlockedExchangeAdd@8
 @InterlockedIncrement@4
+@InterlockedPopEntrySList@4
+@InterlockedPushEntrySList@8
 IoAcquireCancelSpinLock@4
 IoAcquireRemoveLockEx@20
 IoAcquireVpbSpinLock@4
@@ -447,8 +451,8 @@ KeTickCount DATA
 KeWaitForMultipleObjects@32
 KeWaitForMutexObject@20
 KeWaitForSingleObject@20
-;@KefAcquireSpinLockAtDpcLevel
-;@KefReleaseSpinLockFromDpcLevel
+@KefAcquireSpinLockAtDpcLevel@4
+@KefReleaseSpinLockFromDpcLevel@4
 ;Kei386EoiHelper
 ;@KiAcquireSpinLock@4
 ;KiBugCheckData DATA
@@ -527,11 +531,11 @@ NlsLeadByteInfo DATA
 NlsMbCodePageTag DATA
 NlsMbOemCodePageTag DATA
 NlsOemLeadByteInfo DATA
-NtAddAtom@8
+NtAddAtom@12
 NtAdjustPrivilegesToken@24
 NtAlertThread@4
 NtAllocateLocallyUniqueId@4
-NtAllocateUuids@12
+NtAllocateUuids@16
 NtAllocateVirtualMemory@24
 NtBuildNumber DATA
 NtClose@4
@@ -546,7 +550,7 @@ NtDeleteFile@4
 NtDeviceIoControlFile@40
 NtDuplicateObject@28
 NtDuplicateToken@24
-NtFindAtom@8
+NtFindAtom@12
 NtFreeVirtualMemory@16
 NtFsControlFile@40
 NtGlobalFlag DATA
@@ -584,7 +588,7 @@ ObAssignSecurity@16
 ;ObCheckCreateObjectAccess@28
 ;ObCheckObjectAccess@20
 ;ObCreateObject@36
-ObCreateObject@20
+ObRosCreateObject@20
 ;ObFindHandleForObject@20
 ObGetObjectPointerCount@4
 ObGetObjectSecurity@12

@@ -1,8 +1,7 @@
-#include <msvcrt/mbstring.h>
-#include <msvcrt/mbctype.h>
-#include <msvcrt/ctype.h>
+#include <msvcrti.h>
 
-int _ismbbprint(unsigned char c)
+
+int _ismbbprint(unsigned int c)
 {
   return (isprint(c) || _ismbbkana(c));
 }

@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.7 2001/08/07 14:12:58 ekohl Exp $
+/* $Id: virtual.c,v 1.8 2002/09/07 15:12:27 chorns Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -9,9 +9,10 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <kernel32/error.h>
 #include <windows.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
+#include <kernel32/error.h>
 
 /* FUNCTIONS *****************************************************************/
 

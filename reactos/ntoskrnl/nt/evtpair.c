@@ -1,4 +1,4 @@
-/* $Id: evtpair.c,v 1.11 2002/02/19 00:09:24 ekohl Exp $
+/* $Id: evtpair.c,v 1.12 2002/09/07 15:13:03 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,9 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntos/synch.h>
-#include <limits.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -21,7 +19,7 @@
 
 /* GLOBALS *******************************************************************/
 
-POBJECT_TYPE EXPORTED ExEventPairObjectType = NULL;
+POBJECT_TYPE ExEventPairObjectType = NULL;
 
 static GENERIC_MAPPING ExEventPairMapping = {
 	STANDARD_RIGHTS_READ,
@@ -83,7 +81,7 @@ NtCreateEventPair(OUT PHANDLE EventPairHandle,
    NTSTATUS Status;
 
    DPRINT("NtCreateEventPair()\n");
-   Status = ObCreateObject(EventPairHandle,
+   Status = ObRosCreateObject(EventPairHandle,
 			   DesiredAccess,
 			   ObjectAttributes,
 			   ExEventPairObjectType,
@@ -92,10 +90,10 @@ NtCreateEventPair(OUT PHANDLE EventPairHandle,
      {
 	return(Status);
      }
-   KeInitializeEvent(&EventPair->LowEvent,
+   KeInitializeEvent(&EventPair->Event1,
 		     SynchronizationEvent,
 		     FALSE);
-   KeInitializeEvent(&EventPair->HighEvent,
+   KeInitializeEvent(&EventPair->Event2,
 		     SynchronizationEvent,
 		     FALSE);
    ObDereferenceObject(EventPair);
@@ -142,7 +140,7 @@ NtSetHighEventPair(IN HANDLE EventPairHandle)
    if (!NT_SUCCESS(Status))
      return(Status);
 
-   KeSetEvent(&EventPair->HighEvent,
+   KeSetEvent(&EventPair->Event2,
 	      EVENT_INCREMENT,
 	      FALSE);
 
@@ -169,11 +167,11 @@ NtSetHighWaitLowEventPair(IN HANDLE EventPairHandle)
    if (!NT_SUCCESS(Status))
      return(Status);
 
-   KeSetEvent(&EventPair->HighEvent,
+   KeSetEvent(&EventPair->Event2,
 	      EVENT_INCREMENT,
 	      FALSE);
 
-   KeWaitForSingleObject(&EventPair->LowEvent,
+   KeWaitForSingleObject(&EventPair->Event1,
 			 WrEventPair,
 			 UserMode,
 			 FALSE,
@@ -202,7 +200,7 @@ NtSetLowEventPair(IN HANDLE EventPairHandle)
    if (!NT_SUCCESS(Status))
      return(Status);
 
-   KeSetEvent(&EventPair->LowEvent,
+   KeSetEvent(&EventPair->Event1,
 	      EVENT_INCREMENT,
 	      FALSE);
 
@@ -229,11 +227,11 @@ NtSetLowWaitHighEventPair(IN HANDLE EventPairHandle)
    if (!NT_SUCCESS(Status))
      return(Status);
 
-   KeSetEvent(&EventPair->LowEvent,
+   KeSetEvent(&EventPair->Event1,
 	      EVENT_INCREMENT,
 	      FALSE);
 
-   KeWaitForSingleObject(&EventPair->HighEvent,
+   KeWaitForSingleObject(&EventPair->Event2,
 			 WrEventPair,
 			 UserMode,
 			 FALSE,
@@ -262,7 +260,7 @@ NtWaitLowEventPair(IN HANDLE EventPairHandle)
    if (!NT_SUCCESS(Status))
      return(Status);
 
-   KeWaitForSingleObject(&EventPair->LowEvent,
+   KeWaitForSingleObject(&EventPair->Event1,
 			 WrEventPair,
 			 UserMode,
 			 FALSE,
@@ -291,7 +289,7 @@ NtWaitHighEventPair(IN HANDLE EventPairHandle)
    if (!NT_SUCCESS(Status))
      return(Status);
 
-   KeWaitForSingleObject(&EventPair->HighEvent,
+   KeWaitForSingleObject(&EventPair->Event2,
 			 WrEventPair,
 			 UserMode,
 			 FALSE,

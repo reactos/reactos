@@ -1,5 +1,5 @@
-#include <msvcrt/float.h>
-#include <msvcrt/internal/tls.h>
+#include <msvcrti.h>
+
 
 int * __fpecode(void)
 {

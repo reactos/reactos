@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.13 2002/04/01 22:08:20 hbirr Exp $
+/* $Id: env.c,v 1.14 2002/09/07 15:12:27 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -9,9 +9,10 @@
  *                  Created 01/11/98
  */
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
+#include <kernel32.h>
 #include <windows.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 #include <wchar.h>
 #include <string.h>
 
@@ -217,7 +218,8 @@ STDCALL
 GetVersion(VOID)
 {
 	DWORD Version = 0;
-	OSVERSIONINFO VersionInformation;
+	OSVERSIONINFOW VersionInformation;
+
 	GetVersionExW(&VersionInformation);
 
 	Version |= ( VersionInformation.dwMajorVersion << 8 );
@@ -232,7 +234,7 @@ GetVersion(VOID)
 WINBOOL
 STDCALL
 GetVersionExW(
-    LPOSVERSIONINFO lpVersionInformation
+    LPOSVERSIONINFOW lpVersionInformation
     )
 {
 	lpVersionInformation->dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
@@ -248,7 +250,7 @@ GetVersionExW(
 WINBOOL
 STDCALL
 GetVersionExA(
-    LPOSVERSIONINFO lpVersionInformation
+    LPOSVERSIONINFOA lpVersionInformation
     )
 {
 	lpVersionInformation->dwOSVersionInfoSize = sizeof(OSVERSIONINFO);

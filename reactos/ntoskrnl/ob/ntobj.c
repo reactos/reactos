@@ -1,4 +1,4 @@
-/* $Id: ntobj.c,v 1.9 2002/08/14 20:58:38 dwelch Exp $
+/* $Id: ntobj.c,v 1.10 2002/09/07 15:13:04 chorns Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -11,12 +11,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ob.h>
-#include <internal/id.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* FUNCTIONS ************************************************************/
 
@@ -81,7 +80,7 @@ NtQueryObject (
   the different object types*/
 {
   POBJECT_NAME_INFORMATION nameinfo;
-  POBJECT_TYPE_INFORMATION typeinfo;
+  PROS_OBJECT_TYPE_INFORMATION typeinfo;
   PFILE_NAME_INFORMATION filenameinfo;
   PVOID		Object;
   NTSTATUS	Status;  
@@ -137,8 +136,8 @@ NtQueryObject (
       ObDereferenceObject(Object);
       return STATUS_NOT_IMPLEMENTED;
     case ObjectTypeInformation:
-      typeinfo = (POBJECT_TYPE_INFORMATION)ObjectInformation;
-      if (Length!=sizeof(OBJECT_TYPE_INFORMATION)) return STATUS_INVALID_BUFFER_SIZE;
+      typeinfo = (PROS_OBJECT_TYPE_INFORMATION)ObjectInformation;
+      if (Length!=sizeof(ROS_OBJECT_TYPE_INFORMATION)) return STATUS_INVALID_BUFFER_SIZE;
       
       // FIXME: Is this supposed to only be the header's Name field?
       // Can somebody check/verify this?

@@ -1,4 +1,4 @@
-/* $Id: largeint.c,v 1.7 1999/11/27 03:32:55 ekohl Exp $
+/* $Id: largeint.c,v 1.8 2002/09/07 15:12:40 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,11 +11,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 
 #define NDEBUG
-#include <ntdll/ntdll.h>
-
+#include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
 

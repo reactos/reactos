@@ -1,7 +1,4 @@
-#include <msvcrt/stdio.h>
-#include <msvcrt/locale.h>
-#include <msvcrt/string.h>
-#include <limits.h>
+#include <msvcrti.h>
 
 
 int _current_category;	/* used by setlocale */

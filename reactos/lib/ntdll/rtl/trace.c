@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: trace.c,v 1.1 2001/04/10 18:15:22 dwelch Exp $
+/* $Id: trace.c,v 1.2 2002/09/07 15:12:41 chorns Exp $
  *
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Tracing library calls
@@ -26,12 +26,13 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntdll/trace.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
 #include <string.h>
 #include <stdarg.h>
 
-#include <ntdll.h>
+#define NDEBUG
+#include <debug.h>
 
 /* GLOBALS *******************************************************************/
 

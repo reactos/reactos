@@ -1,4 +1,4 @@
-/* $Id: luid.c,v 1.3 2002/07/29 15:36:20 ekohl Exp $
+/* $Id: luid.c,v 1.4 2002/09/07 15:12:40 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -11,7 +11,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#define NTOS_USER_MODE
+#include <ntos.h>
+
+#define NDEBUG
+#include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
 
@@ -38,6 +42,7 @@ RtlCopyLuidAndAttributesArray(ULONG Count,
     }
 }
 
+#undef RtlEqualLuid
 
 BOOLEAN STDCALL
 RtlEqualLuid(PLUID Luid1,
