@@ -7,11 +7,11 @@
 #
 #
 #
-__putchar
-__goxy
-__wherex
-__wherey
-__getscreensize
+#__putchar
+#__goxy
+#__wherex
+#__wherey
+#__getscreensize
 DbgPrint
 ExAcquireFastMutex
 ExAcquireFastMutexUnsafe

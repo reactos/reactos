@@ -132,6 +132,11 @@ void HalSwitchToBlueScreen(void)
    cursorx=0;
    cursory=0;
 
+   outb_p(CRTC_COMMAND, CRTC_CURLO);
+   outb_p(CRTC_DATA, 0);
+   outb_p(CRTC_COMMAND, CRTC_CURHI);
+   outb_p(CRTC_DATA, 0);
+
    /*
     * This code section is taken from the sample routines by
     * Jeff Morgan (kinfira@hotmail.com)
@@ -184,6 +189,14 @@ void __putchar(char c)
      ;
    outb_p(SER_THR, c);
 #endif
+
+   outb_p(CRTC_COMMAND, CRTC_CURHI);
+   offset = inb_p(CRTC_DATA)<<8;
+   outb_p(CRTC_COMMAND, CRTC_CURLO);
+   offset += inb_p(CRTC_DATA);
+
+   cursory = offset / NR_COLUMNS;
+   cursorx = offset % NR_COLUMNS;
 
    switch(c)
      {
@@ -241,15 +254,13 @@ void __putchar(char c)
     * Set the cursor position
     */
    
-   offset = cursory * NR_COLUMNS;
-   offset = offset + cursorx;
-   
+   offset = (cursory * NR_COLUMNS) + cursorx;
+
    outb_p(CRTC_COMMAND, CRTC_CURLO);
    outb_p(CRTC_DATA, offset);
    outb_p(CRTC_COMMAND, CRTC_CURHI);
    offset >>= 8;
    outb_p(CRTC_DATA, offset);
-
 }
 
 asmlinkage void printk(const char* fmt, ...)
@@ -343,6 +354,7 @@ void HalInitConsole(boot_param* bp)
  *         bp = Parameters setup by the boot loader
  */
 {
+   int offset;
 
 #ifdef SERIAL_DEBUGGING
    /*  turn on DTR and RTS  */
@@ -354,33 +366,17 @@ void HalInitConsole(boot_param* bp)
    outb_p(SER_LCR, SERIAL_LINE_CONTROL);
 #endif
 
-        cursorx=bp->cursorx;
-        cursory=bp->cursory;
-}
+   /* Set cursor position */
 
+   cursorx=bp->cursorx;
+   cursory=bp->cursory;
 
-void __goxy(unsigned x, unsigned y)
-{
- 
-  cursorx = x;
-  cursory = y;
-
-}
-
-unsigned __wherex (void)
-{
-   return cursorx;
-}
-
-
-unsigned __wherey (void)
-{
-   return cursory;
-}
-
-void __getscreensize (unsigned *maxx, unsigned *maxy)
-{
-  
-    *maxx = (unsigned)(NR_COLUMNS);
-    *maxy = (unsigned)(NR_ROWS);
+#if 0
+   offset = (cursory * NR_COLUMNS) + cursorx;
+   outb_p(CRTC_COMMAND, CRTC_CURLO);
+   outb_p(CRTC_DATA, offset);
+   outb_p(CRTC_COMMAND, CRTC_CURHI);
+   offset >>= 8;
+   outb_p(CRTC_DATA, offset);
+#endif
 }

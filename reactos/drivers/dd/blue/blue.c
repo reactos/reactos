@@ -122,9 +122,8 @@ NTSTATUS ScrCreate (PDEVICE_OBJECT DeviceObject, PIRP Irp)
     outb_p (CRTC_DATA, 0x07);
     __asm__("sti\n\t");
 
-
     Status = STATUS_SUCCESS;
- 
+
     Irp->IoStatus.Status = Status;
     IoCompleteRequest (Irp, IO_NO_INCREMENT);
 
@@ -144,11 +143,9 @@ NTSTATUS ScrWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
     DeviceExtension = DeviceObject->DeviceExtension;
     vidmem  = DeviceExtension->VideoMemory;
-//    cursorx = DeviceExtension->CursorX;
-//    cursory = DeviceExtension->CursorY;
-   cursorx = __wherex();
-   cursory = __wherey();
-   
+    cursorx = DeviceExtension->CursorX;
+    cursory = DeviceExtension->CursorY;
+
     for (i = 0; i < stk->Parameters.Write.Length; i++, pch++)
     {
         switch (*pch)
@@ -221,7 +218,6 @@ NTSTATUS ScrWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
 
     /* Set the cursor position */
-  
     offset = (cursory * NR_COLUMNS) + cursorx;
    
     outb_p (CRTC_COMMAND, CRTC_CURSORPOSLO);
@@ -230,10 +226,8 @@ NTSTATUS ScrWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
     offset >>= 8;
     outb_p (CRTC_DATA, offset);
 
-//    DeviceExtension->CursorX = cursorx;
-//    DeviceExtension->CursorY = cursory;
-   __goxy(cursorx, cursory);
-
+    DeviceExtension->CursorX = cursorx;
+    DeviceExtension->CursorY = cursory;
 
     Status = STATUS_SUCCESS;
    
