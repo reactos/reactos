@@ -425,7 +425,7 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		break;
 
 	  case PM_SELECT_ENTRY:
-		SelectButtonIndex(0, wparam?true:false);
+		SelectButtonIndex(0, wparam!=0);
 		break;
 
 #ifdef _LIGHT_STARTMENU

@@ -1,5 +1,5 @@
 /*
- * Copyright 2003, 2004 Martin Fuchs
+ * Copyright 2003, 2004, 2005 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -42,10 +42,11 @@ int CollectProgramsThread::Run()
 	} catch(COMException&) {
 	}
 
-	try {
-		collect_programs(SpecialFolderPath(CSIDL_PROGRAMS, _hwnd));
-	} catch(COMException&) {
-	}
+	if (_alive)
+		try {
+			collect_programs(SpecialFolderPath(CSIDL_PROGRAMS, _hwnd));
+		} catch(COMException&) {
+		}
 
 	if (_alive)
 		_cache_valid = true;
@@ -60,16 +61,13 @@ void CollectProgramsThread::collect_programs(const ShellPath& path)
 
 	dir->smart_scan(SORT_NONE, /*SCAN_EXTRACT_ICONS|*/SCAN_FILESYSTEM);
 
-	for(Entry*entry=dir->_down; entry; entry=entry->_next) {
-		if (!_alive)
-			break;
-
+	for(Entry*entry=dir->_down; _alive && entry; entry=entry->_next) {
 		if (entry->_shell_attribs & SFGAO_HIDDEN)
 			continue;
 
-		if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+		if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 			collect_programs(entry->create_absolute_pidl());
-		} else if (entry->_shell_attribs & SFGAO_LINK)
+		else if (entry->_shell_attribs & SFGAO_LINK)
 			if (_alive)
 				_callback(entry, _para);
 	}
@@ -139,6 +137,8 @@ FindProgramDlg::FindProgramDlg(HWND hwnd)
 
 FindProgramDlg::~FindProgramDlg()
 {
+	_thread.Stop();
+
 	unregister_pretranslate(_hwnd);
 }
 
@@ -262,6 +262,10 @@ void FindProgramDlg::add_entry(const FPDEntry& cache_entry)
 LRESULT FindProgramDlg::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	switch(nmsg) {
+	  case WM_CLOSE:
+		ListView_SetImageList(_list_ctrl, 0, LVSIL_SMALL);	// detach system image list
+		goto def;
+
 	  case PM_TRANSLATE_MSG: {
 		MSG* pmsg = (MSG*) lparam;
 
@@ -270,7 +274,7 @@ LRESULT FindProgramDlg::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 		return FALSE;}
 
-	  default:
+	  default: def:
 		return super::WndProc(nmsg, wparam, lparam);
 	}
 

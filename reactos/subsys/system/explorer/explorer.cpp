@@ -387,7 +387,7 @@ const Icon& IconCache::extract(const String& path)
 
 	SHFILEINFO sfi;
 
-#if 1	// use system image list
+#if 1	// use system image list - the "search program dialog" needs it
 	HIMAGELIST himlSys = (HIMAGELIST) SHGetFileInfo(path, 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX|SHGFI_SMALLICON);
 
 	if (himlSys) {
