@@ -105,6 +105,11 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
           MsqDecPaintCountQueue(Window->MessageQueue);
           IntUnLockWindowUpdate(Window);
           IntSendMessage(hWnd, WM_NCPAINT, (WPARAM)TempRegion, 0);
+          if ((HANDLE) 1 != TempRegion && NULL != TempRegion)
+            {
+              /* NOTE: The region can already be deleted! */
+              GDIOBJ_FreeObj(TempRegion, GDI_OBJECT_TYPE_REGION | GDI_OBJECT_TYPE_SILENT);
+            }
         }
 
       if (Window->Flags & WINDOWOBJECT_NEED_ERASEBKGND)
@@ -630,29 +635,9 @@ IntGetPaintMessage(HWND hWnd, UINT MsgFilterMin, UINT MsgFilterMax,
    if (Window != NULL)
    {
       IntLockWindowUpdate(Window);
-      if (0 != (Window->Flags & WINDOWOBJECT_NEED_NCPAINT)
-          && ((0 == MsgFilterMin && 0 == MsgFilterMax) ||
-              (MsgFilterMin <= WM_NCPAINT &&
-               WM_NCPAINT <= MsgFilterMax)))
-      {
-         Message->message = WM_NCPAINT;
-         Message->wParam = (WPARAM)Window->NCUpdateRegion;
-         Message->lParam = 0;
-         if (Remove)
-         {
-            if ((HANDLE) 1 != Window->NCUpdateRegion &&
-                NULL != Window->NCUpdateRegion)
-              {
-                GDIOBJ_SetOwnership(Window->NCUpdateRegion, PsGetCurrentProcess());
-              }
-            IntValidateParent(Window, Window->NCUpdateRegion);
-            Window->NCUpdateRegion = NULL;
-            Window->Flags &= ~WINDOWOBJECT_NEED_NCPAINT;
-            MsqDecPaintCountQueue(Window->MessageQueue);
-         }
-      } else if ((0 == MsgFilterMin && 0 == MsgFilterMax) ||
-                 (MsgFilterMin <= WM_PAINT &&
-                  WM_PAINT <= MsgFilterMax))
+
+      if ((MsgFilterMin == 0 && MsgFilterMax == 0) ||
+          (MsgFilterMin <= WM_PAINT && WM_PAINT <= MsgFilterMax))
       {
          Message->message = WM_PAINT;
          Message->wParam = Message->lParam = 0;
@@ -737,6 +722,28 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
 
    NtUserHideCaret(hWnd);
 
+   if (Window->Flags & WINDOWOBJECT_NEED_NCPAINT)
+   {
+      HRGN hRgn;
+
+      if (Window->NCUpdateRegion != (HANDLE)1 &&
+          Window->NCUpdateRegion != NULL)
+      {
+         GDIOBJ_SetOwnership(Window->NCUpdateRegion, PsGetCurrentProcess());
+      }
+      hRgn = Window->NCUpdateRegion;
+      IntValidateParent(Window, Window->NCUpdateRegion);
+      Window->NCUpdateRegion = NULL;
+      Window->Flags &= ~WINDOWOBJECT_NEED_NCPAINT;
+      MsqDecPaintCountQueue(Window->MessageQueue);
+      IntSendMessage(hWnd, WM_NCPAINT, (WPARAM)hRgn, 0);
+      if (hRgn != (HANDLE)1 && hRgn != NULL)
+      {
+         /* NOTE: The region can already by deleted! */
+         GDIOBJ_FreeObj(hRgn, GDI_OBJECT_TYPE_REGION | GDI_OBJECT_TYPE_SILENT);
+      }
+   }
+
    RtlZeroMemory(&Ps, sizeof(PAINTSTRUCT));
    Ps.hdc = NtUserGetDCEx(hWnd, 0, DCX_INTERSECTUPDATE | DCX_WINDOWPAINT |
       DCX_USESTYLE);
@@ -754,17 +761,17 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
       IntValidateParent(Window, Window->UpdateRegion);
       Rgn = RGNDATA_LockRgn(Window->UpdateRegion);
       if (NULL != Rgn)
-        {
-          UnsafeIntGetRgnBox(Rgn, &Ps.rcPaint);
-          RGNDATA_UnlockRgn(Window->UpdateRegion);
-          IntGdiOffsetRect(&Ps.rcPaint,
-                           Window->WindowRect.left - Window->ClientRect.left,
-                           Window->WindowRect.top - Window->ClientRect.top);
-        }
+      {
+         UnsafeIntGetRgnBox(Rgn, &Ps.rcPaint);
+         RGNDATA_UnlockRgn(Window->UpdateRegion);
+         IntGdiOffsetRect(&Ps.rcPaint,
+                          Window->WindowRect.left - Window->ClientRect.left,
+                          Window->WindowRect.top - Window->ClientRect.top);
+      }
       else
-        {
-          IntGetClientRect(Window, &Ps.rcPaint);
-        }
+      {
+         IntGetClientRect(Window, &Ps.rcPaint);
+      }
       GDIOBJ_SetOwnership(Window->UpdateRegion, PsGetCurrentProcess());
       NtGdiDeleteObject(Window->UpdateRegion);
       Window->UpdateRegion = NULL;

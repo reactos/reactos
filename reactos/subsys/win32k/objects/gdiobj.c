@@ -467,6 +467,7 @@ GDIOBJ_FreeObj(HGDIOBJ hObj, DWORD ObjectType)
   PPAGED_LOOKASIDE_LIST LookasideList;
   HANDLE ProcessId, LockedProcessId, PrevProcId;
   LONG ExpectedType;
+  BOOL Silent;
 #ifdef GDI_DEBUG
   ULONG Attempts = 0;
 #endif
@@ -484,6 +485,9 @@ GDIOBJ_FreeObj(HGDIOBJ hObj, DWORD ObjectType)
 
   ProcessId = PsGetCurrentProcessId();
   LockedProcessId = (HANDLE)((ULONG_PTR)ProcessId | 0x1);
+
+  Silent = (ObjectType & GDI_OBJECT_TYPE_SILENT);
+  ObjectType &= ~GDI_OBJECT_TYPE_SILENT;
 
   ExpectedType = ((ObjectType != GDI_OBJECT_TYPE_DONTCARE) ? ObjectType : 0);
 
@@ -577,17 +581,20 @@ LockHandle:
   }
   else
   {
-    if(((ULONG_PTR)PrevProcId & 0x1) == 0)
+    if(!Silent)
     {
-      DPRINT1("Attempted to free global gdi handle 0x%x, caller needs to get ownership first!!!", hObj);
-    }
-    else
-    {
-      DPRINT1("Attempted to free foreign handle: 0x%x Owner: 0x%x from Caller: 0x%x\n", hObj, (ULONG_PTR)PrevProcId & ~0x1, (ULONG_PTR)ProcessId & ~0x1);
-    }
+      if(((ULONG_PTR)PrevProcId & ~0x1) == 0)
+      {
+        DPRINT1("Attempted to free global gdi handle 0x%x, caller needs to get ownership first!!!\n", hObj);
+      }
+      else
+      {
+        DPRINT1("Attempted to free foreign handle: 0x%x Owner: 0x%x from Caller: 0x%x\n", hObj, (ULONG_PTR)PrevProcId & ~0x1, (ULONG_PTR)ProcessId & ~0x1);
+      }
 #ifdef GDI_DEBUG
-    DPRINT1("-> called from %s:%i\n", file, line);
+      DPRINT1("-> called from %s:%i\n", file, line);
 #endif
+    }
   }
 
   return FALSE;
