@@ -33,8 +33,6 @@
  *   TCM_GETEXTENDEDSTYLE
  *   TCM_SETEXTENDEDSTYLE
  *
- * FIXME:
- *  UpDown control not displayed until after a tab is clicked on
  */
 
 #include <stdarg.h>
@@ -107,7 +105,7 @@ typedef struct
 #define CONTROL_BORDER_SIZEX    2
 #define CONTROL_BORDER_SIZEY    2
 #define BUTTON_SPACINGX         3
-#define BUTTON_SPACINGY         4
+#define BUTTON_SPACINGY         3
 #define FLAT_BTN_SPACINGX       8
 #define DEFAULT_TAB_WIDTH       96
 
@@ -327,40 +325,29 @@ static BOOL TAB_InternalGetItemRect(
   /* calculate the times bottom and top based on the row */
   GetClientRect(hwnd, &clientRect);
 
-  if ((lStyle & TCS_BOTTOM) && !(lStyle & TCS_VERTICAL))
+  if ((lStyle & TCS_BOTTOM) && (lStyle & TCS_VERTICAL))
   {
-    itemRect->bottom = clientRect.bottom -
-                   itemRect->top * (infoPtr->tabHeight - 2) -
-                   ((lStyle & TCS_BUTTONS) ? itemRect->top * BUTTON_SPACINGY : SELECTED_TAB_OFFSET);
-
-    itemRect->top = clientRect.bottom -
-                   infoPtr->tabHeight -
-                   itemRect->top * (infoPtr->tabHeight - 2) -
-                   ((lStyle & TCS_BUTTONS) ? itemRect->top * BUTTON_SPACINGY : SELECTED_TAB_OFFSET);
+    itemRect->right  = clientRect.right - SELECTED_TAB_OFFSET - itemRect->left * infoPtr->tabHeight -
+                       ((lStyle & TCS_BUTTONS) ? itemRect->left * BUTTON_SPACINGX : 0);
+    itemRect->left   = itemRect->right - infoPtr->tabHeight;
   }
-  else if((lStyle & TCS_BOTTOM) && (lStyle & TCS_VERTICAL))
+  else if (lStyle & TCS_VERTICAL)
   {
-    itemRect->right = clientRect.right - SELECTED_TAB_OFFSET - itemRect->left * (infoPtr->tabHeight - 2) -
-                      ((lStyle & TCS_BUTTONS) ? itemRect->left * BUTTON_SPACINGY : 0);
-    itemRect->left = clientRect.right - infoPtr->tabHeight - itemRect->left * (infoPtr->tabHeight - 2) -
-                      ((lStyle & TCS_BUTTONS) ? itemRect->left * BUTTON_SPACINGY : 0);
+    itemRect->left   = clientRect.left + SELECTED_TAB_OFFSET + itemRect->left * infoPtr->tabHeight +
+                       ((lStyle & TCS_BUTTONS) ? itemRect->left * BUTTON_SPACINGX : 0);
+    itemRect->right  = itemRect->left + infoPtr->tabHeight;
   }
-  else if((lStyle & TCS_VERTICAL) && !(lStyle & TCS_BOTTOM))
+  else if (lStyle & TCS_BOTTOM)
   {
-    itemRect->right = clientRect.left + infoPtr->tabHeight + itemRect->left * (infoPtr->tabHeight - 2) +
-                      ((lStyle & TCS_BUTTONS) ? itemRect->left * BUTTON_SPACINGY : 0);
-    itemRect->left = clientRect.left + SELECTED_TAB_OFFSET + itemRect->left * (infoPtr->tabHeight - 2) +
-                      ((lStyle & TCS_BUTTONS) ? itemRect->left * BUTTON_SPACINGY : 0);
+    itemRect->bottom = clientRect.bottom - itemRect->top * infoPtr->tabHeight -
+                       ((lStyle & TCS_BUTTONS) ? itemRect->top * BUTTON_SPACINGY : SELECTED_TAB_OFFSET);
+    itemRect->top    = itemRect->bottom - infoPtr->tabHeight;
   }
-  else if(!(lStyle & TCS_VERTICAL) && !(lStyle & TCS_BOTTOM)) /* not TCS_BOTTOM and not TCS_VERTICAL */
+  else /* not TCS_BOTTOM and not TCS_VERTICAL */
   {
-    itemRect->bottom = clientRect.top +
-                      infoPtr->tabHeight +
-                      itemRect->top * (infoPtr->tabHeight - 2) +
-                      ((lStyle & TCS_BUTTONS) ? itemRect->top * BUTTON_SPACINGY : SELECTED_TAB_OFFSET);
-    itemRect->top = clientRect.top +
-                   itemRect->top * (infoPtr->tabHeight - 2) +
-                   ((lStyle & TCS_BUTTONS) ? itemRect->top * BUTTON_SPACINGY : SELECTED_TAB_OFFSET);
+    itemRect->top    = clientRect.top + itemRect->top * infoPtr->tabHeight +
+                       ((lStyle & TCS_BUTTONS) ? itemRect->top * BUTTON_SPACINGY : SELECTED_TAB_OFFSET);
+    itemRect->bottom = itemRect->top + infoPtr->tabHeight;
  }
 
   /*
@@ -371,7 +358,7 @@ static BOOL TAB_InternalGetItemRect(
   {
     OffsetRect(itemRect,
 	     0,
-	     -(clientRect.bottom - infoPtr->items[infoPtr->leftmostVisible].rect.bottom));
+	     -infoPtr->items[infoPtr->leftmostVisible].rect.top);
 
     /*
      * Move the rectangle so the first item is slightly offset from
@@ -379,7 +366,7 @@ static BOOL TAB_InternalGetItemRect(
      */
     OffsetRect(itemRect,
 	     0,
-	     -SELECTED_TAB_OFFSET);
+	     SELECTED_TAB_OFFSET);
 
   } else
   {
@@ -411,23 +398,23 @@ static BOOL TAB_InternalGetItemRect(
       InflateRect(selectedRect, SELECTED_TAB_OFFSET, 0);
 
     /* If it also a bit higher. */
-    if ((lStyle & TCS_BOTTOM) && !(lStyle & TCS_VERTICAL))
+    if ((lStyle & TCS_BOTTOM) && (lStyle & TCS_VERTICAL))
+    {
+      selectedRect->left   -= 2; /* the border is thicker on the right */
+      selectedRect->right  += SELECTED_TAB_OFFSET;
+    }
+    else if (lStyle & TCS_VERTICAL)
+    {
+      selectedRect->left   -= SELECTED_TAB_OFFSET;
+      selectedRect->right  += 1;
+    }
+    else if (lStyle & TCS_BOTTOM)
     {
       selectedRect->bottom += SELECTED_TAB_OFFSET;
     }
-    else if((lStyle & TCS_BOTTOM) && (lStyle & TCS_VERTICAL))
+    else /* not TCS_BOTTOM and not TCS_VERTICAL */
     {
-      selectedRect->left -= 2; /* the border is thicker on the right */
-      selectedRect->right += SELECTED_TAB_OFFSET;
-    }
-    else if(lStyle & TCS_VERTICAL)
-    {
-      selectedRect->left -= SELECTED_TAB_OFFSET;
-      selectedRect->right += 1;
-    }
-    else
-    {
-      selectedRect->top -= SELECTED_TAB_OFFSET;
+      selectedRect->top    -= SELECTED_TAB_OFFSET;
       selectedRect->bottom -= 1;
     }
   }
@@ -853,72 +840,53 @@ static LRESULT TAB_AdjustRect(
   WPARAM fLarger,
   LPRECT prc)
 {
-  TAB_INFO *infoPtr = TAB_GetInfoPtr(hwnd);
-  DWORD lStyle = GetWindowLongA(hwnd, GWL_STYLE);
+    TAB_INFO *infoPtr = TAB_GetInfoPtr(hwnd);
+    DWORD lStyle = GetWindowLongA(hwnd, GWL_STYLE);
+    LONG *iRightBottom, *iLeftTop;
 
-  if(lStyle & TCS_VERTICAL)
-  {
+    TRACE ("hwnd=%p fLarger=%d (%ld,%ld)-(%ld,%ld)\n", hwnd, fLarger, prc->left, prc->top, prc->right, prc->bottom);
+
+    if(lStyle & TCS_VERTICAL)
+    {
+	iRightBottom = &(prc->right);
+	iLeftTop     = &(prc->left);
+    }
+    else
+    {
+	iRightBottom = &(prc->bottom);
+	iLeftTop     = &(prc->top);
+    }
+
     if (fLarger) /* Go from display rectangle */
     {
-      /* Add the height of the tabs. */
-      if (lStyle & TCS_BOTTOM)
-        prc->right += (infoPtr->tabHeight - 2) * infoPtr->uNumRows + 2;
-      else
-        prc->left -= (infoPtr->tabHeight - 2) * infoPtr->uNumRows + 2;
+        /* Add the height of the tabs. */
+	if (lStyle & TCS_BOTTOM)
+	    *iRightBottom += infoPtr->tabHeight * infoPtr->uNumRows;
+	else
+	    *iLeftTop -= infoPtr->tabHeight * infoPtr->uNumRows +
+			 ((lStyle & TCS_BUTTONS)? 3 * (infoPtr->uNumRows - 1) : 0);
 
-      /* FIXME: not sure if these InflateRect's need to have different values for TCS_VERTICAL */
-      /* Inflate the rectangle for the padding */
-      InflateRect(prc, DISPLAY_AREA_PADDINGX, DISPLAY_AREA_PADDINGY);
+	/* Inflate the rectangle for the padding */
+	InflateRect(prc, DISPLAY_AREA_PADDINGX, DISPLAY_AREA_PADDINGY); 
 
-      /* Inflate for the border */
-      InflateRect(prc, CONTROL_BORDER_SIZEX, CONTROL_BORDER_SIZEX);
+	/* Inflate for the border */
+	InflateRect(prc, CONTROL_BORDER_SIZEX, CONTROL_BORDER_SIZEY);
     }
     else /* Go from window rectangle. */
     {
-      /* FIXME: not sure if these InflateRect's need to have different values for TCS_VERTICAL */
-      /* Deflate the rectangle for the border */
-      InflateRect(prc, -CONTROL_BORDER_SIZEX, -CONTROL_BORDER_SIZEX);
+	/* Deflate the rectangle for the border */
+	InflateRect(prc, -CONTROL_BORDER_SIZEX, -CONTROL_BORDER_SIZEY);
 
-      /* Deflate the rectangle for the padding */
-      InflateRect(prc, -DISPLAY_AREA_PADDINGX, -DISPLAY_AREA_PADDINGY);
+	/* Deflate the rectangle for the padding */
+	InflateRect(prc, -DISPLAY_AREA_PADDINGX, -DISPLAY_AREA_PADDINGY);
 
-      /* Remove the height of the tabs. */
-      if (lStyle & TCS_BOTTOM)
-        prc->right -= (infoPtr->tabHeight - 2) * infoPtr->uNumRows + 2;
-      else
-        prc->left += (infoPtr->tabHeight - 2) * infoPtr->uNumRows + 2;
+	/* Remove the height of the tabs. */
+	if (lStyle & TCS_BOTTOM)
+	    *iRightBottom -= infoPtr->tabHeight * infoPtr->uNumRows;
+	else
+	    *iLeftTop += (infoPtr->tabHeight) * infoPtr->uNumRows +
+			 ((lStyle & TCS_BUTTONS)? 3 * (infoPtr->uNumRows - 1) : 0);
     }
-  }
-  else {
-    if (fLarger) /* Go from display rectangle */
-    {
-      /* Add the height of the tabs. */
-      if (lStyle & TCS_BOTTOM)
-        prc->bottom += (infoPtr->tabHeight - 2) * infoPtr->uNumRows + 2;
-      else
-        prc->top -= (infoPtr->tabHeight - 2) * infoPtr->uNumRows + 2;
-
-      /* Inflate the rectangle for the padding */
-      InflateRect(prc, DISPLAY_AREA_PADDINGX, DISPLAY_AREA_PADDINGY);
-
-      /* Inflate for the border */
-      InflateRect(prc, CONTROL_BORDER_SIZEX, CONTROL_BORDER_SIZEX);
-    }
-    else /* Go from window rectangle. */
-    {
-      /* Deflate the rectangle for the border */
-      InflateRect(prc, -CONTROL_BORDER_SIZEX, -CONTROL_BORDER_SIZEX);
-
-      /* Deflate the rectangle for the padding */
-      InflateRect(prc, -DISPLAY_AREA_PADDINGX, -DISPLAY_AREA_PADDINGY);
-
-      /* Remove the height of the tabs. */
-      if (lStyle & TCS_BOTTOM)
-        prc->bottom -= (infoPtr->tabHeight - 2) * infoPtr->uNumRows + 2;
-      else
-        prc->top += (infoPtr->tabHeight - 2) * infoPtr->uNumRows + 2;
-    }
-  }
 
   return 0;
 }
@@ -1147,7 +1115,7 @@ static void TAB_SetItemBounds (HWND hwnd)
      * Make sure there is enough space for the letters + icon + growing the
      * selected item + extra space for the selected item.
      */
-    infoPtr->tabHeight = item_height + SELECTED_TAB_OFFSET +
+    infoPtr->tabHeight = item_height + 
 	                 ((lStyle & TCS_BUTTONS) ? 2 : 1) *
                           infoPtr->uVItemPadding;
 
@@ -1201,12 +1169,13 @@ static void TAB_SetItemBounds (HWND hwnd)
      * Check if this is a multiline tab control and if so
      * check to see if we should wrap the tabs
      *
-     * Wrap all these tabs. We will arange them evenly later.
+     * Wrap all these tabs. We will arrange them evenly later.
      *
      */
 
     if (((lStyle & TCS_MULTILINE) || (lStyle & TCS_VERTICAL)) &&
-        (infoPtr->items[curItem].rect.right > clientRect.right))
+        (infoPtr->items[curItem].rect.right > 
+	(clientRect.right - CONTROL_BORDER_SIZEX - DISPLAY_AREA_PADDINGX)))
     {
         infoPtr->items[curItem].rect.right -=
                                       infoPtr->items[curItem].rect.left;
@@ -1268,7 +1237,7 @@ static void TAB_SetItemBounds (HWND hwnd)
   /* Set the number of rows */
   infoPtr->uNumRows = curItemRowCount;
 
-  /* Arange all tabs evenly if style says so */
+  /* Arrange all tabs evenly if style says so */
    if (!(lStyle & TCS_RAGGEDRIGHT) &&  ((lStyle & TCS_MULTILINE) || (lStyle & TCS_VERTICAL)) && (infoPtr->uNumItem > 0))
    {
       INT tabPerRow,remTab;
@@ -1302,17 +1271,6 @@ static void TAB_SetItemBounds (HWND hwnd)
           /* if we have reached the maximum number of tabs on this row */
           /* move to the next row, reset our current item left position and */
           /* the count of items on this row */
-
-	  /* ************  FIXME FIXME FIXME  *************** */
-	  /*                                                  */
-	  /* FIXME:                                           */
-	  /* if vertical,                                     */
-	  /*   if item n and n+1 are in the same row,         */
-	  /*      then the display has n+1 lower (toward the  */
-	  /*      bottom) than n. We do it just the           */
-	  /*      opposite!!!                                 */
-	  /*                                                  */
-	  /* ************  FIXME FIXME FIXME  *************** */
 
 	  if (lStyle & TCS_VERTICAL) {
 	      /* Vert: Add the remaining tabs in the *last* remainder rows */
@@ -1429,8 +1387,8 @@ static void TAB_SetItemBounds (HWND hwnd)
 
       rcOriginal = *rcItem;
 
-      /* this is rotating the items by 90 degrees around the center of the control */
-      rcItem->top = (clientRect.right - (rcOriginal.left - clientRect.left)) - (rcOriginal.right - rcOriginal.left);
+      /* this is rotating the items by 90 degrees clockwise around the center of the control */
+      rcItem->top = (rcOriginal.left - clientRect.left);
       rcItem->bottom = rcItem->top + (rcOriginal.right - rcOriginal.left);
       rcItem->left = rcOriginal.top;
       rcItem->right = rcOriginal.bottom;
@@ -1533,7 +1491,7 @@ TAB_DrawItemInterior
   INT    oldBkMode;
   HFONT  hOldFont;
   
-  if (drawRect == NULL)
+/*  if (drawRect == NULL) */
   {
     BOOL isVisible;
     RECT itemRect;
@@ -1557,40 +1515,75 @@ TAB_DrawItemInterior
      * would have liked to avoid code duplication, but couldn't figure
      * out how without making spaghetti of TAB_DrawItem.
      */
+    if (iItem == infoPtr->iSelected)
+      *drawRect = selectedRect;
+    else
+      *drawRect = itemRect;
+        
     if (lStyle & TCS_BUTTONS)
     {
-      *drawRect = itemRect;
       if (iItem == infoPtr->iSelected)
       {
-	OffsetRect(drawRect, 1, 1);
+	drawRect->left   += 4;
+	drawRect->top    += 4;
+	drawRect->right  -= 4;
+	drawRect->bottom -= 1;
+      }
+      else
+      {
+	drawRect->left   += 2;
+	drawRect->top    += 2;
+	drawRect->right  -= 2;
+	drawRect->bottom -= 2;
       }
     }
     else
     {
-      if (iItem == infoPtr->iSelected)
+      if ((lStyle & TCS_VERTICAL) && (lStyle & TCS_BOTTOM))
       {
-        *drawRect = selectedRect;
-	if (lStyle & TCS_BOTTOM)
+        if (iItem != infoPtr->iSelected)
 	{
-	  if (lStyle & TCS_VERTICAL)
-	  {
-	    drawRect->left++;
-	  }
-	  else
-	  {
-	    drawRect->top += 3;
-	    drawRect->left += 1;
-	  }
+	  drawRect->left   += 2;
+	  drawRect->top    += 2;
+	  drawRect->bottom -= 2;
+	}
+      }
+      else if (lStyle & TCS_VERTICAL)
+      {
+        if (iItem == infoPtr->iSelected)
+	{
+	  drawRect->right  += 1;
+	}
+	else
+	{
+	  drawRect->top    += 2;
+	  drawRect->right  -= 2;
+	  drawRect->bottom -= 2;
+	}
+      }
+      else if (lStyle & TCS_BOTTOM)
+      {
+        if (iItem == infoPtr->iSelected)
+	{
+	  drawRect->top    -= 2;
+	}
+	else
+	{
+	  InflateRect(drawRect, -2, -2);
+          drawRect->bottom += 2;
 	}
       }
       else
-        *drawRect = itemRect;
-
-
-      if (lStyle & TCS_BOTTOM && !(lStyle & TCS_VERTICAL))
       {
-        drawRect->top--;
-        drawRect->bottom--;
+        if (iItem == infoPtr->iSelected)
+	{
+	  drawRect->bottom += 3;
+	}
+	else
+	{
+	  drawRect->bottom -= (infoPtr->items[iItem].rect.top != infoPtr->uNumRows-1)? 2:2;
+	  InflateRect(drawRect, -2, 0);
+	}
       }
     }
   }
@@ -1661,7 +1654,6 @@ TAB_DrawItemInterior
     dis.hwndItem = hwnd;		/* */
     dis.hDC      = hdc;
     CopyRect(&dis.rcItem,drawRect);
-    InflateRect(&dis.rcItem, -2, -2);
     dis.itemData = infoPtr->items[iItem].lParam;
 
     /*
@@ -1716,6 +1708,9 @@ TAB_DrawItemInterior
 
       if (center_offset_h < 2)
         center_offset_h = 2;
+	
+      if (center_offset_v < 0)
+        center_offset_v = 0;
 	
       TRACE("for <%s>, c_o_h=%d, c_o_v=%d, draw=(%ld,%ld)-(%ld,%ld), textlen=%ld\n",
 	  debugstr_w(infoPtr->items[iItem].pszText), center_offset_h, center_offset_v,
@@ -1773,13 +1768,21 @@ TAB_DrawItemInterior
       else
         drawRect->bottom-=center_offset_h;
 
-      drawRect->left += ((drawRect->right - drawRect->left) - ((rcText.bottom - rcText.top) + infoPtr->uVItemPadding)) / 2;
+      center_offset_v = ((drawRect->right - drawRect->left) - ((rcText.bottom - rcText.top) + infoPtr->uVItemPadding)) / 2;
     }
     else
     {
       drawRect->left += center_offset_h;
-      drawRect->top += ((drawRect->bottom - drawRect->top) - ((rcText.bottom - rcText.top) + infoPtr->uVItemPadding)) / 2;
+      center_offset_v = ((drawRect->bottom - drawRect->top) - ((rcText.bottom - rcText.top) + infoPtr->uVItemPadding)) / 2;
     }
+
+    if (center_offset_v < 0)
+      center_offset_v = 0;
+
+    if(lStyle & TCS_VERTICAL)
+      drawRect->left += center_offset_v;
+    else
+      drawRect->top += center_offset_v;
 
     /* Draw the text */
     if(lStyle & TCS_VERTICAL) /* if we are vertical rotate the text and each character */
@@ -1830,6 +1833,10 @@ TAB_DrawItemInterior
     }
     else
     {
+      TRACE("for <%s>, c_o_h=%d, c_o_v=%d, draw=(%ld,%ld)-(%ld,%ld), textlen=%ld\n",
+	  debugstr_w(infoPtr->items[iItem].pszText), center_offset_h, center_offset_v,
+	  drawRect->left, drawRect->top, drawRect->right, drawRect->bottom,
+	  (rcText.right-rcText.left));
       DrawTextW
       (
         hdc,
@@ -1958,10 +1965,10 @@ static void TAB_DrawItem(
 
 	    /* if leftmost draw the line longer */
 	    if(selectedRect.top == 0)
-		fillRect.top += 2;
+		fillRect.top += CONTROL_BORDER_SIZEY;
 	    /* if rightmost draw the line longer */
 	    if(selectedRect.bottom == clBottom)
-		fillRect.bottom -= 2;
+		fillRect.bottom -= CONTROL_BORDER_SIZEY;
 	}
 
         if (lStyle & TCS_BOTTOM)
@@ -1969,7 +1976,7 @@ static void TAB_DrawItem(
 	  /* Adjust both rectangles to match native */
 	  r.left += (1-ZZ);
 
-	  TRACE("<left> item=%d, fill=(%ld,%ld)-(%ld,%ld), edge=(%ld,%ld)-(%ld,%ld)\n",
+	  TRACE("<right> item=%d, fill=(%ld,%ld)-(%ld,%ld), edge=(%ld,%ld)-(%ld,%ld)\n",
 		iItem,
 		fillRect.left,fillRect.top,fillRect.right,fillRect.bottom,
 		r.left,r.top,r.right,r.bottom);
@@ -2010,9 +2017,6 @@ static void TAB_DrawItem(
         }
         else
         {
-	  /* Adjust both rectangles to match native */
-	  fillRect.right += (1-ZZ);
-
 	  TRACE("<left> item=%d, fill=(%ld,%ld)-(%ld,%ld), edge=(%ld,%ld)-(%ld,%ld)\n",
 		iItem,
 		fillRect.left,fillRect.top,fillRect.right,fillRect.bottom,
@@ -2049,26 +2053,23 @@ static void TAB_DrawItem(
       {
 	/* These are for adjusting the drawing of a Selected tab      */
 	/* The initial values are for the normal case of non-Selected */
-	int ZZ = 1;   /* Do not strech if selected */
 	if (iItem == infoPtr->iSelected) {
-	    ZZ = 0;
-
 	    /* if leftmost draw the line longer */
 	    if(selectedRect.left == 0)
-		fillRect.left += 2;
+		fillRect.left += CONTROL_BORDER_SIZEX;
 	    /* if rightmost draw the line longer */
 	    if(selectedRect.right == clRight)
-		fillRect.right -= 2;
+		fillRect.right -= CONTROL_BORDER_SIZEX;
 	}
 
         if (lStyle & TCS_BOTTOM)
         {
-
-	  /* Adjust both rectangles to match native */
-	  fillRect.top--;
-	  fillRect.bottom--;
-	  r.bottom--;
-	  r.top -= ZZ;
+	  /* Adjust both rectangles for topmost row */
+	  if (infoPtr->items[iItem].rect.top == infoPtr->uNumRows-1)
+	  {
+	    fillRect.top -= 2;
+	    r.top -= 1;
+	  }
 
 	  TRACE("<bottom> item=%d, fill=(%ld,%ld)-(%ld,%ld), edge=(%ld,%ld)-(%ld,%ld)\n",
 		iItem,
@@ -2117,9 +2118,12 @@ static void TAB_DrawItem(
         }
         else
         {
-
-	  /* Adjust both rectangles to match native */
-	  fillRect.bottom += (1-ZZ);
+	  /* Adjust both rectangles for bottommost row */
+	  if (infoPtr->items[iItem].rect.top == infoPtr->uNumRows-1)
+	  {
+	    fillRect.bottom += 3;
+	    r.bottom += 2;
+	  }
 
 	  TRACE("<top> item=%d, fill=(%ld,%ld)-(%ld,%ld), edge=(%ld,%ld)-(%ld,%ld)\n",
 		iItem,
@@ -2151,7 +2155,6 @@ static void TAB_DrawItem(
 	  ExtTextOutA(hdc, 0, 0, 2, &r1, NULL, 0, 0);
 	  r1.top++;
 	  DrawEdge(hdc, &r1, EDGE_RAISED, BF_SOFT|BF_DIAGONAL_ENDTOPRIGHT);
-
         }
       }
     }
@@ -2184,21 +2187,13 @@ static void TAB_DrawBorder (HWND hwnd, HDC hdc)
   if (infoPtr->uNumItem)
   {
     if ((lStyle & TCS_BOTTOM) && !(lStyle & TCS_VERTICAL))
-    {
-      rect.bottom -= (infoPtr->tabHeight - 2) * infoPtr->uNumRows + 3;
-    }
+      rect.bottom -= infoPtr->tabHeight * infoPtr->uNumRows + CONTROL_BORDER_SIZEX;
     else if((lStyle & TCS_BOTTOM) && (lStyle & TCS_VERTICAL))
-    {
-      rect.right -= (infoPtr->tabHeight - 2) * infoPtr->uNumRows + 2;
-    }
+      rect.right  -= infoPtr->tabHeight * infoPtr->uNumRows + CONTROL_BORDER_SIZEX;
     else if(lStyle & TCS_VERTICAL)
-    {
-      rect.left += (infoPtr->tabHeight - 2) * infoPtr->uNumRows + 2;
-    }
+      rect.left   += infoPtr->tabHeight * infoPtr->uNumRows + CONTROL_BORDER_SIZEX;
     else /* not TCS_VERTICAL and not TCS_BOTTOM */
-    {
-      rect.top += (infoPtr->tabHeight - 2) * infoPtr->uNumRows + 2;
-    }
+      rect.top    += infoPtr->tabHeight * infoPtr->uNumRows + CONTROL_BORDER_SIZEX;
   }
 
   TRACE("border=(%ld,%ld)-(%ld,%ld)\n",
@@ -2418,7 +2413,7 @@ static void TAB_InvalidateTabArea(
   HWND      hwnd,
   TAB_INFO* infoPtr)
 {
-  RECT clientRect, rInvalidate;
+  RECT clientRect, rInvalidate, rAdjClient;
   DWORD lStyle = GetWindowLongA(hwnd, GWL_STYLE);
   INT lastRow = infoPtr->uNumRows - 1;
   RECT rect;
@@ -2427,36 +2422,34 @@ static void TAB_InvalidateTabArea(
 
   GetClientRect(hwnd, &clientRect);
   rInvalidate = clientRect;
+  rAdjClient = clientRect;
+
+  TAB_AdjustRect(hwnd, 0, &rAdjClient);
 
   TAB_InternalGetItemRect(hwnd, infoPtr, infoPtr->uNumItem-1 , &rect, NULL);
-  if ((lStyle & TCS_BOTTOM) && !(lStyle & TCS_VERTICAL))
+  if ((lStyle & TCS_BOTTOM) && (lStyle & TCS_VERTICAL))
   {
-    rInvalidate.top = clientRect.bottom -
-                   infoPtr->tabHeight -
-                   lastRow * (infoPtr->tabHeight - 2) -
-                   ((lStyle & TCS_BUTTONS) ? lastRow * BUTTON_SPACINGY : 0) - 3;
-    rInvalidate.right = clientRect.left + rect.right + 2 * SELECTED_TAB_OFFSET;
-  }
-  else if((lStyle & TCS_BOTTOM) && (lStyle & TCS_VERTICAL))
-  {
-    rInvalidate.left = clientRect.right - infoPtr->tabHeight -
-                      lastRow * (infoPtr->tabHeight - 2) -
-                      ((lStyle & TCS_BUTTONS) ? lastRow * BUTTON_SPACINGY : 0) - 2;
-    rInvalidate.bottom = clientRect.top + rect.bottom + 2 * SELECTED_TAB_OFFSET;
+    rInvalidate.left = rAdjClient.right;
+    if (infoPtr->uNumRows == 1)
+      rInvalidate.bottom = clientRect.top + rect.bottom + 2 * SELECTED_TAB_OFFSET;
   }
   else if(lStyle & TCS_VERTICAL)
   {
-    rInvalidate.right = clientRect.left + infoPtr->tabHeight +
-                       lastRow * (infoPtr->tabHeight - 2) -
-                      ((lStyle & TCS_BUTTONS) ? lastRow * BUTTON_SPACINGY : 0) + 2;
-    rInvalidate.bottom = clientRect.top + rect.bottom + 2 * SELECTED_TAB_OFFSET;
+    rInvalidate.right = rAdjClient.left;
+    if (infoPtr->uNumRows == 1)
+      rInvalidate.bottom = clientRect.top + rect.bottom + 2 * SELECTED_TAB_OFFSET;
   }
-  else
+  else if (lStyle & TCS_BOTTOM)
   {
-    rInvalidate.bottom = clientRect.top + infoPtr->tabHeight +
-                      lastRow * (infoPtr->tabHeight - 2) +
-                      ((lStyle & TCS_BUTTONS) ? lastRow * BUTTON_SPACINGY : 0) + 2;
-    rInvalidate.right = clientRect.left + rect.right + 2 * SELECTED_TAB_OFFSET;
+    rInvalidate.top = rAdjClient.bottom;
+    if (infoPtr->uNumRows == 1)
+      rInvalidate.right = clientRect.left + rect.right + 2 * SELECTED_TAB_OFFSET;
+  }
+  else 
+  {
+    rInvalidate.bottom = rAdjClient.top;
+    if (infoPtr->uNumRows == 1)
+      rInvalidate.right = clientRect.left + rect.right + 2 * SELECTED_TAB_OFFSET;
   }
   
   /* Punch out the updown control */
@@ -2470,8 +2463,8 @@ static void TAB_InvalidateTabArea(
   }
   
   TRACE("invalidate (%ld,%ld)-(%ld,%ld)\n",
-	clientRect.left,clientRect.top,
-	clientRect.right,clientRect.bottom);
+	rInvalidate.left,  rInvalidate.top,
+	rInvalidate.right, rInvalidate.bottom);
  
   InvalidateRect(hwnd, &rInvalidate, TRUE);
 }

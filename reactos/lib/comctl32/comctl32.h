@@ -102,8 +102,9 @@ extern HBRUSH  COMCTL32_hPattern55AABrush;
 #define IDC_DIVIDEROPEN                 107
 
 
-/* DragList icon */
-#define IDI_DRAGARROW                   150
+/* DragList resources */
+#define IDI_DRAGARROW                   501
+#define IDC_COPY                        502
 
 
 /* HOTKEY internal strings */

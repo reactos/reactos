@@ -77,16 +77,16 @@
 363 stdcall -noname StrStrIW(wstr wstr)
 364 stdcall -noname StrSpnW(wstr wstr)
 365 stdcall -noname StrToIntW(wstr)
-366 stub -noname StrChrIA
-367 stub -noname StrChrIW
-368 stub -noname StrRChrIA
-369 stub -noname StrRChrIW
-372 stub -noname StrRStrIA
-373 stub -noname StrRStrIW
-374 stub -noname StrCSpnIA
-375 stub -noname StrCSpnIW
-376 stub -noname IntlStrEqWorkerA
-377 stub -noname IntlStrEqWorkerW
+366 stdcall -noname StrChrIA(str long)
+367 stdcall -noname StrChrIW(wstr long)
+368 stdcall -noname StrRChrIA(str str long)
+369 stdcall -noname StrRChrIW(wstr wstr long)
+372 stdcall -noname StrRStrIA(str str str)
+373 stdcall -noname StrRStrIW(wstr wstr wstr)
+374 stdcall -noname StrCSpnIA(str str)
+375 stdcall -noname StrCSpnIW(wstr wstr)
+376 stdcall -noname IntlStrEqWorkerA(long str str long)
+377 stdcall -noname IntlStrEqWorkerW(long wstr wstr long)
 382 stdcall -noname SmoothScrollWindow(ptr)
 383 stub -noname DoReaderMode
 384 stub -noname SetPathWordBreakProc
@@ -106,13 +106,13 @@
 412 stdcall RemoveWindowSubclass(long ptr long)
 413 stdcall DefSubclassProc(long long long long)
 414 stub -noname MirrorIcon
-415 stdcall -noname DrawTextWrap(long long long long long)
-416 stub -noname DrawTextExPrivWrap
-417 stdcall -noname ExtTextOutWrap(long long long long ptr wstr long ptr)
-418 stub -noname GetCharWidthWrap
-419 stdcall -noname GetTextExtentPointWrap(long long long long)
-420 stub -noname GetTextExtentPoint32Wrap
-421 stub -noname TextOutWrap
+415 stdcall DrawTextWrap(long wstr long ptr long) user32.DrawTextW
+416 stdcall DrawTextExPrivWrap(long wstr long ptr long ptr) user32.DrawTextExW
+417 stdcall ExtTextOutWrap(long long long long ptr wstr long ptr) gdi32.ExtTextOutW
+418 stdcall GetCharWidthWrap(long long long long) gdi32.GetCharWidthW
+419 stdcall GetTextExtentPointWrap(long wstr long ptr) gdi32.GetTextExtentPointW
+420 stdcall GetTextExtentPoint32Wrap(long wstr long ptr) gdi32.GetTextExtentPoint32W
+421 stdcall TextOutWrap(long long long wstr long) gdi32.TextOutW
 
 # Functions imported by name
 

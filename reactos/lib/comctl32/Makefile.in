@@ -28,6 +28,7 @@ C_SRCS = \
 	propsheet.c \
 	rebar.c \
 	smoothscroll.c \
+	string.c \
 	status.c \
 	tab.c \
 	toolbar.c \
@@ -45,6 +46,7 @@ RC_BINARIES = \
 	idb_std_small.bmp \
 	idb_view_large.bmp \
 	idb_view_small.bmp \
+	idc_copy.cur \
 	idc_divider.cur \
 	idc_divideropen.cur \
 	idi_dragarrow.ico \

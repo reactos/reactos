@@ -2289,8 +2289,8 @@ TREEVIEW_DrawItemLines(TREEVIEW_INFO *infoPtr, HDC hdc, TREEVIEW_ITEM *item)
 	    HBRUSH hbr    = CreateSolidBrush(infoPtr->clrBk);
 	    HBRUSH hbrOld = SelectObject(hdc, hbr);
 
-	    Rectangle(hdc, centerx - rectsize, centery - rectsize,
-		      centerx + rectsize + 1, centery + rectsize + 1);
+           Rectangle(hdc, centerx - rectsize - 1, centery - rectsize - 1,
+                     centerx + rectsize + 2, centery + rectsize + 2);
 
 	    SelectObject(hdc, hbrOld);
 	    DeleteObject(hbr);
@@ -2599,7 +2599,7 @@ TREEVIEW_UpdateScrollBars(TREEVIEW_INFO *infoPtr)
     if (vert)
     {
 	si.nPage = TREEVIEW_GetVisibleCount(infoPtr);
-       if ( si.nPage )
+       if ( si.nPage && NULL != infoPtr->firstVisible)
        {
            si.nPos  = infoPtr->firstVisible->visibleOrder;
            si.nMax  = infoPtr->maxVisibleOrder - 1;

@@ -1,0 +1,104 @@
+Index: comctl32.spec
+===================================================================
+RCS file: /home/wine/wine/dlls/comctl32/comctl32.spec,v
+retrieving revision 1.43
+diff -u -r1.43 comctl32.spec
+--- comctl32.spec	20 Feb 2004 05:16:37 -0000	1.43
++++ comctl32.spec	11 Mar 2004 11:16:16 -0000
+@@ -106,13 +106,13 @@
+ 412 stdcall RemoveWindowSubclass(long ptr long)
+ 413 stdcall DefSubclassProc(long long long long)
+ 414 stub -noname MirrorIcon
+-415 stdcall -noname DrawTextWrap(long wstr long ptr long) user32.DrawTextW
+-416 stdcall -noname DrawTextExPrivWrap(long wstr long ptr long ptr) user32.DrawTextExW
+-417 stdcall -noname ExtTextOutWrap(long long long long ptr wstr long ptr) gdi32.ExtTextOutW
+-418 stdcall -noname GetCharWidthWrap(long long long long) gdi32.GetCharWidthW
+-419 stdcall -noname GetTextExtentPointWrap(long wstr long ptr) gdi32.GetTextExtentPointW
+-420 stdcall -noname GetTextExtentPoint32Wrap(long wstr long ptr) gdi32.GetTextExtentPoint32W
+-421 stdcall -noname TextOutWrap(long long long wstr long) gdi32.TextOutW
++415 stdcall DrawTextWrap(long wstr long ptr long) user32.DrawTextW
++416 stdcall DrawTextExPrivWrap(long wstr long ptr long ptr) user32.DrawTextExW
++417 stdcall ExtTextOutWrap(long long long long ptr wstr long ptr) gdi32.ExtTextOutW
++418 stdcall GetCharWidthWrap(long long long long) gdi32.GetCharWidthW
++419 stdcall GetTextExtentPointWrap(long wstr long ptr) gdi32.GetTextExtentPointW
++420 stdcall GetTextExtentPoint32Wrap(long wstr long ptr) gdi32.GetTextExtentPoint32W
++421 stdcall TextOutWrap(long long long wstr long) gdi32.TextOutW
+ 
+ # Functions imported by name
+ 
+Index: rebar.c
+===================================================================
+RCS file: /home/wine/wine/dlls/comctl32/rebar.c,v
+retrieving revision 1.85
+diff -u -r1.85 rebar.c
+--- rebar.c	27 Feb 2004 04:32:54 -0000	1.85
++++ rebar.c	11 Mar 2004 11:16:19 -0000
+@@ -985,7 +985,7 @@
+       }
+ 
+       /* text is visible */
+-      if (lpBand->fStatus & HAS_TEXT) {
++      if ((lpBand->fStatus & HAS_TEXT) && !(lpBand->fStyle & RBBS_HIDETITLE)) {
+ 	  lpBand->fDraw |= DRAW_TEXT;
+ 	  lpBand->rcCapText.right = max(lpBand->rcCapText.left,
+ 					lpBand->rcCapText.right-REBAR_POST_TEXT);
+@@ -1131,7 +1131,7 @@
+ 	}
+ 
+ 	/* text is visible */
+-	if (lpBand->fStatus & HAS_TEXT) {
++	if ((lpBand->fStatus & HAS_TEXT) && !(lpBand->fStyle & RBBS_HIDETITLE)) {
+ 	    lpBand->fDraw |= DRAW_TEXT;
+ 	    lpBand->rcCapText.bottom = max(lpBand->rcCapText.top,
+ 					   lpBand->rcCapText.bottom);
+@@ -2027,7 +2027,8 @@
+     }
+ 
+     /* text is visible */
+-    if ((lpBand->fMask & RBBIM_TEXT) && (lpBand->lpText)) {
++    if ((lpBand->fMask & RBBIM_TEXT) && (lpBand->lpText) &&
++        !(lpBand->fStyle & RBBS_HIDETITLE)) {
+ 	HDC hdc = GetDC (0);
+ 	HFONT hOldFont = SelectObject (hdc, infoPtr->hFont);
+ 	SIZE size;
+Index: string.c
+===================================================================
+RCS file: /home/wine/wine/dlls/comctl32/string.c,v
+retrieving revision 1.3
+diff -u -r1.3 string.c
+--- string.c	20 Feb 2004 19:58:39 -0000	1.3
++++ string.c	11 Mar 2004 11:16:19 -0000
+@@ -254,7 +254,7 @@
+ {
+   TRACE("(%s,%s)\n", debugstr_w(lpszStr), debugstr_w(lpszSearch));
+ 
+-  return COMCTL32_StrStrHelperW(lpszStr, lpszSearch, strncmpiW);
++  return COMCTL32_StrStrHelperW(lpszStr, lpszSearch, (int (*)(LPCWSTR,LPCWSTR,int)) wcsnicmp);
+ }
+ 
+ /**************************************************************************
+@@ -503,7 +503,7 @@
+ {
+   TRACE("(%s,%s)\n", debugstr_w(lpszStr), debugstr_w(lpszSearch));
+ 
+-  return COMCTL32_StrStrHelperW(lpszStr, lpszSearch, strncmpW);
++  return COMCTL32_StrStrHelperW(lpszStr, lpszSearch, (int (*)(LPCWSTR,LPCWSTR,int)) wcsncmp);
+ }
+ 
+ /*************************************************************************
+Index: toolbar.c
+===================================================================
+RCS file: /home/wine/wine/dlls/comctl32/toolbar.c,v
+retrieving revision 1.160
+diff -u -r1.160 toolbar.c
+--- toolbar.c	7 Mar 2004 03:13:26 -0000	1.160
++++ toolbar.c	11 Mar 2004 11:16:21 -0000
+@@ -2299,7 +2299,7 @@
+ 	TRACE ("creating default image list!\n");
+ 
+     himlDef = ImageList_Create (infoPtr->nBitmapWidth, infoPtr->nBitmapHeight, 
+-		ILC_COLOR | ILC_MASK, nButtons, 2);
++		ILC_COLORDDB | ILC_MASK, nButtons, 2);
+ 	TOOLBAR_InsertImageList(&infoPtr->himlDef, &infoPtr->cimlDef, himlDef, 0);
+     infoPtr->himlInt = himlDef;
+     }

@@ -93,7 +93,6 @@
  *   -- LVS_EX_UNDERLINEHOT
  *   
  * Notifications:
- *   -- LVN_BEGINRDRAG
  *   -- LVN_BEGINSCROLL, LVN_ENDSCROLL
  *   -- LVN_GETINFOTIP
  *   -- LVN_HOTTRACK
@@ -4000,7 +3999,26 @@ static DWORD LISTVIEW_ApproximateViewRect(LISTVIEW_INFO *infoPtr, INT nItemCount
     dwViewRect = MAKELONG(wWidth, wHeight);
   }
   else if (uView == LVS_REPORT)
-    FIXME("uView == LVS_REPORT: not implemented\n");
+  {
+    RECT rcBox;
+
+    if (infoPtr->nItemCount > 0)
+    {
+      LISTVIEW_GetItemBox(infoPtr, 0, &rcBox);
+      wWidth = rcBox.right - rcBox.left;
+      wHeight = (rcBox.bottom - rcBox.top) * nItemCount;
+    }
+    else
+    {
+      /* use current height and width */
+      if (wHeight == 0xffff)
+          wHeight = infoPtr->rcList.bottom - infoPtr->rcList.top;
+      if (wWidth == 0xffff)
+          wWidth = infoPtr->rcList.right - infoPtr->rcList.left;
+    }
+
+    dwViewRect = MAKELONG(wWidth, wHeight);
+  }
   else if (uView == LVS_SMALLICON)
     FIXME("uView == LVS_SMALLICON: not implemented\n");
   else if (uView == LVS_ICON)
@@ -4971,7 +4989,7 @@ static HIMAGELIST LISTVIEW_GetImageList(LISTVIEW_INFO *infoPtr, INT nImageList)
  *   the buffer pointer you provided on input. Most code already does
  *   that, so it's not a problem.
  *   For the two cases when the text must be copied (that is,
- *   for LVM_GETITEM, and LVMGETITEMTEXT), use LISTVIEW_GetItemExtT.
+ *   for LVM_GETITEM, and LVM_GETITEMTEXT), use LISTVIEW_GetItemExtT.
  *
  * RETURN:
  *   SUCCESS : TRUE
@@ -5980,7 +5998,9 @@ static INT LISTVIEW_HitTest(LISTVIEW_INFO *infoPtr, LPLVHITTESTINFO lpht, BOOL s
 	}
     }
 
-    if (select && !(uView == LVS_REPORT && (infoPtr->dwLvExStyle & LVS_EX_FULLROWSELECT)))
+    if (select && !(uView == LVS_REPORT &&
+                    ((infoPtr->dwLvExStyle & LVS_EX_FULLROWSELECT) ||
+                     (infoPtr->dwStyle & LVS_OWNERDRAWFIXED))))
     {
         if (uView == LVS_REPORT)
         {

@@ -131,7 +131,9 @@ static const WORD wPattern55AA[] =
 
 
 /***********************************************************************
- * DllMain [Internal] Initializes the internal 'COMCTL32.DLL'.
+ * DllMain [Internal]
+ *
+ * Initializes the internal 'COMCTL32.DLL'.
  *
  * PARAMS
  *     hinstDLL    [I] handle to the 'dlls' instance
@@ -222,6 +224,9 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
 /***********************************************************************
  * MenuHelp [COMCTL32.2]
+ *
+ * Handles the setting of status bar help messages when the user
+ * selects menu items.
  *
  * PARAMS
  *     uMsg       [I] message (WM_MENUSELECT) (see NOTES)
@@ -377,6 +382,8 @@ ShowHideMenuCtl (HWND hwnd, UINT uFlags, LPINT lpInfo)
 
 /***********************************************************************
  * GetEffectiveClientRect [COMCTL32.4]
+ *
+ * Calculates the coordinates of a rectangle in the client area.
  *
  * PARAMS
  *     hwnd   [I] handle to the client window.
@@ -536,7 +543,9 @@ CreateStatusWindowA (LONG style, LPCSTR text, HWND parent, UINT wid)
 
 
 /***********************************************************************
- * CreateStatusWindowW [COMCTL32.@] Creates a status bar control
+ * CreateStatusWindowW [COMCTL32.@]
+ *
+ * Creates a status bar control
  *
  * PARAMS
  *     style  [I] window style
@@ -560,7 +569,9 @@ CreateStatusWindowW (LONG style, LPCWSTR text, HWND parent, UINT wid)
 
 
 /***********************************************************************
- * CreateUpDownControl [COMCTL32.16] Creates an up-down control
+ * CreateUpDownControl [COMCTL32.16]
+ *
+ * Creates an up-down control
  *
  * PARAMS
  *     style  [I] window styles
@@ -711,7 +722,9 @@ InitCommonControlsEx (LPINITCOMMONCONTROLSEX lpInitCtrls)
 
 
 /***********************************************************************
- * CreateToolbarEx [COMCTL32.@] Creates a tool bar window
+ * CreateToolbarEx [COMCTL32.@]
+ *
+ * Creates a toolbar window.
  *
  * PARAMS
  *     hwnd
@@ -794,12 +807,14 @@ CreateToolbarEx (HWND hwnd, DWORD style, UINT wID, INT nBitmaps,
 /***********************************************************************
  * CreateMappedBitmap [COMCTL32.8]
  *
+ * Loads a bitmap resource using a colour map.
+ *
  * PARAMS
- *     hInstance  [I]
- *     idBitmap   [I]
- *     wFlags     [I]
- *     lpColorMap [I]
- *     iNumMaps   [I]
+ *     hInstance  [I] Handle to the module containing the bitmap.
+ *     idBitmap   [I] The bitmap resource ID.
+ *     wFlags     [I] CMB_MASKED for using bitmap as a mask or 0 for normal.
+ *     lpColorMap [I] Colour information needed for the bitmap or NULL (uses system colours).
+ *     iNumMaps   [I] Number of COLORMAP's pointed to by lpColorMap.
  *
  * RETURNS
  *     Success: handle to the new bitmap
@@ -900,7 +915,9 @@ CreateMappedBitmap (HINSTANCE hInstance, INT idBitmap, UINT wFlags,
 
 
 /***********************************************************************
- * CreateToolbar [COMCTL32.7] Creates a tool bar control
+ * CreateToolbar [COMCTL32.7]
+ *
+ * Creates a toolbar control.
  *
  * PARAMS
  *     hwnd
@@ -969,6 +986,12 @@ COMCTL32_DllGetVersion (DLLVERSIONINFO *pdvi)
 
 /***********************************************************************
  *		DllInstall (COMCTL32.@)
+ *
+ * Installs the ComCtl32 DLL.
+ *
+ * RETURNS
+ *     Success: S_OK
+ *     Failure: A HRESULT error
  */
 HRESULT WINAPI COMCTL32_DllInstall(BOOL bInstall, LPCWSTR cmdline)
 {
@@ -1011,9 +1034,10 @@ _TrackMouseEvent (TRACKMOUSEEVENT *ptme)
 /*************************************************************************
  * GetMUILanguage [COMCTL32.@]
  *
- * FIXME: "Returns the language currently in use by the common controls
- * for a particular process." (MSDN)
+ * Returns the user interface language in use by the current process.
  *
+ * RETURNS
+ *      Language ID in use by the current process.
  */
 LANGID WINAPI GetMUILanguage (VOID)
 {
@@ -1024,11 +1048,11 @@ LANGID WINAPI GetMUILanguage (VOID)
 /*************************************************************************
  * InitMUILanguage [COMCTL32.@]
  *
- * FIXME: "Enables an application to specify a language to be used with
- * the common controls that is different than the system language." (MSDN)
+ * Sets the user interface language to be used by the current process.
  *
+ * RETURNS
+ *      Nothing.
  */
-
 VOID WINAPI InitMUILanguage (LANGID uiLang)
 {
    COMCTL32_uiLang = uiLang;
