@@ -1,4 +1,4 @@
-; $Id: win32k.edf,v 1.6 2002/06/15 21:40:41 ekohl Exp $
+; $Id: win32k.edf,v 1.7 2002/10/28 15:03:18 robd Exp $
 ;
 ; win32k.def
 ;
@@ -165,6 +165,8 @@ RtlUpcaseUnicodeToMultiByteN=NTOSKRNL.RtlUpcaseUnicodeToMultiByteN
 STROBJ_bEnum
 STROBJ_dwGetCodePage
 STROBJ_vEnumStart
+W32kCleanupForProcess=W32kCleanupForProcess@4
+W32kInitialize=W32kInitialize@0
 WNDOBJ_bEnum
 WNDOBJ_cEnumStart
 WNDOBJ_vSetConsumer
