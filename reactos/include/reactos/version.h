@@ -1,4 +1,4 @@
-/* $Id: version.h,v 1.22 2004/05/31 12:21:24 chorns Exp $
+/* $Id: version.h,v 1.22.2.1 2004/06/16 21:49:29 navaraf Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS kernel
@@ -22,7 +22,7 @@
 #define KERNEL_VERSION_PATCH_LEVEL	3
 
 /* KERNEL_VERSION_BUILD_TYPE is L"CVS", L"RC1", L"RC2" or L"RELEASE" */
-#define KERNEL_VERSION_BUILD_TYPE	L"CVS"
+#define KERNEL_VERSION_BUILD_TYPE	L"RC1"
 
 
 #endif
