@@ -1203,7 +1203,7 @@ TREEVIEW_InsertItemT(TREEVIEW_INFO *infoPtr, const TVINSERTSTRUCTW *ptdi, BOOL i
     TRACE("parent %p position %p: %s\n", parentItem, insertAfter,
 	  (tvItem->mask & TVIF_TEXT)
 	  ? ((tvItem->pszText == LPSTR_TEXTCALLBACKW) ? "<callback>"
-	     : debugstr_w(tvItem->pszText))
+	     : (isW ? debugstr_w(tvItem->pszText) : debugstr_a((LPSTR)tvItem->pszText)))
 	  : "<no label>");
 
     newItem = TREEVIEW_AllocateItem(infoPtr);
