@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.29 2003/03/12 05:21:53 rcampbell Exp $
+/* $Id: window.c,v 1.30 2003/03/12 08:26:54 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -365,7 +365,6 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   POINT MaxSize, MaxPos, MinTrack, MaxTrack;
   CREATESTRUCTW Cs;
   LRESULT Result;
-
   DPRINT("NtUserCreateWindowEx\n");
 
   /* Initialize gui state if necessary. */
@@ -432,7 +431,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
    */
   WindowObject->Class = ClassObject;
   WindowObject->ExStyle = dwExStyle;
-  WindowObject->Style = dwStyle;
+  WindowObject->Style = dwStyle | WIN_NCACTIVATED;
   WindowObject->x = x;
   WindowObject->y = y;
   WindowObject->Width = nWidth;
