@@ -598,8 +598,9 @@ HRESULT WINAPI HGLOBALStreamImpl_Seek(
    * If the file pointer ends-up after the end of the stream, the next Write operation will
    * make the file larger. This is how it is documented.
    */
+  if (dlibMove.QuadPart < 0 && newPosition.QuadPart < -dlibMove.QuadPart) return STG_E_INVALIDFUNCTION;
+
   newPosition.QuadPart = RtlLargeIntegerAdd(newPosition.QuadPart, dlibMove.QuadPart);
-  if (newPosition.QuadPart < 0) return STG_E_INVALIDFUNCTION;
 
   if (plibNewPosition) *plibNewPosition = newPosition;
   This->currentPosition = newPosition;

@@ -50,7 +50,7 @@ typedef struct OleAdviseHolderImpl
 
 } OleAdviseHolderImpl;
 
-static LPOLEADVISEHOLDER OleAdviseHolderImpl_Constructor();
+static LPOLEADVISEHOLDER OleAdviseHolderImpl_Constructor(void);
 static void              OleAdviseHolderImpl_Destructor(OleAdviseHolderImpl* ptrToDestroy);
 static HRESULT WINAPI    OleAdviseHolderImpl_QueryInterface(LPOLEADVISEHOLDER,REFIID,LPVOID*);
 static ULONG WINAPI      OleAdviseHolderImpl_AddRef(LPOLEADVISEHOLDER);
@@ -181,8 +181,11 @@ static ULONG WINAPI OleAdviseHolderImpl_AddRef(
   LPOLEADVISEHOLDER iface)
 {
   OleAdviseHolderImpl *This = (OleAdviseHolderImpl *)iface;
-  TRACE("(%p)->(ref=%ld)\n", This, This->ref);
-  return ++(This->ref);
+  ULONG ref = InterlockedIncrement(&This->ref);
+
+  TRACE("(%p)->(ref=%ld)\n", This, ref - 1);
+
+  return ref;
 }
 
 /******************************************************************************
@@ -377,7 +380,7 @@ typedef struct DataAdviseHolder
 /**************************************************************************
  *  DataAdviseHolder method prototypes
  */
-static IDataAdviseHolder* DataAdviseHolder_Constructor();
+static IDataAdviseHolder* DataAdviseHolder_Constructor(void);
 static void               DataAdviseHolder_Destructor(DataAdviseHolder* ptrToDestroy);
 static HRESULT WINAPI     DataAdviseHolder_QueryInterface(
 			    IDataAdviseHolder*      iface,

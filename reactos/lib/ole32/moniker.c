@@ -86,9 +86,9 @@ static HRESULT WINAPI RunningObjectTableImpl_NoteChangeTime(IRunningObjectTable*
 static HRESULT WINAPI RunningObjectTableImpl_GetTimeOfLastChange(IRunningObjectTable* iface, IMoniker* pmkObjectName,FILETIME* pfiletime);
 static HRESULT WINAPI RunningObjectTableImpl_EnumRunning(IRunningObjectTable* iface, IEnumMoniker** ppenumMoniker);
 /* Local functions*/
-HRESULT WINAPI RunningObjectTableImpl_Initialize();
-HRESULT WINAPI RunningObjectTableImpl_UnInitialize();
-HRESULT WINAPI RunningObjectTableImpl_Destroy();
+HRESULT WINAPI RunningObjectTableImpl_Initialize(void);
+HRESULT WINAPI RunningObjectTableImpl_UnInitialize(void);
+HRESULT WINAPI RunningObjectTableImpl_Destroy(void);
 HRESULT WINAPI RunningObjectTableImpl_GetObjectIndex(RunningObjectTableImpl* This,DWORD identReg,IMoniker* pmk,DWORD *indx);
 
 /* Virtual function table for the IRunningObjectTable class. */

@@ -445,7 +445,7 @@ HRESULT WINAPI CompositeMonikerImpl_GetSizeMax(IMoniker* iface,ULARGE_INTEGER* p
 
     IMoniker_Enum(iface,TRUE,&enumMk);
 
-    while(IEnumMoniker_Next(enumMk,1,&pmk,NULL)==TRUE){
+    while(IEnumMoniker_Next(enumMk,1,&pmk,NULL)){
 
         IMoniker_GetSizeMax(pmk,&ptmpSize);
 

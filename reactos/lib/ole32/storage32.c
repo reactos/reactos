@@ -51,6 +51,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(storage);
 
 #define FILE_BEGIN 0
 
+#define STGM_SHARE_MODE(stgm) ((stgm)&0xf0)
 
 /* Used for OleConvertIStorageToOLESTREAM and OleConvertOLESTREAMToIStorage */
 #define OLESTREAM_ID 0x501
@@ -872,18 +873,23 @@ HRESULT WINAPI StorageBaseImpl_CreateStream(
   if (pwcsName == 0)
     return STG_E_INVALIDNAME;
 
+  if (reserved1 || reserved2)
+    return STG_E_INVALIDPARAMETER;
+
   /*
    * Validate the STGM flags
    */
   if ( FAILED( validateSTGM(grfMode) ))
     return STG_E_INVALIDFLAG;
 
+  if ( !(grfMode & STGM_SHARE_EXCLUSIVE) )
+    return STG_E_INVALIDFLAG;
+
   /*
    * As documented.
    */
-  if ( !(grfMode & STGM_SHARE_EXCLUSIVE) ||
-        (grfMode & STGM_DELETEONRELEASE) ||
-        (grfMode & STGM_TRANSACTED) )
+  if ((grfMode & STGM_DELETEONRELEASE) ||
+      (grfMode & STGM_TRANSACTED))
     return STG_E_INVALIDFUNCTION;
 
   /*
@@ -1680,7 +1686,7 @@ HRESULT WINAPI StorageImpl_DestroyElement(
           This->rootPropertySetIndex,
           &parentProperty);
 
-  assert(res==TRUE);
+  assert(res);
 
   /*
    * Second, check to see if by any chance the actual storage (This) is not
@@ -2395,8 +2401,7 @@ void StorageImpl_Destroy(
 {
   TRACE("(%p)\n", This);
 
-  if(This->pwcsName)
-    HeapFree(GetProcessHeap(), 0, This->pwcsName);
+  HeapFree(GetProcessHeap(), 0, This->pwcsName);
 
   BlockChainStream_Destroy(This->smallBlockRootChain);
   BlockChainStream_Destroy(This->rootBlockChain);
@@ -5426,6 +5431,8 @@ HRESULT WINAPI StgCreateDocfile(
    */
   if (ppstgOpen == 0)
     return STG_E_INVALIDPOINTER;
+  if (reserved != 0)
+    return STG_E_INVALIDPARAMETER;
 
   /*
    * Validate the STGM flags
@@ -5433,6 +5440,14 @@ HRESULT WINAPI StgCreateDocfile(
   if ( FAILED( validateSTGM(grfMode) ))
     return STG_E_INVALIDFLAG;
 
+  /* StgCreateDocFile always opens for write */
+  if (!(grfMode & (STGM_WRITE|STGM_READWRITE)))
+    return STG_E_INVALIDFLAG;
+
+  /* always opens non-shared */
+  if (!(grfMode & STGM_SHARE_EXCLUSIVE))
+    return STG_E_INVALIDFLAG;
+      
   /*
    * Generate a unique name.
    */
@@ -5493,6 +5508,8 @@ HRESULT WINAPI StgCreateDocfile(
 
   if (hFile == INVALID_HANDLE_VALUE)
   {
+    if(GetLastError() == ERROR_FILE_EXISTS)
+      return STG_E_FILEALREADYEXISTS;
     return E_FAIL;
   }
 
@@ -5564,18 +5581,44 @@ HRESULT WINAPI StgOpenStorage(
 	snbExclude, reserved, ppstgOpen);
 
   /*
-   * Perform a sanity check
+   * Perform sanity checks
    */
-  if (( pwcsName == 0) || (ppstgOpen == 0) )
+  if (pwcsName == 0)
+  {
+    hr = STG_E_INVALIDNAME;
+    goto end;
+  }
+
+  if (ppstgOpen == 0)
   {
     hr = STG_E_INVALIDPOINTER;
+    goto end;
+  }
+
+  if (reserved)
+  {
+    hr = STG_E_INVALIDPARAMETER;
+    goto end;
+  }
+
+  /*
+   * Validate the sharing mode
+   */
+  switch(STGM_SHARE_MODE(grfMode))
+  {
+  case STGM_SHARE_EXCLUSIVE:
+  case STGM_SHARE_DENY_WRITE:
+    break;
+  default:
+    hr = STG_E_INVALIDFLAG;
     goto end;
   }
 
   /*
    * Validate the STGM flags
    */
-  if ( FAILED( validateSTGM(grfMode) ))
+  if ( FAILED( validateSTGM(grfMode) ) ||
+       (grfMode&STGM_CREATE))
   {
     hr = STG_E_INVALIDFLAG;
     goto end;
@@ -5599,8 +5642,6 @@ HRESULT WINAPI StgOpenStorage(
                        OPEN_EXISTING,
                        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_RANDOM_ACCESS,
                        0);
-
-  length = GetFileSize(hFile, NULL);
 
   if (hFile==INVALID_HANDLE_VALUE)
   {
@@ -5633,6 +5674,8 @@ HRESULT WINAPI StgOpenStorage(
 
     goto end;
   }
+
+  length = GetFileSize(hFile, NULL);
 
   /*
    * Allocate and initialize the new IStorage32object.
@@ -7355,15 +7398,9 @@ HRESULT WINAPI OleConvertOLESTREAMToIStorage (
     /* Free allocated memory */
     for(i=0; i < 2; i++)
     {
-        if(pOleStreamData[i].pData != NULL)
-        {
-            HeapFree(GetProcessHeap(),0,pOleStreamData[i].pData);
-        }
-        if(pOleStreamData[i].pstrOleObjFileName != NULL)
-	{
-        	HeapFree(GetProcessHeap(),0,pOleStreamData[i].pstrOleObjFileName);
-        	pOleStreamData[i].pstrOleObjFileName = NULL;
-	}
+        HeapFree(GetProcessHeap(),0,pOleStreamData[i].pData);
+        HeapFree(GetProcessHeap(),0,pOleStreamData[i].pstrOleObjFileName);
+        pOleStreamData[i].pstrOleObjFileName = NULL;
     }
     return hRes;
 }
@@ -7432,10 +7469,7 @@ HRESULT WINAPI OleConvertIStorageToOLESTREAM (
     /* Free allocated memory */
     for(i=0; i < 2; i++)
     {
-        if(pOleStreamData[i].pData != NULL)
-        {
-            HeapFree(GetProcessHeap(),0,pOleStreamData[i].pData);
-        }
+        HeapFree(GetProcessHeap(),0,pOleStreamData[i].pData);
     }
 
     return hRes;

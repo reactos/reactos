@@ -1943,4 +1943,67 @@ void __RPC_STUB IGlobalInterfaceTable_GetInterfaceFromGlobal_Stub(
 
 #endif  /* __IGlobalInterfaceTable_INTERFACE_DEFINED__ */
 
+#ifndef __IInternalUnknown_FWD_DEFINED__
+#define __IInternalUnknown_FWD_DEFINED__
+typedef struct IInternalUnknown IInternalUnknown;
+#endif
+
+/*****************************************************************************
+ * IInternalUnknown interface
+ */
+#ifndef __IInternalUnknown_INTERFACE_DEFINED__
+#define __IInternalUnknown_INTERFACE_DEFINED__
+
+DEFINE_GUID(IID_IInternalUnknown, 0x00000021, 0x0000, 0x0000, 0xc0,0x00, 0x00,0x00,0x00,0x00,0x00,0x46);
+#if defined(__cplusplus) && !defined(CINTERFACE)
+struct IInternalUnknown : public IUnknown
+{
+    virtual HRESULT STDMETHODCALLTYPE QueryInternalInterface(
+        REFIID riid,
+        void** ppv) = 0;
+
+};
+#else
+typedef struct IInternalUnknownVtbl IInternalUnknownVtbl;
+struct IInternalUnknown {
+    const IInternalUnknownVtbl* lpVtbl;
+};
+struct IInternalUnknownVtbl {
+    BEGIN_INTERFACE
+
+    /*** IUnknown methods ***/
+    HRESULT (STDMETHODCALLTYPE *QueryInterface)(
+        IInternalUnknown* This,
+        REFIID riid,
+        void** ppvObject);
+
+    ULONG (STDMETHODCALLTYPE *AddRef)(
+        IInternalUnknown* This);
+
+    ULONG (STDMETHODCALLTYPE *Release)(
+        IInternalUnknown* This);
+
+    /*** IInternalUnknown methods ***/
+    HRESULT (STDMETHODCALLTYPE *QueryInternalInterface)(
+        IInternalUnknown* This,
+        REFIID riid,
+        void** ppv);
+
+    END_INTERFACE
+};
+
+#ifdef COBJMACROS
+/*** IUnknown methods ***/
+#define IInternalUnknown_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IInternalUnknown_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define IInternalUnknown_Release(p) (p)->lpVtbl->Release(p)
+/*** IInternalUnknown methods ***/
+#define IInternalUnknown_QueryInternalInterface(p,a,b) (p)->lpVtbl->QueryInternalInterface(p,a,b)
+#endif
+
+#endif
+
+#endif  /* __IInternalUnknown_INTERFACE_DEFINED__ */
+
+
 #endif  /* __WINE_OBJIDL_H */
