@@ -1,4 +1,4 @@
-/* $Id: disk.c,v 1.6 2002/03/01 23:18:35 ekohl Exp $
+/* $Id: disk.c,v 1.7 2002/03/04 22:31:35 ekohl Exp $
  *
  */
 
@@ -423,8 +423,6 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
     }
 
   DiskDeviceExtension = DiskDeviceObject->DeviceExtension;
-//  DiskData = (PDISK_DEVICE_EXTENSION)((PUCHAR)DiskDeviceExtension + sizeof(DEVICE_EXTENSION));
-
   DiskDeviceExtension->LockCount = 0;
   DiskDeviceExtension->DeviceNumber = DiskNumber;
   DiskDeviceExtension->PortDeviceObject = PortDeviceObject;
@@ -519,7 +517,8 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
       if (!NT_SUCCESS(Status))
 	{
 	  /* Drive is not ready. */
-//	  diskData->DriveNotReady = TRUE;
+	  DPRINT1("Drive not ready\n");
+	  DiskData->DriveNotReady = TRUE;
 	}
       else
 	{
@@ -693,6 +692,12 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	if (IrpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(DISK_GEOMETRY))
 	  {
 	    Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+	    Irp->IoStatus.Information = 0;
+	  }
+	else if (DeviceExtension->DiskGeometry == NULL)
+	  {
+	    DPRINT1("No disk geometry available!\n");
+	    Irp->IoStatus.Status = STATUS_NO_SUCH_DEVICE;
 	    Irp->IoStatus.Information = 0;
 	  }
 	else

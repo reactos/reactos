@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.8 2002/03/03 23:46:01 ekohl Exp $
+/* $Id: scsiport.c,v 1.9 2002/03/04 22:31:51 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -756,29 +756,9 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
     {
       case SRB_FUNCTION_EXECUTE_SCSI:
 	DPRINT1("  SRB_FUNCTION_EXECUTE_SCSI\n");
-
-	switch (Srb->Cdb[0])
-	  {
-#if 0
-	    case SCSIOP_INQUIRY:
-	    case SCSIOP_READ_CAPACITY:
-	      DeviceExtension->Initializing = TRUE;
-	      if(DeviceExtension->HwStartIo(&DeviceExtension->MiniPortDeviceExtension,
-					    Srb) == TRUE)
-		Status = STATUS_SUCCESS;
-	      else
-		Status = STATUS_UNSUCCESSFUL;
-	      DeviceExtension->Initializing = FALSE;
-	      break;
-#endif
-
-	    default:
-	      DPRINT1("Starting packet!\n");
-	      IoStartPacket(DeviceObject, Irp, NULL, NULL);
-	      DPRINT1("Returning STATUS_PENDING\n");
-	      return(STATUS_PENDING);
-	  }
-	break;
+	IoStartPacket(DeviceObject, Irp, NULL, NULL);
+	DPRINT1("Returning STATUS_PENDING\n");
+	return(STATUS_PENDING);
 
       case SRB_FUNCTION_CLAIM_DEVICE:
 	{
@@ -1322,7 +1302,7 @@ ScsiPortIsr(IN PKINTERRUPT Interrupt,
   PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
   BOOLEAN Result;
 
-  DPRINT1("ScsiPortIsr() called!\n");
+  DPRINT("ScsiPortIsr() called!\n");
 
   DeviceExtension = (PSCSI_PORT_DEVICE_EXTENSION)ServiceContext;
 
@@ -1332,9 +1312,12 @@ ScsiPortIsr(IN PKINTERRUPT Interrupt,
       return(FALSE);
     }
 
-  IoRequestDpc(DeviceExtension->DeviceObject,
-	       DeviceExtension->CurrentIrp,
-	       DeviceExtension);
+  if (DeviceExtension->IrpFlags)
+    {
+      IoRequestDpc(DeviceExtension->DeviceObject,
+		   DeviceExtension->CurrentIrp,
+		   DeviceExtension);
+    }
 
   return(TRUE);
 }

@@ -1,4 +1,4 @@
-/* $Id: class2.c,v 1.8 2002/03/03 23:45:30 ekohl Exp $
+/* $Id: class2.c,v 1.9 2002/03/04 22:31:22 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -727,6 +727,7 @@ ScsiClassIoComplete(PDEVICE_OBJECT DeviceObject,
     {
       IoMarkIrpPending(Irp);
     }
+#endif
 
   if (DeviceExtension->ClassStartIo != NULL)
     {
@@ -736,7 +737,6 @@ ScsiClassIoComplete(PDEVICE_OBJECT DeviceObject,
 			    FALSE);
 	}
     }
-#endif
 
   DPRINT1("ScsiClassIoComplete() done (Status %lx)\n", Status);
 

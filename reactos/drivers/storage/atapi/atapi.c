@@ -1,4 +1,4 @@
-/* $Id: atapi.c,v 1.8 2002/03/03 19:37:41 ekohl Exp $
+/* $Id: atapi.c,v 1.9 2002/03/04 22:31:06 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -615,8 +615,6 @@ AtapiInterrupt(IN PVOID DeviceExtension)
       return(FALSE);
     }
 
-  DevExt->ExpectingInterrupt = FALSE;
-
   Srb = DevExt->CurrentSrb;
 
   DPRINT("Srb: %p\n", Srb);
@@ -678,7 +676,7 @@ AtapiInterrupt(IN PVOID DeviceExtension)
       switch (Srb->Cdb[0])
 	{
 	  case SCSIOP_READ:
-	    DPRINT1("SCSIOP_READ\n");
+	    DPRINT("SCSIOP_READ\n");
 
 	    /* Update controller/device state variables */
 	    TargetAddress = Srb->DataBuffer;
@@ -687,7 +685,8 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 //	    DevExt->SectorsTransferred++;
 
 	    /* Remember whether DRQ should be low at end (last block read) */
-	    IsLastBlock = Srb->DataTransferLength == 0;
+	    IsLastBlock = (Srb->DataTransferLength == 0);
+	    DPRINT("IsLastBlock == %s\n", (IsLastBlock)?"TRUE":"FALSE");
 
 	    /* Wait for DRQ assertion */
 	    for (Retries = 0; Retries < IDE_MAX_DRQ_RETRIES &&
@@ -753,6 +752,7 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 	  case SCSIOP_WRITE:
 	    DPRINT1("AtapiInterrupt(): SCSIOP_WRITE not implemented yet!\n");
 	    RequestIsComplete = TRUE;
+	    IsLastBlock = TRUE;
 	    break;
       }
     }
@@ -785,14 +785,19 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 #endif
     }
 
-  ScsiPortNotification(RequestComplete,
-		       DeviceExtension,
-		       Srb);
+  if (IsLastBlock)
+    {
+      DevExt->ExpectingInterrupt = FALSE;
 
-  ScsiPortNotification(NextRequest,
-		       DeviceExtension,
-		       NULL);
+      ScsiPortNotification(RequestComplete,
+			   DeviceExtension,
+			   Srb);
 
+      ScsiPortNotification(NextRequest,
+			   DeviceExtension,
+			   NULL);
+    }
+}
 
   DPRINT("AtapiInterrupt() done!\n");
 
