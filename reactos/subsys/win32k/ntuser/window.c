@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.19 2002/10/31 00:03:31 dwelch Exp $
+/* $Id: window.c,v 1.20 2002/12/21 19:24:51 jfilby Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -496,6 +496,12 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->ClientRect = WindowObject->WindowRect;
 
   /* FIXME: Initialize the window menu. */
+
+  /* Initialize the window's scrollbars */
+  if (dwStyle & WS_VSCROLL)
+      SCROLL_CreateScrollBar(WindowObject, SB_VERT);
+  if (dwStyle & WS_HSCROLL)
+      SCROLL_CreateScrollBar(WindowObject, SB_HORZ);
 
   /* Send a NCCREATE message. */
   Cs.lpCreateParams = lpParam;

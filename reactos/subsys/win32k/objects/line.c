@@ -121,10 +121,12 @@ W32kLineTo(HDC  hDC,
 	ASSERT( pen );
 	// not yet implemented ASSERT( reg );
 
+    /* Draw the line according to the DC origin */
     ret = EngLineTo(SurfObj,
                     NULL, // ClipObj
                     PenToBrushObj(dc, pen),
-                    dc->w.CursPosX, dc->w.CursPosY, XEnd, YEnd,
+                    dc->w.DCOrgX + dc->w.CursPosX, dc->w.DCOrgY + dc->w.CursPosY,
+                    dc->w.DCOrgX + XEnd,           dc->w.DCOrgY + YEnd,
                     reg, // Bounding rectangle
                     dc->w.ROPmode); // MIX
 

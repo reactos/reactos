@@ -1,4 +1,4 @@
-/* $Id: scrollbar.c,v 1.1 2002/11/24 20:15:37 jfilby Exp $
+/* $Id: scrollbar.c,v 1.2 2002/12/21 19:24:51 jfilby Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -35,25 +35,21 @@
  * the top. Return TRUE if the scrollbar is vertical, FALSE if horizontal.
  */
 static BOOL
-SCROLL_GetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect,
-			 PINT arrowSize, PINT thumbSize, PINT thumbPos)
+SCROLL_GetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect /* ,
+			 PINT arrowSize, PINT thumbSize, PINT thumbPos */ )
 {
-  INT pixels;
+  INT pixels, thumbSize, arrowSize;
   BOOL vertical;
-  RECT ClientRect;
+  RECT ClientRect = Window->ClientRect;
+  RECT WindowRect = Window->WindowRect;
   ULONG Style;
-DbgPrint("[SCROLL_GetScrollBarRect]");
-  W32kGetClientRect (Window, &ClientRect);
-DbgPrint("[WindowRect:%d,%d,%d,%d]\n", Window->WindowRect.left, Window->WindowRect.top, Window->WindowRect.right, Window->WindowRect.bottom);
-DbgPrint("[ClientRect:%d,%d,%d,%d]\n", ClientRect.left, ClientRect.top, ClientRect.right, ClientRect.bottom);
 
   switch (nBar)
     {
     case SB_HORZ:
-      DbgPrint ("[SCROLL_GetScrollBarRect:SB_HORZ]");
-      lprect->left = ClientRect.left - Window->WindowRect.left;
-      lprect->top = ClientRect.bottom - Window->WindowRect.top;
-      lprect->right = ClientRect.right - Window->WindowRect.left;
+      lprect->left = ClientRect.left - WindowRect.left;
+      lprect->top = ClientRect.bottom - WindowRect.top;
+      lprect->right = ClientRect.right - WindowRect.left;
       lprect->bottom = lprect->top + NtUserGetSystemMetrics (SM_CYHSCROLL);
       if (Window->Style & WS_BORDER)
 	{
@@ -66,15 +62,10 @@ DbgPrint("[ClientRect:%d,%d,%d,%d]\n", ClientRect.left, ClientRect.top, ClientRe
       break;
 
     case SB_VERT:
-      DbgPrint ("[SCROLL_GetScrollBarRect:SB_VERT]\n");
-/*    lprect->left = ClientRect.right - Window->WindowRect.left;
-      lprect->top = ClientRect.top - Window->WindowRect.top;
+      lprect->left = ClientRect.right - WindowRect.left;
+      lprect->top = ClientRect.top - WindowRect.top;
       lprect->right = lprect->left + NtUserGetSystemMetrics (SM_CXVSCROLL);
-      lprect->bottom = ClientRect.bottom - WindowRect.top; */
-      lprect->left = Window->WindowRect.left + ClientRect.right;
-      lprect->top = Window->WindowRect.bottom - ClientRect.bottom;
-      lprect->right = lprect->left + NtUserGetSystemMetrics (SM_CXVSCROLL);
-      lprect->bottom = Window->WindowRect.bottom;
+      lprect->bottom = ClientRect.bottom - WindowRect.top;
       if (Window->Style & WS_BORDER)
 	{
 	  lprect->top--;
@@ -82,25 +73,15 @@ DbgPrint("[ClientRect:%d,%d,%d,%d]\n", ClientRect.left, ClientRect.top, ClientRe
 	}
       else if (Window->Style & WS_HSCROLL)
 	lprect->bottom++;
-      DbgPrint ("[VERTDIMEN:%d,%d,%d,%d]\n", lprect->left, lprect->top,
-		lprect->right, lprect->bottom);
-      DbgPrint ("[Window:%d,%d,%d,%d]\n", Window->WindowRect.left, Window->WindowRect.top,
-		Window->WindowRect.right, Window->WindowRect.bottom);
-      DbgPrint ("[Client:%d,%d,%d,%d]\n", ClientRect.left, ClientRect.top,
-		ClientRect.right, ClientRect.bottom);
-      DbgPrint ("[NtUserGetSystemMetrics(SM_CXVSCROLL):%d]\n",
-		NtUserGetSystemMetrics (SM_CXVSCROLL));
       vertical = TRUE;
       break;
 
     case SB_CTL:
-      DbgPrint ("[SCROLL_GetScrollBarRect:SB_CTL]");
       W32kGetClientRect (Window, lprect);
       vertical = ((Window->Style & SBS_VERT) != 0);
       break;
 
     default:
-      DbgPrint ("[SCROLL_GetScrollBarRect:FAIL]");
       W32kReleaseWindowObject(Window);
       return FALSE;
     }
@@ -112,19 +93,16 @@ DbgPrint("[ClientRect:%d,%d,%d,%d]\n", ClientRect.left, ClientRect.top, ClientRe
 
   if (pixels <= 2 * NtUserGetSystemMetrics (SM_CXVSCROLL) + SCROLL_MIN_RECT)
     {
-      if (pixels > SCROLL_MIN_RECT)
-	*arrowSize = (pixels - SCROLL_MIN_RECT) / 2;
-      else
-	*arrowSize = 0;
-      *thumbPos = *thumbSize = 0;
+      info.dxyLineButton = info.xyThumbTop = info.xyThumbBottom = 0;
     }
   else
     {
-/*      PSCROLLBARINFO info;
+      SCROLLBARINFO info;
+      info.cbSize = sizeof(SCROLLBARINFO);
 
-      NtUserGetScrollBarInfo (hWnd, nBar, info); recursive loop.. since called function calls this function */
+      SCROLL_GetScrollBarInfo (Window, nBar, &info);
 
-      *arrowSize = NtUserGetSystemMetrics (SM_CXVSCROLL);
+      arrowSize = NtUserGetSystemMetrics (SM_CXVSCROLL);
       pixels -=
 	(2 * (NtUserGetSystemMetrics (SM_CXVSCROLL) - SCROLL_ARROW_THUMB_OVERLAP));
 /*        if (info->Page)
@@ -150,9 +128,61 @@ DbgPrint("[ClientRect:%d,%d,%d,%d]\n", ClientRect.left, ClientRect.top, ClientRe
 		  + MulDiv(pixels, (info->CurVal-info->MinVal),(max - info->MinVal));
         } */
   }
-  W32kReleaseWindowObject(Window);
 
   return vertical;
+}
+
+DWORD SCROLL_CreateScrollBar(PWINDOW_OBJECT Window, LONG idObject)
+{
+  PSCROLLBARINFO psbi;
+  LRESULT Result;
+  int thumbSize = 20, arrowSize = 20, thumbPos = 1;
+
+  Result = WinPosGetNonClientSize(Window->Self, 
+				  &Window->WindowRect,
+				  &Window->ClientRect);
+
+  psbi = ExAllocatePool(NonPagedPool, sizeof(SCROLLBARINFO));
+
+  switch(idObject)
+  {
+    case SB_HORZ:
+      Window->pHScroll = psbi;
+      break;
+    case SB_VERT:
+      Window->pVScroll = psbi;
+      break;
+    case SB_CTL:
+      Window->wExtra = psbi;
+      break;
+    default:
+      return FALSE;
+  }
+
+  SCROLL_GetScrollBarRect (Window, idObject, &(psbi->rcScrollBar) /* , &arrowSize, &thumbSize, &thumbPos */ );
+
+  return 0;
+}
+
+DWORD SCROLL_GetScrollBarInfo(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi)
+{
+  switch(idObject)
+  {
+    case SB_HORZ:
+      memcpy(psbi, Window->pHScroll, psbi->cbSize);
+      break;
+    case SB_VERT:
+      memcpy(psbi, Window->pVScroll, psbi->cbSize);
+      break;
+    case SB_CTL:
+      memcpy(psbi, Window->wExtra, psbi->cbSize);
+      break;
+    default:
+      W32kReleaseWindowObject(Window);
+      return FALSE;
+  }
+
+  return TRUE;
 }
 
 DWORD
@@ -160,97 +190,14 @@ STDCALL
 NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
 {
   PWINDOW_OBJECT Window = W32kGetWindowObject(hWnd);
-  int thumbSize = 20, arrowSize = 20, thumbPos = 0;
 
   if (!Window) return FALSE;
 
-  switch(idObject)
-  {
-    case SB_HORZ: psbi = Window->pHScroll; break;
-    case SB_VERT: psbi = Window->pVScroll; break;
-    case SB_CTL:  psbi = Window->wExtra; break;
-    default:
-      W32kReleaseWindowObject(Window);
-      return FALSE;
-  }
+  SCROLL_GetScrollBarInfo(Window, idObject, psbi);
 
-  if (!psbi)  /* Create the info structure if needed */
-  {
-    if ((psbi = ExAllocatePool(NonPagedPool, sizeof(SCROLLBARINFO))))
-    {
-      DbgPrint("Creating PSCROLLBARINFO for %d - psbi: %08x\n", idObject, psbi);
-      SCROLL_GetScrollBarRect (Window, idObject, &(psbi->rcScrollBar), &arrowSize, &thumbSize, &thumbPos);
-      DbgPrint("NtUserGetScrollBarInfo: Creating with rect (%d,%d,%d,%d)\n",
-               psbi->rcScrollBar.left, psbi->rcScrollBar.top, psbi->rcScrollBar.right, psbi->rcScrollBar.bottom);
-
-      if (idObject == SB_HORZ) Window->pHScroll = psbi;
-        else Window->pVScroll = psbi;
-    }
-/*    if (!hUpArrow) SCROLL_LoadBitmaps(); FIXME: This must be moved somewhere in user32 code */
-  }
-DbgPrint("z1: psbi: %08x\n", psbi);
   W32kReleaseWindowObject(Window);
-DbgPrint("z2: psbi: %08x\n", psbi);
+
   return TRUE;
-}
-
-/* Ported from WINE20020904 */
-BOOL
-SCROLL_ShowScrollBar (HWND hwnd, INT nBar, BOOL fShowH, BOOL fShowV)
-{
-  PWINDOW_OBJECT Window = W32kGetWindowObject(hwnd);
-
-  switch (nBar)
-    {
-    case SB_CTL:
-      NtUserShowWindow (hwnd, fShowH ? SW_SHOW : SW_HIDE);
-      return TRUE;
-
-    case SB_BOTH:
-    case SB_HORZ:
-      if (fShowH)
-	{
-	  fShowH = !(Window->Style & WS_HSCROLL);
-	  Window->Style |= WS_HSCROLL;
-	}
-      else			/* hide it */
-	{
-	  fShowH = (Window->Style & WS_HSCROLL);
-	  Window->Style &= ~WS_HSCROLL;
-	}
-      if (nBar == SB_HORZ)
-	{
-	  fShowV = FALSE;
-	  break;
-	}
-      /* fall through */
-
-    case SB_VERT:
-      if (fShowV)
-	{
-	  fShowV = !(Window->Style & WS_VSCROLL);
-	  Window->Style |= WS_VSCROLL;
-	}
-      else			/* hide it */
-	{
-	  fShowV = (Window->Style & WS_VSCROLL);
-	  Window->Style &= ~WS_VSCROLL;
-	}
-      if (nBar == SB_VERT)
-	fShowH = FALSE;
-      break;
-
-    default:
-      return FALSE;		/* Nothing to do! */
-    }
-
-  if (fShowH || fShowV)		/* frame has been changed, let the window redraw itself */
-  {
-    NtUserSetWindowPos (hwnd, 0, 0, 0, 0, 0,
-                        SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED);
-    return TRUE;
-  }
-  return FALSE;			/* no frame changes */
 }
 
 DWORD
@@ -293,14 +240,66 @@ NtUserSetScrollInfo(
   return 0;
 }
 
+/* Ported from WINE20020904 (SCROLL_ShowScrollBar) */
 DWORD
 STDCALL
 NtUserShowScrollBar(HWND hWnd, int wBar, DWORD bShow)
 {
-DbgPrint("[NtUserShowScrollBar:%d]", bShow);
-  SCROLL_ShowScrollBar (hWnd, wBar, (wBar == SB_VERT) ? 0 : bShow, (wBar == SB_HORZ) ? 0 : bShow);
+  BOOL fShowV = (wBar == SB_VERT) ? 0 : bShow;
+  BOOL fShowH = (wBar == SB_HORZ) ? 0 : bShow;
+  PWINDOW_OBJECT Window = W32kGetWindowObject(hWnd);
 
-  return 0;
+  switch (wBar)
+    {
+    case SB_CTL:
+      NtUserShowWindow (hWnd, fShowH ? SW_SHOW : SW_HIDE);
+      return TRUE;
+
+    case SB_BOTH:
+    case SB_HORZ:
+      if (fShowH)
+	{
+	  fShowH = !(Window->Style & WS_HSCROLL);
+	  Window->Style |= WS_HSCROLL;
+	}
+      else			/* hide it */
+	{
+	  fShowH = (Window->Style & WS_HSCROLL);
+	  Window->Style &= ~WS_HSCROLL;
+	}
+      if (wBar == SB_HORZ)
+	{
+	  fShowV = FALSE;
+	  break;
+	}
+      /* fall through */
+
+    case SB_VERT:
+      if (fShowV)
+	{
+	  fShowV = !(Window->Style & WS_VSCROLL);
+	  Window->Style |= WS_VSCROLL;
+	}
+      else			/* hide it */
+	{
+	  fShowV = (Window->Style & WS_VSCROLL);
+	  Window->Style &= ~WS_VSCROLL;
+	}
+      if (wBar == SB_VERT)
+	fShowH = FALSE;
+      break;
+
+    default:
+      return FALSE;		/* Nothing to do! */
+    }
+
+  if (fShowH || fShowV)		/* frame has been changed, let the window redraw itself */
+  {
+    NtUserSetWindowPos (hWnd, 0, 0, 0, 0, 0,
+                        SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED);
+    return TRUE;
+  }
+  return FALSE;			/* no frame changes */
 }
 
 /* EOF */
