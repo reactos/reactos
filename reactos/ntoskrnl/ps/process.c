@@ -569,7 +569,7 @@ PsCreatePeb(HANDLE ProcessHandle,
   Peb->OSMinorVersion = 0;
   Peb->OSBuildNumber = 1381;
   Peb->OSPlatformId = 2; //VER_PLATFORM_WIN32_NT;
-  Peb->SPMajorVersion = 6;
+  Peb->OSCSDVersion = 6 << 8;
 
   Peb->AnsiCodePageData     = (char*)TableBase + NlsAnsiTableOffset;
   Peb->OemCodePageData      = (char*)TableBase + NlsOemTableOffset;
