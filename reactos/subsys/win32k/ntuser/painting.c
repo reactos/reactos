@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.74 2004/02/24 13:27:03 weiden Exp $
+ *  $Id: painting.c,v 1.75 2004/02/29 11:34:42 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -332,6 +332,7 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
       {
          NtGdiCombineRgn(Window->NCUpdateRegion, Window->NCUpdateRegion,
             hRgnNonClient, RGN_OR);
+         NtGdiDeleteObject(hRgnNonClient);
       }
 
       NtGdiDeleteObject(hRgnWindow);
