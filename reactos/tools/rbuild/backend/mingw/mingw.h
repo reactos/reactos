@@ -31,8 +31,12 @@ private:
 	std::string ReplaceVariable ( std::string name,
 	                              std::string value,
 	                              std::string path );
+	std::string GetEnvironmentVariable ( const std::string& name );
+	std::string GetEnvironmentVariablePathOrDefault ( const std::string& name,
+	                                                  const std::string& defaultValue );
 	std::string GetIntermediatePath ();
 	std::string GetOutputPath ();
+	std::string GetInstallPath ();
 	void ResolveVariablesInPath ( char* buf,
 	                              std::string path );
 	bool CreateDirectory ( std::string path );
@@ -50,6 +54,7 @@ public:
 	bool usePipe;
 	Directory* intermediateDirectory;
 	Directory* outputDirectory;
+	Directory* installDirectory;
 private:
 	void CreateMakefile ();
 	void CloseMakefile () const;
@@ -75,26 +80,20 @@ private:
 	std::string GetInstallDirectories ( const std::string& installDirectory );
 	void GetNonModuleInstallFiles ( std::vector<std::string>& out ) const;
 	void GetInstallFiles ( std::vector<std::string>& out ) const;
-	void GetNonModuleInstallTargetFiles ( std::string installDirectory,
-	                                      std::vector<std::string>& out ) const;
-	void GetModuleInstallTargetFiles ( std::string installDirectory,
-	                                   std::vector<std::string>& out ) const;
-	void GetInstallTargetFiles ( std::string installDirectory,
-	                             std::vector<std::string>& out ) const;
-	void OutputInstallTarget ( const std::string& installDirectory,
-	                           const std::string& sourceFilename,
+	void GetNonModuleInstallTargetFiles ( std::vector<std::string>& out ) const;
+	void GetModuleInstallTargetFiles ( std::vector<std::string>& out ) const;
+	void GetInstallTargetFiles ( std::vector<std::string>& out ) const;
+	void OutputInstallTarget ( const std::string& sourceFilename,
 	                           const std::string& targetFilename,
 	                           const std::string& targetDirectory );
-	void OutputNonModuleInstallTargets ( const std::string& installDirectory );
-	void OutputModuleInstallTargets ( const std::string& installDirectory );
+	void OutputNonModuleInstallTargets ();
+	void OutputModuleInstallTargets ();
 	std::string GetRegistrySourceFiles ();
-	std::string GetRegistryTargetFiles ( const std::string& installDirectory );
-	void OutputRegistryInstallTarget ( const std::string& installDirectory );
+	std::string GetRegistryTargetFiles ();
+	void OutputRegistryInstallTarget ();
 	void GenerateInstallTarget ();
 	FILE* fMakefile;
 	bool use_pch;
 };
-
-std::string FixupTargetFilename ( const std::string& targetFilename );
 
 #endif /* MINGW_H */

@@ -119,7 +119,7 @@ MingwModuleHandler::GetTargetFilename (
 	string_list* pclean_files )
 {
 	string target = PassThruCacheDirectory (
-		FixupTargetFilename ( module.GetPath () ),
+		NormalizeFilename ( module.GetPath () ),
 		backend->outputDirectory );
 	if ( pclean_files )
 	{
@@ -135,7 +135,7 @@ MingwModuleHandler::GetImportLibraryFilename (
 	string_list* pclean_files )
 {
 	string target = PassThruCacheDirectory (
-		FixupTargetFilename ( module.GetDependencyPath () ),
+		NormalizeFilename ( module.GetDependencyPath () ),
 		backend->outputDirectory );
 	if ( pclean_files )
 	{
@@ -1402,11 +1402,11 @@ MingwModuleHandler::GenerateInvocations () const
 			          invoke_targets[i].c_str () );
 		fprintf ( fMakefile,
 		          ": %s\n",
-		          FixupTargetFilename ( invoke.invokeModule->GetPath () ).c_str () );
+		          NormalizeFilename ( invoke.invokeModule->GetPath () ).c_str () );
 		fprintf ( fMakefile, "\t$(ECHO_INVOKE)\n" );
 		fprintf ( fMakefile,
 		          "\t%s %s\n\n",
-		          FixupTargetFilename ( invoke.invokeModule->GetPath () ).c_str (),
+		          NormalizeFilename ( invoke.invokeModule->GetPath () ).c_str (),
 		          invoke.GetParameters ().c_str () );
 	}
 }
@@ -1932,7 +1932,7 @@ MingwWin32DLLModuleHandler::GenerateExtractWineDLLResourcesTarget ()
 		string extension = GetExtension ( file.name );
 		if ( extension == ".rc" || extension == ".RC" )
 		{
-			string resource = FixupTargetFilename ( file.name );
+			string resource = NormalizeFilename ( file.name );
 			fprintf ( fMakefile, "\t$(ECHO_BIN2RES)\n" );
 			fprintf ( fMakefile, "\t@:echo ${bin2res} -f -x %s\n",
 			          resource.c_str () );
@@ -2272,7 +2272,7 @@ MingwIsoModuleHandler::GetBootstrapCdFiles (
 	{
 		const Module& m = *module.project.modules[i];
 		if ( m.bootstrap != NULL )
-			out.push_back ( FixupTargetFilename ( m.GetPath () ) );
+			out.push_back ( NormalizeFilename ( m.GetPath () ) );
 	}
 }
 
@@ -2299,13 +2299,13 @@ void
 MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 {
 	string bootcdDirectory = "cd";
-	string isoboot = FixupTargetFilename ( "boot/freeldr/bootsect/isoboot.o" );
+	string isoboot = NormalizeFilename ( "boot/freeldr/bootsect/isoboot.o" );
 	string bootcdReactosNoFixup = bootcdDirectory + "/reactos";
 	string bootcdReactos = PassThruCacheDirectory (
 		NormalizeFilename ( bootcdReactosNoFixup ),
 		backend->outputDirectory );
 	CLEAN_FILE ( bootcdReactos );
-	string reactosInf = ros_temp + FixupTargetFilename ( bootcdReactosNoFixup + "/reactos.inf" );
+	string reactosInf = ros_temp + NormalizeFilename ( bootcdReactosNoFixup + "/reactos.inf" );
 	string reactosDff = NormalizeFilename ( "bootdata/packages/reactos.dff" );
 	string cdDirectories = GetCdDirectories ( bootcdDirectory );
 	vector<string> vCdFiles;

@@ -120,6 +120,28 @@ Directory::ReplaceVariable ( string name,
 }
 
 string
+Directory::GetEnvironmentVariable ( const string& name )
+{
+	char* value = getenv ( name.c_str () );
+	if ( value != NULL && strlen ( value ) > 0 )
+		return ssprintf ( "%s",
+		                  value );
+	else
+		return "";
+}
+
+string
+Directory::GetEnvironmentVariablePathOrDefault ( const string& name,
+	                                             const string& defaultValue )
+{
+	const string& environmentVariableValue = GetEnvironmentVariable ( name );
+	if ( environmentVariableValue.length () > 0 )
+		return NormalizeFilename ( environmentVariableValue );
+	else
+		return defaultValue;
+}
+
+string
 Directory::GetIntermediatePath ()
 {
 	return "obj-i386";
@@ -131,12 +153,20 @@ Directory::GetOutputPath ()
 	return "output-i386";
 }
 
+string
+Directory::GetInstallPath ()
+{
+	return GetEnvironmentVariablePathOrDefault ( "ROS_INSTALL",
+	                                             "reactos" );
+}
+
 void
 Directory::ResolveVariablesInPath ( char* buf,
 	                                string path )
 {
 	string s = ReplaceVariable ( "$(INTERMEDIATE)", GetIntermediatePath (), path );
 	s = ReplaceVariable ( "$(OUTPUT)", GetOutputPath (), s );
+	s = ReplaceVariable ( "$(INSTALL)", GetInstallPath (), s );
 	strcpy ( buf, s.c_str () );
 }
 
@@ -181,7 +211,8 @@ public:
 MingwBackend::MingwBackend ( Project& project, bool verbose )
 	: Backend ( project, verbose ),
 	  intermediateDirectory ( new Directory ("$(INTERMEDIATE)" ) ),
-	  outputDirectory ( new Directory ( "$(OUTPUT)" ) )
+	  outputDirectory ( new Directory ( "$(OUTPUT)" ) ),
+	  installDirectory ( new Directory ( "$(INSTALL)" ) )
 {
 }
 
@@ -189,6 +220,7 @@ MingwBackend::~MingwBackend()
 {
 	delete intermediateDirectory;
 	delete outputDirectory;
+	delete installDirectory;
 }
 
 string
@@ -514,13 +546,8 @@ MingwBackend::GenerateDirectories ()
 	printf ( "Creating directories..." );
 	intermediateDirectory->GenerateTree ( "", verbose );
 	outputDirectory->GenerateTree ( "", verbose );
+	installDirectory->GenerateTree ( "", verbose );
 	printf ( "done\n" );
-}
-
-string
-FixupTargetFilename ( const string& targetFilename )
-{
-	return NormalizeFilename ( targetFilename );
 }
 
 void
@@ -551,9 +578,6 @@ MingwBackend::DetectPipeSupport ()
 		printf ( "detected\n" );
 	else
 		printf ( "not detected\n" );
-
-	// TODO FIXME - eventually check for ROS_USE_PCH env var and
-	// allow that to override use_pch if true
 }
 
 void
@@ -583,30 +607,25 @@ MingwBackend::DetectPCHSupport ()
 		printf ( "detected\n" );
 	else
 		printf ( "not detected\n" );
-
-	// TODO FIXME - eventually check for ROS_USE_PCH env var and
-	// allow that to override use_pch if true
 }
 
 void
 MingwBackend::GetNonModuleInstallTargetFiles (
-	string installDirectory,
 	vector<string>& out ) const
 {
 	for ( size_t i = 0; i < ProjectNode.installfiles.size (); i++ )
 	{
 		const InstallFile& installfile = *ProjectNode.installfiles[i];
-		string targetFilenameNoFixup = installDirectory + SSEP + installfile.base + SSEP + installfile.newname;
+		string targetFilenameNoFixup = installfile.base + SSEP + installfile.newname;
 		string targetFilename = MingwModuleHandler::PassThruCacheDirectory (
 			NormalizeFilename ( targetFilenameNoFixup ),
-			outputDirectory );
+			installDirectory );
 		out.push_back ( targetFilename );
 	}
 }
 
 void
 MingwBackend::GetModuleInstallTargetFiles (
-	string installDirectory,
 	vector<string>& out ) const
 {
 	for ( size_t i = 0; i < ProjectNode.modules.size (); i++ )
@@ -614,10 +633,10 @@ MingwBackend::GetModuleInstallTargetFiles (
 		const Module& module = *ProjectNode.modules[i];
 		if ( module.installName.length () > 0 )
 		{
-			string targetFilenameNoFixup = installDirectory + SSEP + module.installBase + SSEP + module.installName;
+			string targetFilenameNoFixup = module.installBase + SSEP + module.installName;
 			string targetFilename = MingwModuleHandler::PassThruCacheDirectory (
 				NormalizeFilename ( targetFilenameNoFixup ),
-				outputDirectory );
+				installDirectory );
 			out.push_back ( targetFilename );
 		}
 	}
@@ -625,27 +644,23 @@ MingwBackend::GetModuleInstallTargetFiles (
 
 void
 MingwBackend::GetInstallTargetFiles (
-	string installDirectory,
 	vector<string>& out ) const
 {
-	GetNonModuleInstallTargetFiles ( installDirectory,
-	                                 out );
-	GetModuleInstallTargetFiles ( installDirectory,
-	                              out );
+	GetNonModuleInstallTargetFiles ( out );
+	GetModuleInstallTargetFiles ( out );
 }
 
 void
-MingwBackend::OutputInstallTarget ( const string& installDirectory,
-	                                const string& sourceFilename,
+MingwBackend::OutputInstallTarget ( const string& sourceFilename,
 	                                const string& targetFilename,
 	                                const string& targetDirectory )
 {
 	string normalizedTargetFilename = MingwModuleHandler::PassThruCacheDirectory (
-		NormalizeFilename ( installDirectory + SSEP + targetDirectory + SSEP + targetFilename ),
-		outputDirectory );
+		NormalizeFilename ( targetDirectory + SSEP + targetFilename ),
+		installDirectory );
 	string normalizedTargetDirectory = MingwModuleHandler::PassThruCacheDirectory (
-		NormalizeFilename ( installDirectory + SSEP + targetDirectory ),
-		outputDirectory );
+		NormalizeFilename ( targetDirectory ),
+		installDirectory );
 	fprintf ( fMakefile,
 	          "%s: %s %s\n",
 	          normalizedTargetFilename.c_str (),
@@ -660,20 +675,19 @@ MingwBackend::OutputInstallTarget ( const string& installDirectory,
 }
 
 void
-MingwBackend::OutputNonModuleInstallTargets ( const string& installDirectory )
+MingwBackend::OutputNonModuleInstallTargets ()
 {
 	for ( size_t i = 0; i < ProjectNode.installfiles.size (); i++ )
 	{
 		const InstallFile& installfile = *ProjectNode.installfiles[i];
-		OutputInstallTarget ( installDirectory,
-	                          installfile.GetPath (),
+		OutputInstallTarget ( installfile.GetPath (),
 	                          installfile.newname,
 	                          installfile.base );
 	}
 }
 
 void
-MingwBackend::OutputModuleInstallTargets ( const string& installDirectory )
+MingwBackend::OutputModuleInstallTargets ()
 {
 	for ( size_t i = 0; i < ProjectNode.modules.size (); i++ )
 	{
@@ -683,8 +697,7 @@ MingwBackend::OutputModuleInstallTargets ( const string& installDirectory )
 			string sourceFilename = MingwModuleHandler::PassThruCacheDirectory (
 				NormalizeFilename ( module.GetPath () ),
 				outputDirectory );
-			OutputInstallTarget ( installDirectory,
-		                          sourceFilename,
+			OutputInstallTarget ( sourceFilename,
 		                          module.installName,
 		                          module.installBase );
 		}
@@ -702,11 +715,12 @@ MingwBackend::GetRegistrySourceFiles ()
 }
 
 string
-MingwBackend::GetRegistryTargetFiles ( const string& installDirectory )
+MingwBackend::GetRegistryTargetFiles ()
 {
-	string system32ConfigDirectory = MingwModuleHandler::PassThruCacheDirectory (
-		NormalizeFilename ( installDirectory + SSEP + "system32" + SSEP "config" ),
-		outputDirectory );
+	string system32ConfigDirectory = NormalizeFilename (
+		MingwModuleHandler::PassThruCacheDirectory (
+		"system32" SSEP "config" SSEP,
+		installDirectory ) );
 	return system32ConfigDirectory + SSEP "default " +
 		system32ConfigDirectory + SSEP "sam " +
 		system32ConfigDirectory + SSEP "security " +
@@ -715,14 +729,15 @@ MingwBackend::GetRegistryTargetFiles ( const string& installDirectory )
 }
 
 void
-MingwBackend::OutputRegistryInstallTarget ( const string& installDirectory )
+MingwBackend::OutputRegistryInstallTarget ()
 {
-	string system32ConfigDirectory = MingwModuleHandler::PassThruCacheDirectory (
-		NormalizeFilename ( installDirectory + SSEP + "system32" + SSEP "config" ),
-		outputDirectory );
+	string system32ConfigDirectory = NormalizeFilename (
+		MingwModuleHandler::PassThruCacheDirectory (
+		"system32" SSEP "config" SSEP,
+		installDirectory ) );
 
 	string registrySourceFiles = GetRegistrySourceFiles ();
-	string registryTargetFiles = GetRegistryTargetFiles ( installDirectory );
+	string registryTargetFiles = GetRegistryTargetFiles ();
 	fprintf ( fMakefile,
 	          "install_registry: %s\n",
 	          registryTargetFiles.c_str () );
@@ -743,22 +758,16 @@ MingwBackend::OutputRegistryInstallTarget ( const string& installDirectory )
 void
 MingwBackend::GenerateInstallTarget ()
 {
-	string installDirectoryNoFixup = "reactos";
-	string installDirectory = MingwModuleHandler::PassThruCacheDirectory (
-		NormalizeFilename ( installDirectoryNoFixup ),
-		outputDirectory );
 	vector<string> vInstallTargetFiles;
-	GetInstallTargetFiles ( installDirectoryNoFixup,
-	                        vInstallTargetFiles );
+	GetInstallTargetFiles ( vInstallTargetFiles );
 	string installTargetFiles = v2s ( vInstallTargetFiles, 5 );
 
 	fprintf ( fMakefile,
-	          "install: %s %s install_registry\n",
-	          installDirectory.c_str (),
+	          "install: %s install_registry\n",
 	          installTargetFiles.c_str () );
-	OutputNonModuleInstallTargets ( installDirectoryNoFixup );
-	OutputModuleInstallTargets ( installDirectoryNoFixup );
-	OutputRegistryInstallTarget ( installDirectoryNoFixup );
+	OutputNonModuleInstallTargets ();
+	OutputModuleInstallTargets ();
+	OutputRegistryInstallTarget ();
 	fprintf ( fMakefile,
 	          "\n" );
 }

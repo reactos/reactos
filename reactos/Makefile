@@ -178,6 +178,13 @@ else
 endif
 OUTPUT_ := $(OUTPUT)$(SEP)
 
+ifneq ($(ROS_INSTALL),)
+  INSTALL := $(ROS_INSTALL)
+else
+  INSTALL := reactos
+endif
+INSTALL_ := $(INSTALL)$(SEP)
+
 $(INTERMEDIATE):
 	${mkdir} $@
 
@@ -185,6 +192,7 @@ ifneq ($(INTERMEDIATE),$(OUTPUT))
 $(OUTPUT):
 	${mkdir} $@
 endif
+
 
 NTOSKRNL_MC = ntoskrnl$(SEP)ntoskrnl.mc
 KERNEL32_MC = lib$(SEP)kernel32$(SEP)kernel32.mc
