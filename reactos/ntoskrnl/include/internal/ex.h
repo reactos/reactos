@@ -17,6 +17,8 @@ typedef enum
 
 typedef struct _WINSTATION_OBJECT
 {
+  PVOID SharedHeap; /* points to kmode memory! */
+
   CSHORT Type;
   CSHORT Size;
   KSPIN_LOCK Lock;
@@ -44,6 +46,8 @@ typedef struct _WINSTATION_OBJECT
 
 typedef struct _DESKTOP_OBJECT
 {
+  PVOID DesktopHeap; /* points to kmode memory! */
+
   CSHORT Type;
   CSHORT Size;
   LIST_ENTRY ListEntry;

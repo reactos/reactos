@@ -131,10 +131,6 @@ NtUserCallNoParam(DWORD Routine)
       Result = (DWORD)CsrInit();
       break;
     
-    case NOPARAM_ROUTINE_GDI_QUERY_TABLE:
-      Result = (DWORD)GDI_MapHandleTable(NtCurrentProcess());
-      break;
-    
     case NOPARAM_ROUTINE_MSQCLEARWAKEMASK:
       return (DWORD)IntMsqClearWakeMask();
 

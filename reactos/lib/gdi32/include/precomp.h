@@ -9,9 +9,6 @@
 #define NTOS_MODE_USER
 #include <ntos.h>
 
-#define NtGdiQueryTable() \
-  (PGDI_TABLE_ENTRY)NtUserCallNoParam(NOPARAM_ROUTINE_GDI_QUERY_TABLE)
-
 #define NtUserGetDCBrushColor(hbr) \
   (COLORREF)NtUserCallTwoParam((DWORD)(hbr), OBJ_BRUSH, TWOPARAM_ROUTINE_GETDCCOLOR)
 

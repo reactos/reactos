@@ -54,5 +54,6 @@
 /* misc */
 #define TAG_DRIVER	TAG('G', 'D', 'R', 'V') /* video drivers */
 #define TAG_FNTFILE	TAG('F', 'N', 'T', 'F') /* font file */
+#define TAG_SSECTPOOL   TAG('S', 'S', 'C', 'P') /* shared section pool */
 
 #endif /* _WIN32K_TAGS_H */

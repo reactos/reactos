@@ -58,13 +58,15 @@ KeRosGetStackFrames ( PULONG Frames, ULONG FrameCount );
 
 typedef struct _GDI_HANDLE_TABLE
 {
+  /* the table must be located at the beginning of this structure so it can be
+     properly mapped! */
+  GDI_TABLE_ENTRY Entries[GDI_HANDLE_COUNT];
+  
   PPAGED_LOOKASIDE_LIST LookasideLists;
 
   SLIST_HEADER FreeEntriesHead;
   SLIST_ENTRY FreeEntries[((GDI_HANDLE_COUNT * sizeof(GDI_TABLE_ENTRY)) << 3) /
                           (sizeof(SLIST_ENTRY) << 3)];
-
-  GDI_TABLE_ENTRY Entries[GDI_HANDLE_COUNT];
 } GDI_HANDLE_TABLE, *PGDI_HANDLE_TABLE;
 
 typedef struct
@@ -125,11 +127,17 @@ static PGDI_HANDLE_TABLE INTERNAL_CALL
 GDIOBJ_iAllocHandleTable(VOID)
 {
   PGDI_HANDLE_TABLE handleTable;
+  ULONG htSize;
   UINT ObjType;
   UINT i;
   PGDI_TABLE_ENTRY Entry;
 
-  handleTable = ExAllocatePoolWithTag(NonPagedPool, sizeof(GDI_HANDLE_TABLE), TAG_GDIHNDTBLE);
+  handleTable = NULL;
+  htSize = sizeof(GDI_HANDLE_TABLE);
+  
+  IntUserCreateSharedSection(SessionSharedSectionPool,
+                             (PVOID*)&handleTable,
+                             &htSize);
   ASSERT( handleTable );
   RtlZeroMemory(handleTable, sizeof(GDI_HANDLE_TABLE));
 
@@ -148,7 +156,8 @@ GDIOBJ_iAllocHandleTable(VOID)
                                                       TAG_GDIHNDTBLE);
   if(handleTable->LookasideLists == NULL)
   {
-    ExFreePool(handleTable);
+    InUserDeleteSharedSection(SessionSharedSectionPool,
+                              handleTable);
     return NULL;
   }
 
@@ -1479,12 +1488,22 @@ LockHandleFrom:
 }
 
 PVOID INTERNAL_CALL
-GDI_MapHandleTable(HANDLE hProcess)
+GDI_MapHandleTable(PEPROCESS Process)
 {
-  DPRINT("%s:%i: %s(): FIXME - Map handle table into the process memory space!\n",
-         __FILE__, __LINE__, __FUNCTION__);
-  /* FIXME - Map the entire gdi handle table read-only to userland into the
-             scope of hProcess and return the pointer */
+  ULONG TableSize = sizeof(HandleTable->Entries);
+  PVOID MappedGdiTable = NULL; /* FIXME - try preferred GDI_HANDLE_TABLE_BASE_ADDRESS? */
+  NTSTATUS Status = IntUserMapSharedSection(SessionSharedSectionPool,
+                                            Process,
+                                            HandleTable,
+                                            NULL,
+                                            &MappedGdiTable,
+                                            &TableSize,
+                                            TRUE);
+  if(NT_SUCCESS(Status))
+  {
+    return MappedGdiTable;
+  }
+  
   return NULL;
 }
 
