@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.71.4.6 2004/09/14 01:00:44 weiden Exp $
+/* $Id: message.c,v 1.71.4.7 2004/09/23 19:42:30 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -555,7 +555,7 @@ IntPeekMessage(PUSER_MESSAGE Msg,
                            &Message);
   if (Present)
   {
-    RtlCopyMemory(Msg, Message, sizeof(USER_MESSAGE));
+    *Msg = *Message;
     if (RemoveMessages)
     {
       MsqDestroyMessage(Message);
@@ -573,7 +573,7 @@ IntPeekMessage(PUSER_MESSAGE Msg,
                            &Message);
   if (Present)
   {
-    RtlCopyMemory(Msg, Message, sizeof(USER_MESSAGE));
+    *Msg = *Message;
     if (RemoveMessages)
     {
       MsqDestroyMessage(Message);
