@@ -25,6 +25,7 @@
 
 static LIST_ENTRY DpcQueueHead={NULL,NULL};
 static KSPIN_LOCK DpcQueueLock={0,};
+ULONG DpcQueueSize = 0;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -68,6 +69,7 @@ void KeDrainDpcQueue(void)
 	current->Lock=FALSE;
 	KeRaiseIrql(HIGH_LEVEL,&oldlvl);
 	current_entry = RemoveHeadList(&DpcQueueHead);
+	DpcQueueSize--;
 	KeLowerIrql(oldlvl);
 	current = CONTAINING_RECORD(&current_entry,KDPC,DpcListEntry);
      }
@@ -88,6 +90,7 @@ BOOLEAN KeRemoveQueueDpc(PKDPC Dpc)
 	return(FALSE);
      }
    RemoveEntryList(&Dpc->DpcListEntry);
+   DpcQueueSize--;
    Dpc->Lock=0;
    return(TRUE);
 }
@@ -117,6 +120,7 @@ BOOLEAN KeInsertQueueDpc(PKDPC dpc, PVOID SystemArgument1,
      }
    KeAcquireSpinLockAtDpcLevel(&DpcQueueLock);
    InsertHeadList(&DpcQueueHead,&dpc->DpcListEntry);
+   DpcQueueSize++;
    KeReleaseSpinLockFromDpcLevel(&DpcQueueLock);
    dpc->Lock=(PULONG)1;
    DPRINT("DpcQueueHead.Flink %x\n",DpcQueueHead.Flink);

@@ -310,7 +310,7 @@ ZwAllocateVirtualMemory(
    ULONG Type;
    NTSTATUS Status;
    
-   DbgPrint("ZwAllocateVirtualMemory(ProcessHandle %x, *BaseAddress %x, "
+   DPRINT("ZwAllocateVirtualMemory(ProcessHandle %x, *BaseAddress %x, "
 	    "ZeroBits %d, RegionSize %d, AllocationType %x, Protect %x)\n",
 	    ProcessHandle,*BaseAddress,ZeroBits,*RegionSize,AllocationType,
 	    Protect);
@@ -323,7 +323,7 @@ ZwAllocateVirtualMemory(
 				      NULL);
    if (Status != STATUS_SUCCESS)
      {
-	DbgPrint("ZwAllocateVirtualMemory() = %x\n",Status);
+	DPRINT("ZwAllocateVirtualMemory() = %x\n",Status);
 	return(Status);
      }
    
@@ -347,7 +347,7 @@ ZwAllocateVirtualMemory(
 	       {
 		  MemoryArea->Type = Type;
 		  MemoryArea->Attributes =Protect;
-		  DbgPrint("*BaseAddress %x\n",*BaseAddress);
+		  DPRINT("*BaseAddress %x\n",*BaseAddress);
 		  return(STATUS_SUCCESS);
 	       }
 	     
@@ -357,7 +357,7 @@ ZwAllocateVirtualMemory(
 					    *RegionSize,
 					    Type,
 					    Protect);
-	     DbgPrint("*BaseAddress %x\n",*BaseAddress);
+	     DPRINT("*BaseAddress %x\n",*BaseAddress);
 	     return(STATUS_SUCCESS);
 	  }
      }
@@ -375,11 +375,11 @@ ZwAllocateVirtualMemory(
    
    if (Status != STATUS_SUCCESS)
      {
-	DbgPrint("ZwAllocateVirtualMemory() = %x\n",Status);
+	DPRINT("ZwAllocateVirtualMemory() = %x\n",Status);
 	return(Status);
      }
    
-   DbgPrint("*BaseAddress %x\n",*BaseAddress);
+   DPRINT("*BaseAddress %x\n",*BaseAddress);
    
    return(STATUS_SUCCESS);
 }

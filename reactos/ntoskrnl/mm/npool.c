@@ -58,7 +58,7 @@ static unsigned int kernel_pool_base = 0;
 static block_hdr* free_list_head = NULL;
 static block_hdr* used_list_head = NULL;
 static unsigned int nr_free_blocks = 0;
-static unsigned int nr_used_blocks = 0;
+unsigned int nr_used_blocks = 0;
 
 #define ALLOC_MAP_SIZE (NONPAGED_POOL_SIZE / PAGESIZE)
 

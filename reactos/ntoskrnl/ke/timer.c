@@ -17,6 +17,7 @@
 
 #include <limits.h>
 #include <ddk/ntddk.h>
+#include <string.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -413,6 +414,8 @@ static void HandleExpiredTimer(PKTIMER current)
 {
    if (current->dpc!=NULL)
      {
+	DPRINT("current->dpc->DeferredRoutine %x\n",
+		 current->dpc->DeferredRoutine);
 	current->dpc->DeferredRoutine(current->dpc,
 				      current->dpc->DeferredContext,
 				      current->dpc->SystemArgument1,
@@ -457,13 +460,15 @@ void KeExpireTimers(void)
    KeReleaseSpinLock(&timer_list_lock,oldlvl);
 }
 
+extern unsigned int nr_used_blocks;
+
 VOID KiTimerInterrupt(VOID)
 /*
  * FUNCTION: Handles a timer interrupt
  */
 {
-   char str[16];
-   char* vidmem=(char *)physical_to_linear(0xb8000 + 160 - 16);
+   char str[36];
+   char* vidmem=(char *)physical_to_linear(0xb8000 + 160 - 36);
    int i;
    
    /*
@@ -476,8 +481,8 @@ VOID KiTimerInterrupt(VOID)
     * Display the tick count in the top left of the screen as a debugging
     * aid
     */
-   sprintf(str,"%.8u",ticks);
-   for (i=0;i<8;i++)
+   sprintf(str,"%.8u %.8u",nr_used_blocks,ticks);
+   for (i=0;i<17;i++)
      {
 	*vidmem=str[i];
 	vidmem++;

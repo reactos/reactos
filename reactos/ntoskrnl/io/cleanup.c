@@ -37,6 +37,7 @@ VOID IoReadWriteCompletion(PDEVICE_OBJECT DeviceObject,
         DPRINT("Copying buffered io back to user\n");
 	memcpy(Irp->UserBuffer,Irp->AssociatedIrp.SystemBuffer,
 	       IoStack->Parameters.Read.Length);
+	ExFreePool(Irp->AssociatedIrp.SystemBuffer);
      }
    if (DeviceObject->Flags & DO_DIRECT_IO)
      {

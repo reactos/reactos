@@ -17,14 +17,23 @@
 /* GLOBALS *******************************************************************/
 
 HANDLE IdleThreadHandle = NULL;
+extern ULONG DpcQueueSize;
 
 /* FUNCTIONS *****************************************************************/
 
 static VOID PsIdleThreadMain(PVOID Context)
 {
+   KIRQL oldlvl;
+   
    for(;;)
      {
 //        DbgPrint("Idling.... ");
+	if (DpcQueueSize > 0)
+	  {
+	     KeRaiseIrql(DISPATCH_LEVEL,&oldlvl);
+	     KeDrainDpcQueue();
+	     KeLowerIrql(oldlvl);
+	  }
 	ZwYieldExecution();
      }
 }
