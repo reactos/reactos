@@ -196,6 +196,7 @@ typedef struct _CCB
   LARGE_INTEGER  CurrentByteOffset;
   /* for DirectoryControl */
   ULONG Entry;
+  ULONG Offset;
   /* for DirectoryControl */
   PWCHAR DirectorySearchPattern;
   ULONG LastCluster;
