@@ -956,7 +956,7 @@ BEGIN
     IDS_FAVORITES           "Favoris"
     IDS_PROGRAMS            "Programmes"
     IDS_SETTINGS            "Paramètres"
-    IDS_EXPLORE             "Explore"
+    IDS_EXPLORE             "Explorer"
     IDS_EMPTY               "(Vide)"
     IDS_RECENT              "Documents récents"
     IDS_ADMIN               "Administration"
