@@ -70,7 +70,7 @@ secur32.dll  = 2
 user32.dll   = 2
 version.dll  = 2
 winedbgc.dll = 2
-winmm.dll    = 2
+;winmm.dll    = 2
 ws2_32.dll   = 2
 ws2help.dll  = 2
 wshirda.dll  = 2
@@ -93,6 +93,12 @@ helb____.ttf = 6
 timr____.ttf = 6
 
 system.hiv   = 4
+
+winhello.exe = 2
+
+hcalc.exe    = 2
+mc.exe       = 2
+winemine.exe = 2
 
 [SetupData]
 DefaultPath = \ReactOS

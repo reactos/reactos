@@ -1,6 +1,7 @@
 @echo off
 set BOOTCD_DIR=..\bootcd
 set FREELDR_DIR=..\freeldr
+set ROSAPPS_DIR=..\rosapps
 
 md %BOOTCD_DIR%
 md %BOOTCD_DIR%\disk
@@ -130,3 +131,11 @@ copy /Y subsys\win32k\win32k.sys %BOOTCD_DIR%\disk\install
 
 copy /Y media\fonts\helb____.ttf %BOOTCD_DIR%\disk\install
 copy /Y media\fonts\timr____.ttf %BOOTCD_DIR%\disk\install
+
+rem copy test apps
+copy /Y apps\tests\winhello\winhello.exe %BOOTCD_DIR%\disk\install
+
+rem copy rosapps files
+copy /Y %ROSAPPS_DIR%\games\winemine\winemine.exe %BOOTCD_DIR%\disk\install
+copy /Y %ROSAPPS_DIR%\hcalc\hcalc.exe %BOOTCD_DIR%\disk\install
+copy /Y %ROSAPPS_DIR%\mc\mc.exe %BOOTCD_DIR%\disk\install
