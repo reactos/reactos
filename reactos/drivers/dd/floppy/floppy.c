@@ -185,6 +185,15 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
    // point we should get the bios disk parameters passed in to the kernel at boot
    // and stored in the HARDWARE registry key for us to pick up here.
 
+   // Issue SPECIFY command
+   FloppyWriteDATA (ControllerExtension->PortBase, FLOPPY_CMD_SPEC_CHARS);
+   KeStallExecutionProcessor (100);
+   FloppyWriteDATA (ControllerExtension->PortBase, 0xD1);
+   KeStallExecutionProcessor (100);
+   FloppyWriteDATA (ControllerExtension->PortBase, 0x02);
+   KeStallExecutionProcessor (10000);
+   FloppyWriteMSTAT (ControllerExtension->PortBase, 0x00);
+
    // turn on motor, wait for spinup time, and recalibrate the drive
    FloppyWriteDOR( ControllerExtension->PortBase, FLOPPY_DRIVE0_ON );
    Timeout.QuadPart = FLOPPY_MOTOR_SPINUP_TIME;
