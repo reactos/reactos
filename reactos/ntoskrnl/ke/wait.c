@@ -881,7 +881,7 @@ KeReleaseDispatcherDatabaseLock(KIRQL OldIrql)
 {
     /* If it's the idle thread, dispatch */
     if (!KeIsExecutingDpc() && OldIrql < DISPATCH_LEVEL && KeGetCurrentThread() != NULL && 
-        KeGetCurrentThread() == KeGetCurrentKPCR()->PrcbData.IdleThread) {
+        KeGetCurrentThread() == KeGetCurrentPrcb()->IdleThread) {
         
         PsDispatchThreadNoLock(THREAD_STATE_READY);
         KeLowerIrql(OldIrql);

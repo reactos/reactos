@@ -213,7 +213,7 @@ IoCreateStreamFileObject(PFILE_OBJECT FileObject,
   DPRINT("IoCreateStreamFileObject(FileObject %x, DeviceObject %x)\n",
 	 FileObject, DeviceObject);
 
-  ASSERT_IRQL(PASSIVE_LEVEL);
+  PAGED_CODE();
 
   Status = ObCreateObject(KernelMode,
 			  IoFileObjectType,
@@ -406,6 +406,10 @@ IoCreateFile(OUT PHANDLE		FileHandle,
      }
      _SEH_HANDLE
      {
+       if(SystemEaBuffer != NULL)
+       {
+         ExFreePool(SystemEaBuffer);
+       }
        Status = _SEH_GetExceptionCode();
      }
      _SEH_END;
@@ -596,7 +600,7 @@ IoCreateFile(OUT PHANDLE		FileHandle,
      ExFreePool(SystemEaBuffer);
    }
 
-   ASSERT_IRQL(PASSIVE_LEVEL);
+   PAGED_CODE();
 
    DPRINT("Finished IoCreateFile() (*FileHandle) %x\n", (*FileHandle));
 

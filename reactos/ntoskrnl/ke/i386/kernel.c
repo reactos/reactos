@@ -132,6 +132,7 @@ KePrepareForApplicationProcessorInit(ULONG Id)
   Pcr->ProcessorNumber = Id;
   Pcr->Tib.Self = &Pcr->Tib;
   Pcr->Self = Pcr;
+  Pcr->Prcb = &Pcr->PrcbData;
   Pcr->Irql = SYNCH_LEVEL;
 
   Pcr->PrcbData.MHz = BootPcr->PrcbData.MHz;
@@ -172,7 +173,7 @@ KeApplicationProcessorInit(VOID)
   /* Check FPU/MMX/SSE support. */
   KiCheckFPU();
 
-  KeInitDpc(Pcr);
+  KeInitDpc(Pcr->Prcb);
 
   if (Pcr->PrcbData.FeatureBits & X86_FEATURE_SYSCALL)
   {
@@ -224,6 +225,7 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
    KPCR = (PKPCR)KPCR_BASE;
    memset(KPCR, 0, PAGE_SIZE);
    KPCR->Self = KPCR;
+   KPCR->Prcb = &KPCR->PrcbData;
    KPCR->Irql = SYNCH_LEVEL;
    KPCR->Tib.Self  = &KPCR->Tib;
    KPCR->GDT = KiBootGdt;
@@ -246,7 +248,7 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
    /* Mark the end of the exception handler list */
    KPCR->Tib.ExceptionList = (PVOID)-1;
 
-   KeInitDpc(KPCR);
+   KeInitDpc(KPCR->Prcb);
 
    KeInitExceptions ();
    KeInitInterrupts ();

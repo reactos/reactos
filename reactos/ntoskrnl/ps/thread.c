@@ -63,11 +63,11 @@ PKTHREAD STDCALL KeGetCurrentThread(VOID)
    PKTHREAD Thread;
    Ke386SaveFlags(Flags);
    Ke386DisableInterrupts();
-   Thread = KeGetCurrentKPCR()->PrcbData.CurrentThread;
+   Thread = KeGetCurrentPrcb()->CurrentThread;
    Ke386RestoreFlags(Flags);
    return Thread;
 #else
-   return(KeGetCurrentKPCR()->PrcbData.CurrentThread);
+   return(KeGetCurrentPrcb()->CurrentThread);
 #endif
 }
 
@@ -251,7 +251,7 @@ KiRequestReschedule(CCHAR Processor)
    PKPCR Pcr;
 
    Pcr = (PKPCR)(KPCR_BASE + Processor * PAGE_SIZE);
-   Pcr->PrcbData.QuantumEnd = TRUE;
+   Pcr->Prcb->QuantumEnd = TRUE;
    KiIpiSendRequest(1 << Processor, IPI_REQUEST_DPC);
 }
 
@@ -438,7 +438,7 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 	    OldThread = CurrentThread;
 	    CurrentThread = Candidate;
             
-	    IdleThread = KeGetCurrentKPCR()->PrcbData.IdleThread;
+	    IdleThread = KeGetCurrentPrcb()->IdleThread;
 
 	    if (&OldThread->Tcb == IdleThread)
 	    {
@@ -465,7 +465,7 @@ PsDispatchThread(ULONG NewThreadStatus)
 {
    KIRQL oldIrql;
 
-   if (!DoneInitYet || KeGetCurrentKPCR()->PrcbData.IdleThread == NULL)
+   if (!DoneInitYet || KeGetCurrentPrcb()->IdleThread == NULL)
      {
 	return;
      }
@@ -703,7 +703,7 @@ PsPrepareForApplicationProcessorInit(ULONG Id)
 {
   PETHREAD IdleThread;
   HANDLE IdleThreadHandle;
-  PKPCR Pcr = (PKPCR)((ULONG_PTR)KPCR_BASE + Id * PAGE_SIZE);
+  PKPRCB Prcb = ((PKPCR)((ULONG_PTR)KPCR_BASE + Id * PAGE_SIZE))->Prcb;
 
   PsInitializeThread(NULL,
 		     &IdleThread,
@@ -717,8 +717,8 @@ PsPrepareForApplicationProcessorInit(ULONG Id)
   IdleThread->Tcb.UserAffinity = 1 << Id;
   IdleThread->Tcb.Priority = LOW_PRIORITY;
   IdleThread->Tcb.BasePriority = LOW_PRIORITY;
-  Pcr->PrcbData.IdleThread = &IdleThread->Tcb;
-  Pcr->PrcbData.CurrentThread = &IdleThread->Tcb;
+  Prcb->IdleThread = &IdleThread->Tcb;
+  Prcb->CurrentThread = &IdleThread->Tcb;
 
   Ki386InitialStackArray[Id] = (PVOID)IdleThread->Tcb.StackLimit;
 
@@ -775,7 +775,7 @@ PsInitThreadManagment(VOID)
    FirstThread->Tcb.FreezeCount = 0;
    FirstThread->Tcb.UserAffinity = (1 << 0);   /* Set the affinity of the first thread to the boot processor */
    FirstThread->Tcb.Affinity = (1 << 0);
-   KeGetCurrentKPCR()->PrcbData.CurrentThread = (PVOID)FirstThread;
+   KeGetCurrentPrcb()->CurrentThread = (PVOID)FirstThread;
    NtClose(FirstThreadHandle);
 
    DPRINT("FirstThread %x\n",FirstThread);
@@ -893,8 +893,8 @@ KeSetPriorityThread (PKTHREAD Thread, KPRIORITY Priority)
 		     {
 		       for (i = 0; i < KeNumberProcessors; i++)
 		       {
-		          Pcr = (PKPCR)(KPCR_BASE + i * PAGE_SIZE);
-			  if (Pcr->PrcbData.CurrentThread == Thread)
+			  Pcr = (PKPCR)(KPCR_BASE + i * PAGE_SIZE);
+			  if (Pcr->Prcb->CurrentThread == Thread)
 			  {
 			    KeReleaseDispatcherDatabaseLockFromDpcLevel();
                             KiRequestReschedule(i);
@@ -957,7 +957,7 @@ KeSetAffinityThread(PKTHREAD	Thread,
 	     for (i = 0; i < KeNumberProcessors; i++)
 	     {
 		Pcr = (PKPCR)(KPCR_BASE + i * PAGE_SIZE);
-		if (Pcr->PrcbData.CurrentThread == Thread)
+		if (Pcr->Prcb->CurrentThread == Thread)
 		{
 		   if (!(Affinity & ProcessorMask))
 		   {

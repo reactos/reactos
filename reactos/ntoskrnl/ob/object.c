@@ -496,16 +496,14 @@ ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 	     /* reparse the object path */
 	     NextObject = NameSpaceRoot;
 	     current = PathString.Buffer;
-	  }
-
-	if (NextObject != NULL)
-	  {
+	     
 	     ObReferenceObjectByPointer(NextObject,
 					DIRECTORY_TRAVERSE,
 					NULL,
 					UserMode);
 	  }
-        else
+
+	if (NextObject == NULL)
 	  {
 	     break;
 	  }

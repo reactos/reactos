@@ -20,7 +20,6 @@
 
 POBJECT_TYPE  CmiKeyType = NULL;
 PREGISTRY_HIVE  CmiVolatileHive = NULL;
-KSPIN_LOCK  CmiKeyListLock;
 
 LIST_ENTRY CmiHiveListHead;
 
@@ -361,7 +360,6 @@ CmInitializeRegistry(VOID)
   CmiVolatileHive->RootSecurityCell = RootSecurityCell;
 #endif
 
-  KeInitializeSpinLock(&CmiKeyListLock);
 
   /* Create '\Registry\Machine' key. */
   RtlInitUnicodeString(&KeyName,

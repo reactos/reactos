@@ -144,11 +144,21 @@ SepCaptureSecurityQualityOfService(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIO
                          sizeof(SECURITY_QUALITY_OF_SERVICE),
                          sizeof(ULONG));
 
-            /* don't allocate memory here because ExAllocate should bugcheck
-               the system if it's buggy, SEH would catch that! So make a local
-               copy of the qos structure.*/
-            SafeQos = *(PSECURITY_QUALITY_OF_SERVICE)ObjectAttributes->SecurityQualityOfService;
-            *Present = TRUE;
+            if(((PSECURITY_QUALITY_OF_SERVICE)ObjectAttributes->SecurityQualityOfService)->Length ==
+               sizeof(SECURITY_QUALITY_OF_SERVICE))
+            {
+              /* don't allocate memory here because ExAllocate should bugcheck
+                 the system if it's buggy, SEH would catch that! So make a local
+                 copy of the qos structure.*/
+              RtlCopyMemory(&SafeQos,
+                            ObjectAttributes->SecurityQualityOfService,
+                            sizeof(SECURITY_QUALITY_OF_SERVICE));
+              *Present = TRUE;
+            }
+            else
+            {
+              Status = STATUS_INVALID_PARAMETER;
+            }
           }
           else
           {
@@ -167,15 +177,18 @@ SepCaptureSecurityQualityOfService(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIO
       }
       _SEH_END;
 
-      if(NT_SUCCESS(Status) && *Present)
+      if(NT_SUCCESS(Status))
       {
-        if(SafeQos.Length == sizeof(SECURITY_QUALITY_OF_SERVICE))
+        if(*Present)
         {
           CapturedQos = ExAllocatePool(PoolType,
                                        sizeof(SECURITY_QUALITY_OF_SERVICE));
           if(CapturedQos != NULL)
           {
-            *CapturedQos = SafeQos;
+            RtlCopyMemory(CapturedQos,
+                          &SafeQos,
+                          sizeof(SECURITY_QUALITY_OF_SERVICE));
+            *CapturedSecurityQualityOfService = CapturedQos;
           }
           else
           {
@@ -184,7 +197,7 @@ SepCaptureSecurityQualityOfService(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIO
         }
         else
         {
-          Status = STATUS_INVALID_PARAMETER;
+          *CapturedSecurityQualityOfService = NULL;
         }
       }
     }
@@ -203,7 +216,9 @@ SepCaptureSecurityQualityOfService(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIO
                                            sizeof(SECURITY_QUALITY_OF_SERVICE));
               if(CapturedQos != NULL)
               {
-                *CapturedQos = *(PSECURITY_QUALITY_OF_SERVICE)ObjectAttributes->SecurityQualityOfService;
+                RtlCopyMemory(CapturedQos,
+                              ObjectAttributes->SecurityQualityOfService,
+                              sizeof(SECURITY_QUALITY_OF_SERVICE));
                 *CapturedSecurityQualityOfService = CapturedQos;
                 *Present = TRUE;
               }
@@ -226,7 +241,7 @@ SepCaptureSecurityQualityOfService(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIO
         else
         {
           *CapturedSecurityQualityOfService = (PSECURITY_QUALITY_OF_SERVICE)ObjectAttributes->SecurityQualityOfService;
-          *Present = (ObjectAttributes->SecurityQualityOfService) != NULL;
+          *Present = (ObjectAttributes->SecurityQualityOfService != NULL);
         }
       }
       else

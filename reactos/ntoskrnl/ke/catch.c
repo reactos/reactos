@@ -54,7 +54,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
     DPRINT("KiDispatchException() called\n");
 
     /* Increase number of Exception Dispatches */
-    KeGetCurrentKPCR()->PrcbData.KeExceptionDispatchCount++;
+    KeGetCurrentPrcb()->KeExceptionDispatchCount++;
 
     if (!Context) {
         

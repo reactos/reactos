@@ -164,9 +164,7 @@ FrLdrStartup(ULONG Magic)
     /* Re-initalize EFLAGS */
     Ke386EraseFlags();
     
-    /* Get Kernel Base and Set MmSystemRangeStart */  
-    FrLdrGetKernelBase();
-
+    /* Get the PAE Mode */
     FrLdrGetPaeMode();
        
     /* Initialize the page directory */
@@ -531,6 +529,14 @@ FrLdrMapKernel(FILE *KernelImage)
     ULONG_PTR TargetSection;
     ULONG SectionSize;
     LONG i;
+    PIMAGE_DATA_DIRECTORY RelocationDDir;
+    PIMAGE_BASE_RELOCATION RelocationDir, RelocationEnd;
+    ULONG Count;
+    ULONG_PTR Address, MaxAddress;
+    PUSHORT TypeOffset;
+    ULONG_PTR Delta;
+    PUSHORT ShortPtr;
+    PULONG LongPtr;
 
     /* Allocate 1024 bytes for PE Header */
     ImageHeader = (PIMAGE_DOS_HEADER)MmAllocateMemory(1024);
@@ -552,8 +558,9 @@ FrLdrMapKernel(FILE *KernelImage)
     /* Now read the MZ header to get the offset to the PE Header */
     NtHeader = (PIMAGE_NT_HEADERS)((PCHAR)ImageHeader + ImageHeader->e_lfanew);
      
-    /* Save the Image Base */
-    KernelBase = NtHeader->OptionalHeader.ImageBase;
+    /* Get Kernel Base */
+    KernelBase = NtHeader->OptionalHeader.ImageBase;  
+    FrLdrGetKernelBase();
     
     /* Save Entrypoint */
     KernelEntry = RaToPa(NtHeader->OptionalHeader.AddressOfEntryPoint);
@@ -603,9 +610,64 @@ FrLdrMapKernel(FILE *KernelImage)
                    Section->Misc.VirtualSize - Section->SizeOfRawData);
         }
     }
+       
+    /* Get the Relocation Data Directory */
+    RelocationDDir = &NtHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC];
     
-    /* Now relocate the file */
-    /* FIXME: ADD RELOC CODE */
+    /* Get the Relocation Section Start and End*/
+    RelocationDir = (PIMAGE_BASE_RELOCATION)(KERNEL_BASE_PHYS + RelocationDDir->VirtualAddress);
+    RelocationEnd = (PIMAGE_BASE_RELOCATION)((ULONG_PTR)RelocationDir + RelocationDDir->Size);
+   
+    /* Calculate Difference between Real Base and Compiled Base*/
+    Delta = KernelBase - NtHeader->OptionalHeader.ImageBase;;
+    
+    /* Determine how far we shoudl relocate */
+    MaxAddress = KERNEL_BASE_PHYS + ImageSize;
+    
+    /* Relocate until we've processed all the blocks */
+    while (RelocationDir < RelocationEnd && RelocationDir->SizeOfBlock > 0) {
+        
+        /* See how many Relocation Blocks we have */
+        Count = (RelocationDir->SizeOfBlock - sizeof(IMAGE_BASE_RELOCATION)) / sizeof(USHORT);
+        
+        /* Calculate the Address of this Directory */
+        Address = KERNEL_BASE_PHYS + RelocationDir->VirtualAddress;
+        
+        /* Calculate the Offset of the Type */
+        TypeOffset = (PUSHORT)(RelocationDir + 1);
+
+        for (i = 0; i < Count; i++) {
+            
+            ShortPtr = (PUSHORT)(Address + (*TypeOffset & 0xFFF));
+
+            /* Don't relocate after the end of the loaded driver */
+            if ((ULONG_PTR)ShortPtr >= MaxAddress) break;
+
+            switch (*TypeOffset >> 12) {
+                
+                case IMAGE_REL_BASED_ABSOLUTE:
+                    break;
+
+                case IMAGE_REL_BASED_HIGH:
+                    *ShortPtr += HIWORD(Delta);
+                    break;
+
+                case IMAGE_REL_BASED_LOW:
+                    *ShortPtr += LOWORD(Delta);
+                    break;
+
+                case IMAGE_REL_BASED_HIGHLOW:
+                    LongPtr = (PULONG)ShortPtr;
+                    *LongPtr += Delta;
+                    break;
+            }
+            
+            TypeOffset++;
+        }
+        
+        /* Move to the next Relocation Table */
+        RelocationDir = (PIMAGE_BASE_RELOCATION)((ULONG_PTR)RelocationDir + RelocationDir->SizeOfBlock);
+    }
     
     /* Increase the next Load Base */
     NextModuleBase = ROUND_UP(KERNEL_BASE_PHYS + ImageSize, PAGE_SIZE);

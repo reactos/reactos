@@ -47,12 +47,7 @@ TARGET_CFLAGS = -I./include $(CFLAGS_KDBG) -Wall -Werror $(CFLAGS_OPT)
 TARGET_CFLAGS += -D_DISABLE_TIDENTS
 
 # 3GB User Mode Memory Space support
-ifeq ($(3GB), 1)
-TARGET_CFLAGS += -D__3GB__
-TARGET_BASE = 0xC0000000
-else
 TARGET_BASE = 0x80000000
-endif
 
 ifneq ($(DBG), 0)
 TARGET_CFLAGS += -DDBG

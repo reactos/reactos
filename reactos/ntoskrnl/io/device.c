@@ -541,7 +541,7 @@ IoCreateDevice(
    OBJECT_ATTRIBUTES ObjectAttributes;
    NTSTATUS Status;
    
-   ASSERT_IRQL(PASSIVE_LEVEL);
+   PAGED_CODE();
    
    if (DeviceName != NULL)
    {

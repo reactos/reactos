@@ -76,6 +76,9 @@ CmiObjectParse(PVOID ParsedObject,
 		KeyName.Length);
   KeyName.Buffer[KeyName.Length / sizeof(WCHAR)] = 0;
 
+  /* Acquire hive lock */
+  KeEnterCriticalRegion();
+  ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
 
   FoundObject = CmiScanKeyList(ParsedKey,
 			       &KeyName,
@@ -91,6 +94,8 @@ CmiObjectParse(PVOID ParsedObject,
 				Attributes);
       if (!NT_SUCCESS(Status) || (SubKeyCell == NULL))
 	{
+          ExReleaseResourceLite(&CmiRegistryLock);
+          KeLeaveCriticalRegion();
 	  RtlFreeUnicodeString(&KeyName);
 	  return(STATUS_UNSUCCESSFUL);
 	}
@@ -104,6 +109,9 @@ CmiObjectParse(PVOID ParsedObject,
 				    &LinkPath);
 	  if (NT_SUCCESS(Status))
 	    {
+              ExReleaseResourceLite(&CmiRegistryLock);
+              KeLeaveCriticalRegion();
+
 	      DPRINT("LinkPath '%wZ'\n", &LinkPath);
 
 	      /* build new FullPath for reparsing */
@@ -152,6 +160,8 @@ CmiObjectParse(PVOID ParsedObject,
 			      (PVOID*)&FoundObject);
       if (!NT_SUCCESS(Status))
 	{
+          ExReleaseResourceLite(&CmiRegistryLock);
+          KeLeaveCriticalRegion();
 	  RtlFreeUnicodeString(&KeyName);
 	  return(Status);
 	}
@@ -179,6 +189,11 @@ CmiObjectParse(PVOID ParsedObject,
 	  if (NT_SUCCESS(Status))
 	    {
 	      DPRINT("LinkPath '%wZ'\n", &LinkPath);
+	
+              ExReleaseResourceLite(&CmiRegistryLock);
+              KeLeaveCriticalRegion();
+
+	      ObDereferenceObject(FoundObject);
 
 	      /* build new FullPath for reparsing */
 	      TargetPath.MaximumLength = LinkPath.MaximumLength;
@@ -213,6 +228,8 @@ CmiObjectParse(PVOID ParsedObject,
 	    }
 	}
     }
+  ExReleaseResourceLite(&CmiRegistryLock);
+  KeLeaveCriticalRegion();
 
   DPRINT("CmiObjectParse: %s\n", FoundObject->Name);
 
@@ -269,6 +286,10 @@ CmiObjectDelete(PVOID DeletedObject)
 
   ObReferenceObject (ParentKeyObject);
 
+  /* Acquire hive lock */
+  KeEnterCriticalRegion();
+  ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
+
   if (!NT_SUCCESS(CmiRemoveKeyFromList(KeyObject)))
     {
       DPRINT1("Key not found in parent list ???\n");
@@ -296,6 +317,9 @@ CmiObjectDelete(PVOID DeletedObject)
     }
 
   ObDereferenceObject (ParentKeyObject);
+
+  ExReleaseResourceLite(&CmiRegistryLock);
+  KeLeaveCriticalRegion();
 
   if (KeyObject->NumberOfSubKeys)
     {
@@ -527,11 +551,9 @@ VOID
 CmiAddKeyToList(PKEY_OBJECT ParentKey,
 		PKEY_OBJECT NewKey)
 {
-  KIRQL OldIrql;
 
   DPRINT("ParentKey %.08x\n", ParentKey);
 
-  KeAcquireSpinLock(&CmiKeyListLock, &OldIrql);
 
   if (ParentKey->SizeOfSubKeys <= ParentKey->NumberOfSubKeys)
     {
@@ -563,7 +585,6 @@ CmiAddKeyToList(PKEY_OBJECT ParentKey,
 		NULL,
 		UserMode);
   NewKey->ParentKey = ParentKey;
-  KeReleaseSpinLock(&CmiKeyListLock, OldIrql);
 }
 
 
@@ -571,11 +592,9 @@ NTSTATUS
 CmiRemoveKeyFromList(PKEY_OBJECT KeyToRemove)
 {
   PKEY_OBJECT ParentKey;
-  KIRQL OldIrql;
   DWORD Index;
 
   ParentKey = KeyToRemove->ParentKey;
-  KeAcquireSpinLock(&CmiKeyListLock, &OldIrql);
   /* FIXME: If list maintained in alphabetic order, use dichotomic search */
   for (Index = 0; Index < ParentKey->NumberOfSubKeys; Index++)
     {
@@ -586,7 +605,6 @@ CmiRemoveKeyFromList(PKEY_OBJECT KeyToRemove)
 			  &ParentKey->SubKeys[Index + 1],
 			  (ParentKey->NumberOfSubKeys - Index - 1) * sizeof(PKEY_OBJECT));
 	  ParentKey->NumberOfSubKeys--;
-	  KeReleaseSpinLock(&CmiKeyListLock, OldIrql);
 
 	  DPRINT("Dereference parent key: 0x%x\n", ParentKey);
 	
@@ -594,7 +612,6 @@ CmiRemoveKeyFromList(PKEY_OBJECT KeyToRemove)
 	  return STATUS_SUCCESS;
 	}
     }
-  KeReleaseSpinLock(&CmiKeyListLock, OldIrql);
 
   return STATUS_UNSUCCESSFUL;
 }
@@ -606,13 +623,12 @@ CmiScanKeyList(PKEY_OBJECT Parent,
 	       ULONG Attributes)
 {
   PKEY_OBJECT CurKey;
-  KIRQL OldIrql;
   ULONG Index;
-
+  NTSTATUS Status;
+  
   DPRINT("Scanning key list for: %wZ (Parent: %wZ)\n",
 	 KeyName, &Parent->Name);
 
-  KeAcquireSpinLock(&CmiKeyListLock, &OldIrql);
   /* FIXME: if list maintained in alphabetic order, use dichotomic search */
   for (Index=0; Index < Parent->NumberOfSubKeys; Index++)
     {
@@ -622,8 +638,7 @@ CmiScanKeyList(PKEY_OBJECT Parent,
 	  if ((KeyName->Length == CurKey->Name.Length)
 	      && (_wcsicmp(KeyName->Buffer, CurKey->Name.Buffer) == 0))
 	    {
-	      KeReleaseSpinLock(&CmiKeyListLock, OldIrql);
-	      return CurKey;
+	      break;
 	    }
 	}
       else
@@ -631,13 +646,23 @@ CmiScanKeyList(PKEY_OBJECT Parent,
 	  if ((KeyName->Length == CurKey->Name.Length)
 	      && (wcscmp(KeyName->Buffer, CurKey->Name.Buffer) == 0))
 	    {
-	      KeReleaseSpinLock(&CmiKeyListLock, OldIrql);
-	      return CurKey;
+	      break;
 	    }
 	}
     }
-  KeReleaseSpinLock(&CmiKeyListLock, OldIrql);
 
+  if (Index < Parent->NumberOfSubKeys)
+    {
+      Status = ObReferenceObjectByPointer(CurKey,
+	                                  STANDARD_RIGHTS_REQUIRED,
+				          NULL,
+				          UserMode);
+      if (NT_SUCCESS(Status))
+	{
+          return CurKey;
+        }
+    }
+  
   return NULL;
 }
 

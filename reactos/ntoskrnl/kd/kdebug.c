@@ -444,7 +444,7 @@ KdSystemDebugControl(ULONG Code)
       /* FIXME: This is needed to allow Int10 to attach to csrss until
        * bugchecks are done properly with Inbv, which i'll implement soon -- Alex
        */
-      KeGetCurrentKPCR()->PrcbData.DpcRoutineActive = FALSE;
+      KeGetCurrentPrcb()->DpcRoutineActive = FALSE;
       KEBUGCHECK(MANUALLY_INITIATED_CRASH);
     }
   /* 

@@ -32,7 +32,7 @@ KiIpiSendRequest(ULONG TargetSet, ULONG IpiRequest)
       if (TargetSet & (1 << i))
       {
          Pcr = (PKPCR)(KPCR_BASE + i * PAGE_SIZE);
-	 Ke386TestAndSetBit(IpiRequest, &Pcr->PrcbData.IpiFrozen);
+	 Ke386TestAndSetBit(IpiRequest, &Pcr->Prcb->IpiFrozen);
 	 HalRequestIpi(i);
       }
    }
@@ -50,34 +50,34 @@ KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
    LARGE_INTEGER StartTime, CurrentTime, Frequency;
    ULONG Count = 5;
 #endif   
-   PKPCR Pcr;
+   PKPRCB Prcb;
 
    ASSERT(KeGetCurrentIrql() == IPI_LEVEL);
 
    DPRINT("KiIpiServiceRoutine\n");
 
-   Pcr = KeGetCurrentKPCR();
+   Prcb = KeGetCurrentPrcb();
 
-   if (Ke386TestAndClearBit(IPI_REQUEST_APC, &Pcr->PrcbData.IpiFrozen))
+   if (Ke386TestAndClearBit(IPI_REQUEST_APC, &Prcb->IpiFrozen))
    {
       HalRequestSoftwareInterrupt(APC_LEVEL);
    }
 
-   if (Ke386TestAndClearBit(IPI_REQUEST_DPC, &Pcr->PrcbData.IpiFrozen))
+   if (Ke386TestAndClearBit(IPI_REQUEST_DPC, &Prcb->IpiFrozen))
    {
-      Pcr->PrcbData.DpcInterruptRequested = TRUE;
+      Prcb->DpcInterruptRequested = TRUE;
       HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
    }
 
-   if (Ke386TestAndClearBit(IPI_REQUEST_FUNCTIONCALL, &Pcr->PrcbData.IpiFrozen))
+   if (Ke386TestAndClearBit(IPI_REQUEST_FUNCTIONCALL, &Prcb->IpiFrozen))
    {
-      InterlockedDecrementUL(&Pcr->PrcbData.SignalDone->CurrentPacket[1]);
-      if (InterlockedCompareExchangeUL(&Pcr->PrcbData.SignalDone->CurrentPacket[2], 0, 0))
+      InterlockedDecrementUL(&Prcb->SignalDone->CurrentPacket[1]);
+      if (InterlockedCompareExchangeUL(&Prcb->SignalDone->CurrentPacket[2], 0, 0))
       {
 #ifdef DBG      	
          StartTime = KeQueryPerformanceCounter(&Frequency);
 #endif         
-         while (0 != InterlockedCompareExchangeUL(&Pcr->PrcbData.SignalDone->CurrentPacket[1], 0, 0))
+         while (0 != InterlockedCompareExchangeUL(&Prcb->SignalDone->CurrentPacket[1], 0, 0))
 	 {
 #ifdef DBG	 	
             CurrentTime = KeQueryPerformanceCounter(NULL);
@@ -89,14 +89,14 @@ KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
 #endif	 
          }
       }
-      ((VOID STDCALL(*)(PVOID))(Pcr->PrcbData.SignalDone->WorkerRoutine))(Pcr->PrcbData.SignalDone->CurrentPacket[0]);
-      Ke386TestAndClearBit(KeGetCurrentProcessorNumber(), &Pcr->PrcbData.SignalDone->TargetSet);
-      if (InterlockedCompareExchangeUL(&Pcr->PrcbData.SignalDone->CurrentPacket[2], 0, 0))
+      ((VOID STDCALL(*)(PVOID))(Prcb->SignalDone->WorkerRoutine))(Prcb->SignalDone->CurrentPacket[0]);
+      Ke386TestAndClearBit(KeGetCurrentProcessorNumber(), &Prcb->SignalDone->TargetSet);
+      if (InterlockedCompareExchangeUL(&Prcb->SignalDone->CurrentPacket[2], 0, 0))
       {
 #ifdef DBG      	
          StartTime = KeQueryPerformanceCounter(&Frequency);
 #endif         
-         while (0 != InterlockedCompareExchangeUL(&Pcr->PrcbData.SignalDone->TargetSet, 0, 0))
+         while (0 != InterlockedCompareExchangeUL(&Prcb->SignalDone->TargetSet, 0, 0))
          {
 #ifdef DBG         	
 	    CurrentTime = KeQueryPerformanceCounter(NULL);
@@ -108,7 +108,7 @@ KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
 #endif	 
          }
       }
-      InterlockedExchangePointer(&Pcr->PrcbData.SignalDone, NULL);
+      InterlockedExchangePointer(&Prcb->SignalDone, NULL);
    }
    DPRINT("KiIpiServiceRoutine done\n");
    return TRUE;

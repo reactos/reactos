@@ -39,8 +39,8 @@ USHORT KiBootGdt[11 * 4] =
 struct LocalGdtDescriptor_t
 {
   USHORT Length;
-  ULONG Base;
-} KiGdtDescriptor = { 11 * 8, (ULONG)KiBootGdt };
+  PVOID Base;
+} KiGdtDescriptor = { 11 * 8, (PVOID)KiBootGdt };
 
 #include <poppack.h>
 
@@ -105,7 +105,7 @@ KiInitializeGdt(PKPCR Pcr)
    * Load the GDT
    */
   Descriptor.Length = 8 * 11;
-  Descriptor.Base = (ULONG)Gdt;
+  Descriptor.Base = (PVOID)Gdt;
 #if defined(__GNUC__)
   __asm__ ("lgdt %0\n\t" : /* no output */ : "m" (Descriptor));
   

@@ -217,7 +217,7 @@ typedef struct _KPCR_TIB {
 typedef struct _KPCR {
   KPCR_TIB  Tib;                /* 00 */
   struct _KPCR  *Self;          /* 1C */
-  struct _KPRCB  *PCRCB;        /* 20 */
+  struct _KPRCB  *Prcb;         /* 20 */
   KIRQL  Irql;                  /* 24 */
   ULONG  IRR;                   /* 28 */
   ULONG  IrrActive;             /* 2C */
@@ -269,9 +269,28 @@ static inline PKPCR KeGetCurrentKPCR(VOID)
   return((PKPCR)value);
 }
 
+static inline PKPRCB KeGetCurrentPrcb(VOID)
+{
+  ULONG value;
+
+#if defined(__GNUC__)
+  __asm__ __volatile__ ("movl %%fs:0x20, %0\n\t"
+	  : "=r" (value)
+    : /* no inputs */
+    );
+#elif defined(_MSC_VER)
+  __asm mov eax, fs:0x20;
+  __asm mov value, eax;
+#else
+#error Unknown compiler for inline assembler
+#endif
+  return((PKPRCB)value);
+}
+
 #else
 
 #define KeGetCurrentKPCR(X) ((PKPCR)KPCR_BASE)
+#define KeGetCurrentPrcb() (((PKPCR)KPCR_BASE)->Prcb)
 
 #endif
 

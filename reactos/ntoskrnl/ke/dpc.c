@@ -32,14 +32,14 @@
  */
 VOID
 INIT_FUNCTION
-KeInitDpc(PKPCR Pcr)
+KeInitDpc(PKPRCB Prcb)
 {
-   InitializeListHead(&Pcr->PrcbData.DpcData[0].DpcListHead);
-   KeInitializeEvent(Pcr->PrcbData.DpcEvent, 0, 0);
-   KeInitializeSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
-   Pcr->PrcbData.MaximumDpcQueueDepth = 4;
-   Pcr->PrcbData.MinimumDpcRate = 3;
-   Pcr->PrcbData.DpcData[0].DpcQueueDepth = 0;    
+   InitializeListHead(&Prcb->DpcData[0].DpcListHead);
+   KeInitializeEvent(Prcb->DpcEvent, 0, 0);
+   KeInitializeSpinLock(&Prcb->DpcData[0].DpcLock);
+   Prcb->MaximumDpcQueueDepth = 4;
+   Prcb->MinimumDpcRate = 3;
+   Prcb->DpcData[0].DpcQueueDepth = 0;
 }
 
 /*
@@ -156,7 +156,7 @@ KeInsertQueueDpc(PKDPC Dpc,
                  PVOID SystemArgument2)
 {
     KIRQL OldIrql;
-    PKPCR Pcr;
+    PKPRCB Prcb;
 
     DPRINT("KeInsertQueueDpc(DPC %x, SystemArgument1 %x, SystemArgument2 %x)\n",
         Dpc, SystemArgument1, SystemArgument2);
@@ -176,66 +176,66 @@ KeInsertQueueDpc(PKDPC Dpc,
     if (Dpc->Number >= MAXIMUM_PROCESSORS) {
     
         ASSERT (Dpc->Number - MAXIMUM_PROCESSORS < KeNumberProcessors);
-        Pcr = (PKPCR)(KPCR_BASE + (Dpc->Number - MAXIMUM_PROCESSORS) * PAGE_SIZE);
+        Prcb = ((PKPCR)((ULONG_PTR)KPCR_BASE + ((Dpc->Number - MAXIMUM_PROCESSORS) * PAGE_SIZE)))->Prcb;
         
     } else {
         
         ASSERT (Dpc->Number < KeNumberProcessors);
-        Pcr = KeGetCurrentKPCR();
+        Prcb = KeGetCurrentPrcb();
         Dpc->Number = KeGetCurrentProcessorNumber();
     }
     
-    KiAcquireSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
+    KiAcquireSpinLock(&Prcb->DpcData[0].DpcLock);
 #else
-    Pcr = (PKPCR)KPCR_BASE;
+    Prcb = ((PKPCR)KPCR_BASE)->Prcb;
 #endif
 
     /* Get the DPC Data */
-    if (InterlockedCompareExchangeUL(&Dpc->DpcData, &Pcr->PrcbData.DpcData[0].DpcLock, 0)) {
+    if (InterlockedCompareExchangeUL(&Dpc->DpcData, &Prcb->DpcData[0].DpcLock, 0)) {
     
         DPRINT("DPC Already Inserted");
 #ifdef CONFIG_SMP
-        KiReleaseSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
+        KiReleaseSpinLock(&Prcb->DpcData[0].DpcLock);
 #endif
         KeLowerIrql(OldIrql);
         return(FALSE);
     }
     
     /* Make sure the lists are free if the Queue is 0 */
-    if (Pcr->PrcbData.DpcData[0].DpcQueueDepth == 0) {
+    if (Prcb->DpcData[0].DpcQueueDepth == 0) {
         
-        ASSERT(IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead));
+        ASSERT(IsListEmpty(&Prcb->DpcData[0].DpcListHead));
     } else {
         
-        ASSERT(!IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead));    
+        ASSERT(!IsListEmpty(&Prcb->DpcData[0].DpcListHead));
     }
 
     /* Now we can play with the DPC safely */
     Dpc->SystemArgument1=SystemArgument1;
     Dpc->SystemArgument2=SystemArgument2;
-    Pcr->PrcbData.DpcData[0].DpcQueueDepth++;
-    Pcr->PrcbData.DpcData[0].DpcCount++;
+    Prcb->DpcData[0].DpcQueueDepth++;
+    Prcb->DpcData[0].DpcCount++;
     
     /* Insert the DPC into the list. HighImportance DPCs go at the beginning  */
     if (Dpc->Importance == HighImportance) {
         
-        InsertHeadList(&Pcr->PrcbData.DpcData[0].DpcListHead, &Dpc->DpcListEntry);
+        InsertHeadList(&Prcb->DpcData[0].DpcListHead, &Dpc->DpcListEntry);
     } else { 
         
-        InsertTailList(&Pcr->PrcbData.DpcData[0].DpcListHead, &Dpc->DpcListEntry);
+        InsertTailList(&Prcb->DpcData[0].DpcListHead, &Dpc->DpcListEntry);
     }
     DPRINT("New DPC Added. Dpc->DpcListEntry.Flink %x\n", Dpc->DpcListEntry.Flink);
    
     /* Make sure a DPC isn't executing already and respect rules outlined above. */
-    if ((!Pcr->PrcbData.DpcRoutineActive) && (!Pcr->PrcbData.DpcInterruptRequested)) {
+    if ((!Prcb->DpcRoutineActive) && (!Prcb->DpcInterruptRequested)) {
         
 #ifdef CONFIG_SMP    
         /* Check if this is the same CPU */
-        if (Pcr != KeGetCurrentKPCR()) {
+        if (Prcb != KeGetCurrentPrcb()) {
     
             /* Send IPI if High Importance */
             if ((Dpc->Importance == HighImportance) ||
-                (Pcr->PrcbData.DpcData[0].DpcQueueDepth >= Pcr->PrcbData.MaximumDpcQueueDepth)) {
+                (Prcb->DpcData[0].DpcQueueDepth >= Prcb->MaximumDpcQueueDepth)) {
                 
                 if (Dpc->Number >= MAXIMUM_PROCESSORS) {
                     
@@ -250,31 +250,31 @@ KeInsertQueueDpc(PKDPC Dpc,
             
             /* Request an Interrupt only if the DPC isn't low priority */
             if ((Dpc->Importance != LowImportance) || 
-                 (Pcr->PrcbData.DpcData[0].DpcQueueDepth >= Pcr->PrcbData.MaximumDpcQueueDepth) ||
-                (Pcr->PrcbData.DpcRequestRate < Pcr->PrcbData.MinimumDpcRate)) {
+                 (Prcb->DpcData[0].DpcQueueDepth >= Prcb->MaximumDpcQueueDepth) ||
+                (Prcb->DpcRequestRate < Prcb->MinimumDpcRate)) {
             
                 /* Request Interrupt */
                 HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
-                Pcr->PrcbData.DpcInterruptRequested = TRUE;
+                Prcb->DpcInterruptRequested = TRUE;
             }
         }
 #else
-        DPRINT("Requesting Interrupt. Importance: %x. QueueDepth: %x. MaxQueue: %x . RequestRate: %x. MinRate:%x \n", Dpc->Importance, Pcr->PrcbData.DpcData[0].DpcQueueDepth, Pcr->PrcbData.MaximumDpcQueueDepth, Pcr->PrcbData.DpcRequestRate, Pcr->PrcbData.MinimumDpcRate);
+        DPRINT("Requesting Interrupt. Importance: %x. QueueDepth: %x. MaxQueue: %x . RequestRate: %x. MinRate:%x \n", Dpc->Importance, Prcb->DpcData[0].DpcQueueDepth, Prcb->MaximumDpcQueueDepth, Prcb->DpcRequestRate, Prcb->MinimumDpcRate);
         
         /* Request an Interrupt only if the DPC isn't low priority */
         if ((Dpc->Importance != LowImportance) || 
-            (Pcr->PrcbData.DpcData[0].DpcQueueDepth >= Pcr->PrcbData.MaximumDpcQueueDepth) ||
-            (Pcr->PrcbData.DpcRequestRate < Pcr->PrcbData.MinimumDpcRate)) {
+            (Prcb->DpcData[0].DpcQueueDepth >= Prcb->MaximumDpcQueueDepth) ||
+            (Prcb->DpcRequestRate < Prcb->MinimumDpcRate)) {
             
             /* Request Interrupt */
             DPRINT("Requesting Interrupt\n");
             HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
-            Pcr->PrcbData.DpcInterruptRequested = TRUE;
+            Prcb->DpcInterruptRequested = TRUE;
         }
 #endif
     }
 #ifdef CONFIG_SMP
-    KiReleaseSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
+    KiReleaseSpinLock(&Prcb->DpcData[0].DpcLock);
 #endif
     /* Lower IRQL */    
     KeLowerIrql(OldIrql);
@@ -338,7 +338,7 @@ KeFlushQueuedDpcs(VOID)
  */
 {
     /* Request an interrupt if needed */
-    if (KeGetCurrentKPCR()->PrcbData.DpcData[0].DpcQueueDepth) HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
+    if (KeGetCurrentPrcb()->DpcData[0].DpcQueueDepth) HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
 }
 
 /*
@@ -351,7 +351,7 @@ KeIsExecutingDpc(
 )
 {
     /* Return if the Dpc Routine is active */
-    return KeGetCurrentKPCR()->PrcbData.DpcRoutineActive;
+    return KeGetCurrentPrcb()->DpcRoutineActive;
 }
 
 /*
@@ -419,7 +419,7 @@ KiQuantumEnd(VOID)
     KPRIORITY NewPriority;
     
     /* Lock dispatcher, get current thread */
-    Prcb = &KeGetCurrentKPCR()->PrcbData;
+    Prcb = KeGetCurrentPrcb();
     CurrentThread = KeGetCurrentThread();
     OldIrql = KeRaiseIrqlToSynchLevel();
     
@@ -497,37 +497,37 @@ KiDispatchInterrupt(VOID)
     PLIST_ENTRY DpcEntry;
     PKDPC Dpc;
     KIRQL OldIrql;
-    PKPCR Pcr;
+    PKPRCB Prcb;
 
     DPRINT("Dispatching Interrupts\n");
     ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
 
     /* Set DPC Deliver to Active */
-    Pcr = KeGetCurrentKPCR();
+    Prcb = KeGetCurrentPrcb();
 
-    if (Pcr->PrcbData.DpcData[0].DpcQueueDepth > 0) {
+    if (Prcb->DpcData[0].DpcQueueDepth > 0) {
         /* Raise IRQL */
         KeRaiseIrql(HIGH_LEVEL, &OldIrql);
 #ifdef CONFIG_SMP        
-        KiAcquireSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
+        KiAcquireSpinLock(&Prcb->DpcData[0].DpcLock);
 #endif
-            Pcr->PrcbData.DpcRoutineActive = TRUE;
+            Prcb->DpcRoutineActive = TRUE;
 
-        DPRINT("&Pcr->PrcbData.DpcData[0].DpcListHead: %x\n", &Pcr->PrcbData.DpcData[0].DpcListHead);
+        DPRINT("&Pcr->PrcbData.DpcData[0].DpcListHead: %x\n", &Prcb->DpcData[0].DpcListHead);
         /* Loop while we have entries */
-        while (!IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead)) {
+        while (!IsListEmpty(&Prcb->DpcData[0].DpcListHead)) {
             
-            ASSERT(Pcr->PrcbData.DpcData[0].DpcQueueDepth > 0);
-            DPRINT("Queue Depth: %x\n", Pcr->PrcbData.DpcData[0].DpcQueueDepth);
+            ASSERT(Prcb->DpcData[0].DpcQueueDepth > 0);
+            DPRINT("Queue Depth: %x\n", Prcb->DpcData[0].DpcQueueDepth);
             
             /* Get the DPC call it */
-            DpcEntry = RemoveHeadList(&Pcr->PrcbData.DpcData[0].DpcListHead);
+            DpcEntry = RemoveHeadList(&Prcb->DpcData[0].DpcListHead);
             Dpc = CONTAINING_RECORD(DpcEntry, KDPC, DpcListEntry);
             DPRINT("Dpc->DpcListEntry.Flink %x\n", Dpc->DpcListEntry.Flink);
             Dpc->DpcData = NULL;
-            Pcr->PrcbData.DpcData[0].DpcQueueDepth--;
+            Prcb->DpcData[0].DpcQueueDepth--;
 #ifdef CONFIG_SMP
-            KiReleaseSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
+            KiReleaseSpinLock(&Prcb->DpcData[0].DpcLock);
 #endif
             /* Disable/Enabled Interrupts and Call the DPC */
             KeLowerIrql(OldIrql);
@@ -539,27 +539,27 @@ KiDispatchInterrupt(VOID)
             KeRaiseIrql(HIGH_LEVEL, &OldIrql);
             
 #ifdef CONFIG_SMP
-            KiAcquireSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
+            KiAcquireSpinLock(&Prcb->DpcData[0].DpcLock);
             /* 
              * If the dpc routine drops the irql below DISPATCH_LEVEL,
              * a thread switch can occur and after the next thread switch 
              * the execution may start on an other processor.
              */
-            if (Pcr != KeGetCurrentKPCR()) {
+            if (Prcb != KeGetCurrentPrcb()) {
                 
-                Pcr->PrcbData.DpcRoutineActive = FALSE;
-                KiReleaseSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
-                Pcr = KeGetCurrentKPCR();
-                KiAcquireSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
-                Pcr->PrcbData.DpcRoutineActive = TRUE;
+                Prcb->DpcRoutineActive = FALSE;
+                KiReleaseSpinLock(&Prcb->DpcData[0].DpcLock);
+                Prcb = KeGetCurrentPrcb();
+                KiAcquireSpinLock(&Prcb->DpcData[0].DpcLock);
+                Prcb->DpcRoutineActive = TRUE;
             }
 #endif
         }
         /* Clear DPC Flags */
-        Pcr->PrcbData.DpcRoutineActive = FALSE;
-        Pcr->PrcbData.DpcInterruptRequested = FALSE;
+        Prcb->DpcRoutineActive = FALSE;
+        Prcb->DpcInterruptRequested = FALSE;
 #ifdef CONFIG_SMP
-        KiReleaseSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
+        KiReleaseSpinLock(&Prcb->DpcData[0].DpcLock);
 #endif
         
         /* DPC Dispatching Ended, re-enable interrupts */
@@ -569,9 +569,9 @@ KiDispatchInterrupt(VOID)
     DPRINT("Checking for Quantum End\n");
     
     /* If we have Quantum End, call the function */
-    if (Pcr->PrcbData.QuantumEnd) {
+    if (Prcb->QuantumEnd) {
         
-        Pcr->PrcbData.QuantumEnd = FALSE;
+        Prcb->QuantumEnd = FALSE;
         KiQuantumEnd();
     }
 }
