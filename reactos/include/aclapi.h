@@ -17,7 +17,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-typedef VOID (*FN_PROGRESS) (LPWSTR pObjectName,DWORD Status,PPROG_INVOKE_SETTING pInvokeSetting,PVOID Args,WINBOOL SecuritySet);
+typedef VOID (*FN_PROGRESS) (LPWSTR pObjectName,DWORD Status,PPROG_INVOKE_SETTING pInvokeSetting,PVOID Args,BOOL SecuritySet);
 
 VOID STDCALL BuildExplicitAccessWithNameA(PEXPLICIT_ACCESS_A pExplicitAccess,LPSTR pTrusteeName,DWORD AccessPermissions,ACCESS_MODE AccessMode,DWORD Inheritance);
 VOID STDCALL BuildExplicitAccessWithNameW(PEXPLICIT_ACCESS_W pExplicitAccess,LPWSTR pTrusteeName,DWORD AccessPermissions,ACCESS_MODE AccessMode,DWORD Inheritance);
@@ -62,11 +62,11 @@ DWORD STDCALL SetEntriesInAclW(ULONG cCountOfExplicitEntries,PEXPLICIT_ACCESS_W 
 DWORD STDCALL SetNamedSecurityInfoA(LPSTR pObjectName,SE_OBJECT_TYPE ObjectType,SECURITY_INFORMATION SecurityInfo,PSID psidOwner,PSID psidGroup,PACL pDacl,PACL pSacl);
 DWORD STDCALL SetNamedSecurityInfoW(LPWSTR pObjectName,SE_OBJECT_TYPE ObjectType,SECURITY_INFORMATION SecurityInfo,PSID psidOwner,PSID psidGroup,PACL pDacl,PACL pSacl);
 DWORD STDCALL SetSecurityInfo(HANDLE handle,SE_OBJECT_TYPE ObjectType,SECURITY_INFORMATION SecurityInfo,PSID psidOwner,PSID psidGroup,PACL pDacl,PACL pSacl);
-DWORD STDCALL GetInheritanceSourceA(LPSTR pObjectName,SE_OBJECT_TYPE ObjectType,SECURITY_INFORMATION SecurityInfo,WINBOOL Container,GUID ** pObjectClassGuids ,DWORD GuidCount,PACL pAcl,PFN_OBJECT_MGR_FUNCTS pfnArray OPTIONAL,PGENERIC_MAPPING pGenericMapping,PINHERITED_FROMA pInheritArray);
-DWORD STDCALL GetInheritanceSourceW(LPWSTR pObjectName,SE_OBJECT_TYPE ObjectType,SECURITY_INFORMATION SecurityInfo,WINBOOL Container,GUID ** pObjectClassGuids ,DWORD GuidCount,PACL pAcl,PFN_OBJECT_MGR_FUNCTS pfnArray OPTIONAL,PGENERIC_MAPPING pGenericMapping,PINHERITED_FROMW pInheritArray);
+DWORD STDCALL GetInheritanceSourceA(LPSTR pObjectName,SE_OBJECT_TYPE ObjectType,SECURITY_INFORMATION SecurityInfo,BOOL Container,GUID ** pObjectClassGuids ,DWORD GuidCount,PACL pAcl,PFN_OBJECT_MGR_FUNCTS pfnArray OPTIONAL,PGENERIC_MAPPING pGenericMapping,PINHERITED_FROMA pInheritArray);
+DWORD STDCALL GetInheritanceSourceW(LPWSTR pObjectName,SE_OBJECT_TYPE ObjectType,SECURITY_INFORMATION SecurityInfo,BOOL Container,GUID ** pObjectClassGuids ,DWORD GuidCount,PACL pAcl,PFN_OBJECT_MGR_FUNCTS pfnArray OPTIONAL,PGENERIC_MAPPING pGenericMapping,PINHERITED_FROMW pInheritArray);
 DWORD STDCALL FreeInheritedFromArray(PINHERITED_FROMW pInheritArray,USHORT AceCnt,PFN_OBJECT_MGR_FUNCTS pfnArray);
-DWORD STDCALL TreeResetNamedSecurityInfoA(LPSTR pObjectName,SE_OBJECT_TYPE ObjectType,SECURITY_INFORMATION SecurityInfo,PSID pOwner,PSID pGroup,PACL pDacl,PACL pSacl,WINBOOL KeepExplicit,FN_PROGRESS fnProgress,PROG_INVOKE_SETTING ProgressInvokeSetting,PVOID Args);
-DWORD STDCALL TreeResetNamedSecurityInfoW(LPWSTR pObjectName,SE_OBJECT_TYPE ObjectType,SECURITY_INFORMATION SecurityInfo,PSID pOwner,PSID pGroup,PACL pDacl,PACL pSacl,WINBOOL KeepExplicit,FN_PROGRESS fnProgress,PROG_INVOKE_SETTING ProgressInvokeSetting,PVOID Args);
+DWORD STDCALL TreeResetNamedSecurityInfoA(LPSTR pObjectName,SE_OBJECT_TYPE ObjectType,SECURITY_INFORMATION SecurityInfo,PSID pOwner,PSID pGroup,PACL pDacl,PACL pSacl,BOOL KeepExplicit,FN_PROGRESS fnProgress,PROG_INVOKE_SETTING ProgressInvokeSetting,PVOID Args);
+DWORD STDCALL TreeResetNamedSecurityInfoW(LPWSTR pObjectName,SE_OBJECT_TYPE ObjectType,SECURITY_INFORMATION SecurityInfo,PSID pOwner,PSID pGroup,PACL pDacl,PACL pSacl,BOOL KeepExplicit,FN_PROGRESS fnProgress,PROG_INVOKE_SETTING ProgressInvokeSetting,PVOID Args);
 VOID STDCALL BuildImpersonateExplicitAccessWithNameA(PEXPLICIT_ACCESS_A pExplicitAccess,LPSTR pTrusteeName,PTRUSTEE_A pTrustee,DWORD AccessPermissions,ACCESS_MODE AccessMode,DWORD Inheritance);
 VOID STDCALL BuildImpersonateExplicitAccessWithNameW(PEXPLICIT_ACCESS_W pExplicitAccess,LPWSTR pTrusteeName,PTRUSTEE_W pTrustee,DWORD AccessPermissions,ACCESS_MODE AccessMode,DWORD Inheritance);
 VOID STDCALL BuildImpersonateTrusteeA(PTRUSTEE_A pTrustee,PTRUSTEE_A pImpersonateTrustee);

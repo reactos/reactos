@@ -29,7 +29,7 @@ HANDLE STDCALL  Icmp6CreateFile(
     VOID
     );
 
-WINBOOL STDCALL  IcmpCloseHandle(
+BOOL STDCALL  IcmpCloseHandle(
     HANDLE  IcmpHandle
     );
 

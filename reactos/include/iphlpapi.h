@@ -52,20 +52,20 @@ DWORD STDCALL GetNumberOfInterfaces(PDWORD pdwNumIf);
 
 DWORD STDCALL GetIfEntry(PMIB_IFROW pIfRow);
 
-DWORD STDCALL GetIfTable(PMIB_IFTABLE pIfTable, PULONG pdwSize, WINBOOL bOrder);
+DWORD STDCALL GetIfTable(PMIB_IFTABLE pIfTable, PULONG pdwSize, BOOL bOrder);
 
 DWORD STDCALL GetIpAddrTable(PMIB_IPADDRTABLE pIpAddrTable, PULONG pdwSize,
- WINBOOL bOrder);
+ BOOL bOrder);
 
 DWORD STDCALL GetIpNetTable(PMIB_IPNETTABLE pIpNetTable, PULONG pdwSize,
- WINBOOL bOrder);
+ BOOL bOrder);
 
 DWORD STDCALL GetIpForwardTable(PMIB_IPFORWARDTABLE pIpForwardTable,
- PULONG pdwSize, WINBOOL bOrder);
+ PULONG pdwSize, BOOL bOrder);
 
-DWORD STDCALL GetTcpTable(PMIB_TCPTABLE pTcpTable, PDWORD pdwSize, WINBOOL bOrder);
+DWORD STDCALL GetTcpTable(PMIB_TCPTABLE pTcpTable, PDWORD pdwSize, BOOL bOrder);
 
-DWORD STDCALL GetUdpTable(PMIB_UDPTABLE pUdpTable, PDWORD pdwSize, WINBOOL bOrder);
+DWORD STDCALL GetUdpTable(PMIB_UDPTABLE pUdpTable, PDWORD pdwSize, BOOL bOrder);
 
 DWORD STDCALL GetIpStatistics(PMIB_IPSTATS pStats);
 
@@ -144,7 +144,7 @@ DWORD STDCALL IpRenewAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo);
 DWORD STDCALL SendARP(IPAddr DestIP, IPAddr SrcIP, PULONG pMacAddr,
  PULONG  PhyAddrLen);
 
-WINBOOL STDCALL GetRTTAndHopCount(IPAddr DestIpAddress, PULONG HopCount,
+BOOL STDCALL GetRTTAndHopCount(IPAddr DestIpAddress, PULONG HopCount,
  ULONG  MaxHops, PULONG RTT);
 
 DWORD STDCALL GetFriendlyIfIndex(DWORD IfIndex);
@@ -155,11 +155,11 @@ DWORD STDCALL UnenableRouter(OVERLAPPED* pOverlapped, LPDWORD lpdwEnableCount);
 
 DWORD STDCALL GetIcmpStatisticsEx(PMIB_ICMP_EX pStats,DWORD dwFamily);
 
-DWORD STDCALL NhpAllocateAndGetInterfaceInfoFromStack(IP_INTERFACE_NAME_INFO **ppTable,PDWORD pdwCount,WINBOOL bOrder,HANDLE hHeap,DWORD dwFlags);
+DWORD STDCALL NhpAllocateAndGetInterfaceInfoFromStack(IP_INTERFACE_NAME_INFO **ppTable,PDWORD pdwCount,BOOL bOrder,HANDLE hHeap,DWORD dwFlags);
 
 DWORD STDCALL GetBestInterfaceEx(struct sockaddr *pDestAddr,PDWORD pdwBestIfIndex);
 
-WINBOOL STDCALL CancelIPChangeNotify(LPOVERLAPPED notifyOverlapped);
+BOOL STDCALL CancelIPChangeNotify(LPOVERLAPPED notifyOverlapped);
 
 PIP_ADAPTER_ORDER_MAP STDCALL GetAdapterOrderMap(VOID);
 

@@ -58,7 +58,7 @@ typedef struct _IP_ADAPTER_INFO {
     IP_ADDR_STRING IpAddressList;
     IP_ADDR_STRING GatewayList;
     IP_ADDR_STRING DhcpServer;
-    WINBOOL HaveWins;
+    BOOL HaveWins;
     IP_ADDR_STRING PrimaryWinsServer;
     IP_ADDR_STRING SecondaryWinsServer;
     time_t LeaseObtained;
