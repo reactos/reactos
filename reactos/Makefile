@@ -34,10 +34,10 @@ LIB_FSLIB = vfatlib
 LIB_STATIC = string rosrtl epsapi zlib
 
 # User mode libraries
-# advapi32 crtdll fmifs gdi32 kernel32 libpcap packet msafd msvcrt ntdll ole32
-# oleaut32 epsapi psapi rpcrt4 secur32 shell32 user32 version ws2help ws2_32 wsock32 wshirda
+# advapi32 crtdll fmifs gdi32 kernel32 libpcap packet msafd msvcrt ntdll
+# epsapi psapi rpcrt4 secur32 user32 version ws2help ws2_32 wsock32 wshirda
 DLLS = advapi32 crtdll fmifs freetype gdi32 kernel32 packet msafd msvcrt ntdll \
-       psapi secur32 syssetup user32 version winedbgc winspool ws2help ws2_32 \
+       psapi secur32 syssetup user32 version winspool ws2help ws2_32 \
        wsock32 wshirda
 
 SUBSYS = smss win32k csrss ntvdm
