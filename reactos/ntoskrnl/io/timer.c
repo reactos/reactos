@@ -12,6 +12,7 @@
 
 #include <ddk/ntddk.h>
 
+#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -32,7 +33,7 @@ NTSTATUS IoInitializeTimer(PDEVICE_OBJECT DeviceObject,
 {
    DeviceObject->Timer = ExAllocatePool(NonPagedPool,sizeof(IO_TIMER));
    KeInitializeTimer(&(DeviceObject->Timer->timer));
-   KeInitializeDpc(&(DeviceObject->Timer->dpc),TimerRoutine,Context);
+   KeInitializeDpc(&(DeviceObject->Timer->dpc),(PKDEFERRED_ROUTINE)TimerRoutine,Context);
    
    return(STATUS_SUCCESS);
 }
@@ -45,10 +46,11 @@ VOID IoStartTimer(PDEVICE_OBJECT DeviceObject)
  *       DeviceObject = Device whose timer is to be started
  */
 {
+   long long int lli;
    LARGE_INTEGER li;
    
-   li.HighPart = -1;
-   li.LowPart = 10000000;
+   lli = -1000000;
+   li = *(LARGE_INTEGER *)&lli;
       
    KeSetTimerEx(&DeviceObject->Timer->timer,li,1000,
 		&(DeviceObject->Timer->dpc));
