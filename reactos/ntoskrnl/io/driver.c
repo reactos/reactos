@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.54 2004/09/24 10:51:35 ekohl Exp $
+/* $Id: driver.c,v 1.55 2004/11/07 21:20:51 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -65,6 +65,9 @@ static KSPIN_LOCK DriverReinitListLock;
 
 static LIST_ENTRY GroupListHead = {NULL, NULL};
 static LIST_ENTRY ServiceListHead  = {NULL, NULL};
+
+static UNICODE_STRING IopHardwareDatabaseKey =
+   ROS_STRING_INITIALIZER(L"\\REGISTRY\\MACHINE\\HARDWARE\\DESCRIPTION\\SYSTEM");
 
 POBJECT_TYPE EXPORTED IoDriverObjectType = NULL;
 
@@ -161,6 +164,8 @@ IopCreateDriver(
 
    for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
       Object->MajorFunction[i] = IopInvalidDeviceRequest;
+
+   Object->HardwareDatabase = &IopHardwareDatabaseKey;
 
    return STATUS_SUCCESS;
 }
