@@ -24,8 +24,7 @@ typedef struct _MENU_ITEM
   HBITMAP hbmpChecked;
   HBITMAP hbmpUnchecked;
   ULONG_PTR dwItemData;
-  LPWSTR dwTypeData;
-  UINT cch;
+  UNICODE_STRING Text;
   HBITMAP hbmpItem;
 } MENU_ITEM, *PMENU_ITEM;
 

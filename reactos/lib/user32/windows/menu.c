@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.29 2003/08/23 17:06:07 weiden Exp $
+/* $Id: menu.c,v 1.30 2003/08/27 22:58:12 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -318,7 +318,7 @@ MenuDrawMenuBar(HDC hDC, LPRECT Rect, HWND hWnd, BOOL Draw)
   /* FIXME cache menu bar items using NtUserDrawMenuBarTemp() */
 
   /* FIXME select menu font first */
-   
+  SetTextColor(hDC, COLOR_MENUTEXT);
   DrawTextW(hDC, L"FIXME: Draw Menubar", -1, Rect, DT_SINGLELINE | DT_VCENTER);
 
   return(Rect->bottom - Rect->top);
@@ -750,26 +750,26 @@ InsertMenuA(
   mii.cbSize = sizeof(MENUITEMINFOA);
   mii.fMask = MIIM_FTYPE | MIIM_STRING;
   mii.fType = 0;  
+  
   if(uFlags & MF_BITMAP)
-    mii.fType |= MFT_BITMAP;
-  else
   {
-    if(uFlags & MF_STRING)
-    {
-      mii.fType |= MFT_STRING;
-    }
-    else if(uFlags & MF_OWNERDRAW)
-    {
-      mii.fType |= MFT_OWNERDRAW;
-    }
-    else
-    {
-      SetLastError(ERROR_INVALID_PARAMETER);
-      return FALSE;
-    }
+    mii.fType |= MFT_BITMAP;
+  }
+  else if(uFlags & MF_OWNERDRAW)
+  {
+    mii.fType |= MFT_OWNERDRAW;
   }
   mii.dwTypeData = (LPSTR)lpNewItem;
-
+  if(uFlags & MF_POPUP)
+  {
+    mii.fMask |= MIIM_SUBMENU;
+    mii.hSubMenu = (HMENU)uIDNewItem;
+  }
+  else
+  {
+    mii.fMask |= MIIM_ID;
+    mii.wID = (UINT)uIDNewItem;
+  }
   return InsertMenuItemA(hMenu, uPosition, (WINBOOL)!(MF_BYPOSITION & uFlags), &mii);
 }
 
@@ -786,6 +786,7 @@ InsertMenuItemA(
   LPCMENUITEMINFOA lpmii)
 {
   MENUITEMINFOW mi;
+  UNICODE_STRING MenuText;
   WINBOOL res = FALSE;
   BOOL CleanHeap = FALSE;
   NTSTATUS Status;
@@ -805,6 +806,8 @@ InsertMenuItemA(
         SetLastError (RtlNtStatusToDosError(Status));
         return FALSE;
       }
+      RtlInitUnicodeString(&MenuText, (PWSTR)mi.dwTypeData);
+      mi.dwTypeData = (LPWSTR)&MenuText;
       CleanHeap = TRUE;
     }
 
@@ -828,9 +831,9 @@ InsertMenuItemW(
   LPCMENUITEMINFOW lpmii)
 {
   MENUITEMINFOW mi;
+  UNICODE_STRING MenuText;
   WINBOOL res = FALSE;
   BOOL CleanHeap = FALSE;
-  ULONG len = 0;
   HANDLE hHeap = RtlGetProcessHeap();
   mi.hbmpItem = (HBITMAP)0;
 
@@ -849,16 +852,14 @@ InsertMenuItemW(
     {
       if(lpmii->cch > 0)
       {
-        len = lstrlenW(lpmii->dwTypeData);
-        mi.dwTypeData = RtlAllocateHeap(hHeap, 0, (len + 1) * sizeof(WCHAR));
-        if(!mi.dwTypeData)
+        if(!RtlCreateUnicodeString(&MenuText, (PWSTR)lpmii->dwTypeData))
         {
           SetLastError (RtlNtStatusToDosError(STATUS_NO_MEMORY));
           return FALSE;
         }
-        memcpy(&mi.dwTypeData, &lpmii->dwTypeData, len);
+        mi.dwTypeData = (LPWSTR)&MenuText;
+        mi.cch = MenuText.Length / sizeof(WCHAR);
         CleanHeap = TRUE;
-        mi.cch = len;
       }
     };
     
@@ -895,14 +896,17 @@ InsertMenuW(
   {
     mii.fType |= MFT_OWNERDRAW;
   }
-  else if(uFlags & MF_POPUP)
+  mii.dwTypeData = (LPWSTR)lpNewItem;
+  if(uFlags & MF_POPUP)
   {
     mii.fMask |= MIIM_SUBMENU;
     mii.hSubMenu = (HMENU)uIDNewItem;
-    mii.wID = 0;
   }
-  mii.dwTypeData = (LPWSTR)lpNewItem;
-
+  else
+  {
+    mii.fMask |= MIIM_ID;
+    mii.wID = (UINT)uIDNewItem;
+  }
   return InsertMenuItemW(hMenu, uPosition, (WINBOOL)!(MF_BYPOSITION & uFlags), &mii);
 }
 

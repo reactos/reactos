@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.27 2003/08/22 16:01:01 weiden Exp $
+/* $Id: menu.c,v 1.28 2003/08/27 22:58:12 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -75,11 +75,8 @@
 #define FreeMenuText(MenuItem) \
 { \
   if((MENU_ITEM_TYPE((MenuItem)->fType) == MF_STRING) && \
-           (MenuItem)->dwTypeData) { \
-    if((MenuItem)->cch) \
-      ExFreePool((MenuItem)->dwTypeData); \
-    (MenuItem)->dwTypeData = 0; \
-    (MenuItem)->cch = 0; \
+           (MenuItem)->Text.Length) { \
+    RtlFreeUnicodeString(&(MenuItem)->Text); \
   } \
 }
 
@@ -95,17 +92,17 @@ CleanupMenuImpl(VOID)
   return(STATUS_SUCCESS);
 }
 
-#if 1
+#if 0
 void FASTCALL
 DumpMenuItemList(PMENU_ITEM MenuItem)
 {
   UINT cnt = 0;
   while(MenuItem)
   {
-    if(MenuItem->dwTypeData)
-      DbgPrint(" %d. %ws\n", ++cnt, (LPWSTR)MenuItem->dwTypeData);
+    if(MenuItem->Text.Length)
+      DbgPrint(" %d. %wZ\n", ++cnt, &MenuItem->Text);
     else
-      DbgPrint(" %d. NO TEXT dwTypeData==%d\n", ++cnt, MenuItem->dwTypeData);
+      DbgPrint(" %d. NO TEXT dwTypeData==%d\n", ++cnt, (DWORD)MenuItem->Text.Buffer);
     DbgPrint("   fType=");
     if(MFT_BITMAP & MenuItem->fType) DbgPrint("MFT_BITMAP ");
     if(MFT_MENUBARBREAK & MenuItem->fType) DbgPrint("MFT_MENUBARBREAK ");
@@ -315,31 +312,29 @@ IntCloneMenuItems(PMENU_OBJECT Destination, PMENU_OBJECT Source)
     NewMenuItem->hbmpChecked = MenuItem->hbmpChecked;
     NewMenuItem->hbmpUnchecked = MenuItem->hbmpUnchecked;
     NewMenuItem->dwItemData = MenuItem->dwItemData;
-    NewMenuItem->dwTypeData = MenuItem->dwTypeData;
     if((MENU_ITEM_TYPE(NewMenuItem->fType) == MF_STRING))
     {
-      if(MenuItem->cch && NewMenuItem->dwTypeData)
+      if(MenuItem->Text.Length)
       {
-        NewMenuItem->dwTypeData = (LPWSTR)ExAllocatePool(PagedPool, (MenuItem->cch + 1) * sizeof(WCHAR));
-        if(!NewMenuItem->dwTypeData)
+        NewMenuItem->Text.Length = 0;
+        NewMenuItem->Text.MaximumLength = MenuItem->Text.MaximumLength;
+        NewMenuItem->Text.Buffer = (PWSTR)ExAllocatePool(PagedPool, MenuItem->Text.MaximumLength);
+        if(!NewMenuItem->Text.Buffer)
         {
           ExFreePool(NewMenuItem);
           break;
         }
-        memcpy(NewMenuItem->dwTypeData, MenuItem->dwTypeData, (MenuItem->cch + 1) * sizeof(WCHAR));
+        RtlCopyUnicodeString(&NewMenuItem->Text, &MenuItem->Text);
       }
       else
       {
-        NewMenuItem->cch = MenuItem->cch;
-        NewMenuItem->dwTypeData = MenuItem->dwTypeData;
+        NewMenuItem->Text.Buffer = MenuItem->Text.Buffer;
       }
     }
     else
     {
-      NewMenuItem->cch = MenuItem->cch;
-      NewMenuItem->dwTypeData = MenuItem->dwTypeData;
+      NewMenuItem->Text.Buffer = MenuItem->Text.Buffer;
     }
-    NewMenuItem->cch = MenuItem->cch;
     NewMenuItem->hbmpItem = MenuItem->hbmpItem;
 
     NewMenuItem->Next = NULL;
@@ -566,7 +561,7 @@ IntGetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, LPMENUITEMINFOW
     return FALSE;
   }
   
-  lpmii->cch = MenuItem->cch;
+  lpmii->cch = MenuItem->Text.Length;
   
   if(lpmii->fMask & MIIM_BITMAP)
   {
@@ -604,23 +599,15 @@ IntGetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, LPMENUITEMINFOW
 BOOL FASTCALL
 IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, LPCMENUITEMINFOW lpmii)
 {
+  PUNICODE_STRING Source;
+  UINT copylen = 0;
+  
   if(!MenuItem || !MenuObject || !lpmii)
   {
     return FALSE;
   }
 
-  /*if((MenuItem->fMask & (MIIM_TYPE | MIIM_STRING)) && 
-           (MENU_ITEM_TYPE(MenuItem->fType) == MF_STRING) && 
-           MenuItem->dwTypeData)
-  {
-    // delete old string
-    ExFreePool(MenuItem->dwTypeData);
-    MenuItem->dwTypeData = 0;
-    MenuItem->cch = 0;
-  }*/
-
   MenuItem->fType = lpmii->fType;
-  MenuItem->cch = lpmii->cch;
   
   if(lpmii->fMask & MIIM_BITMAP)
   {
@@ -662,28 +649,32 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, LPCMENUITEMINFO
   {
     if(lpmii->dwTypeData && lpmii->cch)
     {
+      Source = (PUNICODE_STRING)lpmii->dwTypeData;
       FreeMenuText(MenuItem);
-      MenuItem->dwTypeData = (LPWSTR)ExAllocatePool(PagedPool, (lpmii->cch + 1) * sizeof(WCHAR));
-      if(!MenuItem->dwTypeData)
+      copylen = min((UINT)Source->MaximumLength, (lpmii->cch + 1) * sizeof(WCHAR));
+      MenuItem->Text.Buffer = (PWSTR)ExAllocatePool(PagedPool, copylen);
+      if(MenuItem->Text.Buffer)
       {
-        MenuItem->cch = 0;
-        /* FIXME Set last error code? */
-        SetLastWin32Error(STATUS_NO_MEMORY);
-        return FALSE;
+        MenuItem->Text.Length = 0;
+        MenuItem->Text.MaximumLength = copylen;
+        RtlCopyUnicodeString(&MenuItem->Text, Source);
       }
-      MenuItem->cch = lpmii->cch;
-      memcpy(MenuItem->dwTypeData, lpmii->dwTypeData, (lpmii->cch + 1) * sizeof(WCHAR));
+      else
+      {
+        MenuItem->Text.Length = 0;
+        MenuItem->Text.MaximumLength = 0;
+        MenuItem->Text.Buffer = NULL;
+      }
     }
     else
     {
+      FreeMenuText(MenuItem);
       MenuItem->fType = MF_SEPARATOR;
-      MenuItem->dwTypeData = NULL;
-      MenuItem->cch = 0;
     }
   }
   else
   {
-    MenuItem->dwTypeData = NULL;
+    RtlInitUnicodeString(&MenuItem->Text, NULL);
   }
   
   return TRUE;
@@ -729,8 +720,8 @@ IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, WINBOOL fByPosition,
   MenuItem->hSubMenu = (HMENU)0;
   MenuItem->hbmpChecked = (HBITMAP)0;
   MenuItem->hbmpUnchecked = (HBITMAP)0;
-  MenuItem->dwItemData = (ULONG_PTR)NULL;
-  MenuItem->cch = 0;
+  MenuItem->dwItemData = 0;
+  RtlInitUnicodeString(&MenuItem->Text, NULL);
   MenuItem->hbmpItem = (HBITMAP)0;  
 
   if(!IntSetMenuItemInfo(MenuObject, MenuItem, lpmii))
