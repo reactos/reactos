@@ -1,4 +1,4 @@
-/* $Id: bus.c,v 1.8 2001/06/13 22:17:01 ekohl Exp $
+/* $Id: bus.c,v 1.9 2001/08/01 10:39:50 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -160,8 +160,8 @@ HalpInitBusHandlers(VOID)
 				       0);
    if (BusHandler == NULL)
      return;
-//   BusHandler->GetBusData = (pGetSetBusData)HalpGetCmosData;
-//   BusHandler->SetBusData = (pGetSetBusData)HalpSetCmosData;
+   BusHandler->GetBusData = (pGetSetBusData)HalpGetCmosData;
+   BusHandler->SetBusData = (pGetSetBusData)HalpSetCmosData;
 
    /* add isa bus handler */
    BusHandler = HalpAllocateBusHandler(Isa,

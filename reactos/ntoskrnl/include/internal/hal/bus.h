@@ -99,6 +99,23 @@ HalpTranslateIsaBusAddress(PBUS_HANDLER BusHandler,
 			   PULONG AddressSpace,
 			   PPHYSICAL_ADDRESS TranslatedAddress);
 
+/* time.c */
+ULONG STDCALL
+HalpGetCmosData(PBUS_HANDLER BusHandler,
+		ULONG BusNumber,
+		ULONG SlotNumber,
+		PVOID Buffer,
+		ULONG Offset,
+		ULONG Length);
+
+ULONG STDCALL
+HalpSetCmosData(PBUS_HANDLER BusHandler,
+		ULONG BusNumber,
+		ULONG SlotNumber,
+		PVOID Buffer,
+		ULONG Offset,
+		ULONG Length);
+
 #endif /* __INTERNAL_HAL_BUS_H */
 
 /* EOF */
