@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.22 2001/09/09 12:21:37 hbirr Exp $
+/* $Id: create.c,v 1.23 2002/04/27 19:13:15 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -143,6 +143,9 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
 			  Flags,
 			  NULL,
 			  0);
+
+   RtlFreeUnicodeString(&NtPathU);
+
    if (!NT_SUCCESS(Status))
      {
 	SetLastErrorByStatus (Status);
