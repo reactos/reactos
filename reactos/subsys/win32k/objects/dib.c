@@ -5,7 +5,9 @@
 #include <win32k/debug.h>
 #include "../eng/handle.h"
 #include <ntos/minmax.h>
+#include <include/error.h>
 #include <include/inteng.h>
+#include <internal/safe.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -199,10 +201,78 @@ INT STDCALL W32kGetDIBits(HDC  hDC,
                    UINT  StartScan,
                    UINT  ScanLines,
                    LPVOID  Bits,
-                   LPBITMAPINFO   bi,
+                   LPBITMAPINFO UnsafeInfo,
                    UINT  Usage)
 {
-  UNIMPLEMENTED;
+  BITMAPINFO Info;
+  PBITMAPOBJ BitmapObj;
+  INT Result;
+  NTSTATUS Status;
+
+  BitmapObj = (PBITMAPOBJ) GDIOBJ_LockObj(hBitmap, GO_BITMAP_MAGIC);
+  if (NULL == BitmapObj)
+    {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return 0;
+    }
+
+  RtlZeroMemory(&Info, sizeof(BITMAPINFO));
+  Status = MmCopyFromCaller(&(Info.bmiHeader.biSize),
+                            &(UnsafeInfo->bmiHeader.biSize),
+                            sizeof(DWORD));
+  if (! NT_SUCCESS(Status))
+    {
+    SetLastNtError(Status);
+    GDIOBJ_UnlockObj(hBitmap, GO_BITMAP_MAGIC);
+    return 0;
+    }
+  if (sizeof(BITMAPCOREHEADER) != Info.bmiHeader.biSize &&
+      sizeof(BITMAPINFOHEADER) != Info.bmiHeader.biSize)
+    {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      GDIOBJ_UnlockObj(hBitmap, GO_BITMAP_MAGIC);
+      return 0;
+    }
+  Status = MmCopyFromCaller(&(Info.bmiHeader),
+                            &(UnsafeInfo->bmiHeader),
+                            Info.bmiHeader.biSize);
+  if (! NT_SUCCESS(Status))
+    {
+      SetLastNtError(Status);
+      GDIOBJ_UnlockObj(hBitmap, GO_BITMAP_MAGIC);
+      return 0;
+    }
+
+  if (NULL == Bits)
+    {
+      if (0 != Info.bmiHeader.biCompression)
+	{
+	  UNIMPLEMENTED;
+	}
+
+      Info.bmiHeader.biWidth = BitmapObj->bitmap.bmWidth;
+      Info.bmiHeader.biHeight = BitmapObj->bitmap.bmHeight;
+      Info.bmiHeader.biPlanes = BitmapObj->bitmap.bmPlanes;
+      Info.bmiHeader.biBitCount = BitmapObj->bitmap.bmBitsPixel;
+      Info.bmiHeader.biCompression = BI_RGB;
+      Info.bmiHeader.biSizeImage = BitmapObj->bitmap.bmHeight * BitmapObj->bitmap.bmWidthBytes;
+      Status = MmCopyToCaller(UnsafeInfo, &Info, UnsafeInfo->bmiHeader.biSize);
+      if (! NT_SUCCESS(Status))
+	{
+	  SetLastNtError(Status);
+	  GDIOBJ_UnlockObj(hBitmap, GO_BITMAP_MAGIC);
+	  return 0;
+	}
+      Result = 1;
+    }
+  else
+    {
+    UNIMPLEMENTED;
+    }
+
+  GDIOBJ_UnlockObj(hBitmap, GO_BITMAP_MAGIC);
+
+  return Result;
 }
 
 INT STDCALL W32kStretchDIBits(HDC  hDC,
