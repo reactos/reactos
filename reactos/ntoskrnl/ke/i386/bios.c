@@ -75,23 +75,10 @@ Ke386CallBios(UCHAR Int, PKV86M_REGISTERS Regs)
   Regs->Vif = 1;
   Regs->PStatus = &Status;
 
-  WRITE_PORT_UCHAR((PUCHAR)0xea, 0);
-  
   /*
    * Execute the BIOS interrupt
    */
   Ki386RetToV86Mode(Regs, &ORegs);
-
-  WRITE_PORT_UCHAR((PUCHAR)0xea, 1);
-
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("Ke386CallBios() failed (Status %x)\n", Status);
-    }
-  else
-    {
-      DPRINT1("Ke386CallBios succeeded\n");
-    }
 
   /*
    * Copy the return values back to the caller
