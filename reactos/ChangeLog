@@ -1,3 +1,7 @@
+2003-08-29  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* Makefile: Copy freeloader files to bootable CD.
+
 2003-08-28  Martin Fuchs	<martin-fuchs@gmx.net>
 
 	* subsys/system/explorer/taskbar/startmenu.cpp,

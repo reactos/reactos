@@ -147,12 +147,26 @@ dist: $(TOOLS_PATH)/rcopy$(EXE_POSTFIX) dist_clean dist_dirs \
       $(NET_APPS:%=%_dist) \
       $(APPS:%=%_dist) $(EXT_MODULES:%=%_dist)
 
-bootcd_directory_layout:
+FREELDR_DIR = ../freeldr
+
+freeldr:
+	$(MAKE) -C $(FREELDR_DIR)
+
+bootcd_directory_layout: freeldr
 	$(RMKDIR) $(BOOTCD_DIR)
 	$(RMKDIR) $(BOOTCD_DIR)/bootdisk
 	$(RMKDIR) $(BOOTCD_DIR)/loader
 	$(RMKDIR) $(BOOTCD_DIR)/reactos
 	$(RMKDIR) $(BOOTCD_DIR)/reactos/system32
+	$(CP) ${FREELDR_DIR}/bootsect/isoboot.bin ${BOOTCD_DIR}/../isoboot.bin
+	$(CP) ${FREELDR_DIR}/bootsect/dosmbr.bin ${BOOTCD_DIR}/loader/dosmbr.bin
+	$(CP) ${FREELDR_DIR}/bootsect/ext2.bin ${BOOTCD_DIR}/loader/ext2.bin
+	$(CP) ${FREELDR_DIR}/bootsect/fat.bin ${BOOTCD_DIR}/loader/fat.bin
+	$(CP) ${FREELDR_DIR}/bootsect/fat32.bin ${BOOTCD_DIR}/loader/fat32.bin
+	$(CP) ${FREELDR_DIR}/bootsect/isoboot.bin ${BOOTCD_DIR}/loader/isoboot.bin
+	$(CP) ${FREELDR_DIR}/freeldr/obj/i386/freeldr.sys ${BOOTCD_DIR}/loader/freeldr.sys
+	$(CP) ${FREELDR_DIR}/FREELDR.INI ${BOOTCD_DIR}/loader/freeldr.ini
+	$(CP) ${FREELDR_DIR}/freeldr/obj/i386/setupldr.sys ${BOOTCD_DIR}/loader/setupldr.sys
 
 bootcd_bootstrap_files: $(COMPONENTS:%=%_bootcd) $(HALS:%=%_bootcd) $(BUS:%=%_bootcd) \
 	$(LIB_STATIC:%=%_bootcd) $(LIB_FSLIB:%=%_bootcd) $(DLLS:%=%_bootcd) $(KERNEL_DRIVERS:%=%_bootcd) \
@@ -175,8 +189,9 @@ bootcd: all bootcd_directory_layout bootcd_bootstrap_files bootcd_install_before
 	$(CABMAN) /C bootdata/packages/reactos.dff /L $(BOOTCD_DIR)/reactos /I
 	$(CABMAN) /C bootdata/packages/reactos.dff /RC $(BOOTCD_DIR)/reactos/reactos.inf /L $(BOOTCD_DIR)/reactos /N
 	- $(RM) $(BOOTCD_DIR)/reactos/reactos.inf
+	$(TOOLS_PATH)/cdmake/cdmake -v -m -b $(BOOTCD_DIR)/../isoboot.bin $(BOOTCD_DIR) REACTOS ReactOS.iso
 
-.PHONY: all depends implib clean clean_before install dist bootcd_directory_layout \
+.PHONY: all depends implib clean clean_before install dist freeldr bootcd_directory_layout \
 bootcd_bootstrap_files bootcd
 
 
