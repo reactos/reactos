@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: focus.c,v 1.9 2004/01/12 20:51:05 gvg Exp $
+ * $Id: focus.c,v 1.10 2004/01/15 21:00:49 gvg Exp $
  */
 
 #include <win32k/win32k.h>
@@ -75,8 +75,9 @@ IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
             (WPARAM)hWnd, 0);
       }
 
-      WinPosSetWindowPos(hWnd, HWND_TOP, 0, 0, 0, 0,
-         SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
+      if (NtUserGetWindow(hWnd, GW_HWNDPREV) != NULL)
+         WinPosSetWindowPos(hWnd, HWND_TOP, 0, 0, 0, 0,
+            SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
 
       /* FIXME: IntIsWindow */
 
@@ -131,14 +132,6 @@ IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWindow
       hWndPrev = PrevForegroundQueue->ActiveWindow;
    }
 
-/*
-   if (IntIsDesktopWindow(Window))
-   {
-      IntSendDeactivateMessages(hWndPrev, hWnd);
-      IntSetFocusMessageQueue(NULL);
-   }
-*/
-
    if (hWndPrev == hWnd)
    {
       DPRINT("Failed - Same\n");
@@ -151,18 +144,18 @@ IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWindow
    /* FIXME: Call hooks. */
 
    IntSetFocusMessageQueue(Window->MessageQueue);
-/*   ExAcquireFastMutex(&Window->MessageQueue->Lock);*/
+   ExAcquireFastMutex(&Window->MessageQueue->Lock);
    if (Window->MessageQueue)
    {
       Window->MessageQueue->ActiveWindow = hWnd;
    }
-/*   ExReleaseFastMutex(&Window->MessageQueue->Lock);*/
-/*   ExAcquireFastMutex(&FocusWindow->MessageQueue->Lock);*/
+   ExReleaseFastMutex(&Window->MessageQueue->Lock);
+   ExAcquireFastMutex(&FocusWindow->MessageQueue->Lock);
    if (FocusWindow->MessageQueue)
    {
       FocusWindow->MessageQueue->FocusWindow = hWndFocus;
    }
-/*   ExReleaseFastMutex(&Window->MessageQueue->Lock);*/
+   ExReleaseFastMutex(&Window->MessageQueue->Lock);
 
    IntSendDeactivateMessages(hWndPrev, hWnd);
    IntSendKillFocusMessages(hWndFocusPrev, hWndFocus);
@@ -188,7 +181,7 @@ IntMouseActivateWindow(PWINDOW_OBJECT Window)
   HWND Top;
   PWINDOW_OBJECT TopWindow;
 
-  Top = NtUserGetAncestor(Window->Self, GA_ROOT);
+  Top = NtUserGetAncestor(Window->Self, GA_ROOTOWNER);
   if (Top != Window->Self)
     {
       TopWindow = IntGetWindowObject(Top);
@@ -234,9 +227,9 @@ IntSetActiveWindow(PWINDOW_OBJECT Window)
 
    /* FIXME: Call hooks. */
 
-/*   ExAcquireFastMutex(&ThreadQueue->Lock);*/
+   ExAcquireFastMutex(&ThreadQueue->Lock);
    ThreadQueue->ActiveWindow = hWnd;
-/*   ExReleaseFastMutex(&ThreadQueue->Lock);*/
+   ExReleaseFastMutex(&ThreadQueue->Lock);
 
    IntSendDeactivateMessages(hWndPrev, hWnd);
    IntSendActivateMessages(hWndPrev, hWnd, FALSE);
@@ -262,9 +255,9 @@ IntSetFocusWindow(PWINDOW_OBJECT Window)
       return hWndPrev;
    }
 
-/*   ExAcquireFastMutex(&ThreadQueue->Lock);*/
+   ExAcquireFastMutex(&ThreadQueue->Lock);
    ThreadQueue->FocusWindow = hWnd;
-/*   ExReleaseFastMutex(&ThreadQueue->Lock);*/
+   ExReleaseFastMutex(&ThreadQueue->Lock);
 
    IntSendKillFocusMessages(hWndPrev, hWnd);
    IntSendSetFocusMessages(hWndPrev, hWnd);
@@ -368,9 +361,9 @@ NtUserSetCapture(HWND hWnd)
    }
    hWndPrev = ThreadQueue->CaptureWindow;
    IntSendMessage(hWndPrev, WM_CAPTURECHANGED, 0, (LPARAM)hWnd);
-/*   ExAcquireFastMutex(&ThreadQueue->Lock);*/
+   ExAcquireFastMutex(&ThreadQueue->Lock);
    ThreadQueue->CaptureWindow = hWnd;
-/*   ExReleaseFastMutex(&ThreadQueue->Lock);*/
+   ExReleaseFastMutex(&ThreadQueue->Lock);
 
    return hWndPrev;
 }
