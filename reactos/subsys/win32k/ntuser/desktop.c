@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: desktop.c,v 1.24 2004/11/20 16:46:06 weiden Exp $
+ *  $Id: desktop.c,v 1.25 2004/12/05 00:20:41 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -496,7 +496,7 @@ NtUserCreateDesktop(
   CSRSS_API_REQUEST Request;
   CSRSS_API_REPLY Reply;
   
-  DPRINT1("CreateDesktop: %wZ\n", lpszDesktopName);
+  DPRINT("CreateDesktop: %wZ\n", lpszDesktopName);
 
   Status = IntValidateWindowStationHandle(
     hWindowStation,
