@@ -18,8 +18,8 @@
  */
 /*
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ke/kernel.c
- * PURPOSE:         Initializes the kernel
+ * FILE:            ntoskrnl/ke/i386/fpu.c
+ * PURPOSE:         Handles the FPU
  * PROGRAMMER:      David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
  *                  Created 22/05/98
@@ -31,51 +31,36 @@
 #include <internal/ke.h>
 #include <internal/mm.h>
 #include <internal/ps.h>
-#include <internal/i386/fpu.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
+/* GLOBALS *******************************************************************/
+
+static ULONG HardwareMathSupport;
+
 /* FUNCTIONS *****************************************************************/
 
 VOID 
-KeInit1(VOID)
+KiCheckFPU(VOID)
 {
-   KiCheckFPU();
-
-   KeInitExceptions ();
-   KeInitInterrupts ();
-}
-
-VOID 
-KeInit2(VOID)
-{
-   PVOID PcrPage;
+   unsigned short int status;
+   int cr0;
    
-   KeInitDpc();
-   KeInitializeBugCheck();
-   KeInitializeDispatcher();
-   KeInitializeTimerImpl();
+   HardwareMathSupport = 0;
    
-   /*
-    * Initialize the PCR region. 
-    * FIXME: This should be per-processor.
-    */
-   PcrPage = MmAllocPage(0);
-   if (PcrPage == NULL)
+   __asm__("clts\n\t");
+   __asm__("fninit\n\t");
+   __asm__("fstsw %0\n\t" : "=a" (status));
+   if (status != 0)
      {
-	DPRINT1("No memory for PCR page\n");
-	KeBugCheck(0);
+	__asm__("movl %%cr0, %0\n\t" : "=a" (cr0));
+	cr0 = cr0 | 0x4;
+	__asm__("movl %0, %%cr0\n\t" :
+		: "a" (cr0));
+	DbgPrint("No FPU detected\n");
+	return;
      }
-   MmCreateVirtualMapping(NULL,
-			  (PVOID)KPCR_BASE,
-			  PAGE_READWRITE,
-			  (ULONG)PcrPage);
-   memset((PVOID)KPCR_BASE, 0, 4096);
+   /* FIXME: Do fsetpm */
+   HardwareMathSupport = 1;   
 }
-
-
-
-
-
-
