@@ -30,8 +30,19 @@
 /* Assert only on "checked" version */
 #ifndef NASSERT
 #define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); KeBugCheck(0); }
+
+#define assertmsg(_c_, _m_) \
+  if (!(_c_)) { \
+      DbgPrint("(%s:%d)(%s) ", __FILE__, __LINE__, __FUNCTION__); \
+      DbgPrint _m_ ; \
+      KeBugCheck(0); \
+  }
+
 #else
+
 #define assert(x)
+#define assertmsg(_c_, _m_)
+
 #endif
 
 /* Print if using a "checked" version */
