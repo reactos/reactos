@@ -531,4 +531,7 @@ CmiCopyPackedName(PWCHAR NameBuffer,
 		  PCHAR PackedNameBuffer,
 		  ULONG PackedNameSize);
 
+VOID
+CmiSyncHives(VOID);
+
 #endif /*__INCLUDE_CM_H*/

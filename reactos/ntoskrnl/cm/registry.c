@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.79 2002/11/30 14:46:27 ekohl Exp $
+/* $Id: registry.c,v 1.80 2002/12/02 18:52:44 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -37,6 +37,11 @@ KSPIN_LOCK  CmiKeyListLock;
 LIST_ENTRY CmiHiveListHead;
 KSPIN_LOCK CmiHiveListLock;
 
+volatile BOOLEAN CmiHiveSyncEnabled = FALSE;
+volatile BOOLEAN CmiHiveSyncPending = FALSE;
+KDPC CmiHiveSyncDpc;
+KTIMER CmiHiveSyncTimer;
+
 static PKEY_OBJECT  CmiRootKey = NULL;
 static PKEY_OBJECT  CmiMachineKey = NULL;
 static PKEY_OBJECT  CmiUserKey = NULL;
@@ -53,6 +58,12 @@ CmiCheckKey(BOOLEAN Verbose,
 
 static NTSTATUS
 CmiCreateCurrentControlSetLink(VOID);
+
+static VOID STDCALL
+CmiHiveSyncDpcRoutine(PKDPC Dpc,
+		      PVOID DeferredContext,
+		      PVOID SystemArgument1,
+		      PVOID SystemArgument2);
 
 /* FUNCTIONS ****************************************************************/
 
@@ -901,7 +912,12 @@ CmiInitHives(BOOLEAN SetUpBoot)
 
 //  CmiCheckRegistry(TRUE);
 
-  /* FIXME: Start automatic hive syncronization */
+  /* Start automatic hive synchronization */
+  KeInitializeDpc(&CmiHiveSyncDpc,
+		  CmiHiveSyncDpcRoutine,
+		  NULL);
+  KeInitializeTimer(&CmiHiveSyncTimer);
+  CmiHiveSyncEnabled = TRUE;
 
   DPRINT("CmiInitHives() done\n");
 
@@ -918,7 +934,8 @@ CmShutdownRegistry(VOID)
 
   DPRINT1("CmShutdownRegistry() called\n");
 
-  /* FIXME: Stop automatic hive syncronization */
+  /* Stop automatic hive synchronization */
+  CmiHiveSyncEnabled = FALSE;
 
   KeAcquireSpinLock(&CmiHiveListLock,&oldlvl);
   Entry = CmiHiveListHead.Flink;
@@ -928,11 +945,11 @@ CmShutdownRegistry(VOID)
 
     if (Hive->Flags & HIVE_VOLATILE)
     {
-      DPRINT1("Volatile hive\n");
+      DPRINT("Volatile hive\n");
     }
     else
     {
-      DPRINT1("Flush non-volatile hive '%wZ'\n", &Hive->Filename);
+      DPRINT("Flush non-volatile hive '%wZ'\n", &Hive->Filename);
 
       /* Flush non-volatile hive */
 
@@ -945,13 +962,41 @@ CmShutdownRegistry(VOID)
   }
   KeReleaseSpinLock(&CmiHiveListLock,oldlvl);
 
-DPRINT1("  *** System stopped ***\n");
-for (;;);
-
   /* Note:
    *	Don't call UNIMPLEMENTED() here since this function is
    *	called by NtShutdownSystem().
    */
+}
+
+
+static VOID STDCALL
+CmiHiveSyncDpcRoutine(PKDPC Dpc,
+		      PVOID DeferredContext,
+		      PVOID SystemArgument1,
+		      PVOID SystemArgument2)
+{
+  DPRINT("CmiHiveSyncDpcRoutine() called\n");
+
+  CmiHiveSyncPending = FALSE;
+}
+
+
+VOID
+CmiSyncHives(VOID)
+{
+  LARGE_INTEGER Timeout;
+
+  if (CmiHiveSyncEnabled == FALSE ||
+      CmiHiveSyncPending == TRUE)
+    return;
+
+  CmiHiveSyncPending = TRUE;
+
+
+  Timeout.QuadPart = -50000000LL;
+  KeSetTimer(&CmiHiveSyncTimer,
+	     Timeout,
+	     &CmiHiveSyncDpc);
 }
 
 /* EOF */

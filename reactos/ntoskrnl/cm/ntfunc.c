@@ -184,6 +184,8 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 
   VERIFY_KEY_OBJECT(KeyObject);
 
+  CmiSyncHives();
+
   return Status;
 }
 
@@ -228,6 +230,8 @@ NtDeleteKey(IN HANDLE KeyHandle)
 
   /* Release hive lock */
   ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+
+  CmiSyncHives();
 
   return STATUS_SUCCESS;
 }
@@ -1487,6 +1491,8 @@ NtSetValueKey(IN HANDLE KeyHandle,
   ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
   ObDereferenceObject(KeyObject);
 
+  CmiSyncHives();
+
   DPRINT("Return Status 0x%X\n", Status);
 
   return(Status);
@@ -1525,6 +1531,8 @@ NtDeleteValueKey(IN HANDLE KeyHandle,
   ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
 
   ObDereferenceObject(KeyObject);
+
+  CmiSyncHives();
 
   return Status;
 }
