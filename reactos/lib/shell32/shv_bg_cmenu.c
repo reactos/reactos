@@ -223,7 +223,7 @@ static BOOL DoPaste(
 
 	TRACE("\n");
 
-	if(SUCCEEDED(pOleGetClipboard(&pda)))
+	if(SUCCEEDED(OleGetClipboard(&pda)))
 	{
 	  STGMEDIUM medium;
 	  FORMATETC formatetc;
@@ -277,7 +277,7 @@ static BOOL DoPaste(
 	    SHFree(pidl);
 
 	    /* release the medium*/
-	    pReleaseStgMedium(&medium);
+	    ReleaseStgMedium(&medium);
 	  }
 	  IDataObject_Release(pda);
 	}
