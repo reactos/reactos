@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.27 2002/12/09 23:14:04 ekohl Exp $
+/* $Id: scsiport.c,v 1.28 2003/02/27 20:32:31 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -634,8 +634,16 @@ ScsiPortLogError(IN PVOID HwDeviceExtension,
 		 IN ULONG ErrorCode,
 		 IN ULONG UniqueId)
 {
-  DPRINT("ScsiPortLogError()\n");
-  UNIMPLEMENTED;
+  PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+
+  DPRINT("ScsiPortLogError() called\n");
+
+  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
+				      SCSI_PORT_DEVICE_EXTENSION,
+				      MiniPortDeviceExtension);
+
+
+  DPRINT("ScsiPortLogError() done\n");
 }
 
 
@@ -1727,7 +1735,6 @@ ScsiPortBuildDeviceMap(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 
   /* Set 'Driver' (REG_SZ) value */
   DriverName = wcsrchr(RegistryPath->Buffer, L'\\') + 1;
-  DPRINT("  Driver = '%S'\n", DriverName);
   RtlInitUnicodeString(&ValueName,
 		       L"Driver");
   Status = ZwSetValueKey(ScsiPortKey,
@@ -1735,7 +1742,7 @@ ScsiPortBuildDeviceMap(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 			 0,
 			 REG_SZ,
 			 DriverName,
-			 wcslen(DriverName) * sizeof(WCHAR));
+			 (wcslen(DriverName) + 1) * sizeof(WCHAR));
   if (!NT_SUCCESS(Status))
     {
       DPRINT("ZwSetValueKey('Driver') failed (Status %lx)\n", Status);
@@ -1939,7 +1946,7 @@ ScsiPortBuildDeviceMap(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 				     0,
 				     REG_SZ,
 				     NameBuffer,
-				     wcslen(NameBuffer) * sizeof(WCHAR));
+				     (wcslen(NameBuffer) + 1) * sizeof(WCHAR));
 	      if (!NT_SUCCESS(Status))
 		{
 		  DPRINT("ZwSetValueKey('Identifier') failed (Status %lx)\n", Status);
@@ -1992,7 +1999,7 @@ ScsiPortBuildDeviceMap(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 				     0,
 				     REG_SZ,
 				     TypeName,
-				     wcslen(TypeName) * sizeof(WCHAR));
+				     (wcslen(TypeName) + 1) * sizeof(WCHAR));
 	      if (!NT_SUCCESS(Status))
 		{
 		  DPRINT("ZwSetValueKey('Type') failed (Status %lx)\n", Status);
