@@ -1,4 +1,4 @@
-/* $Id: button.c,v 1.7 2003/08/15 02:51:53 silverblade Exp $
+/* $Id: button.c,v 1.8 2003/08/15 15:55:02 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -36,7 +36,7 @@ static void GB_Paint( HWND hwnd, HDC hDC, UINT action );
 static void UB_Paint( HWND hwnd, HDC hDC, UINT action );
 static void OB_Paint( HWND hwnd, HDC hDC, UINT action );
 static void BUTTON_CheckAutoRadioButton( HWND hwnd );
-static LRESULT WINAPI ButtonWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
+// static LRESULT WINAPI ButtonWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 static LRESULT WINAPI ButtonWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 
 #define MAX_BTN_TYPE  12
@@ -84,12 +84,11 @@ static WORD checkBoxWidth = 0, checkBoxHeight = 0;
  */
 const struct builtin_class_descr BUTTON_builtin_class =
 {
-    "Button",            /* name */
+    L"Button",            /* name */
     CS_GLOBALCLASS | CS_DBLCLKS | CS_VREDRAW | CS_HREDRAW | CS_PARENTDC, /* style  */
-    (WNDPROC) ButtonWndProcA,      /* procA */
     (WNDPROC) ButtonWndProcW,      /* procW */
     NB_EXTRA_BYTES,      /* extra */
-    (LPCSTR) IDC_ARROW,          /* cursor */
+    (LPCWSTR) IDC_ARROW,          /* cursor */
     0                    /* brush */
 };
 
@@ -466,6 +465,7 @@ static LRESULT WINAPI ButtonWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 }
 
 
+#if 0
 /***********************************************************************
  *           ButtonWndProcA
  */
@@ -474,6 +474,7 @@ static LRESULT WINAPI ButtonWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
     if (!IsWindow( hWnd )) return 0;
     return ButtonWndProc_common( hWnd, uMsg, wParam, lParam, FALSE );
 }
+#endif
 
 
 /**********************************************************************

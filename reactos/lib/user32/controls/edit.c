@@ -297,12 +297,11 @@ LRESULT CALLBACK EditWndProcW(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
  */
 const struct builtin_class_descr EDIT_builtin_class =
 {
-    "Edit",               			/* name */
+    L"Edit",               			/* name */
     CS_GLOBALCLASS | CS_DBLCLKS | CS_PARENTDC,  /* style */
-    (WNDPROC) EditWndProcA,         		/* procA */
     (WNDPROC) EditWndProcW,         		/* procW */
     sizeof(EDITSTATE *),  			/* extra */
-    (LPCSTR) IDC_ARROW,                        	/* cursor */ /* FIXME Wine uses IDC_ARROWA */
+    (LPCWSTR) IDC_ARROW,                        	/* cursor */ /* FIXME Wine uses IDC_ARROWA */
     0                     			/* brush */
 };
 

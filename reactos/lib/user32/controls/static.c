@@ -1,4 +1,4 @@
-/* $Id: static.c,v 1.3 2003/06/16 13:46:26 gvg Exp $
+/* $Id: static.c,v 1.4 2003/08/15 15:55:02 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -18,7 +18,7 @@ static void STATIC_PaintRectfn( HWND hwnd, HDC hdc, DWORD style );
 static void STATIC_PaintIconfn( HWND hwnd, HDC hdc, DWORD style );
 static void STATIC_PaintBitmapfn( HWND hwnd, HDC hdc, DWORD style );
 static void STATIC_PaintEtchedfn( HWND hwnd, HDC hdc, DWORD style );
-static LRESULT CALLBACK StaticWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
+//static LRESULT CALLBACK StaticWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 static LRESULT CALLBACK StaticWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 
 static COLORREF color_windowframe, color_background, color_window;
@@ -59,12 +59,11 @@ static pfPaint staticPaintFunc[SS_TYPEMASK+1] =
  */
 const struct builtin_class_descr STATIC_builtin_class =
 {
-    "Static",            /* name */
+    L"Static",            /* name */
     CS_GLOBALCLASS | CS_DBLCLKS | CS_PARENTDC, /* style  */
-    (WNDPROC) StaticWndProcA,                  /* procA */
     (WNDPROC) StaticWndProcW,                  /* procW */
     STATIC_EXTRA_BYTES,                        /* extra */
-    (LPCSTR) IDC_ARROW,                        /* cursor */ /* FIXME Wine uses IDC_ARROWA */
+    (LPCWSTR) IDC_ARROW,                        /* cursor */ /* FIXME Wine uses IDC_ARROWA */
     0                                          /* brush */
 };
 
@@ -371,6 +370,7 @@ static LRESULT StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
     return lResult;
 }
 
+#if 0
 /***********************************************************************
  *           StaticWndProcA
  */
@@ -379,6 +379,7 @@ static LRESULT CALLBACK StaticWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPA
     if (!IsWindow( hWnd )) return 0;
     return StaticWndProc_common(hWnd, uMsg, wParam, lParam, FALSE);
 }
+#endif
 
 /***********************************************************************
  *           StaticWndProcW

@@ -42,12 +42,11 @@ static LRESULT CALLBACK IconTitleWndProc( HWND hWnd, UINT msg, WPARAM wParam, LP
  */
 const struct builtin_class_descr ICONTITLE_builtin_class =
 {
-    "ICONTITLE_CLASS_ATOM",     /* name */
+    L"ICONTITLE_CLASS_ATOM",     /* name */
     CS_GLOBALCLASS,             /* style */
-    NULL,                       /* procA (winproc is Unicode only) */
     (WNDPROC) IconTitleWndProc, /* procW */
     0,                          /* extra */
-    (LPCSTR) IDC_ARROW,         /* cursor */ /* FIXME Wine uses IDC_ARROWA */
+    (LPCWSTR) IDC_ARROW,         /* cursor */ /* FIXME Wine uses IDC_ARROWA */
     0                           /* brush */
 };
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dialog.c,v 1.15 2003/08/09 14:25:07 chorns Exp $
+/* $Id: dialog.c,v 1.16 2003/08/15 15:55:02 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/dialog.c
@@ -121,12 +121,11 @@ typedef struct
  */
 const struct builtin_class_descr DIALOG_builtin_class =
 {
-    DIALOG_CLASS_ATOMA, /* name */
+    DIALOG_CLASS_ATOMW, /* name */
     CS_GLOBALCLASS | CS_SAVEBITS | CS_DBLCLKS, /* style  */
-    (WNDPROC) DefDlgProcA,        /* procA */
     (WNDPROC) DefDlgProcW,        /* procW */
     sizeof(DIALOGINFO *),  /* extra */
-    (LPCSTR) IDC_ARROW,           /* cursor */
+    (LPCWSTR) IDC_ARROW,           /* cursor */
     0                     /* brush */
 };
 

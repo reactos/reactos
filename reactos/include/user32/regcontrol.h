@@ -1,4 +1,4 @@
-/* $Id: regcontrol.h,v 1.4 2003/08/15 15:12:14 weiden Exp $
+/* $Id: regcontrol.h,v 1.5 2003/08/15 15:55:02 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -20,12 +20,11 @@
 /* Built-in class descriptor */
 struct builtin_class_descr
 {
-    LPCSTR  name;    /* class name */
+    LPCWSTR name;    /* class name */
     UINT    style;   /* class style */
-    WNDPROC procA;   /* ASCII window procedure */
     WNDPROC procW;   /* Unicode window procedure */
     INT     extra;   /* window extra bytes */
-    LPCSTR  cursor;  /* cursor name */
+    LPCWSTR cursor;  /* cursor name */
     HBRUSH  brush;   /* brush or system color */
 };
 

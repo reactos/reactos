@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.24 2003/08/15 15:12:14 weiden Exp $
+/* $Id: menu.c,v 1.25 2003/08/15 15:55:02 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -68,12 +68,11 @@
  */
 const struct builtin_class_descr POPUPMENU_builtin_class =
 {
-    POPUPMENU_CLASS_ATOMA,                     /* name */
+    POPUPMENU_CLASS_ATOMW,                     /* name */
     CS_GLOBALCLASS | CS_SAVEBITS | CS_DBLCLKS, /* style  */
-    (WNDPROC) NULL,                            /* FIXME - procA */
     (WNDPROC) NULL,                            /* FIXME - procW */
     sizeof(MENUINFO *),                        /* extra */
-    (LPCSTR) IDC_ARROW,                        /* cursor */
+    (LPCWSTR) IDC_ARROW,                        /* cursor */
     (HBRUSH)COLOR_MENU                         /* brush */
 };
 

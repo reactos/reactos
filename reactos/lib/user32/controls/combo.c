@@ -74,7 +74,7 @@ static UINT	CBitHeight, CBitWidth;
 #define COMBO_EDITBUTTONSPACE()  ( 0 )
 #define EDIT_CONTROL_PADDING()   ( 1 )
 
-static LRESULT WINAPI ComboWndProcA( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam );
+// static LRESULT WINAPI ComboWndProcA( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam );
 static LRESULT WINAPI ComboWndProcW( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam );
 
 /*********************************************************************
@@ -82,12 +82,11 @@ static LRESULT WINAPI ComboWndProcW( HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
  */
 const struct builtin_class_descr COMBO_builtin_class =
 {
-    "ComboBox",           /* name */
+    L"ComboBox",           /* name */
     CS_GLOBALCLASS | CS_PARENTDC | CS_DBLCLKS, /* style  */
-    (WNDPROC) ComboWndProcA,        /* procA */
     (WNDPROC) ComboWndProcW,        /* procW */
     sizeof(HEADCOMBO *),  /* extra */
-    (LPCSTR) IDC_ARROW,           /* cursor */
+    (LPCWSTR) IDC_ARROW,           /* cursor */
     0                     /* brush */
 };
 
@@ -2182,6 +2181,7 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
                        DefWindowProcA(hwnd, message, wParam, lParam);
 }
 
+#if 0
 /***********************************************************************
  *           ComboWndProcA
  *
@@ -2193,6 +2193,7 @@ static LRESULT WINAPI ComboWndProcA( HWND hwnd, UINT message, WPARAM wParam, LPA
     if (!IsWindow(hwnd)) return 0;
     return ComboWndProc_common( hwnd, message, wParam, lParam, FALSE );
 }
+#endif
 
 /***********************************************************************
  *           ComboWndProcW

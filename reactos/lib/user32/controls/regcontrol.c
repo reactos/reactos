@@ -1,4 +1,4 @@
-/* $Id: regcontrol.c,v 1.9 2003/08/15 15:12:14 weiden Exp $
+/* $Id: regcontrol.c,v 1.10 2003/08/15 15:55:02 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -14,25 +14,25 @@
 
 static void RegisterBuiltinClass(const struct builtin_class_descr *Descr)
 {
-  WNDCLASSA wca;
+  WNDCLASSW wc;
   
-  wca.lpszClassName = Descr->name;
-  wca.lpfnWndProc = Descr->procA;
-  wca.style = Descr->style;
-  wca.hInstance = NULL;
-  wca.hIcon = NULL;
-  wca.hCursor = LoadCursorA(NULL, Descr->cursor);
-  wca.hbrBackground = Descr->brush;
-  wca.lpszMenuName = NULL;
-  wca.cbClsExtra = 0;
-  wca.cbWndExtra = Descr->extra;
+  wc.lpszClassName = Descr->name;
+  wc.lpfnWndProc = Descr->procW;
+  wc.style = Descr->style;
+  wc.hInstance = NULL;
+  wc.hIcon = NULL;
+  wc.hCursor = LoadCursorW(NULL, Descr->cursor);
+  wc.hbrBackground = Descr->brush;
+  wc.lpszMenuName = NULL;
+  wc.cbClsExtra = 0;
+  wc.cbWndExtra = Descr->extra;
 
 #if 1
-  if(IS_ATOM(wca.lpszClassName))
-    DbgPrint("Registering built-in class atom=0x%x\n", wca.lpszClassName);
+  if(IS_ATOM(wc.lpszClassName))
+    DbgPrint("Registering built-in class atom=0x%x\n", wc.lpszClassName);
   else
-    DbgPrint("Registering built-in class %s\n", wca.lpszClassName);
-  DbgPrint("RegisterClassA = %d\n", RegisterClassA(&wca));
+    DbgPrint("Registering built-in class %wS\n", wc.lpszClassName);
+  DbgPrint("RegisterClassW = %d\n", RegisterClassW(&wc));
 #endif
 }
 
