@@ -6,10 +6,17 @@
 #ifndef MAKEINTATOMA
 #define MAKEINTATOMA(atom)  ((LPCSTR)((ULONG_PTR)((WORD)(atom))))
 #endif
-
 #ifndef WM_ISACTIVEICON 
 #define WM_ISACTIVEICON         0x0035
 #endif 
+#if defined(STRICT)
+typedef INT     (CALLBACK *EDITWORDBREAKPROCA)(LPSTR,INT,INT,INT);
+typedef INT     (CALLBACK *EDITWORDBREAKPROCW)(LPWSTR,INT,INT,INT);
+#else
+typedef FARPROC EDITWORDBREAKPROCA;
+typedef FARPROC EDITWORDBREAKPROCW;
+#endif
+
 /* winuser.h */
 
 
