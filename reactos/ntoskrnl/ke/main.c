@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.116 2002/03/16 00:00:13 ekohl Exp $
+/* $Id: main.c,v 1.117 2002/04/17 11:56:33 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -1096,21 +1096,15 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
   /*
    * Copy the parameters to a local buffer because lowmem will go away
    */
-  memcpy (&KeLoaderBlock, _LoaderBlock, sizeof(LOADER_PARAMETER_BLOCK));
-  memcpy (&KeLoaderModules[1], (PVOID)KeLoaderBlock.ModsAddr,
-	  sizeof(LOADER_MODULE) * KeLoaderBlock.ModsCount);
+  memcpy(&KeLoaderBlock, _LoaderBlock, sizeof(LOADER_PARAMETER_BLOCK));
+  memcpy(&KeLoaderModules[1], (PVOID)KeLoaderBlock.ModsAddr,
+	 sizeof(LOADER_MODULE) * KeLoaderBlock.ModsCount);
   KeLoaderBlock.ModsCount++;
   KeLoaderBlock.ModsAddr = (ULONG)&KeLoaderModules;
   
-  /*
-   * FIXME: Preliminary hack!!!! Add boot device to beginning of command line.
-   * This should be done by the boot loader.
-   */
-  strcpy (KeLoaderCommandLine,
-	  "multi(0)disk(0)rdisk(0)partition(1)\\reactos /DEBUGPORT=SCREEN");
-/*  strcat (KeLoaderCommandLine, (PUCHAR)KeLoaderBlock.CommandLine); */
-  
+  strcpy(KeLoaderCommandLine, (PUCHAR)_LoaderBlock->CommandLine);
   KeLoaderBlock.CommandLine = (ULONG)KeLoaderCommandLine;
+  
   strcpy(KeLoaderModuleStrings[0], "ntoskrnl.exe");
   KeLoaderModules[0].String = (ULONG)KeLoaderModuleStrings[0];
   KeLoaderModules[0].ModStart = 0xC0000000;
