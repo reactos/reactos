@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.31 2002/04/27 19:15:00 hbirr Exp $
+/* $Id: file.c,v 1.32 2002/05/07 22:21:47 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -160,6 +160,11 @@ FlushFileBuffers(HANDLE hFile)
    NTSTATUS errCode;
    IO_STATUS_BLOCK IoStatusBlock;
 
+   if (IsConsoleHandle(hFile))
+   {
+      return FALSE;
+   }
+
    errCode = NtFlushBuffersFile(hFile,
 				&IoStatusBlock);
    if (!NT_SUCCESS(errCode))
@@ -267,7 +272,7 @@ GetFileType(HANDLE hFile)
      }
 
    /* check console handles */
-   if (((ULONG)hFile & 3) == 3)
+   if (IsConsoleHandle(hFile))
      {
 //	if (VerifyConsoleHandle(hFile))
 	  return FILE_TYPE_CHAR;
