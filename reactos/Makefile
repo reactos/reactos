@@ -7,8 +7,8 @@ ifeq ($(VERBOSE),yes)
   Q =
   HALFVERBOSEECHO = @:
 else
-  Q = @
-  HALFVERBOSEECHO = @echo
+  Q =
+  HALFVERBOSEECHO = echo
 endif
 endif
 
@@ -53,7 +53,7 @@ endif
 .PHONY: all
 .PHONY: clean
 
-all: Makefile.auto
+all: makefile.auto
 
 ifneq ($(ROS_INTERMEDIATE),)
 $(ROS_INTERMEDIATE)tools: $(ROS_INTERMEDIATE)
@@ -66,7 +66,7 @@ $(ROS_INTERMEDIATE):
 endif
 
 include tools/Makefile
--include Makefile.auto
+-include makefile.auto
 
 PREAUTO := \
 	include$(SEP)reactos$(SEP)buildno.h \
@@ -75,7 +75,7 @@ PREAUTO := \
 	include$(SEP)reactos$(SEP)errcodes.h \
 	lib$(SEP)kernel32$(SEP)errcodes.rc
 
-Makefile.auto: $(RMKDIR_TARGET) $(BUILDNO_TARGET) $(NCI_SERVICE_FILES) $(WMC_TARGET) $(WRC_TARGET) \
+makefile.auto: $(RMKDIR_TARGET) $(BUILDNO_TARGET) $(NCI_SERVICE_FILES) $(WMC_TARGET) $(WRC_TARGET) \
                $(RSYM_TARGET) $(CDMAKE_TARGET) $(RBUILD_TARGET) $(PREAUTO) $(XMLBUILDFILES)
 	$(HALFVERBOSEECHO) [RBUILD]  makefile.auto
 	$(Q)tools$(SEP)rbuild$(SEP)rbuild$(EXEPOSTFIX) mingw
@@ -89,5 +89,5 @@ include$(SEP)reactos$(SEP)errcodes.h lib$(SEP)kernel32$(SEP)errcodes.rc: $(WMC_T
 
 .PHONY: makefile_auto_clean
 makefile_auto_clean:
-	-@$(rm) Makefile.auto $(PREAUTO) 2>$(NUL)
+	-@$(rm) makefile.auto $(PREAUTO) 2>$(NUL)
 clean: makefile_auto_clean
