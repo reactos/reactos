@@ -1,4 +1,4 @@
-; $Id: advapi32.edf,v 1.20 2003/06/27 15:19:18 sedwards Exp $
+; $Id: advapi32.edf,v 1.21 2003/07/20 00:04:06 ekohl Exp $
 ;
 ; advapi32.edf
 ;
@@ -270,10 +270,10 @@ MapGenericMask=MapGenericMask@8
 ;NTAccessMaskToProvAccessRights=NTAccessMaskToProvAccessRights@12
 ;NotifyBootConfigStatus=NotifyBootConfigStatus@4
 ;NotifyChangeEventLog=NotifyChangeEventLog@8
-;ObjectCloseAuditAlarmA=ObjectCloseAuditAlarmA@12
-;ObjectCloseAuditAlarmW=ObjectCloseAuditAlarmW@12
-;ObjectDeleteAuditAlarmA=ObjectDeleteAuditAlarmA@12
-;ObjectDeleteAuditAlarmW=ObjectDeleteAuditAlarmW@12
+ObjectCloseAuditAlarmA=ObjectCloseAuditAlarmA@12
+ObjectCloseAuditAlarmW=ObjectCloseAuditAlarmW@12
+ObjectDeleteAuditAlarmA=ObjectDeleteAuditAlarmA@12
+ObjectDeleteAuditAlarmW=ObjectDeleteAuditAlarmW@12
 ;ObjectOpenAuditAlarmA=ObjectOpenAuditAlarmA@48
 ;ObjectOpenAuditAlarmW=ObjectOpenAuditAlarmW@48
 ;ObjectPrivilegeAuditAlarmA=ObjectPrivilegeAuditAlarmA@24
