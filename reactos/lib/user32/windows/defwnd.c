@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.44 2003/05/12 19:30:00 jfilby Exp $
+/* $Id: defwnd.c,v 1.45 2003/05/19 18:36:43 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -116,6 +116,12 @@ UserSetupInternalPos( VOID )
 {
   LPSTR Str = "SysIP";
   AtomInternalPos = GlobalAddAtomA(Str);
+}
+
+DWORD STDCALL
+GetSysColor(int nIndex)
+{
+  return SysColours[nIndex];
 }
 
 HPEN STDCALL

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.20 2003/05/12 19:30:00 jfilby Exp $
+/* $Id: stubs.c,v 1.21 2003/05/19 18:36:42 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -194,15 +194,6 @@ DWORD
 STDCALL
 GetQueueStatus(
   UINT flags)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
-DWORD
-STDCALL
-GetSysColor(
-  int nIndex)
 {
   UNIMPLEMENTED;
   return 0;
