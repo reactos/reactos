@@ -1,8 +1,8 @@
 #ifndef __RBUILD_H
 #define __RBUILD_H
 
-#include <string>
-#include <vector>
+#include "pch.h"
+
 #include "ssprintf.h"
 #include "exception.h"
 #include "XML.h"

@@ -1,12 +1,11 @@
 // rbuild.cpp
 
-#ifdef _MSC_VER
-#pragma warning ( disable : 4786 ) // identifier was truncated to '255' characters in the debug information
-#endif//_MSC_VER
+#include "pch.h"
 
 #include <stdio.h>
 #include <io.h>
 #include <assert.h>
+
 #include "rbuild.h"
 
 using std::string;
@@ -15,8 +14,6 @@ using std::vector;
 int
 main ( int argc, char** argv )
 {
-	InitWorkingDirectory();
-
 	try
 	{
 		string projectFilename ( "ReactOS.xml" );
@@ -31,7 +28,8 @@ main ( int argc, char** argv )
 			printf ( "\t%s in folder: %s\n",
 			         m.name.c_str(),
 			         m.path.c_str() );
-			printf ( "\txml dependencies:\n\t\tReactOS.xml\n" );
+			printf ( "\txml dependencies:\n\t\t%s\n",
+			         projectFilename.c_str() );
 			const XMLElement* e = &m.node;
 			while ( e )
 			{

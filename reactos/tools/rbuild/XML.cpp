@@ -1,8 +1,6 @@
 // XML.cpp
 
-#ifdef _MSC_VER
-#pragma warning ( disable : 4786 ) // identifier was truncated to '255' characters in the debug information
-#endif//_MSC_VER
+#include "pch.h"
 
 #include <direct.h>
 #include <io.h>
@@ -51,6 +49,8 @@ filelen ( FILE* f )
 
 Path::Path()
 {
+	if ( !working_directory.size() )
+		InitWorkingDirectory();
 	string s ( working_directory );
 	const char* p = strtok ( &s[0], "/\\" );
 	while ( p )

@@ -1,10 +1,9 @@
 // XML.h
 
-#ifndef __XML_H
-#define __XML_H
+#ifndef XML_H
+#define XML_H
 
-#include <string>
-#include <vector>
+#include "pch.h"
 
 void
 InitWorkingDirectory();
@@ -80,4 +79,4 @@ XMLParse(XMLFile& f,
          const Path& path,
          bool* pend_tag = NULL);
 
-#endif//__XML_H
+#endif//XML_H
