@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cliprgn.c,v 1.22 2003/08/29 09:29:11 gvg Exp $ */
+/* $Id: cliprgn.c,v 1.23 2003/08/31 07:56:24 gvg Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -231,12 +231,14 @@ int STDCALL NtGdiSelectClipRgn(HDC  hDC,
       Copy = NtGdiCreateRectRgn(0, 0, 0, 0);
       if (NULL == Copy)
 	{
+	  DC_UnlockDc(hDC);
 	  return ERROR;
 	}
       Type = NtGdiCombineRgn(Copy, hRgn, 0, RGN_COPY);
       if (ERROR == Type)
 	{
 	  NtGdiDeleteObject(Copy);
+	  DC_UnlockDc(hDC);
 	  return ERROR;
 	}
       NtGdiOffsetRgn(Copy, dc->w.DCOrgX, dc->w.DCOrgY);
@@ -252,6 +254,7 @@ int STDCALL NtGdiSelectClipRgn(HDC  hDC,
     }
   dc->w.hClipRgn = Copy;
   CLIPPING_UpdateGCRegion(dc);
+  DC_UnlockDc(hDC);
 
   return ERROR;
 }

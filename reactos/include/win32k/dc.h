@@ -171,7 +171,6 @@ HGDIOBJ STDCALL  NtGdiGetCurrentObject(HDC  hDC, UINT  ObjectType);
 VOID FASTCALL IntGetCurrentPositionEx (PDC  dc,  LPPOINT currentPosition);
 BOOL STDCALL  NtGdiGetCurrentPositionEx(HDC  hDC, LPPOINT currentPosition);
 BOOL STDCALL  NtGdiGetDCOrgEx(HDC  hDC, LPPOINT  Point);
-HDC STDCALL  NtGdiGetDCState16(HDC  hDC);
 INT STDCALL  NtGdiGetDeviceCaps(HDC  hDC, INT  Index);
 INT STDCALL  NtGdiGetMapMode(HDC  hDC);
 INT STDCALL  NtGdiGetObject(HGDIOBJ  hGDIObj,

@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.31 2003/08/28 12:35:59 gvg Exp $
+ * $Id: dib.c,v 1.32 2003/08/31 07:56:24 gvg Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -541,18 +541,14 @@ HBITMAP STDCALL NtGdiCreateDIBitmap(HDC hdc, const BITMAPINFOHEADER *header,
 
   // Now create the bitmap
 
-  if(fColor)
-  {
-    // If we are using indexed colors, then we need to create a bitmap that is compatible with the palette
-    if(coloruse == DIB_PAL_COLORS)
+  if (init == CBM_INIT)
     {
       handle = NtGdiCreateCompatibleBitmap(hdc, width, height);
     }
-    else if(coloruse == DIB_RGB_COLORS) {
-      handle = NtGdiCreateBitmap(width, height, 1, 24, NULL);
+  else
+    {
+      handle = NtGdiCreateBitmap(width, height, 1, bpp, NULL);
     }
-  }
-  else handle = NtGdiCreateBitmap(width, height, 1, 1, NULL);
 
   if (!handle) return 0;
 
@@ -692,17 +688,20 @@ DIB_CreateDIBSection(
   if (dib)
   {
     res = NtGdiCreateDIBitmap(dc->hSelf, bi, 0, NULL, bmi, usage);
-    if (res)
-    {
-      bmp = BITMAPOBJ_LockBitmap(res);
-      if (bmp)
-	{
-          bmp->dib = (DIBSECTION *) dib;
-	  /* Install user-mode bits instead of kernel-mode bits */
-	  ExFreePool(bmp->bitmap.bmBits);
-	  bmp->bitmap.bmBits = bm.bmBits;
-	}
-    }
+    if (! res)
+      {
+	return NULL;
+      } 
+    bmp = BITMAPOBJ_LockBitmap(res);
+    if (NULL == bmp)
+      {
+	NtGdiDeleteObject(bmp);
+	return NULL;
+      }
+    bmp->dib = (DIBSECTION *) dib;
+    /* Install user-mode bits instead of kernel-mode bits */
+    ExFreePool(bmp->bitmap.bmBits);
+    bmp->bitmap.bmBits = bm.bmBits;
 
     /* WINE NOTE: WINE makes use of a colormap, which is a color translation table between the DIB and the X physical
                   device. Obviously, this is left out of the ReactOS implementation. Instead, we call
@@ -931,7 +930,7 @@ BuildDIBPalette (PBITMAPINFO bmi, PINT paletteType)
 {
   BYTE bits;
   ULONG ColorCount;
-  PALETTEENTRY *palEntries;
+  PALETTEENTRY *palEntries = NULL;
   HPALETTE hPal;
 
   // Determine Bits Per Pixel
@@ -948,14 +947,10 @@ BuildDIBPalette (PBITMAPINFO bmi, PINT paletteType)
     }
   else
     {
-      *paletteType = PAL_RGB; // Would it be BGR, considering the BGR nature of the DIB color table?
+      *paletteType = PAL_BGR;
     }
 
-#ifdef TODO
   if (bmi->bmiHeader.biClrUsed == 0)
-#else
-  if (bmi->bmiHeader.biClrUsed == 0 && bmi->bmiHeader.biBitCount <= 8)
-#endif
     {
       ColorCount = 1 << bmi->bmiHeader.biBitCount;
     }
@@ -964,10 +959,16 @@ BuildDIBPalette (PBITMAPINFO bmi, PINT paletteType)
       ColorCount = bmi->bmiHeader.biClrUsed;
     }
 
-  palEntries = ExAllocatePool(NonPagedPool, sizeof(PALETTEENTRY)*ColorCount);
-  DIBColorTableToPaletteEntries(palEntries, bmi->bmiColors, ColorCount);
+  if (PAL_INDEXED == *paletteType)
+    {
+      palEntries = ExAllocatePool(NonPagedPool, sizeof(PALETTEENTRY)*ColorCount);
+      DIBColorTableToPaletteEntries(palEntries, bmi->bmiColors, ColorCount);
+    }
   hPal = PALETTE_AllocPalette( *paletteType, ColorCount, (ULONG*)palEntries, 0, 0, 0 );
-  ExFreePool(palEntries);
+  if (NULL != palEntries)
+    {
+      ExFreePool(palEntries);
+    }
 
   return hPal;
 }

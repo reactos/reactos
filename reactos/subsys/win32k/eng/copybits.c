@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: copybits.c,v 1.17 2003/08/04 19:57:05 royce Exp $
+/* $Id: copybits.c,v 1.18 2003/08/31 07:56:24 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -119,14 +119,10 @@ EngCopyBits(SURFOBJ *Dest,
     clippingType = Clip->iDComplexity;
   }
 
-  // We only handle XO_TABLE translations at the momement
-  if ((ColorTranslation == NULL) || (ColorTranslation->flXlate & XO_TRIVIAL) ||
-      (ColorTranslation->flXlate & XO_TABLE))
-  {
-    SourceGDI = (PSURFGDI)AccessInternalObjectFromUserObject(Source);
-    DestGDI   = (PSURFGDI)AccessInternalObjectFromUserObject(Dest);
+  SourceGDI = (PSURFGDI)AccessInternalObjectFromUserObject(Source);
+  DestGDI   = (PSURFGDI)AccessInternalObjectFromUserObject(Dest);
 
-    switch(clippingType)
+  switch(clippingType)
     {
       case DC_TRIVIAL:
         DestGDI->DIB_BitBlt(Dest, Source, DestGDI, SourceGDI, DestRect, SourcePoint, NULL, NULL, ColorTranslation, SRCCOPY);
@@ -184,11 +180,11 @@ EngCopyBits(SURFOBJ *Dest,
 
           return(TRUE);
     }
-  }
 
   MouseSafetyOnDrawEnd(Source, SourceGDI);
   MouseSafetyOnDrawEnd(Dest, DestGDI);
 
   return FALSE;
 }
+
 /* EOF */

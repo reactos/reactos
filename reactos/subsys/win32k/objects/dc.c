@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.77 2003/08/29 12:28:24 gvg Exp $
+/* $Id: dc.c,v 1.78 2003/08/31 07:56:24 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -113,9 +113,6 @@ INT STDCALL  func_name( HDC hdc, INT mode ) \
 
 //  ---------------------------------------------------------  File Statics
 
-static VOID FASTCALL
-NtGdiSetDCState16(HDC  hDC, HDC  hDCSave);
-
 //  -----------------------------------------------------  Public Functions
 
 BOOL STDCALL
@@ -131,6 +128,7 @@ NtGdiCreateCompatableDC(HDC  hDC)
   HBITMAP  hBitmap;
   HDC hNewDC;
   HRGN hVisRgn;
+  BITMAPOBJ *pb;
 
   OrigDC = DC_LockDc(hDC);
   if (OrigDC == NULL)
@@ -155,6 +153,11 @@ NtGdiCreateCompatableDC(HDC  hDC)
   /* FIXME: Should this DC request its own PDEV?  */
   if(OrigDC == NULL)
   {
+    NewDC->PDev = PrimarySurface.PDev;
+    memcpy(NewDC->FillPatternSurfaces, PrimarySurface.FillPatterns,
+           sizeof(NewDC->FillPatternSurfaces));
+    NewDC->GDIInfo = &PrimarySurface.GDIInfo;
+    NewDC->DevInfo = &PrimarySurface.DevInfo;
   }
   else
   {
@@ -197,9 +200,15 @@ NtGdiCreateCompatableDC(HDC  hDC)
   NewDC->w.bitsPerPixel = 1;
   NewDC->w.hBitmap      = hBitmap;
   NewDC->w.hFirstBitmap = hBitmap;
-  NewDC->Surface = BitmapToSurf(BITMAPOBJ_LockBitmap(hBitmap));
+  pb = BITMAPOBJ_LockBitmap(hBitmap);
+  NewDC->Surface = BitmapToSurf(pb);
+  BITMAPOBJ_UnlockBitmap(hBitmap);
 
-  if(OrigDC != NULL)
+  if(OrigDC == NULL)
+  {
+    NewDC->w.hPalette = NewDC->DevInfo->hpalDefault;
+  }
+  else
   {
     NewDC->w.hPalette = OrigDC->w.hPalette;
     NewDC->w.textColor = OrigDC->w.textColor;
@@ -560,10 +569,6 @@ NtGdiDeleteDC(HDC  DCHandle)
     NtGdiSelectObject (DCHandle, STOCK_WHITE_BRUSH);
     NtGdiSelectObject (DCHandle, STOCK_SYSTEM_FONT);
     DC_LockDC (DCHandle); NtGdiSelectObject does not recognize stock objects yet  */
-    if ( DCToDelete->w.hBitmap != NULL )
-    {
-      BITMAPOBJ_UnlockBitmap(DCToDelete->w.hBitmap);
-    }
     if (DCToDelete->w.flags & DC_MEMORY)
     {
       EngDeleteSurface (DCToDelete->Surface);
@@ -649,8 +654,23 @@ NtGdiGetDCOrgEx(HDC  hDC, LPPOINT  Point)
   return  TRUE;
 }
 
-HDC STDCALL
-NtGdiGetDCState16(HDC  hDC)
+COLORREF STDCALL
+NtGdiSetBkColor(HDC hDC, COLORREF color)
+{
+  COLORREF oldColor;
+  PDC  dc = DC_LockDc(hDC);
+
+  if ( !dc )
+    return 0x80000000;
+
+  oldColor = dc->w.backgroundColor;
+  dc->w.backgroundColor = color;
+  DC_UnlockDc ( hDC );
+  return oldColor;
+}
+
+static HDC STDCALL
+NtGdiGetDCState(HDC  hDC)
 {
   PDC  newdc, dc;
   HDC hnewdc;
@@ -664,7 +684,7 @@ NtGdiGetDCState16(HDC  hDC)
   hnewdc = DC_AllocDC(NULL);
   if (hnewdc == NULL)
   {
-	DC_UnlockDc( hDC );
+    DC_UnlockDc( hDC );
     return 0;
   }
   newdc = DC_LockDc( hnewdc );
@@ -744,7 +764,118 @@ NtGdiGetDCState16(HDC  hDC)
     newdc->w.hClipRgn = 0;
   }
   DC_UnlockDc( hnewdc );
+  DC_UnlockDc( hDC );
   return  hnewdc;
+}
+
+STATIC
+VOID
+FASTCALL
+NtGdiSetDCState ( HDC hDC, HDC hDCSave )
+{
+  PDC  dc, dcs;
+
+  dc = DC_LockDc ( hDC );
+  if ( dc )
+  {
+    dcs = DC_LockDc ( hDCSave );
+    if ( dcs )
+    {
+      if ( dcs->w.flags & DC_SAVED )
+      {
+	dc->w.flags            = dcs->w.flags & ~DC_SAVED;
+
+	dc->w.hFirstBitmap     = dcs->w.hFirstBitmap;
+
+#if 0
+	dc->w.hDevice          = dcs->w.hDevice;
+#endif
+
+	dc->w.totalExtent      = dcs->w.totalExtent;
+	dc->w.ROPmode          = dcs->w.ROPmode;
+	dc->w.polyFillMode     = dcs->w.polyFillMode;
+	dc->w.stretchBltMode   = dcs->w.stretchBltMode;
+	dc->w.relAbsMode       = dcs->w.relAbsMode;
+	dc->w.backgroundMode   = dcs->w.backgroundMode;
+	dc->w.backgroundColor  = dcs->w.backgroundColor;
+	dc->w.textColor        = dcs->w.textColor;
+	dc->w.brushOrgX        = dcs->w.brushOrgX;
+	dc->w.brushOrgY        = dcs->w.brushOrgY;
+	dc->w.textAlign        = dcs->w.textAlign;
+	dc->w.charExtra        = dcs->w.charExtra;
+	dc->w.breakTotalExtra  = dcs->w.breakTotalExtra;
+	dc->w.breakCount       = dcs->w.breakCount;
+	dc->w.breakExtra       = dcs->w.breakExtra;
+	dc->w.breakRem         = dcs->w.breakRem;
+	dc->w.MapMode          = dcs->w.MapMode;
+	dc->w.GraphicsMode     = dcs->w.GraphicsMode;
+#if 0
+	/* Apparently, the DC origin is not changed by [GS]etDCState */
+	dc->w.DCOrgX           = dcs->w.DCOrgX;
+	dc->w.DCOrgY           = dcs->w.DCOrgY;
+#endif
+	dc->w.CursPosX         = dcs->w.CursPosX;
+	dc->w.CursPosY         = dcs->w.CursPosY;
+	dc->w.ArcDirection     = dcs->w.ArcDirection;
+
+#if 0
+	dc->w.xformWorld2Wnd   = dcs->w.xformWorld2Wnd;
+	dc->w.xformWorld2Vport = dcs->w.xformWorld2Vport;
+	dc->w.xformVport2World = dcs->w.xformVport2World;
+	dc->w.vport2WorldValid = dcs->w.vport2WorldValid;
+#endif
+
+	dc->wndOrgX            = dcs->wndOrgX;
+	dc->wndOrgY            = dcs->wndOrgY;
+	dc->wndExtX            = dcs->wndExtX;
+	dc->wndExtY            = dcs->wndExtY;
+	dc->vportOrgX          = dcs->vportOrgX;
+	dc->vportOrgY          = dcs->vportOrgY;
+	dc->vportExtX          = dcs->vportExtX;
+	dc->vportExtY          = dcs->vportExtY;
+
+	if (!(dc->w.flags & DC_MEMORY))
+	{
+	  dc->w.bitsPerPixel = dcs->w.bitsPerPixel;
+	}
+
+#if 0
+	if (dcs->w.hClipRgn)
+	{
+	  if (!dc->w.hClipRgn)
+	  {
+	    dc->w.hClipRgn = NtGdiCreateRectRgn( 0, 0, 0, 0 );
+	  }
+	  NtGdiCombineRgn( dc->w.hClipRgn, dcs->w.hClipRgn, 0, RGN_COPY );
+	}
+	else
+	{
+	  if (dc->w.hClipRgn)
+	  {
+	    NtGdiDeleteObject( dc->w.hClipRgn );
+	  }
+
+	  dc->w.hClipRgn = 0;
+	}
+	CLIPPING_UpdateGCRegion( dc );
+#endif
+
+	NtGdiSelectObject( hDC, dcs->w.hBitmap );
+	NtGdiSelectObject( hDC, dcs->w.hBrush );
+	NtGdiSelectObject( hDC, dcs->w.hFont );
+	NtGdiSelectObject( hDC, dcs->w.hPen );
+	NtGdiSetBkColor( hDC, dcs->w.backgroundColor);
+	NtGdiSetTextColor( hDC, dcs->w.textColor);
+
+#if 0
+	GDISelectPalette16( hDC, dcs->w.hPalette, FALSE );
+#endif
+      }
+
+      DC_UnlockDc ( hDCSave );
+    }
+    DC_UnlockDc ( hDC );
+  }
 }
 
 INT STDCALL
@@ -1175,7 +1306,9 @@ NtGdiRestoreDC(HDC  hDC, INT  SaveLevel)
     DC_SetNextDC (dcs, DC_GetNextDC (dcs));
     if (--dc->saveLevel < SaveLevel)
       {
-        NtGdiSetDCState16 (hDC, hdcs);
+	DC_UnlockDc( hDC );
+        DC_UnlockDc( hdcs );
+        NtGdiSetDCState(hDC, hdcs);
 #if 0
         if (!PATH_AssignGdiPath( &dc->w.path, &dcs->w.path ))
         {
@@ -1184,8 +1317,16 @@ NtGdiRestoreDC(HDC  hDC, INT  SaveLevel)
           success = FALSE;
         }
 #endif
+	dc = DC_LockDc(hDC);
+	if(!dc)
+	{
+	  return FALSE;
+	}
       }
-	  DC_UnlockDc( hdcs );
+    else
+      {
+      DC_UnlockDc( hdcs );
+      }
     NtGdiDeleteDC (hdcs);
   }
   DC_UnlockDc( hDC );
@@ -1199,17 +1340,22 @@ NtGdiSaveDC(HDC  hDC)
   PDC  dc, dcs;
   INT  ret;
 
-  dc = DC_LockDc (hDC);
-  if (dc == NULL)
+  if (!(hdcs = NtGdiGetDCState(hDC)))
   {
     return 0;
   }
 
-  if (!(hdcs = NtGdiGetDCState16 (hDC)))
+  dcs = DC_LockDc (hdcs);
+  if (dcs == NULL)
   {
     return 0;
   }
-  dcs = DC_LockDc (hdcs);
+  dc = DC_LockDc (hDC);
+  if (dc == NULL)
+  {
+    DC_UnlockDc(dc);
+    return 0;
+  }
 
 #if 0
     /* Copy path. The reason why path saving / restoring is in SaveDC/
@@ -1320,7 +1466,6 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
 
       /* Release the old bitmap, lock the new one and convert it to a SURF */
       EngDeleteSurface(dc->Surface);
-      BITMAPOBJ_UnlockBitmap(objOrg);
       dc->w.hBitmap = hGDIObj;
       pb = BITMAPOBJ_LockBitmap(hGDIObj);
       ASSERT(pb);
@@ -1366,6 +1511,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       hVisRgn = NtGdiCreateRectRgn ( 0, 0, pb->size.cx, pb->size.cy );
       NtGdiSelectVisRgn ( hDC, hVisRgn );
       NtGdiDeleteObject ( hVisRgn );
+      BITMAPOBJ_UnlockBitmap(hGDIObj);
 
       return objOrg;
 
@@ -1387,131 +1533,6 @@ DC_SET_MODE( NtGdiSetPolyFillMode, w.polyFillMode, ALTERNATE, WINDING )
 // DC_SET_MODE( NtGdiSetRelAbs, w.relAbsMode, ABSOLUTE, RELATIVE )
 DC_SET_MODE( NtGdiSetROP2, w.ROPmode, R2_BLACK, R2_WHITE )
 DC_SET_MODE( NtGdiSetStretchBltMode, w.stretchBltMode, BLACKONWHITE, HALFTONE )
-
-COLORREF STDCALL
-NtGdiSetBkColor(HDC hDC, COLORREF color)
-{
-  COLORREF oldColor;
-  PDC  dc = DC_LockDc(hDC);
-
-  if ( !dc )
-    return 0x80000000;
-
-  oldColor = dc->w.backgroundColor;
-  dc->w.backgroundColor = color;
-  DC_UnlockDc ( hDC );
-  return oldColor;
-}
-
-STATIC
-VOID
-FASTCALL
-NtGdiSetDCState16 ( HDC hDC, HDC hDCSave )
-{
-  PDC  dc, dcs;
-
-  dc = DC_LockDc ( hDC );
-  if ( dc )
-  {
-    dcs = DC_LockDc ( hDCSave );
-    if ( dcs )
-    {
-      if ( dcs->w.flags & DC_SAVED )
-      {
-	dc->w.flags            = dcs->w.flags & ~DC_SAVED;
-
-	dc->w.hFirstBitmap     = dcs->w.hFirstBitmap;
-
-#if 0
-	dc->w.hDevice          = dcs->w.hDevice;
-#endif
-
-	dc->w.totalExtent      = dcs->w.totalExtent;
-	dc->w.ROPmode          = dcs->w.ROPmode;
-	dc->w.polyFillMode     = dcs->w.polyFillMode;
-	dc->w.stretchBltMode   = dcs->w.stretchBltMode;
-	dc->w.relAbsMode       = dcs->w.relAbsMode;
-	dc->w.backgroundMode   = dcs->w.backgroundMode;
-	dc->w.backgroundColor  = dcs->w.backgroundColor;
-	dc->w.textColor        = dcs->w.textColor;
-	dc->w.brushOrgX        = dcs->w.brushOrgX;
-	dc->w.brushOrgY        = dcs->w.brushOrgY;
-	dc->w.textAlign        = dcs->w.textAlign;
-	dc->w.charExtra        = dcs->w.charExtra;
-	dc->w.breakTotalExtra  = dcs->w.breakTotalExtra;
-	dc->w.breakCount       = dcs->w.breakCount;
-	dc->w.breakExtra       = dcs->w.breakExtra;
-	dc->w.breakRem         = dcs->w.breakRem;
-	dc->w.MapMode          = dcs->w.MapMode;
-	dc->w.GraphicsMode     = dcs->w.GraphicsMode;
-#if 0
-	/* Apparently, the DC origin is not changed by [GS]etDCState */
-	dc->w.DCOrgX           = dcs->w.DCOrgX;
-	dc->w.DCOrgY           = dcs->w.DCOrgY;
-#endif
-	dc->w.CursPosX         = dcs->w.CursPosX;
-	dc->w.CursPosY         = dcs->w.CursPosY;
-	dc->w.ArcDirection     = dcs->w.ArcDirection;
-
-#if 0
-	dc->w.xformWorld2Wnd   = dcs->w.xformWorld2Wnd;
-	dc->w.xformWorld2Vport = dcs->w.xformWorld2Vport;
-	dc->w.xformVport2World = dcs->w.xformVport2World;
-	dc->w.vport2WorldValid = dcs->w.vport2WorldValid;
-#endif
-
-	dc->wndOrgX            = dcs->wndOrgX;
-	dc->wndOrgY            = dcs->wndOrgY;
-	dc->wndExtX            = dcs->wndExtX;
-	dc->wndExtY            = dcs->wndExtY;
-	dc->vportOrgX          = dcs->vportOrgX;
-	dc->vportOrgY          = dcs->vportOrgY;
-	dc->vportExtX          = dcs->vportExtX;
-	dc->vportExtY          = dcs->vportExtY;
-
-	if (!(dc->w.flags & DC_MEMORY))
-	{
-	  dc->w.bitsPerPixel = dcs->w.bitsPerPixel;
-	}
-
-#if 0
-	if (dcs->w.hClipRgn)
-	{
-	  if (!dc->w.hClipRgn)
-	  {
-	    dc->w.hClipRgn = NtGdiCreateRectRgn( 0, 0, 0, 0 );
-	  }
-	  NtGdiCombineRgn( dc->w.hClipRgn, dcs->w.hClipRgn, 0, RGN_COPY );
-	}
-	else
-	{
-	  if (dc->w.hClipRgn)
-	  {
-	    NtGdiDeleteObject( dc->w.hClipRgn );
-	  }
-
-	  dc->w.hClipRgn = 0;
-	}
-	CLIPPING_UpdateGCRegion( dc );
-#endif
-
-	NtGdiSelectObject( hDC, dcs->w.hBitmap );
-	NtGdiSelectObject( hDC, dcs->w.hBrush );
-	NtGdiSelectObject( hDC, dcs->w.hFont );
-	NtGdiSelectObject( hDC, dcs->w.hPen );
-	NtGdiSetBkColor( hDC, dcs->w.backgroundColor);
-	NtGdiSetTextColor( hDC, dcs->w.textColor);
-
-#if 0
-	GDISelectPalette16( hDC, dcs->w.hPalette, FALSE );
-#endif
-      }
-
-      DC_UnlockDc ( hDCSave );
-    }
-    DC_UnlockDc ( hDC );
-  }
-}
 
 //  ----------------------------------------------------  Private Interface
 

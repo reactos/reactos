@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: palette.c,v 1.11 2003/08/28 12:35:59 gvg Exp $ */
+/* $Id: palette.c,v 1.12 2003/08/31 07:56:24 gvg Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -32,17 +32,6 @@
 
 static int           PALETTE_firstFree = 0; 
 static unsigned char PALETTE_freeList[256];
-
-#ifdef TODO
-static ColorShifts PALETTE_PRed   = {0,0,0};
-//static ColorShifts PALETTE_LRed   = {0,0,0};
-static ColorShifts PALETTE_PGreen = {0,0,0};
-//static ColorShifts PALETTE_LGreen = {0,0,0};
-static ColorShifts PALETTE_PBlue  = {0,0,0};
-//static ColorShifts PALETTE_LBlue  = {0,0,0};
-static int PALETTE_Graymax        = 0;
-static int palette_size;
-#endif
 
 int PALETTE_PaletteFlags     = 0;
 PALETTEENTRY *COLOR_sysPal   = NULL;
@@ -180,63 +169,6 @@ static void FASTCALL PALETTE_FormatSystemPalette(void)
   PALETTE_freeList[j] = 0;
 }
 
-#ifdef TODO
-/* Ported from WINE 20020804 (graphics\x11drv\palette.c) */
-static int FASTCALL SysPaletteLookupPixel( COLORREF col, BOOL skipReserved )
-{
-  int i, best = 0, diff = 0x7fffffff;
-  int r,g,b;
-
-  for( i = 0; i < palette_size && diff ; i++ )
-  {
-    if( !(COLOR_sysPal[i].peFlags & PC_SYS_USED) || (skipReserved && COLOR_sysPal[i].peFlags  & PC_SYS_RESERVED) )
-      continue;
-
-    r = COLOR_sysPal[i].peRed - GetRValue(col);
-    g = COLOR_sysPal[i].peGreen - GetGValue(col);
-    b = COLOR_sysPal[i].peBlue - GetBValue(col);
-
-    r = r*r + g*g + b*b;
-
-    if( r < diff ) { best = i; diff = r; }
-  }
-  return best;
-}
-
-/* Ported from WINE 20020804 (graphics\x11drv\palette.c) */
-/* Make sure this is required - ROS's xlate may make this redundant */
-UINT WINAPI GetNearestPaletteIndex(
-    HPALETTE hpalette, /* [in] Handle of logical color palette */
-    COLORREF color)      /* [in] Color to be matched */
-{
-  PPALOBJ palObj = (PPALOBJ)AccessUserObject((ULONG)hpalette);
-  UINT    index  = 0;
-
-  if( palObj )
-  {
-    int i, diff = 0x7fffffff;
-    int r,g,b;
-    PALETTEENTRY* entry = palObj->logpalette->palPalEntry;
-
-    for( i = 0; i < palObj->logpalette->palNumEntries && diff ; i++, entry++)
-    {
-      if (!(entry->peFlags & PC_SYS_USED)) continue;
-
-      r = entry->peRed - GetRValue(color);
-      g = entry->peGreen - GetGValue(color);
-      b = entry->peBlue - GetBValue(color);
-
-      r = r*r + g*g + b*b;
-
-      if( r < diff ) { index = i; diff = r; }
-    }
-//        GDI_ReleaseObj( hpalette );
-  }
-  DPRINT("(%04x,%06lx): returning %d\n", hpalette, color, index );
-  return index;
-}
-#endif
-
 VOID FASTCALL PALETTE_ValidateFlags(PALETTEENTRY* lpPalE, INT size)
 {
   int i = 0;
@@ -347,143 +279,5 @@ INT STDCALL PALETTE_SetMapping(PPALOBJ palPtr, UINT uStart, UINT uNum, BOOL mapO
   }
   return iRemapped;
 }
-
-#ifdef TODO
-/* Return the physical color closest to 'color'. */
-/* Ported from WINE 20020804 (graphics\x11drv\palette.c) */
-INT FASTCALL PALETTE_ToPhysical (PDC dc, COLORREF color)
-{
-    WORD            index = 0;
-    HPALETTE        hPal = (dc)? dc->w.hPalette: NtGdiGetStockObject(DEFAULT_PALETTE);
-    unsigned char   spec_type = color >> 24;
-    PPALOBJ         palPtr = (PPALOBJ)AccessUserObject((ULONG)hPal);
-
-    /* palPtr can be NULL when DC is being destroyed */
-    if( !palPtr ) return 0;
-
-    if ( PALETTE_PaletteFlags & PALETTE_FIXED )
-    {
-        /* there is no colormap limitation; we are going to have to compute
-         * the pixel value from the visual information stored earlier
-	 */
-
-	unsigned 	long red, green, blue;
-	unsigned 	idx = 0;
-
-	switch(spec_type)
-        {
-          case 1: /* PALETTEINDEX */
-
-            if( (idx = color & 0xffff) >= palPtr->logpalette->palNumEntries)
-            {
-                DPRINT("RGB(%lx) : idx %d is out of bounds, assuming black\n", color, idx);
-//		GDI_ReleaseObj( hPal );
-                return 0;
-            }
-
-            if( palPtr->mapping )
-	    {
-                int ret = palPtr->mapping[idx];
-//		GDI_ReleaseObj( hPal );
-		return ret;
-	    }
-	    color = *(COLORREF*)(palPtr->logpalette->palPalEntry + idx);
-	    break;
-
-	  default:
-	    color &= 0xffffff;
-	    /* fall through to RGB */
-
-	  case 0: /* RGB */
-	    if( dc && (dc->w.bitsPerPixel == 1) )
-	    {
-//		GDI_ReleaseObj( hPal );
-		return (((color >> 16) & 0xff) +
-			((color >> 8) & 0xff) + (color & 0xff) > 255*3/2) ? 1 : 0;
-	    }
-
-	}
-
-        red = GetRValue(color); green = GetGValue(color); blue = GetBValue(color);
-
-	if (PALETTE_Graymax)
-        {
-	    /* grayscale only; return scaled value */
-//	    GDI_ReleaseObj( hPal );
-            return ( (red * 30 + green * 59 + blue * 11) * PALETTE_Graymax) / 25500;
-	}
-	else
-        {
-	    /* scale each individually and construct the TrueColor pixel value */
-	    if (PALETTE_PRed.scale < 8)
-		red = red >> (8-PALETTE_PRed.scale);
-	    else if (PALETTE_PRed.scale > 8)
-		red =   red   << (PALETTE_PRed.scale-8) |
-                        red   >> (16-PALETTE_PRed.scale);
-	    if (PALETTE_PGreen.scale < 8)
-		green = green >> (8-PALETTE_PGreen.scale);
-	    else if (PALETTE_PGreen.scale > 8)
-		green = green << (PALETTE_PGreen.scale-8) |
-                        green >> (16-PALETTE_PGreen.scale);
-	    if (PALETTE_PBlue.scale < 8)
-		blue =  blue  >> (8-PALETTE_PBlue.scale);
-	    else if (PALETTE_PBlue.scale > 8)
-		blue =  blue  << (PALETTE_PBlue.scale-8) |
-                        blue  >> (16-PALETTE_PBlue.scale);
-
-//	    GDI_ReleaseObj( hPal );
-            return (red << PALETTE_PRed.shift) | (green << PALETTE_PGreen.shift) | (blue << PALETTE_PBlue.shift);
-        }
-    }
-    else
-    {
-
-	if( !palPtr->mapping )
-            DPRINT("Palette %04x is not realized\n", dc->w.hPalette);
-
-	switch(spec_type)	/* we have to peruse DC and system palette */
-    	{
-	    default:
-		color &= 0xffffff;
-		/* fall through to RGB */
-
-       	    case 0:  /* RGB */
-		if( dc && (dc->w.bitsPerPixel == 1) )
-		{
-//		    GDI_ReleaseObj( hPal );
-		    return (((color >> 16) & 0xff) +
-			    ((color >> 8) & 0xff) + (color & 0xff) > 255*3/2) ? 1 : 0;
-		}
-
-	    	index = SysPaletteLookupPixel( color, FALSE);
-
-/*                if (PALETTE_PaletteToXPixel) index = PALETTE_PaletteToXPixel[index]; */
-
-		/* DPRINT(palette,"RGB(%lx) -> pixel %i\n", color, index);
-		 */
-	    	break;
-       	    case 1:  /* PALETTEINDEX */
-		index = color & 0xffff;
-
-	        if( index >= palPtr->logpalette->palNumEntries )
-		    DbgPrint("RGB(%lx) : index %i is out of bounds\n", color, index);
-		else if( palPtr->mapping ) index = palPtr->mapping[index];
-
-		/*  DPRINT(palette,"PALETTEINDEX(%04x) -> pixel %i\n", (WORD)color, index);
-		 */
-		break;
-            case 2:  /* PALETTERGB */
-                index = GetNearestPaletteIndex( hPal, color );
-                if (palPtr->mapping) index = palPtr->mapping[index];
-		/* DPRINT(palette,"PALETTERGB(%lx) -> pixel %i\n", color, index);
-		 */
-		break;
-	}
-    }
-
-//    GDI_ReleaseObj( hPal );
-    return index;
-}
-#endif
 
 /* EOF */

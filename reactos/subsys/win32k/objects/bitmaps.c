@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.37 2003/08/28 12:35:59 gvg Exp $ */
+/* $Id: bitmaps.c,v 1.38 2003/08/31 07:56:24 gvg Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -54,8 +54,7 @@ BOOL STDCALL NtGdiBitBlt(HDC  hDCDest,
   POINTL SourcePoint;
   //PBITMAPOBJ DestBitmapObj;
   //PBITMAPOBJ SrcBitmapObj;
-  BOOL Status, SurfDestAlloc, SurfSrcAlloc, XlateAlloc;
-  PPALOBJ DCLogPal;
+  BOOL Status, SurfDestAlloc, SurfSrcAlloc;
   PPALGDI PalDestGDI, PalSourceGDI;
   PXLATEOBJ XlateObj = NULL;
   HPALETTE SourcePalette, DestPalette;
@@ -89,7 +88,6 @@ BOOL STDCALL NtGdiBitBlt(HDC  hDCDest,
 
   SurfDestAlloc = FALSE;
   SurfSrcAlloc  = FALSE;
-  XlateAlloc = FALSE;
 
   // Determine surfaces to be used in the bitblt
   SurfDest = (PSURFOBJ)AccessUserObject((ULONG)DCDest->Surface);
@@ -98,62 +96,45 @@ BOOL STDCALL NtGdiBitBlt(HDC  hDCDest,
   SurfGDIDest = (PSURFGDI)AccessInternalObjectFromUserObject(SurfDest);
   SurfGDISrc  = (PSURFGDI)AccessInternalObjectFromUserObject(SurfSrc);
 
-  // Retrieve the logical palette of the destination DC
-  DCLogPal = (PPALOBJ)PALETTE_LockPalette(DCDest->w.hPalette);
-
-  if(DCLogPal)
+  if (DCDest->w.hPalette != 0)
     {
-      if(DCLogPal->logicalToSystem)
-	{
-	  XlateObj = DCLogPal->logicalToSystem;
-	}
-      PALETTE_UnlockPalette(DCDest->w.hPalette);
+      DestPalette = DCDest->w.hPalette;
+    }
+  else
+    {
+      DestPalette = NtGdiGetStockObject(DEFAULT_PALETTE);
     }
 
-  // If the source and destination formats differ, create an XlateObj [what if we already have one??]
-  if((BitsPerFormat(SurfDest->iBitmapFormat) != BitsPerFormat(SurfSrc->iBitmapFormat)) && (XlateObj == NULL))
+  if(DCSrc->w.hPalette != 0)
     {
-      if(DCDest->w.hPalette != 0)
-	{
-	  DestPalette = DCDest->w.hPalette;
-	}
-      else
-	{
-	  DestPalette = NtGdiGetStockObject(DEFAULT_PALETTE);
-	}
+      SourcePalette = DCSrc->w.hPalette;
+    }
+  else
+    {
+      SourcePalette = NtGdiGetStockObject(DEFAULT_PALETTE);
+    }
 
-      if(DCSrc->w.hPalette != 0)
-	{
-	  SourcePalette = DCSrc->w.hPalette;
-	}
-      else
-	{
-          SourcePalette = NtGdiGetStockObject(DEFAULT_PALETTE);
-	}
+  PalSourceGDI = PALETTE_LockPalette(SourcePalette);
+  SourceMode = PalSourceGDI->Mode;
+  PALETTE_UnlockPalette(SourcePalette);
+  if (DestPalette == SourcePalette)
+    {
+      DestMode = SourceMode;
+    }
+  else
+    {
+      PalDestGDI = PALETTE_LockPalette(DestPalette);
+      DestMode = PalDestGDI->Mode;
+      PALETTE_UnlockPalette(DestPalette);
+    }
 
-      PalSourceGDI = PALETTE_LockPalette(SourcePalette);
-      SourceMode = PalSourceGDI->Mode;
-      PALETTE_UnlockPalette(SourcePalette);
-      if (DestPalette == SourcePalette)
-	{
-	  DestMode = SourceMode;
-	}
-      else
-	{
-	  PalDestGDI = PALETTE_LockPalette(DestPalette);
-	  DestMode = PalDestGDI->Mode;
-	  PALETTE_UnlockPalette(DestPalette);
-	}
-
-      XlateObj = (PXLATEOBJ)IntEngCreateXlate(DestMode, SourceMode, DestPalette, SourcePalette);
-      XlateAlloc = TRUE;
-  }
+  XlateObj = (PXLATEOBJ)IntEngCreateXlate(DestMode, SourceMode, DestPalette, SourcePalette);
 
   // Perform the bitblt operation
 
   Status = IntEngBitBlt(SurfDest, SurfSrc, NULL, DCDest->CombinedClip, XlateObj, &DestRect, &SourcePoint, NULL, NULL, NULL, ROP);
 
-  if (XlateAlloc) EngDeleteXlate(XlateObj);
+  EngDeleteXlate(XlateObj);
   if (SurfDestAlloc) ExFreePool(SurfDest);
   if (SurfSrcAlloc) ExFreePool(SurfSrc);
 
@@ -530,7 +511,7 @@ BOOL STDCALL NtGdiSetPixelV(HDC  hDC,
   }
   bm = bmp->bitmap;
   //FIXME: set the actual pixel value
-  BITMAPOBJ_UnlockBitmap (bmp);
+  BITMAPOBJ_UnlockBitmap (dc->w.hBitmap);
   DC_UnlockDc (hDC);
   return(TRUE);
 }

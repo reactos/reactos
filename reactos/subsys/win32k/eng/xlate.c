@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: xlate.c,v 1.23 2003/08/28 12:35:59 gvg Exp $
+/* $Id: xlate.c,v 1.24 2003/08/31 07:56:24 gvg Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -101,24 +101,20 @@ ClosestColorMatch(XLATEGDI *XlateGDI, ULONG SourceColor, ULONG *DestColors,
     return CCMLastColorMatch;
   }
 
-  if (PAL_BITFIELDS == XlateGDI->XlateObj.iSrcType)
+  if (PAL_BITFIELDS == XlateGDI->XlateObj.iSrcType || PAL_BGR == XlateGDI->XlateObj.iSrcType)
     {
-    /* FIXME: must use bitfields */
-    SourceRGB = ShiftAndMask(XlateGDI, SourceColor);
-    cSourceColor = (PVIDEO_CLUTDATA) &SourceRGB;
-/*
-    SourceRed = (SourceColor >> 7) & 0xff;
-    SourceGreen = (SourceColor >> 2) & 0xff;
-    SourceBlue = (SourceColor << 3) & 0xff;
-*/
+      /* FIXME: must use bitfields */
+      SourceRGB = ShiftAndMask(XlateGDI, SourceColor);
+      cSourceColor = (PVIDEO_CLUTDATA) &SourceRGB;
     }
   else
     {
-    cSourceColor = (PVIDEO_CLUTDATA)&SourceColor;
+      cSourceColor = (PVIDEO_CLUTDATA)&SourceColor;
     } 
   SourceRed = cSourceColor->Red;
   SourceGreen = cSourceColor->Green;
   SourceBlue = cSourceColor->Blue;
+
   for (i=0; i<NumColors; i++)
   {
     cDestColors = (PVIDEO_CLUTDATA)&DestColors[i];
@@ -150,11 +146,18 @@ IndexedToIndexedTranslationTable(XLATEGDI *XlateGDI, ULONG *TranslationTable,
                                       PALGDI *PalDest, PALGDI *PalSource)
 {
   ULONG i;
+  WINBOOL Trivial;
 
+  Trivial = TRUE;
   for(i=0; i<PalSource->NumColors; i++)
-  {
-    TranslationTable[i] = ClosestColorMatch(XlateGDI, PalSource->IndexedColors[i], PalDest->IndexedColors, PalDest->NumColors);
-  }
+    {
+      TranslationTable[i] = ClosestColorMatch(XlateGDI, PalSource->IndexedColors[i], PalDest->IndexedColors, PalDest->NumColors);
+      Trivial = Trivial && (TranslationTable[i] == i);
+    }
+  if (Trivial)
+    {
+      XlateGDI->XlateObj.flXlate |= XO_TRIVIAL;
+    }
 }
 
 static VOID STDCALL
@@ -301,7 +304,7 @@ XLATEOBJ * STDCALL IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
   }
 
   // Prepare the translation table
-  if( (SourcePalType == PAL_INDEXED) || (SourcePalType == PAL_RGB) )
+  if (PAL_INDEXED == SourcePalType || PAL_RGB == SourcePalType || PAL_BGR == SourcePalType)
   {
     XlateObj->flXlate |= XO_TABLE;
     if ((SourcePalType == PAL_INDEXED) && (DestPalType == PAL_INDEXED))
@@ -333,13 +336,7 @@ XLATEOBJ * STDCALL IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
 
         // Converting from indexed to RGB
 
-#ifdef TODO
-        XLATEOBJ_cGetPalette(XlateObj, XO_SRCPALETTE,
-                             SourcePalGDI->NumColors,
-                             XlateGDI->translationTable);
-#else
 	RtlCopyMemory(XlateGDI->translationTable, SourcePalGDI->IndexedColors, sizeof(ULONG) * SourcePalGDI->NumColors);
-#endif
 	if (PAL_BITFIELDS == XlateObj->iDstType)
 	{
 	  for (i = 0; i < SourcePalGDI->NumColors; i++)
@@ -353,19 +350,15 @@ XLATEOBJ * STDCALL IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
   }
 
   // Source palette is RGB
-  if(XlateObj->iSrcType == PAL_RGB)
+  if (PAL_RGB == XlateObj->iSrcType || PAL_BGR == XlateObj->iSrcType)
   {
-    if(XlateObj->iDstType == PAL_INDEXED)
+    if(PAL_INDEXED == XlateObj->iDstType)
     {
       // FIXME: Is this necessary? I think the driver has to call this
       // function anyways if pulXlate is NULL and Dest is PAL_INDEXED
 
       // Converting from RGB to indexed
-#ifdef TODO
-      XLATEOBJ_cGetPalette(XlateObj, XO_DESTPALETTE, DestPalGDI->NumColors, XlateGDI->translationTable);
-#else
       RtlCopyMemory(XlateGDI->translationTable, DestPalGDI->IndexedColors, sizeof(ULONG) * DestPalGDI->NumColors);
-#endif
     }
   }
 
@@ -433,7 +426,8 @@ XLATEOBJ_iXlate(XLATEOBJ *XlateObj,
   {
     return ShiftAndMask(XlateGDI, Color);
   } else
-  if(PAL_RGB == XlateObj->iSrcType || PAL_BITFIELDS == XlateObj->iSrcType)
+  if (PAL_RGB == XlateObj->iSrcType || PAL_BGR == XlateObj->iSrcType
+      || PAL_BITFIELDS == XlateObj->iSrcType)
   {
     // FIXME: should we cache colors used often?
     // FIXME: won't work if destination isn't indexed

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib8bpp.c,v 1.5 2003/08/13 20:24:04 chorns Exp $ */
+/* $Id: dib8bpp.c,v 1.6 2003/08/31 07:56:24 gvg Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -156,9 +156,38 @@ DIB_8BPP_BitBltSrcCopy(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       }
       else
       {
-	/* FIXME */
-	DPRINT1("DIB_8BPP_Bitblt: Unhandled ColorTranslation for 32 -> 32 copy");
-        return FALSE;
+	if (DestRect->top < SourcePoint->y)
+	  {
+	    SourceLine = SourceSurf->pvScan0 + (SourcePoint->y * SourceSurf->lDelta) + SourcePoint->x;
+	    DestLine = DestBits;
+	    for (j = DestRect->top; j < DestRect->bottom; j++)
+	      {
+		SourceBits = SourceLine;
+		DestBits = DestLine;
+		for (i=DestRect->left; i<DestRect->right; i++)
+		  {
+		    *DestBits++ = XLATEOBJ_iXlate(ColorTranslation, *SourceBits++);
+		  }
+		SourceLine += SourceSurf->lDelta;
+		DestLine += DestSurf->lDelta;
+	      }
+	  }
+	else
+	  {
+	    SourceLine = SourceSurf->pvScan0 + ((SourcePoint->y + DestRect->bottom - DestRect->top - 1) * SourceSurf->lDelta) + SourcePoint->x;
+	    DestLine = DestSurf->pvScan0 + ((DestRect->bottom - 1) * DestSurf->lDelta) + DestRect->left;
+	    for (j = DestRect->bottom - 1; DestRect->top <= j; j--)
+	      {
+		SourceBits = SourceLine;
+		DestBits = DestLine;
+		for (i=DestRect->left; i<DestRect->right; i++)
+		  {
+		    *DestBits++ = XLATEOBJ_iXlate(ColorTranslation, *SourceBits++);
+		  }
+		SourceLine -= SourceSurf->lDelta;
+		DestLine -= DestSurf->lDelta;
+	      }
+	  }
       }
       break;
 
