@@ -32,6 +32,7 @@
 #define NTOS_MODE_USER
 #include <ntos.h>
 #include <stdio.h>
+#include <tchar.h>
 #include <windows.h>
 
 #include "services.h"
