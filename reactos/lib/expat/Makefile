@@ -1,11 +1,11 @@
-# $Id: Makefile,v 1.2 2004/03/24 09:39:37 mf Exp $
+# $Id: Makefile,v 1.3 2004/05/29 21:24:43 hbirr Exp $
 
 PATH_TO_TOP = ../..
 
 TARGET_NAME = libexpat
 
 TARGET_TYPE = dynlink
-TARGET_BASE = 0x79000000
+TARGET_BASE = $(TARGET_BASE_LIB_EXPAT)
 TARGET_NORC = yes
 TARGET_DEFONLY = yes
 TARGET_DEFNAME = lib/libexpat

@@ -1,4 +1,4 @@
-# $Id: Makefile.ros-template,v 1.2 2004/01/25 18:42:49 gvg Exp $
+# $Id: Makefile.ros-template,v 1.3 2004/05/29 21:24:46 hbirr Exp $
 
 TARGET_NAME = shell32
 
@@ -8,7 +8,7 @@ TARGET_CFLAGS = @EXTRADEFS@ -D__REACTOS__
 
 TARGET_SDKLIBS = libwine.a @IMPORTS@ wine_uuid.a
 
-TARGET_BASE = 0x77260000
+TARGET_BASE = $(TARGET_BASE_LIB_SHELL32)
 
 TARGET_RC_SRCS = @RC_SRCS@
 TARGET_RC_BINSRC = @RC_BINSRC@

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.13 2004/01/11 20:46:06 navaraf Exp $
+# $Id: makefile,v 1.14 2004/05/29 21:24:47 hbirr Exp $
 
 PATH_TO_TOP = ../..
 
@@ -6,7 +6,7 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = ws2_32
 
-TARGET_BASE = 0x77780000
+TARGET_BASE = $(TARGET_BASE_LIB_W2_32)
 
 TARGET_CFLAGS = \
  -I./include \

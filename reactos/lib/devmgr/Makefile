@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2004/04/04 21:49:15 weiden Exp $
+# $Id: Makefile,v 1.2 2004/05/29 21:24:43 hbirr Exp $
 
 PATH_TO_TOP = ../..
 
@@ -8,7 +8,7 @@ TARGET_NAME = devmgr
 
 TARGET_INSTALLDIR = system32
 
-TARGET_BASE = 0x72A90000
+TARGET_BASE = $(TARGET_BASE_LIB_DEVMGR)
 
 TARGET_CFLAGS = \
  -I./include \

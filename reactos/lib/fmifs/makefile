@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.21 2004/02/23 11:55:12 ekohl Exp $
+# $Id: makefile,v 1.22 2004/05/29 21:24:43 hbirr Exp $
 
 PATH_TO_TOP = ../..
 
@@ -6,7 +6,7 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = fmifs
 
-TARGET_BASE = 0x76df0000
+TARGET_BASE = $(TARGET_BASE_LIB_FMIFS)
 
 TARGET_ENTRY = _InitializeFmIfs@12
 

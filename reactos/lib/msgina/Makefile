@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.6 2003/12/07 01:12:58 weiden Exp $
+# $Id: Makefile,v 1.7 2004/05/29 21:24:44 hbirr Exp $
 
 PATH_TO_TOP = ../..
 
@@ -8,7 +8,7 @@ TARGET_NAME = msgina
 
 TARGET_INSTALLDIR = system32
 
-TARGET_BASE = 0x75970000
+TARGET_BASE = $(TARGET_BASE_LIB_MSGINA)
 
 TARGET_CFLAGS = \
  -I./include \

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2003/12/25 09:52:44 arty Exp $
+# $Id: Makefile,v 1.5 2004/05/29 21:24:43 hbirr Exp $
 
 PATH_TO_TOP = ../..
 
@@ -8,7 +8,7 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = dnsapi
 
-TARGET_BASE = 0x78000000
+TARGET_BASE = $(TARGET_BASE_LIB_DNSAPI)
 
 TARGET_LFLAGS = -nostartfiles -g --kill-at
 

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.2 2004/02/01 15:56:37 ekohl Exp $
+# $Id: makefile,v 1.3 2004/05/29 21:24:46 hbirr Exp $
 
 PATH_TO_TOP = ../..
 
@@ -6,7 +6,7 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = samlib
 
-TARGET_BASE = 0x750C0000
+TARGET_BASE = $(TARGET_BASE_LIB_SAMLIB)
 
 TARGET_SDKLIBS = ntdll.a kernel32.a advapi32.a
 

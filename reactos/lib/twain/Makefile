@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.6 2003/12/02 18:12:05 navaraf Exp $
+# $Id: Makefile,v 1.7 2004/05/29 21:24:47 hbirr Exp $
 
 PATH_TO_TOP = ../..
 
@@ -9,7 +9,7 @@ TARGET_NAME = twain_32
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS -Wall -Werror
 
-TARGET_BASE=0x76380000
+TARGET_BASE=$(TARGET_BASE_LIB_TWAIN_32)
 
 TARGET_SDKLIBS = ntdll.a libwine.a
 

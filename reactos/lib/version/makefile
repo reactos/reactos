@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.14 2003/12/29 22:50:59 sedwards Exp $
+# $Id: makefile,v 1.15 2004/05/29 21:24:47 hbirr Exp $
 
 PATH_TO_TOP = ../..
 
@@ -6,7 +6,7 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = version
 
-TARGET_BASE = 0x77a90000
+TARGET_BASE = $(TARGET_BASE_LIB_VERSION)
 
 TARGET_CFLAGS = -fno-builtin -Wall
 

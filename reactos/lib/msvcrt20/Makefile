@@ -7,7 +7,7 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = msvcrt20
 
-TARGET_BASE = 0x78000000
+TARGET_BASE = $(TARGET_BASE_LIB_MSVCRT20)
 
 TARGET_LFLAGS = -nostartfiles --enable-stdcall-fixup
 

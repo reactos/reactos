@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.43 2004/05/15 12:55:47 jfilby Exp $
+# $Id: Makefile,v 1.44 2004/05/29 21:24:44 hbirr Exp $
 
 PATH_TO_TOP = ../..
 
@@ -8,7 +8,7 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = msvcrt
 
-TARGET_BASE = 0x78000000
+TARGET_BASE = $(TARGET_BASE_LIB_MSVCRT)
 
 TARGET_LFLAGS = -nostartfiles --enable-stdcall-fixup
 

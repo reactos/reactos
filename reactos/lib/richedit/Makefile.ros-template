@@ -1,4 +1,4 @@
-# $Id: Makefile.ros-template,v 1.1 2004/02/01 21:20:05 gvg Exp $
+# $Id: Makefile.ros-template,v 1.2 2004/05/29 21:24:46 hbirr Exp $
 
 TARGET_NAME = riched32
 
@@ -8,7 +8,7 @@ TARGET_CFLAGS = @EXTRADEFS@ -D__REACTOS__
 
 TARGET_SDKLIBS = @IMPORTS@ libwine.a ntdll.a
 
-TARGET_BASE = 0x76340000
+TARGET_BASE = $(TARGET_BASE_LIB_RICHEDIT)
 
 TARGET_NORC = yes
 

@@ -1,4 +1,4 @@
-# $Id: Makefile.ros-template,v 1.1 2004/03/10 15:22:44 silverblade Exp $
+# $Id: Makefile.ros-template,v 1.2 2004/05/29 21:24:44 hbirr Exp $
 
 TARGET_NAME = iphlpapi
 
@@ -8,7 +8,7 @@ TARGET_CFLAGS = @EXTRADEFS@ -D__REACTOS__
 
 TARGET_SDKLIBS = @IMPORTS@ libwine.a advapi32.a kernel32.a ws2_32.a wine_uuid.a ntdll.a
 
-TARGET_BASE = 0x77300000
+TARGET_BASE = $(TARGET_BASE_LIB_MSACM)
 
 TARGET_RC_SRCS = @RC_SRCS@
 TARGET_RC_BINSRC = @RC_BINSRC@

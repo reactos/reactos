@@ -6,6 +6,8 @@ TARGET_NORC = yes
 
 TARGET_NAME = glu32
 
+TARGET_BASE = $(TARGET_BASE_LIB_GLU32)
+
 TARGET_CFLAGS = -D__USE_W32API -DRESOLVE_3D_TEXTURE_SUPPORT -DBUILD_GL32 -DLIBRARYBUILD -Wall -Werror -Iinclude -Ilibnurbs/internals -Ilibnurbs/interface -Ilibnurbs/nurbtess
 
 TARGET_CPPFLAGS = $(TARGET_CFLAGS)

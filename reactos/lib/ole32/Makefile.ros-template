@@ -1,4 +1,4 @@
-# $Id: Makefile.ros-template,v 1.1 2004/01/02 19:49:45 gvg Exp $
+# $Id: Makefile.ros-template,v 1.2 2004/05/29 21:24:45 hbirr Exp $
 
 TARGET_NAME = ole32
 
@@ -8,7 +8,7 @@ TARGET_CFLAGS = @EXTRADEFS@
 
 TARGET_SDKLIBS = @IMPORTS@ libwine.a wine_uuid.a ntdll.a
 
-TARGET_BASE = 0x77a50000
+TARGET_BASE = $(TARGET_BASE_LIB_OLE32)
 
 TARGET_RC_SRCS = @RC_SRCS@
 TARGET_RC_BINSRC = @RC_BINSRC@

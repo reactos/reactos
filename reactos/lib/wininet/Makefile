@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2004/02/01 21:33:56 gvg Exp $
+# $Id: Makefile,v 1.2 2004/05/29 21:24:47 hbirr Exp $
 
 PATH_TO_TOP = ../..
 
@@ -6,7 +6,7 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = wininet
 
-TARGET_BASE = 0x70200000
+TARGET_BASE = $(TARGET_BASE_LIB_WININET)
 
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -Wall -Werror

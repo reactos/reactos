@@ -16,6 +16,8 @@ TARGET_LFLAGS =
 
 TARGET_SDKLIBS = winmm.a
 
+TARGET_BASE = $(TARGET_BASE_LIB_MMDRV)
+
 TARGET_OBJECTS = \
 	auxil.o \
 	entry.o \

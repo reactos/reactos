@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.63 2004/05/28 18:16:46 gvg Exp $
+# $Id: helper.mk,v 1.64 2004/05/29 21:24:48 hbirr Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -55,7 +55,7 @@
 #   $SUBDIRS           = Subdirs in which to run make (optional)
 
 include $(PATH_TO_TOP)/config
-
+include $(PATH_TO_TOP)/baseaddress.cfg
 
 ifeq ($(TARGET_PATH),)
 TARGET_PATH := .

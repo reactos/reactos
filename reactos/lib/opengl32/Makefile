@@ -14,6 +14,8 @@ TARGET_CFLAGS += -D_DISABLE_TIDENTS -Wall -Werror
 
 TARGET_LFLAGS = -lgdi32 -lntdll
 
+TARGET_BASE = $(TARGET_BASE_LIB_OPENGL32)
+
 TARGET_SDKLIBS = gdi32.a ntdll.a
 # ntdll.a gdi32.a - may still need these
 
