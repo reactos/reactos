@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.68 2004/09/09 20:42:33 hbirr Exp $
+/* $Id: mminit.c,v 1.69 2004/09/26 15:07:44 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -401,18 +401,7 @@ MmInit1(ULONG FirstKrnlPhysAddr,
    MmDeletePageTable(NULL, 0);
 #endif
 
-   /*
-    * Create a trap for null pointer references and protect text
-    * segment
-    */
-   DPRINT("_text_start__ %x _init_end__ %x\n",(int)&_text_start__,(int)&_init_end__);
-   for (i=PAGE_ROUND_DOWN(((int)&_text_start__));
-         i<PAGE_ROUND_UP(((int)&_init_end__));i=i+PAGE_SIZE)
-   {
-      MmSetPageProtect(NULL,
-                       (PVOID)i,
-                       PAGE_EXECUTE_READ);
-   }
+
 
    DPRINT("Invalidating between %x and %x\n",
           LastKernelAddress, 0xc0600000);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.196 2004/09/23 18:00:29 royce Exp $
+/* $Id: main.c,v 1.197 2004/09/26 15:07:43 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -338,27 +338,27 @@ ExpInitializeExecutive(VOID)
 	   }
 	}
      }
-    else if (!_strnicmp(p2, "NOGUIBOOT", 12))
-      {
-        p2 += 12;
-        NoGuiBoot = TRUE;
-      }
+     else if (!_strnicmp(p2, "NOGUIBOOT", 9))
+     {
+       p2 += 12;
+       NoGuiBoot = TRUE;
+     }
      else if (!_strnicmp(p2, "CRASHDUMP", 9))
-      {
-	p2 += 9;
-	if (*p2 == ':')
-	  {
-	    p2++;
-	    if (!_strnicmp(p2, "FULL", 4))
-	      {
-		MmCoreDumpType = MM_CORE_DUMP_TYPE_FULL;
-	      }
-	    else
-	      {
-		MmCoreDumpType = MM_CORE_DUMP_TYPE_NONE;
-	      }
-	  }
-      }
+     {
+       p2 += 9;
+       if (*p2 == ':')
+	 {
+	   p2++;
+	   if (!_strnicmp(p2, "FULL", 4))
+	     {
+	       MmCoreDumpType = MM_CORE_DUMP_TYPE_FULL;
+	     }
+	   else
+	     {
+	       MmCoreDumpType = MM_CORE_DUMP_TYPE_NONE;
+	     }
+	 }
+     }
      p1 = p2;
   }
 
@@ -523,7 +523,6 @@ ExpInitializeExecutive(VOID)
   KdInit1();
   IoInit();
   PoInit();
-  LdrInitModuleManagement();
   CmInitializeRegistry();
   NtInit();
   MmInit3();
@@ -977,13 +976,15 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
 
   HalBase = KeLoaderModules[1].ModStart;
   DriverBase = LastKernelAddress;
+  LdrHalBase = (ULONG_PTR)DriverBase;
+
+  LdrInitModuleManagement();
 
   /*
    * Process hal.dll
    */
   LdrSafePEProcessModule((PVOID)HalBase, (PVOID)DriverBase, (PVOID)KERNEL_BASE, &DriverSize);
 
-  LdrHalBase = (ULONG_PTR)DriverBase;
   LastKernelAddress += PAGE_ROUND_UP(DriverSize);
 
   /*
