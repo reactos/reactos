@@ -27,9 +27,18 @@
  // Credits: Thanks to Leon Finker for his explorer cabinet window example
  //
 
+#ifdef __MINGW32__
+#include "servprov.h"	// for IServiceProvider
+#include "docobj.h"		// for IOleCommandTarget
+#endif
+
 
  /// Implementation of IShellBrowser and ICommDlgBrowser interfaces for explorer child windows (see ShellBrowserChild)
-struct IShellBrowserImpl : public IShellBrowser, public ICommDlgBrowser
+struct IShellBrowserImpl
+ :	public IShellBrowser,
+	public ICommDlgBrowser,
+	public IServiceProvider,
+	public IOleCommandTarget
 {
 	IShellBrowserImpl()
 	 :	_dwRef(0)
@@ -68,6 +77,13 @@ struct IShellBrowserImpl : public IShellBrowser, public ICommDlgBrowser
 	virtual HRESULT STDMETHODCALLTYPE OnViewWindowActive(IShellView* ppshv) {return E_NOTIMPL;}
 	virtual HRESULT STDMETHODCALLTYPE SetToolbarItems(LPTBBUTTON lpButtons, UINT nButtons, UINT uFlags) {return E_NOTIMPL;}
 	virtual HRESULT STDMETHODCALLTYPE TranslateAcceleratorSB(LPMSG lpmsg, WORD wID) {return S_OK;}
+
+    // IServiceProvider
+	virtual HRESULT STDMETHODCALLTYPE QueryService(REFGUID guidService, REFIID riid, void** ppvObject);
+
+    // IOleCommandTarget
+    virtual HRESULT STDMETHODCALLTYPE QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[], OLECMDTEXT* pCmdText);
+    virtual HRESULT STDMETHODCALLTYPE Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
 
 protected:
 	DWORD	_dwRef;
