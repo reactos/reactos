@@ -617,6 +617,16 @@ BOOLEAN SetupMouse(PDEVICE_OBJECT DeviceObject, PUNICODE_STRING RegistryPath)
     IoConnectInterrupt(&DeviceExtension->MouseInterrupt, MouseHandler, DeviceObject, NULL, MappedIrq,
                        Dirql, Dirql, 0, FALSE, Affinity, FALSE);
   }
+  else
+  {
+    /* FIXME - this fixes the crash if no mouse was detected */
+    
+    // Connect the interrupt for the mouse irq
+    MappedIrq = HalGetInterruptVector(Internal, 0, 0, MOUSE_IRQ, &Dirql, &Affinity);
+
+    IoConnectInterrupt(&DeviceExtension->MouseInterrupt, MouseHandler, DeviceObject, NULL, MappedIrq,
+                       Dirql, Dirql, 0, FALSE, Affinity, FALSE);
+  }
 
   return TRUE;
 }
