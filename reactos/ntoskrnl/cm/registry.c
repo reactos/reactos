@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.21 1999/11/24 11:51:46 dwelch Exp $
+/* $Id: registry.c,v 1.22 1999/12/09 02:45:05 rex Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1374,7 +1374,6 @@ CmiObjectParse(PVOID  ParsedObject, PWSTR  *Path)
       return  NewKeyObject;
     }
 
-  /* FIXME: this access of RootKeyBlock should be guarded by spinlock  */
   CurKeyBlock = CmiGetKeyBlock(RegistryFile, 
                                RegistryFile->HeaderBlock->RootKeyBlock);
 

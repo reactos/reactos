@@ -159,6 +159,8 @@ HANDLE  DRIVER_FindMPDriver(LPCWSTR  Name);
 BOOL  DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED, 
                                PDRIVER_FUNCTIONS  DF);
 BOOL  DRIVER_UnregisterDriver(LPCWSTR  Name);
+INT  DRIVER_ReferenceDriver (LPCWSTR  Name);
+INT  DRIVER_UnreferenceDriver (LPCWSTR  Name);
 
 #endif
 

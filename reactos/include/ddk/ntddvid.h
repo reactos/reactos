@@ -189,12 +189,36 @@ typedef VOID (*PBANKED_SECTION_ROUTINE)(IN ULONG  ReadBank, IN ULONG  WriteBank,
 
 /* FIXME: replace with proper typedefs  */
 typedef PVOID PVIDEO_CLUT;
-typedef PVOID PVIDEO_MEMORY;
-typedef PVOID PVIDEO_MEMORY_INFORMATION;
-typedef PVOID PVIDEO_MODE;
+
+typedef struct _VIDEO_MEMORY 
+{
+  PVOID  RequestedVirtualAddress;
+} VIDEO_MEMORY, *PVIDEO_MEMORY;
+
+typedef struct _VIDEO_MEMORY_INFORMATION 
+{
+  PVOID  VideoRamBase;
+  ULONG  VideoRamLength;
+  PVOID  FrameBufferBase;
+  ULONG  FrameBufferLength;
+} VIDEO_MEMORY_INFORMATION, *PVIDEO_MEMORY_INFORMATION;
+
+typedef struct _VIDEO_MODE 
+{
+  ULONG  RequestedMode;
+} VIDEO_MODE, *PVIDEO_MODE;
+
+/* FIXME: replace with proper typedefs  */
 typedef PVOID PVIDEO_MODE_INFORMATION;
 typedef PVOID PVIDEO_NUM_MODES;
-typedef PVOID PVIDEO_SHARE_MEMORY;
+
+typedef struct _VIDEO_SHARE_MEMORY 
+{
+  HANDLE  ProcessHandle;
+  ULONG  ViewOffset;
+  ULONG  ViewSize;
+  PVOID  RequestedVirtualAddress;
+} VIDEO_SHARE_MEMORY, *PVIDEO_SHARE_MEMORY;
 
 ULONG STDCALL VideoPortCompareMemory(IN PVOID  Source1, IN PVOID  Source2, IN ULONG  Length);
 VOID STDCALL VideoPortDebugPrint(IN ULONG DebugPrintLevel, IN PCHAR DebugMessage, ...);

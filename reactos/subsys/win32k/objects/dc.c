@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.9 1999/11/17 20:54:05 rex Exp $
+/* $Id: dc.c,v 1.10 1999/12/09 02:45:06 rex Exp $
  *
  * DC.C - Device context functions
  * 
@@ -105,7 +105,8 @@ HDC STDCALL  W32kCreateCompatableDC(HDC  hDC)
       
       return  NULL;
     }
-
+  DRIVER_ReferenceDriver (NewDC->DriverName);
+  
   /* Copy information from original DC to new DC  */
   NewDC->hSelf = NewDC;
 
@@ -243,6 +244,8 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
   /*  Complete initialization of the physical device  */
   NewDC->DriverFunctions.CompletePDev(NewDC->PDev, NewDC);
 
+  DRIVER_ReferenceDriver (Driver);
+  
   /*  Enable the drawing surface  */
   NewDC->Surface = NewDC->DriverFunctions.EnableSurface(NewDC->PDev);
 
@@ -277,9 +280,12 @@ BOOL STDCALL W32kDeleteDC(HDC  DCHandle)
       return  FALSE;
     }
   
-  DCToDelete->DriverFunctions.DisableSurface(DCToDelete->PDev);
-  DCToDelete->DriverFunctions.DisablePDev(DCToDelete->PDev);
-
+  if (!DRIVER_UnreferenceDriver (DCToDelete->DriverName))
+    {
+      DCToDelete->DriverFunctions.DisableSurface(DCToDelete->PDev);
+      DCToDelete->DriverFunctions.DisablePDev(DCToDelete->PDev);
+    }
+  
   /*  First delete all saved DCs  */
   while (DCToDelete->saveLevel)
     {

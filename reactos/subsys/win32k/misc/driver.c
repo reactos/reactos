@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.5 1999/11/20 21:51:19 ekohl Exp $
+/* $Id: driver.c,v 1.6 1999/12/09 02:45:05 rex Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -18,6 +18,7 @@ typedef struct _GRAPHICS_DRIVER
 {
   PWSTR  Name;
   PGD_ENABLEDRIVER  EnableDriver;
+  int  ReferenceCount;
   struct _GRAPHICS_DRIVER  *Next;
 } GRAPHICS_DRIVER, *PGRAPHICS_DRIVER;
 
@@ -31,6 +32,7 @@ BOOL  DRIVER_RegisterDriver(LPCWSTR  Name, PGD_ENABLEDRIVER  EnableDriver)
     {
       return  FALSE;
     }
+  Driver->ReferenceCount = 0;
   Driver->EnableDriver = EnableDriver;
   if (Name)
     {
@@ -172,5 +174,37 @@ BOOL  DRIVER_UnregisterDriver(LPCWSTR  Name)
     {
       return  FALSE;
     }
+}
+
+INT  DRIVER_ReferenceDriver (LPCWSTR  Name)
+{
+  GRAPHICS_DRIVER *Driver = DriverList;
+  
+  while (Driver && Name)
+    {
+      if (!_wcsicmp( Driver->Name, Name)) 
+        {
+          return ++Driver->ReferenceCount;
+        }
+      Driver = Driver->Next;
+    }
+  
+  return  GenericDriver ? ++GenericDriver->ReferenceCount : 0;
+}
+
+INT  DRIVER_UnreferenceDriver (LPCWSTR  Name)
+{
+  GRAPHICS_DRIVER *Driver = DriverList;
+  
+  while (Driver && Name)
+    {
+      if (!_wcsicmp( Driver->Name, Name)) 
+        {
+          return --Driver->ReferenceCount;
+        }
+      Driver = Driver->Next;
+    }
+  
+  return  GenericDriver ? --GenericDriver->ReferenceCount : 0;
 }
 
