@@ -1,4 +1,4 @@
-/* $Id: dlog.c,v 1.11 2004/01/05 14:28:20 weiden Exp $
+/* $Id: dlog.c,v 1.12 2004/03/07 04:38:41 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -31,7 +31,7 @@ static ULONG DebugLogOverflow;
 static HANDLE DebugLogThreadHandle;
 static CLIENT_ID DebugLogThreadCid;
 static HANDLE DebugLogFile;
-static KSEMAPHORE DebugLogSem;
+static KEVENT DebugLogEvent;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -43,7 +43,7 @@ DebugLogInit(VOID)
   DebugLogEnd = 0;
   DebugLogOverflow = 0;
   DebugLogCount = 0;
-  KeInitializeSemaphore(&DebugLogSem, 0, 255);
+  KeInitializeEvent(&DebugLogEvent, NotificationEvent, FALSE);
 }
 
 VOID STDCALL
@@ -56,11 +56,13 @@ DebugLogThreadMain(PVOID Context)
 
   for (;;)
     {
-      KeWaitForSingleObject(&DebugLogSem,
+      LARGE_INTEGER TimeOut;
+      TimeOut.QuadPart = -5000000; /* Half a second. */
+      KeWaitForSingleObject(&DebugLogEvent,
 			    0,
 			    KernelMode,
 			    FALSE,
-			    NULL);
+			    &TimeOut);
       KeAcquireSpinLock(&DebugLogLock, &oldIrql);
       while (DebugLogCount > 0)
 	{
@@ -103,6 +105,7 @@ DebugLogThreadMain(PVOID Context)
 	    }
 	  KeAcquireSpinLock(&DebugLogLock, &oldIrql);
 	}
+      KeResetEvent(&DebugLogEvent);
       KeReleaseSpinLock(&DebugLogLock, oldIrql);
     }
 }
@@ -167,7 +170,7 @@ DebugLogWrite(PCH String)
       KeReleaseSpinLock(&DebugLogLock, oldIrql);
       if (oldIrql < DISPATCH_LEVEL)
  	{
-   	KeReleaseSemaphore(&DebugLogSem, IO_NO_INCREMENT, 1, FALSE);
+	  KeSetEvent(&DebugLogEvent, IO_NO_INCREMENT, FALSE);
  	}
       	return;
     }
@@ -184,7 +187,7 @@ DebugLogWrite(PCH String)
  	  KeReleaseSpinLock(&DebugLogLock, oldIrql);
  	  if (oldIrql < DISPATCH_LEVEL)
  	    {
- 	      KeReleaseSemaphore(&DebugLogSem, IO_NO_INCREMENT, 1, FALSE);
+	      KeSetEvent(&DebugLogEvent, IO_NO_INCREMENT, FALSE);
  	    }
  	  return;
  	}
@@ -195,7 +198,7 @@ DebugLogWrite(PCH String)
 
     if (oldIrql < DISPATCH_LEVEL)
     {
-      KeReleaseSemaphore(&DebugLogSem, IO_NO_INCREMENT, 1, FALSE);
+      KeSetEvent(&DebugLogEvent, IO_NO_INCREMENT, FALSE);
     }
 }
 
