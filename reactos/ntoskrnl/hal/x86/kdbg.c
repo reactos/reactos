@@ -1,4 +1,4 @@
-/* $Id: kdbg.c,v 1.2 1999/10/21 13:00:09 ekohl Exp $
+/* $Id: kdbg.c,v 1.3 1999/12/12 03:48:47 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

@@ -85,28 +85,28 @@ static VOID HiSwitchIrql(KIRQL oldIrql)
 	__asm__("sti\n\t");
 	return;
      }
-   
-   HiSetCurrentPICMask(0);
-   if(CurrentIrql == APC_LEVEL)
-     {
-	KeSetCurrentIrql(DISPATCH_LEVEL);
-	__asm__("sti\n\t");
-	KeDrainDpcQueue();
-	KeSetCurrentIrql(PASSIVE_LEVEL);
-	return;
-     }
-   
-   KeSetCurrentIrql(DISPATCH_LEVEL);
+	HiSetCurrentPICMask(0);
+	if(CurrentIrql == APC_LEVEL)
+	{
+		if (DpcQueueSize > 0 )
+		{
+			KeSetCurrentIrql(DISPATCH_LEVEL);
+			__asm__("sti\n\t");
+			KeDrainDpcQueue();
+			__asm__("cli\n\t");
+			KeSetCurrentIrql(PASSIVE_LEVEL);
+		}
+		__asm__("sti\n\t");
+		return;
+	}
+   if( CurrentIrql == PASSIVE_LEVEL && CurrentThread && CurrentThread->ApcState.KernelApcPending )
+   {
+	   KeSetCurrentIrql( APC_LEVEL );
+	   KeApcProlog2();
+	   KeSetCurrentIrql( PASSIVE_LEVEL );
+   }
+
    __asm__("sti\n\t");
-   KeDrainDpcQueue();
-   if (CurrentIrql == PASSIVE_LEVEL && 
-       CurrentThread != NULL &&
-       CurrentThread->ApcState.KernelApcPending )
-     {
-	KeSetCurrentIrql( APC_LEVEL );
-//	KeApcProlog2();
-     }
-   KeSetCurrentIrql(PASSIVE_LEVEL);
 }
 
 VOID KeSetCurrentIrql(KIRQL newlvl)
