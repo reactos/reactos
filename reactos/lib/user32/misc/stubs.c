@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.22 2003/07/01 23:09:09 sedwards Exp $
+/* $Id: stubs.c,v 1.23 2003/07/03 02:52:54 sedwards Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -537,7 +537,7 @@ VOID
 STDCALL
 SetDebugErrorLevel( DWORD dwLevel )
 {
-  UNIMPLEMENTED
+    DbgPrint("(%ld): stub\n", dwLevel);
 }
 
 /* EOF */
