@@ -940,6 +940,38 @@ DECLARE_INTERFACE_(IPropertySetStorage,IUnknown)
 };
 #undef INTERFACE
 
+#ifdef COBJMACROS
+/*** IUnknown methods ***/
+#define IPropertyStorage_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IPropertyStorage_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define IPropertyStorage_Release(p) (p)->lpVtbl->Release(p)
+/*** IPropertyStorage methods ***/
+#define IPropertyStorage_ReadMultiple(p,a,b,c) (p)->lpVtbl->ReadMultiple(p,a,b,c)
+#define IPropertyStorage_WriteMultiple(p,a,b,c,d) (p)->lpVtbl->WriteMultiple(p,a,b,c,d)
+#define IPropertyStorage_DeleteMultiple(p,a,b) (p)->lpVtbl->DeleteMultiple(p,a,b)
+#define IPropertyStorage_ReadPropertyNames(p,a,b,c) (p)->lpVtbl->ReadPropertyNames(p,a,b,c)
+#define IPropertyStorage_WritePropertyNames(p,a,b,c) (p)->lpVtbl->WritePropertyNames(p,a,b,c)
+#define IPropertyStorage_DeletePropertyNames(p,a,b) (p)->lpVtbl->DeletePropertyNames(p,a,b)
+#define IPropertyStorage_Commit(p,a) (p)->lpVtbl->Commit(p,a)
+#define IPropertyStorage_Revert(p) (p)->lpVtbl->Revert(p)
+#define IPropertyStorage_Enum(p,a) (p)->lpVtbl->Enum(p,a)
+#define IPropertyStorage_SetTimes(p,a,b,c) (p)->lpVtbl->SetTimes(p,a,b,c)
+#define IPropertyStorage_SetClass(p,a) (p)->lpVtbl->SetClass(p,a)
+#define IPropertyStorage_Stat(p,a) (p)->lpVtbl->Stat(p,a)
+#endif
+
+#ifdef COBJMACROS
+/*** IUnknown methods ***/
+#define IPropertySetStorage_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IPropertySetStorage_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define IPropertySetStorage_Release(p) (p)->lpVtbl->Release(p)
+/*** IPropertySetStorage methods ***/
+#define IPropertySetStorage_Create(p,a,b,c,d,e) (p)->lpVtbl->Create(p,a,b,c,d,e)
+#define IPropertySetStorage_Open(p,a,b,c) (p)->lpVtbl->Open(p,a,b,c)
+#define IPropertySetStorage_Delete(p,a) (p)->lpVtbl->Delete(p,a)
+#define IPropertySetStorage_Enum(p,a) (p)->lpVtbl->Enum(p,a)
+#endif
+
 EXTERN_C const IID IID_IClientSecurity;
 #define INTERFACE IClientSecurity
 DECLARE_INTERFACE_(IClientSecurity,IUnknown)
