@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scrollbar.c,v 1.15 2003/09/24 13:41:40 weiden Exp $
+/* $Id: scrollbar.c,v 1.16 2003/10/02 23:21:42 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -312,6 +312,7 @@ IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPSCROLLINFO lpsi, DWORD *Acti
   BOOL Chg = FALSE;
   UINT Mask;
   DWORD Ret;
+  int old;
   
   if(((lpsi->cbSize != sizeof(SCROLLINFO)) && 
      (lpsi->cbSize != sizeof(SCROLLINFO) - sizeof(lpsi->nTrackPos))))
@@ -391,28 +392,36 @@ IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPSCROLLINFO lpsi, DWORD *Acti
   
   if((Mask & SIF_PAGE) && (psi->nPage != lpsi->nPage))
   {
+    old = psi->nPage;
     psi->nPage = lpsi->nPage;
-    Chg = TRUE;
-    if(Action)
-      *Action |= SBU_SCROLLBOX;
     if(psi->nPage < 0) psi->nPage = 0;
     else if(psi->nPage > psi->nMax - psi->nMin + 1)
       psi->nPage = psi->nMax - psi->nMin + 1;
+    
+    if(old != psi->nPage)
+    {
+      Chg = TRUE;
+      if(Action)
+        *Action |= SBU_SCROLLBOX;
+    }
   }
   
   if((Mask & SIF_POS) && (psi->nPos != lpsi->nPos))
   {
+    old = psi->nPos;
     psi->nPos = lpsi->nPos;
-    Chg = TRUE;
-    if(Action)
-      *Action |= SBU_SCROLLBOX;
     if(psi->nPos < psi->nMin)
       psi->nPos = psi->nMin;
     else if(psi->nPos > psi->nMax - max(psi->nPage - 1, 0))
       psi->nPos = psi->nMax - max(psi->nPage - 1, 0);
+    
+    if(old != psi->nPos)
+    {
+      Chg = TRUE;
+      if(Action)
+        *Action |= SBU_SCROLLBOX;
+    }
   }
-  
-  /* FIXME check assigned values */
   
   Ret = psi->nPos;
   
@@ -648,15 +657,17 @@ NtUserGetScrollInfo(HWND hwnd, int fnBar, LPSCROLLINFO lpsi)
   NTSTATUS Status;
   PWINDOW_OBJECT Window;
   SCROLLINFO psi;
+  DWORD sz;
   BOOL Ret;
   
   Status = MmCopyFromCaller(&psi, lpsi, sizeof(SCROLLINFO) - sizeof(psi.nTrackPos));
   if(!NT_SUCCESS(Status) || 
-     (psi.cbSize != sizeof(SCROLLINFO)) || (psi.cbSize != sizeof(SCROLLINFO) - sizeof(psi.nTrackPos)))
+     !((psi.cbSize == sizeof(SCROLLINFO)) || (psi.cbSize == sizeof(SCROLLINFO) - sizeof(psi.nTrackPos))))
   {
     SetLastNtError(Status);
     return FALSE;
   }
+  sz = psi.cbSize;
   
   Window = IntGetWindowObject(hwnd);
 
@@ -669,6 +680,14 @@ NtUserGetScrollInfo(HWND hwnd, int fnBar, LPSCROLLINFO lpsi)
   Ret = IntGetScrollInfo(Window, fnBar, &psi);
   
   IntReleaseWindowObject(Window);
+  
+  Status = MmCopyToCaller(lpsi, &psi, sz);
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    return FALSE;
+  }
+  
   return Ret;
 }
 

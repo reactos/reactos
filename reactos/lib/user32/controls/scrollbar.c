@@ -1,4 +1,4 @@
-/* $Id: scrollbar.c,v 1.18 2003/09/25 21:16:56 weiden Exp $
+/* $Id: scrollbar.c,v 1.19 2003/10/02 23:21:42 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -65,6 +65,56 @@ static BOOL SCROLL_trackVertical;
 /* INTERNAL FUNCTIONS *********************************************************/
 
 HBRUSH DefWndControlColor (HDC hDC, UINT ctlType);
+void
+SCROLL_DrawScrollBar (HWND hwnd, HDC hdc, INT nBar,
+                      BOOL arrows, BOOL interior);
+
+static void
+SCROLL_DrawChanges(HWND hwnd, int sBar, DWORD Changes)
+{
+  HDC dc;
+  SCROLLBARINFO sbi;
+  BOOL btns = FALSE, interior = FALSE;
+  
+  sbi.cbSize = sizeof(SCROLLBARINFO);
+  switch(sBar)
+  {
+    case SB_VERT:
+      NtUserGetScrollBarInfo (hwnd, OBJID_HSCROLL, &sbi);
+      break;
+    case SB_HORZ:
+      NtUserGetScrollBarInfo (hwnd, OBJID_VSCROLL, &sbi);
+      break;
+    case SB_CTL:
+      NtUserGetScrollBarInfo (hwnd, OBJID_CLIENT, &sbi);
+      break;
+  }
+  
+  dc = GetWindowDC(hwnd);
+  if(dc)
+  {
+    
+    if(Changes & SBU_TOPRIGHT)
+    {
+      btns = TRUE;
+    }
+    
+    if(Changes & SBU_BOTTOMLEFT)
+    {
+      btns = TRUE;
+    }
+    
+    if(Changes & SBU_SCROLLBOX)
+    {
+      interior = TRUE;
+    }
+    
+    /* FIXME - draw it directly */
+    SCROLL_DrawScrollBar(hwnd, dc, sBar, btns, interior);
+    
+    ReleaseDC(hwnd, dc);
+  }
+}
 
 /* Ported from WINE20020904 */
 /* Draw the scroll bar interior (everything except the arrows). */
@@ -512,7 +562,7 @@ SetScrollInfo (HWND hwnd, int fnBar, LPCSCROLLINFO lpsi, WINBOOL fRedraw)
   int Ret = (int)NtUserSetScrollInfo(hwnd, fnBar, (LPSCROLLINFO)lpsi, &Changed);
   if(fRedraw && Changed)
   {
-  
+    SCROLL_DrawChanges(hwnd, fnBar, Changed);
   }
   
   return Ret;
@@ -545,6 +595,10 @@ SetScrollPos (HWND hWnd, int nBar, int nPos, WINBOOL bRedraw)
       si.nPos = nPos;
       /* finally set the new position */
       NtUserSetScrollInfo(hWnd, nBar, &si, &Action);
+      if(Action && bRedraw)
+      {
+        SCROLL_DrawChanges(hWnd, nBar, Action);
+      }
     }
   }
   
@@ -569,6 +623,11 @@ SetScrollRange (HWND hWnd,
   
   NtUserSetScrollInfo(hWnd, nBar, &si, &Action);
   /* FIXME - check if called successfully */
+  
+  if(Action && bRedraw)
+  {
+    SCROLL_DrawChanges(hWnd, nBar, Action);
+  }
   
   return TRUE;
 }
