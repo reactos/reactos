@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.43 2002/10/01 06:41:55 ei Exp $
+/* $Id: dc.c,v 1.44 2003/01/19 01:01:00 ei Exp $
  *
  * DC.C - Device context functions
  *
@@ -7,6 +7,7 @@
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
+#include <ddk/ntddvid.h>
 
 #include <win32k/bitmaps.h>
 #include <win32k/coord.h>
@@ -22,6 +23,8 @@
 //#define NDEBUG
 #include <win32k/debug1.h>
 
+static GDIDEVICE PrimarySurface;
+static BOOL PrimarySurfaceCreated = FALSE;
 
 /* FIXME: DCs should probably be thread safe  */
 
@@ -156,8 +159,6 @@ HDC STDCALL  W32kCreateCompatableDC(HDC  hDC)
     NewDC->vportExtY = OrigDC->vportExtY;
   }
 
-  DC_InitDC(hNewDC);
-
   /* Create default bitmap */
   if (!(hBitmap = W32kCreateBitmap( 1, 1, 1, 1, NULL )))
   {
@@ -178,14 +179,10 @@ HDC STDCALL  W32kCreateCompatableDC(HDC  hDC)
   }
   DC_ReleasePtr( hDC );
   DC_ReleasePtr( hNewDC );
+  DC_InitDC(hNewDC);
 
   return  hNewDC;
 }
-
-#include <ddk/ntddvid.h>
-
-static GDIDEVICE PrimarySurface;
-static BOOL PrimarySurfaceCreated = FALSE;
 
 BOOL STDCALL W32kCreatePrimarySurface(LPCWSTR Driver,
 				      LPCWSTR Device)
@@ -338,13 +335,13 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
 
   DPRINT("Bits per pel: %u\n", NewDC->w.bitsPerPixel);
 
+  NewDC->w.hVisRgn = W32kCreateRectRgn(0, 0, 640, 480);
+  DC_ReleasePtr( hNewDC );
+
   /*  Initialize the DC state  */
   DC_InitDC(hNewDC);
-
-  NewDC->w.hVisRgn = W32kCreateRectRgn(0, 0, 640, 480);
   W32kSetTextColor(hNewDC, RGB(0, 0, 0));
   W32kSetTextAlign(hNewDC, TA_TOP);
-  DC_ReleasePtr( hNewDC );
 
   return hNewDC;
 }
@@ -1217,20 +1214,19 @@ HDC  DC_FindOpenDC(LPCWSTR  Driver)
   return NULL;
 }
 
+/*!
+ * Initialize some common fields in the Device Context structure.
+*/
 void  DC_InitDC(HDC  DCHandle)
 {
 //  W32kRealizeDefaultPalette(DCHandle);
-  PDC DCToInit;
-  if( (DCToInit = DC_HandleToPtr( DCHandle ) ) ){
-	  W32kSetTextColor(DCHandle, DCToInit->w.textColor);
-	  W32kSetBkColor(DCHandle, DCToInit->w.backgroundColor);
-	  W32kSelectObject(DCHandle, DCToInit->w.hPen);
-	  W32kSelectObject(DCHandle, W32kGetStockObject( GRAY_BRUSH )); //FIXME: default should be WHITE_BRUSH
-	  W32kSelectObject(DCHandle, DCToInit->w.hFont);
-  }
-  else
-  DPRINT("DC_InitDC: can't get dc for handle %d\n", DCHandle );
+
+  W32kSelectObject(DCHandle, W32kGetStockObject( WHITE_BRUSH ));
+  //W32kSelectObject(DCHandle, hPen);
+  //W32kSelectObject(DCHandle, hFont);
+
 //  CLIPPING_UpdateGCRegion(DCToInit);
+
 }
 
 void  DC_FreeDC(HDC  DCToFree)
