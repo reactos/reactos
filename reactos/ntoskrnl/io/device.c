@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.80 2004/10/23 14:48:15 ekohl Exp $
+/* $Id: device.c,v 1.81 2004/10/23 15:17:35 blight Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -36,7 +36,7 @@ IopInitializeDevice(
       /* This is a Plug and Play driver */
       DPRINT("Plug and Play driver found\n");
 
-      ASSERT(DeviceNode->Pdo);
+      ASSERT(DeviceNode->PhysicalDeviceObject);
 
       DPRINT("Calling driver AddDevice entrypoint at %08lx\n",
          DriverObject->DriverExtension->AddDevice);
