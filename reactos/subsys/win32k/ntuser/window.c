@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.138 2003/11/20 09:18:49 navaraf Exp $
+/* $Id: window.c,v 1.139 2003/11/20 15:35:33 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1475,6 +1475,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
     }
 
   InitializeListHead(&WindowObject->PropListHead);
+  ExInitializeFastMutex(&WindowObject->PropListLock);
   ExInitializeFastMutex(&WindowObject->ChildrenListLock);
 
   RtlInitUnicodeString(&WindowObject->WindowName, WindowName.Buffer);

@@ -13,12 +13,6 @@ typedef struct _WINDOW_OBJECT *PWINDOW_OBJECT;
 #include <include/dce.h>
 #include <include/prop.h>
 
-typedef struct _PROPERTY
-{
-  LIST_ENTRY PropListEntry;
-  HANDLE Data;
-  ATOM Atom;
-} PROPERTY, *PPROPERTY;
 
 VOID FASTCALL
 WinPosSetupInternalPos(VOID);
@@ -80,6 +74,8 @@ typedef struct _WINDOW_OBJECT
   PDCE Dce;
   /* Property list head.*/
   LIST_ENTRY PropListHead;
+  FAST_MUTEX PropListLock;
+  ULONG PropListItems;
   /* Scrollbar info */
   PSCROLLBARINFO pHScroll;
   PSCROLLBARINFO pVScroll;

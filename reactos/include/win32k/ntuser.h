@@ -101,13 +101,13 @@ NtUserBuildNameList(
   DWORD Unknown2,
   DWORD Unknown3);
 
-DWORD
+NTSTATUS
 STDCALL
 NtUserBuildPropList(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+  HWND hWnd,
+  LPVOID Buffer,
+  DWORD BufferSize,
+  DWORD *Count);
 
 DWORD
 STDCALL
