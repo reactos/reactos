@@ -2097,7 +2097,7 @@ LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 }
 
 
-static TCHAR g_pos_names[20][COLUMNS] = {
+static TCHAR g_pos_names[COLUMNS][20] = {
 	{'\0'}	/* symbol */
 };
 
