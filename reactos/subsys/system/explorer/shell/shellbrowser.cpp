@@ -106,7 +106,7 @@ LRESULT ShellBrowserChild::Init(HWND hWndFrame)
 	const String& root_name = GetDesktopFolder().get_name(_create_info._root_shell_path, SHGDN_FORPARSING);
 
 	_root._drive_type = DRIVE_UNKNOWN;
-	lstrcpy(_root._volname, root_name);	// most of the time "Desktop"
+	lstrcpy(_root._volname, root_name);
 	_root._fs_flags = 0;
 	lstrcpy(_root._fs, TEXT("Desktop"));
 
