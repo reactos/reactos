@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.157 2004/11/24 18:13:18 navaraf Exp $
+/* $Id: process.c,v 1.158 2004/12/05 15:42:42 weiden Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -18,7 +18,7 @@
 /* GLOBALS ******************************************************************/
 
 PEPROCESS EXPORTED PsInitialSystemProcess = NULL;
-HANDLE SystemProcessHandle = NULL;
+PEPROCESS PsIdleProcess = NULL;
 
 POBJECT_TYPE EXPORTED PsProcessType = NULL;
 
@@ -345,12 +345,6 @@ PsInitProcessManagment(VOID)
    strcpy(PsInitialSystemProcess->ImageFileName, "SYSTEM");
 
    SepCreateSystemProcessToken(PsInitialSystemProcess);
-
-   ObCreateHandle(PsInitialSystemProcess,
-		  PsInitialSystemProcess,
-		  PROCESS_ALL_ACCESS,
-		  FALSE,
-		  &SystemProcessHandle);
 }
 
 VOID STDCALL
@@ -583,14 +577,35 @@ PsCreateSystemProcess(PHANDLE ProcessHandle,
 		      ACCESS_MASK DesiredAccess,
 		      POBJECT_ATTRIBUTES ObjectAttributes)
 {
-   return NtCreateProcess(ProcessHandle,
-			  DesiredAccess,
-			  ObjectAttributes,
-			  SystemProcessHandle,
-			  FALSE,
-			  NULL,
-			  NULL,
-			  NULL);
+   HANDLE SystemProcessHandle;
+   NTSTATUS Status;
+   
+   /* FIXME - what about security? should there be any privilege checks or something
+              security related? */
+   
+   Status = ObCreateHandle(PsGetCurrentProcess(),
+                           PsInitialSystemProcess,
+                           PROCESS_CREATE_PROCESS | PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION,
+                           FALSE,
+                           &SystemProcessHandle);
+   if(!NT_SUCCESS(Status))
+   {
+      DPRINT1("Failed to create a handle for the system process!\n");
+      return Status;
+   }
+   
+   Status = NtCreateProcess(ProcessHandle,
+			    DesiredAccess,
+			    ObjectAttributes,
+			    SystemProcessHandle,
+			    FALSE,
+			    NULL,
+			    NULL,
+			    NULL);
+
+   NtClose(SystemProcessHandle);
+   
+   return Status;
 }
 
 NTSTATUS STDCALL

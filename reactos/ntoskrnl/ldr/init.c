@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: init.c,v 1.49 2004/11/21 21:09:42 weiden Exp $
+/* $Id: init.c,v 1.50 2004/12/05 15:42:42 weiden Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ldr/init.c
@@ -375,6 +375,7 @@ LdrLoadInitialProcess(PHANDLE ProcessHandle,
   ULONG ResultLength;
   PVOID ImageBaseAddress;
   ULONG InitialStack[5];
+  HANDLE SystemProcessHandle;
   NTSTATUS Status;
 
   /* Get the absolute path to smss.exe. */
@@ -404,6 +405,17 @@ LdrLoadInitialProcess(PHANDLE ProcessHandle,
       return(Status);
     }
 
+  Status = ObCreateHandle(PsGetCurrentProcess(),
+                          PsInitialSystemProcess,
+                          PROCESS_CREATE_PROCESS | PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION,
+                          FALSE,
+                          &SystemProcessHandle);
+  if(!NT_SUCCESS(Status))
+  {
+    DPRINT1("Failed to create a handle for the system process!\n");
+    return Status;
+  }
+
   DPRINT("Creating process\n");
   Status = NtCreateProcess(ProcessHandle,
 			   PROCESS_ALL_ACCESS,
@@ -414,6 +426,7 @@ LdrLoadInitialProcess(PHANDLE ProcessHandle,
 			   NULL,
 			   NULL);
   NtClose(SectionHandle);
+  NtClose(SystemProcessHandle);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("NtCreateProcess() failed (Status %lx)\n", Status);
