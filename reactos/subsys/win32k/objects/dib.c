@@ -670,7 +670,7 @@ RGBQUAD *DIB_MapPaletteColors(PDC dc, LPBITMAPINFO lpbmi)
   lpIndex = (DWORD *)&lpbmi->bmiColors[0];
 
   for (i=0; i<nNumColors; i++) {
-    pRGB[i].rgbRed = palObj->logpalette.palPalEntry[*lpIndex].peRed;
+    lpRGB[i].rgbRed = palObj->logpalette.palPalEntry[*lpIndex].peRed;
     lpRGB[i].rgbGreen = palObj->logpalette.palPalEntry[*lpIndex].peGreen;
     lpRGB[i].rgbBlue = palObj->logpalette.palPalEntry[*lpIndex].peBlue;
     lpIndex++;
