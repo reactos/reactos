@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.44 2002/04/01 22:09:59 hbirr Exp $
+/* $Id: create.c,v 1.45 2002/04/27 19:26:54 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -30,6 +30,25 @@
 #include <kernel32/error.h>
 
 /* FUNCTIONS ****************************************************************/
+
+void DuplicateFileHandle(HANDLE Source, HANDLE hProcess, PHANDLE Destination)
+{
+   NTSTATUS Status;
+   PFILE_OBJECT FileObject;
+   DWORD FileType;
+
+   FileType = GetFileType(Source);
+   if (FileType == FILE_TYPE_DISK || FileType == FILE_TYPE_PIPE)
+   {
+      Status = NtDuplicateObject (NtCurrentProcess(), 
+                                  Source,
+				  hProcess,
+				  Destination,
+				  0,
+				  FALSE,
+				  DUPLICATE_SAME_ACCESS);
+   }
+}   
 
 WINBOOL STDCALL
 CreateProcessA (LPCSTR			lpApplicationName,
@@ -70,8 +89,9 @@ CreateProcessA (LPCSTR			lpApplicationName,
 	CHAR TempCurrentDirectoryA[256];
 
 	DPRINT("CreateProcessA(%s)\n", lpApplicationName);
-	DPRINT("dwCreationFlags %x, lpEnvironment %x, lpCurrentDirectory %x, lpStartupInfo %x, lpProcessInformation %x\n",   
-		dwCreationFlags, lpEnvironment, lpCurrentDirectory, lpStartupInfo, lpProcessInformation);
+	DPRINT("dwCreationFlags %x, lpEnvironment %x, lpCurrentDirectory %x, "
+		"lpStartupInfo %x, lpProcessInformation %x\n", dwCreationFlags, 
+		lpEnvironment, lpCurrentDirectory, lpStartupInfo, lpProcessInformation);
 
 	if (lpEnvironment)
 	{
@@ -528,6 +548,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
    SECTION_IMAGE_INFORMATION Sii;
    WCHAR TempCurrentDirectoryW[256];
    WCHAR TempApplicationNameW[256];
+   WCHAR TempCommandLineNameW[256];
 
    DPRINT("CreateProcessW(lpApplicationName '%S', lpCommandLine '%S')\n",
 	   lpApplicationName, lpCommandLine);
@@ -599,11 +620,32 @@ CreateProcessW(LPCWSTR lpApplicationName,
      return FALSE;
    }
 
+   e = wcsrchr(s, L'.');
+   if (e != NULL && (!_wcsicmp(e, L".bat") || !_wcsicmp(e, L".cmd")))
+   {
+       // the command is a batch file
+       if (lpApplicationName != NULL && lpApplicationName[0])
+       {
+	  // FIXME: use COMSPEC for the command interpreter
+	  wcscpy(TempCommandLineNameW, L"cmd /c ");
+	  wcscat(TempCommandLineNameW, lpApplicationName);
+	  lpCommandLine = TempCommandLineNameW;
+	  wcscpy(TempApplicationNameW, L"cmd.exe");
+          if (!SearchPathW(NULL, TempApplicationNameW, NULL, sizeof(ImagePathName), ImagePathName, &s))
+	  {
+	     return FALSE;
+	  }
+       }
+       else
+       {
+	  return FALSE;
+       }
+   }
 
    /*
     * Store the image file name for the process
     */
-   e = wcschr(s, '.');
+   e = wcschr(s, L'.');
    if (e != NULL)
      {
 	*e = 0;
@@ -639,19 +681,6 @@ CreateProcessW(LPCWSTR lpApplicationName,
 			    TempCurrentDirectoryW);
      }
 
-   /*
-    * Create the PPB
-    */
-   RtlCreateProcessParameters(&Ppb,
-			      &ImagePathName_U,
-			      NULL,
-			      lpCurrentDirectory ? &CurrentDirectory_U : NULL,
-			      &CommandLine_U,
-			      lpEnvironment,
-			      NULL,
-			      NULL,
-			      NULL,
-			      NULL);
    
    /*
     * Create a section for the executable
@@ -660,7 +689,6 @@ CreateProcessW(LPCWSTR lpApplicationName,
    hSection = KlMapFile (ImagePathName, lpCommandLine);
    if (hSection == NULL)
    {
-	RtlDestroyProcessParameters (Ppb);
 	return FALSE;
    }
    
@@ -675,6 +703,19 @@ CreateProcessW(LPCWSTR lpApplicationName,
 			    hSection,
 			    NULL,
 			    NULL);
+   /*
+    * Create the PPB
+    */
+   RtlCreateProcessParameters(&Ppb,
+			      &ImagePathName_U,
+			      NULL,
+			      lpCurrentDirectory ? &CurrentDirectory_U : NULL,
+			      &CommandLine_U,
+			      lpEnvironment,
+			      NULL,
+			      NULL,
+			      NULL,
+			      NULL);
 
    /*
     * Translate some handles for the new process
@@ -726,58 +767,39 @@ CreateProcessW(LPCWSTR lpApplicationName,
    DPRINT("ProcessBasicInfo.UniqueProcessId %d\n",
 	  ProcessBasicInfo.UniqueProcessId);
    lpProcessInformation->dwProcessId = ProcessBasicInfo.UniqueProcessId;
-
-#if 0   
-   if (bInheritHandles && lpStartupInfo->dwFlags & STARTF_USESTDHANDLES)
-   {
-      Status = NtDuplicateObject (NtCurrentProcess(), 
-				  lpStartupInfo->hStdInput,
-				  hProcess,
-				  &Ppb->InputHandle,
-				  0,
-				  TRUE,
-				  DUPLICATE_SAME_ACCESS);
-
-      Status = NtDuplicateObject (NtCurrentProcess(), 
-				  lpStartupInfo->hStdOutput,
-				  hProcess,
-				  &Ppb->OutputHandle,
-				  0,
-				  TRUE,
-				  DUPLICATE_SAME_ACCESS);
-
-      Status = NtDuplicateObject (NtCurrentProcess(), 
-				  lpStartupInfo->hStdError,
-				  hProcess,
-				  &Ppb->ErrorHandle,
-				  0,
-				  TRUE,
-				  DUPLICATE_SAME_ACCESS);
-     
-   }
-   else
-#endif
-   {
-	/*
-	 * Tell the csrss server we are creating a new process
-	 */
-	CsrRequest.Type = CSRSS_CREATE_PROCESS;
-	CsrRequest.Data.CreateProcessRequest.NewProcessId = 
-		ProcessBasicInfo.UniqueProcessId;
-	CsrRequest.Data.CreateProcessRequest.Flags = dwCreationFlags;
-	Status = CsrClientCallServer(&CsrRequest, 
-				     &CsrReply,
-				     sizeof(CSRSS_API_REQUEST),
-				     sizeof(CSRSS_API_REPLY));
-	if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrReply.Status))
-	{
-		DbgPrint("Failed to tell csrss about new process. Expect trouble.\n");
-	}
    
-	Ppb->InputHandle = CsrReply.Data.CreateProcessReply.InputHandle;
-	Ppb->OutputHandle = CsrReply.Data.CreateProcessReply.OutputHandle;;
-	Ppb->ErrorHandle = Ppb->OutputHandle;
-   }
+   /*
+    * Tell the csrss server we are creating a new process
+    */
+   CsrRequest.Type = CSRSS_CREATE_PROCESS;
+   CsrRequest.Data.CreateProcessRequest.NewProcessId = 
+     ProcessBasicInfo.UniqueProcessId;
+   CsrRequest.Data.CreateProcessRequest.Flags = dwCreationFlags;
+   Status = CsrClientCallServer(&CsrRequest, 
+				&CsrReply,
+				sizeof(CSRSS_API_REQUEST),
+				sizeof(CSRSS_API_REPLY));
+   if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrReply.Status))
+     {
+	DbgPrint("Failed to tell csrss about new process. Expect trouble.\n");
+     }
+   
+   Ppb->InputHandle = CsrReply.Data.CreateProcessReply.InputHandle;
+   Ppb->OutputHandle = CsrReply.Data.CreateProcessReply.OutputHandle;;
+   Ppb->ErrorHandle = Ppb->OutputHandle;
+
+   // Replace the child console handles, if the parent console handles are file handles. 
+   DuplicateFileHandle(NtCurrentPeb()->ProcessParameters->InputHandle, 
+	               hProcess,
+		       &Ppb->InputHandle);
+
+   DuplicateFileHandle(NtCurrentPeb()->ProcessParameters->OutputHandle, 
+	               hProcess,
+		       &Ppb->OutputHandle);
+
+   DuplicateFileHandle(NtCurrentPeb()->ProcessParameters->ErrorHandle, 
+	               hProcess,
+		       &Ppb->ErrorHandle);
 
    /*
     * Create Process Environment Block
@@ -804,7 +826,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
    if (!NT_SUCCESS(Status))
      {
 	DbgPrint ("LdrGetProcedureAddress failed (Status %x)\n", Status);
-	return (Status);
+	return FALSE;
      }
    DPRINT("lpStartAddress 0x%08lx\n", (ULONG)lpStartAddress);
 
