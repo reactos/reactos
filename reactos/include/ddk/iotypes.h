@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.38 2002/05/21 19:29:00 ekohl Exp $
+/* $Id: iotypes.h,v 1.39 2002/06/26 18:37:36 hbirr Exp $
  *
  */
 
@@ -238,7 +238,7 @@ typedef struct
    USHORT Revision;
    ULONG Count;
    CM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptors[1];
-} __attribute__((packed))CM_PARTIAL_RESOURCE_LIST;
+} __attribute__((packed))CM_PARTIAL_RESOURCE_LIST, *PCM_PARTIAL_RESOURCE_LIST;
 
 typedef struct
 {
