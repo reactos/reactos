@@ -127,7 +127,8 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
 	  Status = MmCreateVirtualMapping(NULL,
 					  KernelStack + (i * PAGESIZE),
 					  PAGE_EXECUTE_READWRITE,
-					  (ULONG)Page);
+					  (ULONG)Page,
+					  TRUE);
 	}
       Thread->InitialStack = KernelStack + MM_STACK_SIZE;
       Thread->StackBase = KernelStack + MM_STACK_SIZE;

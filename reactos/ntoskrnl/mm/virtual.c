@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.52 2001/12/31 19:06:48 dwelch Exp $
+/* $Id: virtual.c,v 1.53 2002/01/01 00:21:56 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -183,7 +183,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
    /*
     * Otherwise we have succeeded, free the page
     */
-   DPRINT1("MM: Swapped out virtual memory swap!\n");
+   DPRINT("MM: Swapped out virtual memory page 0x%.8X!\n", PhysicalAddress);
    MmDeleteVirtualMapping(MemoryArea->Process, Address, FALSE, NULL, NULL);
    MmCreatePageFileMapping(MemoryArea->Process, Address, SwapEntry);
    MmDeleteAllRmaps(PhysicalAddress, NULL, NULL);
@@ -340,16 +340,17 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
    Status = MmCreateVirtualMapping(PsGetCurrentProcess(),		      
 				   Address,
 				   MemoryArea->Attributes,
-				   (ULONG)Page);
+				   (ULONG)Page,
+				   FALSE);
    while (Status == STATUS_NO_MEMORY)
      {
 	MmUnlockAddressSpace(AddressSpace);
-	KeBugCheck(0);
-	MmLockAddressSpace(AddressSpace);
-	Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
+	Status = MmCreateVirtualMapping(PsGetCurrentProcess(),		      
 					Address,
 					MemoryArea->Attributes,
-					(ULONG)Page);
+					(ULONG)Page,
+					TRUE);
+	MmLockAddressSpace(AddressSpace);
      }  
    if (!NT_SUCCESS(Status))
      {

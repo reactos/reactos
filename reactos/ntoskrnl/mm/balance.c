@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: balance.c,v 1.3 2001/12/31 01:53:45 dwelch Exp $
+/* $Id: balance.c,v 1.4 2002/01/01 00:21:55 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -31,6 +31,7 @@
 
 #include <ddk/ntddk.h>
 #include <internal/mm.h>
+#include <ntos/minmax.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -59,6 +60,10 @@ static ULONG MiNrAvailablePages;
 static ULONG MiNrTotalPages;
 static LIST_ENTRY AllocationListHead;
 static KSPIN_LOCK AllocationListLock;
+static ULONG NrWorkingThreads = 0;
+static HANDLE WorkerThreadId;
+static ULONG MiPagesRequired = 0;
+static ULONG MiMinimumPagesPerRun = 1;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -94,8 +99,15 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PVOID Page)
   PLIST_ENTRY Entry;
   KIRQL oldIrql;
 
+  if (Page == NULL)
+    {
+      DPRINT1("Tried to release page zero.\n");
+      KeBugCheck(0);
+    }
+
   InterlockedDecrement(&MiMemoryConsumers[Consumer].PagesUsed);
   InterlockedIncrement(&MiNrAvailablePages);
+  InterlockedDecrement(&MiPagesRequired);
   KeAcquireSpinLock(&AllocationListLock, &oldIrql);
   if (IsListEmpty(&AllocationListHead))
     {
@@ -138,11 +150,8 @@ MiRebalanceMemoryConsumers(VOID)
   ULONG NrFreedPages;
   NTSTATUS Status;
 
-  Target = MiMinimumAvailablePages - MiNrAvailablePages;
-  if (Target < 0)
-    {
-      Target = 1;
-    }
+  Target = (MiMinimumAvailablePages - MiNrAvailablePages) + MiPagesRequired;
+  Target = min(Target, MiMinimumPagesPerRun);
 
   for (i = 0; i < MC_MAXIMUM && Target > 0; i++)
     {
@@ -168,12 +177,14 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait, PVOID* AllocatedPag
   ULONG OldUsed;
   ULONG OldAvailable;
   PVOID Page;
+  KIRQL oldIrql;
   
   /*
    * Make sure we don't exceed our individual target.
    */
   OldUsed = InterlockedIncrement(&MiMemoryConsumers[Consumer].PagesUsed);
-  if (OldUsed >= (MiMemoryConsumers[Consumer].PagesTarget - 1))
+  if (OldUsed >= (MiMemoryConsumers[Consumer].PagesTarget - 1) &&
+      WorkerThreadId != PsGetCurrentThreadId())
     {
       if (!CanWait)
 	{
@@ -189,25 +200,8 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait, PVOID* AllocatedPag
   OldAvailable = InterlockedDecrement(&MiNrAvailablePages);
   if (OldAvailable < MiMinimumAvailablePages)
     {
-      if (!CanWait)
-	{
-	  InterlockedIncrement(&MiNrAvailablePages);
-	  InterlockedDecrement(&MiMemoryConsumers[Consumer].PagesUsed);
-	  return(STATUS_NO_MEMORY);
-	}
-      MiRebalanceMemoryConsumers();
-    }
-
-  /*
-   * Actually allocate the page.
-   */
-  Page = MmAllocPage(Consumer, 0);
-  if (Page == NULL)
-    {
       MM_ALLOCATION_REQUEST Request;
-      KIRQL oldIrql;
 
-      /* Still not trimmed enough. */
       if (!CanWait)
 	{
 	  InterlockedIncrement(&MiNrAvailablePages);
@@ -218,15 +212,59 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait, PVOID* AllocatedPag
       /* Insert an allocation request. */
       Request.Page = NULL;
       KeInitializeEvent(&Request.Event, NotificationEvent, FALSE);
-      KeAcquireSpinLock(&AllocationListLock, &oldIrql);
-      InsertTailList(&AllocationListHead, &Request.ListEntry);
-      KeReleaseSpinLock(&AllocationListLock, oldIrql);
-      MiRebalanceMemoryConsumers();
+      InterlockedIncrement(&MiPagesRequired);
+
+      KeAcquireSpinLock(&AllocationListLock, &oldIrql);     
+      if (NrWorkingThreads == 0)
+	{
+	  InsertTailList(&AllocationListHead, &Request.ListEntry);
+	  NrWorkingThreads++;
+	  KeReleaseSpinLock(&AllocationListLock, oldIrql);
+	  WorkerThreadId = PsGetCurrentThreadId();
+	  MiRebalanceMemoryConsumers();
+	  KeAcquireSpinLock(&AllocationListLock, &oldIrql);
+	  NrWorkingThreads--;
+	  WorkerThreadId = 0;
+	  KeReleaseSpinLock(&AllocationListLock, oldIrql);
+	}
+      else
+	{
+	  if (WorkerThreadId == PsGetCurrentThreadId())
+	    {
+	      Page = MmAllocPage(Consumer, 0);
+	      KeReleaseSpinLock(&AllocationListLock, oldIrql);
+	      if (Page == NULL)
+		{
+		  KeBugCheck(0);
+		}
+	      *AllocatedPage = Page;
+	      return(STATUS_SUCCESS);
+	    }
+	  InsertTailList(&AllocationListHead, &Request.ListEntry);
+	  KeReleaseSpinLock(&AllocationListLock, oldIrql);
+	  KeWaitForSingleObject(&Request.Event,
+				0,
+				KernelMode,
+				FALSE,
+				NULL);
+	}
+
       Page = Request.Page;
       if (Page == NULL)
 	{
 	  KeBugCheck(0);
 	}
+      *AllocatedPage = Page;
+      return(STATUS_SUCCESS);
+    }
+
+  /*
+   * Actually allocate the page.
+   */
+  Page = MmAllocPage(Consumer, 0);
+  if (Page == NULL)
+    {
+      KeBugCheck(0);
     }
   *AllocatedPage = Page;
 

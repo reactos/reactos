@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.34 2001/04/03 17:25:49 dwelch Exp $
+/* $Id: mdl.c,v 1.35 2002/01/01 00:21:56 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -116,6 +116,7 @@ PVOID STDCALL MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
 	KeBugCheck(0);
 	return(STATUS_SUCCESS);
      }
+   MmUnlockAddressSpace(MmGetKernelAddressSpace());
    
    MdlPages = (PULONG)(Mdl + 1);
    for (i=0; i<(PAGE_ROUND_UP(Mdl->ByteCount+Mdl->ByteOffset)/PAGESIZE); i++)
@@ -123,14 +124,14 @@ PVOID STDCALL MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
 	Status = MmCreateVirtualMapping(NULL,
 					(PVOID)((ULONG)Base+(i*PAGESIZE)),
 					PAGE_READWRITE,
-					MdlPages[i]);
+					MdlPages[i],
+					TRUE);
 	if (!NT_SUCCESS(Status))
 	  {
 	     DbgPrint("Unable to create virtual mapping\n");
 	     KeBugCheck(0);
 	  }
      }
-   MmUnlockAddressSpace(MmGetKernelAddressSpace());
    Mdl->MdlFlags = Mdl->MdlFlags | MDL_MAPPED_TO_SYSTEM_VA;
    Mdl->MappedSystemVa = Base + Mdl->ByteOffset;
    return(Base + Mdl->ByteOffset);

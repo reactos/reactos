@@ -1,4 +1,4 @@
-/* $Id: ncache.c,v 1.14 2001/12/31 19:06:47 dwelch Exp $
+/* $Id: ncache.c,v 1.15 2002/01/01 00:21:56 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -79,7 +79,8 @@ MmAllocateNonCachedMemory(IN ULONG NumberOfBytes)
        MmCreateVirtualMapping (NULL,
 			       Result + (i * PAGESIZE),
 			       Attributes,
-			       (ULONG)NPage);
+			       (ULONG)NPage,
+			       TRUE);
      }
    return ((PVOID)Result);
 }

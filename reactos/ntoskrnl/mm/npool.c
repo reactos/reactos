@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.53 2001/12/31 19:06:47 dwelch Exp $
+/* $Id: npool.c,v 1.54 2002/01/01 00:21:56 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -692,27 +692,33 @@ static BLOCK_HDR* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
 {
    unsigned int total_size = size + sizeof(BLOCK_HDR);
    unsigned int nr_pages = PAGE_ROUND_UP(total_size) / PAGESIZE;
-   unsigned int start = (ULONG)MiAllocNonPagedPoolRegion(nr_pages);
+   unsigned int start;
    BLOCK_HDR* used_blk=NULL;
    BLOCK_HDR* free_blk=NULL;
    int i;
    NTSTATUS Status;
-   
+   KIRQL oldIrql;
+
+   start = (ULONG)MiAllocNonPagedPoolRegion(nr_pages);
+ 
    DPRINT("growing heap for block size %d, ",size);
    DPRINT("start %x\n",start);
-   
+  
    for (i=0;i<nr_pages;i++)
      {
        PVOID Page;
-       Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &Page);
+       /* FIXME: Check whether we can really wait here. */
+       Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &Page);
        if (!NT_SUCCESS(Status))
 	 {
+	   KeBugCheck(0);
 	   return(NULL);
 	 }
        Status = MmCreateVirtualMapping(NULL,
 				       (PVOID)(start + (i*PAGESIZE)),
 				       PAGE_READWRITE,
-				       (ULONG)Page);
+				       (ULONG)Page,
+				       FALSE);
 	if (!NT_SUCCESS(Status))
 	  {
 	     DbgPrint("Unable to create virtual mapping\n");
@@ -720,7 +726,7 @@ static BLOCK_HDR* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
 	  }
      }
 
-   
+   KeAcquireSpinLock(&MmNpoolLock, &oldIrql);
    if ((PAGESIZE-(total_size%PAGESIZE))>(2*sizeof(BLOCK_HDR)))
      {
 	used_blk = (struct _BLOCK_HDR *)start;
@@ -756,6 +762,7 @@ static BLOCK_HDR* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
 #endif /* TAG_STATISTICS_TRACKING */
    
    VALIDATE_POOL;
+   KeReleaseSpinLock(&MmNpoolLock, oldIrql);
    return(used_blk);
 }
 
@@ -987,10 +994,9 @@ ExAllocateNonPagedPoolWithTag(ULONG Type, ULONG Size, ULONG Tag, PVOID Caller)
    /*
     * Otherwise create a new block
     */
-   block=block_to_address(grow_kernel_pool(Size, Tag, Caller));
-   VALIDATE_POOL;
-   memset(block, 0, Size);
    KeReleaseSpinLock(&MmNpoolLock, oldIrql);
+   block=block_to_address(grow_kernel_pool(Size, Tag, Caller));
+   memset(block, 0, Size);
    return(block);
 #endif /* WHOLE_PAGE_ALLOCATIONS */
 }

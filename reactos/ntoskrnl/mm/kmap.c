@@ -1,4 +1,4 @@
-/* $Id: kmap.c,v 1.13 2001/12/31 01:53:45 dwelch Exp $
+/* $Id: kmap.c,v 1.14 2002/01/01 00:21:56 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -111,7 +111,8 @@ ExAllocatePageWithPhysPage(ULONG PhysPage)
 	    Status = MmCreateVirtualMapping(NULL, 
 					    (PVOID)addr, 
 					    PAGE_READWRITE | PAGE_SYSTEM, 
-					    PhysPage);
+					    PhysPage,
+					    FALSE);
 	    if (!NT_SUCCESS(Status))
 	      {
 		DbgPrint("Unable to create virtual mapping\n");
@@ -138,7 +139,9 @@ MiFreeNonPagedPoolRegion(PVOID Addr, ULONG Count, BOOLEAN Free)
   ULONG i;
   ULONG Base = (Addr - NonPagedPoolBase) / PAGESIZE;
   ULONG Offset;
-
+  KIRQL oldlvl;
+  
+  KeAcquireSpinLock(&AllocMapLock, &oldlvl);
   for (i = 0; i < Count; i++)
     {
       Offset = Base + i;
@@ -149,6 +152,7 @@ MiFreeNonPagedPoolRegion(PVOID Addr, ULONG Count, BOOLEAN Free)
 			     NULL, 
 			     NULL);
     }
+  KeReleaseSpinLock(&AllocMapLock, oldlvl);
 }
 
 PVOID
@@ -160,7 +164,9 @@ MiAllocNonPagedPoolRegion(ULONG nr_pages)
    unsigned int start = 0;
    unsigned int length = 0;
    unsigned int i,j;
+   KIRQL oldlvl;
 
+   KeAcquireSpinLock(&AllocMapLock, &oldlvl);
    for (i=1; i<ALLOC_MAP_SIZE;i++)
      {
        if (!(AllocMap[i/32] & (1 << (i % 32))))
@@ -181,6 +187,7 @@ MiAllocNonPagedPoolRegion(ULONG nr_pages)
 		      AllocMap[j / 32] |= (1 << (j % 32));
 		    }
 		  DPRINT("returning %x\n",((start*PAGESIZE)+NonPagedPoolBase));
+		  KeReleaseSpinLock(&AllocMapLock, oldlvl);
 		  return(((start*PAGESIZE)+NonPagedPoolBase));
 	       }
 	  }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.33 2001/12/31 19:06:47 dwelch Exp $
+/* $Id: view.c,v 1.34 2002/01/01 00:21:55 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -88,6 +88,7 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
   PCACHE_SEGMENT current;
   ULONG PagesPerSegment;
   ULONG PagesFreed;
+  BOOLEAN Locked;
 
   DPRINT("CcRosTrimCache(Target %d)\n", Target);
 
@@ -99,7 +100,11 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
     {
       current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, CacheSegmentLRUListEntry);
       current_entry = current_entry->Flink;
-      ExAcquireFastMutex(&current->Lock);
+      Locked = ExTryToAcquireFastMutex(&current->Lock);
+      if (!Locked)
+	{
+	  continue;
+	}
       if (current->MappedCount > 0 || current->Dirty || current->ReferenceCount > 0)
 	{
 	  ExReleaseFastMutex(&current->Lock);
@@ -318,8 +323,8 @@ CcRosGetCacheSegment(PBCB Bcb,
        Status = MmCreateVirtualMapping(NULL,
 				       current->BaseAddress + (i * PAGESIZE),
 				       PAGE_READWRITE,
-				       (ULONG)Page);
-       
+				       (ULONG)Page,
+				       TRUE);
        if (!NT_SUCCESS(Status))
 	 {
 	   KeBugCheck(0);

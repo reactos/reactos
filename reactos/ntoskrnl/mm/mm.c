@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mm.c,v 1.52 2001/12/31 01:53:45 dwelch Exp $
+/* $Id: mm.c,v 1.53 2002/01/01 00:21:56 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -257,7 +257,19 @@ NTSTATUS MmCommitPagedPoolAddress(PVOID Address)
     MmCreateVirtualMapping(NULL,
 			   (PVOID)PAGE_ROUND_DOWN(Address),
 			   PAGE_READWRITE,
-			   (ULONG)AllocatedPage);  
+			   (ULONG)AllocatedPage,
+			   FALSE);
+  if (!NT_SUCCESS(Status))
+    {
+      MmUnlockAddressSpace(MmGetKernelAddressSpace());
+      Status = 
+	MmCreateVirtualMapping(NULL,
+			       (PVOID)PAGE_ROUND_DOWN(Address),
+			       PAGE_READWRITE,
+			       (ULONG)AllocatedPage,
+			       FALSE);
+      MmLockAddressSpace(MmGetKernelAddressSpace());
+    }
   return(Status);
 }
 
@@ -353,9 +365,21 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
 	 case MEMORY_AREA_SHARED_DATA:
 	   Status = 
 	     MmCreateVirtualMapping(PsGetCurrentProcess(),
-				       (PVOID)PAGE_ROUND_DOWN(Address),
-				       PAGE_READONLY,
-				       (ULONG)MmSharedDataPagePhysicalAddress);
+				    (PVOID)PAGE_ROUND_DOWN(Address),
+				    PAGE_READONLY,
+				    (ULONG)MmSharedDataPagePhysicalAddress,
+				    FALSE);
+	   if (!NT_SUCCESS(Status))
+	     {
+	       MmUnlockAddressSpace(&PsGetCurrentProcess()->AddressSpace);
+	       Status = 
+		 MmCreateVirtualMapping(PsGetCurrentProcess(),
+					(PVOID)PAGE_ROUND_DOWN(Address),
+					PAGE_READONLY,
+					(ULONG)MmSharedDataPagePhysicalAddress,
+					TRUE);
+	       MmLockAddressSpace(&PsGetCurrentProcess()->AddressSpace);
+	     }
 	   break;
 	   
 	 default:

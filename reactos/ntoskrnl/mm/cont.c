@@ -1,4 +1,4 @@
-/* $Id: cont.c,v 1.16 2001/12/31 19:06:47 dwelch Exp $
+/* $Id: cont.c,v 1.17 2002/01/01 00:21:55 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -74,7 +74,8 @@ MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
 	MmCreateVirtualMapping(NULL,
 			       BaseAddress + (i * 4096),
 			       PAGE_EXECUTE_READWRITE | PAGE_SYSTEM,
-			       (ULONG)(PBase + (i * 4096)));
+			       (ULONG)(PBase + (i * 4096)),
+			       TRUE);
      }
    return(BaseAddress);
 }

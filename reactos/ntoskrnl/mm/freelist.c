@@ -47,12 +47,6 @@ static LIST_ENTRY FreeZeroedPageListHead;
 static LIST_ENTRY FreeUnzeroedPageListHead;
 static LIST_ENTRY BiosPageListHead;
 
-NTSTATUS 
-MmCreateVirtualMappingUnsafe(struct _EPROCESS* Process,
-			     PVOID Address, 
-			     ULONG flProtect,
-			     ULONG PhysicalAddress);
-
 /* FUNCTIONS *************************************************************/
 
 PVOID
@@ -320,7 +314,8 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 						    (i * PAGESIZE)),
 					    PAGE_READWRITE,
 					    (ULONG)(LastPhysKernelAddress 
-						    - (i * PAGESIZE)));
+						    - (i * PAGESIZE)),
+					    FALSE);
 	     if (!NT_SUCCESS(Status))
 	       {
 		  DbgPrint("Unable to create virtual mapping\n");

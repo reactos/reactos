@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.31 2001/12/31 19:06:48 dwelch Exp $
+/* $Id: page.c,v 1.32 2002/01/01 00:21:57 dwelch Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -217,7 +217,7 @@ VOID MmFreePageTable(PEPROCESS Process, PVOID Address)
      }
 }
 
-NTSTATUS MmGetPageEntry2(PVOID PAddress, PULONG* Pte)
+NTSTATUS MmGetPageEntry2(PVOID PAddress, PULONG* Pte, BOOLEAN MayWait)
 /*
  * FUNCTION: Get a pointer to the page table entry for a virtual address
  */
@@ -240,7 +240,7 @@ NTSTATUS MmGetPageEntry2(PVOID PAddress, PULONG* Pte)
        else
 	 {
 	   NTSTATUS Status;
-	   Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, (PVOID*)&npage);
+	   Status = MmRequestPageMemoryConsumer(MC_NPPOOL, MayWait, (PVOID*)&npage);
 	   if (!NT_SUCCESS(Status))
 	     {
 	       return(Status);
@@ -803,7 +803,7 @@ MmCreateVirtualMappingForKernel(PVOID Address,
 	KeAttachProcess(Process);
      }
    
-   Status = MmGetPageEntry2(Address, &Pte);
+   Status = MmGetPageEntry2(Address, &Pte, FALSE);
    if (!NT_SUCCESS(Status))
      {
 	if (Process != NULL && Process != CurrentProcess)
@@ -878,7 +878,7 @@ MmCreatePageFileMapping(PEPROCESS Process,
 	KeAttachProcess(Process);
     }
   
-  Status = MmGetPageEntry2(Address, &Pte);
+  Status = MmGetPageEntry2(Address, &Pte, FALSE);
   if (!NT_SUCCESS(Status))
     {
 	if (Process != NULL && Process != CurrentProcess)
@@ -914,7 +914,8 @@ NTSTATUS
 MmCreateVirtualMappingUnsafe(PEPROCESS Process,
 			     PVOID Address, 
 			     ULONG flProtect,
-			     ULONG PhysicalAddress)
+			     ULONG PhysicalAddress,
+			     BOOLEAN MayWait)
 {
    PEPROCESS CurrentProcess;
    ULONG Attributes;
@@ -949,7 +950,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
 	KeAttachProcess(Process);
      }
    
-   Status = MmGetPageEntry2(Address, &Pte);
+   Status = MmGetPageEntry2(Address, &Pte, MayWait);
    if (!NT_SUCCESS(Status))
      {
 	if (Process != NULL && Process != CurrentProcess)
@@ -990,7 +991,8 @@ NTSTATUS
 MmCreateVirtualMapping(PEPROCESS Process,
 		       PVOID Address, 
 		       ULONG flProtect,
-		       ULONG PhysicalAddress)
+		       ULONG PhysicalAddress,
+		       BOOLEAN MayWait)
 {
   if (!MmIsUsablePage((PVOID)PhysicalAddress))
     {
@@ -1001,7 +1003,8 @@ MmCreateVirtualMapping(PEPROCESS Process,
   return(MmCreateVirtualMappingUnsafe(Process,
 				      Address,
 				      flProtect,
-				      PhysicalAddress));
+				      PhysicalAddress,
+				      MayWait));
 }
 
 ULONG

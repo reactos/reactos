@@ -57,8 +57,14 @@ extern inline PULONG get_page_directory(void)
 NTSTATUS MmCreateVirtualMapping(struct _EPROCESS* Process,
 				PVOID Address, 
 				ULONG flProtect,
-				ULONG PhysicalAddress);
-
+				ULONG PhysicalAddress,
+				BOOLEAN MayWait);
+NTSTATUS 
+MmCreateVirtualMappingUnsafe(struct _EPROCESS* Process,
+			     PVOID Address, 
+			     ULONG flProtect,
+			     ULONG PhysicalAddress,
+			     BOOLEAN MayWait);
 
 VOID MmSetPageProtect(struct _EPROCESS* Process,
 		      PVOID Address,

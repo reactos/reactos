@@ -313,7 +313,7 @@ MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
      }
    for (i=0; i<(PAGE_ROUND_UP(MemoryArea->Length)/PAGESIZE); i++)
      {
-       ULONG PhysAddr;
+       ULONG PhysAddr = 0;
        BOOL Dirty;
        SWAPENTRY SwapEntry = 0;
 
