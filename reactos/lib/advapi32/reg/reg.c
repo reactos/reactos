@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.26 2003/07/12 00:03:42 ekohl Exp $
+/* $Id: reg.c,v 1.27 2003/07/21 00:32:23 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -1811,7 +1811,7 @@ RegQueryMultipleValuesA (HKEY hKey,
 /************************************************************************
  *  RegQueryMultipleValuesW
  *
- * @unimplemented
+ * @implemented
  */
 LONG STDCALL
 RegQueryMultipleValuesW (HKEY hKey,
@@ -1820,9 +1820,44 @@ RegQueryMultipleValuesW (HKEY hKey,
 			 LPWSTR lpValueBuf,
 			 LPDWORD ldwTotsize)
 {
-  UNIMPLEMENTED;
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return ERROR_CALL_NOT_IMPLEMENTED;
+  int i;
+  DWORD maxBytes = *ldwTotsize;
+  HRESULT status;
+  LPSTR bufptr = (LPSTR)lpValueBuf;
+
+  if ( maxBytes >= (1024*1024) )
+    return ERROR_TRANSFER_TOO_LONG;
+
+  *ldwTotsize = 0;
+
+  TRACE("(%p,%p,%ld,%p,%p=%ld)\n", hkey, val_list, num_vals, lpValueBuf, ldwTotsize, *ldwTotsize);
+
+  for(i=0; i < num_vals; ++i)
+    {
+      val_list[i].ve_valuelen=0;
+      status = RegQueryValueExW(hkey, val_list[i].ve_valuename, NULL, NULL, NULL, &val_list[i].ve_valuelen);
+      if(status != ERROR_SUCCESS)
+	{
+          return status;
+	}
+
+      if(lpValueBuf != NULL && *ldwTotsize + val_list[i].ve_valuelen <= maxBytes)
+	{
+	  status = RegQueryValueExW(hkey, val_list[i].ve_valuename, NULL, &val_list[i].ve_type,
+				    bufptr, &val_list[i].ve_valuelen);
+	  if(status != ERROR_SUCCESS)
+	    {
+	      return status;
+	    }
+
+	  val_list[i].ve_valueptr = (DWORD_PTR)bufptr;
+
+	  bufptr += val_list[i].ve_valuelen;
+	}
+
+      *ldwTotsize += val_list[i].ve_valuelen;
+    }
+  return lpValueBuf != NULL && *ldwTotsize <= maxBytes ? ERROR_SUCCESS : ERROR_MORE_DATA;
 }
 
 
@@ -2166,7 +2201,7 @@ RegQueryValueW (HKEY hKey,
 /************************************************************************
  *  RegReplaceKeyA
  *
- * @unimplemented
+ * @implemented
  */
 LONG STDCALL
 RegReplaceKeyA (HKEY hKey,
@@ -2174,9 +2209,19 @@ RegReplaceKeyA (HKEY hKey,
 		LPCSTR lpNewFile,
 		LPCSTR lpOldFile)
 {
-  UNIMPLEMENTED;
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return ERROR_CALL_NOT_IMPLEMENTED;
+  UNICODE_STRING lpSubKeyW;
+  UNICODE_STRING lpNewFileW;
+  UNICODE_STRING lpOldFileW;
+  LONG ret;
+
+  RtlCreateUnicodeStringFromAsciiz( &lpSubKeyW, lpSubKey );
+  RtlCreateUnicodeStringFromAsciiz( &lpOldFileW, lpOldFile );
+  RtlCreateUnicodeStringFromAsciiz( &lpNewFileW, lpNewFile );
+  ret = RegReplaceKeyW( hkey, lpSubKeyW.Buffer, lpNewFileW.Buffer, lpOldFileW.Buffer );
+  RtlFreeUnicodeString( &lpOldFileW );
+  RtlFreeUnicodeString( &lpNewFileW );
+  RtlFreeUnicodeString( &lpSubKeyW );
+  return ret;
 }
 
 
@@ -2200,16 +2245,20 @@ RegReplaceKeyW (HKEY hKey,
 /************************************************************************
  *  RegRestoreKeyA
  *
- * @unimplemented
+ * @implemented
  */
 LONG STDCALL
 RegRestoreKeyA (HKEY hKey,
 		LPCSTR lpFile,
 		DWORD dwFlags)
 {
-  UNIMPLEMENTED;
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return ERROR_CALL_NOT_IMPLEMENTED;
+  UNICODE_STRING lpFileW;
+  LONG ret;
+
+  RtlCreateUnicodeStringFromAsciiz( &lpFileW, lpFile );
+  ret = RegRestoreKeyW( hkey, lpFileW.Buffer, dwFlags );
+  RtlFreeUnicodeString( &lpFileW );
+  return ret;
 }
 
 
@@ -2232,7 +2281,7 @@ RegRestoreKeyW (HKEY hKey,
 /************************************************************************
  *  RegSaveKeyA
  *
- * @unimplemented
+ * @implemented
  */
 LONG STDCALL
 RegSaveKeyA(HKEY hKey,
