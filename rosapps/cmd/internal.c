@@ -256,7 +256,8 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 	}
 	else
 	{
-		if (towupper(dir[0])!=lpOldPath[0])
+		GetCurrentDirectory(MAX_PATH, dir);
+		if (dir[0]!=lpOldPath[0])
 		{
 			SetCurrentDirectory(lpOldPath);
 			free(lpOldPath);
