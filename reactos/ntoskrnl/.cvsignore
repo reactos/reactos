@@ -4,3 +4,6 @@ ntoskrnl.coff
 objects
 temp.exp
 ntoskrnl.dbg
+bugcodes.rc
+msg*.bin
+

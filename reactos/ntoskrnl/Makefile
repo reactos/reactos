@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.61 2001/12/31 19:06:46 dwelch Exp $
+# $Id: Makefile,v 1.62 2002/01/03 14:51:25 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -52,6 +52,7 @@ OBJECTS_PATH = objects
 
 all: \
 	$(OBJECTS_PATH) \
+	bugcodes.rc \
 	$(TARGETNAME).nostrip.exe \
 	$(TARGETNAME).exe \
 	$(TARGETNAME).sym 
@@ -345,7 +346,7 @@ IE_DATA = \
 $(OBJECTS_PATH):
 	mkdir $(OBJECTS_PATH)
 
-$(OBJECTS_RESOURCE): $(TARGETNAME).rc $(PATH_TO_TOP)/include/reactos/resource.h
+$(OBJECTS_RESOURCE): $(TARGETNAME).rc bugcodes.rc $(PATH_TO_TOP)/include/reactos/resource.h
 
 #
 # Build subsystem intermediate objects
@@ -489,7 +490,7 @@ CLEAN_FILES = $(OBJECTS_PATH)/*.o cc/*.o cm/*.o dbg/*.o dbg/i386/*.o ex/*.o \
               rtl/*.o se/*.o ke/i386/*.o mm/i386/*.o fs/*.o po/*.o nls/*.o \
               lpc/*.o kd/*.o $(TARGETNAME).o junk.tmp base.tmp temp.exp \
               $(TARGETNAME).exe $(TARGETNAME).nostrip.exe $(TARGETNAME).sym \
-	            $(TARGETNAME).coff $(DEP_FILES)
+	          $(TARGETNAME).coff bugcodes.rc msg?????.bin $(DEP_FILES)
 
 $(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(IE_DATA)
 	$(CC) \
@@ -613,6 +614,12 @@ $(TARGETNAME).o: $(OBJECTS)
 		-r \
 		-o $(TARGETNAME).o \
 		$(OBJECTS)
+
+bugcodes.rc: ntoskrnl.mc
+	$(MC) \
+		-H $(PATH_TO_TOP)/include/reactos/bugcodes.h \
+		-o bugcodes.rc \
+		$(TARGETNAME).mc
 
 implib:
 	- $(DLLTOOL) \
