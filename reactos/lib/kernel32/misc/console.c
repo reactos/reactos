@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.44 2002/10/20 00:34:39 mdill Exp $
+/* $Id: console.c,v 1.45 2002/10/20 11:55:59 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -579,9 +579,9 @@ GetStdHandle(DWORD nStdHandle)
   Ppb = NtCurrentPeb()->ProcessParameters;  
   switch (nStdHandle)
     {
-    case STD_INPUT_HANDLE:	return Ppb->InputHandle;
-    case STD_OUTPUT_HANDLE:	return Ppb->OutputHandle;
-    case STD_ERROR_HANDLE:	return Ppb->ErrorHandle;
+    case STD_INPUT_HANDLE:	return Ppb->hStdInput;
+    case STD_OUTPUT_HANDLE:	return Ppb->hStdOutput;
+    case STD_ERROR_HANDLE:	return Ppb->hStdError;
     }
   SetLastError (ERROR_INVALID_PARAMETER);
   return INVALID_HANDLE_VALUE;
@@ -614,13 +614,13 @@ SetStdHandle(DWORD nStdHandle,
   switch (nStdHandle)
     {
     case STD_INPUT_HANDLE:
-      Ppb->InputHandle = hHandle;
+      Ppb->hStdInput = hHandle;
       return TRUE;
     case STD_OUTPUT_HANDLE:
-      Ppb->OutputHandle = hHandle;
+      Ppb->hStdOutput = hHandle;
       return TRUE;
     case STD_ERROR_HANDLE:
-      Ppb->ErrorHandle = hHandle;
+      Ppb->hStdError = hHandle;
       return TRUE;
     }
   SetLastError (ERROR_INVALID_PARAMETER);

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.31 2002/10/01 19:27:20 chorns Exp $
+/* $Id: process.c,v 1.32 2002/10/20 11:56:00 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -323,7 +323,7 @@ static NTSTATUS KlInitPeb (HANDLE ProcessHandle,
 
    /* create the PPB */
    PpbBase = NULL;
-   PpbSize = Ppb->MaximumLength;
+   PpbSize = Ppb->AllocationSize;
    Status = NtAllocateVirtualMemory(ProcessHandle,
 				    &PpbBase,
 				    0,
@@ -342,7 +342,7 @@ static NTSTATUS KlInitPeb (HANDLE ProcessHandle,
    NtWriteVirtualMemory(ProcessHandle,
 			PpbBase,
 			Ppb,
-			Ppb->MaximumLength,
+			Ppb->AllocationSize,
 			&BytesWritten);
    RtlNormalizeProcessParams (Ppb);
 

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.54 2002/10/01 19:27:19 chorns Exp $
+/* $Id: create.c,v 1.55 2002/10/20 11:56:00 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -477,7 +477,7 @@ KlInitPeb (HANDLE ProcessHandle,
 
    /* create the PPB */
    PpbBase = NULL;
-   PpbSize = Ppb->MaximumLength;
+   PpbSize = Ppb->AllocationSize;
    Status = NtAllocateVirtualMemory(ProcessHandle,
 				    &PpbBase,
 				    0,
@@ -493,7 +493,7 @@ KlInitPeb (HANDLE ProcessHandle,
    NtWriteVirtualMemory(ProcessHandle,
 			PpbBase,
 			Ppb,
-			Ppb->MaximumLength,
+			Ppb->AllocationSize,
 			&BytesWritten);
 
    /* write pointer to environment */
@@ -755,23 +755,23 @@ CreateProcessW(LPCWSTR lpApplicationName,
    /*
     * Translate some handles for the new process
     */
-   if (Ppb->CurrentDirectory.Handle)
+   if (Ppb->CurrentDirectoryHandle)
    {
       Status = NtDuplicateObject (NtCurrentProcess(), 
-	                 Ppb->CurrentDirectory.Handle,
+	                 Ppb->CurrentDirectoryHandle,
 			 hProcess,
-			 &Ppb->CurrentDirectory.Handle,
+			 &Ppb->CurrentDirectoryHandle,
 			 0,
 			 TRUE,
 			 DUPLICATE_SAME_ACCESS);
    }
 
-   if (Ppb->ConsoleHandle)
+   if (Ppb->hConsole)
    {
       Status = NtDuplicateObject (NtCurrentProcess(), 
-	                 Ppb->ConsoleHandle,
+	                 Ppb->hConsole,
 			 hProcess,
-			 &Ppb->ConsoleHandle,
+			 &Ppb->hConsole,
 			 0,
 			 TRUE,
 			 DUPLICATE_SAME_ACCESS);
@@ -819,31 +819,31 @@ CreateProcessW(LPCWSTR lpApplicationName,
      }
 
    // Set the child console handles 
-   Ppb->InputHandle = NtCurrentPeb()->ProcessParameters->InputHandle;
-   Ppb->OutputHandle = NtCurrentPeb()->ProcessParameters->OutputHandle;
-   Ppb->ErrorHandle = NtCurrentPeb()->ProcessParameters->ErrorHandle;
+   Ppb->hStdInput = NtCurrentPeb()->ProcessParameters->hStdInput;
+   Ppb->hStdOutput = NtCurrentPeb()->ProcessParameters->hStdOutput;
+   Ppb->hStdError = NtCurrentPeb()->ProcessParameters->hStdError;
 
    if (lpStartupInfo && (lpStartupInfo->dwFlags & STARTF_USESTDHANDLES))
    {
       if (lpStartupInfo->hStdInput)
-	 Ppb->InputHandle = lpStartupInfo->hStdInput;
+	 Ppb->hStdInput = lpStartupInfo->hStdInput;
       if (lpStartupInfo->hStdOutput)
-	 Ppb->OutputHandle = lpStartupInfo->hStdOutput;
+	 Ppb->hStdOutput = lpStartupInfo->hStdOutput;
       if (lpStartupInfo->hStdError)
-	 Ppb->ErrorHandle = lpStartupInfo->hStdError;
+	 Ppb->hStdError = lpStartupInfo->hStdError;
    }
 
-   if (IsConsoleHandle(Ppb->InputHandle))
+   if (IsConsoleHandle(Ppb->hStdInput))
    {
-      Ppb->InputHandle = CsrReply.Data.CreateProcessReply.InputHandle;
+      Ppb->hStdInput = CsrReply.Data.CreateProcessReply.InputHandle;
    }
    else
    {
       DPRINT("Duplicate input handle\n");
       Status = NtDuplicateObject (NtCurrentProcess(), 
-	                          Ppb->InputHandle,
+	                          Ppb->hStdInput,
 			          hProcess,
-			          &Ppb->InputHandle,
+			          &Ppb->hStdInput,
 			          0,
 			          TRUE,
 			          DUPLICATE_SAME_ACCESS);
@@ -853,17 +853,17 @@ CreateProcessW(LPCWSTR lpApplicationName,
       }
    }
 
-   if (IsConsoleHandle(Ppb->OutputHandle))
+   if (IsConsoleHandle(Ppb->hStdOutput))
    {
-      Ppb->OutputHandle = CsrReply.Data.CreateProcessReply.OutputHandle;
+      Ppb->hStdOutput = CsrReply.Data.CreateProcessReply.OutputHandle;
    }
    else
    {
       DPRINT("Duplicate output handle\n");
       Status = NtDuplicateObject (NtCurrentProcess(), 
-	                          Ppb->OutputHandle,
+	                          Ppb->hStdOutput,
 			          hProcess,
-			          &Ppb->OutputHandle,
+			          &Ppb->hStdOutput,
 			          0,
 			          TRUE,
 			          DUPLICATE_SAME_ACCESS);
@@ -872,17 +872,17 @@ CreateProcessW(LPCWSTR lpApplicationName,
 	 DPRINT("NtDuplicateObject failed, status %x\n", Status);
       }
    }
-   if (IsConsoleHandle(Ppb->ErrorHandle))
+   if (IsConsoleHandle(Ppb->hStdError))
    {
-      Ppb->ErrorHandle = CsrReply.Data.CreateProcessReply.OutputHandle;
+      Ppb->hStdError = CsrReply.Data.CreateProcessReply.OutputHandle;
    }
    else
    {
       DPRINT("Duplicate error handle\n");
       Status = NtDuplicateObject (NtCurrentProcess(), 
-	                          Ppb->ErrorHandle,
+	                          Ppb->hStdError,
 			          hProcess,
-			          &Ppb->ErrorHandle,
+			          &Ppb->hStdError,
 			          0,
 			          TRUE,
 			          DUPLICATE_SAME_ACCESS);
@@ -897,20 +897,20 @@ CreateProcessW(LPCWSTR lpApplicationName,
     */
    if (lpStartupInfo)
      {
-       Ppb->WindowFlags = lpStartupInfo->dwFlags;
-       if (Ppb->WindowFlags & STARTF_USESHOWWINDOW)
+       Ppb->dwFlags = lpStartupInfo->dwFlags;
+       if (Ppb->dwFlags & STARTF_USESHOWWINDOW)
 	 {
-	   Ppb->ShowWindowFlags = lpStartupInfo->wShowWindow;
+	   Ppb->wShowWindow = lpStartupInfo->wShowWindow;
 	 }
        else
 	 {
-	   Ppb->ShowWindowFlags = SW_SHOWDEFAULT;
+	   Ppb->wShowWindow = SW_SHOWDEFAULT;
 	 }
-       Ppb->StartingX = lpStartupInfo->dwX;
-       Ppb->StartingY = lpStartupInfo->dwY;
-       Ppb->CountX = lpStartupInfo->dwXSize;
-       Ppb->CountY = lpStartupInfo->dwYSize;
-       Ppb->FillAttribute = lpStartupInfo->dwFillAttribute;
+       Ppb->dwX = lpStartupInfo->dwX;
+       Ppb->dwY = lpStartupInfo->dwY;
+       Ppb->dwXSize = lpStartupInfo->dwXSize;
+       Ppb->dwYSize = lpStartupInfo->dwYSize;
+       Ppb->dwFillAttribute = lpStartupInfo->dwFillAttribute;
      }
    else
      {

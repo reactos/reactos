@@ -1,4 +1,4 @@
-/* $Id: ppb.c,v 1.15 2002/10/01 19:27:20 chorns Exp $
+/* $Id: ppb.c,v 1.16 2002/10/20 11:56:00 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -97,10 +97,10 @@ RtlCreateProcessParameters(PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
 	if (Environment == NULL)
 	  Environment  = NtCurrentPeb()->ProcessParameters->Environment;
 	if (CurrentDirectory == NULL)
-	  CurrentDirectory = &NtCurrentPeb()->ProcessParameters->CurrentDirectory.DosPath;
-	CurrentDirectoryHandle = NtCurrentPeb()->ProcessParameters->CurrentDirectory.Handle;
-	ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
-	ConsoleFlags = NtCurrentPeb()->ProcessParameters->ConsoleFlags;
+	  CurrentDirectory = &NtCurrentPeb()->ProcessParameters->CurrentDirectoryName;
+	CurrentDirectoryHandle = NtCurrentPeb()->ProcessParameters->CurrentDirectoryHandle;
+	ConsoleHandle = NtCurrentPeb()->ProcessParameters->hConsole;
+	ConsoleFlags = NtCurrentPeb()->ProcessParameters->ProcessGroup;
      }
    else
      {
@@ -156,33 +156,33 @@ RtlCreateProcessParameters(PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
 
    DPRINT ("Process parameters allocated\n");
 
-   Param->MaximumLength = RegionSize;
-   Param->Length = Length;
+   Param->AllocationSize = RegionSize;
+   Param->Size = Length;
    Param->Flags = PPF_NORMALIZED;
    Param->Environment = Environment;
-   Param->CurrentDirectory.Handle = CurrentDirectoryHandle;
-   Param->ConsoleHandle = ConsoleHandle;
-   Param->ConsoleFlags = ConsoleFlags;
+   Param->CurrentDirectoryHandle = CurrentDirectoryHandle;
+   Param->hConsole = ConsoleHandle;
+   Param->ProcessGroup = ConsoleFlags;
 
    Dest = (PWCHAR)(((PBYTE)Param) + sizeof(RTL_USER_PROCESS_PARAMETERS));
 
    /* copy current directory */
    RtlpCopyParameterString(&Dest,
-			   &Param->CurrentDirectory.DosPath,
+			   &Param->CurrentDirectoryName,
 			   CurrentDirectory,
 			   MAX_PATH * sizeof(WCHAR));
 
    /* make sure the current directory has a trailing backslash */
-   if (Param->CurrentDirectory.DosPath.Length > 0)
+   if (Param->CurrentDirectoryName.Length > 0)
      {
 	ULONG Length;
 
-	Length = Param->CurrentDirectory.DosPath.Length / sizeof(WCHAR);
-	if (Param->CurrentDirectory.DosPath.Buffer[Length-1] != L'\\')
+	Length = Param->CurrentDirectoryName.Length / sizeof(WCHAR);
+	if (Param->CurrentDirectoryName.Buffer[Length-1] != L'\\')
 	  {
-	     Param->CurrentDirectory.DosPath.Buffer[Length] = L'\\';
-	     Param->CurrentDirectory.DosPath.Buffer[Length + 1] = 0;
-	     Param->CurrentDirectory.DosPath.Length += sizeof(WCHAR);
+	     Param->CurrentDirectoryName.Buffer[Length] = L'\\';
+	     Param->CurrentDirectoryName.Buffer[Length + 1] = 0;
+	     Param->CurrentDirectoryName.Length += sizeof(WCHAR);
 	  }
      }
 
@@ -254,7 +254,7 @@ RtlDeNormalizeProcessParams(PRTL_USER_PROCESS_PARAMETERS Params)
 {
    if (Params && (Params->Flags & PPF_NORMALIZED))
      {
-	DENORMALIZE(Params->CurrentDirectory.DosPath.Buffer, Params);
+	DENORMALIZE(Params->CurrentDirectoryName.Buffer, Params);
 	DENORMALIZE(Params->DllPath.Buffer, Params);
 	DENORMALIZE(Params->ImagePathName.Buffer, Params);
 	DENORMALIZE(Params->CommandLine.Buffer, Params);
@@ -277,7 +277,7 @@ RtlNormalizeProcessParams(PRTL_USER_PROCESS_PARAMETERS Params)
 {
    if (Params && !(Params->Flags & PPF_NORMALIZED))
      {
-	NORMALIZE(Params->CurrentDirectory.DosPath.Buffer, Params);
+	NORMALIZE(Params->CurrentDirectoryName.Buffer, Params);
 	NORMALIZE(Params->DllPath.Buffer, Params);
 	NORMALIZE(Params->ImagePathName.Buffer, Params);
 	NORMALIZE(Params->CommandLine.Buffer, Params);

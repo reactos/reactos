@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.36 2002/09/08 10:22:42 chorns Exp $
+/* $Id: file.c,v 1.37 2002/10/20 11:55:59 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -259,15 +259,15 @@ GetFileType(HANDLE hFile)
    switch ((ULONG)hFile)
      {
 	case STD_INPUT_HANDLE:
-	  hFile = NtCurrentPeb()->ProcessParameters->InputHandle;
+	  hFile = NtCurrentPeb()->ProcessParameters->hStdInput;
 	  break;
 
 	case STD_OUTPUT_HANDLE:
-	  hFile = NtCurrentPeb()->ProcessParameters->OutputHandle;
+	  hFile = NtCurrentPeb()->ProcessParameters->hStdOutput;
 	  break;
 
 	case STD_ERROR_HANDLE:
-	  hFile = NtCurrentPeb()->ProcessParameters->ErrorHandle;
+	  hFile = NtCurrentPeb()->ProcessParameters->hStdError;
 	  break;
      }
 

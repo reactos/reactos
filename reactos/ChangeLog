@@ -1,3 +1,15 @@
+2002-10-20  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* include/napi/teb.h (RTL_USER_PROCESS_PARAMETERS): Use field names
+	as described in Windows NT/2000 Native API Reference.
+	* lib/kernel32/file/file.c: Use new field names.
+	* lib/kernel32/misc/console.c: Ditto.
+	* lib/kernel32/process/create.c: Ditto.
+	* lib/kernel32/process/proc.c: Ditto.
+	* lib/ntdll/rtl/path.c: Ditto.
+	* lib/ntdll/rtl/ppb.c: Ditto.
+	* lib/ntdll/rtl/process.c: Ditto.
+
 2002-10-19  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* include/ntos.h: Include relevant files.

@@ -33,36 +33,35 @@ typedef struct _PEB_FREE_BLOCK
 /* RTL_USER_PROCESS_PARAMETERS.Flags */
 #define PPF_NORMALIZED	(1)
 
-typedef struct _RTL_USER_PROCESS_PARAMETERS
-{
-   ULONG		MaximumLength;		//  00h
-   ULONG		Length;			//  04h
-   ULONG		Flags;			//  08h
-   ULONG		DebugFlags;		//  0Ch
-   PVOID		ConsoleHandle;		//  10h
-   ULONG		ConsoleFlags;		//  14h
-   HANDLE		InputHandle;		//  18h
-   HANDLE		OutputHandle;		//  1Ch
-   HANDLE		ErrorHandle;		//  20h
-   CURDIR		CurrentDirectory;	//  24h
-   UNICODE_STRING	DllPath;		//  30h
-   UNICODE_STRING	ImagePathName;		//  38h
-   UNICODE_STRING	CommandLine;		//  40h
-   PWSTR		Environment;		//  48h
-   ULONG		StartingX;		//  4Ch
-   ULONG		StartingY;		//  50h
-   ULONG		CountX;			//  54h
-   ULONG		CountY;			//  58h
-   ULONG		CountCharsX;		//  5Ch
-   ULONG		CountCharsY;		//  60h
-   ULONG		FillAttribute;		//  64h
-   ULONG		WindowFlags;		//  68h
-   ULONG		ShowWindowFlags;	//  6Ch
-   UNICODE_STRING	WindowTitle;		//  70h
-   UNICODE_STRING	DesktopInfo;		//  78h
-   UNICODE_STRING	ShellInfo;		//  80h
-   UNICODE_STRING	RuntimeInfo;		//  88h
-   RTL_DRIVE_LETTER_CURDIR DLCurrentDirectory[0x20]; // 90h
+typedef struct _RTL_USER_PROCESS_PARAMETERS {
+	ULONG  AllocationSize;
+	ULONG  Size;
+	ULONG  Flags;
+	ULONG  DebugFlags;
+	HANDLE  hConsole;
+	ULONG  ProcessGroup;
+	HANDLE  hStdInput;
+	HANDLE  hStdOutput;
+	HANDLE  hStdError;
+	UNICODE_STRING  CurrentDirectoryName;
+	HANDLE  CurrentDirectoryHandle;
+	UNICODE_STRING  DllPath;
+	UNICODE_STRING  ImagePathName;
+	UNICODE_STRING  CommandLine;
+	PWSTR  Environment;
+	ULONG  dwX;
+	ULONG  dwY;
+	ULONG  dwXSize;
+	ULONG  dwYSize;
+	ULONG  dwXCountChars;
+	ULONG  dwYCountChars;
+	ULONG  dwFillAttribute;
+	ULONG  dwFlags;
+	ULONG  wShowWindow;
+	UNICODE_STRING  WindowTitle;
+	UNICODE_STRING  DesktopInfo;
+	UNICODE_STRING  ShellInfo;
+	UNICODE_STRING  RuntimeInfo;
 } RTL_USER_PROCESS_PARAMETERS, *PRTL_USER_PROCESS_PARAMETERS;
 
 #define PEB_BASE        (0x7FFDF000)

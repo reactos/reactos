@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.46 2002/09/08 10:22:45 chorns Exp $
+/* $Id: proc.c,v 1.47 2002/10/20 11:56:00 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -389,22 +389,22 @@ GetStartupInfoW(LPSTARTUPINFOW lpStartupInfo)
    lpStartupInfo->cb = sizeof(STARTUPINFOW);
    lpStartupInfo->lpDesktop = Params->DesktopInfo.Buffer;
    lpStartupInfo->lpTitle = Params->WindowTitle.Buffer;
-   lpStartupInfo->dwX = Params->StartingX;
-   lpStartupInfo->dwY = Params->StartingY;
-   lpStartupInfo->dwXSize = Params->CountX;
-   lpStartupInfo->dwYSize = Params->CountY;
-   lpStartupInfo->dwXCountChars = Params->CountCharsX;
-   lpStartupInfo->dwYCountChars = Params->CountCharsY;
-   lpStartupInfo->dwFillAttribute = Params->FillAttribute;
-   lpStartupInfo->dwFlags = Params->Flags;
-   lpStartupInfo->wShowWindow = Params->ShowWindowFlags;
+   lpStartupInfo->dwX = Params->dwX;
+   lpStartupInfo->dwY = Params->dwY;
+   lpStartupInfo->dwXSize = Params->dwXSize;
+   lpStartupInfo->dwYSize = Params->dwYSize;
+   lpStartupInfo->dwXCountChars = Params->dwXCountChars;
+   lpStartupInfo->dwYCountChars = Params->dwYCountChars;
+   lpStartupInfo->dwFillAttribute = Params->dwFillAttribute;
+   lpStartupInfo->dwFlags = Params->dwFlags;
+   lpStartupInfo->wShowWindow = Params->wShowWindow;
    lpStartupInfo->lpReserved = Params->ShellInfo.Buffer;
    lpStartupInfo->cbReserved2 = Params->RuntimeInfo.Length;
    lpStartupInfo->lpReserved2 = (LPBYTE)Params->RuntimeInfo.Buffer;
 
-   lpStartupInfo->hStdInput = Params->InputHandle;
-   lpStartupInfo->hStdOutput = Params->OutputHandle;
-   lpStartupInfo->hStdError = Params->ErrorHandle;
+   lpStartupInfo->hStdInput = Params->hStdInput;
+   lpStartupInfo->hStdOutput = Params->hStdOutput;
+   lpStartupInfo->hStdError = Params->hStdError;
 }
 
 
@@ -451,21 +451,21 @@ GetStartupInfoA(LPSTARTUPINFOA lpStartupInfo)
 	                              TRUE);
 	lpLocalStartupInfo->lpReserved = AnsiString.Buffer;
 
-	lpLocalStartupInfo->dwX = Params->StartingX;
-	lpLocalStartupInfo->dwY = Params->StartingY;
-	lpLocalStartupInfo->dwXSize = Params->CountX;
-	lpLocalStartupInfo->dwYSize = Params->CountY;
-	lpLocalStartupInfo->dwXCountChars = Params->CountCharsX;
-	lpLocalStartupInfo->dwYCountChars = Params->CountCharsY;
-	lpLocalStartupInfo->dwFillAttribute = Params->FillAttribute;
-	lpLocalStartupInfo->dwFlags = Params->Flags;
-	lpLocalStartupInfo->wShowWindow = Params->ShowWindowFlags;
+	lpLocalStartupInfo->dwX = Params->dwX;
+	lpLocalStartupInfo->dwY = Params->dwY;
+	lpLocalStartupInfo->dwXSize = Params->dwXSize;
+	lpLocalStartupInfo->dwYSize = Params->dwYSize;
+	lpLocalStartupInfo->dwXCountChars = Params->dwXCountChars;
+	lpLocalStartupInfo->dwYCountChars = Params->dwYCountChars;
+	lpLocalStartupInfo->dwFillAttribute = Params->dwFillAttribute;
+	lpLocalStartupInfo->dwFlags = Params->dwFlags;
+	lpLocalStartupInfo->wShowWindow = Params->wShowWindow;
 	lpLocalStartupInfo->cbReserved2 = Params->RuntimeInfo.Length;
 	lpLocalStartupInfo->lpReserved2 = (LPBYTE)Params->RuntimeInfo.Buffer;
 
-	lpLocalStartupInfo->hStdInput = Params->InputHandle;
-	lpLocalStartupInfo->hStdOutput = Params->OutputHandle;
-	lpLocalStartupInfo->hStdError = Params->ErrorHandle;
+	lpLocalStartupInfo->hStdInput = Params->hStdInput;
+	lpLocalStartupInfo->hStdOutput = Params->hStdOutput;
+	lpLocalStartupInfo->hStdError = Params->hStdError;
      }
 
    RtlReleasePebLock ();

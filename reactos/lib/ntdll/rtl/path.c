@@ -1,4 +1,4 @@
-/* $Id: path.c,v 1.14 2002/09/08 10:23:06 chorns Exp $
+/* $Id: path.c,v 1.15 2002/10/20 11:56:00 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -252,7 +252,7 @@ RtlGetCurrentDirectory_U(ULONG MaximumLength,
 
 	DPRINT ("RtlGetCurrentDirectory %lu %p\n", MaximumLength, Buffer);
 
-	cd = &(NtCurrentPeb ()->ProcessParameters->CurrentDirectory);
+	cd = (PCURDIR)&(NtCurrentPeb ()->ProcessParameters->CurrentDirectoryName);
 
 	RtlAcquirePebLock();
 	Length = cd->DosPath.Length / sizeof(WCHAR);
@@ -304,7 +304,7 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING name)
    DPRINT ("RtlSetCurrentDirectory %wZ\n", name);
    
    RtlAcquirePebLock ();
-   cd = &NtCurrentPeb ()->ProcessParameters->CurrentDirectory;
+   cd = (PCURDIR)&NtCurrentPeb ()->ProcessParameters->CurrentDirectoryName;
    size = cd->DosPath.MaximumLength;
    
    buf = RtlAllocateHeap (RtlGetProcessHeap(),
@@ -516,7 +516,7 @@ CHECKPOINT;
 
 	RtlAcquirePebLock();
 
-	cd = &(NtCurrentPeb ()->ProcessParameters->CurrentDirectory);
+	cd = (PCURDIR)&(NtCurrentPeb ()->ProcessParameters->CurrentDirectoryName);
 DPRINT("type %ld\n", type);
 	switch (type)
 	{
@@ -707,7 +707,7 @@ RtlDosPathNameToNtPathName_U(PWSTR dosname,
 	if (nah)
 	{
 		memset (nah, 0, sizeof(CURDIR));
-		cd = &(NtCurrentPeb ()->ProcessParameters->CurrentDirectory);
+		cd = (PCURDIR)&(NtCurrentPeb ()->ProcessParameters->CurrentDirectoryName);
 		if (Type == 5 && cd->Handle &&
 		    !_wcsnicmp (cd->DosPath.Buffer, fullname, cd->DosPath.Length / 2))
 		{
