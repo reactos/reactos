@@ -257,61 +257,74 @@ BOOL IsAnyDesktopRunning()
 }
 
 
-static void draw_desktop_background(HWND hwnd, HDC hdc)
-{
-	ClientRect rect(hwnd);
-
-	PaintDesktop(hdc);
-/*
-	HBRUSH bkgndBrush = CreateSolidBrush(RGB(0,32,160));	// dark blue
-	FillRect(hdc, &rect, bkgndBrush);
-	DeleteBrush(bkgndBrush);
-*/
-
-	rect.left = rect.right - 280;
-	rect.top = rect.bottom - 56 - DESKTOPBARBAR_HEIGHT;
-	rect.right = rect.left + 250;
-	rect.bottom = rect.top + 40;
-
-#include "../buildno.h"
-	static const LPCTSTR BkgndText = TEXT("ReactOS ")TEXT(KERNEL_VERSION_STR)TEXT(" Explorer\nby Martin Fuchs");
-
-	BkMode bkMode(hdc, TRANSPARENT);
-
-	TextColor textColor(hdc, RGB(128,128,192));
-	DrawText(hdc, BkgndText, -1, &rect, DT_RIGHT);
-
-	SetTextColor(hdc, RGB(255,255,255));
-	--rect.right;
-	++rect.top;
-	DrawText(hdc, BkgndText, -1, &rect, DT_RIGHT);
-}
-
-
 BackgroundWindow::BackgroundWindow(HWND hwnd)
  :	super(hwnd)
 {
 	 // set background brush for the short moment of displaying the
 	 // background color while moving foreground windows
 	SetClassLong(hwnd, GCL_HBRBACKGROUND, COLOR_BACKGROUND+1);
+
+	_display_version = RegGetDWORDValue(HKEY_CURRENT_USER, TEXT("Control Panel\\Desktop"), TEXT("PaintDesktopVersion"), 1);
 }
 
 LRESULT BackgroundWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	switch(nmsg) {
 	  case WM_ERASEBKGND:
-		PaintDesktop((HDC)wparam);
+		DrawDesktopBkgnd((HDC)wparam);
 		return TRUE;
 
 	  case WM_MBUTTONDBLCLK:
 		explorer_show_frame(SW_SHOWNORMAL);
 		break;
 
+	  case PM_DISPLAY_VERSION:
+		if (lparam || wparam) {
+			DWORD or_mask = wparam;
+			DWORD reset_mask = LOWORD(lparam);
+			DWORD xor_mask = HIWORD(lparam);
+			_display_version = ((_display_version&~reset_mask) | or_mask) ^ xor_mask;
+			InvalidateRect(_hwnd, NULL, TRUE);
+		}
+		return _display_version;
+
 	  default:
 		return super::WndProc(nmsg, wparam, lparam);
 	}
 
 	return 0;
+}
+
+void BackgroundWindow::DrawDesktopBkgnd(HDC hdc)
+{
+	PaintDesktop(hdc);
+
+/* special solid background
+	HBRUSH bkgndBrush = CreateSolidBrush(RGB(0,32,160));	// dark blue
+	FillRect(hdc, &rect, bkgndBrush);
+	DeleteBrush(bkgndBrush);
+*/
+	if (_display_version) {
+		ClientRect rect(_hwnd);
+
+		rect.left = rect.right - 280;
+		rect.top = rect.bottom - 56 - DESKTOPBARBAR_HEIGHT;
+		rect.right = rect.left + 250;
+		rect.bottom = rect.top + 40;
+
+	#include "../buildno.h"
+		static const LPCTSTR BkgndText = TEXT("ReactOS ")TEXT(KERNEL_VERSION_STR)TEXT(" Explorer\nby Martin Fuchs");
+
+		BkMode bkMode(hdc, TRANSPARENT);
+
+		TextColor textColor(hdc, RGB(128,128,192));
+		DrawText(hdc, BkgndText, -1, &rect, DT_RIGHT);
+
+		SetTextColor(hdc, RGB(255,255,255));
+		--rect.right;
+		++rect.top;
+		DrawText(hdc, BkgndText, -1, &rect, DT_RIGHT);
+	}
 }
 
 
@@ -436,10 +449,6 @@ LRESULT	DesktopWindow::Init(LPCREATESTRUCT pcs)
 LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	switch(nmsg) {
-	  case WM_PAINT:
-		draw_desktop_background(_hwnd, PaintCanvas(_hwnd));
-		break;
-
 	  case WM_LBUTTONDBLCLK:
 	  case WM_RBUTTONDBLCLK:
 	  case WM_MBUTTONDBLCLK:
@@ -553,6 +562,9 @@ LRESULT	DesktopShellView::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 	  case PM_GET_ICON_ALGORITHM:
 		return _icon_algo;
+
+	  case PM_DISPLAY_VERSION:
+		return SendMessage(_hwndListView, nmsg, wparam, lparam);
 
 	  default:
 		return super::WndProc(nmsg, wparam, lparam);

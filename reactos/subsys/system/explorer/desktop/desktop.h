@@ -28,6 +28,7 @@
 
 #define	PM_SET_ICON_ALGORITHM	(WM_APP+0x19)
 #define	PM_GET_ICON_ALGORITHM	(WM_APP+0x1A)
+#define	PM_DISPLAY_VERSION		(WM_APP+0x24)
 
 
  /// subclassed Background window behind the visible desktop window
@@ -39,6 +40,10 @@ struct BackgroundWindow : public SubclassedWindow
 
 protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+
+	void	DrawDesktopBkgnd(HDC hdc);
+
+	int		_display_version;
 };
 
 
