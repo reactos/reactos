@@ -1,4 +1,4 @@
-/* $Id: bitmap.c,v 1.1 2000/03/09 00:14:10 ekohl Exp $
+/* $Id: bitmap.c,v 1.2 2000/11/19 15:58:58 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,8 +11,13 @@
 #include <ddk/ntddk.h>
 
 
+#define NDEBUG
+#include <ntdll/ntdll.h>
+
 #define ALIGN(x,align)	(((x)+(align)-1) / (align))
 
+
+/* FUNCTIONS *****************************************************************/
 
 VOID
 STDCALL
@@ -38,14 +43,14 @@ RtlAreBitsClear (
 	ULONG Size = BitMapHeader->SizeOfBitMap;
 	ULONG Shift;
 	ULONG Count;
-	PCHAR Ptr;
+	PUCHAR Ptr;
 
 	if (StartingIndex >= Size ||
 	    !Length ||
 	    (StartingIndex + Length > Size))
 		return FALSE;
 
-	Ptr = (PCHAR)BitMapHeader->Buffer + (StartingIndex / 8);
+	Ptr = (PUCHAR)BitMapHeader->Buffer + (StartingIndex / 8);
 	while (Length)
 	{
 		/* get bit shift in current byte */
@@ -55,9 +60,10 @@ RtlAreBitsClear (
 		Count = (Length > 8 - Shift) ? 8 - Shift : Length;
 
 		/* check byte */
-		if (*Ptr++ & (~(0xFF << Count) << Shift))
+		if (*Ptr & (~(0xFF << Count) << Shift))
 			return FALSE;
 
+		Ptr++;
 		Length -= Count;
 		StartingIndex += Count;
 	}
@@ -77,14 +83,15 @@ RtlAreBitsSet (
 	ULONG Size = BitMapHeader->SizeOfBitMap;
 	ULONG Shift;
 	ULONG Count;
-	PCHAR Ptr;
+	PUCHAR Ptr;
+	UCHAR Check;
 
 	if (StartingIndex >= Size ||
 	    !Length ||
 	    (StartingIndex + Length > Size))
 		return FALSE;
 
-	Ptr = (PCHAR)BitMapHeader->Buffer + (StartingIndex / 8);
+	Ptr = (PUCHAR)BitMapHeader->Buffer + (StartingIndex / 8);
 	while (Length)
 	{
 		/* get bit shift in current byte */
@@ -93,10 +100,14 @@ RtlAreBitsSet (
 		/* get number of bits to check in current byte */
 		Count = (Length > 8 - Shift) ? 8 - Shift : Length;
 
+		/* bulid check byte */
+		Check = ~(0xFF << Count) << Shift;
+
 		/* check byte */
-		if (~*Ptr++ & (~(0xFF << Count) << Shift))
+		if ((*Ptr & Check) != Check)
 			return FALSE;
 
+		Ptr++;
 		Length -= Count;
 		StartingIndex += Count;
 	}
@@ -146,7 +157,9 @@ RtlClearBits (
 		Count = (NumberToClear > 8 - Shift ) ? 8 - Shift : NumberToClear;
 
 		/* adjust byte */
-		*Ptr++ &= ~(~(0xFF << Count) << Shift);
+		*Ptr &= ~(~(0xFF << Count) << Shift);
+
+		Ptr++;
 		NumberToClear -= Count;
 		StartingIndex += Count;
 	}
@@ -640,7 +653,9 @@ RtlSetBits (
 		Count = (NumberToSet > 8 - Shift) ? 8 - Shift : NumberToSet;
 
 		/* adjust byte */
-		*Ptr++ |= ~(0xFF << Count) << Shift;
+		*Ptr |= ~(0xFF << Count) << Shift;
+
+		Ptr++;
 		NumberToSet -= Count;
 		StartingIndex += Count;
 	}
