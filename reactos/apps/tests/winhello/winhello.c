@@ -103,11 +103,11 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
           TextOut(hDC, 10, 50, sir, 20);
 	  EndPaint(hWnd, &ps);
 	  break;
-	  
+
 	case WM_DESTROY:
 	  PostQuitMessage(0);
 	  break;
-	  
+
 	default:
 	  return DefWindowProc(hWnd, msg, wParam, lParam);
 	}

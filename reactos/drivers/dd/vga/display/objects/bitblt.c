@@ -8,7 +8,7 @@
 
 typedef BOOL (*PFN_VGABlt)(SURFOBJ*, SURFOBJ*, XLATEOBJ*, RECTL*, POINTL*);
 
-BOOL 
+BOOL
 DIBtoVGA(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
 	 RECTL *DestRect, POINTL *SourcePoint)
 {
@@ -16,25 +16,25 @@ DIBtoVGA(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
   BYTE  *GDIpos, *initial, *tMask, *lMask;
 
   GDIpos = Source->pvBits;
-  
+
   dx = DestRect->right  - DestRect->left;
   dy = DestRect->bottom - DestRect->top;
-  
+
   alterx = abs(SourcePoint->x - DestRect->left);
   altery = abs(SourcePoint->y - DestRect->top);
 
   if (ColorTranslation == NULL)
-    {      
-      DIB_BltToVGA(DestRect->left, DestRect->top, dx, dy, Source->pvBits, 
+    {
+      DIB_BltToVGA(DestRect->left, DestRect->top, dx, dy, Source->pvBits,
 		   Source->lDelta);
-    } 
+    }
   else
     {
       /* Perform color translation */
       for (j = SourcePoint->y; j < SourcePoint->y+dy; j++)
 	{
 	  initial = GDIpos;
-	  
+
 	  for (i=SourcePoint->x; i<SourcePoint->x+dx; i++)
 	    {
 	      idxColor = XLATEOBJ_iXlate(ColorTranslation, *GDIpos);
@@ -97,7 +97,7 @@ DFBtoVGA(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
   // Do DFBs need color translation??
 }
 
-BOOL 
+BOOL
 VGAtoDFB(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
 	 RECTL *DestRect, POINTL *SourcePoint)
 {
@@ -200,14 +200,14 @@ VGADDI_BltBrush(SURFOBJ* Dest, XLATEOBJ* ColorTranslation, RECTL* DestRect,
 
   /* Fill any pixels on the left which don't fall into a full row of eight. */
   if ((DestRect->left % 8) != 0)
-    {      
+    {
       /* Disable writes to pixels outside of the destination rectangle. */
       Mask = (1 << (8 - (DestRect->left % 8))) - 1;
       if ((DestRect->right - DestRect->left) < (8 - (DestRect->left % 8)))
 	{
 	  Mask &= ~((1 << (8 - (DestRect->right % 8))) - 1);
 	}
-      WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x8);
+      WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x08);
       WRITE_PORT_UCHAR((PUCHAR)GRA_D, Mask);
 
       /* Write the same color to each pixel. */
@@ -220,7 +220,7 @@ VGADDI_BltBrush(SURFOBJ* Dest, XLATEOBJ* ColorTranslation, RECTL* DestRect,
     }
 
   /* Enable writes to all pixels. */
-  WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x8);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x08);
   WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0xFF);
 
   /* Have we finished. */
@@ -231,9 +231,9 @@ VGADDI_BltBrush(SURFOBJ* Dest, XLATEOBJ* ColorTranslation, RECTL* DestRect,
 
   /* Fill any whole rows of eight pixels. */
   Left = (DestRect->left + 7) & ~0x7;
-  Length = (DestRect->right >> 3) - (Left >> 3);  
+  Length = (DestRect->right >> 3) - (Left >> 3);
   for (i = DestRect->top; i < DestRect->bottom; i++)
-    {      
+    {
       Video = (PUCHAR)vidmem + i * 80 + (Left >> 3);
       for (j = 0; j < Length; j++, Video++)
 	{
@@ -246,7 +246,7 @@ VGADDI_BltBrush(SURFOBJ* Dest, XLATEOBJ* ColorTranslation, RECTL* DestRect,
     {
       /* Disable writes to pixels outside the destination rectangle. */
       Mask = ~((1 << (8 - (DestRect->right % 8))) - 1);
-      WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x8);
+      WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x08);
       WRITE_PORT_UCHAR((PUCHAR)GRA_D, Mask);
 
       Video = (PUCHAR)vidmem + DestRect->top * 80 + (DestRect->right >> 3);
@@ -259,7 +259,7 @@ VGADDI_BltBrush(SURFOBJ* Dest, XLATEOBJ* ColorTranslation, RECTL* DestRect,
 	}
 
       /* Restore the default write masks. */
-      WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x8);
+      WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x08);
       WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0xFF);
     }
   return(TRUE);
@@ -273,17 +273,17 @@ VGADDI_BltSrc(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
   BOOL EnumMore;
   PFN_VGABlt  BltOperation;
   ULONG SourceType;
-  
+
   SourceType = Source->iType;
 
   if (SourceType == STYPE_BITMAP && Dest->iType == STYPE_DEVICE)
     {
       BltOperation = DIBtoVGA;
-    } 
+    }
   else if (SourceType == STYPE_DEVICE && Dest->iType == STYPE_BITMAP)
     {
       BltOperation = VGAtoDIB;
-    } 
+    }
   else if (SourceType == STYPE_DEVICE && Dest->iType == STYPE_DEVICE)
     {
       BltOperation = VGAtoVGA;
@@ -313,12 +313,12 @@ VGADDI_BltMask(SURFOBJ *Dest, SURFOBJ *Mask, XLATEOBJ *ColorTranslation,
 {
   LONG i, j, dx, dy, idxColor, RGBulong = 0, c8;
   BYTE *initial, *tMask, *lMask;
-  
+
   dx = DestRect->right  - DestRect->left;
   dy = DestRect->bottom - DestRect->top;
-  
+
   if (ColorTranslation == NULL)
-    {      
+    {
       if (Mask != NULL)
 	{
 	  tMask = Mask->pvBits;
@@ -369,7 +369,7 @@ DrvBitBlt(SURFOBJ *Dest,
 			     BrushPoint, rop4));
 
     case SRCCOPY:
-      return(VGADDI_BltSrc(Dest, Source, ColorTranslation, DestRect, 
+      return(VGADDI_BltSrc(Dest, Source, ColorTranslation, DestRect,
 			   SourcePoint));
 
     case 0xAACC:

@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.20 2002/12/21 19:24:51 jfilby Exp $
+/* $Id: window.c,v 1.21 2003/01/24 22:42:15 jfilby Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -278,7 +278,7 @@ W32kCreateDesktopWindow(PWINSTATION_OBJECT WindowStation,
   /* Create the window object. */
   WindowObject = (PWINDOW_OBJECT)ObmCreateObject(WindowStation->HandleTable, 
 						 &Handle, 
-						 otWindow, 
+						 otWindow,
 						 sizeof(WINDOW_OBJECT));
   if (!WindowObject) 
     {
@@ -343,7 +343,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   POINT MaxSize, MaxPos, MinTrack, MaxTrack;
   CREATESTRUCTW Cs;
   LRESULT Result;
-  
+
   DPRINT("NtUserCreateWindowEx\n");
 
   /* Initialize gui state if necessary. */
@@ -391,11 +391,11 @@ NtUserCreateWindowEx(DWORD dwExStyle,
     }
 
   /* Create the window object. */
-  WindowObject = (PWINDOW_OBJECT) 
-    ObmCreateObject(PsGetWin32Process()->WindowStation->HandleTable, &Handle, 
+  WindowObject = (PWINDOW_OBJECT)
+    ObmCreateObject(PsGetWin32Process()->WindowStation->HandleTable, &Handle,
 		    otWindow, sizeof(WINDOW_OBJECT));
   DPRINT("Created object with handle %X\n", Handle);
-  if (!WindowObject) 
+  if (!WindowObject)
     {
       ObDereferenceObject(WinStaObject);
       ObmDereferenceObject(ClassObject);
@@ -422,18 +422,18 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->Self = Handle;
   WindowObject->MessageQueue = PsGetWin32Thread()->MessageQueue;
   WindowObject->Parent = ParentWindow;
-  InsertHeadList(&ParentWindow->ChildrenListHead, 
+  InsertHeadList(&ParentWindow->ChildrenListHead,
 		 &WindowObject->SiblingListEntry);
   InitializeListHead(&WindowObject->ChildrenListHead);
   InitializeListHead(&WindowObject->PropListHead);
 
   RtlInitUnicodeString(&WindowObject->WindowName, WindowName.Buffer);
   RtlFreeUnicodeString(&WindowName);
-  
+
   if (ClassObject->Class.cbWndExtra != 0)
     {
-      WindowObject->ExtraData = 
-	ExAllocatePool(PagedPool, 
+      WindowObject->ExtraData =
+	ExAllocatePool(PagedPool,
 		       ClassObject->Class.cbWndExtra * sizeof(DWORD));
       WindowObject->ExtraDataSize = ClassObject->Class.cbWndExtra;
     }
@@ -460,7 +460,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 		  &WindowObject->ThreadListEntry);
   ExReleaseFastMutexUnsafe (&PsGetWin32Thread()->WindowListLock);
 
-  /* 
+  /*
    * Insert the window into the list of windows associated with the thread's
    * desktop. 
    */

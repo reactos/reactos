@@ -1,4 +1,4 @@
-/* $Id: painting.c,v 1.7 2002/10/31 00:03:31 dwelch Exp $
+/* $Id: painting.c,v 1.8 2003/01/24 22:42:15 jfilby Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -229,7 +229,7 @@ PaintUpdateRgns(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
 	    {
 	      W32kCombineRgn(Window->UpdateRegion, Window->UpdateRegion,
 			     hRgn, RGN_OR);
-	      Window->UpdateRegion = 
+	      Window->UpdateRegion =
 		REGION_CropRgn(Window->UpdateRegion,
 			       Window->UpdateRegion, &Rect, NULL);
 	      if (!HadOne)
@@ -246,7 +246,7 @@ PaintUpdateRgns(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
 	    }
 	  else if (Window->UpdateRegion == 0)
 	    {
-	      Window->UpdateRegion = 
+	      Window->UpdateRegion =
 		REGION_CropRgn(Window->UpdateRegion, hRgn, &Rect, NULL);
 	      if (!HadOne)
 		{
@@ -673,7 +673,7 @@ PaintUpdateNCRegion(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
 	{
 	  if (Flags & UNC_UPDATE)
 	    {
-	      Window->UpdateRegion = 
+	      Window->UpdateRegion =
 		UnsafeW32kCreateRectRgnIndirect(&ClientRect);
 	    }
 	  if (Flags & UNC_REGION)
@@ -692,7 +692,7 @@ PaintUpdateNCRegion(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
       else if (Window->UpdateRegion == (HANDLE)1 && Flags & UNC_UPDATE)
 	{
 	  W32kGetClientRect(Window, &ClientRect);
-	  Window->UpdateRegion = 
+	  Window->UpdateRegion =
 	    UnsafeW32kCreateRectRgnIndirect(&ClientRect);
 	  if (Flags & UNC_REGION)
 	    {
@@ -721,7 +721,9 @@ PaintUpdateNCRegion(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
 	  hClip = W32kCreateRectRgn(0, 0, 0, 0);
 	  W32kCombineRgn(hClip, hRgnRet, 0, RGN_COPY);
 	}
+
       NtUserSendMessage(Window->Self, WM_NCPAINT, (WPARAM)hClip, 0);
+
       if (hClip > (HANDLE)1 && hClip != hRgn && hClip != hRgnRet)
 	{
 	  W32kDeleteObject(hClip);
@@ -758,7 +760,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
     {
       return(NULL);
     }
-
+  if (Window->Flags & WINDOWOBJECT_NEED_ERASEBACKGRD) { DbgPrint("[ayes:0]"); } else { DbgPrint("[ano:0]"); } /*testing*/
   IsIcon = Window->Style & WS_MINIMIZE &&
     NtUserGetClassLong(Window->Self, GCL_HICON);
 
@@ -771,7 +773,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
 
   UpdateRegion = Window->UpdateRegion;
   Window->UpdateRegion = 0;
-  if (UpdateRegion != NULL || 
+  if (UpdateRegion != NULL ||
       (Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT))
     {
       MsqDecPaintCountQueue(Window->MessageQueue);
@@ -779,6 +781,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
   Window->Flags &= ~WINDOWOBJECT_NEED_INTERNALPAINT;
 
   /* FIXME: Hide claret. */
+
 
   if (NtUserGetClassLong(Window->Self, GCL_STYLE) & CS_PARENTDC)
     {
@@ -815,6 +818,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
   if (Window->Flags & WINDOWOBJECT_NEED_ERASEBACKGRD)
     {
       BOOLEAN Result;
+DbgPrint("[dne:0]");
       Window->Flags &= ~WINDOWOBJECT_NEED_ERASEBACKGRD;
       Result = NtUserSendMessage(hWnd,
 				 IsIcon ? WM_ICONERASEBKGND : WM_ERASEBKGND,
@@ -824,6 +828,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
     }
   else
     {
+DbgPrint("[dne:1]");
       lPs->fErase = FALSE;
     }
 

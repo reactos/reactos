@@ -1,4 +1,4 @@
-/* $Id: scrollbar.c,v 1.3 2002/12/22 10:50:04 jfilby Exp $
+/* $Id: scrollbar.c,v 1.4 2003/01/24 22:42:15 jfilby Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -35,9 +35,9 @@
  * the top. Return TRUE if the scrollbar is vertical, FALSE if horizontal.
  */
 static BOOL
-SCROLL_GetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect /* ,
-			 PINT arrowSize, PINT thumbSize, PINT thumbPos */ )
+SCROLL_GetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect)
 {
+  SCROLLBARINFO info;
   INT pixels, thumbSize, arrowSize;
   BOOL vertical;
   RECT ClientRect = Window->ClientRect;
@@ -91,20 +91,21 @@ SCROLL_GetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect /* ,
   else
     pixels = lprect->right - lprect->left;
 
+  info.cbSize = sizeof(SCROLLBARINFO);
+  SCROLL_GetScrollBarInfo (Window, nBar, &info);
+
   if (pixels <= 2 * NtUserGetSystemMetrics (SM_CXVSCROLL) + SCROLL_MIN_RECT)
     {
-/*      info.dxyLineButton = info.xyThumbTop = info.xyThumbBottom = 0; */
+      info.dxyLineButton = info.xyThumbTop = info.xyThumbBottom = 0;
     }
   else
     {
-      SCROLLBARINFO info;
-      info.cbSize = sizeof(SCROLLBARINFO);
-
-      SCROLL_GetScrollBarInfo (Window, nBar, &info);
-
       arrowSize = NtUserGetSystemMetrics (SM_CXVSCROLL);
-      pixels -=
-	(2 * (NtUserGetSystemMetrics (SM_CXVSCROLL) - SCROLL_ARROW_THUMB_OVERLAP));
+      pixels -= (2 * (NtUserGetSystemMetrics (SM_CXVSCROLL) - SCROLL_ARROW_THUMB_OVERLAP));
+
+      /* Temporary initialization - to be removed once proper code is in */
+      info.dxyLineButton = info.xyThumbTop = info.xyThumbBottom = 0;
+
 /*        if (info->Page)
         {
 	    thumbSize = MulDiv(pixels,info->Page,(info->MaxVal-info->MinVal+1));
@@ -136,13 +137,16 @@ DWORD SCROLL_CreateScrollBar(PWINDOW_OBJECT Window, LONG idObject)
 {
   PSCROLLBARINFO psbi;
   LRESULT Result;
-  int thumbSize = 20, arrowSize = 20, thumbPos = 1;
+  INT i;
 
-  Result = WinPosGetNonClientSize(Window->Self, 
+  Result = WinPosGetNonClientSize(Window->Self,
 				  &Window->WindowRect,
 				  &Window->ClientRect);
 
   psbi = ExAllocatePool(NonPagedPool, sizeof(SCROLLBARINFO));
+
+  for (i=0; i<CCHILDREN_SCROLLBAR+1; i++)
+    psbi->rgstate[i] = 0;
 
   switch(idObject)
   {
@@ -159,7 +163,7 @@ DWORD SCROLL_CreateScrollBar(PWINDOW_OBJECT Window, LONG idObject)
       return FALSE;
   }
 
-  SCROLL_GetScrollBarRect (Window, idObject, &(psbi->rcScrollBar) /* , &arrowSize, &thumbSize, &thumbPos */ );
+  SCROLL_GetScrollBarRect (Window, idObject, &(psbi->rcScrollBar));
 
   return 0;
 }

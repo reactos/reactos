@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.16 2002/11/24 20:13:43 jfilby Exp $
+/* $Id: defwnd.c,v 1.17 2003/01/24 22:42:15 jfilby Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -152,7 +152,7 @@ UserHasThickFrameStyle(ULONG Style, ULONG ExStyle)
 	 (!((Style & (WS_DLGFRAME | WS_BORDER)) == WS_DLGFRAME)));
 }
 
-ULONG 
+ULONG
 UserHasThinFrameStyle(ULONG Style, ULONG ExStyle)
 {
   return((Style & WS_BORDER) ||
@@ -178,8 +178,8 @@ void UserGetInsideRectNC( HWND hwnd, RECT *rect )
   rect->top    = rect->left = 0;
   rect->right  = WindowRect.right - WindowRect.left;
   rect->bottom = WindowRect.bottom - WindowRect.top;
-  
-  if (Style & WS_ICONIC) 
+
+  if (Style & WS_ICONIC)
     {
       return;
     }
@@ -194,7 +194,7 @@ void UserGetInsideRectNC( HWND hwnd, RECT *rect )
       {
 	if (UserHasDlgFrameStyle(Style, ExStyle ))
 	  {
-	    InflateRect( rect, -GetSystemMetrics(SM_CXDLGFRAME), 
+	    InflateRect( rect, -GetSystemMetrics(SM_CXDLGFRAME),
 			 -GetSystemMetrics(SM_CYDLGFRAME));
 	    /* FIXME: this isn't in NC_AdjustRect? why not? */
 	    if (ExStyle & WS_EX_DLGMODALFRAME)
@@ -204,7 +204,7 @@ void UserGetInsideRectNC( HWND hwnd, RECT *rect )
 	  {
 	    if (UserHasThinFrameStyle(Style, ExStyle))
 	      {
-		InflateRect(rect, -GetSystemMetrics(SM_CXBORDER), 
+		InflateRect(rect, -GetSystemMetrics(SM_CXBORDER),
 			    -GetSystemMetrics(SM_CYBORDER));
 	      }
 	  }
@@ -344,7 +344,7 @@ VOID
 UserDrawFrameNC(HDC hdc, RECT* rect, BOOL dlgFrame, BOOL active)
 {
   INT width, height;
-  
+
   if (dlgFrame)
     {
       width = GetSystemMetrics(SM_CXDLGFRAME) - 1;
@@ -447,7 +447,7 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
       Rectangle(hDc, 0, 0, rect.right, rect.bottom);
       InflateRect(&rect, -1, -1);
     }
-  
+
   if (UserHasThickFrameStyle(Style, ExStyle))
     {
       UserDrawFrameNC(hDc, &rect, FALSE, Active);
@@ -456,18 +456,19 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
     {
       UserDrawFrameNC(hDc, &rect, TRUE, Active);
     }
-  
+
   if (Style & WS_CAPTION)
     {
       RECT r = rect;
       r.bottom = rect.top + GetSystemMetrics(SM_CYSIZE);
-      rect.top += GetSystemMetrics(SM_CYSIZE) + 
+      rect.top += GetSystemMetrics(SM_CYSIZE) +
 	GetSystemMetrics(SM_CYBORDER);
       UserDrawCaptionNC(hDc, &r, hWnd, Style, Active);
     }
 
   /* FIXME: Draw menu bar. */
 
+DbgPrint("drawing scrollbars..\n");
   /* Draw scrollbars */
   if (Style & WS_VSCROLL)
       SCROLL_DrawScrollBar(hWnd, hDc, SB_VERT, TRUE, TRUE);
@@ -475,7 +476,7 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
       SCROLL_DrawScrollBar(hWnd, hDc, SB_HORZ, TRUE, TRUE);
 
   /* FIXME: Draw size box. */
-  
+
   ReleaseDC(hWnd, hDc);
 }
 
@@ -567,9 +568,9 @@ DefWndHitTestNC(HWND hWnd, POINT Point)
 		}
 	      return(HTRIGHT);
 	    }
-	}      
+	}
     }
-  else 
+  else
     {
       if (UserHasDlgFrameStyle(Style, ExStyle))
 	{
@@ -589,7 +590,7 @@ DefWndHitTestNC(HWND hWnd, POINT Point)
 
   if ((Style & WS_CAPTION) == WS_CAPTION)
     {
-      WindowRect.top += GetSystemMetrics(SM_CYCAPTION) - 
+      WindowRect.top += GetSystemMetrics(SM_CYCAPTION) -
 	GetSystemMetrics(SM_CYBORDER);
       if (!PtInRect(&WindowRect, Point))
 	{
@@ -685,7 +686,7 @@ DefWndTrackMinMaxBox(HWND hWnd, WPARAM wParam)
 
   for(;;)
     {
-      BOOL OldState = Pressed;      
+      BOOL OldState = Pressed;
 
       GetMessageA(hWnd, &Msg, 0, 0);
       if (Msg.message == WM_LBUTTONUP)
@@ -1134,9 +1135,9 @@ User32DefWindowProc(HWND hWnd,
 		RECT WindowRect;
 		INT x, y;
 		GetWindowRect(hWnd, &WindowRect);
-		x = (WindowRect.right - WindowRect.left - 
+		x = (WindowRect.right - WindowRect.left -
 		     GetSystemMetrics(SM_CXICON)) / 2;
-		y = (WindowRect.bottom - WindowRect.top - 
+		y = (WindowRect.bottom - WindowRect.top -
 		     GetSystemMetrics(SM_CYICON)) / 2;
 		DrawIcon(hDc, x, y, hIcon);
 	      }
@@ -1151,7 +1152,7 @@ User32DefWindowProc(HWND hWnd,
 	hRgn = CreateRectRgn(0, 0, 0, 0);
 	if (GetUpdateRgn(hWnd, hRgn, FALSE) != NULLREGION)
 	  {
-	    RedrawWindow(hWnd, NULL, hRgn, 
+	    RedrawWindow(hWnd, NULL, hRgn,
 			 RDW_ERASENOW | RDW_ERASE | RDW_FRAME |
 			 RDW_ALLCHILDREN);
 	  }
@@ -1358,7 +1359,7 @@ User32DefWindowProc(HWND hWnd,
 	INT Index = (wParam != 0) ? GCL_HICON : GCL_HICONSM;
 	HICON hOldIcon = (HICON)GetClassLongW(hWnd, Index);
 	SetClassLongW(hWnd, Index, lParam);
-	SetWindowPos(hWnd, 0, 0, 0, 0, 0, 
+	SetWindowPos(hWnd, 0, 0, 0, 0, 0,
 		     SWP_FRAMECHANGED | SWP_NOSIZE | SWP_NOMOVE |
 		     SWP_NOACTIVATE | SWP_NOZORDER);
 	return((LRESULT)hOldIcon);
