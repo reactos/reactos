@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.83 2004/05/11 20:44:29 gvg Exp $
+/* $Id: create.c,v 1.84 2004/05/15 19:24:59 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -861,6 +861,7 @@ CreateProcessW
    BOOL InputDup, OutputDup, ErrorDup;
    WCHAR Name[MAX_PATH];
    WCHAR *TidyCmdLine;
+   BOOL IsBatchFile = FALSE;
 
    DPRINT("CreateProcessW(lpApplicationName '%S', lpCommandLine '%S')\n",
 	   lpApplicationName, lpCommandLine);
@@ -939,6 +940,7 @@ CreateProcessW
    if (e != NULL && (!_wcsicmp(e, L".bat") || !_wcsicmp(e, L".cmd")))
    {
        // the command is a batch file
+       IsBatchFile = TRUE;
        if (lpApplicationName != NULL && lpApplicationName[0])
        {
 	  // FIXME: use COMSPEC for the command interpreter
@@ -978,10 +980,11 @@ CreateProcessW
     * Process the application name and command line
     */
    RtlInitUnicodeString(&ImagePathName_U, ImagePathName);
-   RtlInitUnicodeString(&CommandLine_U, TidyCmdLine);
+   RtlInitUnicodeString(&CommandLine_U, IsBatchFile ? lpCommandLine : TidyCmdLine);
 
-   DPRINT("ImagePathName_U %S\n", ImagePathName_U.Buffer);
-   DPRINT("CommandLine_U %S\n", CommandLine_U.Buffer);
+   DPRINT("ImagePathName_U '%S'\n", ImagePathName_U.Buffer);
+   DPRINT("lpCommandLine '%S'\n", lpCommandLine);
+   DPRINT("TidyCmdLine '%S'\n", TidyCmdLine);
 
    /* Initialize the current directory string */
    if (lpCurrentDirectory != NULL)
