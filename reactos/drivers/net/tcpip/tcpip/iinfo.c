@@ -33,7 +33,7 @@ TDI_STATUS InfoTdiQueryGetInterfaceMIB(TDIEntityID *ID,
 
     RtlZeroMemory( OutData, sizeof(IFENTRY) + MAX_IFDESCR_LEN );
 
-    OutData->Index = ID->tei_instance + 1; 
+    OutData->Index = Interface->Index;
     /* viz: tcpip keeps those indices */
     OutData->Type = Interface == 
         Loopback ? MIB_IF_TYPE_LOOPBACK : MIB_IF_TYPE_ETHERNET;
@@ -104,5 +104,7 @@ TDI_STATUS InfoInterfaceTdiSetEx( UINT InfoClass,
 				  TDIEntityID *id,
 				  PCHAR Buffer,
 				  UINT BufferSize ) {
+    TI_DbgPrint("Got Request: Class %x Type %x Id %x, EntityID %x:%x\n",
+                InfoClass, InfoId, id->tei_entity, id->tei_instance);
     return TDI_INVALID_REQUEST;
 }

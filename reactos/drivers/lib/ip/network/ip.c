@@ -244,12 +244,28 @@ BOOLEAN IPRegisterInterface(
  */
 {
     KIRQL OldIrql;
+    UINT ChosenIndex = 1;
+    BOOLEAN IndexHasBeenChosen;
     IP_ADDRESS NetworkAddress;
     PNEIGHBOR_CACHE_ENTRY NCE;
+    IF_LIST_ITER(Interface);
 
     TI_DbgPrint(MID_TRACE, ("Called. IF (0x%X).\n", IF));
 
     TcpipAcquireSpinLock(&IF->Lock, &OldIrql);
+
+    /* Choose an index */
+    do {
+        IndexHasBeenChosen = TRUE;
+        ForEachInterface(Interface) {
+            if( Interface->Index == ChosenIndex ) {
+                ChosenIndex++;
+                IndexHasBeenChosen = FALSE;
+            }
+        } EndFor(Interface);
+    } while( !IndexHasBeenChosen );
+
+    IF->Index = ChosenIndex;
 
     /* Add a permanent neighbor for this NTE */
     NCE = NBAddNeighbor(IF, &IF->Unicast, 

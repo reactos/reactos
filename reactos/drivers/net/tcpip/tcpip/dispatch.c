@@ -1465,4 +1465,56 @@ NTSTATUS DispTdiSetInformationEx(
     return Status;
 }
 
+/* TODO: Support multiple addresses per interface.
+ * For now just set the nte context to the interface index.
+ *
+ * Later on, create an NTE context and NTE instance
+ */
+
+NTSTATUS DispTdiSetIPAddress( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
+    NTSTATUS Status = STATUS_DEVICE_DOES_NOT_EXIST;
+    PIP_SET_ADDRESS IpAddrChange = 
+        (PIP_SET_ADDRESS)Irp->AssociatedIrp.SystemBuffer;
+    IF_LIST_ITER(IF);
+
+    ForEachInterface(IF) {
+        if( IF->Unicast.Address.IPv4Address == IpAddrChange->Address ) {
+            Status = STATUS_DUPLICATE_OBJECTID;
+            break;
+        }
+        if( IF->Index == IpAddrChange->NteIndex ) {
+            IF->Unicast.Type = IP_ADDRESS_V4;
+            IF->Unicast.Address.IPv4Address = IpAddrChange->Address;
+            IF->Netmask.Type = IP_ADDRESS_V4;
+            IF->Netmask.Address.IPv4Address = IpAddrChange->Netmask;
+            IpAddrChange->Address = IF->Index;
+            Status = STATUS_SUCCESS;
+            Irp->IoStatus.Information = IF->Index;
+            break;
+        }
+    } EndFor(IF);
+
+    Irp->IoStatus.Status = Status;
+    return Status;
+}
+
+NTSTATUS DispTdiDeleteIPAddress( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    PUSHORT NteIndex = Irp->AssociatedIrp.SystemBuffer;
+    IF_LIST_ITER(IF);
+
+    ForEachInterface(IF) {
+        if( IF->Index == *NteIndex ) {
+            IF->Unicast.Type = IP_ADDRESS_V4;
+            IF->Unicast.Address.IPv4Address = 0;
+            IF->Netmask.Type = IP_ADDRESS_V4;
+            IF->Netmask.Address.IPv4Address = 0;
+            Status = STATUS_SUCCESS;
+        }
+    } EndFor(IF);
+
+    Irp->IoStatus.Status = Status;
+    return Status;
+}
+
 /* EOF */
