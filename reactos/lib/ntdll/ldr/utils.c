@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.46 2001/07/04 20:40:19 chorns Exp $
+/* $Id: utils.c,v 1.47 2001/09/01 19:36:30 rex Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -228,6 +228,7 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
       wcscpy (SearchPathBuffer, SharedUserData->NtSystemRoot);
       wcscat (SearchPathBuffer, L"\\system32;");
       wcscat (SearchPathBuffer, SharedUserData->NtSystemRoot);
+      wcscat (SearchPathBuffer, L";.");
     }
 
   DPRINT("SearchPath %S\n", SearchPath);

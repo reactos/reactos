@@ -5,4 +5,5 @@ napi.c
 ntdll.lib
 ntdll.coff
 ntdll.dll
+ntdll.nostrip.dll
 temp.exp
