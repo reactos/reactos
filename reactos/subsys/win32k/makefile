@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.84 2003/11/30 20:03:47 navaraf Exp $
+# $Id: makefile,v 1.85 2003/12/06 23:10:50 mf Exp $
 
 PATH_TO_TOP = ../..
 
@@ -108,5 +108,12 @@ main/svctabm.o: main/svctab.c
 etags: TAGS
 TAGS: main/TAGS eng/TAGS ldr/TAGS misc/TAGS objects/TAGS stubs/TAGS ntuser/TAGS dib/TAGS ntddraw/TAGS
 	etags -i main/TAGS -i eng/TAGS -i ldr/TAGS -i misc/TAGS -i objects/TAGS -i stubs/TAGS -i ntuser/TAGS -i dib/TAGS -i ntddraw/TAGS
+
+
+docu:
+	doxygen Doxyfile
+
+.PHONY: docu
+
 
 # EOF

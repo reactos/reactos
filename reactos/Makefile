@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.185 2003/12/02 20:13:30 navaraf Exp $
+# $Id: Makefile,v 1.186 2003/12/06 23:10:50 mf Exp $
 #
 # Global makefile
 #
@@ -796,5 +796,24 @@ install_before:
 etags:
 	find . -name "*.[ch]" -print | etags --language=c -
 
-# EOF
 
+docu:
+	echo generating ReactOS NTOSKRNL documentation ...
+	$(MAKE) -C ntoskrnl docu
+
+	echo generating ReactOS drivers documentation ...
+	$(MAKE) -C drivers docu
+
+	echo generating ReactOS WIN32K documentation ...
+	$(MAKE) -C subsys/win32k docu
+
+	echo generating ReactOS apps+tools documentation ...
+	$(MAKE) -C apps docu
+
+	echo generating remaining ReactOS documentation ...
+	doxygen Doxyfile
+
+.PHONY: docu
+
+
+# EOF

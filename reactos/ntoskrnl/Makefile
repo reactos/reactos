@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.109 2003/11/24 16:43:36 ekohl Exp $
+# $Id: Makefile,v 1.110 2003/12/06 23:10:50 mf Exp $
 #
 # ReactOS Operating System
 #
@@ -745,5 +745,12 @@ ke/main.o: ke/main.c $(PATH_TO_TOP)/include/reactos/buildno.h
 
 .%.TAG: %.c
 	etags -o $@ $^
+
+
+docu:
+	doxygen Doxyfile
+
+.PHONY: docu
+
 
 # EOF

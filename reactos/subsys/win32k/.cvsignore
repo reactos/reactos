@@ -6,3 +6,4 @@ temp.exp
 *.map
 *.d
 *.o
+doxy-doc

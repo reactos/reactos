@@ -10,3 +10,4 @@ msg*.bin
 *.o
 *.sym
 *.exe
+doxy-doc
