@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: stubs.c,v 1.5 2003/08/26 13:44:12 rcampbell Exp $
+/* $Id: stubs.c,v 1.6 2003/10/04 19:55:47 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -2598,6 +2598,7 @@ HWND WINAPI CreateStatusWindowW( LONG style,
 	UINT wID )
 {
 	STUB;
+	return 0;
 }
 
 VOID WINAPI

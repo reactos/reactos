@@ -68,6 +68,7 @@ CPlApplet* pListHead; // holds pointer to linked list of cpl modules CPlApplet*
 // Local module support methods
 //
 
+#if 0
 static void AddAppletsToListView(HWND hwndLV, CPlApplet* pApplet)
 {
     LVITEM item;
@@ -113,6 +114,7 @@ static void AddAppletsToListView(HWND hwndLV, CPlApplet* pApplet)
         }
     }
 }
+#endif
 
 static void CreateListColumns(HWND hwndLV)
 {

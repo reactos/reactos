@@ -264,12 +264,12 @@ StrRStrW  ; @  324
 ; StrStrIW=shlwapi.StrStrIW ; @  327
 ; StrStrW=shlwapi.StrStrW ; @  328
 SHRegCloseKey  ; @  505
-SHRegOpenKeyA@12 ; @  506
-SHRegOpenKeyW@12 ; @  507
-SHRegQueryValueA@16 ; @  508
-SHRegQueryValueExA@24 ; @  509
-SHRegQueryValueW@16 ; @  510
-SHRegQueryValueExW@24 ; @  511
+SHRegOpenKeyA=SHRegOpenKeyA@12 ; @  506
+SHRegOpenKeyW=SHRegOpenKeyW@12 ; @  507
+SHRegQueryValueA=SHRegQueryValueA@16 ; @  508
+SHRegQueryValueExA=SHRegQueryValueExA@24 ; @  509
+SHRegQueryValueW=SHRegQueryValueW@16 ; @  510
+SHRegQueryValueExW=SHRegQueryValueExW@24 ; @  511
 SHRegDeleteKeyW  ; @  512
 SHAllocShared@12 ; @  520
 SHLockShared  ; @  521
@@ -277,10 +277,10 @@ SHUnlockShared  ; @  522
 SHFreeShared  ; @  523
 RealDriveType  ; @  524
 RealDriveTypeFlags  ; @  525
-NTSHChangeNotifyRegister@24 ; @  640
+NTSHChangeNotifyRegister=NTSHChangeNotifyRegister@24 ; @  640
 NTSHChangeNotifyDeregister  ; @  641
-SHChangeNotifyReceive@16 ; @  643
-SHChangeNotification_Lock@16 ; @  644
+SHChangeNotifyReceive=SHChangeNotifyReceive@16 ; @  643
+SHChangeNotification_Lock=SHChangeNotification_Lock@16 ; @  644
 SHChangeNotification_Unlock  ; @  645
 SHChangeRegistrationReceive  ; @  646
 ReceiveAddToRecentDocs  ; @  647
@@ -288,94 +288,94 @@ SHWaitOp_Operate  ; @  648
 PathIsSameRootA  ; @  650
 ReadCabinetState  ; @  651
 WriteCabinetState  ; @  652
-PathProcessCommand@16 ; @  653
+PathProcessCommand=PathProcessCommand@16 ; @  653
 shell32_654  ; @  654
 FileIconInit  ; @  660
 IsUserAdmin  ; @  680
 shell32_714  ; @  714
 FOOBAR1217  ; @ 1217
-CheckEscapesA@0
-CheckEscapesW@0
-CommandLineToArgvW@8
+CheckEscapesA=CheckEscapesA@0
+CheckEscapesW=CheckEscapesW@0
+CommandLineToArgvW=CommandLineToArgvW@8
 ;Control_FillCache_RunDLL@16
-Control_FillCache_RunDLLA@16
-Control_FillCache_RunDLLW@16
+Control_FillCache_RunDLLA=Control_FillCache_RunDLLA@16
+Control_FillCache_RunDLLW=Control_FillCache_RunDLLW@16
 ;Control_RunDLL@16
 Control_RunDLLA
 Control_RunDLLW
-DllInstall@8
+DllInstall=DllInstall@8
 ;DoEnvironmentSubstA@8
-DoEnvironmentSubstW@8
-DragQueryFileAorW@0
-DuplicateIcon@8
-ExtractAssociatedIconA@12
-ExtractAssociatedIconExA@0
-ExtractAssociatedIconExW@0
-ExtractAssociatedIconW@12
+DoEnvironmentSubstW=DoEnvironmentSubstW@8
+DragQueryFileAorW=DragQueryFileAorW@0
+DuplicateIcon=DuplicateIcon@8
+ExtractAssociatedIconA=ExtractAssociatedIconA@12
+ExtractAssociatedIconExA=ExtractAssociatedIconExA@0
+ExtractAssociatedIconExW=ExtractAssociatedIconExW@0
+ExtractAssociatedIconW=ExtractAssociatedIconW@12
 ExtractIconA=ExtractIconA@12
 ;ExtractIconEx@20
-ExtractIconExA@20
-ExtractIconExW@20
-ExtractIconW@12
-ExtractIconResInfoA@0
-ExtractIconResInfoW@0 
-ExtractVersionResource16W@0
-FindExeDlgProc@0
-FindExecutableA@12
-FindExecutableW@12
-FreeIconList@4
-InternalExtractIconListA@0
-InternalExtractIconListW@0
-OpenAs_RunDLL@0
-OpenAs_RunDLLA@0
-OpenAs_RunDLLW@0
-PrintersGetCommand_RunDLL@0
-PrintersGetCommand_RunDLLA@0
-PrintersGetCommand_RunDLLW@0
-RealShellExecuteA@0
-RealShellExecuteExA@0
-RealShellExecuteExW@0
-RealShellExecuteW@0
-RegenerateUserEnvironment@0
-SHAddToRecentDocs@8 
-SHAppBarMessage@8 
-SHBrowseForFolder@4 
-SHBrowseForFolderA@4 
-SHBrowseForFolderW@4 
-SHChangeNotify@16 
-ShellHookProc@0
-SHEmptyRecycleBinA@12 
-SHEmptyRecycleBinW@12 
+ExtractIconExA=ExtractIconExA@20
+ExtractIconExW=ExtractIconExW@20
+ExtractIconW=ExtractIconW@12
+ExtractIconResInfoA=ExtractIconResInfoA@0
+ExtractIconResInfoW=ExtractIconResInfoW@0 
+;ExtractVersionResource16W@0
+FindExeDlgProc=FindExeDlgProc@0
+FindExecutableA=FindExecutableA@12
+FindExecutableW=FindExecutableW@12
+FreeIconList=FreeIconList@4
+InternalExtractIconListA=InternalExtractIconListA@0
+InternalExtractIconListW=InternalExtractIconListW@0
+OpenAs_RunDLL=OpenAs_RunDLL@0
+OpenAs_RunDLLA=OpenAs_RunDLLA@0
+OpenAs_RunDLLW=OpenAs_RunDLLW@0
+PrintersGetCommand_RunDLL=PrintersGetCommand_RunDLL@0
+PrintersGetCommand_RunDLLA=PrintersGetCommand_RunDLLA@0
+PrintersGetCommand_RunDLLW=PrintersGetCommand_RunDLLW@0
+RealShellExecuteA=RealShellExecuteA@0
+RealShellExecuteExA=RealShellExecuteExA@0
+RealShellExecuteExW=RealShellExecuteExW@0
+RealShellExecuteW=RealShellExecuteW@0
+RegenerateUserEnvironment=RegenerateUserEnvironment@0
+SHAddToRecentDocs=SHAddToRecentDocs@8 
+SHAppBarMessage=SHAppBarMessage@8 
+SHBrowseForFolder=SHBrowseForFolder@4 
+SHBrowseForFolderA=SHBrowseForFolderA@4 
+SHBrowseForFolderW=SHBrowseForFolderW@4 
+SHChangeNotify=SHChangeNotify@16 
+ShellHookProc=ShellHookProc@0
+SHEmptyRecycleBinA=SHEmptyRecycleBinA@12 
+SHEmptyRecycleBinW=SHEmptyRecycleBinW@12 
 ;SHFileOperation@4 
-SHFileOperationA@4
-SHFileOperationW@4
-SHFormatDrive@16 
-SHFreeNameMappings@4 
-SHGetDesktopFolder@4
+SHFileOperationA=SHFileOperationA@4
+SHFileOperationW=SHFileOperationW@4
+SHFormatDrive=SHFormatDrive@16 
+SHFreeNameMappings=SHFreeNameMappings@4 
+SHGetDesktopFolder=SHGetDesktopFolder@4
 ;SHGetFileInfo@20
-SHGetFileInfoA@20
-SHGetFileInfoW@20
-SHGetInstanceExplorer@4
+SHGetFileInfoA=SHGetFileInfoA@20
+SHGetFileInfoW=SHGetFileInfoW@20
+SHGetInstanceExplorer=SHGetInstanceExplorer@4
 SHGetMalloc=SHGetMalloc@4
 ;SHGetNewLinkInfo@20
 SHGetPathFromIDList=SHGetPathFromIDList@8
 SHGetPathFromIDListA=SHGetPathFromIDListA@8
 SHGetPathFromIDListW=SHGetPathFromIDListW@8
-SHGetSettings@8
+SHGetSettings=SHGetSettings@8
 SHGetSpecialFolderLocation=SHGetSpecialFolderLocation@12
-SHHelpShortcuts_RunDLL@16
-SHHelpShortcuts_RunDLLA@16 
-SHHelpShortcuts_RunDLLW@16 
-SHLoadInProc@4
-SHQueryRecycleBinA@8 
-SHQueryRecycleBinW@8 
-SHUpdateRecycleBinIcon@0 
-WOWShellExecute@28
-DllCanUnloadNow@0
-DllGetVersion@4
-SHGetFreeDiskSpace@0
-SHGetSpecialFolderPathA@16
-SHGetFolderPathA@20
-SHGetFolderPathW@20
-SHGetFolderLocation@20
-CreateStatusWindowW@16
+SHHelpShortcuts_RunDLL=SHHelpShortcuts_RunDLL@16
+SHHelpShortcuts_RunDLLA=SHHelpShortcuts_RunDLLA@16 
+SHHelpShortcuts_RunDLLW=SHHelpShortcuts_RunDLLW@16 
+SHLoadInProc=SHLoadInProc@4
+SHQueryRecycleBinA=SHQueryRecycleBinA@8 
+SHQueryRecycleBinW=SHQueryRecycleBinW@8 
+SHUpdateRecycleBinIcon=SHUpdateRecycleBinIcon@0 
+WOWShellExecute=WOWShellExecute@28
+DllCanUnloadNow=DllCanUnloadNow@0
+DllGetVersion=DllGetVersion@4
+SHGetFreeDiskSpace=SHGetFreeDiskSpace@0
+SHGetSpecialFolderPathA=SHGetSpecialFolderPathA@16
+SHGetFolderPathA=SHGetFolderPathA@20
+SHGetFolderPathW=SHGetFolderPathW@20
+SHGetFolderLocation=SHGetFolderLocation@20
+

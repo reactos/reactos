@@ -21,3 +21,9 @@ EXPORTS
 ;timeBeginPeriod=timeBeginPeriod@4
 ;timeEndPeriod=timeEndPeriod@4
 ;timeGetTime=timeGetTime@0
+mmioAscend=mmioAscend@12
+mmioClose=mmioClose@8
+mmioDescend=mmioDescend@16
+mmioOpenA=mmioOpenA@12
+mmioRead=mmioRead@12
+mmioSeek=mmioSeek@12

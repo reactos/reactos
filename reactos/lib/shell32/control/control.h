@@ -27,7 +27,6 @@
 extern "C" {
 #endif
 
-    
 #include "resource.h"
 
 #define STATUS_WINDOW   2001
@@ -144,32 +143,6 @@ extern TCHAR szWindowClass[];
 void Control_DoLaunch(CPlApplet** pListHead, HWND hWnd, LPCTSTR cmd);
 CPlApplet* Control_LoadApplet(HWND hWnd, LPCTSTR cmd, CPlApplet** pListHead);
 CPlApplet* Control_UnloadApplet(CPlApplet* applet);
-
-
-#ifdef __GNUC__
-/*
-typedef struct tagNMITEMACTIVATE{
-    NMHDR   hdr;
-    int     iItem;
-    int     iSubItem;
-    UINT    uNewState;
-    UINT    uOldState;
-    UINT    uChanged;
-    POINT   ptAction;
-    LPARAM  lParam;
-    UINT    uKeyFlags;
-} NMITEMACTIVATE, FAR *LPNMITEMACTIVATE;
-*/
-#define HDITEM HD_ITEM
-#define LPNMLISTVIEW LPNM_LISTVIEW
-#define NMLISTVIEW NM_LISTVIEW
-/*
-#define HDN_ENDDRAG TBN_ENDDRAG
-#define LVSICF_NOSCROLL LVS_NOSCROLL
-*/
-#define HDM_GETORDERARRAY	(HDM_FIRST+19)   // TODO: FIX ME
-#endif
-
 
 #ifdef __cplusplus
 };

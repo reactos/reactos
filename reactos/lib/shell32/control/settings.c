@@ -103,7 +103,6 @@ BOOL LoadSettings(RECT* prc)
 {
     BOOL retval = TRUE;
     TCHAR szRegPath[MAX_LOADSTRING];
-	HMENU hMenuView = GetSubMenu(hMenuFrame, ID_VIEW_MENU);
 
     HKEY  hKey;
     DWORD dwSize;
