@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: painting.c,v 1.23 2003/08/05 15:41:03 weiden Exp $
+/* $Id: painting.c,v 1.24 2003/08/06 15:27:27 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -457,22 +457,15 @@ PaintUpdateRgns(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
 }
 
 BOOL STDCALL
-PaintRedrawWindow( 
-  PWINDOW_OBJECT Window, 
-  const RECT* UpdateRect, 
-  HRGN UpdateRgn,
-	ULONG Flags, 
-  ULONG ExFlags)
+PaintRedrawWindow( PWINDOW_OBJECT Window, 
+		   const RECT* UpdateRect, 
+		   HRGN UpdateRgn,
+		   ULONG Flags, 
+		   ULONG ExFlags)
 {
   RECT Rect, Rect2;
   POINT Pt;
   HRGN hRgn = NULL;
-
-  /* Return if this is for a desktop. */
-  if (W32kIsDesktopWindow(Window))
-  {
-    return FALSE;
-  }
 
   if ((RDW_INVALIDATE | RDW_FRAME) == (Flags & (RDW_INVALIDATE | RDW_FRAME)) ||
       (RDW_VALIDATE | RDW_NOFRAME) == (Flags & (RDW_VALIDATE | RDW_NOFRAME)))
