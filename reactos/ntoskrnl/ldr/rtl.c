@@ -1,4 +1,4 @@
-/* $Id: rtl.c,v 1.15 2002/09/08 10:23:31 chorns Exp $
+/* $Id: rtl.c,v 1.16 2003/07/10 20:34:50 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -23,6 +23,9 @@
 /* FUNCTIONS ****************************************************************/
 
 
+/*
+ * @implemented
+ */
 PIMAGE_NT_HEADERS STDCALL 
 RtlImageNtHeader (IN PVOID BaseAddress)
 {
@@ -41,6 +44,9 @@ RtlImageNtHeader (IN PVOID BaseAddress)
 }
 
 
+/*
+ * @implemented
+ */
 PVOID STDCALL
 RtlImageDirectoryEntryToData (IN PVOID	BaseAddress,
 			      IN BOOLEAN	ImageLoaded,
@@ -83,6 +89,9 @@ RtlImageDirectoryEntryToData (IN PVOID	BaseAddress,
 }
 
 
+/*
+ * @implemented
+ */
 PIMAGE_SECTION_HEADER
 STDCALL
 RtlImageRvaToSection (
@@ -110,6 +119,9 @@ RtlImageRvaToSection (
 }
 
 
+/*
+ * @implemented
+ */
 ULONG
 STDCALL
 RtlImageRvaToVa (
@@ -144,6 +156,9 @@ RtlImageRvaToVa (
 
 #define RVA(m, b) ((ULONG)b + m)
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 LdrGetProcedureAddress (IN PVOID BaseAddress,
                         IN PANSI_STRING Name,
