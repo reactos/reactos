@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: binhive.c,v 1.10 2004/05/09 14:50:09 ekohl Exp $
+/* $Id: binhive.c,v 1.11 2004/05/29 21:15:58 navaraf Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/binhive.c
@@ -351,7 +351,7 @@ CmiCreateRegistryHive (PCHAR KeyName)
     }
   memset (Hive, 0, sizeof(REGISTRY_HIVE));
 
-  DPRINT("Hive %x\n", Hive);
+  DPRINT("Hive %p\n", Hive);
 
   /* Create hive beader (aka 'base block') */
   Hive->HiveHeader = (PHIVE_HEADER) malloc (REG_BLOCK_SIZE);
@@ -457,7 +457,7 @@ CmiDestroyRegistryHive (PREGISTRY_HIVE Hive)
 	      Bin = Hive->BlockList[i];
 
 	      DPRINT ("Bin[%lu]: Offset 0x%lx  Size 0x%lx\n",
-		      i, Bin->BlockOffset, Bin->BlockSize);
+		      i, Bin->BinOffset, Bin->BinSize);
 
 	      free (Bin);
 	    }
@@ -514,7 +514,7 @@ CmiMergeFree(PREGISTRY_HIVE RegistryHive,
   PHBIN Bin;
   ULONG i;
 
-  DPRINT("CmiMergeFree(Block %lx  Offset %lx  Size %lx) called\n",
+  DPRINT("CmiMergeFree(Block %p  Offset %lx  Size %lx) called\n",
 	 FreeBlock, FreeOffset, FreeBlock->CellSize);
 
   CmiGetCell (RegistryHive,
@@ -608,7 +608,7 @@ CmiAddFree(PREGISTRY_HIVE RegistryHive,
   assert(RegistryHive);
   assert(FreeBlock);
 
-  DPRINT("FreeBlock %.08lx  FreeOffset %.08lx\n",
+  DPRINT("FreeBlock %p  FreeOffset %.08lx\n",
 	 FreeBlock, FreeOffset);
 
   /* Merge free blocks */
@@ -1376,7 +1376,7 @@ CmiWriteHive(PREGISTRY_HIVE Hive,
 	  Bin = Hive->BlockList[i];
 
 	  DPRINT ("Bin[%lu]: Offset 0x%lx  Size 0x%lx\n",
-		  i, Bin->BlockOffset, Bin->BlockSize);
+		  i, Bin->BinOffset, Bin->BinSize);
 
 	  fwrite (Bin, Bin->BinSize, 1, File);
 	}

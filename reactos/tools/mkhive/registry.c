@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: registry.c,v 1.8 2003/11/14 17:13:36 weiden Exp $
+/* $Id: registry.c,v 1.9 2004/05/29 21:15:58 navaraf Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/registry.c
@@ -171,12 +171,12 @@ RegCreateKey(HKEY ParentKey,
       Ptr = CurrentKey->SubKeyList.Flink;
       while (Ptr != &CurrentKey->SubKeyList)
 	{
-	  DPRINT ("Ptr 0x%x\n", Ptr);
+	  DPRINT ("Ptr 0x%p\n", Ptr);
 
 	  SearchKey = CONTAINING_RECORD(Ptr,
 					KEY,
 					KeyList);
-	  DPRINT ("SearchKey 0x%x\n", SearchKey);
+	  DPRINT ("SearchKey 0x%p\n", SearchKey);
 	  DPRINT ("Searching '%s'\n", SearchKey->Name);
 	  if (strncasecmp (SearchKey->Name, name, subkeyLength) == 0)
 	    break;
@@ -211,8 +211,8 @@ RegCreateKey(HKEY ParentKey,
 	  memcpy(NewKey->Name, name, subkeyLength);
 	  NewKey->Name[subkeyLength] = 0;
 
-	  DPRINT ("NewKey 0x%x\n", NewKey);
-	  DPRINT ("NewKey '%s'  Length %d\n", NewKey->Name, NewKey->NameSize);
+	  DPRINT ("NewKey 0x%p\n", NewKey);
+	  DPRINT ("NewKey '%s'  Length %ld\n", NewKey->Name, NewKey->NameSize);
 
 	  CurrentKey = NewKey;
 	}
@@ -279,7 +279,7 @@ RegEnumKey(HKEY Key,
 				KEY,
 				KeyList);
 
-  DPRINT ("Name '%s'  Length %d\n", SearchKey->Name, SearchKey->NameSize);
+  DPRINT ("Name '%s'  Length %ld\n", SearchKey->Name, SearchKey->NameSize);
 
   Size = min(SearchKey->NameSize, *NameSize);
   *NameSize = Size;
@@ -349,13 +349,13 @@ RegOpenKey(HKEY ParentKey,
       Ptr = CurrentKey->SubKeyList.Flink;
       while (Ptr != &CurrentKey->SubKeyList)
 	{
-	  DPRINT ("Ptr 0x%x\n", Ptr);
+	  DPRINT ("Ptr 0x%p\n", Ptr);
 
 	  SearchKey = CONTAINING_RECORD(Ptr,
 					KEY,
 					KeyList);
 
-	  DPRINT ("SearchKey 0x%x\n", SearchKey);
+	  DPRINT ("SearchKey 0x%p\n", SearchKey);
 	  DPRINT ("Searching '%s'\n", SearchKey->Name);
 
 	  if (strncasecmp(SearchKey->Name, name, subkeyLength) == 0)

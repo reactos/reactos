@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mkhive.c,v 1.3 2003/11/14 17:13:36 weiden Exp $
+/* $Id: mkhive.c,v 1.4 2004/05/29 21:15:58 navaraf Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/mkhive.c
@@ -47,9 +47,10 @@
 
 void usage (void)
 {
-  printf ("Usage: mkhive <srcdir> <dstdir>\n\n");
+  printf ("Usage: mkhive <srcdir> <dstdir> <addinf>\n\n");
   printf ("  srcdir  - inf files are read from this directory\n");
   printf ("  dstdir  - binary hive files are created in this directory\n");
+  printf ("  addinf  - additional inf files with full path\n");
 }
 
 void convert_path(char *dst, char *src)
@@ -84,6 +85,7 @@ void convert_path(char *dst, char *src)
 int main (int argc, char *argv[])
 {
   char FileName[PATH_MAX];
+  int Param;
 
   printf ("Binary hive maker\n");
 
@@ -114,6 +116,12 @@ int main (int argc, char *argv[])
   strcat (FileName, DIR_SEPARATOR_STRING);
   strcat (FileName, "hivedef.inf");
   ImportRegistryFile (FileName, "AddReg", FALSE);
+
+  for (Param = 3; Param < argc; Param++)
+  {
+    convert_path (FileName, argv[Param]);
+    ImportRegistryFile (FileName, "AddReg", FALSE);
+  }
 
   convert_path (FileName, argv[2]);
   strcat (FileName, DIR_SEPARATOR_STRING);
