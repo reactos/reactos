@@ -45,7 +45,7 @@ Type process ( const string& element, vector<string>& names, bool& isTypedef, ve
 void process_preprocessor ( const char* filename, Header& h, const string& element );
 void process_c ( Header& h, const string& element );
 int parse_type ( Type t, const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies );
-int parse_asm ( const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies );
+int parse_ignored_statement ( const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies );
 int parse_tident ( const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies );
 int parse_variable ( const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies );
 int parse_struct ( const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies );
@@ -60,7 +60,8 @@ const char* libc_includes[] =
 	"except.h",
 	"limits.h",
 	"stdarg.h",
-	"stdlib.h"
+	"stdlib.h",
+	"string.h"
 };
 
 bool is_libc_include ( const string& inc )
@@ -495,7 +496,9 @@ Type identify ( const vector<string>& tokens, int off )
 			_CrtDbgBreak();
 	}*/
 	if ( tokens[off] == "__asm__" )
-		return T_ASM;
+		return T_IGNORED_STATEMENT;
+	else if ( tokens[off] == "return" )
+		return T_IGNORED_STATEMENT;
 	else if ( tokens[off] == "typedef_tident" )
 		return T_TIDENT;
 	else if ( tokens[off] == "if" )
@@ -561,8 +564,8 @@ int parse_type ( Type t, const vector<string>& tokens, int off, vector<string>& 
 {
 	switch ( t )
 	{
-	case T_ASM:
-		return parse_asm ( tokens, off, names, dependencies );
+	case T_IGNORED_STATEMENT:
+		return parse_ignored_statement ( tokens, off, names, dependencies );
 	case T_TIDENT:
 		return parse_tident ( tokens, off, names, dependencies );
 	case T_VARIABLE:
@@ -612,9 +615,8 @@ void depend ( const string& ident, vector<string>& dependencies )
 	dependencies.push_back ( ident );
 }
 
-int parse_asm ( const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies )
+int parse_ignored_statement ( const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies )
 {
-	TOKASSERT ( tokens[off] == "__asm__" );
 	off++;
 	while ( tokens[off] != ";" )
 		off++;

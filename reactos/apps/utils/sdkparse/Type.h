@@ -6,7 +6,7 @@
 typedef enum
 {
 	T_UNKNOWN = -1,
-	T_ASM,
+	T_IGNORED_STATEMENT,
 	T_TIDENT,
 	T_MACRO,
 	T_DEFINE,
