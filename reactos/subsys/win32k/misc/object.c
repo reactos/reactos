@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: object.c,v 1.12.8.3 2004/09/14 01:00:43 weiden Exp $
+/* $Id: object.c,v 1.12.8.4 2004/09/26 22:44:35 weiden Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -147,7 +147,7 @@ ObmCreateObject(PUSER_HANDLE_TABLE HandleTable,
   LastSlot = HandleTable->Handles + N_USER_HANDLES;
   for(Slot = HandleTable->Handles; Slot < LastSlot; Slot++)
   {
-    if(InterlockedCompareExchange((LONG*)Slot, (LONG)ObjectHeader, 0) == 0)
+    if(InterlockedCompareExchangePointer(Slot, ObjectHeader, NULL) == NULL)
     {
       /* found and assigned a free handle */
       InterlockedIncrement((LONG*)&HandleTable->HandleCount);
@@ -204,7 +204,7 @@ ObmDeleteObject(PUSER_HANDLE_TABLE HandleTable,
   }
 
   /* remove the object from the handle table */
-  InterlockedCompareExchange((LONG*)ObjectHeader->Slot, 0, (LONG)ObjectHeader);
+  InterlockedCompareExchangePointer(ObjectHeader->Slot, NULL, ObjectHeader);
   InterlockedDecrement((LONG*)&HandleTable->HandleCount);
   ObjectHeader->Slot = NULL;
   

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: vis.c,v 1.29.12.3 2004/09/14 01:00:44 weiden Exp $
+ * $Id: vis.c,v 1.29.12.4 2004/09/26 22:44:35 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -77,7 +77,8 @@ VIS_ComputeVisibleRegion(
     * our window.
     */
 
-   while ((CurrentWindow = IntGetParentObject(Window)))
+   PreviousWindow = Window;
+   while ((CurrentWindow = IntGetParentObject(PreviousWindow)))
    {
       if (!(CurrentWindow->Style & WS_VISIBLE))
       {
@@ -89,7 +90,7 @@ VIS_ComputeVisibleRegion(
       NtGdiDeleteObject(ClipRgn);
 
       if ((PreviousWindow->Style & WS_CLIPSIBLINGS) ||
-          (PreviousWindow == Window && ClipSiblings))
+          (PreviousWindow == PreviousWindow && ClipSiblings))
       {
          CurrentSibling = CurrentWindow->FirstChild;
          while (CurrentSibling != NULL && CurrentSibling != PreviousWindow)
@@ -111,7 +112,7 @@ VIS_ComputeVisibleRegion(
          }
       }
 
-      Window = CurrentWindow;
+      PreviousWindow = CurrentWindow;
    }
 
    if (ClipChildren)

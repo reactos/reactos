@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.59.8.5 2004/09/26 22:28:49 weiden Exp $
+/* $Id: class.c,v 1.59.8.6 2004/09/26 22:44:35 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -101,12 +101,13 @@ IntReferenceClassByName(PCLASS_OBJECT *Class,
       (LPWSTR)ClassName->Buffer,
       &ClassAtom);
 
-   if (NT_SUCCESS(Status))
+   if (!NT_SUCCESS(Status))
    {
-      return IntReferenceClassByAtom(Class, ClassAtom, hInstance);
+      DbgPrint("RtlLookupAtomInAtomTable failed for %wZ\n", ClassName);
+      return FALSE;
    }
 
-   return FALSE;
+   return IntReferenceClassByAtom(Class, ClassAtom, hInstance);
 }
 
 BOOL INTERNAL_CALL
@@ -162,6 +163,7 @@ IntGetClassName(PWINDOW_OBJECT WindowObject, PUNICODE_STRING ClassName, ULONG nM
                                    &Length);
   if(!NT_SUCCESS(Status))
   {
+    DPRINT1("IntGetClassName: RtlQueryAtomInAtomTable failed\n");
     RtlFreeUnicodeString(ClassName);
     return FALSE;
   }
@@ -302,28 +304,23 @@ IntRegisterClass(CONST WNDCLASSEXW *lpwcx, PUNICODE_STRING ClassName, PUNICODE_S
   }
   
   /* FIXME - check the rights of the thread's desktop if we're allowed to register a class? */
-  
-  if(ClassName->Length > 0)
+
+  DPRINT("IntRegisterClass(%wZ)\n", ClassName);
+  Status = RtlAddAtomToAtomTable(WinStaObject->AtomTable,
+                                 ClassName->Buffer,
+                                 &Atom);
+  if (!NT_SUCCESS(Status))
   {
-    DPRINT("IntRegisterClass(%wZ)\n", ClassName);
-    Status = RtlAddAtomToAtomTable(WinStaObject->AtomTable,
-                                   ClassName->Buffer,
-                                   &Atom);
-    if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("Failed adding class name (%wZ) to atom table\n", ClassName);
-      SetLastNtError(Status);
-      return NULL;
-    }
+    DPRINT1("Failed adding class name (%wZ) to atom table\n", ClassName);
+    SetLastNtError(Status);
+    return NULL;
   }
-  
+
   Ret = IntCreateClass(lpwcx, Flags, wpExtra, MenuName, Atom);
   if(Ret == NULL)
   {
-    if(ClassName->Length > 0)
-    {
-      RtlDeleteAtomFromAtomTable(WinStaObject->AtomTable, Atom);
-    }
+    DPRINT1("Failed creating a class object (%wZ)\n", ClassName);
+    RtlDeleteAtomFromAtomTable(WinStaObject->AtomTable, Atom);
     return NULL;
   }
   
