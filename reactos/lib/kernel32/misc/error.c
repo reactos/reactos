@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.20 2003/08/07 04:03:23 royce Exp $
+/* $Id: error.c,v 1.21 2004/01/23 17:15:23 ekohl Exp $
  *
  * reactos/lib/kernel32/misc/error.c
  *
@@ -37,7 +37,7 @@ GetLastError (VOID)
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 Beep (DWORD dwFreq, DWORD dwDuration)
 {

@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.57 2003/09/21 14:02:30 mf Exp $
+/* $Id: proc.c,v 1.58 2004/01/23 17:16:26 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -27,7 +27,7 @@ LPSTARTUPINFOA lpLocalStartupInfo = NULL;
 VOID STDCALL
 RegisterWaitForInputIdle(WaitForInputIdleType lpfnRegisterWaitForInputIdle);
 
-WINBOOL STDCALL
+BOOL STDCALL
 InternalGetProcessId (HANDLE hProcess, LPDWORD lpProcessId);
 
 
@@ -91,7 +91,7 @@ SetProcessAffinityMask (HANDLE hProcess,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetProcessShutdownParameters (LPDWORD lpdwLevel,
 			      LPDWORD lpdwFlags)
 {
@@ -120,7 +120,7 @@ GetProcessShutdownParameters (LPDWORD lpdwLevel,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetProcessShutdownParameters (DWORD dwLevel,
 			      DWORD dwFlags)
 {
@@ -149,7 +149,7 @@ SetProcessShutdownParameters (DWORD dwLevel,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetProcessWorkingSetSize (HANDLE hProcess,
 			  LPDWORD lpMinimumWorkingSetSize,
 			  LPDWORD lpMaximumWorkingSetSize)
@@ -178,7 +178,7 @@ GetProcessWorkingSetSize (HANDLE hProcess,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetProcessWorkingSetSize(HANDLE hProcess,
 			 DWORD dwMinimumWorkingSetSize,
 			 DWORD dwMaximumWorkingSetSize)
@@ -191,7 +191,7 @@ SetProcessWorkingSetSize(HANDLE hProcess,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetProcessTimes(HANDLE hProcess,
 		LPFILETIME lpCreationTime,
 		LPFILETIME lpExitTime,
@@ -261,7 +261,7 @@ GetCurrentProcessId(VOID)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetExitCodeProcess(HANDLE hProcess,
 		   LPDWORD lpExitCode)
 {
@@ -289,7 +289,7 @@ GetExitCodeProcess(HANDLE hProcess,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 InternalGetProcessId(HANDLE hProcess,
 	     LPDWORD lpProcessId)
 {
@@ -319,7 +319,7 @@ InternalGetProcessId(HANDLE hProcess,
  */
 HANDLE STDCALL
 OpenProcess(DWORD dwDesiredAccess,
-	    WINBOOL bInheritHandle,
+	    BOOL bInheritHandle,
 	    DWORD dwProcessId)
 {
    NTSTATUS errCode;
@@ -639,7 +639,7 @@ ExitProcess(UINT uExitCode)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 TerminateProcess (HANDLE	hProcess,
 		  UINT	uExitCode)
 {
@@ -744,7 +744,7 @@ GetPriorityClass (HANDLE	hProcess)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetPriorityClass (HANDLE	hProcess,
 		  DWORD	dwPriorityClass)
 {

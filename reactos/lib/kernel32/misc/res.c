@@ -1,4 +1,4 @@
-/* $Id: res.c,v 1.18 2004/01/22 20:47:08 navaraf Exp $
+/* $Id: res.c,v 1.19 2004/01/23 17:15:23 ekohl Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -199,7 +199,7 @@ SizeofResource (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 FreeResource (
 	HGLOBAL	hResData
@@ -229,7 +229,7 @@ HANDLE
 STDCALL
 BeginUpdateResourceW (
 	LPCWSTR	pFileName,
-	WINBOOL	bDeleteExistingResources
+	BOOL	bDeleteExistingResources
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -244,7 +244,7 @@ HANDLE
 STDCALL
 BeginUpdateResourceA (
 	LPCSTR	pFileName,
-	WINBOOL	bDeleteExistingResources
+	BOOL	bDeleteExistingResources
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -255,11 +255,11 @@ BeginUpdateResourceA (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EndUpdateResourceW (
 	HANDLE	hUpdate,
-	WINBOOL	fDiscard
+	BOOL	fDiscard
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -270,11 +270,11 @@ EndUpdateResourceW (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EndUpdateResourceA (
 	HANDLE	hUpdate,
-	WINBOOL	fDiscard
+	BOOL	fDiscard
 	)
 {
 	return EndUpdateResourceW(
@@ -287,7 +287,7 @@ EndUpdateResourceA (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumResourceLanguagesW (
 	HINSTANCE		hModule,
@@ -302,7 +302,7 @@ EnumResourceLanguagesW (
 }
 
 
-WINBOOL
+BOOL
 STDCALL
 EnumResourceLanguagesA (
 	HINSTANCE		hModule,
@@ -320,7 +320,7 @@ EnumResourceLanguagesA (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumResourceNamesW (
 	HINSTANCE		hModule,
@@ -337,7 +337,7 @@ EnumResourceNamesW (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumResourceNamesA (
 	HINSTANCE		hModule,
@@ -354,7 +354,7 @@ EnumResourceNamesA (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumResourceTypesW (
 	HINSTANCE		hModule,
@@ -370,7 +370,7 @@ EnumResourceTypesW (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumResourceTypesA (
 	HINSTANCE		hModule,
@@ -386,7 +386,7 @@ EnumResourceTypesA (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 UpdateResourceA (
 	HANDLE	hUpdate,
@@ -405,7 +405,7 @@ UpdateResourceA (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 UpdateResourceW (
 	HANDLE	hUpdate,

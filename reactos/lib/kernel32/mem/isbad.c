@@ -1,4 +1,4 @@
-/* $Id: isbad.c,v 1.8 2003/10/09 06:13:04 gvg Exp $
+/* $Id: isbad.c,v 1.9 2004/01/23 17:13:36 ekohl Exp $
  *
  * lib/kernel32/mem/isbad.c
  *
@@ -46,7 +46,7 @@ strnlen (
 /*
  * @implemented
  */
-WINBOOL 
+BOOL 
 STDCALL
 IsBadReadPtr (
 	CONST VOID	* lp,
@@ -94,7 +94,7 @@ IsBadReadPtr (
 /*
  * @implemented
  */
-WINBOOL 
+BOOL 
 STDCALL
 IsBadHugeReadPtr (
 	CONST VOID	* lp,
@@ -108,7 +108,7 @@ IsBadHugeReadPtr (
 /*
  * @implemented
  */
-WINBOOL 
+BOOL 
 STDCALL
 IsBadCodePtr (
 	FARPROC	lpfn
@@ -142,7 +142,7 @@ IsBadCodePtr (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 IsBadWritePtr (
 	LPVOID	lp,
@@ -197,7 +197,7 @@ IsBadWritePtr (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 IsBadHugeWritePtr (
 	LPVOID	lp,
@@ -211,7 +211,7 @@ IsBadHugeWritePtr (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 IsBadStringPtrW (
 	LPCWSTR	lpsz,
@@ -232,7 +232,7 @@ IsBadStringPtrW (
 /*
  * @implemented
  */
-WINBOOL 
+BOOL 
 STDCALL
 IsBadStringPtrA (
 	LPCSTR	lpsz,

@@ -1,4 +1,4 @@
-/* $Id: cmdline.c,v 1.17 2003/07/10 18:50:51 chorns Exp $
+/* $Id: cmdline.c,v 1.18 2004/01/23 17:16:26 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -22,7 +22,7 @@
 static UNICODE_STRING CommandLineStringW;
 static ANSI_STRING CommandLineStringA;
 
-static WINBOOL bCommandLineInitialized = FALSE;
+static BOOL bCommandLineInitialized = FALSE;
 
 
 /* FUNCTIONS ****************************************************************/

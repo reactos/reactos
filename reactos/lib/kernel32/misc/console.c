@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.71 2003/12/18 09:51:08 gvg Exp $
+/* $Id: console.c,v 1.72 2004/01/23 17:15:23 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -653,7 +653,7 @@ OpenConsoleW (LPWSTR  wsName,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetConsoleCommandHistoryMode (DWORD	dwMode)
      /*
       * Undocumented
@@ -667,7 +667,7 @@ SetConsoleCommandHistoryMode (DWORD	dwMode)
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetConsoleCursor (DWORD	Unknown0,
 		  DWORD	Unknown1)
      /*
@@ -682,7 +682,7 @@ SetConsoleCursor (DWORD	Unknown0,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetConsoleDisplayMode (HANDLE hOut,
 		       DWORD dwNewMode,
 		       LPDWORD lpdwOldMode)
@@ -702,7 +702,7 @@ SetConsoleDisplayMode (HANDLE hOut,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetConsoleFont (DWORD	Unknown0,
 		DWORD	Unknown1)
      /*
@@ -717,7 +717,7 @@ SetConsoleFont (DWORD	Unknown0,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetConsoleHardwareState (HANDLE	hConsole,
 			 DWORD	Flags,
 			 DWORD	State)
@@ -750,7 +750,7 @@ SetConsoleHardwareState (HANDLE	hConsole,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetConsoleKeyShortcuts (DWORD	Unknown0,
 			DWORD	Unknown1,
 			DWORD	Unknown2,
@@ -767,7 +767,7 @@ SetConsoleKeyShortcuts (DWORD	Unknown0,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetConsoleMaximumWindowSize (DWORD	Unknown0,
 			     DWORD	Unknown1)
      /*
@@ -782,7 +782,7 @@ SetConsoleMaximumWindowSize (DWORD	Unknown0,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetConsoleMenuClose (DWORD	Unknown0)
      /*
       * Undocumented
@@ -796,7 +796,7 @@ SetConsoleMenuClose (DWORD	Unknown0)
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetConsoleNumberOfCommandsA (DWORD	Unknown0,
 			     DWORD	Unknown1)
      /*
@@ -811,7 +811,7 @@ SetConsoleNumberOfCommandsA (DWORD	Unknown0,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetConsoleNumberOfCommandsW (DWORD	Unknown0,
 			     DWORD	Unknown1)
      /*
@@ -826,7 +826,7 @@ SetConsoleNumberOfCommandsW (DWORD	Unknown0,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetConsolePalette (DWORD	Unknown0,
 		   DWORD	Unknown1,
 		   DWORD	Unknown2)
@@ -842,7 +842,7 @@ SetConsolePalette (DWORD	Unknown0,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetLastConsoleEventActive (VOID)
      /*
       * Undocumented
@@ -933,7 +933,7 @@ WriteConsoleInputVDMW (DWORD	Unknown0,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 CloseConsoleHandle(HANDLE Handle)
      /*
       * Undocumented
@@ -966,9 +966,9 @@ CloseConsoleHandle(HANDLE Handle)
 
 
 /*
- * @implemented
+ * internal function
  */
-BOOLEAN STDCALL 
+BOOL STDCALL
 IsConsoleHandle(HANDLE Handle)
 {
   if ((((ULONG)Handle) & 0x10000003) == 0x3)
@@ -982,7 +982,7 @@ IsConsoleHandle(HANDLE Handle)
 /*
  * @implemented
  */
-HANDLE STDCALL 
+HANDLE STDCALL
 GetStdHandle(DWORD nStdHandle)
      /*
       * FUNCTION: Get a handle for the standard input, standard output
@@ -1016,7 +1016,7 @@ GetStdHandle(DWORD nStdHandle)
 /*
  * @implemented
  */
-WINBASEAPI BOOL WINAPI 
+WINBASEAPI BOOL WINAPI
 SetStdHandle(DWORD nStdHandle,
 	     HANDLE hHandle)
      /*
@@ -1066,7 +1066,7 @@ SetStdHandle(DWORD nStdHandle,
  *
  * @implemented
  */
-WINBOOL STDCALL 
+BOOL STDCALL 
 WriteConsoleA(HANDLE hConsoleOutput,
 	      CONST VOID *lpBuffer,
 	      DWORD nNumberOfCharsToWrite,
@@ -1135,7 +1135,7 @@ WriteConsoleA(HANDLE hConsoleOutput,
  *
  * @implemented
  */
-WINBOOL STDCALL ReadConsoleA(HANDLE hConsoleInput,
+BOOL STDCALL ReadConsoleA(HANDLE hConsoleInput,
 			     LPVOID lpBuffer,
 			     DWORD nNumberOfCharsToRead,
 			     LPDWORD lpNumberOfCharsRead,
@@ -1230,7 +1230,7 @@ WINBOOL STDCALL ReadConsoleA(HANDLE hConsoleInput,
  *
  * @implemented
  */
-WINBOOL STDCALL AllocConsole(VOID)
+BOOL STDCALL AllocConsole(VOID)
 {
    CSRSS_API_REQUEST Request;
    CSRSS_API_REPLY Reply;
@@ -1270,7 +1270,7 @@ WINBOOL STDCALL AllocConsole(VOID)
  *
  * @implemented
  */
-WINBOOL STDCALL FreeConsole(VOID)
+BOOL STDCALL FreeConsole(VOID)
 {
     // AG: I'm not sure if this is correct (what happens to std handles?)
     // but I just tried to reverse what AllocConsole() does...
@@ -1296,7 +1296,7 @@ WINBOOL STDCALL FreeConsole(VOID)
  *
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetConsoleScreenBufferInfo(
     HANDLE hConsoleOutput,
@@ -1325,7 +1325,7 @@ GetConsoleScreenBufferInfo(
  *
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetConsoleCursorPosition(
     HANDLE hConsoleOutput,
@@ -1354,7 +1354,7 @@ SetConsoleCursorPosition(
  *
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 FillConsoleOutputCharacterA(
 	HANDLE		hConsoleOutput,
 	CHAR		cCharacter,
@@ -1389,7 +1389,7 @@ FillConsoleOutputCharacterA(
  *
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 FillConsoleOutputCharacterW(
 	HANDLE		hConsoleOutput,

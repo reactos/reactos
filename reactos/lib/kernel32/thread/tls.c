@@ -1,4 +1,4 @@
-/* $Id: tls.c,v 1.12 2003/07/10 18:50:51 chorns Exp $
+/* $Id: tls.c,v 1.13 2004/01/23 17:18:16 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -47,7 +47,7 @@ TlsAlloc(VOID)
 /*
  * @implemented
  */
-WINBOOL STDCALL 
+BOOL STDCALL 
 TlsFree(DWORD dwTlsIndex)
 {
    if (dwTlsIndex >= TLS_MINIMUM_AVAILABLE)
@@ -103,7 +103,7 @@ TlsGetValue(DWORD dwTlsIndex)
 /*
  * @implemented
  */
-WINBOOL STDCALL 
+BOOL STDCALL 
 TlsSetValue(DWORD dwTlsIndex, LPVOID lpTlsValue)
 {
    if (dwTlsIndex >= TLS_MINIMUM_AVAILABLE)

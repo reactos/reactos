@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.11 2003/07/10 18:50:51 chorns Exp $
+/* $Id: virtual.c,v 1.12 2004/01/23 17:13:36 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -60,7 +60,7 @@ VirtualAlloc(LPVOID lpAddress,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 VirtualFreeEx(HANDLE hProcess,
 	      LPVOID lpAddress,
 	      DWORD dwSize,
@@ -84,7 +84,7 @@ VirtualFreeEx(HANDLE hProcess,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 VirtualFree(LPVOID lpAddress,
 	    DWORD dwSize,
 	    DWORD dwFreeType)
@@ -99,7 +99,7 @@ VirtualFree(LPVOID lpAddress,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 VirtualProtect(LPVOID lpAddress,
 	       DWORD dwSize,
 	       DWORD flNewProtect,
@@ -116,7 +116,7 @@ VirtualProtect(LPVOID lpAddress,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 VirtualProtectEx(HANDLE hProcess,
 		 LPVOID lpAddress,
 		 DWORD dwSize,
@@ -142,7 +142,7 @@ VirtualProtectEx(HANDLE hProcess,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 VirtualLock(LPVOID lpAddress,
 	    DWORD dwSize)
 {
@@ -207,7 +207,7 @@ VirtualQueryEx(HANDLE hProcess,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 VirtualUnlock(LPVOID lpAddress,
 	      DWORD dwSize)
 {

@@ -1,4 +1,4 @@
-/* $Id: ldr.c,v 1.17 2003/10/30 15:52:29 arty Exp $
+/* $Id: ldr.c,v 1.18 2004/01/23 17:15:23 ekohl Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -18,7 +18,7 @@
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 DisableThreadLibraryCalls (
 	HMODULE	hLibModule
@@ -181,7 +181,7 @@ GetProcAddress( HMODULE hModule, LPCSTR lpProcName )
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 FreeLibrary( HMODULE hLibModule )
 {

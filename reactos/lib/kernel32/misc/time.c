@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.24 2003/07/20 13:13:03 ekohl Exp $
+/* $Id: time.c,v 1.25 2004/01/23 17:15:23 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -40,7 +40,7 @@ typedef struct __DOSDATE
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 FileTimeToDosDateTime(
 		      CONST FILETIME *lpFileTime,
@@ -81,7 +81,7 @@ FileTimeToDosDateTime(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 DosDateTimeToFileTime(
 		      WORD wFatDate,
@@ -148,7 +148,7 @@ GetSystemTimeAsFileTime (PFILETIME lpFileTime)
 /*
  * @implemented
  */
-WINBOOL 
+BOOL 
 STDCALL
 SystemTimeToFileTime(
     CONST SYSTEMTIME *  lpSystemTime,	
@@ -180,7 +180,7 @@ SystemTimeToFileTime(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 FileTimeToSystemTime(
 		     CONST FILETIME *lpFileTime,
@@ -214,7 +214,7 @@ FileTimeToSystemTime(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 FileTimeToLocalFileTime(
 			CONST FILETIME *lpFileTime,
@@ -231,7 +231,7 @@ FileTimeToLocalFileTime(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 LocalFileTimeToFileTime(
 			CONST FILETIME *lpLocalFileTime,
@@ -276,7 +276,7 @@ GetSystemTime(LPSYSTEMTIME lpSystemTime)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetLocalTime(CONST SYSTEMTIME *lpSystemTime)
 {
   FILETIME LocalFileTime;
@@ -295,7 +295,7 @@ SetLocalTime(CONST SYSTEMTIME *lpSystemTime)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetSystemTime(CONST SYSTEMTIME *lpSystemTime)
 {
   LARGE_INTEGER NewSystemTime;
@@ -389,7 +389,7 @@ GetTickCount(VOID)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SystemTimeToTzSpecificLocalTime(
                                 LPTIME_ZONE_INFORMATION lpTimeZoneInformation,
                                 LPSYSTEMTIME lpUniversalTime,
@@ -425,10 +425,10 @@ SystemTimeToTzSpecificLocalTime(
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetSystemTimeAdjustment(PDWORD lpTimeAdjustment,
 			PDWORD lpTimeIncrement,
-			PWINBOOL lpTimeAdjustmentDisabled)
+			PBOOL lpTimeAdjustmentDisabled)
 {
    SYSTEM_QUERY_TIME_ADJUSTMENT Buffer;
    NTSTATUS Status;
@@ -445,7 +445,7 @@ GetSystemTimeAdjustment(PDWORD lpTimeAdjustment,
    
    *lpTimeAdjustment = (DWORD)Buffer.TimeAdjustment;
    *lpTimeIncrement = (DWORD)Buffer.MaximumIncrement;
-   *lpTimeAdjustmentDisabled = (WINBOOL)Buffer.TimeSynchronization;
+   *lpTimeAdjustmentDisabled = (BOOL)Buffer.TimeSynchronization;
    
    return TRUE;
 }
@@ -454,9 +454,9 @@ GetSystemTimeAdjustment(PDWORD lpTimeAdjustment,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetSystemTimeAdjustment(DWORD dwTimeAdjustment,
-			WINBOOL bTimeAdjustmentDisabled)
+			BOOL bTimeAdjustmentDisabled)
 {
    NTSTATUS Status;
    SYSTEM_SET_TIME_ADJUSTMENT Buffer;

@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.23 2004/01/12 11:05:38 gvg Exp $
+/* $Id: env.c,v 1.24 2004/01/23 17:15:23 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -140,7 +140,7 @@ GetEnvironmentVariableW (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetEnvironmentVariableA (
 	LPCSTR	lpName,
@@ -187,7 +187,7 @@ SetEnvironmentVariableA (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetEnvironmentVariableW (
 	LPCWSTR	lpName,
@@ -247,7 +247,7 @@ GetVersion(VOID)
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetVersionExW(
     LPOSVERSIONINFOW lpVersionInformation
@@ -313,7 +313,7 @@ GetVersionExW(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetVersionExA(
     LPOSVERSIONINFOA lpVersionInformation
@@ -500,7 +500,7 @@ GetEnvironmentStringsW (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 FreeEnvironmentStringsA (
 	LPSTR	EnvironmentStrings
@@ -520,7 +520,7 @@ FreeEnvironmentStringsA (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 FreeEnvironmentStringsW (
 	LPWSTR	EnvironmentStrings

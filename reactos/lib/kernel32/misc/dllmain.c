@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.30 2003/11/17 02:12:50 hyperion Exp $
+/* $Id: dllmain.c,v 1.31 2004/01/23 17:15:23 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -24,7 +24,7 @@ extern UNICODE_STRING WindowsDirectory;
 HANDLE hProcessHeap = NULL;
 HANDLE hBaseDir = NULL;
 
-static WINBOOL DllInitialized = FALSE;
+static BOOL DllInitialized = FALSE;
 
 BOOL STDCALL
 DllMain(HANDLE hInst,

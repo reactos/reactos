@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.13 2003/07/10 18:50:51 chorns Exp $
+/* $Id: timer.c,v 1.14 2004/01/23 17:17:10 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -21,7 +21,7 @@
  */
 HANDLE STDCALL
 CreateWaitableTimerW(LPSECURITY_ATTRIBUTES lpTimerAttributes,
-		     WINBOOL bManualReset,
+		     BOOL bManualReset,
 		     LPWSTR lpTimerName)
 {
    NTSTATUS Status;
@@ -61,7 +61,7 @@ CreateWaitableTimerW(LPSECURITY_ATTRIBUTES lpTimerAttributes,
  */
 HANDLE STDCALL
 CreateWaitableTimerA(LPSECURITY_ATTRIBUTES lpTimerAttributes,
-		     WINBOOL bManualReset,
+		     BOOL bManualReset,
 		     LPCSTR lpTimerName)
 {
 	UNICODE_STRING TimerNameU;
@@ -89,7 +89,7 @@ CreateWaitableTimerA(LPSECURITY_ATTRIBUTES lpTimerAttributes,
  */
 HANDLE STDCALL
 OpenWaitableTimerW(DWORD dwDesiredAccess,
-		   WINBOOL bInheritHandle,
+		   BOOL bInheritHandle,
 		   LPCWSTR lpTimerName)
 {
    NTSTATUS Status;
@@ -129,7 +129,7 @@ OpenWaitableTimerW(DWORD dwDesiredAccess,
  */
 HANDLE STDCALL
 OpenWaitableTimerA(DWORD dwDesiredAccess,
-		   WINBOOL bInheritHandle,
+		   BOOL bInheritHandle,
 		   LPCSTR lpTimerName)
 {
 	UNICODE_STRING TimerNameU;
@@ -155,13 +155,13 @@ OpenWaitableTimerA(DWORD dwDesiredAccess,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetWaitableTimer(HANDLE hTimer,
 		 const LARGE_INTEGER *pDueTime,
 		 LONG lPeriod,
 		 PTIMERAPCROUTINE pfnCompletionRoutine,
 		 LPVOID lpArgToCompletionRoutine,
-		 WINBOOL fResume)
+		 BOOL fResume)
 {
    NTSTATUS Status;
    BOOLEAN pState;
@@ -185,7 +185,7 @@ SetWaitableTimer(HANDLE hTimer,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 CancelWaitableTimer(HANDLE hTimer)
 {
    NTSTATUS Status;

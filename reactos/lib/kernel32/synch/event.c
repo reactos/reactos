@@ -1,4 +1,4 @@
-/* $Id: event.c,v 1.16 2004/01/10 13:54:52 gvg Exp $
+/* $Id: event.c,v 1.17 2004/01/23 17:17:10 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -23,8 +23,8 @@
  */
 HANDLE STDCALL
 CreateEventA(LPSECURITY_ATTRIBUTES lpEventAttributes,
-	     WINBOOL bManualReset,
-	     WINBOOL bInitialState,
+	     BOOL bManualReset,
+	     BOOL bInitialState,
 	     LPCSTR lpName)
 {
    UNICODE_STRING EventNameU;
@@ -61,8 +61,8 @@ CreateEventA(LPSECURITY_ATTRIBUTES lpEventAttributes,
  */
 HANDLE STDCALL
 CreateEventW(LPSECURITY_ATTRIBUTES lpEventAttributes,
-	     WINBOOL bManualReset,
-	     WINBOOL bInitialState,
+	     BOOL bManualReset,
+	     BOOL bInitialState,
 	     LPCWSTR lpName)
 {
    NTSTATUS Status;
@@ -115,7 +115,7 @@ CreateEventW(LPSECURITY_ATTRIBUTES lpEventAttributes,
  */
 HANDLE STDCALL
 OpenEventA(DWORD dwDesiredAccess,
-	   WINBOOL bInheritHandle,
+	   BOOL bInheritHandle,
 	   LPCSTR lpName)
 {
    UNICODE_STRING EventNameU;
@@ -152,7 +152,7 @@ OpenEventA(DWORD dwDesiredAccess,
  */
 HANDLE STDCALL
 OpenEventW(DWORD dwDesiredAccess,
-	   WINBOOL bInheritHandle,
+	   BOOL bInheritHandle,
 	   LPCWSTR lpName)
 {
    OBJECT_ATTRIBUTES ObjectAttributes;
@@ -195,7 +195,7 @@ OpenEventW(DWORD dwDesiredAccess,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 PulseEvent(HANDLE hEvent)
 {
    ULONG Count;
@@ -216,7 +216,7 @@ PulseEvent(HANDLE hEvent)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 ResetEvent(HANDLE hEvent)
 {
    NTSTATUS Status;
@@ -237,7 +237,7 @@ ResetEvent(HANDLE hEvent)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetEvent(HANDLE hEvent)
 {
    NTSTATUS Status;

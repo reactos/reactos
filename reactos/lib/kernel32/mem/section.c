@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.21 2003/12/16 21:32:18 gvg Exp $
+/* $Id: section.c,v 1.22 2004/01/23 17:13:36 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -232,7 +232,7 @@ MapViewOfFile(HANDLE hFileMappingObject,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 UnmapViewOfFile(LPVOID lpBaseAddress)
 {
    NTSTATUS Status;
@@ -253,7 +253,7 @@ UnmapViewOfFile(LPVOID lpBaseAddress)
  */
 HANDLE STDCALL
 OpenFileMappingA(DWORD dwDesiredAccess,
-		 WINBOOL bInheritHandle,
+		 BOOL bInheritHandle,
 		 LPCSTR lpName)
 {
    NTSTATUS Status;
@@ -298,7 +298,7 @@ OpenFileMappingA(DWORD dwDesiredAccess,
  */
 HANDLE STDCALL
 OpenFileMappingW(DWORD dwDesiredAccess,
-		 WINBOOL bInheritHandle,
+		 BOOL bInheritHandle,
 		 LPCWSTR lpName)
 {
    NTSTATUS Status;
@@ -334,7 +334,7 @@ OpenFileMappingW(DWORD dwDesiredAccess,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 FlushViewOfFile(LPCVOID lpBaseAddress,
 		DWORD dwNumberOfBytesToFlush)
 {

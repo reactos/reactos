@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.59 2003/09/20 23:37:56 weiden Exp $
+/* $Id: stubs.c,v 1.60 2004/01/23 17:15:23 ekohl Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -169,7 +169,7 @@ FreeVirtualBuffer (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetBinaryTypeW (
     LPCWSTR lpApplicationName,
@@ -184,7 +184,7 @@ GetBinaryTypeW (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetBinaryTypeA (
     LPCSTR  lpApplicationName,
@@ -218,7 +218,7 @@ GetNextVDMCommand (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetStringTypeExW (
     LCID    Locale,
@@ -236,7 +236,7 @@ GetStringTypeExW (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetStringTypeExA (
     LCID    Locale,
@@ -254,7 +254,7 @@ GetStringTypeExA (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetStringTypeW (
     DWORD   dwInfoType,
@@ -271,7 +271,7 @@ GetStringTypeW (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetStringTypeA (
     LCID    Locale,
@@ -291,7 +291,7 @@ GetStringTypeA (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetSystemPowerStatus (
     DWORD   Unknown0
@@ -321,7 +321,7 @@ GetVDMCurrentDirectories (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 IsDBCSLeadByte (
     BYTE    TestChar
@@ -335,7 +335,7 @@ IsDBCSLeadByte (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 IsDBCSLeadByteEx (
     UINT    CodePage,
@@ -366,7 +366,7 @@ LoadModule (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 RegisterConsoleVDM (
     DWORD   Unknown0,
@@ -390,7 +390,7 @@ RegisterConsoleVDM (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 RegisterWowBaseHandlers (
     DWORD   Unknown0
@@ -404,7 +404,7 @@ RegisterWowBaseHandlers (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 RegisterWowExec (
     DWORD   Unknown0
@@ -418,10 +418,10 @@ RegisterWowExec (
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetSystemPowerState (
-    WINBOOL fSuspend,
-    WINBOOL fForce
+    BOOL fSuspend,
+    BOOL fForce
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -432,7 +432,7 @@ SetSystemPowerState (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetVDMCurrentDirectories (
     DWORD   Unknown0,
@@ -540,7 +540,7 @@ VirtualBufferExceptionHandler (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 ActivateActCtx(
     HANDLE hActCtx,
@@ -566,7 +566,7 @@ AddRefActCtx(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 AllocateUserPhysicalPages(
     HANDLE hProcess,
@@ -581,7 +581,7 @@ AllocateUserPhysicalPages(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 AssignProcessToJobObject(
     HANDLE hJob,
@@ -595,7 +595,7 @@ AssignProcessToJobObject(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 BindIoCompletionCallback (
     HANDLE FileHandle,
@@ -610,7 +610,7 @@ BindIoCompletionCallback (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 CancelDeviceWakeupRequest(
     HANDLE hDevice
@@ -623,7 +623,7 @@ CancelDeviceWakeupRequest(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 CancelTimerQueueTimer(
     HANDLE TimerQueue,
@@ -637,7 +637,7 @@ CancelTimerQueueTimer(
  * @unimplemented
  */
 
-WINBOOL
+BOOL
 STDCALL
 ChangeTimerQueueTimer(
     HANDLE TimerQueue,
@@ -679,7 +679,7 @@ CreateActCtxW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 CreateJobSet (
     ULONG NumJob,
@@ -719,7 +719,7 @@ CreateTimerQueue(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 CreateTimerQueueTimer(
     PHANDLE phNewTimer,
@@ -738,7 +738,7 @@ CreateTimerQueueTimer(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 DeactivateActCtx(
     DWORD dwFlags,
@@ -752,7 +752,7 @@ DeactivateActCtx(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 DeleteTimerQueue(
     HANDLE TimerQueue
@@ -765,7 +765,7 @@ DeleteTimerQueue(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 DeleteTimerQueueEx(
     HANDLE TimerQueue,
@@ -779,7 +779,7 @@ DeleteTimerQueueEx(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 DeleteTimerQueueTimer(
     HANDLE TimerQueue,
@@ -794,7 +794,7 @@ DeleteTimerQueueTimer(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 FindActCtxSectionGuid(
     DWORD dwFlags,
@@ -811,7 +811,7 @@ FindActCtxSectionGuid(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 FindVolumeClose(
     HANDLE hFindVolume
@@ -824,7 +824,7 @@ FindVolumeClose(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 FindVolumeMountPointClose(
     HANDLE hFindVolumeMountPoint
@@ -837,7 +837,7 @@ FindVolumeMountPointClose(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 FreeUserPhysicalPages(
     HANDLE hProcess,
@@ -852,7 +852,7 @@ FreeUserPhysicalPages(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetCurrentActCtx(
     HANDLE *lphActCtx)
@@ -864,11 +864,11 @@ GetCurrentActCtx(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetDevicePowerState(
     HANDLE hDevice,
-    WINBOOL *pfOn
+    BOOL *pfOn
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -878,7 +878,7 @@ GetDevicePowerState(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetFileSizeEx(
     HANDLE hFile,
@@ -904,7 +904,7 @@ GetNativeSystemInfo(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetNumaHighestNodeNumber(
     PULONG HighestNodeNumber
@@ -917,7 +917,7 @@ GetNumaHighestNodeNumber(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetNumaNodeProcessorMask(
     UCHAR Node,
@@ -931,7 +931,7 @@ GetNumaNodeProcessorMask(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetNumaProcessorNode(
     UCHAR Processor,
@@ -945,7 +945,7 @@ GetNumaProcessorNode(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetProcessHandleCount(
     HANDLE hProcess,
@@ -972,7 +972,7 @@ GetProcessId(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetProcessIoCounters(
     HANDLE hProcess,
@@ -986,11 +986,11 @@ GetProcessIoCounters(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetProcessPriorityBoost(
     HANDLE hProcess,
-    PWINBOOL pDisablePriorityBoost
+    PBOOL pDisablePriorityBoost
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1000,7 +1000,7 @@ GetProcessPriorityBoost(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetSystemRegistryQuota(
     PDWORD pdwQuotaAllowed,
@@ -1014,7 +1014,7 @@ GetSystemRegistryQuota(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetSystemTimes(
     LPFILETIME lpIdleTime,
@@ -1029,11 +1029,11 @@ GetSystemTimes(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetThreadIOPendingFlag(
     HANDLE hThread,
-    PWINBOOL lpIOIsPending
+    PBOOL lpIOIsPending
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1061,7 +1061,7 @@ GetWriteWatch(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GlobalMemoryStatusEx(
     LPMEMORYSTATUSEX lpBuffer
@@ -1074,7 +1074,7 @@ GlobalMemoryStatusEx(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 HeapQueryInformation (
     HANDLE HeapHandle, 
@@ -1091,7 +1091,7 @@ HeapQueryInformation (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 HeapSetInformation (
     HANDLE HeapHandle, 
@@ -1107,7 +1107,7 @@ HeapSetInformation (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 InitializeCriticalSectionAndSpinCount(
     LPCRITICAL_SECTION lpCriticalSection,
@@ -1121,12 +1121,12 @@ InitializeCriticalSectionAndSpinCount(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 IsProcessInJob (
     HANDLE ProcessHandle,
     HANDLE JobHandle,
-    PWINBOOL Result
+    PBOOL Result
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1136,7 +1136,7 @@ IsProcessInJob (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 IsSystemResumeAutomatic(
     VOID
@@ -1149,11 +1149,11 @@ IsSystemResumeAutomatic(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 IsWow64Process(
     HANDLE hProcess,
-    PWINBOOL Wow64Process
+    PBOOL Wow64Process
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1163,7 +1163,7 @@ IsWow64Process(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 MapUserPhysicalPages(
     PVOID VirtualAddress,
@@ -1178,7 +1178,7 @@ MapUserPhysicalPages(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 MapUserPhysicalPagesScatter(
     PVOID *VirtualAddresses,
@@ -1197,7 +1197,7 @@ HANDLE
 STDCALL
 OpenThread(
     DWORD dwDesiredAccess,
-    WINBOOL bInheritHandle,
+    BOOL bInheritHandle,
     DWORD dwThreadId
     )
 {
@@ -1208,7 +1208,7 @@ OpenThread(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 QueryActCtxW(
     DWORD dwFlags,
@@ -1227,7 +1227,7 @@ QueryActCtxW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 QueryInformationJobObject(
     HANDLE hJob,
@@ -1244,11 +1244,11 @@ QueryInformationJobObject(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 QueryMemoryResourceNotification(
      HANDLE ResourceNotificationHandle,
-    PWINBOOL  ResourceState
+    PBOOL  ResourceState
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1273,7 +1273,7 @@ QueueUserAPC(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 QueueUserWorkItem(
     LPTHREAD_START_ROUTINE Function,
@@ -1288,13 +1288,13 @@ QueueUserWorkItem(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 ReadDirectoryChangesW(
     HANDLE hDirectory,
     LPVOID lpBuffer,
     DWORD nBufferLength,
-    WINBOOL bWatchSubtree,
+    BOOL bWatchSubtree,
     DWORD dwNotifyFilter,
     LPDWORD lpBytesReturned,
     LPOVERLAPPED lpOverlapped,
@@ -1308,7 +1308,7 @@ ReadDirectoryChangesW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 ReadFileScatter(
     HANDLE hFile,
@@ -1325,7 +1325,7 @@ ReadFileScatter(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 RegisterWaitForSingleObject(
     PHANDLE phNewWaitObject,
@@ -1385,7 +1385,7 @@ RemoveVectoredExceptionHandler(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 RequestDeviceWakeup(
     HANDLE hDevice
@@ -1398,7 +1398,7 @@ RequestDeviceWakeup(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 RequestWakeupLatency(
     LATENCY_TIME latency
@@ -1451,7 +1451,7 @@ SetCriticalSectionSpinCount(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetFilePointerEx(
     HANDLE hFile,
@@ -1467,7 +1467,7 @@ SetFilePointerEx(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetFileValidData(
     HANDLE hFile,
@@ -1481,7 +1481,7 @@ SetFileValidData(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetInformationJobObject(
     HANDLE hJob,
@@ -1497,7 +1497,7 @@ SetInformationJobObject(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetMessageWaitingIndicator(
     HANDLE hMsgIndicator,
@@ -1511,11 +1511,11 @@ SetMessageWaitingIndicator(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetProcessPriorityBoost(
     HANDLE hProcess,
-    WINBOOL bDisablePriorityBoost
+    BOOL bDisablePriorityBoost
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1546,7 +1546,7 @@ SetTimerQueueTimer(
     PVOID Parameter,
     DWORD DueTime,
     DWORD Period,
-    WINBOOL PreferIo
+    BOOL PreferIo
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1556,7 +1556,7 @@ SetTimerQueueTimer(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 TerminateJobObject(
     HANDLE hJob,
@@ -1570,7 +1570,7 @@ TerminateJobObject(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 TzSpecificLocalTimeToSystemTime(
     LPTIME_ZONE_INFORMATION lpTimeZoneInformation,
@@ -1585,7 +1585,7 @@ TzSpecificLocalTimeToSystemTime(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 UnregisterWait(
     HANDLE WaitHandle
@@ -1598,7 +1598,7 @@ UnregisterWait(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 UnregisterWaitEx(
     HANDLE WaitHandle,
@@ -1612,7 +1612,7 @@ UnregisterWaitEx(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 WriteFileGather(
     HANDLE hFile,
@@ -1640,7 +1640,7 @@ WTSGetActiveConsoleSessionId(VOID)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 ZombifyActCtx(
     HANDLE hActCtx
@@ -1653,14 +1653,14 @@ ZombifyActCtx(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 CheckNameLegalDOS8Dot3W(
     LPCWSTR lpName,
     LPSTR lpOemName OPTIONAL,
     DWORD OemNameSize OPTIONAL,
-    PWINBOOL pbNameContainsSpaces OPTIONAL,
-    PWINBOOL pbNameLegal
+    PBOOL pbNameContainsSpaces OPTIONAL,
+    PBOOL pbNameLegal
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1670,7 +1670,7 @@ CheckNameLegalDOS8Dot3W(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 CreateHardLinkW(
     LPCWSTR lpFileName,
@@ -1699,7 +1699,7 @@ CreateJobObjectW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 DeleteVolumeMountPointW(
     LPCWSTR lpszVolumeMountPoint
@@ -1712,7 +1712,7 @@ DeleteVolumeMountPointW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 DnsHostnameToComputerNameW (
     LPCWSTR Hostname,
@@ -1727,7 +1727,7 @@ DnsHostnameToComputerNameW (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 FindActCtxSectionStringW(
     DWORD dwFlags,
@@ -1773,7 +1773,7 @@ FindFirstVolumeMountPointW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 FindNextVolumeW(
     HANDLE hFindVolume,
@@ -1788,7 +1788,7 @@ FindNextVolumeW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 FindNextVolumeMountPointW(
     HANDLE hFindVolumeMountPoint,
@@ -1803,7 +1803,7 @@ FindNextVolumeMountPointW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetComputerNameExW (
     COMPUTER_NAME_FORMAT NameType,
@@ -1863,7 +1863,7 @@ GetLongPathNameW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetModuleHandleExW(
     DWORD        dwFlags,
@@ -1892,7 +1892,7 @@ GetSystemWow64DirectoryW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetVolumeNameForVolumeMountPointW(
     LPCWSTR lpszVolumeMountPoint,
@@ -1907,7 +1907,7 @@ GetVolumeNameForVolumeMountPointW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetVolumePathNameW(
     LPCWSTR lpszFileName,
@@ -1922,7 +1922,7 @@ GetVolumePathNameW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetVolumePathNamesForVolumeNameW(
     LPCWSTR lpszVolumeName,
@@ -1942,7 +1942,7 @@ HANDLE
 STDCALL
 OpenJobObjectW(
     DWORD dwDesiredAccess,
-    WINBOOL bInheritHandle,
+    BOOL bInheritHandle,
     LPCWSTR lpName
     )
 {
@@ -1953,7 +1953,7 @@ OpenJobObjectW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 ReplaceFileW(
     LPCWSTR lpReplacedFileName,
@@ -1971,7 +1971,7 @@ ReplaceFileW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetComputerNameExW (
     COMPUTER_NAME_FORMAT NameType,
@@ -1985,7 +1985,7 @@ SetComputerNameExW (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetDllDirectoryW(
     LPCWSTR lpPathName
@@ -1998,7 +1998,7 @@ SetDllDirectoryW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetFileShortNameW(
     HANDLE hFile,
@@ -2012,7 +2012,7 @@ SetFileShortNameW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetFirmwareEnvironmentVariableW(
     LPCWSTR lpName,
@@ -2028,7 +2028,7 @@ SetFirmwareEnvironmentVariableW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetVolumeMountPointW(
     LPCWSTR lpszVolumeMountPoint,
@@ -2042,7 +2042,7 @@ SetVolumeMountPointW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 VerifyVersionInfoW(
     LPOSVERSIONINFOEXW lpVersionInformation,
@@ -2057,14 +2057,14 @@ VerifyVersionInfoW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 CheckNameLegalDOS8Dot3A(
     LPCSTR lpName,
     LPSTR lpOemName OPTIONAL,
     DWORD OemNameSize OPTIONAL,
-    PWINBOOL pbNameContainsSpaces OPTIONAL,
-    PWINBOOL pbNameLegal
+    PBOOL pbNameContainsSpaces OPTIONAL,
+    PBOOL pbNameLegal
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -2074,7 +2074,7 @@ CheckNameLegalDOS8Dot3A(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 CreateHardLinkA(
     LPCSTR lpFileName,
@@ -2103,7 +2103,7 @@ CreateJobObjectA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 DeleteVolumeMountPointA(
     LPCSTR lpszVolumeMountPoint
@@ -2116,7 +2116,7 @@ DeleteVolumeMountPointA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 DnsHostnameToComputerNameA (
     LPCSTR Hostname,
@@ -2131,7 +2131,7 @@ DnsHostnameToComputerNameA (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 FindActCtxSectionStringA(
     DWORD dwFlags,
@@ -2177,7 +2177,7 @@ FindFirstVolumeMountPointA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 FindNextVolumeA(
     HANDLE hFindVolume,
@@ -2192,7 +2192,7 @@ FindNextVolumeA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 FindNextVolumeMountPointA(
     HANDLE hFindVolumeMountPoint,
@@ -2207,7 +2207,7 @@ FindNextVolumeMountPointA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetComputerNameExA (
     COMPUTER_NAME_FORMAT NameType,
@@ -2267,7 +2267,7 @@ GetLongPathNameA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetModuleHandleExA(
     DWORD        dwFlags,
@@ -2296,7 +2296,7 @@ GetSystemWow64DirectoryA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetVolumeNameForVolumeMountPointA(
     LPCSTR lpszVolumeMountPoint,
@@ -2311,7 +2311,7 @@ GetVolumeNameForVolumeMountPointA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetVolumePathNameA(
     LPCSTR lpszFileName,
@@ -2326,7 +2326,7 @@ GetVolumePathNameA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetVolumePathNamesForVolumeNameA(
     LPCSTR lpszVolumeName,
@@ -2346,7 +2346,7 @@ HANDLE
 STDCALL
 OpenJobObjectA(
     DWORD dwDesiredAccess,
-    WINBOOL bInheritHandle,
+    BOOL bInheritHandle,
     LPCSTR lpName
     )
 {
@@ -2357,7 +2357,7 @@ OpenJobObjectA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 ReplaceFileA(
     LPCSTR  lpReplacedFileName,
@@ -2375,7 +2375,7 @@ ReplaceFileA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetComputerNameExA (
     COMPUTER_NAME_FORMAT NameType,
@@ -2389,7 +2389,7 @@ SetComputerNameExA (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetDllDirectoryA(
     LPCSTR lpPathName
@@ -2402,7 +2402,7 @@ SetDllDirectoryA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetFileShortNameA(
     HANDLE hFile,
@@ -2416,7 +2416,7 @@ SetFileShortNameA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetFirmwareEnvironmentVariableA(
     LPCSTR lpName,
@@ -2432,7 +2432,7 @@ SetFirmwareEnvironmentVariableA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetVolumeMountPointA(
     LPCSTR lpszVolumeMountPoint,
@@ -2446,7 +2446,7 @@ SetVolumeMountPointA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 VerifyVersionInfoA(
     LPOSVERSIONINFOEXA lpVersionInformation,
@@ -2461,7 +2461,7 @@ VerifyVersionInfoA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumSystemLanguageGroupsW(
     LANGUAGEGROUP_ENUMPROCW lpLanguageGroupEnumProc,
@@ -2490,7 +2490,7 @@ VerSetConditionMask(
 /*
  * @unimplemented
  */
-WINBOOL STDCALL GetConsoleKeyboardLayoutNameA(LPSTR name)
+BOOL STDCALL GetConsoleKeyboardLayoutNameA(LPSTR name)
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
@@ -2499,7 +2499,7 @@ WINBOOL STDCALL GetConsoleKeyboardLayoutNameA(LPSTR name)
 /*
  * @unimplemented
  */
-WINBOOL STDCALL GetConsoleKeyboardLayoutNameW(LPWSTR name)
+BOOL STDCALL GetConsoleKeyboardLayoutNameW(LPWSTR name)
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;

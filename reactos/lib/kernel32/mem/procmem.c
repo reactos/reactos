@@ -1,4 +1,4 @@
-/* $Id: procmem.c,v 1.6 2003/07/10 18:50:51 chorns Exp $
+/* $Id: procmem.c,v 1.7 2004/01/23 17:13:36 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -16,7 +16,7 @@
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 ReadProcessMemory (
 	HANDLE	hProcess,
@@ -45,7 +45,7 @@ ReadProcessMemory (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 WriteProcessMemory (
 	HANDLE	hProcess,

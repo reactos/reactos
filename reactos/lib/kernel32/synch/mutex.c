@@ -1,4 +1,4 @@
-/* $Id: mutex.c,v 1.6 2003/07/10 18:50:51 chorns Exp $
+/* $Id: mutex.c,v 1.7 2004/01/23 17:17:10 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -23,7 +23,7 @@
  */
 HANDLE STDCALL
 CreateMutexA(LPSECURITY_ATTRIBUTES lpMutexAttributes,
-	     WINBOOL bInitialOwner,
+	     BOOL bInitialOwner,
 	     LPCSTR lpName)
 {
    UNICODE_STRING NameU;
@@ -51,7 +51,7 @@ CreateMutexA(LPSECURITY_ATTRIBUTES lpMutexAttributes,
  */
 HANDLE STDCALL
 CreateMutexW(LPSECURITY_ATTRIBUTES lpMutexAttributes,
-	     WINBOOL bInitialOwner,
+	     BOOL bInitialOwner,
 	     LPCWSTR lpName)
 {
    OBJECT_ATTRIBUTES ObjectAttributes;
@@ -97,7 +97,7 @@ CreateMutexW(LPSECURITY_ATTRIBUTES lpMutexAttributes,
  */
 HANDLE STDCALL
 OpenMutexA(DWORD dwDesiredAccess,
-	   WINBOOL bInheritHandle,
+	   BOOL bInheritHandle,
 	   LPCSTR lpName)
 {
    OBJECT_ATTRIBUTES ObjectAttributes;
@@ -150,7 +150,7 @@ OpenMutexA(DWORD dwDesiredAccess,
  */
 HANDLE STDCALL
 OpenMutexW(DWORD dwDesiredAccess,
-	   WINBOOL bInheritHandle,
+	   BOOL bInheritHandle,
 	   LPCWSTR lpName)
 {
    OBJECT_ATTRIBUTES ObjectAttributes;
@@ -194,7 +194,7 @@ OpenMutexW(DWORD dwDesiredAccess,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 ReleaseMutex(HANDLE hMutex)
 {
    NTSTATUS Status;

@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.14 2003/10/04 17:12:31 ekohl Exp $
+/* $Id: handle.c,v 1.15 2004/01/23 17:15:23 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -18,7 +18,7 @@
 
 /* GLOBALS *******************************************************************/
 
-WINBOOL STDCALL
+BOOL STDCALL
 InternalGetProcessId (HANDLE hProcess, LPDWORD lpProcessId);
 
 HANDLE STDCALL
@@ -32,7 +32,7 @@ DuplicateConsoleHandle (HANDLE	hConsole,
 /*
  * @implemented
  */
-WINBOOL WINAPI
+BOOL WINAPI
 GetHandleInformation (HANDLE hObject,
 		      LPDWORD lpdwFlags)
 {
@@ -64,7 +64,7 @@ GetHandleInformation (HANDLE hObject,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetHandleInformation (HANDLE hObject,
 		      DWORD dwMask,
 		      DWORD dwFlags)
@@ -111,7 +111,7 @@ SetHandleInformation (HANDLE hObject,
 /*
  * @implemented
  */
-WINBOOL STDCALL CloseHandle(HANDLE  hObject)
+BOOL STDCALL CloseHandle(HANDLE  hObject)
 /*
  * FUNCTION: Closes an open object handle
  * PARAMETERS:
@@ -141,7 +141,7 @@ WINBOOL STDCALL CloseHandle(HANDLE  hObject)
 /*
  * @implemented
  */
-WINBOOL STDCALL DuplicateHandle(HANDLE hSourceProcessHandle,
+BOOL STDCALL DuplicateHandle(HANDLE hSourceProcessHandle,
 				HANDLE hSourceHandle,
 				HANDLE hTargetProcessHandle,
 				LPHANDLE lpTargetHandle,

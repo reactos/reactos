@@ -1,4 +1,4 @@
-/* $Id: debugger.c,v 1.3 2003/07/10 18:50:50 chorns Exp $
+/* $Id: debugger.c,v 1.4 2004/01/23 17:12:54 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -86,7 +86,7 @@ BOOL WINAPI DebugSetProcessKillOnExit(BOOL KillOnExit)
  */
 BOOL WINAPI IsDebuggerPresent(VOID)
 {
- return (WINBOOL)NtCurrentPeb()->BeingDebugged;
+ return (BOOL)NtCurrentPeb()->BeingDebugged;
 }
 
 

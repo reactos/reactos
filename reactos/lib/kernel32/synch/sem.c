@@ -1,4 +1,4 @@
-/* $Id: sem.c,v 1.6 2003/07/10 18:50:51 chorns Exp $
+/* $Id: sem.c,v 1.7 2004/01/23 17:17:10 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -108,7 +108,7 @@ CreateSemaphoreW(LPSECURITY_ATTRIBUTES lpSemaphoreAttributes,
  */
 HANDLE STDCALL
 OpenSemaphoreA(DWORD dwDesiredAccess,
-	       WINBOOL bInheritHandle,
+	       BOOL bInheritHandle,
 	       LPCSTR lpName)
 {
    OBJECT_ATTRIBUTES ObjectAttributes;
@@ -161,7 +161,7 @@ OpenSemaphoreA(DWORD dwDesiredAccess,
  */
 HANDLE STDCALL
 OpenSemaphoreW(DWORD dwDesiredAccess,
-	       WINBOOL bInheritHandle,
+	       BOOL bInheritHandle,
 	       LPCWSTR lpName)
 {
    OBJECT_ATTRIBUTES ObjectAttributes;
@@ -205,7 +205,7 @@ OpenSemaphoreW(DWORD dwDesiredAccess,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 ReleaseSemaphore(HANDLE hSemaphore,
 		 LONG lReleaseCount,
 		 LPLONG lpPreviousCount)

@@ -1,4 +1,4 @@
-/* $Id: heap.c,v 1.24 2003/07/10 18:50:51 chorns Exp $
+/* $Id: heap.c,v 1.25 2004/01/23 17:13:36 ekohl Exp $
  *
  * kernel/heap.c
  * Copyright (C) 1996, Onno Hovers, All rights reserved
@@ -228,7 +228,7 @@ HeapUsage (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 HeapWalk (
 	HANDLE			hHeap,

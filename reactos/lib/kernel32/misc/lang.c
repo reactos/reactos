@@ -1,4 +1,4 @@
-/* $Id: lang.c,v 1.9 2004/01/21 20:37:00 navaraf Exp $
+/* $Id: lang.c,v 1.10 2004/01/23 17:15:23 ekohl Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -57,7 +57,7 @@ ConvertDefaultLocale (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumCalendarInfoW (
     CALINFO_ENUMPROCW lpCalInfoEnumProc,
@@ -74,7 +74,7 @@ EnumCalendarInfoW (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumCalendarInfoA (
     CALINFO_ENUMPROCA lpCalInfoEnumProc,
@@ -91,7 +91,7 @@ EnumCalendarInfoA (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumCalendarInfoExA(
     CALINFO_ENUMPROCEXA lpCalInfoEnumProcEx,
@@ -107,7 +107,7 @@ EnumCalendarInfoExA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumCalendarInfoExW(
     CALINFO_ENUMPROCEXW lpCalInfoEnumProcEx,
@@ -123,7 +123,7 @@ EnumCalendarInfoExW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumDateFormatsW (
     DATEFMT_ENUMPROCW  lpDateFmtEnumProc,
@@ -139,7 +139,7 @@ EnumDateFormatsW (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumDateFormatsA (
     DATEFMT_ENUMPROCA  lpDateFmtEnumProc,
@@ -155,7 +155,7 @@ EnumDateFormatsA (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumDateFormatsExA(
     DATEFMT_ENUMPROCEXA lpDateFmtEnumProcEx,
@@ -170,7 +170,7 @@ EnumDateFormatsExA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumDateFormatsExW(
     DATEFMT_ENUMPROCEXW lpDateFmtEnumProcEx,
@@ -185,7 +185,7 @@ EnumDateFormatsExW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumLanguageGroupLocalesA(
     LANGGROUPLOCALE_ENUMPROCA lpLangGroupLocaleEnumProc,
@@ -201,7 +201,7 @@ EnumLanguageGroupLocalesA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumLanguageGroupLocalesW(
     LANGGROUPLOCALE_ENUMPROCW lpLangGroupLocaleEnumProc,
@@ -217,7 +217,7 @@ EnumLanguageGroupLocalesW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumSystemCodePagesW (
     CODEPAGE_ENUMPROCW  lpCodePageEnumProc,
@@ -232,7 +232,7 @@ EnumSystemCodePagesW (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumSystemCodePagesA (
     CODEPAGE_ENUMPROCA lpCodePageEnumProc,
@@ -247,7 +247,7 @@ EnumSystemCodePagesA (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumSystemGeoID(
     GEOCLASS        GeoClass,
@@ -284,7 +284,7 @@ EnumSystemGeoID(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumSystemLanguageGroupsA(
     LANGUAGEGROUP_ENUMPROCA lpLanguageGroupEnumProc,
@@ -301,7 +301,7 @@ EnumSystemLanguageGroupsA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumSystemLocalesW (
     LOCALE_ENUMPROCW lpLocaleEnumProc,
@@ -316,7 +316,7 @@ EnumSystemLocalesW (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumSystemLocalesA (
     LOCALE_ENUMPROCA lpLocaleEnumProc,
@@ -333,7 +333,7 @@ EnumSystemLocalesA (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumTimeFormatsW (
     TIMEFMT_ENUMPROCW    lpTimeFmtEnumProc,
@@ -349,7 +349,7 @@ EnumTimeFormatsW (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumTimeFormatsA (
     TIMEFMT_ENUMPROCA  lpTimeFmtEnumProc,
@@ -365,7 +365,7 @@ EnumTimeFormatsA (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumUILanguagesA(
     UILANGUAGE_ENUMPROCA lpUILanguageEnumProc,
@@ -380,7 +380,7 @@ EnumUILanguagesA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumUILanguagesW(
     UILANGUAGE_ENUMPROCW lpUILanguageEnumProc,
@@ -449,7 +449,7 @@ GetCalendarInfoW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetCPInfo (
     UINT        CodePage,
@@ -480,7 +480,7 @@ GetCPInfo (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetCPInfoExW(
     UINT          CodePage,
@@ -495,7 +495,7 @@ GetCPInfoExW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetCPInfoExA(
     UINT          CodePage,
@@ -1307,7 +1307,7 @@ GetUserGeoID(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 IsValidCodePage (
     UINT    CodePage
@@ -1321,7 +1321,7 @@ IsValidCodePage (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 IsValidLanguageGroup(
     LGRPID  LanguageGroup,
@@ -1335,7 +1335,7 @@ IsValidLanguageGroup(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 IsValidLocale (
     LCID    Locale,
@@ -1392,7 +1392,7 @@ LCMapStringW (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetCalendarInfoA(
     LCID     Locale,
@@ -1407,7 +1407,7 @@ SetCalendarInfoA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetCalendarInfoW(
     LCID     Locale,
@@ -1425,7 +1425,7 @@ SetCalendarInfoW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetLocaleInfoA (
     LCID    Locale,
@@ -1441,7 +1441,7 @@ SetLocaleInfoA (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetLocaleInfoW (
     LCID    Locale,
@@ -1457,7 +1457,7 @@ SetLocaleInfoW (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetThreadLocale (
     LCID    Locale
@@ -1473,7 +1473,7 @@ SetThreadLocale (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetUserGeoID(
     GEOID       GeoId)

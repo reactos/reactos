@@ -1,4 +1,4 @@
-/* $Id: profile.c,v 1.7 2003/07/10 18:50:51 chorns Exp $
+/* $Id: profile.c,v 1.8 2004/01/23 17:15:23 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -302,7 +302,7 @@ OpenProfileUserMapping (VOID)
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 QueryWin31IniFilesMappedToRegistry (
 	DWORD	Unknown0,
 	DWORD	Unknown1,
@@ -318,7 +318,7 @@ QueryWin31IniFilesMappedToRegistry (
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 WritePrivateProfileSectionA (
 	LPCSTR	lpAppName,
 	LPCSTR	lpString,
@@ -333,7 +333,7 @@ WritePrivateProfileSectionA (
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 WritePrivateProfileSectionW (
 	LPCWSTR	lpAppName,
 	LPCWSTR	lpString,
@@ -348,7 +348,7 @@ WritePrivateProfileSectionW (
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 WritePrivateProfileStringA(LPCSTR lpAppName,
 			   LPCSTR lpKeyName,
 			   LPCSTR lpString,
@@ -362,7 +362,7 @@ WritePrivateProfileStringA(LPCSTR lpAppName,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 WritePrivateProfileStringW(LPCWSTR lpAppName,
 			   LPCWSTR lpKeyName,
 			   LPCWSTR lpString,
@@ -376,7 +376,7 @@ WritePrivateProfileStringW(LPCWSTR lpAppName,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 WritePrivateProfileStructA (
 	DWORD	Unknown0,
 	DWORD	Unknown1,
@@ -393,7 +393,7 @@ WritePrivateProfileStructA (
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 WritePrivateProfileStructW (
 	DWORD	Unknown0,
 	DWORD	Unknown1,
@@ -410,7 +410,7 @@ WritePrivateProfileStructW (
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 WriteProfileSectionA(LPCSTR lpAppName,
 		     LPCSTR lpString)
 {
@@ -423,7 +423,7 @@ WriteProfileSectionA(LPCSTR lpAppName,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 WriteProfileSectionW(LPCWSTR lpAppName,
 		     LPCWSTR lpString)
 {
@@ -436,7 +436,7 @@ WriteProfileSectionW(LPCWSTR lpAppName,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 WriteProfileStringA(LPCSTR lpAppName,
 		    LPCSTR lpKeyName,
 		    LPCSTR lpString)
@@ -451,7 +451,7 @@ WriteProfileStringA(LPCSTR lpAppName,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 WriteProfileStringW(LPCWSTR lpAppName,
 		    LPCWSTR lpKeyName,
 		    LPCWSTR lpString)

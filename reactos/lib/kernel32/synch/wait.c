@@ -1,4 +1,4 @@
-/* $Id: wait.c,v 1.25 2003/08/28 19:37:00 gvg Exp $
+/* $Id: wait.c,v 1.26 2004/01/23 17:17:10 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -219,7 +219,7 @@ DWORD STDCALL
 SignalObjectAndWait(HANDLE hObjectToSignal,
 		    HANDLE hObjectToWaitOn,
 		    DWORD dwMilliseconds,
-		    WINBOOL bAlertable)
+		    BOOL bAlertable)
 {
   PLARGE_INTEGER TimePtr;
   LARGE_INTEGER Time;
