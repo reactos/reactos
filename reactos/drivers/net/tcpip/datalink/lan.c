@@ -281,7 +281,7 @@ NDIS_STATUS STDCALL ProtocolReceive(
     PLAN_ADAPTER Adapter = (PLAN_ADAPTER)BindingContext;
     PETH_HEADER EHeader  = (PETH_HEADER)HeaderBuffer;
 
-    TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
+    TI_DbgPrint(DEBUG_DATALINK, ("Called. (packetsize %d)\n",PacketSize));
 
     if (Adapter->State != LAN_STATE_STARTED) {
         TI_DbgPrint(DEBUG_DATALINK, ("Adapter is stopped.\n"));
@@ -317,11 +317,17 @@ NDIS_STATUS STDCALL ProtocolReceive(
     KeAcquireSpinLockAtDpcLevel(&Adapter->Lock);
     NdisStatus = AllocatePacketWithBuffer( &NdisPacket, NULL, Adapter->MTU );
     if( NdisStatus != NDIS_STATUS_SUCCESS ) return NDIS_STATUS_NOT_ACCEPTED;
-    GetDataPtr( NdisPacket, 0, &BufferData, &PacketSize );
+    TI_DbgPrint(DEBUG_DATALINK, ("pretransfer LookaheadBufferSize %d packsize %d\n",LookaheadBufferSize,PacketSize));
+	{
+		UINT temp;
+		temp = PacketSize;
+    GetDataPtr( NdisPacket, 0, &BufferData, &temp );
+	}
 
     IPPacket.NdisPacket = NdisPacket;
 	
     if (LookaheadBufferSize < PacketSize) {
+    TI_DbgPrint(DEBUG_DATALINK, ("pretransfer LookaheadBufferSize %d packsize %d\n",LookaheadBufferSize,PacketSize));
         /* Get the data */
         NdisTransferData(&NdisStatus,
                          Adapter->NdisHandle,
@@ -331,6 +337,7 @@ NDIS_STATUS STDCALL ProtocolReceive(
                          NdisPacket,
                          &BytesTransferred);
     } else {
+    TI_DbgPrint(DEBUG_DATALINK, ("copy\n"));
 	NdisStatus = NDIS_STATUS_SUCCESS;
 	BytesTransferred = PacketSize;
 	RtlCopyMemory(BufferData,
@@ -339,6 +346,7 @@ NDIS_STATUS STDCALL ProtocolReceive(
 	RtlCopyMemory(BufferData + HeaderBufferSize,
 		      LookaheadBuffer, LookaheadBufferSize);
     }
+    TI_DbgPrint(DEBUG_DATALINK, ("Calling complete\n"));
 
     if (NdisStatus != NDIS_STATUS_PENDING)
 	ProtocolTransferDataComplete(BindingContext,
@@ -348,6 +356,7 @@ NDIS_STATUS STDCALL ProtocolReceive(
 
     /* Release the packet descriptor */
     KeReleaseSpinLockFromDpcLevel(&Adapter->Lock);
+    TI_DbgPrint(DEBUG_DATALINK, ("leaving\n"));
 
     return NDIS_STATUS_SUCCESS;
 }
