@@ -390,6 +390,8 @@ extern "C" {
 
 
 #define	SetDlgCtrlID(hwnd, id) SetWindowLong(hwnd, GWL_ID, id)
+#define	SetWindowStyle(hwnd, val) (DWORD)SetWindowLong(hwnd, GWL_STYLE, val)
+#define	SetWindowExStyle(h, val) (DWORD)SetWindowLong(hwnd, GWL_EXSTYLE, val)
 
 
  // display 

@@ -53,6 +53,10 @@ QuickLaunchBar::QuickLaunchBar(HWND hwnd)
 {
 	_next_id = IDC_FIRST_QUICK_ID;
 
+	HWND hwndToolTip = (HWND) SendMessage(hwnd, TB_GETTOOLTIPS, 0, 0);
+
+	SetWindowStyle(hwndToolTip, GetWindowStyle(hwndToolTip)|TTS_ALWAYSTIP);
+
 	 // delay refresh to some tome later
 	PostMessage(hwnd, PM_REFRESH, 0, 0);
 }
@@ -158,7 +162,7 @@ int QuickLaunchBar::Command(int id, int code)
 int QuickLaunchBar::Notify(int id, NMHDR* pnmh)
 {
 	switch(pnmh->code) {
-	  case TTN_GETDISPINFO: {	//TODO: TTN_GETDISPINFO is only received, if desktop bar window has the focus?!
+	  case TTN_GETDISPINFO: {
 		NMTTDISPINFO* ttdi = (NMTTDISPINFO*) pnmh;
 
 		int id = ttdi->hdr.idFrom;
