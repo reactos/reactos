@@ -1,4 +1,4 @@
-/* $Id: share.c,v 1.2 2000/03/26 19:38:26 ea Exp $
+/* $Id: share.c,v 1.3 2001/05/24 22:19:25 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -17,89 +17,284 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
-STDCALL
-IoUpdateShareAccess(PFILE_OBJECT FileObject, PSHARE_ACCESS ShareAccess)
+VOID STDCALL
+IoUpdateShareAccess(PFILE_OBJECT FileObject,
+		    PSHARE_ACCESS ShareAccess)
 {
-	UNIMPLEMENTED;
+   if ((FileObject->ReadAccess == FALSE) &&
+       (FileObject->WriteAccess == FALSE) &&
+       (FileObject->DeleteAccess == FALSE))
+     {
+	return;
+     }
+
+   ShareAccess->OpenCount++;
+
+   if (FileObject->ReadAccess == TRUE)
+     {
+	ShareAccess->Readers++;
+     }
+
+   if (FileObject->WriteAccess == TRUE)
+     {
+	ShareAccess->Writers++;
+     }
+
+   if (FileObject->DeleteAccess == TRUE)
+     {
+	ShareAccess->Deleters++;
+     }
+
+   if (FileObject->SharedRead == TRUE)
+     {
+	ShareAccess->SharedRead++;
+     }
+
+   if (FileObject->SharedWrite == TRUE)
+     {
+	ShareAccess->SharedWrite++;
+     }
+
+   if (FileObject->SharedDelete == TRUE)
+     {
+	ShareAccess->SharedDelete++;
+     }
 }
 
 
-VOID
-STDCALL
-IoCheckDesiredAccess (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	)
-{
-	UNIMPLEMENTED;
-}
-
-
-NTSTATUS
-STDCALL
-IoCheckEaBufferValidity (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
-{
-	UNIMPLEMENTED;
-	return (STATUS_NOT_IMPLEMENTED);
-}
-
-
-NTSTATUS
-STDCALL
-IoCheckFunctionAccess (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5
-	)
-{
-	UNIMPLEMENTED;
-	return (STATUS_NOT_IMPLEMENTED);
-}
-
-
-NTSTATUS
-STDCALL
+NTSTATUS STDCALL
 IoCheckShareAccess(ACCESS_MASK DesiredAccess,
-			    ULONG DesiredShareAccess,
-			    PFILE_OBJECT FileObject,
-			    PSHARE_ACCESS ShareAccess,
-			    BOOLEAN Update)
+		   ULONG DesiredShareAccess,
+		   PFILE_OBJECT FileObject,
+		   PSHARE_ACCESS ShareAccess,
+		   BOOLEAN Update)
 {
-	UNIMPLEMENTED;
-	return (STATUS_NOT_IMPLEMENTED);
+   BOOLEAN ReadAccess;
+   BOOLEAN WriteAccess;
+   BOOLEAN DeleteAccess;
+   BOOLEAN SharedRead;
+   BOOLEAN SharedWrite;
+   BOOLEAN SharedDelete;
+
+   ReadAccess = (DesiredAccess & (FILE_READ_DATA | FILE_EXECUTE));
+   WriteAccess = (DesiredAccess & (FILE_READ_DATA | FILE_APPEND_DATA));
+   ReadAccess = (DesiredAccess & DELETE);
+
+   FileObject->ReadAccess = ReadAccess;
+   FileObject->WriteAccess = WriteAccess;
+   FileObject->DeleteAccess = DeleteAccess;
+
+   if (!ReadAccess && !WriteAccess && !DeleteAccess)
+     {
+	return (STATUS_SUCCESS);
+     }
+
+   SharedRead = (DesiredShareAccess & FILE_SHARE_READ);
+   SharedWrite = (DesiredShareAccess & FILE_SHARE_WRITE);
+   SharedDelete = (DesiredShareAccess & FILE_SHARE_DELETE);
+
+   FileObject->SharedRead = SharedRead;
+   FileObject->SharedWrite = SharedWrite;
+   FileObject->SharedDelete = SharedDelete;
+
+   if (ReadAccess)
+     {
+	if (ShareAccess->SharedRead < ShareAccess->OpenCount)
+	  return (STATUS_SHARING_VIOLATION);
+     }
+
+   if (WriteAccess)
+     {
+	if (ShareAccess->SharedWrite < ShareAccess->OpenCount)
+	  return (STATUS_SHARING_VIOLATION);
+     }
+
+   if (DeleteAccess)
+     {
+	if (ShareAccess->SharedDelete < ShareAccess->OpenCount)
+	  return (STATUS_SHARING_VIOLATION);
+     }
+
+   if (ShareAccess->Readers != 0)
+     {
+	if (SharedRead == FALSE)
+	  return (STATUS_SHARING_VIOLATION);
+     }
+
+   if (ShareAccess->Writers != 0)
+     {
+	if (SharedWrite == FALSE)
+	  return (STATUS_SHARING_VIOLATION);
+     }
+
+   if (ShareAccess->Deleters != 0)
+     {
+	if (SharedDelete == FALSE)
+	  return (STATUS_SHARING_VIOLATION);
+     }
+
+   if (Update == TRUE)
+     {
+	ShareAccess->OpenCount++;
+
+	if (ReadAccess == TRUE)
+	  ShareAccess->Readers++;
+
+	if (WriteAccess == TRUE)
+	  ShareAccess->Writers++;
+
+	if (DeleteAccess == TRUE)
+	  ShareAccess->Deleters++;
+
+	if (SharedRead == TRUE)
+	  ShareAccess->SharedRead++;
+
+	if (SharedWrite == TRUE)
+	  ShareAccess->SharedWrite++;
+
+	if (SharedDelete == TRUE)
+	  ShareAccess->SharedDelete++;
+     }
+
+   return (STATUS_SUCCESS);
 }
 
 
-VOID
-STDCALL
+VOID STDCALL
 IoRemoveShareAccess(PFILE_OBJECT FileObject,
-			 PSHARE_ACCESS ShareAccess)
+		    PSHARE_ACCESS ShareAccess)
 {
-   UNIMPLEMENTED;
+   if ((FileObject->ReadAccess == FALSE) &&
+       (FileObject->WriteAccess == FALSE) &&
+       (FileObject->DeleteAccess == FALSE))
+     {
+	return;
+     }
+
+   ShareAccess->OpenCount--;
+
+   if (FileObject->ReadAccess == TRUE)
+     {
+	ShareAccess->Readers--;
+     }
+
+   if (FileObject->WriteAccess == TRUE)
+     {
+	ShareAccess->Writers--;
+     }
+
+   if (FileObject->DeleteAccess == TRUE)
+     {
+	ShareAccess->Deleters--;
+     }
+
+   if (FileObject->SharedRead == TRUE)
+     {
+	ShareAccess->SharedRead--;
+     }
+
+   if (FileObject->SharedWrite == TRUE)
+     {
+	ShareAccess->SharedWrite--;
+     }
+
+   if (FileObject->SharedDelete == TRUE)
+     {
+	ShareAccess->SharedDelete--;
+     }
 }
 
 
-VOID
-STDCALL
+VOID STDCALL
 IoSetShareAccess(ACCESS_MASK DesiredAccess,
-		      ULONG DesiredShareAccess,
-		      PFILE_OBJECT FileObject,
-		      PSHARE_ACCESS ShareAccess)
+		 ULONG DesiredShareAccess,
+		 PFILE_OBJECT FileObject,
+		 PSHARE_ACCESS ShareAccess)
+{
+   BOOLEAN ReadAccess;
+   BOOLEAN WriteAccess;
+   BOOLEAN DeleteAccess;
+   BOOLEAN SharedRead;
+   BOOLEAN SharedWrite;
+   BOOLEAN SharedDelete;
+
+   ReadAccess = (DesiredAccess & (FILE_READ_DATA | FILE_EXECUTE));
+   WriteAccess = (DesiredAccess & (FILE_READ_DATA | FILE_APPEND_DATA));
+   ReadAccess = (DesiredAccess & DELETE);
+
+   FileObject->ReadAccess = ReadAccess;
+   FileObject->WriteAccess = WriteAccess;
+   FileObject->DeleteAccess = DeleteAccess;
+
+   if (!ReadAccess && !WriteAccess && !DeleteAccess)
+     {
+	FileObject->SharedRead = FALSE;
+	FileObject->SharedWrite = FALSE;
+	FileObject->SharedDelete = FALSE;
+
+	ShareAccess->OpenCount = 0;
+	ShareAccess->Readers = 0;
+	ShareAccess->Writers = 0;
+	ShareAccess->Deleters = 0;
+
+	ShareAccess->SharedRead = 0;
+	ShareAccess->SharedWrite = 0;
+	ShareAccess->SharedDelete = 0;
+     }
+   else
+     {
+	SharedRead = (DesiredShareAccess & FILE_SHARE_READ);
+	SharedWrite = (DesiredShareAccess & FILE_SHARE_WRITE);
+	SharedDelete = (DesiredShareAccess & FILE_SHARE_DELETE);
+
+	FileObject->SharedRead = SharedRead;
+	FileObject->SharedWrite = SharedWrite;
+	FileObject->SharedDelete = SharedDelete;
+
+	ShareAccess->OpenCount = 1;
+	ShareAccess->Readers = (ReadAccess) ? 1 : 0;
+	ShareAccess->Writers = (WriteAccess) ? 1 : 0;
+	ShareAccess->Deleters = (DeleteAccess) ? 1 : 0;
+
+	ShareAccess->SharedRead = (SharedRead) ? 1 : 0;
+	ShareAccess->SharedWrite = (SharedWrite) ? 1 : 0;
+	ShareAccess->SharedDelete = (SharedDelete) ? 1 : 0;
+     }
+}
+
+
+VOID STDCALL
+IoCheckDesiredAccess(DWORD Unknown0,
+		     DWORD Unknown1)
 {
    UNIMPLEMENTED;
 }
 
 
-NTSTATUS
-STDCALL
+NTSTATUS STDCALL
+IoCheckEaBufferValidity(DWORD Unknown0,
+			DWORD Unknown1,
+			DWORD Unknown2)
+{
+   UNIMPLEMENTED;
+   return (STATUS_NOT_IMPLEMENTED);
+}
+
+
+NTSTATUS STDCALL
+IoCheckFunctionAccess(DWORD Unknown0,
+		      DWORD Unknown1,
+		      DWORD Unknown2,
+		      DWORD Unknown3,
+		      DWORD Unknown4,
+		      DWORD Unknown5)
+{
+   UNIMPLEMENTED;
+   return (STATUS_NOT_IMPLEMENTED);
+}
+
+
+NTSTATUS STDCALL
 IoSetInformation (
 	IN	PFILE_OBJECT		FileObject,
 	IN	FILE_INFORMATION_CLASS	FileInformationClass,
@@ -112,8 +307,7 @@ IoSetInformation (
 }
 
 
-VOID
-STDCALL
+VOID STDCALL
 IoFastQueryNetworkAttributes (
 	DWORD	Unknown0,
 	DWORD	Unknown1,

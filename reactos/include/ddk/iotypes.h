@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.28 2001/05/01 23:08:17 chorns Exp $
+/* $Id: iotypes.h,v 1.29 2001/05/24 22:18:16 ekohl Exp $
  * 
  */
 
@@ -42,17 +42,21 @@ enum
 
 typedef enum _CREATE_FILE_TYPE
 {
-	CreateFileTypeNone,
-	CreateFileTypeNamedPipe,
-	CreateFileTypeMailslot
+   CreateFileTypeNone,
+   CreateFileTypeNamedPipe,
+   CreateFileTypeMailslot
 } CREATE_FILE_TYPE;
 
 
-/*
- * FIXME: Definition needed
- */
 typedef struct _SHARE_ACCESS
 {
+   ULONG OpenCount;
+   ULONG Readers;
+   ULONG Writers;
+   ULONG Deleters;
+   ULONG SharedRead;
+   ULONG SharedWrite;
+   ULONG SharedDelete;
 } SHARE_ACCESS, *PSHARE_ACCESS;
 
 /* FUNCTION TYPES ************************************************************/
