@@ -1,3 +1,10 @@
+#ifndef __WIN32K_FLOAT_H
+#define __WIN32K_FLOAT_H
+
+#include <win32k/math.h>
+#include <win32k/dc.h>
+#include <freetype/freetype.h>
+
 typedef struct tagFLOAT_POINT
 {
    FLOAT x, y;
@@ -18,7 +25,7 @@ static inline INT GDI_ROUND(FLOAT val)
 static inline void INTERNAL_LPTODP_FLOAT(DC *dc, FLOAT_POINT *point)
 {
     FLOAT x, y;
-    
+
     /* Perform the transformation */
     x = point->x;
     y = point->y;
@@ -33,16 +40,17 @@ static inline void INTERNAL_LPTODP_FLOAT(DC *dc, FLOAT_POINT *point)
 /* Performs a viewport-to-world transformation on the specified point (which
  * is in integer format). Returns TRUE if successful, else FALSE.
  */
+#if 0
 static inline BOOL INTERNAL_DPTOLP(DC *dc, LPPOINT point)
 {
     FLOAT_POINT floatPoint;
-    
+
     /* Perform operation with floating point */
     floatPoint.x=(FLOAT)point->x;
     floatPoint.y=(FLOAT)point->y;
     if (!INTERNAL_DPTOLP_FLOAT(dc, &floatPoint))
         return FALSE;
-    
+
     /* Round to integers */
     point->x = GDI_ROUND(floatPoint.x);
     point->y = GDI_ROUND(floatPoint.y);
@@ -56,16 +64,20 @@ static inline BOOL INTERNAL_DPTOLP(DC *dc, LPPOINT point)
 static inline void INTERNAL_LPTODP(DC *dc, LPPOINT point)
 {
     FLOAT_POINT floatPoint;
-    
+
     /* Perform operation with floating point */
     floatPoint.x=(FLOAT)point->x;
     floatPoint.y=(FLOAT)point->y;
     INTERNAL_LPTODP_FLOAT(dc, &floatPoint);
-    
+
     /* Round to integers */
     point->x = GDI_ROUND(floatPoint.x);
     point->y = GDI_ROUND(floatPoint.y);
 }
+
+#endif
+
+#define MulDiv( x, y, z ) EngMulDiv( x, y, z )
 
 #define XDPTOLP(dc,x) \
     (MulDiv(((x)-(dc)->vportOrgX), (dc)->wndExtX, (dc)->vportExtX) + (dc)->wndOrgX)
@@ -86,3 +98,5 @@ static inline void INTERNAL_LPTODP(DC *dc, LPPOINT point)
     MulDiv((x), (dc)->vportExtX, (dc)->wndExtX)
 #define YLSTODS(dc,y) \
     MulDiv((y), (dc)->vportExtY, (dc)->wndExtY)
+
+#endif

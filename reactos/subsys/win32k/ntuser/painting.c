@@ -1,4 +1,4 @@
-/* $Id: painting.c,v 1.1 2002/07/04 20:12:27 dwelch Exp $
+/* $Id: painting.c,v 1.2 2002/07/18 21:59:18 ei Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -23,6 +23,7 @@
 #include <user32/wininternal.h>
 #include <include/rect.h>
 #include <win32k/coord.h>
+#include <win32k/region.h>
 
 
 #define NDEBUG
@@ -47,7 +48,7 @@ PaintDoPaint(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags, ULONG ExFlags)
   BOOL bIcon = (Window->Style & WS_MINIMIZE) &&
     NtUserGetClassLong(hWnd, GCL_HICON);
 
-  if (ExFlags & RDW_EX_DELAY_NCPAINT || 
+  if (ExFlags & RDW_EX_DELAY_NCPAINT ||
       PaintHaveToDelayNCPaint(Window, 0))
     {
       ExFlags |= RDW_EX_DELAY_NCPAINT;
@@ -66,12 +67,12 @@ PaintDoPaint(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags, ULONG ExFlags)
 	DCX_WINDOWPAINT | DCX_CACHE;
       HRGN hRgnRet;
 
-      hRgnRet = 
+      hRgnRet =
 	PaintUpdateNCRegion(Window,
 			 hRgn,
 			 UNC_REGION | UNC_CHECK |
 			 ((ExFlags & RDW_EX_TOPFRAME) ? UNC_ENTIRE : 0) |
-			 ((ExFlags & RDW_EX_DELAY_NCPAINT) ? 
+			 ((ExFlags & RDW_EX_DELAY_NCPAINT) ?
 			  UNC_DELAY_NCPAINT : 0));
       if (hRgnRet != NULL)
 	{
@@ -91,8 +92,8 @@ PaintDoPaint(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags, ULONG ExFlags)
 		}
 	      if (hRgnRet)
 		{
-		  W32kOffsetRgn(hRgnRet, 
-				Window->WindowRect.left - 
+		  W32kOffsetRgn(hRgnRet,
+				Window->WindowRect.left -
 				Window->ClientRect.left,
 				Window->WindowRect.top -
 				Window->ClientRect.top);
@@ -123,7 +124,7 @@ PaintDoPaint(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags, ULONG ExFlags)
 }
 
 VOID STATIC
-PaintUpdateRgns(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags, 
+PaintUpdateRgns(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
 		BOOL First)
 {
 
@@ -173,11 +174,11 @@ PaintRedrawWindow(HWND hWnd, const RECT* UpdateRect, HRGN UpdateRgn,
 	{
 	  if (Window->UpdateRegion != NULL)
 	    {
-	      hRgn = W32kCropRgn(0, UpdateRgn, NULL, &Pt);
+	      hRgn = REGION_CropRgn(0, UpdateRgn, NULL, &Pt);
 	    }
 	  else
 	    {
-	      Window->UpdateRegion = W32kCropRgn(0, UpdateRgn, &Rect, &Pt);
+	      Window->UpdateRegion = REGION_CropRgn(0, UpdateRgn, &Rect, &Pt);
 	    }
 	}
       else if (UpdateRect != NULL)
@@ -282,7 +283,7 @@ PaintingFindWinToRepaint(HWND hWnd, PW32THREAD Thread)
       return(hFoundWnd);
     }
 
-  Status = 
+  Status =
     ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable,
 			       hWnd,
 			       otWindow,
@@ -329,7 +330,7 @@ PaintUpdateNCRegion(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
       Window->Flags &= ~WINDOWOBJECT_NEED_NCPAINT;
       if (Window->UpdateRegion > (HANDLE)1)
 	{
-	  hRgnRet = W32kCropRgn(hRgn, Window->UpdateRegion, NULL, NULL);
+	  hRgnRet = REGION_CropRgn(hRgn, Window->UpdateRegion, NULL, NULL);
 	}
       else
 	{
@@ -338,7 +339,7 @@ PaintUpdateNCRegion(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
       return(hRgnRet);
     }
 
-  if (Window->Flags & WINDOWOBJECT_NEED_NCPAINT && 
+  if (Window->Flags & WINDOWOBJECT_NEED_NCPAINT &&
       !PaintHaveToDelayNCPaint(Window, Flags))
     {
       RECT UpdateRegionBox;
@@ -355,7 +356,7 @@ PaintUpdateNCRegion(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
 	      Rect.right != ClientRect.right || Rect.right != ClientRect.right)
 	    {
 	      hClip = Window->UpdateRegion;
-	      Window->UpdateRegion = W32kCropRgn(hRgn, hClip,
+	      Window->UpdateRegion = REGION_CropRgn(hRgn, hClip,
 						 &Rect, NULL);
 	      if (Flags & UNC_REGION)
 		{
@@ -365,7 +366,7 @@ PaintUpdateNCRegion(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
 
 	  if (Flags & UNC_CHECK)
 	    {
-	      W32kGetBoxRgn(Window->UpdateRegion, &UpdateRegionBox);
+	      W32kGetRgnBox(Window->UpdateRegion, &UpdateRegionBox);
 	      if (W32kIsEmptyRect(&UpdateRegionBox))
 		{
 		  W32kDeleteObject(Window->UpdateRegion);
@@ -377,7 +378,7 @@ PaintUpdateNCRegion(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
 
 	  if (!hClip && Window->UpdateRegion && Flags & UNC_REGION)
 	    {
-	      hRgnRet = W32kCropRgn(hRgn, Window->UpdateRegion, NULL,
+	      hRgnRet = REGION_CropRgn(hRgn, Window->UpdateRegion, NULL,
 				    NULL);
 	    }
 	}
@@ -398,7 +399,7 @@ PaintUpdateNCRegion(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
     {
       if (Window->UpdateRegion > (HANDLE)1 && Flags & UNC_REGION)
 	{
-	  hRgnRet = W32kCropRgn(hRgn, Window->UpdateRegion, NULL, NULL);
+	  hRgnRet = REGION_CropRgn(hRgn, Window->UpdateRegion, NULL, NULL);
 	}
       else if (Window->UpdateRegion == (HANDLE)1 && Flags & UNC_UPDATE)
 	{
@@ -413,7 +414,7 @@ PaintUpdateNCRegion(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
 
   if (hClip == NULL && Flags & UNC_ENTIRE)
     {
-      if (RtlCompareMemory(&Window->WindowRect, &Window->ClientRect, 
+      if (RtlCompareMemory(&Window->WindowRect, &Window->ClientRect,
 			   sizeof(RECT)) == sizeof(RECT))
 	{
 	  hClip = (HANDLE)1;
@@ -459,7 +460,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
   RECT ClipRect;
   NTSTATUS Status;
 
-  Status = 
+  Status =
     ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable,
 			       hWnd,
 			       otWindow,
@@ -469,9 +470,9 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
       return(NULL);
     }
 
-  IsIcon = Window->Style & WS_MINIMIZE && 
+  IsIcon = Window->Style & WS_MINIMIZE &&
     NtUserGetClassLong(Window->Self, GCL_HICON);
-  
+
   Window->Flags &= ~WINDOWOBJECT_NEED_BEGINPAINT;
 
   /* Send WM_NCPAINT */
@@ -499,8 +500,8 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
     {
       if (UpdateRegion != NULL)
 	{
-	  W32kOffsetRgn(UpdateRegion, 
-			Window->WindowRect.left - 
+	  W32kOffsetRgn(UpdateRegion,
+			Window->WindowRect.left -
 			Window->ClientRect.left,
 			Window->WindowRect.top -
 			Window->ClientRect.top);
@@ -522,7 +523,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
     {
       BOOLEAN Result;
       Window->Flags &= ~WINDOWOBJECT_NEED_ERASEBACKGRD;
-      Result = NtUserSendMessage(hWnd, 
+      Result = NtUserSendMessage(hWnd,
 				 IsIcon ? WM_ICONERASEBKGND : WM_ERASEBKGND,
 				 (WPARAM)lPs->hdc,
 				 0);

@@ -4,6 +4,7 @@
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <win32k/dc.h>
+#include <win32k/region.h>
 #include <win32k/cliprgn.h>
 
 // #define NDEBUG
@@ -14,43 +15,39 @@ HRGN WINAPI SaveVisRgn(HDC hdc)
   HRGN copy;
   PRGNDATA obj, copyObj;
   PDC dc = DC_HandleToPtr(hdc);
-/*ei
+
   if (!dc) return 0;
 
-  obj = RGNDATA_HandleToPtr(dc->w.hVisRgn);
+  obj = RGNDATA_LockRgn(dc->w.hVisRgn);
 
-  if(!(copy = CreateRectRgn(0, 0, 0, 0)))
+  if(!(copy = W32kCreateRectRgn(0, 0, 0, 0)))
   {
-    GDI_ReleaseObj(dc->w.hVisRgn);
-    GDI_ReleaseObj(hdc);
+    RGNDATA_UnlockRgn(dc->w.hVisRgn);
+    DC_ReleasePtr(hdc);
     return 0;
   }
-  CombineRgn(copy, dc->w.hVisRgn, 0, RGN_COPY);
-  copyObj = RGNDATA_HandleToPtr(copy);
-*/
+  W32kCombineRgn(copy, dc->w.hVisRgn, 0, RGN_COPY);
+  copyObj = RGNDATA_LockRgn(copy);
 /*  copyObj->header.hNext = obj->header.hNext;
   header.hNext = copy; */
-  DC_ReleasePtr( hdc );
+
   return copy;
 }
 
-INT16 WINAPI SelectVisRgn(HDC hdc, HRGN hrgn)
+INT WINAPI SelectVisRgn(HDC hdc, HRGN hrgn)
 {
-	return ERROR;
-/*ei
   int retval;
   DC *dc;
 
   if (!hrgn) return ERROR;
   if (!(dc = DC_HandleToPtr(hdc))) return ERROR;
 
-  dc->flags &= ~DC_DIRTY;
+  dc->w.flags &= ~DC_DIRTY;
 
-  retval = CombineRgn(dc->hVisRgn, hrgn, 0, RGN_COPY);
-  CLIPPING_UpdateGCRegion(dc);
+  retval = W32kCombineRgn(dc->w.hVisRgn, hrgn, 0, RGN_COPY);
+  //ei CLIPPING_UpdateGCRegion(dc);
 
   return retval;
-*/
 }
 
 int STDCALL W32kExcludeClipRect(HDC  hDC,

@@ -18,6 +18,7 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.  */
 
+#include <windows.h>
 
 double atan (double __x);
 double atan2 (double __y, double __x);
@@ -206,4 +207,51 @@ double tan (double __x)
      : "=t" (__value2), "=u" (__value) : "0" (__x));
 
   return __value;
+}
+
+//FIXME! Is there a better algorithm. like FT_MulDiv
+INT STDCALL EngMulDiv(
+	     INT nMultiplicand,
+	     INT nMultiplier,
+	     INT nDivisor)
+{
+#if SIZEOF_LONG_LONG >= 8
+    long long ret;
+
+    if (!nDivisor) return -1;
+
+    /* We want to deal with a positive divisor to simplify the logic. */
+    if (nDivisor < 0)
+    {
+      nMultiplicand = - nMultiplicand;
+      nDivisor = -nDivisor;
+    }
+
+    /* If the result is positive, we "add" to round. else, we subtract to round. */
+    if ( ( (nMultiplicand <  0) && (nMultiplier <  0) ) ||
+	 ( (nMultiplicand >= 0) && (nMultiplier >= 0) ) )
+      ret = (((long long)nMultiplicand * nMultiplier) + (nDivisor/2)) / nDivisor;
+    else
+      ret = (((long long)nMultiplicand * nMultiplier) - (nDivisor/2)) / nDivisor;
+
+    if ((ret > 2147483647) || (ret < -2147483647)) return -1;
+    return ret;
+#else
+    if (!nDivisor) return -1;
+
+    /* We want to deal with a positive divisor to simplify the logic. */
+    if (nDivisor < 0)
+    {
+      nMultiplicand = - nMultiplicand;
+      nDivisor = -nDivisor;
+    }
+
+    /* If the result is positive, we "add" to round. else, we subtract to round. */
+    if ( ( (nMultiplicand <  0) && (nMultiplier <  0) ) ||
+	 ( (nMultiplicand >= 0) && (nMultiplier >= 0) ) )
+      return ((nMultiplicand * nMultiplier) + (nDivisor/2)) / nDivisor;
+
+    return ((nMultiplicand * nMultiplier) - (nDivisor/2)) / nDivisor;
+
+#endif
 }

@@ -1,6 +1,9 @@
 #ifndef _WIN32K_CLIPRGN_H
 #define _WIN32K_CLIPRGN_H
 
+HRGN WINAPI SaveVisRgn(HDC hdc);
+INT WINAPI SelectVisRgn(HDC hdc, HRGN hrgn);
+
 int
 STDCALL
 W32kExcludeClipRect (

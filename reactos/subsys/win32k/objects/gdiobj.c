@@ -1,7 +1,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.12 2002/07/13 21:37:27 ei Exp $
+ * $Id: gdiobj.c,v 1.13 2002/07/18 21:59:18 ei Exp $
  *
  */
 
@@ -213,7 +213,8 @@ BOOL  GDIOBJ_FreeObj(HGDIOBJ hObj, WORD Magic)
 	Obj = (PGDIOBJ)((PCHAR)handleEntry->pObject + sizeof(GDIOBJHDR));
 	switch( handleEntry->wMagic ){
  		case GO_REGION_MAGIC:
-
+			bRet = RGNDATA_InternalDelete( (PRGNDATA) Obj );
+			break;
  		case GO_PEN_MAGIC:
  		case GO_PALETTE_MAGIC:
  		case GO_BITMAP_MAGIC:
@@ -290,6 +291,7 @@ BOOL GDIOBJ_UnlockObj( HGDIOBJ hObj, WORD Magic )
 
 	if( objectHeader->dwCount  == 0x80000000 ){
 		//delayed object release
+		objectHeader->dwCount = 0;
 		ExReleaseFastMutex(&RefCountHandling);
 		DPRINT("GDIOBJ_UnlockObj: delayed delete\n");
 		return GDIOBJ_FreeObj( hObj, Magic );
@@ -439,31 +441,6 @@ HGDIOBJ STDCALL  W32kGetStockObject(INT  Object)
 
 BOOL STDCALL  W32kDeleteObject(HGDIOBJ hObject)
 {
-/* ei: Now this is handled in gdiobj.c
-  PGDIOBJ  Obj;
-  PGDIOBJHDR  ObjHdr;
-  WORD  magic;
-
-  magic = GDIOBJ_GetHandleMagic (hObject);
-  Obj = GDIOBJ_HandleToPtr( hObject, GO_MAGIC_DONTCARE );
-  if( !Obj )
-    return FALSE;
-  ObjHdr = (PGDIOBJHDR)(((PCHAR)Obj) - sizeof (GDIOBJHDR));
-  switch( magic )
-  {
-    case GO_BITMAP_MAGIC: {
-      DPRINT( "Deleting bitmap\n" );
-      ExFreePool( ((PBITMAPOBJ)Obj)->bitmap.bmBits );
-      BITMAPOBJ_FreeBitmap( Obj );
-      break;
-    }
-    default: {
-      DPRINT( "W32kDeleteObject: Deleting object of unknown type %x\n", magic );
-      return FALSE;
-    }
-  }
-  return TRUE;
- */
   return GDIOBJ_FreeObj( hObject, GO_MAGIC_DONTCARE );
 }
 
