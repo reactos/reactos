@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.10 2001/07/06 00:58:15 ekohl Exp $
+; $Id: msvcrt.def,v 1.11 2001/07/06 12:53:03 ekohl Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -205,7 +205,7 @@ _ctype DATA
 ; _dstbias
 _dup
 _dup2
-; _ecvt
+_ecvt
 _endthread
 _endthreadex
 _environ_dll DATA
@@ -224,7 +224,7 @@ _except_handler3
 _exit
 ; _expand
 _fcloseall
-; _fcvt
+_fcvt
 _fdopen
 _fgetchar
 _fgetwchar
@@ -254,7 +254,7 @@ _fstati64
 _ftol
 _fullpath
 _futime
-; _gcvt
+_gcvt
 _get_osfhandle
 ; _get_sbh_threshold
 _getch
@@ -456,7 +456,7 @@ _stat
 _stati64
 _statusfp
 _strcmpi
-; _strdate
+_strdate
 _strdup
 _strerror
 _stricmp
@@ -537,7 +537,7 @@ _winminor DATA
 _winver DATA
 _wmakepath
 _wmkdir
-; _wmktemp
+_wmktemp
 _wopen
 _wperror
 ; _wpgmptr DATA
@@ -561,8 +561,8 @@ _wsopen
 _wsplitpath
 _wstat
 _wstati64
-; _wstrdate
-; _wstrtime
+_wstrdate
+_wstrtime
 ; _wsystem
 _wtempnam
 _wtmpnam
@@ -589,11 +589,11 @@ bsearch
 calloc
 ceil
 clearerr
-; clock
+clock
 cos
 cosh
 ctime
-; difftime
+difftime
 div
 exit
 exp
@@ -711,7 +711,7 @@ strcoll
 strcpy
 strcspn
 strerror
-; strftime
+strftime
 strlen
 strncat
 strncmp
@@ -751,7 +751,7 @@ wcscmp
 wcscoll
 wcscpy
 wcscspn
-; wcsftime
+wcsftime
 wcslen
 wcsncat
 wcsncmp

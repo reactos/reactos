@@ -18,9 +18,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.2 $
+ * $Revision: 1.3 $
  * $Author: ekohl $
- * $Date: 2001/07/03 22:15:02 $
+ * $Date: 2001/07/06 12:50:47 $
  *
  */
 
@@ -124,6 +124,7 @@ int	_wfindnexti64(int handle, struct _wfinddatai64_t *result);
 int	_wchdir(const wchar_t *szPath);
 wchar_t* _wgetcwd(wchar_t *buffer, int maxlen);
 int	_wmkdir(const wchar_t *_path);
+wchar_t* _wmktemp (wchar_t *_template);
 int	_wrmdir(const wchar_t *_path);
 
 

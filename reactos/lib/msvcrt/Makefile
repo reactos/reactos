@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.15 2001/07/06 00:58:15 ekohl Exp $
+# $Id: Makefile,v 1.16 2001/07/06 12:53:03 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -227,8 +227,13 @@ OBJECTS_STDLIB = \
 	stdlib/atol.o \
 	stdlib/bsearch.o \
 	stdlib/div.o \
+	stdlib/ecvt.o \
+	stdlib/ecvtbuf.o \
 	stdlib/errno.o \
+	stdlib/fcvt.o \
+	stdlib/fcvtbuf.o \
 	stdlib/fullpath.o \
+	stdlib/gcvt.o \
 	stdlib/getenv.o \
 	stdlib/itoa.o \
 	stdlib/itow.o \
@@ -293,8 +298,13 @@ OBJECTS_SYS_STAT = \
 	sys_stat/stat.o
 
 OBJECTS_TIME = \
-	time/time.o \
-	time/ctime.o
+	time/clock.o \
+	time/ctime.o \
+	time/difftime.o \
+	time/strdate.o \
+	time/strftime.o \
+	time/strtime.o \
+	time/time.o
 
 OBJECTS_WSTRING = \
 	wstring/wcscat.o \

@@ -22,9 +22,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.1 $
+ * $Revision: 1.2 $
  * $Author: ekohl $
- * $Date: 2001/07/03 12:55:00 $
+ * $Date: 2001/07/06 12:50:47 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
@@ -130,22 +130,32 @@ extern FILE _iob[];	/* an array of FILE */
 /*
  * File Operations
  */
+FILE*	_fdopen(int handle, char *mode);
+FILE*	_wfdopen(int handle, wchar_t *mode);
 
 FILE*	fopen (const char* szFileName, const char* szMode);
-FILE*	freopen (const char* szNewFileName, const char* szNewMode,
-		 FILE* fileChangeAssociation);
-int	fflush (FILE* fileFlush);
-int	fclose (FILE* fileClose);
+FILE*	_wfopen(const wchar_t *file, const wchar_t *mode);
+
+FILE*	freopen(const char* szNewFileName, const char* szNewMode,
+		FILE* fileChangeAssociation);
+FILE*	_wfreopen(const wchar_t *file, const wchar_t *mode, FILE *f);
+
+FILE*	_fsopen(const char *file, const char *mode, int shflag);
+FILE*	_wfsopen(const wchar_t *file, const wchar_t *mode, int shflag);
+
+int	fflush(FILE* fileFlush);
+int	fclose(FILE* fileClose);
 #define fcloseall 	_fcloseall
-int	remove (const char* szFileName);
-int	_wremove (const wchar_t* szFileName);
-int	rename (const char* szOldFileName, const char* szNewFileName);
-FILE*	tmpfile (void);
+int	remove(const char* szFileName);
+int	_wremove(const wchar_t* szFileName);
+int	rename(const char* szOldFileName, const char* szNewFileName);
+int	_wrename(const wchar_t *oldName, const wchar_t *newName);
+FILE*	tmpfile(void);
 
 int	_filbuf(FILE *f);
-int	_flsbuf(int c, FILE *f); 
+int	_flsbuf(int c, FILE *f);
 void	_fwalk(void (*func)(FILE *)); // not exported
-int 	_fcloseall( void );
+int	_fcloseall(void);
 
 
 /*
@@ -158,7 +168,10 @@ int 	_fcloseall( void );
 #define	L_tmpnam	(260)
 
 char*	tmpnam (char caName[]);
+wchar_t* _wtmpnam(wchar_t *s);
+
 char*	_tempnam (const char *szDir, const char *szPfx);
+wchar_t *_wtempnam(const wchar_t *dir,const wchar_t *prefix);
 
 #ifndef _NO_OLDNAMES
 #define	tempnam _tempnam
@@ -191,6 +204,7 @@ void	setbuf (FILE* fileSetBuffer, char* caBuffer);
   
 int	_pclose (FILE* pipeClose);
 FILE*	_popen (const char* szPipeName, const char* szMode);
+FILE*	_wpopen (const wchar_t *cm, const wchar_t *md);
 
 #define	popen _popen
 #define	pclose _pclose
@@ -330,6 +344,8 @@ int	ferror (FILE* fileIsError);
 void	perror (const char* szErrorMessage);
 
 #endif
+void _wperror(const wchar_t *s);
+
 
 #define  clearerr(f)     (((f)->_flag) &= ~(_IOERR|_IOEOF))
 #define feof(f)		(((f)->_flag&_IOEOF)!=0)

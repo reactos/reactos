@@ -18,9 +18,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.1 $
+ * $Revision: 1.2 $
  * $Author: ekohl $
- * $Date: 2001/07/03 12:55:00 $
+ * $Date: 2001/07/06 12:50:47 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
@@ -105,12 +105,17 @@ char*		ctime (const time_t* tp);
 struct tm*	gmtime (const time_t* tm);
 struct tm*	localtime (const time_t* tm);
 
+char*		_strdate(const char *datestr);
+wchar_t*	_wstrdate(const wchar_t *datestr);
 
 size_t	strftime (char* caBuffer, size_t sizeMax, const char* szFormat,
 		  const struct tm* tpPrint);
 
 size_t	wcsftime (wchar_t* wcaBuffer, size_t sizeMax,
 		  const wchar_t* wsFormat, const struct tm* tpPrint);
+
+char*		_strtime(char* buf);
+wchar_t*	_wstrtime(wchar_t* buf);
 
 #ifdef	__cplusplus
 }
