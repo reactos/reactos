@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bug.c,v 1.28 2003/04/07 23:10:08 gvg Exp $
+/* $Id: bug.c,v 1.29 2003/04/24 16:53:59 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/bug.c
@@ -56,6 +56,7 @@ BOOLEAN STDCALL
 KeDeregisterBugCheckCallback(PKBUGCHECK_CALLBACK_RECORD CallbackRecord)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 BOOLEAN STDCALL
@@ -81,14 +82,59 @@ KeBugCheckWithTf(ULONG BugCheckCode,
 		 ULONG BugCheckParameter4,
 		 PKTRAP_FRAME Tf)
 {
-  KIRQL oldIrql;
-  KeRaiseIrql(HIGH_LEVEL, &oldIrql);
-  DbgPrint("Bug detected code: 0x%X\n", BugCheckCode);
+  PRTL_MESSAGE_RESOURCE_ENTRY Message;
+  NTSTATUS Status;
+  
+  __asm__("cli\n\t");
+  DbgPrint("Bug detected (code %x param %x %x %x %x)\n",
+	   BugCheckCode,
+	   BugCheckParameter1,
+	   BugCheckParameter2,
+	   BugCheckParameter3,
+	   BugCheckParameter4);
+
+  Status = RtlFindMessage((PVOID)KERNEL_BASE, //0xC0000000,
+			  11, //RT_MESSAGETABLE,
+			  0x09, //0x409,
+			  BugCheckCode,
+			  &Message);
+  if (NT_SUCCESS(Status))
+    {
+      if (Message->Flags == 0)
+	DbgPrint("  %s\n", Message->Text);
+      else
+	DbgPrint("  %S\n", (PWSTR)Message->Text);
+    }
+  else
+    {
+      DbgPrint("  No message text found!\n\n");
+    }
+
+  if (InBugCheck == 1)
+    {
+      DbgPrint("Recursive bug check halting now\n");
+      for (;;)
+	{
+	  __asm__ ("hlt\n\t");
+	}
+    }
+  InBugCheck = 1;
   KiDumpTrapFrame(Tf, BugCheckParameter1, BugCheckParameter2);
   MmDumpToPagingFile(BugCheckCode, BugCheckParameter1, 
 		     BugCheckParameter2, BugCheckParameter3,
 		     BugCheckParameter4, Tf);
-  for(;;);
+
+  if (KdDebuggerEnabled)
+    {
+      __asm__("sti\n\t");
+      DbgBreakPoint();
+      __asm__("cli\n\t");
+    }
+
+  for (;;)
+    {
+      __asm__("hlt\n\t");
+    }
 }
 
 VOID STDCALL
