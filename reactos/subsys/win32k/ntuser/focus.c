@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: focus.c,v 1.26 2004/11/25 22:18:59 navaraf Exp $
+ * $Id: focus.c,v 1.27 2004/12/19 11:05:48 tamlin Exp $
  */
 
 #include <w32k.h>
@@ -238,12 +238,18 @@ IntMouseActivateWindow(PWINDOW_OBJECT Window)
   if (Top != Window->Self)
     {
       TopWindow = IntGetWindowObject(Top);
+      if (TopWindow == NULL)
+        {
+          SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+          return FALSE;
+        }
     }
   else
     {
       TopWindow = Window;
     }
 
+  /* TMN: Check return valud from this function? */
   IntSetForegroundAndFocusWindow(TopWindow, Window, TRUE);
 
   if (Top != Window->Self)
