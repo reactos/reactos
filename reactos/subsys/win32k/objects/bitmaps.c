@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.51 2003/12/23 19:22:17 gvg Exp $ */
+/* $Id: bitmaps.c,v 1.52 2004/01/10 01:50:49 rcampbell Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -398,7 +398,7 @@ BOOL STDCALL NtGdiFloodFill(HDC  hDC,
                     INT  YStart,
                     COLORREF  Fill)
 {
-  UNIMPLEMENTED;
+  return NtGdiExtFloodFill(hDC, XStart, YStart, Fill, FLOODFILLBORDER );
 }
 
 BOOL STDCALL NtGdiGetBitmapDimensionEx(HBITMAP  hBitmap,
