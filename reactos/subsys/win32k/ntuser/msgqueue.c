@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.55 2003/12/21 21:20:31 weiden Exp $
+/* $Id: msgqueue.c,v 1.56 2003/12/21 21:21:33 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -233,7 +233,6 @@ MsqIsDblClk(PWINDOW_OBJECT Window, PUSER_MESSAGE Message, BOOL Remove)
   {
     if(Remove)
     {
-      DbgPrint("NO !!! DblClick in %d ms (Msg: %d, last: %d, Max: %d)\n", Message->Msg.time - CurInfo->LastBtnDown, Message->Msg.time, CurInfo->LastBtnDown, CurInfo->DblClickSpeed);
       CurInfo->LastBtnDownX = Message->Msg.pt.x;
       CurInfo->LastBtnDownY = Message->Msg.pt.y;
       CurInfo->LastClkWnd = (HANDLE)Message->Msg.hwnd;
