@@ -315,7 +315,7 @@ KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
     * the PIC.
     */
     
-   KeGetCurrentKPCR()->PrcbData.InterruptCount++;
+   KeGetCurrentPrcb()->InterruptCount++;
 
    /*
     * Notify the rest of the kernel of the raised irq level. For the

@@ -146,6 +146,7 @@ KePrepareForApplicationProcessorInit(ULONG Id)
   Pcr->ProcessorNumber = Id;
   Pcr->Tib.Self = &Pcr->Tib;
   Pcr->Self = Pcr;
+  Pcr->Prcb = &Pcr->PrcbData;
   Pcr->Irql = SYNCH_LEVEL;
 
   Pcr->PrcbData.MHz = BootPcr->PrcbData.MHz;
@@ -238,6 +239,7 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
    KPCR = (PKPCR)KPCR_BASE;
    memset(KPCR, 0, PAGE_SIZE);
    KPCR->Self = KPCR;
+   KPCR->Prcb = &KPCR->PrcbData;
    KPCR->Irql = SYNCH_LEVEL;
    KPCR->Tib.Self  = &KPCR->Tib;
    KPCR->GDT = KiBootGdt;

@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -26,11 +26,11 @@ PsIdleThreadMain(PVOID Context)
 {
    KIRQL oldlvl;
 
-   PKPCR Pcr = KeGetCurrentKPCR();
+   PKPRCB Prcb = KeGetCurrentPrcb();
    
    for(;;)
      {
-       if (Pcr->PrcbData.DpcData[0].DpcQueueDepth > 0)
+       if (Prcb->DpcData[0].DpcQueueDepth > 0)
 	 {
 	   KeRaiseIrql(DISPATCH_LEVEL,&oldlvl);
 	   KiDispatchInterrupt();
@@ -80,7 +80,7 @@ PsInitIdleThread(VOID)
 	return;
    }
    NtClose(IdleThreadHandle);
-   KeGetCurrentKPCR()->PrcbData.IdleThread = &IdleThread->Tcb;
+   KeGetCurrentPrcb()->IdleThread = &IdleThread->Tcb;
    KeSetPriorityThread(&IdleThread->Tcb, LOW_PRIORITY);
    KeSetAffinityThread(&IdleThread->Tcb, 1 << 0);
 

@@ -1436,7 +1436,7 @@ KdbpCmdPcr(ULONG Argc, PCHAR Argv[])
              "  InterruptMode:             0x%08x\n",
              Pcr->Tib.ExceptionList, Pcr->Tib.StackBase, Pcr->Tib.StackLimit,
              Pcr->Tib.SubSystemTib, Pcr->Tib.FiberData, Pcr->Tib.ArbitraryUserPointer,
-             Pcr->Tib.Self, Pcr->Self, Pcr->PCRCB, Pcr->Irql, Pcr->IRR, Pcr->IrrActive,
+             Pcr->Tib.Self, Pcr->Self, Pcr->Prcb, Pcr->Irql, Pcr->IRR, Pcr->IrrActive,
              Pcr->IDR, Pcr->KdVersionBlock, Pcr->IDT, Pcr->GDT, Pcr->TSS,
              Pcr->MajorVersion, Pcr->MinorVersion, Pcr->SetMember, Pcr->StallScaleFactor,
              Pcr->DebugActive, Pcr->ProcessorNumber, Pcr->L2CacheAssociativity,

@@ -1769,7 +1769,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
           
           KeQuerySystemTime(&SystemTime);
           
-          Prcb = &KeGetCurrentKPCR()->PrcbData;
+          Prcb = KeGetCurrentPrcb();
 
           NewCookie = Prcb->KeSystemCalls ^ Prcb->InterruptTime ^
                       SystemTime.u.LowPart ^ SystemTime.u.HighPart;

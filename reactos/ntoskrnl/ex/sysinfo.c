@@ -46,17 +46,18 @@ ExGetCurrentProcessorCpuUsage (
 	PULONG	CpuUsage
 	)
 {
-	PKPCR Pcr;
+	PKPRCB Prcb;
 	ULONG TotalTime;
-	ULONG PercentTime = 0;
 	ULONGLONG ScaledIdle;
 
-	Pcr = KeGetCurrentKPCR();
+	Prcb = KeGetCurrentPrcb();
 
-	ScaledIdle = Pcr->PrcbData.IdleThread->KernelTime * 100;
-	TotalTime = Pcr->PrcbData.KernelTime + Pcr->PrcbData.UserTime;
-	if (TotalTime) PercentTime = 100 - (ScaledIdle / TotalTime);
-	CpuUsage = &PercentTime;
+	ScaledIdle = Prcb->IdleThread->KernelTime * 100;
+	TotalTime = Prcb->KernelTime + Prcb->UserTime;
+	if (TotalTime != 0)
+		*CpuUsage = 100 - (ScaledIdle / TotalTime);
+       else
+		*CpuUsage = 0;
 }
 
 /*
@@ -70,20 +71,27 @@ ExGetCurrentProcessorCounts (
 	PULONG	ProcessorNumber
 	)
 {
-	PKPCR Pcr;
-	ULONG TotalTime;
-	ULONG ThreadTime;
-	ULONG ProcNumber;
+	PKPRCB Prcb;
 
-	Pcr = KeGetCurrentKPCR();
+	Prcb = KeGetCurrentPrcb();
 
-	TotalTime = Pcr->PrcbData.KernelTime + Pcr->PrcbData.UserTime;
-	ThreadTime = Pcr->PrcbData.CurrentThread->KernelTime;
-	ProcNumber = Pcr->ProcessorNumber;
+	*ThreadKernelTime = Prcb->KernelTime + Prcb->UserTime;
+	*TotalCpuTime = Prcb->CurrentThread->KernelTime;
+	*ProcessorNumber = KeGetCurrentKPCR()->ProcessorNumber;
+}
 
-	ThreadKernelTime = &ThreadTime;
-	TotalCpuTime = &TotalTime;
-	ProcessorNumber = &ProcNumber;
+/*
+ * @implemented
+ */
+BOOLEAN 
+STDCALL
+ExIsProcessorFeaturePresent(IN ULONG ProcessorFeature)
+{
+    /* Quick check to see if it exists at all */
+    if (ProcessorFeature >= PROCESSOR_FEATURE_MAX) return(FALSE);
+
+    /* Return our support for it */
+    return(SharedUserData->ProcessorFeatures[ProcessorFeature]);
 }
 
 NTSTATUS STDCALL
@@ -363,7 +371,7 @@ QSI_DEF(SystemProcessorInformation)
 {
 	PSYSTEM_PROCESSOR_INFORMATION Spi 
 		= (PSYSTEM_PROCESSOR_INFORMATION) Buffer;
-	PKPCR Pcr;
+	PKPRCB Prcb;
 	*ReqSize = sizeof (SYSTEM_PROCESSOR_INFORMATION);
 	/*
 	 * Check user buffer's size 
@@ -372,12 +380,12 @@ QSI_DEF(SystemProcessorInformation)
 	{
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
-	Pcr = KeGetCurrentKPCR();
+	Prcb = KeGetCurrentPrcb();
 	Spi->ProcessorArchitecture = 0; /* Intel Processor */
-	Spi->ProcessorLevel	   = Pcr->PrcbData.CpuType;
-	Spi->ProcessorRevision	   = Pcr->PrcbData.CpuStep;
+	Spi->ProcessorLevel	   = Prcb->CpuType;
+	Spi->ProcessorRevision	   = Prcb->CpuStep;
 	Spi->Unknown 		   = 0;
-	Spi->FeatureBits	   = Pcr->PrcbData.FeatureBits;
+	Spi->FeatureBits	   = Prcb->FeatureBits;
 
 	DPRINT("Arch %d Level %d Rev 0x%x\n", Spi->ProcessorArchitecture,
 		Spi->ProcessorLevel, Spi->ProcessorRevision);
@@ -713,7 +721,7 @@ QSI_DEF(SystemProcessorPerformanceInformation)
 
         ULONG i;
 	LARGE_INTEGER CurrentTime;
-	PKPCR Pcr;
+	PKPRCB Prcb;
 
 	*ReqSize = KeNumberProcessors * sizeof (SYSTEM_PROCESSORTIME_INFO);
 	/*
@@ -725,19 +733,17 @@ QSI_DEF(SystemProcessorPerformanceInformation)
 	}
 
 	CurrentTime.QuadPart = KeQueryInterruptTime();
-	Pcr = (PKPCR)KPCR_BASE;   
+	Prcb = ((PKPCR)KPCR_BASE)->Prcb;
 	for (i = 0; i < KeNumberProcessors; i++)
 	{
-
-	   Spi->TotalProcessorRunTime.QuadPart = (Pcr->PrcbData.IdleThread->KernelTime + Pcr->PrcbData.IdleThread->UserTime) * 100000LL; // IdleTime
-           Spi->TotalProcessorTime.QuadPart =  Pcr->PrcbData.KernelTime * 100000LL; // KernelTime
-           Spi->TotalProcessorUserTime.QuadPart = Pcr->PrcbData.UserTime * 100000LL;
-           Spi->TotalDPCTime.QuadPart = Pcr->PrcbData.DpcTime * 100000LL;
-           Spi->TotalInterruptTime.QuadPart = Pcr->PrcbData.InterruptTime * 100000LL;
-           Spi->TotalInterrupts = Pcr->PrcbData.InterruptCount; // Interrupt Count
+	   Spi->TotalProcessorRunTime.QuadPart = (Prcb->IdleThread->KernelTime + Prcb->IdleThread->UserTime) * 100000LL; // IdleTime
+           Spi->TotalProcessorTime.QuadPart =  Prcb->KernelTime * 100000LL; // KernelTime
+           Spi->TotalProcessorUserTime.QuadPart = Prcb->UserTime * 100000LL;
+           Spi->TotalDPCTime.QuadPart = Prcb->DpcTime * 100000LL;
+           Spi->TotalInterruptTime.QuadPart = Prcb->InterruptTime * 100000LL;
+           Spi->TotalInterrupts = Prcb->InterruptCount; // Interrupt Count
 	   Spi++;
-//	   Pcr++;
-	   Pcr = (PKPCR)((ULONG_PTR)Pcr + PAGE_SIZE);
+	   Prcb = (PKPRCB)((ULONG_PTR)Prcb + PAGE_SIZE);
 	}
      
 	return (STATUS_SUCCESS);

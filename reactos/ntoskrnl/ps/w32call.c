@@ -129,7 +129,7 @@ NtCallbackReturn (PVOID		Result,
    */
   KeRaiseIrql(HIGH_LEVEL, &oldIrql);
   if ((Thread->Tcb.NpxState & NPX_STATE_VALID) &&
-      ETHREAD_TO_KTHREAD(Thread) != KeGetCurrentKPCR()->PrcbData.NpxThread)
+      ETHREAD_TO_KTHREAD(Thread) != KeGetCurrentPrcb()->NpxThread)
     {
       RtlCopyMemory((char*)InitialStack - sizeof(FX_SAVE_AREA),
                     (char*)Thread->Tcb.InitialStack - sizeof(FX_SAVE_AREA),
@@ -317,7 +317,7 @@ NtW32Call (IN ULONG RoutineIndex,
   SavedState.SavedCallbackStack = Thread->Tcb.CallbackStack;
   SavedState.SavedExceptionStack = (PVOID)KeGetCurrentKPCR()->TSS->Esp0;
   if ((Thread->Tcb.NpxState & NPX_STATE_VALID) &&
-      ETHREAD_TO_KTHREAD(Thread) != KeGetCurrentKPCR()->PrcbData.NpxThread)
+      ETHREAD_TO_KTHREAD(Thread) != KeGetCurrentPrcb()->NpxThread)
     {
       RtlCopyMemory((char*)NewStack + StackSize - sizeof(FX_SAVE_AREA),
                     (char*)SavedState.SavedInitialStack - sizeof(FX_SAVE_AREA),

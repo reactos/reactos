@@ -38,19 +38,6 @@ ExInit3 (VOID)
 }
 
 
-/*
- * @implemented
- */
-BOOLEAN STDCALL
-ExIsProcessorFeaturePresent(IN ULONG ProcessorFeature)
-{
-  if (ProcessorFeature >= PROCESSOR_FEATURE_MAX)
-    return(FALSE);
-
-  return(SharedUserData->ProcessorFeatures[ProcessorFeature]);
-}
-
-
 VOID STDCALL
 ExPostSystemEvent (ULONG	Unknown1,
 		   ULONG	Unknown2,

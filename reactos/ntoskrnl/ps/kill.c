@@ -151,7 +151,7 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
    /* If the ProcessoR Control Block's NpxThread points to the current thread
     * unset it.
     */
-   InterlockedCompareExchangePointer(&KeGetCurrentKPCR()->PrcbData.NpxThread,
+   InterlockedCompareExchangePointer(&KeGetCurrentPrcb()->NpxThread,
                                      NULL, ETHREAD_TO_KTHREAD(CurrentThread));
 
    KeReleaseDispatcherDatabaseLock(oldIrql);

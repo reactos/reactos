@@ -67,9 +67,9 @@ NtContinue (
           {
             Thread->NpxState = NPX_STATE_VALID;
             KeRaiseIrql(DISPATCH_LEVEL, &oldIrql);
-            if (KeGetCurrentKPCR()->PrcbData.NpxThread == Thread)
+            if (KeGetCurrentPrcb()->NpxThread == Thread)
               {
-                KeGetCurrentKPCR()->PrcbData.NpxThread = NULL;
+                KeGetCurrentPrcb()->NpxThread = NULL;
                 Ke386SetCr0(Ke386GetCr0() | X86_CR0_TS);
               }
             else
