@@ -6,3 +6,4 @@ scsiport.coff
 *.sym
 *.sys
 *.map
+*.d

@@ -6,3 +6,4 @@ disk.coff
 *.sys
 *.o
 *.map
+*.d

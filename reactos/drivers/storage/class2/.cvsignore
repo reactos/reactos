@@ -6,3 +6,5 @@ class2.coff
 *.sys
 *.sym
 *.map
+*.d
+

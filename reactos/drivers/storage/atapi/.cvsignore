@@ -6,3 +6,4 @@ atapi.coff
 *.sym
 *.sys
 *.map
+*.d

@@ -6,3 +6,4 @@ cdrom.coff
 *.sym
 *.sys
 *.map
+*.d
