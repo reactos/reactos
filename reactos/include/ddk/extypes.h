@@ -1,4 +1,4 @@
-/* $Id: extypes.h,v 1.21 2003/11/14 15:19:35 ekohl Exp $ */
+/* $Id: extypes.h,v 1.22 2004/06/23 21:02:35 ion Exp $ */
 
 #ifndef __INCLUDE_DDK_EXTYPES_H
 #define __INCLUDE_DDK_EXTYPES_H
@@ -137,6 +137,55 @@ typedef struct _PAGED_LOOKASIDE_LIST
    FAST_MUTEX Obsoleted;
 } PAGED_LOOKASIDE_LIST, *PPAGED_LOOKASIDE_LIST;
 
+typedef enum _EX_POOL_PRIORITY {
+    LowPoolPriority,
+    LowPoolPrioritySpecialPoolOverrun = 8,
+    LowPoolPrioritySpecialPoolUnderrun = 9,
+    NormalPoolPriority = 16,
+    NormalPoolPrioritySpecialPoolOverrun = 24,
+    NormalPoolPrioritySpecialPoolUnderrun = 25,
+    HighPoolPriority = 32,
+    HighPoolPrioritySpecialPoolOverrun = 40,
+    HighPoolPrioritySpecialPoolUnderrun = 41
+
+    } EX_POOL_PRIORITY;
+
+typedef enum _SUITE_TYPE {
+    SmallBusiness,
+    Enterprise,
+    BackOffice,
+    CommunicationServer,
+    TerminalServer,
+    SmallBusinessRestricted,
+    EmbeddedNT,
+    DataCenter,
+    SingleUserTS,
+    Personal,
+    Blade,
+    MaxSuiteType
+} SUITE_TYPE;
+
+typedef enum _HARDERROR_RESPONSE_OPTION {
+	OptionAbortRetryIgnore,
+	OptionOk,
+	OptionOkCancel,
+	OptionRetryCancel,
+	OptionYesNo,
+	OptionYesNoCancel,
+	OptionShutdownSystem
+} HARDERROR_RESPONSE_OPTION, *PHARDERROR_RESPONSE_OPTION;
+
+typedef enum _HARDERROR_RESPONSE {
+	ResponseReturnToCaller,
+	ResponseNotHandled,
+	ResponseAbort,
+	ResponseCancel,
+	ResponseIgnore,
+	ResponseNo,
+	ResponseOk,
+	ResponseRetry,
+	ResponseYes
+} HARDERROR_RESPONSE, *PHARDERROR_RESPONSE;
 
 /* callback object (not functional in NT4)*/
 

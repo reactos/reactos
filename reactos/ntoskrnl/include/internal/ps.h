@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.58 2004/03/14 18:11:25 ekohl Exp $
+/* $Id: ps.h,v 1.59 2004/06/23 21:02:16 ion Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -63,7 +63,7 @@ typedef struct _KAPC_STATE
    UCHAR KernelApcInProgress;
    UCHAR KernelApcPending;
    USHORT UserApcPending;
-} KAPC_STATE, *PKAPC_STATE;
+} KAPC_STATE, *PKAPC_STATE, *__restrict PRKAPC_STATE;
 
 #include <poppack.h>
 
@@ -505,6 +505,20 @@ NTSTATUS PsResumeThread(PETHREAD Thread, PULONG PreviousCount);
 VOID 
 KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First);
 NTSTATUS KeReleaseThread(PETHREAD Thread);
+
+STDCALL
+VOID
+KeStackAttachProcess (
+    IN PKPROCESS Process,
+    OUT PRKAPC_STATE ApcState
+    );
+
+STDCALL
+VOID
+KeUnstackDetachProcess (
+    IN PRKAPC_STATE ApcState
+    );
+
 VOID STDCALL PiDeleteProcess(PVOID ObjectBody);
 VOID PsReapThreads(VOID);
 VOID PsUnfreezeOtherThread(PETHREAD Thread);

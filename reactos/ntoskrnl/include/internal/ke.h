@@ -53,6 +53,34 @@ DbgBreakPointNoBugCheck(VOID);
 
 VOID STDCALL KeRescheduleThread();
 
+
+STDCALL
+VOID
+KeProfileInterrupt(
+    PKTRAP_FRAME TrapFrame
+);
+
+STDCALL
+VOID
+KeProfileInterruptWithSource(
+	IN PKTRAP_FRAME   		TrapFrame,
+	IN KPROFILE_SOURCE		Source
+);
+
+/*STDCALL
+BOOLEAN
+KiIpiServiceRoutine(
+	IN PKTRAP_FRAME   		TrapFrame,
+	IN PKEXCEPTION_FRAME  	ExceptionFrame
+);*/
+
+STDCALL
+VOID 
+KeUpdateSystemTime(
+	IN PKTRAP_FRAME   	TrapFrame,
+	IN ULONG  			Increment
+);
+
 VOID KiUpdateSystemTime (KIRQL oldIrql, ULONG Eip);
 
 KIRQL KeAcquireDispatcherDatabaseLock(VOID);
@@ -71,16 +99,12 @@ VOID KeDumpStackFrames(PULONG Frame);
 BOOLEAN KiTestAlert(VOID);
 VOID KeRemoveAllWaitsThread(struct _ETHREAD* Thread, NTSTATUS WaitStatus, BOOL Unblock);
 PULONG KeGetStackTopThread(struct _ETHREAD* Thread);
-VOID KeContextToTrapFrame(PCONTEXT Context,
-			  PKTRAP_FRAME TrapFrame);
+VOID KeContextToTrapFrame(PCONTEXT Context, PKTRAP_FRAME TrapFrame);
 VOID
 KiDeliverNormalApc(VOID);
 
 BOOLEAN STDCALL KeRemoveQueueApc (PKAPC Apc);
 PLIST_ENTRY STDCALL KeRundownQueue(IN PKQUEUE Queue);
-
-NTSTATUS STDCALL
-KeRaiseUserException(IN NTSTATUS ExceptionCode);
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 
@@ -137,6 +161,12 @@ KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG ExceptionNr, ULONG cr2);
 
 VOID
 KiUpdateProcessThreadTime(VOID);
+
+STDCALL
+VOID
+KeUpdateRunTime(
+	IN PKTRAP_FRAME	TrapFrame
+);
 
 #endif /* not __ASM__ */
 

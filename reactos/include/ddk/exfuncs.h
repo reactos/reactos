@@ -46,6 +46,32 @@ ExAcquireResourceSharedLite (
 	BOOLEAN		Wait
 	);
 BOOLEAN
+FASTCALL
+ExAcquireRundownProtection (
+	PVOID		ProcessRundownProtect
+	);
+BOOLEAN
+FASTCALL
+ExAcquireRundownProtectionEx (
+	IN PVOID	ProcessRundownProtect,
+	IN PVOID	Unknown
+	);
+PVOID
+FASTCALL
+ExfAcquirePushLockExclusive (
+	PVOID		Lock
+	);
+PVOID
+FASTCALL
+ExfAcquirePushLockShared (
+	PVOID		Lock
+	);
+PVOID
+FASTCALL
+ExfReleasePushLock (
+	PVOID		Lock
+	);
+BOOLEAN
 STDCALL
 ExAcquireSharedStarveExclusive (
 	PERESOURCE	Resource,
@@ -120,6 +146,15 @@ ExAllocatePoolWithTag (
 	IN	ULONG		Tag
 	);
 
+PVOID
+NTAPI
+ExAllocatePoolWithTagPriority(
+    IN POOL_TYPE PoolType,
+    IN SIZE_T NumberOfBytes,
+    IN ULONG Tag,
+    IN EX_POOL_PRIORITY Priority
+    );
+
 VOID
 STDCALL
 ExConvertExclusiveToSharedLite (
@@ -150,6 +185,15 @@ VOID
 STDCALL
 ExDisableResourceBoostLite (
 	PERESOURCE	Resource
+	);
+
+VOID
+STDCALL
+ExEnumHandleTable (
+	PULONG	HandleTable,
+	PVOID	Callback,
+	PVOID	Param,
+	PHANDLE	Handle OPTIONAL
 	);
 
 NTSTATUS
@@ -199,6 +243,28 @@ ExFreePool (
 #define ExGetCurrentResourceThread() \
 	((ERESOURCE_THREAD)KeGetCurrentThread())
 
+LONGLONG
+FASTCALL
+ExfInterlockedCompareExchange64(
+    IN OUT LONGLONG volatile *Destination,
+    IN PLONGLONG ExChange,
+    IN PLONGLONG Comperand
+    );
+
+VOID
+STDCALL
+ExGetCurrentProcessorCounts (
+	PVOID	IdleThreadTime,
+	PVOID	SystemTime,
+	PVOID	Number
+	);
+
+VOID
+STDCALL
+ExGetCurrentProcessorCpuUsage (
+	PVOID	RetVal
+	);
+
 ULONG
 STDCALL
 ExGetExclusiveWaiterCount (
@@ -240,6 +306,12 @@ NTSTATUS
 STDCALL
 ExInitializeResourceLite (
 	PERESOURCE	Resource
+	);
+
+VOID
+FASTCALL
+ExInitializeRundownProtection (
+	PVOID	ProcessRundown
 	);
 
 /*
@@ -333,6 +405,7 @@ ExInterlockedDecrementLong (
 	PLONG		Addend,
 	PKSPIN_LOCK	Lock
 	);
+
 ULONG
 STDCALL
 ExInterlockedExchangeUlong (
@@ -340,6 +413,7 @@ ExInterlockedExchangeUlong (
 	ULONG		Value,
 	PKSPIN_LOCK	Lock
 	);
+
 NTSTATUS
 STDCALL
 ExInterlockedExtendZone (
@@ -348,6 +422,12 @@ ExInterlockedExtendZone (
 	ULONG		SegmentSize,
 	PKSPIN_LOCK	Lock
 	);
+
+PSLIST_ENTRY
+FASTCALL
+ExInterlockedFlushSList (
+    IN PSLIST_HEADER ListHead
+    );
 
 /*
  * PVOID
@@ -498,6 +578,14 @@ ExQueueWorkItem (
 	PWORK_QUEUE_ITEM	WorkItem,
 	WORK_QUEUE_TYPE		QueueType
 	);
+
+SIZE_T
+STDCALL
+ExQueryPoolBlockSize (                          
+    IN PVOID PoolBlock,                         
+    OUT PBOOLEAN QuotaCharged                   
+    );  
+
 VOID
 STDCALL
 ExRaiseAccessViolation (
@@ -513,6 +601,21 @@ STDCALL
 ExRaiseStatus (
 	NTSTATUS	Status
 	);
+VOID
+STDCALL
+ExRaiseException (
+	PEXCEPTION_RECORD pExcptRec
+	);
+VOID
+STDCALL
+ExRaiseHardError (
+	IN NTSTATUS ErrorStatus,
+	IN ULONG NumberOfParameters, 
+	IN PUNICODE_STRING UnicodeStringParameterMask OPTIONAL,
+	IN PVOID *Parameters, 
+	IN HARDERROR_RESPONSE_OPTION ResponseOption, 
+	OUT PHARDERROR_RESPONSE Response 
+	);
 
 PVOID
 STDCALL
@@ -527,6 +630,12 @@ STDCALL
 ExReinitializeResourceLite (
 	PERESOURCE	Resource
 	);
+VOID
+FASTCALL
+ExReInitializeRundownProtection (
+	PVOID	ProcessRundown
+	);
+
 /* ReactOS Specific: begin */
 VOID
 FASTCALL
@@ -566,13 +675,45 @@ ExReleaseResourceForThreadLite (
 	PERESOURCE		Resource,
 	ERESOURCE_THREAD	ResourceThreadId
 	);
-
+BOOLEAN
+FASTCALL
+ExReleaseRundownProtection (
+	IN PVOID	ProcessRundownProtect
+	);
+BOOLEAN
+FASTCALL
+ExReleaseRundownProtectionEx (
+	IN PVOID	ProcessRundownProtect,
+	IN PVOID	Unknown
+	);
+VOID
+FASTCALL
+ExRundownCompleted (
+	PVOID	ProcessRundown
+	);
 VOID
 STDCALL
 ExSetResourceOwnerPointer (
 	IN	PERESOURCE	Resource,
 	IN	PVOID		OwnerPointer
 	);
+
+VOID
+STDCALL
+ExSetTimerResolution (
+    IN ULONG DesiredTime,
+    IN BOOLEAN SetResolution
+    );
+
+STDCALL
+BOOLEAN
+ExVerifySuite(
+    SUITE_TYPE SuiteType
+    );
+
+BOOLEAN
+STDCALL
+ExSystemExceptionFilter();
 
 VOID
 STDCALL
@@ -597,6 +738,20 @@ VOID
 STDCALL
 ExUnregisterCallback (
 	IN	PVOID	CallbackRegistration
+	);
+
+typedef GUID UUID;
+
+STDCALL
+NTSTATUS
+ExUuidCreate(
+    OUT UUID *Uuid
+    );
+
+PVOID
+FASTCALL
+ExWaitForRundownProtectionRelease (
+	PVOID		ProcessRundownProtect
 	);
 
 PSLIST_ENTRY
