@@ -108,35 +108,37 @@ int OskitTCPRecv( void *connection,
 		  OSK_UINT Len,
 		  OSK_UINT *OutLen,
 		  OSK_UINT Flags ) {
-    struct mbuf *paddr = 0;
-    struct mbuf m, *mp;
+    char *output_ptr = Data;
     struct uio uio = { 0 };
+    struct iovec iov = { 0 };
     int error = 0;
     int tcp_flags = 0;
+    int tocopy = 0;
+
+    *OutLen = 0;
 
     if( Flags & OSK_MSG_OOB )      tcp_flags |= MSG_OOB;
     if( Flags & OSK_MSG_DONTWAIT ) tcp_flags |= MSG_DONTWAIT;
     if( Flags & OSK_MSG_PEEK )     tcp_flags |= MSG_PEEK;
 
     uio.uio_resid = Len;
-    m.m_len = Len;
-    m.m_data = Data;
-    m.m_type = MT_DATA;
-    m.m_flags = M_PKTHDR | M_EOR;
-
-    mp = &m;
+    uio.uio_iov = &iov;
+    uio.uio_rw = UIO_READ;
+    uio.uio_iovcnt = 1;
+    iov.iov_len = Len;
+    iov.iov_base = Data;
 
     OS_DbgPrint(OSK_MID_TRACE,("Reading %d bytes from TCP:\n", Len));
 	
-    error = soreceive( connection, &paddr, &uio, &mp, NULL /* SCM_RIGHTS */, 
+    error = soreceive( connection, NULL, &uio, NULL, NULL /* SCM_RIGHTS */, 
 		       &tcp_flags );
 
     if( error == 0 ) {
 	OS_DbgPrint(OSK_MID_TRACE,("Successful read from TCP:\n"));
-	OskitDumpBuffer( m.m_data, uio.uio_resid );
+	*OutLen = Len - uio.uio_resid;
+	OskitDumpBuffer( Data, *OutLen );
     }
 
-    *OutLen = uio.uio_resid;
     return error;
 }
 		  
