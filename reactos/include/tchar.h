@@ -29,20 +29,14 @@
  *  DISCLAIMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.11 $
+ * $Revision: 1.12 $
  * $Author: gvg $
- * $Date: 2004/07/07 22:29:37 $
+ * $Date: 2004/07/10 21:23:18 $
  *
  */
 
 #ifndef	_ROS_TCHAR_H_
 #define _ROS_TCHAR_H_
-
-#ifdef __USE_W32API
-
-#include_next <tchar.h>
-
-#else /* Not __USE_W32API */
 
 #include <msvcrt/string.h>
 
@@ -155,6 +149,7 @@ typedef wchar_t TCHAR;
 #define	_totlower	towlower
 #define	_ttoi		_wtoi
 #define	_tcsftime	wcsftime
+#define	_tsplitpath	_wsplitpath
 
 #else	/* Not _UNICODE */
 
@@ -260,9 +255,8 @@ typedef char TCHAR;
 #define	_totlower	tolower
 #define	_ttoi		atoi
 #define _tcsftime	strftime
+#define	_tsplitpath	_splitpath
 
 #endif	/* Not _UNICODE */
 
 #endif	/* Not _TCHAR_H_ */
-
-#endif /* Not __USE_W32API */
