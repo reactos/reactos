@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.58 2004/02/01 08:07:07 navaraf Exp $
+ * $Id: gdiobj.c,v 1.59 2004/02/01 09:58:30 mf Exp $
  *
  */
 
@@ -82,9 +82,9 @@
 
 typedef struct _GDI_HANDLE_TABLE
 {
-  WORD  wTableSize;
-  PGDIOBJHDR Handles[1];
+  WORD wTableSize;
   WORD AllocationHint;
+  PGDIOBJHDR Handles[1];
 } GDI_HANDLE_TABLE, *PGDI_HANDLE_TABLE;
 
 /*  GDI stock objects */
