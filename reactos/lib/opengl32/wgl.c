@@ -291,17 +291,20 @@ ROSGL_ICDForHDC( HDC hdc )
 			/* get driver name */
 			ret = ExtEscape( hdc, EXT_GET_DRIVERINFO, sizeof (dwInput), (LPCSTR)&dwInput,
 			                 sizeof (EXTDRIVERINFO), (LPSTR)&info );
-			if (ret < 0)
+			if (ret <= 0)
 			{
 				HKEY hKey;
 				DWORD type, size;
 
-				DBGPRINT( "Warning: ExtEscape to get the drivername failed!!! (%d)", GetLastError() );
-				if (MessageBox( WindowFromDC( hdc ), L"Couldn't get installable client driver name!\nUsing default driver.",
-				                L"OPENGL32.dll: Warning", MB_OKCANCEL | MB_ICONWARNING ) == IDCANCEL)
+				if (ret < 0)
 				{
-					SetLastError( ret );
-					return NULL;
+					DBGPRINT( "Warning: ExtEscape to get the drivername failed!!! (%d)", GetLastError() );
+					if (MessageBox( WindowFromDC( hdc ), L"Couldn't get installable client driver name!\nUsing default driver.",
+					                L"OPENGL32.dll: Warning", MB_OKCANCEL | MB_ICONWARNING ) == IDCANCEL)
+					{
+						SetLastError( 0 );
+						return NULL;
+					}
 				}
 
 				/* open registry key */
