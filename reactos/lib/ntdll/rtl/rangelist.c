@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rangelist.c,v 1.4 2004/05/15 19:41:10 ekohl Exp $
+/* $Id: rangelist.c,v 1.5 2004/05/17 13:21:52 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -75,9 +75,12 @@ RtlAddRange (IN OUT PRTL_RANGE_LIST RangeList,
   RangeEntry->Range.Start = Start;
   RangeEntry->Range.End = End;
   RangeEntry->Range.Attributes = Attributes;
-  RangeEntry->Range.Flags = Flags;
   RangeEntry->Range.UserData = UserData;
   RangeEntry->Range.Owner = Owner;
+
+  RangeEntry->Range.Flags = 0;
+  if (Flags & RTL_RANGE_LIST_ADD_SHARED)
+    RangeEntry->Range.Flags |= RTL_RANGE_SHARED;
 
   /* Insert range entry */
   if (RangeList->Count == 0)
@@ -123,7 +126,20 @@ RtlAddRange (IN OUT PRTL_RANGE_LIST RangeList,
 }
 
 
-/*
+/**********************************************************************
+ * NAME							EXPORTED
+ * 	RtlCopyRangeList
+ *
+ * DESCRIPTION
+ *	Copy a range list.
+ *
+ * ARGUMENTS
+ *	CopyRangeList	Pointer to the destination range list.
+ *	RangeList	Pointer to the source range list.
+ *
+ * RETURN VALUE
+ *	Status
+ *
  * @implemented
  */
 NTSTATUS STDCALL
@@ -165,7 +181,21 @@ RtlCopyRangeList (OUT PRTL_RANGE_LIST CopyRangeList,
 }
 
 
-/*
+/**********************************************************************
+ * NAME							EXPORTED
+ * 	RtlDeleteOwnersRanges
+ *
+ * DESCRIPTION
+ *	Delete all ranges that belong to the given owner.
+ *
+ * ARGUMENTS
+ *	RangeList	Pointer to the range list.
+ *	Owner		User supplied value that identifies the owner
+ *			of the ranges to be deleted.
+ *
+ * RETURN VALUE
+ *	Status
+ *
  * @implemented
  */
 NTSTATUS STDCALL
@@ -197,7 +227,22 @@ RtlDeleteOwnersRanges (IN OUT PRTL_RANGE_LIST RangeList,
 }
 
 
-/*
+/**********************************************************************
+ * NAME							EXPORTED
+ * 	RtlDeleteRange
+ *
+ * DESCRIPTION
+ *	Deletes a given range.
+ *
+ * ARGUMENTS
+ *	RangeList	Pointer to the range list.
+ *	Start		Start of the range to be deleted.
+ *	End		End of the range to be deleted.
+ *	Owner		Owner of the ranges to be deleted.
+ *
+ * RETURN VALUE
+ *	Status
+ *
  * @implemented
  */
 NTSTATUS STDCALL
@@ -250,11 +295,50 @@ RtlFindRange (IN PRTL_RANGE_LIST RangeList,
 	      IN PRTL_CONFLICT_RANGE_CALLBACK Callback OPTIONAL,
 	      OUT PULONGLONG Start)
 {
+#if 0
+  PRTL_RANGE_ENTRY Current;
+  PLIST_ENTRY Entry;
+
+  Entry = RangeList->ListHead.Flink;
+  while (Entry != &RangeList->ListHead)
+    {
+      Current = CONTAINING_RECORD (Entry, RTL_RANGE_ENTRY, Entry);
+      if (Current->Range.Start >= Minimum &&
+	  Current->Range.End <= Maximum)
+	{
+	  if (Callback != NULL)
+	    {
+	      Callback (Context,
+			&Current->Range);
+	    }
+
+	  *Start = Current->Range.Start;
+
+	  return STATUS_SUCCESS;
+	}
+
+      Entry = Entry->Flink;
+    }
+
+  return STATUS_RANGE_NOT_FOUND;
+#endif
   return STATUS_NOT_IMPLEMENTED;
 }
 
 
-/*
+/**********************************************************************
+ * NAME							EXPORTED
+ * 	RtlFreeRangeList
+ *
+ * DESCRIPTION
+ *	Deletes all ranges of a range list.
+ *
+ * ARGUMENTS
+ *	RangeList	Pointer to the range list.
+ *
+ * RETURN VALUE
+ *	None
+ *
  * @implemented
  */
 VOID STDCALL
@@ -281,7 +365,21 @@ RtlFreeRangeList (IN PRTL_RANGE_LIST RangeList)
 }
 
 
-/*
+/**********************************************************************
+ * NAME							EXPORTED
+ * 	RtlGetFirstRange
+ *
+ * DESCRIPTION
+ *	Retrieves the first range of a range list.
+ *
+ * ARGUMENTS
+ *	RangeList	Pointer to the range list.
+ *	Iterator	Pointer to a user supplied list state buffer.
+ *	Range		Pointer to the first range.
+ *
+ * RETURN VALUE
+ *	Status
+ *
  * @implemented
  */
 NTSTATUS STDCALL
@@ -306,7 +404,22 @@ RtlGetFirstRange (IN PRTL_RANGE_LIST RangeList,
 }
 
 
-/*
+/**********************************************************************
+ * NAME							EXPORTED
+ * 	RtlGetNextRange
+ *
+ * DESCRIPTION
+ *	Retrieves the next (or previous) range of a range list.
+ *
+ * ARGUMENTS
+ *	Iterator	Pointer to a user supplied list state buffer.
+ *	Range		Pointer to the first range.
+ *	MoveForwards	TRUE, get next range
+ *			FALSE, get previous range
+ *
+ * RETURN VALUE
+ *	Status
+ *
  * @implemented
  */
 NTSTATUS STDCALL
@@ -340,8 +453,20 @@ RtlGetNextRange (IN OUT PRTL_RANGE_LIST_ITERATOR Iterator,
 }
 
 
-/*
- * @unimplemented
+/**********************************************************************
+ * NAME							EXPORTED
+ * 	RtlInitializeRangeList
+ *
+ * DESCRIPTION
+ *	Initializes a range list.
+ *
+ * ARGUMENTS
+ *	RangeList	Pointer to a user supplied range list.
+ *
+ * RETURN VALUE
+ *	None
+ *
+ * @implemented
  */
 VOID STDCALL
 RtlInitializeRangeList (IN OUT PRTL_RANGE_LIST RangeList)
