@@ -1,15 +1,12 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/file/file.c
- * PURPOSE:         Directory functions
+ * FILE:            lib/kernel32/file/delete.c
+ * PURPOSE:         Deleting files
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
- *		    GetTempFileName is modified from WINE [ Alexandre Juiliard ]
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
-
-/* FIXME: the large integer manipulations in this file dont handle overflow  */
 
 /* INCLUDES ****************************************************************/
 
@@ -27,7 +24,7 @@ WINBOOL STDCALL DeleteFileA(LPCSTR lpFileName)
 {
    ULONG i;
    WCHAR FileNameW[MAX_PATH];
-   
+
    i = 0;
    while ((*lpFileName)!=0 && i < MAX_PATH)
      {
@@ -46,7 +43,7 @@ WINBOOL STDCALL DeleteFileW(LPCWSTR lpFileName)
    NTSTATUS errCode;
    WCHAR PathNameW[MAX_PATH];
    UINT Len;
-	
+
    if (lpFileName[1] != ':') 
      {
 	Len =  GetCurrentDirectoryW(MAX_PATH,PathNameW);
@@ -64,13 +61,13 @@ WINBOOL STDCALL DeleteFileW(LPCWSTR lpFileName)
    FileNameString.Length = lstrlenW( PathNameW)*sizeof(WCHAR);
    if ( FileNameString.Length == 0 )
      return FALSE;
-   
+
    if (FileNameString.Length > MAX_PATH*sizeof(WCHAR))
      return FALSE;
-   
+
    FileNameString.Buffer = (WCHAR *)PathNameW;
    FileNameString.MaximumLength = FileNameString.Length+sizeof(WCHAR);
-  
+
    ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
    ObjectAttributes.RootDirectory = NULL;
    ObjectAttributes.ObjectName = &FileNameString;
@@ -86,4 +83,3 @@ WINBOOL STDCALL DeleteFileW(LPCWSTR lpFileName)
      }
    return TRUE;
 }
-

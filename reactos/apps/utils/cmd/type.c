@@ -63,10 +63,13 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 		return 1;
 	}
 
-	hFile = CreateFile (arg[0], GENERIC_READ, FILE_SHARE_READ,
-						NULL, OPEN_EXISTING,
-						FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN,
-						NULL);
+        hFile = CreateFile (arg[0],
+                            GENERIC_READ,
+                            FILE_SHARE_READ,
+                            NULL,
+                            OPEN_EXISTING,
+                            FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN,
+                            NULL);
 
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
@@ -77,11 +80,17 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 
 	do
 	{
-		bResult = ReadFile (hFile, szBuffer, sizeof(szBuffer),
-							&dwBytesRead, NULL);
+                bResult = ReadFile (hFile,
+                                    szBuffer,
+                                    sizeof(szBuffer),
+                                    &dwBytesRead,
+                                    NULL);
 		if (dwBytesRead)
-			WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), szBuffer, dwBytesRead,
-					   &dwBytesWritten, NULL);
+                        WriteFile (GetStdHandle (STD_OUTPUT_HANDLE),
+                                   szBuffer,
+                                   dwBytesRead,
+                                   &dwBytesWritten,
+                                   NULL);
 	}
 	while (bResult && dwBytesRead > 0);
 
