@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: keyboard.c,v 1.21 2003/12/28 14:21:03 weiden Exp $
+/* $Id: keyboard.c,v 1.22 2004/02/19 03:45:44 arty Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -40,6 +40,7 @@
 #include <include/error.h>
 #include <include/object.h>
 #include <include/winsta.h>
+#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -62,7 +63,6 @@
 #define KNUMP         0x400 
 
 /* Lock the keyboard state to prevent unusual concurrent access */ 
-/* This really should be a mutex. */
 FAST_MUTEX QueueStateLock;
 
 BYTE QueueKeyStateTable[256];
@@ -77,6 +77,9 @@ NTSTATUS FASTCALL InitKeyboardImpl(VOID) {
 }
 
 /*** Statics used by TranslateMessage ***/
+
+/*** Shift state code needs to be cleaned up here.  Sorry, I let it get out
+ * of hand. */
 
 static UINT DontDistinguishShifts( UINT ret ) {
     if( ret == VK_LSHIFT || ret == VK_RSHIFT ) ret = VK_SHIFT;
@@ -352,29 +355,29 @@ int STDCALL ToUnicode( UINT wVirtKey,
  * Returns NTSTATUS.
  */
 
-static NTSTATUS ReallyAppendUnicodeString(PUNICODE_STRING ResultFirst,
-					  PUNICODE_STRING Second,
-					  BOOL Deallocate) {
-  NTSTATUS Status;
-  PWSTR new_string = 
-    ExAllocatePool(PagedPool,
-		   (ResultFirst->Length + Second->Length + sizeof(WCHAR)));
-  if( !new_string ) {
-    return STATUS_NO_MEMORY;
-  }
-  memcpy( new_string, ResultFirst->Buffer, 
-	  ResultFirst->Length );
-  memcpy( new_string + ResultFirst->Length / sizeof(WCHAR),
-	  Second->Buffer,
-	  Second->Length );
-  if( Deallocate ) RtlFreeUnicodeString(ResultFirst);
-  ResultFirst->Length += Second->Length;
-  ResultFirst->MaximumLength = ResultFirst->Length;
-  new_string[ResultFirst->Length / sizeof(WCHAR)] = 0;
-  Status = RtlCreateUnicodeString(ResultFirst,new_string) ? 
-    STATUS_SUCCESS : STATUS_NO_MEMORY;
-  ExFreePool(new_string);
-  return Status;
+NTSTATUS NTAPI AppendUnicodeString(PUNICODE_STRING ResultFirst,
+				   PUNICODE_STRING Second,
+				   BOOL Deallocate) {
+    NTSTATUS Status;
+    PWSTR new_string = 
+	ExAllocatePool(PagedPool,
+		       (ResultFirst->Length + Second->Length + sizeof(WCHAR)));
+    if( !new_string ) {
+	return STATUS_NO_MEMORY;
+    }
+    memcpy( new_string, ResultFirst->Buffer, 
+	    ResultFirst->Length );
+    memcpy( new_string + ResultFirst->Length / sizeof(WCHAR),
+	    Second->Buffer,
+	    Second->Length );
+    if( Deallocate ) RtlFreeUnicodeString(ResultFirst);
+    ResultFirst->Length += Second->Length;
+    ResultFirst->MaximumLength = ResultFirst->Length;
+    new_string[ResultFirst->Length / sizeof(WCHAR)] = 0;
+    Status = RtlCreateUnicodeString(ResultFirst,new_string) ? 
+	STATUS_SUCCESS : STATUS_NO_MEMORY;
+    ExFreePool(new_string);
+    return Status;
 }
 
 /*
@@ -387,66 +390,66 @@ static NTSTATUS ReallyAppendUnicodeString(PUNICODE_STRING ResultFirst,
  * Returns NTSTATUS
  */
 
-static NTSTATUS ReadRegistryValue( PUNICODE_STRING KeyName,
-				   PUNICODE_STRING ValueName,
-				   PUNICODE_STRING ReturnedValue ) {
-  NTSTATUS Status;
-  HANDLE KeyHandle;
-  OBJECT_ATTRIBUTES KeyAttributes;
-  PKEY_VALUE_PARTIAL_INFORMATION KeyValuePartialInfo;
-  ULONG Length = 0;
-  ULONG ResLength = 0;
-  UNICODE_STRING Temp;
-
-  InitializeObjectAttributes(&KeyAttributes, KeyName, OBJ_CASE_INSENSITIVE,
-			     NULL, NULL);
-  Status = ZwOpenKey(&KeyHandle, KEY_ALL_ACCESS, &KeyAttributes);
-  if( !NT_SUCCESS(Status) ) {
-    return Status;
-  }
-
-  Status = ZwQueryValueKey(KeyHandle, ValueName, KeyValuePartialInformation,
-			   0,
-			   0,
-			   &ResLength);
-
-  if( Status != STATUS_BUFFER_TOO_SMALL ) {
-    NtClose(KeyHandle);
-    return Status;
-  }
-
-  ResLength += sizeof( *KeyValuePartialInfo );
-  KeyValuePartialInfo = 
-    ExAllocatePool(PagedPool, ResLength);
-  Length = ResLength;
-
-  if( !KeyValuePartialInfo ) {
-    NtClose(KeyHandle);
-    return STATUS_NO_MEMORY;
-  }
-
-  Status = ZwQueryValueKey(KeyHandle, ValueName, KeyValuePartialInformation,
-			   (PVOID)KeyValuePartialInfo,
-			   Length,
-			   &ResLength);
-
-  if( !NT_SUCCESS(Status) ) {
-    NtClose(KeyHandle);
+static NTSTATUS NTAPI ReadRegistryValue( PUNICODE_STRING KeyName,
+					 PUNICODE_STRING ValueName,
+					 PUNICODE_STRING ReturnedValue ) {
+    NTSTATUS Status;
+    HANDLE KeyHandle;
+    OBJECT_ATTRIBUTES KeyAttributes;
+    PKEY_VALUE_PARTIAL_INFORMATION KeyValuePartialInfo;
+    ULONG Length = 0;
+    ULONG ResLength = 0;
+    UNICODE_STRING Temp;
+    
+    InitializeObjectAttributes(&KeyAttributes, KeyName, OBJ_CASE_INSENSITIVE,
+			       NULL, NULL);
+    Status = ZwOpenKey(&KeyHandle, KEY_ALL_ACCESS, &KeyAttributes);
+    if( !NT_SUCCESS(Status) ) {
+	return Status;
+    }
+    
+    Status = ZwQueryValueKey(KeyHandle, ValueName, KeyValuePartialInformation,
+			     0,
+			     0,
+			     &ResLength);
+    
+    if( Status != STATUS_BUFFER_TOO_SMALL ) {
+	NtClose(KeyHandle);
+	return Status;
+    }
+    
+    ResLength += sizeof( *KeyValuePartialInfo );
+    KeyValuePartialInfo = 
+	ExAllocatePool(PagedPool, ResLength);
+    Length = ResLength;
+    
+    if( !KeyValuePartialInfo ) {
+	NtClose(KeyHandle);
+	return STATUS_NO_MEMORY;
+    }
+    
+    Status = ZwQueryValueKey(KeyHandle, ValueName, KeyValuePartialInformation,
+			     (PVOID)KeyValuePartialInfo,
+			     Length,
+			     &ResLength);
+    
+    if( !NT_SUCCESS(Status) ) {
+	NtClose(KeyHandle);
+	ExFreePool(KeyValuePartialInfo);
+	return Status;
+    }
+    
+    Temp.Length = Temp.MaximumLength = KeyValuePartialInfo->DataLength;
+    Temp.Buffer = (PWCHAR)KeyValuePartialInfo->Data;
+    
+    /* At this point, KeyValuePartialInfo->Data contains the key data */
+    RtlInitUnicodeString(ReturnedValue,L"");
+    AppendUnicodeString(ReturnedValue,&Temp,FALSE);
+    
     ExFreePool(KeyValuePartialInfo);
+    NtClose(KeyHandle);
+    
     return Status;
-  }
-
-  Temp.Length = Temp.MaximumLength = KeyValuePartialInfo->DataLength;
-  Temp.Buffer = (PWCHAR)KeyValuePartialInfo->Data;
-  
-  /* At this point, KeyValuePartialInfo->Data contains the key data */
-  RtlInitUnicodeString(ReturnedValue,L"");
-  ReallyAppendUnicodeString(ReturnedValue,&Temp,FALSE);
-
-  ExFreePool(KeyValuePartialInfo);
-  NtClose(KeyHandle);
-
-  return Status;
 }
 
 typedef PVOID (*KbdLayerDescriptor)(VOID);
@@ -491,7 +494,7 @@ void InitKbdLayout( PVOID *pkKeyboardLayout ) {
 			   L"\\REGISTRY\\Machine\\SYSTEM\\CurrentControlSet"
 			   L"\\Control\\KeyboardLayouts\\");
 
-      ReallyAppendUnicodeString(&LayoutKeyName,&DefaultLocale,FALSE);
+      AppendUnicodeString(&LayoutKeyName,&DefaultLocale,FALSE);
 
       RtlFreeUnicodeString(&DefaultLocale);
       RtlInitUnicodeString(&LayoutValueName,L"Layout File");
@@ -508,7 +511,7 @@ void InitKbdLayout( PVOID *pkKeyboardLayout ) {
     
 	RtlFreeUnicodeString(&LayoutKeyName);
 
-	ReallyAppendUnicodeString(&FullLayoutPath,&LayoutFile,FALSE);
+	AppendUnicodeString(&FullLayoutPath,&LayoutFile,FALSE);
 
 	DPRINT("Loading Keyboard DLL %wZ\n", &FullLayoutPath);
 
@@ -963,7 +966,9 @@ VOID FASTCALL W32kKeyProcessMessage(LPMSG Msg, PKBDTABLES KeyboardLayout) {
   ModifierBits = ModBits(KeyboardLayout,QueueKeyStateTable);
 
   /* Get the raw scan code, so we can look up whether the key is a numpad
-   * key */
+   * key
+   *
+   * Shift and the LP_EXT_BIT cancel. */
   ScanCode = (Msg->lParam >> 16) & 0xff;
   BaseMapping = Msg->wParam = 
     IntMapVirtualKeyEx( ScanCode, 1, KeyboardLayout );
@@ -971,12 +976,13 @@ VOID FASTCALL W32kKeyProcessMessage(LPMSG Msg, PKBDTABLES KeyboardLayout) {
 
   if ((ModifierBits & NUMLOCK_BIT) && 
       !(ModifierBits & GetShiftBit(KeyboardLayout)) && 
-      (RawVk & KNUMP)) 
+      (RawVk & KNUMP) &&
+      !(Msg->lParam & LP_EXT_BIT))
     {
       /* The key in question is a numpad key.  Search for a translation. */
       for (i = 0; NumpadConversion[i][0]; i++) 
 	{
-	  if ((RawVk & 0xff) == NumpadConversion[i][0]) 
+	    if ((BaseMapping & 0xff) == NumpadConversion[i][0]) /* RawVk? */
 	    {
 	      Msg->wParam = NumpadConversion[i][1];
 	      break;
