@@ -590,7 +590,7 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
 
   if (RelativeTo & RTL_REGISTRY_HANDLE)
     {
-      Status = NtDuplicateObject(NtCurrentProcess(),
+      Status = ZwDuplicateObject(NtCurrentProcess(),
 				 (HANDLE)Path,
 				 NtCurrentProcess(),
 				 KeyHandle,

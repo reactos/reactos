@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.172 2003/09/29 20:43:07 navaraf Exp $
+/* $Id: main.c,v 1.172.2.1 2003/10/12 09:58:08 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -83,33 +83,7 @@ extern ULONG MmCoreDumpType;
 
 extern PVOID Ki386InitialStackArray[MAXIMUM_PROCESSORS];
 
-
 /* FUNCTIONS ****************************************************************/
-
-static BOOLEAN
-RtlpCheckFileNameExtension(PCHAR FileName,
-			   PCHAR Extension)
-{
-  PCHAR Ext;
-
-  Ext = strrchr(FileName, '.');
-  if (Ext == NULL)
-    {
-      if ((Extension == NULL) || (*Extension == 0))
-	return TRUE;
-      else
-	return FALSE;
-    }
-
-  if (*Extension != '.')
-    Ext++;
-
-  if (_stricmp(Ext, Extension) == 0)
-    return TRUE;
-  else
-    return FALSE;
-}
-
 
 static VOID
 InitSystemSharedUserPage (PCSZ ParameterLine)
@@ -289,27 +263,12 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
      }
 }
 
-VOID STATIC
-MiFreeBootDriverMemory(PVOID StartAddress, ULONG Length)
-{
-  PHYSICAL_ADDRESS Page;
-  ULONG i;
-
-  for (i = 0; i < PAGE_ROUND_UP(Length)/PAGE_SIZE; i++)
-  {
-     Page = MmGetPhysicalAddressForProcess(NULL, StartAddress + i * PAGE_SIZE);
-     MmDeleteVirtualMapping(NULL, StartAddress + i * PAGE_SIZE, FALSE, NULL, NULL);
-     MmDereferencePage(Page);
-  }
-}
-
 VOID
 ExpInitializeExecutive(VOID)
 {
   LARGE_INTEGER Timeout;
   HANDLE ProcessHandle;
   HANDLE ThreadHandle;
-  ULONG BootDriverCount;
   ULONG i;
   ULONG start;
   ULONG length;
@@ -660,42 +619,10 @@ ExpInitializeExecutive(VOID)
 
   IoInit2();
 
-  /* Pass 3: process boot loaded drivers */
-  BootDriverCount = 0;
-  for (i=1; i < KeLoaderBlock.ModsCount; i++)
-    {
-      start = KeLoaderModules[i].ModStart;
-      length = KeLoaderModules[i].ModEnd - start;
-      name = (PCHAR)KeLoaderModules[i].String;
-      if (RtlpCheckFileNameExtension(name, ".sys") ||
-	  RtlpCheckFileNameExtension(name, ".sym"))
-	{
-	  CPRINT("Initializing driver '%s' at %08lx, length 0x%08lx\n",
-	         name, start, length);
-	  LdrInitializeBootStartDriver((PVOID)start, name, length);
-	}
-      if (RtlpCheckFileNameExtension(name, ".sys"))
-	BootDriverCount++;
-    }
-
-  /* Pass 4: free memory for all boot files, except ntoskrnl.exe and hal.dll */
-  for (i = 2; i < KeLoaderBlock.ModsCount; i++)
-    {
-#ifdef KDBG
-       /* Do not free the memory from symbol files, if the kernel debugger is activ */
-       if (!RtlpCheckFileNameExtension(name, ".sym"))
-#endif
-         {
-           MiFreeBootDriverMemory((PVOID)KeLoaderModules[i].ModStart,
-			          KeLoaderModules[i].ModEnd - KeLoaderModules[i].ModStart);
-	 }
-    }
-
-  if (BootDriverCount == 0)
-    {
-      DbgPrint("No boot drivers available.\n");
-      KEBUGCHECK(0);
-    }
+  /*
+   * Load boot start drivers
+   */
+  IopInitializeBootDrivers();
 
   /* Display the boot screen image if not disabled */
   if (!NoBootScreen)
@@ -725,14 +652,14 @@ ExpInitializeExecutive(VOID)
   PiInitDefaultLocale();
 
   /*
-   * Load boot start drivers
+   * Load services for devices found by PnP manager
    */
-  IopLoadBootStartDrivers();
+  IopInitializePnpServices(IopRootDeviceNode, FALSE);
 
   /*
-   * Load Auto configured drivers
+   * Load system start drivers
    */
-  LdrLoadAutoConfigDrivers();
+  IopInitializeSystemDrivers();
 
   IoDestroyDriverList();
 

@@ -1576,6 +1576,8 @@ struct _SYSTEM_QUOTA_INFORMATION
 
 /* object information class */
 
+#ifndef __USE_W32API
+
 typedef enum _OBJECT_INFORMATION_CLASS
 {
   ObjectBasicInformation,
@@ -1594,6 +1596,7 @@ typedef struct _DIRECTORY_BASIC_INFORMATION
 	UNICODE_STRING ObjectTypeName; // Directory, Device ...
 } DIRECTORY_BASIC_INFORMATION, *PDIRECTORY_BASIC_INFORMATION;
 
+#endif /* __USE_W32API */
 
 /*
 	 Action is one of the following values:

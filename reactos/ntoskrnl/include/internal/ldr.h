@@ -26,18 +26,9 @@ LdrLoadInitialProcess(PHANDLE ProcessHandle,
 		      PHANDLE ThreadHandle);
 
 VOID
-LdrLoadAutoConfigDrivers (
-	VOID
-	);
-VOID
 LdrInitModuleManagement (
 	VOID
 	);
-
-NTSTATUS
-LdrInitializeBootStartDriver(IN PVOID ModuleLoadBase,
-			     IN PCHAR FileName,
-			     IN ULONG ModuleLength);
 
 NTSTATUS
 LdrpMapSystemDll (

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.52 2003/08/19 23:59:08 dwelch Exp $
+/* $Id: ps.h,v 1.52.4.1 2003/10/12 09:58:08 navaraf Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -43,7 +43,7 @@ struct _KTRAPFRAME;
 #include <internal/mm.h>
 #include <napi/teb.h>
 
-#ifndef __USE_W32API
+#ifndef KeGetCurrentProcessorNumber
 #define KeGetCurrentProcessorNumber() (KeGetCurrentKPCR()->ProcessorNumber)
 #endif
 
