@@ -263,10 +263,17 @@ typedef struct _REGISTRY_HIVE
 } REGISTRY_HIVE, *PREGISTRY_HIVE;
 
 /* REGISTRY_HIVE.Flags constants */
+/* When set, the hive is volatile. It will not be sync'ed to disk. */
 #define HIVE_VOLATILE   0x00000001
+/* When set, the hive uses pointers instead of offsets. */
+#define HIVE_POINTER    0x00000002
+/* When set, the hive is temporary. It will not be sync'ed to disk. */
+#define HIVE_TEMPORARY  0x00000004
 
 #define IsVolatileHive(Hive)(Hive->Flags & HIVE_VOLATILE)
-#define IsPermanentHive(Hive)(!(Hive->Flags & HIVE_VOLATILE))
+#define IsPointerHive(Hive)(Hive->Flags & HIVE_POINTER)
+#define IsTemporaryHive(Hive)(Hive->Flags & HIVE_TEMPORARY)
+
 
 #define IsFreeCell(Cell)(Cell->CellSize >= 0)
 #define IsUsedCell(Cell)(Cell->CellSize < 0)
@@ -522,14 +529,6 @@ PVOID
 CmiGetBlock(PREGISTRY_HIVE  RegistryHive,
 	    BLOCK_OFFSET  BlockOffset,
 	    OUT PHBIN * ppBin);
-
-VOID
-CmiLockBlock(PREGISTRY_HIVE  RegistryHive,
-  PVOID  Block);
-
-VOID
-CmiReleaseBlock(PREGISTRY_HIVE  RegistryHive,
-		PVOID  Block);
 
 VOID
 CmiMarkBlockDirty(PREGISTRY_HIVE RegistryHive,

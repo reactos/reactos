@@ -1036,7 +1036,7 @@ CmiInitVolatileRegistryHive(PREGISTRY_HIVE RegistryHive)
 {
   PKEY_CELL RootKeyCell;
 
-  RegistryHive->Flags |= HIVE_VOLATILE;
+  RegistryHive->Flags |= (HIVE_VOLATILE | HIVE_POINTER);
 
   CmiCreateDefaultHiveHeader(RegistryHive->HiveHeader);
 
@@ -1829,11 +1829,8 @@ CmiGetMaxNameLength(PREGISTRY_HIVE  RegistryHive,
 	    {
 	      MaxName = CurSubKeyCell->NameSize;
 	    }
-	  CmiReleaseBlock(RegistryHive, CurSubKeyCell);
 	}
     }
-
-  CmiReleaseBlock(RegistryHive, HashBlock);
 
   return MaxName;
 }
@@ -1868,11 +1865,8 @@ CmiGetMaxClassLength(PREGISTRY_HIVE  RegistryHive,
 	    {
 	      MaxClass = CurSubKeyCell->ClassSize;
 	    }
-	  CmiReleaseBlock(RegistryHive, CurSubKeyCell);
 	}
     }
-
-  CmiReleaseBlock(RegistryHive, HashBlock);
 
   return MaxClass;
 }
@@ -1908,18 +1902,15 @@ CmiGetMaxValueNameLength(PREGISTRY_HIVE RegistryHive,
         {
           MaxValueName = CurValueCell->NameSize;
         }
-      CmiReleaseBlock(RegistryHive, CurValueCell);
     }
-
-  CmiReleaseBlock(RegistryHive, ValueListCell);
 
   return MaxValueName;
 }
 
 
-ULONG  
+ULONG
 CmiGetMaxValueDataLength(PREGISTRY_HIVE RegistryHive,
-  PKEY_CELL KeyCell)
+			 PKEY_CELL KeyCell)
 {
   PVALUE_LIST_CELL ValueListCell;
   PVALUE_CELL CurValueCell;
@@ -1944,11 +1935,8 @@ CmiGetMaxValueDataLength(PREGISTRY_HIVE RegistryHive,
         {
           MaxValueData = CurValueCell->DataSize & LONG_MAX;
         }
-      CmiReleaseBlock(RegistryHive, CurValueCell);
     }
 
-  CmiReleaseBlock(RegistryHive, ValueListCell);
-  
   return MaxValueData;
 }
 
@@ -1973,10 +1961,10 @@ CmiScanForSubKey(IN PREGISTRY_HIVE RegistryHive,
 
   assert(RegistryHive);
 
+  *SubKeyCell = NULL;
   KeyLength = strlen(KeyName);
 
   HashBlock = CmiGetBlock(RegistryHive, KeyCell->HashTableOffset, NULL);
-  *SubKeyCell = NULL;
   if (HashBlock == NULL)
     {
       return STATUS_SUCCESS;
@@ -2001,10 +1989,6 @@ CmiScanForSubKey(IN PREGISTRY_HIVE RegistryHive,
                   *BlockOffset = HashBlock->Table[i].KeyOffset;
                   break;
                 }
-              else
-                {
-                  CmiReleaseBlock(RegistryHive, CurSubKeyCell);
-                }
             }
         }
       else
@@ -2022,16 +2006,10 @@ CmiScanForSubKey(IN PREGISTRY_HIVE RegistryHive,
                   *BlockOffset = HashBlock->Table[i].KeyOffset;
                   break;
                 }
-              else
-                {
-                  CmiReleaseBlock(RegistryHive, CurSubKeyCell);
-                }
             }
         }
     }
-  
-  CmiReleaseBlock(RegistryHive, HashBlock);
-  
+
   return STATUS_SUCCESS;
 }
 
@@ -2119,8 +2097,8 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
   SubKey->KeyCell = NewKeyCell;
   SubKey->BlockOffset = NKBOffset;
 
-  /* Don't modify hash table if key is volatile and parent is not */
-  if (IsVolatileHive(RegistryHive) && (!IsVolatileHive(Parent->RegistryHive)))
+  /* Don't modify hash table if key is located in a pointer-based hive and parent key is not */
+  if (IsPointerHive(RegistryHive) && (!IsPointerHive(Parent->RegistryHive)))
     {
       return(Status);
     }
@@ -2327,10 +2305,9 @@ CmiScanKeyForValue(IN PREGISTRY_HIVE RegistryHive,
   PVALUE_CELL CurValueCell;
   ULONG i;
 
-  ValueListCell = CmiGetBlock(RegistryHive, KeyCell->ValuesOffset, NULL);
-
   *ValueCell = NULL;
 
+  ValueListCell = CmiGetBlock(RegistryHive, KeyCell->ValuesOffset, NULL);
   if (ValueListCell == NULL)
     {
       DPRINT("ValueListCell is NULL\n");
@@ -2357,10 +2334,7 @@ CmiScanKeyForValue(IN PREGISTRY_HIVE RegistryHive,
 	  //DPRINT("Found value %s\n", ValueName);
 	  break;
 	}
-      CmiReleaseBlock(RegistryHive, CurValueCell);
     }
-
-  CmiReleaseBlock(RegistryHive, ValueListCell);
 
   return STATUS_SUCCESS;
 }
@@ -2375,10 +2349,9 @@ CmiGetValueFromKeyByIndex(IN PREGISTRY_HIVE RegistryHive,
   PVALUE_LIST_CELL ValueListCell;
   PVALUE_CELL CurValueCell;
 
-  ValueListCell = CmiGetBlock(RegistryHive, KeyCell->ValuesOffset, NULL);
-
   *ValueCell = NULL;
 
+  ValueListCell = CmiGetBlock(RegistryHive, KeyCell->ValuesOffset, NULL);
   if (ValueListCell == NULL)
     {
       return STATUS_NO_MORE_ENTRIES;
@@ -2392,16 +2365,12 @@ CmiGetValueFromKeyByIndex(IN PREGISTRY_HIVE RegistryHive,
     }
 
   CurValueCell = CmiGetBlock(RegistryHive,
-    ValueListCell->Values[Index],
-    NULL);
-
+			     ValueListCell->Values[Index],
+			     NULL);
   if (CurValueCell != NULL)
     {
       *ValueCell = CurValueCell;
     }
-
-  CmiReleaseBlock(RegistryHive, CurValueCell);
-  CmiReleaseBlock(RegistryHive, ValueListCell);
 
   return STATUS_SUCCESS;
 }
@@ -2421,12 +2390,12 @@ CmiAddValueToKey(IN PREGISTRY_HIVE RegistryHive,
   BLOCK_OFFSET VBOffset;
   NTSTATUS Status;
 
+  *pVBOffset = VBOffset;
+
   Status = CmiAllocateValueCell(RegistryHive,
 				&NewValueCell,
 				&VBOffset,
 				ValueName);
-  *pVBOffset = VBOffset;
-
   if (!NT_SUCCESS(Status))
     {
       return Status;
@@ -2478,8 +2447,7 @@ CmiAddValueToKey(IN PREGISTRY_HIVE RegistryHive,
 
   ValueListCell->Values[KeyCell->NumberOfValues] = VBOffset;
   KeyCell->NumberOfValues++;
-  CmiReleaseBlock(RegistryHive, ValueListCell);
-  CmiReleaseBlock(RegistryHive, NewValueCell);
+
   *pValueCell = NewValueCell;
 
   return STATUS_SUCCESS;
@@ -2517,24 +2485,21 @@ CmiDeleteValueFromKey(IN PREGISTRY_HIVE RegistryHive,
 	{
 	  CmiDestroyValueCell(RegistryHive, CurValueCell, ValueListCell->Values[i]);
 
-          if ((KeyCell->NumberOfValues - 1) < i)
-            {
-              RtlCopyMemory(&ValueListCell->Values[i],
-                &ValueListCell->Values[i + 1],
-                sizeof(BLOCK_OFFSET) * (KeyCell->NumberOfValues - 1 - i));
-            }
-          else
-            {
-              RtlZeroMemory(&ValueListCell->Values[i], sizeof(BLOCK_OFFSET));
-            }
+	  if ((KeyCell->NumberOfValues - 1) < i)
+	    {
+	      RtlCopyMemory(&ValueListCell->Values[i],
+			    &ValueListCell->Values[i + 1],
+			    sizeof(BLOCK_OFFSET) * (KeyCell->NumberOfValues - 1 - i));
+	    }
+	  else
+	    {
+	      RtlZeroMemory(&ValueListCell->Values[i], sizeof(BLOCK_OFFSET));
+	    }
 
-          KeyCell->NumberOfValues -= 1;
-          break;
+	  KeyCell->NumberOfValues -= 1;
+	  break;
 	}
-      CmiReleaseBlock(RegistryHive, CurValueCell);
     }
-
-  CmiReleaseBlock(RegistryHive, ValueListCell);
 
   if (KeyCell->NumberOfValues == 0)
     {
@@ -2600,7 +2565,7 @@ CmiGetKeyFromHashByIndex(PREGISTRY_HIVE RegistryHive,
   if (HashBlock == NULL)
     return NULL;
 
-  if (IsVolatileHive(RegistryHive))
+  if (IsPointerHive(RegistryHive))
     {
       KeyCell = (PKEY_CELL) HashBlock->Table[Index].KeyOffset;
     }
@@ -2609,7 +2574,6 @@ CmiGetKeyFromHashByIndex(PREGISTRY_HIVE RegistryHive,
       KeyOffset =  HashBlock->Table[Index].KeyOffset;
       KeyCell = CmiGetBlock(RegistryHive, KeyOffset, NULL);
     }
-  CmiLockBlock(RegistryHive, KeyCell);
 
   return KeyCell;
 }
@@ -2738,17 +2702,17 @@ CmiDestroyValueCell(PREGISTRY_HIVE RegistryHive,
 	}
 
       /* Update time of heap */
-      if (IsPermanentHive(RegistryHive))
-	ZwQuerySystemTime((PTIME) &pBin->DateModified);
+      if (!IsVolatileHive(RegistryHive))
+	NtQuerySystemTime((PTIME) &pBin->DateModified);
     }
 
   /* Destroy the value cell */
   Status = CmiDestroyBlock(RegistryHive, ValueCell, VBOffset);
 
   /* Update time of heap */
-  if (IsPermanentHive(RegistryHive) && CmiGetBlock(RegistryHive, VBOffset, &pBin))
+  if (!IsVolatileHive(RegistryHive) && CmiGetBlock(RegistryHive, VBOffset, &pBin))
     {
-      ZwQuerySystemTime((PTIME) &pBin->DateModified);
+      NtQuerySystemTime((PTIME) &pBin->DateModified);
     }
 
   return Status;
@@ -2833,8 +2797,6 @@ CmiAddBin(PREGISTRY_HIVE RegistryHive,
   if (NewBlockOffset)
     *NewBlockOffset = tmpBin->BlockOffset + REG_HBIN_DATA_OFFSET;
 
-  /* FIXME: set first dword to block_offset of another free bloc */
-
   /* Mark new bin dirty */
   CmiMarkBinDirty(RegistryHive,
 		  tmpBin->BlockOffset);
@@ -2859,7 +2821,7 @@ CmiAllocateBlock(PREGISTRY_HIVE RegistryHive,
   BlockSize = (BlockSize + sizeof(DWORD) + 15) & 0xfffffff0;
 
   /* Handle volatile hives first */
-  if (IsVolatileHive(RegistryHive))
+  if (IsPointerHive(RegistryHive))
     {
       NewBlock = ExAllocatePool(NonPagedPool, BlockSize);
 
@@ -2871,7 +2833,6 @@ CmiAllocateBlock(PREGISTRY_HIVE RegistryHive,
 	{
 	  RtlZeroMemory(NewBlock, BlockSize);
 	  NewBlock->CellSize = BlockSize;
-	  CmiLockBlock(RegistryHive, NewBlock);
 	  *Block = NewBlock;
 	  if (pBlockOffset)
 	    *pBlockOffset = (BLOCK_OFFSET) NewBlock;
@@ -2898,7 +2859,7 @@ CmiAllocateBlock(PREGISTRY_HIVE RegistryHive,
 
 	      if (Temp)
 		{
-		  ZwQuerySystemTime((PTIME) &pBin->DateModified);
+		  NtQuerySystemTime((PTIME) &pBin->DateModified);
 		  CmiMarkBlockDirty(RegistryHive, RegistryHive->FreeListOffset[i]);
 		}
 
@@ -2948,7 +2909,6 @@ CmiAllocateBlock(PREGISTRY_HIVE RegistryHive,
 
 	  RtlZeroMemory(*Block, BlockSize);
 	  ((PCELL_HEADER) (*Block))->CellSize = -BlockSize;
-	  CmiLockBlock(RegistryHive, *Block);
 	}
     }
 
@@ -2958,17 +2918,16 @@ CmiAllocateBlock(PREGISTRY_HIVE RegistryHive,
 
 NTSTATUS
 CmiDestroyBlock(PREGISTRY_HIVE RegistryHive,
-  PVOID Block,
-  BLOCK_OFFSET Offset)
+		PVOID Block,
+		BLOCK_OFFSET Offset)
 {
   NTSTATUS Status;
   PHBIN pBin;
 
   Status = STATUS_SUCCESS;
 
-  if (IsVolatileHive(RegistryHive))
+  if (IsPointerHive(RegistryHive))
     {
-      CmiReleaseBlock(RegistryHive, Block);
       ExFreePool(Block);
     }
   else
@@ -2982,18 +2941,14 @@ CmiDestroyBlock(PREGISTRY_HIVE RegistryHive,
       RtlZeroMemory(((PVOID)pFree) + sizeof(ULONG),
 		    pFree->CellSize - sizeof(ULONG));
 
-      /* add block to the list of free blocks */
+      /* Add block to the list of free blocks */
       CmiAddFree(RegistryHive, Block, Offset, TRUE);
-      CmiReleaseBlock(RegistryHive, Block);
 
       /* Update time of heap */
-      if (IsPermanentHive(RegistryHive) && CmiGetBlock(RegistryHive, Offset,&pBin))
-	ZwQuerySystemTime((PTIME) &pBin->DateModified);
+      if (!IsVolatileHive(RegistryHive) && CmiGetBlock(RegistryHive, Offset,&pBin))
+	NtQuerySystemTime((PTIME) &pBin->DateModified);
 
       CmiMarkBlockDirty(RegistryHive, Offset);
-
-      /* FIXME: Set first dword to block_offset of another free block ? */
-      /* FIXME: Concatenate with previous and next block if free */
     }
 
   return Status;
@@ -3212,7 +3167,7 @@ CmiGetBlock(PREGISTRY_HIVE RegistryHive,
   if ((BlockOffset == 0) || (BlockOffset == (ULONG_PTR) -1))
     return NULL;
 
-  if (IsVolatileHive(RegistryHive))
+  if (IsPointerHive(RegistryHive))
     {
       return (PVOID) BlockOffset;
     }
@@ -3229,28 +3184,6 @@ CmiGetBlock(PREGISTRY_HIVE RegistryHive,
 
 
 VOID
-CmiLockBlock(PREGISTRY_HIVE RegistryHive,
-	     PVOID Block)
-{
-  if (IsPermanentHive(RegistryHive))
-    {
-      /* FIXME: Implement */
-    }
-}
-
-
-VOID
-CmiReleaseBlock(PREGISTRY_HIVE RegistryHive,
-		PVOID Block)
-{
-  if (IsPermanentHive(RegistryHive))
-    {
-      /* FIXME: Implement */
-    }
-}
-
-
-VOID
 CmiMarkBlockDirty(PREGISTRY_HIVE RegistryHive,
 		  BLOCK_OFFSET BlockOffset)
 {
@@ -3260,7 +3193,7 @@ CmiMarkBlockDirty(PREGISTRY_HIVE RegistryHive,
   ULONG BlockCount;
 
   if (IsVolatileHive(RegistryHive))
-      return;
+    return;
 
   DPRINT("CmiMarkBlockDirty(Offset 0x%lx)\n", (ULONG)BlockOffset);
 
@@ -3298,7 +3231,7 @@ CmiMarkBinDirty(PREGISTRY_HIVE RegistryHive,
   PHBIN Bin;
 
   if (IsVolatileHive(RegistryHive))
-      return;
+    return;
 
   DPRINT("CmiMarkBinDirty(Offset 0x%lx)\n", (ULONG)BinOffset);
 

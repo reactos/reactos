@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.91 2003/04/04 21:52:25 hbirr Exp $
+/* $Id: registry.c,v 1.92 2003/04/12 15:09:57 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1061,7 +1061,7 @@ CmShutdownRegistry(VOID)
     {
       Hive = CONTAINING_RECORD(Entry, REGISTRY_HIVE, HiveList);
 
-      if (IsPermanentHive(Hive))
+      if (!IsVolatileHive(Hive))
 	{
 	  /* Acquire hive resource exclusively */
 	  ExAcquireResourceExclusiveLite(&Hive->HiveResource,
@@ -1102,7 +1102,7 @@ CmiHiveSyncRoutine(PVOID DeferredContext)
     {
       Hive = CONTAINING_RECORD(Entry, REGISTRY_HIVE, HiveList);
 
-      if (IsPermanentHive(Hive))
+      if (!IsVolatileHive(Hive))
 	{
 	  /* Acquire hive resource exclusively */
 	  ExAcquireResourceExclusiveLite(&Hive->HiveResource,

@@ -8,9 +8,6 @@
 
 /* INCLUDES *****************************************************************/
 
-#ifdef WIN32_REGDBG
-#include "cm_win32.h"
-#else
 #include <ddk/ntddk.h>
 #include <roscfg.h>
 #include <internal/ob.h>
@@ -23,7 +20,6 @@
 #include <internal/debug.h>
 
 #include "cm.h"
-#endif
 
 
 /* GLOBALS ******************************************************************/
@@ -408,7 +404,6 @@ NtEnumerateKey(
               wcsncpy(NodeInformation->Name + SubKeyCell->NameSize ,
                       (PWCHAR) pClassData->Data,
                       SubKeyCell->ClassSize);
-              CmiReleaseBlock(RegistryHive, pClassData);
             }
         }
       break;
@@ -449,12 +444,10 @@ NtEnumerateKey(
               wcsncpy(FullInformation->Class,
                 (PWCHAR) pClassData->Data,
                 SubKeyCell->ClassSize);
-              CmiReleaseBlock(RegistryHive, pClassData);
             }
         }
       break;
     }
-  CmiReleaseBlock(RegistryHive, SubKeyCell);
 
   ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
   ObDereferenceObject(KeyObject);
@@ -592,7 +585,6 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
                 RtlCopyMemory(ValuePartialInformation->Data, 
                   DataCell->Data,
                   ValueCell->DataSize & LONG_MAX);
-                CmiReleaseBlock(RegistryHive, DataCell);
               }
               else
               {
@@ -659,7 +651,6 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
                     + ValueFullInformation->DataOffset,
                     DataCell->Data,
                     ValueCell->DataSize & LONG_MAX);
-                  CmiReleaseBlock(RegistryHive, DataCell);
                 }
               else
                 {
@@ -713,14 +704,14 @@ NtFlushKey(IN HANDLE KeyHandle)
   ExAcquireResourceExclusiveLite(&RegistryHive->HiveResource,
 				 TRUE);
 
-  if (IsPermanentHive(RegistryHive))
+  if (IsVolatileHive(RegistryHive))
     {
-      /* Flush non-volatile hive */
-      Status = CmiFlushRegistryHive(RegistryHive);
+      Status = STATUS_SUCCESS;
     }
   else
     {
-      Status = STATUS_SUCCESS;
+      /* Flush non-volatile hive */
+      Status = CmiFlushRegistryHive(RegistryHive);
     }
 
   ExReleaseResourceLite(&RegistryHive->HiveResource);
@@ -890,7 +881,6 @@ NtQueryKey(IN HANDLE KeyHandle,
               wcsncpy(NodeInformation->Name + KeyObject->NameSize * sizeof(WCHAR),
                 (PWCHAR)pClassData->Data,
                 KeyCell->ClassSize);
-              CmiReleaseBlock(RegistryHive, pClassData);
             }
           *ResultLength = sizeof(KEY_NODE_INFORMATION)
             + KeyObject->NameSize * sizeof(WCHAR)
@@ -931,7 +921,6 @@ NtQueryKey(IN HANDLE KeyHandle,
               wcsncpy(FullInformation->Class,
                 (PWCHAR)pClassData->Data,
                 KeyCell->ClassSize);
-              CmiReleaseBlock(RegistryHive, pClassData);
             }
           *ResultLength = sizeof(KEY_FULL_INFORMATION) + KeyCell->ClassSize;
         }
@@ -1068,7 +1057,6 @@ NtQueryValueKey(IN HANDLE KeyHandle,
                   RtlCopyMemory(ValuePartialInformation->Data,
                     DataCell->Data,
                     ValueCell->DataSize & LONG_MAX);
-                  CmiReleaseBlock(RegistryHive, DataCell);
                 }
               else
                 {
@@ -1133,7 +1121,6 @@ NtQueryValueKey(IN HANDLE KeyHandle,
                                 + ValueFullInformation->DataOffset,
                                 DataCell->Data,
                                 ValueCell->DataSize & LONG_MAX);
-                  CmiReleaseBlock(RegistryHive, DataCell);
                 }
               else
                 {
@@ -1267,12 +1254,11 @@ NtSetValueKey(IN HANDLE KeyHandle,
       RtlCopyMemory(DataCell->Data, Data, DataSize);
       ValueCell->DataSize = DataSize;
       ValueCell->DataType = Type;
-      CmiReleaseBlock(RegistryHive, DataCell);
 
       /* Update time of heap */
-      if (IsPermanentHive(RegistryHive))
+      if (!IsVolatileHive(RegistryHive))
 	{
-	  ZwQuerySystemTime((PTIME) &pBin->DateModified);
+	  NtQuerySystemTime((PTIME) &pBin->DateModified);
 	}
       CmiMarkBlockDirty(RegistryHive, ValueCell->DataOffset);
     }
@@ -1312,7 +1298,6 @@ NtSetValueKey(IN HANDLE KeyHandle,
       RtlCopyMemory(&NewDataCell->Data[0], Data, DataSize);
       ValueCell->DataSize = DataSize;
       ValueCell->DataType = Type;
-      CmiReleaseBlock(RegistryHive, NewDataCell);
       ValueCell->DataOffset = NewOffset;
       CmiMarkBlockDirty(RegistryHive, ValueCell->DataOffset);
     }
@@ -1326,9 +1311,9 @@ NtSetValueKey(IN HANDLE KeyHandle,
     }
 
   /* Update time of heap */
-  if (IsPermanentHive(RegistryHive) && CmiGetBlock(RegistryHive, VBOffset, &pBin))
+  if (!IsVolatileHive(RegistryHive) && CmiGetBlock(RegistryHive, VBOffset, &pBin))
     {
-      ZwQuerySystemTime((PTIME) &pBin->DateModified);
+      NtQuerySystemTime((PTIME) &pBin->DateModified);
     }
 
   ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
@@ -1502,9 +1487,12 @@ NtQueryMultipleValueKey(IN HANDLE KeyHandle,
 
 	  if (ValueCell->DataSize > 0)
 	    {
-	      DataCell = CmiGetBlock(RegistryHive, ValueCell->DataOffset, NULL);
-	      RtlCopyMemory(DataPtr, DataCell->Data, ValueCell->DataSize & LONG_MAX);
-	      CmiReleaseBlock(RegistryHive, DataCell);
+	      DataCell = CmiGetBlock(RegistryHive,
+				     ValueCell->DataOffset,
+				     NULL);
+	      RtlCopyMemory(DataPtr,
+			    DataCell->Data,
+			    ValueCell->DataSize & LONG_MAX);
 	    }
 	  else
 	    {

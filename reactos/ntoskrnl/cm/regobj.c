@@ -6,9 +6,6 @@
  * UPDATE HISTORY:
 */
 
-#ifdef WIN32_REGDBG
-#include "cm_win32.h"
-#else
 #include <ddk/ntddk.h>
 #include <roscfg.h>
 #include <internal/ob.h>
@@ -22,7 +19,6 @@
 #include <internal/debug.h>
 
 #include "cm.h"
-#endif
 
 
 static NTSTATUS
@@ -209,16 +205,8 @@ CmiObjectParse(PVOID ParsedObject,
 				 NULL,
 				 UserMode);
     }
-#ifndef WIN32_REGDBG
+
   DPRINT("CmiObjectParse: %s\n", FoundObject->Name);
-#else
-  {
-      char buffer[_BUFFER_LEN];
-      memset(buffer, 0, _BUFFER_LEN);
-      strncpy(buffer, FoundObject->Name, min(FoundObject->NameSize, _BUFFER_LEN - 1));
-      DPRINT("CmiObjectParse: %s\n", buffer);
-  }
-#endif
 
   *Path = EndPtr;
 
@@ -283,12 +271,10 @@ CmiObjectDelete(PVOID DeletedObject)
 		      KeyObject->ParentKey,
 		      KeyObject);
 
-      if (IsPermanentHive(KeyObject->RegistryHive))
-	CmiSyncHives();
-    }
-  else
-    {
-      CmiReleaseBlock(KeyObject->RegistryHive, KeyObject->KeyCell);
+      if (!IsVolatileHive(KeyObject->RegistryHive))
+	{
+	  CmiSyncHives();
+	}
     }
 }
 
@@ -393,17 +379,8 @@ CmiScanKeyList(PKEY_OBJECT Parent,
   WORD NameSize;
   DWORD Index;
 
-#ifndef WIN32_REGDBG
   DPRINT("Scanning key list for: %s (Parent: %s)\n",
     KeyName, Parent->Name);
-#else
-  {
-      char buffer[_BUFFER_LEN];
-      memset(buffer, 0, _BUFFER_LEN);
-      strncpy(buffer, Parent->Name, min(Parent->NameSize, _BUFFER_LEN - 1));
-      DPRINT("Scanning key list for: %s (Parent: %s)\n", KeyName, buffer);
-  }
-#endif
 
   NameSize = strlen(KeyName);
   KeAcquireSpinLock(&CmiKeyListLock, &OldIrql);
@@ -431,7 +408,7 @@ CmiScanKeyList(PKEY_OBJECT Parent,
 	}
     }
   KeReleaseSpinLock(&CmiKeyListLock, OldIrql);
-  
+
   return NULL;
 }
 
@@ -484,7 +461,6 @@ CmiGetLinkTarget(PREGISTRY_HIVE RegistryHive,
 		    DataCell->Data,
 		    TargetPath->Length);
       TargetPath->Buffer[TargetPath->Length / sizeof(WCHAR)] = 0;
-      CmiReleaseBlock(RegistryHive, DataCell);
     }
   else
     {
