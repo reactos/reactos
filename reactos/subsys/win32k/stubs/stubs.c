@@ -7,14 +7,6 @@
 
 #define STUB(x) void x(void) { DbgPrint("WIN32K: Stub for %s\n", #x); }
 
-VOID STDCALL
-RtlUnwind(ULONG Unknown1,
-	  ULONG Unknown2,
-	  ULONG Unknown3,
-	  ULONG Unknown4)
-{
-   DbgPrint("WIN32K: Stub for RtlUnwind\n");
-}
 
 STUB(BRUSHOBJ_ulGetBrushColor)
 STUB(CLIPOBJ_ppoGetPath)
@@ -135,12 +127,6 @@ STUB(PATHOBJ_bPolyLineTo)
 STUB(PATHOBJ_vEnumStart)
 STUB(PATHOBJ_vEnumStartClipLines)
 STUB(PATHOBJ_vGetBounds)
-//STUB(RtlAnsiCharToUnicodeChar)
-//STUB(RtlMultiByteToUnicodeN)
-//STUB(RtlUnicodeToMultiByteN)
-//STUB(RtlUnicodeToMultiByteSize)
-//STUB(RtlUpcaseUnicodeChar)
-//STUB(RtlUpcaseUnicodeToMultiByteN)
 STUB(STROBJ_bEnum)
 STUB(STROBJ_dwGetCodePage)
 STUB(STROBJ_vEnumStart)

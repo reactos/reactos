@@ -1,4 +1,4 @@
-; $Id: win32k.edf,v 1.4 2000/12/30 04:19:42 dwelch Exp $
+; $Id: win32k.edf,v 1.5 2001/03/20 15:06:22 ekohl Exp $
 ;
 ; win32k.def
 ;
@@ -154,22 +154,14 @@ PATHOBJ_bPolyLineTo
 PATHOBJ_vEnumStart
 PATHOBJ_vEnumStartClipLines
 PATHOBJ_vGetBounds
-;RtlAnsiCharToUnicodeChar = NTOSKRNL.RtlAnsiCharToUnicodeChar
-;RtlAnsiCharToUnicodeChar@4
-; RtlMultiByteToUnicodeN = NTOSKRNL.RtlMultiByteToUnicodeN
-;RtlMultiByteToUnicodeN@20
-; RtlRaiseException = NTOSKRNL.RtlRaiseException
-;RtlRaiseException
-; RtlUnicodeToMultiByteN = NTOSKRNL.RtlUnicodeToMultiByteN
-;RtlUnicodeToMultiByteN@20
-; RtlUnicodeToMultiByteSize = NTOSKRNL.RtlUnicodeToMultiByteSize
-;RtlUnicodeToMultiByteSize@12
-; RtlUnwind = NTOSKRNL.RtlUnwind
-RtlUnwind=RtlUnwind@16
-; RtlUpcaseUnicodeChar = NTOSKRNL.RtlUpcaseUnicodeChar
-;RtlUpcaseUnicodeChar@4
-; RtlUpcaseUnicodeToMultiByteN = NTOSKRNL.RtlUpcaseUnicodeToMultiByteN
-;RtlUpcaseUnicodeToMultiByteN@20
+RtlAnsiCharToUnicodeChar = NTOSKRNL.RtlAnsiCharToUnicodeChar
+RtlMultiByteToUnicodeN = NTOSKRNL.RtlMultiByteToUnicodeN
+RtlRaiseException = NTOSKRNL.RtlRaiseException
+RtlUnicodeToMultiByteN = NTOSKRNL.RtlUnicodeToMultiByteN
+RtlUnicodeToMultiByteSize = NTOSKRNL.RtlUnicodeToMultiByteSize
+RtlUnwind = NTOSKRNL.RtlUnwind
+RtlUpcaseUnicodeChar = NTOSKRNL.RtlUpcaseUnicodeChar
+RtlUpcaseUnicodeToMultiByteN = NTOSKRNL.RtlUpcaseUnicodeToMultiByteN
 STROBJ_bEnum
 STROBJ_dwGetCodePage
 STROBJ_vEnumStart
