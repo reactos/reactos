@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.12 2000/01/11 01:16:50 ekohl Exp $
+/* $Id: unicode.c,v 1.13 2000/02/19 19:31:18 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -273,43 +273,46 @@ RtlCharToInteger(IN PCSZ String, IN ULONG Base, IN OUT PULONG Value)
 LONG
 STDCALL
 RtlCompareString (
-	PSTRING	String1,
-	PSTRING	String2,
-	BOOLEAN	CaseInsensitive
+	IN	PSTRING	String1,
+	IN	PSTRING	String2,
+	IN	BOOLEAN	CaseInsensitive
 	)
 {
-	unsigned long i;
-	char c1, c2;
+	ULONG len1, len2;
+	PCHAR s1, s2;
+	CHAR  c1, c2;
 
-	if (String1->Length != String2->Length)
-		return String1->Length - String2->Length;
-
-	for (i=0; i<String1->Length; i++)
+	if (String1 && String2)
 	{
-		if (CaseInsensitive == TRUE)
-		{
-			c1 = RtlUpperChar (*String1->Buffer);
-			c2 = RtlUpperChar (*String2->Buffer);
-		}
-		else
-		{
-			c1 = *String1->Buffer;
-			c2 = *String2->Buffer;
-		}
+		len1 = String1->Length;
+		len2 = String2->Length;
+		s1 = String1->Buffer;
+		s2 = String2->Buffer;
 
-		if (c1!=c2)
+		if (s1 && s2)
 		{
-			String1->Buffer -= i;
-			String2->Buffer -= i;
-			return c1 - c2;
+			if (CaseInsensitive)
+			{
+				while (1)
+				{
+					c1 = len1-- ? RtlUpperChar (*s1++) : 0;
+					c2 = len2-- ? RtlUpperChar (*s2++) : 0;
+					if (!c1 || !c2 || c1 != c2)
+						return c1 - c2;
+				}
+			}
+			else
+			{
+				while (1)
+				{
+					c1 = len1-- ? *s1++ : 0;
+					c2 = len2-- ? *s2++ : 0;
+					if (!c1 || !c2 || c1 != c2)
+						return c1 - c2;
+				}
+			}
 		}
-
-		String1->Buffer++;
-		String2->Buffer++;
 	}
-
-	String1->Buffer-=i;
-	String2->Buffer-=i;
 
 	return 0;
 }
@@ -318,39 +321,45 @@ RtlCompareString (
 LONG
 STDCALL
 RtlCompareUnicodeString (
-	PUNICODE_STRING	String1,
-	PUNICODE_STRING	String2,
-	BOOLEAN		CaseInsensitive
+	IN	PUNICODE_STRING	String1,
+	IN	PUNICODE_STRING	String2,
+	IN	BOOLEAN		CaseInsensitive
 	)
 {
-	unsigned long i;
-	WCHAR wc1, wc2;
-	PWCHAR pw1, pw2;
+	ULONG len1, len2;
+	PWCHAR s1, s2;
+	WCHAR  c1, c2;
 
-	if (String1->Length != String2->Length)
-		return String1->Length - String2->Length;
-
-	pw1 = String1->Buffer;
-	pw2 = String2->Buffer;
-
-	for(i = 0; i < (String1->Length / sizeof(WCHAR)); i++)
+	if (String1 && String2)
 	{
-		if(CaseInsensitive == TRUE)
-		{
-			wc1 = RtlUpcaseUnicodeChar (*pw1);
-			wc2 = RtlUpcaseUnicodeChar (*pw2);
-		}
-		else
-		{
-			wc1 = *pw1;
-			wc2 = *pw2;
-		}
+		len1 = String1->Length / sizeof(WCHAR);
+		len2 = String2->Length / sizeof(WCHAR);
+		s1 = String1->Buffer;
+		s2 = String2->Buffer;
 
-		if (wc1 != wc2)
-			return wc1 - wc2;
-
-		pw1++;
-		pw2++;
+		if (s1 && s2)
+		{
+			if (CaseInsensitive)
+			{
+				while (1)
+				{
+					c1 = len1-- ? RtlUpcaseUnicodeChar (*s1++) : 0;
+					c2 = len2-- ? RtlUpcaseUnicodeChar (*s2++) : 0;
+					if (!c1 || !c2 || c1 != c2)
+						return c1 - c2;
+				}
+			}
+			else
+			{
+				while (1)
+				{
+					c1 = len1-- ? *s1++ : 0;
+					c2 = len2-- ? *s2++ : 0;
+					if (!c1 || !c2 || c1 != c2)
+						return c1 - c2;
+				}
+			}
+		}
 	}
 
 	return 0;
