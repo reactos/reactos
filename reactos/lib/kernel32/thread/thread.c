@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.46 2003/12/30 00:12:47 hyperion Exp $
+/* $Id: thread.c,v 1.47 2003/12/30 01:08:16 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -281,6 +281,27 @@ GetCurrentThreadId(VOID)
   return((DWORD)(NtCurrentTeb()->Cid).UniqueThread);
 }
 
+static VOID FASTCALL K32FreeCurrentStack(VOID)
+{
+ MEMORY_BASIC_INFORMATION mbiInfo;
+
+ if(VirtualQuery(NtCurrentTeb()->Tib.StackLimit, &mbiInfo, sizeof(mbiInfo)))
+  VirtualFree(mbiInfo.AllocationBase, 0, MEM_RELEASE);
+}
+
+__declspec(noreturn) VOID STDCALL K32ExitThread(DWORD nExitCode)
+{
+ K32FreeCurrentStack();
+ NtTerminateThread(NtCurrentThread(), nExitCode);
+ for(;;);
+}
+
+extern __declspec(noreturn) VOID STDCALL K32SwitchStackAndExitThread
+(
+ PVOID pStackBase,
+ SIZE_T uStackSize,
+ DWORD uExitCode
+);
 
 /*
  * @implemented
@@ -288,8 +309,8 @@ GetCurrentThreadId(VOID)
 VOID STDCALL
 ExitThread(DWORD uExitCode)
 {
-  BOOLEAN LastThread;
   NTSTATUS Status;
+  BOOLEAN LastThread;
 
   /*
    * Terminate process if this is the last thread
@@ -309,13 +330,12 @@ ExitThread(DWORD uExitCode)
 
   LdrShutdownThread();
 
-  Status = NtTerminateThread(NtCurrentThread(),
-			     uExitCode);
-  if (!NT_SUCCESS(Status))
-    {
-      SetLastErrorByStatus(Status);
-    }
-  for(;;); /* GCC complains noreturn function should not return */
+  K32SwitchStackAndExitThread
+  (
+   NtCurrentTeb()->StaticUnicodeBuffer,
+   sizeof(NtCurrentTeb()->StaticUnicodeBuffer),
+   uExitCode
+  );
 }
 
 
