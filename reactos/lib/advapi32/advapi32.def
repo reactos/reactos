@@ -1,4 +1,4 @@
-; $Id: advapi32.def,v 1.19 2004/05/26 09:50:09 weiden Exp $
+; $Id: advapi32.def,v 1.20 2004/07/10 14:38:23 weiden Exp $
 ;
 ; advapi32.def
 ;
@@ -155,7 +155,7 @@ GetSecurityDescriptorGroup@12
 GetSecurityDescriptorLength@4
 GetSecurityDescriptorOwner@12
 GetSecurityDescriptorSacl@16
-;GetSecurityInfo@32
+GetSecurityInfo@32
 GetServiceDisplayNameA@16
 GetServiceDisplayNameW@16
 GetServiceKeyNameA@16

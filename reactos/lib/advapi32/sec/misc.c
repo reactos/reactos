@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.20 2004/07/09 20:10:45 navaraf Exp $
+/* $Id: misc.c,v 1.21 2004/07/10 14:38:24 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -665,6 +665,26 @@ SetNamedSecurityInfoA(LPSTR pObjectName,
                       PACL pSacl)
 {
   DPRINT1("SetNamedSecurityInfoA: stub\n");
+  return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/**********************************************************************
+ * GetSecurityInfo				EXPORTED
+ *
+ * @unimplemented
+ */
+DWORD STDCALL
+GetSecurityInfo(HANDLE handle,
+                SE_OBJECT_TYPE ObjectType,
+                SECURITY_INFORMATION SecurityInfo,
+                PSID* ppsidOwner,
+                PSID* ppsidGroup,
+                PACL* ppDacl,
+                PACL* ppSacl,
+                PSECURITY_DESCRIPTOR* ppSecurityDescriptor)
+{
+  DPRINT1("GetSecurityInfo: stub\n");
   return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
