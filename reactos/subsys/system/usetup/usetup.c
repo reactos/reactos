@@ -1259,6 +1259,15 @@ FileCopyPage(PINPUT_RECORD Ir)
 static ULONG
 InitSystemPage(PINPUT_RECORD Ir)
 {
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING KeyName;
+  HANDLE KeyHandle;
+  NTSTATUS Status;
+
+  WCHAR TargetPath[MAX_PATH];
+  UNICODE_STRING ValueName;
+
+
   SetTextXY(6, 8, "Initializing system settings");
 
 
@@ -1271,14 +1280,55 @@ InitSystemPage(PINPUT_RECORD Ir)
   SetStatusText("   Please wait...");
 
 
-  /*
-   * Create registry hives
-   */
+  /* Create the 'secret' InstallPath key */
+  RtlInitUnicodeStringFromLiteral(&KeyName,
+				  L"\\Registry\\Machine\\HARDWARE");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &KeyName,
+			     OBJ_CASE_INSENSITIVE,
+			     NULL,
+			     NULL);
+  Status =  NtOpenKey(&KeyHandle,
+		      KEY_ALL_ACCESS,
+		      &ObjectAttributes);
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
+  }
+
+  RtlInitUnicodeStringFromLiteral(&ValueName,
+				  L"InstallPath");
+
+  swprintf(TargetPath,
+	   L"\\Device\\Harddisk%lu\\Partition%lu",
+	   PartData.DiskNumber,
+	   PartData.PartNumber);
+  if (InstallDir[0] != L'\\')
+    wcscat(TargetPath, L"\\");
+  wcscat(TargetPath, InstallDir);
+
+  Status = NtSetValueKey(KeyHandle,
+			 &ValueName,
+			 0,
+			 REG_SZ,
+			 (PVOID)TargetPath,
+			 wcslen(TargetPath) * sizeof(WCHAR));
+  NtClose(KeyHandle);
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+  }
+
+  /* Create the standard hives */
+  Status = NtInitializeRegistry(TRUE);
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT1("NtInitializeRegistry() failed (Status %lx)\n", Status);
+  }
 
 
-  /*
-   * Update registry
-   */
+
+  /* Update registry */
 
   /* FIXME: Create key '\Registry\Machine\System\Setup' */
 
