@@ -57,6 +57,7 @@ PsInitIdleThread(VOID)
    Status = PsInitializeThread(NULL,
 			       &IdleThread,
 			       NULL,
+			       KernelMode,
 			       FALSE);
    if (!NT_SUCCESS(Status))
      {

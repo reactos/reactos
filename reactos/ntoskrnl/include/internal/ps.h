@@ -455,6 +455,7 @@ NTSTATUS
 PsInitializeThread(PEPROCESS Process,
 		   PETHREAD* ThreadPtr,
 		   POBJECT_ATTRIBUTES ObjectAttributes,
+		   KPROCESSOR_MODE AccessMode,
 		   BOOLEAN First);
 
 PACCESS_TOKEN PsReferenceEffectiveToken(PETHREAD Thread,
@@ -532,6 +533,8 @@ VOID
 PsApplicationProcessorInit(VOID);
 VOID
 PsPrepareForApplicationProcessorInit(ULONG Id);
+VOID
+PsInitReaperThread(VOID);
 VOID STDCALL
 PsIdleThreadMain(PVOID Context);
 

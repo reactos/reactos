@@ -709,6 +709,7 @@ PsPrepareForApplicationProcessorInit(ULONG Id)
   PsInitializeThread(NULL,
 		     &IdleThread,
 		     NULL,
+		     KernelMode,
 		     FALSE);
   IdleThread->Tcb.State = THREAD_STATE_RUNNING;
   IdleThread->Tcb.FreezeCount = 0;
@@ -731,10 +732,8 @@ PsInitThreadManagment(VOID)
  * FUNCTION: Initialize thread managment
  */
 {
-   PETHREAD FirstThread, ReaperThread;
+   PETHREAD FirstThread;
    ULONG i;
-   KIRQL oldIrql;
-   NTSTATUS Status;
 
    for (i=0; i < MAXIMUM_PRIORITY; i++)
      {
@@ -766,7 +765,7 @@ PsInitThreadManagment(VOID)
 
    ObpCreateTypeObject(PsThreadType);
 
-   PsInitializeThread(NULL, &FirstThread, NULL, TRUE);
+   PsInitializeThread(NULL, &FirstThread, NULL, KernelMode, TRUE);
    FirstThread->Tcb.State = THREAD_STATE_RUNNING;
    FirstThread->Tcb.FreezeCount = 0;
    FirstThread->Tcb.UserAffinity = (1 << 0);   /* Set the affinity of the first thread to the boot processor */
@@ -776,7 +775,15 @@ PsInitThreadManagment(VOID)
    DPRINT("FirstThread %x\n",FirstThread);
 
    DoneInitYet = TRUE;
+}
 
+VOID
+PsInitReaperThread(VOID)
+{
+   PETHREAD ReaperThread;
+   KIRQL oldIrql;
+   NTSTATUS Status;
+   
    /*
     * Create the reaper thread
     */
@@ -785,6 +792,7 @@ PsInitThreadManagment(VOID)
    Status = PsInitializeThread(NULL,
 			       &ReaperThread,
 			       NULL,
+			       KernelMode,
 			       FALSE);
    if (!NT_SUCCESS(Status))
      {

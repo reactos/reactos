@@ -399,16 +399,14 @@ NTSTATUS
 PsInitializeThread(PEPROCESS Process,
 		   PETHREAD* ThreadPtr,
 		   POBJECT_ATTRIBUTES ObjectAttributes,
+		   KPROCESSOR_MODE AccessMode,
 		   BOOLEAN First)
 {
    PETHREAD Thread;
    NTSTATUS Status;
-   KPROCESSOR_MODE PreviousMode;
    KIRQL oldIrql;
    
    PAGED_CODE();
-   
-   PreviousMode = ExGetPreviousMode();
    
    if (Process == NULL)
      {
@@ -418,7 +416,7 @@ PsInitializeThread(PEPROCESS Process,
    /*
     * Create and initialize thread
     */
-   Status = ObCreateObject(PreviousMode,
+   Status = ObCreateObject(AccessMode,
 			   PsThreadType,
 			   ObjectAttributes,
 			   KernelMode,
@@ -730,6 +728,7 @@ NtCreateThread(OUT PHANDLE ThreadHandle,
   Status = PsInitializeThread(Process,
 			      &Thread,
 			      ObjectAttributes,
+			      PreviousMode,
 			      FALSE);
 
   ObDereferenceObject(Process);
@@ -877,6 +876,7 @@ PsCreateSystemThread(PHANDLE ThreadHandle,
    Status = PsInitializeThread(NULL,
 			       &Thread,
 			       ObjectAttributes,
+			       KernelMode,
 			       FALSE);
    if (!NT_SUCCESS(Status))
      {
