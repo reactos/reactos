@@ -37,4 +37,5 @@ BEGIN
     END
 END
 
+#include "aclui_En.rc"
 

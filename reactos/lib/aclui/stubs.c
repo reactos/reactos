@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.2 2004/08/10 00:12:31 weiden Exp $
+/* $Id: stubs.c,v 1.3 2004/08/10 15:47:54 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Access Control List Editor
@@ -14,8 +14,6 @@
 #include <aclui.h>
 #include "internal.h"
 
-ULONG DbgPrint(PCH Format,...);
-
 #define UNIMPLEMENTED \
   DbgPrint("ACLUI:  %s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__FILE__,__LINE__)
 
@@ -26,14 +24,6 @@ CreateSecurityPage(LPSECURITYINFO psi)
 {
   UNIMPLEMENTED;
   return NULL;
-}
-
-BOOL
-WINAPI
-EditSecurity(HWND hwndOwner, LPSECURITYINFO psi)
-{
-  UNIMPLEMENTED;
-  return FALSE;
 }
 
 /* EOF */

@@ -1,0 +1,11 @@
+#include <reactos/resource.h>
+#include <defines.h>
+#include "resource.h"
+
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+{
+  IDS_PSP_TITLE "Permissions for %1"
+}
+
