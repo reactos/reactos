@@ -28,6 +28,7 @@
 #define TRACE DPRINT
 #define WARN_ON(x) (1)
 
+#undef assert
 #ifdef NDEBUG
 #define TRACE_ON(x) (0)
 #define assert(x)
