@@ -1437,8 +1437,12 @@ NtUserSetScrollInfo(
 DWORD
 STDCALL
 NtUserSetShellWindowEx(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  HWND hwndShell,
+  HWND hwndShellListView);
+
+HWND
+STDCALL
+NtUserGetShellWindow();
 
 DWORD
 STDCALL

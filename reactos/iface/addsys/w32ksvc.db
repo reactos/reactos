@@ -557,3 +557,4 @@ NtUserGetQueueStatus                    1
 NtUserGetParent                         1
 NtUserGetWindow                         2
 NtUserGetLastActivePopup                1
+NtUserGetShellWindow                    0

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.82 2003/08/09 07:09:57 jimtabor Exp $
+/* $Id: window.c,v 1.83 2003/08/09 18:22:11 mf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1673,14 +1673,38 @@ NtUserSetLogonNotifyWindow(DWORD Unknown0)
   return 0;
 }
 
-DWORD STDCALL
-NtUserSetShellWindowEx(DWORD Unknown0,
-		       DWORD Unknown1)
-{
-  UNIMPLEMENTED
 
-  return 0;
+ /* globally stored handles to the shell windows */
+HWND hwndShellWindow = 0;
+HWND hwndShellListView = 0;
+DWORD pidShellWindow = 0;
+
+DWORD STDCALL
+NtUserSetShellWindowEx(HWND hwndShell, HWND hwndShellListView)
+{
+	PEPROCESS my_current = IoGetCurrentProcess();
+
+	 /* test if we are permitted to change the shell window */
+	if (pidShellWindow && my_current->UniqueProcessId!=pidShellWindow)
+		return FALSE;
+
+	hwndShellWindow = hwndShell;
+	hwndShellListView = hwndShellListView;
+
+	if (hwndShell)
+		pidShellWindow = my_current->UniqueProcessId;	/* request shell window for the calling process */
+	else
+		pidShellWindow = 0;	/* shell window is now free for other processes. */
+
+	return TRUE;
 }
+
+HWND STDCALL
+NtUserGetShellWindow()
+{
+	return hwndShellWindow;
+}
+
 
 DWORD STDCALL
 NtUserSetWindowFNID(DWORD Unknown0,
