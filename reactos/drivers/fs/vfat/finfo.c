@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.24 2003/01/11 16:00:16 hbirr Exp $
+/* $Id: finfo.c,v 1.25 2003/01/19 01:06:09 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -472,25 +472,29 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
        }
     }
   }
-  else if (NewSize <= Fcb->RFCB.AllocationSize.u.LowPart - ClusterSize)
+  else if (NewSize + ClusterSize <= Fcb->RFCB.AllocationSize.u.LowPart)
   {
-     if (NewSize > 0)
-     {
-       Status = OffsetToCluster(DeviceExt, Fcb, Cluster, 
+    if (NewSize > 0)
+    {
+      Status = OffsetToCluster(DeviceExt, Fcb, Cluster, 
 	          ROUND_DOWN(NewSize - 1, ClusterSize),
 		  &Cluster, FALSE);
 
-     }
-     NCluster = Cluster;
-     Status = NextCluster (DeviceExt, Fcb, Cluster, &NCluster, FALSE);
-     WriteCluster(DeviceExt, Cluster, 0xffffffff);
-     Cluster = NCluster;
-     while (Cluster != 0xffffffff)
-     {
-        NextCluster (DeviceExt, Fcb, Cluster, &NCluster, FALSE);
-        WriteCluster (DeviceExt, Cluster, 0);
-	Cluster = NCluster;
-     }
+      NCluster = Cluster;
+      Status = NextCluster (DeviceExt, Fcb, Cluster, &NCluster, FALSE);
+      WriteCluster(DeviceExt, Cluster, 0xffffffff);
+      Cluster = NCluster;
+    }
+    else
+    {
+      Cluster = FirstCluster;
+    }
+    while (0xffffffff != Cluster && 0 != Cluster)
+    {
+       NextCluster (DeviceExt, Fcb, Cluster, &NCluster, FALSE);
+       WriteCluster (DeviceExt, Cluster, 0);
+       Cluster = NCluster;
+    }
   }
   if (!vfatFCBIsDirectory(Fcb))
   {
