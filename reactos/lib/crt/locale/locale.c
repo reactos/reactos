@@ -13,7 +13,7 @@
 #include <stdlib.h>
 
 #define NDEBUG
-#include <internal/msvcrtdbg.h>
+#include <internal/debug.h>
 
 unsigned int __setlc_active;
 unsigned int __unguarded_readlc_active;

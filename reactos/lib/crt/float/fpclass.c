@@ -14,6 +14,9 @@
 #define _FPCLASS_PN	0x0100	/* positive normal */
 #define _FPCLASS_PINF	0x0200	/* positive infinity */
 
+
+#if __MINGW32_MAJOR_VERSION < 3 || __MINGW32_MINOR_VERSION < 3
+
 #define FP_SNAN       0x0001  //    signaling NaN
 #define	FP_QNAN       0x0002  //    quiet NaN
 #define	FP_NINF       0x0004  //    negative infinity
@@ -24,6 +27,8 @@
 #define FP_PZERO      0x0040  //    positive zero
 #define FP_NNORM      0x0080  //    negative normalized non-zero
 #define FP_PNORM      0x0100  //    positive normalized non-zero
+
+#endif
 
 typedef int fpclass_t;
 

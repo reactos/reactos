@@ -3,7 +3,7 @@
 #include <string.h>
 
 #define NDEBUG
-#include <internal/msvcrtdbg.h>
+#include <internal/debug.h>
 
 /* misc/environ.c */
 int SetEnv(const wchar_t *option);

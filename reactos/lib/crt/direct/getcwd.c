@@ -3,29 +3,33 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <internal/file.h>
-
+#include <tchar.h>
 
 /*
  * @implemented
  */
-char *_getcwd(char* buffer, int maxlen)
+_TCHAR* _tgetcwd(_TCHAR* buf, int size)
 {
-    char *cwd;
-    int len;
+  _TCHAR dir[MAX_PATH];
+  DWORD dir_len = GetCurrentDirectory(MAX_PATH,dir);
 
-    if (buffer == NULL) {
-        if ( (cwd = malloc(MAX_PATH)) == NULL ) {
-        	__set_errno(ENOMEM);
-        	return NULL;
-        }
-        len = MAX_PATH;
-    } else {
-        cwd = buffer;
-        len = maxlen;
-    }
-    if (GetCurrentDirectoryA(len, cwd) == 0) {
-    	_dosmaperr(GetLastError());
-        return NULL;
-    }
-    return cwd;
+  if (dir_len == 0)
+  {
+    _dosmaperr(GetLastError());
+    return NULL; /* FIXME: Real return value untested */
+  }
+
+  if (!buf)
+  {
+    return _tcsdup(dir);
+  }
+  
+  if (dir_len >= size)
+  {
+    __set_errno(ERANGE);
+    return NULL; /* buf too small */
+  }
+  
+  _tcscpy(buf,dir);
+  return buf;
 }

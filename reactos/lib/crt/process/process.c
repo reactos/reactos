@@ -7,7 +7,7 @@
 #include <tchar.h>
 
 #define NDEBUG
-#include <internal/msvcrtdbg.h>
+#include <internal/debug.h>
 
 #ifdef _UNICODE
    #define find_execT find_execW

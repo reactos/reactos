@@ -6,29 +6,36 @@
 #include <internal/file.h>
 
 
-int cur_drive = 0;
-
-
 /*
- * @implemented
+ * @implemented 
+ *
+ *    _chdrive (MSVCRT.@)
+ *
+ * Change the current drive.
+ *
+ * PARAMS
+ *  newdrive [I] Drive number to change to (1 = 'A', 2 = 'B', ...)
+ *
+ * RETURNS
+ *  Success: 0. The current drive is set to newdrive.
+ *  Failure: -1. errno indicates the error.
+ *
+ * NOTES
+ *  See SetCurrentDirectoryA.
  */
-int _chdrive(int drive)
+int _chdrive(int newdrive)
 {
-    char d[3];
+  WCHAR buffer[] = L"A:";
 
-    if (!( drive >= 1 && drive <= 26)) {
-    	__set_errno(EINVAL);
-        return -1;
-	}
-    if (cur_drive != drive) {
-        cur_drive = drive;
-        d[0] = toupper(cur_drive + '@');
-        d[1] = ':';
-        d[2] = 0;
-        if (!SetCurrentDirectoryA(d)) {
-	    	_dosmaperr(GetLastError());
-	    	return -1;
-	    }	
+  buffer[0] += newdrive - 1;
+  if (!SetCurrentDirectoryW( buffer ))
+  {
+    _dosmaperr(GetLastError());
+    if (newdrive <= 0)
+    {
+      __set_errno(EACCES);
     }
-    return 0;
+    return -1;
+  }
+  return 0;
 }

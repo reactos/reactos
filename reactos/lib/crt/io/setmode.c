@@ -14,6 +14,6 @@
 #include <internal/file.h>
 
 #define NDEBUG
-#include <internal/msvcrtdbg.h>
+#include <internal/debug.h>
 
 

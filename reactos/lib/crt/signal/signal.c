@@ -89,7 +89,7 @@ __p_sig_fn_t signal(int sig, __p_sig_fn_t func)
 int
 raise(int sig)
 {
-   __p_sig_fn_t temp;// = SIG_DFL;
+   __p_sig_fn_t temp = 0;
    int i;
 
    switch (sig)

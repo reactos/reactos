@@ -1,14 +1,14 @@
 #include "precomp.h"
 #include <direct.h>
 #include <internal/file.h>
-
+#include <tchar.h>
 
 /*
  * @implemented
  */
-int _mkdir(const char* _path)
+int _tmkdir(const _TCHAR* _path)
 {
-    if (!CreateDirectoryA(_path, NULL)) {
+    if (!CreateDirectory(_path, NULL)) {
     	_dosmaperr(GetLastError());
         return -1;
 	}

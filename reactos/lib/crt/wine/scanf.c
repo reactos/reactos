@@ -42,12 +42,13 @@
 #include <wchar.h>
 #include <stdio.h>
 #include <conio.h>
+#include <ctype.h>
 #include <internal/file.h>
 
 //#include <ntos/heap.h>
 
 #define NDEBUG
-#include <internal/msvcrtdbg.h>
+#include <internal/debug.h>
 
 
 /*

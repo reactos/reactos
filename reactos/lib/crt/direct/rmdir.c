@@ -1,14 +1,14 @@
 #include "precomp.h"
 #include <direct.h>
 #include <internal/file.h>
-
+#include <tchar.h>
 
 /*
  * @implemented
  */
-int _rmdir(const char* _path)
+int _trmdir(const _TCHAR* _path)
 {
-    if (!RemoveDirectoryA(_path)) {
+    if (!RemoveDirectory(_path)) {
     	_dosmaperr(GetLastError());
         return -1;
     }

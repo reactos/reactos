@@ -8,7 +8,7 @@
 /*
  * @implemented
  */
-#ifdef _UNICODE
+#if defined(_UNICODE) || !(__MINGW32_MAJOR_VERSION < 3 || __MINGW32_MINOR_VERSION < 3)
 long
 #else
 int
@@ -60,7 +60,7 @@ _tfindfirst(const _TCHAR* _name, struct _tfinddata_t* result)
  * @implemented
  */
 int _tfindnext(
-#ifdef _UNICODE
+#if defined(_UNICODE) || !(__MINGW32_MAJOR_VERSION < 3 || __MINGW32_MINOR_VERSION < 3)
    long handle,
 #else
    int handle,
@@ -176,7 +176,13 @@ int _tfindnexti64(long handle, struct _tfinddatai64_t *result)
 /*
  * @implemented
  */
-int _findclose(int handle)
+int _findclose(
+#if __MINGW32_MAJOR_VERSION < 3 || __MINGW32_MINOR_VERSION < 3
+   int handle
+#else
+   long handle
+#endif
+   )
 {
     // check no wildcards or invalid handle
     if (handle == 0 || handle == -1)
