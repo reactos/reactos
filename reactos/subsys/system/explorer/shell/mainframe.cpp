@@ -224,20 +224,40 @@ int MainFrame::OpenShellFolders(LPIDA pIDList, HWND hFrameWnd)
 		SFGAOF attribs = SFGAO_FOLDER;
 		HRESULT hr = folder->GetAttributesOf(1, &pidl, &attribs);
 
-		if (SUCCEEDED(hr) && (attribs&SFGAO_FOLDER))
-			try {
-				ShellPath pidl_abs = ShellPath(pidl).create_absolute_pidl(parent_pidl);
+		if (SUCCEEDED(hr))
+			if (attribs & SFGAO_FOLDER) {
+				try {
+					ShellPath pidl_abs = ShellPath(pidl).create_absolute_pidl(parent_pidl);
 
-				if (hFrameWnd) {
-					if (SendMessage(hFrameWnd, PM_OPEN_WINDOW, OWM_PIDL, (LPARAM)(LPCITEMIDLIST)pidl_abs))
-						++cnt;
-				} else {
-					if (MainFrame::Create(pidl_abs, 0))
-						++cnt;
+					if (hFrameWnd) {
+						if (SendMessage(hFrameWnd, PM_OPEN_WINDOW, OWM_PIDL, (LPARAM)(LPCITEMIDLIST)pidl_abs))
+							++cnt;
+					} else {
+						if (MainFrame::Create(pidl_abs, 0))
+							++cnt;
+					}
+				} catch(COMException& e) {
+					HandleException(e, g_Globals._hMainWnd);
 				}
-			} catch(COMException& e) {
-				HandleException(e, g_Globals._hMainWnd);
-			}
+			}/*TEST
+			else { // !(attribs & SFGAO_FOLDER))
+				SHELLEXECUTEINFOA shexinfo;
+
+				shexinfo.cbSize = sizeof(SHELLEXECUTEINFOA);
+				shexinfo.fMask = SEE_MASK_INVOKEIDLIST;
+				shexinfo.hwnd = NULL;
+				shexinfo.lpVerb = NULL;
+				shexinfo.lpFile = NULL;
+				shexinfo.lpParameters = NULL;
+				shexinfo.lpDirectory = NULL;
+				shexinfo.nShow = SW_NORMAL;
+				shexinfo.lpIDList = ILCombine(parent_pidl, pidl);
+
+				if (ShellExecuteExA(&shexinfo))
+					++cnt;
+
+				ILFree((LPITEMIDLIST)shexinfo.lpIDList);
+			}*/
 	}
 
 	return cnt;
