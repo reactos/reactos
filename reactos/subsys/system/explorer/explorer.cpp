@@ -82,8 +82,13 @@ void ExplorerGlobals::read_persistent()
 	_cfg_dir.printf(TEXT("%s\\ReactOS"), (LPCTSTR)SpecialFolderFSPath(CSIDL_APPDATA,0));
 	_cfg_path.printf(TEXT("%s\\ros-explorer-cfg.xml"), _cfg_dir.c_str());
 
-	if (!_cfg.read(_cfg_path))
+	if (!_cfg.read(_cfg_path)) {
+		if (_cfg._last_error != XML_ERROR_NO_ELEMENTS)
+			MessageBox(g_Globals._hwndDesktop, String(_cfg._last_error_msg.c_str()),
+						TEXT("ROS Explorer - reading user settings"), MB_OK);
+
 		_cfg.read(TEXT("explorer-cfg-template.xml"));
+	}
 
 	 // read bookmarks
 	_favorites_path.printf(TEXT("%s\\ros-explorer-bookmarks.xml"), _cfg_dir.c_str());

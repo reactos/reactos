@@ -427,7 +427,11 @@ bool Favorites::read(LPCTSTR path)
 	XMLDoc xbel;
 
 	if (!xbel.read(path))
-		return false;
+		if (xbel._last_error == XML_ERROR_NO_ELEMENTS)
+			return false;
+		else
+			MessageBox(g_Globals._hwndDesktop, String(xbel._last_error_msg.c_str()),
+						TEXT("ROS Explorer - reading bookmark file"), MB_OK);
 
 	const_XMLPos pos(&xbel);
 

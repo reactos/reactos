@@ -1232,6 +1232,7 @@ struct XMLReader
 		return out.str();
 	}
 
+	XML_Error	get_error_code() {return XML_GetErrorCode(_parser);}
 	std::string get_error_string() const;
 
 protected:
@@ -1276,12 +1277,14 @@ struct XMLHeader : public std::string
 struct XMLDoc : public XMLNode
 {
 	XMLDoc()
-	 :	XMLNode("")
+	 :	XMLNode(""),
+		_last_error(XML_ERROR_NONE)
 	{
 	}
 
 	XMLDoc(LPCTSTR path)
-	 :	XMLNode("")
+	 :	XMLNode(""),
+		_last_error(XML_ERROR_NONE)
 	{
 		read(path);
 	}
@@ -1297,7 +1300,8 @@ struct XMLDoc : public XMLNode
 
 			out << reader.get_position() << " " << reader.get_error_string();
 
-			_last_error = out.str();
+			_last_error = reader.get_error_code();
+			_last_error_msg = out.str();
 		}
 
 		return in;
@@ -1315,7 +1319,8 @@ struct XMLDoc : public XMLNode
 
 			out << path << reader.get_position() << " " << reader.get_error_string();
 
-			_last_error = out.str();
+			_last_error = reader.get_error_code();
+			_last_error_msg = out.str();
 		}
 
 		return status != XML_STATUS_ERROR;
@@ -1352,7 +1357,8 @@ struct XMLDoc : public XMLNode
 		write_formating(out);
 	}
 
-	std::string	_last_error;
+	XML_Error	_last_error;
+	std::string	_last_error_msg;
 };
 
 
