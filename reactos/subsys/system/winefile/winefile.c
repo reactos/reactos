@@ -211,7 +211,7 @@ const static TCHAR sQMarks[] = {'?','?','?','\0'};
 
 /* window class names */
 const static TCHAR sWINEFILEFRAME[] = {'W','F','S','_','F','r','a','m','e','\0'};
-const static TCHAR sWINEFILETREE[] = {'W','F','S','_','T','r','e','e','\0'};
+const static TCHAR sWINEFILETREE[] = {'W','F','S','_','_','T','r','e','e','\0'};
 
 #ifdef _MSC_VER
 /* #define LONGLONGARG _T("I64") */
