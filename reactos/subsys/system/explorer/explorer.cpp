@@ -635,10 +635,10 @@ static void InitInstance(HINSTANCE hInstance)
 	 // register frame window class
 	g_Globals._hframeClass = IconWindowClass(CLASSNAME_FRAME,IDI_EXPLORER);
 
-	 // register child windows class
+	 // register child window class
 	WindowClass(CLASSNAME_CHILDWND, CS_CLASSDC|CS_DBLCLKS|CS_VREDRAW).Register();
 
-	 // register tree windows class
+	 // register tree window class
 	WindowClass(CLASSNAME_WINEFILETREE, CS_CLASSDC|CS_DBLCLKS|CS_VREDRAW).Register();
 
 	g_Globals._cfStrFName = RegisterClipboardFormat(CFSTR_FILENAME);
