@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.110 2003/07/21 21:53:53 royce Exp $
+/* $Id: process.c,v 1.111 2003/08/04 20:44:54 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -928,12 +928,16 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 			  IN  CINT ProcessInformationClass,
 			  OUT PVOID ProcessInformation,
 			  IN  ULONG ProcessInformationLength,
-			  OUT PULONG ReturnLength)
+			  OUT PULONG ReturnLength OPTIONAL)
 {
    PEPROCESS Process;
    NTSTATUS Status;
-   PPROCESS_BASIC_INFORMATION ProcessBasicInformationP;
-   
+
+   /*
+    * TODO: Here we should probably check that ProcessInformationLength
+    * bytes indeed are writable at address ProcessInformation.
+    */
+
    Status = ObReferenceObjectByHandle(ProcessHandle,
 				      PROCESS_SET_INFORMATION,
 				      PsProcessType,
@@ -944,48 +948,137 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
      {
 	return(Status);
      }
-   
+
    switch (ProcessInformationClass)
      {
       case ProcessBasicInformation:
-	ProcessBasicInformationP = (PPROCESS_BASIC_INFORMATION)
-	  ProcessInformation;
-	ProcessBasicInformationP->ExitStatus = Process->ExitStatus;
-	ProcessBasicInformationP->PebBaseAddress = Process->Peb;
-	ProcessBasicInformationP->AffinityMask = Process->Pcb.Affinity;
-	ProcessBasicInformationP->UniqueProcessId =
-	  Process->UniqueProcessId;
-	ProcessBasicInformationP->InheritedFromUniqueProcessId =
-	  (ULONG)Process->InheritedFromUniqueProcessId;
-	Status = STATUS_SUCCESS;
+	if (ProcessInformationLength < sizeof(PROCESS_BASIC_INFORMATION))
+	{
+	  Status = STATUS_INFO_LENGTH_MISMATCH;
+	}
+	else
+	{
+	  PPROCESS_BASIC_INFORMATION ProcessBasicInformationP =
+	    (PPROCESS_BASIC_INFORMATION)ProcessInformation;
+	  ProcessBasicInformationP->ExitStatus = Process->ExitStatus;
+	  ProcessBasicInformationP->PebBaseAddress = Process->Peb;
+	  ProcessBasicInformationP->AffinityMask = Process->Pcb.Affinity;
+	  ProcessBasicInformationP->UniqueProcessId =
+	    Process->UniqueProcessId;
+	  ProcessBasicInformationP->InheritedFromUniqueProcessId =
+	    (ULONG)Process->InheritedFromUniqueProcessId;
+
+	  if (ReturnLength)
+	  {
+	    *ReturnLength = sizeof(PROCESS_BASIC_INFORMATION);
+	  }
+	}
 	break;
-	
+
       case ProcessQuotaLimits:
       case ProcessIoCounters:
-      case ProcessVmCounters:
       case ProcessTimes:
       case ProcessDebugPort:
       case ProcessLdtInformation:
-	Status = STATUS_NOT_IMPLEMENTED;
-	break;
-	
-      case ProcessDefaultHardErrorMode:
-	*((PULONG)ProcessInformation) = Process->DefaultHardErrorProcessing;
-	break;
-	
       case ProcessWorkingSetWatch:
-	Status = STATUS_NOT_IMPLEMENTED;
-	break;
-
       case ProcessWx86Information:
       case ProcessHandleCount:
-      case ProcessPriorityBoost:
-      case ProcessDeviceMap:
       case ProcessSessionInformation:
       case ProcessWow64Information:
 	Status = STATUS_NOT_IMPLEMENTED;
 	break;
-	
+
+      case ProcessVmCounters:
+	if (ProcessInformationLength < sizeof(VM_COUNTERS))
+	{
+	  Status = STATUS_INFO_LENGTH_MISMATCH;
+	}
+	else
+	{
+	  PVM_COUNTERS pOut = (PVM_COUNTERS)ProcessInformation;
+	  pOut->PeakVirtualSize            = Process->PeakVirtualSize;
+	  /*
+	   * Here we should probably use VirtualSize.LowPart, but due to
+	   * incompatibilities in current headers (no unnamed union),
+	   * I opted for cast.
+	   */
+	  pOut->VirtualSize                = (ULONG)Process->VirtualSize.QuadPart;
+	  pOut->PageFaultCount             = Process->Vm.PageFaultCount;
+	  pOut->PeakWorkingSetSize         = Process->Vm.PeakWorkingSetSize;
+	  pOut->WorkingSetSize             = Process->Vm.WorkingSetSize;
+	  pOut->QuotaPeakPagedPoolUsage    = Process->QuotaPeakPoolUsage[0]; // TODO: Verify!
+	  pOut->QuotaPagedPoolUsage        = Process->QuotaPoolUsage[0];     // TODO: Verify!
+	  pOut->QuotaPeakNonPagedPoolUsage = Process->QuotaPeakPoolUsage[1]; // TODO: Verify!
+	  pOut->QuotaNonPagedPoolUsage     = Process->QuotaPoolUsage[1];     // TODO: Verify!
+	  pOut->PagefileUsage              = Process->PagefileUsage;
+	  pOut->PeakPagefileUsage          = Process->PeakPagefileUsage;
+
+	  if (ReturnLength)
+	  {
+	    *ReturnLength = sizeof(VM_COUNTERS);
+	  }
+	}
+	break;
+
+      case ProcessDefaultHardErrorMode:
+	if (ProcessInformationLength < sizeof(ULONG))
+	{
+	  Status = STATUS_INFO_LENGTH_MISMATCH;
+	}
+	else
+	{
+	  PULONG HardErrMode = (PULONG)ProcessInformation;
+	  *HardErrMode = Process->DefaultHardErrorProcessing;
+
+	  if (ReturnLength)
+	  {
+	    *ReturnLength = sizeof(ULONG);
+	  }
+	}
+	break;
+
+      case ProcessPriorityBoost:
+	if (ProcessInformationLength < sizeof(ULONG))
+	{
+	  Status = STATUS_INFO_LENGTH_MISMATCH;
+	}
+	else
+	{
+	  PULONG BoostEnabled = (PULONG)ProcessInformation;
+	  *BoostEnabled = Process->Pcb.DisableBoost ? FALSE : TRUE;
+
+	  if (ReturnLength)
+	  {
+	    *ReturnLength = sizeof(ULONG);
+	  }
+	}
+	break;
+
+      case ProcessDeviceMap:
+	Status = STATUS_NOT_IMPLEMENTED;
+	break;
+
+      case ProcessPriorityClass:
+	if (ProcessInformationLength < sizeof(USHORT))
+	{
+	  Status = STATUS_INFO_LENGTH_MISMATCH;
+	}
+	else
+	{
+	  PUSHORT Priority = (PUSHORT)ProcessInformation;
+	  *Priority = Process->PriorityClass;
+
+	  if (ReturnLength)
+	  {
+	    *ReturnLength = sizeof(USHORT);
+	  }
+	}
+	break;
+
+      /*
+       * Note: The following 10 information classes are verified to not be
+       * implemented on NT, and do indeed return STATUS_INVALID_INFO_CLASS;
+       */
       case ProcessBasePriority:
       case ProcessRaisePriority:
       case ProcessExceptionPort:
@@ -994,7 +1087,6 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
       case ProcessIoPortHandlers:
       case ProcessUserModeIOPL:
       case ProcessEnableAlignmentFaultFixup:
-      case ProcessPriorityClass:
       case ProcessAffinityMask:
       case ProcessForegroundInformation:
       default:
@@ -1003,6 +1095,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
    ObDereferenceObject(Process);
    return(Status);
 }
+
 
 NTSTATUS
 PspAssignPrimaryToken(PEPROCESS Process,
@@ -1089,7 +1182,6 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
 
       case ProcessBasicInformation:
       case ProcessIoCounters:
-      case ProcessVmCounters:
       case ProcessTimes:
       case ProcessPooledUsageAndLimits:
       case ProcessWx86Information:
