@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.13 2002/09/28 22:13:28 jfilby Exp $
+/* $Id: defwnd.c,v 1.14 2002/11/05 20:59:48 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -956,7 +956,7 @@ DefWndAdjustRect(RECT* Rect, ULONG Style, BOOL Menu, ULONG ExStyle)
 LRESULT STDCALL
 DefWndNCCalcSize(HWND hWnd, RECT* Rect)
 {
-  LRESULT Result;
+  LRESULT Result = 0;
   LONG Style = GetClassLongW(hWnd, GCL_STYLE);
   RECT TmpRect = {0, 0, 0, 0};
 
