@@ -51,7 +51,6 @@ static LPARAM TreeView_GetItemData(HWND hwndTreeView, HTREEITEM hItem)
 ShellBrowserChild::ShellBrowserChild(HWND hwnd)
  :	super(hwnd)
 {
-	_hWndFrame = 0;
 	_pShellView = NULL;
 	_pDropTarget = NULL;
 	_himlSmall = 0;

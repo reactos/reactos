@@ -104,7 +104,7 @@ struct ShellBrowserChild : public ChildWindow, public IShellBrowserImpl
 protected:
 	Root	_root;
 
-	HWND	_hWndFrame;
+	WindowHandle _hWndFrame;
 
 	IShellView*	_pShellView;	// current hosted shellview
 	HIMAGELIST	_himlSmall;		// list

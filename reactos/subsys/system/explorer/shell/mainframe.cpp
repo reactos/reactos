@@ -230,7 +230,7 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 	  case WM_GET_CONTROLWINDOW:
 		if (wparam == FCW_STATUS)
-			return (LRESULT)_hstatusbar;
+			return (LRESULT)(HWND)_hstatusbar;
 		break;
 
 	  default:

@@ -1,8 +1,6 @@
 - extend shell view code in Wine
-- implement start menu
 - iplement taskbar and additional deskbands
 - taskbar notification area (aka "tray")
-- Fix the Explorer Bar/Start Menu. Currently it is almost nothing like Windows.
 - paint desktop background: configurable colors, background image, ...
 - Drag Drop on desktop does not work.
 - implement Drag Drop from the tree view.

@@ -17,6 +17,8 @@
 #define IDS_EMPTY                       13
 #define IDS_RECENT                      14
 #define IDS_ADMIN                       15
+#define IDS_NETWORK                     16
+#define IDS_CONNECTIONS                 17
 #define IDI_REACTOS                     100
 #define IDI_EXPLORER                    101
 #define IDI_STARTMENU                   102
@@ -32,6 +34,8 @@
 #define IDM_WINEFILE                    112
 #define IDI_LOGOFF                      124
 #define IDI_FOLDERARROW                 125
+#define IDI_ARROW                       125
+#define IDI_ARROW_SELECTED              126
 #define ID_VIEW_NAME                    401
 #define ID_VIEW_ALL_ATTRIBUTES          402
 #define ID_VIEW_SELECTED_ATTRIBUTES     403

@@ -31,7 +31,6 @@
 #include "window.h"
 
 #include "../globals.h"
-#include "../explorer_intres.h"
 
 
 WindowClass::WindowClass(LPCTSTR classname, UINT style_, WNDPROC wndproc)
@@ -219,9 +218,6 @@ LRESULT SubclassedWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 ChildWindow::ChildWindow(HWND hwnd)
  :	super(hwnd)
 {
-	_left_hwnd = 0;
-	_right_hwnd = 0;
-
 	_focus_pane = 0;
 	_split_pos = DEFAULT_SPLIT_POS;
 	_last_split = DEFAULT_SPLIT_POS;
@@ -466,9 +462,9 @@ int Window::MessageLoop()
 
 Button::Button(HWND parent, LPCTSTR text, int left, int top, int width, int height,
 				int id, DWORD flags, DWORD exStyle)
+ :	WindowHandle(CreateWindowEx(exStyle, TEXT("BUTTON"), text, flags, left, top, width, height,
+							parent, (HMENU)id, g_Globals._hInstance, 0))
 {
-	_hwnd = CreateWindowEx(exStyle, TEXT("BUTTON"), text, flags, left, top, width, height,
-							parent, (HMENU)id, g_Globals._hInstance, 0);
 }
 
 
@@ -484,9 +480,9 @@ LRESULT OwnerdrawnButton::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
 
 Static::Static(HWND parent, LPCTSTR text, int left, int top, int width, int height,
 				int id, DWORD flags, DWORD exStyle)
+ :	WindowHandle(CreateWindowEx(exStyle, TEXT("STATIC"), text, flags, left, top, width, height,
+							parent, (HMENU)id, g_Globals._hInstance, 0))
 {
-	_hwnd = CreateWindowEx(exStyle, TEXT("STATIC"), text, flags, left, top, width, height,
-							parent, (HMENU)id, g_Globals._hInstance, 0);
 }
 
 
@@ -617,54 +613,5 @@ void PictureButton::DrawItem(LPDRAWITEMSTRUCT dis)
 			++rect.right;	++rect.bottom;
 		}
 		DrawFocusRect(dis->hDC, &rect);
-	}
-}
-
-
-void StartmenuEntry::DrawItem(LPDRAWITEMSTRUCT dis)
-{
-	UINT style = DFCS_BUTTONPUSH;
-
-	if (dis->itemState & ODS_DISABLED)
-		style |= DFCS_INACTIVE;
-
-	POINT iconPos = {dis->rcItem.left+2, (dis->rcItem.top+dis->rcItem.bottom-16)/2};
-	RECT textRect = {dis->rcItem.left+16+4, dis->rcItem.top+2, dis->rcItem.right-4, dis->rcItem.bottom-4};
-
-	if (dis->itemState & ODS_SELECTED) {
-		style |= DFCS_PUSHED;
-		++iconPos.x;		++iconPos.y;
-		++textRect.left;	++textRect.top;
-		++textRect.right;	++textRect.bottom;
-	}
-
-	int bk_color = COLOR_BTNFACE;
-	int text_color = COLOR_BTNTEXT;
-
-	if (dis->itemState & ODS_FOCUS) {
-		bk_color = COLOR_HIGHLIGHT;
-		text_color = COLOR_HIGHLIGHTTEXT;
-	}
-
-	HBRUSH bk_brush = GetSysColorBrush(bk_color);
-
-	FillRect(dis->hDC, &dis->rcItem, bk_brush);
-	DrawIconEx(dis->hDC, iconPos.x, iconPos.y, _hIcon, 16, 16, 0, bk_brush, DI_NORMAL);
-
-	 // draw submenu arrow at the right
-	if (_showArrow) {
-		SmallIcon arrowIcon(IDI_FOLDERARROW);
-		DrawIconEx(dis->hDC, dis->rcItem.right-16, iconPos.y, arrowIcon, 16, 16, 0, bk_brush, DI_NORMAL);
-	}
-
-	TCHAR text[BUFFER_LEN];
-	GetWindowText(_hwnd, text, BUFFER_LEN);
-
-	if (dis->itemState & (ODS_DISABLED|ODS_GRAYED))
-		DrawGrayText(dis, &textRect, text, DT_SINGLELINE|DT_VCENTER);
-	else {
-		BkMode mode(dis->hDC, TRANSPARENT);
-		TextColor lcColor(dis->hDC, GetSysColor(text_color));
-		DrawText(dis->hDC, text, -1, &textRect, DT_SINGLELINE|DT_VCENTER);
 	}
 }

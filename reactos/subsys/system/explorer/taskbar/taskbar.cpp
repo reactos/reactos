@@ -77,8 +77,7 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 		return 1;
 
 	 // create start button
-	new PictureButton(Button(_hwnd, ResString(IDS_START), 2, 2, STARTBUTTON_WIDTH, TASKBAR_HEIGHT-8, IDC_START,
-							 WS_VISIBLE|WS_CHILD|BS_PUSHBUTTON|BS_OWNERDRAW),
+	new PictureButton(Button(_hwnd, ResString(IDS_START), 2, 2, STARTBUTTON_WIDTH, TASKBAR_HEIGHT-8, IDC_START, WS_VISIBLE|WS_CHILD|BS_OWNERDRAW),
 						SmallIcon(IDI_STARTMENU));
 
 	 // create task bar
@@ -133,6 +132,10 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	  case WM_CLOSE:
 		break;
 
+	  case WM_STARTMENU_CLOSED:
+		_startMenuRoot = 0;
+		break;
+
 	  default: def:
 		return super::WndProc(nmsg, wparam, lparam);
 	}
@@ -145,7 +148,7 @@ int DesktopBar::Command(int id, int code)
 {
 	switch(id) {
 	  case IDC_START:
-		if (_startMenuRoot && IsWindow(_startMenuRoot)) {
+		if (_startMenuRoot && IsWindow(_startMenuRoot)) {	// IsWindow(): safety first
 			 // dispose Startmenu
 			DestroyWindow(_startMenuRoot);
 			_startMenuRoot = 0;
@@ -229,7 +232,6 @@ TaskBar::TaskBar(HWND hwnd)
  :	super(hwnd)
 {
 	_desktop_bar = NULL;
-	_last_foreground_wnd = 0;
 }
 
 TaskBar::~TaskBar()

@@ -34,14 +34,15 @@
 #define	TASKBAR_LEFT			70
 //#define TASKBAR_AT_TOP
 
-#define	WM_SHELLHOOK_NOTIFY		(WM_APP+0x10)
-
 
 #define	CLASSNAME_EXPLORERBAR	_T("Shell_TrayWnd")
 #define	TITLE_EXPLORERBAR		_T("DesktopBar")
 
 #define	CLASSNAME_TASKBAR		_T("MSTaskSwWClass")
 #define	TITLE_TASKBAR			_T("Running Applications")
+
+
+#define	WM_SHELLHOOK_NOTIFY		(WM_APP+0x10)
 
 
 #define	IDC_START		0x1000
@@ -57,6 +58,8 @@
 #define	IDC_FAVORITES	0x100A
 #define	IDC_PROGRAMS	0x100B
 #define	IDC_EXPLORE		0x100C
+#define	IDC_NETWORK		0x100D
+#define	IDC_CONNECTIONS	0x100E
 
 #define	IDC_FIRST_APP	0x2000
 #define	IDC_FIRST_MENU	0x3000
@@ -74,8 +77,8 @@ protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 	int		Command(int id, int code);
 
-	HWND	_hwndTaskBar;
-	HWND	_startMenuRoot;
+	WindowHandle _hwndTaskBar;
+	WindowHandle _startMenuRoot;
 };
 
 
@@ -114,10 +117,10 @@ struct TaskBar : public Window
 	DesktopBar*	_desktop_bar;
 
 protected:
-	HWND	_htoolbar;
-	TaskBarMap _map;
-	int		_next_id;
-	HWND	_last_foreground_wnd;
+	WindowHandle _htoolbar;
+	TaskBarMap	_map;
+	int			_next_id;
+	WindowHandle _last_foreground_wnd;
 
 	LRESULT	Init(LPCREATESTRUCT pcs);
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);

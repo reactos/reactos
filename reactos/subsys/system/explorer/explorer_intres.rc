@@ -94,7 +94,8 @@ IDI_REACTOS             ICON    DISCARDABLE     "res/reactos.ico"
 IDI_EXPLORER            ICON    DISCARDABLE     "res/explorer.ico"
 IDI_STARTMENU           ICON    DISCARDABLE     "res/startmenu.ico"
 IDI_LOGOFF              ICON    DISCARDABLE     "res/logoff.ico"
-IDI_FOLDERARROW         ICON    DISCARDABLE     "res/arrow.ico"
+IDI_ARROW               ICON    DISCARDABLE     "res/arrow.ico"
+IDI_ARROW_SELECTED      ICON    DISCARDABLE     "res\\arrowsel.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -255,6 +256,12 @@ BEGIN
     IDS_EMPTY               "(Empty)"
     IDS_RECENT              "Recent Documents"
     IDS_ADMIN               "Administration"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NETWORK             "Network"
+    IDS_CONNECTIONS         "Connections"
 END
 
 #endif    // German (Germany) resources

@@ -44,15 +44,28 @@ typedef set<HWND> WindowSet;
  */
 
 
+struct WindowHandle
+{
+	WindowHandle(HWND hwnd=0)
+	 :	_hwnd(hwnd) {}
+
+	operator HWND() const {return _hwnd;}
+	HWND* operator&() {return &_hwnd;}
+
+protected:
+	HWND	_hwnd;
+};
+
+
  /**
 	Class Window is the base class for several C++ window wrapper classes.
 	Window objects are allocated from the heap. They are automatically freed
 	when the window gets destroyed.
  */
-struct Window
+struct Window : public WindowHandle
 {
 	Window(HWND hwnd)
-	 :	_hwnd(hwnd)
+	 :	WindowHandle(hwnd)
 	{
 		 // store "this" pointer as user data
 		SetWindowLong(hwnd, GWL_USERDATA, (LONG)this);
@@ -63,9 +76,6 @@ struct Window
 		 // empty user data field
 		SetWindowLong(_hwnd, GWL_USERDATA, 0);
 	}
-
-
-	operator HWND() const {return _hwnd;}
 
 
 	typedef Window* (*CREATORFUNC)(HWND, const void*);
@@ -98,9 +108,6 @@ struct Window
 
 
 protected:
-	HWND	_hwnd;
-
-
 	virtual LRESULT	Init(LPCREATESTRUCT pcs);							// WM_CREATE processing
 	virtual LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 	virtual int		Command(int id, int code);							// WM_COMMAND processing
@@ -249,8 +256,8 @@ protected:
 protected:
 	MenuInfo*_menu_info;
 
-	HWND	_left_hwnd;
-	HWND	_right_hwnd;
+	WindowHandle _left_hwnd;
+	WindowHandle _right_hwnd;
 	int 	_focus_pane;		// 0: left	1: right
 
 	int 	_split_pos;
@@ -292,15 +299,10 @@ struct Dialog : public Window
 	The button will remain existent when the C++ Button object is destroyed.
 	There is no conjunction between C++ object and windows control life time.
  */
-struct Button
+struct Button : public WindowHandle
 {
 	Button(HWND parent, LPCTSTR text, int left, int top, int width, int height,
 			int id, DWORD flags=WS_VISIBLE|WS_CHILD|BS_PUSHBUTTON, DWORD exStyle=0);
-
-	operator HWND() const {return _hwnd;}
-
-protected:
-	HWND	_hwnd;
 };
 
 
@@ -309,15 +311,10 @@ protected:
 	The control will remain existent when the C++ object is destroyed.
 	There is no conjunction between C++ object and windows control life time.
  */
-struct Static
+struct Static : public WindowHandle
 {
 	Static(HWND parent, LPCTSTR text, int left, int top, int width, int height,
 			int id, DWORD flags=WS_VISIBLE|WS_CHILD|SS_SIMPLE, DWORD ex_flags=0);
-
-	operator HWND() const {return _hwnd;}
-
-protected:
-	HWND	_hwnd;
 };
 
 
@@ -394,7 +391,7 @@ struct OwnerdrawnButton : public SubclassedWindow
 	typedef SubclassedWindow super;
 
 	OwnerdrawnButton(HWND hwnd)
-	 : super(hwnd) {}
+	 :	super(hwnd) {}
 
 protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
@@ -415,7 +412,7 @@ struct ColorButton : public OwnerdrawnButton
 	typedef OwnerdrawnButton super;
 
 	ColorButton(HWND hwnd, COLORREF textColor)
-	 : super(hwnd), _textColor(textColor) {}
+	 :	super(hwnd), _textColor(textColor) {}
 
 protected:
 	virtual void DrawItem(LPDRAWITEMSTRUCT dis);
@@ -442,22 +439,4 @@ protected:
 
 	HICON	_hIcon;
 	bool	_flat;
-};
-
-
- /**
-	implement start menu button as owner drawn buitton controls
- */
-struct StartmenuEntry : public OwnerdrawnButton
-{
-	typedef OwnerdrawnButton super;
-
-	StartmenuEntry(HWND hwnd, HICON hIcon, bool showArrow)
-	 :	super(hwnd), _hIcon(hIcon), _showArrow(showArrow) {}
-
-protected:
-	virtual void DrawItem(LPDRAWITEMSTRUCT dis);
-
-	HICON	_hIcon;
-	bool	_showArrow;
 };

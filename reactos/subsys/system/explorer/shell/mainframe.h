@@ -42,9 +42,9 @@ protected:
 	HWND	_hmdiclient;
 #endif
 
-	HWND	_hstatusbar;
-	HWND	_htoolbar;
-	HWND	_hdrivebar;
+	WindowHandle _hstatusbar;
+	WindowHandle _htoolbar;
+	WindowHandle _hdrivebar;
 
 	HMENU	_hMenuFrame;
 	HMENU	_hMenuWindow;

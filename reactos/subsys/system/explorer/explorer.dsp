@@ -246,6 +246,14 @@ SOURCE=.\utility\window.h
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=.\res\arrow.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\arrowsel.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\de.rc
 
 !IF  "$(CFG)" == "explorer - Win32 Release"
@@ -507,10 +515,6 @@ SOURCE=.\shell\winfs.cpp
 SOURCE=.\shell\winfs.h
 # End Source File
 # End Group
-# Begin Source File
-
-SOURCE=.\res\arrow.ico
-# End Source File
 # Begin Source File
 
 SOURCE=.\explorer.cpp
