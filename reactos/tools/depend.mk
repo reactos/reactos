@@ -11,9 +11,9 @@ include $(DEP_FILES)
 endif
 
 ifeq ($(SEP),\)
-DEPENDS_PATH := $(subst /,\,$(PATH_TO_TOP))\tools\
+DEPENDS_PATH := $(subst /,\,$(PATH_TO_TOP))\tools
 else
-DEPENDS_PATH := $(PATH_TO_TOP)/tools/
+DEPENDS_PATH := $(PATH_TO_TOP)/tools
 endif
 
 .%.d: %.c $(PATH_TO_TOP)/tools/depends$(EXE_POSTFIX)
