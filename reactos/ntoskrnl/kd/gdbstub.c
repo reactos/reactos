@@ -1003,8 +1003,7 @@ KdEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
     {
       GspAccessLocation = NULL;
       GspMemoryError = TRUE;
-      TrapFrame->Eip += 2;
-      ExceptionRecord->ExceptionFlags &= ~EXCEPTION_NONCONTINUABLE;
+      Context->Eip += 2;
     }
   else
     {
@@ -1255,7 +1254,7 @@ GspSetSingleRegisterInTrapFrame (ptr, Register, Context, TrapFrame);
         }
     }
 
-  return kdDoNotHandleException;
+  return kdHandleException;
 }
 
 
