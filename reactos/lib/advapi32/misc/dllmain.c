@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.6 2002/09/08 10:22:36 chorns Exp $
+/* $Id: dllmain.c,v 1.7 2003/02/02 19:26:07 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -15,6 +15,8 @@
 #define NDEBUG
 #include <debug.h>
 
+extern BOOL RegInitialize(VOID);
+extern BOOL RegCleanup(VOID);
 
 INT STDCALL
 DllMain(PVOID hinstDll,

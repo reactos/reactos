@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.21 2002/12/08 16:14:28 robd Exp $
+/* $Id: reg.c,v 1.22 2003/02/02 19:27:16 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -105,7 +105,7 @@ static NTSTATUS OpenCurrentConfigKey(PHANDLE KeyHandle);
 
 /* FUNCTIONS *****************************************************************/
 
-inline RegiTerminateWideString(LPWSTR String, DWORD Length)
+inline void RegiTerminateWideString(LPWSTR String, DWORD Length)
 {
   LPWSTR AfterString = String + Length;
   *AfterString = 0;

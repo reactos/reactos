@@ -1,4 +1,4 @@
-/* $Id: win32.c,v 1.4 2002/08/31 17:11:24 hyperion Exp $
+/* $Id: win32.c,v 1.5 2003/02/02 19:26:08 hyperion Exp $
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -165,6 +165,15 @@ NTSTATUS STDCALL EnumProcessesCallback
 }
 
 /* exported interface */
+/*
+ @brief Enumerate the process identifiers of the currently active processes
+
+ @param lpidProcess Array that receives the list of process identifiers
+ @param cb          Size of the @p lpidProcess array, in bytes
+ @param lpcbNeeded  Number of bytes returned in the @p lpidProcess array
+
+ @return [standard]
+ */
 BOOL STDCALL EnumProcesses
 (
  DWORD *lpidProcess,

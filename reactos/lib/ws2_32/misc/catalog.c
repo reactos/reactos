@@ -155,7 +155,6 @@ PCATALOG_ENTRY LocateProviderById(
 {
   PLIST_ENTRY CurrentEntry;
   PCATALOG_ENTRY Provider;
-  UINT i;
 
   WS_DbgPrint(MAX_TRACE, ("CatalogEntryId (%d).\n", CatalogEntryId));
 

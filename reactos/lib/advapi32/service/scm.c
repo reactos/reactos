@@ -1,4 +1,4 @@
-/* $Id: scm.c,v 1.15 2002/12/27 14:40:03 robd Exp $
+/* $Id: scm.c,v 1.16 2003/02/02 19:27:16 hyperion Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -15,6 +15,7 @@
 #define NTOS_MODE_USER
 #include <ntos.h>
 #include <windows.h>
+#include <wchar.h>
 #include <tchar.h>
 
 #define DBG

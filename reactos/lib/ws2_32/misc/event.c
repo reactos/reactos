@@ -176,7 +176,6 @@ WSAEventSelect(
   PCATALOG_ENTRY Provider;
   INT Status;
   INT Errno;
-  LONG i;
 
   if (!WSAINITIALIZED) {
     WSASetLastError(WSANOTINITIALISED);

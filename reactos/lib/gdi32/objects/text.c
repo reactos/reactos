@@ -3,6 +3,7 @@
 #endif
 
 #undef WIN32_LEAN_AND_MEAN
+#include <string.h>
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <win32k/kapi.h>
@@ -202,7 +203,6 @@ CreateFontA(
         ANSI_STRING StringA;
         UNICODE_STRING StringU;
 	HFONT ret;
-        LOGFONT tlf;
 
 	RtlInitAnsiString(&StringA, (LPSTR)Face);
 	RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);

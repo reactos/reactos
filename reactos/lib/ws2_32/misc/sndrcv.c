@@ -9,6 +9,7 @@
  */
 #include <ws2_32.h>
 #include <catalog.h>
+#include <handle.h>
 
 INT
 EXPORT

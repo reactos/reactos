@@ -1,4 +1,4 @@
-/* $Id: sctrl.c,v 1.8 2002/11/14 18:21:04 chorns Exp $
+/* $Id: sctrl.c,v 1.9 2003/02/02 19:27:17 hyperion Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -15,6 +15,8 @@
 #define NTOS_MODE_USER
 #include <ntos.h>
 #include <windows.h>
+#include <string.h>
+#include <wchar.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -35,7 +37,7 @@ typedef struct
 
 static ULONG ActiveServiceCount;
 static PACTIVE_SERVICE ActiveServices;
-static PHANDLE ActiveServicesThreadHandles;
+/* static PHANDLE ActiveServicesThreadHandles; */ /* uncomment when in use */
 
 /* FUNCTIONS *****************************************************************/
 
@@ -315,9 +317,6 @@ BOOL STDCALL
 StartServiceCtrlDispatcherW(LPSERVICE_TABLE_ENTRYW lpServiceStartTable)
 {
   ULONG i;
-  HANDLE h;
-  DWORD Tid;
-  DWORD r;
   HANDLE hPipe;
   DWORD dwError;
 
@@ -347,7 +346,7 @@ StartServiceCtrlDispatcherW(LPSERVICE_TABLE_ENTRYW lpServiceStartTable)
     }
 
   dwError = ScConnectControlPipe(&hPipe);
-  if (dwError = ERROR_SUCCESS)
+  if (dwError == ERROR_SUCCESS)
     {
       /* FIXME: free the service table */
       return(FALSE);

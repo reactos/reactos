@@ -56,7 +56,7 @@ CreateRectRgnIndirect(
 	CONST RECT	*a0
 	)
 {
-	return W32kCreateRectRgnIndirect(a0);
+	return W32kCreateRectRgnIndirect((RECT *)a0);
 }
 
 

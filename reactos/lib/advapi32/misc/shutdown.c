@@ -1,4 +1,4 @@
-/* $Id: shutdown.c,v 1.8 2003/02/02 17:20:51 ekohl Exp $
+/* $Id: shutdown.c,v 1.9 2003/02/02 19:27:16 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -24,8 +24,6 @@ WINBOOL
 STDCALL
 AbortSystemShutdownW(LPCWSTR lpMachineName)
 {
-    NTSTATUS Status;
-
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }

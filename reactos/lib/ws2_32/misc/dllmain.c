@@ -288,7 +288,6 @@ select(
   PCATALOG_ENTRY Provider;
   INT Count;
   INT Errno;
-  ULONG i;
 
   WS_DbgPrint(MAX_TRACE, ("readfds (0x%X)  writefds (0x%X)  exceptfds (0x%X).\n",
     readfds, writefds, exceptfds));

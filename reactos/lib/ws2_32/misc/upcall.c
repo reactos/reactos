@@ -9,6 +9,7 @@
  */
 #include <ws2_32.h>
 #include <catalog.h>
+#include <handle.h>
 
 BOOL
 WSPAPI
@@ -118,7 +119,7 @@ WPUModifyIFSHandle(
   }
 
   Socket = (SOCKET)CreateProviderHandle(
-    ProposedHandle,
+    (HANDLE)ProposedHandle,
     Provider);
 
   *lpErrno = NO_ERROR;
