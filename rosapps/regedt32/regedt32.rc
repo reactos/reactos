@@ -1,0 +1,374 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#include "resource.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_REGEDT32            ICON    DISCARDABLE     "regedt32.ICO"
+IDI_SMALL               ICON    DISCARDABLE     "SMALL.ICO"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDC_REGEDT32 MENU DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "E&xit",                       IDM_EXIT
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About ...",                  IDM_ABOUT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+#ifdef _MSC_VER
+IDC_REGEDT32 ACCELERATORS MOVEABLE PURE 
+BEGIN
+    "?",            IDM_ABOUT,              ASCII,  ALT
+    "/",            IDM_ABOUT,              ASCII,  ALT
+END
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOG DISCARDABLE  22, 17, 230, 75
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "About"
+FONT 8, "System"
+BEGIN
+    ICON            IDI_REGEDT32,IDC_MYICON,14,9,16,16
+    LTEXT           "ReactOS regedt32 Version 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
+    LTEXT           "Copyright (C) 2002 ReactOS Team",IDC_STATIC,49,20,119,8
+    DEFPUSHBUTTON   "OK",IDOK,195,6,30,11,WS_GROUP
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""resource.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_APP_TITLE           "ReactOS Registry Editor"
+    IDS_HELLO               "Hello World!"
+    IDC_REGEDT32             "REGED32"
+    IDC_REGEDT32_FRAME       "REGED32_FRAME"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (Australia) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENA)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_AUS
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_REGEDIT_MENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&Registry"
+    BEGIN
+        MENUITEM "&Import Registry File...",    ID_REGISTRY_IMPORTREGISTRYFILE
+
+        MENUITEM "&Export Registry File...",    ID_REGISTRY_EXPORTREGISTRYFILE
+
+        MENUITEM SEPARATOR
+        MENUITEM "&Connect Network Registry...", 
+                                                ID_REGISTRY_CONNECTNETWORKREGISTRY
+
+        MENUITEM "&Disconnect Network Registry...", 
+                                                ID_REGISTRY_DISCONNECTNETWORKREGISTRY
+        , GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Print\tCtrl+P",              ID_REGISTRY_PRINT
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       IDM_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Modify",                     ID_EDIT_MODIFY
+        MENUITEM SEPARATOR
+        POPUP "&New"
+        BEGIN
+            MENUITEM "&Key",                        ID_EDIT_NEW_KEY
+            MENUITEM SEPARATOR
+            MENUITEM "&String Value",               ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Binary Value",               ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&DWORD Value",                ID_EDIT_NEW_DWORDVALUE
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Delete\tDel",                ID_EDIT_DELETE
+        MENUITEM "&Rename",                     ID_EDIT_RENAME
+        MENUITEM SEPARATOR
+        MENUITEM "&Copy Key Name",              ID_EDIT_COPYKEYNAME
+        MENUITEM SEPARATOR
+        MENUITEM "&Find\tCtrl+F",               ID_EDIT_FIND
+        MENUITEM "Find Ne&xt\tF3",              ID_EDIT_FINDNEXT
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "Status &Bar",                 ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "Sp&lit",                      ID_VIEW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Refresh\tF5",                ID_VIEW_REFRESH
+    END
+    POPUP "&Favorites"
+    BEGIN
+        MENUITEM "&Add to Favourites",          ID_FAVORITES_ADDTOFAVOURITES
+        MENUITEM "&Remove Favourite",           ID_FAVORITES_REMOVEFAVOURITE
+        , GRAYED
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Help Topics",                ID_HELP_HELPTOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "&About Registry Editor",      IDM_ABOUT
+    END
+END
+
+IDR_REGEDT32_MENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&Registry"
+    BEGIN
+        MENUITEM "&Open Local",                 ID_REGISTRY_OPENLOCAL
+        MENUITEM "&Close",                      ID_REGISTRY_CLOSE, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Load Hive",                  ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "&Unload Hive",                ID_REGISTRY_UNLOADHIVE
+        , GRAYED
+        MENUITEM "R&estore...",                 ID_REGISTRY_RESTORE, GRAYED
+        MENUITEM "Sa&ve Key...",                ID_REGISTRY_SAVEKEY, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Select Computer...",         ID_REGISTRY_SELECTCOMPUTER
+        MENUITEM SEPARATOR
+        MENUITEM "&Print Subtree",              ID_REGISTRY_PRINTSUBTREE
+        , GRAYED
+        MENUITEM "P&rinter Setup...",           ID_REGISTRY_PRINTERSETUP
+        MENUITEM "Save Subtree &As...",         ID_REGISTRY_SAVESUBTREEAS
+        , GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       IDM_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "Add &Key...",                 ID_EDIT_ADDKEY, GRAYED
+        MENUITEM "Add &Value...",               ID_EDIT_ADDVALUE, GRAYED
+        MENUITEM "&Delete\tDel",                ID_EDIT_DELETE, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Binary...",                  ID_EDIT_BINARY, GRAYED
+        MENUITEM "&String...",                  ID_EDIT_STRING, GRAYED
+        MENUITEM "D&WORD...",                   ID_EDIT_DWORD, GRAYED
+        MENUITEM "&Multi String...",            ID_EDIT_MULTISTRING, GRAYED
+    END
+    POPUP "&Tree"
+    BEGIN
+        MENUITEM "E&xpand One Level\t+",        ID_TREE_EXPANDONELEVEL
+        , GRAYED
+        MENUITEM "Expand Branch\t*",            ID_TREE_EXPANDBRANCH, GRAYED
+        MENUITEM "Expand &All\tCtrl+*",         ID_TREE_EXPANDALL, GRAYED
+        MENUITEM "&Collapse Branch\t-",         ID_TREE_COLLAPSEBRANCH
+        , GRAYED
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "Tree &and Data",              ID_VIEW_TREEANDDATA
+        , CHECKED, GRAYED
+        MENUITEM "&Tree only",                  ID_VIEW_TREEONLY, GRAYED
+        MENUITEM "&Data only",                  ID_VIEW_DATAONLY, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Split",                      ID_VIEW_SPLIT, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Display &Binary Data",        ID_VIEW_DISPLAYBINARYDATA
+        , GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "R&efresh All\tShift+F6",      ID_VIEW_REFRESHALL, GRAYED
+        MENUITEM "&Refresh Active\tF6",         ID_VIEW_REFRESHACTIVE
+        , GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Find Key...",                ID_VIEW_FINDKEY, GRAYED
+    END
+    POPUP "Security"
+    BEGIN
+        MENUITEM "&Permissions...",             ID_SECURITY_PERMISSIONS
+        , GRAYED
+    END
+    POPUP "&Options"
+    BEGIN
+        MENUITEM "&Font...",                    ID_OPTIONS_FONT
+        MENUITEM SEPARATOR
+        MENUITEM "&Auto Refresh",               ID_OPTIONS_AUTOREFRESH
+        , CHECKED
+        MENUITEM "&Read Only Mode",             ID_OPTIONS_READONLYMODE
+        MENUITEM "&Confirm on Delete",          ID_OPTIONS_CONFIRMONDELETE
+        , CHECKED
+        MENUITEM "&Save Settings on Exit",      ID_OPTIONS_SAVESETTINGSONEXIT
+        , CHECKED
+    END
+    POPUP "&Window"
+    BEGIN
+        MENUITEM "&Cascade\tShift+F5",          ID_WINDOW_CASCADE, GRAYED
+        MENUITEM "&Tile\tShift+F4",             ID_WINDOW_TILE, GRAYED
+        MENUITEM "&Arrange Icons",              ID_WINDOW_ARRANGEICONS
+        , GRAYED
+        MENUITEM SEPARATOR
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Contents",                   ID_HELP_CONTENTS
+        MENUITEM SEPARATOR
+        MENUITEM "&About Registry Editor...",   IDM_ABOUT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_DIALOG1 DIALOG DISCARDABLE  0, 0, 186, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,129,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,129,24,50,14
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_DIALOG1, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 88
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_HELP_HELPTOPICS      "Opens Registry Editor Help."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDM_ABOUT               "Displays program information, version number, and copyright."
+END
+
+#endif    // English (Australia) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
