@@ -187,7 +187,7 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 	dir=param;
 	endofstring=dir+_tcslen(dir);
 
-	while (lastquote = _tcsrchr(dir,'\"'))
+	while ((lastquote = _tcsrchr(dir,'\"')))
 	{
 		endofstring--;
 		memmove(lastquote,lastquote+1,endofstring-lastquote);
