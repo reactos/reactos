@@ -8,6 +8,11 @@
 /* Look for "FSrt" in mem view */
 #define IFS_POOL_TAG 0x74725346
 
+VOID
+STDCALL INIT_FUNCTION
+FsRtlpInitNotifyImplementation(VOID);
+
+
 VOID STDCALL
 FsRtlpInitFileLockingImplementation(VOID);
 

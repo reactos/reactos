@@ -9,11 +9,14 @@
  */
 
 #include <ntoskrnl.h>
-#define NDEBUG
+
+//#define NDEBUG
 #include <internal/debug.h>
 
 
 PAGED_LOOKASIDE_LIST    NotifyEntryLookaside;
+
+#define FSRTL_NOTIFY_TAG TAG('N','O','T','I')
 
 typedef struct _NOTIFY_ENTRY
 {
@@ -21,23 +24,20 @@ typedef struct _NOTIFY_ENTRY
    PSTRING FullDirectoryName;
    BOOLEAN WatchTree;
    BOOLEAN IgnoreBuffer;
+   BOOLEAN PendingChanges;
    ULONG CompletionFilter;
    LIST_ENTRY IrpQueue;
    PVOID Fcb;
    PCHECK_FOR_TRAVERSE_ACCESS TraverseCallback;
    PSECURITY_SUBJECT_CONTEXT SubjectContext;
    PVOID FsContext;
-   LIST_ENTRY BufferedChangesList;
+   BOOLEAN Unicode;
+   BOOLEAN BufferExhausted;
+   PVOID Buffer; /* Buffer == NULL equals IgnoreBuffer == TRUE */
+   ULONG BufferSize;   
+   ULONG NextEntryOffset;   
+   PFILE_NOTIFY_INFORMATION PrevEntry;
 } NOTIFY_ENTRY, *PNOTIFY_ENTRY;
-
-typedef struct _BUFFERED_CHANGE
-{
-   LIST_ENTRY ListEntry;
-   ULONG Action;
-   USHORT NameLen;
-   WCHAR RelativeName[1];
-   
-} BUFFERED_CHANGE, *PBUFFERED_CHANGE;
 
 
 /**********************************************************************
@@ -54,7 +54,7 @@ FsRtlpInitNotifyImplementation(VOID)
                                     NULL,
                                     0,
                                     sizeof(NOTIFY_ENTRY),
-                                    0 /* FSRTL_NOTIFY_TAG*/,
+                                    FSRTL_NOTIFY_TAG,
                                     0
                                     );
 
@@ -63,6 +63,21 @@ FsRtlpInitNotifyImplementation(VOID)
 
 
 
+static
+inline
+BOOLEAN
+FsRtlpIsUnicodePath(
+   PSTRING Path
+   )
+{
+   ASSERT(Path->Length);
+   
+   if (Path->Length == 1) return FALSE; 
+    
+   if (*(WCHAR*)Path->Buffer == '\\') return TRUE;
+   
+   return FALSE;
+}
 
 
 /**********************************************************************
@@ -188,7 +203,6 @@ FsRtlNotifyCleanup (
    PNOTIFY_ENTRY NotifyEntry;
    LIST_ENTRY CompletedListHead;
    PLIST_ENTRY TmpEntry;
-   PBUFFERED_CHANGE BufferedChange;
    PIRP Irp;
    
    InitializeListHead(&CompletedListHead);
@@ -200,11 +214,9 @@ FsRtlNotifyCleanup (
    if (NotifyEntry)
    {
       /* free buffered changes */
-      while (!IsListEmpty(&NotifyEntry->BufferedChangesList))
+      if (NotifyEntry->Buffer)
       {
-         TmpEntry = RemoveHeadList(&NotifyEntry->BufferedChangesList);
-         BufferedChange = CONTAINING_RECORD(TmpEntry , BUFFERED_CHANGE, ListEntry);
-         ExFreePool(BufferedChange);
+         ExFreePool(NotifyEntry->Buffer);
       }
 
       /* cancel(?) pending irps */
@@ -303,7 +315,6 @@ FsRtlpWatchedDirectoryWasDeleted(
    LIST_ENTRY CompletedListHead;
    PLIST_ENTRY EnumEntry, TmpEntry;
    PNOTIFY_ENTRY NotifyEntry;
-   PBUFFERED_CHANGE BufferedChange;
    PIRP Irp;
    
    InitializeListHead(&CompletedListHead);
@@ -317,14 +328,12 @@ FsRtlpWatchedDirectoryWasDeleted(
          RemoveEntryList(&NotifyEntry->ListEntry);         
          
          /* free buffered changes */
-         while (!IsListEmpty(&NotifyEntry->BufferedChangesList))
+         if (NotifyEntry->Buffer)
          {
-            TmpEntry = RemoveHeadList(&NotifyEntry->BufferedChangesList);
-            BufferedChange = CONTAINING_RECORD(TmpEntry , BUFFERED_CHANGE, ListEntry);
-            ExFreePool(BufferedChange);
+            ExFreePool(NotifyEntry->Buffer);
          }
          
-         /* cancel(?) pending irps */
+         /* cleanup pending irps */
          while (!IsListEmpty(&NotifyEntry->IrpQueue))
          {
             TmpEntry = RemoveHeadList(&NotifyEntry->IrpQueue);
@@ -338,7 +347,7 @@ FsRtlpWatchedDirectoryWasDeleted(
                continue;
             }
             
-            Irp->IoStatus.Status = STATUS_NOTIFY_CLEANUP; /* FIXME: correct status? */
+            Irp->IoStatus.Status = STATUS_DELETE_PENDING;
             Irp->IoStatus.Information = 0;
          
             /* avoid holding lock while completing irp */
@@ -358,6 +367,11 @@ FsRtlpWatchedDirectoryWasDeleted(
    }
    
 }
+
+
+
+
+
 
 /**********************************************************************
  * NAME							EXPORTED
@@ -388,8 +402,7 @@ FsRtlNotifyFullChangeDirectory (
 {
    PIO_STACK_LOCATION IrpStack;   
    PNOTIFY_ENTRY NotifyEntry;
-   PBUFFERED_CHANGE BufferedChange; 
-   PLIST_ENTRY TmpEntry;
+   ULONG IrpBuffLen;
    
    if (!NotifyIrp)
    {
@@ -397,6 +410,8 @@ FsRtlNotifyFullChangeDirectory (
       FsRtlpWatchedDirectoryWasDeleted(NotifySync, NotifyList, FsContext);
       return;
    }
+   
+   DPRINT("FullDirectoryName: %wZ\n", FullDirectoryName);
    
    ExAcquireFastMutex((PFAST_MUTEX)NotifySync);
    
@@ -411,39 +426,61 @@ FsRtlNotifyFullChangeDirectory (
       return;       
    }
    
+   IrpBuffLen = IrpStack->Parameters.NotifyDirectory.Length;
+   
    NotifyEntry = FsRtlpFindNotifyEntry(NotifyList, FsContext);
 
    if (!NotifyEntry)
    {
       /* No NotifyStruct for this FileObject existed */
       
+      /* The first request for this FileObject set the standards.
+       * For subsequent requests, these params will be ignored.
+       * Ref: Windows NT File System Internals page 516
+       */
+      
       NotifyEntry = ExAllocateFromPagedLookasideList(&NotifyEntryLookaside);
+      
+      RtlZeroMemory(NotifyEntry, sizeof(NOTIFY_ENTRY));
       
       NotifyEntry->FsContext = FsContext;
       NotifyEntry->FullDirectoryName = FullDirectoryName;
       NotifyEntry->WatchTree = WatchTree;
-      NotifyEntry->IgnoreBuffer = IgnoreBuffer;
       NotifyEntry->CompletionFilter = CompletionFilter;
       NotifyEntry->TraverseCallback = TraverseCallback;
       NotifyEntry->SubjectContext = SubjectContext;
       NotifyEntry->Fcb = IrpStack->FileObject->FsContext;
+      NotifyEntry->Unicode = FsRtlpIsUnicodePath(FullDirectoryName);
+
+      /* Init. buffer */
+      if (IrpBuffLen && !IgnoreBuffer)
+      {
+         _SEH_TRY
+         {
+            NotifyEntry->Buffer = ExAllocatePoolWithQuotaTag(
+               PagedPool,
+               IrpBuffLen,
+               FSRTL_NOTIFY_TAG
+               );
+               
+            NotifyEntry->PrevEntry = NotifyEntry->Buffer;   
+            NotifyEntry->BufferSize = IrpBuffLen;
+         }
+         _SEH_HANDLE
+         {
+            /* ExAllocatePoolWithQuotaTag raised exception */
+         }
+         _SEH_END;
+      }
+
       InitializeListHead(&NotifyEntry->IrpQueue);
-      InitializeListHead(&NotifyEntry->BufferedChangesList);
       
       InsertTailList(NotifyList, &NotifyEntry->ListEntry);
    }
    
-   /*
-    * FIXME: this NotifyStruct allready have values for WatchTree, CompletionFilter etc.
-    * What if the WatchTree, CompletionFilter etc. params are different from
-    * those in the NotifyStruct? Should the params be ignored or should the params overwrite
-    * the "old" values in the NotifyStruct??
-    * STATUS: Currently we ignore these params for subsequesnt request. 
-    *
-    * -Gunnar
-    */
-
-   if (IsListEmpty(&NotifyEntry->BufferedChangesList))
+ 
+ 
+   if (!NotifyEntry->PendingChanges)
    {
       /* No changes are pending. Queue the irp */
 
@@ -472,48 +509,46 @@ FsRtlNotifyFullChangeDirectory (
       ExReleaseFastMutex((PFAST_MUTEX)NotifySync);
       return;
    }
-    
 
-    
-
-   /*
-   typedef struct _FILE_NOTIFY_INFORMATION {
-   ULONG NextEntryOffset;
-   ULONG Action;
-   ULONG NameLength;
-   WCHAR Name[1];
-   } FILE_NOTIFY_INFORMATION, *PFILE_NOTIFY_INFORMATION;
-   */
    
-   /* Buffered changes exist */
+   /* Pending changes exist */
    
-   
-   /* Copy as much buffered data as available/the buffer can hold */
-   while (!IsListEmpty(&NotifyEntry->BufferedChangesList))
+   if (NotifyEntry->Buffer == NULL || 
+       NotifyEntry->BufferExhausted ||
+       IrpBuffLen < NotifyEntry->NextEntryOffset)
    {
-      TmpEntry = RemoveHeadList(&NotifyEntry->BufferedChangesList);
-      BufferedChange = CONTAINING_RECORD(TmpEntry, BUFFERED_CHANGE, ListEntry);
-
-       /* FIXME:
-       Fill user-buffer with recorded events until full. If user buffer is too small to hold even
-       a single record or can only hold some of the events, what should we do????????????
-       */
-       
-       /* FIXME: implement this (copy data to user) */
-
-//             BufferedChange->Action = Action;
-//             RecordedChange->Name
-//             RecordedChange->NameLength
-
-      ExFreePool(BufferedChange);
-
+      /*
+      Can't return detailed changes to user cause:
+      -No buffer exist, OR
+      -Buffer were overflowed, OR
+      -Current irp buff was not large enough
+      */
+     
+      NotifyIrp->IoStatus.Information = 0;
+      NotifyIrp->IoStatus.Status = STATUS_NOTIFY_ENUM_DIR;
 
    }
+   else
+   {
+      /* terminate last entry */
+      NotifyEntry->PrevEntry->NextEntryOffset = 0;
+      
+      //FIXME: copy data correctly to user
+      memcpy(NotifyIrp->UserBuffer, NotifyEntry->Buffer, NotifyEntry->NextEntryOffset);
+
+      NotifyIrp->IoStatus.Information = NotifyEntry->NextEntryOffset;
+      NotifyIrp->IoStatus.Status = STATUS_SUCCESS;
+   }
+   
+   /* reset buffer */
+   NotifyEntry->PrevEntry = NotifyEntry->Buffer; 
+   NotifyEntry->NextEntryOffset = 0;
+   NotifyEntry->BufferExhausted = FALSE;
+   
+   NotifyEntry->PendingChanges = FALSE;
 
    ExReleaseFastMutex((PFAST_MUTEX)NotifySync);
    
-   NotifyIrp->IoStatus.Information = 0; //<- FIXME
-   NotifyIrp->IoStatus.Status = STATUS_SUCCESS;
    IoCompleteRequest(NotifyIrp, IO_NO_INCREMENT);
 }
 
@@ -530,8 +565,8 @@ FsRtlpGetNextIrp(PNOTIFY_ENTRY NotifyEntry)
    /* Loop to get a non-canceled irp */
    while (!IsListEmpty(&NotifyEntry->IrpQueue))
    {
-      /* If we have queued irp(s) we can't possibly have buffered changes too */
-      ASSERT(IsListEmpty(&NotifyEntry->BufferedChangesList));
+      /* If we have queued irp(s) we can't possibly have pending changes too */
+      ASSERT(!NotifyEntry->PendingChanges);
          
       TmpEntry = RemoveHeadList(&NotifyEntry->IrpQueue);
       Irp = CONTAINING_RECORD(TmpEntry , IRP, Tail.Overlay.ListEntry);
@@ -552,8 +587,35 @@ FsRtlpGetNextIrp(PNOTIFY_ENTRY NotifyEntry)
 }
    
    
-   
-   
+static
+inline
+VOID
+FsRtlpCopyName(
+   PFILE_NOTIFY_INFORMATION CurrentEntry,
+   BOOLEAN Unicode,
+   PSTRING RelativeName,
+   PSTRING StreamName
+   )
+{
+   /* Buffer size is allready probed, so just copy the data */
+
+   if (Unicode)
+   {
+      memcpy(CurrentEntry->Name, RelativeName->Buffer, RelativeName->Length);
+      if (StreamName)
+      {
+         CurrentEntry->Name[RelativeName->Length/sizeof(WCHAR)] = ':';
+         memcpy(&CurrentEntry ->Name[(RelativeName->Length/sizeof(WCHAR))+1], 
+            StreamName->Buffer,
+            StreamName->Length);
+      }
+   }
+   else
+   {
+      //FIXME: convert to unicode etc.
+      DPRINT1("FIXME: ansi strings in notify impl. not supported yet\n");
+   }
+}
 
 
 /**********************************************************************
@@ -573,75 +635,188 @@ STDCALL
 FsRtlNotifyFullReportChange (
 	IN	PNOTIFY_SYNC	NotifySync,
 	IN	PLIST_ENTRY	NotifyList,
-	IN	PSTRING		FullTargetName,
+	IN	PSTRING		FullTargetName, /* can include short names! */
 	IN	USHORT		TargetNameOffset, /* in bytes */
 	IN	PSTRING		StreamName		OPTIONAL,
-	IN	PSTRING		NormalizedParentName	OPTIONAL,
+   IN PSTRING     NormalizedParentName OPTIONAL, /* same as FullTargetName, but with long names */
 	IN	ULONG		FilterMatch,
 	IN	ULONG		Action,
 	IN	PVOID		TargetContext
 	)
 {
-   UNICODE_STRING FullDirName;
-   UNICODE_STRING TargetName;
+   USHORT FullDirLen;
+   STRING RelativeName;
    PLIST_ENTRY EnumEntry;
    PNOTIFY_ENTRY NotifyEntry;
-   PBUFFERED_CHANGE BufferedChange;
    PIRP Irp;
    LIST_ENTRY CompletedListHead;
+   USHORT NameLenU;
+   ULONG RecordLen;
+   PFILE_NOTIFY_INFORMATION CurrentEntry;
    
    InitializeListHead(&CompletedListHead);
+
+   DPRINT("FullTargetName: %wZ\n", FullTargetName);
+
+   /*
+   I think FullTargetName can include/be a short file name! What the heck do i do with this?
+   Dont think this apply to FsRtlNotifyFullChangeDirectory's FullDirectoryName.
+   */
    
-   FullDirName.Buffer = (WCHAR*)FullTargetName->Buffer;
-   FullDirName.MaximumLength = FullDirName.Length = TargetNameOffset - sizeof(WCHAR);
-   
-   TargetName.Buffer = (WCHAR*)(FullTargetName->Buffer + TargetNameOffset);
-   TargetName.MaximumLength = TargetName.Length = FullTargetName->Length - TargetNameOffset;
+
    
 
    ExAcquireFastMutex((PFAST_MUTEX)NotifySync);   
 
    LIST_FOR_EACH_SAFE(EnumEntry, NotifyList, NotifyEntry, NOTIFY_ENTRY, ListEntry )
    {
+      ASSERT(NotifyEntry->Unicode == FsRtlpIsUnicodePath(FullTargetName));
+         
       /* rule out some easy cases */
       /* FIXME: short vs. long names??? */
-      if (FilterMatch != NotifyEntry->CompletionFilter) continue;
+      if (!(FilterMatch & NotifyEntry->CompletionFilter)) continue;
       
-      if (FullDirName.Length < NotifyEntry->FullDirectoryName->Length) continue;
+      FullDirLen = TargetNameOffset - (NotifyEntry->Unicode?sizeof(WCHAR):sizeof(char));
       
-      if (!NotifyEntry->WatchTree && FullDirName.Length != NotifyEntry->FullDirectoryName->Length) continue;
+      
+      if (FullDirLen < NotifyEntry->FullDirectoryName->Length) continue;
+      
+      if (!NotifyEntry->WatchTree && FullDirLen != NotifyEntry->FullDirectoryName->Length) continue;
 
-      if (wcsncmp((WCHAR*)NotifyEntry->FullDirectoryName->Buffer, 
-            FullDirName.Buffer, 
-            NotifyEntry->FullDirectoryName->Length/sizeof(WCHAR)) != 0) continue;
+      DPRINT("NotifyEntry->FullDirectoryName: %wZ\n", NotifyEntry->FullDirectoryName);
+      
+      if (memcmp(NotifyEntry->FullDirectoryName->Buffer, 
+            FullTargetName->Buffer, 
+            NotifyEntry->FullDirectoryName->Length) != 0) continue;
+      
+
+      if (NotifyEntry->WatchTree && 
+          NotifyEntry->TraverseCallback &&
+          FullDirLen != NotifyEntry->FullDirectoryName->Length)
+      {
+         /* change happend in a subdir. ask caller if we are allowed in here */
+         NTSTATUS Status = NotifyEntry->TraverseCallback(NotifyEntry->FsContext,
+                                                         TargetContext,
+                                                         NotifyEntry->SubjectContext);
+         
+         if (!NT_SUCCESS(Status)) continue;
+         
+         /*
+         FIXME: notify-dir impl. should release and free the SubjectContext
+         */
+      }
+
+      DPRINT("Found match\n");
       
       /* Found a valid change */
+
+      RelativeName.Buffer = FullTargetName->Buffer + TargetNameOffset;
+      RelativeName.MaximumLength = 
+         RelativeName.Length = 
+         FullTargetName->Length - TargetNameOffset;
+      
+      DPRINT("RelativeName: %wZ\n",&RelativeName);
+      
+      /* calculate unicode bytes of relative-name + stream-name */
+      if (NotifyEntry->Unicode)
+      {
+         NameLenU = RelativeName.Length + (StreamName ? (StreamName->Length + sizeof(WCHAR)) : 0);
+      }
+      else
+      {
+         NameLenU = RelativeName.Length * sizeof(WCHAR) + 
+            (StreamName ? ((StreamName->Length * sizeof(WCHAR)) + sizeof(WCHAR)) : 0);
+      }
+      
+      RecordLen = FIELD_OFFSET(FILE_NOTIFY_INFORMATION, Name) + NameLenU;
       
       if ((Irp = FsRtlpGetNextIrp(NotifyEntry)))
       {
-         //FIXME: copy data to user
+         PIO_STACK_LOCATION IrpStack;
+         ULONG IrpBuffLen;
          
-         Irp->IoStatus.Status = STATUS_SUCCESS;
-         Irp->IoStatus.Information = 0;
+         IrpStack = IoGetCurrentIrpStackLocation(Irp);
+         IrpBuffLen = IrpStack->Parameters.NotifyDirectory.Length;
+         
+         DPRINT("Got pending irp\n");
+         
+         ASSERT(!NotifyEntry->PendingChanges);
+         
+         if (NotifyEntry->Buffer == NULL || /* aka. IgnoreBuffer */ 
+             RecordLen > IrpBuffLen)
+         {
+            /* ignore buffer / buffer not large enough */
+            Irp->IoStatus.Status = STATUS_NOTIFY_ENUM_DIR;
+            Irp->IoStatus.Information = 0;
+         }
+         else
+         {
+            //FIXME: copy data to user correctly
+            CurrentEntry = (PFILE_NOTIFY_INFORMATION)Irp->UserBuffer;
+            
+            CurrentEntry->Action = Action; 
+            CurrentEntry->NameLength = NameLenU;
+            CurrentEntry->NextEntryOffset = 0;
+
+            FsRtlpCopyName(
+                  CurrentEntry,
+                  NotifyEntry->Unicode,
+                  &RelativeName,
+                  StreamName
+                  );
+
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            Irp->IoStatus.Information = RecordLen;
+         }
          
          /* avoid holding lock while completing irp */
          InsertTailList(&CompletedListHead, &Irp->Tail.Overlay.ListEntry);
       }
       else
       {
-         /* No irp in queue. Buffer changes */
-         /* FIXME: how much stuff should we buffer? 
-            -Should we alloc with quotas? 
-            -Should we use a hardcoded limit?
-            -Should we use a time-out? (drop changes if they are not retrieved in x seconds?
-         */
-         BufferedChange = ExAllocatePool(PagedPool, FIELD_OFFSET(BUFFERED_CHANGE, RelativeName) + TargetName.Length);
+         DPRINT("No irp\n");
          
-         BufferedChange->Action = Action;
-         BufferedChange->NameLen = TargetName.Length;
-         memcpy(BufferedChange->RelativeName, TargetName.Buffer, TargetName.Length); 
+         NotifyEntry->PendingChanges = TRUE;
+
+         if (NotifyEntry->Buffer == NULL || NotifyEntry->BufferExhausted) continue;
          
-         InsertTailList(&NotifyEntry->BufferedChangesList, &BufferedChange->ListEntry);
+         if (RecordLen > NotifyEntry->BufferSize - NotifyEntry->NextEntryOffset)
+         {
+            /* overflow. drop these changes and stop buffering any other changes too */
+            NotifyEntry->BufferExhausted = TRUE;
+            continue;
+         }
+
+         /* The buffer has enough room for the changes.
+          * Copy data to buffer.
+          */
+         
+         CurrentEntry = (PFILE_NOTIFY_INFORMATION)NotifyEntry->Buffer;
+            
+         CurrentEntry->Action = Action; 
+         CurrentEntry->NameLength = NameLenU;
+         CurrentEntry->NextEntryOffset = 0;
+
+         FsRtlpCopyName(CurrentEntry,
+                      NotifyEntry->Unicode,
+                      &RelativeName,
+                      StreamName
+                      );
+         
+         /* adjust buffer */
+         NotifyEntry->PrevEntry->NextEntryOffset = (char*)CurrentEntry - (char*)NotifyEntry->PrevEntry;
+         NotifyEntry->PrevEntry = CurrentEntry;
+         NotifyEntry->NextEntryOffset += RecordLen;
+ 
+
+//         {
+//            UNICODE_STRING TmpStr;
+//            TmpStr.Buffer = BufferedChange->RelativeName;
+//            TmpStr.MaximumLength = TmpStr.Length = BufferedChange->NameLen;
+//            DPRINT("BufferedChange->RelativeName: %wZ\n", &TmpStr);
+//         }
+         
+
       }
    }
 
@@ -677,7 +852,7 @@ FsRtlNotifyInitializeSync (
     IN  PNOTIFY_SYNC *NotifySync
 	)
 {
-   *NotifySync = ExAllocatePoolWithTag(NonPagedPool, sizeof(FAST_MUTEX), 0/*FSRTL_NOTIFY_TAG*/ );
+   *NotifySync = ExAllocatePoolWithTag(NonPagedPool, sizeof(FAST_MUTEX), FSRTL_NOTIFY_TAG );
    ExInitializeFastMutex((PFAST_MUTEX)*NotifySync);
 }
 
