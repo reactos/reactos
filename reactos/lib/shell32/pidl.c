@@ -29,6 +29,9 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
 #include "windef.h"
 #include "winbase.h"
 #include "winreg.h"
@@ -695,22 +698,26 @@ LPITEMIDLIST WINAPI ILCombine(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
  */
 HRESULT WINAPI SHGetRealIDL(LPSHELLFOLDER lpsf, LPCITEMIDLIST pidlSimple, LPITEMIDLIST* pidlReal)
 {
-	UINT cfShellIDList = RegisterClipboardFormatA(CFSTR_SHELLIDLIST);
-
-	STGMEDIUM medium = {0, {0}, 0};
-	FORMATETC fmt = {cfShellIDList, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
-
 	IDataObject* pDataObj;
 	HRESULT hr = IShellFolder_GetUIObjectOf(lpsf, 0, 1, &pidlSimple, &IID_IDataObject, 0, (LPVOID*)&pDataObj);
 
 	if (SUCCEEDED(hr)) {
+            STGMEDIUM medium;
+            FORMATETC fmt;
+
+            fmt.cfFormat = RegisterClipboardFormatA(CFSTR_SHELLIDLIST);
+            fmt.ptd = NULL;
+            fmt.dwAspect = DVASPECT_CONTENT;
+            fmt.lindex = -1;
+            fmt.tymed = TYMED_HGLOBAL;
+
 	    hr = IDataObject_GetData(pDataObj, &fmt, &medium);
 
 	    IDataObject_Release(pDataObj);
 
 	    if (SUCCEEDED(hr)) {
 		/*assert(pida->cidl==1);*/
-		LPIDA pida = (LPIDA)GlobalLock(medium.hGlobal);
+		LPIDA pida = (LPIDA)GlobalLock(medium.u.hGlobal);
 
 		LPCITEMIDLIST pidl_folder = (LPCITEMIDLIST) ((LPBYTE)pida+pida->aoffset[0]);
 		LPCITEMIDLIST pidl_child = (LPCITEMIDLIST) ((LPBYTE)pida+pida->aoffset[1]);
@@ -720,8 +727,8 @@ HRESULT WINAPI SHGetRealIDL(LPSHELLFOLDER lpsf, LPCITEMIDLIST pidlSimple, LPITEM
 		if (!*pidlReal)
 			hr = E_OUTOFMEMORY;
 
-		GlobalUnlock(medium.hGlobal);
-		GlobalFree(medium.hGlobal);
+		GlobalUnlock(medium.u.hGlobal);
+		GlobalFree(medium.u.hGlobal);
 	    }
 	}
 
@@ -1192,31 +1199,31 @@ HRESULT WINAPI SHGetDataFromIDListA(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, int n
 	{
 	  case SHGDFIL_FINDDATA:
 	    {
-			LPSTR filename, shortname;
-			WIN32_FIND_DATAA * pfd = dest;
+	       LPSTR filename, shortname;
+	       WIN32_FIND_DATAA * pfd = dest;
 
-			if (_ILIsDrive(pidl))
-				return E_INVALIDARG;
+	       if (_ILIsDrive(pidl))
+	           return E_INVALIDARG;
 
-			if (len < (int)sizeof(WIN32_FIND_DATAA)) return E_INVALIDARG;
+	       if (len < (int)sizeof(WIN32_FIND_DATAA)) return E_INVALIDARG;
 
-			ZeroMemory(pfd, sizeof (WIN32_FIND_DATAA));
-			_ILGetFileDateTime( pidl, &(pfd->ftLastWriteTime));
-			pfd->dwFileAttributes = _ILGetFileAttributes(pidl, NULL, 0);
-			pfd->nFileSizeLow = _ILGetFileSize ( pidl, NULL, 0);
+	       ZeroMemory(pfd, sizeof (WIN32_FIND_DATAA));
+	       _ILGetFileDateTime( pidl, &(pfd->ftLastWriteTime));
+	       pfd->dwFileAttributes = _ILGetFileAttributes(pidl, NULL, 0);
+	       pfd->nFileSizeLow = _ILGetFileSize ( pidl, NULL, 0);
 
-			filename = _ILGetTextPointer(pidl);
-			shortname = _ILGetSTextPointer(pidl);
+	       filename = _ILGetTextPointer(pidl);
+	       shortname = _ILGetSTextPointer(pidl);
 
-			if (filename)
-				lstrcpynA(pfd->cFileName, filename, MAX_PATH);
-			else
-				pfd->cFileName[0] = '\0';
+	       if (filename)
+	           lstrcpynA(pfd->cFileName, filename, MAX_PATH);
+	       else
+	           pfd->cFileName[0] = '\0';
 
-			if (shortname)
-				lstrcpynA(pfd->cAlternateFileName, shortname, MAX_PATH);
-			else
-				pfd->cAlternateFileName[0] = '\0';
+	       if (shortname)
+	           lstrcpynA(pfd->cAlternateFileName, shortname, MAX_PATH);
+	       else
+	           pfd->cAlternateFileName[0] = '\0';
 	    }
 	    return NOERROR;
 
@@ -1231,6 +1238,7 @@ HRESULT WINAPI SHGetDataFromIDListA(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, int n
 
 	return E_INVALIDARG;
 }
+
 /*************************************************************************
  * SHGetDataFromIDListW [SHELL32.248]
  *
@@ -1247,31 +1255,31 @@ HRESULT WINAPI SHGetDataFromIDListW(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, int n
 	{
 	  case SHGDFIL_FINDDATA:
 	    {
-			LPSTR filename, shortname;
-			WIN32_FIND_DATAW * pfd = dest;
+	       LPSTR filename, shortname;
+	       WIN32_FIND_DATAW * pfd = dest;
 
-			if (_ILIsDrive(pidl))
-				return E_INVALIDARG;
+	       if (_ILIsDrive(pidl))
+	           return E_INVALIDARG;
 
-			if (len < (int)sizeof(WIN32_FIND_DATAW)) return E_INVALIDARG;
+	       if (len < (int)sizeof(WIN32_FIND_DATAW)) return E_INVALIDARG;
 
-			ZeroMemory(pfd, sizeof (WIN32_FIND_DATAA));
-			_ILGetFileDateTime( pidl, &(pfd->ftLastWriteTime));
-			pfd->dwFileAttributes = _ILGetFileAttributes(pidl, NULL, 0);
-			pfd->nFileSizeLow = _ILGetFileSize ( pidl, NULL, 0);
+	       ZeroMemory(pfd, sizeof (WIN32_FIND_DATAA));
+	       _ILGetFileDateTime( pidl, &(pfd->ftLastWriteTime));
+	       pfd->dwFileAttributes = _ILGetFileAttributes(pidl, NULL, 0);
+	       pfd->nFileSizeLow = _ILGetFileSize ( pidl, NULL, 0);
 
-			filename = _ILGetTextPointer(pidl);
-			shortname = _ILGetSTextPointer(pidl);
+	       filename = _ILGetTextPointer(pidl);
+	       shortname = _ILGetSTextPointer(pidl);
 
-			if (!filename)
-				pfd->cFileName[0] = '\0';
-			else if (!MultiByteToWideChar(CP_ACP, 0, filename, -1, pfd->cFileName, MAX_PATH))
-				   pfd->cFileName[MAX_PATH-1] = 0;
+	       if (!filename)
+	           pfd->cFileName[0] = '\0';
+	       else if (!MultiByteToWideChar(CP_ACP, 0, filename, -1, pfd->cFileName, MAX_PATH))
+	           pfd->cFileName[MAX_PATH-1] = 0;
 
-			if (!shortname)
-				pfd->cAlternateFileName[0] = '\0';
-			else if (!MultiByteToWideChar(CP_ACP, 0, shortname, -1, pfd->cAlternateFileName, 14))
-					pfd->cAlternateFileName[13] = 0;
+	       if (!shortname)
+	           pfd->cAlternateFileName[0] = '\0';
+	       else if (!MultiByteToWideChar(CP_ACP, 0, shortname, -1, pfd->cAlternateFileName, 14))
+	           pfd->cAlternateFileName[13] = 0;
 	    }
 	    return NOERROR;
 	  case SHGDFIL_NETRESOURCE:
@@ -2039,7 +2047,7 @@ LPSTR _ILGetTextPointer(LPCITEMIDLIST pidl)
 	    case PT_FOLDER1:
 	    case PT_VALUE:
 	    case PT_IESPECIAL1:
-		case PT_RAS_FOLDER:
+	    case PT_RAS_FOLDER:
 	    case PT_IESPECIAL2:
 	      return (LPSTR)&(pdata->u.file.szNames);
 
@@ -2070,7 +2078,7 @@ LPSTR _ILGetSTextPointer(LPCITEMIDLIST pidl)
 	    case PT_FOLDER:
 	    case PT_VALUE:
 	    case PT_IESPECIAL1:
-		case PT_RAS_FOLDER:
+	    case PT_RAS_FOLDER:
 	    case PT_IESPECIAL2:
 	      return (LPSTR)(pdata->u.file.szNames + strlen (pdata->u.file.szNames) + 1);
 

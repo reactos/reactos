@@ -67,8 +67,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 #define SCF_WORKDIR 0x10
 #define SCF_ARGS 0x20
 #define SCF_CUSTOMICON 0x40
-//#define SCF_UNC 0x80
-//#define SCF_UNICODE 0x1000
 #define SCF_UNICODE 0x80
 
 #include "pshpack1.h"

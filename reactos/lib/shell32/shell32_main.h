@@ -247,10 +247,10 @@ BOOL WINAPI ShellExecuteExW32(LPSHELLEXECUTEINFOW psei, SHELL_ExecuteW32 execfun
 UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOperation,
                           LPWSTR lpResult, LPWSTR key, void **env, LPITEMIDLIST pidl, LPCWSTR args);
 
-extern WCHAR swShell32Name[MAX_PATH];
-extern char sShell32Name[MAX_PATH];
-
 int WINAPI RestartDialog(HWND hwndOwner, LPCSTR lpstrReason, UINT uFlags);
 int WINAPI RestartDialogEx(HWND hwndOwner, LPCWSTR lpwstrReason, UINT uFlags, UINT uReason);
+
+extern WCHAR swShell32Name[MAX_PATH];
+extern char sShell32Name[MAX_PATH];
 
 #endif
