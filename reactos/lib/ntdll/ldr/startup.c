@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.32 2000/10/08 16:32:52 dwelch Exp $
+/* $Id: startup.c,v 1.33 2000/11/19 15:59:46 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -32,6 +32,7 @@ extern unsigned int _image_base__;
 
 static CRITICAL_SECTION PebLock;
 static CRITICAL_SECTION LoaderLock;
+static RTL_BITMAP TlsBitMap;
 
 ULONG NtGlobalFlag = 0;
 
@@ -114,6 +115,13 @@ LdrInitializeThunk (ULONG Unknown1,
    Peb->FastPebLock = &PebLock;
    Peb->FastPebLockRoutine = (PPEBLOCKROUTINE)RtlEnterCriticalSection;
    Peb->FastPebUnlockRoutine = (PPEBLOCKROUTINE)RtlLeaveCriticalSection;
+
+   /* initialize tls bitmap */
+   RtlInitializeBitMap (&TlsBitMap,
+			Peb->TlsBitmapBits,
+			TLS_MINIMUM_AVAILABLE);
+   Peb->TlsBitmap = &TlsBitMap;
+   Peb->TlsExpansionCounter = TLS_MINIMUM_AVAILABLE;
 
    /* initalize loader lock */
    RtlInitializeCriticalSection (&LoaderLock);
