@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.50 2003/08/18 07:20:23 jimtabor Exp $
+/* $Id: conio.c,v 1.51 2003/08/18 10:58:49 hbirr Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -24,7 +24,7 @@
 
 /* FIXME: Is there a way to create real aliasses with gcc? [CSH] */
 #define ALIAS(Name, Target) typeof(Target) Name = Target
-extern VOID CsrConsoleCtrlEvent(DWORD Event);
+extern VOID CsrConsoleCtrlEvent(DWORD Event, PCSRSS_PROCESS_DATA ProcessData);
 
 /* GLOBALS *******************************************************************/
 
@@ -34,45 +34,44 @@ static PCSRSS_CONSOLE ActiveConsole;
 CRITICAL_SECTION ActiveConsoleLock;
 static COORD PhysicalConsoleSize;
 static BOOL KeyReadInhibit = FALSE;
-static PCONTROLDISPATCHER CtrlDispatcher;
 
 /* FUNCTIONS *****************************************************************/
 
-VOID CsrConsoleCtrlEvent(DWORD Event)
+VOID CsrConsoleCtrlEvent(DWORD Event, PCSRSS_PROCESS_DATA ProcessData)
 {
-HANDLE Process, hThread;
-NTSTATUS Status;
-CLIENT_ID ClientId, ClientId1;
-
-
-	ClientId.UniqueProcess = (HANDLE) ActiveConsole->ProcessId;
+    HANDLE Process, hThread;
+    NTSTATUS Status;
+    CLIENT_ID ClientId, ClientId1;
 	
-	
-	DPRINT1("CsrConsoleCtrlEvent Parent ProcessId = %x\n",	ClientId.UniqueProcess);
-		
-		
+    DPRINT1("CsrConsoleCtrlEvent Parent ProcessId = %x\n",	ClientId.UniqueProcess);
+
+    if (ProcessData->CtrlDispatcher)
+    {
+	ClientId.UniqueProcess = (HANDLE) ProcessData->ProcessId;
 	Status = NtOpenProcess( &Process, PROCESS_DUP_HANDLE, 0, &ClientId );
 	if( !NT_SUCCESS( Status ) )
 	{
-		DPRINT("CsrConsoleCtrlEvent: Failed for handle duplication\n");
-		return;
+	    DPRINT("CsrConsoleCtrlEvent: Failed for handle duplication\n");
+	    return;
 	}
 
 	DPRINT1("CsrConsoleCtrlEvent Process Handle = %x\n", Process);
 
 
 	Status = RtlCreateUserThread(Process, NULL, FALSE, 0, NULL, NULL,
-					(PTHREAD_START_ROUTINE)CtrlDispatcher,
-					(PVOID) Event, hThread, &ClientId1);
+				    (PTHREAD_START_ROUTINE)ProcessData->CtrlDispatcher,
+				    (PVOID) Event, &hThread, &ClientId1);
 	if( !NT_SUCCESS( Status ) )
 	{
-		DPRINT("CsrConsoleCtrlEvent: Failed Thread creation\n");
-		NtClose(Process);
-		return;
+	    DPRINT("CsrConsoleCtrlEvent: Failed Thread creation\n");
+	    NtClose(Process);
+	    return;
 	}
 	DPRINT1("CsrConsoleCtrlEvent Parent ProcessId = %x, ReturnPId = %x, hT = %x\n",
-			ClientId.UniqueProcess, ClientId1.UniqueProcess, hThread);
+		ClientId.UniqueProcess, ClientId1.UniqueProcess, hThread);
+	NtClose(hThread);
 	NtClose(Process);
+    }
 }
 
 
@@ -129,10 +128,6 @@ CSR_API(CsrAllocConsole)
 	 return Reply->Status = Status;
       }
 
-   CtrlDispatcher = Request->Data.AllocConsoleRequest.CtrlDispatcher;
-   DPRINT1("CSRSS:CtrlDispatcher address: %x\n", CtrlDispatcher);      
-   ProcessData->Console->ProcessId = ProcessData->ProcessId;
-
    ClientId.UniqueProcess = (HANDLE)ProcessData->ProcessId;
    Status = NtOpenProcess( &Process, PROCESS_DUP_HANDLE, 0, &ClientId );
    if( !NT_SUCCESS( Status ) )
@@ -158,6 +153,12 @@ CSR_API(CsrAllocConsole)
        return Status;
      }
    NtClose( Process );
+   LOCK;
+   ProcessData->CtrlDispatcher = Request->Data.AllocConsoleRequest.CtrlDispatcher;
+   DPRINT1("CSRSS:CtrlDispatcher address: %x\n", ProcessData->CtrlDispatcher);      
+   InsertHeadList(&ProcessData->Console->ProcessList, &ProcessData->ProcessEntry);
+   UNLOCK;
+
    return STATUS_SUCCESS;
 }
 
@@ -781,6 +782,7 @@ NTSTATUS STDCALL CsrInitConsole(PCSRSS_CONSOLE Console)
   Console->Mode = ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_MOUSE_INPUT;
   Console->EarlyReturn = FALSE;
   InitializeListHead(&Console->InputEvents);
+  InitializeListHead(&Console->ProcessList);
 
   InitializeObjectAttributes(&ObjectAttributes, NULL, OBJ_INHERIT, NULL, NULL);
 
@@ -1083,7 +1085,29 @@ VOID Console_Api( DWORD RefreshEvent )
 
 	  UNLOCK;
 	}
-      if( KeyEventRecord->InputEvent.Event.KeyEvent.dwControlKeyState &
+     /* process Ctrl-C and Ctrl-Break */
+     if (ActiveConsole->Mode & ENABLE_PROCESSED_INPUT &&
+         KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown &&
+	 ((KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode == VK_PAUSE) || 
+	 (KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode == 'C')) &&
+	 (KeyEventRecord->InputEvent.Event.KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)))
+         {
+	    PCSRSS_PROCESS_DATA current;
+	    PLIST_ENTRY current_entry;
+            DPRINT1("Console_Api Ctrl-C\n");
+	    LOCK;
+	    current_entry = ActiveConsole->ProcessList.Flink;
+	    while (current_entry != &ActiveConsole->ProcessList)
+	    {
+		current = CONTAINING_RECORD(current_entry, CSRSS_PROCESS_DATA, ProcessEntry);
+		current_entry = current_entry->Flink;
+		CsrConsoleCtrlEvent((DWORD)CTRL_C_EVENT, current);
+	    }
+	    UNLOCK;
+	    RtlFreeHeap( CsrssApiHeap, 0, KeyEventRecord );
+	    continue;
+	 }
+     if( KeyEventRecord->InputEvent.Event.KeyEvent.dwControlKeyState &
         ( RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED ) &&
         ( KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode == VK_UP ||
           KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode == VK_DOWN) )
@@ -1207,14 +1231,6 @@ VOID Console_Api( DWORD RefreshEvent )
 	    }
       }
 
-	/* After all the keys processed */
-	if (((KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode == VK_PAUSE) || 
-		(KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode == 'C')) &&
-		(KeyEventRecord->InputEvent.Event.KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)))
-	{
-		DPRINT1("Console_Api Ctrl-C\n");
-		CsrConsoleCtrlEvent((DWORD)CTRL_C_EVENT);
-	}
       
       ActiveConsole->WaitingChars++;
       if( !(ActiveConsole->Mode & ENABLE_LINE_INPUT) )
@@ -2393,9 +2409,9 @@ CSR_API(CsrReadConsoleOutput)
    BufferSize = Request->Data.ReadConsoleOutputRequest.BufferSize;
    BufferCoord = Request->Data.ReadConsoleOutputRequest.BufferCoord;
    Length = BufferSize.X * BufferSize.Y;
-   Size = Length * sizeof(INPUT_RECORD);
+   Size = Length * sizeof(CHAR_INFO);
    
-    if(((PVOID)CharInfo < ProcessData->CsrSectionViewBase)
+   if(((PVOID)CharInfo < ProcessData->CsrSectionViewBase)
          || (((PVOID)CharInfo + Size) > (ProcessData->CsrSectionViewBase + ProcessData->CsrSectionViewSize)))
    {
       UNLOCK;
@@ -2418,7 +2434,7 @@ CSR_API(CsrReadConsoleOutput)
    
    for(i = 0, Y = ReadRegion.Top; Y < ReadRegion.Bottom; ++i, ++Y)
    {
-     CurCharInfo = CharInfo + (i * BufferSize.Y);
+     CurCharInfo = CharInfo + (i * BufferSize.X);
      
      Offset = (((Y + ScreenBuffer->ShowY) % ScreenBuffer->MaxY) * ScreenBuffer->MaxX + ReadRegion.Left) * 2;
      for(X = ReadRegion.Left; X < ReadRegion.Right; ++X)

@@ -73,7 +73,7 @@ typedef struct CSRSS_CONSOLE_t
    BOOL EarlyReturn;                     /* wake client and return data, even if we are in line buffered mode, and we don't have a complete line */
    DWORD HardwareState;                  /* _GDI_MANAGED, _DIRECT */
    HWND hWindow;
-   ULONG ProcessId;      
+   LIST_ENTRY ProcessList;
 } CSRSS_CONSOLE, *PCSRSS_CONSOLE;
 
 typedef struct _CSRSS_PROCESS_DATA
@@ -88,6 +88,8 @@ typedef struct _CSRSS_PROCESS_DATA
   PVOID CsrSectionViewBase;
   ULONG CsrSectionViewSize;
   struct _CSRSS_PROCESS_DATA * next;
+  LIST_ENTRY ProcessEntry;
+  PCONTROLDISPATCHER CtrlDispatcher;
 } CSRSS_PROCESS_DATA, *PCSRSS_PROCESS_DATA;
 
 #define CSR_API(n) NTSTATUS n (\

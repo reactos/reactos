@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.27 2003/06/20 16:23:34 ekohl Exp $
+/* $Id: process.c,v 1.28 2003/08/18 10:58:49 hbirr Exp $
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -118,6 +118,12 @@ NTSTATUS STDCALL CsrFreeProcessData(ULONG Pid)
    if (pProcessData)
    {
       //DbgPrint("CsrFreeProcessData pid: %d\n", Pid);
+      if (pProcessData->Console)
+      {
+	  RtlEnterCriticalSection(&ActiveConsoleLock);
+	  RemoveEntryList(&pProcessData->ProcessEntry);
+	  RtlLeaveCriticalSection(&ActiveConsoleLock);
+      }
       if (pProcessData->HandleTable)
       {
 	 for( c = 0; c < pProcessData->HandleTableSize; c++ )
@@ -243,6 +249,10 @@ CSR_API(CsrCreateProcess)
 	   return Status;
 	 }
        NtClose( Process );
+       NewProcessData->CtrlDispatcher = Request->Data.CreateProcessRequest.CtrlDispatcher;
+       RtlEnterCriticalSection( &ActiveConsoleLock );
+       InsertHeadList(&NewProcessData->Console->ProcessList, &NewProcessData->ProcessEntry);
+       RtlLeaveCriticalSection( &ActiveConsoleLock );
      }
    else Reply->Data.CreateProcessReply.OutputHandle = Reply->Data.CreateProcessReply.InputHandle = INVALID_HANDLE_VALUE;
 
