@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.73 2003/08/11 19:08:40 gdalsnes Exp $
+# $Id: makefile,v 1.74 2003/08/12 20:52:47 royce Exp $
 
 PATH_TO_TOP = ../..
 
@@ -70,7 +70,7 @@ OBJECTS_OBJECTS = objects/bitmaps.o objects/brush.o objects/cliprgn.o  \
 DIB_OBJECTS = dib/dib.o dib/dib1bpp.o dib/dib4bpp.o dib/dib8bpp.o dib/dib16bpp.o \
               dib/dib24bpp.o dib/dib32bpp.o
 
-STUBS_OBJECTS = stubs/stubs.o
+STUBS_OBJECTS = stubs/stubs.o stubs/xpstubs.o
 
 TARGET_OBJECTS = \
   $(ENG_OBJECTS) $(MAIN_OBJECTS) $(MISC_OBJECTS) $(LDR_OBJECTS) \
