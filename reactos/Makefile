@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.208 2004/02/01 21:40:59 gvg Exp $
+# $Id: Makefile,v 1.209 2004/02/05 19:17:11 weiden Exp $
 #
 # Global makefile
 #
@@ -37,6 +37,9 @@ LIB_STATIC = string rosrtl epsapi uuid libwine zlib
 # Keyboard layout libraries
 DLLS_KBD = kbdus kbdgr kbdfr kbduk
 
+# Control Panels
+DLLS_CPL = cpl
+
 # User mode libraries
 # advapi32 cards crtdll comdlg32 fmifs gdi32 imagehlp kernel32 libpcap packet msafd msvcrt ntdll
 # epsapi psapi richedit rpcrt4 secur32 user32 version ws2help ws2_32 wsock32 wshirda mswsock
@@ -45,7 +48,7 @@ DLLS = advapi32 cabinet cards comctl32 crtdll comdlg32 d3d8thk fmifs freetype gd
 	imm32 iphlpapi kernel32 lzexpand mpr msafd msgina msimg32 msvcrt msvcrt20 mswsock \
 	ntdll ole32 oledlg packet psapi richedit rpcrt4 samlib secur32 shell32 shlwapi \
 	snmpapi syssetup twain unicode user32 userenv version wininet winmm winspool \
-	ws2help ws2_32 wsock32 wshirda $(DLLS_KBD)
+	ws2help ws2_32 wsock32 wshirda $(DLLS_KBD) $(DLLS_CPL)
 
 SUBSYS = smss win32k csrss ntvdm
 
