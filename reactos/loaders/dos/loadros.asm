@@ -1164,8 +1164,10 @@ next_load_base dd 0
 ; Needed for enabling the a20 address line
 ;
 empty_8042:
-	jmp	$+3
-	jmp	$+3
+	jmp	empty_8042_1
+empty_8042_1:
+	jmp	empty_8042_2
+empty_8042_2:	
 	in	al,064h
 	test	al,02h
 	jnz	empty_8042
