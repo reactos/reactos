@@ -52,6 +52,23 @@ $(RBUILD_MINGW_OUT): $(RBUILD_BACKEND_OUT)
 endif
 
 
+RBUILD_TESTS_BASE = $(RBUILD_BASE_)tests
+RBUILD_TESTS_BASE_ = $(RBUILD_TESTS_BASE)$(SEP)
+RBUILD_TESTS_INT = $(INTERMEDIATE_)$(RBUILD_TESTS_BASE)
+RBUILD_TESTS_INT_ = $(RBUILD_TESTS_INT)$(SEP)
+RBUILD_TESTS_OUT = $(OUTPUT)$(RBUILD_TESTS_BASE)
+
+$(RBUILD_TESTS_INT): $(RBUILD_INT)
+	$(ECHO_MKDIR)
+	${mkdir} $@
+
+ifneq ($(INTERMEDIATE),$(OUTPUT))
+$(RBUILD_TESTS_OUT): $(RBUILD_OUT)
+	$(ECHO_MKDIR)
+	${mkdir} $@
+endif
+
+
 RBUILD_DEVCPP_BASE = $(RBUILD_BACKEND_BASE_)devcpp
 RBUILD_DEVCPP_BASE_ = $(RBUILD_DEVCPP_BASE)$(SEP)
 RBUILD_DEVCPP_INT = $(INTERMEDIATE_)$(RBUILD_DEVCPP_BASE)
@@ -236,22 +253,57 @@ $(RBUILD_DEVCPP_INT_)devcpp.o: $(RBUILD_DEVCPP_BASE_)devcpp.cpp $(RBUILD_DEVCPP_
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
-#$(RBUILD_COMMON_OBJECTS): %.o: %.cpp $(RBUILD_INT)
-#	$(ECHO_CC)
-#	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+$(RBUILD_TEST_TARGET): $(RBUILD_TEST_OBJECTS) $(RBUILD_OUT)
+	$(ECHO_LD)
+	${host_gpp} $(RBUILD_TEST_OBJECTS) $(RBUILD_HOST_LFLAGS) -o $@
 
-#$(RBUILD_SPECIAL_OBJECTS): %.o: %.cpp $(RBUILD_INT)
-#	$(ECHO_CC)
-#	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+$(RBUILD_TESTS_INT_)cdfiletest.o: $(RBUILD_TESTS_BASE_)cdfiletest.cpp $(RBUILD_TESTS_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
-#$(RBUILD_TEST_TARGET): $(RBUILD_TEST_OBJECTS) $(RBUILD_OUT)
-#	$(ECHO_LD)
-#	${host_gpp} $(RBUILD_TEST_OBJECTS) $(RBUILD_HOST_LFLAGS) -o $@
+$(RBUILD_TESTS_INT_)definetest.o: $(RBUILD_TESTS_BASE_)definetest.cpp $(RBUILD_TESTS_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
-#$(RBUILD_TEST_SPECIAL_OBJECTS): %.o: %.cpp $(RBUILD_INT)
-#	$(ECHO_CC)
-#	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+$(RBUILD_TESTS_INT_)functiontest.o: $(RBUILD_TESTS_BASE_)functiontest.cpp $(RBUILD_TESTS_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
+$(RBUILD_TESTS_INT_)iftest.o: $(RBUILD_TESTS_BASE_)iftest.cpp $(RBUILD_TESTS_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_TESTS_INT_)includetest.o: $(RBUILD_TESTS_BASE_)includetest.cpp $(RBUILD_TESTS_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_TESTS_INT_)invoketest.o: $(RBUILD_TESTS_BASE_)invoketest.cpp $(RBUILD_TESTS_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_TESTS_INT_)linkerflagtest.o: $(RBUILD_TESTS_BASE_)linkerflagtest.cpp $(RBUILD_TESTS_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_TESTS_INT_)moduletest.o: $(RBUILD_TESTS_BASE_)moduletest.cpp $(RBUILD_TESTS_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_TESTS_INT_)projecttest.o: $(RBUILD_TESTS_BASE_)projecttest.cpp $(RBUILD_TESTS_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_TESTS_INT_)sourcefiletest.o: $(RBUILD_TESTS_BASE_)sourcefiletest.cpp $(RBUILD_TESTS_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_TESTS_INT_)symboltest.o: $(RBUILD_TESTS_BASE_)symboltest.cpp $(RBUILD_TESTS_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_TESTS_INT_)alltests.o: $(RBUILD_TESTS_BASE_)alltests.cpp $(RBUILD_TESTS_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 
 .PHONY: rbuild_test
