@@ -709,7 +709,7 @@
 #define HAVE_VFSCANF 1
 
 /* Define to 1 if you have the `vsnprintf' function. */
-#define HAVE_VSNPRINTF 1
+/* #define HAVE_VSNPRINTF 1 */
 
 /* Define to 1 if you have the `wait' function. */
 /* #undef HAVE_WAIT */
