@@ -296,6 +296,7 @@ RtlAddAuditAccessAce@24
 RtlAddAuditAccessAceEx@28
 ;RtlAddCompoundAce
 RtlAddRange@36
+RtlAddVectoredExceptionHandler@8
 RtlAdjustPrivilege@16
 RtlAllocateAndInitializeSid@44
 RtlAllocateHandle@8
@@ -593,6 +594,7 @@ RtlRealSuccessor@4
 RtlReleasePebLock@0
 RtlReleaseResource@4
 ;RtlRemoteCall
+RtlRemoveVectoredExceptionHandler@4
 RtlResetRtlTranslations@4
 RtlRestoreLastWin32Error@4=RtlSetLastWin32Error@4
 RtlRunDecodeUnicodeString@8

@@ -22,6 +22,15 @@
 #define NDEBUG
 #include <debug.h>
 
+static CRITICAL_SECTION RtlpVectoredExceptionLock;
+static LIST_ENTRY RtlpVectoredExceptionHead;
+
+typedef struct _RTL_VECTORED_EXCEPTION_HANDLER
+{
+  LIST_ENTRY ListEntry;
+  PVECTORED_EXCEPTION_HANDLER VectoredHandler;
+} RTL_VECTORED_EXCEPTION_HANDLER, *PRTL_VECTORED_EXCEPTION_HANDLER;
+
 /* FUNCTIONS ***************************************************************/
 
 VOID STDCALL
@@ -85,6 +94,85 @@ RtlBaseProcessStart(PTHREAD_START_ROUTINE StartAddress,
   ExitStatus = (NTSTATUS) (StartAddress)(Parameter);
 
   NtTerminateProcess(NtCurrentProcess(), ExitStatus);
+}
+
+
+VOID
+RtlpInitializeVectoredExceptionHandling(VOID)
+{
+  InitializeListHead(&RtlpVectoredExceptionHead);
+  RtlInitializeCriticalSection(&RtlpVectoredExceptionLock);
+}
+
+
+/*
+ * @implemented
+ */
+PVOID STDCALL
+RtlAddVectoredExceptionHandler(IN ULONG FirstHandler,
+                               IN PVECTORED_EXCEPTION_HANDLER VectoredHandler)
+{
+  PRTL_VECTORED_EXCEPTION_HANDLER veh;
+  
+  veh = RtlAllocateHeap(RtlGetProcessHeap(),
+                        0,
+                        sizeof(RTL_VECTORED_EXCEPTION_HANDLER));
+  if(veh != NULL)
+  {
+    veh->VectoredHandler = RtlEncodePointer(VectoredHandler);
+    RtlEnterCriticalSection(&RtlpVectoredExceptionLock);
+    if(FirstHandler != 0)
+    {
+      InsertHeadList(&RtlpVectoredExceptionHead,
+                     &veh->ListEntry);
+    }
+    else
+    {
+      InsertTailList(&RtlpVectoredExceptionHead,
+                     &veh->ListEntry);
+    }
+    RtlLeaveCriticalSection(&RtlpVectoredExceptionLock);
+  }
+  
+  return veh;
+}
+
+
+/*
+ * @implemented
+ */
+ULONG STDCALL
+RtlRemoveVectoredExceptionHandler(IN PVOID VectoredHandlerHandle)
+{
+  PLIST_ENTRY CurrentEntry;
+  PRTL_VECTORED_EXCEPTION_HANDLER veh = NULL;
+  ULONG Removed = FALSE;
+  
+  RtlEnterCriticalSection(&RtlpVectoredExceptionLock);
+  for(CurrentEntry = RtlpVectoredExceptionHead.Flink;
+      CurrentEntry != &RtlpVectoredExceptionHead;
+      CurrentEntry = CurrentEntry->Flink)
+  {
+    veh = CONTAINING_RECORD(CurrentEntry,
+                            RTL_VECTORED_EXCEPTION_HANDLER,
+                            ListEntry);
+    if(veh == VectoredHandlerHandle)
+    {
+      RemoveEntryList(&veh->ListEntry);
+      Removed = TRUE;
+      break;
+    }
+  }
+  RtlLeaveCriticalSection(&RtlpVectoredExceptionLock);
+  
+  if(Removed)
+  {
+    RtlFreeHeap(RtlGetProcessHeap(),
+                0,
+                veh);
+  }
+
+  return Removed;
 }
 
 /* EOF */

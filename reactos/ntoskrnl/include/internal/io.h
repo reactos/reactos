@@ -426,6 +426,11 @@ IopBootLog(PUNICODE_STRING DriverName, BOOLEAN Success);
 VOID
 IopSaveBootLogToFile(VOID);
 
+/* cancel.c */
+
+VOID STDCALL
+IoCancelThreadIo(PETHREAD Thread);
+
 /* errlog.c */
 
 NTSTATUS

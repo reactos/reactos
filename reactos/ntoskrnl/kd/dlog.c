@@ -36,11 +36,11 @@ DebugLogDumpMessages(VOID)
   ULONG Offset;
   ULONG Length;
 
-  if (!(KdDebugState & KD_DEBUG_BOOTLOG))
+  if (!(KdDebugState & KD_DEBUG_FILELOG))
     {
       return;
     }
-  KdDebugState &= ~KD_DEBUG_BOOTLOG;
+  KdDebugState &= ~KD_DEBUG_FILELOG;
  
   Offset = (DebugLogEnd + 1) % DEBUGLOG_SIZE;
   do

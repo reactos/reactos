@@ -19,6 +19,7 @@ typedef struct _NPFS_PIPE
   KMUTEX FcbListLock;
   LIST_ENTRY ServerFcbListHead;
   LIST_ENTRY ClientFcbListHead;
+  LIST_ENTRY WaiterListHead;
   ULONG PipeType;
   ULONG ReadMode;
   ULONG WriteMode;
@@ -51,6 +52,14 @@ typedef struct _NPFS_FCB
 
   KSPIN_LOCK DataListLock;	/* Data queue lock */
 } NPFS_FCB, *PNPFS_FCB;
+
+typedef struct _NPFS_WAITER_ENTRY
+{
+  LIST_ENTRY Entry;
+  PIRP Irp;
+  PNPFS_PIPE Pipe;
+  PNPFS_FCB Fcb;
+} NPFS_WAITER_ENTRY, *PNPFS_WAITER_ENTRY;
 
 
 extern NPAGED_LOOKASIDE_LIST NpfsPipeDataLookasideList;

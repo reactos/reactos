@@ -158,6 +158,9 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
  
    PsLockProcess(CurrentProcess, FALSE);
 
+   /* Cancel I/O for the thread. */
+   IoCancelThreadIo(CurrentThread);
+
    /* Remove the thread from the thread list of its process */
    RemoveEntryList(&CurrentThread->ThreadListEntry);
    Last = IsListEmpty(&CurrentProcess->ThreadListHead);

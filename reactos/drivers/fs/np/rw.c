@@ -101,7 +101,6 @@ NpfsRead(PDEVICE_OBJECT DeviceObject,
       /* FIXME: check if in blocking mode */
       if (Fcb->ReadDataAvailable == 0)
 	{
-	  KeResetEvent(&Fcb->Event);
 	  if (Fcb->PipeState == FILE_PIPE_CONNECTED_STATE)
 	    {
 	      KeSetEvent(&WriterFcb->Event, IO_NO_INCREMENT, FALSE);
@@ -167,6 +166,7 @@ NpfsRead(PDEVICE_OBJECT DeviceObject,
 	  if (Length == 0)
 	    {
 	      KeSetEvent(&WriterFcb->Event, IO_NO_INCREMENT, FALSE);
+	      KeResetEvent(&Fcb->Event);
 	      break;
 	    }
 	}
@@ -187,8 +187,19 @@ NpfsRead(PDEVICE_OBJECT DeviceObject,
 #endif
 
 	      Information = CopyLength;
-	      Fcb->ReadDataAvailable = 0;
-	      Fcb->WriteQuotaAvailable = Fcb->MaxDataLength;
+
+	      if (Fcb->ReadDataAvailable > Length)
+	        {
+	          memmove(Fcb->Data, Fcb->Data + Length,
+	                  Fcb->ReadDataAvailable - Length);
+	          Fcb->ReadDataAvailable -= Length;
+	          Status = STATUS_MORE_ENTRIES;
+	        }
+	      else
+	        {
+	          Fcb->ReadDataAvailable = 0;
+	          Fcb->WriteQuotaAvailable = Fcb->MaxDataLength;
+	        }
 	    }
 
 	  if (Information > 0)
@@ -197,6 +208,7 @@ NpfsRead(PDEVICE_OBJECT DeviceObject,
 	        {
 	          KeSetEvent(&WriterFcb->Event, IO_NO_INCREMENT, FALSE);
 	        }
+	      KeResetEvent(&Fcb->Event);
 	      break;
 	    }
 	}
@@ -291,7 +303,6 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
     {
       if (ReaderFcb->WriteQuotaAvailable == 0)
 	{
-	  KeResetEvent(&Fcb->Event);
 	  KeSetEvent(&ReaderFcb->Event, IO_NO_INCREMENT, FALSE);
 	  KeReleaseSpinLock(&ReaderFcb->DataListLock, OldIrql);
 	  if (Fcb->PipeState != FILE_PIPE_CONNECTED_STATE)
@@ -355,6 +366,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 	  if (Length == 0)
 	    {
 	      KeSetEvent(&ReaderFcb->Event, IO_NO_INCREMENT, FALSE);
+	      KeResetEvent(&Fcb->Event);
 	      break;
 	    }
 	}
@@ -374,6 +386,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 	  if (Information > 0)
 	    {
 	      KeSetEvent(&ReaderFcb->Event, IO_NO_INCREMENT, FALSE);
+	      KeResetEvent(&Fcb->Event);
 	      break;
 	    }
 	}
