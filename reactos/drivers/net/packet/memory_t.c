@@ -22,6 +22,7 @@
 #include "tme.h"
 #include "memory_t.h"
 
+#ifdef _USE_SW_FUNCS_
 
 int32 SW_LONG_AT(void *b, uint32 c)
 {
@@ -61,5 +62,7 @@ VOID SW_ULONG_ASSIGN(void *dst, uint32 src)
 	*((uint8*)dst+3)=*((uint8*)&src+0);
 
 }
+
+#endif /*_USE_SW_FUNCS_*/
 
 void assert(void* assert, const char* file, int line, void* msg) { };

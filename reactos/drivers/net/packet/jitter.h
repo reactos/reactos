@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2002
- *	Politecnico di Torino.  All rights reserved.
+ *  Politecnico di Torino.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that: (1) source code distributions
@@ -55,10 +55,10 @@
 
 /*! \brief A stream of X86 binary code.*/
 typedef struct binary_stream{
-	INT cur_ip;		///< Current X86 instruction pointer.
-	INT bpf_pc;		///< Current BPF instruction pointer, i.e. position in the BPF program reached by the jitter.
-	PCHAR ibuf;		///< Instruction buffer, contains the X86 generated code.
-	PUINT refs;		///< Jumps reference table.
+    INT cur_ip;     ///< Current X86 instruction pointer.
+    INT bpf_pc;     ///< Current BPF instruction pointer, i.e. position in the BPF program reached by the jitter.
+    PCHAR ibuf;     ///< Instruction buffer, contains the X86 generated code.
+    PUINT refs;     ///< Jumps reference table.
 }binary_stream;
 
 
@@ -81,8 +81,8 @@ typedef void (*emit_func)(binary_stream *stream, ULONG value, UINT n);
 
 /*! \brief Structure describing a x86 filtering program created by the jitter.*/
 typedef struct JIT_BPF_Filter{
-	BPF_filter_function Function;	///< The x86 filtering binary, in the form of a BPF_filter_function.
-	PINT mem;
+    BPF_filter_function Function;   ///< The x86 filtering binary, in the form of a BPF_filter_function.
+    PINT mem;
 }
 JIT_BPF_Filter;
 
@@ -373,7 +373,7 @@ JIT_BPF_Filter* BPF_jitter(struct bpf_insn *fp, INT nins);
   through the instruction macros defined in jitter.h it is able to create an function directly executable
   by NPF.
 */ 
-BPF_filter_function BPFtoX86(struct bpf_insn *prog, UINT nins, INT *mem);
+BPF_filter_function BPFtoX86(struct bpf_insn *ins, UINT nins, INT *mem);
 /*!
   \brief Deletes a filtering function that was previously created by BPF_jitter().
   \param Filter The filter to destroy.

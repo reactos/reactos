@@ -67,8 +67,7 @@ NDIS_SPIN_LOCK Opened_Instances_Lock;
 
 //-------------------------------------------------------------------
 
-NTSTATUS
-NPF_Open(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+NTSTATUS NPF_Open(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
 
     PDEVICE_EXTENSION DeviceExtension;
@@ -84,7 +83,6 @@ NPF_Open(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     PLIST_ENTRY     PacketListEntry;
 	PCHAR			EvName;
 
-
     IF_LOUD(DbgPrint("NPF: OpenAdapter\n");)
 
     DeviceExtension = DeviceObject->DeviceExtension;
@@ -93,7 +91,8 @@ NPF_Open(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
     //  allocate some memory for the open structure
-    Open=ExAllocatePoolWithTag(NonPagedPool, sizeof(OPEN_INSTANCE), '0OWA');
+#define NPF_TAG_OPENSTRUCT  TAG('0', 'O', 'W', 'A')
+    Open=ExAllocatePoolWithTag(NonPagedPool, sizeof(OPEN_INSTANCE), NPF_TAG_OPENSTRUCT);
 
 
     if (Open==NULL) {
@@ -109,7 +108,8 @@ NPF_Open(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
         );
 
 
-	EvName=ExAllocatePoolWithTag(NonPagedPool, sizeof(L"\\BaseNamedObjects\\NPF0000000000"), '1OWA');
+#define NPF_TAG_EVNAME  TAG('1', 'O', 'W', 'A')
+	EvName=ExAllocatePoolWithTag(NonPagedPool, sizeof(L"\\BaseNamedObjects\\NPF0000000000"), NPF_TAG_EVNAME);
 
     if (EvName==NULL) {
         // no memory
@@ -187,7 +187,8 @@ NPF_Open(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     InitializeListHead(&Open->RequestList);
 
 	// Initializes the extended memory of the NPF machine
-	Open->mem_ex.buffer = ExAllocatePoolWithTag(NonPagedPool, DEFAULT_MEM_EX_SIZE, '2OWA');
+#define NPF_TAG_MACHINE  TAG('2', 'O', 'W', 'A')
+	Open->mem_ex.buffer = ExAllocatePoolWithTag(NonPagedPool, DEFAULT_MEM_EX_SIZE, NPF_TAG_MACHINE);
 	if((Open->mem_ex.buffer) == NULL)
 	{
         // no memory
@@ -208,7 +209,7 @@ NPF_Open(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 	Open->Buffer = NULL;
 	Open->Bhead = 0;
 	Open->Btail = 0;
-	Open->BLastByte = 0;
+	(INT)Open->BLastByte = -1;
 	Open->Dropped = 0;		//reset the dropped packets counter
 	Open->Received = 0;		//reset the received packets counter
 	Open->Accepted = 0;		//reset the accepted packets counter
@@ -225,6 +226,7 @@ NPF_Open(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 	Open->DumpFileHandle = NULL;
 	Open->tme.active = TME_NONE_ACTIVE;
 	Open->DumpLimitReached = FALSE;
+	Open->MaxFrameSize = 0;
 
 	//allocate the spinlock for the statistic counters
     NdisAllocateSpinLock(&Open->CountersLock);
@@ -282,8 +284,12 @@ VOID NPF_OpenAdapterComplete(
     IN NDIS_STATUS  OpenErrorStatus)
 {
 
-    PIRP              Irp;
-    POPEN_INSTANCE    Open;
+    PIRP                Irp;
+    POPEN_INSTANCE      Open;
+    PLIST_ENTRY			RequestListEntry;
+	PINTERNAL_REQUEST	MaxSizeReq;
+	NDIS_STATUS			ReqStatus;
+
 
     IF_LOUD(DbgPrint("NPF: OpenAdapterComplete\n");)
 
@@ -306,6 +312,9 @@ VOID NPF_OpenAdapterComplete(
 
 		ExFreePool(Open->ReadEventName.Buffer);
 
+		ZwClose(Open->ReadEventHandle);
+
+
         ExFreePool(Open);
     }
 	else {
@@ -318,6 +327,47 @@ VOID NPF_OpenAdapterComplete(
 		// Get the absolute value of the system boot time.
 		// This is used for timestamp conversion.
 		TIME_SYNCHRONIZE(&G_Start_Time);
+
+		// Extract a request from the list of free ones
+		RequestListEntry=ExInterlockedRemoveHeadList(&Open->RequestList, &Open->RequestSpinLock);
+
+		if (RequestListEntry == NULL)
+		{
+
+		    Open->MaxFrameSize = 1514;	// Assume Ethernet
+
+			Irp->IoStatus.Status = Status;
+		    Irp->IoStatus.Information = 0;
+		    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+		    return;
+		}
+
+		MaxSizeReq = CONTAINING_RECORD(RequestListEntry, INTERNAL_REQUEST, ListElement);
+		MaxSizeReq->Irp = Irp;
+		MaxSizeReq->Internal = TRUE;
+
+		
+		MaxSizeReq->Request.RequestType = NdisRequestQueryInformation;
+		MaxSizeReq->Request.DATA.QUERY_INFORMATION.Oid = OID_GEN_MAXIMUM_TOTAL_SIZE;
+
+		
+		MaxSizeReq->Request.DATA.QUERY_INFORMATION.InformationBuffer = &Open->MaxFrameSize;
+		MaxSizeReq->Request.DATA.QUERY_INFORMATION.InformationBufferLength = 4;
+
+		//  submit the request
+		NdisRequest(
+			&ReqStatus,
+			Open->AdapterHandle,
+			&MaxSizeReq->Request);
+
+
+		if (ReqStatus != NDIS_STATUS_PENDING) {
+			NPF_RequestComplete(Open, &MaxSizeReq->Request, ReqStatus);
+		}
+
+		return;
+
 	}
 
     Irp->IoStatus.Status = Status;
@@ -397,7 +447,6 @@ NPF_Close(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
  
 	// If this instance is in dump mode, complete the dump and close the file
 	if((Open->mode & MODE_DUMP) && Open->DumpFileHandle != NULL){
-#ifndef __GNUC__
 		NTSTATUS wres;
 
 		ThreadDelay.QuadPart = -50000000;
@@ -413,7 +462,6 @@ NPF_Close(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
 
 		// Flush and close the dump file
 		NPF_CloseDumpFile(Open);
-#endif
 	}
 
 	// Destroy the read Event

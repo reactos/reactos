@@ -26,11 +26,9 @@
 
 void TIME_DESYNCHRONIZE(struct time_conv *data)
 {
-#ifndef __GNUC__
 	data->reference = 0;
 	data->start.tv_sec = 0;
 	data->start.tv_usec = 0;
-#endif
 }
 
 #ifdef KQPC_TS
@@ -39,7 +37,6 @@ void TIME_DESYNCHRONIZE(struct time_conv *data)
 
 VOID TIME_SYNCHRONIZE(struct time_conv *data)
 {
-#ifndef __GNUC__
 	struct timeval tmp;
 	LARGE_INTEGER SystemTime;
 	LARGE_INTEGER i;
@@ -52,17 +49,20 @@ VOID TIME_SYNCHRONIZE(struct time_conv *data)
 	// get the absolute value of the system boot time.   
 	PTime=KeQueryPerformanceCounter(&TimeFreq);
 	KeQuerySystemTime(&SystemTime);
+#ifndef __GNUC__
 	tmp.tv_sec=(LONG)(SystemTime.QuadPart/10000000-11644473600);
 	tmp.tv_usec=(LONG)((SystemTime.QuadPart%10000000)/10);
 	tmp.tv_sec-=(ULONG)(PTime.QuadPart/TimeFreq.QuadPart);
 	tmp.tv_usec-=(LONG)((PTime.QuadPart%TimeFreq.QuadPart)*1000000/TimeFreq.QuadPart);
+#else
+    // TODO FIXME:
+#endif
 	if (tmp.tv_usec<0) {
 		tmp.tv_sec--;
 		tmp.tv_usec+=1000000;
 	}
 	data->start=tmp;
 	data->reference=1;
-#endif
 }
 
 void FORCE_TIME(struct timeval *src, struct time_conv *dest)
@@ -72,29 +72,30 @@ void FORCE_TIME(struct timeval *src, struct time_conv *dest)
 
 void GET_TIME(struct timeval *dst, struct time_conv *data)
 {
-#ifndef __GNUC__
 	LARGE_INTEGER PTime, TimeFreq;
 	LONG tmp;
 
 	PTime=KeQueryPerformanceCounter(&TimeFreq);
+#ifndef __GNUC__
 	tmp=(LONG)(PTime.QuadPart/TimeFreq.QuadPart);
 	dst->tv_sec=data->start.tv_sec+tmp;
 	dst->tv_usec=data->start.tv_usec+(LONG)((PTime.QuadPart%TimeFreq.QuadPart)*1000000/TimeFreq.QuadPart);
+#else
+    // TODO FIXME:
+#endif
 	if (dst->tv_usec>=1000000) {
 		dst->tv_sec++;
 		dst->tv_usec-=1000000;
 	}
-#endif
 }
 
-#else
+#else /*KQPC_TS*/
 
 /*RDTSC timestamps*/
 
 /* callers must be at IRQL=PASSIVE_LEVEL */
 VOID TIME_SYNCHRONIZE(struct time_conv *data)
 {
-#ifndef __GNUC__
 	struct timeval tmp;
 	LARGE_INTEGER system_time;
 	ULONGLONG curr_ticks;
@@ -128,6 +129,17 @@ VOID TIME_SYNCHRONIZE(struct time_conv *data)
 		pop eax
 	}
 #else
+	asm("push %%eax;"
+		"push %%edx;"
+		"push %%ecx;"
+		"rdtsc;"
+		"lea %0,%%ecx;"
+		"mov %%edx,(%%ecx+4);"
+		"mov %%eax,(%%ecx);"
+		"pop %%ecx;"
+		"pop %%edx;"
+		"pop %%eax;"
+        :"=c"(start_ticks): );
 #endif
 	KeLowerIrql(old);
     KeWaitForSingleObject(&event,UserRequest,KernelMode,TRUE ,&i);
@@ -148,6 +160,17 @@ VOID TIME_SYNCHRONIZE(struct time_conv *data)
 		pop eax
 	}
 #else
+	asm("push %%eax;"
+		"push %%edx;"
+		"push %%ecx;"
+		"rdtsc;"
+		"lea %0,%%ecx;"
+		"mov %%edx,(%%ecx+4);"
+		"mov %%eax,(%%ecx);"
+		"pop %%ecx;"
+		"pop %%edx;"
+		"pop %%eax;"
+        :"=c"(stop_ticks): );
 #endif
 	KeLowerIrql(old);
 	delta=stop_ticks-start_ticks;
@@ -178,6 +201,17 @@ VOID TIME_SYNCHRONIZE(struct time_conv *data)
 		pop eax
 	}
 #else
+	asm("push %%eax;"
+		"push %%edx;"
+		"push %%ecx;"
+		"rdtsc;"
+		"lea %0,%%ecx;"
+		"mov %%edx,(%%ecx+4);"
+		"mov %%eax,(%%ecx);"
+		"pop %%ecx;"
+		"pop %%edx;"
+		"pop %%eax;"
+        :"=c"(curr_ticks): );
 #endif
 	tmp.tv_sec=-(LONG)(curr_ticks/reference);
 	tmp.tv_usec=-(LONG)((curr_ticks%reference)*1000000/reference);
@@ -190,8 +224,6 @@ VOID TIME_SYNCHRONIZE(struct time_conv *data)
 	}
 	data->start=tmp;
 	IF_LOUD(DbgPrint("Frequency %I64u MHz\n",data->reference);)
-#else
-#endif
 }
 
 void FORCE_TIME(struct timeval *src, struct time_conv *dest)
@@ -201,7 +233,6 @@ void FORCE_TIME(struct timeval *src, struct time_conv *dest)
 
 void GET_TIME(struct timeval *dst, struct time_conv *data)
 {
-#ifndef __GNUC__
 	ULONGLONG tmp;
 #ifndef __GNUC__
 	__asm
@@ -218,6 +249,17 @@ void GET_TIME(struct timeval *dst, struct time_conv *data)
 		pop eax
 	}
 #else
+	asm("push %%eax;"
+		"push %%edx;"
+		"push %%ecx;"
+		"rdtsc;"
+		"lea %0,%%ecx;"
+		"mov %%edx,(%%ecx+4);"
+		"mov %%eax,(%%ecx);"
+		"pop %%ecx;"
+		"pop %%edx;"
+		"pop %%eax;"
+        :"=c"(tmp): );
 #endif
 	if (data->reference==0)	{
 		return;
@@ -230,7 +272,6 @@ void GET_TIME(struct timeval *dst, struct time_conv *data)
 		dst->tv_sec++;
 		dst->tv_usec-=1000000;
 	}
-#endif
 }
 
 #endif /*KQPC_TS*/

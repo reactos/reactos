@@ -27,6 +27,16 @@
 #else
 #include <ddk/ntddk.h>
 #include <net/ndis.h>
+
+#define NdisMoveMappedMemory(Destination,Source,Length) RtlCopyMemory(Destination,Source,Length)
+#define NdisZeroMappedMemory(Destination,Length)		RtlZeroMemory(Destination,Length)
+#define NdisReinitializePacket(Packet)										\
+{																			\
+	(Packet)->Private.Head = (PNDIS_BUFFER)NULL;							\
+	(Packet)->Private.ValidCounts = FALSE;									\
+}
+
+
 #endif
 
 #include "debug.h"
@@ -92,20 +102,19 @@ NPF_Read(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
     POPEN_INSTANCE      Open;
     PIO_STACK_LOCATION  IrpSp;
     PUCHAR				packp;
-	UINT				i;
 	ULONG				Input_Buffer_Length;
 	UINT				Thead;
 	UINT				Ttail;
 	UINT				TLastByte;
 	PUCHAR				CurrBuff;
-	UINT				cplen;
-	UINT				CpStart;
 	LARGE_INTEGER		CapTime;
 	LARGE_INTEGER		TimeFreq;
 	struct bpf_hdr		*header;
 	KIRQL				Irql;
 	PUCHAR				UserPointer;
 	ULONG				bytecopy;
+	UINT				SizeToCopy;
+	UINT				PktLen;
 
 	IF_LOUD(DbgPrint("NPF: Read\n");)
 		
@@ -255,7 +264,7 @@ NPF_Read(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
 	NdisReleaseSpinLock( &Open->BufLock );
 	
 	Input_Buffer_Length=IrpSp->Parameters.Read.Length;
-	packp=(PUCHAR)MmGetMdlVirtualAddress(Irp->MdlAddress);
+	packp=(PUCHAR)MmGetSystemAddressForMdl(Irp->MdlAddress);
 	
 
 	//
@@ -283,47 +292,38 @@ NPF_Read(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
 	}
 	
 	//the buffer must be scannned to determine the number of bytes to copy
-	CpStart=Thead;
-	i=0;
+	SizeToCopy = 0;
 	while(TRUE){
-		if(Thead == Ttail)break;
+		if(Thead + SizeToCopy == Ttail)
+			break;
 
-		if(Thead == TLastByte){
-			// Copy the portion between thead and TLastByte
-			PacketMoveMem(packp,CurrBuff+CpStart,Thead-CpStart,&(Open->Bhead));
-			packp+=(Thead-CpStart);
+		if(Thead + SizeToCopy == TLastByte && TLastByte != Ttail){
 
+			PacketMoveMem(packp, CurrBuff+Thead, SizeToCopy, &(Open->Bhead));
+			// Reset the buffer
 			NdisAcquireSpinLock( &Open->BufLock );
-			
-			Open->BLastByte = Open->Btail;
- 			Open->Bhead = 0;
-			
+			(INT)Open->BLastByte = -1;
+ 			Open->Bhead = 0;			
 			NdisReleaseSpinLock( &Open->BufLock );
 
-			Thead=0;
-			CpStart=0;
+			EXIT_SUCCESS(SizeToCopy);
 		}
-		cplen=((struct bpf_hdr*)(CurrBuff+Thead))->bh_caplen+sizeof(struct bpf_hdr);
 
-		if((i+cplen > Input_Buffer_Length)){//no more space in the application's buffer
-			PacketMoveMem(packp,CurrBuff+CpStart,Thead-CpStart,&(Open->Bhead));
+		// Get the size of the next packet in the buffer
+		PktLen = ((struct bpf_hdr*)(CurrBuff + Thead + SizeToCopy))->bh_caplen + sizeof(struct bpf_hdr);
 
-			EXIT_SUCCESS(i);
-		}
-		cplen=Packet_WORDALIGN(cplen);
-		i+=cplen;
-		Thead+=cplen;
+		// The length is aligned to 32-bit boundary
+		PktLen = Packet_WORDALIGN(PktLen);
+
+		if(SizeToCopy + PktLen > Input_Buffer_Length)
+			break;
+		
+		SizeToCopy += PktLen;
 	}
-	
 
-	KeResetEvent(Open->ReadEvent);
-	
-	PacketMoveMem(packp,CurrBuff+CpStart,Thead-CpStart,&(Open->Bhead));
-	
-	Open->Bhead=Thead;
-	
-	
-	EXIT_SUCCESS(i);	
+	PacketMoveMem(packp, CurrBuff+Thead, SizeToCopy, &(Open->Bhead));
+	EXIT_SUCCESS(SizeToCopy);
+
 }
 
 //-------------------------------------------------------------------
@@ -350,8 +350,14 @@ NDIS_STATUS NPF_tap (IN NDIS_HANDLE ProtocolBindingContext,IN NDIS_HANDLE MacRec
 	UINT				maxbufspace;
 	USHORT				NPFHdrSize;
 	UINT				BufOccupation;
+	BOOLEAN				ResetBuff = FALSE;
 
     IF_VERY_LOUD(DbgPrint("NPF: tap\n");)
+    IF_VERY_LOUD(DbgPrint("HeaderBufferSize=%d, LookAheadBuffer=%d, LookaheadBufferSize=%d, PacketSize=%d\n", 
+	HeaderBufferSize,
+	LookAheadBuffer,
+	LookaheadBufferSize,
+	PacketSize);)
 
 	Open= (POPEN_INSTANCE)ProtocolBindingContext;
 
@@ -401,6 +407,7 @@ NDIS_STATUS NPF_tap (IN NDIS_HANDLE ProtocolBindingContext,IN NDIS_HANDLE MacRec
 #ifndef __GNUC__
 				_asm add esp,12		
 #else
+                asm("add $0x12,%esp;");
 #endif
 			}
 			else
@@ -489,7 +496,14 @@ NDIS_STATUS NPF_tap (IN NDIS_HANDLE ProtocolBindingContext,IN NDIS_HANDLE MacRec
 		}
 		else{
 			Ttail=0;
+			ResetBuff = TRUE;
 		}
+	}
+	
+	if (Thead > Ttail && (Thead-Ttail) <= maxbufspace)
+	{
+		Open->Dropped++;
+		return NDIS_STATUS_NOT_ACCEPTED;
 	}
 	
 	CurrBuff=Open->Buffer+Ttail;
@@ -568,14 +582,16 @@ NDIS_STATUS NPF_tap (IN NDIS_HANDLE ProtocolBindingContext,IN NDIS_HANDLE MacRec
 		HeaderBuffer,
 		HeaderBufferSize + LookaheadBufferSize);
 
+		BytesTransfered = 0;
+
 		Open->TransferMdl = NULL;
 		Status = NDIS_STATUS_SUCCESS;
 	}
 
-	Open->Accepted++;		// Increase the accepted packets counter
-
 	if (Status != NDIS_STATUS_FAILURE)
 	{
+
+		Open->Accepted++;		// Increase the accepted packets counter
 
 		if( fres > (BytesTransfered+HeaderBufferSize+LookaheadBufferSize) )
 			fres = BytesTransfered+HeaderBufferSize+LookaheadBufferSize;
@@ -596,12 +612,12 @@ NDIS_STATUS NPF_tap (IN NDIS_HANDLE ProtocolBindingContext,IN NDIS_HANDLE MacRec
 			Ttail+=fres+NPFHdrSize;
 		
 		//update the buffer	
-		if(Ttail > Thead)TLastByte = Ttail;
-
 		NdisAcquireSpinLock( &Open->BufLock );
 		
+		if(ResetBuff){
+			Open->BLastByte = Open->Btail;
+		}
 		Open->Btail=Ttail;
-		Open->BLastByte=TLastByte;
 		
 		NdisReleaseSpinLock( &Open->BufLock );
 	}

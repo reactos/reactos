@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from the Stanford/CMU enet packet filter,
  * (net/enet.c) distributed as part of 4.3BSD, and code contributed
@@ -37,7 +37,7 @@
  *
  *      @(#)bpf.h       7.1 (Berkeley) 5/7/91
  *
- * @(#) $Header: /cygdrive/c/RCVS/CVS/ReactOS/reactos/drivers/net/packet/win_bpf.h,v 1.2 2002/09/24 15:16:46 robd Exp $ (LBL)
+ * @(#) $Header: /cygdrive/c/RCVS/CVS/ReactOS/reactos/drivers/net/packet/win_bpf.h,v 1.3 2002/12/21 04:46:09 robd Exp $ (LBL)
  */
 
 #ifndef BPF_MAJOR_VERSION
@@ -45,12 +45,12 @@
 /* BSD style release date */
 #define BPF_RELEASE 199606
 
-typedef	UCHAR u_char;
-typedef	USHORT u_short;
-typedef	ULONG u_int;
-typedef	LONG bpf_int32;
-typedef	ULONG bpf_u_int32;
-typedef	ULONG u_int32;
+typedef UCHAR u_char;
+typedef USHORT u_short;
+typedef ULONG u_int;
+typedef LONG bpf_int32;
+typedef ULONG bpf_u_int32;
+typedef ULONG u_int32;
 
 #define BPF_MAXINSNS 512
 #define BPF_MAXBUFSIZE 0x8000
@@ -62,26 +62,26 @@ typedef	ULONG u_int32;
  * The instruction data structure.
  */
 struct bpf_insn {
-	u_short	code;
-	u_char 	jt;
-	u_char 	jf;
-	bpf_int32 k;
+    u_short code;
+    u_char  jt;
+    u_char  jf;
+    bpf_int32 k;
 };
 
 /*
  *  Structure for BIOCSETF.
  */
 struct bpf_program {
-	u_int bf_len;
-	struct bpf_insn *bf_insns;
+    u_int bf_len;
+    struct bpf_insn *bf_insns;
 };
  
 /*
  * Struct returned by BIOCGSTATS.
  */
 struct bpf_stat {
-	u_int bs_recv;		/* number of packets received */
-	u_int bs_drop;		/* number of packets dropped */
+    u_int bs_recv;      /* number of packets received */
+    u_int bs_drop;      /* number of packets dropped */
 };
 
 /*
@@ -96,8 +96,8 @@ struct bpf_stat {
  * It has nothing to do with the source code version.
  */
 struct bpf_version {
-	u_short bv_major;
-	u_short bv_minor;
+    u_short bv_major;
+    u_short bv_minor;
 };
 /* Current version number of filter architecture. */
 #define BPF_MAJOR_VERSION 1
@@ -108,11 +108,11 @@ struct bpf_version {
  * Structure prepended to each packet.
  */
 struct bpf_hdr {
-	struct timeval	bh_tstamp;	/* time stamp */
-	bpf_u_int32	bh_caplen;	/* length of captured portion */
-	bpf_u_int32	bh_datalen;	/* original length of packet */
-	u_short		bh_hdrlen;	/* length of bpf header (this struct
-					   plus alignment padding) */
+    struct timeval  bh_tstamp;  /* time stamp */
+    bpf_u_int32 bh_caplen;  /* length of captured portion */
+    bpf_u_int32 bh_datalen; /* original length of packet */
+    u_short     bh_hdrlen;  /* length of bpf header (this struct
+                       plus alignment padding) */
 };
 
 /*
@@ -129,17 +129,17 @@ struct bpf_hdr {
  * differ from those here, they should use their values, not the ones
  * here).
  */
-#define DLT_NULL	0	/* no link-layer encapsulation */
-#define DLT_EN10MB	1	/* Ethernet (10Mb) */
-#define DLT_EN3MB	2	/* Experimental Ethernet (3Mb) */
-#define DLT_AX25	3	/* Amateur Radio AX.25 */
-#define DLT_PRONET	4	/* Proteon ProNET Token Ring */
-#define DLT_CHAOS	5	/* Chaos */
-#define DLT_IEEE802	6	/* IEEE 802 Networks */
-#define DLT_ARCNET	7	/* ARCNET */
-#define DLT_SLIP	8	/* Serial Line IP */
-#define DLT_PPP		9	/* Point-to-point Protocol */
-#define DLT_FDDI	10	/* FDDI */
+#define DLT_NULL    0   /* no link-layer encapsulation */
+#define DLT_EN10MB  1   /* Ethernet (10Mb) */
+#define DLT_EN3MB   2   /* Experimental Ethernet (3Mb) */
+#define DLT_AX25    3   /* Amateur Radio AX.25 */
+#define DLT_PRONET  4   /* Proteon ProNET Token Ring */
+#define DLT_CHAOS   5   /* Chaos */
+#define DLT_IEEE802 6   /* IEEE 802 Networks */
+#define DLT_ARCNET  7   /* ARCNET */
+#define DLT_SLIP    8   /* Serial Line IP */
+#define DLT_PPP     9   /* Point-to-point Protocol */
+#define DLT_FDDI    10  /* FDDI */
 
 /*
  * These are values from the traditional libpcap "bpf.h".
@@ -147,8 +147,8 @@ struct bpf_hdr {
  * with the ones appropriate to that platform, if the values are
  * different on that platform.
  */
-#define DLT_ATM_RFC1483	11	/* LLC/SNAP encapsulated atm */
-#define DLT_RAW		12	/* raw IP */
+#define DLT_ATM_RFC1483 11  /* LLC/SNAP encapsulated atm */
+#define DLT_RAW     12  /* raw IP */
 
 /*
  * These are values from BSD/OS's "bpf.h".
@@ -163,17 +163,17 @@ struct bpf_hdr {
  * continue to compile - even though they won't correctly read
  * files of these types.
  */
-#define DLT_SLIP_BSDOS	15	/* BSD/OS Serial Line IP */
-#define DLT_PPP_BSDOS	16	/* BSD/OS Point-to-point Protocol */
+#define DLT_SLIP_BSDOS  15  /* BSD/OS Serial Line IP */
+#define DLT_PPP_BSDOS   16  /* BSD/OS Point-to-point Protocol */
 
-#define DLT_ATM_CLIP	19	/* Linux Classical-IP over ATM */
+#define DLT_ATM_CLIP    19  /* Linux Classical-IP over ATM */
 
 /*
  * This value is defined by NetBSD; other platforms should refrain from
  * using it for other purposes, so that NetBSD savefiles with a link
  * type of 50 can be read as this type on all platforms.
  */
-#define DLT_PPP_SERIAL	50	/* PPP over serial with HDLC encapsulation */
+#define DLT_PPP_SERIAL  50  /* PPP over serial with HDLC encapsulation */
 
 /*
  * This value was defined by libpcap 0.5; platforms that have defined
@@ -189,8 +189,8 @@ struct bpf_hdr {
  * libpcap 0.5 defined it as DLT_CHDLC; we define DLT_CHDLC as well,
  * for source compatibility with programs written for libpcap 0.5.
  */
-#define DLT_C_HDLC	104	/* Cisco HDLC */
-#define DLT_CHDLC	DLT_C_HDLC
+#define DLT_C_HDLC  104 /* Cisco HDLC */
+#define DLT_CHDLC   DLT_C_HDLC
 
 /*
  * Reserved for future use.
@@ -202,7 +202,7 @@ struct bpf_hdr {
  * on one platform to be read on other platforms, even if the two
  * platforms don't use the same numerical values for all DLT_ types).
  */
-#define DLT_IEEE802_11	105	/* IEEE 802.11 wireless */
+#define DLT_IEEE802_11  105 /* IEEE 802.11 wireless */
 
 /*
  * Values between 106 and 107 are used in capture file headers as
@@ -219,7 +219,7 @@ struct bpf_hdr {
  * define DLT_LOOP as 12 in its version, as per the comment above -
  * and should not use 108 for any purpose.
  */
-#define DLT_LOOP	108
+#define DLT_LOOP    108
 
 /*
  * Values between 109 and 112 are used in capture file headers as
@@ -230,85 +230,85 @@ struct bpf_hdr {
 /*
  * This is for Linux cooked sockets.
  */
-#define DLT_LINUX_SLL	113
+#define DLT_LINUX_SLL   113
 
 /*
  * The instruction encodings.
  */
 /* instruction classes */
 #define BPF_CLASS(code) ((code) & 0x07)
-#define		BPF_LD		0x00
-#define		BPF_LDX		0x01
-#define		BPF_ST		0x02
-#define		BPF_STX		0x03
-#define		BPF_ALU		0x04
-#define		BPF_JMP		0x05
-#define		BPF_RET		0x06
-#define		BPF_MISC	0x07
+#define     BPF_LD      0x00
+#define     BPF_LDX     0x01
+#define     BPF_ST      0x02
+#define     BPF_STX     0x03
+#define     BPF_ALU     0x04
+#define     BPF_JMP     0x05
+#define     BPF_RET     0x06
+#define     BPF_MISC    0x07
 
 /* ld/ldx fields */
-#define BPF_SIZE(code)	((code) & 0x18)
-#define		BPF_W		0x00
-#define		BPF_H		0x08
-#define		BPF_B		0x10
-#define BPF_MODE(code)	((code) & 0xe0)
-#define		BPF_IMM 	0x00
-#define		BPF_ABS		0x20
-#define		BPF_IND		0x40
-#define		BPF_MEM		0x60
-#define		BPF_LEN		0x80
-#define		BPF_MSH		0xa0
+#define BPF_SIZE(code)  ((code) & 0x18)
+#define     BPF_W       0x00
+#define     BPF_H       0x08
+#define     BPF_B       0x10
+#define BPF_MODE(code)  ((code) & 0xe0)
+#define     BPF_IMM     0x00
+#define     BPF_ABS     0x20
+#define     BPF_IND     0x40
+#define     BPF_MEM     0x60
+#define     BPF_LEN     0x80
+#define     BPF_MSH     0xa0
 
 /* alu/jmp fields */
-#define BPF_OP(code)	((code) & 0xf0)
-#define		BPF_ADD		0x00
-#define		BPF_SUB		0x10
-#define		BPF_MUL		0x20
-#define		BPF_DIV		0x30
-#define		BPF_OR		0x40
-#define		BPF_AND		0x50
-#define		BPF_LSH		0x60
-#define		BPF_RSH		0x70
-#define		BPF_NEG		0x80
-#define		BPF_JA		0x00
-#define		BPF_JEQ		0x10
-#define		BPF_JGT		0x20
-#define		BPF_JGE		0x30
-#define		BPF_JSET	0x40
-#define BPF_SRC(code)	((code) & 0x08)
-#define		BPF_K		0x00
-#define		BPF_X		0x08
+#define BPF_OP(code)    ((code) & 0xf0)
+#define     BPF_ADD     0x00
+#define     BPF_SUB     0x10
+#define     BPF_MUL     0x20
+#define     BPF_DIV     0x30
+#define     BPF_OR      0x40
+#define     BPF_AND     0x50
+#define     BPF_LSH     0x60
+#define     BPF_RSH     0x70
+#define     BPF_NEG     0x80
+#define     BPF_JA      0x00
+#define     BPF_JEQ     0x10
+#define     BPF_JGT     0x20
+#define     BPF_JGE     0x30
+#define     BPF_JSET    0x40
+#define BPF_SRC(code)   ((code) & 0x08)
+#define     BPF_K       0x00
+#define     BPF_X       0x08
 
 /* ret - BPF_K and BPF_X also apply */
-#define BPF_RVAL(code)	((code) & 0x18)
-#define		BPF_A		0x10
+#define BPF_RVAL(code)  ((code) & 0x18)
+#define     BPF_A       0x10
 
 /* misc */
 #define BPF_MISCOP(code) ((code) & 0xf8)
-#define		BPF_TAX		0x00
-#define		BPF_TXA		0x80
+#define     BPF_TAX     0x00
+#define     BPF_TXA     0x80
 
 /* TME instructions */
-#define		BPF_TME					0x08
+#define     BPF_TME                 0x08
 
-#define		BPF_LOOKUP				0x90   
-#define		BPF_EXECUTE				0xa0
-#define		BPF_INIT				0xb0
-#define		BPF_VALIDATE			0xc0
-#define		BPF_SET_ACTIVE			0xd0
-#define		BPF_RESET				0xe0
-#define		BPF_SET_MEMORY			0x80
-#define		BPF_GET_REGISTER_VALUE	0x70
-#define		BPF_SET_REGISTER_VALUE	0x60
-#define		BPF_SET_WORKING			0x50
-#define		BPF_SET_ACTIVE_READ		0x40
-#define		BPF_SET_AUTODELETION	0x30
-#define		BPF_SEPARATION			0xff
+#define     BPF_LOOKUP              0x90   
+#define     BPF_EXECUTE             0xa0
+#define     BPF_INIT                0xb0
+#define     BPF_VALIDATE            0xc0
+#define     BPF_SET_ACTIVE          0xd0
+#define     BPF_RESET               0xe0
+#define     BPF_SET_MEMORY          0x80
+#define     BPF_GET_REGISTER_VALUE  0x70
+#define     BPF_SET_REGISTER_VALUE  0x60
+#define     BPF_SET_WORKING         0x50
+#define     BPF_SET_ACTIVE_READ     0x40
+#define     BPF_SET_AUTODELETION    0x30
+#define     BPF_SEPARATION          0xff
 
-#define		BPF_MEM_EX_IMM	0xc0
-#define		BPF_MEM_EX_IND	0xe0
+#define     BPF_MEM_EX_IMM  0xc0
+#define     BPF_MEM_EX_IND  0xe0
 /*used for ST */
-#define		BPF_MEM_EX		0xc0
+#define     BPF_MEM_EX      0xc0
 
 
 /*

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2001
- *	Politecnico di Torino.  All rights reserved.
+ *  Politecnico di Torino.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that: (1) source code distributions
@@ -36,10 +36,10 @@
 
 #endif
 
-#define NORMAL_LUT_W_INSERT				0x00000000
+#define NORMAL_LUT_W_INSERT             0x00000000
 uint32 normal_lut_w_insert(uint8 *key, TME_DATA *data, MEM_TYPE *mem_ex, struct time_conv *time_ref);   
-#define NORMAL_LUT_WO_INSERT			0x00000001
+#define NORMAL_LUT_WO_INSERT            0x00000001
 uint32 normal_lut_wo_insert(uint8 *key, TME_DATA *data, MEM_TYPE *mem_ex, struct time_conv *time_ref); 
-#define DUMMY_INSERT					1234
+#define DUMMY_INSERT                    1234
 
 #endif

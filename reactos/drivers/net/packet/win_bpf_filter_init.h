@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2001
- *	Politecnico di Torino.  All rights reserved.
+ *  Politecnico di Torino.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that: (1) source code distributions
@@ -23,8 +23,8 @@
 
 #include "tme.h"
 
-#define INIT_OK		1
-#define INIT_ERROR	0
+#define INIT_OK     1
+#define INIT_ERROR  0
 
 uint32 bpf_filter_init(register struct bpf_insn *pc,MEM_TYPE *mem_ex, TME_CORE *tme, struct time_conv *time_ref);
 

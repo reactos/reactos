@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2001
- *	Politecnico di Torino.  All rights reserved.
+ *  Politecnico di Torino.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that: (1) source code distributions
@@ -38,13 +38,13 @@
 
 typedef struct __c_p_data
 {
-	struct timeval timestamp;
-	uint64 packets;
-	uint64 bytes;
+    struct timeval timestamp;
+    uint64 packets;
+    uint64 bytes;
 }
-	c_p_data;
+    c_p_data;
 
-#define COUNT_PACKETS					0x00000000
+#define COUNT_PACKETS                   0x00000000
 uint32 count_packets(uint8 *block, uint32 pkt_size, TME_DATA *data, MEM_TYPE *mem_ex, uint8 *mem_data);
 
 #endif

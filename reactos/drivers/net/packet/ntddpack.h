@@ -11,7 +11,7 @@ struct _PACKET_OID_DATA {
     ULONG Oid;
     ULONG Length;
     UCHAR Data[1];
-}; 
+};
 
 typedef struct _PACKET_OID_DATA PACKET_OID_DATA, *PPACKET_OID_DATA;
 

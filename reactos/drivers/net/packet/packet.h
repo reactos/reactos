@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1999, 2000
- *	Politecnico di Torino.  All rights reserved.
+ *  Politecnico di Torino.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that: (1) source code distributions
@@ -30,11 +30,15 @@
 #ifndef __PACKET_INCLUDE______
 #define __PACKET_INCLUDE______
 
-#define NTKERNEL	///< Forces the compilation of the jitter with kernel calls 
+#define NTKERNEL    ///< Forces the compilation of the jitter with kernel calls 
 
+#ifdef __GNUC__
+#undef EXIT_SUCCESS
+#undef EXIT_FAILURE
 #define UNICODE_NULL ((WCHAR)0) // winnt
-
 #include "win_bpf.h"
+#include <internal/ps.h>
+#endif
 
 #include "jitter.h"
 #include "tme.h"
@@ -42,8 +46,10 @@
 #define  MAX_REQUESTS   32 ///< Maximum number of simultaneous IOCTL requests.
 
 #define Packet_ALIGNMENT sizeof(int) ///< Alignment macro. Defines the alignment size.
-#define Packet_WORDALIGN(x) (((x)+(Packet_ALIGNMENT-1))&~(Packet_ALIGNMENT-1))	///< Alignment macro. Rounds up to the next 
-																				///< even multiple of Packet_ALIGNMENT. 
+#define Packet_WORDALIGN(x) (((x)+(Packet_ALIGNMENT-1))&~(Packet_ALIGNMENT-1))  ///< Alignment macro. Rounds up to the next 
+                                                                                ///< even multiple of Packet_ALIGNMENT. 
+
+
 /***************************/
 /*         IOCTLs          */
 /***************************/
@@ -56,7 +62,7 @@
   and resets all the parameters associated with the buffer in the OPEN_INSTANCE structure. The currently 
   buffered packets are lost.
 */
-#define	 BIOCSETBUFFERSIZE 9592
+#define  BIOCSETBUFFERSIZE 9592
 
 /*!
   \brief IOCTL code: set packet filtering program.
@@ -68,7 +74,7 @@
   every incoming packet. This command also empties the circular buffer used by current instance 
   to store packets. This is done to avoid the presence in the buffer of packets that do not match the filter.
 */
-#define	 BIOCSETF 9030
+#define  BIOCSETF 9030
 
 /*!
   \brief IOCTL code: get the capture stats
@@ -83,7 +89,7 @@
 
   This command sets the maximum timeout after which a read is released, also if no data packets were received.
 */
-#define	 BIOCSRTIMEOUT 7416
+#define  BIOCSRTIMEOUT 7416
 
 /*!
   \brief IOCTL code: set working mode
@@ -92,7 +98,7 @@
   buffer associated with the IOCTL command, can be #MODE_CAPT for capture mode (the default), #MODE_STAT for
   statistical mode or #MODE_DUMP for dump mode.
 */
-#define	 BIOCSMODE 7412
+#define  BIOCSMODE 7412
 
 /*!
   \brief IOCTL code: set number of physical repetions of every packet written by the app
@@ -100,28 +106,28 @@
   Sets the number of times a single write call must be repeated. This command sets the OPEN_INSTANCE::Nwrites 
   member, and is used to implement the 'multiple write' feature of the driver.
 */
-#define	 BIOCSWRITEREP 7413
+#define  BIOCSWRITEREP 7413
 
 /*!
   \brief IOCTL code: set minimum amount of data in the kernel buffer that unlocks a read call
 
   This command sets the OPEN_INSTANCE::MinToCopy member.
 */
-#define	 BIOCSMINTOCOPY 7414
+#define  BIOCSMINTOCOPY 7414
 
 /*!
   \brief IOCTL code: set an OID value
 
   This IOCTL is used to perform an OID set operation on the NIC driver. 
 */
-#define	 BIOCSETOID 2147483648
+#define  BIOCSETOID 2147483648
 
 /*!
   \brief IOCTL code: get an OID value
 
   This IOCTL is used to perform an OID get operation on the NIC driver. 
 */
-#define	 BIOCQUERYOID 2147483652
+#define  BIOCQUERYOID 2147483652
 
 /*!
   \brief IOCTL code: set the name of a the file used by kernel dump mode
@@ -176,20 +182,20 @@
 #define BIOCISDUMPENDED 7411
 
 // Working modes
-#define MODE_CAPT 0x0		///< Capture working mode
-#define MODE_STAT 0x1		///< Statistical working mode
-#define MODE_MON  0x2		///< Kernel monitoring mode
-#define MODE_DUMP 0x10		///< Kernel dump working mode
+#define MODE_CAPT 0x0       ///< Capture working mode
+#define MODE_STAT 0x1       ///< Statistical working mode
+#define MODE_MON  0x2       ///< Kernel monitoring mode
+#define MODE_DUMP 0x10      ///< Kernel dump working mode
 
 
-#define IMMEDIATE 1			///< Immediate timeout. Forces a read call to return immediately.
+#define IMMEDIATE 1         ///< Immediate timeout. Forces a read call to return immediately.
 
 
 // The following definitions are used to provide compatibility 
 // of the dump files with the ones of libpcap
-#define TCPDUMP_MAGIC 0xa1b2c3d4	///< Libpcap magic number. Used by programs like tcpdump to recognize a driver's generated dump file.
-#define PCAP_VERSION_MAJOR 2		///< Major libpcap version of the dump file. Used by programs like tcpdump to recognize a driver's generated dump file.
-#define PCAP_VERSION_MINOR 4		///< Minor libpcap version of the dump file. Used by programs like tcpdump to recognize a driver's generated dump file.
+#define TCPDUMP_MAGIC 0xa1b2c3d4    ///< Libpcap magic number. Used by programs like tcpdump to recognize a driver's generated dump file.
+#define PCAP_VERSION_MAJOR 2        ///< Major libpcap version of the dump file. Used by programs like tcpdump to recognize a driver's generated dump file.
+#define PCAP_VERSION_MINOR 4        ///< Minor libpcap version of the dump file. Used by programs like tcpdump to recognize a driver's generated dump file.
 
 /*!
   \brief Header of a libpcap dump file.
@@ -198,13 +204,13 @@
 */
 struct packet_file_header 
 {
-	UINT magic;				///< Libpcap magic number
-	USHORT version_major;	///< Libpcap major version
-	USHORT version_minor;	///< Libpcap minor version
-	UINT thiszone;			///< Gmt to local correction
-	UINT sigfigs;			///< Accuracy of timestamps
-	UINT snaplen;			///< Length of the max saved portion of each packet
-	UINT linktype;			///< Data link type (DLT_*). See win_bpf.h for details.
+    UINT magic;             ///< Libpcap magic number
+    USHORT version_major;   ///< Libpcap major version
+    USHORT version_minor;   ///< Libpcap minor version
+    UINT thiszone;          ///< Gmt to local correction
+    UINT sigfigs;           ///< Accuracy of timestamps
+    UINT snaplen;           ///< Length of the max saved portion of each packet
+    UINT linktype;          ///< Data link type (DLT_*). See win_bpf.h for details.
 };
 
 /*!
@@ -212,11 +218,11 @@ struct packet_file_header
   Similar to the bpf_hdr structure, but simpler.
 */
 struct sf_pkthdr {
-    struct timeval	ts;			///< time stamp
-    UINT			caplen;		///< Length of captured portion. The captured portion can be different from 
-								///< the original packet, because it is possible (with a proper filter) to 
-								///< instruct the driver to capture only a portion of the packets. 
-    UINT			len;		///< Length of the original packet (off wire).
+    struct timeval  ts;         ///< time stamp
+    UINT            caplen;     ///< Length of captured portion. The captured portion can be different from 
+                                ///< the original packet, because it is possible (with a proper filter) to 
+                                ///< instruct the driver to capture only a portion of the packets. 
+    UINT            len;        ///< Length of the original packet (off wire).
 };
 
 /*!
@@ -229,9 +235,10 @@ struct sf_pkthdr {
   maintaining information about the IRPs to complete.
 */
 typedef struct _INTERNAL_REQUEST {
-    LIST_ENTRY     ListElement;		///< Used to handle lists of requests.
-    PIRP           Irp;				///< Irp that performed the request
-    NDIS_REQUEST   Request;			///< The structure with the actual request, that will be passed to NdisRequest().
+    LIST_ENTRY      ListElement;        ///< Used to handle lists of requests.
+    PIRP            Irp;                ///< Irp that performed the request
+    BOOLEAN         Internal;           ///< True if the request is for internal use of npf.sys. False if the request is performed by the user through an IOCTL.
+    NDIS_REQUEST    Request;            ///< The structure with the actual request, that will be passed to NdisRequest().
 } INTERNAL_REQUEST, *PINTERNAL_REQUEST;
 
 /*!
@@ -242,11 +249,11 @@ typedef struct _INTERNAL_REQUEST {
   maintaining information about the IRPs to complete.
 */
 typedef struct _PACKET_RESERVED {
-    LIST_ENTRY		ListElement;		///< Used to handle lists of packets.
-    PIRP			Irp;				///< Irp that performed the request
-    PMDL			pMdl;				///< MDL mapping the buffer of the packet.
-	BOOLEAN			FreeBufAfterWrite;	///< True if the memory buffer associated with the packet must be freed 
-										///< after a call to NdisSend().
+    LIST_ENTRY      ListElement;        ///< Used to handle lists of packets.
+    PIRP            Irp;                ///< Irp that performed the request
+    PMDL            pMdl;               ///< MDL mapping the buffer of the packet.
+    BOOLEAN         FreeBufAfterWrite;  ///< True if the memory buffer associated with the packet must be freed 
+                                        ///< after a call to NdisSend().
 }  PACKET_RESERVED, *PPACKET_RESERVED;
 
 #define RESERVED(_p) ((PPACKET_RESERVED)((_p)->ProtocolReserved)) ///< Macro to obtain a NDIS_PACKET from a PACKET_RESERVED
@@ -257,12 +264,10 @@ typedef struct _PACKET_RESERVED {
   Structure containing some data relative to every adapter on which NPF is bound.
 */
 typedef struct _DEVICE_EXTENSION {
-    PDEVICE_OBJECT DeviceObject;		///< Adapter's device.
-    NDIS_HANDLE    NdisProtocolHandle;	///< NDIS handle of NPF.
-    NDIS_STRING    AdapterName;			///< Name of the adapter.
-    PWSTR          BindString;			///< Original  device name of the adapter.
-    PWSTR          ExportString;		///< Name of the exported device, i.e. name that the applications will use 
-										///< to open this adapter through WinPcap.
+    NDIS_HANDLE    NdisProtocolHandle;  ///< NDIS handle of NPF.
+    NDIS_STRING    AdapterName;         ///< Name of the adapter.
+    PWSTR          ExportString;        ///< Name of the exported device, i.e. name that the applications will use 
+                                        ///< to open this adapter through WinPcap.
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
 /*!
@@ -274,106 +279,104 @@ typedef struct _DEVICE_EXTENSION {
 */
 typedef struct _OPEN_INSTANCE
 {
-	PDEVICE_EXTENSION   DeviceExtension;	///< Pointer to the _DEVICE_EXTENSION structure of the device on which
-											///< the instance is bound.
-	NDIS_HANDLE         AdapterHandle;		///< NDIS idetifier of the adapter used by this instance.
-	UINT				Medium;				///< Type of physical medium the underlying NDIS driver uses. See the
-											///< documentation of NdisOpenAdapter in the MS DDK for details.
-	NDIS_HANDLE         PacketPool;			///< Pool of NDIS_PACKET structures used to transfer the packets from and to the NIC driver.
-	PIRP                OpenCloseIrp;		///< Pointer used to store the open/close IRP requests and provide them to the 
-											///< callbacks of NDIS.
-	KSPIN_LOCK			RequestSpinLock;	///< SpinLock used to synchronize the OID requests.
-	LIST_ENTRY          RequestList;		///< List of pending OID requests.
-	LIST_ENTRY          ResetIrpList;		///< List of pending adapter reset requests.
+    PDEVICE_EXTENSION   DeviceExtension;    ///< Pointer to the _DEVICE_EXTENSION structure of the device on which
+                                            ///< the instance is bound.
+    NDIS_HANDLE         AdapterHandle;      ///< NDIS idetifier of the adapter used by this instance.
+    UINT                Medium;             ///< Type of physical medium the underlying NDIS driver uses. See the
+                                            ///< documentation of NdisOpenAdapter in the MS DDK for details.
+    NDIS_HANDLE         PacketPool;         ///< Pool of NDIS_PACKET structures used to transfer the packets from and to the NIC driver.
+    PIRP                OpenCloseIrp;       ///< Pointer used to store the open/close IRP requests and provide them to the 
+                                            ///< callbacks of NDIS.
+    KSPIN_LOCK          RequestSpinLock;    ///< SpinLock used to synchronize the OID requests.
+    LIST_ENTRY          RequestList;        ///< List of pending OID requests.
+    LIST_ENTRY          ResetIrpList;       ///< List of pending adapter reset requests.
     INTERNAL_REQUEST    Requests[MAX_REQUESTS]; ///< Array of structures that wrap every single OID request.
-	PMDL				BufferMdl;			///< Pointer to a Memory descriptor list (MDL) that maps the circular buffer's memory.
-	PKEVENT				ReadEvent;			///< Pointer to the event on which the read calls on this instance must wait.
-	HANDLE				ReadEventHandle;	///< Handle of the event on which the read calls on this instance must wait.
-	UNICODE_STRING		ReadEventName;		///< Name of the event on which the read calls on this instance must wait.
-											///< The event is created with a name, so it can be used at user level to know when it 
-											///< is possible to access the driver without being blocked. This fiels stores the name 
-											///< that and is used by the BIOCGEVNAME IOCTL call.
-	INT					Received;			///< Number of packets received by current instance from its opening, i.e. number of 
-											///< packet received by the network adapter since the beginning of the 
-											///< capture/monitoring/dump session.
-	INT					Dropped;			///< Number of packet that current instance had to drop, from its opening. A packet 
-											///< is dropped if there is no more space to store it in the circular buffer that the 
-											///< driver associates to current instance.
-	INT					Accepted;			///< Number of packet that current capture instance acepted, from its opening. A packet 
-											///< is accepted if it passes the filter and fits in the buffer. Accepted packets are the
-											///< ones that reach the application.
-	PUCHAR				bpfprogram;			///< Pointer to the filtering pseudo-code associated with current instance of the driver.
-											///< This code is used only in particular situations (for example when the packet received
-											///< from the NIC driver is stored in two non-consecutive buffers. In normal situations
-											///< the filtering routine created by the JIT compiler and pointed by the next field 
-											///< is used. See \ref NPF for details on the filtering process.
-	JIT_BPF_Filter		*Filter;			///< Pointer to the native filtering function created by the jitter. 
-											///< See BPF_jitter() for details.
-	PUCHAR				Buffer;				///< Pointer to the circular buffer associated with every driver instance. It contains the 
-											///< data that will be passed to the application. See \ref NPF for details.
-	UINT				Bhead;				///< Head of the circular buffer.
-	UINT				Btail;				///< Tail of the circular buffer.
-	UINT				BufSize;			///< Size of the circular buffer.
-	UINT				BLastByte;			///< Position of the last valid byte in the circular buffer.
-	PMDL                TransferMdl;		///< MDL used to map the portion of the buffer that will contain an incoming packet. 
-											///< Used by NdisTransferData().
-	NDIS_SPIN_LOCK		BufLock;			///< SpinLock that protects the access tho the circular buffer variables.
-	UINT				MinToCopy;			///< Minimum amount of data in the circular buffer that unlocks a read. Set with the
-											///< BIOCSMINTOCOPY IOCTL.
-	LARGE_INTEGER		TimeOut;			///< Timeout after which a read is released, also if the amount of data in the buffer is 
-											///< less than MinToCopy. Set with the BIOCSRTIMEOUT IOCTL.
-											
-	int					mode;				///< Working mode of the driver. See PacketSetMode() for details.
-	LARGE_INTEGER		Nbytes;				///< Amount of bytes accepted by the filter when this instance is in statistical mode.
-	LARGE_INTEGER		Npackets;			///< Number of packets accepted by the filter when this instance is in statistical mode.
-	NDIS_SPIN_LOCK		CountersLock;		///< SpinLock that protects the statistical mode counters.
-	UINT				Nwrites;			///< Number of times a single write must be physically repeated. See \ref NPF for an 
-											///< explanation
-	UINT				Multiple_Write_Counter;	///< Counts the number of times a single write has already physically repeated.
-	NDIS_EVENT			WriteEvent;			///< Event used to synchronize the multiple write process.
-	NDIS_EVENT			IOEvent;			///< Event used to synchronize I/O requests with the callback structure of NDIS.
-	NDIS_STATUS			IOStatus;			///< Maintains the status of and OID request call, that will be passed to the application.
-	BOOLEAN				Bound;				///< Specifies if NPF is still bound to the adapter used by this instance. Bound can be
-											///< FALSE if a Plug and Play adapter has been removed or disabled by the user.
-	HANDLE				DumpFileHandle;		///< Handle of the file used in dump mode.
-	PFILE_OBJECT		DumpFileObject;		///< Pointer to the object of the file used in dump mode.
-//	PKTHREAD			DumpThreadObject;	///< Pointer to the object of the thread used in dump mode.
-	HANDLE				DumpThreadHandle;	///< Handle of the thread created by dump mode to asynchronously move the buffer to disk.
-	NDIS_EVENT			DumpEvent;			///< Event used to synchronize the dump thread with the tap when the instance is in dump mode.
-	LARGE_INTEGER		DumpOffset;			///< Current offset in the dump file.
-	UNICODE_STRING      DumpFileName;		///< String containing the name of the dump file.
-	UINT				MaxDumpBytes;		///< Maximum dimension in bytes of the dump file. If the dump file reaches this size it 
-											///< will be closed. A value of 0 means unlimited size.
-	UINT				MaxDumpPacks;		///< Maximum number of packets that will be saved in the dump file. If this number of 
-											///< packets is reached the dump will be closed. A value of 0 means unlimited number of 
-											///< packets.
-	BOOLEAN				DumpLimitReached;	///< TRUE if the maximum dimension of the dump file (MaxDumpBytes or MaxDumpPacks) is 
-											///< reached.
-	MEM_TYPE			mem_ex;				///< Memory used by the TME virtual co-processor
-	TME_CORE			tme;				///< Data structure containing the virtualization of the TME co-processor
-	NDIS_SPIN_LOCK		machine_lock;		///< SpinLock that protects the mem_ex buffer
+    PMDL                BufferMdl;          ///< Pointer to a Memory descriptor list (MDL) that maps the circular buffer's memory.
+    PKEVENT             ReadEvent;          ///< Pointer to the event on which the read calls on this instance must wait.
+    HANDLE              ReadEventHandle;    ///< Handle of the event on which the read calls on this instance must wait.
+    UNICODE_STRING      ReadEventName;      ///< Name of the event on which the read calls on this instance must wait.
+                                            ///< The event is created with a name, so it can be used at user level to know when it 
+                                            ///< is possible to access the driver without being blocked. This fiels stores the name 
+                                            ///< that and is used by the BIOCGEVNAME IOCTL call.
+    INT                 Received;           ///< Number of packets received by current instance from its opening, i.e. number of 
+                                            ///< packet received by the network adapter since the beginning of the 
+                                            ///< capture/monitoring/dump session.
+    INT                 Dropped;            ///< Number of packet that current instance had to drop, from its opening. A packet 
+                                            ///< is dropped if there is no more space to store it in the circular buffer that the 
+                                            ///< driver associates to current instance.
+    INT                 Accepted;           ///< Number of packet that current capture instance acepted, from its opening. A packet 
+                                            ///< is accepted if it passes the filter and fits in the buffer. Accepted packets are the
+                                            ///< ones that reach the application.
+    PUCHAR              bpfprogram;         ///< Pointer to the filtering pseudo-code associated with current instance of the driver.
+                                            ///< This code is used only in particular situations (for example when the packet received
+                                            ///< from the NIC driver is stored in two non-consecutive buffers. In normal situations
+                                            ///< the filtering routine created by the JIT compiler and pointed by the next field 
+                                            ///< is used. See \ref NPF for details on the filtering process.
+    JIT_BPF_Filter      *Filter;            ///< Pointer to the native filtering function created by the jitter. 
+                                            ///< See BPF_jitter() for details.
+    PUCHAR              Buffer;             ///< Pointer to the circular buffer associated with every driver instance. It contains the 
+                                            ///< data that will be passed to the application. See \ref NPF for details.
+    UINT                Bhead;              ///< Head of the circular buffer.
+    UINT                Btail;              ///< Tail of the circular buffer.
+    UINT                BufSize;            ///< Size of the circular buffer.
+    UINT                BLastByte;          ///< Position of the last valid byte in the circular buffer.
+    PMDL                TransferMdl;        ///< MDL used to map the portion of the buffer that will contain an incoming packet. 
+                                            ///< Used by NdisTransferData().
+    NDIS_SPIN_LOCK      BufLock;            ///< SpinLock that protects the access tho the circular buffer variables.
+    UINT                MinToCopy;          ///< Minimum amount of data in the circular buffer that unlocks a read. Set with the
+                                            ///< BIOCSMINTOCOPY IOCTL.
+    LARGE_INTEGER       TimeOut;            ///< Timeout after which a read is released, also if the amount of data in the buffer is 
+                                            ///< less than MinToCopy. Set with the BIOCSRTIMEOUT IOCTL.
+                                            
+    int                 mode;               ///< Working mode of the driver. See PacketSetMode() for details.
+    LARGE_INTEGER       Nbytes;             ///< Amount of bytes accepted by the filter when this instance is in statistical mode.
+    LARGE_INTEGER       Npackets;           ///< Number of packets accepted by the filter when this instance is in statistical mode.
+    NDIS_SPIN_LOCK      CountersLock;       ///< SpinLock that protects the statistical mode counters.
+    UINT                Nwrites;            ///< Number of times a single write must be physically repeated. See \ref NPF for an 
+                                            ///< explanation
+    UINT                Multiple_Write_Counter; ///< Counts the number of times a single write has already physically repeated.
+    NDIS_EVENT          WriteEvent;         ///< Event used to synchronize the multiple write process.
+    NDIS_EVENT          IOEvent;            ///< Event used to synchronize I/O requests with the callback structure of NDIS.
+    NDIS_STATUS         IOStatus;           ///< Maintains the status of and OID request call, that will be passed to the application.
+    BOOLEAN             Bound;              ///< Specifies if NPF is still bound to the adapter used by this instance. Bound can be
+                                            ///< FALSE if a Plug and Play adapter has been removed or disabled by the user.
+    HANDLE              DumpFileHandle;     ///< Handle of the file used in dump mode.
+    PFILE_OBJECT        DumpFileObject;     ///< Pointer to the object of the file used in dump mode.
+    PKTHREAD            DumpThreadObject;   ///< Pointer to the object of the thread used in dump mode.
+    HANDLE              DumpThreadHandle;   ///< Handle of the thread created by dump mode to asynchronously move the buffer to disk.
+    NDIS_EVENT          DumpEvent;          ///< Event used to synchronize the dump thread with the tap when the instance is in dump mode.
+    LARGE_INTEGER       DumpOffset;         ///< Current offset in the dump file.
+    UNICODE_STRING      DumpFileName;       ///< String containing the name of the dump file.
+    UINT                MaxDumpBytes;       ///< Maximum dimension in bytes of the dump file. If the dump file reaches this size it 
+                                            ///< will be closed. A value of 0 means unlimited size.
+    UINT                MaxDumpPacks;       ///< Maximum number of packets that will be saved in the dump file. If this number of 
+                                            ///< packets is reached the dump will be closed. A value of 0 means unlimited number of 
+                                            ///< packets.
+    BOOLEAN             DumpLimitReached;   ///< TRUE if the maximum dimension of the dump file (MaxDumpBytes or MaxDumpPacks) is 
+                                            ///< reached.
+    MEM_TYPE            mem_ex;             ///< Memory used by the TME virtual co-processor
+    TME_CORE            tme;                ///< Data structure containing the virtualization of the TME co-processor
+    NDIS_SPIN_LOCK      machine_lock;       ///< SpinLock that protects the mem_ex buffer
+    UINT                MaxFrameSize;       ///< Maximum frame size that the underlying MAC acceptes. Used to perform a check on the 
+                                            ///< size of the frames sent with NPF_Write() or NPF_BufferedWrite().
 } OPEN_INSTANCE, *POPEN_INSTANCE;
 
 
-#define TRANSMIT_PACKETS 256	///< Maximum number of packets in the transmit packet pool. This value is an upper bound to the number
-								///< of packets that can be transmitted at the same time or with a single call to NdisSendPackets.
+#define TRANSMIT_PACKETS 256    ///< Maximum number of packets in the transmit packet pool. This value is an upper bound to the number
+                                ///< of packets that can be transmitted at the same time or with a single call to NdisSendPackets.
 
-#ifdef __GNUC__
-#undef EXIT_SUCCESS
-#undef EXIT_FAILURE
-#endif
 
 /// Macro used in the I/O routines to return the control to user-mode with a success status.
 #define EXIT_SUCCESS(quantity) Irp->IoStatus.Information=quantity;\
-Irp->IoStatus.Status = STATUS_SUCCESS;\
-IoCompleteRequest(Irp, IO_NO_INCREMENT);\
-return STATUS_SUCCESS;\
+    Irp->IoStatus.Status = STATUS_SUCCESS;\
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);\
+    return STATUS_SUCCESS;\
 
 /// Macro used in the I/O routines to return the control to user-mode with a failure status.
 #define EXIT_FAILURE(quantity) Irp->IoStatus.Information=quantity;\
-Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;\
-IoCompleteRequest(Irp, IO_NO_INCREMENT);\
-return STATUS_UNSUCCESSFUL;\
+    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;\
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);\
+    return STATUS_UNSUCCESSFUL;\
 
 /**
  *  @}
@@ -400,11 +403,11 @@ return STATUS_UNSUCCESSFUL;\
   performing all the allocations and the setup. In particular, DriverEntry registers all the driver's I/O
   callbacks, creates the devices, defines NPF as a protocol inside NDIS.
 */ 
-NTSTATUS
-DriverEntry(
-    IN PDRIVER_OBJECT DriverObject,
-    IN PUNICODE_STRING RegistryPath
-    );
+//NTSTATUS
+//DriverEntry(
+//    IN PDRIVER_OBJECT DriverObject,
+//    IN PUNICODE_STRING RegistryPath
+//    );
 
 /*!
   \brief Returns the list of the MACs available on the system.
@@ -437,9 +440,9 @@ PKEY_VALUE_PARTIAL_INFORMATION getTcpBindings(VOID);
   determine the correct adapter to use.
 */
 BOOLEAN createDevice(
-	IN OUT PDRIVER_OBJECT adriverObjectP,
-	IN PUNICODE_STRING amacNameP,
-	NDIS_HANDLE aProtoHandle);
+    IN OUT PDRIVER_OBJECT adriverObjectP,
+    IN PUNICODE_STRING amacNameP,
+    NDIS_HANDLE aProtoHandle);
 
 /*!
   \brief Opens a new instance of the driver.
@@ -584,8 +587,8 @@ NPF_ReceiveComplete(IN NDIS_HANDLE  ProtocolBindingContext);
   - #BIOCQUERYOID 
   - #BIOCSETDUMPFILENAME
   - #BIOCGEVNAME
-  -	#BIOCSENDPACKETSSYNC
-  -	#BIOCSENDPACKETSNOSYNC
+  - #BIOCSENDPACKETSSYNC
+  - #BIOCSENDPACKETSNOSYNC
 */
 NTSTATUS
 NPF_IoControl(
@@ -624,9 +627,9 @@ NPF_RequestComplete(
 */
 NTSTATUS
 NPF_Write(
-			IN PDEVICE_OBJECT DeviceObject,
-			IN PIRP Irp
-			);
+            IN PDEVICE_OBJECT DeviceObject,
+            IN PIRP Irp
+            );
 
 
 /*!
@@ -636,7 +639,7 @@ NPF_Write(
   \param UserBuffSize Size of the buffer with the packets.
   \return The amount of bytes actually sent. If the return value is smaller than the Size parameter, an
           error occurred during the send. The error can be caused by an adapter problem or by an
-		  inconsistent/bogus user buffer.
+          inconsistent/bogus user buffer.
 
   This function is called by the OS in consequence of a BIOCSENDPACKETSNOSYNC or a BIOCSENDPACKETSSYNC IOCTL.
   The buffer received as input parameter contains an arbitrary number of packets, each of which preceded by a
@@ -648,9 +651,9 @@ NPF_Write(
 */
 
 INT NPF_BufferedWrite(IN PIRP Irp, 
-						IN PCHAR UserBuff, 
-						IN ULONG UserBuffSize,
-						BOOLEAN sync);
+                        IN PCHAR UserBuff, 
+                        IN ULONG UserBuffSize,
+                        BOOLEAN sync);
 
 /*!
   \brief Ends a send operation.
@@ -827,12 +830,12 @@ int bpf_validate(struct bpf_insn *f,int len, uint32 mem_ex_size);
   that is faster than the interpreter.
 */
 UINT bpf_filter(register struct bpf_insn *pc,
-				register UCHAR *p,
-				UINT wirelen,
-				register UINT buflen,
-				PMEM_TYPE mem_ex,
-				PTME_CORE tme,
-				struct time_conv *time_ref);
+                register UCHAR *p,
+                UINT wirelen,
+                register UINT buflen,
+                PMEM_TYPE mem_ex,
+                PTME_CORE tme,
+                struct time_conv *time_ref);
 
 /*!
   \brief The filtering pseudo-machine interpreter with two buffers. This function is slower than bpf_filter(), 
@@ -852,14 +855,14 @@ UINT bpf_filter(register struct bpf_insn *pc,
   This function is used when NDIS passes the packet to NPF_tap() in two buffers instaed than in a single one.
 */
 UINT bpf_filter_with_2_buffers(register struct bpf_insn *pc,
-							   register UCHAR *p,
-							   register UCHAR *pd,
-							   register int headersize,
-							   UINT wirelen,
-							   register UINT buflen,
-							   PMEM_TYPE mem_ex,
-				               PTME_CORE tme,
-							   struct time_conv *time_ref);
+                               register UCHAR *p,
+                               register UCHAR *pd,
+                               register int headersize,
+                               UINT wirelen,
+                               register UINT buflen,
+                               PMEM_TYPE mem_ex,
+                               PTME_CORE tme,
+                               struct time_conv *time_ref);
 
 /*!
   \brief Creates the file that will receive the packets when the driver is in dump mode.
@@ -910,10 +913,10 @@ NTSTATUS NPF_SaveCurrentBuffer(POPEN_INSTANCE Open);
   of the NPF circular buffer to disk. This function is used by NPF_DumpThread().
 */
 VOID NPF_WriteDumpFile(PFILE_OBJECT FileObject,
-			                    PLARGE_INTEGER Offset,
-								ULONG Length,
-								PMDL Mdl,
-								PIO_STATUS_BLOCK IoStatusBlock);
+                                PLARGE_INTEGER Offset,
+                                ULONG Length,
+                                PMDL Mdl,
+                                PIO_STATUS_BLOCK IoStatusBlock);
 
 
 
@@ -954,4 +957,3 @@ NDIS_STATUS NPF_PowerChange(IN NDIS_HANDLE ProtocolBindingContext, IN PNET_PNP_E
  */
 
 #endif  /*main ifndef/define*/
-

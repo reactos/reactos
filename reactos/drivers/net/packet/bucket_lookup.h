@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2001
- *	Politecnico di Torino.  All rights reserved.
+ *  Politecnico di Torino.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that: (1) source code distributions
@@ -35,9 +35,9 @@
 
 #endif
 
-#define BUCKET_LOOKUP_INSERT	0x00000011
+#define BUCKET_LOOKUP_INSERT    0x00000011
 uint32 bucket_lookup_insert(uint8 *key, TME_DATA *data, MEM_TYPE *mem_ex, struct time_conv *time_ref);
-#define BUCKET_LOOKUP			0x00000010
+#define BUCKET_LOOKUP           0x00000010
 uint32 bucket_lookup(uint8 *key, TME_DATA *data, MEM_TYPE *mem_ex, struct time_conv *time_ref);
 
 #endif

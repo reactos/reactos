@@ -82,6 +82,9 @@ extern NDIS_SPIN_LOCK Opened_Instances_Lock;
 //  Packet Driver's entry routine.
 //
 NTSTATUS
+#ifdef __GNUC__
+STDCALL
+#endif
 DriverEntry(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath
@@ -111,7 +114,7 @@ DriverEntry(
 		return STATUS_IMAGE_MP_UP_MISMATCH;
 	}
 
-    IF_LOUD(DbgPrint("\n\nPacket: DriverEntry\n");)
+    IF_LOUD(DbgPrint("Packet: DriverEntry\n");)
 
 	RtlZeroMemory(&ProtocolChar,sizeof(NDIS_PROTOCOL_CHARACTERISTICS));
 
@@ -123,17 +126,24 @@ DriverEntry(
     ProtocolChar.MinorNdisVersion            = 0;
 #ifndef __GNUC__
     ProtocolChar.Reserved                    = 0;
+#else
+    ProtocolChar.u1.Reserved                 = 0;
 #endif
     ProtocolChar.OpenAdapterCompleteHandler  = NPF_OpenAdapterComplete;
     ProtocolChar.CloseAdapterCompleteHandler = NPF_CloseAdapterComplete;
 #ifndef __GNUC__
     ProtocolChar.SendCompleteHandler         = NPF_SendComplete;
     ProtocolChar.TransferDataCompleteHandler = NPF_TransferDataComplete;
+#else
+    ProtocolChar.u2.SendCompleteHandler         = NPF_SendComplete;
+    ProtocolChar.u3.TransferDataCompleteHandler = NPF_TransferDataComplete;
 #endif
     ProtocolChar.ResetCompleteHandler        = NPF_ResetComplete;
     ProtocolChar.RequestCompleteHandler      = NPF_RequestComplete;
 #ifndef __GNUC__
     ProtocolChar.ReceiveHandler              = NPF_tap;
+#else
+    ProtocolChar.u4.ReceiveHandler           = NPF_tap;
 #endif
     ProtocolChar.ReceiveCompleteHandler      = NPF_ReceiveComplete;
     ProtocolChar.StatusHandler               = NPF_Status;
@@ -170,6 +180,7 @@ DriverEntry(
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL]  = NPF_IoControl;
     DriverObject->DriverUnload = NPF_Unload;
 
+/*
     //  Get the name of the Packet driver and the name of the NIC driver
     //  to bind to from the registry
     Status=NPF_ReadRegistry(
@@ -181,7 +192,7 @@ DriverEntry(
     if (Status != STATUS_SUCCESS) {
 
 		IF_LOUD(DbgPrint("Trying dynamic binding\n");)	
-
+ */
 		bindP = getAdaptersList();
 
 		if (bindP == NULL) {
@@ -198,7 +209,6 @@ DriverEntry(
 			bindT = (WCHAR*)(tcpBindingsP->Data);
         } else {
 			bindT = bindP;
-
 		}
 
 		for (; *bindT != UNICODE_NULL; bindT += (macName.Length + sizeof(UNICODE_NULL)) / sizeof(WCHAR)) {
@@ -207,13 +217,10 @@ DriverEntry(
 		}
 
 		return STATUS_SUCCESS;
-
+/*
     }
-
     BindStringSave   = BindString;
     ExportStringSave = ExportString;
-
-
     //
     //  create a device object for each entry
     //
@@ -223,23 +230,16 @@ DriverEntry(
         //
         RtlInitUnicodeString(
             &MacDriverName,
-            BindString
-            );
-
+            BindString);
         RtlInitUnicodeString(
             &UnicodeDeviceName,
-            ExportString
-            );
-
+            ExportString);
         //
         //  Advance to the next string of the MULTI_SZ string
         //
         BindString   += (MacDriverName.Length+sizeof(UNICODE_NULL))/sizeof(WCHAR);
-
         ExportString += (UnicodeDeviceName.Length+sizeof(UNICODE_NULL))/sizeof(WCHAR);
-
         IF_LOUD(DbgPrint("NPF: DeviceName=%ws  MacName=%ws\n",UnicodeDeviceName.Buffer,MacDriverName.Buffer);)
-
         //
         //  Create the device object
         //
@@ -250,40 +250,25 @@ DriverEntry(
                     FILE_DEVICE_PROTOCOL,
                     0,
                     FALSE,
-                    &DeviceObject
-                    );
-
+                    &DeviceObject);
         if (Status != STATUS_SUCCESS) {
             IF_LOUD(DbgPrint("NPF: IoCreateDevice() failed:\n");)
-
             break;
         }
-
         DevicesCreated++;
-
-
         DeviceObject->Flags |= DO_DIRECT_IO;
         DeviceExtension  =  (PDEVICE_EXTENSION) DeviceObject->DeviceExtension;
         DeviceExtension->DeviceObject = DeviceObject;
-
         //
         //  Save the the name of the MAC driver to open in the Device Extension
         //
-
         DeviceExtension->AdapterName=MacDriverName;
-
         if (DevicesCreated == 1) {
-
             DeviceExtension->BindString   = NULL;
             DeviceExtension->ExportString = NULL;
         }
-
-
         DeviceExtension->NdisProtocolHandle=NdisProtocolHandle;
-
-
     }
-
     if (DevicesCreated > 0) {
         //
         //  Managed to create at least one device.
@@ -291,11 +276,9 @@ DriverEntry(
         IF_LOUD(DbgPrint("NPF: Managed to create at least one device.\n");)
         return STATUS_SUCCESS;
     }
-
-
-
     ExFreePool(BindStringSave);
     ExFreePool(ExportStringSave);
+ */
 
 RegistryError:
     IF_LOUD(DbgPrint("NPF: RegistryError: calling NdisDeregisterProtocol()\n");)
@@ -320,7 +303,8 @@ PWCHAR getAdaptersList(void)
 	HANDLE keyHandle;
 	UINT BufPos=0;
 	
-	PWCHAR DeviceNames = (PWCHAR) ExAllocatePoolWithTag(PagedPool, 4096, '0PWA');
+#define NPF_TAG_DEVICENAME  TAG('0', 'P', 'W', 'A')
+	PWCHAR DeviceNames = (PWCHAR) ExAllocatePoolWithTag(PagedPool, 4096, NPF_TAG_DEVICENAME);
 	
 	if (DeviceNames == NULL) {
 		IF_LOUD(DbgPrint("Unable the allocate the buffer for the list of the network adapters\n");)
@@ -331,7 +315,10 @@ PWCHAR getAdaptersList(void)
 		OBJ_CASE_INSENSITIVE, NULL, NULL);
 	status = ZwOpenKey(&keyHandle, KEY_READ, &objAttrs);
 	if (!NT_SUCCESS(status)) {
-		IF_LOUD(DbgPrint("\n\nStatus of %x opening %ws\n", status, tcpLinkageKeyName.Buffer);)
+
+        //IF_LOUD(DbgPrint("Status of %x opening %ws\n", status, tcpLinkageKeyName.Buffer);)
+        IF_LOUD(DbgPrint("Status of %x opening %ws\n", status, AdapterListKey.Buffer);)
+
     } else { //OK
 		ULONG resultLength;
 		KEY_VALUE_PARTIAL_INFORMATION valueInfo;
@@ -389,7 +376,8 @@ PWCHAR getAdaptersList(void)
 					IF_LOUD(DbgPrint("\n\nStatus of %x querying key value for size\n", status);)
                 } else { // We know how big it needs to be.
 					ULONG valueInfoLength = valueInfo.DataLength + FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]);
-					PKEY_VALUE_PARTIAL_INFORMATION valueInfoP =	(PKEY_VALUE_PARTIAL_INFORMATION) ExAllocatePoolWithTag(PagedPool, valueInfoLength, '1PWA');
+#define NPF_TAG_KEYVALUE  TAG('1', 'P', 'W', 'A')
+					PKEY_VALUE_PARTIAL_INFORMATION valueInfoP =	(PKEY_VALUE_PARTIAL_INFORMATION) ExAllocatePoolWithTag(PagedPool, valueInfoLength, NPF_TAG_KEYVALUE);
 					if (valueInfoP != NULL) {
 						status = ZwQueryValueKey(ExportKeyHandle, &FinalExportKey,
 							KeyValuePartialInformation,
@@ -458,8 +446,9 @@ PKEY_VALUE_PARTIAL_INFORMATION getTcpBindings(void)
       IF_LOUD(DbgPrint("\n\nStatus of %x querying key value for size\n", status);)
     } else {                      // We know how big it needs to be.
       ULONG valueInfoLength = valueInfo.DataLength + FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]);
+#define NPF_TAG_KEYVALUE2  TAG('2', 'P', 'W', 'A')
       PKEY_VALUE_PARTIAL_INFORMATION valueInfoP =
-        (PKEY_VALUE_PARTIAL_INFORMATION)ExAllocatePoolWithTag(PagedPool, valueInfoLength, '2PWA');
+        (PKEY_VALUE_PARTIAL_INFORMATION)ExAllocatePoolWithTag(PagedPool, valueInfoLength, NPF_TAG_KEYVALUE2);
       
 	  if (valueInfoP != NULL) {
         status = ZwQueryValueKey(keyHandle, &bindValueName,
@@ -506,54 +495,100 @@ PKEY_VALUE_PARTIAL_INFORMATION getTcpBindings(void)
 BOOLEAN createDevice(IN OUT PDRIVER_OBJECT adriverObjectP,
                      IN PUNICODE_STRING amacNameP, NDIS_HANDLE aProtoHandle)
 {
-  NTSTATUS status;
-  PDEVICE_OBJECT devObjP;
-  UNICODE_STRING deviceName;
-  BOOLEAN result = FALSE;
+    NTSTATUS status;
+    PDEVICE_OBJECT devObjP;
+    UNICODE_STRING deviceName;
+	UNICODE_STRING deviceSymLink;
 
-  IF_LOUD(DbgPrint("\n\ncreateDevice for MAC %ws\n", amacNameP->Buffer);)
-  if (RtlCompareMemory(amacNameP->Buffer, devicePrefix.Buffer,
+	IF_LOUD(DbgPrint("\n\ncreateDevice for MAC %ws\n", amacNameP->Buffer););
+    if (RtlCompareMemory(amacNameP->Buffer, devicePrefix.Buffer,
                        devicePrefix.Length) < devicePrefix.Length) {
-    return result;
-  }
+		return FALSE;
+    }
 
-  deviceName.Length = 0;
-  deviceName.MaximumLength = (USHORT)(amacNameP->Length + NPF_Prefix.Length + sizeof(UNICODE_NULL));
-  deviceName.Buffer = ExAllocatePoolWithTag(PagedPool, deviceName.MaximumLength, '3PWA');
+    deviceName.Length = 0;
+    deviceName.MaximumLength = (USHORT)(amacNameP->Length + NPF_Prefix.Length + sizeof(UNICODE_NULL));
+#define NPF_TAG_DEVICENAMEBUF  TAG('3', 'P', 'W', 'A')
+    deviceName.Buffer = ExAllocatePoolWithTag(PagedPool, deviceName.MaximumLength, NPF_TAG_DEVICENAMEBUF);
  
-  if (deviceName.Buffer != NULL) {
+	if (deviceName.Buffer == NULL)
+		return FALSE;
+
+	deviceSymLink.Length = 0;
+	deviceSymLink.MaximumLength =(USHORT)(amacNameP->Length-devicePrefix.Length 
+		+ symbolicLinkPrefix.Length 
+		+ NPF_Prefix.Length 
+		+ sizeof(UNICODE_NULL));
+
+#define NPF_TAG_SYMLINKBUF  TAG('3', 'P', 'W', 'A')
+	deviceSymLink.Buffer = ExAllocatePoolWithTag(NonPagedPool, deviceSymLink.MaximumLength, NPF_TAG_SYMLINKBUF);
+
+	if (deviceSymLink.Buffer  == NULL)
+	{
+		ExFreePool(deviceName.Buffer);
+		return FALSE;
+	}
+
     RtlAppendUnicodeStringToString(&deviceName, &devicePrefix);
     RtlAppendUnicodeStringToString(&deviceName, &NPF_Prefix);
     RtlAppendUnicodeToString(&deviceName, amacNameP->Buffer +
                              devicePrefix.Length / sizeof(WCHAR));
     
-	IF_LOUD(DbgPrint("\n\nDevice name: %ws\n", deviceName.Buffer);)
+	RtlAppendUnicodeStringToString(&deviceSymLink, &symbolicLinkPrefix);
+	RtlAppendUnicodeStringToString(&deviceSymLink, &NPF_Prefix);
+	RtlAppendUnicodeToString(&deviceSymLink, amacNameP->Buffer +
+		devicePrefix.Length / sizeof(WCHAR));
+
+	IF_LOUD(DbgPrint("Creating device name: %ws\n", deviceName.Buffer);)
     
-	status = IoCreateDevice(adriverObjectP, sizeof(PDEVICE_EXTENSION),
-                            &deviceName, FILE_DEVICE_TRANSPORT, 0, FALSE,
-                            &devObjP);
+	status = IoCreateDevice(adriverObjectP, 
+        sizeof(PDEVICE_EXTENSION),
+        &deviceName, 
+        FILE_DEVICE_TRANSPORT,
+        0,
+        FALSE,
+        &devObjP);
 
     if (NT_SUCCESS(status)) {
-      PDEVICE_EXTENSION devExtP = (PDEVICE_EXTENSION)devObjP->DeviceExtension;
+        PDEVICE_EXTENSION devExtP = (PDEVICE_EXTENSION)devObjP->DeviceExtension;
 
-	  IF_LOUD(DbgPrint("\n\nDevice created succesfully\n");)
+		IF_LOUD(DbgPrint("Device created successfully\n"););
 
-      devObjP->Flags |= DO_DIRECT_IO;
-      
-	  devExtP->DeviceObject = devObjP;
-      RtlInitUnicodeString(&devExtP->AdapterName,amacNameP->Buffer);   
-	  devExtP->BindString = NULL;
-      devExtP->ExportString = NULL;
-	  devExtP->NdisProtocolHandle=aProtoHandle;
+        devObjP->Flags |= DO_DIRECT_IO;
+        RtlInitUnicodeString(&devExtP->AdapterName,amacNameP->Buffer);
+		devExtP->NdisProtocolHandle=aProtoHandle;
 
+		IF_LOUD(DbgPrint("Trying to create SymLink %ws\n",deviceSymLink.Buffer););
+
+		if (IoCreateSymbolicLink(&deviceSymLink,&deviceName) != STATUS_SUCCESS)	{
+			IF_LOUD(DbgPrint("\n\nError creating SymLink %ws\nn", deviceSymLink.Buffer););
+
+			ExFreePool(deviceName.Buffer);
+			ExFreePool(deviceSymLink.Buffer);
+
+			devExtP->ExportString = NULL;
+
+			return FALSE;
     }
 
-    else IF_LOUD(DbgPrint("\n\nIoCreateDevice status = %x\n", status););
+		IF_LOUD(DbgPrint("SymLink %ws successfully created.\n\n", deviceSymLink.Buffer););
 
-	ExFreePool(deviceName.Buffer);
-  }
+		devExtP->ExportString = deviceSymLink.Buffer;
+
+        ExFreePool(deviceName.Buffer);
+
+		return TRUE;
+    }
   
-  return result;
+	else 
+	{
+		IF_LOUD(DbgPrint("\n\nIoCreateDevice status = %x\n", status););
+
+		ExFreePool(deviceName.Buffer);
+		ExFreePool(deviceSymLink.Buffer);
+		
+		return FALSE;
+	}
 }
 
 //-------------------------------------------------------------------
@@ -561,7 +596,6 @@ BOOLEAN createDevice(IN OUT PDRIVER_OBJECT adriverObjectP,
 VOID
 NPF_Unload(IN PDRIVER_OBJECT DriverObject)
 {
-	
     PDEVICE_OBJECT     DeviceObject;
     PDEVICE_OBJECT     OldDeviceObject;
     PDEVICE_EXTENSION  DeviceExtension;
@@ -569,27 +603,38 @@ NPF_Unload(IN PDRIVER_OBJECT DriverObject)
     NDIS_HANDLE        NdisProtocolHandle;
     NDIS_STATUS        Status;
 	
-    IF_LOUD(DbgPrint("NPF: Unload\n");)
+	NDIS_STRING		   SymLink;
 
+    IF_LOUD(DbgPrint("NPF: Unload\n"););
 
 	DeviceObject    = DriverObject->DeviceObject;
 
     while (DeviceObject != NULL) {
-        DeviceExtension = DeviceObject->DeviceExtension;
-
-        NdisProtocolHandle=DeviceExtension->NdisProtocolHandle;
         OldDeviceObject=DeviceObject;
 		
         DeviceObject=DeviceObject->NextDevice;
+
+		DeviceExtension = OldDeviceObject->DeviceExtension;
+
+        NdisProtocolHandle=DeviceExtension->NdisProtocolHandle;
 
 		IF_LOUD(DbgPrint("Deleting Adapter %ws, Protocol Handle=%x, Device Obj=%x (%x)\n",
 			DeviceExtension->AdapterName.Buffer,
 			NdisProtocolHandle,
 			DeviceObject,
-			OldDeviceObject);)
+			OldDeviceObject););
+
+		if (DeviceExtension->ExportString)
+		{
+			RtlInitUnicodeString(&SymLink , DeviceExtension->ExportString);
 		
+			IF_LOUD(DbgPrint("Deleting SymLink at %p\n", SymLink.Buffer););
+
+			IoDeleteSymbolicLink(&SymLink);
+			ExFreePool(DeviceExtension->ExportString);
+		}
+
         IoDeleteDevice(OldDeviceObject);
-		
     }
 
 	NdisDeregisterProtocol(
@@ -599,7 +644,6 @@ NPF_Unload(IN PDRIVER_OBJECT DriverObject)
 
 	// Free the adapters names
 	ExFreePool( bindP );
-	
 }
 
 //-------------------------------------------------------------------
@@ -754,7 +798,8 @@ NPF_IoControl(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
 		
 		// Allocate the memory to contain the new filter program
 		// We could need the original BPF binary if we are forced to use bpf_filter_with_2_buffers()
-		TmpBPFProgram=(PUCHAR)ExAllocatePoolWithTag(NonPagedPool, cnt*sizeof(struct bpf_insn), '4PWA');
+#define NPF_TAG_BPFPROG  TAG('4', 'P', 'W', 'A')
+		TmpBPFProgram=(PUCHAR)ExAllocatePoolWithTag(NonPagedPool, cnt*sizeof(struct bpf_insn), NPF_TAG_BPFPROG);
 		if (TmpBPFProgram==NULL){
 			IF_LOUD(DbgPrint("Error - No memory for filter");)
 			// no memory
@@ -766,11 +811,8 @@ NPF_IoControl(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
 		Open->bpfprogram=TmpBPFProgram;
 		
 		// Create the new JIT filter function
-
 		if(!IsExtendedFilter)
-			if((Open->Filter=BPF_jitter((struct bpf_insn*)Open->bpfprogram,cnt))
-			== NULL)
-		{
+			if((Open->Filter=BPF_jitter((struct bpf_insn*)Open->bpfprogram,cnt)) == NULL) {
 			IF_LOUD(DbgPrint("Error jittering filter");)
 			EXIT_FAILURE(0);
 		}
@@ -778,9 +820,10 @@ NPF_IoControl(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
 		//return
 		Open->Bhead = 0;
 		Open->Btail = 0;
-		Open->BLastByte = 0;
+		(INT)Open->BLastByte = -1;
 		Open->Received = 0;		
 		Open->Dropped = 0;
+		Open->Accepted = 0;
 
 		EXIT_SUCCESS(IrpSp->Parameters.DeviceIoControl.InputBufferLength);
 		
@@ -839,7 +882,8 @@ NPF_IoControl(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
 			}
 			
 			// Allocate the buffer that will contain the string
-			DumpNameBuff=ExAllocatePoolWithTag(NonPagedPool, IrpSp->Parameters.DeviceIoControl.InputBufferLength, '5PWA');
+#define NPF_TAG_DUMPNAMEBUF  TAG('5', 'P', 'W', 'A')
+			DumpNameBuff=ExAllocatePoolWithTag(NonPagedPool, IrpSp->Parameters.DeviceIoControl.InputBufferLength, NPF_TAG_DUMPNAMEBUF);
 			if(DumpNameBuff==NULL || Open->DumpFileName.Buffer!=NULL){
 				IF_LOUD(DbgPrint("NPF: unable to allocate the dump filename: not enough memory or name already set\n");)
 					EXIT_FAILURE(0);
@@ -908,7 +952,8 @@ NPF_IoControl(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
 		}
 		// Allocate the new buffer
 		if(dim!=0){
-			tpointer = ExAllocatePoolWithTag(NonPagedPool, dim, '6PWA');
+#define NPF_TAG_TPOINTER  TAG('6', 'P', 'W', 'A')
+			tpointer = ExAllocatePoolWithTag(NonPagedPool, dim, NPF_TAG_TPOINTER);
 			if (tpointer==NULL)	{
 				// no memory
 				Open->BufSize = 0;
@@ -922,7 +967,7 @@ NPF_IoControl(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
 		Open->Buffer = tpointer;
 		Open->Bhead = 0;
 		Open->Btail = 0;
-		Open->BLastByte = 0;
+		(INT)Open->BLastByte = -1;
 		
 		Open->BufSize = (UINT)dim;
 		EXIT_SUCCESS(dim);
@@ -990,6 +1035,8 @@ NPF_IoControl(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
 
 		pRequest=CONTAINING_RECORD(RequestListEntry,INTERNAL_REQUEST,ListElement);
 		pRequest->Irp=Irp;
+		pRequest->Internal = FALSE;
+
         
 		//
         //  See if it is an Ndis request
@@ -1094,11 +1141,18 @@ NPF_RequestComplete(
     pRequest=CONTAINING_RECORD(NdisRequest,INTERNAL_REQUEST,Request);
     Irp=pRequest->Irp;
 
-	if(Irp == NULL){
+	if(pRequest->Internal == TRUE){
 
 		// Put the request in the list of the free ones
 		ExInterlockedInsertTailList(&Open->RequestList, &pRequest->ListElement, &Open->RequestSpinLock);
 		
+	    if(Status != NDIS_STATUS_SUCCESS)
+			Open->MaxFrameSize = 1514;	// Assume Ethernet
+
+		// We always return success, because the adapter has been already opened
+		Irp->IoStatus.Status = NDIS_STATUS_SUCCESS;
+		Irp->IoStatus.Information = 0;
+		IoCompleteRequest(Irp, IO_NO_INCREMENT);
 		return;
 	}
 
@@ -1138,7 +1192,7 @@ NPF_RequestComplete(
 
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-	// Unlock the IOCTL call
+	// Unlock the caller
 	NdisSetEvent(&Open->IOEvent);
 
     return;
@@ -1200,7 +1254,8 @@ NPF_ReadRegistry(
 
     PWCHAR     Path;
 
-    Path=ExAllocatePoolWithTag(PagedPool, RegistryPath->Length+sizeof(WCHAR), '7PWA');
+#define NPF_TAG_PATH  TAG('7', 'P', 'W', 'A')
+    Path=ExAllocatePoolWithTag(PagedPool, RegistryPath->Length+sizeof(WCHAR), NPF_TAG_PATH);
 
     if (Path == NULL) {
 		IF_LOUD(DbgPrint("\nPacketReadRegistry: returing STATUS_INSUFFICIENT_RESOURCES\n");)
@@ -1311,7 +1366,8 @@ NPF_QueryRegistryRoutine(
 
     }
 
-    Buffer=ExAllocatePoolWithTag(NonPagedPool, ValueLength, '8PWA');
+#define NPF_TAG_REGBUF  TAG('8', 'P', 'W', 'A')
+    Buffer=ExAllocatePoolWithTag(NonPagedPool, ValueLength, NPF_TAG_REGBUF);
 
     if (Buffer==NULL) {
 
