@@ -3,7 +3,7 @@
  *
  * Copyright 1993 Robert J. Amstadt
  * Copyright 1995 Martin von Loewis
- * Copyright 1995, 1996, 1997 Alexandre Julliard
+ * Copyright 1995, 1996, 1997, 2004 Alexandre Julliard
  * Copyright 1997 Eric Youngdale
  * Copyright 1999 Ulrich Weigand
  *
@@ -32,12 +32,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef WIN32
 #include "windef.h"
 #include "winbase.h"
-#else
-#include "winglue.h"
-#endif
 #include "build.h"
 
 int current_line = 0;
@@ -46,6 +42,9 @@ static char ParseBuffer[512];
 static char TokenBuffer[512];
 static char *ParseNext = ParseBuffer;
 static FILE *input_file;
+
+static const char *separator_chars;
+static const char *comment_chars;
 
 static const char * const TypeNames[TYPE_NBTYPES] =
 {
@@ -67,7 +66,6 @@ static const char * const FlagNames[] =
     "ret64",       /* FLAG_RET64 */
     "i386",        /* FLAG_I386 */
     "register",    /* FLAG_REGISTER */
-    "interrupt",   /* FLAG_INTERRUPT */
     "private",     /* FLAG_PRIVATE */
     NULL
 };
@@ -80,7 +78,12 @@ static int IsNumberString(const char *s)
 
 inline static int is_token_separator( char ch )
 {
-    return (ch == '(' || ch == ')' || ch == '-');
+    return strchr( separator_chars, ch ) != NULL;
+}
+
+inline static int is_token_comment( char ch )
+{
+    return strchr( comment_chars, ch ) != NULL;
 }
 
 /* get the next line from the input file, or return 0 if at eof */
@@ -113,7 +116,7 @@ static const char * GetToken( int allow_eol )
         else break;
     }
 
-    if ((*p == '\0') || (*p == '#'))
+    if ((*p == '\0') || is_token_comment(*p))
     {
         if (!allow_eol) error( "Declaration not terminated properly\n" );
         return NULL;
@@ -138,12 +141,23 @@ static const char * GetToken( int allow_eol )
 }
 
 
+static ORDDEF *add_entry_point( DLLSPEC *spec )
+{
+    if (spec->nb_entry_points == spec->alloc_entry_points)
+    {
+        spec->alloc_entry_points += 128;
+        spec->entry_points = xrealloc( spec->entry_points,
+                                       spec->alloc_entry_points * sizeof(*spec->entry_points) );
+    }
+    return &spec->entry_points[spec->nb_entry_points++];
+}
+
 /*******************************************************************
- *         ParseVariable
+ *         parse_spec_variable
  *
- * Parse a variable definition.
+ * Parse a variable definition in a .spec file.
  */
-static int ParseVariable( ORDDEF *odp )
+static int parse_spec_variable( ORDDEF *odp, DLLSPEC *spec )
 {
     char *endptr;
     int *value_array;
@@ -151,7 +165,7 @@ static int ParseVariable( ORDDEF *odp )
     int value_array_size;
     const char *token;
 
-    if (SpecType == SPEC_WIN32)
+    if (spec->type == SPEC_WIN32)
     {
         error( "'variable' not supported in Win32, use 'extern' instead\n" );
         return 0;
@@ -201,16 +215,16 @@ static int ParseVariable( ORDDEF *odp )
 
 
 /*******************************************************************
- *         ParseExportFunction
+ *         parse_spec_export
  *
- * Parse a function definition.
+ * Parse an exported function definition in a .spec file.
  */
-static int ParseExportFunction( ORDDEF *odp )
+static int parse_spec_export( ORDDEF *odp, DLLSPEC *spec )
 {
     const char *token;
     unsigned int i;
 
-    switch(SpecType)
+    switch(spec->type)
     {
     case SPEC_WIN16:
         if (odp->type == TYPE_STDCALL)
@@ -223,11 +237,6 @@ static int ParseExportFunction( ORDDEF *odp )
         if (odp->type == TYPE_PASCAL)
         {
             error( "'pascal' not supported for Win32\n" );
-            return 0;
-        }
-        if (odp->flags & FLAG_INTERRUPT)
-        {
-            error( "'interrupt' not supported for Win32\n" );
             return 0;
         }
         break;
@@ -273,7 +282,7 @@ static int ParseExportFunction( ORDDEF *odp )
             return 0;
         }
 
-        if (SpecType == SPEC_WIN32)
+        if (spec->type == SPEC_WIN32)
         {
             if (strcmp(token, "long") &&
                 strcmp(token, "ptr") &&
@@ -310,7 +319,7 @@ static int ParseExportFunction( ORDDEF *odp )
         odp->link_name = xstrdup( token );
         if (strchr( odp->link_name, '.' ))
         {
-            if (SpecType == SPEC_WIN16)
+            if (spec->type == SPEC_WIN16)
             {
                 error( "Forwarded functions not supported for Win16\n" );
                 return 0;
@@ -323,17 +332,17 @@ static int ParseExportFunction( ORDDEF *odp )
 
 
 /*******************************************************************
- *         ParseEquate
+ *         parse_spec_equate
  *
- * Parse an 'equate' definition.
+ * Parse an 'equate' definition in a .spec file.
  */
-static int ParseEquate( ORDDEF *odp )
+static int parse_spec_equate( ORDDEF *odp, DLLSPEC *spec )
 {
     char *endptr;
     int value;
     const char *token;
 
-    if (SpecType == SPEC_WIN32)
+    if (spec->type == SPEC_WIN32)
     {
         error( "'equate' not supported for Win32\n" );
         return 0;
@@ -351,11 +360,11 @@ static int ParseEquate( ORDDEF *odp )
 
 
 /*******************************************************************
- *         ParseStub
+ *         parse_spec_stub
  *
- * Parse a 'stub' definition.
+ * Parse a 'stub' definition in a .spec file
  */
-static int ParseStub( ORDDEF *odp )
+static int parse_spec_stub( ORDDEF *odp, DLLSPEC *spec )
 {
     odp->u.func.arg_types[0] = '\0';
     odp->link_name = xstrdup("");
@@ -364,15 +373,15 @@ static int ParseStub( ORDDEF *odp )
 
 
 /*******************************************************************
- *         ParseExtern
+ *         parse_spec_extern
  *
- * Parse an 'extern' definition.
+ * Parse an 'extern' definition in a .spec file.
  */
-static int ParseExtern( ORDDEF *odp )
+static int parse_spec_extern( ORDDEF *odp, DLLSPEC *spec )
 {
     const char *token;
 
-    if (SpecType == SPEC_WIN16)
+    if (spec->type == SPEC_WIN16)
     {
         error( "'extern' not supported for Win16, use 'variable' instead\n" );
         return 0;
@@ -396,11 +405,11 @@ static int ParseExtern( ORDDEF *odp )
 
 
 /*******************************************************************
- *         ParseFlags
+ *         parse_spec_flags
  *
- * Parse the optional flags for an entry point
+ * Parse the optional flags for an entry point in a .spec file.
  */
-static const char *ParseFlags( ORDDEF *odp )
+static const char *parse_spec_flags( ORDDEF *odp )
 {
     unsigned int i;
     const char *token;
@@ -422,32 +431,18 @@ static const char *ParseFlags( ORDDEF *odp )
     return token;
 }
 
-/*******************************************************************
- *         fix_export_name
- *
- * Fix an exported function name by removing a possible @xx suffix
- */
-static void fix_export_name( char *name )
-{
-    char *p, *end = strrchr( name, '@' );
-    if (!end || !end[1] || end == name) return;
-    /* make sure all the rest is digits */
-    for (p = end + 1; *p; p++) if (!isdigit(*p)) return;
-    *end = 0;
-}
 
 /*******************************************************************
- *         ParseOrdinal
+ *         parse_spec_ordinal
  *
- * Parse an ordinal definition.
+ * Parse an ordinal definition in a .spec file.
  */
-static int ParseOrdinal(int ordinal)
+static int parse_spec_ordinal( int ordinal, DLLSPEC *spec )
 {
     const char *token;
 
-    ORDDEF *odp = xmalloc( sizeof(*odp) );
+    ORDDEF *odp = add_entry_point( spec );
     memset( odp, 0, sizeof(*odp) );
-    EntryPoints[nb_entry_points++] = odp;
 
     if (!(token = GetToken(0))) goto error;
 
@@ -462,32 +457,31 @@ static int ParseOrdinal(int ordinal)
     }
 
     if (!(token = GetToken(0))) goto error;
-    if (*token == '-' && !(token = ParseFlags( odp ))) goto error;
+    if (*token == '-' && !(token = parse_spec_flags( odp ))) goto error;
 
     odp->name = xstrdup( token );
-    fix_export_name( odp->name );
     odp->lineno = current_line;
     odp->ordinal = ordinal;
 
     switch(odp->type)
     {
     case TYPE_VARIABLE:
-        if (!ParseVariable( odp )) goto error;
+        if (!parse_spec_variable( odp, spec )) goto error;
         break;
     case TYPE_PASCAL:
     case TYPE_STDCALL:
     case TYPE_VARARGS:
     case TYPE_CDECL:
-        if (!ParseExportFunction( odp )) goto error;
+        if (!parse_spec_export( odp, spec )) goto error;
         break;
     case TYPE_ABS:
-        if (!ParseEquate( odp )) goto error;
+        if (!parse_spec_equate( odp, spec )) goto error;
         break;
     case TYPE_STUB:
-        if (!ParseStub( odp )) goto error;
+        if (!parse_spec_stub( odp, spec )) goto error;
         break;
     case TYPE_EXTERN:
-        if (!ParseExtern( odp )) goto error;
+        if (!parse_spec_extern( odp, spec )) goto error;
         break;
     default:
         assert( 0 );
@@ -497,8 +491,7 @@ static int ParseOrdinal(int ordinal)
     if (odp->flags & FLAG_I386)
     {
         /* ignore this entry point on non-Intel archs */
-        EntryPoints[--nb_entry_points] = NULL;
-        free( odp );
+        spec->nb_entry_points--;
         return 1;
     }
 #endif
@@ -515,15 +508,20 @@ static int ParseOrdinal(int ordinal)
             error( "Ordinal number %d too large\n", ordinal );
             goto error;
         }
-        if (ordinal > Limit) Limit = ordinal;
-        if (ordinal < Base) Base = ordinal;
+        if (ordinal > spec->limit) spec->limit = ordinal;
+        if (ordinal < spec->base) spec->base = ordinal;
         odp->ordinal = ordinal;
-        if (Ordinals[ordinal])
+    }
+
+    if (odp->type == TYPE_STDCALL && !(odp->flags & FLAG_PRIVATE))
+    {
+        if (!strcmp( odp->name, "DllRegisterServer" ) ||
+            !strcmp( odp->name, "DllUnregisterServer" ) ||
+            !strcmp( odp->name, "DllGetClassObject" ) ||
+            !strcmp( odp->name, "DllCanUnloadNow" ))
         {
-            error( "Duplicate ordinal %d\n", ordinal );
-            goto error;
+            warning( "Function %s should be marked private\n", odp->name );
         }
-        Ordinals[ordinal] = odp;
     }
 
     if (!strcmp( odp->name, "@" ) || odp->flags & FLAG_NONAME)
@@ -533,7 +531,7 @@ static int ParseOrdinal(int ordinal)
             error( "Nameless function needs an explicit ordinal number\n" );
             goto error;
         }
-        if (SpecType != SPEC_WIN32)
+        if (spec->type != SPEC_WIN32)
         {
             error( "Nameless functions not supported for Win16\n" );
             goto error;
@@ -542,79 +540,135 @@ static int ParseOrdinal(int ordinal)
         else odp->export_name = odp->name;
         odp->name = NULL;
     }
-    else Names[nb_names++] = odp;
     return 1;
 
 error:
-    EntryPoints[--nb_entry_points] = NULL;
+    spec->nb_entry_points--;
     free( odp->name );
-    free( odp );
     return 0;
 }
 
 
 static int name_compare( const void *name1, const void *name2 )
 {
-    ORDDEF *odp1 = *(ORDDEF **)name1;
-    ORDDEF *odp2 = *(ORDDEF **)name2;
+    const ORDDEF *odp1 = *(const ORDDEF * const *)name1;
+    const ORDDEF *odp2 = *(const ORDDEF * const *)name2;
     return strcmp( odp1->name, odp2->name );
 }
 
 /*******************************************************************
- *         sort_names
+ *         assign_names
  *
- * Sort the name array and catch duplicates.
+ * Build the name array and catch duplicates.
  */
-static void sort_names(void)
+static void assign_names( DLLSPEC *spec )
 {
-    int i;
+    int i, j;
 
-    if (!nb_names) return;
+    spec->nb_names = 0;
+    for (i = 0; i < spec->nb_entry_points; i++)
+        if (spec->entry_points[i].name) spec->nb_names++;
+    if (!spec->nb_names) return;
+
+    spec->names = xmalloc( spec->nb_names * sizeof(spec->names[0]) );
+    for (i = j = 0; i < spec->nb_entry_points; i++)
+        if (spec->entry_points[i].name) spec->names[j++] = &spec->entry_points[i];
 
     /* sort the list of names */
-    qsort( Names, nb_names, sizeof(Names[0]), name_compare );
+    qsort( spec->names, spec->nb_names, sizeof(spec->names[0]), name_compare );
 
     /* check for duplicate names */
-    for (i = 0; i < nb_names - 1; i++)
+    for (i = 0; i < spec->nb_names - 1; i++)
     {
-        if (!strcmp( Names[i]->name, Names[i+1]->name ))
+        if (!strcmp( spec->names[i]->name, spec->names[i+1]->name ))
         {
-            current_line = max( Names[i]->lineno, Names[i+1]->lineno );
+            current_line = max( spec->names[i]->lineno, spec->names[i+1]->lineno );
             error( "'%s' redefined\n%s:%d: First defined here\n",
-                   Names[i]->name, input_file_name,
-                   min( Names[i]->lineno, Names[i+1]->lineno ) );
+                   spec->names[i]->name, input_file_name,
+                   min( spec->names[i]->lineno, spec->names[i+1]->lineno ) );
         }
     }
 }
 
+/*******************************************************************
+ *         assign_ordinals
+ *
+ * Build the ordinal array.
+ */
+static void assign_ordinals( DLLSPEC *spec )
+{
+    int i, count, ordinal;
+
+    /* start assigning from base, or from 1 if no ordinal defined yet */
+    if (spec->base == MAX_ORDINALS) spec->base = 1;
+    if (spec->limit < spec->base) spec->limit = spec->base;
+
+    count = max( spec->limit + 1, spec->base + spec->nb_entry_points );
+    spec->ordinals = xmalloc( count * sizeof(spec->ordinals[0]) );
+    memset( spec->ordinals, 0, count * sizeof(spec->ordinals[0]) );
+
+    /* fill in all explicitly specified ordinals */
+    for (i = 0; i < spec->nb_entry_points; i++)
+    {
+        ordinal = spec->entry_points[i].ordinal;
+        if (ordinal == -1) continue;
+        if (spec->ordinals[ordinal])
+        {
+            current_line = max( spec->entry_points[i].lineno, spec->ordinals[ordinal]->lineno );
+            error( "ordinal %d redefined\n%s:%d: First defined here\n",
+                   ordinal, input_file_name,
+                   min( spec->entry_points[i].lineno, spec->ordinals[ordinal]->lineno ) );
+        }
+        else spec->ordinals[ordinal] = &spec->entry_points[i];
+    }
+
+    /* now assign ordinals to the rest */
+    for (i = 0, ordinal = spec->base; i < spec->nb_names; i++)
+    {
+        if (spec->names[i]->ordinal != -1) continue;  /* already has an ordinal */
+        while (spec->ordinals[ordinal]) ordinal++;
+        if (ordinal >= MAX_ORDINALS)
+        {
+            current_line = spec->names[i]->lineno;
+            fatal_error( "Too many functions defined (max %d)\n", MAX_ORDINALS );
+        }
+        spec->names[i]->ordinal = ordinal;
+        spec->ordinals[ordinal] = spec->names[i];
+    }
+    if (ordinal > spec->limit) spec->limit = ordinal;
+}
+
 
 /*******************************************************************
- *         ParseTopLevel
+ *         parse_spec_file
  *
- * Parse a spec file.
+ * Parse a .spec file.
  */
-int ParseTopLevel( FILE *file )
+int parse_spec_file( FILE *file, DLLSPEC *spec )
 {
     const char *token;
 
     input_file = file;
     current_line = 0;
 
+    comment_chars = "#;";
+    separator_chars = "()-";
+
     while (get_next_line())
     {
         if (!(token = GetToken(1))) continue;
         if (strcmp(token, "@") == 0)
         {
-            if (SpecType != SPEC_WIN32)
+            if (spec->type != SPEC_WIN32)
             {
                 error( "'@' ordinals not supported for Win16\n" );
                 continue;
             }
-            if (!ParseOrdinal( -1 )) continue;
+            if (!parse_spec_ordinal( -1, spec )) continue;
         }
         else if (IsNumberString(token))
         {
-            if (!ParseOrdinal( atoi(token) )) continue;
+            if (!parse_spec_ordinal( atoi(token), spec )) continue;
         }
         else
         {
@@ -625,7 +679,245 @@ int ParseTopLevel( FILE *file )
     }
 
     current_line = 0;  /* no longer parsing the input file */
-    sort_names();
+    assign_names( spec );
+    assign_ordinals( spec );
+    return !nb_errors;
+}
+
+
+/*******************************************************************
+ *         parse_def_library
+ *
+ * Parse a LIBRARY declaration in a .def file.
+ */
+static int parse_def_library( DLLSPEC *spec )
+{
+    const char *token = GetToken(1);
+
+    if (!token) return 1;
+    if (strcmp( token, "BASE" ))
+    {
+        free( spec->file_name );
+        spec->file_name = xstrdup( token );
+        if (!(token = GetToken(1))) return 1;
+    }
+    if (strcmp( token, "BASE" ))
+    {
+        error( "Expected library name or BASE= declaration, got '%s'\n", token );
+        return 0;
+    }
+    if (!(token = GetToken(0))) return 0;
+    if (strcmp( token, "=" ))
+    {
+        error( "Expected '=' after BASE, got '%s'\n", token );
+        return 0;
+    }
+    if (!(token = GetToken(0))) return 0;
+    /* FIXME: do something with base address */
+
+    return 1;
+}
+
+
+/*******************************************************************
+ *         parse_def_stack_heap_size
+ *
+ * Parse a STACKSIZE or HEAPSIZE declaration in a .def file.
+ */
+static int parse_def_stack_heap_size( int is_stack, DLLSPEC *spec )
+{
+    const char *token = GetToken(0);
+    char *end;
+    unsigned long size;
+
+    if (!token) return 0;
+    size = strtoul( token, &end, 0 );
+    if (*end)
+    {
+        error( "Invalid number '%s'\n", token );
+        return 0;
+    }
+    if (is_stack) spec->stack_size = size / 1024;
+    else spec->heap_size = size / 1024;
+    if (!(token = GetToken(1))) return 1;
+    if (strcmp( token, "," ))
+    {
+        error( "Expected ',' after size, got '%s'\n", token );
+        return 0;
+    }
+    if (!(token = GetToken(0))) return 0;
+    /* FIXME: do something with reserve size */
+    return 1;
+}
+
+
+/*******************************************************************
+ *         parse_def_export
+ *
+ * Parse an export declaration in a .def file.
+ */
+static int parse_def_export( char *name, DLLSPEC *spec )
+{
+    int i, args;
+    const char *token = GetToken(1);
+
+    ORDDEF *odp = add_entry_point( spec );
+    memset( odp, 0, sizeof(*odp) );
+
+    odp->lineno = current_line;
+    odp->ordinal = -1;
+    odp->name = name;
+    args = remove_stdcall_decoration( odp->name );
+    if (args == -1) odp->type = TYPE_CDECL;
+    else
+    {
+        odp->type = TYPE_STDCALL;
+        args /= sizeof(int);
+        if (args >= sizeof(odp->u.func.arg_types))
+        {
+            error( "Too many arguments in stdcall function '%s'\n", odp->name );
+            return 0;
+        }
+        for (i = 0; i < args; i++) odp->u.func.arg_types[i] = 'l';
+    }
+
+    /* check for optional internal name */
+
+    if (token && !strcmp( token, "=" ))
+    {
+        if (!(token = GetToken(0))) goto error;
+        odp->link_name = xstrdup( token );
+        remove_stdcall_decoration( odp->link_name );
+        token = GetToken(1);
+    }
+
+    /* check for optional ordinal */
+
+    if (token && token[0] == '@')
+    {
+        int ordinal;
+
+        if (!IsNumberString( token+1 ))
+        {
+            error( "Expected number after '@', got '%s'\n", token+1 );
+            goto error;
+        }
+        ordinal = atoi( token+1 );
+        if (!ordinal)
+        {
+            error( "Ordinal 0 is not valid\n" );
+            goto error;
+        }
+        if (ordinal >= MAX_ORDINALS)
+        {
+            error( "Ordinal number %d too large\n", ordinal );
+            goto error;
+        }
+        if (ordinal > spec->limit) spec->limit = ordinal;
+        if (ordinal < spec->base) spec->base = ordinal;
+        odp->ordinal = ordinal;
+        token = GetToken(1);
+    }
+
+    /* check for other optional keywords */
+
+    if (token && !strcmp( token, "NONAME" ))
+    {
+        if (odp->ordinal == -1)
+        {
+            error( "NONAME requires an ordinal\n" );
+            goto error;
+        }
+        odp->export_name = odp->name;
+        odp->name = NULL;
+        odp->flags |= FLAG_NONAME;
+        token = GetToken(1);
+    }
+    if (token && !strcmp( token, "PRIVATE" ))
+    {
+        odp->flags |= FLAG_PRIVATE;
+        token = GetToken(1);
+    }
+    if (token && !strcmp( token, "DATA" ))
+    {
+        odp->type = TYPE_EXTERN;
+        token = GetToken(1);
+    }
+    if (token)
+    {
+        error( "Garbage text '%s' found at end of export declaration\n", token );
+        goto error;
+    }
+    return 1;
+
+error:
+    spec->nb_entry_points--;
+    free( odp->name );
+    return 0;
+}
+
+
+/*******************************************************************
+ *         parse_def_file
+ *
+ * Parse a .def file.
+ */
+int parse_def_file( FILE *file, DLLSPEC *spec )
+{
+    const char *token;
+    int in_exports = 0;
+
+    input_file = file;
+    current_line = 0;
+
+    comment_chars = ";";
+    separator_chars = ",=";
+
+    while (get_next_line())
+    {
+        if (!(token = GetToken(1))) continue;
+
+        if (!strcmp( token, "LIBRARY" ) || !strcmp( token, "NAME" ))
+        {
+            if (!parse_def_library( spec )) continue;
+            goto end_of_line;
+        }
+        else if (!strcmp( token, "STACKSIZE" ))
+        {
+            if (!parse_def_stack_heap_size( 1, spec )) continue;
+            goto end_of_line;
+        }
+        else if (!strcmp( token, "HEAPSIZE" ))
+        {
+            if (!parse_def_stack_heap_size( 0, spec )) continue;
+            goto end_of_line;
+        }
+        else if (!strcmp( token, "EXPORTS" ))
+        {
+            in_exports = 1;
+            if (!(token = GetToken(1))) continue;
+        }
+        else if (!strcmp( token, "IMPORTS" ))
+        {
+            in_exports = 0;
+            if (!(token = GetToken(1))) continue;
+        }
+        else if (!strcmp( token, "SECTIONS" ))
+        {
+            in_exports = 0;
+            if (!(token = GetToken(1))) continue;
+        }
+
+        if (!in_exports) continue;  /* ignore this line */
+        if (!parse_def_export( xstrdup(token), spec )) continue;
+
+    end_of_line:
+        if ((token = GetToken(1))) error( "Syntax error near '%s'\n", token );
+    }
+
+    current_line = 0;  /* no longer parsing the input file */
+    assign_names( spec );
+    assign_ordinals( spec );
     return !nb_errors;
 }
 

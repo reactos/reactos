@@ -1,0 +1,86 @@
+Index: main.c
+===================================================================
+RCS file: /home/wine/wine/tools/winebuild/main.c,v
+retrieving revision 1.55
+diff -u -r1.55 main.c
+--- main.c	25 Mar 2004 00:40:52 -0000	1.55
++++ main.c	23 Sep 2004 20:38:14 -0000
+@@ -412,9 +412,7 @@
+         switch (spec->type)
+         {
+             case SPEC_WIN16:
+-                if (argv[0])
+-                    fatal_error( "file argument '%s' not allowed in this mode\n", argv[0] );
+-                BuildSpec16File( output_file, spec );
++                fatal_error( "Win16 specs are not supported in ReactOS version of winebuild\n" );
+                 break;
+             case SPEC_WIN32:
+                 read_undef_symbols( argv );
+@@ -439,12 +437,10 @@
+         BuildDebugFile( output_file, current_src_dir, argv );
+         break;
+     case MODE_RELAY16:
+-        if (argv[0]) fatal_error( "file argument '%s' not allowed in this mode\n", argv[0] );
+-        BuildRelays16( output_file );
++        fatal_error( "Win16 relays are not supported in ReactOS version of winebuild\n" );
+         break;
+     case MODE_RELAY32:
+-        if (argv[0]) fatal_error( "file argument '%s' not allowed in this mode\n", argv[0] );
+-        BuildRelays32( output_file );
++        fatal_error( "Win32 relays are not supported in ReactOS version of winebuild\n" );
+         break;
+     default:
+         usage(1);
+Index: spec32.c
+===================================================================
+RCS file: /home/wine/wine/tools/winebuild/spec32.c,v
+retrieving revision 1.83
+diff -u -r1.83 spec32.c
+--- spec32.c	15 Jul 2004 18:58:42 -0000	1.83
++++ spec32.c	23 Sep 2004 20:38:15 -0000
+@@ -30,9 +30,15 @@
+ #include <stdarg.h>
+ #include <string.h>
+ 
++#ifdef WIN32
+ #include "windef.h"
+ #include "winbase.h"
+-#include "wine/exception.h"
++#else
++#include "winglue.h"
++#endif
++#define EXCEPTION_WINE_STUB       0x80000100  /* stub entry point called */
++#define EH_NONCONTINUABLE   0x01
++
+ #include "build.h"
+ 
+ 
+@@ -886,7 +892,10 @@
+         fprintf( outfile, " @%d", odp->ordinal );
+         if (!odp->name) fprintf( outfile, " NONAME" );
+         if (is_data) fprintf( outfile, " DATA" );
++#if 0
++        /* MinGW binutils cannot handle this correctly */
+         if (odp->flags & FLAG_PRIVATE) fprintf( outfile, " PRIVATE" );
++#endif
+         fprintf( outfile, "\n" );
+     }
+ }
+Index: utils.c
+===================================================================
+RCS file: /home/wine/wine/tools/winebuild/utils.c,v
+retrieving revision 1.20
+diff -u -r1.20 utils.c
+--- utils.c	25 Mar 2004 00:40:52 -0000	1.20
++++ utils.c	23 Sep 2004 20:38:15 -0000
+@@ -21,6 +21,10 @@
+ #include "config.h"
+ #include "wine/port.h"
+ 
++#if !defined(WIN32)
++#undef strdup
++#endif
++
+ #include <ctype.h>
+ #include <stdarg.h>
+ #include <stdio.h>

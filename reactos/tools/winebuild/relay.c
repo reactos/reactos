@@ -32,24 +32,21 @@
 
 #include "build.h"
 
-#if defined(__GNUC__) && !defined(__svr4__)
-static const int use_stabs = 1;
-#else
-static const int use_stabs = 0;
-#endif
-
 #ifdef __i386__
 
 static void function_header( FILE *outfile, const char *name )
 {
     fprintf( outfile, "\n\t.align %d\n", get_alignment(4) );
-    if (use_stabs)
-        fprintf( outfile, "\t.stabs \"%s:F1\",36,0,0," __ASM_NAME("%s") "\n", name, name);
     fprintf( outfile, "\t" __ASM_FUNC("%s") "\n", name );
     fprintf( outfile, "\t.globl " __ASM_NAME("%s") "\n", name );
     fprintf( outfile, __ASM_NAME("%s") ":\n", name );
 }
 
+
+static void function_footer( FILE *outfile, const char *name )
+{
+    fprintf( outfile, ".size " __ASM_NAME("%s") ", . - " __ASM_NAME("%s") "\n", name, name );
+}
 
 /*******************************************************************
  *         BuildCallFrom16Core
@@ -444,6 +441,10 @@ static void BuildCallFrom16Core( FILE *outfile, int reg_func, int thunk, int sho
         /* Return to return stub which will return to caller */
         fprintf( outfile, "\tlret $12\n" );
     }
+    if (thunk) function_footer( outfile, "__wine_call_from_16_thunk" );
+    else if (reg_func) function_footer( outfile, "__wine_call_from_16_regs" );
+    else if (short_ret) function_footer( outfile, "__wine_call_from_16_word" );
+    else function_footer( outfile, "__wine_call_from_16_long" );
 }
 
 
@@ -605,6 +606,9 @@ static void BuildCallTo16Core( FILE *outfile, int reg_func )
     /* Jump to the called routine */
     fprintf( outfile, "\t.byte 0x66\n" );
     fprintf( outfile, "\tlret\n" );
+
+    /* Function footer */
+    function_footer( outfile, name );
 }
 
 
@@ -647,6 +651,9 @@ static void BuildRet16Func( FILE *outfile )
     /* Return to caller */
 
     fprintf( outfile, "\tlret\n" );
+
+    /* Function footer */
+    function_footer( outfile, "CallTo16_Ret" );
 
     /* Declare the return address and data selector variables */
 
@@ -756,9 +763,6 @@ static void BuildCallTo32CBClient( FILE *outfile, BOOL isEx )
     /* Function header */
 
     fprintf( outfile, "\n\t.align %d\n", get_alignment(4) );
-    if (use_stabs)
-        fprintf( outfile, ".stabs \"CALL32_%s:F1\",36,0,0," __ASM_NAME("CALL32_%s") "\n",
-                 name, name );
     fprintf( outfile, "\t.globl " __ASM_NAME("CALL32_%s") "\n", name );
     fprintf( outfile, __ASM_NAME("CALL32_%s") ":\n", name );
 
@@ -882,6 +886,7 @@ static void BuildCallTo32CBClient( FILE *outfile, BOOL isEx )
     fprintf( outfile, "\tpopl %%edi\n" );
     fprintf( outfile, "\tpopl %%ebp\n" );
     fprintf( outfile, "\tret\n" );
+    fprintf( outfile, ".size " __ASM_NAME("CALL32_%s") ", . - " __ASM_NAME("CALL32_%s") "\n", name, name );
 }
 
 static void BuildCallTo32CBClientRet( FILE *outfile, BOOL isEx )
@@ -906,6 +911,8 @@ static void BuildCallTo32CBClientRet( FILE *outfile, BOOL isEx )
         fprintf( outfile, "\tlssl %%ss:-12(%%ebx), %%esp\n" );
     }
     fprintf( outfile, "\tlret\n" );
+
+    fprintf( outfile, ".size " __ASM_NAME("CALL32_%s_Ret") ", . - " __ASM_NAME("CALL32_%s_Ret") "\n", name, name );
 
     /* Declare the return address variable */
 
@@ -1036,10 +1043,65 @@ static void BuildCallFrom32Regs( FILE *outfile )
 
     fprintf( outfile, "\tpopl %%ds\n" );
     fprintf( outfile, "\tiret\n" );
+    function_footer( outfile, "__wine_call_from_32_regs" );
 
     function_header( outfile, "__wine_call_from_32_restore_regs" );
     fprintf( outfile, "\tleal 4(%%esp),%%ecx\n" );
     fprintf( outfile, "\tjmp 2b\n" );
+    function_footer( outfile, "__wine_call_from_32_restore_regs" );
+}
+
+
+/*******************************************************************
+ *         BuildPendingEventCheck
+ *
+ * Build a function that checks whether there are any
+ * pending DPMI events.
+ *
+ * Stack layout:
+ *   
+ * (sp+12) long   eflags
+ * (sp+6)  long   cs
+ * (sp+2)  long   ip
+ * (sp)    word   fs
+ *
+ * On entry to function, fs register points to a valid TEB.
+ * On exit from function, stack will be popped.
+ */
+static void BuildPendingEventCheck( FILE *outfile )
+{
+    /* Function header */
+
+    function_header( outfile, "DPMI_PendingEventCheck" );
+
+    /* Check for pending events. */
+    
+    fprintf( outfile, "\t.byte 0x64\n\ttestl $0xffffffff,(%d)\n", 
+             STRUCTOFFSET(TEB,vm86_pending) );
+    fprintf( outfile, "\tje " __ASM_NAME("DPMI_PendingEventCheck_Cleanup") "\n" );
+
+    fprintf( outfile, "\t.byte 0x64\n\ttestl $0xffffffff,(%d)\n", 
+             STRUCTOFFSET(TEB,dpmi_vif) );
+
+    fprintf( outfile, "\tje " __ASM_NAME("DPMI_PendingEventCheck_Cleanup") "\n" );
+
+    /* Process pending events. */
+
+    fprintf( outfile, "\tsti\n" );
+   
+    /* Start cleanup. Restore fs register. */
+
+    fprintf( outfile, ".globl " __ASM_NAME("DPMI_PendingEventCheck_Cleanup") "\n" );
+    fprintf( outfile, __ASM_NAME("DPMI_PendingEventCheck_Cleanup") ":\n" );
+    fprintf( outfile, "\tpopw %%fs\n" );
+
+    /* Return from function. */
+
+    fprintf( outfile, ".globl " __ASM_NAME("DPMI_PendingEventCheck_Return") "\n" );
+    fprintf( outfile, __ASM_NAME("DPMI_PendingEventCheck_Return") ":\n" );
+    fprintf( outfile, "\tiret\n" );
+
+    function_footer( outfile, "DPMI_PendingEventCheck" );
 }
 
 
@@ -1050,26 +1112,12 @@ static void BuildCallFrom32Regs( FILE *outfile )
  */
 void BuildRelays16( FILE *outfile )
 {
-    char buffer[1024];
-
     /* File header */
 
     fprintf( outfile, "/* File generated automatically. Do not edit! */\n\n" );
     fprintf( outfile, "\t.text\n" );
 
-    if (output_file_name && use_stabs)
-    {
-        getcwd(buffer, sizeof(buffer));
-        fprintf( outfile, "\t.file\t\"%s\"\n", output_file_name );
-
-        /*
-         * The stabs help the internal debugger as they are an indication that it
-         * is sensible to step into a thunk/trampoline.
-         */
-        fprintf( outfile, ".stabs \"%s/\",100,0,0,Code_Start\n", buffer);
-        fprintf( outfile, ".stabs \"%s\",100,0,0,Code_Start\n", output_file_name );
-        fprintf( outfile, "Code_Start:\n\n" );
-    }
+    fprintf( outfile, __ASM_NAME("__wine_spec_thunk_text_16") ":\n\n" );
 
     fprintf( outfile, __ASM_NAME("Call16_Start") ":\n" );
     fprintf( outfile, "\t.globl " __ASM_NAME("Call16_Start") "\n" );
@@ -1101,24 +1149,11 @@ void BuildRelays16( FILE *outfile )
 
     fprintf( outfile, __ASM_NAME("Call16_End") ":\n" );
     fprintf( outfile, "\t.globl " __ASM_NAME("Call16_End") "\n" );
-
-    if (use_stabs)
-    {
-        fprintf( outfile, "\t.stabs \"\",100,0,0,.Letext\n");
-        fprintf( outfile, ".Letext:\n");
-
-        /* Some versions of gdb need to have the filename data for
-           each section, so output it again for the data section. */
-        if (output_file_name)
-        {
-            fprintf( outfile, ".stabs \"%s/\",100,0,0,Data_Start\n", buffer);
-            fprintf( outfile, ".stabs \"%s\",100,0,0,Data_Start\n", output_file_name );
-            fprintf( outfile, "Data_Start:\n\n" );
-        }
-    }
+    fprintf( outfile, "\t.size " __ASM_NAME("__wine_spec_thunk_text_16") ",. - " __ASM_NAME("__wine_spec_thunk_text_16") "\n" );
 
     /* The whole Call16_Ret segment must lie within the .data section */
     fprintf( outfile, "\n\t.data\n" );
+    fprintf( outfile, __ASM_NAME("__wine_spec_thunk_data_16") ":\n\n" );
     fprintf( outfile, "\t.globl " __ASM_NAME("Call16_Ret_Start") "\n" );
     fprintf( outfile, __ASM_NAME("Call16_Ret_Start") ":\n" );
 
@@ -1131,9 +1166,13 @@ void BuildRelays16( FILE *outfile )
     /* CBClientThunkSLEx return stub */
     BuildCallTo32CBClientRet( outfile, TRUE  );
 
+    /* Pending DPMI events check stub */
+    BuildPendingEventCheck( outfile );
+
     /* End of Call16_Ret segment */
     fprintf( outfile, "\n\t.globl " __ASM_NAME("Call16_Ret_End") "\n" );
     fprintf( outfile, __ASM_NAME("Call16_Ret_End") ":\n" );
+    fprintf( outfile, "\t.size " __ASM_NAME("__wine_spec_thunk_data_16") ",. - " __ASM_NAME("__wine_spec_thunk_data_16") "\n" );
 }
 
 /*******************************************************************
@@ -1147,30 +1186,12 @@ void BuildRelays32( FILE *outfile )
 
     fprintf( outfile, "/* File generated automatically. Do not edit! */\n\n" );
     fprintf( outfile, "\t.text\n" );
-
-    if (output_file_name && use_stabs)
-    {
-        char buffer[1024];
-        getcwd(buffer, sizeof(buffer));
-        fprintf( outfile, "\t.file\t\"%s\"\n", output_file_name );
-
-        /*
-         * The stabs help the internal debugger as they are an indication that it
-         * is sensible to step into a thunk/trampoline.
-         */
-        fprintf( outfile, ".stabs \"%s/\",100,0,0,Code_Start\n", buffer);
-        fprintf( outfile, ".stabs \"%s\",100,0,0,Code_Start\n", output_file_name );
-        fprintf( outfile, "Code_Start:\n\n" );
-    }
+    fprintf( outfile, __ASM_NAME("__wine_spec_thunk_text_32") ":\n\n" );
 
     /* 32-bit register entry point */
     BuildCallFrom32Regs( outfile );
 
-    if (use_stabs)
-    {
-        fprintf( outfile, "\t.stabs \"\",100,0,0,.Letext\n");
-        fprintf( outfile, ".Letext:\n");
-    }
+    fprintf( outfile, "\t.size " __ASM_NAME("__wine_spec_thunk_text_32") ",. - " __ASM_NAME("__wine_spec_thunk_text_32") "\n" );
 }
 
 #else /* __i386__ */

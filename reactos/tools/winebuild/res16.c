@@ -37,12 +37,8 @@
 #include <sys/mman.h>
 #endif
 
-#ifdef WIN32
 #include "windef.h"
 #include "winbase.h"
-#else
-#include "winglue.h"
-#endif
 #include "build.h"
 
 #define ALIGNMENT 2 /* alignment for resource data */
@@ -73,28 +69,29 @@ struct res_type
     unsigned int             nb_names;     /* total number of names */
 };
 
-static struct resource *resources;
-static int nb_resources;
-
-static struct res_type *res_types;
-static int nb_types;     /* total number of types */
+/* top level of the resource tree */
+struct res_tree
+{
+    struct res_type *types;                /* types array */
+    unsigned int     nb_types;             /* total number of types */
+};
 
 static const unsigned char *file_pos;   /* current position in resource file */
 static const unsigned char *file_end;   /* end of resource file */
 static const char *file_name;  /* current resource file name */
 
 
-inline static struct resource *add_resource(void)
+inline static struct resource *add_resource( DLLSPEC *spec )
 {
-    resources = xrealloc( resources, (nb_resources + 1) * sizeof(*resources) );
-    return &resources[nb_resources++];
+    spec->resources = xrealloc( spec->resources, (spec->nb_resources + 1) * sizeof(*spec->resources) );
+    return &spec->resources[spec->nb_resources++];
 }
 
-static struct res_type *add_type( const struct resource *res )
+static struct res_type *add_type( struct res_tree *tree, const struct resource *res )
 {
     struct res_type *type;
-    res_types = xrealloc( res_types, (nb_types + 1) * sizeof(*res_types) );
-    type = &res_types[nb_types++];
+    tree->types = xrealloc( tree->types, (tree->nb_types + 1) * sizeof(*tree->types) );
+    type = &tree->types[tree->nb_types++];
     type->type        = &res->type;
     type->res         = res;
     type->nb_names    = 0;
@@ -155,9 +152,9 @@ static void get_string( struct string_id *str )
 }
 
 /* load the next resource from the current file */
-static void load_next_resource(void)
+static void load_next_resource( DLLSPEC *spec )
 {
-    struct resource *res = add_resource();
+    struct resource *res = add_resource( spec );
 
     get_string( &res->type );
     get_string( &res->name );
@@ -169,7 +166,7 @@ static void load_next_resource(void)
 }
 
 /* load a Win16 .res file */
-void load_res16_file( const char *name )
+void load_res16_file( const char *name, DLLSPEC *spec )
 {
     int fd;
     void *base;
@@ -190,7 +187,7 @@ void load_res16_file( const char *name )
     file_name = name;
     file_pos  = base;
     file_end  = file_pos + st.st_size;
-    while (file_pos < file_end) load_next_resource();
+    while (file_pos < file_end) load_next_resource( spec );
 }
 
 /* compare two strings/ids */
@@ -218,19 +215,32 @@ static int cmp_res( const void *ptr1, const void *ptr2 )
 }
 
 /* build the 2-level (type,name) resource tree */
-static void build_resource_tree(void)
+static struct res_tree *build_resource_tree( DLLSPEC *spec )
 {
     int i;
+    struct res_tree *tree;
     struct res_type *type = NULL;
 
-    qsort( resources, nb_resources, sizeof(*resources), cmp_res );
+    qsort( spec->resources, spec->nb_resources, sizeof(*spec->resources), cmp_res );
 
-    for (i = 0; i < nb_resources; i++)
+    tree = xmalloc( sizeof(*tree) );
+    tree->types = NULL;
+    tree->nb_types = 0;
+
+    for (i = 0; i < spec->nb_resources; i++)
     {
-        if (!i || cmp_string( &resources[i].type, &resources[i-1].type ))  /* new type */
-            type = add_type( &resources[i] );
+        if (!i || cmp_string( &spec->resources[i].type, &spec->resources[i-1].type ))  /* new type */
+            type = add_type( tree, &spec->resources[i] );
         type->nb_names++;
     }
+    return tree;
+}
+
+/* free the resource tree */
+static void free_resource_tree( struct res_tree *tree )
+{
+    free( tree->types );
+    free( tree );
 }
 
 inline static void put_byte( unsigned char **buffer, unsigned char val )
@@ -258,19 +268,19 @@ static void output_string( unsigned char **buffer, const char *str )
 }
 
 /* output the resource data */
-int output_res16_data( FILE *outfile )
+int output_res16_data( FILE *outfile, DLLSPEC *spec )
 {
     const struct resource *res;
     unsigned char *buffer, *p;
     int i, total;
 
-    if (!nb_resources) return 0;
+    if (!spec->nb_resources) return 0;
 
-    for (i = total = 0, res = resources; i < nb_resources; i++, res++)
+    for (i = total = 0, res = spec->resources; i < spec->nb_resources; i++, res++)
         total += (res->data_size + ALIGN_MASK) & ~ALIGN_MASK;
 
     buffer = p = xmalloc( total );
-    for (i = 0, res = resources; i < nb_resources; i++, res++)
+    for (i = 0, res = spec->resources; i < spec->nb_resources; i++, res++)
     {
         memcpy( p, res->data, res->data_size );
         p += res->data_size;
@@ -282,25 +292,26 @@ int output_res16_data( FILE *outfile )
 }
 
 /* output the resource definitions */
-int output_res16_directory( unsigned char *buffer )
+int output_res16_directory( unsigned char *buffer, DLLSPEC *spec )
 {
     int i, offset, res_offset = 0;
     unsigned int j;
+    struct res_tree *tree;
     const struct res_type *type;
     const struct resource *res;
     unsigned char *start = buffer;
 
-    build_resource_tree();
+    tree = build_resource_tree( spec );
 
     offset = 4;  /* alignment + terminator */
-    offset += nb_types * 8;  /* typeinfo structures */
-    offset += nb_resources * 12;  /* nameinfo structures */
+    offset += tree->nb_types * 8;  /* typeinfo structures */
+    offset += spec->nb_resources * 12;  /* nameinfo structures */
 
     put_word( &buffer, ALIGNMENT );
 
     /* type and name structures */
 
-    for (i = 0, type = res_types; i < nb_types; i++, type++)
+    for (i = 0, type = tree->types; i < tree->nb_types; i++, type++)
     {
         if (type->type->str)
         {
@@ -335,7 +346,7 @@ int output_res16_directory( unsigned char *buffer )
 
     /* name strings */
 
-    for (i = 0, type = res_types; i < nb_types; i++, type++)
+    for (i = 0, type = tree->types; i < tree->nb_types; i++, type++)
     {
         if (type->type->str) output_string( &buffer, type->type->str );
         for (j = 0, res = type->res; j < type->nb_names; j++, res++)
@@ -346,5 +357,6 @@ int output_res16_directory( unsigned char *buffer )
     put_byte( &buffer, 0 );  /* names terminator */
     if ((buffer - start) & 1) put_byte( &buffer, 0 );  /* align on word boundary */
 
+    free_resource_tree( tree );
     return buffer - start;
 }
