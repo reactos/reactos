@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.1 1999/12/11 21:14:48 dwelch Exp $
+ * $Id: fat.c,v 1.2 2000/02/14 14:13:34 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -337,9 +337,11 @@ void  FAT16WriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
  * FUNCTION: Writes a cluster to the FAT16 physical and in-memory tables
  */
 {
- ULONG FATsector;
- PUSHORT Block;
-DbgPrint("FAT16WriteCluster %u : %u\n",ClusterToWrite,NewValue);
+   ULONG FATsector;
+   PUSHORT Block;
+   
+   DbgPrint("FAT16WriteCluster %u : %u\n", ClusterToWrite, NewValue);
+   
    Block=(PUSHORT)DeviceExt->FAT;
    FATsector=ClusterToWrite/(512/sizeof(USHORT));
 
@@ -384,12 +386,18 @@ void  WriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
  * FUNCTION: Write a changed FAT entry
  */
 {
-   if(DeviceExt->FatType==FAT16)
-     FAT16WriteCluster(DeviceExt, ClusterToWrite, NewValue);
-   else if(DeviceExt->FatType==FAT32)
-     FAT32WriteCluster(DeviceExt, ClusterToWrite, NewValue);
+   if (DeviceExt->FatType==FAT16)
+     {
+	FAT16WriteCluster(DeviceExt, ClusterToWrite, NewValue);
+     }
+   else if (DeviceExt->FatType==FAT32)
+     {
+	FAT32WriteCluster(DeviceExt, ClusterToWrite, NewValue);
+     }
    else
-     FAT12WriteCluster(DeviceExt, ClusterToWrite, NewValue);
+     {
+	FAT12WriteCluster(DeviceExt, ClusterToWrite, NewValue);
+     }
 }
 
 ULONG GetNextWriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
@@ -397,29 +405,41 @@ ULONG GetNextWriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
  * FUNCTION: Determines the next cluster to be written
  */
 {
- ULONG LastCluster, NewCluster;
-   DPRINT("GetNextWriteCluster(DeviceExt %x, CurrentCluster %x)\n",
-	    DeviceExt,CurrentCluster);
+   ULONG LastCluster, NewCluster;
+   
+   DPRINT1("GetNextWriteCluster(DeviceExt %x, CurrentCluster %x)\n",
+	   DeviceExt,CurrentCluster);
 
    /* Find out what was happening in the last cluster's AU */
-   LastCluster=GetNextCluster(DeviceExt,CurrentCluster);
+   LastCluster=GetNextCluster(DeviceExt,
+			      CurrentCluster);
    /* Check to see if we must append or overwrite */
-   if (LastCluster==0xffffffff)
-   {//we are after last existing cluster : we must add one to file
+   if (LastCluster == 0xffffffff)
+     {
+	/* we are after last existing cluster : we must add one to file */
         /* Append */
         /* Firstly, find the next available open allocation unit */
-        if(DeviceExt->FatType == FAT16)
-           NewCluster = FAT16FindAvailableCluster(DeviceExt);
-        else if(DeviceExt->FatType == FAT32)
-           NewCluster = FAT32FindAvailableCluster(DeviceExt);
+        if (DeviceExt->FatType == FAT16)
+	  {
+	     NewCluster = FAT16FindAvailableCluster(DeviceExt);
+	     DPRINT1("NewCluster %x\n", NewCluster);
+	  }
+        else if (DeviceExt->FatType == FAT32)
+	  {
+	     NewCluster = FAT32FindAvailableCluster(DeviceExt);
+	  }
         else
-           NewCluster = FAT12FindAvailableCluster(DeviceExt);
+	  {
+	     NewCluster = FAT12FindAvailableCluster(DeviceExt);
+	  }
         /* Mark the new AU as the EOF */
         WriteCluster(DeviceExt, NewCluster, 0xFFFFFFFF);
         /* Now, write the AU of the LastCluster with the value of the newly
            found AU */
-        if(CurrentCluster)
-          WriteCluster(DeviceExt, CurrentCluster, NewCluster);
+	if(CurrentCluster)
+	  {
+	     WriteCluster(DeviceExt, CurrentCluster, NewCluster);
+	  }
         /* Return NewCluster as CurrentCluster */
         return NewCluster;
    }

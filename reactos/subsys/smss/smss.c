@@ -1,4 +1,4 @@
-/* $Id: smss.c,v 1.5 2000/01/26 10:07:30 dwelch Exp $
+/* $Id: smss.c,v 1.6 2000/02/14 14:13:34 dwelch Exp $
  *
  * smss.c - Session Manager
  * 
@@ -125,7 +125,7 @@ void NtProcessStartup (PPEB Peb)
 		...);
 #endif
    
-   NtTerminateProcess( NtCurrentProcess(), 0 );
+   NtTerminateProcess(NtCurrentProcess(), 0);
 }
 
 /* EOF */

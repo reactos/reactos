@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.9 2000/02/13 16:05:18 dwelch Exp $
+/* $Id: create.c,v 1.10 2000/02/14 14:13:33 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -266,12 +266,9 @@ static VOID PiTimeoutThread(struct _KDPC *dpc,
 
 VOID PiBeforeBeginThread(VOID)
 {
-   PPEB Peb;
-   
    DPRINT("PiBeforeBeginThread()\n");
    //KeReleaseSpinLock(&PiThreadListLock, PASSIVE_LEVEL);
    KeLowerIrql(PASSIVE_LEVEL);
-   Peb = (PPEB)PEB_BASE;
 }
 
 VOID PsBeginThread(PKSTART_ROUTINE StartRoutine, PVOID StartContext)
@@ -370,7 +367,10 @@ NTSTATUS PsInitializeThread(HANDLE ProcessHandle,
    Thread->ThreadsProcess = Process;
    KeInitializeDpc(&Thread->Tcb.TimerDpc, PiTimeoutThread, Thread);
    Thread->Tcb.WaitBlockList = NULL;
-   InsertTailList( &Thread->ThreadsProcess->Pcb.ThreadListHead, &Thread->Tcb.ProcessThreadListEntry );
+   InsertTailList(&Thread->ThreadsProcess->Pcb.ThreadListHead, 
+		  &Thread->Tcb.ProcessThreadListEntry );
+   DPRINT1("Inserting %x into process %x list\n",
+	   Thread, Thread->ThreadsProcess);
    KeInitializeDispatcherHeader(&Thread->Tcb.DispatcherHeader,
                                 InternalThreadType,
                                 sizeof(ETHREAD),

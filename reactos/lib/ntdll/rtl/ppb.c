@@ -1,4 +1,4 @@
-/* $Id: ppb.c,v 1.1 2000/02/13 16:05:16 dwelch Exp $
+/* $Id: ppb.c,v 1.2 2000/02/14 14:13:33 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -120,25 +120,22 @@ RtlCreateProcessParameters (
 
 	/* copy current directory */
    Dest = (PWCHAR)(((PBYTE)Param) + 
-		   sizeof(RTL_USER_PROCESS_PARAMETERS) + 
-		   (256 * sizeof(WCHAR)));
+		   sizeof(RTL_USER_PROCESS_PARAMETERS));
 
    Param->CurrentDirectory.DosPath.Buffer = Dest;
+   Param->CurrentDirectory.DosPath.MaximumLength = MAX_PATH * sizeof(WCHAR);
    if (CurrentDirectory != NULL)
      {
 	Param->CurrentDirectory.DosPath.Length = CurrentDirectory->Length;
-	Param->CurrentDirectory.DosPath.MaximumLength = 
-	  CurrentDirectory->Length + sizeof(WCHAR);
 	memcpy(Dest,
 	       CurrentDirectory->Buffer,
 	       CurrentDirectory->Length);
 	Dest = (PWCHAR)(((PBYTE)Dest) + CurrentDirectory->Length);
      }
-   *Dest = 0;
 
    Dest = (PWCHAR)(((PBYTE)Param) + sizeof(RTL_USER_PROCESS_PARAMETERS) +
-		   (256 * sizeof(WCHAR)) + (MAX_PATH * sizeof(WCHAR)));
-   
+		   /* (256 * sizeof(WCHAR)) + */ (MAX_PATH * sizeof(WCHAR)));
+
    /* copy library path */
    Param->LibraryPath.Buffer = Dest;
    if (LibraryPath != NULL)
@@ -214,7 +211,6 @@ RtlCreateProcessParameters (
    *Ppb = Param;
    RtlReleasePebLock ();
    
-   return(Status);
 }
 
 VOID STDCALL RtlDestroyProcessParameters (PRTL_USER_PROCESS_PARAMETERS	Ppb)

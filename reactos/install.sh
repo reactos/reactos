@@ -30,3 +30,4 @@ cp apps/lpc/lpcsrv.exe $1/reactos/bin
 cp apps/lpc/lpcclt.exe $1/reactos/bin
 cp apps/thread/thread.exe $1/reactos/bin
 cp apps/event/event.exe $1/reactos/bin
+cp apps/file/file.exe $1/reactos/bin

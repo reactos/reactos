@@ -36,7 +36,7 @@ else
 endif
 
 file.exe: $(OBJECTS)
-	$(CPP) $(OBJECTS) $(BASE_CFLAGS) -o file.exe
+	$(CC) $(OBJECTS) $(BASE_CFLAGS) -o file.exe
 	$(NM) --numeric-sort file.exe > file.sym
 
 include ../../rules.mak

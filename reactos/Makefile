@@ -41,7 +41,7 @@ FS_DRIVERS = vfat
 # FS_DRIVERS = minix ext2 template
 KERNEL_SERVICES = $(DEVICE_DRIVERS) $(FS_DRIVERS)
 
-APPS = args hello shell test cat bench apc shm lpc thread event
+APPS = args hello shell test cat bench apc shm lpc thread event file
 
 all: buildno $(COMPONENTS) $(DLLS) $(SUBSYS) $(LOADERS) $(KERNEL_SERVICES) $(APPS)
 
