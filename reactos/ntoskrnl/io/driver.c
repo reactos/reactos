@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.45 2004/04/12 15:22:53 navaraf Exp $
+/* $Id: driver.c,v 1.46 2004/06/02 20:30:56 hbirr Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -444,7 +444,7 @@ IopLoadServiceModule(
          for (i = 1; i < KeLoaderBlock.ModsCount; i++)
          {
             ModuleName = (PCHAR)KeLoaderModules[i].String;
-            if (!strcmp(ModuleName, SearchName))
+            if (!_stricmp(ModuleName, SearchName))
             {
                DPRINT("Initializing boot module\n");
 
