@@ -10,13 +10,29 @@
 #include <ndissys.h>
 
 
+VOID STDCALL
+MiniportTimerDpc(
+    PKDPC Dpc,
+    PVOID DeferredContext,
+    PVOID SystemArgument1,
+    PVOID SystemArgument2)
+{
+    PNDIS_MINIPORT_TIMER Timer;
+
+    Timer = (PNDIS_MINIPORT_TIMER)DeferredContext;
+
+    Timer->MiniportTimerFunction (NULL, Timer->MiniportTimerContext, NULL, NULL);
+}
+
+
 VOID
 EXPORT
 NdisCancelTimer(
     IN  PNDIS_TIMER Timer,
     OUT PBOOLEAN    TimerCancelled)
 {
-} 
+    *TimerCancelled = KeCancelTimer (&Timer->Timer);
+}
 
 
 VOID
@@ -24,6 +40,7 @@ EXPORT
 NdisGetCurrentSystemTime (
     IN  OUT PLONGLONG   pSystemTime)
 {
+    KeQuerySystemTime (pSystemTime);
 }
 
 
@@ -34,6 +51,9 @@ NdisInitializeTimer(
     IN      PNDIS_TIMER_FUNCTION    TimerFunction,
     IN      PVOID                   FunctionContext)
 {
+    KeInitializeTimer (&Timer->Timer);
+
+    KeInitializeDpc (&Timer->Dpc, TimerFunction, FunctionContext);
 }
 
 
@@ -43,6 +63,7 @@ NdisMCancelTimer(
     IN  PNDIS_MINIPORT_TIMER    Timer,
     OUT PBOOLEAN                TimerCancelled)
 {
+    *TimerCancelled = KeCancelTimer (&Timer->Timer);
 }
 
 
@@ -54,15 +75,27 @@ NdisMInitializeTimer(
     IN      PNDIS_TIMER_FUNCTION    TimerFunction,
     IN      PVOID                   FunctionContext)
 {
+    KeInitializeTimer (&Timer->Timer);
+
+    KeInitializeDpc (&Timer->Dpc, MiniportTimerDpc, (PVOID) Timer);
+
+    Timer->MiniportTimerFunction = TimerFunction;
+    Timer->MiniportTimerContext = FunctionContext;
+    Timer->Miniport = MiniportAdapterHandle;
 }
 
 
 VOID
 EXPORT
 NdisMSetPeriodicTimer(
-    IN	PNDIS_MINIPORT_TIMER    Timer,
-    IN	UINT                    MillisecondsPeriod)
+    IN  PNDIS_MINIPORT_TIMER    Timer,
+    IN  UINT                    MillisecondsPeriod)
 {
+    LARGE_INTEGER Timeout;
+
+    Timeout.QuadPart = MillisecondsPeriod * -10000;
+
+    KeSetTimerEx (&Timer->Timer, Timeout, MillisecondsPeriod, &Timer->Dpc);
 }
 
 
@@ -72,6 +105,11 @@ NdisMSetTimer(
     IN  PNDIS_MINIPORT_TIMER    Timer,
     IN  UINT                    MillisecondsToDelay)
 {
+    LARGE_INTEGER Timeout;
+
+    Timeout.QuadPart = MillisecondsToDelay * -10000;
+
+    KeSetTimer (&Timer->Timer, Timeout, &Timer->Dpc);
 }
 
 
@@ -81,6 +119,11 @@ NdisSetTimer(
     IN  PNDIS_TIMER Timer,
     IN  UINT        MillisecondsToDelay)
 {
+    LARGE_INTEGER Timeout;
+
+    Timeout.QuadPart = MillisecondsToDelay * -10000;
+
+    KeSetTimer (&Timer->Timer, Timeout, &Timer->Dpc);
 }
 
 /* EOF */
