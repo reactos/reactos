@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.22 2001/01/13 18:38:09 dwelch Exp $ */
+/* $Id: vfat.h,v 1.23 2001/01/14 15:05:53 dwelch Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -189,8 +189,9 @@ VfatReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 NTSTATUS 
 VfatWriteFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
               PVOID Buffer, ULONG Length, ULONG WriteOffset);
-ULONG 
-GetNextWriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster);
+NTSTATUS
+GetNextWriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster,
+		    PULONG NextCluster);
 BOOLEAN 
 IsDeletedEntry(PVOID Block, ULONG Offset);
 BOOLEAN 
@@ -236,15 +237,18 @@ NTSTATUS
 GetNextCluster(PDEVICE_EXTENSION DeviceExt, 
 	       ULONG CurrentCluster,
 	       PULONG NextCluster);
-VOID 
-VFATLoadCluster(PDEVICE_EXTENSION DeviceExt, PVOID Buffer, ULONG Cluster);
+NTSTATUS
+VfatRawReadCluster (PDEVICE_EXTENSION DeviceExt, 
+		    ULONG FirstCluster,
+		    PVOID Buffer, 
+		    ULONG Cluster);
 ULONG 
 FAT12CountAvailableClusters(PDEVICE_EXTENSION DeviceExt);
 ULONG 
 FAT16CountAvailableClusters(PDEVICE_EXTENSION DeviceExt);
 ULONG 
 FAT32CountAvailableClusters(PDEVICE_EXTENSION DeviceExt);
-VOID
+NTSTATUS
 WriteCluster (PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
 	      ULONG NewValue);
 

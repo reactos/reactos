@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.17 2001/01/13 18:38:09 dwelch Exp $
+/* $Id: rw.c,v 1.18 2001/01/14 15:05:53 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -80,30 +80,6 @@ OffsetToCluster(PDEVICE_EXTENSION DeviceExt,
 }
 
 NTSTATUS
-VfatRawReadCluster (PDEVICE_EXTENSION DeviceExt, 
-		    ULONG FirstCluster,
-		    PULONG CurrentCluster,
-		    PVOID Destination)
-{
-  NTSTATUS Status;
-
-  if (FirstCluster == 1)
-    {
-      Status = VfatReadSectors (DeviceExt->StorageDevice,
-				(*CurrentCluster),
-				DeviceExt->Boot->SectorsPerCluster, 
-				Destination);
-      return(Status);
-    }
-  else
-    {
-      VFATLoadCluster (DeviceExt, Destination, (*CurrentCluster));
-      Status = STATUS_SUCCESS;
-      return(Status);
-    }
-}
-
-NTSTATUS
 VfatReadCluster(PDEVICE_EXTENSION DeviceExt,
 		PVFATFCB Fcb,
 		ULONG StartOffset,
@@ -149,8 +125,8 @@ VfatReadCluster(PDEVICE_EXTENSION DeviceExt,
 	  /*
 	   * If necessary read the cluster from the disk
 	   */
-	  Status = VfatRawReadCluster(DeviceExt, FirstCluster, CurrentCluster,
-				      BaseAddress);
+	  Status = VfatRawReadCluster(DeviceExt, FirstCluster, BaseAddress,
+				      *CurrentCluster);
 	  if (!NT_SUCCESS(Status))
 	    {
 	      if (!NoCache)
@@ -212,8 +188,8 @@ VfatReadCluster(PDEVICE_EXTENSION DeviceExt,
 	    {	  
 	      Status = VfatRawReadCluster(DeviceExt, 
 					  FirstCluster,
-					  CurrentCluster,
-					  BaseAddress + (i * BytesPerCluster));
+					  BaseAddress + (i * BytesPerCluster),
+					  *CurrentCluster);
 	      if (!NT_SUCCESS(Status))
 		{
 		  if (!NoCache)
@@ -323,7 +299,9 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    * FIXME: Optimize by remembering the last cluster read and using if 
    * possible.
    */
-  Status = OffsetToCluster(DeviceExt, FirstCluster, ReadOffset, 
+  Status = OffsetToCluster(DeviceExt, 
+			   FirstCluster, 
+			   ROUND_DOWN(ReadOffset, ChunkSize),
 			   &CurrentCluster);
   if (!NT_SUCCESS(Status))
     {
@@ -470,7 +448,7 @@ VfatWriteFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	}
       else
 	{
-	  VFATLoadCluster (DeviceExt, Temp, CurrentCluster);
+	  VfatRawReadCluster (DeviceExt, FirstCluster, Temp, CurrentCluster);
 	}
 
       /* Overwrite the last parts of the data as necessary */
@@ -549,7 +527,7 @@ VfatWriteFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	}
       else
 	{
-	  VFATLoadCluster (DeviceExt, Temp, CurrentCluster);
+	  VfatRawReadCluster (DeviceExt, FirstCluster, Temp, CurrentCluster);
 	  CHECKPOINT;
 	  memcpy (Temp, Buffer, Length2);
 	  CHECKPOINT;

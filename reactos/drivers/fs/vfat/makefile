@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.26 2001/01/12 21:00:08 dwelch Exp $
+# $Id: makefile,v 1.27 2001/01/14 15:05:53 dwelch Exp $
 #
 #
 PATH_TO_TOP = ../../..
@@ -40,7 +40,8 @@ dist: ../../../$(DIST_DIR)/drivers/$(TARGET).sys
 	$(CP) $(TARGET).sys ../../../$(DIST_DIR)/drivers/$(TARGET).sys
 
 $(TARGET).nostrip.sys: $(OBJECTS) $(LIBS)
-	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext -Wl,--base-file,base.tmp -Wl,"-h vfatfs.sys" $(OBJECTS) $(LIBS)
+	$(LD) -r -o vfat.o $(OBJECTS)
+	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext -Wl,--base-file,base.tmp -Wl,"-h vfatfs.sys" vfat.o $(LIBS)
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
 		--dllname $(TARGET).sys \
@@ -48,13 +49,14 @@ $(TARGET).nostrip.sys: $(OBJECTS) $(LIBS)
 		--output-exp temp.exp \
 		--def vfatfs.def
 	- $(RM) base.tmp
-	$(CC) --verbose -Wl,--image-base,0x10000 -Wl,-e,_DriverEntry@8 -Wl,temp.exp -Wl,"-h vfatfs.sys" -specs=../../svc_specs -mdll -o $(TARGET).nostrip.sys $(OBJECTS) $(LIBS)
+	$(CC) -Wl,--image-base,0x10000 -Wl,-e,_DriverEntry@8 -Wl,temp.exp -Wl,"-h vfatfs.sys" -specs=../../svc_specs -mdll -o $(TARGET).nostrip.sys vfat.o $(LIBS)
 	- $(RM) temp.exp
 
 
 $(TARGET).sys: $(OBJECTS) $(LIBS)
-	$(STRIP) --strip-debug $(OBJECTS)
-	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext -Wl,--base-file,base.tmp -Wl,"-h vfatfs.sys" $(OBJECTS) $(LIBS)
+	$(LD) -r -o vfat.o $(OBJECTS)
+	$(STRIP) --strip-debug vfat.o
+	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext -Wl,--base-file,base.tmp -Wl,"-h vfatfs.sys" vfat.o $(LIBS)
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
 		--dllname $(TARGET).sys \
@@ -62,7 +64,7 @@ $(TARGET).sys: $(OBJECTS) $(LIBS)
 		--output-exp temp.exp \
 		--def vfatfs.def
 	- $(RM) base.tmp
-	$(CC) --verbose -Wl,--image-base,0x10000 -Wl,-e,_DriverEntry@8 -Wl,temp.exp -Wl,"-h vfatfs.sys" -specs=../../svc_specs -mdll -o $(TARGET).sys $(OBJECTS) $(LIBS)
+	$(CC) -Wl,--image-base,0x10000 -Wl,-e,_DriverEntry@8 -Wl,temp.exp -Wl,"-h vfatfs.sys" -specs=../../svc_specs -mdll -o $(TARGET).sys vfat.o $(LIBS)
 	- $(RM) temp.exp
 
 WITH_DEBUGGING=yes
