@@ -1,5 +1,10 @@
 2001-03-16  David Welch  <welch@cwcom.net>
 
+	* ntoskrnl/include/internal/safe.h: Add definitions for handling
+	potentially unsafe pointers.
+
+2001-03-16  David Welch  <welch@cwcom.net>
+
 	* ntoskrnl/include/internal/mm.h: Removed MmSafeCopyToUser and
 	MmSafeCopyFromUser as source files need these but don't want internal 
 	mm definitions.
