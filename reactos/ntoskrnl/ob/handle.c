@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: handle.c,v 1.55 2004/05/02 04:40:25 jimtabor Exp $
+/* $Id: handle.c,v 1.56 2004/05/04 20:18:52 jimtabor Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -957,7 +957,11 @@ unsigned int i, Count=0;
 PHANDLE_BLOCK blk;
 POBJECT_HEADER Header;
 PVOID ObjectBody;
+KIRQL oldIrql;
+
 PLIST_ENTRY current = HandleTable->ListHead.Flink;
+
+  KeAcquireSpinLock(&HandleTable->ListLock, &oldIrql);
 
   while (current != &HandleTable->ListHead)
        {
@@ -977,6 +981,7 @@ PLIST_ENTRY current = HandleTable->ListHead.Flink;
 	     }
           current = current->Flink;
        }
+  KeReleaseSpinLock(&HandleTable->ListLock, oldIrql);
   return (Count);	
 }
 
