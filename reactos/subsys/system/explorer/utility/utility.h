@@ -488,6 +488,13 @@ template<typename FCT> struct DynamicFct
 		_fct = (FCT) GetProcAddress(hModule, (LPCSTR)ordinal);
 	}
 
+	DynamicFct(LPCTSTR moduleName, LPCSTR name)
+	{
+		HMODULE hModule = GetModuleHandle(moduleName);
+
+		_fct = (FCT) GetProcAddress(hModule, name);
+	}
+
 	FCT operator*() const {return _fct;}
 	operator bool() const {return _fct? true: false;}
 
@@ -504,6 +511,13 @@ template<typename FCT> struct DynamicLoadLibFct
 		_hModule = LoadLibrary(moduleName);
 
 		_fct = (FCT) GetProcAddress(_hModule, (LPCSTR)ordinal);
+	}
+
+	DynamicLoadLibFct(LPCTSTR moduleName, LPCSTR name)
+	{
+		_hModule = LoadLibrary(moduleName);
+
+		_fct = (FCT) GetProcAddress(_hModule, name);
 	}
 
 	~DynamicLoadLibFct()

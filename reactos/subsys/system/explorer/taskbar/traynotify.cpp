@@ -152,9 +152,11 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 					DWORD processId;
 					GetWindowThreadProcessId(entry._hWnd, &processId);
 
-#ifndef __WINE__ // currently no AllowSetForegroundWindow() in Wine
-					AllowSetForegroundWindow(processId);
-#endif
+					 // bind dynamicaly to AllowSetForegroundWindow() to be compatible to WIN98
+					static DynamicFct<BOOL(WINAPI*)(DWORD dwProcessId)> AllowSetForegroundWindow(TEXT("USER32"), "AllowSetForegroundWindow");
+
+					if (AllowSetForegroundWindow)
+						(*AllowSetForegroundWindow)(processId);
 
 					PostMessage(entry._hWnd, entry._uCallbackMessage, entry._uID, nmsg);
 				}

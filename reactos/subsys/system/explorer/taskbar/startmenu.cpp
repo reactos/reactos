@@ -104,6 +104,7 @@ HWND StartMenu::Create(int x, int y, const StartMenuFolders& folders, HWND hwndP
 
 	create_info._folders = folders;
 	create_info._border_top = top_height;
+	create_info._creator = creator;
 
 	if (title)
 		create_info._title = title;
@@ -238,7 +239,8 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			 // create a floating copy of the current start menu
  			WindowRect pos(_hwnd);
 
-			StartMenu::Create(pos.left, pos.top, _create_info._folders, 0, _create_info._title);
+			//TODO: do something similar to StartMenuRoot::TrackStartmenu() in order to automatically close submenus when clicking on the desktop background
+			StartMenu::Create(pos.left, pos.top, _create_info._folders, 0, _create_info._title, _create_info._creator);
 			CloseStartMenu();
 		}
 		break;}
@@ -274,6 +276,9 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		break;}
 
 	  case PM_STARTENTRY_LAUNCHED:
+		if (GetWindowStyle(_hwnd) & WS_CAPTION)	// don't automatically close floating menus
+			return 0;
+
 		 // route message to the parent menu and close menus after launching an entry
 		if (!SendParent(nmsg, wparam, lparam))
 			DestroyWindow(_hwnd);
@@ -569,8 +574,11 @@ void StartMenu::ActivateEntry(int id, const ShellEntrySet& entries)
  /// close all windows of the start menu popup
 void StartMenu::CloseStartMenu(int id)
 {
-	if (!SendParent(PM_STARTENTRY_LAUNCHED, id, (LPARAM)_hwnd))
-		DestroyWindow(_hwnd);
+	if (!(GetWindowStyle(_hwnd) & WS_CAPTION)) {	// don't automatically close floating menus
+		if (!SendParent(PM_STARTENTRY_LAUNCHED, id, (LPARAM)_hwnd))
+			DestroyWindow(_hwnd);
+	} else if (_submenu)	// instead close submenus of floating parent menus
+		CloseSubmenus();
 }
 
 

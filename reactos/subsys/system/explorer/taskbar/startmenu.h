@@ -126,6 +126,7 @@ struct StartMenuCreateInfo
 	StartMenuFolders _folders;
 	int		_border_top;
 	String	_title;
+	Window::CREATORFUNC _creator;
 };
 
 #define STARTMENU_CREATOR(WND_CLASS) WINDOW_CREATOR_INFO(WND_CLASS, StartMenuCreateInfo)
@@ -185,6 +186,7 @@ protected:
 	void	AddButton(LPCTSTR title, HICON hIcon=0, bool hasSubmenu=false, UINT id=(UINT)-1, DWORD style=WS_VISIBLE|WS_CHILD|BS_OWNERDRAW);
 	void	AddSeparator();
 
+	bool	CloseSubmenus() {return CloseOtherSubmenus(0);}
 	bool	CloseOtherSubmenus(int id);
 	void	CreateSubmenu(int id, LPCTSTR title, CREATORFUNC creator=s_def_creator);
 	void	CreateSubmenu(int id, int folder, LPCTSTR title, CREATORFUNC creator=s_def_creator);
