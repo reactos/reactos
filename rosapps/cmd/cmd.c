@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.22 2000/07/19 06:58:12 ekohl Exp $
+/* $Id: cmd.c,v 1.23 2001/02/03 10:40:19 ekohl Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -113,6 +113,9 @@
  *
  *    28-Dec-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Restore window title after program/batch execution
+ *
+ *    03-Feb-2001 (Eric Kohl <ekohl@rz-online.de>)
+ *        Workaround because argc[0] is NULL under ReactOS
  */
 
 #include "config.h"
@@ -126,9 +129,6 @@
 
 #include "cmd.h"
 #include "batch.h"
-
-
-#define CMDLINE_LENGTH  2048    //1024
 
 
 BOOL bExit = FALSE;       /* indicates EXIT was typed */
@@ -246,7 +246,7 @@ Execute (LPTSTR first, LPTSTR rest)
 	{
 		/* exec the program */
 #ifndef __REACTOS__
-		TCHAR szFullCmdLine [1024];
+		TCHAR szFullCmdLine [CMDLINE_LENGTH];
 #endif
 		PROCESS_INFORMATION prci;
 		STARTUPINFO stui;
@@ -1063,6 +1063,7 @@ Initialize (int argc, char *argv[])
 	{
 		ParseCommandLine (_T("\\cmdstart.bat"));
 	}
+#ifndef __REACTOS__
 	else
 	{
 		/* try to run cmdstart.bat from install dir */
@@ -1078,6 +1079,7 @@ Initialize (int argc, char *argv[])
 			ParseCommandLine (commandline);
 		}
 	}
+#endif
 
 #ifdef FEATURE_DIR_STACK
 	/* initialize directory stack */
@@ -1114,6 +1116,7 @@ static VOID Cleanup (int argc, char *argv[])
 		ConErrPrintf ("Running \\cmdexit.bat...\n");
 		ParseCommandLine (_T("\\cmdexit.bat"));
 	}
+#ifndef __REACTOS__
 	else
 	{
 		/* try to run cmdexit.bat from install dir */
@@ -1130,6 +1133,7 @@ static VOID Cleanup (int argc, char *argv[])
 			ParseCommandLine (commandline);
 		}
 	}
+#endif
 
 #ifdef FEATURE_ALIASES
 	DestroyAlias ();
