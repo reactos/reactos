@@ -1336,7 +1336,7 @@ static LRESULT
 TRACKBAR_Create (HWND hwnd, LPCREATESTRUCTW lpcs)
 {
     TRACKBAR_INFO *infoPtr;
-    DWORD oldStyle, newStyle;
+    DWORD dwStyle;
 
     infoPtr = (TRACKBAR_INFO *)Alloc (sizeof(TRACKBAR_INFO));
     if (!infoPtr) return -1;
@@ -1359,19 +1359,10 @@ TRACKBAR_Create (HWND hwnd, LPCREATESTRUCTW lpcs)
 
     TRACKBAR_InitializeThumb (infoPtr);
 
-    oldStyle = newStyle = GetWindowLongW (hwnd, GWL_STYLE);
-    if (oldStyle & TBS_VERT) {
-	if (! (oldStyle & (TBS_LEFT | TBS_RIGHT | TBS_BOTH)) )
-	    newStyle |= TBS_RIGHT;
-    } else {
-	if (! (oldStyle & (TBS_TOP | TBS_BOTTOM | TBS_BOTH)) )
-	    newStyle |= TBS_BOTTOM;
-    }
-    if (newStyle != oldStyle)
-	SetWindowLongW (hwnd, GWL_STYLE, newStyle);
+    dwStyle = GetWindowLongW (hwnd, GWL_STYLE);
 
     /* Create tooltip control */
-    if (newStyle & TBS_TOOLTIPS) {
+    if (dwStyle & TBS_TOOLTIPS) {
 
     	infoPtr->hwndToolTip =
             CreateWindowExW (0, TOOLTIPS_CLASSW, NULL, 0,

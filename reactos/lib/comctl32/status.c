@@ -650,7 +650,7 @@ STATUSBAR_SetTextT (STATUS_INFO *infoPtr, INT nPart, WORD style,
 {
     STATUSWINDOWPART *part=NULL;
     BOOL changed = FALSE;
-    INT oldStyle;
+    INT  oldStyle;
 
     if (style & SBT_OWNERDRAW) {
          TRACE("part %d, text %p\n",nPart,text);
@@ -890,9 +890,9 @@ STATUSBAR_WMCreate (HWND hwnd, LPCREATESTRUCTA lpCreate)
     dwStyle = GetWindowLongW (hwnd, GWL_STYLE);
 
     /* statusbars on managed windows should not have SIZEGRIP style */
-    if ((dwStyle & SBARS_SIZEGRIP) && lpCreate->hwndParent)
-        if (GetWindowLongW (lpCreate->hwndParent, GWL_EXSTYLE) & WS_EX_MANAGED)
-            SetWindowLongW (hwnd, GWL_STYLE, dwStyle & ~SBARS_SIZEGRIP);
+    if ((dwStyle & SBARS_SIZEGRIP) && lpCreate->hwndParent &&
+        GetPropA( lpCreate->hwndParent, "__wine_x11_managed" ))
+        SetWindowLongW (hwnd, GWL_STYLE, dwStyle & ~SBARS_SIZEGRIP);
 
     if ((hdc = GetDC (hwnd))) {
 	TEXTMETRICW tm;
