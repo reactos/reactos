@@ -1,4 +1,4 @@
-/* $Id: cmd.h,v 1.1 2003/03/20 19:19:22 rcampbell Exp $
+/* $Id: cmd.h,v 1.2 2003/06/01 17:06:22 hbirr Exp $
  *
  *  CMD.H - header file for the modules in CMD.EXE
  *
@@ -76,6 +76,7 @@
 /* global variables */
 extern HANDLE hOut;
 extern HANDLE hIn;
+extern HANDLE hConsole;
 extern WORD   wColor;
 extern WORD   wDefColor;
 extern BOOL   bCtrlBreak;

@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.1 2003/03/20 19:19:22 rcampbell Exp $
+/* $Id: console.c,v 1.2 2003/06/01 17:06:22 hbirr Exp $
  *
  *  CONSOLE.C - console input/output functions.
  *
@@ -249,7 +249,7 @@ VOID GetCursorXY (PSHORT x, PSHORT y)
 {
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 
-	GetConsoleScreenBufferInfo (GetStdHandle (STD_OUTPUT_HANDLE), &csbi);
+	GetConsoleScreenBufferInfo (hConsole, &csbi);
 
 	*x = csbi.dwCursorPosition.X;
 	*y = csbi.dwCursorPosition.Y;
@@ -260,7 +260,7 @@ SHORT GetCursorX (VOID)
 {
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 
-	GetConsoleScreenBufferInfo (GetStdHandle (STD_OUTPUT_HANDLE), &csbi);
+	GetConsoleScreenBufferInfo (hConsole, &csbi);
 
 	return csbi.dwCursorPosition.X;
 }
@@ -270,7 +270,7 @@ SHORT GetCursorY (VOID)
 {
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 
-	GetConsoleScreenBufferInfo (GetStdHandle (STD_OUTPUT_HANDLE), &csbi);
+	GetConsoleScreenBufferInfo (hConsole, &csbi);
 
 	return csbi.dwCursorPosition.Y;
 }
@@ -280,7 +280,7 @@ VOID GetScreenSize (PSHORT maxx, PSHORT maxy)
 {
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 
-	GetConsoleScreenBufferInfo (GetStdHandle (STD_OUTPUT_HANDLE), &csbi);
+	GetConsoleScreenBufferInfo (hConsole, &csbi);
 
 	if (maxx)
 		*maxx = csbi.dwSize.X;

@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.2 2003/04/26 16:38:05 ekohl Exp $
+/* $Id: cmd.c,v 1.3 2003/06/01 17:06:22 hbirr Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -144,6 +144,7 @@ DWORD dwChildProcessId = 0;
 OSVERSIONINFO osvi;
 HANDLE hIn;
 HANDLE hOut;
+HANDLE hConsole;
 
 #ifdef INCLUDE_CMD_COLOR
 WORD wColor;              /* current color */
@@ -1163,14 +1164,13 @@ int main (int argc, char *argv[])
   SetFileApisToOEM();
 
   AllocConsole();
-  if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &Info) == FALSE)
+  hConsole = CreateFile("CONOUT$", GENERIC_READ|GENERIC_WRITE, 
+                        FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, 
+			OPEN_EXISTING, 0, NULL);
+  if (GetConsoleScreenBufferInfo(hConsole, &Info) == FALSE)
     {
       fprintf(stderr, "GetConsoleScreenBufferInfo: Error: %ld\n", GetLastError());
-#ifndef __REACTOS__
-      /* On ReactOS GetConsoleScreenBufferInfo returns an error if the stdin 
-         handle is redirected to a pipe or file. This stops windres from working. */
       return(1);
-#endif
     }
   wColor = Info.wAttributes;
   wDefColor = wColor;

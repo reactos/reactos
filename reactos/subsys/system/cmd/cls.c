@@ -46,17 +46,17 @@ INT cmd_cls (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
 
-	GetConsoleScreenBufferInfo (hOut, &csbi);
+	GetConsoleScreenBufferInfo (hConsole, &csbi);
 
 	coPos.X = 0;
 	coPos.Y = 0;
-	FillConsoleOutputAttribute (hOut, wColor,
+	FillConsoleOutputAttribute (hConsole, wColor,
 								(csbi.dwSize.X)*(csbi.dwSize.Y),
 								coPos, &dwWritten);
-	FillConsoleOutputCharacter (hOut, _T(' '),
+	FillConsoleOutputCharacter (hConsole, _T(' '),
 								(csbi.dwSize.X)*(csbi.dwSize.Y),
 								coPos, &dwWritten);
-	SetConsoleCursorPosition (hOut, coPos);
+	SetConsoleCursorPosition (hConsole, coPos);
 
 	bIgnoreEcho = TRUE;
 
