@@ -20,7 +20,7 @@
 
 NTSTATUS
 VfatReadSectors (IN PDEVICE_OBJECT pDeviceObject,
-		 IN ULONG DiskSector, 
+		 IN ULONG DiskSector,
 		 IN ULONG SectorCount,
 		 IN OUT PUCHAR Buffer)
 {
@@ -37,7 +37,7 @@ VfatReadSectors (IN PDEVICE_OBJECT pDeviceObject,
   KeInitializeEvent (&event, NotificationEvent, FALSE);
   sectorSize = BLOCKSIZE * SectorCount;
 
-  DPRINT ("VFATReadSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
+  DPRINT ("VfatReadSectors(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
 	  pDeviceObject, DiskSector, Buffer);
   DPRINT ("sectorNumber %08lx:%08lx sectorSize %ld\n",
 	  (unsigned long int) sectorNumber.u.LowPart,
@@ -49,14 +49,14 @@ VfatReadSectors (IN PDEVICE_OBJECT pDeviceObject,
 				      pDeviceObject,
 				      Buffer,
 				      sectorSize,
-				      &sectorNumber, 
-				      &event, 
+				      &sectorNumber,
+				      &event,
 				      &IoStatus);
 
   if (Irp == NULL)
     {
       DPRINT("IoBuildSynchronousFsdRequest failed\n");
-      return(STATUS_UNSUCCESSFUL);;
+      return(STATUS_UNSUCCESSFUL);
     }
 
   DPRINT ("Calling IO Driver... with irp %x\n", Irp);
@@ -73,7 +73,7 @@ VfatReadSectors (IN PDEVICE_OBJECT pDeviceObject,
 
   if (!NT_SUCCESS (Status))
     {
-      DPRINT ("IO failed!!! VFATREadSectors : Error code: %x\n", Status);
+      DPRINT ("IO failed!!! VfatReadSectors : Error code: %x\n", Status);
       DPRINT ("(pDeviceObject %x, DiskSector %x, Buffer %x, offset 0x%x%x)\n",
 	      pDeviceObject, DiskSector, Buffer, sectorNumber.u.HighPart,
 	      sectorNumber.u.LowPart);
@@ -86,7 +86,7 @@ VfatReadSectors (IN PDEVICE_OBJECT pDeviceObject,
 NTSTATUS
 VfatWriteSectors (IN PDEVICE_OBJECT pDeviceObject,
 		  IN ULONG DiskSector,
-		  IN ULONG SectorCount, 
+		  IN ULONG SectorCount,
 		  IN PUCHAR Buffer)
 {
   LARGE_INTEGER sectorNumber;
@@ -96,7 +96,7 @@ VfatWriteSectors (IN PDEVICE_OBJECT pDeviceObject,
   NTSTATUS Status;
   ULONG sectorSize;
 
-  DPRINT ("VFATWriteSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
+  DPRINT ("VfatWriteSectors(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
 	  pDeviceObject, DiskSector, Buffer);
 
   sectorNumber.u.LowPart = DiskSector << 9;
@@ -134,7 +134,7 @@ VfatWriteSectors (IN PDEVICE_OBJECT pDeviceObject,
 
   if (!NT_SUCCESS (Status))
     {
-      DPRINT1 ("IO failed!!! VFATWriteSectors : Error code: %x\n", Status);
+      DPRINT1 ("IO failed!!! VfatWriteSectors : Error code: %x\n", Status);
       return (Status);
     }
 
