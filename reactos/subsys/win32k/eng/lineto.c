@@ -15,12 +15,15 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ * $Id: lineto.c,v 1.20 2003/07/14 09:43:11 gvg Exp $
  */
-/* $Id: lineto.c,v 1.19 2003/07/11 15:59:37 royce Exp $ */
+
 #include <ddk/winddi.h>
 #include <ddk/ntddmou.h>
 #include <include/inteng.h>
 #include <include/dib.h>
+#include "clip.h"
 #include "objects.h"
 #include "../dib/dib.h"
 #include "misc.h"
@@ -28,6 +31,303 @@
 #include <include/mouse.h>
 #include <include/object.h>
 #include <include/surface.h>
+
+static void FASTCALL
+TranslateRects(RECT_ENUM *RectEnum, PPOINTL Translate)
+{
+  PRECTL CurrentRect;
+
+  if (0 != Translate->x || 0 != Translate->y)
+    {
+      for (CurrentRect = RectEnum->arcl; CurrentRect < RectEnum->arcl + RectEnum->c; CurrentRect++)
+	{
+	  CurrentRect->left += Translate->x;
+	  CurrentRect->right += Translate->x;
+	  CurrentRect->top += Translate->y;
+	  CurrentRect->bottom += Translate->y;
+	}
+    }
+}
+
+/*
+ * Draw a line from top-left to bottom-right
+ */
+static void FASTCALL
+NWtoSE(PSURFOBJ OutputObj, PSURFGDI OutputGDI, PCLIPOBJ Clip,
+       PBRUSHOBJ Brush, LONG x, LONG y, LONG deltax, LONG deltay,
+       PPOINTL Translate)
+{
+  int i;
+  int error;
+  BOOLEAN EnumMore;
+  PRECTL ClipRect;
+  RECT_ENUM RectEnum;
+  ULONG Pixel = Brush->iSolidColor;
+  LONG delta;
+
+  CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, ENUM_RECT_LIMIT);
+  EnumMore = CLIPOBJ_bEnum(Clip, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
+  TranslateRects(&RectEnum, Translate);
+  ClipRect = RectEnum.arcl;
+  delta = max(deltax, deltay);
+  i = 0;
+  error = 0;
+  while (i < delta && (ClipRect < RectEnum.arcl + RectEnum.c || EnumMore))
+    {
+      while ((ClipRect < RectEnum.arcl + RectEnum.c /* there's still a current clip rect */
+              && (ClipRect->bottom <= y             /* but it's above us */
+                  || (ClipRect->top <= y && ClipRect->right <= x))) /* or to the left of us */
+             || EnumMore)                           /* no current clip rect, but rects left */
+	{
+	  /* Skip to the next clip rect */
+	  if (RectEnum.arcl + RectEnum.c <= ClipRect)
+	    {
+	      EnumMore = CLIPOBJ_bEnum(Clip, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
+	      TranslateRects(&RectEnum, Translate);
+	      ClipRect = RectEnum.arcl;
+	    }
+	  else
+	    {
+	      ClipRect++;
+	    }
+	}
+      if (ClipRect < RectEnum.arcl + RectEnum.c) /* If there's no current clip rect we're done */
+	{
+	  if (ClipRect->left <= x && ClipRect->top <= y)
+	    {
+	      OutputGDI->DIB_PutPixel(OutputObj, x, y, Pixel);
+	    }
+	  if (deltax < deltay)
+	    {
+	      y++;
+	      error = error + deltax;
+	      if (deltay <= error)
+		{
+		  x++;
+		  error = error - deltay;
+		}
+	    }
+	  else
+	    {
+	      x++;
+	      error = error + deltay;
+	      if (deltax <= error)
+		{
+	  	  y++;
+		  error = error - deltax;
+		}
+	    }
+	  i++;
+	}
+    }
+}
+
+static void FASTCALL
+SWtoNE(PSURFOBJ OutputObj, PSURFGDI OutputGDI, PCLIPOBJ Clip,
+       PBRUSHOBJ Brush, LONG x, LONG y, LONG deltax, LONG deltay,
+       PPOINTL Translate)
+{
+  int i;
+  int error;
+  BOOLEAN EnumMore;
+  PRECTL ClipRect;
+  RECT_ENUM RectEnum;
+  ULONG Pixel = Brush->iSolidColor;
+  LONG delta;
+
+  CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_RIGHTUP, ENUM_RECT_LIMIT);
+  EnumMore = CLIPOBJ_bEnum(Clip, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
+  TranslateRects(&RectEnum, Translate);
+  ClipRect = RectEnum.arcl;
+  delta = max(deltax, deltay);
+  i = 0;
+  error = 0;
+  while (i < delta && (ClipRect < RectEnum.arcl + RectEnum.c || EnumMore))
+    {
+      while ((ClipRect < RectEnum.arcl + RectEnum.c
+              && (y < ClipRect->top
+                  || (y < ClipRect->bottom && ClipRect->right <= x)))
+             || EnumMore)
+	{
+	  if (RectEnum.arcl + RectEnum.c <= ClipRect)
+	    {
+	      EnumMore = CLIPOBJ_bEnum(Clip, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
+	      TranslateRects(&RectEnum, Translate);
+	      ClipRect = RectEnum.arcl;
+	    }
+	  else
+	    {
+	      ClipRect++;
+	    }
+	}
+      if (ClipRect < RectEnum.arcl + RectEnum.c)
+	{
+	  if (ClipRect->left <= x && y < ClipRect->bottom)
+	    {
+	      OutputGDI->DIB_PutPixel(OutputObj, x, y, Pixel);
+	    }
+	  if (deltax < deltay)
+	    {
+	      y--;
+	      error = error + deltax;
+	      if (deltay <= error)
+		{
+		  x++;
+		  error = error - deltay;
+		}
+	    }
+	  else
+	    {
+	      x++;
+	      error = error + deltay;
+	      if (deltax <= error)
+		{
+	  	  y--;
+		  error = error - deltax;
+		}
+	    }
+	  i++;
+	}
+    }
+}
+
+static void FASTCALL
+NEtoSW(PSURFOBJ OutputObj, PSURFGDI OutputGDI, PCLIPOBJ Clip,
+       PBRUSHOBJ Brush, LONG x, LONG y, LONG deltax, LONG deltay,
+       PPOINTL Translate)
+{
+  int i;
+  int error;
+  BOOLEAN EnumMore;
+  PRECTL ClipRect;
+  RECT_ENUM RectEnum;
+  ULONG Pixel = Brush->iSolidColor;
+  LONG delta;
+
+  CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_LEFTDOWN, ENUM_RECT_LIMIT);
+  EnumMore = CLIPOBJ_bEnum(Clip, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
+  TranslateRects(&RectEnum, Translate);
+  ClipRect = RectEnum.arcl;
+  delta = max(deltax, deltay);
+  i = 0;
+  error = 0;
+  while (i < delta && (ClipRect < RectEnum.arcl + RectEnum.c || EnumMore))
+    {
+      while ((ClipRect < RectEnum.arcl + RectEnum.c
+              && (ClipRect->bottom <= y
+                  || (ClipRect->top <= y && x < ClipRect->left)))
+             || EnumMore)
+	{
+	  if (RectEnum.arcl + RectEnum.c <= ClipRect)
+	    {
+	      EnumMore = CLIPOBJ_bEnum(Clip, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
+	      TranslateRects(&RectEnum, Translate);
+	      ClipRect = RectEnum.arcl;
+	    }
+	  else
+	    {
+	      ClipRect++;
+	    }
+	}
+      if (ClipRect < RectEnum.arcl + RectEnum.c)
+	{
+	  if (x < ClipRect->right && ClipRect->top <= y)
+	    {
+	      OutputGDI->DIB_PutPixel(OutputObj, x, y, Pixel);
+	    }
+	  if (deltax < deltay)
+	    {
+	      y++;
+	      error = error + deltax;
+	      if (deltay <= error)
+		{
+		  x--;
+		  error = error - deltay;
+		}
+	    }
+	  else
+	    {
+	      x--;
+	      error = error + deltay;
+	      if (deltax <= error)
+		{
+	  	  y++;
+		  error = error - deltax;
+		}
+	    }
+	  i++;
+	}
+    }
+}
+
+static void FASTCALL
+SEtoNW(PSURFOBJ OutputObj, PSURFGDI OutputGDI, PCLIPOBJ Clip,
+       PBRUSHOBJ Brush, LONG x, LONG y, LONG deltax, LONG deltay,
+       PPOINTL Translate)
+{
+  int i;
+  int error;
+  BOOLEAN EnumMore;
+  PRECTL ClipRect;
+  RECT_ENUM RectEnum;
+  ULONG Pixel = Brush->iSolidColor;
+  LONG delta;
+
+  CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_LEFTUP, ENUM_RECT_LIMIT);
+  EnumMore = CLIPOBJ_bEnum(Clip, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
+  TranslateRects(&RectEnum, Translate);
+  ClipRect = RectEnum.arcl;
+  delta = max(deltax, deltay);
+  i = 0;
+  error = 0;
+  while (i < delta && (ClipRect < RectEnum.arcl + RectEnum.c || EnumMore))
+    {
+      while ((ClipRect < RectEnum.arcl + RectEnum.c
+              && (y < ClipRect->top
+                  || (y < ClipRect->bottom && x < ClipRect->left)))
+             || EnumMore)
+	{
+	  if (RectEnum.arcl + RectEnum.c <= ClipRect)
+	    {
+	      EnumMore = CLIPOBJ_bEnum(Clip, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
+	      TranslateRects(&RectEnum, Translate);
+	      ClipRect = RectEnum.arcl;
+	    }
+	  else
+	    {
+	      ClipRect++;
+	    }
+	}
+      if (ClipRect < RectEnum.arcl + RectEnum.c)
+	{
+	  if (x < ClipRect->right && y < ClipRect->bottom)
+	    {
+	      OutputGDI->DIB_PutPixel(OutputObj, x, y, Pixel);
+	    }
+	  if (deltax < deltay)
+	    {
+	      y--;
+	      error = error + deltax;
+	      if (deltay <= error)
+		{
+		  x--;
+		  error = error - deltay;
+		}
+	    }
+	  else
+	    {
+	      x--;
+	      error = error + deltay;
+	      if (deltax <= error)
+		{
+	  	  y--;
+		  error = error - deltax;
+		}
+	    }
+	  i++;
+	}
+    }
+}
 
 /*
  * @unimplemented
@@ -43,36 +343,38 @@ EngLineTo(SURFOBJ *DestObj,
 	  RECTL *RectBounds,
 	  MIX mix)
 {
-  LONG x, y, deltax, deltay, i, xchange, ychange, error, hx, vy;
+  LONG x, y, deltax, deltay, i, xchange, ychange, hx, vy;
   ULONG Pixel = Brush->iSolidColor;
   SURFOBJ *OutputObj;
   SURFGDI *OutputGDI;
   RECTL DestRect;
   POINTL Translate;
   INTENG_ENTER_LEAVE EnterLeave;
+  RECT_ENUM RectEnum;
+  BOOL EnumMore;
 
   DestRect.left = x1;
   if (x1 != x2)
     {
-    DestRect.right = x2;
+      DestRect.right = x2;
     }
   else
     {
-    DestRect.right = x2 + 1;
+      DestRect.right = x2 + 1;
     }
   DestRect.top = y1;
   if (y1 != y2)
     {
-    DestRect.bottom = y2;
+      DestRect.bottom = y2;
     }
   else
     {
-    DestRect.bottom = y2 + 1;
+      DestRect.bottom = y2 + 1;
     }
 
   if (! IntEngEnter(&EnterLeave, DestObj, &DestRect, FALSE, &Translate, &OutputObj))
     {
-    return FALSE;
+      return FALSE;
     }
 
   x1 += Translate.x;
@@ -82,7 +384,6 @@ EngLineTo(SURFOBJ *DestObj,
 
   OutputGDI = AccessInternalObjectFromUserObject(OutputObj);
 
-  // FIXME: Implement clipping
   x = x1;
   y = y1;
   deltax = x2 - x1;
@@ -90,71 +391,97 @@ EngLineTo(SURFOBJ *DestObj,
 
   if (deltax < 0)
     {
-    xchange = -1;
-    deltax = - deltax;
-    hx = x2;
-    x--;
+      xchange = -1;
+      deltax = - deltax;
+      hx = x2;
+      x--;
     }
   else
     {
-    xchange = 1;
-    hx = x1;
+      xchange = 1;
+      hx = x1;
     }
 
   if (deltay < 0)
     {
-    ychange = -1;
-    deltay = - deltay;
-    vy = y2;
-    y--;
+      ychange = -1;
+      deltay = - deltay;
+      vy = y2;
+      y--;
     }
   else
     {
-    ychange = 1;
-    vy = y1;
+      ychange = 1;
+      vy = y1;
     }
 
   if (y1 == y2)
     {
-    OutputGDI->DIB_HLine(OutputObj, hx, hx + deltax, y1, Pixel);
+      CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, ENUM_RECT_LIMIT);
+      do
+	{
+	  EnumMore = CLIPOBJ_bEnum(Clip, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
+	  for (i = 0; i < RectEnum.c && RectEnum.arcl[i].top + Translate.y <= y1; i++)
+	    {
+	      if (y1 < RectEnum.arcl[i].bottom + Translate.y &&
+	          RectEnum.arcl[i].left + Translate.x <= hx + deltax &&
+	          hx < RectEnum.arcl[i].right + Translate.x)
+		{
+		  OutputGDI->DIB_HLine(OutputObj,
+		                       max(hx, RectEnum.arcl[i].left + Translate.x),
+		                       min(hx + deltax, RectEnum.arcl[i].right + Translate.x),
+		                       y1, Pixel);
+		}
+	    }
+	}
+      while (EnumMore);
     }
   else if (x1 == x2)
     {
-    OutputGDI->DIB_VLine(OutputObj, x1, vy, vy + deltay, Pixel);
+      CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, ENUM_RECT_LIMIT);
+      do
+	{
+	  EnumMore = CLIPOBJ_bEnum(Clip, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
+	  for (i = 0; i < RectEnum.c; i++)
+	    {
+	      if (RectEnum.arcl[i].left + Translate.x <= x1 &&
+                  x1 < RectEnum.arcl[i].right + Translate.x &&
+	          RectEnum.arcl[i].top + Translate.y <= vy + deltay &&
+	          vy < RectEnum.arcl[i].bottom + Translate.y)
+		{
+		  OutputGDI->DIB_VLine(OutputObj, x1,
+		                       max(vy, RectEnum.arcl[i].top + Translate.y),
+		                       min(vy + deltay, RectEnum.arcl[i].bottom + Translate.y),
+		                       Pixel);
+		}
+	    }
+	}
+      while (EnumMore);
     }
   else
     {
-    error = 0;
-
-    if (deltax < deltay)
-      {
-      for (i = 0; i < deltay; i++)
-        {
-        OutputGDI->DIB_PutPixel(OutputObj, x, y, Pixel);
-        y = y + ychange;
-        error = error + deltax;
-
-        if (deltay <= error)
-          {
-          x = x + xchange;
-          error = error - deltay;
-          }
-        }
-      }
-     else
-      {
-      for (i = 0; i < deltax; i++)
-        {
-        OutputGDI->DIB_PutPixel(OutputObj, x, y, Pixel);
-        x = x + xchange;
-        error = error + deltay;
-        if (deltax <= error)
-          {
-          y = y + ychange;
-          error = error - deltax;
-          }
-        }
-      }
+      if (0 < xchange)
+	{
+	  if (0 < ychange)
+	    {
+	      NWtoSE(OutputObj, OutputGDI, Clip, Brush, x, y, deltax, deltay, &Translate);
+	    }
+	  else
+	    {
+	      SWtoNE(OutputObj, OutputGDI, Clip, Brush, x, y, deltax, deltay, &Translate);
+	    }
+	}
+      else
+	{
+	  if (0 < ychange)
+	    {
+	      NEtoSW(OutputObj, OutputGDI, Clip, Brush, x, y, deltax, deltay, &Translate);
+	    }
+	  else
+	    {
+	      SEtoNW(OutputObj, OutputGDI, Clip, Brush, x, y, deltax, deltay, &Translate);
+	    }
+	}
     }
 
   return IntEngLeave(&EnterLeave);
@@ -180,20 +507,23 @@ IntEngLineTo(SURFOBJ *DestSurf,
 
   MouseSafetyOnDrawStart(DestSurf, SurfGDI, x1, y1, x2, y2);
 
-  if (NULL != SurfGDI->LineTo) {
+  if (NULL != SurfGDI->LineTo)
+    {
     /* Call the driver's DrvLineTo */
     ret = SurfGDI->LineTo(DestSurf, Clip, Brush, x1, y1, x2, y2, RectBounds, mix);
-  }
+    }
 
 #if 0
-  if (! ret && NULL != SurfGDI->StrokePath) {
-    /* FIXME: Emulate LineTo using drivers DrvStrokePath and set ret on success */
-  }
+  if (! ret && NULL != SurfGDI->StrokePath)
+    {
+      /* FIXME: Emulate LineTo using drivers DrvStrokePath and set ret on success */
+    }
 #endif
 
-  if (! ret) {
-    ret = EngLineTo(DestSurf, Clip, Brush, x1, y1, x2, y2, RectBounds, mix);
-  }
+  if (! ret)
+    {
+      ret = EngLineTo(DestSurf, Clip, Brush, x1, y1, x2, y2, RectBounds, mix);
+    }
 
   MouseSafetyOnDrawEnd(DestSurf, SurfGDI);
 
@@ -213,25 +543,28 @@ IntEngPolyline(SURFOBJ *DestSurf,
   BOOL ret = FALSE;
 
   //Draw the Polyline with a call to IntEngLineTo for each segment.
-  for (i=1; i<dCount; i++)
-  {
-    rect.left = MIN(pt[i-1].x, pt[i].x);
-    rect.top = MIN(pt[i-1].y, pt[i].y);
-    rect.right = MAX(pt[i-1].x, pt[i].x);
-    rect.bottom = MAX(pt[i-1].y, pt[i].y);
-    ret = IntEngLineTo(DestSurf,
-	               Clip,
-	               Brush,
-	               pt[i-1].x,
-	               pt[i-1].y,
-	               pt[i].x,
-	               pt[i].y,
-	               &rect,
-	               mix);
-    if (!ret)
-      break;
-  }
+  for (i = 1; i < dCount; i++)
+    {
+      rect.left = MIN(pt[i-1].x, pt[i].x);
+      rect.top = MIN(pt[i-1].y, pt[i].y);
+      rect.right = MAX(pt[i-1].x, pt[i].x);
+      rect.bottom = MAX(pt[i-1].y, pt[i].y);
+      ret = IntEngLineTo(DestSurf,
+	                 Clip,
+	                 Brush,
+                         pt[i-1].x,
+	                 pt[i-1].y,
+	                 pt[i].x,
+	                 pt[i].y,
+	                 &rect,
+	                 mix);
+      if (!ret)
+	{
+	  break;
+	}
+    }
 
   return ret;
 }
+
 /* EOF */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: polyfill.c,v 1.4 2003/06/25 16:55:33 gvg Exp $
+/* $Id: polyfill.c,v 1.5 2003/07/14 09:43:11 gvg Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -33,6 +33,7 @@
 #include <win32k/fillshap.h>
 #include <win32k/dc.h>
 #include <win32k/pen.h>
+#include <include/inteng.h>
 #include <include/object.h>
 #include <include/paint.h>
 
@@ -487,7 +488,7 @@ static void STDCALL POLYGONFILL_UpdateActiveEdges(int Scanline, PFILL_EDGE_LIST 
 ** This method fills the portion of the polygon that intersects with the scanline
 ** Scanline.
 */
-static void STDCALL POLYGONFILL_FillScanLine(int ScanLine, PFILL_EDGE_LIST ActiveEdges, SURFOBJ *SurfObj, PBRUSHOBJ BrushObj, MIX RopMode)
+static void STDCALL POLYGONFILL_FillScanLine(PDC dc, int ScanLine, PFILL_EDGE_LIST ActiveEdges, SURFOBJ *SurfObj, PBRUSHOBJ BrushObj, MIX RopMode)
 {
   BOOL OnOdd = TRUE;
   RECTL BoundRect;
@@ -510,15 +511,15 @@ static void STDCALL POLYGONFILL_FillScanLine(int ScanLine, PFILL_EDGE_LIST Activ
 
 	  XInterceptEven = pThis->XIntercept;
 	  DPRINT("Fill Line (%d, %d) to (%d, %d)\n",XInterceptOdd - 1, ScanLine, XInterceptEven - 1, ScanLine);
-	  ret = EngLineTo(SurfObj,
-	                  NULL, /* ClipObj */
-	                  BrushObj,
-		          XInterceptOdd - 1, 
-		          ScanLine, 
-	                  XInterceptEven - 1, 
-	                  ScanLine,
-                          &BoundRect, /* Bounding rectangle */
-                          RopMode); /* MIX */
+	  ret = IntEngLineTo(SurfObj,
+	                     dc->CombinedClip,
+	                     BrushObj,
+	                     XInterceptOdd - 1, 
+	                     ScanLine, 
+	                     XInterceptEven - 1, 
+	                     ScanLine,
+                             &BoundRect, /* Bounding rectangle */
+                             RopMode); /* MIX */
 	  OnOdd = TRUE;
 	}
       pThis = pThis->pNext;
@@ -530,7 +531,7 @@ static void STDCALL POLYGONFILL_FillScanLine(int ScanLine, PFILL_EDGE_LIST Activ
 //When the fill mode is ALTERNATE, GDI fills the area between odd-numbered and 
 //even-numbered polygon sides on each scan line. That is, GDI fills the area between the 
 //first and second side, between the third and fourth side, and so on. 
-BOOL STDCALL FillPolygon_ALTERNATE(SURFOBJ *SurfObj, PBRUSHOBJ BrushObj, MIX RopMode, CONST PPOINT Points, int Count, RECTL BoundRect)
+BOOL STDCALL FillPolygon_ALTERNATE(PDC dc, SURFOBJ *SurfObj, PBRUSHOBJ BrushObj, MIX RopMode, CONST PPOINT Points, int Count, RECTL BoundRect)
 {
   PFILL_EDGE_LIST list = 0;
   PFILL_EDGE_LIST ActiveEdges = 0;
@@ -553,7 +554,7 @@ BOOL STDCALL FillPolygon_ALTERNATE(SURFOBJ *SurfObj, PBRUSHOBJ BrushObj, MIX Rop
     {
       POLYGONFILL_UpdateActiveEdges(ScanLine, &list, &ActiveEdges);
       /* DEBUG_PRINT_EDGELIST(ActiveEdges); */
-      POLYGONFILL_FillScanLine(ScanLine, ActiveEdges, SurfObj, BrushObj, RopMode);
+      POLYGONFILL_FillScanLine(dc, ScanLine, ActiveEdges, SurfObj, BrushObj, RopMode);
     }
     
   /* Free Edge List. If any are left. */

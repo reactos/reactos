@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: line.c,v 1.16 2003/05/18 17:16:18 ea Exp $ */
+/* $Id: line.c,v 1.17 2003/07/14 09:43:11 gvg Exp $ */
 
 // Some code from the WINE project source (www.winehq.com)
 
@@ -29,6 +29,7 @@
 #include <win32k/path.h>
 #include <win32k/pen.h>
 #include <win32k/region.h>
+#include <include/error.h>
 #include <include/inteng.h>
 #include <include/object.h>
 #include <include/path.h>
@@ -128,57 +129,74 @@ W32kGetArcDirection(HDC  hDC)
 BOOL
 STDCALL
 W32kLineTo(HDC  hDC,
-                 int  XEnd,
-                 int  YEnd)
+           int  XEnd,
+           int  YEnd)
 {
-  DC		*dc = DC_HandleToPtr(hDC);
-  SURFOBJ	*SurfObj = (SURFOBJ*)AccessUserObject(dc->Surface);
-  BOOL ret;
-  PPENOBJ   pen;
-  PROSRGNDATA  reg;
-#ifndef TODO
-  RECT defaultrect;
-#endif
+  DC *dc = DC_HandleToPtr(hDC);
+  SURFOBJ *SurfObj = (SURFOBJ*)AccessUserObject(dc->Surface);
+  BOOL Ret;
+  PPENOBJ Pen;
+  RECT Bounds;
 
-  if(!dc) return FALSE;
+  if (NULL == dc)
+    {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return FALSE;
+    }
 
-  if(PATH_IsPathOpen(dc->w.path)) {
-    ret = PATH_LineTo(hDC, XEnd, YEnd);
-  } else {
-  	pen = (PPENOBJ) GDIOBJ_LockObj(dc->w.hPen, GO_PEN_MAGIC);
-	reg = (PROSRGNDATA)GDIOBJ_LockObj(dc->w.hGCClipRgn, GO_REGION_MAGIC);
+  if (PATH_IsPathOpen(dc->w.path))
+    {
+      Ret = PATH_LineTo(hDC, XEnd, YEnd);
+    }
+  else
+    {
+      Pen = (PPENOBJ) GDIOBJ_LockObj(dc->w.hPen, GO_PEN_MAGIC);
+      ASSERT(NULL != Pen);
 
-	ASSERT( pen );
-	// not yet implemented ASSERT( reg );
-#ifndef TODO
-  if (NULL == reg) {
-    defaultrect.left = 0;
-    defaultrect.top = 0;
-    defaultrect.right = 640;
-    defaultrect.bottom = 480;
+      if (dc->w.CursPosX <= XEnd)
+	{
+	  Bounds.left = dc->w.CursPosX;
+	  Bounds.right = XEnd;
+	}
+      else
+	{
+	  Bounds.left = XEnd;
+	  Bounds.right = dc->w.CursPosX;
+	}
+      Bounds.left += dc->w.DCOrgX;
+      Bounds.right += dc->w.DCOrgX;
+      if (dc->w.CursPosY <= YEnd)
+	{
+	  Bounds.top = dc->w.CursPosY;
+	  Bounds.bottom = YEnd;
+	}
+      else
+	{
+	  Bounds.top = YEnd;
+	  Bounds.bottom = dc->w.CursPosY;
+        }
+      Bounds.top += dc->w.DCOrgY;
+      Bounds.bottom += dc->w.DCOrgY;
 
-    reg = &defaultrect;
-  }
-#endif
+      Ret = IntEngLineTo(SurfObj,
+                         dc->CombinedClip,
+                         PenToBrushObj(dc, Pen),
+                         dc->w.DCOrgX + dc->w.CursPosX, dc->w.DCOrgY + dc->w.CursPosY,
+                         dc->w.DCOrgX + XEnd,           dc->w.DCOrgY + YEnd,
+                         &Bounds,
+                         dc->w.ROPmode);
 
-    /* Draw the line according to the DC origin */
-    ret = IntEngLineTo(SurfObj,
-                       NULL, // ClipObj
-                       PenToBrushObj(dc, pen),
-                       dc->w.DCOrgX + dc->w.CursPosX, dc->w.DCOrgY + dc->w.CursPosY,
-                       dc->w.DCOrgX + XEnd,           dc->w.DCOrgY + YEnd,
-                       reg, // Bounding rectangle
-                       dc->w.ROPmode); // MIX
+      GDIOBJ_UnlockObj( dc->w.hPen, GO_PEN_MAGIC);
+    }
 
-    GDIOBJ_UnlockObj( dc->w.hGCClipRgn, GO_REGION_MAGIC );
-    GDIOBJ_UnlockObj( dc->w.hPen, GO_PEN_MAGIC);
-  }
-  if(ret) {
-    dc->w.CursPosX = XEnd;
-    dc->w.CursPosY = YEnd;
-  }
-  DC_ReleasePtr( hDC );
-  return ret;
+  if (Ret)
+    {
+      dc->w.CursPosX = XEnd;
+      dc->w.CursPosY = YEnd;
+    }
+  DC_ReleasePtr(hDC);
+
+  return Ret;
 }
 
 BOOL
@@ -336,7 +354,7 @@ W32kPolyline(HDC  hDC,
   
     //get IntEngPolyline to do the drawing.
     ret = IntEngPolyline(SurfObj,
-	                 NULL,
+	                 dc->CombinedClip,
 	                 PenToBrushObj(dc, pen),
 	                 pts,
                          Count,

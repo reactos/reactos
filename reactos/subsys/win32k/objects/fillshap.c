@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fillshap.c,v 1.20 2003/06/25 16:55:33 gvg Exp $ */
+/* $Id: fillshap.c,v 1.21 2003/07/14 09:43:11 gvg Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -82,7 +82,8 @@ W32kPie(HDC  hDC,
 //When the fill mode is ALTERNATE, GDI fills the area between odd-numbered and 
 //even-numbered polygon sides on each scan line. That is, GDI fills the area between the 
 //first and second side, between the third and fourth side, and so on. 
-extern BOOL FillPolygon_ALTERNATE(SURFOBJ *SurfObj,
+extern BOOL FillPolygon_ALTERNATE(PDC dc,
+                                  SURFOBJ *SurfObj,
                                   PBRUSHOBJ BrushObj,
                                   MIX RopMode,
                                   CONST PPOINT Points,
@@ -186,7 +187,7 @@ W32kPolygon(HDC  hDC,
 	}
       else /* default */
 	{
-	  ret = FillPolygon_ALTERNATE(SurfObj,  FillBrushObj, dc->w.ROPmode, Points, Count, DestRect);
+	  ret = FillPolygon_ALTERNATE(dc, SurfObj,  FillBrushObj, dc->w.ROPmode, Points, Count, DestRect);
 	}
 
       // Draw the Polygon Edges with the current pen
@@ -243,7 +244,7 @@ W32kPolygon(HDC  hDC,
 	    }
 	  DPRINT("Polygon Making line from (%d,%d) to (%d,%d)\n", From.x, From.y, To.x, To.y );
 	  ret = IntEngLineTo(SurfObj,
-	                     NULL, /* ClipObj */
+	                     dc->CombinedClip,
 	                     OutBrushObj,
 	                     From.x, 
 	                     From.y, 
@@ -311,28 +312,28 @@ W32kRectangle(HDC  hDC,
     BottomRect += dc->w.DCOrgY;
 
     ret = IntEngLineTo(SurfObj,
-                       NULL, // ClipObj,
+                       dc->CombinedClip,
                        BrushObj,
                        LeftRect, TopRect, RightRect, TopRect,
                        RectBounds, // Bounding rectangle
                        dc->w.ROPmode); // MIX
 
     ret = IntEngLineTo(SurfObj,
-                       NULL, // ClipObj,
+                       dc->CombinedClip,
                        BrushObj,
                        RightRect, TopRect, RightRect, BottomRect,
                        RectBounds, // Bounding rectangle
                        dc->w.ROPmode); // MIX
 
     ret = IntEngLineTo(SurfObj,
-                       NULL, // ClipObj,
+                       dc->CombinedClip,
                        BrushObj,
                        LeftRect, BottomRect, RightRect, BottomRect,
                        RectBounds, // Bounding rectangle
                        dc->w.ROPmode); // MIX
 
     ret = IntEngLineTo(SurfObj,
-                       NULL, // ClipObj,
+                       dc->CombinedClip,
                        BrushObj,
                        LeftRect, TopRect, LeftRect, BottomRect,
                        RectBounds, // Bounding rectangle
