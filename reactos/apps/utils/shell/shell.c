@@ -1,3 +1,4 @@
+#include <ddk/ntddk.h>
 #include <windows.h>
 #include <stdarg.h>
 #include <string.h>
@@ -70,6 +71,13 @@ void ExecuteDir(char* cmdline)
    debug_printf("\n    %d files\n    %d directories\n\n",nFile,nRep);
    FindClose(shandle);
 }
+
+
+void ExecuteReboot(char* cmdline)
+{
+   NtShutdownSystem (ShutdownReboot);
+}
+
 
 void ExecuteType(char* cmdline)
 {
@@ -278,6 +286,11 @@ void ExecuteCommand(char* line)
 	ExecuteKill(tail);
 	return;
      }
+   if (strcmp(cmd,"reboot")==0)
+     {
+	ExecuteReboot(tail);
+	return;
+     }
    if (strcmp(cmd,"type")==0)
      {
 	ExecuteType(tail);	
@@ -285,7 +298,7 @@ void ExecuteCommand(char* line)
      }
    if (strcmp(cmd,"ver")==0)
      {
-        ExecuteVer(); 
+	ExecuteVer(); 
 	return;
      }
    if (strcmp(cmd,"validate")==0)
@@ -303,8 +316,8 @@ void ExecuteCommand(char* line)
      }
    if (strcmp(cmd,"start") == 0)
    {
-	   ExecuteStart(tail);
-	   return;
+	ExecuteStart(tail);
+	return;
    }
    if (strcmp(cmd,"exit")==0)
      {
