@@ -1,3 +1,25 @@
+2003-07-29  James Tabor	<jimtabor@adsl-64-217-116-74.dsl.hstntx.swbell.net>
+	
+	Patch by Art Yerkes <ayerkes@speakeasy.net>
+	* apps/utils/consw/: consw.c makefile runprg.bat Adding Keyboard 
+	Testing Code	
+
+	In order to use this patch you need a keyboard dll named kbdus.dll. 
+	The dll is loaded at runtime, when TranslateMessage is called the
+	first time. Since these dlls are really simple (the kbd_us example
+	is in the DDK), it should be easy to make an LGPL one that gets 
+	shipped with ReactOS.  The one I am testing with so far is the one
+	from win2k. (arty)
+
+	I've tested this patch it works okay w/o kbdus.dll installed. (jt)
+
+	* apps/utils/Makefile: Main part of patch.
+	* subsys/csrss/api/conio.c: Ditto.
+	* subsys/csrss/api/wapi.c: Ditto.
+	* subsys/win32k/ldr/loader.c: Ditto.
+	* subsys/win32k/ntuser/input.c: Ditto.
+	* subsys/win32k/ntuser/keyboard.c: Ditto.
+
 2003-07-24  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* drivers/fs/vfat/*.c: Remove protection of NDEBUG.
