@@ -1,4 +1,4 @@
-/* $Id: lang.c,v 1.6 2004/01/15 22:10:29 mf Exp $
+/* $Id: lang.c,v 1.7 2004/01/16 23:08:38 mf Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -1230,8 +1230,7 @@ GetTimeFormatW (
         return 0;
     }
 
-	return RosGetTimeFormat(Locale, dwFlags & LOCALE_STIMEFORMAT, lpTime, lpFormat,
-                                    lpTimeStr, cchTime);
+	return RosGetTimeFormat(Locale, dwFlags, lpTime, lpFormat, lpTimeStr, cchTime);
 }
 
 
