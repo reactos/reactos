@@ -137,6 +137,9 @@ LRESULT TaskBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		Refresh();
 		break;}
 */
+	  case PM_GET_LAST_ACTIVE:
+		return (LRESULT)(HWND)_last_foreground_wnd;
+
 	  default: def:
 		return super::WndProc(nmsg, wparam, lparam);
 	}

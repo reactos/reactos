@@ -38,6 +38,7 @@
 
 #include "desktop.h"
 #include "../taskbar/desktopbar.h"
+#include "../taskbar/taskbar.h"	// for PM_GET_LAST_ACTIVE
 #include "../shell/mainframe.h"	// for MainFrame::OpenShellFolders()
 
 

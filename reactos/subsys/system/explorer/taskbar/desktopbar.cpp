@@ -228,6 +228,11 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		PopupMenu(IDM_DESKTOPBAR).TrackPopupMenu(_hwnd, MAKEPOINTS(lparam));
 		break;
 
+	  case PM_GET_LAST_ACTIVE:
+		if (_hwndTaskBar)
+			return SendMessage(_hwndTaskBar, nmsg, wparam, lparam);
+		break;
+
 	  default: def:
 		return super::WndProc(nmsg, wparam, lparam);
 	}
