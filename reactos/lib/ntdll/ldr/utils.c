@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.88 2004/06/13 10:35:52 navaraf Exp $
+/* $Id: utils.c,v 1.89 2004/06/15 08:17:23 hbirr Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -2530,7 +2530,7 @@ LdrpAttachProcess(VOID)
    PLIST_ENTRY Entry;
    PLDR_MODULE Module;
    BOOL Result;
-   NTSTATUS Status;
+   NTSTATUS Status = STATUS_SUCCESS;
 
    DPRINT("LdrpAttachProcess() called for %wZ\n",
           &ExeModule->BaseDllName);
