@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdrom.c,v 1.4 2002/03/20 20:00:07 ekohl Exp $
+/* $Id: cdrom.c,v 1.5 2002/03/22 20:32:36 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -409,6 +409,7 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   DiskDeviceExtension->LockCount = 0;
   DiskDeviceExtension->DeviceNumber = DeviceNumber;
   DiskDeviceExtension->PortDeviceObject = PortDeviceObject;
+  DiskDeviceExtension->PhysicalDevice = DiskDeviceObject;
 
   /* FIXME: Not yet! Will cause pointer corruption! */
 //  DiskDeviceExtension->PortCapabilities = PortCapabilities;
@@ -444,28 +445,23 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 
   /* Read the drive's capacity */
   Status = ScsiClassReadDriveCapacity(DiskDeviceObject);
-#if 0
-  if (!NT_SUCCESS(Status) &&
-      (DiskDeviceObject->Characteristics & FILE_REMOVABLE_MEDIA) == 0)
+  if (!NT_SUCCESS(Status) ||
+      DiskDeviceExtension->DiskGeometry->BytesPerSector == 0)
     {
-      DPRINT1("Failed to retrieve drive capacity!\n");
-      return(STATUS_SUCCESS);
+      /* Set ISO9660 defaults */
+      DiskDeviceExtension->DiskGeometry->BytesPerSector = 2048;
+      DiskDeviceExtension->SectorShift = 11;
+      DiskDeviceExtension->PartitionLength.QuadPart = (ULONGLONG)0x7fffffff;
     }
   else
     {
-      /* Clear the verify flag for non-removable media drives. */
-      DiskDeviceObject->Flags &= ~DO_VERIFY_VOLUME;
-    }
-#endif
-
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("Failed to retrieve drive capacity!\n");
-      return(STATUS_SUCCESS);
+      /* Make sure the BytesPerSector value is a power of 2 */
+//      DiskDeviceExtension->DiskGeometry->BytesPerSector = 2048;
     }
 
   DPRINT("SectorSize: %lu\n", DiskDeviceExtension->DiskGeometry->BytesPerSector);
 
+  /* FIXME: initialize media change support */
 
   DPRINT("CdromClassCreateDeviceObjects() done\n");
 
