@@ -1,4 +1,4 @@
-/* $Id: find.c,v 1.38 2003/08/07 04:03:23 royce Exp $
+/* $Id: find.c,v 1.39 2003/10/19 17:10:46 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -53,7 +53,7 @@ InternalFindNextFile (
 	if (IData->pFileInfo->NextEntryOffset != 0)
 	{
 	   IData->pFileInfo = (PVOID)IData->pFileInfo + IData->pFileInfo->NextEntryOffset;
-	   DPRINT("Found %.*S\n",IData->pFileInfo->FileNameLength, IData->pFileInfo->FileName);
+	   DPRINT("Found %.*S\n",IData->pFileInfo->FileNameLength/sizeof(WCHAR), IData->pFileInfo->FileName);
 	   return TRUE;
 	}
 	IData->pFileInfo = (PVOID)IData + sizeof(KERNEL32_FIND_FILE_DATA);
@@ -74,7 +74,7 @@ InternalFindNextFile (
 		SetLastErrorByStatus (Status);
 		return FALSE;
 	}
-	DPRINT("Found %.*S\n",IData->pFileInfo->FileNameLength, IData->pFileInfo->FileName);
+	DPRINT("Found %.*S\n",IData->pFileInfo->FileNameLength/sizeof(WCHAR), IData->pFileInfo->FileName);
 	return TRUE;
 }
 
@@ -237,7 +237,7 @@ InternalFindFirstFile (
 		SetLastErrorByStatus (Status);
 		return NULL;
 	}
-	DPRINT("Found %.*S\n",IData->pFileInfo->FileNameLength, IData->pFileInfo->FileName);
+	DPRINT("Found %.*S\n",IData->pFileInfo->FileNameLength/sizeof(WCHAR), IData->pFileInfo->FileName);
 
 	return IData;
 }
