@@ -42,13 +42,23 @@
   #error Unknown compiler!
 #endif
 
-typedef enum {
+typedef enum
+{
   dsStopped,
   dsStarted,
   dsPaused,
   dsRemoved,
   dsSurpriseRemoved
 } SERIAL_DEVICE_STATE;
+
+typedef enum
+{
+	UartUnknown,
+	Uart8250,
+	Uart16450,
+	Uart16550,
+	Uart16550A
+} UART_TYPE;
 
 typedef struct _CIRCULAR_BUFFER
 {
@@ -73,6 +83,7 @@ typedef struct _SERIAL_DEVICE_EXTENSION
 	PKINTERRUPT Interrupt;
 	
 	SERIAL_LINE_CONTROL SerialLineControl;
+	UART_TYPE UartType;
 	ULONG WaitMask;
 	
 	SERIALPERF_STATS SerialPerfStats;
@@ -110,8 +121,12 @@ typedef struct _SERIAL_DEVICE_EXTENSION
 #define     SR_IIR_ERROR         (SR_IIR_SELF | 6)
 #define   SER_FCR(x)   ((x)+2)
 #define     SR_FCR_ENABLE_FIFO 0x01
-#define     SR_FCR_CLEAR_RCVR  0x02
-#define     SR_FCR_CLEAR_XMIT  0x04
+#define     SR_FCR_CLEAR_RCVR  (0x02 | SR_FCR_ENABLE_FIFO)
+#define     SR_FCR_CLEAR_XMIT  (0x04 | SR_FCR_ENABLE_FIFO)
+#define     SR_FCR_1_BYTE      (0x00 | SR_FCR_ENABLE_FIFO)
+#define     SR_FCR_4_BYTES     (0x40 | SR_FCR_ENABLE_FIFO)
+#define     SR_FCR_8_BYTES     (0x80 | SR_FCR_ENABLE_FIFO)
+#define     SR_FCR_14_BYTES    (0xC0 | SR_FCR_ENABLE_FIFO)
 #define   SER_LCR(x)   ((x)+3)
 #define     SR_LCR_CS5 0x00
 #define     SR_LCR_CS6 0x01
@@ -210,6 +225,10 @@ SerialQueryInformation(
 
 /************************************ legacy.c */
 
+UART_TYPE
+SerialDetectUartType(
+	IN PUCHAR ComPortBase);
+
 NTSTATUS
 DetectLegacyDevices(
 	IN PDRIVER_OBJECT DriverObject);
@@ -237,6 +256,7 @@ NTSTATUS STDCALL
 SerialAddDeviceInternal(
 	IN PDRIVER_OBJECT DriverObject,
 	IN PDEVICE_OBJECT Pdo,
+	IN UART_TYPE UartType,
 	OUT PDEVICE_OBJECT* pFdo OPTIONAL);
 
 NTSTATUS STDCALL

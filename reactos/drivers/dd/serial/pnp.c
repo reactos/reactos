@@ -17,6 +17,7 @@ NTSTATUS STDCALL
 SerialAddDeviceInternal(
 	IN PDRIVER_OBJECT DriverObject,
 	IN PDEVICE_OBJECT Pdo,
+	IN UART_TYPE UartType,
 	OUT PDEVICE_OBJECT* pFdo OPTIONAL)
 {
 	PDEVICE_OBJECT Fdo = NULL;
@@ -69,6 +70,7 @@ SerialAddDeviceInternal(
 	DeviceExtension->SerialPortNumber = DeviceNumber++;
 	DeviceExtension->Pdo = Pdo;
 	DeviceExtension->PnpState = dsStopped;
+	DeviceExtension->UartType = UartType;
 	Status = InitializeCircularBuffer(&DeviceExtension->InputBuffer, 16);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
 	Status = InitializeCircularBuffer(&DeviceExtension->OutputBuffer, 16);
@@ -119,7 +121,7 @@ SerialAddDevice(
 	 * not called with a NULL Pdo. Block this call (blocks
 	 * unfortunately all the other PnP serial ports devices).
 	 */
-	//return SerialAddDeviceInternal(DriverObject, Pdo, NULL);
+	//return SerialAddDeviceInternal(DriverObject, Pdo, UartUnknown, NULL);
 	return STATUS_UNSUCCESSFUL;
 }
 
@@ -142,6 +144,7 @@ SerialPnpStartDevice(
 	KINTERRUPT_MODE InterruptMode = Latched;
 	BOOLEAN ShareInterrupt = TRUE;
 	OBJECT_ATTRIBUTES objectAttributes;
+	PUCHAR ComPortBase;
 	UNICODE_STRING KeyName;
 	HANDLE hKey;
 	NTSTATUS Status;
@@ -197,11 +200,15 @@ SerialPnpStartDevice(
 	 * for read/write if we don't have an interrupt */
 	if (!Dirql)
 		return STATUS_INSUFFICIENT_RESOURCES;
+	ComPortBase = (PUCHAR)DeviceExtension->BaseAddress;
+	
+	if (DeviceExtension->UartType == UartUnknown)
+		DeviceExtension->UartType = SerialDetectUartType(ComPortBase);
 	
 	/* Get current settings */
-	DeviceExtension->IER = READ_PORT_UCHAR(SER_IER((PUCHAR)DeviceExtension->BaseAddress));
-	DeviceExtension->MCR = READ_PORT_UCHAR(SER_MCR((PUCHAR)DeviceExtension->BaseAddress));
-	DeviceExtension->MSR = READ_PORT_UCHAR(SER_MSR((PUCHAR)DeviceExtension->BaseAddress));
+	DeviceExtension->IER = READ_PORT_UCHAR(SER_IER(ComPortBase));
+	DeviceExtension->MCR = READ_PORT_UCHAR(SER_MCR(ComPortBase));
+	DeviceExtension->MSR = READ_PORT_UCHAR(SER_MSR(ComPortBase));
 	DeviceExtension->WaitMask = 0;
 	
 	/* Set baud rate */
@@ -221,6 +228,13 @@ SerialPnpStartDevice(
 	{
 		DPRINT("Serial: SerialSetLineControl() failed with status 0x%08x\n", Status);
 		return Status;
+	}
+	
+	/* Clear receive/transmit buffers */
+	if (DeviceExtension->UartType >= Uart16550)
+	{
+		WRITE_PORT_UCHAR(SER_FCR(ComPortBase),
+			SR_FCR_CLEAR_RCVR | SR_FCR_CLEAR_XMIT);
 	}
 	
 	/* Create link \DosDevices\COMX -> \Device\SerialX */
@@ -267,10 +281,10 @@ SerialPnpStartDevice(
 	
 	DeviceExtension->IER |= 0x1f; /* Activate interrupt mode */
 	DeviceExtension->IER &= ~1; /* FIXME: Disable receive byte interrupt */
-	WRITE_PORT_UCHAR(SER_IER((PUCHAR)DeviceExtension->BaseAddress), DeviceExtension->IER);
+	WRITE_PORT_UCHAR(SER_IER(ComPortBase), DeviceExtension->IER);
 	
 	DeviceExtension->MCR |= 0x03; /* Activate DTR, RTS */
-	WRITE_PORT_UCHAR(SER_MCR((PUCHAR)DeviceExtension->BaseAddress), DeviceExtension->MCR);
+	WRITE_PORT_UCHAR(SER_MCR(ComPortBase), DeviceExtension->MCR);
 	
 	return STATUS_SUCCESS;
 }
