@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.72 2003/12/30 18:52:04 fireball Exp $
+/* $Id: create.c,v 1.73 2004/07/22 02:32:43 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -375,6 +375,9 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
 	DPRINT("ObCreateObject() failed! (Status %lx)\n", Status);
 	return(Status);
      }
+
+   RtlMapGenericMask(&DesiredAccess,
+                     BODY_TO_HEADER(FileObject)->ObjectType->Mapping);
 
    Status = ObInsertObject ((PVOID)FileObject,
 			    NULL,
