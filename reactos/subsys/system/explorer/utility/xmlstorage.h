@@ -1,40 +1,232 @@
-/*
- * Copyright 2004 Martin Fuchs
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
-
 
  //
  // XML storage classes
  //
  // xmlstorage.h
  //
- // Martin Fuchs, 22.03.2004
+ // Copyright (c) 2004, Martin Fuchs <martin-fuchs@gmx.net>
  //
 
 
-#include "expat.h"
+/*
 
-#include <fstream>
-#include <sstream>
-#include <stack>
+  All rights reserved.
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  * Redistributions of source code must retain the above copyright
+	notice, this list of conditions and the following disclaimer.
+  * Redistributions in binary form must reproduce the above copyright
+	notice, this list of conditions and the following disclaimer in
+	the documentation and/or other materials provided with the
+	distribution.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  POSSIBILITY OF SUCH DAMAGE.
+
+*/
+
+#include "expat.h"
 
 #ifdef _MSC_VER
 #pragma comment(lib, "libexpat.lib")
+#pragma warning(disable: 4786)
 #endif
+
+
+#include <windows.h>	// for LPCTSTR
+
+#ifdef UNICODE
+#define	_UNICODE
+#endif
+#include <tchar.h>
+
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <stack>
+#include <list>
+#include <map>
+
+
+#ifndef BUFFER_LEN
+#define BUFFER_LEN 2048
+#endif
+
+
+namespace XMLStorage {
+
+
+#ifndef _STRING_DEFINED
+
+ /// string class for TCHAR strings
+
+struct String
+#ifdef UNICODE
+ : public std::wstring
+#else
+ : public std::string
+#endif
+{
+#ifdef UNICODE
+	typedef std::wstring super;
+#else
+	typedef std::string super;
+#endif
+
+	String() {}
+	String(LPCTSTR s) {if (s) super::assign(s);}
+	String(LPCTSTR s, int l) : super(s, l) {}
+	String(const super& other) : super(other) {}
+	String(const String& other) : super(other) {}
+
+#ifdef UNICODE
+	String(LPCSTR s) {assign(s);}
+	String(LPCSTR s, int l) {assign(s, l);}
+	String(const std::string& other) {assign(other.c_str());}
+	String& operator=(LPCSTR s) {assign(s); return *this;}
+	void assign(LPCSTR s) {if (s) {TCHAR b[BUFFER_LEN]; super::assign(b, MultiByteToWideChar(CP_ACP, 0, s, -1, b, BUFFER_LEN)-1);} else erase();}
+	void assign(LPCSTR s, int l) {if (s) {TCHAR b[BUFFER_LEN]; super::assign(b, MultiByteToWideChar(CP_ACP, 0, s, l, b, BUFFER_LEN));} else erase();}
+#else
+	String(LPCWSTR s) {assign(s);}
+	String(LPCWSTR s, int l) {assign(s, l);}
+	String(const std::wstring& other) {assign(other.c_str());}
+	String& operator=(LPCWSTR s) {assign(s); return *this;}
+	void assign(LPCWSTR s) {if (s) {char b[BUFFER_LEN]; super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, -1, b, BUFFER_LEN, 0, 0)-1);} else erase();}
+	void assign(LPCWSTR s, int l) {if (s) {char b[BUFFER_LEN]; super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, l, b, BUFFER_LEN, 0, 0));} else erase();}
+#endif
+
+	String& operator=(LPCTSTR s) {if (s) super::assign(s); else erase(); return *this;}
+	String& operator=(const super& s) {super::assign(s); return *this;}
+	void assign(LPCTSTR s) {super::assign(s);}
+	void assign(LPCTSTR s, int l) {super::assign(s, l);}
+
+	operator LPCTSTR() const {return c_str();}
+
+#ifdef UNICODE
+	operator std::string() const {char b[BUFFER_LEN]; return std::string(b, WideCharToMultiByte(CP_ACP, 0, c_str(), -1, b, BUFFER_LEN, 0, 0)-1);}
+#else
+	operator std::wstring() const {WCHAR b[BUFFER_LEN]; return std::wstring(b, MultiByteToWideChar(CP_ACP, 0, c_str(), -1, b, BUFFER_LEN)-1);}
+#endif
+
+	String& printf(LPCTSTR fmt, ...)
+	{
+		va_list l;
+		TCHAR b[BUFFER_LEN];
+
+		va_start(l, fmt);
+		super::assign(b, _vstprintf(b, fmt, l));
+		va_end(l);
+
+		return *this;
+	}
+
+	String& vprintf(LPCTSTR fmt, va_list l)
+	{
+		TCHAR b[BUFFER_LEN];
+
+		super::assign(b, _vstprintf(b, fmt, l));
+
+		return *this;
+	}
+
+	String& appendf(LPCTSTR fmt, ...)
+	{
+		va_list l;
+		TCHAR b[BUFFER_LEN];
+
+		va_start(l, fmt);
+		super::append(b, _vstprintf(b, fmt, l));
+		va_end(l);
+
+		return *this;
+	}
+
+	String& vappendf(LPCTSTR fmt, va_list l)
+	{
+		TCHAR b[BUFFER_LEN];
+
+		super::append(b, _vstprintf(b, fmt, l));
+
+		return *this;
+	}
+};
+
+#endif
+
+
+inline void assign_utf8(String& s, const char* str)
+{
+	TCHAR buffer[BUFFER_LEN];
+
+#ifdef UNICODE
+	int l = MultiByteToWideChar(CP_UTF8, 0, str, -1, buffer, BUFFER_LEN) - 1;
+#else
+	WCHAR wbuffer[BUFFER_LEN];
+
+	int l = MultiByteToWideChar(CP_UTF8, 0, str, -1, wbuffer, BUFFER_LEN) - 1;
+	l = WideCharToMultiByte(CP_ACP, 0, wbuffer, l, buffer, BUFFER_LEN, 0, 0);
+#endif
+
+	s.assign(buffer, l);
+}
+
+inline std::string get_utf8(LPCTSTR s, int l)
+{
+	char buffer[BUFFER_LEN];
+
+#ifdef UNICODE
+	l = WideCharToMultiByte(CP_UTF8, 0, s, l, buffer, BUFFER_LEN, 0, 0);
+#else
+	WCHAR wbuffer[BUFFER_LEN];
+
+	l = MultiByteToWideChar(CP_ACP, 0, s, l, wbuffer, BUFFER_LEN);
+	l = WideCharToMultiByte(CP_UTF8, 0, wbuffer, l, buffer, BUFFER_LEN, 0, 0);
+#endif
+
+	return std::string(buffer, l);
+}
+
+inline std::string get_utf8(const String& s)
+{
+	return get_utf8(s.c_str(), s.length());
+}
+
+inline std::string XMLString(const String& s)
+{
+	TCHAR buffer[BUFFER_LEN];
+	LPTSTR o = buffer;
+
+	for(LPCTSTR p=s; *p; ++p)
+		switch(*p) {
+		  case '&':
+			*o++ = '&';	*o++ = 'a';	*o++ = 'm';	*o++ = 'p';	*o++ = ';';
+			break;
+
+		  case '<':
+			*o++ = '&';	*o++ = 'l'; *o++ = 't';	*o++ = ';';
+			break;
+
+		  case '>':
+			*o++ = '&';	*o++ = 'g'; *o++ = 't';	*o++ = ';';
+			break;
+
+		  default:
+			*o++ = *p;
+		}
+
+	return get_utf8(buffer, o-buffer);
+}
 
 
  // write XML files with 2 spaces indenting
@@ -51,7 +243,7 @@ struct String_from_XML_Char : public String
 {
 	String_from_XML_Char(const XML_Char* str)
 	{
-		assign_utf8(str);
+		assign_utf8(*this, str);
 	}
 };
 
@@ -61,8 +253,12 @@ struct String_from_XML_Char : public String
  /// in memory representation of an XML node
 struct XMLNode : public String
 {
-	typedef map<String, String> AttributeMap;
-	typedef list<XMLNode*> Children;
+	typedef std::map<String, String> AttributeMap;
+	typedef std::list<XMLNode*> Children;
+
+	 // access to protected class members for XMLPos anbd XMLReader
+	friend struct XMLPos;
+	friend struct XMLReader;
 
 	XMLNode(const String& name)
 	 :	String(name)
@@ -104,6 +300,68 @@ struct XMLNode : public String
 	{
 		return _children;
 	}
+
+	Children& get_children()
+	{
+		return _children;
+	}
+
+	 /// write XML stream preserving original white space and comments
+	std::ostream& write(std::ostream& out)
+	{
+		out << "<" << XMLString(*this);
+
+		for(AttributeMap::const_iterator it=_attributes.begin(); it!=_attributes.end(); ++it)
+			out << " " << XMLString(it->first) << "=\"" << XMLString(it->second) << "\"";
+
+		if (!_children.empty() || !_content.empty()) {
+			out << ">" << _content;
+
+			for(Children::const_iterator it=_children.begin(); it!=_children.end(); ++it)
+				(*it)->write(out);
+
+			out << "</" << XMLString(*this) << ">" << _trailing;
+		} else {
+			out << "/>" << _trailing;
+		}
+
+		return out;
+	}
+
+	 /// print write node to stream without preserving original white space
+	std::ostream& write_formating(std::ostream& out, int indent=0)
+	{
+		for(int i=indent; i--; )
+			out << XML_INDENT_SPACE;
+
+		out << "<" << XMLString(*this);
+
+		for(AttributeMap::const_iterator it=_attributes.begin(); it!=_attributes.end(); ++it)
+			out << " " << XMLString(it->first) << "=\"" << XMLString(it->second) << "\"";
+
+		if (!_children.empty()) {
+			out << ">\n";
+
+			for(Children::const_iterator it=_children.begin(); it!=_children.end(); ++it)
+				(*it)->write_formating(out, indent+1);
+
+			for(int i=indent; i--; )
+				out << XML_INDENT_SPACE;
+
+			out << "</" << XMLString(*this) << ">\n";
+		} else {
+			out << "/>\n";
+		}
+
+		return out;
+	}
+
+protected:
+	Children _children;
+	AttributeMap _attributes;
+
+	std::string	_content;
+	std::string	_trailing;
 
 	XMLNode* get_first_child() const
 	{
@@ -149,63 +407,104 @@ struct XMLNode : public String
 		else
 			_children.back()->_trailing.append(s, l);
 	}
+};
 
-	 /// write XML stream preserving original white space and comments
-	ostream& write(ostream& out)
+
+ /// iterator access to children nodes with name filtering
+struct XMLChildrenFilter
+{
+	XMLChildrenFilter(XMLNode::Children& children, const String& name)
+	 :	_begin(children.begin(), children.end(), name),
+		_end(children.end(), children.end(), name)
 	{
-		out << "<" << get_utf8();
-
-		for(AttributeMap::const_iterator it=_attributes.begin(); it!=_attributes.end(); ++it)
-			out << " " << it->first.get_utf8() << "=\"" << it->second.get_utf8() << "\"";
-
-		if (!_children.empty() || !_content.empty()) {
-			out << ">" << _content;
-
-			for(Children::const_iterator it=_children.begin(); it!=_children.end(); ++it)
-				(*it)->write(out);
-
-			out << "</" << get_utf8() << ">" << _trailing;
-		} else {
-			out << "/>" << _trailing;
-		}
-
-		return out;
 	}
 
-	 /// print write node to stream without preserving original white space
-	ostream& write_formating(ostream& out, int indent=0)
+	XMLChildrenFilter(XMLNode* node, const String& name)
+	 :	_begin(node->get_children().begin(), node->get_children().end(), name),
+		_end(node->get_children().end(), node->get_children().end(), name)
 	{
-		for(int i=indent; i--; )
-			out << XML_INDENT_SPACE;
+	}
 
-		out << "<" << get_utf8();
+	struct iterator
+	{
+		typedef XMLNode::Children::iterator BaseIterator;
 
-		for(AttributeMap::const_iterator it=_attributes.begin(); it!=_attributes.end(); ++it)
-			out << " " << it->first.get_utf8() << "=\"" << it->second.get_utf8() << "\"";
-
-		if (!_children.empty()) {
-			out << ">\n";
-
-			for(Children::const_iterator it=_children.begin(); it!=_children.end(); ++it)
-				(*it)->write_formating(out, indent+1);
-
-			for(int i=indent; i--; )
-				out << XML_INDENT_SPACE;
-
-			out << "</" << get_utf8() << ">\n";
-		} else {
-			out << "/>\n";
+		iterator(BaseIterator begin, BaseIterator end, const String& filter_name)
+		 :	_cur(begin),
+			_end(end),
+			_filter_name(filter_name)
+		{
+			search_next();
 		}
 
-		return out;
+		operator BaseIterator()
+		{
+			return _cur;
+		}
+
+		const XMLNode* operator*() const
+		{
+			return *_cur;
+		}
+
+		XMLNode* operator*()
+		{
+			return *_cur;
+		}
+
+		iterator& operator++()
+		{
+			++_cur;
+			search_next();
+
+			return *this;
+		}
+
+		iterator operator++(int)
+		{
+			iterator ret = *this;
+
+			++_cur;
+			search_next();
+
+			return ret;
+		}
+
+		bool operator==(const BaseIterator& other) const
+		{
+			return _cur == other;
+		}
+
+		bool operator!=(const BaseIterator& other) const
+		{
+			return _cur != other;
+		}
+
+	protected:
+		BaseIterator	_cur;
+		BaseIterator	_end;
+		String	_filter_name;
+
+		void search_next()
+		{
+			while(_cur!=_end && **_cur!=_filter_name)
+				++_cur;
+		}
+	};
+
+	iterator begin()
+	{
+		return _begin;
+	}
+
+	iterator end()
+	{
+		return _end;
 	}
 
 protected:
-	Children _children;
-	AttributeMap _attributes;
-
-	string	_content;
-	string	_trailing;
+	iterator	_begin;
+	iterator	_end;
 };
 
 
@@ -219,11 +518,14 @@ struct XMLPos
 	}
 
 	 /// access to current node
-	XMLNode* operator->() {return _cur;}
-	const XMLNode* operator->() const {return _cur;}
+	operator XMLNode*() {return _cur;}
+	operator const XMLNode*() const {return _cur;}
 
-	XMLNode& operator*() {return *_cur;}
+	const XMLNode* operator->() const {return _cur;}
+	XMLNode* operator->() {return _cur;}
+
 	const XMLNode& operator*() const {return *_cur;}
+	XMLNode& operator*() {return *_cur;}
 
 	 /// attribute access
 	String& operator[](const String& attr_name) {return (*_cur)[attr_name];}
@@ -301,7 +603,7 @@ struct XMLPos
 protected:
 	XMLNode* _root;
 	XMLNode* _cur;
-	stack<XMLNode*> _stack;
+	std::stack<XMLNode*> _stack;
 
 	 /// go to specified node
 	void go_to(XMLNode* child)
@@ -336,7 +638,7 @@ struct XMLReader
 		XML_ParserFree(_parser);
 	}
 
-	XML_Status read(istream& in)
+	XML_Status read(std::istream& in)
 	{
 		XML_Status status = XML_STATUS_OK;
 
@@ -359,22 +661,22 @@ struct XMLReader
 		return status;
 	}
 
-	string get_position() const
+	std::string get_position() const
 	{
 		int line = XML_GetCurrentLineNumber(_parser);
 		int column = XML_GetCurrentColumnNumber(_parser);
 
-		ostringstream out;
+		std::ostringstream out;
 		out << "(" << line << ") : [column " << column << "]";
 
 		return out.str();
 	}
 
-	string get_error_string() const
+	std::string get_error_string() const
 	{
 		XML_Error error = XML_GetErrorCode(_parser);
 
-		ostringstream out;
+		std::ostringstream out;
 		out << get_position() << " XML parser error #" << error << "\n";
 
 		return out.str();
@@ -383,8 +685,8 @@ struct XMLReader
 protected:
 	XMLPos		_pos;
 	XML_Parser	_parser;
-	string		_xml_version;
-	string		_encoding;
+	std::string	_xml_version;
+	std::string	_encoding;
 	bool		_in_tag;
 
 	static void XMLCALL XML_XmlDeclHandler(void* userData, const XML_Char* version, const XML_Char* encoding, int standalone);
@@ -401,28 +703,28 @@ struct XMLDoc : public XMLNode
 	{
 	}
 
-	XMLDoc(const string& path)
+	XMLDoc(const std::string& path)
 	 :	XMLNode("")
 	{
 		read(path);
 	}
 
-	istream& read(istream& in)
+	std::istream& read(std::istream& in)
 	{
 		XMLReader(this).read(in);
 
 		return in;
 	}
 
-	bool read(const string& path)
+	bool read(const std::string& path)
 	{
-		ifstream in(path.c_str());
+		std::ifstream in(path.c_str());
 
 		return XMLReader(this).read(in) != XML_STATUS_ERROR;
 	}
 
 	 /// write XML stream preserving previous white space and comments
-	ostream& write(ostream& out, const string& xml_version="1.0", const string& encoding="UTF-8")
+	std::ostream& write(std::ostream& out, const std::string& xml_version="1.0", const std::string& encoding="UTF-8")
 	{
 		out << "<?xml version=\"" << xml_version << "\" encoding=\"" << encoding << "\"?>\n";
 
@@ -433,7 +735,7 @@ struct XMLDoc : public XMLNode
 	}
 
 	 /// write XML stream with formating
-	ostream& write_formating(ostream& out)
+	std::ostream& write_formating(std::ostream& out)
 	{
 		out << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
 
@@ -443,17 +745,20 @@ struct XMLDoc : public XMLNode
 		return out;
 	}
 
-	void write(const string& path, const string& xml_version="1.0", const string& encoding="UTF-8")
+	void write(const std::string& path, const std::string& xml_version="1.0", const std::string& encoding="UTF-8")
 	{
-		ofstream out(path.c_str());
+		std::ofstream out(path.c_str());
 
 		write(out, xml_version);
 	}
 
-	void write_formating(const string& path)
+	void write_formating(const std::string& path)
 	{
-		ofstream out(path.c_str());
+		std::ofstream out(path.c_str());
 
 		write_formating(out);
 	}
 };
+
+
+}	// namespace XMLStorage

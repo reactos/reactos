@@ -28,6 +28,8 @@
 
 #include "utility/xmlstorage.h"
 
+using namespace XMLStorage;
+
 
  /// management of file types
 struct FileTypeInfo {

@@ -772,38 +772,6 @@ struct String
 	operator wstring() const {WCHAR b[BUFFER_LEN]; return wstring(b, MultiByteToWideChar(CP_ACP, 0, c_str(), -1, b, BUFFER_LEN)-1);}
 #endif
 
-	void assign_utf8(const char* str)
-	{
-		TCHAR buffer[BUFFER_LEN];
-
-#ifdef UNICODE
-		int l = MultiByteToWideChar(CP_UTF8, 0, str, -1, buffer, BUFFER_LEN) - 1;
-#else
-		WCHAR wbuffer[BUFFER_LEN];
-
-		int l = MultiByteToWideChar(CP_UTF8, 0, str, -1, wbuffer, BUFFER_LEN) - 1;
-		l = WideCharToMultiByte(CP_ACP, 0, wbuffer, l, buffer, BUFFER_LEN, 0, 0);
-#endif
-
-		assign(buffer, l);
-	}
-
-	string get_utf8() const
-	{
-		char buffer[BUFFER_LEN];
-
-#ifdef UNICODE
-		int l = WideCharToMultiByte(CP_UTF8, 0, c_str(), length(), buffer, BUFFER_LEN, 0, 0);
-#else
-		WCHAR wbuffer[BUFFER_LEN];
-
-		int l = MultiByteToWideChar(CP_ACP, 0, c_str(), length(), wbuffer, BUFFER_LEN);
-		l = WideCharToMultiByte(CP_UTF8, 0, wbuffer, l, buffer, BUFFER_LEN, 0, 0);
-#endif
-
-		return string(buffer, l);
-	}
-
 	String& printf(LPCTSTR fmt, ...)
 	{
 		va_list l;
@@ -846,6 +814,8 @@ struct String
 		return *this;
 	}
 };
+
+#define	_STRING_DEFINED
 
 
 struct FmtString : public String

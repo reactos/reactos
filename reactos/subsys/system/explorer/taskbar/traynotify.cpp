@@ -195,11 +195,10 @@ void NotifyArea::read_config()
 
 	if (pos.go_down("explorer-cfg")) {
 		if (pos.go_down("notify-icons")) {
-			const XMLNode::Children& children = pos->get_children();
+			XMLChildrenFilter icons(pos, "icon");
 
-			for(XMLNode::Children::const_iterator it=children.begin(); it!=children.end(); ++it) {
+			for(XMLChildrenFilter::iterator it=icons.begin(); it!=icons.end(); ++it) {
 				const XMLNode& node = **it;
-				assert(node==TEXT("icon"));
 
 				NotifyIconConfig cfg;
 
