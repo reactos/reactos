@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.2 2002/01/26 01:37:35 sedwards Exp $
+# $Id: makefile,v 1.3 2004/06/01 01:13:29 sedwards Exp $
 #
 # Jurgen Van Gael [jurgen.vangael@student.kuleuven.ac.be]
 #
@@ -16,6 +16,8 @@ TARGET_APPTYPE = console
 TARGET_NAME = regsvr32
 
 TARGET_SDKLIBS = kernel32.a
+
+TARGET_CFLAGS = -D__USE_W32API
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 

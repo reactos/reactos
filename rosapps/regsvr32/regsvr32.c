@@ -36,7 +36,7 @@ Cambridge, MA 02139, USA.
 //
 #include <stdio.h>
 #include <windows.h>
-#include <ole32\olectl.h>
+#include <olectl.h>
 
 typedef HRESULT (*DLLREGISTER)		(void);
 typedef HRESULT (*DLLUNREGISTER)	(void);
