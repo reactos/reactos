@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.16 2001/10/12 19:13:01 hbirr Exp $
+/* $Id: rw.c,v 1.17 2002/03/14 16:35:53 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -140,7 +140,7 @@ WINBOOL STDCALL ReadFile(HANDLE hFile,
 	*lpNumberOfBytesRead = IoStatusBlock->Information;
      }
    
-   if (!NT_SUCCESS(errCode))  
+   if (!NT_SUCCESS(errCode) && errCode != STATUS_END_OF_FILE)  
      {
 	SetLastErrorByStatus (errCode);
 	return(FALSE);
