@@ -7,10 +7,6 @@
 #define X_OK	0x08
 #define D_OK	0x10
 
-int access(const char *_path, int _amode)
-{
-	return _access(_path,_amode);
-}
 
 int _access( const char *_path, int _amode )
 {
@@ -23,9 +19,9 @@ int _access( const char *_path, int _amode )
 		if ( (Attributes & FILE_ATTRIBUTE_READONLY) == FILE_ATTRIBUTE_READONLY )
 			return -1;
 	}
-	if ( _amode & D_OK == D_OK ) {
+	if ( (_amode & D_OK) == D_OK ) {
 		if ( (Attributes & FILE_ATTRIBUTE_DIRECTORY) != FILE_ATTRIBUTE_DIRECTORY )
-			return 0;
+			return -1;
 	}
 
 	return 0;
