@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.64 2003/12/23 18:19:07 navaraf Exp $ */
+/* $Id: text.c,v 1.65 2003/12/23 21:29:37 navaraf Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -799,7 +799,81 @@ NtGdiGetCharWidth32(HDC  hDC,
                          UINT  LastChar,
                          LPINT  Buffer)
 {
-  UNIMPLEMENTED;
+   LPINT SafeBuffer;
+   PDC dc;
+   PTEXTOBJ TextObj;
+   PFONTGDI FontGDI;
+   FT_Face face;
+   FT_CharMap charmap, found = NULL;
+   UINT i, glyph_index, BufferSize;
+
+   if (LastChar < FirstChar)
+   {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return FALSE;
+   }
+
+   BufferSize = (LastChar - FirstChar) * sizeof(INT);
+   SafeBuffer = ExAllocatePool(PagedPool, BufferSize);
+   if (SafeBuffer == NULL)
+   {
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return FALSE;
+   }
+
+   dc = DC_LockDc(hDC);
+   if (dc == NULL)
+   {
+      ExFreePool(SafeBuffer);
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return FALSE;
+   }
+   TextObj = TEXTOBJ_LockText(dc->w.hFont);
+   DC_UnlockDc(hDC);
+
+   GetFontObjectsFromTextObj(TextObj, NULL, NULL, &FontGDI);
+   
+   face = FontGDI->face;
+   if (face->charmap == NULL)
+   {
+      for (i = 0; i < face->num_charmaps; i++)
+      {
+         charmap = face->charmaps[i];
+         if (charmap->encoding != 0)
+         {
+            found = charmap;
+            break;
+         }
+      }
+
+      if (!found)
+      {
+         DPRINT1("WARNING: Could not find desired charmap!\n");
+         ExFreePool(SafeBuffer);
+         SetLastWin32Error(ERROR_INVALID_HANDLE);
+         return FALSE;
+      }
+
+      FT_Set_Charmap(face, found);
+   }
+
+   FT_Set_Pixel_Sizes(face,
+                      /* FIXME should set character height if neg */
+                      (TextObj->logfont.lfHeight < 0 ?
+                       - TextObj->logfont.lfHeight :
+                       TextObj->logfont.lfHeight),
+                      TextObj->logfont.lfWidth);
+
+   for (i = FirstChar; i <= LastChar; i++)
+   {
+      glyph_index = FT_Get_Char_Index(face, i);
+      FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+      SafeBuffer[i] = face->glyph->advance.x >> 6;
+   }
+   TEXTOBJ_UnlockText(dc->w.hFont);
+   MmCopyToCaller(Buffer, SafeBuffer, BufferSize);
+   ExFreePool(SafeBuffer);
+   return TRUE;
 }
 
 BOOL
