@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.8 2002/10/26 09:53:15 dwelch Exp $
+# $Id: Makefile,v 1.9 2003/01/01 11:18:06 robd Exp $
 
 PATH_TO_TOP = ../..
 
@@ -14,7 +14,7 @@ TARGET_CFLAGS = -I./include -DUNICODE -Wall -Werror
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 
-TARGET_CLEAN = misc/*.o windows/*.o
+TARGET_CLEAN = controls/*.o misc/*.o windows/*.o
 
 include $(PATH_TO_TOP)/rules.mak
 
