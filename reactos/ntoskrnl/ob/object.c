@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.53 2002/08/14 20:58:38 dwelch Exp $
+/* $Id: object.c,v 1.54 2002/08/27 06:34:22 hbirr Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -378,7 +378,12 @@ ObReferenceObjectByPointer(IN PVOID Object,
 		Object, Header->RefCount, PsThreadType);
 	DPRINT("eip %x\n", ((PULONG)&Object)[-1]);
      }
-   
+ 
+   if (Header->CloseInProcess)
+   {
+      return(STATUS_UNSUCCESSFUL);
+   }
+
    InterlockedIncrement(&Header->RefCount);
    
    return(STATUS_SUCCESS);
@@ -442,6 +447,12 @@ ObpPerformRetentionChecks(POBJECT_HEADER Header)
       Header->HandleCount == 0 &&
       Header->Permanent == FALSE)
     {
+      if (Header->CloseInProcess)
+      {
+	 KeBugCheck(0);
+	 return STATUS_UNSUCCESSFUL;
+      }
+      Header->CloseInProcess = TRUE;
       if (Header->ObjectType != NULL &&
 	  Header->ObjectType->Delete != NULL)
 	{
@@ -482,6 +493,10 @@ ObfReferenceObject(IN PVOID Object)
 
   Header = BODY_TO_HEADER(Object);
 
+  if (Header->CloseInProcess)
+  {
+      KeBugCheck(0);
+  }
   InterlockedIncrement(&Header->RefCount);
 
   ObpPerformRetentionChecks(Header);
