@@ -64,29 +64,37 @@ VOID STDCALL
 SerialReceiveByte(
 	IN PKDPC Dpc,
 	IN PVOID pDeviceExtension, // real type PSERIAL_DEVICE_EXTENSION
-	IN PVOID pByte,            // real type UCHAR
-	IN PVOID Unused)
+	IN PVOID Unused1,
+	IN PVOID Unused2)
 {
 	PSERIAL_DEVICE_EXTENSION DeviceExtension;
+	PUCHAR ComPortBase;
 	UCHAR Byte;
 	KIRQL Irql;
+	UCHAR IER;
 	NTSTATUS Status;
 	
 	DeviceExtension = (PSERIAL_DEVICE_EXTENSION)pDeviceExtension;
-	Byte = (UCHAR)(ULONG_PTR)pByte;
-	DPRINT1("Serial: received byte on COM%lu: 0x%02x (%c)\n",
-		DeviceExtension->ComPort, Byte, Byte);
+	ComPortBase = (PUCHAR)DeviceExtension->BaseAddress;
 	
 	KeAcquireSpinLock(&DeviceExtension->InputBufferLock, &Irql);
-	Status = PushCircularBufferEntry(&DeviceExtension->InputBuffer, Byte);
-	if (!NT_SUCCESS(Status))
+	while (READ_PORT_UCHAR(SER_LSR(ComPortBase)) & SR_LSR_DR)
 	{
-		/* FIXME: count buffer overflow */
-		return;
+		Byte = READ_PORT_UCHAR(SER_RBR(ComPortBase));
+		DPRINT("Serial: Byte received on COM%lu: 0x%02x\n",
+			DeviceExtension->ComPort, Byte);
+		Status = PushCircularBufferEntry(&DeviceExtension->InputBuffer, Byte);
+		if (NT_SUCCESS(Status))
+			DeviceExtension->SerialPerfStats.ReceivedCount++;
+		else
+			DeviceExtension->SerialPerfStats.BufferOverrunErrorCount++;
 	}
-	DPRINT1("Serial: push to buffer done\n");
+	KeSetEvent(&DeviceExtension->InputBufferNotEmpty, 0, FALSE);
 	KeReleaseSpinLock(&DeviceExtension->InputBufferLock, Irql);
-	InterlockedIncrement(&DeviceExtension->SerialPerfStats.ReceivedCount);
+	
+	/* allow new interrupts */
+	IER = READ_PORT_UCHAR(SER_IER(ComPortBase));
+	WRITE_PORT_UCHAR(SER_IER(ComPortBase), IER | SR_IER_DATA_RECEIVED);
 }
 
 VOID STDCALL
@@ -100,6 +108,7 @@ SerialSendByte(
 	PUCHAR ComPortBase;
 	UCHAR Byte;
 	KIRQL Irql;
+	UCHAR IER;
 	NTSTATUS Status;
 	
 	DeviceExtension = (PSERIAL_DEVICE_EXTENSION)pDeviceExtension;
@@ -113,9 +122,15 @@ SerialSendByte(
 		if (!NT_SUCCESS(Status))
 			break;
 		WRITE_PORT_UCHAR(SER_THR(ComPortBase), Byte);
+		DPRINT("Serial: Byte sent to COM%lu: 0x%02x\n",
+			DeviceExtension->ComPort, Byte);
 		DeviceExtension->SerialPerfStats.TransmittedCount++;
-	}	
+	}
 	KeReleaseSpinLock(&DeviceExtension->OutputBufferLock, Irql);
+	
+	/* allow new interrupts */
+	IER = READ_PORT_UCHAR(SER_IER(ComPortBase));
+	WRITE_PORT_UCHAR(SER_IER(ComPortBase), IER | SR_IER_THR_EMPTY);
 }
 
 BOOLEAN STDCALL
@@ -125,7 +140,6 @@ SerialInterruptService(
 {
 	PDEVICE_OBJECT DeviceObject;
 	PSERIAL_DEVICE_EXTENSION DeviceExtension;
-	UCHAR Byte;
 	PUCHAR ComPortBase;
 	UCHAR Iir;
 	
@@ -139,32 +153,32 @@ SerialInterruptService(
 	Iir &= SR_IIR_ID_MASK;
 	if ((Iir & SR_IIR_SELF) != 0) { return FALSE; }
 	
-	/* FIXME: sometimes, update DeviceExtension->IER */
 	/* FIXME: sometimes, update DeviceExtension->MCR */
 	switch (Iir)
 	{
 		case SR_IIR_MSR_CHANGE:
 		{
+			UCHAR IER;
 			DPRINT1("Serial: SR_IIR_MSR_CHANGE\n");
+			
 			DeviceExtension->MSR = READ_PORT_UCHAR(SER_MSR(ComPortBase));
 			/* FIXME: what to do? */
+			IER = READ_PORT_UCHAR(SER_IER(ComPortBase));
+			WRITE_PORT_UCHAR(SER_IER(ComPortBase), IER | SR_IER_MSR_CHANGE);
 			return TRUE;
 		}
 		case SR_IIR_THR_EMPTY:
 		{
 			DPRINT("Serial: SR_IIR_THR_EMPTY\n");
-			return KeInsertQueueDpc(&DeviceExtension->SendByteDpc, NULL, NULL);
+			
+			KeInsertQueueDpc(&DeviceExtension->SendByteDpc, NULL, NULL);
+			return TRUE;
 		}
 		case SR_IIR_DATA_RECEIVED:
 		{
-			DPRINT1("Serial: SR_IIR_DATA_RECEIVED\n");
-			while (READ_PORT_UCHAR(SER_LSR(ComPortBase)) & SR_LSR_DR)
-			{
-				Byte = READ_PORT_UCHAR(SER_RBR(ComPortBase));
-				DPRINT1("Serial: Byte received: 0x%02x (%c)\n", Byte, Byte);
-				if (!KeInsertQueueDpc(&DeviceExtension->ReceivedByteDpc, (PVOID)(ULONG_PTR)Byte, NULL))
-					break;
-			}
+			DPRINT("Serial: SR_IIR_DATA_RECEIVED\n");
+			
+			KeInsertQueueDpc(&DeviceExtension->ReceivedByteDpc, NULL, NULL);
 			return TRUE;
 		}
 		case SR_IIR_ERROR:

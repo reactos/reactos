@@ -54,10 +54,12 @@ typedef enum
 typedef enum
 {
 	UartUnknown,
-	Uart8250,
-	Uart16450,
-	Uart16550,
-	Uart16550A
+	Uart8250,  /* initial version */
+	Uart16450, /* + 38.4 Kbps */
+	Uart16550, /* + 115 Kbps */
+	Uart16550A,/* + FIFO 16 bytes */
+	Uart16650, /* + FIFO 32 bytes, 230 Kbps, power management, auto-flow */
+	Uart16750  /* + FIFO 64 bytes, 460 Kbps */
 } UART_TYPE;
 
 typedef struct _CIRCULAR_BUFFER
@@ -90,14 +92,14 @@ typedef struct _SERIAL_DEVICE_EXTENSION
 	
 	SERIALPERF_STATS SerialPerfStats;
 	SERIAL_TIMEOUTS SerialTimeOuts;
-	BOOLEAN IsOpened;	
+	BOOLEAN IsOpened;
+	KEVENT InputBufferNotEmpty;
 	CIRCULAR_BUFFER InputBuffer;
 	KSPIN_LOCK InputBufferLock;
 	CIRCULAR_BUFFER OutputBuffer;
 	KSPIN_LOCK OutputBufferLock;
 	
 	/* Current values */
-	UCHAR IER; /* Base+1, Interrupt Enable Register */
 	UCHAR MCR; /* Base+4, Modem Control Register */
 	UCHAR MSR; /* Base+6, Modem Status Register */
 } SERIAL_DEVICE_EXTENSION, *PSERIAL_DEVICE_EXTENSION;
@@ -108,7 +110,7 @@ typedef struct _WORKITEM_DATA
 	
 	BOOLEAN UseIntervalTimeout;
 	BOOLEAN UseTotalTimeout;
-	ULONG IntervalTimeout;
+	LARGE_INTEGER IntervalTimeout;
 	LARGE_INTEGER TotalTimeoutTime;
 	BOOLEAN DontWait;
 	BOOLEAN ReadAtLeastOneByte;
@@ -120,22 +122,28 @@ typedef struct _WORKITEM_DATA
 
 /* Baud master clock */
 #define BAUD_CLOCK      1843200
-#define CLOCKS_PER_BIT  16 
+#define CLOCKS_PER_BIT  16
 
 /* UART registers and bits */
-#define   SER_RBR(x)   ((x)+0)
-#define   SER_THR(x)   ((x)+0)
-#define   SER_DLL(x)   ((x)+0)
-#define   SER_IER(x)   ((x)+1)
-#define   SER_DLM(x)   ((x)+1)
-#define   SER_IIR(x)   ((x)+2)
+#define   SER_RBR(x)   ((x)+0) /* Receive Register */
+#define   SER_THR(x)   ((x)+0) /* Transmit Register */
+#define   SER_DLL(x)   ((x)+0) /* Baud Rate Divisor LSB */
+#define   SER_IER(x)   ((x)+1) /* Interrupt Enable Register */
+#define     SR_IER_DATA_RECEIVED 0x01
+#define     SR_IER_THR_EMPTY     0x02
+#define     SR_IER_LSR_CHANGE    0x04
+#define     SR_IER_MSR_CHANGE    0x08
+#define     SR_IER_SLEEP_MODE    0x10 /* Uart >= 16750 */
+#define     SR_IER_LOW_POWER     0x20 /* Uart >= 16750 */
+#define   SER_DLM(x)   ((x)+1) /* Baud Rate Divisor MSB */
+#define   SER_IIR(x)   ((x)+2) /* Interrupt Identification Register */
 #define     SR_IIR_SELF          0x00
 #define     SR_IIR_ID_MASK       0x07
 #define     SR_IIR_MSR_CHANGE    SR_IIR_SELF
 #define     SR_IIR_THR_EMPTY     (SR_IIR_SELF | 2)
 #define     SR_IIR_DATA_RECEIVED (SR_IIR_SELF | 4)
 #define     SR_IIR_ERROR         (SR_IIR_SELF | 6)
-#define   SER_FCR(x)   ((x)+2)
+#define   SER_FCR(x)   ((x)+2) /* FIFO Control Register (Uart >= 16550A) */
 #define     SR_FCR_ENABLE_FIFO 0x01
 #define     SR_FCR_CLEAR_RCVR  (0x02 | SR_FCR_ENABLE_FIFO)
 #define     SR_FCR_CLEAR_XMIT  (0x04 | SR_FCR_ENABLE_FIFO)
@@ -143,7 +151,7 @@ typedef struct _WORKITEM_DATA
 #define     SR_FCR_4_BYTES     (0x40 | SR_FCR_ENABLE_FIFO)
 #define     SR_FCR_8_BYTES     (0x80 | SR_FCR_ENABLE_FIFO)
 #define     SR_FCR_14_BYTES    (0xC0 | SR_FCR_ENABLE_FIFO)
-#define   SER_LCR(x)   ((x)+3)
+#define   SER_LCR(x)   ((x)+3) /* Line Control Register */
 #define     SR_LCR_CS5 0x00
 #define     SR_LCR_CS6 0x01
 #define     SR_LCR_CS7 0x02
@@ -157,16 +165,16 @@ typedef struct _WORKITEM_DATA
 #define     SR_LCR_PSP 0x38
 #define     SR_LCR_BRK 0x40
 #define     SR_LCR_DLAB 0x80
-#define   SER_MCR(x)   ((x)+4)
+#define   SER_MCR(x)   ((x)+4) /* Modem Control Register */
 #define     SR_MCR_DTR 0x01
 #define     SR_MCR_RTS 0x02
-#define   SER_LSR(x)   ((x)+5)
+#define   SER_LSR(x)   ((x)+5) /* Line Status Register */
 #define     SR_LSR_DR  0x01
 #define     SR_LSR_TBE 0x20
-#define   SER_MSR(x)   ((x)+6)
+#define   SER_MSR(x)   ((x)+6) /* Modem Status Register */
 #define     SR_MSR_CTS 0x10
 #define     SR_MSR_DSR 0x20
-#define   SER_SCR(x)   ((x)+7)
+#define   SER_SCR(x)   ((x)+7) /* Scratch Pad Register */
 
 /************************************ circularbuffer.c */
 

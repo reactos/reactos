@@ -78,6 +78,7 @@ SerialAddDeviceInternal(
 	IoInitializeRemoveLock(&DeviceExtension->RemoveLock, SERIAL_TAG, 0, 0);
 	KeInitializeSpinLock(&DeviceExtension->InputBufferLock);
 	KeInitializeSpinLock(&DeviceExtension->OutputBufferLock);
+	KeInitializeEvent(&DeviceExtension->InputBufferNotEmpty, NotificationEvent, FALSE);
 	KeInitializeDpc(&DeviceExtension->ReceivedByteDpc, SerialReceiveByte, DeviceExtension);
 	KeInitializeDpc(&DeviceExtension->SendByteDpc, SerialSendByte, DeviceExtension);
 	Fdo->Flags |= DO_POWER_PAGABLE;
@@ -144,6 +145,7 @@ SerialPnpStartDevice(
 	UNICODE_STRING ComPort;
 	ULONG Vector = 0;
 	ULONG i, j;
+	UCHAR IER;
 	KIRQL Dirql;
 	KAFFINITY Affinity = 0;
 	KINTERRUPT_MODE InterruptMode = Latched;
@@ -195,8 +197,6 @@ SerialPnpStartDevice(
 		DeviceExtension->BaseAddress, Dirql);
 	if (!DeviceExtension->BaseAddress)
 		return STATUS_INSUFFICIENT_RESOURCES;
-	/* FIXME: we should be able to continue and use polling method
-	 * for read/write if we don't have an interrupt */
 	if (!Dirql)
 		return STATUS_INSUFFICIENT_RESOURCES;
 	ComPortBase = (PUCHAR)DeviceExtension->BaseAddress;
@@ -205,7 +205,6 @@ SerialPnpStartDevice(
 		DeviceExtension->UartType = SerialDetectUartType(ComPortBase);
 	
 	/* Get current settings */
-	DeviceExtension->IER = READ_PORT_UCHAR(SER_IER(ComPortBase));
 	DeviceExtension->MCR = READ_PORT_UCHAR(SER_MCR(ComPortBase));
 	DeviceExtension->MSR = READ_PORT_UCHAR(SER_MSR(ComPortBase));
 	DeviceExtension->WaitMask = 0;
@@ -279,11 +278,13 @@ SerialPnpStartDevice(
 	
 	DeviceExtension->PnpState = dsStarted;
 	
-	DeviceExtension->IER |= 0x1f; /* Activate interrupt mode */
-	DeviceExtension->IER &= ~1; /* FIXME: Disable receive byte interrupt */
-	WRITE_PORT_UCHAR(SER_IER(ComPortBase), DeviceExtension->IER);
+	/* Activate interrupt modes */
+	IER = READ_PORT_UCHAR(SER_IER(ComPortBase));
+	IER |= SR_IER_DATA_RECEIVED | SR_IER_THR_EMPTY | SR_IER_LSR_CHANGE | SR_IER_MSR_CHANGE;
+	WRITE_PORT_UCHAR(SER_IER(ComPortBase), IER);
 	
-	DeviceExtension->MCR |= 0x03; /* Activate DTR, RTS */
+	/* Activate DTR, RTS */
+	DeviceExtension->MCR |= SR_MCR_DTR | SR_MCR_RTS;
 	WRITE_PORT_UCHAR(SER_MCR(ComPortBase), DeviceExtension->MCR);
 	
 	return STATUS_SUCCESS;
@@ -331,11 +332,19 @@ SerialPnp(
 				ULONG Irq;
 				
 				DPRINT1("Serial: no allocated resources for this device! Creating fake list\n");
-				/* These values are resources of the ONLY serial
-				 * port that will be managed by this driver
-				 * (default is COM2) */
-				ComPortBase = 0x2f8;
-				Irq = 3;
+				switch (((PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->SerialPortNumber)
+				{
+					case 0:
+						ComPortBase = 0x3f8;
+						Irq = 4;
+						break;
+					case 1:
+						ComPortBase = 0x2f8;
+						Irq = 3;
+						break;
+					default:
+						ComPortBase = Irq = 0;
+				}
 				
 				/* Create resource list */
 				ResourceListSize = sizeof(CM_RESOURCE_LIST) + sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
