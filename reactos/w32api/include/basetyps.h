@@ -113,6 +113,10 @@ typedef struct _GUID
     unsigned char Data4[8];
 } GUID,*REFGUID,*LPGUID;
 #endif /* GUID_DEFINED */
+#ifndef LPCGUID_DEFINED
+#define LPCGUID_DEFINED
+typedef const GUID *LPCGUID;
+#endif
 #ifndef UUID_DEFINED
 #define UUID_DEFINED
 typedef GUID UUID;
