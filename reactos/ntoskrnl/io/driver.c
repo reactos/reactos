@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.50 2004/08/21 20:51:25 tamlin Exp $
+/* $Id: driver.c,v 1.51 2004/09/07 11:48:16 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -119,10 +119,10 @@ IopInvalidDeviceRequest(
    PDEVICE_OBJECT DeviceObject,
    PIRP Irp)
 {
-   Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+   Irp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST;
    Irp->IoStatus.Information = 0;
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-   return STATUS_NOT_IMPLEMENTED;
+   return STATUS_INVALID_DEVICE_REQUEST;
 }
 
 NTSTATUS STDCALL
