@@ -315,19 +315,6 @@ void Entry::smart_scan(int scan_flags)
 }
 
 
-ShellPath Entry::create_absolute_pidl() const
-{
-	CONTEXT("Entry::create_absolute_pidl()");
-
-	TCHAR path[MAX_PATH];
-
-	if (get_path(path))
-		return ShellPath(path);
-
-	return ShellPath();
-}
-
-
 void Entry::extract_icon()
 {
 	TCHAR path[MAX_PATH];

@@ -35,6 +35,7 @@ protected:
 	WinEntry() : Entry(ET_WINDOWS) {}
 
 	virtual bool get_path(PTSTR path) const;
+	virtual ShellPath create_absolute_pidl() const;
 };
 
 
