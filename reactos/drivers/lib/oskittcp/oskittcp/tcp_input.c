@@ -195,9 +195,9 @@ present:
 	if (ti == (struct tcpiphdr *)tp || ti->ti_seq != tp->rcv_nxt)
 		return (0);
 	do {
-		tp->rcv_nxt += ti->ti_len;
-		OS_DbgPrint(OSK_MID_TRACE,("Added %d to rcv_nxt\n",
-					   ti->ti_len));
+		tp->rcv_nxt += ti->ti_len - sizeof( struct ip );
+		OS_DbgPrint(OSK_MID_TRACE,("Added %d to rcv_nxt (result %d)\n",
+					   ti->ti_len - sizeof(struct ip), tp->rcv_nxt));
 		flags = ti->ti_flags & TH_FIN;
 		remque(ti);
 		m = REASS_MBUF(ti);
@@ -598,7 +598,8 @@ findpcb:
 			 * we have enough buffer space to take it.
 			 */
 			++tcpstat.tcps_preddat;
-			tp->rcv_nxt += ti->ti_len;
+			tp->rcv_nxt += ti->ti_len - sizeof(struct ip);
+			OS_DbgPrint(OSK_MID_TRACE,("Added %d to rcv_nxt\n", ti->ti_len - sizeof(struct ip)));
 			tcpstat.tcps_rcvpack++;
 			tcpstat.tcps_rcvbyte += ti->ti_len;
 			/*

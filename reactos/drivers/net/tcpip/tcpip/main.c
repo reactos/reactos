@@ -20,7 +20,7 @@
 #include <info.h>
 #include <memtrack.h>
 
-#define NDEBUG
+//#define NDEBUG
 
 #ifndef NDEBUG
 DWORD DebugTraceLevel = 0x7fffffff;
@@ -208,7 +208,9 @@ CP
 
 	/* XXX This should probably be done in IoCreateFile() */
     /* Parameter checks */
+
     Address = (PTA_IP_ADDRESS)(EaInfo->EaName + EaInfo->EaNameLength + 1); //0-term
+
     if ((EaInfo->EaValueLength < sizeof(TA_IP_ADDRESS)) ||
       (Address->TAAddressCount != 1) ||
       (Address->Address[0].AddressLength < TDI_ADDRESS_LENGTH_IP) ||
@@ -226,6 +228,7 @@ CP
     }
 CP
     /* Open address file object */
+
 
     /* Protocol depends on device object so find the protocol */
     if (DeviceObject == TCPDeviceObject)

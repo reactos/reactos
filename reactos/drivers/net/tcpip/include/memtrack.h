@@ -69,6 +69,11 @@ static inline VOID ExFreePoolX( PVOID Data, PCHAR File, ULONG Line ) {
 #define TrackDump()
 #define Untrack(x)
 #define TrackTag(x)
+#define exAllocatePoolWithTag(x,y,z) ExAllocatePoolWithTag(x,y,z)
+#define exAllocatePool(x,y) ExAllocatePool(x,y)
+#define exFreePool(x) ExFreePool(x)
+#define TrackWithTag(w,x,y,z)
+#define UntrackFL(x,y,z)
 #endif
 
 #endif/*MEMMTRAC_H*/

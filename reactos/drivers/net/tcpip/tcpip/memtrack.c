@@ -5,6 +5,7 @@
 #include <memtrack.h>
 
 #ifdef MEMTRACK
+
 LIST_ENTRY AllocatedObjectsList;
 KSPIN_LOCK AllocatedObjectsLock;
 DWORD TagsToShow[MEMTRACK_MAX_TAGS_TO_TRACK] = { 0 };

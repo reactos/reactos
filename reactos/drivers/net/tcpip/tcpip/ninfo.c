@@ -15,11 +15,12 @@
 #include <prefix.h>
 #include <ip.h>
 #include <route.h>
+#include <tilists.h>
 
 TDI_STATUS InfoTdiQueryGetAddrTable( PNDIS_BUFFER Buffer, 
 				     PUINT BufferSize ) {
-    PIP_INTERFACE CurrentIF;
-    PLIST_ENTRY CurrentIFEntry;
+    
+    IF_LIST_ITER(CurrentIF);
     TDI_STATUS Status = TDI_INVALID_REQUEST;
     KIRQL OldIrql;
     UINT Count = 1; /* Start adapter indices at 1 */
@@ -32,11 +33,7 @@ TDI_STATUS InfoTdiQueryGetAddrTable( PNDIS_BUFFER Buffer,
     
     KeAcquireSpinLock(&InterfaceListLock, &OldIrql);
     
-    CurrentIFEntry = InterfaceListHead.Flink;
-    while (CurrentIFEntry != &InterfaceListHead)
-    {
-	CurrentIF = CONTAINING_RECORD(CurrentIFEntry, IP_INTERFACE, ListEntry);
-
+    ForEachInterface(CurrentIF) {
 	IpCurrent->Index     = Count;
 	IpCurrent->Addr      = 0;
 	IpCurrent->BcastAddr = 0;
@@ -53,9 +50,8 @@ TDI_STATUS InfoTdiQueryGetAddrTable( PNDIS_BUFFER Buffer,
 				 ADE_ADDRMASK,
 				 &IpAddress->Mask );
 	IpCurrent++;
-	CurrentIFEntry = CurrentIFEntry->Flink;
 	Count++;
-    }
+    } EndFor(CurrentIF);
     
     KeReleaseSpinLock(&InterfaceListLock, OldIrql);
 
@@ -155,8 +151,7 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PNDIS_BUFFER Buffer, PUINT BufferSize ) {
 TDI_STATUS InfoTdiQueryGetIPSnmpInfo( PNDIS_BUFFER Buffer,
 				      PUINT BufferSize ) {
     KIRQL OldIrql;
-    PIP_INTERFACE CurrentIF;
-    PLIST_ENTRY CurrentIFEntry;
+    IF_LIST_ITER(CurrentIF);
     IPSNMP_INFO SnmpInfo;
     UINT IfCount = CountInterfaces();
     UINT AddrCount = 0;
@@ -171,13 +166,10 @@ TDI_STATUS InfoTdiQueryGetIPSnmpInfo( PNDIS_BUFFER Buffer,
     AddrCount = 0;
     KeAcquireSpinLock(&InterfaceListLock, &OldIrql);
     
-    CurrentIFEntry = InterfaceListHead.Flink;
-    while (CurrentIFEntry != &InterfaceListHead)
-    {
+    ForEachInterface(CurrentIF) {
 	CurrentIF = CONTAINING_RECORD(CurrentIFEntry, IP_INTERFACE, ListEntry);
 	AddrCount += CountInterfaceAddresses( CurrentIF );
-	CurrentIFEntry = CurrentIFEntry->Flink;
-    }
+    } EndFor(CurrentIF);
     
     KeReleaseSpinLock(&InterfaceListLock, OldIrql);
     

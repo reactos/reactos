@@ -14,24 +14,19 @@
 #include <address.h>
 #include <pool.h>
 #include <ip.h>
+#include <tilists.h>
 
 NTSTATUS GetInterfaceIPv4Address( PIP_INTERFACE Interface, 
 				  ULONG TargetType,
 				  PULONG Address ) {
-    PLIST_ENTRY CurrentIFEntry;
-    PLIST_ENTRY CurrentADEEntry;
-    PADDRESS_ENTRY CurrentADE;
-    
-    CurrentADEEntry = Interface->ADEListHead.Flink;
-    while (CurrentADEEntry != &Interface->ADEListHead)
-    {
-	CurrentADE = CONTAINING_RECORD(CurrentADEEntry, ADDRESS_ENTRY, ListEntry);
+    ADE_LIST_ITER(CurrentADE);
+
+    ForEachADE(Interface->ADEListHead,CurrentADE) {
 	if (CurrentADE->Type == TargetType) {
 	    *Address = CurrentADE->Address->Address.IPv4Address;
 	    return STATUS_SUCCESS;
 	}
-	CurrentADEEntry = CurrentADEEntry->Flink;
-    }
+    } EndFor(CurrentADE);
     
     return STATUS_UNSUCCESSFUL;
 }
@@ -39,15 +34,13 @@ NTSTATUS GetInterfaceIPv4Address( PIP_INTERFACE Interface,
 UINT CountInterfaces() {
     DWORD Count = 0;
     KIRQL OldIrql;
-    PLIST_ENTRY CurrentIFEntry;
+    IF_LIST_ITER(CurrentIF);
 
     KeAcquireSpinLock(&InterfaceListLock, &OldIrql);
     
-    CurrentIFEntry = InterfaceListHead.Flink;
-    while (CurrentIFEntry != &InterfaceListHead) {
+    ForEachInterface(CurrentIF) {
 	Count++;
-	CurrentIFEntry = CurrentIFEntry->Flink;
-    }
+    } EndFor(CurrentIF);
 
     KeReleaseSpinLock(&InterfaceListLock, OldIrql);
 
@@ -56,19 +49,12 @@ UINT CountInterfaces() {
 
 UINT CountInterfaceAddresses( PIP_INTERFACE Interface ) {
     UINT AddrCount = 0;
-    PADDRESS_ENTRY CurrentADE;
-    PLIST_ENTRY CurrentADEntry;
+    ADE_LIST_ITER(CurrentADE);
 
-    CurrentADEntry = Interface->ADEListHead.Flink;
-    
-    while( CurrentADEntry != &Interface->ADEListHead ) {
-	CurrentADEntry = CurrentADEntry->Flink;
-	CurrentADE = CONTAINING_RECORD(CurrentADEntry, 
-				       ADDRESS_ENTRY, 
-				       ListEntry);
+    ForEachADE(Interface->ADEListHead,CurrentADE) {
 	if( CurrentADE->Type == ADE_UNICAST )
 	    AddrCount++;
-    }
+    } EndFor(CurrentADE);
 
     return AddrCount;
 }

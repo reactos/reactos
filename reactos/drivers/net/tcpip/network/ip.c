@@ -19,7 +19,7 @@
 #include <route.h>
 #include <icmp.h>
 #include <pool.h>
-
+#include <tilists.h>
 
 KTIMER IPTimer;
 KDPC IPTimeoutDpc;
@@ -534,10 +534,8 @@ PADDRESS_ENTRY IPLocateADE(
  */
 {
     KIRQL OldIrql;
-    PLIST_ENTRY CurrentIFEntry;
-    PLIST_ENTRY CurrentADEEntry;
-    PIP_INTERFACE CurrentIF;
-    PADDRESS_ENTRY CurrentADE;
+    IF_LIST_ITER(CurrentIF);
+    ADE_LIST_ITER(CurrentADE);
 
 //    TI_DbgPrint(DEBUG_IP, ("Called. Address (0x%X)  AddressType (0x%X).\n",
 //        Address, AddressType));
@@ -547,24 +545,17 @@ PADDRESS_ENTRY IPLocateADE(
     KeAcquireSpinLock(&InterfaceListLock, &OldIrql);
 
     /* Search the interface list */
-    CurrentIFEntry = InterfaceListHead.Flink;
-    while (CurrentIFEntry != &InterfaceListHead) {
-	      CurrentIF = CONTAINING_RECORD(CurrentIFEntry, IP_INTERFACE, ListEntry);
-
+    ForEachInterface(CurrentIF) {
         /* Search the address entry list and return the ADE if found */
-        CurrentADEEntry = CurrentIF->ADEListHead.Flink;
-        while (CurrentADEEntry != &CurrentIF->ADEListHead) {
-	        CurrentADE = CONTAINING_RECORD(CurrentADEEntry, ADDRESS_ENTRY, ListEntry);
+	ForEachADE(CurrentIF->ADEListHead,CurrentADE) {
             if ((AddrIsEqual(Address, CurrentADE->Address)) && 
                 (CurrentADE->Type == AddressType)) {
                 ReferenceObject(CurrentADE);
                 KeReleaseSpinLock(&InterfaceListLock, OldIrql);
                 return CurrentADE;
             }
-            CurrentADEEntry = CurrentADEEntry->Flink;
-        }
-        CurrentIFEntry = CurrentIFEntry->Flink;
-    }
+        } EndFor(CurrentADE);
+    } EndFor(CurrentIF);
 
     KeReleaseSpinLock(&InterfaceListLock, OldIrql);
 
@@ -586,10 +577,8 @@ PADDRESS_ENTRY IPGetDefaultADE(
  */
 {
     KIRQL OldIrql;
-    PLIST_ENTRY CurrentIFEntry;
-    PLIST_ENTRY CurrentADEEntry;
-    PIP_INTERFACE CurrentIF;
-    PADDRESS_ENTRY CurrentADE;
+    ADE_LIST_ITER(CurrentADE);
+    IF_LIST_ITER(CurrentIF);
     BOOLEAN LoopbackIsRegistered = FALSE;
 
     TI_DbgPrint(DEBUG_IP, ("Called. AddressType (0x%X).\n", AddressType));
@@ -597,38 +586,30 @@ PADDRESS_ENTRY IPGetDefaultADE(
     KeAcquireSpinLock(&InterfaceListLock, &OldIrql);
 
     /* Search the interface list */
-    CurrentIFEntry = InterfaceListHead.Flink;
-    while (CurrentIFEntry != &InterfaceListHead) {
-	      CurrentIF = CONTAINING_RECORD(CurrentIFEntry, IP_INTERFACE, ListEntry);
-
+    ForEachInterface(CurrentIF) {
         if (CurrentIF != Loopback) {
             /* Search the address entry list and return the first appropriate ADE found */
-            CurrentADEEntry = CurrentIF->ADEListHead.Flink;
-            while (CurrentADEEntry != &CurrentIF->ADEListHead) {
-	            CurrentADE = CONTAINING_RECORD(CurrentADEEntry, ADDRESS_ENTRY, ListEntry);
-                if (CurrentADE->Type == AddressType)
+	    TI_DbgPrint(DEBUG_IP,("Checking interface %x\n", CurrentIF));
+	    ForEachADE(CurrentIF->ADEListHead,CurrentADE) {
+                if (CurrentADE->Type == AddressType) {
                     ReferenceObject(CurrentADE);
                     KeReleaseSpinLock(&InterfaceListLock, OldIrql);
                     return CurrentADE;
                 }
-                CurrentADEEntry = CurrentADEEntry->Flink;
+	    } EndFor(CurrentADE);
         } else
             LoopbackIsRegistered = TRUE;
-        CurrentIFEntry = CurrentIFEntry->Flink;
-    }
+    } EndFor(CurrentIF);
 
     /* No address was found. Use loopback interface if available */
     if (LoopbackIsRegistered) {
-        CurrentADEEntry = Loopback->ADEListHead.Flink;
-        while (CurrentADEEntry != &Loopback->ADEListHead) {
-	        CurrentADE = CONTAINING_RECORD(CurrentADEEntry, ADDRESS_ENTRY, ListEntry);
+	ForEachADE(CurrentIF->ADEListHead,CurrentADE) {
             if (CurrentADE->Type == AddressType) {
                 ReferenceObject(CurrentADE);
                 KeReleaseSpinLock(&InterfaceListLock, OldIrql);
                 return CurrentADE;
             }
-            CurrentADEEntry = CurrentADEEntry->Flink;
-        }
+        } EndFor(CurrentADE);
     }
 
     KeReleaseSpinLock(&InterfaceListLock, OldIrql);
@@ -665,7 +646,7 @@ VOID STDCALL IPTimeout(
 
 
 VOID IPDispatchProtocol(
-    PNET_TABLE_ENTRY NTE,
+    PIP_INTERFACE IPInterface,
     PIP_PACKET IPPacket)
 /*
  * FUNCTION: IP protocol dispatcher
@@ -692,7 +673,7 @@ VOID IPDispatchProtocol(
     }
 
     /* Call the appropriate protocol handler */
-    (*ProtocolTable[Protocol])(NTE, IPPacket);
+    (*ProtocolTable[Protocol])(IPInterface, IPPacket);
 }
 
 
@@ -850,7 +831,10 @@ BOOLEAN IPRegisterInterface(
     }
 
     /* Add interface to the global interface list */
-    ExInterlockedInsertTailList(&InterfaceListHead, &IF->ListEntry, &InterfaceListLock);
+    ASSERT(&IF->ListEntry);
+    ExInterlockedInsertTailList(&InterfaceListHead, 
+				&IF->ListEntry, 
+				&InterfaceListLock);
 
     KeReleaseSpinLock(&IF->Lock, OldIrql);
 

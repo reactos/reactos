@@ -148,12 +148,12 @@ typedef struct _LLIP_BIND_INFO {
 /* Information about an IP interface */
 typedef struct _IP_INTERFACE {
     DEFINE_TAG
+    LIST_ENTRY NTEListHead;       /* List of NTEs on this interface */
+    LIST_ENTRY ADEListHead;       /* List of ADEs on this interface */
     LIST_ENTRY ListEntry;         /* Entry on list */
     ULONG RefCount;               /* Reference count */
     OBJECT_FREE_ROUTINE Free;     /* Routine used to free resources used by the object */
     KSPIN_LOCK Lock;              /* Spin lock for this object */
-    LIST_ENTRY NTEListHead;       /* List of NTEs on this interface */
-    LIST_ENTRY ADEListHead;       /* List of ADEs on this interface */
     PVOID Context;                /* Pointer to link layer context information */
     UINT  HeaderSize;             /* Size of link level header */
     UINT  MinFrameSize;           /* Minimum frame size in bytes */
@@ -239,7 +239,7 @@ VOID STDCALL IPTimeout(
     PVOID SystemArgument2);
 
 VOID IPDispatchProtocol(
-    PNET_TABLE_ENTRY NTE,
+    PIP_INTERFACE IF,
     PIP_PACKET IPPacket);
 
 VOID IPRegisterProtocol(

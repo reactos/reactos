@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.17 2004/06/09 18:11:37 arty Exp $
+# $Id: makefile,v 1.18 2004/07/18 22:03:49 arty Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -8,10 +8,10 @@ TARGET_TYPE = export_driver
 
 TARGET_NAME = tcpip
 
+# -DMEMTRACK
 TARGET_CFLAGS = \
 	-D__USE_W32API \
 	-DNDIS40 \
-	-DMEMTRACK \
 	-I./include \
 	-I$(PATH_TO_TOP)/drivers/lib/oskittcp/include \
 	-I$(PATH_TO_TOP)/w32api/include \

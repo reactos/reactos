@@ -228,15 +228,24 @@ VOID NBSendSolicit(
           a request for the neighbor */
 
       /* FIXME: Choose first NTE. We might want to give an NTE as argument */
-      CurrentEntry = NCE->Interface->NTEListHead.Flink;
-      if (!IsListEmpty(CurrentEntry))
+      if (!NCE->Interface || !NCE->Interface->NTEListHead.Flink) {
+	  TI_DbgPrint(MID_TRACE, 
+		      ("NCE->Interface: %x, "
+		       "NCE->Interface->NTEListHead.Flink %x\n",
+		       NCE->Interface,
+		       NCE->Interface ? NCE->Interface->NTEListHead.Flink : 0));
+      }
+      if (!IsListEmpty(&NCE->Interface->NTEListHead))
         {
-          NTE = CONTAINING_RECORD(CurrentEntry, NET_TABLE_ENTRY, IFListEntry);
-          ARPTransmit(NCE->Address, NTE);
+	    CurrentEntry = NCE->Interface->NTEListHead.Flink;
+	    NTE = CONTAINING_RECORD(CurrentEntry, NET_TABLE_ENTRY, 
+				    IFListEntry);
+	    ARPTransmit(NCE->Address, NTE);
         }
       else
         {
-          TI_DbgPrint(MIN_TRACE, ("Interface at 0x%X has zero NTE.\n", NCE->Interface));
+	    TI_DbgPrint(MIN_TRACE, ("Interface at 0x%X has zero NTE.\n", 
+				    NCE->Interface));
         }
     }
   else

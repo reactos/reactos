@@ -479,7 +479,7 @@ VOID ProcessFragment(
     DISPLAY_IP_PACKET(Datagram);
 
     /* Give the packet to the protocol dispatcher */
-    IPDispatchProtocol(NTE, Datagram);
+    IPDispatchProtocol(IF, Datagram);
 
     /* We're done with this datagram */
     exFreePool(Datagram->Header);
@@ -529,9 +529,7 @@ VOID IPDatagramReassemblyTimeout(
 {
 }
 
-VOID IPv4Receive(
-  PVOID Context,
-  PIP_PACKET IPPacket)
+VOID IPv4Receive( PIP_INTERFACE IF, PIP_PACKET IPPacket)
 /*
  * FUNCTION: Receives an IPv4 datagram (or fragment)
  * ARGUMENTS:
@@ -580,11 +578,11 @@ VOID IPv4Receive(
     /* FIXME: Possibly forward packets with multicast addresses */
     
     /* FIXME: Should we allow packets to be received on the wrong interface? */
-    NTE = IPLocateNTEOnInterface((PIP_INTERFACE)Context, &IPPacket->DstAddr, &AddressType);
+    NTE = IPLocateNTEOnInterface(IF, &IPPacket->DstAddr, &AddressType);
     
     if (NTE) {
 	/* This packet is destined for us */
-	ProcessFragment((PIP_INTERFACE)Context, IPPacket, NTE);
+	ProcessFragment(IF, IPPacket, NTE);
 	
 	/* Done with this NTE */
 	DereferenceObject(NTE);
@@ -608,12 +606,11 @@ VOID IPv4Receive(
 }
 
 
-VOID IPReceive( PVOID Context,
-	        PIP_PACKET IPPacket )
+VOID IPReceive( PIP_INTERFACE IF, PIP_PACKET IPPacket )
 /*
  * FUNCTION: Receives an IP datagram (or fragment)
  * ARGUMENTS:
- *     Context  = Pointer to context information (IP_INTERFACE)
+ *     IF       = Interface
  *     IPPacket = Pointer to IP packet
  */
 {
@@ -625,7 +622,7 @@ VOID IPReceive( PVOID Context,
   switch (Version) {
   case 4:
     IPPacket->Type = IP_ADDRESS_V4;
-    IPv4Receive(Context, IPPacket);
+    IPv4Receive(IF, IPPacket);
     break;
   case 6:
     IPPacket->Type = IP_ADDRESS_V6;

@@ -56,7 +56,7 @@ VOID IPDatagramReassemblyTimeout(
     VOID);
 
 VOID IPReceive(
-    PVOID Context,
+    PIP_INTERFACE IF,
     PIP_PACKET IPPacket);
 
 #endif /* __RECEIVE_H */
