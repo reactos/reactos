@@ -39,6 +39,7 @@ typedef struct
   INT LineHeight;
   INT CharWidth;
   HFONT hFont;
+  BOOL SbVisible;
   
   INT LeftMargin;
   INT AddressSpacing;
@@ -123,38 +124,49 @@ HEXEDIT_Update(PHEXEDIT_DATA hed)
 {
   SCROLLINFO si;
   RECT rcClient;
+  BOOL SbVisible;
+  DWORD bufsize, cvislines;
   
   GetClientRect(hed->hWndSelf, &rcClient);
   hed->style = GetWindowLong(hed->hWndSelf, GWL_STYLE);
   
-  hed->nLines = max((hed->hBuffer ? LocalSize(hed->hBuffer) / hed->ColumnsPerLine : 1), 1);
+  bufsize = (hed->hBuffer ? LocalSize(hed->hBuffer) : 0);
+  hed->nLines = max(bufsize / hed->ColumnsPerLine, 1);
+  if(bufsize > hed->ColumnsPerLine && (bufsize % hed->ColumnsPerLine) > 0)
+  {
+    hed->nLines++;
+  }
   
   if(hed->LineHeight > 0)
   {
-    hed->nVisibleLines = rcClient.bottom / hed->LineHeight;
+    hed->nVisibleLines = cvislines = rcClient.bottom / hed->LineHeight;
     if(rcClient.bottom % hed->LineHeight)
     {
       hed->nVisibleLines++;
     }
   }
   else
-    hed->nVisibleLines = 0;
+  {
+    hed->nVisibleLines = cvislines = 0;
+  }
+  
+  SbVisible = bufsize > 0 && cvislines < hed->nLines;
+  ShowScrollBar(hed->hWndSelf, SB_VERT, SbVisible);
   
   /* update scrollbar */
   si.cbSize = sizeof(SCROLLINFO);
   si.fMask = SIF_RANGE | SIF_PAGE;
   si.nMin = 0;
-  si.nMax = hed->nLines;
-  if(hed->LineHeight > 0)
-    si.nPage = rcClient.bottom / hed->LineHeight;
-  else
-    si.nPage = 0;
+  si.nMax = ((bufsize > 0) ? hed->nLines - 1 : 0);
+  si.nPage = ((hed->LineHeight > 0) ? rcClient.bottom / hed->LineHeight : 0);
   SetScrollInfo(hed->hWndSelf, SB_VERT, &si, TRUE);
   
-  if(hed->style & WS_VISIBLE)
+  if(IsWindowVisible(hed->hWndSelf) && SbVisible != hed->SbVisible)
   {
     InvalidateRect(hed->hWndSelf, NULL, TRUE);
   }
+  
+  hed->SbVisible = SbVisible;
 }
 
 static HFONT
@@ -174,6 +186,8 @@ HEXEDIT_PaintLines(PHEXEDIT_DATA hed, HDC hDC, DWORD ScrollPos, DWORD First, DWO
   TCHAR hex[3], addr[17];
   RECT rct;
   
+  FillRect(hDC, rc, (HBRUSH)(COLOR_WINDOW + 1));
+  
   if(hed->hBuffer)
   {
     bufsize = LocalSize(hed->hBuffer);
@@ -183,9 +197,15 @@ HEXEDIT_PaintLines(PHEXEDIT_DATA hed, HDC hDC, DWORD ScrollPos, DWORD First, DWO
   {
     buf = NULL;
     bufsize = 0;
+    
+    if(ScrollPos + First == 0)
+    {
+      /* draw address */
+      _stprintf(addr, _T("%04X"), 0);
+      TextOut(hDC, hed->LeftMargin, First * hed->LineHeight, addr, 4);
+    }
   }
   
-  FillRect(hDC, rc, (HBRUSH)(COLOR_WINDOW + 1));
   if(buf)
   {
     end = buf + bufsize;
@@ -472,6 +492,7 @@ HEXEDIT_WM_NCCREATE(HWND hWnd, CREATESTRUCT *cs)
   hed->EditingField = TRUE; /* in hexdump field */
   
   SetWindowLong(hWnd, 0, (LONG)hed);
+  HEXEDIT_Update(hed);
   
   return TRUE;
 }
@@ -778,6 +799,13 @@ HEXEDIT_WM_KEYDOWN(PHEXEDIT_DATA hed, INT VkCode)
   return FALSE;
 }
 
+static LRESULT
+HEXEDIT_WM_SIZE(PHEXEDIT_DATA hed, DWORD sType, WORD NewWidth, WORD NewHeight)
+{
+  HEXEDIT_Update(hed);
+  return 0;
+}
+
 LRESULT
 WINAPI
 HexEditWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -801,6 +829,9 @@ HexEditWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     
     case WM_VSCROLL:
       return HEXEDIT_WM_VSCROLL(hed, HIWORD(wParam), LOWORD(wParam));
+    
+    case WM_SIZE:
+      return HEXEDIT_WM_SIZE(hed, (DWORD)wParam, LOWORD(lParam), HIWORD(lParam));
     
     case WM_MOUSEWHEEL:
       return HEXEDIT_WM_MOUSEWHEEL(hed, ((SHORT)(wParam >> 16) < 0 ? 3 : -3), LOWORD(wParam), &MAKEPOINTS(lParam));
