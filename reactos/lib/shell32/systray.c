@@ -4,8 +4,8 @@
  *	Copyright 1999 Kai Morich	<kai.morich@bigfoot.de>
  *
  *  Manage the systray window. That it actually appears in the docking
- *  area of KDE or GNOME is delegated to windows/x11drv/wnd.c,
- *  X11DRV_WND_DockWindow.
+ *  area of KDE is handled in dlls/x11drv/window.c,
+ *  X11DRV_set_wm_hints using KWM_DOCKWINDOW.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

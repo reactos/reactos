@@ -52,7 +52,7 @@
   56 stdcall PathUnquoteSpaces(str) PathUnquoteSpacesAW
   57 stdcall PathGetDriveNumber (str) PathGetDriveNumberAW
   58 stdcall ParseField(str long ptr long) ParseFieldAW
-  59 stub RestartDialog@12
+  59 stdcall RestartDialog(long long long)
   60 stdcall ExitWindowsDialog(long)
   61 stdcall RunFileDlg(long long long str str long)
   62 stdcall PickIconDlg(long long long long)
@@ -309,6 +309,8 @@
 
 # >= NT5
  714 stdcall @(ptr)SHELL32_714 # PathIsTemporaryW
+
+ 730 stdcall RestartDialogEx(long long long long)
 
 1217 stub FOOBAR1217   # no joke! This is the real name!!
 

@@ -250,4 +250,7 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfun
 extern WCHAR swShell32Name[MAX_PATH];
 extern char sShell32Name[MAX_PATH];
 
+int WINAPI RestartDialog(HWND hwndOwner, LPCSTR lpstrReason, UINT uFlags);
+int WINAPI RestartDialogEx(HWND hwndOwner, LPCWSTR lpwstrReason, UINT uFlags, UINT uReason);
+
 #endif

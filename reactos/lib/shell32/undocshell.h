@@ -187,11 +187,6 @@ void WINAPI RunFileDlg(
 
 void WINAPI ExitWindowsDialog(HWND hwndOwner);
 
-int  WINAPI RestartDialog(
-	HWND hwndOwner,
-	LPCSTR lpstrReason,
-	UINT uFlags);
-
 BOOL WINAPI GetFileNameFromBrowse(
 	HWND hwndOwner,
 	LPSTR lpstrFile,

@@ -372,6 +372,63 @@ void FillList (HWND hCb, char *pszLatest)
     free (pszList) ;
     }
 
+
+/*************************************************************************
+ * RestartWindowsDialog				[SHELL32.730]
+ */
+
+int WINAPI RestartDialogEx(HWND hwndOwner, LPCWSTR lpwstrReason, UINT uFlags, UINT uReason)
+{
+    TRACE("(%p)\n", hwndOwner);
+
+    /*FIXME: use uReason */
+
+    if (MessageBoxA(hwndOwner, "Do you want to restart Windows?", "Restart", MB_YESNO|MB_ICONQUESTION) == IDYES)
+    {
+	if (SHELL_OsIsUnicode())
+	{
+	    HANDLE hToken;
+	    TOKEN_PRIVILEGES npr = {1, {0, 0, SE_PRIVILEGE_ENABLED}};
+
+	    /* enable shutdown privilege for current process */
+	    OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken);
+	    LookupPrivilegeValueA(0, "SeShutdownPrivilege", &npr.Privileges[0].Luid);
+	    AdjustTokenPrivileges(hToken, FALSE, &npr, 0, 0, 0);
+	    CloseHandle(hToken);
+	}
+
+	ExitWindowsEx(EWX_REBOOT, 0);
+    }
+
+    return 0;
+}
+
+
+/*************************************************************************
+ * RestartWindowsDialog				[SHELL32.59]
+ */
+
+int WINAPI RestartDialog(HWND hwndOwner, LPCSTR lpstrReason, UINT uFlags)
+{
+    LPWSTR lpwcsReason;
+    int len, ret;
+
+    if (lpstrReason) {
+	len = MultiByteToWideChar(CP_ACP, 0, lpstrReason, -1, NULL, 0);
+	lpwcsReason = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+	MultiByteToWideChar(CP_ACP, 0, lpstrReason, -1, lpwcsReason, len);
+    } else
+	lpwcsReason = NULL;
+
+    ret = RestartDialogEx(hwndOwner, lpwcsReason, uFlags, 0);
+
+    if (lpwcsReason)
+	HeapFree(GetProcessHeap(), 0, lpwcsReason);
+
+    return ret;
+}
+
+
 /*************************************************************************
  * ExitWindowsDialog				[SHELL32.60]
  *
@@ -380,9 +437,24 @@ void FillList (HWND hCb, char *pszLatest)
  */
 void WINAPI ExitWindowsDialog (HWND hWndOwner)
 {
-	TRACE("(%p)\n", hWndOwner);
-	if (MessageBoxA( hWndOwner, "Do you want to exit WINE?", "Shutdown", MB_YESNO|MB_ICONQUESTION) == IDYES)
+    TRACE("(%p)\n", hWndOwner);
+
+    if (MessageBoxA(hWndOwner, "Do you want to exit Windows?", "Shutdown", MB_YESNO|MB_ICONQUESTION) == IDYES)
+    {
+	if (SHELL_OsIsUnicode())
 	{
-	  SendMessageA ( hWndOwner, WM_QUIT, 0, 0);
+	    HANDLE hToken;
+	    TOKEN_PRIVILEGES npr = {1, {0, 0, SE_PRIVILEGE_ENABLED}};
+
+	    /* enable shutdown privilege for current process */
+	    OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken);
+	    LookupPrivilegeValueA(0, "SeShutdownPrivilege", &npr.Privileges[0].Luid);
+	    AdjustTokenPrivileges(hToken, FALSE, &npr, 0, 0, 0);
+	    CloseHandle(hToken);
+
+	    ExitWindowsEx(EWX_SHUTDOWN, 0);
 	}
+	else
+	    SendMessageA(hWndOwner, WM_QUIT, 0, 0);
+    }
 }
