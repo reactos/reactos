@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.31 2000/12/05 18:08:24 ekohl Exp $
+/* $Id: create.c,v 1.32 2001/01/21 00:07:03 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -390,7 +390,6 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
    UNICODE_STRING CommandLine_U;
    CSRSS_API_REQUEST CsrRequest;
    CSRSS_API_REPLY CsrReply;
-   HANDLE ConsoleHandle;
    CHAR ImageFileName[8];
    PWCHAR s;
    PWCHAR e;
@@ -515,19 +514,15 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
      {
 	DbgPrint("Failed to tell csrss about new process. Expect trouble.\n");
      }
-   ConsoleHandle = CsrReply.Data.CreateProcessReply.ConsoleHandle;
-   
-//   DbgPrint("ConsoleHandle %x\n", ConsoleHandle);
    
    /*
     * Create Process Environment Block
     */
    DPRINT("Creating peb\n");
    
-   Ppb->ConsoleHandle = ConsoleHandle;
-   Ppb->InputHandle = ConsoleHandle;
-   Ppb->OutputHandle = ConsoleHandle;
-   Ppb->ErrorHandle = ConsoleHandle;
+   Ppb->InputHandle = CsrReply.Data.CreateProcessReply.InputHandle;
+   Ppb->OutputHandle = CsrReply.Data.CreateProcessReply.OutputHandle;;
+   Ppb->ErrorHandle = Ppb->OutputHandle;
    KlInitPeb(hProcess, Ppb);
 
    RtlDestroyProcessParameters (Ppb);

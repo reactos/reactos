@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.25 2000/07/11 04:06:42 phreak Exp $
+/* $Id: console.c,v 1.26 2001/01/21 00:07:03 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -62,13 +62,7 @@ HANDLE STDCALL GetStdHandle(DWORD nStdHandle)
 {
    PRTL_USER_PROCESS_PARAMETERS Ppb;
    
-//   DbgPrint("GetStdHandle(nStdHandle %d)\n",nStdHandle);
-   
-   SetLastError(ERROR_SUCCESS); /* OK */
-//   DbgPrint("NtCurrentPeb() %x\n", NtCurrentPeb());
    Ppb = NtCurrentPeb()->ProcessParameters;  
-//   DbgPrint("Ppb %x\n", Ppb);
-//   DbgPrint("Ppb->OutputHandle %x\n", Ppb->OutputHandle);
    switch (nStdHandle)
      {
       case STD_INPUT_HANDLE:	return Ppb->InputHandle;
@@ -184,6 +178,7 @@ WINBOOL STDCALL ReadConsoleA(HANDLE hConsoleInput,
    CSRSS_API_REQUEST Request;
    PCSRSS_API_REPLY Reply;
    NTSTATUS Status;
+   ULONG CharsRead = 0;
    
    Reply = HeapAlloc(GetProcessHeap(),
 		     HEAP_ZERO_MEMORY,
@@ -196,13 +191,12 @@ WINBOOL STDCALL ReadConsoleA(HANDLE hConsoleInput,
    Request.Type = CSRSS_READ_CONSOLE;
    Request.Data.ReadConsoleRequest.ConsoleHandle = hConsoleInput;
    Request.Data.ReadConsoleRequest.NrCharactersToRead = nNumberOfCharsToRead > CSRSS_MAX_READ_CONSOLE_REQUEST ? CSRSS_MAX_READ_CONSOLE_REQUEST : nNumberOfCharsToRead;
-   
+   Request.Data.ReadConsoleRequest.nCharsCanBeDeleted = 0;
    Status = CsrClientCallServer(&Request, 
 				Reply,
 				sizeof(CSRSS_API_REQUEST),
 				sizeof(CSRSS_API_REPLY) + 
-				nNumberOfCharsToRead);
-   //   DbgPrint( "Csrss Returned\n" );
+				Request.Data.ReadConsoleRequest.NrCharactersToRead);
    if (!NT_SUCCESS(Status) || !NT_SUCCESS( Status = Reply->Status ))
      {
 	DbgPrint( "CSR returned error in ReadConsole\n" );
@@ -210,29 +204,52 @@ WINBOOL STDCALL ReadConsoleA(HANDLE hConsoleInput,
 	HeapFree( GetProcessHeap(), 0, Reply );
 	return(FALSE);
      }
+   if( Reply->Status == STATUS_NOTIFY_CLEANUP )
+      Reply->Status = STATUS_PENDING;     // ignore backspace because we have no chars to backspace
+   /* There may not be any chars or lines to read yet, so wait */
    while( Reply->Status == STATUS_PENDING )
      {
-       //DbgPrint( "Read pending, waiting on object %x\n", Reply->Data.ReadConsoleReply.EventHandle );
+       /* some chars may have been returned, but not a whole line yet, so recompute buffer and try again */
+       nNumberOfCharsToRead -= Reply->Data.ReadConsoleReply.NrCharactersRead;
+       /* don't overflow caller's buffer, even if you still don't have a complete line */
+       if( !nNumberOfCharsToRead )
+	 break;
+       Request.Data.ReadConsoleRequest.NrCharactersToRead = nNumberOfCharsToRead > CSRSS_MAX_READ_CONSOLE_REQUEST ? CSRSS_MAX_READ_CONSOLE_REQUEST : nNumberOfCharsToRead;
+       /* copy any chars already read to buffer */
+       memcpy( lpBuffer + CharsRead, Reply->Data.ReadConsoleReply.Buffer, Reply->Data.ReadConsoleReply.NrCharactersRead );
+       CharsRead += Reply->Data.ReadConsoleReply.NrCharactersRead;
+       /* wait for csrss to signal there is more data to read, but not if we got STATUS_NOTIFY_CLEANUP for backspace */
        Status = NtWaitForSingleObject( Reply->Data.ReadConsoleReply.EventHandle, FALSE, 0 );
        if( !NT_SUCCESS( Status ) )
-	 {
-	   DbgPrint( "Wait for console input failed!\n" );
-	   HeapFree( GetProcessHeap(), 0, Reply );
-	   return FALSE;
-	 }
-       Status = CsrClientCallServer( &Request, Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) + nNumberOfCharsToRead );
+	  {
+	     DbgPrint( "Wait for console input failed!\n" );
+	     HeapFree( GetProcessHeap(), 0, Reply );
+	     return FALSE;
+	  }
+       Request.Data.ReadConsoleRequest.nCharsCanBeDeleted = CharsRead;
+       Status = CsrClientCallServer( &Request, Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) + Request.Data.ReadConsoleRequest.NrCharactersToRead );
        if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply->Status ) )
 	 {
 	   SetLastErrorByStatus ( Status );
 	   HeapFree( GetProcessHeap(), 0, Reply );
 	   return FALSE;
 	 }
+       if( Reply->Status == STATUS_NOTIFY_CLEANUP )
+	  {
+	     // delete last char
+	     if( CharsRead )
+		{
+		   CharsRead--;
+		   nNumberOfCharsToRead++;
+		}
+	     Reply->Status = STATUS_PENDING;  // retry
+	  }
      }
+   /* copy data to buffer, count total returned, and return */
+   memcpy( lpBuffer + CharsRead, Reply->Data.ReadConsoleReply.Buffer, Reply->Data.ReadConsoleReply.NrCharactersRead );
+   CharsRead += Reply->Data.ReadConsoleReply.NrCharactersRead;
    if (lpNumberOfCharsRead != NULL)
-	*lpNumberOfCharsRead = Reply->Data.ReadConsoleReply.NrCharactersRead;
-   memcpy(lpBuffer, 
-	  Reply->Data.ReadConsoleReply.Buffer,
-	  Reply->Data.ReadConsoleReply.NrCharactersRead);
+     *lpNumberOfCharsRead = CharsRead;
    HeapFree(GetProcessHeap(),
 	    0,
 	    Reply);
@@ -257,9 +274,9 @@ WINBOOL STDCALL AllocConsole(VOID)
 	 SetLastErrorByStatus ( Status );
 	 return FALSE;
       }
-   SetStdHandle( STD_INPUT_HANDLE, Reply.Data.AllocConsoleReply.ConsoleHandle );
-   SetStdHandle( STD_OUTPUT_HANDLE, Reply.Data.AllocConsoleReply.ConsoleHandle );
-   SetStdHandle( STD_ERROR_HANDLE, Reply.Data.AllocConsoleReply.ConsoleHandle );
+   SetStdHandle( STD_INPUT_HANDLE, Reply.Data.AllocConsoleReply.InputHandle );
+   SetStdHandle( STD_OUTPUT_HANDLE, Reply.Data.AllocConsoleReply.OutputHandle );
+   SetStdHandle( STD_ERROR_HANDLE, Reply.Data.AllocConsoleReply.OutputHandle );
    return TRUE;
 }
 
@@ -934,8 +951,19 @@ SetConsoleActiveScreenBuffer(
 	HANDLE		hConsoleOutput
 	)
 {
-/* TO DO */
-	return FALSE;
+   CSRSS_API_REQUEST Request;
+   CSRSS_API_REPLY Reply;
+   NTSTATUS Status;
+
+   Request.Type = CSRSS_SET_SCREEN_BUFFER;
+   Request.Data.SetActiveScreenBufferRequest.OutputHandle = hConsoleOutput;
+   Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
+   if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
+      {
+	 SetLastErrorByStatus ( Status );
+	 return FALSE;
+      }
+   return TRUE;
 }
 
 
@@ -1327,8 +1355,19 @@ CreateConsoleScreenBuffer(
 	LPVOID				 lpScreenBufferData
 	)
 {
-/* --- TO DO --- */
-	return FALSE;
+   // FIXME: don't ignore access, share mode, and security
+   CSRSS_API_REQUEST Request;
+   CSRSS_API_REPLY Reply;
+   NTSTATUS Status;
+
+   Request.Type = CSRSS_CREATE_SCREEN_BUFFER;
+   Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
+   if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
+      {
+	 SetLastErrorByStatus ( Status );
+	 return FALSE;
+      }
+   return Reply.Data.CreateScreenBufferReply.OutputHandle;
 }
 
 
