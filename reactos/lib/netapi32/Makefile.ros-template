@@ -1,4 +1,4 @@
-# $Id: Makefile.ros-template,v 1.1 2004/02/10 16:57:23 sedwards Exp $
+# $Id: Makefile.ros-template,v 1.2 2004/03/07 14:33:13 navaraf Exp $
 
 TARGET_NAME = netapi32
 
@@ -8,7 +8,7 @@ TARGET_CFLAGS = @EXTRADEFS@ -D__REACTOS__
 
 TARGET_SDKLIBS = @IMPORTS@ libwine.a ntdll.a
 
-TARGET_BASE = 0x76160000
+TARGET_BASE = 0x71C00000
 
 TARGET_RC_SRCS = @RC_SRCS@
 TARGET_RC_BINSRC = @RC_BINSRC@
