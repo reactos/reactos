@@ -25,11 +25,11 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Welcome to the ReactOS Setup Wizard.", IDC_STATIC, 115, 9, 189, 31
+    LTEXT "Welcome to the ReactOS Setup Wizard.", IDC_WELCOMETITLE, 115, 8, 195, 24
     LTEXT "This wizard installs ReactOS on your computer. The wizard "\
           "needs to gather some information about you and your computer "\
-          "to set up ReactOS properly.", IDC_STATIC, 115, 50, 189, 100
-    LTEXT "Click Next to continue with Setup.", IDC_STATIC, 115, 160, 189, 31
+          "to set up ReactOS properly.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Click Next to continue with Setup.", IDC_STATIC, 115, 169, 195, 17
 END
 
 
@@ -90,16 +90,27 @@ BEGIN
 END
 
 
+IDD_PROCESSPAGE DIALOG 0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Some text...", IDC_STATIC, 53, 7, 253, 20
+    LTEXT "Some more text...", IDC_STATIC, 53, 29, 253, 20
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
+END
+
+
 IDD_FINISHPAGE DIALOG DISCARDABLE  0, 0, 317, 193
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Completing ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Completing the ReactOS Setup Wizard",IDC_STATIC,115,9,195,37
+    LTEXT "Completing the ReactOS Setup Wizard", IDC_FINISHTITLE, 115, 8, 195, 24
     LTEXT "You have successfully completed ReactOS Setup.\n\n" \
-          "When you click Finish, your computer will restart.", IDC_STATIC, 115, 58, 195, 100
+          "When you click Finish, your computer will restart.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "If there is a CD in a drive, remove it. Then, to restart "\
-          "your computer, click Finish.", IDC_STATIC, 115, 160, 195, 31
+          "your computer, click Finish.", IDC_STATIC, 115, 169, 195, 17
 END
 
 
@@ -126,6 +137,8 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Computer page subtitle"
     IDS_LOCALETITLE      "Locale page title"
     IDS_LOCALESUBTITLE   "Locale page subtitle"
+    IDS_PROCESSTITLE     "Process page title"
+    IDS_PROCESSSUBTITLE  "Process page subtitle"
 END
 
 /* EOF */

@@ -18,6 +18,8 @@
 
 typedef struct _SETUPDATA
 {
+  HFONT hTitleFont;
+
   TCHAR OwnerName[51];
   TCHAR OwnerOrganization[51];
   TCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];	/* max. 63 characters */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: wizard.c,v 1.6 2004/08/28 11:08:50 ekohl Exp $
+/* $Id: wizard.c,v 1.7 2004/09/24 18:51:52 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -72,6 +72,32 @@ CenterWindow(HWND hWnd)
 }
 
 
+static HFONT
+CreateTitleFont(VOID)
+{
+  NONCLIENTMETRICS ncm;
+  LOGFONT LogFont;
+  HDC hdc;
+  INT FontSize;
+  HFONT hFont;
+
+  ncm.cbSize = sizeof(NONCLIENTMETRICS);
+  SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
+
+  LogFont = ncm.lfMessageFont;
+  LogFont.lfWeight = FW_BOLD;
+  _tcscpy(LogFont.lfFaceName, TEXT("MS Shell Dlg"));
+
+  hdc = GetDC(NULL);
+  FontSize = 12;
+  LogFont.lfHeight = 0 - GetDeviceCaps (hdc, LOGPIXELSY) * FontSize / 72;
+  hFont = CreateFontIndirect(&LogFont);
+  ReleaseDC(NULL, hdc);
+
+  return hFont;
+}
+
+
 BOOL CALLBACK
 WelcomeDlgProc(HWND hwndDlg,
                UINT uMsg,
@@ -82,8 +108,12 @@ WelcomeDlgProc(HWND hwndDlg,
     {
       case WM_INITDIALOG:
         {
+          PSETUPDATA SetupData;
           HWND hwndControl;
           DWORD dwStyle;
+
+          /* Get pointer to the global setup data */
+          SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
 
           hwndControl = GetParent(hwndDlg);
 
@@ -98,6 +128,13 @@ WelcomeDlgProc(HWND hwndDlg,
           hwndControl = GetDlgItem(GetParent(hwndDlg), IDCANCEL);
           ShowWindow (hwndControl, SW_HIDE);
           EnableWindow (hwndControl, FALSE);
+
+          /* Set title font */
+          SendDlgItemMessage(hwndDlg,
+                             IDC_WELCOMETITLE,
+                             WM_SETFONT,
+                             (WPARAM)SetupData->hTitleFont,
+                             (LPARAM)TRUE);
         }
         break;
 
@@ -370,6 +407,81 @@ LocalePageDlgProc(HWND hwndDlg,
 
 
 BOOL CALLBACK
+ProcessPageDlgProc(HWND hwndDlg,
+                   UINT uMsg,
+                   WPARAM wParam,
+                   LPARAM lParam)
+{
+  PSETUPDATA SetupData;
+
+  /* Retrieve pointer to the global setup data */
+  SetupData = (PSETUPDATA)GetWindowLong (hwndDlg, GWL_USERDATA);
+
+  switch (uMsg)
+    {
+      case WM_INITDIALOG:
+        {
+          /* Save pointer to the global setup data */
+          SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+          SetWindowLong(hwndDlg, GWL_USERDATA, (LONG)SetupData);
+        }
+        break;
+
+      case WM_TIMER:
+         {
+           INT Position;
+           HWND hWndProgress;
+
+           hWndProgress = GetDlgItem(hwndDlg, IDC_PROCESSPROGRESS);
+           Position = SendMessage(hWndProgress, PBM_GETPOS, 0, 0);
+           if (Position == 300)
+           {
+             PropSheet_PressButton(GetParent(hwndDlg), PSBTN_NEXT);
+           }
+           else
+           {
+             SendMessage(hWndProgress, PBM_SETPOS, Position + 1, 0);
+           }
+         }
+         return TRUE;
+
+      case WM_NOTIFY:
+        {
+          LPNMHDR lpnm = (LPNMHDR)lParam;
+
+          switch (lpnm->code)
+            {
+              case PSN_SETACTIVE:
+                /* Disable the Back and Next buttons */
+                PropSheet_SetWizButtons(GetParent(hwndDlg), 0);
+
+                SendDlgItemMessage(hwndDlg, IDC_PROCESSPROGRESS, PBM_SETRANGE, 0,
+                                   MAKELPARAM(0, 300)); 
+                SetTimer(hwndDlg, 0, 50, NULL);
+                break;
+
+              case PSN_WIZNEXT:
+
+                /* Enable the Back and Next buttons */
+                PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
+                break;
+
+              default:
+                break;
+            }
+        }
+        break;
+
+      default:
+        break;
+    }
+
+  return FALSE;
+}
+
+
+
+BOOL CALLBACK
 FinishDlgProc(HWND hwndDlg,
               UINT uMsg,
               WPARAM wParam,
@@ -379,6 +491,19 @@ FinishDlgProc(HWND hwndDlg,
   switch (uMsg)
     {
       case WM_INITDIALOG:
+        {
+          PSETUPDATA SetupData;
+
+          /* Get pointer to the global setup data */
+          SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+
+          /* Set title font */
+          SendDlgItemMessage(hwndDlg,
+                             IDC_FINISHTITLE,
+                             WM_SETFONT,
+                             (WPARAM)SetupData->hTitleFont,
+                             (LPARAM)TRUE);
+        }
         break;
 
       case WM_NOTIFY:
@@ -418,9 +543,8 @@ VOID
 InstallWizard(VOID)
 {
   PROPSHEETHEADER psh;
-  HPROPSHEETPAGE ahpsp[5];
+  HPROPSHEETPAGE ahpsp[6];
   PROPSHEETPAGE psp;
-//  SHAREDWIZDATA wizdata;
 
   /* Clear setup data */
   ZeroMemory(&SetupData, sizeof(SETUPDATA));
@@ -436,50 +560,64 @@ InstallWizard(VOID)
   ahpsp[0] = CreatePropertySheetPage(&psp);
 
   /* Create the Owner page */
-  psp.dwFlags = PSP_DEFAULT; // | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
-//  psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_OWNERTITLE);
-//  psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_OWNERSUBTITLE);
+  psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
+  psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_OWNERTITLE);
+  psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_OWNERSUBTITLE);
   psp.pszTemplate = MAKEINTRESOURCE(IDD_OWNERPAGE);
   psp.pfnDlgProc = OwnerPageDlgProc;
   ahpsp[1] = CreatePropertySheetPage(&psp);
 
   /* Create the Computer page */
-  psp.dwFlags = PSP_DEFAULT; // | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
-//  psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_COMPUTERTITLE);
-//  psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_COMPUTERSUBTITLE);
+  psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
+  psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_COMPUTERTITLE);
+  psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_COMPUTERSUBTITLE);
   psp.pfnDlgProc = ComputerPageDlgProc;
   psp.pszTemplate = MAKEINTRESOURCE(IDD_COMPUTERPAGE);
   ahpsp[2] = CreatePropertySheetPage(&psp);
 
 
   /* Create the Locale page */
-  psp.dwFlags = PSP_DEFAULT; // | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
-//  psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_LOCALETITLE);
-//  psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_LOCALESUBTITLE);
+  psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
+  psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_LOCALETITLE);
+  psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_LOCALESUBTITLE);
   psp.pfnDlgProc = LocalePageDlgProc;
   psp.pszTemplate = MAKEINTRESOURCE(IDD_LOCALEPAGE);
   ahpsp[3] = CreatePropertySheetPage(&psp);
+
+
+  /* Create the Process page */
+  psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
+  psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_PROCESSTITLE);
+  psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_PROCESSSUBTITLE);
+  psp.pfnDlgProc = ProcessPageDlgProc;
+  psp.pszTemplate = MAKEINTRESOURCE(IDD_PROCESSPAGE);
+  ahpsp[4] = CreatePropertySheetPage(&psp);
 
 
   /* Create the Finish page */
   psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
   psp.pfnDlgProc = FinishDlgProc;
   psp.pszTemplate = MAKEINTRESOURCE(IDD_FINISHPAGE);
-  ahpsp[4] = CreatePropertySheetPage(&psp);
+  ahpsp[5] = CreatePropertySheetPage(&psp);
 
   /* Create the property sheet */
   psh.dwSize = sizeof(PROPSHEETHEADER);
-  psh.dwFlags = PSH_WIZARD; //97 | PSH_WATERMARK | PSH_HEADER;
+  psh.dwFlags = PSH_WIZARD97 | PSH_WATERMARK | PSH_HEADER;
   psh.hInstance = hDllInstance;
   psh.hwndParent = NULL;
-  psh.nPages = 5;
+  psh.nPages = 6;
   psh.nStartPage = 0;
   psh.phpage = ahpsp;
-//  psh.pszbmWatermark = MAKEINTRESOURCE(IDB_WATERMARK);
-//  psh.pszbmHeader = MAKEINTRESOURCE(IDB_HEADER);
+  psh.pszbmWatermark = MAKEINTRESOURCE(IDB_WATERMARK);
+  psh.pszbmHeader = MAKEINTRESOURCE(IDB_HEADER);
+
+  /* Create title font */
+  SetupData.hTitleFont = CreateTitleFont();
 
   /* Display the wizard */
   PropertySheet(&psh);
+
+  DeleteObject(SetupData.hTitleFont);
 }
 
 /* EOF */

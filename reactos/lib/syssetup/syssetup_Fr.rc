@@ -26,7 +26,7 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bienvenue dans l'assistant d'installation de ReactOS.", IDC_STATIC, 115, 9, 189, 31
+    LTEXT "Bienvenue dans l'assistant d'installation de ReactOS.", IDC_WELCOMETITLE, 115, 9, 189, 31
     LTEXT "Cet assistant installe ReactOS sur votre ordinateur. Il a "\
           "besoin de certaines informations sur vous et votre ordinateur "\
           "pour configurer ReactOS correctement.", IDC_STATIC, 115, 50, 189, 100
@@ -91,12 +91,23 @@ BEGIN
 END
 
 
+IDD_PROCESSPAGE DIALOG 0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Some text...", IDC_STATIC, 53, 7, 253, 20
+    LTEXT "Some more text...", IDC_STATIC, 53, 29, 253, 20
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
+END
+
+
 IDD_FINISHPAGE DIALOG DISCARDABLE  0, 0, 317, 193
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "L'assistant d'installation de ReactOS est terminé.",IDC_STATIC,115,9,195,37
+    LTEXT "L'assistant d'installation de ReactOS est terminé.",IDC_FINISHTITLE,115,9,195,37
     LTEXT "Vous avez installé avec succès ReactOS.\n\n" \
           "En cliquant sur Terminer, votre ordinateur va redémarrer.", IDC_STATIC, 115, 58, 195, 100
     LTEXT "S'il y a un CD dans un lecteur, enlevez-le. Puis, pour redémarrer "\
@@ -127,6 +138,8 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Computer page subtitle"
     IDS_LOCALETITLE      "Locale page title"
     IDS_LOCALESUBTITLE   "Locale page subtitle"
+    IDS_PROCESSTITLE     "Process page title"
+    IDS_PROCESSSUBTITLE  "Process page subtitle"
 END
 
 /* EOF */
