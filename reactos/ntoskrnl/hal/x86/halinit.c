@@ -14,6 +14,9 @@
 #include <internal/ke.h>
 #include <internal/hal.h>
 
+#define NDEBUG
+#include <internal/debug.h>
+
 /* FUNCTIONS ***************************************************************/
 
 VOID HalInit(boot_param* bp)
