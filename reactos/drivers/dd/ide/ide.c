@@ -1,4 +1,4 @@
-/* $Id: ide.c,v 1.27 2000/03/24 22:25:39 dwelch Exp $
+/* $Id: ide.c,v 1.28 2000/06/19 22:15:50 ekohl Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
@@ -564,6 +564,9 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
     } 
   else 
     {
+      // Increase number of available raw disk drives
+      IoGetConfigurationInformation()->DiskCount++;
+
       CreatedDevices = TRUE;
       RawDeviceExtension = (PIDE_DEVICE_EXTENSION) 
           RawDeviceObject->DeviceExtension;
@@ -1385,7 +1388,7 @@ IDEStartIo(IN PDEVICE_OBJECT DeviceObject,
     default:
       Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
       Irp->IoStatus.Information = 0;
-      KeBugCheck(Irp);
+      KeBugCheck((ULONG)Irp);
       IoCompleteRequest(Irp, IO_NO_INCREMENT);
       IoStartNextPacket(DeviceObject, FALSE);
       break;
