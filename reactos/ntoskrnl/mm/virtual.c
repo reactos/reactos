@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: virtual.c,v 1.64 2002/09/08 10:23:37 chorns Exp $
+/* $Id: virtual.c,v 1.65 2003/04/28 10:37:40 gvg Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/virtual.c
@@ -113,6 +113,7 @@ NtQueryVirtualMemory (IN HANDLE ProcessHandle,
 	 
 	 if (Length != sizeof(MEMORY_BASIC_INFORMATION))
 	   {
+	     MmUnlockAddressSpace(AddressSpace);
 	     ObDereferenceObject(Process);
 	     return(STATUS_INFO_LENGTH_MISMATCH);
 	   }
