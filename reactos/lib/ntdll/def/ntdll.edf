@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.8 1999/10/21 16:13:39 ekohl Exp $
+; $Id: ntdll.edf,v 1.9 1999/11/09 18:09:57 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -439,6 +439,8 @@ RtlCreateUserThread=RtlCreateUserThread@40
 RtlCompactHeap=RtlCompactHeap@8
 RtlCompareString
 RtlCompareUnicodeString
+RtlConvertLongToLargeInteger
+RtlConvertUlongToLargeInteger
 RtlCopyString
 RtlCopyUnicodeString
 RtlDestroyHeap=RtlDestroyHeap@4
@@ -459,6 +461,10 @@ RtlInitUnicodeString
 RtlIntegerToUnicodeString
 RtlLargeIntegerAdd
 RtlLargeIntegerDivide
+RtlLargeIntegerNegate
+RtlLargeIntegerShiftLeft
+RtlLargeIntegerShiftRight
+RtlLargeIntegerSubtract
 RtlLengthSecurityDescriptor
 RtlLockHeap=RtlLockHeap@4
 RtlMoveMemory=RtlMoveMemory@12

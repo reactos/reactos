@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.10 1999/10/31 22:41:49 ea Exp $
+; $Id: ntoskrnl.edf,v 1.11 1999/11/09 18:04:26 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -173,19 +173,28 @@ NtUnlockFile=NtUnlockFile@20
 NtWaitForSingleObject=NtWaitForSingleObject@12
 NtWriteFile=NtWriteFile@36
 RtlAnsiStringToUnicodeString
-RtlCompareMemory
+RtlCompareMemory=RtlCompareMemory@12
 RtlConvertLongToLargeInteger
 RtlConvertUlongToLargeInteger
 RtlCopyMemory
 RtlEnlargedIntegerMultiply
+RtlEnlargedUnsignedDivide
+RtlEnlargedUnsignedMultiply
 RtlExtendedIntegerMultiply
+RtlExtendedLargeIntegerDivide
+RtlExtendedMagicDivide
 RtlFillMemory=RtlFillMemory@12
+RtlFillMemoryUlong=RtlFillMemoryUlong@12
 RtlFreeUnicodeString
 RtlInitAnsiString
 RtlInitUnicodeString
 RtlLargeIntegerAdd
-RtlLargeIntegerGreaterThan
+RtlLargeIntegerArithmeticShift
+RtlLargeIntegerDivide
+RtlLargeIntegerNegate
+RtlLargeIntegerShiftLeft
 RtlLargeIntegerShiftRight
+RtlLargeIntegerSubtract
 RtlMoveMemory=RtlMoveMemory@12
 RtlSecondsSince1970ToTime
 RtlSecondsSince1980ToTime

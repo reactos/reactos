@@ -1,4 +1,4 @@
-/* $Id: largeint.c,v 1.4 1999/09/29 23:09:44 ekohl Exp $
+/* $Id: largeint.c,v 1.5 1999/11/09 18:09:00 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,27 +12,12 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <internal/ke.h>
-#include <internal/linkage.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
-typedef long long int LLI, *PLLI;
-typedef unsigned long long int ULLI, *PULLI;
-
-#define LIFromLLI(X) (*(PLARGE_INTEGER)&(X))
-#define LLIFromLI(X) (*(PLLI)&(X))
-#define ULIFromULLI(X) (*(PULARGE_INTEGER)&(X))
 
 /* FUNCTIONS *****************************************************************/
-
-LARGE_INTEGER
-RtlLargeIntegerDivide(LARGE_INTEGER Dividend,
-                      LARGE_INTEGER Divisor,
-                      PLARGE_INTEGER Remainder)
-{
-}
 
 LARGE_INTEGER 
 RtlConvertLongToLargeInteger(LONG SignedInteger)
@@ -65,8 +50,9 @@ RtlEnlargedIntegerMultiply(LONG Multiplicand,
   return RC;
 }
 
-LARGE_INTEGER RtlEnlargedUnsignedMultiply(ULONG Multiplicand,
-					  ULONG Multiplier)
+LARGE_INTEGER
+RtlEnlargedUnsignedMultiply(ULONG Multiplicand,
+                            ULONG Multiplier)
 {
   LARGE_INTEGER RC;
 
@@ -97,11 +83,28 @@ RtlLargeIntegerAdd(LARGE_INTEGER Addend1,
   return RC;
 }
 
-VOID RtlLargeIntegerAnd(PLARGE_INTEGER Result,
-			LARGE_INTEGER Source,
-			LARGE_INTEGER Mask)
+VOID
+RtlLargeIntegerAnd(PLARGE_INTEGER Result,
+                   LARGE_INTEGER Source,
+                   LARGE_INTEGER Mask)
 {
   Result->QuadPart = Source.QuadPart & Mask.QuadPart;
+}
+
+LARGE_INTEGER
+RtlLargeIntegerDivide(LARGE_INTEGER Dividend,
+                      LARGE_INTEGER Divisor,
+                      PLARGE_INTEGER Remainder)
+{
+  LARGE_INTEGER RC;
+
+  if (Remainder)
+    Remainder->QuadPart = Dividend.QuadPart % Divisor.QuadPart;
+
+
+  RC.QuadPart = Dividend.QuadPart / Divisor.QuadPart;
+
+  return RC;
 }
 
 BOOLEAN 

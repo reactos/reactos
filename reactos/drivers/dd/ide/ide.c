@@ -1212,7 +1212,7 @@ DPRINT("AdjOffset:%ld:%ld + Length:%ld = AdjExtent:%ld:%ld\n",
   PartitionExtent.QuadPart = DeviceExtension->Offset + DeviceExtension->Size;
   PartitionExtent = RtlExtendedIntegerMultiply(PartitionExtent, 
                                                DeviceExtension->BytesPerSector);
-  if (RtlLargeIntegerGreaterThan(AdjustedExtent, PartitionExtent) ||
+  if ((AdjustedExtent.QuadPart > PartitionExtent.QuadPart) ||
       (IrpStack->Parameters.Read.Length & (DeviceExtension->BytesPerSector - 1))) 
     {
       DPRINT("Request failed on bad parameters\n",0);
