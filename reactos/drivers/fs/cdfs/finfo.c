@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: finfo.c,v 1.10 2004/05/23 13:31:25 hbirr Exp $
+/* $Id: finfo.c,v 1.11 2004/05/23 15:49:56 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -70,7 +70,7 @@ CdfsGetStandardInformation(PFCB Fcb,
     {
       StandardInfo->AllocationSize = Fcb->RFCB.AllocationSize;
       StandardInfo->EndOfFile = Fcb->RFCB.FileSize;
-      StandardInfo->Directory = TRUE;
+      StandardInfo->Directory = FALSE;
     }
   StandardInfo->NumberOfLinks = 0;
   StandardInfo->DeletePending = FALSE;
