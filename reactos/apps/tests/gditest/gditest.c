@@ -1,5 +1,6 @@
 /*
  * gditest
+   dec 26, 2001 -- gditest bug fix by Richard Campbell
  */
 
 #include <windows.h>
@@ -63,7 +64,7 @@ int main (void)
   LineTo(Desktop, 200, 50);
 
   WhitePen = CreatePen(PS_SOLID, 3, RGB(0xff, 0xff, 0xff));
-  SelectObject(Desktop, GreenPen);
+  SelectObject(Desktop, WhitePen);
 
   MoveToEx(Desktop, 20, 70, NULL);
   LineTo(Desktop, 500, 70);
@@ -123,7 +124,7 @@ int main (void)
   LineTo(DC24, 100, 110);
   BitBlt(Desktop, 200, 200, 110, 120, DC24, 0, 0, SRCCOPY);
 
-  Sleep( 990000 ); // fixme delay only 10000 (for 10 seconds)
+  Sleep( 10000 ); // fixme delay only 10000 (for 10 seconds)
   // Free up everything
   DeleteDC(Desktop);
   DeleteDC(MyDC);
