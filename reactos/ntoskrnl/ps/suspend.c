@@ -131,6 +131,8 @@ NtResumeThread(IN HANDLE ThreadHandle,
   PETHREAD Thread;
   NTSTATUS Status;
   ULONG Count;
+  
+  PAGED_CODE();
 
   DPRINT("NtResumeThead(ThreadHandle %lx  SuspendCount %p)\n",
 	 ThreadHandle, SuspendCount);
@@ -184,6 +186,8 @@ NtSuspendThread(IN HANDLE ThreadHandle,
   PETHREAD Thread;
   NTSTATUS Status;
   ULONG Count;
+  
+  PAGED_CODE();
 
   Status = ObReferenceObjectByHandle(ThreadHandle,
 				     THREAD_SUSPEND_RESUME,

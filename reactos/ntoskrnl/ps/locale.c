@@ -207,6 +207,8 @@ NTSTATUS STDCALL
 NtQueryDefaultLocale(IN BOOLEAN UserProfile,
 		     OUT PLCID DefaultLocaleId)
 {
+  PAGED_CODE();
+
   if (DefaultLocaleId == NULL)
     return STATUS_UNSUCCESSFUL;
 
@@ -252,6 +254,8 @@ NtSetDefaultLocale(IN BOOLEAN UserProfile,
    WCHAR ValueBuffer[20];
    HANDLE UserKey = NULL;
    NTSTATUS Status;
+   
+   PAGED_CODE();
 
    if (UserProfile)
      {
@@ -358,6 +362,8 @@ NtQueryDefaultUILanguage(OUT PLANGID LanguageId)
   HANDLE UserKey;
   HANDLE KeyHandle;
   NTSTATUS Status;
+  
+  PAGED_CODE();
 
   Status = RtlOpenCurrentUser(KEY_READ,
 			      &UserKey);
@@ -431,6 +437,8 @@ NtQueryDefaultUILanguage(OUT PLANGID LanguageId)
 NTSTATUS STDCALL
 NtQueryInstallUILanguage(OUT PLANGID LanguageId)
 {
+  PAGED_CODE();
+  
   *LanguageId = PsInstallUILanguageId;
 
   return STATUS_SUCCESS;
@@ -451,6 +459,8 @@ NtSetDefaultUILanguage(IN LANGID LanguageId)
   HANDLE UserHandle;
   HANDLE KeyHandle;
   NTSTATUS Status;
+  
+  PAGED_CODE();
 
   Status = RtlOpenCurrentUser(KEY_WRITE,
 			      &UserHandle);

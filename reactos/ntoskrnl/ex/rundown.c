@@ -116,7 +116,7 @@ ExReleaseRundownProtectionEx (
         if (Current & EX_RUNDOWN_ACTIVE)
         {
             /* Get Pointer */
-            PRUNDOWN_DESCRIPTOR RundownDescriptor = (PRUNDOWN_DESCRIPTOR)((ULONG_PTR)RunRef->Ptr & ~EX_RUNDOWN_ACTIVE);
+            PRUNDOWN_DESCRIPTOR RundownDescriptor = (PRUNDOWN_DESCRIPTOR)(Current & ~EX_RUNDOWN_ACTIVE);
             
             if (RundownDescriptor == NULL)
             {

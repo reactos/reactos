@@ -113,6 +113,8 @@ NtAssignProcessToJobObject(HANDLE JobHandle,
   KPROCESSOR_MODE PreviousMode;
   NTSTATUS Status;
   
+  PAGED_CODE();
+  
   PreviousMode = ExGetPreviousMode();
   
   /* make sure we're having a handle with enough rights, especially the to
@@ -200,6 +202,8 @@ NtCreateJobObject(PHANDLE JobHandle,
   KPROCESSOR_MODE PreviousMode;
   PEPROCESS CurrentProcess;
   NTSTATUS Status = STATUS_SUCCESS;
+  
+  PAGED_CODE();
 
   PreviousMode = ExGetPreviousMode();
   CurrentProcess = PsGetCurrentProcess();
@@ -305,6 +309,8 @@ NtIsProcessInJob(IN HANDLE ProcessHandle,
   
   PreviousMode = ExGetPreviousMode();
   
+  PAGED_CODE();
+  
   Status = ObReferenceObjectByHandle(ProcessHandle,
                                      PROCESS_QUERY_INFORMATION,
                                      PsProcessType,
@@ -367,6 +373,8 @@ NtOpenJobObject(PHANDLE JobHandle,
   KPROCESSOR_MODE PreviousMode;
   HANDLE hJob;
   NTSTATUS Status = STATUS_SUCCESS;
+  
+  PAGED_CODE();
 
   PreviousMode = ExGetPreviousMode();
 
@@ -461,6 +469,8 @@ NtTerminateJobObject(HANDLE JobHandle,
   KPROCESSOR_MODE PreviousMode;
   PEJOB Job;
   NTSTATUS Status;
+  
+  PAGED_CODE();
   
   PreviousMode = ExGetPreviousMode();
   

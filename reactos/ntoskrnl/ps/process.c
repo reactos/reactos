@@ -192,6 +192,8 @@ NtOpenProcessTokenEx(
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status = STATUS_SUCCESS;
    
+   PAGED_CODE();
+   
    PreviousMode = ExGetPreviousMode();
    
    if(PreviousMode == UserMode)
@@ -505,6 +507,8 @@ PsCreatePeb(HANDLE ProcessHandle,
   ULONG ViewSize;
   PVOID TableBase;
   NTSTATUS Status;
+  
+  PAGED_CODE();
 
   /* Allocate the Process Environment Block (PEB) */
   Process->TebBlock = (PVOID) MM_ROUND_DOWN(PEB_BASE, MM_VIRTMEM_GRANULARITY);
@@ -1163,6 +1167,8 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 {
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status = STATUS_SUCCESS;
+   
+   PAGED_CODE();
   
    PreviousMode = ExGetPreviousMode();
    
@@ -1219,7 +1225,8 @@ NtOpenProcess(OUT PHANDLE	    ProcessHandle,
 	  "ObjectAttributes %x, ClientId %x { UniP %d, UniT %d })\n",
 	  ProcessHandle, DesiredAccess, ObjectAttributes, ClientId,
 	  ClientId->UniqueProcess, ClientId->UniqueThread);
-	  
+
+   PAGED_CODE();
    
    /*
     * Not sure of the exact semantics 
@@ -1314,6 +1321,8 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
    PEPROCESS Process;
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status = STATUS_SUCCESS;
+   
+   PAGED_CODE();
    
    PreviousMode = ExGetPreviousMode();
    
@@ -1786,6 +1795,8 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
    KPROCESSOR_MODE PreviousMode;
    ACCESS_MASK Access;
    NTSTATUS Status = STATUS_SUCCESS;
+   
+   PAGED_CODE();
    
    PreviousMode = ExGetPreviousMode();
 
@@ -2889,6 +2900,8 @@ PsLockProcess(PEPROCESS Process, BOOL Timeout)
   PLARGE_INTEGER Delay = (Timeout ? &PsLockTimeout : NULL);
   PKTHREAD CallingThread = KeGetCurrentThread();
   
+  PAGED_CODE();
+  
   KeEnterCriticalRegion();
   
   for(;;)
@@ -2946,6 +2959,8 @@ PsLockProcess(PEPROCESS Process, BOOL Timeout)
 VOID
 PsUnlockProcess(PEPROCESS Process)
 {
+  PAGED_CODE();
+  
   ASSERT(Process->LockOwner == KeGetCurrentThread());
   
   if(InterlockedDecrementUL(&Process->LockCount) == 0)

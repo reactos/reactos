@@ -184,6 +184,8 @@ NtImpersonateThread(IN HANDLE ThreadHandle,
   KPROCESSOR_MODE PreviousMode;
   NTSTATUS Status = STATUS_SUCCESS;
   
+  PAGED_CODE();
+  
   PreviousMode = ExGetPreviousMode();
   
   if(PreviousMode != KernelMode)
@@ -499,6 +501,8 @@ PsCreateTeb(HANDLE ProcessHandle,
    ULONG TebSize;
    PVOID TebBase;
    TEB Teb;
+   
+   PAGED_CODE();
 
    TebSize = PAGE_SIZE;
 
@@ -671,6 +675,8 @@ NtCreateThread(OUT PHANDLE ThreadHandle,
   KIRQL oldIrql;
   KPROCESSOR_MODE PreviousMode;
   NTSTATUS Status = STATUS_SUCCESS;
+  
+  PAGED_CODE();
   
   if(ThreadContext == NULL)
   {
@@ -851,6 +857,8 @@ PsCreateSystemThread(PHANDLE ThreadHandle,
    PETHREAD Thread;
    NTSTATUS Status;
    KIRQL oldIrql;
+   
+   PAGED_CODE();
    
    DPRINT("PsCreateSystemThread(ThreadHandle %x, ProcessHandle %x)\n",
 	    ThreadHandle,ProcessHandle);

@@ -337,6 +337,8 @@ NtTerminateProcess(IN	HANDLE		ProcessHandle  OPTIONAL,
    NTSTATUS Status;
    PEPROCESS Process;
    
+   PAGED_CODE();
+   
    DPRINT("NtTerminateProcess(ProcessHandle %x, ExitStatus %x)\n",
 	   ProcessHandle, ExitStatus);
    
@@ -372,6 +374,8 @@ NtTerminateThread(IN	HANDLE		ThreadHandle,
 {
    PETHREAD Thread;
    NTSTATUS Status;
+   
+   PAGED_CODE();
    
    Status = ObReferenceObjectByHandle(ThreadHandle,
 				      THREAD_TERMINATE,
@@ -425,6 +429,8 @@ NtCallTerminatePorts(PETHREAD Thread)
    PLIST_ENTRY current_entry;
    PEPORT_TERMINATION_REQUEST current;
    
+   PAGED_CODE();
+   
    KeAcquireSpinLock(&Thread->ActiveTimerListLock, &oldIrql);
    while ((current_entry = RemoveHeadList(&Thread->TerminationPortList)) !=
 	  &Thread->TerminationPortList);
@@ -450,6 +456,8 @@ NtRegisterThreadTerminatePort(HANDLE PortHandle)
    PEPORT TerminationPort;
    KIRQL oldIrql;
    PETHREAD Thread;
+   
+   PAGED_CODE();
    
    Status = ObReferenceObjectByHandle(PortHandle,
 				      PORT_ALL_ACCESS,

@@ -992,6 +992,8 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
 	     IN	PCLIENT_ID ClientId)
 {
    NTSTATUS Status = STATUS_INVALID_PARAMETER;
+   
+   PAGED_CODE();
 
    if((NULL != ThreadHandle)&&(NULL != ObjectAttributes))
    {

@@ -82,6 +82,8 @@ NtCallbackReturn (PVOID		Result,
   PKTRAP_FRAME SavedTrapFrame;
   PVOID SavedCallbackStack;
   PVOID SavedExceptionStack;
+  
+  PAGED_CODE();
 
   Thread = PsGetCurrentThread();
   if (Thread->Tcb.CallbackStack == NULL)
@@ -259,6 +261,8 @@ NtW32Call (IN ULONG RoutineIndex,
   NTSTATUS CallbackStatus;
   NTW32CALL_SAVED_STATE SavedState;
   PNTW32CALL_CALLBACK_STACK AssignedStack;
+  
+  PAGED_CODE();
 
   DPRINT("NtW32Call(RoutineIndex %d, Argument %X, ArgumentLength %d)\n",
 	  RoutineIndex, Argument, ArgumentLength);
