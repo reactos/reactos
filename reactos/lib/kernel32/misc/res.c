@@ -1,4 +1,4 @@
-/* $Id: res.c,v 1.5 2000/07/01 17:07:00 ea Exp $
+/* $Id: res.c,v 1.6 2000/08/27 22:37:45 ekohl Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -155,12 +155,17 @@ LoadResource (
 	HRSRC		hResInfo
 	)
 {
-	void **Data;
+	NTSTATUS Status;
+	PVOID Data;
 
-	Data = HeapAlloc (GetProcessHeap (), 0, sizeof(void *));
-	LdrAccessResource (hModule, hResInfo, Data);
+	Status = LdrAccessResource (hModule, hResInfo, &Data, NULL);
+	if (!NT_SUCCESS(Status))
+	{
+		SetLastErrorByStatus (Status);
+		return NULL;
+	}
 
-	return *Data;
+	return Data;
 }
 
 DWORD
@@ -179,7 +184,6 @@ FreeResource (
 	HGLOBAL	hResData
 	)
 {
-	HeapFree (GetProcessHeap (), 0, &hResData);
 	return TRUE;
 }
 

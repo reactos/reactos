@@ -22,14 +22,17 @@ NTSTATUS LdrMapSections(HANDLE ProcessHandle,
 NTSTATUS LdrMapNTDllForProcess(HANDLE ProcessHandle,
 			       PHANDLE NTDllSectionHandle);
 
-NTSTATUS
-LdrLoadDll (PDLL* Dll,PCHAR	Name);
 
-NTSTATUS LdrUnloadDll(PDLL Dll);
 
 NTSTATUS STDCALL
 LdrDisableThreadCalloutsForDll (IN PVOID BaseAddress,
                                 IN BOOLEAN Disable);
+
+NTSTATUS STDCALL
+LdrGetDllHandle (IN ULONG Unknown1,
+                 IN ULONG Unknown2,
+                 IN PUNICODE_STRING DllName,
+                 OUT PVOID *BaseAddress);
 
 NTSTATUS STDCALL
 LdrGetProcedureAddress (IN PVOID BaseAddress,
@@ -42,5 +45,14 @@ LdrInitializeThunk (ULONG Unknown1,
                     ULONG Unknown2,
                     ULONG Unknown3,
                     ULONG Unknown4);
+
+NTSTATUS STDCALL
+LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
+            IN ULONG LoadFlags,
+            IN PUNICODE_STRING Name,
+            OUT PVOID *BaseAddress OPTIONAL);
+
+NTSTATUS STDCALL
+LdrUnloadDll (IN PVOID BaseAddress);
 
 /* EOF */

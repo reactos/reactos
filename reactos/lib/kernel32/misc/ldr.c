@@ -1,4 +1,4 @@
-/* $Id: ldr.c,v 1.7 2000/08/05 18:01:50 dwelch Exp $
+/* $Id: ldr.c,v 1.8 2000/08/27 22:37:45 ekohl Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -85,6 +85,7 @@ LoadLibraryExW (
 	int i;
 	LPWSTR lpDllName;
 	NTSTATUS Status;
+	UNICODE_STRING DllName;
 
 	if ( lpLibFileName == NULL )
 		return NULL;
@@ -113,8 +114,9 @@ LoadLibraryExW (
 		wcscpy (lpDllName,lpLibFileName);
 	}
 
-	Status = LdrLoadDll((PDLL *)&hInst,lpDllName );
-	HeapFree(GetProcessHeap(),0,lpDllName);
+	RtlInitUnicodeString (&DllName, lpDllName);
+	Status = LdrLoadDll(NULL, dwFlags, &DllName, (PVOID*)&hInst);
+	HeapFree(GetProcessHeap(), 0, lpDllName);
 	if ( !NT_SUCCESS(Status))
 	{
 		SetLastErrorByStatus (Status);
@@ -180,24 +182,55 @@ HMODULE
 STDCALL
 GetModuleHandleA ( LPCSTR lpModuleName )
 {
-	int len = 0;
-	HMODULE hModule;
-	WINBOOL restore = FALSE;
-	if ( lpModuleName != NULL ) {
+	UNICODE_STRING ModuleName;
+	PVOID BaseAddress;
+	NTSTATUS Status;
 
-		len = lstrlenA(lpModuleName);
-		if ( len > 0 && lpModuleName[len-1] == '.' ) {
-			lpModuleName[len-1] = 0;
-			restore = TRUE;
-		}
+	RtlCreateUnicodeStringFromAsciiz (&ModuleName,
+					  (LPSTR)lpModuleName);
+
+	Status = LdrGetDllHandle (0,
+				  0,
+				  &ModuleName,
+				  &BaseAddress);
+
+	RtlFreeUnicodeString (&ModuleName);
+
+	if (!NT_SUCCESS(Status))
+	{
+		SetLastErrorByStatus (Status);
+		return NULL;
 	}
-	hModule =  LoadLibraryA(lpModuleName);
-	if ( restore == TRUE )
-		lpModuleName[len-1] = '.';
 
-
-	return hModule;
+	return ((HMODULE)BaseAddress);
 }
 
+
+HMODULE
+STDCALL
+GetModuleHandleW (LPCWSTR lpModuleName)
+{
+	UNICODE_STRING ModuleName;
+	PVOID BaseAddress;
+	NTSTATUS Status;
+
+	if (lpModuleName == NULL)
+		return ((HMODULE)NtCurrentPeb()->ImageBaseAddress);
+
+	RtlInitUnicodeString (&ModuleName,
+			      (LPWSTR)lpModuleName);
+
+	Status = LdrGetDllHandle (0,
+				  0,
+				  &ModuleName,
+				  &BaseAddress);
+	if (!NT_SUCCESS(Status))
+	{
+		SetLastErrorByStatus (Status);
+		return NULL;
+	}
+
+	return ((HMODULE)BaseAddress);
+}
 
 /* EOF */

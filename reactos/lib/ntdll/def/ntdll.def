@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.61 2000/08/15 12:40:19 ekohl Exp $
+; $Id: ntdll.def,v 1.62 2000/08/27 22:36:24 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -32,22 +32,22 @@ DbgUserBreakPoint@0
 ;KiUserApcDispatcher
 ;KiUserCallbackDispatcher
 ;KiUserExceptionDispatcher
-LdrAccessResource
+LdrAccessResource@16
 LdrDisableThreadCalloutsForDll@8
 ;LdrEnumResources
 ;LdrFindEntryForAddress
 ;LdrFindResourceDirectory_U
 LdrFindResource_U
-;LdrGetDllHandle
+LdrGetDllHandle@16
 LdrGetProcedureAddress@16
 LdrInitializeThunk@16
-LdrLoadDll
+LdrLoadDll@16
 ;LdrProcessRelocationBlock
 ;LdrQueryImageFileExecutionOptions
 ;LdrQueryProcessModuleInformation
 ;LdrShutdownProcess
 ;LdrShutdownThread
-LdrUnloadDll
+LdrUnloadDll@4
 ;LdrVerifyImageMatchesChecksum
 NlsAnsiCodePage DATA
 NlsMbCodePageTag DATA

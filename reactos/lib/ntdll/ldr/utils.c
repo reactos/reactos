@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.29 2000/08/11 12:34:58 ekohl Exp $
+/* $Id: utils.c,v 1.30 2000/08/27 22:36:45 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -38,7 +38,8 @@ STDCALL
 
 static
 NTSTATUS
-LdrFindDll (PDLL* Dll,PCHAR	Name);
+LdrFindDll (PDLL* Dll,PUNICODE_STRING Name);
+//LdrFindDll (PDLL* Dll,PCHAR	Name);
 
 /**********************************************************************
  * NAME
@@ -56,11 +57,16 @@ LdrFindDll (PDLL* Dll,PCHAR	Name);
  *
  */
 
-NTSTATUS LdrLoadDll (PDLL* Dll,
-		     PCHAR	Name)
+//	    IN PCHAR Name,
+
+NTSTATUS STDCALL
+LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
+	    IN ULONG LoadFlags,
+	    IN PUNICODE_STRING Name,
+	    OUT PVOID *BaseAddress OPTIONAL)
 {
-	char			fqname [255] = "\\??\\C:\\reactos\\system32\\";
-	ANSI_STRING		AnsiString;
+	WCHAR			fqname [255] = L"\\SystemRoot\\system32\\";
+//	ANSI_STRING		AnsiString;
 	UNICODE_STRING		UnicodeString;
 	OBJECT_ATTRIBUTES	FileObjectAttributes;
 	char			BlockBuffer [1024];
@@ -73,39 +79,42 @@ NTSTATUS LdrLoadDll (PDLL* Dll,
 	HANDLE			FileHandle;
 	HANDLE			SectionHandle;
 	PDLLMAIN_FUNC		Entrypoint = NULL;
+	PDLL			Dll;
 
-	if ( Dll == NULL )
-		return -1;
-
-	if ( Name == NULL ) {
-		*Dll = &LdrDllListHead;
+	if ( Name == NULL )
+	{
+		*BaseAddress = LdrDllListHead.BaseAddress;
 		return STATUS_SUCCESS;
 	}
 
-	DPRINT("LdrLoadDll(Base %x, Name \"%s\")\n", Dll, Name);
+	*BaseAddress = NULL;
+
+	DPRINT("LdrLoadDll(Name \"%wZ\" BaseAddress %x)\n",
+	       Name, BaseAddress);
 
 	/*
 	 * Build the DLL's absolute name
 	 */
 
-	if ( strncmp(Name,"\\??\\",3) != 0 ) {
-	
-		strcat(fqname, Name);
+	if (wcsncmp(Name->Buffer, L"\\??\\", 3) != 0)
+	{
+		wcscat(fqname, Name->Buffer);
 	}
 	else
-		strncpy(fqname, Name, 256);
+		wcsncpy(fqname, Name->Buffer, 256);
 
-	DPRINT("fqname \"%s\"\n", fqname);
+	DPRINT("fqname \"%S\"\n", fqname);
 
 	/*
 	 * Open the DLL's image file.
 	 */
-	if (LdrFindDll(Dll, Name) == STATUS_SUCCESS)
+	if (LdrFindDll(&Dll, Name) == STATUS_SUCCESS)
 	{
-		DPRINT ("DLL %s already loaded.\n");
+		DPRINT ("DLL %wZ already loaded.\n", Name);
+		*BaseAddress = Dll->BaseAddress;
 		return STATUS_SUCCESS;
 	}
-
+/*
 	RtlInitAnsiString(
 		& AnsiString,
 		fqname
@@ -115,6 +124,9 @@ NTSTATUS LdrLoadDll (PDLL* Dll,
 		& AnsiString,
 		TRUE
 		);
+*/
+	RtlInitUnicodeString(&UnicodeString,
+			     fqname);
 
 	InitializeObjectAttributes(
 		& FileObjectAttributes,
@@ -124,7 +136,7 @@ NTSTATUS LdrLoadDll (PDLL* Dll,
 		NULL
 		);
 
-	DPRINT("Opening dll \"%s\"\n", fqname);
+	DPRINT("Opening dll \"%wZ\"\n", &UnicodeString);
 	
 	Status = ZwOpenFile(
 			& FileHandle,
@@ -136,8 +148,8 @@ NTSTATUS LdrLoadDll (PDLL* Dll,
 			);
 	if (!NT_SUCCESS(Status))
 	{
-		DbgPrint("Dll open of %s failed: Status = 0x%08x\n", 
-		       fqname, Status);
+		DbgPrint("Dll open of %wZ failed: Status = 0x%08x\n", 
+		         &UnicodeString, Status);
 		return Status;
 	}
 	Status = ZwReadFile(
@@ -182,7 +194,7 @@ NTSTATUS LdrLoadDll (PDLL* Dll,
 	DPRINT("ImageBase 0x%08x\n", ImageBase);
 	
 	/*
-	 * Create a section for NTDLL.
+	 * Create a section for dll.
 	 */
 	Status = ZwCreateSection(
 			& SectionHandle,
@@ -200,7 +212,7 @@ NTSTATUS LdrLoadDll (PDLL* Dll,
 		return Status;
 	}
 	/*
-	 * Map the NTDLL into the process.
+	 * Map the dll into the process.
 	 */
 	InitialViewSize =
 		DosHeader->e_lfanew
@@ -227,21 +239,21 @@ NTSTATUS LdrLoadDll (PDLL* Dll,
 	}
 	ZwClose(FileHandle);
 
-	(*Dll) = RtlAllocateHeap(
+	Dll = RtlAllocateHeap(
 			RtlGetProcessHeap(),
 			0,
 			sizeof (DLL)
 			);
-	(*Dll)->Headers = NTHeaders;
-	(*Dll)->BaseAddress = (PVOID)ImageBase;
-	(*Dll)->Next = LdrDllListHead.Next;
-	(*Dll)->Prev = & LdrDllListHead;
-	(*Dll)->ReferenceCount = 1;
-	LdrDllListHead.Next->Prev = (*Dll);
-	LdrDllListHead.Next = (*Dll);
+	Dll->Headers = NTHeaders;
+	Dll->BaseAddress = (PVOID)ImageBase;
+	Dll->Next = LdrDllListHead.Next;
+	Dll->Prev = & LdrDllListHead;
+	Dll->ReferenceCount = 1;
+	LdrDllListHead.Next->Prev = Dll;
+	LdrDllListHead.Next = Dll;
 
 
-   if (((*Dll)->Headers->FileHeader.Characteristics & IMAGE_FILE_DLL) ==
+   if ((Dll->Headers->FileHeader.Characteristics & IMAGE_FILE_DLL) ==
        IMAGE_FILE_DLL)
      {
 
@@ -254,7 +266,7 @@ NTSTATUS LdrLoadDll (PDLL* Dll,
 		{
 			DPRINT("Calling entry point at 0x%08x\n", Entrypoint);
 			if (FALSE == Entrypoint(
-				Dll,
+				Dll->BaseAddress,
 				DLL_PROCESS_ATTACH,
 				NULL
 				))
@@ -272,6 +284,8 @@ NTSTATUS LdrLoadDll (PDLL* Dll,
 			DPRINT("NTDLL.LDR: Entrypoint is NULL for \"%s\"\n", fqname);
 		}
 	}
+
+	*BaseAddress = Dll->BaseAddress;
 	return STATUS_SUCCESS;
 }
 
@@ -291,14 +305,15 @@ NTSTATUS LdrLoadDll (PDLL* Dll,
  * NOTE
  *
  */
-static NTSTATUS LdrFindDll(PDLL* Dll, PCHAR Name)
+//static NTSTATUS LdrFindDll(PDLL* Dll, PCHAR Name)
+static NTSTATUS LdrFindDll(PDLL* Dll, PUNICODE_STRING Name)
 {
    PIMAGE_EXPORT_DIRECTORY	ExportDir;
-   DLL			* current;
    PIMAGE_OPTIONAL_HEADER	OptionalHeader;
+   DLL			* current;
+   UNICODE_STRING DllName;
 
-
-   DPRINT("NTDLL.LdrFindDll(Name %s)\n", Name);
+   DPRINT("NTDLL.LdrFindDll(Name %wZ)\n", Name);
 
    current = & LdrDllListHead;
 
@@ -322,13 +337,17 @@ static NTSTATUS LdrFindDll(PDLL* Dll, PCHAR Name)
 	DPRINT("Scanning  %x %x %x\n",ExportDir->Name,
 	       current->BaseAddress,
 	       (ExportDir->Name + current->BaseAddress));
-	DPRINT("Scanning %s %s\n",
-	       ExportDir->Name + current->BaseAddress, Name);
 
-	if (_stricmp(ExportDir->Name + current->BaseAddress, Name) == 0)
+	RtlCreateUnicodeStringFromAsciiz (&DllName,
+		ExportDir->Name + current->BaseAddress);
+
+	DPRINT("Scanning %wZ %wZ\n", &DllName, Name);
+
+	if (RtlCompareUnicodeString(&DllName, Name, TRUE) == 0)
 	  {
 	     *Dll = current;
 	     current->ReferenceCount++;
+	     RtlFreeUnicodeString (&DllName);
 	     return STATUS_SUCCESS;
 	  }
 
@@ -336,7 +355,9 @@ static NTSTATUS LdrFindDll(PDLL* Dll, PCHAR Name)
 	
      } while (current != & LdrDllListHead);
 
-   DPRINT("Failed to find dll %s\n",Name);
+   RtlFreeUnicodeString (&DllName);
+
+   DPRINT("Failed to find dll %wZ\n", Name);
 
    return STATUS_UNSUCCESSFUL;
 }
@@ -418,10 +439,9 @@ NTSTATUS LdrMapSections(HANDLE			ProcessHandle,
  * NOTE
  *
  */
-
 static PVOID
 LdrGetExportByOrdinal (
-	PDLL	Module,
+	PVOID	BaseAddress,
 	ULONG	Ordinal
 	)
 {
@@ -429,22 +449,21 @@ LdrGetExportByOrdinal (
 	PDWORD			* ExFunctions;
 	USHORT			* ExOrdinals;
 
-	ExportDir = (
-		Module->BaseAddress
-		+ (Module->Headers->OptionalHeader
-			.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT]
-				.VirtualAddress
-				)
-		);
+	ExportDir = (PIMAGE_EXPORT_DIRECTORY)
+		RtlImageDirectoryEntryToData (BaseAddress,
+					      TRUE,
+					      IMAGE_DIRECTORY_ENTRY_EXPORT,
+					      NULL);
+
 
 	ExOrdinals = (USHORT *)
 		RVA(
-			Module->BaseAddress,
+			BaseAddress,
 			ExportDir->AddressOfNameOrdinals
 			);
 	ExFunctions = (PDWORD *)
 		RVA(
-			Module->BaseAddress,
+			BaseAddress,
 			ExportDir->AddressOfFunctions
 			);
 	DbgPrint(
@@ -471,11 +490,10 @@ LdrGetExportByOrdinal (
  * NOTE
  *
  */
-
 static PVOID
 LdrGetExportByName (
-	PDLL	Module,
-	PUCHAR	SymbolName
+	PVOID  BaseAddress,
+	PUCHAR SymbolName
 	)
 {
 	PIMAGE_EXPORT_DIRECTORY	ExportDir;
@@ -492,29 +510,28 @@ LdrGetExportByName (
 //		SymbolName
 //		);
 
-	ExportDir = (
-		Module->BaseAddress
-		+ (Module->Headers->OptionalHeader
-			.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT]
-				.VirtualAddress
-				)
-		);
+	ExportDir = (PIMAGE_EXPORT_DIRECTORY)
+		RtlImageDirectoryEntryToData (BaseAddress,
+					      TRUE,
+					      IMAGE_DIRECTORY_ENTRY_EXPORT,
+					      NULL);
+
 	/*
 	 * Get header pointers
 	 */
 	ExNames = (PDWORD *)
 		RVA(
-			Module->BaseAddress,
+			BaseAddress,
 			ExportDir->AddressOfNames
 			);
 	ExOrdinals = (USHORT *)
 		RVA(
-			Module->BaseAddress,
+			BaseAddress,
 			ExportDir->AddressOfNameOrdinals
 			);
 	ExFunctions = (PDWORD *)
 		RVA(
-			Module->BaseAddress,
+			BaseAddress,
 			ExportDir->AddressOfFunctions
 			);
 	for (	i = 0;
@@ -523,7 +540,7 @@ LdrGetExportByName (
 		)
 	{
 		ExName = RVA(
-				Module->BaseAddress,
+				BaseAddress,
 				ExNames[i]
 				);
 //		DPRINT(
@@ -534,7 +551,7 @@ LdrGetExportByName (
 		if (strcmp(ExName,SymbolName) == 0)
 		{
 			Ordinal = ExOrdinals[i];
-			return(RVA(Module->BaseAddress, ExFunctions[Ordinal]));
+			return(RVA(BaseAddress, ExFunctions[Ordinal]));
 		}
 	}
 
@@ -678,7 +695,7 @@ static NTSTATUS LdrFixupImports(PIMAGE_NT_HEADERS	NTHeaders,
 {
    PIMAGE_IMPORT_MODULE_DIRECTORY ImportModuleDirectory;
    ULONG Ordinal;
-   PDLL	Module;
+   PVOID BaseAddress;
    NTSTATUS Status;
    
    DPRINT("LdrFixupImports(NTHeaders %x, ImageBase %x)\n", NTHeaders, 
@@ -697,15 +714,23 @@ static NTSTATUS LdrFixupImports(PIMAGE_NT_HEADERS	NTHeaders,
      {
 	PVOID	* ImportAddressList;
 	PULONG	FunctionNameList;
+	UNICODE_STRING DllName;
 	DWORD	pName;
 	PWORD	pHint;
 
 	DPRINT("ImportModule->Directory->dwRVAModuleName %s\n",
 	       (PCHAR)(ImageBase + ImportModuleDirectory->dwRVAModuleName));
 
-	Status = LdrLoadDll(&Module,
-			    (PCHAR)(ImageBase
-				    +ImportModuleDirectory->dwRVAModuleName));
+	RtlCreateUnicodeStringFromAsciiz (&DllName,
+		  (PCHAR)(ImageBase + ImportModuleDirectory->dwRVAModuleName));
+
+	Status = LdrLoadDll(NULL,
+			    0,
+			    &DllName,
+//			    (PCHAR)(ImageBase
+//				    +ImportModuleDirectory->dwRVAModuleName),
+			    &BaseAddress);
+	RtlFreeUnicodeString (&DllName);
 	if (!NT_SUCCESS(Status))
 	  {
 	     return Status;
@@ -742,36 +767,30 @@ static NTSTATUS LdrFixupImports(PIMAGE_NT_HEADERS	NTHeaders,
 	     if ((*FunctionNameList) & 0x80000000)
 	       {
 		  Ordinal = (*FunctionNameList) & 0x7fffffff;
-				*ImportAddressList = 
-		    LdrGetExportByOrdinal(
-					  Module,
-					  Ordinal
-					  );
+		  *ImportAddressList = 
+		    LdrGetExportByOrdinal(BaseAddress,
+					  Ordinal);
 	       }
 	     else
 	       {
 		  pName = (DWORD) (
 				   ImageBase
 				   + *FunctionNameList
-				   + 2
-				   );
+				   + 2);
 		  pHint = (PWORD) (
 				   ImageBase
-				   + *FunctionNameList
-						);
-		  
+				   + *FunctionNameList);
+
 		  *ImportAddressList =
-		    LdrGetExportByName(
-						Module,
-				       (PUCHAR) pName
-				       );
+		    LdrGetExportByName(BaseAddress,
+				       (PUCHAR) pName);
 		  if ((*ImportAddressList) == NULL)
 		    {
-				   DbgPrint("Failed to import %s\n", pName);
+		       DbgPrint("Failed to import %s\n", pName);
 		       return STATUS_UNSUCCESSFUL;
 		    }
 	       }
-			ImportAddressList++;
+	     ImportAddressList++;
 	     FunctionNameList++;
 	  }
 	ImportModuleDirectory++;
@@ -879,58 +898,65 @@ PEPFUNC LdrPEStartup (PVOID	ImageBase,
 }
 
 
-NTSTATUS LdrUnloadDll(PDLL Dll)
+NTSTATUS STDCALL
+LdrUnloadDll (IN PVOID BaseAddress)
 {
-   PDLLMAIN_FUNC		Entrypoint;
-   NTSTATUS		Status;
+   PDLLMAIN_FUNC Entrypoint;
+   PDLL Dll;
+   NTSTATUS Status;
 
-   if ( Dll == NULL || Dll == &LdrDllListHead )
-     return -1;
+   if (BaseAddress == NULL)
+     return STATUS_SUCCESS;
 
+   Dll = &LdrDllListHead;
 
-   if ( Dll->ReferenceCount > 1 )
+   do
      {
-	Dll->ReferenceCount--;
-	return STATUS_SUCCESS;
-     }
+	if (Dll->BaseAddress == BaseAddress)
+	  {
 
-   if (( Dll->Headers->FileHeader.Characteristics & IMAGE_FILE_DLL ) == IMAGE_FILE_DLL ) {
+	     if ( Dll->ReferenceCount > 1 )
+	       {
+		  Dll->ReferenceCount--;
+		  return STATUS_SUCCESS;
+	       }
 
-      Entrypoint = (PDLLMAIN_FUNC) LdrPEStartup(Dll->BaseAddress,
-						Dll->SectionHandle);
-      if (Entrypoint != NULL)
-	{
-	   DPRINT("Calling entry point at 0x%08x\n", Entrypoint);
-	   if (FALSE == Entrypoint(Dll,
-				   DLL_PROCESS_DETACH,
-				   NULL))
-	     {
-		DPRINT("NTDLL.LDR: DLL failed to detach\n");
-		return -1;
-	     }
-	   else
-	     {
-		DPRINT("NTDLL.LDR: DLL  detached successfully\n");
-	     }
-	}
-      else
-	{
-	   DPRINT("NTDLL.LDR: Entrypoint is NULL for \n");
-	}
-      
-   }
-   Status = ZwUnmapViewOfSection(NtCurrentProcess(),
-				 Dll->BaseAddress);
 
-   ZwClose(Dll->SectionHandle);
+	     if ((Dll->Headers->FileHeader.Characteristics & IMAGE_FILE_DLL ) == IMAGE_FILE_DLL)
+	       {
+		  Entrypoint = (PDLLMAIN_FUNC) LdrPEStartup(Dll->BaseAddress,
+							    Dll->SectionHandle);
+		  if (Entrypoint != NULL)
+		    {
+		       DPRINT("Calling entry point at 0x%08x\n", Entrypoint);
+		       Entrypoint(Dll->BaseAddress,
+				  DLL_PROCESS_DETACH,
+				  NULL);
+		    }
+		  else
+		    {
+		       DPRINT("NTDLL.LDR: Entrypoint is NULL for \n");
+		    }
+	       }
+	     Status = ZwUnmapViewOfSection (NtCurrentProcess (),
+					    Dll->BaseAddress);
 
-   return Status;
+	     ZwClose (Dll->SectionHandle);
+	     return Status;
+	  }
+
+	Dll = Dll->Next;
+     } while (Dll != & LdrDllListHead);
+
+   DPRINT("NTDLL.LDR: Dll not found\n")
+
+   return STATUS_UNSUCCESSFUL;
 }
 
-static IMAGE_RESOURCE_DIRECTORY_ENTRY * LdrGetNextEntry(IMAGE_RESOURCE_DIRECTORY *ResourceDir, LPCWSTR ResourceName, ULONG Offset)
+
+static PIMAGE_RESOURCE_DIRECTORY_ENTRY
+LdrGetNextEntry(IMAGE_RESOURCE_DIRECTORY *ResourceDir, LPCWSTR ResourceName, ULONG Offset)
 {
-
-
 	WORD    NumberOfNamedEntries;
 	WORD    NumberOfIdEntries;
 	WORD    Entries;
@@ -939,7 +965,6 @@ static IMAGE_RESOURCE_DIRECTORY_ENTRY * LdrGetNextEntry(IMAGE_RESOURCE_DIRECTORY
 	if ( (((ULONG)ResourceDir) & 0xF0000000) != 0 ) {
 		return (IMAGE_RESOURCE_DIRECTORY_ENTRY *)NULL;
 	}
-
 
 	NumberOfIdEntries = ResourceDir->NumberOfIdEntries;
 	NumberOfNamedEntries = ResourceDir->NumberOfNamedEntries;
@@ -973,10 +998,7 @@ static IMAGE_RESOURCE_DIRECTORY_ENTRY * LdrGetNextEntry(IMAGE_RESOURCE_DIRECTORY
 		
 	}
 
-	
-
 	return NULL;
-		
 }
 
 
@@ -1038,42 +1060,58 @@ NTSTATUS LdrFindResource_U(DLL *Dll, IMAGE_RESOURCE_DATA_ENTRY **ResourceDataEnt
 
 }
 
-NTSTATUS LdrAccessResource(DLL *Dll, IMAGE_RESOURCE_DATA_ENTRY *ResourceDataEntry, void **Data)
+
+NTSTATUS STDCALL
+LdrAccessResource(IN  PVOID BaseAddress,
+                  IN  PIMAGE_RESOURCE_DATA_ENTRY ResourceDataEntry,
+                  OUT PVOID *Resource OPTIONAL,
+                  OUT PULONG Size OPTIONAL)
 {
-	PIMAGE_SECTION_HEADER	Sections;
-	int i;
+   PIMAGE_SECTION_HEADER Section;
+   PIMAGE_NT_HEADERS NtHeader;
+   ULONG SectionRva;
+   ULONG SectionVa;
+   ULONG DataSize;
+   ULONG Offset = 0;
+   ULONG Data;
 
-	if ( Data == NULL )
-		return -1;
+   Data = (ULONG)RtlImageDirectoryEntryToData (BaseAddress,
+					       TRUE,
+					       IMAGE_DIRECTORY_ENTRY_RESOURCE,
+					       &DataSize);
+   if (Data == 0)
+	return STATUS_RESOURCE_DATA_NOT_FOUND;
 
-	if ( ResourceDataEntry == NULL )
-		return -1;
+   if ((ULONG)BaseAddress & 1)
+     {
+	/* loaded as ordinary file */
+	NtHeader = RtlImageNtHeader((PVOID)((ULONG)BaseAddress & ~1UL));
+	Offset = (ULONG)BaseAddress - Data + NtHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].VirtualAddress;
+	Section = RtlImageRvaToSection (NtHeader, BaseAddress, NtHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].VirtualAddress);
+	if (Section == NULL)
+	  {
+	     return STATUS_RESOURCE_DATA_NOT_FOUND;
+	  }
 
-	if ( Dll == NULL )
-		return -1;
+	if (Section->Misc.VirtualSize < ResourceDataEntry->OffsetToData)
+	  {
+	     SectionRva = RtlImageRvaToSection (NtHeader, BaseAddress, ResourceDataEntry->OffsetToData)->VirtualAddress;
+	     SectionVa = RtlImageRvaToVa(NtHeader, BaseAddress, SectionRva, NULL);
+	     Offset = SectionRva - SectionVa + Data - Section->VirtualAddress;
+	  }
+     }
 
-	Sections = (PIMAGE_SECTION_HEADER) SECHDROFFSET(Dll->BaseAddress);
+   if (Resource)
+     {
+	*Resource = (PVOID)(ResourceDataEntry->OffsetToData - Offset + (ULONG)BaseAddress);
+     }
 
-	for (	i = 0;
-		(i < Dll->Headers->FileHeader.NumberOfSections);
-		i++
-		)
-	{
-		if (Sections[i].VirtualAddress <= ResourceDataEntry->OffsetToData 
-			&& Sections[i].VirtualAddress + Sections[i].Misc.VirtualSize > ResourceDataEntry->OffsetToData )
-			break;
-	}
+   if (Size)
+     {
+	*Size = ResourceDataEntry->Size;
+     }
 
-	if ( i == Dll->Headers->FileHeader.NumberOfSections ) {
-		*Data = NULL;
-		return -1;
-	}
-
-	*Data = (void *)(((ULONG)Dll->BaseAddress + ResourceDataEntry->OffsetToData - (ULONG)Sections[i].VirtualAddress) +
-				   (ULONG)Sections[i].PointerToRawData);
-
-
-	return STATUS_SUCCESS;
+   return STATUS_SUCCESS;
 }
 
 
@@ -1087,6 +1125,162 @@ LdrDisableThreadCalloutsForDll (
 	/* FIXME: implement it! */
 
 	return STATUS_SUCCESS;
+}
+
+
+NTSTATUS STDCALL
+LdrFindResourceDirectory_U (IN PVOID BaseAddress,
+                            WCHAR **name,
+                            DWORD level,
+                            OUT PVOID *addr)
+{
+   PIMAGE_RESOURCE_DIRECTORY ResDir;
+   PIMAGE_RESOURCE_DIRECTORY_ENTRY ResEntry;
+   ULONG EntryCount;
+   ULONG i;
+   NTSTATUS Status = STATUS_SUCCESS;
+   WCHAR *ws;
+
+   /* Get the pointer to the resource directory */
+   ResDir = (PIMAGE_RESOURCE_DIRECTORY)
+	RtlImageDirectoryEntryToData (BaseAddress,
+				      TRUE,
+				      IMAGE_DIRECTORY_ENTRY_RESOURCE,
+				      &i);
+   if (ResDir == NULL)
+     {
+	return STATUS_RESOURCE_DATA_NOT_FOUND;
+     }
+
+   /* Let's go into resource tree */
+   for (i = 0; i < level; i++, name++)
+     {
+	EntryCount = ResDir->NumberOfNamedEntries;
+	ResEntry = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)(ResDir + 1);
+	if ((ULONG)(*name) & 0xFFFF0000)
+	  {
+	     /* Resource name is a unicode string */
+	     for (; EntryCount--; ResEntry++)
+	       {
+		  /* Scan entries for equal name */
+		  if (ResEntry->Name & 0x80000000)
+		    {
+		       ws = (WCHAR*)((ULONG)ResDir + (ResEntry->Name & 0x7FFFFFFF));
+		       if (!wcsncmp( *name, ws + 1, *ws ) && wcslen( *name ) == (int)*ws )
+			 {
+			    goto found;
+			 }
+		    }
+	       }
+	  }
+	else
+	  {
+	     /* We use ID number instead of string */
+	     ResEntry += EntryCount;
+	     EntryCount = ResDir->NumberOfIdEntries;
+	     for (; EntryCount--; ResEntry++)
+	       {
+		  /* Scan entries for equal name */
+		  if (ResEntry->Name == (ULONG)(*name))
+		     goto found;
+	       }
+	  }
+
+	  switch (i)
+	  {
+	     case 0:
+		return STATUS_RESOURCE_TYPE_NOT_FOUND;
+
+	     case 1:
+		return STATUS_RESOURCE_NAME_NOT_FOUND;
+
+	     case 2:
+		Status = STATUS_RESOURCE_LANG_NOT_FOUND;
+		/* Just use first language entry */
+		if (ResDir->NumberOfNamedEntries || ResDir->NumberOfIdEntries)
+		  {
+		     ResEntry = (IMAGE_RESOURCE_DIRECTORY_ENTRY*)(ResDir + 1);
+		     break;
+		  }
+		return Status;
+
+	     case 3:
+		return STATUS_RESOURCE_DATA_NOT_FOUND;
+
+	     default:
+		return STATUS_INVALID_PARAMETER;
+	  }
+found:;
+	ResDir = (PIMAGE_RESOURCE_DIRECTORY)((ULONG)ResDir + ResEntry->OffsetToData);
+     }
+
+   if (addr)
+     {
+	*addr = (PVOID)ResDir;
+     }
+
+  return Status;
+}
+
+
+NTSTATUS STDCALL
+LdrGetDllHandle (IN ULONG Unknown1,
+                 IN ULONG Unknown2,
+                 IN PUNICODE_STRING DllName,
+                 OUT PVOID *BaseAddress)
+{
+   PIMAGE_EXPORT_DIRECTORY ExportDir;
+   PIMAGE_OPTIONAL_HEADER OptionalHeader;
+   ANSI_STRING AnsiName;
+   DLL *current;
+
+   DPRINT("LdrGetDllHandle (Unknown1 %x Unknown2 %x DllName %wZ BaseAddress %p)\n",
+          Unknown1, Unknown2, DllName, BaseAddress);
+
+   current = &LdrDllListHead;
+
+   // NULL is the current process
+   if ( DllName == NULL )
+     {
+	*BaseAddress = current->BaseAddress;
+	DPRINT1("BaseAddress %x\n", *BaseAddress);
+	return STATUS_SUCCESS;
+     }
+
+   RtlUnicodeStringToAnsiString (&AnsiName, DllName, TRUE);
+
+   do
+     {
+	OptionalHeader = & current->Headers->OptionalHeader;
+	ExportDir = (PIMAGE_EXPORT_DIRECTORY)
+	  OptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT]
+	  .VirtualAddress;
+	ExportDir = (PIMAGE_EXPORT_DIRECTORY)
+	  ((ULONG)ExportDir + (ULONG)current->BaseAddress);
+
+	DPRINT("Scanning  %x %x %x\n",ExportDir->Name,
+	       current->BaseAddress,
+	       (ExportDir->Name + current->BaseAddress));
+	DPRINT("Scanning %s %s\n",
+	       ExportDir->Name + current->BaseAddress, AnsiName.Buffer);
+
+	if (!_stricmp(ExportDir->Name + current->BaseAddress, AnsiName.Buffer))
+	  {
+	     RtlFreeAnsiString (&AnsiName);
+	     *BaseAddress = current->BaseAddress;
+	     DPRINT1("BaseAddress %x\n", *BaseAddress);
+	     return STATUS_SUCCESS;
+	  }
+
+	current = current->Next;
+	
+     } while (current != & LdrDllListHead);
+
+   DbgPrint("Failed to find dll %s\n", AnsiName.Buffer);
+   RtlFreeAnsiString (&AnsiName);
+   *BaseAddress = NULL;
+
+   return STATUS_UNSUCCESSFUL;
 }
 
 
