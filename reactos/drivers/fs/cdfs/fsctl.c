@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.17 2003/11/13 15:25:08 ekohl Exp $
+/* $Id: fsctl.c,v 1.18 2004/03/08 08:51:26 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -95,6 +95,9 @@ CdfsGetPVDData(PUCHAR Buffer,
   DPRINT("VolumeSize: %lu\n", Pvd->VolumeSpaceSizeL);
   DPRINT("RootStart: %lu\n", Pvd->RootDirRecord.ExtentLocationL);
   DPRINT("RootSize: %lu\n", Pvd->RootDirRecord.DataLengthL);
+  DPRINT("PathTableSize: %lu\n", Pvd->PathTableSizeL);
+  DPRINT("PathTablePos: %lu\n", Pvd->LPathTablePos);
+  DPRINT("OptPathTablePos: %lu\n", Pvd->LOptPathTablePos);
 
 #if 0
   DbgPrint("******** PVD **********\n");

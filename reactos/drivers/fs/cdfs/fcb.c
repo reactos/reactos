@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2002 ReactOS Team
+ *  Copyright (C) 2002, 2004 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fcb.c,v 1.17 2004/01/28 20:52:21 ekohl Exp $
+/* $Id: fcb.c,v 1.18 2004/03/08 08:51:26 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -111,8 +111,7 @@ CdfsDestroyFCB(PFCB Fcb)
 BOOLEAN
 CdfsFCBIsDirectory(PFCB Fcb)
 {
-//  return(Fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY);
-  return(Fcb->Entry.FileFlags & 0x02);
+  return(Fcb->Entry.FileFlags & FILE_FLAG_DIRECTORY);
 }
 
 
@@ -268,7 +267,8 @@ CdfsMakeRootFCB(PDEVICE_EXTENSION Vcb)
 
   Fcb->Entry.DataLengthL = Vcb->CdInfo.RootSize;
   Fcb->Entry.ExtentLocationL = Vcb->CdInfo.RootStart;
-  Fcb->Entry.FileFlags = 0x02; // FILE_ATTRIBUTE_DIRECTORY;
+  Fcb->Entry.FileFlags = FILE_FLAG_DIRECTORY;
+  Fcb->IndexNumber.QuadPart = 0LL;
   Fcb->RefCount = 1;
   Fcb->DirIndex = 0;
   Fcb->RFCB.FileSize.QuadPart = Vcb->CdInfo.RootSize;
@@ -342,6 +342,8 @@ CdfsMakeFCBFromDirEntry(PVCB Vcb,
 			PWSTR LongName,
 			PWSTR ShortName,
 			PDIR_RECORD Record,
+			ULONG DirectorySector,
+			ULONG DirectoryOffset,
 			PFCB * fileFCB)
 {
   WCHAR pathName[MAX_PATH];
@@ -388,6 +390,8 @@ CdfsMakeFCBFromDirEntry(PVCB Vcb,
   {
      CdfsFCBInitializeCache(Vcb, rcFCB);
   }
+  rcFCB->IndexNumber.u.HighPart = DirectorySector;
+  rcFCB->IndexNumber.u.LowPart = DirectoryOffset;
   rcFCB->RefCount++;
   CdfsAddFCBToTable(Vcb, rcFCB);
   *fileFCB = rcFCB;
@@ -507,7 +511,9 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
 	     Record->RecordLength, Record->ExtAttrRecordLength, Record->FileIdLength);
 
       CdfsGetDirEntryName(DeviceExt, Record, Name);
-      DPRINT("Name '%S'\n", Name);
+      DPRINT ("Name '%S'\n", Name);
+      DPRINT ("Sector %lu\n", DirectoryFcb->Entry.ExtentLocationL);
+      DPRINT ("Offset %lu\n", Offset);
 
       RtlInitUnicodeString(&LongName, Name);
       ShortName.Length = 0;
@@ -542,6 +548,8 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
 					   Name,
 					   ShortNameBuffer,
 					   Record,
+					   DirectoryFcb->Entry.ExtentLocationL,
+					   Offset,
 					   FoundFCB);
 
 	  CcUnpinData(Context);

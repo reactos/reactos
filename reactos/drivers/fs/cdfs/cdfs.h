@@ -41,7 +41,11 @@ struct _DIR_RECORD
 
 typedef struct _DIR_RECORD DIR_RECORD, *PDIR_RECORD;
 
-
+/* DIR_RECORD.FileFlags */
+#define FILE_FLAG_HIDDEN    0x01
+#define FILE_FLAG_DIRECTORY 0x02
+#define FILE_FLAG_SYSTEM    0x04
+#define FILE_FLAG_READONLY  0x10
 
 
 /* Volume Descriptor header*/
@@ -182,12 +186,13 @@ typedef struct _FCB
 
   ULONG DirIndex;
 
+  LARGE_INTEGER IndexNumber;	/* HighPart: Parent directory start sector */
+				/* LowPart: Directory record offset in the parent directory file */
+
   LONG RefCount;
   ULONG Flags;
 
   DIR_RECORD Entry;
-
-
 } FCB, *PFCB;
 
 
@@ -312,15 +317,26 @@ CdfsMakeRootFCB(PDEVICE_EXTENSION Vcb);
 PFCB
 CdfsOpenRootFCB(PDEVICE_EXTENSION Vcb);
 
-
+NTSTATUS
+CdfsMakeFCBFromDirEntry(PVCB Vcb,
+			PFCB DirectoryFCB,
+			PWSTR LongName,
+			PWSTR ShortName,
+			PDIR_RECORD Record,
+			ULONG DirectorySector,
+			ULONG DirectoryOffset,
+			PFCB * fileFCB);
 
 NTSTATUS
 CdfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
 			  PFCB Fcb,
 			  PFILE_OBJECT FileObject);
 
-
-
+NTSTATUS
+CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
+		PFCB DirectoryFcb,
+		PWSTR FileToFind,
+		PFCB *FoundFCB);
 
 NTSTATUS
 CdfsGetFCBForFile(PDEVICE_EXTENSION Vcb,

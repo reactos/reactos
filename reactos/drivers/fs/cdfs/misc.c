@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2002 ReactOS Team
+ *  Copyright (C) 2002, 2004 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: misc.c,v 1.5 2002/10/03 18:28:22 sedwards Exp $
+/* $Id: misc.c,v 1.6 2004/03/08 08:51:26 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -128,10 +128,10 @@ CdfsFileFlagsToAttributes(PFCB Fcb,
   /* FIXME: Fix attributes */
 
   *FileAttributes = // FILE_ATTRIBUTE_READONLY |
-		    (Fcb->Entry.FileFlags & 0x01) ? FILE_ATTRIBUTE_HIDDEN : 0 |
-		    (Fcb->Entry.FileFlags & 0x02) ? FILE_ATTRIBUTE_DIRECTORY : 0 |
-		    (Fcb->Entry.FileFlags & 0x04) ? FILE_ATTRIBUTE_SYSTEM : 0 |
-		    (Fcb->Entry.FileFlags & 0x10) ? FILE_ATTRIBUTE_READONLY : 0;
+		    (Fcb->Entry.FileFlags & FILE_FLAG_HIDDEN) ? FILE_ATTRIBUTE_HIDDEN : 0 |
+		    (Fcb->Entry.FileFlags & FILE_FLAG_DIRECTORY) ? FILE_ATTRIBUTE_DIRECTORY : 0 |
+		    (Fcb->Entry.FileFlags & FILE_FLAG_SYSTEM) ? FILE_ATTRIBUTE_SYSTEM : 0 |
+		    (Fcb->Entry.FileFlags & FILE_FLAG_READONLY) ? FILE_ATTRIBUTE_READONLY : 0;
 }
 
 /* EOF */

@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2002 ReactOS Team
+ *  Copyright (C) 2002, 2004 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: finfo.c,v 1.8 2003/09/20 20:31:57 weiden Exp $
+/* $Id: finfo.c,v 1.9 2004/03/08 08:51:26 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -39,14 +39,14 @@
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * FUNCTION: Retrieve the standard file information
+ */
 static NTSTATUS
 CdfsGetStandardInformation(PFCB Fcb,
 			   PDEVICE_OBJECT DeviceObject,
 			   PFILE_STANDARD_INFORMATION StandardInfo,
 			   PULONG BufferLength)
-/*
- * FUNCTION: Retrieve the standard file information
- */
 {
   DPRINT("CdfsGetStandardInformation() called\n");
 
@@ -71,6 +71,9 @@ CdfsGetStandardInformation(PFCB Fcb,
 }
 
 
+/*
+ * FUNCTION: Retrieve the file position information
+ */
 static NTSTATUS
 CdfsGetPositionInformation(PFILE_OBJECT FileObject,
 			   PFILE_POSITION_INFORMATION PositionInfo,
@@ -92,6 +95,9 @@ CdfsGetPositionInformation(PFILE_OBJECT FileObject,
 }
 
 
+/*
+ * FUNCTION: Retrieve the basic file information
+ */
 static NTSTATUS
 CdfsGetBasicInformation(PFILE_OBJECT FileObject,
 			PFCB Fcb,
@@ -122,15 +128,15 @@ CdfsGetBasicInformation(PFILE_OBJECT FileObject,
 }
 
 
+/*
+ * FUNCTION: Retrieve the file name information
+ */
 static NTSTATUS
 CdfsGetNameInformation(PFILE_OBJECT FileObject,
 		       PFCB Fcb,
 		       PDEVICE_OBJECT DeviceObject,
 		       PFILE_NAME_INFORMATION NameInfo,
 		       PULONG BufferLength)
-/*
- * FUNCTION: Retrieve the file name information
- */
 {
   ULONG NameLength;
 
@@ -155,6 +161,9 @@ CdfsGetNameInformation(PFILE_OBJECT FileObject,
 }
 
 
+/*
+ * FUNCTION: Retrieve the internal file information
+ */
 static NTSTATUS
 CdfsGetInternalInformation(PFCB Fcb,
 			   PFILE_INTERNAL_INFORMATION InternalInfo,
@@ -168,8 +177,7 @@ CdfsGetInternalInformation(PFCB Fcb,
   if (*BufferLength < sizeof(FILE_INTERNAL_INFORMATION))
     return(STATUS_BUFFER_OVERFLOW);
 
-  /* FIXME: get a real index, that can be used in a create operation */
-  InternalInfo->IndexNumber.QuadPart = 0;
+  InternalInfo->IndexNumber.QuadPart = Fcb->IndexNumber.QuadPart;
 
   *BufferLength -= sizeof(FILE_INTERNAL_INFORMATION);
 
@@ -177,13 +185,13 @@ CdfsGetInternalInformation(PFCB Fcb,
 }
 
 
+/*
+ * FUNCTION: Retrieve the file network open information
+ */
 static NTSTATUS
 CdfsGetNetworkOpenInformation(PFCB Fcb,
 			      PFILE_NETWORK_OPEN_INFORMATION NetworkInfo,
 			      PULONG BufferLength)
-/*
- * FUNCTION: Retrieve the file network open information
- */
 {
   assert(NetworkInfo);
   assert(Fcb);
@@ -210,14 +218,14 @@ CdfsGetNetworkOpenInformation(PFCB Fcb,
 }
 
 
+/*
+ * FUNCTION: Retrieve all file information
+ */
 static NTSTATUS
 CdfsGetAllInformation(PFILE_OBJECT FileObject,
 		      PFCB Fcb,
 		      PFILE_ALL_INFORMATION Info,
 		      PULONG BufferLength)
-/*
- * FUNCTION: Retrieve the all file information
- */
 {
   ULONG NameLength;
 
@@ -245,11 +253,10 @@ CdfsGetAllInformation(PFILE_OBJECT FileObject,
   Info->StandardInformation.EndOfFile = Fcb->RFCB.FileSize;
   Info->StandardInformation.NumberOfLinks = 0;
   Info->StandardInformation.DeletePending = FALSE;
-  Info->StandardInformation.Directory = Fcb->Entry.FileFlags & 0x02 ? TRUE : FALSE;
+  Info->StandardInformation.Directory = Fcb->Entry.FileFlags & FILE_FLAG_DIRECTORY ? TRUE : FALSE;
 
   /* Internal Information */
-  /* FIXME: get a real index, that can be used in a create operation */
-  Info->InternalInformation.IndexNumber.QuadPart = 0;
+  Info->InternalInformation.IndexNumber.QuadPart = Fcb->IndexNumber.QuadPart;
 
   /* EA Information */
   Info->EaInformation.EaSize = 0;
@@ -277,26 +284,13 @@ CdfsGetAllInformation(PFILE_OBJECT FileObject,
   return STATUS_SUCCESS;
 }
 
-static NTSTATUS
-CdfsSetPositionInformation(PFILE_OBJECT FileObject,
-			   PFILE_POSITION_INFORMATION PositionInfo)
-{
-  DPRINT ("CdfsSetPositionInformation()\n");
 
-  DPRINT ("PositionInfo %x\n", PositionInfo);
-  DPRINT ("Setting position %d\n", PositionInfo->CurrentByteOffset.u.LowPart);
-  memcpy (&FileObject->CurrentByteOffset, &PositionInfo->CurrentByteOffset,
-	  sizeof (LARGE_INTEGER));
-
-  return (STATUS_SUCCESS);
-}
-
-NTSTATUS STDCALL
-CdfsQueryInformation(PDEVICE_OBJECT DeviceObject,
-		     PIRP Irp)
 /*
  * FUNCTION: Retrieve the specified file information
  */
+NTSTATUS STDCALL
+CdfsQueryInformation(PDEVICE_OBJECT DeviceObject,
+		     PIRP Irp)
 {
   FILE_INFORMATION_CLASS FileInformationClass;
   PIO_STACK_LOCATION Stack;
@@ -374,6 +368,7 @@ CdfsQueryInformation(PDEVICE_OBJECT DeviceObject,
       default:
 	DPRINT("Unimplemented information class %u\n", FileInformationClass);
 	Status = STATUS_NOT_SUPPORTED;
+	break;
     }
 
   Irp->IoStatus.Status = Status;
@@ -388,12 +383,32 @@ CdfsQueryInformation(PDEVICE_OBJECT DeviceObject,
   return(Status);
 }
 
+
+/*
+ * FUNCTION: Set the file position information
+ */
+static NTSTATUS
+CdfsSetPositionInformation(PFILE_OBJECT FileObject,
+			   PFILE_POSITION_INFORMATION PositionInfo)
+{
+  DPRINT ("CdfsSetPositionInformation()\n");
+
+  DPRINT ("PositionInfo %x\n", PositionInfo);
+  DPRINT ("Setting position %I64u\n", PositionInfo->CurrentByteOffset.QuadPart);
+
+  FileObject->CurrentByteOffset.QuadPart =
+    PositionInfo->CurrentByteOffset.QuadPart;
+
+  return STATUS_SUCCESS;
+}
+
+
+/*
+ * FUNCTION: Set the specified file information
+ */
 NTSTATUS STDCALL
 CdfsSetInformation(PDEVICE_OBJECT DeviceObject,
 		   PIRP Irp)
-/*
- * FUNCTION: Retrieve the specified file information
- */
 {
   FILE_INFORMATION_CLASS FileInformationClass;
   PIO_STACK_LOCATION Stack;
@@ -414,16 +429,19 @@ CdfsSetInformation(PDEVICE_OBJECT DeviceObject,
 
   switch (FileInformationClass)
     {
-    case FilePositionInformation:
-      Status = CdfsSetPositionInformation(FileObject,
-				          SystemBuffer);
-      break;
-    case FileBasicInformation:
-    case FileRenameInformation:
-      Status = STATUS_NOT_IMPLEMENTED;
-      break;
-    default:
-      Status = STATUS_NOT_SUPPORTED;
+      case FilePositionInformation:
+	Status = CdfsSetPositionInformation(FileObject,
+					    SystemBuffer);
+	break;
+
+      case FileBasicInformation:
+      case FileRenameInformation:
+	Status = STATUS_NOT_IMPLEMENTED;
+	break;
+
+      default:
+	Status = STATUS_NOT_SUPPORTED;
+	break;
     }
 
   Irp->IoStatus.Status = Status;
@@ -431,7 +449,7 @@ CdfsSetInformation(PDEVICE_OBJECT DeviceObject,
 
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-  return(Status);
+  return Status;
 }
 
 /* EOF */
