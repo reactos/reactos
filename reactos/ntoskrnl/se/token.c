@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.35 2004/05/18 12:23:48 ekohl Exp $
+/* $Id: token.c,v 1.36 2004/07/06 22:07:26 gvg Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -989,6 +989,7 @@ NtAdjustPrivilegesToken (IN HANDLE TokenHandle,
   ULONG i;
   ULONG j;
   ULONG k;
+  ULONG Count;
 #if 0
    ULONG a;
    ULONG b;
@@ -1059,9 +1060,11 @@ NtAdjustPrivilegesToken (IN HANDLE TokenHandle,
 	      Token->Privileges[i].Attributes &= ~SE_PRIVILEGE_ENABLED;
 	    }
 	}
+      Status = STATUS_SUCCESS;
     }
   else
     {
+      Count = 0;
       for (i = 0; i < Token->PrivilegeCount; i++)
 	{
 	  for (j = 0; j < NewState->PrivilegeCount; j++)
@@ -1094,9 +1097,11 @@ NtAdjustPrivilegesToken (IN HANDLE TokenHandle,
 		      DPRINT ("New attributes %lx\n",
 			      Token->Privileges[i].Attributes);
 		    }
+                  Count++;
 		}
 	    }
 	}
+      Status = Count < NewState->PrivilegeCount ? STATUS_NOT_ALL_ASSIGNED : STATUS_SUCCESS;
     }
 
   if (ReturnLength != NULL)
@@ -1113,12 +1118,7 @@ NtAdjustPrivilegesToken (IN HANDLE TokenHandle,
 
   DPRINT ("NtAdjustPrivilegesToken() done\n");
 
-  if (k < NewState->PrivilegeCount)
-    {
-      return STATUS_NOT_ALL_ASSIGNED;
-    }
-
-  return STATUS_SUCCESS;
+  return Status;
 }
 
 

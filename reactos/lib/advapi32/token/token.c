@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.10 2004/03/25 11:30:07 ekohl Exp $
+/* $Id: token.c,v 1.11 2004/07/06 22:07:25 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -61,12 +61,18 @@ AdjustTokenPrivileges (HANDLE TokenHandle,
 				    BufferLength,
 				    PreviousState,
 				    (PULONG)ReturnLength);
-  if (!NT_SUCCESS (Status))
+  if (STATUS_NOT_ALL_ASSIGNED == Status)
     {
-      SetLastError (RtlNtStatusToDosError (Status));
+      SetLastError(ERROR_NOT_ALL_ASSIGNED);
+      return TRUE;
+    }
+  if (! NT_SUCCESS(Status))
+    {
+      SetLastError(RtlNtStatusToDosError(Status));
       return FALSE;
     }
 
+  SetLastError(ERROR_SUCCESS); /* AdjustTokenPrivileges is documented to do this */
   return TRUE;
 }
 
