@@ -1,4 +1,4 @@
-/* $Id: caret.c,v 1.4 2003/11/22 01:49:39 rcampbell Exp $
+/* $Id: caret.c,v 1.5 2003/11/22 01:51:05 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -47,7 +47,7 @@ IntSetCaretBlinkTime(UINT uMSeconds)
   return FALSE;
 }
 
-UINT
+UINT FASTCALL
 IntGetCaretBlinkTime(VOID)
 {
 	HKEY hKey;
