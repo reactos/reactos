@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib4bpp.c,v 1.15 2003/07/27 18:37:23 dwelch Exp $ */
+/* $Id: dib4bpp.c,v 1.16 2003/08/02 19:46:52 dwelch Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -381,7 +381,7 @@ DIB_4BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
   PULONG   DestBits;
   BOOL     UsesSource = ((Rop4 & 0xCC0000) >> 2) != (Rop4 & 0x330000);
   BOOL     UsesPattern = ((Rop4 & 0xF00000) >> 4) != (Rop4 & 0x0F0000);  
-  ULONG    RoundedRight = ((DestRect->right + 0x7) & ~0x7);
+  ULONG    RoundedRight = DestRect->right - (DestRect->right & 0x7);
   static const ULONG ExpandSolidColor[16] = 
     {
       0x00000000 /* 0 */,
