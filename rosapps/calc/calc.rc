@@ -1,0 +1,164 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#include "resource.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (Australia) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENA)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_AUS
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_CALC_STANDARD MENU DISCARDABLE 
+BEGIN
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "&Paste\tCtrl+V",              ID_EDIT_PASTE
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "S&tandard",                   ID_VIEW_STANDARD, CHECKED
+        MENUITEM "&Scientific",                 ID_VIEW_SCIENTIFIC
+        MENUITEM SEPARATOR
+        MENUITEM "D&igit grouping",             ID_VIEW_DIGIT_GROUPING
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Help Topics",                ID_HELP_TOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "&About Calculator",           ID_HELP_ABOUT
+    END
+END
+
+IDR_CALC_SCIENTIFIC MENU DISCARDABLE 
+BEGIN
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "&Paste\tCtrl+V",              ID_EDIT_PASTE
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "S&tandard",                   ID_VIEW_STANDARD
+        MENUITEM "&Scientific",                 ID_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "D&igit grouping",             ID_VIEW_DIGIT_GROUPING
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Help Topics",                ID_HELP_TOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "&About Calculator",           ID_HELP_ABOUT
+    END
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_STANDARD DIALOG DISCARDABLE  0, 0, 207, 160
+STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Calculator"
+MENU IDR_CALC_STANDARD
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "1",IDC_BUTTON1,"Button",BS_OWNERDRAW | WS_TABSTOP,47,99,
+                    19,17
+    CONTROL         "2",IDC_BUTTON2,"Button",BS_OWNERDRAW | WS_TABSTOP,69,99,
+                    19,17
+    EDITTEXT        IDC_EDIT1,7,7,193,15,ES_RIGHT | ES_AUTOHSCROLL | 
+                    ES_WANTRETURN
+END
+
+IDD_SCIENTIFIC DIALOG DISCARDABLE  0, 0, 325, 156
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Calculator"
+MENU IDR_CALC_SCIENTIFIC
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "1",IDC_BUTTON1,"Button",BS_OWNERDRAW | WS_TABSTOP,47,99,
+                    19,17
+    CONTROL         "2",IDC_BUTTON2,"Button",BS_OWNERDRAW | WS_TABSTOP,69,99,
+                    19,17
+    EDITTEXT        IDC_EDIT1,7,7,310,15,ES_RIGHT | ES_AUTOHSCROLL | 
+                    ES_WANTRETURN
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_STANDARD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 200
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 153
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English (Australia) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
