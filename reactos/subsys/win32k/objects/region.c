@@ -707,45 +707,43 @@ empty:
 HRGN FASTCALL REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lpPt)
 {
   PROSRGNDATA objSrc, rgnDst;
-  HRGN hNewDst, hRet = NULL;
-  GDIMULTILOCK Lock[2] = {{hDst, 0, GDI_OBJECT_TYPE_REGION}, {hSrc, 0, GDI_OBJECT_TYPE_REGION}};
+  HRGN hRet = NULL;
+  POINT pt = { 0, 0 };
 
   if( !hDst )
     {
-      if( !( hNewDst = RGNDATA_AllocRgn(1) ) )
+      if( !( hDst = RGNDATA_AllocRgn(1) ) )
 	{
 	  return 0;
 	}
-      Lock[0].hObj = hNewDst;
     }
 
-  if ( !GDIOBJ_LockMultipleObj(Lock, sizeof(Lock)/sizeof(Lock[0])) )
-    {
-      DPRINT1("GDIOBJ_LockMultipleObj() failed\n" );
-      return 0;
-    }
-  rgnDst = Lock[0].pObj;
-  objSrc = Lock[1].pObj;
-
-  if( objSrc && rgnDst )
+  rgnDst = RGNDATA_LockRgn(hDst);
+  if(rgnDst == NULL)
   {
-    if(rgnDst)
-    {
-      POINT pt = { 0, 0 };
-
-	  if(!lpPt)
-	  	lpPt = &pt;
-
-      if(REGION_CropAndOffsetRegion(lpPt, lpRect, objSrc, rgnDst) == FALSE)
-	  { // ve failed cleanup and return
-		hRet = NULL;
-      }
-      else{ // ve are fine. unlock the correct pointer and return correct handle
-		hRet = Lock[0].hObj;
-	  }
-    }
+    return NULL;
   }
-  GDIOBJ_UnlockMultipleObj(Lock, sizeof(Lock)/sizeof(Lock[0]));
+  
+  objSrc = RGNDATA_LockRgn(hSrc);
+  if(objSrc == NULL)
+  {
+    RGNDATA_UnlockRgn(hDst);
+    return NULL;
+  }
+  if(!lpPt)
+  	lpPt = &pt;
+
+    if(REGION_CropAndOffsetRegion(lpPt, lpRect, objSrc, rgnDst) == FALSE)
+  { // ve failed cleanup and return
+	hRet = NULL;
+    }
+    else{ // ve are fine. unlock the correct pointer and return correct handle
+	hRet = hDst;
+  }
+
+  RGNDATA_UnlockRgn(hSrc);
+  RGNDATA_UnlockRgn(hDst);
+  
   return hRet;
 }
 
@@ -1957,21 +1955,12 @@ NtGdiCombineRgn(HRGN  hDest,
                     INT  CombineMode)
 {
   INT result = ERROR;
-  GDIMULTILOCK Lock[3] = {{hDest, 0, GDI_OBJECT_TYPE_REGION}, {hSrc1, 0, GDI_OBJECT_TYPE_REGION}, {hSrc2, 0, GDI_OBJECT_TYPE_REGION}};
   PROSRGNDATA destRgn, src1Rgn, src2Rgn;
-
-  if ( !GDIOBJ_LockMultipleObj(Lock, sizeof(Lock)/sizeof(Lock[0])) )
-    {
-      DPRINT1("GDIOBJ_LockMultipleObj() failed\n" );
-      return ERROR;
-    }
-
-  destRgn = (PROSRGNDATA) Lock[0].pObj;
-  src1Rgn = (PROSRGNDATA) Lock[1].pObj;
-  src2Rgn = (PROSRGNDATA) Lock[2].pObj;
-
+  
+  destRgn = RGNDATA_LockRgn(hDest);
   if( destRgn )
     {
+      src1Rgn = RGNDATA_LockRgn(hSrc1);
       if( src1Rgn )
 	  {
 	    if (CombineMode == RGN_COPY)
@@ -1982,7 +1971,8 @@ NtGdiCombineRgn(HRGN  hDest,
 	      }
 	    else
 	    {
-	      if( src2Rgn )
+              src2Rgn = RGNDATA_LockRgn(hSrc2);
+              if( src2Rgn )
 		{
 		  switch (CombineMode)
 		    {
@@ -1999,17 +1989,26 @@ NtGdiCombineRgn(HRGN  hDest,
 			REGION_SubtractRegion(destRgn, src1Rgn, src2Rgn);
 			break;
 		    }
+		  RGNDATA_UnlockRgn(hSrc2);
 		  result = destRgn->rdh.iType;
 		}
+		else
+                {
+                  DPRINT1("NtGdiCombineRgn requires hSrc2 != NULL for combine mode %d!\n", CombineMode);
+                }
 	    }
+
+            RGNDATA_UnlockRgn(hSrc1);
 	  }
+
+      RGNDATA_UnlockRgn(hDest);
     }
   else
     {
       DPRINT("NtGdiCombineRgn: hDest unavailable\n");
       result = ERROR;
     }
-  GDIOBJ_UnlockMultipleObj(Lock, sizeof(Lock)/sizeof(Lock[0]));
+
   return result;
 }
 

@@ -377,28 +377,31 @@ GDIOBJ_AllocObj(ULONG ObjectType)
 
       RtlZeroMemory(ObjectBody, GetObjectSize(ObjectType));
 
-      TypeInfo = (ObjectType & 0xFFFF0000) | (ObjectType >> 16);
+      TypeInfo = (ObjectType & GDI_HANDLE_TYPE_MASK) | (ObjectType >> 16);
 
       FreeEntry = InterlockedPopEntrySList(&HandleTable->FreeEntriesHead);
       if(FreeEntry != NULL)
       {
         HANDLE PrevProcId;
         UINT Index;
-        HGDIOBJ Handle;
 
         /* calculate the entry from the address of the entry in the free slot array */
         Index = ((ULONG_PTR)FreeEntry - (ULONG_PTR)&HandleTable->FreeEntries[0]) /
                 sizeof(HandleTable->FreeEntries[0]);
         Entry = &HandleTable->Entries[Index];
-        Handle = (HGDIOBJ)((Index & 0xFFFF) | (ObjectType & 0xFFFF0000));
 
 LockHandle:
         PrevProcId = InterlockedCompareExchangePointer(&Entry->ProcessId, LockedProcessId, 0);
         if(PrevProcId == NULL)
         {
+          HGDIOBJ Handle;
+          
           ASSERT(Entry->KernelData == NULL);
 
           Entry->KernelData = ObjectBody;
+          
+          /* copy the reuse-counter */
+          TypeInfo |= Entry->Type & GDI_HANDLE_REUSE_MASK;
 
           /* we found a free entry, no need to exchange this field atomically
              since we're holding the lock */
@@ -416,6 +419,7 @@ LockHandle:
           {
             InterlockedIncrement(&W32Process->GDIObjects);
           }
+          Handle = (HGDIOBJ)((Index & 0xFFFF) | (TypeInfo & (GDI_HANDLE_TYPE_MASK | GDI_HANDLE_REUSE_MASK)));
 
           DPRINT("GDIOBJ_AllocObj: 0x%x ob: 0x%x\n", Handle, ObjectBody);
           return Handle;
@@ -425,7 +429,7 @@ LockHandle:
 #ifdef GDI_DEBUG
           if(++Attempts > 20)
           {
-            DPRINT1("[%d]Waiting on 0x%x\n", Attempts, Handle);
+            DPRINT1("[%d]Waiting on handle in index 0x%x\n", Attempts, Index);
           }
 #endif
           /* damn, someone is trying to lock the object even though it doesn't
@@ -508,7 +512,8 @@ LockHandle:
   PrevProcId = InterlockedCompareExchangePointer(&Entry->ProcessId, LockedProcessId, ProcessId);
   if(PrevProcId == ProcessId)
   {
-    if(Entry->Type != 0 && Entry->KernelData != NULL && (ExpectedType == 0 || ((Entry->Type << 16) == ExpectedType)))
+    if(Entry->Type != 0 && Entry->KernelData != NULL &&
+       (ExpectedType == 0 || ((Entry->Type << 16) == ExpectedType)))
     {
       PGDIOBJHDR GdiHdr;
 
@@ -520,8 +525,8 @@ LockHandle:
         PW32PROCESS W32Process = PsGetWin32Process();
         ULONG Type = Entry->Type << 16;
 
-        /* Clear the type field so when unlocking the handle it gets finally deleted */
-        Entry->Type = 0;
+        /* Clear the type field so when unlocking the handle it gets finally deleted and increment reuse counter */
+        Entry->Type = ((Entry->Type >> GDI_HANDLE_REUSECNT_SHIFT) + 1) << GDI_HANDLE_REUSECNT_SHIFT;
         Entry->KernelData = NULL;
 
         /* unlock the handle slot */
@@ -551,8 +556,9 @@ LockHandle:
       else
       {
         /* the object is currently locked. just clear the type field so when the
-           object gets unlocked it will be finally deleted from the table. */
-        Entry->Type = 0;
+           object gets unlocked it will be finally deleted from the table. Also
+           incrment the reuse counter! */
+        Entry->Type = ((Entry->Type >> GDI_HANDLE_REUSECNT_SHIFT) + 1) << GDI_HANDLE_REUSECNT_SHIFT;
 
         /* unlock the handle slot */
         InterlockedExchangePointer(&Entry->ProcessId, NULL);
@@ -563,7 +569,7 @@ LockHandle:
     }
     else
     {
-      if(Entry->Type != 0)
+      if((Entry->Type & ~GDI_HANDLE_REUSE_MASK) != 0)
       {
         DPRINT1("Attempted to delete object 0x%x, type mismatch (0x%x : 0x%x)\n", hObj, ObjectType, ExpectedType);
       }
@@ -607,85 +613,6 @@ LockHandle:
   }
 
   return FALSE;
-}
-
-/*!
- * Lock multiple objects. Use this function when you need to lock multiple objects and some of them may be
- * duplicates. You should use this function to avoid trying to lock the same object twice!
- *
- * \param	pList 	pointer to the list that contains handles to the objects. You should set hObj and ObjectType fields.
- * \param	nObj	number of objects to lock
- * \return	for each entry in pList this function sets pObj field to point to the object.
- *
- * \note this function uses an O(n^2) algoritm because we shouldn't need to call it with more than 3 or 4 objects.
-*/
-BOOL INTERNAL_CALL
-GDIOBJ_LockMultipleObj(PGDIMULTILOCK pList, INT nObj)
-{
-  INT i, j;
-  ASSERT( pList );
-  /* FIXME - check for "invalid" handles */
-  /* go through the list checking for duplicate objects */
-  for (i = 0; i < nObj; i++)
-    {
-      pList[i].pObj = NULL;
-      for (j = 0; j < i; j++)
-	{
-	  if (pList[i].hObj == pList[j].hObj)
-	    {
-	      /* already locked, so just copy the pointer to the object */
-	      pList[i].pObj = pList[j].pObj;
-	      break;
-	    }
-	}
-
-      if (NULL == pList[i].pObj)
-	{
-	  /* object hasn't been locked, so lock it. */
-	  if (NULL != pList[i].hObj)
-	    {
-	      pList[i].pObj = GDIOBJ_LockObj(pList[i].hObj, pList[i].ObjectType);
-	    }
-	}
-    }
-
-  return TRUE;
-}
-
-/*!
- * Unlock multiple objects. Use this function when you need to unlock multiple objects and some of them may be
- * duplicates.
- *
- * \param	pList 	pointer to the list that contains handles to the objects. You should set hObj and ObjectType fields.
- * \param	nObj	number of objects to lock
- *
- * \note this function uses O(n^2) algoritm because we shouldn't need to call it with more than 3 or 4 objects.
-*/
-BOOL INTERNAL_CALL
-GDIOBJ_UnlockMultipleObj(PGDIMULTILOCK pList, INT nObj)
-{
-  INT i, j;
-  ASSERT(pList);
-
-  /* go through the list checking for duplicate objects */
-  for (i = 0; i < nObj; i++)
-    {
-      if (NULL != pList[i].pObj)
-	{
-	  for (j = i + 1; j < nObj; j++)
-	    {
-	      if ((pList[i].pObj == pList[j].pObj))
-		{
-		  /* set the pointer to zero for all duplicates */
-		  pList[j].pObj = NULL;
-		}
-	    }
-	  GDIOBJ_UnlockObj(pList[i].hObj);
-	  pList[i].pObj = NULL;
-	}
-    }
-
-  return TRUE;
 }
 
 /*!
@@ -744,11 +671,11 @@ GDI_CleanupForProcess (struct _EPROCESS *Process)
 
     End = &HandleTable->Entries[GDI_HANDLE_COUNT];
     for(Entry = &HandleTable->Entries[RESERVE_ENTRIES_COUNT];
-        Entry < End;
+        Entry != End;
         Entry++, Index++)
     {
       /* ignore the lock bit */
-      if((HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1) == ProcId && Entry->Type != 0)
+      if((HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1) == ProcId && (Entry->Type & ~GDI_HANDLE_REUSE_MASK) != 0)
       {
         HGDIOBJ ObjectHandle;
 
@@ -824,7 +751,8 @@ LockHandle:
     /* we're locking an object that belongs to our process or it's a global
        object if ProcessId == 0 here. ProcessId can only be 0 here if it previously
        failed to lock the object and it turned out to be a global object. */
-    if(EntryType != 0 && Entry->KernelData != NULL && (ExpectedType == 0 || (EntryType == ExpectedType)))
+    if(EntryType != 0 && Entry->KernelData != NULL &&
+       (ExpectedType == 0 || (EntryType == ExpectedType)))
     {
       PETHREAD PrevThread;
       PGDIOBJHDR GdiHdr;
@@ -870,14 +798,15 @@ LockHandle:
     {
       InterlockedExchangePointer(&Entry->ProcessId, PrevProcId);
 
-      if(EntryType == 0)
+      if((EntryType & ~GDI_HANDLE_REUSE_MASK) == 0)
       {
         DPRINT1("Attempted to lock object 0x%x that is deleted!\n", hObj);
         KeRosDumpStackFrames ( NULL, 20 );
       }
       else
       {
-        DPRINT1("Attempted to lock object 0x%x, type mismatch (0x%x : 0x%x)\n", hObj, EntryType, ExpectedType);
+        DPRINT1("Attempted to lock object 0x%x, type mismatch (0x%x : 0x%x)\n",
+                hObj, EntryType & ~GDI_HANDLE_REUSE_MASK, ExpectedType & ~GDI_HANDLE_REUSE_MASK);
         KeRosDumpStackFrames ( NULL, 20 );
       }
 #ifdef GDI_DEBUG
@@ -981,7 +910,7 @@ LockHandle:
 #endif
         }
 
-        if(Entry->Type == 0 && GdiHdr->Locks == 0)
+        if((Entry->Type & ~GDI_HANDLE_REUSE_MASK) == 0 && GdiHdr->Locks == 0)
         {
           PPAGED_LOOKASIDE_LIST LookasideList;
           PW32PROCESS W32Process = PsGetWin32Process();
@@ -1095,7 +1024,7 @@ GDIOBJ_OwnedByCurrentProcess(HGDIOBJ ObjectHandle)
 
     Entry = GDI_HANDLE_GET_ENTRY(HandleTable, ObjectHandle);
     Ret = Entry->KernelData != NULL &&
-          Entry->Type != 0 &&
+          (Entry->Type & ~GDI_HANDLE_REUSE_MASK) != 0 &&
           (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1) == ProcessId;
 
     return Ret;
@@ -1143,6 +1072,8 @@ LockHandle:
          exchange it.*/
       NewType = GDI_HANDLE_GET_TYPE(*hObj);
       NewType |= NewType >> 16;
+      NewType |= (ULONG_PTR)(*hObj) & GDI_HANDLE_REUSE_MASK;
+      
       /* This is the type that the object should have right now, save it */
       OldType = NewType;
       /* As the object should be a stock object, set it's flag, but only in the upper 16 bits */
@@ -1268,7 +1199,7 @@ LockHandle:
     {
       PETHREAD PrevThread;
 
-      if(Entry->Type != 0 && Entry->KernelData != NULL)
+      if((Entry->Type & ~GDI_HANDLE_REUSE_MASK) != 0 && Entry->KernelData != NULL)
       {
         PGDIOBJHDR GdiHdr = GDIBdyToHdr(Entry->KernelData);
 
@@ -1401,7 +1332,7 @@ LockHandleFrom:
       PETHREAD PrevThread;
       PGDIOBJHDR GdiHdr;
 
-      if(FromEntry->Type != 0 && FromEntry->KernelData != NULL)
+      if((FromEntry->Type & ~GDI_HANDLE_REUSE_MASK) != 0 && FromEntry->KernelData != NULL)
       {
         GdiHdr = GDIBdyToHdr(FromEntry->KernelData);
 
