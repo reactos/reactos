@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.68 2003/12/26 00:58:33 weiden Exp $
+/* $Id: winpos.c,v 1.69 2003/12/26 01:14:10 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -200,7 +200,10 @@ WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT pt, PRECT RestoreRect)
       RECT WorkArea;
       PDESKTOP_OBJECT Desktop = PsGetWin32Thread()->Desktop; /* Or rather get it from the window? */
       
-      WorkArea = *IntGetDesktopWorkArea(Desktop);
+      if(WindowObject->Parent == NULL)
+        WorkArea = *IntGetDesktopWorkArea(Desktop);
+      else
+        WorkArea = WindowObject->Parent->ClientRect;
       
       WindowObject->InternalPos = ExAllocatePool(NonPagedPool, sizeof(INTERNALPOS));
       if(!WindowObject->InternalPos)
@@ -362,7 +365,10 @@ WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
   RECT WorkArea;
   PDESKTOP_OBJECT Desktop = PsGetWin32Thread()->Desktop; /* Or rather get it from the window? */
   
-  WorkArea = *IntGetDesktopWorkArea(Desktop);
+  if(Window->Parent == NULL)
+    WorkArea = *IntGetDesktopWorkArea(Desktop);
+  else
+    WorkArea = Window->Parent->ClientRect;
 
   /* Get default values. */
   MinMax.ptMaxSize.x = WorkArea.right - WorkArea.left;
