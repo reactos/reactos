@@ -1,4 +1,4 @@
-/* $Id: w32call.c,v 1.14 2004/08/15 16:39:10 chorns Exp $
+/* $Id: w32call.c,v 1.14.2.1 2004/08/27 10:44:26 hbirr Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -277,6 +277,9 @@ NtW32Call (IN ULONG RoutineIndex,
       AssignedStack = CONTAINING_RECORD(StackEntry, NTW32CALL_CALLBACK_STACK, 
 					ListEntry);
       NewStack = AssignedStack->BaseAddress;
+      
+      MmUpdatePageDir(PsGetCurrentProcess(), NewStack, StackSize);
+
     }
   /* FIXME: Need to check whether we were interrupted from v86 mode. */
   memcpy((char*)NewStack + StackSize - sizeof(KTRAP_FRAME), Thread->Tcb.TrapFrame,
