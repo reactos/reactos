@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.11 2000/09/27 01:21:27 ekohl Exp $
+/* $Id: reg.c,v 1.12 2001/07/01 17:54:07 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -19,7 +19,7 @@
 
 /* GLOBALS *******************************************************************/
 
-#define MAX_DEFAULT_HANDLES   7
+#define MAX_DEFAULT_HANDLES   6
 
 static CRITICAL_SECTION HandleTableCS;
 static HANDLE DefaultHandleTable[MAX_DEFAULT_HANDLES];
@@ -30,7 +30,10 @@ static HANDLE DefaultHandleTable[MAX_DEFAULT_HANDLES];
 static NTSTATUS MapDefaultKey (PHKEY ParentKey, HKEY Key);
 static VOID CloseDefaultKeys(VOID);
 
+static NTSTATUS OpenClassesRootKey(PHANDLE KeyHandle);
 static NTSTATUS OpenLocalMachineKey (PHANDLE KeyHandle);
+static NTSTATUS OpenUsersKey (PHANDLE KeyHandle);
+static NTSTATUS OpenCurrentConfigKey(PHANDLE KeyHandle);
 
 
 /* FUNCTIONS *****************************************************************/
@@ -67,8 +70,8 @@ RegCleanup(VOID)
 
 
 static NTSTATUS
-MapDefaultKey (PHKEY RealKey,
-               HKEY Key)
+MapDefaultKey(PHKEY RealKey,
+	      HKEY Key)
 {
    PHANDLE Handle;
    ULONG Index;
@@ -96,8 +99,29 @@ MapDefaultKey (PHKEY RealKey,
         /* create/open the default handle */
         switch (Index)
           {
-            case 2: /*HKEY_LOCAL_MACHINE */
+            case 0: /* HKEY_CLASSES_ROOT */
+              Status = OpenClassesRootKey(Handle);
+              break;
+
+            case 1: /* HKEY_CURRENT_USER */
+              Status = RtlOpenCurrentUser(KEY_ALL_ACCESS,
+					  Handle);
+              break;
+
+            case 2: /* HKEY_LOCAL_MACHINE */
               Status = OpenLocalMachineKey(Handle);
+              break;
+
+            case 3: /* HKEY_USERS */
+              Status = OpenUsersKey(Handle);
+              break;
+#if 0
+            case 4: /* HKEY_PERFORMANCE_DATA */
+              Status = OpenPerformanceDataKey(Handle);
+              break;
+#endif
+            case 5: /* HKEY_CURRENT_CONFIG */
+              Status = OpenCurrentConfigKey(Handle);
               break;
 
             default:
@@ -117,7 +141,8 @@ MapDefaultKey (PHKEY RealKey,
 }
 
 
-static VOID CloseDefaultKeys (VOID)
+static VOID
+CloseDefaultKeys(VOID)
 {
    ULONG i;
 
@@ -137,172 +162,272 @@ static VOID CloseDefaultKeys (VOID)
 
 
 static NTSTATUS
-OpenLocalMachineKey (PHANDLE KeyHandle)
+OpenClassesRootKey(PHANDLE KeyHandle)
 {
-   OBJECT_ATTRIBUTES Attributes;
-   UNICODE_STRING KeyName;
+  OBJECT_ATTRIBUTES Attributes;
+  UNICODE_STRING KeyName;
 
-   DPRINT("OpenLocalMachineKey()\n");
+  DPRINT("OpenClassesRootKey()\n");
 
-   RtlInitUnicodeString(&KeyName,
-                        L"\\Registry\\Machine");
+  RtlInitUnicodeString(&KeyName,
+		       L"\\Registry\\Machine\\Software\\CLASSES");
 
-   InitializeObjectAttributes(&Attributes,
-                              &KeyName,
-                              OBJ_CASE_INSENSITIVE,
-                              NULL,
-                              NULL);
+  InitializeObjectAttributes(&Attributes,
+			     &KeyName,
+			     OBJ_CASE_INSENSITIVE,
+			     NULL,
+			     NULL);
 
-   return (NtOpenKey (KeyHandle,
-                      KEY_ALL_ACCESS,
-                      &Attributes));
+  return(NtOpenKey(KeyHandle,
+		   KEY_ALL_ACCESS,
+		   &Attributes));
 }
 
+
+static NTSTATUS
+OpenLocalMachineKey(PHANDLE KeyHandle)
+{
+  OBJECT_ATTRIBUTES Attributes;
+  UNICODE_STRING KeyName;
+
+  DPRINT("OpenLocalMachineKey()\n");
+
+  RtlInitUnicodeString(&KeyName,
+		       L"\\Registry\\Machine");
+
+  InitializeObjectAttributes(&Attributes,
+			     &KeyName,
+			     OBJ_CASE_INSENSITIVE,
+			     NULL,
+			     NULL);
+
+  return(NtOpenKey(KeyHandle,
+		   KEY_ALL_ACCESS,
+		   &Attributes));
+}
+
+
+static NTSTATUS
+OpenUsersKey(PHANDLE KeyHandle)
+{
+  OBJECT_ATTRIBUTES Attributes;
+  UNICODE_STRING KeyName;
+
+  DPRINT("OpenUsersKey()\n");
+
+  RtlInitUnicodeString(&KeyName,
+		       L"\\Registry\\User");
+
+  InitializeObjectAttributes(&Attributes,
+			     &KeyName,
+			     OBJ_CASE_INSENSITIVE,
+			     NULL,
+			     NULL);
+
+  return(NtOpenKey(KeyHandle,
+		   KEY_ALL_ACCESS,
+		   &Attributes));
+}
+
+
+static NTSTATUS
+OpenCurrentConfigKey(PHANDLE KeyHandle)
+{
+  OBJECT_ATTRIBUTES Attributes;
+  UNICODE_STRING KeyName;
+
+  DPRINT("OpenCurrentConfigKey()\n");
+
+  RtlInitUnicodeString(&KeyName,
+		       L"\\Registry\\Machine\\System\\CurrentControlSet\\Hardware Profiles\\Current");
+
+  InitializeObjectAttributes(&Attributes,
+			     &KeyName,
+			     OBJ_CASE_INSENSITIVE,
+			     NULL,
+			     NULL);
+
+  return(NtOpenKey(KeyHandle,
+		   KEY_ALL_ACCESS,
+		   &Attributes));
+}
 
 /************************************************************************
  *	RegCloseKey
  */
-LONG
-STDCALL
-RegCloseKey(
-	HKEY	hKey
-	)
+LONG STDCALL
+RegCloseKey(HKEY hKey)
 {
-	NTSTATUS Status;
+  NTSTATUS Status;
 
-	/* don't close null handle or a pseudo handle */
-	if ((!hKey) || (((ULONG)hKey & 0xF0000000) == 0x80000000))
-		return ERROR_INVALID_HANDLE;
+  /* don't close null handle or a pseudo handle */
+  if ((!hKey) || (((ULONG)hKey & 0xF0000000) == 0x80000000))
+    return ERROR_INVALID_HANDLE;
 
-	Status = NtClose (hKey);
-	if (!NT_SUCCESS(Status))
-	{
-		LONG ErrorCode = RtlNtStatusToDosError(Status);
+  Status = NtClose (hKey);
+  if (!NT_SUCCESS(Status))
+    {
+      LONG ErrorCode = RtlNtStatusToDosError(Status);
 
-		SetLastError (ErrorCode);
-		return ErrorCode;
-	}
+      SetLastError (ErrorCode);
+      return ErrorCode;
+    }
 
-	return ERROR_SUCCESS;
+  return ERROR_SUCCESS;
 }
 
 
 /************************************************************************
  *	RegConnectRegistryA
  */
-LONG
-STDCALL
-RegConnectRegistryA(
-	LPSTR	lpMachineName,
-	HKEY	hKey,
-	PHKEY	phkResult
-	)
+LONG STDCALL
+RegConnectRegistryA(LPSTR lpMachineName,
+		    HKEY hKey,
+		    PHKEY phkResult)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /************************************************************************
  *	RegConnectRegistryW
  */
-LONG
-STDCALL
-RegConnectRegistryW(
-	LPWSTR	lpMachineName,
-	HKEY	hKey,
-	PHKEY	phkResult
-	)
+LONG STDCALL
+RegConnectRegistryW(LPWSTR lpMachineName,
+		    HKEY hKey,
+		    PHKEY phkResult)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /************************************************************************
  *	RegCreateKeyA
  */
-LONG
-STDCALL
-RegCreateKeyA(
-	HKEY	hKey,
-	LPCSTR	lpSubKey,
-	PHKEY	phkResult
-	)
+LONG STDCALL
+RegCreateKeyA(HKEY hKey,
+	      LPCSTR lpSubKey,
+	      PHKEY phkResult)
 {
-	return RegCreateKeyExA(hKey,
-		lpSubKey,
-		0,
-		NULL,
-		0,
-		KEY_ALL_ACCESS,
-		NULL,
-		phkResult,
-		NULL);
+  return(RegCreateKeyExA(hKey,
+			 lpSubKey,
+			 0,
+			 NULL,
+			 0,
+			 KEY_ALL_ACCESS,
+			 NULL,
+			 phkResult,
+			 NULL));
 }
 
 
 /************************************************************************
  *	RegCreateKeyW
  */
-LONG
-STDCALL
-RegCreateKeyW(
-	HKEY	hKey,
-	LPCWSTR lpSubKey,
-	PHKEY	phkResult
-	)
+LONG STDCALL
+RegCreateKeyW(HKEY hKey,
+	      LPCWSTR lpSubKey,
+	      PHKEY phkResult)
 {
-	return RegCreateKeyExW(hKey,
-		lpSubKey,
-		0,
-		NULL,
-		0,
-		KEY_ALL_ACCESS,
-		NULL,
-		phkResult,
-		NULL);
+  return(RegCreateKeyExW(hKey,
+			 lpSubKey,
+			 0,
+			 NULL,
+			 0,
+			 KEY_ALL_ACCESS,
+			 NULL,
+			 phkResult,
+			 NULL));
 }
 
 
 /************************************************************************
  *	RegCreateKeyExA
  */
-LONG
-STDCALL
-RegCreateKeyExA(
-	HKEY			hKey,
-	LPCSTR			lpSubKey,
-	DWORD			Reserved,
-	LPSTR			lpClass,
-	DWORD			dwOptions,
-	REGSAM			samDesired,
-	LPSECURITY_ATTRIBUTES	lpSecurityAttributes,
-	PHKEY			phkResult,
-	LPDWORD			lpdwDisposition
-	)
+LONG STDCALL
+RegCreateKeyExA(HKEY hKey,
+		LPCSTR lpSubKey,
+		DWORD Reserved,
+		LPSTR lpClass,
+		DWORD dwOptions,
+		REGSAM samDesired,
+		LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+		PHKEY phkResult,
+		LPDWORD lpdwDisposition)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
+  UNICODE_STRING SubKeyString;
+  UNICODE_STRING ClassString;
+  OBJECT_ATTRIBUTES Attributes;
+  NTSTATUS Status;
+  HKEY ParentKey;
+
+  DPRINT("RegCreateKeyExW() called\n");
+
+  /* get the real parent key */
+  Status = MapDefaultKey(&ParentKey,
+			 hKey);
+  if (!NT_SUCCESS(Status))
+    {
+      LONG ErrorCode = RtlNtStatusToDosError(Status);
+
+      SetLastError(ErrorCode);
+      return(ErrorCode);
+    }
+
+  DPRINT("ParentKey %x\n", (ULONG)ParentKey);
+
+  if (lpClass != NULL)
+    RtlCreateUnicodeStringFromAsciiz(&ClassString,
+				     lpClass);
+  RtlCreateUnicodeStringFromAsciiz(&SubKeyString,
+				   (LPSTR)lpSubKey);
+
+  InitializeObjectAttributes(&Attributes,
+			     &SubKeyString,
+			     OBJ_CASE_INSENSITIVE,
+			     (HANDLE)ParentKey,
+			     (PSECURITY_DESCRIPTOR)lpSecurityAttributes);
+
+  Status = NtCreateKey(phkResult,
+		       samDesired,
+		       &Attributes,
+		       0,
+		       (lpClass == NULL)? NULL : &ClassString,
+		       dwOptions,
+		       (PULONG)lpdwDisposition);
+
+  RtlFreeUnicodeString(&SubKeyString);
+  if (lpClass != NULL)
+    RtlFreeUnicodeString(&ClassString);
+
+  DPRINT("Status %x\n", Status);
+  if (!NT_SUCCESS(Status))
+    {
+      LONG ErrorCode = RtlNtStatusToDosError(Status);
+
+      SetLastError (ErrorCode);
+      return ErrorCode;
+    }
+
+  return(ERROR_SUCCESS);
 }
 
 
 /************************************************************************
  *	RegCreateKeyExW
  */
-LONG
-STDCALL
-RegCreateKeyExW(
-	HKEY			hKey,
-	LPCWSTR			lpSubKey,
-	DWORD			Reserved,
-	LPWSTR			lpClass,
-	DWORD			dwOptions,
-	REGSAM			samDesired,
-	LPSECURITY_ATTRIBUTES	lpSecurityAttributes,
-	PHKEY			phkResult,
-	LPDWORD			lpdwDisposition
-	)
+LONG STDCALL
+RegCreateKeyExW(HKEY			hKey,
+		LPCWSTR			lpSubKey,
+		DWORD			Reserved,
+		LPWSTR			lpClass,
+		DWORD			dwOptions,
+		REGSAM			samDesired,
+		LPSECURITY_ATTRIBUTES	lpSecurityAttributes,
+		PHKEY			phkResult,
+		LPDWORD			lpdwDisposition)
 {
 	UNICODE_STRING SubKeyString;
 	UNICODE_STRING ClassString;
@@ -817,14 +942,36 @@ RegEnumValueW(
 /************************************************************************
  *	RegFlushKey
  */
-LONG
-STDCALL
-RegFlushKey(
-	HKEY	hKey
-	)
+LONG STDCALL
+RegFlushKey(HKEY hKey)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
+  HANDLE KeyHandle;
+  NTSTATUS Status;
+  LONG ErrorCode;
+  
+  if (hKey == HKEY_PERFORMANCE_DATA)
+    return(ERROR_SUCCESS);
+
+  Status = MapDefaultKey(&KeyHandle,
+			 hKey);
+  if (!NT_SUCCESS(Status))
+    {
+      ErrorCode = RtlNtStatusToDosError(Status);
+
+      SetLastError(ErrorCode);
+      return(ErrorCode);
+    }
+
+  Status = NtFlushKey(KeyHandle);
+  if (!NT_SUCCESS(Status))
+    {
+      ErrorCode = RtlNtStatusToDosError(Status);
+
+      SetLastError(ErrorCode);
+      return(ErrorCode);
+    }
+
+  return(ERROR_SUCCESS);
 }
 
 
@@ -899,16 +1046,50 @@ RegNotifyChangeKeyValue(
 /************************************************************************
  *	RegOpenKeyA
  */
-LONG
-STDCALL
-RegOpenKeyA(
-	HKEY	hKey,
-	LPCSTR	lpSubKey,
-	PHKEY	phkResult
-	)
+LONG STDCALL
+RegOpenKeyA(HKEY hKey,
+	    LPCSTR lpSubKey,
+	    PHKEY phkResult)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING SubKeyString;
+  HANDLE KeyHandle;
+  LONG ErrorCode;
+  NTSTATUS Status;
+
+  Status = MapDefaultKey(&KeyHandle,
+			 hKey);
+  if (!NT_SUCCESS(Status))
+    {
+      ErrorCode = RtlNtStatusToDosError(Status);
+
+      SetLastError(ErrorCode);
+      return(ErrorCode);
+    }
+
+  RtlCreateUnicodeStringFromAsciiz(&SubKeyString,
+				   (LPSTR)lpSubKey);
+
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &SubKeyString,
+			     OBJ_CASE_INSENSITIVE,
+			     KeyHandle,
+			     NULL);
+
+  Status = NtOpenKey(phkResult,
+		     KEY_ALL_ACCESS,
+		     &ObjectAttributes);
+
+  RtlFreeUnicodeString(&SubKeyString);
+
+  if (!NT_SUCCESS(Status))
+    {
+      ErrorCode = RtlNtStatusToDosError(Status);
+
+      SetLastError(ErrorCode);
+      return(ErrorCode);
+    }
+  return(ERROR_SUCCESS);
 }
 
 
@@ -970,60 +1151,102 @@ RegOpenKeyW (
 /************************************************************************
  *	RegOpenKeyExA
  */
-LONG
-STDCALL
-RegOpenKeyExA(
-	HKEY	hKey,
-	LPCSTR	lpSubKey,
-	DWORD	ulOptions,
-	REGSAM	samDesired,
-	PHKEY	phkResult
-	)
+LONG STDCALL
+RegOpenKeyExA(HKEY hKey,
+	      LPCSTR lpSubKey,
+	      DWORD ulOptions,
+	      REGSAM samDesired,
+	      PHKEY phkResult)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING SubKeyString;
+  HANDLE KeyHandle;
+  LONG ErrorCode;
+  NTSTATUS Status;
+
+  Status = MapDefaultKey(&KeyHandle,
+			 hKey);
+  if (!NT_SUCCESS(Status))
+    {
+      ErrorCode = RtlNtStatusToDosError(Status);
+
+      SetLastError(ErrorCode);
+      return(ErrorCode);
+    }
+
+  RtlCreateUnicodeStringFromAsciiz(&SubKeyString,
+				   (LPSTR)lpSubKey);
+
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &SubKeyString,
+			     OBJ_CASE_INSENSITIVE,
+			     KeyHandle,
+			     NULL);
+
+  Status = NtOpenKey(phkResult,
+		     samDesired,
+		     &ObjectAttributes);
+
+  RtlFreeUnicodeString(&SubKeyString);
+
+  if (!NT_SUCCESS(Status))
+    {
+      ErrorCode = RtlNtStatusToDosError(Status);
+
+      SetLastError(ErrorCode);
+      return(ErrorCode);
+    }
+
+  return(ERROR_SUCCESS);
 }
 
 
 /************************************************************************
  *	RegOpenKeyExW
  */
-LONG
-STDCALL
-RegOpenKeyExW(
-	HKEY	hKey,
-	LPCWSTR	lpSubKey,
-	DWORD	ulOptions,
-	REGSAM	samDesired,
-	PHKEY	phkResult
-	)
+LONG STDCALL
+RegOpenKeyExW(HKEY hKey,
+	      LPCWSTR lpSubKey,
+	      DWORD ulOptions,
+	      REGSAM samDesired,
+	      PHKEY phkResult)
 {
-	NTSTATUS		errCode;
-	UNICODE_STRING		SubKeyString;
-	OBJECT_ATTRIBUTES	ObjectAttributes;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING SubKeyString;
+  HANDLE KeyHandle;
+  LONG ErrorCode;
+  NTSTATUS Status;
 
-	RtlInitUnicodeString(&SubKeyString,
-			     (LPWSTR)lpSubKey);
+  Status = MapDefaultKey(&KeyHandle,
+			 hKey);
+  if (!NT_SUCCESS(Status))
+    {
+      ErrorCode = RtlNtStatusToDosError(Status);
 
-	InitializeObjectAttributes(&ObjectAttributes,
-				   &SubKeyString,
-				   OBJ_CASE_INSENSITIVE,
-				   (HANDLE)hKey,
-				   NULL);
+      SetLastError (ErrorCode);
+      return(ErrorCode);
+    }
 
-	errCode = NtOpenKey(
-			phkResult,
-			samDesired,
-			& ObjectAttributes
-			);
-	if ( !NT_SUCCESS(errCode) )
-	{
-		LONG LastError = RtlNtStatusToDosError(errCode);
-		
-		SetLastError(LastError);
-		return LastError;
-	}
-	return ERROR_SUCCESS;
+  RtlInitUnicodeString(&SubKeyString,
+		       (LPWSTR)lpSubKey);
+
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &SubKeyString,
+			     OBJ_CASE_INSENSITIVE,
+			     KeyHandle,
+			     NULL);
+
+  Status = NtOpenKey(phkResult,
+		     samDesired,
+		     &ObjectAttributes);
+  if (!NT_SUCCESS(Status))
+    {
+      ErrorCode = RtlNtStatusToDosError(Status);
+
+      SetLastError(ErrorCode);
+      return(ErrorCode);
+    }
+  return(ERROR_SUCCESS);
 }
 
 
