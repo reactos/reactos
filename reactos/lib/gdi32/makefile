@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.41 2004/12/30 02:32:23 navaraf Exp $
+# $Id: makefile,v 1.42 2004/12/30 03:42:03 navaraf Exp $
 
 PATH_TO_TOP = ../..
 
@@ -44,6 +44,7 @@ OBJECTS_OBJECTS = \
  objects/font.o \
  objects/linedda.o \
  objects/region.o \
+ objects/metafile.o \
  objects/text.o
 
 TARGET_OBJECTS = $(MAIN_OBJECTS) $(MISC_OBJECTS) $(OBJECTS_OBJECTS)
