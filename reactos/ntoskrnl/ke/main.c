@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.180 2003/12/30 18:52:04 fireball Exp $
+/* $Id: main.c,v 1.181 2004/01/02 17:43:51 sedwards Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -656,15 +656,16 @@ ExpInitializeExecutive(VOID)
   if (!NT_SUCCESS(Status))
     KEBUGCHECK(INACCESSIBLE_BOOT_DEVICE);
 
-#ifdef DBGPRINT_FILE_LOG
-  /* On the assumption that we can now access disks start up the debug
-     logger thread */
-  DebugLogInit2();
-#endif /* DBGPRINT_FILE_LOG */
-
 #ifdef KDBG
   KdbInitProfiling2();
 #endif /* KDBG */
+
+  /* On the assumption that we can now access disks start up the debug
+   * logger thread */
+  if ((KdDebuggerEnabled == TRUE) && (KdDebugState & KD_DEBUG_FILELOG))
+    {
+      DebugLogInit2();
+    }
 
   PiInitDefaultLocale();
 

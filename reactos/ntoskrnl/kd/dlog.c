@@ -1,4 +1,4 @@
-/* $Id: dlog.c,v 1.9 2003/11/17 02:12:51 hyperion Exp $
+/* $Id: dlog.c,v 1.10 2004/01/02 17:43:50 sedwards Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -22,8 +22,6 @@
 
 #define DEBUGLOG_SIZE (32*1024)
 
-#ifdef DBGPRINT_FILE_LOG
-
 static CHAR DebugLog[DEBUGLOG_SIZE];
 static ULONG DebugLogStart;
 static ULONG DebugLogEnd;
@@ -35,11 +33,7 @@ static CLIENT_ID DebugLogThreadCid;
 static HANDLE DebugLogFile;
 static KSEMAPHORE DebugLogSem;
 
-#endif /* DBGPRINT_FILE_LOG */
-
 /* FUNCTIONS *****************************************************************/
-
-#ifdef DBGPRINT_FILE_LOG
 
 VOID INIT_FUNCTION
 DebugLogInit(VOID)
@@ -52,7 +46,7 @@ DebugLogInit(VOID)
   KeInitializeSemaphore(&DebugLogSem, 0, 255);
 }
 
-NTSTATUS
+VOID STDCALL_FUNC
 DebugLogThreadMain(PVOID Context)
 {
   KIRQL oldIrql;
@@ -74,6 +68,7 @@ DebugLogThreadMain(PVOID Context)
 	    {
 	      WLen = min(256, DEBUGLOG_SIZE - DebugLogStart);
 	      memcpy(Buffer, &DebugLog[DebugLogStart], WLen);
+              Buffer[WLen + 1] = '\n';
 	      DebugLogStart = 
 		(DebugLogStart + WLen) % DEBUGLOG_SIZE;
 	      DebugLogCount = DebugLogCount - WLen;
@@ -84,13 +79,13 @@ DebugLogThreadMain(PVOID Context)
 			  NULL,
 			  &Iosb,
 			  Buffer,
-			  WLen,
+			  WLen + 1,
 			  NULL,
 			  NULL);
 	    }
 	  else
 	    {
-	      WLen = min(256, DebugLogEnd - DebugLogStart);
+	      WLen = min(255, DebugLogEnd - DebugLogStart);
 	      memcpy(Buffer, &DebugLog[DebugLogStart], WLen);
 	      DebugLogStart = 
 		(DebugLogStart + WLen) % DEBUGLOG_SIZE;
@@ -120,7 +115,7 @@ DebugLogInit2(VOID)
   UNICODE_STRING FileName;
   IO_STATUS_BLOCK Iosb;
 
-  RtlRosInitUnicodeStringFromLiteral(&FileName, L"\\SystemRoot\\debug.log");
+  RtlInitUnicodeString(&FileName, L"\\SystemRoot\\debug.log");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &FileName,
 			     0,
@@ -153,71 +148,54 @@ DebugLogInit2(VOID)
 				NULL);
 }
 
- VOID 
- DebugLogWrite(PCH String)
- {
-   KIRQL oldIrql;
+VOID 
+DebugLogWrite(PCH String)
+{
+  KIRQL oldIrql;
 
    if (KeGetCurrentIrql() > DISPATCH_LEVEL)
-     {
-       DebugLogOverflow++;
-       return;
-     }
+    {
+      DebugLogOverflow++;
+      return;
+    }
 
    KeAcquireSpinLock(&DebugLogLock, &oldIrql);
 
    if (DebugLogCount == DEBUGLOG_SIZE)
-     {
-       DebugLogOverflow++;
-       KeReleaseSpinLock(&DebugLogLock, oldIrql);
-       if (oldIrql < DISPATCH_LEVEL)
-	 {
-	   KeReleaseSemaphore(&DebugLogSem, IO_NO_INCREMENT, 1, FALSE);
-	 }
-       return;
-     }
+    {
+      DebugLogOverflow++;
+      KeReleaseSpinLock(&DebugLogLock, oldIrql);
+      if (oldIrql < DISPATCH_LEVEL)
+ 	{
+   	KeReleaseSemaphore(&DebugLogSem, IO_NO_INCREMENT, 1, FALSE);
+ 	}
+      	return;
+    }
 
    while ((*String) != 0)
-     {
-       DebugLog[DebugLogEnd] = *String;
-       String++;
-       DebugLogCount++;
-       if (DebugLogCount == DEBUGLOG_SIZE)
-	 {	   
-	   DebugLogOverflow++;
-	   KeReleaseSpinLock(&DebugLogLock, oldIrql);
-	   if (oldIrql < DISPATCH_LEVEL)
-	     {
-	       KeReleaseSemaphore(&DebugLogSem, IO_NO_INCREMENT, 1, FALSE);
-	     }
-	   return;
-	 }
-      DebugLogEnd = (DebugLogEnd + 1) % DEBUGLOG_SIZE;
-     }
+    {
+      DebugLog[DebugLogEnd] = *String;
+      String++;
+      DebugLogCount++;
 
-   KeReleaseSpinLock(&DebugLogLock, oldIrql);
-   if (oldIrql < DISPATCH_LEVEL)
-     {
-       KeReleaseSemaphore(&DebugLogSem, IO_NO_INCREMENT, 1, FALSE);
-     }
- }
+ 	if (DebugLogCount == DEBUGLOG_SIZE)
+ 	{	   
+ 	  DebugLogOverflow++;
+ 	  KeReleaseSpinLock(&DebugLogLock, oldIrql);
+ 	  if (oldIrql < DISPATCH_LEVEL)
+ 	    {
+ 	      KeReleaseSemaphore(&DebugLogSem, IO_NO_INCREMENT, 1, FALSE);
+ 	    }
+ 	  return;
+ 	}
+     DebugLogEnd = (DebugLogEnd + 1) % DEBUGLOG_SIZE;
+    }
 
- #else /* not DBGPRINT_FILE_LOG */
+    KeReleaseSpinLock(&DebugLogLock, oldIrql);
 
- VOID INIT_FUNCTION
- DebugLogInit(VOID)
- {
- }
-
-VOID INIT_FUNCTION
-DebugLogInit2(VOID)
-{
+    if (oldIrql < DISPATCH_LEVEL)
+    {
+      KeReleaseSemaphore(&DebugLogSem, IO_NO_INCREMENT, 1, FALSE);
+    }
 }
-
-VOID
-DebugLogWrite(PCH String)
-{
-}
-
-#endif /* DBGPRINT_FILE_LOG */
 

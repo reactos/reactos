@@ -1,3 +1,8 @@
+2003-01-02  Steven Edwards  <Steven_Ed4153@yahoo.com>
+	* ntoskrnl/kd/dlog.c: Make /DEBUGPORT=FILE work. With the help
+	of Filip Navara
+	* ntoskrnl/ke/main.c: Ditto
+
 2003-12-29  Steven Edwards  <Steven_Ed4153@yahoo.com>
 	* lib/version: Sync with Winehq 12-29-03
 
