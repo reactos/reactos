@@ -106,7 +106,7 @@ void DeleteKeyTest(void)
 
   dprintf("NtDeleteKey: ");
   Status = NtDeleteKey(hKey);
-  dprintf("Status = l%x\n",Status);
+  dprintf("Status = %lx\n",Status);
   NtClose(hKey);
 }
 
