@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.8 2000/07/06 14:34:52 dwelch Exp $
+/* $Id: conio.c,v 1.9 2000/07/07 01:16:50 phreak Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -15,6 +15,7 @@
 #include "api.h"
 #include <ntdll/rtl.h>
 #include <ddk/ntddblue.h>
+#include <debug.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -460,7 +461,7 @@ VOID CsrInitConsoleSupport(VOID)
 		       &ObjectAttributes,
 		       &Iosb,
 		       0,
-		       FILE_SYNCHRONOUS_IO_ALERT);
+		       0);
    if (!NT_SUCCESS(Status))
      {
 	DbgPrint("CSR: Failed to open keyboard. Expect problems.\n");
@@ -477,13 +478,23 @@ VOID CsrInitConsoleSupport(VOID)
    PhysicalConsoleSize = ScrInfo.dwSize;
 }
 
-VOID Console_Api( DWORD Ignored )
+VOID Console_Api( DWORD RefreshEvent )
 {
   /* keep reading events from the keyboard and stuffing them into the current
      console's input queue */
   ConsoleInput *KeyEventRecord;
   IO_STATUS_BLOCK Iosb;
   NTSTATUS Status;
+  HANDLE Events[2];     // 0 = keyboard, 1 = refresh
+
+  Events[0] = 0;
+  Status = NtCreateEvent( &Events[0], STANDARD_RIGHTS_ALL, NULL, FALSE, FALSE );
+  if( !NT_SUCCESS( Status ) )
+    {
+      DbgPrint( "CSR: NtCreateEvent failed: %x\n", Status );
+      return;
+    }
+  Events[1] = (HANDLE)RefreshEvent;
   while( 1 )
     {
       KeyEventRecord = RtlAllocateHeap(CsrssApiHeap, 
@@ -495,12 +506,32 @@ VOID Console_Api( DWORD Ignored )
 	  continue;
 	}
       KeyEventRecord->InputEvent.EventType = KEY_EVENT;
-      Status = NtReadFile( KeyboardDeviceHandle, NULL, NULL, NULL, &Iosb, &KeyEventRecord->InputEvent.Event.KeyEvent, sizeof( KEY_EVENT_RECORD ), NULL, 0 );
+      Status = NtReadFile( KeyboardDeviceHandle, Events[0], NULL, NULL, &Iosb, &KeyEventRecord->InputEvent.Event.KeyEvent, sizeof( KEY_EVENT_RECORD ), NULL, 0 );
       if( !NT_SUCCESS( Status ) )
 	{
 	  DbgPrint( "CSR: ReadFile on keyboard device failed\n" );
 	  RtlFreeHeap( CsrssApiHeap, 0, KeyEventRecord );
 	  continue;
+	}
+      if( Status == STATUS_PENDING )
+	{
+	  while( 1 )
+	    {
+	      Status = NtWaitForMultipleObjects( 2, Events, WaitAny, FALSE, NULL );
+	      if( Status == STATUS_WAIT_0 + 1 )
+		{
+		  RtlEnterCriticalSection( &ActiveConsoleLock );
+		  CsrDrawConsole( ActiveConsole );
+		  RtlLeaveCriticalSection( &ActiveConsoleLock );
+		  continue;
+		}
+	      else if( Status != STATUS_WAIT_0 )
+		{
+		  DbgPrint( "CSR: NtWaitForMultipleObjects failed: %x, exiting\n", Status );
+		  return;
+		}
+	      else break;
+	    }
 	}
       //      DbgPrint( "Char: %c\n", KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar );
       if( KeyEventRecord->InputEvent.Event.KeyEvent.dwControlKeyState & ( RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED )&&  KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar == 'q' )

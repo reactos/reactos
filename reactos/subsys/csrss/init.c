@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.9 2000/05/26 05:40:20 phreak Exp $
+/* $Id: init.c,v 1.10 2000/07/07 01:16:18 phreak Exp $
  * 
  * reactos/subsys/csrss/init.c
  *
@@ -95,6 +95,9 @@ CsrServerInitialization (
    NTSTATUS		Status;
    OBJECT_ATTRIBUTES	ObAttributes;
    UNICODE_STRING PortName;
+   OBJECT_ATTRIBUTES RefreshEventAttr;
+   UNICODE_STRING RefreshEventName;
+   HANDLE RefreshEventHandle;
 
    Status = CsrParseCommandLine (ArgumentCount, ArgumentArray);
    if (!NT_SUCCESS(Status))
@@ -150,7 +153,15 @@ CsrServerInitialization (
 	NtClose(ApiPortHandle);
 	return FALSE;
      }
-   Status = RtlCreateUserThread( NtCurrentProcess(), NULL, FALSE, 0, NULL, NULL, (PTHREAD_START_ROUTINE)Console_Api, 0, NULL, NULL );
+   RtlInitUnicodeString( &RefreshEventName, L"\\TextConsoleRefreshEvent" );
+   InitializeObjectAttributes( &RefreshEventAttr, &RefreshEventName, NULL, NULL, NULL );
+   Status = NtCreateEvent( &RefreshEventHandle, STANDARD_RIGHTS_ALL, &RefreshEventAttr, FALSE, FALSE );
+   if( !NT_SUCCESS( Status ) )
+     {
+       PrintString( "CSR: Unable to create refresh event!\n" );
+       return FALSE;
+     }
+   Status = RtlCreateUserThread( NtCurrentProcess(), NULL, FALSE, 0, NULL, NULL, (PTHREAD_START_ROUTINE)Console_Api, (DWORD) RefreshEventHandle, NULL, NULL );
    if( !NT_SUCCESS( Status ) )
      {
        PrintString( "CSR: Unable to create console thread\n" );
