@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: print.c,v 1.17 2004/05/10 17:07:20 weiden Exp $ */
+/* $Id: print.c,v 1.18 2004/06/20 00:45:37 navaraf Exp $ */
 #include <w32k.h>
 
 INT
@@ -123,7 +123,7 @@ NtGdiExtEscape(
 
    if ( InSize && UnsafeInData )
    {
-      SafeInData = ExAllocatePoolWithTag ( NonPagedPool, InSize, TAG_PRINT );
+      SafeInData = ExAllocatePoolWithTag ( PagedPool, InSize, TAG_PRINT );
       if ( !SafeInData )
       {
          DC_UnlockDc(hDC);
@@ -142,7 +142,7 @@ NtGdiExtEscape(
 
    if ( OutSize && UnsafeOutData )
    {
-      SafeOutData = ExAllocatePoolWithTag ( NonPagedPool, OutSize, TAG_PRINT );
+      SafeOutData = ExAllocatePoolWithTag ( PagedPool, OutSize, TAG_PRINT );
       if ( !SafeOutData )
       {
          if ( SafeInData )

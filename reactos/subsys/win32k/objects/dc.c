@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.138 2004/06/18 15:18:56 navaraf Exp $
+/* $Id: dc.c,v 1.139 2004/06/20 00:45:37 navaraf Exp $
  *
  * DC.C - Device context functions
  *
@@ -1525,7 +1525,7 @@ NtGdiGetObject(HANDLE handle, INT count, LPVOID buffer)
     return 0;
   }
   
-  SafeBuf = ExAllocatePoolWithTag(NonPagedPool, count, TAG_GDIOBJ);
+  SafeBuf = ExAllocatePoolWithTag(PagedPool, count, TAG_GDIOBJ);
   if(!SafeBuf)
   {
     SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);

@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.96 2004/06/18 15:18:58 navaraf Exp $ */
+/* $Id: text.c,v 1.97 2004/06/20 00:45:37 navaraf Exp $ */
 #include <w32k.h>
 
 #include <ft2build.h>
@@ -44,7 +44,6 @@ static FAST_MUTEX FreeTypeLock;
 
 static LIST_ENTRY FontListHead;
 static FAST_MUTEX FontListLock;
-static INT FontsLoaded = 0; /* number of all fonts loaded (including private fonts */
 static BOOL RenderingEnabled = TRUE;
 
 static PWCHAR ElfScripts[32] = { /* these are in the order of the fsCsb[0] bits */
@@ -114,6 +113,301 @@ static CHARSETINFO FontTci[MAXTCIINDEX] = {
   { SYMBOL_CHARSET, CP_SYMBOL, FS(31)},
 };
 
+VOID FASTCALL
+IntLoadSystemFonts(VOID);
+
+INT FASTCALL
+IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics);
+
+BOOL FASTCALL
+InitFontSupport(VOID)
+{
+   ULONG ulError;
+
+   InitializeListHead(&FontListHead);
+   ExInitializeFastMutex(&FontListLock);
+   ExInitializeFastMutex(&FreeTypeLock);
+
+   ulError = FT_Init_FreeType(&library);
+   if (ulError)
+      return FALSE;
+
+   IntLoadSystemFonts();
+
+   return TRUE;
+}
+
+/*
+ * IntLoadSystemFonts
+ *
+ * Search the system font directory and adds each font found.
+ */
+
+VOID FASTCALL
+IntLoadSystemFonts(VOID)
+{
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   UNICODE_STRING Directory, SearchPattern, FileName, TempString;
+   IO_STATUS_BLOCK Iosb;
+   HANDLE hDirectory;
+   BYTE *DirInfoBuffer;
+   PFILE_DIRECTORY_INFORMATION DirInfo;
+   BOOL bRestartScan = TRUE;
+   NTSTATUS Status;
+
+   RtlInitUnicodeString(&Directory, L"\\SystemRoot\\Media\\Fonts\\");
+   /* FIXME: Add support for other font types */
+   RtlInitUnicodeString(&SearchPattern, L"*.ttf");
+
+   InitializeObjectAttributes(
+      &ObjectAttributes,
+      &Directory,
+      OBJ_CASE_INSENSITIVE,
+      NULL,
+      NULL);
+
+   Status = ZwOpenFile(
+      &hDirectory,
+      SYNCHRONIZE | FILE_LIST_DIRECTORY,
+      &ObjectAttributes,
+      &Iosb,
+      FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+      FILE_SYNCHRONOUS_IO_NONALERT | FILE_DIRECTORY_FILE);
+
+   if (NT_SUCCESS(Status))
+   {
+      DirInfoBuffer = ExAllocatePool(PagedPool, 0x4000);
+      if (DirInfoBuffer == NULL)
+      {
+         ZwClose(hDirectory);
+         return;
+      }
+      
+      FileName.Buffer = ExAllocatePool(PagedPool, MAX_PATH);
+      if (FileName.Buffer == NULL)
+      {
+         ExFreePool(DirInfoBuffer);
+         ZwClose(hDirectory);
+         return;
+      }
+      FileName.Length = 0;
+      FileName.MaximumLength = MAX_PATH;
+
+      while (1)
+      {
+         Status = ZwQueryDirectoryFile(
+            hDirectory,
+            NULL,
+            NULL,
+            NULL,
+            &Iosb,
+            DirInfoBuffer,
+            0x4000,
+            FileDirectoryInformation,
+            FALSE,
+            &SearchPattern,
+            bRestartScan);
+
+         if (!NT_SUCCESS(Status) || Status == STATUS_NO_MORE_FILES)
+         {
+            break;
+         }
+
+         for (DirInfo = (PFILE_DIRECTORY_INFORMATION)DirInfoBuffer;
+              DirInfo->NextEntryOffset != 0;
+              DirInfo = (PFILE_DIRECTORY_INFORMATION)((ULONG_PTR)DirInfo + DirInfo->NextEntryOffset))
+         {
+            TempString.Buffer = DirInfo->FileName;
+            TempString.Length =
+            TempString.MaximumLength = DirInfo->FileNameLength;
+            RtlCopyUnicodeString(&FileName, &Directory);
+            RtlAppendUnicodeStringToString(&FileName, &TempString);
+            IntGdiAddFontResource(&FileName, 0);
+         }
+
+         bRestartScan = FALSE;
+      }
+
+      ExFreePool(FileName.Buffer);
+      ExFreePool(DirInfoBuffer);
+      ZwClose(hDirectory);
+   }
+}
+
+/*
+ * IntGdiAddFontResource
+ *
+ * Adds the font resource from the specified file to the system.
+ */
+
+INT FASTCALL
+IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
+{
+   HFONT NewFont;
+   FONTOBJ *FontObj;
+   PFONTGDI FontGDI;
+   NTSTATUS Status;
+   HANDLE FileHandle;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   FILE_STANDARD_INFORMATION FileStdInfo;
+   PVOID Buffer;
+   IO_STATUS_BLOCK Iosb;
+   INT Error;
+   FT_Face Face;
+   ANSI_STRING AnsiFaceName;
+   PFONT_ENTRY Entry;
+
+   /* Create handle for the font */
+
+   NewFont = (HFONT)CreateGDIHandle(
+      sizeof(FONTGDI),
+      sizeof(FONTOBJ),
+      (PVOID*)&FontGDI,
+      (PVOID*)&FontObj);
+
+   if (NewFont == 0)
+   {
+      DPRINT("Could not allocate a new GDI font object\n");
+      return 0;
+   }
+
+   /* Open the font file */
+
+   InitializeObjectAttributes(&ObjectAttributes, FileName, 0, NULL, NULL);
+   Status = ZwOpenFile(
+      &FileHandle,
+      GENERIC_READ | SYNCHRONIZE,
+      &ObjectAttributes,
+      &Iosb,
+      0,
+      FILE_SYNCHRONOUS_IO_NONALERT);
+
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT("Could not font file: %wZ\n", Filename);
+      NtGdiDeleteObject(NewFont);
+      return 0;
+   }
+
+   /* Get the size of the file */
+
+   Status = NtQueryInformationFile(
+      FileHandle,
+      &Iosb,
+      &FileStdInfo,
+      sizeof(FileStdInfo),
+      FileStandardInformation);
+
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT("Could not get file size\n");
+      NtGdiDeleteObject(NewFont);
+      ZwClose(FileHandle);
+      return 0;
+   }
+
+   /* Allocate pageable memory for the font */
+
+   Buffer = ExAllocatePoolWithTag(
+      PagedPool,
+      FileStdInfo.EndOfFile.u.LowPart,
+      TAG_GDITEXT);
+
+   if (Buffer == NULL)
+   {
+      DPRINT("Could not allocate memory for font");
+      NtGdiDeleteObject(NewFont);
+      ZwClose(FileHandle);
+      return 0;
+   }
+
+   /* Load the font into memory chunk */
+
+   Status = ZwReadFile(
+      FileHandle,
+      NULL,
+      NULL,
+      NULL,
+      &Iosb,
+      Buffer,
+      FileStdInfo.EndOfFile.u.LowPart,
+      NULL,
+      NULL);
+
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT("Could not read the font file into memory");
+      ExFreePool(Buffer);
+      NtGdiDeleteObject(NewFont);
+      ZwClose(FileHandle);
+      return 0;
+   }
+
+   ZwClose(FileHandle);
+
+   IntLockFreeType;
+   Error = FT_New_Memory_Face(
+      library,
+      Buffer,
+      FileStdInfo.EndOfFile.u.LowPart,
+      0,
+      &Face);
+   IntUnLockFreeType;
+
+   if (Error)
+   {
+      if (Error == FT_Err_Unknown_File_Format)
+         DPRINT("Unknown font file format\n");
+      else
+         DPRINT("Error reading font file (error code: %u)\n", Error);
+      ExFreePool(Buffer);
+      NtGdiDeleteObject(NewFont);
+      return 0;
+   }
+
+   Entry = ExAllocatePoolWithTag(PagedPool, sizeof(FONT_ENTRY), TAG_FONT);
+   if (!Entry)
+   {
+      FT_Done_Face(Face);
+      ExFreePool(Buffer);
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return 0;
+   }
+
+   /* FontGDI->Filename = FileName; perform strcpy */
+   FontGDI->face = Face;
+
+   /* FIXME: Complete text metrics */
+   FontGDI->TextMetric.tmAscent = (Face->size->metrics.ascender + 32) >> 6; /* units above baseline */
+   FontGDI->TextMetric.tmDescent = (32 - Face->size->metrics.descender) >> 6; /* units below baseline */
+   FontGDI->TextMetric.tmHeight = FontGDI->TextMetric.tmAscent + FontGDI->TextMetric.tmDescent;
+
+   DPRINT("Font loaded: %s (%s)\n", face->family_name, face->style_name);
+   DPRINT("Num glyphs: %u\n", face->num_glyphs);
+
+   /* Add this font resource to the font table */
+
+   Entry->hFont = NewFont;
+   Entry->NotEnum = (Characteristics & FR_NOT_ENUM);
+   RtlInitAnsiString(&AnsiFaceName, (LPSTR)Face->family_name);
+   RtlAnsiStringToUnicodeString(&Entry->FaceName, &AnsiFaceName, TRUE);
+
+   if (Characteristics & FR_PRIVATE)
+   {
+      PW32PROCESS Win32Process = PsGetWin32Process();
+      IntLockProcessPrivateFonts(Win32Process);
+      InsertTailList(&Win32Process->PrivateFontListHead, &Entry->ListEntry);
+      IntUnLockProcessPrivateFonts(Win32Process);
+   }
+   else
+   {
+      IntLockGlobalFonts;
+      InsertTailList(&FontListHead, &Entry->ListEntry);
+      IntUnLockGlobalFonts;
+   }
+
+   return 1;
+}
 
 BOOL FASTCALL
 IntIsFontRenderingEnabled(VOID)
@@ -159,246 +453,6 @@ IntGetFontRenderMode(LOGFONTW *logfont)
   }
   return FT_RENDER_MODE_MONO;
 }
-
-int FASTCALL
-IntGdiAddFontResource(PUNICODE_STRING Filename, DWORD fl)
-{
-  HFONT NewFont;
-  FONTOBJ *FontObj;
-  PFONTGDI FontGDI;
-  NTSTATUS Status;
-  HANDLE FileHandle;
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  FILE_STANDARD_INFORMATION FileStdInfo;
-  PVOID buffer;
-  ULONG size;
-  INT error;
-  FT_Face face;
-  ANSI_STRING StringA;
-  IO_STATUS_BLOCK Iosb;
-  PFONT_ENTRY entry;
-
-  NewFont = (HFONT)CreateGDIHandle(sizeof( FONTGDI ), sizeof( FONTOBJ ), (PVOID*)&FontGDI, (PVOID*)&FontObj);
-  if(NewFont == 0)
-  {
-    DPRINT1("Could not allocate a new GDI font object\n");
-    return 0;
-  }
-
-  //  Open the Module
-  InitializeObjectAttributes(&ObjectAttributes, Filename, 0, NULL, NULL);
-
-  Status = ZwOpenFile(&FileHandle, 
-                      GENERIC_READ|SYNCHRONIZE, 
-                      &ObjectAttributes, 
-                      &Iosb, 
-                      0, //ShareAccess
-                      FILE_SYNCHRONOUS_IO_NONALERT);
-
-  if (!NT_SUCCESS(Status))
-  {
-    DPRINT1("Could not open module file: %wZ\n", Filename);
-    return 0;
-  }
-
-  //  Get the size of the file
-  Status = NtQueryInformationFile(FileHandle, &Iosb, &FileStdInfo, sizeof(FileStdInfo), FileStandardInformation);
-  if (!NT_SUCCESS(Status))
-  {
-    DPRINT1("Could not get file size\n");
-    return 0;
-  }
-
-  //  Allocate nonpageable memory for driver
-  size = FileStdInfo.EndOfFile.u.LowPart;
-  buffer = ExAllocatePoolWithTag(NonPagedPool, size, TAG_GDITEXT);
-
-  if (buffer == NULL)
-  {
-    DPRINT1("could not allocate memory for module");
-    return 0;
-  }
-
-  //  Load driver into memory chunk
-  Status = ZwReadFile(FileHandle, 
-                      NULL, 
-                      NULL, 
-                      NULL, 
-                      &Iosb, 
-                      buffer, 
-                      FileStdInfo.EndOfFile.u.LowPart, 
-                      NULL, 
-                      NULL);
-                      
-  if (!NT_SUCCESS(Status))
-  {
-    DPRINT1("could not read module file into memory");
-    ExFreePool(buffer);
-    return 0;
-  }
-
-  ZwClose(FileHandle);
-
-  IntLockFreeType;
-  error = FT_New_Memory_Face(library, buffer, size, 0, &face);
-  IntUnLockFreeType;
-  if (error == FT_Err_Unknown_File_Format)
-  {
-    DPRINT1("Unknown font file format\n");
-    return 0;
-  }
-  else if (error)
-  {
-    DPRINT1("Error reading font file (error code: %u)\n", error); // 48
-    return 0;
-  }
-  
-  entry = ExAllocatePoolWithTag(NonPagedPool, sizeof(FONT_ENTRY), TAG_FONT);
-  if(!entry)
-  {
-    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-    return 0;
-  }
-
-  // FontGDI->Filename = Filename; perform strcpy
-  FontGDI->face = face;
-
-  // FIXME: Complete text metrics
-  FontGDI->TextMetric.tmAscent = (face->size->metrics.ascender + 32) >> 6; // units above baseline
-  FontGDI->TextMetric.tmDescent = (32 - face->size->metrics.descender) >> 6; // units below baseline
-  FontGDI->TextMetric.tmHeight = FontGDI->TextMetric.tmAscent + FontGDI->TextMetric.tmDescent;
-
-  DPRINT("Font loaded: %s (%s)\n", face->family_name, face->style_name);
-  DPRINT("Num glyphs: %u\n", face->num_glyphs);
-
-  // Add this font resource to the font table
-  entry->hFont = NewFont;
-  entry->NotEnum = (fl & FR_NOT_ENUM);
-  RtlInitAnsiString(&StringA, (LPSTR)face->family_name);
-  RtlAnsiStringToUnicodeString(&entry->FaceName, &StringA, TRUE);
-  
-  if(fl & FR_PRIVATE)
-  {
-    PW32PROCESS Win32Process = PsGetWin32Process();
-    
-    IntLockProcessPrivateFonts(Win32Process);
-    InsertTailList(&Win32Process->PrivateFontListHead, &entry->ListEntry);
-    FontsLoaded++;
-    IntUnLockProcessPrivateFonts(Win32Process);
-  }
-  else
-  {
-    IntLockGlobalFonts;
-    InsertTailList(&FontListHead, &entry->ListEntry);
-    FontsLoaded++;
-    IntUnLockGlobalFonts;
-  }
-
-  return 1;
-}
-
-BOOL FASTCALL InitFontSupport(VOID)
-{
-	ULONG ulError;
-	UNICODE_STRING cchDir, cchFilename, cchSearchPattern ;
-	OBJECT_ATTRIBUTES obAttr;
-	IO_STATUS_BLOCK Iosb;
-	HANDLE hDirectory;
-	NTSTATUS Status;
-	PFILE_DIRECTORY_INFORMATION iFileData;
-	PVOID   pBuff;
-	BOOLEAN bRestartScan = TRUE;
-    BOOLEAN Result = FALSE;
-	
-	InitializeListHead(&FontListHead);
-    ExInitializeFastMutex(&FontListLock);
-    ExInitializeFastMutex(&FreeTypeLock);
-	
-    ulError = FT_Init_FreeType(&library);
-    
-    if(!ulError)
-    {
-        RtlInitUnicodeString(&cchDir, L"\\SystemRoot\\Media\\Fonts\\");
-
-		RtlInitUnicodeString(&cchSearchPattern,L"*.ttf");
-        InitializeObjectAttributes( &obAttr,
-		    			   			&cchDir,
-			    		   			OBJ_CASE_INSENSITIVE, 
-				    	   			NULL,
-					       			NULL );
-						   			
-        Status = ZwOpenFile( &hDirectory,
-                             SYNCHRONIZE | FILE_LIST_DIRECTORY,
-                             &obAttr,
-                             &Iosb,
-                             FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                             FILE_SYNCHRONOUS_IO_NONALERT | FILE_DIRECTORY_FILE );         
-        if( NT_SUCCESS(Status) )
-        {          
-            while(1)
-            {   
-		if (bRestartScan)
-		  {
-                pBuff = ExAllocatePool(NonPagedPool,0x4000);
-		    if (pBuff == NULL)
-		      {
-		        break;
-		      }
-                RtlInitUnicodeString(&cchFilename,0);
-                cchFilename.MaximumLength = 0x1000;
-                cchFilename.Buffer = ExAllocatePoolWithTag(PagedPool,cchFilename.MaximumLength, TAG_STRING);
-		    if (cchFilename.Buffer == NULL)
-		      {
-		        ExFreePool(pBuff);
-		        break;
-		      }
-		  }
-				    
-				Status = NtQueryDirectoryFile( hDirectory,
-				                               NULL,
-				                               NULL,
-				                               NULL,
-				                               &Iosb,
-				                               pBuff,
-				                               0x4000,
-				                               FileDirectoryInformation,
-					       FALSE,
-				                               &cchSearchPattern,
-				                               bRestartScan );
-				   
-				if( !NT_SUCCESS(Status) || Status == STATUS_NO_MORE_FILES )
-		  {
-				ExFreePool(pBuff);
-				ExFreePool(cchFilename.Buffer);
-		    break;
-		  }
-				bRestartScan = FALSE;
-                iFileData = (PFILE_DIRECTORY_INFORMATION)pBuff;
-		while(1)
-		  {
-		    UNICODE_STRING tmpString;
-		    tmpString.Buffer = iFileData->FileName;
-		    tmpString.Length = tmpString.MaximumLength = iFileData->FileNameLength;
-                    RtlCopyUnicodeString(&cchFilename, &cchDir);
-                    RtlAppendUnicodeStringToString(&cchFilename, &tmpString);
-		    cchFilename.Buffer[cchFilename.Length / sizeof(WCHAR)] = 0;
-		    if (0 != IntGdiAddFontResource(&cchFilename, 0))
-		      {
-		        Result = TRUE;
-		      }
-		    if (iFileData->NextEntryOffset == 0)
-		      {
-		        break;
-		      }
-		    iFileData = (PVOID)iFileData + iFileData->NextEntryOffset;
-		  }
-			}
-        }
-    }
-    ZwClose(hDirectory);
-    return Result;
-}
-
 static NTSTATUS STDCALL
 GetFontObjectsFromTextObj(PTEXTOBJ TextObj, HFONT *FontHandle, FONTOBJ **FontObj, PFONTGDI *FontGDI)
 {

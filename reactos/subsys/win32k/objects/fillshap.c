@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fillshap.c,v 1.49 2004/05/14 16:55:18 navaraf Exp $ */
+/* $Id: fillshap.c,v 1.50 2004/06/20 00:45:37 navaraf Exp $ */
 #include <w32k.h>
 
 /*
@@ -835,7 +835,7 @@ NtGdiPolygon(HDC          hDC,
     SetLastWin32Error(ERROR_INVALID_HANDLE);
   else
   {
-    Safept = ExAllocatePoolWithTag(NonPagedPool, sizeof(POINT) * Count, TAG_SHAPE);
+    Safept = ExAllocatePoolWithTag(PagedPool, sizeof(POINT) * Count, TAG_SHAPE);
     if(!Safept)
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
     else
@@ -877,7 +877,7 @@ NtGdiPolyPolygon(HDC           hDC,
   
   if(Count > 0)
   {
-    Safept = ExAllocatePoolWithTag(NonPagedPool, (sizeof(POINT) + sizeof(INT)) * Count, TAG_SHAPE);
+    Safept = ExAllocatePoolWithTag(PagedPool, (sizeof(POINT) + sizeof(INT)) * Count, TAG_SHAPE);
     if(!Safept)
     {
       DC_UnlockDc(hDC);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: winsta.c,v 1.63 2004/05/22 21:12:15 weiden Exp $
+ *  $Id: winsta.c,v 1.64 2004/06/20 00:45:37 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -106,7 +106,7 @@ IntGetFullWindowStationName(
       FullName->Length += WinStaName->Length + sizeof(WCHAR);
    if (DesktopName != NULL)
       FullName->Length += DesktopName->Length + sizeof(WCHAR);
-   FullName->Buffer = ExAllocatePoolWithTag(NonPagedPool, FullName->Length, TAG_STRING);
+   FullName->Buffer = ExAllocatePoolWithTag(PagedPool, FullName->Length, TAG_STRING);
    if (FullName->Buffer == NULL)
    {
       return FALSE;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: palette.c,v 1.18 2004/05/10 17:07:20 weiden Exp $ */
+/* $Id: palette.c,v 1.19 2004/06/20 00:45:37 navaraf Exp $ */
 #include <w32k.h>
 
 #ifndef NO_MAPPING
@@ -72,7 +72,7 @@ PALETTE_AllocPalette(ULONG Mode,
 
   if (NULL != Colors)
     {
-      PalGDI->IndexedColors = ExAllocatePoolWithTag(NonPagedPool, sizeof(PALETTEENTRY) * NumColors, TAG_PALETTE);
+      PalGDI->IndexedColors = ExAllocatePoolWithTag(PagedPool, sizeof(PALETTEENTRY) * NumColors, TAG_PALETTE);
       if (NULL == PalGDI->IndexedColors)
 	{
 	  PALETTE_UnlockPalette(NewPalette);
@@ -110,7 +110,7 @@ HPALETTE FASTCALL PALETTE_Init(VOID)
   const PALETTEENTRY* __sysPalTemplate = (const PALETTEENTRY*)COLOR_GetSystemPaletteTemplate();
 
   // create default palette (20 system colors)
-  palPtr = ExAllocatePoolWithTag(NonPagedPool, sizeof(LOGPALETTE) + (NB_RESERVED_COLORS * sizeof(PALETTEENTRY)), TAG_PALETTE);
+  palPtr = ExAllocatePoolWithTag(PagedPool, sizeof(LOGPALETTE) + (NB_RESERVED_COLORS * sizeof(PALETTEENTRY)), TAG_PALETTE);
   if (!palPtr) return FALSE;
 
   palPtr->palVersion = 0x300;
@@ -130,7 +130,7 @@ HPALETTE FASTCALL PALETTE_Init(VOID)
   palObj = (PALOBJ*)PALETTE_LockPalette(hpalette);
   if (palObj)
   {
-    if (!(palObj->mapping = ExAllocatePool(NonPagedPool, sizeof(int) * 20)))
+    if (!(palObj->mapping = ExAllocatePool(PagedPool, sizeof(int) * 20)))
     {
       DbgPrint("Win32k: Can not create palette mapping -- out of memory!");
       return FALSE;
@@ -199,7 +199,7 @@ INT STDCALL PALETTE_SetMapping(PALOBJ *palPtr, UINT uStart, UINT uNum, BOOL mapO
   //mapping = HeapReAlloc( GetProcessHeap(), 0, palPtr->mapping,
   //                       sizeof(int)*palPtr->logpalette->palNumEntries);
   ExFreePool(palPtr->mapping);
-  mapping = ExAllocatePoolWithTag(NonPagedPool, sizeof(int)*palGDI->NumColors, TAG_PALETTEMAP);
+  mapping = ExAllocatePoolWithTag(PagedPool, sizeof(int)*palGDI->NumColors, TAG_PALETTEMAP);
 
   palPtr->mapping = mapping;
 

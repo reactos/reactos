@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.50 2004/05/30 14:01:13 weiden Exp $
+ * $Id: dib.c,v 1.51 2004/06/20 00:45:37 navaraf Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -1093,7 +1093,7 @@ DIB_CreateDIBSection(
     bm.bmBits = EngAllocUserMem(totalSize, 0);
   }
 
-/*  bm.bmBits = ExAllocatePool(NonPagedPool, totalSize); */
+/*  bm.bmBits = ExAllocatePool(PagedPool, totalSize); */
 
   if(usage == DIB_PAL_COLORS)
     memcpy(bmi->bmiColors, (UINT *)DIB_MapPaletteColors(dc, bmi), sizeof(UINT *));
@@ -1165,7 +1165,7 @@ DIB_CreateDIBSection(
     if(bi->biBitCount == 4) { Entries = 16; } else
     if(bi->biBitCount == 8) { Entries = 256; }
 
-    bmp->ColorMap = ExAllocatePoolWithTag(NonPagedPool, sizeof(RGBQUAD)*Entries, TAG_COLORMAP);
+    bmp->ColorMap = ExAllocatePoolWithTag(PagedPool, sizeof(RGBQUAD)*Entries, TAG_COLORMAP);
     RtlCopyMemory(bmp->ColorMap, bmi->bmiColors, sizeof(RGBQUAD)*Entries);
   }
 
@@ -1343,7 +1343,7 @@ DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
       nNumColors = min(nNumColors, lpbmi->bmiHeader.biClrUsed);
     }
 
-  lpRGB = (RGBQUAD *)ExAllocatePoolWithTag(NonPagedPool, sizeof(RGBQUAD) * nNumColors, TAG_COLORMAP);
+  lpRGB = (RGBQUAD *)ExAllocatePoolWithTag(PagedPool, sizeof(RGBQUAD) * nNumColors, TAG_COLORMAP);
   lpIndex = (USHORT *)&lpbmi->bmiColors[0];
 
   for (i = 0; i < nNumColors; i++)
@@ -1416,7 +1416,7 @@ BuildDIBPalette (PBITMAPINFO bmi, PINT paletteType)
 
   if (PAL_INDEXED == *paletteType)
     {
-      palEntries = ExAllocatePoolWithTag(NonPagedPool, sizeof(PALETTEENTRY)*ColorCount, TAG_COLORMAP);
+      palEntries = ExAllocatePoolWithTag(PagedPool, sizeof(PALETTEENTRY)*ColorCount, TAG_COLORMAP);
       DIBColorTableToPaletteEntries(palEntries, bmi->bmiColors, ColorCount);
     }
   hPal = PALETTE_AllocPalette( *paletteType, ColorCount, (ULONG*)palEntries, 0, 0, 0 );

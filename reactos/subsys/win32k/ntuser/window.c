@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.238 2004/06/19 20:18:09 navaraf Exp $
+/* $Id: window.c,v 1.239 2004/06/20 00:45:37 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2424,7 +2424,7 @@ NtUserFindWindowEx(HWND hwndParent,
     WCHAR *buf;
     /* safely copy the class name string (NULL terminated because class-lookup
        depends on it... */
-    buf = ExAllocatePoolWithTag(NonPagedPool, ClassName.Length + sizeof(WCHAR), TAG_STRING);
+    buf = ExAllocatePoolWithTag(PagedPool, ClassName.Length + sizeof(WCHAR), TAG_STRING);
     if(!buf)
     {
       SetLastWin32Error(STATUS_INSUFFICIENT_RESOURCES);

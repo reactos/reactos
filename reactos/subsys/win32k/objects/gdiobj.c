@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.67 2004/05/10 17:07:20 weiden Exp $
+ * $Id: gdiobj.c,v 1.68 2004/06/20 00:45:37 navaraf Exp $
  *
  */
 #include <w32k.h>
@@ -204,7 +204,7 @@ GDIOBJ_iAllocHandleTable (WORD Size)
 #endif
   handleTable->wTableSize = Size;
   handleTable->AllocationHint = 1;
-  handleTable->LookasideLists = ExAllocatePoolWithTag(NonPagedPool,
+  handleTable->LookasideLists = ExAllocatePoolWithTag(PagedPool,
                                                       OBJTYPE_COUNT * sizeof(PAGED_LOOKASIDE_LIST),
                                                       TAG_GDIHNDTBLE);
   if (NULL == handleTable->LookasideLists)

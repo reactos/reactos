@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.73 2004/05/14 16:50:44 navaraf Exp $ */
+/* $Id: bitmaps.c,v 1.74 2004/06/20 00:45:37 navaraf Exp $ */
 #include <w32k.h>
 
 #define IN_RECT(r,x,y) \
@@ -1301,7 +1301,7 @@ BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
 	{
 		char *buf;
 
-		buf = ExAllocatePoolWithTag (NonPagedPool, bm.bmWidthBytes * bm.bmHeight, TAG_BITMAP);
+		buf = ExAllocatePoolWithTag (PagedPool, bm.bmWidthBytes * bm.bmHeight, TAG_BITMAP);
 		NtGdiGetBitmapBits (hBitmap, bm.bmWidthBytes * bm.bmHeight, buf);
 		NtGdiSetBitmapBits (res, bm.bmWidthBytes * bm.bmHeight, buf);
 		ExFreePool (buf);

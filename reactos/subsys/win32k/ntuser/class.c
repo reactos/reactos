@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.57 2004/05/27 11:47:42 weiden Exp $
+/* $Id: class.c,v 1.58 2004/06/20 00:45:36 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -216,7 +216,7 @@ IntGetClassName(struct _WINDOW_OBJECT *WindowObject, LPWSTR lpClassName,
    Length = 0;
    Status = RtlQueryAtomInAtomTable(WinStaObject->AtomTable,
       WindowObject->Class->Atom, NULL, NULL, NULL, &Length);
-   Name = ExAllocatePoolWithTag(NonPagedPool, Length + sizeof(UNICODE_NULL), TAG_STRING);
+   Name = ExAllocatePoolWithTag(PagedPool, Length + sizeof(UNICODE_NULL), TAG_STRING);
    Status = RtlQueryAtomInAtomTable(WinStaObject->AtomTable,
       WindowObject->Class->Atom, NULL, NULL, Name, &Length);
    if (!NT_SUCCESS(Status))

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.116 2004/05/16 13:57:49 weiden Exp $
+/* $Id: winpos.c,v 1.117 2004/06/20 00:45:37 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -188,7 +188,7 @@ WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT *pt, PRECT RestoreRect)
       else
         IntGetDesktopWorkArea(Desktop, &WorkArea);
       
-      WindowObject->InternalPos = ExAllocatePoolWithTag(NonPagedPool, sizeof(INTERNALPOS), TAG_WININTLIST);
+      WindowObject->InternalPos = ExAllocatePoolWithTag(PagedPool, sizeof(INTERNALPOS), TAG_WININTLIST);
       if(!WindowObject->InternalPos)
       {
         DPRINT1("Failed to allocate INTERNALPOS structure for window 0x%x\n", WindowObject->Self);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: driver.c,v 1.39 2004/04/09 20:39:10 navaraf Exp $
+/* $Id: driver.c,v 1.40 2004/06/20 00:45:36 navaraf Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -52,7 +52,7 @@ static PGRAPHICS_DRIVER  GenericDriver = 0;
 
 BOOL DRIVER_RegisterDriver(LPCWSTR  Name, PGD_ENABLEDRIVER  EnableDriver)
 {
-  PGRAPHICS_DRIVER  Driver = ExAllocatePoolWithTag(NonPagedPool, sizeof(*Driver), TAG_DRIVER);
+  PGRAPHICS_DRIVER  Driver = ExAllocatePoolWithTag(PagedPool, sizeof(*Driver), TAG_DRIVER);
   DPRINT( "DRIVER_RegisterDriver( Name: %S )\n", Name );
   if (!Driver)  return  FALSE;
   Driver->ReferenceCount = 0;
