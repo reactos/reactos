@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.23 2002/09/08 10:22:46 chorns Exp $
+# $Id: Makefile,v 1.24 2002/10/26 00:32:17 chorns Exp $
 
 PATH_TO_TOP = ../..
 
@@ -73,9 +73,9 @@ OBJECTS_DIRECT = \
 	direct/rmdir.o
 
 OBJECTS_EXCEPT = \
+	except/seh.o \
 	except/abnorter.o \
 	except/exhand2.o \
-	except/exhand3.o \
 	except/matherr.o \
 	except/unwind.o \
 	except/xcptfil.o

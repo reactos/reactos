@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.74 2002/09/08 10:23:02 chorns Exp $
+# $Id: makefile,v 1.75 2002/10/26 00:32:18 chorns Exp $
 
 PATH_TO_TOP = ../..
 
@@ -23,6 +23,10 @@ TARGET_ENTRY = _LdrInitializeThunk@16
 CSR_OBJECTS = csr/lpc.o csr/capture.o csr/probe.o csr/thread.o
 
 DBG_OBJECTS = dbg/brkpoint.o dbg/debug.o dbg/print.o dbg/winedbg.o
+
+RTL_I386_OBJECTS = \
+	rtl/i386/exception.o \
+	rtl/i386/except.o
 
 RTL_OBJECTS = rtl/critical.o rtl/error.o rtl/heap.o rtl/largeint.o \
               rtl/math.o rtl/mem.o rtl/nls.o rtl/process.o rtl/sd.o \
@@ -51,9 +55,13 @@ STRING_OBJECTS = string/ctype.o string/memccpy.o string/memchr.o \
                  string/strpbrk.o string/strrchr.o string/strspn.o \
                  string/strstr.o string/strupr.o string/wstring.o
 
+ARCH_OBJECTS = \
+	$(RTL_I386_OBJECTS)
+
 TARGET_OBJECTS = \
   napi.o \
   ldr/startup.o \
+  $(ARCH_OBJECTS) \
   $(DBG_OBJECTS) \
   $(RTL_OBJECTS) \
   $(STDIO_OBJECTS) \

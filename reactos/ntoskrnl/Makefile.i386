@@ -41,10 +41,14 @@ OBJECTS_MM_I386 := \
 
 OBJECTS_RTL_I386 := \
 	rtl/i386/memset.o \
-	rtl/i386/memcpy.o
+	rtl/i386/memcpy.o \
+	rtl/i386/except.o \
+	rtl/i386/exception.o \
+	rtl/i386/seh.o
 
 RTL_EXCLUDE_FILTER := \
 	rtl/memset.o \
 	rtl/memcpy.o
 
 OBJECTS_ARCH = $(OBJECTS_BOOT) $(OBJECTS_EX_I386) $(OBJECTS_KE_I386) $(OBJECTS_MM_I386) $(OBJECTS_RTL_I386)
+

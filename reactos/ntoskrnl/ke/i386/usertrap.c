@@ -43,33 +43,9 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-/* GLOBALS *****************************************************************/
-
-static char *ExceptionTypeStrings[] = 
-  {
-    "Divide Error",
-    "Debug Trap",
-    "NMI",
-    "Breakpoint",
-    "Overflow",
-    "BOUND range exceeded",
-    "Invalid Opcode",
-    "No Math Coprocessor",
-    "Double Fault",
-    "Unknown(9)",
-    "Invalid TSS",
-    "Segment Not Present",
-    "Stack Segment Fault",
-    "General Protection",
-    "Page Fault",
-    "Math Fault",
-    "Alignment Check",
-    "Machine Check"
-  };
-
 /* FUNCTIONS ****************************************************************/
 
-STATIC BOOLEAN 
+BOOLEAN 
 print_user_address(PVOID address)
 {
    PLIST_ENTRY current_entry;
@@ -120,10 +96,6 @@ print_user_address(PVOID address)
    return(FALSE);
 }
 
-#if 0
-/*
- * Disabled until SEH support is implemented.
- */
 ULONG
 KiUserTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
 {
@@ -175,104 +147,3 @@ KiUserTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
   KiDispatchException(&Er, 0, Tf, UserMode, TRUE);
   return(0);
 }
-#else
-ULONG
-KiUserTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
-{
-  PULONG Frame;
-  ULONG cr3;
-  ULONG i;
-  ULONG ReturnAddress;
-  ULONG NextFrame;
-  NTSTATUS Status;
-
-  /*
-   * Get the PDBR
-   */
-  __asm__("movl %%cr3,%0\n\t" : "=d" (cr3));
-
-   /*
-    * Print out the CPU registers
-    */
-  if (ExceptionNr < 19)
-    {
-      DbgPrint("%s Exception: %d(%x)\n", ExceptionTypeStrings[ExceptionNr],
-	       ExceptionNr, Tf->ErrorCode&0xffff);
-    }
-  else
-    {
-      DbgPrint("Exception: %d(%x)\n", ExceptionNr, Tf->ErrorCode&0xffff);
-    }
-  DbgPrint("CS:EIP %x:%x ", Tf->Cs&0xffff, Tf->Eip);
-  print_user_address((PVOID)Tf->Eip);
-  DbgPrint("\n");
-  __asm__("movl %%cr3,%0\n\t" : "=d" (cr3));
-  DbgPrint("CR2 %x CR3 %x ", Cr2, cr3);
-  DbgPrint("Process: %x ",PsGetCurrentProcess());
-  if (PsGetCurrentProcess() != NULL)
-    {
-      DbgPrint("Pid: %x <", PsGetCurrentProcess()->UniqueProcessId);
-	DbgPrint("%.8s> ", PsGetCurrentProcess()->ImageFileName);
-    }
-  if (PsGetCurrentThread() != NULL)
-    {
-      DbgPrint("Thrd: %x Tid: %x",
-	       PsGetCurrentThread(),
-	       PsGetCurrentThread()->Cid.UniqueThread);
-    }
-  DbgPrint("\n");
-  DbgPrint("DS %x ES %x FS %x GS %x\n", Tf->Ds&0xffff, Tf->Es&0xffff,
-	   Tf->Fs&0xffff, Tf->Gs&0xfff);
-  DbgPrint("EAX: %.8x   EBX: %.8x   ECX: %.8x\n", Tf->Eax, Tf->Ebx, Tf->Ecx);
-  DbgPrint("EDX: %.8x   EBP: %.8x   ESI: %.8x\n", Tf->Edx, Tf->Ebp, Tf->Esi);
-  DbgPrint("EDI: %.8x   EFLAGS: %.8x ", Tf->Edi, Tf->Eflags);
-  DbgPrint("SS:ESP %x:%x\n", Tf->Ss, Tf->Esp);
-
-  /*
-   * Dump the stack frames
-   */
-  DbgPrint("Frames:   ");
-  i = 1;
-  Frame = (PULONG)Tf->Ebp;
-  while (Frame != NULL && i < 50)
-    {
-      Status = MmSafeCopyFromUser(&ReturnAddress, &Frame[1], sizeof(ULONG));
-      if (!NT_SUCCESS(Status))
-	{
-	  DbgPrint("????????\n");
-	  break;
-	}
-      print_user_address((PVOID)ReturnAddress);
-      Status = MmSafeCopyFromUser(&NextFrame, &Frame[0], sizeof(ULONG));
-      if (!NT_SUCCESS(Status))
-	{
-	  DbgPrint("Frame is inaccessible.\n");
-	  break;
-	}
-      if ((NextFrame + sizeof(ULONG)) >= KERNEL_BASE)
-	{
-	  DbgPrint("Next frame is in kernel space!\n");
-	  break;
-	}
-      if (NextFrame != 0 && NextFrame <= (ULONG)Frame)
-	{
-	  DbgPrint("Next frame is not above current frame!\n");
-	  break;
-	}
-      Frame = (PULONG)NextFrame;
-      i++;
-    }
-
-  /*
-   * Kill the faulting process
-   */
-  __asm__("sti\n\t");
-  ZwTerminateProcess(NtCurrentProcess(), STATUS_NONCONTINUABLE_EXCEPTION);
-
-  /*
-   * If terminating the process fails then bugcheck
-   */
-  KeBugCheck(0);
-  return(0);
-}
-#endif

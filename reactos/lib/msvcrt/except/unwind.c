@@ -1,13 +1,10 @@
 #include <windows.h>
-#define PEXCEPTION_FRAME void*
 
-void _global_unwind2( PEXCEPTION_FRAME frame )
+void __cdecl
+_global_unwind2(PEXCEPTION_REGISTRATION RegistrationFrame)
 {
-   //RtlUnwind( frame, 0, NULL, 0 );
-}
-
-void _local_unwind2( PEXCEPTION_FRAME endframe, DWORD nr )
-{
-   //TRACE(crtdll,"(%p,%ld)\n",endframe,nr);
+   RtlUnwind(RegistrationFrame, &&__ret_label, NULL, 0);
+__ret_label:
+   // return is important
    return;
 }

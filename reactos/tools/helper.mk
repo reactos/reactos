@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.21 2002/09/08 10:23:53 chorns Exp $
+# $Id: helper.mk,v 1.22 2002/10/26 00:32:19 chorns Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -381,6 +381,7 @@ include $(PATH_TO_TOP)/config
 TARGET_CFLAGS += $(MK_CFLAGS)
 TARGET_CFLAGS += -pipe -march=$(ARCH)
 ifeq ($(DBG),1)
+TARGET_ASFLAGS += -g
 TARGET_CFLAGS += -g
 TARGET_LFLAGS += -g
 endif

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.55 2002/10/01 19:27:25 chorns Exp $
+/* $Id: create.c,v 1.56 2002/10/26 00:32:19 chorns Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -468,6 +468,9 @@ PsCreateTeb(HANDLE ProcessHandle,
    Teb.Cid.UniqueThread = Thread->Cid.UniqueThread;
    Teb.Cid.UniqueProcess = Thread->Cid.UniqueProcess;
    Teb.CurrentLocale = PsDefaultThreadLocaleId;
+
+   /* Terminate the exception handler list */
+   Teb.Tib.ExceptionList = (PVOID)-1;
    
    DPRINT("sizeof(TEB) %x\n", sizeof(TEB));
    

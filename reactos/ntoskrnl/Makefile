@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.85 2002/10/09 07:11:24 ei Exp $
+# $Id: Makefile,v 1.86 2002/10/26 00:32:18 chorns Exp $
 #
 # ReactOS Operating System
 #
@@ -99,7 +99,6 @@ OBJECTS_RTL = \
 	rtl/purecall.o \
 	rtl/qsort.o \
 	rtl/regio.o \
-	rtl/seh.o \
 	rtl/sprintf.o \
 	rtl/stdlib.o \
 	rtl/string.o \
