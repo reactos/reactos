@@ -176,72 +176,58 @@ void FindProgramDlg::Refresh(bool delete_cache)
 void FindProgramDlg::collect_programs_callback(Entry* entry, void* param)
 {
 	FindProgramDlg* pThis = (FindProgramDlg*) param;
-	ShellPath shell_path;
-
-	if (!get_entry_pidl(entry, shell_path))
-		return;
 
 	IShellLink* pShellLink;
-	LPCITEMIDLIST pidl_last = NULL;
-	IShellFolder* pFolder;
-
-	static DynamicFct<HRESULT(WINAPI*)(LPCITEMIDLIST, REFIID, LPVOID*, LPCITEMIDLIST*)> SHBindToParent(TEXT("SHELL32"), "SHBindToParent");
-
-	if (!SHBindToParent)
-		return;
-
-	HRESULT hr = (*SHBindToParent)(shell_path, IID_IShellFolder, (LPVOID*)&pFolder, &pidl_last);
+	HRESULT hr = entry->GetUIObjectOf(pThis->_hwnd, IID_IShellLink, (LPVOID*)&pShellLink);
 
 	if (SUCCEEDED(hr)) {
-		hr = pFolder->GetUIObjectOf(pThis->_hwnd, 1, &pidl_last, IID_IShellLink, NULL, (LPVOID*)&pShellLink);
+		ShellLinkPtr shell_link(pShellLink);
 
-		if (SUCCEEDED(hr)) {
-			ShellLinkPtr shell_link(pShellLink);
+		shell_link->Release();
 
-			/*hr = pShellLink->Resolve(pThis->_hwnd, SLR_NO_UI);
-			if (SUCCEEDED(hr))*/ {
-				WIN32_FIND_DATA wfd;
-				TCHAR path[MAX_PATH];
+		/*hr = pShellLink->Resolve(pThis->_hwnd, SLR_NO_UI);
+		if (SUCCEEDED(hr))*/ {
+			WIN32_FIND_DATA wfd;
+			TCHAR path[MAX_PATH];
 
-				hr = pShellLink->GetPath(path, MAX_PATH-1, &wfd, SLGP_UNCPRIORITY);
+			hr = pShellLink->GetPath(path, MAX_PATH-1, &wfd, SLGP_UNCPRIORITY);
 
-				if (SUCCEEDED(hr)) {
-					TCHAR entry_path[MAX_PATH];
+			if (SUCCEEDED(hr)) {
+				TCHAR entry_path[MAX_PATH];
 
-					entry->get_path(entry_path);
+				entry->get_path(entry_path);
 
-					String menu_path;
+				String menu_path;
 
-					int len = pThis->_common_programs.size();
+				int len = pThis->_common_programs.size();
 
-					if (len && !_tcsnicmp(entry_path, pThis->_common_programs, len))
-						menu_path = ResString(IDS_ALL_USERS) + (String(entry_path)+len);
-					else if ((len=pThis->_user_programs.size()) && !_tcsnicmp(entry_path, pThis->_user_programs, len))
-						menu_path = String(entry_path)+len;
+				if (len && !_tcsnicmp(entry_path, pThis->_common_programs, len))
+					menu_path = ResString(IDS_ALL_USERS) + (String(entry_path)+len);
+				else if ((len=pThis->_user_programs.size()) && !_tcsnicmp(entry_path, pThis->_user_programs, len))
+					menu_path = String(entry_path)+len;
 
-					 // store info in cache
-					FPDEntry new_entry;
+				 // store info in cache
+				FPDEntry new_entry;
 
-					new_entry._entry = entry;
-					new_entry._menu_path = menu_path;
-					new_entry._path = path;
+				new_entry._entry = entry;
+				new_entry._menu_path = menu_path;
+				new_entry._path = path;
 
-					if (entry->_hIcon != (HICON)-1)
-						new_entry._idxIcon = ImageList_AddIcon(pThis->_himl, entry->_hIcon);
-					else
-						new_entry._idxIcon = pThis->_idxNoIcon;
+				if (entry->_hIcon != (HICON)-1)
+					new_entry._idxIcon = ImageList_AddIcon(pThis->_himl, entry->_hIcon);
+				else
+					new_entry._idxIcon = pThis->_idxNoIcon;
 
-					pThis->_cache.push_front(new_entry);
-					FPDEntry& cache_entry = pThis->_cache.front();
+				pThis->_cache.push_front(new_entry);
+				FPDEntry& cache_entry = pThis->_cache.front();
 
-					Lock lock(pThis->_thread._crit_sect);
+				Lock lock(pThis->_thread._crit_sect);
 
-					 // resolve deadlocks while executing Thread::Stop()
-					if (!pThis->_thread.is_alive())
-						return;
+				 // resolve deadlocks while executing Thread::Stop()
+				if (!pThis->_thread.is_alive())
+					return;
 
-					pThis->add_entry(cache_entry);
-				}
+				pThis->add_entry(cache_entry);
 			}
 		}
 	}

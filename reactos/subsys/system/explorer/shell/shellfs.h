@@ -34,6 +34,7 @@ struct ShellEntry : public Entry
 
 	virtual bool get_path(PTSTR path) const;
 	virtual BOOL launch_entry(HWND hwnd, UINT nCmdShow=SW_SHOWNORMAL);
+	virtual HRESULT GetUIObjectOf(HWND hWnd, REFIID riid, LPVOID* ppvOut);
 
 	IShellFolder* get_parent_folder() const;
 	ShellPath create_absolute_pidl() const;

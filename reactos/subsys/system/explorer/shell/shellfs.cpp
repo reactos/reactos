@@ -151,6 +151,14 @@ bool ShellEntry::get_path(PTSTR path) const
 }
 
 
+HRESULT ShellEntry::GetUIObjectOf(HWND hWnd, REFIID riid, LPVOID* ppvOut)
+{
+	LPCITEMIDLIST pidl = _pidl;
+
+	return get_parent_folder()->GetUIObjectOf(hWnd, 1, &pidl, riid, NULL, ppvOut);
+}
+
+
  // get full path of a shell folder
 bool ShellDirectory::get_path(PTSTR path) const
 {
@@ -388,7 +396,6 @@ void ShellDirectory::read_directory(int scan_flags)
 
 				if (ext) {//@@
 					int len = ext - entry->_data.cFileName;
-
 					entry->_display_name = (LPTSTR) malloc((len+1)*sizeof(TCHAR));
 					_tcsncpy(entry->_display_name, entry->_data.cFileName, len);
 					entry->_display_name[len] = TEXT('\0');

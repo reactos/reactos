@@ -91,6 +91,7 @@ public:
 	virtual const void* get_next_path_component(const void*) {return NULL;}
 	virtual Entry* find_entry(const void*) {return NULL;}
 	virtual bool get_path(PTSTR path) const = 0;
+	virtual HRESULT GetUIObjectOf(HWND hWnd, REFIID riid, LPVOID* ppvOut);
 	virtual BOOL launch_entry(HWND hwnd, UINT nCmdShow=SW_SHOWNORMAL);
 };
 

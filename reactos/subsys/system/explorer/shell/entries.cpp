@@ -307,6 +307,59 @@ BOOL Entry::launch_entry(HWND hwnd, UINT nCmdShow)
 }
 
 
+HRESULT Entry::GetUIObjectOf(HWND hWnd, REFIID riid, LPVOID* ppvOut)
+{
+	TCHAR path[MAX_PATH];
+/*
+	if (!get_path(path))
+		return E_FAIL;
+
+	ShellPath shell_path(path);
+
+	IShellFolder* pFolder;
+	LPCITEMIDLIST pidl_last = NULL;
+
+	static DynamicFct<HRESULT(WINAPI*)(LPCITEMIDLIST, REFIID, LPVOID*, LPCITEMIDLIST*)> SHBindToParent(TEXT("SHELL32"), "SHBindToParent");
+
+	if (!SHBindToParent)
+		return E_NOTIMPL;
+
+	HRESULT hr = (*SHBindToParent)(shell_path, IID_IShellFolder, (LPVOID*)&pFolder, &pidl_last);
+	if (FAILED(hr))
+		return hr;
+
+	ShellFolder shell_folder(pFolder);
+
+	shell_folder->Release();
+
+	return shell_folder->GetUIObjectOf(hWnd, 1, &pidl_last, riid, NULL, ppvOut);
+*/
+	if (!_up)
+		return E_INVALIDARG;
+
+	if (!_up->get_path(path))
+		return E_FAIL;
+
+	ShellPath shell_path(path);
+	ShellFolder shell_folder(shell_path);
+
+	WCHAR wname[MAX_PATH];
+	MultiByteToWideChar(CP_ACP, 0, _data.cFileName, -1, wname, MAX_PATH);
+
+	LPITEMIDLIST pidl_last = NULL;
+	HRESULT hr = shell_folder->ParseDisplayName(hWnd, NULL, wname, NULL, &pidl_last, NULL);
+
+	if (FAILED(hr))
+		return hr;
+
+	hr = shell_folder->GetUIObjectOf(hWnd, 1, (LPCITEMIDLIST*)&pidl_last, riid, NULL, ppvOut);
+
+	ShellMalloc()->Free((void*)pidl_last);
+
+	return hr;
+}
+
+
  // recursively free all child entries
 void Entry::free_subentries()
 {
