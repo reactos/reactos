@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.5 2000/12/29 23:17:12 dwelch Exp $
+/* $Id: volume.c,v 1.6 2001/01/12 21:00:08 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -88,8 +88,8 @@ FsdGetFsSizeInformation (PDEVICE_OBJECT DeviceObject,
       else
 	FsSizeInfo->TotalAllocationUnits.QuadPart = BootSect->SectorsHuge;
 
-      FsSizeInfo->AvailableAllocationUnits.QuadPart =
-	FAT32CountAvailableClusters (DeviceExt);
+      /*      FsSizeInfo->AvailableAllocationUnits.QuadPart =
+	      FAT32CountAvailableClusters (DeviceExt); */
 
       FsSizeInfo->SectorsPerAllocationUnit = BootSect->SectorsPerCluster;
       FsSizeInfo->BytesPerSector = BootSect->BytesPerSector;
@@ -102,14 +102,14 @@ FsdGetFsSizeInformation (PDEVICE_OBJECT DeviceObject,
 	FsSizeInfo->TotalAllocationUnits.QuadPart = BootSect->Sectors;
       else
 	FsSizeInfo->TotalAllocationUnits.QuadPart = BootSect->SectorsHuge;
-
+      /*
       if (DeviceExt->FatType == FAT16)
 	FsSizeInfo->AvailableAllocationUnits.QuadPart =
 	  FAT16CountAvailableClusters (DeviceExt);
       else
 	FsSizeInfo->AvailableAllocationUnits.QuadPart =
 	  FAT12CountAvailableClusters (DeviceExt);
-
+      */
       FsSizeInfo->SectorsPerAllocationUnit = BootSect->SectorsPerCluster;
       FsSizeInfo->BytesPerSector = BootSect->BytesPerSector;
     }

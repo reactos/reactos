@@ -73,6 +73,15 @@ typedef struct
 
 typedef struct
 {
+  ULONG FileOffset;
+  ULONG Protection;
+  ULONG Attributes;
+  SECTION_PAGE_DIRECTORY PageDirectory;
+  KMUTEX Lock;
+} MM_SECTION_SEGMENT;
+
+typedef struct
+{
   CSHORT Type;
   CSHORT Size;
   LARGE_INTEGER MaximumSize;

@@ -1,4 +1,4 @@
-/* $Id: iface.c,v 1.47 2001/01/08 02:14:06 dwelch Exp $
+/* $Id: iface.c,v 1.48 2001/01/12 21:00:08 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -128,17 +128,6 @@ VfatMountDevice (PDEVICE_EXTENSION DeviceExt, PDEVICE_OBJECT DeviceToMount)
       DeviceExt->FatType = FAT16;
     }
 
-  // with FAT32 it's not a good idea to load always fat in memory
-  // because on a 8GB partition with 2 KO clusters, the fat = 8 MO
-  if (DeviceExt->FatType != FAT32)
-    {
-      DeviceExt->FAT =
-	ExAllocatePool (NonPagedPool,
-			BLOCKSIZE * DeviceExt->Boot->FATSectors);
-      /* FIXME: Check status */
-      VfatReadSectors (DeviceToMount, DeviceExt->FATStart,
-		       DeviceExt->Boot->FATSectors, (UCHAR *) DeviceExt->FAT);
-    }
   return STATUS_SUCCESS;
 }
 

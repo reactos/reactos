@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.20 2001/01/08 02:14:06 dwelch Exp $ */
+/* $Id: vfat.h,v 1.21 2001/01/12 21:00:08 dwelch Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -88,7 +88,6 @@ typedef struct
   int FATEntriesPerSector, FATUnit;
   ULONG BytesPerCluster;
   ULONG FatType;
-  unsigned char* FAT;   
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
 typedef struct _VFATFCB
@@ -233,8 +232,10 @@ wstrcmpjoki(PWSTR s1, PWSTR s2);
  */
 ULONG 
 ClusterToSector(PDEVICE_EXTENSION DeviceExt, ULONG Cluster);
-ULONG 
-GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster);
+NTSTATUS
+GetNextCluster(PDEVICE_EXTENSION DeviceExt, 
+	       ULONG CurrentCluster,
+	       PULONG NextCluster);
 VOID 
 VFATLoadCluster(PDEVICE_EXTENSION DeviceExt, PVOID Buffer, ULONG Cluster);
 ULONG 
@@ -243,6 +244,9 @@ ULONG
 FAT16CountAvailableClusters(PDEVICE_EXTENSION DeviceExt);
 ULONG 
 FAT32CountAvailableClusters(PDEVICE_EXTENSION DeviceExt);
+VOID
+WriteCluster (PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
+	      ULONG NewValue);
 
 /*
  * functions from volume.c

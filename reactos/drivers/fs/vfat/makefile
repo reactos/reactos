@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.25 2001/01/01 04:42:12 dwelch Exp $
+# $Id: makefile,v 1.26 2001/01/12 21:00:08 dwelch Exp $
 #
 #
 PATH_TO_TOP = ../../..
@@ -9,7 +9,7 @@ OBJECTS = blockdev.o close.o create.o dir.o dirwr.o iface.o string.o fat.o \
           rw.o finfo.o volume.o shutdown.o $(TARGET).coff
 LIBS = ../../../ntoskrnl/ntoskrnl.a
 
-CFLAGS = -g
+CFLAGS = -g -Wall -Werror
 
 all: $(TARGET).nostrip.sys $(TARGET).sys
 

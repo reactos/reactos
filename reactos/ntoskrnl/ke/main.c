@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.71 2001/01/06 21:40:13 rex Exp $
+/* $Id: main.c,v 1.72 2001/01/12 21:00:07 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -443,11 +443,12 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
 	   sizeof(LOADER_MODULE) * KeLoaderBlock.ModsCount);
    KeLoaderBlock.ModsAddr = (ULONG)&KeLoaderModules;
 
-   /*FIXME: Preliminary hack!!!! Add boot device to beginning of command line.
+   /*
+    * FIXME: Preliminary hack!!!! Add boot device to beginning of command line.
     * This should be done by the boot loader.
     */
    strcpy (KeLoaderCommandLine,
-	   "multi(0)disk(0)rdisk(0)partition(1)\\reactos");
+	   "multi(0)disk(0)rdisk(0)partition(1)\\reactos ");
    strcat (KeLoaderCommandLine, (PUCHAR)KeLoaderBlock.CommandLine);
 
    KeLoaderBlock.CommandLine = (ULONG)KeLoaderCommandLine;

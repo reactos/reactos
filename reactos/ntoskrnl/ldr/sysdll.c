@@ -235,7 +235,6 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
     */   
    RtlInitAnsiString (&ProcedureName,
 		      "LdrInitializeThunk");
-   DPRINT1("Getting address of system DLL entrypoint\n");
    Status = LdrGetProcedureAddress ((PVOID)ImageBase,
 				    &ProcedureName,
 				    0,
@@ -248,8 +247,6 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
 	ZwClose(NTDllSectionHandle);
 	return (Status);
      }
-   DPRINT1("SystemDllEntryPoint 0x%08lx\n",
-	  SystemDllEntryPoint);
    *LdrStartupAddr = SystemDllEntryPoint;
 
    /*

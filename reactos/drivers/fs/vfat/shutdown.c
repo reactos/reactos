@@ -1,4 +1,4 @@
-/* $Id: shutdown.c,v 1.1 2000/12/29 13:45:01 ekohl Exp $
+/* $Id: shutdown.c,v 1.2 2001/01/12 21:00:08 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -21,9 +21,6 @@
 NTSTATUS STDCALL
 VfatShutdown(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
-   PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
-   PFILE_OBJECT FileObject = Stack->FileObject;
-   PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
    NTSTATUS Status;
 
    DPRINT("VfatShutdown(DeviceObject %x, Irp %x)\n",DeviceObject, Irp);

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.12 2001/01/08 02:14:06 dwelch Exp $
+/* $Id: create.c,v 1.13 2001/01/12 21:00:08 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -148,6 +148,7 @@ ReadVolumeLabel (PDEVICE_EXTENSION DeviceExt, PVPB Vpb)
   char *block;
   ULONG StartingSector;
   ULONG NextCluster;
+  NTSTATUS Status;
 
   Size = DeviceExt->rootDirectorySectors;	//FIXME : in fat32, no limit
   StartingSector = DeviceExt->rootStart;
@@ -191,7 +192,7 @@ ReadVolumeLabel (PDEVICE_EXTENSION DeviceExt, PVPB Vpb)
 	{
 	  if (StartingSector == ClusterToSector (DeviceExt, NextCluster + 1))
 	    {
-	      NextCluster = GetNextCluster (DeviceExt, NextCluster);
+	      Status = GetNextCluster (DeviceExt, NextCluster, &NextCluster);
 	      if (NextCluster == 0 || NextCluster == 0xffffffff)
 		{
 		  *(Vpb->VolumeLabel) = 0;
@@ -225,6 +226,7 @@ FindFile (PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
   ULONG StartingSector;
   ULONG NextCluster;
   WCHAR TempStr[2];
+  NTSTATUS Status;
 
   DPRINT ("FindFile(Parent %x, FileToFind '%S')\n", Parent, FileToFind);
 
@@ -352,7 +354,7 @@ FindFile (PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
 	{
 	  if (StartingSector == ClusterToSector (DeviceExt, NextCluster + 1))
 	    {
-	      NextCluster = GetNextCluster (DeviceExt, NextCluster);
+	      Status = GetNextCluster (DeviceExt, NextCluster, &NextCluster);
 	      if (NextCluster == 0 || NextCluster == 0xffffffff)
 		{
 		  if (StartSector)
@@ -638,7 +640,7 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
   FileObject = Stack->FileObject;
   DeviceExt = DeviceObject->DeviceExtension;
   assert (DeviceExt);
-
+  
   Status = FsdOpenFile (DeviceExt, FileObject, FileObject->FileName.Buffer);
 
   CHECKPOINT;
@@ -700,8 +702,8 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	  //	  updEntry (DeviceExt, FileObject);
 	  while (Cluster != 0xffffffff && Cluster > 1)
 	    {
-	      NextCluster = GetNextCluster (DeviceExt, Cluster);
-	      WriteCluster (DeviceExt, Cluster, 0);
+	      Status = GetNextCluster (DeviceExt, Cluster, &NextCluster);
+	      //	      WriteCluster (DeviceExt, Cluster, 0);
 	      Cluster = NextCluster;
 	    }
 	}
