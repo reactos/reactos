@@ -137,7 +137,7 @@ W32kAddFontResource(LPCWSTR  Filename)
   RtlInitAnsiString(&StringA, (LPSTR)face->family_name);
   RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
   FontTable[FontsLoaded].FaceName = ExAllocatePool(NonPagedPool, (StringU.Length + 1) * 2);
-  wcscpy(FontTable[FontsLoaded].FaceName, StringU.Buffer);
+  wcscpy((LPWSTR)FontTable[FontsLoaded].FaceName, StringU.Buffer);
   RtlFreeUnicodeString(&StringU);
 
   FontsLoaded++;
@@ -420,14 +420,14 @@ W32kGetTextExtentPoint(HDC  hDC,
                              int  Count,
                              LPSIZE  Size)
 {
-  PDC dc = AccessUserObject(hDC);
+  PDC dc = (PDC)AccessUserObject(hDC);
   PFONTGDI FontGDI;
   FT_Face face;
   FT_GlyphSlot glyph;
   INT error, pitch, glyph_index, i;
   ULONG TotalWidth = 0, MaxHeight = 0, CurrentChar = 0, SpaceBetweenChars = 5;
 
-  FontGDI = AccessInternalObject(dc->w.hFont);
+  FontGDI = (PFONTGDI)AccessInternalObject(dc->w.hFont);
 
   for(i=0; i<Count; i++)
   {
@@ -450,7 +450,7 @@ W32kGetTextExtentPoint(HDC  hDC,
 
     CurrentChar++;
 
-    if(CurrentChar < Size) TotalWidth += SpaceBetweenChars;
+    if(CurrentChar < Size->cx) TotalWidth += SpaceBetweenChars;
     String++;
   }
 
@@ -482,10 +482,10 @@ STDCALL
 W32kGetTextMetrics(HDC  hDC,
                          LPTEXTMETRIC  tm)
 {
-  PDC dc = AccessUserObject(hDC);
+  PDC dc = (PDC)AccessUserObject(hDC);
   PFONTGDI FontGDI;
 
-  FontGDI = AccessInternalObject(dc->w.hFont);
+  FontGDI = (PFONTGDI)AccessInternalObject(dc->w.hFont);
   memcpy(tm, &FontGDI->TextMetric, sizeof(TEXTMETRIC));
 
   return TRUE;
@@ -576,7 +576,7 @@ W32kTextOut(HDC  hDC,
   // Fixme: Call EngTextOut, which does the real work (calling DrvTextOut where appropriate)
 
   DC *dc = DC_HandleToPtr(hDC);
-  SURFOBJ *SurfObj = AccessUserObject(dc->Surface);
+  SURFOBJ *SurfObj = (SURFOBJ*)AccessUserObject(dc->Surface);
   int error, glyph_index, n, load_flags = FT_LOAD_RENDER, i, j, sx, sy, scc;
   FT_Face face;
   FT_GlyphSlot glyph;
@@ -612,8 +612,8 @@ W32kTextOut(HDC  hDC,
     return FALSE;
   }
 
-  FontObj = AccessUserObject(hFont);
-  FontGDI = AccessInternalObject(hFont);
+  FontObj = (PFONTOBJ)AccessUserObject(hFont);
+  FontGDI = (PFONTGDI)AccessInternalObject(hFont);
   face = FontGDI->face;
 
   if (face->charmap == NULL)
@@ -643,8 +643,8 @@ W32kTextOut(HDC  hDC,
   }
 
   // Create the brush
-  PalDestGDI = AccessInternalObject(dc->w.hPalette);
-  XlateObj = EngCreateXlate(PalDestGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
+  PalDestGDI = (PPALGDI)AccessInternalObject(dc->w.hPalette);
+  XlateObj = (PXLATEOBJ)EngCreateXlate(PalDestGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
   hBrush = W32kCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->w.textColor));
   Brush = BRUSHOBJ_HandleToPtr(hBrush);
   EngDeleteXlate(XlateObj);
@@ -711,7 +711,7 @@ W32kTextOut(HDC  hDC,
     // Then use memset with 0 to clear it and sourcerect to limit the work of the transbitblt
 
     HSourceGlyph = EngCreateBitmap(bitSize, pitch, BMF_1BPP, 0, glyph->bitmap.buffer);
-    SourceGlyphSurf = AccessUserObject(HSourceGlyph);
+    SourceGlyphSurf = (PSURFOBJ)AccessUserObject(HSourceGlyph);
 
     // Use the font data as a mask to paint onto the DCs surface using a brush
     EngBitBlt(SurfObj, NULL, SourceGlyphSurf, NULL, NULL, &DestRect, &SourcePoint, &MaskRect, Brush, &BrushOrigin, 0xAACC);

@@ -1,7 +1,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.9 2001/06/12 17:50:29 chorns Exp $
+ * $Id: gdiobj.c,v 1.10 2001/06/25 09:30:06 ekohl Exp $
  *
  */
 
@@ -227,7 +227,7 @@ VOID CreateStockObjects(void)
   StockObjects[SYSTEM_FIXED_FONT] =   W32kCreateFontIndirect(&SystemFixedFont);
   StockObjects[DEFAULT_GUI_FONT] =    W32kCreateFontIndirect(&DefaultGuiFont);
 
-  StockObjects[DEFAULT_PALETTE] = PALETTE_Init();
+  StockObjects[DEFAULT_PALETTE] = (HGDIOBJ*)PALETTE_Init();
 }
 
 HGDIOBJ STDCALL  W32kGetStockObject(INT  Object)

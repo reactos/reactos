@@ -17,9 +17,9 @@ UINT STDCALL W32kSetDIBColorTable(HDC  hDC,
   PPALOBJ palette;
   RGBQUAD *end;
 
-  if (!(dc = AccessUserObject(hDC))) return 0;
+  if (!(dc = (PDC)AccessUserObject(hDC))) return 0;
 
-  if (!(palette = AccessUserObject(dc->DevInfo.hpalDefault)))
+  if (!(palette = (PPALOBJ)AccessUserObject(dc->DevInfo.hpalDefault)))
   {
 //    GDI_ReleaseObj( hdc );
     return 0;
@@ -95,7 +95,7 @@ INT STDCALL W32kSetDIBits(HDC  hDC,
   // Create a temporary surface for the destination bitmap
   DestSurf   = ExAllocatePool(PagedPool, sizeof(SURFOBJ));
   DestGDI    = ExAllocatePool(PagedPool, sizeof(SURFGDI));
-  DestBitmap = CreateGDIHandle(DestGDI, DestSurf);
+  DestBitmap = (HBITMAP)CreateGDIHandle(DestGDI, DestSurf);
 
   BitmapToSurf(hDC, DestGDI, DestSurf, bitmap);
 
@@ -105,10 +105,10 @@ INT STDCALL W32kSetDIBits(HDC  hDC,
   SourceBitmap = EngCreateBitmap(SourceSize, DIB_GetDIBWidthBytes(SourceSize.cx, bmi->bmiHeader.biBitCount),
                                  BitmapFormat(bmi->bmiHeader.biBitCount, bmi->bmiHeader.biCompression),
                                  0, Bits);
-  SourceSurf = AccessUserObject(SourceBitmap);
+  SourceSurf = (PSURFOBJ)AccessUserObject(SourceBitmap);
 
   // Destination palette obtained from the hDC
-  hDCPalette = AccessInternalObject(dc->DevInfo.hpalDefault);
+  hDCPalette = (PPALGDI)AccessInternalObject(dc->DevInfo.hpalDefault);
   DDB_Palette_Type = hDCPalette->Mode;
   DDB_Palette = dc->DevInfo.hpalDefault;
 

@@ -52,7 +52,7 @@ const PALETTEENTRY COLOR_sysPalTemplate[NB_RESERVED_COLORS] =
 
 const PALETTEENTRY* COLOR_GetSystemPaletteTemplate(void)
 {
-  return &COLOR_sysPalTemplate;
+  return (const PALETTEENTRY*)&COLOR_sysPalTemplate;
 }
 
 BOOL STDCALL W32kAnimatePalette(HPALETTE  hpal,
@@ -120,10 +120,10 @@ HPALETTE STDCALL W32kCreatePalette(CONST PLOGPALETTE palette)
 {
   PPALOBJ  PalObj;
 
-  HPALETTE NewPalette = EngCreatePalette(PAL_INDEXED, palette->palNumEntries, palette->palPalEntry, 0, 0, 0);
+  HPALETTE NewPalette = (HPALETTE)EngCreatePalette(PAL_INDEXED, palette->palNumEntries, palette->palPalEntry, 0, 0, 0);
   ULONG size;
 
-  PalObj = AccessUserObject(NewPalette);
+  PalObj = (PPALOBJ)AccessUserObject(NewPalette);
 
   size = sizeof(LOGPALETTE) + (palette->palNumEntries * sizeof(PALETTEENTRY));
   PalObj->logpalette = ExAllocatePool(NonPagedPool, size);
@@ -150,7 +150,7 @@ COLORREF STDCALL W32kGetNearestColor(HDC  hDC,
   if(DC_HandleToPtr(hDC))
   {
     HPALETTE hpal = (dc->w.hPalette)? dc->w.hPalette : W32kGetStockObject(DEFAULT_PALETTE);
-    palObj = AccessUserObject(hpal);
+    palObj = (PPALOBJ)AccessUserObject(hpal);
     if (!palObj) {
 //      GDI_ReleaseObj(hdc);
       return nearest;
@@ -169,7 +169,7 @@ COLORREF STDCALL W32kGetNearestColor(HDC  hDC,
 UINT STDCALL W32kGetNearestPaletteIndex(HPALETTE  hpal,
                                  COLORREF  Color)
 {
-  PPALOBJ     palObj = AccessUserObject(hpal);
+  PPALOBJ     palObj = (PPALOBJ)AccessUserObject(hpal);
   UINT index  = 0;
 
   if( palObj )
@@ -190,7 +190,7 @@ UINT STDCALL W32kGetPaletteEntries(HPALETTE  hpal,
   PPALOBJ palPtr;
   UINT numEntries;
 
-  palPtr = AccessUserObject(hpal);
+  palPtr = (PPALOBJ)AccessUserObject(hpal);
   if (!palPtr) return 0;
 
   numEntries = palPtr->logpalette->palNumEntries;
@@ -271,19 +271,19 @@ A logical palette is a buffer between color-intensive applications and the syste
   PPALOBJ palPtr, sysPtr;
   PPALGDI palGDI, sysGDI;
   int realized = 0;
-  PDC dc = AccessUserObject(hDC);
+  PDC dc = (PDC)AccessUserObject(hDC);
   HPALETTE systemPalette;
   PSURFGDI SurfGDI;
   BOOLEAN success;
 
   if (!dc) return 0;
 
-  palPtr = AccessUserObject(dc->w.hPalette);
-  SurfGDI = AccessInternalObjectFromUserObject(dc->Surface);
+  palPtr = (PPALOBJ)AccessUserObject(dc->w.hPalette);
+  SurfGDI = (PSURFGDI)AccessInternalObjectFromUserObject(dc->Surface);
   systemPalette = W32kGetStockObject(STOCK_DEFAULT_PALETTE);
-  sysPtr = AccessInternalObject(systemPalette);
-  palGDI = AccessInternalObject(dc->w.hPalette);
-  sysGDI = AccessInternalObject(systemPalette);
+  sysPtr = (PPALOBJ)AccessInternalObject(systemPalette);
+  palGDI = (PPALGDI)AccessInternalObject(dc->w.hPalette);
+  sysGDI = (PPALGDI)AccessInternalObject(systemPalette);
 
   // Step 1: Create mapping of system palette\DC palette
   realized = PALETTE_SetMapping(palPtr, 0, palPtr->logpalette->palNumEntries,
@@ -365,7 +365,7 @@ HPALETTE STDCALL W32kSelectPalette(HDC  hDC,
                             HPALETTE  hpal,
                             BOOL  ForceBackground)
 {
-  PDC dc = AccessUserObject(hDC);
+  PDC dc = (PDC)AccessUserObject(hDC);
   HPALETTE oldPal;
 
   oldPal = dc->w.hPalette;
@@ -390,7 +390,7 @@ UINT STDCALL W32kSetPaletteEntries(HPALETTE  hpal,
   PPALOBJ palPtr;
   INT numEntries;
 
-  palPtr = AccessUserObject(hpal);
+  palPtr = (PPALOBJ)AccessUserObject(hpal);
   if (!palPtr) return 0;
 
   numEntries = palPtr->logpalette->palNumEntries;
@@ -466,7 +466,7 @@ COLORREF COLOR_LookupNearestColor( PALETTEENTRY* palPalEntry, int size, COLORREF
 {
   unsigned char spec_type = color >> 24;
   int i;
-  PALETTEENTRY *COLOR_sysPal = ReturnSystemPalette();
+  PALETTEENTRY *COLOR_sysPal = (PALETTEENTRY*)ReturnSystemPalette();
 
   // we need logical palette for PALETTERGB and PALETTEINDEX colorrefs
 

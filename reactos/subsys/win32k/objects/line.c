@@ -104,7 +104,7 @@ W32kLineTo(HDC  hDC,
                  int  YEnd)
 {
   DC		*dc = DC_HandleToPtr(hDC);
-  SURFOBJ	*SurfObj = AccessUserObject(dc->Surface);
+  SURFOBJ	*SurfObj = (SURFOBJ*)AccessUserObject(dc->Surface);
   BOOL ret;
 
   if(!dc) return FALSE;

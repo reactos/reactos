@@ -105,13 +105,13 @@ XLATEOBJ *EngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
   PALGDI   *SourcePalGDI, *DestPalGDI;
   ULONG    IndexedColors;
 
-  XlateObj = EngAllocMem(FL_ZERO_MEMORY, sizeof(XLATEOBJ), NULL);
-  XlateGDI = EngAllocMem(FL_ZERO_MEMORY, sizeof(XLATEGDI), NULL);
+  XlateObj = EngAllocMem(FL_ZERO_MEMORY, sizeof(XLATEOBJ), 0);
+  XlateGDI = EngAllocMem(FL_ZERO_MEMORY, sizeof(XLATEGDI), 0);
 
-  NewXlate = CreateGDIHandle(XlateGDI, XlateObj);
+  NewXlate = (HPALETTE)CreateGDIHandle(XlateGDI, XlateObj);
 
-  if(SourcePalType == PAL_INDEXED) SourcePalGDI = AccessInternalObject(PaletteSource);
-  if(DestPalType == PAL_INDEXED) DestPalGDI = AccessInternalObject(PaletteDest);
+  if(SourcePalType == PAL_INDEXED) SourcePalGDI = (PALGDI*)AccessInternalObject(PaletteSource);
+  if(DestPalType == PAL_INDEXED) DestPalGDI = (PALGDI*)AccessInternalObject(PaletteDest);
 
   XlateObj->iSrcType = SourcePalType;
   XlateObj->iDstType = DestPalType;
@@ -146,7 +146,7 @@ XLATEOBJ *EngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
     else if (SourcePalType == PAL_INDEXED) { IndexedColors = SourcePalGDI->NumColors; }
     else if (DestPalType   == PAL_INDEXED) { IndexedColors = DestPalGDI->NumColors; }
 
-    XlateGDI->translationTable = EngAllocMem(FL_ZERO_MEMORY, sizeof(ULONG)*IndexedColors, NULL);
+    XlateGDI->translationTable = EngAllocMem(FL_ZERO_MEMORY, sizeof(ULONG)*IndexedColors, 0);
   }
 
   // Source palette is indexed
@@ -191,8 +191,8 @@ XLATEOBJ *EngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
 
 EngDeleteXlate(XLATEOBJ *XlateObj)
 {
-  HPALETTE HXlate    = AccessHandleFromUserObject(XlateObj);
-  XLATEGDI *XlateGDI = AccessInternalObject(HXlate);
+  HPALETTE HXlate    = (HPALETTE)AccessHandleFromUserObject(XlateObj);
+  XLATEGDI *XlateGDI = (XLATEGDI*)AccessInternalObject(HXlate);
 
   if(XlateGDI->translationTable!=NULL)
   {
@@ -206,7 +206,7 @@ EngDeleteXlate(XLATEOBJ *XlateObj)
 
 ULONG *XLATEOBJ_piVector(XLATEOBJ *XlateObj)
 {
-  XLATEGDI *XlateGDI = AccessInternalObjectFromUserObject(XlateObj);
+  XLATEGDI *XlateGDI = (XLATEGDI*)AccessInternalObjectFromUserObject(XlateObj);
 
   if(XlateObj->iSrcType == PAL_INDEXED)
   {
@@ -219,7 +219,7 @@ ULONG *XLATEOBJ_piVector(XLATEOBJ *XlateObj)
 ULONG XLATEOBJ_iXlate(XLATEOBJ *XlateObj, ULONG Color)
 {
   PALGDI   *PalGDI;
-  XLATEGDI *XlateGDI = AccessInternalObjectFromUserObject(XlateObj);
+  XLATEGDI *XlateGDI = (XLATEGDI*)AccessInternalObjectFromUserObject(XlateObj);
 
   if(XlateObj->flXlate & XO_TRIVIAL)
   {
@@ -231,7 +231,7 @@ ULONG XLATEOBJ_iXlate(XLATEOBJ *XlateObj, ULONG Color)
     // FIXME: won't work if destination isn't indexed
 
     // Extract the destination palette
-    PalGDI = AccessInternalObject(XlateGDI->DestPal);
+    PalGDI = (PALGDI*)AccessInternalObject(XlateGDI->DestPal);
 
     // Return closest match for the given RGB color
     return ClosestColorMatch(Color, PalGDI->IndexedColors, PalGDI->NumColors);
@@ -252,7 +252,7 @@ ULONG XLATEOBJ_cGetPalette(XLATEOBJ *XlateObj,
   XLATEGDI *XlateGDI;
   PALGDI *PalGDI;
 
-  XlateGDI = AccessInternalObjectFromUserObject(XlateObj);
+  XlateGDI = (XLATEGDI*)AccessInternalObjectFromUserObject(XlateObj);
 
   if(PalOutType == XO_SRCPALETTE)
   {
@@ -263,7 +263,7 @@ ULONG XLATEOBJ_cGetPalette(XLATEOBJ *XlateObj,
     HPal = XlateGDI->DestPal;
   }
 
-  PalGDI = AccessInternalObject(HPal);
+  PalGDI = (PALGDI*)AccessInternalObject(HPal);
   RtlCopyMemory(OutPal, PalGDI->IndexedColors, sizeof(ULONG)*cPal);
 
   return i;

@@ -146,6 +146,7 @@ typedef struct _DC
   ((PDC) GDIOBJ_HandleToPtr ((HGDIOBJ) hDC, GO_DC_MAGIC))
 #define  DC_LockDC(hDC)  GDIOBJ_LockObject ((HGDIOBJ) hDC)
 #define  DC_UnlockDC(hDC)  GDIOBJ_UnlockObject ((HGDIOBJ) hDC)
+HDC RetrieveDisplayHDC(VOID);
 PDC  DC_AllocDC(LPCWSTR  Driver);
 void  DC_InitDC(PDC  DCToInit);
 PDC  DC_FindOpenDC(LPCWSTR  Driver);

@@ -57,8 +57,8 @@ VOID MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
   LONG mouse_cx = 0, mouse_cy = 0;
   HDC hDC = RetrieveDisplayHDC();
   PDC dc = DC_HandleToPtr(hDC);
-  PSURFOBJ SurfObj = AccessUserObject(dc->Surface);
-  PSURFGDI SurfGDI = AccessInternalObject(dc->Surface);
+  PSURFOBJ SurfObj = (PSURFOBJ)AccessUserObject(dc->Surface);
+  PSURFGDI SurfGDI = (PSURFGDI)AccessInternalObject(dc->Surface);
   RECTL MouseRect;
 
   PDEVICE_OBJECT ClassDeviceObject = NULL;
@@ -134,10 +134,10 @@ NTSTATUS ConnectMouseClassDriver()
 
 void TestMouse()
 {
-  HDC hDC = RetrieveDisplayHDC(RetrieveDisplayHDC());
+  HDC hDC = RetrieveDisplayHDC();
   PDC dc = DC_HandleToPtr(hDC);
-  PSURFOBJ SurfObj = AccessUserObject(dc->Surface);
-  PSURFGDI SurfGDI = AccessInternalObject(dc->Surface);
+  PSURFOBJ SurfObj = (PSURFOBJ)AccessUserObject(dc->Surface);
+  PSURFGDI SurfGDI = (PSURFGDI)AccessInternalObject(dc->Surface);
   BOOL txt;
   int i;
 
@@ -181,7 +181,7 @@ void TestMouse()
   MouseSize.cx = 16;
   MouseSize.cy = 16;
   hMouseSurf = EngCreateBitmap(MouseSize, 16, BMF_4BPP, 0, NULL);
-  MouseSurf = AccessUserObject(hMouseSurf);
+  MouseSurf = (PSURFOBJ)AccessUserObject(hMouseSurf);
 
   // Capture the cursor we drew in the mouse cursor buffer
   ZeroPoint.x = 0;

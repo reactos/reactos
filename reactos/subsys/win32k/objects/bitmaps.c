@@ -44,14 +44,14 @@ BOOL STDCALL W32kBitBlt(HDC  hDCDest,
   SurfSrcAlloc  = FALSE;
 
   // Determine surfaces to be used in the bitblt
-  SurfDest = AccessUserObject(DCDest->Surface);
-  SurfSrc  = AccessUserObject(DCSrc->Surface);
+  SurfDest = (PSURFOBJ)AccessUserObject(DCDest->Surface);
+  SurfSrc  = (PSURFOBJ)AccessUserObject(DCSrc->Surface);
 
-  SurfGDIDest = AccessInternalObjectFromUserObject(SurfDest);
-  SurfGDISrc  = AccessInternalObjectFromUserObject(SurfSrc);
+  SurfGDIDest = (PSURFGDI)AccessInternalObjectFromUserObject(SurfDest);
+  SurfGDISrc  = (PSURFGDI)AccessInternalObjectFromUserObject(SurfSrc);
 
   // Retrieve the logical palette of the destination DC
-  DCLogPal = AccessUserObject(DCDest->w.hPalette);
+  DCLogPal = (PPALOBJ)AccessUserObject(DCDest->w.hPalette);
 
   if(DCLogPal)
     if(DCLogPal->logicalToSystem)
@@ -72,10 +72,10 @@ BOOL STDCALL W32kBitBlt(HDC  hDCDest,
     } else
       SourcePalette = W32kGetStockObject(DEFAULT_PALETTE);
 
-    PalDestGDI   = AccessInternalObject(DestPalette);
-    PalSourceGDI = AccessInternalObject(SourcePalette);
+    PalDestGDI   = (PPALGDI)AccessInternalObject(DestPalette);
+    PalSourceGDI = (PPALGDI)AccessInternalObject(SourcePalette);
 
-    XlateObj = EngCreateXlate(PalDestGDI->Mode, PalSourceGDI->Mode, DestPalette, SourcePalette);
+    XlateObj = (PXLATEOBJ)EngCreateXlate(PalDestGDI->Mode, PalSourceGDI->Mode, DestPalette, SourcePalette);
   }
 
   // Perform the bitblt operation

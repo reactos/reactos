@@ -78,7 +78,7 @@ W32kRectangle(HDC  hDC,
                     int  BottomRect)
 {
   DC		*dc = DC_HandleToPtr(hDC);
-  SURFOBJ	*SurfObj = AccessUserObject(dc->Surface);
+  SURFOBJ	*SurfObj = (SURFOBJ*)AccessUserObject(dc->Surface);
   PBRUSHOBJ	BrushObj;
   BOOL ret;
   PRECTL	RectBounds = GDIOBJ_HandleToPtr(dc->w.hGCClipRgn, GO_REGION_MAGIC);
@@ -89,7 +89,7 @@ W32kRectangle(HDC  hDC,
     ret = PATH_Rectangle(hDC, LeftRect, TopRect, RightRect, BottomRect);
   } else {
     // Draw the rectangle with the current pen
-    BrushObj = PenToBrushObj(dc, GDIOBJ_HandleToPtr(dc->w.hPen, GO_PEN_MAGIC));
+    BrushObj = (PBRUSHOBJ)PenToBrushObj(dc, GDIOBJ_HandleToPtr(dc->w.hPen, GO_PEN_MAGIC));
 
     ret = EngLineTo(SurfObj,
                     NULL, // ClipObj,

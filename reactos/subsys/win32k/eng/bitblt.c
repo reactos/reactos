@@ -57,8 +57,8 @@ BOOL EngBitBlt(SURFOBJ *Dest, SURFOBJ *Source,
   RECTL     TempRect;
   SIZEL     TempSize;
 
-  if(Source != NULL) SourceGDI = AccessInternalObjectFromUserObject(Source);
-  if(Dest   != NULL) DestGDI   = AccessInternalObjectFromUserObject(Dest);
+  if(Source != NULL) SourceGDI = (PSURFGDI)AccessInternalObjectFromUserObject(Source);
+  if(Dest   != NULL) DestGDI   = (PSURFGDI)AccessInternalObjectFromUserObject(Dest);
 
   MouseSafetyOnDrawStart(Source, SourceGDI, SourcePoint->x, SourcePoint->y,
                          (SourcePoint->x + abs(DestRect->right - DestRect->left)),
@@ -96,7 +96,7 @@ BOOL EngBitBlt(SURFOBJ *Dest, SURFOBJ *Source,
         hTemp = EngCreateBitmap(TempSize,
                      DIB_GetDIBWidthBytes(DestRect->right - DestRect->left, BitsPerFormat(Dest->iBitmapFormat)),
                      Dest->iBitmapFormat, 0, NULL);
-        TempSurf = AccessUserObject(hTemp);
+        TempSurf = (PSURFOBJ)AccessUserObject(hTemp);
 
         // FIXME: Skip creating a TempSurf if we have the same BPP and palette
         EngBitBlt(TempSurf, Source, NULL, NULL, ColorTranslation, &TempRect, SourcePoint, NULL, NULL, NULL, 0);

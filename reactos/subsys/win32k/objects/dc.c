@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.22 2001/05/26 08:15:40 jfilby Exp $
+/* $Id: dc.c,v 1.23 2001/06/25 09:30:06 ekohl Exp $
  *
  * DC.C - Device context functions
  * 
@@ -87,7 +87,7 @@ static void  W32kSetDCState16(HDC  hDC, HDC  hDCSave);
 
 //  -----------------------------------------------------  Public Functions
 
-HDC RetrieveDisplayHDC()
+HDC RetrieveDisplayHDC(VOID)
 {
   return hDISPLAY_DC;
 }
@@ -295,7 +295,7 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
   NewDC->Surface = NewDC->DriverFunctions.EnableSurface(NewDC->PDev); // hsurf
   NewDC->w.hPalette = NewDC->DevInfo.hpalDefault;
 
-  SurfObj = AccessUserObject(NewDC->Surface);
+  SurfObj = (PSURFOBJ)AccessUserObject(NewDC->Surface);
   SurfObj->dhpdev = NewDC->PDev;
 
   DPRINT("Bits per pel: %u\n", NewDC->w.bitsPerPixel);
@@ -308,7 +308,7 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
   W32kSetTextAlign(hNewDC, TA_BASELINE);
 
   // If we've created a DC for the DISPLAY, save the reference for later CreateCompatibleDC(NULL... usage
-  if(wcscmp(Driver, "DISPLAY")) // FIXME: this works.. but shouldn't we compare to L"DISPLAY" ? (which doesn't work..)
+  if(wcscmp(Driver, L"DISPLAY")) // FIXME: this works.. but shouldn't we compare to L"DISPLAY" ? (which doesn't work..)
   {
     hDISPLAY_DC = hNewDC;
   }
@@ -939,8 +939,8 @@ HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       dc->w.hPen = hGDIObj;
 
       // Convert the color of the pen to the format of the DC
-      PalGDI = AccessInternalObject(dc->w.hPalette);
-      XlateObj = EngCreateXlate(PalGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
+      PalGDI = (PPALGDI)AccessInternalObject(dc->w.hPalette);
+      XlateObj = (PXLATEOBJ)EngCreateXlate(PalGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
       pen = GDIOBJ_HandleToPtr(dc->w.hPen, GO_PEN_MAGIC);
       pen->logpen.lopnColor = XLATEOBJ_iXlate(XlateObj, pen->logpen.lopnColor);
       break;
@@ -1159,7 +1159,7 @@ PDC  DC_FindOpenDC(LPCWSTR  Driver)
 {
   /*  FIXME: This is just a hack to return the pointer to the DISPLAY DC.. must cater for others too!  */
 
-  if(wcscmp(Driver, "DISPLAY"))
+  if(wcscmp(Driver, L"DISPLAY"))
   {
     return DC_HandleToPtr(hDISPLAY_DC);
   }

@@ -22,8 +22,8 @@ CLIPOBJ *EngCreateClipRegion(ULONG NumRects, RECTL Rects[],
   CLIPOBJ *ClipObj;
   CLIPGDI *ClipGDI;
 
-  ClipObj = EngAllocMem(FL_ZERO_MEMORY, sizeof(CLIPOBJ), NULL);
-  ClipGDI = EngAllocMem(FL_ZERO_MEMORY, sizeof(CLIPGDI), NULL);
+  ClipObj = EngAllocMem(FL_ZERO_MEMORY, sizeof(CLIPOBJ), 0);
+  ClipGDI = EngAllocMem(FL_ZERO_MEMORY, sizeof(CLIPGDI), 0);
 
   NewClip = CreateGDIHandle(ClipGDI, ClipObj);
 
@@ -58,7 +58,7 @@ CLIPOBJ *EngCreateClipRegion(ULONG NumRects, RECTL Rects[],
 VOID EngDeleteClipRegion(CLIPOBJ *ClipObj)
 {
   HCLIP HClip      = AccessHandleFromUserObject(ClipObj);
-  CLIPGDI *ClipGDI = AccessInternalObject(HClip);
+  CLIPGDI *ClipGDI = (CLIPGDI*)AccessInternalObject(HClip);
 
   EngFreeMem(ClipGDI);
   EngFreeMem(ClipObj);
@@ -67,7 +67,7 @@ VOID EngDeleteClipRegion(CLIPOBJ *ClipObj)
 
 VOID EngIntersectClipRegion(CLIPOBJ *ClipObj, ULONG NumRects, RECTL *IntersectRects)
 {
-  CLIPGDI *ClipGDI = AccessInternalObjectFromUserObject(ClipObj);
+  CLIPGDI *ClipGDI = (CLIPGDI*)AccessInternalObjectFromUserObject(ClipObj);
 
   ClipGDI->NumIntersectRects = NumRects;
   ClipGDI->IntersectRects    = IntersectRects;
@@ -85,7 +85,7 @@ VOID EngIntersectClipRegion(CLIPOBJ *ClipObj, ULONG NumRects, RECTL *IntersectRe
 
 CLIPOBJ *EngCreateClip(VOID)
 {
-  return EngAllocMem(FL_ZERO_MEMORY, sizeof(CLIPOBJ), NULL);
+  return EngAllocMem(FL_ZERO_MEMORY, sizeof(CLIPOBJ), 0);
 }
 
 VOID EngDeleteClip(CLIPOBJ *ClipRegion)
@@ -97,7 +97,7 @@ ULONG CLIPOBJ_cEnumStart(IN PCLIPOBJ ClipObj, IN BOOL ShouldDoAll,
                          IN ULONG ClipType,   IN ULONG BuildOrder,
                          IN ULONG MaxRects)
 {
-  CLIPGDI *ClipGDI = AccessInternalObjectFromUserObject(ClipObj);
+  CLIPGDI *ClipGDI = (CLIPGDI*)AccessInternalObjectFromUserObject(ClipObj);
 
   ClipGDI->EnumPos     = 0;
   ClipGDI->EnumRects.c = MaxRects;
@@ -114,7 +114,7 @@ ULONG CLIPOBJ_cEnumStart(IN PCLIPOBJ ClipObj, IN BOOL ShouldDoAll,
 BOOL CLIPOBJ_bEnum(IN PCLIPOBJ ClipObj, IN ULONG ObjSize,
                    OUT ULONG *EnumRects)
 {
-  CLIPGDI *ClipGDI = AccessInternalObjectFromUserObject(ClipObj);
+  CLIPGDI *ClipGDI = (CLIPGDI*)AccessInternalObjectFromUserObject(ClipObj);
 
   ClipGDI->EnumPos++;
 

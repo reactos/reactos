@@ -131,10 +131,10 @@ HSURF EngCreateDeviceSurface(DHSURF dhsurf, SIZEL Size, ULONG Format)
   SURFOBJ *SurfObj;
   SURFGDI *SurfGDI;
 
-  SurfObj = EngAllocMem(FL_ZERO_MEMORY, sizeof(SURFOBJ), NULL);
-  SurfGDI = EngAllocMem(FL_ZERO_MEMORY, sizeof(SURFGDI), NULL);
+  SurfObj = EngAllocMem(FL_ZERO_MEMORY, sizeof(SURFOBJ), 0);
+  SurfGDI = EngAllocMem(FL_ZERO_MEMORY, sizeof(SURFGDI), 0);
 
-  NewSurface = CreateGDIHandle(SurfGDI, SurfObj);
+  NewSurface = (HSURF)CreateGDIHandle(SurfGDI, SurfObj);
 
   InitializeHooks(SurfGDI);
 
@@ -201,8 +201,8 @@ BOOL EngDeleteSurface(HSURF Surface)
   SURFOBJ *SurfObj;
   SURFGDI *SurfGDI;
 
-  SurfGDI = AccessInternalObject(Surface);
-  SurfObj = AccessUserObject(Surface);
+  SurfGDI = (SURFGDI*)AccessInternalObject(Surface);
+  SurfObj = (SURFOBJ*)AccessUserObject(Surface);
 
   EngFreeMem(SurfGDI);
   EngFreeMem(SurfObj);
@@ -214,5 +214,5 @@ BOOL EngDeleteSurface(HSURF Surface)
 SURFOBJ *EngLockSurface(HSURF Surface)
 {
   // FIXME: Call GDI_LockObject (see subsys/win32k/objects/gdi.c)
-  return AccessUserObject(Surface);
+  return (SURFOBJ*)AccessUserObject(Surface);
 }

@@ -16,7 +16,7 @@ BOOL EngLineTo(SURFOBJ *Surface, CLIPOBJ *Clip, BRUSHOBJ *Brush,
   PFN_DIB_HLine    DIB_HLine;
   PFN_DIB_VLine    DIB_VLine;
 
-  SurfGDI = AccessInternalObjectFromUserObject(Surface);
+  SurfGDI = (SURFGDI*)AccessInternalObjectFromUserObject(Surface);
 
   MouseSafetyOnDrawStart(Surface, SurfGDI, x1, y1, x2, y2);
 

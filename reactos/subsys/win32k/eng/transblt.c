@@ -20,8 +20,8 @@ BOOL EngTransparentBlt(PSURFOBJ Dest, PSURFOBJ Source,
                        PRECTL DestRect, PRECTL SourceRect,
                        ULONG TransparentColor, ULONG Reserved)
 {
-  PSURFGDI DestGDI   = AccessInternalObjectFromUserObject(Dest),
-           SourceGDI = AccessInternalObjectFromUserObject(Source);
+  PSURFGDI DestGDI   = (PSURFGDI)AccessInternalObjectFromUserObject(Dest),
+           SourceGDI = (PSURFGDI)AccessInternalObjectFromUserObject(Source);
   HSURF     hTemp;
   PSURFOBJ  TempSurf;
   POINTL    TempPoint, SourcePoint;
@@ -56,7 +56,7 @@ BOOL EngTransparentBlt(PSURFOBJ Dest, PSURFOBJ Source,
 
     hTemp = EngCreateBitmap(TempSize,
                  DIB_GetDIBWidthBytes(dx, BitsPerFormat(Dest->iBitmapFormat)), Dest->iBitmapFormat, 0, NULL);
-    TempSurf = AccessUserObject(hTemp);
+    TempSurf = (PSURFOBJ)AccessUserObject(hTemp);
 
     SourcePoint.x = SourceRect->left;
     SourcePoint.y = SourceRect->top;

@@ -22,10 +22,10 @@ HPALETTE EngCreatePalette(ULONG  Mode,
   PALOBJ *PalObj;
   PALGDI *PalGDI;
 
-  PalObj = EngAllocMem(FL_ZERO_MEMORY, sizeof(PALOBJ), NULL);
-  PalGDI = EngAllocMem(FL_ZERO_MEMORY, sizeof(PALGDI), NULL);
+  PalObj = EngAllocMem(FL_ZERO_MEMORY, sizeof(PALOBJ), 0);
+  PalGDI = EngAllocMem(FL_ZERO_MEMORY, sizeof(PALGDI), 0);
 
-  NewPalette = CreateGDIHandle(PalGDI, PalObj);
+  NewPalette = (HPALETTE)CreateGDIHandle(PalGDI, PalObj);
 
   PalGDI->Mode = Mode;
 
@@ -55,8 +55,8 @@ BOOL EngDeletePalette(IN HPALETTE Palette)
   PALOBJ *PalObj;
   PALGDI *PalGDI;
 
-  PalGDI = AccessInternalObject(Palette);
-  PalObj = AccessUserObject(Palette);
+  PalGDI = (PALGDI*)AccessInternalObject(Palette);
+  PalObj = (PALOBJ*)AccessUserObject(Palette);
 
   EngFreeMem(PalGDI);
   EngFreeMem(PalObj);
@@ -71,7 +71,7 @@ ULONG PALOBJ_cGetColors(PALOBJ *PalObj, ULONG Start, ULONG Colors,
   ULONG i, entry;
   PALGDI *PalGDI;
 
-  PalGDI = AccessInternalObjectFromUserObject(PalObj);
+  PalGDI = (PALGDI*)AccessInternalObjectFromUserObject(PalObj);
 
   for(i=Start; i<Colors; i++)
   {

@@ -27,7 +27,7 @@ HPALETTE PALETTE_Init(void)
   HPALETTE hpalette;
   PLOGPALETTE palPtr;
   PPALOBJ palObj;
-  const PALETTEENTRY* __sysPalTemplate = COLOR_GetSystemPaletteTemplate();
+  const PALETTEENTRY* __sysPalTemplate = (const PALETTEENTRY*)COLOR_GetSystemPaletteTemplate();
 
   // create default palette (20 system colors)
   palPtr = ExAllocatePool(NonPagedPool, sizeof(LOGPALETTE) + (NB_RESERVED_COLORS * sizeof(PALETTEENTRY)));
@@ -46,7 +46,7 @@ HPALETTE PALETTE_Init(void)
   hpalette = W32kCreatePalette(palPtr);
   ExFreePool(palPtr);
 
-  palObj = AccessUserObject(hpalette);
+  palObj = (PPALOBJ)AccessUserObject(hpalette);
   if (palObj)
   {
     if (!(palObj->mapping = ExAllocatePool(NonPagedPool, sizeof(int) * 20)))

@@ -18,7 +18,7 @@ BOOL FillSolid(SURFOBJ *Surface, PRECTL Dimensions, ULONG iColor)
   ULONG x, y, LineWidth, leftOfBitmap;
   SURFGDI *SurfaceGDI;
 
-  SurfaceGDI = AccessInternalObjectFromUserObject(Surface);
+  SurfaceGDI = (SURFGDI*)AccessInternalObjectFromUserObject(Surface);
   LineWidth  = Dimensions->right - Dimensions->left;
 
   for (y = Dimensions->top; y < Dimensions->bottom; y++)
@@ -72,7 +72,7 @@ BOOL EngPaint(IN SURFOBJ *Surface, IN CLIPOBJ *ClipRegion,
   SURFGDI *SurfGDI;
 
   // Is the surface's Paint function hooked?
-  SurfGDI = AccessInternalObjectFromUserObject(Surface);
+  SurfGDI = (SURFGDI*)AccessInternalObjectFromUserObject(Surface);
 
   // FIXME: Perform Mouse Safety on the given ClipRegion
   // MouseSafetyOnDrawStart(Surface, SurfGDI, x1, y1, x2, y2);
