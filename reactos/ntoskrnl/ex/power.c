@@ -17,6 +17,7 @@
 #include <internal/io.h>
 #include <internal/mm.h>
 #include <internal/po.h>
+#include <internal/cc.h>
 
 #include <internal/debug.h>
 
@@ -34,12 +35,19 @@ NtSetSystemPowerState(IN POWER_ACTION SystemAction,
 NTSTATUS STDCALL 
 NtShutdownSystem(IN SHUTDOWN_ACTION Action)
 {
+   ULONG Count;
    if (Action > ShutdownPowerOff)
      return STATUS_INVALID_PARAMETER;
 
    IoShutdownRegisteredDevices();
    CmShutdownRegistry();
    IoShutdownRegisteredFileSystems();
+   /* FIXME: IoShutdownRegisteredFileSystems should unmount the filesystems and
+             this writes back all modified data. This doesn't work at the moment. */
+   CcRosFlushDirtyPages(0xFFFFFFFF, &Count);
+   CcRosFlushDirtyPages(0xFFFFFFFF, &Count);
+   CcRosFlushDirtyPages(0xFFFFFFFF, &Count);
+
    PiShutdownProcessManager();
    MiShutdownMemoryManager();
    
