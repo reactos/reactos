@@ -1,4 +1,4 @@
-/* $Id: ac.c,v 1.8 2004/01/20 01:40:18 ekohl Exp $
+/* $Id: ac.c,v 1.9 2004/02/25 14:25:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -39,88 +39,6 @@ GetAclInformation (
 
 	return TRUE;
 }
-
-
-#if 0
-DWORD
-WINAPI
-GetAuditedPermissionsFromAclA (
-	IN	PACL		pacl,
-	IN	PTRUSTEE_A	pTrustee,
-	OUT	PACCESS_MASK	pSuccessfulAuditedRights,
-	OUT	PACCESS_MASK	pFailedAuditRights
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-WINAPI
-GetAuditedPermissionsFromAclW (
-	IN	PACL		pacl,
-	IN	PTRUSTEE_W	pTrustee,
-	OUT	PACCESS_MASK	pSuccessfulAuditedRights,
-	OUT	PACCESS_MASK	pFailedAuditRights
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-WINAPI
-GetEffectiveRightsFromAclA (
-	IN	PACL		pacl,
-	IN	PTRUSTEE_A	pTrustee,
-	OUT	PACCESS_MASK	pAccessRights
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-WINAPI
-GetEffectiveRightsFromAclW (
-	IN	PACL		pacl,
-	IN	PTRUSTEE_W	pTrustee,
-	OUT	PACCESS_MASK	pAccessRights
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-WINAPI
-GetExplicitEntriesFromAclA (
-	IN	PACL			pacl,
-	OUT	PULONG			pcCountOfExplicitEntries,
-	OUT	PEXPLICIT_ACCESS_A	* pListOfExplicitEntries
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-WINAPI
-GetExplicitEntriesFromAclW (
-	IN	PACL			pacl,
-	OUT	PULONG			pcCountOfExplicitEntries,
-	OUT	PEXPLICIT_ACCESS_W	* pListOfExplicitEntries
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-#endif
 
 
 /*
@@ -188,37 +106,6 @@ SetAclInformation (
 
 	return TRUE;
 }
-
-
-#if 0
-DWORD
-WINAPI
-SetEntriesInAclA (
-	IN	ULONG			cCountOfExplicitEntries,
-	IN	PEXPLICIT_ACCESS_A	pListOfExplicitEntries,
-	IN	PACL			OldAcl,
-	OUT	PACL			* NewAcl
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-WINAPI
-SetEntriesInAclW (
-	IN	ULONG			cCountOfExplicitEntries,
-	IN	PEXPLICIT_ACCESS_W	pListOfExplicitEntries,
-	IN	PACL			OldAcl,
-	OUT	PACL			* NewAcl
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-#endif
-
 
 
 /* --- ACE --- */

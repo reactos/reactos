@@ -1,4 +1,4 @@
-/* $Id: sid.c,v 1.9 2004/01/20 01:40:19 ekohl Exp $
+/* $Id: sid.c,v 1.10 2004/02/25 14:25:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -235,70 +235,6 @@ BOOL STDCALL
 IsValidSid(PSID pSid)
 {
   return((BOOL)RtlValidSid(pSid));
-}
-
-
-/*
- * @unimplemented
- */
-BOOL STDCALL
-LookupAccountNameA(LPCSTR lpSystemName,
-		   LPCSTR lpAccountName,
-		   PSID Sid,
-		   LPDWORD cbSid,
-		   LPSTR DomainName,
-		   LPDWORD cbDomainName,
-		   PSID_NAME_USE peUse)
-{
-  return(FALSE);
-}
-
-
-/*
- * @unimplemented
- */
-BOOL STDCALL
-LookupAccountNameW(LPCWSTR lpSystemName,
-		   LPCWSTR lpAccountName,
-		   PSID Sid,
-		   LPDWORD cbSid,
-		   LPWSTR DomainName,
-		   LPDWORD cbDomainName,
-		   PSID_NAME_USE peUse)
-{
-  return(FALSE);
-}
-
-
-/*
- * @unimplemented
- */
-BOOL STDCALL
-LookupAccountSidA(LPCSTR lpSystemName,
-		  PSID Sid,
-		  LPSTR Name,
-		  LPDWORD cbName,
-		  LPSTR ReferencedDomainName,
-		  LPDWORD cbReferencedDomainName,
-		  PSID_NAME_USE peUse)
-{
-  return(FALSE);
-}
-
-
-/*
- * @unimplemented
- */
-BOOL STDCALL
-LookupAccountSidW(LPCWSTR lpSystemName,
-		  PSID Sid,
-		  LPWSTR Name,
-		  LPDWORD cbName,
-		  LPWSTR ReferencedDomainName,
-		  LPDWORD cbReferencedDomainName,
-		  PSID_NAME_USE peUse)
-{
-  return(FALSE);
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.8 2004/01/20 01:40:19 ekohl Exp $
+/* $Id: token.c,v 1.9 2004/02/25 14:25:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -17,23 +17,28 @@
  * @implemented
  */
 BOOL STDCALL
-AdjustTokenGroups (
-		   HANDLE TokenHandle,
+AdjustTokenGroups (HANDLE TokenHandle,
 		   BOOL ResetToDefault,
 		   PTOKEN_GROUPS NewState,
 		   DWORD BufferLength,
 		   PTOKEN_GROUPS PreviousState,
-		   PDWORD ReturnLength
-		    )
+		   PDWORD ReturnLength)
 {
-	NTSTATUS errCode;
-	errCode = NtAdjustGroupsToken(TokenHandle,ResetToDefault,NewState,
-			BufferLength, PreviousState, (PULONG)ReturnLength );
-	if ( !NT_SUCCESS(errCode) ) {
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return FALSE;
-	}
-	return TRUE;	
+  NTSTATUS Status;
+
+  Status = NtAdjustGroupsToken (TokenHandle,
+				ResetToDefault,
+				NewState,
+				BufferLength,
+				PreviousState,
+				(PULONG)ReturnLength);
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError (Status));
+      return FALSE;
+    }
+
+  return TRUE;
 }
 
 
@@ -41,22 +46,28 @@ AdjustTokenGroups (
  * @implemented
  */
 BOOL STDCALL
-AdjustTokenPrivileges (
-		       HANDLE TokenHandle,
+AdjustTokenPrivileges (HANDLE TokenHandle,
 		       BOOL DisableAllPrivileges,
 		       PTOKEN_PRIVILEGES NewState,
 		       DWORD BufferLength,
 		       PTOKEN_PRIVILEGES PreviousState,
-		       PDWORD ReturnLength
-			)
-{	NTSTATUS errCode;
-	errCode = NtAdjustPrivilegesToken(TokenHandle,DisableAllPrivileges,NewState,
-			BufferLength, PreviousState, (PULONG)ReturnLength );
-	if ( !NT_SUCCESS(errCode) ) {
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return FALSE;
-	}
-	return TRUE;	
+		       PDWORD ReturnLength)
+{
+  NTSTATUS Status;
+
+  Status = NtAdjustPrivilegesToken (TokenHandle,
+				    DisableAllPrivileges,
+				    NewState,
+				    BufferLength,
+				    PreviousState,
+				    (PULONG)ReturnLength);
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError (Status));
+      return FALSE;
+    }
+
+  return TRUE;
 }
 
 
@@ -64,22 +75,26 @@ AdjustTokenPrivileges (
  * @implemented
  */
 BOOL STDCALL
-GetTokenInformation (
-		     HANDLE TokenHandle,
+GetTokenInformation (HANDLE TokenHandle,
 		     TOKEN_INFORMATION_CLASS TokenInformationClass,
 		     LPVOID TokenInformation,
 		     DWORD TokenInformationLength,
-		     PDWORD ReturnLength
-		      )
+		     PDWORD ReturnLength)
 {
-	NTSTATUS errCode;
-	errCode = NtQueryInformationToken(TokenHandle,TokenInformationClass,TokenInformation,
-			TokenInformationLength, (PULONG)ReturnLength);
-	if ( !NT_SUCCESS(errCode) ) {
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return FALSE;
-	}
-	return TRUE;
+  NTSTATUS Status;
+
+  Status = NtQueryInformationToken (TokenHandle,
+				    TokenInformationClass,
+				    TokenInformation,
+				    TokenInformationLength,
+				    (PULONG)ReturnLength);
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError (Status));
+      return FALSE;
+    }
+
+  return TRUE;
 }
 
 
@@ -87,21 +102,24 @@ GetTokenInformation (
  * @implemented
  */
 BOOL STDCALL
-SetTokenInformation (
-		     HANDLE TokenHandle,
+SetTokenInformation (HANDLE TokenHandle,
 		     TOKEN_INFORMATION_CLASS TokenInformationClass,
 		     LPVOID TokenInformation,
-		     DWORD TokenInformationLength
-		      )
+		     DWORD TokenInformationLength)
 {
-	NTSTATUS errCode;
-	errCode = NtSetInformationToken(TokenHandle,TokenInformationClass,TokenInformation,
-			TokenInformationLength);
-	if ( !NT_SUCCESS(errCode) ) {
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return FALSE;
-	}
-	return TRUE;
+  NTSTATUS Status;
+
+  Status = NtSetInformationToken (TokenHandle,
+				  TokenInformationClass,
+				  TokenInformation,
+				  TokenInformationLength);
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError (Status));
+      return FALSE;
+    }
+
+  return TRUE;
 }
 
 

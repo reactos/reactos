@@ -1,4 +1,4 @@
-/* $Id: privilege.c,v 1.5 2003/07/20 15:16:32 ekohl Exp $ 
+/* $Id: privilege.c,v 1.6 2004/02/25 14:25:11 ekohl Exp $ 
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -14,174 +14,129 @@
 
 /**********************************************************************
  *	LookupPrivilegeValueA				EXPORTED
- *	LookupPrivilegeValueW				EXPORTED
  *
  * @implemented
  */
-BOOL STDCALL LookupPrivilegeValueA (
-	LPCSTR	lpSystemName,
-	LPCSTR	lpName,
-	PLUID	lpLuid
-	)
+BOOL STDCALL
+LookupPrivilegeValueA (LPCSTR lpSystemName,
+		       LPCSTR lpName,
+		       PLUID lpLuid)
 {
-	BOOL		rv = FALSE;
-	DWORD		le = ERROR_SUCCESS;
+  UNICODE_STRING SystemName;
+  UNICODE_STRING Name;
+  BOOL Result;
 
-	ANSI_STRING	SystemNameA;
-	UNICODE_STRING	SystemNameW;
-	ANSI_STRING	NameA;
-	UNICODE_STRING	NameW;
+  /* Remote system? */
+  if (lpSystemName != NULL)
+    {
+      RtlCreateUnicodeStringFromAsciiz (&SystemName,
+					(LPSTR)lpSystemName);
+    }
 
-	HANDLE		ProcessHeap = GetProcessHeap ();
+  /* Check the privilege name is not NULL */
+  if (lpName == NULL)
+    {
+      SetLastError (ERROR_INVALID_PARAMETER);
+      return FALSE;
+    }
 
+  RtlCreateUnicodeStringFromAsciiz (&Name,
+				    (LPSTR)lpName);
 
-	/* Remote system? */
-	if (NULL != lpSystemName)
-	{
-		RtlInitAnsiString (
-			& SystemNameA,
-			(LPSTR) lpSystemName
-			);
-		RtlAnsiStringToUnicodeString (
-			& SystemNameW,
-			& SystemNameA,
-			TRUE
-			);
-	}
-	/* Check the privilege name is not NULL */
-	if (NULL != lpName)
-	{
-		RtlInitAnsiString (
-			& NameA,
-			(LPSTR) lpName
-			);
-		RtlAnsiStringToUnicodeString (
-			& NameW,
-			& NameA,
-			TRUE
-			);
-	}
-	else
-	{
-		SetLastError (ERROR_INVALID_PARAMETER);
-		return (FALSE);
-	}
-	/* 
-	 * Forward the call to the UNICODE version
-	 * of this API.
-	 */
-	if (FALSE == (rv = LookupPrivilegeValueW (
-				(lpSystemName ? SystemNameW.Buffer : NULL),
-				NameW.Buffer,
-				lpLuid
-				)
-			)
-		)
-	{
-		le = GetLastError ();
-	}
-	/* Remote system? */
-	if (NULL != lpSystemName)
-	{
-		RtlFreeHeap (
-			ProcessHeap,
-			0,
-			SystemNameW.Buffer
-			);
-	}
-	/* Name */
-	RtlFreeHeap (
-		ProcessHeap,
-		0,
-	       NameW.Buffer
-	       );
-	/*
-	 * Set the last error, if any reported by
-	 * the UNICODE call.
-	 */
-	if (ERROR_SUCCESS != le)
-	{
-		SetLastError (le);
-	}
-	return (rv);
+  Result = LookupPrivilegeValueW ((lpSystemName != NULL) ? SystemName.Buffer : NULL,
+				  Name.Buffer,
+				  lpLuid);
+
+  RtlFreeUnicodeString (&Name);
+
+  /* Remote system? */
+  if (lpSystemName != NULL)
+    {
+      RtlFreeUnicodeString (&SystemName);
+    }
+
+  return Result;
 }
 
 
-BOOL STDCALL LookupPrivilegeValueW (
-	LPCWSTR	lpSystemName, 
-	LPCWSTR	lpName, 
-	PLUID	lpLuid 
-	)
+/**********************************************************************
+ *	LookupPrivilegeValueW				EXPORTED
+ *
+ * @unimplemented
+ */
+BOOL STDCALL
+LookupPrivilegeValueW (LPCWSTR lpSystemName,
+		       LPCWSTR lpName,
+		       PLUID lpLuid)
 {
-	SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
-	return (FALSE);
+  SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
 }
 
 
 /**********************************************************************
  *	LookupPrivilegeDisplayNameA			EXPORTED
+ *
+ * @unimplemented
+ */
+BOOL STDCALL
+LookupPrivilegeDisplayNameA (LPCSTR lpSystemName,
+			     LPCSTR lpName,
+			     LPSTR lpDisplayName,
+			     LPDWORD cbDisplayName,
+			     LPDWORD lpLanguageId)
+{
+  SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
+}
+
+
+/**********************************************************************
  *	LookupPrivilegeDisplayNameW			EXPORTED
  *
  * @unimplemented
  */
-BOOL STDCALL LookupPrivilegeDisplayNameA (
-	LPCSTR	lpSystemName, 
-	LPCSTR	lpName, 
-	LPSTR	lpDisplayName, 
-	LPDWORD	cbDisplayName, 
-	LPDWORD	lpLanguageId 
-	)
+BOOL STDCALL
+LookupPrivilegeDisplayNameW (LPCWSTR lpSystemName,
+			     LPCWSTR lpName,
+			     LPWSTR lpDisplayName,
+			     LPDWORD cbDisplayName,
+			     LPDWORD lpLanguageId)
 {
-	SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
-	return (FALSE);
-}
-
-
-/*
- * @unimplemented
- */
-BOOL STDCALL LookupPrivilegeDisplayNameW (
-	LPCWSTR	lpSystemName, 
-	LPCWSTR	lpName, 
-	LPWSTR	lpDisplayName, 
-	LPDWORD	cbDisplayName, 
-	LPDWORD	lpLanguageId 
-	)
-{
-	SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
-	return (FALSE);
+  SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
 }
 
 
 /**********************************************************************
  *	LookupPrivilegeNameA				EXPORTED
+ *
+ * @unimplemented
+ */
+BOOL STDCALL
+LookupPrivilegeNameA (LPCSTR lpSystemName,
+		      PLUID lpLuid,
+		      LPSTR lpName,
+		      LPDWORD cbName)
+{
+  SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
+}
+
+
+/**********************************************************************
  *	LookupPrivilegeNameW				EXPORTED
  *
  * @unimplemented
  */
-BOOL STDCALL LookupPrivilegeNameA (
-	LPCSTR	lpSystemName, 
-	PLUID	lpLuid, 
-	LPSTR	lpName, 
-	LPDWORD	cbName 
-	)
+BOOL STDCALL
+LookupPrivilegeNameW (LPCWSTR lpSystemName,
+		      PLUID lpLuid,
+		      LPWSTR lpName,
+		      LPDWORD cbName)
 {
-	SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
-	return (FALSE);
-}
-
-/*
- * @unimplemented
- */
-BOOL STDCALL LookupPrivilegeNameW (
-	LPCWSTR	lpSystemName, 
-	PLUID	lpLuid, 
-	LPWSTR	lpName, 
-	LPDWORD	cbName 
-	)
-{
-	SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
-	return (FALSE);
+  SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
 }
 
 

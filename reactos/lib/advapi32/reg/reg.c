@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.43 2004/02/22 14:26:07 ekohl Exp $
+/* $Id: reg.c,v 1.44 2004/02/25 14:25:10 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -191,7 +191,6 @@ OpenClassesRootKey (PHANDLE KeyHandle)
 		    &Attributes);
 }
 
-#undef NDEBUG
 
 static NTSTATUS
 OpenLocalMachineKey (PHANDLE KeyHandle)
@@ -215,7 +214,6 @@ OpenLocalMachineKey (PHANDLE KeyHandle)
   return Status;
 }
 
-#define NDEBUG
 
 static NTSTATUS
 OpenUsersKey (PHANDLE KeyHandle)
@@ -1608,7 +1606,6 @@ RegNotifyChangeKeyValue (HKEY hKey,
 }
 
 
-
 /************************************************************************
  *  RegOpenKeyA
  *
@@ -2535,9 +2532,120 @@ RegReplaceKeyW (HKEY hKey,
 		LPCWSTR lpNewFile,
 		LPCWSTR lpOldFile)
 {
-  UNIMPLEMENTED;
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return ERROR_CALL_NOT_IMPLEMENTED;
+  OBJECT_ATTRIBUTES KeyObjectAttributes;
+  OBJECT_ATTRIBUTES NewObjectAttributes;
+  OBJECT_ATTRIBUTES OldObjectAttributes;
+  UNICODE_STRING SubKeyName;
+  UNICODE_STRING NewFileName;
+  UNICODE_STRING OldFileName;
+  BOOLEAN CloseRealKey;
+  HANDLE RealKeyHandle;
+  HANDLE KeyHandle;
+  LONG ErrorCode;
+  NTSTATUS Status;
+
+  if (hKey == HKEY_PERFORMANCE_DATA)
+    {
+      return ERROR_INVALID_HANDLE;
+    }
+
+  Status = MapDefaultKey (&KeyHandle,
+			  hKey);
+  if (!NT_SUCCESS(Status))
+    {
+      ErrorCode = RtlNtStatusToDosError (Status);
+      SetLastError (ErrorCode);
+      return ErrorCode;
+    }
+
+  /* Open the real key */
+  if (lpSubKey != NULL && *lpSubKey != (WCHAR)0)
+    {
+      RtlInitUnicodeString (&SubKeyName,
+			    (PWSTR)lpSubKey);
+      InitializeObjectAttributes (&KeyObjectAttributes,
+				  &SubKeyName,
+				  OBJ_CASE_INSENSITIVE,
+				  KeyHandle,
+				  NULL);
+      Status = NtOpenKey (&RealKeyHandle,
+			  KEY_ALL_ACCESS,
+			  &KeyObjectAttributes);
+      if (!NT_SUCCESS(Status))
+	{
+	  ErrorCode = RtlNtStatusToDosError (Status);
+	  SetLastError (ErrorCode);
+	  return ErrorCode;
+	}
+      CloseRealKey = TRUE;
+    }
+  else
+    {
+      RealKeyHandle = KeyHandle;
+      CloseRealKey = FALSE;
+    }
+
+  /* Convert new file name */
+  if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpNewFile,
+				     &NewFileName,
+				     NULL,
+				     NULL))
+    {
+      if (CloseRealKey)
+	{
+	  NtClose (RealKeyHandle);
+	}
+      SetLastError (ERROR_INVALID_PARAMETER);
+      return ERROR_INVALID_PARAMETER;
+    }
+
+  InitializeObjectAttributes (&NewObjectAttributes,
+			      &NewFileName,
+			      OBJ_CASE_INSENSITIVE,
+			      NULL,
+			      NULL);
+
+  /* Convert old file name */
+  if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpOldFile,
+				     &OldFileName,
+				     NULL,
+				     NULL))
+    {
+      RtlFreeUnicodeString (&NewFileName);
+      if (CloseRealKey)
+	{
+	  NtClose (RealKeyHandle);
+	}
+      SetLastError (ERROR_INVALID_PARAMETER);
+      return ERROR_INVALID_PARAMETER;
+    }
+
+  InitializeObjectAttributes (&OldObjectAttributes,
+			      &OldFileName,
+			      OBJ_CASE_INSENSITIVE,
+			      NULL,
+			      NULL);
+
+  Status = NtReplaceKey (&NewObjectAttributes,
+			 RealKeyHandle,
+			 &OldObjectAttributes);
+
+  RtlFreeUnicodeString (&OldFileName);
+  RtlFreeUnicodeString (&NewFileName);
+
+  if (CloseRealKey)
+    {
+      NtClose (RealKeyHandle);
+    }
+
+  if (!NT_SUCCESS(Status))
+    {
+      ErrorCode = RtlNtStatusToDosError (Status);
+      SetLastError (ErrorCode);
+      return ErrorCode;
+    }
+
+  return ERROR_SUCCESS;
 }
 
 
@@ -2649,9 +2757,9 @@ RegRestoreKeyW (HKEY hKey,
  * @implemented
  */
 LONG STDCALL
-RegSaveKeyA(HKEY hKey,
-	    LPCSTR lpFile,
-	    LPSECURITY_ATTRIBUTES lpSecurityAttributes)
+RegSaveKeyA (HKEY hKey,
+	     LPCSTR lpFile,
+	     LPSECURITY_ATTRIBUTES lpSecurityAttributes)
 {
   UNICODE_STRING FileName;
   LONG ErrorCode;
@@ -2695,7 +2803,7 @@ RegSaveKeyW (HKEY hKey,
       return ErrorCode;
     }
 
-  if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpFile,
+  if (!RtlDosPathNameToNtPathName_U ((PWSTR)lpFile,
 				     &FileName,
 				     NULL,
 				     NULL))
@@ -2820,7 +2928,7 @@ RegSetValueExA (HKEY hKey,
       strlen(lpValueName) != 0)
     {
       RtlCreateUnicodeStringFromAsciiz (&ValueName,
-					(LPSTR)lpValueName);
+					(PSTR)lpValueName);
       pValueName = (LPWSTR)ValueName.Buffer;
     }
   else
@@ -2834,7 +2942,7 @@ RegSetValueExA (HKEY hKey,
     {
       RtlInitAnsiString (&AnsiString,
 			 NULL);
-      AnsiString.Buffer = (LPSTR)lpData;
+      AnsiString.Buffer = (PSTR)lpData;
       AnsiString.Length = cbData;
       AnsiString.MaximumLength = cbData;
       RtlAnsiStringToUnicodeString (&Data,
@@ -3091,7 +3199,7 @@ RegUnLoadKeyA (HKEY hKey,
  * @implemented
  */
 LONG STDCALL
-RegUnLoadKeyW (HKEY  hKey,
+RegUnLoadKeyW (HKEY hKey,
 	       LPCWSTR lpSubKey)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;

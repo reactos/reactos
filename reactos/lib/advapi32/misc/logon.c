@@ -1,4 +1,4 @@
-/* $Id: logon.c,v 1.3 2004/01/23 10:35:52 ekohl Exp $
+/* $Id: logon.c,v 1.4 2004/02/25 14:25:10 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -121,26 +121,6 @@ CreateProcessAsUserW (HANDLE hToken,
     }
 
   return TRUE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL STDCALL
-CreateProcessWithLogonW (LPCWSTR lpUsername,
-			 LPCWSTR lpDomain,
-			 LPCWSTR lpPassword,
-			 DWORD dwLogonFlags,
-			 LPCWSTR lpApplicationName,
-			 LPWSTR lpCommandLine,
-			 DWORD dwCreationFlags,
-			 LPVOID lpEnvironment,
-			 LPCWSTR lpCurrentDirectory,
-			 LPSTARTUPINFOW lpStartupInfo,
-			 LPPROCESS_INFORMATION lpProcessInformation)
-{
-  return FALSE;
 }
 
 
@@ -391,44 +371,6 @@ LogonUserW (LPCWSTR lpszUsername,
   RtlFreeSid (UserSid);
 
   return TRUE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL STDCALL
-LogonUserExA (LPCSTR lpszUsername,
-	      LPCSTR lpszDomain,
-	      LPCSTR lpszPassword,
-	      DWORD dwLogonType,
-	      DWORD dwLogonProvider,
-	      PHANDLE phToken,
-	      PSID *ppLogonSid,
-	      PVOID *ppProfileBuffer,
-	      LPDWORD pdwProfileLength,
-	      PQUOTA_LIMITS pQuotaLimits)
-{
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL STDCALL
-LogonUserExW (LPCWSTR lpszUsername,
-	      LPCWSTR lpszDomain,
-	      LPCWSTR lpszPassword,
-	      DWORD dwLogonType,
-	      DWORD dwLogonProvider,
-	      PHANDLE phToken,
-	      PSID *ppLogonSid,
-	      PVOID *ppProfileBuffer,
-	      LPDWORD pdwProfileLength,
-	      PQUOTA_LIMITS pQuotaLimits)
-{
-  return FALSE;
 }
 
 /* EOF */

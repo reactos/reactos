@@ -1,4 +1,9 @@
-/*
+/* $Id: misc.c,v 1.9 2004/02/25 14:25:11 ekohl Exp $
+ *
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
+ * FILE:            lib/advapi32/sec/misc.c
+ * PURPOSE:         Miscellaneous security functions
  */
 
 #define NTOS_MODE_USER
@@ -93,12 +98,12 @@ MapGenericMask(PDWORD AccessMask,
 /*
  * @unimplemented
  */
-BOOL
-STDCALL
+BOOL STDCALL
 ImpersonateLoggedOnUser(HANDLE hToken)
 {
-    return FALSE;
+  return FALSE;
 }
+
 
 /*
  * @implemented

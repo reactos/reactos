@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.32 2004/01/20 01:40:18 ekohl Exp $
+# $Id: makefile,v 1.33 2004/02/25 14:25:10 ekohl Exp $
 
 PATH_TO_TOP = ../..
 
@@ -19,10 +19,7 @@ MISC_OBJECTS = \
 	misc/dllmain.o \
 	misc/logon.o \
 	misc/shutdown.o \
-	misc/sysfunc.o \
-	misc/crstubs.o \
-	misc/aclstubs.o \
-	misc/stubs.o
+	misc/sysfunc.o
 
 REGISTRY_OBJECTS = \
 	reg/reg.o
@@ -30,7 +27,6 @@ REGISTRY_OBJECTS = \
 SECURITY_OBJECTS = \
 	sec/ac.o \
 	sec/audit.o \
-	sec/lsa.o \
 	sec/misc.o \
 	sec/sec.o \
 	sec/sid.o

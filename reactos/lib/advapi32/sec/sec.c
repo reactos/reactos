@@ -1,20 +1,18 @@
-/*
+/* $Id: sec.c,v 1.18 2004/02/25 14:25:11 ekohl Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/advapi32/sec/sec.c
- * PURPOSE:         Registry functions
+ * PURPOSE:         Security descriptor functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
- *		            Steven Edwards ( Steven_Ed4153@yahoo.com )
+ *                  Steven Edwards ( Steven_Ed4153@yahoo.com )
  *                  Andrew Greenwood ( silverblade_uk@hotmail.com )
  * UPDATE HISTORY:
  *                  Created 01/11/98
- *                  Added a few new stubs 6/27/03
- *                  Added stubs for GetSecurityInfo/Ex 8/18/03
  */
 
 #define NTOS_MODE_USER
 #include <windows.h>
-// #include <accctrl.h>
 #include <ntos.h>
 
 
@@ -398,131 +396,5 @@ SetSecurityDescriptorSacl (
 
 	return TRUE;
 }
-
-
-/*
- * @unimplemented
- */
-BOOL STDCALL
-GetUserNameA(LPSTR lpBuffer, LPDWORD nSize)
-{
-  return(FALSE);
-}
-
-
-/*
- * @unimplemented
- */
-BOOL STDCALL
-GetUserNameW(LPWSTR lpBuffer, LPDWORD nSize)
-{
-  return(FALSE);
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GetFileSecurityA (
-    LPCSTR lpFileName,
-    SECURITY_INFORMATION RequestedInformation,
-    PSECURITY_DESCRIPTOR pSecurityDescriptor,
-    DWORD nLength,
-    LPDWORD lpnLengthNeeded
-    )
-{
-  return(FALSE);
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GetFileSecurityW (
-    LPCWSTR lpFileName,
-    SECURITY_INFORMATION RequestedInformation,
-    PSECURITY_DESCRIPTOR pSecurityDescriptor,
-    DWORD nLength,
-    LPDWORD lpnLengthNeeded
-    )
-{
-  return(FALSE);
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-SetFileSecurityA (
-    LPCSTR lpFileName,
-    SECURITY_INFORMATION SecurityInformation,
-    PSECURITY_DESCRIPTOR pSecurityDescriptor
-    )
-{
-  return(FALSE);
-}
-
-
-/*
- * @unimplemented
- */
-STDCALL DWORD GetSecurityInfo (
-    HANDLE handle,
-    UINT ObjectType,        // SE_OBJECT_TYPE
-    SECURITY_INFORMATION SecurityInfo,
-    PSID *ppsidOwner,
-    PSID *ppsidGroup,
-    PACL *ppDacl,
-    PACL *ppSacl,
-    PSECURITY_DESCRIPTOR *ppSecurityDescriptor
-    )
-{
-    return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-STDCALL DWORD GetSecurityInfoExA(
-    HANDLE hObject,
-    UINT ObjectType,        // SE_OBJECT_TYPE
-    SECURITY_INFORMATION SecurityInfo,
-    LPCSTR lpProvider,
-    LPCSTR lpProperty,
-    VOID *ppAccessList,     // PACTRL_ACCESS
-    VOID *ppAuditList,      // PACTRL_AUDIT
-    LPCSTR *lppOwner,
-    LPCSTR *lppGroup
-    )
-{
-    return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-STDCALL DWORD GetSecurityInfoExW(
-    HANDLE hObject,
-    UINT ObjectType,        // SE_OBJECT_TYPE
-    SECURITY_INFORMATION SecurityInfo,
-    LPCWSTR lpProvider,
-    LPCWSTR lpProperty,
-    VOID *ppAccessList,     // PACTRL_ACCESS
-    VOID *ppAuditList,      // PACTRL_AUDIT
-    LPWSTR *lppOwner,
-    LPWSTR *lppGroup
-    )
-{
-    return FALSE;
-}
-
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: lsa.c,v 1.8 2004/02/14 23:13:58 sedwards Exp $
+/* $Id: lsa.c,v 1.9 2004/02/25 14:25:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -28,19 +28,19 @@
  *
  * @unimplemented
  */
-NTSTATUS
-STDCALL
-LsaOpenPolicy(PLSA_UNICODE_STRING lsaucs,PLSA_OBJECT_ATTRIBUTES lsaoa,ACCESS_MASK access,PLSA_HANDLE lsah)
+NTSTATUS STDCALL
+LsaOpenPolicy (PLSA_UNICODE_STRING lsaucs,
+	       PLSA_OBJECT_ATTRIBUTES lsaoa,
+	       ACCESS_MASK access,
+	       PLSA_HANDLE lsah)
 {
-	DPRINT1("LsaOpenPolicy - stub\n");
-	return STATUS_SUCCESS;
+  DPRINT1("LsaOpenPolicy - stub\n");
+  return STATUS_SUCCESS;
 }
 
 /*
  * @unimplemented
  */
-#define	SID_REVISION			(1)	/* Current revision - winnt.h */
-
 NTSTATUS
 STDCALL
 LsaQueryInformationPolicy(LSA_HANDLE lsah,POLICY_INFORMATION_CLASS pic,PVOID* Buffer)
@@ -130,18 +130,16 @@ LsaQueryInformationPolicy(LSA_HANDLE lsah,POLICY_INFORMATION_CLASS pic,PVOID* Bu
 /*
  * @implemented
  */
-NTSTATUS
-STDCALL
-LsaFreeMemory(PVOID pv)
+NTSTATUS STDCALL
+LsaFreeMemory (PVOID pv)
 {
-	return RtlFreeHeap(RtlGetProcessHeap(), 0, pv);
+  return RtlFreeHeap(RtlGetProcessHeap(), 0, pv);
 }
 
 /*
  * @unimplemented
  */
-NTSTATUS
-STDCALL
+NTSTATUS STDCALL
 LsaClose(LSA_HANDLE ObjectHandle)
 {
 	DPRINT1("(%p):LsaClose stub\n",ObjectHandle);
