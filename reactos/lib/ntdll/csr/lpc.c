@@ -1,4 +1,4 @@
-/* $Id: lpc.c,v 1.1 2001/06/17 20:05:09 ea Exp $
+/* $Id: lpc.c,v 1.2 2001/08/31 20:06:17 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -30,17 +30,25 @@ HANDLE WindowsApiPort = INVALID_HANDLE_VALUE;
 
 /* Possible CsrClientCallServer (the NT one):
 
+#define CSR_CCS_NATIVE	0x0000
+#define CSR_CCS_CSR	0x0001
+#define CSR_CCS_GUI	0x0002
+
+typedef union _CSR_CCS_API
+{
+	WORD	Index;		// CSRSS API number
+	WORD	Subsystem;	// 0=NTDLL;1=KERNEL32;2=KERNEL32
+
+} CSR_CCS_API, * PCSR_CCS_API;
+
 NTSTATUS STDCALL
-CsrClientCallServer(PCSRSS_XXX_REQUEST Request,
-		    PCSRSS_XXX_REPLY Reply OPTIONAL,
-		    ULONG CsrApiNumber,
-		    ULONG MaxRequestReplyLength)
-
-XXX_REQUEST and XXX_REPLY depend on the CsrApiNumber value and are not LPC
-objects (the LPC_REQUEST is built here instead).
-If Reply == NULL, use storage of Request to write the reply.
-
-TO BE VERIFIED.
+CsrClientCallServer(PVOID Request,
+		    PVOID Unknown OPTIONAL,
+		    CSR_CCS_API CsrApi,
+		    ULONG SizeOfData);
+		    
+Request is the family of PCSRSS_XXX_REQUEST objects.
+XXX_REQUEST depend on the CsrApiNumber.Index.
 
 */
 NTSTATUS STDCALL
