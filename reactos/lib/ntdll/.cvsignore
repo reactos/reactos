@@ -3,6 +3,7 @@ junk.tmp
 napi.asm
 napi.c
 ntdll.lib
+ntdll.sym
 ntdll.coff
 ntdll.dll
 ntdll.nostrip.dll

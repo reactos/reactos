@@ -1,10 +1,11 @@
-/* $Id: stubs.c,v 1.37 2002/12/06 13:14:14 robd Exp $
+/* $Id: stubs.c,v 1.38 2002/12/12 04:53:23 robd Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
  */
 #include <windows.h>
 
+#define _OLE2NLS_IN_BUILD_
 
 BOOL
 STDCALL
@@ -168,6 +169,7 @@ EnumSystemCodePagesA (
     return FALSE;
 }
 
+#ifndef _OLE2NLS_IN_BUILD_
 
 WINBOOL
 STDCALL
@@ -192,6 +194,7 @@ EnumSystemLocalesA (
     return FALSE;
 }
 
+#endif
 
 WINBOOL
 STDCALL
@@ -283,6 +286,7 @@ FreeVirtualBuffer (
     return FALSE;
 }
 
+#ifndef _OLE2NLS_IN_BUILD_
 
 UINT
 STDCALL
@@ -292,6 +296,7 @@ GetACP (VOID)
     return 0;
 }
 
+#endif
 
 WINBOOL
 STDCALL
@@ -316,6 +321,7 @@ GetBinaryTypeA (
     return FALSE;
 }
 
+#ifndef _OLE2NLS_IN_BUILD_
 
 WINBOOL
 STDCALL
@@ -328,6 +334,7 @@ GetCPInfo (
     return 0;
 }
 
+#endif
 
 int
 STDCALL
@@ -360,6 +367,7 @@ GetCurrencyFormatA (
     return 0;
 }
 
+#ifndef _OLE2NLS_IN_BUILD_
 
 int
 STDCALL
@@ -557,6 +565,7 @@ GetSystemDefaultLangID (VOID)
         );
 }
 
+#endif
 
 DWORD
 STDCALL
@@ -568,6 +577,7 @@ GetSystemPowerStatus (
     return 0;
 }
 
+#ifndef _OLE2NLS_IN_BUILD_
 
 LCID
 STDCALL
@@ -581,6 +591,7 @@ GetThreadLocale (VOID)
         );
 }
 
+#endif
 
 WINBOOL
 STDCALL
@@ -639,6 +650,7 @@ GetTimeFormatA (
     return 0;
 }
 
+#ifndef _OLE2NLS_IN_BUILD_
 
 LCID
 STDCALL
@@ -665,6 +677,7 @@ GetUserDefaultLangID (VOID)
         );
 }
 
+#endif
 
 DWORD
 STDCALL
@@ -677,6 +690,7 @@ GetVDMCurrentDirectories (
     return 0;
 }
 
+#ifndef _OLE2NLS_IN_BUILD_
 
 WINBOOL
 STDCALL
@@ -755,6 +769,7 @@ LCMapStringW (
     return 0;
 }
 
+#endif
 
 DWORD
 STDCALL
@@ -857,32 +872,6 @@ SetComputerNameW (
 
 WINBOOL
 STDCALL
-SetLocaleInfoA (
-    LCID    Locale,
-    LCTYPE  LCType,
-    LPCSTR  lpLCData
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-SetLocaleInfoW (
-    LCID    Locale,
-    LCTYPE  LCType,
-    LPCWSTR lpLCData
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-
-WINBOOL
-STDCALL
 SetSystemPowerState (
     DWORD   Unknown0,
     DWORD   Unknown1
@@ -899,16 +888,6 @@ SetThreadIdealProcessor(VOID)
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
-}
-
-WINBOOL
-STDCALL
-SetThreadLocale (
-    LCID    Locale
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
 }
 
 
@@ -966,6 +945,44 @@ VDMOperationStarted (
     return 0;
 }
 
+#ifndef _OLE2NLS_IN_BUILD_
+
+WINBOOL
+STDCALL
+SetLocaleInfoA (
+    LCID    Locale,
+    LCTYPE  LCType,
+    LPCSTR  lpLCData
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+
+WINBOOL
+STDCALL
+SetLocaleInfoW (
+    LCID    Locale,
+    LCTYPE  LCType,
+    LPCWSTR lpLCData
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+
+WINBOOL
+STDCALL
+SetThreadLocale (
+    LCID    Locale
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
 
 DWORD
 STDCALL
@@ -992,6 +1009,7 @@ VerLanguageNameW (
     return 0;
 }
 
+#endif
 
 DWORD
 STDCALL

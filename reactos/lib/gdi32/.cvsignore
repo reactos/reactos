@@ -1,4 +1,5 @@
 gdi32.coff
+gdi32.sym
 gdi32.dll
 gdi32.nostrip.dll
 *.o

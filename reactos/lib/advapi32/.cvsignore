@@ -2,6 +2,7 @@ advapi32.a
 advapi32.dll
 advapi32.nostrip.dll
 advapi32.lib
+advapi32.sym
 advapi32.coff
 base.tmp
 junk.tmp

@@ -1,4 +1,4 @@
-/* $Id: mbchars.c,v 1.1 2002/12/06 13:14:14 robd Exp $
+/* $Id: mbchars.c,v 1.2 2002/12/12 04:53:23 robd Exp $
  *
  */
 #include <windows.h>
@@ -99,7 +99,8 @@ MultiByteToWideChar(
     /*
      * Compute the input buffer length.
      */
-    if (-1 == cchMultiByte)
+    //if (-1 == cchMultiByte)
+    if (cchMultiByte < 0)
     {
         InStringLength = lstrlen(lpMultiByteStr) + 1;
     }
@@ -113,7 +114,7 @@ MultiByteToWideChar(
      */
     if (0 == cchWideChar)
     {
-        SetLastError(ERROR_SUCCESS);
+        //SetLastError(ERROR_SUCCESS); /* according to wine tests this shouldn't be touched on success.
         return InStringLength;
     }
     /*
@@ -144,7 +145,7 @@ MultiByteToWideChar(
      * Return how many characters we
      * wrote in the output buffer.
      */
-    SetLastError(ERROR_SUCCESS);
+    //SetLastError(ERROR_SUCCESS); /* according to wine tests this shouldn't be touched on success.
     return cchConverted;
 }
 
@@ -255,16 +256,20 @@ WideCharToMultiByte(
     }
 
     // for now, make no difference but only convert cut the characters to 7Bit
-    if (cchWideChar == -1) // assume its a 0-terminated str
+    //if (cchWideChar == -1) // assume its a 0-terminated str
+    if (cchWideChar < 0) // assume its a 0-terminated str
     {           // and determine its length
-        for (cchWideChar=0; lpWideCharStr[cchWideChar]!=0; cchWideChar++)
-            cchWideChar++;
+//        for (cchWideChar=0; lpWideCharStr[cchWideChar]!=0; cchWideChar++)
+//            cchWideChar++;
+        for (cchWideChar = 0; lpWideCharStr[cchWideChar] != 0; cchWideChar++) {
+        }
+        cchWideChar++; // length includes the null terminator
     }
 
     // user wants to determine needed space
     if (cchMultiByte == 0) 
     {
-        SetLastError(ERROR_SUCCESS);
+        //SetLastError(ERROR_SUCCESS); /* according to wine tests this shouldn't be touched on success.
         return cchWideChar;         // FIXME: determine correct.
     }
     // the lpWideCharStr is cchWideChar characters long.
@@ -288,7 +293,7 @@ WideCharToMultiByte(
         return 0;
     }
     // else return # of bytes wirtten to MBCSbuffer (di)
-    SetLastError(ERROR_SUCCESS);
+    //SetLastError(ERROR_SUCCESS); /* according to wine tests this shouldn't be touched on success.
     // FIXME: move that elsewhere
     if (lpUsedDefaultChar != NULL) *lpUsedDefaultChar = FALSE; 
     return di;
