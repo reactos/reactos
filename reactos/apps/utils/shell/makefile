@@ -1,7 +1,7 @@
 all: shell.bin
 
 OBJECTS= ../common/crt0.o shell.o
-LIBS= ../../lib/kernel32/kernel32.a ../../lib/ntdll/ntdll.a
+LIBS= ../../lib/kernel32/kernel32.a ../../lib/ntdll/ntdll.a ../../ntoskrnl/libgcc.a
 
 shell.bin: $(OBJECTS) $(LIBS)
 	$(LD) -Ttext 0x10000 $(OBJECTS) $(LIBS) -o shell.exe
