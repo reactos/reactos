@@ -11,7 +11,7 @@ DEP_FILES := $(join $(dir $(DEP_FILTERED)), $(addprefix ., $(notdir $(DEP_FILTER
 
 
 ifneq ($(MAKECMDGOALS),clean)
-include $(DEP_FILES)
+-include $(DEP_FILES)
 endif
 
 ifeq ($(SEP),\)
