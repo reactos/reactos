@@ -1,4 +1,4 @@
-/* $Id: lang.c,v 1.19 2004/06/13 20:04:56 navaraf Exp $
+/* $Id: lang.c,v 1.20 2004/06/26 20:10:50 gdalsnes Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -21,68 +21,56 @@
 #define LOCALE_USE_CP_ACP 0x40000000
 #define LOCALE_LOCALEINFOFLAGSMASK (LOCALE_NOUSEROVERRIDE|LOCALE_USE_CP_ACP|LOCALE_RETURN_NUMBER)
 
-static LCID SystemLocale = MAKELCID(LANG_ENGLISH, SORT_DEFAULT);
+//static LCID SystemLocale = MAKELCID(LANG_ENGLISH, SORT_DEFAULT);
 
 //#define _OLE2NLS_IN_BUILD_
 
-/*
+
+/******************************************************************************
  * @implemented
+ * RIPPED FROM WINE's dlls\kernel\locale.c rev 1.42
+ *
+ *    ConvertDefaultLocale (KERNEL32.@)
+ *
+ * Convert a default locale identifier into a real identifier.
+ *
+ * PARAMS
+ *  lcid [I] LCID identifier of the locale to convert
+ *
+ * RETURNS
+ *  lcid unchanged, if not a default locale or its sublanguage is
+ *   not SUBLANG_NEUTRAL.
+ *  GetSystemDefaultLCID(), if lcid == LOCALE_SYSTEM_DEFAULT.
+ *  GetUserDefaultLCID(), if lcid == LOCALE_USER_DEFAULT or LOCALE_NEUTRAL.
+ *  Otherwise, lcid with sublanguage changed to SUBLANG_DEFAULT.
  */
-LCID
-STDCALL
-ConvertDefaultLocale (
-    LCID    Locale
-    )
+LCID WINAPI ConvertDefaultLocale( LCID lcid )
 {
-  switch(Locale)
-  {
+    LANGID langid;
+
+    switch (lcid)
+    {
     case LOCALE_SYSTEM_DEFAULT:
-      return GetSystemDefaultLCID();
-    
+        lcid = GetSystemDefaultLCID();
+        break;
     case LOCALE_USER_DEFAULT:
-      return GetUserDefaultLCID();
-    
-    /*case LOCALE_NEUTRAL:
-      return MAKELCID(LANG_NEUTRAL, SUBLANG_NEUTRAL);*/
-  }
-  
-  /* ported from wine, is that right? */
-  return MAKELANGID(PRIMARYLANGID(Locale), SUBLANG_NEUTRAL);
+    case LOCALE_NEUTRAL:
+        lcid = GetUserDefaultLCID();
+        break;
+    default:
+        /* Replace SUBLANG_NEUTRAL with SUBLANG_DEFAULT */
+        langid = LANGIDFROMLCID(lcid);
+        if (SUBLANGID(langid) == SUBLANG_NEUTRAL)
+        {
+          langid = MAKELANGID(PRIMARYLANGID(langid), SUBLANG_DEFAULT);
+          lcid = MAKELCID(langid, SORTIDFROMLCID(lcid));
+        }
+    }
+    return lcid;
 }
 
 
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-EnumCalendarInfoW (
-    CALINFO_ENUMPROCW lpCalInfoEnumProc,
-    LCID              Locale,
-    CALID             Calendar,
-    CALTYPE           CalType
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
 
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-EnumCalendarInfoA (
-    CALINFO_ENUMPROCA lpCalInfoEnumProc,
-    LCID              Locale,
-    CALID             Calendar,
-    CALTYPE           CalType
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
 
 
 /*
@@ -117,36 +105,6 @@ EnumCalendarInfoExW(
 }
 
 
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-EnumDateFormatsW (
-    DATEFMT_ENUMPROCW  lpDateFmtEnumProc,
-    LCID               Locale,
-    DWORD              dwFlags
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-EnumDateFormatsA (
-    DATEFMT_ENUMPROCA  lpDateFmtEnumProc,
-    LCID               Locale,
-    DWORD              dwFlags
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
 
 
 /*
@@ -327,36 +285,6 @@ EnumSystemLocalesA (
 #endif
 
 
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-EnumTimeFormatsW (
-    TIMEFMT_ENUMPROCW    lpTimeFmtEnumProc,
-    LCID            Locale,
-    DWORD           dwFlags
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-EnumTimeFormatsA (
-    TIMEFMT_ENUMPROCA  lpTimeFmtEnumProc,
-    LCID               Locale,
-    DWORD              dwFlags
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
 
 
 /*
@@ -502,86 +430,6 @@ GetCPInfoExA(
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
 }
-
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-GetCurrencyFormatW (
-    LCID            Locale,
-    DWORD           dwFlags,
-    LPCWSTR         lpValue,
-    CONST CURRENCYFMTW   * lpFormat,
-    LPWSTR          lpCurrencyStr,
-    int         cchCurrency
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-GetCurrencyFormatA (
-    LCID            Locale,
-    DWORD           dwFlags,
-    LPCSTR          lpValue,
-    CONST CURRENCYFMTA   * lpFormat,
-    LPSTR           lpCurrencyStr,
-    int         cchCurrency
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-
-#ifndef _OLE2NLS_IN_BUILD_
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-GetDateFormatW (
-    LCID            Locale,
-    DWORD           dwFlags,
-    CONST SYSTEMTIME    * lpDate,
-    LPCWSTR         lpFormat,
-    LPWSTR          lpDateStr,
-    int         cchDate
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-GetDateFormatA (
-    LCID            Locale,
-    DWORD           dwFlags,
-    CONST SYSTEMTIME    * lpDate,
-    LPCSTR          lpFormat,
-    LPSTR           lpDateStr,
-    int         cchDate
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-#endif
 
 
 /*
@@ -931,42 +779,7 @@ INT STDCALL GetLocaleInfoA( LCID lcid, LCTYPE lctype, LPSTR buffer, INT len )
 }
 
 
-/*
- * @unimplemented
- */
-int
-STDCALL
-GetNumberFormatW (
-    LCID        Locale,
-    DWORD       dwFlags,
-    LPCWSTR     lpValue,
-    CONST NUMBERFMTW * lpFormat,
-    LPWSTR      lpNumberStr,
-    int     cchNumber
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
 
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-GetNumberFormatA (
-    LCID        Locale,
-    DWORD       dwFlags,
-    LPCSTR      lpValue,
-    CONST NUMBERFMTA * lpFormat,
-    LPSTR       lpNumberStr,
-    int     cchNumber
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
 
 
 /*
@@ -984,18 +797,13 @@ GetOEMCP (VOID)
 #ifndef _OLE2NLS_IN_BUILD_
 
 /*
- * @unimplemented
+ * @implemented
  */
 LANGID
 STDCALL
 GetSystemDefaultLangID (VOID)
 {
-     /* FIXME: ??? */
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return MAKELANGID(
-        LANG_ENGLISH,
-        SUBLANG_ENGLISH_US
-        );
+   return LANGIDFROMLCID(GetSystemDefaultLCID());
 }
 
 
@@ -1006,7 +814,11 @@ LCID
 STDCALL
 GetSystemDefaultLCID (VOID)
 {
-  return SystemLocale;
+   LCID lcid;
+   NtQueryDefaultLocale( FALSE, &lcid );
+   return lcid;
+
+//  return SystemLocale;
 }
 
 #endif
@@ -1038,269 +850,7 @@ GetThreadLocale (VOID)
 
 #endif
 
-INT RosGetTimeFormat(LCID Locale, DWORD dwFlags, CONST SYSTEMTIME *lpTime, LPCWSTR lpFormat, LPWSTR lpTimeStr, int cchTime)
-{
-	INT nPos = 0, nLastFormatPos = 0;
-	BOOL bDrop = FALSE;
 
-	while( *lpFormat )
-	{
-		if (*lpFormat == L'\'')
-		{
-			lpFormat++;
-
-			while(*lpFormat)
-			{
-				if (*lpFormat == L'\'')
-				{
-					lpFormat++;
-					if(*lpFormat != L'\'')
-						break;
-				}
-				if (!cchTime)
-					nPos++;
-				else if(nPos > cchTime)
-				{
-					SetLastError(ERROR_INSUFFICIENT_BUFFER);
-					return 0;
-				}
-				else
-				{
-					if(!bDrop)
-					{
-						lpTimeStr[nPos] = *lpFormat;
-						nPos++;
-					}
-				}
-				*lpFormat++;
-			}
-		}
-		else if(*lpFormat==L'H' || *lpFormat==L'h' || *lpFormat==L'm' || *lpFormat==L's' || *lpFormat==L't' )
-		{
-			int nCount, nBufLen;
-			WCHAR nType = *lpFormat;
-			WCHAR Buffer[40];
-
-			bDrop = FALSE;
-
-			Buffer[0] = 0;
-
-			for(nCount = 1; *lpFormat == nType; lpFormat++)
-				nCount++;
-
-			switch(nType)
-			{
-			case L'h':
-				{
-					if(!(dwFlags & TIME_FORCE24HOURFORMAT))
-					{
-						swprintf( Buffer, L"%.*d", nCount > 2 ? 2 : nCount,
-							lpTime->wHour == 0 ? 12 : (lpTime->wHour - 1) % 12 + 1);
-						break;
-					}
-				}
-			case L'H':
-				{
-					swprintf( Buffer, L"%.*d", nCount > 2 ? 2 : nCount, lpTime->wHour );
-					break;
-				}
-			case L'm':
-				{
-					if(!(dwFlags & TIME_NOMINUTESORSECONDS))
-					{
-						swprintf( Buffer, L"%.*d", nCount > 2 ? 2 : nCount, lpTime->wMinute );
-					}
-					else
-						nPos = nLastFormatPos;
-
-					break;
-				}
-			case L's':
-				{
-					if(!(dwFlags & (TIME_NOSECONDS|TIME_NOMINUTESORSECONDS)))
-					{
-					    swprintf( Buffer, L"%.*d", nCount > 2 ? 2 : nCount, lpTime->wSecond );				
-					}
-					else
-						nPos = nLastFormatPos;
-
-					break;
-				}
-			case L't':
-				{
-					if(!(dwFlags & TIME_NOTIMEMARKER))
-					{
-						GetLocaleInfoW(Locale, (lpTime->wHour < 12) ? LOCALE_S1159 : LOCALE_S2359, Buffer, sizeof(Buffer) );
-						if(nCount == 1)
-							Buffer[1] = 0;
-					}
-					else
-					{
-						nPos = nLastFormatPos;
-						bDrop = TRUE;
-					}
-					break;
-				}
-			}
-			nBufLen = wcslen(Buffer);
-
-			if(!cchTime)
-			{
-				/* wine does nothing here?!? */
-			}
-			else if(nPos + nBufLen < cchTime)
-				wcscpy( lpTimeStr + nPos, Buffer );
-			else
-			{
-				lstrcpynW( lpTimeStr + nPos, Buffer, cchTime - nPos );
-				
-				SetLastError(ERROR_INSUFFICIENT_BUFFER);
-				return 0;
-			}
-			nPos += nBufLen;
-			nLastFormatPos = nPos;
-		}
-		else
-		{
-			if(!cchTime)
-				nPos++;
-			else if(nPos > cchTime)
-			{
-				SetLastError(ERROR_INSUFFICIENT_BUFFER);
-				return 0;
-			}
-			else
-			{
-				if(!bDrop)
-				{
-					lpTimeStr[nPos] = *lpFormat;
-					nPos++;
-				}
-			}
-		lpFormat++;
-		}
-	}
-
-	/* Are we not only counting? */
-	if (cchTime)
-	{
-		if (nPos >= cchTime)
-		{
-			SetLastError(ERROR_INSUFFICIENT_BUFFER);
-			return 0;
-		}
-		else
-			lpTimeStr[nPos] = L'\0';
-	}
-
-	nPos++;
-	return nPos;
-}
-
-/*
- * @implemented
- */
-INT
-STDCALL
-GetTimeFormatW (
-    LCID            Locale,
-    DWORD           dwFlags,
-    CONST SYSTEMTIME* lpTime,
-    LPCWSTR         lpFormat,
-    LPWSTR          lpTimeStr,
-    int             cchTime
-    )
-{
-	WCHAR Buffer[40];
-	SYSTEMTIME t;
-
-    if (!Locale)
-		Locale = LOCALE_SYSTEM_DEFAULT;
-        
-	Locale = ConvertDefaultLocale( Locale );
-
-	if (lpFormat == NULL)
-	{
-	  if (dwFlags & LOCALE_NOUSEROVERRIDE)
-		  Locale = GetSystemDefaultLCID();
-
-	  if (!GetLocaleInfoW(Locale, LOCALE_STIMEFORMAT, Buffer, 40))
-		return 0;
-
-	  lpFormat = Buffer;
-	}
-	if (dwFlags & LOCALE_NOUSEROVERRIDE)
-    {
-		SetLastError(ERROR_INVALID_FLAGS);
-	    return 0;
-    }
-	if (lpTime == NULL)
-	{
-		GetLocalTime(&t);
-		lpTime = &t;
-	}
-	if((lpTime->wHour > 24) || (lpTime->wMinute >= 60) || (lpTime->wSecond >= 60))
-    {
-		SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
-	return RosGetTimeFormat(Locale, dwFlags, lpTime, lpFormat, lpTimeStr, cchTime);
-}
-
-
-/*
- * @implemented
- */
-int
-STDCALL
-GetTimeFormatA (
-    LCID            Locale,
-    DWORD           dwFlags,
-    CONST SYSTEMTIME* lpTime,
-    LPCSTR          lpFormat,
-    LPSTR           lpTimeStr,
-    int             cchTime
-    )
-{
-	LPWSTR lpFormatU = NULL;
-	LPWSTR lpTimeStrU;
-	int numCharsU;
-	int retVal = 0;
-
-	if (lpFormat != NULL) {
-		/* First just determine the number of necessary bytes 
-		for the unicode string */
-		int numBytes = MultiByteToWideChar(CP_ACP, 0, lpFormat, -1, NULL, 0);
-
-		if (numBytes > 0) {
-			lpFormatU = HeapAlloc(GetProcessHeap(), 0, numBytes);
-
-			if (lpFormatU != NULL) 
-				MultiByteToWideChar(CP_ACP, 0, lpFormat, -1, lpFormatU, numBytes);
-		}
-	}
-
-	/* Just get the number of characters needed to store the 
-	   Unicode output */
-	numCharsU = GetTimeFormatW(Locale, dwFlags, lpTime, lpFormatU, NULL, 0);
-
-	if (numCharsU != 0) {
-		lpTimeStrU = HeapAlloc(GetProcessHeap(), 0, numCharsU*sizeof(WCHAR));
-
-		if (lpTimeStrU != NULL) {
-			if (GetTimeFormatW(Locale, dwFlags, lpTime, lpFormatU, lpTimeStrU, numCharsU))
-				/* Convert the output string to ANSI */
-				retVal = WideCharToMultiByte(CP_ACP, 0, lpTimeStrU, numCharsU, lpTimeStr, cchTime, NULL, NULL);
-
-			HeapFree(GetProcessHeap(), 0, lpTimeStrU);
-		}
-	}
-
-	if (lpFormatU != NULL)
-		HeapFree(GetProcessHeap(), 0, lpFormatU);
-
-	return retVal;
-}
 
 
 
@@ -1385,19 +935,38 @@ IsValidLanguageGroup(
 }
 
 
-/*
- * @unimplemented
+
+/******************************************************************************
+ * @implemented
+ * RIPPED FROM WINE's dlls\kernel\locale.c rev 1.44
+ *
+ *           IsValidLocale   (KERNEL32.@)
+ *
+ * Determine if a locale is valid.
+ *
+ * PARAMS
+ *  lcid  [I] LCID of the locale to check
+ *  flags [I] LCID_SUPPORTED = Valid, LCID_INSTALLED = Valid and installed on the system
+ *
+ * RETURN
+ *  TRUE,  if lcid is valid,
+ *  FALSE, otherwise.
+ *
+ * NOTES
+ *  Wine does not currently make the distinction between supported and installed. All
+ *  languages supported are installed by default.
  */
-BOOL
-STDCALL
-IsValidLocale (
-    LCID    Locale,
-    DWORD   dwFlags
-    )
+BOOL STDCALL 
+IsValidLocale( 
+   LCID lcid, 
+   DWORD flags 
+   )
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    /* check if language is registered in the kernel32 resources */
+    return FindResourceExW( hCurrentModule, (LPWSTR)RT_STRING,
+                            (LPCWSTR)LOCALE_ILANGUAGE, LANGIDFROMLCID(lcid)) != 0;
 }
+
 
 
 #ifndef _OLE2NLS_IN_BUILD_
@@ -1507,19 +1076,48 @@ SetLocaleInfoW (
 }
 
 
-/*
+/**********************************************************************
  * @implemented
+ * RIPPED FROM WINE's dlls\kernel\locale.c rev 1.42
+ *
+ *           SetThreadLocale    (KERNEL32.@)
+ *  
+ * Set the current threads locale.
+ *
+ * PARAMS
+ *  lcid [I] LCID of the locale to set
+ *
+ * RETURNS
+ *  Success: TRUE. The threads locale is set to lcid.
+ *  Failure: FALSE. Use GetLastError() to determine the cause.
+ *
  */
-BOOL
-STDCALL
-SetThreadLocale (
-    LCID    Locale
-    )
+BOOL WINAPI SetThreadLocale( LCID lcid )
 {
-  /* FIXME - Check if locale is valid */
-  
-  NtCurrentTeb()->CurrentLocale = Locale;
-  return TRUE;
+    DPRINT("SetThreadLocale(0x%04lX)\n", lcid);
+
+    lcid = ConvertDefaultLocale(lcid);
+
+    if (lcid != GetThreadLocale())
+    {
+        if (!IsValidLocale(lcid, LCID_SUPPORTED))
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return FALSE;
+        }
+
+        NtCurrentTeb()->CurrentLocale = lcid;
+        /* FIXME: NtCurrentTeb()->code_page = get_lcid_codepage( lcid );
+         * Wine save the acp for easy/fast access, but ROS has no such Teb member.
+         * Maybe add this member to ros as well?
+         */
+         
+        /*
+        Lag test app for å se om locale etc, endres i en app. etter at prosessen er
+        startet, eller om bare nye prosesser blir berørt.
+        */
+    }
+    return TRUE;
 }
 
 #endif
