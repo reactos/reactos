@@ -130,18 +130,18 @@ void WinDirectory::read_directory(int scan_flags)
 	Entry* entry;
 
 	LPCTSTR path = (LPCTSTR)_path;
-	TCHAR buffer[MAX_PATH], *p;
-	for(p=buffer; *path; )
-		*p++ = *path++;
+	TCHAR buffer[MAX_PATH], *pname;
+	for(pname=buffer; *path; )
+		*pname++ = *path++;
 
-	lstrcpy(p, TEXT("\\*"));
+	lstrcpy(pname, TEXT("\\*"));
 
 	WIN32_FIND_DATA w32fd;
 	HANDLE hFind = FindFirstFile(buffer, &w32fd);
 
 	if (hFind != INVALID_HANDLE_VALUE) {
 		do {
-			lstrcpy(p+1, w32fd.cFileName);
+			lstrcpy(pname+1, w32fd.cFileName);
 
 			if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 				entry = new WinDirectory(this, buffer);
@@ -155,9 +155,6 @@ void WinDirectory::read_directory(int scan_flags)
 				last->_next = entry;
 
 			memcpy(&entry->_data, &w32fd, sizeof(WIN32_FIND_DATA));
-			entry->_down = NULL;
-			entry->_expanded = false;
-			entry->_scanned = false;
 			entry->_level = level;
 
 			 // display file type names, but don't hide file extensions

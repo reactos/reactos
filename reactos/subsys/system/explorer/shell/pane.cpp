@@ -69,7 +69,7 @@ static const int g_pos_align[] = {
 	HDF_LEFT,	/* ADate */
 	HDF_LEFT,	/* MDate */
 	HDF_LEFT,	/* Index */
-	HDF_CENTER,	/* Links */
+	HDF_RIGHT,	/* Links */
 	HDF_CENTER,	/* Attributes */
 	HDF_LEFT,	/* Security */
 	HDF_LEFT	/* Content / Description */
@@ -484,7 +484,6 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 		_out_wrkr.output_text(dis, _positions, col, entry->_display_name, 0);
 	else if (calcWidthCol==col || calcWidthCol==COLUMNS)
 		calc_width(dis, col, entry->_display_name);
-
 	++col;
 
 	 // output type/class name
@@ -494,7 +493,6 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 		else if (calcWidthCol==col || calcWidthCol==COLUMNS)
 			calc_width(dis, col, entry->_type_name);
 	}
-
 	++col;
 
 	 // display file size
@@ -507,9 +505,8 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 			_out_wrkr.output_number(dis, _positions, col, buffer);
 		else if (calcWidthCol==col || calcWidthCol==COLUMNS)
 			calc_width(dis, col, buffer);	///@todo not in every case time enough
-
-		++col;
 	}
+	++col;
 
 	 // display file date
 	if (visible_cols & (COL_DATE|COL_TIME)) {
@@ -533,7 +530,8 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 		else if (calcWidthCol==col || calcWidthCol==COLUMNS)
 			calc_width(dis, col, buffer);
 		++col;
-	}
+	} else
+		col += 3;
 
 	if (entry->_bhfi_valid) {
 		ULONGLONG index = ((ULONGLONG)entry->_bhfi.nFileIndexHigh << 32) | entry->_bhfi.nFileIndexLow;
@@ -550,7 +548,7 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 		if (visible_cols & COL_LINKS) {
 			wsprintf(buffer, TEXT("%d"), entry->_bhfi.nNumberOfLinks);
 			if (calcWidthCol == -1)
-				_out_wrkr.output_text(dis, _positions, col, buffer, DT_CENTER);
+				_out_wrkr.output_text(dis, _positions, col, buffer, DT_RIGHT);
 			else if (calcWidthCol==col || calcWidthCol==COLUMNS)
 				calc_width(dis, col, buffer);
 			++col;
@@ -584,9 +582,8 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 			_out_wrkr.output_tabbed_text(dis, _positions, col, buffer);
 		else if (calcWidthCol==col || calcWidthCol==COLUMNS)
 			calc_tabbed_width(dis, col, buffer);
-
-		++col;
 	}
+	++col;
 
 /*TODO
 	if (flags.security) {
@@ -615,10 +612,9 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 		output_text(dis, col++, buffer, 0, psize);
 	}
 */
-
 	++col;
 
-	 // output content / symbolic link target 
+	 // output content / symbolic link target / comment
 	if (visible_cols & COL_CONTENT) {
 		if (calcWidthCol == -1)
 			_out_wrkr.output_text(dis, _positions, col, entry->_content, 0);

@@ -120,7 +120,8 @@
 #define ID_DRIVE_UNIX_FS                0x9002
 #define ID_DRIVE_NTOBJ_NS               0x9003
 #define ID_DRIVE_REGISTRY               0x9004
-#define ID_DRIVE_FIRST                  0x9005
+#define ID_DRIVE_FAT                    0x9005
+#define ID_DRIVE_FIRST                  0x9006
 #define ID_ABOUT_WINDOWS                40002
 #define ID_ABOUT_EXPLORER               40003
 #define ID_DESKTOPBAR_SETTINGS          40005

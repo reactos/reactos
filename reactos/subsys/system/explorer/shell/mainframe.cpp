@@ -131,6 +131,13 @@ MainFrame::MainFrame(HWND hwnd)
 	SendMessage(_hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
 	++drivebarBtn.iString;
 
+	 // insert FAT direct file system access button
+	SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)TEXT("FAT\0"));
+
+	drivebarBtn.idCommand = ID_DRIVE_FAT;
+	SendMessage(_hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
+	++drivebarBtn.iString;
+
 	 // register windows drive root strings
 	SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)_drives);
 
@@ -546,6 +553,20 @@ int MainFrame::Command(int id, int code)
 
 #ifndef _NO_MDI
 		FileChildWindow::create(_hmdiclient, RegistryChildWndInfo(TEXT("\\")));
+#else
+		///@todo SDI implementation
+#endif
+	  break;}
+
+	  case ID_DRIVE_FAT: {
+
+	  	///@todo prompt for image file
+
+		if (activate_child_window(TEXT("FAT")))
+			break;
+
+#ifndef _NO_MDI
+		FileChildWindow::create(_hmdiclient, FATChildWndInfo(TEXT("FAT Image")));	//@@
 #else
 		///@todo SDI implementation
 #endif

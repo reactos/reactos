@@ -32,6 +32,7 @@
 #include "../globals.h"
 #include "ntobjfs.h"
 #include "regfs.h"
+#include "fatfs.h"
 
 #include "../explorer_intres.h"
 
@@ -79,6 +80,13 @@ RegistryChildWndInfo::RegistryChildWndInfo(LPCTSTR path)
  :	FileChildWndInfo(path)
 {
 	_etype = ET_REGISTRY;
+}
+
+
+FATChildWndInfo::FATChildWndInfo(LPCTSTR path)
+ :	FileChildWndInfo(path)
+{
+	_etype = ET_FAT;
 }
 
 
@@ -141,6 +149,18 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 		lstrcpy(_root._fs, TEXT("Registry"));
 		lstrcpy(_root._path, drv);
 		_root._entry = new RegistryRoot();
+		entry = _root._entry->read_tree(info._path, SORT_NONE);
+	}
+	else if (info._etype == ET_FAT)
+	{
+		_root._drive_type = DRIVE_UNKNOWN;
+
+		_tsplitpath(info._path, drv, NULL, NULL, NULL);
+		lstrcat(drv, TEXT("\\"));
+		lstrcpy(_root._volname, TEXT("FAT XXX"));	//@@
+		lstrcpy(_root._fs, TEXT("FAT"));
+		lstrcpy(_root._path, drv);
+		_root._entry = new FATDrive(TEXT("c:/reactos-bochs/cdrv.img"));	//TEXT("\\\\.\\F:"));	//@@
 		entry = _root._entry->read_tree(info._path, SORT_NONE);
 	}
 	else //if (info._etype == ET_WINDOWS)
@@ -422,12 +442,15 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			 // now create the popup menu using shell namespace and IContextMenu
 			Pane* pane = GetFocus()==_left_hwnd? _left: _right;
 			int idx = ListBox_GetCurSel(*pane);
-			Entry* entry = (Entry*) ListBox_GetItemData(*pane, idx);
+			if (idx != -1) {
+				Entry* entry = (Entry*) ListBox_GetItemData(*pane, idx);
 
-			ShellPath shell_path = entry->create_absolute_pidl();
-			LPCITEMIDLIST pidl = shell_path;
+				ShellPath shell_path = entry->create_absolute_pidl();
+				LPCITEMIDLIST pidl = shell_path;
 
-			CHECKERROR(ShellFolderContextMenu(Desktop(), _hwnd, 1, &pidl, pos.x, pos.y));
+				///@todo use parent folder instead of desktop -> correct "Properties" dialog, ...
+				CHECKERROR(ShellFolderContextMenu(Desktop(), _hwnd, 1, &pidl, pos.x, pos.y));
+			}
 			break;}
 
 		default: def:

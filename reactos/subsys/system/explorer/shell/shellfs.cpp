@@ -261,11 +261,7 @@ void ShellDirectory::read_directory(int scan_flags)
 
 				memcpy(&entry->_data, &w32fd, sizeof(WIN32_FIND_DATA));
 
-				entry->_down = NULL;
-				entry->_expanded = false;
-				entry->_scanned = false;
 				entry->_level = level;
-				entry->_bhfi_valid = false;
 
 				if (scan_flags & SCAN_DO_ACCESS) {
 					HANDLE hFile = CreateFile(buffer, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
@@ -400,9 +396,6 @@ void ShellDirectory::read_directory(int scan_flags)
 					if (attribs & SFGAO_LINK)
 						w32fd.dwFileAttributes |= ATTRIBUTE_SYMBOLIC_LINK;
 
-					entry->_down = NULL;
-					entry->_expanded = false;
-					entry->_scanned = false;
 					entry->_level = level;
 					entry->_shell_attribs = attribs;
 					entry->_bhfi_valid = bhfi_valid;

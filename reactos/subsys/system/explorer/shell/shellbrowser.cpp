@@ -217,6 +217,12 @@ void ShellBrowserChild::Tree_DoItemMenu(HWND hwndTreeView, HTREEITEM hItem, LPPO
 			LPCITEMIDLIST pidl = static_cast<ShellEntry*>(entry)->_pidl;
 
 			CHECKERROR(ShellFolderContextMenu(folder, ::GetParent(hwndTreeView), 1, &pidl, pptScreen->x, pptScreen->y));
+		} else {
+			ShellPath shell_path = entry->create_absolute_pidl();
+			LPCITEMIDLIST pidl = shell_path;
+
+			///@todo use parent folder instead of desktop
+			CHECKERROR(ShellFolderContextMenu(Desktop(), _hwnd, 1, &pidl, pptScreen->x, pptScreen->y));
 		}
 	}
 }

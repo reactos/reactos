@@ -329,9 +329,6 @@ void NtObjDirectory::read_directory(int scan_flags)
 			if (last)
 				last->_next = entry;
 
-			entry->_down = NULL;
-			entry->_expanded = false;
-			entry->_scanned = false;
 			entry->_level = level;
 
 			last = entry;

@@ -104,7 +104,6 @@ void UnixDirectory::read_directory()
 				entry->_bhfi_valid = FALSE;
 			}
 
-			entry->_down = NULL;
 			entry->_up = this;
 			entry->_expanded = FALSE;
 			entry->_scanned = FALSE;

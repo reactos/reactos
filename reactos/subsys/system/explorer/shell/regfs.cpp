@@ -43,13 +43,13 @@ void RegDirectory::read_directory(int scan_flags)
 	TCHAR buffer[MAX_PATH];
 
 	_tcscpy(buffer, (LPCTSTR)_path);
-	LPTSTR p = buffer + _tcslen(buffer);
+	LPTSTR pname = buffer + _tcslen(buffer);
 
 	HKEY hKey;
 
 	if (!RegOpenKeyEx(_hKeyRoot, *buffer=='\\'?buffer+1:buffer, 0, STANDARD_RIGHTS_READ|KEY_QUERY_VALUE|KEY_ENUMERATE_SUB_KEYS, &hKey)) {
-		if (p[-1] != '\\')
-			*p++ = '\\';
+		if (pname[-1] != '\\')
+			*pname++ = '\\';
 
 		TCHAR name[MAX_PATH], class_name[MAX_PATH];
 		WIN32_FIND_DATA w32fd;
@@ -68,7 +68,7 @@ void RegDirectory::read_directory(int scan_flags)
 			w32fd.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
 			lstrcpy(w32fd.cFileName, name);
 
-			_tcscpy(p, name);
+			_tcscpy(pname, name);
 			entry = new RegDirectory(this, buffer, _hKeyRoot);
 
 			memcpy(&entry->_data, &w32fd, sizeof(WIN32_FIND_DATA));
@@ -82,9 +82,6 @@ void RegDirectory::read_directory(int scan_flags)
 			if (last)
 				last->_next = entry;
 
-			entry->_down = NULL;
-			entry->_expanded = false;
-			entry->_scanned = false;
 			entry->_level = level;
 
 			last = entry;
@@ -110,9 +107,6 @@ void RegDirectory::read_directory(int scan_flags)
 			if (last)
 				last->_next = entry;
 
-			entry->_down = NULL;
-			entry->_expanded = false;
-			entry->_scanned = false;
 			entry->_level = level;
 
 			last = entry;
@@ -171,9 +165,6 @@ void RegDirectory::read_directory(int scan_flags)
 			if (last)
 				last->_next = entry;
 
-			entry->_down = NULL;
-			entry->_expanded = false;
-			entry->_scanned = false;
 			entry->_level = level;
 
 			last = entry;

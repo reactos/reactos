@@ -165,11 +165,12 @@ BOOL time_to_filetime(const time_t* t, FILETIME* ftime)
 
 	stime.wYear = tm->tm_year+1900;
 	stime.wMonth = tm->tm_mon+1;
-	/*	stime.wDayOfWeek */
+	stime.wDayOfWeek = (WORD)-1;
 	stime.wDay = tm->tm_mday;
 	stime.wHour = tm->tm_hour;
 	stime.wMinute = tm->tm_min;
 	stime.wSecond = tm->tm_sec;
+	stime.wMilliseconds = 0;
 
 	return SystemTimeToFileTime(&stime, ftime);
 }
