@@ -9,6 +9,9 @@
 #include <assert.h>
 #include "rbuild.h"
 
+using std::string;
+using std::vector;
+
 #ifdef _MSC_VER
 unsigned __int64
 #else
@@ -118,26 +121,25 @@ XMLAttribute::XMLAttribute(const string& name_,
 {
 }
 
-XMLAttribute::XMLAttribute(const XMLAttribute& src)
-{
-	name = src.name;
-	value = src.value;
-}
-
-XMLAttribute& XMLAttribute::operator=(const XMLAttribute& src)
-{
-	name = src.name;
-	value = src.value;
-	return *this;
-}
-
-
 XMLElement::XMLElement()
 {
 }
 
-// Parse() returns true if you need to look for a </tag> for
-// this one...
+XMLElement::~XMLElement()
+{
+	size_t i;
+	for ( i = 0; i < attributes.size(); i++ )
+		delete attributes[i];
+	for ( i = 0; i < subElements.size(); i++ )
+		delete subElements[i];
+}
+
+// Parse()
+// This function takes a single xml tag ( i.e. beginning with '<' and
+// ending with '>', and parses out it's tag name and constituent
+// attributes.
+// Return Value: returns true if you need to look for a </tag> for
+// the one it just parsed...
 bool XMLElement::Parse(const string& token,
                        bool& end_tag)
 {
@@ -198,12 +200,31 @@ bool XMLElement::Parse(const string& token,
 				p++;
 			p += strspn ( p, WS );
 		}
-		attributes.push_back ( XMLAttribute ( attribute, value ) );
+		attributes.push_back ( new XMLAttribute ( attribute, value ) );
 	}
 	return !( *p == '/' ) && !end_tag;
 }
 
+const XMLAttribute* XMLElement::GetAttribute ( const string& attribute ) const
+{
+	// this would be faster with a tree-based container, but our attribute
+	// lists are likely to stay so short as to not be an issue.
+	for ( int i = 0; i < attributes.size(); i++ )
+	{
+		if ( attribute == attributes[i]->name )
+			return attributes[i];
+	}
+	return NULL;
+}
 
+// XMLParse()
+// This function reads a "token" from the file loaded in XMLFile
+// REM TODO FIXME: At the moment it can't handle comments or non-xml tags.
+// if it finds a tag that is non-singular, it parses sub-elements and/or
+// inner text into the XMLElement that it is building to return.
+// Return Value: an XMLElement allocated via the new operator that contains
+// it's parsed data. Keep calling this function until it returns NULL
+// (no more data)
 XMLElement* XMLParse(XMLFile& f,
                      bool* pend_tag = NULL)
 {
@@ -259,19 +280,80 @@ XMLElement* XMLParse(XMLFile& f,
 	return e;
 }
 
+void Project::ProcessXML ( const XMLElement& e, const string& path )
+{
+	const XMLAttribute *att;
+	string subpath(path);
+	if ( e.name == "project" )
+	{
+		att = e.GetAttribute ( "name" );
+		if ( !att )
+			name = "Unnamed";
+		else
+			name = att->value;
+	}
+	else if ( e.name == "module" )
+	{
+		att = e.GetAttribute ( "name" );
+		if ( !att )
+		{
+			printf ( "syntax error: 'name' attribute required for <module>\n" );
+			return;
+		}
+		Module* module = new Module ( e, att->value, path );
+		modules.push_back ( module );
+		return; // REM TODO FIXME no processing of modules... yet
+	}
+	else if ( e.name == "directory" )
+	{
+		const XMLAttribute* att = e.GetAttribute("name");
+		if ( !att )
+		{
+			printf ( "syntax error: 'name' attribute required for <directory>\n" );
+			return;
+		}
+		subpath = path + "/" + att->value;
+	}
+	for ( size_t i = 0; i < e.subElements.size(); i++ )
+		ProcessXML ( *e.subElements[i], subpath );
+}
+
 int main ( int argc, char** argv )
 {
 	XMLFile f;
-	if ( !f.open ( "rbuild.xml" ) )
+	if ( !f.open ( "ReactOS.xml" ) )
 	{
-		printf ( "couldn't open rbuild.xml!\n" );
+		printf ( "couldn't open ReactOS.xml!\n" );
 		return -1;
 	}
 
-	XMLElement* head = XMLParse(f);
-	if (head)
+	for ( ;; )
 	{
-		// REM TODO FIXME actually do something with the parsed info
+		XMLElement* head = XMLParse ( f );
+		if ( !head )
+			break; // end of file
+
+		if ( head->name != "project" )
+		{
+			printf ( "error: expecting 'project', got '%s'\n", head->name.c_str() );
+			continue;
+		}
+
+		Project* proj = new Project;
+		proj->ProcessXML ( *head, "." );
+
+		// REM TODO FIXME actually do something with Project object...
+		printf ( "Found %lu modules:\n", proj->modules.size() );
+		for ( size_t i = 0; i < proj->modules.size(); i++ )
+		{
+			Module& m = *proj->modules[i];
+			printf ( "\t%s in folder: %s\n",
+			         m.name.c_str(),
+			         m.path.c_str() );
+		}
+
+		delete proj;
+		delete head;
 	}
 
 	return 0;

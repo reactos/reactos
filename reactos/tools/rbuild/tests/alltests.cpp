@@ -110,10 +110,10 @@ public:
 		}
 		
 		if (numberOfFailedTests > 0)
-			printf("%d tests failed",
+			printf("%d tests failed\n",
 			       numberOfFailedTests);
 		else
-			printf("All tests succeeded");
+			printf("All tests succeeded\n");
 	}
 
 private:

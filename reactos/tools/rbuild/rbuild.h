@@ -4,9 +4,6 @@
 #include <string>
 #include <vector>
 
-using std::string;
-using std::vector;
-
 class XMLFile
 {
 	friend class XMLElement;
@@ -17,11 +14,11 @@ public:
 	void next_token();
 	bool next_is_text();
 	bool more_tokens();
-	bool get_token(string& token);
+	bool get_token(std::string& token);
 
 private:
-	vector<FILE*> _f;
-	string _buf;
+	std::vector<FILE*> _f;
+	std::string _buf;
 
 	const char *_p, *_end;
 };
@@ -30,35 +27,51 @@ private:
 class XMLAttribute
 {
 public:
-	string name;
-	string value;
+	std::string name;
+	std::string value;
 
 	XMLAttribute();
-	XMLAttribute ( const string& name_, const string& value_ );
-//		: name(name_), value(value_);
-	XMLAttribute ( const XMLAttribute& src );
-	XMLAttribute& operator = ( const XMLAttribute& src );
+	XMLAttribute ( const std::string& name_, const std::string& value_ );
 };
 
 
 class XMLElement
 {
 public:
-	string name;
-	vector<XMLAttribute> attributes;
-	vector<XMLElement*> subElements;
-	string value;
+	std::string name;
+	std::vector<XMLAttribute*> attributes;
+	std::vector<XMLElement*> subElements;
+	std::string value;
 
 	XMLElement();
-	bool Parse(const string& token,
+	~XMLElement();
+	bool Parse(const std::string& token,
 	           bool& end_tag);
+	const XMLAttribute* GetAttribute ( const std::string& attribute ) const;
 };
 
+class Project;
+class Module;
+
+class Project
+{
+public:
+	std::string name;
+	std::vector<Module*> modules;
+
+	void ProcessXML ( const XMLElement& e, const std::string& path );
+};
 
 class Module
 {
 public:
-	Module(XMLElement moduleNode);
+	const XMLElement& node;
+	std::string name;
+	std::string path;
+
+	Module ( const XMLElement& moduleNode,
+	         const std::string& moduleName,
+	         const std::string& modulePath );
 };
 
 #endif /* __RBUILD_H */
