@@ -268,7 +268,7 @@ MMRESULT        MIDI_StreamOpen(HMIDISTRM* lphMidiStrm, LPUINT lpuDeviceID,
                                 DWORD cMidi, DWORD_PTR dwCallback,
                                 DWORD_PTR dwInstance, DWORD fdwOpen, BOOL bFrom32);
 UINT            WAVE_Open(HANDLE* lphndl, UINT uDeviceID, UINT uType,
-                          const LPWAVEFORMATEX lpFormat, DWORD_PTR dwCallback, 
+                          LPCWAVEFORMATEX lpFormat, DWORD_PTR dwCallback, 
                           DWORD_PTR dwInstance, DWORD dwFlags, BOOL bFrom32);
 
 HMMIO           MMIO_Open(LPSTR szFileName, MMIOINFO* refmminfo,

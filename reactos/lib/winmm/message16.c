@@ -1,7 +1,7 @@
 /* -*- tab-width: 8; c-basic-offset: 4 -*- */
 
 /*
- * MMSYTEM MCI and low level mapping functions
+ * MMSYSTEM MCI and low level mapping functions
  *
  * Copyright 1999 Eric Pouech
  *
@@ -297,14 +297,14 @@ static  WINMM_MapType	MMDRV_MidiOut_Map16To32A  (UINT wMsg, LPDWORD lpdwUser, LP
 
     case MODM_GETDEVCAPS:
 	{
-            LPMIDIOUTCAPSA	moc32 = HeapAlloc(GetProcessHeap(), 0, sizeof(LPMIDIOUTCAPS16) + sizeof(MIDIOUTCAPSA));
+            LPMIDIOUTCAPSW	moc32 = HeapAlloc(GetProcessHeap(), 0, sizeof(LPMIDIOUTCAPS16) + sizeof(MIDIOUTCAPSW));
 	    LPMIDIOUTCAPS16	moc16 = MapSL(*lpParam1);
 
 	    if (moc32) {
 		*(LPMIDIOUTCAPS16*)moc32 = moc16;
-		moc32 = (LPMIDIOUTCAPSA)((LPSTR)moc32 + sizeof(LPMIDIOUTCAPS16));
+		moc32 = (LPMIDIOUTCAPSW)((LPSTR)moc32 + sizeof(LPMIDIOUTCAPS16));
 		*lpParam1 = (DWORD)moc32;
-		*lpParam2 = sizeof(MIDIOUTCAPSA);
+		*lpParam2 = sizeof(MIDIOUTCAPSW);
 
 		ret = WINMM_MAP_OKMEM;
 	    } else {
@@ -390,13 +390,14 @@ static  WINMM_MapType	MMDRV_MidiOut_UnMap16To32A(UINT wMsg, LPDWORD lpdwUser, LP
 
     case MODM_GETDEVCAPS:
 	{
-            LPMIDIOUTCAPSA		moc32 = (LPMIDIOUTCAPSA)(*lpParam1);
+            LPMIDIOUTCAPSW		moc32 = (LPMIDIOUTCAPSW)(*lpParam1);
 	    LPMIDIOUTCAPS16		moc16 = *(LPMIDIOUTCAPS16*)((LPSTR)moc32 - sizeof(LPMIDIOUTCAPS16));
 
 	    moc16->wMid			= moc32->wMid;
 	    moc16->wPid			= moc32->wPid;
 	    moc16->vDriverVersion	= moc32->vDriverVersion;
-	    strcpy(moc16->szPname, moc32->szPname);
+            WideCharToMultiByte( CP_ACP, 0, moc32->szPname, -1, moc16->szPname,
+                                 sizeof(moc16->szPname), NULL, NULL );
 	    moc16->wTechnology		= moc32->wTechnology;
 	    moc16->wVoices		= moc32->wVoices;
 	    moc16->wNotes		= moc32->wNotes;
@@ -455,16 +456,16 @@ static  WINMM_MapType	MMDRV_MidiOut_Map32ATo16  (UINT wMsg, LPDWORD lpdwUser, LP
 	break;
     case MODM_GETDEVCAPS:
 	{
-            LPMIDIOUTCAPSA moc32 = (LPMIDIOUTCAPSA)*lpParam1;
-            LPSTR ptr = HeapAlloc( GetProcessHeap(), 0, sizeof(LPMIDIOUTCAPSA)+sizeof(MIDIOUTCAPS16));
+            LPMIDIOUTCAPSW moc32 = (LPMIDIOUTCAPSW)*lpParam1;
+            LPSTR ptr = HeapAlloc( GetProcessHeap(), 0, sizeof(LPMIDIOUTCAPSW)+sizeof(MIDIOUTCAPS16));
 
 	    if (ptr) {
-		*(LPMIDIOUTCAPSA*)ptr = moc32;
+		*(LPMIDIOUTCAPSW*)ptr = moc32;
 		ret = WINMM_MAP_OKMEM;
 	    } else {
 		ret = WINMM_MAP_NOMEM;
 	    }
-	    *lpParam1 = (DWORD)MapLS(ptr) + sizeof(LPMIDIOUTCAPSA);
+	    *lpParam1 = (DWORD)MapLS(ptr) + sizeof(LPMIDIOUTCAPSW);
 	    *lpParam2 = sizeof(MIDIOUTCAPS16);
 	}
 	break;
@@ -596,13 +597,14 @@ static  WINMM_MapType	MMDRV_MidiOut_UnMap32ATo16(UINT wMsg, LPDWORD lpdwUser, LP
     case MODM_GETDEVCAPS:
 	{
 	    LPMIDIOUTCAPS16		moc16 = MapSL(*lpParam1);
-	    LPSTR			ptr   = (LPSTR)moc16 - sizeof(LPMIDIOUTCAPSA);
-            LPMIDIOUTCAPSA		moc32 = *(LPMIDIOUTCAPSA*)ptr;
+	    LPSTR			ptr   = (LPSTR)moc16 - sizeof(LPMIDIOUTCAPSW);
+            LPMIDIOUTCAPSW		moc32 = *(LPMIDIOUTCAPSW*)ptr;
 
 	    moc32->wMid			= moc16->wMid;
 	    moc32->wPid			= moc16->wPid;
 	    moc32->vDriverVersion	= moc16->vDriverVersion;
-	    strcpy(moc32->szPname, moc16->szPname);
+            WideCharToMultiByte( CP_ACP, 0, moc32->szPname, -1, moc16->szPname,
+                                 sizeof(moc16->szPname), NULL, NULL );
 	    moc32->wTechnology		= moc16->wTechnology;
 	    moc32->wVoices		= moc16->wVoices;
 	    moc32->wNotes		= moc16->wNotes;
@@ -723,14 +725,14 @@ static  WINMM_MapType	MMDRV_WaveIn_Map16To32A  (UINT wMsg, LPDWORD lpdwUser, LPD
 	break;
     case WIDM_GETDEVCAPS:
 	{
-            LPWAVEINCAPSA	wic32 = HeapAlloc(GetProcessHeap(), 0, sizeof(LPWAVEINCAPS16) + sizeof(WAVEINCAPSA));
+            LPWAVEINCAPSW	wic32 = HeapAlloc(GetProcessHeap(), 0, sizeof(LPWAVEINCAPS16) + sizeof(WAVEINCAPSW));
 	    LPWAVEINCAPS16	wic16 = MapSL(*lpParam1);
 
 	    if (wic32) {
 		*(LPWAVEINCAPS16*)wic32 = wic16;
-		wic32 = (LPWAVEINCAPSA)((LPSTR)wic32 + sizeof(LPWAVEINCAPS16));
+		wic32 = (LPWAVEINCAPSW)((LPSTR)wic32 + sizeof(LPWAVEINCAPS16));
 		*lpParam1 = (DWORD)wic32;
-		*lpParam2 = sizeof(WAVEINCAPSA);
+		*lpParam2 = sizeof(WAVEINCAPSW);
 
 		ret = WINMM_MAP_OKMEM;
 	    } else {
@@ -833,13 +835,14 @@ static  WINMM_MapType	MMDRV_WaveIn_UnMap16To32A(UINT wMsg, LPDWORD lpdwUser, LPD
 	break;
     case WIDM_GETDEVCAPS:
 	{
-            LPWAVEINCAPSA		wic32 = (LPWAVEINCAPSA)(*lpParam1);
+            LPWAVEINCAPSW		wic32 = (LPWAVEINCAPSW)(*lpParam1);
 	    LPWAVEINCAPS16		wic16 = *(LPWAVEINCAPS16*)((LPSTR)wic32 - sizeof(LPWAVEINCAPS16));
 
 	    wic16->wMid = wic32->wMid;
 	    wic16->wPid = wic32->wPid;
 	    wic16->vDriverVersion = wic32->vDriverVersion;
-	    strcpy(wic16->szPname, wic32->szPname);
+            WideCharToMultiByte( CP_ACP, 0, wic32->szPname, -1, wic16->szPname,
+                                 sizeof(wic16->szPname), NULL, NULL );
 	    wic16->dwFormats = wic32->dwFormats;
 	    wic16->wChannels = wic32->wChannels;
 	    HeapFree(GetProcessHeap(), 0, (LPSTR)wic32 - sizeof(LPWAVEINCAPS16));
@@ -1010,16 +1013,16 @@ static  WINMM_MapType	MMDRV_WaveIn_Map32ATo16  (UINT wMsg, LPDWORD lpdwUser, LPD
 	break;
    case WIDM_GETDEVCAPS:
 	{
-            LPWAVEINCAPSA wic32 = (LPWAVEINCAPSA)*lpParam1;
-            LPSTR ptr = HeapAlloc( GetProcessHeap(), 0 ,sizeof(LPWAVEINCAPSA) + sizeof(WAVEINCAPS16));
+            LPWAVEINCAPSW wic32 = (LPWAVEINCAPSW)*lpParam1;
+            LPSTR ptr = HeapAlloc( GetProcessHeap(), 0 ,sizeof(LPWAVEINCAPSW) + sizeof(WAVEINCAPS16));
 
 	    if (ptr) {
-		*(LPWAVEINCAPSA*)ptr = wic32;
+		*(LPWAVEINCAPSW*)ptr = wic32;
 		ret = WINMM_MAP_OKMEM;
 	    } else {
 		ret = WINMM_MAP_NOMEM;
 	    }
-	    *lpParam1 = MapLS(ptr) + sizeof(LPWAVEINCAPSA);
+	    *lpParam1 = MapLS(ptr) + sizeof(LPWAVEINCAPSW);
 	    *lpParam2 = sizeof(WAVEINCAPS16);
 	}
 	break;
@@ -1109,13 +1112,14 @@ static  WINMM_MapType	MMDRV_WaveIn_UnMap32ATo16(UINT wMsg, LPDWORD lpdwUser, LPD
      case WIDM_GETDEVCAPS:
 	{
 	    LPWAVEINCAPS16		wic16 = MapSL(*lpParam1);
-	    LPSTR			ptr   = (LPSTR)wic16 - sizeof(LPWAVEINCAPSA);
-            LPWAVEINCAPSA		wic32 = *(LPWAVEINCAPSA*)ptr;
+	    LPSTR			ptr   = (LPSTR)wic16 - sizeof(LPWAVEINCAPSW);
+            LPWAVEINCAPSW		wic32 = *(LPWAVEINCAPSW*)ptr;
 
 	    wic32->wMid = wic16->wMid;
 	    wic32->wPid = wic16->wPid;
 	    wic32->vDriverVersion = wic16->vDriverVersion;
-	    strcpy(wic32->szPname, wic16->szPname);
+            WideCharToMultiByte( CP_ACP, 0, wic32->szPname, -1, wic16->szPname,
+                                 sizeof(wic16->szPname), NULL, NULL );
 	    wic32->dwFormats = wic16->dwFormats;
 	    wic32->wChannels = wic16->wChannels;
             UnMapLS( *lpParam1 );
@@ -1222,14 +1226,14 @@ static  WINMM_MapType	MMDRV_WaveOut_Map16To32A  (UINT wMsg, LPDWORD lpdwUser, LP
 
     case WODM_GETDEVCAPS:
 	{
-            LPWAVEOUTCAPSA		woc32 = HeapAlloc(GetProcessHeap(), 0, sizeof(LPWAVEOUTCAPS16) + sizeof(WAVEOUTCAPSA));
+            LPWAVEOUTCAPSW		woc32 = HeapAlloc(GetProcessHeap(), 0, sizeof(LPWAVEOUTCAPS16) + sizeof(WAVEOUTCAPSW));
 	    LPWAVEOUTCAPS16		woc16 = MapSL(*lpParam1);
 
 	    if (woc32) {
 		*(LPWAVEOUTCAPS16*)woc32 = woc16;
-		woc32 = (LPWAVEOUTCAPSA)((LPSTR)woc32 + sizeof(LPWAVEOUTCAPS16));
+		woc32 = (LPWAVEOUTCAPSW)((LPSTR)woc32 + sizeof(LPWAVEOUTCAPS16));
 		*lpParam1 = (DWORD)woc32;
-		*lpParam2 = sizeof(WAVEOUTCAPSA);
+		*lpParam2 = sizeof(WAVEOUTCAPSW);
 
 		ret = WINMM_MAP_OKMEM;
 	    } else {
@@ -1341,13 +1345,14 @@ static  WINMM_MapType	MMDRV_WaveOut_UnMap16To32A(UINT wMsg, LPDWORD lpdwUser, LP
 
     case WODM_GETDEVCAPS:
 	{
-            LPWAVEOUTCAPSA		woc32 = (LPWAVEOUTCAPSA)(*lpParam1);
+            LPWAVEOUTCAPSW		woc32 = (LPWAVEOUTCAPSW)(*lpParam1);
 	    LPWAVEOUTCAPS16		woc16 = *(LPWAVEOUTCAPS16*)((LPSTR)woc32 - sizeof(LPWAVEOUTCAPS16));
 
 	    woc16->wMid = woc32->wMid;
 	    woc16->wPid = woc32->wPid;
 	    woc16->vDriverVersion = woc32->vDriverVersion;
-	    strcpy(woc16->szPname, woc32->szPname);
+            WideCharToMultiByte( CP_ACP, 0, woc32->szPname, -1, woc16->szPname,
+                                 sizeof(woc16->szPname), NULL, NULL );
 	    woc16->dwFormats = woc32->dwFormats;
 	    woc16->wChannels = woc32->wChannels;
 	    woc16->dwSupport = woc32->dwSupport;
@@ -1416,17 +1421,17 @@ static  WINMM_MapType	MMDRV_WaveOut_Map32ATo16  (UINT wMsg, LPDWORD lpdwUser, LP
 
     case WODM_GETDEVCAPS:
 	{
-            LPWAVEOUTCAPSA woc32 = (LPWAVEOUTCAPSA)*lpParam1;
+            LPWAVEOUTCAPSW woc32 = (LPWAVEOUTCAPSW)*lpParam1;
             LPSTR ptr = HeapAlloc( GetProcessHeap(), 0,
-                                   sizeof(LPWAVEOUTCAPSA) + sizeof(WAVEOUTCAPS16));
+                                   sizeof(LPWAVEOUTCAPSW) + sizeof(WAVEOUTCAPS16));
 
 	    if (ptr) {
-		*(LPWAVEOUTCAPSA*)ptr = woc32;
+		*(LPWAVEOUTCAPSW*)ptr = woc32;
 		ret = WINMM_MAP_OKMEM;
 	    } else {
 		ret = WINMM_MAP_NOMEM;
 	    }
-	    *lpParam1 = MapLS(ptr) + sizeof(LPWAVEOUTCAPSA);
+	    *lpParam1 = MapLS(ptr) + sizeof(LPWAVEOUTCAPSW);
 	    *lpParam2 = sizeof(WAVEOUTCAPS16);
 	}
 	break;
@@ -1606,13 +1611,14 @@ static  WINMM_MapType	MMDRV_WaveOut_UnMap32ATo16(UINT wMsg, LPDWORD lpdwUser, LP
     case WODM_GETDEVCAPS:
 	{
 	    LPWAVEOUTCAPS16		woc16 = MapSL(*lpParam1);
-	    LPSTR			ptr   = (LPSTR)woc16 - sizeof(LPWAVEOUTCAPSA);
-            LPWAVEOUTCAPSA		woc32 = *(LPWAVEOUTCAPSA*)ptr;
+	    LPSTR			ptr   = (LPSTR)woc16 - sizeof(LPWAVEOUTCAPSW);
+            LPWAVEOUTCAPSW		woc32 = *(LPWAVEOUTCAPSW*)ptr;
 
 	    woc32->wMid = woc16->wMid;
 	    woc32->wPid = woc16->wPid;
 	    woc32->vDriverVersion = woc16->vDriverVersion;
-	    strcpy(woc32->szPname, woc16->szPname);
+            WideCharToMultiByte( CP_ACP, 0, woc32->szPname, -1, woc16->szPname,
+                                 sizeof(woc16->szPname), NULL, NULL );
 	    woc32->dwFormats = woc16->dwFormats;
 	    woc32->wChannels = woc16->wChannels;
 	    woc32->dwSupport = woc16->dwSupport;

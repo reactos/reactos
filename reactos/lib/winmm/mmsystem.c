@@ -1940,7 +1940,7 @@ LRESULT	WINAPI mmThreadCreate16(FARPROC16 fpThreadAddr, LPHANDLE16 lpHndl, DWORD
 	lpMMThd->hTask       	= 0;
 
 	if ((dwFlags & 1) == 0 && (GetProcessFlags(GetCurrentThreadId()) & 8) == 0) {
-	    lpMMThd->hEvent = CreateEventA(0, 0, 1, 0);
+	    lpMMThd->hEvent = CreateEventW(NULL, FALSE, TRUE, NULL);
 
 	    TRACE("Let's go crazy... trying new MM thread. lpMMThd=%p\n", lpMMThd);
 	    if (lpMMThd->dwFlags & 2) {
@@ -2712,7 +2712,6 @@ static LRESULT MMIO_Callback16(SEGPTR cb16, LPMMIOINFO lpmmioinfo, UINT uMessage
     mmioInfo16.adwInfo[0]  = lpmmioinfo->adwInfo[0];
     mmioInfo16.adwInfo[1]  = lpmmioinfo->adwInfo[1];
     mmioInfo16.adwInfo[2]  = lpmmioinfo->adwInfo[2];
-    mmioInfo16.adwInfo[3]  = lpmmioinfo->adwInfo[3];
     /* map (lParam1, lParam2) into (lp1, lp2) 32=>16 */
     if ((result = MMIO_Map32To16(uMessage, &lp1, &lp2)) != MMSYSERR_NOERROR)
         return result;
@@ -2733,7 +2732,6 @@ static LRESULT MMIO_Callback16(SEGPTR cb16, LPMMIOINFO lpmmioinfo, UINT uMessage
     lpmmioinfo->adwInfo[0]  = mmioInfo16.adwInfo[0];
     lpmmioinfo->adwInfo[1]  = mmioInfo16.adwInfo[1];
     lpmmioinfo->adwInfo[2]  = mmioInfo16.adwInfo[2];
-    lpmmioinfo->adwInfo[3]  = mmioInfo16.adwInfo[3];
 
     return result;
 }
@@ -2777,7 +2775,6 @@ HMMIO16 WINAPI mmioOpen16(LPSTR szFileName, MMIOINFO16* lpmmioinfo16,
             mmioinfo.adwInfo[0] = (DWORD)DosFileHandleToWin32Handle(mmioinfo.adwInfo[0]);
 	mmioinfo.adwInfo[1]  = lpmmioinfo16->adwInfo[1];
 	mmioinfo.adwInfo[2]  = lpmmioinfo16->adwInfo[2];
-	mmioinfo.adwInfo[3]  = lpmmioinfo16->adwInfo[3];
 
 	ret = MMIO_Open(szFileName, &mmioinfo, dwOpenFlags, MMIO_PROC_16);
         MMIO_SetSegmentedBuffer(mmioinfo.hmmio, (SEGPTR)lpmmioinfo16->pchBuffer, FALSE);
@@ -2856,7 +2853,6 @@ MMRESULT16 WINAPI mmioGetInfo16(HMMIO16 hmmio, MMIOINFO16* lpmmioinfo, UINT16 uF
     lpmmioinfo->adwInfo[0]  = mmioinfo.adwInfo[0];
     lpmmioinfo->adwInfo[1]  = mmioinfo.adwInfo[1];
     lpmmioinfo->adwInfo[2]  = mmioinfo.adwInfo[2];
-    lpmmioinfo->adwInfo[3]  = mmioinfo.adwInfo[3];
     lpmmioinfo->dwReserved1 = 0;
     lpmmioinfo->dwReserved2 = 0;
     lpmmioinfo->hmmio = HMMIO_16(mmioinfo.hmmio);
@@ -3065,7 +3061,11 @@ UINT16 WINAPI joyGetNumDevs16(void)
 MMRESULT16 WINAPI joyGetDevCaps16(UINT16 wID, LPJOYCAPS16 lpCaps, UINT16 wSize)
 {
     JOYCAPSA	jca;
-    MMRESULT	ret = joyGetDevCapsA(wID, &jca, sizeof(jca));
+    MMRESULT	ret;
+
+    if (lpCaps == NULL) return MMSYSERR_INVALPARAM;
+
+    ret = joyGetDevCapsA(wID, &jca, sizeof(jca));
 
     if (ret != JOYERR_NOERROR) return ret;
     lpCaps->wMid = jca.wMid;

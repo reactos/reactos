@@ -138,9 +138,9 @@ UINT WINAPI joyGetNumDevs(void)
 }
 
 /**************************************************************************
- * 				joyGetDevCapsA		[WINMM.@]
+ * 				joyGetDevCapsW		[WINMM.@]
  */
-MMRESULT WINAPI joyGetDevCapsA(UINT_PTR wID, LPJOYCAPSA lpCaps, UINT wSize)
+MMRESULT WINAPI joyGetDevCapsW(UINT_PTR wID, LPJOYCAPSW lpCaps, UINT wSize)
 {
     if (wID >= MAXJOYSTICK)	return JOYERR_PARMS;
     if (!JOY_LoadDriver(wID))	return MMSYSERR_NODRIVER;
@@ -152,43 +152,49 @@ MMRESULT WINAPI joyGetDevCapsA(UINT_PTR wID, LPJOYCAPSA lpCaps, UINT wSize)
 }
 
 /**************************************************************************
- * 				joyGetDevCapsW		[WINMM.@]
+ * 				joyGetDevCapsA		[WINMM.@]
  */
-MMRESULT WINAPI joyGetDevCapsW(UINT_PTR wID, LPJOYCAPSW lpCaps, UINT wSize)
+MMRESULT WINAPI joyGetDevCapsA(UINT_PTR wID, LPJOYCAPSA lpCaps, UINT wSize)
 {
-    JOYCAPSA	jca;
-    MMRESULT	ret = joyGetDevCapsA(wID, &jca, sizeof(jca));
+    JOYCAPSW	jcw;
+    MMRESULT	ret;
 
-    if (ret != JOYERR_NOERROR) return ret;
-    lpCaps->wMid = jca.wMid;
-    lpCaps->wPid = jca.wPid;
-    MultiByteToWideChar( CP_ACP, 0, jca.szPname, -1, lpCaps->szPname,
-                         sizeof(lpCaps->szPname)/sizeof(WCHAR) );
-    lpCaps->wXmin = jca.wXmin;
-    lpCaps->wXmax = jca.wXmax;
-    lpCaps->wYmin = jca.wYmin;
-    lpCaps->wYmax = jca.wYmax;
-    lpCaps->wZmin = jca.wZmin;
-    lpCaps->wZmax = jca.wZmax;
-    lpCaps->wNumButtons = jca.wNumButtons;
-    lpCaps->wPeriodMin = jca.wPeriodMin;
-    lpCaps->wPeriodMax = jca.wPeriodMax;
+    if (lpCaps == NULL) return MMSYSERR_INVALPARAM;
 
-    if (wSize >= sizeof(JOYCAPSW)) { /* Win95 extensions ? */
-	lpCaps->wRmin = jca.wRmin;
-	lpCaps->wRmax = jca.wRmax;
-	lpCaps->wUmin = jca.wUmin;
-	lpCaps->wUmax = jca.wUmax;
-	lpCaps->wVmin = jca.wVmin;
-	lpCaps->wVmax = jca.wVmax;
-	lpCaps->wCaps = jca.wCaps;
-	lpCaps->wMaxAxes = jca.wMaxAxes;
-	lpCaps->wNumAxes = jca.wNumAxes;
-	lpCaps->wMaxButtons = jca.wMaxButtons;
-        MultiByteToWideChar( CP_ACP, 0, jca.szRegKey, -1, lpCaps->szRegKey,
-                         sizeof(lpCaps->szRegKey)/sizeof(WCHAR) );
-        MultiByteToWideChar( CP_ACP, 0, jca.szOEMVxD, -1, lpCaps->szOEMVxD,
-                         sizeof(lpCaps->szOEMVxD)/sizeof(WCHAR) );
+    ret = joyGetDevCapsW(wID, &jcw, sizeof(jcw));
+
+    if (ret == JOYERR_NOERROR)
+    {
+        lpCaps->wMid = jcw.wMid;
+        lpCaps->wPid = jcw.wPid;
+        WideCharToMultiByte( CP_ACP, 0, jcw.szPname, -1, lpCaps->szPname,
+                             sizeof(lpCaps->szPname), NULL, NULL );
+        lpCaps->wXmin = jcw.wXmin;
+        lpCaps->wXmax = jcw.wXmax;
+        lpCaps->wYmin = jcw.wYmin;
+        lpCaps->wYmax = jcw.wYmax;
+        lpCaps->wZmin = jcw.wZmin;
+        lpCaps->wZmax = jcw.wZmax;
+        lpCaps->wNumButtons = jcw.wNumButtons;
+        lpCaps->wPeriodMin = jcw.wPeriodMin;
+        lpCaps->wPeriodMax = jcw.wPeriodMax;
+
+        if (wSize >= sizeof(JOYCAPSA)) { /* Win95 extensions ? */
+            lpCaps->wRmin = jcw.wRmin;
+            lpCaps->wRmax = jcw.wRmax;
+            lpCaps->wUmin = jcw.wUmin;
+            lpCaps->wUmax = jcw.wUmax;
+            lpCaps->wVmin = jcw.wVmin;
+            lpCaps->wVmax = jcw.wVmax;
+            lpCaps->wCaps = jcw.wCaps;
+            lpCaps->wMaxAxes = jcw.wMaxAxes;
+            lpCaps->wNumAxes = jcw.wNumAxes;
+            lpCaps->wMaxButtons = jcw.wMaxButtons;
+            WideCharToMultiByte( CP_ACP, 0, jcw.szRegKey, -1, lpCaps->szRegKey,
+                                 sizeof(lpCaps->szRegKey), NULL, NULL );
+            WideCharToMultiByte( CP_ACP, 0, jcw.szOEMVxD, -1, lpCaps->szOEMVxD,
+                                 sizeof(lpCaps->szOEMVxD), NULL, NULL );
+        }
     }
 
     return ret;
