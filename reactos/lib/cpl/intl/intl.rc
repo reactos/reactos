@@ -11,66 +11,16 @@
 
 
 IDC_CPLICON ICON "resources/applet.ico"
+IDC_FLAGS ICON "resources/flags.ico"
 
 
-LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
-IDD_GENERALPAGE DIALOGEX 0, 0, 246, 228
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "General"
-FONT 8, "MS Shell Dlg"
-BEGIN
-  LTEXT "Property Page 1",-1,73,74,90,8
-END
+/*
+ * Everything specific to any language goes in one of the specific
+ * files. Note that you can and may override resources which also have
+ * a neutral version. This is to get localized bitmaps for example.
+ */
 
+#include "en.rc"
+#include "de.rc"
 
-IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 228
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Numbers"
-FONT 8, "MS Shell Dlg"
-BEGIN
-  LTEXT "Property Page 2",-1,73,74,90,8
-END
-
-
-IDD_CURRENCYPAGE DIALOGEX 0, 0, 246, 228
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Currency"
-FONT 8, "MS Shell Dlg"
-BEGIN
-  LTEXT "Property Page 3",-1,73,74,90,8
-END
-
-
-IDD_TIMEPAGE DIALOGEX 0, 0, 246, 228
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Time"
-FONT 8, "MS Shell Dlg"
-BEGIN
-  LTEXT "Property Page 4",-1,73,74,90,8
-END
-
-
-IDD_DATEPAGE DIALOGEX 0, 0, 246, 228
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Date"
-FONT 8, "MS Shell Dlg"
-BEGIN
-  LTEXT "Property Page 5",-1,73,74,90,8
-END
-
-
-IDD_LOCALEPAGE DIALOGEX 0, 0, 246, 228
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Input Locale"
-FONT 8, "MS Shell Dlg"
-BEGIN
-  LTEXT "Property Page 6",-1,73,74,90,8
-END
-
-
-STRINGTABLE
-BEGIN
-  IDS_CPLNAME "Regional Options"
-  IDS_CPLDESCRIPTION "Select languages and format numbers, currencies, times and date."
-END
