@@ -1,9 +1,9 @@
 /*
  * entry.c
  *
- * $Revision: 1.7 $
- * $Author: dwelch $
- * $Date: 2000/07/01 23:18:58 $
+ * $Revision: 1.8 $
+ * $Author: phreak $
+ * $Date: 2000/07/07 00:59:41 $
  *
  */
 
@@ -170,6 +170,7 @@ DHPDEV VGADDIEnablePDEV(IN DEVMODEW  *DM,
       return  NULL;
     }
   PDev->KMDriver = Driver;
+  DPRINT( "PDev: %x, Driver: %x\n", PDev, PDev->KMDriver );
   PDev->xyCursor.x = 320;
   PDev->xyCursor.y = 240;
   PDev->ptlExtent.x = 0;
@@ -223,7 +224,7 @@ VOID VGADDIAssertMode(IN DHPDEV  DPev,
 
   } else {
     // Go back to last known mode
-
+    DPRINT( "ppdev: %x, KMDriver: %x", ppdev, ppdev->KMDriver );
     if (EngDeviceIoControl(ppdev->KMDriver,
                            IOCTL_VIDEO_RESET_DEVICE,
                            NULL,
@@ -243,8 +244,7 @@ VOID VGADDIDisablePDEV(IN DHPDEV PDev)
 {
   PPDEV ppdev = (PPDEV)PDev;
 
-  EngDeletePalette(devinfoVGA.hpalDefault);
-
+  // EngDeletePalette(devinfoVGA.hpalDefault);
   if (ppdev->pjPreallocSSBBuffer != NULL)
   {
     EngFreeMem(ppdev->pjPreallocSSBBuffer);
@@ -253,8 +253,8 @@ VOID VGADDIDisablePDEV(IN DHPDEV PDev)
   if (ppdev->pucDIB4ToVGAConvBuffer != NULL)
   {
     EngFreeMem(ppdev->pucDIB4ToVGAConvBuffer);
-  }
-
+    }
+  DPRINT( "Freeing PDEV\n" );
   EngFreeMem(PDev);
 }
 
@@ -263,22 +263,26 @@ VOID VGADDIDisableSurface(IN DHPDEV PDev)
   PPDEV ppdev = (PPDEV)PDev;
   PDEVSURF pdsurf = ppdev->AssociatedSurf;
   PSAVED_SCREEN_BITS pSSB, pSSBNext;
-
-  EngFreeMem(pdsurf->BankSelectInfo);
-
+  CHECKPOINT;
+  DPRINT( "KMDriver: %x\n", ppdev->KMDriver );
+  //  EngFreeMem(pdsurf->BankSelectInfo);
+  CHECKPOINT;
   if (pdsurf->BankInfo != NULL) {
     EngFreeMem(pdsurf->BankInfo);
-  }
+    }
+  CHECKPOINT;
   if (pdsurf->BankInfo2RW != NULL) {
     EngFreeMem(pdsurf->BankInfo2RW);
-  }
+    }
+  CHECKPOINT;
   if (pdsurf->BankBufferPlane0 != NULL) {
     EngFreeMem(pdsurf->BankBufferPlane0);
   }
+  CHECKPOINT;
   if (ppdev->PointerAttributes != NULL) {
     EngFreeMem(ppdev->PointerAttributes);
-  }
-
+    }
+  CHECKPOINT;
   // free any pending saved screen bit blocks
   pSSB = pdsurf->ssbList;
   while (pSSB != (PSAVED_SCREEN_BITS) NULL) {
@@ -289,10 +293,9 @@ VOID VGADDIDisableSurface(IN DHPDEV PDev)
     // Free the current block
     EngFreeMem(pSSB);
     pSSB = pSSBNext;
-  }
-
+    }
   EngDeleteSurface((HSURF) ppdev->SurfHandle);
-  EngFreeMem(pdsurf); // free the surface
+  //  EngFreeMem(pdsurf); // free the surface
 }
 
 VOID InitSavedBits(PPDEV ppdev)
@@ -402,7 +405,7 @@ HSURF VGADDIEnableSurface(IN DHPDEV  PDev)
 
     return(hsurf);
   }
-
+  DPRINT( "EngAssociateSurface() failed\n" );
   EngDeleteSurface(hsurf);
 
 error_clean:
