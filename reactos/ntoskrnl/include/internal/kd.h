@@ -1,4 +1,4 @@
-/* $Id: kd.h,v 1.12 2002/07/18 00:25:30 dwelch Exp $
+/* $Id: kd.h,v 1.13 2002/07/19 03:56:47 ei Exp $
  *
  * kernel debugger prototypes
  */
@@ -30,10 +30,10 @@ typedef enum _KD_CONTINUE_TYPE
   kdHandleException
 } KD_CONTINUE_TYPE;
 
-ULONG 
+ULONG
 KdpPrintString (PANSI_STRING String);
 
-VOID 
+VOID
 DebugLogWrite(PCH String);
 VOID
 DebugLogInit(VOID);
@@ -70,7 +70,7 @@ VOID KdPrintMda(PCH pch);
 
 #ifndef KDBG
 #define KDB_DELETEPROCESS_HOOK(PROCESS)
-#define KDB_LOADDRIVER_HOOK(MODULE)
+#define KDB_LOADDRIVER_HOOK(FILENAME, MODULE)
 #define KDB_UNLOADDRIVER_HOOK(MODULE)
 #define KDB_LOADERINIT_HOOK(NTOS, HAL)
 #define KDB_SYMBOLFILE_HOOK(LOADBASE, FILENAME, LENGTH)
@@ -96,7 +96,7 @@ VOID
 KdbLoadDriver(PUNICODE_STRING Filename, PMODULE_OBJECT Module);
 VOID
 KdbFreeSymbolsProcess(PPEB Peb);
-BOOLEAN 
+BOOLEAN
 KdbPrintAddress(PVOID address);
 
 #endif /* __INCLUDE_INTERNAL_KERNEL_DEBUGGER_H */
