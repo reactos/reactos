@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2002/12/21 04:46:09 robd Exp $
+# $Id: Makefile,v 1.4 2003/02/21 16:30:05 robd Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -10,6 +10,8 @@ TARGET_NAME = packet
 #TARGET_CFLAGS = -DDBG -DWIN_NT_DRIVER -DKQPC_TS -I$(PATH_TO_TOP)/ntoskrnl/include
 
 TARGET_CFLAGS = -DDBG -DWIN_NT_DRIVER -DKQPC_TS -DUSE_KLOCKS -I$(PATH_TO_TOP)/ntoskrnl/include
+
+TARGET_DDKLIBS = ndis.a
 
 TARGET_OBJECTS = \
 	packet.o    \
@@ -28,15 +30,6 @@ TARGET_OBJECTS = \
 	functions.o \
 	bucket_lookup.o \
 	normal_lookup.o
-
-
-TARGET_DDKLIBS = ndis.a
-
-TARGET_CLEAN = \
-  *.o \
-  *.coff
-
-TARGET_PATH = .
 
 include $(PATH_TO_TOP)/rules.mak
 
