@@ -38,7 +38,7 @@ FS_DRIVERS = minix vfat ext2
 # FS_DRIVERS = template
 KERNEL_SERVICES = $(DEVICE_DRIVERS) $(FS_DRIVERS)
 		  
-APPS = args hello shell
+APPS = args hello shell test cat
 # APPS = cmd
 
 all: $(COMPONENTS) $(DLLS) $(LOADERS) $(KERNEL_SERVICES) $(APPS)

@@ -160,6 +160,19 @@ void ExecuteCommand(char* line)
 	ExecuteType(tail);	
 	return;
      }
+   if (strcmp(cmd,"validate")==0)
+     {
+	debug_printf("Validating heap...");
+	if (HeapValidate(GetProcessHeap(),0,NULL))
+	  {
+	     debug_printf("succeeded\n");
+	  }
+	else
+	  {
+	     debug_printf("failed\n");
+	  }
+	return;
+     }
    if (strcmp(cmd,"exit")==0)
      {
 	ExitProcess(0);

@@ -28,11 +28,10 @@ void main(int argc, char* argv[])
    OutputHandle =  GetStdHandle(STD_OUTPUT_HANDLE);
 
    debug_printf("GetCommandLineA() %s\n",GetCommandLineA());
-   #if 0
    for (i=0; i<argc; i++)
      {
+	debug_printf("Args: %x\n",argv[i]);
 	debug_printf("Args: '%s'\n",argv[i]);
      }
-   #endif
 }
 
