@@ -1458,7 +1458,6 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
 {
    PEPROCESS Process;
    NTSTATUS Status;
-   PHANDLE ProcessAccessTokenP;
    KPROCESSOR_MODE PreviousMode;
    
    PreviousMode = ExGetPreviousMode();
@@ -1480,14 +1479,104 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
       case ProcessBasePriority:
       case ProcessRaisePriority:
       case ProcessDebugPort:
-      case ProcessExceptionPort:
 	Status = STATUS_NOT_IMPLEMENTED;
 	break;
 
+      case ProcessExceptionPort:
+      {
+        if(ProcessInformationLength != sizeof(PROCESS_ACCESS_TOKEN))
+        {
+          Status = STATUS_INFO_LENGTH_MISMATCH;
+        }
+        else
+        {
+          HANDLE PortHandle;
+
+          /* make a safe copy of the buffer on the stack */
+          _SEH_TRY
+          {
+            PortHandle = *(PHANDLE)ProcessInformation;
+            Status = STATUS_SUCCESS;
+          }
+          _SEH_HANDLE
+          {
+            Status = _SEH_GetExceptionCode();
+          }
+          _SEH_END;
+          
+          if(NT_SUCCESS(Status))
+          {
+            PEPORT ExceptionPort;
+            
+            /* in case we had success reading from the buffer, verify the provided
+             * LPC port handle
+             */
+            Status = ObReferenceObjectByHandle(PortHandle,
+                                               0,
+                                               LpcPortObjectType,
+                                               PreviousMode,
+                                               (PVOID)&ExceptionPort,
+                                               NULL);
+            if(NT_SUCCESS(Status))
+            {
+              /* lock the process to be thread-safe! */
+              
+              Status = PsLockProcess(Process, FALSE);
+              if(NT_SUCCESS(Status))
+              {
+                /*
+                 * according to "NT Native API" documentation, setting the exception
+                 * port is only permitted once!
+                 */
+                if(Process->ExceptionPort == NULL)
+                {
+                  Process->ExceptionPort = ExceptionPort;
+                  Status = STATUS_SUCCESS;
+                }
+                else
+                {
+                  Status = STATUS_PORT_ALREADY_SET;
+                }
+                PsUnlockProcess(Process);
+              }
+              
+              ObDereferenceObject(ExceptionPort);
+            }
+          }
+        }
+        break;
+      }
+
       case ProcessAccessToken:
-	ProcessAccessTokenP = (PHANDLE)ProcessInformation;
-	Status = PspAssignPrimaryToken(Process, *ProcessAccessTokenP);
+      {
+        if(ProcessInformationLength != sizeof(PROCESS_ACCESS_TOKEN))
+        {
+          Status = STATUS_INFO_LENGTH_MISMATCH;
+        }
+        else
+        {
+          HANDLE TokenHandle;
+
+          /* make a safe copy of the buffer on the stack */
+          _SEH_TRY
+          {
+            TokenHandle = ((PPROCESS_ACCESS_TOKEN)ProcessInformation)->Token;
+            Status = STATUS_SUCCESS;
+          }
+          _SEH_HANDLE
+          {
+            Status = _SEH_GetExceptionCode();
+          }
+          _SEH_END;
+
+          if(NT_SUCCESS(Status))
+          {
+            /* in case we had success reading from the buffer, perform the actual task */
+            Status = PspAssignPrimaryToken(Process, TokenHandle);
+          }
+        }
 	break;
+      }
 
       case ProcessDefaultHardErrorMode:
       {
@@ -1572,7 +1661,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             
             /* FIXME - update the session id for the process token */
 
-            Status = PsLockProcess(Process, TRUE);
+            Status = PsLockProcess(Process, FALSE);
             if(NT_SUCCESS(Status))
             {
               Process->SessionId = SessionInfo.SessionId;
