@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.97 2003/11/08 15:00:36 gvg Exp $
+/* $Id: dc.c,v 1.98 2003/11/17 08:20:24 navaraf Exp $
  *
  * DC.C - Device context functions
  *
@@ -1283,7 +1283,7 @@ NtGdiGetDeviceCaps(HDC  hDC,
       break;
 
     case RASTERCAPS:
-      UNIMPLEMENTED; /* FIXME */
+      ret = dc->GDIInfo->flRaster;
       break;
 
     case CURVECAPS:
