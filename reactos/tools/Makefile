@@ -116,7 +116,9 @@ rgenstat_target:
 	$(MAKE) -C rgenstat rgenstat$(EXE_POSTFIX)
 
 pipetools_target:
+ifeq ($(HOST),mingw32-windows)
 	$(MAKE) -C pipetools
+endif
 
 .PHONY: wmc_target cdmake_target mkhive_target rgenstat_target pipetools_target
 
@@ -128,7 +130,6 @@ clean:
 	$(MAKE) -C mkhive clean
 	$(MAKE) -C wmc clean
 	$(MAKE) -C rgenstat clean
-	$(MAKE) -C pipetools clean
 	rm mkconfig
 	rm $(TOOLS)
 endif
