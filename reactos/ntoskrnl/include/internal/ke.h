@@ -46,6 +46,7 @@ struct _KEXCEPTION_FRAME;
 #define IPI_REQUEST_FUNCTIONCALL    0
 #define IPI_REQUEST_APC		    1
 #define IPI_REQUEST_DPC		    2
+#define IPI_REQUEST_FREEZE	    4
 
 /* ipi.c ********************************************************************/
 

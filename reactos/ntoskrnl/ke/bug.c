@@ -354,8 +354,8 @@ KeBugCheckWithTf(ULONG BugCheckCode,
             if (i != KeGetCurrentProcessorNumber()) {
                 
                 /* Send the IPI and give them one second to catch up */
-                KiIpiSendRequest(1 << i, IPI_FREEZE);
-                KeStallExecutionProcessor(1000000)
+                KiIpiSendRequest(1 << i, IPI_REQUEST_FREEZE);
+                KeStallExecutionProcessor(1000000);
             }
         }
 #endif
