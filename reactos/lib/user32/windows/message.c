@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.16 2003/05/21 22:58:43 gvg Exp $
+/* $Id: message.c,v 1.17 2003/05/29 13:17:41 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -83,13 +83,21 @@ User32FreeAsciiConvertedMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 	LPSTR TempString;
 	LPSTR InString;
 	InString = (LPSTR)lParam;
-	TempString = RtlAllocateHeap(RtlGetProcessHeap(), 0, strlen(InString));
+	TempString = RtlAllocateHeap(RtlGetProcessHeap(), 0, strlen(InString) + 1);
 	strcpy(TempString, InString);
 	RtlInitAnsiString(&AnsiString, TempString);
-	UnicodeString.Length = wParam;
-	UnicodeString.MaximumLength = wParam;
+	UnicodeString.Length = wParam * sizeof(WCHAR);
+	UnicodeString.MaximumLength = wParam * sizeof(WCHAR);
 	UnicodeString.Buffer = (PWSTR)lParam;
-	RtlAnsiStringToUnicodeString(&UnicodeString, &AnsiString, FALSE);
+	if (! NT_SUCCESS(RtlAnsiStringToUnicodeString(&UnicodeString,
+	                                              &AnsiString,
+	                                              FALSE)))
+	  {
+	    if (1 <= wParam)
+	      {
+		UnicodeString.Buffer[0] = L'\0';
+	      }
+	  }
 	RtlFreeHeap(RtlGetProcessHeap(), 0, TempString);
 	break;
       }
