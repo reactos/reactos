@@ -70,6 +70,8 @@ extern VOID KiTrapUnknown(VOID);
 extern ULONG init_stack;
 extern ULONG init_stack_top;
 
+static char KiNullLdt[8] = {0,};
+
 /* FUNCTIONS ****************************************************************/
 
 extern unsigned int _text_start__, _text_end__;
@@ -155,6 +157,145 @@ KiUserTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
 
   KiDispatchException(&Er, 0, Tf, UserMode, TRUE);
   return(0);
+}
+
+ULONG
+KiDoubleFaultHandler(VOID)
+{
+  unsigned int cr2;
+  unsigned int i;
+  PULONG stack;
+  ULONG StackLimit;
+  ULONG Esp0;
+  ULONG ExceptionNr = 8;
+  extern KTSS KiTss;
+  static char *TypeStrings[] = 
+  {
+    "Divide Error",
+    "Debug Trap",
+    "NMI",
+    "Breakpoint",
+    "Overflow",
+    "BOUND range exceeded",
+    "Invalid Opcode",
+    "No Math Coprocessor",
+    "Double Fault",
+    "Unknown(9)",
+    "Invalid TSS",
+    "Segment Not Present",
+    "Stack Segment Fault",
+    "General Protection",
+    "Page Fault",
+    "Math Fault",
+    "Alignment Check",
+    "Machine Check"
+  };
+  
+  /* Use the address of the trap frame as approximation to the ring0 esp */
+  Esp0 = KiTss.Esp0;
+  
+   /* Get CR2 */
+   __asm__("movl %%cr2,%0\n\t" : "=d" (cr2));
+   
+   /*
+    * Check for stack underflow
+    */
+   if (PsGetCurrentThread() != NULL &&
+       Esp0 < (ULONG)PsGetCurrentThread()->Tcb.StackLimit)
+     {
+	DbgPrint("Stack underflow (tf->esp %x Limit %x)\n",
+		 Esp0, (ULONG)PsGetCurrentThread()->Tcb.StackLimit);
+	ExceptionNr = 12;
+     }
+   
+   /*
+    * Print out the CPU registers
+    */
+   if (ExceptionNr < 19)
+     {
+       DbgPrint("%s Exception: %d(%x)\n",TypeStrings[ExceptionNr],
+		ExceptionNr, 0);
+     }
+   else
+     {
+       DbgPrint("Exception: %d(%x)\n", ExceptionNr, 0);
+     }
+   DbgPrint("CS:EIP %x:%x ", KiTss.Cs, KiTss.Eip);
+   print_address((PVOID)KiTss.Eip);
+   DbgPrint("\n");
+   DbgPrint("cr2 %x cr3 %x ", cr2, KiTss.Cr3);
+   DbgPrint("Proc: %x ",PsGetCurrentProcess());
+   if (PsGetCurrentProcess() != NULL)
+     {
+	DbgPrint("Pid: %x <", PsGetCurrentProcess()->UniqueProcessId);
+	DbgPrint("%.8s> ", PsGetCurrentProcess()->ImageFileName);
+     }
+   if (PsGetCurrentThread() != NULL)
+     {
+	DbgPrint("Thrd: %x Tid: %x",
+		 PsGetCurrentThread(),
+		 PsGetCurrentThread()->Cid.UniqueThread);
+     }
+   DbgPrint("\n");
+   DbgPrint("DS %x ES %x FS %x GS %x\n", KiTss.Ds, KiTss.Es,
+	    KiTss.Fs, KiTss.Gs);
+   DbgPrint("EAX: %.8x   EBX: %.8x   ECX: %.8x\n", KiTss.Eax, KiTss.Ebx, 
+	    KiTss.Ecx);
+   DbgPrint("EDX: %.8x   EBP: %.8x   ESI: %.8x\n", KiTss.Edx, KiTss.Ebp, 
+	    KiTss.Esi);
+   DbgPrint("EDI: %.8x   EFLAGS: %.8x ", KiTss.Edi, KiTss.Eflags);
+   if (KiTss.Cs == KERNEL_CS)
+     {
+	DbgPrint("kESP %.8x ", Esp0);
+	if (PsGetCurrentThread() != NULL)
+	  {
+	     DbgPrint("kernel stack base %x\n",
+		      PsGetCurrentThread()->Tcb.StackLimit);
+		      	     
+	  }
+     }
+   else
+     {
+	DbgPrint("User ESP %.8x\n", KiTss.Esp);
+     }
+  if ((KiTss.Cs & 0xffff) == KERNEL_CS)
+    {
+       DbgPrint("ESP %x\n", Esp0);
+       stack = (PULONG) (Esp0 + 24);
+       stack = (PULONG)(((ULONG)stack) & (~0x3));
+       if (PsGetCurrentThread() != NULL)
+	 {
+	   StackLimit = (ULONG)PsGetCurrentThread()->Tcb.StackBase;
+	 }
+       else
+	 {
+	   StackLimit = (ULONG)&init_stack_top;
+	 }
+       
+       DbgPrint("stack<%p>: ", stack);
+	 
+       for (i = 0; i < 18 && (((ULONG)&stack[i+5]) < StackLimit); i = i + 6)
+	 {
+	    DbgPrint("%.8x %.8x %.8x %.8x\n", 
+		     stack[i], stack[i+1], 
+		     stack[i+2], stack[i+3], 
+		     stack[i+4], stack[i+5]);
+	 }
+       DbgPrint("Frames:\n");
+       for (i = 0; i < 32 && (((ULONG)&stack[i]) < StackLimit); i++)
+	 {
+	    if (stack[i] > ((unsigned int) &_text_start__) &&
+	      !(stack[i] >= ((ULONG)&init_stack) &&
+		stack[i] <= ((ULONG)&init_stack_top)))
+	      {
+		 print_address((PVOID)stack[i]);
+		 DbgPrint(" ");
+	      }
+	 }
+    }
+   
+   DbgPrint("\n");
+   for(;;);
 }
 
 ULONG
@@ -415,15 +556,104 @@ static void set_interrupt_gate(unsigned int sel, unsigned int func)
    KiIdt[sel].b = 0x8f00 + (((int)func)&0xffff0000);         
 }
 
+static void
+set_task_gate(unsigned int sel, unsigned task_sel)
+{
+  KiIdt[sel].a = task_sel << 16;
+  KiIdt[sel].b = 0x8500;
+}
+
 void KeInitExceptions(void)
 /*
  * FUNCTION: Initalize CPU exception handling
  */
 {
    int i;
-   
+   ULONG base, length;
+   extern USHORT KiGdt[];
+   extern unsigned int trap_stack_top;   
+   extern KTSS KiTss;
+   extern KTSS KiTrapTss;
+   ULONG cr3;
+
    DPRINT("KeInitExceptions()\n",0);
+
+   __asm__("movl %%cr3,%0\n\t" : "=d" (cr3));
+
+   /*
+    * Set up an a descriptor for the LDT
+    */
+   memset(KiNullLdt, 0, sizeof(KiNullLdt));
+   base = (unsigned int)&KiNullLdt;
+   length = sizeof(KiNullLdt) - 1;
    
+   KiGdt[(LDT_SELECTOR / 2) + 0] = (length & 0xFFFF);
+   KiGdt[(LDT_SELECTOR / 2) + 1] = (base & 0xFFFF);
+   KiGdt[(LDT_SELECTOR / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8200;
+   KiGdt[(LDT_SELECTOR / 2) + 3] = ((length & 0xF0000) >> 16) |
+     ((base & 0xFF000000) >> 16);
+
+   /*
+    * Set up a descriptor for the TSS
+    */
+   memset(&KiTss, 0, sizeof(KiTss));
+   base = (unsigned int)&KiTss;
+   length = sizeof(KiTss) - 1;
+         
+   KiGdt[(TSS_SELECTOR / 2) + 0] = (length & 0xFFFF);
+   KiGdt[(TSS_SELECTOR / 2) + 1] = (base & 0xFFFF);
+   KiGdt[(TSS_SELECTOR / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8900;
+   KiGdt[(TSS_SELECTOR / 2) + 3] = ((length & 0xF0000) >> 16) |
+     ((base & 0xFF000000) >> 16);
+   
+   /*
+    * Initialize the TSS
+    */
+   KiTss.Esp0 = (ULONG)&init_stack_top;
+   KiTss.Ss0 = KERNEL_DS;
+   //   KiTss.IoMapBase = FIELD_OFFSET(KTSS, IoBitmap);
+   KiTss.IoMapBase = 0xFFFF; /* No i/o bitmap */
+   KiTss.IoBitmap[0] = 0xFF;   
+   KiTss.Ldt = LDT_SELECTOR;
+  
+   /*
+    * Load the task register
+    */
+   __asm__("ltr %%ax" 
+	   : /* no output */
+           : "a" (TSS_SELECTOR));
+
+   /*
+    * Set up the TSS for handling double faults
+    */
+   memset(&KiTrapTss, 0, sizeof(KiTrapTss));
+   base = (unsigned int)&KiTrapTss;
+   length = sizeof(KiTrapTss) - 1;
+         
+   KiGdt[(TRAP_TSS_SELECTOR / 2) + 0] = (length & 0xFFFF);
+   KiGdt[(TRAP_TSS_SELECTOR / 2) + 1] = (base & 0xFFFF);
+   KiGdt[(TRAP_TSS_SELECTOR / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8900;
+   KiGdt[(TRAP_TSS_SELECTOR / 2) + 3] = ((length & 0xF0000) >> 16) |
+     ((base & 0xFF000000) >> 16);
+
+   KiTrapTss.Eflags = 0;
+   KiTrapTss.Esp0 = (ULONG)&trap_stack_top;
+   KiTrapTss.Ss0 = KERNEL_DS;
+   KiTrapTss.Esp = (ULONG)&trap_stack_top;
+   KiTrapTss.Cs = KERNEL_CS;
+   KiTrapTss.Eip = (ULONG)KiTrap8;
+   KiTrapTss.Ss = KERNEL_DS;
+   KiTrapTss.Ds = KERNEL_DS;
+   KiTrapTss.Es = KERNEL_DS;
+   KiTrapTss.Fs = PCR_SELECTOR;
+   KiTrapTss.IoMapBase = 0xFFFF; /* No i/o bitmap */
+   KiTrapTss.IoBitmap[0] = 0xFF;   
+   KiTrapTss.Ldt = LDT_SELECTOR;
+   KiTrapTss.Cr3 = cr3;
+
+   /*
+    * Set up the other gates
+    */
    set_interrupt_gate(0, (ULONG)KiTrap0);
    set_interrupt_gate(1, (ULONG)KiTrap1);
    set_interrupt_gate(2, (ULONG)KiTrap2);
@@ -432,7 +662,7 @@ void KeInitExceptions(void)
    set_interrupt_gate(5, (ULONG)KiTrap5);
    set_interrupt_gate(6, (ULONG)KiTrap6);
    set_interrupt_gate(7, (ULONG)KiTrap7);
-   set_interrupt_gate(8, (ULONG)KiTrap8);
+   set_task_gate(8, TRAP_TSS_SELECTOR);
    set_interrupt_gate(9, (ULONG)KiTrap9);
    set_interrupt_gate(10, (ULONG)KiTrap10);
    set_interrupt_gate(11, (ULONG)KiTrap11);

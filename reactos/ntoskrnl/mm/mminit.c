@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.16 2001/03/26 20:46:53 dwelch Exp $
+/* $Id: mminit.c,v 1.17 2001/03/28 14:24:05 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -176,6 +176,7 @@ VOID MmInit1(ULONG FirstKrnlPhysAddr,
 {
    ULONG i;
    ULONG kernel_len;
+   extern unsigned int unmap_me, unmap_me2, unmap_me3;
    
    DPRINT("MmInit1(bp %x, LastKernelAddress %x)\n", bp, 
 	  LastKernelAddress);
@@ -265,6 +266,10 @@ VOID MmInit1(ULONG FirstKrnlPhysAddr,
 	MmDeleteVirtualMapping(NULL, (PVOID)(i), FALSE, NULL, NULL);
      }
    DPRINT("Almost done MmInit()\n");
+
+   MmDeleteVirtualMapping(NULL, (PVOID)&unmap_me, FALSE, NULL, NULL);
+   MmDeleteVirtualMapping(NULL, (PVOID)&unmap_me2, FALSE, NULL, NULL);
+   MmDeleteVirtualMapping(NULL, (PVOID)&unmap_me3, FALSE, NULL, NULL);
    
    /*
     * Intialize memory areas

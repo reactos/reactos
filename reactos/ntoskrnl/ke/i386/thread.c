@@ -39,9 +39,8 @@
 
 /* GLOBALS ***************************************************************/
 
-static char KiNullLdt[8] = {0,};
-
 KTSS KiTss;
+KTSS KiTrapTss;
 
 extern USHORT KiGdt[];
 
@@ -161,51 +160,6 @@ HalInitFirstTask(PETHREAD thread)
  * initial thread
  */
 {
-   ULONG base;
-   ULONG length;
-   
-   /*
-    * Set up an a descriptor for the LDT
-    */
-   memset(KiNullLdt, 0, sizeof(KiNullLdt));
-   base = (unsigned int)&KiNullLdt;
-   length = sizeof(KiNullLdt) - 1;
-   
-   KiGdt[(TSS_SELECTOR / 2) + 0] = (length & 0xFFFF);
-   KiGdt[(TSS_SELECTOR / 2) + 1] = (base & 0xFFFF);
-   KiGdt[(TSS_SELECTOR / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8200;
-   KiGdt[(TSS_SELECTOR / 2) + 3] = ((length & 0xF0000) >> 16) |
-     ((base & 0xFF000000) >> 16);
-
-   /*
-    * Set up a descriptor for the TSS
-    */
-   memset(&KiTss, 0, sizeof(KiTss));
-   base = (unsigned int)&KiTss;
-   length = sizeof(KiTss) - 1;
-         
-   KiGdt[(TSS_SELECTOR / 2) + 0] = (length & 0xFFFF);
-   KiGdt[(TSS_SELECTOR / 2) + 1] = (base & 0xFFFF);
-   KiGdt[(TSS_SELECTOR / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8900;
-   KiGdt[(TSS_SELECTOR / 2) + 3] = ((length & 0xF0000) >> 16) |
-     ((base & 0xFF000000) >> 16);
-   
-   /*
-    * Initialize the TSS
-    */
-   KiTss.Esp0 = (ULONG)&init_stack_top;
-   KiTss.Ss0 = KERNEL_DS;
-   //   KiTss.IoMapBase = FIELD_OFFSET(KTSS, IoBitmap);
-   KiTss.IoMapBase = 0xFFFF; /* No i/o bitmap */
-   KiTss.IoBitmap[0] = 0xFF;   
-   KiTss.Ldt = LDT_SELECTOR;
-
-   /*
-    * Load the task register
-    */
-   __asm__("ltr %%ax" 
-	   : /* no output */
-           : "a" (TSS_SELECTOR));
 }
 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: trap.s,v 1.9 2001/03/25 02:34:28 dwelch Exp $
+/* $Id: trap.s,v 1.10 2001/03/28 14:24:05 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/trap.s
@@ -245,11 +245,8 @@ _KiTrap7:
 
 .globl _KiTrap8
 _KiTrap8:
-	pushl	%ebp
-	pushl	%ebx
-	pushl	%esi
-	movl	$8, %esi
-	jmp	_KiTrapProlog
+	call	_KiDoubleFaultHandler
+	iret
 
 .globl _KiTrap9
 _KiTrap9:
