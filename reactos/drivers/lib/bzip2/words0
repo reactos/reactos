@@ -1,0 +1,5 @@
+
+If compilation produces errors, or a large number of warnings, 
+please read README.COMPILATION.PROBLEMS -- you might be able to
+adjust the flags in this Makefile to improve matters.
+
