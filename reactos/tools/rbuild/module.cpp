@@ -235,7 +235,7 @@ Library::ProcessXML()
 	if ( !module.project.LocateModule ( name ) )
 		throw InvalidBuildFileException (
 			node.location,
-			"module '%s' trying to link against non-existant module '%s'",
+			"module '%s' is trying to link against non-existant module '%s'",
 			module.name.c_str(),
 			name.c_str() );
 }
@@ -243,14 +243,28 @@ Library::ProcessXML()
 
 Invoke::Invoke ( const XMLElement& _node,
                  const Module& _module )
-	: node(_node),
-	  module(_module)
+	: node (_node),
+	  module (_module)
 {
 }
 
 void
 Invoke::ProcessXML()
 {
+	const XMLAttribute* att = node.GetAttribute ( "module", false );
+	if (att == NULL)
+		invokeModule = &module;
+	else
+	{
+		invokeModule = module.project.LocateModule ( att->value );
+		if ( invokeModule == NULL )
+			throw InvalidBuildFileException (
+				node.location,
+				"module '%s' is trying to invoke non-existant module '%s'",
+				module.name.c_str(),
+				att->value.c_str() );
+	}
+	
 	for ( size_t i = 0; i < node.subElements.size (); i++ )
 		ProcessXMLSubElement ( *node.subElements[i] );
 }
@@ -259,10 +273,30 @@ void
 Invoke::ProcessXMLSubElement ( const XMLElement& e )
 {
 	bool subs_invalid = false;
-	if ( e.name == "output" )
+	if ( e.name == "input" )
+	{
+		for ( size_t i = 0; i < e.subElements.size (); i++ )
+			ProcessXMLSubElementInput ( *e.subElements[i] );
+	}
+	else if ( e.name == "output" )
 	{
 		for ( size_t i = 0; i < e.subElements.size (); i++ )
 			ProcessXMLSubElementOutput ( *e.subElements[i] );
+	}
+	if ( subs_invalid && e.subElements.size() > 0 )
+		throw InvalidBuildFileException ( e.location,
+		                                  "<%s> cannot have sub-elements",
+		                                  e.name.c_str() );
+}
+
+void
+Invoke::ProcessXMLSubElementInput ( const XMLElement& e )
+{
+	bool subs_invalid = false;
+	if ( e.name == "inputfile" && e.value.size () > 0 )
+	{
+		input.push_back ( new InvokeFile ( e, FixSeparator ( module.path + CSEP + e.value ) ) );
+		subs_invalid = true;
 	}
 	if ( subs_invalid && e.subElements.size() > 0 )
 		throw InvalidBuildFileException ( e.location,
@@ -276,7 +310,7 @@ Invoke::ProcessXMLSubElementOutput ( const XMLElement& e )
 	bool subs_invalid = false;
 	if ( e.name == "outputfile" && e.value.size () > 0 )
 	{
-		output.push_back ( new File ( FixSeparator ( module.path + CSEP + e.value ) ) );
+		output.push_back ( new InvokeFile ( e, FixSeparator ( module.path + CSEP + e.value ) ) );
 		subs_invalid = true;
 	}
 	if ( subs_invalid && e.subElements.size() > 0 )
@@ -291,12 +325,30 @@ Invoke::GetTargets () const
 	string targets ( "" );
 	for ( size_t i = 0; i < output.size (); i++ )
 	{
-		File& file = *output[i];
+		InvokeFile& file = *output[i];
 		if ( targets.length () > 0 )
 			targets += " ";
 		targets += file.name;
 	}
 	return targets;
+}
+
+
+InvokeFile::InvokeFile ( const XMLElement& _node,
+                         const string& _name )
+	: node (_node),
+      name (_name)
+{
+	const XMLAttribute* att = _node.GetAttribute ( "switches", false );
+	if (att != NULL)
+		switches = att->value;
+	else
+		switches = "";
+}
+
+void
+InvokeFile::ProcessXML()
+{
 }
 
 

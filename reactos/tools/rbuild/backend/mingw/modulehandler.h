@@ -26,7 +26,9 @@ protected:
 	void GenerateArchiveTargetHost ( const Module& module ) const;
 	void GenerateArchiveTargetTarget ( const Module& module ) const;
 	std::string GetInvocationDependencies ( const Module& module ) const;
+	std::string GetInvocationParameters ( const Invoke& invoke ) const;
 	void GenerateInvocations ( const Module& module ) const;
+	void GeneratePreconditionDependencies ( const Module& module ) const;
 	FILE* fMakefile;
 private:
 	std::string ConcatenatePaths ( const std::string& path1,
@@ -40,6 +42,7 @@ private:
 	                                 const std::string& cc ) const;
 	void GenerateArchiveTarget ( const Module& module,
 	                             const std::string& ar ) const;
+	std::string GetPreconditionDependenciesName ( const Module& module ) const;
 };
 
 

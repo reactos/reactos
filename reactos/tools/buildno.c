@@ -32,10 +32,8 @@
 #define FALSE 0
 #define TRUE  1
 
-/* File to (over)write */
-#define BUILDNO_INCLUDE_FILE "../include/reactos/buildno.h"
-
 static char * argv0 = "";
+static char * filename = "";
 
 #ifdef DBG
 void
@@ -157,7 +155,7 @@ write_h (int build)
   s = s + sprintf (s, "-%S\"\n", KERNEL_VERSION_BUILD_TYPE);
   s = s + sprintf (s, "#endif\n/* EOF */\n");
 
-  h = fopen (BUILDNO_INCLUDE_FILE, "rb");
+  h = fopen (filename, "rb");
   if (h != NULL)
     {
       fseek(h, 0, SEEK_END);
@@ -178,13 +176,13 @@ write_h (int build)
       fclose(h);
     }
 
-  h = fopen (BUILDNO_INCLUDE_FILE, "wb");
+  h = fopen (filename, "wb");
   if (!h) 
     {
       fprintf (stderr,
 	       "%s: can not create file \"%s\"!\n",
 	       argv0,
-	       BUILDNO_INCLUDE_FILE);
+	       filename);
       return;
     }
   fwrite(s1, 1, strlen(s1), h);
@@ -196,7 +194,7 @@ usage (void)
 {
 	fprintf (
 		stderr,
-		"Usage: %s [-{p|q}]\n\n  -p  print version number and exit\n  -q  run in quiet mode\n",
+		"Usage: %s [-{p|q}] path-to-header\n\n  -p  print version number and exit\n  -q  run in quiet mode\n",
 		argv0
 		);
 	exit (EXIT_SUCCESS);
@@ -221,6 +219,7 @@ main (int argc, char * argv [])
 		case 1:
 			break;
 		case 2:
+		case 3:
 			if (argv[1][0] == '-')
 			{
 				if (argv[1][1] == 'q')
@@ -235,6 +234,11 @@ main (int argc, char * argv [])
 				{
 					usage ();
 				}
+				filename = argv[2];
+			}
+			else if (argc == 2)
+			{
+				filename = argv[1];
 			}
 			else
 			{

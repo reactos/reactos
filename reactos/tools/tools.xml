@@ -7,3 +7,6 @@
 		</output>
 	</invoke>
 </module>
+<directory name="wmc">
+	<xi:include href="wmc/wmc.xml" />
+</directory>

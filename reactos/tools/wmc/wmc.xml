@@ -1,0 +1,11 @@
+<module name="wmc" type="buildtool">
+	<include base="wmc">.</include>
+	<file>getopt.c</file>
+	<file>lang.c</file>
+	<file>mcl.c</file>
+	<file>misc.c</file>
+	<file>utils.c</file>
+	<file>wmc.c</file>
+	<file>write.c</file>
+	<file>y_tab.c</file>
+</module>

@@ -1,5 +1,6 @@
 <module name="ntoskrnl" type="kernelmodedll" extension=".exe">
 	<dependency>buildno</dependency>
+	<dependency>wmc</dependency>
 	<define name="_SEH_NO_NATIVE_NLG" />
 	<define name="_DISABLE_TIDENTS" />
 	<define name="__NTOSKRNL__" />
@@ -7,6 +8,15 @@
 	<include base="kjs">./include</include>
 	<include base="ntoskrnl">include</include>
 	<library>kjs</library>
+	<invoke module="wmc">
+		<input>
+			<inputfile>ntoskrnl.mc</inputfile>
+		</input>
+		<output>
+			<outputfile switches="-H">../include/reactos/bugcodes.h</outputfile>
+			<outputfile switches="-o">bugcodes.rc</outputfile>
+		</output>
+	</invoke>
 	<directory name="cc">
 		<file>cacheman.c</file>
 		<file>copy.c</file>

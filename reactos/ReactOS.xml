@@ -16,6 +16,6 @@
 		<xi:include href="lib/directory.xml" />
 	</directory>
 	<directory name="ntoskrnl">
-		<xi:include href="ntoskrnl/module.xml" />
+		<xi:include href="ntoskrnl/ntoskrnl.xml" />
 	</directory>
 </project>

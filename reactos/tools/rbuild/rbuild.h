@@ -28,6 +28,7 @@ class Define;
 class File;
 class Library;
 class Invoke;
+class InvokeFile;
 class Dependency;
 
 class Project
@@ -168,7 +169,9 @@ class Invoke
 public:
 	const XMLElement& node;
 	const Module& module;
-	std::vector<File*> output;
+	const Module* invokeModule;
+	std::vector<InvokeFile*> input;
+	std::vector<InvokeFile*> output;
 
 	Invoke ( const XMLElement& _node,
 	         const Module& _module );
@@ -177,7 +180,22 @@ public:
 	std::string GetTargets () const;
 private:
 	void ProcessXMLSubElement ( const XMLElement& e );
+	void ProcessXMLSubElementInput ( const XMLElement& e );
 	void ProcessXMLSubElementOutput ( const XMLElement& e );
+};
+
+
+class InvokeFile
+{
+public:
+	const XMLElement& node;
+	std::string name;
+	std::string switches;
+
+	InvokeFile ( const XMLElement& _node,
+	             const std::string& _name );
+
+	void ProcessXML ();
 };
 
 
