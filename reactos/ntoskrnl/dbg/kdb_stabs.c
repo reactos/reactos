@@ -603,7 +603,7 @@ LdrpLoadModuleSymbols(PUNICODE_STRING FileName,
                       &ObjectAttributes,
                       &IoStatusBlock,
                       0,
-                      0);
+                      FILE_SYNCHRONOUS_IO_NONALERT);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("Could not open symbol file: %wZ\n", &SymFileName);

@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.18 2002/07/20 01:00:34 ekohl Exp $
+/* $Id: file.c,v 1.19 2002/08/14 20:58:34 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -44,12 +44,9 @@ NtQueryInformationFile(HANDLE FileHandle,
    assert(IoStatusBlock != NULL);
    assert(FileInformation != NULL);
    
-   DPRINT("NtQueryInformationFile(Handle %x StatBlk %x FileInfo %x Length %d Class %d)\n",
-	  FileHandle,
-	  IoStatusBlock,
-	  FileInformation,
-	  Length,
-	  FileInformationClass);
+   DPRINT("NtQueryInformationFile(Handle %x StatBlk %x FileInfo %x Length %d "
+	  "Class %d)\n", FileHandle, IoStatusBlock, FileInformation,
+	  Length, FileInformationClass);
    
    Status = ObReferenceObjectByHandle(FileHandle,
 				      FILE_READ_ATTRIBUTES,
@@ -124,8 +121,7 @@ NtQueryInformationFile(HANDLE FileHandle,
 		       IoStatusBlock->Information);
     }
    
-   ExFreePool(SystemBuffer);
-   
+   ExFreePool(SystemBuffer);   
    return(Status);
 }
 
@@ -223,12 +219,9 @@ NtSetInformationFile(HANDLE FileHandle,
    assert(IoStatusBlock != NULL)
    assert(FileInformation != NULL)
    
-   DPRINT("NtSetInformationFile(Handle %x StatBlk %x FileInfo %x Length %d Class %d)\n",
-	  FileHandle,
-	  IoStatusBlock,
-	  FileInformation,
-	  Length,
-	  FileInformationClass);
+   DPRINT("NtSetInformationFile(Handle %x StatBlk %x FileInfo %x Length %d "
+	  "Class %d)\n", FileHandle, IoStatusBlock, FileInformation,
+	  Length, FileInformationClass);
    
    /*  Get the file object from the file handle  */
    Status = ObReferenceObjectByHandle(FileHandle,

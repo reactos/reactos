@@ -13,10 +13,20 @@
 #ifndef __INCLUDE_MM_H
 #define __INCLUDE_MM_H
 
+#if 0
 #define SEC_COMMIT	(134217728)
 #define SEC_IMAGE	(16777216)
 #define SEC_NOCACHE	(268435456)
 #define SEC_RESERVE	(67108864)
+#else
+#define SEC_BASED       (0x00200000)
+#define SEC_NO_CHANGE   (0x00400000)
+#define SEC_IMAGE       (0x01000000)
+#define SEC_VLM         (0x02000000)
+#define SEC_RESERVE     (0x04000000)
+#define SEC_COMMIT      (0x08000000)
+#define SEC_NOCACHE     (0x10000000)
+#endif
 #define PAGE_READONLY	(2)
 #define PAGE_READWRITE	(4)
 #define PAGE_WRITECOPY	(8)

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.49 2002/08/09 17:23:57 dwelch Exp $
+/* $Id: create.c,v 1.50 2002/08/14 20:58:38 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -264,20 +264,6 @@ PsReferenceImpersonationToken(PETHREAD Thread,
 			      SepTokenObjectType,
 			      KernelMode);
    return(Thread->ImpersonationInfo->Token);
-}
-
-VOID STDCALL
-PiTimeoutThread(struct _KDPC *dpc,
-		PVOID Context,
-		PVOID arg1,
-		PVOID arg2)
-{
-  /* Wake up the thread, and tell it it timed out */
-  NTSTATUS Status = STATUS_TIMEOUT;
-   
-  DPRINT("PiTimeoutThread()\n");
-  
-  KeRemoveAllWaitsThread((PETHREAD)Context, Status);
 }
 
 VOID
@@ -575,8 +561,7 @@ NtCreateThread(PHANDLE ThreadHandle,
       return(Status);
     }
 
-  Status = Ke386InitThreadWithContext(&Thread->Tcb,
-				      ThreadContext);
+  Status = KiArchInitThreadWithContext(&Thread->Tcb, ThreadContext);
   if (!NT_SUCCESS(Status))
     {
       return(Status);
@@ -683,9 +668,7 @@ PsCreateSystemThread(PHANDLE ThreadHandle,
      }
    
    Thread->StartAddress = StartRoutine;
-   Status = Ke386InitThread(&Thread->Tcb,
-			    StartRoutine,
-			    StartContext);
+   Status = KiArchInitThread(&Thread->Tcb, StartRoutine, StartContext);
    if (!NT_SUCCESS(Status))
      {
 	return(Status);

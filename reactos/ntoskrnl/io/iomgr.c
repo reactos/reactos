@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.22 2002/06/10 08:47:21 ekohl Exp $
+/* $Id: iomgr.c,v 1.23 2002/08/14 20:58:34 dwelch Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -120,75 +120,65 @@ VOID IoInit (VOID)
   HANDLE Handle;
 
   IopInitDriverImplementation();
+  
+  /*
+   * Register iomgr types: DeviceObjectType
+   */
+  IoDeviceObjectType = ExAllocatePool (NonPagedPool, 
+				       sizeof (OBJECT_TYPE));
+  
+  IoDeviceObjectType->Tag = TAG_DEVICE_TYPE;
+  IoDeviceObjectType->TotalObjects = 0;
+  IoDeviceObjectType->TotalHandles = 0;
+  IoDeviceObjectType->MaxObjects = ULONG_MAX;
+  IoDeviceObjectType->MaxHandles = ULONG_MAX;
+  IoDeviceObjectType->PagedPoolCharge = 0;
+  IoDeviceObjectType->NonpagedPoolCharge = sizeof (DEVICE_OBJECT);
+  IoDeviceObjectType->Mapping = &IopFileMapping;
+  IoDeviceObjectType->Dump = NULL;
+  IoDeviceObjectType->Open = NULL;
+  IoDeviceObjectType->Close = NULL;
+  IoDeviceObjectType->Delete = NULL;
+  IoDeviceObjectType->Parse = NULL;
+  IoDeviceObjectType->Security = NULL;
+  IoDeviceObjectType->QueryName = NULL;
+  IoDeviceObjectType->OkayToClose = NULL;
+  IoDeviceObjectType->Create = IopCreateDevice;
+  IoDeviceObjectType->DuplicationNotify = NULL;
+  
+  RtlInitUnicodeString (&IoDeviceObjectType->TypeName, L"Device");
 
-	/*
-	 * Register iomgr types: DeviceObjectType
-	 */
-	IoDeviceObjectType = ExAllocatePool (NonPagedPool, 
-					     sizeof (OBJECT_TYPE));
-
-	IoDeviceObjectType->Tag = TAG_DEVICE_TYPE;
-	IoDeviceObjectType->TotalObjects = 0;
-	IoDeviceObjectType->TotalHandles = 0;
-	IoDeviceObjectType->MaxObjects = ULONG_MAX;
-	IoDeviceObjectType->MaxHandles = ULONG_MAX;
-	IoDeviceObjectType->PagedPoolCharge = 0;
-	IoDeviceObjectType->NonpagedPoolCharge = sizeof (DEVICE_OBJECT);
-	IoDeviceObjectType->Mapping = &IopFileMapping;
-	IoDeviceObjectType->Dump = NULL;
-	IoDeviceObjectType->Open = NULL;
-	IoDeviceObjectType->Close = NULL;
-	IoDeviceObjectType->Delete = NULL;
-	IoDeviceObjectType->Parse = NULL;
-	IoDeviceObjectType->Security = NULL;
-	IoDeviceObjectType->QueryName = NULL;
-	IoDeviceObjectType->OkayToClose = NULL;
-	IoDeviceObjectType->Create = IopCreateDevice;
-	IoDeviceObjectType->DuplicationNotify = NULL;
-
-	RtlInitUnicodeString (
-		& IoDeviceObjectType->TypeName,
-		L"Device"
-		);
-
-	/*
-	 * Register iomgr types: FileObjectType
-	 * (alias DriverObjectType)
-	 */
-	IoFileObjectType = ExAllocatePool (
-				NonPagedPool,
-				sizeof (OBJECT_TYPE)
-				);
-
-	IoFileObjectType->Tag = TAG_FILE_TYPE;
-	IoFileObjectType->TotalObjects = 0;
-	IoFileObjectType->TotalHandles = 0;
-	IoFileObjectType->MaxObjects = ULONG_MAX;
-	IoFileObjectType->MaxHandles = ULONG_MAX;
-	IoFileObjectType->PagedPoolCharge = 0;
-	IoFileObjectType->NonpagedPoolCharge = sizeof(FILE_OBJECT);
-	IoFileObjectType->Mapping = &IopFileMapping;
-	IoFileObjectType->Dump = NULL;
-	IoFileObjectType->Open = NULL;
-	IoFileObjectType->Close = IopCloseFile;
-	IoFileObjectType->Delete = IopDeleteFile;
-	IoFileObjectType->Parse = NULL;
-	IoFileObjectType->Security = NULL;
-	IoFileObjectType->QueryName = NULL;
-	IoFileObjectType->OkayToClose = NULL;
-	IoFileObjectType->Create = IopCreateFile;
-	IoFileObjectType->DuplicationNotify = NULL;
-
-	RtlInitUnicodeString (
-		& IoFileObjectType->TypeName,
-		L"File"
-		);
+  /*
+   * Register iomgr types: FileObjectType
+   * (alias DriverObjectType)
+   */
+  IoFileObjectType = ExAllocatePool (NonPagedPool, sizeof (OBJECT_TYPE));
+  
+  IoFileObjectType->Tag = TAG_FILE_TYPE;
+  IoFileObjectType->TotalObjects = 0;
+  IoFileObjectType->TotalHandles = 0;
+  IoFileObjectType->MaxObjects = ULONG_MAX;
+  IoFileObjectType->MaxHandles = ULONG_MAX;
+  IoFileObjectType->PagedPoolCharge = 0;
+  IoFileObjectType->NonpagedPoolCharge = sizeof(FILE_OBJECT);
+  IoFileObjectType->Mapping = &IopFileMapping;
+  IoFileObjectType->Dump = NULL;
+  IoFileObjectType->Open = NULL;
+  IoFileObjectType->Close = IopCloseFile;
+  IoFileObjectType->Delete = IopDeleteFile;
+  IoFileObjectType->Parse = NULL;
+  IoFileObjectType->Security = NULL;
+  IoFileObjectType->QueryName = NULL;
+  IoFileObjectType->OkayToClose = NULL;
+  IoFileObjectType->Create = IopCreateFile;
+  IoFileObjectType->DuplicationNotify = NULL;
+  
+  RtlInitUnicodeString (&IoFileObjectType->TypeName, L"File");
 
   /*
    * Create the '\Driver' object directory
    */
-  RtlInitUnicodeString(&DirName,
-		       L"\\Driver");
+  RtlInitUnicodeString(&DirName, L"\\Driver");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &DirName,
 			     0,

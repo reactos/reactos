@@ -16,9 +16,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.45 2002/08/08 17:54:13 dwelch Exp $
+/* $Id: view.c,v 1.46 2002/08/14 20:58:32 dwelch Exp $
  *
- * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/view.c
  * PURPOSE:         Cache manager
@@ -80,6 +79,71 @@ NTSTATUS STDCALL
 CcRosInternalFreeCacheSegment(PBCB Bcb, PCACHE_SEGMENT CacheSeg);
 
 /* FUNCTIONS *****************************************************************/
+
+NTSTATUS STATIC
+CcRosFlushCacheSegment(PCACHE_SEGMENT CacheSegment)
+{
+  NTSTATUS Status;
+  Status = WriteCacheSegment(CacheSegment);
+  if (NT_SUCCESS(Status))
+    {
+      CacheSegment->Dirty = FALSE;
+      RemoveEntryList(&CacheSegment->DirtySegmentListEntry);
+    }
+  return(Status);
+}
+
+NTSTATUS
+CcRosFlushDirtyPages(ULONG Target, PULONG Count)
+{
+  PLIST_ENTRY current_entry;
+  PCACHE_SEGMENT current;
+  ULONG PagesPerSegment;
+  BOOLEAN Locked;
+  NTSTATUS Status;
+
+  DPRINT("CcRosFlushDirtyPages(Target %d)\n", Target);
+
+  (*Count) = 0;
+
+  ExAcquireFastMutex(&ViewLock);
+  current_entry = DirtySegmentListHead.Flink;
+  while (current_entry != &DirtySegmentListHead && Target > 0)
+    {
+      current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, 
+				  DirtySegmentListEntry);
+      current_entry = current_entry->Flink;
+      Locked = ExTryToAcquireFastMutex(&current->Lock);
+      if (!Locked)
+	{
+	  continue;
+	}
+      assert(current->Dirty);
+      if (current->ReferenceCount > 0)
+	{
+	  ExReleaseFastMutex(&current->Lock);
+	  continue;
+	}
+      current->ReferenceCount++;
+      ExReleaseFastMutex(&ViewLock);
+      PagesPerSegment = current->Bcb->CacheSegmentSize / PAGESIZE;
+      Status = CcRosFlushCacheSegment(current);      
+      current->ReferenceCount--;
+      ExReleaseFastMutex(&current->Lock);
+      if (!NT_SUCCESS(Status))
+	{
+	  DPRINT1("CC: Failed to flush cache segment.\n");
+	}      
+      (*Count) += PagesPerSegment;
+      Target -= PagesPerSegment;     
+
+      ExAcquireFastMutex(&ViewLock);
+      current_entry = DirtySegmentListHead.Flink;
+    }
+  ExReleaseFastMutex(&ViewLock);
+  DPRINT("CcRosTrimCache() finished\n");
+  return(STATUS_SUCCESS);
+}
 
 NTSTATUS
 CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
@@ -195,6 +259,28 @@ PCACHE_SEGMENT CcRosLookupCacheSegment(PBCB Bcb, ULONG FileOffset)
 }
 
 NTSTATUS
+CcRosMarkDirtyCacheSegment(PBCB Bcb, ULONG FileOffset)
+{
+  PCACHE_SEGMENT CacheSeg;
+
+  ExAcquireFastMutex(&ViewLock);
+  CacheSeg = CcRosLookupCacheSegment(Bcb, FileOffset);
+  if (CacheSeg == NULL)
+    {
+      KeBugCheck(0);
+    }
+  ExAcquireFastMutex(&CacheSeg->Lock);
+  if (!CacheSeg->Dirty)
+    {
+      InsertTailList(&DirtySegmentListHead, &CacheSeg->DirtySegmentListEntry);
+    }
+  CacheSeg->Dirty = TRUE;
+  ExReleaseFastMutex(&CacheSeg->Lock);
+  ExReleaseFastMutex(&ViewLock);
+  return(STATUS_SUCCESS);
+}
+
+NTSTATUS
 CcRosSuggestFreeCacheSegment(PBCB Bcb, ULONG FileOffset, BOOLEAN NowDirty)
 {
   PCACHE_SEGMENT CacheSeg;
@@ -240,6 +326,7 @@ CcRosUnmapCacheSegment(PBCB Bcb, ULONG FileOffset, BOOLEAN NowDirty)
   ExAcquireFastMutex(&CacheSeg->Lock);
   CacheSeg->MappedCount--;
   CacheSeg->Dirty = CacheSeg->Dirty || NowDirty;
+  CacheSeg->ReferenceCount--;
   ExReleaseFastMutex(&CacheSeg->Lock);
   return(STATUS_SUCCESS);
 }
@@ -516,7 +603,7 @@ CcRosDeleteFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
    PCACHE_SEGMENT current;
    NTSTATUS Status;
    
-   DPRINT("CcRosReleaseFileCache(FileObject %x, Bcb %x)\n", Bcb->FileObject, 
+   DPRINT("CcRosDeleteFileCache(FileObject %x, Bcb %x)\n", Bcb->FileObject, 
 	  Bcb);
 
    MmFreeSectionSegments(Bcb->FileObject);

@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.100 2002/08/08 17:54:16 dwelch Exp $
+/* $Id: thread.c,v 1.101 2002/08/14 20:58:38 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -142,23 +142,6 @@ VOID PsDumpThreads(BOOLEAN IncludeSystem)
 
 static PETHREAD PsScanThreadList (KPRIORITY Priority, ULONG Affinity)
 {
-#if 0
-   PLIST_ENTRY current_entry;
-   PETHREAD current;
-   
-   current_entry = RemoveHeadList(&PriorityListHead[Priority]);
-   if (current_entry != &PriorityListHead[Priority])
-     {	
-	current = CONTAINING_RECORD(current_entry, ETHREAD, 
-				    Tcb.QueueListEntry);
-     }
-   else
-     {
-	current = NULL;
-     }
-   
-   return(current);
-#else
    PLIST_ENTRY current_entry;
    PETHREAD current;
 
@@ -179,9 +162,7 @@ static PETHREAD PsScanThreadList (KPRIORITY Priority, ULONG Affinity)
        current_entry = current_entry->Flink;
      }
    return(NULL);
-#endif
 }
-
 
 VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 {
@@ -225,7 +206,7 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 	    CurrentThread = Candidate;
 	     
 	    KeReleaseSpinLockFromDpcLevel(&PiThreadListLock);
-	    Ki386ContextSwitch(&CurrentThread->Tcb, &OldThread->Tcb);
+	    KiArchContextSwitch(&CurrentThread->Tcb, &OldThread->Tcb);
 	    PsReapThreads();
 	    return;
 	  }
@@ -430,14 +411,13 @@ PsInitThreadManagment(VOID)
    DoneInitYet = TRUE;
 }
 
-
+LONG STDCALL
+KeSetBasePriorityThread (PKTHREAD	Thread,
+			 LONG		Increment)
 /*
  * Sets thread's base priority relative to the process' base priority
  * Should only be passed in THREAD_PRIORITY_ constants in pstypes.h
  */
-LONG STDCALL
-KeSetBasePriorityThread (PKTHREAD	Thread,
-			 LONG		Increment)
 {
    Thread->BasePriority = 
      ((PETHREAD)Thread)->ThreadsProcess->Pcb.BasePriority + Increment;

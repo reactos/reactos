@@ -16,13 +16,15 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-#ifndef __NTOSKRNL_INCLUDE_INTERNAL_ARCH_MM_H
-#define __NTOSKRNL_INCLUDE_INTERNAL_ARCH_MM_H
+#ifndef __NTOSKRNL_INCLUDE_INTERNAL_ARCH_KE_H
+#define __NTOSKRNL_INCLUDE_INTERNAL_ARCH_KE_H
 
 #ifdef i386
-#include <internal/i386/mm.h>
+#include <internal/i386/ke.h>
 #else
 #error "Unknown processor"
 #endif
 
-#endif /* __NTOSKRNL_INCLUDE_INTERNAL_ARCH_MM_H */
+#endif /* __NTOSKRNL_INCLUDE_INTERNAL_ARCH_KE_H */
+
+/* EOF */

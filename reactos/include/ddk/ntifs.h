@@ -12,8 +12,6 @@ struct _CACHE_SEGMENT;
 typedef struct _CACHE_SEGMENT* PCACHE_SEGMENT;
 
 NTSTATUS STDCALL
-CcRosFlushCacheSegment (struct _CACHE_SEGMENT*	CacheSeg);
-NTSTATUS STDCALL
 CcRosReleaseCacheSegment (struct _BCB*		Bcb,
 			  struct _CACHE_SEGMENT*	CacheSeg,
 			  BOOLEAN		Valid,

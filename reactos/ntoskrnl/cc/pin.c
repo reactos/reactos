@@ -1,4 +1,4 @@
-/* $Id: pin.c,v 1.3 2002/07/17 21:04:55 dwelch Exp $
+/* $Id: pin.c,v 1.4 2002/08/14 20:58:32 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -32,6 +32,7 @@ typedef struct _INTERNAL_BCB
 {
   PUBLIC_BCB PFCB;
   PCACHE_SEGMENT CacheSegment;
+  BOOLEAN Dirty;
 } INTERNAL_BCB, *PINTERNAL_BCB;
 
 BOOLEAN STDCALL
@@ -95,6 +96,7 @@ CcMapData (IN PFILE_OBJECT FileObject,
       return FALSE;
     }
   iBcb->CacheSegment = CacheSeg;
+  iBcb->Dirty = FALSE;
   iBcb->PFCB.MappedLength = Length;
   iBcb->PFCB.MappedFileOffset.QuadPart = FileOffset->QuadPart;
   *pBcb = (PVOID)iBcb;
@@ -106,7 +108,7 @@ CcUnpinData (IN PVOID Bcb)
 {
   PINTERNAL_BCB iBcb = Bcb;
   CcRosReleaseCacheSegment(iBcb->CacheSegment->Bcb, iBcb->CacheSegment, TRUE, 
-			   FALSE, FALSE);
+			   iBcb->Dirty, FALSE);
   ExFreePool(iBcb);
 }
 
@@ -115,7 +117,6 @@ CcSetDirtyPinnedData (IN PVOID Bcb,
 		      IN PLARGE_INTEGER Lsn)
 {
    PINTERNAL_BCB iBcb = Bcb;
-   /* FIXME: write only the modifyed 4-pages back */
-   WriteCacheSegment(iBcb->CacheSegment);
+   iBcb->Dirty = TRUE;
 }
 

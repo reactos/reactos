@@ -1,6 +1,9 @@
-/* $Id: vfat.h,v 1.43 2002/06/26 18:36:41 hbirr Exp $ */
+/* $Id: vfat.h,v 1.44 2002/08/14 20:58:32 dwelch Exp $ */
 
 #include <ddk/ntifs.h>
+
+#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
+#define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
 
 struct _BootSector
 {
@@ -114,8 +117,7 @@ typedef struct
   ULONG NumberOfClusters;
   ULONG FatType;
   ULONG Sectors;
-}
-FATINFO, *PFATINFO;
+} FATINFO, *PFATINFO;
 
 struct _VFATFCB;
 
@@ -133,18 +135,16 @@ typedef struct
   ULONG LastAvailableCluster;
   ULONG AvailableClusters;
   BOOLEAN AvailableClustersValid;
-  ULONG Flags;
+  ULONG Flags;  
   struct _VFATFCB * VolumeFcb;
-}
-DEVICE_EXTENSION, *PDEVICE_EXTENSION, VCB, *PVCB;
+} DEVICE_EXTENSION, *PDEVICE_EXTENSION, VCB, *PVCB;
 
 typedef struct
 {
   PDRIVER_OBJECT DriverObject;
   PDEVICE_OBJECT DeviceObject;
   ULONG Flags;
-}
-VFAT_GLOBAL_DATA, *PVFAT_GLOBAL_DATA;
+} VFAT_GLOBAL_DATA, *PVFAT_GLOBAL_DATA;
 
 extern PVFAT_GLOBAL_DATA VfatGlobalData;
 
@@ -174,12 +174,12 @@ typedef struct _VFATFCB
   ERESOURCE PagingIoResource;
   ERESOURCE MainResource;
   ULONG TimerCount;
+  SHARE_ACCESS FCBShareAccess;
 
   /* Structure members used only for paging files. */
   ULONG FatChainSize;
   PULONG FatChain;
-}
-VFATFCB, *PVFATFCB;
+} VFATFCB, *PVFATFCB;
 
 typedef struct _VFATCCB
 {
@@ -194,8 +194,7 @@ typedef struct _VFATCCB
   ULONG LastCluster;
   ULONG LastOffset;
 
-}
-VFATCCB, *PVFATCCB;
+} VFATCCB, *PVFATCCB;
 
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 
@@ -232,8 +231,7 @@ typedef struct
    UCHAR MajorFunction;
    UCHAR MinorFunction;
    PFILE_OBJECT FileObject;
-}
-VFAT_IRP_CONTEXT, *PVFAT_IRP_CONTEXT;
+} VFAT_IRP_CONTEXT, *PVFAT_IRP_CONTEXT;
 
 /*  ------------------------------------------------------  shutdown.c  */
 
@@ -326,6 +324,12 @@ NTSTATUS VfatQueryInformation (PVFAT_IRP_CONTEXT IrpContext);
 
 NTSTATUS VfatSetInformation (PVFAT_IRP_CONTEXT IrpContext);
 
+NTSTATUS
+VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject, 
+				 PVFATFCB Fcb,
+				 PDEVICE_OBJECT DeviceObject,
+				 PLARGE_INTEGER AllocationSize);
+
 /*  ---------------------------------------------------------  iface.c  */
 
 NTSTATUS STDCALL DriverEntry (PDRIVER_OBJECT DriverObject,
@@ -333,12 +337,12 @@ NTSTATUS STDCALL DriverEntry (PDRIVER_OBJECT DriverObject,
 
 /*  ---------------------------------------------------------  dirwr.c  */
 
-NTSTATUS addEntry (PDEVICE_EXTENSION DeviceExt,
-                   PFILE_OBJECT pFileObject,
-                   ULONG RequestedOptions,UCHAR ReqAttr);
+NTSTATUS VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
+		       PFILE_OBJECT pFileObject,
+		       ULONG RequestedOptions,UCHAR ReqAttr);
 
-NTSTATUS updEntry (PDEVICE_EXTENSION DeviceExt,
-                   PFILE_OBJECT pFileObject);
+NTSTATUS VfatUpdateEntry (PDEVICE_EXTENSION DeviceExt,
+			  PFILE_OBJECT pFileObject);
 
 NTSTATUS delEntry(PDEVICE_EXTENSION,
                   PFILE_OBJECT);
@@ -516,5 +520,8 @@ PVOID VfatGetUserBuffer(IN PIRP);
 NTSTATUS VfatLockUserBuffer(IN PIRP, IN ULONG,
                             IN LOCK_OPERATION);
 
-
+NTSTATUS 
+VfatSetExtendedAttributes(PFILE_OBJECT FileObject, 
+			  PVOID Ea,
+			  ULONG EaLength);
 /* EOF */

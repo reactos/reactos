@@ -1,4 +1,4 @@
-/* $Id: dirwr.c,v 1.26 2002/06/10 21:19:18 hbirr Exp $
+/* $Id: dirwr.c,v 1.27 2002/08/14 20:58:31 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -31,7 +31,8 @@ vfatIsShortIllegal(char c)
   return FALSE;
 }
 
-NTSTATUS updEntry (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT pFileObject)
+NTSTATUS 
+VfatUpdateEntry (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT pFileObject)
 /*
  * update an existing FAT entry
  */
@@ -173,10 +174,10 @@ findDirSpace(PDEVICE_EXTENSION DeviceExt,
 }
 
 NTSTATUS
-addEntry (PDEVICE_EXTENSION DeviceExt,
-          PFILE_OBJECT pFileObject,
-          ULONG RequestedOptions,
-          UCHAR ReqAttr)
+VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
+	      PFILE_OBJECT pFileObject,
+	      ULONG RequestedOptions,
+	      UCHAR ReqAttr)
 /*
   create a new FAT entry
 */

@@ -703,11 +703,11 @@ END FIXME*/
 		NULL);
 
   Status = NtOpenFile(&FileHandle,
-		FILE_ALL_ACCESS,
-		&ObjectAttributes,
-		NULL,
-    0,
-    0);
+		      FILE_ALL_ACCESS,
+		      &ObjectAttributes,
+		      NULL,
+		      0,
+		      FILE_SYNCHRONOUS_IO_NONALERT);
 
   if (!NT_SUCCESS(Status))
     {

@@ -16,13 +16,32 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-#ifndef __NTOSKRNL_INCLUDE_INTERNAL_ARCH_MM_H
-#define __NTOSKRNL_INCLUDE_INTERNAL_ARCH_MM_H
+/* $Id: ea.c,v 1.1 2002/08/14 20:58:31 dwelch Exp $
+ *
+ * PROJECT:          ReactOS kernel
+ * FILE:             services/fs/vfat/ea.c
+ * PURPOSE:          VFAT Filesystem
+ * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
 
-#ifdef i386
-#include <internal/i386/mm.h>
-#else
-#error "Unknown processor"
-#endif
+ */
 
-#endif /* __NTOSKRNL_INCLUDE_INTERNAL_ARCH_MM_H */
+/* INCLUDES *****************************************************************/
+
+#include <ddk/ntddk.h>
+#include <wchar.h>
+#include <limits.h>
+
+#define NDEBUG
+#include <debug.h>
+
+#include "vfat.h"
+
+/* FUNCTIONS *****************************************************************/
+
+NTSTATUS 
+VfatSetExtendedAttributes(PFILE_OBJECT FileObject, 
+			  PVOID Ea,
+			  ULONG EaLength)
+{
+  return(STATUS_EAS_NOT_SUPPORTED);
+}

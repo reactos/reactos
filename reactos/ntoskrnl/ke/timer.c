@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.50 2002/05/14 21:19:18 dwelch Exp $
+/* $Id: timer.c,v 1.51 2002/08/14 20:58:35 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -173,12 +173,12 @@ KeQuerySystemTime(PLARGE_INTEGER CurrentTime)
 NTSTATUS STDCALL
 NtGetTickCount (PULONG	UpTime)
 {
-	LARGE_INTEGER TickCount;
-	if ( UpTime == NULL )
-		return(STATUS_INVALID_PARAMETER);
-	KeQueryTickCount(&TickCount);
-	*UpTime = TickCount.u.LowPart;
-	return (STATUS_SUCCESS);
+  LARGE_INTEGER TickCount;
+  if (UpTime == NULL)
+    return(STATUS_INVALID_PARAMETER);
+  KeQueryTickCount(&TickCount);
+  *UpTime = TickCount.u.LowPart;
+  return (STATUS_SUCCESS);
 }
 
 
@@ -244,7 +244,7 @@ KeSetTimerEx (PKTIMER		Timer,
    InsertTailList(&TimerListHead,&Timer->TimerListEntry);
    KeReleaseSpinLock(&TimerListLock, oldlvl);
    
-   return FALSE;
+   return(FALSE);
 }
 
 BOOLEAN STDCALL
@@ -291,7 +291,7 @@ KeInitializeTimer (PKTIMER	Timer)
  * NOTE: This function initializes a notification timer
  */
 {
-   KeInitializeTimerEx(Timer,NotificationTimer);
+   KeInitializeTimerEx(Timer, NotificationTimer);
 }
 
 VOID STDCALL

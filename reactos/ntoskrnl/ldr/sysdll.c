@@ -79,6 +79,7 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
    PEPROCESS Process;
    ANSI_STRING ProcedureName;
    ULONG ViewSize;
+   IO_STATUS_BLOCK Iosb;
 
    /*
     * Locate and open NTDLL to determine ImageBase
@@ -97,7 +98,7 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
 		       &FileObjectAttributes,
 		       NULL,
 		       FILE_SHARE_READ,
-		       0);
+		       FILE_SYNCHRONOUS_IO_NONALERT);
    if (!NT_SUCCESS(Status))
      {
 	DbgPrint("NTDLL open failed (Status %x)\n", Status);
@@ -107,12 +108,12 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
 		       0,
 		       0,
 		       0,
-		       0,
+		       &Iosb,
 		       BlockBuffer,
 		       sizeof(BlockBuffer),
 		       0,
 		       0);
-   if (!NT_SUCCESS(Status))
+   if (!NT_SUCCESS(Status) || Iosb.Information != sizeof(BlockBuffer))
      {
 	DbgPrint("NTDLL header read failed (Status %x)\n", Status);
 	ZwClose(FileHandle);

@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.16 2002/08/08 17:54:12 dwelch Exp $
+/* $Id: fcb.c,v 1.17 2002/08/14 20:58:31 dwelch Exp $
  *
  *
  * FILE:             fcb.c
@@ -151,7 +151,7 @@ vfatGrabFCBFromTable(PDEVICE_EXTENSION  pVCB, PWSTR  pFileName)
 }
 
 NTSTATUS
-vfatFCBInitializeCache (PVCB  vcb, PVFATFCB  fcb)
+vfatFCBInitializeCacheFromVolume (PVCB  vcb, PVFATFCB  fcb)
 {
   NTSTATUS  status;
   PFILE_OBJECT  fileObject;
@@ -231,7 +231,7 @@ vfatMakeRootFCB(PDEVICE_EXTENSION  pVCB)
   FCB->RFCB.ValidDataLength.QuadPart = Size;
   FCB->RFCB.AllocationSize.QuadPart = Size;
 
-  vfatFCBInitializeCache(pVCB, FCB);
+  vfatFCBInitializeCacheFromVolume(pVCB, FCB);
   vfatAddFCBToTable(pVCB, FCB);
   vfatGrabFCB(pVCB, FCB);
 
@@ -257,8 +257,8 @@ vfatMakeFCBFromDirEntry(PVCB  vcb,
 			PVFATFCB  directoryFCB,
 			PWSTR  longName,
 			PFAT_DIR_ENTRY  dirEntry,
-            ULONG dirIndex,
-			PVFATFCB * fileFCB)
+			ULONG dirIndex,
+			PVFATFCB* fileFCB)
 {
   PVFATFCB  rcFCB;
   WCHAR  pathName [MAX_PATH];
@@ -315,9 +315,11 @@ vfatMakeFCBFromDirEntry(PVCB  vcb,
   rcFCB->RFCB.FileSize.QuadPart = Size;
   rcFCB->RFCB.ValidDataLength.QuadPart = Size;
   rcFCB->RFCB.AllocationSize.QuadPart = ROUND_UP(Size, vcb->FatInfo.BytesPerCluster);
-//  DPRINT1("%S %d %d\n", longName, Size, (ULONG)rcFCB->RFCB.AllocationSize.QuadPart);
-  vfatFCBInitializeCache (vcb, rcFCB);
   rcFCB->RefCount++;
+  if (vfatFCBIsDirectory(vcb, rcFCB))
+    {
+      vfatFCBInitializeCacheFromVolume(vcb, rcFCB);
+    }
   vfatAddFCBToTable (vcb, rcFCB);
   *fileFCB = rcFCB;
 

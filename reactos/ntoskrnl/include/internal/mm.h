@@ -64,12 +64,10 @@ typedef struct
    PSECTION_PAGE_TABLE PageTables[NR_SECTION_PAGE_TABLES];
 } SECTION_PAGE_DIRECTORY, *PSECTION_PAGE_DIRECTORY;
 
-#define MM_PAGEFILE_SECTION    (0x1)
-#define MM_IMAGE_SECTION       (0x2)
-/*
- * Flags for section objects
- */
-#define SO_PHYSICAL_MEMORY                      (0x4)
+#define SEC_PHYSICALMEMORY     (0x80000000)
+
+#define MM_PAGEFILE_SEGMENT    (0x1)
+#define MM_DATAFILE_SEGMENT    (0x2)
 
 #define MM_SECTION_SEGMENT_BSS (0x1)
 
@@ -95,12 +93,11 @@ typedef struct
   CSHORT Size;
   LARGE_INTEGER MaximumSize;
   ULONG SectionPageProtection;
-  ULONG AllocateAttributes;
+  ULONG AllocationAttributes;
   PFILE_OBJECT FileObject;
   LIST_ENTRY ViewListHead;
   KSPIN_LOCK ViewListLock;
   KMUTEX Lock;
-  ULONG Flags;
   ULONG NrSegments;
   PMM_SECTION_SEGMENT Segments;
   PVOID ImageBase;
@@ -276,7 +273,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 NTSTATUS MmWaitForPage(PVOID Page);
 VOID MmClearWaitPage(PVOID Page);
 VOID MmSetWaitPage(PVOID Page);
-BOOLEAN MmIsPageDirty(struct _EPROCESS* Process, PVOID Address);
+BOOLEAN MmIsDirtyPage(struct _EPROCESS* Process, PVOID Address);
 BOOLEAN MmIsPageTablePresent(PVOID PAddress);
 NTSTATUS 
 MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
@@ -329,14 +326,6 @@ typedef struct
 
 extern MM_STATS MmStats;
 
-NTSTATUS 
-MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
-		       PMEMORY_AREA MArea,
-		       PVOID Address);
-NTSTATUS 
-MmWritePageVirtualMemory(PMADDRESS_SPACE AddressSpace,
-			 PMEMORY_AREA MArea,
-			 PVOID Address);
 PVOID 
 MmGetDirtyPagesFromWorkingSet(struct _EPROCESS* Process);
 NTSTATUS 
@@ -594,4 +583,26 @@ MmProtectSectionView(PMADDRESS_SPACE AddressSpace,
 		     ULONG Length,
 		     ULONG Protect,
 		     PULONG OldProtect);
+NTSTATUS 
+MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
+		       PMEMORY_AREA MArea,
+		       PVOID Address,
+		       PMM_PAGEOP PageOp);
+NTSTATUS 
+MmWritePageVirtualMemory(PMADDRESS_SPACE AddressSpace,
+			 PMEMORY_AREA MArea,
+			 PVOID Address,
+			 PMM_PAGEOP PageOp);
+VOID
+MmSetCleanAllRmaps(PHYSICAL_ADDRESS PhysicalAddress);
+VOID
+MmSetDirtyAllRmaps(PHYSICAL_ADDRESS PhysicalAddress);
+NTSTATUS
+MmWritePagePhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress);
+BOOL
+MmIsDirtyPageRmap(PHYSICAL_ADDRESS PhysicalAddress);
+NTSTATUS MmInitMpwThread(VOID);
+BOOLEAN
+MmIsAvailableSwapPage(VOID);
+
 #endif

@@ -1,6 +1,23 @@
-/* $Id: mpw.c,v 1.7 2001/12/31 01:53:45 dwelch Exp $
+/*
+ *  ReactOS kernel
+ *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
  *
- * COPYRIGHT:    See COPYING in the top level directory
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: mpw.c,v 1.8 2002/08/14 20:58:36 dwelch Exp $
+ *
  * PROJECT:      ReactOS kernel
  * FILE:         ntoskrnl/mm/mpw.c
  * PURPOSE:      Writes data that has been modified in memory but not on
@@ -15,6 +32,7 @@
 #include <ddk/ntddk.h>
 #include <internal/ps.h>
 #include <internal/mm.h>
+#include <internal/cc.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -29,28 +47,61 @@ static volatile BOOLEAN MpwThreadShouldTerminate;
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS STDCALL
+MmWriteDirtyPages(ULONG Target, PULONG Actual)
+{
+  PHYSICAL_ADDRESS Page;
+  PHYSICAL_ADDRESS NextPage;
+  NTSTATUS Status;
+
+  Page = MmGetLRUFirstUserPage();
+  while (Page.QuadPart != 0LL && Target > 0)
+    {
+      NextPage = MmGetLRUNextUserPage(Page);
+      if (MmIsDirtyPageRmap(Page))
+	{
+	  Status = MmWritePagePhysicalAddress(Page);
+	  if (NT_SUCCESS(Status))
+	    {
+	      Target--;
+	    }
+	} 
+      Page = NextPage;
+    }
+  *Actual = Target;
+  return(STATUS_SUCCESS);
+}
+
+NTSTATUS STDCALL
 MmMpwThreadMain(PVOID Ignored)
 {
    NTSTATUS Status;
-      
+   ULONG PagesWritten;
+   LARGE_INTEGER Timeout;
+
+   Timeout.QuadPart = -50000000;
+
    for(;;)
      {
-	Status = KeWaitForSingleObject(&MpwThreadEvent,
-				       0,
-				       KernelMode,
-				       FALSE,
-				       NULL);
-	if (!NT_SUCCESS(Status))
-	  {
-	     DbgPrint("MpwThread: Wait failed\n");
-	     KeBugCheck(0);
-	     return(STATUS_UNSUCCESSFUL);
-	  }
-	if (MpwThreadShouldTerminate)
-	  {
-	     DbgPrint("MpwThread: Terminating\n");
-	     return(STATUS_SUCCESS);
-	  }
+       Status = KeWaitForSingleObject(&MpwThreadEvent,
+				      0,
+				      KernelMode,
+				      FALSE,
+				      &Timeout);
+       if (!NT_SUCCESS(Status))
+	 {
+	   DbgPrint("MpwThread: Wait failed\n");
+	   KeBugCheck(0);
+	   return(STATUS_UNSUCCESSFUL);
+	 }
+       if (MpwThreadShouldTerminate)
+	 {
+	   DbgPrint("MpwThread: Terminating\n");
+	   return(STATUS_SUCCESS);
+	 }
+       
+       PagesWritten = 0;
+       MmWriteDirtyPages(128, &PagesWritten);
+       CcRosFlushDirtyPages(128, &PagesWritten);
      }
 }
 
@@ -59,10 +110,8 @@ NTSTATUS MmInitMpwThread(VOID)
    NTSTATUS Status;
    
    MpwThreadShouldTerminate = FALSE;
-   KeInitializeEvent(&MpwThreadEvent,
-		     SynchronizationEvent,
-		     FALSE);
-   
+   KeInitializeEvent(&MpwThreadEvent, SynchronizationEvent, FALSE);
+
    Status = PsCreateSystemThread(&MpwThreadHandle,
 				 THREAD_ALL_ACCESS,
 				 NULL,

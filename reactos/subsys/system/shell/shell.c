@@ -1,4 +1,4 @@
-/* $Id: shell.c,v 1.9 2002/05/02 09:10:00 jfilby Exp $
+/* $Id: shell.c,v 1.10 2002/08/14 20:58:39 dwelch Exp $
  *
  * PROJECT    : ReactOS Operating System
  * DESCRIPTION: ReactOS' Native Shell
@@ -124,6 +124,7 @@ void ExecuteType(char* cmdline)
    HANDLE FileHandle;
    char c;
    DWORD Result;
+   BOOL Success;
 
    FileHandle = CreateFile(cmdline,
 			   FILE_GENERIC_READ,
@@ -137,15 +138,19 @@ void ExecuteType(char* cmdline)
 	debug_printf("Unknown file\n");
 	return;
      }
-   while (ReadFile(FileHandle,
-		   &c,
-		   1,
-		   &Result,
-		   NULL))
+   do
      {
-	debug_printf("%c",c);
-	c = 0;
-     }
+       Success = ReadFile(FileHandle,
+			  &c,
+			  1,
+			  &Result,
+			  NULL);
+       if (Success)
+	 {
+	   debug_printf("%c",c);
+	   c = 0;
+	 }
+     } while (Success && Result > 0);
    CloseHandle(FileHandle);
 }
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: anonmem.c,v 1.1 2002/08/10 16:41:19 dwelch Exp $
+/* $Id: anonmem.c,v 1.2 2002/08/14 20:58:36 dwelch Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/anonmem.c
@@ -40,12 +40,88 @@
 
 NTSTATUS 
 MmWritePageVirtualMemory(PMADDRESS_SPACE AddressSpace,
-			 PMEMORY_AREA MArea,
-			 PVOID Address)
+			 PMEMORY_AREA MemoryArea,
+			 PVOID Address,
+			 PMM_PAGEOP PageOp)
 {
-   return(STATUS_UNSUCCESSFUL);
-}
+  SWAPENTRY SwapEntry;
+  LARGE_INTEGER PhysicalAddress;
+  PMDL Mdl;
+  NTSTATUS Status;
 
+  /*
+   * Check for paging out from a deleted virtual memory area.
+   */
+  if (MemoryArea->DeleteInProgress)
+    {
+      PageOp->Status = STATUS_UNSUCCESSFUL;
+      KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+      MmReleasePageOp(PageOp);
+      return(STATUS_UNSUCCESSFUL);
+    }
+
+  PhysicalAddress = 
+    MmGetPhysicalAddressForProcess(AddressSpace->Process, Address);
+
+  /*
+   * Get that the page actually is dirty.
+   */
+  if (!MmIsDirtyPage(MemoryArea->Process, Address))
+    {
+      PageOp->Status = STATUS_SUCCESS;
+      KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+      MmReleasePageOp(PageOp);
+      return(STATUS_SUCCESS);
+    }
+
+  /*
+   * Speculatively set the mapping to clean.
+   */
+  MmSetCleanPage(MemoryArea->Process, Address);
+  
+  /*
+   * If necessary, allocate an entry in the paging file for this page
+   */
+  SwapEntry = MmGetSavedSwapEntryPage(PhysicalAddress);
+  if (SwapEntry == 0)
+    {
+      SwapEntry = MmAllocSwapPage();
+      if (SwapEntry == 0)
+	{
+	  MmSetDirtyPage(MemoryArea->Process, Address);
+	  PageOp->Status = STATUS_PAGEFILE_QUOTA_EXCEEDED;
+	  KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+	  MmReleasePageOp(PageOp);
+	  return(STATUS_PAGEFILE_QUOTA_EXCEEDED);
+	}
+    }
+
+  /*
+   * Write the page to the pagefile
+   */
+  Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
+  MmBuildMdlFromPages(Mdl, (PULONG)&PhysicalAddress);
+  Status = MmWriteToSwapPage(SwapEntry, Mdl);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("MM: Failed to write to swap page (Status was 0x%.8X)\n", 
+	      Status);
+      MmSetDirtyPage(MemoryArea->Process, Address);
+      PageOp->Status = STATUS_UNSUCCESSFUL;
+      KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+      MmReleasePageOp(PageOp);
+      return(STATUS_UNSUCCESSFUL);
+    }
+  
+  /*
+   * Otherwise we have succeeded.
+   */
+  MmSetSavedSwapEntryPage(PhysicalAddress, SwapEntry);
+  PageOp->Status = STATUS_SUCCESS;
+  KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+  MmReleasePageOp(PageOp);
+  return(STATUS_SUCCESS);
+}
 
 NTSTATUS 
 MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
@@ -67,33 +143,14 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
     */
    if (MemoryArea->DeleteInProgress)
      {
+       PageOp->Status = STATUS_UNSUCCESSFUL;
+       KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+       MmReleasePageOp(PageOp);
        return(STATUS_UNSUCCESSFUL);
      }
 
    /*
-    * Paging out code or readonly data is easy.
-    */
-   if ((MemoryArea->Attributes & PAGE_READONLY) ||
-       (MemoryArea->Attributes & PAGE_EXECUTE_READ))
-     {       
-       MmDeleteVirtualMapping(MemoryArea->Process, Address, FALSE,
-			      NULL, &PhysicalAddress);
-       MmDeleteAllRmaps(PhysicalAddress, NULL, NULL);
-       if (MmGetSavedSwapEntryPage(PhysicalAddress) != 0)
-	 {
-	   DPRINT1("Read-only page was swapped out.\n");
-	   KeBugCheck(0);
-	 }
-       MmReleasePageMemoryConsumer(MC_USER, PhysicalAddress);
-       
-       PageOp->Status = STATUS_SUCCESS;
-       KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
-       MmReleasePageOp(PageOp);
-       return(STATUS_SUCCESS);
-     }
-
-   /*
-    * Otherwise this is read-write data
+    * Disable the virtual mapping.
     */
    MmDisableVirtualMapping(MemoryArea->Process, Address,
 			   &WasDirty, (PULONG)&PhysicalAddress);
@@ -101,6 +158,10 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
      {
        KeBugCheck(0);
      }
+
+   /*
+    * Paging out non-dirty data is easy. 
+    */
    if (!WasDirty)
      {
        MmDeleteVirtualMapping(MemoryArea->Process, Address, FALSE, NULL, NULL);
@@ -399,6 +460,13 @@ MmModifyAttributes(PMADDRESS_SPACE AddressSpace,
 				     FALSE, NULL, NULL);
 	      if (PhysicalAddr.QuadPart != 0)
 		{
+		  SWAPENTRY SavedSwapEntry;
+		  SavedSwapEntry = MmGetSavedSwapEntryPage(PhysicalAddr);
+		  if (SavedSwapEntry != 0)
+		    {
+		      MmFreeSwapPage(SavedSwapEntry);
+		      MmSetSavedSwapEntryPage(PhysicalAddr, 0);
+		    }
 		  MmDeleteRmap(PhysicalAddr, AddressSpace->Process,
 			       BaseAddress + (i * PAGESIZE));
 		  MmReleasePageMemoryConsumer(MC_USER, PhysicalAddr);
@@ -455,13 +523,6 @@ NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
  *                a combination of PAGE_READONLY, PAGE_READWRITE, 
  *                PAGE_EXECUTE_READ, PAGE_EXECUTE_READWRITE, PAGE_GUARD, 
  *                PAGE_NOACCESS
- * REMARKS:
- *       This function maps to the win32 VirtualAllocEx. Virtual memory is 
- *       process based so the  protocol starts with a ProcessHandle. I 
- *       splitted the functionality of obtaining the actual address and 
- *       specifying the start address in two parameters ( BaseAddress and 
- *       StartAddress ) The NumberOfBytesAllocated specify the range and the 
- *       AllocationType and ProctectionType map to the other two parameters.
  * RETURNS: Status
  */
 {
@@ -495,7 +556,6 @@ NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
    PBaseAddress = *UBaseAddress;
    PRegionSize = *URegionSize;
    
-
    BaseAddress = (PVOID)PAGE_ROUND_DOWN(PBaseAddress);
    RegionSize = PAGE_ROUND_UP(PBaseAddress + PRegionSize) -
      PAGE_ROUND_DOWN(PBaseAddress);
@@ -593,6 +653,13 @@ MmFreeVirtualMemoryPage(PVOID Context,
   
   if (PhysicalAddr.QuadPart != 0)
     {
+      SWAPENTRY SavedSwapEntry;
+      SavedSwapEntry = MmGetSavedSwapEntryPage(PhysicalAddr);
+      if (SavedSwapEntry != 0)
+	{
+	  MmFreeSwapPage(SavedSwapEntry);
+	  MmSetSavedSwapEntryPage(PhysicalAddr, 0);
+	}
       MmDeleteRmap(PhysicalAddr, Process, Address);
       MmReleasePageMemoryConsumer(MC_USER, PhysicalAddr);
     }

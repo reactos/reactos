@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.43 2002/06/26 18:36:41 hbirr Exp $
+/* $Id: rw.c,v 1.44 2002/08/14 20:58:31 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -19,11 +19,6 @@
 #include <debug.h>
 
 #include "vfat.h"
-
-/* GLOBALS *******************************************************************/
-
-#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
-#define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
 
 /* FUNCTIONS *****************************************************************/
 
@@ -52,15 +47,15 @@ NextCluster(PDEVICE_EXTENSION DeviceExt,
 	  if (Extend)
 	    {
 	      Fcb->FatChain = ExAllocatePool(NonPagedPool, sizeof(ULONG));
-	      if (!Fcb->FatChain)
+	      if (Fcb->FatChain == NULL)
 		{
-		  return STATUS_NO_MEMORY;
+		  return(STATUS_NO_MEMORY);
 		}
 	      Status = GetNextCluster(DeviceExt, 0, CurrentCluster, TRUE);
 	      if (!NT_SUCCESS(Status))
 		{
 		  ExFreePool(Fcb->FatChain);
-		  return Status;
+		  return(Status);
 		}
 	      Fcb->FatChain[0] = *CurrentCluster;
 	      Fcb->FatChainSize = 1;
@@ -1119,7 +1114,7 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
          // update dates/times and length
 	 if (OldAllocationSize != Fcb->RFCB.AllocationSize.u.LowPart)
 	 {
-	    updEntry (IrpContext->DeviceExt, IrpContext->FileObject);
+	    VfatUpdateEntry (IrpContext->DeviceExt, IrpContext->FileObject);
 	    Fcb->Flags &= ~FCB_UPDATE_DIRENTRY;
 	 }
 	 else

@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.39 2002/06/14 07:46:47 ekohl Exp $
+/* $Id: init.c,v 1.40 2002/08/14 20:58:39 dwelch Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -386,6 +386,7 @@ SmPagingFilesQueryRoutine(PWSTR ValueName,
   LARGE_INTEGER InitialSize;
   LARGE_INTEGER MaximumSize;
   NTSTATUS Status;
+  LPWSTR p;
 
 #ifndef NDEBUG
   PrintString("ValueName '%S'  Type %lu  Length %lu\n", ValueName, ValueType, ValueLength);
@@ -398,23 +399,33 @@ SmPagingFilesQueryRoutine(PWSTR ValueName,
     }
 
   /*
-   * FIXME:
-   *  read initial and maximum size from the registry or use default values
-   *
    * Format: "<path>[ <initial_size>[ <maximum_size>]]"
    */
+  if ((p = wcschr(ValueData, ' ')) != NULL)
+    {
+      *p = L'\0';
+      InitialSize.QuadPart = wcstoul(p + 1, &p, 0);
+      if (*p == ' ')
+	{
+	  MaximumSize.QuadPart = wcstoul(p + 1, NULL, 0);
+	}
+    }
+  else
+    {
+      InitialSize.QuadPart = 50 * 4096;
+      MaximumSize.QuadPart = 80 * 4096;
+    }
 
   if (!RtlDosPathNameToNtPathName_U ((LPWSTR)ValueData, 
-	                                 &FileName,
-									 NULL,
-									 NULL))
-  {
-	  return (STATUS_SUCCESS);
-  }
+				     &FileName,
+				     NULL,
+				     NULL))
+    {
+      return (STATUS_SUCCESS);
+    }  
 
-  InitialSize.QuadPart = 50 * 4096;
-  MaximumSize.QuadPart = 80 * 4096;
-
+  DbgPrint("SMSS: Created paging file %wZ with size %dKB\n", 
+	   &FileName, InitialSize.QuadPart / 1024);
   Status = NtCreatePagingFile(&FileName,
 			      &InitialSize,
 			      &MaximumSize,

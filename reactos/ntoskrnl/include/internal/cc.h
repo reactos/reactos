@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_INTERNAL_CC_H
 #define __INCLUDE_INTERNAL_CC_H
-/* $Id: cc.h,v 1.12 2002/08/08 17:54:14 dwelch Exp $ */
+/* $Id: cc.h,v 1.13 2002/08/14 20:58:34 dwelch Exp $ */
 #include <ddk/ntifs.h>
 
 typedef struct _BCB
@@ -77,4 +77,9 @@ CcRosGetCacheSegmentChain(PBCB Bcb,
 			  ULONG Length,
 			  PCACHE_SEGMENT* CacheSeg);
 VOID CcInitCacheZeroPage(VOID);
+NTSTATUS
+CcRosMarkDirtyCacheSegment(PBCB Bcb, ULONG FileOffset);
+NTSTATUS
+CcRosFlushDirtyPages(ULONG Target, PULONG Count);
+
 #endif

@@ -1,3 +1,127 @@
+2002-08-14  David Welch  <welch@computer2.darkstar.org>
+
+	* subsys/smss/init.c (SmPagingFilesQueryRoutine): If possible
+	take the size of the paging file from the registry.
+
+2002-08-14  David Welch  <welch@computer2.darkstar.org>
+
+	* ntoskrnl/mm/section.c (MmCreateDataFileSection): Extend the
+	section if necessary.
+
+2002-08-14  David Welch  <welch@computer2.darkstar.org>
+
+	* ntoskrnl/mm/pagefile.c (NtCreatePagingFile): Set the file
+	size using the FileAllocationInformation class.
+
+2002-08-14  David Welch  <welch@computer2.darkstar.org>
+
+	* ntoskrnl/mm/anonmem.c (MmWritePageVirtualMemory): Implemented
+	function to write anonymous memory pages to the swap file.
+	* ntoskrnl/mm/anonmem.c (MmFreeVirtualMemoryPage): Free any
+	swap page associated with the page.
+	* ntoskrnl/mm/mpw.c (MmWriteDirtyPages): New function to find
+	pages to write to disk.
+	* ntoskrnl/mm/mpw.c (MmMpwThreadMain): Implemented MPW functionality.
+	* ntoskrnl/mm/rmap.c (MmWritePagePhysicalAddress): New function
+	to write a single page back to disk.
+	* ntoskrnl/mm/rmap.c (MmSetCleanAllRmaps, MmSetDirtyAllRmaps,
+	MmIsDirtyPageRmap): New rmap function to support the MPW thread.
+	* ntoskrnl/mm/section.c (MmWritePageSectionView): Implemented
+	function to write back section pages.
+	* ntoskrnl/mm/section.c (MmFreeSectionPage): Free any swap
+	entry associated with the page; mark pages shared with
+	the cache as dirty if necessary.
+	
+2002-08-14  David Welch  <welch@computer2.darkstar.org>
+
+	* ntoskrnl/ldr/loader.c (LdrPEProcessModule): Set name of
+	the module into the module text structure.
+
+2002-08-14  David Welch  <welch@computer2.darkstar.org>
+
+	* ntoskrnl/io/rw.c (NtReadFile, NtWriteFile): Use the correct
+	test for whether to wait for the completion of i/o.
+
+2002-08-14  David Welch  <welch@computer2.darkstar.org>
+
+	* ntoskrnl/cm/ntfunc.c (NtFlushKey): Request synchronous i/o
+	from NtOpenFile.
+	* ntoskrnl/cm/regfile (CmiInitPermanentRegistryHive): Request
+	synchronous i/o from NtCreateFile.
+	* ntoskrnl/dbg/kdb_stabs.c (LdrpLoadModuleSymbols): Request
+	synchronous i/o from NtOpenFile.
+	* ntoskrnl/ldr/sysdll.c (LdrpMapSystemDll): Request synchronous i/o
+	from NtOpenFile.
+
+2002-08-14  David Welch  <welch@computer2.darkstar.org>
+
+	* ntoskrnl/cc/view.c (CcRosSuggestFreeCacheSegment): Maintain the
+	correct reference count.
+
+2002-08-14  David Welch  <welch@computer2.darkstar.org>
+
+	* ntoskrnl/cc/view.c (CcRosFlushCacheSegment): New function to
+	write back a modified cache segment.
+	* ntoskrnl/cc/view.c (CcRosFlushDirtyPages): New function to
+	flush some dirty pages from the cache.
+	* ntoskrnl/cc/view.c (CcRosMarkDirtyCacheSegment): New function to
+	mark a cache segment modified while mapped into memory as dirty.
+
+2002-08-14  David Welch  <welch@computer2.darkstar.org>
+
+	* ntoskrnl/cc/pin.c (CcMapData, CcUnpinData, CcSetDirtyPinnedData):
+	Store the dirty status in the BCB; don't write back dirty data
+	immediately.
+
+2002-08-14  David Welch  <welch@computer2.darkstar.org>
+
+	* include/ntos/mm.h: Added SEC_XXXX defines from 'Windows NT/2000
+	Native API Reference'
+
+2002-08-14  David Welch  <welch@computer2.darkstar.org>
+
+	* drivers/fs/vfat/ea.c (VfatSetExtendedAttributes): Empty
+	placeholder for extended attribute functions.
+
+2002-08-14  David Welch  <welch@computer2.darkstar.org>
+
+	* drivers/fs/vfat/finfo.c (VfatSetAllocationSizeInformation):
+	Added function to set allocation size.
+
+2002-08-14  David Welch  <welch@computer2.darkstar.org>
+
+	* drivers/fs/vfat/fcb.c (vfatFCBInitializeCache): Renamed
+	to vfatFCBInitializeCacheFromVolume.
+	* drivers/fs/vfat/fcb.c (vfatMakeFCBFromDirEntry): Don't
+	initialise the cache with a file object representing the
+	volume unless the FCB is for a directory.
+
+2002-08-14  David Welch  <welch@computer2.darkstar.org>
+
+	* drivers/fs/vfat/create.c (VfatPagingFileCreate): Added a
+	new function for handling paging file only code.
+	* drivers/fs/vfat/create.c (VfatSupersedeFile): Added a
+	new function for doing a file supersede.
+	* drivers/fs/vfat/create.c (VfatCreateFile): Reformatted and
+	adjusted control flow. Set allocation size and extended attributes
+	on create.
+	* drivers/fs/vfat/create.c (VfatCreate): Removed goto.
+
+2002-08-14  David Welch  <welch@computer2.darkstar.org>
+
+	* drivers/fs/vfat/cleanup.c (VfatCleanupFile): Renamed
+	updEntry to VfatUpdateEntry.
+	* drivers/fs/vfat/close.c (VfatCloseFile): Renamed
+	updEntry to VfatUpdateEntry.
+	* drivers/fs/vfat/dirwr.c (updEntry): Renamed to
+	VfatUpdateEntry.
+	* drivers/fs/vfat/dirwr.c (addEntry): Renamed to
+	VfatAddEntry.
+
+2002-08-14  David Welch  <welch@computer2.darkstar.org>
+
+	* apps/tests/sectest/sectest.c (main): Fixed formatting.
+
 2002-08-10  David Welch  <welch@computer2.darkstar.org>
 
 	* ntoskrnl/mm/i386/page.c (MmSetPageProtect): Fixed

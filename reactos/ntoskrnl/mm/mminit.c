@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.36 2002/07/17 21:04:56 dwelch Exp $
+/* $Id: mminit.c,v 1.37 2002/08/14 20:58:36 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -354,6 +354,11 @@ VOID MmInit3(VOID)
    MmInitPagerThread();
    MmCreatePhysicalMemorySection();
    MmInitializeRmapList();
+
+   /*
+    * Initialise the modified page writer.
+    */
+   MmInitMpwThread();
 
    /* FIXME: Read parameters from memory */
 }

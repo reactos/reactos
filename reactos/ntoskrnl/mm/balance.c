@@ -16,9 +16,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: balance.c,v 1.10 2002/06/10 21:34:37 hbirr Exp $
+/* $Id: balance.c,v 1.11 2002/08/14 20:58:36 dwelch Exp $
  *
- * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
  * FILE:        ntoskrnl/mm/balance.c
  * PURPOSE:     kernel memory managment functions
@@ -70,8 +69,10 @@ static ULONG MiMinimumPagesPerRun = 1;
 VOID MmPrintMemoryStatistic(VOID)
 {
   DbgPrint("MC_CACHE %d, MC_USER %d, MC_PPOOL %d, MC_NPPOOL %d\n",
-           MiMemoryConsumers[MC_CACHE].PagesUsed, MiMemoryConsumers[MC_USER].PagesUsed, 
-           MiMemoryConsumers[MC_PPOOL].PagesUsed, MiMemoryConsumers[MC_NPPOOL].PagesUsed); 
+           MiMemoryConsumers[MC_CACHE].PagesUsed, 
+	   MiMemoryConsumers[MC_USER].PagesUsed, 
+           MiMemoryConsumers[MC_PPOOL].PagesUsed, 
+	   MiMemoryConsumers[MC_NPPOOL].PagesUsed); 
 }
 
 VOID
@@ -86,7 +87,8 @@ MmInitializeBalancer(ULONG NrAvailablePages)
   /* Set up targets. */
   MiMinimumAvailablePages = 64;
   MiMemoryConsumers[MC_CACHE].PagesTarget = NrAvailablePages / 2;
-  MiMemoryConsumers[MC_USER].PagesTarget = NrAvailablePages - MiMinimumAvailablePages;
+  MiMemoryConsumers[MC_USER].PagesTarget = 
+    NrAvailablePages - MiMinimumAvailablePages;
   MiMemoryConsumers[MC_PPOOL].PagesTarget = NrAvailablePages / 2;
   MiMemoryConsumers[MC_NPPOOL].PagesTarget = 0xFFFFFFFF;
 }
@@ -114,29 +116,29 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PHYSICAL_ADDRESS Page)
 
   KeAcquireSpinLock(&AllocationListLock, &oldIrql);
   if (MmGetReferenceCountPage(Page) == 1)
-  {
-    InterlockedDecrement(&MiMemoryConsumers[Consumer].PagesUsed);
-    InterlockedIncrement(&MiNrAvailablePages);
-    InterlockedDecrement(&MiPagesRequired);
-    if (IsListEmpty(&AllocationListHead))
+    {
+      InterlockedDecrement(&MiMemoryConsumers[Consumer].PagesUsed);
+      InterlockedIncrement(&MiNrAvailablePages);
+      InterlockedDecrement(&MiPagesRequired);
+      if (IsListEmpty(&AllocationListHead))
+	{
+	  KeReleaseSpinLock(&AllocationListLock, oldIrql);
+	  MmDereferencePage(Page);
+	}
+      else
+	{
+	  Entry = RemoveHeadList(&AllocationListHead);
+	  Request = CONTAINING_RECORD(Entry, MM_ALLOCATION_REQUEST, ListEntry);
+	  KeReleaseSpinLock(&AllocationListLock, oldIrql);
+	  Request->Page = Page;
+	  KeSetEvent(&Request->Event, IO_NO_INCREMENT, FALSE);
+	}
+    }
+  else
     {
       KeReleaseSpinLock(&AllocationListLock, oldIrql);
       MmDereferencePage(Page);
     }
-    else
-    {
-      Entry = RemoveHeadList(&AllocationListHead);
-      Request = CONTAINING_RECORD(Entry, MM_ALLOCATION_REQUEST, ListEntry);
-      KeReleaseSpinLock(&AllocationListLock, oldIrql);
-      Request->Page = Page;
-      KeSetEvent(&Request->Event, IO_NO_INCREMENT, FALSE);
-    }
-  }
-  else
-  {
-    KeReleaseSpinLock(&AllocationListLock, oldIrql);
-    MmDereferencePage(Page);
-  }
 
   return(STATUS_SUCCESS);
 }

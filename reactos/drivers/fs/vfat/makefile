@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.39 2002/06/26 18:36:41 hbirr Exp $
+# $Id: makefile,v 1.40 2002/08/14 20:58:31 dwelch Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -25,7 +25,8 @@ TARGET_OBJECTS = \
   string.o \
   volume.o \
   misc.o \
-  fsctl.o
+  fsctl.o \
+  ea.o
 
 DEP_OBJECTS = $(TARGET_OBJECTS)
 

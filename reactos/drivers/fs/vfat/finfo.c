@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.14 2002/07/20 11:44:37 ekohl Exp $
+/* $Id: finfo.c,v 1.15 2002/08/14 20:58:31 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -344,6 +344,91 @@ VfatGetAllInformation(PFILE_OBJECT FileObject,
   return STATUS_SUCCESS;
 }
 
+NTSTATUS
+VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject, 
+				 PVFATFCB Fcb,
+				 PDEVICE_OBJECT DeviceObject,
+				 PLARGE_INTEGER AllocationSize)
+{
+  ULONG OldSize;
+  ULONG Cluster;
+  ULONG Offset;
+  NTSTATUS Status;
+  PDEVICE_EXTENSION DeviceExt = 
+    (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+  ULONG ClusterSize = DeviceExt->FatInfo.BytesPerCluster;
+  ULONG NewSize = AllocationSize->u.LowPart;
+  ULONG NextCluster;
+
+  OldSize = Fcb->entry.FileSize;
+  if (OldSize == AllocationSize->u.LowPart)
+    {
+      return(STATUS_SUCCESS);
+    }
+  Fcb->entry.FileSize = AllocationSize->u.LowPart;  
+  Fcb->RFCB.AllocationSize = *AllocationSize;
+  Fcb->RFCB.FileSize = *AllocationSize;
+  Fcb->RFCB.ValidDataLength = *AllocationSize;
+  CcSetFileSizes(FileObject, (PCC_FILE_SIZES)&Fcb->RFCB.AllocationSize);
+
+  if (DeviceExt->FatInfo.FatType == FAT32)
+    {
+      Cluster = Fcb->entry.FirstCluster + Fcb->entry.FirstClusterHigh * 65536;
+    }
+  else
+    {
+      Cluster = Fcb->entry.FirstCluster;
+    }
+
+  if (OldSize > NewSize &&
+      ROUND_UP(OldSize, ClusterSize) > ROUND_DOWN(NewSize, ClusterSize))
+    {            
+      /* Seek to the new end of the file. */
+      Offset = 0;
+      while (Cluster != 0xffffffff && Cluster > 1 && Offset <= NewSize)
+	{
+	  Status = GetNextCluster (DeviceExt, Cluster, &NextCluster, FALSE);
+	  Cluster = NextCluster;
+	  Offset += ClusterSize;
+	}
+      /* Free everything beyond this point. */
+      while (Cluster != 0xffffffff && Cluster > 1)
+	{
+	  Status = GetNextCluster (DeviceExt, Cluster, &NextCluster, FALSE);
+	  WriteCluster (DeviceExt, Cluster, 0xFFFFFFFF);
+	  Cluster = NextCluster;	  
+	}
+      if (NewSize == 0)
+	{
+	  Fcb->entry.FirstCluster = 0;
+	  Fcb->entry.FirstClusterHigh = 0;
+	}
+    }
+  else if (NewSize > OldSize &&
+	   ROUND_UP(NewSize, ClusterSize) > ROUND_DOWN(OldSize, ClusterSize))
+    {
+      /* Seek to the new end of the file. */
+      Offset = 0;
+      if (OldSize == 0)
+	{
+	  assert(Cluster == 0);
+	  Status = GetNextCluster (DeviceExt, 0, &NextCluster, TRUE);
+	  Fcb->entry.FirstCluster = (NextCluster & 0x0000FFFF) >> 0;
+	  Fcb->entry.FirstClusterHigh = (NextCluster & 0xFFFF0000) >> 16;
+	  Cluster = NextCluster;
+	  Offset += ClusterSize;
+	}
+      while (Cluster != 0xffffffff && Cluster > 1 && Offset <= NewSize)
+	{
+	  Status = GetNextCluster (DeviceExt, Cluster, &NextCluster, TRUE);
+	  Cluster = NextCluster;
+	  Offset += ClusterSize;
+	}      
+    }	   
+
+  /* Update the on-disk directory entry */
+  VfatUpdateEntry(DeviceExt, FileObject);
+}
 
 NTSTATUS VfatQueryInformation(PVFAT_IRP_CONTEXT IrpContext)
 /*
@@ -454,34 +539,36 @@ NTSTATUS VfatSetInformation(PVFAT_IRP_CONTEXT IrpContext)
   PVFATFCB FCB = NULL;
   NTSTATUS RC = STATUS_SUCCESS;
   PVOID SystemBuffer;
-
+  BOOL CanWait = IrpContext->Flags & IRPCONTEXT_CANWAIT;
+  
   /* PRECONDITION */
   assert(IrpContext);
-
+  
   DPRINT("VfatSetInformation(IrpContext %x)\n", IrpContext);
-
+  
   /* INITIALIZATION */
-  FileInformationClass = IrpContext->Stack->Parameters.SetFile.FileInformationClass;
+  FileInformationClass = 
+    IrpContext->Stack->Parameters.SetFile.FileInformationClass;
   FCB = ((PVFATCCB) IrpContext->FileObject->FsContext2)->pFcb;
   SystemBuffer = IrpContext->Irp->AssociatedIrp.SystemBuffer;
-
+  
   DPRINT("FileInformationClass %d\n", FileInformationClass);
   DPRINT("SystemBuffer %x\n", SystemBuffer);
-
+  
   if (FCB->Flags & FCB_IS_PAGE_FILE)
-  {
-     if (!ExAcquireResourceExclusiveLite(&FCB->PagingIoResource, IrpContext->Flags & IRPCONTEXT_CANWAIT))
-     {
-        return VfatQueueRequest (IrpContext);
-     }
-  }
+    {
+      if (!ExAcquireResourceExclusiveLite(&FCB->PagingIoResource, CanWait))
+	{
+	  return(VfatQueueRequest (IrpContext));
+	}
+    }
   else
-  {
-     if (!ExAcquireResourceExclusiveLite(&FCB->MainResource, IrpContext->Flags & IRPCONTEXT_CANWAIT))
-     {
-        return VfatQueueRequest (IrpContext);
-     }
-  }
+    {
+      if (!ExAcquireResourceExclusiveLite(&FCB->MainResource, CanWait))
+	{
+	  return(VfatQueueRequest (IrpContext));
+	}
+    }
 
   switch (FileInformationClass)
     {
@@ -497,9 +584,14 @@ NTSTATUS VfatSetInformation(PVFAT_IRP_CONTEXT IrpContext)
 					 IrpContext->DeviceObject,
 					 SystemBuffer);
       break;
-    case FileBasicInformation:
-    case FileAllocationInformation:
+    case FileAllocationInformation:    
     case FileEndOfFileInformation:
+      RC = VfatSetAllocationSizeInformation(IrpContext->FileObject,
+					    FCB,
+					    IrpContext->DeviceObject,
+					    (PLARGE_INTEGER)SystemBuffer);
+      break;    
+    case FileBasicInformation:
     case FileRenameInformation:
       RC = STATUS_NOT_IMPLEMENTED;
       break;

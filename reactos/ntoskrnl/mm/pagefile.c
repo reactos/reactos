@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.21 2002/07/17 21:04:56 dwelch Exp $
+/* $Id: pagefile.c,v 1.22 2002/08/14 20:58:36 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -96,7 +96,7 @@ static PULONG MmCoreDumpBlockMap;
 static ULONG MmCoreDumpSize;
 static PULONG MmCoreDumpBlockMap = NULL;
 static MM_DUMP_POINTERS MmCoreDumpDeviceFuncs;
-DWORD MmCoreDumpType;
+ULONG MmCoreDumpType;
 
 /*
  * Translate between a swap entry and a file and offset pair.
@@ -223,14 +223,13 @@ MmReserveSwapPages(ULONG Nr)
    KeAcquireSpinLock(&PagingFileListLock, &oldIrql);
    MiAvailSwapPages =
      (MiFreeSwapPages * MM_PAGEFILE_COMMIT_RATIO) + MM_PAGEFILE_COMMIT_GRACE;
+   MiReservedSwapPages = MiReservedSwapPages + Nr;
    if (MM_PAGEFILE_COMMIT_RATIO != 0 && MiAvailSwapPages < MiReservedSwapPages)
      {
        KeReleaseSpinLock(&PagingFileListLock, oldIrql);
        return(FALSE);
-     }
-   MiReservedSwapPages = MiReservedSwapPages + Nr;
+     }   
    KeReleaseSpinLock(&PagingFileListLock, oldIrql);
-
    return(TRUE);
 }
 
@@ -303,6 +302,12 @@ MmFreeSwapPage(SWAPENTRY Entry)
    
    KeReleaseSpinLockFromDpcLevel(&PagingFileList[i]->AllocMapLock);
    KeReleaseSpinLock(&PagingFileListLock, oldIrql);
+}
+
+BOOLEAN
+MmIsAvailableSwapPage(VOID)
+{
+  return(MiFreeSwapPages > 0);
 }
 
 SWAPENTRY 
@@ -504,7 +509,6 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
    KIRQL oldIrql;
    ULONG AllocMapSize;
    ULONG i;
-   PVOID Buffer;
 
    DPRINT("NtCreatePagingFile(FileName %wZ, InitialSize %I64d)\n",
 	  FileName, InitialSize->QuadPart);
@@ -539,23 +543,16 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
 	return(Status);
      }
 
-   Buffer = ExAllocatePool(NonPagedPool, 4096);
-   memset(Buffer, 0, 4096);
-   Status = NtWriteFile(FileHandle,
-			NULL,
-			NULL,
-			NULL,
-			&IoStatus,
-			Buffer,
-			4096,
-			InitialSize,
-			NULL);
+   Status = NtSetInformationFile(FileHandle,
+				 &IoStatus,
+				 InitialSize,
+				 sizeof(LARGE_INTEGER),
+				 FileAllocationInformation);
    if (!NT_SUCCESS(Status))
      {
-       NtClose(FileHandle);
+       ZwClose(FileHandle);
        return(Status);
      }
-   ExFreePool(Buffer);
 
    Status = ObReferenceObjectByHandle(FileHandle,
 				      FILE_ALL_ACCESS,

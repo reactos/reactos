@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rmap.c,v 1.7 2002/08/10 16:41:19 dwelch Exp $
+/* $Id: rmap.c,v 1.8 2002/08/14 20:58:36 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -58,6 +58,100 @@ MmInitializeRmapList(VOID)
 }
 
 NTSTATUS
+MmWritePagePhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
+{
+  PMM_RMAP_ENTRY entry;
+  PMEMORY_AREA MemoryArea;
+  ULONG Type;
+  PVOID Address;
+  PEPROCESS Process;
+  PMM_PAGEOP PageOp;
+  LARGE_INTEGER Offset;
+  NTSTATUS Status;
+
+  ExAcquireFastMutex(&RmapListLock);
+  entry = MmGetRmapListHeadPage(PhysicalAddress);
+  if (entry == NULL)
+    {
+      ExReleaseFastMutex(&RmapListLock);
+      return(STATUS_UNSUCCESSFUL);
+    }
+  Process = entry->Process;
+  Address = entry->Address;
+  if ((((ULONG)Address) & 0xFFF) != 0)
+    {
+      KeBugCheck(0);
+    }
+
+  ExReleaseFastMutex(&RmapListLock);
+  MmLockAddressSpace(&Process->AddressSpace);
+  MemoryArea = MmOpenMemoryAreaByAddress(&Process->AddressSpace, Address);
+  Type = MemoryArea->Type;
+  if (Type == MEMORY_AREA_SECTION_VIEW)
+    {
+      Offset.QuadPart = (ULONG)((Address - (ULONG)MemoryArea->BaseAddress) +
+	MemoryArea->Data.SectionData.ViewOffset);
+
+      /*
+       * Get or create a pageop
+       */
+      PageOp = MmGetPageOp(MemoryArea, 0, 0, 
+			   MemoryArea->Data.SectionData.Segment, 
+			   Offset.u.LowPart, MM_PAGEOP_PAGEOUT);
+      if (PageOp == NULL)
+	{
+	  DPRINT1("MmGetPageOp failed\n");
+	  KeBugCheck(0);
+	}
+
+      if (PageOp->Thread != PsGetCurrentThread())
+	{
+	  MmReleasePageOp(PageOp);
+	  MmUnlockAddressSpace(&Process->AddressSpace);
+	  return(STATUS_UNSUCCESSFUL);
+	}
+      
+      /*
+       * Release locks now we have a page op.
+       */
+      MmUnlockAddressSpace(&Process->AddressSpace);      
+
+      /*
+       * Do the actual page out work.
+       */
+      Status = MmWritePageSectionView(&Process->AddressSpace, MemoryArea, 
+				      Address, PageOp);
+    }
+  else if (Type == MEMORY_AREA_VIRTUAL_MEMORY)
+    {
+      PageOp = MmGetPageOp(MemoryArea, Process->UniqueProcessId,
+			   Address, NULL, 0, MM_PAGEOP_PAGEOUT);
+      if (PageOp->Thread != PsGetCurrentThread())
+	{
+	  MmReleasePageOp(PageOp);
+	  MmUnlockAddressSpace(&Process->AddressSpace);
+	  return(STATUS_UNSUCCESSFUL);
+	}
+
+      /*
+       * Release locks now we have a page op.
+       */
+      MmUnlockAddressSpace(&Process->AddressSpace);
+
+      /*
+       * Do the actual page out work.
+       */
+      Status = MmWritePageVirtualMemory(&Process->AddressSpace, MemoryArea, 
+					Address, PageOp);
+    }
+  else
+    {
+      KeBugCheck(0);
+    }
+  return(Status);
+}
+
+NTSTATUS
 MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
 {
   PMM_RMAP_ENTRY entry;
@@ -83,6 +177,7 @@ MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
       KeBugCheck(0);
     }
 
+  ExReleaseFastMutex(&RmapListLock);
   MmLockAddressSpace(&Process->AddressSpace);
   MemoryArea = MmOpenMemoryAreaByAddress(&Process->AddressSpace, Address);
   Type = MemoryArea->Type;
@@ -107,7 +202,6 @@ MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
 	{
 	  MmReleasePageOp(PageOp);
 	  MmUnlockAddressSpace(&Process->AddressSpace);
-	  ExReleaseFastMutex(&RmapListLock);
 	  return(STATUS_UNSUCCESSFUL);
 	}
       
@@ -115,7 +209,6 @@ MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
        * Release locks now we have a page op.
        */
       MmUnlockAddressSpace(&Process->AddressSpace);
-      ExReleaseFastMutex(&RmapListLock);
 
       /*
        * Do the actual page out work.
@@ -131,7 +224,6 @@ MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
 	{
 	  MmReleasePageOp(PageOp);
 	  MmUnlockAddressSpace(&Process->AddressSpace);
-	  ExReleaseFastMutex(&RmapListLock);
 	  return(STATUS_UNSUCCESSFUL);
 	}
 
@@ -139,7 +231,6 @@ MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
        * Release locks now we have a page op.
        */
       MmUnlockAddressSpace(&Process->AddressSpace);
-      ExReleaseFastMutex(&RmapListLock);
 
       /*
        * Do the actual page out work.
@@ -152,6 +243,71 @@ MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
       KeBugCheck(0);
     }
   return(Status);
+}
+
+VOID
+MmSetCleanAllRmaps(PHYSICAL_ADDRESS PhysicalAddress)
+{
+  PMM_RMAP_ENTRY current_entry;
+
+  ExAcquireFastMutex(&RmapListLock);
+  current_entry = MmGetRmapListHeadPage(PhysicalAddress);
+  if (current_entry == NULL)
+    {
+      DPRINT1("MmIsDirtyRmap: No rmaps.\n");
+      KeBugCheck(0);
+    }
+  while (current_entry != NULL)
+    {      
+      MmSetCleanPage(current_entry->Process, current_entry->Address);
+      current_entry = current_entry->Next;
+    }
+  ExReleaseFastMutex(&RmapListLock);
+}
+
+VOID
+MmSetDirtyAllRmaps(PHYSICAL_ADDRESS PhysicalAddress)
+{
+  PMM_RMAP_ENTRY current_entry;
+
+  ExAcquireFastMutex(&RmapListLock);
+  current_entry = MmGetRmapListHeadPage(PhysicalAddress);
+  if (current_entry == NULL)
+    {
+      DPRINT1("MmIsDirtyRmap: No rmaps.\n");
+      KeBugCheck(0);
+    }
+  while (current_entry != NULL)
+    {      
+      MmSetDirtyPage(current_entry->Process, current_entry->Address);
+      current_entry = current_entry->Next;
+    }
+  ExReleaseFastMutex(&RmapListLock);
+}
+
+BOOL
+MmIsDirtyPageRmap(PHYSICAL_ADDRESS PhysicalAddress)
+{
+  PMM_RMAP_ENTRY current_entry;
+
+  ExAcquireFastMutex(&RmapListLock);
+  current_entry = MmGetRmapListHeadPage(PhysicalAddress);
+  if (current_entry == NULL)
+    {
+      ExReleaseFastMutex(&RmapListLock);
+      return(FALSE);
+    }
+  while (current_entry != NULL)
+    {      
+      if (MmIsDirtyPage(current_entry->Process, current_entry->Address))
+	{	  
+	  ExReleaseFastMutex(&RmapListLock);
+	  return(TRUE);
+	}
+      current_entry = current_entry->Next;
+    }
+  ExReleaseFastMutex(&RmapListLock);
+  return(FALSE);
 }
 
 VOID

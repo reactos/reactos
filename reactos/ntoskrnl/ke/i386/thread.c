@@ -37,15 +37,17 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-/* FUNCTIONS **************************************************************/
+/* GLOBALS *******************************************************************/
 
 #define FLAG_NT (1<<14)
 #define FLAG_VM (1<<17)
 #define FLAG_IF (1<<9)
 #define FLAG_IOPL ((1<<12)+(1<<13))
 
+/* FUNCTIONS *****************************************************************/
+
 NTSTATUS 
-KeValidateUserContext(PCONTEXT Context)
+Ki386ValidateUserContext(PCONTEXT Context)
 /*
  * FUNCTION: Validates a processor context
  * ARGUMENTS:

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: irq.c,v 1.21 2002/07/10 15:12:33 ekohl Exp $
+/* $Id: irq.c,v 1.22 2002/08/14 20:58:35 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/irq.c
@@ -52,6 +52,13 @@
 /* GLOBALS *****************************************************************/
 
 #ifdef MP
+
+/* 
+ * FIXME: This does not work if we have more than 24 IRQs (ie. more than one 
+ * I/O APIC) 
+ */
+#define VECTOR2IRQ(vector) (((vector) - 0x31) / 8)
+#define VECTOR2IRQL(vector) (4 + VECTOR2IRQ(vector))
 
 #define IRQ_BASE  FIRST_DEVICE_VECTOR
 #define NR_IRQS   0x100 - 0x30

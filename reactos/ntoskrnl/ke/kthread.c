@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kthread.c,v 1.31 2002/08/09 17:23:57 dwelch Exp $
+/* $Id: kthread.c,v 1.32 2002/08/14 20:58:35 dwelch Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Microkernel thread support
@@ -35,11 +35,6 @@
 
 #define NDEBUG
 #include <internal/debug.h>
-
-/* EXTERN ********************************************************************/
-
-//extern VOID 
-//PiTimeoutThread(struct _KDPC Dpc, PVOID Context, PVOID Arg1, PVOID Arg2);
 
 /* FUNCTIONS *****************************************************************/
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.38 2002/08/09 17:23:56 dwelch Exp $
+/* $Id: ps.h,v 1.39 2002/08/14 20:58:34 dwelch Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -28,72 +28,20 @@
 #ifndef __INCLUDE_INTERNAL_PS_H
 #define __INCLUDE_INTERNAL_PS_H
 
-/*
- * Defines for accessing KPCR and KTHREAD structure members
- */
-#define KTHREAD_INITIAL_STACK     0x18
-#define KTHREAD_STACK_LIMIT       0x1C
-#define KTHREAD_TEB               0x20
-#define KTHREAD_KERNEL_STACK      0x28
-#define KTHREAD_PREVIOUS_MODE     0x137
-#define KTHREAD_TRAP_FRAME        0x128
-#define KTHREAD_CALLBACK_STACK    0x120
+#ifndef __ASM__
 
-#define ETHREAD_THREADS_PROCESS   0x234
+/* Forward declarations. */
+struct _KTHREAD;
+struct _KTRAPFRAME;
 
-#define KPROCESS_DIRECTORY_TABLE_BASE 0x18
+#endif /* __ASM__ */
 
-#define KPCR_BASE                 0xFF000000
-
-#define KPCR_EXCEPTION_LIST       0x0
-#define KPCR_SELF                 0x18
-#define KPCR_TSS                  0x28
-#define KPCR_CURRENT_THREAD       0x124	
+#include <internal/arch/ps.h>
 
 #ifndef __ASM__
 
 #include <internal/mm.h>
 #include <napi/teb.h>
-
-struct _KTHREAD;
-struct _KTRAPFRAME;
-
-/* FIXME: This does not work if we have more than 24 IRQs (ie. more than one I/O APIC) */
-#define VECTOR2IRQ(vector) (((vector) - 0x31) / 8)
-#define VECTOR2IRQL(vector) (4 + VECTOR2IRQ(vector))
-
-/*
- * Processor Control Region
- */
-typedef struct _KPCR
-{
-  PVOID ExceptionList;               /* 00 */
-  PVOID StackBase;                   /* 04 */
-  PVOID StackLimit;                  /* 08 */
-  PVOID SubSystemTib;                /* 0C */
-  PVOID Reserved1;                   /* 10 */
-  PVOID ArbitraryUserPointer;        /* 14 */
-  struct _KPCR* Self;                /* 18 */
-  UCHAR ProcessorNumber;             /* 1C */
-  KIRQL Irql;                        /* 1D */
-  UCHAR Reserved2[0x2];              /* 1E */
-  PUSHORT IDT;                       /* 20 */
-  PUSHORT GDT;                       /* 24 */
-  KTSS* TSS;                         /* 28 */
-  UCHAR Reserved3[0xF8];             /* 2C */
-  struct _KTHREAD* CurrentThread;    /* 124 */
-} __attribute__((packed)) KPCR, *PKPCR;
-
-static inline PKPCR KeGetCurrentKPCR(VOID)
-{
-  ULONG value;
-
-  __asm__ __volatile__ ("movl %%fs:0x18, %0\n\t"
-	  : "=r" (value)
-    : /* no inputs */
-    );
-  return((PKPCR)value);
-}
 
 #define KeGetCurrentProcessorNumber() (KeGetCurrentKPCR()->ProcessorNumber)
 
@@ -101,7 +49,6 @@ extern HANDLE SystemProcessHandle;
 
 extern LCID PsDefaultThreadLocaleId;
 extern LCID PsDefaultSystemLocaleId;
-
 
 typedef struct _KAPC_STATE
 {
@@ -198,18 +145,7 @@ typedef struct _KTHREAD
    LIST_ENTRY        ProcessThreadListEntry;         /* 1B0 */
 } __attribute__((packed)) KTHREAD, *PKTHREAD;
 
-// According to documentation the stack should have a commited [ 1 page ] and
-// a reserved part [ 1 M ] but can be specified otherwise in the image file.
-
-
-
-
-
-
-
-// TopLevelIrp can be one of the following values:
-// FIXME I belong somewhere else
-
+/* Top level irp definitions. */
 #define 	FSRTL_FSP_TOP_LEVEL_IRP			(0x01)
 #define 	FSRTL_CACHE_TOP_LEVEL_IRP		(0x02)
 #define 	FSRTL_MOD_WRITE_TOP_LEVEL_IRP		(0x03)
@@ -230,7 +166,6 @@ typedef struct
    UCHAR Pad[2];                                     // 0x6
    SECURITY_IMPERSONATION_LEVEL Level;               // 0x8
 } PS_IMPERSONATION_INFO, *PPS_IMPERSONATION_INFO;
-
 
 typedef struct _ETHREAD
 {
@@ -404,7 +339,7 @@ struct _EPROCESS
   struct _EPORT*        ExceptionPort;
   PVOID                 ObjectTable;
   PVOID                 Token;
-  //  FAST_MUTEX            WorkingSetLock;
+  /*  FAST_MUTEX            WorkingSetLock; */
   KMUTEX                WorkingSetLock;
   PVOID                 WorkingSetPage;
   UCHAR                 ProcessOutswapEnabled;
@@ -482,9 +417,6 @@ VOID PsBeginThread(PKSTART_ROUTINE StartRoutine, PVOID StartContext);
 VOID PsBeginThreadWithContextInternal(VOID);
 VOID PiKillMostProcesses(VOID);
 NTSTATUS STDCALL PiTerminateProcess(PEPROCESS Process, NTSTATUS ExitStatus);
-ULONG PsUnfreezeThread(PETHREAD Thread, PNTSTATUS WaitStatus);
-ULONG PsFreezeThread(PETHREAD Thread, PNTSTATUS WaitStatus,
-		     UCHAR Alertable, ULONG WaitMode);
 VOID PiInitApcManagement(VOID);
 VOID STDCALL PiDeleteThread(PVOID ObjectBody);
 VOID STDCALL PiCloseThread(PVOID ObjectBody, ULONG HandleCount);
@@ -522,9 +454,9 @@ NTSTATUS PsResumeThread(PETHREAD Thread, PULONG PreviousCount);
 
 /*
  * Internal thread priorities, added by Phillip Susi
- * TODO: rebalence these to make use of all priorities... the ones above 16 can not all be used right now
+ * TODO: rebalence these to make use of all priorities... the ones above 16 
+ * can not all be used right now
  */
-
 #define PROCESS_PRIO_IDLE			3
 #define PROCESS_PRIO_NORMAL			8
 #define PROCESS_PRIO_HIGH			13
@@ -534,10 +466,6 @@ NTSTATUS PsResumeThread(PETHREAD Thread, PULONG PreviousCount);
 VOID 
 KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First);
 NTSTATUS KeReleaseThread(PETHREAD Thread);
-NTSTATUS 
-Ke386InitThread(PKTHREAD Thread, PKSTART_ROUTINE fn, PVOID StartContext);
-NTSTATUS 
-Ke386InitThreadWithContext(PKTHREAD Thread, PCONTEXT Context);
 VOID STDCALL PiDeleteProcess(PVOID ObjectBody);
 VOID PsReapThreads(VOID);
 VOID PsUnfreezeOtherThread(PETHREAD Thread);
@@ -545,8 +473,6 @@ VOID PsFreezeOtherThread(PETHREAD Thread);
 VOID PsFreezeProcessThreads(PEPROCESS Process);
 VOID PsUnfreezeProcessThreads(PEPROCESS Process);
 PEPROCESS PsGetNextProcess(PEPROCESS OldProcess);
-VOID
-Ki386ContextSwitch(PKTHREAD NewThread, PKTHREAD OldThread);
 VOID
 PsBlockThread(PNTSTATUS Status, UCHAR Alertable, ULONG WaitMode, 
 	      BOOLEAN DispatcherLock, KIRQL WaitIrql);
@@ -571,13 +497,6 @@ VOID STDCALL
 PiSuspendThreadNormalRoutine(PVOID NormalContext,
 			     PVOID SystemArgument1,
 			     PVOID SystemArgument2);
-
-VOID STDCALL
-PiTimeoutThread(struct _KDPC *dpc,
-		PVOID Context,
-		PVOID arg1,
-		PVOID arg2);
-
 VOID STDCALL
 PsDispatchThread(ULONG NewThreadStatus);
 VOID

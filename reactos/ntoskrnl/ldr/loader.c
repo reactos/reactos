@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.119 2002/08/10 16:41:18 dwelch Exp $
+/* $Id: loader.c,v 1.120 2002/08/14 20:58:36 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -344,7 +344,7 @@ LdrLoadModule(PUNICODE_STRING Filename,
                       &ObjectAttributes,
                       &IoStatusBlock,
                       0,
-                      0);
+                      FILE_SYNCHRONOUS_IO_NONALERT);
   CHECKPOINT;
   if (!NT_SUCCESS(Status))
     {
@@ -1133,19 +1133,20 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
   RtlZeroMemory(CreatedModuleObject, sizeof(MODULE_OBJECT));
 
    /*  Initialize ModuleObject data  */
-   CreatedModuleObject->Base = DriverBase;
-   CreatedModuleObject->Flags = MODULE_FLAG_PE;
-
-   RtlCreateUnicodeString(&CreatedModuleObject->FullName,
-			  FileName->Buffer);
-   LdrpBuildModuleBaseName(&CreatedModuleObject->BaseName,
-			   &CreatedModuleObject->FullName);
-
-  CreatedModuleObject->EntryPoint = (PVOID)((DWORD)DriverBase + 
-    PEOptionalHeader->AddressOfEntryPoint);
+  CreatedModuleObject->Base = DriverBase;
+  CreatedModuleObject->Flags = MODULE_FLAG_PE;
+  
+  RtlCreateUnicodeString(&CreatedModuleObject->FullName,
+			 FileName->Buffer);
+  LdrpBuildModuleBaseName(&CreatedModuleObject->BaseName,
+			  &CreatedModuleObject->FullName);
+  
+  CreatedModuleObject->EntryPoint = 
+    (PVOID)((DWORD)DriverBase + 
+	    PEOptionalHeader->AddressOfEntryPoint);
   CreatedModuleObject->Length = DriverSize;
   DPRINT("EntryPoint at %x\n", CreatedModuleObject->EntryPoint);
-
+  
   CreatedModuleObject->Image.PE.FileHeader =
     (PIMAGE_FILE_HEADER) ((unsigned int) DriverBase + PEDosHeader->e_lfanew + sizeof(ULONG));
 
@@ -1172,10 +1173,9 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
   RtlZeroMemory(ModuleTextSection, sizeof(MODULE_TEXT_SECTION));
   ModuleTextSection->Base = (ULONG)DriverBase;
   ModuleTextSection->Length = DriverSize;
-  ModuleTextSection->Name = 
-    ExAllocatePool(NonPagedPool, 
-		   (wcslen(NameBuffer) + 1) * sizeof(WCHAR));
-  wcscpy(ModuleTextSection->Name, NameBuffer);
+  ModuleTextSection->Name = ExAllocatePool(NonPagedPool, 
+	(wcslen(CreatedModuleObject->BaseName.Buffer) + 1) * sizeof(WCHAR));
+  wcscpy(ModuleTextSection->Name, CreatedModuleObject->BaseName.Buffer);
   ModuleTextSection->OptionalHeader = 
     CreatedModuleObject->Image.PE.OptionalHeader;
   InsertTailList(&ModuleTextListHead, &ModuleTextSection->ListEntry);

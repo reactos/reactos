@@ -1,27 +1,27 @@
-/* $Id: iface.c,v 1.63 2002/05/15 18:05:00 ekohl Exp $
+/*
+ *  ReactOS kernel
+ *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
  *
- * COPYRIGHT:        See COPYING in the top level directory
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: iface.c,v 1.64 2002/08/14 20:58:31 dwelch Exp $
+ *
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/vfat/iface.c
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
- * UPDATE HISTORY:
- *    ??           Created
- *   24-10-1998   Fixed bugs in long filename support
- *                Fixed a bug that prevented unsuccessful file open requests
- *                being reported
- *                Now works with long filenames that span over a sector
- *                boundary
- *   28-10-1998   Reads entire FAT into memory
- *                VFatReadSector modified to read in more than one sector at a
- *                time
- *   7-11-1998    Fixed bug that assumed that directory data could be
- *                fragmented
- *   8-12-1998    Added FAT32 support
- *                Added initial writability functions
- *                WARNING: DO NOT ATTEMPT TO TEST WRITABILITY FUNCTIONS!!!
- *   12-12-1998   Added basic support for FILE_STANDARD_INFORMATION request
- *
  */
 
 /* INCLUDES *****************************************************************/
@@ -34,7 +34,6 @@
 #include "vfat.h"
 
 /* GLOBALS *****************************************************************/
-
 
 PVFAT_GLOBAL_DATA VfatGlobalData;
 
@@ -55,10 +54,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
    UNICODE_STRING DeviceName;
    NTSTATUS Status;
 
-   DPRINT("VFAT 0.0.6\n");
-
-   RtlInitUnicodeString(&DeviceName,
-			L"\\Fat");
+   RtlInitUnicodeString(&DeviceName, L"\\Fat");
    Status = IoCreateDevice(DriverObject,
 			   sizeof(VFAT_GLOBAL_DATA),
 			   &DeviceName,
@@ -84,15 +80,17 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
    DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = VfatBuildRequest;
    DriverObject->MajorFunction[IRP_MJ_SET_INFORMATION] = VfatBuildRequest;
    DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] = VfatBuildRequest;
-   DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] = VfatBuildRequest;
-   DriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION] = VfatBuildRequest;
+   DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] = 
+     VfatBuildRequest;
+   DriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION] = 
+     VfatBuildRequest;
    DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = VfatShutdown;
    DriverObject->MajorFunction[IRP_MJ_CLEANUP] = VfatBuildRequest;
 
    DriverObject->DriverUnload = NULL;
 
    IoRegisterFileSystem(DeviceObject);
-   return STATUS_SUCCESS;
+   return(STATUS_SUCCESS);
 }
 
 /* EOF */

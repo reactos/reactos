@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.37 2002/04/27 19:22:09 hbirr Exp $
+/* $Id: rw.c,v 1.38 2002/08/14 20:58:35 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -17,10 +17,6 @@
 
 #define NDEBUG
 #include <internal/debug.h>
-
-/* DATA ********************************************************************/
-
-
 
 /* FUNCTIONS ***************************************************************/
 
@@ -42,111 +38,123 @@ NTSTATUS STDCALL NtReadFile(HANDLE			FileHandle,
 			    HANDLE			EventHandle,
 			    PIO_APC_ROUTINE		ApcRoutine,
 			    PVOID			ApcContext,
-			    PIO_STATUS_BLOCK	IoStatusBlock,
+			    PIO_STATUS_BLOCK	        UserIoStatusBlock,
 			    PVOID			Buffer,
 			    ULONG			Length,
 			    PLARGE_INTEGER		ByteOffset,
 			    PULONG			Key)
 {
-   NTSTATUS Status;
-   PFILE_OBJECT FileObject;
-   PIRP Irp;
-   PIO_STACK_LOCATION StackPtr;
-   PKEVENT ptrEvent = NULL;
-   IO_STATUS_BLOCK IoSB;
-   
-   DPRINT("NtReadFile(FileHandle %x Buffer %x Length %x ByteOffset %x, "
-	  "IoStatusBlock %x)\n", FileHandle, Buffer, Length, ByteOffset,
-	  IoStatusBlock);
-
-   Status = ObReferenceObjectByHandle(FileHandle,
-				      FILE_READ_DATA,
-				      IoFileObjectType,
+  NTSTATUS Status;
+  PFILE_OBJECT FileObject;
+  PIRP Irp;
+  PIO_STACK_LOCATION StackPtr;
+  PKEVENT Event = NULL;
+  IO_STATUS_BLOCK Iosb;
+  PIO_STATUS_BLOCK IoStatusBlock;
+  
+  DPRINT("NtReadFile(FileHandle %x Buffer %x Length %x ByteOffset %x, "
+	 "IoStatusBlock %x)\n", FileHandle, Buffer, Length, ByteOffset,
+	 IoStatusBlock);
+  
+  Status = ObReferenceObjectByHandle(FileHandle,
+				     FILE_READ_DATA,
+				     IoFileObjectType,
+				     UserMode,
+				     (PVOID*)&FileObject,
+				     NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
+  
+  if (ByteOffset == NULL)
+    {
+      ByteOffset = &FileObject->CurrentByteOffset;
+    }
+  
+  if (EventHandle != NULL)
+    {
+      Status = ObReferenceObjectByHandle(EventHandle,
+					 SYNCHRONIZE,
+					 ExEventObjectType,
+					 UserMode,
+					 (PVOID*)&Event,
+					 NULL);
+      if (!NT_SUCCESS(Status))
+	{
+	  ObDereferenceObject(FileObject);
+	  return(Status);
+	}
+    }
+  else 
+    {
+      Event = &FileObject->Event;
+      KeResetEvent(Event);
+    }
+  
+  if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+    {
+      IoStatusBlock = &Iosb;
+    }
+  else
+    {
+      IoStatusBlock = UserIoStatusBlock;
+    }
+  
+  Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
+				     FileObject->DeviceObject,
+				     Buffer,
+				     Length,
+				     ByteOffset,
+				     Event,
+				     IoStatusBlock);
+  
+  Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
+  Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
+  
+  StackPtr = IoGetNextIrpStackLocation(Irp);
+  StackPtr->FileObject = FileObject;
+  if (Key != NULL)
+    {
+      StackPtr->Parameters.Read.Key = *Key;
+    }
+  else
+    {
+      StackPtr->Parameters.Read.Key = 0;
+    }
+  
+  Status = IoCallDriver(FileObject->DeviceObject, Irp);
+  if (Status == STATUS_PENDING && FileObject->Flags & FO_SYNCHRONOUS_IO)
+     {
+       BOOLEAN Alertable;
+       
+       if (FileObject->Flags & FO_ALERTABLE_IO)
+	 {
+	   Alertable = TRUE;
+	 }
+       else
+	 {
+	   Alertable = FALSE;
+	 } 
+       
+       Status = KeWaitForSingleObject(Event,
+				      Executive,
 				      UserMode,
-				      (PVOID*)&FileObject,
+				      Alertable,
 				      NULL);
-   if( !NT_SUCCESS( Status ) )
-     return Status;
-
-   if (ByteOffset == NULL)
-     {
-	ByteOffset = &FileObject->CurrentByteOffset;
+       if (Status != STATUS_WAIT_0)
+	 {
+	   /* Wait failed. */
+	   return(Status);
+	 }
+	Status = Iosb.Status;
+	return(Status);
      }
-   
-   if (EventHandle != NULL)
-     {
-	Status = ObReferenceObjectByHandle(EventHandle,
-					   SYNCHRONIZE,
-					   ExEventObjectType,
-					   UserMode,
-					   (PVOID*)&ptrEvent,
-					   NULL);
-	if (!NT_SUCCESS(Status))
-	  {
-	     ObDereferenceObject(FileObject);
-	     return Status;
-	  }
-     }
-   else 
-     {
-       ptrEvent = &FileObject->Event;
-       KeResetEvent( ptrEvent );
-     }
-   
-   Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
-				      FileObject->DeviceObject,
-				      Buffer,
-				      Length,
-				      ByteOffset,
-				      ptrEvent,
-				      EventHandle ? IoStatusBlock : &IoSB);
-   
-   Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
-   Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
-   
-   StackPtr = IoGetNextIrpStackLocation(Irp);
-   StackPtr->FileObject = FileObject;
-   if (Key != NULL)
-     {
-	StackPtr->Parameters.Read.Key = *Key;
-     }
-   else
-     {
-	StackPtr->Parameters.Read.Key = 0;
-     }
-   
-   Status = IoCallDriver(FileObject->DeviceObject,
-			 Irp);
-   if (EventHandle == NULL && Status == STATUS_PENDING && 
-       !(FileObject->Flags & FO_SYNCHRONOUS_IO))
-     {
-	BOOLEAN Alertable;
-	
-	if (FileObject->Flags & FO_ALERTABLE_IO)
-	  {
-	     Alertable = TRUE;
-	  }
-	else
-	  {
-	     Alertable = FALSE;
-	  } 
-	
-	Status = KeWaitForSingleObject(ptrEvent,
-				       Executive,
-				       KernelMode,
-				       Alertable,
-				       NULL);
-	if( !NT_SUCCESS( Status ) )
-	  {
-	    DPRINT1( "WaitForSingleObject failed: %x\n", Status );
-	  }
-	else Status = IoSB.Status;
-     }
-   if (IoStatusBlock && EventHandle == NULL)
-     {
-       *IoStatusBlock = IoSB;
-     }
-   return (Status);
+  if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+    {
+      *UserIoStatusBlock = Iosb;
+    }
+  return(Status);
 }
 
 
@@ -167,97 +175,123 @@ NTSTATUS STDCALL NtWriteFile(HANDLE			FileHandle,
 			     HANDLE			EventHandle,
 			     PIO_APC_ROUTINE		ApcRoutine,
 			     PVOID			ApcContext,
-			     PIO_STATUS_BLOCK	IoStatusBlock,
+			     PIO_STATUS_BLOCK	        UserIoStatusBlock,
 			     PVOID			Buffer,
 			     ULONG			Length,
 			     PLARGE_INTEGER		ByteOffset,
 			     PULONG			Key)
 {
-   NTSTATUS Status;
-   PFILE_OBJECT FileObject;
-   PIRP Irp;
-   PIO_STACK_LOCATION StackPtr;
-   PKEVENT ptrEvent;
-   IO_STATUS_BLOCK IoSB;
-   
-   DPRINT("NtWriteFile(FileHandle %x, Buffer %x, Length %d)\n",
-	  FileHandle, Buffer, Length);
-   
-   Status = ObReferenceObjectByHandle(FileHandle,
-				      FILE_WRITE_DATA,
-				      IoFileObjectType,
-				      UserMode,
-				      (PVOID*)&FileObject,
-				      NULL);
-   if (!NT_SUCCESS(Status))
+  NTSTATUS Status;
+  PFILE_OBJECT FileObject;
+  PIRP Irp;
+  PIO_STACK_LOCATION StackPtr;
+  PKEVENT Event = NULL;
+  IO_STATUS_BLOCK Iosb;
+  PIO_STATUS_BLOCK IoStatusBlock;
+  
+  DPRINT("NtReadFile(FileHandle %x Buffer %x Length %x ByteOffset %x, "
+	 "IoStatusBlock %x)\n", FileHandle, Buffer, Length, ByteOffset,
+	 IoStatusBlock);
+  
+  Status = ObReferenceObjectByHandle(FileHandle,
+				     FILE_READ_DATA,
+				     IoFileObjectType,
+				     UserMode,
+				     (PVOID*)&FileObject,
+				     NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
+  
+  if (ByteOffset == NULL)
+    {
+      ByteOffset = &FileObject->CurrentByteOffset;
+    }
+  
+  if (EventHandle != NULL)
+    {
+      Status = ObReferenceObjectByHandle(EventHandle,
+					 SYNCHRONIZE,
+					 ExEventObjectType,
+					 UserMode,
+					 (PVOID*)&Event,
+					 NULL);
+      if (!NT_SUCCESS(Status))
+	{
+	  ObDereferenceObject(FileObject);
+	  return(Status);
+	}
+    }
+  else 
+    {
+      Event = &FileObject->Event;
+      KeResetEvent(Event);
+    }
+  
+  if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+    {
+      IoStatusBlock = &Iosb;
+    }
+  else
+    {
+      IoStatusBlock = UserIoStatusBlock;
+    }
+  
+  Irp = IoBuildSynchronousFsdRequest(IRP_MJ_WRITE,
+				     FileObject->DeviceObject,
+				     Buffer,
+				     Length,
+				     ByteOffset,
+				     Event,
+				     IoStatusBlock);
+  
+  Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
+  Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
+  
+  StackPtr = IoGetNextIrpStackLocation(Irp);
+  StackPtr->FileObject = FileObject;
+  if (Key != NULL)
+    {
+      StackPtr->Parameters.Write.Key = *Key;
+    }
+  else
+    {
+      StackPtr->Parameters.Write.Key = 0;
+    }
+  
+  Status = IoCallDriver(FileObject->DeviceObject, Irp);
+  if (Status == STATUS_PENDING && FileObject->Flags & FO_SYNCHRONOUS_IO)
      {
+       BOOLEAN Alertable;
+       
+       if (FileObject->Flags & FO_ALERTABLE_IO)
+	 {
+	   Alertable = TRUE;
+	 }
+       else
+	 {
+	   Alertable = FALSE;
+	 } 
+       
+       Status = KeWaitForSingleObject(Event,
+				      Executive,
+				      UserMode,
+				      Alertable,
+				      NULL);
+       if (Status != STATUS_WAIT_0)
+	 {
+	   /* Wait failed. */
+	   return(Status);
+	 }
+	Status = Iosb.Status;
 	return(Status);
      }
-   
-   if (ByteOffset == NULL)
-     {
-	ByteOffset = &FileObject->CurrentByteOffset;
-     }
-
-   if (EventHandle != NULL)
-     {
-	Status = ObReferenceObjectByHandle(EventHandle,
-					   SYNCHRONIZE,
-					   ExEventObjectType,
-					   UserMode,
-					   (PVOID*)&ptrEvent,
-					   NULL);
-	if (!NT_SUCCESS(Status))
-	  {
-	     ObDereferenceObject(FileObject);
-	     return(Status);
-	  }
-     }
-   else
-     {
-	ptrEvent = &FileObject->Event;
-	KeResetEvent( ptrEvent );
-     }
-
-   Irp = IoBuildSynchronousFsdRequest(IRP_MJ_WRITE,
-				      FileObject->DeviceObject,
-				      Buffer,
-				      Length,
-				      ByteOffset,
-				      ptrEvent,
-				      EventHandle ? IoStatusBlock : &IoSB);
-   
-   Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
-   Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
-   
-   DPRINT("FileObject->DeviceObject %x\n",FileObject->DeviceObject);
-   
-   StackPtr = IoGetNextIrpStackLocation(Irp);
-   StackPtr->FileObject = FileObject;
-   if (Key != NULL)
-     {
-	StackPtr->Parameters.Write.Key = *Key;
-     }
-   else
-     {
-	StackPtr->Parameters.Write.Key = 0;
-     }
-   Status = IoCallDriver(FileObject->DeviceObject, Irp);
-   if (EventHandle == NULL && Status == STATUS_PENDING && 
-       !(FileObject->Flags & FO_SYNCHRONOUS_IO))
-     {
-	KeWaitForSingleObject(ptrEvent,
-			      Executive,
-			      KernelMode,
-			      FileObject->Flags & FO_ALERTABLE_IO ? TRUE : FALSE,
-			      NULL);
-	Status = IoSB.Status;
-     }
-   if (IoStatusBlock && EventHandle == NULL)
-     {
-       *IoStatusBlock = IoSB;
-     }
-   return(Status);
+  if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+    {
+      *UserIoStatusBlock = Iosb;
+    }
+  return(Status);
 }
 
 

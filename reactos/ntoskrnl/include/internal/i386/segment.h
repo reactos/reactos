@@ -38,13 +38,13 @@
 #define PCR_SELECTOR         (0x30)
 /* Thread Environment Block */
 #define TEB_SELECTOR         (0x38 + 0x3)
-#define RESERVED_SELECTOR   (0x40)
+#define RESERVED_SELECTOR    (0x40)
 /* Local Descriptor Table */
 #define LDT_SELECTOR         (0x48)
 #define TRAP_TSS_SELECTOR    (0x50)
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_I386_SEGMENT_H */
 
-
+/* EOF */
 
 

@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.52 2002/07/17 21:04:56 dwelch Exp $
+/* $Id: object.c,v 1.53 2002/08/14 20:58:38 dwelch Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -243,15 +243,10 @@ ObCreateObject(OUT PHANDLE Handle,
 
   DPRINT("ObCreateObject(Handle %x, ObjectAttributes %x, Type %x)\n",
 	 Handle, ObjectAttributes, Type);
-  if (ObjectAttributes != NULL &&
-      ObjectAttributes->ObjectName != NULL)
-    {
-      DPRINT("ObjectAttributes->ObjectName->Buffer %S\n",
-	     ObjectAttributes->ObjectName->Buffer);
-    }
 
   if (ObjectAttributes != NULL &&
-      ObjectAttributes->ObjectName != NULL)
+      ObjectAttributes->ObjectName != NULL &&
+      ObjectAttributes->ObjectName->Buffer != NULL)
     {
       Status = ObFindObject(ObjectAttributes,
 			    &Parent,

@@ -392,8 +392,8 @@ KiDoubleFaultHandler(VOID)
 VOID
 KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG Parameter1, ULONG Parameter2)
 {
-  unsigned int cr3;
-  unsigned int i;
+  ULONG cr3;
+  ULONG i;
   ULONG StackLimit;
   PULONG Frame;
   ULONG Esp0;
