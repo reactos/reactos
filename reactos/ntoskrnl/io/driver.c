@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.24 2003/10/15 17:04:39 navaraf Exp $
+/* $Id: driver.c,v 1.25 2003/10/16 12:50:30 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -18,8 +18,8 @@
 #include <internal/po.h>
 #include <internal/ldr.h>
 #include <internal/id.h>
-#include <internal/pool.h>
 #include <internal/registry.h>
+#include <internal/pool.h>
 #include <internal/se.h>
 #include <internal/mm.h>
 #include <internal/ke.h>
@@ -664,29 +664,32 @@ IopInitializeSystemDrivers(VOID)
 }
 
 /*
- * IopGetDriverNameFromKeyNode
+ * IopGetDriverNameFromServiceKey
  *
- * Returns a module path from service registry key node.
+ * Returns a module path from service registry key.
  *
  * Parameters
+ *    RelativeTo
+ *       Relative path identifier.
+ *    PathName
+ *       Relative key path name.
  *    ImagePath
  *       The result path.
- *    KeyHandle
- *       Registry handle for service registry key node
- *       (\Registry\Machine\System\CurrentControlSet\Services\...)
- *		
+ *
  * Return Value
  *    Status
  */
 
 NTSTATUS STDCALL
-IopGetDriverNameFromKeyNode(PUNICODE_STRING ImagePath, HANDLE KeyHandle)
+IopGetDriverNameFromServiceKey(
+  ULONG RelativeTo,
+  PWSTR PathName,
+  PUNICODE_STRING ImagePath)
 {
    RTL_QUERY_REGISTRY_TABLE QueryTable[2];
    UNICODE_STRING RegistryImagePath;
    NTSTATUS Status;
-   PKEY_NODE_INFORMATION NodeInformation;
-   ULONG ResultLength;
+   PWSTR ServiceName;
 
    RtlZeroMemory(&QueryTable, sizeof(QueryTable));
    RtlInitUnicodeString(&RegistryImagePath, NULL);
@@ -695,8 +698,8 @@ IopGetDriverNameFromKeyNode(PUNICODE_STRING ImagePath, HANDLE KeyHandle)
    QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
    QueryTable[0].EntryContext = &RegistryImagePath;
 
-   Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
-      (PWSTR)KeyHandle, QueryTable, NULL, NULL);
+   Status = RtlQueryRegistryValues(RelativeTo,
+      PathName, QueryTable, NULL, NULL);
    if (!NT_SUCCESS(Status))
    {
       DPRINT("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
@@ -706,30 +709,25 @@ IopGetDriverNameFromKeyNode(PUNICODE_STRING ImagePath, HANDLE KeyHandle)
 
    if (RegistryImagePath.Length == 0)
    {
-      RtlFreeUnicodeString(&RegistryImagePath);
-      ZwQueryKey(KeyHandle, KeyNodeInformation, 0, 0, &ResultLength);
-      NodeInformation = ExAllocatePool(NonPagedPool, ResultLength);
-      if (NodeInformation == NULL)
+      ServiceName = wcsrchr(PathName, L'\\');
+      if (ServiceName == NULL)
       {
-         return STATUS_UNSUCCESSFUL;
+         ServiceName = PathName;
       }
-      Status = ZwQueryKey(KeyHandle, KeyNodeInformation, NodeInformation,
-         ResultLength, &ResultLength);
-      if (!NT_SUCCESS(Status))
+      else
       {
-         ExFreePool(NodeInformation);
-         return STATUS_UNSUCCESSFUL;
+         ServiceName++;
       }
+
       ImagePath->Length = sizeof(UNICODE_NULL) +
-         ((33 + NodeInformation->NameLength) * sizeof(WCHAR));
+         ((33 + wcslen(ServiceName)) * sizeof(WCHAR));
       ImagePath->Buffer = ExAllocatePool(NonPagedPool, ImagePath->Length);
       if (ImagePath->Buffer == NULL)
       {
-         ExFreePool(NodeInformation);
          return STATUS_UNSUCCESSFUL;
       }
       wcscpy(ImagePath->Buffer, L"\\SystemRoot\\system32\\drivers\\");
-      wcscat(ImagePath->Buffer, NodeInformation->Name);
+      wcscat(ImagePath->Buffer, ServiceName);
       wcscat(ImagePath->Buffer, L".sys");
    } else
    if (RegistryImagePath.Buffer[0] != L'\\')
@@ -772,20 +770,11 @@ IopGetDriverNameFromKeyNode(PUNICODE_STRING ImagePath, HANDLE KeyHandle)
 NTSTATUS
 IopInitializeDeviceNodeService(PDEVICE_NODE DeviceNode, BOOLEAN BootDriverOnly)
 {
-   HANDLE KeyHandle;
    NTSTATUS Status;
 
    if (DeviceNode->ServiceName.Buffer == NULL)
    {
       return STATUS_UNSUCCESSFUL;
-   }
-
-   Status = RtlpGetRegistryHandle(RTL_REGISTRY_SERVICES,
-      DeviceNode->ServiceName.Buffer, FALSE, &KeyHandle);
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("RtlpGetRegistryHandle() failed (Status %x)\n", Status);
-      return Status;
    }
 
    if (BootDriverOnly)
@@ -801,9 +790,8 @@ IopInitializeDeviceNodeService(PDEVICE_NODE DeviceNode, BOOLEAN BootDriverOnly)
       QueryTable[0].Name = L"Start";
       QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
       QueryTable[0].EntryContext = &ServiceStart;
-      Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
-         (PWCHAR)KeyHandle, QueryTable, NULL, NULL);
-      NtClose(KeyHandle);
+      Status = RtlQueryRegistryValues(RTL_REGISTRY_SERVICES,
+         DeviceNode->ServiceName.Buffer, QueryTable, NULL, NULL);
       if (!NT_SUCCESS(Status))
       {
          DPRINT("RtlQueryRegistryValues() failed (Status %x)\n", Status);
@@ -847,8 +835,8 @@ IopInitializeDeviceNodeService(PDEVICE_NODE DeviceNode, BOOLEAN BootDriverOnly)
       /*
        * Get service path
        */
-      Status = IopGetDriverNameFromKeyNode(&ImagePath, KeyHandle);
-      NtClose(KeyHandle);
+      Status = IopGetDriverNameFromServiceKey(RTL_REGISTRY_SERVICES,
+          DeviceNode->ServiceName.Buffer, &ImagePath);
       if (!NT_SUCCESS(Status))
       {
          DPRINT("IopGetDriverNameFromKeyNode() failed (Status %x)\n", Status);
@@ -901,7 +889,6 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
    UNICODE_STRING ObjectName;
    PDRIVER_OBJECT DriverObject;
    PMODULE_OBJECT ModuleObject;
-   HANDLE KeyHandle;
    NTSTATUS Status;
    LPWSTR Start;
 
@@ -944,21 +931,13 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
    /*
     * Get path of service...
     */
-   Status = RtlpGetRegistryHandle(RTL_REGISTRY_ABSOLUTE,
-      DriverServiceName->Buffer, FALSE, &KeyHandle);
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("RtlpGetRegistryHandle() failed (Status %x)\n", Status);
-      return Status;
-   }
-   Status = IopGetDriverNameFromKeyNode(&ImagePath, KeyHandle);
+   Status = IopGetDriverNameFromServiceKey(RTL_REGISTRY_ABSOLUTE,
+       DriverServiceName->Buffer, &ImagePath);
    if (!NT_SUCCESS(Status))
    {
       DPRINT("IopGetDriverNameFromKeyNode() failed (Status %x)\n", Status);
-      NtClose(KeyHandle);
       return Status;
    }
-   NtClose(KeyHandle);
 
    /*
     * ... and check if it's loaded
@@ -1006,7 +985,6 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
 {
    RTL_QUERY_REGISTRY_TABLE QueryTable[2];
    UNICODE_STRING ImagePath;
-   HANDLE KeyHandle;
    NTSTATUS Status;
    ULONG Type;
    PDEVICE_NODE DeviceNode;
@@ -1026,48 +1004,31 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
    RtlInitUnicodeString(&ImagePath, NULL);
 
    /*
-    * Open service registry key
-    */
-   Status = RtlpGetRegistryHandle(RTL_REGISTRY_ABSOLUTE,
-      DriverServiceName->Buffer, FALSE, &KeyHandle);
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("RtlpGetRegistryHandle() failed (Status %x)\n", Status);
-      return Status;
-   }
-
-   /*
     * Get service type
     */
    RtlZeroMemory(&QueryTable, sizeof(QueryTable));
    QueryTable[0].Name = L"Type";
    QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
    QueryTable[0].EntryContext = &Type;
-   Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE, (PWSTR)KeyHandle,
-      QueryTable, NULL, NULL);
+   Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
+      DriverServiceName->Buffer, QueryTable, NULL, NULL);
    if (!NT_SUCCESS(Status))
    {
       DPRINT("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
       RtlFreeUnicodeString(&ImagePath);
-      NtClose(KeyHandle);
       return Status;
    }
 
    /*
     * Get module path
     */
-   Status = IopGetDriverNameFromKeyNode(&ImagePath, KeyHandle);
+   Status = IopGetDriverNameFromServiceKey(RTL_REGISTRY_ABSOLUTE,
+      DriverServiceName->Buffer, &ImagePath);
    if (!NT_SUCCESS(Status))
    {
       DPRINT("IopGetDriverNameFromKeyNode() failed (Status %x)\n", Status);
-      NtClose(KeyHandle);
       return Status;
    }
-
-   /*
-    * Close service registry key
-    */
-   NtClose(KeyHandle);
 
    DPRINT("FullImagePath: '%S'\n", ImagePath.Buffer);
    DPRINT("Type: %lx\n", Type);

@@ -1,4 +1,4 @@
-/* $Id: pnproot.c,v 1.16 2003/09/25 18:29:44 navaraf Exp $
+/* $Id: pnproot.c,v 1.17 2003/10/16 12:50:30 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -14,7 +14,6 @@
 #include <ddk/ntddk.h>
 #include <reactos/bugcodes.h>
 #include <internal/io.h>
-#include <internal/registry.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -382,7 +381,6 @@ PnpRootFdoReadDeviceInfo(
   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
   PUNICODE_STRING DeviceDesc;
   WCHAR KeyName[MAX_PATH];
-  HANDLE KeyHandle;
   NTSTATUS Status;
 
   DPRINT("Called\n");
@@ -391,25 +389,13 @@ PnpRootFdoReadDeviceInfo(
 
   DeviceDesc = &Device->DeviceDescription;
 
-  wcscpy(KeyName, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
-  wcscat(KeyName, ENUM_NAME_ROOT);
+  wcscpy(KeyName, ENUM_NAME_ROOT);
   wcscat(KeyName, L"\\");
   wcscat(KeyName, Device->ServiceName.Buffer);
   wcscat(KeyName, L"\\");
   wcscat(KeyName, Device->InstanceID.Buffer);
 
   DPRINT("KeyName %S\n", KeyName);
-
-  Status = RtlpGetRegistryHandle(
-    RTL_REGISTRY_ABSOLUTE,
-	  KeyName,
-		FALSE,
-		&KeyHandle);
-  if (!NT_SUCCESS(Status))
-  {
-    DPRINT("RtlpGetRegistryHandle() failed (Status %x)\n", Status);
-    return Status;
-  }
 
   RtlZeroMemory(QueryTable, sizeof(QueryTable));
 
@@ -420,13 +406,11 @@ PnpRootFdoReadDeviceInfo(
   QueryTable[0].EntryContext = DeviceDesc;
 
   Status = RtlQueryRegistryValues(
-    RTL_REGISTRY_HANDLE,
-	 	(PWSTR)KeyHandle,
-	 	QueryTable,
-	 	NULL,
-	 	NULL);
-
-  NtClose(KeyHandle);
+    RTL_REGISTRY_ENUM,
+    KeyName,
+    QueryTable,
+    NULL,
+    NULL);
 
   DPRINT("RtlQueryRegistryValues() returned status %x\n", Status);
 
