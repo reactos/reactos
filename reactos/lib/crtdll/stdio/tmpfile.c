@@ -13,8 +13,10 @@
 #include <libc/file.h>
 #include <share.h>
 
+#if 0
 #ifndef __dj_include_stdio_h_
 #define _name_to_remove _tmpfname
+#endif
 #endif
 
 FILE *	__alloc_file(void);

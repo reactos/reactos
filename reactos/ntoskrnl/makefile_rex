@@ -110,7 +110,11 @@ utils/export/export$(EXE_POSTFIX): utils/export/export.c
 	$(NATIVE_CC) -g utils/export/export.c -o utils/export/export$(EXE_POSTFIX)
 
 ke/exports.o: exports.lst utils/export/export$(EXE_POSTFIX)
+ifeq ($(HOST),mingw32-windows)
+	.\\utils\\export\\export$(EXE_POSTFIX) < exports.lst > ke\\exports.c
+else
 	utils/export/export$(EXE_POSTFIX) < exports.lst > ke/exports.c
+endif
 	$(CC) $(CFLAGS) -c ke/exports.c -o ke/exports.o
 
 ntoskrnl.exe: $(OBJECTS) ntoskrnl.def
@@ -120,10 +124,10 @@ ntoskrnl.exe: $(OBJECTS) ntoskrnl.def
 	$(CC) -specs=../specs -mdll -o junk.tmp -Wl,--defsym,_end=end \
 	      -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext \
 	      -Wl,--base-file,base.tmp ntoskrnl.o
-	$(RM) junk.tmp
+	- $(RM) junk.tmp
 	$(DLLTOOL) --dllname ntoskrnl.exe --base-file base.tmp \
 	           --output-exp temp.exp --def ntoskrnl.def
-	$(RM) base.tmp
+	- $(RM) base.tmp
 	$(CC) -specs=../specs -mdll -o ntoskrnl.exe ntoskrnl.o \
 	      -Wl,--image-base,0xc0000000 \
 	      -Wl,--file-alignment,0x1000 \
@@ -131,7 +135,7 @@ ntoskrnl.exe: $(OBJECTS) ntoskrnl.def
 	      -Wl,--defsym,_end=end \
 	      -Wl,--defsym,_edata=__data_end__ \
 	      -Wl,--defsym,_etext=etext -Wl,temp.exp
-	$(RM) temp.exp
+	- $(RM) temp.exp
 	$(NM) --numeric-sort ntoskrnl.exe > ntoskrnl.sym
 	
 dummy:

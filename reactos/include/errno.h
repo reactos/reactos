@@ -18,9 +18,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.1 $
- * $Author: ariadne $
- * $Date: 1999/02/25 22:51:47 $
+ * $Revision: 1.1.2.1 $
+ * $Author: rex $
+ * $Date: 1999/02/27 00:30:07 $
  *
  */
 
@@ -96,10 +96,10 @@ extern "C" {
  * sys_errlist.
  */
 int*	_errno(void);
-#define	errno		(*_errno(void))
+#define	errno		(*_errno())
 
 int*	__doserrno(void);
-#define	_doserrno	(*__doserrno(void))
+#define	_doserrno	(*__doserrno())
 
 #if	__MSVCRT__
 /* One of the MSVCRTxx libraries */

@@ -23,7 +23,7 @@ wchar_t * ___wcstok = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
-wchar_t* wcsdup(wchar_t* src)
+wchar_t* wcsdup(const wchar_t* src)
 {
    wchar_t* dest;
    
@@ -54,7 +54,7 @@ wcschr(const wchar_t *str, wchar_t ch)
     {
       if ((*str) == ch)
         {
-          return str;
+          return (wchar_t *) str;
         }
       str++;
     }

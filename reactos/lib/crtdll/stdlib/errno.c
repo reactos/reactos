@@ -1,13 +1,18 @@
-/* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 #include <errno.h>
 
 #undef errno
 int errno;
+#undef _doserrno
 int _doserrno;
 
 
-int _errno(void)
+int *_errno(void)
 {
-	return errno;
+	return &errno;
+}
+
+int *__doserrno(void)
+{
+	return &_doserrno;
 }
 

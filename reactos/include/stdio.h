@@ -22,9 +22,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.4 $
- * $Author: ariadne $
- * $Date: 1999/02/21 13:29:56 $
+ * $Revision: 1.4.2.1 $
+ * $Author: rex $
+ * $Date: 1999/02/27 00:30:07 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
@@ -295,7 +295,7 @@ void	rewind	(FILE* fileRewind);
 typedef long	fpos_t;
 
 int	fgetpos	(FILE* fileGetPosition, fpos_t* pfpos);
-int	fsetpos (FILE* fileSetPosition, fpos_t* pfpos);
+int	fsetpos (FILE* fileSetPosition, const fpos_t* pfpos);
 
 
 /*

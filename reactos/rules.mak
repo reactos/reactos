@@ -3,7 +3,9 @@
 #
 .EXPORT_ALL_VARIABLES:
 
+ifeq ($(HOST),mingw32-linux)
 TOPDIR := $(shell if [ "$$PWD" != "" ]; then echo $$PWD; else pwd; fi)
+endif
 
 #
 # Choose various options
@@ -19,10 +21,15 @@ KM_SPECS = $(TOPDIR)/specs
 endif
 
 ifeq ($(HOST),mingw32-windows)
+
 NASM_FORMAT = win32
 PREFIX = 
 EXE_POSTFIX = .exe
 CP = copy
+DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
+NASM_CMD = nasm
+RM = DELETE
+KM_SPECS = $(TOPDIR)/specs
 endif
 
 #

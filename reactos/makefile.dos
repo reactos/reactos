@@ -7,15 +7,20 @@
 #
 #HOST = djgpp-linux
 #HOST = mingw32-linux
-HOST = djgpp-msdos
-#HOST = mingw32-windows
+#HOST = djgpp-msdos
+HOST = mingw32-windows
+
+ifeq ($(HOST),mingw32-windows)
+TOPDIR := /TEMP/M32/REACTOS
+endif
 
 include rules.mak
 
 #
 # Required to run the system
 #
-COMPONENTS = iface_native ntoskrnl kernel32 ntdll crtdll mingw32
+COMPONENTS = iface_native ntoskrnl kernel32 ntdll 
+# crtdll mingw32
 
 #
 # Select the server(s) you want to build
@@ -36,27 +41,33 @@ KERNEL_SERVICES = parallel keyboard blues null mouse serial sound ide test sdisk
 APPS = hello shell
 
 all: $(COMPONENTS) $(LOADERS) $(KERNEL_SERVICES) $(APPS)
+.PHONY: all
 
-clean: dummy
-	make -C iface/native clean
+clean: $(COMPONENTS:%=%_clean) $(LOADERS:%=%_clean) \
+       $(KERNEL_SERVICES:%=%_clean) $(APPS:%=%_clean)
+.PHONY: clean
 
 #
 # Applications
 #
-hello: dummy
-	make -C apps/hello
+$(APPS): %:
+	make -C apps/$*
 
-cmd: dummy
-	make -C apps/cmd
+$(APPS:%=%_clean): %_clean:
+	make -C apps/$* clean
 
-shell: dummy
-	make -C apps/shell
+.PHONY: $(APPS:%=%) $(APPS:%=%_clean)
 
 #
 # Interfaces
 #
-iface_native: dummy
+iface_native:
 	make -C iface/native
+
+iface_native_clean:
+	make -C iface/native clean
+
+.PHONY: iface_native iface_native_clean
 
 #
 # Device driver rules

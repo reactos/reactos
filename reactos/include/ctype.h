@@ -18,9 +18,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.1 $
- * $Author: ariadne $
- * $Date: 1999/02/21 17:43:45 $
+ * $Revision: 1.1.2.1 $
+ * $Author: rex $
+ * $Date: 1999/02/27 00:30:07 $
  *
  */
 #ifndef _LINUX_CTYPE_H
@@ -50,6 +50,18 @@
 
 #define	_ALPHA		0x0103
 
+/* from DJGPP, see appropriate licence */
+#define __dj_ISALNUM 	0x0001
+#define __dj_ISALPHA	0x0002
+#define __dj_ISCNTRL	0x0004
+#define __dj_ISDIGIT	0x0008
+#define __dj_ISGRAPH	0x0010
+#define __dj_ISLOWER	0x0020
+#define __dj_ISPRINT	0x0040
+#define __dj_ISPUNCT	0x0080
+#define __dj_ISSPACE	0x0100
+#define __dj_ISUPPER	0x0200
+#define __dj_ISXDIGIT	0x0400
 
 #ifdef __cplusplus
 extern "C" {

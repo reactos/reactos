@@ -1,12 +1,11 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 #include <stdlib.h>
-#include <libc/unconst.h>
+// #include <libc/unconst.h>
 
 void *
-bsearch(const void *key, const void *base0, size_t nelem,
+bsearch(const void *key, const void *base, size_t nelem,
 	size_t size, int (*cmp)(const void *ck, const void *ce))
 {
-  char *base = unconst(base0, char *);
   int lim, cmpval;
   void *p;
 
