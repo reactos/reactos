@@ -119,10 +119,15 @@ NotifyArea::~NotifyArea()
 HWND NotifyArea::Create(HWND hwndParent)
 {
 	ClientRect clnt(hwndParent);
-
+	#ifndef _ROS_
 	return Window::Create(WINDOW_CREATOR(NotifyArea), WS_EX_STATICEDGE,
 							BtnWindowClass(CLASSNAME_TRAYNOTIFY,CS_DBLCLKS), TITLE_TRAYNOTIFY, WS_CHILD|WS_VISIBLE,
 							clnt.right-(NOTIFYAREA_WIDTH_DEF+1), 1, NOTIFYAREA_WIDTH_DEF, clnt.bottom-2, hwndParent);
+	#else
+	return Window::Create(WINDOW_CREATOR(NotifyArea), 0,
+							BtnWindowClass(CLASSNAME_TRAYNOTIFY,CS_DBLCLKS), TITLE_TRAYNOTIFY, WS_CHILD|WS_VISIBLE,
+							clnt.right-(NOTIFYAREA_WIDTH_DEF+1), 1, NOTIFYAREA_WIDTH_DEF, clnt.bottom-2, hwndParent);
+	#endif
 }
 
 LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
