@@ -246,6 +246,8 @@ typedef struct _KPCR {
 
 #ifndef __USE_W32API
 
+#ifdef MP
+
 static inline PKPCR KeGetCurrentKPCR(VOID)
 {
   ULONG value;
@@ -263,6 +265,12 @@ static inline PKPCR KeGetCurrentKPCR(VOID)
 #endif
   return((PKPCR)value);
 }
+
+#else
+
+#define KeGetCurrentKPCR(X) ((PKPCR)KPCR_BASE)
+
+#endif
 
 #endif /* __USE_W32API */
 
