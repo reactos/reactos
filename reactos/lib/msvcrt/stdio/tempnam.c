@@ -13,7 +13,7 @@ char *_tempnam(const char *dir,const char *prefix )
   else
     d = (char *)dir;
 
-  if (GetTempFileNameA(d, prefix, 0, TempFileName) == 0)
+  if (GetTempFileNameA(d, prefix, 1, TempFileName) == 0)
     {
       free(TempFileName);
       return NULL;
@@ -32,7 +32,7 @@ wchar_t *_wtempnam(const wchar_t *dir,const wchar_t *prefix)
   else 
     d = (wchar_t *)dir;
 
-  if (GetTempFileNameW(d, prefix, 0, TempFileName) == 0)
+  if (GetTempFileNameW(d, prefix, 1, TempFileName) == 0)
     {
       free(TempFileName);
       return NULL;
