@@ -21,6 +21,9 @@
 	<include>w32api/include</include>
 	<include>w32api/include/ddk</include>
 
+	<directory name="boot">
+		<xi:include href="boot/boot.xml" />
+	</directory>
 	<directory name="drivers">
 		<xi:include href="drivers/directory.xml" />
 	</directory>

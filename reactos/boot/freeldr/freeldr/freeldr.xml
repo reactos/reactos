@@ -1,0 +1,6 @@
+<module name="freeldr" type="bootloader">
+	<library>freeldr_startup</library>
+	<library>freeldr_base64k</library>
+	<library>freeldr_base</library>
+	<library>freeldr_main</library>
+</module>

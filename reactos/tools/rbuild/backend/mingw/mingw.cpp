@@ -162,22 +162,26 @@ MingwBackend::GenerateGlobalVariables ()
 {
 #ifdef WIN32
 	fprintf ( fMakefile, "host_gcc = gcc\n" );
-	fprintf ( fMakefile, "host_ar = ar\n" );
 	fprintf ( fMakefile, "host_ld = ld\n" );
+	fprintf ( fMakefile, "host_ar = ar\n" );
+	fprintf ( fMakefile, "host_objcopy = objcopy\n" );
 	fprintf ( fMakefile, "rm = del /f /q\n" );
 	fprintf ( fMakefile, "gcc = gcc\n" );
 	fprintf ( fMakefile, "ld = ld\n" );
 	fprintf ( fMakefile, "ar = ar\n" );
+	fprintf ( fMakefile, "objcopy = objcopy\n" );
 	fprintf ( fMakefile, "dlltool = dlltool\n" );
 	fprintf ( fMakefile, "windres = windres\n" );
 #else
 	fprintf ( fMakefile, "host_gcc = gcc\n" );
-	fprintf ( fMakefile, "host_ar = ar\n" );
 	fprintf ( fMakefile, "host_ld = ld\n" );
+	fprintf ( fMakefile, "host_ar = ar\n" );
+	fprintf ( fMakefile, "host_objcopy = objcopy\n" );
 	fprintf ( fMakefile, "rm = rm -f\n" );
 	fprintf ( fMakefile, "gcc = mingw32-gcc\n" );
 	fprintf ( fMakefile, "ld = mingw32-ld\n" );
 	fprintf ( fMakefile, "ar = mingw32-ar\n" );
+	fprintf ( fMakefile, "objcopy = mingw32-objcopy\n" );
 	fprintf ( fMakefile, "dlltool = mingw32-dlltool\n" );
 	fprintf ( fMakefile, "windres = mingw32-windres\n" );
 #endif
@@ -207,9 +211,12 @@ MingwBackend::GenerateAllTarget ()
 	for ( size_t i = 0; i < ProjectNode.modules.size (); i++ )
 	{
 		Module& module = *ProjectNode.modules[i];
-		fprintf ( fMakefile,
-		          " %s",
-		          FixupTargetFilename ( module.GetPath () ).c_str () );
+		if ( module.type != ObjectLibrary )
+		{
+			fprintf ( fMakefile,
+			          " %s",
+			          FixupTargetFilename ( module.GetPath () ).c_str () );
+		}
 	}
 	fprintf ( fMakefile, "\n\t\n\n" );
 }

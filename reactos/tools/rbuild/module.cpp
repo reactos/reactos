@@ -1,5 +1,3 @@
-// module.cpp
-
 #include "pch.h"
 #include <assert.h>
 
@@ -74,6 +72,8 @@ Module::~Module ()
 		delete dependencies[i];
 	for ( i = 0; i < ifs.size(); i++ )
 		delete ifs[i];
+	for ( i = 0; i < compilerFlags.size(); i++ )
+		delete compilerFlags[i];
 	for ( i = 0; i < linkerFlags.size(); i++ )
 		delete linkerFlags[i];
 }
@@ -98,6 +98,8 @@ Module::ProcessXML()
 		dependencies[i]->ProcessXML ();
 	for ( i = 0; i < ifs.size(); i++ )
 		ifs[i]->ProcessXML();
+	for ( i = 0; i < compilerFlags.size(); i++ )
+		compilerFlags[i]->ProcessXML();
 	for ( i = 0; i < linkerFlags.size(); i++ )
 		linkerFlags[i]->ProcessXML();
 }
@@ -203,6 +205,11 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 			ifs.push_back ( pIf );
 		subs_invalid = false;
 	}
+	else if ( e.name == "compilerflag" )
+	{
+		compilerFlags.push_back ( new CompilerFlag ( project, this, e ) );
+		subs_invalid = true;
+	}
 	else if ( e.name == "linkerflag" )
 	{
 		linkerFlags.push_back ( new LinkerFlag ( project, this, e ) );
@@ -230,6 +237,8 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return BuildTool;
 	if ( attribute.value == "staticlibrary" )
 		return StaticLibrary;
+	if ( attribute.value == "objectlibrary" )
+		return ObjectLibrary;
 	if ( attribute.value == "kernel" )
 		return Kernel;
 	if ( attribute.value == "kernelmodedll" )
@@ -242,6 +251,8 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return Win32DLL;
 	if ( attribute.value == "win32gui" )
 		return Win32GUI;
+	if ( attribute.value == "bootloader" )
+		return BootLoader;
 	throw InvalidAttributeValueException ( location,
 	                                       attribute.name,
 	                                       attribute.value );
@@ -256,6 +267,8 @@ Module::GetDefaultModuleExtension () const
 			return EXEPOSTFIX;
 		case StaticLibrary:
 			return ".a";
+		case ObjectLibrary:
+			return ".o";
 		case Kernel:
 		case Win32GUI:
 			return ".exe";
@@ -264,6 +277,7 @@ Module::GetDefaultModuleExtension () const
 		case Win32DLL:
 			return ".dll";
 		case KernelModeDriver:
+		case BootLoader:
 			return ".sys";
 	}
 	throw InvalidOperationException ( __FILE__,

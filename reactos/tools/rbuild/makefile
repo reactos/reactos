@@ -17,6 +17,7 @@ BACKEND_BASE_OBJECTS = \
 
 BASE_OBJECTS = \
 	$(BACKEND_BASE_OBJECTS) \
+	compilerflag.o \
 	define.o \
 	exception.o \
 	include.o \

@@ -32,6 +32,7 @@ class InvokeFile;
 class Dependency;
 class ImportLibrary;
 class If;
+class CompilerFlag;
 class LinkerFlag;
 class Property;
 
@@ -71,12 +72,14 @@ enum ModuleType
 {
 	BuildTool,
 	StaticLibrary,
+	ObjectLibrary,
 	Kernel,
 	KernelModeDLL,
 	KernelModeDriver,
 	NativeDLL,
 	Win32DLL,
-	Win32GUI
+	Win32GUI,
+	BootLoader
 };
 
 
@@ -97,6 +100,7 @@ public:
 	std::vector<Invoke*> invocations;
 	std::vector<Dependency*> dependencies;
 	std::vector<If*> ifs;
+	std::vector<CompilerFlag*> compilerFlags;
 	std::vector<LinkerFlag*> linkerFlags;
 
 	Module ( const Project& project,
@@ -274,6 +278,26 @@ public:
 	~If();
 
 	void ProcessXML();
+};
+
+
+class CompilerFlag
+{
+public:
+	const Project& project;
+	const Module* module;
+	const XMLElement& node;
+	std::string flag;
+
+	CompilerFlag ( const Project& project,
+	               const XMLElement& compilerFlagNode );
+	CompilerFlag ( const Project& project,
+	               const Module* module,
+	               const XMLElement& compilerFlagNode );
+	~CompilerFlag ();
+	void ProcessXML();
+private:
+	void Initialize();
 };
 
 

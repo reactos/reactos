@@ -145,13 +145,19 @@ MingwModuleHandler::IsGeneratedFile ( const File& file ) const
 	else
 		return false;
 }
-	
+
+string
+MingwModuleHandler::GetImportLibraryDependency ( const Module& importedModule ) const
+{
+	if ( importedModule.type == ObjectLibrary )
+		return GetObjectsMacro ( importedModule );
+	else
+		return PassThruCacheDirectory ( FixupTargetFilename ( importedModule.GetDependencyPath () ) );
+}
+
 string
 MingwModuleHandler::GetImportLibraryDependencies ( const Module& module ) const
 {
-	if ( module.libraries.size () == 0 )
-		return "";
-	
 	string dependencies ( "" );
 	for ( size_t i = 0; i < module.libraries.size (); i++ )
 	{
@@ -159,7 +165,7 @@ MingwModuleHandler::GetImportLibraryDependencies ( const Module& module ) const
 			dependencies += " ";
 		const Module* importedModule = module.project.LocateModule ( module.libraries[i]->name );
 		assert ( importedModule != NULL );
-		dependencies += PassThruCacheDirectory ( FixupTargetFilename ( importedModule->GetDependencyPath () ) ).c_str ();
+		dependencies += GetImportLibraryDependency ( *importedModule );
 	}
 	return dependencies;
 }
@@ -379,6 +385,20 @@ MingwModuleHandler::GenerateGccIncludeParameters ( const Module& module ) const
 
 
 string
+MingwModuleHandler::GenerateCompilerParametersFromVector ( const vector<CompilerFlag*>& compilerFlags ) const
+{
+	string parameters;
+	for ( size_t i = 0; i < compilerFlags.size (); i++ )
+	{
+		CompilerFlag& compilerFlag = *compilerFlags[i];
+		if ( parameters.length () > 0 )
+			parameters += " ";
+		parameters += compilerFlag.flag;
+	}
+	return parameters;
+}
+
+string
 MingwModuleHandler::GenerateLinkerParametersFromVector ( const vector<LinkerFlag*>& linkerFlags ) const
 {
 	string parameters;
@@ -402,7 +422,8 @@ void
 MingwModuleHandler::GenerateMacro ( const char* assignmentOperation,
                                     const string& macro,
                                     const vector<Include*>& includes,
-                                    const vector<Define*>& defines ) const
+                                    const vector<Define*>& defines,
+                                    const vector<CompilerFlag*>* compilerFlags ) const
 {
 	size_t i;
 
@@ -411,6 +432,19 @@ MingwModuleHandler::GenerateMacro ( const char* assignmentOperation,
 		"%s %s",
 		macro.c_str(),
 		assignmentOperation );
+	
+	if ( compilerFlags != NULL )
+	{
+		string compilerParameters = GenerateCompilerParametersFromVector ( *compilerFlags );
+		if ( compilerParameters.size () > 0 )
+		{
+			fprintf (
+				fMakefile,
+				" %s",
+				compilerParameters.c_str () );
+		}
+	}
+
 	for ( i = 0; i < includes.size(); i++ )
 	{
 		fprintf (
@@ -440,6 +474,7 @@ MingwModuleHandler::GenerateMacros (
 	const vector<File*>& files,
 	const vector<Include*>& includes,
 	const vector<Define*>& defines,
+	const vector<CompilerFlag*>* compilerFlags,
 	const vector<LinkerFlag*>* linkerFlags,
 	const vector<If*>& ifs,
 	const string& cflags_macro,
@@ -455,11 +490,13 @@ MingwModuleHandler::GenerateMacros (
 		GenerateMacro ( assignmentOperation,
 		                cflags_macro,
 		                includes,
-		                defines );
+		                defines,
+		                compilerFlags );
 		GenerateMacro ( assignmentOperation,
 		                windresflags_macro,
 		                includes,
-		                defines );
+		                defines,
+		                compilerFlags );
 	}
 	
 	if ( linkerFlags != NULL )
@@ -527,6 +564,7 @@ MingwModuleHandler::GenerateMacros (
 				rIf.includes,
 				rIf.defines,
 				NULL,
+				NULL,
 				rIf.ifs,
 				cflags_macro,
 				nasmflags_macro,
@@ -554,6 +592,7 @@ MingwModuleHandler::GenerateMacros (
 		module.files,
 		module.includes,
 		module.defines,
+		&module.compilerFlags,
 		&module.linkerFlags,
 		module.ifs,
 		cflags_macro,
@@ -1225,6 +1264,7 @@ MingwBuildToolModuleHandler::GenerateBuildToolModuleTarget ( const Module& modul
 	          archiveFilename.c_str () );
 }
 
+
 static MingwKernelModuleHandler kernelmodule_handler;
 
 MingwKernelModuleHandler::MingwKernelModuleHandler ()
@@ -1313,6 +1353,28 @@ MingwStaticLibraryModuleHandler::Process ( const Module& module )
 
 void
 MingwStaticLibraryModuleHandler::GenerateStaticLibraryModuleTarget ( const Module& module )
+{
+	GenerateMacrosAndTargetsTarget ( module );
+}
+
+
+static MingwObjectLibraryModuleHandler objectlibrary_handler;
+
+MingwObjectLibraryModuleHandler::MingwObjectLibraryModuleHandler ()
+	: MingwModuleHandler ( ObjectLibrary )
+{
+}
+
+void
+MingwObjectLibraryModuleHandler::Process ( const Module& module )
+{
+	GeneratePreconditionDependencies ( module );
+	GenerateObjectLibraryModuleTarget ( module );
+	GenerateInvocations ( module );
+}
+
+void
+MingwObjectLibraryModuleHandler::GenerateObjectLibraryModuleTarget ( const Module& module )
 {
 	GenerateMacrosAndTargetsTarget ( module );
 }
@@ -1606,4 +1668,53 @@ MingwWin32GUIModuleHandler::GenerateWin32GUIModuleTarget ( const Module& module 
 		fprintf ( fMakefile, "%s:\n\n",
 		          target.c_str ());
 	}
+}
+
+
+static MingwBootLoaderModuleHandler bootloadermodule_handler;
+
+MingwBootLoaderModuleHandler::MingwBootLoaderModuleHandler ()
+	: MingwModuleHandler ( BootLoader )
+{
+}
+
+void
+MingwBootLoaderModuleHandler::Process ( const Module& module )
+{
+	GeneratePreconditionDependencies ( module );
+	GenerateBootLoaderModuleTarget ( module );
+	GenerateInvocations ( module );
+}
+
+void
+MingwBootLoaderModuleHandler::GenerateBootLoaderModuleTarget ( const Module& module )
+{
+	static string ros_junk ( "$(ROS_TEMPORARY)" );
+	string targetName ( module.GetTargetName () );
+	string target ( FixupTargetFilename (module.GetPath ()) );
+	string workingDirectory = GetWorkingDirectory ();
+	string junk_tmp = ros_junk + module.name + ".junk.tmp";
+	string objectsMacro = GetObjectsMacro ( module );
+	string importLibraryDependencies = GetImportLibraryDependencies ( module );
+
+	GenerateMacrosAndTargetsTarget ( module );
+
+	fprintf ( fMakefile, "%s: %s %s\n",
+	          target.c_str (),
+	          objectsMacro.c_str (),
+	          importLibraryDependencies.c_str () );
+
+	fprintf ( fMakefile,
+	          "\t${ld} %s -N -Ttext=0x8000 -o %s %s %s\n",
+	          GetLinkerMacro ( module ).c_str (),
+	          junk_tmp.c_str (),
+	          objectsMacro.c_str (),
+	          importLibraryDependencies.c_str () );
+	fprintf ( fMakefile,
+	          "\t${objcopy} -O binary %s %s\n",
+	          junk_tmp.c_str (),
+	          target.c_str () );
+	fprintf ( fMakefile,
+	          "\t${rm} %s\n",
+	          junk_tmp.c_str () );
 }

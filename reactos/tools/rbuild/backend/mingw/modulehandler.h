@@ -29,6 +29,7 @@ protected:
 	std::string GetActualSourceFilename ( const std::string& filename ) const;
 	std::string GetModuleArchiveFilename ( const Module& module ) const;
 	bool IsGeneratedFile ( const File& file ) const;
+	std::string GetImportLibraryDependency ( const Module& importedModule ) const;
 	std::string GetImportLibraryDependencies ( const Module& module ) const;
 	std::string GetModuleDependencies ( const Module& module ) const;
 	std::string GetAllDependencies ( const Module& module ) const;
@@ -65,16 +66,19 @@ private:
 	std::string GenerateGccDefineParametersFromVector ( const std::vector<Define*>& defines ) const;
 	std::string GenerateGccDefineParameters ( const Module& module ) const;
 	std::string GenerateGccIncludeParametersFromVector ( const std::vector<Include*>& includes ) const;
+	std::string GenerateCompilerParametersFromVector ( const std::vector<CompilerFlag*>& compilerFlags ) const;
 	std::string GenerateLinkerParametersFromVector ( const std::vector<LinkerFlag*>& linkerFlags ) const;
 	std::string GenerateLinkerParameters ( const Module& module ) const;
 	void GenerateMacro ( const char* assignmentOperation,
 	                     const std::string& macro,
 	                     const std::vector<Include*>& includes,
-	                     const std::vector<Define*>& defines ) const;
+	                     const std::vector<Define*>& defines,
+	                     const std::vector<CompilerFlag*>* compilerFlags ) const;
 	void GenerateMacros ( const char* op,
 	                      const std::vector<File*>& files,
 	                      const std::vector<Include*>& includes,
 	                      const std::vector<Define*>& defines,
+	                      const std::vector<CompilerFlag*>* compilerFlags,
 	                      const std::vector<LinkerFlag*>* linkerFlags,
 	                      const std::vector<If*>& ifs,
 	                      const std::string& cflags_macro,
@@ -170,6 +174,16 @@ private:
 };
 
 
+class MingwObjectLibraryModuleHandler : public MingwModuleHandler
+{
+public:
+	MingwObjectLibraryModuleHandler ();
+	virtual void Process ( const Module& module );
+private:
+	void GenerateObjectLibraryModuleTarget ( const Module& module );
+};
+
+
 class MingwKernelModeDLLModuleHandler : public MingwModuleHandler
 {
 public:
@@ -218,6 +232,16 @@ public:
 	virtual void Process ( const Module& module );
 private:
 	void GenerateWin32GUIModuleTarget ( const Module& module );
+};
+
+
+class MingwBootLoaderModuleHandler : public MingwModuleHandler
+{
+public:
+	MingwBootLoaderModuleHandler ();
+	virtual void Process ( const Module& module );
+private:
+	void GenerateBootLoaderModuleTarget ( const Module& module );
 };
 
 #endif /* MINGW_MODULEHANDLER_H */
