@@ -16,11 +16,48 @@
 #include <internal/mmhal.h>
 #include <internal/hal/io.h>
 
+//#define BOCHS_DEBUGGING 1
+//#define SERIAL_DEBUGGING
+#define SERIAL_PORT 0x03f8
+#define SERIAL_BAUD_RATE 19200
+#define SERIAL_LINE_CONTROL (SR_LCR_CS8 | SR_LCR_ST1 | SR_LCR_PNO)
+//#define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS ******************************************************************/
 
+#ifdef BOCHS_DEBUGGING
 #define BOCHS_LOGGER_PORT (0x3ed)
+#endif
+
+#ifdef SERIAL_DEBUGGING
+#define   SER_RBR   SERIAL_PORT + 0
+#define   SER_THR   SERIAL_PORT + 0
+#define   SER_DLL   SERIAL_PORT + 0
+#define   SER_IER   SERIAL_PORT + 1
+#define   SER_DLM   SERIAL_PORT + 1
+#define   SER_IIR   SERIAL_PORT + 2
+#define   SER_LCR   SERIAL_PORT + 3
+#define     SR_LCR_CS5 0x00
+#define     SR_LCR_CS6 0x01
+#define     SR_LCR_CS7 0x02
+#define     SR_LCR_CS8 0x03
+#define     SR_LCR_ST1 0x00
+#define     SR_LCR_ST2 0x04
+#define     SR_LCR_PNO 0x00
+#define     SR_LCR_POD 0x08
+#define     SR_LCR_PEV 0x18
+#define     SR_LCR_PMK 0x28
+#define     SR_LCR_PSP 0x38
+#define     SR_LCR_BRK 0x40
+#define     SR_LCR_DLAB 0x80
+#define   SER_MCR   SERIAL_PORT + 4
+#define     SR_MCR_DTR 0x01
+#define     SR_MCR_RTS 0x02
+#define   SER_LSR   SERIAL_PORT + 5
+#define     SR_LSR_TBE 0x20
+#define   SER_MSR   SERIAL_PORT + 6
+#endif
 
 /*
  * PURPOSE: Current cursor position
@@ -132,8 +169,16 @@ static void putchar(char c)
    int offset;
    int i;
    
+#ifdef BOCHS_DEBUGGING
    outb_p(BOCHS_LOGGER_PORT,c);
-   
+#endif
+
+#ifdef SERIAL_DEBUGGING
+   while ((inb_p(SER_LSR) & SR_LSR_TBE) == 0)
+     ;
+   outb_p(SER_THR, c);
+#endif
+
    switch(c)
      {
       case '\n':
@@ -288,6 +333,17 @@ void HalInitConsole(boot_param* bp)
  *         bp = Parameters setup by the boot loader
  */
 {
+
+#ifdef SERIAL_DEBUGGING
+   /*  turn on DTR and RTS  */
+   outb_p(SER_MCR, SR_MCR_DTR | SR_MCR_RTS);
+   /*  set baud rate, line control  */
+   outb_p(SER_LCR, SERIAL_LINE_CONTROL | SR_LCR_DLAB);
+   outb_p(SER_DLL, (115200 / SERIAL_BAUD_RATE) & 0xff);
+   outb_p(SER_DLM, ((115200 / SERIAL_BAUD_RATE) >> 8) & 0xff);
+   outb_p(SER_LCR, SERIAL_LINE_CONTROL);
+#endif
+
         cursorx=bp->cursorx;
         cursory=bp->cursory;
 }
