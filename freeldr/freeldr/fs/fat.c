@@ -107,7 +107,7 @@ BOOL FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector)
 
 	DbgPrint((DPRINT_FILESYSTEM, "Dumping boot sector:\n"));
 
-	if (FatFileSystemType == FAT32)
+	if (FatType == FAT32)
 	{
 		DbgPrint((DPRINT_FILESYSTEM, "sizeof(FAT32_BOOTSECTOR) = 0x%x.\n", sizeof(FAT32_BOOTSECTOR)));
 
