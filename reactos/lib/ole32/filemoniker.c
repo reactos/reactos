@@ -1333,16 +1333,6 @@ HRESULT WINAPI FileMonikerROTDataImpl_GetComparaisonData(IROTData* iface,
 }
 
 /******************************************************************************
- *        CreateFileMoniker (OLE2.28)
- ******************************************************************************/
-HRESULT WINAPI CreateFileMoniker16(LPCOLESTR16 lpszPathName,LPMONIKER* ppmk)
-{
-
-    FIXME("(%s,%p),stub!\n",lpszPathName,ppmk);
-    return E_NOTIMPL;
-}
-
-/******************************************************************************
  *        CreateFileMoniker (OLE32.@)
  ******************************************************************************/
 HRESULT WINAPI CreateFileMoniker(LPCOLESTR lpszPathName, LPMONIKER * ppmk)

@@ -25,6 +25,10 @@
 #include "winbase.h"
 #include "objbase.h"
 
+typedef CHAR OLECHAR16;
+typedef LPSTR LPOLESTR16;
+typedef LPCSTR LPCOLESTR16;
+
 /***********************************************************************
  * IMalloc16 interface
  */

@@ -46,6 +46,7 @@
 #include "wine/wingdi16.h"
 #include "wine/winuser16.h"
 #include "ole32_main.h"
+#include "ifs.h"
 
 #include "wine/debug.h"
 
@@ -119,4 +120,25 @@ HGLOBAL16 WINAPI OleMetaFilePictFromIconAndLabel16(
     mf->yExt = 20; /* dito */
     mf->hMF = CloseMetaFile16(HDC_16(hdc));
     return hmf;
+}
+
+
+/******************************************************************************
+ *        CreateItemMoniker	(OLE2.27)
+ */
+HRESULT WINAPI CreateItemMoniker16(LPCOLESTR16 lpszDelim,LPCOLESTR16 lpszItem,LPMONIKER* ppmk)
+{
+    FIXME("(%s,%p),stub!\n",lpszDelim,ppmk);
+    *ppmk = NULL;
+    return E_NOTIMPL;
+}
+
+
+/******************************************************************************
+ *        CreateFileMoniker (OLE2.28)
+ */
+HRESULT WINAPI CreateFileMoniker16(LPCOLESTR16 lpszPathName,LPMONIKER* ppmk)
+{
+    FIXME("(%s,%p),stub!\n",lpszPathName,ppmk);
+    return E_NOTIMPL;
 }

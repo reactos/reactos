@@ -5803,7 +5803,8 @@ HRESULT WINAPI StgOpenStorageOnILockBytes(
  *
  *
  */
-HRESULT WINAPI StgSetTimes(OLECHAR const *str, FILETIME const *a, FILETIME const *b, FILETIME const *c )
+HRESULT WINAPI StgSetTimes(OLECHAR const *str, FILETIME const *a,
+                           FILETIME const *b, FILETIME const *c )
 {
   FIXME("(%s, %p, %p, %p),stub!\n", debugstr_w(str), a, b, c);
   return S_OK;
@@ -6855,6 +6856,7 @@ HRESULT OLECONVERT_CreateCompObjStream(LPSTORAGE pStorage, LPCSTR strOleTypeName
     HRESULT hStorageRes, hRes = S_OK;
     OLECONVERT_ISTORAGE_COMPOBJ IStorageCompObj;
     WCHAR wstrStreamName[] = {1,'C', 'o', 'm', 'p', 'O', 'b', 'j', 0};
+    WCHAR bufferW[OLESTREAM_MAX_STR_LEN];
 
     BYTE pCompObjUnknown1[] = {0x01, 0x00, 0xFE, 0xFF, 0x03, 0x0A, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF};
     BYTE pCompObjUnknown2[] = {0xF4, 0x39, 0xB2, 0x71};
@@ -6880,7 +6882,9 @@ HRESULT OLECONVERT_CreateCompObjStream(LPSTORAGE pStorage, LPCSTR strOleTypeName
         strcpy(IStorageCompObj.strProgIDName, strOleTypeName);
 
         /* Get the CLSID */
-        hRes = CLSIDFromProgID16(IStorageCompObj.strProgIDName, &(IStorageCompObj.clsid));
+        MultiByteToWideChar( CP_ACP, 0, IStorageCompObj.strProgIDName, -1,
+                             bufferW, OLESTREAM_MAX_STR_LEN );
+        hRes = CLSIDFromProgID(bufferW, &(IStorageCompObj.clsid));
 
         if(hRes == S_OK)
         {

@@ -1,27 +1,11 @@
-Index: compobj.c
-===================================================================
-RCS file: /home/wine/wine/dlls/ole32/compobj.c,v
-retrieving revision 1.86
-diff -u -r1.86 compobj.c
---- compobj.c	23 Jan 2004 01:51:34 -0000	1.86
-+++ compobj.c	23 Jan 2004 14:35:27 -0000
-@@ -565,7 +565,7 @@
- /*****************************************************************************/
- 
- HRESULT WINAPI CLSIDFromString(
--	LPCOLESTR idstr,	/* [in] string representation of GUID */
-+	LPOLESTR idstr,		/* [in] string representation of GUID */
- 	CLSID *id )		/* [out] GUID represented by above string */
- {
-     char xid[40];
 Index: ifs.h
 ===================================================================
 RCS file: /home/wine/wine/dlls/ole32/ifs.h,v
-retrieving revision 1.10
-diff -u -r1.10 ifs.h
---- ifs.h	14 Oct 2003 20:23:01 -0000	1.10
-+++ ifs.h	23 Jan 2004 14:35:33 -0000
-@@ -31,6 +31,7 @@
+retrieving revision 1.11
+diff -u -r1.11 ifs.h
+--- ifs.h	23 Jan 2004 22:51:42 -0000	1.11
++++ ifs.h	28 Jan 2004 21:32:28 -0000
+@@ -35,6 +35,7 @@
  
  typedef struct IMalloc16 IMalloc16, *LPMALLOC16;
  
@@ -29,76 +13,3 @@ diff -u -r1.10 ifs.h
  #define INTERFACE IMalloc16
  #define IMalloc16_METHODS \
      IUnknown_METHODS \
-Index: ole2.c
-===================================================================
-RCS file: /home/wine/wine/dlls/ole32/ole2.c,v
-retrieving revision 1.48
-diff -u -r1.48 ole2.c
---- ole2.c	8 Dec 2003 22:46:08 -0000	1.48
-+++ ole2.c	23 Jan 2004 14:35:37 -0000
-@@ -1419,6 +1419,7 @@
-  */
- BOOL WINAPI IsAccelerator(HACCEL hAccel, int cAccelEntries, LPMSG lpMsg, WORD* lpwCmd)
- {
-+#if 0 /* Not implemented for ReactOS */
-     /* YES, Accel16! */
-     LPACCEL16 lpAccelTbl;
-     int i;
-@@ -1485,6 +1486,9 @@
- found:
-     if(lpwCmd) *lpwCmd = lpAccelTbl[i].cmd;
-     return TRUE;
-+#else
-+    return FALSE;
-+#endif
- }
- 
- /***********************************************************************
-Index: ole2stubs.c
-===================================================================
-RCS file: /home/wine/wine/dlls/ole32/ole2stubs.c,v
-retrieving revision 1.34
-diff -u -r1.34 ole2stubs.c
---- ole2stubs.c	8 Dec 2003 22:46:08 -0000	1.34
-+++ ole2stubs.c	23 Jan 2004 14:35:37 -0000
-@@ -47,11 +47,11 @@
- /******************************************************************************
-  *              OleDuplicateData        [OLE32.@]
-  */
--HRESULT WINAPI OleDuplicateData(HANDLE hSrc, CLIPFORMAT cfFormat,
-+HANDLE WINAPI OleDuplicateData(HANDLE hSrc, CLIPFORMAT cfFormat,
- 	                          UINT uiFlags)
- {
-     FIXME("(%p,%x,%x), stub!\n", hSrc, cfFormat, uiFlags);
--    return E_NOTIMPL;
-+    return NULL;
- }
- 
- 
-Index: storage32.c
-===================================================================
-RCS file: /home/wine/wine/dlls/ole32/storage32.c,v
-retrieving revision 1.45
-diff -u -r1.45 storage32.c
---- storage32.c	23 Jan 2004 01:51:34 -0000	1.45
-+++ storage32.c	23 Jan 2004 14:35:45 -0000
-@@ -5803,7 +5803,7 @@
-  *
-  *
-  */
--HRESULT WINAPI StgSetTimes(OLECHAR *str, FILETIME *a, FILETIME *b, FILETIME *c )
-+HRESULT WINAPI StgSetTimes(OLECHAR const *str, FILETIME const *a, FILETIME const *b, FILETIME const *c )
- {
-   FIXME("(%s, %p, %p, %p),stub!\n", debugstr_w(str), a, b, c);
-   return S_OK;
-@@ -7435,8 +7435,8 @@
- /***********************************************************************
-  *		GetConvertStg (OLE32.@)
-  */
--HRESULT WINAPI GetConvertStg(LPGUID guid) {
--    FIXME("(%s), unimplemented stub!\n",debugstr_guid(guid));
-+HRESULT WINAPI GetConvertStg(IStorage *stg) {
-+    FIXME("unimplemented stub!\n");
-     return E_FAIL;
- }
- 

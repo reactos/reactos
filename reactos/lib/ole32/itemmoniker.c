@@ -958,17 +958,6 @@ HRESULT WINAPI ItemMonikerROTDataImpl_GetComparaisonData(IROTData* iface,
 }
 
 /******************************************************************************
- *        CreateItemMoniker16	[OLE2.28]
- ******************************************************************************/
-HRESULT WINAPI CreateItemMoniker16(LPCOLESTR16 lpszDelim,LPCOLESTR  lpszItem,LPMONIKER* ppmk)
-{
-
-    FIXME("(%s,%p),stub!\n",lpszDelim,ppmk);
-    *ppmk = NULL;
-    return E_NOTIMPL;
-}
-
-/******************************************************************************
  *        CreateItemMoniker	[OLE32.@]
  ******************************************************************************/
 HRESULT WINAPI CreateItemMoniker(LPCOLESTR lpszDelim,LPCOLESTR  lpszItem, LPMONIKER * ppmk)

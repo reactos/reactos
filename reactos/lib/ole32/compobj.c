@@ -51,6 +51,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
+typedef LPCSTR LPCOLESTR16;
+
 /****************************************************************************
  * This section defines variables internal to the COM module.
  *

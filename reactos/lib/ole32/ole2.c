@@ -1441,6 +1441,7 @@ BOOL WINAPI IsAccelerator(HACCEL hAccel, int cAccelEntries, LPMSG lpMsg, WORD* l
     if (CopyAcceleratorTableW(hAccel, lpAccelTbl, cAccelEntries) != cAccelEntries)
     {
 	WARN_(accel)("CopyAcceleratorTableW failed\n");
+	HeapFree(GetProcessHeap(), 0, lpAccelTbl);
 	return FALSE;
     }
 

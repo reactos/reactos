@@ -24,7 +24,7 @@
 24 stub OLESAVETOSTREAM
 25 stub OLELOADFROMSTREAM
 26 stub CREATEBINDCTX
-27 stub CREATEITEMMONIKER
+27 pascal CreateItemMoniker(str str ptr) CreateItemMoniker16
 28 pascal CreateFileMoniker(str ptr) CreateFileMoniker16
 29 stub CREATEGENERICCOMPOSITE
 30 pascal GetRunningObjectTable(long ptr) GetRunningObjectTable16

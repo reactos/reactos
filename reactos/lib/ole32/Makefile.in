@@ -6,7 +6,7 @@ VPATH     = @srcdir@
 MODULE    = ole32.dll
 IMPORTS   = advapi32 user32 gdi32 rpcrt4 kernel32 ntdll
 ALTNAMES  = ole2.dll ole2nls.dll ole2conv.dll ole2prox.dll ole2thk.dll storage.dll compobj.dll
-EXTRALIBS = $(LIBUUID)
+EXTRALIBS = -luuid
 
 SPEC_SRCS16 = $(ALTNAMES:.dll=.spec)
 
