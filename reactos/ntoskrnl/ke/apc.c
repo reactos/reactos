@@ -321,6 +321,10 @@ KeInsertQueueApc (PKAPC	Apc,
 	  "SystemArgument2 %x)\n",Apc,SystemArgument1,
 	  SystemArgument2);
 
+   /* We don't support queuing APCs to the attached environment (yet),
+      see KiSwapApcEnvironment() */
+   assert(OriginalApcEnvironment == Apc->ApcStateIndex);
+
    Apc->SystemArgument1 = SystemArgument1;
    Apc->SystemArgument2 = SystemArgument2;
 
@@ -348,15 +352,15 @@ KeInsertQueueApc (PKAPC	Apc,
 
    if (Apc->ApcMode == KernelMode)
      {
-	InsertTailList(&TargetThread->ApcState.ApcListHead[0], 
+	InsertTailList(&TargetThread->ApcStatePointer[(int) Apc->ApcStateIndex]->ApcListHead[0], 
 		       &Apc->ApcListEntry);
-	TargetThread->ApcState.KernelApcPending++;
+	TargetThread->ApcStatePointer[(int) Apc->ApcStateIndex]->KernelApcPending++;
      }
    else
      {
-	InsertTailList(&TargetThread->ApcState.ApcListHead[1],
+	InsertTailList(&TargetThread->ApcStatePointer[(int) Apc->ApcStateIndex]->ApcListHead[1],
 		       &Apc->ApcListEntry);
-	TargetThread->ApcState.UserApcPending++;
+	TargetThread->ApcStatePointer[(int) Apc->ApcStateIndex]->UserApcPending++;
      }
    Apc->Inserted = TRUE;
 
@@ -445,20 +449,20 @@ KeRemoveQueueApc (PKAPC Apc)
    KiAcquireSpinLock(&PiApcLock);
    if (Apc->Inserted == FALSE)
      {
-	KiReleaseSpinLock(&PiApcLock);
-  KeLowerIrql(oldIrql);
-	return(FALSE);
+        KiReleaseSpinLock(&PiApcLock);
+        KeLowerIrql(oldIrql);
+        return FALSE;
      }
 
    TargetThread = Apc->Thread;
    RemoveEntryList(&Apc->ApcListEntry);
    if (Apc->ApcMode == KernelMode)
      {
-	TargetThread->ApcState.KernelApcPending--;
+	TargetThread->ApcStatePointer[(int) Apc->ApcStateIndex]->KernelApcPending--;
      }
    else
      {
-	TargetThread->ApcState.UserApcPending--;
+	TargetThread->ApcStatePointer[(int) Apc->ApcStateIndex]->UserApcPending--;
      }
    Apc->Inserted = FALSE;
 
@@ -607,6 +611,20 @@ PiInitApcManagement(VOID)
    KeInitializeSpinLock(&PiApcLock);
 }
 
+static VOID FASTCALL
+RepairList(PLIST_ENTRY Original, PLIST_ENTRY Copy, int Mode)
+{
+  if (IsListEmpty(&Original[Mode]))
+    {
+      InitializeListHead(&Copy[Mode]);
+    }
+  else
+    {
+      Copy[Mode].Flink->Blink = &Copy[Mode];
+      Copy[Mode].Blink->Flink = &Copy[Mode];
+    }
+}
+
 
 VOID FASTCALL
 KiSwapApcEnvironment(
@@ -638,6 +656,11 @@ KiSwapApcEnvironment(
     
     /* restore backup of original environment */
     Thread->ApcState = Thread->SavedApcState;
+    /* repair lists */
+    RepairList(Thread->SavedApcState.ApcListHead, Thread->ApcState.ApcListHead,
+               KernelMode);
+    RepairList(Thread->SavedApcState.ApcListHead, Thread->ApcState.ApcListHead,
+               UserMode);
 
     /* update environment pointers */
     Thread->ApcStatePointer[OriginalApcEnvironment] = &Thread->ApcState;
@@ -650,6 +673,11 @@ KiSwapApcEnvironment(
   {
     /* backup original environment */
     Thread->SavedApcState = Thread->ApcState;
+    /* repair lists */
+    RepairList(Thread->ApcState.ApcListHead, Thread->SavedApcState.ApcListHead,
+               KernelMode);
+    RepairList(Thread->ApcState.ApcListHead, Thread->SavedApcState.ApcListHead,
+               UserMode);
 
     /*
     FIXME: Is it possible to target an apc to an attached environment even if the 
