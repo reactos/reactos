@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.87 2003/12/10 03:59:18 rcampbell Exp $
+/* $Id: window.c,v 1.88 2003/12/10 05:41:21 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1339,7 +1339,7 @@ OpenIcon(HWND hWnd)
     }
 
     ShowWindow(hWnd,SW_RESTORE);
-    return true;
+    return TRUE;
 }
 
 
@@ -1748,4 +1748,4 @@ ScrollWindowEx(HWND hWnd, int dx, int dy, CONST RECT *prcScroll,
 }
 
 /* EOF */
-	
+	 
