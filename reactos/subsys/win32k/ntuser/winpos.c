@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.49 2003/11/30 22:48:11 navaraf Exp $
+/* $Id: winpos.c,v 1.50 2003/12/02 19:58:54 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -96,80 +96,26 @@ NtUserGetClientOrigin(HWND hWnd, LPPOINT Point)
 }
 
 /*******************************************************************
- *         can_activate_window
- *
- * Check if we can activate the specified window.
- */
-static BOOL FASTCALL
-can_activate_window(HWND hwnd)
-{
-  LONG style;
-
-  if (! hwnd)
-    {
-      return FALSE;
-    }
-  style = NtUserGetWindowLong(hwnd, GWL_STYLE, FALSE);
-  if (! (style & WS_VISIBLE))
-    {
-      return FALSE;
-    }
-  if ((style & (WS_POPUP|WS_CHILD)) == WS_CHILD)
-    {
-      return FALSE;
-    }
-  return ! (style & WS_DISABLED);
-}
-
-/*******************************************************************
  *         WinPosActivateOtherWindow
  *
  *  Activates window other than pWnd.
  */
-void FASTCALL
+VOID FASTCALL
 WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
 {
-  HWND hwndTo;
-  HWND fg;
-
-  if ((NtUserGetWindowLong(Window->Self, GWL_STYLE, FALSE) & WS_POPUP)
-      && (hwndTo = NtUserGetWindow(Window->Self, GW_OWNER)))
-    {
-      hwndTo = NtUserGetAncestor(hwndTo, GA_ROOT);
-      if (can_activate_window(hwndTo)) goto done;
-    }
-
-  hwndTo = Window->Self;
-  for (;;)
-    {
-      if (!(hwndTo = NtUserGetWindow(hwndTo, GW_HWNDNEXT)))
-        {
-          break;
-        }
-      if (can_activate_window(hwndTo))
-        {
-          break;
-        }
-    }
-
-done:
-  fg = NtUserGetForegroundWindow();
-/*    TRACE("win = %p fg = %p\n", hwndTo, fg); */
-  if (! fg || (hwndTo == fg))
-    {
-      PWINDOW_OBJECT ToWindow = IntGetWindowObject(hwndTo);
-      if (IntSetForegroundWindow(ToWindow))
-        {
-          IntReleaseWindowObject(ToWindow);
-          return;
-        }
-      IntReleaseWindowObject(Window);
-    }
-
-  if (!IntSetActiveWindow(hwndTo))
-    {
-      IntSetActiveWindow(NULL);
-    }
+   for (;;)
+   {
+      Window = IntGetParent(Window);
+      if (!Window || IntIsDesktopWindow(Window))
+      {
+         IntSetFocusMessageQueue(NULL);
+         return;
+      }
+      if (IntSetForegroundWindow(Window))
+      {
+         return;
+      }
+   }
 }
 
 POINT STATIC FASTCALL

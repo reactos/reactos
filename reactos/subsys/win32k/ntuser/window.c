@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.149 2003/11/30 20:03:47 navaraf Exp $
+/* $Id: window.c,v 1.150 2003/12/02 19:58:54 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1512,6 +1512,14 @@ NtUserDestroyWindow(HWND Wnd)
    * be destroying.
    */
   WinPosActivateOtherWindow(Window);
+  /* FIXME: Lock */
+  if (Window->MessageQueue->ActiveWindow == Window->Self)
+    Window->MessageQueue->ActiveWindow = NULL;
+  if (Window->MessageQueue->FocusWindow == Window->Self)
+    Window->MessageQueue->FocusWindow = NULL;
+  if (Window->MessageQueue->CaptureWindow == Window->Self)
+    Window->MessageQueue->CaptureWindow = NULL;
+  /* FIXME: Unlock */
 
   /* Call hooks */
 #if 0 /* FIXME */

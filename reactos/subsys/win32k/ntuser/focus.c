@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: focus.c,v 1.2 2003/11/30 22:48:11 navaraf Exp $
+ * $Id: focus.c,v 1.3 2003/12/02 19:58:54 navaraf Exp $
  */
 
 #include <win32k/win32k.h>
@@ -144,8 +144,13 @@ IntSetForegroundWindow(PWINDOW_OBJECT Window)
    /* FIXME: Call hooks. */
 
    IntSetFocusMessageQueue(Window->MessageQueue);
-   Window->MessageQueue->ActiveWindow = hWnd;
-   Window->MessageQueue->FocusWindow = hWnd;
+/*   ExAcquireFastMutex(&Window->MessageQueue->Lock);*/
+   if (Window->MessageQueue)
+   {
+      Window->MessageQueue->ActiveWindow = hWnd;
+      Window->MessageQueue->FocusWindow = hWnd;
+   }
+/*   ExReleaseFastMutex(&Window->MessageQueue->Lock);*/
 
    IntSendDeactivateMessages(hWndPrev, hWnd);
    IntSendKillFocusMessages(hWndPrev, hWnd);
@@ -187,7 +192,9 @@ IntSetActiveWindow(PWINDOW_OBJECT Window)
 
    /* FIXME: Call hooks. */
 
+/*   ExAcquireFastMutex(&ThreadQueue->Lock);*/
    ThreadQueue->ActiveWindow = hWnd;
+/*   ExReleaseFastMutex(&ThreadQueue->Lock);*/
 
    IntSendDeactivateMessages(hWndPrev, hWnd);
    IntSendActivateMessages(hWndPrev, hWnd);
@@ -213,7 +220,9 @@ IntSetFocusWindow(PWINDOW_OBJECT Window)
       return hWndPrev;
    }
 
+/*   ExAcquireFastMutex(&ThreadQueue->Lock);*/
    ThreadQueue->FocusWindow = hWnd;
+/*   ExReleaseFastMutex(&ThreadQueue->Lock);*/
 
    IntSendKillFocusMessages(hWndPrev, hWnd);
    IntSendSetFocusMessages(hWndPrev, hWnd);
@@ -317,7 +326,9 @@ NtUserSetCapture(HWND hWnd)
    }
    hWndPrev = ThreadQueue->CaptureWindow;
    NtUserSendMessage(hWndPrev, WM_CAPTURECHANGED, 0, (LPARAM)hWnd);
+/*   ExAcquireFastMutex(&ThreadQueue->Lock);*/
    ThreadQueue->CaptureWindow = hWnd;
+/*   ExReleaseFastMutex(&ThreadQueue->Lock);*/
 
    return hWndPrev;
 }

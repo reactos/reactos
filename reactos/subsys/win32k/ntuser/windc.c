@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.39 2003/11/26 21:48:35 gvg Exp $
+/* $Id: windc.c,v 1.40 2003/12/02 19:58:54 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -439,6 +439,23 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
         }
       Flags |= DCX_INTERSECTRGN;
     }
+
+/*
+  if (ClipRegion == (HRGN)1)
+    {
+      if (!(Flags & DCX_WINDOW))
+        {
+          ClipRegion = UnsafeIntCreateRectRgnIndirect(&Window->ClientRect);
+        }
+      else
+        {
+          ClipRegion = UnsafeIntCreateRectRgnIndirect(&Window->WindowRect);
+        }
+      NtGdiOffsetRgn(ClipRegion, 
+         -Window->WindowRect.left,
+         -Window->WindowRect.top);
+    }
+*/
 
   if (NULL != ClipRegion)
     {
