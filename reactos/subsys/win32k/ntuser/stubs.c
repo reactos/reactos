@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.37 2003/11/19 12:25:03 weiden Exp $
+/* $Id: stubs.c,v 1.38 2003/11/22 11:01:28 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -82,17 +82,6 @@ NtUserBuildNameList(
 DWORD
 STDCALL
 NtUserCallHwnd(
-  DWORD Unknown0,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserCallHwndOpt(
   DWORD Unknown0,
   DWORD Unknown1)
 {

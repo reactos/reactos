@@ -121,11 +121,13 @@ NtUserCallHwndLock(
   HWND hWnd,
   DWORD Unknown1);
 
-DWORD
+#define HWNDOPT_ROUTINE_SETPROGMANWINDOW       0x4A
+#define HWNDOPT_ROUTINE_SETTASKMANWINDOW       0x4B
+HWND
 STDCALL
 NtUserCallHwndOpt(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  HWND Param,
+  DWORD Routine);
 
 DWORD
 STDCALL

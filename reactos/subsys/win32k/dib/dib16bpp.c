@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib16bpp.c,v 1.9 2003/10/06 16:25:53 gvg Exp $ */
+/* $Id: dib16bpp.c,v 1.10 2003/11/22 11:01:28 navaraf Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -278,12 +278,12 @@ DIB_16BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 		 PBRUSHOBJ Brush, PPOINTL BrushOrigin,
 		 XLATEOBJ *ColorTranslation, ULONG Rop4)
 {
-  LONG     i, j, k, sx, sy;
+  LONG     i, j, sx, sy;
   ULONG    Dest, Source, Pattern;
   PULONG   DestBits;
   BOOL     UsesSource = ((Rop4 & 0xCC0000) >> 2) != (Rop4 & 0x330000);
   BOOL     UsesPattern = ((Rop4 & 0xF00000) >> 4) != (Rop4 & 0x0F0000);  
-  LONG     RoundedRight = DestRect->right - (DestRect->right & 0x1);
+  LONG     RoundedRight = DestRect->right - ((DestRect->right - DestRect->left) & 0x1);
 
   if (Rop4 == SRCCOPY)
     {
@@ -302,11 +302,8 @@ DIB_16BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 	    Dest = *DestBits;
 	    if (UsesSource)
 	      {
-		Source = 0;
-		for (k = 0; k < 2; k++)
-		  {
-		    Source |= (DIB_GetSource(SourceSurf, SourceGDI, sx + (i - DestRect->left) + k, sy, ColorTranslation) << (k * 16));
-		  }
+		Source = DIB_GetSource(SourceSurf, SourceGDI, sx + (i - DestRect->left), sy, ColorTranslation);
+		Source |= DIB_GetSource(SourceSurf, SourceGDI, sx + (i - DestRect->left) + 1, sy, ColorTranslation) << 16;
 	      }
 	    if (UsesPattern)
 	      {

@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.26 2003/11/19 13:19:40 weiden Exp $
+/* $Id: misc.c,v 1.27 2003/11/22 11:01:28 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -275,6 +275,25 @@ NtUserCallTwoParam(
   return 0;
 }
 
+HWND
+STDCALL
+NtUserCallHwndOpt(
+  HWND Param,
+  DWORD Routine)
+{
+   switch (Routine)
+   {
+      case HWNDOPT_ROUTINE_SETPROGMANWINDOW:
+         /* FIXME */
+         break;
+
+      case HWNDOPT_ROUTINE_SETTASKMANWINDOW:
+         /* FIXME */
+         break;
+   }
+
+   return 0;
+}
 
 /*
  * @implemented
