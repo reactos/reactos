@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dpc.c,v 1.50 2004/12/24 17:06:58 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -411,7 +411,7 @@ KiQuantumEnd(VOID)
  *          Called when deleting a Driver.
  */
 {
-	KPRCB Prcb;
+	PKPRCB Prcb;
 	PKTHREAD CurrentThread;
 	KIRQL OldIrql;
 	PKPROCESS Process;
@@ -419,7 +419,7 @@ KiQuantumEnd(VOID)
 	KPRIORITY NewPriority;
 	
 	/* Lock dispatcher, get current thread */
-	Prcb = KeGetCurrentKPCR()->PrcbData;
+	Prcb = &KeGetCurrentKPCR()->PrcbData;
 	CurrentThread = KeGetCurrentThread();
 	OldIrql = KeRaiseIrqlToSynchLevel();
 	
@@ -427,8 +427,8 @@ KiQuantumEnd(VOID)
 	Process = CurrentThread->ApcState.Process;
 	
 	/* Set DPC Event if requested */
-	if (Prcb.DpcSetEventRequest) {
-		KeSetEvent(Prcb.DpcEvent, 0, 0);
+	if (Prcb->DpcSetEventRequest) {
+		KeSetEvent(Prcb->DpcEvent, 0, 0);
 	}
 	
 	/* Check if Quantum expired */
@@ -449,7 +449,7 @@ KiQuantumEnd(VOID)
 				CurrentThread->Priority = NewPriority;
 			} else {
 				/* Queue new thread if none is already */
-				if (Prcb.NextThread == NULL) {
+				if (Prcb->NextThread == NULL) {
 					/* FIXME: Schedule a New Thread, when ROS will have NT Scheduler */
 				} else {
 					/* Make the current thread non-premeptive if a new thread is queued */
