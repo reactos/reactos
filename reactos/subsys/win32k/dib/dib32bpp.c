@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib32bpp.c,v 1.30 2004/07/14 20:48:56 navaraf Exp $ */
+/* $Id: dib32bpp.c,v 1.31 2004/07/15 18:13:22 navaraf Exp $ */
 #include <w32k.h>
 
 VOID
@@ -344,7 +344,7 @@ DIB_32BPP_BitBlt(PBLTINFO BltInfo)
       }
       DestBits = (PULONG)(
          (ULONG_PTR)DestBits -
-         ((BltInfo->DestRect.right - BltInfo->DestRect.left) << 2) -
+         ((BltInfo->DestRect.right - BltInfo->DestRect.left) << 2) +
          BltInfo->DestSurface->lDelta);
    }
   
