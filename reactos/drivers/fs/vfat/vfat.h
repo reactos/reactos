@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.36 2001/10/10 22:20:48 hbirr Exp $ */
+/* $Id: vfat.h,v 1.37 2001/11/02 22:57:14 hbirr Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -98,7 +98,7 @@ typedef struct
 {
   ERESOURCE DirResource;
   ERESOURCE FatResource;
-  
+
   KSPIN_LOCK FcbListLock;
   LIST_ENTRY FcbListHead;
 
@@ -110,11 +110,14 @@ typedef struct
   int FATEntriesPerSector, FATUnit;
   ULONG BytesPerCluster;
   ULONG FatType;
+  ULONG LastAvailableCluster;
+  ULONG NumberOfClusters;
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION, VCB, *PVCB;
 
 #define FCB_CACHE_INITIALIZED   0x0001
 #define FCB_DELETE_PENDING      0x0002
 #define FCB_IS_FAT              0x0004
+#define FCB_IS_PAGE_FILE        0x0008
 
 typedef struct _VFATFCB
 {
@@ -132,6 +135,8 @@ typedef struct _VFATFCB
   ULONG Flags;
   PFILE_OBJECT FileObject;
   ULONG dirIndex;
+  ERESOURCE PagingIoResource;
+  ERESOURCE MainResource;
 } VFATFCB, *PVFATFCB;
 
 typedef struct _VFATCCB
@@ -158,45 +163,51 @@ typedef struct _VFATCCB
 
 typedef struct __DOSTIME
 {
-   WORD	Second:5; 
+   WORD	Second:5;
    WORD	Minute:6;
    WORD Hour:5;
 } DOSTIME, *PDOSTIME;
 
 typedef struct __DOSDATE
 {
-   WORD	Day:5; 
+   WORD	Day:5;
    WORD	Month:4;
    WORD Year:5;
 } DOSDATE, *PDOSDATE;
 
+#define IRPCONTEXT_CANWAIT  0x0001
+
+typedef struct
+{
+   PIRP Irp;
+   PDEVICE_OBJECT DeviceObject;
+   PDEVICE_EXTENSION DeviceExt;
+   ULONG Flags;
+   WORK_QUEUE_ITEM WorkQueueItem;
+   PIO_STACK_LOCATION Stack;
+   UCHAR MajorFunction;
+   UCHAR MinorFunction;
+   PFILE_OBJECT FileObject;
+}
+VFAT_IRP_CONTEXT, *PVFAT_IRP_CONTEXT;
+
+
 /* functions called by i/o manager : */
 NTSTATUS STDCALL
 DriverEntry(PDRIVER_OBJECT _DriverObject,PUNICODE_STRING RegistryPath);
-NTSTATUS STDCALL
-VfatDirectoryControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS STDCALL
-VfatRead(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS STDCALL
-VfatWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS STDCALL
-VfatCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS STDCALL
-VfatClose(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS STDCALL
-VfatFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS STDCALL
-VfatQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS STDCALL
-VfatSetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS STDCALL
-VfatCleanup (PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS VfatDirectoryControl (PVFAT_IRP_CONTEXT);
+NTSTATUS VfatRead (PVFAT_IRP_CONTEXT);
+NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT);
+NTSTATUS VfatCreate (PVFAT_IRP_CONTEXT);
+NTSTATUS VfatClose (PVFAT_IRP_CONTEXT);
+NTSTATUS VfatFileSystemControl (PVFAT_IRP_CONTEXT);
+NTSTATUS VfatQueryInformation (PVFAT_IRP_CONTEXT);
+NTSTATUS VfatSetInformation (PVFAT_IRP_CONTEXT);
+NTSTATUS VfatCleanup (PVFAT_IRP_CONTEXT);
 NTSTATUS STDCALL
 VfatShutdown(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS STDCALL
-VfatQueryVolumeInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS STDCALL
-VfatSetVolumeInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS VfatQueryVolumeInformation (PVFAT_IRP_CONTEXT);
+NTSTATUS VfatSetVolumeInformation (PVFAT_IRP_CONTEXT);
 
 
 NTSTATUS
@@ -235,7 +246,7 @@ NTSTATUS
 VfatReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	     PVOID Buffer, ULONG Length, ULONG ReadOffset,
              PULONG LengthRead, ULONG NoCache);
-NTSTATUS 
+NTSTATUS
 VfatWriteFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
               PVOID Buffer, ULONG Length, ULONG WriteOffset, BOOLEAN NoCache, BOOLEAN PageIo);
 NTSTATUS
@@ -272,7 +283,7 @@ wchar_t*
 vfat_movstr(wchar_t *src, ULONG dpos, ULONG spos, ULONG len);
 BOOLEAN 
 wstrcmpi(PWSTR s1, PWSTR s2);
-BOOLEAN 
+BOOLEAN
 wstrcmpjoki(PWSTR s1, PWSTR s2);
 PWCHAR  vfatGetNextPathElement (PWCHAR  pFileName);
 void  vfatWSubString (PWCHAR pTarget, const PWCHAR pSource, size_t pLength);
@@ -370,7 +381,7 @@ NTSTATUS  vfatDirFindFile (PDEVICE_EXTENSION  pVCB,
                            PVFATFCB  parentFCB,
                            PWSTR  elementName,
                            PVFATFCB * fileFCB);
-NTSTATUS  vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB, 
+NTSTATUS  vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB,
                              PVFATFCB  *pParentFCB, 
                              PVFATFCB  *pFCB, 
                              const PWSTR  pFileName);
@@ -385,4 +396,9 @@ NTSTATUS vfatMakeFCBFromDirEntry(PVCB  vcb,
 
 NTSTATUS vfatExtendSpace (PDEVICE_EXTENSION pDeviceExt, PFILE_OBJECT pFileObject, ULONG NewSize);
 
+/*  ------------------------------------------------------------- misc.c */
+NTSTATUS VfatQueueRequest(PVFAT_IRP_CONTEXT IrpContext);
+PVFAT_IRP_CONTEXT VfatAllocateIrpContext(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+VOID VfatFreeIrpContext(PVFAT_IRP_CONTEXT IrpContext);
+NTSTATUS STDCALL VfatBuildRequest (PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
