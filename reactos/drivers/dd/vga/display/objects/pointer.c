@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pointer.c,v 1.11 2002/09/25 21:21:35 dwelch Exp $
+/* $Id: pointer.c,v 1.12 2002/09/30 19:45:19 dwelch Exp $
  *
  * PROJECT:         ReactOS VGA16 display driver
  * FILE:            drivers/dd/vga/display/objects/pointer.c
@@ -79,9 +79,9 @@ VGADDI_BltPointerToVGA(ULONG StartX, ULONG StartY, ULONG SizeX,
       Src = MaskBits;
       for (i = 0; i < SizeY; i++, Video+=80, Src+=MaskPitch)
 	{
-	  SrcValue = (*Src) << (StartX % 8);
+	  SrcValue = (*Src) >> (StartX % 8);
 	  (VOID)READ_REGISTER_UCHAR(Video);
-	  WRITE_REGISTER_UCHAR(Video, PreCalcReverseByte[SrcValue]);
+	  WRITE_REGISTER_UCHAR(Video, SrcValue);
 	}
     }
 
@@ -106,15 +106,15 @@ VGADDI_BltPointerToVGA(ULONG StartX, ULONG StartY, ULONG SizeX,
 	{
 	  if ((StartX % 8) != 0)
 	    {
-	      SrcValue = (Src[0] >> (8 - (StartX % 8)));
-	      SrcValue |= (Src[1] << (StartX % 8));
+	      SrcValue = (Src[0] << (8 - (StartX % 8)));
+	      SrcValue |= (Src[1] >> (StartX % 8));
 	    }
 	  else
 	    {
 	      SrcValue = Src[0];
 	    }
 	  (VOID)READ_REGISTER_UCHAR(Video);
-	  WRITE_REGISTER_UCHAR(Video, PreCalcReverseByte[SrcValue]);
+	  WRITE_REGISTER_UCHAR(Video, SrcValue);
 	}
     }
 
@@ -130,9 +130,9 @@ VGADDI_BltPointerToVGA(ULONG StartX, ULONG StartY, ULONG SizeX,
       Src = MaskBits + (SizeX >> 3) - 1;
       for (i = StartY; i < EndY; i++, Video+=80, Src+=MaskPitch)
 	{
-	  SrcValue = (Src[0] >> (8 - (StartX % 8)));
+	  SrcValue = (Src[0] << (8 - (StartX % 8)));
 	  (VOID)READ_REGISTER_UCHAR(Video);
-	  WRITE_REGISTER_UCHAR(Video, PreCalcReverseByte[SrcValue]);
+	  WRITE_REGISTER_UCHAR(Video, SrcValue);
 	}
 
       /* Restore the default write masks. */
@@ -270,10 +270,7 @@ DrvSetPointerShape(PSURFOBJ pso,
 	{
 	  Dest += ((NewHeight - i - 1) * (NewWidth >> 3));
 	}
-      for (j = 0; j < (NewWidth >> 3); j++)
-	{
-	  Dest[j] = PreCalcReverseByte[Src[j]];
-	}
+      memcpy(Dest, Src, NewWidth >> 3);
     }
 
   /* Set the new cursor position */
