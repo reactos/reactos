@@ -855,7 +855,7 @@ NdisRegisterProtocol(
         }
 
       wcscpy(RegistryPathStr, SERVICES_KEY);
-      wcscat(RegistryPathStr, (((WCHAR *)(KeyInformation->Data)) +8 ));
+      wcscat(RegistryPathStr, DataPtr + 8 );
       wcscat(RegistryPathStr, PARAMETERS_KEY);
       wcsncat(RegistryPathStr, ProtocolCharacteristics->Name.Buffer, ProtocolCharacteristics->Name.Length / sizeof(WCHAR) );
 
