@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.123 2004/12/27 20:06:55 gvg Exp $ */
+/* $Id: text.c,v 1.124 2004/12/30 15:15:01 gvg Exp $ */
 #include <w32k.h>
 
 #include <ft2build.h>
@@ -714,8 +714,13 @@ FillTM(TEXTMETRICW *TM, FT_Face Face, TT_OS2 *pOS2, TT_HoriHeader *pHori)
       Descent = pOS2->usWinDescent;
     }
 
+#if 0 /* This (Wine) code doesn't seem to work correctly for us */
   TM->tmAscent = (FT_MulFix(Ascent, YScale) + 32) >> 6;
   TM->tmDescent = (FT_MulFix(Descent, YScale) + 32) >> 6;
+#else
+  TM->tmAscent = (Face->size->metrics.ascender + 32) >> 6; /* units above baseline */
+  TM->tmDescent = (32 - Face->size->metrics.descender) >> 6; /* units below baseline */
+#endif
   TM->tmInternalLeading = (FT_MulFix(Ascent + Descent
                                      - Face->units_per_EM, YScale) + 32) >> 6;
 
