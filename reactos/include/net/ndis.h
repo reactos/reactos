@@ -2625,17 +2625,17 @@ NdisWriteConfiguration(
     IN  PNDIS_STRING                    Keyword,
     IN  PNDIS_CONFIGURATION_PARAMETER   *ParameterValue);
 
-/*
+
 VOID
 EXPIMP
 NdisWriteErrorLogEntry(
     IN  NDIS_HANDLE     NdisAdapterHandle,
     IN  NDIS_ERROR_CODE ErrorCode,
     IN  ULONG           NumberOfErrorValues,
-    IN  ULONG           ...);
-*/
-
-
+    IN  ULONG           ERROR_LOG_MAXIMUM_SIZE);
+/*  IN  ULONG           ...); 
+ *  ERROR_LOG_MAXIMUM_SIZE = ... in MSDN
+ */
 
 /*
  * VOID NdisStallExecution(
