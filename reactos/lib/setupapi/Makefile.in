@@ -15,6 +15,7 @@ C_SRCS = \
 	dirid.c \
 	diskspace.c \
 	install.c \
+	misc.c \
 	parser.c \
 	queue.c \
 	setupcab.c \

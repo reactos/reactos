@@ -1,3 +1,6 @@
+@ stub AddTagToGroupOrderListEntry
+@ stub AppendStringToMultiSz
+@ stub AssertFail
 @ stdcall CM_Connect_MachineW(wstr ptr)
 @ stdcall CM_Disconnect_Machine(long)
 @ stub CM_Free_Log_Conf_Handle
@@ -36,10 +39,10 @@
 @ stub MemoryInitialize
 @ stub MultiByteToUnicode
 @ stub MultiSzFromSearchControl
-@ stub MyFree
+@ stdcall MyFree(ptr)
 @ stub MyGetFileTitle
-@ stub MyMalloc
-@ stub MyRealloc
+@ stdcall MyMalloc(long)
+@ stdcall MyRealloc(ptr long)
 @ stub OpenAndMapFileForRead
 @ stub OutOfMemory
 @ stub QueryMultiSzValueToArray
