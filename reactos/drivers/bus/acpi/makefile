@@ -9,9 +9,21 @@ LIBS = $(PATH_TO_TOP)/ntoskrnl/ntoskrnl.a
 OBJECTS_PATH = objects
 
 
+OBJECTS_OSPM_BUSMGR = \
+  ospm/busmgr/bm.o \
+  ospm/busmgr/bmnotify.o \
+  ospm/busmgr/bmpm.o \
+  ospm/busmgr/bmpower.o \
+  ospm/busmgr/bmrequest.o \
+  ospm/busmgr/bmsearch.o \
+  ospm/busmgr/bmutils.o \
+  ospm/busmgr/bmxface.o
+  
 OBJECTS_OSPM = \
+  $(OBJECTS_OSPM_BUSMGR) \
   ospm/acpienum.o \
   ospm/acpisys.o \
+  ospm/bn.o \
   ospm/osl.o
 
 OBJECTS_DISPATCHER = \

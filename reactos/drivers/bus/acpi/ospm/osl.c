@@ -108,7 +108,11 @@ acpi_os_callocate(u32 size)
 void
 acpi_os_free(void *ptr)
 {
-  ExFreePool(ptr);
+  if (ptr) {
+    /* FIXME: There is at least one bug somewhere that
+              results in an attempt to release a null pointer */
+    ExFreePool(ptr);
+  }
 }
 
 ACPI_STATUS
@@ -552,7 +556,7 @@ acpi_os_wait_semaphore(
 
   DPRINT("Waiting for semaphore[%p|%d|%d]\n", handle, units, timeout);
 
-  ExAcquireFastMutex(Mutex);
+  //ExAcquireFastMutex(Mutex);
 
   return AE_OK;
 }
@@ -571,7 +575,7 @@ acpi_os_signal_semaphore(
 
   DPRINT("Signaling semaphore[%p|%d]\n", handle, units);
 
-  ExReleaseFastMutex(Mutex);
+  //ExReleaseFastMutex(Mutex);
 
   return AE_OK;
 }

@@ -1,4 +1,4 @@
-/* $Id: acpienum.c,v 1.1 2001/05/01 23:00:03 chorns Exp $
+/* $Id: acpienum.c,v 1.2 2001/05/05 19:15:44 chorns Exp $
  *
  * PROJECT:         ReactOS ACPI bus driver
  * FILE:            acpi/ospm/acpienum.c
@@ -8,55 +8,200 @@
  *      01-05-2001  CSH  Created
  */
 #include <acpisys.h>
-#include <acnamesp.h>
+#include <bm.h>
 
 #define NDEBUG
 #include <debug.h>
 
 
-ACPI_STATUS ACPIEnumerateDevice(
-  ACPI_HANDLE ObjHandle,
-  UINT32 Level,
-  PVOID Context,
-  PVOID *ReturnValue)
+void
+bm_print1 (
+	BM_NODE			*node,
+	u32                     flags)
 {
-  ACPI_DEVICE_INFO Info;
-  ACPI_STATUS Status;
-  ACPI_BUFFER Path;
-  CHAR Buffer[256];
+	ACPI_BUFFER             buffer;
+	BM_DEVICE		*device = NULL;
+	char                    *type_string = NULL;
 
-  Path.length = sizeof(Buffer);
-  Path.pointer = Buffer;
+	if (!node) {
+		return;
+	}
 
-  /* Get the full path of this device and print it */
-  Status = acpi_get_name(ObjHandle, ACPI_FULL_PATHNAME, &Path);
+	device = &(node->device);
 
-  if (ACPI_SUCCESS(Status)) {
-    DPRINT("Device: %s\n", Path.pointer);
-  }
+	if (flags & BM_PRINT_PRESENT) {
+		if (!BM_DEVICE_PRESENT(device)) {
+			return;
+		}
+	}
 
-  /* Get the device info for this device and print it */
-  Status = acpi_get_object_info(ObjHandle, &Info);
-  if (ACPI_SUCCESS(Status)) {
-    DPRINT(" HID: %.8X, ADR: %.8X, Status: %x\n",
-      Info.hardware_id, Info.address,
-      Info.current_status);
-  }
-  return AE_OK;
+	buffer.length = 256;
+	buffer.pointer = acpi_os_callocate(buffer.length);
+	if (!buffer.pointer) {
+		return;
+	}
+
+	acpi_get_name(device->acpi_handle, ACPI_FULL_PATHNAME, &buffer);
+
+	switch(device->id.type) {
+	case BM_TYPE_SYSTEM:
+		type_string = "System";
+		break;
+	case BM_TYPE_SCOPE:
+		type_string = "Scope";
+		break;
+	case BM_TYPE_PROCESSOR:
+		type_string = "Processor";
+		break;
+	case BM_TYPE_THERMAL_ZONE:
+		type_string = "ThermalZone";
+		break;
+	case BM_TYPE_POWER_RESOURCE:
+		type_string = "PowerResource";
+		break;
+	case BM_TYPE_FIXED_BUTTON:
+		type_string = "Button";
+		break;
+	case BM_TYPE_DEVICE:
+		type_string = "Device";
+		break;
+	default:
+		type_string = "Unknown";
+		break;
+	}
+
+	if (!(flags & BM_PRINT_GROUP)) {
+		DbgPrint("+------------------------------------------------------------\n");
+	}
+
+		DbgPrint("%s[0x%02x] hid[%s] %s\n", type_string, device->handle, device->id.hid, buffer.pointer);
+		DbgPrint("  acpi_handle[0x%08x] flags[0x%02x] status[0x%02x]\n", device->acpi_handle, device->flags, device->status);
+
+	if (flags & BM_PRINT_IDENTIFICATION) {
+		DbgPrint("  identification: uid[%s] adr[0x%08x]\n", device->id.uid, device->id.adr);
+	}
+
+	if (flags & BM_PRINT_LINKAGE) {
+		DbgPrint("  linkage: this[%p] parent[%p] next[%p]\n", node, node->parent, node->next);
+		DbgPrint("    scope.head[%p] scope.tail[%p]\n", node->scope.head, node->scope.tail);
+	}
+
+	if (flags & BM_PRINT_POWER) {
+		DbgPrint("  power: state[D%d] flags[0x%08X]\n", device->power.state, device->power.flags);
+		DbgPrint("    S0[0x%02x] S1[0x%02x] S2[0x%02x]\n", device->power.dx_supported[0], device->power.dx_supported[1], device->power.dx_supported[2]);
+		DbgPrint("    S3[0x%02x] S4[0x%02x] S5[0x%02x]\n", device->power.dx_supported[3], device->power.dx_supported[4], device->power.dx_supported[5]);
+	}
+
+	if (!(flags & BM_PRINT_GROUP)) {
+		DbgPrint("+------------------------------------------------------------\n");
+	}
+
+	acpi_os_free(buffer.pointer);
+
+	return;
 }
 
+
 NTSTATUS
-ACPIEnumerateSystemDevices(
+ACPIEnumerateRootBusses(
   PACPI_DEVICE_EXTENSION DeviceExtension)
 {
-  ACPI_HANDLE SysBusHandle;
+  BM_HANDLE_LIST HandleList;
+  PACPI_DEVICE AcpiDevice;
+  ACPI_STATUS AcpiStatus;
+  BM_HANDLE DeviceHandle;
+	BM_DEVICE_ID Criteria;
+  KIRQL OldIrql;
+  ULONG i;
 
-  DPRINT("Enumerating system devices\n");
+  BM_NODE *Node;
+  ULONG j;
 
-  acpi_get_handle(0, NS_SYSTEM_BUS, &SysBusHandle);
-  DPRINT("Display of all devices in the namespace:\n");
-  acpi_walk_namespace(ACPI_TYPE_DEVICE, SysBusHandle,
-    ~0, ACPIEnumerateDevice, NULL, NULL);
+  DPRINT("Called\n");
+
+  RtlZeroMemory(&Criteria, sizeof(BM_DEVICE_ID));
+  RtlMoveMemory(&Criteria.hid, PCI_ROOT_HID_STRING, sizeof(PCI_ROOT_HID_STRING));
+
+  AcpiStatus = bm_search(BM_HANDLE_ROOT, &Criteria, &HandleList);
+
+  if (ACPI_SUCCESS(AcpiStatus)) {
+    DPRINT("Got %d devices\n", HandleList.count);
+
+    for (i = 0; i < HandleList.count; i++) {
+      AcpiStatus = bm_get_node(HandleList.handles[i], 0, &Node);
+      if (ACPI_SUCCESS(AcpiStatus)) {
+        DPRINT("Got BM node information: (Node 0x%X)\n", Node);
+        bm_print1(Node, BM_PRINT_ALL - BM_PRINT_PRESENT);
+#if 0
+        for (j=0; j < 4*1000;j++)
+          KeStallExecutionProcessor(1000);
+#endif
+      } else {
+        DPRINT("Could not get BM node\n");
+      }
+
+      AcpiDevice = (PACPI_DEVICE)ExAllocatePool(
+          NonPagedPool, sizeof(ACPI_DEVICE));
+      if (!AcpiDevice) {
+        return STATUS_INSUFFICIENT_RESOURCES;
+      }
+
+      AcpiDevice->Pdo = NULL;
+      AcpiDevice->BmHandle = HandleList.handles[i];
+
+      KeAcquireSpinLock(&DeviceExtension->DeviceListLock, &OldIrql);
+      InsertHeadList(&DeviceExtension->DeviceListHead,
+        &AcpiDevice->DeviceListEntry);
+      DeviceExtension->DeviceListCount++;
+      KeReleaseSpinLock(&DeviceExtension->DeviceListLock, OldIrql);
+    }
+  } else {
+    DPRINT("Got no devices (Status 0x%X)\n", AcpiStatus);
+  }
+
+  return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+ACPIEnumerateNamespace(
+  PACPI_DEVICE_EXTENSION DeviceExtension)
+{
+  ACPI_STATUS AcpiStatus;
+	BM_DEVICE_ID Criteria;
+  BM_HANDLE_LIST HandleList;
+  ULONG i;
+
+  BM_NODE *Node;
+  ULONG j, q;
+
+  DPRINT("Called\n");
+
+	RtlZeroMemory(&Criteria, sizeof(BM_DEVICE_ID));
+
+  DbgPrint("Listing ACPI namespace\n");
+  Criteria.type = BM_TYPE_ALL;
+
+  AcpiStatus = bm_search(BM_HANDLE_ROOT, &Criteria, &HandleList);
+  if (ACPI_SUCCESS(AcpiStatus)) {
+    DPRINT("Got %d devices\n", HandleList.count);
+
+    for (i = 0; i < HandleList.count; i++) {
+      AcpiStatus = bm_get_node(HandleList.handles[i], 0, &Node);
+      if (ACPI_SUCCESS(AcpiStatus)) {
+        DPRINT("Got BM node information: (Node 0x%X)\n", Node);
+#if 0
+        bm_print1(Node, BM_PRINT_ALL - BM_PRINT_PRESENT);
+        for (j=0; j < 4*1000;j++)
+          KeStallExecutionProcessor(1000);*/
+#endif
+      } else {
+        DPRINT("Could not get BM node\n");
+      }
+    }
+  } else {
+    DPRINT("Got no devices (Status 0x%X)\n", AcpiStatus);
+  }
 
   return STATUS_SUCCESS;
 }

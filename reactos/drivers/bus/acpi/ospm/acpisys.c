@@ -1,4 +1,4 @@
-/* $Id: acpisys.c,v 1.1 2001/05/01 23:00:03 chorns Exp $
+/* $Id: acpisys.c,v 1.2 2001/05/05 19:15:44 chorns Exp $
  *
  * PROJECT:         ReactOS ACPI bus driver
  * FILE:            acpi/ospm/acpisys.c
@@ -8,6 +8,8 @@
  *      01-05-2001  CSH  Created
  */
 #include <acpisys.h>
+#include <bm.h>
+#include <bn.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -19,14 +21,9 @@
 
 #pragma  alloc_text(init, DriverEntry)
 
-// Make the PASSIVE_LEVEL routines pageable, so that they don't
-// waste nonpaged memory
-
-#pragma  alloc_text(page, ACPIDispatchOpenClose)
-#pragma  alloc_text(page, ACPIDispatchRead)
-#pragma  alloc_text(page, ACPIDispatchWrite)
-
 #endif  /*  ALLOC_PRAGMA  */
+
+FADT_DESCRIPTOR_REV2	acpi_fadt;
 
 
 NTSTATUS
@@ -85,6 +82,57 @@ VOID ACPIPrintInfo(
 
 
 NTSTATUS
+ACPIInitializeInternalDriver(
+  PACPI_DEVICE_EXTENSION DeviceExtension,
+  ACPI_DRIVER_FUNCTION Initialize,
+  ACPI_DRIVER_FUNCTION Terminate)
+{
+  ACPI_STATUS AcpiStatus;
+  PACPI_DEVICE AcpiDevice;
+
+  AcpiStatus = Initialize();
+  if (!ACPI_SUCCESS(AcpiStatus)) {
+    DPRINT("BN init status 0x%X\n", AcpiStatus);
+    return STATUS_UNSUCCESSFUL;
+  }
+#if 0
+  AcpiDevice = (PACPI_DEVICE)ExAllocatePool(
+    NonPagedPool, sizeof(ACPI_DEVICE));
+  if (!AcpiDevice) {
+    return STATUS_INSUFFICIENT_RESOURCES;
+  }
+
+  AcpiDevice->Initialize = Initialize;
+  AcpiDevice->Terminate = Terminate;
+
+  /* FIXME: Create PDO */
+
+  AcpiDevice->Pdo = NULL;
+  //AcpiDevice->BmHandle = HandleList.handles[i];
+
+  ExInterlockedInsertHeadList(&DeviceExtension->DeviceListHead,
+    &AcpiDevice->ListEntry, &DeviceExtension->DeviceListLock);
+#endif
+  return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+ACPIInitializeInternalDrivers(
+  PACPI_DEVICE_EXTENSION DeviceExtension)
+{
+  NTSTATUS Status;
+
+  ULONG j;
+
+  Status = ACPIInitializeInternalDriver(DeviceExtension,
+    bn_initialize, bn_terminate);
+
+  return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
 ACPIStartDevice(
   IN PDEVICE_OBJECT DeviceObject,
   IN PIRP Irp)
@@ -106,13 +154,13 @@ ACPIStartDevice(
   AcpiStatus = acpi_initialize_subsystem();
   if (!ACPI_SUCCESS(AcpiStatus)) {
     DPRINT("acpi_initialize_subsystem() failed with status 0x%X\n", AcpiStatus);
-    return STATUS_NO_SUCH_DEVICE;
+    return STATUS_UNSUCCESSFUL;
   }
 
   AcpiStatus = acpi_find_root_pointer(&rsdp);
   if (!ACPI_SUCCESS(AcpiStatus)) {
     DPRINT("acpi_find_root_pointer() failed with status 0x%X\n", AcpiStatus);
-    return STATUS_NO_SUCH_DEVICE;
+    return STATUS_UNSUCCESSFUL;
 	}
 
   /* From this point on, on error we must call acpi_terminate() */
@@ -121,7 +169,7 @@ ACPIStartDevice(
 	if (!ACPI_SUCCESS(AcpiStatus)) {
 		DPRINT("acpi_load_tables() failed with status 0x%X\n", AcpiStatus);
 		acpi_terminate();
-		return STATUS_NO_SUCH_DEVICE;
+		return STATUS_UNSUCCESSFUL;
 	}
 
 	Buffer.length  = sizeof(SysInfo);
@@ -131,16 +179,22 @@ ACPIStartDevice(
 	if (!ACPI_SUCCESS(AcpiStatus)) {
 		DPRINT("acpi_get_system_info() failed with status 0x%X\n", AcpiStatus);
 		acpi_terminate();
-		return STATUS_NO_SUCH_DEVICE;
+		return STATUS_UNSUCCESSFUL;
 	}
 
 	DPRINT("ACPI CA Core Subsystem version 0x%X\n", SysInfo.acpi_ca_version);
+
+  assert(SysInfo.num_table_types > ACPI_TABLE_FADT);
+
+  RtlMoveMemory(&acpi_fadt,
+    &SysInfo.table_info[ACPI_TABLE_FADT],
+    sizeof(FADT_DESCRIPTOR_REV2));
 
   AcpiStatus = acpi_enable_subsystem(ACPI_FULL_INITIALIZATION);
   if (!ACPI_SUCCESS(AcpiStatus)) {
     DPRINT("acpi_enable_subsystem() failed with status 0x%X\n", AcpiStatus);
     acpi_terminate();
-    return STATUS_NO_SUCH_DEVICE;
+    return STATUS_UNSUCCESSFUL;
   }
 
   DPRINT("ACPI CA Core Subsystem enabled\n");
@@ -162,11 +216,27 @@ ACPIStartDevice(
 		}
 	}
 
-  DeviceExtension->State = dsStarted;
-
   ACPIPrintInfo(DeviceExtension);
 
-  //ACPIEnumerateSystemDevices(DeviceExtension);
+  /* Initialize ACPI bus manager */
+  AcpiStatus = bm_initialize();
+  if (!ACPI_SUCCESS(AcpiStatus)) {
+    DPRINT("bm_initialize() failed with status 0x%X\n", AcpiStatus);
+    acpi_terminate();
+    return STATUS_UNSUCCESSFUL;
+  }
+
+  InitializeListHead(&DeviceExtension->DeviceListHead);
+  KeInitializeSpinLock(&DeviceExtension->DeviceListLock);
+  DeviceExtension->DeviceListCount = 0;
+
+  ACPIEnumerateNamespace(DeviceExtension);
+
+  ACPIEnumerateRootBusses(DeviceExtension);
+
+  ACPIInitializeInternalDrivers(DeviceExtension);
+
+  DeviceExtension->State = dsStarted;
 
 	return STATUS_SUCCESS;
 }
@@ -178,26 +248,61 @@ ACPIQueryBusRelations(
   IN PIRP Irp,
   PIO_STACK_LOCATION IrpSp)
 {
+  PACPI_DEVICE_EXTENSION DeviceExtension;
   PDEVICE_RELATIONS Relations;
+  PLIST_ENTRY CurrentEntry;
+  PACPI_DEVICE Device;
   NTSTATUS Status;
   ULONG Size;
+  ULONG i;
 
   DPRINT("Called\n");
 
-  Size = sizeof(DEVICE_RELATIONS);
+  DeviceExtension = (PACPI_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+  Size = sizeof(DEVICE_RELATIONS) + sizeof(Relations->Objects) *
+    (DeviceExtension->DeviceListCount - 1);
   Relations = (PDEVICE_RELATIONS)ExAllocatePool(PagedPool, Size);
   if (!Relations)
     return STATUS_INSUFFICIENT_RESOURCES;
 
-  /* FIXME: Create PDOs and return them to PnP manager */
+  Relations->Count = DeviceExtension->DeviceListCount;
 
-  /* FIXME: For ACPI namespace devices create filter DOs and attach them
-     just above */
+  i = 0;
+  CurrentEntry = DeviceExtension->DeviceListHead.Flink;
+  while (CurrentEntry != &DeviceExtension->DeviceListHead) {
+    Device = CONTAINING_RECORD(CurrentEntry, ACPI_DEVICE, DeviceListEntry);
 
-  /* FIXME: For other devices in ACPI namespace, but not on motherboard,
-     create PDOs */
+    /* FIXME: For ACPI namespace devices on the motherboard create filter DOs
+       and attach them just above the ACPI bus device object (PDO) */
 
-  Relations->Count = 0;
+    /* FIXME: For other devices in ACPI namespace, but not on motherboard,
+       create PDOs */
+
+    if (!Device->Pdo) {
+      /* Create a physical device object for the
+         device as it does not already have one */
+      Status = IoCreateDevice(DeviceObject->DriverObject, 0,
+        NULL, FILE_DEVICE_CONTROLLER, 0, FALSE, &Device->Pdo);
+      if (!NT_SUCCESS(Status)) {
+        DPRINT("IoCreateDevice() failed with status 0x%X\n", Status);
+        ExFreePool(Relations);
+        return Status;
+      }
+
+      Device->Pdo->Flags |= DO_BUS_ENUMERATED_DEVICE;
+    }
+
+    /* Reference the physical device object. The PnP manager
+       will dereference it again when it is no longer needed */
+    ObReferenceObject(Device->Pdo);
+
+    Relations->Objects[i] = Device->Pdo;
+
+    i++;
+
+    CurrentEntry = CurrentEntry->Flink;
+  }
 
   Irp->IoStatus.Information = (ULONG)Relations;
 
@@ -220,6 +325,25 @@ ACPIQueryDeviceRelations(
       Status = ACPIQueryBusRelations(DeviceObject, Irp, IrpSp);
       break;
 
+    default:
+      Status = STATUS_NOT_IMPLEMENTED;
+  }
+
+  return Status;
+}
+
+
+NTSTATUS
+ACPIQueryId(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PIRP Irp,
+  PIO_STACK_LOCATION IrpSp)
+{
+  NTSTATUS Status;
+
+  DPRINT("Called\n");
+
+  switch (IrpSp->Parameters.QueryId.IdType) {
     default:
       Status = STATUS_NOT_IMPLEMENTED;
   }
@@ -304,6 +428,10 @@ ACPIPnpControl(
     Status = ACPIQueryDeviceRelations(DeviceObject, Irp, IrpSp);
     break;
 
+  case IRP_MN_QUERY_ID:
+    Status = ACPIQueryId(DeviceObject, Irp, IrpSp);
+    break;
+
   case IRP_MN_START_DEVICE:
     DPRINT("IRP_MN_START_DEVICE received\n");
     Status = ACPIStartDevice(DeviceObject, Irp);
@@ -311,6 +439,7 @@ ACPIPnpControl(
 
   case IRP_MN_STOP_DEVICE:
     /* Currently not supported */
+    //bm_terminate();
     Status = STATUS_UNSUCCESSFUL;
     break;
 
@@ -378,7 +507,7 @@ ACPIAddDevice(
   DPRINT("Called\n");
 
   Status = IoCreateDevice(DriverObject, sizeof(ACPI_DEVICE_EXTENSION),
-    NULL, FILE_DEVICE_BUS_EXTENDER, FILE_DEVICE_SECURE_OPEN, TRUE, &Fdo);
+    NULL, FILE_DEVICE_ACPI, FILE_DEVICE_SECURE_OPEN, TRUE, &Fdo);
   if (!NT_SUCCESS(Status)) {
     DPRINT("IoCreateDevice() failed with status 0x%X\n", Status);
     return Status;
