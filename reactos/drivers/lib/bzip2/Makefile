@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.5 2003/11/14 17:13:28 weiden Exp $
+# $Id: Makefile,v 1.6 2003/11/16 22:37:06 sedwards Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -10,7 +10,7 @@ TARGET_NORC = yes
 
 TARGET_CFLAGS = \
  -Wall -Winline -Os -fomit-frame-pointer -fno-strength-reduce \
- -DBZ_NO_STDIO -DBZ_DECOMPRESS_ONLY $(BIGFILES) -g -Werror
+ -DBZ_NO_STDIO -DBZ_DECOMPRESS_ONLY $(BIGFILES) -g -Werror -D__USE_W32API
 
 TARGET_OBJECTS = \
 	bzlib.o \

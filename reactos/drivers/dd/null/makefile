@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.16 2002/06/16 21:41:15 dwelch Exp $
+# $Id: makefile,v 1.17 2003/11/16 22:42:43 sedwards Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -7,6 +7,8 @@ TARGET_TYPE = driver
 TARGET_NAME = null
 
 TARGET_OBJECTS = null.o
+
+TARGET_CFLAGS = -D__USE_W32API 
 
 #TARGET_LFLAGS = -Wl,--file-alignment,0x20 -Wl,--section-alignment,0x20
 
