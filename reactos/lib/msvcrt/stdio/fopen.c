@@ -4,9 +4,12 @@
 #include <crtdll/stdio.h>
 #include <crtdll/io.h>
 #include <crtdll/fcntl.h>
-#include <crtdll/internal/file.h>
+//#include <crtdll/internal/file.h>
 
 //might change fopen(file,mode) -> fsopen(file,mode,_SH_DENYNO);
+
+#undef _fmode
+extern unsigned int _fmode;
 
 FILE *	__alloc_file(void);
 

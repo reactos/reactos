@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.2 2000/12/03 17:57:25 ekohl Exp $
+/* $Id: dllmain.c,v 1.3 2001/01/07 02:58:32 ekohl Exp $
  * 
  * ReactOS MSVCRT.DLL Compatibility Library
  */
@@ -14,15 +14,19 @@ unsigned int _winminor = 0;
 unsigned int _winmajor = 0;
 unsigned int _winver = 0;
 
+char *_acmdln = NULL;		/* pointer to ascii command line */
+char **_environ = NULL;		/* pointer to environment block */
+char *_pgmptr = NULL;		/* pointer to program name */
+
+int __app_type = 0; //_UNKNOWN_APP;	/* application type */
+
+
 /* FUNCTIONS **************************************************************/
 
-BOOLEAN
-__stdcall
-DllMain(
-	PVOID	hinstDll,
-	ULONG	dwReason,
-	PVOID	reserved
-	)
+BOOLEAN __stdcall
+DllMain(PVOID hinstDll,
+	ULONG dwReason,
+	PVOID reserved)
 {
 	switch (dwReason)
 	{
@@ -37,6 +41,9 @@ DllMain(
 			/* create tls stuff */
 			if (!CreateThreadData())
 				return FALSE;
+
+			_acmdln = (char *)GetCommandLineA();
+			_environ = (char **)GetEnvironmentStringsA();
 
 			/* FIXME: more initializations... */
 
@@ -57,7 +64,6 @@ DllMain(
 
 				/* FIXME: more cleanup... */
 
-
 				/* destroy tls stuff */
 				DestroyThreadData();
 			}
@@ -66,5 +72,50 @@ DllMain(
 
 	return TRUE;
 }
+
+
+
+void __set_app_type(int app_type)
+{
+   __app_type = app_type;
+}
+
+
+char **__p__acmdln(void)
+{
+   return &_acmdln;
+}
+
+char ***__p__environ(void)
+{
+   return &_environ;
+}
+
+unsigned int *__p__osver(void)
+{
+   return &_osver;
+}
+
+char **__p__pgmptr(void)
+{
+   return &_pgmptr;
+}
+
+unsigned int *__p__winmajor(void)
+{
+   return &_winmajor;
+}
+
+unsigned int *__p__winminor(void)
+{
+   return &_winminor;
+}
+
+unsigned int *__p__winver(void)
+{
+   return &_winver;
+}
+
+
 
 /* EOF */

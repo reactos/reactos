@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.8 2001/01/06 15:49:25 ekohl Exp $
+# $Id: Makefile,v 1.9 2001/01/07 02:58:31 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -46,10 +46,12 @@ OBJECTS_FLOAT = \
 	float/isnan.o
 
 OBJECTS_IO = \
+	io/access.o \
 	io/close.o \
 	io/fmode.o \
 	io/isatty.o \
 	io/lseek.o \
+	io/mktemp.o \
 	io/open.o \
 	io/read.o \
 	io/setmode.o \
@@ -62,7 +64,9 @@ OBJECTS_MATH = \
 
 OBJECTS_MISC = \
 	misc/amsg.o \
+	misc/assert.o \
 	misc/dllmain.o \
+	misc/getargs.o \
 	misc/purecall.o \
 	misc/tls.o
 
@@ -83,6 +87,7 @@ OBJECTS_STDIO = \
 	stdio/fflush.o \
 	stdio/fgets.o \
 	stdio/filbuf.o \
+	stdio/fileno.o \
 	stdio/flsbuf.o \
 	stdio/fopen.o \
 	stdio/fprintf.o \
@@ -100,6 +105,7 @@ OBJECTS_STDIO = \
 	stdio/setvbuf.o \
 	stdio/sprintf.o \
 	stdio/stdhnd.o \
+	stdio/tempnam.o \
 	stdio/vfprintf.o \
 	stdio/vfwprint.o \
 	stdio/vprintf.o \
@@ -176,7 +182,8 @@ OBJECTS_STRING = \
 	string/strxfrm.o 
 
 OBJECTS_SYS_STAT = \
-	sys_stat/fstat.o
+	sys_stat/fstat.o \
+	sys_stat/stat.o
 
 OBJECTS_TIME = \
 	time/time.o \

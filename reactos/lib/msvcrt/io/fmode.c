@@ -5,5 +5,7 @@
 #undef _fmode
 unsigned int _fmode = O_TEXT;
 
-unsigned  int *_fmode_dll = &_fmode;       
-
+unsigned int *__p__fmode(void)
+{
+   return &_fmode;
+}

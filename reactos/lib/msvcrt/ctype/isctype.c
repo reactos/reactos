@@ -261,23 +261,33 @@ unsigned short _ctype[] = {
 	0			/* 0xff */
 };
 
-unsigned short *__p__pctype = _ctype + 1;
-unsigned short *__p__pwctype = _ctype + 1;
+unsigned short *_pctype = _ctype + 1;
+unsigned short *_pwctype = _ctype + 1;
 
-int _isctype (unsigned int c, int ctypeFlags)
+unsigned short **__p__pctype(void)
 {
-	return (__p__pctype[(unsigned char)(c & 0xFF)] & ctypeFlags);
+   return &_pctype;
+}
+
+unsigned short **__p__pwctype(void)
+{
+   return &_pwctype;
+}
+
+int _isctype(unsigned int c, int ctypeFlags)
+{
+   return (_pctype[(unsigned char)(c & 0xFF)] & ctypeFlags);
 }
 
 int iswctype(wint_t wc, wctype_t wctypeFlags)
 {
-	return (__p__pwctype[(unsigned char)(wc & 0xFF)] & wctypeFlags);
+   return (_pwctype[(unsigned char)(wc & 0xFF)] & wctypeFlags);
 }
 
 // obsolete
-int	is_wctype(wint_t wc, wctype_t wctypeFlags)
+int is_wctype(wint_t wc, wctype_t wctypeFlags)
 {
-	return (__p__pwctype[(unsigned char)(wc & 0xFF)] & wctypeFlags);
+   return (_pwctype[(unsigned char)(wc & 0xFF)] & wctypeFlags);
 }
 
 /* EOF */

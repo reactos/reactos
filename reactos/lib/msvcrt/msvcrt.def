@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.3 2001/01/06 15:49:25 ekohl Exp $
+; $Id: msvcrt.def,v 1.4 2001/01/07 02:58:31 ekohl Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -89,8 +89,8 @@ EXPORTS
 ; __RTDynamicCast
 ; __RTtypeid
 ; __STRINGTOLD
-; __argc
-; __argv
+__argc
+__argv
 ; __badioinfo
 ; __crtCompareStringA
 ; __crtGetLocaleInfoW
@@ -98,7 +98,7 @@ EXPORTS
 ; __dllonexit
 ; __doserrno
 ; __fpecode
-; __getmainargs
+__getmainargs
 ; __initenv
 __isascii
 __iscsym
@@ -108,38 +108,38 @@ __iscsymf
 ; __lc_handle
 ; __lconv_init
 ; __mb_cur_max
-; __p___argc
-; __p___argv
+__p___argc
+__p___argv
 ; __p___initenv
 ; __p___mb_cur_max
 ; __p___wargv
 ; __p___winitenv
-; __p__acmdln
+__p__acmdln
 ; __p__amblksiz
 ; __p__commode
 ; __p__daylight
 ; __p__dstbias
-; __p__environ
+__p__environ
 ; __p__fileinfo
-; __p__fmode
+__p__fmode
 ; __p__iob
 ; __p__mbcasemap
 ; __p__mbctype
-; __p__osver
-__p__pctype DATA
-; __p__pgmptr
-__p__pwctype DATA
+__p__osver
+__p__pctype
+__p__pgmptr
+__p__pwctype
 ; __p__timezone
 ; __p__tzname
 ; __p__wcmdln
 ; __p__wenviron
-; __p__winmajor
-; __p__winminor
-; __p__winver
+__p__winmajor
+__p__winminor
+__p__winver
 ; __p__wpgmptr
 ; __pioinfo
 ; __pxcptinfoptrs
-; __set_app_type
+__set_app_type
 ; __setlc_active
 ; __setusermatherr
 __threadhandle
@@ -152,8 +152,8 @@ __toascii
 ; __wgetmainargs
 ; __winitenv
 ; _abnormal_termination
-; _access
-; _acmdln
+_access
+_acmdln DATA
 ; _adj_fdiv_m16i
 ; _adj_fdiv_m32
 ; _adj_fdiv_m32i
@@ -170,7 +170,7 @@ __toascii
 ; _adjust_fdiv
 _aexit_rtn
 _amsg_exit
-; _assert
+_assert
 ; _atodbl
 ; _atoi64
 ; _atoldbl
@@ -208,7 +208,7 @@ _ctype DATA
 ; _ecvt
 _endthread
 _endthreadex
-; _environ
+_environ DATA
 ; _eof
 _errno
 ; _except_handler2
@@ -232,7 +232,7 @@ _filbuf
 ; _fileinfo
 ; _filelength
 ; _filelengthi64
-; _fileno
+_fileno
 ; _findclose
 ; _findfirst
 ; _findfirsti64
@@ -241,7 +241,7 @@ _filbuf
 _finite
 _flsbuf
 _flushall
-_fmode
+_fmode DATA
 ; _fpclass
 ; _fpieee_flt
 _fpreset
@@ -397,7 +397,7 @@ _makepath
 _memccpy
 _memicmp
 _mkdir
-; _mktemp
+_mktemp
 ; _msize
 ; _nextafter
 ; _onexit
@@ -408,8 +408,8 @@ _osver DATA
 ; _outpd
 ; _outpw
 ; _pclose
-; _pctype
-; _pgmptr
+_pctype DATA
+_pgmptr DATA
 ; _pipe
 ; _popen
 _purecall
@@ -417,7 +417,7 @@ _purecall
 _putenv
 ; _putw
 ; _putws
-; _pwctype
+_pwctype DATA
 _read
 _rmdir
 ; _rmtmp
@@ -452,7 +452,7 @@ _snwprintf
 ; _spawnvp
 ; _spawnvpe
 _splitpath
-; _stat
+_stat
 ; _stati64
 ; _statusfp
 _strcmpi
@@ -475,7 +475,7 @@ _sys_errlist DATA
 _sys_nerr DATA
 ; _tell
 ; _telli64
-; _tempnam
+_tempnam
 ; _timezone
 _tolower
 _toupper
@@ -493,7 +493,7 @@ _unloaddll
 ; _utime
 _vsnprintf
 _vsnwprintf
-; _waccess
+_waccess
 ; _wasctime
 _wchdir
 ; _wchmod
@@ -540,7 +540,7 @@ _wmkdir
 ; _wmktemp
 _wopen
 ; _wperror
-; _wpgmptr
+; _wpgmptr DATA
 ; _wpopen
 _wputenv
 _wremove
