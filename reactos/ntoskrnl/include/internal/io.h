@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.38 2003/12/15 17:49:41 ekohl Exp $
+/* $Id: io.h,v 1.39 2004/03/14 17:10:48 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -48,6 +48,13 @@ typedef struct _IO_COMPLETION_PACKET{
    LIST_ENTRY        ListEntry;
 } IO_COMPLETION_PACKET, *PIO_COMPLETION_PACKET;
 
+typedef struct _DEVOBJ_EXTENSION {
+   CSHORT Type;
+   USHORT Size;
+   PDEVICE_OBJECT DeviceObject;
+   ULONG Unknown[3];
+   struct _DEVICE_NODE *DeviceNode;
+} DEVOBJ_EXTENSION, *PDEVOBJ_EXTENSION;
 
 typedef struct _DEVICE_NODE
 {

@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.23 2004/03/12 19:40:29 navaraf Exp $
+/* $Id: pnpmgr.c,v 1.24 2004/03/14 17:10:48 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -62,16 +62,11 @@ IoInvalidateDeviceRelations(
 {
 }
 
-PPNP_BUS_INFORMATION FASTCALL
-IopQueryBusInformation(
+PDEVICE_NODE FASTCALL
+IopGetDeviceNode(
   PDEVICE_OBJECT DeviceObject)
 {
-  IO_STATUS_BLOCK IoStatusBlock;
-  IO_STACK_LOCATION Stack;
-  
-  return NT_SUCCESS(IopInitiatePnpIrp(DeviceObject, &IoStatusBlock,
-    IRP_MN_QUERY_BUS_INFORMATION, &Stack)) ?
-    (PPNP_BUS_INFORMATION)IoStatusBlock.Information : NULL;
+  return DeviceObject->DeviceObjectExtension->DeviceNode;
 }
 
 /*
@@ -86,9 +81,18 @@ IoGetDeviceProperty(
   OUT PVOID PropertyBuffer,
   OUT PULONG ResultLength)
 {
-  PPNP_BUS_INFORMATION BusInformation;
+  PDEVICE_NODE DeviceNode = IopGetDeviceNode(DeviceObject);
+  ULONG Length;
+  PVOID Data;
 
-  DPRINT("IoGetDeviceProperty called");
+  DPRINT("IoGetDeviceProperty called\n");
+
+  if (DeviceNode == NULL ||
+      DeviceNode->BusInformation == NULL ||
+      DeviceNode->CapabilityFlags == NULL)
+  {
+    return STATUS_INVALID_DEVICE_REQUEST;
+  }
 
   /*
    * Used IRPs:
@@ -97,64 +101,46 @@ IoGetDeviceProperty(
    */
   switch (DeviceProperty)
   {
-    /* Complete, untested */
     case DevicePropertyBusNumber:
-      *ResultLength = sizeof(ULONG);
-      if (BufferLength < sizeof(ULONG))
-        return STATUS_BUFFER_TOO_SMALL;
-      BusInformation = IopQueryBusInformation(DeviceObject);
-      if (BusInformation != NULL)
-      {
-        *((ULONG *)PropertyBuffer) = BusInformation->BusNumber;
-        ExFreePool(BusInformation);
-        return STATUS_UNSUCCESSFUL;
-      }
-      return STATUS_SUCCESS;
+      Length = sizeof(ULONG);
+      Data = &DeviceNode->BusInformation->BusNumber;
+      break;
 
     /* Complete, untested */
     case DevicePropertyBusTypeGuid:
       *ResultLength = 39 * sizeof(WCHAR);
       if (BufferLength < (39 * sizeof(WCHAR)))
         return STATUS_BUFFER_TOO_SMALL;
-      BusInformation = IopQueryBusInformation(DeviceObject);
-      if (BusInformation != NULL)
-      {
-        swprintf((PWSTR)PropertyBuffer,
-          L"{%08lX-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
-          BusInformation->BusTypeGuid.Data1,
-          BusInformation->BusTypeGuid.Data2,
-          BusInformation->BusTypeGuid.Data3,
-          BusInformation->BusTypeGuid.Data4[0],
-          BusInformation->BusTypeGuid.Data4[1],
-          BusInformation->BusTypeGuid.Data4[2],
-          BusInformation->BusTypeGuid.Data4[3],
-          BusInformation->BusTypeGuid.Data4[4],
-          BusInformation->BusTypeGuid.Data4[5],
-          BusInformation->BusTypeGuid.Data4[6],
-          BusInformation->BusTypeGuid.Data4[7]);
-        ExFreePool(BusInformation);
-        return STATUS_UNSUCCESSFUL;
-      }
+      swprintf((PWSTR)PropertyBuffer,
+        L"{%08lX-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
+        DeviceNode->BusInformation->BusTypeGuid.Data1,
+        DeviceNode->BusInformation->BusTypeGuid.Data2,
+        DeviceNode->BusInformation->BusTypeGuid.Data3,
+        DeviceNode->BusInformation->BusTypeGuid.Data4[0],
+        DeviceNode->BusInformation->BusTypeGuid.Data4[1],
+        DeviceNode->BusInformation->BusTypeGuid.Data4[2],
+        DeviceNode->BusInformation->BusTypeGuid.Data4[3],
+        DeviceNode->BusInformation->BusTypeGuid.Data4[4],
+        DeviceNode->BusInformation->BusTypeGuid.Data4[5],
+        DeviceNode->BusInformation->BusTypeGuid.Data4[6],
+        DeviceNode->BusInformation->BusTypeGuid.Data4[7]);
       return STATUS_SUCCESS;
 
-    /* Complete, untested */
     case DevicePropertyLegacyBusType:
-      *ResultLength = sizeof(INTERFACE_TYPE);
-      if (BufferLength < sizeof(INTERFACE_TYPE))
-        return STATUS_BUFFER_TOO_SMALL;
-      BusInformation = IopQueryBusInformation(DeviceObject);
-      if (BusInformation != NULL)
-      {
-        RtlCopyMemory(
-          PropertyBuffer,
-          &BusInformation->LegacyBusType,
-          sizeof(INTERFACE_TYPE));
-        ExFreePool(BusInformation);
-        return STATUS_UNSUCCESSFUL;
-      }
-      return STATUS_SUCCESS;
+      Length = sizeof(INTERFACE_TYPE);
+      Data = &DeviceNode->BusInformation->LegacyBusType;
+      break;
 
     case DevicePropertyAddress:
+      Length = sizeof(ULONG);
+      Data = &DeviceNode->CapabilityFlags->Address;
+      break;
+
+    case DevicePropertyUINumber:
+      Length = sizeof(ULONG);
+      Data = &DeviceNode->CapabilityFlags->UINumber;
+      break;
+
     case DevicePropertyBootConfiguration:
     case DevicePropertyBootConfigurationTranslated:
     case DevicePropertyClassGuid:
@@ -168,12 +154,16 @@ IoGetDeviceProperty(
     case DevicePropertyLocationInformation:
     case DevicePropertyManufacturer:
     case DevicePropertyPhysicalDeviceObjectName:
-    case DevicePropertyUINumber:
-       break;
+      return STATUS_NOT_IMPLEMENTED;
 
     default:
-       return STATUS_INVALID_PARAMETER_2;
+      return STATUS_INVALID_PARAMETER_2;
   }
+
+  *ResultLength = Length;
+  if (BufferLength < Length)
+    return STATUS_BUFFER_TOO_SMALL;
+  RtlCopyMemory(PropertyBuffer, Data, Length);
 
   return STATUS_NOT_IMPLEMENTED;
 }
@@ -308,6 +298,8 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
     }
 
   Node->Pdo = PhysicalDeviceObject;
+
+  PhysicalDeviceObject->DeviceObjectExtension->DeviceNode = Node;
 
   if (ParentNode)
     {

@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.66 2004/03/07 11:59:10 navaraf Exp $
+/* $Id: device.c,v 1.67 2004/03/14 17:10:48 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -636,6 +636,7 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
  */
 {
    PDEVICE_OBJECT CreatedDeviceObject;
+   PDEVOBJ_EXTENSION DeviceObjectExtension;
    OBJECT_ATTRIBUTES ObjectAttributes;
    NTSTATUS Status;
    
@@ -740,6 +741,17 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
       IoAttachVpb(CreatedDeviceObject);
     }
   
+  DeviceObjectExtension =
+    ExAllocatePoolWithTag(NonPagedPool, sizeof(DEVOBJ_EXTENSION),
+			  TAG_DEVICE_EXTENSION);
+
+  DeviceObjectExtension->Type = 0 /* ?? */;
+  DeviceObjectExtension->Size = sizeof(DEVOBJ_EXTENSION);
+  DeviceObjectExtension->DeviceObject = CreatedDeviceObject;
+  DeviceObjectExtension->DeviceNode = NULL;
+
+  CreatedDeviceObject->DeviceObjectExtension = DeviceObjectExtension;
+
   *DeviceObject = CreatedDeviceObject;
   
   return(STATUS_SUCCESS);

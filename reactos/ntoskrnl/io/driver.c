@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.35 2004/03/12 19:40:29 navaraf Exp $
+/* $Id: driver.c,v 1.36 2004/03/14 17:10:48 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -802,32 +802,33 @@ NTSTATUS
 IopInitializeDeviceNodeService(PDEVICE_NODE DeviceNode, BOOLEAN BootDriverOnly)
 {
    NTSTATUS Status;
+   ULONG ServiceStart;
+   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
 
    if (DeviceNode->ServiceName.Buffer == NULL)
    {
       return STATUS_UNSUCCESSFUL;
    }
 
+   /*
+    * Get service start value
+    */
+
+   RtlZeroMemory(QueryTable, sizeof(QueryTable));
+   QueryTable[0].Name = L"Start";
+   QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
+   QueryTable[0].EntryContext = &ServiceStart;
+   Status = RtlQueryRegistryValues(RTL_REGISTRY_SERVICES,
+      DeviceNode->ServiceName.Buffer, QueryTable, NULL, NULL);
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT("RtlQueryRegistryValues() failed (Status %x)\n", Status);
+      return Status;
+   }
+
    if (BootDriverOnly)
    {
-      ULONG ServiceStart;
-      RTL_QUERY_REGISTRY_TABLE QueryTable[2];
       PLOADER_MODULE KeLoaderModules = (PLOADER_MODULE)KeLoaderBlock.ModsAddr;
-
-      /*
-       * Get service start value
-       */
-      RtlZeroMemory(QueryTable, sizeof(QueryTable));
-      QueryTable[0].Name = L"Start";
-      QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
-      QueryTable[0].EntryContext = &ServiceStart;
-      Status = RtlQueryRegistryValues(RTL_REGISTRY_SERVICES,
-         DeviceNode->ServiceName.Buffer, QueryTable, NULL, NULL);
-      if (!NT_SUCCESS(Status))
-      {
-         DPRINT("RtlQueryRegistryValues() failed (Status %x)\n", Status);
-         return Status;
-      }
 
       /*
        * Find and initialize boot driver
@@ -860,6 +861,7 @@ IopInitializeDeviceNodeService(PDEVICE_NODE DeviceNode, BOOLEAN BootDriverOnly)
          return STATUS_UNSUCCESSFUL;
       }
    } else
+   if (ServiceStart < 4)
    {
       UNICODE_STRING ImagePath;
 
@@ -889,6 +891,8 @@ IopInitializeDeviceNodeService(PDEVICE_NODE DeviceNode, BOOLEAN BootDriverOnly)
        */
       RtlFreeUnicodeString(&ImagePath);
    }
+   else
+      Status = STATUS_UNSUCCESSFUL;
 
    return Status;
 }
