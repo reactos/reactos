@@ -119,17 +119,16 @@ BEGIN
     END
     POPUP "&Window"
     BEGIN
-        MENUITEM "&Cascade\tShift+F5",          ID_WINDOW_CASCADE, GRAYED
-        MENUITEM "&Tile\tShift+F4",             ID_WINDOW_TILE, GRAYED
-        MENUITEM "&Arrange Icons",              ID_WINDOW_ARRANGEICONS
-        , GRAYED
+        MENUITEM "&Cascade\tShift+F5",          ID_WINDOW_CASCADE
+        MENUITEM "&Tile\tShift+F4",             ID_WINDOW_TILE
+        MENUITEM "&Arrange Icons",              ID_WINDOW_ARRANGE_ICONS
         MENUITEM SEPARATOR
     END
     POPUP "&Help"
     BEGIN
         MENUITEM "&Contents",                   ID_HELP_CONTENTS
         MENUITEM SEPARATOR
-        MENUITEM "&About Registry Editor...",   IDM_ABOUT
+        MENUITEM "&About Registry Editor...",   ID_HELP_ABOUT
     END
 END
 
@@ -224,7 +223,7 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     ID_HELP_HELPTOPICS      "Opens Registry Editor Help."
-    IDM_ABOUT               "Displays program information, version number, and copyright."
+    ID_HELP_ABOUT           "Displays program information, version number, and copyright."
 END
 
 #endif    // English (Australia) resources

@@ -1,7 +1,7 @@
 /*
- *  ReactOS regedt32
+ *  ReactOS Application Main Window
  *
- *  regedt32.h
+ *  framewnd.h
  *
  *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
  *
@@ -20,14 +20,23 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef __REGEDT32_H__
-#define __REGEDT32_H__
+#ifndef __FRAME_WND_H__
+#define __FRAME_WND_H__
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
 
-#include "resource.h"
 
+LRESULT CALLBACK FrameWndProc(HWND, UINT, WPARAM, LPARAM);
+    
 
-#endif // __REGEDT32_H__
+#ifdef __cplusplus
+};
+#endif
+
+#endif // __FRAME_WND_H__

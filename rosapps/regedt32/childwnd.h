@@ -1,7 +1,7 @@
 /*
- *  ReactOS Application Debug Routines
+ *  ReactOS Application MDI Child Window
  *
- *  debug.cpp
+ *  childwnd.h
  *
  *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
  *
@@ -20,20 +20,23 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifdef _MSC_VER
-#include "stdafx.h"
-#else
-#define WIN32_LEAN_AND_MEAN     // Exclude rarely-used stuff from Windows headers
-#include <windows.h>
-#include <commctrl.h>
-#include <stdlib.h>
-#include <malloc.h>
-#include <memory.h>
-#include <tchar.h>
-#include <process.h>
-#include <stdio.h>
-#endif
-    
-#include "regedt32.h"
-#include "debug.h"
+#ifndef __CHILD_WND_H__
+#define __CHILD_WND_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#if _MSC_VER > 1000
+#pragma once
+#endif // _MSC_VER > 1000
+
+
+LRESULT CALLBACK ChildWndProc(HWND, UINT, WPARAM, LPARAM);
+    
+
+#ifdef __cplusplus
+};
+#endif
+
+#endif // __CHILD_WND_H__

@@ -319,13 +319,18 @@ void set_curdir(ChildWnd* child, Entry* entry)
 	if (!entry->scanned)
 		scan_entry(child, entry);
 	else {
-		ListBox_ResetContent(child->right.hWnd);
-		insert_entries(&child->right, entry->down, -1);
-		calc_widths(&child->right, FALSE);
-#ifndef _NO_EXTENSIONS
-		set_header(&child->right);
-#endif
+//		ListBox_ResetContent(child->right.hWnd);
+//		insert_entries(&child->right, entry->down, -1);
+
+//        RefreshList(child->right.hWnd, entry);
+
+//		calc_widths(&child->right, FALSE);
+//#ifndef _NO_EXTENSIONS
+//		set_header(&child->right);
+//#endif
 	}
+        RefreshList(child->right.hWnd, entry->down);
+
 	get_path(entry, path);
 	lstrcpy(child->szPath, path);
 	SetWindowText(child->hWnd, path);

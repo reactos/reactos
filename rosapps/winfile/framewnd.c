@@ -343,6 +343,69 @@ static void toggle_child(HWND hWnd, UINT cmd, HWND hchild)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+
+LRESULT CALLBACK EnumNetConnectionsProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    return 0;
+}
+
+/*
+DWORD WNetOpenEnum(
+  DWORD dwScope,                // scope of enumeration
+  DWORD dwType,                 // resource types to list
+  DWORD dwUsage,                // resource usage to list
+  LPNETRESOURCE lpNetResource,  // resource structure
+  LPHANDLE lphEnum              // enumeration handle buffer
+);
+
+    result = WNetOpenEnum(RESOURCE_CONNECTED, RESOURCETYPE_DISK, RESOURCEUSAGE_ALL, NULL, &EnumNetConnectionsProc);
+
+ */
+DWORD MapNetworkDrives(HWND hWnd, BOOL connect)
+{
+    DWORD result = 0L;
+#if 1
+    if (connect) {
+        WNetConnectionDialog(hWnd, RESOURCETYPE_DISK);
+    } else {
+        WNetDisconnectDialog(hWnd, RESOURCETYPE_DISK);
+    }
+#else
+    if (connect) {
+        NETRESOURCE netResouce;
+        CONNECTDLGSTRUCT connectDlg;
+
+        //netResouce.dwScope; 
+        //netResouce.dwType; 
+        netResouce.dwDisplayType = 0;
+        //netResouce.dwUsage; 
+        //netResouce.lpLocalName; 
+        //netResouce.lpRemoteName; 
+        //netResouce.lpComment; 
+        //netResouce.lpProvider; 
+
+        //connectDlg.cbStructure;
+        connectDlg.hwndOwner = hWnd;
+        connectDlg.lpConnRes = &netResouce;
+        //connectDlg.dwFlags;
+        //connectDlg.dwDevNum;
+
+        result = WNetConnectionDialog1(&connectDlg);
+    } else {
+        DISCDLGSTRUCT disconnectDlg;
+        //disconnectDlg.cbStructure;
+        disconnectDlg.hwndOwner = hWnd;
+        //disconnectDlg.lpLocalName;
+        //disconnectDlg.lpRemoteName;
+        //disconnectDlg.dwFlags;
+        result = WNetDisconnectDialog1(&disconnectDlg);
+    }
+#endif
+    return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 //
 //  FUNCTION: _CmdWndProc(HWND, unsigned, WORD, LONG)
 //
@@ -398,7 +461,11 @@ LRESULT _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case ID_FILE_RUN:
             OnFileRun();
             break;
-		case ID_DISK_FORMAT_DISK:
+        case ID_DISK_COPY_DISK:
+			break;
+        case ID_DISK_LABEL_DISK:
+			break;
+        case ID_DISK_FORMAT_DISK:
 //			SHFormatDrive(hWnd, 0 /* A: */, SHFMT_ID_DEFAULT, 0);
 			{
 				UINT OldMode = SetErrorMode(0); // Get the current Error Mode settings.
@@ -408,6 +475,20 @@ LRESULT _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				SetErrorMode(OldMode); // Put it back the way it was. 			
 			}
 			break;
+        case ID_DISK_CONNECT_NETWORK_DRIVE:
+            MapNetworkDrives(hWnd, TRUE);
+			break;
+        case ID_DISK_DISCONNECT_NETWORK_DRIVE:
+            MapNetworkDrives(hWnd, FALSE);
+			break;
+        case ID_DISK_SHARE_AS:
+			break;
+        case ID_DISK_STOP_SHARING:
+			break;
+        case ID_DISK_SELECT_DRIVE:
+			break;
+
+
         case ID_VIEW_BY_FILE_TYPE:
 			{
 			struct ExecuteDialog dlg = {{0}};

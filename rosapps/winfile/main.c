@@ -42,6 +42,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Global Variables:
 //
+UINT OemCodePage;
+UINT AnsiCodePage;
+LCID UserDefaultLCID;
 
 HINSTANCE hInst;
 #ifdef USE_GLOBAL_STRUCT
@@ -310,6 +313,7 @@ static BOOL CALLBACK EnumWndProc(HWND hWnd, LPARAM lparam)
 	GetClassName(hWnd, cls, 128);
 	if (!lstrcmp(cls, (LPCTSTR)lparam)) {
 		g_foundPrevInstance++;
+        SetForegroundWindow(hWnd);
 		return FALSE;
 	}
 	return TRUE;
@@ -322,6 +326,13 @@ void ExitInstance(void)
 	    ImageList_Destroy(Globals.himl);
 }
 
+/*
+struct _cpinfo { 
+  UINT MaxCharSize; 
+  BYTE DefaultChar[MAX_DEFAULTCHAR]; 
+  BYTE LeadByte[MAX_LEADBYTES]; 
+} CPINFO, *LPCPINFO; 
+ */
 
 int APIENTRY WinMain(HINSTANCE hInstance,
                      HINSTANCE hPrevInstance,
@@ -332,6 +343,15 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     HACCEL hAccel;
     HWND hMDIClient;
 
+    CPINFO CPinfo;
+
+    OemCodePage = GetOEMCP();
+    AnsiCodePage = GetACP();
+    UserDefaultLCID = GetUserDefaultLCID();
+    if (GetCPInfo(UserDefaultLCID, &CPinfo)) {
+
+    }
+
     // Initialize global strings
     LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadString(hInstance, IDC_WINFILE, szFrameClass, MAX_LOADSTRING);
@@ -339,8 +359,9 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
 	// Allow only one running instance
     EnumWindows(EnumWndProc, (LPARAM)szFrameClass);
-	if (g_foundPrevInstance)
+    if (g_foundPrevInstance) {
 		return 1;
+    }
 
     // Store instance handle in our global variable
     hInst = hInstance;
@@ -365,4 +386,16 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     return msg.wParam;
 }
 
+void _GetFreeSpaceEx(void)
+{
+   BOOL fResult;
+   TCHAR szDrive[MAX_PATH];
+   ULARGE_INTEGER i64FreeBytesToCaller;
+   ULARGE_INTEGER i64TotalBytes;
+   ULARGE_INTEGER i64FreeBytes;
 
+   fResult = GetDiskFreeSpaceEx(szDrive,
+                (PULARGE_INTEGER)&i64FreeBytesToCaller,
+                (PULARGE_INTEGER)&i64TotalBytes,
+                (PULARGE_INTEGER)&i64FreeBytes);
+}

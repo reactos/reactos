@@ -34,12 +34,12 @@ extern "C" {
 #include "resource.h"
 
 
-void CreateTreeWnd(HWND parent, Pane* pane, int id, LPSTR lpszFileName);
+void CreateTreeWnd(HWND parent, Pane* pane, int id);
 
 HTREEITEM AddItemToTree(HWND hwndTV, LPSTR lpszItem, int nLevel);
 
-//HWND CreateTreeView(HWND hwndParent, LPSTR lpszFileName);
-//void create_tree_window(HWND parent, Pane* pane, int id, int id_header, LPSTR lpszFileName);
+//HWND CreateTreeView(HWND hwndParent);
+//void create_tree_window(HWND parent, Pane* pane, int id, int id_header);
 //LRESULT CALLBACK TreeWndProc(HWND, UINT, WPARAM, LPARAM);
 
 

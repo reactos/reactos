@@ -2,9 +2,23 @@
 // Microsoft Developer Studio generated include file.
 // Used by regedt32.rc
 //
+#define IDW_FIRST_CHILD                 200
+
+#define ID_REGISTRY_MENU                0
+#define ID_EDIT_MENU                    1
+#define ID_TREE_MENU                    2
+#define ID_VIEW_MENU                    3
+#define ID_SECURITY_MENU                4
+#define ID_OPTIONS_MENU                 5
+#define ID_WINDOW_MENU                  6
+#define ID_HELP_MENU                    7
+
+#define ID_WINDOW_CLOSE                 798
+#define ID_WINDOW_CLOSEALL              799
+#define STATUS_WINDOW                   2001
+
 #define IDD_ABOUTBOX                    103
 #define IDS_APP_TITLE                   103
-#define IDM_ABOUT                       104
 #define IDM_EXIT                        105
 #define IDS_HELLO                       106
 #define IDI_REGEDT32                    107
@@ -13,6 +27,7 @@
 #define IDC_REGEDT32_FRAME              110
 #define IDR_REGEDT32_MENU               129
 #define IDR_REGEDT_MENU                 130
+#define ID_HELP_ABOUT                   32770
 #define ID_HELP_HELPTOPICS              32771
 #define ID_FAVORITES_ADDTOFAVOURITES    32772
 #define ID_FAVORITES_REMOVEFAVOURITE    32773
@@ -29,15 +44,15 @@
 #define ID_EDIT_NEW_STRINGVALUE         32786
 #define ID_EDIT_NEW_BINARYVALUE         32787
 #define ID_EDIT_NEW_DWORDVALUE          32788
-#define ID_REGISTRY_IMPORTREGISTRYFILE  32789
-#define ID_REGISTRY_EXPORTREGISTRYFILE  32790
-#define ID_REGISTRY_CONNECTNETWORKREGISTRY 32791
-#define ID_REGISTRY_DISCONNECTNETWORKREGISTRY 32792
-#define ID_REGISTRY_PRINT               32793
-#define ID_HELP_CONTENTS                32795
-#define ID_WINDOW_CASCADE               32797
-#define ID_WINDOW_TILE                  32798
-#define ID_WINDOW_ARRANGEICONS          32799
+
+#define ID_WINDOW_NEW_WINDOW            32794
+#define ID_WINDOW_CASCADE               32795
+#define ID_WINDOW_TILE                  32796
+#define ID_WINDOW_TILE_HORZ             32796
+#define ID_WINDOW_TILE_VERT             32797
+#define ID_WINDOW_ARRANGE_ICONS         32798
+#define ID_WINDOW_REFRESH               32799
+
 #define ID_OPTIONS_FONT                 32800
 #define ID_OPTIONS_AUTOREFRESH          32801
 #define ID_OPTIONS_READONLYMODE         32802
@@ -71,6 +86,12 @@
 #define ID_REGISTRY_PRINTSUBTREE        32832
 #define ID_REGISTRY_PRINTERSETUP        32833
 #define ID_REGISTRY_SAVESUBTREEAS       32834
+#define ID_REGISTRY_IMPORTREGISTRYFILE  32835
+#define ID_REGISTRY_EXPORTREGISTRYFILE  32836
+#define ID_REGISTRY_CONNECTNETWORKREGISTRY 32837
+#define ID_REGISTRY_DISCONNECTNETWORKREGISTRY 32838
+#define ID_REGISTRY_PRINT               32839
+#define ID_HELP_CONTENTS                32840
 
 #define IDC_LICENSE_EDIT                1029
 #define IDS_LICENSE                     32835

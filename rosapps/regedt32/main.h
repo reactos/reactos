@@ -1,7 +1,7 @@
 /*
- *  ReactOS winfile
+ *  ReactOS regedt32
  *
- *  listview.h
+ *  main.h
  *
  *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
  *
@@ -20,8 +20,8 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef __LISTVIEW_H__
-#define __LISTVIEW_H__
+#ifndef __MAIN_H__
+#define __MAIN_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,12 +34,42 @@ extern "C" {
 #include "resource.h"
 
 
-void CreateListWnd(HWND parent, Pane* pane, int id, LPSTR lpszPathName);
-void RefreshList(HWND hWnd, Entry* entry);
+////////////////////////////////////////////////////////////////////////////////
 
+#define	SPLIT_WIDTH    5
+#define MAX_LOADSTRING 100
+
+typedef struct {
+    HWND    hWnd;
+    HWND    hLeftWnd;
+    HWND    hRightWnd;
+    int     nFocusPanel;      // 0: left  1: right
+	int		nSplitPos;
+    WINDOWPLACEMENT pos;
+	TCHAR	szPath[MAX_PATH];
+} ChildWnd;
+
+//void UpdateStatusBar(void);
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Global Variables:
+
+extern HINSTANCE hInst;
+extern HACCEL    hAccel;
+extern HWND      hFrameWnd;
+extern HMENU     hMenuFrame;
+extern HWND      hMDIClient;
+//extern HWND      hStatusBar;
+//extern HWND      hToolBar;
+extern HFONT     hFont;
+
+extern TCHAR szTitle[];
+extern TCHAR szFrameClass[];
+extern TCHAR szChildClass[];
 
 #ifdef __cplusplus
 };
 #endif
 
-#endif // __LISTVIEW_H__
+#endif // __MAIN_H__

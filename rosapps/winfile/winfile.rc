@@ -87,10 +87,7 @@ BEGIN
         MENUITEM "&Format Disk..\t",            ID_DISK_FORMAT_DISK
         MENUITEM SEPARATOR
         MENUITEM "Connect &Network Drive...",   ID_DISK_CONNECT_NETWORK_DRIVE
-        , GRAYED
-        MENUITEM "&Disconnect Network Drive...", 
-                                                ID_DISK_DISCONNECT_NETWORK_DRIVE
-        , GRAYED
+        MENUITEM "&Disconnect Network Drive...",ID_DISK_DISCONNECT_NETWORK_DRIVE
         MENUITEM SEPARATOR
         MENUITEM "Share &As...",                ID_DISK_SHARE_AS, GRAYED
         MENUITEM "S&top Sharing...",            ID_DISK_STOP_SHARING, GRAYED

@@ -317,7 +317,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 
 	switch(message) {
 		case WM_CREATE:
-	        CreateTreeWnd(pChildWnd->hWnd, &pChildWnd->left, IDW_TREE_LEFT, pChildWnd->szPath);
+	        CreateTreeWnd(pChildWnd->hWnd, &pChildWnd->left, IDW_TREE_LEFT);
             CreateListWnd(pChildWnd->hWnd, &pChildWnd->right, IDW_TREE_RIGHT, pChildWnd->szPath);
             //create_tree_window(pChildWnd->hWnd, &pChildWnd->left, IDW_TREE_LEFT, IDW_HEADER_LEFT, pChildWnd->szPath);
             //create_list_window(pChildWnd->hWnd, &pChildWnd->right, IDW_TREE_RIGHT, IDW_HEADER_RIGHT);
@@ -515,9 +515,16 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 		case WM_NOTIFY: {
             int idCtrl = (int)wParam; 
 			NMHDR* pnmh = (NMHDR*)lParam;
-
 			//return pane_notify(pnmh->idFrom==IDW_HEADER_LEFT? &pChildWnd->left: &pChildWnd->right, pnmh);
             if (idCtrl == IDW_TREE_LEFT) {
+                if ((((LPNMHDR)lParam)->code) == TVN_SELCHANGED) {
+                    Entry* entry = (Entry*)((NMTREEVIEW*)lParam)->itemNew.lParam;
+                    if (entry != NULL) {
+                        //RefreshList(pChildWnd->right.hWnd, entry);
+                        //void set_curdir(ChildWnd* child, Entry* entry)
+                        set_curdir(pChildWnd, entry);
+                    }
+                }
                 SendMessage(pChildWnd->left.hWnd, message, wParam, lParam);
             }
             if (idCtrl == IDW_TREE_RIGHT) {
@@ -538,9 +545,6 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 	return 0;
 }
 
-/*
-RegenerateUserEnvironment
- */
 ATOM RegisterChildWnd(HINSTANCE hInstance, int res_id)
 {
 	WNDCLASSEX wcFrame = {

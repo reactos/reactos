@@ -29,9 +29,9 @@ BASE_CFLAGS = -DGCC -D_WIN32_IE=0x0400
 RCFLAGS = -DGCC -D_WIN32_IE=0x0400
 
 
-OBJS =	about.o \
-	debug.o \
-	$(TARGET).o
+OBJS =	framewnd.o \
+	childwnd.o \
+	main.o
 
 LIBS = -lgdi32 -luser32 -lkernel32 -lcomctl32
 
@@ -44,41 +44,13 @@ $(TARGET).exe:	$(OBJS) $(TARGET).coff
 	$(NM) --numeric-sort $(TARGET).exe > $(TARGET).sym
 
 
-about.o:	about.cpp about.h resource.h
+main.o:		main.c main.h framewnd.h resource.h
 
-affinity.o:	affinity.cpp affinity.h
+framewnd.o:	framewnd.c framewnd.h resource.h
 
-applicationpage.o:	applicationpage.cpp applicationpage.h processpage.h $(TARGET).h resource.h
+childwnd.o:	childwnd.c childwnd.h resource.h
 
-column.o:	column.cpp column.h resource.h
-
-debug.o:	debug.cpp debug.h
-
-endproc.o:	endproc.cpp endproc.h
-
-font.o:		font.cpp font.h
-
-graph.o:	graph.cpp graph.h resource.h
-
-graphctrl.o:	graphctrl.cpp graphctrl.h resource.h
-
-optnmenu.o:	optnmenu.cpp optnmenu.h resource.h
-
-perfdata.o:	perfdata.cpp perfdata.h
-
-performancepage.o:	performancepage.cpp performancepage.h perfdata.h graphctrl.h graph.h $(TARGET).h resource.h
-
-priority.o:	priority.cpp priority.h
-
-processpage.o:	processpage.cpp processpage.h perfdata.h column.h proclist.h $(TARGET).h resource.h
-
-proclist.o:	proclist.cpp proclist.h
-
-run.o:		run.cpp run.h
-
-trayicon.o:	trayicon.cpp trayicon.h resource.h
-
-$(TARGET).o:	$(TARGET).cpp $(TARGET).h resource.h
+$(TARGET).o:	$(TARGET).c $(TARGET).h resource.h
 
 clean:
 	- $(RM) $(OBJS)

@@ -81,7 +81,8 @@ static void AddEntryToList(HWND hwndLV, int idx, Entry* entry)
     item.stateMask = 0; 
 //    item.pszText = entry->data.cFileName; 
     item.pszText = LPSTR_TEXTCALLBACK; 
-    item.cchTextMax = strlen(entry->data.cFileName); 
+//    item.cchTextMax = strlen(entry->data.cFileName); 
+    item.cchTextMax = 0; 
     item.iImage = 0; 
 //    item.iImage = I_IMAGECALLBACK; 
     item.lParam = (LPARAM)entry;
@@ -92,28 +93,24 @@ static void AddEntryToList(HWND hwndLV, int idx, Entry* entry)
 }
 
 // insert listctrl entries after index idx
-static void InsertListEntries(Pane* pane, Entry* parent, int idx)
+static void InsertListEntries(HWND hWnd, Entry* entry, int idx)
 {
-	Entry* entry = parent;
-
-	if (!entry)
-		return;
-	ShowWindow(pane->hWnd, SW_HIDE);
+  	ShowWindow(hWnd, SW_HIDE);
 
     if (idx == -1) {
     }
     idx = 0;
 
-	for(; entry; entry=entry->next) {
+	for (; entry; entry = entry->next) {
 #ifndef _LEFT_FILES
-		if (entry->data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-			continue;
+    	if (entry->data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+	    	continue;
 #endif
-        //ListBox_InsertItemData(pane->hWnd, idx, entry);
-        AddEntryToList(pane->hWnd, idx, entry); 
+        //ListBox_InsertItemData(hWnd, idx, entry);
+        AddEntryToList(hWnd, idx, entry); 
         ++idx;
-	}
-	ShowWindow(pane->hWnd, SW_SHOW);
+    }
+    ShowWindow(hWnd, SW_SHOW);
 }
 
 static void CreateListColumns(HWND hWndListView)
@@ -269,7 +266,7 @@ BOOL OnEndLabelEdit(NMLVDISPINFO* plvdi)
     // To make a more robust application you should send an EM_LIMITTEXT
     // message to the edit control to prevent the user from entering too
     // many characters in the field. 
- } 
+} 
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -333,8 +330,9 @@ void CreateListWnd(HWND parent, Pane* pane, int id, LPSTR lpszPathName)
 	SendMessage(pane->hWnd, WM_SETFONT, (WPARAM)Globals.hFont, FALSE);
 
 	 // insert entries into listbox
-	if (entry)
-		InsertListEntries(pane, entry, -1);
+    if (entry) {
+		InsertListEntries(pane->hWnd, entry, -1);
+    }
 
 	 // calculate column widths
 //	if (!s_init) {
@@ -343,4 +341,40 @@ void CreateListWnd(HWND parent, Pane* pane, int id, LPSTR lpszPathName)
 //	}
 //	calc_widths(pane, TRUE);
 }
+
+void RefreshList(HWND hWnd, Entry* entry)
+{
+    if (hWnd != NULL) {
+        ListView_DeleteAllItems(hWnd);
+        if (entry != NULL) {
+            //TRACE("RefreshList(...) entry name: %s\n", entry->data.cFileName);
+    	    InsertListEntries(hWnd, entry, -1);
+        }
+    }
+}
+/*
+typedef struct _WIN32_FIND_DATA {
+  DWORD    dwFileAttributes; 
+  FILETIME ftCreationTime; 
+  FILETIME ftLastAccessTime; 
+  FILETIME ftLastWriteTime; 
+  DWORD    nFileSizeHigh; 
+  DWORD    nFileSizeLow; 
+  DWORD    dwReserved0; 
+  DWORD    dwReserved1; 
+  TCHAR    cFileName[ MAX_PATH ]; 
+  TCHAR    cAlternateFileName[ 14 ]; 
+} WIN32_FIND_DATA, *PWIN32_FIND_DATA; 
+ */
+
+/*
+	Pane* pane = (Pane*)GetWindowLong(hWnd, GWL_USERDATA);
+    if (pane != NULL) {
+//        ListBox_RemoveAll(hWnd, TRUE, 1);
+        ListView_DeleteAllItems(pane->hWnd);
+        if (entry) {
+	    	InsertListEntries(pane->hWnd, entry, -1);
+        }
+    }
+ */
 
