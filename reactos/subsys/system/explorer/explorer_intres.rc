@@ -383,7 +383,31 @@ IDM_MAINFRAME MENU PRELOAD DISCARDABLE
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "E&xit",                       ID_FILE_EXIT
+        MENUITEM "Create Shortcut",             ID_FILE_CREATESHORTCUT
+        , GRAYED
+        MENUITEM "Delete",                      ID_FILE_DELETE, GRAYED
+        MENUITEM "Rename",                      ID_FILE_RENAME, GRAYED
+        MENUITEM "Properties",                  ID_FILE_PROPERTIES, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Close",                       ID_FILE_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "Undo",                        ID_EDIT_UNDO, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Cut",                        ID_EDIT_CUt, GRAYED
+        MENUITEM "&Copy",                       ID_EDIT_COPY, GRAYED
+        MENUITEM "&Paste",                      ID_EDIT_PASTE, GRAYED
+        MENUITEM "&Paste Shortcut",             ID_EDIT_PASTE_SHORTCUT
+        , GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Copy to Folder",              ID_EDIT_COPY_FOLDER, GRAYED
+        MENUITEM "Move to Folder",              ID_EDIT_MOVE_TO_FOLDER
+        , GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Select All",                  ID_EDIT_SELECT_ALL, GRAYED
+        MENUITEM "Invert Selection",            ID_EDIT_INVERT_SELECTION
+        , GRAYED
     END
     POPUP "&View"
     BEGIN
@@ -394,6 +418,13 @@ BEGIN
     BEGIN
         MENUITEM "New &Window",                 ID_WINDOW_NEW
         MENUITEM "&Refresh\tF5",                ID_REFRESH
+    END
+    POPUP "&Tools"
+    BEGIN
+        MENUITEM "Map Network Drive",           ID_TOOLS_MAP, GRAYED
+        MENUITEM "Disconnect Network Drive...", ID_TOOLS_DISCONNECT, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Folder Options...",           ID_TOOLS_OPTIONS, GRAYED
     END
     POPUP "&Help"
     BEGIN

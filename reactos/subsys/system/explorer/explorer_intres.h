@@ -110,6 +110,24 @@
 #define ID_EXPLORE                      40011
 #define ID_TASKMGR                      40012
 #define ID_BROWSE_UP                    40013
+
+#define ID_EDIT_UNDO                    40019
+#define ID_EDIT_COPY                    40020
+#define ID_EDIT_CUt                     40021
+#define ID_TOOLS_MAP                    40022
+#define ID_EDIT_PASTE                   40023
+#define ID_EDIT_PASTE_SHORTCUT          40024
+#define ID_TOOLS_OPTIONS                40025
+#define ID_TOOLS_DISCONNECT             40026
+#define ID_EDIT_COPY_FOLDER             40027
+#define ID_EDIT_MOVE_TO_FOLDER          40028
+#define ID_EDIT_SELECT_ALL              40029
+#define ID_EDIT_INVERT_SELECTION        40030
+#define ID_FILE_CREATESHORTCUT          40031
+#define ID_FILE_DELETE                  40032
+#define ID_FILE_RENAME                  40033
+#define ID_FILE_PROPERTIES              40034
+
 #define ID_SWITCH_DESKTOP_1             50000
 #define ID_WINDOW_NEW                   0xE130
 #define ID_EDIT_PROPERTIES              57656

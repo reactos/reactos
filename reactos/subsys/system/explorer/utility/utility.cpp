@@ -207,7 +207,7 @@ BOOL launch_fileA(HWND hwnd, LPSTR cmd, UINT nCmdShow)
 #endif
 
 
-/* search for already running win[e]files */
+/* search for already running explorers */
 
 static int g_foundPrevInstance = 0;
 
