@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.48 2004/12/27 16:48:29 navaraf Exp $
+/* $Id: message.c,v 1.49 2004/12/30 02:32:26 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -882,8 +882,13 @@ BOOL
 STDCALL
 InSendMessage(VOID)
 {
+  static DWORD ShowNotImplemented = TRUE;
+  if (ShowNotImplemented)
+    {
+      DbgPrint("InSendMessage is unimplemented\n");
+      ShowNotImplemented = FALSE;
+    }
   /* return(NtUserGetThreadState(THREADSTATE_INSENDMESSAGE) != ISMEX_NOSEND); */
-  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -1919,7 +1924,7 @@ BOOL WINAPI IsInsideMessagePumpHook()
 	if(!gfMessagePumpHook)
 		return FALSE;
 	
-    /* This code checks for WOW16. */
+    /* This code checks if we're inside SendMessage. */
 #if 0
 	/* Since our TEB doesnt match that of real windows, testing this value is useless until we know what it does
 	PUCHAR NtTeb = (PUCHAR)NtCurrentTeb();
