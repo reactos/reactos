@@ -105,9 +105,12 @@ endif
 KERNEL_DRIVERS = $(DRIVERS_LIB) $(DEVICE_DRIVERS) $(INPUT_DRIVERS) $(FS_DRIVERS) \
 	$(NET_DRIVERS) $(NET_DEVICE_DRIVERS) $(STORAGE_DRIVERS)
 
+# Regression tests
+REGTESTS = regtests
+
 all: tools dk implib $(LIB_STATIC) $(COMPONENTS) $(HALS) $(BUS) $(LIB_FSLIB) $(DLLS) $(SUBSYS) \
      $(LOADERS) $(KERNEL_DRIVERS) $(SYS_APPS) $(SYS_SVC) \
-     $(APPS) $(EXT_MODULES)
+     $(APPS) $(EXT_MODULES) $(REGTESTS)
 
 #config: $(TOOLS:%=%_config)
 
@@ -125,7 +128,7 @@ clean: tools dk_clean $(HALS:%=%_clean) \
        $(LOADERS:%=%_clean) $(KERNEL_DRIVERS:%=%_clean) $(SUBSYS:%=%_clean) \
        $(SYS_APPS:%=%_clean) $(SYS_SVC:%=%_clean) \
        $(NET_APPS:%=%_clean) \
-       $(APPS:%=%_clean) $(EXT_MODULES:%=%_clean) \
+       $(APPS:%=%_clean) $(EXT_MODULES:%=%_clean) $(REGTESTS:%=%_clean) \
        clean_after tools_clean
 
 clean_after:
@@ -136,7 +139,7 @@ install: tools install_dirs install_before \
          $(LIB_STATIC:%=%_install) $(LIB_FSLIB:%=%_install) $(DLLS:%=%_install) $(LOADERS:%=%_install) \
          $(KERNEL_DRIVERS:%=%_install) $(SUBSYS:%=%_install) \
          $(SYS_APPS:%=%_install) $(SYS_SVC:%=%_install) \
-         $(APPS:%=%_install) $(EXT_MODULES:%=%_install)
+         $(APPS:%=%_install) $(EXT_MODULES:%=%_install) $(REGTESTS:%=%_install)
 
 dist: $(TOOLS_PATH)/rcopy$(EXE_POSTFIX) dist_clean dist_dirs \
       $(HALS:%=%_dist) $(COMPONENTS:%=%_dist) $(BUS:%=%_dist) $(LIB_STATIC:%=%_dist) $(LIB_FSLIB:%=%_dist) \
@@ -743,6 +746,22 @@ $(SUBSYS:%=%_bootcd): %_bootcd:
         $(SUBSYS:%=%_dist) $(SUBSYS:%=%_bootcd)
 
 #
+# Regression testsuite
+#
+
+$(REGTESTS): %:
+	$(MAKE) -C regtests
+
+$(REGTESTS:%=%_clean): %_clean:
+	$(MAKE) -C regtests clean
+
+$(REGTESTS:%=%_install): %_install:
+	$(MAKE) -C regtests install
+
+.PHONY: $(REGTESTS) $(REGTESTS:%=%_depends) $(SUBSYS:%=%_clean) $(REGTESTS:%=%_install)
+
+
+#
 # Create an installation
 #
 
@@ -835,7 +854,6 @@ dist_dirs:
 	$(RMKDIR) $(DIST_DIR)/symbols
 
 .PHONY: dist_clean dist_dirs
-
 
 etags:
 	find . -name "*.[ch]" -print | etags --language=c -

@@ -3,6 +3,7 @@ PATH_TO_TOP = ..
 TOOLS = \
   buildno$(EXE_POSTFIX) \
   depends$(EXE_POSTFIX) \
+  regtests$(EXE_POSTFIX) \
   rcopy$(EXE_POSTFIX) \
   rdel$(EXE_POSTFIX) \
   rline$(EXE_POSTFIX) \
@@ -22,6 +23,9 @@ buildno$(EXE_POSTFIX): buildno.c ../include/reactos/version.h
 
 depends$(EXE_POSTFIX): depends.c
 	$(HOST_CC) $(CFLAGS) -o depends$(EXE_POSTFIX) depends.c
+
+regtests$(EXE_POSTFIX): regtests.c
+	$(HOST_CC) $(CFLAGS) -o regtests$(EXE_POSTFIX) regtests.c
 
 ifeq ($(HOST),mingw32-linux)
 rcopy$(EXE_POSTFIX): rcopy.c

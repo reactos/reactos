@@ -94,6 +94,7 @@ RMDIR = $(TOOLS_PATH)/rrmdir
 RMKDIR = $(TOOLS_PATH)/rmkdir
 RSYM = $(TOOLS_PATH)/rsym
 RTOUCH = $(TOOLS_PATH)/rtouch
+REGTESTS = $(TOOLS_PATH)/regtests
 MC = $(TOOLS_PATH)/wmc/wmc
 XSLTPROC = xsltproc
 

@@ -13,7 +13,7 @@ KDBG := 0
 #
 # Whether to compile for debugging
 #
-DBG := 0
+DBG := 1
 
 #
 # Whether to compile a multiprocessor or single processor version
@@ -24,6 +24,11 @@ MP := 0
 # Whether to compile for ACPI compliant systems
 #
 ACPI := 0
+
+#
+# Whether to use Structured Exception Handling
+#
+SEH := 0
 
 
 #

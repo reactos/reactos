@@ -323,6 +323,13 @@ HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga\Device0","InstalledDisplayDrivers",0x00010000,"vmx_fb"
 
+; Kernel-mode regression test driver
+HKLM,"SYSTEM\CurrentControlSet\Services\kmregtests","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\kmregtests","Group",0x00000000,"Extended Base"
+HKLM,"SYSTEM\CurrentControlSet\Services\kmregtests","ImagePath",0x00020000,"system32\drivers\kmregtests.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\kmregtests","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\kmregtests","Type",0x00010001,0x00000001
+
 
 ; ControlSet selection settings
 HKLM,"SYSTEM\Select","Current",0x00010001,0x00000001

@@ -1,0 +1,3 @@
+LIBRARY win32base.dll
+EXPORTS
+RegTestMain@0

@@ -1,5 +1,50 @@
 2003-07-11  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* regtests: New directory.
+	* regtests/kmregtests: Ditto.
+	* regtests/kmrtint: Ditto.
+	* regtests/regtests: Ditto.
+	* regtests/shared: Ditto.
+	* regtests/win32base: Ditto.
+	* include/roskrnl.h: New file.
+	* regtests/Makefile: Ditto.
+	* regtests/kmregtests/.cvsignore: Ditto.
+	* regtests/kmregtests/driver.c: Ditto.
+	* regtests/kmregtests/kmregtests.h: Ditto.
+	* regtests/kmregtests/Makefile: Ditto.
+	* regtests/kmrtint/.cvsignore: Ditto.
+	* regtests/kmrtint/kmrtint.c: Ditto.
+	* regtests/kmrtint/kmrtint.def: Ditto.
+	* regtests/kmrtint/kmrtint.edf: Ditto.
+	* regtests/kmrtint/Makefile: Ditto.
+	* regtests/regtests/.cvsignore: Ditto.
+	* regtests/regtests/Makefile: Ditto.
+	* regtests/regtests/regtests.c: Ditto.
+	* regtests/shared/.cvsignore: Ditto.
+	* regtests/shared/Makefile: Ditto.
+	* regtests/shared/regtests.c: Ditto.
+	* regtests/shared/regtests.h: Ditto.
+	* regtests/win32base/.cvsignore: Ditto.
+	* regtests/win32base/driver.c: Ditto.
+	* regtests/win32base/file-1.c: Ditto.
+	* regtests/win32base/Makefile: Ditto.
+	* regtests/win32base/win32base.def: Ditto.
+	* regtests/win32base/win32base.edf: Ditto.
+	* tools/regtests.c: Ditto.
+	* Makefile: Add target regtests.
+	* config: Add SEH option.
+	* rules.mak: Add tool REGTESTS.
+	* bootdata/hivesys.inf: Add service kmregtests.
+	* include/win32k/bitmaps.h (DIB_BitmapInfoSize): Correct prototype.
+	* ntoskrnl/ke/i386/exp.c (KiKernelTrapHandler): Reverse wrong boolean
+	expression.
+	* ntoskrnl/ke/i386/usertrap.c (KiUserTrapHandler): Ditto.
+	* tools/Makefile: Add tool regtests.
+	* tools/config.mk: Handle SEH option.
+	* tools/helper.mk: Support regression tests.
+
+2003-07-11  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* apps/tests/bitblt/bitblt.c (MainWndProc): Declare variables
 	before any statements are processed in the scope.
 	* apps/tests/icontest/icontest.c (WinMain): Ditto.
