@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.18 2000/08/25 15:52:56 ekohl Exp $
+/* $Id: volume.c,v 1.19 2001/06/11 19:54:05 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -32,8 +32,7 @@
 #define MAX_DOS_DRIVES 26
 
 
-DWORD
-STDCALL
+DWORD STDCALL
 GetLogicalDriveStringsA(DWORD nBufferLength,
 			LPSTR lpBuffer)
 {
@@ -67,8 +66,7 @@ GetLogicalDriveStringsA(DWORD nBufferLength,
 }
 
 
-DWORD
-STDCALL
+DWORD STDCALL
 GetLogicalDriveStringsW(DWORD nBufferLength,
 			LPWSTR lpBuffer)
 {
@@ -100,16 +98,14 @@ GetLogicalDriveStringsW(DWORD nBufferLength,
 }
 
 
-DWORD
-STDCALL
+DWORD STDCALL
 GetLogicalDrives(VOID)
 {
    return (((PKUSER_SHARED_DATA)USER_SHARED_DATA_BASE)->DosDeviceMap);
 }
 
 
-WINBOOL
-STDCALL
+WINBOOL STDCALL
 GetDiskFreeSpaceA (
 	LPCSTR	lpRootPathName,
 	LPDWORD	lpSectorsPerCluster,
@@ -158,8 +154,7 @@ GetDiskFreeSpaceA (
 }
 
 
-WINBOOL
-STDCALL
+WINBOOL STDCALL
 GetDiskFreeSpaceW(
     LPCWSTR lpRootPathName,
     LPDWORD lpSectorsPerCluster,
@@ -213,8 +208,7 @@ GetDiskFreeSpaceW(
 }
 
 
-WINBOOL
-STDCALL
+WINBOOL STDCALL
 GetDiskFreeSpaceExA (
 	LPCSTR		lpDirectoryName,
 	PULARGE_INTEGER	lpFreeBytesAvailableToCaller,
@@ -261,8 +255,7 @@ GetDiskFreeSpaceExA (
 }
 
 
-WINBOOL
-STDCALL
+WINBOOL STDCALL
 GetDiskFreeSpaceExW(
     LPCWSTR lpDirectoryName,
     PULARGE_INTEGER lpFreeBytesAvailableToCaller,
@@ -324,11 +317,8 @@ GetDiskFreeSpaceExW(
 }
 
 
-UINT
-STDCALL
-GetDriveTypeA (
-	LPCSTR	lpRootPathName
-	)
+UINT STDCALL
+GetDriveTypeA(LPCSTR lpRootPathName)
 {
 	UNICODE_STRING RootPathNameU;
 	ANSI_STRING RootPathName;
@@ -357,11 +347,8 @@ GetDriveTypeA (
 }
 
 
-UINT
-STDCALL
-GetDriveTypeW (
-	LPCWSTR	lpRootPathName
-	)
+UINT STDCALL
+GetDriveTypeW(LPCWSTR lpRootPathName)
 {
 	FILE_FS_DEVICE_INFORMATION FileFsDevice;
 	IO_STATUS_BLOCK IoStatusBlock;
@@ -393,9 +380,8 @@ GetDriveTypeW (
 }
 
 
-WINBOOL
-STDCALL
-GetVolumeInformationA (
+WINBOOL STDCALL
+GetVolumeInformationA(
 	LPCSTR	lpRootPathName,
 	LPSTR	lpVolumeNameBuffer,
 	DWORD	nVolumeNameSize,
@@ -500,8 +486,7 @@ GetVolumeInformationA (
 #define FS_ATTRIBUTE_BUFFER_SIZE (MAX_PATH + sizeof(FILE_FS_ATTRIBUTE_INFORMATION))
 
 
-WINBOOL
-STDCALL
+WINBOOL STDCALL
 GetVolumeInformationW(
     LPCWSTR lpRootPathName,
     LPWSTR lpVolumeNameBuffer,
@@ -634,14 +619,55 @@ SetVolumeLabelA (
 }
 
 
-WINBOOL
-STDCALL
-SetVolumeLabelW (
-	LPCWSTR	lpRootPathName,
-	LPCWSTR	lpVolumeName
-	)
+WINBOOL STDCALL
+SetVolumeLabelW(LPCWSTR lpRootPathName,
+		LPCWSTR lpVolumeName)
 {
+   PFILE_FS_LABEL_INFORMATION LabelInfo;
+   IO_STATUS_BLOCK IoStatusBlock;
+   ULONG LabelLength;
+   HANDLE hFile;
+   NTSTATUS Status;
+   
+   LabelLength = wcslen(lpVolumeName) * sizeof(WCHAR);
+   LabelInfo = RtlAllocateHeap(RtlGetProcessHeap(),
+			       0,
+			       sizeof(FILE_FS_LABEL_INFORMATION) +
+			       LabelLength);
+   LabelInfo->VolumeLabelLength = LabelLength;
+   wcscpy(&LabelInfo->VolumeLabel,
+	  lpVolumeName);
+   
+   hFile = CreateFileW(lpRootPathName,
+		       FILE_WRITE_ATTRIBUTES,
+		       FILE_SHARE_READ|FILE_SHARE_WRITE,
+		       NULL,
+		       OPEN_EXISTING,
+		       FILE_ATTRIBUTE_NORMAL,
+		       NULL);
+   DPRINT("hFile: %x\n", hFile);
+   
+   Status = NtSetVolumeInformationFile(hFile,
+				       &IoStatusBlock,
+				       LabelInfo,
+				       sizeof(FILE_FS_LABEL_INFORMATION) +
+				       LabelLength,
+				       FileFsLabelInformation);
+
+   RtlFreeHeap(RtlGetProcessHeap(),
+	       0,
+	       LabelInfo);
+
+   if (!NT_SUCCESS(Status))
+     {
+	DPRINT("Status: %x\n", Status);
+	CloseHandle(hFile);
+	SetLastErrorByStatus(Status);
 	return FALSE;
+     }
+
+   CloseHandle(hFile);
+   return TRUE;
 }
 
 /* EOF */
