@@ -1,0 +1,60 @@
+LIBRARY commctrl.dll
+EXPORTS
+;Header_Init@@YAHPAUHINSTANCE__@@@Z
+;ListView_Init@@YAHPAUHINSTANCE__@@@Z
+;TV_Init@@YAHPAUHINSTANCE__@@@Z
+;_CenterWindow	@35
+;_CommandBands_AddAdornments	@39
+;_CommandBands_AddBands	@37
+;_CommandBands_Create	@36
+;_CommandBands_GetCommandBar	@38
+;_CommandBands_GetRestoreInformation	@41
+;_CommandBands_Show	@40
+_CommandBar_AddAdornments	@10
+;_CommandBar_AddBitmap	@5
+;_CommandBar_AlignAdornments	@44
+_CommandBar_Create	@3
+;_CommandBar_DrawMenuBar	@43
+;_CommandBar_GetItemWindow	@11
+;_CommandBar_GetMenu	@9
+;_CommandBar_Height	@12
+;_CommandBar_InsertComboBox	@6
+;_CommandBar_InsertControl	@7
+_CommandBar_InsertMenubar	@8
+;_CommandBar_InsertMenubarEx	@42
+_CommandBar_Show	@4
+;_CreatePropertySheetPageW	@19
+;_CreateStatusWindowW	@17
+;_CreateToolbar	@15
+;_CreateToolbarEx	@16
+;_CreateUpDownControl	@14
+;_DPA_Destroy	@31
+;_DPA_GetPtr	@32
+;_DSA_Create	@23
+;_DSA_DeleteAllItems	@30
+;_DSA_DeleteItem	@29
+;_DSA_Destroy	@24
+;_DSA_DestroyCallback	@57
+;_DSA_GetItem	@25
+;_DSA_GetItemPtr	@26
+;_DSA_InsertItem	@27
+;_DSA_SetItem	@28
+;_DestroyPropertySheetPage	@20
+;_DrawStatusTextW	@21
+;InitCapEdit
+;_InitCommonControls	@1
+;_InitCommonControlsEx	@2
+;InitDateClasses
+;InitProgressClass
+;InitReBarClass
+;InitStatusClass
+;InitToolTipsClass
+;InitToolbarClass
+;InitTrackBar
+;InitUpDownClass
+;_InvertRect	@22
+;_IsCommandBarMessage	@13
+;_PropertySheetW	@18
+;_StrToIntW	@34
+;_Str_SetPtrW	@33
+;Tab_Init
