@@ -3,6 +3,12 @@
 
 /* Brush functions */
 
+XLATEOBJ* FASTCALL
+IntGdiCreateBrushXlate(PDC Dc, GDIBRUSHOBJ *BrushObj, BOOLEAN *Failed);
+
+VOID FASTCALL
+IntGdiInitBrushInstance(GDIBRUSHINST *BrushInst, PGDIBRUSHOBJ BrushObj, XLATEOBJ *XlateObj);
+
 HBRUSH FASTCALL
 IntGdiCreateBrushIndirect(PLOGBRUSH lb);
 

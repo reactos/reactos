@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: color.c,v 1.49 2004/07/04 17:09:45 navaraf Exp $ */
+/* $Id: color.c,v 1.50 2004/07/14 20:48:58 navaraf Exp $ */
 #include <w32k.h>
 
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
@@ -135,7 +135,8 @@ HPALETTE STDCALL NtGdiCreatePalette(CONST PLOGPALETTE palette)
 BOOL STDCALL NtGdiGetColorAdjustment(HDC  hDC,
                              LPCOLORADJUSTMENT  ca)
 {
-  UNIMPLEMENTED;
+   UNIMPLEMENTED;
+   return FALSE;
 }
 
 unsigned short GetNumberOfBits(unsigned int dwMask)
@@ -422,6 +423,7 @@ BOOL STDCALL NtGdiResizePalette(HPALETTE  hpal,
   return TRUE; */
 
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 /*!
@@ -478,7 +480,8 @@ HPALETTE STDCALL NtGdiSelectPalette(HDC  hDC,
 BOOL STDCALL NtGdiSetColorAdjustment(HDC  hDC,
                              CONST LPCOLORADJUSTMENT  ca)
 {
-  UNIMPLEMENTED;
+   UNIMPLEMENTED;
+   return FALSE;
 }
 
 UINT STDCALL NtGdiSetPaletteEntries(HPALETTE  hpal,
@@ -515,12 +518,14 @@ UINT STDCALL
 NtGdiSetSystemPaletteUse(HDC hDC, UINT Usage)
 {
    UNIMPLEMENTED;
+   return 0;
 }
 
 BOOL STDCALL
 NtGdiUnrealizeObject(HGDIOBJ hgdiobj)
 {
    UNIMPLEMENTED;
+   return FALSE;
 }
 
 BOOL STDCALL

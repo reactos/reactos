@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: print.c,v 1.19 2004/07/03 13:55:37 navaraf Exp $ */
+/* $Id: print.c,v 1.20 2004/07/14 20:48:58 navaraf Exp $ */
 #include <w32k.h>
 
 INT
@@ -24,6 +24,7 @@ STDCALL
 NtGdiAbortDoc(HDC  hDC)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 INT
@@ -31,6 +32,7 @@ STDCALL
 NtGdiEndDoc(HDC  hDC)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 INT
@@ -38,6 +40,7 @@ STDCALL
 NtGdiEndPage(HDC  hDC)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 INT
@@ -49,6 +52,7 @@ NtGdiEscape(HDC  hDC,
                 LPVOID  OutData)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 INT
@@ -184,6 +188,7 @@ NtGdiSetAbortProc(HDC  hDC,
                       ABORTPROC  AbortProc)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 INT
@@ -192,6 +197,7 @@ NtGdiStartDoc(HDC  hDC,
                   CONST LPDOCINFOW  di)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 INT
@@ -199,5 +205,6 @@ STDCALL
 NtGdiStartPage(HDC  hDC)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 /* EOF */

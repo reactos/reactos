@@ -36,20 +36,22 @@ typedef struct
    COLORREF crBack;
    COLORREF crFore;
    ULONG ulPalTime;
-#if 0
    ULONG ulSurfTime;
    PVOID ulRealization;
    ULONG Unknown4C[3];
-#else
-   BRUSHOBJ BrushObject;
-   ULONG Unknown50[2];
-#endif
    POINT ptPenWidth;
    ULONG ulPenStyle;
    DWORD *pStyle;
    ULONG dwStyleCount;
    ULONG Unknown6C;
 } GDIBRUSHOBJ, *PGDIBRUSHOBJ;
+
+typedef struct
+{
+   BRUSHOBJ BrushObject;
+   PGDIBRUSHOBJ GdiBrushObject;
+   XLATEOBJ *XlateObject;
+} GDIBRUSHINST, *PGDIBRUSHINST;
 
 /* GDI Brush Attributes */
 

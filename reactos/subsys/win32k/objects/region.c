@@ -113,7 +113,7 @@ SOFTWARE.
  * the y-x-banding that's so nice to have...
  */
 
-/* $Id: region.c,v 1.61 2004/07/03 17:40:27 navaraf Exp $ */
+/* $Id: region.c,v 1.62 2004/07/14 20:48:58 navaraf Exp $ */
 #include <w32k.h>
 #include <win32k/float.h>
 
@@ -2396,6 +2396,7 @@ NtGdiPaintRgn(HDC  hDC,
   CLIPOBJ* ClipRegion;
   BOOL bRet = FALSE;
   PGDIBRUSHOBJ pBrush;
+  GDIBRUSHINST BrushInst;
   POINTL BrushOrigin;
   BITMAPOBJ *BitmapObj;
 
@@ -2432,13 +2433,15 @@ NtGdiPaintRgn(HDC  hDC,
   ASSERT( ClipRegion );
   pBrush = BRUSHOBJ_LockBrush(dc->w.hBrush);
   ASSERT(pBrush);
+  IntGdiInitBrushInstance(&BrushInst, pBrush, dc->XlateBrush);
+  
   BrushOrigin.x = dc->w.brushOrgX;
   BrushOrigin.y = dc->w.brushOrgY;
   BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
 
   bRet = IntEngPaint(BitmapObj,
 	 ClipRegion,
-	 &pBrush->BrushObject,
+	 &BrushInst.BrushObject,
 	 &BrushOrigin,
 	 0xFFFF);//FIXME:don't know what to put here
 

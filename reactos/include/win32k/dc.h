@@ -100,6 +100,9 @@ typedef struct _DC
 
   CLIPOBJ *CombinedClip;
 
+  XLATEOBJ *XlateBrush;
+  XLATEOBJ *XlatePen;
+
   INT  saveLevel;
 
   WIN_DC_INFO  w;

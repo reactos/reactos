@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: icm.c,v 1.10 2004/05/10 17:07:20 weiden Exp $ */
+/* $Id: icm.c,v 1.11 2004/07/14 20:48:58 navaraf Exp $ */
 #include <w32k.h>
 
 BOOL
@@ -27,6 +27,7 @@ NtGdiCheckColorsInGamut(HDC  hDC,
                              UINT  Count)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 BOOL
@@ -36,6 +37,7 @@ NtGdiColorMatchToTarget(HDC  hDC,
                              DWORD  Action)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 HCOLORSPACE
@@ -43,6 +45,7 @@ STDCALL
 NtGdiCreateColorSpace(LPLOGCOLORSPACEW  LogColorSpace)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 BOOL
@@ -50,6 +53,7 @@ STDCALL
 NtGdiDeleteColorSpace(HCOLORSPACE  hColorSpace)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 INT
@@ -81,6 +85,7 @@ NtGdiGetDeviceGammaRamp(HDC  hDC,
                              LPVOID  Ramp)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 BOOL
@@ -90,6 +95,7 @@ NtGdiGetICMProfile(HDC  hDC,
                         LPWSTR  Filename)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 BOOL
@@ -99,6 +105,7 @@ NtGdiGetLogColorSpace(HCOLORSPACE  hColorSpace,
                            DWORD  Size)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 HCOLORSPACE
@@ -107,6 +114,7 @@ NtGdiSetColorSpace(HDC  hDC,
                                HCOLORSPACE  hColorSpace)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 BOOL
@@ -115,6 +123,7 @@ NtGdiSetDeviceGammaRamp(HDC  hDC,
                              LPVOID  Ramp)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 INT
@@ -145,6 +154,7 @@ NtGdiSetICMProfile(HDC  hDC,
                         LPWSTR  Filename)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 BOOL
@@ -155,6 +165,7 @@ NtGdiUpdateICMRegKey(DWORD  Reserved,
                           UINT  Command)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 /* EOF */

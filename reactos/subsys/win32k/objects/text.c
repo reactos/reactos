@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.104 2004/07/11 02:10:48 navaraf Exp $ */
+/* $Id: text.c,v 1.105 2004/07/14 20:48:58 navaraf Exp $ */
 #include <w32k.h>
 
 #include <ft2build.h>
@@ -648,6 +648,7 @@ NtGdiCreateScalableFontResource(DWORD  Hidden,
                                      LPCWSTR  CurrentPath)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 /*************************************************************************
@@ -1494,6 +1495,7 @@ NtGdiEnumFonts(HDC  hDC,
                    LPARAM  lParam)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 BOOL STDCALL
@@ -1525,8 +1527,10 @@ NtGdiExtTextOut(
    POINTL SourcePoint, BrushOrigin;
    HBRUSH hBrushFg = NULL;
    PGDIBRUSHOBJ BrushFg = NULL;
+   GDIBRUSHINST BrushFgInst;
    HBRUSH hBrushBg = NULL;
    PGDIBRUSHOBJ BrushBg = NULL;
+   GDIBRUSHINST BrushBgInst;
    HBITMAP HSourceGlyph;
    SURFOBJ *SourceGlyphSurf;
    SIZEL bitSize;
@@ -1587,12 +1591,14 @@ NtGdiExtTextOut(
    XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL);
    hBrushFg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->w.textColor));
    BrushFg = BRUSHOBJ_LockBrush(hBrushFg);
+   IntGdiInitBrushInstance(&BrushFgInst, BrushFg, NULL);
    if ((fuOptions & ETO_OPAQUE) || dc->w.backgroundMode == OPAQUE)
    {
       hBrushBg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->w.backgroundColor));
       if (hBrushBg)
       {
          BrushBg = BRUSHOBJ_LockBrush(hBrushBg);
+         IntGdiInitBrushInstance(&BrushBgInst, BrushBg, NULL);
       }
       else
       {
@@ -1625,7 +1631,7 @@ NtGdiExtTextOut(
          &DestRect,
          &SourcePoint,
          &SourcePoint,
-         &BrushBg->BrushObject,
+         &BrushBgInst.BrushObject,
          &BrushOrigin,
          PATCOPY);
       fuOptions &= ~ETO_OPAQUE;
@@ -1839,7 +1845,7 @@ NtGdiExtTextOut(
             &DestRect,
             &SourcePoint,
             &SourcePoint,
-            &BrushBg->BrushObject,
+            &BrushBgInst.BrushObject,
             &BrushOrigin,
             PATCOPY);
          BackgroundLeft = DestRect.right;
@@ -1878,7 +1884,7 @@ NtGdiExtTextOut(
          &DestRect,
          &SourcePoint,
          (PPOINTL)&MaskRect,
-         &BrushFg->BrushObject,
+         &BrushFgInst.BrushObject,
          &BrushOrigin);
 
       EngUnlockSurface(SourceGlyphSurf);
@@ -1944,6 +1950,7 @@ NtGdiGetAspectRatioFilterEx(HDC  hDC,
                                  LPSIZE  AspectRatio)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 BOOL
@@ -1965,6 +1972,7 @@ NtGdiGetCharABCWidthsFloat(HDC  hDC,
                                 LPABCFLOAT  abcF)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 DWORD
@@ -1977,6 +1985,7 @@ NtGdiGetCharacterPlacement(HDC  hDC,
                                  DWORD  Flags)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 BOOL
@@ -2090,6 +2099,7 @@ NtGdiGetCharWidthFloat(HDC  hDC,
                             PFLOAT  Buffer)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 DWORD
@@ -2097,6 +2107,7 @@ STDCALL
 NtGdiGetFontLanguageInfo(HDC  hDC)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 DWORD
@@ -2110,8 +2121,7 @@ NtGdiGetGlyphOutline(HDC  hDC,
                            CONST LPMAT2 mat2)
 {
   UNIMPLEMENTED;
-
-
+  return 0;
 }
 
 DWORD
@@ -2121,6 +2131,7 @@ NtGdiGetKerningPairs(HDC  hDC,
                            LPKERNINGPAIR  krnpair)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 UINT
@@ -2130,6 +2141,7 @@ NtGdiGetOutlineTextMetrics(HDC  hDC,
                                 LPOUTLINETEXTMETRICW  otm)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 BOOL
@@ -2138,6 +2150,7 @@ NtGdiGetRasterizerCaps(LPRASTERIZER_STATUS  rs,
                             UINT  Size)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 UINT
@@ -2145,6 +2158,7 @@ STDCALL
 NtGdiGetTextCharset(HDC  hDC)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 UINT
@@ -2154,6 +2168,7 @@ NtGdiGetTextCharsetInfo(HDC  hDC,
                              DWORD  Flags)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 static BOOL
@@ -2625,6 +2640,7 @@ NtGdiPolyTextOut(HDC  hDC,
                       int  Count)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 BOOL
@@ -2632,6 +2648,7 @@ STDCALL
 NtGdiRemoveFontResource(LPCWSTR  FileName)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 DWORD
@@ -2640,6 +2657,7 @@ NtGdiSetMapperFlags(HDC  hDC,
                           DWORD  Flag)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 UINT
@@ -2692,6 +2710,7 @@ NtGdiSetTextJustification(HDC  hDC,
                                int  BreakCount)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 BOOL STDCALL

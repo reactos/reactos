@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: copybits.c,v 1.25 2004/07/03 13:55:35 navaraf Exp $
+/* $Id: copybits.c,v 1.26 2004/07/14 20:48:57 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -41,11 +41,9 @@ EngCopyBits(SURFOBJ *Dest,
 {
   BOOLEAN   ret;
   BYTE      clippingType;
-  RECTL     rclTmp;
-  POINTL    ptlTmp;
   RECT_ENUM RectEnum;
   BOOL      EnumMore;
-  POINTL BrushOrigin;
+  BLTINFO   BltInfo;
 
   MouseSafetyOnDrawStart(Source, SourcePoint->x, SourcePoint->y,
                          (SourcePoint->x + abs(DestRect->right - DestRect->left)),
@@ -114,13 +112,20 @@ EngCopyBits(SURFOBJ *Dest,
     clippingType = Clip->iDComplexity;
   }
 
-  BrushOrigin.x = BrushOrigin.y = 0;
+  BltInfo.DestSurface = Dest;
+  BltInfo.SourceSurface = Source;
+  BltInfo.PatternSurface = NULL;
+  BltInfo.XlateSourceToDest = ColorTranslation;
+  BltInfo.XlatePatternToDest = NULL;
+  BltInfo.Rop4 = SRCCOPY;
 
   switch(clippingType)
     {
       case DC_TRIVIAL:
-        DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_BitBlt(
-          Dest, Source, DestRect, SourcePoint, NULL, BrushOrigin, ColorTranslation, SRCCOPY);
+        BltInfo.DestRect = *DestRect;
+        BltInfo.SourcePoint = *SourcePoint;
+
+        DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo);
 
         MouseSafetyOnDrawEnd(Dest);
         MouseSafetyOnDrawEnd(Source);
@@ -129,13 +134,12 @@ EngCopyBits(SURFOBJ *Dest,
 
       case DC_RECT:
         // Clip the blt to the clip rectangle
-        EngIntersectRect(&rclTmp, DestRect, &Clip->rclBounds);
+        EngIntersectRect(&BltInfo.DestRect, DestRect, &Clip->rclBounds);
 
-        ptlTmp.x = SourcePoint->x + rclTmp.left - DestRect->left;
-        ptlTmp.y = SourcePoint->y + rclTmp.top  - DestRect->top;
+        BltInfo.SourcePoint.x = SourcePoint->x + BltInfo.DestRect.left - DestRect->left;
+        BltInfo.SourcePoint.y = SourcePoint->y + BltInfo.DestRect.top  - DestRect->top;
 
-        DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_BitBlt(
-          Dest, Source, &rclTmp, &ptlTmp, NULL, BrushOrigin, ColorTranslation, SRCCOPY);
+        DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo);
 
         MouseSafetyOnDrawEnd(Dest);
         MouseSafetyOnDrawEnd(Source);
@@ -155,13 +159,13 @@ EngCopyBits(SURFOBJ *Dest,
             RECTL* prcl    = &RectEnum.arcl[0];
 
             do {
-              EngIntersectRect(prcl, prcl, DestRect);
+              EngIntersectRect(&BltInfo.DestRect, prcl, DestRect);
 
-              ptlTmp.x = SourcePoint->x + prcl->left - DestRect->left;
-              ptlTmp.y = SourcePoint->y + prcl->top - DestRect->top;
+              BltInfo.SourcePoint.x = SourcePoint->x + prcl->left - DestRect->left;
+              BltInfo.SourcePoint.y = SourcePoint->y + prcl->top - DestRect->top;
 
-              if(!DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_BitBlt(
-                    Dest, Source, prcl, &ptlTmp, NULL, BrushOrigin, ColorTranslation, SRCCOPY)) return FALSE;
+              if(!DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo))
+                return FALSE;
 
               prcl++;
 

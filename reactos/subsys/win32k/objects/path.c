@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: path.c,v 1.23 2004/07/03 17:40:27 navaraf Exp $ */
+/* $Id: path.c,v 1.24 2004/07/14 20:48:58 navaraf Exp $ */
 #include <w32k.h>
 #include <win32k/float.h>
 
@@ -43,6 +43,7 @@ STDCALL
 NtGdiAbortPath(HDC  hDC)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 BOOL
@@ -50,6 +51,7 @@ STDCALL
 NtGdiBeginPath(HDC  hDC)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 BOOL
@@ -81,6 +83,7 @@ STDCALL
 NtGdiEndPath(HDC  hDC)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 BOOL
@@ -88,6 +91,7 @@ STDCALL
 NtGdiFillPath(HDC  hDC)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 BOOL
@@ -95,6 +99,7 @@ STDCALL
 NtGdiFlattenPath(HDC  hDC)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 
@@ -104,6 +109,7 @@ NtGdiGetMiterLimit(HDC  hDC,
                         PFLOAT  Limit)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 INT
@@ -114,6 +120,7 @@ NtGdiGetPath(HDC  hDC,
                  INT  nSize)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 HRGN
@@ -121,6 +128,7 @@ STDCALL
 NtGdiPathToRegion(HDC  hDC)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 BOOL
@@ -130,6 +138,7 @@ NtGdiSetMiterLimit(HDC  hDC,
                         PFLOAT  OldLimit)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 BOOL
@@ -137,6 +146,7 @@ STDCALL
 NtGdiStrokeAndFillPath(HDC  hDC)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 BOOL
@@ -144,6 +154,7 @@ STDCALL
 NtGdiStrokePath(HDC  hDC)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 BOOL
@@ -151,6 +162,7 @@ STDCALL
 NtGdiWidenPath(HDC  hDC)
 {
    UNIMPLEMENTED;
+   return FALSE;
 }
 
 /***********************************************************************

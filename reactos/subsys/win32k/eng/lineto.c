@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: lineto.c,v 1.34 2004/07/03 13:55:35 navaraf Exp $
+ * $Id: lineto.c,v 1.35 2004/07/14 20:48:57 navaraf Exp $
  */
 #include <w32k.h>
 
@@ -40,7 +40,7 @@ TranslateRects(RECT_ENUM *RectEnum, POINTL* Translate)
 /*
  * Draw a line from top-left to bottom-right
  */
-static void FASTCALL
+void FASTCALL
 NWtoSE(SURFOBJ* OutputObj, CLIPOBJ* Clip,
        BRUSHOBJ* Brush, LONG x, LONG y, LONG deltax, LONG deltay,
        POINTL* Translate)
@@ -111,7 +111,7 @@ NWtoSE(SURFOBJ* OutputObj, CLIPOBJ* Clip,
     }
 }
 
-static void FASTCALL
+void FASTCALL
 SWtoNE(SURFOBJ* OutputObj, CLIPOBJ* Clip,
        BRUSHOBJ* Brush, LONG x, LONG y, LONG deltax, LONG deltay,
        POINTL* Translate)
@@ -181,7 +181,7 @@ SWtoNE(SURFOBJ* OutputObj, CLIPOBJ* Clip,
     }
 }
 
-static void FASTCALL
+void FASTCALL
 NEtoSW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
        BRUSHOBJ* Brush, LONG x, LONG y, LONG deltax, LONG deltay,
        POINTL* Translate)
@@ -251,7 +251,7 @@ NEtoSW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
     }
 }
 
-static void FASTCALL
+void FASTCALL
 SEtoNW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
        BRUSHOBJ* Brush, LONG x, LONG y, LONG deltax, LONG deltay,
        POINTL* Translate)
@@ -492,15 +492,15 @@ IntEngLineTo(BITMAPOBJ *DestObj,
 {
   BOOLEAN ret;
   SURFOBJ *DestSurf = &DestObj->SurfObj;
-  PGDIBRUSHOBJ GdiBrush;
+  PGDIBRUSHINST GdiBrush;
   RECTL b;
 
   GdiBrush = CONTAINING_RECORD(
      Brush,
-     GDIBRUSHOBJ,
+     GDIBRUSHINST,
      BrushObject);
 
-  if (GdiBrush->flAttrs & GDIBRUSH_IS_NULL)
+  if (GdiBrush->GdiBrushObject->flAttrs & GDIBRUSH_IS_NULL)
     return TRUE;
 
   /* No success yet */

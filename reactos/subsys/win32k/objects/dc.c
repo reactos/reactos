@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.143 2004/07/03 17:40:27 navaraf Exp $
+/* $Id: dc.c,v 1.144 2004/07/14 20:48:58 navaraf Exp $
  *
  * DC.C - Device context functions
  *
@@ -120,6 +120,7 @@ BOOL STDCALL
 NtGdiCancelDC(HDC  hDC)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 HDC STDCALL
@@ -869,6 +870,10 @@ NtGdiDeleteDC(HDC  DCHandle)
     {
       NtGdiDeleteObject (DCToDelete->w.hFirstBitmap);
     }
+    if (DCToDelete->XlateBrush != NULL)
+      EngDeleteXlate(DCToDelete->XlateBrush);
+    if (DCToDelete->XlatePen != NULL)
+      EngDeleteXlate(DCToDelete->XlatePen);
   }
   if (DCToDelete->w.hClipRgn)
   {
@@ -902,6 +907,7 @@ NtGdiDrawEscape(HDC  hDC,
                LPCSTR  lpszInData)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 INT STDCALL
@@ -911,6 +917,7 @@ NtGdiEnumObjects(HDC  hDC,
                 LPARAM  lParam)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 DC_GET_VAL( COLORREF, NtGdiGetBkColor, w.backgroundColor )
@@ -1613,6 +1620,7 @@ HDC STDCALL
 NtGdiResetDC(HDC  hDC, CONST DEVMODEW *InitData)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 BOOL STDCALL
@@ -1741,12 +1749,10 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
   PGDIBRUSHOBJ pen;
   PGDIBRUSHOBJ brush;
   XLATEOBJ *XlateObj;
-  PPALGDI PalGDI;
   DWORD objectType;
-  COLORREF MonoColorMap[2];
   ULONG NumColors = 0;
   HRGN hVisRgn;
-  USHORT Mode;
+  BOOLEAN Failed;
 
   if(!hDC || !hGDIObj) return NULL;
   
@@ -1762,101 +1768,49 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
   switch (objectType)
   {
     case GDI_OBJECT_TYPE_PEN:
-      objOrg = NULL;
-      /* Convert the color of the pen to the format of the DC */
-      PalGDI = PALETTE_LockPalette(dc->w.hPalette);
-      if (NULL != PalGDI)
-        {
-          Mode = PalGDI->Mode;
-          PALETTE_UnlockPalette(dc->w.hPalette);
-          XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL);
-          if (NULL != XlateObj)
-            {
-              pen = PENOBJ_LockPen((HPEN) hGDIObj);
-              if (NULL != pen)
-                {
-                  if (pen->flAttrs & GDIBRUSH_IS_SOLID)
-                    {
-                      pen->BrushObject.iSolidColor = 
-                        XLATEOBJ_iXlate(XlateObj, pen->BrushAttr.lbColor);
-                    }
-                  else
-                    {
-                      pen->BrushObject.iSolidColor = 0xFFFFFFFF;
-                    }
-                  pen->crBack = XLATEOBJ_iXlate(XlateObj, dc->w.backgroundColor);
-                  pen->crFore = XLATEOBJ_iXlate(XlateObj, dc->w.textColor);
-                  PENOBJ_UnlockPen((HPEN) hGDIObj);
-                  objOrg = (HGDIOBJ)dc->w.hPen;
-                  dc->w.hPen = hGDIObj;
-                }
-              else
-                {
-                  SetLastWin32Error(ERROR_INVALID_HANDLE);
-                }
-              EngDeleteXlate(XlateObj);
-	    }
-          else
-            {
-              SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
-            }
-        }
-      else
-        {
-          SetLastWin32Error(ERROR_INVALID_HANDLE);
-        }
+      pen = PENOBJ_LockPen((HPEN) hGDIObj);
+      if (pen == NULL)
+      {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        break;
+      }
+
+      XlateObj = IntGdiCreateBrushXlate(dc, pen, &Failed);
+      PENOBJ_UnlockPen((HPEN) hGDIObj);
+      if (Failed)
+      {
+        SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+        break;
+      }
+
+      objOrg = (HGDIOBJ)dc->w.hPen;
+      dc->w.hPen = hGDIObj;
+      if (dc->XlatePen != NULL)
+        EngDeleteXlate(dc->XlatePen);
+      dc->XlatePen = XlateObj;
       break;
 
     case GDI_OBJECT_TYPE_BRUSH:
-      objOrg = NULL;
-      /* Convert the color of the brush to the format of the DC */
-      PalGDI = PALETTE_LockPalette(dc->w.hPalette);
-      if (NULL != PalGDI)
-        {
-	  Mode = PalGDI->Mode;
-          PALETTE_UnlockPalette(dc->w.hPalette);
-          XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL);
-          if (NULL != XlateObj)
-            {
-              brush = BRUSHOBJ_LockBrush((HBRUSH) hGDIObj);
-              if (NULL != brush)
-                {
-                  if (brush->flAttrs & GDIBRUSH_IS_SOLID)
-                    {
-                      brush->BrushObject.iSolidColor = 
-                        XLATEOBJ_iXlate(XlateObj, brush->BrushAttr.lbColor);
-                    }
-                  else
-                    {
-                      brush->BrushObject.iSolidColor = 0xFFFFFFFF;
-                    }
-                  brush->crBack = XLATEOBJ_iXlate(XlateObj, dc->w.backgroundColor);
-                  brush->crFore = XLATEOBJ_iXlate(XlateObj, ((brush->flAttrs & GDIBRUSH_IS_HATCH) ? 
-                                                             brush->BrushAttr.lbColor : dc->w.textColor));
-                  /* according to the documentation of SetBrushOrgEx(), the origin is assigned to the
-                     next brush selected into the DC, so we should set it here */
-                  brush->ptOrigin.x = dc->w.brushOrgX;
-                  brush->ptOrigin.y = dc->w.brushOrgY;
-                  
-                  BRUSHOBJ_UnlockBrush((HBRUSH) hGDIObj);
-                  objOrg = (HGDIOBJ)dc->w.hBrush;
-                  dc->w.hBrush = (HBRUSH) hGDIObj;
-                }
-              else
-                {
-                  SetLastWin32Error(ERROR_INVALID_HANDLE);
-                }
-              EngDeleteXlate(XlateObj);
-            }
-          else
-            {
-              SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
-            }
-        }
-      else
-        {
-          SetLastWin32Error(ERROR_INVALID_HANDLE);
-        }
+      brush = BRUSHOBJ_LockBrush((HPEN) hGDIObj);
+      if (brush == NULL)
+      {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        break;
+      }
+
+      XlateObj = IntGdiCreateBrushXlate(dc, brush, &Failed);
+      BRUSHOBJ_UnlockBrush((HPEN) hGDIObj);
+      if (Failed)
+      {
+        SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+        break;
+      }
+
+      objOrg = (HGDIOBJ)dc->w.hBrush;
+      dc->w.hBrush = hGDIObj;
+      if (dc->XlateBrush != NULL)
+        EngDeleteXlate(dc->XlateBrush);
+      dc->XlateBrush = XlateObj;
       break;
 
     case GDI_OBJECT_TYPE_FONT:
@@ -1907,17 +1861,12 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       else
       {
         dc->w.bitsPerPixel = BitsPerFormat(pb->SurfObj.iBitmapFormat);
-        if (1 == dc->w.bitsPerPixel)
-          {
-            MonoColorMap[0] = RGB(0, 0, 0);
-            MonoColorMap[1] = RGB(255, 255, 255);
-            dc->w.hPalette = PALETTE_AllocPaletteIndexedRGB(2, (RGBQUAD*)MonoColorMap);
-          }
-        else
-          {
-            dc->w.hPalette = dc->DevInfo->hpalDefault;
-          }
+        dc->w.hPalette = dc->DevInfo->hpalDefault;
       }
+
+      /* Reselect brush and pen to regenerate the XLATEOBJs. */
+      NtGdiSelectObject ( hDC, dc->w.hBrush );
+      NtGdiSelectObject ( hDC, dc->w.hPen );
 
       DC_UnlockDc ( hDC );
       hVisRgn = NtGdiCreateRectRgn ( 0, 0, pb->SurfObj.sizlBitmap.cx, pb->SurfObj.sizlBitmap.cy );
@@ -2034,6 +1983,8 @@ DC_AllocDC(PUNICODE_STRING Driver)
   NewDC->wndExtY = 1.0f;
   NewDC->vportExtX = 1.0f;
   NewDC->vportExtY = 1.0f;
+  NewDC->w.textColor = 0;
+  NewDC->w.backgroundColor = 0xffffff;
 
   NewDC->w.hFont = NtGdiGetStockObject(SYSTEM_FONT);
   TextIntRealizeFont(NewDC->w.hFont);
@@ -2183,89 +2134,20 @@ IntIsPrimarySurface(SURFOBJ *SurfObj)
 COLORREF FASTCALL
 IntGetDCColor(HDC hDC, ULONG Object)
 {
-  COLORREF Result;
-  DC *dc;
-  PPALGDI PalGDI;
-  PGDIBRUSHOBJ pen;
-  PGDIBRUSHOBJ brush;
-  XLATEOBJ *XlateObj;
-  HPALETTE Pal = 0;
-  USHORT Mode;
-  ULONG iColor;
-  
-  if(!(dc = DC_LockDc(hDC)))
-  {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
-    return CLR_INVALID;
-  }
-  
-  switch(Object)
-  {
-    case OBJ_PEN:
-    {
-      if(!(pen = PENOBJ_LockPen(dc->w.hPen)))
-      {
-        DC_UnlockDc(hDC);
-        return CLR_INVALID;
-      }
-      if(!(pen->flAttrs & GDIBRUSH_IS_SOLID))
-      {
-        /* FIXME - just bail here? */
-        PENOBJ_UnlockPen(dc->w.hPen);
-        DC_UnlockDc(hDC);
-        return CLR_INVALID;
-      }
-      iColor = pen->BrushObject.iSolidColor;
-      PENOBJ_UnlockPen(dc->w.hPen);
-      break;
-    }
-    case OBJ_BRUSH:
-    {
-      if(!(brush = BRUSHOBJ_LockBrush(dc->w.hBrush)))
-      {
-        DC_UnlockDc(hDC);
-        return CLR_INVALID;
-      }
-      if(!(brush->flAttrs & GDIBRUSH_IS_SOLID))
-      {
-        /* FIXME - just bail here? */
-        BRUSHOBJ_UnlockBrush(dc->w.hBrush);
-        DC_UnlockDc(hDC);
-        return CLR_INVALID;
-      }
-      iColor = brush->BrushObject.iSolidColor;
-      BRUSHOBJ_UnlockBrush(dc->w.hBrush);
-      break;
-    }
-    default:
-    {
-      DC_UnlockDc(hDC);
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      return CLR_INVALID;
-    }
-  }
-  
-  /* translate the color into RGB */
-  
-  if(dc->w.hPalette)
-    Pal = dc->w.hPalette;
-  
-  Result = CLR_INVALID;
-  
-  if((PalGDI = PALETTE_LockPalette(dc->w.hPalette)))
-  {
-    Mode = PalGDI->Mode;
-    PALETTE_UnlockPalette(dc->w.hPalette);
-    XlateObj = (XLATEOBJ*)IntEngCreateXlate(PAL_RGB, Mode, NULL, Pal);
-    if(XlateObj)
-    {
-      Result = XLATEOBJ_iXlate(XlateObj, iColor);
-      EngDeleteXlate(XlateObj);
-    }
-  }
-  
-  DC_UnlockDc(hDC);
-  return Result;
+   /*
+    * The previous implementation was completly incorrect. It modified the
+    * brush that was currently selected into the device context, but in fact
+    * the DC pen/brush color should be stored directly in the device context
+    * (at address 0x2C of the user mode DC object memory on Windows 2K/XP).
+    * The actual color is then used when DC_BRUSH/DC_PEN object is selected
+    * into the device context and BRUSHOBJ for drawing is composed (belongs
+    * to IntGdiInitBrushInstance in the current ReactOS implementation). Also
+    * the implementation should be moved to user mode GDI32.dll when UM
+    * mapped GDI objects will be implemented.
+    */
+
+   DPRINT("WIN32K:IntGetDCColor is unimplemented\n");
+   return 0xFFFFFF; /* The default DC color. */
 }
 
 /*
@@ -2275,133 +2157,10 @@ IntGetDCColor(HDC hDC, ULONG Object)
 COLORREF FASTCALL
 IntSetDCColor(HDC hDC, ULONG Object, COLORREF Color)
 {
-  COLORREF Result;
-  DC *dc;
-  PPALGDI PalGDI;
-  PGDIBRUSHOBJ pen;
-  PGDIBRUSHOBJ brush;
-  XLATEOBJ *XlateObj;
-  HPALETTE Pal = 0;
-  USHORT Mode;
-  ULONG iColor;
-  
-  if(Color == CLR_INVALID)
-  {
-    SetLastWin32Error(ERROR_INVALID_PARAMETER);
-    return CLR_INVALID;
-  }
-  
-  if(!(dc = DC_LockDc(hDC)))
-  {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
-    return CLR_INVALID;
-  }
-  
-  switch(Object)
-  {
-    case OBJ_PEN:
-    {
-      if(!(pen = PENOBJ_LockPen(dc->w.hPen)))
-      {
-        DC_UnlockDc(hDC);
-        return CLR_INVALID;
-      }
-      if(!(pen->flAttrs & GDIBRUSH_IS_SOLID))
-      {
-        /* FIXME - just bail here? */
-        PENOBJ_UnlockPen(dc->w.hPen);
-        DC_UnlockDc(hDC);
-        return CLR_INVALID;
-      }
-      
-      /* save old color index, translate it to RGB later */
-      iColor = pen->BrushObject.iSolidColor;
-      
-      if(!(PalGDI = PALETTE_LockPalette(dc->w.hPalette)))
-      {
-        PENOBJ_UnlockPen(dc->w.hPen);
-        DC_UnlockDc(hDC);
-        return CLR_INVALID;
-      }
-      Mode = PalGDI->Mode;
-      PALETTE_UnlockPalette(dc->w.hPalette);
-      if(!(XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL)))
-      {
-        PENOBJ_UnlockPen(dc->w.hPen);
-        DC_UnlockDc(hDC);
-        return CLR_INVALID;
-      }
-      pen->BrushObject.iSolidColor = XLATEOBJ_iXlate(XlateObj, (ULONG)Color);
-      EngDeleteXlate(XlateObj);
-      PENOBJ_UnlockPen(dc->w.hPen);
-      break;
-    }
-    case OBJ_BRUSH:
-    {
-      if(!(brush = BRUSHOBJ_LockBrush(dc->w.hBrush)))
-      {
-        DC_UnlockDc(hDC);
-        return CLR_INVALID;
-      }
-      if(!(brush->flAttrs & GDIBRUSH_IS_SOLID))
-      {
-        /* FIXME - just bail here? */
-        BRUSHOBJ_UnlockBrush(dc->w.hBrush);
-        DC_UnlockDc(hDC);
-        return CLR_INVALID;
-      }
-      
-      /* save old color index, translate it to RGB later */
-      iColor = brush->BrushObject.iSolidColor;
-      
-      if(!(PalGDI = PALETTE_LockPalette(dc->w.hPalette)))
-      {
-        PENOBJ_UnlockPen(dc->w.hPen);
-        DC_UnlockDc(hDC);
-        return CLR_INVALID;
-      }
-      Mode = PalGDI->Mode;
-      PALETTE_UnlockPalette(dc->w.hPalette);
-      if(!(XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL)))
-      {
-        PENOBJ_UnlockPen(dc->w.hPen);
-        DC_UnlockDc(hDC);
-        return CLR_INVALID;
-      }
-      brush->BrushObject.iSolidColor = XLATEOBJ_iXlate(XlateObj, (ULONG)Color);
-      EngDeleteXlate(XlateObj);
-      BRUSHOBJ_UnlockBrush(dc->w.hBrush);
-      break;
-    }
-    default:
-    {
-      DC_UnlockDc(hDC);
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      return CLR_INVALID;
-    }
-  }
-  
-  /* translate the old color into RGB */
-  
-  if(dc->w.hPalette)
-    Pal = dc->w.hPalette;
-  
-  Result = CLR_INVALID;
-  
-  if((PalGDI = PALETTE_LockPalette(dc->w.hPalette)))
-  {
-    Mode = PalGDI->Mode;
-    PALETTE_UnlockPalette(dc->w.hPalette);
-    XlateObj = (XLATEOBJ*)IntEngCreateXlate(PAL_RGB, Mode, NULL, Pal);
-    if(XlateObj)
-    {
-      Result = XLATEOBJ_iXlate(XlateObj, iColor);
-      EngDeleteXlate(XlateObj);
-    }
-  }
-  
-  DC_UnlockDc(hDC);
-  return Result;
+   /* See the comment in IntGetDCColor. */
+
+   DPRINT("WIN32K:IntSetDCColor is unimplemented\n");
+   return CLR_INVALID;
 }
 
 /* EOF */

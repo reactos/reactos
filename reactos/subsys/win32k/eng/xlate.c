@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: xlate.c,v 1.40 2004/07/04 17:09:45 navaraf Exp $
+/* $Id: xlate.c,v 1.41 2004/07/14 20:48:57 navaraf Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -162,6 +162,11 @@ IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
    else if (PaletteDest != NULL)
       DestPalGDI = PALETTE_LockPalette(PaletteDest);
 
+   if (SourcePalType == 0)
+      SourcePalType = SourcePalGDI->Mode;
+   if (DestPalType == 0)
+      DestPalType = DestPalGDI->Mode;
+
    XlateObj->iSrcType = SourcePalType;
    XlateObj->iDstType = DestPalType;
    XlateObj->flXlate = 0;
@@ -269,14 +274,20 @@ XLATEOBJ * STDCALL IntEngCreateMonoXlate(
    USHORT SourcePalType, HPALETTE PaletteDest, HPALETTE PaletteSource,
    ULONG BackgroundColor)
 {
-   HPALETTE NewXlate;
+   ULONG NewXlate;
    XLATEOBJ *XlateObj;
    XLATEGDI *XlateGDI;
    PALGDI *SourcePalGDI;
 
-   NewXlate = (HPALETTE)CreateGDIHandle(sizeof(XLATEGDI), sizeof(XLATEOBJ), (PVOID*)&XlateGDI, (PVOID*)&XlateObj);
+   NewXlate = CreateGDIHandle(sizeof(XLATEGDI), sizeof(XLATEOBJ), (PVOID*)&XlateGDI, (PVOID*)&XlateObj);
    if (!ValidEngHandle(NewXlate))
       return NULL;
+
+   SourcePalGDI = PALETTE_LockPalette(PaletteSource);
+   ASSERT(SourcePalGDI);
+
+   if (SourcePalType == 0)
+      SourcePalType = SourcePalGDI->Mode;
 
    XlateObj->iSrcType = SourcePalType;
    XlateObj->iDstType = PAL_INDEXED;
@@ -303,17 +314,68 @@ XLATEOBJ * STDCALL IntEngCreateMonoXlate(
          break;
       case PAL_BITFIELDS:
          {
-            SourcePalGDI = PALETTE_LockPalette(PaletteSource);
             BitMasksFromPal(SourcePalType, SourcePalGDI, &XlateGDI->RedMask,
                &XlateGDI->BlueMask, &XlateGDI->GreenMask);
             XlateGDI->RedShift = CalculateShift(0xFF) - CalculateShift(XlateGDI->RedMask);
             XlateGDI->GreenShift = CalculateShift(0xFF00) - CalculateShift(XlateGDI->GreenMask);
             XlateGDI->BlueShift = CalculateShift(0xFF0000) - CalculateShift(XlateGDI->BlueMask);
             XlateGDI->BackgroundColor = ShiftAndMask(XlateGDI, BackgroundColor);
-            PALETTE_UnlockPalette(PaletteSource);
          }
          break;
    }
+
+   PALETTE_UnlockPalette(PaletteSource);
+
+   return XlateObj;
+}
+
+XLATEOBJ * STDCALL
+IntEngCreateSrcMonoXlate(HPALETTE PaletteDest,
+                         ULONG ForegroundColor,
+                         ULONG BackgroundColor)
+{
+   ULONG NewXlate;
+   XLATEOBJ *XlateObj;
+   XLATEGDI *XlateGDI;
+   PALGDI *DestPalGDI;
+
+   DestPalGDI = PALETTE_LockPalette(PaletteDest);
+   if (DestPalGDI == NULL)
+      return NULL;
+
+   NewXlate = CreateGDIHandle(sizeof(XLATEGDI), sizeof(XLATEOBJ), (PVOID*)&XlateGDI, (PVOID*)&XlateObj);
+   if (!ValidEngHandle(NewXlate))
+      return NULL;
+
+   XlateGDI->translationTable = EngAllocMem(0, sizeof(ULONG) * 2, 0);
+   if (XlateGDI->translationTable == NULL)
+   {
+      FreeGDIHandle(NewXlate);
+      return NULL;
+   }
+
+   XlateObj->pulXlate = XlateGDI->translationTable;
+
+   XlateObj->iSrcType = PAL_INDEXED;
+   XlateObj->iDstType = DestPalGDI->Mode;
+
+   /* Store handles of palettes in internal Xlate GDI object (or NULLs) */
+   XlateGDI->SourcePal = NULL;
+   XlateGDI->DestPal = PaletteDest;
+
+   XlateObj->flXlate = XO_TABLE;
+
+   BitMasksFromPal(DestPalGDI->Mode, DestPalGDI, &XlateGDI->RedMask,
+      &XlateGDI->BlueMask, &XlateGDI->GreenMask);
+
+   XlateGDI->RedShift = CalculateShift(RGB(255, 0, 0)) - CalculateShift(XlateGDI->RedMask);
+   XlateGDI->GreenShift = CalculateShift(RGB(0, 255, 0)) - CalculateShift(XlateGDI->GreenMask);
+   XlateGDI->BlueShift = CalculateShift(RGB(0, 0, 255)) - CalculateShift(XlateGDI->BlueMask);
+
+   XlateGDI->translationTable[0] = ShiftAndMask(XlateGDI, BackgroundColor);
+   XlateGDI->translationTable[1] = ShiftAndMask(XlateGDI, ForegroundColor);
+
+   PALETTE_UnlockPalette(PaletteDest);
 
    return XlateObj;
 }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: line.c,v 1.36 2004/07/03 22:36:01 navaraf Exp $ */
+/* $Id: line.c,v 1.37 2004/07/14 20:48:58 navaraf Exp $ */
 #include <w32k.h>
 
 // Some code from the WINE project source (www.winehq.com)
@@ -54,6 +54,7 @@ IntGdiLineTo(DC  *dc,
   BITMAPOBJ *BitmapObj;
   BOOL      Ret = TRUE;
   PGDIBRUSHOBJ PenBrushObj;
+  GDIBRUSHINST PenBrushInst;
   RECTL     Bounds;
   POINT     Points[2];
 
@@ -101,9 +102,10 @@ IntGdiLineTo(DC  *dc,
 
       if (!(PenBrushObj->flAttrs & GDIBRUSH_IS_NULL))
       {
+        IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);
         Ret = IntEngLineTo(BitmapObj,
                            dc->CombinedClip,
-                           &PenBrushObj->BrushObject,
+                           &PenBrushInst.BrushObject,
                            Points[0].x, Points[0].y,
                            Points[1].x, Points[1].y,
                            &Bounds,
@@ -190,6 +192,7 @@ IntGdiPolyline(DC      *dc,
 {
    BITMAPOBJ *BitmapObj;
    GDIBRUSHOBJ *PenBrushObj;
+   GDIBRUSHINST PenBrushInst;
    LPPOINT Points;
    BOOL Ret = TRUE;
    LONG i;
@@ -219,8 +222,9 @@ IntGdiPolyline(DC      *dc,
             Points[i].y += dc->w.DCOrgY;
          }
 
+         IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);
          Ret = IntEngPolyline(BitmapObj, dc->CombinedClip,
-     			   &PenBrushObj->BrushObject, Points, Count,
+     			   &PenBrushInst.BrushObject, Points, Count,
      			   dc->w.ROPmode);
 
          BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
@@ -337,6 +341,7 @@ NtGdiAngleArc(HDC  hDC,
              FLOAT  SweepAngle)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 BOOL
@@ -611,6 +616,7 @@ NtGdiPolyDraw(HDC            hDC,
              int            Count)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 BOOL

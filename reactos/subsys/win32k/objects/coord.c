@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: coord.c,v 1.25 2004/06/18 15:18:54 navaraf Exp $
+/* $Id: coord.c,v 1.26 2004/07/14 20:48:58 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -481,7 +481,8 @@ NtGdiScaleViewportExtEx(HDC  hDC,
                              int  Ydenom,
                              LPSIZE  Size)
 {
-  UNIMPLEMENTED;
+   UNIMPLEMENTED;
+   return FALSE;
 }
 
 BOOL
@@ -493,7 +494,8 @@ NtGdiScaleWindowExtEx(HDC  hDC,
                            int  Ydenom,
                            LPSIZE  Size)
 {
-  UNIMPLEMENTED;
+   UNIMPLEMENTED;
+   return FALSE;
 }
 
 int

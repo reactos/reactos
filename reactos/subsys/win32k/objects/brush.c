@@ -17,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: brush.c,v 1.39 2004/07/03 17:40:27 navaraf Exp $
+ * $Id: brush.c,v 1.40 2004/07/14 20:48:57 navaraf Exp $
  */
 #include <w32k.h>
 
@@ -45,6 +45,56 @@ Brush_InternalDelete( PGDIBRUSHOBJ pBrush )
   return TRUE;
 }
 
+XLATEOBJ* FASTCALL
+IntGdiCreateBrushXlate(PDC Dc, GDIBRUSHOBJ *BrushObj, BOOLEAN *Failed)
+{
+   XLATEOBJ *Result = NULL;
+
+   if (BrushObj->flAttrs & GDIBRUSH_IS_NULL)
+   {
+      Result = NULL;
+      *Failed = FALSE;
+   }
+   else if (BrushObj->flAttrs & GDIBRUSH_IS_SOLID)
+   {
+      Result = IntEngCreateXlate(0, PAL_RGB, Dc->w.hPalette, NULL);
+      *Failed = FALSE;
+   }
+   else
+   {
+      BITMAPOBJ *Pattern = BITMAPOBJ_LockBitmap(BrushObj->hbmPattern);
+      if (Pattern == NULL)
+         return NULL;
+
+      /* Special case: 1bpp pattern */
+      if (Pattern->SurfObj.iBitmapFormat == BMF_1BPP)
+      {
+         if (Dc->w.bitsPerPixel != 1)
+            Result = IntEngCreateSrcMonoXlate(Dc->w.hPalette, Dc->w.textColor, Dc->w.backgroundColor);
+      }
+
+      BITMAPOBJ_UnlockBitmap(BrushObj->hbmPattern);
+      *Failed = FALSE;
+   }
+
+   return Result;
+}
+
+VOID FASTCALL
+IntGdiInitBrushInstance(GDIBRUSHINST *BrushInst, PGDIBRUSHOBJ BrushObj, XLATEOBJ *XlateObj)
+{
+   if (BrushObj->flAttrs & GDIBRUSH_IS_NULL)
+      BrushInst->BrushObject.iSolidColor = 0;			
+   else if (BrushObj->flAttrs & GDIBRUSH_IS_SOLID)
+      BrushInst->BrushObject.iSolidColor = XLATEOBJ_iXlate(XlateObj, BrushObj->BrushAttr.lbColor);
+   else
+      BrushInst->BrushObject.iSolidColor = 0xFFFFFFFF;
+   BrushInst->BrushObject.pvRbrush = BrushObj->ulRealization;
+   BrushInst->BrushObject.flColorType = 0;
+   BrushInst->GdiBrushObject = BrushObj;
+   BrushInst->XlateObject = XlateObj;
+}
+
 HBRUSH FASTCALL
 IntGdiCreateBrushIndirect(PLOGBRUSH LogBrush)
 {
@@ -54,21 +104,23 @@ IntGdiCreateBrushIndirect(PLOGBRUSH LogBrush)
    
    switch (LogBrush->lbStyle)
    {
-     case BS_HATCHED:
-       if(!(hPattern = NtGdiCreateBitmap(8, 8, 1, 1, HatchBrushes[LogBrush->lbHatch])))
-       {
-         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-         return NULL;
-       }
-       break;
+      case BS_HATCHED:
+         hPattern = NtGdiCreateBitmap(8, 8, 1, 1, HatchBrushes[LogBrush->lbHatch]);
+         if (hPattern == NULL)
+         {
+            SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+            return NULL;
+         }
+         break;
      
-     case BS_PATTERN:
-       if(!(hPattern = BITMAPOBJ_CopyBitmap((HBITMAP)LogBrush->lbHatch)))
-       {
-         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-         return NULL;
-       }
-       break;
+      case BS_PATTERN:
+         hPattern = BITMAPOBJ_CopyBitmap((HBITMAP)LogBrush->lbHatch);
+         if (hPattern == NULL)
+         {
+            SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+            return NULL;
+         }
+         break;
    }
    
    hBrush = BRUSHOBJ_AllocBrush();
@@ -89,7 +141,6 @@ IntGdiCreateBrushIndirect(PLOGBRUSH LogBrush)
       case BS_SOLID:
          BrushObject->flAttrs |= GDIBRUSH_IS_SOLID;
          BrushObject->BrushAttr.lbColor = LogBrush->lbColor & 0xFFFFFF;
-         BrushObject->BrushObject.iSolidColor = BrushObject->BrushAttr.lbColor;
          /* FIXME: Fill in the rest of fields!!! */
          break;
 
@@ -97,13 +148,11 @@ IntGdiCreateBrushIndirect(PLOGBRUSH LogBrush)
          BrushObject->flAttrs |= GDIBRUSH_IS_HATCH;
          BrushObject->hbmPattern = hPattern;
          BrushObject->BrushAttr.lbColor = LogBrush->lbColor & 0xFFFFFF;
-         BrushObject->BrushObject.iSolidColor = 0xFFFFFFFF;
          break;
 
       case BS_PATTERN:
          BrushObject->flAttrs |= GDIBRUSH_IS_BITMAP;
          BrushObject->hbmPattern = hPattern;
-         BrushObject->BrushObject.iSolidColor = 0xFFFFFFFF;
          /* FIXME: Fill in the rest of fields!!! */
          break;
 
@@ -128,6 +177,7 @@ IntPatBlt(
 {
    RECTL DestRect;
    BITMAPOBJ *BitmapObj;
+   GDIBRUSHINST BrushInst;
    POINTL BrushOrigin;
    BOOL ret = TRUE;
 
@@ -166,6 +216,8 @@ IntPatBlt(
       BrushOrigin.x = BrushObj->ptOrigin.x + dc->w.DCOrgX;
       BrushOrigin.y = BrushObj->ptOrigin.y + dc->w.DCOrgY;
 
+      IntGdiInitBrushInstance(&BrushInst, BrushObj, dc->XlateBrush);
+
       ret = IntEngBitBlt(
          BitmapObj,
          NULL,
@@ -175,7 +227,7 @@ IntPatBlt(
          &DestRect,
          NULL,
          NULL,
-         &BrushObj->BrushObject,
+         &BrushInst.BrushObject,
          &BrushOrigin,
          ROP);
    }

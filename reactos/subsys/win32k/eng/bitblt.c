@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.57 2004/07/03 17:40:25 navaraf Exp $
+/* $Id: bitblt.c,v 1.58 2004/07/14 20:48:57 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -88,7 +88,7 @@ BltMask(SURFOBJ* Dest,
    BYTE *tMask, *lMask;
    static BYTE maskbit[8] = { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
    /* Pattern brushes */
-   PGDIBRUSHOBJ GdiBrush = NULL;
+   PGDIBRUSHINST GdiBrush = NULL;
    HBITMAP PatternSurface = NULL;
    SURFOBJ *PatternObj = NULL;
    ULONG PatternWidth = 0, PatternHeight = 0, PatternY = 0;
@@ -107,11 +107,11 @@ BltMask(SURFOBJ* Dest,
 
       GdiBrush = CONTAINING_RECORD(
          Brush,
-         GDIBRUSHOBJ,
+         GDIBRUSHINST,
          BrushObject);
 
-      PatternSurface = GdiBrush->hbmPattern;
-      PatternBitmap = BITMAPOBJ_LockBitmap(GdiBrush->hbmPattern);
+      PatternSurface = GdiBrush->GdiBrushObject->hbmPattern;
+      PatternBitmap = BITMAPOBJ_LockBitmap(GdiBrush->GdiBrushObject->hbmPattern);
 
       PatternObj = &PatternBitmap->SurfObj;
       PatternWidth = PatternObj->sizlBitmap.cx;
@@ -140,7 +140,7 @@ BltMask(SURFOBJ* Dest,
             {
                DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_PutPixel(
                   Dest, DestRect->left + i, DestRect->top + j,
-                  DIB_1BPP_GetPixel(PatternObj, (DestRect->left + i) % PatternWidth, PatternY) ? GdiBrush->crFore : GdiBrush->crBack);
+                  DIB_GetSource(PatternObj, (DestRect->left + i) % PatternWidth, PatternY, GdiBrush->XlateObject));
             }
          }
          c8++;
@@ -198,18 +198,44 @@ CallDibBitBlt(SURFOBJ* OutputObj,
               POINTL* BrushOrigin,
               ROP4 Rop4)
 {
-  POINTL RealBrushOrigin;
-  if (BrushOrigin == NULL)
-    {
-      RealBrushOrigin.x = RealBrushOrigin.y = 0;
-    }
-  else
-    {
-      RealBrushOrigin = *BrushOrigin;
-    }
+   BLTINFO BltInfo;
+   PGDIBRUSHINST GdiBrush = NULL;
+   BITMAPOBJ *bmPattern;
+   BOOLEAN Result;
 
-  return DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_BitBlt(
-    OutputObj, InputObj, OutputRect, InputPoint, Brush, RealBrushOrigin, ColorTranslation, Rop4);
+   BltInfo.DestSurface = OutputObj;
+   BltInfo.SourceSurface = InputObj;
+   BltInfo.PatternSurface = NULL;
+   BltInfo.XlateSourceToDest = ColorTranslation;
+   BltInfo.DestRect = *OutputRect;
+   BltInfo.SourcePoint = *InputPoint;
+
+   if (Rop4 == SRCCOPY)
+      return DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo);
+
+   BltInfo.XlatePatternToDest = NULL;
+   BltInfo.Brush = Brush;
+   BltInfo.BrushOrigin = *BrushOrigin;
+   BltInfo.Rop4 = Rop4;
+
+   /* Pattern brush */
+   if (ROP_USES_PATTERN(Rop4) && Brush->iSolidColor == 0xFFFFFFFF)
+   {
+      GdiBrush = CONTAINING_RECORD(Brush, GDIBRUSHINST, BrushObject);
+      bmPattern = BITMAPOBJ_LockBitmap(GdiBrush->GdiBrushObject->hbmPattern);
+      BltInfo.PatternSurface = &bmPattern->SurfObj;
+      BltInfo.XlatePatternToDest = GdiBrush->XlateObject;
+   }
+
+   Result = DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_BitBlt(&BltInfo);
+
+   /* Pattern brush */
+   if (ROP_USES_PATTERN(Rop4) && Brush->iSolidColor == 0xFFFFFFFF)
+   {
+      BITMAPOBJ_UnlockBitmap(BltInfo.PatternSurface->hsurf);
+   }
+
+   return Result;
 }
 
 INT abs(INT nm);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.78 2004/07/07 16:36:08 navaraf Exp $ */
+/* $Id: bitmaps.c,v 1.79 2004/07/14 20:48:57 navaraf Exp $ */
 #include <w32k.h>
 
 #define IN_RECT(r,x,y) \
@@ -45,14 +45,12 @@ NtGdiBitBlt(
 	RECTL DestRect;
 	POINTL SourcePoint, BrushOrigin;
 	BOOL Status;
-	PPALGDI PalDestGDI, PalSourceGDI;
 	XLATEOBJ *XlateObj = NULL;
 	HPALETTE SourcePalette = 0, DestPalette = 0;
-	ULONG SourceMode, DestMode;
 	PGDIBRUSHOBJ BrushObj;
-	BOOL UsesSource = ((ROP & 0xCC0000) >> 2) != (ROP & 0x330000);
-	BOOL UsesPattern = TRUE;//((ROP & 0xF00000) >> 4) != (ROP & 0x0F0000);
-	HPALETTE Mono = NULL;
+	GDIBRUSHINST BrushInst;
+	BOOL UsesSource = ROP_USES_SOURCE(ROP);
+	BOOL UsesPattern = ROP_USES_PATTERN(ROP);
 
 	DCDest = DC_LockDc(hDCDest);
 	if (NULL == DCDest)
@@ -133,6 +131,7 @@ NtGdiBitBlt(
 			return FALSE;
 		}
 		BrushOrigin = BrushObj->ptOrigin;
+		IntGdiInitBrushInstance(&BrushInst, BrushObj, DCDest->XlateBrush);
 	}
 	else
 	{
@@ -148,97 +147,48 @@ NtGdiBitBlt(
 		if (DCSrc->w.hPalette != 0)
 			SourcePalette = DCSrc->w.hPalette;
 
-		PalSourceGDI = PALETTE_LockPalette(SourcePalette);
-		if (NULL == PalSourceGDI)
+		/* KB41464 details how to convert between mono and color */
+		if (DCDest->w.bitsPerPixel == DCSrc->w.bitsPerPixel == 1)
 		{
-			if (UsesSource && hDCSrc != hDCDest)
-			{
-				DC_UnlockDc(hDCSrc);
-			}
-			DC_UnlockDc(hDCDest);
-			SetLastWin32Error(ERROR_INVALID_HANDLE);
-			return FALSE;
-		}
-		SourceMode = PalSourceGDI->Mode;
-		PALETTE_UnlockPalette(SourcePalette);
-
-		if (DestPalette == SourcePalette)
-		{
-			DestMode = SourceMode;
+			XlateObj = NULL;
 		}
 		else
 		{
-			PalDestGDI = PALETTE_LockPalette(DestPalette);
-			if (NULL == PalDestGDI)
+			if (DCDest->w.bitsPerPixel == 1)
+			{
+				XlateObj = IntEngCreateMonoXlate(0, DestPalette, SourcePalette, DCSrc->w.backgroundColor);
+			}
+			else if (DCSrc->w.bitsPerPixel == 1)
+			{
+				XlateObj = IntEngCreateSrcMonoXlate(DestPalette, DCSrc->w.backgroundColor, DCSrc->w.textColor);
+			}
+			else
+			{
+				XlateObj = IntEngCreateXlate(0, 0, DestPalette, SourcePalette);
+			}
+			if (NULL == XlateObj)
 			{
 				if (UsesSource && hDCSrc != hDCDest)
 				{
 					DC_UnlockDc(hDCSrc);
 				}
 				DC_UnlockDc(hDCDest);
-				SetLastWin32Error(ERROR_INVALID_HANDLE);
+				SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
 				return FALSE;
 			}
-			DestMode = PalDestGDI->Mode;
-			PALETTE_UnlockPalette(DestPalette);
-		}
-
-		/* KB41464 details how to convert between mono and color */
-		if (DCDest->w.bitsPerPixel == 1)
-		{
-			XlateObj = (XLATEOBJ*)IntEngCreateMonoXlate(SourceMode, DestPalette,
-				SourcePalette, DCSrc->w.backgroundColor);
-		}
-		else if (DCSrc->w.bitsPerPixel == 1)
-		{
-			ULONG Colors[2];
-
-			Colors[0] = DCSrc->w.textColor;
-			Colors[1] = DCSrc->w.backgroundColor;
-			Mono = PALETTE_AllocPaletteIndexedRGB(2, (RGBQUAD*)Colors);
-			if (NULL != Mono)
-			{
-				XlateObj = (XLATEOBJ*)IntEngCreateXlate(DestMode, PAL_INDEXED, DestPalette, Mono);
-			}
-			else
-			{
-				XlateObj = NULL;
-			}
-		}
-		else
-		{
-			XlateObj = (XLATEOBJ*)IntEngCreateXlate(DestMode, SourceMode, DestPalette, SourcePalette);
-		}
-		if (NULL == XlateObj)
-		{
-			if (NULL != Mono)
-			{
-				EngDeletePalette(Mono);
-			}
-			if (UsesSource && hDCSrc != hDCDest)
-			{
-				DC_UnlockDc(hDCSrc);
-			}
-			DC_UnlockDc(hDCDest);
-			SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
-			return FALSE;
 		}
 	}
 
 	/* Perform the bitblt operation */
 	Status = IntEngBitBlt(BitmapDest, BitmapSrc, NULL, DCDest->CombinedClip, XlateObj,
-		&DestRect, &SourcePoint, NULL, &BrushObj->BrushObject, &BrushOrigin, ROP);
+		&DestRect, &SourcePoint, NULL, BrushObj ? &BrushInst.BrushObject : NULL, &BrushOrigin, ROP);
 
-	if (UsesSource)
+	if (UsesSource && XlateObj != NULL)
 		EngDeleteXlate(XlateObj);
 	BITMAPOBJ_UnlockBitmap(DCDest->w.hBitmap);
 	if (UsesSource && DCSrc->w.hBitmap != DCDest->w.hBitmap)
 	{
 		BITMAPOBJ_UnlockBitmap(DCSrc->w.hBitmap);
-	}
-	if (NULL != Mono)
-	{
-		EngDeletePalette(Mono);
 	}
 	if (UsesPattern)
 	{
@@ -547,6 +497,7 @@ NtGdiExtFloodFill(
 	UINT  FillType)
 {
 	UNIMPLEMENTED;
+	return FALSE;
 }
 
 BOOL STDCALL
@@ -588,8 +539,6 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 	BITMAPOBJ *BitmapObject;
 	SURFOBJ *SurfaceObject;
 	HPALETTE Pal = 0;
-	PPALGDI PalGDI;
-	USHORT PalMode;
 	XLATEOBJ *XlateObj;
 
 	dc = DC_LockDc (hDC);
@@ -608,25 +557,18 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 		{
 			if ( dc->w.hPalette != 0 )
 				Pal = dc->w.hPalette;
-			PalGDI = PALETTE_LockPalette(Pal);
-			if ( PalGDI )
+			/* FIXME: Verify if it shouldn't be PAL_BGR! */
+			XlateObj = (XLATEOBJ*)IntEngCreateXlate ( PAL_RGB, 0, NULL, Pal );
+			if ( XlateObj )
 			{
-				PalMode = PalGDI->Mode;
-				PALETTE_UnlockPalette(Pal);
-
-				/* FIXME: Verify if it shouldn't be PAL_BGR! */
-				XlateObj = (XLATEOBJ*)IntEngCreateXlate ( PAL_RGB, PalMode, NULL, Pal );
-				if ( XlateObj )
+				// check if this DC has a DIB behind it...
+				if ( SurfaceObject->pvScan0 ) // STYPE_BITMAP == SurfaceObject->iType
 				{
-					// check if this DC has a DIB behind it...
-					if ( SurfaceObject->pvScan0 ) // STYPE_BITMAP == SurfaceObject->iType
-					{
-						ASSERT ( SurfaceObject->lDelta );
-						Result = XLATEOBJ_iXlate(XlateObj,
-							DibFunctionsForBitmapFormat[SurfaceObject->iBitmapFormat].DIB_GetPixel ( SurfaceObject, XPos, YPos ) );
-					}
-					EngDeleteXlate(XlateObj);
+					ASSERT ( SurfaceObject->lDelta );
+					Result = XLATEOBJ_iXlate(XlateObj,
+						DibFunctionsForBitmapFormat[SurfaceObject->iBitmapFormat].DIB_GetPixel ( SurfaceObject, XPos, YPos ) );
 				}
+				EngDeleteXlate(XlateObj);
 			}
 		}
 		BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
@@ -897,6 +839,7 @@ NtGdiPlgBlt(
 	INT  yMask)
 {
 	UNIMPLEMENTED;
+	return FALSE;
 }
 
 LONG STDCALL
@@ -1049,10 +992,8 @@ NtGdiStretchBlt(
 	RECTL DestRect;
 	RECTL SourceRect;
 	BOOL Status;
-	PPALGDI PalDestGDI, PalSourceGDI;
 	XLATEOBJ *XlateObj = NULL;
 	HPALETTE SourcePalette = 0, DestPalette = 0;
-	ULONG SourceMode, DestMode;
 	PGDIBRUSHOBJ BrushObj;
 	BOOL UsesSource = ((ROP & 0xCC0000) >> 2) != (ROP & 0x330000);
 	BOOL UsesPattern = ((ROP & 0xF00000) >> 4) != (ROP & 0x0F0000);
@@ -1154,43 +1095,8 @@ NtGdiStretchBlt(
 		if (DCSrc->w.hPalette != 0)
 			SourcePalette = DCSrc->w.hPalette;
 
-		PalSourceGDI = PALETTE_LockPalette(SourcePalette);
-		if (NULL == PalSourceGDI)
-		{
-			if (UsesSource && hDCSrc != hDCDest)
-			{
-				DC_UnlockDc(hDCSrc);
-			}
-			DC_UnlockDc(hDCDest);
-			SetLastWin32Error(ERROR_INVALID_HANDLE);
-			return FALSE;
-		}
-		SourceMode = PalSourceGDI->Mode;
-		PALETTE_UnlockPalette(SourcePalette);
-
-		if (DestPalette == SourcePalette)
-		{
-			DestMode = SourceMode;
-		}
-		else
-		{
-			PalDestGDI = PALETTE_LockPalette(DestPalette);
-			if (NULL == PalDestGDI)
-			{
-				if (UsesSource && hDCSrc != hDCDest)
-				{
-					DC_UnlockDc(hDCSrc);
-				}
-				DC_UnlockDc(hDCDest);
-				SetLastWin32Error(ERROR_INVALID_HANDLE);
-				return FALSE;
-			}
-			DestMode = PalDestGDI->Mode;
-			PALETTE_UnlockPalette(DestPalette);
-		}
-
 		/* FIXME: Use the same logic for create XLATEOBJ as in NtGdiBitBlt. */
-		XlateObj = (XLATEOBJ*)IntEngCreateXlate(DestMode, SourceMode, DestPalette, SourcePalette);
+		XlateObj = (XLATEOBJ*)IntEngCreateXlate(0, 0, DestPalette, SourcePalette);
 		if (NULL == XlateObj)
 		{
 			if (UsesSource && hDCSrc != hDCDest)

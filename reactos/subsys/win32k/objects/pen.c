@@ -17,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: pen.c,v 1.15 2004/05/10 17:07:20 weiden Exp $
+ * $Id: pen.c,v 1.16 2004/07/14 20:48:58 navaraf Exp $
  */
 #include <w32k.h>
 
@@ -45,7 +45,6 @@ IntGdiCreatePenIndirect(PLOGPEN LogPen)
    PenObject->ptPenWidth = LogPen->lopnWidth;
    PenObject->ulPenStyle = LogPen->lopnStyle;
    PenObject->BrushAttr.lbColor = LogPen->lopnColor;
-   PenObject->BrushObject.iSolidColor = LogPen->lopnColor;
    PenObject->flAttrs = GDIBRUSH_IS_OLDSTYLEPEN;
    switch (LogPen->lopnStyle)
    {
@@ -114,6 +113,7 @@ NtGdiExtCreatePen(
    CONST PDWORD Style)
 {
    UNIMPLEMENTED;
+   return 0;
 }
 
 /* EOF */

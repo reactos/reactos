@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cliprgn.c,v 1.41 2004/07/07 16:34:33 navaraf Exp $ */
+/* $Id: cliprgn.c,v 1.42 2004/07/14 20:48:58 navaraf Exp $ */
 #include <w32k.h>
 
 int FASTCALL
@@ -220,6 +220,7 @@ int STDCALL NtGdiGetMetaRgn(HDC  hDC,
                     HRGN  hrgn)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 int STDCALL NtGdiExcludeClipRect(HDC  hDC,
@@ -328,6 +329,7 @@ int STDCALL NtGdiOffsetClipRgn(HDC  hDC,
                        int  YOffset)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 BOOL STDCALL NtGdiPtVisible(HDC  hDC,
@@ -389,6 +391,7 @@ BOOL STDCALL NtGdiSelectClipPath(HDC  hDC,
                          int  Mode)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 INT STDCALL
@@ -400,6 +403,7 @@ NtGdiSelectClipRgn(HDC hDC, HRGN hRgn)
 int STDCALL NtGdiSetMetaRgn(HDC  hDC)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 /* EOF */

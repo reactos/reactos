@@ -65,6 +65,11 @@ IntEngCreateMonoXlate(USHORT SourcePalType,
                       HPALETTE PaletteDest,
                       HPALETTE PaletteSource,
                       ULONG BackgroundColor);
+
+XLATEOBJ * STDCALL
+IntEngCreateSrcMonoXlate(HPALETTE PaletteDest,
+                         ULONG ForegroundColor,
+                         ULONG BackgroundColor);
 			
 BOOL STDCALL
 IntEngPolyline(BITMAPOBJ *DestSurf,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: metafile.c,v 1.10 2004/05/10 17:07:20 weiden Exp $ */
+/* $Id: metafile.c,v 1.11 2004/07/14 20:48:58 navaraf Exp $ */
 #include <w32k.h>
 
 HENHMETAFILE
@@ -24,6 +24,7 @@ STDCALL
 NtGdiCloseEnhMetaFile(HDC  hDC)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 HMETAFILE
@@ -31,6 +32,7 @@ STDCALL
 NtGdiCloseMetaFile(HDC  hDC)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 HENHMETAFILE
@@ -39,6 +41,7 @@ NtGdiCopyEnhMetaFile(HENHMETAFILE  Src,
                                   LPCWSTR  File)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 HMETAFILE
@@ -47,6 +50,7 @@ NtGdiCopyMetaFile(HMETAFILE  Src,
                             LPCWSTR  File)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 HDC
@@ -57,6 +61,7 @@ NtGdiCreateEnhMetaFile(HDC  hDCRef,
                            LPCWSTR  Description)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 HDC
@@ -64,6 +69,7 @@ STDCALL
 NtGdiCreateMetaFile(LPCWSTR  File)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 BOOL
@@ -71,6 +77,7 @@ STDCALL
 NtGdiDeleteEnhMetaFile(HENHMETAFILE  emf)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 BOOL
@@ -78,6 +85,7 @@ STDCALL
 NtGdiDeleteMetaFile(HMETAFILE  mf)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 BOOL
@@ -89,6 +97,7 @@ NtGdiEnumEnhMetaFile(HDC  hDC,
                           CONST LPRECT  Rect)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 BOOL
@@ -99,6 +108,7 @@ NtGdiEnumMetaFile(HDC  hDC,
                        LPARAM  lParam)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 BOOL
@@ -108,6 +118,7 @@ NtGdiGdiComment(HDC  hDC,
                      CONST LPBYTE  Data)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 HENHMETAFILE
@@ -115,6 +126,7 @@ STDCALL
 NtGdiGetEnhMetaFile(LPCWSTR  MetaFile)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 UINT
@@ -124,6 +136,7 @@ NtGdiGetEnhMetaFileBits(HENHMETAFILE  hemf,
                              LPBYTE  Buffer)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 UINT
@@ -133,6 +146,7 @@ NtGdiGetEnhMetaFileDescription(HENHMETAFILE  hemf,
                                     LPWSTR  Description)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 UINT
@@ -142,6 +156,7 @@ NtGdiGetEnhMetaFileHeader(HENHMETAFILE  hemf,
                                LPENHMETAHEADER  emh)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 UINT
@@ -151,6 +166,7 @@ NtGdiGetEnhMetaFilePaletteEntries(HENHMETAFILE  hemf,
                                        LPPALETTEENTRY  pe)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 HMETAFILE
@@ -158,6 +174,7 @@ STDCALL
 NtGdiGetMetaFile(LPCWSTR  MetaFile)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 UINT
@@ -167,6 +184,7 @@ NtGdiGetMetaFileBitsEx(HMETAFILE  hmf,
                             LPVOID  Data)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 UINT
@@ -178,6 +196,7 @@ NtGdiGetWinMetaFileBits(HENHMETAFILE  hemf,
                              HDC  Ref)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 BOOL
@@ -187,6 +206,7 @@ NtGdiPlayEnhMetaFile(HDC  hDC,
                           CONST PRECT  Rect)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 BOOL
@@ -197,6 +217,7 @@ NtGdiPlayEnhMetaFileRecord(HDC  hDC,
                                 UINT  Handles)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 BOOL
@@ -205,6 +226,7 @@ NtGdiPlayMetaFile(HDC  hDC,
                        HMETAFILE  hmf)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 BOOL
@@ -215,6 +237,7 @@ NtGdiPlayMetaFileRecord(HDC  hDC,
                              UINT  Handles)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 HENHMETAFILE
@@ -223,6 +246,7 @@ NtGdiSetEnhMetaFileBits(UINT  BufSize,
                                      CONST PBYTE  Data)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 HMETAFILE
@@ -231,6 +255,7 @@ NtGdiSetMetaFileBitsEx(UINT  Size,
                                  CONST PBYTE  Data)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 HENHMETAFILE
@@ -242,6 +267,7 @@ NtGdiSetWinMetaFileBits(UINT  BufSize,
 				     PVOID mfp)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 /* EOF */

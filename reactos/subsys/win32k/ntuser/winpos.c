@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.118 2004/06/20 22:27:19 gvg Exp $
+/* $Id: winpos.c,v 1.119 2004/07/14 20:48:57 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -99,6 +99,22 @@ NtUserGetClientOrigin(HWND hWnd, LPPOINT Point)
 }
 
 /*******************************************************************
+ *         WinPosCanActivateWindow
+ *
+ * Check if we can activate the specified window.
+ */
+static BOOL WinPosCanActivateWindow(HWND hWnd)
+{
+   LONG Style;
+
+   if (!hWnd) return FALSE;
+   Style = NtUserGetWindowLong(hWnd, GWL_STYLE, FALSE);
+   if (!(Style & WS_VISIBLE)) return FALSE;
+   if ((Style & (WS_POPUP | WS_CHILD)) == WS_CHILD) return FALSE;
+   return !(Style & WS_DISABLED);
+}
+
+/*******************************************************************
  *         WinPosActivateOtherWindow
  *
  *  Activates window other than pWnd.
@@ -106,63 +122,37 @@ NtUserGetClientOrigin(HWND hWnd, LPPOINT Point)
 VOID FASTCALL
 WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
 {
-  PWINDOW_OBJECT Wnd, Old;
-  int TryTopmost;
-  
-  if (!Window || IntIsDesktopWindow(Window))
-  {
-    IntSetFocusMessageQueue(NULL);
-    return;
-  }
-  Wnd = Window;
-  for(;;)
-  {
-    HWND *List, *phWnd;
-    
-    Old = Wnd;
-    Wnd = IntGetParentObject(Wnd);
-    if(Old != Window)
-    {
-      IntReleaseWindowObject(Old);
-    }
-    if(!Wnd)
-    {
-      IntSetFocusMessageQueue(NULL);
-      return;
-    }
-    
-    if((List = IntWinListChildren(Wnd)))
-    {
-      for(TryTopmost = 0; TryTopmost <= 1; TryTopmost++)
+   HWND hwndTo = NULL, fg;
+   PWINDOW_OBJECT wndTo;
+
+   if ((Window->Style & WS_POPUP) && (hwndTo = Window->Owner))
+   {
+      hwndTo = NtUserGetAncestor(hwndTo, GA_ROOT);
+      if (WinPosCanActivateWindow(hwndTo))
+         goto done;
+   }
+
+   for (hwndTo = NtUserGetWindow(Window->Self, GW_HWNDNEXT);
+        hwndTo != NULL;
+        hwndTo = NtUserGetWindow(hwndTo, GW_HWNDNEXT))
+   {
+      if (WinPosCanActivateWindow(hwndTo)) break;
+   }
+
+done:
+   fg = NtUserGetForegroundWindow();
+   if (!fg || (Window->Self == fg))
+   {
+      wndTo = IntGetWindowObject(hwndTo);
+      if (wndTo != NULL && IntSetForegroundWindow(wndTo))
       {
-        for(phWnd = List; *phWnd; phWnd++)
-        {
-          PWINDOW_OBJECT Child;
-        
-          if((*phWnd) == Window->Self)
-          {
-            continue;
-          }
-        
-          if((Child = IntGetWindowObject(*phWnd)))
-          {
-            if(((! TryTopmost && (0 == (Child->ExStyle & WS_EX_TOPMOST)))
-                || (TryTopmost && (0 != (Child->ExStyle & WS_EX_TOPMOST))))
-               && IntSetForegroundWindow(Child))
-            {
-              ExFreePool(List);
-              IntReleaseWindowObject(Wnd);
-              IntReleaseWindowObject(Child);
-              return;
-            }
-            IntReleaseWindowObject(Child);
-          }
-        }
+         IntReleaseWindowObject(wndTo);
+         return;
       }
-      ExFreePool(List);
-    }
-  }
-  IntReleaseWindowObject(Wnd);
+      IntReleaseWindowObject(wndTo);
+   }
+   if (!NtUserSetActiveWindow(hwndTo))
+      NtUserSetActiveWindow(0);
 }
 
 VOID STATIC FASTCALL
