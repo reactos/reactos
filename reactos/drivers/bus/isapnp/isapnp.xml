@@ -1,0 +1,7 @@
+<module name="isapnp" type="kernelmodedriver">
+	<include base="isapnp">.</include>
+	<library>ntoskrnl</library>
+	<library>hal</library>
+	<file>isapnp.c</file>
+	<file>isapnp.rc</file>
+</module>

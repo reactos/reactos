@@ -1,0 +1,9 @@
+<module name="pci" type="kernelmodedriver">
+	<include base="pci">.</include>
+	<library>ntoskrnl</library>
+	<library>hal</library>
+	<file>fdo.c</file>
+	<file>pci.c</file>
+	<file>pdo.c</file>
+	<file>pci.rc</file>
+</module>

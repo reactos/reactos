@@ -1,3 +1,6 @@
+<directory name="bus">
+	<xi:include href="bus/directory.xml" />
+</directory>
 <directory name="lib">
 	<xi:include href="lib/directory.xml" />
 </directory>
