@@ -1682,6 +1682,7 @@ KdbpPrint(
    INT Length;
    INT i;
    INT RowsPrintedByTerminal;
+   ULONG ScanCode;
    va_list ap;
 
    /* Check if the user has aborted output of the current command */
@@ -1703,20 +1704,17 @@ KdbpPrint(
       {
          /* Try to query number of rows from terminal. A reply looks like "\x1b[8;24;80t" */
          TerminalReportsSize = FALSE;
-         DbgPrint("\x1b[18t");
-         i = 10;
-         while ((i-- > 0) && ((c = KdbpTryGetCharSerial()) == -1));
+         //DbgPrint("\x1b[18t");
+         c = KdbpTryGetCharSerial(10);
          if (c == KEY_ESC)
          {
-            i = 5;
-            while ((i-- > 0) && ((c = KdbpTryGetCharSerial()) == -1));
+            c = KdbpTryGetCharSerial(5);
             if (c == '[')
             {
                Length = 0;
                for (;;)
                {
-                  i = 5;
-                  while ((i-- > 0) && ((c = KdbpTryGetCharSerial()) == -1));
+                  c = KdbpTryGetCharSerial(5);
                   if (c == -1)
                      break;
                   Buffer[Length++] = c;
@@ -1781,13 +1779,19 @@ KdbpPrint(
          if (KdbNumberOfColsPrinted > 0)
             DbgPrint("\n");
          DbgPrint("--- Press q to abort, any other key to continue ---");
-         while ((c = KdbpTryGetCharSerial()) == -1);
+         if (KdDebugState & KD_DEBUG_KDSERIAL)
+            c = KdbpGetCharSerial();
+         else
+            c = KdbpGetCharKeyboard(&ScanCode);
          if (c == '\r')
          {
-            /* Ignore \r and wait for \n or another \r - if \n is not received here
+            /* Try to read '\n' which might follow '\r' - if \n is not received here
              * it will be interpreted as "return" when the next command should be read.
              */
-            while ((c = KdbpTryGetCharSerial()) == -1);
+            if (KdDebugState & KD_DEBUG_KDSERIAL)
+               c = KdbpTryGetCharSerial(5);
+            else
+               c = KdbpTryGetCharKeyboard(&ScanCode, 5);
          }
          DbgPrint("\n");
          if (c == 'q')
@@ -1914,7 +1918,7 @@ KdbpReadCommand(
    OUT PCHAR Buffer,
    IN  ULONG Size)
 {
-   CHAR Key;
+   CHAR Key, NextKey;
    PCHAR Orig = Buffer;
    ULONG ScanCode = 0;
    BOOLEAN EchoOn;
@@ -1929,14 +1933,14 @@ KdbpReadCommand(
    {
       if (KdDebugState & KD_DEBUG_KDSERIAL)
       {
-         while ((Key = KdbpTryGetCharSerial()) == -1);
+         Key = KdbpGetCharSerial();
          ScanCode = 0;
          if (Key == KEY_ESC) /* ESC */
          {
-            while ((Key = KdbpTryGetCharSerial()) == -1);
+            Key = KdbpGetCharSerial();
             if (Key == '[')
             {
-               while ((Key = KdbpTryGetCharSerial()) == -1);
+               Key = KdbpGetCharSerial();
                switch (Key)
                {
                case 'A':
@@ -1954,7 +1958,9 @@ KdbpReadCommand(
          }
       }
       else
-         while ((Key = KdbpTryGetCharKeyboard(&ScanCode)) == -1);
+      {
+         Key = KdbpGetCharKeyboard(&ScanCode);
+      }
 
       if ((Buffer - Orig) >= (Size - 1))
       {
@@ -1965,10 +1971,13 @@ KdbpReadCommand(
 
       if (Key == '\r')
       {
-         /* Ignore this key... */
-      }
-      else if (Key == '\n')
-      {
+         /* Read the next char - this is to throw away a \n which most clients should
+          * send after \r.
+          */
+         if (KdDebugState & KD_DEBUG_KDSERIAL)
+            NextKey = KdbpTryGetCharSerial(5);
+         else
+            NextKey = KdbpTryGetCharKeyboard(&ScanCode, 5);
          DbgPrint("\n");
 	 /*
 	  * Repeat the last command if the user presses enter. Reduces the

@@ -62,12 +62,13 @@ VOID KbdDisableMouse()
 }
 
 CHAR
-KdbpTryGetCharKeyboard(PULONG ScanCode)
+KdbpTryGetCharKeyboard(PULONG ScanCode, UINT Retry)
 {
     static byte_t last_key = 0;
     static byte_t shift = 0;
     char c;
-    while(1) {
+    BOOLEAN KeepRetrying = (Retry == 0);
+    while (KeepRetrying || Retry-- > 0) {
 	unsigned char status = kbd_read_status();
 	while (status & KBD_STAT_OBF) {
 	    byte_t scancode;
@@ -91,6 +92,8 @@ KdbpTryGetCharKeyboard(PULONG ScanCode)
 	    }
 	}
     }
+    
+    return -1;
 }
 
 #endif

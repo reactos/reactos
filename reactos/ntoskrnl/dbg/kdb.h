@@ -272,10 +272,15 @@ KdbProfileInterrupt(ULONG_PTR Eip);
 
 #define KdbpSafeReadMemory(dst, src, size)   MmSafeCopyFromUser(dst, src, size)
 #define KdbpSafeWriteMemory(dst, src, size)  MmSafeCopyToUser(dst, src, size)
+
+#define KdbpGetCharKeyboard(ScanCode) KdbpTryGetCharKeyboard(ScanCode, 0)
 CHAR
-KdbpTryGetCharKeyboard(PULONG ScanCode);
-ULONG
-KdbpTryGetCharSerial(VOID);
+KdbpTryGetCharKeyboard(PULONG ScanCode, UINT Retry);
+
+#define KdbpGetCharSerial()  KdbpTryGetCharSerial(0)
+CHAR
+KdbpTryGetCharSerial(UINT Retry);
+
 VOID
 KdbEnter(VOID);
 VOID
