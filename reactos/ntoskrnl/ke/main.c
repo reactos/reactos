@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.207 2004/11/26 17:36:18 fireball Exp $
+/* $Id: main.c,v 1.208 2004/11/27 11:42:56 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -262,8 +262,6 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
    RtlFreeUnicodeString (&BootPath);
    RtlFreeUnicodeString (&DriveDeviceName);
    RtlFreeUnicodeString (&ArcDeviceName);
-
-   /*DPRINT("DosDeviceMap: 0x%x\n", SharedUserData->DosDeviceMap);*/
 
    if (BootDriveFound == FALSE)
      {
