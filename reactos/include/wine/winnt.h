@@ -24,6 +24,14 @@
 #include_next <winnt.h>
 #include <w32api.h>
 
+#if (__W32API_MAJOR_VERSION < 2 || __W32API_MINOR_VERSION < 5)
+#define LANG_DIVEHI	0x65
+#define LANG_GALICIAN	0x56
+#define LANG_KYRGYZ	0x40
+#define LANG_MONGOLIAN	0x50
+#define LANG_SYRIAC	0x5a
+#endif
+
 /* non standard; keep the number high enough (but < 0xff) */
 #define LANG_ESPERANTO			 0x8f
 #define LANG_WALON			 0x90
