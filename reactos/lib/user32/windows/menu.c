@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.58 2004/03/25 08:51:44 gvg Exp $
+/* $Id: menu.c,v 1.59 2004/04/01 23:17:28 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -1763,7 +1763,7 @@ MenuShowPopup(HWND WndOwner, HMENU Menu, UINT Id,
     }
 
   /* Display the window */
-  SetWindowPos(MenuInfo.Wnd, HWND_TOP, 0, 0, 0, 0,
+  SetWindowPos(MenuInfo.Wnd, HWND_TOPMOST, 0, 0, 0, 0,
                SWP_SHOWWINDOW | SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
   UpdateWindow(MenuInfo.Wnd);
 
