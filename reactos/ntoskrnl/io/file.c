@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.30 2004/07/17 03:06:01 ion Exp $
+/* $Id: file.c,v 1.31 2004/07/24 01:28:04 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -479,6 +479,7 @@ NtSetInformationFile(HANDLE FileHandle,
    Irp->UserIosb = IoStatusBlock;
    Irp->UserEvent = &FileObject->Event;
    KeResetEvent( &FileObject->Event );
+   Irp->Tail.Overlay.Thread = PsGetCurrentThread();
    
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->MajorFunction = IRP_MJ_SET_INFORMATION;
