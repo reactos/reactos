@@ -1,4 +1,3 @@
-# $Id$
 #
 # Global makefile
 #
@@ -101,8 +100,8 @@ STORAGE_DRIVERS = atapi cdrom class2 disk floppy scsiport diskdump
 # System applications
 # autochk cmd format services setup usetup welcome winlogon msiexec 
 SYS_APPS = autochk calc cmd explorer expand format regedt32 regsvr32 \
-  services setup taskmgr userinit usetup welcome vmwinst winlogon \
-  regedit winefile notepad reactos
+  reporterror services setup taskmgr userinit usetup welcome vmwinst \
+  winlogon regedit winefile notepad reactos
 
 # System services
 # rpcss eventlog
