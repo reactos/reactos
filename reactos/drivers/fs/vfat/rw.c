@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.27 2001/08/04 11:10:36 hbirr Exp $
+/* $Id: rw.c,v 1.28 2001/08/05 16:35:52 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -965,14 +965,6 @@ VfatWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
   Status = VfatWriteFile (DeviceExt, FileObject, Buffer, Length, Offset,
 			  NoCache);
 
-   if (FileObject->Flags & FO_SYNCHRONOUS_IO
-    && !(Irp->Flags & IRP_PAGING_IO)
-    && NT_SUCCESS(Status))
-  {
-    FileObject->CurrentByteOffset.QuadPart = Offset + Length;
-  }
-
-
   Irp->IoStatus.Status = Status;
   Irp->IoStatus.Information = Length;
   IoCompleteRequest (Irp, IO_NO_INCREMENT);
@@ -1034,13 +1026,6 @@ VfatRead (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 			     FileObject, Buffer, Length, Offset, &LengthRead,
 			     NoCache);
     }
-
-  if (FileObject->Flags & FO_SYNCHRONOUS_IO
-    && !(Irp->Flags & IRP_PAGING_IO)
-    && NT_SUCCESS(Status))
-  {
-    FileObject->CurrentByteOffset.QuadPart = Offset + LengthRead;
-  }
 
   Irp->IoStatus.Status = Status;
   Irp->IoStatus.Information = LengthRead;
