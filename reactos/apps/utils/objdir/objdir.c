@@ -1,4 +1,4 @@
-/* $Id: objdir.c,v 1.7 2001/05/02 20:50:06 ea Exp $
+/* $Id: objdir.c,v 1.8 2001/08/03 21:49:14 ea Exp $
  *
  * DESCRIPTION: Object Manager Simple Explorer
  * PROGRAMMER:  David Welch
@@ -229,6 +229,11 @@ ListDirectory (
 			);
 	if (!NT_SUCCESS(Status))
 	{
+		if (STATUS_NO_MORE_ENTRIES == Status)
+		{
+			NtClose (DirectoryHandle);
+			return TRUE;
+		}
 		printf (
 			"Failed to query directory object (Status: %s)\n",
 			StatusToName (Status)
