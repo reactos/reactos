@@ -1,4 +1,4 @@
-/* $Id: fs.c,v 1.30 2003/02/14 22:54:38 ekohl Exp $
+/* $Id: fs.c,v 1.31 2003/02/24 23:14:05 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -220,7 +220,7 @@ IopMountFileSystem(PDEVICE_OBJECT DeviceObject,
 {
   IO_STATUS_BLOCK IoStatusBlock;
   PIO_STACK_LOCATION StackPtr;
-  PKEVENT Event;
+  KEVENT Event;
   PIRP Irp;
   NTSTATUS Status;
 
@@ -228,23 +228,17 @@ IopMountFileSystem(PDEVICE_OBJECT DeviceObject,
 	 DeviceObject,DeviceToMount);
 
   assert_irql(PASSIVE_LEVEL);
-  Event = ExAllocatePool(NonPagedPool, sizeof(KEVENT));
-  if (Event == NULL)
-    {
-      return(STATUS_INSUFFICIENT_RESOURCES);
-    }
-  KeInitializeEvent(Event, NotificationEvent, FALSE);
 
+  KeInitializeEvent(&Event, NotificationEvent, FALSE);
   Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
   if (Irp==NULL)
     {
-      ExFreePool(Event);
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
   Irp->UserIosb = &IoStatusBlock;
   DPRINT("Irp->UserIosb %x\n", Irp->UserIosb);
-  Irp->UserEvent = Event;
+  Irp->UserEvent = &Event;
   Irp->Tail.Overlay.Thread = PsGetCurrentThread();
 
   StackPtr = IoGetNextIrpStackLocation(Irp);
@@ -262,11 +256,9 @@ IopMountFileSystem(PDEVICE_OBJECT DeviceObject,
   Status = IoCallDriver(DeviceObject,Irp);
   if (Status==STATUS_PENDING)
     {
-      KeWaitForSingleObject(Event,Executive,KernelMode,FALSE,NULL);
+      KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
       Status = IoStatusBlock.Status;
     }
-
-  ExFreePool(Event);
 
   return(Status);
 }
@@ -277,30 +269,24 @@ IopLoadFileSystem(IN PDEVICE_OBJECT DeviceObject)
 {
   IO_STATUS_BLOCK IoStatusBlock;
   PIO_STACK_LOCATION StackPtr;
-  PKEVENT Event;
+  KEVENT Event;
   PIRP Irp;
   NTSTATUS Status;
 
   DPRINT("IopLoadFileSystem(DeviceObject %x)\n", DeviceObject);
 
   assert_irql(PASSIVE_LEVEL);
-  Event = ExAllocatePool(NonPagedPool, sizeof(KEVENT));
-  if (Event == NULL)
-    {
-      return(STATUS_INSUFFICIENT_RESOURCES);
-    }
-  KeInitializeEvent(Event, NotificationEvent, FALSE);
 
+  KeInitializeEvent(&Event, NotificationEvent, FALSE);
   Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
   if (Irp==NULL)
     {
-      ExFreePool(Event);
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
   Irp->UserIosb = &IoStatusBlock;
   DPRINT("Irp->UserIosb %x\n", Irp->UserIosb);
-  Irp->UserEvent = Event;
+  Irp->UserEvent = &Event;
   Irp->Tail.Overlay.Thread = PsGetCurrentThread();
 
   StackPtr = IoGetNextIrpStackLocation(Irp);
@@ -315,11 +301,9 @@ IopLoadFileSystem(IN PDEVICE_OBJECT DeviceObject)
   Status = IoCallDriver(DeviceObject,Irp);
   if (Status==STATUS_PENDING)
     {
-      KeWaitForSingleObject(Event,Executive,KernelMode,FALSE,NULL);
+      KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
       Status = IoStatusBlock.Status;
     }
-
-  ExFreePool(Event);
 
   return(Status);
 }
@@ -339,6 +323,7 @@ IoMountVolume(IN PDEVICE_OBJECT DeviceObject,
   FILE_SYSTEM_OBJECT* current;
   NTSTATUS Status;
   DEVICE_TYPE MatchingDeviceType;
+  PDEVICE_OBJECT DevObject;
 
   assert_irql(PASSIVE_LEVEL);
 
@@ -385,12 +370,14 @@ IoMountVolume(IN PDEVICE_OBJECT DeviceObject,
       switch (Status)
 	{
 	  case STATUS_FS_DRIVER_REQUIRED:
-	    Status = IopLoadFileSystem(current->DeviceObject);
+	    DevObject = current->DeviceObject;
+	    ExReleaseResourceLite(&FileSystemListLock);
+	    Status = IopLoadFileSystem(DevObject);
 	    if (!NT_SUCCESS(Status))
 	      {
-		ExReleaseResourceLite(&FileSystemListLock);
 		return(Status);
 	      }
+            ExAcquireResourceSharedLite(&FileSystemListLock,TRUE);
 	    current_entry = FileSystemListHead.Flink;
 	    continue;
 
@@ -435,7 +422,7 @@ IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
 {
   IO_STATUS_BLOCK IoStatusBlock;
   PIO_STACK_LOCATION StackPtr;
-  PKEVENT Event;
+  KEVENT Event;
   PIRP Irp;
   NTSTATUS Status;
 
@@ -455,24 +442,19 @@ IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
   if (DeviceObject->Vpb->Flags & VPB_MOUNTED)
     {
       /* Issue verify request to the FSD */
-      Event = ExAllocatePool(NonPagedPool,
-			     sizeof(KEVENT));
-      if (Event == NULL)
-	return(STATUS_INSUFFICIENT_RESOURCES);
 
-      KeInitializeEvent(Event,
+      KeInitializeEvent(&Event,
 			NotificationEvent,
 			FALSE);
 
       Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
       if (Irp==NULL)
 	{
-	  ExFreePool(Event);
 	  return(STATUS_INSUFFICIENT_RESOURCES);
 	}
 
       Irp->UserIosb = &IoStatusBlock;
-      Irp->UserEvent = Event;
+      Irp->UserEvent = &Event;
       Irp->Tail.Overlay.Thread = PsGetCurrentThread();
 
       StackPtr = IoGetNextIrpStackLocation(Irp);
@@ -491,10 +473,9 @@ IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
 			    Irp);
       if (Status==STATUS_PENDING)
 	{
-	  KeWaitForSingleObject(Event,Executive,KernelMode,FALSE,NULL);
+	  KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
 	  Status = IoStatusBlock.Status;
 	}
-      ExFreePool(Event);
 
       if (NT_SUCCESS(Status))
 	{
