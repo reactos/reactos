@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.156 2004/11/21 21:09:43 weiden Exp $
+/* $Id: process.c,v 1.157 2004/11/24 18:13:18 navaraf Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -875,7 +875,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 	  }
 
         FileName = SectionObject->FileObject->FileName;
-        szSrc = (PWCHAR)(FileName.Buffer + FileName.Length - 1);
+        szSrc = (PWCHAR)(FileName.Buffer + (FileName.Length / sizeof(WCHAR)) - 1);
         while(szSrc >= FileName.Buffer)
         {
           if(*szSrc == L'\\')
