@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.68 2004/02/22 12:25:02 navaraf Exp $
+/* $Id: msgqueue.c,v 1.69 2004/02/23 20:08:35 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -447,6 +447,19 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 
   DesktopWindow = IntGetWindowObject(IntGetDesktopWindow());
 
+  WaitObjects[1] = &MessageQueue->NewMessages;
+  WaitObjects[0] = &HardwareMessageQueueLock;
+  do
+    {
+      WaitStatus = KeWaitForMultipleObjects(2, WaitObjects, WaitAny, UserRequest,
+                                            UserMode, TRUE, NULL, NULL);
+      while (MsqDispatchOneSentMessage(MessageQueue))
+        {
+          ;
+        }
+    }
+  while (NT_SUCCESS(WaitStatus) && STATUS_WAIT_0 != WaitStatus);
+
   /* Process messages in the message queue itself. */
   ExAcquireFastMutex(&MessageQueue->HardwareLock);
   CurrentEntry = MessageQueue->HardwareMessagesListHead.Flink;
@@ -469,6 +482,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 		  RemoveEntryList(&Current->ListEntry);
 		}
 	      ExReleaseFastMutex(&MessageQueue->HardwareLock);
+              KeReleaseMutex(&HardwareMessageQueueLock, FALSE);
 	      *Message = Current;
 	      IntReleaseWindowObject(DesktopWindow);
 	      return(TRUE);
@@ -481,18 +495,6 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
   ExReleaseFastMutex(&MessageQueue->HardwareLock);
 
   /* Now try the global queue. */
-  WaitObjects[1] = &MessageQueue->NewMessages;
-  WaitObjects[0] = &HardwareMessageQueueLock;
-  do
-    {
-      WaitStatus = KeWaitForMultipleObjects(2, WaitObjects, WaitAny, UserRequest,
-                                            UserMode, TRUE, NULL, NULL);
-      while (MsqDispatchOneSentMessage(MessageQueue))
-        {
-          ;
-        }
-    }
-  while (NT_SUCCESS(WaitStatus) && STATUS_WAIT_0 != WaitStatus);
 
   /* Transfer all messages from the DPC accessible queue to the main queue. */
   KeAcquireSpinLock(&SystemMessageQueueLock, &OldIrql);
