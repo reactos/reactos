@@ -32,17 +32,42 @@ ULONG BGRtoULONG(BYTE Blue, BYTE Green, BYTE Red)
   return ((Blue & 0xff) << 16) | ((Green & 0xff) << 8) | (Red & 0xff);
 }
 
+static ULONG ShiftAndMask(XLATEGDI *XlateGDI, ULONG Color)
+{
+  ULONG TranslatedColor;
+
+  TranslatedColor = 0;
+  if (XlateGDI->RedShift < 0)
+  {
+    TranslatedColor = (Color >> -(XlateGDI->RedShift)) & XlateGDI->RedMask;
+  } else
+    TranslatedColor = (Color << XlateGDI->RedShift) & XlateGDI->RedMask;
+  if (XlateGDI->GreenShift < 0)
+  {
+    TranslatedColor |= (Color >> -(XlateGDI->GreenShift)) & XlateGDI->GreenMask;
+  } else
+    TranslatedColor |= (Color << XlateGDI->GreenShift) & XlateGDI->GreenMask;
+  if (XlateGDI->BlueShift < 0)
+  {
+    TranslatedColor |= (Color >> -(XlateGDI->BlueShift)) & XlateGDI->BlueMask;
+  } else
+    TranslatedColor |= (Color << XlateGDI->BlueShift) & XlateGDI->BlueMask;
+
+  return TranslatedColor;
+}
+
 
 // FIXME: If the caller knows that the destinations are indexed and not RGB
 // then we should cache more than one value. Same with the source.
 
 // Takes indexed palette and a
-ULONG ClosestColorMatch(XLATEOBJ *XlateObj, ULONG SourceColor, ULONG *DestColors,
+ULONG ClosestColorMatch(XLATEGDI *XlateGDI, ULONG SourceColor, ULONG *DestColors,
                         ULONG NumColors)
 {
   PVIDEO_CLUTDATA cSourceColor;
   PVIDEO_CLUTDATA cDestColors;
   LONG idx = 0, i, rt;
+  ULONG SourceRGB;
   ULONG SourceRed, SourceGreen, SourceBlue;
   ULONG cxRed, cxGreen, cxBlue, BestMatch = 16777215;
 
@@ -54,20 +79,24 @@ ULONG ClosestColorMatch(XLATEOBJ *XlateObj, ULONG SourceColor, ULONG *DestColors
     return CCMLastColorMatch;
   }
 
-  if (PAL_BITFIELDS == XlateObj->iSrcType)
+  if (PAL_BITFIELDS == XlateGDI->XlateObj.iSrcType)
     {
     /* FIXME: must use bitfields */
+    SourceRGB = ShiftAndMask(XlateGDI, SourceColor);
+    cSourceColor = (PVIDEO_CLUTDATA) &SourceRGB;
+/*
     SourceRed = (SourceColor >> 7) & 0xff;
     SourceGreen = (SourceColor >> 2) & 0xff;
     SourceBlue = (SourceColor << 3) & 0xff;
+*/
     }
   else
     {
     cSourceColor = (PVIDEO_CLUTDATA)&SourceColor;
-    SourceRed = cSourceColor->Red;
-    SourceGreen = cSourceColor->Green;
-    SourceBlue = cSourceColor->Blue;
     } 
+  SourceRed = cSourceColor->Red;
+  SourceGreen = cSourceColor->Green;
+  SourceBlue = cSourceColor->Blue;
   for (i=0; i<NumColors; i++)
   {
     cDestColors = (PVIDEO_CLUTDATA)&DestColors[i];
@@ -94,14 +123,14 @@ ULONG ClosestColorMatch(XLATEOBJ *XlateObj, ULONG SourceColor, ULONG *DestColors
   return idx;
 }
 
-VOID IndexedToIndexedTranslationTable(XLATEOBJ *XlateObj, ULONG *TranslationTable,
+VOID IndexedToIndexedTranslationTable(XLATEGDI *XlateGDI, ULONG *TranslationTable,
                                       PALGDI *PalDest, PALGDI *PalSource)
 {
   ULONG i;
 
   for(i=0; i<PalSource->NumColors; i++)
   {
-    TranslationTable[i] = ClosestColorMatch(XlateObj, PalSource->IndexedColors[i], PalDest->IndexedColors, PalDest->NumColors);
+    TranslationTable[i] = ClosestColorMatch(XlateGDI, PalSource->IndexedColors[i], PalDest->IndexedColors, PalDest->NumColors);
   }
 }
 
@@ -144,30 +173,6 @@ static INT CalculateShift(ULONG Mask)
      }
 
    return Shift;
-}
-
-static ULONG ShiftAndMask(XLATEGDI *XlateGDI, ULONG Color)
-{
-  ULONG TranslatedColor;
-
-  TranslatedColor = 0;
-  if (XlateGDI->RedShift < 0)
-  {
-    TranslatedColor = (Color >> -(XlateGDI->RedShift)) & XlateGDI->RedMask;
-  } else
-    TranslatedColor = (Color << XlateGDI->RedShift) & XlateGDI->RedMask;
-  if (XlateGDI->GreenShift < 0)
-  {
-    TranslatedColor |= (Color >> -(XlateGDI->GreenShift)) & XlateGDI->GreenMask;
-  } else
-    TranslatedColor |= (Color << XlateGDI->GreenShift) & XlateGDI->GreenMask;
-  if (XlateGDI->BlueShift < 0)
-  {
-    TranslatedColor |= (Color >> -(XlateGDI->BlueShift)) & XlateGDI->BlueMask;
-  } else
-    TranslatedColor |= (Color << XlateGDI->BlueShift) & XlateGDI->BlueMask;
-
-  return TranslatedColor;
 }
 
 XLATEOBJ *EngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
@@ -269,7 +274,7 @@ XLATEOBJ *EngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
     if(XlateObj->iDstType == PAL_INDEXED)
     {
       // Converting from indexed to indexed
-      IndexedToIndexedTranslationTable(XlateObj, XlateGDI->translationTable, DestPalGDI, SourcePalGDI);
+      IndexedToIndexedTranslationTable(XlateGDI, XlateGDI->translationTable, DestPalGDI, SourcePalGDI);
     } else
       if (PAL_RGB == XlateObj->iDstType || PAL_BITFIELDS == XlateObj->iDstType )
       {
@@ -363,7 +368,7 @@ XLATEOBJ_iXlate(XLATEOBJ *XlateObj,
     PalGDI = (PALGDI*)AccessInternalObject((ULONG)XlateGDI->DestPal);
 
     // Return closest match for the given color
-    return ClosestColorMatch(XlateObj, Color, PalGDI->IndexedColors, PalGDI->NumColors);
+    return ClosestColorMatch(XlateGDI, Color, PalGDI->IndexedColors, PalGDI->NumColors);
   } else
   if(XlateObj->iSrcType == PAL_INDEXED)
   {
