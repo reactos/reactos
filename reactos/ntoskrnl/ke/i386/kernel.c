@@ -41,8 +41,65 @@
 ULONG KiPcrInitDone = 0;
 static ULONG PcrsAllocated = 0;
 static PHYSICAL_ADDRESS PcrPages[MAXIMUM_PROCESSORS];
+ULONG Ke386CpuidFlags, Ke386CpuidFlags2, Ke386CpuidExFlags;
+
+#define X86_EFLAGS_ID       (1 << 21)
 
 /* FUNCTIONS *****************************************************************/
+
+VOID INIT_FUNCTION STATIC
+Ki386GetCpuId(VOID)
+{
+  ULONG OrigFlags, Flags, FinalFlags;
+  ULONG MaxCpuidLevel;
+
+  Ke386CpuidFlags = Ke386CpuidFlags2 =  Ke386CpuidExFlags = 0;
+
+  /* Try to toggle the id bit in eflags. */
+  __asm__ ("pushfl\n\t"
+	   "popl %0\n\t"
+	   : "=r" (OrigFlags));
+  Flags = OrigFlags ^ X86_EFLAGS_ID;
+  __asm__ ("pushl %1\n\t"
+	   "popfl\n\t"
+	   "pushfl\n\t"
+	   "popl %0\n\t"
+	   : "=r" (FinalFlags)
+	   : "r" (Flags));
+   if ((OrigFlags & X86_EFLAGS_ID) == (FinalFlags & X86_EFLAGS_ID))
+    {
+      /* No cpuid supported. */
+      return;
+    }
+  
+  /* Get maximum cpuid level supported. */
+  __asm__("cpuid\n\t"
+	  : "=a" (MaxCpuidLevel)
+	  : "a" (0x00000000)
+	  : "ebx", "ecx", "edx");       
+  if (MaxCpuidLevel > 0)
+    {
+      /* Get the feature flags. */
+      __asm__("cpuid\n\t"
+	  : "=d" (Ke386CpuidFlags), "=c" (Ke386CpuidFlags2)
+	  : "a" (0x00000001)
+	  : "ebx");       
+    }
+
+  /* Get the maximum extended cpuid level supported. */
+  __asm__("cpuid\n\t"
+	  : "=a" (MaxCpuidLevel)
+	  : "a" (0x80000000)
+	  : "ebx", "ecx", "edx");       
+  if (MaxCpuidLevel > 0)
+    {
+      /* Get the extended feature flags. */
+      __asm__("cpuid\n\t"
+	  : "=d" (Ke386CpuidExFlags)
+	  : "a" (0x80000001)
+	  : "ebx", "ecx");       
+    }
+}
 
 VOID INIT_FUNCTION
 KePrepareForApplicationProcessorInit(ULONG Id)
@@ -131,6 +188,9 @@ KeInit1(VOID)
    KPCR->Tib.ExceptionList = (PVOID)-1;
 
    Ki386InitializeLdt();
+   
+   /* Get processor information. */
+   Ki386GetCpuId();
 }
 
 VOID INIT_FUNCTION
