@@ -76,13 +76,13 @@ static ICOM_VTABLE(IShellExecuteHookW) vt_ShellExecuteHookW;
 static ICOM_VTABLE(IShellExecuteHookA) vt_ShellExecuteHookA;
 
 #define _IPersistFolder2_Offset	    ((int)(&(((ICPanelImpl*)0)->lpVtblPersistFolder2)))
-#define _ICOM_THIS_From_IPersistFolder2(class, name) class* This =(class*)(((char*)name)-_IPersistFolder2_Offset);
+#define _ICOM_THIS_From_IPersistFolder2(class, name) class* This = (class*)(((char*)name)-_IPersistFolder2_Offset);
 
 #define IShellExecuteHookW_Offset   ((int)(&(((ICPanelImpl*)0)->lpVtblShellExecuteHookW)))
-#define _ICOM_THIS_From_IShellExecuteHookW(class, name) class* This =(class*)(((char*)name)-IShellExecuteHookW_Offset);
+#define _ICOM_THIS_From_IShellExecuteHookW(class, name) class* This = (class*)(((char*)name)-IShellExecuteHookW_Offset);
 
 #define IShellExecuteHookA_Offset   ((int)(&(((ICPanelImpl*)0)->lpVtblShellExecuteHookA)))
-#define _ICOM_THIS_From_IShellExecuteHookA(class, name) class* This =(class*)(((char*)name)-IShellExecuteHookA_Offset);
+#define _ICOM_THIS_From_IShellExecuteHookA(class, name) class* This = (class*)(((char*)name)-IShellExecuteHookA_Offset);
 
 
 /*
@@ -381,19 +381,19 @@ ISF_ControlPanel_fnGetUIObjectOf(IShellFolder2 * iface,
 	*ppvOut = NULL;
 
 	if (IsEqualIID(riid, &IID_IContextMenu) &&(cidl >= 1)) {
-	    pObj =(LPUNKNOWN) ISvItemCm_Constructor((IShellFolder *) iface, This->pidlRoot, apidl, cidl);
+	    pObj = (LPUNKNOWN) ISvItemCm_Constructor((IShellFolder *) iface, This->pidlRoot, apidl, cidl);
 	    hr = S_OK;
 	} else if (IsEqualIID(riid, &IID_IDataObject) &&(cidl >= 1)) {
-	    pObj =(LPUNKNOWN) IDataObject_Constructor(hwndOwner, This->pidlRoot, apidl, cidl);
+	    pObj = (LPUNKNOWN) IDataObject_Constructor(hwndOwner, This->pidlRoot, apidl, cidl);
 	    hr = S_OK;
 	} else if (IsEqualIID(riid, &IID_IExtractIconA) &&(cidl == 1)) {
 	    pidl = ILCombine(This->pidlRoot, apidl[0]);
-	    pObj =(LPUNKNOWN) IExtractIconA_Constructor(pidl);
+	    pObj = (LPUNKNOWN) IExtractIconA_Constructor(pidl);
 	    SHFree(pidl);
 	    hr = S_OK;
 	} else if (IsEqualIID(riid, &IID_IExtractIconW) &&(cidl == 1)) {
 	    pidl = ILCombine(This->pidlRoot, apidl[0]);
-	    pObj =(LPUNKNOWN) IExtractIconW_Constructor(pidl);
+	    pObj = (LPUNKNOWN) IExtractIconW_Constructor(pidl);
 	    SHFree(pidl);
 	    hr = S_OK;
 	} else if ((IsEqualIID(riid,&IID_IShellLinkW) || IsEqualIID(riid,&IID_IShellLinkA))

@@ -1297,16 +1297,17 @@ HRESULT _SHGetPathFromIDListA(LPCITEMIDLIST pidl, LPSTR pszPath, UINT uOutSize)
 	LPSTR pstr;
 	LPSTR end = pszPath + uOutSize;
 
- 	if (_ILIsMyComputer(pidl)) { /* optimized loop to retrieve file system paths */
+	/* If the item ID list begins at "My Computer", we can use
+	   an optimized loop to retrieve file system paths. */
+ 	if (_ILIsMyComputer(pidl)) {
 	    LPCITEMIDLIST p = ILGetNext(pidl);
 	    LPSTR txt;
 
 	    pstr = pszPath;
-	    end = pszPath + MAX_PATH;
 
 	    while(p && p->mkid.cb && pstr<end) {
 		if (_ILIsSpecialFolder(p))
-		    break;
+		    return E_INVALIDARG;
 
 		txt = _ILGetTextPointer(p);
 		if (!txt)
@@ -1329,32 +1330,25 @@ HRESULT _SHGetPathFromIDListA(LPCITEMIDLIST pidl, LPSTR pszPath, UINT uOutSize)
 
 	pstr = pszPath;
 
-	hr = SHGetDesktopFolder(&desktop);
+	/* The only other valid case is a simple PIDL rooted at desktop level */
+        if (_ILIsValue(pidl) && _ILIsPidlSimple(pidl)) {
+	    hr = SHGetDesktopFolder(&desktop);
 
-	if (SUCCEEDED(hr)) {
-            if (_ILIsValue(pidl)) {
+	    if (SUCCEEDED(hr)) {
 		hr = SHGetSpecialFolderPathA(0, pszPath, CSIDL_DESKTOP, FALSE);
 
 		if (SUCCEEDED(hr)) {
 		    pstr = PathAddBackslashA(pszPath);
 		    hr = IShellFolder_GetDisplayNameOf(desktop, pidl, SHGDN_FORPARSING, &str);
 		}
+
+		IShellFolder_Release(desktop);
 	    }
-	    else
-	        hr = IShellFolder_GetDisplayNameOf(desktop, pidl, SHGDN_FORPARSING, &str);
+	} else
+	    return E_INVALIDARG;
 
-	    IShellFolder_Release(desktop);
-	}
-
-	if (SUCCEEDED(hr)) {
+	if (SUCCEEDED(hr))
 	    hr = StrRetToStrNA(pstr, end-pstr, &str, pidl);
-
-	    /* don't allow to return displaynames of the form "::{guid}" */
-	    if (pstr[0]==':' && pstr[1]==':') {
-	        *pszPath = '\0';
-	        hr = E_FAIL;
-	    }
-	}
 
 	TRACE_(shell)("-- %s, 0x%08lx\n",pszPath, hr);
 	return hr;
@@ -1401,7 +1395,9 @@ HRESULT _SHGetPathFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath, UINT uOutSize)
 	LPWSTR pstr;
 	LPWSTR end = pszPath + uOutSize;
 
- 	if (_ILIsMyComputer(pidl)) { /* optimized loop to retrieve file system paths */
+	/* If the item ID list begins at "My Computer", we can use
+	   an optimized loop to retrieve file system paths. */
+ 	if (_ILIsMyComputer(pidl)) {
 	    LPCITEMIDLIST p = ILGetNext(pidl);
 	    LPSTR txt;
 
@@ -1409,7 +1405,7 @@ HRESULT _SHGetPathFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath, UINT uOutSize)
 
 	    while(p && p->mkid.cb && pstr<end) {
 		if (_ILIsSpecialFolder(p))
-		    break;
+		    return E_INVALIDARG;
 
 		txt = _ILGetTextPointer(p);
 		if (!txt)
@@ -1433,32 +1429,25 @@ HRESULT _SHGetPathFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath, UINT uOutSize)
 
 	pstr = pszPath;
 
-	hr = SHGetDesktopFolder(&desktop);
+	/* The only other valid case is a simple PIDL rooted at desktop level */
+        if (_ILIsValue(pidl) && _ILIsPidlSimple(pidl)) {
+	    hr = SHGetDesktopFolder(&desktop);
 
-	if (SUCCEEDED(hr)) {
-            if (_ILIsValue(pidl)) {
+	    if (SUCCEEDED(hr)) {
 		hr = SHGetSpecialFolderPathW(0, pszPath, CSIDL_DESKTOP, FALSE);
 
 		if (SUCCEEDED(hr)) {
 		    pstr = PathAddBackslashW(pszPath);
 		    hr = IShellFolder_GetDisplayNameOf(desktop, pidl, SHGDN_FORPARSING, &str);
 		}
+
+		IShellFolder_Release(desktop);
 	    }
-	    else
-	        hr = IShellFolder_GetDisplayNameOf(desktop, pidl, SHGDN_FORPARSING, &str);
+	} else
+	    return E_INVALIDARG;
 
-	    IShellFolder_Release(desktop);
-	}
-
-	if (SUCCEEDED(hr)) {
+	if (SUCCEEDED(hr))
 	    hr = StrRetToStrNW(pstr, end-pstr, &str, pidl);
-
-	    /* don't allow to return displaynames of the form "::{guid}" */
-	    if (pstr[0]==':' && pstr[1]==':') {
-	        *pszPath = '\0';
-	        hr = E_FAIL;
-	    }
-	}
 
 	TRACE_(shell)("-- %s, 0x%08lx\n",debugstr_w(pszPath), hr);
 	return hr;
