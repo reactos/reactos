@@ -1,10 +1,56 @@
 #ifndef __INCLUDE_DDK_FSFUNCS_H
 #define __INCLUDE_DDK_FSFUNCS_H
-/* $Id: fsfuncs.h,v 1.23 2004/06/23 00:41:55 ion Exp $ */
+/* $Id: fsfuncs.h,v 1.24 2004/06/27 05:38:54 ion Exp $ */
 #define FlagOn(x,f) ((x) & (f))
 
 #include <ntos/fstypes.h>
 
+/* Some comments on the Prototypes that aren't in the GNU IFS:
+
+The following come from alternate sources, or guessed from documentation:
+FsRtlNotifyFullChangeDirectory GOOGLE GROUPS
+FsRtlIsPagingFile OSR DOCUMENTATION
+FsRtlAcquireFileExclusive (GUESS: The function takes a single parameter. The function name is "AcquireFile". Logical assumption says this is a File Object. NTFSD ML Post confirms.)
+FsRtlReleaseFile (GUESS: The function takes a single parameter. The function name is "AcquireFile". Logical assumption says this is a File Object. NTFSD ML Post confirms.)
+FsRtlMdlReadCompleteDev (FsRtlMdlReadComplete is on GNU IFS. The Dev Suffix simply means an extra PDEVICE_OBJECT param)
+FsRtlMdlReadDev (FsRtlMdlReadDev is on GNU IFS. The Dev Suffix simply means an extra PDEVICE_OBJECT param)
+FsRtlMdlWriteCompleteDev FsRtlMdlWriteCompleteDev is on GNU IFS. The Dev Suffix simply means an extra PDEVICE_OBJECT param)
+FsRtlPrepareMdlWrite (Compared with CcMdlWrite, which is already documented)
+FsRtlPrepareMdlWriteDev (Same as above, and add a pointer to device object (Dev suffix)
+FsRtlGetNextMcbEntry(FsRtlGetNextLargeMcbEntry is documented and uses LONGLONGs. Logical assumption that this one only uses LONGS and non-large MCB (Documented))
+
+Stream Context. Going along with public OSR documenttion:
+
+FsRtlInsertPerStreamContext:
+"This call is used by the file system filter driver to associate a given context block 
+(allocated by the filter and initialized using FsRtlInitPerStreamContext) with the stream associated with the given file object."
+Notice we are told "given context block...initialized using FsRtlInitPerStreamContext". This function description tells us:
+" provide space for the FSRTL_PER_STREAM_CONTEXT block in the filter driver’s context structure"
+Therefore, one of the parameters is PFSRTL_PER_STREAM_CONTEXT.
+"with the stream associated with the given file object." The OSR Documentations then mentions:
+"Tracking per-file (or “per stream”) context information in FSRTL_ADVANCED_FCB_HEADER"
+So we are associating a FSRTL_PER_STREAM_CONTEXT block with the FSRTL_ADVANCED_FCB_HEADER associated with the file object.
+FSRTL_ADVANCED_FCB_HEADER is documented by a search through Google.
+FSRTL_PER_STREAM_CONTEXT is *NOT* documented anywhere else then in the IFS, so it has been removed.
+
+FsRtlLookupPerStreamContextInternal
+"FsRtlLookupPerStreamContext – this call is used by the file system filter driver to locate a given context
+block that is associated with the file object.  Typically, a file system filter driver will identify its 
+own context block using unique OwnerId and InstanceId parameters when creating the context block and subsequently
+when locating the associated information."
+OSR tells us here that the last two parameters are OwnerId and InstanceId. It also says it will find a given context block,
+so there's our Return Value. (Although, not being documented, we must put PVOID). It looks into a file object's stream, so we
+probably need that FCB header again.
+
+FsRtlRemovePerStreamContext
+OSR is vague, so all we know for sure is that we are sending an FCB Header. The return value isn't NTSTATUS, but seems to be a
+pointer. We don't know what the two other parameters are, so they have been marked as unknown.
+
+FsRtlTeardownPerStreamContexts
+OSR doens't tell a lot, but we only have one parameter. It must be the FCB Header. Furthermore, the CVS of Captive implements
+this function as a stub, and confirms the theory.
+
+*/
 
 VOID
 STDCALL
@@ -424,6 +470,7 @@ FsRtlMdlRead (
 	OUT	PMDL			*MdlChain,
 	OUT	PIO_STATUS_BLOCK	IoStatus
 	);
+
 BOOLEAN
 STDCALL
 FsRtlMdlReadComplete (
@@ -584,6 +631,7 @@ FsRtlPrepareMdlWrite (
 	OUT	PMDL			*MdlChain,
 	OUT	PIO_STATUS_BLOCK	IoStatus
 	);
+
 BOOLEAN
 STDCALL
 FsRtlPrepareMdlWriteDev (
@@ -613,6 +661,7 @@ FsRtlPostPagingFileStackOverflow (
 	DWORD	Unknown1,
 	DWORD	Unknown2
 	);
+
 VOID
 STDCALL
 FsRtlPostStackOverflow (
@@ -620,6 +669,7 @@ FsRtlPostStackOverflow (
 	DWORD	Unknown1,
 	DWORD	Unknown2
 	);
+
 BOOLEAN
 STDCALL
 FsRtlPrivateLock (
@@ -636,6 +686,7 @@ FsRtlPrivateLock (
     IN PVOID                Context,
     IN BOOLEAN              AlreadySynchronized
     );
+
 NTSTATUS
 STDCALL
 FsRtlProcessFileLock (
@@ -647,8 +698,8 @@ FsRtlProcessFileLock (
 STDCALL
 NTSTATUS
 FsRtlRegisterFileSystemFilterCallbacks (
-    IN struct _DRIVER_OBJECT *FilterDriverObject,
-    IN PFS_FILTER_CALLBACKS Callbacks
+    IN PVOID		Unknown,
+    IN PVOID		Unknown
     );
 
 NTSTATUS STDCALL
@@ -676,8 +727,8 @@ STDCALL
 PFSRTL_PER_STREAM_CONTEXT
 FsRtlRemovePerStreamContext (
     IN PFSRTL_ADVANCED_FCB_HEADER StreamContext,
-    IN PVOID OwnerId OPTIONAL,
-    IN PVOID InstanceId OPTIONAL
+    IN PVOID Unknown1 OPTIONAL,
+    IN PVOID Unknown2 OPTIONAL
     );
 
 STDCALL
