@@ -70,6 +70,7 @@ typedef struct CSRSS_CONSOLE_t
 	   UINT Input;
 	   UINT Output;
    } CodePageId;
+   BOOL EarlyReturn;                   /* wake client and return data, even if we are in line buffered mode, and we don't have a complete line */
 } CSRSS_CONSOLE, *PCSRSS_CONSOLE;
 
 typedef struct

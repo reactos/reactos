@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.28 2002/02/08 02:57:10 chorns Exp $
+/* $Id: conio.c,v 1.29 2002/05/05 03:45:21 phreak Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -677,6 +677,7 @@ NTSTATUS STDCALL CsrInitConsole(PCSRSS_CONSOLE Console)
   Console->EchoCount = 0;
   Console->Header.Type = CSRSS_CONSOLE_MAGIC;
   Console->Mode = ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_MOUSE_INPUT;
+  Console->EarlyReturn = FALSE;
   InitializeListHead(&Console->InputEvents);
   Status = NtCreateEvent( &Console->ActiveEvent, STANDARD_RIGHTS_ALL, 0, FALSE, FALSE );
   if( !NT_SUCCESS( Status ) )
@@ -1048,6 +1049,7 @@ VOID Console_Api( DWORD RefreshEvent )
       InsertTailList(&ActiveConsole->InputEvents, &KeyEventRecord->ListEntry);
       // if line input mode is enabled, only wake the client on enter key down
       if( !(ActiveConsole->Mode & ENABLE_LINE_INPUT ) ||
+	  ActiveConsole->EarlyReturn ||
 	  ( KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar == '\n' &&
 	    KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown == TRUE ) )
 	{
@@ -1274,29 +1276,35 @@ CSR_API(CsrReadInputEvent)
    Status = CsrGetObject( ProcessData, Request->Data.ReadInputRequest.ConsoleHandle, (Object_t **)&Console );
    if( !NT_SUCCESS( Status ) || (Status = Console->Header.Type == CSRSS_CONSOLE_MAGIC ? 0 : STATUS_INVALID_HANDLE))
       {
-	 Reply->Status = Status;
-	 UNLOCK;
-	 return Status;
+         Reply->Status = Status;
+         UNLOCK;
+         return Status;
       }
 
-   // only get input if there is input, and we are not in line input mode, or if we are, if we have a whole line
-   if( ( Console->InputEvents.Flink != &Console->InputEvents ) &&
-       ( !( Console->Mode & ENABLE_LINE_INPUT ) || ( Console->WaitingLines > 0 ) ) )
+   // only get input if there is any
+   if( Console->InputEvents.Flink != &Console->InputEvents )
      {
-  CurrentEntry = RemoveHeadList(&Console->InputEvents);
-  Input = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
-	Reply->Data.ReadInputReply.Input = Input->InputEvent;
+       CurrentEntry = RemoveHeadList(&Console->InputEvents);
+       Input = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
+       Reply->Data.ReadInputReply.Input = Input->InputEvent;
 
-  if( Console->Mode & ENABLE_LINE_INPUT &&
-	    Input->InputEvent.Event.KeyEvent.bKeyDown == FALSE &&
-	    Input->InputEvent.Event.KeyEvent.uChar.AsciiChar == '\n' )
-	  Console->WaitingLines--;
-	Console->WaitingChars--;
-	RtlFreeHeap( CsrssApiHeap, 0, Input );
-	Reply->Data.ReadInputReply.MoreEvents = (Console->InputEvents.Flink != &Console->InputEvents) ? TRUE : FALSE;
-	Status = STATUS_SUCCESS;
+       if( Input->InputEvent.EventType == KEY_EVENT )
+	 {
+	   if( Console->Mode & ENABLE_LINE_INPUT &&
+	       Input->InputEvent.Event.KeyEvent.bKeyDown == FALSE &&
+	       Input->InputEvent.Event.KeyEvent.uChar.AsciiChar == '\n' )
+	     Console->WaitingLines--;
+	   Console->WaitingChars--;
+	 }
+       RtlFreeHeap( CsrssApiHeap, 0, Input );
+       Reply->Data.ReadInputReply.MoreEvents = (Console->InputEvents.Flink != &Console->InputEvents) ? TRUE : FALSE;
+       Status = STATUS_SUCCESS;
+       Console->EarlyReturn = FALSE; // clear early return
      }
-   else Status = STATUS_PENDING;
+   else {
+      Status = STATUS_PENDING;
+      Console->EarlyReturn = TRUE;  // mark for early return
+   }
    UNLOCK;
    return Reply->Status = Status;
 }
