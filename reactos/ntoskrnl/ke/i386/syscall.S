@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: syscall.S,v 1.14.10.2 2004/06/27 22:11:21 hyperion Exp $
+/* $Id: syscall.S,v 1.14.10.3 2004/06/29 20:48:56 hyperion Exp $
  *
  * FILE:            ntoskrnl/hal/x86/syscall.s
  * PURPOSE:         2E trap handler
@@ -38,8 +38,6 @@
  */
 .globl KeReturnFromSystemCall
 .globl KeReturnFromSystemCallWithHook
-.globl KeSystemCallReturn
-.globl KeSystemCallReturn2
 .globl _interrupt_handler2e
 _interrupt_handler2e:
 
@@ -59,6 +57,8 @@ _interrupt_handler2e:
 	   /* Save the old exception list */
 	   movl         %fs:KPCR_EXCEPTION_LIST, %ebx
 	   pushl	%ebx
+	   /* Set the exception handler chain terminator */
+	   movl         $0xffffffff, %fs:KPCR_EXCEPTION_LIST
 	   /* Get a pointer to the current thread */
 	   movl         %fs:KPCR_CURRENT_THREAD, %esi
 	   /* Save the old previous mode */
@@ -153,8 +153,7 @@ new_serviceInRange:
 
            /*  Allocate room for argument list from kernel stack  */
            movl  %es:_KeServiceDescriptorTable + 12, %ecx
-           movb  %es:(%ecx, %eax), %cl
-           movzx %cl, %ecx
+           movl  %es:(%ecx, %eax, 4), %ecx
            subl  %ecx, %esp
 
            /*  Copy the arguments from the user stack to the kernel stack  */
@@ -175,7 +174,20 @@ new_serviceInRange:
            movl  %es:(%ecx, %eax, 4), %eax
            call  *%eax
 
-           jmp   KeSystemCallReturn
+#if CHECKED
+           /*  Bump Service Counter  */
+#endif
+
+           /*  Deallocate the kernel stack frame  */
+           movl %ebp,%esp
+
+	   /* Call the post system call hook and deliver any pending APCs */
+	   pushl %ebp
+	   pushl %eax
+	   call _KiAfterSystemCallHook
+	   addl $8,%esp
+
+           jmp  KeReturnFromSystemCall
 
 new_useShadowTable:
 
@@ -199,8 +211,7 @@ new_shadowServiceInRange:
 
            /*  Allocate room for argument list from kernel stack  */
            movl  %es:_KeServiceDescriptorTableShadow + 28, %ecx
-           movb  %es:(%ecx, %eax), %cl
-           movzx %cl, %ecx
+           movl  %es:(%ecx, %eax, 4), %ecx
            subl  %ecx, %esp
 
            /*  Copy the arguments from the user stack to the kernel stack  */
@@ -226,7 +237,52 @@ new_shadowServiceInRange:
            movl  %es:(%ecx, %eax, 4), %eax
            call  *%eax
 
-#include "sysret.inc.S"
+#if CHECKED
+           /*  Bump Service Counter  */
+#endif
 
-#define _KeSystemCallReturn2
-#include "sysret.inc.S"
+           /*  Deallocate the kernel stack frame  */
+           movl %ebp,%esp
+
+KeReturnFromSystemCallWithHook:	
+	   /* Call the post system call hook and deliver any pending APCs */
+	   pushl %esp
+	   pushl %eax
+	   call _KiAfterSystemCallHook
+	   addl $8,%esp
+
+KeReturnFromSystemCall:
+	
+           /* Restore the user context */
+	   /* Get a pointer to the current thread */
+           movl %fs:0x124, %esi
+	
+           /* Restore the old trap frame pointer */
+           movl 0x3c(%esp), %ebx
+	   movl %ebx, KTHREAD_TRAP_FRAME(%esi)
+	
+	   /* Skip debug information and unsaved registers */
+	   addl	$0x30, %esp
+	   popl %gs
+	   popl %es
+	   popl %ds
+	   popl %edx
+	   popl %ecx
+	   addl $0x4, %esp   /* Don't restore eax */
+
+	   /* Restore the old previous mode */
+	   popl %ebx
+	   movb %bl, %ss:KTHREAD_PREVIOUS_MODE(%esi)
+
+	   /* Restore the old exception handler list */
+	   popl %ebx
+	   movl %ebx, %fs:KPCR_EXCEPTION_LIST
+	
+	   popl %fs 
+	   popl %edi
+	   popl %esi
+	   popl %ebx
+	   popl %ebp
+	   addl $0x4, %esp  /* Ignore error code */
+		
+           iret
