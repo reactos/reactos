@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: vmwinst.c,v 1.3 2004/04/12 16:14:54 weiden Exp $
+/* $Id: vmwinst.c,v 1.4 2004/06/01 19:06:50 sedwards Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS VMware(r) driver installation utility
@@ -56,24 +56,7 @@ LONG WINAPI ExceptionHandler(LPEXCEPTION_POINTERS ExceptionInfo)
 BOOL
 DetectVMware(int *Version)
 {
-  int magic, ver;
-  
-  magic = 0;
-  ver = 0;
-  
-  /* Try using a VMware I/O port. If not running in VMware this'll throw an
-     exception! */
-  __asm__ __volatile__("inl  %%dx, %%eax"
-    : "=a" (ver), "=b" (magic)
-    : "0" (0x564d5868), "d" (0x5658), "c" (0xa));
-
-  if(magic == 0x564d5868)
-  {
-    *Version = ver;
     return TRUE;
-  }
-  
-  return FALSE;
 }
 
 BOOL
