@@ -61,7 +61,7 @@ NtFreeVirtualMemory ZwFreeVirtualMemory 4
 NtFsControlFile ZwFsControlFile 10
 NtGetContextThread ZwGetContextThread 2
 NtGetPlugPlayEvent ZwGetPlugPlayEvent 4
-NtGetTickCount ZwGetTickCount 1
+NtGetTickCount ZwGetTickCount 0
 NtImpersonateClientOfPort ZwImpersonateClientOfPort 2
 NtImpersonateThread ZwImpersonateThread 3
 NtInitializeRegistry ZwInitializeRegistry 1

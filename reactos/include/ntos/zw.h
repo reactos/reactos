@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.23 2004/04/20 20:39:19 jimtabor Exp $
+/* $Id: zw.h,v 1.24 2004/05/01 19:22:49 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -5413,10 +5413,10 @@ ZwFlushVirtualMemory(
  *        UpTime = Number of clock ticks since boot.
  * RETURNS: Status 
  */
-NTSTATUS
-STDCALL 
+ULONG
+STDCALL
 ZwGetTickCount(
-	PULONG UpTime
+	VOID
 	);
 
 /*

@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.118 2004/03/24 23:42:39 gdalsnes Exp $
+; $Id: ntdll.def,v 1.119 2004/05/01 19:21:44 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -126,7 +126,7 @@ NtFreeVirtualMemory@16
 NtFsControlFile@40
 NtGetContextThread@8
 NtGetPlugPlayEvent@16
-NtGetTickCount@4
+NtGetTickCount@0
 NtImpersonateClientOfPort@8
 NtImpersonateThread@12
 NtInitializeRegistry@4
@@ -710,7 +710,7 @@ ZwFreeVirtualMemory@16
 ZwFsControlFile@40
 ZwGetContextThread@8
 ZwGetPlugPlayEvent@16
-ZwGetTickCount@4
+ZwGetTickCount@0
 ZwImpersonateClientOfPort@8
 ZwImpersonateThread@12
 ZwInitializeRegistry@4
