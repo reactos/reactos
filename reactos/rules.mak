@@ -1,7 +1,3 @@
-export VERBOSE = yes
-export BUILD_MAP = yes
-export BUILD_SYM = no
-
 # Default to half-verbose mode
 ifeq ($(VERBOSE),no)
   Q = @
