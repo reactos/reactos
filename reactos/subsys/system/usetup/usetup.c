@@ -1596,16 +1596,16 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 			    PartEntry->PartInfo[0].PartitionType = PARTITION_HUGE;
 			  }
 		      }
-		    else if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (2ULL * 1024ULL * 1024ULL * 1024ULL))
+		    else if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (512ULL * 1024ULL * 1024ULL))
 		      {
-		        /* FAT16 LBA partition (partition is smaller than 2GB) */
+		        /* FAT16 LBA partition (partition size is smaller than 512MB) */
 		        DPRINT1("%x\n", PartEntry->PartInfo[0].PartitionType);
 		        PartEntry->PartInfo[0].PartitionType = PARTITION_XINT13;
 		      }
 		    else
 		      {
 		        DPRINT1("%x\n", PartEntry->PartInfo[0].PartitionType);
-		        /* FAT32 LBA partition (partition is at least 2GB) */
+		        /* FAT32 LBA partition (partition size 512MB or larger) */
 		        PartEntry->PartInfo[0].PartitionType = PARTITION_FAT32_XINT13;
 		      }
 		    break;

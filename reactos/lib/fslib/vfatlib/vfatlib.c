@@ -426,6 +426,14 @@ VfatFormat(
       return Status;
     }
 
+  if (PartitionInfo.PartitionLength.QuadPart < 512ULL * 1024ULL * 1024ULL)
+    {
+      DPRINT1("FIXME: Partition size is smaller than 512MB - use FAT16\n");
+      NtClose(FileHandle);
+      return STATUS_UNSUCCESSFUL;
+    }
+
+
   /* Calculate cluster size */
   if (ClusterSize == 0)
     {
