@@ -1,4 +1,4 @@
-; $Id: win32k.def,v 1.9 2000/03/17 21:56:43 jfilby Exp $
+; $Id: win32k.def,v 1.10 2000/04/11 20:56:11 jfilby Exp $
 ;
 ; win32k.def
 ;
@@ -48,7 +48,7 @@ EngEraseSurface
 EngFillPath
 EngFindImageProcAddress
 EngFindResource
-EngFreeMem
+EngFreeMem@4
 EngFreeModule
 EngFreeUserMem@4
 EngGetCurrentCodePage
