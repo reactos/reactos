@@ -227,7 +227,7 @@ NtUserGetPriorityClipboardFormat(UINT *paFormatPriorityList, INT cFormats)
 BOOL STDCALL
 NtUserIsClipboardFormatAvailable(UINT format)
 {
-   UNIMPLEMENTED
+   DPRINT1("FIXME: NtUserIsClipboardFormatAvailable() is not implemented\n");
    return 0;
 }
 
