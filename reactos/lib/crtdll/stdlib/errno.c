@@ -2,17 +2,35 @@
 #include <windows.h>
 #include <errno.h>
 
-int __crtdll_errno;
+#undef _doserrno
+int _doserrno;
+
+#undef errno
+unsigned int errno;
+
 
 int *_errno(void)
 {
-	__crtdll_errno = GetLastError();
-	return &__crtdll_errno;
+	
+	return &errno;
 }
 
-int *__dos_errno(void)
+
+int __set_errno (int error)
 {
-	__crtdll_errno = GetLastError();
-	return &__crtdll_errno;
+	errno = error;
+	return error;
 }
 
+
+
+int * __fpecode ( void )
+{
+        return NULL;
+}
+
+int*	__doserrno(void)
+{
+	_doserrno = GetLastError();
+	return &_doserrno;
+}
