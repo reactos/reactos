@@ -1,4 +1,4 @@
-/* $Id: echo.c,v 1.2 2003/08/07 09:27:42 hbirr Exp $
+/* $Id: echo.c,v 1.3 2004/04/30 16:52:41 navaraf Exp $
  *
  *  ECHO.C - internal echo commands.
  *
@@ -42,13 +42,13 @@ INT CommandEcho (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts ("Displays a message or switches command echoing on or off.\n"
-			    "\n"
-			    "  ECHO [ON | OFF]\n"
-			    "  ECHO [message]\n"
-			    "  ECHO.             prints an empty line\n"
-			    "\n"
-			    "Type ECHO without a parameter to display the current ECHO setting.");
+		ConOutPuts (_T("Displays a message or switches command echoing on or off.\n"
+			       "\n"
+			       "  ECHO [ON | OFF]\n"
+			       "  ECHO [message]\n"
+			       "  ECHO.             prints an empty line\n"
+			       "\n"
+			       "Type ECHO without a parameter to display the current ECHO setting."));
 		return 0;
 	}
 

@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.11 2004/04/26 20:26:15 gdalsnes Exp $
+/* $Id: cmd.c,v 1.12 2004/04/30 16:52:41 navaraf Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -119,6 +119,9 @@
  *
  *    23-Feb-2001 (Carl Nettelblad <cnettel@hem.passagen.se>)
  *        %envvar% replacement conflicted with for.
+ *
+ *    30-Apr-2004 (Filip Navara <xnavara@volny.cz>)
+ *       Make MakeSureDirectoryPathExistsEx unicode safe.
  */
 
 #include "config.h"
@@ -178,41 +181,39 @@ WORD wDefColor;           /* default color */
  *
  * FIXME: maybe put this in a header/library where everyone can use it?????
  */
-BOOL WINAPI MakeSureDirectoryPathExistsEx(LPCSTR DirPath, BOOL FileAtEnd)
+BOOL WINAPI MakeSureDirectoryPathExistsEx(LPCTSTR DirPath, BOOL FileAtEnd)
 {
-   char Path[MAX_PATH];
-   char *SlashPos = Path;
-   char Slash;
-   BOOL bRes;
+	TCHAR Path[MAX_PATH];
+	TCHAR *SlashPos = Path;
+	TCHAR Slash;
+	BOOL bRes;
    
-   strcpy(Path, DirPath);
-        
-   while((SlashPos=strpbrk(SlashPos+1,"\\/")))
-   {
-      Slash = *SlashPos;
-      *SlashPos = 0;
+	_tcscpy(Path, DirPath);
+	while ((SlashPos = _tcspbrk(SlashPos + 1, _T("\\/"))))
+	{
+		Slash = *SlashPos;
+		*SlashPos = 0;
       
-      bRes = CreateDirectoryA(Path, NULL);
-      if (bRes == FALSE && GetLastError() != ERROR_ALREADY_EXISTS)
-      {
-         return FALSE;
-      }
+		bRes = CreateDirectory(Path, NULL);
+		if (bRes == FALSE && GetLastError() != ERROR_ALREADY_EXISTS)
+		{
+			return FALSE;
+		}
       
-      *SlashPos = Slash;
-      
-      if (*(SlashPos+1) == 0) return TRUE;
-   }
+		*SlashPos = Slash;
+		if (*(SlashPos + 1) == 0) return TRUE;
+	}
 
-   if (!FileAtEnd)
-   {
-      bRes = CreateDirectoryA(Path, NULL);
-      if (bRes == FALSE && GetLastError() != ERROR_ALREADY_EXISTS)
-      {
-         return FALSE;
-      }
-   }
+	if (!FileAtEnd)
+	{
+		bRes = CreateDirectory(Path, NULL);
+		if (bRes == FALSE && GetLastError() != ERROR_ALREADY_EXISTS)
+		{
+			return FALSE;
+		}
+	}
 
-   return TRUE;
+	return TRUE;
 }
 
 
@@ -564,7 +565,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 #ifdef FEATURE_REDIRECTION
 	/* find the temp path to store temporary files */
 	GetTempPath (MAX_PATH, szTempPath);
-   MakeSureDirectoryPathExistsEx(szTempPath, FALSE);
+	MakeSureDirectoryPathExistsEx(szTempPath, FALSE);
 	if (szTempPath[_tcslen (szTempPath) - 1] != _T('\\'))
 		_tcscat (szTempPath, _T("\\"));
 

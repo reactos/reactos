@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.4 2003/08/13 05:18:40 jimtabor Exp $
+/* $Id: console.c,v 1.5 2004/04/30 16:52:41 navaraf Exp $
  *
  *  CONSOLE.C - console input/output functions.
  *
@@ -106,8 +106,8 @@ VOID ConInString (LPTSTR lpInput, DWORD dwLength)
 	DWORD  i;
 	PCHAR pBuf;
 
-#ifdef UNICODE
-	pBuf = (PCHAR)alloca(dwLength);
+#ifdef _UNICODE
+	pBuf = (PCHAR)malloc(dwLength);
 #else
 	pBuf = lpInput;
 #endif
@@ -131,6 +131,10 @@ VOID ConInString (LPTSTR lpInput, DWORD dwLength)
 			break;
 		}
 	}
+
+#ifdef _UNICODE
+	free(pBuf);
+#endif
 
 	SetConsoleMode (hFile, dwOldMode);
 }
@@ -169,7 +173,7 @@ VOID ConPuts(LPTSTR szText, DWORD nStdHandle)
 
 	len = _tcslen(szText);
 #ifdef _UNICODE
-	pBuf = alloca(len + 1);
+	pBuf = malloc(len + 1);
 	len = WideCharToMultiByte(CP_ACP, 0, szText, len + 1, pBuf, len + 1, NULL, NULL) - 1;
 #else
 	pBuf = szText;
@@ -184,6 +188,9 @@ VOID ConPuts(LPTSTR szText, DWORD nStdHandle)
 	           1,
 	           &dwWritten,
 	           NULL);
+#ifdef UNICODE
+	free(pBuf);
+#endif
 }
 
 VOID ConOutPuts (LPTSTR szText)
@@ -201,7 +208,7 @@ VOID ConPrintf(LPTSTR szFormat, va_list arg_ptr, DWORD nStdHandle)
 
 	len = _vstprintf (szOut, szFormat, arg_ptr);
 #ifdef _UNICODE
-	pBuf = alloca(len + 1);
+	pBuf = malloc(len + 1);
 	len = WideCharToMultiByte(CP_ACP, 0, szOut, len + 1, pBuf, len + 1, NULL, NULL) - 1;
 #else
 	pBuf = szOut;
@@ -211,6 +218,9 @@ VOID ConPrintf(LPTSTR szFormat, va_list arg_ptr, DWORD nStdHandle)
 	           len,
 	           &dwWritten,
 	           NULL);
+#ifdef UNICODE
+	free(pBuf);
+#endif
 }
 
 

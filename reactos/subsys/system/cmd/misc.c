@@ -376,7 +376,7 @@ BOOL FileGetString (HANDLE hFile, LPTSTR lpBuffer, INT nBufferLength)
 	DWORD  dwRead;
 	INT len;
 #ifdef _UNICODE
-	lpString = alloca(nBufferLength);
+	lpString = malloc(nBufferLength);
 #else
 	lpString = lpBuffer;
 #endif
@@ -399,6 +399,7 @@ BOOL FileGetString (HANDLE hFile, LPTSTR lpBuffer, INT nBufferLength)
 	lpString[len++] = '\0';
 #ifdef _UNICODE
 	MultiByteToWideChar(CP_ACP, 0, lpString, len, lpBuffer, len);
+	free(lpString);
 #endif
 	return TRUE;
 }

@@ -41,11 +41,11 @@ VOID ShortVersion (VOID)
 	VersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 	if (GetVersionEx(&VersionInfo) && 0 == _tcsnicmp(VersionInfo.szCSDVersion, _T("ReactOS"), 7))
 	{
-		ConOutPrintf(_T("%s running on %s"), SHELLVER, VersionInfo.szCSDVersion);
+		ConOutPrintf(_T("%S running on %s"), SHELLVER, VersionInfo.szCSDVersion);
 	}
 	else
 	{
-		ConOutPuts(SHELLVER);
+		ConOutPrintf(_T("%S"), SHELLVER);
 	}
 	ConOutPuts (_T("\n"));
 }
