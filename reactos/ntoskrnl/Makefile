@@ -376,134 +376,26 @@ $(OBJECTS_PATH):
 
 $(OBJECTS_RESOURCE): $(TARGET_NAME).rc bugcodes.rc $(PATH_TO_TOP)/include/reactos/resource.h
 
-#
-# Build subsystem intermediate objects
-#
-$(OBJECTS_PATH)/arch.o: $(OBJECTS_ARCH)
-	$(LD) -r -o $(OBJECTS_PATH)/arch.o $(OBJECTS_ARCH)
-
-$(OBJECTS_PATH)/io.o: $(OBJECTS_IO)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/io.o \
-		$(OBJECTS_IO)
-
-$(OBJECTS_PATH)/ke.o: $(OBJECTS_KE)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/ke.o \
-		$(OBJECTS_KE)
-
-$(OBJECTS_PATH)/rtl.o: $(OBJECTS_RTL)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/rtl.o \
-		$(OBJECTS_RTL)
-
-$(OBJECTS_PATH)/mm.o: $(OBJECTS_MM)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/mm.o \
-		$(OBJECTS_MM)
-
-$(OBJECTS_PATH)/ob.o: $(OBJECTS_OB)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/ob.o \
-		$(OBJECTS_OB)
-
-$(OBJECTS_PATH)/ps.o: $(OBJECTS_PS)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/ps.o \
-		$(OBJECTS_PS)
-
-$(OBJECTS_PATH)/ex.o: $(OBJECTS_EX)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/ex.o \
-		$(OBJECTS_EX)
-
-$(OBJECTS_PATH)/fs.o: $(OBJECTS_FS)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/fs.o \
-		$(OBJECTS_FS)
-
-$(OBJECTS_PATH)/se.o: $(OBJECTS_SE)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/se.o \
-		$(OBJECTS_SE)
-
-$(OBJECTS_PATH)/cm.o: $(OBJECTS_CM)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/cm.o \
-		$(OBJECTS_CM)
-
-$(OBJECTS_PATH)/dbg.o: $(OBJECTS_DBG)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/dbg.o \
-		$(OBJECTS_DBG)
-
-$(OBJECTS_PATH)/ldr.o: $(OBJECTS_LDR)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/ldr.o \
-		$(OBJECTS_LDR)
-
-$(OBJECTS_PATH)/lpc.o: $(OBJECTS_LPC)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/lpc.o \
-		$(OBJECTS_LPC)
-
-$(OBJECTS_PATH)/po.o: $(OBJECTS_PO)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/po.o \
-		$(OBJECTS_PO)
-
-$(OBJECTS_PATH)/cc.o: $(OBJECTS_CC)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/cc.o \
-		$(OBJECTS_CC)
-
-$(OBJECTS_PATH)/kd.o: $(OBJECTS_KD)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/kd.o \
-		$(OBJECTS_KD)
-
-$(OBJECTS_PATH)/inbv.o: $(OBJECTS_INBV)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/inbv.o \
-		$(OBJECTS_INBV)
-
 # Note: arch.o MUST be the first file!!!
 OBJECTS := \
-	$(OBJECTS_PATH)/arch.o \
-	$(OBJECTS_PATH)/ke.o \
-	$(OBJECTS_PATH)/cc.o \
-	$(OBJECTS_PATH)/cm.o \
-	$(OBJECTS_PATH)/dbg.o \
-	$(OBJECTS_PATH)/ex.o \
-	$(OBJECTS_PATH)/lpc.o \
-	$(OBJECTS_PATH)/fs.o \
-	$(OBJECTS_PATH)/io.o \
-	$(OBJECTS_PATH)/kd.o \
-	$(OBJECTS_PATH)/ldr.o \
-	$(OBJECTS_PATH)/mm.o \
-	$(OBJECTS_PATH)/ob.o \
-	$(OBJECTS_PATH)/po.o \
-	$(OBJECTS_PATH)/ps.o \
-	$(OBJECTS_PATH)/rtl.o \
-	$(OBJECTS_PATH)/se.o \
-	$(OBJECTS_PATH)/inbv.o \
+	$(OBJECTS_ARCH) \
+	$(OBJECTS_KE) \
+	$(OBJECTS_CC) \
+	$(OBJECTS_CM) \
+	$(OBJECTS_DBG) \
+	$(OBJECTS_EX) \
+	$(OBJECTS_LPC) \
+	$(OBJECTS_FS) \
+	$(OBJECTS_IO) \
+	$(OBJECTS_KD) \
+	$(OBJECTS_LDR) \
+	$(OBJECTS_MM) \
+	$(OBJECTS_OB) \
+	$(OBJECTS_PO) \
+	$(OBJECTS_PS) \
+	$(OBJECTS_RTL) \
+	$(OBJECTS_SE) \
+	$(OBJECTS_INBV) \
 	$(OBJECTS_RESOURCE)
 
 EXTRA_OBJECTS = $(PATH_TO_TOP)/include/reactos/bugcodes.h
