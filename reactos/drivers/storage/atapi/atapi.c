@@ -1,4 +1,4 @@
-/* $Id: atapi.c,v 1.9 2002/03/04 22:31:06 ekohl Exp $
+/* $Id: atapi.c,v 1.10 2002/03/05 00:05:28 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -797,7 +797,6 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 			   DeviceExtension,
 			   NULL);
     }
-}
 
   DPRINT("AtapiInterrupt() done!\n");
 
