@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.13 2004/08/24 17:25:17 navaraf Exp $
+/* $Id: conio.c,v 1.14 2004/08/25 10:37:14 hbirr Exp $
  *
  * reactos/subsys/csrss/win32csr/conio.c
  *
@@ -405,7 +405,7 @@ ConioWriteConsole(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff,
               continue;
             }
           /* --- BS --- */
-          else if (Buffer[i] == '\n')
+          else if (Buffer[i] == '\b')
             {
               /* Only handle BS if we're not on the first pos of the first line */
               if (0 != Buff->CurrentX || Buff->ShowY != Buff->CurrentY)
