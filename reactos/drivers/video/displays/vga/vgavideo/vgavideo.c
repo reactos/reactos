@@ -18,8 +18,8 @@ static unsigned char leftMask;
 static int byteCounter;
 static unsigned char rightMask;
 
-#define READ_REGISTER_UCHAR(p) (*((PUCHAR)(p)))
-#define WRITE_REGISTER_UCHAR(p,c) (*((PCHAR)(p))) = (c)
+#define READ_REGISTER_UCHAR(p) (*((volatile UCHAR *)(p)))
+#define WRITE_REGISTER_UCHAR(p,c) (*((volatile CHAR *)(p))) = (c)
 
 INT abs(INT nm)
 {
