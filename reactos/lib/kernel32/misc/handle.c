@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.19 2004/11/02 21:51:25 weiden Exp $
+/* $Id: handle.c,v 1.20 2004/11/06 10:10:02 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -17,9 +17,6 @@
 #include "../include/debug.h"
 
 /* GLOBALS *******************************************************************/
-
-BOOL STDCALL
-InternalGetProcessId (HANDLE hProcess, LPDWORD lpProcessId);
 
 HANDLE STDCALL
 DuplicateConsoleHandle (HANDLE	hConsole,
