@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: arcname.c,v 1.6 2002/08/20 20:37:12 hyperion Exp $
+/* $Id: arcname.c,v 1.7 2002/09/04 13:58:56 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -36,6 +36,9 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+/* MACROS *******************************************************************/
+
+#define FS_VOLUME_BUFFER_SIZE (MAX_PATH + sizeof(FILE_FS_VOLUME_INFORMATION))
 
 /* FUNCTIONS ****************************************************************/
 
@@ -165,16 +168,82 @@ IoCreateArcNames(VOID)
 	return(Status);
     }
 
-
   DPRINT("IoCreateArcNames() done\n");
 
   return(STATUS_SUCCESS);
 }
 
 
+static NTSTATUS
+IopCheckCdromDevices(PULONG DeviceNumber)
+{
+  PFILE_FS_VOLUME_INFORMATION FileFsVolume;
+  PCONFIGURATION_INFORMATION ConfigInfo;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING DeviceName;
+  WCHAR DeviceNameBuffer[32];
+  HANDLE Handle;
+  ULONG i;
+  NTSTATUS Status;
+  IO_STATUS_BLOCK IoStatusBlock;
+  USHORT Buffer[FS_VOLUME_BUFFER_SIZE];
+
+  FileFsVolume = (PFILE_FS_VOLUME_INFORMATION)Buffer;
+
+  ConfigInfo = IoGetConfigurationInformation();
+  for (i = 0; i < ConfigInfo->CDRomCount; i++)
+    {
+      swprintf(DeviceNameBuffer,
+	       L"\\Device\\CdRom%lu\\",
+	       i);
+      RtlInitUnicodeString(&DeviceName,
+			   DeviceNameBuffer);
+
+      InitializeObjectAttributes(&ObjectAttributes,
+				 &DeviceName,
+				 0,
+				 NULL,
+				 NULL);
+
+      Status = NtOpenFile(&Handle,
+			  FILE_ALL_ACCESS,
+			  &ObjectAttributes,
+			  NULL,
+			  0,
+			  0);
+      DPRINT("NtOpenFile()  DeviceNumber %lu  Status %lx\n", i, Status);
+      if (NT_SUCCESS(Status))
+	{
+	  Status = NtQueryVolumeInformationFile(Handle,
+						&IoStatusBlock,
+						FileFsVolume,
+						FS_VOLUME_BUFFER_SIZE,
+						FileFsVolumeInformation);
+	  DPRINT("NtQueryVolumeInformationFile()  Status %lx\n", Status);
+	  if (NT_SUCCESS(Status))
+	    {
+	      DPRINT("VolumeLabel: '%S'\n", FileFsVolume->VolumeLabel);
+	      if (_wcsicmp(FileFsVolume->VolumeLabel, L"REACTOS") == 0)
+		{
+		  NtClose(Handle);
+		  *DeviceNumber = i;
+		  return(STATUS_SUCCESS);
+		}
+	    }
+	  NtClose(Handle);
+	}
+    }
+
+  *DeviceNumber = (ULONG)-1;
+
+  return(STATUS_UNSUCCESSFUL);
+}
+
+
 NTSTATUS
 IoCreateSystemRootLink(PCHAR ParameterLine)
 {
+  OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING LinkName;
   UNICODE_STRING DeviceName;
   UNICODE_STRING ArcName;
@@ -184,7 +253,6 @@ IoCreateSystemRootLink(PCHAR ParameterLine)
   PCHAR p;
   NTSTATUS Status;
   ULONG Length;
-  OBJECT_ATTRIBUTES ObjectAttributes;
   HANDLE Handle;
 
   /* Create local parameter line copy */
@@ -213,7 +281,43 @@ IoCreateSystemRootLink(PCHAR ParameterLine)
       DPRINT("Boot path: %s\n", "\\");
       RtlCreateUnicodeStringFromAsciiz(&BootPath, "\\");
     }
-  DPRINT("Arc name: %s\n", ParamBuffer);
+  DPRINT("ARC name: %s\n", ParamBuffer);
+
+  p = strstr(ParamBuffer, "cdrom");
+  if (p != NULL)
+    {
+      ULONG DeviceNumber;
+
+      DPRINT("Booting from CD-ROM!\n");
+      Status = IopCheckCdromDevices(&DeviceNumber);
+      if (!NT_SUCCESS(Status))
+	{
+	  CPRINT("Failed to find setup disk!\n");
+	  return(Status);
+	}
+
+      sprintf(p, "cdrom(%lu)", DeviceNumber);
+
+      DPRINT("New ARC name: %s\n", ParamBuffer);
+
+      /* Adjust original command line */
+      p = strstr(ParameterLine, "cdrom");
+      if (p != NULL);
+	{
+	  char temp[256];
+	  char *q;
+
+	  q = strchr(p, ')');
+	  if (q != NULL)
+	    {
+
+	      q++;
+	      strcpy(temp, q);
+	      sprintf(p, "cdrom(%lu)", DeviceNumber);
+	      strcat(p, temp);
+	    }
+	}
+    }
 
   /* Only arc name left - build full arc name */
   ArcNameBuffer = ExAllocatePool(PagedPool, 256 * sizeof(WCHAR));
