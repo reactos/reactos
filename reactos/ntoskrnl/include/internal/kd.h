@@ -1,4 +1,4 @@
-/* $Id: kd.h,v 1.17 2003/01/19 01:46:33 hbirr Exp $
+/* $Id: kd.h,v 1.18 2003/02/14 17:52:30 ekohl Exp $
  *
  * kernel debugger prototypes
  */
@@ -54,7 +54,7 @@ UCHAR
 KdGetChar(VOID);
 
 VOID
-KdGdbStubInit();
+KdGdbStubInit(ULONG Phase);
 
 VOID
 KdGdbDebugPrint (LPSTR Message);

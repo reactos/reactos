@@ -86,7 +86,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 VOID KeTrapFrameToContext(PKTRAP_FRAME TrapFrame,
 			  PCONTEXT Context);
 VOID
-KeApplicationProcessorInit();
+KeApplicationProcessorInit(VOID);
 VOID
 KePrepareForApplicationProcessorInit(ULONG id);
 ULONG
@@ -96,7 +96,7 @@ KePushAndStackSwitchAndSysRet(ULONG Push, PVOID NewStack);
 VOID STDCALL
 KeStackSwitchAndRet(PVOID NewStack);
 VOID STDCALL
-KeBugCheckWithTf(ULONG BugCheckCode, 	     
+KeBugCheckWithTf(ULONG BugCheckCode,
 		 ULONG BugCheckParameter1,
 		 ULONG BugCheckParameter2,
 		 ULONG BugCheckParameter3,
