@@ -13,7 +13,6 @@
 #ifdef DBG
 
 /* See debug.h for debug/trace constants */
-//DWORD DebugTraceLevel = MID_TRACE;
 ULONG DebugTraceLevel = MIN_TRACE;
 
 #endif /* DBG */
@@ -173,7 +172,7 @@ NDIS_STATUS MiniportInitialize(
     }
 
     if (i == MediumArraySize) {
-        NDIS_DbgPrint(MIN_TRACE, ("No supported medias.\n"));
+        NDIS_DbgPrint(MIN_TRACE, ("No supported media.\n"));
         return NDIS_STATUS_UNSUPPORTED_MEDIA;
     }
 
@@ -195,6 +194,63 @@ NDIS_STATUS MiniportInitialize(
     Adapter->MaxMulticastListSize   = DRIVER_MAX_MULTICAST_LIST_SIZE;
     Adapter->InterruptMask          = DRIVER_INTERRUPT_MASK;
     Adapter->LookaheadSize          = DRIVER_MAXIMUM_LOOKAHEAD;
+
+     /* get the port, irq, and MAC address from registry */
+    do
+    {
+        PNDIS_CONFIGURATION_PARAMETER ConfigurationParameter;
+        NDIS_HANDLE ConfigurationHandle;
+        UNICODE_STRING Keyword;
+        UINT *RegNetworkAddress = 0;
+        UINT RegNetworkAddressLength = 0;
+
+        NdisOpenConfiguration(&Status, &ConfigurationHandle, WrapperConfigurationContext);
+        if(Status != NDIS_STATUS_SUCCESS)
+        {
+            NDIS_DbgPrint(MIN_TRACE,("NdisOpenConfiguration returned error 0x%x\n", Status));
+            break;
+        }
+
+        NdisInitUnicodeString(&Keyword, L"Irq");
+        NdisReadConfiguration(&Status, &ConfigurationParameter, ConfigurationHandle, &Keyword, NdisParameterInteger);
+        if(Status == NDIS_STATUS_SUCCESS)
+        {
+            NDIS_DbgPrint(MID_TRACE,("NdisReadConfiguration for Irq returned successfully, irq 0x%x\n",
+                    ConfigurationParameter->ParameterData.IntegerData));
+            Adapter->InterruptNumber = ConfigurationParameter->ParameterData.IntegerData;
+        }
+
+        NdisInitUnicodeString(&Keyword, L"Port");
+        NdisReadConfiguration(&Status, &ConfigurationParameter, ConfigurationHandle, &Keyword, NdisParameterInteger);
+        if(Status == NDIS_STATUS_SUCCESS)
+        {
+            NDIS_DbgPrint(MID_TRACE,("NdisReadConfiguration for Port returned successfully, port 0x%x\n",
+                    ConfigurationParameter->ParameterData.IntegerData));
+            Adapter->IoBaseAddress = ConfigurationParameter->ParameterData.IntegerData;
+        }
+
+        /* the returned copy of the data is owned by NDIS and will be released on NdisCloseConfiguration */
+        NdisReadNetworkAddress(&Status, (PVOID *)&RegNetworkAddress, &RegNetworkAddressLength, ConfigurationHandle);
+        if(Status == NDIS_STATUS_SUCCESS && RegNetworkAddressLength == DRIVER_LENGTH_OF_ADDRESS)
+        {
+            int i;
+            NDIS_DbgPrint(MID_TRACE,("NdisReadNetworkAddress returned successfully, address %x:%x:%x:%x:%x:%x\n",
+                    RegNetworkAddress[0], RegNetworkAddress[1], RegNetworkAddress[2], RegNetworkAddress[3],
+                    RegNetworkAddress[4], RegNetworkAddress[5]));
+            for(i = 0; i < DRIVER_LENGTH_OF_ADDRESS; i++)
+                Adapter->StationAddress[i] = RegNetworkAddress[i];
+        }
+
+        NdisCloseConfiguration(ConfigurationHandle);
+    } while(0);
+
+     /* find the nic */
+    if (!NICCheck(Adapter)) {
+        NDIS_DbgPrint(MID_TRACE, ("No adapter found at (0x%X).\n", Adapter->IOBase));
+        return NDIS_STATUS_ADAPTER_NOT_FOUND;
+    } else
+        NDIS_DbgPrint(MID_TRACE, ("Adapter found at (0x%X).\n", Adapter->IOBase));
+
 
     NdisMSetAttributes(
         MiniportAdapterHandle,
@@ -220,8 +276,8 @@ NDIS_STATUS MiniportInitialize(
 #ifndef NOCARD
     Status = NICInitialize(Adapter);
     if (Status != NDIS_STATUS_SUCCESS) {
-        DbgPrint("No NE2000 or compatible network adapter found at address 0x%X.\n",
-            Adapter->IOBase);
+        NDIS_DbgPrint(MIN_TRACE,("No NE2000 or compatible network adapter found at address 0x%X.\n",
+            Adapter->IOBase));
 
         NDIS_DbgPrint(MID_TRACE, ("Status (0x%X).\n", Status));
         MiniportHalt((NDIS_HANDLE)Adapter);
@@ -809,4 +865,81 @@ DriverEntry(
     return STATUS_SUCCESS;
 }
 
+#if 0
+        /* while i'm here - some basic registry sanity checks */
+        {
+            /* write tests */
+            NDIS_CONFIGURATION_PARAMETER ParameterValue;
+
+            ParameterValue.ParameterType = NdisParameterInteger;
+            ParameterValue.ParameterData.IntegerData = 0x12345678;
+            NdisInitUnicodeString(&Keyword, L"DwordTest");
+            NdisWriteConfiguration(&Status, ConfigurationHandle, &Keyword, &ParameterValue);
+
+            if(Status != NDIS_STATUS_SUCCESS)
+            {
+                DbgPrint("ne2000!MiniportInitialize: failed to set DwordTest: 0x%x\n", Status);
+                KeBugCheck(0);
+            }
+            
+            DbgPrint("ne2000!MiniportInitialize: DwordTest successfully set\n");
+            
+            NdisInitUnicodeString(&Keyword, L"StringTest");
+            ParameterValue.ParameterType = NdisParameterString;
+            NdisInitUnicodeString(&ParameterValue.ParameterData.StringData, L"Testing123");
+
+            NdisWriteConfiguration(&Status, ConfigurationHandle, &Keyword, &ParameterValue);
+
+            if(Status != NDIS_STATUS_SUCCESS)
+            {
+                DbgPrint("ne2000!MiniportInitialize: failed to set StringTest: 0x%x\n", Status);
+                KeBugCheck(0);
+            }
+            
+            DbgPrint("ne2000!MiniportInitialize: StringTest successfully set\n");
+        }
+
+        {
+            /* read back the test values */
+            NDIS_CONFIGURATION_PARAMETER *ParameterValue = 0;
+
+            NdisInitUnicodeString(&Keyword, L"DwordTest");
+            NdisReadConfiguration(&Status, &ParameterValue, ConfigurationHandle, &Keyword, NdisParameterInteger);
+
+            if(Status != NDIS_STATUS_SUCCESS)
+            {
+                DbgPrint("ne2000!MiniportInitialize: failed to read DwordTest: 0x%x\n", Status);
+                KeBugCheck(0);
+            }
+
+            if(ParameterValue->ParameterData.IntegerData != 0x12345678)
+            {
+                DbgPrint("ne2000!MiniportInitialize: DwordTest value is wrong: 0x%x\n",
+                    ParameterValue->ParameterData.IntegerData);
+                KeBugCheck(0);
+            }
+
+            DbgPrint("ne2000!MiniportInitialize: DwordTest value was correctly read\n");
+
+            NdisInitUnicodeString(&Keyword, L"StringTest");
+            NdisReadConfiguration(&Status, &ParameterValue, ConfigurationHandle, &Keyword, NdisParameterString);
+
+            if(Status != NDIS_STATUS_SUCCESS)
+            {
+                DbgPrint("ne2000!MiniportInitialize: failed to read StringTest: 0x%x\n", Status);
+                KeBugCheck(0);
+            }
+
+            if(wcsncmp(ParameterValue->ParameterData.StringData.Buffer, L"Testing123",
+                    wcslen(L"Testing123")))
+            {
+                DbgPrint("ne2000!MiniportInitialize: StringTest value is wrong: %wZ\n",
+                    &ParameterValue->ParameterData.StringData);
+                KeBugCheck(0);
+            }
+
+            DbgPrint("ne2000!MiniportInitialize: StringTest value was correctly read\n");
+        }
+
+#endif
 /* EOF */

@@ -208,12 +208,39 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","ImagePath",0x00020000,"system32\d
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Type",0x00010001,0x00000001
 
+; NIC drivers are like any other drivers - but no card-specific info here.  bind/route/export
+; should have one entry per child device object
 ; NE2000 NIC driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Group",0x00000000,"NDIS"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","ImagePath",0x00020000,"system32\drivers\ne2000.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Test",0x00010001,0xbaadf00d
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Route",0x00000000,"NE20001"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000\Linkage","Bind",0x00000000,"\Device\NE20001"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000\Linkage","Export",0x00000000,"\Device\NE20001"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000\Linkage","Route",0x00000000,"NE20001"
+
+; Each adapter in the system gets its own SCM entry where its parameters and protocol info are stored.
+; NOTE - service type is 0x4 (SERVICE_ADAPTER) and start is 0x3 (manual start).  These drivers are named
+; for the parent driver plus a globally-increasing serial number (i.e. across all ndis miniports)
+; TODO: create this with NDI
+; NE2000 Adapter 1
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001","Type",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Linkage","Bind",0x00010000,"\Device\NE20001"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Linkage","Export",0x00010000,"\Device\NE20001"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Linkage","Route",0x00010000,"NE20001"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters","Port",0x00010001,0x00000280
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters","Irq",0x00010001,0x00000009
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters","DwordTest",0x00010001,0xbaadf00d
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters","StringTest",0x00000000,"StringTest"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters","NetworkAddress",0x00000000,"001122334455"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters\Tcpip","DefaultGateway",0x00010000,"10.0.0.1"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters\Tcpip","IPAddress",0x00010000,"10.0.0.100"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters\Tcpip","SubnetMask",0x00010001,"255.255.255.0"
 
 ; Named Pipe filesystem driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Npfs","ErrorControl",0x00010001,0x00000000

@@ -9,7 +9,6 @@
  */
 #include <ndissys.h>
 
-
 /*
  * @unimplemented
  */
@@ -164,22 +163,6 @@ NdisMapFile(
     UNIMPLEMENTED
 }
 
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisWriteConfiguration(
-    OUT PNDIS_STATUS                    Status,
-    IN  NDIS_HANDLE                     WrapperConfigurationContext,
-    IN  PNDIS_STRING                    Keyword,
-    IN  PNDIS_CONFIGURATION_PARAMETER   * ParameterValue)
-{
-    UNIMPLEMENTED
-}
-
-
 /*
  * @unimplemented
  */
@@ -193,18 +176,6 @@ NdisWriteErrorLogEntry(
 /*  IN  ULONG           ...) 
  *  ERROR_LOG_MAXIMUM_SIZE = ... in MSDN
  */
-{
-    UNIMPLEMENTED
-}
-
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisCloseConfiguration(
-    IN  NDIS_HANDLE ConfigurationHandle)
 {
     UNIMPLEMENTED
 }
@@ -315,26 +286,6 @@ NdisMWanSendComplete(
  */
 VOID
 EXPORT
-NdisOpenConfiguration(
-    OUT PNDIS_STATUS    Status,
-    OUT PNDIS_HANDLE    ConfigurationHandle,
-    IN  NDIS_HANDLE     WrapperConfigurationContext)
-{
-    UNIMPLEMENTED
-}
-
-
-/*
-NdisOpenConfigurationKeyByIndex
-NdisOpenConfigurationKeyByName
-*/
-
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
 NdisOpenFile(
     OUT PNDIS_STATUS            Status,
     OUT PNDIS_HANDLE            FileHandle,
@@ -349,51 +300,6 @@ NdisOpenFile(
 /*
 NdisOpenGlobalConfiguration
 */
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisOpenProtocolConfiguration(
-    OUT PNDIS_STATUS    Status,
-    OUT PNDIS_HANDLE    ConfigurationHandle,
-    IN  PNDIS_STRING    ProtocolSection)
-{
-    UNIMPLEMENTED
-}
-
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisReadConfiguration(
-    OUT PNDIS_STATUS                    Status,
-    OUT PNDIS_CONFIGURATION_PARAMETER   * ParameterValue,
-    IN  NDIS_HANDLE                     ConfigurationHandle,
-    IN  PNDIS_STRING                    Keyword,
-    IN  NDIS_PARAMETER_TYPE             ParameterType)
-{
-    UNIMPLEMENTED
-}
-
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisReadNetworkAddress(
-    OUT PNDIS_STATUS    Status,
-    OUT PVOID           * NetworkAddress,
-    OUT PUINT           NetworkAddressLength,
-    IN  NDIS_HANDLE     ConfigurationHandle)
-{
-    UNIMPLEMENTED
-}
-
 
 #if 0
 VOID
@@ -876,48 +782,6 @@ NdisMSetMiniportSecondary(
     return NDIS_STATUS_FAILURE;
 }
 
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisOpenConfigurationKeyByIndex(
-    OUT PNDIS_STATUS    Status,
-    IN  NDIS_HANDLE     ConfigurationHandle,
-    IN  ULONG           Index,
-    OUT PNDIS_STRING    KeyName,
-    OUT PNDIS_HANDLE    KeyHandle)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
-{
-    UNIMPLEMENTED
-}
-
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisOpenConfigurationKeyByName(
-    OUT PNDIS_STATUS    Status,
-    IN  NDIS_HANDLE     ConfigurationHandle,
-    IN  PNDIS_STRING    SubKeyName,
-    OUT PNDIS_HANDLE    SubKeyHandle)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
-{
-    UNIMPLEMENTED
-}
 
 
 /*

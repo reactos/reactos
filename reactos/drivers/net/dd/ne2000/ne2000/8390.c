@@ -9,6 +9,45 @@
  */
 #include <ne2000.h>
 
+/* Null-terminated array of ports to probe. This is "semi-risky" (Don Becker).  */
+ULONG ProbeAddressList[] = { 0x280, 0x300, 0x320, 0x340, 0x360, 0x380, 0 };
+
+BOOLEAN ProbeAddressForNIC(
+    ULONG address)
+/*
+ * FUNCTION: Probes an address for a NIC
+ * ARGUMENTS:
+ *     address = Base address to probe
+ * RETURNS:
+ *     TRUE if an NIC is found at the address
+ *     FALSE otherwise
+ * NOTES:
+ *     If the adapter responds correctly to a
+ *     stop command we assume it is present
+ */
+{
+    UCHAR Tmp;
+
+    NDIS_DbgPrint(MID_TRACE, ("Probing address 0x%x\n", address));
+
+    /* Disable interrupts */
+    NdisRawWritePortUchar(address + PG0_IMR, 0);
+
+    /* Stop the NIC */
+    NdisRawWritePortUchar(address + PG0_CR, CR_STP | CR_RD2);
+
+    /* Pause for 1.6ms */
+    NdisStallExecution(1600);
+
+    /* Read NIC response */
+    NdisRawReadPortUchar(address + PG0_CR, &Tmp);
+
+    if ((Tmp == (CR_RD2 | CR_STP)) || (Tmp == (CR_RD2 | CR_STP | CR_STA)))
+        return TRUE;
+    else
+        return FALSE;
+}
+
 
 BOOLEAN NICCheck(
     PNIC_ADAPTER Adapter)
@@ -18,29 +57,32 @@ BOOLEAN NICCheck(
  *     Adapter = Pointer to adapter information
  * RETURNS:
  *     TRUE if NIC is believed to be present, FALSE if not
- * NOTES:
- *     If the adapter responds correctly to a
- *     stop command we assume it is present
  */
 {
-    UCHAR Tmp;
+    int i; 
 
-    /* Disable interrupts */
-    NdisRawWritePortUchar(Adapter->IOBase + PG0_IMR, 0);
+    NDIS_DbgPrint(MAX_TRACE, ("Called\n"));
 
-    /* Stop the NIC */
-    NdisRawWritePortUchar(Adapter->IOBase + PG0_CR, CR_STP | CR_RD2);
-
-    /* Pause for 1.6ms */
-    NdisStallExecution(1600);
-
-    /* Read NIC response */
-    NdisRawReadPortUchar(Adapter->IOBase + PG0_CR, &Tmp);
-
-    if ((Tmp == (CR_RD2 | CR_STP)) || (Tmp == (CR_RD2 | CR_STP | CR_STA)))
+    /* first try the supplied value */
+    if(ProbeAddressForNIC(Adapter->IoBaseAddress))
+    {
+        NDIS_DbgPrint(MIN_TRACE, ("Found adapter at 0x%x\n", Adapter->IoBaseAddress));
         return TRUE;
-    else
-        return FALSE;
+    }
+
+    /* ok, no dice, time to probe */
+    for(i = 0; ProbeAddressList[i]; i++)
+    {
+        if(ProbeAddressForNIC(ProbeAddressList[i]))
+        {
+            NDIS_DbgPrint(MIN_TRACE, ("Found adapter at address 0x%x\n", ProbeAddressList[i]));
+            Adapter->IoBaseAddress = ProbeAddressList[i];
+            return TRUE;
+        }
+    }
+
+    NDIS_DbgPrint(MIN_TRACE,("Adapter NOT found!\n"));
+    return FALSE;
 }
 
 
@@ -215,7 +257,7 @@ BOOLEAN NICReadSAPROM(
 
     /* If WordLength is 2 the data read before was doubled. We must compensate for this */
     if (WordLength == 2) {
-        DbgPrint("NE2000 or compatible network adapter found.\n");
+        NDIS_DbgPrint(MAX_TRACE,("NE2000 or compatible network adapter found.\n"));
 
         Adapter->WordMode = TRUE;
 
@@ -234,7 +276,7 @@ BOOLEAN NICReadSAPROM(
 
         return TRUE;
     } else {
-        DbgPrint("NE1000 or compatible network adapter found.\n");
+        NDIS_DbgPrint(MAX_TRACE, ("NE1000 or compatible network adapter found.\n"));
 
         Adapter->WordMode = FALSE;
 
@@ -257,13 +299,7 @@ NDIS_STATUS NICInitialize(
 {
     UCHAR Tmp;
 
-    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-
-    if (!NICCheck(Adapter)) {
-        NDIS_DbgPrint(MID_TRACE, ("No adapter found at (0x%X).\n", Adapter->IOBase));
-        return NDIS_STATUS_ADAPTER_NOT_FOUND;
-    } else
-        NDIS_DbgPrint(MID_TRACE, ("Adapter found at (0x%X).\n", Adapter->IOBase));
+    NDIS_DbgPrint(MID_TRACE, ("Called.\n"));
 
     /* Reset the NIC */
     NdisRawReadPortUchar(Adapter->IOBase + NIC_RESET, &Tmp);
@@ -867,6 +903,7 @@ VOID NICIndicatePacket(
                 IndicateLength + DRIVER_HEADER_SIZE);
 
     NDIS_DbgPrint(MID_TRACE, ("Indicating (%d) bytes.\n", IndicateLength));
+    DbgPrint("ne2000!NICIndicatePacket: Indicating (%d) bytes.\n", IndicateLength);
 
 #if 0
     NDIS_DbgPrint(MAX_TRACE, ("FRAME:\n"));
@@ -927,7 +964,7 @@ VOID NICReadPacket(
     NDIS_DbgPrint(MAX_TRACE, ("HEADER: (PacketLength) (0x%X)\n", Adapter->PacketHeader.PacketLength));
 
     if (Adapter->PacketHeader.PacketLength < 64  ||
-        Adapter->PacketHeader.PacketLength > 1518) {
+        Adapter->PacketHeader.PacketLength > 1518) {	/* XXX I don't think the CRC will show up... should be 1514 */
         NDIS_DbgPrint(MAX_TRACE, ("Bogus packet size (%d).\n",
             Adapter->PacketHeader.PacketLength));
         SkipPacket = TRUE;

@@ -427,7 +427,6 @@ NdisSetTimer(
     IN PNDIS_TIMER  Timer,
     IN UINT         MillisecondsToDelay);
 
-
 /* Hardware */
 
 typedef CM_MCA_POS_DATA NDIS_MCA_POS_DATA, *PNDIS_MCA_POS_DATA;
@@ -717,14 +716,34 @@ typedef enum _NDIS_INTERFACE_TYPE
 #define NdisInterruptLatched        Latched
 typedef KINTERRUPT_MODE NDIS_INTERRUPT_MODE, *PNDIS_INTERRUPT_MODE;
 
+typedef enum _NDIS_PROCESSOR_TYPE
+{
+	NdisProcessorX86,
+	NdisProcessorMips,
+	NdisProcessorAlpha,
+	NdisProcessorPpc
+} NDIS_PROCESSOR_TYPE, *PNDIS_PROCESSOR_TYPE;
+
+typedef enum _NDIS_ENVIRONMENT_TYPE
+{
+	NdisEnvironmentWindows,
+	NdisEnvironmentWindowsNt
+} NDIS_ENVIRONMENT_TYPE, *PNDIS_ENVIRONMENT_TYPE;
 
 typedef enum _NDIS_PARAMETER_TYPE
 {
     NdisParameterInteger,
     NdisParameterHexInteger,
     NdisParameterString,
-    NdisParameterMultiString
+    NdisParameterMultiString,
+	 NdisParameterBinary
 } NDIS_PARAMETER_TYPE, *PNDIS_PARAMETER_TYPE;
+
+typedef struct
+{
+	USHORT Length;
+	PVOID  Buffer;
+} BINARY_DATA;
 
 typedef struct _NDIS_CONFIGURATION_PARAMETER
 {
@@ -733,6 +752,7 @@ typedef struct _NDIS_CONFIGURATION_PARAMETER
     {
         ULONG IntegerData;
         NDIS_STRING StringData;
+		  BINARY_DATA BinaryData;
     } ParameterData;
 } NDIS_CONFIGURATION_PARAMETER, *PNDIS_CONFIGURATION_PARAMETER;
 
@@ -2523,11 +2543,43 @@ NdisReadConfiguration(
 
 VOID
 EXPIMP
+NdisReadNetworkAddress(
+    OUT PNDIS_STATUS Status,
+	 OUT PVOID        *NetworkAddress,
+	 OUT PUINT        NetworkAddressLength,
+	 IN  NDIS_HANDLE  ConfigurationHandle);
+
+VOID
+EXPIMP
 NdisWriteConfiguration(
     OUT PNDIS_STATUS                    Status,
-    IN  NDIS_HANDLE                     WrapperConfigurationContext,
+    IN  NDIS_HANDLE                     ConfigurationHandle,
     IN  PNDIS_STRING                    Keyword,
-    IN  PNDIS_CONFIGURATION_PARAMETER   *ParameterValue);
+    IN  PNDIS_CONFIGURATION_PARAMETER   ParameterValue);
+
+VOID
+EXPIMP
+NdisOpenConfiguration(
+	OUT PNDIS_STATUS Status,
+	OUT PNDIS_HANDLE ConfigurationHandle,
+	IN NDIS_HANDLE   WrapperConfigurationContext);
+
+VOID
+EXPIMP
+NdisOpenConfigurationKeyByIndex(
+    OUT PNDIS_STATUS    Status,
+    IN  NDIS_HANDLE     ConfigurationHandle,
+    IN  ULONG           Index,
+    OUT PNDIS_STRING    KeyName,
+    OUT PNDIS_HANDLE    KeyHandle);
+
+VOID
+EXPIMP
+NdisOpenConfigurationKeyByName(
+    OUT PNDIS_STATUS    Status,
+    IN  NDIS_HANDLE     ConfigurationHandle,
+    IN  PNDIS_STRING    SubKeyName,
+    OUT PNDIS_HANDLE    SubKeyHandle);
 
 
 VOID
@@ -2900,23 +2952,6 @@ EXPIMP
 NdisMSetMiniportSecondary(
     IN  NDIS_HANDLE MiniportAdapterHandle,
     IN  NDIS_HANDLE PrimaryMiniportAdapterHandle);
-
-VOID
-EXPIMP
-NdisOpenConfigurationKeyByIndex(
-    OUT PNDIS_STATUS    Status,
-    IN  NDIS_HANDLE     ConfigurationHandle,
-    IN  ULONG           Index,
-    OUT PNDIS_STRING    KeyName,
-    OUT PNDIS_HANDLE    KeyHandle);
-
-VOID
-EXPIMP
-NdisOpenConfigurationKeyByName(
-    OUT PNDIS_STATUS    Status,
-    IN  NDIS_HANDLE     ConfigurationHandle,
-    IN  PNDIS_STRING    SubKeyName,
-    OUT PNDIS_HANDLE    SubKeyHandle);
 
 UINT
 EXPIMP
@@ -4815,6 +4850,22 @@ struct _NDIS_OPEN_BLOCK
 
 /* Routines for NDIS miniport drivers */
 
+/*
+ * VOID NdisMInitializeWrapper(
+ *     OUT PNDIS_HANDLE    NdisWrapperHandle,
+ *     IN  PVOID           SystemSpecific1,
+ *     IN  PVOID           SystemSpecific2,
+ *     IN  PVOID           SystemSpecific3);
+ */
+#define NdisMInitializeWrapper(NdisWrapperHandle, \
+                               SystemSpecific1,   \
+                               SystemSpecific2,   \
+                               SystemSpecific3)   \
+    NdisInitializeWrapper((NdisWrapperHandle),    \
+                          (SystemSpecific1),      \
+                          (SystemSpecific2),      \
+                          (SystemSpecific3))
+
 VOID
 EXPIMP
 NdisInitializeWrapper(
@@ -4995,22 +5046,6 @@ EXPIMP
 NdisMIndicateStatusComplete(
     IN  NDIS_HANDLE MiniportAdapterHandle);
 
-/*
- * VOID NdisMInitializeWrapper(
- *     OUT PNDIS_HANDLE    NdisWrapperHandle,
- *     IN  PVOID           SystemSpecific1,
- *     IN  PVOID           SystemSpecific2,
- *     IN  PVOID           SystemSpecific3);
- */
-#define NdisMInitializeWrapper(NdisWrapperHandle, \
-                               SystemSpecific1,   \
-                               SystemSpecific2,   \
-                               SystemSpecific3)   \
-    NdisInitializeWrapper((NdisWrapperHandle),    \
-                          (SystemSpecific1),      \
-                          (SystemSpecific2),      \
-                          (SystemSpecific3))
-
 NDIS_STATUS
 EXPIMP
 NdisMMapIoSpace(
@@ -5057,6 +5092,32 @@ NdisMRegisterMiniport(
     IN  NDIS_HANDLE                     NdisWrapperHandle,
     IN  PNDIS_MINIPORT_CHARACTERISTICS  MiniportCharacteristics,
     IN  UINT                            CharacteristicsLength);
+
+VOID
+EXPIMP
+NdisMSetTimer(
+	IN PNDIS_MINIPORT_TIMER Timer,
+	IN UINT                 MillisecondsToDelay);
+
+VOID
+EXPIMP
+NdisMInitializeTimer(
+	IN OUT PNDIS_MINIPORT_TIMER Timer,
+	IN NDIS_HANDLE              MiniportAdapterHandle,
+	IN PNDIS_TIMER_FUNCTION     TimerFunction,
+	IN PVOID                    FunctionContext);
+
+VOID
+EXPIMP
+NdisMSetPeriodicTimer(
+	IN PNDIS_MINIPORT_TIMER Timer,
+	IN UINT                 MillisecondPeriod);
+
+VOID
+EXPIMP
+NdisMCancelTimer(
+	IN  PNDIS_MINIPORT_TIMER Timer,
+	OUT PBOOLEAN             TimerCancelled);
 
 
 #ifndef NDIS_WRAPPER

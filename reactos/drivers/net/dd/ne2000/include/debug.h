@@ -43,7 +43,7 @@ extern ULONG DebugTraceLevel;
 #endif /* _MSC_VER */
 
 
-/* Assert and kin are defined in rtl.h */
+/* Assert is defined in ndis.h */
 #if 0
 #ifdef ASSERT
 #undef ASSERT
@@ -62,7 +62,7 @@ extern ULONG DebugTraceLevel;
 #define NDIS_DbgPrint(_t_, _x_)
 
 #define ASSERT_IRQL(x)
-/* #define ASSERT(x) */  /* rtl.h */
+/* #define ASSERT(x) */  /* ndis.h */
 
 #endif /* DBG */
 

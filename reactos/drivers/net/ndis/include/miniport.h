@@ -26,7 +26,23 @@ typedef struct _MINIPORT_DRIVER {
     WORK_QUEUE_ITEM                 WorkItem;           /* Work item */
     PDRIVER_OBJECT                  DriverObject;       /* Driver object of miniport */
     LIST_ENTRY                      AdapterListHead;    /* Adapters created by miniport */
+    PUNICODE_STRING                 RegistryPath;       /* SCM Registry key */
 } MINIPORT_DRIVER, *PMINIPORT_DRIVER;
+
+/* resources allocated on behalf on the miniport */
+#define MINIPORT_RESOURCE_TYPE_MEMORY 0
+typedef struct _MINIPORT_RESOURCE {
+    LIST_ENTRY     ListEntry;
+    ULONG          ResourceType;
+    PVOID          Resource;
+} MINIPORT_RESOURCE, *PMINIPORT_RESOURCE;
+
+/* Configuration context */
+typedef struct _MINIPORT_CONFIGURATION_CONTEXT {
+    NDIS_HANDLE    Handle;
+    LIST_ENTRY     ResourceListHead;
+    KSPIN_LOCK     ResourceLock;
+} MINIPORT_CONFIGURATION_CONTEXT, *PMINIPORT_CONFIGURATION_CONTEXT;
 
 #define GET_MINIPORT_DRIVER(Handle)((PMINIPORT_DRIVER)Handle)
 

@@ -41,7 +41,7 @@ extern DWORD DebugTraceLevel;
 
 #endif /* _MSC_VER */
 
-/* in rtl.h now */
+/* in ndis.h now */
 #if 0
 #ifdef ASSERT
 #undef ASSERT

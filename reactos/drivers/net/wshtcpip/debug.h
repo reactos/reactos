@@ -28,7 +28,7 @@ extern DWORD DebugTraceLevel;
 		DbgPrint _x_; \
     }
 
-/* this belongs in rtl */
+/* this belongs in ndis.h */
 #if 0
 #ifdef ASSERT
 #undef ASSERT

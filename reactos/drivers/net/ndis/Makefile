@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.15 2002/09/08 10:22:16 chorns Exp $
+# $Id: Makefile,v 1.16 2003/07/30 22:11:20 royce Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -6,7 +6,7 @@ TARGET_TYPE = export_driver
 
 TARGET_NAME = ndis
 
-TARGET_CFLAGS = -I./include -DNDIS_WRAPPER -DBINARY_COMPATIBLE=1
+TARGET_CFLAGS = -I./include -DNDIS_WRAPPER 
 
 TARGET_OBJECTS = \
   ndis/main.o \
@@ -16,6 +16,7 @@ TARGET_OBJECTS = \
   ndis/cl.o \
   ndis/cm.o \
   ndis/co.o \
+  ndis/config.o \
   ndis/control.o \
   ndis/hardware.o \
   ndis/io.o \
