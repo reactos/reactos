@@ -45,10 +45,10 @@ static BOOL (WINAPI*SetShellWindowEx)(HWND, HWND);
 
 BOOL IsAnyDesktopRunning()
 {
-	HINSTANCE shell32 = GetModuleHandle(TEXT("user32"));
+	HINSTANCE hUser32 = GetModuleHandle(TEXT("user32"));
 
-	SetShellWindow = (BOOL(WINAPI*)(HWND)) GetProcAddress(shell32, "SetShellWindow");
-	SetShellWindowEx = (BOOL(WINAPI*)(HWND,HWND)) GetProcAddress(shell32, "SetShellWindowEx");
+	SetShellWindow = (BOOL(WINAPI*)(HWND)) GetProcAddress(hUser32, "SetShellWindow");
+	SetShellWindowEx = (BOOL(WINAPI*)(HWND,HWND)) GetProcAddress(hUser32, "SetShellWindowEx");
 
 	return GetShellWindow() != 0;
 }
