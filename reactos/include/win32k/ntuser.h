@@ -1087,13 +1087,9 @@ NtUserRealChildWindowFromPoint(
   DWORD Unknown1,
   DWORD Unknown2);
 
-DWORD
-STDCALL
-NtUserRedrawWindow(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+BOOL STDCALL
+NtUserRedrawWindow(HWND hWnd, CONST RECT *lprcUpdate, HRGN hrgnUpdate, UINT flags);
+
 
 RTL_ATOM
 STDCALL

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: paint.c,v 1.8 2002/09/08 10:23:12 chorns Exp $
+/* $Id: paint.c,v 1.9 2003/03/18 07:19:17 rcampbell Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -104,7 +104,7 @@ RedrawWindow(
   HRGN hrgnUpdate,
   UINT flags)
 {
-  return FALSE;
+  return NtUserRedrawWindow(hWnd, lprcUpdate, hrgnUpdate, flags);
 }
 WINBOOL
 STDCALL

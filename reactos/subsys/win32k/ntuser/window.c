@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.32 2003/03/16 23:01:08 rcampbell Exp $
+/* $Id: window.c,v 1.33 2003/03/18 07:19:17 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -897,15 +897,10 @@ NtUserRealChildWindowFromPoint(DWORD Unknown0,
   return 0;
 }
 
-DWORD STDCALL
-NtUserRedrawWindow(DWORD Unknown0,
-		   DWORD Unknown1,
-		   DWORD Unknown2,
-		   DWORD Unknown3)
+BOOL STDCALL
+NtUserRedrawWindow(HWND hWnd, CONST RECT *lprcUpdate, HRGN hrgnUpdate, UINT flags)
 {
-  UNIMPLEMENTED
-
-  return 0;
+  return PaintRedrawWindow(hWnd, lprcUpdate, hrgnUpdate, flags);
 }
 
 UINT STDCALL
