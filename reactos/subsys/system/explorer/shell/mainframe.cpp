@@ -40,19 +40,19 @@ extern HWND create_webchildwindow(const WebChildWndInfo& info);
 
 HWND MainFrameBase::Create(LPCTSTR path, bool mdi, UINT cmdshow)
 {
-	HWND hMainFrame;
+	HWND hFrame;
 
 #ifndef _NO_MDI	///@todo implement command line option to switch between MDI and SDI
 	if (mdi)
-		hMainFrame = MDIMainFrame::Create();
+		hFrame = MDIMainFrame::Create();
 	else
 #endif
-		hMainFrame = SDIMainFrame::Create();
+		hFrame = SDIMainFrame::Create();
 
-	if (hMainFrame) {
+	if (hFrame) {
 		HWND hwndOld = g_Globals._hMainWnd;
 
-		g_Globals._hMainWnd = hMainFrame;
+		g_Globals._hMainWnd = hFrame;
 
 		if (path) {
 			static String sPath = path;	// copy path to avoid accessing freed memory
@@ -62,8 +62,8 @@ HWND MainFrameBase::Create(LPCTSTR path, bool mdi, UINT cmdshow)
 		if (hwndOld)
 			DestroyWindow(hwndOld);
 
-		ShowWindow(hMainFrame, cmdshow);
-		UpdateWindow(hMainFrame);
+		ShowWindow(hFrame, cmdshow);
+		UpdateWindow(hFrame);
 
 		bool valid_dir = false;
 
@@ -78,12 +78,12 @@ HWND MainFrameBase::Create(LPCTSTR path, bool mdi, UINT cmdshow)
 
 		 // Open the first child window after initializing the application
 		if (valid_dir)
-			PostMessage(hMainFrame, PM_OPEN_WINDOW, 0, (LPARAM)path);
+			PostMessage(hFrame, PM_OPEN_WINDOW, 0, (LPARAM)path);
 		else
-			PostMessage(hMainFrame, PM_OPEN_WINDOW, OWM_EXPLORE|OWM_DETAILS, 0);
+			PostMessage(hFrame, PM_OPEN_WINDOW, OWM_EXPLORE|OWM_DETAILS, 0);
 	}
 
-	return hMainFrame;
+	return hFrame;
 }
 
 
@@ -842,34 +842,34 @@ HWND MDIMainFrame::Create()
 
 HWND MDIMainFrame::Create(LPCTSTR path, int mode)
 {
-	HWND hMainFrame = Create();
-	if (!hMainFrame)
+	HWND hFrame = Create();
+	if (!hFrame)
 		return 0;
 
-	ShowWindow(hMainFrame, SW_SHOW);
+	ShowWindow(hFrame, SW_SHOW);
 
-	MDIMainFrame* pMainFrame = GET_WINDOW(MDIMainFrame, hMainFrame);
+	MDIMainFrame* pMainFrame = GET_WINDOW(MDIMainFrame, hFrame);
 
 	if (pMainFrame)
 		pMainFrame->CreateChild(path, mode);
 
-	return hMainFrame;
+	return hFrame;
 }
 
 HWND MDIMainFrame::Create(LPCITEMIDLIST pidl, int mode)
 {
-	HWND hMainFrame = Create();
-	if (!hMainFrame)
+	HWND hFrame = Create();
+	if (!hFrame)
 		return 0;
 
-	ShowWindow(hMainFrame, SW_SHOW);
+	ShowWindow(hFrame, SW_SHOW);
 
-	MDIMainFrame* pMainFrame = GET_WINDOW(MDIMainFrame, hMainFrame);
+	MDIMainFrame* pMainFrame = GET_WINDOW(MDIMainFrame, hFrame);
 
 	if (pMainFrame)
 		pMainFrame->CreateChild(pidl, mode);
 
-	return hMainFrame;
+	return hFrame;
 }
 
 
@@ -1311,6 +1311,22 @@ HWND SDIMainFrame::Create(LPCITEMIDLIST pidl, int mode)
 
 	if (pFrame)
 		pFrame->jump_to(pidl, mode);
+
+	return hFrame;
+}
+
+HWND SDIMainFrame::Create(LPCTSTR path, int mode)
+{
+	HWND hFrame = Create();
+	if (!hFrame)
+		return 0;
+
+	ShowWindow(hFrame, SW_SHOW);
+
+	MDIMainFrame* pMainFrame = GET_WINDOW(MDIMainFrame, hFrame);
+
+	if (pMainFrame)
+		pMainFrame->CreateChild(path, mode);
 
 	return hFrame;
 }
