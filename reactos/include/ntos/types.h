@@ -101,7 +101,7 @@ typedef float *PFLOAT;
 typedef unsigned short *PWCH;
 typedef unsigned short *PWORD;
 
-#include <msvcrt\crttypes.h> // for definition of LONGLONG, PLONGLONG etc
+#include <msvcrt/crttypes.h> // for definition of LONGLONG, PLONGLONG etc
 
 typedef const void *LPCVOID;
 typedef BYTE *LPBYTE, *PBYTE;
