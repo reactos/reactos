@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: polyfill.c,v 1.9 2003/08/16 05:12:37 royce Exp $
+/* $Id: polyfill.c,v 1.10 2003/08/16 21:17:20 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -145,6 +145,10 @@ POLYGONFILL_MakeEdge(POINT From, POINT To)
     rc->ToX = From.x;
     rc->ToY = From.y;
     rc->YDirection = -1;
+
+	// lines that go up get walked backwards, so need to be offset
+	// by -1 in order to make the walk identically on a pixel-level
+	rc->Error = -1;
   }
   else
   {
@@ -153,6 +157,8 @@ POLYGONFILL_MakeEdge(POINT From, POINT To)
     rc->ToX = To.x;
     rc->ToY = To.y;
     rc->YDirection = 1;
+
+	rc->Error = 0;
   }
 
   rc->x = rc->FromX;
@@ -166,7 +172,7 @@ POLYGONFILL_MakeEdge(POINT From, POINT To)
 
   rc->ErrorMax = MAX(rc->absdx,rc->absdy);
 
-  rc->Error = rc->ErrorMax / 2;
+  rc->Error += rc->ErrorMax / 2;
 
   rc->XDirection = (rc->dx < 0)?(-1):(1);
 
@@ -433,8 +439,8 @@ POLYGONFILL_FillScanLineAlternate(
 
   while ( NULL != pRight )
   {
-    int x1 = pLeft->XIntercept[1];
-    int x2 = pRight->XIntercept[0]+1;
+    int x1 = pLeft->XIntercept[1]+1;
+    int x2 = pRight->XIntercept[0];
     if ( x2 > x1 )
     {
       RECTL BoundRect;
@@ -483,8 +489,8 @@ POLYGONFILL_FillScanLineWinding(
 
   while ( NULL != pRight )
   {
-    int x1 = pLeft->XIntercept[1];
-    int x2 = pRight->XIntercept[0]+1;
+    int x1 = pLeft->XIntercept[1]+1;
+    int x2 = pRight->XIntercept[0];
     if ( winding && x2 > x1 )
     {
       RECTL BoundRect;

@@ -268,6 +268,10 @@ POLYGONFILL_MakeEdge(POINT From, POINT To)
     rc->ToX = From.x;
     rc->ToY = From.y;
     rc->YDirection = -1;
+
+	// lines that go up get walked backwards, so need to be offset
+	// by -1 in order to make the walk identically on a pixel-level
+	rc->Error = -1;
   }
   else
   {
@@ -276,6 +280,8 @@ POLYGONFILL_MakeEdge(POINT From, POINT To)
     rc->ToX = To.x;
     rc->ToY = To.y;
     rc->YDirection = 1;
+
+	rc->Error = 0;
   }
 
   rc->x = rc->FromX;
@@ -289,7 +295,7 @@ POLYGONFILL_MakeEdge(POINT From, POINT To)
 
   rc->ErrorMax = MAX(rc->absdx,rc->absdy);
 
-  rc->Error = rc->ErrorMax / 2;
+  rc->Error += rc->ErrorMax / 2;
 
   rc->XDirection = (rc->dx < 0)?(-1):(1);
 
@@ -556,8 +562,8 @@ POLYGONFILL_FillScanLineAlternate(
 
   while ( NULL != pRight )
   {
-    int x1 = pLeft->XIntercept[1];
-    int x2 = pRight->XIntercept[0]+1;
+    int x1 = pLeft->XIntercept[1]+1;
+    int x2 = pRight->XIntercept[0];
     if ( x2 > x1 )
     {
       RECTL BoundRect;
@@ -606,8 +612,8 @@ POLYGONFILL_FillScanLineWinding(
 
   while ( NULL != pRight )
   {
-    int x1 = pLeft->XIntercept[1];
-    int x2 = pRight->XIntercept[0]+1;
+    int x1 = pLeft->XIntercept[1]+1;
+    int x2 = pRight->XIntercept[0];
     if ( winding && x2 > x1 )
     {
       RECTL BoundRect;
@@ -808,7 +814,7 @@ void main()
   const int pts_count = sizeof(pts)/sizeof(pts[0]);
 
   // use ALTERNATE or WINDING for 3rd param
-  Polygon ( pts, pts_count, ALTERNATE );
+  Polygon ( pts, pts_count, WINDING );
 
   // print out our "screen"
   for ( int y = 0; y < SCREENY; y++ )
