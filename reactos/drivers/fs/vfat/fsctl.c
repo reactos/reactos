@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.6 2002/05/29 21:41:41 ekohl Exp $
+/* $Id: fsctl.c,v 1.7 2002/06/07 16:53:18 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -311,18 +311,16 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
 
    Fcb->Flags = FCB_IS_FAT;
 
+   Fcb->RFCB.FileSize.QuadPart = DeviceExt->FatInfo.FATSectors * BLOCKSIZE;
+   Fcb->RFCB.ValidDataLength = Fcb->RFCB.FileSize;
+   Fcb->RFCB.AllocationSize = Fcb->RFCB.FileSize;
+
    if (DeviceExt->FatInfo.FatType != FAT12)
    {
-      Fcb->RFCB.FileSize.QuadPart = DeviceExt->FatInfo.FATSectors * BLOCKSIZE;
-      Fcb->RFCB.ValidDataLength.QuadPart = DeviceExt->FatInfo.FATSectors * BLOCKSIZE;
-      Fcb->RFCB.AllocationSize.QuadPart = ROUND_UP(DeviceExt->FatInfo.FATSectors * BLOCKSIZE, CACHEPAGESIZE(DeviceExt));
       Status = CcRosInitializeFileCache(DeviceExt->FATFileObject, &Fcb->RFCB.Bcb, CACHEPAGESIZE(DeviceExt));
    }
    else
    {
-      Fcb->RFCB.FileSize.QuadPart = DeviceExt->FatInfo.FATSectors * BLOCKSIZE;
-      Fcb->RFCB.ValidDataLength.QuadPart = DeviceExt->FatInfo.FATSectors * BLOCKSIZE;
-      Fcb->RFCB.AllocationSize.QuadPart = 2 * PAGESIZE;
       Status = CcRosInitializeFileCache(DeviceExt->FATFileObject, &Fcb->RFCB.Bcb, 2 * PAGESIZE);
    }
    if (!NT_SUCCESS (Status))
