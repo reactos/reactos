@@ -25,6 +25,7 @@ BEGIN
             VALUE "FileVersion",	RES_STR_FILE_VERSION
             VALUE "InternalName",	"pedump\0"
             VALUE "LegalCopyright",	RES_STR_LEGAL_COPYRIGHT
+            VALUE "OriginalCopyright",  "1993 Randy Kath; 1997 Sang Cho\0"
             VALUE "OriginalFilename",	"pedump.exe\0"
             VALUE "ProductName",	RES_STR_PRODUCT_NAME
             VALUE "ProductVersion",	RES_STR_PRODUCT_VERSION
