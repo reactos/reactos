@@ -1,4 +1,4 @@
-/* $Id: lang.c,v 1.24 2004/10/20 03:46:27 jimtabor Exp $
+/* $Id: lang.c,v 1.25 2004/12/04 13:59:14 ekohl Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -42,33 +42,34 @@
  *  GetUserDefaultLCID(), if lcid == LOCALE_USER_DEFAULT or LOCALE_NEUTRAL.
  *  Otherwise, lcid with sublanguage changed to SUBLANG_DEFAULT.
  */
-LCID WINAPI ConvertDefaultLocale( LCID lcid )
+LCID WINAPI
+ConvertDefaultLocale(LCID lcid)
 {
-    LANGID langid;
+  LANGID langid;
 
-    switch (lcid)
-    {
+  switch (lcid)
+  {
     case LOCALE_SYSTEM_DEFAULT:
-        lcid = GetSystemDefaultLCID();
-        break;
+      lcid = GetSystemDefaultLCID();
+      break;
+
     case LOCALE_USER_DEFAULT:
     case LOCALE_NEUTRAL:
-        lcid = GetUserDefaultLCID();
-        break;
+      lcid = GetUserDefaultLCID();
+      break;
+
     default:
-        /* Replace SUBLANG_NEUTRAL with SUBLANG_DEFAULT */
-        langid = LANGIDFROMLCID(lcid);
-        if (SUBLANGID(langid) == SUBLANG_NEUTRAL)
-        {
-          langid = MAKELANGID(PRIMARYLANGID(langid), SUBLANG_DEFAULT);
-          lcid = MAKELCID(langid, SORTIDFROMLCID(lcid));
-        }
-    }
-    return lcid;
+      /* Replace SUBLANG_NEUTRAL with SUBLANG_DEFAULT */
+      langid = LANGIDFROMLCID(lcid);
+      if (SUBLANGID(langid) == SUBLANG_NEUTRAL)
+      {
+        langid = MAKELANGID(PRIMARYLANGID(langid), SUBLANG_DEFAULT);
+        lcid = MAKELCID(langid, SORTIDFROMLCID(lcid));
+      }
+  }
+
+  return lcid;
 }
-
-
-
 
 
 /*
@@ -240,7 +241,7 @@ EnumSystemGeoID(
 BOOL
 STDCALL
 EnumSystemLanguageGroupsA(
-    LANGUAGEGROUP_ENUMPROCA lpLanguageGroupEnumProc,
+    LANGUAGEGROUP_ENUMPROCA pLangGroupEnumProc,
     DWORD                   dwFlags,
     LONG_PTR                lParam)
 {
@@ -254,8 +255,23 @@ EnumSystemLanguageGroupsA(
  */
 BOOL
 STDCALL
-EnumSystemLocalesW (
-    LOCALE_ENUMPROCW lpLocaleEnumProc,
+EnumSystemLanguageGroupsW(
+    LANGUAGEGROUP_ENUMPROCW pLangGroupEnumProc,
+    DWORD                   dwFlags,
+    LONG_PTR                lParam)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+EnumSystemLocalesA (
+    LOCALE_ENUMPROCA lpLocaleEnumProc,
     DWORD            dwFlags
     )
 {
@@ -269,8 +285,8 @@ EnumSystemLocalesW (
  */
 BOOL
 STDCALL
-EnumSystemLocalesA (
-    LOCALE_ENUMPROCA lpLocaleEnumProc,
+EnumSystemLocalesW (
+    LOCALE_ENUMPROCW lpLocaleEnumProc,
     DWORD            dwFlags
     )
 {
@@ -877,47 +893,52 @@ INT STDCALL GetLocaleInfoA( LCID lcid, LCTYPE lctype, LPSTR buffer, INT len )
 /*
  * @implemented
  */
-LANGID
-STDCALL
-GetSystemDefaultLangID (VOID)
+LANGID STDCALL
+GetSystemDefaultLangID(VOID)
 {
-   return LANGIDFROMLCID(GetSystemDefaultLCID());
+  return LANGIDFROMLCID(GetSystemDefaultLCID());
 }
 
 
 /*
  * @implemented
  */
-LCID
-STDCALL
-GetSystemDefaultLCID (VOID)
+LCID STDCALL
+GetSystemDefaultLCID(VOID)
 {
-   LCID lcid;
-   NtQueryDefaultLocale( FALSE, &lcid );
-   return lcid;
+  LCID lcid;
 
-//  return SystemLocale;
+  NtQueryDefaultLocale(FALSE, &lcid);
+
+  return lcid;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
-LANGID
-STDCALL
+LANGID STDCALL
 GetSystemDefaultUILanguage(VOID)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+  LANGID LanguageId;
+  NTSTATUS Status;
+
+  Status = NtQueryInstallUILanguage(&LanguageId);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return 0;
+    }
+
+  return LanguageId;
 }
 
 
 /*
  * @implemented
  */
-LCID
-STDCALL
-GetThreadLocale (VOID)
+LCID STDCALL
+GetThreadLocale(VOID)
 {
   return NtCurrentTeb()->CurrentLocale;
 }
@@ -926,53 +947,50 @@ GetThreadLocale (VOID)
 /*
  * @implemented
  */
-LANGID
-STDCALL
-GetUserDefaultLangID (VOID)
+LANGID STDCALL
+GetUserDefaultLangID(VOID)
 {
-    return LANGIDFROMLCID(GetUserDefaultLCID());
+  return LANGIDFROMLCID(GetUserDefaultLCID());
 }
 
 
 /*
  * @implemented
  */
-LCID
-STDCALL
-GetUserDefaultLCID (VOID)
+LCID STDCALL
+GetUserDefaultLCID(VOID)
 {
-    LCID lcid;
-    NTSTATUS Status;
-    
-    Status = NtQueryDefaultLocale(TRUE, &lcid);
-    if(!NT_SUCCESS(Status))
+  LCID lcid;
+  NTSTATUS Status;
+
+  Status = NtQueryDefaultLocale(TRUE, &lcid);
+  if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
-        return 0;
+      SetLastErrorByStatus(Status);
+      return 0;
     }
-    
-    return lcid;
+
+  return lcid;
 }
 
 
 /*
  * @implemented
  */
-LANGID
-STDCALL
+LANGID STDCALL
 GetUserDefaultUILanguage(VOID)
 {
-    LANGID LangId;
-    NTSTATUS Status;
-  
-     Status = NtQueryDefaultUILanguage(&LangId);
-    if(!NT_SUCCESS(Status))
+  LANGID LangId;
+  NTSTATUS Status;
+
+  Status = NtQueryDefaultUILanguage(&LangId);
+  if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
-        return 0;
+      SetLastErrorByStatus(Status);
+      return 0;
     }
-  
-    return LangId;
+
+  return LangId;
 }
 
 
@@ -1003,36 +1021,124 @@ IsValidLanguageGroup(
 }
 
 
-
 /******************************************************************************
- * @implemented
- * RIPPED FROM WINE's dlls\kernel\locale.c rev 1.44
- *
- *           IsValidLocale   (KERNEL32.@)
+ *           IsValidLocale
  *
  * Determine if a locale is valid.
  *
  * PARAMS
- *  lcid  [I] LCID of the locale to check
- *  flags [I] LCID_SUPPORTED = Valid, LCID_INSTALLED = Valid and installed on the system
+ *  Locale  [I] LCID of the locale to check
+ *  dwFlags [I] LCID_SUPPORTED = Valid
+ *              LCID_INSTALLED = Valid and installed on the system
  *
  * RETURN
- *  TRUE,  if lcid is valid,
+ *  TRUE,  if Locale is valid,
  *  FALSE, otherwise.
  *
- * NOTES
- *  Wine does not currently make the distinction between supported and installed. All
- *  languages supported are installed by default.
+ * @implemented
  */
-BOOL STDCALL 
-IsValidLocale( 
-   LCID lcid, 
-   DWORD flags 
-   )
+BOOL STDCALL
+IsValidLocale(LCID Locale,
+	      DWORD dwFlags)
 {
-    /* check if language is registered in the kernel32 resources */
-    return FindResourceExW( hCurrentModule, (LPWSTR)RT_STRING,
-                            (LPCWSTR)LOCALE_ILANGUAGE, LANGIDFROMLCID(lcid)) != 0;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  PKEY_VALUE_PARTIAL_INFORMATION KeyInfo;
+  WCHAR ValueNameBuffer[9];
+  UNICODE_STRING KeyName;
+  UNICODE_STRING ValueName;
+  ULONG KeyInfoSize;
+  ULONG ReturnedSize;
+  HANDLE KeyHandle;
+  PWSTR ValueData;
+  NTSTATUS Status;
+
+  DPRINT("IsValidLocale() called\n");
+
+  if ((dwFlags & ~(LCID_SUPPORTED | LCID_INSTALLED)) ||
+      (dwFlags == (LCID_SUPPORTED | LCID_INSTALLED)))
+    {
+      DPRINT("Invalid flags: %lx\n", dwFlags);
+      return FALSE;
+    }
+
+  if (Locale & 0xFFFF0000)
+    {
+      RtlInitUnicodeString(&KeyName,
+			   L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Nls\\Locale\\Alternate Sorts");
+    }
+  else
+    {
+      RtlInitUnicodeString(&KeyName,
+			   L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Nls\\Locale");
+    }
+
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &KeyName,
+			     OBJ_CASE_INSENSITIVE,
+			     NULL,
+			     NULL);
+
+  Status = NtOpenKey(&KeyHandle,
+		     KEY_QUERY_VALUE,
+		     &ObjectAttributes);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("NtOpenKey() failed (Status %lx)\n", Status);
+      return FALSE;
+    }
+
+  swprintf(ValueNameBuffer, L"%08lx", (ULONG)Locale);
+  RtlInitUnicodeString(&ValueName, ValueNameBuffer);
+
+  KeyInfoSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 4 * sizeof(WCHAR);
+  KeyInfo = RtlAllocateHeap(RtlGetProcessHeap(),
+			    HEAP_ZERO_MEMORY,
+			    KeyInfoSize);
+  if (KeyInfo == NULL)
+    {
+      DPRINT("RtlAllocateHeap() failed (Status %lx)\n", Status);
+      NtClose(KeyHandle);
+      return FALSE;
+    }
+
+  Status = NtQueryValueKey(KeyHandle,
+			   &ValueName,
+			   KeyValuePartialInformation,
+			   KeyInfo,
+			   KeyInfoSize,
+			   &ReturnedSize);
+  NtClose(KeyHandle);
+
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("NtQueryValueKey() failed (Status %lx)\n", Status);
+      RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
+      return FALSE;
+    }
+
+  if (dwFlags & LCID_SUPPORTED)
+    {
+      DPRINT("Locale is supported\n");
+      RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
+      return TRUE;
+    }
+
+  ValueData = (PWSTR)&KeyInfo->Data[0];
+  if ((dwFlags & LCID_INSTALLED) &&
+      (KeyInfo->Type == REG_SZ) &&
+      (KeyInfo->DataLength == 2 * sizeof(WCHAR)) &&
+      (ValueData[0] == L'1'))
+    {
+      DPRINT("Locale is supported and installed\n");
+      RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
+      return TRUE;
+    }
+
+  RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
+
+  DPRINT("IsValidLocale() called\n");
+
+  return FALSE;
 }
 
 

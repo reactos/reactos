@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.94 2004/10/20 03:46:27 jimtabor Exp $
+/* $Id: stubs.c,v 1.95 2004/12/04 13:59:41 ekohl Exp $
  *
  * KERNEL32.DLL stubs (STUB functions)
  * Remove from this file, if you implement them.
@@ -1688,20 +1688,6 @@ VerifyVersionInfoA(
     DWORD dwTypeMask,
     DWORDLONG dwlConditionMask
     )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-EnumSystemLanguageGroupsW(
-    LANGUAGEGROUP_ENUMPROCW lpLanguageGroupEnumProc,
-    DWORD                   dwFlags,
-    LONG_PTR                lParam)
 {
     STUB;
     return 0;
