@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.53 2003/06/05 03:55:36 mdill Exp $
+/* $Id: window.c,v 1.54 2003/06/14 10:00:57 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -759,12 +759,361 @@ NtUserDeferWindowPos(HDWP WinPosInfo,
   return 0;
 }
 
-BOOLEAN STDCALL
-NtUserDestroyWindow(HWND Wnd)
+
+/***********************************************************************
+ *           W32kSendDestroyMsg
+ */
+static void W32kSendDestroyMsg(HWND Wnd)
 {
+#if 0 /* FIXME */
+  GUITHREADINFO info;
+
+  if (GetGUIThreadInfo(GetCurrentThreadId(), &info))
+    {
+      if (Wnd == info.hwndCaret)
+	{
+	  DestroyCaret();
+	}
+    }
+#endif
+
+  /*
+   * Send the WM_DESTROY to the window.
+   */
+  NtUserSendMessage(Wnd, WM_DESTROY, 0, 0);
+
+  /*
+   * This WM_DESTROY message can trigger re-entrant calls to DestroyWindow
+   * make sure that the window still exists when we come back.
+   */
+#if 0 /* FIXME */
+  if (IsWindow(Wnd))
+    {
+      HWND* pWndArray;
+      int i;
+
+      if (!(pWndArray = WIN_ListChildren( hwnd ))) return;
+
+      /* start from the end (FIXME: is this needed?) */
+      for (i = 0; pWndArray[i]; i++) ;
+
+      while (--i >= 0)
+	{
+	  if (IsWindow( pWndArray[i] )) WIN_SendDestroyMsg( pWndArray[i] );
+	}
+      HeapFree(GetProcessHeap(), 0, pWndArray);
+    }
+  else
+    {
+      DPRINT("destroyed itself while in WM_DESTROY!\n");
+    }
+#endif
+}
+
+static BOOL W32kWndBelongsToCurrentThread(PWINDOW_OBJECT Window)
+{
+  PW32THREAD ThreadData = PsGetWin32Thread();
+  PLIST_ENTRY Current;
+  PWINDOW_OBJECT ThreadWindow;
+  BOOL Belongs = FALSE;
+
+  ExAcquireFastMutexUnsafe(&ThreadData->WindowListLock);
+  /* If there's no win32k thread data then this thread hasn't created any windows */
+  if (NULL != ThreadData)
+    {
+      Current = ThreadData->WindowListHead.Flink;
+      while (! Belongs && Current != &ThreadData->WindowListHead)
+	{
+	  ThreadWindow = CONTAINING_RECORD(Current, WINDOW_OBJECT, ThreadListEntry);
+	  Belongs = (Window == ThreadWindow);
+	  Current = Current->Flink;
+	}
+    }
+  ExReleaseFastMutexUnsafe(&ThreadData->WindowListLock);
+
+  return Belongs;
+}
+
+static BOOL BuildChildWindowArray(PWINDOW_OBJECT Window, HWND **Children, unsigned *NumChildren)
+{
+  PLIST_ENTRY Current;
+  unsigned Index;
+  PWINDOW_OBJECT Child;
+
+  *Children = NULL;
+  *NumChildren = 0;
+  ExAcquireFastMutexUnsafe(&Window->ChildrenListLock);
+  Current = Window->ChildrenListHead.Flink;
+  while (Current != &Window->ChildrenListHead)
+    {
+      (*NumChildren)++;
+      Current = Current->Flink;
+    }
+  if (0 != *NumChildren)
+    {
+      *Children = ExAllocatePoolWithTag(PagedPool, *NumChildren * sizeof(HWND), TAG_WNAM);
+      if (NULL != *Children)
+	{
+	  Current = Window->ChildrenListHead.Flink;
+	  Index = 0;
+	  while (Current != &Window->ChildrenListHead)
+	    {
+	      Child = CONTAINING_RECORD(Current, WINDOW_OBJECT, SiblingListEntry);
+	      (*Children)[Index] = Child->Self;
+	      Current = Current->Flink;
+	      Index++;
+	    }
+	  assert(Index == *NumChildren);
+	}
+      else
+	{
+	  DPRINT1("Failed to allocate memory for children array\n");
+	}
+    }
+  ExReleaseFastMutexUnsafe(&Window->ChildrenListLock);
+
+  return 0 == *NumChildren || NULL != *Children;
+}
+
+/***********************************************************************
+ *           W32kDestroyWindow
+ *
+ * Destroy storage associated to a window. "Internals" p.358
+ */
+static LRESULT W32kDestroyWindow(PWINDOW_OBJECT Window)
+{
+  HWND *Children;
+  unsigned NumChildren;
+  unsigned Index;
+  PWINDOW_OBJECT Child;
+
+  if (! W32kWndBelongsToCurrentThread(Window))
+    {
+      DPRINT1("Window doesn't belong to current thread\n");
+      return 0;
+    }
+
+  /* free child windows */
+  if (! BuildChildWindowArray(Window, &Children, &NumChildren))
+    {
+      return 0;
+    }
+  for (Index = NumChildren; 0 < Index; Index--)
+    {
+      Child = W32kGetWindowObject(Children[Index - 1]);
+      if (NULL != Child)
+	{
+	  if (W32kWndBelongsToCurrentThread(Child))
+	    {
+	      W32kDestroyWindow(Child);
+	    }
+#if 0 /* FIXME */
+	  else
+	    {
+	      SendMessageW( list[i], WM_WINE_DESTROYWINDOW, 0, 0 );
+	    }
+#endif
+	}
+    }
+  if (0 != NumChildren)
+    {
+      ExFreePool(Children);
+    }
+
+  /*
+   * Clear the update region to make sure no WM_PAINT messages will be
+   * generated for this window while processing the WM_NCDESTROY.
+   */
+  PaintRedrawWindow(Window->Self, NULL, 0,
+                    RDW_VALIDATE | RDW_NOFRAME | RDW_NOERASE | RDW_NOINTERNALPAINT | RDW_NOCHILDREN,
+                    0);
+
+  /*
+   * Send the WM_NCDESTROY to the window being destroyed.
+   */
+  NtUserSendMessage(Window->Self, WM_NCDESTROY, 0, 0);
+
+  /* FIXME: do we need to fake QS_MOUSEMOVE wakebit? */
+
+#if 0 /* FIXME */
+  WinPosCheckInternalPos(Window->Self);
+  if (Window->Self == GetCapture())
+    {
+      ReleaseCapture();
+    }
+
+  /* free resources associated with the window */
+  TIMER_RemoveWindowTimers(Window->Self);
+#endif
+
+#if 0 /* FIXME */
+  if (0 == (Window->Style & WS_CHILD))
+    {
+      HMENU Menu = (HMENU) NtUserSetWindowLongW(Window->Self, GWL_ID, 0);
+      if (NULL != Menu)
+	{
+	  DestroyMenu(Menu);
+	}
+    }
+  if (Window->hSysMenu)
+    {
+      DestroyMenu(Window->hSysMenu);
+      Window->hSysMenu = 0;
+    }
+  DCE_FreeWindowDCE(Window->Self);    /* Always do this to catch orphaned DCs */
+  WINPROC_FreeProc(Window->winproc, WIN_PROC_WINDOW);
+  CLASS_RemoveWindow(Window->Class);
+#endif
+  RemoveEntryList(&Window->SiblingListEntry);
+  RemoveEntryList(&Window->DesktopListEntry);
+  RemoveEntryList(&Window->ThreadListEntry);
+  Window->Class = NULL;
+  ObmCloseHandle(PsGetWin32Process()->WindowStation->HandleTable, Window->Self);
+
   W32kGraphicsCheck(FALSE);
 
   return 0;
+}
+
+BOOLEAN STDCALL
+NtUserDestroyWindow(HWND Wnd)
+{
+  BOOL isChild;
+  PWINDOW_OBJECT Window;
+
+  Window = W32kGetWindowObject(Wnd);
+  if (Window == NULL)
+    {
+      return FALSE;
+    }
+
+  /* FIXME: check if window belongs to current thread */
+
+  /* Check for desktop window (has NULL parent) */
+  if (NULL == Window->Parent)
+    {
+      SetLastWin32Error(ERROR_ACCESS_DENIED);
+      return FALSE;
+    }
+
+  /* Look whether the focus is within the tree of windows we will
+   * be destroying.
+   */
+#if 0 /* FIXME */
+  h = GetFocus();
+  if (h == Wnd || IsChild(Wnd, h))
+    {
+      HWND Parent = GetAncestor(Wnd, GA_PARENT);
+      if (Parent == GetDesktopWindow())
+	{
+	  Parent = NULL;
+	}
+        SetFocus(Parent);
+    }
+#endif
+
+  /* Call hooks */
+#if 0 /* FIXME */
+  if (HOOK_CallHooks(WH_CBT, HCBT_DESTROYWND, (WPARAM) hwnd, 0, TRUE))
+    {
+    return FALSE;
+    }
+#endif
+
+  isChild = (0 != (Window->Style & WS_CHILD));
+
+#if 0 /* FIXME */
+  if (isChild)
+    {
+      if (! USER_IsExitingThread(GetCurrentThreadId()))
+	{
+	  send_parent_notify(hwnd, WM_DESTROY);
+	}
+    }
+  else if (NULL != GetWindow(Wnd, GW_OWNER))
+    {
+      HOOK_CallHooks( WH_SHELL, HSHELL_WINDOWDESTROYED, (WPARAM)hwnd, 0L, TRUE );
+      /* FIXME: clean up palette - see "Internals" p.352 */
+    }
+
+  if (! IsWindow(Wnd))
+    {
+    return TRUE;
+    }
+#endif
+
+  /* Hide the window */
+  if (! WinPosShowWindow(Wnd, SW_HIDE ))
+    {
+#if 0 /* FIXME */
+      if (hwnd == GetActiveWindow())
+	{
+	  WINPOS_ActivateOtherWindow( hwnd );
+	}
+#endif
+    }
+
+#if 0 /* FIXME */
+  if (! IsWindow(Wnd))
+    {
+    return TRUE;
+    }
+#endif
+
+  /* Recursively destroy owned windows */
+#if 0 /* FIXME */
+  if (! isChild)
+    {
+      for (;;)
+	{
+	  int i;
+	  BOOL GotOne = FALSE;
+	  HWND *list = WIN_ListChildren(GetDesktopWindow());
+	  if (list)
+	    {
+	      for (i = 0; list[i]; i++)
+		{
+		  if (GetWindow(list[i], GW_OWNER) != Wnd)
+		    {
+		      continue;
+		    }
+		  if (WIN_IsCurrentThread(list[i]))
+		    {
+		      DestroyWindow(list[i]);
+		      GotOne = TRUE;
+		      continue;
+		    }
+		  WIN_SetOwner(list[i], NULL);
+		}
+	      HeapFree(GetProcessHeap(), 0, list);
+	    }
+	  if (! GotOne)
+	    {
+	      break;
+	    }
+	}
+    }
+#endif
+
+  /* Send destroy messages */
+  W32kSendDestroyMsg(Wnd);
+
+#if 0 /* FIXME */
+  if (!IsWindow(Wnd))
+    {
+      return TRUE;
+    }
+#endif
+
+  /* Unlink now so we won't bother with the children later on */
+#if 0 /* FIXME */
+  WIN_UnlinkWindow( hwnd );
+#endif
+
+  /* Destroy the window storage */
+  W32kDestroyWindow(Window);
+
+  return TRUE;
 }
 
 DWORD STDCALL
