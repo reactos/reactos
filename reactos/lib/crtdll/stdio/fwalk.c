@@ -3,14 +3,6 @@
 #include <crtdll/internal/file.h>
 
 // not exported by crtdll
-
-#define __FILE_REC_MAX 20
-typedef struct __file_rec {
-  struct __file_rec *next;
-  int count;
-  FILE *files[__FILE_REC_MAX];
-} __file_rec;
-
 __file_rec *__file_rec_list;
 
 void

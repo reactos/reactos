@@ -1,5 +1,3 @@
-#include <internal/mmhal.h>
-
 #include <ddk/ntddk.h>
 #include <stdarg.h>
 #include <string.h>

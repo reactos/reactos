@@ -11,6 +11,7 @@
 
 */
 
+#include <ddk/ntddk.h>
 #include <internal/mmhal.h>
 #include <internal/halio.h>
 /* #include <internal/hal/ddk.h> */
