@@ -90,6 +90,7 @@ NTSTATUS addEntry(PDEVICE_EXTENSION DeviceExt
  PVfatFCB newFCB,pDirFCB;
  PVfatCCB newCCB,pDirCCB;
  ULONG CurrentCluster;
+ TIME_FIELDS RTCTime;
    CHECKPOINT;
    PathFileName=pFileObject->FileName.Buffer;
    DPRINT("addEntry: Pathname=%w\n",PathFileName);
@@ -224,13 +225,19 @@ DPRINT("i=%d,j=%d,%d,%d\n",i,j,pEntry->Filename[i],FileName[i]);
       DirName[NameLen]=0;
    }
    DPRINT("dos name=%11.11s\n",pEntry->Filename);
-   //FIXME : set attributes, dates, times
+   // set attributes, dates, times
    pEntry->Attrib=ReqAttr;
 
    if(RequestedOptions&FILE_DIRECTORY_FILE)
      pEntry->Attrib |= FILE_ATTRIBUTE_DIRECTORY;
-   pEntry->CreationDate=0x21;
-   pEntry->UpdateDate=0x21;
+   HalQueryRealTimeClock(&RTCTime);
+   pEntry->CreationTime
+         = (RTCTime.Second>>1)+(RTCTime.Minute<<5)+(RTCTime.Hour<<11);
+   pEntry->CreationDate
+          = RTCTime.Day+(RTCTime.Month<<5)+((RTCTime.Year-1980)<<9);
+   pEntry->UpdateDate=pEntry->CreationDate;
+   pEntry->UpdateTime=pEntry->CreationTime;
+   pEntry->AccessDate=pEntry->CreationDate;
    // calculate checksum for 8.3 name
    for(pSlots[0].alias_checksum=i=0;i<11;i++)
    {
@@ -300,10 +307,13 @@ DPRINT("i=%d,j=%d,%d,%d\n",i,j,pEntry->Filename[i],FileName[i]);
    newCCB->PtrFileObject=pFileObject;
    newFCB->RefCount++;
    //FIXME : initialize all fields in FCB and CCB
-   newFCB->nextFcb=pFirstFcb;
+   newFCB->Buffer=ExAllocatePool(NonPagedPool,DeviceExt->BytesPerCluster);
+   newFCB->Cluster=0xFFFFFFFF;
+   newFCB->Flags=0;
    memcpy(&newFCB->entry,pEntry,sizeof(FATDirEntry));
 DPRINT("new : entry=%11.11s\n",newFCB->entry.Filename);
 DPRINT("new : entry=%11.11s\n",pEntry->Filename);
+   newFCB->nextFcb=pFirstFcb;
    pFirstFcb=newFCB;
    vfat_wcsncpy(newFCB->PathName,PathFileName,MAX_PATH);
    newFCB->ObjectName=newFCB->PathName+(PathFileName-FileName);
