@@ -865,6 +865,11 @@ MingwModuleHandler::GenerateLinkerCommand ( const Module& module,
 		          importLibraryDependencies.c_str (),
 		          GetLinkerMacro ( module ).c_str () );
 	}
+
+	fprintf ( fMakefile,
+		      "\t${rsym} %s %s\n",
+		      target.c_str (),
+		      target.c_str () );
 }
 
 void
@@ -1402,6 +1407,10 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ( const Module& module )
 	fprintf ( fMakefile,
 	          "\t${rm} %s\n\n",
 	          temp_exp.c_str () );
+	fprintf ( fMakefile,
+		      "\t${rsym} %s %s\n",
+		      target.c_str (),
+		      target.c_str () );
 }
 
 

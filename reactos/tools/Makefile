@@ -24,6 +24,33 @@ rmkdir_clean:
 	-@$(rm) $(RMKDIR_TARGET) $(RMKDIR_OBJECTS) 2>$(NUL)
 clean: rmkdir_clean
 
+
+RSYM_BASE = tools
+
+RSYM_TARGET = \
+	$(ROS_INTERMEDIATE)$(RSYM_BASE)$(SEP)rsym$(EXEPOSTFIX)
+
+RSYM_SOURCES = \
+	$(RSYM_BASE)$(SEP)rsym.c
+
+RSYM_OBJECTS = \
+	$(RSYM_SOURCES:.c=.o)
+
+RSYM_HOST_CFLAGS = -g -Werror -Wall
+
+RSYM_HOST_LFLAGS = -g
+
+$(RSYM_TARGET): $(RSYM_OBJECTS)
+	${host_gcc} $(RSYM_OBJECTS) $(RSYM_HOST_LFLAGS) -o $(RSYM_TARGET)
+
+$(RSYM_OBJECTS): %.o : %.c
+	${host_gcc} $(RSYM_HOST_CFLAGS) -c $< -o $@
+
+.PHONY: rsym_clean
+rsym_clean:
+	-@$(rm) $(RSYM_TARGET) $(RSYM_OBJECTS) 2>$(NUL)
+clean: rsym_clean
+
 include tools/buildno/Makefile
 include tools/cdmake/makefile
 include tools/nci/makefile

@@ -167,6 +167,7 @@ MingwBackend::GenerateGlobalVariables () const
 	fprintf ( fMakefile, "bin2res = tools" SSEP "bin2res" SSEP "bin2res" EXEPOSTFIX "\n" );
 	fprintf ( fMakefile, "cabman = tools" SSEP "cabman" SSEP "cabman" EXEPOSTFIX "\n" );
 	fprintf ( fMakefile, "cdmake = tools" SSEP "cdmake" SSEP "cdmake" EXEPOSTFIX "\n" );
+	fprintf ( fMakefile, "rsym = tools" SSEP "rsym" EXEPOSTFIX "\n" );
 	fprintf ( fMakefile, "wrc = tools" SSEP "wrc" SSEP "wrc" EXEPOSTFIX "\n" );
 	fprintf ( fMakefile, "\n" );
 	GenerateGlobalCFlagsAndProperties (
