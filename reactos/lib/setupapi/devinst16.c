@@ -56,6 +56,16 @@ RETERR16 WINAPI DiBuildCompatDrvList16(LPDEVICE_INFO16 lpdi)
 }
 
 /***********************************************************************
+ *	        DiBuildClassDrvList (SETUPX.301)
+ */
+RETERR16 WINAPI DiBuildClassDrvList16(LPDEVICE_INFO16 lpdi)
+{
+    FIXME("(%p): stub\n", lpdi);
+    lpdi->lpCompatDrvList = NULL;
+    return FALSE;
+}
+
+/***********************************************************************
  *		DiCallClassInstaller (SETUPX.308)
  */
 RETERR16 WINAPI DiCallClassInstaller16(/*DI_FUNCTIONS*/WORD diFctn, LPDEVICE_INFO16 lpdi)

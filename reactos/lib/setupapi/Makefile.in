@@ -13,11 +13,11 @@ SPEC_SRCS16 = $(ALTNAMES:.dll=.spec)
 C_SRCS = \
 	devinst.c \
 	dirid.c \
+	diskspace.c \
 	install.c \
 	parser.c \
 	queue.c \
 	setupcab.c \
-        setupapi_main.c \
 	stubs.c
 
 C_SRCS16 = \

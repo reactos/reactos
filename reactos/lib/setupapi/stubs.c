@@ -187,3 +187,42 @@ BOOL WINAPI SetupCopyOEMInfA(PCSTR sourceinffile, PCSTR sourcemedialoc,
   FIXME("stub: source %s location %s ...\n",sourceinffile, sourcemedialoc);
   return FALSE;
 }
+
+/***********************************************************************
+ *		SetupGetInfInformationA    (SETUPAPI.@)
+ */
+BOOL WINAPI SetupGetInfInformationA( LPCVOID InfSpec, DWORD SearchControl,
+                                     PSP_INF_INFORMATION ReturnBuffer,
+                                     DWORD ReturnBufferSize, PDWORD RequiredSize)
+{
+    FIXME("(%p, %ld, %p, %ld, %p) Stub!\n",
+          InfSpec, SearchControl, ReturnBuffer, ReturnBufferSize, RequiredSize );
+    return TRUE;
+}
+
+/***********************************************************************
+ *		SetupInitializeFileLogW(SETUPAPI.@)
+ */
+HANDLE WINAPI SetupInitializeFileLogW(LPWSTR LogFileName, DWORD Flags)
+{
+    FIXME("Stub %s, 0x%lx\n",debugstr_w(LogFileName),Flags);
+    return INVALID_HANDLE_VALUE;
+}
+
+/***********************************************************************
+ *		SetupInitializeFileLogA(SETUPAPI.@)
+ */
+HANDLE WINAPI SetupInitializeFileLogA(LPSTR LogFileName, DWORD Flags)
+{
+    FIXME("Stub %s, 0x%lx\n",debugstr_a(LogFileName),Flags);
+    return INVALID_HANDLE_VALUE;
+}
+
+/***********************************************************************
+ *		SetupTerminateFileLog(SETUPAPI.@)
+ */
+BOOL WINAPI SetupTerminateFileLog(HANDLE FileLogHandle)
+{
+    FIXME ("Stub %p\n",FileLogHandle);
+    return TRUE;
+}

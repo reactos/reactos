@@ -76,6 +76,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
 
+#define HINSTANCE_32(h16) ((HINSTANCE)(ULONG_PTR)(h16))
+
 /***********************************************************************
  *		SURegOpenKey (SETUPX.47)
  */
@@ -98,74 +100,6 @@ DWORD WINAPI SURegQueryValueEx( HKEY hkey, LPSTR lpszValueName,
                                lpbData, lpcbData );
 }
 
-/*
- * Returns pointer to a string list with the first entry being number
- * of strings.
- *
- * Hmm. Should this be InitSubstrData(), GetFirstSubstr() and GetNextSubstr()
- * instead?
- */
-static LPSTR *SETUPX_GetSubStrings(LPSTR start, char delimiter)
-{
-    LPSTR p, q;
-    LPSTR *res = NULL;
-    DWORD count = 0;
-    int len;
-
-    p = start;
-
-    while (1)
-    {
-	/* find beginning of real substring */
-	while ( (*p == ' ') || (*p == '\t') || (*p == '"') ) p++;
-
-	/* find end of real substring */
-	q = p;
-	while ( (*q)
-	     &&	(*q != ' ') && (*q != '\t') && (*q != '"')
-	     && (*q != ';') && (*q != delimiter) ) q++;
-	if (q == p)
-	    break;
-	len = (int)q - (int)p;
-
-	/* alloc entry for new substring in steps of 32 units and copy over */
-	if (count % 32 == 0)
-	{ /* 1 for count field + current count + 32 */
-	    if (res)
-    		res = HeapReAlloc(GetProcessHeap(), 0, res, (1+count+32)*sizeof(LPSTR));
-	    else
-		res = HeapAlloc(GetProcessHeap(), 0, (1+count+32)*sizeof(LPSTR));	    
-	}
-	*(res+1+count) = HeapAlloc(GetProcessHeap(), 0, len+1);
-	strncpy(*(res+1+count), p, len);
-	(*(res+1+count))[len] = '\0';
-	count++;
-
-	/* we are still within last substring (before delimiter),
-	 * so get out of it */
-	while ((*q) && (*q != ';') && (*q != delimiter)) q++;
-	if ((!*q) || (*q == ';'))
-	    break;
-	p = q+1;
-    }
-
-    /* put number of entries at beginning of list */
-    *(DWORD *)res = count;
-    return res;
-}
-
-static void SETUPX_FreeSubStrings(LPSTR *substr)
-{
-    DWORD count = *(DWORD *)substr;
-    LPSTR *pStrings = substr+1;
-    DWORD n;
-
-    for (n=0; n < count; n++)
-	HeapFree(GetProcessHeap(), 0, *pStrings++);
-
-    HeapFree(GetProcessHeap(), 0, substr);
-}
-
 
 /***********************************************************************
  *		InstallHinfSection (SETUPX.527)
@@ -180,63 +114,8 @@ static void SETUPX_FreeSubStrings(LPSTR *substr)
  */
 RETERR16 WINAPI InstallHinfSection16( HWND16 hwnd, HINSTANCE16 hinst, LPCSTR lpszCmdLine, INT16 nCmdShow)
 {
-    LPSTR *pSub;
-    DWORD count;
-    HINF16 hInf = 0;
-    RETERR16 res = OK, tmp;
-    WORD wFlags;
-    BOOL reboot = FALSE;
-
-    TRACE("(%04x, %04x, %s, %d);\n", hwnd, hinst, lpszCmdLine, nCmdShow);
-
-    pSub = SETUPX_GetSubStrings((LPSTR)lpszCmdLine, ' ');
-
-    count = *(DWORD *)pSub;
-    if (count < 2) /* invalid number of arguments ? */
-	goto end;
-    if (IpOpen16(*(pSub+count), &hInf) != OK)
-    {
-	res = ERROR_FILE_NOT_FOUND; /* yes, correct */
-	goto end;
-    }
-    if (VcpOpen16(NULL, 0))
-	goto end;
-    if (GenInstall16(hInf, *(pSub+count-2), GENINSTALL_DO_ALL) != OK)
-	goto end;
-    wFlags = atoi(*(pSub+count-1)) & ~128;
-    switch (wFlags)
-    {
-	case HOW_ALWAYS_SILENT_REBOOT:
-	case HOW_SILENT_REBOOT:
-	    reboot = TRUE;
-	    break;
-	case HOW_ALWAYS_PROMPT_REBOOT:
-	case HOW_PROMPT_REBOOT:
-            if (MessageBoxA(HWND_32(hwnd), "You must restart Wine before the new settings will take effect.\n\nDo you want to exit Wine now ?", "Systems Settings Change", MB_YESNO|MB_ICONQUESTION) == IDYES)
-                reboot = TRUE;
-	    break;
-	default:
-	    ERR("invalid flags %d !\n", wFlags);
-	    goto end;
-    }
-
-    res = OK;
-end:
-    tmp = VcpClose16(VCPFL_ALL, NULL);
-    if (tmp != OK)
-	res = tmp;
-    tmp = IpClose16(hInf);
-    if (tmp != OK)
-	res = tmp;
-    SETUPX_FreeSubStrings(pSub);
-    if (reboot)
-    {
-	/* FIXME: we should have a means of terminating all wine + wineserver */
-	MESSAGE("Program or user told me to restart. Exiting Wine...\n");
-	ExitProcess(1);
-    }
-
-    return res;
+    InstallHinfSectionA( HWND_32(hwnd), HINSTANCE_32(hinst), lpszCmdLine, nCmdShow );
+    return OK;
 }
 
 typedef struct

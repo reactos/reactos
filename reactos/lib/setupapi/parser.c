@@ -36,6 +36,7 @@
 #include "winternl.h"
 #include "winerror.h"
 #include "setupapi.h"
+#include "setupapi_private.h"
 
 #include "wine/unicode.h"
 #include "wine/debug.h"
@@ -568,7 +569,7 @@ static void close_current_line( struct parser *parser )
 static const WCHAR *line_start_state( struct parser *parser, const WCHAR *pos )
 {
     const WCHAR *p;
-    
+
     for (p = pos; !is_eof( parser, p ); p++)
     {
         switch(*p)
@@ -795,7 +796,7 @@ static const WCHAR *quotes_state( struct parser *parser, const WCHAR *pos )
 static const WCHAR *leading_spaces_state( struct parser *parser, const WCHAR *pos )
 {
     const WCHAR *p;
- 
+
     for (p = pos; !is_eol( parser, p ); p++)
     {
         if (*p == '\\')
@@ -945,7 +946,7 @@ static struct inf_file *parse_file( HANDLE handle, const WCHAR *class, UINT *err
     file->string_pos = file->strings;
     file->strings_section = -1;
 
-    if (TRUE)//(!RtlIsTextUnicode( buffer, size, NULL )) // Fireball, 07 Feb 04, temp fix
+    if (!RtlIsTextUnicode( buffer, size, NULL ))
     {
         WCHAR *new_buff = HeapAlloc( GetProcessHeap(), 0, size * sizeof(WCHAR) );
         if (new_buff)
@@ -996,6 +997,32 @@ const WCHAR *PARSER_get_src_root( HINF hinf )
 {
     struct inf_file *file = hinf;
     return file->src_root;
+}
+
+
+/***********************************************************************
+ *            PARSER_get_dest_dir
+ *
+ * retrieve a destination dir of the form "dirid,relative_path" in the given entry.
+ * returned buffer must be freed by caller.
+ */
+WCHAR *PARSER_get_dest_dir( INFCONTEXT *context )
+{
+    const WCHAR *dir;
+    WCHAR *ptr, *ret;
+    INT dirid;
+    DWORD len1, len2;
+
+    if (!SetupGetIntField( context, 1, &dirid )) return NULL;
+    if (!(dir = DIRID_get_string( context->Inf, dirid ))) return NULL;
+    len1 = strlenW(dir) + 1;
+    if (!SetupGetStringFieldW( context, 2, NULL, 0, &len2 )) len2 = 0;
+    if (!(ret = HeapAlloc( GetProcessHeap(), 0, (len1+len2) * sizeof(WCHAR) ))) return NULL;
+    strcpyW( ret, dir );
+    ptr = ret + strlenW(ret);
+    if (len2 && ptr > ret && ptr[-1] != '\\') *ptr++ = '\\';
+    if (!SetupGetStringFieldW( context, 2, ptr, len2, NULL )) *ptr = 0;
+    return ret;
 }
 
 
@@ -1067,6 +1094,7 @@ HINF WINAPI SetupOpenInfFileW( PCWSTR name, PCWSTR class, DWORD style, UINT *err
             handle = CreateFileW( path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, 0 );
         }
     }
+
     if (handle != INVALID_HANDLE_VALUE)
     {
         file = parse_file( handle, class, error );

@@ -1,5 +1,5 @@
 /*
- * Top level resource file for SETUPX
+ * English resources for SETUPAPI
  *
  * Copyright 2001 Andreas Mohr
  *
@@ -18,16 +18,17 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "setupapi_private.h"
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
-#include "En.rc"
-#include "Es.rc"
-#include "Fr.rc"
-#include "It.rc"
-#include "Nl.rc"
-#include "Pt.rc"
-#include "Ru.rc"
+COPYFILEDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 20, 20, 208, 105
+STYLE DS_MODALFRAME | DS_SETFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Copying Files..."
+FONT 8, "MS Sans Serif"
+BEGIN
+	PUSHBUTTON "Cancel", IDCANCEL, 79, 84, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+	LTEXT "Source:", -1, 7, 7, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+	LTEXT "", SOURCESTRORD, 7, 18, 194, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+	LTEXT "Destination:", -1, 7, 30, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+	LTEXT "", DESTSTRORD, 7, 41, 194, 22, WS_CHILD | WS_VISIBLE | WS_GROUP
+	CONTROL "", PROGRESSORD, "setupx_progress", 7, 63, 194, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END

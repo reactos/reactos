@@ -27,9 +27,9 @@
 @ stub GetSetFileTimestamp
 @ stub GetVersionInfoFromImage
 @ stub InfIsFromOemLocation
-@ stdcall InstallHinfSection(long long str long)
-@ stub InstallHinfSectionA
-@ stub InstallHinfSectionW
+@ stdcall InstallHinfSection(long long str long) InstallHinfSectionA
+@ stdcall InstallHinfSectionA(long long str long)
+@ stdcall InstallHinfSectionW(long long wstr long)
 @ stub InstallStop
 @ stub IsUserAdmin
 @ stub LookUpStringInTable
@@ -50,7 +50,7 @@
 @ stub RetrieveServiceConfig
 @ stub SearchForInfFile
 @ stub SetArrayToMultiSzValue
-@ stub SetupAddInstallSectionToDiskSpaceListA
+@ stdcall SetupAddInstallSectionToDiskSpaceListA(long long long str ptr long)
 @ stub SetupAddInstallSectionToDiskSpaceListW
 @ stub SetupAddSectionToDiskSpaceListA
 @ stub SetupAddSectionToDiskSpaceListW
@@ -70,8 +70,8 @@
 @ stub SetupCopyErrorW
 @ stdcall SetupCopyOEMInfA(str str long long ptr long ptr ptr)
 @ stub SetupCopyOEMInfW
-@ stub SetupCreateDiskSpaceListA
-@ stub SetupCreateDiskSpaceListW
+@ stdcall SetupCreateDiskSpaceListA(ptr long long)
+@ stdcall SetupCreateDiskSpaceListW(ptr long long)
 @ stub SetupDecompressOrCopyFileA
 @ stub SetupDecompressOrCopyFileW
 @ stub SetupDefaultQueueCallback
@@ -79,7 +79,7 @@
 @ stdcall SetupDefaultQueueCallbackW(ptr long long long)
 @ stub SetupDeleteErrorA
 @ stub SetupDeleteErrorW
-@ stub SetupDestroyDiskSpaceList
+@ stdcall SetupDestroyDiskSpaceList(long)
 @ stub SetupDiAskForOEMDisk
 @ stub SetupDiBuildClassInfoList
 @ stdcall SetupDiBuildClassInfoListExW(long ptr long ptr wstr ptr)
@@ -195,7 +195,7 @@
 @ stdcall SetupGetFileQueueFlags(long ptr)
 @ stub SetupGetInfFileListA
 @ stub SetupGetInfFileListW
-@ stub SetupGetInfInformationA
+@ stdcall SetupGetInfInformationA(ptr long ptr long ptr)
 @ stub SetupGetInfInformationW
 @ stdcall SetupGetIntField(ptr long ptr)
 @ stdcall SetupGetLineByIndexA(long str long ptr)
@@ -218,8 +218,8 @@
 @ stub SetupGetTargetPathW
 @ stdcall SetupInitDefaultQueueCallback(long)
 @ stdcall SetupInitDefaultQueueCallbackEx(long long long long ptr)
-@ stub SetupInitializeFileLogA
-@ stub SetupInitializeFileLogW
+@ stdcall SetupInitializeFileLogA (str long)
+@ stdcall SetupInitializeFileLogW (wstr long)
 @ stub SetupInstallFileA
 @ stub SetupInstallFileExA
 @ stub SetupInstallFileExW
@@ -254,7 +254,7 @@
 @ stub SetupQueryInfOriginalFileInformationW
 @ stub SetupQuerySourceListA
 @ stub SetupQuerySourceListW
-@ stub SetupQuerySpaceRequiredOnDriveA
+@ stdcall SetupQuerySpaceRequiredOnDriveA(long str ptr ptr long)
 @ stub SetupQuerySpaceRequiredOnDriveW
 @ stdcall SetupQueueCopyA(long str str str str str str str long)
 @ stdcall SetupQueueCopyIndirectA(ptr)
@@ -297,7 +297,7 @@
 @ stub SetupSetSourceListA
 @ stub SetupSetSourceListW
 @ stdcall SetupTermDefaultQueueCallback(ptr)
-@ stub SetupTerminateFileLog
+@ stdcall SetupTerminateFileLog(long)
 @ stub ShouldDeviceBeExcluded
 @ stub StampFileSecurity
 @ stub StringTableAddString

@@ -18,9 +18,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include <stdarg.h>
 
 #include "windef.h"
@@ -249,6 +246,22 @@ UINT CALLBACK QUEUE_callback_WtoA( void *context, UINT notification,
             MultiByteToWideChar( CP_ACP, 0, buffer, -1, (WCHAR *)old_param2, MAX_PATH );
         break;
 
+    case SPFILENOTIFY_STARTREGISTRATION:
+    case SPFILENOTIFY_ENDREGISTRATION:
+        {
+            SP_REGISTER_CONTROL_STATUSW *statusW = (SP_REGISTER_CONTROL_STATUSW *)param1;
+            SP_REGISTER_CONTROL_STATUSA statusA;
+
+            statusA.cbSize = sizeof(statusA);
+            statusA.FileName = strdupWtoA( statusW->FileName );
+            statusA.Win32Error  = statusW->Win32Error;
+            statusA.FailureCode = statusW->FailureCode;
+            ret = callback_ctx->orig_handler( callback_ctx->orig_context, notification,
+                                              (UINT_PTR)&statusA, param2 );
+            HeapFree( GetProcessHeap(), 0, (LPSTR)statusA.FileName );
+        }
+        break;
+
     case SPFILENOTIFY_NEEDMEDIA:
     case SPFILENOTIFY_QUEUESCAN:
         FIXME("mapping for %d not implemented\n",notification);
@@ -260,7 +273,7 @@ UINT CALLBACK QUEUE_callback_WtoA( void *context, UINT notification,
         ret = callback_ctx->orig_handler( callback_ctx->orig_context, notification, param1, param2 );
         break;
     }
-        return ret;
+    return ret;
 }
 
 
@@ -351,25 +364,11 @@ static WCHAR *get_destination_dir( HINF hinf, const WCHAR *section )
 {
     static const WCHAR Dest[] = {'D','e','s','t','i','n','a','t','i','o','n','D','i','r','s',0};
     static const WCHAR Def[]  = {'D','e','f','a','u','l','t','D','e','s','t','D','i','r',0};
-
-    const WCHAR *dir;
-    WCHAR *ptr, *ret;
     INFCONTEXT context;
-    INT dirid;
-    DWORD len1, len2;
 
     if (!SetupFindFirstLineW( hinf, Dest, section, &context ) &&
         !SetupFindFirstLineW( hinf, Dest, Def, &context )) return NULL;
-    if (!SetupGetIntField( &context, 1, &dirid )) return NULL;
-    if (!(dir = DIRID_get_string( hinf, dirid ))) return NULL;
-    len1 = strlenW(dir) + 1;
-    if (!SetupGetStringFieldW( &context, 2, NULL, 0, &len2 )) len2 = 0;
-    if (!(ret = HeapAlloc( GetProcessHeap(), 0, (len1+len2) * sizeof(WCHAR) ))) return NULL;
-    strcpyW( ret, dir );
-    ptr = ret + strlenW(ret);
-    if (len2 && ptr > ret && ptr[-1] != '\\') *ptr++ = '\\';
-    if (!SetupGetStringFieldW( &context, 2, ptr, len2, NULL )) *ptr = 0;
-    return ret;
+    return PARSER_get_dest_dir( &context );
 }
 
 
