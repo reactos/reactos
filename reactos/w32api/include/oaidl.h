@@ -541,6 +541,31 @@ DECLARE_INTERFACE_(ITypeInfo,IUnknown)
 };
 #undef INTERFACE
 
+#ifdef COBJMACROS
+#define ITypeInfo_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define ITypeInfo_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define ITypeInfo_Release(p) (p)->lpVtbl->Release(p)
+#define ITypeInfo_GetTypeAttr(p,a) (p)->lpVtbl->GetTypeAttr(p,a)
+#define ITypeInfo_GetTypeComp(p,a) (p)->lpVtbl->GetTypeComp(p,a)
+#define ITypeInfo_GetFuncDesc(p,a,b) (p)->lpVtbl->GetFuncDesc(p,a,b)
+#define ITypeInfo_GetVarDesc(p,a,b) (p)->lpVtbl->GetVarDesc(p,a,b)
+#define ITypeInfo_GetNames(p,a,b,c,d) (p)->lpVtbl->GetNames(p,a,b,c,d)
+#define ITypeInfo_GetRefTypeOfImplType(p,a,b) (p)->lpVtbl->GetRefTypeOfImplType(p,a,b)
+#define ITypeInfo_GetImplTypeFlags(p,a,b) (p)->lpVtbl->GetImplTypeFlags(p,a,b)
+#define ITypeInfo_GetIDsOfNames(p,a,b,c) (p)->lpVtbl->GetIDsOfNames(p,a,b,c)
+#define ITypeInfo_Invoke(p,a,b,c,d,e,f,g) (p)->lpVtbl->Invoke(p,a,b,c,d,e,f,g)
+#define ITypeInfo_GetDocumentation(p,a,b,c,d,e) (p)->lpVtbl->GetDocumentation(p,a,b,c,d,e)
+#define ITypeInfo_GetDllEntry(p,a,b,c,d,e) (p)->lpVtbl->GetDllEntry(p,a,b,c,d,e)
+#define ITypeInfo_GetRefTypeInfo(p,a,b) (p)->lpVtbl->GetRefTypeInfo(p,a,b)
+#define ITypeInfo_AddressOfMember(p,a,b,c) (p)->lpVtbl->AddressOfMember(p,a,b,c)
+#define ITypeInfo_CreateInstance(p,a,b,c) (p)->lpVtbl->CreateInstance(p,a,b,c)
+#define ITypeInfo_GetMops(p,a,b) (p)->lpVtbl->GetMops(p,a,b)
+#define ITypeInfo_GetContainingTypeLib(p,a,b) (p)->lpVtbl->GetContainingTypeLib(p,a,b)
+#define ITypeInfo_ReleaseTypeAttr(p,a) (p)->lpVtbl->ReleaseTypeAttr(p,a)
+#define ITypeInfo_ReleaseFuncDesc(p,a) (p)->lpVtbl->ReleaseFuncDesc(p,a)
+#define ITypeInfo_ReleaseVarDesc(p,a) (p)->lpVtbl->ReleaseVarDesc(p,a)
+#endif
+
 #define INTERFACE ITypeInfo2
 DECLARE_INTERFACE_(ITypeInfo2,ITypeInfo)
 {
