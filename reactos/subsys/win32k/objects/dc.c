@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.131 2004/04/25 15:31:43 weiden Exp $
+/* $Id: dc.c,v 1.132 2004/04/25 20:05:30 weiden Exp $
  *
  * DC.C - Device context functions
  *
@@ -2219,6 +2219,238 @@ IntIsPrimarySurface(PSURFGDI SurfGDI)
        return FALSE;
      }
    return SurfGDI == (PSURFGDI)AccessInternalObject((ULONG) PrimarySurface.Handle) ? TRUE : FALSE;
+}
+
+/*
+ * Returns the color of the brush or pen that is currently selected into the DC.
+ * This function is called from GetDCBrushColor() and GetDCPenColor()
+ */
+COLORREF FASTCALL
+IntGetDCColor(HDC hDC, ULONG Object)
+{
+  COLORREF Result;
+  DC *dc;
+  PPALGDI PalGDI;
+  PGDIBRUSHOBJ pen;
+  PGDIBRUSHOBJ brush;
+  XLATEOBJ *XlateObj;
+  HPALETTE Pal;
+  USHORT Mode;
+  ULONG iColor;
+  
+  if(!(dc = DC_LockDc(hDC)))
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return CLR_INVALID;
+  }
+  
+  switch(Object)
+  {
+    case OBJ_PEN:
+    {
+      if(!(pen = PENOBJ_LockPen(dc->w.hPen)))
+      {
+        DC_UnlockDc(hDC);
+        return CLR_INVALID;
+      }
+      if(!(pen->flAttrs & GDIBRUSH_IS_SOLID))
+      {
+        /* FIXME - just bail here? */
+        PENOBJ_UnlockPen(dc->w.hPen);
+        DC_UnlockDc(hDC);
+        return CLR_INVALID;
+      }
+      iColor = pen->BrushObject.iSolidColor;
+      PENOBJ_UnlockPen(dc->w.hPen);
+      break;
+    }
+    case OBJ_BRUSH:
+    {
+      if(!(brush = BRUSHOBJ_LockBrush(dc->w.hBrush)))
+      {
+        DC_UnlockDc(hDC);
+        return CLR_INVALID;
+      }
+      if(!(brush->flAttrs & GDIBRUSH_IS_SOLID))
+      {
+        /* FIXME - just bail here? */
+        BRUSHOBJ_UnlockBrush(dc->w.hBrush);
+        DC_UnlockDc(hDC);
+        return CLR_INVALID;
+      }
+      iColor = brush->BrushObject.iSolidColor;
+      BRUSHOBJ_UnlockBrush(dc->w.hBrush);
+      break;
+    }
+    default:
+    {
+      DC_UnlockDc(hDC);
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return CLR_INVALID;
+    }
+  }
+  
+  /* translate the color into RGB */
+  
+  if(dc->w.hPalette)
+    Pal = dc->w.hPalette;
+  else
+    Pal = NtGdiGetStockObject(DEFAULT_PALETTE);
+  
+  Result = CLR_INVALID;
+  
+  if((PalGDI = PALETTE_LockPalette(dc->w.hPalette)))
+  {
+    Mode = PalGDI->Mode;
+    PALETTE_UnlockPalette(dc->w.hPalette);
+    XlateObj = (XLATEOBJ*)IntEngCreateXlate(PAL_RGB, Mode, NULL, Pal);
+    if(XlateObj)
+    {
+      Result = XLATEOBJ_iXlate(XlateObj, iColor);
+      EngDeleteXlate(XlateObj);
+    }
+  }
+  
+  DC_UnlockDc(hDC);
+  return Result;
+}
+
+/*
+ * Changes the color of the brush or pen that is currently selected into the DC.
+ * This function is called from SetDCBrushColor() and SetDCPenColor()
+ */
+COLORREF FASTCALL
+IntSetDCColor(HDC hDC, ULONG Object, COLORREF Color)
+{
+  COLORREF Result;
+  DC *dc;
+  PPALGDI PalGDI;
+  PGDIBRUSHOBJ pen;
+  PGDIBRUSHOBJ brush;
+  XLATEOBJ *XlateObj;
+  HPALETTE Pal;
+  USHORT Mode;
+  ULONG iColor;
+  
+  if(Color == CLR_INVALID)
+  {
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return CLR_INVALID;
+  }
+  
+  if(!(dc = DC_LockDc(hDC)))
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return CLR_INVALID;
+  }
+  
+  switch(Object)
+  {
+    case OBJ_PEN:
+    {
+      if(!(pen = PENOBJ_LockPen(dc->w.hPen)))
+      {
+        DC_UnlockDc(hDC);
+        return CLR_INVALID;
+      }
+      if(!(pen->flAttrs & GDIBRUSH_IS_SOLID))
+      {
+        /* FIXME - just bail here? */
+        PENOBJ_UnlockPen(dc->w.hPen);
+        DC_UnlockDc(hDC);
+        return CLR_INVALID;
+      }
+      
+      /* save old color index, translate it to RGB later */
+      iColor = pen->BrushObject.iSolidColor;
+      
+      if(!(PalGDI = PALETTE_LockPalette(dc->w.hPalette)))
+      {
+        PENOBJ_UnlockPen(dc->w.hPen);
+        DC_UnlockDc(hDC);
+        return CLR_INVALID;
+      }
+      Mode = PalGDI->Mode;
+      PALETTE_UnlockPalette(dc->w.hPalette);
+      if(!(XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL)))
+      {
+        PENOBJ_UnlockPen(dc->w.hPen);
+        DC_UnlockDc(hDC);
+        return CLR_INVALID;
+      }
+      pen->BrushObject.iSolidColor = XLATEOBJ_iXlate(XlateObj, (ULONG)Color);
+      EngDeleteXlate(XlateObj);
+      PENOBJ_UnlockPen(dc->w.hPen);
+      break;
+    }
+    case OBJ_BRUSH:
+    {
+      if(!(brush = BRUSHOBJ_LockBrush(dc->w.hBrush)))
+      {
+        DC_UnlockDc(hDC);
+        return CLR_INVALID;
+      }
+      if(!(brush->flAttrs & GDIBRUSH_IS_SOLID))
+      {
+        /* FIXME - just bail here? */
+        BRUSHOBJ_UnlockBrush(dc->w.hBrush);
+        DC_UnlockDc(hDC);
+        return CLR_INVALID;
+      }
+      
+      /* save old color index, translate it to RGB later */
+      iColor = brush->BrushObject.iSolidColor;
+      
+      if(!(PalGDI = PALETTE_LockPalette(dc->w.hPalette)))
+      {
+        PENOBJ_UnlockPen(dc->w.hPen);
+        DC_UnlockDc(hDC);
+        return CLR_INVALID;
+      }
+      Mode = PalGDI->Mode;
+      PALETTE_UnlockPalette(dc->w.hPalette);
+      if(!(XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL)))
+      {
+        PENOBJ_UnlockPen(dc->w.hPen);
+        DC_UnlockDc(hDC);
+        return CLR_INVALID;
+      }
+      brush->BrushObject.iSolidColor = XLATEOBJ_iXlate(XlateObj, (ULONG)Color);
+      EngDeleteXlate(XlateObj);
+      BRUSHOBJ_UnlockBrush(dc->w.hBrush);
+      break;
+    }
+    default:
+    {
+      DC_UnlockDc(hDC);
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return CLR_INVALID;
+    }
+  }
+  
+  /* translate the old color into RGB */
+  
+  if(dc->w.hPalette)
+    Pal = dc->w.hPalette;
+  else
+    Pal = NtGdiGetStockObject(DEFAULT_PALETTE);
+  
+  Result = CLR_INVALID;
+  
+  if((PalGDI = PALETTE_LockPalette(dc->w.hPalette)))
+  {
+    Mode = PalGDI->Mode;
+    PALETTE_UnlockPalette(dc->w.hPalette);
+    XlateObj = (XLATEOBJ*)IntEngCreateXlate(PAL_RGB, Mode, NULL, Pal);
+    if(XlateObj)
+    {
+      Result = XLATEOBJ_iXlate(XlateObj, iColor);
+      EngDeleteXlate(XlateObj);
+    }
+  }
+  
+  DC_UnlockDc(hDC);
+  return Result;
 }
 
 /* EOF */

@@ -11,6 +11,18 @@
 #define NDEBUG
 #include <debug.h>
 
+#define NtUserGetDCBrushColor(hbr) \
+  (COLORREF)NtUserCallTwoParam((DWORD)(hbr), OBJ_BRUSH, TWOPARAM_ROUTINE_GETDCCOLOR)
+
+#define NtUserGetDCPenColor(hbr) \
+  (COLORREF)NtUserCallTwoParam((DWORD)(hbr), OBJ_PEN, TWOPARAM_ROUTINE_GETDCCOLOR)
+
+#define NtUserSetDCBrushColor(hbr, crColor) \
+  (COLORREF)NtUserCallTwoParam((DWORD)(hbr), (DWORD)crColor, TWOPARAM_ROUTINE_SETDCBRUSHCOLOR)
+
+#define NtUserSetDCPenColor(hbr, crColor) \
+  (COLORREF)NtUserCallTwoParam((DWORD)(hbr), (DWORD)crColor, TWOPARAM_ROUTINE_SETDCPENCOLOR)
+
 /*
  * @implemented
  */
@@ -1059,3 +1071,52 @@ PtVisible(
   return NtGdiPtVisible(hdc, X, Y);
 }
 
+/*
+ * @implemented
+ */
+COLORREF 
+STDCALL
+GetDCBrushColor(
+	HDC hdc
+)
+{
+  return NtUserGetDCBrushColor(hdc);
+}
+
+/*
+ * @implemented
+ */
+COLORREF 
+STDCALL
+GetDCPenColor(
+	HDC hdc
+)
+{
+  return NtUserGetDCPenColor(hdc);
+}
+
+/*
+ * @implemented
+ */
+COLORREF 
+STDCALL
+SetDCBrushColor(
+	HDC hdc,
+	COLORREF crColor
+)
+{
+  return NtUserSetDCBrushColor(hdc, crColor);
+}
+
+/*
+ * @implemented
+ */
+COLORREF 
+STDCALL
+SetDCPenColor(
+	HDC hdc,
+	COLORREF crColor
+)
+{
+  return NtUserSetDCPenColor(hdc, crColor);
+}

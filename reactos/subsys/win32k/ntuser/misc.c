@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.62 2004/04/15 23:36:03 weiden Exp $
+/* $Id: misc.c,v 1.63 2004/04/25 20:05:30 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -18,6 +18,8 @@
 #include <include/menu.h>
 #include <include/painting.h>
 #include <include/dce.h>
+#include <include/inteng.h>
+#include <include/intgdi.h>
 #include <include/mouse.h>
 #include <include/winsta.h>
 #include <include/caret.h>
@@ -208,6 +210,18 @@ NtUserCallTwoParam(
   
   switch(Routine)
   {
+    case TWOPARAM_ROUTINE_SETDCPENCOLOR:
+    {
+      return (DWORD)IntSetDCColor((HDC)Param1, OBJ_PEN, (COLORREF)Param2);
+    }
+    case TWOPARAM_ROUTINE_SETDCBRUSHCOLOR:
+    {
+      return (DWORD)IntSetDCColor((HDC)Param1, OBJ_BRUSH, (COLORREF)Param2);
+    }
+    case TWOPARAM_ROUTINE_GETDCCOLOR:
+    {
+      return (DWORD)IntGetDCColor((HDC)Param1, (ULONG)Param2);
+    }
     case TWOPARAM_ROUTINE_GETWINDOWRGNBOX:
     {
       DWORD Ret;

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.59 2004/04/25 16:40:39 weiden Exp $
+/* $Id: stubs.c,v 1.60 2004/04/25 20:05:30 weiden Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -2288,32 +2288,6 @@ GetCharWidthI(
 /*
  * @unimplemented
  */
-COLORREF 
-STDCALL
-GetDCBrushColor(
-	HDC hdc
-)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-COLORREF 
-STDCALL
-GetDCPenColor(
-	HDC hdc
-)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
 DWORD 
 STDCALL
 GetFontUnicodeRanges(
@@ -2541,34 +2515,6 @@ SetBitmapAttributes(HBITMAP hbm, DWORD dwFlags)
 HBRUSH 
 STDCALL
 SetBrushAttributes(HBRUSH hbm, DWORD dwFlags)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-COLORREF 
-STDCALL
-SetDCBrushColor(
-	HDC hdc,
-	COLORREF crColor
-)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-COLORREF 
-STDCALL
-SetDCPenColor(
-	HDC hdc,
-	COLORREF crColor
-)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
