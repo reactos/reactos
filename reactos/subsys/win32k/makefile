@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.31 2001/05/26 08:15:39 jfilby Exp $
+# $Id: makefile,v 1.32 2001/06/04 14:39:43 chorns Exp $
 #
 # WIN32K.SYS build spec
 #
@@ -19,6 +19,7 @@ ENG_OBJECTS= eng/debug.o eng/mem.o eng/brush.o eng/bitblt.o eng/clip.o eng/copyb
 MAIN_OBJECTS = main/dllmain.o
 MISC_OBJECTS = misc/driver.o misc/math.o
 LDR_OBJECTS = ldr/loader.o
+NTUSER_OBJECTS = ntuser/stubs.o
 OBJECTS_OBJECTS = objects/bitmaps.o objects/brush.o objects/cliprgn.o  \
                   objects/color.o objects/coord.o objects/dc.o  \
                   objects/fillshap.o objects/gdiobj.o objects/icm.o  \
@@ -35,9 +36,10 @@ FREETYPE_OBJECTS = freetype/grfont.o freetype/ctype.o \
 RESOURCE_OBJECT = $(TARGET).coff
 STUBS_OBJECTS = stubs/stubs.o
 
-OBJECTS = $(ENG_OBJECTS) $(MAIN_OBJECTS) $(MISC_OBJECTS) $(LDR_OBJECTS) $(OBJECTS_OBJECTS)  \
-          $(RESOURCE_OBJECT) $(STUBS_OBJECTS) $(MATH_OBJECTS) $(FLOAT_OBJECTS) $(FREETYPE_OBJECTS) \
-          $(DIB_OBJECTS)
+OBJECTS = $(ENG_OBJECTS) $(MAIN_OBJECTS) $(MISC_OBJECTS) $(LDR_OBJECTS) \
+          $(NTUSER_OBJECTS) $(OBJECTS_OBJECTS) $(RESOURCE_OBJECT) \
+          $(STUBS_OBJECTS) $(MATH_OBJECTS) $(FLOAT_OBJECTS) \
+          $(FREETYPE_OBJECTS) $(DIB_OBJECTS)
 
 all: $(TARGET).sys
 
