@@ -1513,10 +1513,20 @@ HRESULT WINAPI SHBindToParent(LPCITEMIDLIST pidl, REFIID riid, LPVOID *ppv, LPCI
 
 	if (_ILIsPidlSimple(pidl))
 	{
+	  IShellFolder* desktop;
+
 	  /* we are on desktop level */
-	  if (ppidlLast)
-	    *ppidlLast = ILClone(pidl);
-	  hr = SHGetDesktopFolder((IShellFolder**)ppv);
+	  hr = SHGetDesktopFolder(&desktop);
+
+	  if (SUCCEEDED(hr))
+	  {
+		hr = IShellFolder_QueryInterface(desktop, riid, ppv);
+
+		if (SUCCEEDED(hr) && ppidlLast)
+		  *ppidlLast = ILClone(pidl);
+
+		IShellFolder_Release(desktop);
+	  }
 	}
 	else
 	{
