@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.33 2004/06/29 23:45:31 navaraf Exp $
+/* $Id: timer.c,v 1.34 2004/07/30 09:16:06 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -85,10 +85,11 @@ IntInsertTimerAscendingOrder(PMSG_TIMER_ENTRY NewTimer)
 
 //must hold mutex while calling this
 PMSG_TIMER_ENTRY FASTCALL
-IntRemoveTimer(HWND hWnd, UINT_PTR IDEvent, HANDLE ThreadID, BOOL SysTimer)
+IntRemoveTimer(HWND hWnd, UINT_PTR IDEvent, BOOL SysTimer)
 {
   PMSG_TIMER_ENTRY MsgTimer;
   PLIST_ENTRY EnumEntry;
+  PUSER_MESSAGE_QUEUE MessageQueue = PsGetWin32Thread()->MessageQueue;
   
   //remove timer if already in the queue
   EnumEntry = TimerListHead.Flink;
@@ -99,7 +100,7 @@ IntRemoveTimer(HWND hWnd, UINT_PTR IDEvent, HANDLE ThreadID, BOOL SysTimer)
       
     if (MsgTimer->Msg.hwnd == hWnd && 
         MsgTimer->Msg.wParam == (WPARAM)IDEvent &&
-        MsgTimer->ThreadID == ThreadID &&
+        MsgTimer->MessageQueue == MessageQueue &&
         (MsgTimer->Msg.message == WM_SYSTIMER) == SysTimer)
     {
       RemoveEntryList(&MsgTimer->ListEntry);
@@ -115,10 +116,15 @@ IntRemoveTimer(HWND hWnd, UINT_PTR IDEvent, HANDLE ThreadID, BOOL SysTimer)
  * NOTE: It doesn't kill the timer. It just removes them from the list.
  */
 VOID FASTCALL
-RemoveTimersThread(HANDLE ThreadID)
+RemoveTimersThread(PUSER_MESSAGE_QUEUE MessageQueue)
 {
   PMSG_TIMER_ENTRY MsgTimer;
   PLIST_ENTRY EnumEntry;
+  
+  if(MessageQueue == NULL)
+  {
+    return;
+  }
   
   IntLockTimerList();
   
@@ -128,7 +134,7 @@ RemoveTimersThread(HANDLE ThreadID)
     MsgTimer = CONTAINING_RECORD(EnumEntry, MSG_TIMER_ENTRY, ListEntry);
     EnumEntry = EnumEntry->Flink;
     
-    if (MsgTimer->ThreadID == ThreadID)
+    if (MsgTimer->MessageQueue == MessageQueue)
     {
       if (MsgTimer->Msg.hwnd == NULL)
       {
@@ -136,6 +142,9 @@ RemoveTimersThread(HANDLE ThreadID)
       }
       
       RemoveEntryList(&MsgTimer->ListEntry);
+      
+      IntDereferenceMessageQueue(MsgTimer->MessageQueue);
+      
       ExFreePool(MsgTimer);
     }
   }
@@ -164,6 +173,9 @@ RemoveTimersWindow(HWND Wnd)
     if (MsgTimer->Msg.hwnd == Wnd)
     {
       RemoveEntryList(&MsgTimer->ListEntry);
+      
+      IntDereferenceMessageQueue(MsgTimer->MessageQueue);
+      
       ExFreePool(MsgTimer);
     }
   }
@@ -179,10 +191,8 @@ IntSetTimer(HWND hWnd, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc, B
   PMSG_TIMER_ENTRY NewTimer;
   LARGE_INTEGER CurrentTime;
   PWINDOW_OBJECT WindowObject;
-  HANDLE ThreadID;
   UINT_PTR Ret = 0;
  
-  ThreadID = PsGetCurrentThreadId();
   KeQuerySystemTime(&CurrentTime);
   IntLockTimerList();
   
@@ -219,7 +229,7 @@ IntSetTimer(HWND hWnd, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc, B
     IntReleaseWindowObject(WindowObject);
     
     /* remove timer if already in the queue */
-    MsgTimer = IntRemoveTimer(hWnd, nIDEvent, ThreadID, SystemTimer); 
+    MsgTimer = IntRemoveTimer(hWnd, nIDEvent, SystemTimer);
   }
   
   #if 1
@@ -266,7 +276,9 @@ IntSetTimer(HWND hWnd, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc, B
     NewTimer->Msg.lParam = (LPARAM)lpTimerFunc;
     NewTimer->Period = uElapse;
     NewTimer->Timeout.QuadPart = CurrentTime.QuadPart + (uElapse * 10000);
-    NewTimer->ThreadID = ThreadID;
+    NewTimer->MessageQueue = PsGetWin32Thread()->MessageQueue;
+    
+    IntReferenceMessageQueue(NewTimer->MessageQueue);
   }
   
   Ret = nIDEvent; // FIXME - return lpTimerProc if it's not a system timer
@@ -322,7 +334,7 @@ IntKillTimer(HWND hWnd, UINT_PTR uIDEvent, BOOL SystemTimer)
     IntReleaseWindowObject(WindowObject);
   }
   
-  MsgTimer = IntRemoveTimer(hWnd, uIDEvent, PsGetCurrentThreadId(), SystemTimer);
+  MsgTimer = IntRemoveTimer(hWnd, uIDEvent, SystemTimer);
   
   IntUnLockTimerList();
   
@@ -332,6 +344,8 @@ IntKillTimer(HWND hWnd, UINT_PTR uIDEvent, BOOL SystemTimer)
     /* FIXME: set the last error */
     return FALSE;
   }
+  
+  IntReferenceMessageQueue(MsgTimer->MessageQueue);
   
   /* FIXME: use lookaside? */
   ExFreePool(MsgTimer);
@@ -346,9 +360,6 @@ TimerThreadMain(PVOID StartContext)
   LARGE_INTEGER CurrentTime;
   PLIST_ENTRY EnumEntry;
   PMSG_TIMER_ENTRY MsgTimer;
-  PETHREAD Thread;
-  PETHREAD *ThreadsToDereference;
-  ULONG ThreadsToDereferenceCount, ThreadsToDereferencePos, i;
   
   for(;;)
   {
@@ -363,8 +374,6 @@ TimerThreadMain(PVOID StartContext)
       KEBUGCHECK(0);
     }
     
-    ThreadsToDereferenceCount = ThreadsToDereferencePos = 0;
-    
     IntLockTimerList();
     
     KeQuerySystemTime(&CurrentTime);
@@ -374,15 +383,9 @@ TimerThreadMain(PVOID StartContext)
          EnumEntry = EnumEntry->Flink)
     {
        MsgTimer = CONTAINING_RECORD(EnumEntry, MSG_TIMER_ENTRY, ListEntry);
-       if (CurrentTime.QuadPart >= MsgTimer->Timeout.QuadPart)
-          ++ThreadsToDereferenceCount;
-       else
+       if (CurrentTime.QuadPart < MsgTimer->Timeout.QuadPart)
           break;
     }
-
-
-    ThreadsToDereference = (PETHREAD *)ExAllocatePoolWithTag(
-       NonPagedPool, ThreadsToDereferenceCount * sizeof(PETHREAD), TAG_TIMERTD);
 
     EnumEntry = TimerListHead.Flink;
     while (EnumEntry != &TimerListHead)
@@ -399,16 +402,7 @@ TimerThreadMain(PVOID StartContext)
          * FIXME: 1) Find a faster way of getting the thread message queue? (lookup by id is slow)
          */
         
-        if (!NT_SUCCESS(PsLookupThreadByThreadId(MsgTimer->ThreadID, &Thread)))
-        {
-          ExFreePool(MsgTimer);
-          continue;
-        }
-        
-        MsqPostMessage(((PW32THREAD)Thread->Win32Thread)->MessageQueue, &MsgTimer->Msg, FALSE);
-        
-        ThreadsToDereference[ThreadsToDereferencePos] = Thread;
-        ++ThreadsToDereferencePos;
+        MsqPostMessage(MsgTimer->MessageQueue, &MsgTimer->Msg, FALSE);
         
         //set up next periodic timeout
         //FIXME: is this calculation really necesary (and correct)? -Gunnar
@@ -435,11 +429,6 @@ TimerThreadMain(PVOID StartContext)
     }
     
     IntUnLockTimerList();
-
-    for (i = 0; i < ThreadsToDereferencePos; i++)
-       ObDereferenceObject(ThreadsToDereference[i]);
-
-     ExFreePool(ThreadsToDereference);
   }
 }
 

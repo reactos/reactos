@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.107 2004/07/29 12:03:47 weiden Exp $ */
+/* $Id: text.c,v 1.108 2004/07/30 09:16:06 weiden Exp $ */
 #include <w32k.h>
 
 #include <ft2build.h>
@@ -2967,7 +2967,8 @@ TextIntRealizeFont(HFONT FontHandle)
 
   RtlFreeUnicodeString(&FaceName);
   TEXTOBJ_UnlockText(FontHandle);
-  ASSERT(! NT_SUCCESS(Status) && NULL != TextObj->GDIFontHandle);
+  
+  ASSERT((NT_SUCCESS(Status) ^ (NULL == TextObj->GDIFontHandle)) != 0);
 
   return Status;
 }

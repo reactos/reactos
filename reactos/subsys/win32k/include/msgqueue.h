@@ -17,17 +17,20 @@ typedef struct _USER_MESSAGE
 
 struct _USER_MESSAGE_QUEUE;
 
+#define USMF_WAKE_SENDER 0x1
+
 typedef struct _USER_SENT_MESSAGE
 {
   LIST_ENTRY ListEntry;
   MSG Msg;
-  PKEVENT CompletionEvent;
-  LRESULT* Result;
+  LRESULT Result;
+  ULONG Flags; /* the sender queue must be locked to access this field!!! */
   struct _USER_MESSAGE_QUEUE* SenderQueue;
   SENDASYNCPROC CompletionCallback;
   ULONG_PTR CompletionCallbackContext;
   /* entry in the dispatching list of the sender's message queue */
   LIST_ENTRY DispatchingListEntry;
+  KEVENT CompletionEvent;
 } USER_SENT_MESSAGE, *PUSER_SENT_MESSAGE;
 
 typedef struct _USER_SENT_MESSAGE_NOTIFY
