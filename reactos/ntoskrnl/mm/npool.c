@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.83 2004/03/15 00:03:31 dwelch Exp $
+/* $Id: npool.c,v 1.84 2004/03/15 22:22:53 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -35,7 +35,7 @@
  * end of the range so any accesses beyond the end of block are to invalid
  * memory locations. 
  */
-#define WHOLE_PAGE_ALLOCATIONS
+/*#define WHOLE_PAGE_ALLOCATIONS*/
 
 #ifdef ENABLE_VALIDATE_POOL
 #define VALIDATE_POOL validate_kernel_pool()
@@ -1782,15 +1782,7 @@ MiInitializeNonPagedPool(VOID)
            KEBUGCHECK(0);
          }
        MiNonPagedPoolAllocMap[i / 32] |= (1 << (i % 32));
-#if defined(__GNUC__)
-       Address += PAGE_SIZE;
-#else
-       {
-	 char* pTemp = Address;
-	 pTemp += PAGE_SIZE;
-	 Address = pTemp;
-       }
-#endif
+       Address = (PVOID)((ULONG_PTR)Address + PAGE_SIZE);
      }
    /* the first block contains the non paged pool bitmap */
    blk = (BLOCK_HDR*)MiNonPagedPoolStart;
