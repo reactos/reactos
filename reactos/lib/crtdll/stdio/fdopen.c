@@ -1,4 +1,7 @@
 #include <crtdll/stdio.h>
+#include <crtdll/internal/file.h>
+
+FILE *	__alloc_file(void);
 
 FILE *_fdopen(int handle, char *mode)
 {

@@ -10,5 +10,9 @@ void clearerr(FILE *stream);
 void
 clearerr(FILE *f)
 {
+  if (!f) {
+    __set_errno (EINVAL);
+    return;
+  }
   f->_flag &= ~(_IOERR|_IOEOF);
 }

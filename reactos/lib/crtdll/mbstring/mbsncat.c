@@ -1,0 +1,56 @@
+/*
+ * COPYRIGHT:   See COPYING in the top level directory
+ * PROJECT:     ReactOS system libraries
+ * FILE:        lib/crtdll/mbstring/mbsset.c 
+ * PURPOSE:     Concatenate two multi byte string to maximum of n characters or bytes
+ * PROGRAMER:   Boudewijn Dekker
+ * UPDATE HISTORY:
+ *              12/04/99: Created
+ */
+
+#include <crtdll/mbstring.h>
+
+
+unsigned char * _mbsncat(unsigned char *dst, const unsigned char *src, size_t n)
+{
+	char *d; 
+    	const char *s = src;	
+    	if (n != 0) {
+		d = dst + strlen(dst); // get the end of string 
+		d += mblen(*d); // move 1 or 2 up
+
+		do {
+			if ((*d++ = *s++) == 0)
+			{
+				while (--n != 0)
+					*d++ = 0;
+				break;
+      			}
+			if (!_ismbblead(*s1) )
+				n--;
+    		} while (n > 0);
+  	}
+  	return dst;
+}
+
+unsigned char * _mbsnbcat(unsigned char *dst, const unsigned char *src, size_t n)
+{
+	char *d; 
+    	const char *s = src;	
+    	if (n != 0) {
+		d = dst + strlen(dst); // get the end of string 
+		d += mblen(*d); // move 1 or 2 up
+
+		do {
+			if ((*d++ = *s++) == 0)
+			{
+				while (--n != 0)
+					*d++ = 0;
+				break;
+      			}
+			if ( !(n==1 && _ismbblead(*s1)) )
+				n--;
+    		} while (n > 0);
+  	}
+  	return dst;
+}	

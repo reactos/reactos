@@ -16,7 +16,7 @@ fprintf(register FILE *iop, const char *fmt, ...)
     iop->_flag &= ~_IONBF;
     iop->_ptr = iop->_base = localbuf;
     iop->_bufsiz = BUFSIZ;
-    len = _doprnt(fmt,a, iop);
+    len = vfprintf(iop,fmt,a);
     fflush(iop);
     iop->_flag |= _IONBF;
     iop->_base = NULL;
@@ -24,6 +24,6 @@ fprintf(register FILE *iop, const char *fmt, ...)
     iop->_cnt = 0;
   }
   else
-    len = _doprnt(fmt, a, iop);
+    len = vfprintf(iop, fmt, a);
   return ferror(iop) ? EOF : len;
 }

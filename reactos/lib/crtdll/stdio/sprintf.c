@@ -15,7 +15,7 @@ sprintf(char *str, const char *fmt, ...)
   _strbuf._flag = _IOWRT|_IOSTRG;
   _strbuf._ptr = str;
   _strbuf._cnt = INT_MAX;
-  len = _doprnt(fmt, a, &_strbuf);
+  len = vfprintf(&_strbuf, fmt, a);
   *_strbuf._ptr = 0;
   return len;
 }

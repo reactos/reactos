@@ -1,20 +1,21 @@
+/* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 #include <crtdll/wchar.h>
 
-wchar_t * wcsncat(wchar_t * dest,const wchar_t * src,size_t count)
+wchar_t *wcsncat(wchar_t *dst, const wchar_t *src, size_t n)
 {
-   int i,j;
-   if ( count != 0 ) {
-   
-   	for (j=0;dest[j]!=0;j++);
+  if (n != 0)
+  {
+    wchar_t *d = dst;
+    const wchar_t *s = src;
 
-   	for (i=0;i<count;i++)
-     	{
-		dest[j+i] = src[i];
-		if (src[i] == 0)
-	     		return(dest);
-	
-     	}
-   	dest[j+i]=0;
-   }
-   return(dest);
+    while (*d != 0)
+      d++;
+    do {
+      if ((*d = *s++) == 0)
+	break;
+      d++;
+    } while (--n != 0);
+    *d = 0;
+  }
+  return dst;
 }

@@ -1,18 +1,17 @@
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-//#include <crtdll/stubs.h>
+
 #include <crtdll/stdio.h>
+#include <crtdll/wchar.h>
 #include <crtdll/sys/types.h>
 #include <crtdll/stdlib.h>
-//#include <crtdll/unistd.h>
-//#include <crtdll/go32.h>
 #include <crtdll/internal/file.h>
 #include <crtdll/io.h>
 
 int
 _flsbuf(int c, FILE *f)
 {
-  char *base;
+ char *base;
   int n, rn;
   char c1;
   int size;
@@ -29,8 +28,7 @@ _flsbuf(int c, FILE *f)
   /* if the buffer is not yet allocated, allocate it */
   if ((base = f->_base) == NULL && (f->_flag & _IONBF) == 0)
   {
-//    size = _go32_info_block.size_of_transfer_buffer;
-	size = 512;
+    size = 512;
     if ((f->_base = base = malloc (size)) == NULL)
     {
       f->_flag |= _IONBF;
@@ -98,3 +96,9 @@ _flsbuf(int c, FILE *f)
   }
   return c;
 }
+
+wint_t  _flswbuf(wchar_t c,FILE *fp)
+{
+	return (wint_t )_flsbuf((int)c,fp);
+}
+

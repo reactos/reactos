@@ -6,7 +6,6 @@
 #include <crtdll/io.h>
 #include <crtdll/internal/file.h>
 
-#define _fillsize _bufsiz
 
 int setvbuf(FILE *f, char *buf, int type, size_t len)
 {

@@ -1,18 +1,13 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-//#include <crtdll/stubs.h>
+
 #include <crtdll/stdio.h>
 #include <crtdll/io.h>
 #include <crtdll/sys/types.h>
 #include <crtdll/sys/stat.h>
 #include <crtdll/stdlib.h>
-//#include <crtdll/unistd.h>
+#include <crtdll/errno.h>
 #include <crtdll/internal/file.h>
 
-#if 0
-#ifndef __dj_include_stdio_h_
-#define _name_to_remove _tmpfname
-#endif
-#endif
 
 int
 fclose(FILE *f)
@@ -20,8 +15,12 @@ fclose(FILE *f)
   int r;
 
   r = EOF;
-  if (!f)
+  if (!f) {
+    __set_errno (EINVAL);
     return r;
+  }
+// flush only if stream was opened for writing
+
   if (f->_flag & (_IOREAD|_IOWRT|_IORW)
       && !(f->_flag&_IOSTRG))
   {

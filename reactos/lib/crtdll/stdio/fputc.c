@@ -9,8 +9,9 @@ fputc(int c, FILE *fp)
   return putc(c, fp);
 }
 
-int
+wint_t 
 fputwc(wchar_t c, FILE *fp)
-{
-  return putc(c, fp);
+{	
+	return fputwc(c,fp);
 }
+

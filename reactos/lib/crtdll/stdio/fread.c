@@ -6,7 +6,6 @@
 #include <crtdll/string.h>
 #include <crtdll/internal/file.h>
 
-#define _fillsize _bufsiz
 
 size_t
 fread(void *vptr, size_t size, size_t count, FILE *iop)

@@ -5,15 +5,15 @@
 wchar_t * wcscat(wchar_t * dest,const wchar_t * src)
 {
   
-  int i,j;
-  j=0;
-  for (i=0; dest[i]!=0; i++);
-  while (src[j] != 0)
+  wchar_t *d = dest;
+  for (; *dest !=0; dest++);
+  while (*src != 0)
   {
-	dest[i+j] = src[j];
-	j++;
+	*dest = *src;
+	dest++;
+	src++;
   }
-  dest[i+j] = 0;
-  return dest;
+  *dest = 0;
+  return d;
 }
 

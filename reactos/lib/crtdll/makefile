@@ -46,7 +46,7 @@ WCHAR_OBJECTS = wchar/wcscat.o wchar/wcschr.o wchar/wcscmp.o \
 		 wchar/wcslwr.o wchar/wcsncat.o wchar/wcsncmp.o \
 		 wchar/wcsncpy.o  
 
-STDIO_OBJECTS = stdio/getenv.o stdio/doprnt.o stdio/doscan.o stdio/filbuf.o  \
+STDIO_OBJECTS = stdio/getenv.o stdio/filbuf.o  \
 		stdio/fclose.o stdio/feof.o stdio/ferror.o stdio/fileno.o\
 		stdio/fflush.o stdio/fgetc.o stdio/fgetpos.o stdio/fgets.o stdio/flsbuf.o \
 		stdio/fopen.o stdio/fprintf.o stdio/fputc.o stdio/fputs.o \
@@ -113,9 +113,9 @@ OLD_OBJECTS = $(MISC_OBJECTS) stdlib/malloc.o stdlib/abort.o \
           stdlib/_exit.o stdlib/atexit.o stdio/fileno.o io/fmode.o \
 	  float/fpreset.o stdio/stdhnd.o io/setmode.o io/open.o \
 	  stdio/vsprintf.o $(CTYPE_OBJECTS) stdlib/atoi.o stdlib/strtol.o \
-	  stdio/flsbuf.o stdio/putc.o stdio/doprnt.o $(STRING_OBJECTS)\
+	  stdio/flsbuf.o stdio/putc.o stdio/vfprintf.o $(STRING_OBJECTS)\
 	  io/write.o io/isatty.o sys_stat/fstat.o misc/dllmain.o \
-	  stdlib/errno.o 
+	  stdlib/errno.o stdio/printf.o stdio/vprintf.o
 
 OBJECTS = $(MISC_OBJECTS) $(STDLIB_OBJECTS) $(IO_OBJECTS) \
           $(FLOAT_OBJECTS) $(ASSERT_OBJECTS) $(PROCESS_OBJECTS) \

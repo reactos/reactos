@@ -1,6 +1,23 @@
 #include <crtdll/string.h>
 
-size_t wcsxfrm( wchar_t *str1, const wchar_t *str2, size_t len )
+size_t _wcsxfrm(char *dst,const char *src, size_t n)
 {
-	return 0;
+  size_t r = 0;
+  int c;
+
+  if (n != 0) {
+    while ((c = *src++) != 0)
+    {
+      r++;
+      if (--n == 0)
+      {
+	while (*src++ != 0)
+	  r++;
+	break;
+      }
+      *dst++ = c;
+    }
+    *dst = 0;
+  }
+  return r;
 }

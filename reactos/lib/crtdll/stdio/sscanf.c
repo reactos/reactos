@@ -1,47 +1,75 @@
-/* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <crtdll/stdio.h>
+/* Copyright (C) 1991, 1995, 1996 Free Software Foundation, Inc.
+   This file is part of the GNU C Library.
+
+   The GNU C Library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Library General Public License as
+   published by the Free Software Foundation; either version 2 of the
+   License, or (at your option) any later version.
+
+   The GNU C Library is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Library General Public License for more details.
+
+   You should have received a copy of the GNU Library General Public
+   License along with the GNU C Library; see the file COPYING.LIB.  If not,
+   write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+   Boston, MA 02111-1307, USA.  */
+
 #include <stdarg.h>
-#include <crtdll/internal/file.h>
-//#include <crtdll/unconst.h>
+#include <crtdll/stdio.h>
+#include <crtdll/wchar.h>
+#include <crtdll/alloc.h>
 
+int __vsscanf (const char *s,const char *format,va_list arg);
+
+/* Read formatted input from S, according to the format string FORMAT.  */
+/* VARARGS2 */
 int
-sscanf(const char *str, const char *fmt, ...)
+sscanf (const char *s,const char *format, ...)
 {
-  int r;
-  va_list a=0;
-  FILE _strbuf;
+  va_list arg;
+  int done;
 
-  va_start(a, fmt);
+  va_start (arg, format);
+  done = __vsscanf (s, format, arg);
+  va_end (arg);
 
-  _strbuf._flag = _IOREAD|_IOSTRG;
-  _strbuf._ptr = (char *)str;
-  _strbuf._base = (char *)str;
-  _strbuf._cnt = 0;
-  while (*str++)
-    _strbuf._cnt++;
-  _strbuf._bufsiz = _strbuf._cnt;
-  r = _doscan(&_strbuf, fmt, a);
-  va_end(a);
-  return r;
+  return done;
 }
+
+#ifdef USE_IN_LIBIO
+# undef _IO_sscanf
+/* This is for libg++.  */
+strong_alias (sscanf, _IO_sscanf)
+#endif
+
+
 
 int
 swscanf(const wchar_t *str, const wchar_t *fmt, ...)
 {
-  int r;
-  va_list a=0;
-  FILE _strbuf;
+  va_list arg;
+  int done;
+  char *f , *s;
+  int i,len = wcslen(fmt);
 
-  va_start(a, fmt);
+  f = alloca(len+1);
+  for(i=0;i<len;i++)
+	f[i] = fmt[i];
+  f[i] = 0;  
 
-  _strbuf._flag = _IOREAD|_IOSTRG;
-  _strbuf._ptr = (char *)str;
-  _strbuf._base = (char *)str;
-  _strbuf._cnt = 0;
-  while (*str++)
-    _strbuf._cnt++;
-  _strbuf._bufsiz = _strbuf._cnt;
-  r = _dowscan(&_strbuf, fmt, a);
-  va_end(a);
-  return r;
+  len = wcslen(str);
+  s = alloca(len+1);
+  for(i=0;i<len;i++)
+	s[i] = str[i];
+  s[i] = 0;  
+
+  va_start (arg, fmt);
+  done = __vsscanf (s, f, arg);
+  va_end (arg);
+
+  return done;
+
+
 }

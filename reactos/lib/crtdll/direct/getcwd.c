@@ -4,12 +4,6 @@
 
 
 
-#undef getcwd
-char *getcwd( char *buffer, int maxlen )
-{
-	return _getcwd(buffer,maxlen);
-}
-
 char *_getcwd( char *buffer, int maxlen )
 {
 	char *cwd;

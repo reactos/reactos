@@ -33,8 +33,28 @@ ungetc(int c, FILE *f)
 }
 
 
-int
+wint_t
 ungetwc(wchar_t c, FILE *f)
 {
-	return ungetc(c,f);
+  if ((char)c == EOF
+      || (f->_flag & (_IOREAD|_IORW)) == 0
+      || f->_ptr == NULL
+      || f->_base == NULL)
+    return EOF;
+
+  if (f->_ptr == f->_base)
+  {
+    if (f->_cnt == 0)
+      f->_ptr+=sizeof(wchar_t);
+    else
+      return EOF;
+  }
+
+  f->_cnt+=sizeof(wchar_t);
+  f->_ptr-=sizeof(wchar_t);
+
+  f->_flag |= _IOUNGETC;
+  *((wchar_t *)(f->_ptr)) = c;
+
+  return c;
 }

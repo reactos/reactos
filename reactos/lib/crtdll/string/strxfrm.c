@@ -1,25 +1,16 @@
-/* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
+#include <windows.h>
 #include <crtdll/string.h>
 
-size_t
-strxfrm(char *dst,const char *src, size_t n)
+size_t strxfrm( char *dest, const char *src, size_t n )
 {
-  size_t r = 0;
-  int c;
+	
+	int ret = LCMapStringA(LOCALE_USER_DEFAULT,LCMAP_LOWERCASE,	
+    	src, strlen(src),	
+    	dest, strlen(dest) );
 
-  if (n != 0) {
-    while ((c = *src++) != 0)
-    {
-      r++;
-      if (--n == 0)
-      {
-	while (*src++ != 0)
-	  r++;
-	break;
-      }
-      *dst++ = c;
-    }
-    *dst = 0;
-  }
-  return r;
+
+	if ( ret == 0 )
+		return -1;
+	return ret;
+
 }

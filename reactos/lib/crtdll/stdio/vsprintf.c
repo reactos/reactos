@@ -4,6 +4,7 @@
 #include <limits.h>
 #include <crtdll/internal/file.h>
 
+int
 vsprintf(char *str, const char *fmt, va_list ap)
 {
   FILE f;
@@ -12,7 +13,7 @@ vsprintf(char *str, const char *fmt, va_list ap)
   f._flag = _IOWRT|_IOSTRG;
   f._ptr = str;
   f._cnt = INT_MAX;
-  len = _doprnt(fmt, ap, &f);
+  len = vfprintf(&f,fmt, ap);
   *f._ptr = 0;
   return len;
 }

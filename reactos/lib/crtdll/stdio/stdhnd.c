@@ -11,32 +11,34 @@ FILE _crtdll_iob[5] =
 {
  NULL, 0, NULL,
   _IOREAD | _IOLBF ,
-  0, 0,0, NULL
+  0, 0,0, NULL, 0
 },
 	// stdout
 {
  NULL, 0, NULL,
    _IOWRT | _IOLBF |_IOSTRG,
-  1,0,0, NULL
+  1,0,0, NULL, 0
 },
 	// stderr
 {
  NULL, 0, NULL,
   _IOWRT | _IONBF,
-  2,0,0, NULL
+  2,0,0, NULL, 0
 },
 	// stdaux
 {
  NULL, 0, NULL,
   _IORW | _IONBF,
-  3,0,0, NULL
+  3,0,0, NULL, 0
 },
 	// stdprn
 {
  NULL, 0, NULL,
   _IOWRT | _IONBF,
-  4, 0,0,NULL
+  4, 0,0,NULL, 0
 }
 };
 
 FILE (*_iob)[] = &_crtdll_iob;
+
+FILE (*__imp__iob)[] = &_crtdll_iob;

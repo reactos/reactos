@@ -19,8 +19,8 @@ _scan_ungetch(int c, FILE *fp)
 int
 _cscanf(const char *fmt, ...)
 {
-  return(_doscan_low(NULL, _scan_getche, _scan_ungetch, 
-		     fmt, (void **) unconst( ((&fmt)+1), char ** )));
+//  return(_doscan_low(NULL, _scan_getche, _scan_ungetch, 
+//		     fmt, (void **) unconst( ((&fmt)+1), char ** )));
 }
 
 

@@ -1,3 +1,13 @@
+/*
+ * COPYRIGHT:   See COPYING in the top level directory
+ * PROJECT:     ReactOS system libraries
+ * FILE:        lib/crtdll/process/dll.c
+ * PURPOSE:     Dll support routines
+ * PROGRAMER:   Boudewijn Dekker
+ * UPDATE HISTORY:
+ *              04/03/99: Created
+ */
+
 #include <windows.h>
 #include <crtdll/process.h>
 

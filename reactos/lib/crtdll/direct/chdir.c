@@ -1,15 +1,8 @@
-#include <crtdll/direct.h>
 #include <windows.h>
+#include <crtdll/direct.h>
 #include <crtdll/ctype.h>
 
-char _SetCurrentDirectory(char *dir);
-int _GetCurrentDirectory(int count,char *buffer);
 
-#undef chdir
-int chdir( const char *_path )
-{
-	return _chdir(_path);
-}
 
 int _chdir( const char *_path )
 {

@@ -1,6 +1,6 @@
 #include <crtdll/wchar.h>
 
-wchar_t * _wcsncpy(wchar_t * dest,const wchar_t *src,size_t count)
+wchar_t * wcsncpy(wchar_t * dest,const wchar_t *src,size_t count)
 {
    int i;
    

@@ -18,8 +18,8 @@ fgetc(FILE *f)
   return getc(f);
 }
 
-int
+wint_t
 fgetwc(FILE *f)
 {
-  return getc(f);
+  return getwc(f);
 }

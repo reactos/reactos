@@ -7,7 +7,6 @@
 #include <crtdll/fcntl.h>
 #include <crtdll/io.h>
 
-#define _fillsize _bufsiz
 
 int
 fseek(FILE *f, long offset, int ptrname)

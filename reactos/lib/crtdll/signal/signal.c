@@ -5,7 +5,7 @@
 #include <crtdll/signal.h>
 #include <crtdll/stdlib.h>
 
-extern unsigned end __asm__ ("end");
+//extern unsigned end __asm__ ("end");
 
 void __djgpp_traceback_exit(int);
 
@@ -28,6 +28,7 @@ _p_sig_fn_t	signal(int sig, _p_sig_fn_t func)
 int
 raise(int sig)
 {
+#if 0
   _p_sig_fn_t temp;
 
   if(sig <= 0)
@@ -47,6 +48,8 @@ raise(int sig)
   }
   else
     temp(sig);
+
+#endif
   return 0;
 }
 
