@@ -16,10 +16,10 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: clipboard.c,v 1.10 2003/12/24 11:24:29 navaraf Exp $
+/* $Id: clipboard.c,v 1.11 2003/12/28 08:59:24 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/windows/input.c
+ * FILE:            lib/user32/windows/clipboard.c
  * PURPOSE:         Input
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:
@@ -30,8 +30,10 @@
 
 #include <windows.h>
 #include <user32.h>
-#include <debug.h>
 #include <strpool.h>
+
+#define NDEBUG
+#include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
 
@@ -110,10 +112,10 @@ GetClipboardFormatNameA(UINT format, LPSTR lpszFormatName, int cchMaxCount)
    FormatName.MaximumLength = cchMaxCount * sizeof(WCHAR);
    FormatName.Buffer = lpBuffer;
    Length = NtUserGetClipboardFormatName(format, &FormatName, cchMaxCount);
-   DbgPrint("GetClipboardFormatNameA(%x): %S\n", format, lpBuffer);
+   DPRINT("GetClipboardFormatNameA(%x): %S\n", format, lpBuffer);
    HEAP_strcpyWtoA(lpszFormatName, lpBuffer, Length);
    HEAP_free(lpBuffer);
-   DbgPrint("GetClipboardFormatNameA(%x): returning %s\n", format, lpszFormatName);
+   DPRINT("GetClipboardFormatNameA(%x): returning %s\n", format, lpszFormatName);
    
    return Length;
 }
@@ -131,7 +133,7 @@ GetClipboardFormatNameW(UINT format, LPWSTR lpszFormatName, INT cchMaxCount)
    FormatName.MaximumLength = cchMaxCount * sizeof(WCHAR);
    FormatName.Buffer = (PWSTR)lpszFormatName;
    Ret = NtUserGetClipboardFormatName(format, &FormatName, cchMaxCount);
-   DbgPrint("GetClipboardFormatNameW(%x): returning %S\n", format, lpszFormatName);
+   DPRINT("GetClipboardFormatNameW(%x): returning %S\n", format, lpszFormatName);
    return Ret;
 }
 
@@ -196,7 +198,7 @@ UINT STDCALL
 RegisterClipboardFormatA(LPCSTR lpszFormat)
 {
    ULONG Ret = RegisterWindowMessageA(lpszFormat);
-   DbgPrint("RegisterClipboardFormatA(%s) - %x\n", lpszFormat, Ret);
+   DPRINT("RegisterClipboardFormatA(%s) - %x\n", lpszFormat, Ret);
    return Ret;
 }
 
@@ -207,7 +209,7 @@ UINT STDCALL
 RegisterClipboardFormatW(LPCWSTR lpszFormat)
 {
    ULONG Ret = RegisterWindowMessageW(lpszFormat);
-   DbgPrint("RegisterClipboardFormatW(%S) - %x\n", lpszFormat, Ret);
+   DPRINT("RegisterClipboardFormatW(%S) - %x\n", lpszFormat, Ret);
    return Ret;
 }
 
