@@ -1,4 +1,4 @@
-/* $Id: largeint.c,v 1.10 2002/12/08 15:57:39 robd Exp $
+/* $Id: largeint.c,v 1.11 2003/06/01 18:14:24 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -119,14 +119,77 @@ RtlExtendedLargeIntegerDivide (
 	return RC;
 }
 
-LARGE_INTEGER
-STDCALL
-RtlExtendedMagicDivide(LARGE_INTEGER	Dividend,
-	LARGE_INTEGER	MagicDivisor,
-	CCHAR		ShiftCount)
+
+/******************************************************************************
+ * RtlExtendedMagicDivide
+ *
+ * Allows replacing a division by a longlong constant with a multiplication by
+ * the inverse constant.
+ *
+ * RETURNS
+ *  (Dividend * MagicDivisor) >> (64 + ShiftCount)
+ *
+ * NOTES
+ *  If the divisor of a division is constant, the constants MagicDivisor and
+ *  shift must be chosen such that
+ *  MagicDivisor = 2^(64 + ShiftCount) / Divisor.
+ *
+ *  Then we have RtlExtendedMagicDivide(Dividend,MagicDivisor,ShiftCount) ==
+ *  Dividend * MagicDivisor / 2^(64 + ShiftCount) == Dividend / Divisor.
+ *
+ *  The Parameter MagicDivisor although defined as LONGLONG is used as
+ *  ULONGLONG.
+ */
+
+#define LOWER_32(A) ((A) & 0xffffffff)
+#define UPPER_32(A) ((A) >> 32)
+
+LARGE_INTEGER STDCALL
+RtlExtendedMagicDivide (LARGE_INTEGER Dividend,
+			LARGE_INTEGER MagicDivisor,
+			CCHAR ShiftCount)
 {
-	UNIMPLEMENTED;
+  ULONGLONG dividend_high;
+  ULONGLONG dividend_low;
+  ULONGLONG inverse_divisor_high;
+  ULONGLONG inverse_divisor_low;
+  ULONGLONG ah_bl;
+  ULONGLONG al_bh;
+  LARGE_INTEGER result;
+  BOOLEAN positive;
+
+  if (Dividend.QuadPart < 0)
+    {
+      dividend_high = UPPER_32((ULONGLONG) -Dividend.QuadPart);
+      dividend_low =  LOWER_32((ULONGLONG) -Dividend.QuadPart);
+      positive = FALSE;
+    }
+  else
+    {
+      dividend_high = UPPER_32((ULONGLONG) Dividend.QuadPart);
+      dividend_low =  LOWER_32((ULONGLONG) Dividend.QuadPart);
+      positive = TRUE;
+    }
+  inverse_divisor_high = UPPER_32((ULONGLONG) MagicDivisor.QuadPart);
+  inverse_divisor_low =  LOWER_32((ULONGLONG) MagicDivisor.QuadPart);
+
+  ah_bl = dividend_high * inverse_divisor_low;
+  al_bh = dividend_low * inverse_divisor_high;
+
+  result.QuadPart =
+    (LONGLONG) ((dividend_high * inverse_divisor_high +
+		 UPPER_32(ah_bl) +
+		 UPPER_32(al_bh) +
+		 UPPER_32(LOWER_32(ah_bl) + LOWER_32(al_bh) +
+			  UPPER_32(dividend_low * inverse_divisor_low))) >> ShiftCount);
+  if (!positive)
+    {
+      result.QuadPart = -result.QuadPart;
+    }
+
+  return result;
 }
+
 
 LARGE_INTEGER
 STDCALL

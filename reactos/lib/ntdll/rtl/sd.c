@@ -1,4 +1,4 @@
-/* $Id: sd.c,v 1.9 2002/09/08 10:23:06 chorns Exp $
+/* $Id: sd.c,v 1.10 2003/06/01 18:14:24 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -641,6 +641,7 @@ RtlSetSaclSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
    return(STATUS_SUCCESS);
 }
 
+
 NTSTATUS STDCALL
 RtlSelfRelativeToAbsoluteSD(PSECURITY_DESCRIPTOR RelSD,
 			    PSECURITY_DESCRIPTOR AbsSD,
@@ -654,7 +655,54 @@ RtlSelfRelativeToAbsoluteSD(PSECURITY_DESCRIPTOR RelSD,
 			    PSID Group,
 			    PDWORD GroupSize)
 {
-   UNIMPLEMENTED;
+  ULONG TotalSize;
+  ULONG OwnerLength;
+  ULONG GroupLength;
+  ULONG DaclLength;
+  ULONG SaclLength;
+  PSID pOwner;
+  PSID pGroup;
+  PACL pDacl;
+  PACL pSacl;
+
+  if (!(RelSD->Control & SE_SELF_RELATIVE))
+    return STATUS_BAD_DESCRIPTOR_FORMAT;
+
+  RtlpQuerySecurityDescriptor (RelSD,
+			       &pOwner,
+			       &OwnerLength,
+			       &pGroup,
+			       &GroupLength,
+			       &pDacl,
+			       &DaclLength,
+			       &pSacl,
+			       &SaclLength);
+
+  if (OwnerLength > *OwnerSize ||
+      GroupLength > *GroupSize ||
+      DaclLength > *DaclSize ||
+      SaclLength > *SaclSize)
+    return STATUS_BUFFER_TOO_SMALL;
+
+  memmove (Owner, pOwner, OwnerLength);
+  memmove (Group, pGroup, GroupLength);
+  memmove (Dacl, pDacl, DaclLength);
+  memmove (Sacl, pSacl, SaclLength);
+
+  memmove (AbsSD, RelSD, sizeof (SECURITY_DESCRIPTOR));
+
+  AbsSD->Control &= ~SE_SELF_RELATIVE;
+  AbsSD->Owner = Owner;
+  AbsSD->Group = Group;
+  AbsSD->Dacl = Dacl;
+  AbsSD->Sacl = Sacl;
+
+  *OwnerSize = OwnerLength;
+  *GroupSize = GroupLength;
+  *DaclSize = DaclLength;
+  *SaclSize = SaclLength;
+
+  return STATUS_SUCCESS;
 }
 
 /* EOF */
