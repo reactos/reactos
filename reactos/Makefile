@@ -30,11 +30,12 @@ BUS = acpi isapnp pci
 # vfatlib
 LIB_FSLIB = vfatlib
 
-# User mode libraries
+# User and kernel mode libraries
 # advapi32 crtdll fmifs gdi32 kernel32 libpcap packet msafd msvcrt ntdll ole32
 # oleaut32 epsapi psapi rpcrt4 secur32 shell32 user32 version ws2help ws2_32 wsock32 wshirda
 DLLS = rosrtl advapi32 crtdll fmifs freetype gdi32 kernel32 packet msafd msvcrt ntdll \
-       epsapi psapi secur32 user32 version winedbgc ws2help ws2_32 wsock32 wshirda zlib #winmm
+       epsapi psapi secur32 user32 version winedbgc winspool ws2help ws2_32 wsock32 \
+       wshirda zlib #winmm
 
 SUBSYS = smss win32k csrss ntvdm
 

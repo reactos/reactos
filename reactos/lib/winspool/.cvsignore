@@ -1,0 +1,9 @@
+winspool.a
+winspool.drv
+winspool.nostrip.drv
+winspool.coff
+winspool.sym
+base.tmp
+junk.tmp
+temp.exp
+.*.d
