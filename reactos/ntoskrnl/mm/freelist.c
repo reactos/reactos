@@ -556,7 +556,7 @@ MmAllocPage(SWAPENTRY SavedSwapEntry)
    KeAcquireSpinLock(&PageListLock, &oldIrql);
    if (IsListEmpty(&FreePageListHead))
      {
-	DPRINT("MmAllocPage(): Out of memory\n");
+	DPRINT1("MmAllocPage(): Out of memory\n");
 	KeReleaseSpinLock(&PageListLock, oldIrql);
 	return(NULL);
      }

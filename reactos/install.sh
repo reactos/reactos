@@ -19,6 +19,7 @@ cp lib/crtdll/crtdll.dll $1/reactos/system32
 cp lib/fmifs/fmifs.dll $1/reactos/system32
 cp lib/gdi32/gdi32.dll $1/reactos/system32
 cp lib/advapi32/advapi32.dll $1/reactos/system32
+cp lib/user32/user32.dll $1/reactos/system32/
 cp apps/hello/hello.exe $1/reactos/bin
 cp apps/args/args.exe $1/reactos/bin
 cp apps/bench/bench-thread.exe $1/reactos/bin

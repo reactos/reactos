@@ -1,4 +1,22 @@
-/* $Id: handle.c,v 1.29 2001/03/07 16:48:45 dwelch Exp $
+/*
+ *  ReactOS kernel
+ *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: handle.c,v 1.30 2001/03/20 16:09:44 dwelch Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -613,5 +631,20 @@ NTSTATUS STDCALL NtClose(HANDLE Handle)
    return(STATUS_SUCCESS);
 }
 
+NTSTATUS STDCALL 
+ObInsertObject(PVOID Object,
+	       PACCESS_STATE PassedAccessState,
+	       ACCESS_MASK DesiredAccess,
+	       ULONG AdditionalReferences,
+	       PVOID* ReferencedObject,
+	       PHANDLE Handle)
+{
+  return(ObCreateHandle(PsGetCurrentProcess(),
+			Object,
+			DesiredAccess,
+			FALSE,
+			Handle));
+}
+	       
 
 /* EOF */

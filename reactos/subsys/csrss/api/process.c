@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.11 2001/01/21 00:11:54 phreak Exp $
+/* $Id: process.c,v 1.12 2001/03/20 16:09:44 dwelch Exp $
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -68,11 +68,11 @@ PCSRSS_PROCESS_DATA CsrGetProcessData(ULONG ProcessId)
 	  }
      }
 //   DbgPrint("CSR: CsrGetProcessData() failed\n");
-   RtlLeaveCriticalSection( &ProcessDataLock );
+   RtlLeaveCriticalSection(&ProcessDataLock);
    return(NULL);
 }
 
-NTSTATUS CsrFreeProcessData( ULONG Pid )
+NTSTATUS CsrFreeProcessData(ULONG Pid)
 {
    int i;
    RtlEnterCriticalSection( &ProcessDataLock );

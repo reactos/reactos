@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.13 2001/03/18 19:35:12 dwelch Exp $
+/* $Id: catch.c,v 1.14 2001/03/20 16:09:44 dwelch Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -46,7 +46,7 @@ KiDispatchException(PEXCEPTION_RECORD Er,
 
   /* PCR->KeExceptionDispatchCount++; */
 
-  if (Context != NULL)
+  if (Context == NULL)
     {
       TContext.ContextFlags = CONTEXT_FULL;
       if (PreviousMode == UserMode)

@@ -106,5 +106,12 @@ VOID ObCloseAllHandles(struct _EPROCESS* Process);
 VOID ObDeleteHandleTable(struct _EPROCESS* Process);
 PVOID ObDeleteHandle(struct _EPROCESS* Process, 
 		     HANDLE Handle);
+NTSTATUS STDCALL 
+ObInsertObject(PVOID Object,
+	       PACCESS_STATE PassedAccessState,
+	       ACCESS_MASK DesiredAccess,
+	       ULONG AdditionalReferences,
+	       PVOID* ReferencedObject,
+	       PHANDLE Handle);
 
 #endif /* __INCLUDE_INTERNAL_OBJMGR_H */
