@@ -684,7 +684,8 @@ INT_PTR CALLBACK Window::DialogProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM 
 			return TRUE;	// message has been processed
 
 		  case WM_NOTIFYFORMAT:
-			return NFR_CURRENT;
+			SetWindowLong(hwnd, DWLP_MSGRESULT, NFR_CURRENT);	// set return value NFR_CURRENT
+			return TRUE;	// message has been processed
 
 		  case WM_NCDESTROY:
 			delete pThis;
@@ -1365,7 +1366,8 @@ INT_PTR CALLBACK PropSheetPageDlg::DialogProc(HWND hwnd, UINT nmsg, WPARAM wpara
 			return TRUE;	// message has been processed
 
 		  case WM_NOTIFYFORMAT:
-			return NFR_CURRENT;
+			SetWindowLong(hwnd, DWLP_MSGRESULT, NFR_CURRENT);	// set return value NFR_CURRENT
+			return TRUE;	// message has been processed
 
 		  case WM_NCDESTROY:
 			delete pThis;
