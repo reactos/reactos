@@ -1715,6 +1715,63 @@ BOOL WINAPI PathFileExistsW(LPCWSTR lpszPath)
 }
 
 /*************************************************************************
+ * PathFileExistsAndAttributesA	[SHLWAPI.445]
+ *
+ * Determine if a file exists.
+ *
+ * PARAMS
+ *  lpszPath [I] Path to check
+ *  dwAttr   [O] attributes of file
+ *
+ * RETURNS
+ *  TRUE  If the file exists and is readable
+ *  FALSE Otherwise
+ */
+BOOL WINAPI PathFileExistsAndAttributesA(LPCSTR lpszPath, DWORD *dwAttr)
+{
+  UINT iPrevErrMode;
+  DWORD dwVal = 0;
+
+  TRACE("(%s %p)\n", debugstr_a(lpszPath), dwAttr);
+
+  if (dwAttr)
+    *dwAttr = INVALID_FILE_ATTRIBUTES;
+
+  if (!lpszPath)
+    return FALSE;
+
+  iPrevErrMode = SetErrorMode(SEM_FAILCRITICALERRORS);
+  dwVal = GetFileAttributesA(lpszPath);
+  SetErrorMode(iPrevErrMode);
+  if (dwAttr)
+    *dwAttr = dwVal;
+  return (dwVal != INVALID_FILE_ATTRIBUTES);
+}
+
+/*************************************************************************
+ * PathFileExistsAndAttributesW	[SHLWAPI.446]
+ *
+ * See PathFileExistsA.
+ */
+BOOL WINAPI PathFileExistsAndAttributesW(LPCWSTR lpszPath, DWORD *dwAttr)
+{
+  UINT iPrevErrMode;
+  DWORD dwVal;
+
+  TRACE("(%s %p)\n", debugstr_w(lpszPath), dwAttr);
+
+  if (!lpszPath)
+    return FALSE;
+
+  iPrevErrMode = SetErrorMode(SEM_FAILCRITICALERRORS);
+  dwVal = GetFileAttributesW(lpszPath);
+  SetErrorMode(iPrevErrMode);
+  if (dwAttr)
+    *dwAttr = dwVal;
+  return (dwVal != INVALID_FILE_ATTRIBUTES);
+}
+
+/*************************************************************************
  * PathMatchSingleMaskA	[internal]
  */
 static BOOL WINAPI PathMatchSingleMaskA(LPCSTR name, LPCSTR mask)
@@ -2975,7 +3032,7 @@ BOOL WINAPI PathMakeSystemFolderW(LPWSTR lpszPath)
   if (!lpszPath || !*lpszPath)
     return FALSE;
 
-  /* If the directory is already a system directory, dont do anything */
+  /* If the directory is already a system directory, don't do anything */
   GetSystemDirectoryW(buff, MAX_PATH);
   if (!strcmpW(buff, lpszPath))
     return TRUE;

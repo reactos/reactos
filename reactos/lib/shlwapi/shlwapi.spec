@@ -442,8 +442,8 @@
 442 stdcall @(wstr ptr long) kernel32.GetEnvironmentVariableW
 443 stdcall @(ptr long) kernel32.GetSystemWindowsDirectoryA
 444 stdcall @(ptr long) kernel32.GetSystemWindowsDirectoryW
-445 stub -noname PathFileExistsAndAttributesA
-446 stub -noname PathFileExistsAndAttributesW
+445 stdcall -noname PathFileExistsAndAttributesA(str ptr)
+446 stdcall -noname PathFileExistsAndAttributesW(wstr ptr)
 447 stub -noname FixSlashesAndColonA
 448 stub -noname FixSlashesAndColonW
 449 stub -noname NextPathA
@@ -826,7 +826,7 @@
 @ stdcall SHRegDuplicateHKey (long)
 @ stdcall SHRegSetPathA(long str str str long)
 @ stdcall SHRegSetPathW(long wstr wstr wstr long)
-@ stub    SHRegisterValidateTemplate
+@ stdcall SHRegisterValidateTemplate(wstr long)
 @ stdcall SHSetThreadRef (ptr)
 @ stdcall SHReleaseThreadRef()
 @ stdcall SHSkipJunction(ptr ptr)

@@ -2190,3 +2190,34 @@ HRESULT WINAPI SHRegGetCLSIDKeyW(REFGUID guid, LPCWSTR lpszValue, BOOL bUseHKCU,
 
   return dwRet ? HRESULT_FROM_WIN32(dwRet) : S_OK;
 }
+
+/*************************************************************************
+ * SHRegisterValidateTemplate	[SHLWAPI.@]
+ *
+ * observed from the ie 5.5 installer:
+ *  - allocates a buffer with the size of the given file
+ *  - read the file content into the buffer
+ *  - creates the key szTemplateKey
+ *  - sets "205523652929647911071668590831910975402"=dword:00002e37 at
+ *    the key
+ *
+ * PARAMS
+ *  filename [I] An existing file its content is read into an allocated
+ *               buffer
+ *  unknown  [I]
+ *
+ * RETURNS
+ *  Success: ERROR_SUCCESS.
+ */
+HRESULT WINAPI SHRegisterValidateTemplate(LPCWSTR filename, BOOL unknown)
+{
+/* static const WCHAR szTemplateKey[] = { 'S','o','f','t','w','a','r','e','\\',
+ *  'M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\',
+ *  'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
+ *  'E','x','p','l','o','r','e','r','\\',
+ *  'T','e','m','p','l','a','t','e','R','e','g','i','s','t','r','y',0 };
+ */
+  FIXME("stub: %s, %08x\n", debugstr_w(filename), unknown);
+
+  return S_OK;
+}

@@ -4,7 +4,7 @@ RCS file: /home/wine/wine/dlls/shlwapi/istream.c,v
 retrieving revision 1.9
 diff -u -r1.9 istream.c
 --- istream.c	24 Sep 2003 05:14:39 -0000	1.9
-+++ istream.c	2 Jan 2004 19:10:16 -0000
++++ istream.c	22 Jan 2004 20:39:18 -0000
 @@ -163,12 +163,12 @@
    TRACE("(%p,%ld,%ld,%p)\n", This, dlibMove.s.LowPart, dwOrigin, pNewPos);
  
@@ -38,7 +38,7 @@ RCS file: /home/wine/wine/dlls/shlwapi/ordinal.c,v
 retrieving revision 1.75
 diff -u -r1.75 ordinal.c
 --- ordinal.c	1 Oct 2003 03:10:42 -0000	1.75
-+++ ordinal.c	2 Jan 2004 19:10:18 -0000
++++ ordinal.c	22 Jan 2004 20:39:20 -0000
 @@ -3414,7 +3414,7 @@
   *  Success: A handle to the loaded module
   *  Failure: A NULL handle.
@@ -60,10 +60,10 @@ diff -u -r1.75 ordinal.c
 Index: path.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/shlwapi/path.c,v
-retrieving revision 1.38
-diff -u -r1.38 path.c
---- path.c	22 Sep 2003 19:46:32 -0000	1.38
-+++ path.c	2 Jan 2004 19:10:20 -0000
+retrieving revision 1.40
+diff -u -r1.40 path.c
+--- path.c	19 Jan 2004 21:46:14 -0000	1.40
++++ path.c	22 Jan 2004 20:39:22 -0000
 @@ -32,6 +32,7 @@
  #include "wingdi.h"
  #include "winuser.h"
@@ -72,7 +72,7 @@ diff -u -r1.38 path.c
  #define NO_SHLWAPI_STREAM
  #include "shlwapi.h"
  #include "wine/debug.h"
-@@ -2944,7 +2945,7 @@
+@@ -3001,7 +3002,7 @@
   *  TRUE  If the path was changed to/already was a system folder
   *  FALSE If the path is invalid or SetFileAttributesA() fails
   */
@@ -81,7 +81,7 @@ diff -u -r1.38 path.c
  {
    BOOL bRet = FALSE;
  
-@@ -2964,7 +2965,7 @@
+@@ -3021,7 +3022,7 @@
   *
   * See PathMakeSystemFolderA.
   */
@@ -90,7 +90,7 @@ diff -u -r1.38 path.c
  {
    DWORD dwDefaultAttr = FILE_ATTRIBUTE_READONLY, dwAttr;
    WCHAR buff[MAX_PATH];
-@@ -3211,7 +3212,7 @@
+@@ -3268,7 +3269,7 @@
    if (lpszUrl[1] != ':' && lpszUrl[1] != '|' && isalphaW(*lpszUrl))
      return E_INVALIDARG;
  
@@ -99,7 +99,7 @@ diff -u -r1.38 path.c
    if (lpszPath[1] == '|')
      lpszPath[1] = ':';
  
-@@ -3359,7 +3360,7 @@
+@@ -3416,7 +3417,7 @@
   *  Failure: FALSE, if lpszPath is NULL, empty, not a directory, or calling
   *           SetFileAttributesA() fails.
   */
@@ -108,7 +108,7 @@ diff -u -r1.38 path.c
  {
    DWORD dwAttr;
  
-@@ -3378,7 +3379,7 @@
+@@ -3435,7 +3436,7 @@
   *
   * See PathUnmakeSystemFolderA.
   */
@@ -117,7 +117,7 @@ diff -u -r1.38 path.c
  {
    DWORD dwAttr;
  
-@@ -3688,7 +3689,7 @@
+@@ -3745,7 +3746,7 @@
   *  The match is made against the end of the suffix string, so for example:
   *  lpszSuffix="fooBAR" matches "BAR", but lpszSuffix="fooBARfoo" does not.
   */
@@ -126,7 +126,7 @@ diff -u -r1.38 path.c
  {
    size_t dwLen;
    int dwRet = 0;
-@@ -3705,13 +3706,13 @@
+@@ -3762,13 +3763,13 @@
        if (dwCompareLen < dwLen)
        {
          if (!strcmp(lpszSuffix + dwLen - dwCompareLen, *lppszArray))
@@ -142,7 +142,7 @@ diff -u -r1.38 path.c
  }
  
  /*************************************************************************
-@@ -3719,7 +3720,7 @@
+@@ -3776,7 +3777,7 @@
   *
   * See PathFindSuffixArrayA.
   */
@@ -151,7 +151,7 @@ diff -u -r1.38 path.c
  {
    size_t dwLen;
    int dwRet = 0;
-@@ -3736,13 +3737,13 @@
+@@ -3793,13 +3794,13 @@
        if (dwCompareLen < dwLen)
        {
          if (!strcmpW(lpszSuffix + dwLen - dwCompareLen, *lppszArray))
@@ -170,10 +170,10 @@ diff -u -r1.38 path.c
 Index: reg.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/shlwapi/reg.c,v
-retrieving revision 1.44
-diff -u -r1.44 reg.c
---- reg.c	20 Nov 2003 04:20:50 -0000	1.44
-+++ reg.c	2 Jan 2004 19:10:21 -0000
+retrieving revision 1.45
+diff -u -r1.45 reg.c
+--- reg.c	18 Jan 2004 22:07:57 -0000	1.45
++++ reg.c	22 Jan 2004 20:39:23 -0000
 @@ -232,7 +232,7 @@
   *  Success: ERROR_SUCCESS
   *  Failure: An error code from RegCloseKey().
@@ -292,10 +292,10 @@ diff -u -r1.44 reg.c
 Index: shlwapi.spec
 ===================================================================
 RCS file: /home/wine/wine/dlls/shlwapi/shlwapi.spec,v
-retrieving revision 1.81
-diff -u -r1.81 shlwapi.spec
---- shlwapi.spec	1 Oct 2003 03:10:42 -0000	1.81
-+++ shlwapi.spec	2 Jan 2004 19:10:22 -0000
+retrieving revision 1.83
+diff -u -r1.83 shlwapi.spec
+--- shlwapi.spec	19 Jan 2004 21:46:14 -0000	1.83
++++ shlwapi.spec	22 Jan 2004 20:39:24 -0000
 @@ -374,8 +374,8 @@
  374 stub -noname SHCheckDiskForMediaA
  375 stub -noname SHCheckDiskForMediaW
@@ -313,7 +313,7 @@ RCS file: /home/wine/wine/dlls/shlwapi/string.c,v
 retrieving revision 1.39
 diff -u -r1.39 string.c
 --- string.c	22 Nov 2003 00:00:53 -0000	1.39
-+++ string.c	2 Jan 2004 19:10:23 -0000
++++ string.c	22 Jan 2004 20:39:25 -0000
 @@ -556,7 +556,7 @@
  {
    TRACE("(%s,%s)\n", debugstr_w(lpszStr), debugstr_w(lpszSearch));
@@ -356,7 +356,7 @@ RCS file: /home/wine/wine/dlls/shlwapi/url.c,v
 retrieving revision 1.26
 diff -u -r1.26 url.c
 --- url.c	1 Oct 2003 03:10:42 -0000	1.26
-+++ url.c	2 Jan 2004 19:10:24 -0000
++++ url.c	22 Jan 2004 20:39:26 -0000
 @@ -34,9 +34,9 @@
  #include "shlwapi.h"
  #include "wine/debug.h"
