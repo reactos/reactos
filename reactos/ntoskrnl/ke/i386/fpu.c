@@ -51,7 +51,9 @@ KiCheckFPU(VOID)
    
    __asm__("movl %%cr0, %0\n\t" : "=a" (cr0));
    /* Set NE and MP. */
-   cr0 = cr0 | 22;
+   cr0 = cr0 | 0x22;
+   /* Clear EM */
+   cr0 = cr0 & (~0x4);
    __asm__("movl %0, %%cr0\n\t" : : "a" (cr0));
 
    __asm__("clts\n\t");
