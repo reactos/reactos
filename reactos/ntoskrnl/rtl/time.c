@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.11 2002/09/08 10:23:42 chorns Exp $
+/* $Id: time.c,v 1.12 2002/09/13 18:58:36 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -112,6 +112,12 @@ RtlTimeToTimeFields (
     /* compute year */
   CurYear = EPOCHYEAR;
     /* FIXME: handle calendar modifications */
+  CurYear += Days / DAYSPERLEAPYEAR;
+  Days -= (CurYear - EPOCHYEAR) * DAYSPERLEAPYEAR;
+  CurYear--; /* The next calculation needs CurYear - 1 */
+  Days += CurYear - CurYear / 4 + CurYear / 100 - CurYear / 400;
+  CurYear++;
+  Days -= EPOCHYEAR - EPOCHYEAR / 4 + EPOCHYEAR / 100 - EPOCHYEAR / 400;
   while (1)
     {
       LeapYear = IsLeapYear(CurYear);
@@ -139,54 +145,36 @@ RtlTimeFieldsToTime (
 	PLARGE_INTEGER Time
 	)
 {
-  int CurYear, CurMonth, MonthLength;
+  int CurMonth;
   long long int rcTime;
   TIME_FIELDS TimeFields = *tfTimeFields;
+  const int *Months;
 
   rcTime = 0;
   
-    /* FIXME: normalize the TIME_FIELDS structure here */
-  while (TimeFields.Second >= SECSPERMIN)
-    {
-      NormalizeTimeFields(&TimeFields.Second, 
-                          &TimeFields.Minute, 
-                          SECSPERMIN);
-    }
-  while (TimeFields.Minute >= MINSPERHOUR)
-    {
-      NormalizeTimeFields(&TimeFields.Minute, 
-                          &TimeFields.Hour, 
-                          MINSPERHOUR);
-    }
-  while (TimeFields.Hour >= HOURSPERDAY)
-    {
-      NormalizeTimeFields(&TimeFields.Hour, 
-                          &TimeFields.Day, 
-                          HOURSPERDAY);
-    }
-  MonthLength =
-    MonthLengths[IsLeapYear(TimeFields.Year)][TimeFields.Month - 1];
-  while (TimeFields.Day > MonthLength)
-    {
-      NormalizeTimeFields(&TimeFields.Day, 
-                          &TimeFields.Month, 
-                          MonthLength);
-    }
-  while (TimeFields.Month > MONSPERYEAR)
-    {
-      NormalizeTimeFields(&TimeFields.Month, 
-                          &TimeFields.Year, 
-                          MONSPERYEAR);
-    }
+  /* Normalize the month value, because we don't know the length for month -1, 0, 13, 14, ... */  
+  if (TimeFields.Month < 1 || TimeFields.Month > 12)
+  {
+     TimeFields.Year += (TimeFields.Month - 1) / MONSPERYEAR;
+     TimeFields.Month = ((TimeFields.Month - 1) % MONSPERYEAR) + 1;
+     if (TimeFields.Month < 1)
+     {
+	TimeFields.Year--;
+	TimeFields.Month += MONSPERYEAR;
+     }
+  }
+    /* FIXME: handle calendar corrections here */
+
+  rcTime += (TimeFields.Year - EPOCHYEAR) * DAYSPERNORMALYEAR;
+  /* Adjust leap years */
+  rcTime += (TimeFields.Year - 1)/ 4 - (TimeFields.Year - 1) / 100 + (TimeFields.Year - 1) / 400;
+  rcTime -= EPOCHYEAR / 4 - EPOCHYEAR / 100 + EPOCHYEAR / 400;
 
     /* FIXME: handle calendar corrections here */
-  for (CurYear = EPOCHYEAR; CurYear < TimeFields.Year; CurYear++)
-    {
-      rcTime += YearLengths[IsLeapYear(CurYear)];
-    }
+  Months = MonthLengths[IsLeapYear(TimeFields.Year)];
   for (CurMonth = 1; CurMonth < TimeFields.Month; CurMonth++)
     {
-      rcTime += MonthLengths[IsLeapYear(CurYear)][CurMonth - 1];
+      rcTime += Months[CurMonth - 1];
     }
   rcTime += TimeFields.Day - 1;
   rcTime *= SECSPERDAY;
