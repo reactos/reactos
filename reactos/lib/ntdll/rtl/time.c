@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.16 2003/07/11 23:58:45 ekohl Exp $
+/* $Id: time.c,v 1.17 2003/11/17 20:35:46 sedwards Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -56,7 +56,7 @@ static __inline void NormalizeTimeFields(CSHORT *FieldToNormalize,
 /* FUNCTIONS *****************************************************************/
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 STDCALL
@@ -141,7 +141,7 @@ RtlTimeToTimeFields(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 STDCALL

@@ -201,14 +201,6 @@ RtlCaptureContext (
 /*
  * @unimplemented
  */
-DWORD     STDCALL RtlComputeCrc32(DWORD dwInitial, PBYTE pData, INT iLen)
-{
-  return(FALSE);
-}
-
-/*
- * @unimplemented
- */
 WCHAR     STDCALL RtlDowncaseUnicodeChar(WCHAR wch)
 {
   return(FALSE);
@@ -895,42 +887,6 @@ STDCALL
 RtlStringFromGUID(
     IN REFGUID Guid,
     OUT PUNICODE_STRING GuidString
-    )
-{
-  return(FALSE);
-}
-
-/*
- * @unimplemented
- */
-USHORT
-FASTCALL
-RtlUshortByteSwap(
-    IN USHORT Source
-    )
-{
-  return(FALSE);
-}
-
-/*
- * @unimplemented
- */
-ULONG
-FASTCALL
-RtlUlongByteSwap(
-    IN ULONG Source
-    )
-{
-  return(FALSE);
-}
-
-/*
- * @unimplemented
- */
-ULONGLONG
-FASTCALL
-RtlUlonglongByteSwap(
-    IN ULONGLONG Source
     )
 {
   return(FALSE);

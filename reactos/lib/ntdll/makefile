@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.94 2003/09/12 17:51:47 vizzini Exp $
+# $Id: makefile,v 1.95 2003/11/17 20:35:46 sedwards Exp $
 
 PATH_TO_TOP = ../..
 
@@ -54,7 +54,7 @@ RTL_I386_OBJECTS = \
 	rtl/i386/float.o \
 	rtl/i386/ftol.o
 
-RTL_OBJECTS = rtl/critical.o rtl/error.o rtl/heap.o rtl/largeint.o \
+RTL_OBJECTS = rtl/critical.o rtl/crc32.o rtl/error.o rtl/heap.o rtl/largeint.o \
               rtl/math.o rtl/mem.o rtl/nls.o rtl/process.o rtl/sd.o \
               rtl/thread.o rtl/unicode.o rtl/env.o rtl/path.o rtl/ppb.o \
               rtl/bitmap.o rtl/time.o rtl/acl.o rtl/sid.o rtl/image.o \

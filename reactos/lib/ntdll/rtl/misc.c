@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.8 2003/07/24 19:53:11 hbirr Exp $
+/* $Id: misc.c,v 1.9 2003/11/17 20:35:46 sedwards Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -123,5 +123,3 @@ RtlGetNtVersionNumbers(LPDWORD major, LPDWORD minor, LPDWORD build)
 		*build = (0xF0000000 | pPeb->OSBuildNumber);
 	}
 }
-
-/* EOF */

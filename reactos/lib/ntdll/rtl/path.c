@@ -1,4 +1,4 @@
-/* $Id: path.c,v 1.24 2003/10/19 19:51:48 navaraf Exp $
+/* $Id: path.c,v 1.25 2003/11/17 20:35:46 sedwards Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -736,7 +736,7 @@ CHECKPOINT;
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN STDCALL
 RtlDosPathNameToNtPathName_U(PWSTR dosname,
@@ -931,7 +931,7 @@ RtlDosSearchPath_U (
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN STDCALL
 RtlDoesFileExists_U(IN PWSTR FileName)

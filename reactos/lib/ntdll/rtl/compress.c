@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: compress.c,v 1.2 2003/07/11 13:50:23 royce Exp $
+/* $Id: compress.c,v 1.3 2003/11/17 20:35:46 sedwards Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -186,7 +186,7 @@ RtlDescribeChunk(IN USHORT CompressionFormat,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS STDCALL
 RtlGetCompressionWorkSpaceSize(IN USHORT CompressionFormatAndEngine,

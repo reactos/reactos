@@ -1,4 +1,4 @@
-/* $Id: mem.c,v 1.13 2003/07/11 13:50:23 royce Exp $
+/* $Id: mem.c,v 1.14 2003/11/17 20:35:46 sedwards Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,30 +16,31 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/******************************************************************************
+ *  RtlCompareMemory   [NTDLL.@]
+ *
+ * Compare one block of memory with another
+ *
+ * PARAMS
+ *  Source1 [I] Source block
+ *  Source2 [I] Block to compare to Source1
+ *  Length  [I] Number of bytes to fill
+ *
+ * RETURNS
+ *  The length of the first byte at which Source1 and Source2 differ, or Length
+ *  if they are the same.
+ *
+ * @implemented
+ */
 ULONG
 STDCALL
 RtlCompareMemory(PVOID Source1,
 	PVOID Source2,
 	ULONG Length)
-/*
- * FUNCTION: Compares blocks of memory and returns the number of equal bytes
- * ARGUMENTS:
- *      Source1 = Block to compare
- *      Source2 = Block to compare
- *      Length = Number of bytes to compare
- * RETURNS: Number of equal bytes
- */
 {
-   int i,total;
-   
-   for (i=0,total=0;i<Length;i++)
-     {
-	if ( ((PUCHAR)Source1)[i] == ((PUCHAR)Source2)[i] )
-	  {
-	     total++;
-	  }
-     }
-   return(total);
+    SIZE_T i;
+    for(i=0; (i<Length) && (((LPBYTE)Source1)[i]==((LPBYTE)Source2)[i]); i++);
+    return i;
 }
 
 /*
@@ -163,6 +164,72 @@ RtlZeroMemory (
 		Length,
 		0
 		);
+}
+
+/*************************************************************************
+ * RtlUshortByteSwap    [NTDLL.@]
+ *
+ * Swap the bytes of an unsigned short value.
+ *
+ * NOTES
+ * Based on the inline versions in Wine winternl.h
+ *
+ * @implemented
+ */
+USHORT
+FASTCALL
+RtlUshortByteSwap(
+    IN USHORT Source
+    )
+{
+    return (Source >> 8) | (Source << 8);
+}
+
+/*************************************************************************
+ * RtlUlongByteSwap    [NTDLL.@]
+ *
+ * Swap the bytes of an unsigned int value.
+ *
+ * NOTES
+ * Based on the inline versions in Wine winternl.h
+ *
+ * @implemented
+ */
+ULONG
+FASTCALL
+RtlUlongByteSwap(
+    IN ULONG Source
+    )
+{
+#if defined(__i386__) && defined(__GNUC__)
+    ULONG ret;
+    __asm__("bswap %0" : "=r" (ret) : "0" (Source) );
+    return ret;
+#else
+    return ((ULONG)RtlUshortByteSwap((USHORT)Source) << 16) | RtlUshortByteSwap((USHORT)(Source >> 16));
+#endif
+}
+
+/*************************************************************************
+ * RtlUlonglongByteSwap    [NTDLL.@]
+ *
+ * Swap the bytes of an unsigned long long value.
+ *
+ * PARAMS
+ *  i [I] Value to swap bytes of
+ *
+ * RETURNS
+ *  The value with its bytes swapped.
+ *
+ * @implemented
+ */
+ULONGLONG
+FASTCALL
+RtlUlonglongByteSwap(
+    IN ULONGLONG Source
+    )
+{
+  return ((ULONGLONG)RtlUlongByteSwap(Source) << 32) | RtlUlongByteSwap(Source>>32);
 }
 
 /* EOF */
