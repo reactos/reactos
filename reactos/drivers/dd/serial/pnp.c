@@ -19,7 +19,7 @@ SerialAddDevice(
 	IN PDEVICE_OBJECT Pdo)
 {
 	PDEVICE_OBJECT Fdo = NULL;
-	PSERIAL_DEVICE_EXTENSION DeviceExtension;
+	PSERIAL_DEVICE_EXTENSION DeviceExtension = NULL;
 	NTSTATUS Status;
 	WCHAR DeviceNameBuffer[32];
 	UNICODE_STRING DeviceName;
