@@ -1,7 +1,7 @@
 #ifndef _INC_REACTOS_RESOURCE_H
 #define _INC_REACTOS_RESOURCE_H
-#include <reactos/version.h>
-#include <reactos/buildno.h>
+#include "version.h"
+#include "buildno.h"
 
 /* Global File Version UINTs */
 
