@@ -393,6 +393,12 @@ CmiObjectSecurity(PVOID ObjectBody,
 		  PSECURITY_DESCRIPTOR SecurityDescriptor,
 		  PULONG BufferLength);
 
+NTSTATUS STDCALL
+CmiObjectQueryName (PVOID ObjectBody,
+		    POBJECT_NAME_INFORMATION ObjectNameInfo,
+		    ULONG Length,
+		    PULONG ReturnLength);
+
 NTSTATUS
 CmiImportHiveBins(PREGISTRY_HIVE Hive,
 		  PUCHAR ChunkPtr);

@@ -301,9 +301,74 @@ CmiObjectSecurity(PVOID ObjectBody,
 		  PSECURITY_DESCRIPTOR SecurityDescriptor,
 		  PULONG BufferLength)
 {
-  DPRINT1("CmiObjectSecurity() called\n");
+  DPRINT1 ("CmiObjectSecurity() called\n");
 
-  return(STATUS_SUCCESS);
+  return STATUS_SUCCESS;
+}
+
+
+NTSTATUS STDCALL
+CmiObjectQueryName (PVOID ObjectBody,
+		    POBJECT_NAME_INFORMATION ObjectNameInfo,
+		    ULONG Length,
+		    PULONG ReturnLength)
+{
+  POBJECT_NAME_INFORMATION LocalInfo;
+  PKEY_OBJECT KeyObject;
+  ULONG LocalReturnLength;
+  NTSTATUS Status;
+
+  DPRINT ("CmiObjectQueryName() called\n");
+
+  KeyObject = (PKEY_OBJECT)ObjectBody;
+
+  LocalInfo = ExAllocatePool (NonPagedPool,
+			      sizeof(OBJECT_NAME_INFORMATION) +
+				MAX_PATH * sizeof(WCHAR));
+  if (LocalInfo == NULL)
+    return STATUS_INSUFFICIENT_RESOURCES;
+
+  if (KeyObject->ParentKey != NULL)
+    {
+      Status = ObQueryNameString (KeyObject->ParentKey,
+				  LocalInfo,
+				  MAX_PATH * sizeof(WCHAR),
+				  &LocalReturnLength);
+    }
+  else
+    {
+      Status = ObQueryNameString (BODY_TO_HEADER(KeyObject)->Parent,
+				  LocalInfo,
+				  MAX_PATH * sizeof(WCHAR),
+				  &LocalReturnLength);
+    }
+
+  if (!NT_SUCCESS (Status))
+    {
+      ExFreePool (LocalInfo);
+      return Status;
+    }
+  DPRINT ("Parent path: %wZ\n", &LocalInfo->Name);
+
+  Status = RtlAppendUnicodeStringToString (&ObjectNameInfo->Name,
+					   &LocalInfo->Name);
+  ExFreePool (LocalInfo);
+  if (!NT_SUCCESS (Status))
+    return Status;
+
+  Status = RtlAppendUnicodeToString (&ObjectNameInfo->Name,
+				     L"\\");
+  if (!NT_SUCCESS (Status))
+    return Status;
+
+  Status = RtlAppendUnicodeStringToString (&ObjectNameInfo->Name,
+					   &KeyObject->Name);
+  if (NT_SUCCESS (Status))
+    {
+      DPRINT ("Total path: %wZ\n", &ObjectNameInfo->Name);
+    }
+
+  return Status;
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.101 2003/06/01 17:39:14 ekohl Exp $
+/* $Id: registry.c,v 1.102 2003/06/02 16:51:15 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -272,7 +272,7 @@ CmInitializeRegistry(VOID)
   CmiKeyType->Delete = CmiObjectDelete;
   CmiKeyType->Parse = CmiObjectParse;
   CmiKeyType->Security = CmiObjectSecurity;
-  CmiKeyType->QueryName = NULL;
+  CmiKeyType->QueryName = CmiObjectQueryName;
   CmiKeyType->OkayToClose = NULL;
   CmiKeyType->Create = CmiObjectCreate;
   CmiKeyType->DuplicationNotify = NULL;
@@ -305,6 +305,7 @@ CmInitializeRegistry(VOID)
   RootKey->RegistryHive = CmiVolatileHive;
   RootKey->BlockOffset = CmiVolatileHive->HiveHeader->RootKeyCell;
   RootKey->KeyCell = CmiGetBlock(CmiVolatileHive, RootKey->BlockOffset, NULL);
+  RootKey->ParentKey = NULL;
   RootKey->Flags = 0;
   RootKey->NumberOfSubKeys = 0;
   RootKey->SubKeys = NULL;
@@ -558,7 +559,6 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
       return Status;
     }
 
-  NewKey->ParentKey = ParentKey;
   NewKey->RegistryHive = RegistryHive;
   NewKey->BlockOffset = RegistryHive->HiveHeader->RootKeyCell;
   NewKey->KeyCell = CmiGetBlock(RegistryHive, NewKey->BlockOffset, NULL);
@@ -656,6 +656,7 @@ CmiDisconnectHive (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
     }
 
   Hive = KeyObject->RegistryHive;
+  CmiRemoveKeyFromList (KeyObject);
 
   /* Dereference KeyObject twice to delete it */
   ObDereferenceObject (KeyObject);
