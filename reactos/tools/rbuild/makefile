@@ -18,7 +18,7 @@ BASE_OBJECTS = \
 	module.o \
 	project.o \
 	ssprintf.o \
-	xml.o
+	XML.o
 
 OBJECTS = $(BASE_OBJECTS) rbuild.o
 
