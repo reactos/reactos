@@ -173,7 +173,7 @@ static BOOL PROPSHEET_AddPage(HWND hwndDlg,
 static BOOL PROPSHEET_RemovePage(HWND hwndDlg,
                                  int index,
                                  HPROPSHEETPAGE hpage);
-static void PROPSHEET_CleanUp();
+static void PROPSHEET_CleanUp(HWND hwndDlg);
 static int PROPSHEET_GetPageIndex(HPROPSHEETPAGE hpage, PropSheetInfo* psInfo);
 static void PROPSHEET_SetWizButtons(HWND hwndDlg, DWORD dwFlags);
 static PADDING_INFO PROPSHEET_GetPaddingInfoWizard(HWND hwndDlg, const PropSheetInfo* psInfo);
@@ -308,10 +308,9 @@ static BOOL PROPSHEET_CollectSheetInfoA(LPCPROPSHEETHEADERA lppsh,
   {
      if (HIWORD(lppsh->pszCaption))
      {
-        int len = strlen(lppsh->pszCaption);
-        psInfo->ppshheader.pszCaption = HeapAlloc( GetProcessHeap(), 0, (len+1)*sizeof (WCHAR) );
-        MultiByteToWideChar(CP_ACP, 0, lppsh->pszCaption, -1, (LPWSTR) psInfo->ppshheader.pszCaption, len+1);
-        /* strcpy( (char *)psInfo->ppshheader.pszCaption, lppsh->pszCaption ); */
+        int len = MultiByteToWideChar(CP_ACP, 0, lppsh->pszCaption, -1, NULL, 0);
+        psInfo->ppshheader.pszCaption = HeapAlloc( GetProcessHeap(), 0, len*sizeof (WCHAR) );
+        MultiByteToWideChar(CP_ACP, 0, lppsh->pszCaption, -1, (LPWSTR) psInfo->ppshheader.pszCaption, len);
      }
   }
   psInfo->nPages = lppsh->nPages;
@@ -361,7 +360,7 @@ static BOOL PROPSHEET_CollectSheetInfoW(LPCPROPSHEETHEADERW lppsh,
      psInfo->ppshheader.pszCaption = NULL;
   else
   {
-     if (!(lppsh->dwFlags & INTRNL_ANY_WIZARD) && HIWORD(lppsh->pszCaption))
+     if (HIWORD(lppsh->pszCaption))
      {
         int len = strlenW(lppsh->pszCaption);
         psInfo->ppshheader.pszCaption = HeapAlloc( GetProcessHeap(), 0, (len+1)*sizeof(WCHAR) );
@@ -1511,7 +1510,6 @@ static BOOL PROPSHEET_CreatePage(HWND hwndParent,
   psInfo->proppage[index].hwndPage = hwndPage;
 
   if (psInfo->ppshheader.dwFlags & INTRNL_ANY_WIZARD) {     
-      int offsetx = 0;
       int offsety = 0;
       HWND hwndChild;
       RECT r;
@@ -1532,11 +1530,10 @@ static BOOL PROPSHEET_CreatePage(HWND hwndParent,
 	    pageWidth, pageHeight, padding.x, padding.y);
 
       /* If there is a watermark, offset the dialog items */     
-      if ( (psInfo->ppshheader.dwFlags & (PSH_WATERMARK | PSH_WIZARD97_NEW | PSH_WIZARD97_OLD)) &&
+      if ( (psInfo->ppshheader.dwFlags & (PSH_WIZARD97_NEW | PSH_WIZARD97_OLD)) &&
+           (psInfo->ppshheader.dwFlags & PSH_WATERMARK) &&
 	   ((index == 0) || (index == psInfo->nPages - 1)) )
       {
-	  BITMAP bm;
-
 	  /* if PSH_USEHBMWATERMARK is not set, load the resource from pszbmWatermark 
 	     and put the HBITMAP in hbmWatermark. Thus all the rest of the code always 
 	     considers hbmWatermark as valid. */
@@ -1545,13 +1542,10 @@ static BOOL PROPSHEET_CreatePage(HWND hwndParent,
 	      ((PropSheetInfo *)psInfo)->ppshheader.u4.hbmWatermark = 
 		  CreateMappedBitmap(ppshpage->hInstance, (INT)psInfo->ppshheader.u4.pszbmWatermark, 0, NULL, 0);
 	  }
-
-	  /* Compute the offset x */
-	  GetObjectA(psInfo->ppshheader.u4.hbmWatermark, sizeof(BITMAP), (LPVOID)&bm);
-	  offsetx = bm.bmWidth;
       }
 
-      if (psInfo->ppshheader.dwFlags & (PSH_HEADER | PSH_WIZARD97_NEW | PSH_WIZARD97_OLD))
+      if (psInfo->ppshheader.dwFlags & (PSH_WIZARD97_NEW | PSH_WIZARD97_OLD) &&
+          psInfo->ppshheader.dwFlags & PSH_HEADER)
       {
 	  /* Same behavior as for watermarks */
 	  if (!(psInfo->ppshheader.dwFlags & PSH_USEHBMHEADER))
@@ -1567,21 +1561,10 @@ static BOOL PROPSHEET_CreatePage(HWND hwndParent,
 	  offsety = (ppshpage->dwFlags & PSP_HIDEHEADER)?0:r.bottom + 1;
       }
 
-      hwndChild = GetWindow(hwndPage, GW_CHILD);
-      while((offsetx!=0) && (hwndChild)) {
-	  GetWindowRect(hwndChild, &r);
-	  MapWindowPoints(0, hwndPage, (LPPOINT)&r, 2);
-	  OffsetRect(&r, -offsetx, 0);
-	  SetWindowPos(hwndChild, 0, r.left, r.top, 
-		       0, 0, SWP_NOSIZE | SWP_NOZORDER);
-	  
-	  hwndChild = GetWindow(hwndChild, GW_HWNDNEXT);
-      }      
-
       SetWindowPos(hwndPage, HWND_TOP,
-		   rc.left + padding.x/2 + offsetx,
+		   rc.left + padding.x/2,
 		   rc.top + padding.y/2 + offsety,
-		   pageWidth - offsetx, pageHeight - offsety, 0);
+		   pageWidth, pageHeight - offsety, 0);
   }
   else {
       /*
@@ -3053,7 +3036,8 @@ static LRESULT PROPSHEET_Paint(HWND hwnd)
 	hOldPal = SelectPalette(hdc, psInfo->ppshheader.hplWatermark, FALSE);
 
     if ( (!(ppshpage->dwFlags & PSP_HIDEHEADER)) &&
-	 (psInfo->ppshheader.dwFlags & (PSH_WIZARD97_NEW | PSH_HEADER)) ) 
+	 (psInfo->ppshheader.dwFlags & (PSH_WIZARD97_OLD | PSH_WIZARD97_NEW)) &&
+	 (psInfo->ppshheader.dwFlags & PSH_HEADER) ) 
     {
 	RECT rzone;
 	HWND hwndLineHeader = GetDlgItem(hwnd, IDC_SUNKEN_LINEHEADER);
@@ -3109,35 +3093,33 @@ static LRESULT PROPSHEET_Paint(HWND hwnd)
     }
 
     if ( ((psInfo->active_page == 0) || (psInfo->active_page == psInfo->nPages - 1)) &&
-	 (psInfo->ppshheader.dwFlags & (PSH_WIZARD97_NEW | PSH_WATERMARK)) ) 
+	 (psInfo->ppshheader.dwFlags & (PSH_WIZARD97_OLD | PSH_WIZARD97_NEW)) &&
+	 (psInfo->ppshheader.dwFlags & PSH_WATERMARK) ) 
     {
-	if (psInfo->ppshheader.dwFlags & PSH_USEHBMWATERMARK ) 
-	{
-	    HWND hwndLine = GetDlgItem(hwnd, IDC_SUNKEN_LINE);	    
+	HWND hwndLine = GetDlgItem(hwnd, IDC_SUNKEN_LINE);	    
 
-	    GetClientRect(hwndLine, &r);
-	    MapWindowPoints(hwndLine, hwnd, (LPPOINT) &r, 2);
+	GetClientRect(hwndLine, &r);
+	MapWindowPoints(hwndLine, hwnd, (LPPOINT) &r, 2);
 
-	    GetObjectA(psInfo->ppshheader.u4.hbmWatermark, sizeof(BITMAP), (LPVOID)&bm);
-	    hbmp = SelectObject(hdcSrc, psInfo->ppshheader.u4.hbmWatermark);
+	GetObjectA(psInfo->ppshheader.u4.hbmWatermark, sizeof(BITMAP), (LPVOID)&bm);
+	hbmp = SelectObject(hdcSrc, psInfo->ppshheader.u4.hbmWatermark);
 
-	    BitBlt(hdc, 0, offsety, bm.bmWidth, bm.bmHeight, 
-		   hdcSrc, 0, 0, SRCCOPY);
+	BitBlt(hdc, 0, offsety, min(bm.bmWidth, r.right),
+	       min(bm.bmHeight, r.bottom), hdcSrc, 0, 0, SRCCOPY);
 
-	    /* If the bitmap is not big enough, fill the remaining area
-	       with the color of pixel (0,0) of bitmap - see MSDN */
-	    if (r.top > bm.bmHeight) {
-		r.bottom = r.top - 1;
-		r.top = bm.bmHeight;
-		r.left = 0;
-		r.right = bm.bmWidth;
-		hbr = CreateSolidBrush(GetPixel(hdcSrc, 0, 0));
-		FillRect(hdc, &r, hbr);
-		DeleteObject(hbr);
-	    }
-
-	    SelectObject(hdcSrc, hbmp);	    
+	/* If the bitmap is not big enough, fill the remaining area
+	   with the color of pixel (0,0) of bitmap - see MSDN */
+	if (r.top > bm.bmHeight) {
+	    r.bottom = r.top - 1;
+	    r.top = bm.bmHeight;
+	    r.left = 0;
+	    r.right = bm.bmWidth;
+	    hbr = CreateSolidBrush(GetPixel(hdcSrc, 0, 0));
+	    FillRect(hdc, &r, hbr);
+	    DeleteObject(hbr);
 	}
+
+	SelectObject(hdcSrc, hbmp);	    
     }
 
     if (psInfo->ppshheader.dwFlags & PSH_USEHPLWATERMARK) 
