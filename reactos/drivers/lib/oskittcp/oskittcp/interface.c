@@ -92,7 +92,7 @@ void OskitDumpBuffer( OSK_PCHAR Data, OSK_UINT Len )
 		if ( !align )
 		{
 			if ( i ) DbgPrint( line );
-			snprintf ( line, sizeof(line)-1, "%08x:                                                                  \n", Data );
+			snprintf ( line, sizeof(line)-1, "%08x:                                                                  \n", &Data[i] );
 			line[sizeof(line)-1] = '\0';
 		}
 
