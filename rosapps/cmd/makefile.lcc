@@ -60,8 +60,8 @@ OBJS=alias.obj \
 # What about this implicid rule?
 # It should compile all c files.
 # (To test this, uncomment the following two lines.) EK
-#.c.obj:
-#	$(CC) $(CFLAGS) $<
+.c.obj:
+	$(CC) $(CFLAGS) $<
 
 $(TARGET).exe: $(OBJS)
 	$(LD) $(LFLAGS) $(OBJS)

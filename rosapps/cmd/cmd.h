@@ -29,8 +29,7 @@
 #include <windows.h>
 #include <tchar.h>
 
-
-#define CMD_VER      "0.1 pre 6"
+#include "cmdver.h"
 
 #ifdef _MSC_VER
 #define SHELLVER     "Version " CMD_VER " [" __DATE__ ", msc]"

@@ -9,7 +9,7 @@ OBJECTS = cmd.o attrib.o alias.o batch.o beep.o call.o chcp.o choice.o \
           dir.o dirstack.o echo.o error.o filecomp.o for.o goto.o history.o \
           if.o internal.o label.o locale.o misc.o move.o msgbox.o path.o \
           pause.o prompt.o redir.o ren.o set.o shift.o start.o time.o \
-          timer.o title.o type.o ver.o verify.o vol.o where.o
+          timer.o title.o type.o ver.o verify.o vol.o where.o cmd.coff
 
 CLEAN_FILES = *.o cmd.exe cmd.sym
 
