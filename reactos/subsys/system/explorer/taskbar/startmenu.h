@@ -272,7 +272,7 @@ protected:
 	void	DrawFloatingButton(HDC hdc);
 	void	GetFloatingButonRect(LPRECT prect);
 
-	void	Paint(HDC hdc);
+	void	Paint(PaintCanvas& canvas);
 };
 
 
@@ -339,7 +339,7 @@ protected:
 	SIZE	_logo_size;
 
 	void	AddEntries();
-	void	Paint(HDC hdc);
+	void	Paint(PaintCanvas& canvas);
 };
 
 

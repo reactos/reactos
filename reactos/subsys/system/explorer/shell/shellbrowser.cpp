@@ -402,6 +402,17 @@ LRESULT ShellBrowserChild::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	  case WM_GETISHELLBROWSER:	// for Registry Explorer Plugin
 		return (LRESULT)static_cast<IShellBrowser*>(this);
 
+	  case PM_DISPATCH_COMMAND: {
+		switch(LOWORD(wparam)) {
+		  case ID_WINDOW_NEW: {CONTEXT("ShellBrowserChild PM_DISPATCH_COMMAND ID_WINDOW_NEW");
+			ShellBrowserChild::create(GetParent(_hwnd)/*_hmdiclient*/, _create_info);
+			break;}
+
+		  default:
+			return FALSE;
+		}
+		return TRUE;}
+	
 	  default:
 		return super::WndProc(nmsg, wparam, lparam);
 	}

@@ -174,7 +174,7 @@ LRESULT	DesktopWindow::Init(LPCREATESTRUCT pcs)
 
 		if (SUCCEEDED(hr)) {
 			 // subclass shellview window
-			DesktopShellView* pShellView = new DesktopShellView(hWndView, _pShellView);
+			new DesktopShellView(hWndView, _pShellView);
 
 			_pShellView->UIActivate(SVUIA_ACTIVATE_FOCUS);
 

@@ -220,9 +220,10 @@ void StartMenu::AddShellEntries(const ShellDirectory& dir, int max, bool subfold
 LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	switch(nmsg) {
-	  case WM_PAINT:
-		Paint(PaintCanvas(_hwnd));
-		break;
+	  case WM_PAINT: {
+		PaintCanvas canvas(_hwnd);
+		Paint(canvas);
+		break;}
 
 	  case WM_SIZE:
 		ResizeButtons(LOWORD(lparam)-_border_left);
@@ -344,9 +345,9 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 }
 
 
-void StartMenu::Paint(HDC hdc)
+void StartMenu::Paint(PaintCanvas& canvas)
 {
-	DrawFloatingButton(hdc);
+	DrawFloatingButton(canvas);
 
 #ifdef _LIGHT_STARTMENU
 	ClientRect clnt(_hwnd);
@@ -354,25 +355,29 @@ void StartMenu::Paint(HDC hdc)
 
 	int sep_width = rect.right-rect.left - 4;
 
-	FontSelection font(hdc, GetStockFont(DEFAULT_GUI_FONT));
-	BkMode bk_mode(hdc, TRANSPARENT);
+	FontSelection font(canvas, GetStockFont(DEFAULT_GUI_FONT));
+	BkMode bk_mode(canvas, TRANSPARENT);
 
 	for(SMBtnList::const_iterator it=_buttons.begin(); it!=_buttons.end(); ++it) {
 		const SMBtnInfo& info = *it;
 
+		if (rect.top > canvas.rcPaint.bottom)
+			break;
+
 		if (info._id == -1) {	// a separator?
 			rect.bottom = rect.top + STARTMENU_SEP_HEIGHT;
 
-			BrushSelection brush_sel(hdc, GetSysColorBrush(COLOR_BTNSHADOW));
-			PatBlt(hdc, rect.left+2, rect.top+STARTMENU_SEP_HEIGHT/2-1, sep_width, 1, PATCOPY);
+			BrushSelection brush_sel(canvas, GetSysColorBrush(COLOR_BTNSHADOW));
+			PatBlt(canvas, rect.left+2, rect.top+STARTMENU_SEP_HEIGHT/2-1, sep_width, 1, PATCOPY);
 
-			SelectBrush(hdc, GetSysColorBrush(COLOR_BTNHIGHLIGHT));
-			PatBlt(hdc, rect.left+2, rect.top+STARTMENU_SEP_HEIGHT/2, sep_width, 1, PATCOPY);
+			SelectBrush(canvas, GetSysColorBrush(COLOR_BTNHIGHLIGHT));
+			PatBlt(canvas, rect.left+2, rect.top+STARTMENU_SEP_HEIGHT/2, sep_width, 1, PATCOPY);
 		} else {
 			rect.bottom = rect.top + STARTMENU_LINE_HEIGHT;
 
-			DrawStartMenuButton(hdc, rect, info._title, info._hIcon,
-								info._hasSubmenu, info._enabled, info._id==_selected_id, false);
+			if (rect.top >= canvas.rcPaint.top)
+				DrawStartMenuButton(canvas, rect, info._title, info._hIcon,
+									info._hasSubmenu, info._enabled, info._id==_selected_id, false);
 		}
 
 		rect.top = rect.bottom;
@@ -1143,9 +1148,10 @@ void StartMenuRoot::AddEntries()
 LRESULT	StartMenuRoot::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	switch(nmsg) {
-	  case WM_PAINT:
-		Paint(PaintCanvas(_hwnd));
-		break;
+	  case WM_PAINT: {
+		PaintCanvas canvas(_hwnd);
+		Paint(canvas);
+		break;}
 
 	  default:
 		return super::WndProc(nmsg, wparam, lparam);
@@ -1154,7 +1160,7 @@ LRESULT	StartMenuRoot::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	return 0;
 }
 
-void StartMenuRoot::Paint(HDC hdc)
+void StartMenuRoot::Paint(PaintCanvas& canvas)
 {
 	int clr_bits;
 	{WindowCanvas dc(_hwnd); clr_bits=GetDeviceCaps(dc, BITSPIXEL);}
@@ -1169,22 +1175,22 @@ void StartMenuRoot::Paint(HDC hdc)
 
 	RECT rect = {0, 0, _logo_size.cx-1, clnt.bottom-h};
 	HBRUSH hbr = CreateSolidBrush(logo256? RGB(166,202,240): RGB(255,255,255));	// same color as the background color in the logo bitmap
-	FillRect(hdc, &rect, hbr);
+	FillRect(canvas, &rect, hbr);
 	DeleteObject(hbr);
-	//PatBlt(hdc, _logo_size.cx-1, 0, 1, clnt.bottom-h, WHITENESS);
-	PatBlt(hdc, _logo_size.cx-1, 0, 1, clnt.bottom-h, WHITENESS);
+	//PatBlt(canvas, _logo_size.cx-1, 0, 1, clnt.bottom-h, WHITENESS);
+	PatBlt(canvas, _logo_size.cx-1, 0, 1, clnt.bottom-h, WHITENESS);
 
-	BitBlt(hdc, 0, clnt.bottom-h, _logo_size.cx, h, mem_dc, 0, 0, SRCCOPY);
+	BitBlt(canvas, 0, clnt.bottom-h, _logo_size.cx, h, mem_dc, 0, 0, SRCCOPY);
 
 	if (!logo256) {
 		rect.left = rect.right++;
 		rect.bottom = clnt.bottom;
 		HBRUSH hbr_border = GetStockBrush(GRAY_BRUSH);	//CreateSolidBrush(RGB(71,88,85));
-		FillRect(hdc, &rect, hbr_border);
+		FillRect(canvas, &rect, hbr_border);
 		//DeleteObject(hbr_border);
 	}
 
-	super::Paint(hdc);
+	super::Paint(canvas);
 }
 
 

@@ -343,7 +343,7 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			Pane* pane = GetFocus()==_left_hwnd? _left: _right;
 
 			switch(LOWORD(wparam)) {
-			  case ID_WINDOW_NEW: {CONTEXT("PM_DISPATCH_COMMAND ID_WINDOW_NEW");
+			  case ID_WINDOW_NEW: {CONTEXT("FileChildWindow PM_DISPATCH_COMMAND ID_WINDOW_NEW");
 				if (_root._entry->_etype == ET_SHELL)
 					FileChildWindow::create(GetParent(_hwnd)/*_hmdiclient*/, ShellChildWndInfo(_path,DesktopFolderPath()));
 				else
