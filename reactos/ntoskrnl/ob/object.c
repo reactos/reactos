@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.56 2002/09/08 10:23:39 chorns Exp $
+/* $Id: object.c,v 1.57 2002/11/05 20:51:23 hbirr Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -17,6 +17,7 @@
 #include <internal/ps.h>
 #include <internal/id.h>
 #include <internal/ke.h>
+#include <internal/io.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -111,6 +112,7 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
    PWSTR Path;
    PWSTR current;
    UNICODE_STRING PathString;
+   ULONG Attributes;
    
    DPRINT("ObFindObject(ObjectAttributes %x, ReturnedObject %x, "
 	  "RemainingPath %x)\n",ObjectAttributes,ReturnedObject,RemainingPath);
@@ -167,6 +169,9 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
      }
 
    RootObject = CurrentObject;
+   Attributes = ObjectAttributes->Attributes;
+   if (ObjectType == IoSymbolicLinkType)
+     Attributes |= OBJ_OPENLINK;
 
    while (TRUE)
      {
@@ -185,7 +190,7 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 						  &NextObject,
 						  &PathString,
 						  &current,
-						  ObjectAttributes->Attributes);
+						  Attributes);
 	if (Status == STATUS_REPARSE)
 	  {
 	     /* reparse the object path */
