@@ -380,10 +380,13 @@ UpdateFreeLoaderIni(PWCHAR IniPath,
   UNICODE_STRING Name;
   PINICACHE IniCache;
   PINICACHESECTION IniSection;
+  PINICACHESECTION OsIniSection;
   WCHAR SectionName[80];
   WCHAR OsName[80];
+  WCHAR SystemPath[200];
+  WCHAR SectionName2[200];
   PWCHAR KeyData;
-  ULONG i;
+  ULONG i,j;
   NTSTATUS Status;
 
   RtlInitUnicodeString(&Name,
@@ -399,9 +402,12 @@ UpdateFreeLoaderIni(PWCHAR IniPath,
   IniSection = IniCacheGetSection(IniCache,
 				  L"Operating Systems");
   if (IniSection == NULL)
+  {
+    IniCacheDestroy(IniCache);
     return(STATUS_UNSUCCESSFUL);
+  }
 
-  /* Find an unused section name */
+  /* Find an existing usable or an unused section name */
   i = 1;
   wcscpy(SectionName, L"ReactOS");
   wcscpy(OsName, L"\"ReactOS\"");
@@ -412,6 +418,77 @@ UpdateFreeLoaderIni(PWCHAR IniPath,
 			    &KeyData);
     if (!NT_SUCCESS(Status))
       break;
+
+    /* Get operation system section */
+    if (KeyData[0] == '"')
+    {
+      wcscpy(SectionName2, &KeyData[1]);
+      j = wcslen(SectionName2);
+      if (j > 0)
+      {
+        SectionName2[j-1] = 0;
+      }
+    }
+    else
+    {
+      wcscpy(SectionName2, KeyData);
+    }
+
+    OsIniSection = IniCacheGetSection(IniCache,
+      SectionName2);
+    if (OsIniSection != NULL)
+    {
+      BOOLEAN UseExistingEntry = TRUE;
+
+      /* Check BootType */
+      Status = IniCacheGetKey(OsIniSection,
+        L"BootType",
+        &KeyData);
+      if (NT_SUCCESS(Status))
+      {
+        if (KeyData == NULL
+          || (_wcsicmp(KeyData, L"ReactOS") != 0
+          && _wcsicmp(KeyData, L"\"ReactOS\"") != 0))
+        {
+          /* This is not a ReactOS entry */
+          UseExistingEntry = FALSE;
+        }
+      }
+      else
+      {
+        UseExistingEntry = FALSE;
+      }
+
+      if (UseExistingEntry)
+      {
+        /* BootType is ReactOS. Now check SystemPath */
+        Status = IniCacheGetKey(OsIniSection,
+          L"SystemPath",
+          &KeyData);
+        if (NT_SUCCESS(Status))
+        {
+          swprintf(SystemPath, L"\"%S\"", ArcPath);
+          if (KeyData == NULL
+            || (_wcsicmp(KeyData, ArcPath) != 0
+            && _wcsicmp(KeyData, SystemPath) != 0))
+          {
+            /* This entry is a ReactOS entry, but the SystemRoot does not
+               match the one we are looking for */
+            UseExistingEntry = FALSE;
+          }
+        }
+        else
+        {
+          UseExistingEntry = FALSE;
+        }
+      }
+
+      if (UseExistingEntry)
+      {
+        IniCacheDestroy(IniCache);
+        return(STATUS_SUCCESS);
+      }
+    }
 
     swprintf(SectionName, L"ReactOS_%lu", i);
     swprintf(OsName, L"\"ReactOS %lu\"", i);
@@ -1608,7 +1685,6 @@ UpdateBootIni(PWSTR BootIniPath,
 			FALSE);
   if (!NT_SUCCESS(Status))
   {
-CHECKPOINT1;
     return(Status);
   }
 
@@ -1616,7 +1692,6 @@ CHECKPOINT1;
 			       L"operating systems");
   if (Section == NULL)
   {
-CHECKPOINT1;
     IniCacheDestroy(Cache);
     return(STATUS_UNSUCCESSFUL);
   }
@@ -1631,7 +1706,6 @@ CHECKPOINT1;
 			    &FileAttribute);
   if (!NT_SUCCESS(Status))
   {
-CHECKPOINT1;
     IniCacheDestroy(Cache);
     return(Status);
   }
@@ -1640,7 +1714,6 @@ CHECKPOINT1;
 			BootIniPath);
   if (!NT_SUCCESS(Status))
   {
-CHECKPOINT1;
     IniCacheDestroy(Cache);
     return(Status);
   }
