@@ -146,7 +146,7 @@ GetFatEntry16:
 
 		mov   cx,2						; AX = AX * 2 (since FAT16 entries are 2 bytes)
 		mul   cx
-		shl   dx,0fh
+		shl   dx,12
 
         mov   bx,7000h
 		add   bx,dx

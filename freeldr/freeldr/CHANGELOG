@@ -1,3 +1,7 @@
+Changes in v1.6.2 (7/28/2002) (brianp)
+
+- Fix for GetFatEntry16 bug (fathelp.asm) by Mike Lerwill
+
 Changes in v1.6.1 (7/22/2002) (brianp)
 
 - Fix for disk caching while doing drive remapping
