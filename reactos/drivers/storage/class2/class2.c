@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.12 2002/03/22 20:34:15 ekohl Exp $
+/* $Id: class2.c,v 1.13 2002/03/22 23:06:58 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -41,6 +41,8 @@
 
 
 #define VERSION "0.0.1"
+
+#define TAG_SRBT  TAG('S', 'r', 'b', 'T')
 
 #define INQUIRY_DATA_SIZE 2048
 
@@ -671,11 +673,38 @@ ScsiClassInitialize(PVOID Argument1,
 }
 
 
+/**********************************************************************
+ * NAME							EXPORTED
+ *	ScsiClassInitializeSrbLookasideList
+ *
+ * DESCRIPTION
+ *	Initializes a lookaside list for SRBs.
+ *
+ * RUN LEVEL
+ *	PASSIVE_LEVEL
+ *
+ * ARGUMENTS
+ *	DeviceExtension
+ *		Class specific device extension.
+ *
+ *	NumberElements
+ *		Maximum number of elements of the lookaside list.
+ *
+ * RETURN VALUE
+ *	None.
+ */
+
 VOID STDCALL
 ScsiClassInitializeSrbLookasideList(PDEVICE_EXTENSION DeviceExtension,
 				    ULONG NumberElements)
 {
-  UNIMPLEMENTED;
+  ExInitializeNPagedLookasideList(&DeviceExtension->SrbLookasideListHead,
+				  NULL,
+				  NULL,
+				  NonPagedPool,
+				  sizeof(SCSI_REQUEST_BLOCK),
+				  TAG_SRBT,
+				  (USHORT)NumberElements);
 }
 
 
@@ -879,7 +908,7 @@ ScsiClassReadDriveCapacity(IN PDEVICE_OBJECT DeviceObject)
 		    sizeof(DISK_GEOMETRY));
       DeviceExtension->DiskGeometry->BytesPerSector = 512;
       DeviceExtension->SectorShift = 9;
-      DeviceExtension->Partitionlength.QuadPart = 0;
+      DeviceExtension->PartitionLength.QuadPart = 0;
 
       if (DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA)
 	{
