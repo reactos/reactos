@@ -1,0 +1,11 @@
+<module name="psaux" type="kernelmodedriver">
+	<include base="psaux">.</include>
+	<library>ntoskrnl</library>
+	<library>hal</library>
+	<file>controller.c</file>
+	<file>logips2pp.c</file>
+	<file>mouse.c</file>
+	<file>psaux.c</file>
+	<file>synaptics.c</file>
+	<file>psaux.rc</file>
+</module>

@@ -1,0 +1,7 @@
+<module name="mouclass" type="kernelmodedriver">
+	<include base="mouclass">.</include>
+	<library>ntoskrnl</library>
+	<library>hal</library>
+	<file>mouclass.c</file>
+	<file>mouclass.rc</file>
+</module>

@@ -1,0 +1,12 @@
+<directory name="keyboard">
+	<xi:include href="keyboard/keyboard.xml" />
+</directory>
+<directory name="mouclass">
+	<xi:include href="mouclass/mouclass.xml" />
+</directory>
+<directory name="psaux">
+	<xi:include href="psaux/psaux.xml" />
+</directory>
+<directory name="sermouse">
+	<xi:include href="sermouse/sermouse.xml" />
+</directory>

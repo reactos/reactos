@@ -7,6 +7,9 @@
 <directory name="fs">
 	<xi:include href="fs/directory.xml" />
 </directory>
+<directory name="input">
+	<xi:include href="input/directory.xml" />
+</directory>
 <directory name="lib">
 	<xi:include href="lib/directory.xml" />
 </directory>

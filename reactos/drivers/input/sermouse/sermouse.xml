@@ -1,0 +1,7 @@
+<module name="sermouse" type="kernelmodedriver">
+	<include base="sermouse">.</include>
+	<library>ntoskrnl</library>
+	<library>hal</library>
+	<file>sermouse.c</file>
+	<file>sermouse.rc</file>
+</module>
