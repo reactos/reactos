@@ -492,7 +492,7 @@ KeWaitForMultipleObjects(ULONG Count,
    DPRINT("Entering KeWaitForMultipleObjects(Count %lu Object[] %p) "
           "PsGetCurrentThread() %x\n", Count, Object, PsGetCurrentThread());
 
-   ASSERT(0 < Count && Count <= EX_MAXIMUM_WAIT_OBJECTS);
+   ASSERT(0 < Count && Count <= MAXIMUM_WAIT_OBJECTS);
 
    CurrentThread = KeGetCurrentThread();
 
@@ -510,7 +510,7 @@ KeWaitForMultipleObjects(ULONG Count,
    }
    else
    {
-      if (Count > EX_MAXIMUM_WAIT_OBJECTS)
+      if (Count > MAXIMUM_WAIT_OBJECTS)
       {
          DPRINT("(%s:%d) Too many objects!\n", __FILE__, __LINE__);
          return (STATUS_UNSUCCESSFUL);
@@ -762,8 +762,8 @@ NtWaitForMultipleObjects(IN ULONG Count,
 			 IN BOOLEAN Alertable,
 			 IN PLARGE_INTEGER UnsafeTime)
 {
-   KWAIT_BLOCK WaitBlockArray[EX_MAXIMUM_WAIT_OBJECTS];
-   PVOID ObjectPtrArray[EX_MAXIMUM_WAIT_OBJECTS];
+   KWAIT_BLOCK WaitBlockArray[MAXIMUM_WAIT_OBJECTS];
+   PVOID ObjectPtrArray[MAXIMUM_WAIT_OBJECTS];
    NTSTATUS Status;
    ULONG i, j;
    KPROCESSOR_MODE WaitMode;
@@ -772,7 +772,7 @@ NtWaitForMultipleObjects(IN ULONG Count,
    DPRINT("NtWaitForMultipleObjects(Count %lu Object[] %x, Alertable %d, "
 	  "Time %x)\n", Count,Object,Alertable,Time);
 
-   if (Count > EX_MAXIMUM_WAIT_OBJECTS)
+   if (Count > MAXIMUM_WAIT_OBJECTS)
      return STATUS_UNSUCCESSFUL;
    if (0 == Count)
      return STATUS_INVALID_PARAMETER;

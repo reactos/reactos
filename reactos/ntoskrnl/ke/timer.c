@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.93 2004/12/24 17:06:58 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -138,7 +138,7 @@ NtQueryPerformanceCounter(IN PLARGE_INTEGER Counter,
 
 NTSTATUS STDCALL
 NtDelayExecution(IN ULONG Alertable,
-		 IN TIME* Interval)
+		 IN LARGE_INTEGER* Interval)
 {
    NTSTATUS Status;
    LARGE_INTEGER Timeout;

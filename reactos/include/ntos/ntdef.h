@@ -11,7 +11,9 @@
 #ifndef __INCLUDE_NTDEF_H
 #define __INCLUDE_NTDEF_H
 
-#define EX_MAXIMUM_WAIT_OBJECTS (64)
+#ifndef _USE_W32API
+#define MAXIMUM_WAIT_OBJECTS (64)
+#endif
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1300) && defined(__cplusplus)
 # define TYPE_ALIGNMENT(t) __alignof(t)

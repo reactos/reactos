@@ -1,4 +1,4 @@
-/* $Id: zw.h,v 1.40 2004/12/30 08:05:10 hyperion Exp $
+/* $Id$
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -5241,7 +5241,7 @@ NTSTATUS
 STDCALL
 NtDelayExecution(
 	IN ULONG Alertable,
-	IN TIME *Interval
+	IN LARGE_INTEGER *Interval
 	);
 
 /*
