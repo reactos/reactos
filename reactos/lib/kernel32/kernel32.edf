@@ -1,4 +1,4 @@
-; $Id: kernel32.edf,v 1.24 2003/05/29 00:36:41 hyperion Exp $
+; $Id: kernel32.edf,v 1.25 2003/06/19 19:38:26 ea Exp $
 ;
 ; kernel32.edf
 ;
@@ -242,6 +242,7 @@ GetConsoleScreenBufferInfo=GetConsoleScreenBufferInfo@8
 GetConsoleSelectionInfo=GetConsoleSelectionInfo@4
 GetConsoleTitleA=GetConsoleTitleA@8
 GetConsoleTitleW=GetConsoleTitleW@8
+GetConsoleWindow=GetConsoleWindow@0
 GetCurrencyFormatA=GetCurrencyFormatA@24
 GetCurrencyFormatW=GetCurrencyFormatW@24
 GetCurrentConsoleFont=GetCurrentConsoleFont@12

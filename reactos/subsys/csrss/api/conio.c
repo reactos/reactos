@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.47 2003/03/26 22:10:43 hbirr Exp $
+/* $Id: conio.c,v 1.48 2003/06/19 19:38:26 ea Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -757,6 +757,9 @@ NTSTATUS STDCALL CsrInitConsole(PCSRSS_CONSOLE Console)
 	RtlFreeHeap( CsrssApiHeap, 0, Console->ActiveBuffer );
 	return Status;
      }
+  /* Create the GDI Window to be used in windowed mode */
+  /* FIXME: create window; now write NULL */
+  Console->hWindow = (HWND) NULL;
   /* add a reference count because the buffer is tied to the console */
   Console->ActiveBuffer->Header.ReferenceCount++;
   /* make console active, and insert into console list */
@@ -2440,6 +2443,122 @@ CSR_API(CsrWriteConsoleInput)
    
    Reply->Status = STATUS_SUCCESS;
    Reply->Data.WriteConsoleInputReply.Length = i;
+   return Reply->Status;
+}
+
+/**********************************************************************
+ *	HardwareStateProperty
+ *
+ *	DESCRIPTION
+ *		Set/Get the value of the HardwareState and switch
+ *		between direct video buffer ouput and GDI windowed
+ *		output.
+ *	ARGUMENTS
+ *		Client hands us a CSRSS_CONSOLE_HARDWARE_STATE
+ *		object. We use the same object to reply.
+ *	NOTE
+ *		ConsoleHwState has the correct size to be compatible
+ *		with NT's, but values are not.
+ */
+static NTSTATUS FASTCALL SetConsoleHardwareState (PCSRSS_CONSOLE Console, DWORD ConsoleHwState)
+{
+   if ( (CONSOLE_HARDWARE_STATE_GDI_MANAGED == ConsoleHwState)
+      ||(CONSOLE_HARDWARE_STATE_DIRECT == ConsoleHwState))
+   {
+      if (Console->HardwareState != ConsoleHwState)
+      {
+	 /* TODO: implement switching from full screen to windowed mode */
+	 /* TODO: or back; now simply store the hardware state */
+         Console->HardwareState = ConsoleHwState;
+      }
+      return STATUS_SUCCESS;	
+   }
+   return STATUS_INVALID_PARAMETER_3; // Client: (handle, set_get, [mode])
+}
+
+CSR_API(CsrHardwareStateProperty)
+{
+   PCSRSS_CONSOLE Console;
+   NTSTATUS       Status;
+ 
+   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
+
+   LOCK;
+   
+   Status = CsrGetObject (
+		   ProcessData,
+		   Request->Data.ConsoleHardwareStateRequest.ConsoleHandle,
+		   (Object_t**) & Console
+		   );
+   if (!NT_SUCCESS(Status))
+   {
+      Reply->Status = Status;
+   }
+   else
+   {
+      if(Console->Header.Type != CSRSS_CONSOLE_MAGIC)
+      {
+         Reply->Status = STATUS_INVALID_HANDLE;
+      }
+      else
+      {
+         switch (Request->Data.ConsoleHardwareStateRequest.SetGet)
+         {
+         case CONSOLE_HARDWARE_STATE_GET:
+            Reply->Data.ConsoleHardwareStateReply.State = Console->HardwareState;
+            break;
+      
+         case CONSOLE_HARDWARE_STATE_SET:
+            Reply->Status = SetConsoleHardwareState (Console, Request->Data.ConsoleHardwareStateRequest.State);
+            break;
+
+         default:
+            Reply->Status = STATUS_INVALID_PARAMETER_2; // Client: (handle, [set_get], mode)
+            break;
+         }
+      }
+   }
+
+   UNLOCK;
+
+   return Reply->Status;
+}
+
+CSR_API(CsrGetConsoleWindow)
+{
+   PCSRSS_CONSOLE Console;
+   NTSTATUS       Status;
+ 
+   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
+
+   LOCK;
+   
+   Status = CsrGetObject (
+		   ProcessData,
+		   Request->Data.ConsoleWindowRequest.ConsoleHandle,
+		   (Object_t**) & Console
+		   );
+   if (!NT_SUCCESS(Status))
+   {
+      Reply->Status = Status;
+   }
+   else
+   {
+      if(Console->Header.Type != CSRSS_CONSOLE_MAGIC)
+      {
+         Reply->Status = STATUS_INVALID_HANDLE;
+      }
+      else
+      {
+	 // Is this GDI handle valid in the client's context?
+	 Reply->Data.ConsoleWindowReply.WindowHandle = Console->hWindow;
+      }
+   }
+
+   UNLOCK;
+
    return Reply->Status;
 }
 

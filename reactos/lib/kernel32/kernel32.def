@@ -238,6 +238,7 @@ GetConsoleScreenBufferInfo@8
 GetConsoleSelectionInfo@4
 GetConsoleTitleA@8
 GetConsoleTitleW@8
+GetConsoleWindow@0
 GetCurrencyFormatA@24
 GetCurrencyFormatW@24
 GetCurrentConsoleFont@12

@@ -66,11 +66,13 @@ typedef struct CSRSS_CONSOLE_t
    WORD Mode;                            /* Console mode flags */
    WORD EchoCount;                       /* count of chars to echo, in line buffered mode */
    UNICODE_STRING Title;                 /* Title of console */
-   struct {				/* active code pages */
+   struct {				 /* active code pages */
 	   UINT Input;
 	   UINT Output;
    } CodePageId;
-   BOOL EarlyReturn;                   /* wake client and return data, even if we are in line buffered mode, and we don't have a complete line */
+   BOOL EarlyReturn;                     /* wake client and return data, even if we are in line buffered mode, and we don't have a complete line */
+   DWORD HardwareState;                  /* _GDI_MANAGED, _DIRECT */
+   HWND hWindow;
 } CSRSS_CONSOLE, *PCSRSS_CONSOLE;
 
 typedef struct _CSRSS_PROCESS_DATA
@@ -137,6 +139,8 @@ CSR_API(CsrGetOutputHandle);
 CSR_API(CsrCloseHandle);
 CSR_API(CsrVerifyHandle);
 CSR_API(CsrDuplicateHandle);
+CSR_API(CsrHardwareStateProperty);
+CSR_API(CsrGetConsoleWindow);
 
 /* print.c */
 VOID STDCALL DisplayString(LPCWSTR lpwString);

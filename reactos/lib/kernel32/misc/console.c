@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.57 2003/05/16 20:33:15 ea Exp $
+/* $Id: console.c,v 1.58 2003/06/19 19:38:26 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -305,15 +305,32 @@ GetConsoleFontSize(HANDLE hConsoleOutput,
 }
 
 DWORD STDCALL
-GetConsoleHardwareState (DWORD	Unknown0,
-			 DWORD	Unknown1,
-			 DWORD	Unknown2)
+GetConsoleHardwareState (HANDLE	hConsole,
+			 DWORD	Flags,
+			 PDWORD	State)
      /*
       * Undocumented
       */
 {
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return 0;
+  CSRSS_API_REQUEST Request;
+  CSRSS_API_REPLY   Reply;
+  NTSTATUS          Status;
+
+  Request.Type = CSRSS_SETGET_CONSOLE_HW_STATE;
+  Request.Data.ConsoleHardwareStateRequest.ConsoleHandle = hConsole;
+  Request.Data.ConsoleHardwareStateRequest.SetGet = CONSOLE_HARDWARE_STATE_GET;
+
+  Status = CsrClientCallServer(& Request,
+			       & Reply,
+			       sizeof(CSRSS_API_REQUEST),
+			       sizeof(CSRSS_API_REPLY));
+  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
+  {
+    SetLastErrorByStatus(Status);
+    return FALSE;
+  }
+  *State = Reply.Data.ConsoleHardwareStateReply.State;
+  return TRUE;  
 }
 
 DWORD STDCALL
@@ -457,15 +474,32 @@ SetConsoleFont (DWORD	Unknown0,
 }
 
 WINBOOL STDCALL
-SetConsoleHardwareState (DWORD	Unknown0,
-			 DWORD	Unknown1,
-			 DWORD	Unknown2)
+SetConsoleHardwareState (HANDLE	hConsole,
+			 DWORD	Flags,
+			 DWORD	State)
      /*
       * Undocumented
       */
 {
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return FALSE;
+  CSRSS_API_REQUEST Request;
+  CSRSS_API_REPLY   Reply;
+  NTSTATUS          Status;
+
+  Request.Type = CSRSS_SETGET_CONSOLE_HW_STATE;
+  Request.Data.ConsoleHardwareStateRequest.ConsoleHandle = hConsole;
+  Request.Data.ConsoleHardwareStateRequest.SetGet = CONSOLE_HARDWARE_STATE_SET;
+  Request.Data.ConsoleHardwareStateRequest.State = State;
+
+  Status = CsrClientCallServer(& Request,
+			       & Reply,
+			       sizeof(CSRSS_API_REQUEST),
+			       sizeof(CSRSS_API_REPLY));
+  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
+  {
+    SetLastErrorByStatus(Status);
+    return FALSE;
+  }
+  return TRUE;  
 }
 
 WINBOOL STDCALL
@@ -2186,7 +2220,7 @@ RemoveConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine)
     {
       for (i = 0; i < NrCtrlHandlers; i++)
 	{
-	  if (CtrlHandlers[i] == HandlerRoutine)
+	  if ((PHANDLER_ROUTINE) CtrlHandlers[i] == HandlerRoutine)
 	    {
 	      CtrlHandlers[i] = CtrlHandlers[NrCtrlHandlers - 1];
 	      NrCtrlHandlers--;
@@ -2655,5 +2689,32 @@ AttachConsole(DWORD dwProcessId)
    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
    return FALSE;
 }
+
+/*--------------------------------------------------------------
+ * 	GetConsoleWindow/0
+ */
+HWND STDCALL
+GetConsoleWindow (VOID)
+{
+  CSRSS_API_REQUEST Request;
+  CSRSS_API_REPLY   Reply;
+  NTSTATUS          Status;
+   
+  Request.Data.ConsoleWindowRequest.ConsoleHandle =
+    OpenConsoleW (L"CONOUT$", (GENERIC_READ|GENERIC_WRITE), FALSE, OPEN_EXISTING);
+  if (INVALID_HANDLE_VALUE == Request.Data.ConsoleWindowRequest.ConsoleHandle)
+  {
+    return (HWND) NULL;
+  }
+  Request.Type = CSRSS_GET_CONSOLE_WINDOW;
+  Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
+  if (!NT_SUCCESS(Status ) || !NT_SUCCESS(Status = Reply.Status))
+  {
+    SetLastErrorByStatus (Status);
+    return (HWND) NULL;
+  }
+  return Reply.Data.ConsoleWindowReply.WindowHandle;
+}
+
 
 /* EOF */

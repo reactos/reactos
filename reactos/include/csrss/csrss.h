@@ -368,6 +368,26 @@ typedef struct
   HANDLE Handle;
 } CSRSS_DUPLICATE_HANDLE_REPLY, *PCSRSS_DUPLICATE_HANDLE_REPLY;
 
+#define CONSOLE_HARDWARE_STATE_GET 0
+#define CONSOLE_HARDWARE_STATE_SET 1
+
+#define CONSOLE_HARDWARE_STATE_GDI_MANAGED 0
+#define CONSOLE_HARDWARE_STATE_DIRECT      1
+
+typedef struct
+{
+  HANDLE ConsoleHandle;
+  DWORD SetGet; // 0=get; 1=set
+  DWORD State;
+
+} CSRSS_CONSOLE_HARDWARE_STATE, *PCSRSS_CONSOLE_HARDWARE_STATE;
+
+typedef struct
+{
+  HANDLE ConsoleHandle;
+  HWND   WindowHandle;
+} CSRSS_CONSOLE_WINDOW, *PCSRSS_CONSOLE_WINDOW;
+
 #define CSRSS_MAX_WRITE_CONSOLE_REQUEST       \
       (MAX_MESSAGE_DATA - sizeof(ULONG) - sizeof(CSRSS_WRITE_CONSOLE_REQUEST))
 
@@ -427,6 +447,8 @@ typedef struct
 #define CSRSS_CLOSE_HANDLE                  (0x26)
 #define CSRSS_VERIFY_HANDLE                 (0x27)
 #define CSRSS_DUPLICATE_HANDLE		    (0x28)
+#define CSRSS_SETGET_CONSOLE_HW_STATE       (0x29)
+#define CSRSS_GET_CONSOLE_WINDOW            (0x2A)
 
 /* Keep in sync with definition below. */
 #define CSRSS_REQUEST_HEADER_SIZE (sizeof(LPC_MESSAGE) + sizeof(ULONG))
@@ -473,6 +495,8 @@ typedef struct
     CSRSS_CLOSE_HANDLE_REQUEST CloseHandleRequest;
     CSRSS_VERIFY_HANDLE_REQUEST VerifyHandleRequest;
     CSRSS_DUPLICATE_HANDLE_REQUEST DuplicateHandleRequest;
+    CSRSS_CONSOLE_HARDWARE_STATE ConsoleHardwareStateRequest;
+    CSRSS_CONSOLE_WINDOW ConsoleWindowRequest;
   } Data;
 } CSRSS_API_REQUEST, *PCSRSS_API_REQUEST;
 
@@ -506,6 +530,8 @@ typedef struct
     CSRSS_GET_INPUT_HANDLE_REPLY GetInputHandleReply;
     CSRSS_GET_OUTPUT_HANDLE_REPLY GetOutputHandleReply;
     CSRSS_DUPLICATE_HANDLE_REPLY DuplicateHandleReply;
+    CSRSS_CONSOLE_HARDWARE_STATE ConsoleHardwareStateReply;
+    CSRSS_CONSOLE_WINDOW ConsoleWindowReply;
   } Data;
 } CSRSS_API_REPLY, *PCSRSS_API_REPLY;
 
