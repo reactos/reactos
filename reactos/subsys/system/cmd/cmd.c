@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.3 2003/06/01 17:06:22 hbirr Exp $
+/* $Id: cmd.c,v 1.4 2003/08/07 09:43:03 hbirr Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -180,7 +180,7 @@ Execute (LPTSTR first, LPTSTR rest)
 	DWORD dwExitCode = 0;
 
 #ifdef _DEBUG
-	DebugPrintf ("Execute: \'%s\' \'%s\'\n", first, rest);
+	DebugPrintf (_T("Execute: \'%s\' \'%s\'\n"), first, rest);
 #endif
 
 	/* check for a drive change */
@@ -192,8 +192,8 @@ Execute (LPTSTR first, LPTSTR rest)
 		{
 			TCHAR str[4];
 			str[0]=first[0];
-			str[1]=':';
-			str[2]='\\';
+			str[1]=_T(':');
+			str[2]=_T('\\');
 			str[3]=0;
 			working = SetCurrentDirectory(str);
 		}
@@ -220,7 +220,7 @@ Execute (LPTSTR first, LPTSTR rest)
 		!_tcsicmp (_tcsrchr (szFullName, _T('.')), _T(".cmd")))
 	{
 #ifdef _DEBUG
-		DebugPrintf ("[BATCH: %s %s]\n", szFullName, rest);
+		DebugPrintf (_T("[BATCH: %s %s]\n"), szFullName, rest);
 #endif
 		Batch (szFullName, first, rest);
 	}
@@ -232,7 +232,7 @@ Execute (LPTSTR first, LPTSTR rest)
 		STARTUPINFO stui;
 
 #ifdef _DEBUG
-		DebugPrintf ("[EXEC: %s %s]\n", szFullName, rest);
+		DebugPrintf (_T("[EXEC: %s %s]\n"), szFullName, rest);
 #endif
 		/* build command line for CreateProcess() */
 		_tcscpy (szFullCmdLine, first);
@@ -267,7 +267,7 @@ Execute (LPTSTR first, LPTSTR rest)
 			WaitForSingleObject (prci.hProcess, INFINITE);
 
 			/* FIXME: Protect this with critical section */
-			bChildProcessRunning = TRUE;
+			bChildProcessRunning = FALSE;
 
 			GetExitCodeProcess (prci.hProcess, &dwExitCode);
 			nErrorLevel = (INT)dwExitCode;
@@ -277,7 +277,7 @@ Execute (LPTSTR first, LPTSTR rest)
 		else
 		{
 			ErrorMessage (GetLastError (),
-			              "Error executing CreateProcess()!!\n");
+			              _T("Error executing CreateProcess()!!\n"));
 		}
 		// restore console mode
 		SetConsoleMode( GetStdHandle( STD_INPUT_HANDLE ),
@@ -310,11 +310,11 @@ DoCommand (LPTSTR line)
 	LPCOMMAND cmdptr;
 
 #ifdef _DEBUG
-	DebugPrintf ("DoCommand: (\'%s\')\n", line);
+	DebugPrintf (_T("DoCommand: (\'%s\')\n"), line);
 #endif /* DEBUG */
 
 	/* Skip over initial white space */
-	while (isspace (*rest))
+	while (_istspace (*rest))
 		rest++;
 
 	cstart = rest;
@@ -400,11 +400,11 @@ VOID ParseCommandLine (LPTSTR cmd)
 	TCHAR cmdline[CMDLINE_LENGTH];
 	LPTSTR s;
 #ifdef FEATURE_REDIRECTION
-	TCHAR in[CMDLINE_LENGTH] = "";
-	TCHAR out[CMDLINE_LENGTH] = "";
-	TCHAR err[CMDLINE_LENGTH] = "";
+	TCHAR in[CMDLINE_LENGTH] = _T("");
+	TCHAR out[CMDLINE_LENGTH] = _T("");
+	TCHAR err[CMDLINE_LENGTH] = _T("");
 	TCHAR szTempPath[MAX_PATH] = _T(".\\");
-	TCHAR szFileName[2][MAX_PATH] = {"", ""};
+	TCHAR szFileName[2][MAX_PATH] = {_T(""), _T("")};
 	HANDLE hFile[2] = {INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE};
 	LPTSTR t = NULL;
 	INT  num = 0;
@@ -419,7 +419,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 	s = &cmdline[0];
 
 #ifdef _DEBUG
-	DebugPrintf ("ParseCommandLine: (\'%s\')\n", s);
+	DebugPrintf (_T("ParseCommandLine: (\'%s\')\n"), s);
 #endif /* DEBUG */
 
 #ifdef FEATURE_ALIASES
@@ -465,13 +465,13 @@ VOID ParseCommandLine (LPTSTR cmd)
 		                    FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hFile == INVALID_HANDLE_VALUE)
 		{
-			ConErrPrintf ("Can't redirect input from file %s\n", in);
+			ConErrPrintf (_T("Can't redirect input from file %s\n"), in);
 			return;
 		}
 
 		if (!SetStdHandle (STD_INPUT_HANDLE, hFile))
 		{
-			ConErrPrintf ("Can't redirect input from file %s\n", in);
+			ConErrPrintf (_T("Can't redirect input from file %s\n"), in);
 			return;
 		}
 #ifdef _DEBUG
@@ -480,7 +480,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 	}
 
 	/* Now do all but the last pipe command */
-	*szFileName[0] = '\0';
+	*szFileName[0] = _T('\0');
 	hFile[0] = INVALID_HANDLE_VALUE;
 
 	while (num-- > 1)
@@ -488,7 +488,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 		SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
 
 		/* Create unique temporary file name */
-		GetTempFileName (szTempPath, "CMD", 0, szFileName[1]);
+		GetTempFileName (szTempPath, _T("CMD"), 0, szFileName[1]);
 
 		/* Set current stdout to temporary file */
 		hFile[1] = CreateFile (szFileName[1], GENERIC_WRITE, 0, &sa,
@@ -541,13 +541,13 @@ VOID ParseCommandLine (LPTSTR cmd)
 		                    FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hFile == INVALID_HANDLE_VALUE)
 		{
-			ConErrPrintf ("Can't redirect to file %s\n", out);
+			ConErrPrintf (_T("Can't redirect to file %s\n"), out);
 			return;
 		}
 
 		if (!SetStdHandle (STD_OUTPUT_HANDLE, hFile))
 		{
-			ConErrPrintf ("Can't redirect to file %s\n", out);
+			ConErrPrintf (_T("Can't redirect to file %s\n"), out);
 			return;
 		}
 
@@ -600,13 +600,13 @@ VOID ParseCommandLine (LPTSTR cmd)
 			                    NULL);
 			if (hFile == INVALID_HANDLE_VALUE)
 			{
-				ConErrPrintf ("Can't redirect to file %s\n", err);
+				ConErrPrintf (_T("Can't redirect to file %s\n"), err);
 				return;
 			}
 		}
 		if (!SetStdHandle (STD_ERROR_HANDLE, hFile))
 		{
-			ConErrPrintf ("Can't redirect to file %s\n", err);
+			ConErrPrintf (_T("Can't redirect to file %s\n"), err);
 			return;
 		}
 
@@ -790,7 +790,7 @@ ProcessInput (BOOL bFlag)
 						if ((tp != NULL) &&
 						    (tp <= _tcschr(ip, _T(' ')) - 1))
 						{
-							char evar[512];
+							TCHAR evar[512];
 							*tp = _T('\0');
 
 							/* FIXME: This is just a quick hack!! */
@@ -897,25 +897,24 @@ ShowCommands (VOID)
 	PrintCommandList ();
 
 	/* print feature list */
-	ConOutPuts ("\nFeatures available:");
+	ConOutPuts (_T("\nFeatures available:"));
 #ifdef FEATURE_ALIASES
-	ConOutPuts ("  [aliases]");
+	ConOutPuts (_T("  [aliases]"));
 #endif
 #ifdef FEATURE_HISTORY
-	ConOutPuts ("  [history]");
+	ConOutPuts (_T("  [history]"));
 #endif
 #ifdef FEATURE_UNIX_FILENAME_COMPLETION
-	ConOutPuts ("  [unix filename completion]");
+	ConOutPuts (_T("  [unix filename completion]"));
 #endif
 #ifdef FEATURE_DIRECTORY_STACK
-	ConOutPuts ("  [directory stack]");
+	ConOutPuts (_T("  [directory stack]"));
 #endif
 #ifdef FEATURE_REDIRECTION
-	ConOutPuts ("  [redirections and piping]");
+	ConOutPuts (_T("  [redirections and piping]"));
 #endif
-	ConOutChar ('\n');
+	ConOutChar (_T('\n'));
 }
-
 
 /*
  * set up global initializations and process parameters
@@ -925,21 +924,24 @@ ShowCommands (VOID)
  *
  */
 static VOID
-Initialize (int argc, char *argv[])
+Initialize (int argc, TCHAR* argv[])
 {
 	TCHAR commandline[CMDLINE_LENGTH];
 	TCHAR ModuleName[_MAX_PATH + 1];
 	INT i;
+	INT len;
+	TCHAR *ptr, *cmdLine;
+
 
 #ifdef _DEBUG
 	INT x;
 
-	DebugPrintf ("[command args:\n");
+	DebugPrintf (_T("[command args:\n"));
 	for (x = 0; x < argc; x++)
 	{
-		DebugPrintf ("%d. %s\n", x, argv[x]);
+		DebugPrintf (_T("%d. %s\n"), x, argv[x]);
 	}
-	DebugPrintf ("]\n");
+	DebugPrintf (_T("]\n"));
 #endif
 
 	/* get version information */
@@ -985,10 +987,10 @@ Initialize (int argc, char *argv[])
 				if (!IsValidFileName (_T("\\autoexec.bat")))
 				{
 #ifdef INCLUDE_CMD_DATE
-					cmd_date ("", "");
+					cmd_date (_T(""), _T(""));
 #endif
 #ifdef INCLUDE_CMD_TIME
-					cmd_time ("", "");
+					cmd_time (_T(""), _T(""));
 #endif
 				}
 				else
@@ -1001,12 +1003,12 @@ Initialize (int argc, char *argv[])
 			{
 				/* This just runs a program and exits */
 				++i;
-				if (argv[i])
+				if (i < argc)
 				{
 					_tcscpy (commandline, argv[i]);
-					while (argv[++i])
+					while (++i < argc)
 					{
-						_tcscat (commandline, " ");
+						_tcscat (commandline, _T(" "));
 						_tcscat (commandline, argv[i]);
 					}
 
@@ -1022,12 +1024,12 @@ Initialize (int argc, char *argv[])
 			{
 				/* This just runs a program and remains */
 				++i;
-				if (argv[i])
+				if (i < argc)
 				{
 					_tcscpy (commandline, argv[i]);
-					while (argv[++i])
+					while (++i < argc)
 					{
-						_tcscat (commandline, " ");
+						_tcscat (commandline, _T(" "));
 						_tcscat (commandline, argv[i]);
 					}
 
@@ -1038,7 +1040,7 @@ Initialize (int argc, char *argv[])
 			else if (!_tcsnicmp (argv[i], _T("/t:"), 3))
 			{
 				/* process /t (color) argument */
-				wDefColor = (WORD)strtoul (&argv[i][3], NULL, 16);
+				wDefColor = (WORD)_tcstoul (&argv[i][3], NULL, 16);
 				wColor = wDefColor;
 				SetScreenColor (wColor, TRUE);
 			}
@@ -1067,7 +1069,7 @@ Initialize (int argc, char *argv[])
 
 		if (IsValidFileName (_T("commandline")))
 		{
-			ConErrPrintf ("Running %s...\n", commandline);
+			ConErrPrintf (_T("Running %s...\n", commandline));
 			ParseCommandLine (commandline);
 		}
 	}
@@ -1096,17 +1098,17 @@ Initialize (int argc, char *argv[])
 }
 
 
-static VOID Cleanup (int argc, char *argv[])
+static VOID Cleanup (int argc, TCHAR *argv[])
 {
 	/* run cmdexit.bat */
 	if (IsValidFileName (_T("cmdexit.bat")))
 	{
-		ConErrPrintf ("Running cmdexit.bat...\n");
+		ConErrPrintf (_T("Running cmdexit.bat...\n"));
 		ParseCommandLine (_T("cmdexit.bat"));
 	}
 	else if (IsValidFileName (_T("\\cmdexit.bat")))
 	{
-		ConErrPrintf ("Running \\cmdexit.bat...\n");
+		ConErrPrintf (_T("Running \\cmdexit.bat...\n"));
 		ParseCommandLine (_T("\\cmdexit.bat"));
 	}
 #ifndef __REACTOS__
@@ -1122,7 +1124,7 @@ static VOID Cleanup (int argc, char *argv[])
 
 		if (IsValidFileName (_T("commandline")))
 		{
-			ConErrPrintf ("Running %s...\n", commandline);
+			ConErrPrintf (_T("Running %s...\n"), commandline);
 			ParseCommandLine (commandline);
 		}
 	}
@@ -1152,24 +1154,85 @@ static VOID Cleanup (int argc, char *argv[])
 			ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_ECHO_INPUT );
 }
 
+#ifdef __REACTOS__
+#ifdef _UNICODE
+PWCHAR * _CommandLineToArgvW(PWCHAR lpCmdLine, int *pNumArgs)
+{
+   PWCHAR * argvw = NULL;
+   PWCHAR ptr = lpCmdLine;
+   PWCHAR str;
+   int len;
+   int NumArgs;
+
+   NumArgs = 0;
+
+   while(lpCmdLine && *lpCmdLine)
+   {
+       while (iswspace(*lpCmdLine)) lpCmdLine++;
+       if (*lpCmdLine)
+       {
+	   if ((NumArgs % 10)==0)
+	   {
+               PWCHAR * old_argvw = argvw;
+	       argvw = malloc((NumArgs + 10) * sizeof(PWCHAR));
+	       memcpy(argvw, old_argvw, NumArgs * sizeof(PWCHAR));
+	       free(old_argvw);
+	   }
+	   ptr = wcschr(lpCmdLine, L' ');
+	   if (ptr)
+	   {
+	       len = ptr - lpCmdLine;
+	   }
+	   else
+	   {
+	       len = wcslen(lpCmdLine);
+	   }
+	   str = malloc((len + 1) * sizeof(WCHAR));
+	   memcpy(str, lpCmdLine, len * sizeof(WCHAR));
+	   str[len] = 0;
+	   argvw[NumArgs]=str;
+	   NumArgs++;
+	   lpCmdLine = ptr;
+       }
+   }
+   *pNumArgs = NumArgs;
+   return argvw;
+}
+#endif
+#endif
 
 /*
  * main function
  */
+#ifdef _UNICODE
+int main(void)
+#else
 int main (int argc, char *argv[])
+#endif
 {
   CONSOLE_SCREEN_BUFFER_INFO Info;
   INT nExitCode;
+#ifdef _UNICODE
+  PWCHAR * argv;
+  int argc=0;
+#ifdef __REACTOS__
+  argv = _CommandLineToArgvW(GetCommandLineW(), &argc);
+#else
+  argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+#endif
+#endif
 
   SetFileApisToOEM();
 
   AllocConsole();
-  hConsole = CreateFile("CONOUT$", GENERIC_READ|GENERIC_WRITE, 
+
+
+  hConsole = CreateFile(_T("CONOUT$"), GENERIC_READ|GENERIC_WRITE, 
                         FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, 
 			OPEN_EXISTING, 0, NULL);
   if (GetConsoleScreenBufferInfo(hConsole, &Info) == FALSE)
     {
-      fprintf(stderr, "GetConsoleScreenBufferInfo: Error: %ld\n", GetLastError());
+      ConErrPrintf (_T("GetConsoleScreenBufferInfo: Error: %ld\n"), GetLastError());
       return(1);
     }
   wColor = Info.wAttributes;
