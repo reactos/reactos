@@ -407,7 +407,10 @@ void DIB_BltFromVGA(int x, int y, int w, int h, void *b, int Dest_lDelta)
     }
 
   /* Reset the destination. */
-  memset(b, 0, h * Dest_lDelta);
+  for (j = 0; j < h; j++)
+    {
+      memset(b + (j * Dest_lDelta), 0, abs(Dest_lDelta));
+    }
 
   for (plane = 0; plane < 4; plane++)
     {

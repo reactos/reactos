@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pointer.c,v 1.2 2004/01/16 13:18:23 gvg Exp $
+/* $Id: pointer.c,v 1.3 2004/07/03 13:45:42 navaraf Exp $
  *
  * PROJECT:         ReactOS VGA16 display driver
  * FILE:            drivers/dd/vga/display/objects/pointer.c
@@ -245,8 +245,8 @@ DrvSetPointerShape(SURFOBJ* pso,
     }
   ppdev->flCursor = ppdev->flCursor & (~ CURSOR_DOWN);
 
-  NewWidth = psoMask->lDelta << 3;
-  NewHeight = (psoMask->cjBits / psoMask->lDelta) / 2;
+  NewWidth = abs(psoMask->lDelta) << 3;
+  NewHeight = (psoMask->cjBits / abs(psoMask->lDelta)) / 2;
 
   /* Reallocate the space for the cursor if necessary. */
   if (ppdev->pPointerAttributes->Width != NewWidth ||
@@ -275,11 +275,10 @@ DrvSetPointerShape(SURFOBJ* pso,
       ImageBehindCursor = VGADDI_AllocSavedScreenBits(SavedMemSize);
     }
 
+  Src = (PUCHAR)psoMask->pvScan0;
   /* Copy the new cursor in. */
   for (i = 0; i < (NewHeight * 2); i++)
     {
-      Src = (PUCHAR)psoMask->pvBits;
-      Src += (i * (NewWidth >> 3));
       Dest = (PUCHAR)ppdev->pPointerAttributes->Pixels;
       if (i >= NewHeight)
 	{
@@ -290,6 +289,7 @@ DrvSetPointerShape(SURFOBJ* pso,
 	  Dest += ((NewHeight - i - 1) * (NewWidth >> 3));
 	}
       memcpy(Dest, Src, NewWidth >> 3);
+      Src += psoMask->lDelta;
     }
 
   /* Set the new cursor position */

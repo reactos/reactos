@@ -28,7 +28,7 @@ DrvTransparentBlt(SURFOBJ* Dest,
   if(sy<dy) dy = sy;
 
   // FIXME: adjust using SourceRect
-  DIB_TransparentBltToVGA(DestRect->left, DestRect->top, dx, dy, Source->pvBits, Source->lDelta, TransparentColor);
+  DIB_TransparentBltToVGA(DestRect->left, DestRect->top, dx, dy, Source->pvScan0, Source->lDelta, TransparentColor);
 
   return TRUE;
 }

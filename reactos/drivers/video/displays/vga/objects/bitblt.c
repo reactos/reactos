@@ -77,7 +77,7 @@ VGAtoDIB(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
 
   // FIXME: Optimize to retrieve entire bytes at a time (see /display/vgavideo/vgavideo.c:vgaGetByte)
 
-  GDIpos = Dest->pvBits /* + (DestRect->top * Dest->lDelta) + (DestRect->left >> 1) */ ;
+  GDIpos = Dest->pvScan0 /* + (DestRect->top * Dest->lDelta) + (DestRect->left >> 1) */ ;
   dx = DestRect->right  - DestRect->left;
   dy = DestRect->bottom - DestRect->top;
 
@@ -87,7 +87,7 @@ VGAtoDIB(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
     DestDevSurf.NextScan = Dest->lDelta;
     DestDevSurf.StartBmp = Dest->pvScan0;
 
-    DIB_BltFromVGA(SourcePoint->x, SourcePoint->y, dx, dy, Dest->pvBits, Dest->lDelta);
+    DIB_BltFromVGA(SourcePoint->x, SourcePoint->y, dx, dy, Dest->pvScan0, Dest->lDelta);
 
   } else {
     // Color translation
@@ -353,7 +353,7 @@ VGADDI_BltMask(SURFOBJ* Dest, SURFOBJ* Source, SURFOBJ* Mask,
     {
       if (Mask != NULL)
 	{
-	  tMask = Mask->pvBits;
+	  tMask = Mask->pvScan0;
 	  for (j=0; j<dy; j++)
 	    {
 	      lMask = tMask;
