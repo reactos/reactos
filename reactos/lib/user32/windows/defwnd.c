@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.29 2003/03/07 04:50:42 rcampbell Exp $
+/* $Id: defwnd.c,v 1.30 2003/03/11 00:18:54 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -20,14 +20,19 @@
 
 /* GLOBALS *******************************************************************/
 
-static HBITMAP hbitmapClose;
-static HBITMAP hbitmapMinimize;
-static HBITMAP hbitmapMinimizeD;
-static HBITMAP hbitmapMaximize;
-static HBITMAP hbitmapMaximizeD;
-static HBITMAP hbitmapRestore;
-static HBITMAP hbitmapRestoreD;
-
+/* TODO:  widgets will be cached here.
+static HBITMAP hbClose;
+static HBITMAP hbCloseD;
+static HBITMAP hbMinimize;
+static HBITMAP hbMinimizeD;
+static HBITMAP hbRestore;
+static HBITMAP hbRestoreD;
+static HBITMAP hbMaximize;
+static HBITMAP hbScrUp;
+static HBITMAP hbScrDwn;
+static HBITMAP hbScrLeft;
+static HBITMAP hbScrRight;
+*/
 static COLORREF SysColours[] =
   {
     RGB(224, 224, 224) /* COLOR_SCROLLBAR */,
@@ -64,6 +69,24 @@ static COLORREF SysColours[] =
 static ATOM AtomInternalPos;
 
 /* FUNCTIONS *****************************************************************/
+
+BOOL IsMaxBoxActive(HWND hWnd)
+{
+    ULONG uStyle = GetWindowLong(hWnd, GWL_STYLE);
+    return (uStyle & WS_MAXIMIZEBOX);
+}
+
+BOOL IsCloseBoxActive(HWND hWnd)
+{
+    ULONG uStyle = GetWindowLong(hWnd, GWL_STYLE);
+    return (uStyle & WS_SYSMENU);
+}
+
+BOOL IsMinBoxActive(HWND hWnd)
+{
+    ULONG uStyle = GetWindowLong(hWnd, GWL_STYLE);
+    return (uStyle & WS_MINIMIZEBOX);
+}
 
 VOID
 UserSetupInternalPos(VOID)
@@ -217,125 +240,99 @@ void UserDrawSysMenuButton( HWND hWnd, HDC hDC, BOOL down )
                load default (OIC_SAMPLE I believe, not sure */
 }
 
-static void UserDrawCloseButton ( HWND hWnd, HDC hDC, BOOL down )
+/* FIXME:  Cache bitmaps, then just bitblt instead of calling DFC() (and
+           wasting precious CPU cycles) every time */
+           
+static void UserDrawCloseButton ( HWND hWnd, HDC hDC, BOOL bDown )
 {
-    /* ported from wine code */
     RECT rect;
-    BOOL bInactive = FALSE;
+    BOOL bToolWindow = GetWindowLongA( hWnd, GWL_EXSTYLE ) & WS_EX_TOOLWINDOW;
+    INT iBmpWidth =  (bToolWindow ? GetSystemMetrics(SM_CXSMSIZE) :
+                      GetSystemMetrics(SM_CXSIZE)) - 2;
+    INT iBmpHeight = (bToolWindow ? GetSystemMetrics(SM_CYSMSIZE) :
+                      GetSystemMetrics(SM_CYSIZE)) - 4;
     
     UserGetInsideRectNC( hWnd, &rect );
-
-    if (GetWindowLongA( hWnd, GWL_EXSTYLE ) & WS_EX_TOOLWINDOW)
-    {
-        INT iBmpHeight = 11; /* Windows does not use SM_CXSMSIZE and SM_CYSMSIZE   */
-        INT iBmpWidth = 11;  /* it uses 11x11 for  the close button in tool window */
-        INT iCaptionHeight = GetSystemMetrics(SM_CYSMCAPTION);
-
-        rect.top = rect.top + (iCaptionHeight - 1 - iBmpHeight) / 2;
-        rect.left = rect.right - (iCaptionHeight + 1 + iBmpWidth) / 2;
-        rect.bottom = rect.top + iBmpHeight;
-        rect.right = rect.left + iBmpWidth;
-    }
-    else
-    {
-     rect.top++;
-     rect.right--;
-     /* Standard close/min/max button sizes appear to be 16x14, though
-        these change with the caption size, I'll fix this soon */
-     rect.left = rect.right - 16;
-     rect.bottom = rect.top + 14;
-
-    }
+    
+    SetRect(&rect,
+            rect.right - iBmpWidth,
+            rect.top + 1,
+            rect.right,
+            rect.top + iBmpHeight + 1 );
+            
     DrawFrameControl( hDC, &rect, DFC_CAPTION,
                       (DFCS_CAPTIONCLOSE |
-                       (down ? DFCS_PUSHED : 0) |
-                       (bInactive ? DFCS_INACTIVE : 0)) );
+                       (bDown ? DFCS_PUSHED : 0) |
+                       (IsCloseBoxActive(hWnd) ? 0 : DFCS_INACTIVE)) );
 }
-
-static void UserDrawMaxButton( HWND hWnd, HDC hDC, BOOL down )
+           
+static void UserDrawMaxButton( HWND hWnd, HDC hDC, BOOL bDown )
 { 
-
     RECT rect;
-    UINT flags = IsZoomed(hWnd) ? DFCS_CAPTIONRESTORE : DFCS_CAPTIONMAX;
+    INT iBmpWidth = GetSystemMetrics(SM_CXSIZE) - 2;
+    INT iBmpHeight = GetSystemMetrics(SM_CYSIZE) - 4;
 
-    UserGetInsideRectNC( hWnd, &rect );
-    rect.top++;
-    rect.right--;
-    rect.left = rect.right - (GetSystemMetrics(SM_CXSIZE) - 1) * 2;
-    rect.right = rect.left + (GetSystemMetrics(SM_CXSIZE) - 2);
-    rect.bottom = rect.top + GetSystemMetrics(SM_CYSIZE) - 4;
-
-    if (down) flags |= DFCS_PUSHED;
-    DrawFrameControl( hDC, &rect, DFC_CAPTION, flags );
+    if (!IsMinBoxActive(hWnd) && !IsMaxBoxActive(hWnd))
+        return;    
+    if ((GetWindowLongA( hWnd, GWL_EXSTYLE ) & WS_EX_TOOLWINDOW) == TRUE)
+        return; /* ToolWindows don't have min/max buttons */
+        
+    UserGetInsideRectNC(hWnd, &rect );
     
+    SetRect(&rect,
+            rect.right - (iBmpWidth * 2) - 2,
+            rect.top + 1,
+            (rect.right - iBmpWidth) - 2,
+            rect.top + iBmpHeight + 1 );
+    
+    DrawFrameControl( hDC, &rect, DFC_CAPTION,
+                     (IsZoomed(hWnd) ? DFCS_CAPTIONMAX : DFCS_CAPTIONRESTORE) |
+                     (bDown ? DFCS_PUSHED : 0) |
+                     (IsMaxBoxActive(hWnd) ? 0 : DFCS_INACTIVE) );
 }
 
-static void UserDrawMinButton( HWND hWnd, HDC hDC, BOOL down)
+static void UserDrawMinButton( HWND hWnd, HDC hDC, BOOL bDown )
 {
-
     RECT rect;
-    UINT flags = DFCS_CAPTIONMIN;
+    INT iBmpWidth = GetSystemMetrics(SM_CXSIZE) - 2;
+    INT iBmpHeight = GetSystemMetrics(SM_CYSIZE) - 4;
+    if (!IsMinBoxActive(hWnd) && !IsMaxBoxActive(hWnd))
+        return;
+    if ((GetWindowLongA( hWnd, GWL_EXSTYLE ) & WS_EX_TOOLWINDOW) == TRUE)
+        return; /* ToolWindows don't have min/max buttons */
+        
+    UserGetInsideRectNC(hWnd, &rect );
     
-    BOOL bInactive = FALSE;
-    UserGetInsideRectNC( hWnd, &rect );
-    rect.top++;
-    rect.right--;
-    rect.left = rect.right - ((GetSystemMetrics(SM_CXSIZE)) * 3) + 4;
-    rect.right = rect.left + (GetSystemMetrics(SM_CXSIZE) - 2);
-    rect.bottom = rect.top + GetSystemMetrics(SM_CYSIZE) - 4;
-    
-    if (down) flags |= DFCS_PUSHED;
-    if (bInactive) flags |= DFCS_INACTIVE;
-    DrawFrameControl( hDC, &rect, DFC_CAPTION, flags );
-    
+    SetRect(&rect,
+            rect.right - (iBmpWidth * 3) - 2,
+            rect.top + 1,
+            (rect.right - iBmpWidth * 2) - 2,
+            rect.top + iBmpHeight + 1 );
+    DrawFrameControl( hDC, &rect, DFC_CAPTION,
+                     (IsZoomed(hWnd) ? DFCS_CAPTIONMAX : DFCS_CAPTIONRESTORE) |
+                     (bDown ? DFCS_PUSHED : 0) |
+                     (IsMinBoxActive(hWnd) ? 0 : DFCS_INACTIVE) );
 }
 
 static void UserDrawCaptionNC( HDC hDC, RECT *rect, HWND hWnd,
 			    DWORD style, BOOL active )
 {
-  RECT r = *rect;
-  char buffer[256];
-
-  if (!hbitmapClose)
-   {
-      hbitmapClose = LoadBitmapW( 0, MAKEINTRESOURCE(OBM_CLOSE));
-      hbitmapMinimize  = LoadBitmapW( 0, MAKEINTRESOURCE(OBM_REDUCE) );
-      hbitmapMinimizeD = LoadBitmapW( 0, MAKEINTRESOURCE(OBM_REDUCED) );
-      hbitmapMaximize  = LoadBitmapW( 0, MAKEINTRESOURCE(OBM_ZOOM) );
-      hbitmapMaximizeD = LoadBitmapW( 0, MAKEINTRESOURCE(OBM_ZOOMD) );
-      hbitmapRestore   = LoadBitmapW( 0, MAKEINTRESOURCE(OBM_RESTORE) );
-      hbitmapRestoreD  = LoadBitmapW( 0, MAKEINTRESOURCE(OBM_RESTORED) );
-   }
-
-  if (GetWindowLong(hWnd, GWL_EXSTYLE) & WS_EX_DLGMODALFRAME)
-  {
-      /* Unimplemented */
-  }
+    RECT r = *rect;
+    char buffer[256];
     
-    /* Fill the caption with COLOR_(IN)ACTIVECAPTION.
-       In the future this will be GradientFill() */
-       
+    /* Implement and Use DrawCaption() */
     SelectObject( hDC, GetSysColorBrush(active ? COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION) );
     PatBlt(hDC,rect->left + 3, rect->top + 3, rect->right - 6, rect->bottom - 1, PATCOPY );
     
-  if (style & WS_SYSMENU)
+    if (style & WS_SYSMENU)
     {
-      UserDrawSysMenuButton( hWnd, hDC, FALSE );
+      UserDrawSysMenuButton( hWnd, hDC, FALSE);
       r.left += GetSystemMetrics(SM_CXSIZE) + 1;
-      UserDrawCloseButton( hWnd, hDC, FALSE );
-    }
-  if (style & WS_MAXIMIZEBOX)
-    {
-      UserDrawMaxButton( hWnd, hDC, FALSE );
+      UserDrawCloseButton( hWnd, hDC, FALSE);
       r.right -= GetSystemMetrics(SM_CXSMSIZE) + 1;
+      UserDrawMinButton(hWnd, hDC, FALSE);
+      UserDrawMaxButton(hWnd, hDC, FALSE);
     }
-  if (style & WS_MINIMIZEBOX)
-    {
-      UserDrawMinButton( hWnd, hDC, FALSE );
-      r.right -= GetSystemMetrics(SM_CXSMSIZE) + 1;
-    }
-
-
   if (GetWindowTextA( hWnd, buffer, sizeof(buffer) ))
     {
       NONCLIENTMETRICS nclm;
@@ -458,9 +455,9 @@ DefWndHitTestNC(HWND hWnd, POINT Point)
   ULONG ExStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
 
   GetWindowRect(hWnd, &WindowRect);
-
   if (!PtInRect(&WindowRect, Point))
     {
+      
       return(HTNOWHERE);
     }
   if (Style & WS_MINIMIZE)
@@ -561,7 +558,7 @@ DefWndHitTestNC(HWND hWnd, POINT Point)
 	      return(HTCLOSE);
 	    }
 
-	  if (Style & WS_MAXIMIZEBOX)
+	  if (Style & WS_MAXIMIZEBOX || Style & WS_MINIMIZEBOX)
 	    {
 	      WindowRect.right -= GetSystemMetrics(SM_CXSMSIZE) + 1;
 	    }
@@ -625,192 +622,116 @@ DefWndHitTestNC(HWND hWnd, POINT Point)
 }
 
 VOID
-DefWndTrackMinMaxBox(HWND hWnd, WPARAM wParam)
-{
-  HDC hDC = GetWindowDC(hWnd);
-  BOOL Pressed = TRUE;
-  MSG Msg;
-
-  SetCapture(hWnd);
-
-  if (wParam == HTMINBUTTON)
-    {
-      UserDrawMinButton(hWnd, hDC, TRUE);
-    }
-  else
-    {
-      UserDrawMaxButton(hWnd, hDC, TRUE);
-    }
-
-  for(;;)
-    {
-      BOOL OldState = Pressed;
-
-      GetMessageA(hWnd, &Msg, 0, 0);
-      if (Msg.message == WM_LBUTTONUP)
-	{
-	  break;
-	}
-      if (Msg.message != WM_MOUSEMOVE)
-	{
-	  continue;
-	}
-
-      Pressed = DefWndHitTestNC(hWnd, Msg.pt) == (LRESULT) wParam;
-      if (Pressed != OldState)
-	{
-	  if (wParam == HTMINBUTTON)
-	    {
-	      UserDrawMinButton(hWnd, hDC, Pressed);
-	    }
-	  else
-	    {
-	      UserDrawMaxButton(hWnd, hDC, Pressed);
-	    }
-	}
-    }
-
-  if (Pressed)
-    {
-      if (wParam == HTMINBUTTON)
-	{
-	  UserDrawMinButton(hWnd, hDC, FALSE);
-	}
-      else
-	{
-	  UserDrawMaxButton(hWnd, hDC, FALSE);
-	}
-    }
-
-  ReleaseCapture();
-  ReleaseDC(hWnd, hDC);
-
-  if (!Pressed)
-    {
-      return;
-    }
-
-  if (wParam == HTMINBUTTON)
-    {
-      SendMessageA(hWnd, WM_SYSCOMMAND, SC_MINIMIZE,
-		   MAKELONG(Msg.pt.x, Msg.pt.y));
-    }
-  else
-    {
-      SendMessageA(hWnd, WM_SYSCOMMAND,
-		   IsZoomed(hWnd) ? SC_RESTORE : SC_MAXIMIZE,
-		   MAKELONG(Msg.pt.x, Msg.pt.y));
-    }
-}
-
-VOID
 DefWndDrawSysButton(HWND hWnd, HDC hDC, BOOL Down)
 {
-  RECT Rect;
-  HDC hDCMem;
-  HBITMAP hSavedBitmap;
-
-  UserGetInsideRectNC(hWnd, &Rect);
-  hDCMem = CreateCompatibleDC(hDC);
-  hSavedBitmap = SelectObject(hDCMem, hbitmapClose);
-  BitBlt(hDC, Rect.left, Rect.top, GetSystemMetrics(SM_CXSIZE),
-	 GetSystemMetrics(SM_CYSIZE), hDCMem,
-	 (GetWindowLong(hWnd, GWL_STYLE) & WS_CHILD) ?
-	 GetSystemMetrics(SM_CXSIZE): 0, 0, Down ? NOTSRCCOPY : SRCCOPY);
-  SelectObject(hDCMem, hSavedBitmap);
-  DeleteDC(hDCMem);
 }
 
 LRESULT
 DefWndHandleLButtonDownNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-  switch (wParam)
+    switch (wParam)
     {
-    case HTCAPTION:
-      {
-	HWND hTopWnd = GetDesktopWindow(); //GetAncestor(hWnd, GA_ROOT); temp fix.
-	if (SetActiveWindow(hTopWnd) || GetActiveWindow() == hTopWnd)
-	  {
-	    SendMessageA(hWnd, WM_SYSCOMMAND, SC_MOVE + HTCAPTION, lParam);
-	  }
-	break;
-      }
-    case HTSYSMENU:
-      {
-	if (GetWindowLong(hWnd, GWL_STYLE) & WS_SYSMENU)
-	  {
-	    if (!(GetWindowLong(hWnd, GWL_STYLE) & WS_MINIMIZE))
-	      {
-		HDC hDC = GetWindowDC(hWnd);
-		DefWndDrawSysButton(hWnd, hDC, TRUE);
-		ReleaseDC(hWnd, hDC);
-	      }
-	    SendMessageA(hWnd, WM_SYSCOMMAND, SC_MOUSEMENU + HTSYSMENU,
-			 lParam);
-	  }
-	break;
-      }
-
-    case HTMENU:
-      SendMessageA(hWnd, WM_SYSCOMMAND, SC_MOUSEMENU, lParam);
-      break;
-
-    case HTHSCROLL:
-      SendMessageA(hWnd, WM_SYSCOMMAND, SC_HSCROLL + HTHSCROLL, lParam);
-      break;
-
-    case HTVSCROLL:
-      SendMessageA(hWnd, WM_SYSCOMMAND, SC_VSCROLL + HTVSCROLL, lParam);
-      break;
-
-    case HTMINBUTTON:
-        UserDrawMinButton(hWnd, GetWindowDC(hWnd),TRUE);
-        break;
-    case HTMAXBUTTON:
-        UserDrawMaxButton(hWnd,GetWindowDC(hWnd),TRUE);
-        break;
-    case HTCLOSE:
-        UserDrawCloseButton(hWnd,GetWindowDC(hWnd),TRUE);
-        break;
-    case HTLEFT:
-    case HTRIGHT:
-    case HTTOP:
-    case HTBOTTOM:
-    case HTTOPLEFT:
-    case HTTOPRIGHT:
-    case HTBOTTOMLEFT:
-    case HTBOTTOMRIGHT:
-      SendMessageA(hWnd, WM_SYSCOMMAND, SC_SIZE + wParam - 2, lParam);
-      break;
+        case HTCAPTION:
+        {
+	        HWND hTopWnd = GetDesktopWindow(); //GetAncestor(hWnd, GA_ROOT); temp fix.
+	        if (SetActiveWindow(hTopWnd) || GetActiveWindow() == hTopWnd)
+	        {
+	            SendMessageA(hWnd, WM_SYSCOMMAND, SC_MOVE + HTCAPTION, lParam);
+	        }
+	        break;
+        }
+        case HTSYSMENU:
+        {
+	        if (GetWindowLong(hWnd, GWL_STYLE) & WS_SYSMENU)
+            {
+	            if (!(GetWindowLong(hWnd, GWL_STYLE) & WS_MINIMIZE))
+	            {
+		            HDC hDC = GetWindowDC(hWnd);
+		            DefWndDrawSysButton(hWnd, hDC, TRUE);
+		            ReleaseDC(hWnd, hDC);
+	            }
+	        SendMessageA(hWnd, WM_SYSCOMMAND, SC_MOUSEMENU + HTSYSMENU,
+			             lParam);
+	        }
+            break;
+        }
+        case HTMENU:
+        {
+            SendMessageA(hWnd, WM_SYSCOMMAND, SC_MOUSEMENU, lParam);
+            break;
+        }
+        case HTHSCROLL:
+        {
+            SendMessageA(hWnd, WM_SYSCOMMAND, SC_HSCROLL + HTHSCROLL, lParam);
+            break;
+        }
+        case HTVSCROLL:
+        {
+            SendMessageA(hWnd, WM_SYSCOMMAND, SC_VSCROLL + HTVSCROLL, lParam);
+            break;
+        }
+        case HTMINBUTTON:
+        {
+            UserDrawMinButton(hWnd, GetWindowDC(hWnd), IsMinBoxActive(hWnd) );
+            break;
+        }
+        case HTMAXBUTTON:
+        {
+            UserDrawMaxButton(hWnd,GetWindowDC(hWnd), IsMaxBoxActive(hWnd) );
+            break;
+        }
+        case HTCLOSE:
+        {
+            UserDrawCloseButton(hWnd,GetWindowDC(hWnd),TRUE);
+            break;
+        }
+        case HTLEFT:
+        case HTRIGHT:
+        case HTTOP:
+        case HTBOTTOM:
+        case HTTOPLEFT:
+        case HTTOPRIGHT:
+        case HTBOTTOMLEFT:
+        case HTBOTTOMRIGHT:
+        {
+            SendMessageA(hWnd, WM_SYSCOMMAND, SC_SIZE + wParam - 2, lParam);
+            break;
+        }
     }
-
-  return(0);
+    return(0);
 }
 
 LRESULT
 DefWndHandleLButtonDblClkNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-  /* FIXME: Implement this. */
-  return(0);
+    return(0);
 }
 
 LRESULT
 DefWndHandleLButtonUpNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-  UserDrawMinButton(hWnd,GetWindowDC(hWnd),FALSE);
-  UserDrawMaxButton(hWnd,GetWindowDC(hWnd),FALSE);
-  UserDrawCloseButton(hWnd,GetWindowDC(hWnd),FALSE);
-  switch (wParam)
+    UserDrawMinButton(hWnd,GetWindowDC(hWnd),FALSE);
+    UserDrawMaxButton(hWnd,GetWindowDC(hWnd),FALSE);
+    UserDrawCloseButton(hWnd,GetWindowDC(hWnd),FALSE);
+    switch (wParam)
     {
-    case HTMINBUTTON:
-        break;
-    case HTMAXBUTTON:
-        break;
-    case HTCLOSE:
-      SendMessageA(hWnd, WM_CLOSE, 0, 0);
-      break;
+        case HTMINBUTTON:
+        {
+            SendMessageA(hWnd, WM_SYSCOMMAND, SC_MINIMIZE, 0);
+            break;
+        }
+        case HTMAXBUTTON:
+        {
+            SendMessageA(hWnd, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
+            break;
+        }
+        case HTCLOSE:
+        {
+            SendMessageA(hWnd, WM_CLOSE, 0, 0);
+            SendMessageA(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0);
+            break;
+        }
     }
-
   return(0);
 }
 
@@ -1271,13 +1192,13 @@ User32DefWindowProc(HWND hWnd,
 	  {
 	    return(0);
 	  }
-	/* FIXME: Check for a popup window. */
+	/* FIXME: Not done correctly */
 	if ((GetWindowLongW(hWnd, GWL_STYLE) & WS_VISIBLE && !wParam) ||
 	    (!(GetWindowLongW(hWnd, GWL_STYLE) & WS_VISIBLE) && wParam))
 	  {
 	    return(0);
 	  }
-	ShowWindow(hWnd, wParam ? SW_SHOWNOACTIVATE : SW_HIDE);
+	ShowWindow(hWnd, wParam ? SW_SHOWNA : SW_HIDE);
 	break;
       }
 
@@ -1375,6 +1296,7 @@ User32DefWindowProc(HWND hWnd,
   return 0;
 }
 
+
 LRESULT STDCALL
 DefWindowProcA(HWND hWnd,
 	       UINT Msg,
@@ -1466,7 +1388,6 @@ DefWindowProcA(HWND hWnd,
 	  {
 	    GlobalDeleteAtom((ATOM)(ULONG)WindowTextAtom);
 	  }
-	/* FIXME: Destroy scroll bars here as well. */
 	return(0);
       }
 
@@ -1571,7 +1492,7 @@ DefWindowProcW(HWND hWnd,
 	  {
 	    GlobalDeleteAtom((ATOM)(DWORD)WindowTextAtom);
 	  }
-	/* FIXME: Destroy scroll bars here as well. */
+
 	return(0);
       }
 
