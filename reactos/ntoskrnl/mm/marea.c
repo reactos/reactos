@@ -346,6 +346,53 @@ PVOID MmFindGap(PMADDRESS_SPACE AddressSpace, ULONG Length, BOOL TopDown)
    return MmFindGapBottomUp(AddressSpace, Length);
 }
 
+ULONG MmFindGapAtAddress(PMADDRESS_SPACE AddressSpace, PVOID Address)
+{
+   PLIST_ENTRY current_entry, ListHead;
+   PMEMORY_AREA current;
+
+   Address = (PVOID)PAGE_ROUND_DOWN(Address);
+
+   if (AddressSpace->LowestAddress < KERNEL_BASE)
+   {
+      if (Address >= (PVOID)KERNEL_BASE)
+      {
+         return 0;
+      }
+   }
+   else
+   {
+      if ((ULONG_PTR)Address < AddressSpace->LowestAddress)
+      {
+         return 0;
+      }
+   }
+
+   ListHead = &AddressSpace->MAreaListHead;
+
+   current_entry = ListHead->Flink;
+   while (current_entry != ListHead)
+   {
+      current = CONTAINING_RECORD(current_entry,MEMORY_AREA,Entry);
+      if (current->BaseAddress <= Address && Address < current->BaseAddress + current->Length)
+      {
+         return 0;
+      }
+      else if (current->BaseAddress > Address)
+      {
+         return (ULONG_PTR)current->BaseAddress - (ULONG_PTR)Address;
+      }
+      current_entry = current_entry->Flink;
+   }
+   if (AddressSpace->LowestAddress < KERNEL_BASE)
+   {
+      return KERNEL_BASE - (ULONG_PTR)Address;
+   }
+   else
+   {
+      return 0 - (ULONG_PTR)Address;
+   }
+}
 
 NTSTATUS INIT_FUNCTION
 MmInitMemoryAreas(VOID)

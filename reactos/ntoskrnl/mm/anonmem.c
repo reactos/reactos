@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: anonmem.c,v 1.28 2004/06/06 08:36:31 hbirr Exp $
+/* $Id: anonmem.c,v 1.29 2004/07/10 17:01:03 hbirr Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/anonmem.c
@@ -887,8 +887,9 @@ MmQueryAnonMem(PMEMORY_AREA MemoryArea,
    Region = MmFindRegion(MemoryArea->BaseAddress,
                          &MemoryArea->Data.VirtualMemoryData.RegionListHead,
                          Address, &RegionBase);
-   Info->AllocationBase = RegionBase;
-   Info->AllocationProtect = Region->Protect;  /* FIXME */
+   Info->BaseAddress = RegionBase;
+   Info->AllocationBase = MemoryArea->BaseAddress;
+   Info->AllocationProtect = MemoryArea->Attributes;
    Info->RegionSize = (char*)RegionBase + Region->Length - (char*)Info->BaseAddress;
    Info->State = Region->Type;
    Info->Protect = Region->Protect;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.152 2004/06/20 10:21:48 navaraf Exp $
+/* $Id: section.c,v 1.153 2004/07/10 17:01:02 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -2035,7 +2035,7 @@ MmQuerySectionView(PMEMORY_AREA MemoryArea,
          }
       }
       KeReleaseSpinLock(&Section->ViewListLock, oldIrql);
-      Info->BaseAddress = MemoryArea->BaseAddress;
+      Info->BaseAddress = RegionBaseAddress;
       Info->AllocationProtect = MemoryArea->Attributes;
       Info->Type = MEM_IMAGE;
    }
@@ -2043,10 +2043,10 @@ MmQuerySectionView(PMEMORY_AREA MemoryArea,
    {
       Info->BaseAddress = RegionBaseAddress;
       Info->AllocationBase = MemoryArea->BaseAddress;
-      Info->AllocationProtect = Region->Protect;
+      Info->AllocationProtect = MemoryArea->Attributes;
       Info->Type = MEM_MAPPED;
    }
-   Info->RegionSize = MemoryArea->Length;
+   Info->RegionSize = PAGE_ROUND_UP(MemoryArea->Length);
    Info->State = MEM_COMMIT;
    Info->Protect = Region->Protect;
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: virtual.c,v 1.77 2004/07/09 20:14:49 navaraf Exp $
+/* $Id: virtual.c,v 1.78 2004/07/10 17:01:02 hbirr Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/virtual.c
@@ -132,6 +132,12 @@ NtQueryVirtualMemory (IN HANDLE ProcessHandle,
    MEMORY_AREA* MemoryArea;
    ULONG ResultLength = 0;
    PMADDRESS_SPACE AddressSpace;
+   KPROCESSOR_MODE PrevMode;
+   union
+   {
+      MEMORY_BASIC_INFORMATION BasicInfo;
+   }
+   VirtualMemoryInfo;
 
    DPRINT("NtQueryVirtualMemory(ProcessHandle %x, Address %x, "
           "VirtualMemoryInformationClass %d, VirtualMemoryInformation %x, "
@@ -139,20 +145,33 @@ NtQueryVirtualMemory (IN HANDLE ProcessHandle,
           VirtualMemoryInformationClass,VirtualMemoryInformation,
           Length,ResultLength);
 
-   Status = ObReferenceObjectByHandle(ProcessHandle,
-                                      PROCESS_QUERY_INFORMATION,
-                                      NULL,
-                                      UserMode,
-                                      (PVOID*)(&Process),
-                                      NULL);
+   PrevMode =  ExGetPreviousMode();
 
-   if (!NT_SUCCESS(Status))
+   if (PrevMode == UserMode && Address >= (PVOID)KERNEL_BASE)
    {
-      DPRINT("NtQueryVirtualMemory() = %x\n",Status);
-      return(Status);
+      return STATUS_INVALID_PARAMETER;
    }
 
-   AddressSpace = &Process->AddressSpace;
+   if (Address < (PVOID)KERNEL_BASE)
+   {
+      Status = ObReferenceObjectByHandle(ProcessHandle,
+                                         PROCESS_QUERY_INFORMATION,
+                                         NULL,
+                                         UserMode,
+                                         (PVOID*)(&Process),
+                                         NULL);
+
+      if (!NT_SUCCESS(Status))
+      {
+         DPRINT("NtQueryVirtualMemory() = %x\n",Status);
+         return(Status);
+      }
+      AddressSpace = &Process->AddressSpace;
+   }
+   else
+   {
+      AddressSpace = MmGetKernelAddressSpace();
+   }
    MmLockAddressSpace(AddressSpace);
    MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
                                           Address);
@@ -160,47 +179,65 @@ NtQueryVirtualMemory (IN HANDLE ProcessHandle,
    {
       case MemoryBasicInformation:
          {
-            PMEMORY_BASIC_INFORMATION Info =
-               (PMEMORY_BASIC_INFORMATION)VirtualMemoryInformation;
-
+	    PMEMORY_BASIC_INFORMATION Info = &VirtualMemoryInfo.BasicInfo;
             if (Length != sizeof(MEMORY_BASIC_INFORMATION))
             {
                MmUnlockAddressSpace(AddressSpace);
                ObDereferenceObject(Process);
                return(STATUS_INFO_LENGTH_MISMATCH);
             }
-
+            
             if (MemoryArea == NULL)
             {
+	       Info->Type = 0;
                Info->State = MEM_FREE;
+	       Info->Protect = PAGE_NOACCESS;
+	       Info->AllocationProtect = 0;
                Info->BaseAddress = (PVOID)PAGE_ROUND_DOWN(Address);
-               Info->AllocationBase = 0;
-               Info->AllocationProtect = 0;
-               /* TODO: Find the next memory area and set RegionSize! */
-               /* Since programs might depend on RegionSize for
-                * iteration, we for now just make up a value.
-                */
-               Info->RegionSize = (Address > (PVOID)0x80000000) ? 0 : 0x10000;
-               Info->Protect = PAGE_NOACCESS;
-               Info->Type = 0;
+	       Info->AllocationBase = NULL;
+	       Info->RegionSize = MmFindGapAtAddress(AddressSpace, Info->BaseAddress);
                Status = STATUS_SUCCESS;
                ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
-            }
-            else if (MemoryArea->Type == MEMORY_AREA_VIRTUAL_MEMORY)
-            {
-               Status = MmQueryAnonMem(MemoryArea, Address, Info,
-                                       &ResultLength);
-            }
-            else if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
-            {
-               Status = MmQuerySectionView(MemoryArea, Address, Info,
-                                           &ResultLength);
-            }
-            else
-            {
-               Status = STATUS_UNSUCCESSFUL;
-               ResultLength = 0;
-            }
+	    }
+            else 
+	    {
+	       switch(MemoryArea->Type)
+	       {
+		  case MEMORY_AREA_VIRTUAL_MEMORY:
+                     Status = MmQueryAnonMem(MemoryArea, Address, Info,
+                                             &ResultLength);
+		     break;
+	          case MEMORY_AREA_SECTION_VIEW:
+                     Status = MmQuerySectionView(MemoryArea, Address, Info,
+                                                 &ResultLength);
+                     break;
+		  case MEMORY_AREA_NO_ACCESS:
+	             Info->Type = 0;
+                     Info->State = MEM_FREE;
+	             Info->Protect = MemoryArea->Attributes;
+		     Info->AllocationProtect = MemoryArea->Attributes;
+                     Info->BaseAddress = MemoryArea->BaseAddress;
+	             Info->AllocationBase = MemoryArea->BaseAddress;
+	             Info->RegionSize = MemoryArea->Length;
+                     Status = STATUS_SUCCESS;
+                     ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
+	             break;
+		  case MEMORY_AREA_SHARED_DATA:
+	             Info->Type = 0;
+                     Info->State = MEM_COMMIT;
+	             Info->Protect = MemoryArea->Attributes;
+		     Info->AllocationProtect = MemoryArea->Attributes;
+                     Info->BaseAddress = MemoryArea->BaseAddress;
+	             Info->AllocationBase = MemoryArea->BaseAddress;
+	             Info->RegionSize = MemoryArea->Length;
+                     Status = STATUS_SUCCESS;
+                     ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
+		     break;
+		  default:
+	             Status = STATUS_UNSUCCESSFUL;
+                     ResultLength = 0;
+	       }
+	    }
             break;
          }
 
@@ -213,7 +250,20 @@ NtQueryVirtualMemory (IN HANDLE ProcessHandle,
    }
 
    MmUnlockAddressSpace(AddressSpace);
-   ObDereferenceObject(Process);
+   if (Address < (PVOID)KERNEL_BASE)
+   {
+      ObDereferenceObject(Process);
+   }
+
+   if (NT_SUCCESS(Status) && ResultLength > 0)
+   {
+      Status = MmCopyToCaller(VirtualMemoryInformation, &VirtualMemoryInfo, ResultLength);
+      if (!NT_SUCCESS(Status))
+      {
+         ResultLength = 0;
+      }
+   }
+   
    if (UnsafeResultLength != NULL)
    {
       MmCopyToCaller(UnsafeResultLength, &ResultLength, sizeof(ULONG));
