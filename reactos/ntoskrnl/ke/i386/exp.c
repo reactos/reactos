@@ -318,7 +318,10 @@ KiDoubleFaultHandler(VOID)
 	  StackBase = (ULONG)&init_stack;
 	}
 
-      /* Change to an #if 0 if no frames are printed because of fpo. */
+      /* 
+	 Change to an #if 0 to reduce the amount of information printed on
+	 a recursive stack trace. 
+      */      
 #if 1
       DbgPrint("Frames: ");
       Frame = (PULONG)OldTss->Ebp;
@@ -488,7 +491,8 @@ KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG Parameter1, ULONG Parameter2)
     * Dump the stack frames
     */
    DbgPrint("Frames: ");
-#if 0
+   /* Change to an #if 0 if no frames are printed because of fpo. */
+#if 1
    i = 1;
    Frame = (PULONG)Tf->Ebp;
    while (Frame != NULL)
