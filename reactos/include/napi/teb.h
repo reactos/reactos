@@ -220,7 +220,7 @@ typedef struct _TEB
    PVOID Instrumentation[0x10];        // F2Ch
    PVOID WinSockData;                  // F6Ch
    ULONG GdiBatchCount;                // F70h
-   ULONG Spare2;                       // F74h
+   ULONG Spare2;                       // F74h // NOTE: RtlExitUserThread writes something here
    ULONG Spare3;                       // F78h
    ULONG Spare4;                       // F7Ch
    PVOID ReservedForOle;               // F80h

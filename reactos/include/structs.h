@@ -4021,11 +4021,70 @@ typedef struct tagSTYLESTRUCT {
   DWORD styleNew;
 } STYLESTRUCT, * LPSTYLESTRUCT;
 
+typedef struct _ACCESS_ALLOWED_ACE {
+ ACE_HEADER Header;
+ ACCESS_MASK Mask;
+ DWORD SidStart;
+} ACCESS_ALLOWED_ACE;
+
+typedef ACCESS_ALLOWED_ACE *PACCESS_ALLOWED_ACE;
+
+typedef struct _ACCESS_DENIED_ACE {
+ ACE_HEADER Header;
+ ACCESS_MASK Mask;
+ DWORD SidStart;
+} ACCESS_DENIED_ACE;
+typedef ACCESS_DENIED_ACE *PACCESS_DENIED_ACE;
+
 typedef struct _SYSTEM_AUDIT_ACE {
-  ACE_HEADER  Header;
-  ACCESS_MASK Mask;
-  DWORD       SidStart;
+ ACE_HEADER Header;
+ ACCESS_MASK Mask;
+ DWORD SidStart;
 } SYSTEM_AUDIT_ACE;
+typedef SYSTEM_AUDIT_ACE *PSYSTEM_AUDIT_ACE;
+
+typedef struct _SYSTEM_ALARM_ACE {
+ ACE_HEADER Header;
+ ACCESS_MASK Mask;
+ DWORD SidStart;
+} SYSTEM_ALARM_ACE;
+typedef SYSTEM_ALARM_ACE *PSYSTEM_ALARM_ACE;
+
+typedef struct _ACCESS_ALLOWED_OBJECT_ACE {
+ ACE_HEADER Header;
+ ACCESS_MASK Mask;
+ DWORD Flags;
+ GUID ObjectType;
+ GUID InheritedObjectType;
+ DWORD SidStart;
+} ACCESS_ALLOWED_OBJECT_ACE, *PACCESS_ALLOWED_OBJECT_ACE;
+
+typedef struct _ACCESS_DENIED_OBJECT_ACE {
+ ACE_HEADER Header;
+ ACCESS_MASK Mask;
+ DWORD Flags;
+ GUID ObjectType;
+ GUID InheritedObjectType;
+ DWORD SidStart;
+} ACCESS_DENIED_OBJECT_ACE, *PACCESS_DENIED_OBJECT_ACE;
+
+typedef struct _SYSTEM_AUDIT_OBJECT_ACE {
+ ACE_HEADER Header;
+ ACCESS_MASK Mask;
+ DWORD Flags;
+ GUID ObjectType;
+ GUID InheritedObjectType;
+ DWORD SidStart;
+} SYSTEM_AUDIT_OBJECT_ACE, *PSYSTEM_AUDIT_OBJECT_ACE;
+
+typedef struct _SYSTEM_ALARM_OBJECT_ACE {
+ ACE_HEADER Header;
+ ACCESS_MASK Mask;
+ DWORD Flags;
+ GUID ObjectType;
+ GUID InheritedObjectType;
+ DWORD SidStart;
+} SYSTEM_ALARM_OBJECT_ACE, *PSYSTEM_ALARM_OBJECT_ACE;
 
 typedef struct _SYSTEM_INFO
 {

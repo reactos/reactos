@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.36 2002/11/14 18:21:03 chorns Exp $
+/* $Id: rtl.h,v 1.37 2003/03/31 22:30:48 hyperion Exp $
  *
  */
 
@@ -338,6 +338,8 @@ RtlCreateUserThread (
 	IN OUT	PHANDLE			ThreadHandle,
 	IN OUT	PCLIENT_ID		ClientId
 	);
+
+NTSTATUS STDCALL RtlExitUserThread(NTSTATUS Status);
 
 NTSTATUS
 STDCALL
