@@ -1,4 +1,4 @@
-/* $Id: rtltypes.h,v 1.16 2004/10/24 20:37:26 weiden Exp $
+/* $Id$
  * 
  */
 
@@ -444,5 +444,9 @@ typedef struct _RTL_GENERIC_TABLE {
 	PVOID TableContext;
 } RTL_GENERIC_TABLE;
 typedef RTL_GENERIC_TABLE *PRTL_GENERIC_TABLE;
+
+typedef NTSTATUS
+(*PHEAP_ENUMERATION_ROUTINE)(IN PVOID HeapHandle,
+                             IN PVOID UserParam);
 
 #endif /* __DDK_RTLTYPES_H */

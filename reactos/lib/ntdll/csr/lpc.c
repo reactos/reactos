@@ -1,4 +1,4 @@
-/* $Id: lpc.c,v 1.15 2004/12/24 17:45:57 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -168,7 +168,7 @@ CsrClientConnectToServer(VOID)
    CsrSectionMapServerBase = LpcWrite.TargetViewBase;
 
    /* Create the heap for communication for csrss. */
-   CsrCommHeap = RtlCreateHeap(HEAP_NO_VALLOC,
+   CsrCommHeap = RtlCreateHeap(0,
 			       CsrSectionMapBase,
 			       CsrSectionViewSize.u.LowPart,
 			       CsrSectionViewSize.u.LowPart,

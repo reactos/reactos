@@ -1,4 +1,4 @@
-/* $Id: processes.c,v 1.3 2004/11/08 00:34:46 weiden Exp $
+/* $Id$
 */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -261,32 +261,8 @@ PsaWalkFirstThread(IN PSYSTEM_PROCESSES CurrentProcess)
 {
   static SIZE_T nOffsetOfThreads = 0;
 
-  /* get the offset of the Threads field (dependant on the kernel version) */
-  if(!nOffsetOfThreads)
-  {
-    /*
-     FIXME: we should probably use the build number, instead, but it isn't
-     available as reliably as the major and minor version numbers
-    */
-    switch(SharedUserData->NtMajorVersion)
-    {
-      /* NT 3 and 4 */
-      case 3:
-      case 4:
-      {
-        nOffsetOfThreads = offsetof(SYSTEM_PROCESSES_NT4, Threads);
-        break;
-      }
-
-      /* NT 5 and later */
-      case 5:
-      default:
-      {
-        nOffsetOfThreads = offsetof(SYSTEM_PROCESSES_NT5, Threads);
-        break;
-      }
-    }
-  }
+  /* get the offset of the Threads field */
+  nOffsetOfThreads = offsetof(SYSTEM_PROCESSES, Threads);
 
   return (PSYSTEM_THREADS)((ULONG_PTR)CurrentProcess + nOffsetOfThreads);
 }

@@ -12,9 +12,6 @@
 #ifndef __INCLUDE_HEAP_H
 #define __INCLUDE_HEAP_H
 
-/* HeapAlloc, HeapReAlloc */
-#define HEAP_NO_VALLOC 			(256)
-
 #ifndef __USE_W32API
 
 #define HEAP_NO_SERIALIZE		(1)
