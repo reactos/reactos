@@ -1,4 +1,4 @@
-/* $Id: class2.c,v 1.4 2002/01/31 14:57:58 ekohl Exp $
+/* $Id: class2.c,v 1.5 2002/02/03 20:21:29 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -126,8 +126,10 @@ ScsiClassBuildRequest(PDEVICE_OBJECT DeviceObject,
 
 //  logicalBlockAddress = (ULONG)(Int64ShrlMod32(startingOffset.QuadPart, deviceExtension->SectorShift));
 
-  startingBlock.QuadPart = startingOffset.QuadPart >> deviceExtension->SectorShift;
+  startingBlock.QuadPart = startingOffset.QuadPart / 512; // >> deviceExtension->SectorShift;
   logicalBlockAddress = (ULONG)startingBlock.u.LowPart;
+
+  DPRINT1("Logical block address: %lu\n", logicalBlockAddress);
 
     //
     // Allocate an Srb.
@@ -222,7 +224,7 @@ ScsiClassBuildRequest(PDEVICE_OBJECT DeviceObject,
 		MAXIMUM_CDB_SIZE);
 
   Cdb->CDB10.LogicalUnitNumber = deviceExtension->Lun;
-    transferBlocks = (USHORT)(currentIrpStack->Parameters.Read.Length >> deviceExtension->SectorShift);
+  transferBlocks = (USHORT)(currentIrpStack->Parameters.Read.Length >> deviceExtension->SectorShift);
 
     //
     // Move little endian values into CDB in big endian format.
@@ -319,7 +321,7 @@ ScsiClassClaimDevice(PDEVICE_OBJECT PortDeviceObject,
   PIRP Irp;
   NTSTATUS Status;
 
-  DPRINT1("ScsiClassClaimDevice() called\n");
+  DPRINT("ScsiClassClaimDevice() called\n");
 
   if (NewPortDeviceObject != NULL)
     *NewPortDeviceObject = NULL;
@@ -406,7 +408,7 @@ ScsiClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   UNICODE_STRING DeviceName;
   NTSTATUS Status;
 
-  DPRINT1("ScsiClassCreateDeviceObject() called\n");
+  DPRINT("ScsiClassCreateDeviceObject() called\n");
 
   *DeviceObject = NULL;
 
@@ -421,7 +423,7 @@ ScsiClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
       return(Status);
     }
 
-  DPRINT1("Device name: '%wZ'\n", &DeviceName);
+  DPRINT("Device name: '%wZ'\n", &DeviceName);
 
   Status = IoCreateDevice(DriverObject,
 			  InitializationData->DeviceExtensionSize,
@@ -432,7 +434,7 @@ ScsiClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 			  &InternalDeviceObject);
   if (NT_SUCCESS(Status))
     {
-      PDEVICE_EXTENSION deviceExtension = InternalDeviceObject->DeviceExtension;
+      DeviceExtension = InternalDeviceObject->DeviceExtension;
 
       DeviceExtension->ClassError = InitializationData->ClassError;
       DeviceExtension->ClassReadWriteVerification = InitializationData->ClassReadWriteVerification;
@@ -696,7 +698,7 @@ ScsiClassInitialize(PVOID Argument1,
       DPRINT("Status 0x%08lX\n", Status);
       if (NT_SUCCESS(Status))
 	{
-	  DPRINT1("ScsiPort%lu found.\n", PortNumber);
+	  DPRINT("ScsiPort%lu found.\n", PortNumber);
 
 	  /* Check scsi port for attached disk drives */
 	  if (InitializationData->ClassFindDevices(DriverObject,
@@ -710,9 +712,9 @@ ScsiClassInitialize(PVOID Argument1,
 	}
     }
 
-  DPRINT("ScsiClassInitialize() done!\n");
-for(;;);
-
+  DPRINT1("ScsiClassInitialize() done!\n");
+//  DPRINT1("** System stopped! **\n");
+//for(;;);
   return((DiskFound == TRUE) ? STATUS_SUCCESS : STATUS_NO_SUCH_DEVICE);
 }
 
@@ -750,7 +752,7 @@ ScsiClassIoComplete(PDEVICE_OBJECT DeviceObject,
 		    PIRP Irp,
 		    PVOID Context)
 {
-  DPRINT1("ScsiClassIoComplete() called\n");
+  DPRINT("ScsiClassIoComplete() called\n");
 
   if (Irp->PendingReturned)
     {
@@ -798,7 +800,7 @@ ScsiClassReadDriveCapacity(IN PDEVICE_OBJECT DeviceObject)
   ULONG LastSector;
   ULONG SectorSize;
 
-  DPRINT1("ScsiClassReadDriveCapacity() called\n");
+  DPRINT("ScsiClassReadDriveCapacity() called\n");
 
   DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
@@ -903,7 +905,7 @@ ScsiClassSendSrbSynchronous(PDEVICE_OBJECT DeviceObject,
   NTSTATUS Status;
 
 
-  DPRINT1("ScsiClassSendSrbSynchronous() called\n");
+  DPRINT("ScsiClassSendSrbSynchronous() called\n");
 
   DeviceExtension = DeviceObject->DeviceExtension;
 
@@ -1042,6 +1044,10 @@ ScsiClassReadWrite(IN PDEVICE_OBJECT DeviceObject,
   DeviceExtension = DeviceObject->DeviceExtension;
   IrpStack  = IoGetCurrentIrpStackLocation(Irp);
 
+  DPRINT1("Relative Offset: %I64u  Length: %lu\n",
+	 IrpStack->Parameters.Read.ByteOffset.QuadPart,
+	 IrpStack->Parameters.Read.Length);
+
   TransferLength = IrpStack->Parameters.Read.Length;
 
 
@@ -1118,7 +1124,7 @@ ScsiClassReadWrite(IN PDEVICE_OBJECT DeviceObject,
   ScsiClassBuildRequest(DeviceObject,
 			Irp);
 
-  DPRINT1("ScsiClassReadWrite() done\n");
+  DPRINT("ScsiClassReadWrite() done\n");
 
   /* Call the port driver */
   return(IoCallDriver(DeviceExtension->PortDeviceObject,
@@ -1144,13 +1150,20 @@ static NTSTATUS STDCALL
 ScsiClassDeviceDispatch(IN PDEVICE_OBJECT DeviceObject,
 			IN PIRP Irp)
 {
-  DPRINT1("ScsiClassDeviceDispatch() called\n");
+  PDEVICE_EXTENSION DeviceExtension;
 
-  Irp->IoStatus.Status = STATUS_SUCCESS;
-  Irp->IoStatus.Information = 0;
+  DPRINT("ScsiClassDeviceDispatch() called\n");
+
+  DeviceExtension = DeviceObject->DeviceExtension;
+  if (DeviceExtension->ClassDeviceControl)
+    {
+      return(DeviceExtension->ClassDeviceControl(DeviceObject, Irp));
+    }
+
+  Irp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST;
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-  return(STATUS_SUCCESS);
+  return(STATUS_INVALID_DEVICE_REQUEST);
 }
 
 
@@ -1158,13 +1171,20 @@ static NTSTATUS STDCALL
 ScsiClassShutdownFlush(IN PDEVICE_OBJECT DeviceObject,
 		       IN PIRP Irp)
 {
-  DPRINT1("ScsiClassShutdownFlush() called\n");
+  PDEVICE_EXTENSION DeviceExtension;
 
-  Irp->IoStatus.Status = STATUS_SUCCESS;
-  Irp->IoStatus.Information = 0;
+  DPRINT("ScsiClassShutdownFlush() called\n");
+
+  DeviceExtension = DeviceObject->DeviceExtension;
+  if (DeviceExtension->ClassShutdownFlush)
+    {
+      return(DeviceExtension->ClassShutdownFlush(DeviceObject, Irp));
+    }
+
+  Irp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST;
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-  return(STATUS_SUCCESS);
+  return(STATUS_INVALID_DEVICE_REQUEST);
 }
 
 /* EOF */

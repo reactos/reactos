@@ -113,6 +113,8 @@ extern "C" {
 //  Access macros for control registers
 //  Each macro takes an address of the control port blank and data
 //
+#define IDEReadAltStatus(Address) \
+  (ScsiPortReadPortUchar((PUCHAR)((Address) + IDE_REG_ALT_STATUS)))
 #define IDEWriteDriveControl(Address, Data) \
   (ScsiPortWritePortUchar((PUCHAR)((Address) + IDE_REG_DEV_CNTRL), (Data)))
 

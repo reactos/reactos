@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.4 2002/01/31 14:58:52 ekohl Exp $
+/* $Id: scsiport.c,v 1.5 2002/02/03 20:21:59 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -58,6 +58,7 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
   ULONG PortBusInfoSize;
   PSCSI_ADAPTER_BUS_INFO PortBusInfo;
   
+  PDEVICE_OBJECT DeviceObject;
   PCONTROLLER_OBJECT ControllerObject;
   
   PHW_STARTIO HwStartIo;
@@ -113,6 +114,7 @@ typedef struct _SCSI_PORT_CONTROLLER_EXTENSION
   LONG                   TimerCount;
 
   PDEVICE_OBJECT         PortDeviceObject;
+  PCONTROLLER_OBJECT ControllerObject;
 
 } SCSI_PORT_CONTROLLER_EXTENSION, *PSCSI_PORT_CONTROLLER_EXTENSION;
 
@@ -168,6 +170,8 @@ static VOID STDCALL
 ScsiPortIoTimer(PDEVICE_OBJECT DeviceObject,
 		PVOID Context);
 
+static VOID
+ScsiPortFinishOperation(PSCSI_PORT_CONTROLLER_EXTENSION ControllerExtension);
 
 
 /* FUNCTIONS *****************************************************************/
@@ -589,7 +593,27 @@ ScsiPortNotification(IN SCSI_NOTIFICATION_TYPE NotificationType,
 		     IN PVOID HwDeviceExtension,
 		     ...)
 {
-  UNIMPLEMENTED;
+  PSCSI_PORT_DEVICE_EXTENSION DevExt;
+  PSCSI_PORT_CONTROLLER_EXTENSION ControllerExt;
+
+  DPRINT1("ScsiPortNotification() called\n");
+
+  DevExt = (PSCSI_PORT_DEVICE_EXTENSION)((PUCHAR)HwDeviceExtension - sizeof(SCSI_PORT_DEVICE_EXTENSION));
+  ControllerExt = (PSCSI_PORT_CONTROLLER_EXTENSION)DevExt->ControllerObject->ControllerExtension;
+
+  switch (NotificationType)
+    {
+      case RequestComplete:
+	IoCompleteRequest(ControllerExt->CurrentIrp, IO_NO_INCREMENT);
+	break;
+
+      case NextRequest:
+	IoStartNextPacket(DevExt->DeviceObject, FALSE);
+	break;
+
+      default:
+	break;
+    }
 }
 
 
@@ -692,7 +716,7 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
   ULONG DataSize = 0;
 
 
-  DPRINT1("ScsiPortDispatchScsi()\n");
+  DPRINT("ScsiPortDispatchScsi()\n");
 
   DeviceExtension = DeviceObject->DeviceExtension;
   Stack = IoGetCurrentIrpStackLocation(Irp);
@@ -701,19 +725,19 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
     {
       case IOCTL_SCSI_EXECUTE_IN:
 	{
-	  DPRINT1("  IOCTL_SCSI_EXECUTE_IN\n");
+	  DPRINT("  IOCTL_SCSI_EXECUTE_IN\n");
 	}
 	break;
 
       case IOCTL_SCSI_EXECUTE_OUT:
 	{
-	  DPRINT1("  IOCTL_SCSI_EXECUTE_OUT\n");
+	  DPRINT("  IOCTL_SCSI_EXECUTE_OUT\n");
 	}
 	break;
 
       case IOCTL_SCSI_EXECUTE_NONE:
 	{
-	  DPRINT1("  IOCTL_SCSI_EXECUTE_NONE\n");
+	  DPRINT("  IOCTL_SCSI_EXECUTE_NONE\n");
 	}
 	break;
     }
@@ -869,7 +893,7 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
   PIO_STACK_LOCATION Stack;
   PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
 
-  DPRINT1("ScsiPortDeviceControl()\n");
+  DPRINT("ScsiPortDeviceControl()\n");
 
   Irp->IoStatus.Status = STATUS_SUCCESS;
   Irp->IoStatus.Information = 0;
@@ -885,7 +909,7 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	{
 	  PIO_SCSI_CAPABILITIES Capabilities;
 
-	  DPRINT1("  IOCTL_SCSI_GET_CAPABILITIES\n");
+	  DPRINT("  IOCTL_SCSI_GET_CAPABILITIES\n");
 
 	  Capabilities = (PIO_SCSI_CAPABILITIES)Irp->AssociatedIrp.SystemBuffer;
 	  Capabilities->Length = sizeof(IO_SCSI_CAPABILITIES);
@@ -1013,7 +1037,7 @@ ScsiPortReadWrite(IN PDEVICE_OBJECT DeviceObject,
 {
   NTSTATUS Status;
 
-  DPRINT1("ScsiPortReadWrite() called!\n");
+  DPRINT("ScsiPortReadWrite() called!\n");
 
   Status = STATUS_SUCCESS;
 
@@ -1036,7 +1060,7 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
   PIO_STACK_LOCATION IrpStack;
   KIRQL OldIrql;
 
-  DPRINT1("ScsiPortStartIo() called!\n");
+  DPRINT("ScsiPortStartIo() called!\n");
 
   DeviceExtension = DeviceObject->DeviceExtension;
   IrpStack = IoGetCurrentIrpStackLocation(Irp);
@@ -1050,54 +1074,37 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
 	  BOOLEAN Result;
 	  PSCSI_REQUEST_BLOCK Srb;
 
-	  DPRINT1("IRP_MJ_SCSI\n");
+	  DPRINT("IRP_MJ_SCSI\n");
 
 	  Srb = IrpStack->Parameters.Scsi.Srb;
 
-//	  Result = DeviceExtension->HwStartIo(&DeviceExtension->MiniPortDeviceExtension,
-//					      Srb);
-
-	  /* FIXME: Needs error handling! */
-//	  if (Stack->Parameters.DeviceIoControl.IoControlCode == IOCTL_SCSI_EXECUTE_OUT)
-//	  DataSize = Srb->DataTransferLength;
+	  DPRINT("DeviceExtension %p\n", DeviceExtension);
+	  DPRINT("DeviceExtension->ControllerObject %p\n", DeviceExtension->ControllerObject);
 
 	  Irp->IoStatus.Status = STATUS_SUCCESS;
 	  Irp->IoStatus.Information = Srb->DataTransferLength;
 	  IoMarkIrpPending(Irp);
 
-CHECKPOINT1;
 	  KeRaiseIrql(DISPATCH_LEVEL,
 		      &OldIrql);
-CHECKPOINT1;
 	  IoAllocateController(DeviceExtension->ControllerObject,
 			       DeviceObject,
 			       ScsiPortAllocateController,
 			       Irp);
-CHECKPOINT1;
 	  KeLowerIrql(OldIrql);
-CHECKPOINT1;
-
-#if 0
-	Irp->IoStatus.Status = STATUS_SUCCESS;
-	Irp->IoStatus.Information = Srb->DataTransferLength;
-	IoCompleteRequest(Irp,
-			  IO_NO_INCREMENT);
-	IoStartNextPacket(DeviceObject,
-			  FALSE);
-#endif
 	}
 	break;
 
       default:
 	Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
 	Irp->IoStatus.Information = 0;
-	IoCompleteRequest(Irp,
-			  IO_NO_INCREMENT);
 	IoStartNextPacket(DeviceObject,
 			  FALSE);
+	IoCompleteRequest(Irp,
+			  IO_NO_INCREMENT);
 	break;
     }
-  DPRINT1("ScsiPortStartIo() done\n");
+  DPRINT("ScsiPortStartIo() done\n");
 }
 
 
@@ -1110,7 +1117,7 @@ ScsiPortAllocateController(IN PDEVICE_OBJECT DeviceObject,
   PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
   PSCSI_PORT_CONTROLLER_EXTENSION ControllerExtension;
 
-  DPRINT1("ScsiPortAllocateController() called\n");
+  DPRINT("ScsiPortAllocateController() called\n");
 
   DeviceExtension = (PSCSI_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
   ControllerExtension = (PSCSI_PORT_CONTROLLER_EXTENSION)
@@ -1133,7 +1140,7 @@ ScsiPortStartController(IN OUT PVOID Context)
   PIO_STACK_LOCATION IrpStack;
   PSCSI_REQUEST_BLOCK Srb;
 
-  DPRINT1("ScsiPortStartController() called\n");
+  DPRINT("ScsiPortStartController() called\n");
 
   DeviceExtension = (PSCSI_PORT_DEVICE_EXTENSION) Context;
   ControllerExtension = (PSCSI_PORT_CONTROLLER_EXTENSION)
@@ -1204,6 +1211,7 @@ ScsiPortCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
 				    PseudoDeviceExtension->PortConfig.BusInterruptLevel,
 				    &Dirql,
 				    &Affinity);
+#endif
 
   ControllerObject = IoCreateController(sizeof(SCSI_PORT_CONTROLLER_EXTENSION));
   if (ControllerObject == NULL)
@@ -1212,11 +1220,11 @@ ScsiPortCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
 	       PortNumber);
       return(STATUS_NO_SUCH_DEVICE);
     }
-#endif
 
   /* Fill out Controller extension data */
   ControllerExtension = (PSCSI_PORT_CONTROLLER_EXTENSION)
       ControllerObject->ControllerExtension;
+  ControllerExtension->ControllerObject = ControllerObject;
   ControllerExtension->Number = PortNumber;
   ControllerExtension->Vector = PseudoDeviceExtension->PortConfig.BusInterruptVector;
   ControllerExtension->DMASupported = FALSE;
@@ -1278,8 +1286,24 @@ ScsiPortCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
   PortDeviceObject->AlignmentRequirement = FILE_WORD_ALIGNMENT;
 
   PortDeviceExtension = PortDeviceObject->DeviceExtension;
-  PortDeviceExtension->ControllerObject = ControllerObject;
 
+  /* Copy pseudo device extension into the real device extension */
+  memcpy(PortDeviceExtension,
+	 PseudoDeviceExtension,
+	 PseudoDeviceExtension->Length);
+
+  /* Copy access ranges */
+  AccessRangeSize =
+    sizeof(ACCESS_RANGE) * PseudoDeviceExtension->PortConfig.NumberOfAccessRanges;
+  PortDeviceExtension->PortConfig.AccessRanges = ExAllocatePool(NonPagedPool,
+								AccessRangeSize);
+  memcpy(PortDeviceExtension->PortConfig.AccessRanges,
+	 PseudoDeviceExtension->PortConfig.AccessRanges,
+	 AccessRangeSize);
+
+  /* Store pointers to controller object and port device object */
+  PortDeviceExtension->ControllerObject = ControllerObject;
+  PortDeviceExtension->DeviceObject = PortDeviceObject;
   ControllerExtension->PortDeviceObject = PortDeviceObject;
 
   /* Initialize the DPC object here */
@@ -1295,20 +1319,6 @@ ScsiPortCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
   IoInitializeTimer(ControllerExtension->PortDeviceObject,
 		    ScsiPortIoTimer,
 		    ControllerExtension);
-
-  /* Copy port configuration in device extension */
-  memcpy(PortDeviceExtension,
-	 PseudoDeviceExtension,
-	 PseudoDeviceExtension->Length);
-
-  /* Copy access ranges */
-  AccessRangeSize =
-    sizeof(ACCESS_RANGE) * PseudoDeviceExtension->PortConfig.NumberOfAccessRanges;
-  PortDeviceExtension->PortConfig.AccessRanges = ExAllocatePool(NonPagedPool,
-								AccessRangeSize);
-  memcpy(PortDeviceExtension->PortConfig.AccessRanges,
-	 PseudoDeviceExtension->PortConfig.AccessRanges,
-	 AccessRangeSize);
 
   /* Initialize inquiry data */
   PortDeviceExtension->PortBusInfoSize = 0;
@@ -1336,14 +1346,22 @@ ScsiPortIsr(IN PKINTERRUPT Interrupt,
 {
   PSCSI_PORT_CONTROLLER_EXTENSION ControllerExtension;
   PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+  BOOLEAN Result;
 
   DPRINT1("ScsiPortIsr() called!\n");
 
   ControllerExtension = (PSCSI_PORT_CONTROLLER_EXTENSION)ServiceContext;
   DeviceExtension = ControllerExtension->DeviceForOperation;
 
+  Result = DeviceExtension->HwInterrupt(&DeviceExtension->MiniPortDeviceExtension);
+  if (Result == FALSE)
+    {
+      return(FALSE);
+    }
 
-
+  IoRequestDpc(ControllerExtension->PortDeviceObject,
+	       ControllerExtension->CurrentIrp,
+	       ControllerExtension);
 
   return(TRUE);
 }
@@ -1366,8 +1384,8 @@ ScsiPortDpcForIsr(IN PKDPC Dpc,
 		  IN PIRP DpcIrp,
 		  IN PVOID DpcContext)
 {
-  DPRINT("ScsiPortDpcForIsr()\n");
-//  IDEFinishOperation((PIDE_CONTROLLER_EXTENSION) DpcContext);
+  DPRINT1("ScsiPortDpcForIsr()\n");
+  ScsiPortFinishOperation((PSCSI_PORT_CONTROLLER_EXTENSION) DpcContext);
 }
 
 
@@ -1387,6 +1405,46 @@ ScsiPortIoTimer(PDEVICE_OBJECT DeviceObject,
 		PVOID Context)
 {
   DPRINT("ScsiPortIoTimer()\n");
+}
+
+
+
+static VOID
+ScsiPortFinishOperation(PSCSI_PORT_CONTROLLER_EXTENSION ControllerExtension)
+{
+  PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+  PIRP Irp;
+  ULONG Operation;
+
+  DPRINT1("ScsiPortFinishOperation()\n");
+
+  DeviceExtension = ControllerExtension->DeviceForOperation;
+  Irp = ControllerExtension->CurrentIrp;
+//  Operation = DeviceExtension->Operation;
+  ControllerExtension->OperationInProgress = FALSE;
+  ControllerExtension->DeviceForOperation = NULL;
+  ControllerExtension->CurrentIrp = NULL;
+
+  /* Deallocate the controller */
+  IoFreeController(DeviceExtension->ControllerObject);
+
+  /* Issue completion of the current packet */
+  IoCompleteRequest(Irp,
+		    IO_DISK_INCREMENT);
+
+  /* Start the next packet */
+  IoStartNextPacket(DeviceExtension->DeviceObject,
+		    FALSE);
+
+#if 0
+  /* Flush cache if necessary */
+  if (Operation == IRP_MJ_READ)
+    {
+      KeFlushIoBuffers(Irp->MdlAddress,
+		       TRUE,
+		       FALSE);
+    }
+#endif
 }
 
 /* EOF */
