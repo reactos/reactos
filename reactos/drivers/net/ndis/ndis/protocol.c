@@ -395,7 +395,7 @@ ProTransferData(
     IN  NDIS_HANDLE         MacReceiveContext,
     IN  UINT                ByteOffset,
     IN  UINT                BytesToTransfer,
-    IN  OUT	PNDIS_PACKET    Packet,
+    IN  OUT PNDIS_PACKET    Packet,
     OUT PUINT               BytesTransferred)
 /*
  * FUNCTION: Forwards a request to copy received data into a protocol-supplied packet
@@ -661,8 +661,8 @@ NdisRegisterProtocol(
   UINT MinSize;
   HANDLE DriverKeyHandle = NULL;
   PKEY_VALUE_PARTIAL_INFORMATION KeyInformation = NULL;
-  UINT DataOffset = 0;
-
+  WCHAR *CurrentStr;
+  
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
   /* first validate the PROTOCOL_CHARACTERISTICS */
@@ -807,8 +807,7 @@ NdisRegisterProtocol(
       }
   }
 
-  DataOffset = 0;
-  while((KeyInformation->Data)[DataOffset])
+    for(CurrentStr = (WCHAR*)&KeyInformation->Data[0]; *CurrentStr != '\0'; CurrentStr += wcslen(CurrentStr) + 1)
     {
       /* BindContext is for tracking pending binding operations */
       VOID *BindContext = 0;
@@ -817,7 +816,7 @@ NdisRegisterProtocol(
       WCHAR *RegistryPathStr = NULL;
       ULONG PathLength = 0;
 
-      RtlInitUnicodeString(&DeviceName, (WCHAR *)KeyInformation->Data);	/* we know this is 0-term */
+      RtlInitUnicodeString(&DeviceName, CurrentStr);   /* we know this is 0-term */
 
       /*
        * RegistryPath should be:
@@ -828,7 +827,7 @@ NdisRegisterProtocol(
        */
 
       PathLength = sizeof(SERVICES_KEY) +                               /* \Registry\Machine\System\CurrentControlSet\Services\ */
-          wcslen( ((WCHAR *)KeyInformation->Data)+8 ) * sizeof(WCHAR) + /* Adapter1  (extracted from \Device\Adapter1)          */
+          wcslen( CurrentStr+8 ) * sizeof(WCHAR) +			/* Adapter1  (extracted from \Device\Adapter1)          */
           sizeof(PARAMETERS_KEY) +                                      /* \Parameters\                                         */
           ProtocolCharacteristics->Name.Length;                         /* Tcpip                                                */
 
@@ -843,7 +842,7 @@ NdisRegisterProtocol(
         }
 
       wcscpy(RegistryPathStr, SERVICES_KEY);
-      wcscat(RegistryPathStr, (((WCHAR *)(KeyInformation->Data)) +8 ));
+      wcscat(RegistryPathStr, CurrentStr +8 );
       wcscat(RegistryPathStr, PARAMETERS_KEY);
       wcsncat(RegistryPathStr, ProtocolCharacteristics->Name.Buffer, ProtocolCharacteristics->Name.Length / sizeof(WCHAR) );
 
@@ -873,6 +872,7 @@ NdisRegisterProtocol(
         {
           /* Put protocol binding struct on global list */
           ExInterlockedInsertTailList(&ProtocolListHead, &Protocol->ListEntry, &ProtocolListLock);
+	  NDIS_DbgPrint(MAX_TRACE, ("Added to global list.\n"));
         }
 
       /*
@@ -881,10 +881,8 @@ NdisRegisterProtocol(
           // what to do here?
         }
        */
-
-      DataOffset += wcslen((WCHAR *)KeyInformation->Data);
     }
-
+  NDIS_DbgPrint(MAX_TRACE, ("Leaving..\n"));
   *Status             = NDIS_STATUS_SUCCESS;
 }
 

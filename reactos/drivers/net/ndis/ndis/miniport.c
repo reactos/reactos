@@ -546,6 +546,7 @@ MiniLocateDevice(
   KIRQL OldIrql;
   PLIST_ENTRY CurrentEntry;
   PLOGICAL_ADAPTER Adapter = 0;
+  UNICODE_STRING ToCompare;
 
   ASSERT(AdapterName);
 
@@ -569,15 +570,19 @@ MiniLocateDevice(
 
               ASSERT(Adapter);
 
-              NDIS_DbgPrint(DEBUG_MINIPORT, ("AdapterName = %wZ\n", &AdapterName));
+              NDIS_DbgPrint(DEBUG_MINIPORT, ("AdapterName = %wZ\n", AdapterName));
               NDIS_DbgPrint(DEBUG_MINIPORT, ("DeviceName = %wZ\n", &Adapter->DeviceName));
+	      ToCompare = *AdapterName;
+	      if( ToCompare.Length > Adapter->DeviceName.Length )
+		  ToCompare.Length = Adapter->DeviceName.Length;
 
-              if (RtlCompareUnicodeString(AdapterName, &Adapter->DeviceName, TRUE) == 0) 
+              if (RtlCompareUnicodeString(&ToCompare, &Adapter->DeviceName, TRUE) == 0) 
                 {
                   ReferenceObject(Adapter);
                   break;
                 }
 
+	      Adapter = 0;
               CurrentEntry = CurrentEntry->Flink;
             }
         } while (0);

@@ -387,6 +387,8 @@ NDIS_STATUS STDCALL ProtocolReceive(
     {
 	if (NdisStatus == NDIS_STATUS_SUCCESS)
         {
+	    ASSERT(PacketSize <= Adapter->MTU);
+
             NdisTransferData(&NdisStatus, Adapter->NdisHandle,
                              MacReceiveContext, 0, PacketSize, 
 			     NdisPacket, &BytesTransferred);
@@ -470,7 +472,7 @@ VOID STDCALL ProtocolBindAdapter(
 {
 	/* XXX confirm that this is still true, or re-word the following comment */
 	/* we get to ignore BindContext because we will never pend an operation with NDIS */
-	TI_DbgPrint(DEBUG_DATALINK, ("Called with registry path %wZ\n", SystemSpecific1));
+	TI_DbgPrint(DEBUG_DATALINK, ("Called with registry path %wZ for %wZ\n", SystemSpecific1, DeviceName));
 	*Status = LANRegisterAdapter(DeviceName, SystemSpecific1);
 }
 
