@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.53 2004/09/12 18:50:03 weiden Exp $
+/* $Id: atapi.c,v 1.54 2004/09/14 22:09:06 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -1138,29 +1138,6 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
        return FALSE;
      }
 
-   /* Soft reset */
-   IDEWriteDriveHead(CommandPortBase, IDE_DH_FIXED);
-   IDEWriteDriveControl(ControlPortBase, IDE_DC_SRST);
-   ScsiPortStallExecution(500);
-   IDEWriteDriveControl(ControlPortBase, IDE_DC_nIEN);
-   ScsiPortStallExecution(200);
-
-   /* Wait for busy to clear */
-   if (!AtapiWaitForStatus(CommandPortBase, IDE_SR_BUSY, 0, 20000))
-     {
-       DPRINT("Timeout on drive %lu\n", UnitNumber);
-       return FALSE;
-     }
-   else
-     {
-       Status = IDEReadStatus(DeviceExtension->CommandPortBase);
-       if (Status & IDE_SR_ERR)
-         {
-           DPRINT("Error while doing software reset\n");
-           return FALSE;
-         }
-     }
-
   for (UnitNumber = 0; UnitNumber < 2; UnitNumber++)
     {
       /* Skip initilization of non-existent units */
@@ -1172,6 +1149,27 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
       /* Select drive */
       IDEWriteDriveHead(CommandPortBase, IDE_DH_FIXED |
                         (UnitNumber ? IDE_DH_DRV1 : IDE_DH_DRV0));
+      /* Soft reset */
+      IDEWriteDriveControl(ControlPortBase, IDE_DC_SRST);
+      ScsiPortStallExecution(500);
+      IDEWriteDriveControl(ControlPortBase, IDE_DC_nIEN);
+      ScsiPortStallExecution(200);
+
+      /* Wait for busy to clear */
+      if (!AtapiWaitForStatus(CommandPortBase, IDE_SR_BUSY, 0, 20000))
+        {
+          DPRINT("Timeout on drive %lu\n", UnitNumber);
+          return FALSE;
+        }
+      else
+        {
+          Status = IDEReadStatus(DeviceExtension->CommandPortBase);
+          if (Status & IDE_SR_ERR)
+           {
+             DPRINT("Error while doing software reset\n");
+             return FALSE;
+           }
+        }
 
       High = IDEReadCylinderHigh(CommandPortBase);
       Low = IDEReadCylinderLow(CommandPortBase);
