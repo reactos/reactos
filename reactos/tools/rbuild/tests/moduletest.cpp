@@ -9,7 +9,7 @@ void ModuleTest::Run()
 	ARE_EQUAL(2, project.modules.size());
 
 	Module& module1 = *project.modules[0];
-	IS_TRUE(module1.etype == BuildTool);
+	IS_TRUE(module1.type == BuildTool);
 	ARE_EQUAL(2, module1.files.size());
 	ARE_EQUAL("." SSEP "dir1" SSEP "file1.c", module1.files[0]->name);
 	ARE_EQUAL("." SSEP "dir1" SSEP "file2.c", module1.files[1]->name);
@@ -17,7 +17,7 @@ void ModuleTest::Run()
 	ARE_EQUAL(0, module1.libraries.size());
 
 	Module& module2 = *project.modules[1];
-	IS_TRUE(module2.etype == KernelModeDLL);
+	IS_TRUE(module2.type == KernelModeDLL);
 	ARE_EQUAL(2, module2.files.size());
 	ARE_EQUAL("." SSEP "dir2" SSEP "file3.c", module2.files[0]->name);
 	ARE_EQUAL("." SSEP "dir2" SSEP "file4.c", module2.files[1]->name);
