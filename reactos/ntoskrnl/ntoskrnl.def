@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.85 2000/08/11 12:38:45 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.86 2000/08/26 16:18:58 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -435,7 +435,6 @@ KiDispatchInterrupt@0
 ;LdrEnumResources@20
 ;LdrFindResourceDirectory_U@16
 ;LdrFindResource_U@16
-LdrLoadModule
 ;LpcRequestPort@8
 ;LsaCallAuthenticationPackage
 ;LsaDeregisterLogonProcess
@@ -748,7 +747,7 @@ RtlOemToUnicodeN@20
 RtlPrefixString@12
 RtlPrefixUnicodeString@12
 ;RtlQueryAtomInAtomTable
-RtlQueryRegistryValues=RtlQueryRegistryValues@20
+RtlQueryRegistryValues@20
 ;RtlQueryTimeZoneInformation
 ;RtlRaiseException
 ;RtlRandom

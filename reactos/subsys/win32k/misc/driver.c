@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.14 2000/07/07 11:59:11 ekohl Exp $
+/* $Id: driver.c,v 1.15 2000/08/26 16:22:04 ekohl Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -63,9 +63,9 @@ BOOL  DRIVER_RegisterDriver(LPCWSTR  Name, PGD_ENABLEDRIVER  EnableDriver)
 
 PGD_ENABLEDRIVER  DRIVER_FindDDIDriver(LPCWSTR  Name)
 {
-  UNICODE_STRING DriverNameW;
-  PMODULE_OBJECT ModuleObject;
+  SYSTEM_GDI_DRIVER_INFORMATION GdiDriverInfo;
   GRAPHICS_DRIVER *Driver = DriverList;
+  NTSTATUS Status;
 
   /* First see if the driver hasn't already been loaded */
   while (Driver && Name)
@@ -78,14 +78,16 @@ PGD_ENABLEDRIVER  DRIVER_FindDDIDriver(LPCWSTR  Name)
     }
 
   /* If not, then load it */
-  RtlInitUnicodeString (&DriverNameW, Name);
+  RtlInitUnicodeString (&GdiDriverInfo.DriverName,
+			(LPWSTR)Name);
+  Status = ZwSetSystemInformation (SystemLoadGdiDriverInformation,
+				   &GdiDriverInfo,
+				   sizeof(SYSTEM_GDI_DRIVER_INFORMATION));
+   if (!NT_SUCCESS(Status))
+	return NULL;
 
-  ModuleObject = EngLoadImage(&DriverNameW);
-  if (ModuleObject == NULL)
-    return NULL;
-
-  DRIVER_RegisterDriver( L"DISPLAY", ModuleObject->EntryPoint );
-  return (PGD_ENABLEDRIVER)ModuleObject->EntryPoint;
+  DRIVER_RegisterDriver( L"DISPLAY", GdiDriverInfo.EntryPoint);
+  return (PGD_ENABLEDRIVER)GdiDriverInfo.EntryPoint;
 }
 
 BOOL  DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED, 
@@ -136,7 +138,7 @@ BOOL  DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED,
     if(DED->pdrvfn[i].iFunc == INDEX_DrvGetModes)        DF->GetModes = (PGD_GETMODES)DED->pdrvfn[i].pfn;
     if(DED->pdrvfn[i].iFunc == INDEX_DrvFree)            DF->Free = (PGD_FREE)DED->pdrvfn[i].pfn;
     if(DED->pdrvfn[i].iFunc == INDEX_DrvDestroyFont)     DF->DestroyFont = (PGD_DESTROYFONT)DED->pdrvfn[i].pfn;
-    if(DED->pdrvfn[i].iFunc == INDEX_DrvQueryFontCaps)   DF->QueryFontCaps = (PGD_LOADFONTFILE)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvQueryFontCaps)   DF->QueryFontCaps = (PGD_QUERYFONTCAPS)DED->pdrvfn[i].pfn;
     if(DED->pdrvfn[i].iFunc == INDEX_DrvLoadFontFile)    DF->LoadFontFile = (PGD_LOADFONTFILE)DED->pdrvfn[i].pfn;
     if(DED->pdrvfn[i].iFunc == INDEX_DrvUnloadFontFile)  DF->UnloadFontFile = (PGD_UNLOADFONTFILE)DED->pdrvfn[i].pfn;
     if(DED->pdrvfn[i].iFunc == INDEX_DrvFontManagement)  DF->FontManagement = (PGD_FONTMANAGEMENT)DED->pdrvfn[i].pfn;
@@ -169,9 +171,7 @@ typedef VP_STATUS (*PMP_DRIVERENTRY)(PVOID, PVOID);
 
 HANDLE DRIVER_FindMPDriver(LPCWSTR  Name)
 {
-  UNICODE_STRING DriverNameW;
-  PMODULE_OBJECT ModuleObject;
-
+  SYSTEM_GDI_DRIVER_INFORMATION GdiDriverInfo;
   PWSTR  lName;
   NTSTATUS  Status;
   UNICODE_STRING  DeviceName;
@@ -182,9 +182,12 @@ HANDLE DRIVER_FindMPDriver(LPCWSTR  Name)
   PMP_DRIVERENTRY PMP_DriverEntry;
 
   /* Phase 1 */
-  RtlInitUnicodeString (&DriverNameW, L"\\??\\C:\\reactos\\system32\\drivers\\vgamp.sys");
-  ModuleObject = EngLoadImage(&DriverNameW);
-  if (ModuleObject == NULL)
+  RtlInitUnicodeString (&GdiDriverInfo.DriverName,
+			L"\\SystemRoot\\system32\\drivers\\vgamp.sys");
+  Status = ZwSetSystemInformation (SystemLoadGdiDriverInformation,
+				   &GdiDriverInfo,
+				   sizeof(SYSTEM_GDI_DRIVER_INFORMATION));
+  if (!NT_SUCCESS(Status))
      return NULL;
 
   /* Phase 2 */
@@ -220,7 +223,7 @@ HANDLE DRIVER_FindMPDriver(LPCWSTR  Name)
   // We pass the DriverObject to the Miniport driver, which passes it to the VideoPort driver
   // The VideoPort driver then creates the Device Object
 
-  PMP_DriverEntry = ModuleObject->EntryPoint;
+  PMP_DriverEntry = GdiDriverInfo.EntryPoint;
   PMP_DriverEntry(DriverObject, NULL);
 
   return  DriverObject;

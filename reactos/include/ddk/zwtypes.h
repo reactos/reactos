@@ -121,9 +121,9 @@ enum _SYSTEM_INFORMATION_CLASS
 	SystemPoolTagInformation		= 22,	/* Q (checked build only) */
 	SystemProcessorScheduleInfo		= 23,	/* Q */
 	SystemDpcInformation			= 24,	/* QS */
-	SystemInformation25			= 25,
-	SystemLoadImage				= 26,	/* S (callable) */
-	SystemUnloadImage			= 27,	/* S (callable) */
+	SystemFullMemoryInformation		= 25,
+	SystemLoadGdiDriverInformation		= 26,	/* S (callable) */
+	SystemUnloadGdiDriverInformation	= 27,	/* S (callable) */
 	SystemTimeAdjustmentInformation		= 28,	/* QS */
 	SystemInformation29			= 29,
 	SystemInformation30			= 30,
@@ -558,7 +558,7 @@ struct _SYSTEM_POOL_TAG_INFO
 {
 	ULONG			Count;
 	SYSTEM_POOL_TAG_ENTRY	PoolEntry [1];
-    
+
 } SYSTEM_POOL_TAG_INFO, *PSYSTEM_POOL_TAG_INFO;
 
 // SystemProcessorScheduleInfo (23)
@@ -589,26 +589,17 @@ struct _SYSTEM_DPC_INFORMATION
 // SystemInformation25 (25)
 // UNKNOWN
 
-// SystemLoadImage (26)
-typedef
-struct _SYSTEM_IMAGE_LOAD
+// SystemLoadGdiDriverInformation (26)
+// SystemUnloadGdiDriverInformation (27)
+typedef struct _SYSTEM_GDI_DRIVER_INFORMATION
 {
-	UNICODE_STRING	ModuleFileName		IN;
-	PVOID		BaseAddress		OUT;
-	PVOID		Section			OUT;
-	PVOID		EntryPoint		OUT;
-	PVOID		ExportDirectory		OUT;
-	
-} SYSTEM_IMAGE_LOAD, *PSYSTEM_IMAGE_LOAD;
-
-// SystemUnloadImage (27)
-typedef
-struct _SYSTEM_IMAGE_UNLOAD
-{
-	PVOID	Section	IN; /* see SYSTEM_IMAGE_LOAD.ModuleSection */
-
-} SYSTEM_IMAGE_UNLOAD, *PSYSTEM_IMAGE_UNLOAD;
-
+	UNICODE_STRING		DriverName;
+	PVOID			ImageAddress;
+	PVOID			SectionPointer;
+	PVOID			EntryPoint;
+//	PIMAGE_EXPORT_DIRECTORY	ExportSectionPointer;
+	PVOID			ExportSectionPointer;
+} SYSTEM_GDI_DRIVER_INFORMATION, *PSYSTEM_GDI_DRIVER_INFORMATION;
 
 // SystemTimeAdjustmentInformation (28)
 // (what is the right one?)

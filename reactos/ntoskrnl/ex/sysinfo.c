@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.5 2000/04/25 23:22:56 ea Exp $
+/* $Id: sysinfo.c,v 1.6 2000/08/26 16:19:40 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -15,6 +15,7 @@
 #include <ddk/zwtypes.h>
 #include <string.h>
 #include <internal/ex.h>
+#include <internal/ldr.h>
 
 #include <internal/debug.h>
 
@@ -423,15 +424,26 @@ QSI_DEF(SystemInformation25)
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 26 - Load Image (callable) */
-SSI_DEF(SystemLoadImage)
+/* Class 26 - Load Gdi Driver Information */
+SSI_DEF(SystemLoadGdiDriverInformation)
 {
-	/* FIXME */
-	return (STATUS_NOT_IMPLEMENTED);
+	PSYSTEM_GDI_DRIVER_INFORMATION Sdi
+		= (PSYSTEM_GDI_DRIVER_INFORMATION) Buffer;
+
+	if (sizeof (SYSTEM_GDI_DRIVER_INFORMATION) != Size)
+	{
+		return (STATUS_INFO_LENGTH_MISMATCH);
+	}
+
+	return LdrLoadGdiDriver (&Sdi->DriverName,
+				 &Sdi->ImageAddress,
+				 &Sdi->SectionPointer,
+				 &Sdi->EntryPoint,
+				 &Sdi->ExportSectionPointer);
 }
 
-/* Class 27 - Unload Image (callable) */
-SSI_DEF(SystemUnloadImage)
+/* Class 27 - Unload Gdi Driver Information */
+SSI_DEF(SystemUnloadGdiDriverInformation)
 {
 	/* FIXME */
 	return (STATUS_NOT_IMPLEMENTED);
@@ -666,8 +678,8 @@ CallQS [] =
 	SI_QX(SystemProcessorScheduleInfo),
 	SI_QS(SystemDpcInformation),
 	SI_QX(SystemInformation25), /* it should be SI_XX */
-	SI_XS(SystemLoadImage),
-	SI_XS(SystemUnloadImage),
+	SI_XS(SystemLoadGdiDriverInformation),
+	SI_XS(SystemUnloadGdiDriverInformation),
 	SI_QS(SystemTimeAdjustmentInformation),
 	SI_QX(SystemInformation29), /* it should be SI_XX */
 	SI_QX(SystemInformation30), /* it should be SI_XX */

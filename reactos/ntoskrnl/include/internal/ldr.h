@@ -53,6 +53,11 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
                         IN ULONG Ordinal,
                         OUT PVOID *ProcedureAddress);
 
+NTSTATUS LdrLoadGdiDriver (PUNICODE_STRING DriverName,
+			   PVOID *ImageAddress,
+			   PVOID *SectionPointer,
+			   PVOID *EntryPoint,
+			   PVOID *ExportSectionPointer);
 
 PVOID STDCALL
 RtlImageDirectoryEntryToData (

@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.61 2000/08/24 19:11:06 ekohl Exp $
+/* $Id: loader.c,v 1.62 2000/08/26 16:20:34 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -259,6 +259,36 @@ NTSTATUS LdrLoadDriver(PUNICODE_STRING Filename)
 
   return IoInitializeDriver(ModuleObject->EntryPoint);
 }
+
+NTSTATUS LdrLoadGdiDriver (PUNICODE_STRING DriverName,
+			   PVOID *ImageAddress,
+			   PVOID *SectionPointer,
+			   PVOID *EntryPoint,
+			   PVOID *ExportSectionPointer)
+{
+  PMODULE_OBJECT  ModuleObject;
+
+  ModuleObject = LdrLoadModule(DriverName);
+  if (ModuleObject == 0)
+    {
+      return  STATUS_UNSUCCESSFUL;
+    }
+
+  if (ImageAddress)
+    *ImageAddress = ModuleObject->Base;
+
+//  if (SectionPointer)
+//    *SectionPointer = ModuleObject->
+
+  if (EntryPoint)
+    *EntryPoint = ModuleObject->EntryPoint;
+
+//  if (ExportSectionPointer)
+//    *ExportSectionPointer = ModuleObject->
+
+  return STATUS_SUCCESS;
+}
+
 
 PMODULE_OBJECT
 LdrLoadModule(PUNICODE_STRING Filename)
