@@ -1,18 +1,21 @@
-/*
- * WINDOW.C - activate internal command.
+/* $Id: window.c,v 1.3 1999/10/03 22:16:14 ekohl Exp $
  *
- * clone from 4nt window command
+ * WINDOW.C - activate & window internal commands.
  *
- * 10 Sep 1999
- *     started - Paolo Pantaleo <dfaustus@freemail.it>
+ * clone from 4nt activate command
  *
+ * 10 Sep 1999 (Paolo Pantaleo)
+ *     started (window command in WINDOW.c)
  *
+ * 29 Sep 1999 (Paolo Pantaleo)
+ *     activate and window in a single file using mainly the same code
+ *     (nice size optimization :)
  */
 
 
 #include "config.h"
 
-#ifdef INCLUDE_CMD_WINDOW
+#if (  defined(INCLUDE_CMD_WINDOW) ||  defined(INCLUDE_CMD_ACTIVATE)  )
 
 #include "cmd.h"
 #include <windows.h>
@@ -26,34 +29,31 @@
 #define A_RESTORE	0x04
 #define A_POS		0x08
 #define A_SIZE		0x10
+#define A_CLOSE		0x20
 
 
-INT CommandWindow (LPTSTR cmd, LPTSTR param)
+/*service funciton to perform actions on windows
+
+ param is a string to parse for options/actions
+ hWnd is the handle of window on wich perform actions
+
+*/
+
+static
+INT ServiceActivate (LPTSTR param, HWND hWnd)
 {
-	LPTSTR *p,p_tmp;
-	INT argc,i;
+	LPTSTR *p=0,p_tmp;
+	INT argc=0,i;
 	INT iAction=0;
 	LPTSTR title=0;
-	HWND hWnd;
 	WINDOWPLACEMENT wp;
 	RECT pos;
 	LPTSTR tmp;
 
-	if (_tcsncmp (param, _T("/?"), 2) == 0)
-	{
-		ConOutPuts(_T("change console window aspect\n"
-		              "\n"
-		              "WINDOW [/POS[=]left,top,width,heigth]\n"
-		              "              [MIN|MAX|RESTORE]\n"
-		              "\n"
-		              "/POS          specify window placement and dimensions\n"
-		              "MIN           minimize the window\n"
-		              "MAX           maximize the window\n"
-		              "RESTORE       restore the window"));
-		return 0;
-	}
 
-	p=split(param,&argc);
+	if(*param)
+		p=split(param,&argc);
+
 
 	for(i = 0; i < argc; i++)
 	{
@@ -76,6 +76,12 @@ INT CommandWindow (LPTSTR cmd, LPTSTR param)
 		if (_tcsicmp(p_tmp,_T("restore"))==0)
 		{
 			iAction |= A_RESTORE;
+			continue;
+		}
+
+		if (_tcsicmp(p_tmp,_T("close"))==0)
+		{
+			iAction |= A_CLOSE;
 			continue;
 		}
 
@@ -119,17 +125,7 @@ INT CommandWindow (LPTSTR cmd, LPTSTR param)
 			continue;
 		}
 
-#if 0
-		if(*p_tmp != '"')
-		{
-			error_invalid_parameter_format(p[i]);
-			
-			freep(p);
-			return 1;
-		}
-#endif
-
-		//none of them=window title
+		/*none of them=window title*/
 		if (title)
 		{
 			error_invalid_parameter_format(p[i]);
@@ -147,17 +143,13 @@ INT CommandWindow (LPTSTR cmd, LPTSTR param)
 	}
 
 	if(title)
-		SetConsoleTitle(title);
-
-	hWnd=GetConsoleWindow();
+		SetWindowText(hWnd,title);
 
 	wp.length=sizeof(WINDOWPLACEMENT);
 	GetWindowPlacement(hWnd,&wp);
 
-	if(iAction & A_POS)
-	{
-		wp.rcNormalPosition = pos;
-	}
+	if(iAction & A_POS)	
+		wp.rcNormalPosition = pos;	
 
 	if(iAction & A_MIN)
 		wp.showCmd=SW_MINIMIZE;
@@ -165,14 +157,91 @@ INT CommandWindow (LPTSTR cmd, LPTSTR param)
 	if(iAction & A_MAX)
 		wp.showCmd=SW_SHOWMAXIMIZED;
 
-	if(iAction & A_RESTORE)
+	/*if no actions are specified default is SW_RESTORE*/
+	if( (iAction & A_RESTORE) || (!iAction) )
 		wp.showCmd=SW_RESTORE;
+
+	if(iAction & A_CLOSE)
+		ConErrPrintf(_T("!!!FIXME:  CLOSE Not implemented!!!\n"));
 
 	wp.length=sizeof(WINDOWPLACEMENT);
 	SetWindowPlacement(hWnd,&wp);
 
-	freep(p);
+	if(p)
+		freep(p);
+
 	return 0;
 }
 
-#endif /* INCLUDE_CMD_WINDOW */
+
+
+
+INT CommandWindow (LPTSTR cmd, LPTSTR param)
+{
+	HWND h;
+
+	if (_tcsncmp (param, _T("/?"), 2) == 0)
+	{
+		ConOutPuts(_T("change console window aspect\n"
+		              "\n"
+		              "WINDOW [/POS[=]left,top,width,heigth]\n"
+		              "              [MIN|MAX|RESTORE] [\"title\"]\n"
+		              "\n"
+		              "/POS          specify window placement and dimensions\n"
+		              "MIN           minimize the window\n"
+		              "MAX           maximize the window\n"
+		              "RESTORE       restore the window"));
+		return 0;
+	}
+
+	h = GetConsoleWindow();
+	Sleep(0);
+	return ServiceActivate(param,h);
+}
+
+
+INT CommandActivate (LPTSTR cmd, LPTSTR param)
+{
+	LPTSTR str;
+	HWND h;
+
+	if (_tcsncmp (param, _T("/?"), 2) == 0)
+	{
+		ConOutPuts(_T("change console window aspect\n"
+		              "\n"
+		              "ACTIAVTE \"window\" [/POS[=]left,top,width,heigth]\n"
+		              "              [MIN|MAX|RESTORE] [\"title\"]\n"		              
+		              "\n"
+		              "window        tile of window on wich perform actions\n"
+		              "/POS          specify window placement and dimensions\n"
+		              "MIN           minimize the window\n"
+		              "MAX           maximize the window\n"
+		              "RESTORE       restore the window\n"
+		              "title          new title"));
+		return 0;
+	}
+
+	if(!(*param))
+		return 1;
+
+	str=_tcschr(param,_T(' '));
+
+	if (str)
+	{
+		*str=_T('\0');
+		str++;
+	}
+	else
+		str = "";
+
+	h=FindWindow(NULL, param);
+	if (!h)
+	{
+		ConErrPuts("window not found");
+		return 1;
+	}
+
+	return ServiceActivate(str,h);
+}
+
+#endif /* (  defined(INCLUDE_CMD_WINDOW) ||  defined(INCLUDE_CMD_ACTIVATE)  ) */
