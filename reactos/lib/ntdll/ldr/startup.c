@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.55 2003/09/12 17:51:47 vizzini Exp $
+/* $Id: startup.c,v 1.56 2003/11/17 02:32:45 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,6 +18,7 @@
 #include <csrss/csrss.h>
 #include <ntdll/csr.h>
 #include <user32/callback.h>
+#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <ntdll/ntdll.h>
@@ -91,7 +92,7 @@ LoadCompatibilitySettings(PPEB Peb)
 			return FALSE;
 		}
 
-		RtlInitUnicodeStringFromLiteral(&KeyName, 
+		RtlRosInitUnicodeStringFromLiteral(&KeyName, 
 			L"Software\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers");
 
 		InitializeObjectAttributes(&ObjectAttributes,
