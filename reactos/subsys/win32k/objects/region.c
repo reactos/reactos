@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.40 2003/12/13 11:15:06 weiden Exp $ */
+/* $Id: region.c,v 1.41 2004/02/11 17:56:29 navaraf Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -2011,6 +2011,11 @@ NtGdiPaintRgn(HDC  hDC,
 
   //visrgn = RGNDATA_LockRgn(tmpVisRgn);
   visrgn = RGNDATA_LockRgn(hRgn);
+  if (visrgn == NULL)
+  {
+  	DC_UnlockDc( hDC );
+    return FALSE;
+  }
 
   ClipRegion = IntEngCreateClipRegion (
 	  visrgn->rdh.nCount, (PRECTL)visrgn->Buffer, visrgn->rdh.rcBound );

@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.40 2004/01/16 19:32:00 gvg Exp $
+ * $Id: dib.c,v 1.41 2004/02/11 17:56:29 navaraf Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -48,11 +48,11 @@ UINT STDCALL NtGdiSetDIBColorTable(HDC  hDC,
   PPALGDI palette;
   const RGBQUAD *end;
 
-  if (!(dc = (PDC)AccessUserObject((ULONG)hDC))) return 0;
+  if (!(dc = DC_LockDc(hDC))) return 0;
 
   if (!(palette = PALETTE_LockPalette((ULONG)dc->DevInfo->hpalDefault)))
   {
-//    GDI_ReleaseObj( hdc );
+    DC_UnlockDc(hDC);
     return 0;
   }
 
@@ -80,7 +80,7 @@ UINT STDCALL NtGdiSetDIBColorTable(HDC  hDC,
   }
 
   PALETTE_UnlockPalette(dc->DevInfo->hpalDefault);
-//  GDI_ReleaseObj(hdc);
+  DC_UnlockDc(hDC);
 
   return Entries;
 }

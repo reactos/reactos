@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.45 2003/12/22 15:30:21 navaraf Exp $
+/* $Id: class.c,v 1.46 2004/02/11 17:56:29 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -282,14 +282,16 @@ IntCreateClass(CONST WNDCLASSEXW *lpwcx,
 		if (NT_SUCCESS(Status))
 		{
 			ObmDereferenceObject(ClassObject);
+			SetLastWin32Error(ERROR_CLASS_ALREADY_EXISTS);
 			return(NULL);
-		}
+		}	
 	}
 	
 	objectSize = sizeof(WNDCLASS_OBJECT) + lpwcx->cbClsExtra;
 	ClassObject = ObmCreateObject(NULL, NULL, otClass, objectSize);
 	if (ClassObject == 0)
 	{          
+		SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
 		return(NULL);
 	}
 	
@@ -413,7 +415,6 @@ NtUserRegisterClassExWOW(
     }
     ObDereferenceObject(WinStaObject);
     DPRINT("Failed creating window class object\n");
-    SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
     return((RTL_ATOM)0);
   }
   ExAcquireFastMutex(&PsGetWin32Process()->ClassListLock);
@@ -607,51 +608,65 @@ NtUserSetClassWord(DWORD Unknown0,
 }
 
 BOOL STDCALL
-NtUserUnregisterClass(LPCWSTR ClassNameOrAtom,
-		      HINSTANCE hInstance,
-		      DWORD Unknown)
+NtUserUnregisterClass(
+   LPCWSTR ClassNameOrAtom,
+	 HINSTANCE hInstance,
+	 DWORD Unknown)
 {
-  NTSTATUS Status;
-  PWNDCLASS_OBJECT Class;
+   NTSTATUS Status;
+   PWNDCLASS_OBJECT Class;
+   PWINSTATION_OBJECT WinStaObject;
   
-  if(!ClassNameOrAtom)
-  {
-    SetLastWin32Error(ERROR_INVALID_PARAMETER);
-    return FALSE;
-  }
+   if (!ClassNameOrAtom)
+   {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return FALSE;
+   }
   
-  Status = ClassReferenceClassByNameOrAtom(&Class, ClassNameOrAtom);
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
-    return FALSE;
-  }
+   Status = IntValidateWindowStationHandle(
+      PROCESS_WINDOW_STATION(),
+      KernelMode,
+      0,
+      &WinStaObject);
+   if (!NT_SUCCESS(Status))
+   {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return FALSE;
+   }
+
+   Status = ClassReferenceClassByNameOrAtom(&Class, ClassNameOrAtom);
+   if (!NT_SUCCESS(Status))
+   {
+      SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
+      return FALSE;
+   }
   
-  if(Class->hInstance && (Class->hInstance != hInstance))
-  {
-    ObmDereferenceObject(Class);
-    SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
-    return FALSE;
-  }
+   if (Class->hInstance && Class->hInstance != hInstance)
+   {
+      ObmDereferenceObject(Class);
+      SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
+      return FALSE;
+   }
   
-  if(ObmGetReferenceCount(Class) > 2)
-  {
-    ObmDereferenceObject(Class);
-    SetLastWin32Error(ERROR_CLASS_HAS_WINDOWS);
-    return FALSE;
-  }
+   if (ObmGetReferenceCount(Class) > 2)
+   {
+      ObmDereferenceObject(Class);
+      SetLastWin32Error(ERROR_CLASS_HAS_WINDOWS);
+      return FALSE;
+   }
   
-  /* Dereference the ClassReferenceClassByNameOrAtom() call */
-  ObmDereferenceObject(Class);
+   /* Dereference the ClassReferenceClassByNameOrAtom() call */
+   ObmDereferenceObject(Class);
   
-  RemoveEntryList(&Class->ListEntry);
+   RemoveEntryList(&Class->ListEntry);
+
+   RtlDeleteAtomFromAtomTable(WinStaObject->AtomTable, Class->Atom);
+   ObDereferenceObject(WinStaObject);
   
-  /* FIXME - delete the atom? */
+   /* Free the object */
+   ObmDereferenceObject(Class);
   
-  /* Free the object */
-  ObmDereferenceObject(Class);
-  
-  return TRUE;
+   return TRUE;
 }
 
 /* EOF */
