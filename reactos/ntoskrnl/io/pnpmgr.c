@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.22 2003/10/16 14:49:05 ekohl Exp $
+/* $Id: pnpmgr.c,v 1.23 2004/03/12 19:40:29 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -62,17 +62,16 @@ IoInvalidateDeviceRelations(
 {
 }
 
-NTSTATUS
+PPNP_BUS_INFORMATION FASTCALL
 IopQueryBusInformation(
-  PDEVICE_OBJECT DeviceObject,
-  PPNP_BUS_INFORMATION BusInformation)
+  PDEVICE_OBJECT DeviceObject)
 {
   IO_STATUS_BLOCK IoStatusBlock;
   IO_STACK_LOCATION Stack;
   
-  IoStatusBlock.Information = (ULONG)BusInformation;
-  return IopInitiatePnpIrp(DeviceObject, &IoStatusBlock,
-    IRP_MN_QUERY_BUS_INFORMATION, &Stack);
+  return NT_SUCCESS(IopInitiatePnpIrp(DeviceObject, &IoStatusBlock,
+    IRP_MN_QUERY_BUS_INFORMATION, &Stack)) ?
+    (PPNP_BUS_INFORMATION)IoStatusBlock.Information : NULL;
 }
 
 /*
@@ -87,8 +86,7 @@ IoGetDeviceProperty(
   OUT PVOID PropertyBuffer,
   OUT PULONG ResultLength)
 {
-  PNP_BUS_INFORMATION BusInformation;
-  NTSTATUS Status;
+  PPNP_BUS_INFORMATION BusInformation;
 
   DPRINT("IoGetDeviceProperty called");
 
@@ -104,43 +102,57 @@ IoGetDeviceProperty(
       *ResultLength = sizeof(ULONG);
       if (BufferLength < sizeof(ULONG))
         return STATUS_BUFFER_TOO_SMALL;
-      Status = IopQueryBusInformation(DeviceObject, &BusInformation);
-      if (NT_SUCCESS(Status))
-        *((ULONG *)PropertyBuffer) = BusInformation.BusNumber;
-      return Status;
+      BusInformation = IopQueryBusInformation(DeviceObject);
+      if (BusInformation != NULL)
+      {
+        *((ULONG *)PropertyBuffer) = BusInformation->BusNumber;
+        ExFreePool(BusInformation);
+        return STATUS_UNSUCCESSFUL;
+      }
+      return STATUS_SUCCESS;
 
     /* Complete, untested */
     case DevicePropertyBusTypeGuid:
       *ResultLength = 39 * sizeof(WCHAR);
       if (BufferLength < (39 * sizeof(WCHAR)))
         return STATUS_BUFFER_TOO_SMALL;
-      Status = IopQueryBusInformation(DeviceObject, &BusInformation);
-      if (NT_SUCCESS(Status))
+      BusInformation = IopQueryBusInformation(DeviceObject);
+      if (BusInformation != NULL)
+      {
         swprintf((PWSTR)PropertyBuffer,
           L"{%08lX-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
-          BusInformation.BusTypeGuid.Data1,
-          BusInformation.BusTypeGuid.Data2,
-          BusInformation.BusTypeGuid.Data3,
-          BusInformation.BusTypeGuid.Data4[0],
-          BusInformation.BusTypeGuid.Data4[1],
-          BusInformation.BusTypeGuid.Data4[2],
-          BusInformation.BusTypeGuid.Data4[3],
-          BusInformation.BusTypeGuid.Data4[4],
-          BusInformation.BusTypeGuid.Data4[5],
-          BusInformation.BusTypeGuid.Data4[6],
-          BusInformation.BusTypeGuid.Data4[7]);
-      return Status;
+          BusInformation->BusTypeGuid.Data1,
+          BusInformation->BusTypeGuid.Data2,
+          BusInformation->BusTypeGuid.Data3,
+          BusInformation->BusTypeGuid.Data4[0],
+          BusInformation->BusTypeGuid.Data4[1],
+          BusInformation->BusTypeGuid.Data4[2],
+          BusInformation->BusTypeGuid.Data4[3],
+          BusInformation->BusTypeGuid.Data4[4],
+          BusInformation->BusTypeGuid.Data4[5],
+          BusInformation->BusTypeGuid.Data4[6],
+          BusInformation->BusTypeGuid.Data4[7]);
+        ExFreePool(BusInformation);
+        return STATUS_UNSUCCESSFUL;
+      }
+      return STATUS_SUCCESS;
 
     /* Complete, untested */
     case DevicePropertyLegacyBusType:
       *ResultLength = sizeof(INTERFACE_TYPE);
       if (BufferLength < sizeof(INTERFACE_TYPE))
         return STATUS_BUFFER_TOO_SMALL;
-      Status = IopQueryBusInformation(DeviceObject, &BusInformation);
-      if (NT_SUCCESS(Status))
-        memcpy(PropertyBuffer, &BusInformation.LegacyBusType,
+      BusInformation = IopQueryBusInformation(DeviceObject);
+      if (BusInformation != NULL)
+      {
+        RtlCopyMemory(
+          PropertyBuffer,
+          &BusInformation->LegacyBusType,
           sizeof(INTERFACE_TYPE));
-      return Status;
+        ExFreePool(BusInformation);
+        return STATUS_UNSUCCESSFUL;
+      }
+      return STATUS_SUCCESS;
 
     case DevicePropertyAddress:
     case DevicePropertyBootConfiguration:

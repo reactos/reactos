@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.164 2004/03/08 08:05:27 navaraf Exp $
+; $Id: ntoskrnl.edf,v 1.165 2004/03/12 19:40:29 navaraf Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -239,6 +239,7 @@ IoAllocateAdapterChannel=IoAllocateAdapterChannel@20
 IoAllocateIrp=IoAllocateIrp@8
 IoAllocateMdl=IoAllocateMdl@20
 IoAllocateController=IoAllocateController@16
+IoAllocateDriverObjectExtension=IoAllocateDriverObjectExtension@16
 IoAllocateErrorLogEntry=IoAllocateErrorLogEntry@8
 IoAllocateWorkItem=IoAllocateWorkItem@4
 IoAssignResources=IoAssignResources@24
@@ -287,6 +288,7 @@ IoGetBaseFileSystemDeviceObject=IoGetBaseFileSystemDeviceObject@4
 IoGetConfigurationInformation=IoGetConfigurationInformation@0
 IoGetCurrentProcess=IoGetCurrentProcess@0
 IoGetDeviceObjectPointer=IoGetDeviceObjectPointer@16
+IoGetDriverObjectExtension=IoGetDriverObjectExtension@8
 IoGetDeviceProperty=IoGetDeviceProperty@20
 IoGetDeviceToVerify=IoGetDeviceToVerify@4
 IoGetDmaAdapter=IoGetDmaAdapter@12

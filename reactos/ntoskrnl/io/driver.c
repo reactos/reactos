@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.34 2004/01/10 14:24:30 hbirr Exp $
+/* $Id: driver.c,v 1.35 2004/03/12 19:40:29 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -1235,6 +1235,82 @@ IopReinitializeDrivers(VOID)
     if (Entry == DriverReinitTailEntry)
       return;
   }
+}
+
+typedef struct _PRIVATE_DRIVER_EXTENSIONS {
+   struct _PRIVATE_DRIVER_EXTENSIONS *Link;
+   PVOID ClientIdentificationAddress;
+   CHAR Extension[1];
+} PRIVATE_DRIVER_EXTENSIONS, *PPRIVATE_DRIVER_EXTENSIONS;
+
+NTSTATUS STDCALL
+IoAllocateDriverObjectExtension(
+   PDRIVER_OBJECT DriverObject,
+   PVOID ClientIdentificationAddress,
+   ULONG DriverObjectExtensionSize,
+   PVOID *DriverObjectExtension)
+{
+   KIRQL OldIrql;
+   PPRIVATE_DRIVER_EXTENSIONS DriverExtensions;
+   PPRIVATE_DRIVER_EXTENSIONS NewDriverExtension;
+
+   NewDriverExtension = ExAllocatePoolWithTag(
+      NonPagedPool,
+      sizeof(PRIVATE_DRIVER_EXTENSIONS) - sizeof(CHAR) +
+      DriverObjectExtensionSize,
+      TAG_DRIVER_EXTENSION);
+
+   if (NewDriverExtension == NULL)
+   {
+      return STATUS_INSUFFICIENT_RESOURCES;             
+   }
+   
+   OldIrql = KeRaiseIrqlToDpcLevel();
+
+   NewDriverExtension->Link = DriverObject->DriverSection;
+   NewDriverExtension->ClientIdentificationAddress = ClientIdentificationAddress;
+
+   for (DriverExtensions = DriverObject->DriverSection;
+        DriverExtensions != NULL;
+        DriverExtensions = DriverExtensions->Link)
+   {
+      if (DriverExtensions->ClientIdentificationAddress ==
+          ClientIdentificationAddress)
+         return STATUS_OBJECT_NAME_COLLISION;
+   }
+
+   DriverObject->DriverSection = NewDriverExtension;
+
+   KfLowerIrql(OldIrql);
+
+   *DriverObjectExtension = &NewDriverExtension->Extension;
+
+   return STATUS_SUCCESS;      
+}
+
+PVOID STDCALL
+IoGetDriverObjectExtension(
+   PDRIVER_OBJECT DriverObject,
+   PVOID ClientIdentificationAddress)
+{
+   KIRQL OldIrql;
+   PPRIVATE_DRIVER_EXTENSIONS DriverExtensions;
+
+   OldIrql = KeRaiseIrqlToDpcLevel();
+
+   for (DriverExtensions = DriverObject->DriverSection;
+        DriverExtensions != NULL &&
+        DriverExtensions->ClientIdentificationAddress !=
+          ClientIdentificationAddress;
+        DriverExtensions = DriverExtensions->Link)
+      ;
+
+   KfLowerIrql(OldIrql);
+
+   if (DriverExtensions == NULL)
+      return NULL;
+
+   return &DriverExtensions->Extension;
 }
 
 /* EOF */

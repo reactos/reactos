@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.178 2004/03/08 08:05:27 navaraf Exp $
+; $Id: ntoskrnl.def,v 1.179 2004/03/12 19:40:29 navaraf Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -238,6 +238,7 @@ IoAcquireVpbSpinLock@4
 IoAdapterObjectType DATA
 IoAllocateAdapterChannel@20
 IoAllocateController@16
+IoAllocateDriverObjectExtension@16
 IoAllocateErrorLogEntry@8
 IoAllocateIrp@8
 IoAllocateMdl@20
@@ -287,6 +288,7 @@ IoGetAttachedDeviceReference@4
 IoGetBaseFileSystemDeviceObject@4
 IoGetConfigurationInformation@0
 IoGetCurrentProcess@0
+IoGetDriverObjectExtension@8
 IoGetDeviceObjectPointer@16
 IoGetDeviceProperty@20
 IoGetDeviceToVerify@4
