@@ -121,7 +121,6 @@ OBJECTS_KE = \
 	ke/spinlock.o \
 	ke/timer.o \
 	ke/wait.o \
-	ke/zw.o
 
 # Memory Manager (Mm)
 OBJECTS_MM = \
@@ -270,7 +269,8 @@ OBJECTS_EX = \
 	ex/uuid.o \
 	ex/win32k.o \
 	ex/work.o \
-	ex/zone.o
+	ex/zone.o \
+	ex/zw.o
 
 # Installable File System Run-Time Library (FsRtl)
 OBJECTS_FS = \
