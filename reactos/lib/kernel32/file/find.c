@@ -1,4 +1,4 @@
-/* $Id: find.c,v 1.35 2003/03/23 10:48:14 hbirr Exp $
+/* $Id: find.c,v 1.36 2003/04/26 08:56:50 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -470,11 +470,11 @@ FindFirstFileW (
 	memcpy (lpFindFileData->cFileName,
 	        IData->pFileInfo->FileName,
 	        IData->pFileInfo->FileNameLength);
-  lpFindFileData->cFileName[IData->pFileInfo->FileNameLength] = 0;
+	lpFindFileData->cFileName[IData->pFileInfo->FileNameLength / sizeof(WCHAR)] = 0;
 	memcpy (lpFindFileData->cAlternateFileName,
 	        IData->pFileInfo->ShortName,
 	        IData->pFileInfo->ShortNameLength);
-  lpFindFileData->cAlternateFileName[IData->pFileInfo->ShortNameLength] = 0;
+	lpFindFileData->cAlternateFileName[IData->pFileInfo->ShortNameLength / sizeof(WCHAR)] = 0;
 	return IData;
 }
 
@@ -511,11 +511,11 @@ FindNextFileW (
 	memcpy (lpFindFileData->cFileName,
 	        IData->pFileInfo->FileName,
 	        IData->pFileInfo->FileNameLength);
-  lpFindFileData->cFileName[IData->pFileInfo->FileNameLength] = 0;
+	lpFindFileData->cFileName[IData->pFileInfo->FileNameLength / sizeof(WCHAR)] = 0;
 	memcpy (lpFindFileData->cAlternateFileName,
 	        IData->pFileInfo->ShortName,
 	        IData->pFileInfo->ShortNameLength);
-  lpFindFileData->cAlternateFileName[IData->pFileInfo->ShortNameLength] = 0;
+	lpFindFileData->cAlternateFileName[IData->pFileInfo->ShortNameLength / sizeof(WCHAR)] = 0;
 	return TRUE;
 }
 
