@@ -41,21 +41,21 @@ LdrpMapProcessImage(PHANDLE SectionHandle,
 			     NULL);
 
   DPRINT("Opening image file %S\n", ObjectAttributes.ObjectName->Buffer);
-  Status = NtOpenFile(&FileHandle,
-		      FILE_ALL_ACCESS,
+  Status = ZwOpenFile(&FileHandle,
+		      FILE_GENERIC_READ,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
 		      FILE_SYNCHRONOUS_IO_ALERT);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtOpenFile() failed (Status %lx)\n", Status);
+      DPRINT("ZwOpenFile() failed (Status %lx)\n", Status);
       return(Status);
     }
 
   /* Create a section for the image */
   DPRINT("Creating section\n");
-  Status = NtCreateSection(SectionHandle,
+  Status = ZwCreateSection(SectionHandle,
 			   SECTION_ALL_ACCESS,
 			   NULL,
 			   NULL,

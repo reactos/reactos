@@ -443,6 +443,7 @@ Elf64FmtCreateSection
   nReadStatus = ReadFileCb
   (
    File,
+   ImageSectionObject->BytesPerSector,
    &lnOffset,
    cbPHdrSize,
    &pData,

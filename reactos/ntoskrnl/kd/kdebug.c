@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -45,7 +45,7 @@ KiEnableTimerWatchdog = FALSE;		/* EXPORTED */
 
  
 static BOOLEAN KdpBreakPending = FALSE;
-ULONG KdDebugState = KD_DEBUG_DISABLED;
+ULONG KdDebugState = /*KD_DEBUG_DISABLED*/KD_DEBUG_BOCHS;
 ULONG KdpPortIrq = 0;
 
 KD_PORT_INFORMATION GdbPortInfo;
@@ -251,6 +251,13 @@ KdInitSystem(ULONG BootPhase,
 #endif /* KDBG */
       p1 = p2;
     }
+#if 1
+    if (READ_PORT_UCHAR((PUCHAR)BOCHS_LOGGER_PORT) == BOCHS_LOGGER_PORT)
+      {
+	KdDebuggerEnabled = TRUE;
+	KdDebugState |= KD_DEBUG_BOCHS;
+      }
+#endif
 
   /* Perform any initialization nescessary */
   if (KdDebuggerEnabled == TRUE)
@@ -349,9 +356,23 @@ KdBochsDebugPrint(IN LPSTR  Message)
 	  {
 	    if (*Message == '\n')
 	      {
+#ifdef _M_IX86
+	        __asm__ __volatile__(
+		    "outb   %0, %w1\n\t"
+		    :
+		    : "a" ('\r'), "d" (BOCHS_LOGGER_PORT));
+#else
 		WRITE_PORT_UCHAR((PUCHAR)BOCHS_LOGGER_PORT, '\r');
+#endif
 	      }
+#ifdef _M_IX86
+	      __asm__ __volatile__(
+		  "outb	%0, %w1\n\t"
+		  :
+	          : "a" (*Message), "d" (BOCHS_LOGGER_PORT));
+#else
 	    WRITE_PORT_UCHAR((PUCHAR)BOCHS_LOGGER_PORT, *Message);
+#endif
 	    Message++;
 	  }
 }

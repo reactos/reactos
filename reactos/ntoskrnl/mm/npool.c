@@ -156,6 +156,8 @@ static PULONG MiNonPagedPoolAllocMap;
 static ULONG MiNonPagedPoolNrOfPages;
 #endif /* WHOLE_PAGE_ALLOCATIONS */
 
+VOID MmPrintMemoryStatistic(VOID);
+
 /* avl helper functions ****************************************************/
 
 void DumpFreeBlockNode(PNODE p)
@@ -1321,6 +1323,7 @@ static BLOCK_HDR* get_block(unsigned int size, unsigned long alignment)
                   (best == NULL || current->Size < best->Size))
             {
                best = current;
+	       break;
             }
          }
          else
@@ -1340,6 +1343,7 @@ static BLOCK_HDR* get_block(unsigned int size, unsigned long alignment)
                   (best == NULL || current->Size < best->Size))
             {
                best = current;
+	       break;
             }
          }
          if (best && current->Size >= size + alignment + 2 * BLOCK_HDR_SIZE)
@@ -1475,6 +1479,8 @@ VOID STDCALL ExFreeNonPagedPool (PVOID block)
 
    DPRINT("freeing block %x\n",block);
 
+   ASSERT_IRQL(DISPATCH_LEVEL);
+
    POOL_TRACE("ExFreePool(block %x), size %d, caller %x\n",block,blk->size,
               ((PULONG)&block)[-1]);
 
@@ -1494,6 +1500,8 @@ VOID STDCALL ExFreeNonPagedPool (PVOID block)
    }
 
    DPRINT("freeing block %x\n",blk);
+
+   ASSERT_IRQL(DISPATCH_LEVEL);
 
    POOL_TRACE("ExFreePool(block %x), size %d, caller %x\n",block,blk->Size,
               ((PULONG)&block)[-1]);
@@ -1571,6 +1579,8 @@ ExAllocateNonPagedPoolWithTag(POOL_TYPE Type, ULONG Size, ULONG Tag, PVOID Calle
    BLOCK_HDR* best = NULL;
    KIRQL oldIrql;
    ULONG alignment;
+   
+
 
    POOL_TRACE("ExAllocatePool(NumberOfBytes %d) caller %x ",
               Size,Caller);
@@ -1579,7 +1589,7 @@ ExAllocateNonPagedPoolWithTag(POOL_TYPE Type, ULONG Size, ULONG Tag, PVOID Calle
 
    VALIDATE_POOL;
 
-#if 0
+#if 1
    /* after some allocations print the npaged pool stats */
 #ifdef TAG_STATISTICS_TRACKING
 
@@ -1588,6 +1598,7 @@ ExAllocateNonPagedPoolWithTag(POOL_TYPE Type, ULONG Size, ULONG Tag, PVOID Calle
       if (counter++ % 100000 == 0)
       {
          MiDebugDumpNonPagedPoolStats(FALSE);
+	 MmPrintMemoryStatistic();
       }
    }
 #endif

@@ -3,7 +3,7 @@
 
 #include <ddk/ntifs.h>
 
-#define USE_ROS_CC_AND_FS
+//#define USE_ROS_CC_AND_FS
 
 #define CDFS_BASIC_SECTOR 2048
 #define CDFS_PRIMARY_DESCRIPTOR_LOCATION 16

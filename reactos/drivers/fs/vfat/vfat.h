@@ -1,11 +1,19 @@
 /* $Id$ */
 
+//#define USE_ROS_CC_AND_FS
+
+#ifndef USE_ROS_CC_AND_FS
+#ifdef WINVER
+#undef WINVER
+#endif
+#define WINVER 0x0400
+#endif
+
 #include <ddk/ntifs.h>
 #include <ddk/ntdddisk.h>
 #include <limits.h>
 #include <debug.h>
 
-#define USE_ROS_CC_AND_FS
 
 /* FIXME */
 #ifdef __USE_W32API

@@ -89,7 +89,7 @@ MmMpwThreadMain(PVOID Ignored)
       MmWriteDirtyPages(128, &PagesWritten);
 #endif
 
-      CcRosFlushDirtyPages(128, &PagesWritten);
+//      CcRosFlushDirtyPages(128, &PagesWritten);
    }
 }
 

@@ -369,7 +369,7 @@ vfatFCBInitializeCacheFromVolume (PVCB  vcb, PVFATFCB  fcb)
   /* FIXME: Guard by SEH. */
   CcInitializeCacheMap(fileObject,
                        (PCC_FILE_SIZES)(&fcb->RFCB.AllocationSize),
-                       FALSE,
+                       TRUE,
                        &VfatGlobalData->CacheMgrCallbacks,
                        fcb);
 #endif

@@ -387,7 +387,7 @@ MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
    if (MmGetPfnForProcess(Process, Address) != Page)
    {
       DPRINT1("Insert rmap (%d, 0x%.8X) 0x%.8X which doesn't match physical "
-              "address 0x%.8X\n", Process->UniqueProcessId, Address,
+	  "address 0x%.8X\n", Process ? Process->UniqueProcessId : 0, Address,
               MmGetPfnForProcess(Process, Address) << PAGE_SHIFT,
               Page << PAGE_SHIFT);
       KEBUGCHECK(0);
@@ -489,5 +489,6 @@ MmDeleteRmap(PFN_TYPE Page, PEPROCESS Process,
       previous_entry = current_entry;
       current_entry = current_entry->Next;
    }
+   DPRINT1("%x %x %x\n", Page, Process, Address);
    KEBUGCHECK(0);
 }

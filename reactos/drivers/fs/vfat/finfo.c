@@ -101,6 +101,34 @@ VfatGetStandardInformation(PVFATFCB FCB,
 }
 
 static NTSTATUS
+VfatGetAttributeTagInformation(PVFATFCB FCB,
+			       PFILE_ATTRIBUTE_TAG_INFORMATION AttributeTagInfo,
+			       PULONG BufferLength)
+{
+  if (*BufferLength < sizeof(FILE_ATTRIBUTE_TAG_INFORMATION))
+    return STATUS_BUFFER_OVERFLOW;
+
+  /* PRECONDITION */
+  ASSERT(StandardInfo != NULL);
+  ASSERT(FCB != NULL);
+
+  AttributeTagInfo->FileAttributes = *FCB->Attributes & 0x3f;
+  /* Synthesize FILE_ATTRIBUTE_NORMAL */
+  if (0 == (AttributeTagInfo->FileAttributes & (FILE_ATTRIBUTE_DIRECTORY |
+                                                FILE_ATTRIBUTE_ARCHIVE |
+                                                FILE_ATTRIBUTE_SYSTEM |
+                                                FILE_ATTRIBUTE_HIDDEN |
+                                                FILE_ATTRIBUTE_READONLY)))
+  {
+    AttributeTagInfo->FileAttributes |= FILE_ATTRIBUTE_NORMAL;
+  }
+  AttributeTagInfo->ReparseTag = 0;
+
+  *BufferLength -= sizeof(FILE_ATTRIBUTE_TAG_INFORMATION);
+  return(STATUS_SUCCESS);
+}
+
+static NTSTATUS
 VfatSetPositionInformation(PFILE_OBJECT FileObject,
 			   PFILE_POSITION_INFORMATION PositionInfo)
 {
@@ -309,7 +337,7 @@ VfatSetDispositionInformation(PFILE_OBJECT FileObject,
         }
       else
         {
-          DPRINT("MmFlushImageSection returned FALSE\n");
+          DPRINT1("MmFlushImageSection returned FALSE\n");
           Status = STATUS_CANNOT_DELETE;
         }
       if (NT_SUCCESS(Status) && vfatFCBIsDirectory(FCB))
@@ -762,6 +790,12 @@ NTSTATUS VfatQueryInformation(PVFAT_IRP_CONTEXT IrpContext)
 				 &BufferLength);
       break;
 
+    case FileAttributeTagInformation:
+      RC = VfatGetAttributeTagInformation(FCB,
+	                                  SystemBuffer,
+					  &BufferLength);
+      break;
+
     case FileAlternateNameInformation:
       RC = STATUS_NOT_IMPLEMENTED;
       break;
@@ -848,6 +882,7 @@ NTSTATUS VfatSetInformation(PVFAT_IRP_CONTEXT IrpContext)
 				   SystemBuffer);
       break;
     case FileRenameInformation:
+    case FileAttributeTagInformation:
       RC = STATUS_NOT_IMPLEMENTED;
       break;
     default:

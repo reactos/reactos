@@ -176,7 +176,7 @@ NTSTATUS NTAPI PeFmtCreateSection
 (
  IN CONST VOID * FileHeader,
  IN SIZE_T FileHeaderSize,
- IN PVOID File,
+ IN PFILE_OBJECT FileObject,
  OUT PMM_IMAGE_SECTION_OBJECT ImageSectionObject,
  OUT PULONG Flags,
  IN PEXEFMT_CB_READ_FILE ReadFileCb,
@@ -205,7 +205,7 @@ NTSTATUS NTAPI PeFmtCreateSection
 
  ASSERT(FileHeader);
  ASSERT(FileHeaderSize > 0);
- ASSERT(File);
+ ASSERT(FileObject);
  ASSERT(ImageSectionObject);
  ASSERT(ReadFileCb);
  ASSERT(AllocateSegmentsCb);
@@ -274,7 +274,8 @@ l_ReadHeaderFromFile:
   /* read the header from the file */
   nStatus = ReadFileCb
   (
-   File,
+   FileObject,
+   ImageSectionObject->BytesPerSector,
    &lnOffset,
    sizeof(IMAGE_NT_HEADERS64),
    &pData,
@@ -568,7 +569,8 @@ l_ReadHeaderFromFile:
   /* read the header from the file */
   nStatus = ReadFileCb
   (
-   File,
+   FileObject,
+   ImageSectionObject->BytesPerSector,
    &lnOffset,
    cbSectionHeadersSize,
    &pData,

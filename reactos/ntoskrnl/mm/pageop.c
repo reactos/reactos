@@ -42,7 +42,10 @@ MmReleasePageOp(PMM_PAGEOP PageOp)
       KeReleaseSpinLock(&MmPageOpHashTableLock, oldIrql);
       return;
    }
-   InterlockedDecrementUL(&PageOp->MArea->PageOpCount);
+   if (PageOp->MArea)
+   {
+      InterlockedDecrementUL(&PageOp->MArea->PageOpCount);
+   }
    PrevPageOp = MmPageOpHashTable[PageOp->Hash];
    if (PrevPageOp == PageOp)
    {
@@ -77,13 +80,19 @@ MmCheckForPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
    /*
     * Calcuate the hash value for pageop structure
     */
-   if (MArea->Type == MEMORY_AREA_SECTION_VIEW)
+   if (MArea->Type == MEMORY_AREA_SECTION_VIEW ||
+       MArea->Type == MEMORY_AREA_CACHE_SEGMENT)
    {
       Hash = (((ULONG_PTR)Segment) | (((ULONG_PTR)Offset) / PAGE_SIZE));
    }
-   else
+   else if (MArea->Type == MEMORY_AREA_VIRTUAL_MEMORY)
    {
       Hash = (((ULONG_PTR)Pid) | (((ULONG_PTR)Address) / PAGE_SIZE));
+   }
+   else
+   {
+      DPRINT1("MmCheckForPageOp was called for %d\n", MArea->Type);
+      KEBUGCHECK(0);
    }
    Hash = Hash % PAGEOP_HASH_TABLE_SIZE;
 
@@ -95,7 +104,8 @@ MmCheckForPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
    PageOp = MmPageOpHashTable[Hash];
    while (PageOp != NULL)
    {
-      if (MArea->Type == MEMORY_AREA_SECTION_VIEW)
+      if (MArea->Type == MEMORY_AREA_SECTION_VIEW ||
+	  MArea->Type == MEMORY_AREA_CACHE_SEGMENT)
       {
          if (PageOp->Segment == Segment &&
                PageOp->Offset == Offset)
@@ -144,13 +154,19 @@ MmGetPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
    /*
     * Calcuate the hash value for pageop structure
     */
-   if (MArea->Type == MEMORY_AREA_SECTION_VIEW)
+   if (MArea->Type == MEMORY_AREA_SECTION_VIEW ||
+       MArea->Type == MEMORY_AREA_CACHE_SEGMENT)
    {
       Hash = (((ULONG_PTR)Segment) | (((ULONG_PTR)Offset) / PAGE_SIZE));
    }
-   else
+   else if (MArea->Type == MEMORY_AREA_VIRTUAL_MEMORY)
    {
       Hash = (((ULONG_PTR)Pid) | (((ULONG_PTR)Address) / PAGE_SIZE));
+   }
+   else
+   {
+      DPRINT1("MmGetPageOp was called for %d\n", MArea->Type);
+      KEBUGCHECK(0);
    }
    Hash = Hash % PAGEOP_HASH_TABLE_SIZE;
 
@@ -162,7 +178,8 @@ MmGetPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
    PageOp = MmPageOpHashTable[Hash];
    while (PageOp != NULL)
    {
-      if (MArea->Type == MEMORY_AREA_SECTION_VIEW)
+      if (MArea->Type == MEMORY_AREA_SECTION_VIEW ||
+	  MArea->Type == MEMORY_AREA_CACHE_SEGMENT)
       {
          if (PageOp->Segment == Segment &&
                PageOp->Offset == Offset)
@@ -210,15 +227,16 @@ MmGetPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
       return(NULL);
    }
 
-   if (MArea->Type != MEMORY_AREA_SECTION_VIEW)
-   {
-      PageOp->Pid = Pid;
-      PageOp->Address = Address;
-   }
-   else
+   if (MArea->Type == MEMORY_AREA_SECTION_VIEW ||
+       MArea->Type == MEMORY_AREA_CACHE_SEGMENT)
    {
       PageOp->Segment = Segment;
       PageOp->Offset = Offset;
+   }
+   else
+   {
+      PageOp->Pid = Pid;
+      PageOp->Address = Address;
    }
    PageOp->ReferenceCount = 1;
    PageOp->Next = MmPageOpHashTable[Hash];
@@ -230,7 +248,10 @@ MmGetPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
    PageOp->MArea = MArea;
    KeInitializeEvent(&PageOp->CompletionEvent, NotificationEvent, FALSE);
    MmPageOpHashTable[Hash] = PageOp;
-   InterlockedIncrementUL(&MArea->PageOpCount);
+   if (MArea)
+   {
+      InterlockedIncrementUL(&MArea->PageOpCount);
+   }
 
    KeReleaseSpinLock(&MmPageOpHashTableLock, oldIrql);
    return(PageOp);

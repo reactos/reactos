@@ -420,6 +420,9 @@ MmInit2(VOID)
    MmInitPagingFile();
 }
 
+VOID 
+MmInitSectionImplementation2(VOID);
+
 VOID INIT_FUNCTION
 MmInit3(VOID)
 {
@@ -442,6 +445,9 @@ MmInit3(VOID)
    MmInitMpwThread();
 
    /* FIXME: Read parameters from memory */
+   MmInitSectionImplementation2();
+
+
 }
 
 VOID STATIC

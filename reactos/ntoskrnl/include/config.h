@@ -19,7 +19,7 @@
 #undef ENABLE_VALIDATE_POOL
 
 /* Enable tracking of statistics about the tagged blocks in the pool */
-#undef TAG_STATISTICS_TRACKING
+#define TAG_STATISTICS_TRACKING
 
 /*
  * Put each block in its own range of pages and position the block at the
