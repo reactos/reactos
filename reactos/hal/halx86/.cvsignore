@@ -1,1 +1,5 @@
 *.d
+halx86up.coff
+hal.dll
+hal.nostrip.dll
+

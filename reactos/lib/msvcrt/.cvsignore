@@ -1,2 +1,3 @@
 msvcrt.coff
 msvcrt.dll
+msvcrt.nostrip.dll

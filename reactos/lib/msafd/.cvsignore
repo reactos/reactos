@@ -1,5 +1,6 @@
 msafd.a
 msafd.dll
+msafd.nostrip.dll
 msafd.coff
 base.tmp
 junk.tmp

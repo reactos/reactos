@@ -1,5 +1,6 @@
 wshtcpip.a
 wshtcpip.dll
+wshtcpip.nostrip.dll
 wshtcpip.coff
 base.tmp
 junk.tmp
