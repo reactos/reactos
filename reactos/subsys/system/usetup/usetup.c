@@ -34,7 +34,7 @@
 #include "console.h"
 #include "partlist.h"
 #include "inicache.h"
-
+#include "filequeue.h"
 
 
 #define START_PAGE			0
@@ -56,6 +56,14 @@
 #define REBOOT_PAGE			102
 
 
+typedef struct _COPYCONTEXT
+{
+  ULONG TotalOperations;
+  ULONG CompletedOperations;
+  ULONG Progress;
+} COPYCONTEXT, *PCOPYCONTEXT;
+
+
 /* GLOBALS ******************************************************************/
 
 HANDLE ProcessHeap;
@@ -69,6 +77,8 @@ UNICODE_STRING SourcePath;
 UNICODE_STRING SourceRootPath;
 
 PINICACHE IniCache;
+
+HSPFILEQ SetupFileQueue = NULL;
 
 
 /* FUNCTIONS ****************************************************************/
@@ -895,13 +905,18 @@ static ULONG
 PrepareCopyPage(PINPUT_RECORD Ir)
 {
   WCHAR PathBuffer[MAX_PATH];
-  PINICACHESECTION Section;
+  PINICACHESECTION DirSection;
+  PINICACHESECTION FilesSection;
   PINICACHEITERATOR Iterator;
   PWCHAR KeyName;
   PWCHAR KeyValue;
   ULONG Length;
   NTSTATUS Status;
 
+  PWCHAR FileKeyName;
+  PWCHAR FileKeyValue;
+  PWCHAR DirKeyName;
+  PWCHAR DirKeyValue;
 
   SetTextXY(6, 8, "Setup prepares your computer for copying the ReactOS files. ");
 
@@ -913,26 +928,16 @@ PrepareCopyPage(PINPUT_RECORD Ir)
   SetStatusText("   Please wait...");
 
 
-  /* build the file copy list */
-
+  /*
+   * Build the file copy list
+   */
   SetInvertedTextXY(8, 12, "Build file copy list");
-
-  /* FIXME: build that list */
-
-  SetTextXY(8, 12, "Build file copy list");
-  SetHighlightedTextXY(50, 12, "Done");
-
-
-
-
-  /* create directories */
-  SetInvertedTextXY(8, 14, "Create directories");
 
 
   /* Open 'Directories' section */
-  Section = IniCacheGetSection(IniCache,
-			       L"Directories");
-  if (Section == NULL)
+  DirSection = IniCacheGetSection(IniCache,
+				  L"Directories");
+  if (DirSection == NULL)
   {
     PopupError("Setup failed to find the 'Directories' section\n"
 	       "in TXTSETUP.SIF.\n",
@@ -948,6 +953,92 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 	}
       }
   }
+
+  /* Open 'SourceFiles' section */
+  FilesSection = IniCacheGetSection(IniCache,
+				    L"SourceFiles");
+  if (FilesSection == NULL)
+  {
+    PopupError("Setup failed to find the 'SourceFiles' section\n"
+	       "in TXTSETUP.SIF.\n",
+	       "ENTER = Reboot computer");
+
+      while(TRUE)
+      {
+	ConInKey(Ir);
+
+	if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	{
+	  return(QUIT_PAGE);
+	}
+      }
+  }
+
+
+  /* Create the file queue */
+  SetupFileQueue = SetupOpenFileQueue();
+  if (SetupFileQueue == NULL)
+  {
+    PopupError("Setup failed to open the copy file queue.\n",
+	       "ENTER = Reboot computer");
+
+      while(TRUE)
+      {
+	ConInKey(Ir);
+
+	if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	{
+	  return(QUIT_PAGE);
+	}
+      }
+  }
+
+  /*
+   * Enumerate the files in the 'SourceFiles' section
+   * and add them to the file queue.
+   */
+  Iterator = IniCacheFindFirstValue(FilesSection,
+				    &FileKeyName,
+				    &FileKeyValue);
+  if (Iterator != NULL)
+  {
+    do
+    {
+      DPRINT("FileKeyName: '%S'  FileKeyValue: '%S'\n", FileKeyName, FileKeyValue);
+
+      /* Lookup target directory */
+      Status = IniCacheGetKey(DirSection,
+			      FileKeyValue,
+			      &DirKeyValue);
+      if (!NT_SUCCESS(Status))
+      {
+	/* FIXME: Handle error! */
+	DPRINT1("IniCacheGetKey() failed (Status 0x%lX)\n", Status);
+      }
+
+      if (SetupQueueCopy(SetupFileQueue,
+			 SourceRootPath.Buffer,
+			 L"\\install",
+			 FileKeyName,
+			 DirKeyValue,
+			 NULL) == FALSE)
+      {
+	/* FIXME: Handle error! */
+	DPRINT1("SetupQueueCopy() failed\n");
+      }
+    }
+    while (IniCacheFindNextValue(Iterator, &FileKeyName, &FileKeyValue));
+
+    IniCacheFindClose(Iterator);
+  }
+
+  /* Report that the file queue has been built */
+  SetTextXY(8, 12, "Build file copy list");
+  SetHighlightedTextXY(50, 12, "Done");
+
+  /* create directories */
+  SetInvertedTextXY(8, 14, "Create directories");
+
 
   /*
    * FIXME:
@@ -990,7 +1081,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 
 
   /* Enumerate the directory values and create the subdirectories */
-  Iterator = IniCacheFindFirstValue(Section,
+  Iterator = IniCacheFindFirstValue(DirSection,
 				    &KeyName,
 				    &KeyValue);
   if (Iterator != NULL)
@@ -1080,11 +1171,66 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 
 
 static ULONG
+FileCopyCallback(PVOID Context,
+		 ULONG Notification,
+		 PVOID Param1,
+		 PVOID Param2)
+{
+  PCOPYCONTEXT CopyContext;
+
+  CopyContext = (PCOPYCONTEXT)Context;
+
+  switch (Notification)
+  {
+    case SPFILENOTIFY_STARTSUBQUEUE:
+      CopyContext->TotalOperations = (ULONG)Param2;
+      break;
+
+    case SPFILENOTIFY_STARTCOPY:
+      /* Display copy message */
+      PrintTextXYN(6, 16, 60, "Copying file: %S", (PWSTR)Param1);
+
+      PrintTextXYN(6, 18, 60, "File %lu of %lu",
+		   CopyContext->CompletedOperations + 1,
+		   CopyContext->TotalOperations);
+      break;
+
+
+    case SPFILENOTIFY_ENDCOPY:
+      CopyContext->CompletedOperations++;
+      break;
+  }
+
+  return(0);
+}
+
+
+static ULONG
 FileCopyPage(PINPUT_RECORD Ir)
 {
+  WCHAR TargetRootPath[MAX_PATH];
+  COPYCONTEXT CopyContext;
+
+  CopyContext.TotalOperations = 0;
+  CopyContext.CompletedOperations = 0;
+  CopyContext.Progress = 0;
+
+  SetStatusText("   Please wait...");
 
   SetTextXY(6, 8, "Copying files");
 
+  swprintf(TargetRootPath,
+	   L"\\Device\\Harddisk%lu\\Partition%lu",
+	   PartData.DiskNumber,
+	   PartData.PartNumber);
+
+  SetupCommitFileQueue(SetupFileQueue,
+		       TargetRootPath,
+		       InstallDir,
+		       (PSP_FILE_CALLBACK)FileCopyCallback,
+		       &CopyContext);
+
+  SetupCloseFileQueue(SetupFileQueue);
 
   SetStatusText("   ENTER = Continue   F3 = Quit");
 
@@ -1109,72 +1255,10 @@ FileCopyPage(PINPUT_RECORD Ir)
 }
 
 
-#if 0
-static NTSTATUS
-UpdateSystemRootLink(VOID)
-{
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING LinkName;
-  UNICODE_STRING TargetName;
-  CHAR TargetBuffer[MAX_PATH];
-  HANDLE Handle;
-  NTSTATUS Status;
-
-  RtlInitUnicodeString(&LinkName,
-		       L"\\SystemRoot");
-
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &LinkName,
-			     OBJ_OPENLINK,
-			     NULL,
-			     NULL);
-
-  Status = NtOpenSymbolicLinkObject(&Handle,
-				    SYMBOLIC_LINK_ALL_ACCESS,
-				    &ObjectAttributes);
-  if (!NT_SUCCESS(Status))
-    return(Status);
-
-  Status = NtMakeTemporaryObject(Handle);
-  NtClose(Handle);
-  if (!NT_SUCCESS(Status))
-    return(Status);
-
-  sprintf(TargetBuffer,
-	  "\\Device\\Harddisk%lu\\Partition%lu",
-	  PartData.DiskNumber,
-	  PartData.PartNumber);
-  if (InstallDir[0] != '\\')
-    strcat(TargetBuffer, "\\");
-  strcat(TargetBuffer, InstallDir);
-
-  RtlCreateUnicodeStringFromAsciiz(&TargetName,
-				   TargetBuffer);
-
-  Status = NtCreateSymbolicLinkObject(&Handle,
-				      SYMBOLIC_LINK_ALL_ACCESS,
-				      &ObjectAttributes,
-				      &TargetName);
-
-  RtlFreeUnicodeString(&TargetName);
-
-  if (!NT_SUCCESS(Status))
-    return(Status);
-
-  NtClose(Handle);
-
-  return(STATUS_SUCCESS);
-}
-#endif
-
 
 static ULONG
 InitSystemPage(PINPUT_RECORD Ir)
 {
-#if 0
-  NTSTATUS Status;
-#endif
-
   SetTextXY(6, 8, "Initializing system settings");
 
 
@@ -1186,27 +1270,11 @@ InitSystemPage(PINPUT_RECORD Ir)
 
   SetStatusText("   Please wait...");
 
-#if 0
+
   /*
-   * Initialize registry
+   * Create registry hives
    */
 
-  /* Update 'SystemRoot' link */
-  Status = UpdateSystemRootLink();
-  if (!NT_SUCCESS(Status))
-    {
-
-      PrintTextXY(6, 25, "UpdateSystemRootLink() failed (Status = 0x%08lx)", Status);
-    }
-
-
-  Status = NtInitializeRegistry(TRUE);
-  if (!NT_SUCCESS(Status))
-    {
-
-      PrintTextXY(6, 26, "NtInitializeRegistry() failed (Status = 0x%08lx)", Status);
-    }
-#endif
 
   /*
    * Update registry

@@ -1055,7 +1055,7 @@ SetHighlightedTextXY(SHORT x, SHORT y, PCHAR Text)
 
 
 VOID
-PrintTextXY(SHORT x, SHORT y, char* fmt,...)
+PrintTextXY(SHORT x, SHORT y, char* fmt, ...)
 {
   char buffer[512];
   va_list ap;
@@ -1072,5 +1072,44 @@ PrintTextXY(SHORT x, SHORT y, char* fmt,...)
 			       strlen(buffer),
 			       coPos);
 }
+
+
+VOID
+PrintTextXYN(SHORT x, SHORT y, SHORT len, char* fmt, ...)
+{
+  char buffer[512];
+  va_list ap;
+  COORD coPos;
+  ULONG Length;
+  ULONG Written;
+
+  va_start(ap, fmt);
+  vsprintf(buffer, fmt, ap);
+  va_end(ap);
+
+  coPos.X = x;
+  coPos.Y = y;
+
+  Length = strlen(buffer);
+  if (Length > len - 1)
+    {
+      Length = len - 1;
+    }
+
+  WriteConsoleOutputCharacters(buffer,
+			       Length,
+			       coPos);
+
+  coPos.X += Length;
+
+  if (len > Length)
+    {
+      FillConsoleOutputCharacter(' ',
+				 len - Length,
+				 coPos,
+				 &Written);
+    }
+}
+
 
 /* EOF */

@@ -6,3 +6,16 @@ Signature = "$ReactOS$"
 2 = system32
 3 = system32\drivers
 4 = system32\config
+
+[SourceFiles]
+atapi.sys    = 3
+cdrom.sys    = 3
+class2.sys   = 3
+disk.sys     = 3
+hal.dll      = 2
+scsiport.sys = 3
+ntoskrnl.exe = 2
+vfatfs.sys   = 3
+
+[SetupData]
+DefaultPath = \reactos

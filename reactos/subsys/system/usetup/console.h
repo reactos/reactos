@@ -120,7 +120,10 @@ VOID
 SetHighlightedTextXY(SHORT x, SHORT y, PCHAR Text);
 
 VOID
-PrintTextXY(SHORT x, SHORT y, char* fmt,...);
+PrintTextXY(SHORT x, SHORT y, char* fmt, ...);
+
+VOID
+PrintTextXYN(SHORT x, SHORT y, SHORT len, char* fmt, ...);
 
 #endif /* __CONSOLE_H__*/
 
