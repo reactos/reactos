@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.43 2003/08/18 13:37:54 weiden Exp $
+/* $Id: dllmain.c,v 1.44 2003/08/19 11:48:49 weiden Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -46,18 +46,18 @@ extern SSDT Win32kSSDT[];
 extern SSPT Win32kSSPT[];
 extern ULONG Win32kNumberOfSysCalls;
 
-PEPROCESS W32kDeviceProcess;
+PEPROCESS Win32kDeviceProcess;
 
 
 NTSTATUS STDCALL
-W32kProcessCallback (struct _EPROCESS *Process,
+Win32kProcessCallback (struct _EPROCESS *Process,
 		     BOOLEAN Create)
 {
   PW32PROCESS Win32Process;
   NTSTATUS Status;
 
 #if 0
-  DbgPrint ("W32kProcessCallback() called\n");
+  DbgPrint ("Win32kProcessCallback() called\n");
 #endif
 
   Win32Process = Process->Win32Process;
@@ -83,7 +83,7 @@ W32kProcessCallback (struct _EPROCESS *Process,
 					&Win32Process->WindowStation);
 	  if (!NT_SUCCESS(Status))
 	    {
-	      DbgPrint("W32K: Failed to reference a window station for "
+	      DbgPrint("Win32K: Failed to reference a window station for "
 		       "process.\n");
 	    }
 	}
@@ -95,7 +95,7 @@ W32kProcessCallback (struct _EPROCESS *Process,
       DbgPrint ("  IRQ level: %lu\n", KeGetCurrentIrql ());
 #endif
 
-      W32kCleanupMenus(Process, Win32Process);
+      IntCleanupMenus(Process, Win32Process);
 
       CleanupForProcess(Process, Process->UniqueProcessId);
     }
@@ -105,7 +105,7 @@ W32kProcessCallback (struct _EPROCESS *Process,
 
 
 NTSTATUS STDCALL
-W32kThreadCallback (struct _ETHREAD *Thread,
+Win32kThreadCallback (struct _ETHREAD *Thread,
 		    BOOLEAN Create)
 {
   struct _EPROCESS *Process;
@@ -113,7 +113,7 @@ W32kThreadCallback (struct _ETHREAD *Thread,
   NTSTATUS Status;
 
 #if 0
-  DbgPrint ("W32kThreadCallback() called\n");
+  DbgPrint ("Win32kThreadCallback() called\n");
 #endif
 
   Process = Thread->ThreadsProcess;
@@ -140,7 +140,7 @@ W32kThreadCallback (struct _ETHREAD *Thread,
 					     NULL);
 	  if (!NT_SUCCESS(Status))
 	    {
-	      DbgPrint("W32K: Failed to reference a desktop for thread.\n");
+	      DbgPrint("Win32K: Failed to reference a desktop for thread.\n");
 	    }
 	}
     }
@@ -171,7 +171,7 @@ DllMain (
   NTSTATUS Status;
   BOOLEAN Result;
 
-  W32kInitializeWinLock();
+  IntInitializeWinLock();
 
   /*
    * Register user mode call interface
@@ -191,8 +191,8 @@ DllMain (
   /*
    * Register our per-process and per-thread structures.
    */
-  PsEstablishWin32Callouts (W32kProcessCallback,
-			    W32kThreadCallback,
+  PsEstablishWin32Callouts (Win32kProcessCallback,
+			    Win32kThreadCallback,
 			    0,
 			    0,
 			    sizeof(W32THREAD),
@@ -255,11 +255,11 @@ DllMain (
 
 BOOLEAN
 STDCALL
-W32kInitialize (VOID)
+Win32kInitialize (VOID)
 {
-  DPRINT("in W32kInitialize\n");
+  DPRINT("in Win32kInitialize\n");
 
-  W32kDeviceProcess = PsGetCurrentProcess();
+  Win32kDeviceProcess = PsGetCurrentProcess();
 
   InitGdiObjectHandleTable ();
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: icm.c,v 1.8 2003/08/07 04:03:25 royce Exp $ */
+/* $Id: icm.c,v 1.9 2003/08/19 11:48:50 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -28,7 +28,7 @@
 
 BOOL
 STDCALL
-W32kCheckColorsInGamut(HDC  hDC,
+NtGdiCheckColorsInGamut(HDC  hDC,
                              LPVOID  RGBTriples,
                              LPVOID  Buffer,
                              UINT  Count)
@@ -38,7 +38,7 @@ W32kCheckColorsInGamut(HDC  hDC,
 
 BOOL
 STDCALL
-W32kColorMatchToTarget(HDC  hDC,
+NtGdiColorMatchToTarget(HDC  hDC,
                              HDC  hDCTarget, 
                              DWORD  Action)
 {
@@ -47,21 +47,21 @@ W32kColorMatchToTarget(HDC  hDC,
 
 HCOLORSPACE
 STDCALL
-W32kCreateColorSpace(LPLOGCOLORSPACEW  LogColorSpace)
+NtGdiCreateColorSpace(LPLOGCOLORSPACEW  LogColorSpace)
 {
   UNIMPLEMENTED;
 }
 
 BOOL
 STDCALL
-W32kDeleteColorSpace(HCOLORSPACE  hColorSpace)
+NtGdiDeleteColorSpace(HCOLORSPACE  hColorSpace)
 {
   UNIMPLEMENTED;
 }
 
 INT
 STDCALL
-W32kEnumICMProfiles(HDC    hDC,
+NtGdiEnumICMProfiles(HDC    hDC,
                     LPWSTR lpstrBuffer,
                     UINT   cch )
 {
@@ -76,7 +76,7 @@ W32kEnumICMProfiles(HDC    hDC,
 
 HCOLORSPACE
 STDCALL
-W32kGetColorSpace(HDC  hDC)
+NtGdiGetColorSpace(HDC  hDC)
 {
   /* FIXME: Need to to whatever GetColorSpace actually does */
   return  0;
@@ -84,7 +84,7 @@ W32kGetColorSpace(HDC  hDC)
 
 BOOL
 STDCALL
-W32kGetDeviceGammaRamp(HDC  hDC,  
+NtGdiGetDeviceGammaRamp(HDC  hDC,  
                              LPVOID  Ramp)
 {
   UNIMPLEMENTED;
@@ -92,7 +92,7 @@ W32kGetDeviceGammaRamp(HDC  hDC,
 
 BOOL
 STDCALL
-W32kGetICMProfile(HDC  hDC,
+NtGdiGetICMProfile(HDC  hDC,
                         LPDWORD  NameSize,
                         LPWSTR  Filename)
 {
@@ -101,7 +101,7 @@ W32kGetICMProfile(HDC  hDC,
 
 BOOL
 STDCALL
-W32kGetLogColorSpace(HCOLORSPACE  hColorSpace,
+NtGdiGetLogColorSpace(HCOLORSPACE  hColorSpace,
                            LPLOGCOLORSPACEW  Buffer,
                            DWORD  Size)
 {
@@ -110,7 +110,7 @@ W32kGetLogColorSpace(HCOLORSPACE  hColorSpace,
 
 HCOLORSPACE
 STDCALL
-W32kSetColorSpace(HDC  hDC,
+NtGdiSetColorSpace(HDC  hDC,
                                HCOLORSPACE  hColorSpace)
 {
   UNIMPLEMENTED;
@@ -118,7 +118,7 @@ W32kSetColorSpace(HDC  hDC,
 
 BOOL
 STDCALL
-W32kSetDeviceGammaRamp(HDC  hDC,
+NtGdiSetDeviceGammaRamp(HDC  hDC,
                              LPVOID  Ramp)
 {
   UNIMPLEMENTED;
@@ -126,7 +126,7 @@ W32kSetDeviceGammaRamp(HDC  hDC,
 
 INT
 STDCALL
-W32kSetICMMode(HDC  hDC,
+NtGdiSetICMMode(HDC  hDC,
                     INT  EnableICM)
 {
   /* FIXME: this should be coded someday  */
@@ -148,7 +148,7 @@ W32kSetICMMode(HDC  hDC,
 
 BOOL
 STDCALL
-W32kSetICMProfile(HDC  hDC,
+NtGdiSetICMProfile(HDC  hDC,
                         LPWSTR  Filename)
 {
   UNIMPLEMENTED;
@@ -156,7 +156,7 @@ W32kSetICMProfile(HDC  hDC,
 
 BOOL
 STDCALL
-W32kUpdateICMRegKey(DWORD  Reserved,  
+NtGdiUpdateICMRegKey(DWORD  Reserved,  
                           LPWSTR  CMID, 
                           LPWSTR  Filename,
                           UINT  Command)

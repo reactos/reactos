@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.33 2003/08/19 01:03:41 weiden Exp $
+/* $Id: class.c,v 1.34 2003/08/19 11:48:49 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -191,7 +191,7 @@ NtUserGetClassInfo(HINSTANCE hInst,
 }
 
 ULONG FASTCALL
-W32kGetClassName(struct _WINDOW_OBJECT *WindowObject,
+IntGetClassName(struct _WINDOW_OBJECT *WindowObject,
 		   LPWSTR lpClassName,
 		   ULONG nMaxCount)
 {
@@ -255,14 +255,14 @@ NtUserGetClassName (
   PWINDOW_OBJECT WindowObject;
   LONG Ret;
 
-  WindowObject = W32kGetWindowObject(hWnd);
+  WindowObject = IntGetWindowObject(hWnd);
   if (WindowObject == NULL)
   {
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
     return 0;
   }
-  Ret = W32kGetClassName(WindowObject, lpClassName, nMaxCount);
-  W32kReleaseWindowObject(WindowObject);
+  Ret = IntGetClassName(WindowObject, lpClassName, nMaxCount);
+  IntReleaseWindowObject(WindowObject);
   return(Ret);
 }
 
@@ -275,7 +275,7 @@ NtUserGetWOWClass(DWORD Unknown0,
 }
 
 PWNDCLASS_OBJECT FASTCALL
-W32kCreateClass(CONST WNDCLASSEXW *lpwcx,
+IntCreateClass(CONST WNDCLASSEXW *lpwcx,
                 BOOL bUnicodeClass,
                 RTL_ATOM Atom)
 {
@@ -374,7 +374,7 @@ NtUserRegisterClassExWOW(
   {
     Atom = (RTL_ATOM)(ULONG)lpwcx->lpszClassName;
   }
-  ClassObject = W32kCreateClass(lpwcx, bUnicodeClass, Atom);
+  ClassObject = IntCreateClass(lpwcx, bUnicodeClass, Atom);
   if (ClassObject == NULL)
   {
     if (!IS_ATOM(lpwcx->lpszClassName))
@@ -394,7 +394,7 @@ NtUserRegisterClassExWOW(
 }
 
 ULONG FASTCALL
-W32kGetClassLong(struct _WINDOW_OBJECT *WindowObject, ULONG Offset, BOOL Ansi)
+IntGetClassLong(struct _WINDOW_OBJECT *WindowObject, ULONG Offset, BOOL Ansi)
 {
   LONG Ret;
   switch (Offset)
@@ -449,19 +449,19 @@ NtUserGetClassLong(HWND hWnd, DWORD Offset, BOOL Ansi)
   PWINDOW_OBJECT WindowObject;
   LONG Ret;
 
-  WindowObject = W32kGetWindowObject(hWnd);
+  WindowObject = IntGetWindowObject(hWnd);
   if (WindowObject == NULL)
   {
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
     return 0;
   }
-  Ret = W32kGetClassLong(WindowObject, Offset, Ansi);
-  W32kReleaseWindowObject(WindowObject);
+  Ret = IntGetClassLong(WindowObject, Offset, Ansi);
+  IntReleaseWindowObject(WindowObject);
   return(Ret);
 }
 
 void FASTCALL
-W32kSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BOOL Ansi)
+IntSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BOOL Ansi)
 {
   PUNICODE_STRING str;
   switch (Offset)
@@ -528,15 +528,15 @@ NtUserSetClassLong(HWND hWnd,
   PWINDOW_OBJECT WindowObject;
   LONG Ret;
 
-  WindowObject = W32kGetWindowObject(hWnd);
+  WindowObject = IntGetWindowObject(hWnd);
   if (WindowObject == NULL)
   {
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
     return 0;
   }
-  Ret = W32kGetClassLong(WindowObject, Offset, Ansi);
-  W32kSetClassLong(WindowObject, Offset, dwNewLong, Ansi);
-  W32kReleaseWindowObject(WindowObject);
+  Ret = IntGetClassLong(WindowObject, Offset, Ansi);
+  IntSetClassLong(WindowObject, Offset, dwNewLong, Ansi);
+  IntReleaseWindowObject(WindowObject);
   return(Ret);
 }
 

@@ -92,7 +92,7 @@ BOOL IconCursor_InternalDelete( PICONCURSOROBJ pIconCursor );
 /*  User Entry Points  */
 HICON 
 STDCALL 
-W32kCreateIcon (
+NtGdiCreateIcon (
     BOOL fIcon,
 	INT  Width,
 	INT  Height,

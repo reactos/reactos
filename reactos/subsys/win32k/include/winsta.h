@@ -33,25 +33,25 @@ ValidateDesktopHandle(HDESK Desktop,
 		      ACCESS_MASK DesiredAccess,
 		      PDESKTOP_OBJECT *Object);
 LRESULT CALLBACK
-W32kDesktopWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+IntDesktopWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 PDESKTOP_OBJECT FASTCALL
-W32kGetActiveDesktop(VOID);
+IntGetActiveDesktop(VOID);
 PDESKTOP_OBJECT FASTCALL
-W32kGetDesktopObject ( HDESK hDesk );
+IntGetDesktopObject ( HDESK hDesk );
 PUSER_MESSAGE_QUEUE FASTCALL
-W32kGetFocusMessageQueue(VOID);
+IntGetFocusMessageQueue(VOID);
 VOID FASTCALL
-W32kInitializeDesktopGraphics(VOID);
+IntInitializeDesktopGraphics(VOID);
 VOID FASTCALL
-W32kEndDesktopGraphics(VOID);
+IntEndDesktopGraphics(VOID);
 HDC FASTCALL
-W32kGetScreenDC(VOID);
+IntGetScreenDC(VOID);
 VOID STDCALL
-W32kSetFocusMessageQueue(PUSER_MESSAGE_QUEUE NewQueue);
+IntSetFocusMessageQueue(PUSER_MESSAGE_QUEUE NewQueue);
 struct _WINDOW_OBJECT* STDCALL
-W32kGetCaptureWindow(VOID);
+IntGetCaptureWindow(VOID);
 VOID STDCALL
-W32kSetCaptureWindow(struct _WINDOW_OBJECT* Window);
+IntSetCaptureWindow(struct _WINDOW_OBJECT* Window);
 
 #endif /* __WIN32K_WINSTA_H */
 

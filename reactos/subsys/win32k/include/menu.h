@@ -45,62 +45,62 @@ typedef struct _MENU_OBJECT
 } MENU_OBJECT, *PMENU_OBJECT;
 
 PMENU_OBJECT FASTCALL
-W32kGetMenuObject(HMENU hMenu);
+IntGetMenuObject(HMENU hMenu);
 
 VOID FASTCALL
-W32kReleaseMenuObject(PMENU_OBJECT MenuObject);
+IntReleaseMenuObject(PMENU_OBJECT MenuObject);
 
 BOOL FASTCALL
-W32kFreeMenuItem(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem,
+IntFreeMenuItem(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem,
     BOOL RemoveFromList, BOOL bRecurse);
     
 BOOL FASTCALL
-W32kRemoveMenuItem(PMENU_OBJECT MenuObject, UINT uPosition, UINT uFlags, 
+IntRemoveMenuItem(PMENU_OBJECT MenuObject, UINT uPosition, UINT uFlags, 
                    BOOL bRecurse);
     
 UINT FASTCALL
-W32kDeleteMenuItems(PMENU_OBJECT MenuObject, BOOL bRecurse);
+IntDeleteMenuItems(PMENU_OBJECT MenuObject, BOOL bRecurse);
 
 BOOL FASTCALL
-W32kDestroyMenuObject(PMENU_OBJECT MenuObject, BOOL bRecurse);
+IntDestroyMenuObject(PMENU_OBJECT MenuObject, BOOL bRecurse);
 
 PMENU_OBJECT FASTCALL
-W32kCreateMenu(PHANDLE Handle);
+IntCreateMenu(PHANDLE Handle);
 
 BOOL FASTCALL
-W32kSetMenuFlagRtoL(PMENU_OBJECT MenuObject);
+IntSetMenuFlagRtoL(PMENU_OBJECT MenuObject);
 
 BOOL FASTCALL
-W32kSetMenuContextHelpId(PMENU_OBJECT MenuObject, DWORD dwContextHelpId);
+IntSetMenuContextHelpId(PMENU_OBJECT MenuObject, DWORD dwContextHelpId);
 
 BOOL FASTCALL
-W32kGetMenuInfo(PMENU_OBJECT MenuObject, LPMENUINFO lpmi);
+IntGetMenuInfo(PMENU_OBJECT MenuObject, LPMENUINFO lpmi);
 
 BOOL FASTCALL
-W32kSetMenuInfo(PMENU_OBJECT MenuObject, LPMENUINFO lpmi);
+IntSetMenuInfo(PMENU_OBJECT MenuObject, LPMENUINFO lpmi);
 
 int FASTCALL
-W32kGetMenuItemByFlag(PMENU_OBJECT MenuObject, UINT uSearchBy, UINT fFlag, 
+IntGetMenuItemByFlag(PMENU_OBJECT MenuObject, UINT uSearchBy, UINT fFlag, 
                       PMENU_ITEM *MenuItem, PMENU_ITEM *PrevMenuItem);
 
 BOOL FASTCALL
-W32kSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, LPCMENUITEMINFOW lpmii);
+IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, LPCMENUITEMINFOW lpmii);
 
 BOOL FASTCALL
-W32kInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, WINBOOL fByPosition,
+IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, WINBOOL fByPosition,
                    LPCMENUITEMINFOW lpmii);
                    
 UINT FASTCALL
-W32kEnableMenuItem(PMENU_OBJECT MenuObject, UINT uIDEnableItem, UINT uEnable);
+IntEnableMenuItem(PMENU_OBJECT MenuObject, UINT uIDEnableItem, UINT uEnable);
 
 DWORD FASTCALL
-W32kCheckMenuItem(PMENU_OBJECT MenuObject, UINT uIDCheckItem, UINT uCheck);
+IntCheckMenuItem(PMENU_OBJECT MenuObject, UINT uIDCheckItem, UINT uCheck);
 
 BOOL FASTCALL
-W32kSetMenuDefaultItem(PMENU_OBJECT MenuObject, UINT uItem, UINT fByPos);
+IntSetMenuDefaultItem(PMENU_OBJECT MenuObject, UINT uItem, UINT fByPos);
 
 BOOL FASTCALL
-W32kCleanupMenus(struct _EPROCESS *Process, PW32PROCESS Win32Process);
+IntCleanupMenus(struct _EPROCESS *Process, PW32PROCESS Win32Process);
 
 
 

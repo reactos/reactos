@@ -25,7 +25,7 @@ Arc(
 	int	a8
 	)
 {
-	return W32kArc(a0,a1,a2,a3,a4,a5,a6,a7,a8);
+	return NtGdiArc(a0,a1,a2,a3,a4,a5,a6,a7,a8);
 }
 
 /*
@@ -38,7 +38,7 @@ SetArcDirection(
         int     a1
         )
 {
-        return W32kSetArcDirection(hdc, a1);
+        return NtGdiSetArcDirection(hdc, a1);
 }
 
 
@@ -51,7 +51,7 @@ GetArcDirection(
         HDC     hdc
         )
 {
-        return W32kGetArcDirection(hdc);
+        return NtGdiGetArcDirection(hdc);
 }
 
 
@@ -62,7 +62,7 @@ BOOL
 STDCALL
 LineTo(HDC hDC, int XEnd, int YEnd)
 {
-   return W32kLineTo(hDC, XEnd, YEnd);
+   return NtGdiLineTo(hDC, XEnd, YEnd);
 }
 
 
@@ -73,7 +73,7 @@ BOOL
 STDCALL 
 MoveToEx(HDC hDC, int X, int Y, LPPOINT Point)
 {
-   return W32kMoveToEx(hDC, X, Y, Point);
+   return NtGdiMoveToEx(hDC, X, Y, Point);
 }
 
 
@@ -84,7 +84,7 @@ BOOL
 STDCALL
 Polyline( HDC hdc, CONST POINT *lppt, int cPoints )
 {
-   return W32kPolyline(hdc, (CONST LPPOINT) lppt, cPoints);
+   return NtGdiPolyline(hdc, (CONST LPPOINT) lppt, cPoints);
 }
 
 /*
@@ -104,7 +104,7 @@ ArcTo(
 	int	a8
 	)
 {
-	return W32kArcTo(hdc,a1,a2,a3,a4,a5,a6,a7,a8);
+	return NtGdiArcTo(hdc,a1,a2,a3,a4,a5,a6,a7,a8);
 }
 
 

@@ -143,19 +143,19 @@ BOOL FASTCALL DC_InvertXform(const XFORM *xformSrc, XFORM *xformDest);
 
 /*  User entry points */
 
-BOOL STDCALL  W32kCancelDC(HDC  hDC);
-HDC STDCALL  W32kCreateCompatableDC(HDC  hDC);
-HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
+BOOL STDCALL  NtGdiCancelDC(HDC  hDC);
+HDC STDCALL  NtGdiCreateCompatableDC(HDC  hDC);
+HDC STDCALL  NtGdiCreateDC(LPCWSTR  Driver,
                           LPCWSTR  Device,
                           LPCWSTR  Output,
                           CONST PDEVMODEW  InitData);
-HDC STDCALL W32kCreateIC(LPCWSTR  Driver,
+HDC STDCALL NtGdiCreateIC(LPCWSTR  Driver,
                          LPCWSTR  Device,
                          LPCWSTR  Output,
                          CONST PDEVMODEW  DevMode);
-BOOL STDCALL  W32kDeleteDC(HDC  hDC);
-BOOL STDCALL  W32kDeleteObject(HGDIOBJ hObject);
-INT STDCALL  W32kDrawEscape(HDC  hDC,
+BOOL STDCALL  NtGdiDeleteDC(HDC  hDC);
+BOOL STDCALL  NtGdiDeleteObject(HGDIOBJ hObject);
+INT STDCALL  NtGdiDrawEscape(HDC  hDC,
                             INT  nEscape,
                             INT  cbInput,
                             LPCSTR  lpszInData);
@@ -163,46 +163,46 @@ INT STDCALL  W32kDrawEscape(HDC  hDC,
 /* FIXME: this typedef should go somewhere else...  */
 typedef VOID (*GOBJENUMPROC)(PVOID, LPARAM);
 
-INT STDCALL  W32kEnumObjects(HDC  hDC,
+INT STDCALL  NtGdiEnumObjects(HDC  hDC,
                              INT  ObjectType,
                              GOBJENUMPROC  ObjectFunc,
                              LPARAM  lParam);
 
-COLORREF STDCALL  W32kGetBkColor(HDC  hDC);
-INT STDCALL  W32kGetBkMode(HDC  hDC);
-BOOL STDCALL  W32kGetBrushOrgEx(HDC  hDC, LPPOINT brushOrg);
-HRGN STDCALL  W32kGetClipRgn(HDC  hDC);
-HGDIOBJ STDCALL  W32kGetCurrentObject(HDC  hDC, UINT  ObjectType);
+COLORREF STDCALL  NtGdiGetBkColor(HDC  hDC);
+INT STDCALL  NtGdiGetBkMode(HDC  hDC);
+BOOL STDCALL  NtGdiGetBrushOrgEx(HDC  hDC, LPPOINT brushOrg);
+HRGN STDCALL  NtGdiGetClipRgn(HDC  hDC);
+HGDIOBJ STDCALL  NtGdiGetCurrentObject(HDC  hDC, UINT  ObjectType);
 VOID FASTCALL IntGetCurrentPositionEx (PDC  dc,  LPPOINT currentPosition);
-BOOL STDCALL  W32kGetCurrentPositionEx(HDC  hDC, LPPOINT currentPosition);
-BOOL STDCALL  W32kGetDCOrgEx(HDC  hDC, LPPOINT  Point);
-HDC STDCALL  W32kGetDCState16(HDC  hDC);
-INT STDCALL  W32kGetDeviceCaps(HDC  hDC, INT  Index);
-INT STDCALL  W32kGetMapMode(HDC  hDC);
-INT STDCALL  W32kGetObject(HGDIOBJ  hGDIObj,
+BOOL STDCALL  NtGdiGetCurrentPositionEx(HDC  hDC, LPPOINT currentPosition);
+BOOL STDCALL  NtGdiGetDCOrgEx(HDC  hDC, LPPOINT  Point);
+HDC STDCALL  NtGdiGetDCState16(HDC  hDC);
+INT STDCALL  NtGdiGetDeviceCaps(HDC  hDC, INT  Index);
+INT STDCALL  NtGdiGetMapMode(HDC  hDC);
+INT STDCALL  NtGdiGetObject(HGDIOBJ  hGDIObj,
                            INT  BufSize,
                            LPVOID  Object);
-DWORD STDCALL  W32kGetObjectType(HGDIOBJ  hGDIObj);
-INT STDCALL  W32kGetPolyFillMode(HDC  hDC);
-INT STDCALL  W32kGetRelAbs(HDC  hDC);
-INT STDCALL  W32kGetROP2(HDC  hDC);
-HGDIOBJ STDCALL  W32kGetStockObject(INT  Object);
-INT STDCALL  W32kGetStretchBltMode(HDC  hDC);
-COLORREF STDCALL  W32kGetTextColor(HDC  hDC);
-UINT STDCALL  W32kGetTextAlign(HDC  hDC);
-BOOL STDCALL  W32kGetViewportExtEx(HDC  hDC, LPSIZE viewportExt);
-BOOL STDCALL  W32kGetViewportOrgEx(HDC  hDC, LPPOINT viewportOrg);
-BOOL STDCALL  W32kGetWindowExtEx(HDC  hDC, LPSIZE windowExt);
-BOOL STDCALL  W32kGetWindowOrgEx(HDC  hDC, LPPOINT windowOrg);
-HDC STDCALL  W32kResetDC(HDC  hDC, CONST DEVMODEW  *InitData);
-BOOL STDCALL  W32kRestoreDC(HDC  hDC, INT  SavedDC);
-INT STDCALL  W32kSaveDC(HDC  hDC);
-HGDIOBJ STDCALL  W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj);
-INT STDCALL  W32kSetBkMode(HDC  hDC, INT  backgroundMode);
-INT STDCALL  W32kSetPolyFillMode(HDC  hDC, INT polyFillMode);
-INT STDCALL  W32kSetRelAbs(HDC  hDC, INT  relAbsMode);
-INT STDCALL  W32kSetROP2(HDC  hDC, INT  ROPmode);
-INT STDCALL  W32kSetStretchBltMode(HDC  hDC, INT  stretchBltMode);
-COLORREF STDCALL  W32kSetTextColor(HDC hDC, COLORREF color);
+DWORD STDCALL  NtGdiGetObjectType(HGDIOBJ  hGDIObj);
+INT STDCALL  NtGdiGetPolyFillMode(HDC  hDC);
+INT STDCALL  NtGdiGetRelAbs(HDC  hDC);
+INT STDCALL  NtGdiGetROP2(HDC  hDC);
+HGDIOBJ STDCALL  NtGdiGetStockObject(INT  Object);
+INT STDCALL  NtGdiGetStretchBltMode(HDC  hDC);
+COLORREF STDCALL  NtGdiGetTextColor(HDC  hDC);
+UINT STDCALL  NtGdiGetTextAlign(HDC  hDC);
+BOOL STDCALL  NtGdiGetViewportExtEx(HDC  hDC, LPSIZE viewportExt);
+BOOL STDCALL  NtGdiGetViewportOrgEx(HDC  hDC, LPPOINT viewportOrg);
+BOOL STDCALL  NtGdiGetWindowExtEx(HDC  hDC, LPSIZE windowExt);
+BOOL STDCALL  NtGdiGetWindowOrgEx(HDC  hDC, LPPOINT windowOrg);
+HDC STDCALL  NtGdiResetDC(HDC  hDC, CONST DEVMODEW  *InitData);
+BOOL STDCALL  NtGdiRestoreDC(HDC  hDC, INT  SavedDC);
+INT STDCALL  NtGdiSaveDC(HDC  hDC);
+HGDIOBJ STDCALL  NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj);
+INT STDCALL  NtGdiSetBkMode(HDC  hDC, INT  backgroundMode);
+INT STDCALL  NtGdiSetPolyFillMode(HDC  hDC, INT polyFillMode);
+INT STDCALL  NtGdiSetRelAbs(HDC  hDC, INT  relAbsMode);
+INT STDCALL  NtGdiSetROP2(HDC  hDC, INT  ROPmode);
+INT STDCALL  NtGdiSetStretchBltMode(HDC  hDC, INT  stretchBltMode);
+COLORREF STDCALL  NtGdiSetTextColor(HDC hDC, COLORREF color);
 
 #endif

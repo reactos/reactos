@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: wingl.c,v 1.6 2003/05/18 17:16:18 ea Exp $ */
+/* $Id: wingl.c,v 1.7 2003/08/19 11:48:50 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -28,7 +28,7 @@
 
 INT
 STDCALL
-W32kChoosePixelFormat(HDC  hDC,
+NtGdiChoosePixelFormat(HDC  hDC,
                            CONST PPIXELFORMATDESCRIPTOR  pfd)
 {
   UNIMPLEMENTED;
@@ -37,7 +37,7 @@ W32kChoosePixelFormat(HDC  hDC,
 
 INT
 STDCALL
-W32kDescribePixelFormat(HDC  hDC,
+NtGdiDescribePixelFormat(HDC  hDC,
                              INT  PixelFormat,
                              UINT  BufSize,
                              LPPIXELFORMATDESCRIPTOR  pfd)
@@ -47,7 +47,7 @@ W32kDescribePixelFormat(HDC  hDC,
 
 UINT
 STDCALL
-W32kGetEnhMetaFilePixelFormat(HENHMETAFILE  hEMF,
+NtGdiGetEnhMetaFilePixelFormat(HENHMETAFILE  hEMF,
                                     DWORD  BufSize, 
                                     CONST PPIXELFORMATDESCRIPTOR  pfd)
 {
@@ -56,14 +56,14 @@ W32kGetEnhMetaFilePixelFormat(HENHMETAFILE  hEMF,
 
 INT
 STDCALL
-W32kGetPixelFormat(HDC  hDC)
+NtGdiGetPixelFormat(HDC  hDC)
 {
   UNIMPLEMENTED;
 }
 
 BOOL
 STDCALL
-W32kSetPixelFormat(HDC  hDC,
+NtGdiSetPixelFormat(HDC  hDC,
                          INT  PixelFormat,
                          CONST PPIXELFORMATDESCRIPTOR  pfd)
 {
@@ -72,7 +72,7 @@ W32kSetPixelFormat(HDC  hDC,
 
 BOOL
 STDCALL
-W32kSwapBuffers(HDC  hDC)
+NtGdiSwapBuffers(HDC  hDC)
 {
   UNIMPLEMENTED;
 }

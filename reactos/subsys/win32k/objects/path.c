@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: path.c,v 1.13 2003/08/17 17:32:58 royce Exp $ */
+/* $Id: path.c,v 1.14 2003/08/19 11:48:50 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -45,14 +45,14 @@
 
 BOOL
 STDCALL
-W32kAbortPath(HDC  hDC)
+NtGdiAbortPath(HDC  hDC)
 {
   UNIMPLEMENTED;
 }
 
 BOOL
 STDCALL
-W32kBeginPath(HDC  hDC)
+NtGdiBeginPath(HDC  hDC)
 {
   UNIMPLEMENTED;
 }
@@ -67,7 +67,7 @@ IntCloseFigure ( PDC dc )
 
 BOOL
 STDCALL
-W32kCloseFigure ( HDC hDC )
+NtGdiCloseFigure ( HDC hDC )
 {
   PDC dc = DC_HandleToPtr ( hDC );
   BOOL ret = FALSE; // default to failure
@@ -83,21 +83,21 @@ W32kCloseFigure ( HDC hDC )
 
 BOOL
 STDCALL
-W32kEndPath(HDC  hDC)
+NtGdiEndPath(HDC  hDC)
 {
   UNIMPLEMENTED;
 }
 
 BOOL
 STDCALL
-W32kFillPath(HDC  hDC)
+NtGdiFillPath(HDC  hDC)
 {
   UNIMPLEMENTED;
 }
 
 BOOL
 STDCALL
-W32kFlattenPath(HDC  hDC)
+NtGdiFlattenPath(HDC  hDC)
 {
   UNIMPLEMENTED;
 }
@@ -105,7 +105,7 @@ W32kFlattenPath(HDC  hDC)
 
 BOOL
 STDCALL
-W32kGetMiterLimit(HDC  hDC,
+NtGdiGetMiterLimit(HDC  hDC,
                         PFLOAT  Limit)
 {
   UNIMPLEMENTED;
@@ -113,7 +113,7 @@ W32kGetMiterLimit(HDC  hDC,
 
 INT
 STDCALL
-W32kGetPath(HDC  hDC,
+NtGdiGetPath(HDC  hDC,
                  LPPOINT  Points,
                  LPBYTE  Types,
                  INT  nSize)
@@ -123,14 +123,14 @@ W32kGetPath(HDC  hDC,
 
 HRGN
 STDCALL
-W32kPathToRegion(HDC  hDC)
+NtGdiPathToRegion(HDC  hDC)
 {
   UNIMPLEMENTED;
 }
 
 BOOL
 STDCALL
-W32kSetMiterLimit(HDC  hDC,
+NtGdiSetMiterLimit(HDC  hDC,
                         FLOAT  NewLimit,
                         PFLOAT  OldLimit)
 {
@@ -139,21 +139,21 @@ W32kSetMiterLimit(HDC  hDC,
 
 BOOL
 STDCALL
-W32kStrokeAndFillPath(HDC  hDC)
+NtGdiStrokeAndFillPath(HDC  hDC)
 {
   UNIMPLEMENTED;
 }
 
 BOOL
 STDCALL
-W32kStrokePath(HDC  hDC)
+NtGdiStrokePath(HDC  hDC)
 {
   UNIMPLEMENTED;
 }
 
 BOOL
 STDCALL
-W32kWidenPath(HDC  hDC)
+NtGdiWidenPath(HDC  hDC)
 {
    UNIMPLEMENTED;
 }
@@ -343,7 +343,7 @@ PATH_Rectangle ( PDC dc, INT x1, INT y1, INT x2, INT y2 )
   /* Close any previous figure */
   if ( !IntCloseFigure ( dc ) )
   {
-    /* The W32kCloseFigure call shouldn't have failed */
+    /* The NtGdiCloseFigure call shouldn't have failed */
     assert(FALSE);
     return FALSE;
   }

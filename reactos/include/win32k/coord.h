@@ -5,14 +5,14 @@
 
 BOOL
 STDCALL
-W32kCombineTransform (
+NtGdiCombineTransform (
 	LPXFORM		XformResult,
 	CONST LPXFORM	xform1,
 	CONST LPXFORM	xform2
 	);
 BOOL
 STDCALL
-W32kDPtoLP (
+NtGdiDPtoLP (
 	HDC	hDC,
 	LPPOINT	Points,
 	int	Count
@@ -24,11 +24,11 @@ IntGetGraphicsMode ( PDC dc );
 
 int
 STDCALL
-W32kGetGraphicsMode ( HDC hDC );
+NtGdiGetGraphicsMode ( HDC hDC );
 
 BOOL
 STDCALL
-W32kGetWorldTransform (
+NtGdiGetWorldTransform (
 	HDC	hDC,
 	LPXFORM	Xform
 	);
@@ -43,21 +43,21 @@ IntLPtoDP ( PDC dc, LPPOINT Points, INT Count );
 
 BOOL
 STDCALL
-W32kLPtoDP (
+NtGdiLPtoDP (
 	HDC	hDC,
 	LPPOINT	Points,
 	int	Count
 	);
 BOOL
 STDCALL
-W32kModifyWorldTransform (
+NtGdiModifyWorldTransform (
 	HDC		hDC,
 	CONST LPXFORM	Xform,
 	DWORD		Mode
 	);
 BOOL
 STDCALL
-W32kOffsetViewportOrgEx (
+NtGdiOffsetViewportOrgEx (
 	HDC	hDC,
 	int	XOffset,
 	int	YOffset,
@@ -65,7 +65,7 @@ W32kOffsetViewportOrgEx (
 	);
 BOOL
 STDCALL
-W32kOffsetWindowOrgEx (
+NtGdiOffsetWindowOrgEx (
 	HDC	hDC,
 	int	XOffset,
 	int	YOffset,
@@ -73,7 +73,7 @@ W32kOffsetWindowOrgEx (
 	);
 BOOL
 STDCALL
-W32kScaleViewportExtEx (
+NtGdiScaleViewportExtEx (
 	HDC	hDC,
 	int	Xnum,
 	int	Xdenom,
@@ -83,7 +83,7 @@ W32kScaleViewportExtEx (
 	);
 BOOL
 STDCALL
-W32kScaleWindowExtEx (
+NtGdiScaleWindowExtEx (
 	HDC	hDC,
 	int	Xnum,
 	int	Xdenom,
@@ -93,19 +93,19 @@ W32kScaleWindowExtEx (
 	);
 int
 STDCALL
-W32kSetGraphicsMode (
+NtGdiSetGraphicsMode (
 	HDC	hDC,
 	int	Mode
 	);
 int
 STDCALL
-W32kSetMapMode (
+NtGdiSetMapMode (
 	HDC	hDC,
 	int	MapMode
 	);
 BOOL
 STDCALL
-W32kSetViewportExtEx (
+NtGdiSetViewportExtEx (
 	HDC	hDC,
 	int	XExtent,
 	int	YExtent,
@@ -113,7 +113,7 @@ W32kSetViewportExtEx (
 	);
 BOOL
 STDCALL
-W32kSetViewportOrgEx (
+NtGdiSetViewportOrgEx (
 	HDC	hDC,
 	int	X,
 	int	Y,
@@ -121,7 +121,7 @@ W32kSetViewportOrgEx (
 	);
 BOOL
 STDCALL
-W32kSetWindowExtEx (
+NtGdiSetWindowExtEx (
 	HDC	hDC,
 	int	XExtent,
 	int	YExtent,
@@ -129,7 +129,7 @@ W32kSetWindowExtEx (
 	);
 BOOL
 STDCALL
-W32kSetWindowOrgEx (
+NtGdiSetWindowOrgEx (
 	HDC	hDC,
 	int	X,
 	int	Y,
@@ -137,7 +137,7 @@ W32kSetWindowOrgEx (
 	);
 BOOL
 STDCALL
-W32kSetWorldTransform (
+NtGdiSetWorldTransform (
 	HDC		hDC,
 	CONST LPXFORM	Xform
 	);

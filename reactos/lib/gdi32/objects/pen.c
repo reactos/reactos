@@ -15,7 +15,7 @@ HPEN
 STDCALL
 CreatePen(INT PenStyle, INT Width, COLORREF Color)
 {
-   return W32kCreatePen(PenStyle, Width, Color);
+   return NtGdiCreatePen(PenStyle, Width, Color);
 }
 
 
@@ -26,14 +26,5 @@ HPEN
 STDCALL
 CreatePenIndirect(CONST LOGPEN *lgpn)
 {
-   return W32kCreatePenIndirect((CONST PLOGPEN)lgpn);
+   return NtGdiCreatePenIndirect((CONST PLOGPEN)lgpn);
 }
-
-
-/*
-VOID STDCALL
-DumpGdiObjects( INT process )
-{
-	W32kDumpGdiObjects( process );
-}
-*/

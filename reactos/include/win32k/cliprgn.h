@@ -6,7 +6,7 @@ INT WINAPI SelectVisRgn(HDC hdc, HRGN hrgn);
 
 int
 STDCALL
-W32kExcludeClipRect (
+NtGdiExcludeClipRect (
 	HDC	hDC,
 	int	LeftRect,
 	int	TopRect,
@@ -15,26 +15,26 @@ W32kExcludeClipRect (
 	);
 int
 STDCALL
-W32kExtSelectClipRgn (
+NtGdiExtSelectClipRgn (
 	HDC	hDC,
 	HRGN	hrgn,
 	int	fnMode
 	);
 int
 STDCALL
-W32kGetClipBox (
+NtGdiGetClipBox (
 	HDC	hDC,
 	LPRECT	rc
 	);
 int
 STDCALL
-W32kGetMetaRgn (
+NtGdiGetMetaRgn (
 	HDC	hDC,
 	HRGN	hrgn
 	);
 int
 STDCALL
-W32kIntersectClipRect (
+NtGdiIntersectClipRect (
 	HDC	hDC,
 	int	LeftRect,
 	int	TopRect,
@@ -43,39 +43,39 @@ W32kIntersectClipRect (
 	);
 int
 STDCALL
-W32kOffsetClipRgn (
+NtGdiOffsetClipRgn (
 	HDC	hDC,
 	int	XOffset,
 	int	YOffset
 	);
 BOOL
 STDCALL
-W32kPtVisible (
+NtGdiPtVisible (
 	HDC	hDC,
 	int	X,
 	int	Y
 	);
 BOOL
 STDCALL
-W32kRectVisible (
+NtGdiRectVisible (
 	HDC		hDC,
 	CONST PRECT	rc
 	);
 BOOL
 STDCALL
-W32kSelectClipPath (
+NtGdiSelectClipPath (
 	HDC	hDC,
 	int	Mode
 	);
 int
 STDCALL
-W32kSelectClipRgn (
+NtGdiSelectClipRgn (
 	HDC	hDC,
 	HRGN	hrgn
 	);
 int
 STDCALL
-W32kSetMetaRgn (
+NtGdiSetMetaRgn (
 	HDC	hDC
 	);
 #endif

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.32 2003/08/13 20:24:05 chorns Exp $ */
+/* $Id: bitmaps.c,v 1.33 2003/08/19 11:48:50 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -30,7 +30,7 @@
 #define NDEBUG
 #include <win32k/debug1.h>
 
-BOOL STDCALL W32kBitBlt(HDC  hDCDest,
+BOOL STDCALL NtGdiBitBlt(HDC  hDCDest,
                  INT  XDest,
                  INT  YDest,
                  INT  Width,
@@ -105,12 +105,12 @@ BOOL STDCALL W32kBitBlt(HDC  hDCDest,
     if(DCDest->w.hPalette != 0)
       DestPalette = DCDest->w.hPalette;
     else
-      DestPalette = W32kGetStockObject(DEFAULT_PALETTE);
+      DestPalette = NtGdiGetStockObject(DEFAULT_PALETTE);
 
     if(DCSrc->w.hPalette != 0)
       SourcePalette = DCSrc->w.hPalette;
     else
-      SourcePalette = W32kGetStockObject(DEFAULT_PALETTE);
+      SourcePalette = NtGdiGetStockObject(DEFAULT_PALETTE);
 
     PalDestGDI   = (PPALGDI)AccessInternalObject((ULONG)DestPalette);
     PalSourceGDI = (PPALGDI)AccessInternalObject((ULONG)SourcePalette);
@@ -132,7 +132,7 @@ BOOL STDCALL W32kBitBlt(HDC  hDCDest,
   return Status;
 }
 
-HBITMAP STDCALL W32kCreateBitmap(INT  Width,
+HBITMAP STDCALL NtGdiCreateBitmap(INT  Width,
                           INT  Height,
                           UINT  Planes,
                           UINT  BitsPerPel,
@@ -167,13 +167,13 @@ HBITMAP STDCALL W32kCreateBitmap(INT  Width,
   hBitmap = BITMAPOBJ_AllocBitmap ();
   if (!hBitmap)
   {
-	DPRINT("W32kCreateBitmap: BITMAPOBJ_AllocBitmap returned 0\n");
+	DPRINT("NtGdiCreateBitmap: BITMAPOBJ_AllocBitmap returned 0\n");
     return 0;
   }
 
   bmp = BITMAPOBJ_HandleToPtr( hBitmap );
 
-  DPRINT("W32kCreateBitmap:%dx%d, %d (%d BPP) colors returning %08x\n", Width, Height,
+  DPRINT("NtGdiCreateBitmap:%dx%d, %d (%d BPP) colors returning %08x\n", Width, Height,
          1 << (Planes * BitsPerPel), BitsPerPel, bmp);
 
   bmp->size.cx = Width;
@@ -193,7 +193,7 @@ HBITMAP STDCALL W32kCreateBitmap(INT  Width,
 
   if (Bits) /* Set bitmap bits */
   {
-    W32kSetBitmapBits(hBitmap, Height * bmp->bitmap.bmWidthBytes, Bits);
+    NtGdiSetBitmapBits(hBitmap, Height * bmp->bitmap.bmWidthBytes, Bits);
   }
 
   BITMAPOBJ_ReleasePtr( hBitmap );
@@ -229,7 +229,7 @@ BOOL FASTCALL Bitmap_InternalDelete( PBITMAPOBJ pBmp )
 }
 
 
-HBITMAP STDCALL W32kCreateCompatibleBitmap(HDC hDC,
+HBITMAP STDCALL NtGdiCreateCompatibleBitmap(HDC hDC,
                                     INT  Width,
                                     INT  Height)
 {
@@ -239,7 +239,7 @@ HBITMAP STDCALL W32kCreateCompatibleBitmap(HDC hDC,
   hbmpRet = 0;
   dc = DC_HandleToPtr (hDC);
 
-  DPRINT("W32kCreateCompatibleBitmap(%04x,%d,%d, bpp:%d) = \n", hDC, Width, Height, dc->w.bitsPerPixel);
+  DPRINT("NtGdiCreateCompatibleBitmap(%04x,%d,%d, bpp:%d) = \n", hDC, Width, Height, dc->w.bitsPerPixel);
 
   if (!dc)
   {
@@ -254,11 +254,11 @@ HBITMAP STDCALL W32kCreateCompatibleBitmap(HDC hDC,
     /* MS doc says if width or height is 0, return 1-by-1 pixel, monochrome bitmap */
     if (!Width || !Height)
     {
-      hbmpRet = W32kCreateBitmap (1, 1, 1, 1, NULL);
+      hbmpRet = NtGdiCreateBitmap (1, 1, 1, 1, NULL);
     }
     else
     {
-      hbmpRet = W32kCreateBitmap(Width, Height, 1, dc->w.bitsPerPixel, NULL);
+      hbmpRet = NtGdiCreateBitmap(Width, Height, 1, dc->w.bitsPerPixel, NULL);
     }
   }
   DPRINT ("\t\t%04x\n", hbmpRet);
@@ -266,24 +266,24 @@ HBITMAP STDCALL W32kCreateCompatibleBitmap(HDC hDC,
   return hbmpRet;
 }
 
-HBITMAP STDCALL W32kCreateBitmapIndirect(CONST BITMAP  *BM)
+HBITMAP STDCALL NtGdiCreateBitmapIndirect(CONST BITMAP  *BM)
 {
-  return W32kCreateBitmap (BM->bmWidth,
+  return NtGdiCreateBitmap (BM->bmWidth,
                            BM->bmHeight,
                            BM->bmPlanes,
                            BM->bmBitsPixel,
                            BM->bmBits);
 }
 
-HBITMAP STDCALL W32kCreateDiscardableBitmap(HDC  hDC,
+HBITMAP STDCALL NtGdiCreateDiscardableBitmap(HDC  hDC,
                                      INT  Width,
                                      INT  Height)
 {
   /* FIXME: this probably should do something else */
-  return  W32kCreateCompatibleBitmap(hDC, Width, Height);
+  return  NtGdiCreateCompatibleBitmap(hDC, Width, Height);
 }
 
-BOOL STDCALL W32kExtFloodFill(HDC  hDC,
+BOOL STDCALL NtGdiExtFloodFill(HDC  hDC,
                       INT  XStart,
                       INT  YStart,
                       COLORREF  Color,
@@ -292,7 +292,7 @@ BOOL STDCALL W32kExtFloodFill(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL STDCALL W32kFloodFill(HDC  hDC,
+BOOL STDCALL NtGdiFloodFill(HDC  hDC,
                     INT  XStart,
                     INT  YStart,
                     COLORREF  Fill)
@@ -300,7 +300,7 @@ BOOL STDCALL W32kFloodFill(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL STDCALL W32kGetBitmapDimensionEx(HBITMAP  hBitmap,
+BOOL STDCALL NtGdiGetBitmapDimensionEx(HBITMAP  hBitmap,
                                LPSIZE  Dimension)
 {
   PBITMAPOBJ  bmp;
@@ -316,14 +316,14 @@ BOOL STDCALL W32kGetBitmapDimensionEx(HBITMAP  hBitmap,
   return  TRUE;
 }
 
-COLORREF STDCALL W32kGetPixel(HDC  hDC,
+COLORREF STDCALL NtGdiGetPixel(HDC  hDC,
                        INT  XPos,
                        INT  YPos)
 {
   UNIMPLEMENTED;
 }
 
-BOOL STDCALL W32kMaskBlt(HDC  hDCDest,
+BOOL STDCALL NtGdiMaskBlt(HDC  hDCDest,
                   INT  XDest,
                   INT  YDest,
                   INT  Width,
@@ -339,7 +339,7 @@ BOOL STDCALL W32kMaskBlt(HDC  hDCDest,
   UNIMPLEMENTED;
 }
 
-BOOL STDCALL W32kPlgBlt(HDC  hDCDest,
+BOOL STDCALL NtGdiPlgBlt(HDC  hDCDest,
                 CONST POINT  *Point,
                 HDC  hDCSrc,
                 INT  XSrc,
@@ -353,7 +353,7 @@ BOOL STDCALL W32kPlgBlt(HDC  hDCDest,
   UNIMPLEMENTED;
 }
 
-LONG STDCALL W32kSetBitmapBits(HBITMAP  hBitmap,
+LONG STDCALL NtGdiSetBitmapBits(HBITMAP  hBitmap,
                         DWORD  Bytes,
                         CONST VOID *Bits)
 {
@@ -426,7 +426,7 @@ LONG STDCALL W32kSetBitmapBits(HBITMAP  hBitmap,
   return ret;
 }
 
-BOOL STDCALL W32kSetBitmapDimensionEx(HBITMAP  hBitmap,
+BOOL STDCALL NtGdiSetBitmapDimensionEx(HBITMAP  hBitmap,
                                INT  Width,
                                INT  Height,
                                LPSIZE  Size)
@@ -449,7 +449,7 @@ BOOL STDCALL W32kSetBitmapDimensionEx(HBITMAP  hBitmap,
   return TRUE;
 }
 
-COLORREF STDCALL W32kSetPixel(HDC  hDC,
+COLORREF STDCALL NtGdiSetPixel(HDC  hDC,
                        INT  X,
                        INT  Y,
                        COLORREF  Color)
@@ -457,7 +457,7 @@ COLORREF STDCALL W32kSetPixel(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL STDCALL W32kSetPixelV(HDC  hDC,
+BOOL STDCALL NtGdiSetPixelV(HDC  hDC,
                     INT  X,
                     INT  Y,
                     COLORREF  Color)
@@ -465,7 +465,7 @@ BOOL STDCALL W32kSetPixelV(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL STDCALL W32kStretchBlt(HDC  hDCDest,
+BOOL STDCALL NtGdiStretchBlt(HDC  hDCDest,
                      INT  XOriginDest,
                      INT  YOriginDest,
                      INT  WidthDest,
@@ -531,14 +531,14 @@ HBITMAP FASTCALL BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
 
   bm = bmp->bitmap;
   bm.bmBits = NULL;
-  res = W32kCreateBitmapIndirect(&bm);
+  res = NtGdiCreateBitmapIndirect(&bm);
   if(res)
   {
     char *buf;
 
     buf = ExAllocatePool (NonPagedPool, bm.bmWidthBytes * bm.bmHeight);
-    W32kGetBitmapBits (hBitmap, bm.bmWidthBytes * bm.bmHeight, buf);
-    W32kSetBitmapBits (res, bm.bmWidthBytes * bm.bmHeight, buf);
+    NtGdiGetBitmapBits (hBitmap, bm.bmWidthBytes * bm.bmHeight, buf);
+    NtGdiSetBitmapBits (res, bm.bmWidthBytes * bm.bmHeight, buf);
     ExFreePool (buf);
   }
 

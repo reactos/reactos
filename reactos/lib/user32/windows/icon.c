@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: icon.c,v 1.7 2003/07/10 21:04:32 chorns Exp $
+/* $Id: icon.c,v 1.8 2003/08/19 11:48:49 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/icon.c
@@ -132,7 +132,7 @@ CreateIcon(
   CONST BYTE *lpbXORbits)
 {
   DPRINT("hInstance not used in this implementation\n");
-  return W32kCreateIcon(TRUE,
+  return NtGdiCreateIcon(TRUE,
                         nWidth,
                         nHeight,
                         cPlanes,
@@ -230,10 +230,10 @@ CreateIconIndirect(
   BITMAP bmMask;
   BITMAP bmColor;
 
-  W32kGetObject( piconinfo->hbmMask, sizeof(BITMAP), &bmMask );
-  W32kGetObject( piconinfo->hbmColor, sizeof(BITMAP), &bmColor );
+  NtGdiGetObject( piconinfo->hbmMask, sizeof(BITMAP), &bmMask );
+  NtGdiGetObject( piconinfo->hbmColor, sizeof(BITMAP), &bmColor );
 
-  return W32kCreateIcon(piconinfo->fIcon,
+  return NtGdiCreateIcon(piconinfo->fIcon,
 			bmColor.bmWidth,
 			bmColor.bmHeight,
 			bmColor.bmPlanes,
@@ -253,7 +253,7 @@ STDCALL
 DestroyIcon(
   HICON hIcon)
 {
-  return W32kDeleteObject(hIcon);
+  return NtGdiDeleteObject(hIcon);
 }
 
 
@@ -297,7 +297,7 @@ DrawIconEx(
     if (!GetIconInfo(hIcon, &IconInfo))
       return FALSE;
 
-    W32kGetObject(IconInfo.hbmColor, sizeof(BITMAP), &XORBitmap);
+    NtGdiGetObject(IconInfo.hbmColor, sizeof(BITMAP), &XORBitmap);
 
     DPRINT("(hdc=%p,pos=%d.%d,hicon=%p,extend=%d.%d,istep=%d,br=%p,flags=0x%08x)\n",
                  hdc,xLeft,yTop,hIcon,cxWidth,cyWidth,istepIfAniCur,hbrFlickerFreeDraw,diFlags );

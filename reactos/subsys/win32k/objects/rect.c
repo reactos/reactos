@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rect.c,v 1.5 2003/07/27 18:34:47 dwelch Exp $ */
+/* $Id: rect.c,v 1.6 2003/08/19 11:48:50 weiden Exp $ */
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <win32k/region.h>
@@ -29,7 +29,20 @@
 /* FUNCTIONS *****************************************************************/
 
 BOOL STDCALL
-W32kOffsetRect(LPRECT Rect, INT x, INT y)
+NtGdiSetEmptyRect(PRECT Rect)
+{
+  Rect->left = Rect->right = Rect->top = Rect->bottom = 0;
+  return(TRUE);
+}
+
+BOOL STDCALL
+NtGdiIsEmptyRect(const RECT* Rect)
+{
+  return(Rect->left >= Rect->right || Rect->top >= Rect->bottom);
+}
+
+BOOL STDCALL
+NtGdiOffsetRect(LPRECT Rect, INT x, INT y)
 {
   Rect->left += x;
   Rect->right += x;
@@ -40,13 +53,13 @@ W32kOffsetRect(LPRECT Rect, INT x, INT y)
 
 
 BOOL STDCALL
-W32kUnionRect(PRECT Dest, const RECT* Src1, const RECT* Src2)
+NtGdiUnionRect(PRECT Dest, const RECT* Src1, const RECT* Src2)
 {
-  if (W32kIsEmptyRect(Src1))
+  if (NtGdiIsEmptyRect(Src1))
     {
-      if (W32kIsEmptyRect(Src2))
+      if (NtGdiIsEmptyRect(Src2))
 	{
-	  W32kSetEmptyRect(Dest);
+	  NtGdiSetEmptyRect(Dest);
 	  return(FALSE);
 	}
       else
@@ -56,7 +69,7 @@ W32kUnionRect(PRECT Dest, const RECT* Src1, const RECT* Src2)
     }
   else
     {
-      if (W32kIsEmptyRect(Src2))
+      if (NtGdiIsEmptyRect(Src2))
 	{
 	  *Dest = *Src1;
 	}
@@ -72,20 +85,7 @@ W32kUnionRect(PRECT Dest, const RECT* Src1, const RECT* Src2)
 }
 
 BOOL STDCALL
-W32kSetEmptyRect(PRECT Rect)
-{
-  Rect->left = Rect->right = Rect->top = Rect->bottom = 0;
-  return(TRUE);
-}
-
-BOOL STDCALL
-W32kIsEmptyRect(const RECT* Rect)
-{
-  return(Rect->left >= Rect->right || Rect->top >= Rect->bottom);
-}
-
-BOOL STDCALL
-W32kSetRect(PRECT Rect, INT left, INT top, INT right, INT bottom)
+NtGdiSetRect(PRECT Rect, INT left, INT top, INT right, INT bottom)
 {
   Rect->left = left;
   Rect->top = top;
@@ -95,13 +95,13 @@ W32kSetRect(PRECT Rect, INT left, INT top, INT right, INT bottom)
 }
 
 BOOL STDCALL
-W32kIntersectRect(PRECT Dest, const RECT* Src1, const RECT* Src2)
+NtGdiIntersectRect(PRECT Dest, const RECT* Src1, const RECT* Src2)
 {
-  if (W32kIsEmptyRect(Src1) || W32kIsEmptyRect(Src2) ||
+  if (NtGdiIsEmptyRect(Src1) || NtGdiIsEmptyRect(Src2) ||
       Src1->left >= Src2->right || Src2->left >= Src1->right ||
       Src1->top >= Src2->bottom || Src2->top >= Src1->bottom)
     {
-      W32kSetEmptyRect(Dest);
+      NtGdiSetEmptyRect(Dest);
       return(FALSE);
     }
   Dest->left = max(Src1->left, Src2->left);

@@ -20,53 +20,53 @@ BOOL FASTCALL RGNDATA_InternalDelete( PROSRGNDATA Obj );
 
 /*  User entry points */
 HRGN STDCALL
-W32kUnionRectWithRgn(HRGN hDest, CONST PRECT Rect);
+NtGdiUnionRectWithRgn(HRGN hDest, CONST PRECT Rect);
 
 INT
 STDCALL
-W32kCombineRgn(HRGN  hDest,
+NtGdiCombineRgn(HRGN  hDest,
                     HRGN  hSrc1,
                     HRGN  hSrc2,
                     INT  CombineMode);
 
 HRGN
 STDCALL
-W32kCreateEllipticRgn(INT  LeftRect,
+NtGdiCreateEllipticRgn(INT  LeftRect,
                             INT  TopRect,
                             INT  RightRect,
                             INT  BottomRect);
 
 HRGN
 STDCALL
-W32kCreateEllipticRgnIndirect(CONST PRECT  rc);
+NtGdiCreateEllipticRgnIndirect(CONST PRECT  rc);
 
 HRGN
 STDCALL
-W32kCreatePolygonRgn(CONST PPOINT  pt,
+NtGdiCreatePolygonRgn(CONST PPOINT  pt,
                            INT  Count,
                            INT  PolyFillMode);
 
 HRGN
 STDCALL
-W32kCreatePolyPolygonRgn(CONST PPOINT  pt,
+NtGdiCreatePolyPolygonRgn(CONST PPOINT  pt,
                                CONST PINT  PolyCounts,
                                INT  Count,
                                INT  PolyFillMode);
 
 HRGN
 STDCALL
-W32kCreateRectRgn(INT  LeftRect,
+NtGdiCreateRectRgn(INT  LeftRect,
                         INT  TopRect,
                         INT  RightRect,
                         INT  BottomRect);
 
 HRGN
 STDCALL
-W32kCreateRectRgnIndirect(CONST PRECT  rc);
+NtGdiCreateRectRgnIndirect(CONST PRECT  rc);
 
 HRGN
 STDCALL
-W32kCreateRoundRectRgn(INT  LeftRect,
+NtGdiCreateRoundRectRgn(INT  LeftRect,
                              INT  TopRect,
                              INT  RightRect,
                              INT  BottomRect,
@@ -75,24 +75,24 @@ W32kCreateRoundRectRgn(INT  LeftRect,
 
 BOOL
 STDCALL
-W32kEqualRgn(HRGN  hSrcRgn1,
+NtGdiEqualRgn(HRGN  hSrcRgn1,
                    HRGN  hSrcRgn2);
 
 HRGN
 STDCALL
-W32kExtCreateRegion(CONST PXFORM  Xform,
+NtGdiExtCreateRegion(CONST PXFORM  Xform,
                           DWORD  Count,
                           CONST PROSRGNDATA  RgnData);
 
 BOOL
 STDCALL
-W32kFillRgn(HDC  hDC,
+NtGdiFillRgn(HDC  hDC,
                   HRGN  hRgn,
                   HBRUSH  hBrush);
 
 BOOL
 STDCALL
-W32kFrameRgn(HDC  hDC,
+NtGdiFrameRgn(HDC  hDC,
                    HRGN  hRgn,
                    HBRUSH  hBrush,
                    INT  Width,
@@ -100,44 +100,44 @@ W32kFrameRgn(HDC  hDC,
 
 INT
 STDCALL
-W32kGetRgnBox(HRGN  hRgn,
+NtGdiGetRgnBox(HRGN  hRgn,
                    LPRECT  Rect);
 
 BOOL
 STDCALL
-W32kInvertRgn(HDC  hDC,
+NtGdiInvertRgn(HDC  hDC,
                     HRGN  hRgn);
 
 INT
 STDCALL
-W32kOffsetRgn(HRGN  hRgn,
+NtGdiOffsetRgn(HRGN  hRgn,
                    INT  XOffset,
                    INT  YOffset);
 
 BOOL
 STDCALL
-W32kPaintRgn(HDC  hDC,
+NtGdiPaintRgn(HDC  hDC,
                    HRGN  hRgn);
 
 BOOL
 STDCALL
-W32kPtInRegion(HRGN  hRgn,
+NtGdiPtInRegion(HRGN  hRgn,
                      INT  X,
                      INT  Y);
 
 BOOL
 STDCALL
-W32kRectInRegion(HRGN  hRgn,
+NtGdiRectInRegion(HRGN  hRgn,
                        CONST LPRECT  rc);
 
 INT
 STDCALL
-W32kSelectVisRgn(HDC hdc,
+NtGdiSelectVisRgn(HDC hdc,
                      HRGN hrgn);
 
 BOOL
 STDCALL
-W32kSetRectRgn(HRGN  hRgn,
+NtGdiSetRectRgn(HRGN  hRgn,
                      INT  LeftRect,
                      INT  TopRect,
                      INT  RightRect,
@@ -145,14 +145,14 @@ W32kSetRectRgn(HRGN  hRgn,
 
 DWORD
 STDCALL
-W32kGetRegionData(HRGN hrgn,
+NtGdiGetRegionData(HRGN hrgn,
 						DWORD count,
 						LPRGNDATA rgndata);
 
 HRGN STDCALL REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lpPt);
 
-HRGN STDCALL UnsafeW32kCreateRectRgnIndirect(CONST PRECT rc);
-INT STDCALL UnsafeW32kGetRgnBox(HRGN  hRgn, LPRECT pRect);
-HRGN FASTCALL UnsafeW32kUnionRectWithRgn(HRGN hDest, CONST PRECT Rect);
+HRGN STDCALL UnsafeIntCreateRectRgnIndirect(CONST PRECT rc);
+INT STDCALL UnsafeIntGetRgnBox(HRGN  hRgn, LPRECT pRect);
+HRGN FASTCALL UnsafeIntUnionRectWithRgn(HRGN hDest, CONST PRECT Rect);
 #endif
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.20 2003/08/17 09:17:04 weiden Exp $
+/* $Id: windc.c,v 1.21 2003/08/19 11:48:50 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -64,7 +64,7 @@ DceGetVisRgn(HWND hWnd, ULONG Flags, HWND hWndChild, ULONG CFlags)
   HRGN ChildRect;
   HRGN ParentRect;
 
-  Window = W32kGetWindowObject(hWnd);
+  Window = IntGetWindowObject(hWnd);
 
   if (NULL == Window)
     {
@@ -78,7 +78,7 @@ DceGetVisRgn(HWND hWnd, ULONG Flags, HWND hWndChild, ULONG CFlags)
   if (NULL != hWndChild && 0 != (CFlags & DCX_CLIPCHILDREN))
     {
       /* We need to filter out the child windows of hWndChild */
-      Child = W32kGetWindowObject(hWnd);
+      Child = IntGetWindowObject(hWnd);
       if (NULL != Child)
  	{
     if (Child->FirstChild)
@@ -88,28 +88,28 @@ DceGetVisRgn(HWND hWnd, ULONG Flags, HWND hWndChild, ULONG CFlags)
 	                                          Child, FALSE, TRUE, FALSE);
 	      /* If the child doesn't obscure the whole window, we need to
                  extend it. First compute the difference between window and child */
-	      ChildRect = UnsafeW32kCreateRectRgnIndirect(&(Child->ClientRect));
+	      ChildRect = UnsafeIntCreateRectRgnIndirect(&(Child->ClientRect));
 	      if (0 == (Flags & DCX_WINDOW))
 		{
-		  ParentRect = UnsafeW32kCreateRectRgnIndirect(&(Window->ClientRect));
+		  ParentRect = UnsafeIntCreateRectRgnIndirect(&(Window->ClientRect));
 		}
 	      else
 		{
-		  ParentRect = UnsafeW32kCreateRectRgnIndirect(&(Window->WindowRect));
+		  ParentRect = UnsafeIntCreateRectRgnIndirect(&(Window->WindowRect));
 		}
-	      W32kCombineRgn(ChildRect, ParentRect, ChildRect, RGN_DIFF);
+	      NtGdiCombineRgn(ChildRect, ParentRect, ChildRect, RGN_DIFF);
 
 	      /* Now actually extend the child by adding the difference */
-	      W32kCombineRgn(VisChild, VisChild, ChildRect, RGN_OR);
+	      NtGdiCombineRgn(VisChild, VisChild, ChildRect, RGN_OR);
 
 	      /* Clip the childs children */
-	      W32kCombineRgn(VisRgn, VisRgn, VisChild, RGN_AND);
+	      NtGdiCombineRgn(VisRgn, VisRgn, VisChild, RGN_AND);
 	    }
-	  W32kReleaseWindowObject(Child);
+	  IntReleaseWindowObject(Child);
 	}
     }
 
-  W32kReleaseWindowObject(Window);
+  IntReleaseWindowObject(Window);
 
   return VisRgn;
 }
@@ -133,7 +133,7 @@ PDCE FASTCALL DceAllocDCE(HWND hWnd, DCE_TYPE Type)
 
   DceHandle = DCEOBJ_AllocDCE();
   Dce = DCEOBJ_LockDCE(DceHandle);
-  Dce->hDC = W32kCreateDC(L"DISPLAY", NULL, NULL, NULL);
+  Dce->hDC = NtGdiCreateDC(L"DISPLAY", NULL, NULL, NULL);
   Dce->hwndCurrent = hWnd;
   Dce->hClipRgn = NULL;
   Dce->next = FirstDce;
@@ -146,7 +146,7 @@ PDCE FASTCALL DceAllocDCE(HWND hWnd, DCE_TYPE Type)
 	{
 	  PWINDOW_OBJECT WindowObject;
 
-	  WindowObject = W32kGetWindowObject(hWnd);
+	  WindowObject = IntGetWindowObject(hWnd);
 	  if (WindowObject->Style & WS_CLIPCHILDREN)
 	    {
 	      Dce->DCXFlags |= DCX_CLIPCHILDREN;
@@ -155,7 +155,7 @@ PDCE FASTCALL DceAllocDCE(HWND hWnd, DCE_TYPE Type)
 	    {
 	      Dce->DCXFlags |= DCX_CLIPSIBLINGS;
 	    }
-	  W32kReleaseWindowObject(WindowObject);
+	  IntReleaseWindowObject(WindowObject);
 	}
     }
   else
@@ -204,7 +204,7 @@ DceDeleteClipRgn(DCE* Dce)
     }
   else if (Dce->hClipRgn > (HRGN) 1)
     {
-      W32kDeleteObject(Dce->hClipRgn);
+      NtGdiDeleteObject(Dce->hClipRgn);
     }
 
   Dce->hClipRgn = NULL;
@@ -228,7 +228,7 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
       Flags &= ~DCX_USESTYLE;
       Window = NULL;
     }
-  else if (NULL == (Window = W32kGetWindowObject(hWnd)))
+  else if (NULL == (Window = IntGetWindowObject(hWnd)))
     {
       return(0);
     }
@@ -344,7 +344,7 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
 
   if (NULL == Dce && NULL != Window)
     {
-      W32kReleaseWindowObject(Window);
+      IntReleaseWindowObject(Window);
       return(NULL);
     }
 
@@ -354,7 +354,7 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
 
   if (0 == (Flags & (DCX_EXCLUDERGN | DCX_INTERSECTRGN)) && NULL != ClipRegion)
     {
-      W32kDeleteObject(ClipRegion);
+      NtGdiDeleteObject(ClipRegion);
       ClipRegion = NULL;
     }
 
@@ -365,9 +365,9 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
 
   if (NULL != ClipRegion)
     {
-      Dce->hClipRgn = W32kCreateRectRgn(0, 0, 0, 0);
-      W32kCombineRgn(Dce->hClipRgn, ClipRegion, NULL, RGN_COPY);
-      W32kDeleteObject(ClipRegion);
+      Dce->hClipRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
+      NtGdiCombineRgn(Dce->hClipRgn, ClipRegion, NULL, RGN_COPY);
+      NtGdiDeleteObject(ClipRegion);
     }
 
   DceSetDrawable(Window, Dce->hDC, Flags, UpdateClipOrigin);
@@ -398,15 +398,15 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
 	    }
 	  else
 	    {
-	      hRgnVisible = W32kCreateRectRgn(0, 0, 0, 0);
+	      hRgnVisible = NtGdiCreateRectRgn(0, 0, 0, 0);
 	    }
 	}
       else
 	{
-	  if (hWnd == W32kGetDesktopWindow())
+	  if (hWnd == IntGetDesktopWindow())
 	    {
 	      hRgnVisible = 
-		W32kCreateRectRgn(0, 0, 
+		NtGdiCreateRectRgn(0, 0, 
 				  NtUserGetSystemMetrics(SM_CXSCREEN),
 				  NtUserGetSystemMetrics(SM_CYSCREEN));
 	    }
@@ -418,25 +418,25 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
 
       if (0 != (Dce->DCXFlags & DCX_INTERSECTRGN))
 	{
-	  W32kCombineRgn(hRgnVisible, hRgnVisible, Dce->hClipRgn, RGN_AND);
+	  NtGdiCombineRgn(hRgnVisible, hRgnVisible, Dce->hClipRgn, RGN_AND);
 	}
 
       if (0 != (Dce->DCXFlags & DCX_EXCLUDERGN))
 	{
-	  W32kCombineRgn(hRgnVisible, hRgnVisible, Dce->hClipRgn, RGN_DIFF);
+	  NtGdiCombineRgn(hRgnVisible, hRgnVisible, Dce->hClipRgn, RGN_DIFF);
 	}
 
       Dce->DCXFlags &= ~DCX_DCEDIRTY;
-      W32kSelectVisRgn(Dce->hDC, hRgnVisible);
+      NtGdiSelectVisRgn(Dce->hDC, hRgnVisible);
     }
 
   if (hRgnVisible != NULL)
     {
-      W32kDeleteObject(hRgnVisible);
+      NtGdiDeleteObject(hRgnVisible);
     }
   if (NULL != Window)
     {
-      W32kReleaseWindowObject(Window);
+      IntReleaseWindowObject(Window);
     }
 
   return(Dce->hDC);
@@ -469,7 +469,7 @@ DCE_InternalDelete(PDCE Dce)
 }
 
 HWND FASTCALL
-W32kWindowFromDC(HDC hDc)
+IntWindowFromDC(HDC hDc)
 {
   DCE *Dce;
   for (Dce = FirstDce; Dce != NULL; Dce = Dce->next)

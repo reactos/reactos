@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.11 2003/08/11 21:10:49 royce Exp $
+/* $Id: input.c,v 1.12 2003/08/19 11:48:49 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -75,7 +75,7 @@ KeyboardThreadMain(PVOID StartContext)
 		      FILE_SYNCHRONOUS_IO_ALERT);
   if (!NT_SUCCESS(Status))
     {
-      DbgPrint("W32K: Failed to open keyboard.\n");
+      DbgPrint("Win32K: Failed to open keyboard.\n");
       return; //(Status);
     }
 
@@ -118,7 +118,7 @@ KeyboardThreadMain(PVOID StartContext)
 	    }
 	  if (!NT_SUCCESS(Status))
 	    {
-	      DbgPrint("W32K: Failed to read from keyboard.\n");
+	      DbgPrint("Win32K: Failed to read from keyboard.\n");
 	      return; //(Status);
 	    }
 	  
@@ -210,7 +210,7 @@ InitInputImpl(VOID)
 				NULL);
   if (!NT_SUCCESS(Status))
     {
-      DbgPrint("W32K: Failed to create keyboard thread.\n");
+      DbgPrint("Win32K: Failed to create keyboard thread.\n");
     }
 
   /*
@@ -230,7 +230,7 @@ InitInputImpl(VOID)
 		      0);
   if (!NT_SUCCESS(Status))
     {
-      DbgPrint("W32K: Failed to open mouse.\n");
+      DbgPrint("Win32K: Failed to open mouse.\n");
       return(Status);
     }
   Status = ObReferenceObjectByHandle(MouseDeviceHandle,
@@ -242,7 +242,7 @@ InitInputImpl(VOID)
    
    if (!NT_SUCCESS(Status))
      {
-       DbgPrint("W32K: Failed to reference mouse file object.\n");
+       DbgPrint("Win32K: Failed to reference mouse file object.\n");
        return(Status);
      }
    KeInitializeEvent(&IoEvent, FALSE, NotificationEvent);
@@ -275,7 +275,7 @@ InitInputImpl(VOID)
      }
    if (!NT_SUCCESS(Status))
      {
-       DbgPrint("W32K: Failed to connect to mouse driver.\n");
+       DbgPrint("Win32K: Failed to connect to mouse driver.\n");
        return(Status);
      }
    

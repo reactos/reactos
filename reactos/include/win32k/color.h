@@ -10,7 +10,7 @@
 
 BOOL
 STDCALL
-W32kAnimatePalette (
+NtGdiAnimatePalette (
 	HPALETTE		hpal,
 	UINT			StartIndex,
 	UINT			Entries,
@@ -18,35 +18,35 @@ W32kAnimatePalette (
 	);
 HPALETTE
 STDCALL
-W32kCreateHalftonePalette (
+NtGdiCreateHalftonePalette (
 	HDC	hDC
 	);
 HPALETTE
 STDCALL
-W32kCreatePalette (
+NtGdiCreatePalette (
 	CONST PLOGPALETTE	lgpl
 	);
 BOOL
 STDCALL
-W32kGetColorAdjustment (
+NtGdiGetColorAdjustment (
 	HDC			hDC,
 	LPCOLORADJUSTMENT	ca
 	);
 COLORREF
 STDCALL
-W32kGetNearestColor (
+NtGdiGetNearestColor (
 	HDC		hDC,
 	COLORREF	Color
 	);
 UINT
 STDCALL
-W32kGetNearestPaletteIndex (
+NtGdiGetNearestPaletteIndex (
 	HPALETTE	hpal,
 	COLORREF	Color
 	);
 UINT
 STDCALL
-W32kGetPaletteEntries (
+NtGdiGetPaletteEntries (
 	HPALETTE	hpal,
 	UINT		StartIndex,
 	UINT		Entries,
@@ -54,7 +54,7 @@ W32kGetPaletteEntries (
 	);
 UINT
 STDCALL
-W32kGetSystemPaletteEntries (
+NtGdiGetSystemPaletteEntries (
 	HDC		hDC,
 	UINT		StartIndex,
 	UINT		Entries,
@@ -62,36 +62,36 @@ W32kGetSystemPaletteEntries (
 	);
 UINT
 STDCALL
-W32kGetSystemPaletteUse (
+NtGdiGetSystemPaletteUse (
 	HDC	hDC
 	);
 UINT
 STDCALL
-W32kRealizePalette (
+NtGdiRealizePalette (
 	HDC	hDC
 	);
 BOOL
 STDCALL
-W32kResizePalette (
+NtGdiResizePalette (
 	HPALETTE	hpal,
 	UINT		Entries
 	);
 HPALETTE
 STDCALL
-W32kSelectPalette (
+NtGdiSelectPalette (
 	HDC		hDC,
 	HPALETTE	hpal,
 	BOOL		ForceBackground
 	);
 BOOL
 STDCALL
-W32kSetColorAdjustment (
+NtGdiSetColorAdjustment (
 	HDC			hDC,
 	CONST LPCOLORADJUSTMENT	ca
 	);
 UINT
 STDCALL
-W32kSetPaletteEntries (
+NtGdiSetPaletteEntries (
 	HPALETTE		hpal,
 	UINT			Start,
 	UINT			Entries,
@@ -99,18 +99,18 @@ W32kSetPaletteEntries (
 	);
 UINT
 STDCALL
-W32kSetSystemPaletteUse (
+NtGdiSetSystemPaletteUse (
 	HDC	hDC,
 	UINT	Usage
 	);
 BOOL
 STDCALL
-W32kUnrealizeObject (
+NtGdiUnrealizeObject (
 	HGDIOBJ	hgdiobj
 	);
 BOOL
 STDCALL
-W32kUpdateColors (
+NtGdiUpdateColors (
 	HDC	hDC
 	);
 #endif

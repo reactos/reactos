@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.26 2003/08/13 20:24:05 chorns Exp $
+ * $Id: dib.c,v 1.27 2003/08/19 11:48:50 weiden Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -36,7 +36,7 @@
 #define NDEBUG
 #include <win32k/debug1.h>
 
-UINT STDCALL W32kSetDIBColorTable(HDC  hDC,
+UINT STDCALL NtGdiSetDIBColorTable(HDC  hDC,
                            UINT  StartIndex,
                            UINT  Entries,
                            CONST RGBQUAD  *Colors)
@@ -85,7 +85,7 @@ UINT STDCALL W32kSetDIBColorTable(HDC  hDC,
 
 // Converts a DIB to a device-dependent bitmap
 INT STDCALL
-W32kSetDIBits(
+NtGdiSetDIBits(
 	HDC  hDC,
 	HBITMAP  hBitmap,
 	UINT  StartScan,
@@ -201,7 +201,7 @@ W32kSetDIBits(
 }
 
 INT STDCALL
-W32kSetDIBitsToDevice(
+NtGdiSetDIBitsToDevice(
 	HDC  hDC,
 	INT  XDest,
 	INT  YDest,
@@ -219,7 +219,7 @@ W32kSetDIBitsToDevice(
   return 0;
 }
 
-UINT STDCALL W32kGetDIBColorTable(HDC  hDC,
+UINT STDCALL NtGdiGetDIBColorTable(HDC  hDC,
                            UINT  StartIndex,
                            UINT  Entries,
                            RGBQUAD  *Colors)
@@ -228,7 +228,7 @@ UINT STDCALL W32kGetDIBColorTable(HDC  hDC,
 }
 
 // Converts a device-dependent bitmap to a DIB
-INT STDCALL W32kGetDIBits(HDC  hDC,
+INT STDCALL NtGdiGetDIBits(HDC  hDC,
                    HBITMAP hBitmap,
                    UINT  StartScan,
                    UINT  ScanLines,
@@ -385,7 +385,7 @@ INT STDCALL W32kGetDIBits(HDC  hDC,
   return Result;
 }
 
-INT STDCALL W32kStretchDIBits(HDC  hDC,
+INT STDCALL NtGdiStretchDIBits(HDC  hDC,
                        INT  XDest,
                        INT  YDest,
                        INT  DestWidth,
@@ -402,7 +402,7 @@ INT STDCALL W32kStretchDIBits(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-LONG STDCALL W32kGetBitmapBits(HBITMAP  hBitmap,
+LONG STDCALL NtGdiGetBitmapBits(HBITMAP  hBitmap,
                         LONG  Count,
                         LPVOID  Bits)
 {
@@ -479,7 +479,7 @@ LONG STDCALL W32kGetBitmapBits(HBITMAP  hBitmap,
 
 // The CreateDIBitmap function creates a device-dependent bitmap (DDB) from a DIB and, optionally, sets the bitmap bits
 // The DDB that is created will be whatever bit depth your reference DC is
-HBITMAP STDCALL W32kCreateDIBitmap(HDC hdc, const BITMAPINFOHEADER *header,
+HBITMAP STDCALL NtGdiCreateDIBitmap(HDC hdc, const BITMAPINFOHEADER *header,
                                DWORD init, LPCVOID bits, const BITMAPINFO *data,
                                UINT coloruse)
 {
@@ -544,25 +544,25 @@ HBITMAP STDCALL W32kCreateDIBitmap(HDC hdc, const BITMAPINFOHEADER *header,
     // If we are using indexed colors, then we need to create a bitmap that is compatible with the palette
     if(coloruse == DIB_PAL_COLORS)
     {
-      handle = W32kCreateCompatibleBitmap(hdc, width, height);
+      handle = NtGdiCreateCompatibleBitmap(hdc, width, height);
     }
     else if(coloruse == DIB_RGB_COLORS) {
-      handle = W32kCreateBitmap(width, height, 1, 24, NULL);
+      handle = NtGdiCreateBitmap(width, height, 1, 24, NULL);
     }
   }
-  else handle = W32kCreateBitmap(width, height, 1, 1, NULL);
+  else handle = NtGdiCreateBitmap(width, height, 1, 1, NULL);
 
   if (!handle) return 0;
 
   if (init == CBM_INIT)
   {
-    W32kSetDIBits(hdc, handle, 0, height, bits, data, coloruse);
+    NtGdiSetDIBits(hdc, handle, 0, height, bits, data, coloruse);
   }
 
   return handle;
 }
 
-HBITMAP STDCALL W32kCreateDIBSection(HDC hDC,
+HBITMAP STDCALL NtGdiCreateDIBSection(HDC hDC,
                               CONST BITMAPINFO  *bmi,
                               UINT  Usage,
                               VOID  *Bits,
@@ -576,7 +576,7 @@ HBITMAP STDCALL W32kCreateDIBSection(HDC hDC,
   // If the reference hdc is null, take the desktop dc
   if (hDC == 0)
   {
-    hDC = W32kCreateCompatableDC(0);
+    hDC = NtGdiCreateCompatableDC(0);
     bDesktopDC = TRUE;
   }
 
@@ -588,7 +588,7 @@ HBITMAP STDCALL W32kCreateDIBSection(HDC hDC,
   }
 
   if (bDesktopDC)
-    W32kDeleteDC(hDC);
+    NtGdiDeleteDC(hDC);
 
   return hbitmap;
 }
@@ -689,7 +689,7 @@ DIB_CreateDIBSection(
   // Create Device Dependent Bitmap and add DIB pointer
   if (dib)
   {
-    res = W32kCreateDIBitmap(dc->hSelf, bi, 0, NULL, bmi, usage);
+    res = NtGdiCreateDIBitmap(dc->hSelf, bi, 0, NULL, bmi, usage);
     if (res)
     {
       bmp = BITMAPOBJ_HandleToPtr (res);
@@ -704,7 +704,7 @@ DIB_CreateDIBSection(
 
     /* WINE NOTE: WINE makes use of a colormap, which is a color translation table between the DIB and the X physical
                   device. Obviously, this is left out of the ReactOS implementation. Instead, we call
-                  W32kSetDIBColorTable. */
+                  NtGdiSetDIBColorTable. */
     if(bi->biBitCount == 1) { Entries = 2; } else
     if(bi->biBitCount == 4) { Entries = 16; } else
     if(bi->biBitCount == 8) { Entries = 256; }
@@ -840,7 +840,7 @@ INT STDCALL DIB_GetBitmapInfo (const BITMAPINFOHEADER *header,
 // Converts a Device Independent Bitmap (DIB) to a Device Dependant Bitmap (DDB)
 // The specified Device Context (DC) defines what the DIB should be converted to
 PBITMAPOBJ FASTCALL DIBtoDDB(HGLOBAL hPackedDIB, HDC hdc) // FIXME: This should be removed. All references to this function should
-						 // change to W32kSetDIBits
+						 // change to NtGdiSetDIBits
 {
   HBITMAP hBmp = 0;
   PBITMAPOBJ pBmp = NULL;
@@ -854,7 +854,7 @@ PBITMAPOBJ FASTCALL DIBtoDDB(HGLOBAL hPackedDIB, HDC hdc) // FIXME: This should 
   pbits = (LPBYTE)(dib + DIB_BitmapInfoSize((BITMAPINFO*)&dib->dsBmih, DIB_RGB_COLORS));
 
   // Create a DDB from the DIB
-  hBmp = W32kCreateDIBitmap ( hdc, &dib->dsBmih, CBM_INIT,
+  hBmp = NtGdiCreateDIBitmap ( hdc, &dib->dsBmih, CBM_INIT,
     (LPVOID)pbits, (BITMAPINFO*)&dib->dsBmih, DIB_RGB_COLORS);
 
   // GlobalUnlock(hPackedDIB);

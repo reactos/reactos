@@ -20,45 +20,45 @@
 
 HBRUSH
 STDCALL
-W32kCreateBrushIndirect (
+NtGdiCreateBrushIndirect (
 	CONST LOGBRUSH	* lb
 	);
 HBRUSH
 STDCALL
-W32kCreateDIBPatternBrush (
+NtGdiCreateDIBPatternBrush (
 	HGLOBAL	hDIBPacked,
 	UINT	ColorSpec
 	);
 HBRUSH
 STDCALL
-W32kCreateDIBPatternBrushPt (
+NtGdiCreateDIBPatternBrushPt (
 	CONST VOID	* PackedDIB,
 	UINT		Usage
 	);
 HBRUSH
 STDCALL
-W32kCreateHatchBrush (
+NtGdiCreateHatchBrush (
 	INT		Style,
 	COLORREF	Color
 	);
 HBRUSH
 STDCALL
-W32kCreatePatternBrush (
+NtGdiCreatePatternBrush (
 	HBITMAP	hBitmap
 	);
 HBRUSH
 STDCALL
-W32kCreateSolidBrush (
+NtGdiCreateSolidBrush (
 	COLORREF	Color
 	);
 BOOL
 STDCALL
-W32kFixBrushOrgEx (
+NtGdiFixBrushOrgEx (
 	VOID
 	);
 BOOL
 STDCALL
-W32kPatBlt (
+NtGdiPatBlt (
 	HDC	hDC,
 	INT	XLeft,
 	INT	YLeft,
@@ -68,7 +68,26 @@ W32kPatBlt (
 	);
 BOOL
 STDCALL
-W32kSetBrushOrgEx (
+NtGdiPolyPatBlt(
+	HDC hDC,
+	DWORD dwRop,
+	PPATRECT pRects,
+	int cRects,
+	ULONG Reserved
+	);
+BOOL
+STDCALL
+NtGdiPatBlt (
+	HDC	hDC,
+	INT	XLeft,
+	INT	YLeft,
+	INT	Width,
+	INT	Height,
+	DWORD	ROP
+	);
+BOOL
+STDCALL
+NtGdiSetBrushOrgEx (
 	HDC	hDC,
 	INT	XOrg,
 	INT	YOrg,

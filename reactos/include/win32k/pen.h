@@ -24,13 +24,13 @@ typedef struct
 #define  PENOBJ_LockPen(hBMObj) ((PPENOBJ)GDIOBJ_LockObj ((HGDIOBJ) hBMObj, GO_PEN_MAGIC))
 #define  PENOBJ_UnlockPen(hBMObj) GDIOBJ_UnlockObj ((HGDIOBJ) hBMObj, GO_PEN_MAGIC)
 
-HPEN STDCALL W32kCreatePen(INT  PenStyle,
+HPEN STDCALL NtGdiCreatePen(INT  PenStyle,
                     INT  Width,
                     COLORREF  Color);
 
-HPEN STDCALL W32kCreatePenIndirect(CONST PLOGPEN  lgpn);
+HPEN STDCALL NtGdiCreatePenIndirect(CONST PLOGPEN  lgpn);
 
-HPEN STDCALL W32kExtCreatePen(DWORD  PenStyle,
+HPEN STDCALL NtGdiExtCreatePen(DWORD  PenStyle,
                        DWORD  Width,
                        CONST PLOGBRUSH  lb,
                        DWORD  StyleCount,

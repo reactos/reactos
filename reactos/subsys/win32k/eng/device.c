@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: device.c,v 1.10 2003/08/18 10:18:14 hbirr Exp $
+/* $Id: device.c,v 1.11 2003/08/19 11:48:49 weiden Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -57,10 +57,10 @@ EngDeviceIoControl(HANDLE  hDevice,
   KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
 
   CurrentProcess = PsGetCurrentProcess();
-  if (CurrentProcess != W32kDeviceProcess)
+  if (CurrentProcess != Win32kDeviceProcess)
     {  
       /* Switch to process context in which hDevice is valid */
-      KeAttachProcess(W32kDeviceProcess);
+      KeAttachProcess(Win32kDeviceProcess);
     }
 
   Status = ObReferenceObjectByHandle(hDevice,
@@ -69,7 +69,7 @@ EngDeviceIoControl(HANDLE  hDevice,
 				     KernelMode,
 				     (PVOID *)&FileObject,
 				     NULL);
-  if (CurrentProcess != W32kDeviceProcess)
+  if (CurrentProcess != Win32kDeviceProcess)
     {
       KeDetachProcess();
     }

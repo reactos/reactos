@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: callback.c,v 1.11 2003/08/01 20:24:54 dwelch Exp $
+/* $Id: callback.c,v 1.12 2003/08/19 11:48:49 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -46,7 +46,7 @@
 /* FUNCTIONS *****************************************************************/
 
 VOID STDCALL
-W32kCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
+IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
 			    HWND hWnd,
 			    UINT Msg,
 			    ULONG_PTR CompletionCallbackContext,
@@ -73,7 +73,7 @@ W32kCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
 }
 
 LRESULT STDCALL
-W32kSendNCCALCSIZEMessage(HWND Wnd, BOOL Validate, PRECT Rect,
+IntSendNCCALCSIZEMessage(HWND Wnd, BOOL Validate, PRECT Rect,
 			  NCCALCSIZE_PARAMS* Params)
 {
   SENDNCCALCSIZEMESSAGE_CALLBACK_ARGUMENTS Arguments;
@@ -115,7 +115,7 @@ W32kSendNCCALCSIZEMessage(HWND Wnd, BOOL Validate, PRECT Rect,
 }
 
 LRESULT STDCALL
-W32kSendCREATEMessage(HWND Wnd, CREATESTRUCTW* CreateStruct)
+IntSendCREATEMessage(HWND Wnd, CREATESTRUCTW* CreateStruct)
 {
   SENDCREATEMESSAGE_CALLBACK_ARGUMENTS Arguments;
   LRESULT Result;
@@ -140,7 +140,7 @@ W32kSendCREATEMessage(HWND Wnd, CREATESTRUCTW* CreateStruct)
 }
 
 LRESULT STDCALL
-W32kSendNCCREATEMessage(HWND Wnd, CREATESTRUCTW* CreateStruct)
+IntSendNCCREATEMessage(HWND Wnd, CREATESTRUCTW* CreateStruct)
 {
   SENDNCCREATEMESSAGE_CALLBACK_ARGUMENTS Arguments;
   LRESULT Result;
@@ -165,7 +165,7 @@ W32kSendNCCREATEMessage(HWND Wnd, CREATESTRUCTW* CreateStruct)
 }
 
 LRESULT STDCALL
-W32kCallWindowProc(WNDPROC Proc,
+IntCallWindowProc(WNDPROC Proc,
 		   HWND Wnd,
 		   UINT Message,
 		   WPARAM wParam,
@@ -176,14 +176,14 @@ W32kCallWindowProc(WNDPROC Proc,
   NTSTATUS Status;
   PVOID ResultPointer;
   ULONG ResultLength;
-  PWINDOW_OBJECT WindowObject = W32kGetWindowObject(Wnd);
+  PWINDOW_OBJECT WindowObject = IntGetWindowObject(Wnd);
 
-  if (W32kIsDesktopWindow(WindowObject))
+  if (IntIsDesktopWindow(WindowObject))
     {
-      W32kReleaseWindowObject(WindowObject);
-      return(W32kDesktopWindowProc(Wnd, Message, wParam, lParam));
+      IntReleaseWindowObject(WindowObject);
+      return(IntDesktopWindowProc(Wnd, Message, wParam, lParam));
     }
-  W32kReleaseWindowObject(WindowObject);
+  IntReleaseWindowObject(WindowObject);
 
   Arguments.Proc = Proc;
   Arguments.Wnd = Wnd;
@@ -205,7 +205,7 @@ W32kCallWindowProc(WNDPROC Proc,
 }
 
 LRESULT STDCALL
-W32kSendGETMINMAXINFOMessage(HWND Wnd, MINMAXINFO* MinMaxInfo)
+IntSendGETMINMAXINFOMessage(HWND Wnd, MINMAXINFO* MinMaxInfo)
 {
   SENDGETMINMAXINFO_CALLBACK_ARGUMENTS Arguments;
   SENDGETMINMAXINFO_CALLBACK_RESULT Result;
@@ -230,7 +230,7 @@ W32kSendGETMINMAXINFOMessage(HWND Wnd, MINMAXINFO* MinMaxInfo)
 }
 
 LRESULT STDCALL
-W32kSendWINDOWPOSCHANGINGMessage(HWND Wnd, WINDOWPOS* WindowPos)
+IntSendWINDOWPOSCHANGINGMessage(HWND Wnd, WINDOWPOS* WindowPos)
 {
   SENDWINDOWPOSCHANGING_CALLBACK_ARGUMENTS Arguments;
   LRESULT Result;
@@ -255,7 +255,7 @@ W32kSendWINDOWPOSCHANGINGMessage(HWND Wnd, WINDOWPOS* WindowPos)
 }
 
 LRESULT STDCALL
-W32kSendWINDOWPOSCHANGEDMessage(HWND Wnd, WINDOWPOS* WindowPos)
+IntSendWINDOWPOSCHANGEDMessage(HWND Wnd, WINDOWPOS* WindowPos)
 {
   SENDWINDOWPOSCHANGED_CALLBACK_ARGUMENTS Arguments;
   LRESULT Result;
@@ -280,7 +280,7 @@ W32kSendWINDOWPOSCHANGEDMessage(HWND Wnd, WINDOWPOS* WindowPos)
 }
 
 LRESULT STDCALL
-W32kSendSTYLECHANGINGMessage(HWND Wnd, DWORD WhichStyle, STYLESTRUCT* Style)
+IntSendSTYLECHANGINGMessage(HWND Wnd, DWORD WhichStyle, STYLESTRUCT* Style)
 {
   SENDSTYLECHANGING_CALLBACK_ARGUMENTS Arguments;
   LRESULT Result;
@@ -307,7 +307,7 @@ W32kSendSTYLECHANGINGMessage(HWND Wnd, DWORD WhichStyle, STYLESTRUCT* Style)
 }
 
 LRESULT STDCALL
-W32kSendSTYLECHANGEDMessage(HWND Wnd, DWORD WhichStyle, STYLESTRUCT* Style)
+IntSendSTYLECHANGEDMessage(HWND Wnd, DWORD WhichStyle, STYLESTRUCT* Style)
 {
   SENDSTYLECHANGED_CALLBACK_ARGUMENTS Arguments;
   LRESULT Result;
@@ -333,7 +333,7 @@ W32kSendSTYLECHANGEDMessage(HWND Wnd, DWORD WhichStyle, STYLESTRUCT* Style)
 }
 
 LRESULT STDCALL
-W32kCallTrampolineWindowProc(WNDPROC Proc,
+IntCallTrampolineWindowProc(WNDPROC Proc,
 			     HWND Wnd,
 			     UINT Message,
 			     WPARAM wParam,
@@ -342,41 +342,41 @@ W32kCallTrampolineWindowProc(WNDPROC Proc,
   switch (Message)
     {
     case WM_NCCREATE:
-      return W32kSendNCCREATEMessage(Wnd, (CREATESTRUCTW*)lParam);
+      return IntSendNCCREATEMessage(Wnd, (CREATESTRUCTW*)lParam);
      
     case WM_CREATE:
-      return W32kSendCREATEMessage(Wnd, (CREATESTRUCTW*)lParam);
+      return IntSendCREATEMessage(Wnd, (CREATESTRUCTW*)lParam);
 
     case WM_GETMINMAXINFO:
-      return W32kSendGETMINMAXINFOMessage(Wnd, (MINMAXINFO*)lParam);
+      return IntSendGETMINMAXINFOMessage(Wnd, (MINMAXINFO*)lParam);
 
     case WM_NCCALCSIZE:
       {
 	if (wParam)
 	  {
-	    return W32kSendNCCALCSIZEMessage(Wnd, TRUE, NULL, 
+	    return IntSendNCCALCSIZEMessage(Wnd, TRUE, NULL, 
 					     (NCCALCSIZE_PARAMS*)lParam);
 	  }
 	else
 	  {
-	    return W32kSendNCCALCSIZEMessage(Wnd, FALSE, (RECT*)lParam, NULL);
+	    return IntSendNCCALCSIZEMessage(Wnd, FALSE, (RECT*)lParam, NULL);
 	  }
       }
 
     case WM_WINDOWPOSCHANGING:
-      return W32kSendWINDOWPOSCHANGINGMessage(Wnd, (WINDOWPOS*) lParam);
+      return IntSendWINDOWPOSCHANGINGMessage(Wnd, (WINDOWPOS*) lParam);
 
     case WM_WINDOWPOSCHANGED:
-      return W32kSendWINDOWPOSCHANGEDMessage(Wnd, (WINDOWPOS*) lParam);
+      return IntSendWINDOWPOSCHANGEDMessage(Wnd, (WINDOWPOS*) lParam);
 
     case WM_STYLECHANGING:
-      return W32kSendSTYLECHANGINGMessage(Wnd, wParam, (STYLESTRUCT*) lParam);
+      return IntSendSTYLECHANGINGMessage(Wnd, wParam, (STYLESTRUCT*) lParam);
 
     case WM_STYLECHANGED:
-	  return W32kSendSTYLECHANGEDMessage(Wnd, wParam, (STYLESTRUCT*) lParam);
+	  return IntSendSTYLECHANGEDMessage(Wnd, wParam, (STYLESTRUCT*) lParam);
 
     default:
-      return(W32kCallWindowProc(Proc, Wnd, Message, wParam, lParam));
+      return(IntCallWindowProc(Proc, Wnd, Message, wParam, lParam));
     }
 }
 

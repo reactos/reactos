@@ -17,7 +17,7 @@ BOOL IconCursor_InternalDelete( PICONCURSOROBJ pIconCursor )
 	return TRUE;
 }
 
-HICON STDCALL W32kCreateIcon(BOOL fIcon,
+HICON STDCALL NtGdiCreateIcon(BOOL fIcon,
                              INT  Width,
                              INT  Height,
                              UINT  Planes,
@@ -48,7 +48,7 @@ HICON STDCALL W32kCreateIcon(BOOL fIcon,
 	hIcon = ICONCURSOROBJ_AllocIconCursor ();
 	if (!hIcon)
 	{
-		DPRINT("W32kCreateIcon: ICONCURSOROBJ_AllocIconCursor() returned 0\n");
+		DPRINT("NtGdiCreateIcon: ICONCURSOROBJ_AllocIconCursor() returned 0\n");
 		return 0;
 	}
 	
@@ -121,13 +121,13 @@ NtUserGetIconInfo(
   *xHotspot = icon->xHotspot;
   *yHotspot = icon->yHotspot;
 
-  *hbmMask = W32kCreateBitmap(icon->ANDBitmap.bmWidth,
+  *hbmMask = NtGdiCreateBitmap(icon->ANDBitmap.bmWidth,
                               icon->ANDBitmap.bmHeight,
                               icon->ANDBitmap.bmPlanes,
                               icon->ANDBitmap.bmBitsPixel,
                               icon->ANDBitmap.bmBits);
 
-  *hbmColor = W32kCreateBitmap(icon->XORBitmap.bmWidth,
+  *hbmColor = NtGdiCreateBitmap(icon->XORBitmap.bmWidth,
                                icon->XORBitmap.bmHeight,
                                icon->XORBitmap.bmPlanes,
                                icon->XORBitmap.bmBitsPixel,

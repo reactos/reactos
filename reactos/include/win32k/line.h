@@ -3,7 +3,7 @@
 
 BOOL
 STDCALL
-W32kAngleArc(HDC  hDC,
+NtGdiAngleArc(HDC  hDC,
                    int  X,
                    int  Y,
                    DWORD  Radius,
@@ -12,7 +12,7 @@ W32kAngleArc(HDC  hDC,
 
 BOOL
 STDCALL
-W32kArc(HDC  hDC,
+NtGdiArc(HDC  hDC,
               int  LeftRect,
               int  TopRect,
               int  RightRect, 
@@ -24,7 +24,7 @@ W32kArc(HDC  hDC,
 
 BOOL
 STDCALL
-W32kArcTo(HDC  hDC,
+NtGdiArcTo(HDC  hDC,
                 int  LeftRect,
                 int  TopRect,
                 int  RightRect,
@@ -40,62 +40,62 @@ IntGetArcDirection ( PDC dc );
 
 INT
 STDCALL
-W32kGetArcDirection ( HDC hDC );
+NtGdiGetArcDirection ( HDC hDC );
 
 BOOL
 STDCALL
-W32kLineTo(HDC  hDC,
+NtGdiLineTo(HDC  hDC,
            int  XEnd,
            int  YEnd );
 
 BOOL
 STDCALL
-W32kMoveToEx(HDC  hDC,
+NtGdiMoveToEx(HDC  hDC,
                    int  X,
                    int  Y,
                    LPPOINT  Point);
 
 BOOL
 STDCALL
-W32kPolyBezier(HDC  hDC,
+NtGdiPolyBezier(HDC  hDC,
                      CONST LPPOINT  pt,
                      DWORD  Count);
 
 BOOL
 STDCALL
-W32kPolyBezierTo(HDC  hDC,
+NtGdiPolyBezierTo(HDC  hDC,
                        CONST LPPOINT  pt,
                        DWORD  Count);
 
 BOOL
 STDCALL
-W32kPolyDraw(HDC  hDC,
+NtGdiPolyDraw(HDC  hDC,
                    CONST LPPOINT  pt,
                    CONST LPBYTE  Types,
                    int  Count);
 
 BOOL
 STDCALL
-W32kPolyline(HDC  hDC,
+NtGdiPolyline(HDC  hDC,
                    CONST LPPOINT  pt,
                    int  Count);
 
 BOOL
 STDCALL
-W32kPolylineTo(HDC  hDC,
+NtGdiPolylineTo(HDC  hDC,
                      CONST LPPOINT  pt,
                      DWORD  Count);
 
 BOOL
 STDCALL
-W32kPolyPolyline(HDC  hDC,
+NtGdiPolyPolyline(HDC  hDC,
                        CONST LPPOINT  pt,
                        CONST LPDWORD  PolyPoints,
                        DWORD  Count);
 
 int
 STDCALL
-W32kSetArcDirection(HDC  hDC,
+NtGdiSetArcDirection(HDC  hDC,
                          int  ArcDirection);
 
 #endif

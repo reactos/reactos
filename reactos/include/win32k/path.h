@@ -19,36 +19,36 @@ typedef struct tagGdiPath
 
 #define PATH_IsPathOpen(path) ((path).state==PATH_Open)
 
-BOOL STDCALL W32kAbortPath(HDC  hDC);
+BOOL STDCALL NtGdiAbortPath(HDC  hDC);
 
-BOOL STDCALL W32kBeginPath(HDC  hDC);
+BOOL STDCALL NtGdiBeginPath(HDC  hDC);
 
-BOOL STDCALL W32kCloseFigure(HDC  hDC);
+BOOL STDCALL NtGdiCloseFigure(HDC  hDC);
 
-BOOL STDCALL W32kEndPath(HDC  hDC);
+BOOL STDCALL NtGdiEndPath(HDC  hDC);
 
-BOOL STDCALL W32kFillPath(HDC  hDC);
+BOOL STDCALL NtGdiFillPath(HDC  hDC);
 
-BOOL STDCALL W32kFlattenPath(HDC  hDC);
+BOOL STDCALL NtGdiFlattenPath(HDC  hDC);
 
-BOOL STDCALL W32kGetMiterLimit(HDC  hDC,
+BOOL STDCALL NtGdiGetMiterLimit(HDC  hDC,
                         PFLOAT  Limit);
 
-INT STDCALL W32kGetPath(HDC  hDC,
+INT STDCALL NtGdiGetPath(HDC  hDC,
                  LPPOINT  Points,
                  LPBYTE  Types,
                  INT  nSize);
 
-HRGN STDCALL W32kPathToRegion(HDC  hDC);
+HRGN STDCALL NtGdiPathToRegion(HDC  hDC);
 
-BOOL STDCALL W32kSetMiterLimit(HDC  hDC,
+BOOL STDCALL NtGdiSetMiterLimit(HDC  hDC,
                         FLOAT  NewLimit,
                         PFLOAT  OldLimit);
 
-BOOL STDCALL W32kStrokeAndFillPath(HDC  hDC);
+BOOL STDCALL NtGdiStrokeAndFillPath(HDC  hDC);
 
-BOOL STDCALL W32kStrokePath(HDC  hDC);
+BOOL STDCALL NtGdiStrokePath(HDC  hDC);
 
-BOOL STDCALL W32kWidenPath(HDC  hDC);
+BOOL STDCALL NtGdiWidenPath(HDC  hDC);
 
 #endif

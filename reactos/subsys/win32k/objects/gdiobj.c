@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.36 2003/08/18 10:18:14 hbirr Exp $
+ * $Id: gdiobj.c,v 1.37 2003/08/19 11:48:50 weiden Exp $
  *
  */
 
@@ -463,24 +463,24 @@ CreateStockObjects(void)
 {
   // Create GDI Stock Objects from the logical structures we've defined
 
-  StockObjects[WHITE_BRUSH] =  W32kCreateBrushIndirect(&WhiteBrush);
+  StockObjects[WHITE_BRUSH] =  NtGdiCreateBrushIndirect(&WhiteBrush);
   GDIOBJ_MarkObjectGlobal(StockObjects[WHITE_BRUSH]);
-  StockObjects[LTGRAY_BRUSH] = W32kCreateBrushIndirect(&LtGrayBrush);
+  StockObjects[LTGRAY_BRUSH] = NtGdiCreateBrushIndirect(&LtGrayBrush);
   GDIOBJ_MarkObjectGlobal(StockObjects[LTGRAY_BRUSH]);
-  StockObjects[GRAY_BRUSH] =   W32kCreateBrushIndirect(&GrayBrush);
+  StockObjects[GRAY_BRUSH] =   NtGdiCreateBrushIndirect(&GrayBrush);
   GDIOBJ_MarkObjectGlobal(StockObjects[GRAY_BRUSH]);
-  StockObjects[DKGRAY_BRUSH] = W32kCreateBrushIndirect(&DkGrayBrush);
+  StockObjects[DKGRAY_BRUSH] = NtGdiCreateBrushIndirect(&DkGrayBrush);
   GDIOBJ_MarkObjectGlobal(StockObjects[DKGRAY_BRUSH]);
-  StockObjects[BLACK_BRUSH] =  W32kCreateBrushIndirect(&BlackBrush);
+  StockObjects[BLACK_BRUSH] =  NtGdiCreateBrushIndirect(&BlackBrush);
   GDIOBJ_MarkObjectGlobal(StockObjects[BLACK_BRUSH]);
-  StockObjects[NULL_BRUSH] =   W32kCreateBrushIndirect(&NullBrush);
+  StockObjects[NULL_BRUSH] =   NtGdiCreateBrushIndirect(&NullBrush);
   GDIOBJ_MarkObjectGlobal(StockObjects[NULL_BRUSH]);
 
-  StockObjects[WHITE_PEN] = W32kCreatePenIndirect(&WhitePen);
+  StockObjects[WHITE_PEN] = NtGdiCreatePenIndirect(&WhitePen);
   GDIOBJ_MarkObjectGlobal(StockObjects[WHITE_PEN]);
-  StockObjects[BLACK_PEN] = W32kCreatePenIndirect(&BlackPen);
+  StockObjects[BLACK_PEN] = NtGdiCreatePenIndirect(&BlackPen);
   GDIOBJ_MarkObjectGlobal(StockObjects[BLACK_PEN]);
-  StockObjects[NULL_PEN] =  W32kCreatePenIndirect(&NullPen);
+  StockObjects[NULL_PEN] =  NtGdiCreatePenIndirect(&NullPen);
   GDIOBJ_MarkObjectGlobal(StockObjects[NULL_PEN]);
 
   (void) TextIntCreateFontIndirect(&OEMFixedFont, (HFONT*)&StockObjects[OEM_FIXED_FONT]);
@@ -505,7 +505,7 @@ CreateStockObjects(void)
  * \return	Handle to the object.
 */
 HGDIOBJ STDCALL
-W32kGetStockObject(INT  Object)
+NtGdiGetStockObject(INT  Object)
 {
   // check when adding new objects
   if( (Object < 0) || (Object >= NB_STOCK_OBJECTS)  )
@@ -519,7 +519,7 @@ W32kGetStockObject(INT  Object)
  * \return	if the function fails the returned value is NULL.
 */
 BOOL STDCALL
-W32kDeleteObject(HGDIOBJ hObject)
+NtGdiDeleteObject(HGDIOBJ hObject)
 {
   return GDIOBJ_FreeObj( hObject, GO_MAGIC_DONTCARE, GDIOBJFLAG_DEFAULT );
 }
@@ -550,7 +550,7 @@ CleanupForProcess (struct _EPROCESS *Process, INT Pid)
           (INT)handleEntry->hProcessId == Pid)
 	{
 	  objectHeader = (PGDIOBJHDR) handleEntry->pObject;
-	  DPRINT("\nW32kCleanup: %d, magic: %x \n process: %d, locks: %d", i, handleEntry->wMagic, handleEntry->hProcessId, objectHeader->dwCount);
+	  DPRINT("\nNtGdiCleanup: %d, magic: %x \n process: %d, locks: %d", i, handleEntry->wMagic, handleEntry->hProcessId, objectHeader->dwCount);
 	  GDIOBJ_FreeObj( GDI_INDEX2HANDLE(i), GO_MAGIC_DONTCARE, GDIOBJFLAG_IGNOREPID|GDIOBJFLAG_IGNORELOCK );
 	}
     }
@@ -569,7 +569,7 @@ CleanupForProcess (struct _EPROCESS *Process, INT Pid)
  *
 */
 VOID STDCALL
-W32kDumpGdiObjects( INT Process )
+NtGdiDumpGdiObjects( INT Process )
 {
 	DWORD i;
 	PGDI_HANDLE_ENTRY handleEntry;

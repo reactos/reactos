@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: print.c,v 1.10 2003/08/05 15:41:03 weiden Exp $ */
+/* $Id: print.c,v 1.11 2003/08/19 11:48:50 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -27,28 +27,28 @@
 
 INT
 STDCALL
-W32kAbortDoc(HDC  hDC)
+NtGdiAbortDoc(HDC  hDC)
 {
   UNIMPLEMENTED;
 }
 
 INT
 STDCALL
-W32kEndDoc(HDC  hDC)
+NtGdiEndDoc(HDC  hDC)
 {
   UNIMPLEMENTED;
 }
 
 INT
 STDCALL
-W32kEndPage(HDC  hDC)
+NtGdiEndPage(HDC  hDC)
 {
   UNIMPLEMENTED;
 }
 
 INT
 STDCALL
-W32kEscape(HDC  hDC,
+NtGdiEscape(HDC  hDC,
                 INT  Escape,
                 INT  InSize,
                 LPCSTR  InData,
@@ -59,7 +59,7 @@ W32kEscape(HDC  hDC,
 
 INT
 STDCALL
-W32kExtEscape(HDC  hDC,
+NtGdiExtEscape(HDC  hDC,
                    INT  Escape,
                    INT  InSize,
                    LPCSTR  InData,
@@ -71,7 +71,7 @@ W32kExtEscape(HDC  hDC,
 
 INT
 STDCALL
-W32kSetAbortProc(HDC  hDC,
+NtGdiSetAbortProc(HDC  hDC,
                       ABORTPROC  AbortProc)
 {
   UNIMPLEMENTED;
@@ -79,7 +79,7 @@ W32kSetAbortProc(HDC  hDC,
 
 INT
 STDCALL
-W32kStartDoc(HDC  hDC,
+NtGdiStartDoc(HDC  hDC,
                   CONST PDOCINFOW  di)
 {
   UNIMPLEMENTED;
@@ -87,7 +87,7 @@ W32kStartDoc(HDC  hDC,
 
 INT
 STDCALL
-W32kStartPage(HDC  hDC)
+NtGdiStartPage(HDC  hDC)
 {
   UNIMPLEMENTED;
 }

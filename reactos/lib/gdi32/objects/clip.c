@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: clip.c,v 1.2 2003/07/10 15:35:49 chorns Exp $
+/* $Id: clip.c,v 1.3 2003/08/19 11:48:49 weiden Exp $
  *
  * PROJECT:         ReactOS gdi32.dll
  * FILE:            lib/gdi32/objects/clip.c
@@ -36,5 +36,5 @@ int
 STDCALL
 SelectClipRgn(HDC DC, HRGN Rgn)
 {
-  return W32kSelectClipRgn(DC, Rgn);
+  return NtGdiSelectClipRgn(DC, Rgn);
 }

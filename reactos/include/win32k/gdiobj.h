@@ -102,7 +102,7 @@ BOOL    FASTCALL GDIOBJ_LockMultipleObj( PGDIMULTILOCK pList, INT nObj );
 BOOL    FASTCALL GDIOBJ_UnlockObj (HGDIOBJ Obj, WORD Magic);
 BOOL    FASTCALL GDIOBJ_UnlockMultipleObj( PGDIMULTILOCK pList, INT nObj );
 WORD    FASTCALL GDIOBJ_GetHandleMagic (HGDIOBJ ObjectHandle);
-VOID    STDCALL W32kDumpGdiObjects( INT Pid );
+VOID    STDCALL IntDumpGdiObjects( INT Pid );
 
 // a couple macros for debugging GDIOBJ locking
 #define GDIOBJ_LockObj(obj,mag) GDIOBJ_LockObjDbg(__FILE__,__LINE__,obj,mag)

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.33 2003/08/13 20:24:05 chorns Exp $ */
+/* $Id: region.c,v 1.34 2003/08/19 11:48:50 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -1335,16 +1335,16 @@ static void FASTCALL REGION_XorRegion(ROSRGNDATA *dr, ROSRGNDATA *sra,
 	return;
 	tra = RGNDATA_LockRgn( htra );
 	if( !tra ){
-		W32kDeleteObject( htra );
-		W32kDeleteObject( htrb );
+		NtGdiDeleteObject( htra );
+		NtGdiDeleteObject( htrb );
 		return;
 	}
 
 	trb = RGNDATA_LockRgn( htrb );
 	if( !trb ){
 		RGNDATA_UnlockRgn( htra );
-		W32kDeleteObject( htra );
-		W32kDeleteObject( htrb );
+		NtGdiDeleteObject( htra );
+		NtGdiDeleteObject( htrb );
 		return;
 	}
 
@@ -1354,8 +1354,8 @@ static void FASTCALL REGION_XorRegion(ROSRGNDATA *dr, ROSRGNDATA *sra,
 	RGNDATA_UnlockRgn( htra );
 	RGNDATA_UnlockRgn( htrb );
 
-    W32kDeleteObject( htra );
-    W32kDeleteObject( htrb );
+    NtGdiDeleteObject( htra );
+    NtGdiDeleteObject( htrb );
     return;
 }
 
@@ -1390,10 +1390,10 @@ BOOL STDCALL REGION_LPTODP(HDC hdc, HRGN hDest, HRGN hSrc)
 
   if(dc->w.MapMode == MM_TEXT) // Requires only a translation
   {
-    if(W32kCombineRgn(hDest, hSrc, 0, RGN_COPY) == ERROR)
+    if(NtGdiCombineRgn(hDest, hSrc, 0, RGN_COPY) == ERROR)
       goto done;
 
-    W32kOffsetRgn(hDest, dc->vportOrgX - dc->wndOrgX, dc->vportOrgY - dc->wndOrgY);
+    NtGdiOffsetRgn(hDest, dc->vportOrgX - dc->wndOrgX, dc->vportOrgY - dc->wndOrgY);
     ret = TRUE;
     goto done;
   }
@@ -1469,10 +1469,10 @@ BOOL FASTCALL RGNDATA_InternalDelete( PROSRGNDATA pRgn )
   return TRUE;
 }
 
-// W32k Exported Functions
+// NtGdi Exported Functions
 INT
 STDCALL
-W32kCombineRgn(HRGN  hDest,
+NtGdiCombineRgn(HRGN  hDest,
                     HRGN  hSrc1,
                     HRGN  hSrc2,
                     INT  CombineMode)
@@ -1527,7 +1527,7 @@ W32kCombineRgn(HRGN  hDest,
     }
   else
     {
-      DPRINT("W32kCombineRgn: hDest unavailable\n");
+      DPRINT("NtGdiCombineRgn: hDest unavailable\n");
       result = ERROR;
     }
   GDIOBJ_UnlockMultipleObj(Lock, sizeof(Lock)/sizeof(Lock[0]));
@@ -1536,7 +1536,7 @@ W32kCombineRgn(HRGN  hDest,
 
 HRGN
 STDCALL
-W32kCreateEllipticRgn(INT  LeftRect,
+NtGdiCreateEllipticRgn(INT  LeftRect,
                             INT  TopRect,
                             INT  RightRect,
                             INT  BottomRect)
@@ -1546,14 +1546,14 @@ W32kCreateEllipticRgn(INT  LeftRect,
 
 HRGN
 STDCALL
-W32kCreateEllipticRgnIndirect(CONST PRECT  rc)
+NtGdiCreateEllipticRgnIndirect(CONST PRECT  rc)
 {
   UNIMPLEMENTED;
 }
 
 HRGN
 STDCALL
-W32kCreatePolygonRgn(CONST PPOINT  pt,
+NtGdiCreatePolygonRgn(CONST PPOINT  pt,
                            INT  Count,
                            INT  PolyFillMode)
 {
@@ -1562,7 +1562,7 @@ W32kCreatePolygonRgn(CONST PPOINT  pt,
 
 HRGN
 STDCALL
-W32kCreatePolyPolygonRgn(CONST PPOINT  pt,
+NtGdiCreatePolyPolygonRgn(CONST PPOINT  pt,
                                CONST PINT  PolyCounts,
                                INT  Count,
                                INT  PolyFillMode)
@@ -1572,7 +1572,7 @@ W32kCreatePolyPolygonRgn(CONST PPOINT  pt,
 
 HRGN
 STDCALL
-W32kCreateRectRgn(INT  LeftRect,
+NtGdiCreateRectRgn(INT  LeftRect,
                         INT  TopRect,
                         INT  RightRect,
                         INT  BottomRect)
@@ -1589,22 +1589,22 @@ W32kCreateRectRgn(INT  LeftRect,
 
     	// Fill in the region data header
     	pRgnData->rdh.iType = SIMPLEREGION;
-    	W32kSetRect(&(pRgnData->rdh.rcBound), LeftRect, TopRect, RightRect, BottomRect);
+    	NtGdiSetRect(&(pRgnData->rdh.rcBound), LeftRect, TopRect, RightRect, BottomRect);
 
-    	// use W32kCopyRect when implemented
-    	W32kSetRect(pRect, LeftRect, TopRect, RightRect, BottomRect);
+    	// use NtGdiCopyRect when implemented
+    	NtGdiSetRect(pRect, LeftRect, TopRect, RightRect, BottomRect);
 		RGNDATA_UnlockRgn( hRgn );
 
     	return hRgn;
 	}
-	W32kDeleteObject( hRgn );
+	NtGdiDeleteObject( hRgn );
   }
-  DPRINT("W32kCreateRectRgn: can't allocate region\n");
+  DPRINT("NtGdiCreateRectRgn: can't allocate region\n");
   return NULL;
 }
 
 HRGN STDCALL
-W32kCreateRectRgnIndirect(CONST PRECT rc)
+NtGdiCreateRectRgnIndirect(CONST PRECT rc)
 {
   RECT SafeRc;
   NTSTATUS Status;
@@ -1614,18 +1614,18 @@ W32kCreateRectRgnIndirect(CONST PRECT rc)
     {
       return(NULL);
     }
-  return(UnsafeW32kCreateRectRgnIndirect(&SafeRc));
+  return(UnsafeIntCreateRectRgnIndirect(&SafeRc));
 }
 
 HRGN STDCALL
-UnsafeW32kCreateRectRgnIndirect(CONST PRECT  rc)
+UnsafeIntCreateRectRgnIndirect(CONST PRECT  rc)
 {
-  return(W32kCreateRectRgn(rc->left, rc->top, rc->right, rc->bottom));
+  return(NtGdiCreateRectRgn(rc->left, rc->top, rc->right, rc->bottom));
 }
 
 HRGN
 STDCALL
-W32kCreateRoundRectRgn(INT  LeftRect,
+NtGdiCreateRoundRectRgn(INT  LeftRect,
                              INT  TopRect,
                              INT  RightRect,
                              INT  BottomRect,
@@ -1637,7 +1637,7 @@ W32kCreateRoundRectRgn(INT  LeftRect,
 
 BOOL
 STDCALL
-W32kEqualRgn(HRGN  hSrcRgn1,
+NtGdiEqualRgn(HRGN  hSrcRgn1,
                    HRGN  hSrcRgn2)
 {
   PROSRGNDATA rgn1, rgn2;
@@ -1685,7 +1685,7 @@ exit:
 
 HRGN
 STDCALL
-W32kExtCreateRegion(CONST PXFORM  Xform,
+NtGdiExtCreateRegion(CONST PXFORM  Xform,
                           DWORD  Count,
                           CONST PROSRGNDATA  RgnData)
 {
@@ -1701,7 +1701,7 @@ W32kExtCreateRegion(CONST PXFORM  Xform,
 
 BOOL
 STDCALL
-W32kFillRgn(HDC hDC, HRGN hRgn, HBRUSH hBrush)
+NtGdiFillRgn(HDC hDC, HRGN hRgn, HBRUSH hBrush)
 {
   HBRUSH oldhBrush;
   PROSRGNDATA rgn;
@@ -1712,7 +1712,7 @@ W32kFillRgn(HDC hDC, HRGN hRgn, HBRUSH hBrush)
       return FALSE;
     }
 
-  if (NULL == (oldhBrush = W32kSelectObject(hDC, hBrush)))
+  if (NULL == (oldhBrush = NtGdiSelectObject(hDC, hBrush)))
     {
       RGNDATA_UnlockRgn(hRgn);
       return FALSE;
@@ -1720,10 +1720,10 @@ W32kFillRgn(HDC hDC, HRGN hRgn, HBRUSH hBrush)
 
   for (r = (PRECT) rgn->Buffer; r < ((PRECT) rgn->Buffer) + rgn->rdh.nCount; r++)
     {
-      W32kPatBlt(hDC, r->left, r->top, r->right - r->left, r->bottom - r->top, PATCOPY);
+      NtGdiPatBlt(hDC, r->left, r->top, r->right - r->left, r->bottom - r->top, PATCOPY);
     }
 
-  W32kSelectObject(hDC, oldhBrush);
+  NtGdiSelectObject(hDC, oldhBrush);
   RGNDATA_UnlockRgn( hRgn );
 
   return TRUE;
@@ -1731,7 +1731,7 @@ W32kFillRgn(HDC hDC, HRGN hRgn, HBRUSH hBrush)
 
 BOOL
 STDCALL
-W32kFrameRgn(HDC  hDC,
+NtGdiFrameRgn(HDC  hDC,
                    HRGN  hRgn,
                    HBRUSH  hBrush,
                    INT  Width,
@@ -1741,7 +1741,7 @@ W32kFrameRgn(HDC  hDC,
 }
 
 INT STDCALL
-UnsafeW32kGetRgnBox(HRGN  hRgn,
+UnsafeIntGetRgnBox(HRGN  hRgn,
 		    LPRECT  pRect)
 {
   PROSRGNDATA rgn = RGNDATA_LockRgn(hRgn);
@@ -1760,7 +1760,7 @@ UnsafeW32kGetRgnBox(HRGN  hRgn,
 
 
 INT STDCALL
-W32kGetRgnBox(HRGN  hRgn,
+NtGdiGetRgnBox(HRGN  hRgn,
 	      LPRECT  pRect)
 {
   PROSRGNDATA rgn = RGNDATA_LockRgn(hRgn);
@@ -1786,7 +1786,7 @@ W32kGetRgnBox(HRGN  hRgn,
 
 BOOL
 STDCALL
-W32kInvertRgn(HDC  hDC,
+NtGdiInvertRgn(HDC  hDC,
                     HRGN  hRgn)
 {
   UNIMPLEMENTED;
@@ -1794,17 +1794,17 @@ W32kInvertRgn(HDC  hDC,
 
 INT
 STDCALL
-W32kOffsetRgn(HRGN  hRgn,
+NtGdiOffsetRgn(HRGN  hRgn,
                    INT  XOffset,
                    INT  YOffset)
 {
   PROSRGNDATA rgn = RGNDATA_LockRgn(hRgn);
   INT ret;
 
-  DPRINT("W32kOffsetRgn: hRgn %d Xoffs %d Yoffs %d rgn %x\n", hRgn, XOffset, YOffset, rgn );
+  DPRINT("NtGdiOffsetRgn: hRgn %d Xoffs %d Yoffs %d rgn %x\n", hRgn, XOffset, YOffset, rgn );
 
   if( !rgn ){
-	  DPRINT("W32kOffsetRgn: hRgn error\n");
+	  DPRINT("NtGdiOffsetRgn: hRgn error\n");
 	  return ERROR;
   }
 
@@ -1833,7 +1833,7 @@ W32kOffsetRgn(HRGN  hRgn,
 
 BOOL
 STDCALL
-W32kPaintRgn(HDC  hDC,
+NtGdiPaintRgn(HDC  hDC,
                    HRGN  hRgn)
 {
   //RECT box;
@@ -1849,21 +1849,21 @@ W32kPaintRgn(HDC  hDC,
   if( !dc )
 	return FALSE;
 
-  if(!(tmpVisRgn = W32kCreateRectRgn(0, 0, 0, 0))){
+  if(!(tmpVisRgn = NtGdiCreateRectRgn(0, 0, 0, 0))){
 	DC_ReleasePtr( hDC );
   	return FALSE;
   }
 
 /* ei enable later
   // Transform region into device co-ords
-  if(!REGION_LPTODP(hDC, tmpVisRgn, hRgn) || W32kOffsetRgn(tmpVisRgn, dc->w.DCOrgX, dc->w.DCOrgY) == ERROR) {
-    W32kDeleteObject( tmpVisRgn );
+  if(!REGION_LPTODP(hDC, tmpVisRgn, hRgn) || NtGdiOffsetRgn(tmpVisRgn, dc->w.DCOrgX, dc->w.DCOrgY) == ERROR) {
+    NtGdiDeleteObject( tmpVisRgn );
 	DC_ReleasePtr( hDC );
     return FALSE;
   }
 */
   /* enable when clipping is implemented
-  W32kCombineRgn(tmpVisRgn, tmpVisRgn, dc->w.hGCClipRgn, RGN_AND);
+  NtGdiCombineRgn(tmpVisRgn, tmpVisRgn, dc->w.hGCClipRgn, RGN_AND);
   */
 
   //visrgn = RGNDATA_LockRgn(tmpVisRgn);
@@ -1893,7 +1893,7 @@ W32kPaintRgn(HDC  hDC,
 
 BOOL
 STDCALL
-W32kPtInRegion(HRGN  hRgn,
+NtGdiPtInRegion(HRGN  hRgn,
                      INT  X,
                      INT  Y)
 {
@@ -1917,7 +1917,7 @@ W32kPtInRegion(HRGN  hRgn,
 
 BOOL
 STDCALL
-W32kRectInRegion(HRGN  hRgn,
+NtGdiRectInRegion(HRGN  hRgn,
                        CONST LPRECT  unsaferc)
 {
   PROSRGNDATA rgn;
@@ -1926,7 +1926,7 @@ W32kRectInRegion(HRGN  hRgn,
   BOOL bRet = FALSE;
 
   if( !NT_SUCCESS( MmCopyFromCaller( rc, unsaferc, sizeof( RECT ) ) ) ){
-	DPRINT("W32kRectInRegion: bogus rc\n");
+	DPRINT("NtGdiRectInRegion: bogus rc\n");
 	return ERROR;
   }
 
@@ -1952,7 +1952,7 @@ W32kRectInRegion(HRGN  hRgn,
 
 BOOL
 STDCALL
-W32kSetRectRgn(HRGN  hRgn,
+NtGdiSetRectRgn(HRGN  hRgn,
                      INT  LeftRect,
                      INT  TopRect,
                      INT  RightRect,
@@ -1987,7 +1987,7 @@ W32kSetRectRgn(HRGN  hRgn,
 }
 
 HRGN FASTCALL
-UnsafeW32kUnionRectWithRgn(HRGN hDest, CONST PRECT Rect)
+UnsafeIntUnionRectWithRgn(HRGN hDest, CONST PRECT Rect)
 {
   PROSRGNDATA pRgn;
 
@@ -2005,7 +2005,7 @@ UnsafeW32kUnionRectWithRgn(HRGN hDest, CONST PRECT Rect)
 }
 
 HRGN STDCALL
-W32kUnionRectWithRgn(HRGN hDest, CONST PRECT UnsafeRect)
+NtGdiUnionRectWithRgn(HRGN hDest, CONST PRECT UnsafeRect)
 {
   RECT SafeRect;
 
@@ -2015,7 +2015,7 @@ W32kUnionRectWithRgn(HRGN hDest, CONST PRECT UnsafeRect)
       return NULL;
     }
 
-  return UnsafeW32kUnionRectWithRgn(hDest, &SafeRect);
+  return UnsafeIntUnionRectWithRgn(hDest, &SafeRect);
 }
 
 /*!
@@ -2028,7 +2028,7 @@ W32kUnionRectWithRgn(HRGN hDest, CONST PRECT UnsafeRect)
  *
  * If the function fails, the return value is zero."
  */
-DWORD STDCALL W32kGetRegionData(HRGN hrgn, DWORD count, LPRGNDATA rgndata)
+DWORD STDCALL NtGdiGetRegionData(HRGN hrgn, DWORD count, LPRGNDATA rgndata)
 {
     DWORD size;
     PROSRGNDATA obj = RGNDATA_LockRgn( hrgn );

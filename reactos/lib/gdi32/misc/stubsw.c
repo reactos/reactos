@@ -1,4 +1,4 @@
-/* $Id: stubsw.c,v 1.19 2003/08/07 04:03:22 royce Exp $
+/* $Id: stubsw.c,v 1.20 2003/08/19 11:48:49 weiden Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -22,7 +22,7 @@ STDCALL
 AddFontResourceExW ( LPCWSTR lpszFilename, DWORD fl, PVOID pvReserved )
 {
   /* FIXME handle fl parameter */
-  return W32kAddFontResource ( lpszFilename );
+  return NtGdiAddFontResource ( lpszFilename );
 }
 
 /*
@@ -46,7 +46,7 @@ CopyMetaFileW(
 	LPCWSTR		File
 	)
 {
-	return W32kCopyMetaFile ( Src, File );
+	return NtGdiCopyMetaFile ( Src, File );
 }
 
 
@@ -62,7 +62,7 @@ CreateICW(
 	CONST DEVMODEW *	lpdvmInit
 	)
 {
-  return W32kCreateIC ( lpszDriver,
+  return NtGdiCreateIC ( lpszDriver,
 		      lpszDevice,
 		      lpszOutput,
 		      (CONST PDEVMODEW)lpdvmInit );
@@ -78,7 +78,7 @@ CreateMetaFileW(
 	LPCWSTR		lpszFile
 	)
 {
-	return W32kCreateMetaFile ( lpszFile );
+	return NtGdiCreateMetaFile ( lpszFile );
 }
 
 
@@ -94,7 +94,7 @@ CreateScalableFontResourceW(
 	LPCWSTR		lpszCurrentPath
 	)
 {
-  return W32kCreateScalableFontResource ( fdwHidden,
+  return NtGdiCreateScalableFontResource ( fdwHidden,
 					  lpszFontRes,
 					  lpszFontFile,
 					  lpszCurrentPath );
@@ -115,8 +115,8 @@ DeviceCapabilitiesExW(
 	)
 {
 #if 0
-  /* FIXME no W32kDeviceCapabilities???? */
-  return W32kDeviceCapabilities ( pDevice,
+  /* FIXME no NtGdiDeviceCapabilities???? */
+  return NtGdiDeviceCapabilities ( pDevice,
 				  pPort,
 				  fwCapability,
 				  pOutput,
@@ -142,7 +142,7 @@ EnumFontFamiliesExW(
 	)
 {
 #if 0
-  return W32kEnumFontFamiliesEx ( hdc, lpLogFont, lpEnumFontFamProc, lParam, dwFlags );
+  return NtGdiEnumFontFamiliesEx ( hdc, lpLogFont, lpEnumFontFamProc, lParam, dwFlags );
 #else
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return 0;
@@ -163,7 +163,7 @@ EnumFontFamiliesW(
 	)
 {
 #if 0
-  return W32kEnumFontFamilies ( hdc, lpszFamily, lpEnumFontFamProc, lParam );
+  return NtGdiEnumFontFamilies ( hdc, lpszFamily, lpEnumFontFamProc, lParam );
 #else
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return 0;
@@ -184,7 +184,7 @@ EnumFontsW(
 	)
 {
 #if 0
-  return W32kEnumFonts ( hDC, lpFaceName, FontFunc, lParam );
+  return NtGdiEnumFonts ( hDC, lpFaceName, FontFunc, lParam );
 #else
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return 0;
@@ -204,7 +204,7 @@ GetCharWidthW (
 	LPINT	lpBuffer
 	)
 {
-  return W32kGetCharWidth ( hdc, iFirstChar, iLastChar, lpBuffer );
+  return NtGdiGetCharWidth ( hdc, iFirstChar, iLastChar, lpBuffer );
 }
 
 
@@ -220,7 +220,7 @@ GetCharWidth32W(
 	LPINT	lpBuffer
 	)
 {
-  return W32kGetCharWidth32 ( hdc, iFirstChar, iLastChar, lpBuffer );
+  return NtGdiGetCharWidth32 ( hdc, iFirstChar, iLastChar, lpBuffer );
 }
 
 
@@ -236,7 +236,7 @@ GetCharWidthFloatW(
 	PFLOAT	pxBuffer
 	)
 {
-  return W32kGetCharWidthFloat ( hdc, iFirstChar, iLastChar, pxBuffer );
+  return NtGdiGetCharWidthFloat ( hdc, iFirstChar, iLastChar, pxBuffer );
 }
 
 
@@ -252,7 +252,7 @@ GetCharABCWidthsW(
 	LPABC	lpabc
 	)
 {
-  return W32kGetCharABCWidths ( hdc, uFirstChar, uLastChar, lpabc );
+  return NtGdiGetCharABCWidths ( hdc, uFirstChar, uLastChar, lpabc );
 }
 
 
@@ -268,7 +268,7 @@ GetCharABCWidthsFloatW(
 	LPABCFLOAT	lpABCF
 	)
 {
-  return W32kGetCharABCWidthsFloat ( hdc, iFirstChar, iLastChar, lpABCF );
+  return NtGdiGetCharABCWidthsFloat ( hdc, iFirstChar, iLastChar, lpABCF );
 }
 
 
@@ -287,7 +287,7 @@ GetGlyphOutlineW(
 	CONST MAT2	*lpmat2
 	)
 {
-  return W32kGetGlyphOutline ( hdc, uChar, uFormat, lpgm, cbBuffer, lpvBuffer, (CONST LPMAT2)lpmat2 );
+  return NtGdiGetGlyphOutline ( hdc, uChar, uFormat, lpgm, cbBuffer, lpvBuffer, (CONST LPMAT2)lpmat2 );
 }
 
 
@@ -300,7 +300,7 @@ GetMetaFileW(
 	LPCWSTR	lpszMetaFile
 	)
 {
-  return W32kGetMetaFile ( lpszMetaFile );
+  return NtGdiGetMetaFile ( lpszMetaFile );
 }
 
 
@@ -335,7 +335,7 @@ GetTextExtentExPointW(
 	LPSIZE		lpSize
 	)
 {
-  return W32kGetTextExtentExPoint (
+  return NtGdiGetTextExtentExPoint (
     hdc, lpszStr, cchString, nMaxExtent, lpnFit, alpDx, lpSize );
 }
 
@@ -369,7 +369,7 @@ ResetDCW(
 	CONST DEVMODEW	*lpInitData
 	)
 {
-  return W32kResetDC ( hdc, lpInitData );
+  return NtGdiResetDC ( hdc, lpInitData );
 }
 
 
@@ -382,7 +382,7 @@ RemoveFontResourceW(
 	LPCWSTR	lpFileName
 	)
 {
-  return W32kRemoveFontResource ( lpFileName );
+  return NtGdiRemoveFontResource ( lpFileName );
 }
 
 
@@ -396,7 +396,7 @@ CopyEnhMetaFileW(
 	LPCWSTR		lpszFile
 	)
 {
-  return W32kCopyEnhMetaFile ( hemfSrc, lpszFile );
+  return NtGdiCopyEnhMetaFile ( hemfSrc, lpszFile );
 }
 
 
@@ -412,7 +412,7 @@ CreateEnhMetaFileW(
 	LPCWSTR		lpDescription
 	)
 {
-  return W32kCreateEnhMetaFile ( hdc, lpFileName, (CONST LPRECT)lpRect, lpDescription );
+  return NtGdiCreateEnhMetaFile ( hdc, lpFileName, (CONST LPRECT)lpRect, lpDescription );
 }
 
 
@@ -425,7 +425,7 @@ GetEnhMetaFileW(
 	LPCWSTR	lpszMetaFile
 	)
 {
-  return W32kGetEnhMetaFile ( lpszMetaFile );
+  return NtGdiGetEnhMetaFile ( lpszMetaFile );
 }
 
 
@@ -440,7 +440,7 @@ GetEnhMetaFileDescriptionW(
 	LPWSTR		lpszDescription
 	)
 {
-  return W32kGetEnhMetaFileDescription ( hemf, cchBuffer, lpszDescription );
+  return NtGdiGetEnhMetaFileDescription ( hemf, cchBuffer, lpszDescription );
 }
 
 
@@ -454,7 +454,7 @@ StartDocW(
 	CONST DOCINFOW	*a1
 	)
 {
-	return W32kStartDoc ( hdc, (CONST PDOCINFOW)a1 );
+	return NtGdiStartDoc ( hdc, (CONST PDOCINFOW)a1 );
 }
 
 
@@ -469,7 +469,7 @@ GetObjectW(
 	LPVOID		a2
 	)
 {
-	return W32kGetObject ( a0, a1, a2 );
+	return NtGdiGetObject ( a0, a1, a2 );
 }
 
 
@@ -593,9 +593,9 @@ EnumICMProfilesW(
 	)
 {
   /*
-   * FIXME - call W32kEnumICMProfiles with NULL for lpstrBuffer
+   * FIXME - call NtGdiEnumICMProfiles with NULL for lpstrBuffer
    * to find out how big a buffer we need. Then allocate that buffer
-   * and call W32kEnumICMProfiles again to have the buffer filled.
+   * and call NtGdiEnumICMProfiles again to have the buffer filled.
    *
    * Finally, step through the buffer ( MULTI-SZ recommended for format ),
    * and call the user's callback function until we run out of strings or

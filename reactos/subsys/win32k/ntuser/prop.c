@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: prop.c,v 1.4 2003/08/11 19:05:27 gdalsnes Exp $
+/* $Id: prop.c,v 1.5 2003/08/19 11:48:49 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -47,7 +47,7 @@
 /* FUNCTIONS *****************************************************************/
 
 PPROPERTY FASTCALL
-W32kGetProp(PWINDOW_OBJECT WindowObject, ATOM Atom)
+IntGetProp(PWINDOW_OBJECT WindowObject, ATOM Atom)
 {
   PLIST_ENTRY ListEntry;
   PPROPERTY Property;
@@ -83,22 +83,22 @@ NtUserRemoveProp(HWND hWnd, ATOM Atom)
   PPROPERTY Prop;
   HANDLE Data;
 
-  if (!(WindowObject = W32kGetWindowObject(hWnd)))
+  if (!(WindowObject = IntGetWindowObject(hWnd)))
   {
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
     return NULL;
   }
 
-  Prop = W32kGetProp(WindowObject, Atom);
+  Prop = IntGetProp(WindowObject, Atom);
   if (Prop == NULL)
     {
-      W32kReleaseWindowObject(WindowObject);
+      IntReleaseWindowObject(WindowObject);
       return(NULL);
     }
   Data = Prop->Data;
   RemoveEntryList(&Prop->PropListEntry);
   ExFreePool(Prop);
-  W32kReleaseWindowObject(WindowObject);
+  IntReleaseWindowObject(WindowObject);
   return(Data);
 }
 
@@ -109,32 +109,32 @@ NtUserGetProp(HWND hWnd, ATOM Atom)
   PPROPERTY Prop;
   HANDLE Data = NULL;
 
-  W32kAcquireWinLockShared();
+  IntAcquireWinLockShared();
 
-  if (!(WindowObject = W32kGetWindowObject(hWnd)))
+  if (!(WindowObject = IntGetWindowObject(hWnd)))
   {
-    W32kReleaseWinLock();
+    IntReleaseWinLock();
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
     return FALSE;
   }
 
-  Prop = W32kGetProp(WindowObject, Atom);
+  Prop = IntGetProp(WindowObject, Atom);
   if (Prop != NULL)
   {
     Data = Prop->Data;
   }
   
-  W32kReleaseWinLock();
+  IntReleaseWinLock();
 
   return(Data);
 }
 
 BOOL FASTCALL
-W32kSetProp(PWINDOW_OBJECT Wnd, ATOM Atom, HANDLE Data)
+IntSetProp(PWINDOW_OBJECT Wnd, ATOM Atom, HANDLE Data)
 {
   PPROPERTY Prop;
 
-  Prop = W32kGetProp(Wnd, Atom);
+  Prop = IntGetProp(Wnd, Atom);
 
   if (Prop == NULL)
   {
@@ -155,18 +155,18 @@ NtUserSetProp(HWND hWnd, ATOM Atom, HANDLE Data)
   PWINDOW_OBJECT Wnd;
   BOOL ret;
 
-  W32kAcquireWinLockExclusive();
+  IntAcquireWinLockExclusive();
 
-  if (!(Wnd = W32kGetWindowObject(hWnd)))
+  if (!(Wnd = IntGetWindowObject(hWnd)))
   {
-    W32kReleaseWinLock();
+    IntReleaseWinLock();
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
     return FALSE;
   }
 
-  ret = W32kSetProp(Wnd, Atom, Data);
+  ret = IntSetProp(Wnd, Atom, Data);
 
-  W32kReleaseWinLock();
+  IntReleaseWinLock();
   return ret;
 }
 

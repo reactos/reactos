@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: coord.c,v 1.15 2003/08/17 17:32:58 royce Exp $
+/* $Id: coord.c,v 1.16 2003/08/19 11:48:50 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -38,7 +38,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
-BOOL STDCALL W32kCombineTransform(LPXFORM  UnsafeXFormResult,
+BOOL STDCALL NtGdiCombineTransform(LPXFORM  UnsafeXFormResult,
                            CONST LPXFORM  Unsafexform1,
                            CONST LPXFORM  Unsafexform2)
 {
@@ -90,7 +90,7 @@ FLOAT x, y;
  * \return  TRUE 	if success.
 */
 BOOL STDCALL
-W32kDPtoLP(HDC  hDC,
+NtGdiDPtoLP(HDC  hDC,
 	   LPPOINT  UnsafePoints,
 	   int  Count)
 {
@@ -127,7 +127,7 @@ IntGetGraphicsMode ( PDC dc )
 
 int
 STDCALL
-W32kGetGraphicsMode ( HDC hDC )
+NtGdiGetGraphicsMode ( HDC hDC )
 {
   PDC dc = DC_HandleToPtr ( hDC );
   int GraphicsMode = 0; // default to failure
@@ -143,7 +143,7 @@ W32kGetGraphicsMode ( HDC hDC )
 
 BOOL
 STDCALL
-W32kGetWorldTransform(HDC  hDC,
+NtGdiGetWorldTransform(HDC  hDC,
                       LPXFORM  XForm)
 {
   PDC  dc;
@@ -194,7 +194,7 @@ IntLPtoDP ( PDC dc, LPPOINT Points, INT Count )
  * \return  TRUE 	if success.
 */
 BOOL STDCALL
-W32kLPtoDP ( HDC hDC, LPPOINT UnsafePoints, INT Count )
+NtGdiLPtoDP ( HDC hDC, LPPOINT UnsafePoints, INT Count )
 {
   PDC dc = DC_HandleToPtr ( hDC );
   LPPOINT Points;
@@ -221,7 +221,7 @@ W32kLPtoDP ( HDC hDC, LPPOINT UnsafePoints, INT Count )
 
 BOOL
 STDCALL
-W32kModifyWorldTransform(HDC  hDC,
+NtGdiModifyWorldTransform(HDC  hDC,
                                CONST LPXFORM  UnsafeXForm,
                                DWORD  Mode)
 {
@@ -260,11 +260,11 @@ W32kModifyWorldTransform(HDC  hDC,
       break;
 
     case MWT_LEFTMULTIPLY:
-      W32kCombineTransform(&dc->w.xformWorld2Wnd, XForm, &dc->w.xformWorld2Wnd );
+      NtGdiCombineTransform(&dc->w.xformWorld2Wnd, XForm, &dc->w.xformWorld2Wnd );
       break;
 
     case MWT_RIGHTMULTIPLY:
-      W32kCombineTransform(&dc->w.xformWorld2Wnd, &dc->w.xformWorld2Wnd, XForm);
+      NtGdiCombineTransform(&dc->w.xformWorld2Wnd, &dc->w.xformWorld2Wnd, XForm);
       break;
 
     default:
@@ -278,7 +278,7 @@ W32kModifyWorldTransform(HDC  hDC,
 
 BOOL
 STDCALL
-W32kOffsetViewportOrgEx(HDC hDC,
+NtGdiOffsetViewportOrgEx(HDC hDC,
                         int XOffset,
                         int YOffset,
                         LPPOINT UnsafePoint)
@@ -317,7 +317,7 @@ W32kOffsetViewportOrgEx(HDC hDC,
 
 BOOL
 STDCALL
-W32kOffsetWindowOrgEx(HDC  hDC,
+NtGdiOffsetWindowOrgEx(HDC  hDC,
                       int  XOffset,
                       int  YOffset,
                       LPPOINT  Point)
@@ -346,7 +346,7 @@ W32kOffsetWindowOrgEx(HDC  hDC,
 
 BOOL
 STDCALL
-W32kScaleViewportExtEx(HDC  hDC,
+NtGdiScaleViewportExtEx(HDC  hDC,
                              int  Xnum,
                              int  Xdenom,
                              int  Ynum,
@@ -358,7 +358,7 @@ W32kScaleViewportExtEx(HDC  hDC,
 
 BOOL
 STDCALL
-W32kScaleWindowExtEx(HDC  hDC,
+NtGdiScaleWindowExtEx(HDC  hDC,
                            int  Xnum,
                            int  Xdenom,
                            int  Ynum,
@@ -370,7 +370,7 @@ W32kScaleWindowExtEx(HDC  hDC,
 
 int
 STDCALL
-W32kSetGraphicsMode(HDC  hDC,
+NtGdiSetGraphicsMode(HDC  hDC,
                     int  Mode)
 {
   INT ret;
@@ -402,7 +402,7 @@ W32kSetGraphicsMode(HDC  hDC,
 
 int
 STDCALL
-W32kSetMapMode(HDC  hDC,
+NtGdiSetMapMode(HDC  hDC,
                int  MapMode)
 {
   int PrevMapMode;
@@ -422,7 +422,7 @@ W32kSetMapMode(HDC  hDC,
 
 BOOL
 STDCALL
-W32kSetViewportExtEx(HDC  hDC,
+NtGdiSetViewportExtEx(HDC  hDC,
                      int  XExtent,
                      int  YExtent,
                      LPSIZE  Size)
@@ -468,7 +468,7 @@ W32kSetViewportExtEx(HDC  hDC,
 
 BOOL
 STDCALL
-W32kSetViewportOrgEx(HDC  hDC,
+NtGdiSetViewportOrgEx(HDC  hDC,
                      int  X,
                      int  Y,
                      LPPOINT  Point)
@@ -497,7 +497,7 @@ W32kSetViewportOrgEx(HDC  hDC,
 
 BOOL
 STDCALL
-W32kSetWindowExtEx(HDC  hDC,
+NtGdiSetWindowExtEx(HDC  hDC,
                    int  XExtent,
                    int  YExtent,
                    LPSIZE  Size)
@@ -538,7 +538,7 @@ W32kSetWindowExtEx(HDC  hDC,
 
 BOOL
 STDCALL
-W32kSetWindowOrgEx(HDC  hDC,
+NtGdiSetWindowOrgEx(HDC  hDC,
                    int  X,
                    int  Y,
                    LPPOINT  Point)
@@ -567,7 +567,7 @@ W32kSetWindowOrgEx(HDC  hDC,
 
 BOOL
 STDCALL
-W32kSetWorldTransform(HDC  hDC,
+NtGdiSetWorldTransform(HDC  hDC,
                       CONST LPXFORM  XForm)
 {
   PDC  dc;

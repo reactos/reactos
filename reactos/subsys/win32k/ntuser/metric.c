@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: metric.c,v 1.8 2003/07/17 19:31:49 gvg Exp $
+/* $Id: metric.c,v 1.9 2003/08/19 11:48:49 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -132,7 +132,7 @@ NtUserGetSystemMetrics(ULONG Index)
       return(27);
     case SM_CXSCREEN:
     case SM_CYSCREEN:
-      DesktopWindow = W32kGetWindowObject(W32kGetDesktopWindow());
+      DesktopWindow = IntGetWindowObject(IntGetDesktopWindow());
       if (NULL != DesktopWindow)
 	{
 	  Width = DesktopWindow->WindowRect.right;
@@ -143,7 +143,7 @@ NtUserGetSystemMetrics(ULONG Index)
 	  Width = 640;
 	  Height = 480;
 	}
-      W32kReleaseWindowObject(DesktopWindow);
+      IntReleaseWindowObject(DesktopWindow);
       return SM_CXSCREEN == Index ? Width : Height;
     case SM_CXSIZE:
     case SM_CYSIZE:

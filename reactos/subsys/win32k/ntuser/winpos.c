@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.24 2003/08/15 10:53:16 rcampbell Exp $
+/* $Id: winpos.c,v 1.25 2003/08/19 11:48:50 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -24,7 +24,7 @@
  * FILE:             subsys/win32k/ntuser/window.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  * REVISION HISTORY:
- *       06-06-2001  CSH  Created
+ *       06-06-2001  CSH  NtGdid
  */
 /* INCLUDES ******************************************************************/
 
@@ -83,7 +83,7 @@ NtUserGetClientOrigin(HWND hWnd, LPPOINT Point)
 {
   PWINDOW_OBJECT WindowObject;
 
-  WindowObject = W32kGetWindowObject(hWnd);
+  WindowObject = IntGetWindowObject(hWnd);
   if (WindowObject == NULL)
     {
       Point->x = Point->y = 0;
@@ -109,7 +109,7 @@ WinPosFindIconPos(HWND hWnd, POINT Pos)
 }
 
 HWND STATIC FASTCALL
-WinPosCreateIconTitle(PWINDOW_OBJECT WindowObject)
+WinPosNtGdiIconTitle(PWINDOW_OBJECT WindowObject)
 {
   return(NULL);
 }
@@ -117,7 +117,7 @@ WinPosCreateIconTitle(PWINDOW_OBJECT WindowObject)
 BOOL STATIC FASTCALL
 WinPosShowIconTitle(PWINDOW_OBJECT WindowObject, BOOL Show)
 {
-  PINTERNALPOS InternalPos = (PINTERNALPOS)W32kGetProp(WindowObject, AtomInternalPos);
+  PINTERNALPOS InternalPos = (PINTERNALPOS)IntGetProp(WindowObject, AtomInternalPos);
   PWINDOW_OBJECT IconWindow;
   NTSTATUS Status;
 
@@ -127,7 +127,7 @@ WinPosShowIconTitle(PWINDOW_OBJECT WindowObject, BOOL Show)
 
       if (hWnd == NULL)
 	{
-	  hWnd = WinPosCreateIconTitle(WindowObject);
+	  hWnd = WinPosNtGdiIconTitle(WindowObject);
 	}
       if (Show)
 	{
@@ -160,12 +160,12 @@ WinPosShowIconTitle(PWINDOW_OBJECT WindowObject, BOOL Show)
 PINTERNALPOS STATIC STDCALL
 WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT pt, PRECT RestoreRect)
 {
-  PINTERNALPOS InternalPos = (PINTERNALPOS)W32kGetProp(WindowObject, AtomInternalPos);
+  PINTERNALPOS InternalPos = (PINTERNALPOS)IntGetProp(WindowObject, AtomInternalPos);
   if (InternalPos == NULL)
     {
       InternalPos = 
 	ExAllocatePool(NonPagedPool, sizeof(INTERNALPOS));
-      W32kSetProp(WindowObject, AtomInternalPos, InternalPos);
+      IntSetProp(WindowObject, AtomInternalPos, InternalPos);
       InternalPos->IconTitle = 0;
       InternalPos->NormalRect = WindowObject->WindowRect;
       InternalPos->IconPos.x = InternalPos->MaxPos.x = 0xFFFFFFFF;
@@ -224,7 +224,7 @@ WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos)
 	    WindowObject->Style |= WS_MINIMIZE;
 	    InternalPos->IconPos = WinPosFindIconPos(WindowObject,
 						     InternalPos->IconPos);
-	    W32kSetRect(NewPos, InternalPos->IconPos.x, InternalPos->IconPos.y,
+	    NtGdiSetRect(NewPos, InternalPos->IconPos.x, InternalPos->IconPos.y,
 			NtUserGetSystemMetrics(SM_CXICON),
 			NtUserGetSystemMetrics(SM_CYICON));
 	    SwpFlags |= SWP_NOCOPYBITS;
@@ -241,7 +241,7 @@ WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos)
 		WindowObject->Style &= ~WS_MINIMIZE;
 	      }
 	    WindowObject->Style |= WS_MINIMIZE;
-	    W32kSetRect(NewPos, InternalPos->MaxPos.x, InternalPos->MaxPos.y,
+	    NtGdiSetRect(NewPos, InternalPos->MaxPos.x, InternalPos->MaxPos.y,
 			Size.x, Size.y);
 	    break;
 	  }
@@ -257,7 +257,7 @@ WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos)
 		    WinPosGetMinMaxInfo(WindowObject, &Size,
 					&InternalPos->MaxPos, NULL, NULL);
 		    WindowObject->Style |= WS_MAXIMIZE;
-		    W32kSetRect(NewPos, InternalPos->MaxPos.x,
+		    NtGdiSetRect(NewPos, InternalPos->MaxPos.x,
 				InternalPos->MaxPos.y, Size.x, Size.y);
 		    break;
 		  }
@@ -325,7 +325,7 @@ WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
   MinMax.ptMaxSize.x += 2 * XInc;
   MinMax.ptMaxSize.y += 2 * YInc;
 
-  Pos = (PINTERNALPOS)W32kGetProp(Window, AtomInternalPos);
+  Pos = (PINTERNALPOS)IntGetProp(Window, AtomInternalPos);
   if (Pos != NULL)
     {
       MinMax.ptMaxPosition = Pos->MaxPos;
@@ -336,7 +336,7 @@ WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
       MinMax.ptMaxPosition.y -= YInc;
     }
 
-  W32kSendMessage(Window->Self, WM_GETMINMAXINFO, 0, (LPARAM)&MinMax, TRUE);
+  IntSendMessage(Window->Self, WM_GETMINMAXINFO, 0, (LPARAM)&MinMax, TRUE);
 
   MinMax.ptMaxTrackSize.x = max(MinMax.ptMaxTrackSize.x,
 				MinMax.ptMinTrackSize.x);
@@ -356,7 +356,7 @@ WinPosChangeActiveWindow(HWND hWnd, BOOL MouseMsg)
 {
   PWINDOW_OBJECT WindowObject;
 
-  WindowObject = W32kGetWindowObject(hWnd);
+  WindowObject = IntGetWindowObject(hWnd);
   if (WindowObject == NULL)
     {
       return FALSE;
@@ -366,9 +366,9 @@ WinPosChangeActiveWindow(HWND hWnd, BOOL MouseMsg)
     WM_ACTIVATE,
 	  MAKELONG(MouseMsg ? WA_CLICKACTIVE : WA_CLICKACTIVE,
       (WindowObject->Style & WS_MINIMIZE) ? 1 : 0),
-      (LPARAM)W32kGetDesktopWindow());  /* FIXME: Previous active window */
+      (LPARAM)IntGetDesktopWindow());  /* FIXME: Previous active window */
 
-  W32kReleaseWindowObject(WindowObject);
+  IntReleaseWindowObject(WindowObject);
 
   return TRUE;
 }
@@ -388,7 +388,7 @@ WinPosDoWinPosChanging(PWINDOW_OBJECT WindowObject,
 {
   if (!(WinPos->flags & SWP_NOSENDCHANGING))
     {
-      W32kSendWINDOWPOSCHANGINGMessage(WindowObject->Self, WinPos);
+      IntSendWINDOWPOSCHANGINGMessage(WindowObject->Self, WinPos);
     }
   
   *WindowRect = WindowObject->WindowRect;
@@ -458,7 +458,7 @@ WinPosDoSimpleFrameChanged( PWINDOW_OBJECT wndPtr, RECT* pOldClientRect, WORD sw
 	if( wndPtr->ClientRect.bottom > pOldClientRect->bottom ) /* bottom edge */
 	{
 	    if( i )
-		hrgn = W32kCreateRectRgnIndirect( &rect );
+		hrgn = NtGdiCreateRectRgnIndirect( &rect );
 	    rect.left = 0;
 	    rect.right = wndPtr->ClientRect.right - wndPtr->ClientRect.left;
 	    rect.bottom = wndPtr->ClientRect.bottom - wndPtr->ClientRect.top;
@@ -468,16 +468,16 @@ WinPosDoSimpleFrameChanged( PWINDOW_OBJECT wndPtr, RECT* pOldClientRect, WORD sw
 		rect.top = 0;
 	    if( i++ ) 
 	      {
-		HRGN hRectRgn = W32kCreateRectRgnIndirect(&rect);
-	        W32kCombineRgn(hrgn, hrgn, hRectRgn, RGN_OR);
-		W32kDeleteObject(hRectRgn);
+		HRGN hRectRgn = NtGdiCreateRectRgnIndirect(&rect);
+	        NtGdiCombineRgn(hrgn, hrgn, hRectRgn, RGN_OR);
+		NtGdiDeleteObject(hRectRgn);
 	      }
 	}
 
 	if( i == 0 && (uFlags & SWP_EX_NOCOPY) ) /* force redraw anyway */
 	{
 	    rect = wndPtr->WindowRect;
-	    W32kOffsetRect( &rect, wndPtr->WindowRect.left - wndPtr->ClientRect.left,
+	    NtGdiOffsetRect( &rect, wndPtr->WindowRect.left - wndPtr->ClientRect.left,
 			    wndPtr->WindowRect.top - wndPtr->ClientRect.top );
 	    i++;
 	}
@@ -495,7 +495,7 @@ redraw:
     }
 
     if( hrgn > (HRGN)1 )
-	W32kDeleteObject( hrgn );
+	NtGdiDeleteObject( hrgn );
 }
 
 /***********************************************************************
@@ -520,11 +520,11 @@ static UINT WinPosCopyValidBits( PWINDOW_OBJECT Wnd, HRGN* pVisRgn,
      uFlags |= SWP_EX_NOCOPY; /* whole window is invalid, nothing to copy */
 
  newVisRgn = DceGetVisRgn( Wnd->Self, DCX_WINDOW | DCX_CLIPSIBLINGS, 0, 0);
- W32kOffsetRgn(newVisRgn, -Wnd->WindowRect.left, -Wnd->WindowRect.top);
- dirtyRgn = W32kCreateRectRgn( 0, 0, 0, 0 );
+ NtGdiOffsetRgn(newVisRgn, -Wnd->WindowRect.left, -Wnd->WindowRect.top);
+ dirtyRgn = NtGdiCreateRectRgn( 0, 0, 0, 0 );
 
  if( !(uFlags & SWP_EX_NOCOPY) ) /* make sure dst region covers only valid bits */
-     my = W32kCombineRgn( dirtyRgn, newVisRgn, *pVisRgn, RGN_AND );
+     my = NtGdiCombineRgn( dirtyRgn, newVisRgn, *pVisRgn, RGN_AND );
 
  if( (my == NULLREGION) || (uFlags & SWP_EX_NOCOPY) )
  {
@@ -533,10 +533,10 @@ nocopy:
      /* set dirtyRgn to the sum of old and new visible regions 
       * in parent client coordinates */
 
-     W32kOffsetRgn( newVisRgn, Wnd->WindowRect.left, Wnd->WindowRect.top );
-     W32kOffsetRgn( *pVisRgn, lpOldWndRect->left, lpOldWndRect->top );
+     NtGdiOffsetRgn( newVisRgn, Wnd->WindowRect.left, Wnd->WindowRect.top );
+     NtGdiOffsetRgn( *pVisRgn, lpOldWndRect->left, lpOldWndRect->top );
 
-     W32kCombineRgn(*pVisRgn, *pVisRgn, newVisRgn, RGN_OR );
+     NtGdiCombineRgn(*pVisRgn, *pVisRgn, newVisRgn, RGN_OR );
  }
  else			/* copy valid bits to a new location */
  {
@@ -546,7 +546,7 @@ nocopy:
      /* subtract already invalid region inside Wnd from the dst region */
 
      if( Wnd->UpdateRegion )
-         if( W32kCombineRgn( hrgnValid, hrgnValid, Wnd->UpdateRegion, RGN_DIFF) == NULLREGION )
+         if( NtGdiCombineRgn( hrgnValid, hrgnValid, Wnd->UpdateRegion, RGN_DIFF) == NULLREGION )
 	     goto nocopy;
 
      /* check if entire window can be copied */
@@ -592,8 +592,8 @@ nocopy:
 
 	REGION_CropRgn( hrgnValid, hrgnValid, &r, 
 			(uFlags & SWP_EX_PAINTSELF) ? NULL : (POINT*)&(Wnd->WindowRect));
-	W32kGetRgnBox( hrgnValid, &r );
-	if( W32kIsEmptyRect( &r ) )
+	NtGdiGetRgnBox( hrgnValid, &r );
+	if( NtGdiIsEmptyRect( &r ) )
 	    goto nocopy;
 	r = *lpOldClientRect;
      }
@@ -612,7 +612,7 @@ nocopy:
          {
              dx = Wnd->WindowRect.left - lpOldWndRect->left;
              dy = Wnd->WindowRect.top -  lpOldWndRect->top;
-             W32kOffsetRgn( hrgnValid, Wnd->WindowRect.left, Wnd->WindowRect.top );
+             NtGdiOffsetRgn( hrgnValid, Wnd->WindowRect.left, Wnd->WindowRect.top );
          }
 	r = *lpOldWndRect;
      }
@@ -620,15 +620,15 @@ nocopy:
      if( !(uFlags & SWP_EX_PAINTSELF) )
      {
         /* Move remaining regions to parent coordinates */
-	W32kOffsetRgn( newVisRgn, Wnd->WindowRect.left, Wnd->WindowRect.top );
-	W32kOffsetRgn( *pVisRgn,  lpOldWndRect->left, lpOldWndRect->top );
+	NtGdiOffsetRgn( newVisRgn, Wnd->WindowRect.left, Wnd->WindowRect.top );
+	NtGdiOffsetRgn( *pVisRgn,  lpOldWndRect->left, lpOldWndRect->top );
      }
      else
-	W32kOffsetRect( &r, -lpOldWndRect->left, -lpOldWndRect->top );
+	NtGdiOffsetRect( &r, -lpOldWndRect->left, -lpOldWndRect->top );
 
      /* Compute combined dirty region (old + new - valid) */
-     W32kCombineRgn( *pVisRgn, *pVisRgn, newVisRgn, RGN_OR);
-     W32kCombineRgn( *pVisRgn, *pVisRgn, hrgnValid, RGN_DIFF);
+     NtGdiCombineRgn( *pVisRgn, *pVisRgn, newVisRgn, RGN_OR);
+     NtGdiCombineRgn( *pVisRgn, *pVisRgn, hrgnValid, RGN_DIFF);
 
      /* Blt valid bits, r is the rect to copy  */
 
@@ -658,9 +658,9 @@ nocopy:
          if( oh > nh ) r.bottom = r.top  + nh;
          if( ow < nw ) r.right = r.left  + nw;
 
-         if( W32kIntersectRect( &r, &r, &rClip ) )
+         if( NtGdiIntersectRect( &r, &r, &rClip ) )
          {
-	        W32kBitBlt(hDC, dx + r.left, dy + r.top, r.right - r.left, r.bottom - r.top, hDC, r.left, r.top, SRCCOPY);
+	        NtGdiBitBlt(hDC, dx + r.left, dy + r.top, r.right - r.left, r.bottom - r.top, hDC, r.left, r.top, SRCCOPY);
 
                  /* When you copy the bits without repainting, parent doesn't
                     get validated appropriately. Therefore, we have to validate
@@ -669,7 +669,7 @@ nocopy:
 
                 if (Wnd->Parent->UpdateRegion != 0 && !(Wnd->Parent->Style & WS_CLIPCHILDREN))
                 {
-                  W32kOffsetRect(&r, dx, dy);
+                  NtGdiOffsetRect(&r, dx, dy);
                   NtUserValidateRect(Wnd->Parent->Self, &r);
                 }
 	 }
@@ -680,8 +680,8 @@ nocopy:
 
  /* *pVisRgn now points to the invalidated region */
 
- W32kDeleteObject(newVisRgn);
- W32kDeleteObject(dirtyRgn);
+ NtGdiDeleteObject(newVisRgn);
+ NtGdiDeleteObject(dirtyRgn);
  return uFlags;
 }
 
@@ -798,7 +798,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 	{
 	  VisRgn = DceGetVisRgn(Wnd, DCX_WINDOW, 0, 0);
 	}
-      W32kOffsetRgn(VisRgn, -Window->WindowRect.left, -Window->WindowRect.top);
+      NtGdiOffsetRgn(VisRgn, -Window->WindowRect.left, -Window->WindowRect.top);
     }
 
   WvrFlags = WinPosDoNCCALCSize(Window, &WinPos, &NewWindowRect,
@@ -829,7 +829,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 	{
 	  if (VisRgn > (HRGN)1)
 	    {
-	      W32kOffsetRgn(VisRgn, OldWindowRect.left, OldWindowRect.top);	     
+	      NtGdiOffsetRgn(VisRgn, OldWindowRect.left, OldWindowRect.top);	     
 	    }
 	  else
 	    {
@@ -854,7 +854,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 		}
 	      if (VisRgn != 0)
 		{
-		  W32kDeleteObject(VisRgn);
+		  NtGdiDeleteObject(VisRgn);
 		  VisRgn = 0;
 		}
 	    }
@@ -890,7 +890,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 	    }
 	  /* FIXME: Redraw the window parent. */
 	}
-      W32kDeleteObject(VisRgn);
+      NtGdiDeleteObject(VisRgn);
     }
 
   if (!(flags & SWP_NOACTIVATE))
@@ -899,7 +899,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
     }
 
   /* FIXME: Check some conditions before doing this. */
-  W32kSendWINDOWPOSCHANGEDMessage(Window->Self, &WinPos);
+  IntSendWINDOWPOSCHANGEDMessage(Window->Self, &WinPos);
 
   ObmDereferenceObject(Window);
   return(TRUE);
@@ -909,7 +909,7 @@ LRESULT STDCALL
 WinPosGetNonClientSize(HWND Wnd, RECT* WindowRect, RECT* ClientRect)
 {
   *ClientRect = *WindowRect;
-  return(W32kSendNCCALCSIZEMessage(Wnd, FALSE, ClientRect, NULL));
+  return(IntSendNCCALCSIZEMessage(Wnd, FALSE, ClientRect, NULL));
 }
 
 BOOLEAN FASTCALL
@@ -1019,7 +1019,7 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
     }
 
   if (Window->Style & WS_CHILD &&
-      !W32kIsWindowVisible(Window->Parent->Self) &&
+      !IntIsWindowVisible(Window->Parent->Self) &&
       (Swp & (SWP_NOSIZE | SWP_NOMOVE)) == (SWP_NOSIZE | SWP_NOMOVE))
     {
       if (Cmd == SW_HIDE)
@@ -1045,15 +1045,15 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
 	  if (Cmd == SW_HIDE)
 	    {
 	      /* Hide the window. */
-	      if (Wnd == W32kGetActiveWindow())
+	      if (Wnd == IntGetActiveWindow())
 		{
 		  WinPosActivateOtherWindow(Window);
 		}
 	      /* Revert focus to parent. */
-	      if (Wnd == W32kGetFocusWindow() ||
-		  W32kIsChildWindow(Wnd, W32kGetFocusWindow()))
+	      if (Wnd == IntGetFocusWindow() ||
+		  IntIsChildWindow(Wnd, IntGetFocusWindow()))
 		{
-		  W32kSetFocusWindow(Window->Parent->Self);
+		  IntSetFocusWindow(Window->Parent->Self);
 		}
 	    }
 	}
@@ -1173,11 +1173,11 @@ WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, POINT WinPoint,
     }
 
   /* Translate the point to the space of the scope window. */
-  DesktopWindowHandle = W32kGetDesktopWindow();
-  DesktopWindow = W32kGetWindowObject(DesktopWindowHandle);
+  DesktopWindowHandle = IntGetDesktopWindow();
+  DesktopWindow = IntGetWindowObject(DesktopWindowHandle);
   Point.x += ScopeWin->ClientRect.left - DesktopWindow->ClientRect.left;
   Point.y += ScopeWin->ClientRect.top - DesktopWindow->ClientRect.top;
-  W32kReleaseWindowObject(DesktopWindow);
+  IntReleaseWindowObject(DesktopWindow);
 
   HitTest = WinPosSearchChildren(ScopeWin, Point, Window);
   if (HitTest != 0)
@@ -1191,7 +1191,7 @@ WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, POINT WinPoint,
     }
   if ((*Window)->MessageQueue == PsGetWin32Thread()->MessageQueue)
     {
-      HitTest = W32kSendMessage((*Window)->Self, WM_NCHITTEST, 0,
+      HitTest = IntSendMessage((*Window)->Self, WM_NCHITTEST, 0,
 				MAKELONG(Point.x, Point.y), FALSE);
       /* FIXME: Check for HTTRANSPARENT here. */
     }
@@ -1209,7 +1209,7 @@ WinPosSetActiveWindow(PWINDOW_OBJECT Window, BOOL Mouse, BOOL ChangeFocus)
   PUSER_MESSAGE_QUEUE ActiveQueue;
   HWND PrevActive;
 
-  ActiveQueue = W32kGetFocusMessageQueue();
+  ActiveQueue = IntGetFocusMessageQueue();
   if (ActiveQueue != NULL)
     {
       PrevActive = ActiveQueue->ActiveWindow;
@@ -1219,26 +1219,26 @@ WinPosSetActiveWindow(PWINDOW_OBJECT Window, BOOL Mouse, BOOL ChangeFocus)
       PrevActive = NULL;
     }
 
-  if (Window->Self == W32kGetActiveDesktop() || Window->Self == PrevActive)
+  if (Window->Self == IntGetActiveDesktop() || Window->Self == PrevActive)
     {
       return(FALSE);
     }
   if (PrevActive != NULL)
     {
-      PWINDOW_OBJECT PrevActiveWindow = W32kGetWindowObject(PrevActive);
+      PWINDOW_OBJECT PrevActiveWindow = IntGetWindowObject(PrevActive);
       WORD Iconised = HIWORD(PrevActiveWindow->Style & WS_MINIMIZE);
-      if (!W32kSendMessage(PrevActive, WM_NCACTIVATE, FALSE, 0, TRUE))
+      if (!IntSendMessage(PrevActive, WM_NCACTIVATE, FALSE, 0, TRUE))
 	{
 	  /* FIXME: Check if the new window is system modal. */
 	  return(FALSE);
 	}
-      W32kSendMessage(PrevActive, 
+      IntSendMessage(PrevActive, 
 		      WM_ACTIVATE, 
 		      MAKEWPARAM(WA_INACTIVE, Iconised), 
 		      (LPARAM)Window->Self,
 		      TRUE);
       /* FIXME: Check if anything changed while processing the message. */
-      W32kReleaseWindowObject(PrevActiveWindow);
+      IntReleaseWindowObject(PrevActiveWindow);
     }
 
   if (Window != NULL)
@@ -1260,7 +1260,7 @@ WinPosSetActiveWindow(PWINDOW_OBJECT Window, BOOL Mouse, BOOL ChangeFocus)
 
   /* FIXME: Send WM_ACTIVATEAPP */
   
-  W32kSetFocusMessageQueue(Window->MessageQueue);
+  IntSetFocusMessageQueue(Window->MessageQueue);
 
   /* FIXME: Send activate messages. */
 
@@ -1276,7 +1276,7 @@ NtUserGetActiveWindow(VOID)
 {
   PUSER_MESSAGE_QUEUE ActiveQueue;
 
-  ActiveQueue = W32kGetFocusMessageQueue();
+  ActiveQueue = IntGetFocusMessageQueue();
   if (ActiveQueue == NULL)
     {
       return(NULL);
@@ -1291,21 +1291,21 @@ NtUserSetActiveWindow(HWND hWnd)
   PUSER_MESSAGE_QUEUE ThreadQueue;
   HWND Prev;
 
-  Window = W32kGetWindowObject(hWnd);
+  Window = IntGetWindowObject(hWnd);
   if (Window == NULL || (Window->Style & (WS_DISABLED | WS_CHILD)))
     {
-      W32kReleaseWindowObject(Window);
+      IntReleaseWindowObject(Window);
       return(0);
     }
   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
   if (Window->MessageQueue != ThreadQueue)
     {
-      W32kReleaseWindowObject(Window);
+      IntReleaseWindowObject(Window);
       return(0);
     }
   Prev = Window->MessageQueue->ActiveWindow;
   WinPosSetActiveWindow(Window, FALSE, FALSE);
-  W32kReleaseWindowObject(Window);
+  IntReleaseWindowObject(Window);
   return(Prev);
 }
 

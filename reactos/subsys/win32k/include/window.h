@@ -102,9 +102,9 @@ typedef struct _WINDOW_OBJECT
 #define WINDOWOBJECT_NEED_INTERNALPAINT   (0x00000010)
 #define WINDOWOBJECT_RESTOREMAX           (0x00000020)
 
-inline BOOL W32kIsDesktopWindow(PWINDOW_OBJECT WindowObject);
+inline BOOL IntIsDesktopWindow(PWINDOW_OBJECT WindowObject);
 
-inline BOOL W32kIsBroadcastHwnd( HWND hwnd );
+inline BOOL IntIsBroadcastHwnd( HWND hwnd );
 
 NTSTATUS FASTCALL
 InitWindowImpl (VOID);
@@ -113,45 +113,45 @@ NTSTATUS FASTCALL
 CleanupWindowImpl (VOID);
 
 VOID FASTCALL
-W32kGetClientRect (PWINDOW_OBJECT WindowObject, PRECT Rect);
+IntGetClientRect (PWINDOW_OBJECT WindowObject, PRECT Rect);
 
 PWINDOW_OBJECT FASTCALL
-W32kGetWindowObject (HWND hWnd);
+IntGetWindowObject (HWND hWnd);
 
 VOID FASTCALL
-W32kReleaseWindowObject (PWINDOW_OBJECT Window);
+IntReleaseWindowObject (PWINDOW_OBJECT Window);
 
 HWND STDCALL
-W32kCreateDesktopWindow (PWINSTATION_OBJECT WindowStation,
+IntCreateDesktopWindow (PWINSTATION_OBJECT WindowStation,
 			PWNDCLASS_OBJECT DesktopClass,
 			ULONG Width, ULONG Height);
 
 HWND FASTCALL
-W32kGetActiveWindow (VOID);
+IntGetActiveWindow (VOID);
 
 BOOL FASTCALL
-W32kIsWindowVisible (HWND Wnd);
+IntIsWindowVisible (HWND Wnd);
 
 BOOL FASTCALL
-W32kIsChildWindow (HWND Parent, HWND Child);
+IntIsChildWindow (HWND Parent, HWND Child);
 
 HWND FASTCALL
-W32kGetDesktopWindow (VOID);
+IntGetDesktopWindow (VOID);
 
 HWND FASTCALL
-W32kGetFocusWindow (VOID);
+IntGetFocusWindow (VOID);
 
 HWND FASTCALL
-W32kSetFocusWindow (HWND hWnd);
+IntSetFocusWindow (HWND hWnd);
 
 BOOL FASTCALL
-W32kSetProp(PWINDOW_OBJECT Wnd, ATOM Atom, HANDLE Data);
+IntSetProp(PWINDOW_OBJECT Wnd, ATOM Atom, HANDLE Data);
 
 PPROPERTY FASTCALL
-W32kGetProp(PWINDOW_OBJECT WindowObject, ATOM Atom);
+IntGetProp(PWINDOW_OBJECT WindowObject, ATOM Atom);
 
 DWORD FASTCALL
-W32kGetWindowThreadProcessId(PWINDOW_OBJECT Wnd, PDWORD pid);
+IOntGetWindowThreadProcessId(PWINDOW_OBJECT Wnd, PDWORD pid);
 
 ULONG
 UserHasDlgFrameStyle(ULONG Style, ULONG ExStyle);
@@ -160,10 +160,10 @@ ULONG
 UserHasThickFrameStyle(ULONG Style, ULONG ExStyle);
 
 PWINDOW_OBJECT FASTCALL
-W32kGetAncestor(PWINDOW_OBJECT Wnd, UINT Type);
+IntGetAncestor(PWINDOW_OBJECT Wnd, UINT Type);
 
 PWINDOW_OBJECT FASTCALL
-W32kGetParent(PWINDOW_OBJECT Wnd);
+IntGetParent(PWINDOW_OBJECT Wnd);
 
 typedef enum _WINLOCK_TYPE
 {
@@ -173,16 +173,16 @@ typedef enum _WINLOCK_TYPE
   Exclusive
 } WINLOCK_TYPE; 
 
-#define ASSERT_WINLOCK(a) assert(W32kVerifyWinLock(a))
+#define ASSERT_WINLOCK(a) assert(IntVerifyWinLock(a))
 
-inline VOID W32kAcquireWinLockShared();
-inline VOID W32kAcquireWinLockExclusive();
-inline VOID W32kReleaseWinLock();
-BOOL FASTCALL W32kVerifyWinLock(WINLOCK_TYPE Type);
-WINLOCK_TYPE FASTCALL W32kSuspendWinLock();
-VOID FASTCALL W32kRestoreWinLock(WINLOCK_TYPE Type);
-inline BOOL W32kInitializeWinLock();
-inline VOID W32kDeleteWinLock();
+inline VOID IntAcquireWinLockShared();
+inline VOID IntAcquireWinLockExclusive();
+inline VOID IntReleaseWinLock();
+BOOL FASTCALL IntVerifyWinLock(WINLOCK_TYPE Type);
+WINLOCK_TYPE FASTCALL IntSuspendWinLock();
+VOID FASTCALL IntRestoreWinLock(WINLOCK_TYPE Type);
+inline BOOL IntInitializeWinLock();
+inline VOID IntDeleteWinLock();
 
 #endif /* __WIN32K_WINDOW_H */
 

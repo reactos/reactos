@@ -3,29 +3,29 @@
 
 HENHMETAFILE
 STDCALL
-W32kCloseEnhMetaFile (
+NtGdiCloseEnhMetaFile (
 	HDC	hDC
 	);
 HMETAFILE
 STDCALL
-W32kCloseMetaFile (
+NtGdiCloseMetaFile (
 	HDC	hDC
 	);
 HENHMETAFILE
 STDCALL
-W32kCopyEnhMetaFile (
+NtGdiCopyEnhMetaFile (
 	HENHMETAFILE	Src,
 	LPCWSTR		File
 	);
 HMETAFILE
 STDCALL
-W32kCopyMetaFile (
+NtGdiCopyMetaFile (
 	HMETAFILE	Src,
 	LPCWSTR		File
 	);
 HDC
 STDCALL
-W32kCreateEnhMetaFile (
+NtGdiCreateEnhMetaFile (
 	HDC		hDCRef,
 	LPCWSTR		File,
 	CONST LPRECT	Rect,
@@ -33,22 +33,22 @@ W32kCreateEnhMetaFile (
 	);
 HDC
 STDCALL
-W32kCreateMetaFile (
+NtGdiCreateMetaFile (
 	LPCWSTR		File
 	);
 BOOL
 STDCALL
-W32kDeleteEnhMetaFile (
+NtGdiDeleteEnhMetaFile (
 	HENHMETAFILE	emf
 	);
 BOOL
 STDCALL
-W32kDeleteMetaFile (
+NtGdiDeleteMetaFile (
 	HMETAFILE	mf
 	);
 BOOL
 STDCALL
-W32kEnumEnhMetaFile (
+NtGdiEnumEnhMetaFile (
 	HDC		hDC,
 	HENHMETAFILE	emf,
 	ENHMFENUMPROC	EnhMetaFunc,
@@ -57,7 +57,7 @@ W32kEnumEnhMetaFile (
 	);
 BOOL
 STDCALL
-W32kEnumMetaFile (
+NtGdiEnumMetaFile (
 	HDC		hDC,
 	HMETAFILE	mf,
 	MFENUMPROC	MetaFunc,
@@ -65,59 +65,59 @@ W32kEnumMetaFile (
 	);
 BOOL
 STDCALL
-W32kGdiComment (
+NtGdiGdiComment (
 	HDC		hDC,
 	UINT		Size,
 	CONST LPBYTE	Data
 	);
 HENHMETAFILE
 STDCALL
-W32kGetEnhMetaFile (
+NtGdiGetEnhMetaFile (
 	LPCWSTR	MetaFile
 	);
 UINT
 STDCALL
-W32kGetEnhMetaFileBits (
+NtGdiGetEnhMetaFileBits (
 	HENHMETAFILE	hemf,
 	UINT		BufSize,
 	LPBYTE		Buffer
 	);
 UINT
 STDCALL
-W32kGetEnhMetaFileDescription (
+NtGdiGetEnhMetaFileDescription (
 	HENHMETAFILE	hemf,
 	UINT		BufSize,
 	LPWSTR		Description
 	);
 UINT
 STDCALL
-W32kGetEnhMetaFileHeader (
+NtGdiGetEnhMetaFileHeader (
 	HENHMETAFILE	hemf,
 	UINT		BufSize,
 	LPENHMETAHEADER	emh
 	);
 UINT
 STDCALL
-W32kGetEnhMetaFilePaletteEntries (
+NtGdiGetEnhMetaFilePaletteEntries (
 	HENHMETAFILE	hemf,
 	UINT		Entries,
 	LPPALETTEENTRY	pe
 	);
 HMETAFILE
 STDCALL
-W32kGetMetaFile (
+NtGdiGetMetaFile (
 	LPCWSTR	MetaFile
 	);
 UINT
 STDCALL
-W32kGetMetaFileBitsEx (
+NtGdiGetMetaFileBitsEx (
 	HMETAFILE	hmf,
 	UINT		Size,
 	LPVOID		Data
 	);
 UINT
 STDCALL
-W32kGetWinMetaFileBits (
+NtGdiGetWinMetaFileBits (
 	HENHMETAFILE	hemf,
 	UINT		BufSize,
 	LPBYTE		Buffer,
@@ -126,14 +126,14 @@ W32kGetWinMetaFileBits (
 	);
 BOOL
 STDCALL
-W32kPlayEnhMetaFile (
+NtGdiPlayEnhMetaFile (
 	HDC		hDC,
 	HENHMETAFILE	hemf,
 	CONST PRECT	Rect
 	);
 BOOL
 STDCALL
-W32kPlayEnhMetaFileRecord (
+NtGdiPlayEnhMetaFileRecord (
 	HDC			hDC,
 	LPHANDLETABLE		Handletable,
 	CONST ENHMETARECORD	* EnhMetaRecord,
@@ -141,13 +141,13 @@ W32kPlayEnhMetaFileRecord (
 	);
 BOOL
 STDCALL
-W32kPlayMetaFile (
+NtGdiPlayMetaFile (
 	HDC		hDC,
 	HMETAFILE	hmf
 	);
 BOOL
 STDCALL
-W32kPlayMetaFileRecord (
+NtGdiPlayMetaFileRecord (
 	HDC		hDC,
 	LPHANDLETABLE	Handletable,
 	LPMETARECORD	MetaRecord,
@@ -155,20 +155,20 @@ W32kPlayMetaFileRecord (
 	);
 HENHMETAFILE
 STDCALL
-W32kSetEnhMetaFileBits (
+NtGdiSetEnhMetaFileBits (
 	UINT		BufSize,
 	CONST PBYTE	Data
 	);
 HMETAFILE
 STDCALL
-W32kSetMetaFileBitsEx (
+NtGdiSetMetaFileBitsEx (
 	UINT		Size,
 	CONST PBYTE	Data
 	);
 #if 0
 HENHMETAFILE
 STDCALL
-W32kSetWinMetaFileBits (
+NtGdiSetWinMetaFileBits (
 	UINT			BufSize,
 	CONST PBYTE		Buffer,
 	HDC			Ref,

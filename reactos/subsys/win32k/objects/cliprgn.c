@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cliprgn.c,v 1.19 2003/08/11 21:10:49 royce Exp $ */
+/* $Id: cliprgn.c,v 1.20 2003/08/19 11:48:50 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -40,30 +40,30 @@ CLIPPING_UpdateGCRegion(DC* Dc)
 #ifndef TODO
   if (Dc->w.hGCClipRgn == NULL)
     {
-      Dc->w.hGCClipRgn = W32kCreateRectRgn(0, 0, 0, 0);
+      Dc->w.hGCClipRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
     }
 
   if (Dc->w.hClipRgn == NULL)
     {
-      W32kCombineRgn(Dc->w.hGCClipRgn, Dc->w.hVisRgn, 0, RGN_COPY);
+      NtGdiCombineRgn(Dc->w.hGCClipRgn, Dc->w.hVisRgn, 0, RGN_COPY);
     }
   else
     {
-      W32kCombineRgn(Dc->w.hGCClipRgn, Dc->w.hClipRgn, Dc->w.hVisRgn,
+      NtGdiCombineRgn(Dc->w.hGCClipRgn, Dc->w.hClipRgn, Dc->w.hVisRgn,
 		     RGN_AND);
     }
 #endif
 
-  Combined = W32kCreateRectRgn(0, 0, 0, 0);
+  Combined = NtGdiCreateRectRgn(0, 0, 0, 0);
   ASSERT(NULL != Combined);
 
   if (Dc->w.hClipRgn == NULL)
     {
-      W32kCombineRgn(Combined, Dc->w.hVisRgn, 0, RGN_COPY);
+      NtGdiCombineRgn(Combined, Dc->w.hVisRgn, 0, RGN_COPY);
     }
   else
     {
-      W32kCombineRgn(Combined, Dc->w.hClipRgn, Dc->w.hVisRgn,
+      NtGdiCombineRgn(Combined, Dc->w.hClipRgn, Dc->w.hVisRgn,
 		     RGN_AND);
     }
 
@@ -81,7 +81,7 @@ CLIPPING_UpdateGCRegion(DC* Dc)
   ASSERT(NULL != Dc->CombinedClip);
 
   RGNDATA_UnlockRgn(Combined);
-  W32kDeleteObject(Combined);
+  NtGdiDeleteObject(Combined);
 }
 
 HRGN WINAPI SaveVisRgn(HDC hdc)
@@ -94,13 +94,13 @@ HRGN WINAPI SaveVisRgn(HDC hdc)
 
   obj = RGNDATA_LockRgn(dc->w.hVisRgn);
 
-  if(!(copy = W32kCreateRectRgn(0, 0, 0, 0)))
+  if(!(copy = NtGdiCreateRectRgn(0, 0, 0, 0)))
   {
     RGNDATA_UnlockRgn(dc->w.hVisRgn);
     DC_ReleasePtr(hdc);
     return 0;
   }
-  W32kCombineRgn(copy, dc->w.hVisRgn, 0, RGN_COPY);
+  NtGdiCombineRgn(copy, dc->w.hVisRgn, 0, RGN_COPY);
   copyObj = RGNDATA_LockRgn(copy);
 /*  copyObj->header.hNext = obj->header.hNext;
   header.hNext = copy; */
@@ -109,7 +109,7 @@ HRGN WINAPI SaveVisRgn(HDC hdc)
 }
 
 INT STDCALL
-W32kSelectVisRgn(HDC hdc, HRGN hrgn)
+NtGdiSelectVisRgn(HDC hdc, HRGN hrgn)
 {
   int retval;
   DC *dc;
@@ -123,17 +123,17 @@ W32kSelectVisRgn(HDC hdc, HRGN hrgn)
 
   if (dc->w.hVisRgn == NULL)
     {
-      dc->w.hVisRgn = W32kCreateRectRgn(0, 0, 0, 0);
+      dc->w.hVisRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
     }
 
-  retval = W32kCombineRgn(dc->w.hVisRgn, hrgn, 0, RGN_COPY);
+  retval = NtGdiCombineRgn(dc->w.hVisRgn, hrgn, 0, RGN_COPY);
   CLIPPING_UpdateGCRegion(dc);
   DC_ReleasePtr( hdc );
 
   return retval;
 }
 
-int STDCALL W32kExcludeClipRect(HDC  hDC,
+int STDCALL NtGdiExcludeClipRect(HDC  hDC,
                          int  LeftRect,
                          int  TopRect,
                          int  RightRect,
@@ -142,14 +142,14 @@ int STDCALL W32kExcludeClipRect(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-int STDCALL W32kExtSelectClipRgn(HDC  hDC,
+int STDCALL NtGdiExtSelectClipRgn(HDC  hDC,
                           HRGN  hrgn,
                           int  fnMode)
 {
   UNIMPLEMENTED;
 }
 
-int STDCALL W32kGetClipBox(HDC  hDC,
+int STDCALL NtGdiGetClipBox(HDC  hDC,
 			   LPRECT  rc)
 {
   int retval;
@@ -157,24 +157,24 @@ int STDCALL W32kGetClipBox(HDC  hDC,
 
   if (!(dc = DC_HandleToPtr(hDC)))
   	return ERROR;
-  retval = UnsafeW32kGetRgnBox(dc->w.hGCClipRgn, rc);
+  retval = UnsafeIntGetRgnBox(dc->w.hGCClipRgn, rc);
   rc->left -= dc->w.DCOrgX;
   rc->right -= dc->w.DCOrgX;
   rc->top -= dc->w.DCOrgY;
   rc->bottom -= dc->w.DCOrgY;
 
   DC_ReleasePtr( hDC );
-  W32kDPtoLP(hDC, (LPPOINT)rc, 2);
+  NtGdiDPtoLP(hDC, (LPPOINT)rc, 2);
   return(retval);
 }
 
-int STDCALL W32kGetMetaRgn(HDC  hDC,
+int STDCALL NtGdiGetMetaRgn(HDC  hDC,
                     HRGN  hrgn)
 {
   UNIMPLEMENTED;
 }
 
-int STDCALL W32kIntersectClipRect(HDC  hDC,
+int STDCALL NtGdiIntersectClipRect(HDC  hDC,
                            int  LeftRect,
                            int  TopRect,
                            int  RightRect,
@@ -183,33 +183,33 @@ int STDCALL W32kIntersectClipRect(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-int STDCALL W32kOffsetClipRgn(HDC  hDC,
+int STDCALL NtGdiOffsetClipRgn(HDC  hDC,
                        int  XOffset,
                        int  YOffset)
 {
   UNIMPLEMENTED;
 }
 
-BOOL STDCALL W32kPtVisible(HDC  hDC,
+BOOL STDCALL NtGdiPtVisible(HDC  hDC,
                     int  X,
                     int  Y)
 {
   UNIMPLEMENTED;
 }
 
-BOOL STDCALL W32kRectVisible(HDC  hDC,
+BOOL STDCALL NtGdiRectVisible(HDC  hDC,
                       CONST PRECT  rc)
 {
   UNIMPLEMENTED;
 }
 
-BOOL STDCALL W32kSelectClipPath(HDC  hDC,
+BOOL STDCALL NtGdiSelectClipPath(HDC  hDC,
                          int  Mode)
 {
   UNIMPLEMENTED;
 }
 
-int STDCALL W32kSelectClipRgn(HDC  hDC,
+int STDCALL NtGdiSelectClipRgn(HDC  hDC,
                               HRGN hRgn)
 {
   int Type;
@@ -225,18 +225,18 @@ int STDCALL W32kSelectClipRgn(HDC  hDC,
 
   if (NULL != hRgn)
     {
-      Copy = W32kCreateRectRgn(0, 0, 0, 0);
+      Copy = NtGdiCreateRectRgn(0, 0, 0, 0);
       if (NULL == Copy)
 	{
 	  return ERROR;
 	}
-      Type = W32kCombineRgn(Copy, hRgn, 0, RGN_COPY);
+      Type = NtGdiCombineRgn(Copy, hRgn, 0, RGN_COPY);
       if (ERROR == Type)
 	{
-	  W32kDeleteObject(Copy);
+	  NtGdiDeleteObject(Copy);
 	  return ERROR;
 	}
-      W32kOffsetRgn(Copy, dc->w.DCOrgX, dc->w.DCOrgY);
+      NtGdiOffsetRgn(Copy, dc->w.DCOrgX, dc->w.DCOrgY);
     }
   else
     {
@@ -245,7 +245,7 @@ int STDCALL W32kSelectClipRgn(HDC  hDC,
 
   if (NULL != dc->w.hClipRgn)
     {
-      W32kDeleteObject(dc->w.hClipRgn);
+      NtGdiDeleteObject(dc->w.hClipRgn);
     }
   dc->w.hClipRgn = Copy;
   CLIPPING_UpdateGCRegion(dc);
@@ -253,7 +253,7 @@ int STDCALL W32kSelectClipRgn(HDC  hDC,
   return ERROR;
 }
 
-int STDCALL W32kSetMetaRgn(HDC  hDC)
+int STDCALL NtGdiSetMetaRgn(HDC  hDC)
 {
   UNIMPLEMENTED;
 }

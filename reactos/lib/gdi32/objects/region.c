@@ -19,7 +19,7 @@ OffsetClipRgn(
         int     a2
         )
 {
-        return W32kOffsetClipRgn(a0, a1, a2);
+        return NtGdiOffsetClipRgn(a0, a1, a2);
 }
 
 
@@ -33,10 +33,10 @@ GetClipRgn(
         HRGN    a1
         )
 {
-	HRGN rgn = W32kGetClipRgn(a0);
+	HRGN rgn = NtGdiGetClipRgn(a0);
 	if(rgn)
 	{
-		if(W32kCombineRgn(a1, rgn, 0, RGN_COPY) != ERROR) return 1;
+		if(NtGdiCombineRgn(a1, rgn, 0, RGN_COPY) != ERROR) return 1;
 		else
 			return -1;
 	}
@@ -56,7 +56,7 @@ CreatePolyPolygonRgn(
 	int		fnPolyFillMode
 	)
 {
-  return W32kCreatePolyPolygonRgn ( (CONST PPOINT)lppt,
+  return NtGdiCreatePolyPolygonRgn ( (CONST PPOINT)lppt,
     (CONST PINT)lpPolyCounts, nCount, fnPolyFillMode );
 }
 
@@ -70,7 +70,7 @@ CreatePatternBrush(
 	HBITMAP		hbmp
 	)
 {
-  return W32kCreatePatternBrush ( hbmp );
+  return NtGdiCreatePatternBrush ( hbmp );
 }
 
 
@@ -86,7 +86,7 @@ CreateRectRgn(
 	int		a3
 	)
 {
-	return W32kCreateRectRgn(a0,a1,a2,a3);
+	return NtGdiCreateRectRgn(a0,a1,a2,a3);
 }
 
 
@@ -99,7 +99,7 @@ CreateRectRgnIndirect(
 	CONST RECT	*a0
 	)
 {
-	return W32kCreateRectRgnIndirect((RECT *)a0);
+	return NtGdiCreateRectRgnIndirect((RECT *)a0);
 }
 
 
@@ -117,7 +117,7 @@ CreateRoundRectRgn(
 	int	nHeightEllipse
 	)
 {
-  return W32kCreateRoundRectRgn (
+  return NtGdiCreateRoundRectRgn (
     nLeftRect, nTopRect, nRightRect, nBottomRect, nWidthEllipse, nHeightEllipse );
 }
 
@@ -132,7 +132,7 @@ EqualRgn(
 	HRGN		a1
 	)
 {
-	return W32kEqualRgn(a0,a1);
+	return NtGdiEqualRgn(a0,a1);
 }
 
 
@@ -147,7 +147,7 @@ OffsetRgn(
 	int	a2
 	)
 {
-	return W32kOffsetRgn(a0,a1,a2);
+	return NtGdiOffsetRgn(a0,a1,a2);
 }
 
 
@@ -161,7 +161,7 @@ GetRgnBox(
 	LPRECT	a1
 	)
 {
-	return W32kGetRgnBox(a0,a1);
+	return NtGdiGetRgnBox(a0,a1);
 }
 
 
@@ -178,7 +178,7 @@ SetRectRgn(
 	int	a4
 	)
 {
-	return W32kSetRectRgn(a0,a1,a2,a3,a4);
+	return NtGdiSetRectRgn(a0,a1,a2,a3,a4);
 }
 
 
@@ -194,7 +194,7 @@ CombineRgn(
 	int	a3
 	)
 {
-	return W32kCombineRgn(a0,a1,a2,a3);
+	return NtGdiCombineRgn(a0,a1,a2,a3);
 }
 
 
@@ -209,7 +209,7 @@ GetRegionData(
 	LPRGNDATA	a2
 	)
 {
-	return W32kGetRegionData(a0,a1,a2);
+	return NtGdiGetRegionData(a0,a1,a2);
 }
 
 
@@ -223,7 +223,7 @@ PaintRgn(
 	HRGN	a1
 	)
 {
-	return W32kPaintRgn( a0, a1 );
+	return NtGdiPaintRgn( a0, a1 );
 }
 
 
@@ -238,7 +238,7 @@ FillRgn(
 	HBRUSH	a2
 	)
 {
-	return W32kFillRgn(a0, a1, a2);
+	return NtGdiFillRgn(a0, a1, a2);
 }
 
 /*
@@ -252,7 +252,7 @@ PtInRegion(
 	int	a2
 	)
 {
-	return W32kPtInRegion(a0,a1,a2);
+	return NtGdiPtInRegion(a0,a1,a2);
 }
 
 /*
@@ -265,5 +265,5 @@ RectInRegion(
 	CONST RECT	*a1
 	)
 {
-	return W32kRectInRegion(a0,(CONST PRECT)a1);
+	return NtGdiRectInRegion(a0,(CONST PRECT)a1);
 }

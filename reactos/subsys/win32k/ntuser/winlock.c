@@ -51,7 +51,7 @@ static ERESOURCE WinLock;
 
 /* FUNCTIONS *****************************************************************/
 
-BOOL FASTCALL W32kVerifyWinLock(WINLOCK_TYPE Type)
+BOOL FASTCALL IntVerifyWinLock(WINLOCK_TYPE Type)
 {
   switch (Type)
   {
@@ -68,7 +68,7 @@ BOOL FASTCALL W32kVerifyWinLock(WINLOCK_TYPE Type)
   return FALSE;
 }
 
-WINLOCK_TYPE FASTCALL W32kSuspendWinLock()
+WINLOCK_TYPE FASTCALL IntSuspendWinLock()
 {
   ASSERT_WINLOCK(Any);
 
@@ -77,14 +77,14 @@ WINLOCK_TYPE FASTCALL W32kSuspendWinLock()
   return Shared;
 }
 
-VOID FASTCALL W32kRestoreWinLock(WINLOCK_TYPE Type)
+VOID FASTCALL IntRestoreWinLock(WINLOCK_TYPE Type)
 {
   switch (Type)
   {
     case Exclusive:
-      return W32kAcquireWinLockExclusive(&WinLock);
+      return IntAcquireWinLockExclusive(&WinLock);
     case Shared:
-      return W32kAcquireWinLockShared(&WinLock);
+      return IntAcquireWinLockShared(&WinLock);
     /* silence warnings */
     case None:
     case Any:
@@ -94,28 +94,28 @@ VOID FASTCALL W32kRestoreWinLock(WINLOCK_TYPE Type)
   KEBUGCHECK(0);
 }
 
-inline VOID W32kAcquireWinLockShared()
+inline VOID IntAcquireWinLockShared()
 {
   ExAcquireResourceExclusiveLite(&WinLock, TRUE /*Wait*/ );
 }
 
-inline VOID W32kAcquireWinLockExclusive()
+inline VOID IntAcquireWinLockExclusive()
 {
   ExAcquireResourceSharedLite(&WinLock, TRUE /*Wait*/  );
 }
 
-inline VOID W32kReleaseWinLock()
+inline VOID IntReleaseWinLock()
 {
   ExReleaseResourceLite(&WinLock ); 
 }
 
-inline BOOL W32kInitializeWinLock()
+inline BOOL IntInitializeWinLock()
 {
   ExInitializeResourceLite(&WinLock );
   return TRUE;
 }
 
-inline VOID W32kDeleteWinLock()
+inline VOID IntDeleteWinLock()
 {
   ExDeleteResourceLite(&WinLock );  
 }

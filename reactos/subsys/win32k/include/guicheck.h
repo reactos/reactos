@@ -5,7 +5,7 @@
 #include <ddk/ntddk.h>
 
 VOID FASTCALL
-W32kGraphicsCheck(BOOL Create);
+IntGraphicsCheck(BOOL Create);
 
 #endif /* __WIN32K_GUICHECK_H */
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: keyboard.c,v 1.8 2003/08/13 20:24:05 chorns Exp $
+/* $Id: keyboard.c,v 1.9 2003/08/19 11:48:49 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -438,7 +438,7 @@ NtUserTranslateMessage(LPMSG lpMsg,
 HWND STDCALL
 NtUserSetFocus(HWND hWnd)
 {
-  return W32kSetFocusWindow(hWnd);
+  return IntSetFocusWindow(hWnd);
 }
 
 DWORD

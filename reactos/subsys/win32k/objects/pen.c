@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pen.c,v 1.10 2003/05/18 17:16:18 ea Exp $ */
+/* $Id: pen.c,v 1.11 2003/08/19 11:48:50 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -27,7 +27,7 @@
 
 HPEN
 STDCALL
-W32kCreatePen(INT PenStyle, INT Width, COLORREF Color)
+NtGdiCreatePen(INT PenStyle, INT Width, COLORREF Color)
 {
   LOGPEN logpen;
 
@@ -36,12 +36,12 @@ W32kCreatePen(INT PenStyle, INT Width, COLORREF Color)
   logpen.lopnWidth.y = 0;
   logpen.lopnColor = Color;
 
-  return W32kCreatePenIndirect(&logpen);
+  return NtGdiCreatePenIndirect(&logpen);
 }
 
 HPEN
 STDCALL
-W32kCreatePenIndirect(CONST PLOGPEN lgpn)
+NtGdiCreatePenIndirect(CONST PLOGPEN lgpn)
 {
   PPENOBJ penPtr;
   HPEN    hpen;
@@ -63,7 +63,7 @@ W32kCreatePenIndirect(CONST PLOGPEN lgpn)
 
 HPEN
 STDCALL
-W32kExtCreatePen(DWORD  PenStyle,
+NtGdiExtCreatePen(DWORD  PenStyle,
                        DWORD  Width,
                        CONST PLOGBRUSH  lb,
                        DWORD  StyleCount,

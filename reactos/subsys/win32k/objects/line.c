@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: line.c,v 1.19 2003/08/17 17:32:58 royce Exp $ */
+/* $Id: line.c,v 1.20 2003/08/19 11:48:50 weiden Exp $ */
 
 // Some code from the WINE project source (www.winehq.com)
 
@@ -40,7 +40,7 @@
 
 BOOL
 STDCALL
-W32kAngleArc(HDC  hDC,
+NtGdiAngleArc(HDC  hDC,
              int  X,
              int  Y,
              DWORD  Radius,
@@ -52,7 +52,7 @@ W32kAngleArc(HDC  hDC,
 
 BOOL
 STDCALL
-W32kArc(HDC  hDC,
+NtGdiArc(HDC  hDC,
         int  LeftRect,
         int  TopRect,
         int  RightRect,
@@ -82,7 +82,7 @@ W32kArc(HDC  hDC,
 
 BOOL
 STDCALL
-W32kArcTo(HDC  hDC,
+NtGdiArcTo(HDC  hDC,
           int  LeftRect,
           int  TopRect,
           int  RightRect,
@@ -96,7 +96,7 @@ W32kArcTo(HDC  hDC,
   //DC *dc;
 
   // Line from current position to starting point of arc
-  if ( !W32kLineTo(hDC, XRadial1, YRadial1) )
+  if ( !NtGdiLineTo(hDC, XRadial1, YRadial1) )
     return FALSE;
 
   //dc = DC_HandleToPtr(hDC);
@@ -104,14 +104,14 @@ W32kArcTo(HDC  hDC,
   //if(!dc) return FALSE;
 
   // Then the arc is drawn.
-  result = W32kArc(hDC, LeftRect, TopRect, RightRect, BottomRect,
+  result = NtGdiArc(hDC, LeftRect, TopRect, RightRect, BottomRect,
                    XRadial1, YRadial1, XRadial2, YRadial2);
 
   //DC_ReleasePtr( hDC );
 
   // If no error occured, the current position is moved to the ending point of the arc.
   if(result)
-    W32kMoveToEx(hDC, XRadial2, YRadial2, NULL);
+    NtGdiMoveToEx(hDC, XRadial2, YRadial2, NULL);
 
   return result;
 }
@@ -126,7 +126,7 @@ IntGetArcDirection ( PDC dc )
 
 INT
 STDCALL
-W32kGetArcDirection(HDC  hDC)
+NtGdiGetArcDirection(HDC  hDC)
 {
   PDC dc = DC_HandleToPtr (hDC);
   int ret = 0; // default to failure
@@ -142,7 +142,7 @@ W32kGetArcDirection(HDC  hDC)
 
 BOOL
 STDCALL
-W32kLineTo(HDC  hDC,
+NtGdiLineTo(HDC  hDC,
            int  XEnd,
            int  YEnd)
 {
@@ -225,7 +225,7 @@ W32kLineTo(HDC  hDC,
 
 BOOL
 STDCALL
-W32kMoveToEx(HDC      hDC,
+NtGdiMoveToEx(HDC      hDC,
              int      X,
              int      Y,
              LPPOINT  Point)
@@ -255,7 +255,7 @@ W32kMoveToEx(HDC      hDC,
 
 BOOL
 STDCALL
-W32kPolyBezier(HDC            hDC,
+NtGdiPolyBezier(HDC            hDC,
                CONST LPPOINT  pt,
                DWORD          Count)
 {
@@ -279,7 +279,7 @@ W32kPolyBezier(HDC            hDC,
     if ( Pts )
     {
       DbgPrint("Pts = %p, no = %d\n", Pts, nOut);
-      ret = W32kPolyline(dc->hSelf, Pts, nOut);
+      ret = NtGdiPolyline(dc->hSelf, Pts, nOut);
       ExFreePool(Pts);
     }
   }
@@ -289,7 +289,7 @@ W32kPolyBezier(HDC            hDC,
 
 BOOL
 STDCALL
-W32kPolyBezierTo(HDC  hDC,
+NtGdiPolyBezierTo(HDC  hDC,
                  CONST LPPOINT  pt,
                  DWORD  Count)
 {
@@ -309,7 +309,7 @@ W32kPolyBezierTo(HDC  hDC,
       npt[0].x = dc->w.CursPosX;
       npt[0].y = dc->w.CursPosY;
       memcpy(npt + 1, pt, sizeof(POINT) * Count);
-      ret = W32kPolyBezier(dc->hSelf, npt, Count+1);
+      ret = NtGdiPolyBezier(dc->hSelf, npt, Count+1);
       ExFreePool(npt);
     }
   }
@@ -324,7 +324,7 @@ W32kPolyBezierTo(HDC  hDC,
 
 BOOL
 STDCALL
-W32kPolyDraw(HDC            hDC,
+NtGdiPolyDraw(HDC            hDC,
              CONST LPPOINT  pt,
              CONST LPBYTE   Types,
              int            Count)
@@ -392,7 +392,7 @@ IntPolyline(PDC           dc,
 
 BOOL
 STDCALL
-W32kPolyline(HDC            hDC,
+NtGdiPolyline(HDC            hDC,
              CONST LPPOINT  pt,
              int            Count)
 {
@@ -411,7 +411,7 @@ W32kPolyline(HDC            hDC,
 
 BOOL
 STDCALL
-W32kPolylineTo(HDC            hDC,
+NtGdiPolylineTo(HDC            hDC,
                CONST LPPOINT  pt,
                DWORD          Count)
 {
@@ -432,7 +432,7 @@ W32kPolylineTo(HDC            hDC,
       pts[0].x = dc->w.CursPosX;
       pts[0].y = dc->w.CursPosY;
       memcpy( pts + 1, pt, sizeof(POINT) * Count);
-      ret = W32kPolyline(hDC, pts, Count + 1);
+      ret = NtGdiPolyline(hDC, pts, Count + 1);
       ExFreePool(pts);
     }
   }
@@ -447,7 +447,7 @@ W32kPolylineTo(HDC            hDC,
 
 BOOL
 STDCALL
-W32kPolyPolyline(HDC            hDC,
+NtGdiPolyPolyline(HDC            hDC,
                  CONST LPPOINT  pt,
                  CONST LPDWORD  PolyPoints,
                  DWORD          Count)
@@ -457,7 +457,7 @@ W32kPolyPolyline(HDC            hDC,
 
 int
 STDCALL
-W32kSetArcDirection(HDC  hDC,
+NtGdiSetArcDirection(HDC  hDC,
                     int  ArcDirection)
 {
   PDC  dc;

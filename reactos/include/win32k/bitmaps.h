@@ -53,7 +53,7 @@ HBITMAP FASTCALL BitmapToSurf(PBITMAPOBJ BitmapObj);
 /*  User Entry Points  */
 BOOL
 STDCALL
-W32kBitBlt (
+NtGdiBitBlt (
 	HDC	hDCDest,
 	INT	XDest,
 	INT	YDest,
@@ -66,7 +66,7 @@ W32kBitBlt (
 	);
 HBITMAP
 STDCALL
-W32kCreateBitmap (
+NtGdiCreateBitmap (
 	INT		Width,
 	INT		Height,
 	UINT		Planes,
@@ -75,19 +75,19 @@ W32kCreateBitmap (
 	);
 HBITMAP
 STDCALL
-W32kCreateCompatibleBitmap (
+NtGdiCreateCompatibleBitmap (
 	HDC	hDC,
 	INT	Width,
 	INT	Height
 	);
 HBITMAP
 STDCALL
-W32kCreateBitmapIndirect (
+NtGdiCreateBitmapIndirect (
 	CONST BITMAP	* BM
 	);
 HBITMAP
 STDCALL
-W32kCreateDIBitmap (
+NtGdiCreateDIBitmap (
 	HDC			hDC,
 	CONST BITMAPINFOHEADER	* bmih,
 	DWORD			Init,
@@ -97,7 +97,7 @@ W32kCreateDIBitmap (
 	);
 HBITMAP
 STDCALL
-W32kCreateDIBSection (
+NtGdiCreateDIBSection (
 	HDC			hDC,
 	CONST BITMAPINFO	* bmi,
 	UINT			Usage,
@@ -107,14 +107,14 @@ W32kCreateDIBSection (
 	);
 HBITMAP
 STDCALL
-W32kCreateDiscardableBitmap (
+NtGdiCreateDiscardableBitmap (
 	HDC	hDC,
 	INT	Width,
 	INT	Height
 	);
 BOOL
 STDCALL
-W32kExtFloodFill (
+NtGdiExtFloodFill (
 	HDC		hDC,
 	INT		XStart,
 	INT		YStart,
@@ -123,7 +123,7 @@ W32kExtFloodFill (
 	);
 BOOL
 STDCALL
-W32kFloodFill (
+NtGdiFloodFill (
 	HDC		hDC,
 	INT		XStart,
 	INT		YStart,
@@ -131,20 +131,20 @@ W32kFloodFill (
 	);
 LONG
 STDCALL
-W32kGetBitmapBits (
+NtGdiGetBitmapBits (
 	HBITMAP	hBitmap,
 	LONG	Buffer,
 	LPVOID	Bits
 	);
 BOOL
 STDCALL
-W32kGetBitmapDimensionEx (
+NtGdiGetBitmapDimensionEx (
 	HBITMAP	hBitmap,
 	LPSIZE	Dimension
 	);
 UINT
 STDCALL
-W32kGetDIBColorTable (
+NtGdiGetDIBColorTable (
 	HDC	hDC,
 	UINT	StartIndex,
 	UINT	Entries,
@@ -152,7 +152,7 @@ W32kGetDIBColorTable (
 	);
 INT
 STDCALL
-W32kGetDIBits (
+NtGdiGetDIBits (
 	HDC		hDC,
 	HBITMAP		hBitmap,
 	UINT		StartScan,
@@ -163,14 +163,14 @@ W32kGetDIBits (
 	);
 COLORREF
 STDCALL
-W32kGetPixel (
+NtGdiGetPixel (
 	HDC	hDC,
 	INT	XPos,
 	INT	YPos
 	);
 BOOL
 STDCALL
-W32kMaskBlt (
+NtGdiMaskBlt (
 	HDC	hDCDest,
 	INT	XDest,
 	INT	YDest,
@@ -186,7 +186,7 @@ W32kMaskBlt (
 	);
 BOOL
 STDCALL
-W32kPlgBlt (
+NtGdiPlgBlt (
 	HDC		hDCDest,
 	CONST POINT	* Point,
 	HDC		hDCSrc,
@@ -200,14 +200,14 @@ W32kPlgBlt (
 	);
 LONG
 STDCALL
-W32kSetBitmapBits (
+NtGdiSetBitmapBits (
 	HBITMAP		hBitmap,
 	DWORD		Bytes,
 	CONST VOID	* Bits
 	);
 BOOL
 STDCALL
-W32kSetBitmapDimensionEx (
+NtGdiSetBitmapDimensionEx (
 	HBITMAP	hBitmap,
 	INT	Width,
 	INT	Height,
@@ -215,7 +215,7 @@ W32kSetBitmapDimensionEx (
 	);
 UINT
 STDCALL
-W32kSetDIBColorTable (
+NtGdiSetDIBColorTable (
 	HDC		hDC,
 	UINT		StartIndex,
 	UINT		Entries,
@@ -223,7 +223,7 @@ W32kSetDIBColorTable (
 	);
 INT
 STDCALL
-W32kSetDIBits (
+NtGdiSetDIBits (
 	HDC			hDC,
 	HBITMAP			hBitmap,
 	UINT			StartScan,
@@ -234,7 +234,7 @@ W32kSetDIBits (
 	);
 INT
 STDCALL
-W32kSetDIBitsToDevice (
+NtGdiSetDIBitsToDevice (
 	HDC			hDC,
 	INT			XDest,
 	INT			YDest,
@@ -250,7 +250,7 @@ W32kSetDIBitsToDevice (
 	);
 COLORREF
 STDCALL
-W32kSetPixel (
+NtGdiSetPixel (
 	HDC		hDC,
 	INT		X,
 	INT		Y,
@@ -258,7 +258,7 @@ W32kSetPixel (
 	);
 BOOL
 STDCALL
-W32kSetPixelV (
+NtGdiSetPixelV (
 	HDC		hDC,
 	INT		X,
 	INT		Y,
@@ -266,7 +266,7 @@ W32kSetPixelV (
 	);
 BOOL
 STDCALL
-W32kStretchBlt (
+NtGdiStretchBlt (
 	HDC	hDCDest,
 	INT	XOriginDest,
 	INT	YOriginDest,
@@ -281,7 +281,7 @@ W32kStretchBlt (
 	);
 INT
 STDCALL
-W32kStretchDIBits (
+NtGdiStretchDIBits (
 	HDC			hDC,
 	INT			XDest,
 	INT			YDest,

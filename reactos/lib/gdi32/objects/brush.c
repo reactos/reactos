@@ -17,7 +17,7 @@ CreateSolidBrush(
 	COLORREF	a0
 	)
 {
-	return W32kCreateSolidBrush(a0);
+	return NtGdiCreateSolidBrush(a0);
 }
 
 /*
@@ -29,7 +29,7 @@ CreateBrushIndirect(
 	CONST LOGBRUSH	*a0
 	)
 {
-	return W32kCreateBrushIndirect(a0);
+	return NtGdiCreateBrushIndirect(a0);
 }
 
 /*
@@ -42,7 +42,7 @@ CreateDIBPatternBrushPt(
 	UINT			a1
 	)
 {
-	return W32kCreateDIBPatternBrushPt(a0,a1);
+	return NtGdiCreateDIBPatternBrushPt(a0,a1);
 }
 
 /*
@@ -55,5 +55,5 @@ CreateHatchBrush(
 	COLORREF	a1
 	)
 {
-	return W32kCreateHatchBrush(a0,a1);
+	return NtGdiCreateHatchBrush(a0,a1);
 }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.27 2003/08/05 15:41:03 weiden Exp $
+/* $Id: message.c,v 1.28 2003/08/19 11:48:49 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -47,13 +47,13 @@
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS FASTCALL
-W32kInitMessageImpl(VOID)
+IntInitMessageImpl(VOID)
 {
   return STATUS_SUCCESS;
 }
 
 NTSTATUS FASTCALL
-W32kCleanupMessageImpl(VOID)
+IntCleanupMessageImpl(VOID)
 {
   return STATUS_SUCCESS;
 }
@@ -83,7 +83,7 @@ NtUserDispatchMessage(CONST MSG* UnsafeMsg)
 
 	  /* FIXME: Check for continuing validity of timer. */
 
-	  return W32kCallWindowProc((WNDPROC)Msg.lParam,
+	  return IntCallWindowProc((WNDPROC)Msg.lParam,
 				      Msg.hwnd,
 				      Msg.message,
 				      Msg.wParam,
@@ -108,7 +108,7 @@ NtUserDispatchMessage(CONST MSG* UnsafeMsg)
   /* Call the window procedure. */
   if (WindowObject->Unicode == TRUE)
   {
-	Result = W32kCallWindowProc(WindowObject->WndProcW,
+	Result = IntCallWindowProc(WindowObject->WndProcW,
 					Msg.hwnd,
 					Msg.message,
 					Msg.wParam,
@@ -116,7 +116,7 @@ NtUserDispatchMessage(CONST MSG* UnsafeMsg)
   }
   else
   {
-	Result = W32kCallWindowProc(WindowObject->WndProcA,
+	Result = IntCallWindowProc(WindowObject->WndProcA,
 					Msg.hwnd,
 					Msg.message,
 					Msg.wParam,
@@ -130,7 +130,7 @@ NtUserDispatchMessage(CONST MSG* UnsafeMsg)
  * Internal version of PeekMessage() doing all the work
  */
 BOOL STDCALL
-W32kPeekMessage(LPMSG Msg,
+IntPeekMessage(LPMSG Msg,
                 HWND Wnd,
                 UINT MsgFilterMin,
                 UINT MsgFilterMax,
@@ -218,7 +218,7 @@ W32kPeekMessage(LPMSG Msg,
       Msg->message = WM_PAINT;
       Msg->wParam = Msg->lParam = 0;
 
-      WindowObject = W32kGetWindowObject(Msg->hwnd);
+      WindowObject = IntGetWindowObject(Msg->hwnd);
       if (WindowObject != NULL)
 	{
 	  if (WindowObject->Style & WS_MINIMIZE &&
@@ -229,7 +229,7 @@ W32kPeekMessage(LPMSG Msg,
 	    }
 
 	  if (Msg->hwnd == NULL || Msg->hwnd == Wnd ||
-	      W32kIsChildWindow(Wnd, Msg->hwnd))
+	      IntIsChildWindow(Wnd, Msg->hwnd))
 	    {
 	      if (WindowObject->Flags & WINDOWOBJECT_NEED_INTERNALPAINT &&
 		  WindowObject->UpdateRegion == NULL)
@@ -241,7 +241,7 @@ W32kPeekMessage(LPMSG Msg,
 		    }
 		}
 	    }
-	  W32kReleaseWindowObject(WindowObject);
+	  IntReleaseWindowObject(WindowObject);
 	}
 
       return TRUE;
@@ -282,7 +282,7 @@ NtUserPeekMessage(LPMSG UnsafeMsg,
       MsgFilterMax = 0;
     }
 
-  Present = W32kPeekMessage(&SafeMsg, Wnd, MsgFilterMin, MsgFilterMax, RemoveMsg);
+  Present = IntPeekMessage(&SafeMsg, Wnd, MsgFilterMin, MsgFilterMax, RemoveMsg);
   if (Present)
     {
       Status = MmCopyToCaller(UnsafeMsg, &SafeMsg, sizeof(MSG));
@@ -299,7 +299,7 @@ NtUserPeekMessage(LPMSG UnsafeMsg,
 }
 
 static BOOL STDCALL
-W32kWaitMessage(HWND Wnd,
+IntWaitMessage(HWND Wnd,
                 UINT MsgFilterMin,
                 UINT MsgFilterMax)
 {
@@ -311,7 +311,7 @@ W32kWaitMessage(HWND Wnd,
 
   do
     {
-      if (W32kPeekMessage(&Msg, Wnd, MsgFilterMin, MsgFilterMax, PM_NOREMOVE))
+      if (IntPeekMessage(&Msg, Wnd, MsgFilterMin, MsgFilterMax, PM_NOREMOVE))
 	{
 	  return TRUE;
 	}
@@ -369,7 +369,7 @@ NtUserGetMessage(LPMSG UnsafeMsg,
 
   do
     {
-      GotMessage = W32kPeekMessage(&SafeMsg, Wnd, MsgFilterMin, MsgFilterMax, PM_REMOVE);
+      GotMessage = IntPeekMessage(&SafeMsg, Wnd, MsgFilterMin, MsgFilterMax, PM_REMOVE);
       if (GotMessage)
 	{
 	  Status = MmCopyToCaller(UnsafeMsg, &SafeMsg, sizeof(MSG));
@@ -381,7 +381,7 @@ NtUserGetMessage(LPMSG UnsafeMsg,
 	}
       else
 	{
-	  W32kWaitMessage(Wnd, MsgFilterMin, MsgFilterMax);
+	  IntWaitMessage(Wnd, MsgFilterMin, MsgFilterMax);
 	}
     }
   while (! GotMessage);
@@ -486,7 +486,7 @@ NtUserQuerySendMessage(DWORD Unknown0)
 }
 
 LRESULT STDCALL
-W32kSendMessage(HWND hWnd,
+IntSendMessage(HWND hWnd,
 		UINT Msg,
 		WPARAM wParam,
 		LPARAM lParam,
@@ -517,7 +517,7 @@ W32kSendMessage(HWND hWnd,
     {
       if (KernelMessage)
 	{
-	  Result = W32kCallTrampolineWindowProc(NULL, hWnd, Msg, wParam,
+	  Result = IntCallTrampolineWindowProc(NULL, hWnd, Msg, wParam,
 						lParam);
 	  return Result;
 	}
@@ -525,11 +525,11 @@ W32kSendMessage(HWND hWnd,
 	{
 	if (Window->Unicode == TRUE)
 	{
-	  Result = W32kCallWindowProc(Window->WndProcW, hWnd, Msg, wParam, lParam);
+	  Result = IntCallWindowProc(Window->WndProcW, hWnd, Msg, wParam, lParam);
 	}
 	else
 	{
-	  Result = W32kCallWindowProc(Window->WndProcA, hWnd, Msg, wParam, lParam);
+	  Result = IntCallWindowProc(Window->WndProcA, hWnd, Msg, wParam, lParam);
 	}
 	  return Result;
 	}
@@ -576,7 +576,7 @@ NtUserSendMessage(HWND Wnd,
 		  WPARAM wParam,
 		  LPARAM lParam)
 {
-  return W32kSendMessage(Wnd, Msg, wParam, lParam, FALSE);
+  return IntSendMessage(Wnd, Msg, wParam, lParam, FALSE);
 }
 
 BOOL STDCALL
@@ -607,7 +607,7 @@ BOOL STDCALL
 NtUserWaitMessage(VOID)
 {
 
-  return W32kWaitMessage(NULL, 0, 0);
+  return IntWaitMessage(NULL, 0, 0);
 }
 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scrollbar.c,v 1.7 2003/05/26 10:52:15 rcampbell Exp $
+/* $Id: scrollbar.c,v 1.8 2003/08/19 11:48:50 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -93,12 +93,12 @@ SCROLL_GetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect)
       break;
 
     case SB_CTL:
-      W32kGetClientRect (Window, lprect);
+      IntGetClientRect (Window, lprect);
       vertical = ((Window->Style & SBS_VERT) != 0);
       break;
 
     default:
-      W32kReleaseWindowObject(Window);
+      IntReleaseWindowObject(Window);
       return FALSE;
     }
 
@@ -155,7 +155,7 @@ DWORD STDCALL SCROLL_GetScrollBarInfo(PWINDOW_OBJECT Window, LONG idObject, PSCR
       memcpy(psbi, Window->wExtra, psbi->cbSize);
       break;
     default:
-      W32kReleaseWindowObject(Window);
+      IntReleaseWindowObject(Window);
       return FALSE;
   }
 
@@ -168,13 +168,13 @@ DWORD
 STDCALL
 NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
 {
-  PWINDOW_OBJECT Window = W32kGetWindowObject(hWnd);
+  PWINDOW_OBJECT Window = IntGetWindowObject(hWnd);
 
   if (!Window) return FALSE;
 
   SCROLL_GetScrollBarInfo(Window, idObject, psbi);
 
-  W32kReleaseWindowObject(Window);
+  IntReleaseWindowObject(Window);
 
   return TRUE;
 }
@@ -226,7 +226,7 @@ NtUserShowScrollBar(HWND hWnd, int wBar, DWORD bShow)
 {
   BOOL fShowV = (wBar == SB_VERT) ? 0 : bShow;
   BOOL fShowH = (wBar == SB_HORZ) ? 0 : bShow;
-  PWINDOW_OBJECT Window = W32kGetWindowObject(hWnd);
+  PWINDOW_OBJECT Window = IntGetWindowObject(hWnd);
 
   switch (wBar)
     {

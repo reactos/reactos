@@ -2,11 +2,11 @@
 #define __WIN32K_MISC_H
 
 /* Process context in which miniport driver is opened/used */
-extern PEPROCESS W32kDeviceProcess;
+extern PEPROCESS Win32kDeviceProcess;
 
 BOOLEAN
 STDCALL
-W32kInitialize (VOID);
+Win32kInitialize (VOID);
 
 VOID
 FASTCALL

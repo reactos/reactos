@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winsta.c,v 1.25 2003/08/11 19:05:26 gdalsnes Exp $
+/* $Id: winsta.c,v 1.26 2003/08/19 11:48:50 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -55,7 +55,7 @@
 #define WINSTA_ROOT_NAME L"\\Windows\\WindowStations"
 
 LRESULT CALLBACK
-W32kDesktopWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+IntDesktopWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 STATIC PWNDCLASS_OBJECT DesktopWindowClass;
 
@@ -70,30 +70,30 @@ static HDC ScreenDeviceContext = NULL;
 
 
 PDESKTOP_OBJECT FASTCALL
-W32kGetActiveDesktop(VOID)
+IntGetActiveDesktop(VOID)
 {
   return(InputDesktop);
 }
 
 PDESKTOP_OBJECT FASTCALL
-W32kGetDesktopObject ( HDESK hDesk )
+IntGetDesktopObject ( HDESK hDesk )
 {
   /* FIXME - this obviously isn't right */
-  return W32kGetActiveDesktop();
+  return IntGetActiveDesktop();
 }
 
 VOID STDCALL
-W32kSetFocusMessageQueue(PUSER_MESSAGE_QUEUE NewQueue)
+IntSetFocusMessageQueue(PUSER_MESSAGE_QUEUE NewQueue)
 {
-  PDESKTOP_OBJECT pdo = W32kGetActiveDesktop();
+  PDESKTOP_OBJECT pdo = IntGetActiveDesktop();
 
   pdo->ActiveMessageQueue = NewQueue;
 }
 
 PUSER_MESSAGE_QUEUE FASTCALL
-W32kGetFocusMessageQueue(VOID)
+IntGetFocusMessageQueue(VOID)
 {
-  PDESKTOP_OBJECT pdo = W32kGetActiveDesktop();
+  PDESKTOP_OBJECT pdo = IntGetActiveDesktop();
 
   if (!pdo)
     {
@@ -105,9 +105,9 @@ W32kGetFocusMessageQueue(VOID)
 }
 
 PWINDOW_OBJECT STDCALL
-W32kGetCaptureWindow(VOID)
+IntGetCaptureWindow(VOID)
 {
-  PDESKTOP_OBJECT pdo = W32kGetActiveDesktop();
+  PDESKTOP_OBJECT pdo = IntGetActiveDesktop();
   if (!pdo)
     {
       DPRINT("No active desktop\n");
@@ -117,9 +117,9 @@ W32kGetCaptureWindow(VOID)
 }
 
 VOID STDCALL
-W32kSetCaptureWindow(PWINDOW_OBJECT Window)
+IntSetCaptureWindow(PWINDOW_OBJECT Window)
 {
-  PDESKTOP_OBJECT pdo = W32kGetActiveDesktop();
+  PDESKTOP_OBJECT pdo = IntGetActiveDesktop();
   if (!pdo)
     {
       DPRINT("No active desktop\n");
@@ -162,13 +162,13 @@ InitWindowStationImpl(VOID)
    * Create the desktop window class
    */
   wcx.style = 0;
-  wcx.lpfnWndProc = W32kDesktopWindowProc;
+  wcx.lpfnWndProc = IntDesktopWindowProc;
   wcx.cbClsExtra = wcx.cbWndExtra = 0;
   wcx.hInstance = wcx.hIcon = wcx.hCursor = NULL;
   wcx.hbrBackground = NULL;
   wcx.lpszMenuName = NULL;
   wcx.lpszClassName = L"DesktopWindowClass";
-  DesktopWindowClass = W32kCreateClass(&wcx, TRUE, (RTL_ATOM)32880);
+  DesktopWindowClass = IntCreateClass(&wcx, TRUE, (RTL_ATOM)32880);
 
   return(STATUS_SUCCESS);
 }
@@ -661,7 +661,7 @@ NtUserCreateDesktop(PUNICODE_STRING lpszDesktopName,
   /* Initialize some local (to win32k) desktop state. */
   DesktopObject->ActiveMessageQueue = NULL;  
   DesktopObject->DesktopWindow = 
-    W32kCreateDesktopWindow(DesktopObject->WindowStation,
+    IntCreateDesktopWindow(DesktopObject->WindowStation,
 			    DesktopWindowClass,
 			    640, 480);
 
@@ -912,34 +912,34 @@ NtUserSwitchDesktop(HDESK hDesktop)
 }
 
 VOID FASTCALL
-W32kInitializeDesktopGraphics(VOID)
+IntInitializeDesktopGraphics(VOID)
 {
-  ScreenDeviceContext = W32kCreateDC(L"DISPLAY", NULL, NULL, NULL);
+  ScreenDeviceContext = NtGdiCreateDC(L"DISPLAY", NULL, NULL, NULL);
   GDIOBJ_MarkObjectGlobal(ScreenDeviceContext);
   EnableMouse(ScreenDeviceContext);
   NtUserAcquireOrReleaseInputOwnership(FALSE);
 }
 
 VOID FASTCALL
-W32kEndDesktopGraphics(VOID)
+IntEndDesktopGraphics(VOID)
 {
   NtUserAcquireOrReleaseInputOwnership(TRUE);
   EnableMouse(FALSE);
   if (NULL != ScreenDeviceContext)
     {
-      W32kDeleteDC(ScreenDeviceContext);
+      NtGdiDeleteDC(ScreenDeviceContext);
       ScreenDeviceContext = NULL;
     }
 }
 
 HDC FASTCALL
-W32kGetScreenDC(VOID)
+IntGetScreenDC(VOID)
 {
   return(ScreenDeviceContext);
 }
 
 LRESULT CALLBACK
-W32kDesktopWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+IntDesktopWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   switch (msg)
     {

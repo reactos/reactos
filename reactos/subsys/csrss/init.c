@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.20 2003/08/11 18:50:12 chorns Exp $
+/* $Id: init.c,v 1.21 2003/08/19 11:48:49 weiden Exp $
  * 
  * reactos/subsys/csrss/init.c
  *
@@ -207,7 +207,7 @@ CsrServerInitialization (
        return FALSE;
      }
 
-   W32kInitialize();
+   Win32kInitialize();
 
    return TRUE;
 }

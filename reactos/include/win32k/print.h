@@ -4,19 +4,19 @@
 
 INT
 STDCALL
-W32kAbortDoc(HDC  hDC);
+NtGdiAbortDoc(HDC  hDC);
 
 INT
 STDCALL
-W32kEndDoc(HDC  hDC);
+NtGdiEndDoc(HDC  hDC);
 
 INT
 STDCALL
-W32kEndPage(HDC  hDC);
+NtGdiEndPage(HDC  hDC);
 
 INT
 STDCALL
-W32kEscape(HDC  hDC,
+NtGdiEscape(HDC  hDC,
                 INT  Escape,
                 INT  InSize,
                 LPCSTR  InData,
@@ -24,7 +24,7 @@ W32kEscape(HDC  hDC,
 
 INT
 STDCALL
-W32kExtEscape(HDC  hDC,
+NtGdiExtEscape(HDC  hDC,
                    INT  Escape,
                    INT  InSize,
                    LPCSTR  InData,
@@ -33,16 +33,16 @@ W32kExtEscape(HDC  hDC,
 
 INT
 STDCALL
-W32kSetAbortProc(HDC  hDC,
+NtGdiSetAbortProc(HDC  hDC,
                       ABORTPROC  AbortProc);
 
 INT
 STDCALL
-W32kStartDoc(HDC  hDC,
+NtGdiStartDoc(HDC  hDC,
                   CONST PDOCINFOW  di);
 
 INT
 STDCALL
-W32kStartPage(HDC  hDC);
+NtGdiStartPage(HDC  hDC);
 
 #endif

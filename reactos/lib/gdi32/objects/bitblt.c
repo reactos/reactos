@@ -23,7 +23,7 @@ BitBlt(HDC  hDCDest,
 	INT  YSrc,
 	DWORD  ROP)
 {
-	return W32kBitBlt(hDCDest, XDest, YDest, Width, Height, hDCSrc, XSrc, YSrc, ROP);
+	return NtGdiBitBlt(hDCDest, XDest, YDest, Width, Height, hDCSrc, XSrc, YSrc, ROP);
 }
 
 
@@ -38,7 +38,7 @@ CreateBitmap(INT  Width,
 	UINT  BitsPerPel,
 	CONST VOID *Bits)
 {
-	return W32kCreateBitmap(Width, Height, Planes, BitsPerPel, Bits);
+	return NtGdiCreateBitmap(Width, Height, Planes, BitsPerPel, Bits);
 }
 
 
@@ -49,7 +49,7 @@ HBITMAP
 STDCALL
 CreateBitmapIndirect(CONST BITMAP  *BM)
 {
-	return W32kCreateBitmapIndirect(BM);
+	return NtGdiCreateBitmapIndirect(BM);
 }
 
 
@@ -62,7 +62,7 @@ CreateCompatibleBitmap(HDC hDC,
 	INT  Width,
 	INT  Height)
 {
-	return W32kCreateCompatibleBitmap(hDC, Width, Height);
+	return NtGdiCreateCompatibleBitmap(hDC, Width, Height);
 }
 
 
@@ -75,7 +75,7 @@ CreateDiscardableBitmap(HDC  hDC,
 	INT  Width,
 	INT  Height)
 {
-	return W32kCreateDiscardableBitmap(hDC, Width, Height);
+	return NtGdiCreateDiscardableBitmap(hDC, Width, Height);
 }
 
 
@@ -91,7 +91,7 @@ CreateDIBitmap(HDC  hDC,
 	CONST BITMAPINFO  *bmi,
 	UINT  Usage)
 {
-	return W32kCreateDIBitmap(hDC, bmih, Init, bInit, bmi, Usage);
+	return NtGdiCreateDIBitmap(hDC, bmih, Init, bInit, bmi, Usage);
 }
 
 
@@ -104,7 +104,7 @@ GetBitmapBits(HBITMAP  hBitmap,
 	LONG  Count,
 	LPVOID  Bits)
 {
-	return W32kGetBitmapBits(hBitmap, Count, Bits);
+	return NtGdiGetBitmapBits(hBitmap, Count, Bits);
 }
 
 
@@ -116,7 +116,7 @@ STDCALL
 GetBitmapDimensionEx(HBITMAP  hBitmap,
 	LPSIZE  Dimension)
 {
-	return W32kGetBitmapDimensionEx(hBitmap, Dimension);
+	return NtGdiGetBitmapDimensionEx(hBitmap, Dimension);
 }
 
 
@@ -133,7 +133,7 @@ GetDIBits(HDC  hDC,
 	LPBITMAPINFO   bi,
 	UINT  Usage)
 {
-	return W32kGetDIBits(hDC, hBitmap, StartScan, ScanLines, Bits, bi, Usage);
+	return NtGdiGetDIBits(hDC, hBitmap, StartScan, ScanLines, Bits, bi, Usage);
 }
 
 
@@ -155,7 +155,7 @@ MaskBlt(HDC  hDCDest,
 	INT  yMask,
 	DWORD  ROP)
 {
-	return W32kMaskBlt(hDCDest, XDest, YDest, Width, Height, hDCSrc, XSrc, YSrc, hMaskBitmap, xMask, yMask, ROP);
+	return NtGdiMaskBlt(hDCDest, XDest, YDest, Width, Height, hDCSrc, XSrc, YSrc, hMaskBitmap, xMask, yMask, ROP);
 }
 
 
@@ -175,7 +175,7 @@ PlgBlt(HDC  hDCDest,
 	INT  xMask,      
 	INT  yMask)
 {
-	return W32kPlgBlt(hDCDest, Point, hDCSrc, XSrc, YSrc, Width, Height, hMaskBitmap, xMask, yMask);
+	return NtGdiPlgBlt(hDCDest, Point, hDCSrc, XSrc, YSrc, Width, Height, hMaskBitmap, xMask, yMask);
 }
 
 
@@ -188,7 +188,7 @@ SetBitmapBits(HBITMAP  hBitmap,
 	DWORD  Bytes,
 	CONST VOID *Bits)
 {
-	return W32kSetBitmapBits(hBitmap, Bytes, Bits);
+	return NtGdiSetBitmapBits(hBitmap, Bytes, Bits);
 }
 
 
@@ -205,7 +205,7 @@ SetDIBits(HDC  hDC,
 	CONST BITMAPINFO  *bmi,
 	UINT  ColorUse)
 {
-	return W32kSetDIBits(hDC, hBitmap, StartScan, ScanLines, Bits, bmi, ColorUse);
+	return NtGdiSetDIBits(hDC, hBitmap, StartScan, ScanLines, Bits, bmi, ColorUse);
 }
 
 
@@ -227,7 +227,7 @@ SetDIBitsToDevice(HDC  hDC,
 	CONST BITMAPINFO  *bmi,
 	UINT  ColorUse)
 {
-	return W32kSetDIBitsToDevice(hDC, XDest, YDest, Width, Height, XSrc, YSrc, StartScan, ScanLines,
+	return NtGdiSetDIBitsToDevice(hDC, XDest, YDest, Width, Height, XSrc, YSrc, StartScan, ScanLines,
 		Bits, bmi, ColorUse);
 }
 
@@ -290,7 +290,7 @@ StretchDIBits(HDC  hDC,
 	UINT  Usage,
 	DWORD  ROP)
 {
-	return W32kStretchDIBits(hDC, XDest, YDest, DestWidth, DestHeight, XSrc, YSrc,
+	return NtGdiStretchDIBits(hDC, XDest, YDest, DestWidth, DestHeight, XSrc, YSrc,
 		SrcWidth, SrcHeight, Bits, BitsInfo, Usage, ROP);
 }
 
@@ -307,7 +307,7 @@ CreateDIBSection(HDC hDC,
 	HANDLE  hSection,
 	DWORD  dwOffset)
 {
-	return W32kCreateDIBSection(hDC, bmi, Usage, Bits, hSection, dwOffset);
+	return NtGdiCreateDIBSection(hDC, bmi, Usage, Bits, hSection, dwOffset);
 }
 
 
@@ -321,7 +321,7 @@ SetPixel(HDC  hDC,
 	INT  Y,
 	COLORREF  Color)
 {
-	return W32kSetPixel(hDC, X, Y, Color);
+	return NtGdiSetPixel(hDC, X, Y, Color);
 }
 
 
@@ -331,7 +331,7 @@ SetPixel(HDC  hDC,
 BOOL STDCALL
 PatBlt(HDC hDC, INT Top, INT Left, INT Width, INT Height, ULONG Rop)
 {
-  return(W32kPatBlt(hDC, Top, Left, Width, Height, Rop));
+  return(NtGdiPatBlt(hDC, Top, Left, Width, Height, Rop));
 }
 
 /*
@@ -341,44 +341,31 @@ WINBOOL
 STDCALL 
 PolyPatBlt(HDC hDC,DWORD dwRop,PPATRECT pRects,int cRects,ULONG Reserved)
 {
-	int i;
-	PATRECT r;
-	HBRUSH hBrOld;
-	for (i = 0;i<cRects;i++)
-	{
-		r = *pRects;
-		hBrOld = (HBRUSH)SelectObject(hDC,r.hBrush);
-		PatBlt(hDC,r.r.left,r.r.top,r.r.right,r.r.bottom,dwRop);
-		pRects++;
-		SelectObject(hDC,hBrOld);
-	}
-	return TRUE;
+	return NtGdiPolyPatBlt(hDC,dwRop,pRects,cRects,Reserved);
 }
-
-
 
 
 /*
 
-BOOL STDCALL W32kExtFloodFill(HDC  hDC, INT  XStart, INT  YStart, COLORREF  Color, UINT  FillType)
-BOOL STDCALL W32kFloodFill(HDC  hDC, INT  XStart, INT  YStart, COLORREF  Fill)
-UINT STDCALL W32kGetDIBColorTable(HDC  hDC, UINT  StartIndex, UINT  Entries, RGBQUAD  *Colors)
-COLORREF STDCALL W32kGetPixel(HDC  hDC,
+BOOL STDCALL NtGdiExtFloodFill(HDC  hDC, INT  XStart, INT  YStart, COLORREF  Color, UINT  FillType)
+BOOL STDCALL NtGdiFloodFill(HDC  hDC, INT  XStart, INT  YStart, COLORREF  Fill)
+UINT STDCALL NtGdiGetDIBColorTable(HDC  hDC, UINT  StartIndex, UINT  Entries, RGBQUAD  *Colors)
+COLORREF STDCALL NtGdiGetPixel(HDC  hDC,
                        INT  XPos,
                        INT  YPos)
-BOOL STDCALL W32kSetBitmapDimensionEx(HBITMAP  hBitmap,
+BOOL STDCALL NtGdiSetBitmapDimensionEx(HBITMAP  hBitmap,
                                INT  Width,
                                INT  Height,
                                LPSIZE  Size)
-UINT STDCALL W32kSetDIBColorTable(HDC  hDC,
+UINT STDCALL NtGdiSetDIBColorTable(HDC  hDC,
                            UINT  StartIndex,
                            UINT  Entries,
                            CONST RGBQUAD  *Colors)
-BOOL STDCALL W32kSetPixelV(HDC  hDC,
+BOOL STDCALL NtGdiSetPixelV(HDC  hDC,
                     INT  X,
                     INT  Y,
                     COLORREF  Color)
-BOOL STDCALL W32kStretchBlt(HDC  hDCDest,
+BOOL STDCALL NtGdiStretchBlt(HDC  hDCDest,
                      INT  XOriginDest,
                      INT  YOriginDest,
                      INT  WidthDest,

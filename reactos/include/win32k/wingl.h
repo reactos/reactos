@@ -4,35 +4,35 @@
 
 INT
 STDCALL
-W32kChoosePixelFormat(HDC  hDC,
+NtGdiChoosePixelFormat(HDC  hDC,
                            CONST PPIXELFORMATDESCRIPTOR  pfd);
 
 INT
 STDCALL
-W32kDescribePixelFormat(HDC  hDC,
+NtGdiDescribePixelFormat(HDC  hDC,
                              INT  PixelFormat,
                              UINT  BufSize,
                              PPIXELFORMATDESCRIPTOR  pfd);
 
 UINT
 STDCALL
-W32kGetEnhMetaFilePixelFormat(HENHMETAFILE  hEMF,
+NtGdiGetEnhMetaFilePixelFormat(HENHMETAFILE  hEMF,
                                     DWORD  BufSize, 
                                     CONST PPIXELFORMATDESCRIPTOR  pfd);
 
 INT
 STDCALL
-W32kGetPixelFormat(HDC  hDC);
+NtGdiGetPixelFormat(HDC  hDC);
 
 BOOL
 STDCALL
-W32kSetPixelFormat(HDC  hDC,
+NtGdiSetPixelFormat(HDC  hDC,
                          INT  PixelFormat,
                          CONST PPIXELFORMATDESCRIPTOR  pfd);
 
 BOOL
 STDCALL
-W32kSwapBuffers(HDC  hDC);
+NtGdiSwapBuffers(HDC  hDC);
 
 #endif
 

@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.6 2003/08/18 00:11:17 weiden Exp $
+/* $Id: misc.c,v 1.7 2003/08/19 11:48:49 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -49,7 +49,7 @@ NtUserCallOneParam(
   switch(Routine)
   {
     case ONEPARAM_ROUTINE_GETMENU:
-      WindowObject = W32kGetWindowObject((HWND)Param);
+      WindowObject = IntGetWindowObject((HWND)Param);
       if(!WindowObject)
       {
         SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -58,25 +58,25 @@ NtUserCallOneParam(
       
       Result = (DWORD)WindowObject->Menu;
       
-      W32kReleaseWindowObject(WindowObject);
+      IntReleaseWindowObject(WindowObject);
       return Result;
       
     case ONEPARAM_ROUTINE_ISWINDOWUNICODE:
-      WindowObject = W32kGetWindowObject((HWND)Param);
+      WindowObject = IntGetWindowObject((HWND)Param);
       if(!WindowObject)
       {
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
       }
       Result = WindowObject->Unicode;
-      W32kReleaseWindowObject(WindowObject);
+      IntReleaseWindowObject(WindowObject);
       return Result;
       
     case ONEPARAM_ROUTINE_WINDOWFROMDC:
-      return (DWORD)W32kWindowFromDC((HDC)Param);
+      return (DWORD)IntWindowFromDC((HDC)Param);
       
     case ONEPARAM_ROUTINE_GETWNDCONTEXTHLPID:
-      WindowObject = W32kGetWindowObject((HWND)Param);
+      WindowObject = IntGetWindowObject((HWND)Param);
       if(!WindowObject)
       {
         SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -85,7 +85,7 @@ NtUserCallOneParam(
       
       Result = WindowObject->ContextHelpId;
       
-      W32kReleaseWindowObject(WindowObject);
+      IntReleaseWindowObject(WindowObject);
       return Result;
 
   }
@@ -126,7 +126,7 @@ NtUserCallTwoParam(
       return (DWORD)NtUserValidateRgn((HWND) Param1, (HRGN) Param2);
       
     case TWOPARAM_ROUTINE_SETWNDCONTEXTHLPID:
-      WindowObject = W32kGetWindowObject((HWND)Param1);
+      WindowObject = IntGetWindowObject((HWND)Param1);
       if(!WindowObject)
       {
         SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -135,7 +135,7 @@ NtUserCallTwoParam(
       
       WindowObject->ContextHelpId = Param2;
       
-      W32kReleaseWindowObject(WindowObject);
+      IntReleaseWindowObject(WindowObject);
       return TRUE;
 
   }

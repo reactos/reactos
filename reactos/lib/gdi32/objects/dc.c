@@ -17,7 +17,7 @@ GetObjectType(
         HGDIOBJ         a0
         )
 {
-        return W32kGetObjectType(a0);
+        return NtGdiGetObjectType(a0);
 }
 
 
@@ -33,7 +33,7 @@ DPtoLP(
         int     a2
         )
 {
-        return W32kDPtoLP(a0, a1, a2);
+        return NtGdiDPtoLP(a0, a1, a2);
 }
 
 
@@ -47,7 +47,7 @@ SetBkColor(
         COLORREF        a1
         )
 {
-        return W32kSetBkColor(a0, a1);
+        return NtGdiSetBkColor(a0, a1);
 }
 
 
@@ -60,7 +60,7 @@ GetGraphicsMode(
         HDC     a0
         )
 {
-        return W32kGetGraphicsMode(a0);
+        return NtGdiGetGraphicsMode(a0);
 }
 
 
@@ -74,7 +74,7 @@ SetGraphicsMode(
         int     iMode
         )
 {
-        return W32kSetGraphicsMode(hdc, iMode);
+        return NtGdiSetGraphicsMode(hdc, iMode);
 }
 
 
@@ -87,7 +87,7 @@ GetMapMode(
         HDC     a0
         )
 {
-        return W32kGetMapMode(a0);
+        return NtGdiGetMapMode(a0);
 }
 
 /*
@@ -100,7 +100,7 @@ GetCurrentPositionEx(
         LPPOINT a1
         )
 {
-        return W32kGetCurrentPositionEx(a0, a1);
+        return NtGdiGetCurrentPositionEx(a0, a1);
 }
 
 
@@ -113,7 +113,7 @@ GetBkColor(
         HDC     a0
         )
 {
-        return W32kGetBkColor(a0);
+        return NtGdiGetBkColor(a0);
 }
 
 
@@ -126,7 +126,7 @@ GetBkMode(
         HDC     a0
         )
 {
-        return W32kGetBkMode(a0);
+        return NtGdiGetBkMode(a0);
 }
 
 /*
@@ -139,7 +139,7 @@ GetBrushOrgEx(
         LPPOINT a1
         )
 {
-        return W32kGetBrushOrgEx(a0, a1);
+        return NtGdiGetBrushOrgEx(a0, a1);
 }
 
 
@@ -152,7 +152,7 @@ GetROP2(
         HDC     a0
         )
 {
-        return W32kGetROP2(a0);
+        return NtGdiGetROP2(a0);
 
 }
 
@@ -166,7 +166,7 @@ GetStretchBltMode(
         HDC     a0
         )
 {
-        return W32kGetStretchBltMode(a0);
+        return NtGdiGetStretchBltMode(a0);
 
 }
 
@@ -181,7 +181,7 @@ GetTextAlign(
         HDC     hDc
         )
 {
-        return W32kGetTextAlign(hDc);
+        return NtGdiGetTextAlign(hDc);
 
 }
 
@@ -195,7 +195,7 @@ GetTextColor(
         HDC     hDc
         )
 {
-        return W32kGetTextColor(hDc);
+        return NtGdiGetTextColor(hDc);
 
 }
 
@@ -210,7 +210,7 @@ GetViewportExtEx(
         LPSIZE  lpSize
         )
 {
-        return W32kGetViewportExtEx(hDc, lpSize);
+        return NtGdiGetViewportExtEx(hDc, lpSize);
 
 }
 
@@ -225,7 +225,7 @@ GetViewportOrgEx(
         LPPOINT         lpPoint
         )
 {
-        return W32kGetViewportOrgEx(hDc, lpPoint);
+        return NtGdiGetViewportOrgEx(hDc, lpPoint);
 
 }
 
@@ -240,7 +240,7 @@ GetWindowExtEx(
         LPSIZE          lpSize
         )
 {
-        return W32kGetWindowExtEx(hDc, lpSize);
+        return NtGdiGetWindowExtEx(hDc, lpSize);
 }
 
 
@@ -254,7 +254,7 @@ GetWindowOrgEx(
         LPPOINT         lpPoint
         )
 {
-        return W32kGetWindowOrgEx(hDc, lpPoint);
+        return NtGdiGetWindowOrgEx(hDc, lpPoint);
 }
 
 
@@ -268,7 +268,7 @@ SetBkMode(
         int     a1
         )
 {
-        return W32kSetBkMode(a0, a1);
+        return NtGdiSetBkMode(a0, a1);
 
 }
 
@@ -283,7 +283,7 @@ SetROP2(
         int     a1
         )
 {
-        return W32kSetROP2(a0, a1);
+        return NtGdiSetROP2(a0, a1);
 }
 
 
@@ -297,7 +297,7 @@ SetStretchBltMode(
         int     a1
         )
 {
-        return W32kSetStretchBltMode(a0, a1);
+        return NtGdiSetStretchBltMode(a0, a1);
 
 }
 
@@ -312,7 +312,7 @@ GetRelAbs(
          DWORD a1
            )
 {
-        return W32kGetRelAbs(a0);
+        return NtGdiGetRelAbs(a0);
 
 }
 
@@ -323,7 +323,7 @@ GetRelAbs(
 HGDIOBJ STDCALL
 GetStockObject(int Index)
 {
-  return(W32kGetStockObject(Index));
+  return(NtGdiGetStockObject(Index));
 }
 
 
@@ -333,7 +333,7 @@ GetStockObject(int Index)
 int STDCALL
 GetClipBox(HDC hDc, LPRECT Rect)
 {
-  return(W32kGetClipBox(hDc, Rect));
+  return(NtGdiGetClipBox(hDc, Rect));
 }
 
 
@@ -346,7 +346,7 @@ GetPolyFillMode(
 	HDC	a0
 	)
 {
-	return W32kGetPolyFillMode(a0);
+	return NtGdiGetPolyFillMode(a0);
 }
 
 
@@ -435,7 +435,7 @@ CreateDCW (
 	CONST DEVMODEW	* lpInitData
 	)
 {
-	return W32kCreateDC (
+	return NtGdiCreateDC (
 			lpwszDriver,
 			lpwszDevice,
 			lpwszOutput,
@@ -449,7 +449,7 @@ CreateDCW (
  */
 BOOL STDCALL DeleteDC( HDC hDC )
 {
-  return W32kDeleteDC( hDC );
+  return NtGdiDeleteDC( hDC );
 }
 
 
@@ -462,7 +462,7 @@ CreateCompatibleDC(
 	HDC  hDC
 	)
 {
-	return W32kCreateCompatableDC(hDC);
+	return NtGdiCreateCompatableDC(hDC);
 }
 
 
@@ -476,7 +476,7 @@ SelectObject(
 	HGDIOBJ	hGDIObj
 	)
 {
-	return W32kSelectObject(hDC, hGDIObj);
+	return NtGdiSelectObject(hDC, hGDIObj);
 }
 
 
@@ -490,7 +490,7 @@ SetMapMode(
 	int	a1
 	)
 {
-  return W32kSetMapMode( a0, a1 );
+  return NtGdiSetMapMode( a0, a1 );
 }
 
 
@@ -506,7 +506,7 @@ SetViewportOrgEx(
 	LPPOINT	a3
 	)
 {
-  return W32kSetViewportOrgEx( a0, a1, a2, a3 );
+  return NtGdiSetViewportOrgEx( a0, a1, a2, a3 );
 }
 
 
@@ -522,7 +522,7 @@ OffsetViewportOrgEx(
 	LPPOINT	Point
 	)
 {
-  return W32kOffsetViewportOrgEx(DC, XOffset, YOffset, Point);
+  return NtGdiOffsetViewportOrgEx(DC, XOffset, YOffset, Point);
 }
 
 
@@ -538,7 +538,7 @@ SetWindowOrgEx(
 	LPPOINT	a3
 	)
 {
-  return W32kSetWindowOrgEx( a0, a1, a2, a3 );
+  return NtGdiSetWindowOrgEx( a0, a1, a2, a3 );
 }
 
 
@@ -551,7 +551,7 @@ DeleteObject(
 	HGDIOBJ		a0
 	)
 {
-	return W32kDeleteObject(a0);
+	return NtGdiDeleteObject(a0);
 }
 
 
@@ -566,7 +566,7 @@ SelectPalette(
 	BOOL		a2
 	)
 {
-	return W32kSelectPalette( a0, a1,a2 );
+	return NtGdiSelectPalette( a0, a1,a2 );
 }
 
 
@@ -579,7 +579,7 @@ RealizePalette(
 	HDC	a0
 	)
 {
-	return W32kRealizePalette( a0 );
+	return NtGdiRealizePalette( a0 );
 }
 
 
@@ -594,7 +594,7 @@ LPtoDP(
 	int	a2
 	)
 {
-	return W32kLPtoDP(a0, a1, a2);
+	return NtGdiLPtoDP(a0, a1, a2);
 }
 
 
@@ -608,7 +608,7 @@ SetPolyFillMode(
 	int	a1
 	)
 {
-	return W32kSetPolyFillMode(a0, a1);
+	return NtGdiSetPolyFillMode(a0, a1);
 }
 
 
@@ -622,7 +622,7 @@ GetDeviceCaps(
 	int	Index
 	)
 {
-	return W32kGetDeviceCaps(DC, Index);
+	return NtGdiGetDeviceCaps(DC, Index);
 }
 
 /*
@@ -634,7 +634,7 @@ CreatePalette(
 	CONST LOGPALETTE	*a0
 	)
 {
-	return W32kCreatePalette((CONST PLOGPALETTE)a0);
+	return NtGdiCreatePalette((CONST PLOGPALETTE)a0);
 }
 
 /*
@@ -647,7 +647,7 @@ GetNearestColor(
 	COLORREF	a1
 	)
 {
-	return W32kGetNearestColor(a0,a1);
+	return NtGdiGetNearestColor(a0,a1);
 }
 
 /*
@@ -660,7 +660,7 @@ GetNearestPaletteIndex(
 	COLORREF	a1
 	)
 {
-	return W32kGetNearestPaletteIndex(a0,a1);
+	return NtGdiGetNearestPaletteIndex(a0,a1);
 }
 
 /*
@@ -675,7 +675,7 @@ GetPaletteEntries(
 	LPPALETTEENTRY	a3
 	)
 {
-	return W32kGetPaletteEntries(a0,a1,a2,a3);
+	return NtGdiGetPaletteEntries(a0,a1,a2,a3);
 }
 
 /*
@@ -690,7 +690,7 @@ GetSystemPaletteEntries(
 	LPPALETTEENTRY	a3
 	)
 {
-	return W32kGetSystemPaletteEntries(a0,a1,a2,a3);
+	return NtGdiGetSystemPaletteEntries(a0,a1,a2,a3);
 }
 
 /*
@@ -703,7 +703,7 @@ RestoreDC(
 	int	a1
 	)
 {
-	return W32kRestoreDC(a0,a1);
+	return NtGdiRestoreDC(a0,a1);
 }
 
 
@@ -716,7 +716,7 @@ SaveDC(
 	HDC	a0
 	)
 {
-	return W32kSaveDC(a0);
+	return NtGdiSaveDC(a0);
 }
 
 /*
@@ -731,7 +731,7 @@ SetPaletteEntries(
 	CONST PALETTEENTRY	*a3
 	)
 {
-	return W32kSetPaletteEntries(a0,a1,a2,(CONST PPALETTEENTRY)a3);
+	return NtGdiSetPaletteEntries(a0,a1,a2,(CONST PPALETTEENTRY)a3);
 }
 
 /*
@@ -744,7 +744,7 @@ GetWorldTransform(
 	LPXFORM		a1
 	)
 {
-	return W32kGetWorldTransform(hdc,a1);
+	return NtGdiGetWorldTransform(hdc,a1);
 }
 
 /*
@@ -757,7 +757,7 @@ SetWorldTransform(
 	CONST XFORM	*a1
 	)
 {
-	return W32kSetWorldTransform(a0,(CONST PXFORM)a1);
+	return NtGdiSetWorldTransform(a0,(CONST PXFORM)a1);
 }
 
 /*
@@ -771,7 +771,7 @@ ModifyWorldTransform(
 	DWORD		a2
 	)
 {
-	return W32kModifyWorldTransform(a0,(CONST PXFORM)a1,a2);
+	return NtGdiModifyWorldTransform(a0,(CONST PXFORM)a1,a2);
 }
 
 /*
@@ -785,7 +785,7 @@ CombineTransform(
 	CONST XFORM	*a2
 	)
 {
-	return W32kCombineTransform(a0,(CONST PXFORM)a1,(CONST PXFORM)a2);
+	return NtGdiCombineTransform(a0,(CONST PXFORM)a1,(CONST PXFORM)a2);
 }
 
 /*
@@ -800,7 +800,7 @@ SetDIBColorTable(
 	CONST RGBQUAD	*a3
 	)
 {
-	return W32kSetDIBColorTable(hdc,a1,a2,(CONST PRGBQUAD)a3);
+	return NtGdiSetDIBColorTable(hdc,a1,a2,(CONST PRGBQUAD)a3);
 }
 
 /*
@@ -812,7 +812,7 @@ CreateHalftonePalette(
 	HDC	hdc
 	)
 {
-	return W32kCreateHalftonePalette(hdc);
+	return NtGdiCreateHalftonePalette(hdc);
 }
 
 /*
@@ -827,7 +827,7 @@ SetViewportExtEx(
 	LPSIZE	a3
 	)
 {
-	return W32kSetViewportExtEx(a0,a1,a2,a3);
+	return NtGdiSetViewportExtEx(a0,a1,a2,a3);
 }
 
 /*
@@ -842,7 +842,7 @@ SetWindowExtEx(
 	LPSIZE	a3
 	)
 {
-	return W32kSetWindowExtEx(a0,a1,a2,a3);
+	return NtGdiSetWindowExtEx(a0,a1,a2,a3);
 }
 
 /*
@@ -857,7 +857,7 @@ OffsetWindowOrgEx(
 	LPPOINT	a3
 	)
 {
-	return W32kOffsetWindowOrgEx(a0,a1,a2,a3);
+	return NtGdiOffsetWindowOrgEx(a0,a1,a2,a3);
 }
 
 /*
@@ -872,7 +872,7 @@ SetBitmapDimensionEx(
 	LPSIZE	a3
 	)
 {
-	return W32kSetBitmapDimensionEx(a0,a1,a2,a3);
+	return NtGdiSetBitmapDimensionEx(a0,a1,a2,a3);
 }
 
 /*
@@ -885,5 +885,5 @@ GetDCOrgEx(
 	LPPOINT	a1
 	)
 {
-	return W32kGetDCOrgEx(a0,a1);
+	return NtGdiGetDCOrgEx(a0,a1);
 }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: color.c,v 1.19 2003/08/13 20:24:05 chorns Exp $ */
+/* $Id: color.c,v 1.20 2003/08/19 11:48:50 weiden Exp $ */
 
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
 
@@ -75,24 +75,24 @@ const PALETTEENTRY COLOR_sysPalTemplate[NB_RESERVED_COLORS] =
   { 0xff, 0xff, 0xff, PC_SYS_USED }     // last 10
 };
 
-ULONG FASTCALL W32kGetSysColor(int nIndex)
+ULONG FASTCALL NtGdiGetSysColor(int nIndex)
 {
    const PALETTEENTRY *p = COLOR_sysPalTemplate + (nIndex * sizeof(PALETTEENTRY));
    return RGB(p->peRed, p->peGreen, p->peBlue);
 }
 
-HPEN STDCALL W32kGetSysColorPen(int nIndex)
+HPEN STDCALL NtGdiGetSysColorPen(int nIndex)
 {
   COLORREF Col;
   memcpy(&Col, COLOR_sysPalTemplate + nIndex, sizeof(COLORREF));
-  return(W32kCreatePen(PS_SOLID, 1, Col));
+  return(NtGdiCreatePen(PS_SOLID, 1, Col));
 }
 
-HBRUSH STDCALL W32kGetSysColorBrush(int nIndex)
+HBRUSH STDCALL NtGdiGetSysColorBrush(int nIndex)
 {
   COLORREF Col;
   memcpy(&Col, COLOR_sysPalTemplate + nIndex, sizeof(COLORREF));
-  return(W32kCreateSolidBrush(Col));
+  return(NtGdiCreateSolidBrush(Col));
 }
 
 
@@ -102,13 +102,13 @@ const PALETTEENTRY* FASTCALL COLOR_GetSystemPaletteTemplate(void)
   return (const PALETTEENTRY*)&COLOR_sysPalTemplate;
 }
 
-BOOL STDCALL W32kAnimatePalette(HPALETTE  hpal,
+BOOL STDCALL NtGdiAnimatePalette(HPALETTE  hpal,
                          UINT  StartIndex,
                          UINT  Entries,
                          CONST PPALETTEENTRY  ppe)
 {
 /*
-  if( hPal != W32kGetStockObject(DEFAULT_PALETTE) )
+  if( hPal != NtGdiGetStockObject(DEFAULT_PALETTE) )
   {
     PALETTEOBJ* palPtr = (PALETTEOBJ *)GDI_GetObjPtr(hPal, PALETTE_MAGIC);
     if (!palPtr) return FALSE;
@@ -129,7 +129,7 @@ BOOL STDCALL W32kAnimatePalette(HPALETTE  hpal,
   UNIMPLEMENTED;
 }
 
-HPALETTE STDCALL W32kCreateHalftonePalette(HDC  hDC)
+HPALETTE STDCALL NtGdiCreateHalftonePalette(HDC  hDC)
 {
   int i, r, g, b;
   struct {
@@ -140,7 +140,7 @@ HPALETTE STDCALL W32kCreateHalftonePalette(HDC  hDC)
 
   Palette.Version = 0x300;
   Palette.NumberOfEntries = 256;
-  W32kGetSystemPaletteEntries(hDC, 0, 256, Palette.aEntries);
+  NtGdiGetSystemPaletteEntries(hDC, 0, 256, Palette.aEntries);
 
   for (r = 0; r < 6; r++) {
     for (g = 0; g < 6; g++) {
@@ -160,10 +160,10 @@ HPALETTE STDCALL W32kCreateHalftonePalette(HDC  hDC)
     Palette.aEntries[i].peBlue = v;
   }
 
-  return W32kCreatePalette((LOGPALETTE *)&Palette);
+  return NtGdiCreatePalette((LOGPALETTE *)&Palette);
 }
 
-HPALETTE STDCALL W32kCreatePalette(CONST PLOGPALETTE palette)
+HPALETTE STDCALL NtGdiCreatePalette(CONST PLOGPALETTE palette)
 {
   PPALOBJ  PalObj;
 
@@ -185,13 +185,13 @@ HPALETTE STDCALL W32kCreatePalette(CONST PLOGPALETTE palette)
   return NewPalette;
 }
 
-BOOL STDCALL W32kGetColorAdjustment(HDC  hDC,
+BOOL STDCALL NtGdiGetColorAdjustment(HDC  hDC,
                              LPCOLORADJUSTMENT  ca)
 {
   UNIMPLEMENTED;
 }
 
-COLORREF STDCALL W32kGetNearestColor(HDC  hDC,
+COLORREF STDCALL NtGdiGetNearestColor(HDC  hDC,
                               COLORREF  Color)
 {
   COLORREF nearest = CLR_INVALID;
@@ -200,7 +200,7 @@ COLORREF STDCALL W32kGetNearestColor(HDC  hDC,
 
   if( (dc = DC_HandleToPtr(hDC) ) )
   {
-    HPALETTE hpal = (dc->w.hPalette)? dc->w.hPalette : W32kGetStockObject(DEFAULT_PALETTE);
+    HPALETTE hpal = (dc->w.hPalette)? dc->w.hPalette : NtGdiGetStockObject(DEFAULT_PALETTE);
     palObj = (PPALOBJ)AccessUserObject((ULONG)hpal);
     if (!palObj) {
 //      GDI_ReleaseObj(hdc);
@@ -217,7 +217,7 @@ COLORREF STDCALL W32kGetNearestColor(HDC  hDC,
   return nearest;
 }
 
-UINT STDCALL W32kGetNearestPaletteIndex(HPALETTE  hpal,
+UINT STDCALL NtGdiGetNearestPaletteIndex(HPALETTE  hpal,
                                  COLORREF  Color)
 {
   PPALOBJ     palObj = (PPALOBJ)AccessUserObject((ULONG)hpal);
@@ -233,7 +233,7 @@ UINT STDCALL W32kGetNearestPaletteIndex(HPALETTE  hpal,
   return index;
 }
 
-UINT STDCALL W32kGetPaletteEntries(HPALETTE  hpal,
+UINT STDCALL NtGdiGetPaletteEntries(HPALETTE  hpal,
                             UINT  StartIndex,
                             UINT  Entries,
                             LPPALETTEENTRY  pe)
@@ -263,7 +263,7 @@ UINT STDCALL W32kGetPaletteEntries(HPALETTE  hpal,
   return Entries;
 }
 
-UINT STDCALL W32kGetSystemPaletteEntries(HDC  hDC,
+UINT STDCALL NtGdiGetSystemPaletteEntries(HDC  hDC,
                                   UINT  StartIndex,
                                   UINT  Entries,
                                   LPPALETTEENTRY  pe)
@@ -299,7 +299,7 @@ UINT STDCALL W32kGetSystemPaletteEntries(HDC  hDC,
   return 0;
 }
 
-UINT STDCALL W32kGetSystemPaletteUse(HDC  hDC)
+UINT STDCALL NtGdiGetSystemPaletteUse(HDC  hDC)
 {
   UNIMPLEMENTED;
   return 0;
@@ -320,7 +320,7 @@ A logical palette is a buffer between color-intensive applications and the syste
    the dc palette.
 -- If it is an RGB palette, then an XLATEOBJ is created between the RGB values and the dc palette.
 */
-UINT STDCALL W32kRealizePalette(HDC  hDC)
+UINT STDCALL NtGdiRealizePalette(HDC  hDC)
 {
   PPALOBJ palPtr, sysPtr;
   PPALGDI palGDI, sysGDI;
@@ -336,7 +336,7 @@ UINT STDCALL W32kRealizePalette(HDC  hDC)
 
   palPtr = (PPALOBJ)AccessUserObject((ULONG)dc->w.hPalette);
   SurfGDI = (PSURFGDI)AccessInternalObjectFromUserObject(dc->Surface);
-  systemPalette = W32kGetStockObject((INT)STOCK_DEFAULT_PALETTE);
+  systemPalette = NtGdiGetStockObject((INT)STOCK_DEFAULT_PALETTE);
   sysPtr = (PPALOBJ)AccessInternalObject((ULONG)systemPalette);
   palGDI = (PPALGDI)AccessInternalObject((ULONG)dc->w.hPalette);
   sysGDI = (PPALGDI)AccessInternalObject((ULONG)systemPalette);
@@ -344,7 +344,7 @@ UINT STDCALL W32kRealizePalette(HDC  hDC)
   // Step 1: Create mapping of system palette\DC palette
   realized = PALETTE_SetMapping(palPtr, 0, palPtr->logpalette->palNumEntries,
                (dc->w.hPalette != hPrimaryPalette) ||
-               (dc->w.hPalette == W32kGetStockObject(DEFAULT_PALETTE)));
+               (dc->w.hPalette == NtGdiGetStockObject(DEFAULT_PALETTE)));
 
   // Step 2:
   // The RealizePalette function modifies the palette for the device associated with the specified device context. If the
@@ -374,7 +374,7 @@ UINT STDCALL W32kRealizePalette(HDC  hDC)
   return realized;
 }
 
-BOOL STDCALL W32kResizePalette(HPALETTE  hpal,
+BOOL STDCALL NtGdiResizePalette(HPALETTE  hpal,
                         UINT  Entries)
 {
 /*  PPALOBJ palPtr = (PPALOBJ)AccessUserObject(hPal);
@@ -428,7 +428,7 @@ BOOL STDCALL W32kResizePalette(HPALETTE  hpal,
  *
  * \todo	implement ForceBackground == TRUE
 */
-HPALETTE STDCALL W32kSelectPalette(HDC  hDC,
+HPALETTE STDCALL NtGdiSelectPalette(HDC  hDC,
                             HPALETTE  hpal,
                             BOOL  ForceBackground)
 {
@@ -446,13 +446,13 @@ HPALETTE STDCALL W32kSelectPalette(HDC  hDC,
   return oldPal;
 }
 
-BOOL STDCALL W32kSetColorAdjustment(HDC  hDC,
+BOOL STDCALL NtGdiSetColorAdjustment(HDC  hDC,
                              CONST LPCOLORADJUSTMENT  ca)
 {
   UNIMPLEMENTED;
 }
 
-UINT STDCALL W32kSetPaletteEntries(HPALETTE  hpal,
+UINT STDCALL NtGdiSetPaletteEntries(HPALETTE  hpal,
                             UINT  Start,
                             UINT  Entries,
                             CONST LPPALETTEENTRY  pe)
@@ -478,18 +478,18 @@ UINT STDCALL W32kSetPaletteEntries(HPALETTE  hpal,
   return Entries;
 }
 
-UINT STDCALL W32kSetSystemPaletteUse(HDC  hDC,
+UINT STDCALL NtGdiSetSystemPaletteUse(HDC  hDC,
                               UINT  Usage)
 {
   UNIMPLEMENTED;
 }
 
-BOOL STDCALL W32kUnrealizeObject(HGDIOBJ  hgdiobj)
+BOOL STDCALL NtGdiUnrealizeObject(HGDIOBJ  hgdiobj)
 {
   UNIMPLEMENTED;
 }
 
-BOOL STDCALL W32kUpdateColors(HDC  hDC)
+BOOL STDCALL NtGdiUpdateColors(HDC  hDC)
 {
   //PDC dc;
   //HWND hWnd;

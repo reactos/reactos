@@ -1,4 +1,4 @@
-/* $Id: stubsa.c,v 1.23 2003/08/07 04:03:22 royce Exp $
+/* $Id: stubsa.c,v 1.24 2003/08/19 11:48:49 weiden Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -75,7 +75,7 @@ CopyMetaFileA(
     SetLastError (RtlNtStatusToDosError(Status));
   else
   {
-    rc = W32kCopyMetaFile ( Src, lpszFileW );
+    rc = NtGdiCopyMetaFile ( Src, lpszFileW );
 
     HEAP_free ( lpszFileW );
   }
@@ -119,7 +119,7 @@ CreateICA(
 	    if ( lpdvmInit )
 	      RosRtlDevModeA2W ( &dvmInitW, (const LPDEVMODEA)lpdvmInit );
 
-	    rc = W32kCreateIC ( lpszDriverW,
+	    rc = NtGdiCreateIC ( lpszDriverW,
 				lpszDeviceW,
 				lpszOutputW,
 				lpdvmInit ? &dvmInitW : NULL );
@@ -152,7 +152,7 @@ CreateMetaFileA(
     SetLastError (RtlNtStatusToDosError(Status));
   else
     {
-      rc = W32kCreateMetaFile ( lpszFileW );
+      rc = NtGdiCreateMetaFile ( lpszFileW );
 
       HEAP_free ( lpszFileW );
     }
@@ -191,7 +191,7 @@ CreateScalableFontResourceA(
 	    SetLastError (RtlNtStatusToDosError(Status));
 	  else
 	    {
-	      rc = W32kCreateScalableFontResource ( fdwHidden,
+	      rc = NtGdiCreateScalableFontResource ( fdwHidden,
 						    lpszFontResW,
 						    lpszFontFileW,
 						    lpszCurrentPathW );
@@ -247,7 +247,7 @@ EnumFontFamiliesExA (
   RosRtlLogFontA2W ( &LogFontW, lpLogFont );
 
   /* no need to convert LogFontW back to lpLogFont b/c it's an [in] parameter only */
-  return W32kEnumFontFamiliesEx ( hdc, &LogFontW, lpEnumFontFamProc, lParam, dwFlags );
+  return NtGdiEnumFontFamiliesEx ( hdc, &LogFontW, lpEnumFontFamProc, lParam, dwFlags );
 #endif
 }
 
@@ -276,7 +276,7 @@ EnumFontFamiliesA(
     SetLastError (RtlNtStatusToDosError(Status));
   else
     {
-      rc = W32kEnumFontFamilies ( hdc, lpszFamilyW, lpEnumFontFamProc, lParam );
+      rc = NtGdiEnumFontFamilies ( hdc, lpszFamilyW, lpEnumFontFamProc, lParam );
 
       HEAP_free ( lpszFamilyW );
     }
@@ -310,7 +310,7 @@ EnumFontsA (
     SetLastError (RtlNtStatusToDosError(Status));
   else
     {
-      rc = W32kEnumFonts ( hDC, lpFaceNameW, FontFunc, lParam );
+      rc = NtGdiEnumFonts ( hDC, lpFaceNameW, FontFunc, lParam );
 
       HEAP_free ( lpFaceNameW );
     }
@@ -332,7 +332,7 @@ GetCharWidthA (
 	)
 {
   /* FIXME what to do with iFirstChar and iLastChar ??? */
-  return W32kGetCharWidth ( hdc, iFirstChar, iLastChar, lpBuffer );
+  return NtGdiGetCharWidth ( hdc, iFirstChar, iLastChar, lpBuffer );
 }
 
 
@@ -349,7 +349,7 @@ GetCharWidth32A(
 	)
 {
   /* FIXME what to do with iFirstChar and iLastChar ??? */
-  return W32kGetCharWidth32 ( hdc, iFirstChar, iLastChar, lpBuffer );
+  return NtGdiGetCharWidth32 ( hdc, iFirstChar, iLastChar, lpBuffer );
 }
 
 
@@ -366,7 +366,7 @@ GetCharWidthFloatA(
 	)
 {
   /* FIXME what to do with iFirstChar and iLastChar ??? */
-  return W32kGetCharWidthFloat ( hdc, iFirstChar, iLastChar, pxBuffer );
+  return NtGdiGetCharWidthFloat ( hdc, iFirstChar, iLastChar, pxBuffer );
 }
 
 
@@ -383,7 +383,7 @@ GetCharABCWidthsA(
 	)
 {
   /* FIXME what to do with uFirstChar and uLastChar ??? */
-  return W32kGetCharABCWidths ( hdc, uFirstChar, uLastChar, lpabc );
+  return NtGdiGetCharABCWidths ( hdc, uFirstChar, uLastChar, lpabc );
 }
 
 
@@ -400,7 +400,7 @@ GetCharABCWidthsFloatA(
 	)
 {
   /* FIXME what to do with iFirstChar and iLastChar ??? */
-  return W32kGetCharABCWidthsFloat ( hdc, iFirstChar, iLastChar, lpABCF );
+  return NtGdiGetCharABCWidthsFloat ( hdc, iFirstChar, iLastChar, lpABCF );
 }
 
 
@@ -419,7 +419,7 @@ GetGlyphOutlineA(
 	CONST MAT2	*lpmat2
 	)
 {
-  return W32kGetGlyphOutline ( hdc, uChar, uFormat, lpgm, cbBuffer, lpvBuffer, (CONST LPMAT2)lpmat2 );
+  return NtGdiGetGlyphOutline ( hdc, uChar, uFormat, lpgm, cbBuffer, lpvBuffer, (CONST LPMAT2)lpmat2 );
 }
 
 
@@ -441,7 +441,7 @@ GetMetaFileA(
     SetLastError (RtlNtStatusToDosError(Status));
   else
     {
-      rc = W32kGetMetaFile ( lpszMetaFileW );
+      rc = NtGdiGetMetaFile ( lpszMetaFileW );
 
       HEAP_free ( lpszMetaFileW );
     }
@@ -490,7 +490,7 @@ GetTextExtentExPointA(
     SetLastError (RtlNtStatusToDosError(Status));
   else
   {
-    rc = W32kGetTextExtentExPoint (
+    rc = NtGdiGetTextExtentExPoint (
       hdc, lpszStrW, cchString, nMaxExtent, lpnFit, alpDx, lpSize );
 
     HEAP_free ( lpszStrW );
@@ -533,7 +533,7 @@ ResetDCA(
 
   RosRtlDevModeA2W ( &InitDataW, (CONST LPDEVMODEA)lpInitData );
 
-  return W32kResetDC ( hdc, &InitDataW );
+  return NtGdiResetDC ( hdc, &InitDataW );
 }
 
 
@@ -555,7 +555,7 @@ RemoveFontResourceA(
     SetLastError (RtlNtStatusToDosError(Status));
   else
     {
-      rc = W32kRemoveFontResource ( lpFileNameW );
+      rc = NtGdiRemoveFontResource ( lpFileNameW );
 
       HEAP_free ( lpFileNameW );
     }
@@ -583,7 +583,7 @@ CopyEnhMetaFileA(
     SetLastError (RtlNtStatusToDosError(Status));
   else
     {
-      rc = W32kCopyEnhMetaFile ( hemfSrc, lpszFileW );
+      rc = NtGdiCopyEnhMetaFile ( hemfSrc, lpszFileW );
 
       HEAP_free ( lpszFileW );
     }
@@ -617,7 +617,7 @@ CreateEnhMetaFileA(
 	SetLastError (RtlNtStatusToDosError(Status));
       else
       {
-	rc = W32kCreateEnhMetaFile (
+	rc = NtGdiCreateEnhMetaFile (
 	  hdc, lpFileNameW, (CONST LPRECT)lpRect, lpDescriptionW );
 
 	HEAP_free ( lpDescriptionW );
@@ -647,7 +647,7 @@ GetEnhMetaFileA(
     SetLastError (RtlNtStatusToDosError(Status));
   else
   {
-    rc = W32kGetEnhMetaFile ( lpszMetaFileW );
+    rc = NtGdiGetEnhMetaFile ( lpszMetaFileW );
 
     HEAP_free ( lpszMetaFileW );
   }
@@ -683,7 +683,7 @@ GetEnhMetaFileDescriptionA(
   else
     lpszDescriptionW = NULL;
 
-  rc = W32kGetEnhMetaFileDescription ( hemf, cchBuffer, lpszDescriptionW );
+  rc = NtGdiGetEnhMetaFileDescription ( hemf, cchBuffer, lpszDescriptionW );
 
   if ( lpszDescription && cchBuffer )
     {
@@ -730,7 +730,7 @@ GetObjectA(
 	LPVOID		a2
 	)
 {
-	return W32kGetObject ( a0, a1, a2 );
+	return NtGdiGetObject ( a0, a1, a2 );
 }
 
 
@@ -855,9 +855,9 @@ EnumICMProfilesA(
 	)
 {
   /*
-   * FIXME - call W32kEnumICMProfiles with NULL for lpstrBuffer
+   * FIXME - call NtGdiEnumICMProfiles with NULL for lpstrBuffer
    * to find out how big a buffer we need. Then allocate that buffer
-   * and call W32kEnumICMProfiles again to have the buffer filled.
+   * and call NtGdiEnumICMProfiles again to have the buffer filled.
    *
    * Finally, step through the buffer ( MULTI-SZ recommended for format ),
    * and convert each string to ANSI, calling the user's callback function

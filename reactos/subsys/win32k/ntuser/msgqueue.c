@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.14 2003/08/05 15:41:03 weiden Exp $
+/* $Id: msgqueue.c,v 1.15 2003/08/19 11:48:49 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -159,7 +159,7 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
   POINT Point;
   ULONG Click = 0;
 
-  if ((Window = W32kGetCaptureWindow()) == NULL)
+  if ((Window = IntGetCaptureWindow()) == NULL)
     {
       *HitTest = WinPosWindowFromPoint(ScopeWin, Message->Msg.pt, &Window);
     }
@@ -184,7 +184,7 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
     }
 
   if (hWnd != NULL && Window->Self != hWnd && 
-      !W32kIsChildWindow(hWnd, Window->Self))
+      !IntIsChildWindow(hWnd, Window->Self))
     {
       return(FALSE);
     }
@@ -195,7 +195,7 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
     }
   if (Click)
     {
-      if (W32kGetClassLong(Window, GCL_STYLE, FALSE) & CS_DBLCLKS ||
+      if (IntGetClassLong(Window, GCL_STYLE, FALSE) & CS_DBLCLKS ||
 	  (*HitTest) != HTCLIENT)
 	{
 	  if (Msg == ClkMessage &&
@@ -267,7 +267,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
   ULONG ActiveStamp;
   PWINDOW_OBJECT DesktopWindow;
 
-  DesktopWindow = W32kGetWindowObject(W32kGetDesktopWindow());
+  DesktopWindow = IntGetWindowObject(IntGetDesktopWindow());
 
   /* Process messages in the message queue itself. */
   ExAcquireFastMutex(&MessageQueue->Lock);
@@ -292,7 +292,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 		}
 	      ExReleaseFastMutex(&MessageQueue->Lock);
 	      *Message = Current;
-	      W32kReleaseWindowObject(DesktopWindow);
+	      IntReleaseWindowObject(DesktopWindow);
 	      return(TRUE);
 	    }
 	}
@@ -362,7 +362,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 		}
 	      ExReleaseFastMutex(&HardwareMessageQueueLock);
 	      *Message = Current;
-	      W32kReleaseWindowObject(DesktopWindow);
+	      IntReleaseWindowObject(DesktopWindow);
 	      return(TRUE);
 	    }
 	  /* If the contents of the queue changed then restart processing. */
@@ -395,7 +395,7 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
   DPRINT("MsqPostKeyboardMessage(uMsg 0x%x, wParam 0x%x, lParam 0x%x)\n",
     uMsg, wParam, lParam);
 
-  FocusMessageQueue = W32kGetFocusMessageQueue();
+  FocusMessageQueue = IntGetFocusMessageQueue();
   if (FocusMessageQueue == NULL)
     {
       DPRINT("No focus message queue\n");
@@ -462,7 +462,7 @@ MsqDispatchSentNotifyMessages(PUSER_MESSAGE_QUEUE MessageQueue)
 				ListEntry);
     ExReleaseFastMutex(&MessageQueue->Lock);
 
-    W32kCallSentMessageCallback(Message->CompletionCallback,
+    IntCallSentMessageCallback(Message->CompletionCallback,
 				Message->hWnd,
 				Message->Msg,
 				Message->CompletionCallbackContext,
@@ -495,7 +495,7 @@ MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
   ExReleaseFastMutex(&MessageQueue->Lock);
 
   /* Call the window procedure. */
-  Result = W32kCallWindowProc(NULL,
+  Result = IntCallWindowProc(NULL,
 			      Message->Msg.hwnd,
 			      Message->Msg.message,
 			      Message->Msg.wParam,

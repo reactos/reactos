@@ -120,7 +120,7 @@ MsqIncPaintCountQueue(PUSER_MESSAGE_QUEUE Queue);
 VOID FASTCALL
 MsqDecPaintCountQueue(PUSER_MESSAGE_QUEUE Queue);
 LRESULT STDCALL
-W32kSendMessage(HWND hWnd,
+IntSendMessage(HWND hWnd,
 		UINT Msg,
 		WPARAM wParam,
 		LPARAM lParam,

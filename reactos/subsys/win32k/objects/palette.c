@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: palette.c,v 1.9 2003/08/01 16:08:14 royce Exp $ */
+/* $Id: palette.c,v 1.10 2003/08/19 11:48:50 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -75,7 +75,7 @@ HPALETTE FASTCALL PALETTE_Init(VOID)
     palPtr->palPalEntry[i].peFlags = 0;
   }
 
-  hpalette = W32kCreatePalette(palPtr);
+  hpalette = NtGdiCreatePalette(palPtr);
   ExFreePool(palPtr);
 
   palObj = (PPALOBJ)AccessUserObject((ULONG)hpalette);
@@ -285,7 +285,7 @@ INT STDCALL PALETTE_SetMapping(PPALOBJ palPtr, UINT uStart, UINT uNum, BOOL mapO
 INT FASTCALL PALETTE_ToPhysical (PDC dc, COLORREF color)
 {
     WORD            index = 0;
-    HPALETTE        hPal = (dc)? dc->w.hPalette: W32kGetStockObject(DEFAULT_PALETTE);
+    HPALETTE        hPal = (dc)? dc->w.hPalette: NtGdiGetStockObject(DEFAULT_PALETTE);
     unsigned char   spec_type = color >> 24;
     PPALOBJ         palPtr = (PPALOBJ)AccessUserObject((ULONG)hPal);
 

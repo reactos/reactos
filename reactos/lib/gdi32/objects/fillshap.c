@@ -16,7 +16,7 @@ Polygon(HDC	hDC,
 	CONST POINT	*lpPoints,
 	int	nCount)
 {
-	return W32kPolygon(hDC, (CONST PPOINT)lpPoints, nCount);
+	return NtGdiPolygon(hDC, (CONST PPOINT)lpPoints, nCount);
 }
 
 
@@ -31,6 +31,6 @@ Rectangle(HDC  hDC,
 	int  RightRect,
 	int  BottomRect)
 {
-   return W32kRectangle(hDC, LeftRect, TopRect, RightRect, BottomRect);
+   return NtGdiRectangle(hDC, LeftRect, TopRect, RightRect, BottomRect);
 }
 

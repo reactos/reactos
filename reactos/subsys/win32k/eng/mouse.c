@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.27 2003/08/13 20:24:04 chorns Exp $
+/* $Id: mouse.c,v 1.28 2003/08/19 11:48:49 weiden Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -214,7 +214,7 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
 {
   ULONG i;
   LONG mouse_cx = 0, mouse_cy = 0;
-  HDC hDC = W32kGetScreenDC();
+  HDC hDC = IntGetScreenDC();
   PDC dc;
   PSURFOBJ SurfObj;
   PSURFGDI SurfGDI;

@@ -1,12 +1,12 @@
 BOOL STDCALL
-W32kUnionRect(PRECT Dest, const RECT* Src1, const RECT* Src2);
+NtGdiUnionRect(PRECT Dest, const RECT* Src1, const RECT* Src2);
 BOOL STDCALL
-W32kSetRect(PRECT Rect, INT left, INT top, INT right, INT bottom);
+NtGdiSetRect(PRECT Rect, int left, int top, int right, int bottom);
 BOOL STDCALL
-W32kSetEmptyRect(PRECT Rect);
+NtGdiSetEmptyRect(PRECT Rect);
 BOOL STDCALL
-W32kIsEmptyRect(const RECT* Rect);
+NtGdiIsEmptyRect(const RECT* Rect);
 BOOL STDCALL
-W32kIntersectRect(PRECT Dest, const RECT* Src1, const RECT* Src2);
+NtGdiIntersectRect(PRECT Dest, const RECT* Src1, const RECT* Src2);
 BOOL STDCALL
-W32kOffsetRect(LPRECT Rect, INT x, INT y);
+NtGdiOffsetRect(LPRECT Rect, int x, int y);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: guicheck.c,v 1.13 2003/06/20 16:26:14 ekohl Exp $
+/* $Id: guicheck.c,v 1.14 2003/08/19 11:48:49 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -52,13 +52,13 @@ static ULONG NrGuiApplicationsRunning = 0;
 /* FUNCTIONS *****************************************************************/
 
 VOID FASTCALL
-W32kGraphicsCheck(BOOL Create)
+IntGraphicsCheck(BOOL Create)
 {
   if (Create)
     {
       if (0 == NrGuiApplicationsRunning)
 	{
-	  W32kInitializeDesktopGraphics();
+	  IntInitializeDesktopGraphics();
 	}
       NrGuiApplicationsRunning++;
     }
@@ -70,7 +70,7 @@ W32kGraphicsCheck(BOOL Create)
 	}
       if (0 == NrGuiApplicationsRunning)
 	{
-	  W32kEndDesktopGraphics();
+	  IntEndDesktopGraphics();
 	}
     }
     

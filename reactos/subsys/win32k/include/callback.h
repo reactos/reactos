@@ -2,43 +2,43 @@
 #define __SUBSYS_WIN32K_INCLUDE_CALLBACK_H
 
 LRESULT STDCALL
-W32kCallWindowProc(WNDPROC Proc,
+IntCallWindowProc(WNDPROC Proc,
 		   HWND Wnd,
 		   UINT Message,
 		   WPARAM wParam,
 		   LPARAM lParam);
 LRESULT STDCALL
-W32kCallTrampolineWindowProc(WNDPROC Proc,
+IntCallTrampolineWindowProc(WNDPROC Proc,
 			     HWND Wnd,
 			     UINT Message,
 			     WPARAM wParam,
 			     LPARAM lParam);
 LRESULT STDCALL
-W32kSendNCCREATEMessage(HWND Wnd, CREATESTRUCTW* CreateStruct);
+IntSendNCCREATEMessage(HWND Wnd, CREATESTRUCTW* CreateStruct);
 LRESULT STDCALL
-W32kSendCREATEMessage(HWND Wnd, CREATESTRUCTW* CreateStruct);
+IntSendCREATEMessage(HWND Wnd, CREATESTRUCTW* CreateStruct);
 VOID STDCALL
-W32kCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
+IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
 			    HWND hWnd,
 			    UINT Msg,
 			    ULONG_PTR CompletionCallbackContext,
 			    LRESULT Result);
 LRESULT STDCALL
-W32kSendNCCALCSIZEMessage(HWND Wnd, BOOL Validate, PRECT Rect,
+IntSendNCCALCSIZEMessage(HWND Wnd, BOOL Validate, PRECT Rect,
 			  NCCALCSIZE_PARAMS* Params);
 LRESULT STDCALL
-W32kSendGETMINMAXINFOMessage(HWND Wnd, MINMAXINFO* MinMaxInfo);
+IntSendGETMINMAXINFOMessage(HWND Wnd, MINMAXINFO* MinMaxInfo);
 
 LRESULT STDCALL
-W32kSendWINDOWPOSCHANGINGMessage(HWND Wnd, WINDOWPOS* WindowPos);
+IntSendWINDOWPOSCHANGINGMessage(HWND Wnd, WINDOWPOS* WindowPos);
 
 LRESULT STDCALL
-W32kSendWINDOWPOSCHANGEDMessage(HWND Wnd, WINDOWPOS* WindowPos);
+IntSendWINDOWPOSCHANGEDMessage(HWND Wnd, WINDOWPOS* WindowPos);
 
 LRESULT STDCALL
-W32kSendSTYLECHANGINGMessage(HWND Wnd, DWORD WhichStyle, STYLESTRUCT* Style);
+IntSendSTYLECHANGINGMessage(HWND Wnd, DWORD WhichStyle, STYLESTRUCT* Style);
 
 LRESULT STDCALL
-W32kSendSTYLECHANGEDMessage(HWND Wnd, DWORD WhichStyle, STYLESTRUCT* Style);
+IntSendSTYLECHANGEDMessage(HWND Wnd, DWORD WhichStyle, STYLESTRUCT* Style);
 
 #endif /* __SUBSYS_WIN32K_INCLUDE_CALLBACK_H */

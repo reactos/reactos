@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: vis.c,v 1.5 2003/08/11 19:05:27 gdalsnes Exp $
+ * $Id: vis.c,v 1.6 2003/08/19 11:48:50 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -52,7 +52,7 @@ VIS_GetVisRect(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
 
   if (0 == (Window->Style & WS_VISIBLE))
     {
-      W32kSetEmptyRect(Rect);
+      NtGdiSetEmptyRect(Rect);
 
       return FALSE;
     }
@@ -69,10 +69,10 @@ VIS_GetVisRect(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
 	  Window = Window->Parent;
 	  if (WS_VISIBLE != (Window->Style & (WS_ICONIC | WS_VISIBLE)))
 	    {
-	      W32kSetEmptyRect(Rect);
+	      NtGdiSetEmptyRect(Rect);
 	      return FALSE;
 	    }
-	  if (! W32kIntersectRect(Rect, Rect, &(Window->ClientRect)))
+	  if (! NtGdiIntersectRect(Rect, Rect, &(Window->ClientRect)))
 	    {
 	      return FALSE;
 	    }
@@ -80,19 +80,19 @@ VIS_GetVisRect(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
       while (0 != (Window->Style & WS_CHILD));
     }
 
-  DesktopWindow = W32kGetWindowObject(Desktop->DesktopWindow);
+  DesktopWindow = IntGetWindowObject(Desktop->DesktopWindow);
   if (NULL == DesktopWindow)
     {
       ASSERT(FALSE);
       return FALSE;
     }
 
-  if (! W32kIntersectRect(Rect, Rect, &(DesktopWindow->ClientRect)))
+  if (! NtGdiIntersectRect(Rect, Rect, &(DesktopWindow->ClientRect)))
     {
-      W32kReleaseWindowObject(DesktopWindow);
+      IntReleaseWindowObject(DesktopWindow);
       return FALSE;
     }
-  W32kReleaseWindowObject(DesktopWindow);
+  IntReleaseWindowObject(DesktopWindow);
 
   return TRUE;
 }
@@ -116,9 +116,9 @@ VIS_AddClipRects(PWINDOW_OBJECT Parent, PWINDOW_OBJECT End,
     
     if (Child->Style & WS_VISIBLE)
     {
-      if (W32kIntersectRect(&Intersect, &Child->WindowRect, Rect))
+      if (NtGdiIntersectRect(&Intersect, &Child->WindowRect, Rect))
       {
-        UnsafeW32kUnionRectWithRgn(ClipRgn, &Child->WindowRect);
+        UnsafeIntUnionRectWithRgn(ClipRgn, &Child->WindowRect);
       }
     }
     
@@ -140,7 +140,7 @@ VIS_ComputeVisibleRegion(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
   HRGN ClipRgn;
   PWINDOW_OBJECT DesktopWindow;
 
-  DesktopWindow = W32kGetWindowObject(Desktop->DesktopWindow);
+  DesktopWindow = IntGetWindowObject(Desktop->DesktopWindow);
   if (NULL == DesktopWindow)
     {
       ASSERT(FALSE);
@@ -149,10 +149,10 @@ VIS_ComputeVisibleRegion(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
 
   if (VIS_GetVisRect(Desktop, Window, ClientArea, &Rect))
     {
-      VisRgn = UnsafeW32kCreateRectRgnIndirect(&Rect);
+      VisRgn = UnsafeIntCreateRectRgnIndirect(&Rect);
       if (NULL != VisRgn)
 	{
-	  ClipRgn = W32kCreateRectRgn(0, 0, 0, 0);
+	  ClipRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
 
 	  if (ClipRgn != NULL)
 	    {
@@ -177,22 +177,22 @@ VIS_ComputeVisibleRegion(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
 
 	      VIS_AddClipRects(DesktopWindow, Window, ClipRgn, &Rect);
 
-	      W32kCombineRgn(VisRgn, VisRgn, ClipRgn, RGN_DIFF);
-	      W32kDeleteObject(ClipRgn);
+	      NtGdiCombineRgn(VisRgn, VisRgn, ClipRgn, RGN_DIFF);
+	      NtGdiDeleteObject(ClipRgn);
 	    }
 	  else
 	    {
-	      W32kDeleteObject(VisRgn);
+	      NtGdiDeleteObject(VisRgn);
 	      VisRgn = NULL;
 	    }
 	}
     }
   else
     {
-      VisRgn = W32kCreateRectRgn(0, 0, 0, 0);
+      VisRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
     }
 
-  W32kReleaseWindowObject(DesktopWindow);
+  IntReleaseWindowObject(DesktopWindow);
 
   return VisRgn;
 }
@@ -202,9 +202,9 @@ VOID FASTCALL
 VIS_RepaintDesktop(HWND Desktop, HRGN RepaintRgn)
 {
   HDC dc = NtUserGetDC(Desktop);
-  HBRUSH DesktopBrush = W32kCreateSolidBrush(RGB(58, 110, 165));
-  W32kFillRgn(dc, RepaintRgn, DesktopBrush);
-  W32kDeleteObject(DesktopBrush);
+  HBRUSH DesktopBrush = NtGdiCreateSolidBrush(RGB(58, 110, 165));
+  NtGdiFillRgn(dc, RepaintRgn, DesktopBrush);
+  NtGdiDeleteObject(DesktopBrush);
   NtUserReleaseDC(Desktop, dc);
 }
 
@@ -220,8 +220,8 @@ VIS_WindowLayoutChanged(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
   HRGN Covered;
   HRGN Repaint;
 
-  DesktopWindow = W32kGetWindowObject(Desktop->DesktopWindow);
-  Uncovered = UnsafeW32kCreateRectRgnIndirect(&DesktopWindow->WindowRect);
+  DesktopWindow = IntGetWindowObject(Desktop->DesktopWindow);
+  Uncovered = UnsafeIntCreateRectRgnIndirect(&DesktopWindow->WindowRect);
 
   ExAcquireFastMutexUnsafe(&DesktopWindow->ChildrenListLock);
   Child = DesktopWindow->FirstChild;
@@ -229,21 +229,21 @@ VIS_WindowLayoutChanged(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
   {
     if (0 != (Child->Style & WS_VISIBLE))
     {
-      Covered = UnsafeW32kCreateRectRgnIndirect(&Child->WindowRect);
-      W32kCombineRgn(Uncovered, Uncovered, Covered, RGN_DIFF);
+      Covered = UnsafeIntCreateRectRgnIndirect(&Child->WindowRect);
+      NtGdiCombineRgn(Uncovered, Uncovered, Covered, RGN_DIFF);
       PaintRedrawWindow(Child, NULL, NULL, RDW_INVALIDATE | RDW_FRAME | RDW_ERASE, 0);
-      W32kDeleteObject(Covered);
+      NtGdiDeleteObject(Covered);
     }
     Child = Child->NextSibling;
   }
   ExReleaseFastMutexUnsafe(&DesktopWindow->ChildrenListLock);
 
-  Repaint = W32kCreateRectRgn(0, 0, 0, 0);
-  W32kCombineRgn(Repaint, NewlyExposed, Uncovered, RGN_AND);
+  Repaint = NtGdiCreateRectRgn(0, 0, 0, 0);
+  NtGdiCombineRgn(Repaint, NewlyExposed, Uncovered, RGN_AND);
   VIS_RepaintDesktop(DesktopWindow->Self, Repaint);
-  W32kDeleteObject(Repaint);
+  NtGdiDeleteObject(Repaint);
 
-  W32kDeleteObject(Uncovered);
+  NtGdiDeleteObject(Uncovered);
 }
 
 /* EOF */

@@ -3,7 +3,7 @@
 
 BOOL
 STDCALL
-W32kChord(HDC  hDC,
+NtGdiChord(HDC  hDC,
                 int  LeftRect,
                 int  TopRect,
                 int  RightRect,
@@ -15,7 +15,7 @@ W32kChord(HDC  hDC,
 
 BOOL
 STDCALL
-W32kEllipse(HDC  hDC,
+NtGdiEllipse(HDC  hDC,
                   int  LeftRect,
                   int  TopRect,
                   int  RightRect,
@@ -23,7 +23,7 @@ W32kEllipse(HDC  hDC,
 
 BOOL
 STDCALL
-W32kPie(HDC  hDC,
+NtGdiPie(HDC  hDC,
               int  LeftRect,
               int  TopRect,
               int  RightRect,
@@ -35,20 +35,20 @@ W32kPie(HDC  hDC,
 
 BOOL
 STDCALL
-W32kPolygon(HDC  hDC,
+NtGdiPolygon(HDC  hDC,
                   CONST PPOINT  Points,
                   int  Count);
 
 BOOL
 STDCALL
-W32kPolyPolygon(HDC  hDC,
+NtGdiPolyPolygon(HDC  hDC,
                       CONST LPPOINT  Points,
                       CONST LPINT  PolyCounts,
                       int  Count);
 
 BOOL
 STDCALL
-W32kRectangle(HDC  hDC,
+NtGdiRectangle(HDC  hDC,
                     int  LeftRect,
                     int  TopRect,
                     int  RightRect,
@@ -56,7 +56,7 @@ W32kRectangle(HDC  hDC,
 
 BOOL
 STDCALL
-W32kRoundRect(HDC  hDC,
+NtGdiRoundRect(HDC  hDC,
                     int  LeftRect,
                     int  TopRect,  
                     int  RightRect, 

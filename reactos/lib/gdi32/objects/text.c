@@ -19,7 +19,7 @@ SetTextAlign(
         UINT    a1
         )
 {
-        return W32kSetTextAlign(a0, a1);
+        return NtGdiSetTextAlign(a0, a1);
 }
 
 
@@ -64,7 +64,7 @@ TextOutW(
 	LPCWSTR  String,
 	int  Count)
 {
-	return W32kTextOut(hDC, XStart, YStart, String, Count);
+	return NtGdiTextOut(hDC, XStart, YStart, String, Count);
 }
 
 
@@ -74,7 +74,7 @@ TextOutW(
 COLORREF  STDCALL 
 SetTextColor(HDC hDC, COLORREF color)
 {
-  return(W32kSetTextColor(hDC, color));
+  return(NtGdiSetTextColor(hDC, color));
 }
 
 
@@ -131,7 +131,7 @@ GetTextMetricsA(
   UINT Letter;
   NTSTATUS Status;
 
-  if (! W32kGetTextMetrics(hdc, &tmw))
+  if (! NtGdiGetTextMetrics(hdc, &tmw))
     {
       return FALSE;
     }
@@ -237,7 +237,7 @@ GetTextMetricsW(
 	LPTEXTMETRICW	tm
 	)
 {
-	return W32kGetTextMetrics(hdc, tm);
+	return NtGdiGetTextMetrics(hdc, tm);
 }
 
 
@@ -280,7 +280,7 @@ GetTextExtentPointW(
 	LPSIZE		Size
 	)
 {
-	return W32kGetTextExtentPoint(hDC, String, Count, Size);
+	return NtGdiGetTextExtentPoint(hDC, String, Count, Size);
 }
 
 
@@ -323,7 +323,7 @@ GetTextExtentPoint32W(
 	LPSIZE		Size
 	)
 {
-  return W32kGetTextExtentPoint32(hDC, String, Count, Size);
+  return NtGdiGetTextExtentPoint32(hDC, String, Count, Size);
 }
 
 
@@ -374,7 +374,7 @@ ExtTextOutW(
 	CONST INT	*Spacings
 	)
 {
-	return W32kTextOut(hDC, X, Y, String, Count);
+	return NtGdiTextOut(hDC, X, Y, String, Count);
 }
 
 
@@ -414,7 +414,7 @@ CreateFontIndirectW(
 	CONST LOGFONTW		*lf
 	)
 {
-	return W32kCreateFontIndirect((CONST LPLOGFONTW)lf);
+	return NtGdiCreateFontIndirect((CONST LPLOGFONTW)lf);
 }
 
 
@@ -478,7 +478,7 @@ CreateFontW(
 	LPCWSTR	Face
 	)
 {
-	return W32kCreateFont(Height, Width, Escapement, Orientation, Weight, Italic, Underline, StrikeOut,
+	return NtGdiCreateFont(Height, Width, Escapement, Orientation, Weight, Italic, Underline, StrikeOut,
                           CharSet, OutputPrecision, ClipPrecision, Quality, PitchAndFamily, Face);
 }
 

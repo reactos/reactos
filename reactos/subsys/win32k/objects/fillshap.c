@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fillshap.c,v 1.25 2003/08/17 17:32:58 royce Exp $ */
+/* $Id: fillshap.c,v 1.26 2003/08/19 11:48:50 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -36,7 +36,7 @@
 
 BOOL
 STDCALL
-W32kChord(HDC  hDC,
+NtGdiChord(HDC  hDC,
                 int  LeftRect,
                 int  TopRect,
                 int  RightRect,
@@ -51,7 +51,7 @@ W32kChord(HDC  hDC,
 
 BOOL
 STDCALL
-W32kEllipse(HDC  hDC,
+NtGdiEllipse(HDC  hDC,
                   int  LeftRect,
                   int  TopRect,
                   int  RightRect,
@@ -62,7 +62,7 @@ W32kEllipse(HDC  hDC,
 
 BOOL
 STDCALL
-W32kPie(HDC  hDC,
+NtGdiPie(HDC  hDC,
               int  LeftRect,
               int  TopRect,
               int  RightRect,
@@ -218,17 +218,17 @@ IntPolygon(PDC          dc,
   return ret;
 }
 
-//This implementation is blatantly ripped off from W32kRectangle
+//This implementation is blatantly ripped off from NtGdiRectangle
 BOOL
 STDCALL
-W32kPolygon(HDC          hDC,
+NtGdiPolygon(HDC          hDC,
             CONST PPOINT UnsafePoints,
             int          Count)
 {
   DC *dc;
   BOOL ret = FALSE; // default to failure
 
-  //DPRINT("In W32kPolygon()\n");
+  //DPRINT("In NtGdiPolygon()\n");
 
   dc = DC_HandleToPtr ( hDC );
 
@@ -246,7 +246,7 @@ W32kPolygon(HDC          hDC,
 
 BOOL
 STDCALL
-W32kPolyPolygon(HDC            hDC,
+NtGdiPolyPolygon(HDC            hDC,
                 CONST LPPOINT  Points,
                 CONST LPINT    PolyCounts,
                 int            Count)
@@ -358,7 +358,7 @@ IntRectangle(PDC dc,
 
 BOOL
 STDCALL
-W32kRectangle(HDC  hDC,
+NtGdiRectangle(HDC  hDC,
               int  LeftRect,
               int  TopRect,
               int  RightRect,
@@ -378,7 +378,7 @@ W32kRectangle(HDC  hDC,
 
 BOOL
 STDCALL
-W32kRoundRect(HDC  hDC,
+NtGdiRoundRect(HDC  hDC,
                     int  LeftRect,
                     int  TopRect,
                     int  RightRect,
