@@ -38,27 +38,25 @@ static const GUID IID_INotifyDBEvents =
 static HRESULT WINAPI WBCPC_QueryInterface(LPCONNECTIONPOINTCONTAINER iface,
                                            REFIID riid, LPVOID *ppobj)
 {
-    IConnectionPointContainerImpl *This = (IConnectionPointContainerImpl *)iface;
+    FIXME("- no interface\n\tIID:\t%s\n", debugstr_guid(riid));
 
-    FIXME("(%p)->(%s,%p),stub!\n", This, debugstr_guid(riid), ppobj);
+    if (ppobj == NULL) return E_POINTER;
+    
     return E_NOINTERFACE;
 }
 
 static ULONG WINAPI WBCPC_AddRef(LPCONNECTIONPOINTCONTAINER iface)
 {
-    IConnectionPointContainerImpl *This = (IConnectionPointContainerImpl *)iface;
+    SHDOCVW_LockModule();
 
-    TRACE("\n");
-    return ++(This->ref);
+    return 2; /* non-heap based object */
 }
 
 static ULONG WINAPI WBCPC_Release(LPCONNECTIONPOINTCONTAINER iface)
 {
-    IConnectionPointContainerImpl *This = (IConnectionPointContainerImpl *)iface;
+    SHDOCVW_UnlockModule();
 
-    /* static class, won't be freed */
-    TRACE("\n");
-    return --(This->ref);
+    return 1; /* non-heap based object */
 }
 
 /* Get a list of connection points inside this container. */
@@ -112,7 +110,7 @@ static IConnectionPointContainerVtbl WBCPC_Vtbl =
     WBCPC_FindConnectionPoint
 };
 
-IConnectionPointContainerImpl SHDOCVW_ConnectionPointContainer = { &WBCPC_Vtbl, 1 };
+IConnectionPointContainerImpl SHDOCVW_ConnectionPointContainer = {&WBCPC_Vtbl};
 
 
 /**********************************************************************
@@ -122,27 +120,25 @@ IConnectionPointContainerImpl SHDOCVW_ConnectionPointContainer = { &WBCPC_Vtbl, 
 static HRESULT WINAPI WBCP_QueryInterface(LPCONNECTIONPOINT iface,
                                           REFIID riid, LPVOID *ppobj)
 {
-    IConnectionPointImpl *This = (IConnectionPointImpl *)iface;
+    FIXME("- no interface\n\tIID:\t%s\n", debugstr_guid(riid));
 
-    FIXME("(%p)->(%s,%p),stub!\n", This, debugstr_guid(riid), ppobj);
+    if (ppobj == NULL) return E_POINTER;
+    
     return E_NOINTERFACE;
 }
 
 static ULONG WINAPI WBCP_AddRef(LPCONNECTIONPOINT iface)
 {
-    IConnectionPointImpl *This = (IConnectionPointImpl *)iface;
+    SHDOCVW_LockModule();
 
-    TRACE("\n");
-    return ++(This->ref);
+    return 2; /* non-heap based object */
 }
 
 static ULONG WINAPI WBCP_Release(LPCONNECTIONPOINT iface)
 {
-    IConnectionPointImpl *This = (IConnectionPointImpl *)iface;
+    SHDOCVW_UnlockModule();
 
-    /* static class, won't be freed */
-    TRACE("\n");
-    return --(This->ref);
+    return 1; /* non-heap based object */
 }
 
 static HRESULT WINAPI WBCP_GetConnectionInterface(LPCONNECTIONPOINT iface, IID* pIId)
@@ -209,4 +205,4 @@ static IConnectionPointVtbl WBCP_Vtbl =
     WBCP_EnumConnections
 };
 
-IConnectionPointImpl SHDOCVW_ConnectionPoint = { &WBCP_Vtbl, 1 };
+IConnectionPointImpl SHDOCVW_ConnectionPoint = {&WBCP_Vtbl};

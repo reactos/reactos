@@ -121,7 +121,7 @@
 @ stub ImportPrivacySettings
 @ stub InstallReg_RunDLL
 @ stub IEWriteErrorLog
-@ stub OpenURL
+@ stdcall OpenURL(long long str long)
 @ stub SHGetIDispatchForFolder
 @ stdcall SetQueryNetSessionCount(long)
 @ stub SoftwareUpdateMessageBox

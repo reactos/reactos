@@ -47,6 +47,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
+LONG SHDOCVW_refCount = 0;
+
 static const WCHAR szMozDlPath[] = {
     'S','o','f','t','w','a','r','e','\\','W','i','n','e','\\',
     's','h','d','o','c','v','w',0
@@ -55,6 +57,7 @@ static const WCHAR szMozDlPath[] = {
 DEFINE_GUID( CLSID_MozillaBrowser, 0x1339B54C,0x3453,0x11D2,0x93,0xB9,0x00,0x00,0x00,0x00,0x00,0x00);
 
 typedef HRESULT (WINAPI *fnGetClassObject)(REFCLSID rclsid, REFIID iid, LPVOID *ppv);
+typedef HRESULT (WINAPI *fnCanUnloadNow)(void);
 
 HINSTANCE shdocvw_hinstance = 0;
 static HMODULE SHDOCVW_hshell32 = 0;
@@ -127,7 +130,20 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD fdwReason, LPVOID fImpLoad)
  */
 HRESULT WINAPI SHDOCVW_DllCanUnloadNow(void)
 {
-    FIXME("(void): stub\n");
+    HRESULT moz_can_unload = S_FALSE;
+    fnCanUnloadNow pCanUnloadNow;
+
+    if (hMozCtl)
+    {
+        pCanUnloadNow = (fnCanUnloadNow)
+            GetProcAddress(hMozCtl, "DllCanUnloadNow");
+        moz_can_unload = pCanUnloadNow();
+    }
+    else
+        moz_can_unload = S_OK;
+
+    if (moz_can_unload == S_OK && SHDOCVW_refCount == 0)
+        return S_OK;
 
     return S_FALSE;
 }
@@ -145,6 +161,8 @@ typedef struct _IBindStatusCallbackImpl {
 static HRESULT WINAPI
 dlQueryInterface( IBindStatusCallback* This, REFIID riid, void** ppvObject )
 {
+    if (ppvObject == NULL) return E_POINTER;
+    
     if( IsEqualIID(riid, &IID_IUnknown) ||
         IsEqualIID(riid, &IID_IBindStatusCallback))
     {
@@ -158,6 +176,9 @@ dlQueryInterface( IBindStatusCallback* This, REFIID riid, void** ppvObject )
 static ULONG WINAPI dlAddRef( IBindStatusCallback* iface )
 {
     IBindStatusCallbackImpl *This = (IBindStatusCallbackImpl *) iface;
+
+    SHDOCVW_LockModule();
+    
     return InterlockedIncrement( &This->ref );
 }
 
@@ -165,11 +186,15 @@ static ULONG WINAPI dlRelease( IBindStatusCallback* iface )
 {
     IBindStatusCallbackImpl *This = (IBindStatusCallbackImpl *) iface;
     DWORD ref = InterlockedDecrement( &This->ref );
+    
     if( !ref )
     {
         DestroyWindow( This->hDialog );
         HeapFree( GetProcessHeap(), 0, This );
     }
+
+    SHDOCVW_UnlockModule();
+    
     return ref;
 }
 
