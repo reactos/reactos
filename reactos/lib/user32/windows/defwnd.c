@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.108 2003/12/10 06:47:32 rcampbell Exp $
+/* $Id: defwnd.c,v 1.109 2003/12/10 16:59:00 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1138,28 +1138,7 @@ User32DefWindowProc(HWND hWnd,
             FillRect((HDC)wParam, &Rect, hBrush);
             return (1);
         }
-       case WM_MDICREATE:
-        {
-            MDICREATESTRUCTW *cs =
-                (MDICREATESTRUCTW *)HeapAlloc( GetProcessHeap(), 0, sizeof(*cs) );
-            if (!cs) return -1;
-            *cs = *(MDICREATESTRUCTW *)lParam;
-            if (HIWORD(cs->szClass))
-            {
-                UNICODE_STRING usBuffer;
-                RtlCreateUnicodeStringFromAsciiz(&usBuffer,(LPCSTR)cs->szClass);
-                cs->szClass = usBuffer.Buffer;
-            }
-            if (HIWORD(cs->szTitle))
-            {
-                UNICODE_STRING usBuffer;
-                RtlCreateUnicodeStringFromAsciiz(&usBuffer,(LPCSTR)cs->szTitle);
-                cs->szTitle = usBuffer.Buffer;
-            }
-            lParam = (LPARAM)cs;
-        }
-        return 1;
-
+        
         case WM_CTLCOLORMSGBOX:
         case WM_CTLCOLOREDIT:
         case WM_CTLCOLORLISTBOX:
