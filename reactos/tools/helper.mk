@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.61 2004/05/10 18:02:19 gvg Exp $
+# $Id: helper.mk,v 1.62 2004/05/17 19:45:10 gvg Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -977,7 +977,7 @@ endif
 
 REGTEST_TESTS = $(wildcard tests/tests/*.c)
 
-$(REGTEST_TARGETS): $(REGTEST_TESTS) $(REGTESTS)
+$(REGTEST_TARGETS): $(REGTEST_TESTS)
 ifeq ($(MK_MODE),user)
 	$(REGTESTS) ./tests/tests ./tests/_regtests.c ./tests/Makefile.tests -u ./tests/_rtstub.c
 	$(MAKE) -C tests TARGET_REGTESTS=no all
