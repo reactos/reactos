@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.27 2000/04/07 02:24:00 dwelch Exp $
+/* $Id: npool.c,v 1.28 2000/06/07 13:04:53 ekohl Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -585,7 +585,12 @@ static void* take_block(block_hdr* current, unsigned int size)
    return(block_to_address(current));
 }
 
-asmlinkage VOID ExFreePool(PVOID block)
+//asmlinkage VOID ExFreePool(PVOID block)
+VOID
+STDCALL
+ExFreePool (
+	PVOID	block
+	)
 /*
  * FUNCTION: Releases previously allocated memory
  * ARGUMENTS:
@@ -620,7 +625,7 @@ asmlinkage VOID ExFreePool(PVOID block)
    add_to_free_list(blk);
    
    EiUsedNonPagedPool = EiUsedNonPagedPool - blk->size;
-   EiFreeNonPagedPool = EiFreeNonPagedPool + blk->size;   
+   EiFreeNonPagedPool = EiFreeNonPagedPool + blk->size;
    
    VALIDATE_POOL;
    

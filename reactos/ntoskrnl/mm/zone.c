@@ -1,4 +1,5 @@
-/*
+/* $Id: zone.c,v 1.3 2000/06/07 13:04:53 ekohl Exp $
+ *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
  * FILE:          ntoskrnl/mm/zone.c
@@ -22,7 +23,12 @@ inline static PVOID entry_to_block(PZONE_ENTRY Entry)
    return( (PVOID)( ((PVOID)Entry) + sizeof(ZONE_ENTRY)));
 }
 
-BOOLEAN ExIsObjectInFirstZoneSegment(PZONE_HEADER Zone, PVOID Object)
+BOOLEAN
+STDCALL
+ExIsObjectInFirstZoneSegment (
+	PZONE_HEADER	Zone,
+	PVOID		Object
+	)
 {
    PVOID Base = (PVOID)(Zone + sizeof(ZONE_HEADER) + sizeof(ZONE_SEGMENT) + 
 			sizeof(ZONE_ENTRY));
@@ -31,7 +37,13 @@ BOOLEAN ExIsObjectInFirstZoneSegment(PZONE_HEADER Zone, PVOID Object)
    return( (Object > Base) && (Object < (Base + length)));
 }
 
-NTSTATUS ExExtendZone(PZONE_HEADER Zone, PVOID Segment, ULONG SegmentSize)
+NTSTATUS
+STDCALL
+ExExtendZone (
+	PZONE_HEADER	Zone,
+	PVOID		Segment,
+	ULONG		SegmentSize
+	)
 {
    PZONE_ENTRY entry;
    PZONE_SEGMENT seg;
@@ -53,8 +65,14 @@ NTSTATUS ExExtendZone(PZONE_HEADER Zone, PVOID Segment, ULONG SegmentSize)
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS ExInterlockedExtendZone(PZONE_HEADER Zone, PVOID Segment,
-				 ULONG SegmentSize, PKSPIN_LOCK Lock)
+NTSTATUS
+STDCALL
+ExInterlockedExtendZone (
+	PZONE_HEADER	Zone,
+	PVOID		Segment,
+	ULONG		SegmentSize,
+	PKSPIN_LOCK	Lock
+	)
 {
    NTSTATUS ret;
    KIRQL oldlvl;
@@ -65,12 +83,20 @@ NTSTATUS ExInterlockedExtendZone(PZONE_HEADER Zone, PVOID Segment,
    return(ret);
 }
 
-BOOLEAN ExIsFullZone(PZONE_HEADER Zone)
+BOOLEAN
+STDCALL
+ExIsFullZone (
+	PZONE_HEADER	Zone
+	)
 {
    return(Zone->FreeList.Next==NULL);
 }
 
-PVOID ExAllocateFromZone(PZONE_HEADER Zone)
+PVOID
+STDCALL
+ExAllocateFromZone (
+	PZONE_HEADER	Zone
+	)
 /*
  * FUNCTION: Allocate a block from a zone
  * ARGUMENTS:
@@ -83,7 +109,12 @@ PVOID ExAllocateFromZone(PZONE_HEADER Zone)
    return(entry_to_block(entry));
 }
 
-PVOID ExFreeToZone(PZONE_HEADER Zone, PVOID Block)
+PVOID
+STDCALL
+ExFreeToZone (
+	PZONE_HEADER	Zone,
+	PVOID		Block
+	)
 /*
  * FUNCTION: Frees a block from a zone
  * ARGUMENTS:
@@ -97,8 +128,14 @@ PVOID ExFreeToZone(PZONE_HEADER Zone, PVOID Block)
    return(ret);
 }
 
-NTSTATUS ExInitializeZone(PZONE_HEADER Zone, ULONG BlockSize, 
-			  PVOID InitialSegment, ULONG InitialSegmentSize)
+NTSTATUS
+STDCALL
+ExInitializeZone (
+	PZONE_HEADER	Zone,
+	ULONG		BlockSize,
+	PVOID		InitialSegment,
+	ULONG		InitialSegmentSize
+	)
 /*
  * FUNCTION: Initalizes a zone header
  * ARGUMENTS:
@@ -134,8 +171,13 @@ NTSTATUS ExInitializeZone(PZONE_HEADER Zone, ULONG BlockSize,
    return(STATUS_SUCCESS);
 }
 
-PVOID ExInterlockedFreeToZone(PZONE_HEADER Zone, PVOID Block,
-			      PKSPIN_LOCK Lock)
+PVOID
+STDCALL
+ExInterlockedFreeToZone (
+	PZONE_HEADER	Zone,
+	PVOID		Block,
+	PKSPIN_LOCK	Lock
+	)
 {
    KIRQL oldlvl;
    PVOID ret;
@@ -146,7 +188,12 @@ PVOID ExInterlockedFreeToZone(PZONE_HEADER Zone, PVOID Block,
    return(ret);
 }
 
-PVOID ExInterlockedAllocateFromZone(PZONE_HEADER Zone, PKSPIN_LOCK Lock)
+PVOID
+STDCALL
+ExInterlockedAllocateFromZone (
+	PZONE_HEADER	Zone,
+	PKSPIN_LOCK	Lock
+	)
 {
    PVOID ret;
    KIRQL oldlvl;
@@ -156,3 +203,5 @@ PVOID ExInterlockedAllocateFromZone(PZONE_HEADER Zone, PKSPIN_LOCK Lock)
    KeReleaseSpinLock(Lock,oldlvl);
    return(ret);
 }
+
+/* EOF */

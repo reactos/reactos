@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.9 2000/04/25 23:22:56 ea Exp $
+/* $Id: time.c,v 1.10 2000/06/07 13:04:34 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -64,6 +64,7 @@ NtQuerySystemTime (
 
 
 VOID
+STDCALL
 ExLocalTimeToSystemTime (
 	PLARGE_INTEGER	LocalTime, 
 	PLARGE_INTEGER	SystemTime
@@ -75,6 +76,7 @@ ExLocalTimeToSystemTime (
 
 
 VOID
+STDCALL
 ExSystemTimeToLocalTime (
 	PLARGE_INTEGER	SystemTime,
 	PLARGE_INTEGER	LocalTime

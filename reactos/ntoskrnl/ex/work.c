@@ -1,4 +1,5 @@
-/*
+/* $Id: work.c,v 1.5 2000/06/07 13:04:34 ekohl Exp $
+ *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
  * FILE:               mkernel/kernel/work.c
@@ -134,9 +135,13 @@ VOID ExInitializeWorkerThreads(VOID)
 			 HIGH_PRIORITY);
 }
 
-VOID ExInitializeWorkItem(PWORK_QUEUE_ITEM Item,
-			  PWORKER_THREAD_ROUTINE Routine,
-	 		  PVOID Context)
+VOID
+STDCALL
+ExInitializeWorkItem (
+	PWORK_QUEUE_ITEM	Item,
+	PWORKER_THREAD_ROUTINE	Routine,
+	PVOID			Context
+	)
 /*
  * FUNCTION: Initializes a work item to be processed by one of the system
  * worker threads
@@ -154,8 +159,12 @@ VOID ExInitializeWorkItem(PWORK_QUEUE_ITEM Item,
    Item->Entry.Blink = NULL;
 }
 
-VOID ExQueueWorkItem(PWORK_QUEUE_ITEM WorkItem,
-		     WORK_QUEUE_TYPE QueueType)
+VOID
+STDCALL
+ExQueueWorkItem (
+	PWORK_QUEUE_ITEM	WorkItem,
+	WORK_QUEUE_TYPE		QueueType
+	)
 /*
  * FUNCTION: Inserts a work item in a queue for one of the system worker
  * threads to process
@@ -205,3 +214,5 @@ VOID ExQueueWorkItem(PWORK_QUEUE_ITEM WorkItem,
 
      }
 }
+
+/* EOF */

@@ -1,4 +1,5 @@
-/*
+/* $Id: lookas.c,v 1.2 2000/06/07 13:05:09 ekohl Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/rtl/lookas.c
@@ -16,56 +17,89 @@
 
 /* FUNCTIONS *****************************************************************/
 
-PVOID ExAllocateFromNPagedLookasideList(PNPAGED_LOOKASIDE_LIST Lookaside)
+PVOID
+STDCALL
+ExAllocateFromNPagedLookasideList (
+	PNPAGED_LOOKASIDE_LIST	Lookaside
+	)
 {
    UNIMPLEMENTED;
 }
 
-PVOID ExAllocateFromPagedLookasideList(PPAGED_LOOKASIDE_LIST Lookaside)
+PVOID
+STDCALL
+ExAllocateFromPagedLookasideList (
+	PPAGED_LOOKASIDE_LIST	Lookaside
+	)
 {
    UNIMPLEMENTED;
 }
 
-VOID ExDeleteNPagedLookasideList(PNPAGED_LOOKASIDE_LIST Lookaside)
+VOID
+STDCALL
+ExDeleteNPagedLookasideList (
+	PNPAGED_LOOKASIDE_LIST	Lookaside
+	)
 {
    UNIMPLEMENTED;
 }
 
-VOID ExDeletePagedLookasideList(PPAGED_LOOKASIDE_LIST Lookaside)
+VOID
+STDCALL
+ExDeletePagedLookasideList (
+	PPAGED_LOOKASIDE_LIST	Lookaside
+	)
 {
    UNIMPLEMENTED;
 }
 
-VOID ExFreeToNPagedLookasideList(PNPAGED_LOOKASIDE_LIST Lookaside,
-				 PVOID Entry)
+VOID
+STDCALL
+ExFreeToNPagedLookasideList (
+	PNPAGED_LOOKASIDE_LIST	Lookaside,
+	PVOID			Entry
+	)
 {
    UNIMPLEMENTED;
 }
 
-VOID ExFreeToPagedLookasideList(PPAGED_LOOKASIDE_LIST Lookaside,
-				 PVOID Entry)
+VOID
+STDCALL
+ExFreeToPagedLookasideList (
+	PPAGED_LOOKASIDE_LIST	Lookaside,
+	PVOID			Entry
+	)
 {
    UNIMPLEMENTED;
 }
 
-VOID ExInitializeNPagedLookasideList(PNPAGED_LOOKASIDE_LIST Lookaside,
-				     PALLOCATE_FUNCTION Allocate,
-				     PFREE_FUNCTION Free,
-				     ULONG Flags,
-				     ULONG Size,
-				     ULONG Tag,
-				     USHORT Depth)
+VOID
+STDCALL
+ExInitializeNPagedLookasideList (
+	PNPAGED_LOOKASIDE_LIST	Lookaside,
+	PALLOCATE_FUNCTION	Allocate,
+	PFREE_FUNCTION		Free,
+	ULONG			Flags,
+	ULONG			Size,
+	ULONG			Tag,
+	USHORT			Depth)
 {
    UNIMPLEMENTED
 }
 
-VOID ExInitializePagedLookasideList(PPAGED_LOOKASIDE_LIST Lookaside,
-				    PALLOCATE_FUNCTION Allocate,
-				    PFREE_FUNCTION Free,
-				    ULONG Flags,
-				    ULONG Size,
-				    ULONG Tag,
-				    USHORT Depth)
+VOID
+STDCALL
+ExInitializePagedLookasideList (
+	PPAGED_LOOKASIDE_LIST	Lookaside,
+	PALLOCATE_FUNCTION	Allocate,
+	PFREE_FUNCTION		Free,
+	ULONG			Flags,
+	ULONG			Size,
+	ULONG			Tag,
+	USHORT			Depth
+	)
 {
    UNIMPLEMENTED
 }
+
+/* EOF */

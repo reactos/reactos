@@ -1,4 +1,5 @@
-/*
+/* $Id: resource.c,v 1.12 2000/06/07 13:04:34 ekohl Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/resource.c
@@ -45,8 +46,12 @@
 
 /* FUNCTIONS *****************************************************************/
 
-	      
-BOOLEAN ExTryToAcquireResourceExclusiveLite(PERESOURCE Resource)
+
+BOOLEAN
+STDCALL
+ExTryToAcquireResourceExclusiveLite (
+	PERESOURCE	Resource
+	)
 /*
  * FUNCTION: Attempts to require the resource for exclusive access
  * ARGUMENTS:
@@ -58,12 +63,22 @@ BOOLEAN ExTryToAcquireResourceExclusiveLite(PERESOURCE Resource)
   return(ExAcquireResourceExclusiveLite(Resource,FALSE));
 }
 
-BOOLEAN ExAcquireResourceExclusive(PERESOURCE Resource, BOOLEAN Wait)
+BOOLEAN
+STDCALL
+ExAcquireResourceExclusive (
+	PERESOURCE	Resource,
+	BOOLEAN		Wait
+	)
 {
    return(ExAcquireResourceExclusiveLite(Resource,Wait));
 }
 
-BOOLEAN ExAcquireResourceExclusiveLite(PERESOURCE Resource, BOOLEAN Wait)
+BOOLEAN
+STDCALL
+ExAcquireResourceExclusiveLite (
+	PERESOURCE	Resource,
+	BOOLEAN		Wait
+	)
 /*
  * FUNCTION: Acquires a resource exclusively for the calling thread
  * ARGUMENTS:
@@ -85,7 +100,7 @@ BOOLEAN ExAcquireResourceExclusiveLite(PERESOURCE Resource, BOOLEAN Wait)
    /* resource already locked */
    if((Resource->Flag & ResourceOwnedExclusive)
       && Resource->OwnerThreads[0].OwnerThread == ExGetCurrentResourceThread())
-     { 
+     {
 	/* it's ok : same lock for same thread */
 	Resource->OwnerThreads[0].a.OwnerCount++;
 	KeReleaseSpinLock(&Resource->SpinLock, oldIrql);
@@ -284,7 +299,12 @@ static BOOLEAN EiAddSharedOwner(PERESOURCE Resource)
    return(TRUE);
 }
 
-BOOLEAN ExAcquireResourceSharedLite(PERESOURCE Resource, BOOLEAN Wait)
+BOOLEAN
+STDCALL
+ExAcquireResourceSharedLite (
+	PERESOURCE	Resource,
+	BOOLEAN		Wait
+	)
 /*
  * FUNCTION: Acquires the given resource for shared access by the calling
  *           thread
@@ -353,7 +373,11 @@ BOOLEAN ExAcquireResourceSharedLite(PERESOURCE Resource, BOOLEAN Wait)
    return(TRUE);
 }
 
-VOID ExConvertExclusiveToSharedLite(PERESOURCE Resource)
+VOID
+STDCALL
+ExConvertExclusiveToSharedLite (
+	PERESOURCE	Resource
+	)
 /*
  * FUNCTION: Converts a given resource from acquired for exclusive access
  *           to acquire for shared access
@@ -399,12 +423,21 @@ VOID ExConvertExclusiveToSharedLite(PERESOURCE Resource)
    DPRINT("ExConvertExclusiveToSharedLite() finished\n");
 }
 
-ULONG ExGetExclusiveWaiterCount(PERESOURCE Resource)
+ULONG
+STDCALL
+ExGetExclusiveWaiterCount (
+	PERESOURCE	Resource
+	)
 {
   return(Resource->NumberOfExclusiveWaiters);
 }
 
-BOOLEAN ExAcquireSharedStarveExclusive(PERESOURCE Resource, BOOLEAN Wait)
+BOOLEAN
+STDCALL
+ExAcquireSharedStarveExclusive (
+	PERESOURCE	Resource,
+	BOOLEAN		Wait
+	)
 /*
  * FUNCTION: Acquires a given resource for shared access without waiting
  *           for any pending attempts to acquire exclusive access to the
@@ -471,17 +504,30 @@ BOOLEAN ExAcquireSharedStarveExclusive(PERESOURCE Resource, BOOLEAN Wait)
    return(TRUE);
 }
 
-BOOLEAN ExAcquireSharedWaitForExclusive(PERESOURCE Resource, BOOLEAN Wait)
+BOOLEAN
+STDCALL
+ExAcquireSharedWaitForExclusive (
+	PERESOURCE	Resource,
+	BOOLEAN		Wait
+	)
 {
   return(ExAcquireResourceSharedLite(Resource,Wait));
 }
 
-NTSTATUS ExDeleteResource(PERESOURCE Resource)
+NTSTATUS
+STDCALL
+ExDeleteResource (
+	PERESOURCE	Resource
+	)
 {
    return(ExDeleteResourceLite(Resource));
 }
 
-NTSTATUS ExDeleteResourceLite(PERESOURCE Resource)
+NTSTATUS
+STDCALL
+ExDeleteResourceLite (
+	PERESOURCE	Resource
+	)
 {
    DPRINT("ExDeleteResourceLite(Resource %x)\n", Resource);
    if (Resource->OwnerTable) ExFreePool(Resource->OwnerTable);
@@ -490,22 +536,38 @@ NTSTATUS ExDeleteResourceLite(PERESOURCE Resource)
    return(STATUS_SUCCESS);;
 }
 
-ERESOURCE_THREAD ExGetCurrentResourceThread()
+ERESOURCE_THREAD
+STDCALL
+ExGetCurrentResourceThread (
+	VOID
+	)
 {
    return((ERESOURCE_THREAD)PsGetCurrentThread());
 }
 
-ULONG ExGetSharedWaiterCount(PERESOURCE Resource)
+ULONG
+STDCALL
+ExGetSharedWaiterCount (
+	PERESOURCE	Resource
+	)
 {
    return(Resource->NumberOfSharedWaiters);
 }
 
-NTSTATUS ExInitializeResource(PERESOURCE Resource)
+NTSTATUS
+STDCALL
+ExInitializeResource (
+	PERESOURCE	Resource
+	)
 {
    return(ExInitializeResourceLite(Resource));
 }
 
-NTSTATUS ExInitializeResourceLite(PERESOURCE Resource)
+NTSTATUS
+STDCALL
+ExInitializeResourceLite (
+	PERESOURCE	Resource
+	)
 {
    DPRINT("ExInitializeResourceLite(Resource %x)\n", Resource);
    memset(Resource,0,sizeof(ERESOURCE));
@@ -523,7 +585,11 @@ NTSTATUS ExInitializeResourceLite(PERESOURCE Resource)
    return(0);
 }
 
-BOOLEAN ExIsResourceAcquiredExclusiveLite(PERESOURCE Resource)
+BOOLEAN
+STDCALL
+ExIsResourceAcquiredExclusiveLite (
+	PERESOURCE	Resource
+	)
 /*
  * FUNCTION: Returns whether the current thread has exclusive access to
  * a given resource
@@ -537,7 +603,11 @@ BOOLEAN ExIsResourceAcquiredExclusiveLite(PERESOURCE Resource)
 	  && Resource->OwnerThreads[0].OwnerThread==ExGetCurrentResourceThread());
 }
 
-ULONG ExIsResourceAcquiredSharedLite(PERESOURCE Resource)
+ULONG
+STDCALL
+ExIsResourceAcquiredSharedLite (
+	PERESOURCE	Resource
+	)
 /*
  * FUNCTION: Returns whether the current thread has shared access to a given
  *           resource
@@ -570,7 +640,11 @@ ULONG ExIsResourceAcquiredSharedLite(PERESOURCE Resource)
    return(0);
 }
 
-VOID ExReinitializeResourceLite(PERESOURCE Resource)
+VOID
+STDCALL
+ExReinitializeResourceLite (
+	PERESOURCE	Resource
+	)
 {
    Resource->NumberOfSharedWaiters = 0;
    Resource->NumberOfExclusiveWaiters = 0;
@@ -590,25 +664,41 @@ VOID ExReinitializeResourceLite(PERESOURCE Resource)
    Resource->OwnerThreads[1].a.OwnerCount=0;
 }
 
-VOID ExReleaseResourceLite(PERESOURCE Resource)
+VOID
+STDCALL
+ExReleaseResourceLite (
+	PERESOURCE	Resource
+	)
 {
   return(ExReleaseResourceForThreadLite(Resource,
 					ExGetCurrentResourceThread()));
 }
 
-VOID ExReleaseResource(PERESOURCE Resource)
+VOID
+STDCALL
+ExReleaseResource (
+	PERESOURCE	Resource
+	)
 {
   return ExReleaseResourceForThreadLite(Resource,ExGetCurrentResourceThread());
 }
 
-VOID ExReleaseResourceForThread(PERESOURCE Resource, 
-				ERESOURCE_THREAD ResourceThreadId)
+VOID
+STDCALL
+ExReleaseResourceForThread (
+	PERESOURCE		Resource,
+	ERESOURCE_THREAD	ResourceThreadId
+	)
 {
   return(ExReleaseResourceForThreadLite(Resource,ResourceThreadId));
 }
 
-VOID ExReleaseResourceForThreadLite(PERESOURCE Resource,
-				    ERESOURCE_THREAD ResourceThreadId)
+VOID
+STDCALL
+ExReleaseResourceForThreadLite (
+	PERESOURCE		Resource,
+	ERESOURCE_THREAD	ResourceThreadId
+	)
 /*
  * FUNCTION: Releases a resource for the given thread
  * ARGUMENTS:
@@ -686,4 +776,4 @@ VOID ExReleaseResourceForThreadLite(PERESOURCE Resource,
    DPRINT("ExReleaseResourceForThreadLite() finished\n");
 }
 
-
+/* EOF */

@@ -1,4 +1,5 @@
-/*
+/* $Id: list.c,v 1.6 2000/06/07 13:05:09 ekohl Exp $
+ *
  * COPYRIGHT:           See COPYING in the top level directory
  * PROJECT:             ReactOS kernel
  * FILE:                ntoskrnl/rtl/list.c
@@ -124,9 +125,13 @@ VOID InsertHeadList(PLIST_ENTRY ListHead, PLIST_ENTRY ListEntry)
    assert( CheckEntry( ListEntry ) );
 }
 
-PLIST_ENTRY ExInterlockedInsertTailList(PLIST_ENTRY ListHead,
-					PLIST_ENTRY ListEntry,
-					PKSPIN_LOCK Lock)
+PLIST_ENTRY
+STDCALL
+ExInterlockedInsertTailList (
+	PLIST_ENTRY	ListHead,
+	PLIST_ENTRY	ListEntry,
+	PKSPIN_LOCK	Lock
+	)
 {
    PLIST_ENTRY Old;
    KIRQL oldlvl;
@@ -140,15 +145,19 @@ PLIST_ENTRY ExInterlockedInsertTailList(PLIST_ENTRY ListHead,
      {       
 	Old = ListHead->Blink;
      }
-   InsertTailList(ListHead,ListEntry);   
+   InsertTailList(ListHead,ListEntry);
    KeReleaseSpinLock(Lock,oldlvl);
    
    return(Old);
 }
 
-PLIST_ENTRY ExInterlockedInsertHeadList(PLIST_ENTRY ListHead,
-					PLIST_ENTRY ListEntry,
-					PKSPIN_LOCK Lock)
+PLIST_ENTRY
+STDCALL
+ExInterlockedInsertHeadList (
+	PLIST_ENTRY	ListHead,
+	PLIST_ENTRY	ListEntry,
+	PKSPIN_LOCK	Lock
+	)
 /*
  * FUNCTION: Inserts an entry at the head of a doubly linked list
  * ARGUMENTS:
@@ -167,18 +176,22 @@ PLIST_ENTRY ExInterlockedInsertHeadList(PLIST_ENTRY ListHead,
 	Old = NULL;
      }
    else
-     {       
+     {
 	Old = ListHead->Flink;
      }
-   InsertHeadList(ListHead,ListEntry);   
+   InsertHeadList(ListHead,ListEntry);
    KeReleaseSpinLock(Lock,oldlvl);
    
    return(Old);
 }
 
 
-PLIST_ENTRY ExInterlockedRemoveHeadList(PLIST_ENTRY Head,
-					PKSPIN_LOCK Lock)
+PLIST_ENTRY
+STDCALL
+ExInterlockedRemoveHeadList (
+	PLIST_ENTRY	Head,
+	PKSPIN_LOCK	Lock
+	)
 /*
  * FUNCTION: Removes the head of a double linked list
  * ARGUMENTS:
@@ -228,3 +241,5 @@ PLIST_ENTRY ExInterlockedRemoveTailList(PLIST_ENTRY Head,
    KeReleaseSpinLock(Lock,oldlvl);
    return(ret);
 }
+
+/* EOF */
