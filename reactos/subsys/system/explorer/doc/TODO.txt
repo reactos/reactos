@@ -21,8 +21,11 @@
 - implement blink effect in task bar for SetForegoundWindow() requests
 - implement more than one column or scrolling in start menus for very crowded start menus
 - Execute selected programs with additional command line options ("Run" dialog with pre-filled edit field)
-
+- switch background images with desktop switcher
+- Desktop Manager: Desktop Names; Speicherung der Verteilung von Applikations-Fenstern auf die verschiedenen Desktops -> config file
 - autostart doesn't work on NT4 ?
+- hide desktop bar when showing full screen applications
+- new start menu entry "Filemanager" close to "Explore" -> display C: and D: drive in MDI window
 
 - Startmenu: You can't close the start menu with pressing Win-key You can open the start menu
   with pressing Win-key, but can't close with another hit of Win-key.
@@ -31,25 +34,4 @@
   the taskbar, but the ROS-Exp ignores the setting and always shows the clock.
   Yes, ROS explorer doesn't read many settings from the registry currently,
   as it doesn't have a way to configure them. (missing configuration dialogs)
-
-- Vollbildfenster suchen -> Taskleiste ausblenden
-- Desktop-Manager: Speicherung der Verteilung von Applikations-Fenstern auf die verschiedenen Desktops; Desktop-Namen
-- neuer Startmenü-Eintrag: "Filemanager" neben "Explore"  ->  Anzeige von C: und D:
-
-> When minimizing window such as Sleipnir; a popular
-> IE-based tab browser in Japan:
-> http://www20.pos.to/~sleipnir/software/sleipnir/index.html
-> the window'll  not stored into the notification area but just minimized; instead of the setting.
-> This might be a problem of application which doesn't handle the event, but it works under MS-explorer.
-> I tested on 1.42JA, but I also tested and it reproduced on 1.41EN.
-> The setting are: Tools->Sleipnir Options->System Tray->turn both settings on
-> When you click the minimize button on the top-right of the window, it
-> minimizes successfully into SysTray, but on the other hand, when you minimize the
-> window by clicking the taskbutton, it minimizes but doesn't go into SysTray.
-
-> mIRC doesn't expect to be on two desktops at the same time.
-> There may be a internal variables, which say: "I am minimized or not." and
-> "I am visible or not." So I will have to adjust desktop switching in a
-> way, that applications are either visible or not - but not mixed between  two
-> different desktops.
 

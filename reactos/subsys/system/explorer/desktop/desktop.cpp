@@ -182,10 +182,18 @@ void Desktops::SwitchToDesktop(int idx)
 	WindowSet& windows = old_desktop._windows;
 
 	windows.clear();
+
+	 // collect window handles of all other desktops
+	WindowSet other_wnds;
+	for(const_iterator it1=begin(); it1!=end(); ++it1)
+		for(WindowSet::const_iterator it2=it1->_windows.begin(); it2!=it1->_windows.end(); ++it2)
+			other_wnds.insert(*it2);
+
 	EnumWindows(SwitchDesktopEnumFct, (LPARAM)&windows);
+
 	old_desktop._hwndForeground = (HWND)SendMessage(g_Globals._hwndDesktopBar, PM_GET_LAST_ACTIVE, 0, 0);
 
-	 // hide all windows we found
+	 // hide all windows of the previous desktop
 	for(WindowSet::iterator it=windows.begin(); it!=windows.end(); ++it)
 		ShowWindowAsync(*it, SW_HIDE);
 
@@ -196,6 +204,11 @@ void Desktops::SwitchToDesktop(int idx)
 	if (desktop._hwndForeground)
 		SetForegroundWindow(desktop._hwndForeground);
 
+	 // remove the window handles of the other desktops from what we found on the previous desktop
+	for(WindowSet::const_iterator it=other_wnds.begin(); it!=other_wnds.end(); ++it)
+		windows.erase(*it);
+
+	 // We don't need to store the window handles of what's now visible the now current desktop.
 	desktop._windows.clear();
 
 	_current_desktop = idx;
