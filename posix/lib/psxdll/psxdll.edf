@@ -1,4 +1,4 @@
-; $Id: psxdll.edf,v 1.6 2002/03/21 22:47:05 hyperion Exp $
+; $Id: psxdll.edf,v 1.7 2002/05/17 02:21:54 hyperion Exp $
 ;
 ; ReactOS POSIX+ Client Library
 ;
@@ -162,18 +162,32 @@ strstr=NTDLL.strstr
 ;implemented internally
 strdup
 
+;sys/stat
+chmod=chmod
+fchmod=fchmod
+fstat=fstat
+lstat=lstat
+mkdir=mkdir
+mkfifo=mkfifo
+mknod=mknod
+stat=stat
+umask=umask
+
 ;sys/utsname
 uname=uname
 
 ;unistd
+access=access
 close=close
 dup=dup
 dup2=dup2
+fork=fork
 getcwd=getcwd
 getpid=getpid
 getppid=getppid
 pread=pread
 read=read
+sleep=sleep
 write=write
 
 ;wchar
@@ -207,5 +221,8 @@ RtlUnwind=NTDLL.RtlUnwind
 RtlUpcaseUnicodeChar=NTDLL.RtlUpcaseUnicodeChar
 RtlUpcaseUnicodeToMultiByteN=NTDLL.RtlUpcaseUnicodeToMultiByteN
 RtlZeroMemory=NTDLL.RtlZeroMemory
+
+;WARNING: PRELIMINARY CODE FOR DEBUGGING PURPOSES ONLY - DO NOT CHANGE
+__PdxGetProcessData=__PdxGetProcessData
 
 ;EOF

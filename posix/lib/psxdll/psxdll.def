@@ -1,4 +1,4 @@
-; $Id: psxdll.def,v 1.7 2002/03/21 22:47:05 hyperion Exp $
+; $Id: psxdll.def,v 1.8 2002/05/17 02:21:54 hyperion Exp $
 ;
 ; ReactOS POSIX+ Client Library
 ;
@@ -162,18 +162,32 @@ strstr
 ;implemented internally
 strdup
 
+;sys/stat
+chmod
+fchmod
+fstat
+lstat
+mkdir
+mkfifo
+mknod
+stat
+umask
+
 ;sys/utsname
 uname
 
 ;unistd
+access
 close
 dup
 dup2
+fork
 getcwd
 getpid
 getppid
 pread
 read
+sleep
 write
 
 ;wchar
@@ -207,5 +221,8 @@ RtlUnwind
 RtlUpcaseUnicodeChar
 RtlUpcaseUnicodeToMultiByteN
 RtlZeroMemory
+
+;WARNING: PRELIMINARY CODE FOR DEBUGGING PURPOSES ONLY - DO NOT CHANGE
+__PdxGetProcessData
 
 ;EOF

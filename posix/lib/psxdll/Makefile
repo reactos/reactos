@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.7 2002/03/23 18:13:33 hyperion Exp $
+# $Id: Makefile,v 1.8 2002/05/17 02:21:54 hyperion Exp $
 
 PATH_TO_TOP = ../../../..
 
@@ -34,15 +34,16 @@ include $(PATH_TO_TOP)/rules.mak
 include $(TOOLS_PATH)/helper.mk
 
 OBJECTS_MISC = \
-	misc/main.o \
-	misc/init.o \
-	misc/heap.o \
-	misc/interlock.o \
-	misc/safeobj.o \
+ misc/main.o \
+ misc/init.o \
+ misc/heap.o \
+ misc/interlock.o \
+ misc/safeobj.o \
  misc/spawn.o \
-	misc/path.o \
+ misc/path.o \
  misc/pdata.o \
-	misc/fdtable.o
+ misc/fdtable.o \
+ misc/tls.o
 
 OBJECTS_DIRENT = \
  dirent/opendir.o \
@@ -50,13 +51,13 @@ OBJECTS_DIRENT = \
  dirent/closedir.o
 
 OBJECTS_DLFCN = \
-	dlfcn/dlopen.o \
-	dlfcn/dlclose.o \
-	dlfcn/dlsym.o \
-	dlfcn/dlerror.o
+ dlfcn/dlopen.o \
+ dlfcn/dlclose.o \
+ dlfcn/dlsym.o \
+ dlfcn/dlerror.o
 
 OBJECTS_ERRNO = \
-	errno/errno.o
+ errno/errno.o
 
 OBJECTS_FCNTL = \
  fcntl/open.o \
@@ -74,45 +75,57 @@ OBJECTS_SIGNAL = \
 
 OBJECTS_STDLIB = \
  stdlib/abort.o \
-	stdlib/malloc.o \
-	stdlib/exit.o
+ stdlib/malloc.o \
+ stdlib/exit.o
 
 OBJECTS_STRING = \
-	string/strdup.o \
-	string/strerror.o
+ string/strdup.o \
+ string/strerror.o
 
 OBJECTS_PTHREAD = \
-	pthread/create.o \
-	pthread/exit.o \
-	pthread/join.o \
-	pthread/mutex.o \
-	pthread/self.o
+ pthread/create.o \
+ pthread/exit.o \
+ pthread/join.o \
+ pthread/mutex.o \
+ pthread/self.o
+
+OBJECTS_SYS_STAT = \
+ sys/stat/chmod.o \
+ sys/stat/mkdir.o \
+ sys/stat/mkfifo.o \
+ sys/stat/mknod.o \
+ sys/stat/stat.o \
+ sys/stat/umask.o
 
 OBJECTS_SYS_UTSNAME = \
-	sys/utsname/uname.o
+ sys/utsname/uname.o
  
 OBJECTS_UNISTD = \
+ unistd/access.o \
  unistd/close.o \
  unistd/dup.o \
+ unistd/fork.o \
  unistd/getcwd.o \
  unistd/getpid.o \
  unistd/getppid.o \
  unistd/read.o \
+ unistd/sleep.o \
  unistd/write.o
 
 OBJECTS = \
-	$(OBJECTS_MISC) \
+ $(OBJECTS_MISC) \
  $(OBJECTS_DIRENT) \
-	$(OBJECTS_DLFCN) \
-	$(OBJECTS_ERRNO) \
+ $(OBJECTS_DLFCN) \
+ $(OBJECTS_ERRNO) \
  $(OBJECTS_FCNTL) \
  $(OBJECTS_LIBGEN) \
  $(OBJECTS_SCHED) \
  $(OBJECTS_SIGNAL) \
-	$(OBJECTS_STDLIB) \
-	$(OBJECTS_STRING) \
-	$(OBJECTS_PTHREAD) \
-	$(OBJECTS_SYS_UTSNAME) \
+ $(OBJECTS_STDLIB) \
+ $(OBJECTS_STRING) \
+ $(OBJECTS_PTHREAD) \
+ $(OBJECTS_SYS_STAT) \
+ $(OBJECTS_SYS_UTSNAME) \
  $(OBJECTS_UNISTD)
 
 DEP_OBJECTS = $(OBJECTS)
