@@ -11,9 +11,47 @@ typedef enum _IO_QUERY_DEVICE_DESCRIPTION
 
 typedef enum _CONFIGURATION_TYPE
 {
+   ArcSystem,
+   CentralProcessor,
+   FloatingPointProcessor,
+   PrimaryIcache,
+   PrimaryDcache,
+   SecondaryIcache,
+   SecondaryDcache,
+   SecondaryCache,
+   EisaAdapter,
+   TcAdapter,
+   ScsiAdapter,
+   DtiAdapter,
+   MultiFunctionAdapter,
    DiskController,
+   TapeController,
+   CdromController,
+   WorkController,
+   SerialController,
+   NetworkController,
+   DsplayController,
    ParallelController,
-   MaximumType,
+   PointerController,
+   KeyboardController,
+   AudioController,
+   OtherController,
+   FloppyDiskPeripheral,
+   TapePeripheral,
+   ModemPeripheral,
+   MonitorPeripheral,
+   PrinterPeripheral,
+   PointerPeripheral,
+   KeyboardPeripheral,
+   TerminalPeripheral,
+   OtherPeripheral,
+   LinePeripheral,
+   NetworkPeripheral,
+   SystemMemory,
+   DockingInformation,
+   RealModeIrqRoutingTable,
+   RealModePCIEnumeration,
+   MaximumType
 } CONFIGURATION_TYPE, *PCONFIGURATION_TYPE;
 
 typedef enum _CM_RESOURCE_TYPE
@@ -413,4 +451,30 @@ typedef ULONG FS_INFORMATION_CLASS, *PFS_INFORMATION_CLASS;
 #define IRP_MN_QUERY_DIRECTORY          0x01
 #define IRP_MN_NOTIFY_CHANGE_DIRECTORY  0x02
 
+/*
+ * Floppy device data type
+ */
+typedef struct _CM_FLOPPY_DEVICE_DATA
+{
+   USHORT Version;
+   USHORT Revision;
+   CHAR Size[8];
+   ULONG MaxDensity;
+   ULONG MountDensity;
+   UCHAR StepRateHeadUnloadTime;
+   UCHAR HeadLoadTime;
+   UCHAR MotorOffTime;
+   UCHAR SectorLengthCode;
+   UCHAR SectorPerTrack;
+   UCHAR ReadWriteGapLength;
+   UCHAR DataTransferLength;
+   UCHAR FormatGapLength;
+   UCHAR FormatFillCharacter;
+   UCHAR HeadSettleTime;
+   UCHAR MotorSettleTime;
+   UCHAR MaximumTrackValue;
+   UCHAR DataTransferRate;
+} CM_FLOPPY_DEVICE_DATA, *PCM_FLOPPY_DEVICE_DATA;
+
 #endif
+
