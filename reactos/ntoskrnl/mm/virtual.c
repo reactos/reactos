@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: virtual.c,v 1.82 2004/10/28 19:01:58 chorns Exp $
+/* $Id: virtual.c,v 1.83 2004/10/29 16:48:10 chorns Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/virtual.c
@@ -55,7 +55,7 @@ NtFlushVirtualMemory(IN HANDLE ProcessHandle,
 
 
 NTSTATUS STDCALL
-NtLockVirtualMemoryInternal(HANDLE ProcessHandle,
+MiLockVirtualMemory(HANDLE ProcessHandle,
   PVOID BaseAddress,
   ULONG NumberOfBytesToLock,
   PULONG NumberOfBytesLocked,
@@ -113,7 +113,7 @@ NtLockVirtualMemory(HANDLE ProcessHandle,
     NumberOfBytesToLock,
     NumberOfBytesLocked);
 
-  return NtLockVirtualMemoryInternal(ProcessHandle,
+  return MiLockVirtualMemory(ProcessHandle,
     BaseAddress,
     NumberOfBytesToLock,
     NumberOfBytesLocked,

@@ -82,7 +82,7 @@ static void RunTest()
   ULONG NumberOfBytesLocked;
   NTSTATUS status;
 
-  status = NtLockVirtualMemoryInternal(TestProcessHandle,
+  status = MiLockVirtualMemory(TestProcessHandle,
     TestBaseAddress,
     TestNumberOfBytesToLock,
     &NumberOfBytesLocked,

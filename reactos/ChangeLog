@@ -1,3 +1,10 @@
+2004-10-29  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* ntoskrnl/include/internal/test.h (NtLockVirtualMemoryInternal): Rename
+	to MiLockVirtualMemory.
+	* ntoskrnl/include/internal/test.h: Update.
+	* ntoskrnl/tests/tests/VirtualMemory.c: Update.
+
 2004-10-28  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* drivers/net/tcpip/tests/setup.c: Include windows.h.

@@ -27,7 +27,7 @@ PObReferenceObjectByHandle(HANDLE Handle,
 
 
 NTSTATUS STDCALL
-NtLockVirtualMemoryInternal(HANDLE ProcessHandle,
+MiLockVirtualMemory(HANDLE ProcessHandle,
   PVOID BaseAddress,
   ULONG NumberOfBytesToLock,
   PULONG NumberOfBytesLocked,
