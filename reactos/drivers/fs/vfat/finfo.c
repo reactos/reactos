@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.23 2002/12/27 23:50:20 gvg Exp $
+/* $Id: finfo.c,v 1.24 2003/01/11 16:00:16 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -193,16 +193,27 @@ VfatSetDispositionInformation(PFILE_OBJECT FileObject,
   }
   if (DispositionInfo->DoDeleteFile)
   {
-    KeAcquireSpinLock (&DeviceExt->FcbListLock, &oldIrql);
-    count = FCB->RefCount;
-    if (FCB->RefCount > 1)
-      Status = STATUS_ACCESS_DENIED;
+    if (MmFlushImageSection (FileObject->SectionObjectPointers, MmFlushForDelete))
+    {
+      KeAcquireSpinLock (&DeviceExt->FcbListLock, &oldIrql);
+      count = FCB->RefCount;
+      if (FCB->RefCount > 1)
+      {
+	DPRINT1("%d %x\n", FCB->RefCount, CcGetFileObjectFromSectionPtrs(FileObject->SectionObjectPointers));
+        Status = STATUS_ACCESS_DENIED;
+      }
+      else
+      {
+        FCB->Flags |= FCB_DELETE_PENDING;
+        FileObject->DeletePending = TRUE;
+      }
+      KeReleaseSpinLock(&DeviceExt->FcbListLock, oldIrql);
+    }
     else
     {
-      FCB->Flags |= FCB_DELETE_PENDING;
-      FileObject->DeletePending = TRUE;
+      DPRINT1("MmFlushImageSection returned FALSE\n");
+      Status = STATUS_ACCESS_DENIED;
     }
-    KeReleaseSpinLock(&DeviceExt->FcbListLock, oldIrql);
     DPRINT("RefCount:%d\n", count);
     if (NT_SUCCESS(Status) && vfatFCBIsDirectory(FCB))
     {
