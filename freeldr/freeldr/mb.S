@@ -248,11 +248,11 @@ EXTERN(_multiboot_module_strings)
 	.byte	0
 	.endr
 
-_multiboot_address_range_descriptor_size:
+EXTERN(_multiboot_memory_map_descriptor_size)
 	.long	0
 
-_multiboot_address_ranges:
-	.rept	(64 * /*multiboot_address_range_size*/24)
+EXTERN(_multiboot_memory_map)
+	.rept	(64 * /*sizeof(memory_map_t)*/24)
 	.byte	0
 	.endr
 

@@ -29,10 +29,11 @@ FLAGS = -Wall -fno-builtin
 
 # asmcode.o has to be first in the link line because it contains the startup code
 OBJS = asmcode.a asmcode.o mb.o boot.o freeldr.o stdlib.o fs.a fs.o fs_fat.o \
-	reactos.o tui.o menu.o miscboot.o options.o linux.o multiboot.o arcname.o
-ASM_OBJS = asmcode.o mb.o boot.o
+	reactos.o tui.o menu.o miscboot.o options.o linux.o multiboot.o arcname.o \
+	mem.o memory.o
+ASM_OBJS = asmcode.o mb.o boot.o mem.o
 C_OBJS = freeldr.o stdlib.o fs.a reactos.o tui.o menu.o miscboot.o options.o linux.o \
-	multiboot.o arcname.o
+	multiboot.o arcname.o memory.o
 
 all:	freeldr.sys
 
@@ -92,6 +93,12 @@ linux.o:	linux.c freeldr.h stdlib.h tui.h linux.h Makefile
 
 arcname.o:	arcname.c freeldr.h arcname.h stdlib.h Makefile
 	$(CC) $(FLAGS) -o arcname.o -c arcname.c
+
+mem.o:	mem.S asmcode.h Makefile
+	$(CC) $(FLAGS) -o mem.o -c mem.S
+
+memory.o:	memory.c asmcode.h memory.h Makefile
+	$(CC) $(FLAGS) -o memory.o -c memory.c
 
 clean:
 	$(RM) *.o

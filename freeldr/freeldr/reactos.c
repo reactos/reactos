@@ -26,6 +26,7 @@
 #include "tui.h"
 #include "multiboot.h"
 #include "arcname.h"
+#include "memory.h"
 
 BOOL	LoadReactOSKernel(char *OperatingSystemName);
 BOOL	LoadReactOSDrivers(char *OperatingSystemName);
@@ -36,24 +37,37 @@ void LoadAndBootReactOS(char *OperatingSystemName)
 	char		name[1024];
 	char		value[1024];
 	char		szFileName[1024];
-	char	szBootPath[256];
+	char		szBootPath[256];
 	int			i;
 	int			nNumDriverFiles=0;
 	int			nNumFilesLoaded=0;
-	char MsgBuffer[256];
+	char		MsgBuffer[256];
 
 	/*
 	 * Setup multiboot information structure
 	 */
 	mb_info.flags = MB_INFO_FLAG_MEM_SIZE | MB_INFO_FLAG_BOOT_DEVICE | MB_INFO_FLAG_COMMAND_LINE | MB_INFO_FLAG_MODULES;
-	mb_info.mem_lower = 640;//(640 * 1024);
-	mb_info.mem_upper = (8 * 1024);
+	mb_info.mem_lower = GetConventionalMemorySize();
+	mb_info.mem_upper = GetExtendedMemorySize();
 	mb_info.boot_device = 0xffffffff;
 	mb_info.cmdline = (unsigned long)multiboot_kernel_cmdline;
 	mb_info.mods_count = 0;
 	mb_info.mods_addr = (unsigned long)multiboot_modules;
-	mb_info.mmap_length = 0;
-	mb_info.mmap_addr = 0;
+	mb_info.mmap_length = GetBiosMemoryMap(&multiboot_memory_map);
+	if (mb_info.mmap_length)
+	{
+		mb_info.mmap_addr = (unsigned long)&multiboot_memory_map;
+		mb_info.flags |= MB_INFO_FLAG_MEMORY_MAP;
+		//printf("memory map length: %d\n", mb_info.mmap_length);
+		//printf("dumping memory map:\n");
+		//for (i=0; i<(mb_info.mmap_length / 4); i++)
+		//{
+		//	printf("0x%x\n", ((unsigned long *)&multiboot_memory_map)[i]);
+		//}
+		//getch();
+	}
+	//printf("low_mem = %d\n", mb_info.mem_lower);
+	//printf("high_mem = %d\n", mb_info.mem_upper);
 
 	/*
 	 * Make sure the system path is set in the .ini file

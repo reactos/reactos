@@ -123,12 +123,13 @@ typedef struct module
    but no size. */
 typedef struct memory_map
 {
-  unsigned long size;
+  //unsigned long size;
   unsigned long base_addr_low;
   unsigned long base_addr_high;
   unsigned long length_low;
   unsigned long length_high;
   unsigned long type;
+  unsigned long reserved;
 } memory_map_t;
 
 
@@ -137,9 +138,13 @@ multiboot_info_t		mb_info;							// Multiboot info structure passed to kernel
 char					multiboot_kernel_cmdline[255];		// Command line passed to kernel
 module_t				multiboot_modules[64];				// Array to hold boot module info loaded for the kernel
 char					multiboot_module_strings[64][256];	// Array to hold module names
+unsigned long			multiboot_memory_map_descriptor_size;
+memory_map_t			multiboot_memory_map;				// Memory map
 
 
 void	boot_reactos(void);
+
+#include "fs.h"		// Included FILE structure definition
 
 BOOL	MultiBootLoadKernel(FILE *KernelImage);
 BOOL	MultiBootLoadModule(FILE *ModuleImage, char *ModuleName);
