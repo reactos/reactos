@@ -1,5 +1,4 @@
-/* $Id: fs.c,v 1.40 2003/12/13 14:36:42 ekohl Exp $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/fs.c
@@ -53,6 +52,19 @@ IopNotifyFileSystemChange(PDEVICE_OBJECT DeviceObject,
 
 
 /* FUNCTIONS *****************************************************************/
+
+/*
+ * @unimplemented
+ */
+STDCALL
+VOID
+IoCancelFileOpen(
+    IN PDEVICE_OBJECT  DeviceObject,
+    IN PFILE_OBJECT    FileObject
+    )
+{
+	UNIMPLEMENTED;
+}
 
 /*
  * @implemented

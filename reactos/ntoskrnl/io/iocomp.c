@@ -67,6 +67,43 @@ NtpDeleteIoCompletion(PVOID ObjectBody)
 }
 
 
+/*
+ * @unimplemented
+ */
+STDCALL
+NTSTATUS
+IoSetCompletionRoutineEx(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp,
+    IN PIO_COMPLETION_ROUTINE CompletionRoutine,
+    IN PVOID Context,
+    IN BOOLEAN InvokeOnSuccess,
+    IN BOOLEAN InvokeOnError,
+    IN BOOLEAN InvokeOnCancel
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+NTSTATUS
+IoSetIoCompletion (
+	IN PVOID IoCompletion,
+	IN PVOID KeyContext,
+	IN PVOID ApcContext,
+	IN NTSTATUS IoStatus,
+	IN ULONG_PTR IoStatusInformation,
+	IN BOOLEAN Quota
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
 VOID 
 NtInitializeIoCompletionImplementation(VOID)
 {

@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.28 2003/12/13 14:36:42 ekohl Exp $
+/* $Id: file.c,v 1.29 2004/06/23 21:42:50 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -130,6 +130,133 @@ NtQueryInformationFile(HANDLE FileHandle,
    return Status;
 }
 
+
+/*
+ * @unimplemented
+ */
+STDCALL
+NTSTATUS
+IoCheckQuerySetFileInformation(
+    IN FILE_INFORMATION_CLASS FileInformationClass,
+    IN ULONG Length,
+    IN BOOLEAN SetOperation
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+NTSTATUS
+IoCheckQuerySetVolumeInformation(
+    IN FS_INFORMATION_CLASS FsInformationClass,
+    IN ULONG Length,
+    IN BOOLEAN SetOperation
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+NTSTATUS
+IoCheckQuotaBufferValidity(
+    IN PFILE_QUOTA_INFORMATION QuotaBuffer,
+    IN ULONG QuotaLength,
+    OUT PULONG ErrorOffset
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+NTSTATUS
+IoCreateFileSpecifyDeviceObjectHint(
+    OUT PHANDLE FileHandle,
+    IN ACCESS_MASK DesiredAccess,
+    IN POBJECT_ATTRIBUTES ObjectAttributes,
+    OUT PIO_STATUS_BLOCK IoStatusBlock,
+    IN PLARGE_INTEGER AllocationSize OPTIONAL,
+    IN ULONG FileAttributes,
+    IN ULONG ShareAccess,
+    IN ULONG Disposition,
+    IN ULONG CreateOptions,
+    IN PVOID EaBuffer OPTIONAL,
+    IN ULONG EaLength,
+    IN CREATE_FILE_TYPE CreateFileType,
+    IN PVOID ExtraCreateParameters OPTIONAL,
+    IN ULONG Options,
+    IN PVOID DeviceObject
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+PFILE_OBJECT
+IoCreateStreamFileObjectEx(
+    IN PFILE_OBJECT FileObject OPTIONAL,
+    IN PDEVICE_OBJECT DeviceObject OPTIONAL,
+    OUT PHANDLE FileObjectHandle OPTIONAL
+    )
+{
+	UNIMPLEMENTED;
+	return 0;
+}
+/*
+ * @unimplemented
+ */
+STDCALL
+PFILE_OBJECT
+IoCreateStreamFileObjectLite(
+    IN PFILE_OBJECT FileObject OPTIONAL,
+    IN PDEVICE_OBJECT DeviceObject OPTIONAL
+    )
+{
+	UNIMPLEMENTED;
+	return 0;
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+BOOLEAN
+IoIsFileOriginRemote(
+    IN PFILE_OBJECT FileObject
+    )
+{
+	UNIMPLEMENTED;
+	return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+NTSTATUS
+IoQueryFileDosDeviceName(
+    IN PFILE_OBJECT FileObject,
+    OUT POBJECT_NAME_INFORMATION *ObjectNameInformation
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
 
 /*
  * @implemented
@@ -351,6 +478,20 @@ NtSetInformationFile(HANDLE FileHandle,
    return Status;
 }
 
+
+/*
+ * @unimplemented
+ */
+STDCALL
+NTSTATUS
+IoSetFileOrigin(
+    IN PFILE_OBJECT FileObject,
+    IN BOOLEAN Remote
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
 
 NTSTATUS STDCALL
 NtQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,

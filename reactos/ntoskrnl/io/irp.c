@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.61 2004/06/06 08:36:31 hbirr Exp $
+/* $Id: irp.c,v 1.62 2004/06/23 21:42:50 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -45,6 +45,19 @@
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * @unimplemented
+ */
+STDCALL
+BOOLEAN
+IoForwardIrpSynchronously(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp
+    )
+{
+	UNIMPLEMENTED;
+	return FALSE;
+}
 
 /*
  * @implemented
@@ -60,6 +73,47 @@ IoFreeIrp(PIRP Irp)
   ExFreePool(Irp);
 }
 
+/*
+ * @unimplemented
+ */
+STDCALL
+ULONG
+IoGetRequestorProcessId(
+    IN PIRP Irp
+    )
+{
+	UNIMPLEMENTED;
+	return 0;
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+NTSTATUS
+IoGetRequestorSessionId(
+	IN PIRP Irp,
+	OUT PULONG pSessionId
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+STDCALL
+BOOLEAN
+IoIsValidNameGraftingBuffer(
+    IN PIRP Irp,
+    IN PREPARSE_DATA_BUFFER ReparseBuffer
+    )
+{
+	UNIMPLEMENTED;
+	return FALSE;
+}
 
 /*
  * @unimplemented

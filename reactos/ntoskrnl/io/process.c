@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: process.c,v 1.16 2003/12/30 18:52:04 fireball Exp $
+/* $Id: process.c,v 1.17 2004/06/23 21:42:50 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -57,6 +57,18 @@ IoGetStackLimits(OUT PULONG LowLimit,
   *HighLimit = (ULONG)NtCurrentTeb()->Tib.StackBase;
 }
 
+/*
+ * @unimplemented
+ */
+STDCALL
+BOOLEAN
+IoIsSystemThread(
+    IN PETHREAD Thread
+    )
+{
+	UNIMPLEMENTED;
+	return FALSE;
+}
 
 /*
  * @implemented

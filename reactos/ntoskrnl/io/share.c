@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: share.c,v 1.9 2003/07/10 15:47:00 royce Exp $
+/* $Id: share.c,v 1.10 2004/06/23 21:42:50 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -330,8 +330,8 @@ IoCheckFunctionAccess(IN ACCESS_MASK GrantedAccess,
 		      IN UCHAR MajorFunction,
 		      IN UCHAR MinorFunction,
 		      IN ULONG IoControlCode,
-		      IN PFILE_INFORMATION_CLASS FileInformationClass OPTIONAL,
-		      IN PFS_INFORMATION_CLASS FsInformationClass OPTIONAL)
+		      IN PVOID ExtraData OPTIONAL,
+		      IN PVOID ExtraData2 OPTIONAL)
 {
   UNIMPLEMENTED;
   return(STATUS_NOT_IMPLEMENTED);

@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.70 2004/04/08 16:01:47 navaraf Exp $
+/* $Id: device.c,v 1.71 2004/06/23 21:42:49 ion Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -165,6 +165,21 @@ IoAttachDeviceByPointer(
 }
 
 /*
+ * @unimplemented
+ */
+STDCALL
+NTSTATUS
+IoAttachDeviceToDeviceStackSafe(
+    IN PDEVICE_OBJECT SourceDevice,
+    IN PDEVICE_OBJECT TargetDevice,
+    OUT PDEVICE_OBJECT *AttachedToDeviceObject
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
  * IoDeleteDevice
  *
  * Status
@@ -204,6 +219,64 @@ IoDeleteDevice(PDEVICE_OBJECT DeviceObject)
    }
 
    ObDereferenceObject(DeviceObject);
+}
+
+
+/*
+ * @unimplemented
+ */
+STDCALL
+NTSTATUS
+IoEnumerateDeviceObjectList(
+    IN  PDRIVER_OBJECT  DriverObject,
+    IN  PDEVICE_OBJECT  *DeviceObjectList,
+    IN  ULONG           DeviceObjectListSize,
+    OUT PULONG          ActualNumberDeviceObjects
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+STDCALL
+PDEVICE_OBJECT
+IoGetDeviceAttachmentBaseRef(
+    IN PDEVICE_OBJECT DeviceObject
+    )
+{
+	UNIMPLEMENTED;
+	return 0;
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+NTSTATUS
+IoGetDiskDeviceObject(
+    IN  PDEVICE_OBJECT  FileSystemDeviceObject,
+    OUT PDEVICE_OBJECT  *DiskDeviceObject
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+PDEVICE_OBJECT
+IoGetLowerDeviceObject(
+    IN  PDEVICE_OBJECT  DeviceObject
+    )
+{
+	UNIMPLEMENTED;
+	return 0;
 }
 
 /*
@@ -615,6 +688,34 @@ IoOpenDeviceInstanceKey(
 }
 
 /*
+ * @unimplemented
+ */
+STDCALL
+VOID
+IoRegisterBootDriverReinitialization(
+    IN PDRIVER_OBJECT DriverObject,
+    IN PDRIVER_REINITIALIZE DriverReinitializationRoutine,
+    IN PVOID Context
+    )
+{
+	UNIMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+STDCALL
+NTSTATUS
+IoRegisterLastChanceShutdownNotification(
+    IN PDEVICE_OBJECT DeviceObject
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
  * IoQueryDeviceEnumInfo
  *
  * Status
@@ -628,6 +729,48 @@ IoQueryDeviceEnumInfo(
 {
    UNIMPLEMENTED;
    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+VOID
+IoSetStartIoAttributes(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN BOOLEAN DeferredStartIo,
+    IN BOOLEAN NonCancelable
+    )
+{
+	UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+VOID
+IoSynchronousInvalidateDeviceRelations(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN DEVICE_RELATION_TYPE Type
+    )
+{
+	UNIMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+STDCALL
+NTSTATUS
+IoValidateDeviceIoControlAccess(
+    IN  PIRP    Irp,
+    IN  ULONG   RequiredAccess
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
 }
 
 /* EOF */
