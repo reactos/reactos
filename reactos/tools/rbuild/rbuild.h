@@ -152,6 +152,7 @@ public:
 	std::vector<CompilerFlag*> compilerFlags;
 	std::vector<LinkerFlag*> linkerFlags;
 	PchFile* pch;
+	bool cplusplus;
 
 	Module ( const Project& project,
 	         const XMLElement& moduleNode,

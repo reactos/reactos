@@ -1056,24 +1056,27 @@ MingwModuleHandler::GenerateObjectFileTargets (
 	const string& windresflagsMacro,
 	string_list& clean_files ) const
 {
-	if ( module.pch && use_pch )
+	if ( module.pch )
 	{
 		const string& pch_file = module.pch->header;
 		string gch_file = pch_file + ".gch";
 		CLEAN_FILE(gch_file);
-		fprintf (
-			fMakefile,
-			"%s: %s\n",
-			gch_file.c_str(),
-			pch_file.c_str() );
-		fprintf ( fMakefile, "\t$(ECHO_PCH)\n" );
-		fprintf (
-			fMakefile,
-			"\t%s -c %s -o %s %s\n\n",
-			cc.c_str(),
-			pch_file.c_str(),
-			gch_file.c_str(),
-			cflagsMacro.c_str() );
+		if ( use_pch )
+		{
+			fprintf (
+				fMakefile,
+				"%s: %s\n",
+				gch_file.c_str(),
+				pch_file.c_str() );
+			fprintf ( fMakefile, "\t$(ECHO_PCH)\n" );
+			fprintf (
+				fMakefile,
+				"\t%s -o %s %s -g %s\n\n",
+				( module.cplusplus ? cppc.c_str() : cc.c_str() ),
+				gch_file.c_str(),
+				cflagsMacro.c_str(),
+				pch_file.c_str() );
+		}
 	}
 
 	GenerateObjectFileTargets ( module,
@@ -1456,18 +1459,10 @@ MingwModuleHandler::GetDefinitionDependencies ( const Module& module ) const
 	return dependencies;
 }
 
-// TODO FIXME - check for C++ extensions when parsing XML, and set a
-// bool in the Module class
 bool
 MingwModuleHandler::IsCPlusPlusModule ( const Module& module ) const
 {
-	if ( module.HasFileWithExtension ( module.non_if_data, ".cc" ) )
-		return true;
-	if ( module.HasFileWithExtension ( module.non_if_data, ".cxx" ) )
-		return true;
-	if ( module.HasFileWithExtension ( module.non_if_data, ".cpp" ) )
-		return true;
-	return false;
+	return module.cplusplus;
 }
 
 

@@ -91,7 +91,8 @@ Module::Module ( const Project& project,
 	  node (moduleNode),
 	  importLibrary (NULL),
 	  bootstrap (NULL),
-	  pch (NULL)
+	  pch (NULL),
+	  cplusplus (false)
 {
 	if ( node.name != "module" )
 		throw Exception ( "internal tool error: Module created with non-<module> node" );
@@ -184,6 +185,17 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 				throw InvalidBuildFileException (
 					e.location,
 					"attribute 'first' of <file> element can only be 'true' or 'false'" );
+		}
+		if ( !cplusplus )
+		{
+			// check for c++ file
+			string ext = GetExtension ( e.value );
+			if ( !stricmp ( ext.c_str(), ".cpp" ) )
+				cplusplus = true;
+			else if ( !stricmp ( ext.c_str(), ".cc" ) )
+				cplusplus = true;
+			else if ( !stricmp ( ext.c_str(), ".cxx" ) )
+				cplusplus = true;
 		}
 		File* pFile = new File ( FixSeparator ( path + CSEP + e.value ), first );
 		if ( pIf )
