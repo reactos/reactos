@@ -81,6 +81,29 @@ void ExplorerGlobals::init(HINSTANCE hInstance)
 	_icon_cache.init();
 }
 
+bool ExplorerGlobals::read_cfg()
+{
+	 // read configuration file
+	_cfg_dir.printf(TEXT("%s\\ReactOS"), (LPCTSTR)SpecialFolderFSPath(CSIDL_APPDATA,0));
+	_cfg_path.printf(TEXT("%s\\ros-explorer.xml"), _cfg_dir.c_str());
+
+	if (_cfg.read(_cfg_path))
+		return true;
+
+	if (_cfg.read("explorer-cfg-template.xml"))
+		return true;
+
+	return false;
+}
+
+void ExplorerGlobals::write_cfg()
+{
+	 // write configuration file
+	RecursiveCreateDirectory(_cfg_dir);
+
+	_cfg.write(_cfg_path);
+}
+
 
 void _log_(LPCTSTR txt)
 {
@@ -746,12 +769,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	 // init common controls library
 	CommonControlInit usingCmnCtrl;
 
-	 // read configuration file
-	String cfg_dir = FmtString(TEXT("%s\\ReactOS"), (LPCTSTR)SpecialFolderFSPath(CSIDL_APPDATA,0));
-	String cfg_path = FmtString(TEXT("%s\\ros-explorer.xml"), cfg_dir.c_str());
-
-	if (!g_Globals._cfg.read(cfg_path))
-		g_Globals._cfg.read("explorer-cfg-template.xml");
+	g_Globals.read_cfg();
 
 	if (startup_desktop) {
 		g_Globals._desktops.init();
@@ -779,8 +797,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	int ret = explorer_main(hInstance, lpCmdLine, nShowCmd);
 
 	 // write configuration file
-	RecursiveCreateDirectory(cfg_dir);
-	g_Globals._cfg.write(cfg_path);
+	g_Globals.write_cfg();
 
 	return ret;
 }

@@ -224,7 +224,9 @@ extern struct ExplorerGlobals
 {
 	ExplorerGlobals();
 
-	void		init(HINSTANCE hInstance);
+	void	init(HINSTANCE hInstance);
+	bool	read_cfg();
+	void	write_cfg();
 
 	HINSTANCE	_hInstance;
 	ATOM		_hframeClass;
@@ -249,6 +251,8 @@ extern struct ExplorerGlobals
 	Desktops	_desktops;
 
 	XMLDoc		_cfg;
+	String		_cfg_dir;
+	String		_cfg_path;
 } g_Globals;
 
 

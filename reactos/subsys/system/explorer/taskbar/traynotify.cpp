@@ -199,7 +199,7 @@ void NotifyArea::read_config()
 
 			for(XMLNode::Children::const_iterator it=children.begin(); it!=children.end(); ++it) {
 				const XMLNode& node = **it;
-				assert(node=="icon");
+				assert(node==TEXT("icon"));
 
 				NotifyIconConfig cfg;
 

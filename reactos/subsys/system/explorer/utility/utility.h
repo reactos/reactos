@@ -680,7 +680,7 @@ struct BStr
 		WCHAR b[BUFFER_LEN];
 
 		if (s)
-			_p = SysAllocStringLen(b, MultiByteToWideChar(CP_ACP, 0, s, -1, b, BUFFER_LEN));
+			_p = SysAllocStringLen(b, MultiByteToWideChar(CP_ACP, 0, s, -1, b, BUFFER_LEN)-1);
 		else
 			_p = NULL;
 	}
@@ -744,7 +744,7 @@ struct String
 	String(LPCSTR s, int l) {assign(s, l);}
 	String(const string& other) {assign(other.c_str());}
 	String& operator=(LPCSTR s) {assign(s); return *this;}
-	void assign(LPCSTR s) {if (s) {TCHAR b[BUFFER_LEN]; super::assign(b, MultiByteToWideChar(CP_ACP, 0, s, -1, b, BUFFER_LEN));} else erase();}
+	void assign(LPCSTR s) {if (s) {TCHAR b[BUFFER_LEN]; super::assign(b, MultiByteToWideChar(CP_ACP, 0, s, -1, b, BUFFER_LEN)-1);} else erase();}
 	void assign(LPCSTR s, int l) {if (s) {TCHAR b[BUFFER_LEN]; super::assign(b, MultiByteToWideChar(CP_ACP, 0, s, l, b, BUFFER_LEN));} else erase();}
 	void assign(const BStr& s) {int l = s.length(); super::assign(s, l);}
 #else
@@ -752,7 +752,7 @@ struct String
 	String(LPCWSTR s, int l) {assign(s, l);}
 	String(const wstring& other) {assign(other.c_str());}
 	String& operator=(LPCWSTR s) {assign(s); return *this;}
-	void assign(LPCWSTR s) {if (s) {char b[BUFFER_LEN]; super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, -1, b, BUFFER_LEN, 0, 0));} else erase();}
+	void assign(LPCWSTR s) {if (s) {char b[BUFFER_LEN]; super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, -1, b, BUFFER_LEN, 0, 0)-1);} else erase();}
 	void assign(LPCWSTR s, int l) {if (s) {char b[BUFFER_LEN]; super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, l, b, BUFFER_LEN, 0, 0));} else erase();}
 	void assign(const BStr& s) {int l = s.length(); if (l) {char b[BUFFER_LEN]; super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, l, b, BUFFER_LEN, 0, 0));} else erase();}
 #endif
@@ -767,10 +767,42 @@ struct String
 	operator LPCTSTR() const {return c_str();}
 
 #ifdef UNICODE
-	operator string() const {char b[BUFFER_LEN]; return string(b, WideCharToMultiByte(CP_ACP, 0, c_str(), -1, b, BUFFER_LEN, 0, 0));}
+	operator string() const {char b[BUFFER_LEN]; return string(b, WideCharToMultiByte(CP_ACP, 0, c_str(), -1, b, BUFFER_LEN, 0, 0)-1);}
 #else
-	operator wstring() const {WCHAR b[BUFFER_LEN]; return wstring(b, MultiByteToWideChar(CP_ACP, 0, c_str(), -1, b, BUFFER_LEN));}
+	operator wstring() const {WCHAR b[BUFFER_LEN]; return wstring(b, MultiByteToWideChar(CP_ACP, 0, c_str(), -1, b, BUFFER_LEN)-1);}
 #endif
+
+	void assign_utf8(const char* str)
+	{
+		TCHAR buffer[BUFFER_LEN];
+
+#ifdef UNICODE
+		int l = MultiByteToWideChar(CP_UTF8, 0, str, -1, buffer, BUFFER_LEN) - 1;
+#else
+		WCHAR wbuffer[BUFFER_LEN];
+
+		int l = MultiByteToWideChar(CP_UTF8, 0, str, -1, wbuffer, BUFFER_LEN) - 1;
+		l = WideCharToMultiByte(CP_ACP, 0, wbuffer, l, buffer, BUFFER_LEN, 0, 0);
+#endif
+
+		assign(buffer, l);
+	}
+
+	string get_utf8() const
+	{
+		char buffer[BUFFER_LEN];
+
+#ifdef UNICODE
+		int l = WideCharToMultiByte(CP_UTF8, 0, c_str(), length(), buffer, BUFFER_LEN, 0, 0);
+#else
+		WCHAR wbuffer[BUFFER_LEN];
+
+		int l = MultiByteToWideChar(CP_ACP, 0, c_str(), length(), wbuffer, BUFFER_LEN);
+		l = WideCharToMultiByte(CP_UTF8, 0, wbuffer, l, buffer, BUFFER_LEN, 0, 0);
+#endif
+
+		return string(buffer, l);
+	}
 
 	String& printf(LPCTSTR fmt, ...)
 	{

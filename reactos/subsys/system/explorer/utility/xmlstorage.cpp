@@ -72,15 +72,16 @@ void XMLCALL XMLReader::XML_XmlDeclHandler(void* userData, const XML_Char* versi
 void XMLCALL XMLReader::XML_StartElementHandler(void* userData, const XML_Char* name, const XML_Char** atts)
 {
 	XMLReader* pThis = (XMLReader*) userData;
-	XMLNode* node = new XMLNode(name);
+
+	XMLNode* node = new XMLNode(String_from_XML_Char(name));
 
 	pThis->_pos.add_down(node);
 
 	while(*atts) {
-		const XML_Char* name = *atts++;
-		const XML_Char* value = *atts++;
+		const XML_Char* attr_name = *atts++;
+		const XML_Char* attr_value = *atts++;
 
-		(*node)[name] = value;
+		(*node)[String_from_XML_Char(attr_name)] = String_from_XML_Char(attr_value);
 	}
 
 	pThis->_in_tag = true;

@@ -41,14 +41,31 @@
 #define	XML_INDENT_SPACE "  "
 
 
- /// in memory representation of an XML node
-struct XMLNode : public string
+#ifdef XML_UNICODE	// Are XML_Char strings UTF-16 encoded?
+
+typedef String String_from_XML_Char;
+
+#else
+
+struct String_from_XML_Char : public String
 {
-	typedef map<string, string> AttributeMap;
+	String_from_XML_Char(const XML_Char* str)
+	{
+		assign_utf8(str);
+	}
+};
+
+#endif
+
+
+ /// in memory representation of an XML node
+struct XMLNode : public String
+{
+	typedef map<String, String> AttributeMap;
 	typedef list<XMLNode*> Children;
 
-	XMLNode(const string& name)
-	 :	string(name)
+	XMLNode(const String& name)
+	 :	String(name)
 	{
 	}
 
@@ -67,13 +84,13 @@ struct XMLNode : public string
 	}
 
 	 /// write access to an attribute
-	string& operator[](const string& attr_name)
+	String& operator[](const String& attr_name)
 	{
 		return _attributes[attr_name];
 	}
 
 	 /// read only access to an attribute
-	string operator[](const string& attr_name) const
+	String operator[](const String& attr_name) const
 	{
 		AttributeMap::const_iterator found = _attributes.find(attr_name);
 
@@ -96,7 +113,7 @@ struct XMLNode : public string
 			return NULL;
 	}
 
-	XMLNode* find_first(const string& name) const
+	XMLNode* find_first(const String& name) const
 	{
 		for(Children::const_iterator it=_children.begin(); it!=_children.end(); ++it)
 			if (**it == name)
@@ -105,18 +122,12 @@ struct XMLNode : public string
 		return NULL;
 	}
 
-	XMLNode* find_first(const string& name, const string& attr_name, const string& attr_value) const
+	XMLNode* find_first(const String& name, const String& attr_name, const String& attr_value) const
 	{
 		for(Children::const_iterator it=_children.begin(); it!=_children.end(); ++it) {
 			const XMLNode& node = **it;
 
-			if (node==name &&
-#ifdef UNICODE
-				!strcmp(node[attr_name].c_str(), attr_value.c_str())	// workaround because of STL bug
-#else
-				node[attr_name]==attr_value
-#endif
-				)
+			if (node==name && node[attr_name]==attr_value)
 				return *it;
 		}
 
@@ -142,10 +153,10 @@ struct XMLNode : public string
 	 /// write XML stream preserving original white space and comments
 	ostream& write(ostream& out)
 	{
-		out << "<" << *this;
+		out << "<" << get_utf8();
 
 		for(AttributeMap::const_iterator it=_attributes.begin(); it!=_attributes.end(); ++it)
-			out << " " << it->first << "=\"" << it->second << "\"";
+			out << " " << it->first.get_utf8() << "=\"" << it->second.get_utf8() << "\"";
 
 		if (!_children.empty() || !_content.empty()) {
 			out << ">" << _content;
@@ -153,7 +164,7 @@ struct XMLNode : public string
 			for(Children::const_iterator it=_children.begin(); it!=_children.end(); ++it)
 				(*it)->write(out);
 
-			out << "</" << *this << ">" << _trailing;
+			out << "</" << get_utf8() << ">" << _trailing;
 		} else {
 			out << "/>" << _trailing;
 		}
@@ -167,10 +178,10 @@ struct XMLNode : public string
 		for(int i=indent; i--; )
 			out << XML_INDENT_SPACE;
 
-		out << "<" << *this;
+		out << "<" << get_utf8();
 
 		for(AttributeMap::const_iterator it=_attributes.begin(); it!=_attributes.end(); ++it)
-			out << " " << it->first << "=\"" << it->second << "\"";
+			out << " " << it->first.get_utf8() << "=\"" << it->second.get_utf8() << "\"";
 
 		if (!_children.empty()) {
 			out << ">\n";
@@ -181,7 +192,7 @@ struct XMLNode : public string
 			for(int i=indent; i--; )
 				out << XML_INDENT_SPACE;
 
-			out << "</" << *this << ">\n";
+			out << "</" << get_utf8() << ">\n";
 		} else {
 			out << "/>\n";
 		}
@@ -215,8 +226,8 @@ struct XMLPos
 	const XMLNode& operator*() const {return *_cur;}
 
 	 /// attribute access
-	string& operator[](const string& attr_name) {return (*_cur)[attr_name];}
-	string operator[](const string& attr_name) const {return (*_cur)[attr_name];}
+	String& operator[](const String& attr_name) {return (*_cur)[attr_name];}
+	String operator[](const String& attr_name) const {return (*_cur)[attr_name];}
 
 	 /// insert children when building tree
 	void add_down(XMLNode* child)
@@ -249,7 +260,7 @@ struct XMLPos
 	}
 
 	 /// search for child and go down
-	bool go_down(const string& name)
+	bool go_down(const String& name)
 	{
 		XMLNode* node = _cur->find_first(name);
 
@@ -261,7 +272,7 @@ struct XMLPos
 	}
 
 	 /// create node if not already existing and move to it
-	void create(const string& name)
+	void create(const String& name)
 	{
 		XMLNode* node = _cur->find_first(name);
 
@@ -272,7 +283,7 @@ struct XMLPos
 	}
 
 	 /// search matching child node identified by key name and an attribute value
-	void create(const string& name, const string& attr_name, const string& attr_value)
+	void create(const String& name, const String& attr_name, const String& attr_value)
 	{
 		XMLNode* node = _cur->find_first(name, attr_name, attr_value);
 
