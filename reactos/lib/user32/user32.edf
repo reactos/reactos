@@ -561,6 +561,7 @@ SetCursor=SetCursor@4
 SetCursorPos=SetCursorPos@8
 SetDebugErrorLevel=SetDebugErrorLevel@4
 ;SetDeskWallpaper
+;SetDesktopBitmap
 SetDlgItemInt=SetDlgItemInt@16
 SetDlgItemTextA=SetDlgItemTextA@12
 SetDlgItemTextW=SetDlgItemTextW@12
