@@ -66,11 +66,9 @@ void RegDirectory::read_directory(int scan_flags)
 				break;
 
 			w32fd.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
+			lstrcpy(w32fd.cFileName, name);
 
 			_tcscpy(p, name);
-
-			lstrcpy(w32fd.cFileName, p);
-
 			entry = new RegDirectory(this, buffer, _hKeyRoot);
 
 			memcpy(&entry->_data, &w32fd, sizeof(WIN32_FIND_DATA));
@@ -91,7 +89,35 @@ void RegDirectory::read_directory(int scan_flags)
 
 			last = entry;
 		}
+/*
+		TCHAR value[MAX_PATH];
+		LONG value_len = sizeof(value);
 
+		if (!RegQueryValue(hKey, NULL, value, &value_len) && value_len>1) {
+			memset(&w32fd, 0, sizeof(WIN32_FIND_DATA));
+
+			lstrcpy(w32fd.cFileName, TEXT("(Default)"));
+
+			entry = new RegEntry(this);
+
+			memcpy(&entry->_data, &w32fd, sizeof(WIN32_FIND_DATA));
+
+			entry->_content = _tcsdup(value);
+
+			if (!first_entry)
+				first_entry = entry;
+
+			if (last)
+				last->_next = entry;
+
+			entry->_down = NULL;
+			entry->_expanded = false;
+			entry->_scanned = false;
+			entry->_level = level;
+
+			last = entry;
+		}
+*/
 		DWORD type;
 		for(int idx=0; ; ++idx) {
 			DWORD name_len = MAX_PATH;
@@ -101,9 +127,10 @@ void RegDirectory::read_directory(int scan_flags)
 
 			memset(&w32fd, 0, sizeof(WIN32_FIND_DATA));
 
-			_tcscpy(p, name);
-
-			lstrcpy(w32fd.cFileName, p);
+			if (name[0])
+				lstrcpy(w32fd.cFileName, name);
+			else
+				lstrcpy(w32fd.cFileName, TEXT("(Default)"));
 
 			entry = new RegEntry(this);
 
@@ -122,6 +149,20 @@ void RegDirectory::read_directory(int scan_flags)
 			  case REG_FULL_RESOURCE_DESCRIPTOR:	entry->_type_name = _tcsdup(TEXT("REG_FULL_RESOURCE_DESCRIPTOR"));	break;
 			  case REG_RESOURCE_REQUIREMENTS_LIST:	entry->_type_name = _tcsdup(TEXT("REG_RESOURCE_REQUIREMENTS_LIST"));break;
 			  case REG_QWORD:						entry->_type_name = _tcsdup(TEXT("REG_QWORD"));						break;
+			}
+
+			 ///@todo This can also be done in the RegEnumValue() call if we dynamically adjust the return buffer size.
+			TCHAR value[MAX_PATH];
+			DWORD value_len = sizeof(value);
+
+			if (!RegQueryValueEx(hKey, name, NULL, NULL, (LPBYTE)value, &value_len)) {
+				if (type==REG_SZ || type==REG_EXPAND_SZ)
+					entry->_content = _tcsdup(value);
+				else if (type == REG_DWORD) {
+					TCHAR b[32];
+					_stprintf(b, TEXT("%d"), *(DWORD*)&value);
+					entry->_content = _tcsdup(b);
+				}
 			}
 
 			if (!first_entry)
