@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.1 2004/08/12 02:50:35 weiden Exp $
+/* $Id: stubs.c,v 1.2 2004/08/12 15:41:36 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         SkyOS GI library
@@ -290,5 +290,340 @@ GI_wait_message(s_gi_msg *m,
   STUB("GI_wait_message(0x%x, 0x%x) returns 0!\n", m, w);
   return 0;
 }
+
+
+/*
+ * @unimplemented
+ */
+int __cdecl
+GC_draw_text(GC *gc,
+             s_region *rect,
+             unsigned char *text)
+{
+  STUB("GC_draw_text(0x%x, 0x%x, 0x%x) returns 0!\n", gc, rect, text);
+  return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+int __cdecl
+GC_set_fg_color(GC *gc,
+                COLOR col)
+{
+  STUB("GC_set_fg_color(0x%x, 0x%x) returns 0!\n", gc, col);
+  return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+int __cdecl
+GC_set_font(GC *gc,
+            unsigned int fontIndex)
+{
+  STUB("GC_set_font(0x%x, 0x%x) returns 0!\n", gc, fontIndex);
+  return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+int __cdecl
+GC_set_font_size(GC *gc,
+                 unsigned int fontSize)
+{
+  STUB("GC_set_font_size(0x%x, 0x%x) returns 0!\n", gc, fontSize);
+  return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+int __cdecl
+GC_set_font_flags(GC *gc,
+                  unsigned int flags)
+{
+  STUB("GC_set_font_flags(0x%x, 0x%x) returns 0!\n", gc, flags);
+  return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+int __cdecl
+GC_set_font_param(GC *gc,
+                  unsigned int font,
+                  unsigned int fontsize,
+                  unsigned int flags,
+                  unsigned int trans)
+{
+  STUB("GC_set_font_param(0x%x, 0x%x, 0x%x, 0x%x, 0x%x) returns 0!\n", gc, font, fontsize, flags, trans);
+  return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+sCreateApplication* __cdecl
+GI_CreateApplicationStruct(void)
+{
+  STUB("GI_CreateApplicationStruct() returns NULL!\n");
+  return NULL;
+}
+
+
+/*
+ * @unimplemented
+ */
+HANDLE __cdecl
+GI_CreateApplication(sCreateApplication *application)
+{
+  STUB("GI_CreateApplication(0x%x) returns NULL!\n", application);
+  return NULL;
+}
+
+
+/*
+ * @unimplemented
+ */
+int __cdecl
+GI_EnableMouseTracking(HANDLE hWnd)
+{
+  STUB("GI_EnableMouseTracking(0x%x) returns 0!\n", hWnd);
+  return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+HANDLE __cdecl
+GI_GetTopLevelWindow(HANDLE hWnd)
+{
+  STUB("GI_GetTopLevelWindow(0x%x) returns NULL!\n", hWnd);
+  return NULL;
+}
+
+
+/*
+ * @unimplemented
+ */
+int __cdecl
+GI_GetWindowX(HANDLE hWnd)
+{
+  STUB("GI_GetWindowX(0x%x) returns 0!\n", hWnd);
+  return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+int __cdecl
+GI_GetWindowY(HANDLE hWnd)
+{
+  STUB("GI_GetWindowY(0x%x) returns 0!\n", hWnd);
+  return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+int __cdecl
+GI_GetWindowWidth(HANDLE hWnd)
+{
+  STUB("GI_GetWindowWidth(0x%x) returns 0!\n", hWnd);
+  return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+int __cdecl
+GI_GetWindowHeight(HANDLE hWnd)
+{
+  STUB("GI_GetWindowHeight(0x%x) returns 0!\n", hWnd);
+  return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+int __cdecl
+GI_create_font(unsigned char *family,
+               unsigned char *style,
+               unsigned char *filename)
+{
+  STUB("GI_create_font(0x%x, 0x%x, 0x%x) returns 0!\n", family, style, filename);
+  return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+int __cdecl
+GI_textheight(unsigned int index,
+              unsigned int size,
+              unsigned char *text)
+{
+  STUB("GI_textheight(0x%x, 0x%x, 0x%x) returns 0!\n", index, size, text);
+  return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+int __cdecl
+GI_textlength(unsigned int index,
+              unsigned int size,
+              unsigned char *text)
+{
+  STUB("GI_textlength(0x%x, 0x%x, 0x%x) returns 0!\n", index, size, text);
+  return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+int __cdecl
+GI_init(void)
+{
+  STUB("GI_init() returns 0!\n");
+  return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+int __cdecl
+GI_set_dimension(HANDLE hWnd,
+                 int notify,
+                 int x1,
+                 int y1,
+                 unsigned int width,
+                 unsigned int height)
+{
+  STUB("GI_set_dimension(0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x) returns 0!\n", hWnd, notify, x1, y1, width, height);
+  return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+int __cdecl
+GC_blit_from_DIB(GC *gc,
+                 DIB *dib,
+                 int x,
+                 int y)
+{
+  STUB("GC_blit_from_DIB(0x%x, 0x%x, 0x%x, 0x%x) returns 0!\n", gc, dib, x, y);
+  return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+int __cdecl
+GC_draw_pixel(GC *gc,
+              int x,
+              int y)
+{
+  STUB("GC_draw_pixel(0x%x, 0x%x, 0x%x) returns 0!\n", gc, x, y);
+  return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+int __cdecl
+GC_set_clip(GC *gc,
+            s_region *clip)
+{
+  STUB("GC_set_clip(0x%x, 0x%x) returns 0!\n", gc, clip);
+  return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+DIB* __cdecl
+GI_create_DIB(void *data,
+              unsigned int width,
+              unsigned int height,
+              unsigned int bpp,
+              void *palette,
+              unsigned int palette_size)
+{
+  STUB("GI_create_DIB(0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x) returns NULL!\n", data, width, height, bpp, palette, palette_size);
+  return NULL;
+}
+
+
+/*
+ * @unimplemented
+ */
+int __cdecl
+GI_redraw_window(s_window *win)
+{
+  STUB("GI_redraw_window(0x%x) returns 0!\n", win);
+  return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+DIB* __cdecl
+GI_ScaleDIB(DIB *srcbitmap,
+            int iWidth,
+            int iHeight,
+            int filtertype,
+            float filterwidth)
+{
+  STUB("GI_ScaleDIB(0x%x, 0x%x, 0x%x, 0x%x, 0x%x) returns 0!\n", srcbitmap, iWidth, iHeight, filtertype, filterwidth);
+  return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+int __cdecl
+GI_get_resolution(s_resolution *res)
+{
+  STUB("GI_get_resolution(0x%x) returns 0!\n", res);
+  return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+int __cdecl
+GI_widget_status_set(s_window *win,
+                     unsigned char *text)
+{
+  STUB("GI_widget_status_set(0x%x, 0x%x) returns 0!\n", win, text);
+  return 0;
+}
+
 
 /* EOF */

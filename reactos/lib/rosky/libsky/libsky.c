@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: libsky.c,v 1.1 2004/08/12 02:50:35 weiden Exp $
+/* $Id: libsky.c,v 1.2 2004/08/12 15:41:36 weiden Exp $
  *
  * PROJECT:         SkyOS library
  * FILE:            lib/libsky/libsky.c
@@ -26,6 +26,7 @@
  *      08/12/2004  Created
  */
 #include <windows.h>
+/* #define NDEBUG */
 #include "libsky.h"
 #include "resource.h"
 

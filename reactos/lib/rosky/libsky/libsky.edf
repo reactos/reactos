@@ -3,11 +3,22 @@ LIBRARY acledit.dll
 EXPORTS
 __libc_init_memory=__libc_init_memory
 __to_kernel=__to_kernel
-_alloca=NTDLL._alloca_probe
 ctor_dtor_initialize=ctor_dtor_initialize
 get_usec_counter=get_usec_counter
+
+; MSVCRT
 rand=MSVCRT.rand
 srand=MSVCRT.srand
-strcpy=NTDLL.strcpy
+
+; NTDLL
+_alloca=NTDLL._alloca_probe
+
+; CRTDLL
+printf=CRTDLL.printf
+putchar=CRTDLL.putchar
+sprintf=CRTDLL.sprintf
+strcat=CRTDLL.strcat
+strcpy=CRTDLL.strcpy
+time=CRTDLL.time
 
 ; EOF

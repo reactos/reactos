@@ -208,4 +208,35 @@ typedef struct s_window
   int origin_y;
 } s_window;
 
+typedef struct sCreateApplication
+{
+  unsigned char ucApplicationName[255];
+  unsigned int  uiX;
+  unsigned int  uiY;
+  unsigned int  uiWidth;
+  unsigned int  uiHeight;
+
+  void *fwndClient;
+  unsigned int uiStyleApplication;
+  unsigned int uiStyleFrame;
+  unsigned int uiStyleTitle;
+  unsigned int uiStyleMenu;
+  unsigned int uiStyleBar;
+  unsigned int uiStyleClient;
+  unsigned int uiBackGroundColor;
+  unsigned int uiApplicationIcon;
+  widget_menu  *pFrameMenu;
+
+  unsigned int uiReserved[128];
+
+  void (__cdecl *PostCreateWindowBitmap)(HANDLE hWnd, void *pGCBuf);
+} sCreateApplication;
+
+typedef struct s_resolution
+{
+  unsigned int width;
+  unsigned int height;
+  unsigned int bpp;
+} s_resolution;
+
 #endif /* __RSK_STRUCTS_H */

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2004/08/12 02:50:35 weiden Exp $
+# $Id: Makefile,v 1.2 2004/08/12 15:41:36 weiden Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -12,6 +12,7 @@ TARGET_BASE = 0x71c10000
 
 TARGET_CFLAGS = \
  -I./include \
+ -DDEBUG \
  -Wall \
  -Werror \
  -fno-builtin
