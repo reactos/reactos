@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.114 2003/08/19 23:59:08 dwelch Exp $
+/* $Id: process.c,v 1.115 2003/09/14 10:52:33 hbirr Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -75,32 +75,54 @@ PsGetNextProcess(PEPROCESS OldProcess)
    
    if (OldProcess == NULL)
      {
-	return(PsInitialSystemProcess);
+       Status = ObReferenceObjectByPointer(PsInitialSystemProcess,
+				           PROCESS_ALL_ACCESS,
+				           PsProcessType,
+				           KernelMode);   
+       if (!NT_SUCCESS(Status))
+         {
+	   CPRINT("PsGetNextProcess(): ObReferenceObjectByPointer failed for PsInitialSystemProcess\n");
+	   KEBUGCHECK(0);
+	 }
+       return PsInitialSystemProcess;
      }
    
    KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
-   if (OldProcess->ProcessListEntry.Flink == &PsProcessListHead)
+   NextProcess = OldProcess;
+   while (1)
      {
-	NextProcess = CONTAINING_RECORD(PsProcessListHead.Flink,
-					EPROCESS,
-					ProcessListEntry);
+       if (NextProcess->ProcessListEntry.Blink == &PsProcessListHead)
+         {
+	   NextProcess = CONTAINING_RECORD(PsProcessListHead.Blink,
+					   EPROCESS,
+					   ProcessListEntry);
+         }
+       else
+         {
+	   NextProcess = CONTAINING_RECORD(NextProcess->ProcessListEntry.Blink,
+					   EPROCESS,
+					   ProcessListEntry);
+         }
+       Status = ObReferenceObjectByPointer(NextProcess,
+				           PROCESS_ALL_ACCESS,
+				           PsProcessType,
+				           KernelMode);   
+       if (NT_SUCCESS(Status))
+         {
+	   break;
+	 }
+       else if (Status == STATUS_PROCESS_IS_TERMINATING)
+         {
+	   continue;
+	 }
+       else if (!NT_SUCCESS(Status))
+         {
+	   CPRINT("PsGetNextProcess(): ObReferenceObjectByPointer failed\n");
+	   KEBUGCHECK(0);
+	 }
      }
-   else
-     {
-	NextProcess = CONTAINING_RECORD(OldProcess->ProcessListEntry.Flink,
-					EPROCESS,
-					ProcessListEntry);
-     }
-   Status = ObReferenceObjectByPointer(NextProcess,
-				       PROCESS_ALL_ACCESS,
-				       PsProcessType,
-				       KernelMode);   
+
    KeReleaseSpinLock(&PsProcessListLock, oldIrql);
-   if (!NT_SUCCESS(Status))
-     {
-	CPRINT("PsGetNextProcess(): ObReferenceObjectByPointer failed\n");
-	KEBUGCHECK(0);
-     }
    ObDereferenceObject(OldProcess);
    
    return(NextProcess);
@@ -950,19 +972,29 @@ NtOpenProcess(OUT PHANDLE	    ProcessHandle,
 					 ProcessListEntry);
 	     if (current->UniqueProcessId == (ULONG)ClientId->UniqueProcess)
 	       {
-		  ObReferenceObjectByPointer(current,
-					     DesiredAccess,
-					     PsProcessType,
-					     UserMode);
+	          if (current->Pcb.State == PROCESS_STATE_TERMINATED)
+		    {
+		      Status = STATUS_PROCESS_IS_TERMINATING;
+		    }
+		  else
+		    {
+		      Status = ObReferenceObjectByPointer(current,
+					                  DesiredAccess,
+					                  PsProcessType,
+					                  UserMode);
+		    }
 		  KeReleaseSpinLock(&PsProcessListLock, oldIrql);
-		  Status = ObCreateHandle(PsGetCurrentProcess(),
-					  current,
-					  DesiredAccess,
-					  FALSE,
-					  ProcessHandle);
-		  ObDereferenceObject(current);
-		  DPRINT("*ProcessHandle %x\n", ProcessHandle);
-		  DPRINT("NtOpenProcess() = %x\n", Status);
+		  if (NT_SUCCESS(Status))
+		    {
+		      Status = ObCreateHandle(PsGetCurrentProcess(),
+					      current,
+					      DesiredAccess,
+					      FALSE,
+					      ProcessHandle);
+		      ObDereferenceObject(current);
+		      DPRINT("*ProcessHandle %x\n", ProcessHandle);
+		      DPRINT("NtOpenProcess() = %x\n", Status);
+		    }
 		  return(Status);
 	       }
 	     current_entry = current_entry->Flink;
