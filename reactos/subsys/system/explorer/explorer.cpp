@@ -481,6 +481,9 @@ struct ExplorerAboutDlg : public
 
 		new HyperlinkCtrl(hwnd, IDC_WWW);
 
+		FmtString ver_txt(ResString(IDS_EXPLORER_VERSION_STR), (LPCTSTR)ResString(IDS_VERSION_STR));
+		SetWindowText(GetDlgItem(hwnd, IDC_VERSION_TXT), ver_txt);
+
 		CenterWindow(hwnd);
 	}
 

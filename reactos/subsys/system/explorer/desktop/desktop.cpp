@@ -206,7 +206,7 @@ void BackgroundWindow::DrawDesktopBkgnd(HDC hdc)
 		ClientRect rect(_hwnd);
 
 		rect.left = rect.right - 280;
-		rect.top = rect.bottom - 56 - DESKTOPBARBAR_HEIGHT;
+		rect.top = rect.bottom - 80 - DESKTOPBARBAR_HEIGHT;
 		rect.right = rect.left + 250;
 		rect.bottom = rect.top + 40;
 

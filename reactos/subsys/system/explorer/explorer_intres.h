@@ -96,6 +96,7 @@
 #define IDC_WWW                         1012
 #define IDC_TOPIC                       1017
 #define IDC_MAILS_FOUND                 1018
+#define IDC_VERSION_TXT                 1029
 #define ID_REFRESH                      1704
 #define ID_ABOUT_WINEFILE               1705
 #define IDS_VERSION_STR                 5000
@@ -114,7 +115,6 @@
 #define ID_EXPLORE                      40011
 #define ID_TASKMGR                      40012
 #define ID_BROWSE_UP                    40013
-
 #define ID_EDIT_UNDO                    40019
 #define ID_EDIT_COPY                    40020
 #define ID_EDIT_CUt                     40021
@@ -131,7 +131,6 @@
 #define ID_FILE_DELETE                  40032
 #define ID_FILE_RENAME                  40033
 #define ID_FILE_PROPERTIES              40034
-
 #define ID_SWITCH_DESKTOP_1             50000
 #define ID_WINDOW_NEW                   0xE130
 #define ID_EDIT_PROPERTIES              57656
