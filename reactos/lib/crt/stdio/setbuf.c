@@ -1,7 +1,7 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/stdio.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/internal/file.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <internal/file.h>
 
 /*
  * @implemented

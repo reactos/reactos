@@ -1,7 +1,7 @@
-#include <msvcrt/errno.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/string.h>
-#include <msvcrt/internal/file.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+#include <internal/file.h>
 
 
 /*

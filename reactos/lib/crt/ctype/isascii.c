@@ -8,7 +8,7 @@
  *              28/12/98: Created
  */
 
-#include <msvcrt/ctype.h>
+#include <ctype.h>
 
 /*
  * @implemented

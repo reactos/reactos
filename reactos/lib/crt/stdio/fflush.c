@@ -11,13 +11,14 @@
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 
-#include <msvcrt/stdio.h>
-#include <msvcrt/errno.h>
-#include <msvcrt/sys/types.h>
-#include <msvcrt/sys/stat.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/internal/file.h>
-#include <msvcrt/io.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <stdlib.h>
+#include <io.h>
+#include <internal/file.h>
 
 
 /*
@@ -75,7 +76,7 @@ int fflush(FILE *f)
 
     if ((f->_flag & _IOFBF) == _IOFBF) {
      	if ( (f->_flag & _IOAHEAD) == _IOAHEAD )
- 	    _lseek(fileno(f),-rn, SEEK_CUR);
+ 	    _lseek(_fileno(f),-rn, SEEK_CUR);
     }
 
     f->_flag &= ~_IOAHEAD;
@@ -89,7 +90,7 @@ int fflush(FILE *f)
 // better open the file in write through mode
 
     while (rn > 0) {
-      n = _write(fileno(f), base, rn);
+      n = _write(_fileno(f), base, rn);
       if (n <= 0) {
 	    f->_flag |= _IOERR;
 	    return EOF;
@@ -100,7 +101,7 @@ int fflush(FILE *f)
     f->_flag &= ~_IODIRTY;
 
 // commit flushed data
-//    _commit(fileno(f));
+//    _commit(_fileno(f));
   }
   if (OPEN4READING(f) && OPEN4WRITING(f) )
   {

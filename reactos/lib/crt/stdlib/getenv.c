@@ -1,8 +1,8 @@
 #include "precomp.h"
-#include <msvcrt/stdlib.h>
+#include <stdlib.h>
 
 #define NDEBUG
-#include <msvcrt/msvcrtdbg.h>
+#include <internal/msvcrtdbg.h>
 
 #undef environ
 

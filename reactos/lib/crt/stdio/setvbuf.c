@@ -1,11 +1,11 @@
 /* Copyright (C) 1998 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/stdio.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/io.h>
-#include <msvcrt/errno.h>
-#include <msvcrt/internal/file.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <io.h>
+#include <errno.h>
+#include <internal/file.h>
 
 
 /*

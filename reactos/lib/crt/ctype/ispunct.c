@@ -6,7 +6,7 @@
  * PROGRAMMER:       Copyright (C) 1995 DJ Delorie
  */
 
-#include <msvcrt/ctype.h>
+#include <ctype.h>
 
 #undef ispunct
 /*

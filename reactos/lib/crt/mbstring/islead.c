@@ -1,5 +1,5 @@
 #include "precomp.h"
-#include <msvcrt/mbstring.h>
+#include <mbstring.h>
 
 /*
  * @unimplemented

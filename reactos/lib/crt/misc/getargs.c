@@ -1,6 +1,6 @@
 #include "precomp.h"
-#include <msvcrt/stdlib.h>
-#include <msvcrt/string.h>
+#include <stdlib.h>
+#include <string.h>
 
 
 extern char*_acmdln;
@@ -167,6 +167,15 @@ char*** __p___argv(void)
 {
     return &__argv;
 }
+
+/*
+ * @implemented
+ */
+wchar_t*** __p___wargv(void)
+{
+    return &__wargv;
+}
+
 
 #if 0
 int _chkstk(void)

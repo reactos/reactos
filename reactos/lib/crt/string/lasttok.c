@@ -2,8 +2,8 @@
 #undef __USE_W32API
 #endif
 
-#include <msvcrt/internal/tls.h>
-#include <msvcrt/assert.h>
+#include <internal/tls.h>
+#include <assert.h>
 
 /*
  * This is an MSVCRT internal function to return the lasttoken

@@ -1,4 +1,4 @@
-#include <msvcrt/math.h>
+#include <math.h>
 
 /*
  * @implemented

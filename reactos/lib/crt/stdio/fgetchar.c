@@ -21,8 +21,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <msvcrt/stdio.h>
-#include <msvcrt/conio.h>
+#include <stdio.h>
+#include <conio.h>
 
 int _fgetchar(void)
 {

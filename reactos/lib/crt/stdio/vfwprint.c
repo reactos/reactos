@@ -4,13 +4,10 @@
 #undef __USE_W32API
 #endif
 
-//#include <stdarg.h>
-#include <msvcrt/stdarg.h> // robd
-#include <msvcrt/crttypes.h> // robd
-
-#include <msvcrt/stdio.h>
-#include <msvcrt/malloc.h>
-#include <msvcrt/internal/file.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <malloc.h>
+#include <internal/file.h>
 
 
 int _isnanl(double x);
@@ -33,7 +30,7 @@ vfwprintf(FILE *f, const wchar_t *fmt, va_list ap)
 	wchar_t localbuf[BUFSIZ];
 
 #if 0
-	__fileno_lock(fileno(f));
+	__fileno_lock(_fileno(f));
 #endif
 	if (f->_flag & _IONBF) {
 		f->_flag &= ~_IONBF;
@@ -48,7 +45,7 @@ vfwprintf(FILE *f, const wchar_t *fmt, va_list ap)
 	} else
 		len = __vfwprintf(f,fmt,ap);
 #if 0
-	__fileno_unlock(fileno(f));
+	__fileno_unlock(_fileno(f));
 #endif
 	return (ferror(f) ? EOF : len);
 }
@@ -70,14 +67,13 @@ vfwprintf(FILE *f, const wchar_t *fmt, va_list ap)
  * Appropiated for the reactos kernel, March 1998 -- David Welch
  */
 
-#include <msvcrt/stdarg.h>
+#include <stdarg.h>
 
-#include <msvcrt/ctype.h>
-#include <msvcrt/string.h>
-#include <msvcrt/stdio.h>
-#include <msvcrt/string.h>
-#include <msvcrt/math.h>
-#include <msvcrt/internal/ieee.h>
+#include <ctype.h>
+#include <string.h>
+#include <stdio.h>
+#include <math.h>
+#include <internal/ieee.h>
 
 
 #define ZEROPAD		1	/* pad with zero */

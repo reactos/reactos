@@ -8,8 +8,8 @@
  *              12/04/99: Created
  */
 
-#include <msvcrt/mbstring.h>
-#include <msvcrt/mbctype.h>
+#include <mbstring.h>
+#include <mbctype.h>
 
 
 /*

@@ -14,19 +14,19 @@
 
 #include "precomp.h"
 #if !defined(NDEBUG) && defined(DBG)
-#include <msvcrt/stdarg.h>
+#include <stdarg.h>
 #endif
-#include <msvcrt/io.h>
-#include <msvcrt/fcntl.h>
-#include <msvcrt/sys/stat.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/internal/file.h>
-#include <msvcrt/string.h>
-#include <msvcrt/share.h>
-#include <msvcrt/errno.h>
+#include <io.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <stdlib.h>
+#include <string.h>
+#include <share.h>
+#include <errno.h>
+#include <internal/file.h>
 
 #define NDEBUG
-#include <msvcrt/msvcrtdbg.h>
+#include <internal/msvcrtdbg.h>
 
 
 /*
@@ -136,13 +136,14 @@ int _wopen(const wchar_t* _path, int _oflag, ...)
     	_dosmaperr(GetLastError());
         return -1;
 	}
-    return __fileno_alloc(hFile,_oflag);
+    return alloc_fd(hFile,split_oflags(_oflag));
 }
 
 /*
  * @implemented
  */
-int _wsopen(wchar_t* path, int access, int shflag, int mode)
+int _wsopen(const wchar_t* path, int access, int shflag,.../* int mode*/)
 {
-    return _wopen((path), (access)|(shflag), (mode));
+   //FIXME: vararg
+    return _wopen((path), (access)|(shflag));//, (mode));
 }

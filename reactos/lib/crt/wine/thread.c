@@ -19,10 +19,10 @@
  */
 
 #include "precomp.h"
-#include <msvcrt/wine/msvcrt.h>
+#include <internal/wine/msvcrt.h>
 
-#include "msvcrt/malloc.h"
-#include "msvcrt/process.h"
+#include <malloc.h>
+#include <process.h>
 
 #include "wine/debug.h"
 

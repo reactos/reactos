@@ -1,17 +1,26 @@
 #include "precomp.h"
-#include <msvcrt/io.h>
-#include <msvcrt/errno.h>
+#include <io.h>
+#include <errno.h>
+#include <tchar.h>
+#include <internal/file.h>
+
 #define NDEBUG
-#include <msvcrt/msvcrtdbg.h>
+#include <internal/msvcrtdbg.h>
+
+#ifdef _UNICODE
+ #define _TS S
+#else
+ #define _TS s
+#endif
 
 
 /*
  * @implemented
  */
-int _access( const char *_path, int _amode )
+int _taccess( const _TCHAR *_path, int _amode )
 {
-    DWORD Attributes = GetFileAttributesA(_path);
-    DPRINT("_access('%s', %x)\n", _path, _amode);
+    DWORD Attributes = GetFileAttributes(_path);
+    DPRINT(MK_STR(_taccess)"('%"_TS"', %x)\n", _path, _amode);
 
     if (Attributes == -1) {
     	_dosmaperr(GetLastError());
@@ -23,11 +32,31 @@ int _access( const char *_path, int _amode )
             return -1;
         }
     }
-    if ((_amode & D_OK) == D_OK) {
-        if ((Attributes & FILE_ATTRIBUTE_DIRECTORY) != FILE_ATTRIBUTE_DIRECTORY) {
-            __set_errno(EACCES);
-            return -1;
-        }
-    }
+    
     return 0;
 }
+
+
+
+/*
+ * INTERNAL
+ */
+int access_dirT(const _TCHAR *_path)
+{
+    DWORD Attributes = GetFileAttributes(_path);
+    DPRINT(MK_STR(is_dirT)"('%"_TS"')\n", _path);
+
+    if (Attributes == -1) {
+         _dosmaperr(GetLastError());
+        return -1;
+    }
+       
+    if ((Attributes & FILE_ATTRIBUTE_DIRECTORY) != FILE_ATTRIBUTE_DIRECTORY) 
+    {
+      __set_errno(EACCES);
+      return -1;
+    }
+
+   return 0;
+}
+

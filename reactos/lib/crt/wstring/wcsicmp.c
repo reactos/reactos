@@ -1,7 +1,7 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 
-#include <msvcrt/ctype.h>
-#include <msvcrt/string.h>
+#include <ctype.h>
+#include <string.h>
 
 
 /*

@@ -16,11 +16,11 @@ License along with the GNU C Library; see the file COPYING.LIB.  If
 not, write to the Free Software Foundation, Inc., 675 Mass Ave,
 Cambridge, MA 02139, USA.  */
 
-#include <msvcrt/stdarg.h>
+#include <stdarg.h>
 #undef	__OPTIMIZE__	/* Avoid inline `vprintf' function.  */
-#include <msvcrt/stdio.h>
-#include <msvcrt/wchar.h>
-
+#include <stdio.h>
+#include <wchar.h>
+#include <tchar.h>
 
 #undef	vprintf
 #undef	vwprintf
@@ -32,50 +32,26 @@ Cambridge, MA 02139, USA.  */
 /*
  * @implemented
  */
-int vprintf(const char* format, va_list arg)
+int _vtprintf(const _TCHAR* format, va_list arg)
 {
     int ret;
 
-    ret = vfprintf(stdout, format, arg);
-    fflush(stdout);
-    return ret;
-}
-
-/*
- * @implemented
- */
-int vwprintf(const wchar_t* format, va_list arg)
-{
-    int ret;
-
-    ret = vfwprintf(stdout, format, arg);
+    ret = _vftprintf(stdout, format, arg);
     fflush(stdout);
     return ret;
 }
 
 #else
 
-int vprintf(const char* format, ...)
+int _vtprintf(const _TCHAR* format, ...)
 {
     va_list arg;
     int ret;
 
     va_start(arg, format);
-    ret = vfprintf(stdout, format, arg);
+    ret = _vftprintf(stdout, format, arg);
     va_end(arg);
 
-    fflush(stdout);
-    return ret;
-}
-
-int vwprintf(const wchar_t* format, ...)
-{
-    va_list arg;
-    int ret;
-
-    va_start(arg, format);
-    ret = vfwprintf(stdout, format, arg);
-    va_end(arg);
     fflush(stdout);
     return ret;
 }

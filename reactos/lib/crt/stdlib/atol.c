@@ -1,11 +1,12 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/stdlib.h>
+#include <stdlib.h>
+#include <tchar.h>
 
 /*
  * @implemented
  */
 long
-atol(const char *str)
+_ttol(const _TCHAR *str)
 {
-  return strtol(str, 0, 10);
+  return _tcstol(str, 0, 10);
 }

@@ -9,10 +9,10 @@
  */
 
 #include "precomp.h"
-#include <msvcrt/conio.h>
-#include <msvcrt/string.h>
-#include <msvcrt/stdio.h>
-#include <msvcrt/internal/file.h>
+#include <conio.h>
+#include <string.h>
+#include <stdio.h>
+#include <internal/file.h>
 
 
 /*
@@ -22,7 +22,7 @@ int _cputs(const char *_str)
 {
   int len = strlen(_str);
   DWORD written = 0;
-  if (!WriteFile(filehnd(stdout->_file),_str,len,&written,NULL))
+  if (!WriteFile( fdinfo(stdout->_file)->hFile ,_str,len,&written,NULL))
     return -1;
   return 0;
 }

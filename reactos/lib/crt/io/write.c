@@ -9,14 +9,14 @@
  */
 
 #include "precomp.h"
-#include <msvcrt/io.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/string.h>
-#include <msvcrt/internal/file.h>
-#include <msvcrt/errno.h>
+#include <io.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+#include <internal/file.h>
 
 #define NDEBUG
-#include <msvcrt/msvcrtdbg.h>
+#include <internal/msvcrtdbg.h>
 
 #define BUFSIZE 4096
 /*
@@ -38,7 +38,7 @@ void ReportLastError(void)
 /*
  * @implemented
  */
-size_t _write(int _fd, const void* _buf, size_t _nbyte)
+int _write(int _fd, const void* _buf, unsigned int _nbyte)
 {
    char *tmp, *in, *out;
    int result;
@@ -61,7 +61,7 @@ size_t _write(int _fd, const void* _buf, size_t _nbyte)
             *out++ = 0x0d;
             count--;
             if (count == 0) {
-                if (!WriteFile(_get_osfhandle(_fd), tmp, BUFSIZE, &wbyte, NULL)) {
+                if (!WriteFile((HANDLE)_get_osfhandle(_fd), tmp, BUFSIZE, &wbyte, NULL)) {
                    //ReportLastError();
 		   _dosmaperr(GetLastError());
 		   result = -1;
@@ -78,7 +78,7 @@ size_t _write(int _fd, const void* _buf, size_t _nbyte)
          *out++ = *in++;
          count--;
          if (count == 0 || _nbyte == 0) {
-            if (!WriteFile(_get_osfhandle(_fd), tmp, BUFSIZE - count, &wbyte, NULL)) {
+            if (!WriteFile((HANDLE)_get_osfhandle(_fd), tmp, BUFSIZE - count, &wbyte, NULL)) {
 				_dosmaperr(GetLastError());
 				result = -1; 
 				break;
@@ -94,7 +94,7 @@ size_t _write(int _fd, const void* _buf, size_t _nbyte)
       free(tmp);
       return result;
    } else {
-      if(!WriteFile(_get_osfhandle(_fd), _buf, _nbyte, &wbyte, NULL)) {
+      if(!WriteFile((HANDLE)_get_osfhandle(_fd), _buf, _nbyte, &wbyte, NULL)) {
 			_dosmaperr(GetLastError());
 			return -1;
       }

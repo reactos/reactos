@@ -17,7 +17,7 @@
  * Cambridge, MA 02139, USA.  */
 
 
-#include <msvcrt/stdio.h>
+#include <stdio.h>
 
 
 /*

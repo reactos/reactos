@@ -1,6 +1,6 @@
 #include "precomp.h"
-#include <msvcrt/io.h>
-#include <msvcrt/internal/file.h>
+#include <io.h>
+#include <internal/file.h>
 
 
 //#define SETFILEPOINTEREX_AVAILABLE
@@ -19,7 +19,7 @@ __int64 _lseeki64(int _fildes, __int64 _offset, int _whence)
 //        __set_errno ( EBADF );
 //        return -1L;
 //    }
-    if (SetFilePointerEx((HANDLE)filehnd(_fildes), offset, &new_pos, _whence)) {
+    if (SetFilePointerEx((HANDLE)fdinfo(_fildes)->hFile, offset, &new_pos, _whence)) {
     } else {
 		_dosmaperr(error);
         return -1L;
@@ -34,7 +34,7 @@ __int64 _lseeki64(int _fildes, __int64 _offset, int _whence)
     LARGE_INTEGER offset;
     offset.QuadPart = _offset;
 
-    offset.u.LowPart = SetFilePointer((HANDLE)filehnd(_fildes), 
+    offset.u.LowPart = SetFilePointer((HANDLE)fdinfo(_fildes)->hFile, 
                           offset.u.LowPart, &offset.u.HighPart, _whence);
     return ((((__int64)offset.u.HighPart) << 32) + offset.u.LowPart);
 

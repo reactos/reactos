@@ -8,8 +8,8 @@
  *              12/04/99: Created
  */
 
-#include <msvcrt/mbctype.h>
-#include <msvcrt/ctype.h>
+#include <mbctype.h>
+#include <ctype.h>
 
 /*
  * code page 952 only

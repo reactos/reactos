@@ -1,9 +1,13 @@
+
 #include "precomp.h"
-#include <msvcrt/io.h>
-#include <msvcrt/internal/file.h>
+#include <io.h>
+#include <sys/stat.h>
+#include <tchar.h>
+#include <internal/file.h>
 
 #define NDEBUG
-#include <msvcrt/msvcrtdbg.h>
+#include <internal/msvcrtdbg.h>
+
 
 #define mode_t int
 
@@ -11,14 +15,14 @@
 /*
  * @implemented
  */
-int _chmod(const char* filename, mode_t mode)
+int _tchmod(const _TCHAR* filename, mode_t mode)
 {
     DWORD FileAttributes = 0;
     BOOLEAN Set = FALSE;
 
-    DPRINT("_chmod('%s', %x)\n", filename, mode);
+    DPRINT(#_tchmod"('%"sT"', %x)\n", filename, mode);
 
-    FileAttributes = GetFileAttributesA(filename);
+    FileAttributes = GetFileAttributes(filename);
     if ( FileAttributes == -1 ) {
     	_dosmaperr(GetLastError());
         return -1;
@@ -38,7 +42,7 @@ int _chmod(const char* filename, mode_t mode)
 	    Set = TRUE;
 	}
     }
-    if (Set && SetFileAttributesA(filename, FileAttributes) == FALSE) {
+    if (Set && SetFileAttributes(filename, FileAttributes) == FALSE) {
         _dosmaperr(GetLastError());
 	return -1;
     }

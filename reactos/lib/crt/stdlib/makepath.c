@@ -1,7 +1,7 @@
 /* $Id$
  */
-#include <msvcrt/stdlib.h>
-#include <msvcrt/string.h>
+#include <stdlib.h>
+#include <string.h>
 
 /*
  * @implemented

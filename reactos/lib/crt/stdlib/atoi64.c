@@ -1,6 +1,6 @@
 
-#include <msvcrt/ctype.h>
-#include <msvcrt/stdlib.h>
+#include <ctype.h>
+#include <stdlib.h>
 
 /*
  * @implemented

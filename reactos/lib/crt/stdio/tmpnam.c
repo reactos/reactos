@@ -1,19 +1,19 @@
 #include "precomp.h"
-#include <msvcrt/stdio.h>
-#include <msvcrt/string.h>
-
+#include <stdio.h>
+#include <string.h>
+#include <tchar.h>
 
 /*
  * @implemented
  */
-char* tmpnam(char* s)
+_TCHAR* _ttmpnam(_TCHAR* s)
 {
-    char PathName[MAX_PATH];
-    static char static_buf[MAX_PATH];
+    _TCHAR PathName[MAX_PATH];
+    static _TCHAR static_buf[MAX_PATH];
 
-    GetTempPathA(MAX_PATH, PathName);
-    GetTempFileNameA(PathName, "ARI", 007, static_buf);
-    strcpy(s,static_buf);
+    GetTempPath(MAX_PATH, PathName);
+    GetTempFileName(PathName, _T("ARI"), 007, static_buf);
+    _tcscpy(s,static_buf);
 
     return s;
 }

@@ -1,17 +1,17 @@
 #include "precomp.h"
-#include <msvcrt/sys/types.h>
-#include <msvcrt/sys/stat.h>
-#include <msvcrt/fcntl.h>
-#include <msvcrt/io.h>
-#include <msvcrt/errno.h>
-#include <msvcrt/string.h>
-#include <msvcrt/internal/file.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <io.h>
+#include <errno.h>
+#include <string.h>
+#include <internal/file.h>
 
 
 /*
  * @implemented
  */
-int _stat(const char* path, struct stat* buffer)
+int _stat(const char* path, struct _stat* buffer)
 {
   WIN32_FILE_ATTRIBUTE_DATA fileAttributeData;
   char* ext;
@@ -64,7 +64,7 @@ int _stat(const char* path, struct stat* buffer)
 /*
  * @implemented
  */
-__int64 _stati64 (const char *path, struct _stati64 *buffer)
+int _stati64 (const char *path, struct _stati64 *buffer)
 {
   WIN32_FILE_ATTRIBUTE_DATA fileAttributeData;
   char* ext;

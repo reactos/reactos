@@ -1,10 +1,12 @@
-#include <msvcrt/stdio.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/string.h>
-#include <msvcrt/errno.h>
-#include <msvcrt/internal/file.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+#include <internal/file.h>
+
 #define NDEBUG
-#include <msvcrt/msvcrtdbg.h>
+#include <internal/msvcrtdbg.h>
 
 
 /*
@@ -16,32 +18,32 @@ size_t fwrite(const void *vptr, size_t size, size_t count, FILE *iop)
   unsigned char *ptr = (unsigned char *)vptr;
   int copy;
 
-  DPRINT("fwrite(%x, %d, %d, %x)\n", vptr, size, count, iop);
+  TRACE("fwrite(%x, %d, %d, %x)", vptr, size, count, iop);
 
   to_write = size*count;
   if (!OPEN4WRITING(iop))
     {
       __set_errno (EINVAL);
-      return 0;
+      return(0);
     }
 
   if (iop == NULL)
     {
       __set_errno (EINVAL);
-      return 0;
+      return(0);
     }
 
   if (ferror (iop))
-    return 0;
+    return(0);
   if (vptr == NULL || to_write == 0)
-    return 0;
+    return(0);
 
   if (iop->_base == NULL && !(iop->_flag&_IONBF))
   {
      if (EOF == _flsbuf(*ptr++, iop))
-        return 0;
+        return(0);
      if (--to_write == 0)
-        return 1;
+        return(1);
   }
 
   if (iop->_flag & _IO_LBF)
@@ -78,7 +80,7 @@ size_t fwrite(const void *vptr, size_t size, size_t count, FILE *iop)
 	{
 	   while (to_write > 0)
 	   {
-	      n_written = _write(fileno(iop), ptr, to_write);
+	      n_written = _write(_fileno(iop), ptr, to_write);
 	      if (n_written <= 0)
 	      {
 	         iop->_flag |= _IOERR;
@@ -103,12 +105,12 @@ size_t fwrite(const void *vptr, size_t size, size_t count, FILE *iop)
                  iop->_ptr += to_write;
                  iop->_cnt -= to_write;
                  iop->_flag |= _IODIRTY;
-	         return count;
+            return(count);
 	      }
 	   }
 	}
      }
   }
 
-  return count - (to_write/size);
+  return(count - (to_write/size));
 }

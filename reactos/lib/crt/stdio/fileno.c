@@ -1,12 +1,7 @@
-#include <msvcrt/stdio.h>
+#include <stdio.h>
+#include <io.h>
 
-#if 0
-#undef fileno
-int fileno(FILE *f)
-{
-  return f->_file;
-}
-#endif
+#undef _fileno
 
 /*
  * @implemented

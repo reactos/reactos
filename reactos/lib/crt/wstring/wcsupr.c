@@ -1,5 +1,5 @@
-#include <msvcrt/ctype.h>
-#include <msvcrt/string.h>
+#include <ctype.h>
+#include <string.h>
 
 /*
  * @implemented

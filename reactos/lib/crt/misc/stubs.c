@@ -1,7 +1,7 @@
 #include "precomp.h"
 
 #define NDEBUG
-#include <msvcrt/msvcrtdbg.h>
+#include <internal/msvcrtdbg.h>
 
 /*********************************************************************
  *		$I10_OUTPUT (MSVCRT.@)
@@ -110,4 +110,35 @@ void __stdcall _adj_fdivr_m64( unsigned __int64 arg )
 void _adj_fpatan(void)
 {
   DPRINT1("_adj_fpatan stub\n");
+}
+
+
+void __crtCompareStringA(void)
+{
+   DPRINT1("__crtCompareStringA stub\n");
+}
+
+void __crtGetLocaleInfoW(void)
+{
+   DPRINT1("__crtGetLocaleInfoW stub\n");
+}
+
+void __p__amblksiz(void)
+{
+   DPRINT1("__p__amblksiz stub\n");
+}
+
+void __p__dstbias(void)
+{
+   DPRINT1("__p__dstbias stub\n");
+}
+
+void __fileinfo(void)
+{
+   DPRINT1("__fileinfo stub\n");
+}
+
+void stub(void)
+{
+   DPRINT1("stub\n");
 }

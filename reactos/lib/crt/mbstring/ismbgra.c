@@ -1,11 +1,11 @@
-#include <msvcrt/mbstring.h>
-#include <msvcrt/mbctype.h>
-#include <msvcrt/ctype.h>
+#include <mbstring.h>
+#include <mbctype.h>
+#include <ctype.h>
 
 /*
  * @implemented
  */
-int _ismbbgraph(unsigned char c)
+int _ismbbgraph(unsigned int c)
 {
   return (isgraph(c) || _ismbbkana(c));
 }

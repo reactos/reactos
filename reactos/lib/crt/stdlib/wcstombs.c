@@ -16,11 +16,10 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.  */
 
-#include <msvcrt/stdlib.h>
-#include <msvcrt/wchar.h>
-
-#include <msvcrt/errno.h>
-#include <msvcrt/internal/file.h>
+#include <stdlib.h>
+#include <wchar.h>
+#include <errno.h>
+#include <internal/file.h>
 
 #ifndef EILSEQ
 #define EILSEQ EINVAL

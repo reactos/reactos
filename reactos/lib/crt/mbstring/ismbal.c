@@ -7,13 +7,13 @@
  * UPDATE HISTORY:
  *              12/04/99: Created
  */
-#include <msvcrt/mbctype.h>
-#include <msvcrt/ctype.h>
+#include <mbctype.h>
+#include <ctype.h>
 
 /*
  * @implemented
  */
-int _ismbbalpha(unsigned char c)
+int _ismbbalpha(unsigned int c)
 {
   return (isalpha(c) || _ismbbkalnum(c));
 }

@@ -18,44 +18,30 @@ License along with the GNU C Library; see the file COPYING.LIB.  If
 not, write to the Free Software Foundation, Inc., 675 Mass Ave,
 Cambridge, MA 02139, USA.  */
 
-#include <msvcrt/stdarg.h>
-#include <msvcrt/stdio.h>
-#include <msvcrt/wchar.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <wchar.h>
 #include <limits.h>
-#include <msvcrt/internal/file.h>
+#include <internal/file.h>
+#include <tchar.h>
 
 #undef sprintf
 #undef wsprintf
-/*
- * @implemented
- */
-int
-sprintf(char *str, const char *fmt, ...)
-{
-  va_list arg;
-  int done;
-
-  va_start (arg, fmt);
-  done = vsprintf (str, fmt, arg);
-  va_end (arg);
-  return done;
-}
 
 /*
  * @implemented
  */
 int
-swprintf(wchar_t *str, const wchar_t *fmt, ...)
+_stprintf(_TCHAR *str, const _TCHAR *fmt, ...)
 {
   va_list arg;
   int done;
 
   va_start (arg, fmt);
-  done = vswprintf (str, fmt, arg);
+  done = _vstprintf (str, fmt, arg);
   va_end (arg);
   return done;
 }
-
 
 
 /* Write formatted output into S, according to the format
@@ -65,29 +51,13 @@ swprintf(wchar_t *str, const wchar_t *fmt, ...)
  * @implemented
  */
 int
-_snprintf (char *s, size_t maxlen,const char *format, ...)
+_sntprintf (_TCHAR *s, size_t maxlen,const _TCHAR *format, ...)
 {
   va_list arg;
   int done;
 
   va_start (arg, format);
-  done = _vsnprintf (s, maxlen, format, arg);
-  va_end (arg);
-
-  return done;
-}
-
-/*
- * @implemented
- */
-int
-_snwprintf (wchar_t *s, size_t maxlen,const wchar_t *format, ...)
-{
-  va_list arg;
-  int done;
-
-  va_start (arg, format);
-  done = _vsnwprintf (s, maxlen, format, arg);
+  done = _vsntprintf(s, maxlen, format, arg);
   va_end (arg);
 
   return done;

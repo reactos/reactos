@@ -6,8 +6,8 @@
  * PROGRAMMER:       Eric Kohl (Imported from DJGPP)
  */
 
-#include <msvcrt/conio.h>
-#include <msvcrt/stdlib.h>
+#include <conio.h>
+#include <stdlib.h>
 
 /*
  * @implemented

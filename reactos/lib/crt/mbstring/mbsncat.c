@@ -8,8 +8,8 @@
  *              12/04/99: Created
  */
 
-#include <msvcrt/mbstring.h>
-#include <msvcrt/string.h>
+#include <mbstring.h>
+#include <string.h>
 
 size_t _mbclen2(const unsigned int s);
 

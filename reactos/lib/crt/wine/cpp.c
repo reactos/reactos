@@ -32,12 +32,12 @@
 #include "winnt.h"
 #include "excpt.h"
 #include "wine/debug.h"
-#include "msvcrt/malloc.h"
-#include "msvcrt/stdlib.h"
+#include <malloc.h>
+#include <stdlib.h>
 
-#include <msvcrt/wine/msvcrt.h>
-#include <msvcrt/wine/cppexcept.h>
-#include <msvcrt/internal/mtdll.h>
+#include <internal/wine/msvcrt.h>
+#include <internal/wine/cppexcept.h>
+#include <internal/mtdll.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 

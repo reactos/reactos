@@ -9,7 +9,7 @@
  */
 
 #include "precomp.h"
-#include <msvcrt/conio.h>
+#include <conio.h>
 
 /*
  * @implemented

@@ -1,36 +1,37 @@
 #include "precomp.h"
-#include <msvcrt/stdlib.h>
-#include <msvcrt/string.h>
+#include <stdlib.h>
+#include <string.h>
+#include <tchar.h>
 
 #define NDEBUG
-#include <msvcrt/msvcrtdbg.h>
+#include <internal/msvcrtdbg.h>
 
 
 /*
  * @implemented
  */
-void _searchenv(const char* file,const char* var,char* path)
+void _tsearchenv(const _TCHAR* file,const _TCHAR* var,_TCHAR* path)
 {
-    char* env = getenv(var);
-    char* x;
-    char* y;
-    char* FilePart;
+    _TCHAR* env = _tgetenv(var);
+    _TCHAR* x;
+    _TCHAR* y;
+    _TCHAR* FilePart;
 
-    DPRINT("_searchenv()\n");
+    DPRINT(#_tsearchenv"()\n");
 
-    x = strchr(env,'=');
+    x = _tcschr(env,'=');
     if ( x != NULL ) {
         *x = 0;
         x++;
     }
-    y = strchr(env,';');
+    y = _tcschr(env,';');
     while ( y != NULL ) {
         *y = 0;
-        if ( SearchPathA(x,file,NULL,MAX_PATH,path,&FilePart) > 0 ) {
+        if ( SearchPath(x,file,NULL,MAX_PATH,path,&FilePart) > 0 ) {
             return;
         }
         x = y+1;
-        y = strchr(env,';');
+        y = _tcschr(env,';');
     }
     return;
 }

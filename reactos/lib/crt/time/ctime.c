@@ -36,16 +36,16 @@
 */
 
 #include "precomp.h"
-#include <msvcrt/fcntl.h>
-#include <msvcrt/time.h>
-#include <msvcrt/string.h>
-#include <msvcrt/ctype.h>
-#include <msvcrt/stdio.h>
-#include <msvcrt/stdlib.h>
+#include <fcntl.h>
+#include <time.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "tzfile.h"
 
-#include <msvcrt/io.h>
+#include <io.h>
 
 #include "posixrul.h"
 
@@ -294,7 +294,7 @@ static int tzload(const char* name, struct state* CPP_CONST sp)
     name = fullname;
   }
 
-  if ((fid = open(name, OPEN_MODE)) == -1)
+  if ((fid = _open(name, OPEN_MODE)) == -1)
   {
     const char *base = strrchr(name, '/');
     if (base)
@@ -310,8 +310,8 @@ static int tzload(const char* name, struct state* CPP_CONST sp)
   }
   else
   {
-    i = read(fid, buf, sizeof buf);
-    if (close(fid) != 0 || i < sizeof *tzhp)
+    i = _read(fid, buf, sizeof buf);
+    if (_close(fid) != 0 || i < sizeof *tzhp)
       return -1;
   }
 
@@ -1022,7 +1022,10 @@ localsub(const time_t * CPP_CONST timep, const long offset, struct tm * CPP_CONS
   timesub(&t, ttisp->tt_gmtoff, sp, tmp);
   tmp->tm_isdst = ttisp->tt_isdst;
   _tzname[tmp->tm_isdst] = (char *)&sp->chars[ttisp->tt_abbrind];
+#if 0
+/* tm_zone doesnt exist in windows msvcrt -Gunnar */
   tmp->tm_zone = (char *)&sp->chars[ttisp->tt_abbrind];
+#endif  
 }
 
 /*
@@ -1059,6 +1062,8 @@ gmtsub(const time_t * CPP_CONST timep, const long offset, struct tm * CPP_CONST 
    ** "GMT+xxxx" or "GMT-xxxx" if offset is non-zero,
    ** but this is no time for a treasure hunt.
    */
+#if 0
+/* tm_zone doesnt exist in windows msvcrt -Gunnar */
   if (offset != 0)
     tmp->tm_zone = TZ_NAME;
   else
@@ -1073,6 +1078,7 @@ gmtsub(const time_t * CPP_CONST timep, const long offset, struct tm * CPP_CONST 
     tmp->tm_zone = gmtptr->chars;
 #endif /* State Farm */
   }
+#endif /* if 0 */  
 }
 
 /*
@@ -1179,7 +1185,10 @@ timesub(const time_t * CPP_CONST timep, const long offset, const struct state * 
     days = days - (long) ip[tmp->tm_mon];
   tmp->tm_mday = (int) (days + 1);
   tmp->tm_isdst = 0;
+#if 0  
+/* tm_gmtoff doesnt exist in windows msvcrt -Gunnar */  
   tmp->tm_gmtoff = offset;
+#endif  
 }
 
 /*

@@ -1,6 +1,6 @@
-#include <msvcrt/float.h>
-#include <msvcrt/math.h>
-#include <msvcrt/internal/ieee.h>
+#include <float.h>
+#include <math.h>
+#include <internal/ieee.h>
 
 
 #define _FPCLASS_SNAN	0x0001	/* signaling NaN */

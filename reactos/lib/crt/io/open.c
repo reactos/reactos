@@ -8,87 +8,139 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-
+/*
+ * Some stuff taken from active perl: perl\win32.c (ioinfo stuff)
+ *
+ * (c) 1995 Microsoft Corporation. All rights reserved.
+ *       Developed by hip communications inc., http://info.hip.com/info/
+ * Portions (c) 1993 Intergraph Corporation. All rights reserved.
+ *
+ *    You may distribute under the terms of either the GNU General Public
+ *    License or the Artistic License, as specified in the README file.
+ */
+/*
+ * Some functions taken from/based on wine\dlls\msvcrt\file.c:
+ *  split_oflags
+ *  _open_osfhandle
+ *  many more...
+ *
+ * Copyright 1996,1998 Marcus Meissner
+ * Copyright 1996 Jukka Iivonen
+ * Copyright 1997,2000 Uwe Bonnes
+ * Copyright 2000 Jon Griffiths
+ * Copyright 2004 Eric Pouech
+ * Copyright 2004 Juan Lang
+ */
+ 
 // rember to interlock the allocation of fileno when making this thread safe
 
 // possibly store extra information at the handle
 
 #include "precomp.h"
+
 #if !defined(NDEBUG) && defined(DBG)
-#include <msvcrt/stdarg.h>
+#include <stdarg.h>
 #endif
-#include <msvcrt/io.h>
-#include <msvcrt/fcntl.h>
-#include <msvcrt/sys/stat.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/string.h>
-#include <msvcrt/share.h>
-#include <msvcrt/errno.h>
-#include <msvcrt/internal/file.h>
+
+#include <io.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <stdlib.h>
+#include <string.h>
+#include <share.h>
+#include <errno.h>
+#include <internal/file.h>
 
 #define NDEBUG
-#include <msvcrt/msvcrtdbg.h>
+#include <internal/msvcrtdbg.h>
 
-//#define _OLD_BUILD_
 
-#define STD_AUX_HANDLE 3
-#define STD_PRINTER_HANDLE 4
 
+FDINFO first_bucket[FDINFO_ENTRIES_PER_BUCKET];
+FDINFO* __pioinfo[FDINFO_BUCKETS] = {first_bucket};
+
+
+/* This critical section protects the tables MSVCRT_fdesc and MSVCRT_fstreams,
+ * and their related indexes, MSVCRT_fdstart, MSVCRT_fdend,
+ * and MSVCRT_stream_idx, from race conditions.
+ * It doesn't protect against race conditions manipulating the underlying files
+ * or flags; doing so would probably be better accomplished with per-file
+ * protection, rather than locking the whole table for every change.
+ */
+static CRITICAL_SECTION g_file_cs;
+#define LOCK_FILES()    do { EnterCriticalSection(&g_file_cs); } while (0)
+#define UNLOCK_FILES()  do { LeaveCriticalSection(&g_file_cs); } while (0)
 
 /////////////////////////////////////////
-#if 0 // from perl sources
 
-#ifndef _INTPTR_T_DEFINED
-typedef int		intptr_t;
-#define _INTPTR_T_DEFINED
-#endif
-
-#ifndef _UINTPTR_T_DEFINED
-typedef unsigned int	uintptr_t;
-#define _UINTPTR_T_DEFINED
-#endif
+static int g_fdstart = 3; /* first unallocated fd */
+static int g_fdend = 3; /* highest allocated fd */
 
 /*
- * Control structure for lowio file handles
+ * INTERNAL
  */
-typedef struct {
-    intptr_t osfhnd;/* underlying OS file HANDLE */
-    char osfile;    /* attributes of file (e.g., open in text mode?) */
-    char pipech;    /* one char buffer for handles opened on pipes */
-    int lockinitflag;
-    //CRITICAL_SECTION lock;
-} ioinfo;
-
-/*
- * Array of arrays of control structures for lowio files.
- */
-//ioinfo* __pioinfo[];
-//ioinfo* __pioinfo[] = { NULL };
-
-#endif
-/////////////////////////////////////////
-
-typedef struct _fileno_modes_type
+ /*
+static inline FD_INFO* fdinfo(int fd)
 {
-    HANDLE hFile;
-    int mode;
-    char pipech;    /* one char buffer for handles opened on pipes */
-    int lockinitflag;
-    /*CRITICAL_SECTION*/int lock;
-    int fd;
-} fileno_modes_type;
+   FD_INFO* bucket = __pioinfo[fd >> FDINFO_ENTRIES_PER_BUCKET_SHIFT];
+   if (!bucket){
+      bucket = alloc_init_bucket(fd);
+   }
+   return bucket + (fd & (FDINFO_ENTRIES_PER_BUCKET - 1));
+}
+*/
 
-//static fileno_modes_type* fileno_modes = NULL;
-fileno_modes_type* __pioinfo = NULL;
 
-/////////////////////////////////////////
-int maxfno = 0;
+/*
+ * INTERNAL
+ */
+inline BOOL is_valid_fd(int fd)
+{
+   BOOL b = (fd >= 0 && fd < g_fdend && (fdinfo(fd)->fdflags & FOPEN));
+   
+   if (!b){
+      DPRINT1("not valid fd %i, g_fdend %i, fdinfo %x, bucket %x, fdflags %x\n",
+         fd,g_fdend,fdinfo(fd),fdinfo_bucket(fd),fdinfo(fd)->fdflags);
+      
+   }
+   
+   return b;
+}
 
+/*
+ * INTERNAL
+ */
+char split_oflags(int oflags)
+{
+    char         fdflags = 0;
+
+    if (oflags & _O_APPEND)              fdflags |= FAPPEND;
+    
+    if (oflags & _O_BINARY)              ;
+    else if (oflags & _O_TEXT)           fdflags |= FTEXT;
+    else if (_fmode& _O_BINARY)  ;
+    else                                        fdflags |= FTEXT; /* default to TEXT*/
+    
+    if (oflags & _O_NOINHERIT)           fdflags |= FNOINHERIT;
+
+    if (oflags & ~(_O_BINARY|_O_TEXT|_O_APPEND|_O_TRUNC|
+                   _O_EXCL|_O_CREAT|_O_RDWR|_O_WRONLY|
+                   _O_TEMPORARY|_O_NOINHERIT))
+        DPRINT1(":unsupported oflags 0x%04x\n",oflags);
+
+    return fdflags;
+}
+
+
+
+/*
+ * INTERNAL
+ */
 char __is_text_file(FILE* p)
 {
-   if ( p == NULL || __pioinfo == NULL )
+   if ( p == NULL || fdinfo_bucket((p)->_file) == NULL )
      return FALSE;
-   return (!((p)->_flag&_IOSTRG) && (__pioinfo[(p)->_file].mode&O_TEXT));
+   return (!((p)->_flag&_IOSTRG) && (fdinfo((p)->_file)->fdflags & FTEXT));
 }
 
 /*
@@ -112,7 +164,9 @@ int _open(const char* _path, int _oflag,...)
    pmode = va_arg(arg, int);
 #endif
 
-//   DPRINT("_open('%s', %x, (%x))\n", _path, _oflag, pmode);
+
+   TRACE("_open('%s', %x, (%x))\n", _path, _oflag);
+
 
    if ((_oflag & S_IREAD ) == S_IREAD)
      dwShareMode = FILE_SHARE_READ;
@@ -188,155 +242,304 @@ int _open(const char* _path, int _oflag,...)
                NULL);
 	if (hFile == (HANDLE)-1) {
 		_dosmaperr(GetLastError());
-		return -1;
+      return( -1);
 	}
    DPRINT("OK\n");
    if (!(_oflag & (_O_TEXT|_O_BINARY))) {
-       _oflag |= __fmode;
+       _oflag |= _fmode;
    }
-   return __fileno_alloc(hFile,_oflag);
+   return(alloc_fd(hFile, split_oflags(_oflag)));
 }
 
 
-int __fileno_alloc(HANDLE hFile, int mode)
+
+/*
+ * INTERNAL
+ */
+static void init_bucket(FDINFO* entry)
 {
-  int i;
-  /* Check for bogus values */
-  if (hFile < 0)
-    return -1;
-
-  for (i = 5; i < maxfno; i++) {
-    if (__pioinfo[i].fd == -1 ) {
-        __pioinfo[i].fd = i;
-        __pioinfo[i].mode = mode;
-        __pioinfo[i].hFile = hFile;
-        return i;
-    }
-  }
-
-  /* See if we need to expand the tables.  Check this BEFORE it might fail,
-     so that when we hit the count'th request, we've already up'd it. */
-  if (i == maxfno) {
-    int oldcount = maxfno;
-    fileno_modes_type* old_fileno_modes = __pioinfo;
-    maxfno += 255;
-    __pioinfo = (fileno_modes_type*)malloc(maxfno * sizeof(fileno_modes_type));
-    if (old_fileno_modes != NULL) {
-        memcpy(__pioinfo, old_fileno_modes, oldcount * sizeof(fileno_modes_type));
-        free(old_fileno_modes);
-    }
-    memset(__pioinfo + oldcount, -1, (maxfno-oldcount)*sizeof(fileno_modes_type));
-  }
-
-  /* Fill in the value */
-  __pioinfo[i].fd = i;
-  __pioinfo[i].mode = mode;
-  __pioinfo[i].hFile = hFile;
-  return i;
+   int i;
+   
+   for(i=0; 
+       i < FDINFO_ENTRIES_PER_BUCKET; 
+       i++, entry++)
+   {
+      entry->hFile = INVALID_HANDLE_VALUE;
+      entry->fdflags = 0;
+      entry->pipechar = LF;
+      entry->lockinitflag = 0;
+   }
 }
 
-void* filehnd(int fileno)
+/*
+ * INTERNAL
+ */
+static BOOL alloc_init_bucket(int fd)
 {
-    if (fileno < 0 || fileno >= maxfno || __pioinfo[fileno].fd == -1) {
-        return (void*)-1;
-    }
-    return __pioinfo[fileno].hFile;
+   fdinfo_bucket(fd) = malloc(FDINFO_ENTRIES_PER_BUCKET * sizeof(FDINFO));
+   if (!fdinfo_bucket(fd)) return FALSE;
+   
+   init_bucket(fdinfo_bucket(fd));
+   
+   return TRUE;
 }
 
-int __fileno_setmode(int _fd, int _newmode)
+
+
+
+/* 
+ * INTERNAL
+ *  Allocate an fd slot from a Win32 HANDLE, starting from fd
+ *  caller must hold the files lock
+ */
+static int alloc_fd_from(HANDLE hand, char flag, int fd)
 {
-    int m;
-    if (_fd < 0 || _fd >= maxfno) {
+   
+   if (fd >= FDINFO_ENTRIES)
+   {
+      DPRINT1("files exhausted!\n");
+      return -1;
+   }
+   
+   if (!fdinfo_bucket(fd))
+   {
+      if (!alloc_init_bucket(fd)){
+         //errno = ENOMEM
+         return -1;
+      }
+   }
+   
+   fdinfo(fd)->hFile = hand;
+   fdinfo(fd)->fdflags = FOPEN | (flag & (FNOINHERIT | FAPPEND | FTEXT));
+   fdinfo(fd)->pipechar = LF;   
+   fdinfo(fd)->lockinitflag = 0;
+   //fdinfo(fd)->lock
+
+   /* locate next free slot */
+   if (fd == g_fdstart && fd == g_fdend)
+   {
+      g_fdstart = g_fdend + 1;
+   }
+   else
+   {
+#if 0  /* alternate (untested) impl. maybe a tiny bit faster? -Gunnar */
+      int i, bidx;
+
+      for (bidx = fdinfo_bucket_idx(g_fdstart); bidx < FDINFO_BUCKETS && __pioinfo[bidx]; bidx++)
+      {
+         for (i = fdinfo_bucket_entry_idx(g_fdstart);
+              g_fdstart < g_fdend && fdinfo(g_fdstart)->fdflags & FOPEN && i < FDINFO_BUCKET_ENTRIES;
+              i++)
+         {
+            g_fdstart++;
+         }
+      }
+#else
+
+      while (g_fdstart < g_fdend &&
+             fdinfo_bucket(g_fdstart) &&
+             (fdinfo(g_fdstart)->fdflags & FOPEN))
+      {
+         g_fdstart++;
+      }
+#endif      
+   }
+    
+  /* update last fd in use */
+   if (fd >= g_fdend)
+      g_fdend = fd + 1;
+
+   /* alloc more fdinfo buckets by demand.
+    * FIXME: should we dealloc buckets when they become unused also? */
+   if (!fdinfo_bucket(g_fdstart) && g_fdstart < FDINFO_ENTRIES)
+   {
+      alloc_init_bucket(g_fdstart);
+   }
+
+   DPRINT("fdstart is %d, fdend is %d\n", g_fdstart, g_fdend);
+
+   switch (fd)
+   {
+      case 0: SetStdHandle(STD_INPUT_HANDLE,  hand); break;
+      case 1: SetStdHandle(STD_OUTPUT_HANDLE, hand); break;
+      case 2: SetStdHandle(STD_ERROR_HANDLE,  hand); break;
+   }
+
+   return fd;
+}
+
+
+/* 
+ * INTERNAL: Allocate an fd slot from a Win32 HANDLE 
+ */
+int alloc_fd(HANDLE hand, char flag)
+{
+  int ret;
+
+  LOCK_FILES();
+  
+//  TRACE(":handle (%p) allocating fd (%d)\n",hand,MSVCRT_fdstart);
+  ret = alloc_fd_from(hand, flag, g_fdstart);
+  
+  UNLOCK_FILES();
+  return ret;
+}
+
+
+
+/*
+ * INTERNAL
+ */
+char __fileno_getmode(int fd)
+{
+    if (!is_valid_fd(fd)) {
         __set_errno(EBADF);
         return -1;
     }
-    m = __pioinfo[_fd].mode;
-    __pioinfo[_fd].mode = _newmode;
-    return m;
-}
-
-int __fileno_getmode(int _fd)
-{
-    if (_fd < 0 || _fd >= maxfno) {
-        __set_errno(EBADF);
-        return -1;
-    }
-    return __pioinfo[_fd].mode;
+    return fdinfo(fd)->fdflags;
 
 }
 
-int __fileno_close(int _fd)
+/*
+ * INTERNAL
+ */
+void free_fd(int fd)
 {
-    if (_fd < 0 || _fd >= maxfno) {
-        __set_errno(EBADF);
-        return -1;
-    }
-    __pioinfo[_fd].fd = -1;
-    __pioinfo[_fd].hFile = (HANDLE)-1;
-    return 0;
+   LOCK_FILES();
+   
+   
+   fdinfo(fd)->hFile = INVALID_HANDLE_VALUE;
+   fdinfo(fd)->fdflags = 0;
+   
+   if (fd < 3) /* don't use 0,1,2 for user files */
+   {
+      switch (fd)
+      {
+         case 0: SetStdHandle(STD_INPUT_HANDLE,  NULL); break;
+         case 1: SetStdHandle(STD_OUTPUT_HANDLE, NULL); break;
+         case 2: SetStdHandle(STD_ERROR_HANDLE,  NULL); break;
+      }
+   }
+   else
+   {
+      if (fd == g_fdend - 1)
+         g_fdend--;
+      
+      if (fd < g_fdstart)
+         g_fdstart = fd;
+   }
+
+   
+   UNLOCK_FILES();
 }
 
 /*
  * @implemented
  */
-int _open_osfhandle(void* osfhandle, int flags)
+int _open_osfhandle(long osfhandle, int oflags)
 {
-    return __fileno_alloc((HANDLE)osfhandle, flags);
+   /*
+   PREV:
+   The _open_osfhandle() function in MSVCRT is expected to take the absence
+   of either _O_TEXT or _O_BINARY to mean _O_BINARY. Currently it defaults to
+   _O_TEXT.
+   
+   An example of this is MFC's CStdioFile::Open in binary mode - it passes flags
+   of 0 when it wants to write a binary file - under WINE we do text mode conversions!
+   
+   The attached patch ensures that _O_BINARY is set if neither is set in the passed-in
+flags.
+
+
+   * file, so set the write flag. It also only sets _O_TEXT if it wants
+   * text - it never sets _O_BINARY.
+    */
+   /* FIXME: handle more flags */
+/*
+  flags |= MSVCRT__IOREAD|MSVCRT__IOWRT;
+  if ( !( flags & _O_TEXT ) ) flags |= _O_BINARY;
+
+  fd = msvcrt_alloc_fd((HANDLE)hand,flags);
+  TRACE(":handle (%ld) fd (%d) flags 0x%08x\n",hand,fd, flags);
+*/
+  /* MSVCRT__O_RDONLY (0) always matches, so set the read flag
+   * MFC's CStdioFile clears O_RDONLY (0)! if it wants to write to the
+   * file, so set the write flag. It also only sets MSVCRT__O_TEXT if it wants
+   * text - it never sets MSVCRT__O_BINARY.
+   */
+  /* FIXME: handle more flags */
+  /*
+  LAG TEST SOM TESTER UT ALT DETTE flag tingern
+  */
+  if (!(oflags & (_O_BINARY | _O_TEXT)) && (_fmode & _O_BINARY))
+      oflags |= _O_BINARY;
+  else
+      oflags |= _O_TEXT;
+
+    return alloc_fd((HANDLE)osfhandle, split_oflags(oflags));
 }
 
 /*
  * @implemented
  */
-void* _get_osfhandle( int fileno )
+long _get_osfhandle(int fd)
 {
-    return filehnd(fileno);
+   TRACE("_get_osfhandle(%i)",fd);
+   
+    if (!is_valid_fd(fd)) {
+        return( -1 );
+    }
+    return( (long)fdinfo(fd)->hFile );
 }
 
+
+
+/*
+ * INTERNAL
+ */
 int __fileno_dup2(int handle1, int handle2)
 {
    HANDLE hProcess;
    BOOL result;
-   if (handle1 >= maxfno || handle1 < 0 || handle2 >= maxfno || handle2 < 0) {
+   
+   if (handle1 >= FDINFO_ENTRIES || handle1 < 0 || handle2 >= FDINFO_ENTRIES || handle2 < 0) {
       __set_errno(EBADF);
       return -1;
    }
-   if (__pioinfo[handle1].fd == -1) {
+//   if (_pioinfo[handle1]->fd == -1) {
+   if (fdinfo(handle1)->hFile == INVALID_HANDLE_VALUE) {   
       __set_errno(EBADF);
       return -1;
    }
    if (handle1 == handle2)
       return handle1;
-   if (__pioinfo[handle2].fd != -1) {
+//   if (_pioinfo[handle2]->fd != -1) {
+   if (fdinfo(handle2)->hFile != INVALID_HANDLE_VALUE) {   
       _close(handle2);
    }
    hProcess = GetCurrentProcess();
    result = DuplicateHandle(hProcess, 
-                __pioinfo[handle1].hFile, 
+                fdinfo(handle1)->hFile, 
                 hProcess, 
-                &__pioinfo[handle2].hFile, 
+                &fdinfo(handle2)->hFile, 
                 0, 
                 TRUE,  
                 DUPLICATE_SAME_ACCESS);
    if (result) {
-      __pioinfo[handle2].fd = handle2;
-      __pioinfo[handle2].mode = __pioinfo[handle1].mode;
+//      _pioinfo[handle2]->fd = handle2;
+      fdinfo(handle2)->fdflags = fdinfo(handle1)->fdflags;
       switch (handle2) {
       case 0:
-         SetStdHandle(STD_INPUT_HANDLE, __pioinfo[handle2].hFile);
+         SetStdHandle(STD_INPUT_HANDLE, fdinfo(handle2)->hFile);
          break;
       case 1:
-         SetStdHandle(STD_OUTPUT_HANDLE, __pioinfo[handle2].hFile);
+         SetStdHandle(STD_OUTPUT_HANDLE, fdinfo(handle2)->hFile);
          break;
       case 2:
-         SetStdHandle(STD_ERROR_HANDLE, __pioinfo[handle2].hFile);
-         break;
-      case 3:
-         SetStdHandle(STD_AUX_HANDLE, __pioinfo[handle2].hFile);
-         break;
-      case 4:
-         SetStdHandle(STD_AUX_HANDLE, __pioinfo[handle2].hFile);
+         SetStdHandle(STD_ERROR_HANDLE, fdinfo(handle2)->hFile);
          break;
       }
+      
       return handle1;
    } else {
       __set_errno(EMFILE);  // Is this the correct error no.?
@@ -347,77 +550,172 @@ int __fileno_dup2(int handle1, int handle2)
 
 void* malloc(size_t sizeObject);
 
+
+
+/*
+ * INTERNAL
+ */
 BOOL __fileno_init(void)
 {
-   ULONG count = 0, i;
-   HANDLE* pFile;
-   char* pmode;
-   STARTUPINFOA StInfo;
+  STARTUPINFOA  si;
+  int           i;
 
-   GetStartupInfoA(&StInfo);
-   if (StInfo.lpReserved2 && StInfo.cbReserved2 >= sizeof(ULONG)) {
-      count = *(ULONG*)StInfo.lpReserved2;
-/*
-      if (sizeof(ULONG) + count * (sizeof(HANDLE) + sizeof(char)) != StInfo.cbReserved2)
-      {
-          count = 0;
-      }
-*/
-   }
-   maxfno = 255;
-   while(count >= maxfno)
-      maxfno += 255;
+  init_bucket(first_bucket);
 
+  GetStartupInfoA(&si);
+  
+   if (si.cbReserved2 != 0 && si.lpReserved2 != NULL)
    {
-#ifdef _OLD_BUILD_
-       // why was this here ???? - robd.
-       int result;
-       result = malloc(50);
-#endif
-   }
-   //__pioinfo = (fileno_modes_type*)malloc(sizeof(fileno_modes_type) * maxfno);
-   __pioinfo = malloc(sizeof(fileno_modes_type) * maxfno);
-   if (__pioinfo == NULL) {
-       return FALSE;
-   }
-   memset(__pioinfo, -1, sizeof(fileno_modes_type) * maxfno);
-   if (count) {
-      pFile = (HANDLE*)(StInfo.lpReserved2 + sizeof(ULONG) + count * sizeof(char));
-      pmode = (char*)(StInfo.lpReserved2 + sizeof(ULONG));
-      for (i = 0; i <  count; i++) {
-          if (*pFile != INVALID_HANDLE_VALUE) {
-             __pioinfo[i].fd = i;
-             __pioinfo[i].mode = ((*pmode << 8) & (_O_TEXT|_O_BINARY)) | (*pmode & _O_ACCMODE);
-             __pioinfo[i].hFile = *pFile;
-          }
-          pFile++;
-          pmode++;
+    char*       fdflags_ptr;
+    HANDLE*     handle_ptr;
+
+    g_fdend = *(unsigned*)si.lpReserved2;
+
+    fdflags_ptr= (char*)(si.lpReserved2 + sizeof(unsigned));
+    handle_ptr = (HANDLE*)(fdflags_ptr + g_fdend * sizeof(char));
+
+   g_fdend = min(g_fdend, FDINFO_ENTRIES);
+   for (i = 0; i < g_fdend; i++)
+   {
+      if (!fdinfo_bucket(i))
+      {
+         if (!alloc_init_bucket(i)){
+            /* FIXME: free other buckets? */
+            return FALSE;
+         }
       }
+       
+      if ((*fdflags_ptr & FOPEN) && *handle_ptr != INVALID_HANDLE_VALUE)
+      {
+        fdinfo(i)->fdflags  = *fdflags_ptr;
+        fdinfo(i)->hFile = *handle_ptr;
+      }
+/*
+      else
+      {
+        fdinfo(i)->fdflags  = 0;
+        fdinfo(i)->hFile = INVALID_HANDLE_VALUE;
+      }
+*/      
+      fdflags_ptr++; handle_ptr++;
+    }
+    for (g_fdstart = 3; g_fdstart < g_fdend; g_fdstart++)
+        if (fdinfo(g_fdstart)->hFile == INVALID_HANDLE_VALUE) break;
    }
-   if (__pioinfo[0].fd == -1) {
-      __pioinfo[0].fd = 0;
-      __pioinfo[0].hFile = GetStdHandle(STD_INPUT_HANDLE);
-      __pioinfo[0].mode = _O_RDONLY|_O_TEXT;
+   
+   InitializeCriticalSection(&g_file_cs);
+
+
+   if (fdinfo(0)->hFile == INVALID_HANDLE_VALUE || !(fdinfo(0)->fdflags & FOPEN)) {
+      fdinfo(0)->hFile = GetStdHandle(STD_INPUT_HANDLE);
+      fdinfo(0)->fdflags = FOPEN|FTEXT;
    }
-   if (__pioinfo[1].fd == -1) {
-      __pioinfo[1].fd = 1;
-      __pioinfo[1].hFile = GetStdHandle(STD_OUTPUT_HANDLE);
-      __pioinfo[1].mode = _O_WRONLY|_O_TEXT;
+   if (fdinfo(1)->hFile == INVALID_HANDLE_VALUE || !(fdinfo(1)->fdflags & FOPEN)) {
+      fdinfo(1)->hFile = GetStdHandle(STD_OUTPUT_HANDLE);
+      fdinfo(1)->fdflags = FOPEN|FTEXT;
    }
-   if (__pioinfo[2].fd == -1) {
-      __pioinfo[2].fd = 2;
-      __pioinfo[2].hFile = GetStdHandle(STD_ERROR_HANDLE);
-      __pioinfo[2].mode = _O_WRONLY|_O_TEXT;
+   if (fdinfo(2)->hFile == INVALID_HANDLE_VALUE || !(fdinfo(2)->fdflags & FOPEN)) {
+      fdinfo(2)->hFile = GetStdHandle(STD_ERROR_HANDLE);
+      fdinfo(2)->fdflags = FOPEN|FTEXT;
    }
-   if (__pioinfo[3].fd == -1) {
-      __pioinfo[3].fd = 3;
-      __pioinfo[3].hFile = GetStdHandle(STD_AUX_HANDLE);
-      __pioinfo[3].mode = _O_WRONLY|_O_TEXT;
+
+
+
+
+   for (i = 0; i < 3; i++)
+   {
+      /* FILE structs for stdin/out/err are static and never deleted */
+//      MSVCRT_fstreams[i] = &MSVCRT__iob[i];
    }
-   if (__pioinfo[4].fd == -1) {
-      __pioinfo[4].fd = 4;
-      __pioinfo[4].hFile = GetStdHandle(STD_PRINTER_HANDLE);
-      __pioinfo[4].mode = _O_WRONLY|_O_TEXT;
-   }
+//   MSVCRT_stream_idx = 3;
+
    return TRUE;
 }
+
+
+
+/* INTERNAL: Create an inheritance data block (for spawned process)
+ * The inheritance block is made of:
+ *      00      int     nb of file descriptor (NBFD)
+ *      04      char    file flags (wxflag): repeated for each fd
+ *      4+NBFD  HANDLE  file handle: repeated for each fd
+ */
+unsigned create_io_inherit_block(STARTUPINFOA* si)
+{
+  int         fd;
+  char*       fdflags_ptr;
+  HANDLE*     handle_ptr;
+
+  TRACE("create_io_inherit_block(%x)",si);
+   
+  si->cbReserved2 = sizeof(unsigned) + (sizeof(char) + sizeof(HANDLE)) * g_fdend;
+  si->lpReserved2 = calloc(si->cbReserved2, 1);
+  if (!si->lpReserved2)
+  {
+    si->cbReserved2 = 0;
+    return( FALSE );
+  }
+  fdflags_ptr = (char*)si->lpReserved2 + sizeof(unsigned);
+  handle_ptr = (HANDLE*)(fdflags_ptr + g_fdend * sizeof(char));
+
+  *(unsigned*)si->lpReserved2 = g_fdend;
+  for (fd = 0; fd < g_fdend; fd++)
+  {
+    /* to be inherited, we need it to be open, and that DONTINHERIT isn't set */
+    if ((fdinfo(fd)->fdflags & (FOPEN | FNOINHERIT)) == FOPEN)
+    {
+      *fdflags_ptr = fdinfo(fd)->fdflags;
+      *handle_ptr = fdinfo(fd)->hFile;
+    }
+    else
+    {
+      *fdflags_ptr = 0;
+      *handle_ptr = INVALID_HANDLE_VALUE;
+    }
+    fdflags_ptr++; handle_ptr++;
+  } 
+  return( TRUE );
+}
+
+
+
+
+/*
+ * @implemented
+ */
+int _setmode(int fd, int newmode)
+{
+   int prevmode;
+   
+   TRACE("_setmode(%d, %d)", fd, newmode);
+   
+   if (!is_valid_fd(fd))
+   {
+      DPRINT1("_setmode: inval fd (%d)\n",fd);
+      //errno = EBADF;
+      return(-1);
+   }
+   
+   if (newmode & ~(_O_TEXT|_O_BINARY))
+   {
+      DPRINT1("_setmode: fd (%d) mode (0x%08x) unknown\n",fd,newmode);
+      /* FIXME: Should we fail with EINVAL here? */
+   }
+
+   prevmode = fdinfo(fd)->fdflags & FTEXT ? _O_TEXT : _O_BINARY;
+  
+   if ((newmode & _O_TEXT) == _O_TEXT)
+   {
+      fdinfo(fd)->fdflags |= FTEXT;
+   }
+   else
+   {
+      /* FIXME: If both _O_TEXT and _O_BINARY are set, we get here.
+       * Should we fail with EINVAL instead? -Gunnar
+       */
+      fdinfo(fd)->fdflags &= ~FTEXT;
+   }
+   
+   return(prevmode);
+}
+

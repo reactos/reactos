@@ -1,9 +1,9 @@
 #include "precomp.h"
-#include <msvcrt/stdlib.h>
-#include <msvcrt/string.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define NDEBUG
-#include <msvcrt/msvcrtdbg.h>
+#include <internal/msvcrtdbg.h>
 
 /* misc/environ.c */
 int SetEnv(const wchar_t *option);

@@ -1,8 +1,7 @@
 #include "precomp.h"
-#include <msvcrt/ctype.h>
-#include <msvcrt/direct.h>
-#include <msvcrt/internal/file.h>
-#include <msvcrt/internal/file.h>
+#include <ctype.h>
+#include <direct.h>
+#include <internal/file.h>
 
 /*
  * @implemented

@@ -1,6 +1,6 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 
-#include <msvcrt/float.h>
+#include <float.h>
 
 #define X87_CW_IM   (1<<0)      /* Invalid operation mask */
 #define X87_CW_DM   (1<<1)      /* Denormal operand mask */

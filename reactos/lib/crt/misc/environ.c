@@ -6,12 +6,13 @@
  */
 
 #include "precomp.h"
-#include <msvcrt/internal/tls.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/string.h>
+#include <internal/tls.h>
+#include <stdlib.h>
+#include <string.h>
+#include <internal/file.h>
   
 #define NDEBUG
-#include <msvcrt/msvcrtdbg.h>
+#include <internal/msvcrtdbg.h>
 
 
 unsigned int _osver = 0;

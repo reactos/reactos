@@ -1,15 +1,15 @@
-#include <msvcrt/io.h>
-#include <msvcrt/sys/stat.h>
+#include <io.h>
+#include <sys/stat.h>
 
 #define NDEBUG
-#include <msvcrt/msvcrtdbg.h>
+#include <internal/msvcrtdbg.h>
 
 /*
  * @implemented
  */
 int _isatty( int fd )
 {
-  struct stat buf;
+  struct _stat buf;
   DPRINT("_isatty(fd %d)\n", fd);
   if (_fstat (fd, &buf) < 0)
     return 0;

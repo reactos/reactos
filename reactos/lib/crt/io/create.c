@@ -1,8 +1,8 @@
-#include <msvcrt/io.h>
-#include <msvcrt/fcntl.h>
+#include <io.h>
+#include <fcntl.h>
 
 #define NDEBUG
-#include <msvcrt/msvcrtdbg.h>
+#include <internal/msvcrtdbg.h>
 
 
 /*

@@ -9,7 +9,7 @@
  */
 
 #include "precomp.h"
-#include <msvcrt/process.h>
+#include <process.h>
 
 
 /*

@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <msvcrt/stdio.h>
+#include <stdio.h>
 
 
 int _fputchar(int c)
@@ -32,7 +32,7 @@ int _fputchar(int c)
 /*
  * @implemented
  */
-int _fputwchar(wchar_t c)
+wint_t _fputwchar(wint_t c)
 {
   return putwc(c, stdout);
 }

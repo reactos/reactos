@@ -9,10 +9,11 @@
  */
 
 #include "precomp.h"
-#include <msvcrt/io.h>
+#include <io.h>
+#include <internal/file.h>
 
 #define NDEBUG
-#include <msvcrt/msvcrtdbg.h>
+#include <internal/msvcrtdbg.h>
 
 
 /*

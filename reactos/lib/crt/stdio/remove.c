@@ -1,30 +1,21 @@
 #include "precomp.h"
-#include <msvcrt/stddef.h>
-#include <msvcrt/stdio.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <tchar.h>
 
 #define NDEBUG
-#include <msvcrt/msvcrtdbg.h>
+#include <internal/msvcrtdbg.h>
 
 /*
  * @implemented
  */
-int remove(const char *fn)
+int _tremove(const _TCHAR *fn)
 {
   int result = 0;
-  DPRINT("remove('%s')\n", fn);
-  if (!DeleteFileA(fn))
+  DPRINT(MK_STR(_tremove)"('%"sT"')\n", fn);
+  if (!DeleteFile(fn))
     result = -1;
   DPRINT("%d\n", result);
   return result;
 }
 
-/*
- * @implemented
- */
-int _wremove(const wchar_t *fn)
-{
-  DPRINT("_wremove('%S')\n", fn);
-  if (!DeleteFileW(fn))
-    return -1;
-  return 0;
-}

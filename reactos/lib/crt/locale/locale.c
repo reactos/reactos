@@ -5,15 +5,15 @@
  */
  
 #include "precomp.h"
-#include <msvcrt/stdio.h>
-#include <msvcrt/locale.h>
-#include <msvcrt/string.h>
+#include <stdio.h>
+#include <locale.h>
+#include <string.h>
 #include <limits.h>
-#include <msvcrt/internal/tls.h>
-#include <msvcrt/stdlib.h>
+#include <internal/tls.h>
+#include <stdlib.h>
 
 #define NDEBUG
-#include <msvcrt/msvcrtdbg.h>
+#include <internal/msvcrtdbg.h>
 
 unsigned int __setlc_active;
 unsigned int __unguarded_readlc_active;

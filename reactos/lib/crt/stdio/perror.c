@@ -1,7 +1,7 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/stdio.h>
-#include <msvcrt/string.h>
-#include <msvcrt/errno.h>
+#include <stdio.h>
+#include <string.h>
+#include <errno.h>
 
 
 #ifdef perror

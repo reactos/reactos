@@ -13,16 +13,16 @@
  */
 
 #include <windows.h>
-#include <msvcrt/io.h>
-#include <msvcrt/internal/file.h>
+#include <io.h>
+#include <internal/file.h>
 
 #define NDEBUG
-#include <msvcrt/msvcrtdbg.h>
+#include <internal/msvcrtdbg.h>
 
 /*
  * @implemented
  */
-size_t _read(int _fd, void *_buf, size_t _nbyte)
+int _read(int _fd, void *_buf, unsigned int _nbyte)
 {
    DWORD _rbyte = 0, nbyte = _nbyte;
    char *bufp = (char*)_buf;
@@ -35,7 +35,7 @@ size_t _read(int _fd, void *_buf, size_t _nbyte)
    if(_nbyte == 0)
       return 0;
 
-   hfile = _get_osfhandle(_fd);
+   hfile = (HANDLE)_get_osfhandle(_fd);
    istext = __fileno_getmode(_fd) & O_TEXT;
 
    /* read data */

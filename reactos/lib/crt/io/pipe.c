@@ -10,9 +10,12 @@
  */
 
 #include "precomp.h"
-#include <msvcrt/io.h>
-#include <msvcrt/errno.h>
-#include <msvcrt/internal/file.h>
+#include <io.h>
+#include <errno.h>
+#include <internal/file.h>
+
+#define NDEBUG
+#include <internal/msvcrtdbg.h>
 
 
 /*
@@ -23,29 +26,31 @@ int _pipe(int _fildes[2], unsigned int size, int mode )
   HANDLE hReadPipe, hWritePipe;
   SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
 
+  TRACE("_pipe((%i,%i), %ui, %i)", _fildes[0], _fildes[1], size, mode);
+
   if (mode & O_NOINHERIT)
     sa.bInheritHandle = FALSE;
 
   if (!CreatePipe(&hReadPipe,&hWritePipe,&sa,size)) {
 		_dosmaperr(GetLastError());
-		return -1;
+      return( -1);
 	}
 
-  if ((_fildes[0] = __fileno_alloc(hReadPipe, mode)) < 0)
+  if ((_fildes[0] = alloc_fd(hReadPipe, split_oflags(mode))) < 0)
   {
     CloseHandle(hReadPipe);
     CloseHandle(hWritePipe);
     __set_errno(EMFILE);
-    return -1;
+    return(-1);
   }
 
-  if ((_fildes[1] = __fileno_alloc(hWritePipe, mode)) < 0)
+  if ((_fildes[1] = alloc_fd(hWritePipe, split_oflags(mode))) < 0)
   {
-    __fileno_close(_fildes[0]);
+    free_fd(_fildes[0]);
     CloseHandle(hReadPipe);
     CloseHandle(hWritePipe);
     __set_errno(EMFILE);
-    return -1;
+    return(-1);
   }
-  return 0;
+  return(0);
 }

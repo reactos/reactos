@@ -8,8 +8,7 @@
  *              03/04/99: Created
  */
 
-#include <msvcrt/stdlib.h>
-#include <msvcrt/crttypes.h>
+#include <stdlib.h>
 
 /*
  * @implemented

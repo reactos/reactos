@@ -1,8 +1,8 @@
 #include "precomp.h"
-#include <msvcrt/direct.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/errno.h>
-#include <msvcrt/internal/file.h>
+#include <direct.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <internal/file.h>
 
 
 /*

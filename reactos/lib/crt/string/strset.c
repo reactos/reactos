@@ -1,6 +1,6 @@
-#include <msvcrt/string.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/crttypes.h>
+#include <string.h>
+#include <stdlib.h>
+
 
 /*
  * @implemented
