@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: coord.c,v 1.12 2003/05/27 07:23:05 gvg Exp $
+/* $Id: coord.c,v 1.13 2003/07/22 20:02:08 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -250,7 +250,7 @@ W32kModifyWorldTransform(HDC  hDC,
       break;
 
     default:
-	  DC_ReleasePtr( hDC );
+      DC_ReleasePtr( hDC );
       return FALSE;
   }
   DC_UpdateXforms (dc);
@@ -265,10 +265,11 @@ W32kOffsetViewportOrgEx(HDC hDC,
                         int YOffset,
                         LPPOINT UnsafePoint)
 {
-  DC *dc = DC_HandleToPtr(hDC);
+  PDC dc;
   POINT Point;
   NTSTATUS Status;
 
+  dc = DC_HandleToPtr(hDC);
   if (NULL == dc)
     {
     return FALSE;
@@ -299,11 +300,30 @@ W32kOffsetViewportOrgEx(HDC hDC,
 BOOL
 STDCALL
 W32kOffsetWindowOrgEx(HDC  hDC,
-                            int  XOffset,
-                            int  YOffset,
-                            LPPOINT  Point)
+                      int  XOffset,
+                      int  YOffset,
+                      LPPOINT  Point)
 {
-  UNIMPLEMENTED;
+  PDC dc;
+
+  dc = DC_HandleToPtr(hDC);
+  if (!dc)
+    {
+      return FALSE;
+    }
+
+  if (Point)
+    {
+      Point->x = dc->wndOrgX;
+      Point->y = dc->wndOrgY;
+    }
+
+  dc->wndOrgX += XOffset;
+  dc->wndOrgY += YOffset;
+
+  DC_ReleasePtr(hDC);
+
+  return TRUE;
 }
 
 BOOL
@@ -333,10 +353,10 @@ W32kScaleWindowExtEx(HDC  hDC,
 int
 STDCALL
 W32kSetGraphicsMode(HDC  hDC,
-                         int  Mode)
+                    int  Mode)
 {
   INT ret;
-  DC *dc;
+  PDC dc;
 
   dc = DC_HandleToPtr (hDC);
   if (!dc)
@@ -351,10 +371,11 @@ W32kSetGraphicsMode(HDC  hDC,
    */
 
   if ((Mode != GM_COMPATIBLE) && (Mode != GM_ADVANCED))
-  {
-	DC_ReleasePtr( hDC );
-    return 0;
-  }
+    {
+      DC_ReleasePtr( hDC );
+      return 0;
+    }
+
   ret = dc->w.GraphicsMode;
   dc->w.GraphicsMode = Mode;
   DC_ReleasePtr( hDC );
@@ -364,55 +385,172 @@ W32kSetGraphicsMode(HDC  hDC,
 int
 STDCALL
 W32kSetMapMode(HDC  hDC,
-                    int  MapMode)
+               int  MapMode)
 {
-  UNIMPLEMENTED;
+  int PrevMapMode;
+  PDC dc;
+
+  dc = DC_HandleToPtr(hDC);
+  if (!dc)
+    {
+      return FALSE;
+    }
+
+  PrevMapMode = dc->w.MapMode;
+  dc->w.MapMode = MapMode;
+
+  return PrevMapMode;
 }
 
 BOOL
 STDCALL
 W32kSetViewportExtEx(HDC  hDC,
-                           int  XExtent,
-                           int  YExtent,
-                           LPSIZE  Size)
+                     int  XExtent,
+                     int  YExtent,
+                     LPSIZE  Size)
 {
-  UNIMPLEMENTED;
+  PDC dc;
+
+  dc = DC_HandleToPtr(hDC);
+  if (!dc)
+    {
+      return FALSE;
+    }
+
+  switch (dc->w.MapMode)
+    {
+      case MM_HIENGLISH:
+      case MM_HIMETRIC:
+      case MM_LOENGLISH:
+      case MM_LOMETRIC:
+      case MM_TEXT:
+      case MM_TWIPS:
+	DC_ReleasePtr(hDC);
+	return FALSE;
+
+      case MM_ISOTROPIC:
+	// Here we should (probably) check that SetWindowExtEx *really* has
+	// been called
+	break;
+    }
+
+  if (Size)
+    {
+      Size->cx = dc->vportExtX;
+      Size->cy = dc->vportExtY;
+    }
+
+  dc->vportExtX = XExtent;
+  dc->vportExtY = YExtent;
+
+  DC_ReleasePtr(hDC);
+
+  return TRUE;
 }
 
 BOOL
 STDCALL
 W32kSetViewportOrgEx(HDC  hDC,
-                           int  X,
-                           int  Y,
-                           LPPOINT  Point)
+                     int  X,
+                     int  Y,
+                     LPPOINT  Point)
 {
-  UNIMPLEMENTED;
+  PDC dc;
+
+  dc = DC_HandleToPtr(hDC);
+  if (!dc)
+    {
+      return FALSE;
+    }
+
+  if (Point)
+    {
+      Point->x = dc->vportOrgX;
+      Point->y = dc->vportOrgY;
+    }
+
+  dc->vportOrgX = X;
+  dc->vportOrgY = Y;
+
+  DC_ReleasePtr(hDC);
+
+  return TRUE;
 }
 
 BOOL
 STDCALL
 W32kSetWindowExtEx(HDC  hDC,
-                         int  XExtent,
-                         int  YExtent,
-                         LPSIZE  Size)
+                   int  XExtent,
+                   int  YExtent,
+                   LPSIZE  Size)
 {
-  UNIMPLEMENTED;
+  PDC dc;
+
+  dc = DC_HandleToPtr(hDC);
+  if (!dc)
+    {
+      return FALSE;
+    }
+
+  switch (dc->w.MapMode)
+    {
+      case MM_HIENGLISH:
+      case MM_HIMETRIC:
+      case MM_LOENGLISH:
+      case MM_LOMETRIC:
+      case MM_TEXT:
+      case MM_TWIPS:
+	DC_ReleasePtr(hDC);
+	return FALSE;
+    }
+
+  if (Size)
+    {
+      Size->cx = dc->wndExtX;
+      Size->cy = dc->wndExtY;
+    }
+
+  dc->wndExtX = XExtent;
+  dc->wndExtY = YExtent;
+
+  DC_ReleasePtr(hDC);
+
+  return TRUE;
 }
 
 BOOL
 STDCALL
 W32kSetWindowOrgEx(HDC  hDC,
-                         int  X,
-                         int  Y,
-                         LPPOINT  Point)
+                   int  X,
+                   int  Y,
+                   LPPOINT  Point)
 {
-  UNIMPLEMENTED;
+  PDC dc;
+
+  dc = DC_HandleToPtr(hDC);
+  if (!dc)
+    {
+      return FALSE;
+    }
+
+  if (Point)
+    {
+      Point->x = dc->wndOrgX;
+      Point->y = dc->wndOrgY;
+    }
+
+  dc->wndOrgX = X;
+  dc->wndOrgY = Y;
+
+  DC_ReleasePtr(hDC);
+
+  return TRUE;
 }
 
 BOOL
 STDCALL
 W32kSetWorldTransform(HDC  hDC,
-                            CONST LPXFORM  XForm)
+                      CONST LPXFORM  XForm)
 {
   PDC  dc;
 
@@ -423,14 +561,14 @@ W32kSetWorldTransform(HDC  hDC,
   }
   if (!XForm)
   {
-	DC_ReleasePtr( hDC );
+    DC_ReleasePtr( hDC );
     return  FALSE;
   }
 
   /* Check that graphics mode is GM_ADVANCED */
   if (dc->w.GraphicsMode != GM_ADVANCED)
   {
-  	DC_ReleasePtr( hDC );
+    DC_ReleasePtr( hDC );
     return  FALSE;
   }
   dc->w.xformWorld2Wnd = *XForm;
