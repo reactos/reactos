@@ -893,7 +893,7 @@ extern "C" {
 #define DC_TEXT	8
 #define DC_INBUTTON	16
 #define DC_GRADIENT 32
-#define DC_BUTTONS 64
+#define DC_BUTTONS 0x1000
 #define DC_CAPTION	(DC_ICON|DC_TEXT|DC_BUTTONS|DC_GRADIENT)
 #define DC_NC	(DC_CAPTION|DC_FRAME)
 
@@ -1728,6 +1728,7 @@ extern "C" {
 #define COLOR_3DDKSHADOW	(21)
 #define COLOR_3DFACE	(15)
 #define COLOR_3DHILIGHT	(20)
+#define COLOR_3DHIGHLIGHT	(20)
 #define COLOR_3DLIGHT	(22)
 #define COLOR_BTNHILIGHT	(20)
 #define COLOR_3DSHADOW	(16)

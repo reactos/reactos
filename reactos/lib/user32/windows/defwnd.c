@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.102 2003/10/25 22:57:34 navaraf Exp $
+/* $Id: defwnd.c,v 1.103 2003/10/26 11:08:31 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -29,7 +29,6 @@ LRESULT DefWndNCActivate(HWND hWnd, WPARAM wParam);
 LRESULT DefWndNCHitTest(HWND hWnd, POINT Point);
 LRESULT DefWndNCLButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam);
 LRESULT DefWndNCLButtonDblClk(HWND hWnd, WPARAM wParam, LPARAM lParam);
-LRESULT DefWndNCLButtonUp(HWND hWnd, WPARAM wParam, LPARAM lParam);
 
 /* GLOBALS *******************************************************************/
 
@@ -912,11 +911,6 @@ User32DefWindowProc(HWND hWnd,
         case WM_NCLBUTTONDOWN:
         {
             return (DefWndNCLButtonDown(hWnd, wParam, lParam));
-        }
-
-        case WM_NCLBUTTONUP:
-        {
-            return (DefWndNCLButtonUp(hWnd, wParam, lParam));
         }
 
         case WM_LBUTTONDBLCLK:
