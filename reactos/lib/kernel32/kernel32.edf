@@ -1,4 +1,4 @@
-; $Id: kernel32.edf,v 1.2 1999/08/29 06:59:01 ea Exp $
+; $Id: kernel32.edf,v 1.3 1999/10/26 19:47:05 ea Exp $
 ;
 ; kernel32.edf
 ;
@@ -32,7 +32,7 @@
 ;   If not, write to the Free Software Foundation, 
 ;   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ;
-LIBRARY KERNEL32
+LIBRARY KERNEL32.DLL
 EXPORTS
 AddAtomA=AddAtomA@4
 AddAtomW=AddAtomW@4

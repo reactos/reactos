@@ -1,4 +1,7 @@
-LIBRARY version
+; $Id: version.edf,v 1.2 1999/10/26 19:47:06 ea Exp $
+; ReactOS Operating System
+;
+LIBRARY version.dll
 EXPORTS
 GetFileVersionInfoA=GetFileVersionInfoA@16
 GetFileVersionInfoSizeA=GetFileVersionInfoSizeA@8

@@ -1,4 +1,4 @@
-; $Id: advapi32.edf,v 1.2 1999/07/26 20:46:39 ea Exp $
+; $Id: advapi32.edf,v 1.3 1999/10/26 19:47:02 ea Exp $
 ;
 ; advapi32.def
 ;
@@ -6,7 +6,7 @@
 ;
 ; Some stack sizes are taken from Ander Norlander's .DEFs.
 ;
-LIBRARY advapi32
+LIBRARY advapi32.dll
 EXPORTS
 AbortSystemShutdownA=AbortSystemShutdownA@4
 AbortSystemShutdownW=AbortSystemShutdownW@4

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.24 1999/10/12 21:17:03 ea Exp $
+# $Id: makefile,v 1.25 1999/10/26 19:47:05 ea Exp $
 #
 # ReactOS Operating System
 #
@@ -65,7 +65,7 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) def/ntdll.def def/ntdll.edf
 		$(OBJECTS) \
 		-o $(TARGET).o
 	$(DLLTOOL) \
-		--dllname $(TARGET) \
+		--dllname $(TARGET).dll \
 		--def def/$(TARGET).def \
 		--kill-at \
 		--output-lib $(TARGET).a
@@ -77,7 +77,7 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) def/ntdll.def def/ntdll.edf
 		$(TARGET).o
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
-		--dllname $(TARGET) \
+		--dllname $(TARGET).dll \
 		--base-file base.tmp \
 		--output-exp temp.exp \
 		--def def/$(TARGET).edf

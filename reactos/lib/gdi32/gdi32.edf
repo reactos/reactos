@@ -1,4 +1,4 @@
-; $Id: gdi32.edf,v 1.1 1999/07/17 23:10:19 ea Exp $
+; $Id: gdi32.edf,v 1.2 1999/10/26 19:47:04 ea Exp $
 ;
 ; gdi32.def
 ;
@@ -6,7 +6,7 @@
 ;
 ; From Anders Norlander's w32api-0.1.5 gdi32.def.
 ;
-LIBRARY gdi32
+LIBRARY gdi32.dll
 EXPORTS
 AbortDoc=AbortDoc@4
 AbortPath=AbortPath@4
