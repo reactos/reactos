@@ -59,7 +59,7 @@ BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, PVOID *UserData);
 
 /* == BITMAP UTILITY FUNCTIONS ============================================== */
 
-BOOL STDCALL CalculateColorTableSize(LPBITMAPINFOHEADER BitmapInfoHeader, UINT *ColorSpec, UINT *ColorTableSize);
-LPBITMAPINFO STDCALL ConvertBitmapInfo(LPBITMAPINFO BitmapInfo, UINT ColorSpec, UINT *BitmapInfoSize, BOOL FollowedByData);
+BOOL STDCALL CalculateColorTableSize(CONST BITMAPINFOHEADER *BitmapInfoHeader, UINT *ColorSpec, UINT *ColorTableSize);
+LPBITMAPINFO STDCALL ConvertBitmapInfo(CONST BITMAPINFO *BitmapInfo, UINT ColorSpec, UINT *BitmapInfoSize, BOOL FollowedByData);
 
 /* EOF */

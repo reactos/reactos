@@ -24,7 +24,7 @@
 
 BOOL STDCALL
 CalculateColorTableSize(
-   LPBITMAPINFOHEADER BitmapInfoHeader,
+   CONST BITMAPINFOHEADER *BitmapInfoHeader,
    UINT *ColorSpec,
    UINT *ColorTableSize)
 {
@@ -170,12 +170,12 @@ CalculateColorTableSize(
 
 LPBITMAPINFO STDCALL
 ConvertBitmapInfo(
-   LPBITMAPINFO BitmapInfo,
+   CONST BITMAPINFO *BitmapInfo,
    UINT ColorSpec,
    UINT *BitmapInfoSize,
    BOOL FollowedByData)
 {
-   LPBITMAPINFO NewBitmapInfo = BitmapInfo;
+   LPBITMAPINFO NewBitmapInfo = (LPBITMAPINFO)BitmapInfo;
    LPBITMAPCOREINFO CoreBitmapInfo = (LPBITMAPCOREINFO)BitmapInfo;
    DWORD Size = 0;
    ULONG DataSize = 0;

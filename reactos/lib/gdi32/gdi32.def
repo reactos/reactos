@@ -58,7 +58,7 @@ CreateDCA@16
 CreateDCW@16
 CreateDIBPatternBrush@8
 CreateDIBPatternBrushPt@8
-CreateDIBSection@24=NtGdiCreateDIBSection@24
+CreateDIBSection@24
 CreateDIBitmap@24=NtGdiCreateDIBitmap@24
 CreateDiscardableBitmap@12=NtGdiCreateDiscardableBitmap@12
 CreateEllipticRgn@16=NtGdiCreateEllipticRgn@16
