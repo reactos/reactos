@@ -1,4 +1,4 @@
-/* $Id: fsctl.c,v 1.2 2002/04/10 09:58:45 ekohl Exp $
+/* $Id: fsctl.c,v 1.3 2002/05/05 20:19:14 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -61,10 +61,10 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
 					&Size);
       if (!NT_SUCCESS(Status))
       {
-         DPRINT1("VfatBlockDeviceIoControl faild (%x)\n", Status);
+         DPRINT("VfatBlockDeviceIoControl faild (%x)\n", Status);
          return Status;
       }
-#ifdef DBG
+#ifndef NDEBUG
       DbgPrint("Partition Information:\n");
       DbgPrint("StartingOffset      %u\n", PartitionInfo.StartingOffset.QuadPart  / 512);
       DbgPrint("PartitionLength     %u\n", PartitionInfo.PartitionLength.QuadPart / 512);
@@ -113,7 +113,7 @@ ReadSector:
       FatInfo.rootDirectorySectors = ((Boot->RootEntries * 32) + Boot->BytesPerSector - 1) / Boot->BytesPerSector;
       FatInfo.rootStart = FatInfo.FATStart + FatInfo.FATCount * FatInfo.FATSectors;
       FatInfo.dataStart = FatInfo.rootStart + FatInfo.rootDirectorySectors;
-      Sectors = Boot->Sectors ? Boot->Sectors : Boot->SectorsHuge;
+      FatInfo.Sectors = Sectors = Boot->Sectors ? Boot->Sectors : Boot->SectorsHuge;
       Sectors -= Boot->ReservedSectors + FatInfo.FATCount * FatInfo.FATSectors + FatInfo.rootDirectorySectors;
       FatInfo.NumberOfClusters = Sectors / Boot->SectorsPerCluster;
       if (FatInfo.NumberOfClusters < 4085)
@@ -153,7 +153,7 @@ VfatMountDevice(PDEVICE_EXTENSION DeviceExt,
    NTSTATUS Status;
    BOOLEAN RecognizedFS;
 
-   DPRINT1("Mounting VFAT device...\n");
+   DPRINT("Mounting VFAT device...\n");
 
    Status = VfatHasFileSystem(DeviceToMount, &RecognizedFS, &DeviceExt->FatInfo);
    if (!NT_SUCCESS(Status))
@@ -189,6 +189,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    BOOLEAN RecognizedFS;
    NTSTATUS Status;
    PVFATFCB Fcb = NULL;
+   PVFATFCB VolumeFcb = NULL;
    PVFATCCB Ccb = NULL;
    LARGE_INTEGER timeout;
 
@@ -241,7 +242,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
       goto ByeBye;
    }
 
-#ifdef DBG
+#ifndef NDEBUG
    DbgPrint("BytesPerSector:     %d\n", DeviceExt->FatInfo.BytesPerSector);
    DbgPrint("SectorsPerCluster:  %d\n", DeviceExt->FatInfo.SectorsPerCluster);
    DbgPrint("FATCount:           %d\n", DeviceExt->FatInfo.FATCount);
@@ -270,6 +271,8 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
       goto ByeBye;
    }
    memset(Ccb, 0, sizeof (VFATCCB));
+   wcscpy(Fcb->PathName, L"$$Fat$$");
+   Fcb->ObjectName = Fcb->PathName;
    DeviceExt->FATFileObject->Flags = DeviceExt->FATFileObject->Flags | FO_FCB_IS_VALID | FO_DIRECT_CACHE_PAGING_READ;
    DeviceExt->FATFileObject->FsContext = (PVOID) &Fcb->RFCB;
    DeviceExt->FATFileObject->FsContext2 = Ccb;
@@ -309,6 +312,21 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    KeInitializeSpinLock(&DeviceExt->FcbListLock);
    InitializeListHead(&DeviceExt->FcbListHead);
 
+   VolumeFcb = vfatNewFCB(NULL);
+   if (VolumeFcb == NULL)
+   {
+      Status = STATUS_INSUFFICIENT_RESOURCES;
+      goto ByeBye;
+   }
+   wcscpy(VolumeFcb->PathName, L"$$Volume$$");
+   VolumeFcb->ObjectName = VolumeFcb->PathName;
+   VolumeFcb->Flags = FCB_IS_VOLUME;
+   VolumeFcb->RFCB.FileSize.QuadPart = DeviceExt->FatInfo.Sectors * BLOCKSIZE;
+   VolumeFcb->RFCB.ValidDataLength = VolumeFcb->RFCB.FileSize;
+   VolumeFcb->RFCB.AllocationSize = VolumeFcb->RFCB.FileSize;
+   VolumeFcb->pDevExt = (PDEVICE_EXTENSION)DeviceExt->StorageDevice;
+   DeviceExt->VolumeFcb = VolumeFcb;
+
    /* read serial number */
    DeviceObject->Vpb->SerialNumber = DeviceExt->FatInfo.VolumeID;
 
@@ -330,6 +348,8 @@ ByeBye:
         ExFreePool(Ccb);
      if (DeviceObject)
        IoDeleteDevice(DeviceObject);
+     if (VolumeFcb)
+        vfatDestroyFCB(VolumeFcb);
   }
   return Status;
 }
