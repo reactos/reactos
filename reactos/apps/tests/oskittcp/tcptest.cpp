@@ -183,6 +183,9 @@ int main( int argc, char **argv ) {
     struct timeval tv;
     struct sockaddr_in addr_from = { AF_INET }, addr_to;
     std::list<std::string>::iterator i;
+    WSADATA wsadata;
+
+    WSAStartup( 0x101, &wsadata );
 
     if( argc > 1 ) port = atoi(argv[1]);
 
