@@ -1,4 +1,4 @@
-/* $Id: logon.c,v 1.6 2004/06/17 09:07:12 ekohl Exp $
+/* $Id: logon.c,v 1.7 2004/07/07 08:41:47 gvg Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -248,6 +248,36 @@ LogonUserW (LPWSTR lpszUsername,
 	    DWORD dwLogonProvider,
 	    PHANDLE phToken)
 {
+  /* FIXME shouldn't use hard-coded list of privileges */
+  static struct
+    {
+      LPCWSTR PrivName;
+      DWORD Attributes;
+    }
+  DefaultPrivs[] =
+    {
+      { L"SeUnsolicitedInputPrivilege", 0 },
+      { L"SeMachineAccountPrivilege", 0 },
+      { L"SeSecurityPrivilege", 0 },
+      { L"SeTakeOwnershipPrivilege", 0 },
+      { L"SeLoadDriverPrivilege", 0 },
+      { L"SeSystemProfilePrivilege", 0 },
+      { L"SeSystemtimePrivilege", 0 },
+      { L"SeProfileSingleProcessPrivilege", 0 },
+      { L"SeIncreaseBasePriorityPrivilege", 0 },
+      { L"SeCreatePagefilePrivilege", 0 },
+      { L"SeBackupPrivilege", 0 },
+      { L"SeRestorePrivilege", 0 },
+      { L"SeShutdownPrivilege", 0 },
+      { L"SeDebugPrivilege", 0 },
+      { L"SeSystemEnvironmentPrivilege", 0 },
+      { L"SeChangeNotifyPrivilege", SE_PRIVILEGE_ENABLED | SE_PRIVILEGE_ENABLED_BY_DEFAULT },
+      { L"SeRemoteShutdownPrivilege", 0 },
+      { L"SeUndockPrivilege", 0 },
+      { L"SeEnableDelegationPrivilege", 0 },
+      { L"SeImpersonatePrivilege", SE_PRIVILEGE_ENABLED | SE_PRIVILEGE_ENABLED_BY_DEFAULT },
+      { L"SeCreateGlobalPrivilege", SE_PRIVILEGE_ENABLED | SE_PRIVILEGE_ENABLED_BY_DEFAULT }
+    };
   OBJECT_ATTRIBUTES ObjectAttributes;
   SECURITY_QUALITY_OF_SERVICE Qos;
   TOKEN_USER TokenUser;
@@ -255,8 +285,7 @@ LogonUserW (LPWSTR lpszUsername,
   TOKEN_PRIMARY_GROUP TokenPrimaryGroup;
   TOKEN_GROUPS TokenGroups;
 //  PTOKEN_GROUPS TokenGroups;
-  TOKEN_PRIVILEGES TokenPrivileges;
-//  PTOKEN_PRIVILEGES TokenPrivileges;
+  PTOKEN_PRIVILEGES TokenPrivileges;
   TOKEN_DEFAULT_DACL TokenDefaultDacl;
   LARGE_INTEGER ExpirationTime;
   LUID AuthenticationId;
@@ -264,8 +293,8 @@ LogonUserW (LPWSTR lpszUsername,
   PSID UserSid;
   ACL Dacl;
   NTSTATUS Status;
-
   SID_IDENTIFIER_AUTHORITY SystemAuthority = {SECURITY_NT_AUTHORITY};
+  unsigned i;
 
   Qos.Length = sizeof(SECURITY_QUALITY_OF_SERVICE);
   Qos.ImpersonationLevel = SecurityAnonymous;
@@ -309,8 +338,30 @@ LogonUserW (LPWSTR lpszUsername,
   TokenGroups.Groups[0].Sid = UserSid; /* FIXME */
   TokenGroups.Groups[0].Attributes = SE_GROUP_ENABLED;
 
-//  TokenPrivileges = NULL;
-  TokenPrivileges.PrivilegeCount = 0;
+  TokenPrivileges = RtlAllocateHeap(GetProcessHeap(), 0,
+                                    sizeof(TOKEN_PRIVILEGES)
+                                    + sizeof(DefaultPrivs) / sizeof(DefaultPrivs[0])
+                                      * sizeof(LUID_AND_ATTRIBUTES));
+  if (NULL == TokenPrivileges)
+    {
+      RtlFreeSid (UserSid);
+      SetLastError(ERROR_OUTOFMEMORY);
+      return FALSE;
+    }
+  TokenPrivileges->PrivilegeCount = 0;
+  for (i = 0; i < sizeof(DefaultPrivs) / sizeof(DefaultPrivs[0]); i++)
+    {
+      if (! LookupPrivilegeValueW(NULL, DefaultPrivs[i].PrivName,
+                                  &TokenPrivileges->Privileges[TokenPrivileges->PrivilegeCount].Luid))
+        {
+          DPRINT1("Can't set privilege %S\n", DefaultPrivs[i].PrivName);
+        }
+      else
+        {
+          TokenPrivileges->Privileges[TokenPrivileges->PrivilegeCount].Attributes = DefaultPrivs[i].Attributes;
+          TokenPrivileges->PrivilegeCount++;
+        }
+    }
 
   TokenOwner.Owner = UserSid;
 
@@ -319,6 +370,7 @@ LogonUserW (LPWSTR lpszUsername,
   Status = RtlCreateAcl (&Dacl, sizeof(ACL), ACL_REVISION);
   if (!NT_SUCCESS(Status))
     {
+      RtlFreeHeap(GetProcessHeap(), 0, TokenPrivileges);
       RtlFreeSid (UserSid);
       return FALSE;
     }
@@ -344,21 +396,16 @@ LogonUserW (LPWSTR lpszUsername,
 			  &TokenUser,
 //			  TokenGroups,
 			  &TokenGroups,
-//			  TokenPrivileges,
-			  &TokenPrivileges,
+			  TokenPrivileges,
 			  &TokenOwner,
 			  &TokenPrimaryGroup,
 			  &TokenDefaultDacl,
 			  &TokenSource);
-  if (!NT_SUCCESS(Status))
-    {
-      RtlFreeSid (UserSid);
-      return FALSE;
-    }
 
+  RtlFreeHeap(GetProcessHeap(), 0, TokenPrivileges);
   RtlFreeSid (UserSid);
 
-  return TRUE;
+  return NT_SUCCESS(Status);
 }
 
 /* EOF */
