@@ -297,7 +297,7 @@ GetExitCodeProcess(HANDLE hProcess,
       return(FALSE);
      }
 
-  memcpy(lpExitCode, &ProcessBasic.ExitStatus, sizeof(DWORD));
+  *lpExitCode = (DWORD)ProcessBasic.ExitStatus;
 
   return(TRUE);
 }

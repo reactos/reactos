@@ -121,7 +121,7 @@ NTSTATUS
 ExpSetTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation);
 
 NTSTATUS
-ExpAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId);;
+ExpAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId);
 
 #define InterlockedDecrementUL(Addend) \
    (ULONG)InterlockedDecrement((PLONG)(Addend))
