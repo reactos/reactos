@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: focus.c,v 1.24.4.3 2004/09/14 01:00:44 weiden Exp $
+ * $Id: focus.c,v 1.24.4.4 2004/09/27 01:39:10 royce Exp $
  */
 #include <w32k.h>
 
@@ -97,6 +97,7 @@ IntSetForegroundWindow(PWINDOW_OBJECT Window)
    * message queue has active menus (2000/XP and later)
    */
   
+  pdo = PsGetWin32Thread()->Desktop;
   if((pdo->ActiveMessageQueue != NULL) &&
      (pdo->ActiveMessageQueue->MenuOwner != NULL))
   {
