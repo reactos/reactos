@@ -1,4 +1,4 @@
-/* $Id: ldr.c,v 1.9 2000/09/01 17:09:19 ekohl Exp $
+/* $Id: ldr.c,v 1.10 2001/01/24 04:41:58 phreak Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -303,6 +303,8 @@ GetModuleHandleA ( LPCSTR lpModuleName )
 	PVOID BaseAddress;
 	NTSTATUS Status;
 
+	if (lpModuleName == NULL)
+		return ((HMODULE)NtCurrentPeb()->ImageBaseAddress);
 	RtlInitAnsiString (&ModuleName,
 	                   (LPSTR)lpModuleName);
 
