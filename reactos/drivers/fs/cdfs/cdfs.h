@@ -221,10 +221,6 @@ typedef struct
 extern PCDFS_GLOBAL_DATA CdfsGlobalData;
 
 
-int CdfsStrcmpi( wchar_t *str1, wchar_t *str2 );
-void CdfsWstrcpy( wchar_t *str1, wchar_t *str2, int max );
-
-
 /* cleanup.c */
 
 NTSTATUS STDCALL

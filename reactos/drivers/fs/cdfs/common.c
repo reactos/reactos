@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: common.c,v 1.6 2003/11/09 11:20:28 ekohl Exp $
+/* $Id: common.c,v 1.7 2003/11/10 18:07:36 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -134,12 +134,11 @@ CdfsDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
 		     IN PVOID InputBuffer,
 		     IN ULONG InputBufferSize,
 		     IN OUT PVOID OutputBuffer,
-		     IN OUT PULONG pOutputBufferSize,
+		     IN OUT PULONG OutputBufferSize,
 		     IN BOOLEAN Override)
 {
   PIO_STACK_LOCATION Stack;
   IO_STATUS_BLOCK IoStatus;
-  ULONG OutputBufferSize = 0;
   KEVENT Event;
   PIRP Irp;
   NTSTATUS Status;
@@ -150,11 +149,6 @@ CdfsDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
 	 InputBuffer, InputBufferSize, OutputBuffer, pOutputBufferSize, 
 	 pOutputBufferSize ? *pOutputBufferSize : 0);
 
-  if (pOutputBufferSize)
-    {
-      OutputBufferSize = *pOutputBufferSize;
-    }
-
   KeInitializeEvent (&Event, NotificationEvent, FALSE);
 
   DPRINT("Building device I/O control request ...\n");
@@ -163,7 +157,7 @@ CdfsDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
 				      InputBuffer,
 				      InputBufferSize,
 				      OutputBuffer,
-				      OutputBufferSize,
+				      (OutputBufferSize != NULL) ? *OutputBufferSize : 0,
 				      FALSE,
 				      &Event,
 				      &IoStatus);
@@ -192,9 +186,9 @@ CdfsDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
       Status = IoStatus.Status;
     }
 
-  if (pOutputBufferSize)
+  if (OutputBufferSize != NULL)
     {
-     *pOutputBufferSize = OutputBufferSize;
+     *OutputBufferSize = IoStatus.Information;
     }
 
   DPRINT("Returning Status %x\n", Status);
