@@ -7,8 +7,9 @@
 #ifndef __WINE_QUEUE_H
 #define __WINE_QUEUE_H
 
-//#include "wine/winuser16.h"
+
 #include <windows.h>
+#include <user32/win.h>
 
 /***** Window hooks *****/
 
@@ -20,7 +21,6 @@
 #define WH_MAXHOOK          WH_MAX
 #define WH_NB_HOOKS         (WH_MAXHOOK-WH_MINHOOK+1)
 
-#define HQUEUE HANDLE
 
 
   /* Message as stored in the queue (contains the extraInfo field) */
@@ -113,11 +113,11 @@ void QUEUE_FlushMessages(HQUEUE);
 void hardware_event( WORD message, WORD wParam, LONG lParam,
 			    int xPos, int yPos, DWORD time, DWORD extraInfo );
 
-HQUEUE STDCALL InitThreadInput( WORD unknown, WORD flags );
+HQUEUE  InitThreadInput( WORD unknown, WORD flags );
 
-HQUEUE WINAPI SetThreadQueue( DWORD thread, HQUEUE hQueue );
-HQUEUE WINAPI GetThreadQueue( DWORD thread );
-VOID WINAPI SetFastQueue( DWORD thread, HANDLE hQueue );
-HANDLE STDCALL GetFastQueue( void );
+HQUEUE  SetThreadQueue( DWORD thread, HQUEUE hQueue );
+HQUEUE  GetThreadQueue( DWORD thread );
+VOID  SetFastQueue( DWORD thread, HANDLE hQueue );
+HANDLE  GetFastQueue( void );
 
 #endif  /* __WINE_QUEUE_H */

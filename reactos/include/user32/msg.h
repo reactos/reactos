@@ -1,14 +1,28 @@
-/*
- * Message definitions
- *
- * Copyright 1993 Alexandre Julliard
- */
 
-#ifndef __WINE_MESSAGE_H
-#define __WINE_MESSAGE_H
+#ifndef __WINE_MSG_H
+#define __WINE_MSG_H
+
+
+
+#define WM_SYSTIMER	    0x0118
+
+#define WH_HARDWARE	    8
+
 
 #include <user32/win.h>
 #include <user32/queue.h>
+#include <user32/sysmetr.h>
+//#include <user32/debug.h>
+
+typedef struct
+{
+    HWND    hWnd;
+    UINT    wMessage;
+    WPARAM  wParam;
+    LPARAM    lParam;
+} HARDWAREHOOKSTRUCT, *LPHARDWAREHOOKSTRUCT;
+
+
 
 #define MAX_QUEUE_SIZE 256
 
@@ -38,8 +52,13 @@ WINBOOL MSG_PeekMessage( LPMSG msg, HWND hwnd, WORD first, WORD last,
 
 void  MSG_CallWndProcHook( LPMSG pmsg, WINBOOL bUnicode );
 
-LRESULT MSG_SendMessage( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam,
-	WINBOOL bUnicode );
+LRESULT MSG_SendMessage( HQUEUE hDestQueue, HWND hwnd, UINT msg,
+                                WPARAM wParam, LPARAM lParam, WORD flags );
 
 
-#endif  /* __WINE_MESSAGE_H */
+void joySendMessages(void);
+
+
+
+
+#endif

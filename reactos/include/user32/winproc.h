@@ -7,7 +7,7 @@
 #ifndef __WINE_WINPROC_H
 #define __WINE_WINPROC_H
 
-//#include "wintypes.h"
+#include <windows.h>
 
 typedef enum
 {  
@@ -40,6 +40,11 @@ WINBOOL WINPROC_SetProc( HWINDOWPROC *pFirst, WNDPROC func,
                                WINDOWPROCTYPE type, WINDOWPROCUSER user );
 void WINPROC_FreeProc( HWINDOWPROC proc, WINDOWPROCUSER user );
 WINDOWPROCTYPE WINPROC_GetProcType( HWINDOWPROC proc );
+
+INT WINPROC_MapMsg32ATo32W( HWND hwnd, UINT msg, WPARAM wParam, LPARAM *plparam );
+void WINPROC_UnmapMsg32ATo32W( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam );
+INT WINPROC_MapMsg32WTo32A( HWND hwnd, UINT msg, WPARAM wParam, LPARAM *plparam );
+void WINPROC_UnmapMsg32WTo32A( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam );
 
 
 #endif  /* __WINE_WINPROC_H */

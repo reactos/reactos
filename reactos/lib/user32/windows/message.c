@@ -26,106 +26,22 @@
  *  ECMA-234, Win 
  */
 
+
+#if 0
 LRESULT STDCALL SendMessageA( HWND hwnd, UINT msg, WPARAM wParam,
                                LPARAM lParam )
 {
-    WND * wndPtr;
-    WND **list, **ppWnd;
-    LRESULT ret;
-
-    if (hwnd == HWND_BROADCAST || hwnd == HWND_TOPMOST)
-    {
-        if (!(list = WIN_BuildWinArray( WIN_GetDesktop(), 0, NULL )))
-            return TRUE;
-        for (ppWnd = list; *ppWnd; ppWnd++)
-        {
-            wndPtr = *ppWnd;
-            if (!IsWindow(wndPtr->hwndSelf)) continue;
-            if (wndPtr->dwStyle & WS_POPUP || wndPtr->dwStyle & WS_CAPTION)
-                SendMessageA( wndPtr->hwndSelf, msg, wParam, lParam );
-        }
-	HeapFree( GetProcessHeap(), 0, list );
-        return TRUE;
-    }
-
-    if (HOOK_IsHooked( WH_CALLWNDPROC ))
-	MSG_CallWndProcHook( (LPMSG)&hwnd, FALSE);
-
-    if (!(wndPtr = WIN_FindWndPtr( hwnd )))
-    {
-        //WARN(msg, "invalid hwnd %08x\n", hwnd );
-        return 0;
-    }
-#if 0
-    if (QUEUE_IsExitingQueue(wndPtr->hmemTaskQ))
-        return 0;  /* Don't send anything if the task is dying */
-#endif
-    SPY_EnterMessage( SPY_SENDMESSAGE, hwnd, msg, wParam, lParam );
-
-    if (wndPtr->hmemTaskQ != GetFastQueue())
-        ret = MSG_SendMessage( wndPtr->hmemTaskQ, hwnd, msg, wParam, lParam,
-                               QUEUE_SM_ASCII );
-    else
-        ret = CallWindowProcA( (WNDPROC)wndPtr->winproc,
-                                 hwnd, msg, wParam, lParam );
-
-    SPY_ExitMessage( SPY_RESULT_OK, hwnd, msg, ret );
-    return ret;
+	return  MSG_SendMessage( hwnd, msg, wParam, lParam,  FALSE );
 }
 
 
 
-LRESULT STDCALL SendMessageW( 
-  HWND hwnd,    /* Window to send message to. If HWND_BROADCAST, 
-                 the message will be sent to all top-level windows. */
-
-  UINT msg,      /* message */
-  WPARAM wParam, /* message parameter */
-  LPARAM lParam    /* additional message parameter */
-) {
-    WND * wndPtr;
-    WND **list, **ppWnd;
-    LRESULT ret;
-
-    if (hwnd == HWND_BROADCAST || hwnd == HWND_TOPMOST)
-    {
-        if (!(list = WIN_BuildWinArray( WIN_GetDesktop(), 0, NULL )))
-            return TRUE;
-        for (ppWnd = list; *ppWnd; ppWnd++)
-        {
-            wndPtr = *ppWnd;
-            if (!IsWindow(wndPtr->hwndSelf)) continue;
-            if (wndPtr->dwStyle & WS_POPUP || wndPtr->dwStyle & WS_CAPTION)
-                SendMessageW( wndPtr->hwndSelf, msg, wParam, lParam );
-        }
-	HeapFree( GetProcessHeap(), 0, list );
-        return TRUE;
-    }
-
-    if (HOOK_IsHooked( WH_CALLWNDPROC ))
-        MSG_CallWndProcHook( (LPMSG)&hwnd, TRUE);
-
-    if (!(wndPtr = WIN_FindWndPtr( hwnd )))
-    {
-        //WARN(msg, "invalid hwnd %08x\n", hwnd );
-        return 0;
-    }
-#if 0
-    if (QUEUE_IsExitingQueue(wndPtr->hmemTaskQ))
-        return 0;  /* Don't send anything if the task is dying */
-#endif
-    SPY_EnterMessage( SPY_SENDMESSAGE, hwnd, msg, wParam, lParam );
-
-    if (wndPtr->hmemTaskQ != GetFastQueue())
-        ret = MSG_SendMessage( wndPtr->hmemTaskQ, hwnd, msg, wParam, lParam,
-                                QUEUE_SM_ASCII | QUEUE_SM_UNICODE );
-    else
-        ret = CallWindowProcW( (WNDPROC)wndPtr->winproc,
-                                 hwnd, msg, wParam, lParam );
-
-    SPY_ExitMessage( SPY_RESULT_OK, hwnd, msg, ret );
-    return ret;
+LRESULT STDCALL SendMessageW(  HWND hwnd, UINT msg,   WPARAM wParam, 
+  LPARAM lParam  ) 
+{
+	return MSG_SendMessage( hwnd, msg, wParam, lParam,  TRUE );
 }
+#endif
 
 
 /***********************************************************************
@@ -133,11 +49,57 @@ LRESULT STDCALL SendMessageW(
  *
  * Implementation of an inter-task SendMessage.
  */
-LRESULT MSG_SendMessage( HQUEUE hDestQueue, HWND hwnd, UINT msg,
-                                WPARAM wParam, LPARAM lParam, WORD flags )
+LRESULT MSG_SendMessage( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam,  WINBOOL bUnicode )
 {
-	return 0;
+    WND * wndPtr;
+    LRESULT ret;
+    MSG msg;
+
+
+//    SPY_EnterMessage( SPY_SENDMESSAGE, hwnd, msg, wParam, lParam );
+#if 0
+    WND **list, **ppWnd;
+    if (hwnd == HWND_BROADCAST || hwnd == HWND_TOPMOST)
+    {
+        if (!(list = WIN_BuildWinArray( WIN_GetDesktop(), 0, NULL )))
+            return TRUE;
+        for (ppWnd = list; *ppWnd; ppWnd++)
+        {
+            wndPtr = *ppWnd;
+            if (!WIN_IsWindow(wndPtr->hwndSelf)) 
+		continue;
+            if (wndPtr->dwStyle & WS_POPUP || wndPtr->dwStyle & WS_CAPTION)
+                MSG_SendMessage( wndPtr->hwndSelf, message, wParam, lParam, bUnicode );
+        }
+	WIN_DestroyList( list );
+        return TRUE;
+    }
+#endif
+
+    if (HOOK_IsHooked( WH_CALLWNDPROC ))
+	MSG_CallWndProcHook( (LPMSG)&hwnd, FALSE);
+
+    if (!(wndPtr = WIN_FindWndPtr( hwnd )))
+    {
+        return 0;
+    }
+
+
+    msg.hwnd = hwnd;
+    msg.message = message;
+    msg.wParam = wParam;
+    msg.lParam = lParam;
+    msg.time = 0;
+    msg.pt.x = 0;
+    msg.pt.y = 0; 
+
+ 
+  //  SPY_ExitMessage( SPY_RESULT_OK, hwnd, msg, ret );
+    return ret;
 }
+
+
+
 /************************************************************************
  *	     MSG_CallWndProcHook
  */
@@ -159,4 +121,18 @@ void  MSG_CallWndProcHook( LPMSG pmsg, WINBOOL bUnicode )
    pmsg->wParam = cwp.wParam;
    pmsg->message = cwp.message;
    pmsg->hwnd = cwp.hwnd;
+}
+
+
+/***********************************************************************
+ *           MSG_InternalGetMessage
+ *
+ * GetMessage() function for internal use. Behave like GetMessage(),
+ * but also call message filters and optionally send WM_ENTERIDLE messages.
+ * 'hwnd' must be the handle of the dialog or menu window.
+ * 'code' is the message filter value (MSGF_??? codes).
+ */
+WINBOOL MSG_InternalGetMessage( MSG *msg, HWND hwnd, HWND hwndOwner,
+                               WPARAM code, WORD flags, WINBOOL sendIdle ) 
+{
 }

@@ -11,9 +11,12 @@
 typedef HANDLE HTASK;
 typedef HANDLE HQUEUE;
 
+#define STRING2ATOMA(str) HIWORD(str) ? GlobalFindAtomA(str) : (ATOM)LOWORD(str)
+#define STRING2ATOMW(str) HIWORD(str) ? GlobalFindAtomW(str) : (ATOM)LOWORD(str)
 
 #include <user32/class.h>
-
+#include <user32/heapdup.h>
+#include <user32/dce.h>
 
 #define WND_MAGIC     0x444e4957  /* 'WIND' */
 
@@ -56,53 +59,50 @@ struct tagDCE;
 struct tagDC;
 struct tagCLASS;
 
-
 typedef struct tagWND
 {
     struct tagWND *next;          /* Next sibling */
     struct tagWND *child;         /* First child */
     struct tagWND *parent;        /* Window parent (from CreateWindow) */
     struct tagWND *owner;         /* Window owner */
-    struct tagCLASS *class;         /* Window class */
+    struct tagCLASS  *class;         /* Window class */
     void	  *winproc;       /* Window procedure */
-    DWORD          dwMagic;       /* Magic number (must be WND_MAGIC) */
-    HWND         hwndSelf;      /* Handle of this window */
-    HINSTANCE    hInstance;     /* Window hInstance (from CreateWindow) */
-    RECT         rectClient;    /* Client area rel. to parent client area */
-    RECT         rectWindow;    /* Whole window rel. to parent client area */
-    LPWSTR          text;          /* Window text */
+    HANDLE	  hmemTaskQ;      /* This should be hThread */
+    DWORD         dwMagic;       /* Magic number (must be WND_MAGIC) */
+    HWND          hwndSelf;      /* Handle of this window */
+    HINSTANCE     hInstance;     /* Window hInstance (from CreateWindow) */
+    RECT          rectClient;    /* Client area rel. to parent client area */
+    RECT          rectWindow;    /* Whole window rel. to parent client area */
+    LPWSTR        text;          /* Window text */
     void          *pVScroll;      /* Vertical scroll-bar info */
     void          *pHScroll;      /* Horizontal scroll-bar info */
     void          *pProp;         /* Pointer to properties list */
     struct tagDCE *dce;           /* Window DCE (if CS_OWNDC or CS_CLASSDC) */
-    HGLOBAL      hmemTaskQ;     /* Task queue global memory handle */
-    HRGN         hrgnUpdate;    /* Update region */
-    HRGN         hrgnWindow;   /* region where the os permits drawing == max update region */
-    HWND         hwndLastActive;/* Last active popup hwnd */
-    DWORD          dwStyle;       /* Window style (from CreateWindow) */
-    DWORD          dwExStyle;     /* Extended style (from CreateWindowEx) */
-    UINT         wIDmenu;       /* ID or hmenu (from CreateWindow) */
-    DWORD          helpContext;   /* Help context ID */
-    WORD           flags;         /* Misc. flags (see below) */
-    HMENU        hSysMenu;      /* window's copy of System Menu */
-    DWORD          userdata;      /* User private data */
-//    struct _WND_DRIVER *pDriver;  /* Window driver */
-//    void          *pDriverData;   /* Window driver data */
-    DWORD          wExtra[1];     /* Window extra bytes */
+    HRGN          hrgnUpdate;    /* Update region */
+    HRGN          hrgnWindow;   /* region where the os permits drawing == max update region */
+    HWND          hwndLastActive;/* Last active popup hwnd */
+    DWORD         dwStyle;       /* Window style (from CreateWindow) */
+    DWORD         dwExStyle;     /* Extended style (from CreateWindowEx) */
+    UINT          wIDmenu;       /* ID or hmenu (from CreateWindow) */
+    DWORD         helpContext;   /* Help context ID */
+    WORD          flags;         /* Misc. flags (see below) */
+    HMENU         hSysMenu;      /* window's copy of System Menu */
+    DWORD         userdata;      /* User private data */
+    DWORD         wExtra[1];     /* Window extra bytes */
 } WND;
 
 typedef struct tagCREATESTRUCTA { 
   LPVOID    lpCreateParams;  
   HINSTANCE hInstance;       
   HMENU     hMenu;           
-  HWND      hwndParent;      
+  HWND      hWndParent;      
   int       cy;              
   int       cx;              
   int       y;               
   int       x;               
   LONG      style;           
-  LPCSTR   lpszName;        
-  LPCSTR   lpszClass;       
+  LPCSTR    lpszName;        
+  LPCSTR    lpszClass;       
   DWORD     dwExStyle;       
 } CREATESTRUCTA, *LPCREATESTRUCTA; 
 
@@ -110,7 +110,7 @@ typedef struct tagCREATESTRUCTW {
   LPVOID    lpCreateParams;  
   HINSTANCE hInstance;       
   HMENU     hMenu;           
-  HWND      hwndParent;      
+  HWND      hWndParent;      
   int       cy;              
   int       cx;              
   int       y;               
@@ -154,24 +154,7 @@ typedef struct _STARTUPINFOW {
   HANDLE  hStdError; 
 } STARTUPINFOW, *LPSTARTUPINFOW; 
 
-typedef struct _WND_DRIVER
-{
-    void   (*pInitialize)(WND *);
-    void   (*pFinalize)(WND *);
-    WINBOOL (*pCreateDesktopWindow)(WND *, struct tagCLASS *, WINBOOL);
-    WINBOOL (*pCreateWindow)(WND *, struct tagCLASS*, CREATESTRUCTW *, WINBOOL);
-    WINBOOL (*pDestroyWindow)(WND *);
-    WND*   (*pSetParent)(WND *, WND *);
-    void   (*pForceWindowRaise)(WND *);
-    void   (*pSetWindowPos)(WND *, const WINDOWPOS *, WINBOOL);
-    void   (*pSetText)(WND *, LPCSTR);
-    void   (*pSetFocus)(WND *);
-    void   (*pPreSizeMove)(WND *);
-    void   (*pPostSizeMove)(WND *);
-    void   (*pScrollWindow)(WND *, struct tagDC *, INT, INT, const RECT *, WINBOOL);
-    void   (*pSetDrawable)(WND *, struct tagDC *, WORD, WINBOOL);
-    WINBOOL (*pIsSelfClipping)(WND *);
-} WND_DRIVER;
+
 
 typedef struct
 {
@@ -212,11 +195,8 @@ typedef struct
 #define GWL_WNDPROC         (-4)
 
 
-
-
-
   /* Window functions */
-HWND WIN_CreateWindowEx( CREATESTRUCTW *cs, ATOM classAtom );
+HANDLE WIN_CreateWindowEx( CREATESTRUCTW *cs, ATOM atomName );
 WND*   WIN_FindWndPtr( HWND hwnd );
 WND*   WIN_GetDesktop(void);
 void   WIN_DumpWindow( HWND hwnd );
@@ -235,7 +215,7 @@ WND**  WIN_BuildWinArray( WND *wndPtr, UINT bwa, UINT* pnum );
 void WIN_UpdateNCArea(WND* wnd, WINBOOL bUpdate);
 
 void WIN_SendDestroyMsg( WND* pWnd );
-WND* WIN_DestroyWindow( WND* wndPtr );
+WINBOOL WIN_DestroyWindow( WND* wndPtr );
 HWND WIN_FindWindow( HWND parent, HWND child, ATOM className,
                               LPCWSTR title );
 LONG WIN_GetWindowLong( HWND hwnd, INT offset );
