@@ -1,4 +1,4 @@
-/* $Id: vpb.c,v 1.15 2002/04/10 09:57:31 ekohl Exp $
+/* $Id: vpb.c,v 1.16 2002/04/20 03:46:40 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -98,7 +98,6 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
    PFILE_OBJECT FileObject;
    PDEVICE_OBJECT DeviceObject;
    PIRP Irp;
-   KEVENT Event;
    NTSTATUS Status;
    PIO_STACK_LOCATION StackPtr;
    PVOID SystemBuffer;
@@ -122,10 +121,6 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
    
    DeviceObject = FileObject->DeviceObject;
    
-   KeInitializeEvent(&Event,
-		     NotificationEvent,
-		     FALSE);
-   
    Irp = IoAllocateIrp(DeviceObject->StackSize,
 		       TRUE);
    if (Irp == NULL)
@@ -145,7 +140,8 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
      }
    
    Irp->AssociatedIrp.SystemBuffer = SystemBuffer;
-   Irp->UserEvent = &Event;
+   KeResetEvent( &FileObject->Event );
+   Irp->UserEvent = &FileObject->Event;
    Irp->UserIosb = &IoSB;
    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
    
@@ -164,7 +160,7 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
 			 Irp);
    if (Status == STATUS_PENDING)
      {
-	KeWaitForSingleObject(&Event,
+	KeWaitForSingleObject(&FileObject->Event,
 			      UserRequest,
 			      KernelMode,
 			      FALSE,
@@ -202,7 +198,6 @@ IoQueryVolumeInformation(IN PFILE_OBJECT FileObject,
    PIO_STACK_LOCATION StackPtr;
    PDEVICE_OBJECT DeviceObject;
    PIRP Irp;
-   KEVENT Event;
    NTSTATUS Status;
    
    assert(FsInformation != NULL);
@@ -220,10 +215,6 @@ IoQueryVolumeInformation(IN PFILE_OBJECT FileObject,
    
    DeviceObject = FileObject->DeviceObject;
    
-   KeInitializeEvent(&Event,
-		     NotificationEvent,
-		     FALSE);
-   
    Irp = IoAllocateIrp(DeviceObject->StackSize,
 		       TRUE);
    if (Irp == NULL)
@@ -233,7 +224,8 @@ IoQueryVolumeInformation(IN PFILE_OBJECT FileObject,
      }
    
    Irp->AssociatedIrp.SystemBuffer = FsInformation;
-   Irp->UserEvent = &Event;
+   KeResetEvent( &FileObject->Event );
+   Irp->UserEvent = &FileObject->Event;
    Irp->UserIosb = &IoStatusBlock;
    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
    
@@ -252,7 +244,7 @@ IoQueryVolumeInformation(IN PFILE_OBJECT FileObject,
 			 Irp);
    if (Status == STATUS_PENDING)
      {
-	KeWaitForSingleObject(&Event,
+	KeWaitForSingleObject(&FileObject->Event,
 			      UserRequest,
 			      KernelMode,
 			      FALSE,
@@ -281,7 +273,6 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
    PFILE_OBJECT FileObject;
    PDEVICE_OBJECT DeviceObject;
    PIRP Irp;
-   KEVENT Event;
    NTSTATUS Status;
    PIO_STACK_LOCATION StackPtr;
    PVOID SystemBuffer;
@@ -299,10 +290,6 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
      }
    
    DeviceObject = FileObject->DeviceObject;
-   
-   KeInitializeEvent(&Event,
-		     NotificationEvent,
-		     FALSE);
    
    Irp = IoAllocateIrp(DeviceObject->StackSize,TRUE);
    if (Irp == NULL)
@@ -326,7 +313,8 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
 		      Length);
    
    Irp->AssociatedIrp.SystemBuffer = SystemBuffer;
-   Irp->UserEvent = &Event;
+   KeResetEvent( &FileObject->Event );
+   Irp->UserEvent = &FileObject->Event;
    Irp->UserIosb = &IoSB;
    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
    
@@ -344,7 +332,7 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
    Status = IoCallDriver(DeviceObject,Irp);
    if (Status == STATUS_PENDING)
      {
-	KeWaitForSingleObject(&Event,
+	KeWaitForSingleObject(&FileObject->Event,
 			      UserRequest,
 			      KernelMode,
 			      FALSE,

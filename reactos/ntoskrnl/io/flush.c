@@ -47,7 +47,6 @@ NtFlushBuffersFile (
    PFILE_OBJECT FileObject = NULL;
    PIRP Irp;
    PIO_STACK_LOCATION StackPtr;
-   KEVENT Event;
    NTSTATUS Status;
    IO_STATUS_BLOCK IoSB;
       
@@ -61,14 +60,13 @@ NtFlushBuffersFile (
      {
 	return(Status);
      }
-   
-   KeInitializeEvent(&Event,NotificationEvent,FALSE);
+   KeResetEvent( &FileObject->Event );
    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_FLUSH_BUFFERS,
 				      FileObject->DeviceObject,
 				      NULL,
 				      0,
 				      NULL,
-				      &Event,
+				      &FileObject->Event,
 				      &IoSB);
 
    StackPtr = IoGetNextIrpStackLocation(Irp);
@@ -77,7 +75,7 @@ NtFlushBuffersFile (
    Status = IoCallDriver(FileObject->DeviceObject,Irp);
    if (Status==STATUS_PENDING)
      {
-	KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
+	KeWaitForSingleObject(&FileObject->Event,Executive,KernelMode,FALSE,NULL);
 	Status = IoSB.Status;
      }
    if (IoStatusBlock)

@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.35 2002/04/07 18:36:13 phreak Exp $
+/* $Id: rw.c,v 1.36 2002/04/20 03:46:40 phreak Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -65,6 +65,9 @@ NTSTATUS STDCALL NtReadFile(HANDLE			FileHandle,
 				      UserMode,
 				      (PVOID*)&FileObject,
 				      NULL);
+   if( !NT_SUCCESS( Status ) )
+     return Status;
+
    if (ByteOffset == NULL)
      {
 	ByteOffset = &FileObject->CurrentByteOffset;
@@ -246,7 +249,7 @@ NTSTATUS STDCALL NtWriteFile(HANDLE			FileHandle,
 	KeWaitForSingleObject(ptrEvent,
 			      Executive,
 			      KernelMode,
-			      FALSE,
+			      FileObject->Flags & FO_ALERTABLE_IO ? TRUE : FALSE,
 			      NULL);
 	Status = IoSB.Status;
      }
