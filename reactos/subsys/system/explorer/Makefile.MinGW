@@ -4,13 +4,11 @@
 #  Makefile.MinGW
 #
 
-
 CC = gcc
 CXX = g++
 LINK = g++
 
 CFLAGS	= -DWIN32 -D_ROS_ -D_WIN32_IE=0x0501 -D_WIN32_WINNT=0x0501 -fexceptions -Wall
-CXXFLAGS= $(CFLAGS)
 RCFLAGS	= -DWIN32 -D_ROS_
 LFLAGS	= -Wl,--subsystem,windows
 
@@ -28,6 +26,8 @@ ifdef UNICODE
 CFLAGS	+= -DUNICODE
 # LFLAGS+= -Wl,--entry,_wWinMain@16
 endif
+
+CXXFLAGS = $(CFLAGS)
 
 EXEC_SUFFIX = .exe
 RES_SUFFIX = .coff
@@ -71,5 +71,5 @@ explorer$(RES_SUFFIX): $(PROGRAM)_intres.rc
 	windres $(RCFLAGS) -o $@ $^
 
 clean:
-	rm -f $(TARGET) *.o *$(RES_SUFFIX)
+	rm -f $(TARGET) $(OBJECTS) $(PROGRAM)$(RES_SUFFIX)
 

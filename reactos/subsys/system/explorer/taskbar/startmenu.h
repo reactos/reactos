@@ -58,14 +58,15 @@ struct StartMenuDirectory
 };
 
 typedef list<StartMenuDirectory> StartMenuShellDirs;
+typedef set<const ShellEntry*> ShellEntrySet;
 
 struct StartMenuEntry
 {
-	StartMenuEntry() : _hIcon(0), _entry(NULL) {}
+	StartMenuEntry() : _hIcon(0) {}
 
 	String	_title;
 	HICON	_hIcon;
-	const ShellEntry* _entry;
+	ShellEntrySet _entries;
 };
 
 
@@ -173,7 +174,7 @@ protected:
 	void	CreateSubmenu(int id, int folder, CREATORFUNC creator=s_def_creator);
 	void	CreateSubmenu(int id, int folder1, int folder2, CREATORFUNC creator=s_def_creator);
 	void	CreateSubmenu(int id, const StartMenuFolders& new_folders, CREATORFUNC creator=s_def_creator);
-	void	ActivateEntry(int id, ShellEntry* entry);
+	void	ActivateEntry(int id, const ShellEntrySet& entries);
 	void	CloseStartMenu(int id=0);
 };
 

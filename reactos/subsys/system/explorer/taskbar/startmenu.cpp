@@ -94,8 +94,6 @@ HWND StartMenu::Create(int x, int y, const StartMenuFolders& folders, HWND hwndP
 
 LRESULT	StartMenu::Init(LPCREATESTRUCT pcs)
 {
-	WaitCursor wait;
-
 	try {
 		AddEntries();
 
@@ -107,8 +105,9 @@ LRESULT	StartMenu::Init(LPCREATESTRUCT pcs)
 			const StartMenuEntry& sme = it->second;
 			bool hasSubmenu = false;
 
-			if (sme._entry && (sme._entry->_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY))
-				hasSubmenu = true;
+			for(ShellEntrySet::const_iterator it=sme._entries.begin(); it!=sme._entries.end(); ++it)
+				if ((*it)->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+					hasSubmenu = true;
 
 			AddButton(sme._title, sme._hIcon, hasSubmenu, it->first);
 		}
@@ -128,7 +127,11 @@ void StartMenu::AddEntries()
 		StartMenuDirectory& smd = *it;
 		ShellDirectory& dir = smd._dir;
 
-		dir.smart_scan();
+		if (!dir._scanned) {
+			WaitCursor wait;
+
+			dir.smart_scan();
+		}
 
 		AddShellEntries(dir, -1, smd._subfolders);
 	}
@@ -255,13 +258,10 @@ int StartMenu::Command(int id, int code)
 		break;
 
 	  default: {
-		ShellEntryMap::const_iterator found = _entries.find(id);
+		ShellEntryMap::iterator found = _entries.find(id);
 
 		if (found != _entries.end()) {
-			ShellEntry* entry = const_cast<ShellEntry*>(found->second._entry);
-
-			if (entry)
-				ActivateEntry(id, entry);
+			ActivateEntry(id, found->second._entries);
 			break;
 		}
 
@@ -294,9 +294,23 @@ StartMenuEntry& StartMenu::AddEntry(const ShellFolder folder, const ShellEntry* 
 
 	const String& entry_name = folder.get_name(entry->_pidl);
 
+	 // search for an already existing subdirectory entry with the same name
+	for(ShellEntryMap::iterator it=_entries.begin(); it!=_entries.end(); ++it) {
+		StartMenuEntry& sme = it->second;
+
+		if (sme._title == entry_name)
+			for(ShellEntrySet::iterator it2=sme._entries.begin(); it2!=sme._entries.end(); ++it2) {
+				if ((*it2)->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+					 // merge the new shell entry with the existing of the same name
+					sme._entries.insert(entry);
+					return sme;
+				}
+			}
+	}
+
 	StartMenuEntry& sme = AddEntry(entry_name, hIcon);
 
-	sme._entry = entry;
+	sme._entries.insert(entry);
 
 	return sme;
 }
@@ -432,25 +446,35 @@ void StartMenu::CreateSubmenu(int id, const StartMenuFolders& new_folders, CREAT
 }
 
 
-void StartMenu::ActivateEntry(int id, ShellEntry* entry)
+void StartMenu::ActivateEntry(int id, const ShellEntrySet& entries)
 {
-	if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+	StartMenuFolders new_folders;
+
+	for(ShellEntrySet::const_iterator it=entries.begin(); it!=entries.end(); ++it) {
+		ShellEntry* entry = const_cast<ShellEntry*>(*it);
+
+		if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+			new_folders.push_back(entry->create_absolute_pidl(_hwnd));
+		else {
+			 // If the entry is no subdirectory, there can only be one shell entry.
+			assert(entries.size()==1);
+
+			entry->launch_entry(_hwnd);	//TODO: launch in the background; specify correct HWND for error message box titles
+
+			 // close start menus after launching the selected entry
+			CloseStartMenu(id);
+
+			 // we deleted 'this' - ensure we leave loop and function
+			return;
+		}
+	}
+
+	if (!new_folders.empty()) {
 		 // Only open one submenu at a time.
 		if (!CloseOtherSubmenus(id))
 			return;
 
-		StartMenuFolders new_folders;
-
-		new_folders.push_back(entry->create_absolute_pidl(_hwnd));
-
-		//TODO: merge all entries of subdirectories with the same name, like "All Users\...\Accessories" and "<user>\...\Accessories"
-
 		CreateSubmenu(id, new_folders);
-	} else {
-		entry->launch_entry(_hwnd);	//TODO: launch in the background; specify correct HWND for error message box titles
-
-		 // close start menus after launching the selected entry
-		CloseStartMenu(id);
 	}
 }
 
@@ -896,7 +920,11 @@ void RecentStartMenu::AddEntries()
 		StartMenuDirectory& smd = *it;
 		ShellDirectory& dir = smd._dir;
 
-		dir.smart_scan();
+		if (!dir._scanned) {
+			WaitCursor wait;
+
+			dir.smart_scan();
+		}
 
 		dir.sort_directory(SORT_DATE);
 		AddShellEntries(dir, 16, smd._subfolders);	//TODO: read max. count of entries from registry
