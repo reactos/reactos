@@ -1,4 +1,4 @@
-/* $Id: lang.c,v 1.8 2004/01/16 23:19:16 mf Exp $
+/* $Id: lang.c,v 1.9 2004/01/21 20:37:00 navaraf Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -1254,34 +1254,26 @@ GetTimeFormatA (
 #ifndef _OLE2NLS_IN_BUILD_
 
 /*
- * @unimplemented
+ * @implemented
  */
 LANGID
 STDCALL
 GetUserDefaultLangID (VOID)
 {
-     /* FIXME: ??? */
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return MAKELANGID(
-        LANG_ENGLISH,
-        SUBLANG_ENGLISH_US
-        );
+    return LANGIDFROMLCID(GetUserDefaultLCID());
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 LCID
 STDCALL
 GetUserDefaultLCID (VOID)
 {
-    /* FIXME: ??? */
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return MAKELCID(
-        LANG_ENGLISH,
-        SORT_DEFAULT
-        );
+    LCID lcid;
+    NtQueryDefaultLocale(TRUE, &lcid);
+    return lcid;
 }
 
 #endif
