@@ -1607,11 +1607,12 @@ extern "C" {
 #define QS_TIMER	(16)
 
 /* GetScrollInfo, SetScrollInfo */
-#define SIF_ALL	(23)
-#define SIF_PAGE	(2)
-#define SIF_POS	(4)
-#define SIF_RANGE	(1)
-#define SIF_DISABLENOSCROLL	(8)
+#define SIF_ALL 23
+#define SIF_PAGE 2
+#define SIF_POS 4
+#define SIF_RANGE 1
+#define SIF_DISABLENOSCROLL 8
+#define SIF_TRACKPOS   16
 
 /* GetStdHandle */
 #define STD_INPUT_HANDLE	(DWORD)(-10)

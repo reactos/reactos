@@ -707,14 +707,16 @@ typedef struct _COMMTIMEOUTS {
 } COMMTIMEOUTS,*LPCOMMTIMEOUTS;
 
 typedef struct tagCOMPAREITEMSTRUCT {
-  UINT  CtlType;
-  UINT  CtlID;
-  HWND  hwndItem;
-  UINT  itemID1;
-  DWORD itemData1;
-  UINT  itemID2;
-  DWORD itemData2;
-} COMPAREITEMSTRUCT;
+	UINT	CtlType;
+	UINT	CtlID;
+	HWND	hwndItem;
+	UINT	itemID1;
+	DWORD	itemData1;
+	UINT	itemID2;
+	DWORD	itemData2;
+	DWORD	dwLocaleId;
+} COMPAREITEMSTRUCT,*LPCOMPAREITEMSTRUCT;
+
 
 typedef struct {
   COLORREF crText;

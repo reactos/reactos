@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.65 2003/08/16 17:37:51 jimtabor Exp $
+/* $Id: console.c,v 1.66 2003/08/17 22:45:40 silverblade Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -1261,12 +1261,27 @@ WINBOOL STDCALL AllocConsole(VOID)
 /*--------------------------------------------------------------
  *	FreeConsole
  *
- * @unimplemented
+ * @implemented
  */
 WINBOOL STDCALL FreeConsole(VOID)
 {
-   DbgPrint("FreeConsole() is unimplemented\n");
-   return FALSE;
+    // AG: I'm not sure if this is correct (what happens to std handles?)
+    // but I just tried to reverse what AllocConsole() does...
+
+   CSRSS_API_REQUEST Request;
+   CSRSS_API_REPLY Reply;
+   NTSTATUS Status;
+   HANDLE hStdError;
+
+   Request.Type = CSRSS_FREE_CONSOLE;
+   Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
+   if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
+      {
+	 SetLastErrorByStatus ( Status );
+	 return FALSE;
+      }
+
+   return TRUE;
 }
 
 

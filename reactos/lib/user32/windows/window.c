@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.62 2003/08/17 20:29:57 silverblade Exp $
+/* $Id: window.c,v 1.63 2003/08/17 22:45:40 silverblade Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1227,14 +1227,14 @@ GetWindowThreadProcessId(HWND hWnd,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL STDCALL
 IsChild(HWND hWndParent,
 	HWND hWnd)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+    // Untested
+    return ((HWND)NtUserGetWindowLong(hWnd, GWL_HWNDPARENT, FALSE)) == hWndParent;
 }
 
 
@@ -1275,15 +1275,15 @@ IsWindowUnicode(HWND hWnd)
 WINBOOL STDCALL
 IsWindowVisible(HWND hWnd)
 {
-  while (GetWindowLongW(hWnd, GWL_STYLE) & WS_CHILD)
+  while (NtUserGetWindowLong(hWnd, GWL_STYLE, FALSE) & WS_CHILD)
     {
-      if (!(GetWindowLongW(hWnd, GWL_STYLE) & WS_VISIBLE))
+      if (!(NtUserGetWindowLong(hWnd, GWL_STYLE, FALSE) & WS_VISIBLE))
 	{
 	  return(FALSE);
 	}
       hWnd = GetAncestor(hWnd, GA_PARENT);
     }
-  return(GetWindowLongW(hWnd, GWL_STYLE) & WS_VISIBLE);
+  return(NtUserGetWindowLong(hWnd, GWL_STYLE, FALSE) & WS_VISIBLE);
 }
 
 
@@ -1299,7 +1299,7 @@ IsWindowEnabled(
     // disabled. I think they stop processing messages but stay appearing
     // as enabled.
     
-    return (! (GetWindowLongW(hWnd, GWL_STYLE) & WS_DISABLED));
+    return (! (NtUserGetWindowLong(hWnd, GWL_STYLE, FALSE) & WS_DISABLED));
 }
 
 
@@ -1309,9 +1309,7 @@ IsWindowEnabled(
 WINBOOL STDCALL
 IsZoomed(HWND hWnd)
 {
-  ULONG uStyle = GetWindowLongW(hWnd, GWL_STYLE);
-  
-  return (uStyle & WS_MAXIMIZE);
+  return NtUserGetWindowLong(hWnd, GWL_STYLE, FALSE) & WS_MAXIMIZE;
 }
 
 
@@ -1347,8 +1345,23 @@ MoveWindow(HWND hWnd,
 WINBOOL STDCALL
 OpenIcon(HWND hWnd)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+    if (! NtUserGetWindowLong(hWnd, GWL_STYLE, FALSE) & WS_MINIMIZE)
+    {
+        // Not minimized - error?
+        return FALSE;
+    }
+    
+    if (! SendMessageA(hWnd, WM_QUERYOPEN, 0, 0))
+    {
+        // Window doesn't want to be opened - error?
+        return FALSE;
+    }
+    
+    // Now we need to do the actual opening of the window, which is something
+    // I'll leave to someone more capable :)
+
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
 
