@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.52 2003/05/13 21:28:26 chorns Exp $
+/* $Id: device.c,v 1.53 2003/06/04 21:35:37 gdalsnes Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -96,7 +96,21 @@ IoGetRelatedDeviceObject (
 	IN	PFILE_OBJECT	FileObject
 	)
 {
-	return (FileObject->DeviceObject);
+   /*Win NT File System Internals, page 633-634*/
+
+   /*get logical volume mounted on a physical/virtual/logical device*/
+   if (FileObject->Vpb && FileObject->Vpb->DeviceObject)
+   {
+      return IoGetAttachedDevice(FileObject->Vpb->DeviceObject);
+   }
+
+   /*check if fileobject has an associated device object mounted by some other file system*/
+   if (FileObject->DeviceObject->Vpb && FileObject->DeviceObject->Vpb->DeviceObject)
+   {
+      return IoGetAttachedDevice(FileObject->DeviceObject->Vpb->DeviceObject);
+   }
+
+   return IoGetAttachedDevice(FileObject->DeviceObject);
 }
 
 
@@ -548,7 +562,7 @@ IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
 
 NTSTATUS STDCALL
 IoAttachDevice(PDEVICE_OBJECT SourceDevice,
-	       PUNICODE_STRING TargetDevice,
+          PUNICODE_STRING TargetDeviceName,
 	       PDEVICE_OBJECT* AttachedDevice)
 /*
  * FUNCTION: Layers a device over the highest device in a device stack
@@ -558,7 +572,25 @@ IoAttachDevice(PDEVICE_OBJECT SourceDevice,
  *       AttachedDevice (OUT) = Caller storage for the device attached to
  */
 {
-  UNIMPLEMENTED;
+   NTSTATUS       Status;
+   PFILE_OBJECT   FileObject;
+   PDEVICE_OBJECT TargetDevice;
+     
+   Status = IoGetDeviceObjectPointer(TargetDeviceName,
+                                     FILE_READ_ATTRIBUTES,
+                                     &FileObject,
+                                     &TargetDevice);
+   
+   if (!NT_SUCCESS(Status))
+   {
+      return Status;
+   }
+
+   *AttachedDevice = IoAttachDeviceToDeviceStack(SourceDevice,
+                                                 TargetDevice);
+
+   ObDereferenceObject(FileObject);
+   return STATUS_SUCCESS;
 }
 
 
