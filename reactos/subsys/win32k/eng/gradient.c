@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: gradient.c,v 1.2 2004/02/09 15:33:30 weiden Exp $
+/* $Id: gradient.c,v 1.3 2004/02/09 16:37:59 weiden Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -88,6 +88,8 @@ IntEngGradientFillRect(
     IN POINTL  *pptlDitherOrg,
     IN BOOL Horizontal)
 {
+  SURFOBJ *OutputObj;
+  SURFGDI *OutputGDI;
   TRIVERTEX *v1, *v2;
   RECT rcGradient, rcSG;
   RECT_ENUM RectEnum;
@@ -116,14 +118,18 @@ IntEngGradientFillRect(
     dy = abs(rcGradient.bottom - rcGradient.top);
   }
   
+  if(!IntEngEnter(&EnterLeave, psoDest, &rcSG, FALSE, &Translate, &OutputObj))
+  {
+    return FALSE;
+  }
+  OutputGDI = AccessInternalObjectFromUserObject(OutputObj);
+  
   if((v1->Red != v2->Red || v1->Green != v2->Green || v1->Blue != v2->Blue) && dy > 1)
   {
     CLIPOBJ_cEnumStart(pco, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, 0);
     do
     {
       RECT FillRect;
-      SURFOBJ *OutputObj;
-      SURFGDI *OutputGDI;
       ULONG Color;
       
       if(Horizontal)
@@ -136,11 +142,6 @@ IntEngGradientFillRect(
             HVINITCOL(Red, 0);
             HVINITCOL(Green, 1);
             HVINITCOL(Blue, 2);
-            if(!IntEngEnter(&EnterLeave, psoDest, &FillRect, FALSE, &Translate, &OutputObj))
-            {
-              return FALSE;
-            }
-            OutputGDI = AccessInternalObjectFromUserObject(OutputObj);
             
             for(y = rcSG.left; y < FillRect.right; y++)
             {
@@ -152,11 +153,6 @@ IntEngGradientFillRect(
               HVSTEPCOL(0);
               HVSTEPCOL(1);
               HVSTEPCOL(2);
-            }
-            
-            if(!IntEngLeave(&EnterLeave))
-            {
-              return FALSE;
             }
           }
         }
@@ -173,11 +169,6 @@ IntEngGradientFillRect(
           HVINITCOL(Red, 0);
           HVINITCOL(Green, 1);
           HVINITCOL(Blue, 2);
-          if(!IntEngEnter(&EnterLeave, psoDest, &FillRect, FALSE, &Translate, &OutputObj))
-          {
-            return FALSE;
-          }
-          OutputGDI = AccessInternalObjectFromUserObject(OutputObj);
           
           for(y = rcSG.top; y < FillRect.bottom; y++)
           {
@@ -190,17 +181,12 @@ IntEngGradientFillRect(
             HVSTEPCOL(1);
             HVSTEPCOL(2);
           }
-          
-          if(!IntEngLeave(&EnterLeave))
-          {
-            return FALSE;
-          }
         }
       }
       
     } while(EnumMore);
-    
-    return TRUE;
+
+    return IntEngLeave(&EnterLeave);
   }
   
   /* rectangle has only one color, no calculation required */
@@ -208,8 +194,6 @@ IntEngGradientFillRect(
   do
   {
     RECT FillRect;
-    SURFOBJ *OutputObj;
-    SURFGDI *OutputGDI;
     ULONG Color = XLATEOBJ_iXlate(pxlo, RGB(v1->Red, v1->Green, v1->Blue));
     
     EnumMore = CLIPOBJ_bEnum(pco, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
@@ -217,27 +201,15 @@ IntEngGradientFillRect(
     {
       if(NtGdiIntersectRect(&FillRect, &RectEnum.arcl[i], &rcSG))
       {
-        
-        if(!IntEngEnter(&EnterLeave, psoDest, &FillRect, FALSE, &Translate, &OutputObj))
-        {
-          return FALSE;
-        }
-        OutputGDI = AccessInternalObjectFromUserObject(OutputObj);
-        
         for(; FillRect.top < FillRect.bottom; FillRect.top++)
         {
           OutputGDI->DIB_HLine(OutputObj, FillRect.left, FillRect.right, FillRect.top, Color);
-        }
-        
-        if(!IntEngLeave(&EnterLeave))
-        {
-          return FALSE;
         }
       }
     }
   } while(EnumMore);
   
-  return TRUE;
+  return IntEngLeave(&EnterLeave);
 }
 
 #define NLINES 3

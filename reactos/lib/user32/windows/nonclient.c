@@ -1084,12 +1084,10 @@ DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
     {
         if (uFlags & DC_GRADIENT)
         {
+          static GRADIENT_RECT gcap = {0, 1};
+          TRIVERTEX vert[2];
           COLORREF Colors[2];
-          BYTE cr[3], cg[3], cb[3];
-          LONG xx, wd, wdh;
-          POINT OldPoint;
-          HPEN Pen;
-          HGDIOBJ OldObj;
+          LONG xx;
           
           r.right = (lprc->right - lprc->left);
           if (uFlags & DC_SMALLCAP)
@@ -1125,41 +1123,23 @@ DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
             UserDrawSysMenuButton(hWnd, MemDC, &r);
             r.top ++;
             r.left += xx;
-          }          
-          
-          cr[1] = GetRValue(Colors[0]);
-          cg[1] = GetGValue(Colors[0]);
-          cb[1] = GetBValue(Colors[0]);
-          cr[2] = GetRValue(Colors[1]) - cr[1];
-          cg[2] = GetGValue(Colors[1]) - cg[1];
-          cb[2] = GetBValue(Colors[1]) - cb[1];
-          
-          wd = r.right - r.left;
-          wdh = wd / 2;
-          
-          if(wd > 0)
-          {
-            MoveToEx(MemDC, 0, 0, &OldPoint);
-            
-            for(xx = 0; xx < wd; xx++)
-            {
-              cr[0] = (cr[1] + ((cr[2] * xx) + wdh) / wd);
-              cg[0] = (cg[1] + ((cg[2] * xx) + wdh) / wd);
-              cb[0] = (cb[1] + ((cb[2] * xx) + wdh) / wd);
-              Pen = CreatePen(PS_SOLID, 0, RGB(cr[0], cg[0], cb[0]));
-              if(!Pen)
-              {
-                break;
-              }
-              OldObj = SelectObject(MemDC, Pen);
-              MoveToEx(MemDC, r.left + xx, 0, NULL);
-              LineTo(MemDC, r.left + xx, lprc->bottom - lprc->top);
-              if(OldObj)
-                SelectObject(MemDC, OldObj);
-              DeleteObject(Pen);
-            }
-            MoveToEx(MemDC, OldPoint.x, OldPoint.y, NULL);
           }
+          
+          vert[0].x = r.left;
+          vert[0].y = 0;
+          vert[0].Red = GetRValue(Colors[0]) << 8;
+          vert[0].Green = GetGValue(Colors[0]) << 8;
+          vert[0].Blue = GetBValue(Colors[0]) << 8;
+          vert[0].Alpha = 0;
+          
+          vert[1].x = r.right;
+          vert[1].y = lprc->bottom - lprc->top;
+          vert[1].Red = GetRValue(Colors[1]) << 8;
+          vert[1].Green = GetGValue(Colors[1]) << 8;
+          vert[1].Blue = GetBValue(Colors[1]) << 8;
+          vert[1].Alpha = 0;
+          
+          GdiGradientFill(MemDC, vert, 2, &gcap, 1, GRADIENT_FILL_RECT_H);
           
           if(OldBrush)
           {
