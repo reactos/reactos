@@ -1,4 +1,4 @@
-/* $Id: regcmds.c,v 1.1 2002/11/24 19:13:40 robd Exp $
+/* $Id: regcmds.c,v 1.2 2003/01/01 11:16:18 robd Exp $
  *
  *  ReactOS regedit
  *
@@ -73,7 +73,7 @@ static char *usage =
 "command-line interface only.\n";
 
 typedef enum {
-    ACTION_UNDEF, ACTION_ADD, ACTION_EXPORT, ACTION_DELETE
+    ACTION_UNDEF, ACTION_ADD, ACTION_EXPORT, ACTION_DELETE, ACTION_VIEW
 } REGEDIT_ACTION;
 
 /**
@@ -172,6 +172,9 @@ BOOL ProcessCmdLine(LPSTR lpCmdLine)
                     break;
                 case 'E':
                     action = ACTION_EXPORT;
+                    break;
+                case 'V':
+                    action = ACTION_VIEW;
                     break;
                 case '?':
                     printf(usage);

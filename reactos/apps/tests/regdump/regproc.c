@@ -920,7 +920,14 @@ void processRegLines(FILE *in, CommandAPI command)
             /* Get as much as possible into the buffer, terminated either by
              * eof, error, eol or getting the maximum amount.  Abort on error.
              */
-            size_to_get = (size_remaining > INT_MAX ? INT_MAX : size_remaining);
+//
+// This line is surely foobar, don't want to read INT_MAX in buffer at s, it's never going to be that big...
+//            size_to_get = (size_remaining > INT_MAX ? INT_MAX : size_remaining);
+//
+// Looks as if 'lineSize' contains the number of characters of buffer size
+//
+            size_to_get = (size_remaining > lineSize ? lineSize : size_remaining);
+
             if (NULL == _fgetts(s, size_to_get, in)) {
                 if (ferror(in)) {
                     //_tperror(_T("While reading input"));
