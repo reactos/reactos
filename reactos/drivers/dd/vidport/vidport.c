@@ -1,4 +1,4 @@
-/* $Id: vidport.c,v 1.18 2001/03/25 02:34:29 dwelch Exp $
+/* $Id: vidport.c,v 1.19 2001/05/02 12:37:06 jfilby Exp $
  *
  * VideoPort driver
  *   Written by Rex Jolliff
@@ -21,6 +21,11 @@ static NTSTATUS STDCALL VidDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 
 static HANDLE CsrssHandle;
 static struct _EPROCESS* Csrss;
+
+PBYTE ReturnCsrssAddress(void)
+{
+  return Csrss;
+}
 
 //  -------------------------------------------------------  Public Interface
 

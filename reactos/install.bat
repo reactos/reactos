@@ -4,6 +4,8 @@ md c:\reactos\bin
 md c:\reactos\system32
 md c:\reactos\system32\config
 md c:\reactos\system32\drivers
+md c:\reactos\media
+md c:\reactos\media\fonts
 copy boot.bat c:\reactos
 copy loaders\dos\loadros.com c:\reactos
 copy ntoskrnl\ntoskrnl.exe c:\reactos
@@ -13,6 +15,8 @@ copy services\bus\isapnp\isapnp.sys c:\reactos
 copy services\dd\ide\ide.sys c:\reactos
 copy services\dd\floppy\floppy.sys c:\reactos\system32\drivers
 copy services\input\keyboard\keyboard.sys c:\reactos\system32\drivers
+copy services\input\mouclass\mouclass.sys c:\reactos\system32\drivers
+copy services\input\psaux\psaux.sys c:\reactos\system32\drivers
 copy services\dd\blue\blue.sys c:\reactos\system32\drivers
 copy services\dd\vga\miniport\vgamp.sys c:\reactos\system32\drivers
 copy services\dd\vga\display\vgaddi.dll c:\reactos\system32\drivers
@@ -46,3 +50,5 @@ copy apps\pteb\pteb.exe c:\reactos\bin
 copy apps\consume\consume.exe c:\reactos\bin
 copy apps\vmtest\vmtest.exe c:\reactos\bin
 copy apps\gditest\gditest.exe c:\reactos\bin
+copy media\fonts\helb____.ttf c:\reactos\media\fonts
+copy media\fonts\timr____.ttf c:\reactos\media\fonts

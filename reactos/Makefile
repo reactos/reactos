@@ -6,7 +6,7 @@
 # Select your host
 #
 #HOST = mingw32-linux
-#HOST = mingw32-windows
+HOST = mingw32-windows
 
 PATH_TO_TOP = .
 
@@ -39,7 +39,7 @@ LOADERS = dos
 DEVICE_DRIVERS = vidport vga blue ide null floppy
 
 #INPUT_DRIVERS = keyboard
-INPUT_DRIVERS = keyboard
+INPUT_DRIVERS = keyboard psaux mouclass
 
 #FS_DRIVERS = vfat minix ext2 template
 FS_DRIVERS = vfat

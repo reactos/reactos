@@ -2,6 +2,8 @@ mkdir -p $1/reactos
 mkdir -p $1/reactos/system32
 mkdir -p $1/reactos/system32/drivers
 mkdir -p $1/reactos/bin
+mkdir -p $1/reactos/media
+mkdir -p $1/reactos/media/fonts
 ./install-system.sh $1
 cp services/bus/acpi/acpi.sys $1/reactos/system32/drivers
 cp services/bus/isapnp/isapnp.sys $1/reactos/system32/drivers
@@ -48,3 +50,5 @@ cp apps/ptest/ptest.exe $1/reactos/bin/
 cp apps/timer/timer.exe $1/reactos/bin/
 cp apps/exp/exp.exe $1/reactos/bin/
 cp apps/alive/alive.exe $1/reactos/bin/
+cp media/fonts/helb____.ttf $1/reactos/media/fonts/
+cp media/fonts/timr____.ttf $1/reactos/media/fonts/
