@@ -6,12 +6,11 @@ TOOLS = \
   rcopy$(EXE_POSTFIX) \
   rdel$(EXE_POSTFIX) \
   rmkdir$(EXE_POSTFIX) \
-  rrmdir$(EXE_POSTFIX) \
-  wmc$(EXE_POSTFIX)
+  rrmdir$(EXE_POSTFIX) 
 
 CLEAN_FILES = $(TOOLS)
 
-all: $(TOOLS)
+all: $(TOOLS) wmc_directory_target
 
 buildno$(EXE_POSTFIX): buildno.c ../include/reactos/version.h
 	$(HOST_CC) $(CFLAGS) -o buildno$(EXE_POSTFIX) buildno.c
@@ -51,7 +50,7 @@ rrmdir$(EXE_POSTFIX): rrmdir.c
 	$(HOST_CC) $(CFLAGS) -DDOS_PATHS rrmdir.c -o rrmdir$(EXE_POSTFIX)
 endif
 
-wmc$(EXE_POSTFIX):
+wmc_directory_target:
 	make -C wmc wmc$(EXE_POSTFIX)
 
 ifeq ($(HOST),mingw32-linux)
