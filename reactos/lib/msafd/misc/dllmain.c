@@ -566,7 +566,6 @@ WSPSelect(
     NTSTATUS				Status;
     ULONG				HandleCount, OutCount = 0;
     ULONG				PollBufferSize;
-    LARGE_INTEGER			uSec;
     PVOID				PollBuffer;
     ULONG				i, j = 0, x;
     HANDLE                              SockEvent;
@@ -599,7 +598,6 @@ WSPSelect(
     } else {
 	PollInfo->Timeout = RtlEnlargedIntegerMultiply
 	    ((timeout->tv_sec * 1000) + timeout->tv_usec, -10000);
-	PollInfo->Timeout.QuadPart += uSec.QuadPart;
     }
     
     /* Number of handles for AFD to Check */
