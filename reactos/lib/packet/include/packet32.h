@@ -34,7 +34,6 @@
 #define __PACKET32
 
 #include <winsock2.h>
-#include "devioctl.h"
 
 // Working modes
 #define PACKET_MODE_CAPT 0x0 ///< Capture mode

@@ -21,11 +21,10 @@
 
 #define UNICODE 1
 
-#include <packet32.h>
 #include <windows.h>
-//#include <windowsx.h>
-#include <ntddndis.h>
+#include <net/ntddndis.h>
 
+#include <packet32.h>
 #include "trace.h"
 
 
