@@ -1,5 +1,4 @@
-/* $Id:$
- * 
+/* 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/exp.c
@@ -393,9 +392,7 @@ VOID
 KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG Parameter1, ULONG Parameter2)
 {
   ULONG cr3_;
-  ULONG i;
   ULONG StackLimit;
-  PULONG Frame;
   ULONG Esp0;
   ULONG ExceptionNr = (ULONG)Tf->DebugArgMark;
   ULONG cr2 = (ULONG)Tf->DebugPointer;
@@ -462,46 +459,7 @@ KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG Parameter1, ULONG Parameter2)
    /*
     * Dump the stack frames
     */
-   DbgPrint("Frames: ");
-   /* Change to an #if 0 if no frames are printed because of fpo. */
-#if 1
-   i = 1;
-   Frame = (PULONG)Tf->Ebp;
-   while (Frame != NULL)
-     {
-       NTSTATUS Status;
-       PVOID Eip;
-       Status = MmSafeCopyFromUser(&Eip, Frame + 1, sizeof(Eip));
-       if (!NT_SUCCESS(Status))
-	 {
-	   DbgPrint("<INVALID>");
-	   break;
-	 }
-       if (!KeRosPrintAddress(Eip))
-	 {
-	   DbgPrint("<%X>", Eip);
-	 }
-       Status = MmSafeCopyFromUser(&Frame, Frame, sizeof(Frame));
-       if (!NT_SUCCESS(Status))
-	 {
-	   break;
-	 }
-       i++;
-       DbgPrint(" ");
-     }
-#else
-   i = 1;
-   Frame = (PULONG)((ULONG_PTR)Esp0 + KTRAP_FRAME_EFLAGS);
-   while (Frame < (PULONG)PsGetCurrentThread()->Tcb.StackBase && i < 50)
-     {
-	 ULONG Address = *Frame;
-	 if (KeRosPrintAddress((PVOID)Address))
-	   {
-	     i++;
-	   }
-	 Frame++;
-     }
-#endif
+   KeDumpStackFrames((PULONG)Tf->Ebp);
 }
 
 ULONG
@@ -616,7 +574,7 @@ KeDumpStackFrames(PULONG Frame)
 	ULONG ResultLength = sizeof(mbi);
 	NTSTATUS Status;
 
-	DbgPrint("Frames: ");
+	DbgPrint("Frames:\n");
 	_SEH_TRY
 	{
 		Status = MiQueryVirtualMemory (
