@@ -1,0 +1,9 @@
+LIBRARY SAMLIB.DLL
+EXPORTS
+SamInitializeSAM=SamInitializeSAM@0
+SamGetDomainSid=SamGetDomainSid@4
+SamSetDomainSid=SamSetDomainSid@4
+SamCreateUser=SamCreateUser@12
+SamCheckUserPassword=SamCheckUserPassword@8
+SamGetUserSid=SamGetUserSid@8
+; EOF
