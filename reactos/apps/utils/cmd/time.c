@@ -238,7 +238,7 @@ INT cmd_time (LPTSTR cmd, LPTSTR param)
 			}
 
                         /* force input the next time around. */
-			nTimeString == -1;
+                        nTimeString = -1;
 		}
 		ConErrPuts (_T("Invalid time."));
 	}

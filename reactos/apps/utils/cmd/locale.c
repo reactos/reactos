@@ -93,7 +93,7 @@ VOID InitLocale (VOID)
 #endif
 
 #ifdef LOCALE_DEFAULT
-	LPTSTR names [7] = {_T("Son"), _T("Mon"), _T("Tue"), _T("Wed"), _T("Thu"), _T("Fri"), _T("Sat")};
+        LPTSTR names [7] = {_T("Sun"), _T("Mon"), _T("Tue"), _T("Wed"), _T("Thu"), _T("Fri"), _T("Sat")};
 	INT i;
 
 	/* date settings */
