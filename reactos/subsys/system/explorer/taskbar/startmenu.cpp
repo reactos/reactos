@@ -418,6 +418,8 @@ void StartMenu::ActivateEntry(int id, ShellEntry* entry)
 
 		new_folders.push_back(entry->create_absolute_pidl(_hwnd));
 
+		//TODO: merge all entries of subdirectories with the same name, like "All Users\...\Accessories" and "<user>\...\Accessories"
+
 		CreateSubmenu(id, new_folders);
 	} else {
 		entry->launch_entry(_hwnd);	//TODO: launch in the background
@@ -529,11 +531,11 @@ StartMenuRoot::StartMenuRoot(HWND hwnd)
 {
 	 // insert directory "All Users\Start Menu"
 	ShellDirectory cmn_startmenu(Desktop(), SpecialFolderPath(CSIDL_COMMON_STARTMENU, _hwnd), _hwnd);
-	_dirs.push_back(StartMenuDirectory(cmn_startmenu, false));	// dont't add subfolders
+	_dirs.push_back(StartMenuDirectory(cmn_startmenu, false));	// don't add subfolders
 
 	 // insert directory "<user name>\Start Menu"
 	ShellDirectory usr_startmenu(Desktop(), SpecialFolderPath(CSIDL_STARTMENU, _hwnd), _hwnd);
-	_dirs.push_back(StartMenuDirectory(usr_startmenu, false));	// dont't add subfolders
+	_dirs.push_back(StartMenuDirectory(usr_startmenu, false));	// don't add subfolders
 }
 
 

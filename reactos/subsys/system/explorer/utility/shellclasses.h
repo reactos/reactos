@@ -54,24 +54,35 @@ using namespace _com_util;
 
 #else
 
-struct COMException {
+struct COMException
+{
 	COMException(HRESULT hr)
-	 : _hr(hr)
+	 :	_hr(hr)
 	{
-		_msg = NULL;
 	}
 
 	LPCTSTR ErrorMessage() const
 	{
-		if (!_msg)
-			_msg = TEXT("COM Exception");	//TODO: use FormatMessage()
+		if (_msg.empty()) {
+			LPTSTR pBuf;
+
+			if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM,
+				0, _hr, MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT), (LPSTR)&pBuf, 0, NULL)) {
+				_msg = pBuf;
+				LocalFree(pBuf);
+			 } else {
+				TCHAR buffer[128];
+				_stprintf(buffer, _T("unknown COM Exception: 0x%08X"), _hr);
+				_msg = buffer;
+			 }
+		}
 
 		return _msg;
 	}
 
 protected:
 	HRESULT	_hr;
-	mutable LPCTSTR _msg;
+	mutable String _msg;
 };
 
 inline void CheckError(HRESULT hr)
@@ -213,12 +224,12 @@ template<typename T> struct SShellPtr
 
 protected:
 	SShellPtr()
-	 : _p(0)
+	 :	_p(0)
 	{
 	}
 
 	SShellPtr(T* p)
-	 : _p(p)
+	 :	_p(p)
 	{
 	}
 
@@ -243,11 +254,12 @@ private:
 template<typename T> struct SIfacePtr
 {
 	SIfacePtr()
-	 : _p(0)
+	 :	_p(0)
 	{
 	}
 
-	SIfacePtr(T* p) : _p(p)
+	SIfacePtr(T* p)
+	 :	_p(p)
 	{
 		if (p)
 			p->AddRef();
@@ -322,7 +334,7 @@ template<typename T> struct SIfacePtr
 
 protected:
 	SIfacePtr(const SIfacePtr& o)
-	 : _p(o._p)
+	 :	_p(o._p)
 	{
 		if (_p)
 			_p->AddRef();
@@ -458,7 +470,7 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 	}
 
 	ShellPath(ITEMIDLIST* p)
-	 : SShellPtr<ITEMIDLIST>(p)
+	 :	SShellPtr<ITEMIDLIST>(p)
 	{
 	}
 
