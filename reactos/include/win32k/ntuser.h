@@ -257,13 +257,13 @@ NtUserCreateAcceleratorTable(
  LPACCEL Entries,
   SIZE_T EntriesCount);
 
-DWORD
+BOOL
 STDCALL
 NtUserCreateCaret(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+  HWND hWnd,
+  HBITMAP hBitmap,
+  int nWidth,
+  int nHeight);
 
 HDESK
 STDCALL
@@ -571,14 +571,14 @@ STDCALL
 NtUserGetAsyncKeyState(
   DWORD Unknown0);
 
-DWORD
+UINT
 STDCALL
 NtUserGetCaretBlinkTime(VOID);
 
-DWORD
+BOOL
 STDCALL
 NtUserGetCaretPos(
-  DWORD Unknown0);
+  LPPOINT lpPoint);
 
 DWORD STDCALL
 NtUserGetClassInfo(HINSTANCE hInst,
@@ -888,10 +888,10 @@ NtUserGetWOWClass(
   DWORD Unknown0,
   DWORD Unknown1);
 
-DWORD
+BOOL
 STDCALL
 NtUserHideCaret(
-  DWORD Unknown0);
+  HWND hWnd);
 
 BOOL
 STDCALL
@@ -1599,10 +1599,10 @@ NtUserSetWinEventHook(
   DWORD Unknown6,
   DWORD Unknown7);
 
-DWORD
+BOOL
 STDCALL
 NtUserShowCaret(
-  DWORD Unknown0);
+  HWND hWnd);
 
 DWORD
 STDCALL

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.112 2003/10/14 18:49:10 navaraf Exp $
+/* $Id: window.c,v 1.113 2003/10/15 20:48:19 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -460,19 +460,19 @@ IntGetParent(PWINDOW_OBJECT Wnd)
 }
 
 
-HMENU FASTCALL
+PMENU_OBJECT FASTCALL
 IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert, BOOL RetMenu)
 {
-  PMENU_OBJECT MenuObject, NewMenuObject;
+  PMENU_OBJECT MenuObject, NewMenuObject, ret = NULL;
   PW32PROCESS W32Process;
-  HMENU NewMenu, ret = (HMENU)0;
+  HMENU NewMenu;
 
   if(bRevert)
   {
     W32Process = PsGetWin32Process();
     
     if(!W32Process->WindowStation)
-      return (HMENU)0;
+      return NULL;
       
     if(WindowObject->SystemMenu)
     {
@@ -488,15 +488,15 @@ IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert, BOOL RetMenu)
       /* clone system menu */
       MenuObject = IntGetMenuObject(W32Process->WindowStation->SystemMenuTemplate);
       if(!MenuObject)
-        return (HMENU)0;
+        return NULL;
 
       NewMenuObject = IntCloneMenu(MenuObject);
       if(NewMenuObject)
       {
         WindowObject->SystemMenu = NewMenuObject->Self;
         NewMenuObject->IsSystemMenu = TRUE;
-        ret = NewMenuObject->Self;
-        IntReleaseMenuObject(NewMenuObject);
+        ret = NewMenuObject;
+        //IntReleaseMenuObject(NewMenuObject);
       }
       IntReleaseMenuObject(MenuObject);
     }
@@ -504,29 +504,29 @@ IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert, BOOL RetMenu)
     {
       NewMenu = IntLoadSysMenuTemplate();
       if(!NewMenu)
-        return (HMENU)0;
+        return NULL;
       MenuObject = IntGetMenuObject(NewMenu);
       if(!MenuObject)
-        return (HMENU)0;
+        return NULL;
       
       NewMenuObject = IntCloneMenu(MenuObject);
       if(NewMenuObject)
       {
         WindowObject->SystemMenu = NewMenuObject->Self;
         NewMenuObject->IsSystemMenu = TRUE;
-        ret = NewMenuObject->Self;
-        IntReleaseMenuObject(NewMenuObject);
+        ret = NewMenuObject;
+        //IntReleaseMenuObject(NewMenuObject);
       }
       IntDestroyMenuObject(MenuObject, FALSE, TRUE);
     }
     if(RetMenu)
       return ret;
     else
-      return (HMENU)0;
+      return NULL;
   }
   else
   {
-    return WindowObject->SystemMenu;
+    return IntGetMenuObject((HMENU)WindowObject->SystemMenu);
   }
 }
 
@@ -1185,6 +1185,13 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   DPRINT("1: Style is now %d\n", WindowObject->Style);
   
   SystemMenu = IntGetSystemMenu(WindowObject, TRUE, TRUE);
+  if(SystemMenu)
+  {
+    WindowObject->SystemMenu = SystemMenu->Self;
+    IntReleaseMenuObject(SystemMenu);
+  }
+  else
+    WindowObject->SystemMenu = (HANDLE)0;
   
   WindowObject->x = x;
   WindowObject->y = y;
@@ -1193,10 +1200,6 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->ContextHelpId = 0;
   WindowObject->ParentHandle = hWndParent;
   WindowObject->IDMenu = (UINT)hMenu;
-  if(SystemMenu)
-    WindowObject->SystemMenu = SystemMenu->Self;
-  else
-    WindowObject->SystemMenu = (HMENU)0;
   WindowObject->Instance = hInstance;
   WindowObject->Parameters = lpParam;
   WindowObject->Self = Handle;
@@ -1983,6 +1986,7 @@ NtUserGetSystemMenu(
 {
   HMENU res = (HMENU)0;
   PWINDOW_OBJECT WindowObject;
+  PMENU_OBJECT MenuObject, SubMenuObject;
   WindowObject = IntGetWindowObject((HWND)hWnd);
   if(!WindowObject)
   {
@@ -1990,7 +1994,24 @@ NtUserGetSystemMenu(
     return (HMENU)0;
   }
   
-  res = IntGetSystemMenu(WindowObject, bRevert, FALSE);
+  MenuObject = IntGetSystemMenu(WindowObject, bRevert, FALSE);
+  if(MenuObject)
+  {
+    /* return the handle of the first submenu */
+    ExAcquireFastMutexUnsafe(&MenuObject->MenuItemsLock);
+    if(MenuObject->MenuItemList)
+    {
+      res = MenuObject->MenuItemList->hSubMenu;
+      /* test if submenu is a valid menu */
+      SubMenuObject = IntGetMenuObject(res);
+      if(SubMenuObject)
+        IntReleaseMenuObject(SubMenuObject);
+      else
+        res = (HMENU)0;
+    }    
+    ExReleaseFastMutexUnsafe(&MenuObject->MenuItemsLock);
+    IntReleaseMenuObject(MenuObject);
+  }
   
   IntReleaseWindowObject(WindowObject);
   return res;

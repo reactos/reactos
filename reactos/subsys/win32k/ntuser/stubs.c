@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.29 2003/10/09 06:13:05 gvg Exp $
+/* $Id: stubs.c,v 1.30 2003/10/15 20:48:19 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -210,19 +210,6 @@ NtUserCreateAcceleratorTable(
 {
 /*  UNIMPLEMENTED */
   DbgPrint("%s at %s:%d is unimplemented, have a nice day\n",__FUNCTION__,__FILE__,__LINE__);
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserCreateCaret(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
-{
-  UNIMPLEMENTED
 
   return 0;
 }
@@ -472,25 +459,6 @@ NtUserGetAsyncKeyState(
 
 DWORD
 STDCALL
-NtUserGetCaretBlinkTime(VOID)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserGetCaretPos(
-  DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserGetClipboardData(
   DWORD Unknown0,
   DWORD Unknown1)
@@ -705,16 +673,6 @@ NtUserGetUpdateRect(
   DWORD Unknown0,
   DWORD Unknown1,
   DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserHideCaret(
-  DWORD Unknown0)
 {
   UNIMPLEMENTED
 
@@ -1029,16 +987,6 @@ STDCALL
 NtUserSetThreadState(
   DWORD Unknown0,
   DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserShowCaret(
-  DWORD Unknown0)
 {
   UNIMPLEMENTED
 

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.78 2003/08/13 22:43:15 royce Exp $
+# $Id: makefile,v 1.79 2003/10/15 20:48:19 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -48,7 +48,7 @@ MISC_OBJECTS = misc/driver.o misc/error.o misc/math.o misc/object.o
 
 LDR_OBJECTS = ldr/loader.o
 
-NTUSER_OBJECTS = ntuser/class.o ntuser/guicheck.o ntuser/hook.o \
+NTUSER_OBJECTS = ntuser/caret.o ntuser/class.o ntuser/guicheck.o ntuser/hook.o \
                  ntuser/message.o ntuser/msgqueue.o ntuser/stubs.o \
                  ntuser/userobj.o ntuser/window.o ntuser/winsta.o ntuser/menu.o \
 		 ntuser/input.o ntuser/keyboard.o ntuser/callback.o \
