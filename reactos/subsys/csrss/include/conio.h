@@ -1,4 +1,4 @@
-/* $Id: conio.h,v 1.2 2004/01/11 17:31:15 gvg Exp $
+/* $Id: conio.h,v 1.3 2004/03/14 17:53:27 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -58,6 +58,7 @@ typedef struct tagCSRSS_CONSOLE_VTBL
                                 UINT OldCursorX, UINT OldCursorY);
   BOOL (STDCALL *ChangeTitle)(PCSRSS_CONSOLE Console);
   VOID (STDCALL *CleanupConsole)(PCSRSS_CONSOLE Console);
+  BOOL (STDCALL *ChangeIcon)(PCSRSS_CONSOLE Console);
 } CSRSS_CONSOLE_VTBL, *PCSRSS_CONSOLE_VTBL;
 
 typedef struct tagCSRSS_CONSOLE
@@ -80,6 +81,7 @@ typedef struct tagCSRSS_CONSOLE
   BOOL EarlyReturn;                     /* wake client and return data, even if we are in line buffered mode, and we don't have a complete line */
   DWORD HardwareState;                  /* _GDI_MANAGED, _DIRECT */
   HWND hWindow;
+  HICON hWindowIcon;
   COORD Size;
   PVOID PrivateData;
   PCSRSS_CONSOLE_VTBL Vtbl;
@@ -129,6 +131,7 @@ CSR_API(CsrReadConsoleOutput);
 CSR_API(CsrWriteConsoleInput);
 CSR_API(CsrHardwareStateProperty);
 CSR_API(CsrGetConsoleWindow);
+CSR_API(CsrSetConsoleIcon);
 
 #define ConioInitScreenBuffer(Console, Buff) (Console)->Vtbl->InitScreenBuffer((Console), (Buff))
 #define ConioDrawRegion(Console, Region) (Console)->Vtbl->DrawRegion((Console), (Region))
@@ -154,6 +157,7 @@ CSR_API(CsrGetConsoleWindow);
     Win32CsrLockObject((ProcessData), (Handle), (Object_t **)(Ptr), CONIO_SCREEN_BUFFER_MAGIC)
 #define ConioUnlockScreenBuffer(Buff) \
     Win32CsrUnlockObject((Object_t *) Buff)
+#define ConioChangeIcon(Console) (Console)->Vtbl->ChangeIcon(Console)
 
 #endif /* CONIO_H_INCLUDED */
 

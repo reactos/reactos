@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.73 2004/01/23 21:16:03 ekohl Exp $
+/* $Id: console.c,v 1.74 2004/03/14 17:53:26 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -3169,7 +3169,7 @@ AttachConsole(DWORD dwProcessId)
 }
 
 /*--------------------------------------------------------------
- * 	GetConsoleWindow/0
+ * 	GetConsoleWindow
  *
  * @implemented
  */
@@ -3194,6 +3194,34 @@ GetConsoleWindow (VOID)
     return (HWND) NULL;
   }
   return Reply.Data.ConsoleWindowReply.WindowHandle;
+}
+
+
+/*--------------------------------------------------------------
+ * 	GetConsoleWindow
+ * @implemented
+ */
+BOOL STDCALL SetConsoleIcon(HICON hicon)
+{
+  CSRSS_API_REQUEST Request;
+  CSRSS_API_REPLY   Reply;
+  NTSTATUS          Status;
+  
+  Request.Data.ConsoleSetWindowIconRequest.ConsoleHandle =
+    OpenConsoleW (L"CONOUT$", (GENERIC_READ|GENERIC_WRITE), FALSE, OPEN_EXISTING);
+  if (INVALID_HANDLE_VALUE == Request.Data.ConsoleSetWindowIconRequest.ConsoleHandle)
+  {
+    return FALSE;
+  }
+  Request.Type = CSRSS_SET_CONSOLE_ICON;
+  Request.Data.ConsoleSetWindowIconRequest.WindowIcon = hicon;
+  Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
+  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
+  {
+    SetLastErrorByStatus (Status);
+    return FALSE;
+  }
+  return NT_SUCCESS(Status);
 }
 
 /* EOF */

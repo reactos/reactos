@@ -1,4 +1,4 @@
-/* $Id: guiconsole.c,v 1.11 2004/03/07 21:00:11 hbirr Exp $
+/* $Id: guiconsole.c,v 1.12 2004/03/14 17:53:27 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -717,6 +717,15 @@ GuiChangeTitle(PCSRSS_CONSOLE Console)
   return TRUE;
 }
 
+STATIC BOOL STDCALL
+GuiChangeIcon(PCSRSS_CONSOLE Console)
+{
+  SendMessageW(Console->hWindow, WM_SETICON, ICON_BIG, (LPARAM)Console->hWindowIcon);
+  SendMessageW(Console->hWindow, WM_SETICON, ICON_SMALL, (LPARAM)Console->hWindowIcon);
+
+  return TRUE;
+}
+
 static VOID STDCALL
 GuiCleanupConsole(PCSRSS_CONSOLE Console)
 {
@@ -731,7 +740,8 @@ static CSRSS_CONSOLE_VTBL GuiVtbl =
   GuiSetCursorInfo,
   GuiSetScreenInfo,
   GuiChangeTitle,
-  GuiCleanupConsole
+  GuiCleanupConsole,
+  GuiChangeIcon
 };
 
 NTSTATUS FASTCALL

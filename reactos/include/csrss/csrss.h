@@ -499,6 +499,12 @@ typedef struct
 
 typedef struct
 {
+  HANDLE ConsoleHandle;
+  HICON  WindowIcon;
+} CSRSS_CONSOLE_SET_WINDOW_ICON, *PCSRSS_CONSOLE_SET_WINDOW_ICON;
+
+typedef struct
+{
   WCHAR DesktopName[1];
 } CSRSS_CREATE_DESKTOP_REQUEST, *PCSRSS_CREATE_DESKTOP_REQUEST;
 
@@ -590,6 +596,7 @@ typedef struct
 #define CSRSS_CREATE_DESKTOP                (0x2B)
 #define CSRSS_SHOW_DESKTOP                  (0x2C)
 #define CSRSS_HIDE_DESKTOP                  (0x2D)
+#define CSRSS_SET_CONSOLE_ICON              (0x2E)
 
 /* Keep in sync with definition below. */
 #define CSRSS_REQUEST_HEADER_SIZE (sizeof(LPC_MESSAGE) + sizeof(ULONG))
@@ -643,6 +650,7 @@ typedef struct
     CSRSS_CREATE_DESKTOP_REQUEST CreateDesktopRequest;
     CSRSS_SHOW_DESKTOP_REQUEST ShowDesktopRequest;
     CSRSS_HIDE_DESKTOP_REQUEST HideDesktopRequest;
+    CSRSS_CONSOLE_SET_WINDOW_ICON ConsoleSetWindowIconRequest;
   } Data;
 } CSRSS_API_REQUEST, *PCSRSS_API_REQUEST;
 
@@ -682,6 +690,7 @@ typedef struct
     CSRSS_CREATE_DESKTOP_REPLY CreateDesktopReply;
     CSRSS_SHOW_DESKTOP_REPLY ShowDesktopReply;
     CSRSS_HIDE_DESKTOP_REPLY HideDesktopReply;
+    CSRSS_CONSOLE_SET_WINDOW_ICON ConsoleSetWindowIconReply;
   } Data;
 } CSRSS_API_REPLY, *PCSRSS_API_REPLY;
 

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.66 2004/03/14 13:20:10 weiden Exp $
+/* $Id: stubs.c,v 1.67 2004/03/14 17:53:26 weiden Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -2383,15 +2383,6 @@ BOOL STDCALL GetConsoleKeyboardLayoutNameA(LPSTR name)
  * @unimplemented
  */
 BOOL STDCALL GetConsoleKeyboardLayoutNameW(LPWSTR name)
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL STDCALL SetConsoleIcon(HICON hicon)
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;

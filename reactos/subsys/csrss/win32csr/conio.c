@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.8 2004/03/07 20:03:43 hbirr Exp $
+/* $Id: conio.c,v 1.9 2004/03/14 17:53:27 weiden Exp $
  *
  * reactos/subsys/csrss/win32csr/conio.c
  *
@@ -2871,6 +2871,33 @@ CSR_API(CsrGetConsoleWindow)
   ConioUnlockConsole(Console);
 
   return Reply->Status = STATUS_SUCCESS;
+}
+
+CSR_API(CsrSetConsoleIcon)
+{
+  PCSRSS_CONSOLE Console;
+  NTSTATUS Status;
+
+  DPRINT("CsrSetConsoleIcon\n");
+ 
+  Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
+   
+  Status = ConioLockConsole(ProcessData,
+                            Request->Data.ConsoleSetWindowIconRequest.ConsoleHandle,
+                            &Console);
+  if (! NT_SUCCESS(Status))
+    {
+      return Reply->Status = Status;
+    }
+
+  Console->hWindowIcon = Request->Data.ConsoleSetWindowIconRequest.WindowIcon;
+  Reply->Status = (ConioChangeIcon(Console) ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
+  Reply->Data.ConsoleSetWindowIconReply.WindowIcon = Console->hWindow;
+  
+  ConioUnlockConsole(Console);
+
+  return Reply->Status;
 }
 
 /* EOF */
