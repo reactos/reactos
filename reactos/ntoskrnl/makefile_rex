@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.69 2000/05/01 14:15:02 ea Exp $
+# $Id: makefile_rex,v 1.70 2000/05/07 23:04:43 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -63,7 +63,9 @@ OBJECTS_RTL = \
 	rtl/wstring.o
 
 # Kernel (Ke)
+# Note: head.o MUST be the fist file!!!
 OBJECTS_KE = \
+	ke/head.o \
 	ke/apc.o \
 	ke/bug.o \
 	ke/catch.o \
@@ -73,7 +75,6 @@ OBJECTS_KE = \
 	ke/error.o \
 	ke/event.o \
 	ke/gdt.o \
-	ke/head.o \
 	ke/idt.o \
 	ke/kernel.o \
 	ke/kqueue.o \
@@ -376,7 +377,9 @@ $(OBJECTS_PATH)/kd.o: $(OBJECTS_KD)
 $(TARGETNAME).coff: $(TARGETNAME).rc ../include/reactos/resource.h
 
 
+# Note: ke.o MUST be the fist file!!!
 OBJECTS = \
+	$(OBJECTS_PATH)/ke.o \
 	$(OBJECTS_PATH)/hal.o \
 	$(OBJECTS_PATH)/cc.o \
 	$(OBJECTS_PATH)/cm.o \
@@ -385,7 +388,6 @@ OBJECTS = \
 	$(OBJECTS_PATH)/fs.o \
 	$(OBJECTS_PATH)/io.o \
 	$(OBJECTS_PATH)/kd.o \
-	$(OBJECTS_PATH)/ke.o \
 	$(OBJECTS_PATH)/ldr.o \
 	$(OBJECTS_PATH)/mm.o \
 	$(OBJECTS_PATH)/nls.o \
