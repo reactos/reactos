@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.15 2002/06/14 17:17:38 chorns Exp $
+# $Id: helper.mk,v 1.16 2002/06/16 21:41:16 dwelch Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -138,8 +138,8 @@ ifeq ($(TARGET_TYPE),library)
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH :=
   MK_IMPLIB_EXT :=
-  MK_INSTALLDIR := # Don't install
-  MK_DISTDIR := # Don't include in distribution
+  MK_INSTALLDIR := system32
+  MK_DISTDIR := # FIXME
   MK_RES_BASE :=
 endif
 
@@ -350,12 +350,12 @@ endif
 
 ifeq ($(MK_MODE),user)
   MK_DEFBASE := 0x400000
-  MK_LIBS := $(addprefix $(SDK_PATH_LIB)/, $(MK_SDKLIBS) $(TARGET_SDKLIBS)) $(TARGET_LIBS)
+  MK_LIBS := $(addprefix $(SDK_PATH_LIB)/, $(MK_SDKLIBS) $(TARGET_SDKLIBS))
 endif
 
 ifeq ($(MK_MODE),kernel)
   MK_DEFBASE := 0x10000
-  MK_LIBS := $(addprefix $(DDK_PATH_LIB)/, $(MK_DDKLIBS) $(TARGET_DDKLIBS)) $(TARGET_LIBS)
+  MK_LIBS := $(addprefix $(DDK_PATH_LIB)/, $(MK_DDKLIBS) $(TARGET_DDKLIBS))
 endif
 
 
@@ -374,16 +374,20 @@ endif
 #
 include $(PATH_TO_TOP)/config
 
+
 TARGET_CFLAGS += $(MK_CFLAGS)
-TARGET_CFLAGS += $(PIPE) -march=$(ARCH)
+TARGET_CFLAGS += -pipe -march=$(ARCH)
+ifeq ($(DBG),1)
+#TARGET_CFLAGS += -g
+endif
 
 TARGET_CPPFLAGS += $(MK_CPPFLAGS)
-TARGET_CPPFLAGS += $(PIPE) -march=$(ARCH)
+TARGET_CPPFLAGS += -pipe -march=$(ARCH)
 
 TARGET_RCFLAGS += $(MK_RCFLAGS)
 
 TARGET_ASFLAGS += $(MK_ASFLAGS)
-TARGET_ASFLAGS += $(PIPE) -march=$(ARCH)
+TARGET_ASFLAGS += -pipe -march=$(ARCH)
 
 TARGET_NFLAGS += $(MK_NFLAGS)
 
@@ -396,7 +400,7 @@ MK_IMPLIB_FULLNAME := $(MK_BASENAME)$(MK_IMPLIB_EXT)
 MK_NOSTRIPNAME := $(MK_BASENAME).nostrip$(MK_EXT)
 
 # We don't want to link header files
-MK_OBJECTS := $(filter-out %.h,$(TARGET_OBJECTS))
+MK_OBJECTS := $(filter-out %.h,$(TARGET_OBJECTS)) 
 MK_STRIPPED_OBJECT := $(MK_BASENAME).stripped.o
 
 ifeq ($(MK_IMPLIBONLY),yes)
@@ -416,7 +420,7 @@ else # MK_IMPLIBONLY
 
 
 all: $(MK_FULLNAME) $(MK_NOSTRIPNAME)
-
+	
 
 ifeq ($(MK_IMPLIB),yes)
   MK_EXTRACMD := --def $(MK_EDFNAME)
@@ -481,21 +485,20 @@ $(MK_NOSTRIPNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_LIBS)
 		--base-file base.tmp \
 		--output-exp temp.exp $(MK_EXTRACMD)
 	- $(RM) base.tmp
-	$(CC) \
+	$(CC) $(TARGET_LFLAGS) \
 		-Wl,--subsystem,native \
 		-Wl,--image-base,$(TARGET_BASE) \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
 		-Wl,--entry,$(TARGET_ENTRY) \
 		-Wl,temp.exp \
-		$(TARGET_LFLAGS) \
 		-mdll -nostartfiles -nostdlib \
 		-o $(MK_NOSTRIPNAME) \
 	  $(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS) $(MK_GCCLIBS)
 	- $(RM) temp.exp
-	- $(NM) --numeric-sort $(MK_NOSTRIPNAME) > $(MK_BASENAME).sym
+	$(NM) --numeric-sort $(MK_NOSTRIPNAME) > $(MK_BASENAME).sym
 
-$(MK_FULLNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_LIBS)
+$(MK_FULLNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_LIBS) $(MK_NOSTRIPNAME)
 	$(LD) -r -o $(MK_STRIPPED_OBJECT) $(MK_OBJECTS)
 	$(STRIP) --strip-debug $(MK_STRIPPED_OBJECT)
 	$(CC) -Wl,--base-file,base.tmp \
@@ -509,14 +512,13 @@ $(MK_FULLNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_LIBS)
 		--base-file base.tmp \
 		--output-exp temp.exp $(MK_EXTRACMD)
 	- $(RM) base.tmp
-	$(CC) \
+	$(CC) $(TARGET_LFLAGS) \
 		-Wl,--subsystem,native \
 		-Wl,--image-base,$(TARGET_BASE) \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
 		-Wl,--entry,$(TARGET_ENTRY) \
 		-Wl,temp.exp \
-		$(TARGET_LFLAGS) \
 		-mdll -nostartfiles -nostdlib \
 		-o $(MK_FULLNAME) \
 	  $(MK_FULLRES) $(MK_STRIPPED_OBJECT) $(MK_LIBS) $(MK_GCCLIBS)
@@ -527,12 +529,8 @@ endif # MK_MODE
 # Static library target
 ifeq ($(MK_MODE),static)
 
-$(MK_NOSTRIPNAME): $(TARGET_OBJECTS)
-	$(AR) -r $(MK_NOSTRIPNAME) $(TARGET_OBJECTS)
-
-# FIXME: dummy rule
-$(MK_FULLNAME): $(MK_NOSTRIPNAME)
-	 $(CP) $(MK_NOSTRIPNAME) $(MK_FULLNAME)
+$(MK_FULLNAME): $(TARGET_OBJECTS)
+	$(AR) -r $(MK_FULLNAME) $(TARGET_OBJECTS)
 
 endif # MK_MODE
 
@@ -550,10 +548,10 @@ ifeq ($(MK_IMPLIB),yes)
 endif
 
 # Be carefull not to clean non-object files
-MK_CLEANFILES := $(filter %.o,$(MK_OBJECTS))
+MK_CLEANFILES := $(filter %.o,$(MK_OBJECTS)) 
 
 clean:
-	- $(RM) .*.d *.o $(MK_BASENAME).sym $(MK_BASENAME).a $(TARGET_PATH)/$(MK_RES_BASE).coff \
+	- $(RM) *.o $(MK_BASENAME).sym $(MK_BASENAME).a $(TARGET_PATH)/$(MK_RES_BASE).coff \
 	  $(MK_FULLNAME) $(MK_NOSTRIPNAME) $(MK_CLEANFILES) \
 	  junk.tmp base.tmp temp.exp \
 	  $(TARGET_CLEAN)
@@ -574,19 +572,10 @@ dist:
 
 else # MK_IMPLIBONLY
 
-ifeq ($(MK_MODE),static)
-
-# Don't install static libraries
-
-install:
-
-dist:
-
-else # MK_MODE
 
 install: $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME)
 
-$(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME): $(MK_FULLNAME) 
+$(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME): $(MK_FULLNAME) $(MK_BASENAME).sym
 	$(CP) $(MK_FULLNAME) $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME)
 	$(CP) $(MK_BASENAME).sym $(INSTALL_DIR)/symbols/$(MK_BASENAME).sym
 
@@ -596,7 +585,6 @@ $(DIST_DIR)/$(MK_DISTDIR)/$(MK_FULLNAME): $(MK_FULLNAME)
 	$(CP) $(MK_FULLNAME) $(DIST_DIR)/$(MK_DISTDIR)/$(MK_FULLNAME)
 	$(CP) $(MK_BASENAME).sym $(DIST_DIR)/symbols/$(MK_BASENAME).sym
 
-endif # MK_MODE
 
 endif # MK_IMPLIBONLY
 

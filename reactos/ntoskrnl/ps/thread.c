@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.96 2002/06/16 20:52:07 jfilby Exp $
+/* $Id: thread.c,v 1.97 2002/06/16 21:41:16 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -561,11 +561,36 @@ NtCallbackReturn (PVOID		Result,
   Thread->Tcb.InitialStack = InitialStack;
   Thread->Tcb.StackBase = StackBase;
   Thread->Tcb.StackLimit = StackLimit;
+  KeGetCurrentKPCR()->TSS->Esp0 = (ULONG)Thread->Tcb.InitialStack;
   KeStackSwitchAndRet((PVOID)(OldStack + 6));
 
   /* Should never return. */
   KeBugCheck(0);
   return(STATUS_UNSUCCESSFUL);
+}
+
+VOID STATIC
+PsFreeCallbackStackPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, 
+			PHYSICAL_ADDRESS PhysAddr, SWAPENTRY SwapEntry, 
+			BOOLEAN Dirty)
+{
+  assert(SwapEntry == 0);
+  if (PhysAddr.QuadPart  != 0)
+    {
+      MmReleasePageMemoryConsumer(MC_NPPOOL, PhysAddr);
+    }
+}
+
+VOID STATIC
+PsFreeCallbackStack(PVOID StackLimit)
+{
+  MmLockAddressSpace(MmGetKernelAddressSpace());
+  MmFreeMemoryArea(MmGetKernelAddressSpace(),
+		   StackLimit,
+		   MM_STACK_SIZE,
+		   PsFreeCallbackStackPage,
+		   NULL);
+  MmUnlockAddressSpace(MmGetKernelAddressSpace());
 }
 
 PVOID STATIC
@@ -636,9 +661,10 @@ NtW32Call (IN ULONG RoutineIndex,
   /* Set up the new kernel and user environment. */
   StackSize = (ULONG)(Thread->Tcb.StackBase - Thread->Tcb.StackLimit);  
   NewStack = PsAllocateCallbackStack(StackSize);
-  memcpy(NewStack + StackSize - 124, Thread->Tcb.TrapFrame,
-	 124);
-  NewFrame = (PKTRAP_FRAME)(NewStack + StackSize - 124);
+  /* FIXME: Need to check whether we were interrupted from v86 mode. */
+  memcpy(NewStack + StackSize - sizeof(KTRAP_FRAME), Thread->Tcb.TrapFrame,
+	 sizeof(KTRAP_FRAME) - (4 * sizeof(DWORD)));
+  NewFrame = (PKTRAP_FRAME)(NewStack + StackSize - sizeof(KTRAP_FRAME));
   NewFrame->Esp -= (ArgumentLength + (4 * sizeof(ULONG))); 
   NewFrame->Eip = (ULONG)LdrpGetSystemDllCallbackDispatcher();
   UserEsp = (PULONG)NewFrame->Esp;
@@ -655,7 +681,8 @@ NtW32Call (IN ULONG RoutineIndex,
   SavedInitialStack = Thread->Tcb.InitialStack;
   Thread->Tcb.InitialStack = Thread->Tcb.StackBase = NewStack + StackSize;
   Thread->Tcb.StackLimit = (ULONG)NewStack;
-  Thread->Tcb.KernelStack = NewStack + StackSize - 124;
+  Thread->Tcb.KernelStack = NewStack + StackSize - sizeof(KTRAP_FRAME);
+  KeGetCurrentKPCR()->TSS->Esp0 = (ULONG)Thread->Tcb.InitialStack;
   KePushAndStackSwitchAndSysRet(SavedStackLimit, 
 				(ULONG)SavedStackBase, 
 				(ULONG)SavedInitialStack, (ULONG)Result, 
@@ -667,7 +694,7 @@ NtW32Call (IN ULONG RoutineIndex,
    * modified.
    */
   KeLowerIrql(PASSIVE_LEVEL);
-  ExFreePool(NewStack);
+  PsFreeCallbackStack(NewStack);
   return(CallbackStatus);
 } 
 

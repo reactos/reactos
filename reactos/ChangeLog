@@ -1,3 +1,28 @@
+2002-06-16  David Welch  <welch@whitehall1-5.seh.ox.ac.uk>
+
+	* tools/help.mk: Make the install target depend on all the
+	files to be installed.
+
+2002-06-16  David Welch  <welch@whitehall1-5.seh.ox.ac.uk>
+
+	* ntoskrnl/ps/thread.c (NtCallbackReturn): Set TSS.Esp0 to the
+	top of the old stack.
+	* ntoskrnl/ps/thread.c (NtW32Call): Set TSS.Esp0 to the top of
+	the new stack. Free the callback stack correctly. Don't copy
+	portion of the trap frame that doesn't exist in none v86-mode
+	interrupts.
+	* ntoskrnl/ps/thread.c (PsFreeCallbackStack): New function to
+	free a stack allocated with PsAllocateCallbackStack.
+
+2002-06-16  David Welch  <welch@whitehall1-5.seh.ox.ac.uk>
+
+	* drivers/dd/null/makefile: Commented out local LDFLAGS as
+	these cause bad relocations in the stripped image.
+
+2002-06-16  David Welch  <welch@whitehall1-5.seh.ox.ac.uk>
+
+	* config: Corrected spelling error.
+
 2002-06-11  David Welch  <welch@whitehall1-5.seh.ox.ac.uk>
 
 	* subsys/system/winlogon/winlogon.c (WinMain): Check for
