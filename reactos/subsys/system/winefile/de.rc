@@ -101,7 +101,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 
 	POPUP "&Optionen"  {
 		MENUITEM "&Bestätigen..." ,		-1
-		MENUITEM "Schrift&art..." ,			-1
+		MENUITEM "Schrift&art..." ,			ID_SELECT_FONT
 		MENUITEM "Symbolleiste &definieren..." , -1
 		MENUITEM SEPARATOR
 		MENUITEM "Sy&mbolleiste" ,		ID_VIEW_TOOL_BAR, CHECKED

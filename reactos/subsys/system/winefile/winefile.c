@@ -153,7 +153,7 @@ extern void WineWarranty(HWND hwnd);
 
 #ifdef __WINE__
 
-/* functions in read_unix.c */
+/* functions in unixcalls.c */
 
 extern void call_getcwd(char* buffer, size_t len);
 extern void* call_opendir(const char* path);
@@ -486,10 +486,12 @@ void read_directory_unix(Entry* dir, LPCTSTR path)
 	int level = dir->level + 1;
 
 	if (pdir) {
-		char buffer[MAX_PATH], *p, *s;
+		char buffer[MAX_PATH];
 		time_t atime, mtime;
 		unsigned inode;
 		int is_dir;
+		const char* s;
+		char* p;
 
 		for(p=buffer,s=cpath; *s; )
 			*p++ = *s++;

@@ -25,7 +25,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <dirent.h>
-//#include <sys/dirent.h>
 
 
 void call_getcwd(char* buffer, size_t len)

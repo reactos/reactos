@@ -34,17 +34,17 @@
 #include <commctrl.h>
 #include <commdlg.h>
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <locale.h>
-#include <time.h>
-
 #ifdef UNICODE
 #define _UNICODE
 #include <wchar.h>
 #endif
 #include <tchar.h>
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <ctype.h>
+#include <locale.h>
+#include <time.h>
 
 #ifdef _MSC_VER
 #include <malloc.h>	/* for alloca() */
