@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.15 2002/01/08 00:49:00 dwelch Exp $
+/* $Id: pagefile.c,v 1.16 2002/01/27 03:25:44 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -421,6 +421,7 @@ NtCreatePagingFile(IN	PUNICODE_STRING	PageFileName,
        NtClose(FileHandle);
        return(Status);
      }
+   ExFreePool(Buffer);
 
    Status = ObReferenceObjectByHandle(FileHandle,
 				      FILE_ALL_ACCESS,

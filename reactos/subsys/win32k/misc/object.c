@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.2 2002/01/27 01:11:24 dwelch Exp $
+/* $Id: object.c,v 1.3 2002/01/27 03:25:45 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -34,13 +34,13 @@ BODY_TO_HEADER(PVOID ObjectBody)
 VOID STATIC
 ObmpLockHandleTable(PUSER_HANDLE_TABLE HandleTable)
 {
-  ExAcquireFastMutex(HandleTable->ListLock);
+  ExAcquireFastMutex(&HandleTable->ListLock);
 }
 
 VOID STATIC
 ObmpUnlockHandleTable(PUSER_HANDLE_TABLE HandleTable)
 {
-  ExReleaseFastMutex(HandleTable->ListLock);
+  ExReleaseFastMutex(&HandleTable->ListLock);
 }
 
 VOID
@@ -482,7 +482,7 @@ VOID
 ObmInitializeHandleTable(PUSER_HANDLE_TABLE HandleTable)
 {
   InitializeListHead(&HandleTable->ListHead);
-  ExInitializeFastMutex(HandleTable->ListLock);
+  ExInitializeFastMutex(&HandleTable->ListLock);
 }
 
 VOID

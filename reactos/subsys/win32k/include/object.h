@@ -36,7 +36,7 @@ typedef struct _USER_HANDLE_BLOCK
 typedef struct _USER_HANDLE_TABLE
 {
    LIST_ENTRY ListHead;
-   PFAST_MUTEX ListLock;
+   FAST_MUTEX ListLock;
 } USER_HANDLE_TABLE, *PUSER_HANDLE_TABLE;
 
 

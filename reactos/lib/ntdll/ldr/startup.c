@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.34 2001/06/04 11:26:10 chorns Exp $
+/* $Id: startup.c,v 1.35 2002/01/27 03:25:44 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,6 +18,7 @@
 #include <csrss/csrss.h>
 #include <ntdll/csr.h>
 #include <napi/shared_data.h>
+#include <user32/callback.h>
 
 #define NDEBUG
 #include <ntdll/ntdll.h>
@@ -122,6 +123,12 @@ LdrInitializeThunk (ULONG Unknown1,
 			TLS_MINIMUM_AVAILABLE);
    Peb->TlsBitmap = &TlsBitMap;
    Peb->TlsExpansionCounter = TLS_MINIMUM_AVAILABLE;
+
+   /* Initialize table of callbacks for the kernel. */
+   Peb->KernelCallbackTable = 
+     RtlAllocateHeap(RtlGetProcessHeap(),
+		     0,
+		     sizeof(PVOID) * USER32_CALLBACK_MAXIMUM);
 
    /* initalize loader lock */
    RtlInitializeCriticalSection (&LoaderLock);
