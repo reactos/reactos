@@ -433,7 +433,7 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn)
      {
         TempRect = CurrentRect;
         TempRect.bottom = TempRect.top + (UINT)NtUserSetMenuBarHeight(menu, 0);
-        CurrentRect.top += MenuDrawMenuBar(hDC, &TempRect, hWnd, TRUE);
+        CurrentRect.top += MenuDrawMenuBar(hDC, &TempRect, hWnd, FALSE);
      }
      
      if (ExStyle & WS_EX_CLIENTEDGE)
@@ -528,7 +528,7 @@ DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect)
            CliRect.right -= OrigRect.left;
            CliRect.left -= OrigRect.left;
            CliRect.top -= OrigRect.top;
-           menuheight = (ULONG)MenuDrawMenuBar(hDC, &CliRect, hWnd, FALSE);
+           menuheight = (ULONG)MenuDrawMenuBar(hDC, &CliRect, hWnd, TRUE);
            ReleaseDC(hWnd, hDC);
            Rect->top += max(menuheight, GetSystemMetrics(SM_CYMENU));
          }

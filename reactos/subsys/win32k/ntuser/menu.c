@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.50 2004/02/24 13:27:03 weiden Exp $
+/* $Id: menu.c,v 1.51 2004/03/09 14:03:18 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1671,25 +1671,23 @@ NtUserMenuItemFromPoint(
   PWINDOW_OBJECT WindowObject = NULL;
   PMENU_ITEM mi;
   int i;
-  
+
   MenuObject = IntGetMenuObject(Menu);
   if (NULL == MenuObject)
     {
       SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
       return -1;
     }
-  if (0 != (MenuObject->MenuInfo.Flags & MF_POPUP))
+
+  WindowObject = IntGetWindowObject(MenuObject->MenuInfo.Wnd);
+  if (NULL == WindowObject)
     {
-      WindowObject = IntGetWindowObject(MenuObject->MenuInfo.Wnd);
-      if (NULL == WindowObject)
-        {
-          SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-          return -1;
-        }
-      X -= WindowObject->WindowRect.left;
-      Y -= WindowObject->WindowRect.top;
-      IntReleaseWindowObject(WindowObject);
+      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+      return -1;
     }
+  X -= WindowObject->WindowRect.left;
+  Y -= WindowObject->WindowRect.top;
+  IntReleaseWindowObject(WindowObject);
   
   IntLockMenuItems(MenuObject);
   mi = MenuObject->MenuItemList;
