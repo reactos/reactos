@@ -31,11 +31,10 @@
  * NOTES:            Adapted from Wine
  */
 
+#include "user32.h"
 #include <stdarg.h>
 #include <string.h>
 #include <stdio.h>
-#include <windows.h>
-#include <wine/winternl.h>
 #include "strpool.h"
 
 #define WPRINTF_LEFTALIGN   0x0001  /* Align output on the left ('-' prefix) */

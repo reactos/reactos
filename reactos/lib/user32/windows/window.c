@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.119 2004/05/23 14:04:58 weiden Exp $
+/* $Id: window.c,v 1.120 2004/08/15 21:36:30 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -11,16 +11,12 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <windows.h>
-#include <user32.h>
+#include "user32.h"
 #include <window.h>
 #include <string.h>
 #include <strpool.h>
 #include <user32/callback.h>
 #include <user32/regcontrol.h>
-#define NTOS_MODE_USER
-#include <ntos.h>
-
 #define NDEBUG
 #include <debug.h>
 

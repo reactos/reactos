@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.41 2004/06/16 06:18:14 gvg Exp $
+/* $Id: message.c,v 1.42 2004/08/15 21:36:30 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -8,14 +8,12 @@
  * UPDATE HISTORY:
  *      06-06-2001  CSH  Created
  */
-#include <windows.h>
-#include <user32.h>
+
+#include "user32.h"
 #include <string.h>
 #include <debug.h>
 #include <user32/callback.h>
 #include <message.h>
-#define NTOS_MODE_USER
-#include <ntos.h>
 
 /* DDE message exchange
  * 

@@ -1,4 +1,4 @@
-/* $Id: exit.c,v 1.5 2004/07/12 20:09:34 gvg Exp $
+/* $Id: exit.c,v 1.6 2004/08/15 21:36:28 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -7,10 +7,7 @@
  * PROGRAMMER:      Eric Kohl (ekohl@rz-online.de)
  */
 
-#include <windows.h>
-#include <user32.h>
-#define NTOS_MODE_USER
-#include <ntos.h>
+#include "user32.h"
 #include <ntdll/csr.h>
 
 /*

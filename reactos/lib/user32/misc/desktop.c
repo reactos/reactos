@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.31 2004/03/07 11:59:43 navaraf Exp $
+/* $Id: desktop.c,v 1.32 2004/08/15 21:36:27 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -8,9 +8,9 @@
  * UPDATE HISTORY:
  *      06-06-2001  CSH  Created
  */
+
+#include "user32.h"
 #include <string.h>
-#include <windows.h>
-#include <user32.h>
 #include <debug.h>
 #include <rosrtl/devmode.h>
 #include <rosrtl/logfont.h>

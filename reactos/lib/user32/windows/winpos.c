@@ -1,4 +1,4 @@
-/* $Id: winpos.c,v 1.10 2003/12/26 13:06:34 weiden Exp $
+/* $Id: winpos.c,v 1.11 2004/08/15 21:36:30 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -11,14 +11,12 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <windows.h>
-#include <user32.h>
+#include "user32.h"
 #include <window.h>
 #include <user32/callback.h>
 #include <user32/regcontrol.h>
 #include <user32/wininternal.h>
 #include <window.h>
-
 #define NDEBUG
 #include <debug.h>
 

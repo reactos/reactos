@@ -1,4 +1,4 @@
-/* $Id: winsta.c,v 1.15 2004/04/09 20:03:14 navaraf Exp $
+/* $Id: winsta.c,v 1.16 2004/08/15 21:36:28 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -8,8 +8,8 @@
  * UPDATE HISTORY:
  *      04-06-2001  CSH  Created
  */
-#include <windows.h>
-#include <user32.h>
+
+#include "user32.h"
 #include <debug.h>
 
 

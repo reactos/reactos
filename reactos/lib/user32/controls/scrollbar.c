@@ -30,8 +30,7 @@
 
 /* INCLUDES *******************************************************************/
 
-#include <windows.h>
-#include <user32.h>
+#include "user32.h"
 #include <debug.h>
 #include <draw.h>
 #include <stdlib.h>

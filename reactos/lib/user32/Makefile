@@ -1,10 +1,12 @@
-# $Id: Makefile,v 1.38 2004/05/29 21:24:47 hbirr Exp $
+# $Id: Makefile,v 1.39 2004/08/15 21:36:25 chorns Exp $
 
 PATH_TO_TOP = ../..
 
 TARGET_TYPE = dynlink
 
 TARGET_NAME = user32
+
+TARGET_PCH = include/user32.h
 
 TARGET_BASE = $(TARGET_BASE_LIB_USER32)
 

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.64 2004/07/12 22:34:27 gvg Exp $
+/* $Id: stubs.c,v 1.65 2004/08/15 21:36:28 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -9,11 +9,11 @@
  * UPDATE HISTORY:
  *      08-05-2001  CSH  Created
  */
-#include <windows.h>
+
+#include "user32.h"
 #include <debug.h>
 #include <string.h>
 #include <mmsystem.h>
-#include <user32.h>
 #ifdef __USE_W32API
 typedef PVOID LPIMEPROW, LPIMEPROA;
 #endif

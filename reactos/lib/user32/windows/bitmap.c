@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmap.c,v 1.31 2004/07/14 20:52:13 navaraf Exp $
+/* $Id: bitmap.c,v 1.32 2004/08/15 21:36:28 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -28,13 +28,10 @@
 
 /* INCLUDES ******************************************************************/
 
+#include "user32.h"
 #include <string.h>
-#include <windows.h>
-#include <user32.h>
 #include <debug.h>
 #include <stdlib.h>
-#define NTOS_MODE_USER
-#include <ntos.h>
 
 /*forward declerations... actualy in user32\windows\icon.c but usful here****/
 HICON ICON_CreateCursorFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxDesired, int cyDesired, int xHotspot, int yHotspot);

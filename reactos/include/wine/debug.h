@@ -63,6 +63,9 @@ inline static const char *debugres_w( const wchar_t *s ) { return wine_dbgstr_wn
 #define WARN_ON(ch)  1
 #endif
 
+#ifdef FIXME
+#undef FIXME
+#endif
 #define FIXME        DPRINT1
 #define FIXME_(ch)   DPRINT1
 #ifdef NDEBUG

@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.50 2004/07/03 17:40:23 navaraf Exp $
+/* $Id: class.c,v 1.51 2004/08/15 21:36:29 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -8,17 +8,14 @@
  * UPDATE HISTORY:
  *      09-05-2001  CSH  Created
  */
-#include <windows.h>
-#include <user32.h>
+
+#include "user32.h"
 #include <string.h>
 #include <stdlib.h>
 #include <debug.h>
 #include <window.h>
 #include <strpool.h>
 #include <user32/regcontrol.h>
-#define NTOS_MODE_USER
-#include <ntos.h>
-
 
 
 static BOOL GetClassInfoExCommon(

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursor.c,v 1.21 2004/05/01 09:31:59 weiden Exp $
+/* $Id: cursor.c,v 1.22 2004/08/15 21:36:29 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/cursor.c
@@ -28,12 +28,9 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <windows.h>
-#include <user32.h>
+#include "user32.h"
 #include <string.h>
 #include <debug.h>
-#define NTOS_MODE_USER
-#include <ntos.h>
 #undef CopyCursor
 
 HBITMAP

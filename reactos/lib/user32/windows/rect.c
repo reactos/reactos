@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rect.c,v 1.15 2004/05/14 17:02:40 navaraf Exp $
+/* $Id: rect.c,v 1.16 2004/08/15 21:36:30 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -28,8 +28,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <windows.h>
-#include <user32.h>
+#include "user32.h"
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/

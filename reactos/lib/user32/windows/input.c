@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.24 2004/04/29 20:26:35 weiden Exp $
+/* $Id: input.c,v 1.25 2004/08/15 21:36:29 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -28,8 +28,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <windows.h>
-#include <user32.h>
+#include "user32.h"
 #include <debug.h>
 #include <wchar.h>
 

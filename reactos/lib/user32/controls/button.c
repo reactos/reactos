@@ -23,11 +23,11 @@
 #define __USE_W32API
 #endif
 
+#include "user32.h"
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h>
 
-#include "windows.h"
 #include "controls.h"
 #include "user32/regcontrol.h"
 #include "wine/unicode.h"

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.9 2004/04/09 20:03:15 navaraf Exp $
+/* $Id: text.c,v 1.10 2004/08/15 21:36:30 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -28,12 +28,8 @@
 
 /* INCLUDES ******************************************************************/
 
-#define __NTAPP__
-
-#include <windows.h>
-#include <user32.h>
-#define NTOS_MODE_USER
-#include <ntos.h>
+#include "user32.h"
+#include <ctype.h>
 #include <debug.h>
 
 const unsigned short wctype_table[] =

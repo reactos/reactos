@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: object.c,v 1.7 2004/05/15 22:50:04 weiden Exp $
+/* $Id: object.c,v 1.8 2004/08/15 21:36:28 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/dde.c
@@ -28,8 +28,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <windows.h>
-#include <user32.h>
+#include "user32.h"
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/

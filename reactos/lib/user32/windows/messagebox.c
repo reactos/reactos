@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: messagebox.c,v 1.26 2004/07/22 02:32:53 navaraf Exp $
+/* $Id: messagebox.c,v 1.27 2004/08/15 21:36:30 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/messagebox.c
@@ -31,18 +31,14 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <windows.h>
+#include "user32.h"
 #include <messages.h>
-#include <user32.h>
 #include <string.h>
-#define NTOS_MODE_USER
-#include <ntos.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <debug.h>
 #include "resource.h"
 
-//typedef UINT *LPUINT;
 #include <mmsystem.h>
 
 /* DEFINES *******************************************************************/

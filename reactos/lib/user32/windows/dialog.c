@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dialog.c,v 1.26 2004/05/16 19:31:07 navaraf Exp $
+/* $Id: dialog.c,v 1.27 2004/08/15 21:36:29 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/dialog.c
@@ -31,15 +31,12 @@
 
 /* INCLUDES ******************************************************************/
 
-#define __NTAPP__
-#include <windows.h>
+#include "user32.h"
 #include <string.h>
-#include <user32.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include <limits.h>
-#define NTOS_MODE_USER
-#include <ntos.h>
 #include <debug.h>
 
 #include "user32/regcontrol.h"

@@ -5,6 +5,8 @@
  * PURPOSE:     Global user32 definitions
  */
 #include <windows.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
 #include <win32k/win32k.h>
 
 extern HINSTANCE User32Instance;

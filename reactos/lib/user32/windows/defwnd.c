@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.143 2004/07/19 12:13:45 weiden Exp $
+/* $Id: defwnd.c,v 1.144 2004/08/15 21:36:29 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -11,9 +11,8 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <windows.h>
+#include "user32.h"
 #include <windowsx.h>
-#include <user32.h>
 #include <window.h>
 #include <user32/wininternal.h>
 #include <string.h>

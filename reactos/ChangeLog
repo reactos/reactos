@@ -1,5 +1,12 @@
 2004-08-15  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* lib/user32/include/.cvsignore: New file.
+	* lib/user32/Makefile (TARGET_PCH): Set to include/user32.h.
+	* lib/user32/*/*.c: Use pre-compiled header.
+	* include/wine/debug.h (FIXME): Override previous declaration is needed.
+
+2004-08-15  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* lib/userenv/.cvsignore: Add *.gch.
 	* lib/userenv/makefile (TARGET_PCH): Set to precomp.h.
 	* lib/userenv/*.c: Use pre-compiled header.
