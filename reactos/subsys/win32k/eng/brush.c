@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: brush.c,v 1.9 2003/10/29 08:38:55 gvg Exp $
+/* $Id: brush.c,v 1.10 2004/01/30 16:36:16 navaraf Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -48,4 +48,14 @@ BRUSHOBJ_pvGetRbrush(IN BRUSHOBJ  *BrushObj)
 {
   return(BrushObj->pvRbrush);
 }
+
+/*
+ * @implemented
+ */
+ULONG STDCALL
+BRUSHOBJ_ulGetBrushColor(IN BRUSHOBJ *BrushObj)
+{
+   return BrushObj->iSolidColor;
+}
+
 /* EOF */

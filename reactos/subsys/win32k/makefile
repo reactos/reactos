@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.90 2003/12/14 17:59:16 navaraf Exp $
+# $Id: makefile,v 1.91 2004/01/30 16:36:16 navaraf Exp $
 
 PATH_TO_TOP = ../..
 
@@ -38,10 +38,10 @@ TARGET_LFLAGS =\
  $(PATH_TO_TOP)/dk/w32/lib/rosrtl.a \
  --disable-stdcall-fixup
 
-ENG_OBJECTS= eng/debug.o eng/mem.o eng/brush.o eng/bitblt.o eng/clip.o \
-    eng/copybits.o eng/device.o eng/handle.o eng/lineto.o eng/paint.o \
-    eng/palette.o eng/perfcnt.o eng/surface.o eng/xlate.o eng/transblt.o \
-    eng/mouse.o eng/misc.o eng/nls.o eng/sort.o
+ENG_OBJECTS= eng/debug.o eng/error.o eng/mem.o eng/brush.o eng/bitblt.o \
+    eng/clip.o eng/copybits.o eng/device.o eng/handle.o eng/lineto.o \
+    eng/paint.o eng/palette.o eng/perfcnt.o eng/semaphor.o eng/surface.o \
+    eng/xlate.o eng/transblt.o eng/mouse.o eng/misc.o eng/nls.o eng/sort.o
 
 MAIN_OBJECTS = main/dllmain.o main/svctabm.o
 
@@ -66,7 +66,7 @@ OBJECTS_OBJECTS = objects/bitmaps.o objects/brush.o objects/cliprgn.o  \
                   objects/region.o objects/text.o objects/wingl.o \
                   objects/bezier.o objects/objconv.o objects/dib.o \
                   objects/palette.o objects/rect.o objects/polyfill.o \
-                  objects/cursoricon.o objects/semaphor.o
+                  objects/cursoricon.o
 
 DIB_OBJECTS = dib/dib.o dib/dib1bpp.o dib/dib4bpp.o dib/dib8bpp.o dib/dib16bpp.o \
               dib/dib24bpp.o dib/dib32bpp.o

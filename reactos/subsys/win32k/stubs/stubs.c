@@ -97,18 +97,6 @@ EngTextOut (
 /*
  * @unimplemented
  */
-ULONG
-STDCALL
-BRUSHOBJ_ulGetBrushColor ( IN BRUSHOBJ  *pbo )
-{
-  // www.osr.com/ddk/graphics/gdifncs_0ch3.htm
-  UNIMPLEMENTED;
-  return 0;
-}
-
-/*
- * @unimplemented
- */
 PATHOBJ*
 STDCALL
 CLIPOBJ_ppoGetPath ( IN CLIPOBJ *pco )
@@ -372,28 +360,6 @@ EngGetForm(
   // www.osr.com/ddk/graphics/gdifncs_5vvr.htm
   UNIMPLEMENTED;
   return FALSE;
-}
-
-/*
- * @implemented
- */
-ULONG
-STDCALL
-EngGetLastError ( VOID )
-{
-  // www.osr.com/ddk/graphics/gdifncs_3non.htm
-  return GetLastNtError();
-}
-
-/*
- * @implemented
- */
-VOID
-STDCALL
-EngSetLastError ( IN ULONG iError )
-{
-  // www.osr.com/ddk/graphics/gdifncs_95m0.htm
-  SetLastNtError ( iError );
 }
 
 /*
