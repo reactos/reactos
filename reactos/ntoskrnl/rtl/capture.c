@@ -58,6 +58,12 @@ RtlCaptureUnicodeString(OUT PUNICODE_STRING Dest,
                    sizeof(UNICODE_STRING),
                    sizeof(ULONG));
       Src = *UnsafeSrc;
+      if(Src.Length > 0)
+      {
+        ProbeForRead(Src.Buffer,
+                     Src.Length,
+                     sizeof(WCHAR));
+      }
     }
     _SEH_HANDLE
     {
@@ -86,20 +92,19 @@ RtlCaptureUnicodeString(OUT PUNICODE_STRING Dest,
    * Initialize the destination string.
    */
   Dest->Length = Src.Length;
-  Dest->MaximumLength = Src.Length + sizeof(WCHAR);
-  Dest->Buffer = ExAllocatePool(PoolType, Dest->MaximumLength);
-  if (Dest->Buffer == NULL)
-  {
-    Dest->Length = Dest->MaximumLength = 0;
-    Dest->Buffer = NULL;
-    return STATUS_INSUFFICIENT_RESOURCES;
-  }
-
-  /*
-   * Copy the source string to kernel space.
-   */
   if(Src.Length > 0)
   {
+    Dest->MaximumLength = Src.Length + sizeof(WCHAR);
+    Dest->Buffer = ExAllocatePool(PoolType, Dest->MaximumLength);
+    if (Dest->Buffer == NULL)
+    {
+      Dest->Length = Dest->MaximumLength = 0;
+      Dest->Buffer = NULL;
+      return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    /*
+     * Copy the source string to kernel space.
+     */
     _SEH_TRY
     {
       RtlCopyMemory(Dest->Buffer, Src.Buffer, Src.Length);
@@ -110,6 +115,11 @@ RtlCaptureUnicodeString(OUT PUNICODE_STRING Dest,
       Status = _SEH_GetExceptionCode();
     }
     _SEH_END;
+  }
+  else
+  {
+    Dest->MaximumLength = 0;
+    Dest->Buffer = NULL;
   }
   
   return Status;
