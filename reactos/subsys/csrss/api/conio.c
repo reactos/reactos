@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.40 2003/02/24 21:58:46 sedwards Exp $
+/* $Id: conio.c,v 1.41 2003/02/24 23:17:32 hbirr Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -1814,16 +1814,14 @@ CSR_API(CsrFlushInputBuffer)
     }
 
   /* Discard all entries in the input event queue */
-  CurrentEntry = Console->InputEvents.Flink;
-  while (IsListEmpty(&Console->InputEvents))
+  while (!IsListEmpty(&Console->InputEvents))
     {
-  NextEntry = CurrentEntry->Flink;
-  Input = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
-  /* Destroy the event */
-  Console->WaitingChars--;
-	RtlFreeHeap( CsrssApiHeap, 0, Input );
-  CurrentEntry = NextEntry;
+      CurrentEntry = RemoveHeadList(&Console->InputEvents);
+      Input = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
+      /* Destroy the event */
+      RtlFreeHeap( CsrssApiHeap, 0, Input );
     }
+  Console->WaitingChars=0;
   UNLOCK;
 
   return (Reply->Status = STATUS_SUCCESS);
