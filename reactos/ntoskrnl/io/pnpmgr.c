@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.34 2004/10/09 18:16:58 navaraf Exp $
+/* $Id: pnpmgr.c,v 1.35 2004/10/10 15:51:52 blight Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -155,7 +155,8 @@ IoGetDeviceProperty(
             RegistryPropertyName = L"Mfg"; break;
           case DevicePropertyFriendlyName:
             RegistryPropertyName = L"FriendlyName"; break;
-          default: ;
+          default:
+            RegistryPropertyName = NULL; break;
         }
 
         KeyNameBuffer = ExAllocatePool(PagedPool,
