@@ -344,11 +344,10 @@ Fat32Format (HANDLE  FileHandle,
 	     PFMIFSCALLBACK  Callback)
 {
   FAT32_BOOT_SECTOR BootSector;
-  ANSI_STRING VolumeLabel;
+  OEM_STRING VolumeLabel;
   ULONG RootDirSectors;
   ULONG TmpVal1;
   ULONG TmpVal2;
-  ULONG TmpVal3;
   NTSTATUS Status;
 
   /* Calculate cluster size */
@@ -388,7 +387,7 @@ Fat32Format (HANDLE  FileHandle,
   BootSector.FATSectors = 0;
   BootSector.SectorsPerTrack = DiskGeometry->SectorsPerTrack;
   BootSector.Heads = DiskGeometry->TracksPerCylinder;
-  BootSector.HiddenSectors = DiskGeometry->SectorsPerTrack; //PartitionInfo->HiddenSectors; /* FIXME: Hack! */
+  BootSector.HiddenSectors = PartitionInfo->HiddenSectors;
   BootSector.SectorsHuge = PartitionInfo->PartitionLength.QuadPart >>
     GetShiftCount(BootSector.BytesPerSector); /* Use shifting to avoid 64-bit division */
   BootSector.FATSectors32 = 0; /* Set later */
@@ -406,45 +405,23 @@ Fat32Format (HANDLE  FileHandle,
     }
   else
     {
-      RtlUnicodeStringToAnsiString(&VolumeLabel, Label, TRUE);
+      RtlUnicodeStringToOemString(&VolumeLabel, Label, TRUE);
       memset(&BootSector.VolumeLabel[0], ' ', 11);
       memcpy(&BootSector.VolumeLabel[0], VolumeLabel.Buffer,
         VolumeLabel.Length < 11 ? VolumeLabel.Length : 11);
-      RtlFreeAnsiString(&VolumeLabel);
+      RtlFreeOemString(&VolumeLabel);
     }
   memcpy(&BootSector.SysType[0], "FAT32   ", 8);
 
   RootDirSectors = ((BootSector.RootEntries * 32) +
     (BootSector.BytesPerSector - 1)) / BootSector.BytesPerSector;
-  TmpVal1 = BootSector.SectorsHuge - (BootSector.ReservedSectors + RootDirSectors);
-  TmpVal2 = (256 * BootSector.SectorsPerCluster) + BootSector.FATCount;
-  if (TRUE /* FAT32 */)
-    {
-      TmpVal2 = 0;
-      do
-        {
-          if (TmpVal2 == 0)
-	    {
-	      TmpVal3 = 0xffffffff;
-	    }
-	  else
-	    {
-	      TmpVal3 = TmpVal2;
-	    }
-          TmpVal2 = ((TmpVal1 - TmpVal2 * BootSector.FATCount) / BootSector.SectorsPerCluster) + 2;
-	  TmpVal2 = (sizeof(ULONG) * TmpVal2 + BootSector.BytesPerSector - 1) / BootSector.BytesPerSector;
-        }
-      while (TmpVal3 > TmpVal2);
-      BootSector.FATSectors32 = TmpVal2;
-    }
 
-#if 0
-  /* experimental */
-  /* 128 FAT entries (32bit) fit into one 512 byte sector */
+  /* Calculate number of FAT sectors */
+  /* (BytesPerSector / 4) FAT entries (32bit) fit into one sector */
   TmpVal1 = BootSector.SectorsHuge - BootSector.ReservedSectors;
-  TmpVal2 = (128 * BootSector.SectorsPerCluster) + BootSector.FATCount;
+  TmpVal2 = ((BootSector.BytesPerSector / 4) * BootSector.SectorsPerCluster) + BootSector.FATCount;
   BootSector.FATSectors32 = (TmpVal1 + (TmpVal2 - 1)) / TmpVal2;
-#endif
+  DPRINT("FATSectors32 = %lu\n", BootSector.FATSectors32);
 
   Status = Fat32WriteBootSector(FileHandle,
     &BootSector);

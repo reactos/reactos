@@ -275,7 +275,7 @@ Fat16Format (HANDLE  FileHandle,
 	     PFMIFSCALLBACK  Callback)
 {
   FAT16_BOOT_SECTOR BootSector;
-  ANSI_STRING VolumeLabel;
+  OEM_STRING VolumeLabel;
   ULONG SectorCount;
   ULONG RootDirSectors;
   ULONG TmpVal1;
@@ -323,7 +323,7 @@ Fat16Format (HANDLE  FileHandle,
   BootSector.FATSectors = 0;  /* Set later. See below. */
   BootSector.SectorsPerTrack = DiskGeometry->SectorsPerTrack;
   BootSector.Heads = DiskGeometry->TracksPerCylinder;
-  BootSector.HiddenSectors = DiskGeometry->SectorsPerTrack; //PartitionInfo->HiddenSectors; /* FIXME: Hack! */
+  BootSector.HiddenSectors = PartitionInfo->HiddenSectors;
   BootSector.SectorsHuge = (SectorCount >= 0x10000) ? (unsigned long)SectorCount : 0;
   BootSector.Drive = 0xff; /* No BIOS boot drive available */
   BootSector.ExtBootSignature = 0x29;
@@ -334,11 +334,11 @@ Fat16Format (HANDLE  FileHandle,
     }
   else
     {
-      RtlUnicodeStringToAnsiString(&VolumeLabel, Label, TRUE);
+      RtlUnicodeStringToOemString(&VolumeLabel, Label, TRUE);
       memset(&BootSector.VolumeLabel[0], ' ', 11);
       memcpy(&BootSector.VolumeLabel[0], VolumeLabel.Buffer,
         VolumeLabel.Length < 11 ? VolumeLabel.Length : 11);
-      RtlFreeAnsiString(&VolumeLabel);
+      RtlFreeOemString(&VolumeLabel);
     }
   memcpy(&BootSector.SysType[0], "FAT16   ", 8);
 
@@ -347,13 +347,13 @@ Fat16Format (HANDLE  FileHandle,
   RootDirSectors = ((BootSector.RootEntries * 32) +
     (BootSector.BytesPerSector - 1)) / BootSector.BytesPerSector;
 
-  /* 265 FAT entries (16bit) fit into one 512 byte sector */
+  /* Calculate number of FAT sectors */
+  /* (BootSector.BytesPerSector / 2) FAT entries (16bit) fit into one sector */
   TmpVal1 = SectorCount - (BootSector.ReservedSectors + RootDirSectors);
-  TmpVal2 = (256 * BootSector.SectorsPerCluster) + BootSector.FATCount;
+  TmpVal2 = ((BootSector.BytesPerSector / 2) * BootSector.SectorsPerCluster) + BootSector.FATCount;
   TmpVal3 = (TmpVal1 + (TmpVal2 - 1)) / TmpVal2;
   BootSector.FATSectors = (unsigned short)(TmpVal3 & 0xffff);
-
-  DPRINT("BootSector.FATSectors = %hx\n", BootSector.FATSectors);
+  DPRINT("BootSector.FATSectors = %hu\n", BootSector.FATSectors);
 
   Status = Fat16WriteBootSector(FileHandle,
     &BootSector);

@@ -107,6 +107,12 @@ VfatFormat(
           NtClose(FileHandle);
           return Status;
         }
+
+      /*
+       * FIXME: This is a hack!
+       *        Partitioning software MUST set the correct number of hidden sectors!
+       */
+      PartitionInfo.HiddenSectors = DiskGeometry.SectorsPerTrack;
     }
   else
     {
@@ -118,10 +124,10 @@ VfatFormat(
 	(ULONGLONG)DiskGeometry.SectorsPerTrack *
 	(ULONGLONG)DiskGeometry.BytesPerSector;
       PartitionInfo.HiddenSectors = 0;
-      PartitionInfo.PartitionNumber = 1;
+      PartitionInfo.PartitionNumber = 0;
       PartitionInfo.BootIndicator = FALSE;
       PartitionInfo.RewritePartition = FALSE;
-      PartitionInfo.RecognizedPartition = TRUE;
+      PartitionInfo.RecognizedPartition = FALSE;
     }
 
   DPRINT("PartitionType 0x%x\n", PartitionInfo.PartitionType);
