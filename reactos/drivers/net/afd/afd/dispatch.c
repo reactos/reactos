@@ -25,55 +25,44 @@ NTSTATUS AfdpDispRecv(
  *     Status of operation
  */
 {
-  PAFD_READ_REQUEST ReadRequest;
-  NTSTATUS Status;
-  KIRQL OldIrql;
-  ULONG Count;
-
-  KeAcquireSpinLock(&FCB->ReceiveQueueLock, &OldIrql);
-  if (IsListEmpty(&FCB->ReceiveQueue)) {
-    KeReleaseSpinLock(&FCB->ReceiveQueueLock, OldIrql);
-
+    PAFD_READ_REQUEST ReadRequest;
+    NTSTATUS Status;
+    KIRQL OldIrql;
+    ULONG Count;
+    
+    KeAcquireSpinLock(&FCB->ReadRequestQueueLock, &OldIrql);
     /* Queue a read request and return STATUS_PENDING */
-
+    
     AFD_DbgPrint(MAX_TRACE, ("Queueing read request.\n"));
-
+    
     /*ReadRequest = (PAFD_READ_REQUEST)ExAllocateFromNPagedLookasideList(
-        &ReadRequestLookasideList);*/
-    ReadRequest = (PAFD_READ_REQUEST)ExAllocatePool(
-      NonPagedPool,
-      sizeof(AFD_READ_REQUEST));
+      &ReadRequestLookasideList);*/
+    ReadRequest = 
+	(PAFD_READ_REQUEST)ExAllocatePool(
+	    NonPagedPool,
+	    sizeof(AFD_READ_REQUEST));
     if (ReadRequest) {
-      ReadRequest->Irp = Irp;
-      ReadRequest->Recv.Request = Request;
-      ReadRequest->Recv.Reply = Reply;
-
-      ExInterlockedInsertTailList(
-        &FCB->ReadRequestQueue,
-        &ReadRequest->ListEntry,
-        &FCB->ReadRequestQueueLock);
-      Status = STATUS_PENDING;
+	ReadRequest->Irp = Irp;
+	ReadRequest->Recv.Request = Request;
+	ReadRequest->Recv.Reply = Reply;
+	
+	InsertTailList(
+	    &FCB->ReadRequestQueue,
+	    &ReadRequest->ListEntry);
+	Status = STATUS_PENDING;
     } else {
-      Status = STATUS_INSUFFICIENT_RESOURCES;
+	Status = STATUS_INSUFFICIENT_RESOURCES;
     }
-  } else {
+    KeReleaseSpinLock(&FCB->ReadRequestQueueLock, OldIrql);
+
     AFD_DbgPrint(MAX_TRACE, ("Satisfying read request.\n"));
-
-    /* Satisfy the request at once */
-    Status = FillWSABuffers(
-      FCB,
-      Request->Buffers,
-      Request->BufferCount,
-      &Count);
-    KeReleaseSpinLock(&FCB->ReceiveQueueLock, OldIrql);
-
-    Reply->NumberOfBytesRecvd = Count;
-    Reply->Status = NO_ERROR;
-
+    
+    if( Status == STATUS_PENDING )
+	Status = AfdpTryToSatisfyRecvRequest( FCB, &Count );
+    
     AFD_DbgPrint(MAX_TRACE, ("Bytes received (0x%X).\n", Count));
-  }
 
-  return Status;
+    return Status;
 }
 
 
@@ -856,18 +845,21 @@ NTSTATUS AfdDispRecv(
 
     Request = (PFILE_REQUEST_RECV)Irp->AssociatedIrp.SystemBuffer;
     Reply   = (PFILE_REPLY_RECV)Irp->AssociatedIrp.SystemBuffer;
+
+    AFD_DbgPrint(MAX_TRACE, ("DISPATCH <x< Request: %x >x>\n", Request));
+
     /* Since we're using bufferred I/O */
     Request->Buffers = (LPWSABUF)(Request + 1);
 
     Status = AfdpDispRecv(
-      Irp,
-      FCB,
-      Request,
-      Reply);
+	Irp,
+	FCB,
+	Request,
+	Reply);
   } else {
-    Status = STATUS_INVALID_PARAMETER;
+      Status = STATUS_INVALID_PARAMETER;
   }
-
+  
   AFD_DbgPrint(MAX_TRACE, ("Status (0x%X).\n", Status));
 
   return Status;

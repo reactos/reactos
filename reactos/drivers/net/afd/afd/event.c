@@ -1,3 +1,4 @@
+
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS Ancillary Function Driver
@@ -10,24 +11,20 @@
 #include <ntddk.h>
 #include <afd.h>
 
-NTSTATUS AfdpEventReceive(
-    IN PVOID TdiEventContext,
-    IN CONNECTION_CONTEXT ConnectionContext,
-    IN ULONG ReceiveFlags,
-    IN ULONG BytesIndicated,
-    IN ULONG BytesAvailable,
-    OUT ULONG *BytesTaken,
-    IN PVOID Tsdu,
-    OUT PIRP *IoRequestPacket)
+NTSTATUS AfdpEventReceive
+( IN PVOID TdiEventContext,
+  IN CONNECTION_CONTEXT ConnectionContext,
+  IN ULONG ReceiveFlags,
+  IN ULONG BytesIndicated,
+  IN ULONG BytesAvailable,
+  OUT ULONG *BytesTaken,
+  IN PVOID Tsdu,
+  OUT PIRP *IoRequestPacket )
 {
   PAFDFCB FCB = (PAFDFCB)TdiEventContext;
-  PAFD_READ_REQUEST ReadRequest;
   PVOID ReceiveBuffer;
   PAFD_BUFFER Buffer;
-  PLIST_ENTRY Entry;
   NTSTATUS Status;
-  KIRQL OldIrql;
-  ULONG Count;
 
   AFD_DbgPrint(MAX_TRACE, ("Called.\n"));
 
@@ -57,43 +54,80 @@ NTSTATUS AfdpEventReceive(
 
   Buffer->Buffer.len = BytesIndicated;
   Buffer->Buffer.buf = ReceiveBuffer;
+  Buffer->ConsumedThisBuffer = 0;
 
   ExInterlockedInsertTailList(
     &FCB->ReceiveQueue,
     &Buffer->ListEntry,
     &FCB->ReceiveQueueLock);
 
-  KeAcquireSpinLock(&FCB->ReadRequestQueueLock, &OldIrql);
-
-  if (!IsListEmpty(&FCB->ReadRequestQueue)) {
-    AFD_DbgPrint(MAX_TRACE, ("Satisfying read request.\n"));
-
-    Entry = RemoveHeadList(&FCB->ReceiveQueue);
-    ReadRequest = CONTAINING_RECORD(Entry, AFD_READ_REQUEST, ListEntry);
-
-    Status = FillWSABuffers(
-      FCB,
-      ReadRequest->Recv.Request->Buffers,
-      ReadRequest->Recv.Request->BufferCount,
-      &Count);
-    ReadRequest->Recv.Reply->NumberOfBytesRecvd = Count;
-    ReadRequest->Recv.Reply->Status = NO_ERROR;
-
-    ReadRequest->Irp->IoStatus.Information = 0;
-    ReadRequest->Irp->IoStatus.Status = Status;
-
-    AFD_DbgPrint(MAX_TRACE, ("Completing IRP at (0x%X).\n", ReadRequest->Irp));
-
-    IoCompleteRequest(ReadRequest->Irp, IO_NETWORK_INCREMENT);
-  }
-
-  KeReleaseSpinLock(&FCB->ReadRequestQueueLock, OldIrql);
-
   *BytesTaken = BytesIndicated;
 
-  AFD_DbgPrint(MAX_TRACE, ("Leaving.\n"));
+  Status = AfdpTryToSatisfyRecvRequest( FCB, BytesTaken );
+  
+  if( Status == STATUS_SUCCESS || Status == STATUS_PENDING ) 
+      return STATUS_SUCCESS;
+  else
+      return Status;
+}
 
-  return STATUS_SUCCESS;
+NTSTATUS AfdpTryToSatisfyRecvRequest( PAFDFCB FCB, PULONG BytesTaken ) {
+    PAFD_READ_REQUEST ReadRequest;
+    KIRQL OldIrql, RROldIrql;
+    NTSTATUS Status = STATUS_PENDING;
+    PLIST_ENTRY Entry;
+    ULONG Count = 0;
+
+    *BytesTaken = 0;
+    KeAcquireSpinLock(&FCB->ReadRequestQueueLock, &OldIrql);
+    KeAcquireSpinLock(&FCB->ReceiveQueueLock, &RROldIrql);
+    
+    while (!IsListEmpty(&FCB->ReadRequestQueue) &&
+	   !IsListEmpty(&FCB->ReceiveQueue) ) {
+	AFD_DbgPrint(MAX_TRACE, ("Satisfying read request.\n"));
+	
+	Entry = FCB->ReadRequestQueue.Flink;
+	
+	ReadRequest = CONTAINING_RECORD(Entry, AFD_READ_REQUEST, ListEntry);
+
+	AFD_DbgPrint(MAX_TRACE, 
+		     ("ReadRequest: %x\n", 
+		      ReadRequest->Recv.Reply));
+	
+	Status = FillWSABuffers
+	    (FCB,
+	     ReadRequest->Recv.Request->Buffers,
+	     ReadRequest->Recv.Request->BufferCount,
+	     &Count);
+
+	AFD_DbgPrint(MAX_TRACE,
+		     ("FillWSABuffers: %x %d\n", Status, Count));
+
+	if( Status == STATUS_SUCCESS && Count > 0 ) {
+	    RemoveHeadList(&FCB->ReadRequestQueue);
+
+	    ReadRequest->Recv.Reply->NumberOfBytesRecvd = Count;
+	    ReadRequest->Recv.Reply->Status = NO_ERROR;
+	    ReadRequest->Irp->IoStatus.Status = Status;
+
+	    IoCompleteRequest( ReadRequest->Irp, IO_NETWORK_INCREMENT );
+	} else {
+	    ReadRequest->Recv.Reply->NumberOfBytesRecvd = Count;
+	    ReadRequest->Recv.Reply->Status = Status;
+	    ReadRequest->Irp->IoStatus.Information = 
+		sizeof(*ReadRequest->Recv.Reply);
+	    ReadRequest->Irp->IoStatus.Status = Status;
+	}
+    }
+    
+    KeReleaseSpinLock(&FCB->ReceiveQueueLock, RROldIrql);
+    KeReleaseSpinLock(&FCB->ReadRequestQueueLock, OldIrql);
+
+    *BytesTaken = Count;
+    
+    AFD_DbgPrint(MAX_TRACE, ("Leaving.\n"));
+    
+    return Status;
 }
 
 
@@ -176,14 +210,14 @@ NTSTATUS AfdEventReceive(
     IN PVOID Tsdu,
     OUT PIRP *IoRequestPacket)
 {
-  return AfdpEventReceive(TdiEventContext,
-    ConnectionContext,
-    ReceiveFlags,
-    BytesIndicated,
-    BytesAvailable,
-    BytesTaken,
-    Tsdu,
-    IoRequestPacket);
+    return AfdpEventReceive(TdiEventContext,
+			    ConnectionContext,
+			    ReceiveFlags,
+			    BytesIndicated,
+			    BytesAvailable,
+			    BytesTaken,
+			    Tsdu,
+			    IoRequestPacket);
 }
 
 
@@ -284,7 +318,7 @@ NTSTATUS AfdEventReceiveDatagramHandler(
   if (!IsListEmpty(&FCB->ReadRequestQueue)) {
     AFD_DbgPrint(MAX_TRACE, ("Satisfying read request.\n"));
 
-    Entry = RemoveHeadList(&FCB->ReceiveQueue);
+    Entry = RemoveHeadList(&FCB->ReadRequestQueue);
     ReadRequest = CONTAINING_RECORD(Entry, AFD_READ_REQUEST, ListEntry);
 
     Status = FillWSABuffers(

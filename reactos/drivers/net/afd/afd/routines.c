@@ -10,6 +10,7 @@
 #include <afd.h>
 #include <debug.h>
 
+extern VOID WINAPI MmCopyToCaller( PVOID Dst, PVOID Src, UINT Count );
 
 VOID DumpName(
   LPSOCKADDR Name)
@@ -98,6 +99,8 @@ NTSTATUS FillWSABuffers(
   PAFD_BUFFER SrcBuffer;
   PLIST_ENTRY Entry;
 
+  AFD_DbgPrint(MID_TRACE,("Called\n"));
+
   *BytesCopied = 0;
   if (BufferCount == 0)
     return STATUS_SUCCESS;
@@ -105,16 +108,22 @@ NTSTATUS FillWSABuffers(
   if (IsListEmpty(&FCB->ReceiveQueue))
     return STATUS_SUCCESS;
 
-  Entry = RemoveHeadList(&FCB->ReceiveQueue);
-  SrcBuffer = CONTAINING_RECORD(Entry, AFD_BUFFER, ListEntry);
-  SrcData = SrcBuffer->Buffer.buf;
-  SrcSize = SrcBuffer->Buffer.len;
+  AFD_DbgPrint(MID_TRACE,("pt 1\n"));
 
+  Entry = RemoveHeadList(&FCB->ReceiveQueue);
+  
+  SrcBuffer = CONTAINING_RECORD(Entry, AFD_BUFFER, ListEntry);
+  SrcData = SrcBuffer->Buffer.buf + SrcBuffer->ConsumedThisBuffer;
+  SrcSize = SrcBuffer->Buffer.len - SrcBuffer->ConsumedThisBuffer;
+  
   DstData = Buffers->buf;
   DstSize = Buffers->len;
 
+  AFD_DbgPrint(MID_TRACE,("pt 2\n"));
+
   /* Copy the data */
   for (Total = 0;;) {
+      AFD_DbgPrint(MID_TRACE,("pt 2a\n"));
     /* Find out how many bytes we can copy at one time */
     if (DstSize < SrcSize)
       Count = DstSize;
@@ -124,11 +133,14 @@ NTSTATUS FillWSABuffers(
     AFD_DbgPrint(MAX_TRACE, ("DstData (0x%X) SrcData (0x%X) Count (0x%X).\n",
       DstData, SrcData, Count));
 
-    RtlCopyMemory((PVOID)DstData, (PVOID)SrcData, Count);
+    RtlCopyMemory((PVOID)DstData, (PVOID)SrcData, Count); /* XXX */
 
     Total += Count;
-
+    SrcBuffer->ConsumedThisBuffer += Count;
     SrcSize -= Count;
+
+      AFD_DbgPrint(MID_TRACE,("pt 2b\n"));
+
     if (SrcSize == 0) {
       ExFreePool(SrcBuffer->Buffer.buf);
       ExFreePool(SrcBuffer);
@@ -139,17 +151,23 @@ NTSTATUS FillWSABuffers(
         SrcBuffer = NULL;
         SrcData = 0;
         SrcSize = 0;
+      AFD_DbgPrint(MID_TRACE,("pt 2c\n"));
         break;
       }
 
+      AFD_DbgPrint(MID_TRACE,("pt 2d\n"));
       Entry = RemoveHeadList(&FCB->ReceiveQueue);
       SrcBuffer = CONTAINING_RECORD(Entry, AFD_BUFFER, ListEntry);
-      SrcData = SrcBuffer->Buffer.buf;
-      SrcSize = SrcBuffer->Buffer.len;
+      SrcData = SrcBuffer->Buffer.buf + SrcBuffer->ConsumedThisBuffer;
+      SrcSize = SrcBuffer->Buffer.len - SrcBuffer->ConsumedThisBuffer;
+      AFD_DbgPrint(MID_TRACE,("pt 2e\n"));
     }
+
+      AFD_DbgPrint(MID_TRACE,("pt 2f\n"));
 
     DstSize -= Count;
     if (DstSize == 0) {
+      AFD_DbgPrint(MID_TRACE,("pt 2g\n"));
       /* No more bytes in destination buffer. Proceed to
          the next buffer in the destination buffer chain */
       BufferCount--;
@@ -158,17 +176,32 @@ NTSTATUS FillWSABuffers(
       Buffers++;
       DstData = Buffers->buf;
       DstSize = Buffers->len;
+      AFD_DbgPrint(MID_TRACE,("pt 2h\n"));
     }
   }
 
+  AFD_DbgPrint(MID_TRACE,("pt 2i\n"));
+
   if (SrcSize > 0) {
-    InsertHeadList(&FCB->ReceiveQueue, Entry);
-  } else if (SrcBuffer != NULL) {
+      AFD_DbgPrint(MAX_TRACE,("%d bytes left in this buffer (%d taken)\n",
+			      SrcSize, SrcBuffer->ConsumedThisBuffer));
+      InsertHeadList(&FCB->ReceiveQueue, 
+		     Entry);
+      SrcBuffer = NULL;
+  }
+  
+  AFD_DbgPrint(MID_TRACE,("pt 2j\n"));
+
+  if (SrcBuffer != NULL) {
     ExFreePool(SrcBuffer->Buffer.buf);
     ExFreePool(SrcBuffer);
   }
 
+  AFD_DbgPrint(MID_TRACE,("pt 2k (TotalBytes = %d)\n", Total));
+
   *BytesCopied = Total;
+
+  AFD_DbgPrint(MID_TRACE,("pt 2h\n"));
 
   return STATUS_SUCCESS;
 }

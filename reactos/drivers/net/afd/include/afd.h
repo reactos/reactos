@@ -30,11 +30,11 @@ typedef struct _DEVICE_EXTENSION {
 
 /* Context Control Block structure */
 typedef struct _AFDCCB {
-	struct _AFDFCB *FCB;
-	LIST_ENTRY      ListEntry;
-	PFILE_OBJECT    FileObject;
-	ULONG           Flags;
-	LARGE_INTEGER   CurrentByteOffset;
+    struct _AFDFCB *FCB;
+    LIST_ENTRY      ListEntry;
+    PFILE_OBJECT    FileObject;
+    ULONG           Flags;
+    LARGE_INTEGER   CurrentByteOffset;
 } AFDCCB, *PAFDCCB;
 
 /* Flags for CCB structure */
@@ -89,6 +89,7 @@ typedef struct _AFDFCB {
 
 typedef struct _AFD_BUFFER {
   LIST_ENTRY ListEntry;
+  UINT ConsumedThisBuffer;
   WSABUF Buffer;
 } AFD_BUFFER, *PAFD_BUFFER;
 
@@ -290,6 +291,8 @@ NTSTATUS AfdRegisterEventHandlers(
 
 NTSTATUS AfdDeregisterEventHandlers(
     PAFDFCB FCB);
+
+NTSTATUS AfdpTryToSatisfyRecvRequest( PAFDFCB FCB, PULONG Count );
 
 /* Prototypes from opnclose.c */
 

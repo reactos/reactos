@@ -53,8 +53,10 @@ AfdDispatch(
  *     Status of the operation
  */
 {
-	NTSTATUS Status;
+    NTSTATUS Status;
     PIO_STACK_LOCATION IrpSp;
+    KIRQL OldIrql;
+    BOOL Complete = TRUE;
 
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
@@ -94,6 +96,7 @@ AfdDispatch(
 
     case IOCTL_AFD_RECV:
         Status = AfdDispRecv(Irp, IrpSp);
+	Complete = FALSE;
         break;
 
     case IOCTL_AFD_SEND:
@@ -116,14 +119,18 @@ AfdDispatch(
         break;
     }
 
-    if (Status != STATUS_PENDING) {
+    /* Some functions complete their own IRPs */
+    if (Status != STATUS_PENDING && Complete ) {
         Irp->IoStatus.Status = Status;
+	IoAcquireCancelSpinLock( &OldIrql );
+	IoSetCancelRoutine( Irp, NULL );
+	IoReleaseCancelSpinLock( OldIrql );
         IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
     }
 
     AFD_DbgPrint(MAX_TRACE, ("Leaving. Status (0x%X).\n", Status));
 
-	return Status;
+    return Status;
 }
 
 
