@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.209 2004/11/28 01:31:08 hbirr Exp $
+/* $Id: main.c,v 1.210 2004/12/04 20:58:13 gvg Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -464,7 +464,7 @@ ExpInitializeExecutive(VOID)
 #if 1
   if (KeMemoryMapRangeCount > 0)
     {
-      DPRINT1("MemoryMap:\n");
+      DPRINT("MemoryMap:\n");
       for (i = 0; i < KeMemoryMapRangeCount; i++)
         {
           switch(KeMemoryMap[i].Type)
@@ -484,7 +484,7 @@ ExpInitializeExecutive(VOID)
 	      default:
 	        sprintf(str, "type %lu", KeMemoryMap[i].Type);
             }
-          DPRINT1("%08x - %08x %s\n", KeMemoryMap[i].BaseAddrLow, KeMemoryMap[i].BaseAddrLow + KeMemoryMap[i].LengthLow, str);
+          DPRINT("%08x - %08x %s\n", KeMemoryMap[i].BaseAddrLow, KeMemoryMap[i].BaseAddrLow + KeMemoryMap[i].LengthLow, str);
 	}
     }
 #endif
@@ -1020,11 +1020,6 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
 
   FirstKrnlPhysAddr = KeLoaderModules[0].ModStart - KERNEL_BASE + 0x200000;
   LastKrnlPhysAddr = LastKernelAddress - KERNEL_BASE + 0x200000;
-
-#ifndef ACPI
-  /* FIXME: VMware does not like it when ReactOS is using the BIOS memory map */
-  KeLoaderBlock.Flags &= ~MB_FLAGS_MMAP_INFO;
-#endif
 
   KeMemoryMapRangeCount = 0;
   if (KeLoaderBlock.Flags & MB_FLAGS_MMAP_INFO)
