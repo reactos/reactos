@@ -1,0 +1,13 @@
+the kernel
+ntoskrnl
+win32k
+msafd
+ws2_32
+user32
+shell32
+the cache manager
+tdi
+the scheduler
+the thread queue
+the message queue
+atapi

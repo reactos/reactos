@@ -17,11 +17,63 @@ using std::vector;
 
 const char* ArchBlackmann = "ArchBlackmann";
 
-vector<string> tech_replies;
+vector<string> tech, module, dev, stru, period;
 
-const char* TechReply()
+void ImportList ( vector<string>& list, const char* filename )
 {
-	return tech_replies[rand()%tech_replies.size()].c_str();
+	File f ( filename, "r" );
+	string line;
+	while ( f.next_line ( line, true ) )
+		list.push_back ( line );
+}
+
+const char* ListRand ( const vector<string>& list )
+{
+	return list[rand()%list.size()].c_str();
+}
+
+string TechReply()
+{
+	string t = ListRand(tech);
+	string out;
+	const char* p = t.c_str();
+	while ( *p )
+	{
+		if ( *p == '%' )
+		{
+			if ( !strnicmp ( p, "%dev%", 5 ) )
+			{
+				out += ListRand(dev);
+				p += 5;
+			}
+			else if ( !strnicmp ( p, "%period%", 8 ) )
+			{
+				out += ListRand(period);
+				p += 8;
+			}
+			else if ( !strnicmp ( p, "%module%", 8 ) )
+			{
+				out += ListRand(module);
+				p += 8;
+			}
+			else if ( !strnicmp ( p, "%stru%", 6 ) )
+			{
+				out += ListRand(stru);
+				p += 6;
+			}
+			else
+				out += *p++;
+		}
+		const char* p2 = strchr ( p, '%' );
+		if ( !p2 )
+			p2 = p + strlen(p);
+		if ( p2 > p )
+		{
+			out += string ( p, p2-p );
+			p = p2;
+		}
+	}
+	return out;
 }
 
 // do custom stuff with the IRCClient from your subclass via the provided callbacks...
@@ -60,7 +112,7 @@ public:
 		strlwr ( &text2[0] );
 		if ( !strnicmp ( text2.c_str(), ArchBlackmann, strlen(ArchBlackmann) ) )
 		{
-			string reply = ssprintf("%s: %s", from.c_str(), TechReply());
+			string reply = ssprintf("%s: %s", from.c_str(), TechReply().c_str());
 			flog.printf ( "TECH-REPLY: %s\n", reply.c_str() );
 			return PrivMsg ( channel, reply );
 		}
@@ -98,11 +150,11 @@ public:
 int main ( int argc, char** argv )
 {
 	srand ( time(NULL) );
-	File f ( "tech.txt", "r" );
-	string line;
-	while ( f.next_line ( line, true ) )
-		tech_replies.push_back ( line );
-	f.close();
+	ImportList ( tech, "tech.txt" );
+	ImportList ( stru, "stru.txt" );
+	ImportList ( dev, "dev.txt" );
+	ImportList ( period, "period.txt" );
+	ImportList ( module, "module.txt" );
 
 	printf ( "initializing IRCClient debugging\n" );
 	IRCClient::SetDebug ( true );
