@@ -1,0 +1,20 @@
+PATH_TO_TOP = ../..
+
+TARGET_TYPE = dynlink
+
+TARGET_NAME = d3d8thk
+
+TARGET_DEFONLY = yes
+
+#TARGET_BASE = 0x76340000
+
+# require os code to explicitly request A/W version of structs/functions
+TARGET_CFLAGS += -D_DISABLE_TIDENTS
+
+TARGET_SDKLIBS = ntdll.a winedbgc.a
+
+TARGET_OBJECTS = win32k.o
+
+include $(PATH_TO_TOP)/rules.mak
+
+include $(TOOLS_PATH)/helper.mk

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.79 2003/10/15 20:48:19 weiden Exp $
+# $Id: makefile,v 1.80 2003/10/25 20:34:34 gvg Exp $
 
 PATH_TO_TOP = ../..
 
@@ -72,10 +72,12 @@ DIB_OBJECTS = dib/dib.o dib/dib1bpp.o dib/dib4bpp.o dib/dib8bpp.o dib/dib16bpp.o
 
 STUBS_OBJECTS = stubs/stubs.o stubs/xpstubs.o
 
+NTDDRAW_OBJECTS = ntddraw/stubs.o
+
 TARGET_OBJECTS = \
   $(ENG_OBJECTS) $(MAIN_OBJECTS) $(MISC_OBJECTS) $(LDR_OBJECTS) \
   $(NTUSER_OBJECTS) $(OBJECTS_OBJECTS) $(STUBS_OBJECTS) \
-  $(MATH_OBJECTS) $(FLOAT_OBJECTS) $(DIB_OBJECTS)
+  $(MATH_OBJECTS) $(FLOAT_OBJECTS) $(DIB_OBJECTS) $(NTDDRAW_OBJECTS)
 
 TARGET_CLEAN = $(DEP_FILES) \
   dib/*.o \
@@ -85,6 +87,7 @@ TARGET_CLEAN = $(DEP_FILES) \
   misc/*.o \
   ntuser/*.o \
   objects/*.o \
+  ntddraw/*.o \
   stubs/*.o
 
 include $(PATH_TO_TOP)/rules.mak
@@ -104,7 +107,7 @@ main/svctabm.o: main/svctab.c
 	etags $(@D)/\*.c -o $(@D)/TAGS
 
 etags: TAGS
-TAGS: main/TAGS eng/TAGS ldr/TAGS misc/TAGS objects/TAGS stubs/TAGS ntuser/TAGS dib/TAGS
-	etags -i main/TAGS -i eng/TAGS -i ldr/TAGS -i misc/TAGS -i objects/TAGS -i stubs/TAGS -i ntuser/TAGS -i dib/TAGS
+TAGS: main/TAGS eng/TAGS ldr/TAGS misc/TAGS objects/TAGS stubs/TAGS ntuser/TAGS dib/TAGS ntddraw/TAGS
+	etags -i main/TAGS -i eng/TAGS -i ldr/TAGS -i misc/TAGS -i objects/TAGS -i stubs/TAGS -i ntuser/TAGS -i dib/TAGS -i ntddraw/TAGS
 
 # EOF
