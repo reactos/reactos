@@ -5,11 +5,13 @@
    Written by: Aleksey Bragin (aleksey@studiocerebral.com)
    
    Most of the code dealing with getting system parameters is taken from
-   ReactOS Task Manager written by Brian Palmet (brianp@reactos.org)
+   ReactOS Task Manager written by Brian Palmer (brianp@reactos.org)
 
    History:
-     20 March 2003 - v0.03, works good under ReactOS, and allows process killing
-	 18 March 2003 - Initial version 0.01, doesn't work under RectOS
+	09 April 2003 - v0.1, fixed bugs, added features, ported to mingw
+   	20 March 2003 - v0.03, works good under ReactOS, and allows process
+			killing
+	18 March 2003 - Initial version 0.01, doesn't work under RectOS
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -115,7 +117,7 @@ void DisplayScreen()
 
 	// Header
 	pos.X = 2; pos.Y = 2;
-	strcpy(lpStr, "Console TaskManager v0.09 by Aleksey Bragin <aleksey@studiocerebral.com>");
+	strcpy(lpStr, "Console TaskManager v0.1 by Aleksey Bragin <aleksey@studiocerebral.com>");
 	WriteConsoleOutputCharacter(hStdout, lpStr, strlen(lpStr), pos, &numChars);
 
 	pos.X = 2; pos.Y = 3;
@@ -161,7 +163,7 @@ void DisplayScreen()
 		WideCharToMultiByte(CP_ACP, 0, pPerfData[scrolled+idx].ImageName, -1,
 			imgName, MAX_PATH, NULL, NULL);
 		len = strlen(imgName);
-		WriteConsoleOutputCharacter(hStdout, "                            ", 30, pos, &numChars);
+		WriteConsoleOutputCharacter(hStdout, "                             ", 30, pos, &numChars);
 		WriteConsoleOutputCharacter(hStdout, imgName, (len > 30) ? 30 : len, pos, &numChars);
 
 		// PID
@@ -230,6 +232,9 @@ void DisplayScreen()
 // returns TRUE if exiting
 int ProcessKeys(int numEvents)
 {
+	if ((ProcessCount-scrolled < 17) && (ProcessCount > 17))
+		scrolled = ProcessCount-17;
+
 	unsigned char key = GetKeyPressed(numEvents);
 	if (key == VK_Q)
 		return TRUE;
@@ -252,14 +257,14 @@ int ProcessKeys(int numEvents)
 		if (key == VK_Y)
 		{
 			HANDLE hProcess;
-			pId = pPerfData[selection].ProcessId;
+			pId = pPerfData[selection+scrolled].ProcessId;
 			hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pId);
 			
 			if (hProcess)
 			{
 				if (!TerminateProcess(hProcess, 0))
 				{
-					strcpy(lpStr, "Unable to terminate this proces...                                      ");
+					strcpy(lpStr, "Unable to terminate this process...                                      ");
 					WriteConsoleOutputCharacter(hStdout, lpStr, strlen(lpStr), pos, &pId);
 					Sleep(1000);
 				}
@@ -268,7 +273,7 @@ int ProcessKeys(int numEvents)
 			}
 			else
 			{
-					strcpy(lpStr, "Unable to terminate this proces...                                      ");
+					sprintf(lpStr, "Unable to terminate process %3d (unable to OpenProcess)               ", pId);
 					WriteConsoleOutputCharacter(hStdout, lpStr, strlen(lpStr), pos, &pId);
 					Sleep(1000);
 			}
@@ -497,7 +502,8 @@ int MultiByteToWideChar(
 // Code partly taken from slw32tty.c from mc/slang
 unsigned int GetKeyPressed(int events)
 {
-	long key, bytesRead;
+	long key;
+	DWORD bytesRead;
 	INPUT_RECORD record;
 	int i;
 
@@ -522,19 +528,19 @@ int main(int *argc, char **argv)
 
 	if (hStdin == INVALID_HANDLE_VALUE || hStdout == INVALID_HANDLE_VALUE)
 	{
-		printf("tmtm: can't use console.");
+		printf("ctm: can't use console.");
 		return -1;
 	}
 
 	if (GetConsoleMode(hStdin, &inConMode) == 0)
 	{
-		printf("tmtm: can't GetConsoleMode() for input console.");
+		printf("ctm: can't GetConsoleMode() for input console.");
 		return -1;
 	}
 
 	if (GetConsoleMode(hStdout, &outConMode) == 0)
 	{
-		printf("tmtm: can't GetConsoleMode() for output console.");
+		printf("ctm: can't GetConsoleMode() for output console.");
 		return -1;
 	}
 
@@ -559,7 +565,7 @@ int main(int *argc, char **argv)
 				break;
 		}
 		else
-			Sleep(200); // TODO: Should be done more efficient (might be another thread handling input/etc)*/
+			Sleep(40); // TODO: Should be done more efficient (might be another thread handling input/etc)*/
 	}
 
 	RestoreConsole();

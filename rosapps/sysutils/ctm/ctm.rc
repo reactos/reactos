@@ -23,9 +23,9 @@ BEGIN
             VALUE "CompanyName",	RES_STR_COMPANY_NAME
             VALUE "FileDescription",	"ReactOS Console Task Manager\0"
             VALUE "FileVersion",	RES_STR_FILE_VERSION
-            VALUE "InternalName",	"tlist\0"
+            VALUE "InternalName",	"ctm\0"
             VALUE "LegalCopyright",	"2003, Aleksey Bragin\0"
-            VALUE "OriginalFilename",	"tlist.exe\0"
+            VALUE "OriginalFilename",	"ctm.exe\0"
             VALUE "ProductName",	RES_STR_PRODUCT_NAME
             VALUE "ProductVersion",	RES_STR_PRODUCT_VERSION
         END

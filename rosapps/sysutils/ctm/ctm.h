@@ -5,7 +5,7 @@
    Written by: Aleksey Bragin (aleksey@studiocerebral.com)
    
    Most of this file content is taken from
-   ReactOS Task Manager written by Brian Palmet (brianp@reactos.org)
+   ReactOS Task Manager written by Brian Palmer (brianp@reactos.org)
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
