@@ -46,15 +46,16 @@ $(TARGET).exe:	$(OBJS) $(TARGET).coff
 	$(NM) --numeric-sort $(TARGET).exe > $(TARGET).sym
 
 
-about.o:	about.c about.h resource.h
+main.h:		resource.h
 
-main.o:		main.c main.h childwnd.h framewnd.h resource.h
+about.o:	about.c about.h main.h
 
-childwnd.o:	childwnd.c childwnd.h resource.h
+main.o:		main.c main.h framewnd.h childwnd.h
 
-framewnd.o:	framewnd.c framewnd.h resource.h
+framewnd.o:	framewnd.c framewnd.h main.h
 
-#$(TARGET).o:	$(TARGET).c $(TARGET).h resource.h
+childwnd.o:	childwnd.c childwnd.h main.h
+
 
 
 clean:
