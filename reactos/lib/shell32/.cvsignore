@@ -7,11 +7,6 @@
 *.map
 *.tmp
 Makefile.ros
-desktop.ico
-document.ico
-drive.ico
-folder.ico
-folder_open.ico
-mycomputer.ico
+*.ico
 shell32.spec.def
 authors.c
