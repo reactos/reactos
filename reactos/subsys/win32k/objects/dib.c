@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.35 2003/10/04 21:09:29 gvg Exp $
+ * $Id: dib.c,v 1.36 2003/11/08 11:19:47 navaraf Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -515,7 +515,6 @@ HBITMAP STDCALL NtGdiCreateDIBitmap(HDC hdc, const BITMAPINFOHEADER *header,
                                UINT coloruse)
 {
   HBITMAP handle;
-  BOOL fColor;
   DWORD width;
   int height;
   WORD bpp;
@@ -527,64 +526,20 @@ HBITMAP STDCALL NtGdiCreateDIBitmap(HDC hdc, const BITMAPINFOHEADER *header,
   // Check if we should create a monochrome or color bitmap. We create a monochrome bitmap only if it has exactly 2
   // colors, which are black followed by white, nothing else. In all other cases, we create a color bitmap.
 
-  if (bpp != 1) fColor = TRUE;
-  else if ((coloruse != DIB_RGB_COLORS) ||
-           (init != CBM_INIT) || !data) fColor = FALSE;
-  else
-  {
-    if (data->bmiHeader.biSize == sizeof(BITMAPINFOHEADER))
-    {
-      RGBQUAD *rgb = data->bmiColors;
-      DWORD col = RGB( rgb->rgbRed, rgb->rgbGreen, rgb->rgbBlue );
-
-      // Check if the first color of the colormap is black
-      if ((col == RGB(0, 0, 0)))
-      {
-        rgb++;
-        col = RGB( rgb->rgbRed, rgb->rgbGreen, rgb->rgbBlue );
-
-        // If the second color is white, create a monochrome bitmap
-        fColor =  (col != RGB(0xff,0xff,0xff));
-      }
-    else fColor = TRUE;
-  }
-  else if (data->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
-  {
-    RGBTRIPLE *rgb = ((BITMAPCOREINFO *)data)->bmciColors;
-     DWORD col = RGB( rgb->rgbtRed, rgb->rgbtGreen, rgb->rgbtBlue);
-
-    if ((col == RGB(0,0,0)))
-    {
-      rgb++;
-      col = RGB( rgb->rgbtRed, rgb->rgbtGreen, rgb->rgbtBlue );
-      fColor = (col != RGB(0xff,0xff,0xff));
-    }
-    else fColor = TRUE;
-  }
-  else
-  {
-      DPRINT("(%ld): wrong size for data\n", data->bmiHeader.biSize );
-      return 0;
-    }
-  }
-
   // Now create the bitmap
-
   if (init == CBM_INIT)
     {
       handle = NtGdiCreateCompatibleBitmap(hdc, width, height);
+      if (!handle)
+        { 
+          return 0;
+        }
+      NtGdiSetDIBits(hdc, handle, 0, height, bits, data, coloruse);
     }
   else
     {
       handle = NtGdiCreateBitmap(width, height, 1, bpp, NULL);
     }
-
-  if (!handle) return 0;
-
-  if (init == CBM_INIT)
-  {
-    NtGdiSetDIBits(hdc, handle, 0, height, bits, data, coloruse);
-  }
 
   return handle;
 }
