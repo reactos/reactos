@@ -16,19 +16,16 @@ VOID STDCALL GetSystemTimeAsFileTime(LPFILETIME  lpSystemTimeAsFileTime );
 
 clock_t clock ( void )
 {
-	FILETIME  CreationTime;
-	FILETIME  ExitTime;
-	FILETIME  KernelTime;
-	FILETIME  UserTime;
-	
-	FILETIME  SystemTime;
-	DWORD Remainder;
+        FILETIME  CreationTime;
+        FILETIME  ExitTime;
+        FILETIME  KernelTime;
+        FILETIME  UserTime;
+        
+        DWORD Remainder;
 
-	if ( !GetProcessTimes(GetCurrentProcess(),&CreationTime,&ExitTime,&KernelTime,&UserTime ) )
-		return -1;
+        if ( !GetProcessTimes(GetCurrentProcess(),&CreationTime,&ExitTime,&KernelTime,&UserTime ) )
+                return -1;
+            
 
-	GetSystemTimeAsFileTime(&SystemTime);
-		
-
-	return FileTimeToUnixTime( &SystemTime,&Remainder ) - FileTimeToUnixTime( &CreationTime,&Remainder ); 
+        return FileTimeToUnixTime( &KernelTime,&Remainder ) + FileTimeToUnixTime( &UserTime,&Remainder ); 
 }

@@ -9,7 +9,7 @@
 
 int getc(FILE *fp)
 {
-
+        int c = -1;
 // check for invalid stream
 
 	if ( !__validfp (fp) ) {
@@ -25,12 +25,12 @@ int getc(FILE *fp)
 
 	if(fp->_cnt > 0) {
 		fp->_cnt--;
-		return (int)*fp->_ptr++;
+		c =  (int)*fp->_ptr++;
 	} 
 	else {
-		return _filbuf(fp);
+		c =  _filbuf(fp);
 	}
-	return -1;
+	return c;
 }
 
 // not exported

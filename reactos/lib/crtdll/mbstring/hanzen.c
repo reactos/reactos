@@ -1,3 +1,13 @@
+#include <mbctype.h>
+
+/*
+ * japanese code system utilities < jutil.h >
+ *
+ * 日本語のコード体系に関するユーティリティ
+ *
+ * Copyright (c) 1992-94 Tokyo Denki University, Taiji Yamada
+ * Copyright (c) 1997 AIHARA Electrical Engineering Co.,Ltd., Taiji Yamada
+ */
 
 static unsigned short han_to_zen_ascii_table[0x5f] = {
   0x8140, 0x8149, 0x8168, 0x8194, 0x8190, 0x8193, 0x8195, 0x8166,
@@ -84,15 +94,6 @@ static unsigned short _mbctombb(unsigned short c)
   }
   return c;
 }
-#endif
 
 
-unsigned int _mbctohira( unsigned int c )
-{
-	return c;
-}
 
-unsigned int _mbctokata( unsigned int c )
-{
-	return c;
-}

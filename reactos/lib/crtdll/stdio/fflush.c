@@ -73,6 +73,9 @@ int fflush(FILE *f)
 
 // how can write return less than rn without being on error ???
 
+// possibly commit the flushed data
+// better open the file in write through mode
+
     do {
       n = _write(fileno(f), base, rn);
       if (n <= 0) {

@@ -119,7 +119,7 @@ OLD_OBJECTS = $(MISC_OBJECTS) stdlib/malloc.o stdlib/abort.o \
 	  stdlib/errno.o stdio/printf.o stdio/vprintf.o\
 	  $(QUAD_OBJECTS)
 
-RESOURCE_OBJECT = crtdll.coff
+#RESOURCE_OBJECT = crtdll.coff
 
 OBJECTS = $(MISC_OBJECTS) $(STDLIB_OBJECTS) $(IO_OBJECTS) \
 	  $(FLOAT_OBJECTS) $(ASSERT_OBJECTS) $(PROCESS_OBJECTS) \

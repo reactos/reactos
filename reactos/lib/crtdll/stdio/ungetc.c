@@ -37,7 +37,6 @@ ungetc(int c, FILE *f)
     f->_flag |= _IOUNGETC;
     *f->_ptr = c;
   }
-
   return c;
 }
 

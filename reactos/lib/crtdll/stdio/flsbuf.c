@@ -28,6 +28,12 @@ _flsbuf(int c, FILE *f)
 	return EOF;
   }
 
+// no file associated with buffer
+// this is a memory stream
+
+  if ( fileno(f) == -1 )
+	return c;
+
   /* if the buffer is not yet allocated, allocate it */
   if ((base = f->_base) == NULL && (f->_flag & _IONBF) == 0)
   {

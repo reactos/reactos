@@ -1,4 +1,25 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
+
+/* Copyright (C) 1991, 1995 Free Software Foundation, Inc.
+This file is part of the GNU C Library.
+
+The GNU C Library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Library General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The GNU C Library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Library General Public License for more details.
+
+You should have received a copy of the GNU Library General Public
+License along with the GNU C Library; see the file COPYING.LIB.  If
+not, write to the Free Software Foundation, Inc., 675 Mass Ave,
+Cambridge, MA 02139, USA.  */
+
+#include <stdarg.h>
+#include <crtdll/stdio.h>
 #include <crtdll/stdio.h>
 #include <limits.h>
 #include <crtdll/internal/file.h>
@@ -7,15 +28,30 @@
 int
 sprintf(char *str, const char *fmt, ...)
 {
-  FILE _strbuf;
-  int len;
-  va_list a = 0;
-  va_start( a, fmt ); 
+  va_list arg;
+  int done;
 
-  _strbuf._flag = _IOWRT|_IOSTRG;
-  _strbuf._ptr = str;
-  _strbuf._cnt = INT_MAX;
-  len = vfprintf(&_strbuf, fmt, a);
-  *_strbuf._ptr = 0;
-  return len;
+  va_start (arg, fmt);
+  done = vsprintf (str, fmt, arg);
+  //va_end (arg);
+  return done;
 }
+
+
+
+/* Write formatted output into S, according to the format
+   string FORMAT, writing no more than MAXLEN characters.  */
+/* VARARGS3 */
+int
+snprintf (char *s, size_t maxlen,const char *format, ...)
+{
+  va_list arg;
+  int done;
+
+  va_start (arg, format);
+  done = vsnprintf (s, maxlen, format, arg);
+  //va_end (arg);
+
+  return done;
+}
+

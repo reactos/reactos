@@ -59,7 +59,7 @@ _filbuf(FILE *f)
   }
 
 // if we have a dirty stream we flush it
-  if ( f->_flag &_IODIRTY == _IODIRTY )
+  if ( (f->_flag &_IODIRTY) == _IODIRTY )
 	 fflush(f);
 
 

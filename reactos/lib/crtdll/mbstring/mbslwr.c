@@ -1,3 +1,5 @@
+#include <mbstring.h>
+
 unsigned int _mbctolower(unsigned int c)
 {
 	if (!_ismbblead(c) )
