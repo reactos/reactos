@@ -17,6 +17,33 @@
 #  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 
+# Windows is default host environment
+ifeq ($(HOST),)
+HOST = mingw32-windows
+endif
+
+#
+# Choose various options
+#
+ifeq ($(HOST),mingw32-linux)
+RM			= rm -f
+CP			= cp -f 
+CC			= mingw32-gcc
+LD			= mingw32-ld
+AR			= mingw32-ar
+NM			= mingw32-nm
+MKDIR		= mkdir
+SEP      = /
+else
+RM			= cmd /C del
+CP			= copy /Y 
+CC			= gcc
+LD			= ld
+AR			= ar
+NM			= nm
+MKDIR		= md
+SEP      = /
+endif
 
 #############################################
 # CHANGE THESE FOR YOUR OUTPUT
@@ -28,37 +55,33 @@ TARGET		=	i386
 DEBUG		=	no
 
 OBJDIR		=	obj
-OUTPUT_DIR	=	$(OBJDIR)/$(TARGET)
+OUTPUT_DIR	=	$(OBJDIR)$(SEP)$(TARGET)
 
-BOOTCD_DIR	=	../../bootcd
+BOOTCD_DIR	=	..$(SEP)..$(SEP)bootcd
 
 #############################################
 # COMPILER AND LINKER PROGRAMS
 #
-TOOLSDIR	= $(SRCDIR)/../tools
+TOOLSDIR	= $(SRCDIR)$(SEP)..$(SEP)tools
 
-CC			= gcc
-LD			= ld
-AR			= ar
-NM			= nm
-RM			= $(TOOLSDIR)/rdel
-CP			= $(TOOLSDIR)/rcopy
-MKDIR		= $(TOOLSDIR)/rmkdir
-RMDIR		= $(TOOLSDIR)/rrmdir
+RM			= $(TOOLSDIR)$(SEP)rdel
+CP			= $(TOOLSDIR)$(SEP)rcopy
+MKDIR		= $(TOOLSDIR)$(SEP)rmkdir
+RMDIR		= $(TOOLSDIR)$(SEP)rrmdir
 NASM_CMD	= nasm
 OBJCOPY		= objcopy
-DEPTOOL		= $(TOOLSDIR)/deptool
-HOSTTOOL	= $(TOOLSDIR)/hosttype
+DEPTOOL		= $(TOOLSDIR)$(SEP)deptool
+HOSTTOOL	= $(TOOLSDIR)$(SEP)hosttype
 TOOLS		= $(DEPTOOL) $(HOSTTOOL)
 
-HOST		= $(shell $(HOSTTOOL))
+HOSTTYPE		= $(shell $(HOSTTOOL))
 
 #-----------------------------------------------------------------------------------------------------
 # TEST IF WE ARE IN THE TARGET DIRECTORY
 # IF NOT WE WILL CHANGE TO THE TARGET DIRECTORY AND RUN MAKE FROM THERE
 #-----------------------------------------------------------------------------------------------------
-#ifeq (,$(filter $(CURDIR)/$(OUTPUT_DIR),$(notdir $(CURDIR))))
-ifneq ($(CURDIR), $(SRCDIR)/$(OUTPUT_DIR))
+#ifeq (,$(filter $(CURDIR)$(SEP)$(OUTPUT_DIR),$(notdir $(CURDIR))))
+ifneq ($(CURDIR), $(SRCDIR)$(SEP)$(OUTPUT_DIR))
 
 SRCDIR		= $(CURDIR)
 
@@ -68,10 +91,10 @@ SRCDIR		= $(CURDIR)
 # VARIABLE TO CHANGE TO TARGET DIRECTORY AND INVOKE MAKE FROM THERE
 #
 MAKETARGET	= $(MAKE) --no-print-directory -C $(OUTPUT_DIR) \
-			  -f ../../Makefile SRCDIR=$(CURDIR) $(MAKECMDGOALS)
+			  -f ..$(SEP)..$(SEP)Makefile SRCDIR=$(CURDIR) $(MAKECMDGOALS)
 
 .PHONY: CHANGE_TO_TARGET
-CHANGE_TO_TARGET setupldr : BUILD_TOOLS $(OBJDIR) $(OBJDIR)/$(TARGET)
+CHANGE_TO_TARGET setupldr : BUILD_TOOLS $(OBJDIR) $(OBJDIR)$(SEP)$(TARGET)
 	@echo Calculating source file dependencies...
 	+@$(MAKETARGET)
 
@@ -83,9 +106,9 @@ $(OBJDIR):
 	@echo Creating directory: $(OBJDIR)
 	@$(MKDIR) $(OBJDIR)
 
-$(OBJDIR)/$(TARGET): $(OBJDIR)
-	@echo Creating directory: $(OBJDIR)/$(TARGET)
-	@$(MKDIR) $(OBJDIR)/$(TARGET)
+$(OBJDIR)$(SEP)$(TARGET): $(OBJDIR)
+	@echo Creating directory: $(OBJDIR)$(SEP)$(TARGET)
+	@$(MKDIR) $(OBJDIR)$(SEP)$(TARGET)
 
 
 Makefile : ;
@@ -97,10 +120,10 @@ Makefile : ;
 .PHONY : clean
 clean:
 	@$(MAKE) --no-print-directory -C $(TOOLSDIR)
-	@echo Cleaning directory $(OBJDIR)/$(TARGET)
-	@-$(RM) $(OBJDIR)/$(TARGET)/*
-	@echo Removing directory $(OBJDIR)/$(TARGET)
-	@-$(RMDIR) $(OBJDIR)/$(TARGET)
+	@echo Cleaning directory $(OBJDIR)$(SEP)$(TARGET)
+	@-$(RM) $(OBJDIR)$(SEP)$(TARGET)$(SEP)*
+	@echo Removing directory $(OBJDIR)$(SEP)$(TARGET)
+	@-$(RMDIR) $(OBJDIR)$(SEP)$(TARGET)
 	@-$(RMDIR) $(OBJDIR)
 	@echo Clean ALL done.
 
@@ -112,20 +135,20 @@ bootcd : bootcd_dirs setup_loader boot_loader
 .PHONY : bootcd_dirs
 bootcd_dirs:
 	$(MKDIR) $(BOOTCD_DIR)
-	$(MKDIR) $(BOOTCD_DIR)/disk
-	$(MKDIR) $(BOOTCD_DIR)/disk/reactos
-	$(MKDIR) $(BOOTCD_DIR)/disk/install
-	$(MKDIR) $(BOOTCD_DIR)/disk/bootdisk
-	$(MKDIR) $(BOOTCD_DIR)/disk/loader
+	$(MKDIR) $(BOOTCD_DIR)$(SEP)disk
+	$(MKDIR) $(BOOTCD_DIR)$(SEP)disk$(SEP)reactos
+	$(MKDIR) $(BOOTCD_DIR)$(SEP)disk$(SEP)install
+	$(MKDIR) $(BOOTCD_DIR)$(SEP)disk$(SEP)bootdisk
+	$(MKDIR) $(BOOTCD_DIR)$(SEP)disk$(SEP)loader
 
 .PHONY : boot_loader
-boot_loader : $(OBJDIR)/$(TARGET)/freeldr.sys
-	$(CP) $(OBJDIR)/$(TARGET)/freeldr.sys $(BOOTCD_DIR)/disk/loader/freeldr.sys
-	$(CP) ../freeldr.ini $(BOOTCD_DIR)/disk/loader/freeldr.ini
+boot_loader : $(OBJDIR)$(SEP)$(TARGET)$(SEP)freeldr.sys
+	$(CP) $(OBJDIR)$(SEP)$(TARGET)$(SEP)freeldr.sys $(BOOTCD_DIR)$(SEP)disk$(SEP)loader$(SEP)freeldr.sys
+	$(CP) ..$(SEP)freeldr.ini $(BOOTCD_DIR)$(SEP)disk$(SEP)loader$(SEP)freeldr.ini
 
 .PHONY : setup_loader
-setup_loader : $(OBJDIR)/$(TARGET)/setupldr.sys
-	$(CP) $(OBJDIR)/$(TARGET)/setupldr.sys $(BOOTCD_DIR)/disk/reactos/setupldr.sys
+setup_loader : $(OBJDIR)$(SEP)$(TARGET)$(SEP)setupldr.sys
+	$(CP) $(OBJDIR)$(SEP)$(TARGET)$(SEP)setupldr.sys $(BOOTCD_DIR)$(SEP)disk$(SEP)reactos$(SEP)setupldr.sys
 
 #############################################
 
@@ -154,7 +177,7 @@ COMPILER_DEFINES = -D__$(TARGET)__ $(COMPILER_DEBUG_DEFINES)
 #############################################
 # INCLUDE DIRECTORY OPTIONS
 #
-COMPILER_INCLUDES	=	-I$(SRCDIR)/include
+COMPILER_INCLUDES	=	-I$(SRCDIR)$(SEP)include
 
 #############################################
 # COMPILER FLAGS
@@ -177,10 +200,10 @@ LFLAGS	=	$(LINKER_OPTIONS)
 #############################################
 # NASM FLAGS
 #
-ifeq ($(HOST), dos)
+ifeq ($(HOSTTYPE), dos)
 	NASMFLAGS	=	-f coff
 else
-	ifeq ($(HOST), win32)
+	ifeq ($(HOSTTYPE), win32)
 		NASMFLAGS	=	-f win32
 	else
 		NASMFLAGS	=	-f elf
@@ -325,21 +348,21 @@ ALL_OBJS	=	$(COMMON_OBJS)		\
 #############################################
 # SET THE VPATH SO MAKE CAN FIND THE SOURCE FILES
 #
-VPATH		=	$(SRCDIR)/					\
-				$(SRCDIR)/arch/$(TARGET)	\
-				$(SRCDIR)/rtl				\
-				$(SRCDIR)/fs				\
-				$(SRCDIR)/ui				\
-				$(SRCDIR)/reactos			\
-				$(SRCDIR)/comm				\
-				$(SRCDIR)/disk				\
-				$(SRCDIR)/mm				\
-				$(SRCDIR)/cache				\
-				$(SRCDIR)/inifile			\
-				$(SRCDIR)/inffile			\
-				$(SRCDIR)/video				\
-				$(SRCDIR)/math				\
-				$(SRCDIR)/include
+VPATH		=	$(SRCDIR)$(SEP)					\
+				$(SRCDIR)$(SEP)arch$(SEP)$(TARGET)	\
+				$(SRCDIR)$(SEP)rtl				\
+				$(SRCDIR)$(SEP)fs				\
+				$(SRCDIR)$(SEP)ui				\
+				$(SRCDIR)$(SEP)reactos			\
+				$(SRCDIR)$(SEP)comm				\
+				$(SRCDIR)$(SEP)disk				\
+				$(SRCDIR)$(SEP)mm				\
+				$(SRCDIR)$(SEP)cache				\
+				$(SRCDIR)$(SEP)inifile			\
+				$(SRCDIR)$(SEP)inffile			\
+				$(SRCDIR)$(SEP)video				\
+				$(SRCDIR)$(SEP)math				\
+				$(SRCDIR)$(SEP)include
 
 #############################################
 

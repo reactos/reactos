@@ -18,9 +18,32 @@
 #
 	
 
-CC		= gcc
-LD		= ld
-RM		= cmd /C del
+# Windows is default host environment
+ifeq ($(HOST),)
+HOST = mingw32-windows
+endif
+
+#
+# Choose various options
+#
+ifeq ($(HOST),mingw32-linux)
+RM			= rm -f
+CP			= cp -f 
+MKDIR		= mkdir
+SEP      = /
+CC		   = mingw32-gcc
+LD		   = mingw32-ld
+WINDRES  = mingw32-windres
+else
+RM			= cmd /C del
+CP			= copy /Y 
+MKDIR		= md
+SEP      = \$(EMPTY_VAR)
+CC   		= gcc
+LD	   	= ld
+RM	   	= cmd /C del
+WINDRES  = windres
+endif
 
 FLAGS = -Wall
 
@@ -36,7 +59,7 @@ fdebug.exe: $(OBJS)
 
 fdebug.res: fdebug.rc resource.h
 	@echo ===================================================== Compiling $*
-	windres -o fdebug.res fdebug.rc -O coff
+	$(WINDRES) -o fdebug.res fdebug.rc -O coff
 
 fdebug.o: fdebug.c rs232.h
 	@echo ===================================================== Compiling $*

@@ -17,10 +17,24 @@
 #  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 	
+# Windows is default host environment
+ifeq ($(HOST),)
+HOST = mingw32-windows
+endif
 
-CC		= gcc
-LD		= ld
-RM		= cmd /C del
+#
+# Choose various options
+#
+ifeq ($(HOST),mingw32-linux)
+RM			= rm -f
+SEP      = /
+else
+RM			= cmd /C del
+SEP      = \$(EMPTY_VAR)
+endif
+
+CC		= mingw32-gcc
+LD		= mingw32-ld
 
 FLAGS = -Wall
 
@@ -30,10 +44,10 @@ LIBS = -lkernel32
 
 .PHONY : clean
 
-all: ../bootsect/fat.h ../bootsect/fat32.h install.exe
+all: ..$(SEP)bootsect$(SEP)fat.h ..$(SEP)bootsect$(SEP)fat32.h install.exe
 
-../bootsect/fat.h ../bootsect/fat32.h :
-	@$(MAKE) --no-print-directory -C ../bootsect
+..$(SEP)bootsect$(SEP)fat.h ..$(SEP)bootsect$(SEP)fat32.h :
+	@$(MAKE) --no-print-directory -C ..$(SEP)bootsect
 
 install.exe: $(OBJS)
 	@echo ===================================================== LINKING install

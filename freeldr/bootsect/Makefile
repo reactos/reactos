@@ -17,13 +17,31 @@
 #  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 
+# Windows is default host environment
+ifeq ($(HOST),)
+HOST = mingw32-windows
+endif
+
+#
+# Choose various options
+#
+ifeq ($(HOST),mingw32-linux)
+RM			= rm -f
+CP			= cp -f 
+MKDIR		= mkdir
+SEP      = /
+else
 RM			= cmd /C del
 CP			= copy /Y 
 MKDIR		= md
+SEP      = \$(EMPTY_VAR)
+endif
+
 NASM_CMD	= nasm
-BIN2C		= ../tools/bin2c
-TOOLSDIR	= ../tools
-BOOTCD_DIR	= ..\..\bootcd
+NFLAGS = -fwin32 -dwin32
+BIN2C		= ..$(SEP)tools$(SEP)bin2c
+TOOLSDIR	= ..$(SEP)tools
+BOOTCD_DIR	= ..$(SEP)..$(SEP)bootcd
 
 .PHONY : clean bootcd
 
@@ -35,46 +53,46 @@ $(BIN2C) :
 
 dosmbr.bin : dosmbr.asm
 	@echo ===================================================== Assembling dosmbr
-	@$(NASM_CMD) -o dosmbr.bin -f bin dosmbr.asm
+	@$(NASM_CMD) $(NFLAGS) -o dosmbr.bin -f bin dosmbr.asm
 
 fat.bin : fat.asm $(BIN2C)
 	@echo ===================================================== Assembling fat
-	@$(NASM_CMD) -o fat.bin -f bin fat.asm
+	@$(NASM_CMD) $(NFLAGS) -o fat.bin -f bin fat.asm
 	@$(BIN2C) fat.bin fat.h fat_data
 
 
 fat32.bin : fat32.asm $(BIN2C)
 	@echo ===================================================== Assembling fat32
-	@$(NASM_CMD) -o fat32.bin -f bin fat32.asm
+	@$(NASM_CMD) $(NFLAGS) -o fat32.bin -f bin fat32.asm
 	@$(BIN2C) fat32.bin fat32.h fat32_data
 
 isoboot.bin : isoboot.asm
 	@echo ===================================================== Assembling isoboot
-	@$(NASM_CMD) -o isoboot.bin -f bin isoboot.asm
+	@$(NASM_CMD) $(NFLAGS) -o isoboot.bin -f bin isoboot.asm
 
 ext2.bin : ext2.asm
 	@echo ===================================================== Assembling ext2
-	@$(NASM_CMD) -o ext2.bin -f bin ext2.asm
+	@$(NASM_CMD) $(NFLAGS) -o ext2.bin -f bin ext2.asm
 	@$(BIN2C) ext2.bin ext2.h ext2_data
 
 
 .PHONY : bootcd
 bootcd: bootcd_dirs isoboot.bin
 	$(CP) isoboot.bin $(BOOTCD_DIR)
-	$(CP) dosmbr.bin $(BOOTCD_DIR)\disk\loader
-	$(CP) ext2.bin $(BOOTCD_DIR)\disk\loader
-	$(CP) fat.bin $(BOOTCD_DIR)\disk\loader
-	$(CP) fat32.bin $(BOOTCD_DIR)\disk\loader
-	$(CP) isoboot.bin $(BOOTCD_DIR)\disk\loader
+	$(CP) dosmbr.bin $(BOOTCD_DIR)$(SEP)disk$(SEP)loader
+	$(CP) ext2.bin $(BOOTCD_DIR)$(SEP)disk$(SEP)loader
+	$(CP) fat.bin $(BOOTCD_DIR)$(SEP)disk$(SEP)loader
+	$(CP) fat32.bin $(BOOTCD_DIR)$(SEP)disk$(SEP)loader
+	$(CP) isoboot.bin $(BOOTCD_DIR)$(SEP)disk$(SEP)loader
 
 .PHONY : bootcd_dirs
 bootcd_dirs:
 	$(MKDIR) $(BOOTCD_DIR)
-	$(MKDIR) $(BOOTCD_DIR)\disk
-	$(MKDIR) $(BOOTCD_DIR)\disk\reactos
-	$(MKDIR) $(BOOTCD_DIR)\disk\install
-	$(MKDIR) $(BOOTCD_DIR)\disk\bootdisk
-	$(MKDIR) $(BOOTCD_DIR)\disk\loader
+	$(MKDIR) $(BOOTCD_DIR)$(SEP)disk
+	$(MKDIR) $(BOOTCD_DIR)$(SEP)disk$(SEP)reactos
+	$(MKDIR) $(BOOTCD_DIR)$(SEP)disk$(SEP)install
+	$(MKDIR) $(BOOTCD_DIR)$(SEP)disk$(SEP)bootdisk
+	$(MKDIR) $(BOOTCD_DIR)$(SEP)disk$(SEP)loader
 
 clean:
 	@-$(RM) *.bin
