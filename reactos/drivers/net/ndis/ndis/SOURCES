@@ -1,0 +1,29 @@
+TARGETNAME=ndis
+TARGETPATH=..\objects
+TARGETTYPE=EXPORT_DRIVER
+
+TARGETLIBS=
+
+C_DEFINES=$(C_DEFINES) -DUNICODE -DNDIS_WRAPPER -DBINARY_COMPATIBLE=1
+
+INCLUDES=..\include;..\..\..\..\include\net;$(BASEDIR)\INC
+
+SOURCES= 40gone.c \
+         50gone.c \
+         buffer.c \
+         cl.c \
+         cm.c \
+         co.c \
+		 control.c \
+		 hardware.c \
+		 io.c \
+         main.c \
+		 memory.c \
+         miniport.c \
+		 protocol.c \
+		 string.c \
+         stubs.c \
+		 time.c \
+         RESOURCE.RC
+
+MSC_WARNING_LEVEL=/W3 /WX
