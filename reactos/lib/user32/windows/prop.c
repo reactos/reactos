@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: prop.c,v 1.5 2002/09/17 23:46:23 dwelch Exp $
+/* $Id: prop.c,v 1.6 2002/11/05 20:58:20 hbirr Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -118,7 +118,7 @@ RemovePropA(HWND hWnd, LPCSTR lpString)
     }
   else
     {
-      Ret = RemovePropW(hWnd, lpWString);
+      Ret = RemovePropW(hWnd, (LPCWSTR)lpString);
     }
   return(Ret);
 }

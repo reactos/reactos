@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmap.c,v 1.6 2002/09/30 21:21:38 chorns Exp $
+/* $Id: bitmap.c,v 1.7 2002/11/05 20:58:20 hbirr Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -57,7 +57,7 @@ LoadImageA(HINSTANCE hinst,
     }
   else
     {
-      Handle = LoadImageW(hinst, lpszWName, uType, cxDesired,
+      Handle = LoadImageW(hinst, (LPCWSTR)lpszName, uType, cxDesired,
 			  cyDesired, fuLoad);
     }
   return(Handle);
