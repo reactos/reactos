@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.8 1999/10/24 17:51:54 ekohl Exp $
+/* $Id: time.c,v 1.9 1999/12/27 15:05:15 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -58,8 +58,12 @@ static __inline void NormalizeTimeFields(CSHORT *FieldToNormalize,
 
 /* FUNCTIONS *****************************************************************/
 
-VOID RtlTimeToTimeFields(PLARGE_INTEGER liTime,
-			 PTIME_FIELDS TimeFields)
+VOID
+STDCALL
+RtlTimeToTimeFields (
+	PLARGE_INTEGER liTime,
+	PTIME_FIELDS TimeFields
+	)
 {
   const int *Months;
   int LeapSecondCorrections, SecondsInDay, CurYear;
@@ -128,8 +132,12 @@ VOID RtlTimeToTimeFields(PLARGE_INTEGER liTime,
   TimeFields->Day = (CSHORT) (Days + 1);
 }
 
-BOOLEAN RtlTimeFieldsToTime(PTIME_FIELDS tfTimeFields,
-			    PLARGE_INTEGER Time)
+BOOLEAN
+STDCALL
+RtlTimeFieldsToTime (
+	PTIME_FIELDS tfTimeFields,
+	PLARGE_INTEGER Time
+	)
 {
   int CurYear, CurMonth, MonthLength;
   long long int rcTime;
@@ -197,8 +205,11 @@ BOOLEAN RtlTimeFieldsToTime(PTIME_FIELDS tfTimeFields,
 
 
 VOID
-RtlSecondsSince1970ToTime (ULONG SecondsSince1970,
-                           PLARGE_INTEGER Time)
+STDCALL
+RtlSecondsSince1970ToTime (
+	ULONG SecondsSince1970,
+	PLARGE_INTEGER Time
+	)
 {
    LONGLONG llTime;
 
@@ -209,8 +220,11 @@ RtlSecondsSince1970ToTime (ULONG SecondsSince1970,
 
 
 VOID
-RtlSecondsSince1980ToTime (ULONG SecondsSince1980,
-                           PLARGE_INTEGER Time)
+STDCALL
+RtlSecondsSince1980ToTime (
+	ULONG SecondsSince1980,
+	PLARGE_INTEGER Time
+	)
 {
    LONGLONG llTime;
 
@@ -221,8 +235,11 @@ RtlSecondsSince1980ToTime (ULONG SecondsSince1980,
 
 
 BOOLEAN
-RtlTimeToSecondsSince1970 (PLARGE_INTEGER Time,
-                           PULONG SecondsSince1970)
+STDCALL
+RtlTimeToSecondsSince1970 (
+	PLARGE_INTEGER Time,
+	PULONG SecondsSince1970
+	)
 {
    LARGE_INTEGER liTime;
 
@@ -239,8 +256,11 @@ RtlTimeToSecondsSince1970 (PLARGE_INTEGER Time,
 
 
 BOOLEAN
-RtlTimeToSecondsSince1980 (PLARGE_INTEGER Time,
-                           PULONG SecondsSince1980)
+STDCALL
+RtlTimeToSecondsSince1980 (
+	PLARGE_INTEGER Time,
+	PULONG SecondsSince1980
+	)
 {
    LARGE_INTEGER liTime;
 

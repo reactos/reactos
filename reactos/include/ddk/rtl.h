@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.22 1999/12/26 17:22:18 ea Exp $
+/* $Id: rtl.h,v 1.23 1999/12/27 15:04:50 ekohl Exp $
  * 
  */
 
@@ -865,6 +865,20 @@ RtlRetrieveUshort (
 	PUSHORT	SourceAddress
 	);
 
+VOID
+STDCALL
+RtlSecondsSince1970ToTime (
+	ULONG SecondsSince1970,
+	PLARGE_INTEGER Time
+	);
+
+VOID
+STDCALL
+RtlSecondsSince1980ToTime (
+	ULONG SecondsSince1980,
+	PLARGE_INTEGER Time
+	);
+
 NTSTATUS
 STDCALL
 RtlSetDaclSecurityDescriptor (
@@ -908,12 +922,28 @@ RtlStoreUshort (
 	);
 
 BOOLEAN
+STDCALL
 RtlTimeFieldsToTime (
 	PTIME_FIELDS	TimeFields,
 	PLARGE_INTEGER	Time
 	);
 
+BOOLEAN
+STDCALL
+RtlTimeToSecondsSince1970 (
+	PLARGE_INTEGER Time,
+	PULONG SecondsSince1970
+	);
+
+BOOLEAN
+STDCALL
+RtlTimeToSecondsSince1980 (
+	PLARGE_INTEGER Time,
+	PULONG SecondsSince1980
+	);
+
 VOID
+STDCALL
 RtlTimeToTimeFields (
 	PLARGE_INTEGER	Time,
 	PTIME_FIELDS	TimeFields

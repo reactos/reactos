@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.21 1999/12/26 20:21:02 ea Exp $
+; $Id: ntoskrnl.edf,v 1.22 1999/12/27 15:05:33 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -250,12 +250,12 @@ RtlMultiByteToUnicodeN=RtlMultiByteToUnicodeN@20
 RtlMultiByteToUnicodeSize=RtlMultiByteToUnicodeSize@12
 RtlOemStringToUnicodeSize=RtlOemStringToUnicodeSize@4
 RtlOemStringToUnicodeString=RtlOemStringToUnicodeString@12
-RtlSecondsSince1970ToTime
-RtlSecondsSince1980ToTime
-RtlTimeFieldsToTime
-RtlTimeToSecondsSince1970
-RtlTimeToSecondsSince1980
-RtlTimeToTimeFields
+RtlSecondsSince1970ToTime=RtlSecondsSince1970ToTime@8
+RtlSecondsSince1980ToTime=RtlSecondsSince1980ToTime@8
+RtlTimeFieldsToTime=RtlTimeFieldsToTime@8
+RtlTimeToSecondsSince1970=RtlTimeToSecondsSince1970@8
+RtlTimeToSecondsSince1980=RtlTimeToSecondsSince1980@8
+RtlTimeToTimeFields=RtlTimeToTimeFields@8
 RtlUnicodeStringToAnsiSize=RtlUnicodeStringToAnsiSize@4
 RtlUnicodeStringToAnsiString=RtlUnicodeStringToAnsiString@12
 RtlUnicodeStringToInteger=RtlUnicodeStringToInteger@12
