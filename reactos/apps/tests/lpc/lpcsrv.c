@@ -1,4 +1,4 @@
-/* $Id: lpcsrv.c,v 1.13 2003/11/17 02:12:48 hyperion Exp $
+/* $Id: lpcsrv.c,v 1.14 2004/01/06 16:07:21 ekohl Exp $
  *
  * DESCRIPTION: Simple LPC Server
  * PROGRAMMER:  David Welch
@@ -6,7 +6,6 @@
 #include <ddk/ntddk.h>
 #include <rosrtl/string.h>
 #include <windows.h>
-#include <napi/lpc.h>
 #include <stdarg.h>
 #include <string.h>
 #include <stdio.h>

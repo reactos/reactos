@@ -1,8 +1,6 @@
 #ifndef __INCLUDE_INTERNAL_PORT_H
 #define __INCLUDE_INTERNAL_PORT_H
 
-#include <napi/lpc.h>
-
 typedef struct _EPORT_LISTENER
 {
   HANDLE ListenerPid;

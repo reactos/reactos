@@ -2,7 +2,6 @@
 #define __INCLUDE_CSRSS_CSRSS_H
 
 #include <windows.h>
-#include <napi/lpc.h>
 #include <ddk/ntddblue.h>
 #include <ntos/keyboard.h>
 

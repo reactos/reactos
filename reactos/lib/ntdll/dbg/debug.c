@@ -1,4 +1,4 @@
-/* $Id: debug.c,v 1.13 2003/12/30 05:10:32 hyperion Exp $
+/* $Id: debug.c,v 1.14 2004/01/06 16:08:02 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,7 +16,6 @@
 #include <rosrtl/string.h>
 #include <rosrtl/thread.h>
 #include <ntdll/dbg.h>
-#include <napi/lpc.h>
 
 /* FUNCTIONS *****************************************************************/
 

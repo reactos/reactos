@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.53 2003/11/24 16:15:00 gvg Exp $
+/* $Id: init.c,v 1.54 2004/01/06 16:10:11 ekohl Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -32,7 +32,6 @@
 #include <ntos.h>
 #include <ntdll/rtl.h>
 #include <ntdll/ldr.h>
-#include <napi/lpc.h>
 #include <rosrtl/string.h>
 
 #include "smss.h"
@@ -520,7 +519,7 @@ SmLoadKnownDlls(VOID)
 		      FILE_SYNCHRONOUS_IO_NONALERT | FILE_DIRECTORY_FILE);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtOpenFile() failed (Status %lx)\n", Status);
+      DPRINT1("NtOpenFile(%wZ) failed (Status %lx)\n", &DllNtPath, Status);
       return Status;
     }
 

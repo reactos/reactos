@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.20 2003/11/21 18:42:05 navaraf Exp $
+/* $Id: zw.h,v 1.21 2004/01/06 15:57:48 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -56,6 +56,24 @@ typedef struct _EVENT_BASIC_INFORMATION
 //#define LCID ULONG
 //#define SECURITY_INFORMATION ULONG
 //typedef ULONG SECURITY_INFORMATION;
+
+#ifndef __USE_NT_LPC__
+NTSTATUS STDCALL
+NtAcceptConnectPort (PHANDLE PortHandle,
+		     HANDLE NamedPortHandle,
+		     PLPC_MESSAGE ServerReply,
+		     BOOLEAN AcceptIt,
+		     PLPC_SECTION_WRITE WriteMap,
+		     PLPC_SECTION_READ ReadMap);
+#else
+NTSTATUS STDCALL
+NtAcceptConnectPort (PHANDLE PortHandle,
+		     ULONG PortIdentifier,
+		     PLPC_MESSAGE ServerReply,
+		     BOOLEAN AcceptIt,
+		     PLPC_SECTION_WRITE WriteMap,
+		     PLPC_SECTION_READ ReadMap);
+#endif /* ndef __USE_NT_LPC__ */
 
 /*
  * FUNCTION: Adjusts the groups in an access token
@@ -343,6 +361,34 @@ ZwCloseObjectAuditAlarm(
 	IN PVOID HandleId,
 	IN BOOLEAN GenerateOnClose
 	);
+
+
+NTSTATUS STDCALL
+NtCompleteConnectPort (HANDLE PortHandle);
+
+NTSTATUS STDCALL
+ZwCompleteConnectPort (HANDLE PortHandle);
+
+
+NTSTATUS STDCALL
+NtConnectPort (PHANDLE PortHandle,
+	       PUNICODE_STRING PortName,
+	       PSECURITY_QUALITY_OF_SERVICE SecurityQos,
+	       PLPC_SECTION_WRITE SectionInfo,
+	       PLPC_SECTION_READ MapInfo,
+	       PULONG MaxMessageSize,
+	       PVOID ConnectInfo,
+	       PULONG ConnectInfoLength);
+
+NTSTATUS STDCALL
+ZwConnectPort (PHANDLE PortHandle,
+	       PUNICODE_STRING PortName,
+	       PSECURITY_QUALITY_OF_SERVICE SecurityQos,
+	       PLPC_SECTION_WRITE SectionInfo,
+	       PLPC_SECTION_READ MapInfo,
+	       PULONG MaxMessageSize,
+	       PVOID ConnectInfo,
+	       PULONG ConnectInfoLength);
 
 /*
  * FUNCTION: Creates a directory object
@@ -634,6 +680,102 @@ ZwCreateMutant(
 	);
 
 /*
+ * FUNCTION: Creates a named pipe
+ * ARGUMENTS:
+ *        NamedPipeFileHandle (OUT) = Caller supplied storage for the 
+ *                                    resulting handle
+ *        DesiredAccess = Specifies the type of access that the caller 
+ *                        requires to the file boject
+ *        ObjectAttributes = Points to a structure that specifies the
+ *                           object attributes.
+ *        IoStatusBlock = Points to a variable that receives the final
+ *                        completion status and information
+ *        ShareAccess = Specifies the limitations on sharing of the file.
+ *                      This parameter can be zero or any compatible 
+ *                      combination of the following flags
+ *                         FILE_SHARE_READ
+ *                         FILE_SHARE_WRITE
+ *        CreateDisposition = Specifies what to do depending on whether
+ *                            the file already exists. This must be one of
+ *                            the following values
+ *                                  FILE_OPEN
+ *                                  FILE_CREATE
+ *                                  FILE_OPEN_IF
+ *        CreateOptions = Specifies the options to be applied when
+ *                        creating or opening the file, as a compatible
+ *                        combination of the following flags
+ *                            FILE_WRITE_THROUGH
+ *                            FILE_SYNCHRONOUS_IO_ALERT
+ *                            FILE_SYNCHRONOUS_IO_NONALERT
+ *        TypeMessage = Specifies whether the data written to the pipe is
+ *                      interpreted as a sequence of messages or as a 
+ *                      stream of bytes
+ *        ReadModeMessage = Specifies whether the data read from the pipe
+ *                          is interpreted as a sequence of messages or as
+ *                          a stream of bytes
+ *        NonBlocking = Specifies whether non-blocking mode is enabled
+ *        MaxInstances = Specifies the maximum number of instancs that can
+ *                       be created for this pipe
+ *        InBufferSize = Specifies the number of bytes to reserve for the
+ *                       input buffer
+ *        OutBufferSize = Specifies the number of bytes to reserve for the
+ *                        output buffer
+ *        DefaultTimeout = Optionally points to a variable that specifies
+ *                         the default timeout value in units of 
+ *                         100-nanoseconds.
+ * REMARKS: This funciton maps to the win32 function CreateNamedPipe
+ * RETURNS:
+ *	Status
+ */
+NTSTATUS STDCALL
+NtCreateNamedPipeFile (OUT PHANDLE NamedPipeFileHandle,
+		       IN ACCESS_MASK DesiredAccess,
+		       IN POBJECT_ATTRIBUTES ObjectAttributes,
+		       OUT PIO_STATUS_BLOCK IoStatusBlock,
+		       IN ULONG ShareAccess,
+		       IN ULONG CreateDisposition,
+		       IN ULONG CreateOptions,
+		       IN BOOLEAN WriteModeMessage,
+		       IN BOOLEAN ReadModeMessage,
+		       IN BOOLEAN NonBlocking,
+		       IN ULONG MaxInstances,
+		       IN ULONG InBufferSize,
+		       IN ULONG OutBufferSize,
+		       IN PLARGE_INTEGER DefaultTimeOut);
+
+NTSTATUS STDCALL
+ZwCreateNamedPipeFile (OUT PHANDLE NamedPipeFileHandle,
+		       IN ACCESS_MASK DesiredAccess,
+		       IN POBJECT_ATTRIBUTES ObjectAttributes,
+		       OUT PIO_STATUS_BLOCK IoStatusBlock,
+		       IN ULONG ShareAccess,
+		       IN ULONG CreateDisposition,
+		       IN ULONG CreateOptions,
+		       IN BOOLEAN WriteModeMessage,
+		       IN BOOLEAN ReadModeMessage,
+		       IN BOOLEAN NonBlocking,
+		       IN ULONG MaxInstances,
+		       IN ULONG InBufferSize,
+		       IN ULONG OutBufferSize,
+		       IN PLARGE_INTEGER DefaultTimeOut);
+
+
+NTSTATUS STDCALL
+NtCreatePort (PHANDLE PortHandle,
+	      POBJECT_ATTRIBUTES ObjectAttributes,
+	      ULONG MaxConnectInfoLength,
+	      ULONG MaxDataLength,
+	      ULONG NPMessageQueueSize OPTIONAL);
+
+NTSTATUS STDCALL
+NtCreatePort (PHANDLE PortHandle,
+	      POBJECT_ATTRIBUTES ObjectAttributes,
+	      ULONG MaxConnectInfoLength,
+	      ULONG MaxDataLength,
+	      ULONG NPMessageQueueSize OPTIONAL);
+
+
+/*
  * FUNCTION: Creates a process.
  * ARGUMENTS:
  *        ProcessHandle (OUT) = Caller supplied storage for the resulting handle
@@ -649,8 +791,8 @@ ZwCreateMutant(
  *        This function maps to the win32 CreateProcess.
  * RETURNS: Status
  */
-NTSTATUS 
-STDCALL 
+NTSTATUS
+STDCALL
 NtCreateProcess(
 	OUT PHANDLE ProcessHandle,
         IN ACCESS_MASK DesiredAccess,
@@ -662,8 +804,8 @@ NtCreateProcess(
         IN HANDLE ExceptionPort OPTIONAL
 	);
 
-NTSTATUS 
-STDCALL 
+NTSTATUS
+STDCALL
 ZwCreateProcess(
 	OUT PHANDLE ProcessHandle,
         IN ACCESS_MASK DesiredAccess,
@@ -692,11 +834,11 @@ ZwCreateProcess(
 
 NTSTATUS
 STDCALL
-NtCreateSection( 
-	OUT PHANDLE SectionHandle, 
+NtCreateSection(
+	OUT PHANDLE SectionHandle,
 	IN ACCESS_MASK DesiredAccess,
-	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,  
-	IN PLARGE_INTEGER MaximumSize OPTIONAL,  
+	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+	IN PLARGE_INTEGER MaximumSize OPTIONAL,
 	IN ULONG SectionPageProtection OPTIONAL,
 	IN ULONG AllocationAttributes,
 	IN HANDLE FileHandle OPTIONAL
@@ -704,11 +846,11 @@ NtCreateSection(
 
 NTSTATUS
 STDCALL
-ZwCreateSection( 
-	OUT PHANDLE SectionHandle, 
+ZwCreateSection(
+	OUT PHANDLE SectionHandle,
 	IN ACCESS_MASK DesiredAccess,
-	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,  
-	IN PLARGE_INTEGER MaximumSize OPTIONAL,  
+	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+	IN PLARGE_INTEGER MaximumSize OPTIONAL,
 	IN ULONG SectionPageProtection OPTIONAL,
 	IN ULONG AllocationAttributes,
 	IN HANDLE FileHandle OPTIONAL
@@ -873,6 +1015,22 @@ STDCALL
 NtCurrentTeb(VOID
 	);
 #endif
+
+
+NTSTATUS STDCALL
+NtCreateWaitablePort (PHANDLE PortHandle,
+		      POBJECT_ATTRIBUTES ObjectAttributes,
+		      ULONG MaxConnectInfoLength,
+		      ULONG MaxDataLength,
+		      ULONG NPMessageQueueSize OPTIONAL);
+
+NTSTATUS STDCALL
+ZwCreateWaitablePort (PHANDLE PortHandle,
+		      POBJECT_ATTRIBUTES ObjectAttributes,
+		      ULONG MaxConnectInfoLength,
+		      ULONG MaxDataLength,
+		      ULONG NPMessageQueueSize OPTIONAL);
+
 
 /*
  * FUNCTION: Deletes an atom from the global atom table
@@ -1256,16 +1414,25 @@ ZwFsControlFile(
 NTSTATUS
 STDCALL 
 NtGetContextThread(
-	IN HANDLE ThreadHandle, 
+	IN HANDLE ThreadHandle,
 	OUT PCONTEXT Context
 	);
 
 NTSTATUS
 STDCALL 
 ZwGetContextThread(
-	IN HANDLE ThreadHandle, 
+	IN HANDLE ThreadHandle,
 	OUT PCONTEXT Context
 	);
+
+
+NTSTATUS STDCALL
+NtImpersonateClientOfPort (HANDLE PortHandle,
+			   PLPC_MESSAGE ClientMessage);
+
+NTSTATUS STDCALL
+ZwImpersonateClientOfPort (HANDLE PortHandle,
+			   PLPC_MESSAGE ClientMessage);
 
 /*
  * FUNCTION: Sets a thread to impersonate another 
@@ -1308,6 +1475,16 @@ STDCALL
 ZwInitializeRegistry(
 	BOOLEAN SetUpBoot
 	);
+
+
+NTSTATUS STDCALL
+NtListenPort (HANDLE PortHandle,
+	      PLPC_MESSAGE LpcMessage);
+
+NTSTATUS STDCALL
+ZwListenPort (HANDLE PortHandle,
+	      PLPC_MESSAGE LpcMessage);
+
 
 /*
  * FUNCTION: Loads a driver. 
@@ -2288,6 +2465,22 @@ ZwQueryInformationFile(
 	);
 
 
+NTSTATUS STDCALL
+NtQueryInformationPort (HANDLE PortHandle,
+			CINT PortInformationClass,
+			PVOID PortInformation,
+			ULONG PortInformationLength,
+			PULONG ReturnLength);
+
+#ifndef __USE_W32API
+NTSTATUS STDCALL
+ZwQueryInformationPort (HANDLE PortHandle,
+			CINT PortInformationClass,
+			PVOID PortInformation,
+			ULONG PortInformationLength,
+			PULONG ReturnLength);
+#endif
+
 /*
  * FUNCTION: Queries the information of a thread object.
  * ARGUMENTS: 
@@ -2858,34 +3051,53 @@ ZwReadFile(
 	  Key =  Key = If a range is lock a matching key will allow the read to continue.
  * RETURNS: Status
  *
-*/       
+*/
 NTSTATUS
 STDCALL
-NtReadFileScatter( 
-	IN HANDLE FileHandle, 
-	IN HANDLE Event OPTIONAL, 
-	IN PIO_APC_ROUTINE UserApcRoutine OPTIONAL, 
-	IN  PVOID UserApcContext OPTIONAL, 
-	OUT PIO_STATUS_BLOCK UserIoStatusBlock, 
-	IN FILE_SEGMENT_ELEMENT BufferDescription[], 
-	IN ULONG BufferLength, 
-	IN PLARGE_INTEGER ByteOffset, 
-	IN PULONG Key OPTIONAL	
-	); 
+NtReadFileScatter(
+	IN HANDLE FileHandle,
+	IN HANDLE Event OPTIONAL,
+	IN PIO_APC_ROUTINE UserApcRoutine OPTIONAL,
+	IN  PVOID UserApcContext OPTIONAL,
+	OUT PIO_STATUS_BLOCK UserIoStatusBlock,
+	IN FILE_SEGMENT_ELEMENT BufferDescription[],
+	IN ULONG BufferLength,
+	IN PLARGE_INTEGER ByteOffset,
+	IN PULONG Key OPTIONAL
+	);
 
 NTSTATUS
 STDCALL
-ZwReadFileScatter( 
-	IN HANDLE FileHandle, 
-	IN HANDLE Event OPTIONAL, 
-	IN PIO_APC_ROUTINE UserApcRoutine OPTIONAL, 
-	IN  PVOID UserApcContext OPTIONAL, 
-	OUT PIO_STATUS_BLOCK UserIoStatusBlock, 
-	IN FILE_SEGMENT_ELEMENT BufferDescription[], 
-	IN ULONG BufferLength, 
-	IN PLARGE_INTEGER ByteOffset, 
-	IN PULONG Key OPTIONAL	
-	); 
+ZwReadFileScatter(
+	IN HANDLE FileHandle,
+	IN HANDLE Event OPTIONAL,
+	IN PIO_APC_ROUTINE UserApcRoutine OPTIONAL,
+	IN  PVOID UserApcContext OPTIONAL,
+	OUT PIO_STATUS_BLOCK UserIoStatusBlock,
+	IN FILE_SEGMENT_ELEMENT BufferDescription[],
+	IN ULONG BufferLength,
+	IN PLARGE_INTEGER ByteOffset,
+	IN PULONG Key OPTIONAL
+	);
+
+
+NTSTATUS STDCALL
+NtReadRequestData (HANDLE PortHandle,
+		   PLPC_MESSAGE Message,
+		   ULONG Index,
+		   PVOID Buffer,
+		   ULONG BufferLength,
+		   PULONG ReturnLength);
+
+NTSTATUS STDCALL
+ZwReadRequestData (HANDLE PortHandle,
+		   PLPC_MESSAGE Message,
+		   ULONG Index,
+		   PVOID Buffer,
+		   ULONG BufferLength,
+		   PULONG ReturnLength);
+
+
 /*
  * FUNCTION: Copies a range of virtual memory to a buffer
  * ARGUMENTS: 
@@ -3020,17 +3232,68 @@ ZwRemoveIoCompletion(
 NTSTATUS
 STDCALL
 NtReplaceKey(
-	IN POBJECT_ATTRIBUTES ObjectAttributes, 
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
 	IN HANDLE Key,
-	IN POBJECT_ATTRIBUTES ReplacedObjectAttributes 
+	IN POBJECT_ATTRIBUTES ReplacedObjectAttributes
 	);
 NTSTATUS
 STDCALL
 ZwReplaceKey(
-	IN POBJECT_ATTRIBUTES ObjectAttributes, 
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
 	IN HANDLE Key,
-	IN POBJECT_ATTRIBUTES ReplacedObjectAttributes 
+	IN POBJECT_ATTRIBUTES ReplacedObjectAttributes
 	);
+
+
+NTSTATUS STDCALL
+NtReplyPort (HANDLE PortHandle,
+	     PLPC_MESSAGE LpcReply);
+
+NTSTATUS STDCALL
+ZwReplyPort (HANDLE PortHandle,
+	     PLPC_MESSAGE LpcReply);
+
+
+NTSTATUS STDCALL
+NtReplyWaitReceivePort (HANDLE PortHandle,
+			PULONG PortId,
+			PLPC_MESSAGE MessageReply,
+			PLPC_MESSAGE MessageRequest);
+
+NTSTATUS STDCALL
+ZwReplyWaitReceivePort (HANDLE PortHandle,
+			PULONG PortId,
+			PLPC_MESSAGE MessageReply,
+			PLPC_MESSAGE MessageRequest);
+
+
+NTSTATUS STDCALL
+NtReplyWaitReplyPort (HANDLE PortHandle,
+		      PLPC_MESSAGE ReplyMessage);
+
+NTSTATUS STDCALL
+ZwReplyWaitReplyPort (HANDLE PortHandle,
+		      PLPC_MESSAGE ReplyMessage);
+
+
+NTSTATUS STDCALL
+NtRequestPort (HANDLE PortHandle,
+	       PLPC_MESSAGE LpcMessage);
+
+NTSTATUS STDCALL
+ZwRequestPort (HANDLE PortHandle,
+	       PLPC_MESSAGE LpcMessage);
+
+
+NTSTATUS STDCALL
+NtRequestWaitReplyPort (HANDLE PortHandle,
+			PLPC_MESSAGE LpcReply,
+			PLPC_MESSAGE LpcRequest);
+
+NTSTATUS STDCALL
+ZwRequestWaitReplyPort (HANDLE PortHandle,
+			PLPC_MESSAGE LpcReply,
+			PLPC_MESSAGE LpcRequest);
 
 /*
  * FUNCTION: Resets a event to a non signaled state 
@@ -3705,12 +3968,36 @@ ZwShutdownSystem(
 	IN SHUTDOWN_ACTION Action
 	);
 
+/*
+ * FUNCTION: Signals an object and wait for an other one.
+ * ARGUMENTS: 
+ *        SignalObject = Handle to the object that should be signaled
+ *        WaitObject = Handle to the object that should be waited for
+ *        Alertable = True if the wait is alertable
+ *        Time = The time to wait
+ * RETURNS: Status
+ */
+NTSTATUS
+STDCALL
+NtSignalAndWaitForSingleObject(
+	IN	HANDLE		SignalObject,
+	IN	HANDLE		WaitObject,
+	IN	BOOLEAN		Alertable,
+	IN	PLARGE_INTEGER	Time
+	);
 
-/* --- PROFILING --- */
+NTSTATUS
+STDCALL
+NtSignalAndWaitForSingleObject(
+	IN	HANDLE		SignalObject,
+	IN	HANDLE		WaitObject,
+	IN	BOOLEAN		Alertable,
+	IN	PLARGE_INTEGER	Time
+	);
 
 /*
  * FUNCTION: Starts profiling
- * ARGUMENTS: 
+ * ARGUMENTS:
  *       ProfileHandle = Handle to the profile
  * RETURNS: Status
  */
@@ -3729,9 +4016,9 @@ ZwStartProfile(
 
 /*
  * FUNCTION: Stops profiling
- * ARGUMENTS: 
+ * ARGUMENTS:
  *       ProfileHandle = Handle to the profile
- * RETURNS: Status    
+ * RETURNS: Status
  */
 
 NTSTATUS
@@ -3755,26 +4042,24 @@ ZwStopProfile(
  *      ThreadHandle = Handle to the process
  *      ExitStatus  = The exit status of the process to terminate with.
  * REMARKS
-	Native applications should kill themselves using this function.
+ *      Native applications should kill themselves using this function.
  * RETURNS: Status
- */	
+ */
 NTSTATUS 
 STDCALL 
 NtTerminateProcess(
-	IN HANDLE ProcessHandle ,
+	IN HANDLE ProcessHandle,
 	IN NTSTATUS ExitStatus
 	);
 NTSTATUS 
 STDCALL 
 ZwTerminateProcess(
-	IN HANDLE ProcessHandle ,
+	IN HANDLE ProcessHandle,
 	IN NTSTATUS ExitStatus
 	);
 
-/* --- DEVICE DRIVER CONTROL --- */
-
 /*
- * FUNCTION: Unloads a driver. 
+ * FUNCTION: Unloads a driver.
  * ARGUMENTS: 
  *      DriverServiceName = Name of the driver to unload
  * RETURNS: Status
@@ -3790,7 +4075,45 @@ ZwUnloadDriver(
 	IN PUNICODE_STRING DriverServiceName
 	);
 
-/* --- VIRTUAL MEMORY MANAGEMENT --- */
+/*
+ * FUNCTION: Unmaps a piece of virtual memory backed by a file. 
+ * ARGUMENTS: 
+ *       ProcessHandle = Handle to the process
+ *       BaseAddress =  The address where the mapping begins
+ * REMARK:
+	This procedure maps to the win32 UnMapViewOfFile
+ * RETURNS: Status
+ */
+NTSTATUS
+STDCALL
+NtUnmapViewOfSection(
+	IN HANDLE ProcessHandle,
+	IN PVOID BaseAddress
+	);
+NTSTATUS
+STDCALL
+ZwUnmapViewOfSection(
+	IN HANDLE ProcessHandle,
+	IN PVOID BaseAddress
+	);
+
+
+NTSTATUS STDCALL
+NtWriteRequestData (HANDLE PortHandle,
+		    PLPC_MESSAGE Message,
+		    ULONG Index,
+		    PVOID Buffer,
+		    ULONG BufferLength,
+		    PULONG ReturnLength);
+
+NTSTATUS STDCALL
+ZwWriteRequestData (HANDLE PortHandle,
+		    PLPC_MESSAGE Message,
+		    ULONG Index,
+		    PVOID Buffer,
+		    ULONG BufferLength,
+		    PULONG ReturnLength);
+
 
 /*
  * FUNCTION: Writes a range of virtual memory
@@ -3824,56 +4147,6 @@ ZwWriteVirtualMemory(
 	OUT PULONG NumberOfBytesWritten
 	);
 
-/*
- * FUNCTION: Unmaps a piece of virtual memory backed by a file. 
- * ARGUMENTS: 
- *       ProcessHandle = Handle to the process
- *       BaseAddress =  The address where the mapping begins
- * REMARK:
-	This procedure maps to the win32 UnMapViewOfFile
- * RETURNS: Status
- */
-NTSTATUS
-STDCALL
-NtUnmapViewOfSection(
-	IN HANDLE ProcessHandle,
-	IN PVOID BaseAddress
-	);
-NTSTATUS
-STDCALL
-ZwUnmapViewOfSection(
-	IN HANDLE ProcessHandle,
-	IN PVOID BaseAddress
-	);
-
-/* --- OBJECT SYNCHRONIZATION --- */
-
-/*
- * FUNCTION: Signals an object and wait for an other one.
- * ARGUMENTS: 
- *        SignalObject = Handle to the object that should be signaled
- *        WaitObject = Handle to the object that should be waited for
- *        Alertable = True if the wait is alertable
- *        Time = The time to wait
- * RETURNS: Status
- */
-NTSTATUS
-STDCALL
-NtSignalAndWaitForSingleObject(
-	IN	HANDLE		SignalObject,
-	IN	HANDLE		WaitObject,
-	IN	BOOLEAN		Alertable,
-	IN	PLARGE_INTEGER	Time
-	);
-
-NTSTATUS
-STDCALL
-NtSignalAndWaitForSingleObject(
-	IN	HANDLE		SignalObject,
-	IN	HANDLE		WaitObject,
-	IN	BOOLEAN		Alertable,
-	IN	PLARGE_INTEGER	Time
-	);
 
 /*
  * FUNCTION: Waits for an object to become signalled.

@@ -1656,8 +1656,67 @@ typedef enum _TIMER_INFORMATION_CLASS
   TimerBasicInformation
 } TIMER_INFORMATION_CLASS;
 
-typedef
-struct _LPC_PORT_BASIC_INFORMATION
+#ifndef __USE_W32API
+
+typedef enum
+{
+    UNUSED_MSG_TYPE        = 0x0, /* ReactOS */
+    LPC_NEW_MESSAGE        = 0x0, /* NT */
+    LPC_REQUEST            = 0x1,
+    LPC_REPLY              = 0x2,
+    LPC_DATAGRAM           = 0x3,
+    LPC_LOST_REPLY         = 0x4,
+    LPC_PORT_CLOSED        = 0x5,
+    LPC_CLIENT_DIED        = 0x6,
+    LPC_EXCEPTION          = 0x7,
+    LPC_DEBUG_EVENT        = 0x8,
+    LPC_ERROR_EVENT        = 0x9,
+    LPC_CONNECTION_REQUEST = 0xa,
+    LPC_CONNECTION_REFUSED = 0xb
+
+} LPC_TYPE, *PLPC_TYPE;
+
+typedef struct _LPC_SECTION_WRITE
+{
+   ULONG Length;
+   HANDLE SectionHandle;
+   ULONG SectionOffset;
+   ULONG ViewSize;
+   PVOID ViewBase;
+   PVOID TargetViewBase;
+} LPC_SECTION_WRITE, *PLPC_SECTION_WRITE;
+
+typedef struct _LPC_SECTION_READ
+{
+   ULONG Length;
+   ULONG ViewSize;
+   PVOID ViewBase;
+} LPC_SECTION_READ, *PLPC_SECTION_READ;
+
+typedef struct _LPC_MESSAGE
+{
+   USHORT DataSize;
+   USHORT MessageSize;
+   USHORT MessageType;
+   USHORT VirtualRangesOffset;
+   CLIENT_ID ClientId;
+   ULONG MessageId;
+   ULONG SectionSize; /* CallbackID */
+} LPC_MESSAGE, *PLPC_MESSAGE;
+
+#define MAX_MESSAGE_DATA   (0x130)
+
+typedef struct _LPC_MAX_MESSAGE
+{
+   LPC_MESSAGE Header;
+   BYTE Data[MAX_MESSAGE_DATA];
+} LPC_MAX_MESSAGE, *PLPC_MAX_MESSAGE;
+
+#define PORT_MESSAGE_TYPE(m) (LPC_TYPE)((m).Header.MessageType)
+
+#endif /* __USE_W32API */
+
+typedef struct _LPC_PORT_BASIC_INFORMATION
 {
 	DWORD	Unknown0;
 	DWORD	Unknown1;
@@ -1675,6 +1734,7 @@ struct _LPC_PORT_BASIC_INFORMATION
 	DWORD	Unknown13;
 
 } LPC_PORT_BASIC_INFORMATION, * PLPC_PORT_BASIC_INFORMATION;
+
 
 typedef struct _KINTERRUPT
 {

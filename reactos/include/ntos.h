@@ -1,6 +1,6 @@
 #ifndef _NTOS_H
 #define _NTOS_H
-/* $Id: ntos.h,v 1.17 2003/10/15 21:15:18 ekohl Exp $ */
+/* $Id: ntos.h,v 1.18 2004/01/06 16:05:47 ekohl Exp $ */
 
 #if defined(NTOS_MODE_USER)
 /* 
@@ -32,7 +32,6 @@
 #include "napi/i386/segment.h"
 #include "napi/types.h"
 #include "napi/dbg.h"
-#include "napi/lpc.h"
 #include "napi/npipe.h"
 #include "napi/shared_data.h"
 #include "napi/win32.h"
@@ -74,7 +73,6 @@
 #include "napi/i386/segment.h"
 #include "napi/types.h"
 #include "napi/dbg.h"
-#include "napi/lpc.h"
 #include "napi/npipe.h"
 #include "napi/shared_data.h"
 #include "napi/win32.h"

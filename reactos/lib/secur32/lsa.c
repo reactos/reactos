@@ -1,4 +1,4 @@
-/* $Id: lsa.c,v 1.9 2003/11/17 02:12:50 hyperion Exp $
+/* $Id: lsa.c,v 1.10 2004/01/06 16:08:25 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -13,7 +13,6 @@
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <rosrtl/string.h>
-#include <napi/lpc.h>
 #include <lsass/lsass.h>
 #include <string.h>
 

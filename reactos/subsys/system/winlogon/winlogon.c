@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.23 2003/12/18 09:51:08 gvg Exp $
+/* $Id: winlogon.c,v 1.24 2004/01/06 16:11:57 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -15,7 +15,6 @@
 #include <windows.h>
 #include <stdio.h>
 #include <ntsecapi.h>
-#include <napi/lpc.h>
 #include <wchar.h>
 
 #include "setup.h"

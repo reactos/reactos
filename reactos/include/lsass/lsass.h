@@ -1,4 +1,4 @@
-/* $Id: lsass.h,v 1.5 2003/09/08 09:56:56 weiden Exp $
+/* $Id: lsass.h,v 1.6 2004/01/06 16:04:18 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -13,7 +13,6 @@
 
 #include <ntos.h>
 #include <ntsecapi.h>
-#include <napi/lpc.h>
 
 #define LSASS_REQUEST_REGISTER_LOGON_PROCESS               (1)
 #define LSASS_REQUEST_CALL_AUTHENTICATION_PACKAGE          (2)

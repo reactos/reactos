@@ -1,8 +1,6 @@
 #ifndef __INCLUDE_NAPI_DBG_H
 #define __INCLUDE_NAPI_DBG_H
 
-#include <napi/lpc.h>
-
 #define DBG_EVENT_EXCEPTION         (1)
 #define DBG_EVENT_CREATE_THREAD     (2)
 #define DBG_EVENT_CREATE_PROCESS    (3)
@@ -59,5 +57,12 @@ typedef struct _LPC_DBG_MESSAGE
 	  } UnloadDll;
      } Data;
 } LPC_DBG_MESSAGE, *PLPC_DBG_MESSAGE;
+
+
+typedef struct _LPC_TERMINATION_MESSAGE
+{
+   LPC_MESSAGE Header;
+   TIME CreationTime;
+} LPC_TERMINATION_MESSAGE, *PLPC_TERMINATION_MESSAGE;
 
 #endif /* __INCLUDE_NAPI_DBG_H */

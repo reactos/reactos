@@ -1,4 +1,4 @@
-/* $Id: wlx.c,v 1.2 2003/12/07 00:04:20 weiden Exp $
+/* $Id: wlx.c,v 1.3 2004/01/06 16:11:57 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -15,7 +15,6 @@
 #include <windows.h>
 #include <stdio.h>
 #include <WinWlx.h>
-#include <napi/lpc.h>
 #include <wchar.h>
 
 #include "setup.h"

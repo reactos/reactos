@@ -1,7 +1,6 @@
 #ifndef __INCLUDE_INTERNAL_DBG_H
 #define __INCLUDE_INTERNAL_DBG_H
 
-#include <napi/lpc.h>
 #include <napi/dbg.h>
 #include <internal/port.h>
 

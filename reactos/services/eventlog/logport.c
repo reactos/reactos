@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: logport.c,v 1.8 2003/11/24 16:41:41 ekohl Exp $
+/* $Id: logport.c,v 1.9 2004/01/06 16:08:46 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -31,7 +31,6 @@
 
 #define NTOS_MODE_USER
 #include <ntos.h>
-#include <napi/lpc.h>
 #include <windows.h>
 #include <string.h>
 

@@ -1,4 +1,4 @@
-/* $Id: smapi.c,v 1.10 2003/11/17 02:12:51 hyperion Exp $
+/* $Id: smapi.c,v 1.11 2004/01/06 16:10:11 ekohl Exp $
  *
  * Reactos Session Manager
  *
@@ -7,7 +7,6 @@
 
 #include <ddk/ntddk.h>
 #include <ntdll/rtl.h>
-#include <napi/lpc.h>
 #include <rosrtl/string.h>
 
 #include "smss.h"
