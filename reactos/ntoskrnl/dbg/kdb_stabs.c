@@ -545,6 +545,7 @@ LdrGetAddressInformation(IN PIMAGE_SYMBOL_INFO  SymbolInfo,
   Status = LdrpGetLineNumber(SymbolInfo, RelativeAddress, LineNumber);
   if (!NT_SUCCESS(Status))
     {
+      DPRINT("LdrpGetLineNumber failed (%08x)\n", Status);
       return Status;
     }
 
@@ -820,6 +821,8 @@ KdbUnloadDriver(PMODULE_OBJECT ModuleObject)
   KdbLdrUnloadModuleSymbols(&ModuleObject->TextSection->SymbolInfo);
 }
 
+/* Length here is the length of the loaded module, not the file name. */
+
 VOID
 KdbProcessSymbolFile(PVOID ModuleLoadBase, PCHAR FileName, ULONG Length)
 {
@@ -833,8 +836,8 @@ KdbProcessSymbolFile(PVOID ModuleLoadBase, PCHAR FileName, ULONG Length)
 
   DPRINT("Module %s is a symbol file\n", FileName);
 
-  strncpy(TmpBaseName, FileName, Length);
-  TmpBaseName[Length] = '\0';
+  strncpy(TmpBaseName, FileName, MAX_PATH-1);
+  TmpBaseName[MAX_PATH-1] = '\0';
   
   DPRINT("base: %s (Length %d)\n", TmpBaseName, Length);
   

@@ -10,6 +10,8 @@ LdrGetAddressInformation(IN PIMAGE_SYMBOL_INFO  SymbolInfo,
 
 ULONG
 KdbTryGetCharKeyboard(VOID);
+ULONG
+KdbTryGetCharSerial(VOID);
 VOID
 KdbEnter(VOID);
 VOID

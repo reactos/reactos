@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kdb.c,v 1.12 2003/12/14 18:03:59 hbirr Exp $
+/* $Id: kdb.c,v 1.13 2003/12/23 05:04:58 arty Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb.c
@@ -42,6 +42,9 @@
 
 /* GLOBALS *******************************************************************/
 
+int isalpha( int );
+VOID
+PsDumpThreads(BOOLEAN System);
 ULONG 
 DbgContCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
 ULONG 
@@ -54,6 +57,12 @@ ULONG
 DbgBugCheckCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
 ULONG
 DbgBackTraceCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
+ULONG
+DbgAddrCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
+ULONG
+DbgXCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
+ULONG
+DbgThreadListCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
 ULONG
 DbgProcessListCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
 ULONG
@@ -78,7 +87,10 @@ struct
   {"cregs", "cregs", "Display control registers", DbgCRegsCommand},
   {"bugcheck", "bugcheck", "Bugcheck the system", DbgBugCheckCommand},
   {"bt", "bt [*frame-address]|[thread-id]","Do a backtrace", DbgBackTraceCommand},
+  {"addr", "addr <address>", "Displays symbol info", DbgAddrCommand},
+  {"x", "x <addr> <words>", "Displays <addr> for <words>", DbgXCommand},
   {"plist", "plist", "Display processes in the system", DbgProcessListCommand},
+  {"tlist", "tlist [sys]", "Display threads in the system", DbgThreadListCommand},
   {"sfiles", "sfiles", "Show files that print debug prints", DbgShowFilesCommand},
   {"efile", "efile <filename>", "Enable debug prints from file", DbgEnableFileCommand},
   {"dfile", "dfile <filename>", "Disable debug prints from file", DbgDisableFileCommand},
@@ -181,7 +193,10 @@ KdbGetCommand(PCH Buffer)
 
   for (;;)
     {
-      while ((Key = KdbTryGetCharKeyboard()) == -1);
+      if (KdDebugState & KD_DEBUG_KDSERIAL)
+	while ((Key = KdbTryGetCharSerial()) == -1);
+      else
+	while ((Key = KdbTryGetCharKeyboard()) == -1);
 
       if (Key == '\r' || Key == '\n')
 	{
@@ -216,6 +231,17 @@ DbgProcessHelpCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
         }
       DbgPrint(" - %s\n", DebuggerCommands[i].Help);
     }
+  return(1);
+}
+
+ULONG
+DbgThreadListCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
+{
+  BOOL System = FALSE;
+  if (Argc == 2 && (!strcmp(Argv[1], "sys") || !strcmp(Argv[1], "SYS")))
+    System = TRUE;
+    
+  PsDumpThreads(System);
   return(1);
 }
 
@@ -272,6 +298,46 @@ DbgPrintBackTrace(PULONG Frame, ULONG StackBase, ULONG StackLimit)
     {
       DbgPrint("\n");
     }
+}
+
+ULONG
+DbgAddrCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME tf)
+{
+  PVOID Addr;
+
+  if (Argc == 2)
+    {
+      Addr = (PVOID)strtoul(Argv[1], NULL, 0);
+      KdbPrintAddress(Addr);
+    }
+
+  return(1);
+}
+
+ULONG
+DbgXCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME tf)
+{
+  PDWORD Addr = 0;
+  DWORD Items = 1;
+  DWORD i = 0;
+
+  if (Argc >= 2)
+    Addr = (PDWORD)strtoul(Argv[1], NULL, 0);
+  if (Argc >= 3)
+    Items = (DWORD)strtoul(Argv[2], NULL, 0);
+
+  if( !Addr ) return(1);
+
+  for( i = 0; i < Items; i++ ) 
+    {
+      if( (i % 4) == 0 ) {
+	if( i ) DbgPrint("\n");
+	DbgPrint("%08x:", (int)(&Addr[i]));
+      }
+      DbgPrint( "%08x ", Addr[i] );
+    }
+
+  return(1);
 }
 
 ULONG

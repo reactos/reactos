@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.47 2003/10/12 17:05:45 hbirr Exp $
+/* $Id: kdebug.c,v 1.48 2003/12/23 05:04:59 arty Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -154,6 +154,12 @@ KdInitSystem(ULONG Reserved,
 		}
 	    }
 	}
+      else if (!_strnicmp(p2, "KDSERIAL", 8))
+        {
+	  p2 += 8;
+	  KdDebuggerEnabled = TRUE;
+	  KdDebugState |= KD_DEBUG_SERIAL | KD_DEBUG_KDSERIAL;
+        }
       else if (!_strnicmp(p2, "DEBUG", 5))
 	{
 	  p2 += 5;
