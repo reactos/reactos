@@ -2,6 +2,7 @@
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <ddk/ntddk.h>
 #include <win32k/icm.h>
 
 // #define NDEBUG
@@ -41,7 +42,8 @@ INT  W32kEnumICMProfiles(HDC  hDC,
 
 HCOLORSPACE  W32kGetColorSpace(HDC  hDC)
 {
-  UNIMPLEMENTED;
+  /* FIXME: Need to to whatever GetColorSpace actually does */
+  return  0;
 }
 
 BOOL  W32kGetDeviceGammaRamp(HDC  hDC,  
@@ -79,7 +81,21 @@ BOOL  W32kSetDeviceGammaRamp(HDC  hDC,
 INT  W32kSetICMMode(HDC  hDC,
                     INT  EnableICM)
 {
-  UNIMPLEMENTED;
+  /* FIXME: this should be coded someday  */
+  if (EnableICM == ICM_OFF) 
+    {
+      return  ICM_OFF;
+    }
+  if (EnableICM == ICM_ON) 
+    {
+      return  0;
+    }
+  if (EnableICM == ICM_QUERY) 
+    {
+      return  ICM_OFF;
+    }
+  
+  return  0;
 }
 
 BOOL  W32kSetICMProfile(HDC  hDC,

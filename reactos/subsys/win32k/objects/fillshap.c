@@ -1,6 +1,7 @@
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <ddk/ntddk.h>
 #include <win32k/fillshap.h>
 
 // #define NDEBUG

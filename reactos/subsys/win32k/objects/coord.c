@@ -2,16 +2,43 @@
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <ddk/ntddk.h>
 #include <win32k/coord.h>
+#include <win32k/dc.h>
 
 // #define NDEBUG
 #include <internal/debug.h>
 
-BOOL  W32kCombineTransform(LPXFORM  XformResult,
+BOOL  W32kCombineTransform(LPXFORM  XFormResult,
                            CONST LPXFORM  xform1,
                            CONST LPXFORM  xform2)
 {
-  UNIMPLEMENTED;
+  XFORM  xformTemp;
+    
+  /* Check for illegal parameters */
+  if (!XFormResult || !xform1 || !xform2)
+    {
+      return  FALSE;
+    }
+  /* Create the result in a temporary XFORM, since xformResult may be
+   * equal to xform1 or xform2 */
+  xformTemp.eM11 = xform1->eM11 * xform2->eM11 +
+    xform1->eM12 * xform2->eM21;
+  xformTemp.eM12 = xform1->eM11 * xform2->eM12 +
+    xform1->eM12 * xform2->eM22;
+  xformTemp.eM21 = xform1->eM21 * xform2->eM11 +
+    xform1->eM22 * xform2->eM21;
+  xformTemp.eM22 = xform1->eM21 * xform2->eM12 +
+    xform1->eM22 * xform2->eM22;
+  xformTemp.eDx  = xform1->eDx  * xform2->eM11 +
+    xform1->eDy  * xform2->eM21 + xform2->eDx;
+  xformTemp.eDy  = xform1->eDx  * xform2->eM12 +
+    xform1->eDy  * xform2->eM22 + xform2->eDy;
+
+  /* Copy the result to xformResult */
+  *XFormResult = xformTemp;
+
+  return  TRUE;
 }
 
 BOOL  W32kDPtoLP(HDC  hDC,
@@ -21,15 +48,43 @@ BOOL  W32kDPtoLP(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-int  W32kGetGraphicsMode(HDC  hDC)
+int  
+W32kGetGraphicsMode(HDC  hDC)
 {
-  UNIMPLEMENTED;
+  PDC  dc;
+  int  GraphicsMode;
+  
+  dc = DC_HandleToPtr (hDC);
+  if (!dc) 
+    {
+      return  0;
+    }
+  
+  GraphicsMode = dc->w.GraphicsMode;
+  DC_UnlockDC (hDC);
+  
+  return  GraphicsMode;
 }
 
-BOOL  W32kGetWorldTransform(HDC  hDC,
-                            LPXFORM  Xform)
+BOOL  
+W32kGetWorldTransform(HDC  hDC,
+                      LPXFORM  XForm)
 {
-  UNIMPLEMENTED;
+  PDC  dc;
+  
+  dc = DC_HandleToPtr (hDC);
+  if (!dc)
+    {
+      return  FALSE;
+    }
+  if (!XForm)
+    {
+      return  FALSE;
+    }
+  *XForm = dc->w.xformWorld2Wnd;
+  DC_UnlockDC (hDC);
+    
+  return  TRUE;
 }
 
 BOOL  W32kLPtoDP(HDC  hDC,
@@ -40,10 +95,57 @@ BOOL  W32kLPtoDP(HDC  hDC,
 }
 
 BOOL  W32kModifyWorldTransform(HDC  hDC,
-                               CONST LPXFORM  Xform,
+                               CONST LPXFORM  XForm,
                                DWORD  Mode)
 {
-  UNIMPLEMENTED;
+  PDC  dc;
+  
+  dc = DC_HandleToPtr (hDC);
+  if (!dc)
+    {
+//      SetLastError( ERROR_INVALID_HANDLE );
+      return  FALSE;
+    }
+  if (!XForm)
+    {
+      return FALSE;
+    }
+    
+  /* Check that graphics mode is GM_ADVANCED */
+  if (dc->w.GraphicsMode!=GM_ADVANCED)
+    {
+      return FALSE;
+    }
+  switch (Mode)
+    {
+    case MWT_IDENTITY:
+      dc->w.xformWorld2Wnd.eM11 = 1.0f;
+      dc->w.xformWorld2Wnd.eM12 = 0.0f;
+      dc->w.xformWorld2Wnd.eM21 = 0.0f;
+      dc->w.xformWorld2Wnd.eM22 = 1.0f; 
+      dc->w.xformWorld2Wnd.eDx  = 0.0f;
+      dc->w.xformWorld2Wnd.eDy  = 0.0f;
+      break;
+      
+    case MWT_LEFTMULTIPLY:
+      W32kCombineTransform(&dc->w.xformWorld2Wnd, 
+                           XForm,
+                           &dc->w.xformWorld2Wnd );
+      break;
+      
+    case MWT_RIGHTMULTIPLY:
+      W32kCombineTransform(&dc->w.xformWorld2Wnd, 
+                           &dc->w.xformWorld2Wnd,
+                           XForm);
+      break;
+      
+    default:
+      return FALSE;
+    }
+  DC_UpdateXforms (dc);
+  DC_UnlockDC (hDC);
+
+  return  TRUE;
 }
 
 BOOL  W32kOffsetViewportOrgEx(HDC  hDC,
@@ -85,7 +187,30 @@ BOOL  W32kScaleWindowExtEx(HDC  hDC,
 int  W32kSetGraphicsMode(HDC  hDC,
                          int  Mode)
 {
-  UNIMPLEMENTED;
+  INT ret;
+  DC *dc;
+  
+  dc = DC_HandleToPtr (hDC);
+  if (!dc)
+    {
+      return 0;
+    }
+
+  /* One would think that setting the graphics mode to GM_COMPATIBLE
+   * would also reset the world transformation matrix to the unity
+   * matrix. However, in Windows, this is not the case. This doesn't
+   * make a lot of sense to me, but that's the way it is.
+   */
+  
+  if ((Mode != GM_COMPATIBLE) && (Mode != GM_ADVANCED)) 
+    {
+      return 0;
+    }
+  ret = dc->w.GraphicsMode;
+  dc->w.GraphicsMode = Mode;
+  DC_UnlockDC (hDC);
+  
+  return  ret;
 }
 
 int  W32kSetMapMode(HDC  hDC,
@@ -127,9 +252,31 @@ BOOL  W32kSetWindowOrgEx(HDC  hDC,
 }
 
 BOOL  W32kSetWorldTransform(HDC  hDC,
-                            CONST LPXFORM  Xform)
+                            CONST LPXFORM  XForm)
 {
-  UNIMPLEMENTED;
+  PDC  dc;
+  
+  dc = DC_HandleToPtr (hDC);
+  if (!dc)
+    {
+//      SetLastError( ERROR_INVALID_HANDLE );
+      return  FALSE;
+    }
+  if (!XForm)
+    {
+      return  FALSE;
+    }
+    
+  /* Check that graphics mode is GM_ADVANCED */
+  if (dc->w.GraphicsMode != GM_ADVANCED)
+    {
+      return  FALSE;
+    }
+  dc->w.xformWorld2Wnd = *XForm;
+  DC_UpdateXforms (dc);
+  DC_UnlockDC (hDC);
+
+  return  TRUE;
 }
 
 

@@ -2,6 +2,8 @@
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <ddk/ntddk.h>
+#include <win32k/dc.h>
 #include <win32k/text.h>
 
 // #define NDEBUG
@@ -245,13 +247,38 @@ DWORD  W32kSetMapperFlags(HDC  hDC,
 UINT  W32kSetTextAlign(HDC  hDC,
                        UINT  Mode)
 {
-  UNIMPLEMENTED;
+  UINT prevAlign;
+  DC *dc;
+  
+  dc = DC_HandleToPtr(hDC);
+  if (!dc) 
+    {
+      return  0;
+    }
+  prevAlign = dc->w.textAlign;
+  dc->w.textAlign = Mode;
+  DC_UnlockDC (hDC);
+  
+  return  prevAlign;
 }
 
-COLORREF  W32kSetTextColor(HDC  hDC,
-                           COLORREF  Color)
+COLORREF STDCALL  
+W32kSetTextColor(HDC hDC, 
+                 COLORREF color)
 {
-  UNIMPLEMENTED;
+  COLORREF  oldColor;
+  PDC  dc = DC_HandleToPtr(hDC);
+  
+  if (!dc) 
+    {
+      return 0x80000000;
+    }
+
+  oldColor = dc->w.textColor;
+  dc->w.textColor = color;
+  DC_UnlockDC(hDC);
+
+  return  oldColor;
 }
 
 BOOL  W32kSetTextJustification(HDC  hDC,

@@ -1,9 +1,10 @@
-/* $Id: brush.c,v 1.4 1999/07/22 16:21:52 rex Exp $
+/* $Id: brush.c,v 1.5 1999/10/28 23:37:14 rex Exp $
  */
 
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <ddk/ntddk.h>
 #include <win32k/brush.h>
 
 // #define NDEBUG

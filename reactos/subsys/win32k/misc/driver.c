@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.3 1999/10/27 05:49:58 rex Exp $
+/* $Id: driver.c,v 1.4 1999/10/28 23:37:14 rex Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -91,7 +91,8 @@ HANDLE  DRIVER_FindMPDriver(LPCWSTR  Name)
     }
   else
     {
-      lName = Name;
+      lName = ExAllocatePool(NonPagedPool, wcslen(Name) * sizeof(WCHAR));
+      wcscpy(lName, Name);
     }
   
   RtlInitUnicodeString(&DeviceName, lName);

@@ -7,12 +7,44 @@
 #include <win32k/gdiobj.h>
 
 /*  (RJJ) Taken from WINE  */
+typedef struct _DEVICECAPS
+{
+  WORD   version;       /*   0: driver version */
+  WORD   technology;    /*   2: device technology */
+  WORD   horzSize;      /*   4: width of display in mm */
+  WORD   vertSize;      /*   6: height of display in mm */
+  WORD   horzRes;       /*   8: width of display in pixels */
+  WORD   vertRes;       /*  10: width of display in pixels */
+  WORD   bitsPixel;     /*  12: bits per pixel */
+  WORD   planes;        /*  14: color planes */
+  WORD   numBrushes;    /*  16: device-specific brushes */
+  WORD   numPens;       /*  18: device-specific pens */
+  WORD   numMarkers;    /*  20: device-specific markers */
+  WORD   numFonts;      /*  22: device-specific fonts */
+  WORD   numColors;     /*  24: size of color table */
+  WORD   pdeviceSize;   /*  26: size of PDEVICE structure */
+  WORD   curveCaps;     /*  28: curve capabilities */
+  WORD   lineCaps;      /*  30: line capabilities */
+  WORD   polygonalCaps; /*  32: polygon capabilities */
+  WORD   textCaps;      /*  34: text capabilities */
+  WORD   clipCaps;      /*  36: clipping capabilities */
+  WORD   rasterCaps;    /*  38: raster capabilities */
+  WORD   aspectX;       /*  40: relative width of device pixel */
+  WORD   aspectY;       /*  42: relative height of device pixel */
+  WORD   aspectXY;      /*  44: relative diagonal width of device pixel */
+  WORD   pad1[21];      /*  46-86: reserved */
+  WORD   logPixelsX;    /*  88: pixels / logical X inch */
+  WORD   logPixelsY;    /*  90: pixels / logical Y inch */
+  WORD   pad2[6];       /*  92-102: reserved */
+  WORD   sizePalette;   /* 104: entries in system palette */
+  WORD   numReserved;   /* 106: reserved entries */
+  WORD   colorRes;      /* 108: color resolution */    
+} DEVICECAPS, *PDEVICECAPS;
+
 typedef struct _WIN_DC_INFO
 {
   int  flags;
-#if 0
-    const DeviceCaps *devCaps;
-#endif
+  const PDEVICECAPS  devCaps;
 
   HRGN  hClipRgn;     /* Clip region (may be 0) */
   
@@ -68,12 +100,10 @@ typedef struct _WIN_DC_INFO
   INT  CursPosY;
   INT  ArcDirection;
   
-#if 0
-    XFORM         xformWorld2Wnd;    /* World-to-window transformation */
-    XFORM         xformWorld2Vport;  /* World-to-viewport transformation */
-    XFORM         xformVport2World;  /* Inverse of the above transformation */
-    BOOL        vport2WorldValid;  /* Is xformVport2World valid? */  
-#endif
+  XFORM  xformWorld2Wnd;    /* World-to-window transformation */
+  XFORM  xformWorld2Vport;  /* World-to-viewport transformation */
+  XFORM  xformVport2World;  /* Inverse of the above transformation */
+  BOOL  vport2WorldValid;  /* Is xformVport2World valid? */  
 } WIN_DC_INFO;
 
   /* DC flags */
@@ -123,6 +153,8 @@ HDC  DC_PtrToHandle(PDC  pDC);
 PDC  DC_HandleToPtr(HDC  hDC);
 BOOL DC_LockDC(HDC  hDC);
 BOOL DC_UnlockDC(HDC  hDC);
+void DC_UpdateXforms(PDC  dc);
+BOOL DC_InvertXform(const XFORM *xformSrc, XFORM *xformDest);
 
 /*  User entry points */
 

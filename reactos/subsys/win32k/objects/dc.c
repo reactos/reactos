@@ -6,8 +6,12 @@
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
+#include <win32k/bitmaps.h>
+#include <win32k/coord.h>
 #include <win32k/driver.h>
 #include <win32k/dc.h>
+#include <win32k/print.h>
+#include <win32k/region.h>
 
 // #define NDEBUG
 #include <internal/debug.h>
@@ -264,8 +268,11 @@ BOOL STDCALL W32kDeleteDC(HDC  DCHandle)
 
   DCToDelete = DC_HandleToPtr(DCHandle);
 
-  /* FIXME: Call driver shutdown/deallocate routines here  */
+  /* FIXME: Verify that is is a valid handle */
   
+  DCToDelete->DriverFunctions.DisableSurface(DCToDelete->PDev);
+  DCToDelete->DriverFunctions.DisablePDev(DCToDelete->PDev);
+
   DC_FreeDC(DCToDelete);
   
   return  STATUS_SUCCESS;
@@ -308,7 +315,25 @@ DC_GET_VAL_EX( W32kGetCurrentPositionEx, w.CursPosX, w.CursPosY, POINT )
 BOOL STDCALL W32kGetDCOrgEx(HDC  hDC,
                      LPPOINT  Point)
 {
-  UNIMPLEMENTED;
+  DC * dc;
+
+  if (!Point) 
+    {
+      return FALSE;
+    }
+  dc = DC_HandleToPtr(hDC);
+  if (dc == NULL) 
+    {
+      return FALSE;
+    }
+
+  Point->x = Point->y = 0;
+
+  Point->x += dc->w.DCOrgX; 
+  Point->y += dc->w.DCOrgY;
+  DC_UnlockDC (hDC);
+  
+  return  TRUE;
 }
 
 HDC  W32kGetDCState16(HDC  hDC)
@@ -412,7 +437,74 @@ HDC  W32kGetDCState16(HDC  hDC)
 INT STDCALL W32kGetDeviceCaps(HDC  hDC,
                        INT  Index)
 {
-  UNIMPLEMENTED;
+  PDC  dc;
+  INT  ret;
+  POINT  pt;
+    
+  dc = DC_HandleToPtr(hDC);
+  if (dc == NULL) 
+    {
+      return 0;
+    }
+
+  /* Device capabilities for the printer */
+  switch (Index)
+    {
+    case PHYSICALWIDTH:
+      if(W32kEscape(hDC, GETPHYSPAGESIZE, 0, NULL, (LPVOID)&pt) > 0)
+        {
+          return pt.x;
+        }
+      break;
+      
+    case PHYSICALHEIGHT:
+      if(W32kEscape(hDC, GETPHYSPAGESIZE, 0, NULL, (LPVOID)&pt) > 0)
+        {
+          return pt.y;
+        }
+      break;
+      
+    case PHYSICALOFFSETX:
+      if(W32kEscape(hDC, GETPRINTINGOFFSET, 0, NULL, (LPVOID)&pt) > 0)
+        {
+          return pt.x;
+        }
+      break;
+      
+    case PHYSICALOFFSETY:
+      if(W32kEscape(hDC, GETPRINTINGOFFSET, 0, NULL, (LPVOID)&pt) > 0)
+        {
+          return pt.y;
+        }
+      break;
+      
+    case SCALINGFACTORX:
+      if(W32kEscape(hDC, GETSCALINGFACTOR, 0, NULL, (LPVOID)&pt) > 0)
+        {
+          return pt.x;
+        }
+      break;
+      
+    case SCALINGFACTORY:
+      if(W32kEscape(hDC, GETSCALINGFACTOR, 0, NULL, (LPVOID)&pt) > 0)
+        {
+          return pt.y;
+        }
+      break;
+    }
+
+    if ((Index < 0) || (Index > sizeof(DEVICECAPS) - sizeof(WORD)))
+    {
+      DC_UnlockDC(hDC);
+      return 0;
+    }
+    
+ DPRINT("(%04x,%d): returning %d\n",
+        hDC, Index, *(WORD *)(((char *)dc->w.devCaps) + Index));
+  ret = *(WORD *)(((char *)dc->w.devCaps) + Index);
+
+  DC_UnlockDC(hDC);
+  return ret;
 }
 
 DC_GET_VAL( INT, W32kGetMapMode, w.MapMode )
@@ -700,23 +792,6 @@ static void  W32kSetDCState16(HDC  hDC, HDC  hDCSave)
   DC_UnlockDC(hDCSave);
 }
 
-COLORREF STDCALL  W32kSetTextColor(HDC hDC, COLORREF color)
-{
-  COLORREF  oldColor;
-  PDC  dc = DC_HandleToPtr(hDC);
-  
-  if (!dc) 
-    {
-      return 0x80000000;
-    }
-
-  oldColor = dc->w.textColor;
-  dc->w.textColor = color;
-  DC_UnlockDC(hDC);
-
-  return  oldColor;
-}
-
 //  ----------------------------------------------------  Private Interface
 
 PDC  DC_AllocDC(LPCWSTR  Driver)
@@ -776,6 +851,11 @@ HDC  DC_PtrToHandle(PDC  pDC)
 PDC  DC_HandleToPtr(HDC  hDC)
 {
   /* FIXME: this should actually return a pointer obtained from the handle  */
+  if (((PDC)hDC)->header.wMagic != GO_DC_MAGIC)
+    {
+      return  0;
+    }
+  
   return (PDC) hDC;
 }
 
@@ -788,6 +868,59 @@ BOOL DC_LockDC(HDC  hDC)
 BOOL DC_UnlockDC(HDC  hDC)
 {
   /* FIXME */
+  return  TRUE;
+}
+
+void 
+DC_UpdateXforms(PDC  dc)
+{
+  XFORM  xformWnd2Vport;
+  FLOAT  scaleX, scaleY;
+  
+  /* Construct a transformation to do the window-to-viewport conversion */
+  scaleX = (FLOAT)dc->vportExtX / (FLOAT)dc->wndExtX;
+  scaleY = (FLOAT)dc->vportExtY / (FLOAT)dc->wndExtY;
+  xformWnd2Vport.eM11 = scaleX;
+  xformWnd2Vport.eM12 = 0.0;
+  xformWnd2Vport.eM21 = 0.0;
+  xformWnd2Vport.eM22 = scaleY;
+  xformWnd2Vport.eDx  = (FLOAT)dc->vportOrgX -
+    scaleX * (FLOAT)dc->wndOrgX;
+  xformWnd2Vport.eDy  = (FLOAT)dc->vportOrgY -
+    scaleY * (FLOAT)dc->wndOrgY;
+  
+  /* Combine with the world transformation */
+  W32kCombineTransform(&dc->w.xformWorld2Vport, 
+                       &dc->w.xformWorld2Wnd,
+                       &xformWnd2Vport );
+  
+  /* Create inverse of world-to-viewport transformation */
+  dc->w.vport2WorldValid = DC_InvertXform(&dc->w.xformWorld2Vport,
+                                          &dc->w.xformVport2World);
+}
+
+BOOL 
+DC_InvertXform(const XFORM *xformSrc, 
+               XFORM *xformDest)
+{
+  FLOAT  determinant;
+  
+  determinant = xformSrc->eM11*xformSrc->eM22 -
+    xformSrc->eM12*xformSrc->eM21;
+  if (determinant > -1e-12 && determinant < 1e-12)
+    {
+      return  FALSE;
+    }
+  
+  xformDest->eM11 =  xformSrc->eM22 / determinant;
+  xformDest->eM12 = -xformSrc->eM12 / determinant;
+  xformDest->eM21 = -xformSrc->eM21 / determinant;
+  xformDest->eM22 =  xformSrc->eM11 / determinant;
+  xformDest->eDx  = -xformSrc->eDx * xformDest->eM11 -
+    xformSrc->eDy * xformDest->eM21;
+  xformDest->eDy  = -xformSrc->eDx * xformDest->eM12 -
+    xformSrc->eDy * xformDest->eM22;
+  
   return  TRUE;
 }
 

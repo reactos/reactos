@@ -2,6 +2,8 @@
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <ddk/ntddk.h>
+#include <win32k/dc.h>
 #include <win32k/line.h>
 
 // #define NDEBUG
@@ -45,7 +47,19 @@ BOOL  W32kArcTo(HDC  hDC,
 
 int  W32kGetArcDirection(HDC  hDC)
 {
-  UNIMPLEMENTED;
+  PDC  dc;
+  int  ret;
+  
+  dc = DC_HandleToPtr (hDC);
+  if (!dc)
+    {
+      return 0;
+    }
+
+  ret = dc->w.ArcDirection;
+  DC_UnlockDC (hDC);
+  
+  return ret;
 }
 
 BOOL  W32kLineTo(HDC  hDC,
@@ -110,6 +124,23 @@ BOOL  W32kPolyPolyline(HDC  hDC,
 int  W32kSetArcDirection(HDC  hDC,
                          int  ArcDirection)
 {
-  UNIMPLEMENTED;
+  PDC  dc;
+  INT  nOldDirection;
+
+  dc = DC_HandleToPtr (hDC);
+  if (!dc)
+    {
+      return 0;
+    }
+  if (ArcDirection != AD_COUNTERCLOCKWISE && ArcDirection != AD_CLOCKWISE)
+    {
+//      SetLastError(ERROR_INVALID_PARAMETER);
+      return 0;
+    }
+
+  nOldDirection = dc->w.ArcDirection;
+  dc->w.ArcDirection = ArcDirection;
+
+  return nOldDirection;
 }
 
