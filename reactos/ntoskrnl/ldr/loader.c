@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.125 2002/11/05 21:01:38 hbirr Exp $
+/* $Id: loader.c,v 1.126 2003/02/03 11:52:46 gvg Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -811,6 +811,40 @@ LdrGetModuleObject(PUNICODE_STRING ModuleName)
 
 /*  ----------------------------------------------  PE Module support */
 
+static BOOL
+PageNeedsWriteAccess(PVOID PageStart,
+                     PVOID DriverBase,
+                     PIMAGE_FILE_HEADER PEFileHeader,
+                     PIMAGE_SECTION_HEADER PESectionHeaders)
+{
+  BOOL NeedsWriteAccess;
+  unsigned Idx;
+  ULONG Characteristics;
+  ULONG Length;
+  PVOID BaseAddress;
+
+  NeedsWriteAccess = FALSE;
+  /* Set the protections for the various parts of the driver */
+  for (Idx = 0; Idx < PEFileHeader->NumberOfSections && ! NeedsWriteAccess; Idx++)
+    {
+      Characteristics = PESectionHeaders[Idx].Characteristics;
+      if (!(Characteristics & IMAGE_SECTION_CHAR_CODE) ||
+	  (Characteristics & IMAGE_SECTION_CHAR_WRITABLE ||
+	   Characteristics & IMAGE_SECTION_CHAR_DATA ||
+	   Characteristics & IMAGE_SECTION_CHAR_BSS))
+	{
+	  Length = 
+	      max(PESectionHeaders[Idx].Misc.VirtualSize,
+	          PESectionHeaders[Idx].SizeOfRawData);
+	  BaseAddress = PESectionHeaders[Idx].VirtualAddress + DriverBase;
+	  NeedsWriteAccess = BaseAddress < PageStart + PAGE_SIZE &&
+	                     PageStart < (PVOID)((PCHAR) BaseAddress + Length);
+	}
+    }
+
+  return(NeedsWriteAccess);
+}
+
 static NTSTATUS
 LdrPEProcessModule(PVOID ModuleLoadBase,
 		   PUNICODE_STRING FileName,
@@ -1105,20 +1139,32 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
       ULONG Characteristics = PESectionHeaders[Idx].Characteristics;
       ULONG Length;
       PVOID BaseAddress;
-      ULONG i;
-      Length = 
-	max(PESectionHeaders[Idx].Misc.VirtualSize,
-	    PESectionHeaders[Idx].SizeOfRawData);
-      BaseAddress = PESectionHeaders[Idx].VirtualAddress + DriverBase;
+      PVOID PageAddress;
       if (Characteristics & IMAGE_SECTION_CHAR_CODE &&
 	  !(Characteristics & IMAGE_SECTION_CHAR_WRITABLE ||
 	    Characteristics & IMAGE_SECTION_CHAR_DATA ||
 	    Characteristics & IMAGE_SECTION_CHAR_BSS))
 	{
-	  for (i = 0; i < PAGE_ROUND_UP(Length) / PAGE_SIZE; i++)
+	  Length = 
+	      max(PESectionHeaders[Idx].Misc.VirtualSize,
+	          PESectionHeaders[Idx].SizeOfRawData);
+	  BaseAddress = PESectionHeaders[Idx].VirtualAddress + DriverBase;
+	  PageAddress = (PVOID)PAGE_ROUND_DOWN(BaseAddress);
+	  if (! PageNeedsWriteAccess(PageAddress, DriverBase, PEFileHeader, PESectionHeaders))
 	    {
-	      MmSetPageProtect(NULL, BaseAddress + (i * PAGE_SIZE), 
-			       PAGE_READONLY);
+	      MmSetPageProtect(NULL, PageAddress, PAGE_READONLY);
+	    }
+	  PageAddress = (PVOID)((PCHAR) PageAddress + PAGE_SIZE);
+	  while ((PVOID)((PCHAR) PageAddress + PAGE_SIZE) <
+	         (PVOID)((PCHAR) BaseAddress + Length))
+	    {
+	      MmSetPageProtect(NULL, PageAddress, PAGE_READONLY);
+	      PageAddress = (PVOID)((PCHAR) PageAddress + PAGE_SIZE);
+	    }
+	  if (PageAddress < (PVOID)((PCHAR) BaseAddress + Length) &&
+	      ! PageNeedsWriteAccess(PageAddress, DriverBase, PEFileHeader, PESectionHeaders))
+	    {
+	      MmSetPageProtect(NULL, PageAddress, PAGE_READONLY);
 	    }
 	}
     }
