@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.65 2002/01/23 23:39:24 chorns Exp $
+# $Id: Makefile,v 1.66 2002/03/13 23:37:25 chorns Exp $
 #
 # ReactOS Operating System
 #
@@ -159,6 +159,7 @@ OBJECTS_MM = \
 # I/O Subsystem (Io)
 OBJECTS_IO = \
 	io/adapter.o \
+  io/arcname.o \
 	io/buildirp.o \
 	io/cancel.o \
 	io/cleanup.o \
