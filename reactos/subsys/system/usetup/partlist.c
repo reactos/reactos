@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.c,v 1.4 2002/11/13 18:25:18 ekohl Exp $
+/* $Id: partlist.c,v 1.5 2002/11/28 19:20:37 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.c
@@ -117,6 +117,39 @@ AddPartitionList(ULONG DiskNumber,
 	      PartEntry->Used = FALSE;
 	    }
 	}
+    }
+}
+
+
+static VOID
+GetDriverName(PDISKENTRY DiskEntry)
+{
+  RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+  WCHAR KeyName[32];
+  NTSTATUS Status;
+
+  RtlInitUnicodeString(&DiskEntry->DriverName,
+		       NULL);
+
+  swprintf(KeyName,
+	   L"\\Scsi\\Scsi Port %lu",
+	   DiskEntry->Port);
+
+  RtlZeroMemory(&QueryTable,
+		sizeof(QueryTable));
+
+  QueryTable[0].Name = L"Driver";
+  QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
+  QueryTable[0].EntryContext = &DiskEntry->DriverName;
+
+  Status = RtlQueryRegistryValues(RTL_REGISTRY_DEVICEMAP,
+				  KeyName,
+				  QueryTable,
+				  NULL,
+				  NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
     }
 }
 
@@ -237,6 +270,7 @@ CreatePartitionList(SHORT Left,
 
 		  List->DiskArray[DiskNumber].FixedDisk = TRUE;
 
+		  GetDriverName(&List->DiskArray[DiskNumber]);
 
 		  LayoutBuffer = (DRIVE_LAYOUT_INFORMATION*)RtlAllocateHeap(ProcessHeap, 0, 8192);
 
@@ -310,12 +344,15 @@ DestroyPartitionList(PPARTLIST List)
     }
 #endif
 
-  /* free disk and partition info */
+  /* Release disk and partition info */
   if (List->DiskArray != NULL)
     {
-      /* free partition arrays */
       for (i = 0; i < List->DiskCount; i++)
 	{
+	  /* Release driver name */
+	  RtlFreeUnicodeString(&List->DiskArray[i].DriverName);
+
+	  /* Release partition array */
 	  if (List->DiskArray[i].PartArray != NULL)
 	    {
 	      RtlFreeHeap(ProcessHeap, 0, List->DiskArray[i].PartArray);
@@ -324,13 +361,13 @@ DestroyPartitionList(PPARTLIST List)
 	    }
 	}
 
-      /* free disk array */
+      /* Release disk array */
       RtlFreeHeap(ProcessHeap, 0, List->DiskArray);
       List->DiskCount = 0;
       List->DiskArray = NULL;
     }
 
-  /* free list head */
+  /* Release list head */
   RtlFreeHeap(ProcessHeap, 0, List);
 }
 
@@ -554,14 +591,29 @@ PrintDiskData(PPARTLIST List,
       Unit = "MB";
     }
 
-  sprintf(LineBuffer,
-	  "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)",
-	  DiskSize,
-	  Unit,
-	  DiskEntry->DiskNumber,
-	  DiskEntry->Port,
-	  DiskEntry->Bus,
-	  DiskEntry->Id);
+  if (DiskEntry->DriverName.Length > 0)
+    {
+      sprintf(LineBuffer,
+	      "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ",
+	      DiskSize,
+	      Unit,
+	      DiskEntry->DiskNumber,
+	      DiskEntry->Port,
+	      DiskEntry->Bus,
+	      DiskEntry->Id,
+	      &DiskEntry->DriverName);
+    }
+  else
+    {
+      sprintf(LineBuffer,
+	      "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)",
+	      DiskSize,
+	      Unit,
+	      DiskEntry->DiskNumber,
+	      DiskEntry->Port,
+	      DiskEntry->Bus,
+	      DiskEntry->Id);
+    }
 
   FillConsoleOutputAttribute(0x17,
 			     Width,
@@ -768,29 +820,55 @@ BOOL
 GetPartitionData(PPARTLIST List,
 		 PPARTDATA Data)
 {
+  PDISKENTRY DiskEntry;
+  PPARTENTRY PartEntry;
+
   if (List->CurrentDisk >= List->DiskCount)
     return(FALSE);
 
-  if (List->DiskArray[List->CurrentDisk].FixedDisk == FALSE)
+  DiskEntry = &List->DiskArray[List->CurrentDisk];
+
+  if (DiskEntry->FixedDisk == FALSE)
     return(FALSE);
 
-  if (List->CurrentPartition >= List->DiskArray[List->CurrentDisk].PartCount)
+  if (List->CurrentPartition >= DiskEntry->PartCount)
     return(FALSE);
 
-  if (List->DiskArray[List->CurrentDisk].PartArray[List->CurrentPartition].Used == FALSE)
+  PartEntry = &DiskEntry->PartArray[List->CurrentPartition];
+
+  if (PartEntry->Used == FALSE)
     return(FALSE);
 
-  Data->DiskSize = List->DiskArray[List->CurrentDisk].DiskSize;
-  Data->DiskNumber = List->DiskArray[List->CurrentDisk].DiskNumber;
-  Data->Port = List->DiskArray[List->CurrentDisk].Port;
-  Data->Bus = List->DiskArray[List->CurrentDisk].Bus;
-  Data->Id = List->DiskArray[List->CurrentDisk].Id;
+  /* Copy disk-specific data */
+  Data->DiskSize = DiskEntry->DiskSize;
+  Data->DiskNumber = DiskEntry->DiskNumber;
+  Data->Port = DiskEntry->Port;
+  Data->Bus = DiskEntry->Bus;
+  Data->Id = DiskEntry->Id;
 
-  Data->PartSize = List->DiskArray[List->CurrentDisk].PartArray[List->CurrentPartition].PartSize;
-  Data->PartNumber = List->DiskArray[List->CurrentDisk].PartArray[List->CurrentPartition].PartNumber;
-  Data->PartType = List->DiskArray[List->CurrentDisk].PartArray[List->CurrentPartition].PartType;
+  /* Copy driver name */
+  RtlInitUnicodeString(&Data->DriverName,
+		       NULL);
+  if (DiskEntry->DriverName.Length != 0)
+    {
+      Data->DriverName.Buffer = RtlAllocateHeap(ProcessHeap,
+						0,
+						DiskEntry->DriverName.MaximumLength);
+      if (Data->DriverName.Buffer != NULL)
+	{
+	  Data->DriverName.MaximumLength = DiskEntry->DriverName.MaximumLength;
+	  Data->DriverName.Length = DiskEntry->DriverName.Length;
+	  RtlCopyMemory(Data->DriverName.Buffer,
+			DiskEntry->DriverName.Buffer,
+			DiskEntry->DriverName.MaximumLength);
+	}
+    }
 
-  Data->DriveLetter = List->DiskArray[List->CurrentDisk].PartArray[List->CurrentPartition].DriveLetter;
+  /* Copy partition-specific data */
+  Data->PartSize = PartEntry->PartSize;
+  Data->PartNumber = PartEntry->PartNumber;
+  Data->PartType = PartEntry->PartType;
+  Data->DriveLetter = PartEntry->DriveLetter;
 
   return(TRUE);
 }

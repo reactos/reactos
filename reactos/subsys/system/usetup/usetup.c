@@ -753,30 +753,32 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
       PartType = "Unknown";
     }
 
-  SetTextXY(6, 8, "ReactOS will be installed");
+  SetTextXY(6, 8, "Setup will install ReactOS on");
 
-  PrintTextXY(8, 9, "on Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu.",
-	      PartData.DiskNumber,
-	      DiskSize,
-	      DiskUnit,
-	      PartData.Port,
-	      PartData.Bus,
-	      PartData.Id);
-
-  PrintTextXY(8, 10, "on Partition %lu (%I64u %s) %s",
+  PrintTextXY(8, 10, "Partition %lu (%I64u %s) %s on",
 	      PartData.PartNumber,
 	      PartSize,
 	      PartUnit,
 	      PartType);
 
-  SetTextXY(6, 13, "Select a file system for the partition from the list below.");
+  PrintTextXY(8, 12, "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ).",
+	      PartData.DiskNumber,
+	      DiskSize,
+	      DiskUnit,
+	      PartData.Port,
+	      PartData.Bus,
+	      PartData.Id,
+	      &PartData.DriverName);
 
-  SetTextXY(8, 15, "\xf9  Press UP or DOWN to select a file system.");
-  SetTextXY(8, 17, "\xf9  Press ENTER to format the partition.");
-  SetTextXY(8, 19, "\xf9  Press ESC to select another partition.");
+
+  SetTextXY(6, 17, "Select a file system for the partition from the list below.");
+
+  SetTextXY(8, 19, "\xf9  Press UP or DOWN to select a file system.");
+  SetTextXY(8, 21, "\xf9  Press ENTER to format the partition.");
+  SetTextXY(8, 23, "\xf9  Press ESC to select another partition.");
 
   /* FIXME: use a real list later */
-  SetInvertedTextXY(6, 22, " Keep current file system (no changes) ");
+  SetInvertedTextXY(6, 26, " Keep current file system (no changes) ");
 
 
   SetStatusText("   ENTER = Continue   ESC = Cancel   F3 = Quit");
