@@ -56,6 +56,12 @@
 #ifndef TB_GETBUTTONINFO	//missing in mingw headers
 #define TB_GETBUTTONINFO (WM_USER+65)
 #endif
+#ifndef SFGAO_HIDDEN	//SFGAO_GHOSTED wrong defined, SFGAO_HIDDEN missing in mingw headers
+#define	SFGAO_HIDDEN 0x00080000L
+#undef SFGAO_GHOSTED
+#define SFGAO_GHOSTED 0x00008000L
+#endif
+
 
 
 #ifdef __cplusplus

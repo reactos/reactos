@@ -262,6 +262,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_NETWORK             "Network"
     IDS_CONNECTIONS         "Connections"
+    IDS_DRIVES              "File System"
 END
 
 #endif    // German (Germany) resources

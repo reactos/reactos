@@ -128,7 +128,8 @@ void StartMenu::AddShellEntries(const ShellDirectory& dir, int max, bool subfold
 
 	for(const Entry*entry=dir._down; entry; entry=entry->_next) {
 		 // hide files like "desktop.ini"
-		if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
+		if (entry->_shell_attribs & SFGAO_HIDDEN)
+		//not appropriate for drive roots: if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
 			continue;
 
 		 // hide subfolders if requested
@@ -565,6 +566,7 @@ LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 	AddButton(ResString(IDS_RECENT),	0, true, IDC_RECENT);
 	AddButton(ResString(IDS_SETTINGS),	0, true, IDC_SETTINGS);
 	AddButton(ResString(IDS_ADMIN),		0, true, IDC_ADMIN);
+	AddButton(ResString(IDS_DRIVES),	0, true, IDC_DRIVES);
 	AddButton(ResString(IDS_NETWORK),	0, true, IDC_NETWORK);
 	AddButton(ResString(IDS_CONNECTIONS),0,true, IDC_CONNECTIONS);
 	AddButton(ResString(IDS_SEARCH),	0, false, IDC_SEARCH);
@@ -624,6 +626,11 @@ int StartMenuRoot::Command(int id, int code)
 
 	  case IDC_CONNECTIONS:
 		CreateSubmenu(id, CSIDL_CONNECTIONS);
+		break;
+
+	  case IDC_DRIVES:
+		//TODO: exclude removeable drives
+		CreateSubmenu(id, CSIDL_DRIVES);
 		break;
 
 	  case IDC_LOGOFF:
