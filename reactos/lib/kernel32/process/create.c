@@ -426,11 +426,24 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
    ULONG InitialViewSize;
    PROCESS_BASIC_INFORMATION ProcessBasicInfo;
    ULONG retlen;
+   DWORD len = 0;
    
    DPRINT("CreateProcessW(lpApplicationName '%w', lpCommandLine '%w')\n",
 	   lpApplicationName,lpCommandLine);
-   
-   wcscpy(TempCommandLine, lpApplicationName);
+
+   if (lpApplicationName[1] != ':')
+     {
+        len = GetCurrentDirectoryW(MAX_PATH,TempCommandLine);
+        if (TempCommandLine[len - 1] != L'\\')
+	  {
+                TempCommandLine[len] = L'\\';
+                TempCommandLine[len + 1] = 0;
+	  }
+        wcscat(TempCommandLine,lpApplicationName);
+     }
+   else
+        wcscpy(TempCommandLine, lpApplicationName);
+
    if (lpCommandLine != NULL)
      {
 	wcscat(TempCommandLine, L" ");
