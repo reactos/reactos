@@ -38,6 +38,9 @@ INT CommandChcp (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
 
+	/* get parameters */
+	arg = split (param, &args, FALSE);
+
 	if (args == 0)
 	{
 		/* display active code page number */
@@ -52,8 +55,6 @@ INT CommandChcp (LPTSTR cmd, LPTSTR param)
 		return 1;
 	}
 
-	/* get parameters */
-	arg = split (param, &args, FALSE);
 
 	/* save old code page */
 	uOldCodePage = GetConsoleCP ();
