@@ -1,4 +1,4 @@
-/* $Id: coord.c,v 1.9 2003/03/14 22:48:31 ei Exp $
+/* $Id: coord.c,v 1.10 2003/03/18 08:34:37 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -11,9 +11,10 @@
 
 #include <windows.h>
 #include <ddk/ntddk.h>
+#include <internal/safe.h>
 #include <win32k/coord.h>
 #include <win32k/dc.h>
-//#define NDEBUG
+#define NDEBUG
 #include <win32k/debug1.h>
 
 /* FUNCTIONS *****************************************************************/
