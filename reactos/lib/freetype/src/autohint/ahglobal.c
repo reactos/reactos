@@ -32,6 +32,9 @@
   {
     "THEZOCQS",
     "HEZLOCUS",
+#ifdef FT_CONFIG_CHESTER_SMALL_F
+    "fijkdbh",
+#endif
     "xzroesc",
     "xzroesc",
     "pqgjy"
@@ -320,7 +323,7 @@
       if ( error )
         goto Exit;
 
-      error = ah_outline_load( hinter->glyph, hinter->face );
+      error = ah_outline_load( hinter->glyph, 0x10000L, 0x10000L, hinter->face );
       if ( error )
         goto Exit;
 

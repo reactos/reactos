@@ -56,7 +56,7 @@
   /* documentation is in ftglyph.h */
 
   FT_EXPORT_DEF( void )
-  FT_Matrix_Multiply( FT_Matrix*  a,
+  FT_Matrix_Multiply( const FT_Matrix*  a,
                       FT_Matrix*  b )
   {
     FT_Fixed  xx, xy, yx, yy;

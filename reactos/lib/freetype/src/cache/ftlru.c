@@ -21,6 +21,7 @@
 #include FT_CACHE_INTERNAL_LRU_H
 #include FT_LIST_H
 #include FT_INTERNAL_OBJECTS_H
+#include FT_INTERNAL_DEBUG_H
 
 #include "ftcerror.h"
 
@@ -187,78 +188,133 @@
       goto Exit;
     }
 
-    /* we haven't found the relevant element.  We will now try */
-    /* to create a new one.                                    */
-    /*                                                         */
-
-    /* first, check if our list if full, when appropriate */
-    if ( list->max_nodes > 0 && list->num_nodes >= list->max_nodes )
+   /* since we haven't found the relevant element in our LRU list,
+    * we're going to "create" a new one.
+    *
+    * the following code is a bit special, because it tries to handle
+    * out-of-memory conditions (OOM) in an intelligent way.
+    *
+    * more precisely, if not enough memory is available to create a
+    * new node or "flush" an old one, we need to remove the oldest
+    * elements from our list, and try again. since several tries may
+    * be necessary, a loop is needed
+    *
+    * this loop will only exit when:
+    *
+    *   - a new node was succesfully created, or an old node flushed
+    *   - an error other than FT_Err_Out_Of_Memory is detected
+    *   - the list of nodes is empty, and it isn't possible to create
+    *     new nodes
+    *
+    * on each unsucesful attempt, one node will be removed from the list
+    *
+    */
+    
     {
-      /* this list list is full; we will now flush */
-      /* the oldest node, if there's one!          */
-      FT_LruNode  last = *plast;
+      FT_Int   drop_last = ( list->max_nodes > 0 && 
+                             list->num_nodes >= list->max_nodes );
 
-
-      if ( last )
+      for (;;)
       {
-        if ( clazz->node_flush )
+        node = NULL;
+
+       /* when "drop_last" is true, we should free the last node in
+        * the list to make room for a new one. note that we re-use
+        * its memory block to save allocation calls.
+        */
+        if ( drop_last )
         {
-          error = clazz->node_flush( last, key, list->data );
+         /* find the last node in the list
+          */
+          pnode = &list->nodes;
+          node  = *pnode;
+  
+          if ( node == NULL )
+          {
+            FT_ASSERT( list->nodes == 0 );
+            error = FT_Err_Out_Of_Memory;
+            goto Exit;
+          }
+
+          FT_ASSERT( list->num_nodes > 0 );
+
+          while ( node->next )
+          {
+            pnode = &node->next;
+            node  = *pnode;
+          }
+  
+         /* remove it from the list, and try to "flush" it. doing this will
+          * save a significant number of dynamic allocations compared to
+          * a classic destroy/create cycle
+          */
+          *pnode = NULL;
+          list->num_nodes -= 1;
+  
+          if ( clazz->node_flush )
+          {
+            error = clazz->node_flush( node, key, list->data );
+            if ( !error )
+              goto Success;
+
+           /* note that if an error occured during the flush, we need to
+            * finalize it since it is potentially in incomplete state.
+            */
+          }
+
+         /* we finalize, but do not destroy the last node, we
+          * simply re-use its memory block !
+          */
+          if ( clazz->node_done )
+            clazz->node_done( node, list->data );
+            
+          FT_MEM_ZERO( node, clazz->node_size );
         }
         else
         {
-          if ( clazz->node_done )
-            clazz->node_done( last, list->data );
-
-          last->key  = key;
-          error = clazz->node_init( last, key, list->data );
+         /* try to allocate a new node when "drop_last" is not TRUE
+          * this usually happens on the first pass, when the LRU list
+          * is not already full.
+          */
+          if ( FT_ALLOC( node, clazz->node_size ) )
+            goto Fail;
         }
+  
+        FT_ASSERT( node != NULL );
 
-        if ( !error )
+        node->key = key;
+        error = clazz->node_init( node, key, list->data );
+        if ( error )
         {
-          /* move it to the top of the list */
-          *plast      = NULL;
-          last->next  = list->nodes;
-          list->nodes = last;
+          if ( clazz->node_done )
+            clazz->node_done( node, list->data );
 
-          result = last;
-          goto Exit;
+          FT_FREE( node );
+          goto Fail;
         }
 
-        /* in case of error during the flush or done/init cycle, */
-        /* we need to discard the node                           */
-        if ( clazz->node_done )
-          clazz->node_done( last, list->data );
+      Success:
+        result = node;
 
-        *plast = NULL;
-        list->num_nodes--;
-
-        FT_FREE( last );
+        node->next  = list->nodes;
+        list->nodes = node;
+        list->num_nodes++;
         goto Exit;
+  
+      Fail:
+        if ( error != FT_Err_Out_Of_Memory )
+          goto Exit;
+        
+        drop_last = 1;
+        continue;
       }
     }
-
-    /* otherwise, simply allocate a new node */
-    if ( FT_ALLOC( node, clazz->node_size ) )
-      goto Exit;
-
-    node->key = key;
-    error = clazz->node_init( node, key, list->data );
-    if ( error )
-    {
-      FT_FREE( node );
-      goto Exit;
-    }
-
-    result      = node;
-    node->next  = list->nodes;
-    list->nodes = node;
-    list->num_nodes++;
 
   Exit:
     *anode = result;
     return error;
   }
+
 
 
   FT_EXPORT_DEF( void )

@@ -474,6 +474,8 @@
     FT_Angle  delta = angle2 - angle1;
 
     delta %= FT_ANGLE_2PI;
+    if ( delta < 0 )
+      delta += FT_ANGLE_2PI;
 
     if ( delta > FT_ANGLE_PI )
       delta -= FT_ANGLE_2PI;

@@ -33,6 +33,7 @@ THE SOFTWARE.
 
 #include "pcf.h"
 #include "pcfdriver.h"
+#include "pcfread.h"
 
 #include "pcferror.h"
 
@@ -316,7 +317,7 @@ THE SOFTWARE.
   };
 
 
-  static PCF_Property
+  FT_LOCAL_DEF( PCF_Property )
   pcf_find_property( PCF_Face          face,
                      const FT_String*  prop )
   {

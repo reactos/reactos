@@ -88,6 +88,137 @@
 
 
   /* compute the snapped width of a given stem */
+#ifdef FT_CONFIG_CHESTER_SERIF
+  static FT_Pos
+  ah_compute_stem_width( AH_Hinter      hinter,
+                         int            vertical,
+                         FT_Pos         width,
+                         AH_Edge_Flags  base_flags,
+                         AH_Edge_Flags  stem_flags )
+  {
+    AH_Globals  globals = &hinter->globals->scaled;
+    FT_Pos      dist    = width;
+    FT_Int      sign    = 0;
+
+
+    if ( dist < 0 )
+    {
+      dist = -width;
+      sign = 1;
+    }
+
+    if ( !hinter->do_stem_adjust )
+    {
+      /* leave stem widths unchanged */
+    }
+    else if ( (  vertical && !hinter->do_vert_snapping ) ||
+              ( !vertical && !hinter->do_horz_snapping ) )
+    {
+      /* smooth hinting process, very lightly quantize the stem width */
+      /*                                                              */
+
+      /* leave the widths of serifs alone */
+
+      if ( ( stem_flags & AH_EDGE_SERIF ) && vertical && ( dist < 3 * 64 ) )
+        goto Done_Width;
+
+      else if ( ( base_flags & AH_EDGE_ROUND ) )
+      {
+        if ( dist < 80 )
+          dist = 64;
+      }
+      else if ( dist < 56 )
+        dist = 56;
+
+      {
+        FT_Pos  delta = dist - globals->stds[vertical];
+
+
+        if ( delta < 0 )
+          delta = -delta;
+
+        if ( delta < 40 )
+        {
+          dist = globals->stds[vertical];
+          if ( dist < 48 )
+            dist = 48;
+
+          goto Done_Width;
+        }
+
+        if ( dist < 3 * 64 )
+        {
+          delta = ( dist & 63 );
+          dist &= -64;
+
+          if ( delta < 10 )
+            dist += delta;
+
+          else if ( delta < 32 )
+            dist += 10;
+
+          else if ( delta < 54 )
+            dist += 54;
+
+          else
+            dist += delta;
+        }
+        else
+          dist = ( dist + 32 ) & -64;
+      }
+    }
+    else
+    {
+      /* strong hinting process, snap the stem width to integer pixels */
+      /*                                                               */
+      if ( vertical )
+      {
+        dist = ah_snap_width( globals->heights, globals->num_heights, dist );
+
+        /* in the case of vertical hinting, always round */
+        /* the stem heights to integer pixels            */
+        if ( dist >= 64 )
+          dist = ( dist + 16 ) & -64;
+        else
+          dist = 64;
+      }
+      else
+      {
+        dist = ah_snap_width( globals->widths,  globals->num_widths, dist );
+
+        if ( hinter->flags & AH_HINTER_MONOCHROME )
+        {
+          /* monochrome horizontal hinting: snap widths to integer pixels */
+          /* with a different threshold                                   */
+          if ( dist < 64 )
+            dist = 64;
+          else
+            dist = ( dist + 32 ) & -64;
+        }
+        else
+        {
+          /* for horizontal anti-aliased hinting, we adopt a more subtle */
+          /* approach: we strengthen small stems, round stems whose size */
+          /* is between 1 and 2 pixels to an integer, otherwise nothing  */
+          if ( dist < 48 )
+            dist = ( dist + 64 ) >> 1;
+
+          else if ( dist < 128 )
+            dist = ( dist + 22 ) & -64;
+          else
+            /* XXX: round otherwise, prevent color fringes in LCD mode */
+            dist = ( dist + 32 ) & -64;
+        }
+      }
+    }
+
+  Done_Width:
+    if ( sign )
+      dist = -dist;
+
+    return dist;
+  }
+#else /* !CHESTER_SERIF */
   static FT_Pos
   ah_compute_stem_width( AH_Hinter  hinter,
                          int        vertical,
@@ -104,8 +235,12 @@
       sign = 1;
     }
 
-    if ( (  vertical && !hinter->do_vert_snapping ) ||
-         ( !vertical && !hinter->do_horz_snapping ) )
+    if ( !hinter->do_stem_adjust )
+    {
+      /* leave stem widths unchanged */
+    }
+    else if ( (  vertical && !hinter->do_vert_snapping ) ||
+              ( !vertical && !hinter->do_horz_snapping ) )
     {
       /* smooth hinting process, very lightly quantize the stem width */
       /*                                                              */
@@ -197,6 +332,7 @@
 
     return dist;
   }
+#endif /* !CHESTER_SERIF */
 
 
   /* align one stem edge relative to the previous stem edge */
@@ -208,9 +344,18 @@
   {
     FT_Pos  dist = stem_edge->opos - base_edge->opos;
 
+#ifdef FT_CONFIG_CHESTER_SERIF
+    FT_Pos  fitted_width = ah_compute_stem_width( hinter,
+                                                  vertical,
+                                                  dist,
+                                                  base_edge->flags,
+                                                  stem_edge->flags );
 
+    stem_edge->pos = base_edge->pos + fitted_width;
+#else
     stem_edge->pos = base_edge->pos +
                      ah_compute_stem_width( hinter, vertical, dist );
+#endif
   }
 
 
@@ -224,7 +369,7 @@
     FT_Pos  sign = 1;
 
     FT_UNUSED( hinter );
-
+    FT_UNUSED( vertical );
 
     dist = serif->opos - base->opos;
     if ( dist < 0 )
@@ -364,12 +509,61 @@
 
         if ( !anchor )
         {
+#ifdef FT_CONFIG_CHESTER_STEM
+          FT_Pos   org_len, org_center, cur_len;
+          FT_Pos   cur_pos1, error1, error2, u_off, d_off;
+
+          org_len    = edge2->opos - edge->opos;
+          cur_len    = ah_compute_stem_width( hinter, dimension, org_len,
+                                              edge->flags, edge2->flags   );
+
+          if (cur_len <= 64 )
+            u_off = d_off = 32;
+          else
+          {
+            u_off = 38;
+            d_off = 26;
+          }
+
+          if ( cur_len < 96 )
+          {
+            org_center = edge->opos + ( org_len >> 1 );
+
+            cur_pos1   = ( org_center + 32 ) & -64;
+
+            error1 = org_center - ( cur_pos1 - u_off );
+            if ( error1 < 0 )
+              error1 = -error1;
+
+            error2 = org_center - ( cur_pos1 + d_off );
+            if ( error2 < 0 )
+              error2 = -error2;
+
+            if ( error1 < error2 )
+              cur_pos1 -= u_off;
+            else
+              cur_pos1 += d_off;
+
+            edge->pos  = cur_pos1 - cur_len / 2;
+            edge2->pos = cur_pos1 + cur_len / 2;
+
+          }
+          else
+            edge->pos = ( edge->opos + 32 ) & -64;
+
+          anchor    = edge;
+
+          edge->flags |= AH_EDGE_DONE;
+
+          ah_align_linked_edge( hinter, edge, edge2, dimension );
+#else /* !CHESTER_STEM */
           edge->pos = ( edge->opos + 32 ) & -64;
           anchor    = edge;
 
           edge->flags |= AH_EDGE_DONE;
 
           ah_align_linked_edge( hinter, edge, edge2, dimension );
+#endif /* !CHESTER_STEM */
         }
         else
         {
@@ -381,7 +575,70 @@
           org_len    = edge2->opos - edge->opos;
           org_center = org_pos + ( org_len >> 1 );
 
+#ifdef FT_CONFIG_CHESTER_SERIF
+          cur_len    = ah_compute_stem_width( hinter, dimension, org_len,
+                                              edge->flags, edge2->flags  );
+#else  /* !CHESTER_SERIF */
           cur_len    = ah_compute_stem_width( hinter, dimension, org_len );
+#endif /* !CHESTER_SERIF */
+
+#ifdef FT_CONFIG_CHESTER_STEM
+          if ( cur_len < 96 )
+          {
+            FT_Pos  u_off, d_off;
+
+
+            cur_pos1   = ( org_center + 32 ) & -64;
+
+            if (cur_len <= 64 )
+              u_off = d_off = 32;
+            else
+            {
+              u_off = 38;
+              d_off = 26;
+            }
+
+            delta1 = org_center - (cur_pos1 - u_off);
+            if ( delta1 < 0 )
+              delta1 = -delta1;
+
+            delta2 = org_center - (cur_pos1 + d_off);
+            if ( delta2 < 0 )
+              delta2 = -delta2;
+
+            if ( delta1 < delta2 )
+              cur_pos1 -= u_off;
+            else
+              cur_pos1 += d_off;
+
+            edge->pos  = cur_pos1 - cur_len / 2;
+            edge2->pos = cur_pos1 + cur_len / 2;
+          }
+          else
+          {
+
+            org_pos    = anchor->pos + (edge->opos - anchor->opos);
+            org_len    = edge2->opos - edge->opos;
+            org_center = org_pos + ( org_len >> 1 );
+
+            cur_len    = ah_compute_stem_width( hinter, dimension, org_len,
+                                                edge->flags, edge2->flags );
+
+            cur_pos1   = ( org_pos + 32 ) & -64;
+            delta1     = ( cur_pos1 + ( cur_len >> 1 ) - org_center );
+            if ( delta1 < 0 )
+              delta1 = -delta1;
+
+            cur_pos2   = ( ( org_pos + org_len + 32 ) & -64 ) - cur_len;
+            delta2     = ( cur_pos2 + ( cur_len >> 1 ) - org_center );
+            if ( delta2 < 0 )
+              delta2 = -delta2;
+
+            edge->pos  = ( delta1 < delta2 ) ? cur_pos1 : cur_pos2;
+            edge2->pos = edge->pos + cur_len;
+          }
+
+#else /* !CHESTER_STEM */
 
           cur_pos1   = ( org_pos + 32 ) & -64;
           delta1     = ( cur_pos1 + ( cur_len >> 1 ) - org_center );
@@ -395,6 +652,8 @@
 
           edge->pos  = ( delta1 <= delta2 ) ? cur_pos1 : cur_pos2;
           edge2->pos = edge->pos + cur_len;
+
+#endif /* !CHESTER_STEM */
 
           edge->flags  |= AH_EDGE_DONE;
           edge2->flags |= AH_EDGE_DONE;
@@ -1051,8 +1310,8 @@
     FT_Face           face     = hinter->face;
     FT_GlyphSlot      slot     = face->glyph;
     FT_Slot_Internal  internal = slot->internal;
-    FT_Fixed          x_scale  = face->size->metrics.x_scale;
-    FT_Fixed          y_scale  = face->size->metrics.y_scale;
+    FT_Fixed          x_scale  = hinter->globals->x_scale;
+    FT_Fixed          y_scale  = hinter->globals->y_scale;
     FT_Error          error;
     AH_Outline        outline  = hinter->glyph;
     AH_Loader         gloader  = hinter->loader;
@@ -1132,7 +1391,7 @@
 
       /* now, load the slot image into the auto-outline, and run the */
       /* automatic hinting process                                   */
-      error = ah_outline_load( outline, face );   /* XXX: change to slot */
+      error = ah_outline_load( outline, x_scale, y_scale, face );
       if ( error )
         goto Exit;
 
@@ -1169,9 +1428,11 @@
         hinter->pp1.x = ( ( new_lsb    - old_lsb ) + 32 ) & -64;
         hinter->pp2.x = ( ( edge2->pos + old_rsb ) + 32 ) & -64;
 
+#if 0
         /* try to fix certain bad advance computations */
         if ( hinter->pp2.x + hinter->pp1.x == edge2->pos && old_rsb > 4 )
           hinter->pp2.x += 64;
+#endif
       }
 
       /* good, we simply add the glyph to our loader's base */
@@ -1400,6 +1661,36 @@
 
     }
 
+#ifdef FT_CONFIG_CHESTER_BLUE_SCALE
+   /* try to optimize the y_scale so that the top of non-capital letters
+    * is aligned on a pixel boundary whenever possible
+    */
+    {
+      AH_Globals  design = &face_globals->design;
+      FT_Pos      shoot  = design->blue_shoots[ AH_BLUE_SMALL_TOP ];
+
+     /* the value of 'shoot' will be -1000 if the font doesn't have */
+     /* small latin letters; we simply check the sign here...       */
+      if ( shoot > 0 )
+      {
+        FT_Pos  scaled = FT_MulFix( shoot, y_scale );
+        FT_Pos  fitted = ( scaled + 32 ) & -64;
+
+        if ( scaled != fitted )
+        {
+         /* adjust y_scale
+          */
+          y_scale = FT_MulDiv( y_scale, fitted, scaled );
+
+         /* adust x_scale
+          */
+          if ( fitted < scaled )
+            x_scale -= x_scale/50;  /* x_scale*0.98 with integers */
+        }
+      }
+    }
+#endif /* FT_CONFIG_CHESTER_BLUE_SCALE */
+
     /* now, we must check the current character pixel size to see if we */
     /* need to rescale the global metrics                               */
     if ( face_globals->x_scale != x_scale ||
@@ -1409,8 +1700,8 @@
     ah_loader_rewind( hinter->loader );
 
     /* reset hinting flags according to load flags and current render target */
-    hinter->do_horz_hints = !FT_BOOL( load_flags & FT_LOAD_NO_AUTOHINT );
-    hinter->do_vert_hints = !FT_BOOL( load_flags & FT_LOAD_NO_AUTOHINT );
+    hinter->do_horz_hints = FT_BOOL( !(load_flags & FT_LOAD_NO_AUTOHINT) );
+    hinter->do_vert_hints = FT_BOOL( !(load_flags & FT_LOAD_NO_AUTOHINT) );
 
 #ifdef DEBUG_HINTER
     hinter->do_horz_hints = !ah_debug_disable_vert;  /* not a bug, the meaning */
@@ -1426,6 +1717,8 @@
     /* vertical LCD rendering targets only.  Corresponds to Y snapping. */
     hinter->do_vert_snapping = FT_BOOL( hint_mode == FT_RENDER_MODE_MONO   ||
                                         hint_mode == FT_RENDER_MODE_LCD_V  );
+
+    hinter->do_stem_adjust   = FT_BOOL( hint_mode != FT_RENDER_MODE_LIGHT );
 
 #if 1
     load_flags  = FT_LOAD_NO_SCALE

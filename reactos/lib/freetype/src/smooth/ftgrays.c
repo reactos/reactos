@@ -857,7 +857,7 @@
         if ( y < min ) min = y;
         if ( y > max ) max = y;
 
-        if ( TRUNC( min ) >= ras.max_ey || TRUNC( max ) < 0 )
+        if ( TRUNC( min ) >= ras.max_ey || TRUNC( max ) < ras.min_ey )
           goto Draw;
 
         gray_split_conic( arc );
@@ -1827,9 +1827,9 @@
   gray_convert_glyph( RAS_ARG )
   {
     TBand            bands[40];
-    volatile TBand*  band;
-    volatile int     n, num_bands;
-    volatile TPos    min, max, max_y;
+    TBand* volatile  band;
+    int volatile     n, num_bands;
+    TPos volatile    min, max, max_y;
     FT_BBox*         clip;
 
 

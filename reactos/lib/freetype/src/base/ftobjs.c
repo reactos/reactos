@@ -22,7 +22,9 @@
 #include FT_INTERNAL_OBJECTS_H
 #include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_STREAM_H
+#include FT_INTERNAL_SFNT_H    /* for SFNT_Load_Table_Func */
 #include FT_TRUETYPE_TABLES_H
+#include FT_TRUETYPE_IDS_H
 #include FT_OUTLINE_H
 
 
@@ -196,19 +198,59 @@
     return error;
   }
 
+  FT_BASE_DEF( void )
+  ft_glyphslot_free_bitmap( FT_GlyphSlot  slot )
+  {
+    if ( slot->flags & FT_GLYPH_OWN_BITMAP )
+    {
+      FT_Memory  memory = FT_FACE_MEMORY( slot->face );
+      
+      
+      FT_FREE( slot->bitmap.buffer );
+      slot->flags &= ~FT_GLYPH_OWN_BITMAP;
+    }
+    else
+    {
+      /* assume that the bitmap buffer was stolen or not */
+      /* allocated from the heap                         */
+      slot->bitmap.buffer = NULL;
+    }
+  }
+
+
+  FT_BASE_DEF( void )
+  ft_glyphslot_set_bitmap( FT_GlyphSlot  slot,
+                           FT_Pointer    buffer )
+  {
+    ft_glyphslot_free_bitmap( slot );
+    
+    slot->bitmap.buffer = buffer;
+    
+    FT_ASSERT( (slot->flags & FT_GLYPH_OWN_BITMAP) == 0 );
+  }                           
+
+
+  FT_BASE_DEF( FT_Error )
+  ft_glyphslot_alloc_bitmap( FT_GlyphSlot  slot,
+                             FT_ULong      size )
+  {
+    FT_Memory  memory = FT_FACE_MEMORY( slot->face );
+    
+    
+    if ( slot->flags & FT_GLYPH_OWN_BITMAP )
+      FT_FREE( slot->bitmap.buffer );
+    else
+      slot->flags |= FT_GLYPH_OWN_BITMAP;
+    
+    return FT_MEM_ALLOC( slot->bitmap.buffer, size );
+  }                             
+
 
   static void
   ft_glyphslot_clear( FT_GlyphSlot  slot )
   {
     /* free bitmap if needed */
-    if ( slot->flags & FT_GLYPH_OWN_BITMAP )
-    {
-      FT_Memory  memory = FT_FACE_MEMORY( slot->face );
-
-
-      FT_FREE( slot->bitmap.buffer );
-      slot->flags &= ~FT_GLYPH_OWN_BITMAP;
-    }
+    ft_glyphslot_free_bitmap( slot );
 
     /* clear all public fields in the glyph slot */
     FT_ZERO( &slot->metrics );
@@ -246,8 +288,7 @@
       clazz->done_slot( slot );
 
     /* free bitmap buffer if needed */
-    if ( slot->flags & FT_GLYPH_OWN_BITMAP )
-      FT_FREE( slot->bitmap.buffer );
+    ft_glyphslot_free_bitmap( slot );
 
     /* free glyph loader */
     if ( FT_DRIVER_USES_OUTLINES( driver ) )
@@ -702,6 +743,100 @@
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
+  /*    find_unicode_charmap                                               */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    This function finds a Unicode charmap, if there is one.            */
+  /*    And if there is more than one, it tries to favour the more         */
+  /*    extensive one, i.e. one that supports UCS-4 against those which    */
+  /*    are limited to the BMP (said UCS-2 encoding.)                      */
+  /*                                                                       */
+  /*    This function is called from open_face() (just below), and also    */
+  /*    from FT_Select_Charmap( , FT_ENCODING_UNICODE).                    */
+  /*                                                                       */
+  static FT_Error
+  find_unicode_charmap( FT_Face  face )
+  {
+    FT_CharMap*  first;
+    FT_CharMap*  cur;
+    FT_CharMap*  unicmap = NULL;  /* some UCS-2 map, if we found it */
+
+
+    /* caller should have already checked that `face' is valid */
+    FT_ASSERT ( face );
+
+    first = face->charmaps;
+
+    if ( !first )
+      return FT_Err_Invalid_CharMap_Handle;
+
+    /*
+     *  the original TrueType specification(s) only specified charmap
+     *  formats that are capable of mapping 8 or 16 bit character codes to
+     *  glyph indices.
+     *
+     *  however, recent updates to the Apple and OpenType specifications
+     *  introduced new formats that are capable of mapping 32-bit character
+     *  codes as well. And these are already used on some fonts, mainly to
+     *  map non-BMP Asian ideographs as defined in Unicode.
+     *
+     *  for compatibility purposes, these fonts generally come with
+     *  *several* Unicode charmaps:
+     *
+     *   - one of them in the "old" 16-bit format, that cannot access
+     *     all glyphs in the font
+     *
+     *   - another one in the "new" 32-bit format, that can access all
+     *     the glyphs.
+     *
+     *  this function has been written to always favor a 32-bit charmap
+     *  when found. Otherwise, a 16-bit one is returned when found
+     */
+
+    /* since the `interesting' table, with id's 3,10, is normally the */
+    /* last one, we loop backwards. This looses with type1 fonts with */
+    /* non-BMP characters (<.0001%), this wins with .ttf with non-BMP */
+    /* chars (.01% ?), and this is the same about 99.99% of the time! */
+
+    cur = first + face->num_charmaps;  /* points after the last one */
+
+    for ( ; --cur >= first; )
+    {
+      if ( cur[0]->encoding == FT_ENCODING_UNICODE )
+      {
+        unicmap = cur;  /* record we found a Unicode charmap */
+
+        /* XXX If some new encodings to represent UCS-4 are added,  */
+        /*     they should be added here.                           */
+        if ( ( cur[0]->platform_id == TT_PLATFORM_MICROSOFT &&
+               cur[0]->encoding_id == TT_MS_ID_UCS_4        )          ||
+             ( cur[0]->platform_id == TT_PLATFORM_APPLE_UNICODE &&
+               cur[0]->encoding_id == TT_APPLE_ID_UNICODE_32    )      )
+
+        /* Hurray! We found a UCS-4 charmap. We can stop the scan! */
+        {
+          face->charmap = cur[0];
+          return 0;
+        }
+      }
+    }
+
+    /* We do not have any UCS-4 charmap. Sigh.                           */
+    /* Let's see if we have  some other kind of Unicode charmap, though. */
+    if ( unicmap != NULL )
+    {
+      face->charmap = unicmap[0];
+      return 0;
+    }
+
+    /* Chou blanc! */
+    return FT_Err_Invalid_CharMap_Handle;
+  }
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Function>                                                            */
   /*    open_face                                                          */
   /*                                                                       */
   /* <Description>                                                         */
@@ -718,7 +853,7 @@
     FT_Memory         memory;
     FT_Driver_Class  clazz;
     FT_Face           face = 0;
-    FT_Error          error;
+    FT_Error          error, error2;
     FT_Face_Internal  internal;
 
 
@@ -748,7 +883,7 @@
             i++ )
         if ( params[i].tag == FT_PARAM_TAG_INCREMENTAL )
           face->internal->incremental_interface = params[i].data;
-	}
+    }
 #endif
 
     error = clazz->init_face( stream,
@@ -760,24 +895,17 @@
       goto Fail;
 
     /* select Unicode charmap by default */
+    error2 = find_unicode_charmap( face );
+
+    /* if no Unicode charmap can be found, FT_Err_Invalid_CharMap_Handle is
+     * returned.
+     */
+
+    /* no error should happen, but we want to play safe. */
+    if ( error2 && error2 != FT_Err_Invalid_CharMap_Handle )
     {
-      FT_Int      nn;
-      FT_CharMap  unicmap = NULL, cmap;
-
-
-      for ( nn = 0; nn < face->num_charmaps; nn++ )
-      {
-        cmap = face->charmaps[nn];
-
-        if ( cmap->encoding == FT_ENCODING_UNICODE )
-        {
-          unicmap = cmap;
-          break;
-        }
-      }
-
-      if ( unicmap != NULL )
-        face->charmap = unicmap;
+      error = error2;
+      goto Fail;
     }
 
     *aface = face;
@@ -1241,10 +1369,10 @@
     /* Compute root ascender, descender, test height, and max_advance */
 
     metrics->ascender    = ( FT_MulFix( face->ascender,
-                                        metrics->y_scale ) + 32 ) & -64;
+                                        metrics->y_scale ) + 63 ) & -64;
 
     metrics->descender   = ( FT_MulFix( face->descender,
-                                        metrics->y_scale ) + 32 ) & -64;
+                                        metrics->y_scale ) + 0 ) & -64;
 
     metrics->height      = ( FT_MulFix( face->height,
                                         metrics->y_scale ) + 32 ) & -64;
@@ -1297,9 +1425,10 @@
     if ( char_height < 1 * 64 )
       char_height = 1 * 64;
 
-    /* Compute pixel sizes in 26.6 units */
-    dim_x = ( ( ( char_width  * horz_resolution ) / 72 ) + 32 ) & -64;
-    dim_y = ( ( ( char_height * vert_resolution ) / 72 ) + 32 ) & -64;
+   /* Compute pixel sizes in 26.6 units. we use rounding
+    */
+    dim_x = ( ( char_width  * horz_resolution + (36+32*72) ) / 72 ) & -64;
+    dim_y = ( ( char_height * vert_resolution + (36+32*72) ) / 72 ) & -64;
 
     metrics->x_ppem  = (FT_UShort)( dim_x >> 6 );
     metrics->y_ppem  = (FT_UShort)( dim_y >> 6 );
@@ -1440,6 +1569,13 @@
 
     if ( !face )
       return FT_Err_Invalid_Face_Handle;
+
+    /* FT_ENCODING_UNICODE is special. We try to find the `best' Unicode */
+    /* charmap available, i.e. one with UCS-4 characters, if possible.   */
+    /*                                                                   */
+    /* This is done by find_unicode_charmap() above, to share code.      */
+    if ( encoding == FT_ENCODING_UNICODE )
+      return find_unicode_charmap( face );
 
     cur = face->charmaps;
     if ( !cur )
@@ -1764,6 +1900,32 @@
 
   Exit:
     return table;
+  }
+
+
+  /* documentation is in tttables.h */
+
+  FT_EXPORT_DEF( FT_Error )
+  FT_Load_Sfnt_Table( FT_Face      face,
+                      FT_ULong     tag,
+                      FT_Long      offset,
+                      FT_Byte*     buffer,
+                      FT_ULong*    length )
+  {
+    SFNT_Load_Table_Func  func;
+    FT_Driver             driver;
+
+
+    if ( !face || !FT_IS_SFNT( face ) )
+      return FT_Err_Invalid_Face_Handle;
+
+    driver = face->driver;
+    func   = (SFNT_Load_Table_Func) driver->root.clazz->get_interface(
+                                      FT_MODULE( driver ), "load_sfnt" );
+    if ( !func )
+      return FT_Err_Unimplemented_Feature;
+
+    return func( face, tag, offset, buffer, length );
   }
 
 

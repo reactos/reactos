@@ -111,7 +111,10 @@
 
     /* allocate new base block */
     if ( FT_ALLOC( table->block, new_size ) )
+    {
+      table->block = old_base;
       return error;
+    }
 
     /* copy elements and shift offsets */
     if (old_base )

@@ -58,6 +58,15 @@
 #define UNSCALED_COMPONENT_OFFSET  0x1000
 
 
+/* Maximum recursion depth we allow for composite glyphs.
+ * The TrueType spec doesn't say anything about recursion,
+ * so it isn't clear that recursion is allowed at all. But
+ * we'll be generous.
+ */
+#define TT_MAX_COMPOSITE_RECURSE 5
+
+
+
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
@@ -747,7 +756,8 @@
   /*                                                                       */
   static FT_Error
   load_truetype_glyph( TT_Loader  loader,
-                       FT_UInt    glyph_index )
+                       FT_UInt    glyph_index,
+                       FT_UInt    recurse_count )
   {
 
 #ifdef TT_CONFIG_OPTION_BYTECODE_INTERPRETER
@@ -769,6 +779,11 @@
     FT_Bool               glyph_data_loaded = 0;
 #endif
 
+    if ( recurse_count >= TT_MAX_COMPOSITE_RECURSE )
+    {
+      error = TT_Err_Invalid_Composite;
+      goto Exit;
+    }
 
     /* check glyph index */
     if ( glyph_index >= (FT_UInt)face->root.num_glyphs )
@@ -793,41 +808,32 @@
       FT_Short   left_bearing = 0;
       FT_UShort  advance_width = 0;
 
-#ifdef FT_CONFIG_OPTION_INCREMENTAL
-      FT_Bool    metrics_found = FALSE;
+      Get_HMetrics( face, glyph_index,
+                    (FT_Bool)!( loader->load_flags &
+                                FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH ),
+                    &left_bearing,
+                    &advance_width );
 
+#ifdef FT_CONFIG_OPTION_INCREMENTAL
 
       /* If this is an incrementally loaded font see if there are */
       /* overriding metrics for this glyph.                       */
       if ( face->root.internal->incremental_interface &&
            face->root.internal->incremental_interface->funcs->get_glyph_metrics )
       {
-        FT_Incremental_MetricsRec  m;
+        FT_Incremental_MetricsRec  metrics;
 
-
+		metrics.bearing_x = left_bearing;
+		metrics.bearing_y = 0;
+		metrics.advance = advance_width;
         error = face->root.internal->incremental_interface->funcs->get_glyph_metrics(
                   face->root.internal->incremental_interface->object,
-                  glyph_index, FALSE, &m, &metrics_found );
+                  glyph_index, FALSE, &metrics );
         if ( error )
           goto Exit;
-        left_bearing  = (FT_Short)m.bearing_x;
-        advance_width = (FT_UShort)m.advance;
+        left_bearing  = (FT_Short)metrics.bearing_x;
+        advance_width = (FT_UShort)metrics.advance;
       }
-
-      if ( !metrics_found )
-        Get_HMetrics( face, glyph_index,
-                      (FT_Bool)!( loader->load_flags &
-                                  FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH ),
-                      &left_bearing,
-                      &advance_width );
-
-#else
-
-      Get_HMetrics( face, glyph_index,
-                    (FT_Bool)!( loader->load_flags &
-                                FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH ),
-                    &left_bearing,
-                    &advance_width );
 
 #endif /* FT_CONFIG_OPTION_INCREMENTAL */
 
@@ -985,7 +991,7 @@
     /***********************************************************************/
 
     /* otherwise, load a composite! */
-    else
+    else if ( contours_count == -1 )
     {
       TT_GlyphSlot  glyph = (TT_GlyphSlot)loader->glyph;
       FT_UInt       start_point;
@@ -1059,7 +1065,8 @@
 
           num_base_points = gloader->base.outline.n_points;
 
-          error = load_truetype_glyph( loader, subglyph->index );
+          error = load_truetype_glyph( loader, subglyph->index,
+                                       recurse_count+1 );
           if ( error )
             goto Fail;
 
@@ -1310,7 +1317,6 @@
             exec->is_composite     = TRUE;
             exec->pedantic_hinting =
               (FT_Bool)( loader->load_flags & FT_LOAD_PEDANTIC );
-
             error = TT_Run_Context( exec, ((TT_Size)loader->size)->debug );
             if ( error && exec->pedantic_hinting )
               goto Fail;
@@ -1325,6 +1331,12 @@
 
       }
       /* end of composite loading */
+    }
+    else
+    {
+      /* invalid composite count ( negative but not -1 ) */
+      error = TT_Err_Invalid_Outline;
+      goto Fail;
     }
 
     /***********************************************************************/
@@ -1427,33 +1439,9 @@
       FT_Pos     left;     /* scaled vertical left side bearing */
       FT_Pos     top;      /* scaled vertical top side bearing  */
       FT_Pos     advance;  /* scaled vertical advance height    */
-      FT_Bool    metrics_found = FALSE;
-
-#ifdef FT_CONFIG_OPTION_INCREMENTAL
-
-      /* If this is an incrementally loaded font see if there are */
-      /* overriding metrics for this glyph.                       */
-      if ( face->root.internal->incremental_interface &&
-           face->root.internal->incremental_interface->funcs->get_glyph_metrics )
-      {
-        FT_Incremental_MetricsRec  m;
-        FT_Error                   error =
-          face->root.internal->incremental_interface->funcs->get_glyph_metrics(
-            face->root.internal->incremental_interface->object,
-            glyph_index, TRUE, &m, &metrics_found );
-
-
-        if ( error )
-          return error;
-
-        top_bearing    = (FT_Short)m.bearing_y;
-        advance_height = (FT_UShort)m.advance;
-      }
-
-#endif /* FT_CONFIG_OPTION_INCREMENTAL */
 
       /* Get the unscaled top bearing and advance height. */
-      if ( !metrics_found && face->vertical_info &&
+      if ( face->vertical_info &&
            face->vertical.number_Of_VMetrics > 0 )
       {
         /* Don't assume that both the vertical header and vertical */
@@ -1494,8 +1482,35 @@
         }
       }
 
+#ifdef FT_CONFIG_OPTION_INCREMENTAL
+
+      /* If this is an incrementally loaded font see if there are */
+      /* overriding metrics for this glyph.                       */
+      if ( face->root.internal->incremental_interface &&
+           face->root.internal->incremental_interface->funcs->get_glyph_metrics )
+      {
+        FT_Incremental_MetricsRec  metrics;
+        FT_Error                   error = 0;
+
+		metrics.bearing_x = 0;
+		metrics.bearing_y = top_bearing;
+		metrics.advance = advance_height;
+        error =
+          face->root.internal->incremental_interface->funcs->get_glyph_metrics(
+            face->root.internal->incremental_interface->object,
+            glyph_index, TRUE, &metrics );
+
+        if ( error )
+          return error;
+
+        top_bearing    = (FT_Short)metrics.bearing_y;
+        advance_height = (FT_UShort)metrics.advance;
+      }
+
+#endif /* FT_CONFIG_OPTION_INCREMENTAL */
+
       /* We must adjust the top_bearing value from the bounding box given */
-      /* in the glyph header to te bounding box calculated with           */
+      /* in the glyph header to the bounding box calculated with          */
       /* FT_Get_Outline_CBox().                                           */
 
       /* scale the metrics */
@@ -1757,7 +1772,7 @@
     glyph->format        = FT_GLYPH_FORMAT_OUTLINE;
     glyph->num_subglyphs = 0;
 
-    error = load_truetype_glyph( &loader, glyph_index );
+    error = load_truetype_glyph( &loader, glyph_index, 0 );
     if ( !error )
       compute_glyph_metrics( &loader, glyph_index );
 

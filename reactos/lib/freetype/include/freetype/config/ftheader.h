@@ -376,6 +376,17 @@
   /*************************************************************************/
   /*                                                                       */
   /* @macro:                                                               */
+  /*    FT_WINFONTS_H                                                      */
+  /*                                                                       */
+  /* @description:                                                         */
+  /*    A macro used in #include statements to name the file containing    */
+  /*    the definitions of an API to support Windows .FNT files            */
+  /*                                                                       */
+#define FT_WINFONTS_H   <freetype/ftwinfnt.h>
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* @macro:                                                               */
   /*    FT_GLYPH_H                                                         */
   /*                                                                       */
   /* @description:                                                         */

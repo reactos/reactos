@@ -7,31 +7,14 @@ SPECIAL NOTE FOR UNIX USERS
   perform a few special steps to ensure that everything goes well.
 
 
-
   I. Enable the TrueType bytecode hinter if you need it
   -----------------------------------------------------
 
-    The  TrueType  bytecode  interpreter  is disabled  in  all  public
-    releases  of  the  FreeType  packages  for  patents  reasons  (see
-    http://www.freetype.org/patents.html for more details).
-
-    However, many Linux distributions do enable the interpreter in the
-    FreeType packages (DEB/RPM/etc.) they produce for their platforms.
-    If you are using TrueType  fonts on your system, you most probably
-    want to enable it manually by doing the following:
-
-      - open the file "include/freetype/config/ftoption.h"
-
-      - locate a line that says:
-
-          #undef TT_CONFIG_OPTION_BYTECODE_INTERPRETER
-
-      - change it to:
-
-          #define TT_CONFIG_OPTION_BYTECODE_INTERPRETER
-
-    of course, this must be done _before_ compiling the library
-
+    See the instructions in the file "TRUETYPE" of this directory.
+   
+    Note that FreeType supports TrueType fonts without the bytecode
+    interpreter through its auto-hinter, which now generate relatively good
+    results with most fonts.
 
 
   II. Determine the correct installation path

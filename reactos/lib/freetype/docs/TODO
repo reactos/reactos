@@ -4,6 +4,10 @@ document "docs/BUGS".
 Here is a list of items that need to be addressed in FreeType 2; they are
 not exactly bugs, but should be considered though:
 
-* Add synthesized Unicode charmap processing to the CFF driver.
-
 * Implement stem3/counter hints properly in the Postscript hinter.
+
+* FInalize the cache sub-system. If has been in beta for too long :-)
+
+* The automatic and Postscript hinters have been improved to increase
+  the quality of AA text, but Monochrome and LCD hinting still suck. we
+  need to do something about that..

@@ -779,17 +779,25 @@
 
 
   static int
-  is_alpha( FT_Byte  c )
+  is_name_char( FT_Byte  c )
   {
-    /* Note: we must accept "+" as a valid character, as it is used in */
-    /*       embedded type1 fonts in PDF documents.                    */
-    /*                                                                 */
-    return ( ft_isalnum( c ) ||
-             c == '.'        ||
-             c == '_'        ||
-             c == '-'        ||
-             c == '+'        );
-  }
+    /* Note: PostScript allows any non-delimiting, non-whitespace      */
+    /*       in a name (PS Ref Manual, 3rd Ed, p31)                    */
+    /*       PostScript delimiters include (,),<,>,[,],{,},/ and %     */
+
+    return ( c != '(' &&
+             c != ')' &&
+             c != '<' &&
+             c != '>' &&
+             c != '[' &&
+             c != ']' &&
+             c != '{' &&
+             c != '}' &&
+             c != '/' &&
+             c != '%' &&
+             ! is_space( c ) 
+             );
+ }
 
 
   static int
@@ -861,7 +869,7 @@
 
     cur++;
     cur2 = cur;
-    while ( cur2 < limit && is_alpha( *cur2 ) )
+    while ( cur2 < limit && is_name_char( *cur2 ) )
       cur2++;
 
     len = cur2 - cur;
@@ -1070,7 +1078,7 @@
             FT_PtrDist  len;
 
 
-            while ( cur2 < limit && is_alpha( *cur2 ) )
+            while ( cur2 < limit && is_name_char( *cur2 ) )
               cur2++;
 
             len = cur2 - cur - 1;
@@ -1132,6 +1140,14 @@
     if ( loader->num_subrs )
       /*  with synthetic fonts, it's possible we get here twice  */
       return;
+
+    if ( parser->root.cursor + 2 > parser->root.limit &&
+         parser->root.cursor[0] == '['                &&
+         parser->root.cursor[1] == ']'                )
+    {
+      /* empty array */
+      return;
+    }
 
     loader->num_subrs = (FT_Int)T1_ToInt( parser );
     if ( parser->root.error )
@@ -1304,7 +1320,7 @@
         FT_PtrDist  len;
 
 
-        while ( cur2 < limit && is_alpha( *cur2 ) )
+        while ( cur2 < limit && is_name_char( *cur2 ) )
           cur2++;
         len = cur2 - cur - 1;
 
@@ -1483,9 +1499,9 @@
 
     /* now add the special functions... */
     T1_FIELD_CALLBACK( "FontName", parse_font_name )
-#if 0    
+#if 0
     T1_FIELD_CALLBACK( "FontBBox", parse_font_bbox )
-#endif    
+#endif
     T1_FIELD_CALLBACK( "FontMatrix", parse_font_matrix )
     T1_FIELD_CALLBACK( "Encoding", parse_encoding )
     T1_FIELD_CALLBACK( "Subrs", parse_subrs )
@@ -1564,7 +1580,7 @@
 
           cur++;
           cur2 = cur;
-          while ( cur2 < limit && is_alpha( *cur2 ) )
+          while ( cur2 < limit && is_name_char( *cur2 ) )
             cur2++;
 
           len = cur2 - cur;

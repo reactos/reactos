@@ -228,6 +228,9 @@
     if ( ft_strcmp( module_interface, "get_sfnt" ) == 0 )
       return (FT_Module_Interface)get_sfnt_table;
 
+    if ( ft_strcmp( module_interface, "load_sfnt" ) == 0 )
+      return (FT_Module_Interface)tt_face_load_any;
+
 #ifdef TT_CONFIG_OPTION_POSTSCRIPT_NAMES
     if ( ft_strcmp( module_interface, "glyph_name" ) == 0 )
       return (FT_Module_Interface)get_sfnt_glyph_name;

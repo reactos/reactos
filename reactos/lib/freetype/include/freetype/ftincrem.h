@@ -174,21 +174,22 @@ FT_BEGIN_HEADER
   *   vertical ::
   *     If true, return vertical metrics.
   *
+  *   ametrics ::
+  *     This parameter is used for both input and output.
+  *     The original glyph metrics, if any, in font units.  If metrics are
+  *     not available all the values must be set to zero.
+  *
   * @output:
   *   ametrics ::
-  *     The glyph metrics in font units.
-  *
-  *   afound ::
-  *     True if there are metrics at all.
+  *     The replacement glyph metrics in font units.
   *
   */
   typedef FT_Error
   (*FT_Incremental_GetGlyphMetricsFunc)
-                      ( FT_Incremental              incremental,
-                        FT_UInt                     glyph_index,
-                        FT_Bool                     vertical,
-                        FT_Incremental_MetricsRec  *ametrics,
-                        FT_Bool                    *afound );
+                      ( FT_Incremental                   incremental,
+                        FT_UInt                          glyph_index,
+                        FT_Bool                          vertical,
+                        FT_Incremental_MetricsRec        *ametrics );
 
 
   /**************************************************************************

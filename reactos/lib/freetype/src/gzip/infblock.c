@@ -64,10 +64,10 @@ local const uInt border[] = { /* Order of the bit length code lengths */
  */
 
 
-local void inflate_blocks_reset(s, z, c)
-inflate_blocks_statef *s;
-z_streamp z;
-uLongf *c;
+local void inflate_blocks_reset( /* s, z, c) */
+inflate_blocks_statef *s,
+z_streamp z,
+uLongf *c )
 {
   if (c != Z_NULL)
     *c = s->check;
@@ -85,10 +85,10 @@ uLongf *c;
 }
 
 
-local inflate_blocks_statef *inflate_blocks_new(z, c, w)
-z_streamp z;
-check_func c;
-uInt w;
+local inflate_blocks_statef *inflate_blocks_new( /* z, c, w) */
+z_streamp z,
+check_func c,
+uInt w )
 {
   inflate_blocks_statef *s;
 
@@ -116,10 +116,10 @@ uInt w;
 }
 
 
-local int inflate_blocks(s, z, r)
-inflate_blocks_statef *s;
-z_streamp z;
-int r;
+local int inflate_blocks( /* s, z, r) */
+inflate_blocks_statef *s,
+z_streamp z,
+int r )
 {
   uInt t;               /* temporary storage */
   uLong b;              /* bit buffer */
@@ -365,12 +365,15 @@ int r;
       r = Z_STREAM_ERROR;
       LEAVE
   }
+#ifdef NEED_DUMMY_RETURN
+  return 0;
+#endif
 }
 
 
-local int inflate_blocks_free(s, z)
-inflate_blocks_statef *s;
-z_streamp z;
+local int inflate_blocks_free( /* s, z) */
+inflate_blocks_statef *s,
+z_streamp z )
 {
   inflate_blocks_reset(s, z, Z_NULL);
   ZFREE(z, s->window);

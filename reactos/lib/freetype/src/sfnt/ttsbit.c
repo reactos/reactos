@@ -1212,14 +1212,16 @@
                    TT_SBit_Range    range,
                    FT_ULong         ebdt_pos,
                    FT_ULong         glyph_offset,
-                   FT_Bitmap*       map,
+                   FT_GlyphSlot     slot,
                    FT_Int           x_offset,
                    FT_Int           y_offset,
                    FT_Stream        stream,
-                   TT_SBit_Metrics  metrics )
+                   TT_SBit_Metrics  metrics,
+                   FT_Int           depth )
   {
-    FT_Memory  memory = stream->memory;
-    FT_Error   error;
+    FT_Memory   memory = stream->memory;
+    FT_Bitmap*  map    = &slot->bitmap;
+    FT_Error    error;
 
 
     /* place stream at beginning of glyph data and read metrics */
@@ -1230,11 +1232,10 @@
     if ( error )
       goto Exit;
 
-    /* this function is recursive.  At the top-level call, the */
-    /* field map.buffer is NULL.  We thus begin by finding the */
-    /* dimensions of the higher-level glyph to allocate the    */
-    /* final pixmap buffer                                     */
-    if ( map->buffer == 0 )
+    /* this function is recursive.  At the top-level call, we  */
+    /* compute the dimensions of the higher-level glyph to     */
+    /* allocate the final pixmap buffer                        */
+    if ( depth == 0 )
     {
       FT_Long  size;
 
@@ -1274,7 +1275,8 @@
       if ( size == 0 )
         goto Exit;     /* exit successfully! */
 
-      if ( FT_ALLOC( map->buffer, size ) )
+      error = ft_glyphslot_alloc_bitmap( slot, size );
+      if (error)
         goto Exit;
     }
 
@@ -1348,11 +1350,12 @@
                                  elem_range,
                                  ebdt_pos,
                                  elem_offset,
-                                 map,
+                                 slot,
                                  x_offset + comp->x_offset,
                                  y_offset + comp->y_offset,
                                  stream,
-                                 &elem_metrics );
+                                 &elem_metrics,
+                                 depth+1 );
         if ( error )
           goto Fail_Memory;
       }
@@ -1409,7 +1412,6 @@
                            TT_SBit_MetricsRec  *metrics )
   {
     FT_Error        error;
-    FT_Memory       memory = stream->memory;
     FT_ULong        ebdt_pos, glyph_offset;
 
     TT_SBit_Strike  strike;
@@ -1432,19 +1434,10 @@
 
     ebdt_pos = FT_STREAM_POS();
 
-    /* clear the bitmap & load the bitmap */
-    if ( face->root.glyph->flags & FT_GLYPH_OWN_BITMAP )
-      FT_FREE( map->buffer );
-
-    map->rows = map->pitch = map->width = 0;
-
     error = Load_SBit_Image( strike, range, ebdt_pos, glyph_offset,
-                             map, 0, 0, stream, metrics );
+                             face->root.glyph, 0, 0, stream, metrics, 0 );
     if ( error )
       goto Exit;
-
-    /* the glyph slot owns this bitmap buffer */
-    face->root.glyph->flags |= FT_GLYPH_OWN_BITMAP;
 
     /* setup vertical metrics if needed */
     if ( strike->flags & 1 )

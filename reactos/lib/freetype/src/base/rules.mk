@@ -49,12 +49,14 @@ BASE_SRC := $(BASE_)ftcalc.c   \
 # object.  It will then be linked to the final executable only if one of its
 # symbols is used by the application.
 #
-BASE_EXT_SRC := $(BASE_)ftglyph.c \
-                $(BASE_)ftmm.c    \
-                $(BASE_)ftbdf.c   \
-                $(BASE_)fttype1.c \
-                $(BASE_)ftxf86.c  \
-                $(BASE_)ftpfr.c   \
+BASE_EXT_SRC := $(BASE_)ftglyph.c   \
+                $(BASE_)ftmm.c      \
+                $(BASE_)ftbdf.c     \
+                $(BASE_)fttype1.c   \
+                $(BASE_)ftxf86.c    \
+                $(BASE_)ftpfr.c     \
+                $(BASE_)ftstroker.c \
+                $(BASE_)ftwinfnt.c  \
                 $(BASE_)ftbbox.c
 
 # Default extensions objects

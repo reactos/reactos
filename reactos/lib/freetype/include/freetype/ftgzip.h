@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __FTXF86_H__
-#define __FTXF86_H__
+#ifndef __FTGZIP_H__
+#define __FTGZIP_H__
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -83,4 +83,4 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __FTXF86_H__ */
+#endif /* __FTGZIP_H__ */

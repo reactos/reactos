@@ -15,7 +15,7 @@
 
 CFLAGS=$(COMP_FLAGS)$(DEBUG)/include=([--.builds.vms],[--.include],[--.src.base])
 
-OBJS=ftbase.obj,ftinit.obj,ftglyph.obj,ftdebug.obj,ftbdf.obj,ftmm.obj,fttype1.obj,ftxf86.obj,ftpfr.obj
+OBJS=ftbase.obj,ftinit.obj,ftglyph.obj,ftdebug.obj,ftbdf.obj,ftmm.obj,fttype1.obj,ftxf86.obj,ftpfr.obj,ftstroker.obj,ftwinfnt.obj
 
 all : $(OBJS)
         library [--.lib]freetype.olb $(OBJS)

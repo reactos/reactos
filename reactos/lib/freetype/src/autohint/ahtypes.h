@@ -385,12 +385,26 @@ FT_BEGIN_HEADER
   } AH_OutlineRec, *AH_Outline;
 
 
-#define AH_BLUE_CAPITAL_TOP     0                              /* THEZOCQS */
-#define AH_BLUE_CAPITAL_BOTTOM  ( AH_BLUE_CAPITAL_TOP + 1 )    /* HEZLOCUS */
-#define AH_BLUE_SMALL_TOP       ( AH_BLUE_CAPITAL_BOTTOM + 1 ) /* xzroesc  */
-#define AH_BLUE_SMALL_BOTTOM    ( AH_BLUE_SMALL_TOP + 1 )      /* xzroesc  */
-#define AH_BLUE_SMALL_MINOR     ( AH_BLUE_SMALL_BOTTOM + 1 )   /* pqgjy    */
-#define AH_BLUE_MAX             ( AH_BLUE_SMALL_MINOR + 1 )
+#ifdef FT_CONFIG_CHESTER_SMALL_F
+
+#  define AH_BLUE_CAPITAL_TOP     0                              /* THEZOCQS */
+#  define AH_BLUE_CAPITAL_BOTTOM  ( AH_BLUE_CAPITAL_TOP + 1 )    /* HEZLOCUS */
+#  define AH_BLUE_SMALL_F_TOP     ( AH_BLUE_CAPITAL_BOTTOM + 1 ) /* fijkdbh  */
+#  define AH_BLUE_SMALL_TOP       ( AH_BLUE_SMALL_F_TOP + 1 )    /* xzroesc  */
+#  define AH_BLUE_SMALL_BOTTOM    ( AH_BLUE_SMALL_TOP + 1 )      /* xzroesc  */
+#  define AH_BLUE_SMALL_MINOR     ( AH_BLUE_SMALL_BOTTOM + 1 )   /* pqgjy    */
+#  define AH_BLUE_MAX             ( AH_BLUE_SMALL_MINOR + 1 )
+
+#else /* !CHESTER_SMALL_F */
+
+#  define AH_BLUE_CAPITAL_TOP     0                              /* THEZOCQS */
+#  define AH_BLUE_CAPITAL_BOTTOM  ( AH_BLUE_CAPITAL_TOP + 1 )    /* HEZLOCUS */
+#  define AH_BLUE_SMALL_TOP       ( AH_BLUE_CAPITAL_BOTTOM + 1)  /* xzroesc  */
+#  define AH_BLUE_SMALL_BOTTOM    ( AH_BLUE_SMALL_TOP + 1 )      /* xzroesc  */
+#  define AH_BLUE_SMALL_MINOR     ( AH_BLUE_SMALL_BOTTOM + 1 )   /* pqgjy    */
+#  define AH_BLUE_MAX             ( AH_BLUE_SMALL_MINOR + 1 )
+
+#endif /* !CHESTER_SMALL_F */
 
   typedef FT_Int  AH_Blue;
 
@@ -462,12 +476,12 @@ FT_BEGIN_HEADER
   /*                                                                       */
   typedef struct  AH_Face_GlobalsRec_
   {
-    FT_Face     face;
+    FT_Face        face;
     AH_GlobalsRec  design;
     AH_GlobalsRec  scaled;
-    FT_Fixed    x_scale;
-    FT_Fixed    y_scale;
-    FT_Bool     control_overshoot;
+    FT_Fixed       x_scale;
+    FT_Fixed       y_scale;
+    FT_Bool        control_overshoot;
 
   } AH_Face_GlobalsRec, *AH_Face_Globals;
 
@@ -496,6 +510,7 @@ FT_BEGIN_HEADER
     FT_Bool           do_vert_hints;     /* disable Y hinting            */
     FT_Bool           do_horz_snapping;  /* disable X stem size snapping */
     FT_Bool           do_vert_snapping;  /* disable Y stem size snapping */
+    FT_Bool           do_stem_adjust;    /* disable light stem snapping  */
 
   } AH_HinterRec, *AH_Hinter;
 

@@ -483,7 +483,7 @@ FT_BEGIN_HEADER
   /*    The result is undefined if either `a' or `b' is zero.              */
   /*                                                                       */
   FT_EXPORT( void )
-  FT_Matrix_Multiply( FT_Matrix*  a,
+  FT_Matrix_Multiply( const FT_Matrix*  a,
                       FT_Matrix*  b );
 
 

@@ -1,11 +1,28 @@
 
-FreeType comes with two licenses from which you can choose the one which
-fits your needs best:
+   The FreeType   2 font   engine  is   copyrighted work,   and cannot   be
+   used  legally  without a   software license.   In order   to make   this
+   project  usable  to  a  vast majority  of developers,  we distribute  it
+   under two dual licenses.
 
-  . The FreeType License, in file `docs/FTL.txt'.
+   What this  means is  that *you*  must choose  *one* license among  those
+   described below,  then obey  all  its  terms and  conditions when  using
+   FreeType 2 in any of your projects or products:
 
-  . The GNU General Public License, in file `docs/GPL.txt'.
 
-The contributed PCF driver comes with a license similar to that of X Window
-System which is compatible to the above two licenses (see file
-src/pcf/readme).
+     - The  FreeType License,  found in  the file  "FTL.TXT", which  is
+       an     BSD-style  open-source   license *with*  an   advertising
+       clause   that      forces   you   to   explicitely   cite    the
+       FreeType   project   in  your      product's  documentation. All
+       details are in the license file
+
+
+     - The GNU General Public   License, found in "GPL.TXT",  which  is
+       the      traditionnal   and    "viral"   GPL    license,    that
+       forces  you   to     redistribute the _complete_ sources of  all
+       your products that simply     use FreeType 2.
+
+
+   Note that  the contributed  PCF driver  comes with  a license similar to
+   that  of   X Window   System  which  is  compatible   to the  above  two
+   licenses (see file src/pcf/readme).
+

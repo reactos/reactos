@@ -593,6 +593,63 @@ FT_BEGIN_HEADER
   FT_Get_Sfnt_Table( FT_Face      face,
                      FT_Sfnt_Tag  tag );
 
+ /**************************************************************************
+  *
+  * <Function>
+  *    FT_Load_Sfnt_Table
+  *
+  * <Description>
+  *   Loads any font table into client memory.
+  *
+  * <Input>
+  *   face   :: handle to source face.
+  *   tag    :: the 4-byte tag of the table to load. Use the value 0 if
+  *             you want to access the whole font file. Else, you can use
+  *             one of the definitions found in the @FT_TRUETYPE_TAGS_H
+  *             file, or forge a new one with @FT_MAKE_TAG
+  *              
+  *   offset :: the starting offset in the table (or file if tag == 0)
+  *
+  * <Output>
+  *   buffer :: target buffer address. client must ensure that there are
+  *             enough bytes in it.
+  *
+  * <InOut>
+  *   length :: if the 'length' parameter is NULL, then try to load the whole
+  *             table, and return an error code if it fails.
+  *
+  *             else, if '*length' is 0, then exit immediately while returning
+  *             the table's (or file) full size in it.
+  *
+  *             else, the number of bytes to read from the table or file,
+  *             from the starting offset.
+  *
+  * <Return>
+  *   error code. 0 means success
+  *
+  * <Note>
+  *   if you need to determine the table's length you should first call this
+  *   function with "*length" set to 0, as in the following example:
+  *
+  *   {
+  *     FT_ULong  length = 0;
+  *
+  *     error = FT_Load_Sfnt_Table( face, tag, 0, NULL, &length );
+  *     if ( error ) { ... table does not exist ... }
+  *
+  *     buffer = malloc( length );
+  *     if ( buffer == NULL )  { ... not enough memory ... }
+  *
+  *     error = FT_Load_Sfnt_Table( face,tag, 0, buffer, &length );
+  *     if ( error ) { ... could not load table ... }
+  *   }
+  */
+  FT_EXPORT( FT_Error )
+  FT_Load_Sfnt_Table( FT_Face      face,
+                      FT_ULong     tag,
+                      FT_Long      offset,
+                      FT_Byte*     buffer,
+                      FT_ULong*    length );
 
   /* */
 

@@ -23,8 +23,12 @@
 #include FT_CACHE_MANAGER_H
 #include FT_INTERNAL_MEMORY_H
 #include FT_INTERNAL_DEBUG_H
+#include FT_TRUETYPE_IDS_H
 
 #include "ftcerror.h"
+
+#undef  FT_COMPONENT
+#define FT_COMPONENT  trace_cache
 
   /*************************************************************************/
   /*                                                                       */
@@ -131,7 +135,7 @@
   ftc_cmap_node_weight( FTC_CMapNode  cnode )
   {
     FT_UNUSED( cnode );
-    
+
     return sizeof ( *cnode );
   }
 
@@ -189,10 +193,54 @@
         break;
 
       case FTC_CMAP_BY_ENCODING:
-        for ( idx = 0; idx < count; idx++, cur++ )
-          if ( cur[0]->encoding == desc->u.encoding )
-            break;
+        if (desc->u.encoding == FT_ENCODING_UNICODE)
+        {
+         /* since the `interesting' table, with id's 3,10, is normally the
+          * last one, we loop backwards. This looses with type1 fonts with
+          * non-BMP characters (<.0001%), this wins with .ttf with non-BMP
+          * chars (.01% ?), and this is the same about 99.99% of the time!
+          */
 
+          FT_UInt  unicmap_idx = count;  /* some UCS-2 map, if we found it */
+
+          cur += count - 1;
+
+          for ( idx = 0; idx < count; idx++, cur-- )
+          {
+            if ( cur[0]->encoding == FT_ENCODING_UNICODE )
+            {
+              unicmap_idx = idx;  /* record we found a Unicode charmap */
+
+             /* XXX If some new encodings to represent UCS-4 are added,
+              *     they should be added here.
+              */
+              if ( ( cur[0]->platform_id == TT_PLATFORM_MICROSOFT &&
+                     cur[0]->encoding_id == TT_MS_ID_UCS_4        )          ||
+                   ( cur[0]->platform_id == TT_PLATFORM_APPLE_UNICODE &&
+                     cur[0]->encoding_id == TT_APPLE_ID_UNICODE_32    )      )
+
+              /* Hurray! We found a UCS-4 charmap. We can stop the scan! */
+              {
+                idx = count - 1 - idx;
+                goto Found_idx_for_FTC_CMAP_BY_ENCODING;
+              }
+            }
+          }
+
+         /* We do not have any UCS-4 charmap. Sigh.
+          * Let's see if we have some other kind of Unicode charmap, though.
+          */
+          if ( unicmap_idx < count )
+            idx = count - 1 - unicmap_idx;
+        }
+        else
+        {
+          for ( idx = 0; idx < count; idx++, cur++ )
+            if ( cur[0]->encoding == desc->u.encoding )
+              break;
+        }
+
+      Found_idx_for_FTC_CMAP_BY_ENCODING:
         hash = idx * 67;
         break;
 
@@ -227,7 +275,7 @@
     return error;
 
   Bad_Descriptor:
-    FT_ERROR(( "ftp_cmap_family_init: invalid charmap descriptor\n" ));
+    FT_TRACE1(( "ftp_cmap_family_init: invalid charmap descriptor\n" ));
     return FTC_Err_Invalid_Argument;
   }
 

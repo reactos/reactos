@@ -311,6 +311,7 @@ FT_BEGIN_HEADER
   {
     FT_SizeRec         root;
 
+    FT_Size_Metrics    metrics;    /* slightly different from the root metrics */
     TT_Size_Metrics    ttmetrics;
 
 #ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS

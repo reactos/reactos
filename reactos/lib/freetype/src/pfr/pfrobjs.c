@@ -41,10 +41,17 @@
   FT_LOCAL_DEF( void )
   pfr_face_done( PFR_Face  face )
   {
+    FT_Memory   memory = face->root.driver->root.memory;
+
+    /* we don't want dangling pointers */
+    face->root.family_name = NULL;
+    face->root.style_name  = NULL;
+    
     /* finalize the physical font record */
     pfr_phy_font_done( &face->phy_font, FT_FACE_MEMORY( face ) );
 
     /* no need to finalize the logical font or the header */
+    FT_FREE( face->root.available_sizes );
   }
 
 
@@ -136,8 +143,18 @@
        if ( phy_font->num_kern_pairs > 0 )
          root->face_flags |= FT_FACE_FLAG_KERNING;
 
-       root->family_name = phy_font->font_id;
-       root->style_name  = NULL;  /* no style name in font file */
+      /* if no family name was found in the "undocumented" auxiliary
+       * data, use the font ID instead. This sucks but is better than
+       * nothing
+       */
+       root->family_name = phy_font->family_name;
+       if ( root->family_name == NULL )
+         root->family_name = phy_font->font_id;
+
+      /* note that the style name can be NULL in certain PFR fonts,
+       * probably meaning "Regular"
+       */
+       root->style_name  = phy_font->style_name;
 
        root->num_fixed_sizes = 0;
        root->available_sizes = 0;
@@ -149,6 +166,27 @@
        root->height       = (FT_Short)
                               ( ( ( root->ascender - root->descender ) * 12 )
                                 / 10 );
+
+       if ( phy_font->num_strikes > 0 )
+       {
+         FT_UInt          n, count = phy_font->num_strikes;
+         FT_Bitmap_Size*  size;
+         PFR_Strike       strike;
+         FT_Memory        memory = root->stream->memory;
+         
+         
+         if ( FT_NEW_ARRAY( root->available_sizes, count ) )
+           goto Exit;
+         
+         size   = root->available_sizes;
+         strike = phy_font->strikes;
+         for ( n = 0; n < count; n++, size++, strike++ )
+         {
+           size->height = (FT_UShort) strike->y_ppm;
+           size->width  = (FT_UShort) strike->x_ppm;
+         }
+         root->num_fixed_sizes = count;
+       }
 
        /* now compute maximum advance width */
        if ( ( phy_font->flags & PFR_PHY_PROPORTIONAL ) == 0 )
@@ -253,6 +291,12 @@
       error = pfr_slot_load_bitmap( slot, size, gindex );
       if ( error == 0 )
         goto Exit;
+    }
+
+    if ( load_flags & FT_LOAD_SBITS_ONLY )
+    {
+      error = FT_Err_Invalid_Argument;
+      goto Exit;
     }
 
     gchar               = face->phy_font.chars + gindex;

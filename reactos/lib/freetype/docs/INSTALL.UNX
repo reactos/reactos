@@ -1,0 +1,181 @@
+This document contains instructions on how to build the FreeType library
+on Unix systems. This also works for emulations like Cygwin or MSys on
+Win32:
+
+
+  I. Ensure that you are using GNU Make
+  -------------------------------------
+
+    The FreeType build system  _exclusively_ works with GNU Make.  You
+    will  not be  able to  compile the  library with  the instructions
+    below using any other alternative (including BSD Make).
+
+    Trying  to compile  the library  with a  different Make  tool will
+    print a message like:
+
+      Sorry, GNU make is required to build FreeType2.
+
+    and the build  process will be aborted.  If  this happens, install
+    GNU Make on your system,  and use the GNUMAKE environment variable
+    to name it.
+
+
+
+  IV. Build and install the library
+  ---------------------------------
+
+    The following  should work  on all Unix  systems where  the 'make'
+    command invokes GNU Make:
+
+      ./configure --prefix=<yourprefix>
+      make
+      make install           (as root)
+
+    where "<yourprefix>"  must be replaced  by the prefix  returned by
+    the "freetype-config" command.
+
+    When using a different command to invoke GNU Make, use the GNUMAKE
+    variable.  For example,  if `gmake' is the command  to use on your
+    system, do something like:
+
+       GNUMAKE=gmake ./configure --prefix=<yourprefix>
+       gmake
+       gmake install            (as root)
+
+    If  this  still  doesn't   work,  something's rotten on your system(
+    (e.g. you're using a very old version of GNU Make)
+
+
+
+I. Unix systems
+---------------
+
+  If you have GNU Make installed, simply type
+
+    ./configure
+    make
+    make install
+
+  on the command line to configure, build and install FreeType on your
+  system.  Note that the default installation path is "/usr/local".
+
+  Please read the file  README.UNX, it contains _critical_ information
+  regarding the installation of FreeType on many Unix systems.
+
+
+II. From the command line
+-------------------------
+
+  If  you are  not using  Unix, there  are two  ways to  quickly build
+  FreeType 2 from the command line.
+
+  The first, and favorite one, is to use the "Jam" build tool.  Jam is
+  a highly  portable replacement for  Make whose control files  do not
+  depend on the current platform or compiler toolset.
+
+  For more information, please see:
+
+    http://www.freetype.org/jam/index.html
+
+  The second one is to use "GNU Make" (and NO OTHER MAKE TOOL).
+
+
+  1. Building FT2 with "Jam"
+  --------------------------
+
+    Once you've  got *our version* of  the Jam tool  installed on your
+    system, simply go to the top-level FT2 directory, then type
+
+      "jam"
+
+    on the command line.  This will  build the library and place it in
+    the "objs" directory.
+
+    By default,  a static  library is built.   On Unix systems,  it is
+    possible to  build a shared library through  the "libtool" script.
+    You need to have libtool  installed on your system, then re-define
+    a few environment variables before invoking Jam, as in
+
+       export CC="libtool --mode=compile cc"
+       export LINK="libtool --mode=link cc"
+       jam
+
+    In  later releases  of  FT2, building  shared  libraries with  Jam
+    should become automatic on Unix systems.
+
+
+  2. Building FT2 with "GNU Make"
+  -------------------------------
+
+  You need  to have  GNU Make (version  3.78.1 or newer)  installed on
+  your system to compile the library from the command line.  This will
+  _NOT_ work with other make tools (including BSD make)!
+
+  [Well, this is not  really correct.  Recently, a perl implementation
+  of make called `makepp' has appeared which can also build FreeType 2
+  successfully on  Unix platforms.   See http://makepp.sourceforge.net
+  for more details.]
+
+  - Go to the `freetype2' directory.
+
+  - Unix (any C compiler should work):
+
+      - make setup (don't worry, this will invoke a configure script)
+      - make
+      - make install
+
+    Alternatively,  you can  pass parameters  to the  configure script
+    within the CFG variable, as in:
+
+      - make setup CFG="--prefix=/usr"
+      - make
+      - make install
+
+    If the  configure script isn't run,  try to add `unix' as a target
+    on the command line, e.g.:
+
+      - make setup unix CFG="--prefix=/opt/experimental"
+
+
+  - Windows:
+
+    We provide a  version of GNU Make for Win32  on the FreeType site.
+    See http://www.freetype.org/download.html for details.
+
+    - gcc (Mingw, _not_ CygWin):
+
+        - make setup
+        - make
+
+
+    - Visual C++:
+
+        - make setup visualc
+        - make
+
+
+    - other compilers:
+
+        - make setup bcc32    -> Borland C++ 32 bits
+        - make setup intelc   -> Intel C++
+        - make setup watcom   -> Watcom C++
+        - make setup lcc      -> Win32-LCC
+
+
+  If you want  to build FreeType 2 in another  directory, you must set
+  two  environment  variables,  `OJB_DIR'  and  `TOP_DIR'.  The former
+  gives the directory where the object files and the library should  be
+  created (this directory must exist), the latter the top directory of
+  the FreeType 2 source tree.  Example:
+
+    OBJ_DIR=~/freetype2.compiled TOP_DIR=~/freetype2 \
+      make -f$TOP_DIR/Makefile setup ansi
+    OBJ_DIR=~/freetype2.compiled TOP_DIR=~/freetype2 \
+      make -f$TOP_DIR/Makefile
+
+  On  Unix boxes,  calling  `configure' from  the  build directory  is
+  sufficient;  it  will  build  a  small   Makefile  which  calls  the
+  FreeType 2 Makefile with the necessary parameters.
+
+
+--- end of INSTALL --

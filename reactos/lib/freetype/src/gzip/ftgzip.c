@@ -29,7 +29,7 @@
 
 #ifdef FT_CONFIG_OPTION_SYSTEM_ZLIB
 
-#  include "zlib.h"
+#  include <zlib.h>
 
 #else /* !SYSTEM_ZLIB */
 
@@ -96,10 +96,10 @@
 #ifndef FT_CONFIG_OPTION_SYSTEM_ZLIB
 
  local voidpf
- zcalloc (opaque, items, size)
-    voidpf opaque;
-    unsigned items;
-    unsigned size;
+ zcalloc ( /* opaque, items, size) */
+    voidpf opaque,
+    unsigned items,
+    unsigned size )
  {
    return ft_gzip_alloc( opaque, items, size );
  }
@@ -177,7 +177,7 @@
     (void)FT_STREAM_SKIP( 6 );
 
     /* skip the extra field */
-    if ( head[3] && FT_GZIP_EXTRA_FIELD )
+    if ( head[3] & FT_GZIP_EXTRA_FIELD )
     {
       FT_UInt  len;
 
@@ -187,7 +187,7 @@
     }
 
     /* skip original file name */
-    if ( head[3] && FT_GZIP_ORIG_NAME )
+    if ( head[3] & FT_GZIP_ORIG_NAME )
       for (;;)
       {
         FT_UInt  c;
@@ -275,6 +275,8 @@
   ft_gzip_file_done( FT_GZipFile  zip )
   {
     z_stream*  zstream = &zip->zstream;
+
+    inflateEnd( zstream );
 
     /* clear the rest */
     zstream->zalloc    = NULL;
@@ -376,6 +378,7 @@
       if ( err == Z_STREAM_END )
       {
         zip->limit = zstream->next_out;
+        error      = FT_Err_Invalid_Stream_Operation;
         break;
       }
       else if ( err != Z_OK )

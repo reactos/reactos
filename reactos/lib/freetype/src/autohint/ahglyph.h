@@ -58,6 +58,8 @@ FT_BEGIN_HEADER
 
   FT_LOCAL( FT_Error )
   ah_outline_load( AH_Outline  outline,
+                   FT_Fixed    x_scale,
+                   FT_Fixed    y_scale,
                    FT_Face     face );
 
   FT_LOCAL( void )

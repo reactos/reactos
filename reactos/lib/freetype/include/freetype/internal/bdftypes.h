@@ -29,6 +29,7 @@ THE SOFTWARE.
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include FT_BDF_H
 
 
 FT_BEGIN_HEADER
@@ -43,6 +44,10 @@ FT_BEGIN_HEADER
 
   } BDF_Public_FaceRec, *BDF_Public_Face;
 
+
+  typedef FT_Error  (*BDF_GetPropertyFunc)( FT_Face           face,
+                                            const char*       prop_name,
+                                            BDF_PropertyRec  *aproperty );
 
 FT_END_HEADER
 

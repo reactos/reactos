@@ -173,7 +173,7 @@ typedef z_stream FAR *z_streamp;
  */
 
 /*
-ZEXTERN int ZEXPORT deflateInit OF((z_streamp strm, int level));
+ZEXTERN(int)  deflateInit OF((z_streamp strm, int level));
 
      Initializes the internal stream state for compression. The fields
    zalloc, zfree and opaque must be initialized before by the caller.
@@ -286,7 +286,7 @@ ZEXTERN int ZEXPORT deflateInit OF((z_streamp strm, int level));
 
 
 /*
-ZEXTERN int ZEXPORT inflateInit OF((z_streamp strm));
+ZEXTERN(int)  inflateInit OF((z_streamp strm));
 
      Initializes the internal stream state for decompression. The fields
    next_in, avail_in, zalloc, zfree and opaque must be initialized before by
@@ -306,7 +306,7 @@ ZEXTERN int ZEXPORT inflateInit OF((z_streamp strm));
 */
 
 
-ZEXTERN int ZEXPORT inflate OF((z_streamp strm, int flush));
+ZEXTERN(int) inflate OF((z_streamp strm, int flush));
 /*
     inflate decompresses as much data as possible, and stops when the input
   buffer becomes empty or the output buffer becomes full. It may some
@@ -375,7 +375,7 @@ ZEXTERN int ZEXPORT inflate OF((z_streamp strm, int flush));
 */
 
 
-ZEXTERN int ZEXPORT inflateEnd OF((z_streamp strm));
+ZEXTERN(int)  inflateEnd OF((z_streamp strm));
 /*
      All dynamically allocated data structures for this stream are freed.
    This function discards any unprocessed input and does not flush any
@@ -393,7 +393,7 @@ ZEXTERN int ZEXPORT inflateEnd OF((z_streamp strm));
 */
 
 /*
-ZEXTERN int ZEXPORT deflateInit2 OF((z_streamp strm,
+ZEXTERN(int)  deflateInit2 OF((z_streamp strm,
                                      int  level,
                                      int  method,
                                      int  windowBits,
@@ -514,7 +514,7 @@ ZEXTERN int ZEXPORT deflateInit2 OF((z_streamp strm,
 */
 
 /*
-ZEXTERN int ZEXPORT inflateInit2 OF((z_streamp strm,
+ZEXTERN(int)  inflateInit2 OF((z_streamp strm,
                                      int  windowBits));
 
      This is another version of inflateInit with an extra parameter. The
@@ -566,7 +566,7 @@ ZEXTERN int ZEXPORT inflateInit2 OF((z_streamp strm,
   until success or end of the input data.
 */
 
-ZEXTERN int ZEXPORT inflateReset OF((z_streamp strm));
+ZEXTERN(int)  inflateReset OF((z_streamp strm));
 /*
      This function is equivalent to inflateEnd followed by inflateInit,
    but does not free and reallocate all the internal decompression state.
@@ -772,7 +772,7 @@ ZEXTERN int ZEXPORT inflateReset OF((z_streamp strm));
    compression library.
 */
 
-ZEXTERN uLong ZEXPORT adler32 OF((uLong adler, const Bytef *buf, uInt len));
+ZEXTERN(uLong)  adler32 OF((uLong adler, const Bytef *buf, uInt len));
 
 /*
      Update a running Adler-32 checksum with the bytes buf[0..len-1] and
@@ -810,7 +810,7 @@ ZEXTERN uLong ZEXPORT adler32 OF((uLong adler, const Bytef *buf, uInt len));
 /* deflateInit and inflateInit are macros to allow checking the zlib version
  * and the compiler's view of z_stream:
  */
-ZEXTERN int ZEXPORT inflateInit2_ OF((z_streamp strm, int  windowBits,
+ZEXTERN(int)  inflateInit2_ OF((z_streamp strm, int  windowBits,
                                       const char *version, int stream_size));
 #define deflateInit(strm, level) \
         deflateInit_((strm), (level),       ZLIB_VERSION, sizeof(z_stream))

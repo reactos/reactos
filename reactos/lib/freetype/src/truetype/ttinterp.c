@@ -568,7 +568,7 @@
       exec->FDefs      = size->function_defs;
       exec->IDefs      = size->instruction_defs;
       exec->tt_metrics = size->ttmetrics;
-      exec->metrics    = size->root.metrics;
+      exec->metrics    = size->metrics;
 
       exec->maxFunc    = size->max_func;
       exec->maxIns     = size->max_ins;

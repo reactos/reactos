@@ -560,17 +560,10 @@
 
 
   static void
-  ft_glyphslot_clear( FT_GlyphSlot  slot )
+  t42_glyphslot_clear( FT_GlyphSlot  slot )
   {
     /* free bitmap if needed */
-    if ( slot->flags & FT_GLYPH_OWN_BITMAP )
-    {
-      FT_Memory  memory = FT_FACE_MEMORY( slot->face );
-
-
-      FT_FREE( slot->bitmap.buffer );
-      slot->flags &= ~FT_GLYPH_OWN_BITMAP;
-    }
+    ft_glyphslot_free_bitmap( slot );
 
     /* clear all public fields in the glyph slot */
     FT_ZERO( &slot->metrics );
@@ -603,7 +596,7 @@
     FT_Driver_Class  ttclazz = ((T42_Driver)glyph->face->driver)->ttclazz;
 
 
-    ft_glyphslot_clear( t42slot->ttslot );
+    t42_glyphslot_clear( t42slot->ttslot );
     error = ttclazz->load_glyph( t42slot->ttslot,
                                  t42size->ttsize,
                                  glyph_index,

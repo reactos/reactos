@@ -459,6 +459,21 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
+  /* <FuncType>                                                            */
+  /*    SFNT_Load_Table_Func                                               */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    Loads a given SFNT table in memory                                 */
+  /*                                                                       */
+  typedef FT_Error
+  (*SFNT_Load_Table_Func)( FT_Face      face,
+                           FT_ULong     tag,
+                           FT_Long      offset,
+                           FT_Byte*     buffer,
+                           FT_ULong*    length );
+
+  /*************************************************************************/
+  /*                                                                       */
   /* <Struct>                                                              */
   /*    SFNT_Interface                                                     */
   /*                                                                       */

@@ -35,7 +35,7 @@
   /*                                                                       */
 #define FREETYPE_MAJOR 2
 #define FREETYPE_MINOR 1
-#define FREETYPE_PATCH 3
+#define FREETYPE_PATCH 4
 
 
 #include <ft2build.h>
@@ -1105,8 +1105,6 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
-  /*                    FreeType base size metrics                         */
-  /*                                                                       */
   /* <Struct>                                                              */
   /*    FT_Size_Metrics                                                    */
   /*                                                                       */
@@ -1135,7 +1133,7 @@ FT_BEGIN_HEADER
   /*                    pixels.  Always positive.                          */
   /*                                                                       */
   /*    descender    :: The descender, expressed in 26.6 fixed point       */
-  /*                    pixels.  Always positive.                          */
+  /*                    pixels.  Always negative.                          */
   /*                                                                       */
   /*    height       :: The text height, expressed in 26.6 fixed point     */
   /*                    pixels.  Always positive.                          */
@@ -1494,6 +1492,16 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    FT_OPEN_PARAMS      :: Use the `num_params' & `params' field.      */
   /*                                                                       */
+  /*    ft_open_memory :: deprecated. use @FT_OPEN_MEMORY instead          */
+  /*                                                                       */
+  /*    ft_open_stream :: deprecated. use @FT_OPEN_STREAM instead          */
+  /*                                                                       */
+  /*    ft_open_pathname :: deprecated. use @FT_OPEN_PATHNAME instead      */
+  /*                                                                       */
+  /*    ft_open_driver :: deprecated, use @FT_OPEN_DRIVER instead          */
+  /*                                                                       */
+  /*    ft_open_params :: deprecated, use @FT_OPEN_PARAMS instead          */
+  /*                                                                       */
   /* <Note>                                                                */
   /*    The `FT_OPEN_MEMORY', `FT_OPEN_STREAM', and `FT_OPEN_PATHNAME'     */
   /*    flags are mutually exclusive.                                      */
@@ -1508,11 +1516,11 @@ FT_BEGIN_HEADER
 
   } FT_Open_Flags;
 
-#define  FT_OPEN_MEMORY    FT_OPEN_MEMORY
-#define  FT_OPEN_STREAM    FT_OPEN_STREAM
-#define  FT_OPEN_PATHNAME  FT_OPEN_PATHNAME
-#define  FT_OPEN_DRIVER    FT_OPEN_DRIVER
-#define  FT_OPEN_PARAMS    FT_OPEN_PARAMS
+#define  ft_open_memory    FT_OPEN_MEMORY     /* deprecated */
+#define  ft_open_stream    FT_OPEN_STREAM     /* deprecated */
+#define  ft_open_pathname  FT_OPEN_PATHNAME   /* deprecated */
+#define  ft_open_driver    FT_OPEN_DRIVER     /* deprecated */
+#define  ft_open_params    FT_OPEN_PARAMS     /* deprecated */
 
 
   /*************************************************************************/

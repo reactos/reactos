@@ -17,6 +17,7 @@
 
 
 #include <ft2build.h>
+#include FT_WINFONTS_H
 #include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_STREAM_H
 #include FT_INTERNAL_OBJECTS_H
@@ -68,9 +69,9 @@
   const FT_Frame_Field  winfnt_header_fields[] =
   {
 #undef  FT_STRUCTURE
-#define FT_STRUCTURE  WinFNT_HeaderRec
+#define FT_STRUCTURE  FT_WinFNT_HeaderRec
 
-    FT_FRAME_START( 134 ),
+    FT_FRAME_START( 146 ),
       FT_FRAME_USHORT_LE( version ),
       FT_FRAME_ULONG_LE ( file_size ),
       FT_FRAME_BYTES    ( copyright, 60 ),
@@ -106,7 +107,7 @@
       FT_FRAME_USHORT_LE( B_space ),
       FT_FRAME_USHORT_LE( C_space ),
       FT_FRAME_USHORT_LE( color_table_offset ),
-      FT_FRAME_BYTES    ( reserved, 4 ),
+      FT_FRAME_BYTES    ( reserved1, 16 ),
     FT_FRAME_END
   };
 
@@ -127,8 +128,8 @@
   fnt_font_load( FNT_Font   font,
                  FT_Stream  stream )
   {
-    FT_Error       error;
-    WinFNT_Header  header = &font->header;
+    FT_Error          error;
+    FT_WinFNT_Header  header = &font->header;
 
 
     /* first of all, read the FNT header */
@@ -143,6 +144,17 @@
       FT_TRACE2(( "[not a valid FNT file]\n" ));
       error = FNT_Err_Unknown_File_Format;
       goto Exit;
+    }
+
+    /* Version 2 doesn't have these fields */
+    if ( header->version == 0x200 )
+    {
+      header->flags   = 0;
+      header->A_space = 0;
+      header->B_space = 0;
+      header->C_space = 0;
+
+      header->color_table_offset = 0;
     }
 
     if ( header->file_type & 1 )
@@ -592,7 +604,7 @@
     len        = new_format ? 6 : 4;
 
     /* jump to glyph entry */
-    p = font->fnt_frame + 118 + len * glyph_index;
+    p = font->fnt_frame + ( new_format ? 146 : 118 ) + len * glyph_index;
 
     bitmap->width = FT_NEXT_SHORT_LE( p );
 
@@ -606,32 +618,18 @@
 
     /* allocate and build bitmap */
     {
-      FT_Memory  memory = FT_FACE_MEMORY( slot->face );
       FT_Int     pitch  = ( bitmap->width + 7 ) >> 3;
-      FT_Byte*   column;
-      FT_Byte*   write;
 
 
       bitmap->pitch      = pitch;
       bitmap->rows       = font->header.pixel_height;
       bitmap->pixel_mode = FT_PIXEL_MODE_MONO;
 
-      if ( FT_ALLOC( bitmap->buffer, pitch * bitmap->rows ) )
-        goto Exit;
-
-      column = (FT_Byte*)bitmap->buffer;
-
-      for ( ; pitch > 0; pitch--, column++ )
-      {
-        FT_Byte*  limit = p + bitmap->rows;
-
-
-        for ( write = column; p < limit; p++, write += bitmap->pitch )
-          write[0] = p[0];
-      }
+      /* note: we don't allocate a new buffer for the bitmap since we */
+      /*       already store the images in the FT_Face                */
+      ft_glyphslot_set_bitmap( slot, p );
     }
 
-    slot->flags       = FT_GLYPH_OWN_BITMAP;
     slot->bitmap_left = 0;
     slot->bitmap_top  = font->header.ascent;
     slot->format      = FT_GLYPH_FORMAT_BITMAP;

@@ -216,7 +216,7 @@
       /* we mark unloaded glyphs with `sbit.buffer == 0' */
       /* and 'width == 255', 'height == 0'               */
       /*                                                 */
-      if ( error )
+      if ( error && error != FT_Err_Out_Of_Memory )
       {
         sbit->width = 255;
         error       = 0;

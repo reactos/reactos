@@ -55,11 +55,11 @@ struct inflate_codes_state {
 };
 
 
-local inflate_codes_statef *inflate_codes_new(bl, bd, tl, td, z)
-uInt bl, bd;
-inflate_huft *tl;
-inflate_huft *td; /* need separate declaration for Borland C++ */
-z_streamp z;
+local inflate_codes_statef *inflate_codes_new( /* bl, bd, tl, td, z) */
+uInt bl, uInt bd,
+inflate_huft *tl,
+inflate_huft *td, /* need separate declaration for Borland C++ */
+z_streamp z )
 {
   inflate_codes_statef *c;
 
@@ -77,10 +77,10 @@ z_streamp z;
 }
 
 
-local int inflate_codes(s, z, r)
-inflate_blocks_statef *s;
-z_streamp z;
-int r;
+local int inflate_codes( /* s, z, r) */
+inflate_blocks_statef *s,
+z_streamp z,
+int r )
 {
   uInt j;               /* temporary storage */
   inflate_huft *t;      /* temporary pointer */
@@ -241,9 +241,9 @@ int r;
 }
 
 
-local void inflate_codes_free(c, z)
-inflate_codes_statef *c;
-z_streamp z;
+local void inflate_codes_free( /* c, z) */
+inflate_codes_statef *c,
+z_streamp z )
 {
   ZFREE(z, c);
   Tracev((stderr, "inflate:       codes free\n"));

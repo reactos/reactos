@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-/* @(#) $Id: zconf.h,v 1.1 2003/04/01 08:38:22 gvg Exp $ */
+/* @(#) $Id: zconf.h,v 1.2 2003/04/18 10:44:17 gvg Exp $ */
 
 #ifndef _ZCONF_H
 #define _ZCONF_H
@@ -91,11 +91,14 @@
 #  define NO_DUMMY_DECL
 #endif
 
-/* Old Borland C incorrectly complains about missing returns: */
+/* Old Borland C and LCC incorrectly complains about missing returns: */
 #if defined(__BORLANDC__) && (__BORLANDC__ < 0x500)
 #  define NEED_DUMMY_RETURN
 #endif
 
+#if defined(__LCC__)
+#  define  NEED_DUMMY_RETURN
+#endif
 
 /* Maximum value for memLevel in deflateInit2 */
 #ifndef MAX_MEM_LEVEL
@@ -167,22 +170,22 @@
 #      undef FAR
 #    endif
 #    include <windows.h>
-#    define ZEXPORT  WINAPI
+#    define ZEXPORT(x)  x WINAPI
 #    ifdef WIN32
-#      define ZEXPORTVA  WINAPIV
+#      define ZEXPORTVA(x)  x WINAPIV
 #    else
-#      define ZEXPORTVA  FAR _cdecl _export
+#      define ZEXPORTVA(x)  x FAR _cdecl _export
 #    endif
 #  endif
 #  if defined (__BORLANDC__)
 #    if (__BORLANDC__ >= 0x0500) && defined (WIN32)
 #      include <windows.h>
-#      define ZEXPORT __declspec(dllexport) WINAPI
-#      define ZEXPORTRVA __declspec(dllexport) WINAPIV
+#      define ZEXPORT(x) x __declspec(dllexport) WINAPI
+#      define ZEXPORTRVA(x)  x __declspec(dllexport) WINAPIV
 #    else
 #      if defined (_Windows) && defined (__DLL__)
-#        define ZEXPORT _export
-#        define ZEXPORTVA _export
+#        define ZEXPORT(x) x _export
+#        define ZEXPORTVA(x) x _export
 #      endif
 #    endif
 #  endif
@@ -190,16 +193,16 @@
 
 
 #ifndef ZEXPORT
-#  define ZEXPORT
+#  define ZEXPORT(x)   static x
 #endif
 #ifndef ZEXPORTVA
-#  define ZEXPORTVA
+#  define ZEXPORTVA(x)   static x
 #endif
 #ifndef ZEXTERN
-#  define ZEXTERN static
+#  define ZEXTERN(x) static x
 #endif
 #ifndef ZEXTERNDEF
-#  define ZEXTERNDEF  static
+#  define ZEXTERNDEF(x)  static x
 #endif
 
 #ifndef FAR

@@ -213,7 +213,14 @@
 
         has_head = 1;
 
-        if ( table.Length != 0x36                ||
+       /* the table length should be 0x36, but certain font tools
+        * make it 0x38, so we will just check that it is greater.
+        *
+        * note that according to the specification,
+        * the table must be padded to 32-bit lengths, but this doesn't
+        * apply to the value of its "Length" field !!
+        */
+        if ( table.Length < 0x36                 ||
              FT_STREAM_SEEK( table.Offset + 12 ) ||
              FT_READ_ULONG( magic )              ||
              magic != 0x5F0F3CF5UL               )
@@ -831,6 +838,20 @@
       error = face->goto_table( face, TTAG_hmtx, stream, &table_len );
       if ( error )
       {
+
+#ifdef FT_CONFIG_OPTION_INCREMENTAL
+      /* If this is an incrementally loaded font and there are    */
+      /* overriding metrics tolerate a missing 'hmtx' table.      */
+        if ( face->root.internal->incremental_interface &&
+             face->root.internal->incremental_interface->funcs->
+                 get_glyph_metrics )
+        {
+          face->horizontal.number_Of_HMetrics = 0;
+          error = SFNT_Err_Ok;
+          goto Exit;
+	    }
+#endif
+
         FT_ERROR(( " no horizontal metrics in file!\n" ));
         error = SFNT_Err_Hmtx_Table_Missing;
         goto Exit;
@@ -1085,7 +1106,7 @@
     if ( FT_STREAM_READ_FIELDS( name_table_fields, table ) )
       goto Exit;
 
-    /* Some popular asian fonts have an invalid `storageOffset' value   */
+    /* Some popular Asian fonts have an invalid `storageOffset' value   */
     /* (it should be at least "6 + 12*num_names").  However, the string */
     /* offsets, computed as "storageOffset + entry->stringOffset", are  */
     /* valid pointers within the name table...                          */

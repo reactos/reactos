@@ -221,6 +221,7 @@ FT_BEGIN_HEADER
     FT_Bool             do_vert_hints;
     FT_Bool             do_horz_snapping;
     FT_Bool             do_vert_snapping;
+    FT_Bool             do_stem_adjust;
 
   } PSH3_GlyphRec, *PSH3_Glyph;
 

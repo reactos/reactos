@@ -54,7 +54,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
-# ADD LIB32 /nologo /out:"..\..\..\objs\freetype211.lib"
+# ADD LIB32 /nologo /out:"..\..\..\objs\freetype214.lib"
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug"
 
@@ -78,7 +78,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
-# ADD LIB32 /nologo /out:"..\..\..\objs\freetype211_D.lib"
+# ADD LIB32 /nologo /out:"..\..\..\objs\freetype214_D.lib"
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Multithreaded"
 
@@ -103,7 +103,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo /out:"lib\freetype200b8_D.lib"
-# ADD LIB32 /nologo /out:"..\..\..\objs\freetype211MT_D.lib"
+# ADD LIB32 /nologo /out:"..\..\..\objs\freetype214MT_D.lib"
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Multithreaded"
 
@@ -127,7 +127,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo /out:"lib\freetype200b8.lib"
-# ADD LIB32 /nologo /out:"..\..\..\objs\freetype211MT.lib"
+# ADD LIB32 /nologo /out:"..\..\..\objs\freetype214MT.lib"
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Singlethreaded"
 
@@ -152,7 +152,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo /out:"..\..\..\objs\freetype206.lib"
-# ADD LIB32 /out:"..\..\..\objs\freetype211ST.lib"
+# ADD LIB32 /out:"..\..\..\objs\freetype214ST.lib"
 # SUBTRACT LIB32 /nologo
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Singlethreaded"
@@ -178,7 +178,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo /out:"..\..\..\objs\freetype206_D.lib"
-# ADD LIB32 /nologo /out:"..\..\..\objs\freetype211ST_D.lib"
+# ADD LIB32 /nologo /out:"..\..\..\objs\freetype214ST_D.lib"
 
 !ENDIF 
 
@@ -228,6 +228,10 @@ SOURCE=..\ftdebug.c
 
 SOURCE=..\..\..\src\base\ftglyph.c
 # SUBTRACT CPP /Fr
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\src\gzip\ftgzip.c
 # End Source File
 # Begin Source File
 

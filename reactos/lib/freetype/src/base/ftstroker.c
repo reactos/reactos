@@ -233,8 +233,12 @@
   {
     FT_ASSERT( border->start >= 0 );
 
-    border->tags[ border->start        ] |= FT_STROKE_TAG_BEGIN;
-    border->tags[ border->num_points-1 ] |= FT_STROKE_TAG_END;
+    /* don't record empty paths !! */
+    if ( border->num_points > (FT_UInt)border->start )
+    {
+      border->tags[ border->start        ] |= FT_STROKE_TAG_BEGIN;
+      border->tags[ border->num_points-1 ] |= FT_STROKE_TAG_END;
+    }
 
     border->start   = -1;
     border->movable = 0;
@@ -469,7 +473,7 @@
    FT_Byte*    tags       = border->tags;
    FT_Int      in_contour = 0;
 
-   for ( ; count > 0; count--, point++, tags++ )
+   for ( ; count > 0; count--, num_points++, point++, tags++ )
    {
      if ( tags[0] & FT_STROKE_TAG_BEGIN )
      {
@@ -538,7 +542,7 @@
      FT_Short*  write = outline->contours + outline->n_contours;
      FT_Short   index = (FT_Short) outline->n_points;
 
-     for ( ; count > 0; count--, tags++, write++, index++ )
+     for ( ; count > 0; count--, tags++, index++ )
      {
        if ( *tags & FT_STROKE_TAG_END )
        {
@@ -787,9 +791,15 @@
 
       theta  = FT_Angle_Diff( stroker->angle_in, stroker->angle_out );
       if (theta == FT_ANGLE_PI)
+      {
         theta = rotate;
+        phi   = stroker->angle_in;
+      }
       else
+      {
         theta = theta/2;
+        phi   = stroker->angle_in + theta + rotate;
+      }
 
       thcos  = FT_Cos( theta );
       sigma  = FT_MulFix( stroker->miter_limit, thcos );
@@ -797,7 +807,6 @@
       if ( sigma >= 0x10000L )
         miter = 0;
 
-      phi = stroker->angle_in + theta + rotate;
 
       if (miter)  /* this is a miter (broken angle) */
       {
@@ -1361,4 +1370,208 @@
       ft_stroke_border_export( stroker->borders+0, outline );
       ft_stroke_border_export( stroker->borders+1, outline );
     }
+  }
+
+
+
+
+
+ /*
+  *  the following is very similar to FT_Outline_Decompose, except
+  *  that we do support opened paths, and do not scale the outline
+  */
+  FT_EXPORT_DEF( FT_Error )
+  FT_Stroker_ParseOutline( FT_Stroker   stroker,
+                           FT_Outline*  outline,
+                           FT_Bool      opened )
+  {
+    FT_Vector   v_last;
+    FT_Vector   v_control;
+    FT_Vector   v_start;
+
+    FT_Vector*  point;
+    FT_Vector*  limit;
+    char*       tags;
+
+    FT_Error    error;
+
+    FT_Int   n;         /* index of contour in outline     */
+    FT_UInt  first;     /* index of first point in contour */
+    FT_Int   tag;       /* current point's state           */
+    FT_Int   in_path;
+
+    if ( !outline || !stroker )
+      return FT_Err_Invalid_Argument;
+
+    first = 0;
+
+    in_path = 0;
+
+    for ( n = 0; n < outline->n_contours; n++ )
+    {
+      FT_Int  last;  /* index of last point in contour */
+
+
+      last  = outline->contours[n];
+      limit = outline->points + last;
+
+      v_start = outline->points[first];
+      v_last  = outline->points[last];
+
+      v_control = v_start;
+
+      point = outline->points + first;
+      tags  = outline->tags  + first;
+      tag   = FT_CURVE_TAG( tags[0] );
+
+      /* A contour cannot start with a cubic control point! */
+      if ( tag == FT_CURVE_TAG_CUBIC )
+        goto Invalid_Outline;
+
+      /* check first point to determine origin */
+      if ( tag == FT_CURVE_TAG_CONIC )
+      {
+        /* first point is conic control.  Yes, this happens. */
+        if ( FT_CURVE_TAG( outline->tags[last] ) == FT_CURVE_TAG_ON )
+        {
+          /* start at last point if it is on the curve */
+          v_start = v_last;
+          limit--;
+        }
+        else
+        {
+          /* if both first and last points are conic,         */
+          /* start at their middle and record its position    */
+          /* for closure                                      */
+          v_start.x = ( v_start.x + v_last.x ) / 2;
+          v_start.y = ( v_start.y + v_last.y ) / 2;
+
+          v_last = v_start;
+        }
+        point--;
+        tags--;
+      }
+
+      error = FT_Stroker_BeginSubPath( stroker, &v_start, opened );
+      if ( error )
+        goto Exit;
+
+      in_path = 1;
+
+      while ( point < limit )
+      {
+        point++;
+        tags++;
+
+        tag = FT_CURVE_TAG( tags[0] );
+        switch ( tag )
+        {
+        case FT_CURVE_TAG_ON:  /* emit a single line_to */
+          {
+            FT_Vector  vec;
+
+
+            vec.x = point->x;
+            vec.y = point->y;
+
+            error = FT_Stroker_LineTo( stroker, &vec );
+            if ( error )
+              goto Exit;
+            continue;
+          }
+
+        case FT_CURVE_TAG_CONIC:  /* consume conic arcs */
+          v_control.x = point->x;
+          v_control.y = point->y;
+
+        Do_Conic:
+          if ( point < limit )
+          {
+            FT_Vector  vec;
+            FT_Vector  v_middle;
+
+
+            point++;
+            tags++;
+            tag = FT_CURVE_TAG( tags[0] );
+
+            vec = point[0];
+
+            if ( tag == FT_CURVE_TAG_ON )
+            {
+              error = FT_Stroker_ConicTo( stroker, &v_control, &vec );
+              if ( error )
+                goto Exit;
+              continue;
+            }
+
+            if ( tag != FT_CURVE_TAG_CONIC )
+              goto Invalid_Outline;
+
+            v_middle.x = ( v_control.x + vec.x ) / 2;
+            v_middle.y = ( v_control.y + vec.y ) / 2;
+
+            error = FT_Stroker_ConicTo( stroker, &v_control, &v_middle );
+            if ( error )
+              goto Exit;
+
+            v_control = vec;
+            goto Do_Conic;
+          }
+
+          error = FT_Stroker_ConicTo( stroker, &v_control, &v_start );
+          goto Close;
+
+        default:  /* FT_CURVE_TAG_CUBIC */
+          {
+            FT_Vector  vec1, vec2;
+
+
+            if ( point + 1 > limit                             ||
+                 FT_CURVE_TAG( tags[1] ) != FT_CURVE_TAG_CUBIC )
+              goto Invalid_Outline;
+
+            point += 2;
+            tags  += 2;
+
+            vec1 = point[-2];
+            vec2 = point[-1];
+
+            if ( point <= limit )
+            {
+              FT_Vector  vec;
+
+
+              vec = point[0];
+
+              error = FT_Stroker_CubicTo( stroker, &vec1, &vec2, &vec );
+              if ( error )
+                goto Exit;
+              continue;
+            }
+
+            error = FT_Stroker_CubicTo( stroker, &vec1, &vec2, &v_start );
+            goto Close;
+          }
+        }
+      }
+
+    Close:
+      if ( error )
+        goto Exit;
+
+      error = FT_Stroker_EndSubPath( stroker );
+      if ( error )
+        goto Exit;
+
+      first = last + 1;
+    }
+
+    return 0;
+
+  Exit:
+    return error;
+
+  Invalid_Outline:
+    return FT_Err_Invalid_Outline;
   }

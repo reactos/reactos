@@ -1,5 +1,20 @@
-# FreeType 2 top Jamfile (c) 2001, 2002 David Turner
+# FreeType 2 top Jamfile (c) 2001-2002 David Turner
 #
+
+# The HDRMACRO is already defined in FTJam and is used to add
+# the content of certain macros to the list of included header
+# files.
+#
+# we can compile FreeType 2 with classic Jam however thanks to
+# the following code
+#
+if ! $(JAM_TOOLSET)
+{
+  rule HDRMACRO
+  {
+    # nothing !!
+  }
+}
 
 # We need to invoke a SubDir rule if the FT2 source directory top is not the
 # current directory.  This allows us to build FreeType 2 as part of a larger
@@ -10,17 +25,71 @@ if $(FT2_TOP) != $(DOT)
   SubDir  FT2_TOP ;
 }
 
-FT2_INCLUDE = [ FT2_SubDir include ] ;
-FT2_SRC     = [ FT2_SubDir src ] ;
-
-FT2_LIB     = $(LIBPREFIX)freetype ;
-
-
-# We don't support libtool just yet.  It seems that this is not
-# so simple with Jam, but I'll study this topic later.
+#
+# The following macros define the include directory, the source directory
+# and the final library name (without library extensions). They can be
+# replaced by other definitions when the library is compiled as part of
+# a larger project.
 #
 
-# used only when trying to debug the hinter(s)
+# name of FreeType include directory during compilation.
+# relative to FT2_TOP
+#
+FT2_INCLUDE_DIR ?= include ;
+
+# name of FreeType source directory during compilation.
+# relative to FT2_TOP
+#
+FT2_SRC_DIR ?= src ;
+
+# name of final library, without extension
+#
+FT2_LIB ?= $(LIBPREFIX)freetype ;
+
+
+# define FT2_BUILD_INCLUDE to point to your build-specific directory
+# this is prepended to FT2_INCLUDE_DIR. This can be used to specify
+# the location of a custom <ft2build.h> which will point to custom
+# versions of "ftmodule.h" and "ftoption.h", for example
+#
+FT2_BUILD_INCLUDE ?= ;
+
+# the list of modules to compile on any given build of the library
+# by default, this will contain _all_ modules defined in FT2_SRC_DIR
+#
+# IMPORTANT: You'll need to change the content of "ftmodule.h" as well
+#            if you modify this list or provide your own.
+#
+FT2_COMPONENTS ?= gzip       # support for gzip-compressed files.
+                  autohint   # auto-hinter
+                  base       # base component (public APIs)
+                  bdf        # BDF font driver
+                  cache      # cache sub-system
+                  cff        # CFF/CEF font driver
+                  cid        # Postscript CID-keyed font driver
+                  pcf        # PCF font driver
+                  pfr        # PFR/TrueDoc font driver
+                  psaux      # Common Postscript routines module
+                  pshinter   # Postscript hinter module
+                  psnames    # Postscript names handling
+                  raster     # Monochrome rasterizer
+                  smooth     # Anti-aliased rasterizer
+                  sfnt       # SFNT-based format support routines
+                  truetype   # TrueType font driver
+                  type1      # Postscript Type 1 font driver
+                  type42     # Postscript Type 42 (embedded TrueType) driver
+                  winfonts   # Windows FON/FNT font driver
+                  ;
+
+
+# don't touch
+#
+FT2_INCLUDE  = $(FT2_BUILD_INCLUDE)
+               [ FT2_SubDir $(FT2_INCLUDE_DIR) ] ;
+
+FT2_SRC      = [ FT2_SubDir $(FT2_SRC_DIR) ] ;
+
+# only used by FreeType developers
 #
 if $(DEBUG_HINTER)
 {
@@ -31,7 +100,10 @@ if $(DEBUG_HINTER)
 # We need "freetype2/include" in the current include path in order to
 # compile any part of FreeType 2.
 #
-SubDirHdr  += $(FT2_INCLUDE) ;
+HDRS += $(FT2_INCLUDE) ;
+
+
+#SubDirHdr += $(FT2_INCLUDE) ;
 
 # Uncomment the following line if you want to build individual source files
 # for each FreeType 2 module.
@@ -51,7 +123,7 @@ HDRMACRO  [ FT2_SubDir  include freetype internal internal.h ] ;
 SubInclude  FT2_TOP $(FT2_SRC_DIR) ;
 
 
-# tests files (hinter debugging)
+# tests files (hinter debugging). only used by FreeType developers
 #
 if $(DEBUG_HINTER)
 {

@@ -70,14 +70,17 @@
   {
     FT_Memory  memory = zone->memory;
 
+    if ( memory )
+    {
+      FT_FREE( zone->contours );
+      FT_FREE( zone->tags );
+      FT_FREE( zone->cur );
+      FT_FREE( zone->org );
 
-    FT_FREE( zone->contours );
-    FT_FREE( zone->tags );
-    FT_FREE( zone->cur );
-    FT_FREE( zone->org );
-
-    zone->max_points   = zone->n_points   = 0;
-    zone->max_contours = zone->n_contours = 0;
+      zone->max_points   = zone->n_points   = 0;
+      zone->max_contours = zone->n_contours = 0;
+      zone->memory       = NULL;
+    }
   }
 
 
@@ -541,7 +544,7 @@
 
     face = (TT_Face)size->root.face;
 
-    metrics = &size->root.metrics;
+    metrics = &size->metrics;
 
     if ( metrics->x_ppem < 1 || metrics->y_ppem < 1 )
       return TT_Err_Invalid_PPem;
@@ -575,6 +578,7 @@
                                         metrics->y_scale ) + 32 ) & -64;
     metrics->max_advance = ( FT_MulFix( face->root.max_advance_width,
                                         metrics->x_scale ) + 32 ) & -64;
+
 
 #ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
     /* set to `invalid' by default */
@@ -690,7 +694,7 @@
     SFNT_Service      sfnt;
 
 
-    metrics = &size->root.metrics;
+    metrics = &size->metrics;
 
     if ( size->strike_index != 0xFFFFU )
       return TT_Err_Ok;
@@ -728,8 +732,8 @@
                                   sbit_metrics->descender;
 
       /* XXX: Is this correct? */
-      sbit_metrics->max_advance = ( strike->hori.min_origin_SB +
-                                    strike->hori.max_width     +
+      sbit_metrics->max_advance = ( strike->hori.min_origin_SB  +
+                                    strike->hori.max_width      +
                                     strike->hori.min_advance_SB ) << 6;
 
       size->strike_index = strike_index;

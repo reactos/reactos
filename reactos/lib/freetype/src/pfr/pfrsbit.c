@@ -49,7 +49,7 @@
   static void
   pfr_bitwriter_init( PFR_BitWriter  writer,
                       FT_Bitmap*     target,
-                      FT_Bool        decreasing )
+                      FT_UInt        decreasing )
   {
     writer->line   = target->buffer;
     writer->pitch  = target->pitch;
@@ -107,7 +107,7 @@
       }
       else if ( mask == 0 )
       {
-        cur[0] = c;
+        cur[0] = (FT_Byte)c;
         mask   = 0x80;
         c      = 0;
         cur ++;
@@ -115,7 +115,7 @@
     }
 
     if ( mask != 0x80 )
-      cur[0] = c;
+      cur[0] = (FT_Byte) c;
   }
 
 
@@ -185,7 +185,7 @@
       }
       else if ( mask == 0 )
       {
-        cur[0] = c;
+        cur[0] = (FT_Byte) c;
         mask   = 0x80;
         c      = 0;
         cur ++;
@@ -249,7 +249,7 @@
       }
       else if ( mask == 0 )
       {
-        cur[0] = c;
+        cur[0] = (FT_Byte) c;
         c      = 0;
         mask   = 0x80;
         cur ++;
@@ -281,7 +281,7 @@
                           FT_ULong*  found_size )
   {
     FT_UInt   left, right, char_len;
-    FT_Bool   two = flags & 1;
+    FT_Bool   two = FT_BOOL( flags & 1 );
     FT_Byte*  buff;
 
 
@@ -583,7 +583,7 @@
       pfr_lookup_bitmap_data( stream->cursor,
                               stream->limit,
                               strike->num_bitmaps,
-                              strike->flags,
+                              (FT_Byte) strike->flags,
                               character->char_code,
                               &gps_offset,
                               &gps_size );
@@ -624,7 +624,7 @@
       if ( !error )
       {
         glyph->root.format = FT_GLYPH_FORMAT_BITMAP;
-      
+
         /* Set up glyph bitmap and metrics */
         glyph->root.bitmap.width      = (FT_Int)xsize;
         glyph->root.bitmap.rows       = (FT_Int)ysize;
@@ -645,11 +645,10 @@
 
         /* Allocate and read bitmap data */
         {
-          FT_Memory  memory = face->root.memory;
-          FT_Long    len    = glyph->root.bitmap.pitch * ysize;
+          FT_ULong    len    = glyph->root.bitmap.pitch * ysize;
 
-
-          if ( !FT_ALLOC( glyph->root.bitmap.buffer, len ) )
+          error = ft_glyphslot_alloc_bitmap( &glyph->root, len );
+          if ( !error )
           {
             error = pfr_load_bitmap_bits( p,
                                           stream->limit,

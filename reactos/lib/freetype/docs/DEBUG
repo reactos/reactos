@@ -14,7 +14,7 @@ located in the file "ftoptions.h".  The macros are:
     #define this macro  if you want to compile  the FT_ERROR macro calls
     used to  print error messages  during program execution.   This will
     not  stop the  program, but  is very  useful to  spot  invalid fonts
-    during development and code wordarounds for them.
+    during development and code workarounds for them.
 
   FT_DEBUG_LEVEL_TRACE
 
@@ -158,5 +158,26 @@ behaviour of FreeType at runtime:
     FT_DEBUG_MEMORY macro  #defined in  "ftoption.h" though, it  will be
     ignored in other builds.
 
+
+  FT2_ALLOC_TOTAL_MAX
+
+    this variable is ignored if FT2_DEBUG_MEMORY is not defined. It allows
+    you to specify a maximum heap size for all memory allocations performed
+    by FreeType. This is very useful to test the robustness of the font
+    engine and programs that use it in tight memory conditions.
+    
+    If it is undefined, or if its value is not strictly positive, then no
+    allocation bounds are checked at runtime.
+
+
+  FT2_ALLOC_COUNT_MAX
+  
+    this variable is ignored if FT2_DEBUG_MEMORY is not defined. It allows
+    you to sepcify a maximum number of memory allocations performed by
+    FreeType before returning the error FT_Err_Out_Of_Memory. This is
+    useful for debugging and testing the engine's robustness.
+    
+    If it is undefined, or if its value is not strictly positive, then no
+    allocation bounsd are checked at runtime.
 
 End of file

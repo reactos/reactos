@@ -62,6 +62,13 @@
     FT_ULong         alloc_total;
     FT_ULong         alloc_current;
     FT_ULong         alloc_max;
+    FT_ULong         alloc_count;
+
+    FT_Bool          bound_total;    
+    FT_ULong         alloc_total_max;
+    
+    FT_Bool          bound_count;
+    FT_ULong         alloc_count_max;
 
     const char*      file_name;
     FT_Long          line_no;
@@ -476,9 +483,21 @@
     if ( size <= 0 )
       ft_mem_debug_panic( "negative block size allocation (%ld)", size );
 
+    /* return NULL if the maximum number of allocations was reached */
+    if ( table->bound_count &&
+         table->alloc_count >= table->alloc_count_max )
+      return NULL;
+
+    /* return NULL if this allocation would overflow the maximum heap size */
+    if ( table->bound_total && 
+         table->alloc_current + (FT_ULong)size > table->alloc_total_max )
+      return NULL;         
+
     block = (FT_Byte *)ft_mem_table_alloc( table, size );
     if ( block )
       ft_mem_table_set( table, block, (FT_ULong)size );
+
+    table->alloc_count++;
 
     table->file_name = NULL;
     table->line_no   = 0;
@@ -570,15 +589,42 @@
     FT_Int       result = 0;
 
 
-    if ( getenv( "FT_DEBUG_MEMORY" ) )
+    if ( getenv( "FT2_DEBUG_MEMORY" ) )
     {
       table = ft_mem_table_new( memory );
       if ( table )
       {
+        const char*  p;
+        
         memory->user    = table;
         memory->alloc   = ft_mem_debug_alloc;
         memory->realloc = ft_mem_debug_realloc;
         memory->free    = ft_mem_debug_free;
+        
+        p = getenv( "FT2_ALLOC_TOTAL_MAX" );
+        if ( p != NULL )
+        {
+          FT_Long   total_max = atol(p);
+          
+          if ( total_max > 0 )
+          {
+            table->bound_total     = 1;
+            table->alloc_total_max = (FT_ULong) total_max;
+          }
+        }
+        
+        p = getenv( "FT2_ALLOC_COUNT_MAX" );
+        if ( p != NULL )
+        {
+          FT_Long  total_count = atol(p);
+          
+          if ( total_count > 0 )
+          {
+            table->bound_count     = 1;
+            table->alloc_count_max = (FT_ULong) total_count;
+          }
+        }
+
         result = 1;
       }
     }

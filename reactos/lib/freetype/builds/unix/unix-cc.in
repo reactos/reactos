@@ -78,6 +78,7 @@ LDFLAGS := @LDFLAGS@
 # Library linking
 #
 LINK_LIBRARY = $(LIBTOOL) --mode=link $(CCraw) -o $@ $(OBJECTS_LIST) \
-                          -rpath $(libdir) -version-info $(version_info)
+                          -rpath $(libdir) -version-info $(version_info) \
+                          $(LDFLAGS)
 
 # EOF

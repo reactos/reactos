@@ -2363,6 +2363,29 @@
       cff_builder_done( &decoder.builder );
     }
 
+ #ifdef FT_CONFIG_OPTION_INCREMENTAL
+
+    /* Incremental fonts can optionally override the metrics. */
+    if ( !error                                       &&
+         face->root.internal->incremental_interface   &&
+         face->root.internal->incremental_interface->funcs->get_glyph_metrics )
+    {
+      FT_Incremental_MetricsRec  metrics;
+
+      metrics.bearing_x = decoder.builder.left_bearing.x;
+	  metrics.bearing_y = decoder.builder.left_bearing.y;
+	  metrics.advance   = decoder.builder.advance.x;
+      error = face->root.internal->incremental_interface->funcs->get_glyph_metrics(
+                face->root.internal->incremental_interface->object,
+                glyph_index, FALSE, &metrics );
+      decoder.builder.left_bearing.x = metrics.bearing_x;
+      decoder.builder.left_bearing.y = metrics.bearing_y;
+      decoder.builder.advance.x      = metrics.advance;
+      decoder.builder.advance.y      = 0;
+    }
+
+#endif /* FT_CONFIG_OPTION_INCREMENTAL */
+
     font_matrix = cff->top_font.font_dict.font_matrix;
     font_offset = cff->top_font.font_dict.font_offset;
 

@@ -21,7 +21,11 @@ GZIP_DIR_ := $(GZIP_DIR)$(SEP)
 
 # compilation flags for the driver
 #
-GZIP_COMPILE := $(FT_COMPILE) $I$(GZIP_DIR)
+ifeq ($(SYSTEM_ZLIB),)
+  GZIP_COMPILE := $(FT_COMPILE) $I$(GZIP_DIR)
+else
+  GZIP_COMPILE := $(FT_COMPILE)
+endif
 
 
 # gzip support sources (i.e., C files)
@@ -30,15 +34,19 @@ GZIP_DRV_SRC := $(GZIP_DIR_)ftgzip.c
 
 # gzip support headers
 #
-GZIP_DRV_H := 
+GZIP_DRV_H :=
 
 
-# Pfr driver object(s)
+# gzip driver object(s)
 #
 #   GZIP_DRV_OBJ_M is used during `multi' builds
 #   GZIP_DRV_OBJ_S is used during `single' builds
 #
-GZIP_DRV_OBJ_M := $(GZIP_DRV_SRC:$(GZIP_DIR_)%.c=$(OBJ_)%.$O)
+ifeq ($(SYSTEM_ZLIB),)
+  GZIP_DRV_OBJ_M := $(GZIP_DRV_SRC:$(GZIP_DIR_)%.c=$(OBJ_)%.$O)
+else
+  GZIP_DRV_OBJ_M := $(OBJ_)ftgzip.$O
+endif
 GZIP_DRV_OBJ_S := $(OBJ_)ftgzip.$O
 
 # gzip support source file for single build

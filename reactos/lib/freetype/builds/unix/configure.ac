@@ -10,7 +10,7 @@ dnl configuration file -- stay in 8.3 limit
 AC_CONFIG_HEADER(ftconfig.h:ftconfig.in)
 
 dnl Don't forget to update VERSION.DLL!
-version_info='9:2:3'
+version_info='9:3:3'
 AC_SUBST(version_info)
 ft_version=`echo $version_info | tr : .`
 AC_SUBST(ft_version)
@@ -80,6 +80,25 @@ fi
 AC_SUBST(FTSYS_SRC)
 
 AC_CHECK_FUNCS(memcpy memmove)
+
+
+dnl Check for system zlib
+AC_ARG_WITH(zlib,
+  [  --without-zlib          use internal zlib instead of system-wide])
+if test x$with_zlib != xno && test -z "$LIBZ"; then
+  AC_CHECK_LIB(z, gzsetparams, [AC_CHECK_HEADER(zlib.h, LIBZ='-lz')])
+fi
+if test x$with_zlib != xno && test -n "$LIBZ"; then
+  CFLAGS="$CFLAGS -DFT_CONFIG_OPTION_SYSTEM_ZLIB"
+  LDFLAGS="$LDFLAGS $LIBZ"
+  SYSTEM_ZLIB=yes
+fi
+AC_SUBST(LIBZ)
+AC_SUBST(CFLAGS)
+AC_SUBST(LDFLAGS)
+AC_SUBST(SYSTEM_ZLIB)
+
+
 
 AC_PROG_LIBTOOL
 

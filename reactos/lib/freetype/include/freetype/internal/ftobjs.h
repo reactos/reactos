@@ -462,6 +462,8 @@ FT_BEGIN_HEADER
   FT_Get_Module_Interface( FT_Library   library,
                            const char*  mod_name );
 
+ /* */
+
 
   /*************************************************************************/
   /*************************************************************************/
@@ -533,6 +535,30 @@ FT_BEGIN_HEADER
   /*                                                                       */
   FT_BASE( void )
   FT_Done_GlyphSlot( FT_GlyphSlot  slot );
+
+ /* */
+ 
+ /*
+  * free the bitmap of a given glyphslot when needed
+  * (i.e. only when it was allocated with ft_glyphslot_alloc_bitmap)
+  */
+  FT_BASE( void )
+  ft_glyphslot_free_bitmap( FT_GlyphSlot  slot );
+ 
+ /*
+  * allocate a new bitmap buffer in a glyph slot
+  */
+  FT_BASE( FT_Error )
+  ft_glyphslot_alloc_bitmap( FT_GlyphSlot  slot,
+                             FT_ULong      size );
+
+ /*
+  * set the bitmap buffer in a glyph slot to a given pointer.
+  * the buffer will not be freed by a later call to ft_glyphslot_free_bitmap
+  */
+  FT_BASE( void )
+  ft_glyphslot_set_bitmap( FT_GlyphSlot   slot,
+                           FT_Pointer     buffer );
 
 
   /*************************************************************************/

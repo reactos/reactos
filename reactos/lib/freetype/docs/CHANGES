@@ -1,3 +1,86 @@
+LATEST CHANGES BETWEEN 2.1.4 and 2.1.3
+
+  I. IMPORTANT BUG FIXES
+
+    - updated to newest libtool version, fixes build problems on various
+      platforms.
+
+    - a fix in the Gzip stream reader, it couldn't read certain .gz files
+      properly due to a small typo. In certain cases, FreeType could also
+      loop endlessly when trying to load tiny gzipped files.
+
+    - the configure script now tries to use the system-wide zlib when
+      it finds one (instead of the copy found in src/gzip). And
+      "freetype-config" has been updated to return relevant flags in this
+      case when invoked with "--libs" (e.g. "-lzlib")
+
+    - certain fonts couldn't be loaded by 2.1.3 because they lacked a
+      Unicode charmap (e.g. SYMBOL.TTF). FreeType erroneously rejected
+      them.
+
+    - the CFF loader was modified to accept fonts which only
+      contain a subset of their reference charset. This prevented the
+      correct use of PDF-embedded fonts.
+
+    - the logic to detect Unicode charmaps has been modified. this is required
+      to support fonts which include both 16-bit and 32-bit charmaps (like
+      very recent asian ones) using the new 10 and 12 SFNT formats.
+
+    - the TrueType loader now limits the depth of composite glyphs. This is
+      necessary to prevent broken fonts to break the engine by blowing the
+      stack with recursive glyph definitions.
+
+    - the CMap cache is now capable of managing UCS-4 character codes that
+      are mapped through extended charmaps in recent TrueType/OpenType fonts
+
+    - the cache sub-system now properly manages out-of-memory conditions,
+      instead of blindly reporting them to the caller. This means that it
+      will try to empty the cache before restarting its allocations to see
+      if that can help.
+
+    - the PFR driver didn't return the list of available embedded bitmaps
+      properly.
+
+  II. IMPORTANT CHANGES
+
+    - David Chester contributed some enhancements to the auto-hinter that
+      significantly increase the quality of its output. The Postscript hinter
+      was also improved in several ways..
+
+    - the FT_RENDER_MODE_LIGHT render mode was implemented
+
+    - a new API, called FT_Get_BDF_Property has been added to FT_BDF_H to
+      retrieve BDF properties from BDF _and_ PCF font files. THIS IS STILL
+      EXPERIMENTAL, since it hasn't been properly tested yet.
+
+    - a Windows FNT specific API has been added, mostly to access font
+      headers. This is used by Wine
+
+    - TrueType tables without a "hmtx" table are now tolerated when an
+      incremental interface is used. This happens for certain Type42 fonts
+      passed from Ghostscript to FreeType.
+
+    - the PFR font driver is now capable of returning the font family and
+      style names when they're available (instead of the sole "FontID"). This
+      is performed by parsing an *undocumented* portion of the font file !!
+
+  III. MISCELLANEOUS
+
+    - the path stroker in FT_STROKER_H has entered beta stage. It now works
+      very well, but it's interface might change a bit in the future. More
+      on this in later releases
+
+    - the documentation for FT_Size_Metrics didn't appear properly in the
+      API reference
+
+    - the file docs/VERSION.DLL has been updated to explain versioning
+      with FreeType (i.e. comparing release/libtool/so numbers, and how
+      to use them in Autoconf scripts)
+
+    - the installation documentation has been seriously revamped. Everything
+      is now in the "docs" directory.
+
+==============================================================================
 LATEST CHANGES BETWEEN 2.1.3 and 2.1.2
 
   I. IMPORTANT BUG FIXES

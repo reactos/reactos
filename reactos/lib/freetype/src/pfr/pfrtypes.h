@@ -230,11 +230,17 @@ FT_BEGIN_HEADER
     FT_BBox            bbox;
     FT_UInt            flags;
     FT_UInt            standard_advance;
+    
+    FT_Int             ascent;   /* optional, bbox.yMax if not present */
+    FT_Int             descent;  /* optional, bbox.yMin if not present */
+    FT_Int             leading;  /* optional, 0 if not present         */
 
     PFR_DimensionRec   horizontal;
     PFR_DimensionRec   vertical;
 
     FT_String*         font_id;
+    FT_String*         family_name;
+    FT_String*         style_name;
 
     FT_UInt            num_strikes;
     FT_UInt            max_strikes;

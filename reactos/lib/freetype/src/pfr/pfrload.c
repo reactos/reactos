@@ -432,7 +432,16 @@
   }
 
 
-  /* load font ID, i.e. name */
+ /* load font ID, this is a so-called "unique" name that is rather
+  * long and descriptive (like "Tiresias ScreenFont v7.51").
+  *
+  * note that a PFR font's family name is contained in an *undocumented*
+  * string of the "auxiliary data" portion of a physical font record. this
+  * may also contain the "real" style name !
+  *
+  * if no family name is present, the font id is used instead for the
+  * family
+  */
   FT_CALLBACK_DEF( FT_Error )
   pfr_extra_item_load_font_id( FT_Byte*     p,
                                FT_Byte*     limit,
@@ -693,12 +702,54 @@
   };
 
 
+ /* loads a name from the auxiliary data. Since this extracts undocumented
+  * strings from the font file, we need to be careful here
+  */
+  static FT_Error
+  pfr_aux_name_load( FT_Byte*     p,
+                     FT_UInt      len,
+                     FT_Memory    memory,
+                     FT_String*  *astring )
+  {
+    FT_Error    error = 0;
+    FT_String*  result = NULL;
+    FT_UInt     n, ok;
+
+    if ( len > 0 && p[len-1] == 0 )
+      len--;
+
+   /* check that each character is ASCII, that's to be sure
+    * to not load garbage..
+    */
+    ok = (len > 0);
+    for ( n = 0; n < len; n++ )
+      if ( p[n] < 32 || p[n] > 127 )
+      {
+        ok = 0;
+        break;
+      }
+
+    if ( ok )
+    {
+      if ( FT_ALLOC( result, len+1 ) )
+        goto Exit;
+
+      FT_MEM_COPY( result, p, len );
+      result[len] = 0;
+    }
+  Exit:
+    *astring = result;
+    return error;
+  }
+
+
   FT_LOCAL_DEF( void )
   pfr_phy_font_done( PFR_PhyFont  phy_font,
                      FT_Memory    memory )
   {
-    if ( phy_font->font_id )
-      FT_FREE( phy_font->font_id );
+    FT_FREE( phy_font->font_id );
+    FT_FREE( phy_font->family_name );
+    FT_FREE( phy_font->style_name );
 
     FT_FREE( phy_font->vertical.stem_snaps );
     phy_font->vertical.num_stem_snaps = 0;
@@ -734,6 +785,7 @@
 
     phy_font->num_kern_pairs = 0;
   }
+
 
 
   FT_LOCAL_DEF( FT_Error )
@@ -790,12 +842,80 @@
         goto Fail;
     }
 
-    /* skip the aux bytes */
+    /* in certain fonts, the auxiliary bytes contain interesting  */
+    /* information. These are not in the specification but can be */
+    /* guessed by looking at the content of a few PFR0 fonts      */
     PFR_CHECK( 3 );
     num_aux = PFR_NEXT_ULONG( p );
 
-    PFR_CHECK( num_aux );
-    p += num_aux;
+    if ( num_aux > 0 )
+    {
+      FT_Byte*  q = p;
+      FT_Byte*  q2;
+
+      PFR_CHECK( num_aux );
+      p += num_aux;
+
+      while ( num_aux > 0 )
+      {
+        FT_UInt  length, type;
+
+        if ( q + 4 > p )
+          break;
+
+        length = PFR_NEXT_USHORT(q);
+        if ( length < 4 || length > num_aux )
+          break;
+
+        q2   = q + length - 2;
+        type = PFR_NEXT_USHORT(q);
+
+        switch ( type )
+        {
+          case 1:
+            {
+             /* this seems to correspond to the font's family name,
+              * padded to 16-bits with one zero when necessary
+              */
+              error = pfr_aux_name_load( q, length-4U, memory,
+                                         &phy_font->family_name );
+              if ( error )
+                goto Exit;
+            }
+            break;
+
+          case 2:
+            {
+              if ( q + 32 > q2 )
+                break;
+
+              q += 10;
+              phy_font->ascent  = PFR_NEXT_SHORT(q);
+              phy_font->descent = PFR_NEXT_SHORT(q);
+              phy_font->leading = PFR_NEXT_SHORT(q);
+              q += 16;
+            }
+            break;
+
+          case 3:
+            {
+             /* this seems to correspond to the font's style name,
+              * padded to 16-bits with one zero when necessary
+              */
+              error = pfr_aux_name_load( q, length-4U, memory,
+                                         &phy_font->style_name );
+              if ( error )
+                goto Exit;
+            }
+            break;
+
+          default:
+            ;
+        }
+        q        = q2;
+        num_aux -= length;
+      }
+    }
 
     /* read the blue values */
     {

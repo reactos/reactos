@@ -29,6 +29,7 @@ THE SOFTWARE.
 #include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_STREAM_H
 #include FT_INTERNAL_OBJECTS_H
+#include FT_BDF_H
 
 #include "bdf.h"
 #include "bdfdrivr.h"
@@ -488,8 +489,6 @@ THE SOFTWARE.
     int             i, j, count;
     unsigned char   *p, *pp;
 
-    FT_Memory       memory = face->bdffont->memory;
-
     FT_UNUSED( load_flags );
 
 
@@ -513,9 +512,9 @@ THE SOFTWARE.
       bitmap->pixel_mode = FT_PIXEL_MODE_MONO;
       bitmap->pitch      = glyph.bpr;
 
-      if ( FT_NEW_ARRAY( bitmap->buffer, glyph.bytes ) )
-        goto Exit;
-      FT_MEM_COPY( bitmap->buffer, glyph.bitmap, glyph.bytes );
+     /* note: we don't allocate a new array to hold the bitmap, we */
+     /*       can simply point to it                               */
+      ft_glyphslot_set_bitmap( slot, glyph.bitmap );
     }
     else
     {
@@ -523,7 +522,8 @@ THE SOFTWARE.
       bitmap->pixel_mode = FT_PIXEL_MODE_GRAY;
       bitmap->pitch      = bitmap->width;
 
-      if ( FT_NEW_ARRAY( bitmap->buffer, bitmap->rows * bitmap->pitch ) )
+      error = ft_glyphslot_alloc_bitmap( slot, bitmap->rows * bitmap->pitch );
+      if ( error )
         goto Exit;
 
       switch ( bpp )
@@ -624,10 +624,61 @@ THE SOFTWARE.
 
     slot->linearHoriAdvance = (FT_Fixed)glyph.dwidth << 16;
     slot->format            = FT_GLYPH_FORMAT_BITMAP;
-    slot->flags             = FT_GLYPH_OWN_BITMAP;
 
   Exit:
     return error;
+  }
+
+
+  static FT_Error
+  bdf_get_bdf_property( BDF_Face          face,
+                        const char*       prop_name,
+                        BDF_PropertyRec  *aproperty )
+  {
+    bdf_property_t*  prop;
+
+    FT_ASSERT( face && face->bdffont );
+
+    prop = bdf_get_font_property( face->bdffont, (char*)prop_name );
+    if ( prop != NULL )
+    {
+      switch ( prop->format )
+      {
+        case BDF_ATOM:
+          aproperty->type   = BDF_PROPERTY_TYPE_ATOM;
+          aproperty->u.atom = prop->value.atom;
+          break;
+
+        case BDF_INTEGER:
+          aproperty->type      = BDF_PROPERTY_TYPE_INTEGER;
+          aproperty->u.integer = prop->value.int32;
+          break;
+
+        case BDF_CARDINAL:
+          aproperty->type       = BDF_PROPERTY_TYPE_CARDINAL;
+          aproperty->u.cardinal = prop->value.card32;
+          break;
+
+        default:
+          goto Fail;
+      }
+      return 0;
+    }
+  Fail:
+    return FT_Err_Invalid_Argument;
+  }
+
+
+  static FT_Module_Interface
+  bdf_driver_requester( FT_Module    module,
+                        const char*  name )
+  {
+    FT_UNUSED( module );
+
+    if ( name && ft_strcmp( name, "get_bdf_property" ) == 0 )
+      return (FT_Module_Interface) bdf_get_bdf_property;
+
+    return NULL;
   }
 
 
@@ -646,7 +697,7 @@ THE SOFTWARE.
 
       (FT_Module_Constructor)0,
       (FT_Module_Destructor) 0,
-      (FT_Module_Requester)  0
+      (FT_Module_Requester)  bdf_driver_requester
     },
 
     sizeof ( BDF_FaceRec ),

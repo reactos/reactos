@@ -389,6 +389,8 @@
   /*                                                                       */
   FT_LOCAL_DEF( FT_Error )
   ah_outline_load( AH_Outline  outline,
+                   FT_Fixed    x_scale,
+                   FT_Fixed    y_scale,
                    FT_Face     face )
   {
     FT_Memory    memory       = outline->memory;
@@ -461,8 +463,8 @@
       outline->horz_major_dir = AH_DIR_RIGHT;
     }
 
-    outline->x_scale = face->size->metrics.x_scale;
-    outline->y_scale = face->size->metrics.y_scale;
+    outline->x_scale = x_scale;
+    outline->y_scale = y_scale;
 
     points = outline->points;
     if ( outline->num_points == 0 )
@@ -478,8 +480,6 @@
       /* compute coordinates */
       {
         FT_Vector*  vec     = source->points;
-        FT_Fixed    x_scale = outline->x_scale;
-        FT_Fixed    y_scale = outline->y_scale;
 
 
         for ( point = points; point < point_limit; vec++, point++ )
@@ -1350,10 +1350,20 @@
             else
               edge2 = seg2->edge;
 
+#ifdef FT_CONFIG_CHESTER_SERIF
+            if ( is_serif )
+            {
+              edge->serif   = edge2;
+              edge2->flags |= AH_EDGE_SERIF;
+            }
+            else
+              edge->link  = edge2;
+#else /* !CHESTER_SERIF */
             if ( is_serif )
               edge->serif = edge2;
             else
               edge->link  = edge2;
+#endif
           }
 
           seg = seg->edge_next;
@@ -1477,8 +1487,14 @@
 
       /* compute the initial threshold as a fraction of the EM size */
       best_dist = FT_MulFix( face_globals->face->units_per_EM / 40, y_scale );
+
+#ifdef FT_CONFIG_CHESTER_SMALL_F
+      if ( best_dist > 64 / 2 )
+        best_dist = 64 / 2;
+#else
       if ( best_dist > 64 / 4 )
-        best_dist = 64 / 4;
+         best_dist = 64 / 4;
+#endif
 
       for ( blue = AH_BLUE_CAPITAL_TOP; blue < AH_BLUE_MAX; blue++ )
       {

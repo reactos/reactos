@@ -229,7 +229,6 @@ FT_BEGIN_HEADER
   pcf_load_font( FT_Stream,
                  PCF_Face );
 
-
 FT_END_HEADER
 
 #endif /* __PCF_H__ */

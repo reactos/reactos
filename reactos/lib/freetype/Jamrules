@@ -6,6 +6,19 @@
 #
 
 
+# call SubDirHdrs on a list of directories
+#
+rule AddSubDirHdrs
+{
+  local x ;
+
+  for x in $(<)
+  {
+    SubDirHdrs $(x) ;
+  }
+}
+
+
 # Determine prefix of library file.  We must use "libxxxxx" on Unix systems,
 # while all other simply use the real name.
 #
@@ -38,11 +51,6 @@ rule FT2_SubDir
     return [ FDirName  $(FT2_TOP) $(<) ] ;
   }
 }
-
-# The directory "include" must be in the current include path when compiling
-# any part of FreeType.  We thus update the HDRS variable there.
-#
-HDRS += [ FT2_SubDir  include ] ;
 
 # We also set ALL_LOCATE_TARGET in order to place all object and library
 # files in "objs".

@@ -32,8 +32,18 @@
 FT_BEGIN_HEADER
 
 
-#define AH_IS_TOP_BLUE( b )  ( (b) == AH_BLUE_CAPITAL_TOP || \
-                               (b) == AH_BLUE_SMALL_TOP   )
+#ifdef  FT_CONFIG_CHESTER_SMALL_F
+
+#  define AH_IS_TOP_BLUE( b )  ( (b) == AH_BLUE_CAPITAL_TOP || \
+                                 (b) == AH_BLUE_SMALL_F_TOP || \
+                                 (b) == AH_BLUE_SMALL_TOP   )
+
+#else /* !CHESTER_SMALL_F */
+
+#  define AH_IS_TOP_BLUE( b )  ( (b) == AH_BLUE_CAPITAL_TOP || \
+                                 (b) == AH_BLUE_SMALL_TOP   )
+
+#endif /* !CHESTER_SMALL_F */
 
 
   /* compute global metrics automatically */
