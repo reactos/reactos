@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.12 2004/11/03 22:42:59 weiden Exp $
+# $Id: makefile,v 1.13 2004/11/04 22:14:41 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -6,7 +6,7 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = psapi
 
-TARGET_SDKLIBS = epsapi.a ntdll.a kernel32.a
+TARGET_SDKLIBS = ntdll.a kernel32.a
 
 TARGET_CFLAGS = -I./include -Wall -Werror
 
