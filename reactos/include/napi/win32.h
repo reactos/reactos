@@ -34,8 +34,8 @@ typedef struct _W32PROCESS
   struct _WINSTATION_OBJECT* WindowStation;
   HANDLE hWindowStation;
   ULONG Flags;
-  WORD GDIObjects;
-  WORD UserObjects;
+  LONG GDIObjects;
+  LONG UserObjects;
 } W32PROCESS, *PW32PROCESS;
 
 PW32THREAD STDCALL

@@ -140,8 +140,8 @@ typedef struct
 
 #define  DC_LockDc(hDC)  \
   ((PDC) GDIOBJ_LockObj ((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC))
-#define  DC_UnlockDc(hDC)  \
-  GDIOBJ_UnlockObj ((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC)
+#define  DC_UnlockDc(DC)  \
+  GDIOBJ_UnlockObj ((PGDIOBJ) DC)
 
 HDC  FASTCALL RetrieveDisplayHDC(VOID);
 HDC  FASTCALL DC_AllocDC(PUNICODE_STRING  Driver);
@@ -150,7 +150,7 @@ HDC  FASTCALL DC_FindOpenDC(PUNICODE_STRING  Driver);
 VOID FASTCALL DC_FreeDC(HDC  DCToFree);
 HDC  FASTCALL DC_GetNextDC (PDC pDC);
 VOID FASTCALL DC_SetNextDC (PDC pDC, HDC hNextDC);
-BOOL FASTCALL DC_InternalDeleteDC( PDC DCToDelete );
+BOOL FASTCALL DC_Cleanup(PDC pDc);
 VOID FASTCALL DC_SetOwnership(HDC DC, PEPROCESS Owner);
 
 VOID FASTCALL DC_UpdateXforms(PDC  dc);

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.65 2004/08/15 21:36:28 chorns Exp $
+/* $Id: stubs.c,v 1.65.4.1 2004/09/12 21:23:25 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -182,21 +182,6 @@ RealMsgWaitForMultipleObjectsEx(
 {
   UNIMPLEMENTED;
   return 0;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-SetSysColors(
-  int cElements,
-  CONST INT *lpaElements,
-  CONST COLORREF *lpaRgbValues)
-{
-  UNIMPLEMENTED;
-  return FALSE;
 }
 
 
