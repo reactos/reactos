@@ -60,11 +60,6 @@
 /* Base definitions */
 #include <base.h>
 
-/* WIN32 messages */
-//#ifndef WIN32_LEAN_AND_MEAN
-//#include <messages.h>
-//#endif
-
 /* WIN32 definitions */
 #include <defines.h>
 
@@ -84,18 +79,11 @@
 #endif /* ! defined (RC_INVOKED) */
 
 /* WIN32 error codes */
-#ifndef WIN32_LEAN_AND_MEAN
-#include <errors.h>
-#endif
+//#ifndef WIN32_LEAN_AND_MEAN
+//#include <errors.h>
+//#endif
 
 #ifndef RC_INVOKED
-
-/* Windows sockets specification version 1.1 */
-#ifdef Win32_Winsock
-#ifndef WIN32_LEAN_AND_MEAN
-#include <sockets.h>
-#endif
-#endif
 
 /* There is a conflict with BOOL between Objective-C and Win32,
    so the Windows32 API Library defines and uses WINBOOL.

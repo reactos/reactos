@@ -20,7 +20,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <errors.h>
+#include <winerror.h>
 
 #define NDEBUG
 #include <debug.h>

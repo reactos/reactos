@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <winerror.h>
 #include <wininet.h>
 
 #define NDEBUG
