@@ -21,14 +21,4 @@ MoveToEx(HDC hDC, int X, int Y, LPPOINT Point)
    return W32kMoveToEx(hDC, X, Y, Point);
 }
 
-BOOL
-STDCALL
-Rectangle(HDC  hDC,
-	int  LeftRect,
-	int  TopRect,
-	int  RightRect,
-	int  BottomRect)
-{
-   // MOVE to fillshap.c
-   return W32kRectangle(hDC, LeftRect, TopRect, RightRect, BottomRect);
-}
+
