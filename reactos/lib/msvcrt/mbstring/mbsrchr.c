@@ -10,24 +10,32 @@
 
 #include <msvcrt/mbstring.h>
 
-size_t _mbclen2(const unsigned int s);
+char *strrchr(const char* szSearch, int cFor);
+extern int __mb_cur_max;
 
 /*
  * @implemented
  */
 unsigned char * _mbsrchr(const unsigned char *src, unsigned int val)
 {
-	char  *s = (char *)src;
-	short cc = val;
-	const char *sp=(char *)0;
+  if (__mb_cur_max > 1)
+  {
+    unsigned int c;
+    unsigned char *match = NULL;
 
-	while (*s)
-	{
-		if (*(short *)s == cc)
-			sp = s;
-		s+= _mbclen2(*s);
-	}
-	if (cc == 0)
-		sp = s;
-	return (char *)sp;
+    if (!src)
+      return NULL;
+
+    while (1)
+    {
+      c = _mbsnextc(src);
+      if (c == val)
+        match = (unsigned char*)src;
+      if (!c)
+        return match;
+      src += (c > 255) ? 2 : 1;
+    }
+  }
+
+  return strrchr(src, val);
 }

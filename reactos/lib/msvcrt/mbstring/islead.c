@@ -4,7 +4,7 @@
 /*
  * @unimplemented
  */
-int isleadbyte(char *mbstr)
+int isleadbyte(int byte)
 {
 	return 0;
 	//return IsDBCSLeadByteEx(0,*c);
