@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.66 2003/12/23 21:13:00 weiden Exp $
+/* $Id: winpos.c,v 1.67 2003/12/23 21:33:25 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -29,6 +29,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/safe.h>
 #include <win32k/win32k.h>
 #include <include/object.h>
 #include <include/guicheck.h>
@@ -75,20 +76,41 @@
 #define HAS_THINFRAME(Style, ExStyle) \
             (((Style) & WS_BORDER) || (!((Style) & (WS_CHILD | WS_POPUP))))
 
-BOOL STDCALL
-NtUserGetClientOrigin(HWND hWnd, LPPOINT Point)
+BOOL FASTCALL
+IntGetClientOrigin(HWND hWnd, LPPOINT Point)
 {
   PWINDOW_OBJECT WindowObject;
-
+  
   WindowObject = IntGetWindowObject(hWnd);
   if (WindowObject == NULL)
     {
       Point->x = Point->y = 0;
-      return(TRUE);
+      return FALSE;
     }
   Point->x = WindowObject->ClientRect.left;
   Point->y = WindowObject->ClientRect.top;
-  return(TRUE);
+  
+  IntReleaseWindowObject(WindowObject);
+  return TRUE;
+}
+
+BOOL STDCALL
+NtUserGetClientOrigin(HWND hWnd, LPPOINT Point)
+{
+  BOOL Ret;
+  POINT pt;
+  NTSTATUS Status;
+  
+  Ret = IntGetClientOrigin(hWnd, &pt);
+  
+  Status = MmCopyToCaller(Point, &pt, sizeof(POINT));
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    return FALSE;
+  }
+  
+  return Ret;
 }
 
 /*******************************************************************

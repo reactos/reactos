@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.51 2003/12/23 18:19:07 navaraf Exp $
+ *  $Id: painting.c,v 1.52 2003/12/23 21:33:25 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -701,8 +701,8 @@ IntFixCaret(HWND hWnd, LPRECT lprc, UINT flags)
       pt.x = info.rcCaret.left;
       pt.y = info.rcCaret.top;
 
-      NtUserGetClientOrigin(info.hwndCaret, &FromOffset);
-      NtUserGetClientOrigin(hWnd, &ToOffset);
+      IntGetClientOrigin(info.hwndCaret, &FromOffset);
+      IntGetClientOrigin(hWnd, &ToOffset);
       Offset.x = FromOffset.x - ToOffset.x;
       Offset.y = FromOffset.y - ToOffset.y;
       info.rcCaret.left += Offset.x;
@@ -1153,7 +1153,7 @@ NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *rect,
          for (i = 0; List[i]; i++)
          {
             NtUserGetWindowRect(List[i], &r);
-            NtUserGetClientOrigin(hWnd, &ClientOrigin);
+            IntGetClientOrigin(hWnd, &ClientOrigin);
             r.left -= ClientOrigin.x;
             r.top -= ClientOrigin.y;
             r.right -= ClientOrigin.x;

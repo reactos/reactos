@@ -5,6 +5,8 @@
 #define SWP_NOCLIENTMOVE          0x0800
 #define SWP_NOCLIENTSIZE          0x1000
 
+BOOL FASTCALL
+IntGetClientOrigin(HWND hWnd, LPPOINT Point);
 LRESULT FASTCALL
 WinPosGetNonClientSize(HWND Wnd, RECT* WindowRect, RECT* ClientRect);
 UINT FASTCALL
