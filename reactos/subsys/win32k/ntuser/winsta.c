@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: winsta.c,v 1.61 2004/05/15 22:50:04 weiden Exp $
+ *  $Id: winsta.c,v 1.62 2004/05/15 23:07:11 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -721,7 +721,7 @@ NtUserGetObjectInformation(
       ObDereferenceObject(DesktopObject);
 
    SetLastNtError(Status);
-   return NTSUCCESS(Status);
+   return NT_SUCCESS(Status);
 }
 
 /*
