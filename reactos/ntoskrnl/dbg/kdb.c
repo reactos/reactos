@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kdb.c,v 1.3 2001/04/16 02:02:03 dwelch Exp $
+/* $Id: kdb.c,v 1.4 2001/04/22 14:47:00 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb.c
@@ -56,20 +56,25 @@ ULONG
 DbgBackTraceCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
 ULONG
 DbgProcessListCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
+ULONG
+DbgProcessHelpCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
 
 struct
 {
   PCH Name;
+  PCH Syntax;
+  PCH Help;
   ULONG (*Fn)(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
 } DebuggerCommands[] = {
-  {"cont", DbgContCommand},
-  {"regs", DbgRegsCommand},
-  {"dregs", DbgDRegsCommand},
-  {"cregs", DbgCRegsCommand},
-  {"bugcheck", DbgBugCheckCommand},
-  {"bt", DbgBackTraceCommand},
-  {"plist", DbgProcessListCommand},
-  {NULL, NULL}
+  {"cont", "cont", "Exit the debugger", DbgContCommand},
+  {"regs", "regs", "Display general purpose registers", DbgRegsCommand},
+  {"dregs", "dregs", "Display debug registers", DbgDRegsCommand},
+  {"cregs", "cregs", "Display control registers", DbgCRegsCommand},
+  {"bugcheck", "bugcheck", "Bugcheck the system", DbgBugCheckCommand},
+  {"bt", "bt [*frame-address]|[thread-id]","Do a backtrace", DbgBackTraceCommand},
+  {"plist", "plist", "Display processes in the system", DbgProcessListCommand},
+  {"help", "help", "Display help screen", DbgProcessHelpCommand},
+  {NULL, NULL, NULL}
 };
 
 /* FUNCTIONS *****************************************************************/
@@ -181,6 +186,28 @@ KdbGetCommand(PCH Buffer)
       *Buffer = Key;
       Buffer++;
     }
+}
+
+ULONG
+DbgProcessHelpCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
+{
+  ULONG i, j, len;
+
+  DbgPrint("Kernel debugger commands:\n");
+  for (i = 0; DebuggerCommands[i].Name != NULL; i++)
+    {
+      DbgPrint("  %s", DebuggerCommands[i].Syntax);
+      len = strlen(DebuggerCommands[i].Syntax);
+      if (len < 35)
+        {
+          for (j = 0; j < 35 - len; j++)
+          {
+            DbgPrint(" ");
+          }
+        }
+      DbgPrint(" - %s\n", DebuggerCommands[i].Help);
+    }
+  return(1);
 }
 
 ULONG
@@ -584,7 +611,7 @@ KdbMainLoop(PKTRAP_FRAME Tf)
   CHAR Command[256];
   ULONG s;
 
-  DbgPrint("\n");
+  DbgPrint("\nEntered kernel debugger (type \"help\" for a list of commands)\n");
   do
     {
       DbgPrint("kdb:> ");
