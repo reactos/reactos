@@ -700,12 +700,107 @@ static const WCHAR szSHUserFolders[] = {'S','o','f','t','w','a','r','e','\\','M'
 static const WCHAR szSetup[] = {'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\','C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\','E','x','p','l','o','r','e','r','\\','S','e','t','u','p','\0'};
 static const WCHAR szCurrentVersion[] = {'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\','C','u','r','r','e','n','t','V','e','r','s','i','o','n','\0'};
 
+
+
+static const WCHAR Administrative_ToolsW[] = {'A','d','m','i','n','i','s','t','r','a','t','i','v','e',' ','T','o','o','l','s','\0'};
+static const WCHAR All_Users__Application_DataW[] = {'A','l','l',' ','U','s','e','r','s','\\',
+                                                     'A','p','p','l','i','c','a','t','i','o','n',' ','D','a','t','a','\0'};
+static const WCHAR All_Users__DocumentsW[] = {'A','l','l',' ','U','s','e','r','s','\\',
+                                              'D','o','c','u','m','e','n','t','s','\0'};
+static const WCHAR All_Users__Documents__My_MusicW[] = {'A','l','l',' ','U','s','e','r','s','\\',
+                                                        'D','o','c','u','m','e','n','t','s','\\',
+                                                        'M','y',' ','M','u','s','i','c','\0'};
+static const WCHAR All_Users__Documents__My_PicturesW[] = {'A','l','l',' ','U','s','e','r','s','\\',
+                                                           'D','o','c','u','m','e','n','t','s','\\',
+                                                           'M','y',' ','P','i','c','t','u','r','e','s','\0'};
+static const WCHAR All_Users__Documents__My_VideoW[] = {'A','l','l',' ','U','s','e','r','s','\\',
+                                                        'D','o','c','u','m','e','n','t','s','\\',
+                                                        'M','y',' ','V','i','d','e','o','\0'};
+static const WCHAR All_Users__Start_Menu__Programs__Administrative_ToolsW[] = {'A','l','l',' ','U','s','e','r','s','\\',
+                                'S','t','a','r','t',' ','M','e','n','u','\\','P','r','o','g','r','a','m','s','\\',
+                                'A','d','m','i','n','i','s','t','r','a','t','i','v','e',' ','T','o','o','l','s','\0'};
+static const WCHAR All_Users__Start_Menu__Programs__StartUpW[] = {'A','l','l',' ','U','s','e','r','s','\\',
+                                                               'S','t','a','r','t',' ','M','e','n','u','\\',
+                                                               'P','r','o','g','r','a','m','s','\\',
+                                                               'S','t','a','r','t','U','p','\0'};
+static const WCHAR All_Users__TemplatesW[] = {'A','l','l',' ','U','s','e','r','s','\\',
+                                              'T','e','m','p','l','a','t','e','s','\0'};
+static const WCHAR AppDataW[] = {'A','p','p','D','a','t','a','\0'};
+static const WCHAR Application_DataW[] = {'A','p','p','l','i','c','a','t','i','o','n',' ','D','a','t','a','\0'};
+static const WCHAR CacheW[] = {'C','a','c','h','e','\0'};
+static const WCHAR CD_BurningW[] = {'C','D',' ','B','u','r','n','i','n','g','\0'};
+static const WCHAR Common_Administrative_ToolsW[] = {'C','o','m','m','o','n',' ','A','d','m','i','n','i','s','t','r','a','t','i','v','e',' ','T','o','o','l','s','\0'};
+static const WCHAR Common_AppDataW[] = {'C','o','m','m','o','n',' ','A','p','p','D','a','t','a','\0'};
+static const WCHAR Common_DesktopW[] = {'C','o','m','m','o','n',' ','D','e','s','k','t','o','p','\0'};
+static const WCHAR Common_DocumentsW[] = {'C','o','m','m','o','n',' ','D','o','c','u','m','e','n','t','s','\0'};
+static const WCHAR CommonFilesDirW[] = {'C','o','m','m','o','n','F','i','l','e','s','D','i','r','\0'};
+static const WCHAR CommonMusicW[] = {'C','o','m','m','o','n','M','u','s','i','c','\0'};
+static const WCHAR CommonPicturesW[] = {'C','o','m','m','o','n','P','i','c','t','u','r','e','s','\0'};
+static const WCHAR Common_ProgramsW[] = {'C','o','m','m','o','n',' ','P','r','o','g','r','a','m','s','\0'};
+static const WCHAR Common_StartUpW[] = {'C','o','m','m','o','n',' ','S','t','a','r','t','U','p','\0'};
+static const WCHAR Common_Start_MenuW[] = {'C','o','m','m','o','n',' ','S','t','a','r','t',' ','M','e','n','u','\0'};
+static const WCHAR Common_TemplatesW[] = {'C','o','m','m','o','n',' ','T','e','m','p','l','a','t','e','s','\0'};
+static const WCHAR CommonVideoW[] = {'C','o','m','m','o','n','V','i','d','e','o','\0'};
+static const WCHAR CookiesW[] = {'C','o','o','k','i','e','s','\0'};
+static const WCHAR DesktopW[] = {'D','e','s','k','t','o','p','\0'};
+static const WCHAR Empty_StringW[] = {'\0'};
+static const WCHAR FavoritesW[] = {'F','a','v','o','r','i','t','e','s','\0'};
+static const WCHAR FontsW[] = {'F','o','n','t','s','\0'};
+static const WCHAR HistoryW[] = {'H','i','s','t','o','r','y','\0'};
+static const WCHAR Local_AppDataW[] = {'L','o','c','a','l',' ','A','p','p','D','a','t','a','\0'};
+static const WCHAR Local_Settings__Application_DataW[] = {'L','o','c','a','l',' ','S','e','t','t','i','n','g','s','\\',
+                                                         'A','p','p','l','i','c','a','t','i','o','n',' ','D','a','t','a','\0'};
+static const WCHAR Local_Settings__Application_Data__Microsoft__CD_BurningW[] = {
+    'L','o','c','a','l',' ','S','e','t','t','i','n','g','s','\\',
+    'A','p','p','l','i','c','a','t','i','o','n',' ','D','a','t','a','\\',
+    'M','i','c','r','o','s','o','f','t','\\','C','D',' ','B','u','r','n','i','n','g','\0'};
+static const WCHAR My_DocumentsW[] = {'M','y',' ','D','o','c','u','m','e','n','t','s','\0'};
+static const WCHAR My_Documents__My_MusicW[] = {'M','y',' ','D','o','c','u','m','e','n','t','s','\\',
+                                                'M','y',' ','M','u','s','i','c','\0'};
+static const WCHAR My_Documents__My_PicturesW[] = {'M','y',' ','D','o','c','u','m','e','n','t','s','\\',
+                                                  'M','y',' ','P','i','c','t','u','r','e','s','\0'};
+static const WCHAR My_Documents__My_VideoW[] = {'M','y',' ','D','o','c','u','m','e','n','t','s','\\',
+                                               'M','y',' ','V','i','d','e','o','\0'};
+static const WCHAR My_MusicW[] = {'M','y',' ','M','u','s','i','c','\0'};
+static const WCHAR My_PicturesW[] = {'M','y',' ','P','i','c','t','u','r','e','s','\0'};
+static const WCHAR My_VideoW[] = {'M','y',' ','V','i','d','e','o','\0'};
+static const WCHAR NetHoodW[] = {'N','e','t','H','o','o','d','\0'};
+static const WCHAR PersonalW[] = {'P','e','r','s','o','n','a','l','\0'};
+static const WCHAR PrintHoodW[] = {'P','r','i','n','t','H','o','o','d','\0'};
+static const WCHAR ProgramFilesDirW[] = {'P','r','o','g','r','a','m','F','i','l','e','s','D','i','r','\0'};
+static const WCHAR Program_FilesW[] = {'P','r','o','g','r','a','m',' ','F','i','l','e','s','\0'};
+static const WCHAR Program_Files__Common_FilesW[] = {'P','r','o','g','r','a','m',' ','F','i','l','e','s','\\',
+                                                     'C','o','m','m','o','n',' ','F','i','l','e','s','\0'};
+static const WCHAR ProgramsW[] = {'P','r','o','g','r','m','s','\0'};
+static const WCHAR RecentW[] = {'R','e','c','e','n','t','\0'};
+static const WCHAR ResourcesW[] = {'R','e','s','o','u','r','c','e','s','\0'};
+static const WCHAR SendToW[] = {'S','e','n','d','T','o','\0'};
+static const WCHAR ShellNewW[] = {'S','h','e','l','l','N','e','w','\0'};
+static const WCHAR Start_Menu__ProgramsW[] = {'S','t','a','r','t',' ','M','e','n','u','\\','P','r','o','g','r','a','m','s','\0'};
+static const WCHAR SysDirW[] = {'S','y','s','D','i','r','\0'};
+static const WCHAR SYSTEMW[] = {'S','Y','S','T','E','M','\0'};
+static const WCHAR StartUpW[] = {'S','t','a','r','t','U','p','\0'};
+static const WCHAR Start_MenuW[] = {'S','t','a','r','t',' ','M','e','n','u','\0'};
+static const WCHAR Start_Menu__Programs__Administrative_ToolsW[] = {
+                                'S','t','a','r','t',' ','M','e','n','u','\\','P','r','o','g','r','a','m','s','\\',
+                                'A','d','m','i','n','i','s','t','r','a','t','i','v','e',' ','T','o','o','l','s','\0'};
+static const WCHAR Start_Menu__Programs__StartUpW[] = {'S','t','a','r','t',' ','M','e','n','u','\\',
+                                                     'P','r','o','g','r','a','m','s','\\',
+                                                     'S','t','a','r','t','U','p','\0'};
+static const WCHAR TemplatesW[] = {'T','e','m','p','l','a','t','e','s','\0'};
+static const WCHAR Temporary_Internet_FilesW[] = {'T','e','m','p','o','r','a','r','y',' ','I','n','t','e','r','n','e','t',' ','F','i','l','e','s','\0'};
+static const WCHAR WinDirW[] = {'W','i','n','D','i','r','\0'};
+static const WCHAR WindowsW[] = {'W','i','n','d','o','w','s','\0'};
+
+
+
+
 typedef struct
 {
     DWORD dwFlags;
     HKEY hRootKey;
-    LPCSTR szValueName;
-    LPCSTR szDefaultPath; /* fallback string; sub dir of windows directory */
+    LPCWSTR szValueName;
+    LPCWSTR szDefaultPath; /* fallback string; sub dir of windows directory */
 } CSIDL_DATA;
 
 #define CSIDL_MYFLAG_SHFOLDER	1
@@ -722,317 +817,380 @@ typedef struct
 static const CSIDL_DATA CSIDL_Data[] =
 {
     { /* CSIDL_DESKTOP */
-	9, HKCU,
-	"Desktop",
-	"Desktop"
+	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
+        HKCU,
+	DesktopW,
+	DesktopW
     },
     { /* CSIDL_INTERNET */
-	0, HKEY_DISALLOWED,
+	0,
+        HKEY_DISALLOWED,
 	NULL,
-	NULL,
+	NULL
     },
     { /* CSIDL_PROGRAMS */
-	0, HKEY_DISALLOWED,
-	NULL,
-	NULL,
+	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
+        HKCU,
+	ProgramsW,
+	Start_Menu__ProgramsW
     },
     { /* CSIDL_CONTROLS (.CPL files) */
-	10, HKLM,
-	"SysDir",
-	"SYSTEM"
+	CSIDL_MYFLAG_SETUP | CSIDL_MYFLAG_RELATIVE,
+        HKLM,
+	SysDirW,
+	SYSTEMW
     },
     { /* CSIDL_PRINTERS */
-	10, HKLM,
-	"SysDir",
-	"SYSTEM"
+	CSIDL_MYFLAG_SETUP | CSIDL_MYFLAG_RELATIVE,
+        HKLM,
+	SysDirW,
+	SYSTEMW
     },
     { /* CSIDL_PERSONAL */
-	1, HKCU,
-	"Personal",
-	"My Documents"
+	CSIDL_MYFLAG_SHFOLDER,
+        HKCU,
+	PersonalW,
+	My_DocumentsW
     },
     { /* CSIDL_FAVORITES */
-	9, HKCU,
-	"Favorites",
-	"Favorites"
+	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
+        HKCU,
+	FavoritesW,
+	FavoritesW
     },
     { /* CSIDL_STARTUP */
-	9, HKCU,
-	"StartUp",
-	"Start Menu\\Programs\\StartUp"
+	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
+        HKCU,
+	StartUpW,
+	Start_Menu__Programs__StartUpW
     },
     { /* CSIDL_RECENT */
-	9, HKCU,
-	"Recent",
-	"Recent"
+	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
+        HKCU,
+	RecentW,
+	RecentW
     },
     { /* CSIDL_SENDTO */
-	9, HKCU,
-	"SendTo",
-	"SendTo"
+	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
+        HKCU,
+	SendToW,
+	SendToW
     },
     { /* CSIDL_BITBUCKET - Recycle Bin */
-	0, HKEY_DISALLOWED,
+	0,
+        HKEY_DISALLOWED,
 	NULL,
 	NULL,
     },
     { /* CSIDL_STARTMENU */
-	9, HKCU,
-	"Start Menu",
-	"Start Menu"
+	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
+        HKCU,
+	Start_MenuW,
+	Start_MenuW
     },
     { /* CSIDL_MYDOCUMENTS */
-	0, HKEY_UNIMPLEMENTED, /* FIXME */
+	0,
+        HKEY_UNIMPLEMENTED, /* FIXME */
 	NULL,
 	NULL
     },
     { /* CSIDL_MYMUSIC */
-	1, HKCU,
-	"My Music",
-	"My Documents\\My Music"
+	CSIDL_MYFLAG_SHFOLDER,
+        HKCU,
+	My_MusicW,
+	My_Documents__My_MusicW
     },
     { /* CSIDL_MYVIDEO */
-	1, HKCU,
-	"My Video",
-	"My Documents\\My Video"
+	CSIDL_MYFLAG_SHFOLDER,
+        HKCU,
+	My_VideoW,
+	My_Documents__My_VideoW
     },
     { /* unassigned */
-	0, 0,
+	0,
+        HKEY_DISALLOWED,
 	NULL,
 	NULL,
     },
     { /* CSIDL_DESKTOPDIRECTORY */
-	9, HKCU,
-	"Desktop",
-	"Desktop"
+	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
+        HKCU,
+	DesktopW,
+	DesktopW
     },
     { /* CSIDL_DRIVES */
-	0, HKEY_DISALLOWED,
+	0,
+        HKEY_DISALLOWED,
 	NULL,
 	NULL,
     },
     { /* CSIDL_NETWORK */
-	0, HKEY_DISALLOWED,
+	0,
+        HKEY_DISALLOWED,
 	NULL,
 	NULL,
     },
     { /* CSIDL_NETHOOD */
-	9, HKCU,
-	"NetHood",
-	"NetHood"
+	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
+        HKCU,
+	NetHoodW,
+	NetHoodW
     },
     { /* CSIDL_FONTS */
-	9, HKCU,
-	"Fonts",
-	"Fonts"
+	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
+        HKCU,
+        FontsW,
+	FontsW
     },
     { /* CSIDL_TEMPLATES */
-	9, HKCU,
-	"Templates",
-	"ShellNew"
+	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
+        HKCU,
+	TemplatesW,
+	ShellNewW
     },
     { /* CSIDL_COMMON_STARTMENU */
-	9, HKLM,
-	"Common Start Menu",
-	"Start Menu"
+	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
+        HKLM,
+	Common_Start_MenuW,
+	Start_MenuW
     },
     { /* CSIDL_COMMON_PROGRAMS */
-	9, HKLM,
-	"Common Programs",
-	""
+	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
+        HKLM,
+	Common_ProgramsW,
+	Empty_StringW
     },
     { /* CSIDL_COMMON_STARTUP */
-	9, HKLM,
-	"Common StartUp",
-	"All Users\\Start Menu\\Programs\\StartUp"
+	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
+        HKLM,
+        Common_StartUpW,
+	All_Users__Start_Menu__Programs__StartUpW
     },
     { /* CSIDL_COMMON_DESKTOPDIRECTORY */
-	9, HKLM,
-	"Common Desktop",
-	"Desktop"
+	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
+        HKLM,
+	Common_DesktopW,
+	DesktopW
     },
     { /* CSIDL_APPDATA */
-	9, HKCU,
-	"AppData",
-	"Application Data"
+	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
+        HKCU,
+	AppDataW,
+	Application_DataW
     },
     { /* CSIDL_PRINTHOOD */
-	9, HKCU,
-	"PrintHood",
-	"PrintHood"
+	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
+        HKCU,
+	PrintHoodW,
+	PrintHoodW
     },
     { /* CSIDL_LOCAL_APPDATA (win2k only/undocumented) */
-	1, HKCU,
-	"Local AppData",
-	"Local Settings\\Application Data",
+	CSIDL_MYFLAG_SHFOLDER,
+        HKCU,
+	Local_AppDataW,
+	Local_Settings__Application_DataW,
     },
     { /* CSIDL_ALTSTARTUP */
-	0, HKEY_NONEXISTENT,
+	0,
+        HKEY_NONEXISTENT,
 	NULL,
 	NULL
     },
     { /* CSIDL_COMMON_ALTSTARTUP */
-	0, HKEY_NONEXISTENT,
+	0,
+        HKEY_NONEXISTENT,
 	NULL,
 	NULL
     },
     { /* CSIDL_COMMON_FAVORITES */
-	9, HKCU,
-	"Favorites",
-	"Favorites"
+	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
+        HKCU,
+	FavoritesW,
+	FavoritesW
     },
     { /* CSIDL_INTERNET_CACHE (32) */
-	9, HKCU,
-	"Cache",
-	"Temporary Internet Files"
+	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
+        HKCU,
+	CacheW,
+	Temporary_Internet_FilesW
     },
     { /* CSIDL_COOKIES (33) */
-	9, HKCU,
-	"Cookies",
-	"Cookies"
+	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
+        HKCU,
+	CookiesW,
+	CookiesW
     },
     { /* CSIDL_HISTORY (34) */
-	9, HKCU,
-	"History",
-	"History"
+	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
+        HKCU,
+	HistoryW,
+	HistoryW
     },
     { /* CSIDL_COMMON_APPDATA */
-	9, HKLM,
-	"Common AppData",
-	"All Users\\Application Data"
+	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
+        HKLM,
+	Common_AppDataW,
+	All_Users__Application_DataW
     },
     { /* CSIDL_WINDOWS */
-	2, HKLM,
-	"WinDir",
-	"Windows"
+	CSIDL_MYFLAG_SETUP,
+        HKLM,
+	WinDirW,
+	WindowsW
     },
     { /* CSIDL_SYSTEM */
-	10, HKLM,
-	"SysDir",
-	"SYSTEM"
+	CSIDL_MYFLAG_SETUP | CSIDL_MYFLAG_RELATIVE,
+        HKLM,
+	SysDirW,
+	SYSTEMW
     },
     { /* CSIDL_PROGRAM_FILES */
-	4, HKLM,
-	"ProgramFilesDir",
-	"Program Files"
+	CSIDL_MYFLAG_CURRVER,
+        HKLM,
+	ProgramFilesDirW,
+	Program_FilesW
     },
     { /* CSIDL_MYPICTURES */
-	1, HKCU,
-	"My Pictures",
-	"My Documents\\My Pictures"
+	CSIDL_MYFLAG_SHFOLDER,
+        HKCU,
+	My_PicturesW,
+	My_Documents__My_PicturesW
     },
     { /* CSIDL_PROFILE */
-	10, HKLM,
-	"WinDir", /* correct ? */
-	""
+	CSIDL_MYFLAG_SETUP | CSIDL_MYFLAG_RELATIVE,
+        HKLM,
+	WinDirW, /* correct ? */
+	Empty_StringW
     },
     { /* CSIDL_SYSTEMX86 */
-	10, HKLM,
- 	"SysDir",
-	"SYSTEM"
+	CSIDL_MYFLAG_SETUP | CSIDL_MYFLAG_RELATIVE,
+        HKLM,
+ 	SysDirW,
+	SYSTEMW
     },
     { /* CSIDL_PROGRAM_FILESX86 */
-	4, HKLM,
-	"ProgramFilesDir",
-	"Program Files"
+	CSIDL_MYFLAG_CURRVER,
+        HKLM,
+	ProgramFilesDirW,
+	Program_FilesW
     },
     { /* CSIDL_PROGRAM_FILES_COMMON */
-	4, HKLM,
-	"CommonFilesDir",
-	"Program Files\\Common Files" /* ? */
+	CSIDL_MYFLAG_CURRVER,
+        HKLM,
+	CommonFilesDirW,
+	Program_Files__Common_FilesW /* ? */
     },
     { /* CSIDL_PROGRAM_FILES_COMMONX86 */
-	4, HKLM,
-	"CommonFilesDir",
-	"Program Files\\Common Files" /* ? */
+	CSIDL_MYFLAG_CURRVER,
+        HKLM,
+	CommonFilesDirW,
+	Program_Files__Common_FilesW /* ? */
     },
     { /* CSIDL_COMMON_TEMPLATES */
-	9, HKLM,
-	"Common Templates",
-	/*"Documents and Settings\\"*/"All Users\\Templates"
+	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
+        HKLM,
+	Common_TemplatesW,
+	/*"Documents and Settings\\"*/ All_Users__TemplatesW
     },
     { /* CSIDL_COMMON_DOCUMENTS */
-	9, HKLM,
-	"Common Documents",
-	/*"Documents and Settings\\"*/"All Users\\Documents"
+	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
+        HKLM,
+	Common_DocumentsW,
+	/*"Documents and Settings\\"*/ All_Users__DocumentsW
     },
     { /* CSIDL_COMMON_ADMINTOOLS */
-	9, HKLM,
-	"Common Administrative Tools",
-	/*"Documents and Settings\\"*/"All Users\\Start Menu\\Programs\\Administrative Tools"
+	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
+        HKLM,
+	Common_Administrative_ToolsW,
+	/*"Documents and Settings\\"*/ All_Users__Start_Menu__Programs__Administrative_ToolsW
     },
     { /* CSIDL_ADMINTOOLS */
-	9, HKCU,
-	"Administrative Tools",
-	"Start Menu\\Programs\\Administrative Tools"
+	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
+        HKCU,
+	Administrative_ToolsW,
+	Start_Menu__Programs__Administrative_ToolsW
     },
     { /* CSIDL_CONNECTIONS */
-	0, HKEY_DISALLOWED,
+	0,
+        HKEY_DISALLOWED,
 	NULL,
 	NULL
     },
     { /* unassigned 32 */
-	0, HKEY_DISALLOWED,
+	0,
+        HKEY_DISALLOWED,
 	NULL,
 	NULL
     },
     { /* unassigned 33 */
-	0, HKEY_DISALLOWED,
+	0,
+        HKEY_DISALLOWED,
 	NULL,
 	NULL
     },
     { /* unassigned 34 */
-	0, HKEY_DISALLOWED,
+	0,
+        HKEY_DISALLOWED,
 	NULL,
 	NULL
     },
     { /* CSIDL_COMMON_MUSIC */
-	9, HKLM,
-	"CommonMusic",
-	/*"Documents and Settings\\"*/"All Users\\Documents\\My Music"
+	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
+        HKLM,
+	CommonMusicW,
+	/*"Documents and Settings\\"*/ All_Users__Documents__My_MusicW
     },
     { /* CSIDL_COMMON_PICTURES */
-	9, HKLM,
-	"CommonPictures",
-	/*"Documents and Settings\\"*/"All Users\\Documents\\My Pictures"
+	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
+        HKLM,
+	CommonPicturesW,
+	/*"Documents and Settings\\"*/ All_Users__Documents__My_PicturesW
     },
     { /* CSIDL_COMMON_VIDEO */
-	9, HKLM,
-	"CommonVideo",
-	/*"Documents and Settings\\"*/"All Users\\Documents\\My Video"
+	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
+        HKLM,
+	CommonVideoW,
+	/*"Documents and Settings\\"*/ All_Users__Documents__My_VideoW
     },
     { /* CSIDL_RESOURCES */
-	0, HKEY_WINDOWSPATH,
+	0,
+        HKEY_WINDOWSPATH,
 	NULL,
-	"Resources"
+	ResourcesW
     },
     { /* CSIDL_RESOURCES_LOCALIZED */
-	0, 0, /* FIXME */
+	0,
+        HKEY_DISALLOWED, /* FIXME */
 	NULL,
 	NULL
     },
     { /* CSIDL_COMMON_OEM_LINKS */
-	0, 0, /* FIXME */
+	0,
+        HKEY_DISALLOWED, /* FIXME */
 	NULL,
 	NULL
     },
     { /* CSIDL_CDBURN_AREA */
-	1, HKCU,
-	"CD Burning",
-	"Local Settings\\Application Data\\Microsoft\\CD Burning"
+	CSIDL_MYFLAG_SHFOLDER,
+        HKCU,
+	CD_BurningW,
+	Local_Settings__Application_Data__Microsoft__CD_BurningW
     },
     { /* unassigned 3C */
-	0, 0,
+	0,
+        HKEY_DISALLOWED,
 	NULL,
 	NULL
     },
     { /* CSIDL_COMPUTERSNEARME */
-	0, 0, /* FIXME */
+	0,
+        HKEY_DISALLOWED, /* FIXME */
 	NULL,
 	NULL
     },
     { /* CSIDL_PROFILES */
-	0, 0, /* FIXME */
+	0,
+        HKEY_DISALLOWED, /* FIXME */
 	NULL,
 	NULL
     }
@@ -1049,7 +1207,7 @@ HRESULT WINAPI SHGetFolderPathW(
 	DWORD dwFlags,	/* [in] FIXME: SHGFP_TYPE_CURRENT|SHGFP_TYPE_DEFAULT */
 	LPWSTR pszPath)
 {
-	WCHAR	szValueName[MAX_PATH], szDefaultPath[MAX_PATH], szBuildPath[MAX_PATH];
+	WCHAR   szBuildPath[MAX_PATH];
 	HKEY	hRootKey, hKey;
 	DWORD	dwCsidlFlags;
 	DWORD	dwType, dwDisp, dwPathLen = MAX_PATH;
@@ -1078,28 +1236,26 @@ HRESULT WINAPI SHGetFolderPathW(
 	{
 	    GetWindowsDirectoryW(pszPath, MAX_PATH);
 	    PathAddBackslashW(pszPath);
-	    strcatW(pszPath, szDefaultPath);
+	    strcatW(pszPath, CSIDL_Data[folder].szDefaultPath);
 	    return S_OK;
 	}
         
 	dwCsidlFlags = CSIDL_Data[folder].dwFlags;
 	hRootKey = CSIDL_Data[folder].hRootKey;
-	MultiByteToWideChar(CP_ACP, 0, CSIDL_Data[folder].szValueName, -1, szValueName, MAX_PATH);
-	MultiByteToWideChar(CP_ACP, 0, CSIDL_Data[folder].szDefaultPath, -1, szDefaultPath, MAX_PATH);
 
 	if (dwCsidlFlags & CSIDL_MYFLAG_SHFOLDER)
 	{
 	  /*   user shell folders */
 	  if   (RegCreateKeyExW(hRootKey,szSHUserFolders,0,NULL,0,KEY_ALL_ACCESS,NULL,&hKey,&dwDisp)) return E_FAIL;
 
-	  if   (RegQueryValueExW(hKey,szValueName,NULL,&dwType,(LPBYTE)pszPath,&dwPathLen))
+	  if   (RegQueryValueExW(hKey,CSIDL_Data[folder].szValueName,NULL,&dwType,(LPBYTE)pszPath,&dwPathLen))
 	  {
 	    RegCloseKey(hKey);
 
 	    /* shell folders */
 	    if (RegCreateKeyExW(hRootKey,szSHFolders,0,NULL,0,KEY_ALL_ACCESS,NULL,&hKey,&dwDisp)) return E_FAIL;
 
-	    if (RegQueryValueExW(hKey,szValueName,NULL,&dwType,(LPBYTE)pszPath,&dwPathLen))
+	    if (RegQueryValueExW(hKey,CSIDL_Data[folder].szValueName,NULL,&dwType,(LPBYTE)pszPath,&dwPathLen))
 	    {
 
 	      /* value not existing */
@@ -1107,15 +1263,15 @@ HRESULT WINAPI SHGetFolderPathW(
 	      {
 	        GetWindowsDirectoryW(pszPath, MAX_PATH);
 	        PathAddBackslashW(pszPath);
-	        strcatW(pszPath, szDefaultPath);
+	        strcatW(pszPath, CSIDL_Data[folder].szDefaultPath);
 	      }
 	      else
 	      {
 	        GetSystemDirectoryW(pszPath, MAX_PATH);
-	        strcpyW(pszPath + 3, szDefaultPath);
+	        strcpyW(pszPath + 3, CSIDL_Data[folder].szDefaultPath);
 	      }
               dwType=REG_SZ;
-	      RegSetValueExW(hKey,szValueName,0,REG_SZ,(LPBYTE)pszPath,
+	      RegSetValueExW(hKey,CSIDL_Data[folder].szValueName,0,REG_SZ,(LPBYTE)pszPath,
                          (strlenW(pszPath)+1)*sizeof(WCHAR));
 	    }
 	  }
@@ -1137,22 +1293,22 @@ HRESULT WINAPI SHGetFolderPathW(
 
 	  if   (RegCreateKeyExW(hRootKey,pRegPath,0,NULL,0,KEY_ALL_ACCESS,NULL,&hKey,&dwDisp)) return E_FAIL;
 
-	  if   (RegQueryValueExW(hKey,szValueName,NULL,&dwType,(LPBYTE)pszPath,&dwPathLen))
+	  if   (RegQueryValueExW(hKey,CSIDL_Data[folder].szValueName,NULL,&dwType,(LPBYTE)pszPath,&dwPathLen))
 	  {
 	    /* value not existing */
 	    if (dwCsidlFlags & CSIDL_MYFLAG_RELATIVE)
 	    {
 	      GetWindowsDirectoryW(pszPath, MAX_PATH);
 	      PathAddBackslashW(pszPath);
-	      strcatW(pszPath, szDefaultPath);
+	      strcatW(pszPath, CSIDL_Data[folder].szDefaultPath);
 	    }
 	    else
 	    {
 	      GetSystemDirectoryW(pszPath, MAX_PATH);
-	      strcpyW(pszPath + 3, szDefaultPath);
+	      strcpyW(pszPath + 3, CSIDL_Data[folder].szDefaultPath);
 	    }
             dwType=REG_SZ;
-	    RegSetValueExW(hKey,szValueName,0,REG_SZ,(LPBYTE)pszPath,
+	    RegSetValueExW(hKey,CSIDL_Data[folder].szValueName,0,REG_SZ,(LPBYTE)pszPath,
                        (strlenW(pszPath)+1)*sizeof(WCHAR));
 	  }
 	  RegCloseKey(hKey);
@@ -1161,8 +1317,8 @@ HRESULT WINAPI SHGetFolderPathW(
 	/* expand paths like %USERPROFILE% */
 	if (dwType == REG_EXPAND_SZ)
 	{
-	  ExpandEnvironmentStringsW(pszPath, szDefaultPath, MAX_PATH);
-	  strcpyW(pszPath, szDefaultPath);
+	  ExpandEnvironmentStringsW(pszPath, szBuildPath, MAX_PATH);
+	  strcpyW(pszPath, szBuildPath);
 	}
 
 	/* if we don't care about existing directories we are ready */
