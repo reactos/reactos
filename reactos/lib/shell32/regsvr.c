@@ -29,6 +29,7 @@
 
 #include "ole2.h"
 #include "shlguid.h"
+#include "shell32_main.h"
 
 #include "wine/debug.h"
 
@@ -518,6 +519,8 @@ HRESULT WINAPI SHELL32_DllRegisterServer()
     hr = register_coclasses(coclass_list);
     if (SUCCEEDED(hr))
 	hr = register_interfaces(interface_list);
+    if (SUCCEEDED(hr))
+	hr = SHELL_RegisterShellFolders();
     return hr;
 }
 

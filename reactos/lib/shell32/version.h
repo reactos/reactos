@@ -18,11 +18,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#define WINE_FILEVERSION_MAJOR         4
-#define WINE_FILEVERSION_MINOR        72
-#define WINE_FILEVERSION_BUILD      3110
+#define WINE_FILEVERSION_MAJOR         6
+#define WINE_FILEVERSION_MINOR         0
+#define WINE_FILEVERSION_BUILD      2600
 #define WINE_FILEVERSION_PLATFORMID    1
 
 /* FIXME: when libs/wpp gets fixed to support concatenation we can remove
  * this and define it in version.rc */
-#define WINE_FILEVERSION "4.72.3110.1"
+#define WINE_FILEVERSION "6.0.2600.1"

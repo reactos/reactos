@@ -76,6 +76,7 @@ LPSTR _dbg_ILGetTextPointer(LPCITEMIDLIST pidl)
 	  {
 	    case PT_GUID:
 	    case PT_SHELLEXT:
+	    case PT_YAGUID:
 	      return NULL;
 
 	    case PT_DRIVE:
@@ -88,7 +89,6 @@ LPSTR _dbg_ILGetTextPointer(LPCITEMIDLIST pidl)
 	    case PT_FOLDER1:
 	    case PT_VALUE:
 	    case PT_IESPECIAL1:
-	    case PT_RAS_FOLDER:
 	    case PT_IESPECIAL2:
 	      return (LPSTR)&(pdata->u.file.szNames);
 
@@ -115,7 +115,6 @@ LPSTR _dbg_ILGetSTextPointer(LPCITEMIDLIST pidl)
 	    case PT_FOLDER:
 	    case PT_VALUE:
 	    case PT_IESPECIAL1:
-	    case PT_RAS_FOLDER:
 	    case PT_IESPECIAL2:
 	      return (LPSTR)(pdata->u.file.szNames + strlen (pdata->u.file.szNames) + 1);
 
@@ -250,7 +249,7 @@ BOOL pcheck (LPCITEMIDLIST pidl)
 	      case PT_NETPROVIDER:
 	      case PT_NETWORK:
 	      case PT_IESPECIAL1:
-	      case PT_RAS_FOLDER:
+	      case PT_YAGUID:
 	      case PT_IESPECIAL2:
 	      case PT_SHARE:
 		break;
@@ -263,7 +262,7 @@ BOOL pcheck (LPCITEMIDLIST pidl)
 		memset(szTemp, ' ', BYTES_PRINTED*4 + 1);
 		for ( i = 0; (i<pidltemp->mkid.cb) && (i<BYTES_PRINTED); i++)
 		{
-		  c = ((unsigned char *)pidltemp)[i];
+		  c = ((const unsigned char *)pidltemp)[i];
 
 		  szTemp[i*3+0] = ((c>>4)>9)? (c>>4)+55 : (c>>4)+48;
 		  szTemp[i*3+1] = ((0x0F&c)>9)? (0x0F&c)+55 : (0x0F&c)+48;
