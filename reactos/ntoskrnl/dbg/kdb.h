@@ -41,7 +41,12 @@ KdbpSymGetSourceAddress(IN PIMAGE_SYMBOL_INFO SymbolInfo,
                         OUT PVOID *Address);
 
 /* other functions */
-
+/*NTSTATUS
+KdbSafeReadMemory(PVOID dst, PVOID src, INT size);
+NTSTATUS
+KdbSafeWriteMemory(PVOID dst, PVOID src, INT size);*/
+#define KdbpSafeReadMemory(dst, src, size) MmSafeCopyFromUser(dst, src, size)
+#define KdbpSafeWriteMemory(dst, src, size) MmSafeCopyToUser(dst, src, size)
 CHAR
 KdbTryGetCharKeyboard(PULONG ScanCode);
 ULONG

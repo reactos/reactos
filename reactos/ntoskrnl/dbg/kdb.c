@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kdb.c,v 1.31 2004/08/31 23:53:40 navaraf Exp $
+/* $Id: kdb.c,v 1.32 2004/10/27 13:33:59 blight Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb.c
@@ -246,6 +246,48 @@ strpbrk(const char* s, const char* accept)
   return(NULL);
 }
 
+
+#if 0
+NTSTATUS
+KdbpSafeReadMemory(PVOID dst, PVOID src, INT size)
+{
+  INT page, page_end;
+  
+  /* check source */
+  page_end = (((ULONG_PTR)src + size) / PAGE_SIZE);
+  for (page = ((ULONG_PTR)src / PAGE_SIZE); page <= page_end; page++)
+  {
+    if (!MmIsPagePresent(NULL, (PVOID)(page * PAGE_SIZE)))
+      return STATUS_UNSUCCESSFUL;
+  }
+
+  /* copy memory */
+  RtlCopyMemory(dst, src, size);
+  return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+KdbpSafeWriteMemory(PVOID dst, PVOID src, INT size)
+{
+  return KdbpSafeWriteMemory(dst, src, size);
+  INT page, page_end;
+
+  /* check destination */
+  page_end = (((ULONG_PTR)dst + size) / PAGE_SIZE);
+  for (page = ((ULONG_PTR)dst / PAGE_SIZE); page <= page_end; page++)
+  {
+    if (!MmIsPagePresent(NULL, (PVOID)(page * PAGE_SIZE)))
+      return STATUS_UNSUCCESSFUL;
+  }
+
+  /* copy memory */
+  RtlCopyMemory(dst, src, size);
+  return STATUS_SUCCESS;
+}
+#endif /* unused */
+
+
 VOID
 KdbGetCommand(PCH Buffer)
 {
@@ -416,7 +458,7 @@ KdbOverwriteInst(ULONG Address, PUCHAR PreviousInst, UCHAR NewInst)
   /* Copy the old instruction back to the caller. */
   if (PreviousInst != NULL)
     {
-      Status = MmSafeCopyFromUser(PreviousInst, (PUCHAR)Address, 1);
+      Status = KdbpSafeReadMemory(PreviousInst, (PUCHAR)Address, 1);
       if (!NT_SUCCESS(Status))
 	    {
           if (Protect & (PAGE_READONLY|PAGE_EXECUTE|PAGE_EXECUTE_READ))
@@ -427,7 +469,7 @@ KdbOverwriteInst(ULONG Address, PUCHAR PreviousInst, UCHAR NewInst)
 	    }
     }
   /* Copy the new instruction in its place. */
-  Status = MmSafeCopyToUser((PUCHAR)Address, &NewInst, 1);
+  Status = KdbpSafeWriteMemory((PUCHAR)Address, &NewInst, 1);
   if (Protect & (PAGE_READONLY|PAGE_EXECUTE|PAGE_EXECUTE_READ))
     {
       MmSetPageProtect(PsGetCurrentProcess(), (PVOID)PAGE_ROUND_DOWN(Address), Protect);
@@ -655,8 +697,17 @@ DbgStep(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
 ULONG
 DbgStepOver(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
 {
-  PUCHAR Eip = (PUCHAR)Tf->Eip;
-   /* Check if the current instruction is a call. */
+  PUCHAR Eip;
+  UCHAR Mem[3];
+
+  if (!NT_SUCCESS(KdbpSafeReadMemory(Mem, (PVOID)Tf->Eip, sizeof (Mem))))
+    {
+      DbgPrint("Couldn't access memory at 0x%x\n", (UINT)Tf->Eip);
+      return(1);
+    }
+  Eip = Mem;
+
+  /* Check if the current instruction is a call. */
   while (Eip[0] == 0x66 || Eip[0] == 0x67)
     {
       Eip++;
@@ -694,7 +745,7 @@ DbgFinish(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
     }
 
   /* Get the address of the caller. */
-  Status = MmSafeCopyFromUser(&ReturnAddress, Ebp + 1, sizeof(ULONG));
+  Status = KdbpSafeReadMemory(&ReturnAddress, Ebp + 1, sizeof(ULONG));
   if (!NT_SUCCESS(Status))
     {
       DbgPrint("Memory access error (%X) while getting return address.\n",
@@ -826,21 +877,24 @@ DbgProcessListCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
 VOID
 DbgPrintBackTrace(PULONG Frame, ULONG StackBase, ULONG StackLimit)
 {
-  ULONG i = 1;
+  PVOID Address;
 
   DbgPrint("Frames:  ");
   while (Frame != NULL && (ULONG_PTR)Frame >= StackLimit && 
-	 (ULONG_PTR)Frame < StackBase)
+	 (ULONG_PTR)Frame < StackBase) /* FIXME: why limit this to StackBase/StackLimit? */
     {
-      KdbSymPrintAddress((PVOID)Frame[1]);
+      if (!NT_SUCCESS(KdbpSafeReadMemory(&Address, Frame + 1, sizeof (Address))))
+        {
+          DbgPrint("\nCouldn't access memory at 0x%x!\n", (UINT)(Frame + 1));
+          break;
+        }
+      KdbSymPrintAddress(Address);
       DbgPrint("\n");
-      Frame = (PULONG)Frame[0];
-      i++;
-    }
-
-  if ((i % 10) != 0)
-    {
-      DbgPrint("\n");
+      if (!NT_SUCCESS(KdbpSafeReadMemory(&Frame, Frame, sizeof (Frame))))
+        {
+          DbgPrint("\nCouldn't access memory at 0x%x!\n", (UINT)Frame);
+          break;
+        }
     }
 }
 
@@ -861,24 +915,33 @@ DbgAddrCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME tf)
 ULONG
 DbgXCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME tf)
 {
-  PDWORD Addr = 0;
+  PDWORD Addr = NULL;
   DWORD Items = 1;
   DWORD i = 0;
+  DWORD Item;
 
   if (Argc >= 2)
     Addr = (PDWORD)strtoul(Argv[1], NULL, 0);
   if (Argc >= 3)
     Items = (DWORD)strtoul(Argv[2], NULL, 0);
 
-  if( !Addr ) return(1);
+  if (Addr == NULL)
+    return(1);
 
-  for( i = 0; i < Items; i++ ) 
+  for (i = 0; i < Items; i++)
     {
-      if( (i % 4) == 0 ) {
-	if( i ) DbgPrint("\n");
-	DbgPrint("%08x:", (int)(&Addr[i]));
-      }
-      DbgPrint( "%08x ", Addr[i] );
+      if( (i % 4) == 0 )
+        {
+	  if (i != 0)
+            DbgPrint("\n");
+	  DbgPrint("%08x:", (int)(&Addr[i]));
+        }
+      if (!NT_SUCCESS(KdbpSafeReadMemory(&Item, Addr + i, sizeof (Item))))
+        {
+          DbgPrint("\nCouldn't access memory at 0x%x!\n", (UINT)(Addr + i));
+          break;
+        }
+      DbgPrint("%08x ", Item);
     }
 
   return(1);
