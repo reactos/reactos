@@ -11,7 +11,7 @@
 
 #include <windows.h>
 
-#endif __NTDLL__
+#endif /* __NTDLL__ */
 
 struct _GUID;
 
