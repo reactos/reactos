@@ -1,4 +1,4 @@
-/* $Id: callback.c,v 1.3 2002/06/18 21:51:11 dwelch Exp $
+/* $Id: callback.c,v 1.4 2002/06/21 04:14:07 ei Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -47,7 +47,7 @@ W32kSendCREATEMessage(HWND Wnd, CREATESTRUCT* CreateStruct)
   LRESULT Result;
   NTSTATUS Status;
   PVOID ResultPointer;
-  DWORD ResultLength;
+  ULONG ResultLength;
 
   Arguments.Wnd = Wnd;
   Arguments.CreateStruct = *CreateStruct;
@@ -72,7 +72,7 @@ W32kSendNCCREATEMessage(HWND Wnd, CREATESTRUCT* CreateStruct)
   LRESULT Result;
   NTSTATUS Status;
   PVOID ResultPointer;
-  DWORD ResultLength;
+  ULONG ResultLength;
 
   Arguments.Wnd = Wnd;
   Arguments.CreateStruct = *CreateStruct;
@@ -88,7 +88,7 @@ W32kSendNCCREATEMessage(HWND Wnd, CREATESTRUCT* CreateStruct)
       return(0);
     }
   return(Result);
-}				
+}
 
 LRESULT STDCALL
 W32kCallWindowProc(WNDPROC Proc,
@@ -101,6 +101,7 @@ W32kCallWindowProc(WNDPROC Proc,
   LRESULT Result;
   NTSTATUS Status;
   PVOID ResultPointer;
+  ULONG ResultLength;
 
   Arguments.Proc = Proc;
   Arguments.Wnd = Wnd;
@@ -108,11 +109,12 @@ W32kCallWindowProc(WNDPROC Proc,
   Arguments.wParam = wParam;
   Arguments.lParam = lParam;
   ResultPointer = &Result;
+  ResultLength = sizeof(LRESULT);
   Status = NtW32Call(USER32_CALLBACK_WINDOWPROC,
 		     &Arguments,
 		     sizeof(WINDOWPROC_CALLBACK_ARGUMENTS),
 		     &ResultPointer,
-		     sizeof(LRESULT));
+			 &ResultLength);
   if (!NT_SUCCESS(Status))
     {
       return(0xFFFFFFFF);
