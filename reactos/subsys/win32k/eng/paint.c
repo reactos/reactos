@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: paint.c,v 1.20 2004/07/03 13:55:35 navaraf Exp $
+/* $Id: paint.c,v 1.21 2004/12/14 04:55:43 royce Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -34,6 +34,8 @@ BOOL STDCALL FillSolid(SURFOBJ *Surface, PRECTL pRect, ULONG iColor)
   LONG y;
   ULONG LineWidth;
 
+  ASSERT ( Surface );
+  ASSERT ( pRect );
   MouseSafetyOnDrawStart(Surface, pRect->left, pRect->top, pRect->right, pRect->bottom);
   LineWidth  = pRect->right - pRect->left;
   DPRINT(" LineWidth: %d, top: %d, bottom: %d\n", LineWidth, pRect->top, pRect->bottom);
@@ -54,6 +56,9 @@ EngPaintRgn(SURFOBJ *Surface, CLIPOBJ *ClipRegion, ULONG iColor, MIX Mix,
   RECT_ENUM RectEnum;
   BOOL EnumMore;
   ULONG i;
+
+  ASSERT(Surface);
+  ASSERT(ClipRegion);
 
   DPRINT("ClipRegion->iMode:%d, ClipRegion->iDComplexity: %d\n Color: %d", ClipRegion->iMode, ClipRegion->iDComplexity, iColor);
   switch(ClipRegion->iMode) {

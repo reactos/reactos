@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: surface.c,v 1.45 2004/12/12 01:40:36 weiden Exp $
+/* $Id: surface.c,v 1.46 2004/12/14 04:55:43 royce Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -472,6 +472,8 @@ EngEraseSurface(SURFOBJ *Surface,
 		RECTL *Rect,
 		ULONG iColor)
 {
+  ASSERT(Surface);
+  ASSERT(Rect);
   return FillSolid(Surface, Rect, iColor);
 }
 
