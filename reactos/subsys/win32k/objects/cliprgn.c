@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cliprgn.c,v 1.38 2004/05/14 16:55:18 navaraf Exp $ */
+/* $Id: cliprgn.c,v 1.39 2004/05/15 20:19:20 weiden Exp $ */
 #include <w32k.h>
 
 VOID FASTCALL
@@ -24,7 +24,6 @@ CLIPPING_UpdateGCRegion(DC* Dc)
 {
    PROSRGNDATA CombinedRegion;
 
-   ASSERT(Dc->w.hGCClipRgn != NULL);
    if (Dc->w.hGCClipRgn == NULL)
       Dc->w.hGCClipRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
 
