@@ -1,4 +1,4 @@
-/* $Id: pageop.c,v 1.21 2004/08/15 16:39:08 chorns Exp $
+/* $Id: pageop.c,v 1.22 2004/12/24 17:06:59 navaraf Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -42,7 +42,7 @@ MmReleasePageOp(PMM_PAGEOP PageOp)
       KeReleaseSpinLock(&MmPageOpHashTableLock, oldIrql);
       return;
    }
-   InterlockedDecrement((LONG *)&PageOp->MArea->PageOpCount);
+   InterlockedDecrementUL(&PageOp->MArea->PageOpCount);
    PrevPageOp = MmPageOpHashTable[PageOp->Hash];
    if (PrevPageOp == PageOp)
    {
@@ -230,7 +230,7 @@ MmGetPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
    PageOp->MArea = MArea;
    KeInitializeEvent(&PageOp->CompletionEvent, NotificationEvent, FALSE);
    MmPageOpHashTable[Hash] = PageOp;
-   InterlockedIncrement((LONG *)&MArea->PageOpCount);
+   InterlockedIncrementUL(&MArea->PageOpCount);
 
    KeReleaseSpinLock(&MmPageOpHashTableLock, oldIrql);
    return(PageOp);

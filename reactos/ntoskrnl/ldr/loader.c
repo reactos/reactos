@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.151 2004/11/13 13:09:07 weiden Exp $
+/* $Id: loader.c,v 1.152 2004/12/24 17:06:59 navaraf Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1157,7 +1157,7 @@ LdrPEFixupForward(PCHAR ForwardName)
 	CPRINT("LdrPEFixupForward: failed to find module %s\n", NameBuffer);
 	return NULL;
      }
-  return LdrPEGetExportByName(ModuleObject->Base, p+1, 0xffff);
+  return LdrPEGetExportByName(ModuleObject->Base, (PUCHAR)(p+1), 0xffff);
 }
 
 static NTSTATUS
@@ -1377,7 +1377,7 @@ LdrPEGetExportByName(PVOID BaseAddress,
    if (Hint < ExportDir->NumberOfNames)
    {
       ExName = RVA(BaseAddress, ExNames[Hint]);
-      if (strcmp(ExName, SymbolName) == 0)
+      if (strcmp(ExName, (PCHAR)SymbolName) == 0)
       {
          Ordinal = ExOrdinals[Hint];
          Function = RVA(BaseAddress, ExFunctions[Ordinal]);
@@ -1412,7 +1412,7 @@ LdrPEGetExportByName(PVOID BaseAddress,
       mid = (minn + maxn) / 2;
 
       ExName = RVA(BaseAddress, ExNames[mid]);
-      res = strcmp(ExName, SymbolName);
+      res = strcmp(ExName, (PCHAR)SymbolName);
       if (res == 0)
       {
          Ordinal = ExOrdinals[mid];
@@ -1455,7 +1455,7 @@ LdrPEGetExportByName(PVOID BaseAddress,
    for (i = 0; i < ExportDir->NumberOfNames; i++)
    {
       ExName = RVA(BaseAddress, ExNames[i]);
-      if (strcmp(ExName,SymbolName) == 0)
+      if (strcmp(ExName, (PCHAR)SymbolName) == 0)
       {
          Ordinal = ExOrdinals[i];
          Function = RVA(BaseAddress, ExFunctions[Ordinal]);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rmap.c,v 1.31 2004/10/02 10:16:10 hbirr Exp $
+/* $Id: rmap.c,v 1.32 2004/12/24 17:06:59 navaraf Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -423,7 +423,7 @@ MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
    }
    if (Process)
    {
-      PrevSize = InterlockedExchangeAdd(&Process->Vm.WorkingSetSize, PAGE_SIZE);
+      PrevSize = InterlockedExchangeAddUL(&Process->Vm.WorkingSetSize, PAGE_SIZE);
       if (PrevSize >= Process->Vm.PeakWorkingSetSize)
       {
          Process->Vm.PeakWorkingSetSize = PrevSize + PAGE_SIZE;
@@ -465,7 +465,7 @@ MmDeleteAllRmaps(PFN_TYPE Page, PVOID Context,
       }
       if (Process)
       {
-         InterlockedExchangeAdd(&Process->Vm.WorkingSetSize, -PAGE_SIZE);
+         InterlockedExchangeAddUL(&Process->Vm.WorkingSetSize, -PAGE_SIZE);
       }
    }
    ExReleaseFastMutex(&RmapListLock);
@@ -501,7 +501,7 @@ MmDeleteRmap(PFN_TYPE Page, PEPROCESS Process,
 	 }
 	 if (Process)
 	 {
-            InterlockedExchangeAdd(&Process->Vm.WorkingSetSize, -PAGE_SIZE);
+            InterlockedExchangeAddUL(&Process->Vm.WorkingSetSize, -PAGE_SIZE);
 	 }
          return;
       }

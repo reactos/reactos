@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.167 2004/12/19 16:16:58 navaraf Exp $
+/* $Id: section.c,v 1.168 2004/12/24 17:06:59 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -2026,7 +2026,7 @@ MmpDeleteSection(PVOID ObjectBody)
          {
             MmLockSectionSegment(&SectionSegments[i]);
          }
-         RefCount = InterlockedDecrement((LONG *)&SectionSegments[i].ReferenceCount);
+         RefCount = InterlockedDecrementUL(&SectionSegments[i].ReferenceCount);
          if (SectionSegments[i].Characteristics & IMAGE_SECTION_CHAR_SHARED)
          {
             if (RefCount == 0)
@@ -2055,7 +2055,7 @@ MmpDeleteSection(PVOID ObjectBody)
       }
       else
       {
-         InterlockedDecrement((LONG *)&Section->Segment->ReferenceCount);
+         InterlockedDecrementUL(&Section->Segment->ReferenceCount);
       }
    }
    if (Section->FileObject != NULL)
@@ -2468,7 +2468,7 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
          (PMM_SECTION_SEGMENT)FileObject->SectionObjectPointer->
          DataSectionObject;
       Section->Segment = Segment;
-      InterlockedIncrement((PLONG)&Segment->ReferenceCount);
+      InterlockedIncrementUL(&Segment->ReferenceCount);
       MmLockSectionSegment(Segment);
 
       if (MaximumSize.u.LowPart > Segment->RawLength &&
@@ -2818,8 +2818,8 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
          ExInitializeFastMutex(&SectionSegments[i].Lock);
          RtlZeroMemory(&SectionSegments[i].PageDirectory, sizeof(SECTION_PAGE_DIRECTORY));
       }
-      if (0 != InterlockedCompareExchange((PLONG)&FileObject->SectionObjectPointer->ImageSectionObject,
-                                          (LONG)ImageSectionObject, 0))
+      if (0 != InterlockedCompareExchangeUL(&FileObject->SectionObjectPointer->ImageSectionObject,
+                                            ImageSectionObject, 0))
       {
          /*
           * An other thread has initialized the some image in the background
@@ -2831,7 +2831,7 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
 
          for (i = 0; i < NrSegments; i++)
          {
-            InterlockedIncrement((LONG *)&SectionSegments[i].ReferenceCount);
+            InterlockedIncrementUL(&SectionSegments[i].ReferenceCount);
          }
       }
       ExFreePool(ImageSections);
@@ -2897,7 +2897,7 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
        */
       for (i = 0; i < NrSegments; i++)
       {
-         InterlockedIncrement((LONG *)&SectionSegments[i].ReferenceCount);
+         InterlockedIncrementUL(&SectionSegments[i].ReferenceCount);
       }
 
    }

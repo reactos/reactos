@@ -175,7 +175,7 @@ KeApplicationProcessorInit(VOID)
   }
   
 
-  Offset = InterlockedIncrement(&PcrsAllocated) - 1;
+  Offset = InterlockedIncrementUL(&PcrsAllocated) - 1;
   Pcr = (PKPCR)((ULONG_PTR)KPCR_BASE + Offset * PAGE_SIZE);
 
   /*
@@ -296,7 +296,7 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
     *   Make the detection of the noexecute feature more portable.
     */
    if(KPCR->PrcbData.CpuType == 0xf &&
-      0 == strcmp("AuthenticAMD", KPCR->PrcbData.VendorString))
+      0 == memcpy("AuthenticAMD", KPCR->PrcbData.VendorString, 12))
    {
       if (NoExecute)
       {

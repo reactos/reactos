@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kdb.c,v 1.36 2004/12/18 19:22:10 blight Exp $
+/* $Id: kdb.c,v 1.37 2004/12/24 17:06:58 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb.c
@@ -323,7 +323,7 @@ KdbGetCommand(PCH Buffer)
 {
   CHAR Key;
   PCH Orig = Buffer;
-  static UCHAR LastCommand[256] = "";
+  static CHAR LastCommand[256] = "";
   ULONG ScanCode = 0;
   static CHAR LastKey = '\0';
   
@@ -404,7 +404,7 @@ KdbGetCommand(PCH Buffer)
 }
 
 BOOLEAN STATIC
-KdbDecodeAddress(PUCHAR Buffer, PULONG Address)
+KdbDecodeAddress(PCHAR Buffer, PULONG Address)
 {
   while (isspace(*Buffer))
     {
@@ -412,8 +412,8 @@ KdbDecodeAddress(PUCHAR Buffer, PULONG Address)
     }
   if (Buffer[0] == '<')
     {
-      PUCHAR ModuleName = Buffer + 1;
-      PUCHAR AddressString = strpbrk(Buffer, ":");
+      PCHAR ModuleName = Buffer + 1;
+      PCHAR AddressString = strpbrk(Buffer, ":");
       extern LIST_ENTRY ModuleTextListHead;
       PLIST_ENTRY current_entry;
       MODULE_TEXT_SECTION* current = NULL;

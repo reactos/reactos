@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.90 2004/12/12 17:25:52 hbirr Exp $
+/* $Id: kill.c,v 1.91 2004/12/24 17:07:00 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -300,8 +300,8 @@ PiTerminateProcess(PEPROCESS Process,
 	   ObGetObjectHandleCount(Process));
    
    ObReferenceObject(Process);
-   if (InterlockedExchange((PLONG)&Process->Pcb.State, 
-			   PROCESS_STATE_TERMINATED) == 
+   if (InterlockedExchangeUL(&Process->Pcb.State, 
+			     PROCESS_STATE_TERMINATED) == 
        PROCESS_STATE_TERMINATED)
      {
         ObDereferenceObject(Process);

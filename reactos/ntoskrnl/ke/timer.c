@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.92 2004/11/28 12:59:00 ekohl Exp $
+/* $Id: timer.c,v 1.93 2004/12/24 17:06:58 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -712,8 +712,8 @@ KeUpdateRunTime(
    if (TrapFrame->Cs & 0x1 ||
        TrapFrame->Eflags & X86_EFLAGS_VM)
    {
-      InterlockedIncrement((PLONG)&CurrentThread->UserTime);
-      InterlockedIncrement((PLONG)&CurrentProcess->UserTime);
+      InterlockedIncrementUL(&CurrentThread->UserTime);
+      InterlockedIncrementUL(&CurrentProcess->UserTime);
       Pcr->PrcbData.UserTime++;
    }
    else
@@ -728,8 +728,8 @@ KeUpdateRunTime(
       }
       else
       {
-         InterlockedIncrement((PLONG)&CurrentThread->KernelTime);
-         InterlockedIncrement((PLONG)&CurrentProcess->KernelTime);
+         InterlockedIncrementUL(&CurrentThread->KernelTime);
+         InterlockedIncrementUL(&CurrentProcess->KernelTime);
 	 Pcr->PrcbData.KernelTime++;
       }
    }

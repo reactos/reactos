@@ -1,4 +1,4 @@
-/* $Id: RPoolMgr.h,v 1.3 2004/12/21 04:05:18 royce Exp $
+/* $Id: RPoolMgr.h,v 1.4 2004/12/24 17:06:59 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -354,8 +354,8 @@ RiBadBlock ( PR_USED pUsed, char* Addr, const char* violation, const char* file,
 
 	if ( printzone )
 	{
-		unsigned char* HiZone = Addr + pUsed->UserSize;
-		unsigned char* LoZone = Addr - R_RZ; // this is to simplify indexing below...
+		unsigned char* HiZone = (unsigned char*)Addr + pUsed->UserSize;
+		unsigned char* LoZone = (unsigned char*)Addr - R_RZ; // this is to simplify indexing below...
 		R_DEBUG ( ", LoZone " );
 		for ( i = 0; i < R_RZ; i++ )
 			R_DEBUG ( "%02x", LoZone[i] );
@@ -414,8 +414,8 @@ RUsedRedZoneCheck ( PR_POOL pool, PR_USED pUsed, char* Addr, const char* file, i
 	{
 		RiBadBlock ( pUsed, Addr, "invalid user size", file, line, 0 );
 	}
-	HiZone = Addr + pUsed->UserSize;
-	LoZone = Addr - R_RZ; // this is to simplify indexing below...
+	HiZone = (unsigned char*)Addr + pUsed->UserSize;
+	LoZone = (unsigned char*)Addr - R_RZ; // this is to simplify indexing below...
 	for ( i = 0; i < R_RZ && bLow && bHigh; i++ )
 	{
 		bLow = bLow && ( LoZone[i] == R_RZ_LOVALUE );

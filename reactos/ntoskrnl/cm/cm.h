@@ -641,13 +641,13 @@ CmiGetPackedNameLength(IN PUNICODE_STRING Name,
 
 BOOLEAN
 CmiComparePackedNames(IN PUNICODE_STRING Name,
-		      IN PCHAR NameBuffer,
+		      IN PUCHAR NameBuffer,
 		      IN USHORT NameBufferSize,
 		      IN BOOLEAN NamePacked);
 
 VOID
 CmiCopyPackedName(PWCHAR NameBuffer,
-		  PCHAR PackedNameBuffer,
+		  PUCHAR PackedNameBuffer,
 		  ULONG PackedNameSize);
 
 BOOLEAN

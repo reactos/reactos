@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.85 2004/11/18 11:46:07 ekohl Exp $
+/* $Id: device.c,v 1.86 2004/12/24 17:06:58 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -557,7 +557,7 @@ IoCreateDevice(
    {
       swprintf(AutoNameBuffer,
                L"\\Device\\%08lx",
-               InterlockedIncrement(&IopDeviceObjectNumber));
+               InterlockedIncrementUL(&IopDeviceObjectNumber));
       RtlInitUnicodeString(&AutoName,
                            AutoNameBuffer);
       DeviceName = &AutoName;

@@ -1,4 +1,4 @@
-/* $Id: ipi.c,v 1.4 2004/11/27 16:32:10 hbirr Exp $
+/* $Id: ipi.c,v 1.5 2004/12/24 17:06:58 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -76,13 +76,13 @@ KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
 
    if (Pcr->PrcbData.IpiFrozen & IPI_REQUEST_FUNCTIONCALL)
    {
-      InterlockedDecrement((PLONG)&Pcr->PrcbData.SignalDone->CurrentPacket[1]);
+      InterlockedDecrementUL(&Pcr->PrcbData.SignalDone->CurrentPacket[1]);
       if (Pcr->PrcbData.SignalDone->CurrentPacket[2])
       {
 #ifdef DBG      	
          StartTime = KeQueryPerformanceCounter(&Frequency);
 #endif         
-         while (0 != InterlockedCompareExchange((PLONG)&Pcr->PrcbData.SignalDone->CurrentPacket[1], 0, 0))
+         while (0 != InterlockedCompareExchangeUL(&Pcr->PrcbData.SignalDone->CurrentPacket[1], 0, 0))
 	 {
 #ifdef DBG	 	
             CurrentTime = KeQueryPerformanceCounter(NULL);
@@ -99,13 +99,13 @@ KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
       {
          Processor = 1 << KeGetCurrentProcessorNumber();
 	 TargetSet = Pcr->PrcbData.SignalDone->TargetSet;
-      } while (Processor & InterlockedCompareExchange(&Pcr->PrcbData.SignalDone->TargetSet, TargetSet & ~Processor, TargetSet)); 
+      } while (Processor & InterlockedCompareExchangeUL(&Pcr->PrcbData.SignalDone->TargetSet, TargetSet & ~Processor, TargetSet)); 
       if (Pcr->PrcbData.SignalDone->CurrentPacket[2])
       {
 #ifdef DBG      	
          StartTime = KeQueryPerformanceCounter(&Frequency);
 #endif         
-         while (0 != InterlockedCompareExchange(&Pcr->PrcbData.SignalDone->TargetSet, 0, 0))
+         while (0 != InterlockedCompareExchangeUL(&Pcr->PrcbData.SignalDone->TargetSet, 0, 0))
          {
 #ifdef DBG         	
 	    CurrentTime = KeQueryPerformanceCounter(NULL);
@@ -149,7 +149,7 @@ KiIpiSendPacket(ULONG TargetSet, VOID STDCALL (*WorkerRoutine)(PVOID), PVOID Arg
        if (TargetSet & Processor)
        {
           Pcr = (PKPCR)(KPCR_BASE + i * PAGE_SIZE);
-          while(0 != InterlockedCompareExchange((PLONG)&Pcr->PrcbData.SignalDone, (LONG)&CurrentPcr->PrcbData, 0));
+          while(0 != InterlockedCompareExchangeUL(&Pcr->PrcbData.SignalDone, (LONG)&CurrentPcr->PrcbData, 0));
 	  Pcr->PrcbData.IpiFrozen |= IPI_REQUEST_FUNCTIONCALL;
 	  if (Processor != CurrentProcessor)
 	  {

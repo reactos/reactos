@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.78 2004/11/27 16:37:52 hbirr Exp $
+/* $Id: page.c,v 1.79 2004/12/24 17:07:00 navaraf Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -426,7 +426,7 @@ VOID MmDeletePageTable(PEPROCESS Process, PVOID Address)
    if (Ke386Pae)
    {
       ULONGLONG ZeroPde = 0LL;
-      ExfpInterlockedExchange64(PAE_ADDR_TO_PDE(Address), &ZeroPde);
+      ExfpInterlockedExchange64UL(PAE_ADDR_TO_PDE(Address), &ZeroPde);
    }
    else
    {
@@ -470,7 +470,7 @@ VOID MmFreePageTable(PEPROCESS Process, PVOID Address)
          }
       }
       Pfn = PAE_PTE_TO_PFN(*(PAE_ADDR_TO_PDE(Address)));
-      ExfpInterlockedExchange64(PAE_ADDR_TO_PDE(Address), &ZeroPte);
+      ExfpInterlockedExchange64UL(PAE_ADDR_TO_PDE(Address), &ZeroPte);
    }
    else
    {
@@ -536,7 +536,7 @@ MmGetPageTableForProcessForPAE(PEPROCESS Process, PVOID Address, BOOLEAN Create)
          KEBUGCHECK(0);
       }
       PageDir += PAE_ADDR_TO_PDE_PAGE_OFFSET(Address);
-      Entry = ExfInterlockedCompareExchange64(PageDir, &ZeroEntry, &ZeroEntry);
+      Entry = ExfInterlockedCompareExchange64UL(PageDir, &ZeroEntry, &ZeroEntry);
       if (Entry == 0LL)
       {
          if (Create == FALSE)
@@ -550,7 +550,7 @@ MmGetPageTableForProcessForPAE(PEPROCESS Process, PVOID Address, BOOLEAN Create)
 	    KEBUGCHECK(0);
 	 }
          Entry = PFN_TO_PTE(Pfn) | PA_PRESENT | PA_READWRITE | PA_USER; 
-	 Entry = ExfInterlockedCompareExchange64(PageDir, &Entry, &ZeroEntry);
+	 Entry = ExfInterlockedCompareExchange64UL(PageDir, &Entry, &ZeroEntry);
 	 if (Entry != 0LL)
 	 {
 	    MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
@@ -570,7 +570,7 @@ MmGetPageTableForProcessForPAE(PEPROCESS Process, PVOID Address, BOOLEAN Create)
       return Pt + PAE_ADDR_TO_PTE_OFFSET(Address);
    }
    PageDir = PAE_ADDR_TO_PDE(Address);
-   if (0LL == ExfInterlockedCompareExchange64(PageDir, &ZeroEntry, &ZeroEntry))
+   if (0LL == ExfInterlockedCompareExchange64UL(PageDir, &ZeroEntry, &ZeroEntry))
    {
       if (Address >= (PVOID)KERNEL_BASE)
       {
@@ -590,12 +590,12 @@ MmGetPageTableForProcessForPAE(PEPROCESS Process, PVOID Address, BOOLEAN Create)
 	    {
 	       Entry |= PA_GLOBAL;
 	    }
-	    if (0LL != ExfInterlockedCompareExchange64(&MmGlobalKernelPageDirectoryForPAE[PAE_ADDR_TO_PDE_OFFSET(Address)], &Entry, &ZeroEntry))
+	    if (0LL != ExfInterlockedCompareExchange64UL(&MmGlobalKernelPageDirectoryForPAE[PAE_ADDR_TO_PDE_OFFSET(Address)], &Entry, &ZeroEntry))
 	    {
 	       MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
 	    }
 	 }
-	 ExfInterlockedCompareExchange64(PageDir, &MmGlobalKernelPageDirectoryForPAE[PAE_ADDR_TO_PDE_OFFSET(Address)], &ZeroEntry);
+	 ExfInterlockedCompareExchange64UL(PageDir, &MmGlobalKernelPageDirectoryForPAE[PAE_ADDR_TO_PDE_OFFSET(Address)], &ZeroEntry);
       }
       else
       {
@@ -609,7 +609,7 @@ MmGetPageTableForProcessForPAE(PEPROCESS Process, PVOID Address, BOOLEAN Create)
 	    KEBUGCHECK(0);
 	 }
 	 Entry = PFN_TO_PTE(Pfn) | PA_PRESENT | PA_READWRITE | PA_USER;
-         Entry = ExfInterlockedCompareExchange64(PageDir, &Entry, &ZeroEntry);
+         Entry = ExfInterlockedCompareExchange64UL(PageDir, &Entry, &ZeroEntry);
 	 if (Entry != 0LL)
 	 {
 	    MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
@@ -647,7 +647,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
 	 {
 	    KEBUGCHECK(0);
 	 }
-         Entry = InterlockedCompareExchange(&PageDir[PdeOffset], PFN_TO_PTE(Pfn) | PA_PRESENT | PA_READWRITE | PA_USER, 0);
+         Entry = InterlockedCompareExchangeUL(&PageDir[PdeOffset], PFN_TO_PTE(Pfn) | PA_PRESENT | PA_READWRITE | PA_USER, 0);
 	 if (Entry != 0)
 	 {
 	    MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
@@ -687,7 +687,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
 	    {
 	       Entry |= PA_GLOBAL;
 	    }
-	    if(0 != InterlockedCompareExchange(&MmGlobalKernelPageDirectory[PdeOffset], Entry, 0))
+	    if(0 != InterlockedCompareExchangeUL(&MmGlobalKernelPageDirectory[PdeOffset], Entry, 0))
 	    {
 	       MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
 	    }
@@ -705,7 +705,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
 	 {
 	    KEBUGCHECK(0);
 	 }
-         Entry = InterlockedCompareExchange(PageDir, PFN_TO_PTE(Pfn) | PA_PRESENT | PA_READWRITE | PA_USER, 0);
+         Entry = InterlockedCompareExchangeUL(PageDir, PFN_TO_PTE(Pfn) | PA_PRESENT | PA_READWRITE | PA_USER, 0);
 	 if (Entry != 0)
 	 {
 	    MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
@@ -820,7 +820,7 @@ MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOL* WasDirty, PPFN_T
       {
         Pte = *Pt;
 	tmpPte = Pte & ~PA_PRESENT;
-      } while (Pte != ExfInterlockedCompareExchange64(Pt, &tmpPte, &Pte)); 
+      } while (Pte != ExfInterlockedCompareExchange64UL(Pt, &tmpPte, &Pte)); 
 
       MiFlushTlb((PULONG)Pt, Address);
       WasValid = PAE_PAGE_MASK(Pte) != 0LL ? TRUE : FALSE;
@@ -857,7 +857,7 @@ MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOL* WasDirty, PPFN_T
       do
       {
         Pte = *Pt;
-      } while (Pte != InterlockedCompareExchange(Pt, Pte & ~PA_PRESENT, Pte)); 
+      } while (Pte != InterlockedCompareExchangeUL(Pt, Pte & ~PA_PRESENT, Pte)); 
 
       MiFlushTlb(Pt, Address);
       WasValid = (PAGE_MASK(Pte) != 0);
@@ -893,7 +893,7 @@ MmRawDeleteVirtualMapping(PVOID Address)
          /*
           * Set the entry to zero
           */
-	 ExfpInterlockedExchange64(Pt, &ZeroPte);
+	 ExfpInterlockedExchange64UL(Pt, &ZeroPte);
          MiFlushTlb((PULONG)Pt, Address);
       }
    }
@@ -948,7 +948,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage,
        * Atomically set the entry to zero and get the old value.
        */
       Pte = 0LL;
-      Pte = ExfpInterlockedExchange64(Pt, &Pte);
+      Pte = ExfpInterlockedExchange64UL(Pt, &Pte);
 
       MiFlushTlb((PULONG)Pt, Address);
 
@@ -1003,7 +1003,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage,
       /*
        * Atomically set the entry to zero and get the old value.
        */
-      Pte = InterlockedExchange(Pt, 0);
+      Pte = InterlockedExchangeUL(Pt, 0);
 
       MiFlushTlb(Pt, Address);
 
@@ -1079,7 +1079,7 @@ MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
        * Atomically set the entry to zero and get the old value.
        */
       Pte = 0LL;
-      Pte = ExfpInterlockedExchange64(Pt, &Pte);
+      Pte = ExfpInterlockedExchange64UL(Pt, &Pte);
 
       MiFlushTlb((PULONG)Pt, Address);
 
@@ -1123,7 +1123,7 @@ MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
       /*
        * Atomically set the entry to zero and get the old value.
        */
-      Pte = InterlockedExchange(Pt, 0);
+      Pte = InterlockedExchangeUL(Pt, 0);
 
       MiFlushTlb(Pt, Address);
 
@@ -1230,7 +1230,7 @@ MmIsAccessedAndResetAccessPage(PEPROCESS Process, PVOID Address)
       {
          Pte = *Pt;
 	 tmpPte = Pte & ~PA_ACCESSED;
-      } while (Pte != ExfInterlockedCompareExchange64(Pt, &tmpPte, &Pte));
+      } while (Pte != ExfInterlockedCompareExchange64UL(Pt, &tmpPte, &Pte));
 
       if (Pte & PA_ACCESSED)
       {
@@ -1257,7 +1257,7 @@ MmIsAccessedAndResetAccessPage(PEPROCESS Process, PVOID Address)
       do
       {
          Pte = *Pt;
-      } while (Pte != InterlockedCompareExchange(Pt, Pte & ~PA_ACCESSED, Pte));
+      } while (Pte != InterlockedCompareExchangeUL(Pt, Pte & ~PA_ACCESSED, Pte));
 
       if (Pte & PA_ACCESSED)
       {
@@ -1296,7 +1296,7 @@ VOID MmSetCleanPage(PEPROCESS Process, PVOID Address)
       {
          Pte = *Pt;
 	 tmpPte = Pte & ~PA_DIRTY;
-      } while (Pte != ExfInterlockedCompareExchange64(Pt, &tmpPte, &Pte));
+      } while (Pte != ExfInterlockedCompareExchange64UL(Pt, &tmpPte, &Pte));
 
       if (Pte & PA_DIRTY)
       {
@@ -1322,7 +1322,7 @@ VOID MmSetCleanPage(PEPROCESS Process, PVOID Address)
       do
       {
          Pte = *Pt;
-      } while (Pte != InterlockedCompareExchange(Pt, Pte & ~PA_DIRTY, Pte));
+      } while (Pte != InterlockedCompareExchangeUL(Pt, Pte & ~PA_DIRTY, Pte));
 
       if (Pte & PA_DIRTY)
       {
@@ -1358,7 +1358,7 @@ VOID MmSetDirtyPage(PEPROCESS Process, PVOID Address)
       {
          Pte = *Pt;
 	 tmpPte = Pte | PA_DIRTY; 
-      } while (Pte != ExfInterlockedCompareExchange64(Pt, &tmpPte, &Pte));
+      } while (Pte != ExfInterlockedCompareExchange64UL(Pt, &tmpPte, &Pte));
       if (!(Pte & PA_DIRTY))
       {
          MiFlushTlb((PULONG)Pt, Address);
@@ -1382,7 +1382,7 @@ VOID MmSetDirtyPage(PEPROCESS Process, PVOID Address)
       do
       {
          Pte = *Pt;
-      } while (Pte != InterlockedCompareExchange(Pt, Pte | PA_DIRTY, Pte));
+      } while (Pte != InterlockedCompareExchangeUL(Pt, Pte | PA_DIRTY, Pte));
       if (!(Pte & PA_DIRTY))
       {
          MiFlushTlb(Pt, Address);
@@ -1412,7 +1412,7 @@ VOID MmEnableVirtualMapping(PEPROCESS Process, PVOID Address)
       {
          Pte = *Pt;
 	 tmpPte = Pte | PA_PRESENT;
-      } while (Pte != ExfInterlockedCompareExchange64(Pt, &tmpPte, &Pte));
+      } while (Pte != ExfInterlockedCompareExchange64UL(Pt, &tmpPte, &Pte));
       if (!(Pte & PA_PRESENT))
       {
          MiFlushTlb((PULONG)Pt, Address);
@@ -1436,7 +1436,7 @@ VOID MmEnableVirtualMapping(PEPROCESS Process, PVOID Address)
       do
       {
          Pte = *Pt;
-      } while (Pte != InterlockedCompareExchange(Pt, Pte | PA_PRESENT, Pte));
+      } while (Pte != InterlockedCompareExchangeUL(Pt, Pte | PA_PRESENT, Pte));
       if (!(Pte & PA_PRESENT))
       {
          MiFlushTlb(Pt, Address);
@@ -1546,7 +1546,7 @@ MmCreateVirtualMappingForKernel(PVOID Address,
 	 {
 	    Pte |= 0x8000000000000000LL;
 	 }
-         Pte = ExfpInterlockedExchange64(Pt, &Pte);
+         Pte = ExfpInterlockedExchange64UL(Pt, &Pte);
          if (Pte != 0LL)
          {
             KEBUGCHECK(0);
@@ -1635,7 +1635,7 @@ MmCreatePageFileMapping(PEPROCESS Process,
          KEBUGCHECK(0);
       }
       tmpPte = SwapEntry << 1;
-      Pte = ExfpInterlockedExchange64(Pt, &tmpPte);
+      Pte = ExfpInterlockedExchange64UL(Pt, &tmpPte);
       if (PAE_PAGE_MASK((Pte)) != 0)
       {
          MmMarkPageUnmapped(PAE_PTE_TO_PFN((Pte)));
@@ -1793,7 +1793,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
 	 {
 	    tmpPte |= 0x8000000000000000LL;
 	 }
-         Pte = ExfpInterlockedExchange64(Pt, &tmpPte);
+         Pte = ExfpInterlockedExchange64UL(Pt, &tmpPte);
          if (PAE_PAGE_MASK((Pte)) != 0LL && !((Pte) & PA_PRESENT))
          {
             KEBUGCHECK(0);
@@ -2014,7 +2014,7 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
 	{
 	   tmpPte &= ~0x8000000000000000LL;
 	}
-      } while (Pte != ExfInterlockedCompareExchange64(Pt, &tmpPte, &Pte));
+      } while (Pte != ExfInterlockedCompareExchange64UL(Pt, &tmpPte, &Pte));
 
       MiFlushTlb((PULONG)Pt, Address);
    }
@@ -2124,7 +2124,7 @@ VOID MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
          {
             if (i * 512 + Offset < PAE_ADDR_TO_PDE_OFFSET(PAGETABLE_MAP) || i * 512 + Offset >= PAE_ADDR_TO_PDE_OFFSET(PAGETABLE_MAP)+4)
             {
-               ExfInterlockedCompareExchange64(&Pde[Offset], &MmGlobalKernelPageDirectoryForPAE[i*512 + Offset], &ZeroPde);
+               ExfInterlockedCompareExchange64UL(&Pde[Offset], &MmGlobalKernelPageDirectoryForPAE[i*512 + Offset], &ZeroPde);
             }
          }
          MmUnmapPageTable((PULONG)Pde);
@@ -2148,7 +2148,7 @@ VOID MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
       {
          if (Offset != ADDR_TO_PDE_OFFSET(PAGETABLE_MAP))
          {
-            InterlockedCompareExchange(&Pde[Offset], MmGlobalKernelPageDirectory[Offset], 0);
+            InterlockedCompareExchangeUL(&Pde[Offset], MmGlobalKernelPageDirectory[Offset], 0);
          }
       }
       if (Pde != (PULONG)PAGEDIRECTORY_MAP)
@@ -2170,7 +2170,7 @@ MmInitGlobalKernelPageDirectory(VOID)
          if ((i < PAE_ADDR_TO_PDE_OFFSET(PAGETABLE_MAP) || i >= PAE_ADDR_TO_PDE_OFFSET(PAGETABLE_MAP) + 4) &&
              0LL == MmGlobalKernelPageDirectoryForPAE[i] && 0LL != CurrentPageDirectory[i])
          {
-            ExfpInterlockedExchange64(&MmGlobalKernelPageDirectoryForPAE[i], &CurrentPageDirectory[i]);
+            ExfpInterlockedExchange64UL(&MmGlobalKernelPageDirectoryForPAE[i], &CurrentPageDirectory[i]);
 	    if (Ke386GlobalPagesEnabled)
 	    {
                MmGlobalKernelPageDirectoryForPAE[i] |= PA_GLOBAL;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.211 2004/12/12 20:14:01 hbirr Exp $
+/* $Id: main.c,v 1.212 2004/12/24 17:06:58 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -73,8 +73,8 @@ EXPORTED ULONG InitSafeBootMode = 0; /* KB83764 */
 #endif	/* __GNUC__ */
 
 static LOADER_MODULE KeLoaderModules[64];
-static UCHAR KeLoaderModuleStrings[64][256];
-static UCHAR KeLoaderCommandLine[256];
+static CHAR KeLoaderModuleStrings[64][256];
+static CHAR KeLoaderCommandLine[256];
 static ADDRESS_RANGE KeMemoryMap[64];
 static ULONG KeMemoryMapRangeCount;
 static ULONG FirstKrnlPhysAddr;
@@ -696,8 +696,8 @@ ExpInitializeExecutive(VOID)
   IoCreateArcNames();
 
   /* Create the SystemRoot symbolic link */
-  CPRINT("CommandLine: %s\n", (PUCHAR)KeLoaderBlock.CommandLine);
-  Status = IoCreateSystemRootLink((PUCHAR)KeLoaderBlock.CommandLine);
+  CPRINT("CommandLine: %s\n", (PCHAR)KeLoaderBlock.CommandLine);
+  Status = IoCreateSystemRootLink((PCHAR)KeLoaderBlock.CommandLine);
   if (!NT_SUCCESS(Status))
   {
     DbgPrint ( "IoCreateSystemRootLink FAILED: (0x%x) - ", Status );
@@ -745,7 +745,7 @@ ExpInitializeExecutive(VOID)
    * Initialize shared user page:
    *  - set dos system path, dos device map, etc.
    */
-  InitSystemSharedUserPage ((PUCHAR)KeLoaderBlock.CommandLine);
+  InitSystemSharedUserPage ((PCHAR)KeLoaderBlock.CommandLine);
 
   /* Create 'ReactOSInitDone' event */
   RtlInitUnicodeString(&Name, L"\\ReactOSInitDone");
@@ -917,10 +917,10 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
       if (((PUCHAR)_LoaderBlock->CommandLine)[1] == 'h' &&
 	  ((PUCHAR)_LoaderBlock->CommandLine)[2] == 'd')
 	{
-	  DiskNumber = ((PUCHAR)_LoaderBlock->CommandLine)[3] - '0';
-	  PartNumber = ((PUCHAR)_LoaderBlock->CommandLine)[5] - '0';
+	  DiskNumber = ((PCHAR)_LoaderBlock->CommandLine)[3] - '0';
+	  PartNumber = ((PCHAR)_LoaderBlock->CommandLine)[5] - '0';
 	}
-      strcpy(Temp, &((PUCHAR)_LoaderBlock->CommandLine)[7]);
+      strcpy(Temp, &((PCHAR)_LoaderBlock->CommandLine)[7]);
       if ((options = strchr(Temp, ' ')) != NULL)
 	{
 	  *options = 0;
@@ -955,7 +955,7 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
     }
   else
     {
-      strcpy(KeLoaderCommandLine, (PUCHAR)_LoaderBlock->CommandLine);
+      strcpy(KeLoaderCommandLine, (PCHAR)_LoaderBlock->CommandLine);
     }
   KeLoaderBlock.CommandLine = (ULONG)KeLoaderCommandLine;
   
@@ -976,13 +976,13 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
   for (i = 1; i < KeLoaderBlock.ModsCount; i++)
     {      
       CHAR* s;
-      if ((s = strrchr((PUCHAR)KeLoaderModules[i].String, '/')) != 0)
+      if ((s = strrchr((PCHAR)KeLoaderModules[i].String, '/')) != 0)
 	{
 	  strcpy(KeLoaderModuleStrings[i], s + 1);
 	}
       else
 	{
-	  strcpy(KeLoaderModuleStrings[i], (PUCHAR)KeLoaderModules[i].String);
+	  strcpy(KeLoaderModuleStrings[i], (PCHAR)KeLoaderModules[i].String);
 	}
       /* TODO: Fix this hardcoded load address stuff... */
       KeLoaderModules[i].ModStart -= 0x200000;

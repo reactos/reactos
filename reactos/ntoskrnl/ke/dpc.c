@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dpc.c,v 1.49 2004/11/27 19:27:31 hbirr Exp $
+/* $Id: dpc.c,v 1.50 2004/12/24 17:06:58 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -209,7 +209,7 @@ KeInsertQueueDpc (PKDPC	Dpc,
 #endif
 
 	/* Get the DPC Data */
-	if (InterlockedCompareExchange((LONG*)&Dpc->DpcData, (LONG)&Pcr->PrcbData.DpcData[0].DpcLock, 0)) {
+	if (InterlockedCompareExchangeUL(&Dpc->DpcData, &Pcr->PrcbData.DpcData[0].DpcLock, 0)) {
 		DPRINT("DPC Already Inserted");
 #ifdef MP
 		KiReleaseSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);

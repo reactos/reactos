@@ -120,5 +120,25 @@ ExfpInterlockedExchange64(LONGLONG volatile * Destination,
 NTSTATUS
 ExpSetTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation);
 
+#define InterlockedDecrementUL(Addend) \
+   (ULONG)InterlockedDecrement((PLONG)(Addend))
+
+#define InterlockedIncrementUL(Addend) \
+   (ULONG)InterlockedIncrement((PLONG)(Addend))
+
+#define InterlockedExchangeUL(Target, Value) \
+   (ULONG)InterlockedExchange((PLONG)(Target), (LONG)(Value))
+
+#define InterlockedExchangeAddUL(Addend, Value) \
+   (ULONG)InterlockedExchangeAdd((PLONG)(Addend), (LONG)(Value))
+
+#define InterlockedCompareExchangeUL(Destination, Exchange, Comperand) \
+   (ULONG)InterlockedCompareExchange((PLONG)(Destination), (LONG)(Exchange), (LONG)(Comperand))
+
+#define ExfInterlockedCompareExchange64UL(Destination, Exchange, Comperand) \
+   (ULONGLONG)ExfInterlockedCompareExchange64((PLONGLONG)(Destination), (PLONGLONG)(Exchange), (PLONGLONG)(Comperand))
+
+#define ExfpInterlockedExchange64UL(Target, Value) \
+   (ULONGLONG)ExfpInterlockedExchange64((PLONGLONG)(Target), (PLONGLONG)(Value))
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_EXECUTIVE_H */
