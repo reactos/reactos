@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.43 2004/08/31 23:32:01 gvg Exp $
+/* $Id: message.c,v 1.44 2004/12/05 03:50:33 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -594,7 +594,7 @@ MsgiUnicodeToAnsiMessage(LPMSG AnsiMsg, LPMSG UnicodeMsg)
                 }
               CsA->lpszClass = AString.Buffer;
             }
-          UnicodeMsg->lParam = (LPARAM)CsA;
+          AnsiMsg->lParam = (LPARAM)CsA;
           break;
         }
       case WM_GETTEXT:
@@ -681,13 +681,13 @@ MsgiUnicodeToAnsiReply(LPMSG AnsiMsg, LPMSG UnicodeMsg, LRESULT *Result)
         if (0 < AnsiMsg->wParam &&
             ! MultiByteToWideChar(CP_ACP, 0, Buffer, -1, UBuffer, UnicodeMsg->wParam))
           {
-            UBuffer[AnsiMsg->wParam - 1] = L'\0';
+            UBuffer[UnicodeMsg->wParam - 1] = L'\0';
           }
         break;
       }
     }
 
-  MsgiUnicodeToAnsiCleanup(UnicodeMsg, AnsiMsg);
+  MsgiUnicodeToAnsiCleanup(AnsiMsg, UnicodeMsg);
 
   return TRUE;
 }
