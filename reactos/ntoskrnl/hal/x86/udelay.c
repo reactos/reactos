@@ -20,7 +20,7 @@
  * MA 02139, USA.  
  *
  */
-/* $Id: udelay.c,v 1.4 2000/10/11 20:50:33 dwelch Exp $
+/* $Id: udelay.c,v 1.5 2000/11/19 15:57:27 ekohl Exp $
  *
  * PROJECT:        ReactOS kernel
  * FILE:           ntoskrnl/hal/x86/udelay.c
@@ -142,7 +142,7 @@ VOID HalpCalibrateStallExecution(VOID)
    delay_count >>= 1;              /* Get bottom value for delay     */
    
    /* Stage 2:  Fine calibration                                     */
-   DbgPrint("delay_count: %d\n", delay_count);
+   DbgPrint("delay_count: %d", delay_count);
    
    calib_bit = delay_count;        /* Which bit are we going to test */
 
