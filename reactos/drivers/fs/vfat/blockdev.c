@@ -37,8 +37,6 @@ BOOLEAN VFATReadSectors(IN PDEVICE_OBJECT pDeviceObject,
     KeInitializeEvent(&event, NotificationEvent, FALSE);
     sectorSize = BLOCKSIZE * SectorCount;
 
-    /* FIXME: this routine does not need to alloc mem and copy  */
-
 
     DPRINT("VFATReadSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
            pDeviceObject,
@@ -89,8 +87,6 @@ BOOLEAN VFATReadSectors(IN PDEVICE_OBJECT pDeviceObject,
                  GET_LARGE_INTEGER_LOW_PART(sectorNumber));
         return FALSE;
     }
-
-    DPRINT("Copying memory...\n");
     DPRINT("Block request succeeded\n");
     return TRUE;
 }
@@ -106,7 +102,6 @@ BOOLEAN VFATWriteSectors(IN PDEVICE_OBJECT pDeviceObject,
     KEVENT          event;
     NTSTATUS        status;
     ULONG           sectorSize;
-    PULONG          mbr;
    
    DPRINT("VFATWriteSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
    	    pDeviceObject,DiskSector,Buffer);
@@ -118,17 +113,10 @@ BOOLEAN VFATWriteSectors(IN PDEVICE_OBJECT pDeviceObject,
 
     sectorSize = BLOCKSIZE*SectorCount;
 
-    mbr = ExAllocatePool(NonPagedPool, sectorSize);
-
-    if (!mbr) {
-        return FALSE;
-    }
-
-
     DPRINT("Building synchronous FSD Request...\n");
     irp = IoBuildSynchronousFsdRequest(IRP_MJ_WRITE,
                                        pDeviceObject,
-                                       mbr,
+                                       Buffer,
                                        sectorSize,
                                        &sectorNumber,
                                        &event,
@@ -136,7 +124,6 @@ BOOLEAN VFATWriteSectors(IN PDEVICE_OBJECT pDeviceObject,
 
     if (!irp) {
         DbgPrint("WRITE failed!!!\n");
-        ExFreePool(mbr);
         return FALSE;
     }
 
@@ -157,14 +144,9 @@ BOOLEAN VFATWriteSectors(IN PDEVICE_OBJECT pDeviceObject,
 
     if (!NT_SUCCESS(status)) {
         DbgPrint("IO failed!!! VFATWriteSectors : Error code: %x\n", status);
-        ExFreePool(mbr);
         return FALSE;
     }
 
-    DPRINT("Copying memory...\n");
-   RtlCopyMemory(Buffer,mbr,sectorSize);
-
-    ExFreePool(mbr);
     DPRINT("Block request succeeded\n");
     return TRUE;
 }
