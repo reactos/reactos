@@ -237,8 +237,8 @@ NtUserClipCursor(
   
   PWINSTATION_OBJECT WinStaObject;
   PSYSTEM_CURSORINFO CurInfo;
-  PWINDOW_OBJECT DesktopWindow;
   RECT Rect;
+  PWINDOW_OBJECT DesktopWindow = NULL;
 
   NTSTATUS Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
 				       KernelMode,
@@ -260,21 +260,20 @@ NtUserClipCursor(
   }
   
   CurInfo = &WinStaObject->SystemCursor;
-  if(UnsafeRect)
+  if(WinStaObject->ActiveDesktop)
+    DesktopWindow = IntGetWindowObject(WinStaObject->ActiveDesktop->DesktopWindow);
+  
+  if((Rect.right > Rect.left) && (Rect.bottom > Rect.top)
+     && DesktopWindow)
   {
-    if((Rect.right > Rect.left) &&
-       (Rect.bottom > Rect.top))
-    {
-      DesktopWindow = IntGetWindowObject(WinStaObject->ActiveDesktop->DesktopWindow);
-      CurInfo->CursorClipInfo.IsClipped = TRUE;
-      CurInfo->CursorClipInfo.Left = max(Rect.left, DesktopWindow->WindowRect.left);
-      CurInfo->CursorClipInfo.Top = max(Rect.top, DesktopWindow->WindowRect.top);
-      CurInfo->CursorClipInfo.Right = min(Rect.right - 1, DesktopWindow->WindowRect.right - 1);
-      CurInfo->CursorClipInfo.Bottom = min(Rect.bottom - 1, DesktopWindow->WindowRect.bottom - 1);
-      IntReleaseWindowObject(DesktopWindow);
+    CurInfo->CursorClipInfo.IsClipped = TRUE;
+    CurInfo->CursorClipInfo.Left = max(Rect.left, DesktopWindow->WindowRect.left);
+    CurInfo->CursorClipInfo.Top = max(Rect.top, DesktopWindow->WindowRect.top);
+    CurInfo->CursorClipInfo.Right = min(Rect.right - 1, DesktopWindow->WindowRect.right - 1);
+    CurInfo->CursorClipInfo.Bottom = min(Rect.bottom - 1, DesktopWindow->WindowRect.bottom - 1);
+    IntReleaseWindowObject(DesktopWindow);
     
-      MouseMoveCursor(CurInfo->x, CurInfo->y);  
-    }
+    MouseMoveCursor(CurInfo->x, CurInfo->y);  
   }
   else
     WinStaObject->SystemCursor.CursorClipInfo.IsClipped = FALSE;
