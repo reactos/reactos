@@ -228,18 +228,17 @@ typedef struct _TEB
    PVOID WineDebugInfo;                // Needed for WINE DLL's
 } TEB, *PTEB;
 
-static inline PTEB NtCurrentTeb(void)
-{
- PTEB pTeb;
-
 #if defined(_M_IX86)
 /* on the x86, the TEB is contained in the FS segment */
-/* FIXME: instead of hardcoded offsets, use offsetof() - if possible */
 /* 
  FIXME: GCC should allow defining a variable that directly maps to a register.
  It could make for even faster code
 */
+static inline PTEB NtCurrentTeb(void)
+{
+ PTEB pTeb;
 
+ /* FIXME: instead of hardcoded offsets, use offsetof() - if possible */
  __asm__ __volatile__
  (
   "movl %%fs:0x18, %0\n" /* fs:18h == Teb->Tib.Self */
@@ -248,34 +247,30 @@ static inline PTEB NtCurrentTeb(void)
  );
 
  return pTeb;
+}
 
 #elif defined(_M_ALPHA)
 /* on the Alpha AXP, we call the rdteb PAL to retrieve the address of the TEB */
-/* FIXME: this is probably wrong */
- __asm__ __volatile__("call_pal rdteb\n");
- __asm__ __volatile__
- (
-  "mov %0, $0\n"
-  : "=r" (pTeb)
-  :
- );
+/*
+ FIXME? I have no first-hand experience with Alpha development, but I think this
+ is a good guess
+*/
+
+#define NtCurrentTeb() ((PTEB)__rdteb())
+
+void * __rdteb(void);
+#pragma intrinsic(__rdteb)
 
 #elif defined(_M_MIPS)
 /* on the MIPS R4000, the TEB is loaded at a fixed address (?) */
-/* FIXME: again, not terribly sure about this */
- __asm__ __volatile__
- (
-  "lw %0, 0x7FFFF4A8\n"
-  : "=r" (pTeb)
-  :
- );
+/* FIXME: not terribly sure about this */
+#define NtCurrentTeb() ((PTEB)0x7FFFF4A8)
 
 /* #elif defined(_M_PPC) */
 /* FIXME: sorry, I couldn't disassemble the PPC ntdll.dll */
 #else
 #error Unsupported architecture or no architecture specified.
 #endif
-}
 
 #ifdef _M_IX86
 static inline PPEB NtCurrentPeb(void)
