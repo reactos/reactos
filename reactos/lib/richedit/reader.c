@@ -126,12 +126,17 @@ int _RTFGetChar(RTF_Info *info)
     {
         char buff[10];
         long pcb;
-        memset(buff, '\0', sizeof(buff)); /* Workaround for bug in Nullsoft installer */
-        info->editstream.pfnCallback(info->editstream.dwCookie, buff, 1, &pcb);
+        info->editstream.pfnCallback(info->editstream.dwCookie, buff, sizeof(buff), &pcb);
         if(pcb == 0)
            return EOF;
         else
-           CHARLIST_Enqueue(&info->inputCharList, buff[0]);
+        {
+           int i;
+           for (i = 0; i < pcb; i++)
+           {
+               CHARLIST_Enqueue(&info->inputCharList, buff[i]);
+           }
+        }
     }
     myChar = CHARLIST_Dequeue(&info->inputCharList);
     return (int) myChar;
