@@ -1,4 +1,4 @@
-/* $Id: direntry.c,v 1.2 2001/07/13 10:31:14 ekohl Exp $
+/* $Id: direntry.c,v 1.3 2001/07/28 07:05:56 hbirr Exp $
  *
  *
  * FILE:             DirEntry.c
@@ -62,6 +62,12 @@ BOOL
 vfatIsDirEntryLongName (FATDirEntry * pFatDirEntry)
 {
   return  pFatDirEntry->Attrib == 0x0f;
+}
+
+BOOL
+vfatIsDirEntryVolume (FATDirEntry * pFatDirEntry)
+{
+  return pFatDirEntry->Attrib == 0x28;
 }
 
 void

@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.33 2001/07/20 08:00:21 ekohl Exp $ */
+/* $Id: vfat.h,v 1.34 2001/07/28 07:05:56 hbirr Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -334,6 +334,7 @@ VfatOpenFile(PDEVICE_EXTENSION DeviceExt,
 ULONG  vfatDirEntryGetFirstCluster (PDEVICE_EXTENSION  pDeviceExt,
                                     PFAT_DIR_ENTRY  pDirEntry);
 BOOL  vfatIsDirEntryDeleted (FATDirEntry * pFatDirEntry);
+BOOL  vfatIsDirEntryVolume (FATDirEntry * pFatDirEntry);
 void  vfatGetDirEntryName (PFAT_DIR_ENTRY pDirEntry,  PWSTR  pEntryName);
 NTSTATUS  vfatGetNextDirEntry (PDEVICE_EXTENSION  pDeviceExt,
                                PVFATFCB  pDirectoryFCB,

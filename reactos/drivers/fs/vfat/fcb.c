@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.7 2001/07/25 17:39:34 hbirr Exp $
+/* $Id: fcb.c,v 1.8 2001/07/28 07:05:56 hbirr Exp $
  *
  *
  * FILE:             fcb.c
@@ -466,7 +466,8 @@ vfatDirFindFile (PDEVICE_EXTENSION  pDeviceExt,
             directoryIndex,
             currentLongName);
 
-    if (!vfatIsDirEntryDeleted (&currentDirEntry))
+    if (!vfatIsDirEntryDeleted (&currentDirEntry)
+      && !vfatIsDirEntryVolume(&currentDirEntry))
     {
       if (currentLongName [0] != L'\0' && wstrcmpjoki (currentLongName, pFileToFind))
       {
