@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.50 2004/03/14 13:11:55 weiden Exp $
+/* $Id: file.c,v 1.51 2004/03/14 13:20:10 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -441,6 +441,37 @@ GetFileSize(HANDLE hFile,
      *lpFileSizeHigh = FileStandard.EndOfFile.u.HighPart;
 
    return FileStandard.EndOfFile.u.LowPart;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+GetFileSizeEx(
+    HANDLE hFile,
+    PLARGE_INTEGER lpFileSize
+    )
+{
+   NTSTATUS errCode;
+   FILE_STANDARD_INFORMATION FileStandard;
+   IO_STATUS_BLOCK IoStatusBlock;
+
+   errCode = NtQueryInformationFile(hFile,
+				    &IoStatusBlock,
+				    &FileStandard,
+				    sizeof(FILE_STANDARD_INFORMATION),
+				    FileStandardInformation);
+   if (!NT_SUCCESS(errCode))
+     {
+	SetLastErrorByStatus(errCode);
+	return FALSE;
+     }
+   if (lpFileSize)
+     *lpFileSize = FileStandard.EndOfFile;
+
+   return TRUE;
 }
 
 
