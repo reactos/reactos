@@ -441,6 +441,7 @@ RtlExtendedIntegerMultiply
 _splitpath
 _strcmpi
 _stricmp
+_strlwr
 _strnicmp
 _strupr
 atoi

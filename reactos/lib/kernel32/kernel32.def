@@ -163,8 +163,10 @@ ExitProcess = ExitProcess@4
 ;FatalAppExitW@8
 ;FatalExit@4
 ;FileTimeToDosDateTime@12
-;FileTimeToLocalFileTime@8
-;FileTimeToSystemTime@8
+FileTimeToLocalFileTime@8
+FileTimeToLocalFileTime = FileTimeToLocalFileTime@8
+FileTimeToSystemTime@8
+FileTimeToSystemTime = FileTimeToSystemTime@8
 FillConsoleOutputAttribute@20
 FillConsoleOutputAttribute = FillConsoleOutputAttribute@20
 FillConsoleOutputCharacterA@20

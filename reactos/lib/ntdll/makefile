@@ -20,7 +20,7 @@ STDLIB_OBJECTS = stdlib/atoi.o stdlib/atol.o stdlib/splitp.o \
 STRING_OBJECTS = string/ctype.o string/memcpy.o string/memmove.o \
                  string/memset.o string/strcat.o string/strchr.o \
                  string/strcmp.o string/strcspn.o \
-                 string/strcpy.o string/stricmp.o string/strlen.o \
+                 string/strcpy.o string/stricmp.o string/strlen.o string/strlwr.o \
                  string/strncat.o string/strncmp.o string/strncpy.o \
                  string/strnicmp.o string/strnlen.o string/strrchr.o \
                  string/strstr.o string/strupr.o string/wstring.o
