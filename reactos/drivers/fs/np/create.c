@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.24 2004/10/14 11:49:55 ekohl Exp $
+/* $Id: create.c,v 1.25 2004/11/01 22:54:24 ion Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -223,7 +223,7 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
    PNPFS_FCB Fcb;
    PLIST_ENTRY current_entry;
    PNPFS_PIPE current = NULL;
-   PIO_PIPE_CREATE_BUFFER Buffer;
+   PNAMED_PIPE_CREATE_PARAMETERS Buffer;
    
    DPRINT("NpfsCreateNamedPipe(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
    
@@ -233,7 +233,7 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
    DPRINT("FileObject %p\n", FileObject);
    DPRINT("Pipe name %wZ\n", &FileObject->FileName);
    
-   Buffer = (PIO_PIPE_CREATE_BUFFER)Irp->Tail.Overlay.AuxiliaryBuffer;
+   Buffer = (PNAMED_PIPE_CREATE_PARAMETERS)Irp->Tail.Overlay.AuxiliaryBuffer;
    
    Irp->IoStatus.Information = 0;
 
@@ -286,8 +286,8 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
          }
 
        /* FIXME: Check pipe modes also! */
-       if (Pipe->MaximumInstances != Buffer->MaxInstances ||
-           Pipe->TimeOut.QuadPart != Buffer->TimeOut.QuadPart)
+       if (Pipe->MaximumInstances != Buffer->MaximumInstances ||
+           Pipe->TimeOut.QuadPart != Buffer->DefaultTimeout.QuadPart)
          {
            DPRINT("Asked for invalid pipe mode.\n");
            ExFreePool(Fcb);
@@ -323,24 +323,24 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
        InitializeListHead(&Pipe->ClientFcbListHead);
        KeInitializeMutex(&Pipe->FcbListLock, 0);
 
-       Pipe->PipeType = Buffer->WriteModeMessage ? FILE_PIPE_MESSAGE_TYPE : FILE_PIPE_BYTE_STREAM_TYPE;
-       Pipe->PipeWriteMode = Buffer->WriteModeMessage ? FILE_PIPE_MESSAGE_MODE : FILE_PIPE_BYTE_STREAM_MODE;
-       Pipe->PipeReadMode = Buffer->ReadModeMessage ? FILE_PIPE_MESSAGE_MODE : FILE_PIPE_BYTE_STREAM_MODE;
-       Pipe->PipeBlockMode = Buffer->NonBlocking;
+       Pipe->PipeType = Buffer->NamedPipeType ? FILE_PIPE_MESSAGE_TYPE : FILE_PIPE_BYTE_STREAM_TYPE;
+       Pipe->PipeWriteMode = Buffer->NamedPipeType ? FILE_PIPE_MESSAGE_MODE : FILE_PIPE_BYTE_STREAM_MODE;
+       Pipe->PipeReadMode = Buffer->ReadMode ? FILE_PIPE_MESSAGE_MODE : FILE_PIPE_BYTE_STREAM_MODE;
+       Pipe->PipeBlockMode = Buffer->CompletionMode;
        Pipe->PipeConfiguration = IoStack->Parameters.Create.Options & 0x3;
-       Pipe->MaximumInstances = Buffer->MaxInstances;
+       Pipe->MaximumInstances = Buffer->MaximumInstances;
        Pipe->CurrentInstances = 0;
-       Pipe->TimeOut = Buffer->TimeOut;
+       Pipe->TimeOut = Buffer->DefaultTimeout;
        if (!(IoStack->Parameters.Create.Options & FILE_PIPE_OUTBOUND) || 
            IoStack->Parameters.Create.Options & FILE_PIPE_FULL_DUPLEX)
          {
-           if (Buffer->InBufferSize == 0)
+           if (Buffer->InboundQuota == 0)
              {
                Pipe->InboundQuota = DeviceExt->DefaultQuota;
              }
            else
              {
-               Pipe->InboundQuota = PAGE_ROUND_UP(Buffer->InBufferSize);
+               Pipe->InboundQuota = PAGE_ROUND_UP(Buffer->InboundQuota);
                if (Pipe->InboundQuota < DeviceExt->MinQuota)
                  {
                    Pipe->InboundQuota = DeviceExt->MinQuota;
@@ -357,13 +357,13 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
          }
        if (IoStack->Parameters.Create.Options & (FILE_PIPE_FULL_DUPLEX|FILE_PIPE_OUTBOUND))
          {
-           if (Buffer->OutBufferSize == 0)
+           if (Buffer->OutboundQuota == 0)
              {
                Pipe->OutboundQuota = DeviceExt->DefaultQuota;
              }
            else
              {
-               Pipe->OutboundQuota = PAGE_ROUND_UP(Buffer->OutBufferSize);
+               Pipe->OutboundQuota = PAGE_ROUND_UP(Buffer->OutboundQuota);
                if (Pipe->OutboundQuota < DeviceExt->MinQuota)
                  {
                    Pipe->OutboundQuota = DeviceExt->MinQuota;
