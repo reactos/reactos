@@ -1043,3 +1043,19 @@ GetCurrentObject(
 {
   return NtGdiGetCurrentObject(hdc, uObjectType);
 }
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+PtVisible(
+	HDC	hdc,
+	int	X,
+	int	Y
+	)
+{
+  return NtGdiPtVisible(hdc, X, Y);
+}
+

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cliprgn.c,v 1.32 2004/04/24 14:21:37 weiden Exp $ */
+/* $Id: cliprgn.c,v 1.33 2004/04/25 15:52:31 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -124,9 +124,15 @@ NtGdiSelectVisRgn(HDC hdc, HRGN hrgn)
   DC *dc;
 
   if (!hrgn)
+  {
+  	SetLastWin32Error(ERROR_INVALID_PARAMETER);
   	return ERROR;
+  }
   if (!(dc = DC_LockDc(hdc)))
+  {
+  	SetLastWin32Error(ERROR_INVALID_HANDLE);
   	return ERROR;
+  }
 
   dc->w.flags &= ~DC_DIRTY;
 
@@ -168,10 +174,14 @@ IntGdiGetClipBox(HDC    hDC,
   PDC dc;
 
   if (!(dc = DC_LockDc(hDC)))
+  {
+  	SetLastWin32Error(ERROR_INVALID_HANDLE);
   	return ERROR;
+  }
   if(!(Rgn = RGNDATA_LockRgn(dc->w.hGCClipRgn)))
   {
     DC_UnlockDc( hDC );
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
     return ERROR;
   }
   retval = UnsafeIntGetRgnBox(Rgn, rc);
@@ -219,7 +229,10 @@ int STDCALL NtGdiIntersectClipRect(HDC  hDC,
    PDC dc = DC_LockDc(hDC);
 
    if (!dc)
+   {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
       return ERROR;
+   }
 
    Rect.left = LeftRect;
    Rect.top = TopRect;
@@ -262,7 +275,26 @@ BOOL STDCALL NtGdiPtVisible(HDC  hDC,
                     int  X,
                     int  Y)
 {
-  UNIMPLEMENTED;
+  BOOL Ret;
+  DC *dc;
+  
+  if(!(dc = DC_LockDc(hDC)))
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
+  
+  if(dc->w.hClipRgn)
+  {
+    Ret = NtGdiPtInRegion(dc->w.hClipRgn, X, Y);
+  }
+  else
+  {
+    Ret = FALSE;
+  }
+  
+  DC_UnlockDc(hDC);
+  return Ret;
 }
 
 BOOL STDCALL NtGdiRectVisible(HDC  hDC,
@@ -276,6 +308,7 @@ BOOL STDCALL NtGdiRectVisible(HDC  hDC,
 
    if (!dc)
    {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
    }
 

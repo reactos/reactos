@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.56 2004/04/25 15:31:43 weiden Exp $
+/* $Id: stubs.c,v 1.57 2004/04/25 15:52:31 weiden Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -384,22 +384,6 @@ STDCALL
 PlayMetaFile(
 	HDC		a0,
 	HMETAFILE	a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-PtVisible(
-	HDC	a0,
-	int	a1,
-	int	a2
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
