@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.70 2001/05/02 22:23:47 ekohl Exp $
+; $Id: ntdll.def,v 1.71 2001/05/24 11:28:18 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -271,8 +271,8 @@ NtYieldExecution@0
 ;RtlAbortRXact
 RtlAbsoluteToSelfRelativeSD@12
 RtlAcquirePebLock@0
-;RtlAcqureResourceExclusive
-;RtlAcqureResourceShared
+RtlAcquireResourceExclusive@8
+RtlAcquireResourceShared@8
 RtlAddAccessAllowedAce@16
 RtlAddAccessDeniedAce@16
 RtlAddAce@20
@@ -312,9 +312,9 @@ RtlCompareString@12
 RtlCompareUnicodeString@12
 ;RtlCompressBuffer
 ;RtlConsoleMultiByteToUnicodeN
-;RtlConvertExclusiveToShared
+RtlConvertExclusiveToShared@4
 RtlConvertLongToLargeInteger@4
-;RtlConvertSharedToExclusive
+RtlConvertSharedToExclusive@4
 RtlConvertSidToUnicodeString@12
 ;RtlConvertUiListToApiList
 RtlConvertUlongToLargeInteger@4
@@ -353,7 +353,7 @@ RtlDeleteCriticalSection@4
 ;RtlDeleteElementGenericTable
 ;RtlDeleteNoSplay
 RtlDeleteRegistryValue@12
-;RtlDeleteResource
+RtlDeleteResource@4
 ;RtlDeleteSecurityObject
 ;RtlDestroyAtomTable
 RtlDestroyEnvironment@4
@@ -366,7 +366,7 @@ RtlDoesFileExists_U@4
 RtlDosPathNameToNtPathName_U@16
 RtlDosSearchPath_U@24
 RtlDowncaseUnicodeString@12
-;RtlDumpResource
+RtlDumpResource@4
 ;RtlEmptyAtomTable
 RtlEnlargedIntegerMultiply@8
 RtlEnlargedUnsignedDivide@16
@@ -446,7 +446,7 @@ RtlInitializeCriticalSection@4
 ;RtlInitializeGenericTable
 ;RtlInitializeHandleTable
 ;RtlInitializeRXact
-;RtlInitializeResource
+RtlInitializeResource@4
 RtlInitializeSid@12
 ;RtlInsertElementGenericTable
 RtlIntegerToChar@16
@@ -518,7 +518,7 @@ RtlReAllocateHeap@16
 ;RtlRealPredecessor
 ;RtlRealSuccessor
 RtlReleasePebLock@0
-;RtlReleaseResource
+RtlReleaseResource@4
 ;RtlRemoteCall
 ;RtlResetRtlTranslations
 ;RtlRunDecodeUnicodeString

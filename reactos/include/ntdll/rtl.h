@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.25 2001/05/07 22:03:26 chorns Exp $
+/* $Id: rtl.h,v 1.26 2001/05/24 11:27:10 ekohl Exp $
  *
  */
 
@@ -37,6 +37,18 @@ typedef struct _RTL_PROCESS_INFO
    SECTION_IMAGE_INFORMATION ImageInfo;
 } RTL_PROCESS_INFO, *PRTL_PROCESS_INFO;
 
+typedef struct _RTL_RESOURCE
+{
+   CRITICAL_SECTION Lock;
+   HANDLE SharedSemaphore;
+   ULONG SharedWaiters;
+   HANDLE ExclusiveSemaphore;
+   ULONG ExclusiveWaiters;
+   LONG NumberActive;
+   HANDLE OwningThread;
+   ULONG TimeoutBoost; /* ?? */
+   PVOID DebugInfo; /* ?? */
+} RTL_RESOURCE, *PRTL_RESOURCE;
 
 
 #define HEAP_BASE (0xa0000000)
@@ -333,6 +345,59 @@ VOID
 STDCALL
 RtlRaiseStatus (
 	IN	NTSTATUS	Status
+	);
+
+
+/* resource functions */
+
+BOOLEAN
+STDCALL
+RtlAcquireResourceExclusive (
+	IN	PRTL_RESOURCE	Resource,
+	IN	BOOLEAN		Wait
+	);
+
+BOOLEAN
+STDCALL
+RtlAcquireResourceShared (
+	IN	PRTL_RESOURCE	Resource,
+	IN	BOOLEAN		Wait
+	);
+
+VOID
+STDCALL
+RtlConvertExclusiveToShared (
+	IN	PRTL_RESOURCE	Resource
+	);
+
+VOID
+STDCALL
+RtlConvertSharedToExclusive (
+	IN	PRTL_RESOURCE	Resource
+	);
+
+VOID
+STDCALL
+RtlDeleteResource (
+	IN	PRTL_RESOURCE	Resource
+	);
+
+VOID
+STDCALL
+RtlDumpResource (
+	IN	PRTL_RESOURCE	Resource
+	);
+
+VOID
+STDCALL
+RtlInitializeResource (
+	IN	PRTL_RESOURCE	Resource
+	);
+
+VOID
+STDCALL
+RtlReleaseResource (
+	IN	PRTL_RESOURCE	Resource
 	);
 
 #endif /* __INCLUDE_NTDLL_RTL_H */
