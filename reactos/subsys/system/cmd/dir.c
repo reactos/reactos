@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.5 2003/12/14 22:51:52 hbirr Exp $
+/* $Id: dir.c,v 1.6 2004/01/16 19:57:13 weiden Exp $
  *
  *  DIR.C - dir internal command.
  *
@@ -966,7 +966,12 @@ DirList (LPTSTR szPath, LPTSTR szFilespec, LPINT pLine, DWORD dwFlags)
 				}
 
 				/* print file size */
-				if (file.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+				if (file.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)
+				{
+					ConOutPrintf (_T("         <JUNCTION>    "));
+					dircount++;
+				}
+				else if (file.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 				{
 					ConOutPrintf (_T("         <DIR>         "));
 					dircount++;
