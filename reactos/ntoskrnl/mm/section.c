@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.60 2001/08/26 17:29:09 ekohl Exp $
+/* $Id: section.c,v 1.61 2001/09/25 19:41:38 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -157,8 +157,6 @@ MmUnlockSectionSegment(PMM_SECTION_SEGMENT Segment)
   KeReleaseMutex(&Segment->Lock, FALSE);
 }
 
-
-
 VOID 
 MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
 			     ULONG Offset,
@@ -253,6 +251,13 @@ NTSTATUS
 MiReadPage(PMEMORY_AREA MemoryArea,
 	   PLARGE_INTEGER Offset,
 	   PVOID* Page)
+     /*
+      * FUNCTION: Read a page for a section backed memory area.
+      * PARAMETERS:
+      *       MemoryArea - Memory area to read the page for.
+      *       Offset - Offset of the page to read.
+      *       Page - Variable that receives a page contains the read data.
+      */
 {
   IO_STATUS_BLOCK IoStatus;
   PFILE_OBJECT FileObject;
@@ -263,6 +268,11 @@ MiReadPage(PMEMORY_AREA MemoryArea,
   FileObject = MemoryArea->Data.SectionData.Section->FileObject;
   Fcb = (PREACTOS_COMMON_FCB_HEADER)FileObject->FsContext;
   
+  /*
+   * If the file system is letting us go directly to the cache and the
+   * memory area was mapped at an offset in the file which is page aligned
+   * then get the related cache segment.
+   */
   if (FileObject->Flags & FO_DIRECT_CACHE_PAGING_READ &&
       (Offset->QuadPart % PAGESIZE) == 0)
     {
@@ -272,18 +282,29 @@ MiReadPage(PMEMORY_AREA MemoryArea,
       PCACHE_SEGMENT CacheSeg;
       LARGE_INTEGER SegOffset;
       PHYSICAL_ADDRESS Addr;
+
+      /*
+       * Get the related cache segment; we use a lower level interface than
+       * filesystems do because it is safe for us to use an offset with a
+       * alignment less than the file system block size.
+       */
       Status = CcRosGetCacheSegment(Fcb->Bcb,
-				 (ULONG)Offset->QuadPart,
-				 &BaseOffset,
-				 &BaseAddress,
-				 &UptoDate,
-				 &CacheSeg);
+				    (ULONG)Offset->QuadPart,
+				    &BaseOffset,
+				    &BaseAddress,
+				    &UptoDate,
+				    &CacheSeg);
       if (!NT_SUCCESS(Status))
 	{
 	  return(Status);
 	}
       if (!UptoDate)
 	{
+	  /*
+	   * If the cache segment isn't up to date then call the file
+	   * system to read in the data.
+	   */
+
 	  Mdl = MmCreateMdl(NULL, BaseAddress, Fcb->Bcb->CacheSegmentSize);
 	  MmBuildMdlForNonPagedPool(Mdl);
 	  SegOffset.QuadPart = BaseOffset;
@@ -298,6 +319,9 @@ MiReadPage(PMEMORY_AREA MemoryArea,
 	      return(Status);
 	    }
 	}
+      /*
+       * Retrieve the page from the cache segment that we actually want.
+       */
       Addr = MmGetPhysicalAddress(BaseAddress + 
 				  Offset->QuadPart - BaseOffset);
       (*Page) = (PVOID)(ULONG)Addr.QuadPart;
