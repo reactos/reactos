@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmap.c,v 1.30 2004/06/23 05:04:30 ion Exp $
+/* $Id: bitmap.c,v 1.31 2004/07/14 20:52:13 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -337,6 +337,14 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
   }
   else
   {
+      /*
+       * FIXME: This code is incorrect and is likely to crash in many cases. 
+       * In the file the cursor/icon directory records are stored like
+       * CURSORICONFILEDIR, but we treat them like CURSORICONDIR. In Wine
+       * this is solved by creating a fake cursor/icon directory in memory
+       * and passing that to CURSORICON_FindBestIcon.
+       */
+
       if (fuLoad & LR_SHARED)
       {
         DbgPrint("FIXME: need LR_SHARED support for loading icon images from files\n");
