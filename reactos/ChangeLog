@@ -1,5 +1,16 @@
 2003-12-07  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* lib/user32/windows/accel.c (U32IsValidAccelMessage): Translate WM_KEYUP
+	and WM_SYSKEYUP messages.
+	(TranslateAcceleratorA): Returntype of RtlMultiByteToUnicodeN is NTSTATUS,
+	so interpret it as such.
+	* subsys/win32k/ntuser/accelerator.c (NtUserDestroyAcceleratorTable):
+	Call ObmCloseHandle() before destroying the object.
+	(IntTranslateAccelerator): New function.
+	(NtUserTranslateAccelerator): Partial implementation.
+
+2003-12-07  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* subsys/win32k/include/accelerator.h: New file.
 	* subsys/win32k/ntuser/accelerator.c: Ditto.
 	* include/win32k/ntuser.h (NtUserDestroyAcceleratorTable): Make returntype

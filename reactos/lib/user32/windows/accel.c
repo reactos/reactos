@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: accel.c,v 1.11 2003/07/23 20:39:45 gvg Exp $
+/* $Id: accel.c,v 1.12 2003/12/07 16:54:44 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -162,9 +162,10 @@ BOOL WINAPI U32IsValidAccelMessage(UINT uMsg)
  switch(uMsg)
  {
   case WM_KEYDOWN:
+  case WM_KEYUP:
   case WM_CHAR:
   case WM_SYSKEYDOWN:
-  case WM_SYSCHAR:
+  case WM_SYSKEYUP:
    return TRUE;
 
   default:
@@ -352,16 +353,14 @@ int WINAPI TranslateAcceleratorA(HWND hWnd, HACCEL hAccTable, LPMSG lpMsg)
  MSG mCopy = *lpMsg;
  CHAR cChar;
  WCHAR wChar;
- NTSTATUS nErrCode;
+ NTSTATUS Status;
 
  if(!U32IsValidAccelMessage(lpMsg->message)) return 0;
 
- nErrCode =
-  RtlMultiByteToUnicodeN(&wChar, sizeof(wChar), NULL, &cChar, sizeof(cChar));
-
- if(!nErrCode)
+ Status = RtlMultiByteToUnicodeN(&wChar, sizeof(wChar), NULL, &cChar, sizeof(cChar));
+ if(!NT_SUCCESS(Status))
  {
-  SetLastError(RtlNtStatusToDosError(nErrCode));
+  SetLastError(RtlNtStatusToDosError(Status));
   return 0;
  }
 
