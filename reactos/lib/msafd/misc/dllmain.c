@@ -1721,7 +1721,7 @@ VOID SockAsyncSelectCompletionRoutine(PVOID Context, PIO_STATUS_BLOCK IoStatusBl
 	for (x = 1; x; x<<=1) {
 		switch (AsyncData->AsyncSelectInfo.Handles[0].Events & x) {
 			case AFD_EVENT_RECEIVE:
-				if ((Socket->SharedData.AsyncEvents & FD_READ) && (!Socket->SharedData.AsyncDisabledEvents & FD_READ)) {
+				if (0 != (Socket->SharedData.AsyncEvents & FD_READ) && 0 == (Socket->SharedData.AsyncDisabledEvents & FD_READ)) {
 					/* Make the Notifcation */
 					(Upcalls.lpWPUPostMessage)(Socket->SharedData.hWnd,
 								   Socket->SharedData.wMsg,
@@ -1730,9 +1730,10 @@ VOID SockAsyncSelectCompletionRoutine(PVOID Context, PIO_STATUS_BLOCK IoStatusBl
 					/* Disable this event until the next read(); */
 					Socket->SharedData.AsyncDisabledEvents |= FD_READ;
 				}
+				break;
 			
 			case AFD_EVENT_OOB_RECEIVE:
-				if ((Socket->SharedData.AsyncEvents & FD_OOB) && (!Socket->SharedData.AsyncDisabledEvents & FD_OOB)) {
+				if (0 != (Socket->SharedData.AsyncEvents & FD_OOB) && 0 == (Socket->SharedData.AsyncDisabledEvents & FD_OOB)) {
 					/* Make the Notifcation */
 					(Upcalls.lpWPUPostMessage)(Socket->SharedData.hWnd,
 								   Socket->SharedData.wMsg,
@@ -1741,9 +1742,10 @@ VOID SockAsyncSelectCompletionRoutine(PVOID Context, PIO_STATUS_BLOCK IoStatusBl
 					/* Disable this event until the next read(); */
 					Socket->SharedData.AsyncDisabledEvents |= FD_OOB;
 				}
+				break;
 		
 			case AFD_EVENT_SEND:
-				if ((Socket->SharedData.AsyncEvents & FD_WRITE) && (!Socket->SharedData.AsyncDisabledEvents & FD_WRITE)) {
+				if (0 != (Socket->SharedData.AsyncEvents & FD_WRITE) && 0 == (Socket->SharedData.AsyncDisabledEvents & FD_WRITE)) {
 					/* Make the Notifcation */
 					(Upcalls.lpWPUPostMessage)(Socket->SharedData.hWnd,
 								   Socket->SharedData.wMsg,
@@ -1752,9 +1754,10 @@ VOID SockAsyncSelectCompletionRoutine(PVOID Context, PIO_STATUS_BLOCK IoStatusBl
 					/* Disable this event until the next write(); */
 					Socket->SharedData.AsyncDisabledEvents |= FD_WRITE;
 				}
+				break;
 				
 			case AFD_EVENT_ACCEPT:
-				if ((Socket->SharedData.AsyncEvents & FD_ACCEPT) && (!Socket->SharedData.AsyncDisabledEvents & FD_ACCEPT)) {
+				if (0 != (Socket->SharedData.AsyncEvents & FD_ACCEPT) && 0 == (Socket->SharedData.AsyncDisabledEvents & FD_ACCEPT)) {
 					/* Make the Notifcation */
 					(Upcalls.lpWPUPostMessage)(Socket->SharedData.hWnd,
 								   Socket->SharedData.wMsg,
@@ -1763,11 +1766,12 @@ VOID SockAsyncSelectCompletionRoutine(PVOID Context, PIO_STATUS_BLOCK IoStatusBl
 					/* Disable this event until the next accept(); */
 					Socket->SharedData.AsyncDisabledEvents |= FD_ACCEPT;
 				}
+				break;
 
 			case AFD_EVENT_DISCONNECT:
 			case AFD_EVENT_ABORT:
 			case AFD_EVENT_CLOSE:
-				if ((Socket->SharedData.AsyncEvents & FD_CLOSE) && (!Socket->SharedData.AsyncDisabledEvents & FD_CLOSE)) {
+				if (0 != (Socket->SharedData.AsyncEvents & FD_CLOSE) && 0 == (Socket->SharedData.AsyncDisabledEvents & FD_CLOSE)) {
 					/* Make the Notifcation */
 					(Upcalls.lpWPUPostMessage)(Socket->SharedData.hWnd,
 								   Socket->SharedData.wMsg,
@@ -1776,6 +1780,7 @@ VOID SockAsyncSelectCompletionRoutine(PVOID Context, PIO_STATUS_BLOCK IoStatusBl
 					/* Disable this event forever; */
 					Socket->SharedData.AsyncDisabledEvents |= FD_CLOSE;
 				}
+				break;
 
 			/* FIXME: Support QOS */
 		}
