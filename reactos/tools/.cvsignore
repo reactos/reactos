@@ -6,6 +6,7 @@ rline
 rmkdir
 rrmdir
 mkconfig
+mkflpimg
 rdel
 rsym
 rtouch

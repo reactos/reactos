@@ -9,7 +9,8 @@ TOOLS = \
   rmkdir$(EXE_POSTFIX) \
   rrmdir$(EXE_POSTFIX) \
   rsym$(EXE_POSTFIX) \
-  rtouch$(EXE_POSTFIX)
+  rtouch$(EXE_POSTFIX) \
+  mkflpimg$(EXE_POSTFIX)
 
 CLEAN_FILES = $(TOOLS)
 
@@ -77,6 +78,15 @@ endif
 ifeq ($(HOST),mingw32-windows)
 rtouch$(EXE_POSTFIX): rtouch.c
 	$(HOST_CC) $(CFLAGS) -DDOS_PATHS rtouch.c -o rtouch$(EXE_POSTFIX)
+endif
+
+ifeq ($(HOST),mingw32-linux)
+rtouch$(EXE_POSTFIX): mkflpimg.c
+	$(HOST_CC) $(CFLAGS) -DUNIX_PATHS mkflpimg.c -o mkflpimg$(EXE_POSTFIX)
+endif
+ifeq ($(HOST),mingw32-windows)
+rtouch$(EXE_POSTFIX): mkflpimg.c
+	$(HOST_CC) $(CFLAGS) -DDOS_PATHS mkflpimg.c -o mkflpimg$(EXE_POSTFIX)
 endif
 
 
