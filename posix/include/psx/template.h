@@ -1,9 +1,9 @@
-/* $Id: template.h,v 1.3 2002/03/03 17:24:04 hyperion Exp $
+/* $Id: template.h,v 1.4 2002/03/10 18:06:08 hyperion Exp $
  How to create a new header file from this template:
   - copy the template in the new file (never edit this file directly, unless
     that's what you want)
   - search for the string "EDITME" in the file, and follow the instructions
-  - remove this comment block, all blocks containing DELETEME, and all EDITME
+  - remove this comment block, all blocks containing REMOVEME, and all EDITME
     instructions
   - save your file, and Have Fun! (TM)
  */
