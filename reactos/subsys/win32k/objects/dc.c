@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.103 2003/11/26 22:24:04 gvg Exp $
+/* $Id: dc.c,v 1.104 2003/11/30 18:55:57 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -425,8 +425,8 @@ SetupDevMode(PDEVMODEW DevMode)
                                           NULL);
           if (! NT_SUCCESS(Status))
             {
-              DPRINT1("RtlQueryRegistryValues for %S failed with status 0x%08x\n",
-                      ProfilePath, Status);
+              DPRINT("RtlQueryRegistryValues for %S failed with status 0x%08x\n",
+                     ProfilePath, Status);
               Valid = FALSE;
             }
           else
