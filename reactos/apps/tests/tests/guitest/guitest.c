@@ -202,7 +202,7 @@ char*WndName(HWND hWnd,int state)
    return buffer;
   }
  }
- sprintf(buffer,"%04x",hWnd);
+ sprintf(buffer,"%p",hWnd);
  return buffer;
 }
 
@@ -451,7 +451,6 @@ LRESULT FAR CALLBACK _export MainWindowProc(HWND hWnd, UINT msg, WPARAM wParam, 
 LRESULT FAR CALLBACK _export SubWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
  LRESULT lResult=0;
- RECT rect;
  int OldState=State;
 
  State=STATE_RECURS; Rec++;
@@ -486,19 +485,19 @@ LRESULT FAR CALLBACK _export SubClassWindowProc(HWND hWnd, UINT msg, WPARAM wPar
  if (!Clicked) {
   LogMessage(OldState,hWnd,msg,wParam,lParam,NULL);
   if (But!=-1) {
-   lResult=CallWindowProc((FARPROC)wndButton[But],hWnd,msg,wParam,lParam);
+   lResult=CallWindowProc(wndButton[But],hWnd,msg,wParam,lParam);
    if (msg==WM_LBUTTONUP) {
     LogChildOrder(GetParent(hWnd));
    }
   }
   else if (hWnd==hDialog) {
-   lResult=CallWindowProc((FARPROC)wndDialog,hWnd,msg,wParam,lParam);
+   lResult=CallWindowProc(wndDialog,hWnd,msg,wParam,lParam);
   }
   else if (hWnd==hSubDlg) {
-   lResult=CallWindowProc((FARPROC)wndSubDlg,hWnd,msg,wParam,lParam);
+   lResult=CallWindowProc(wndSubDlg,hWnd,msg,wParam,lParam);
   }
   else if (hWnd==hGroup) {
-   lResult=CallWindowProc((FARPROC)wndGroup,hWnd,msg,wParam,lParam);
+   lResult=CallWindowProc(wndGroup,hWnd,msg,wParam,lParam);
    if (msg==WM_SETFOCUS) {
     /* create subdialog */
     if (hSubDlg) {
@@ -534,7 +533,6 @@ BOOL FAR CALLBACK _export TestDialogProc(HWND hWndDlg, UINT msg, WPARAM wParam, 
  BOOL bResult=0;
  RECT rect;
  int OldState=State;
- int But=-1;
 
  State=STATE_RECURS; Rec++;
  if (!Clicked) LogMessage(OldState,hWndDlg,msg,wParam,lParam,"dlgp");
@@ -586,9 +584,7 @@ BOOL FAR CALLBACK _export TestDialogProc(HWND hWndDlg, UINT msg, WPARAM wParam, 
 BOOL FAR CALLBACK _export SubDialogProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
  BOOL bResult=0;
- RECT rect;
  int OldState=State;
- int But=-1;
 
  State=STATE_RECURS; Rec++;
  if (!Clicked) LogMessage(OldState,hWndDlg,msg,wParam,lParam,NULL);
@@ -622,7 +618,7 @@ BOOL AppInit(void)
  wclass.cbWndExtra = 0;
  wclass.hInstance = hInst;
  wclass.hIcon = LoadIcon(hInst,MAKEINTRESOURCE(1));
- wclass.hCursor = LoadCursor(0,IDC_ARROW);
+ wclass.hCursor = LoadCursor(0, MAKEINTRESOURCE(IDC_ARROW));
  wclass.hbrBackground = GetStockObject(WHITE_BRUSH);
  wclass.lpszMenuName = NULL;
  wclass.lpszClassName = wclassname;

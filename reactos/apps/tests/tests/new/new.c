@@ -22,8 +22,8 @@ int PASCAL WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	 wndclass.cbClsExtra	= 0 ;
 	 wndclass.cbWndExtra	= 0 ;
 	 wndclass.hInstance	= hInstance ;
-	 wndclass.hIcon		= LoadIcon (NULL, IDI_APPLICATION) ;
-	 wndclass.hCursor	= LoadCursor (NULL, IDC_ARROW) ;
+	 wndclass.hIcon		= LoadIcon (NULL, MAKEINTRESOURCE(IDI_APPLICATION)) ;
+	 wndclass.hCursor	= LoadCursor (NULL, MAKEINTRESOURCE(IDC_ARROW)) ;
 	 wndclass.hbrBackground	= GetStockObject (WHITE_BRUSH) ;
 	 wndclass.lpszMenuName	= NULL ;
 	 wndclass.lpszClassName	= szAppName ;
@@ -73,7 +73,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     	     wndclass.cbWndExtra	= 0 ;
     	     wndclass.hInstance		= ghInstance ;
     	     wndclass.hIcon		= NULL ;
-    	     wndclass.hCursor		= LoadCursor (NULL, IDC_CROSS) ;
+    	     wndclass.hCursor		= LoadCursor (NULL, MAKEINTRESOURCE(IDC_CROSS)) ;
     	     wndclass.hbrBackground	= GetStockObject (LTGRAY_BRUSH) ;
     	     wndclass.lpszMenuName	= NULL ;
     	     wndclass.lpszClassName	= clsName;

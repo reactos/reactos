@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <windows.h>
 /* Win32 counterpart for CalcChildScroll16 is not implemented */
 /* even in MS Visual C++ */
@@ -74,7 +75,7 @@ LRESULT CALLBACK WndProc2 (HWND wnd, UINT msg, WPARAM w, LPARAM l)
 
     case WM_PAINT:
 	dc = BeginPaint (wnd, &ps);
-        sprintf(buf,"ps.rcPaint = {left = %d, top = %d, right = %d, bottom = %d}",
+        sprintf(buf,"ps.rcPaint = {left = %lu, top = %lu, right = %lu, bottom = %lu}",
                 ps.rcPaint.left,ps.rcPaint.top,ps.rcPaint.right,ps.rcPaint.bottom);
 	rectInfo.left = rectInfo.top = 0;
 	GetTextExtentPoint32 (dc, buf, strlen(buf), ((LPSIZE)&rectInfo) + 1 );
@@ -114,8 +115,8 @@ int PASCAL WinMain (HINSTANCE inst, HINSTANCE prev, LPSTR cmdline, int show)
 	class.cbClsExtra = 0;
 	class.cbWndExtra = 0;
 	class.hInstance  = inst;
-	class.hIcon      = LoadIcon (0, IDI_APPLICATION);
-	class.hCursor    = LoadCursor (0, IDC_ARROW);
+	class.hIcon      = LoadIcon (0, MAKEINTRESOURCE(IDI_APPLICATION));
+	class.hCursor    = LoadCursor (0, MAKEINTRESOURCE(IDC_ARROW));
 	class.hbrBackground = GetStockObject (WHITE_BRUSH);
 	class.lpszMenuName = NULL;
 	class.lpszClassName = className;

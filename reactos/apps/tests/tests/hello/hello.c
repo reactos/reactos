@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <string.h>
 
 char szAppName[] = "Hello";
 
@@ -18,8 +19,8 @@ int PASCAL WinMain (HINSTANCE hInstance, HINSTANCE hPrevInst, LPSTR lpszCmdLine,
 		wndclass.cbClsExtra = 0;
 		wndclass.cbWndExtra = 0;
 		wndclass.hInstance = hInstance;
-		wndclass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-		wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
+		wndclass.hIcon = LoadIcon(NULL, MAKEINTRESOURCE(IDI_APPLICATION));
+		wndclass.hCursor = LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW));
 		wndclass.hbrBackground = GetStockObject(WHITE_BRUSH);
 		wndclass.lpszMenuName = NULL;
 		wndclass.lpszClassName = szAppName;

@@ -231,7 +231,7 @@ int PASCAL WinMain (HINSTANCE inst, HINSTANCE prev, LPSTR cmdline, int show)
     class.cbWndExtra = 0;
     class.hInstance  = inst;
     class.hIcon      = 0; /* Draw my own icon */
-    class.hCursor    = LoadCursor (0, IDC_ARROW);
+    class.hCursor    = LoadCursor (0, MAKEINTRESOURCE(IDC_ARROW));
     class.hbrBackground = (HBRUSH)(COLOR_BACKGROUND + 1);
     class.lpszMenuName = 0;
     class.lpszClassName = AppName;
