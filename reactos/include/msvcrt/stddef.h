@@ -28,9 +28,9 @@
  *  DISCLAIMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.6 $
- * $Author: robd $
- * $Date: 2002/11/24 18:06:00 $
+ * $Revision: 1.7 $
+ * $Author: gvg $
+ * $Date: 2004/08/26 07:54:47 $
  *
  */
 
@@ -132,7 +132,7 @@ typedef __WCHAR_TYPE__      wchar_t;
  */
 #if defined (__MSVCRT_STDDEF_H_) || defined (__need_wint_t)
 
-#ifndef _WINT_T_
+#if ! defined(_WINT_T_) && ! defined(_WINT_T)
 #define _WINT_T_
 #define _WINT_T     /* To satisfy libstdc++ */
 #ifndef __WINT_TYPE__
