@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.45 2001/05/03 17:24:00 chorns Exp $
+/* $Id: npool.c,v 1.46 2001/05/05 19:13:10 chorns Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -688,8 +688,8 @@ static BLOCK_HDR* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
    int i;
    NTSTATUS Status;
    
-   OLD_DPRINT("growing heap for block size %d, ",size);
-   OLD_DPRINT("start %x\n",start);
+   DPRINT("growing heap for block size %d, ",size);
+   DPRINT("start %x\n",start);
    
    for (i=0;i<nr_pages;i++)
      {
@@ -708,13 +708,13 @@ static BLOCK_HDR* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
    if ((PAGESIZE-(total_size%PAGESIZE))>(2*sizeof(BLOCK_HDR)))
      {
 	used_blk = (struct _BLOCK_HDR *)start;
-	OLD_DPRINT("Creating block at %x\n",start);
+	DPRINT("Creating block at %x\n",start);
 	used_blk->Magic = BLOCK_HDR_USED_MAGIC;
         used_blk->Size = size;
 	add_to_used_list(used_blk);
 	
 	free_blk = (BLOCK_HDR *)(start + sizeof(BLOCK_HDR) + size);
-	OLD_DPRINT("Creating block at %x\n",free_blk);
+	DPRINT("Creating block at %x\n",free_blk);
 	free_blk->Magic = BLOCK_HDR_FREE_MAGIC;
 	free_blk->Size = (nr_pages * PAGESIZE) -((sizeof(BLOCK_HDR)*2) + size);
 	add_to_free_list(free_blk);
@@ -825,7 +825,7 @@ VOID STDCALL ExFreePool (PVOID block)
 
    assert(block);
 
-   OLD_DPRINT("(%s:%d) freeing block %x\n",__FILE__,__LINE__,blk);
+   DPRINT("freeing block %x\n",blk);
    
    POOL_TRACE("ExFreePool(block %x), size %d, caller %x\n",block,blk->size,
             ((PULONG)&block)[-1]);
@@ -899,8 +899,8 @@ ExAllocateNonPagedPoolWithTag(ULONG Type, ULONG Size, ULONG Tag, PVOID Caller)
    current_entry = FreeBlockListHead.Flink;   
    while (current_entry != &FreeBlockListHead)
      {
-	OLD_DPRINT("current %x size %x next %x\n",current,current->size,
-	       current->next);
+  DPRINT("current %x size %x tag_next %x\n",current,current->Size,
+	       current->tag_next);
 	current = CONTAINING_RECORD(current_entry, BLOCK_HDR, ListEntry);
 	if (current->Size >= Size && 
 	    (best == NULL || current->Size < best->Size)) 

@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.46 2001/04/04 22:21:31 dwelch Exp $
+/* $Id: virtual.c,v 1.47 2001/05/05 19:13:10 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -870,9 +870,9 @@ NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
    PVOID PBaseAddress;
    ULONG PRegionSize;
 
-   DPRINT("NtAllocateVirtualMemory(ProcessHandle %x, *BaseAddress %x, "
-	  "ZeroBits %d, *RegionSize %x, AllocationType %x, Protect %x)\n",
-	  ProcessHandle,*BaseAddress,ZeroBits,*RegionSize,AllocationType,
+   DPRINT("NtAllocateVirtualMemory(*UBaseAddress %x, "
+	  "ZeroBits %d, *URegionSize %x, AllocationType %x, Protect %x)\n",
+	  *UBaseAddress,ZeroBits,*URegionSize,AllocationType,
 	  Protect);
    
    /*
@@ -976,7 +976,7 @@ NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
    InsertTailList(&MemoryArea->Data.VirtualMemoryData.SegmentListHead,
 		  &Segment->SegmentListEntry);
    
-   DPRINT("*BaseAddress %x\n",*BaseAddress);
+   DPRINT("*UBaseAddress %x\n",*UBaseAddress);
    if ((AllocationType & MEM_COMMIT) &&
        ((Protect & PAGE_READWRITE) ||
 	(Protect & PAGE_EXECUTE_READWRITE)))
@@ -1070,9 +1070,9 @@ NtFreeVirtualMemory(IN	HANDLE	ProcessHandle,
    PVOID BaseAddress;
    ULONG RegionSize;
    
-   DPRINT("NtFreeVirtualMemory(ProcessHandle %x, *BaseAddress %x, "
-	  "*RegionSize %x, FreeType %x)\n",ProcessHandle,*BaseAddress,
-	  *RegionSize,FreeType);
+   DPRINT("NtFreeVirtualMemory(ProcessHandle %x, *PBaseAddress %x, "
+	  "*PRegionSize %x, FreeType %x)\n",ProcessHandle,*PBaseAddress,
+	  *PRegionSize,FreeType);
 				 
    BaseAddress = (PVOID)PAGE_ROUND_DOWN((*PBaseAddress));
    RegionSize = PAGE_ROUND_UP((*PBaseAddress) + (*PRegionSize)) -

@@ -20,13 +20,10 @@
 
 #include <internal/ntoskrnl.h>
 #include <internal/config.h>
+#include <internal/dbg.h>
 
 #define UNIMPLEMENTED do {DbgPrint("%s at %s:%d is unimplemented, have a nice day\n",__FUNCTION__,__FILE__,__LINE__); for(;;);  } while(0);
 
-/*  FIXME: should probably remove this later  */
-#if !defined(CHECKED) && !defined(NDEBUG)
-#define CHECKED
-#endif
 
 #ifdef DBG
 
@@ -50,28 +47,28 @@
 #define DPRINT1(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);
 #define CHECKPOINT1 do { DbgPrint("%s:%d\n",__FILE__,__LINE__); } while(0);
 
-extern unsigned int old_idt[256][2];
-//extern unsigned int idt;
-extern unsigned int old_idt_valid;
+#if defined(KDBG) && defined(NDEBUG)
 
-#ifdef __NTOSKRNL__
-//#define DPRINT_CHECKS ExAllocatePool(NonPagedPool,0); assert(old_idt_valid || (!memcmp(old_idt,KiIdt,256*2)));
-//#define DPRINT_CHECKS ExAllocatePool(NonPagedPool,0);
-#define DPRINT_CHECKS
-#else
-#define DPRINT_CHECKS
-#endif
+#define DPRINT(args...) do { \
+  if (DbgShouldPrint(__FILE__)) { \
+    DbgPrint("(%s:%d) ",__FILE__,__LINE__); \
+    DbgPrint(args); \
+  } \
+} while(0);
+
+#define CHECKPOINT
+
+#else /* KDBG && NDEBUG */
 
 #ifndef NDEBUG
-#define OLD_DPRINT(fmt,args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(fmt,args); } while(0);
-#define DPRINT(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); DPRINT_CHECKS  } while(0);
+#define DPRINT(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);
 #define CHECKPOINT do { DbgPrint("%s:%d\n",__FILE__,__LINE__); ExAllocatePool(NonPagedPool,0); } while(0);
-#else
-//#define DPRINT(args...) do { DPRINT_CHECKS } while (0);
+#else /* NDEBUG */
 #define DPRINT(args...)
-#define OLD_DPRINT(args...)
 #define CHECKPOINT
 #endif /* NDEBUG */
+
+#endif /* KDBG && NDEBUG */
 
 /*
  * FUNCTION: Assert a maximum value for the current irql

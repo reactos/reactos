@@ -1,4 +1,4 @@
-/* $Id: fs.c,v 1.16 2001/03/07 16:48:41 dwelch Exp $
+/* $Id: fs.c,v 1.17 2001/05/05 19:13:09 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -57,11 +57,11 @@ NtFsControlFile (
    PIO_STACK_LOCATION StackPtr;
    KEVENT KEvent;
 
-   DPRINT("NtFsControlFile(DeviceHandle %x Event %x UserApcRoutine %x "
-          "UserApcContext %x IoStatusBlock %x IoControlCode %x "
+   DPRINT("NtFsControlFile(DeviceHandle %x EventHandle %x ApcRoutine %x "
+          "ApcContext %x IoStatusBlock %x IoControlCode %x "
           "InputBuffer %x InputBufferSize %x OutputBuffer %x "
           "OutputBufferSize %x)\n",
-          DeviceHandle,Event,UserApcRoutine,UserApcContext,IoStatusBlock,
+          DeviceHandle,EventHandle,ApcRoutine,ApcContext,IoStatusBlock,
           IoControlCode,InputBuffer,InputBufferSize,OutputBuffer,
           OutputBufferSize);
 

@@ -169,10 +169,10 @@ KeSetBaseGdtSelector(ULONG Entry,
      ((((ULONG)Base) & 0xff000000) >> 16);
    
    DPRINT("%x %x %x %x\n", 
-	   KiGdt[Entry + 0],
-	   KiGdt[Entry + 1],
-	   KiGdt[Entry + 2],
-	   KiGdt[Entry + 3]);
+	   Gdt[Entry + 0],
+	   Gdt[Entry + 1],
+	   Gdt[Entry + 2],
+	   Gdt[Entry + 3]);
    
    KeReleaseSpinLock(&GdtLock, oldIrql);
 }

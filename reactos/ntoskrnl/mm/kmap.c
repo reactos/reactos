@@ -1,4 +1,4 @@
-/* $Id: kmap.c,v 1.9 2001/03/25 02:34:28 dwelch Exp $
+/* $Id: kmap.c,v 1.10 2001/05/05 19:13:10 chorns Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -161,8 +161,7 @@ MiAllocNonPagedPoolRegion(ULONG nr_pages)
 		    {
 		       set_bit(j%32,&AllocMap[j/32]);
 		    }
-                  OLD_DPRINT("returning %x\n",(start*PAGESIZE)
-			 +kernel_pool_base);
+      DPRINT("returning %x\n",((start*PAGESIZE)+NonPagedPoolBase));
 		  return(((start*PAGESIZE)+NonPagedPoolBase));
 	       }
 	  }

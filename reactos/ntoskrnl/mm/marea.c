@@ -302,7 +302,7 @@ MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
    ULONG i;
    
    DPRINT("MmFreeMemoryArea(AddressSpace %x, BaseAddress %x, Length %x,"
-	   "FreePages %d)\n",AddressSpace,BaseAddress,Length,FreePages);
+	   "FreePageContext %d)\n",AddressSpace,BaseAddress,Length,FreePageContext);
 
    MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
 					  BaseAddress);

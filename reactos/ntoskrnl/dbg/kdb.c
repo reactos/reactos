@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kdb.c,v 1.4 2001/04/22 14:47:00 chorns Exp $
+/* $Id: kdb.c,v 1.5 2001/05/05 19:13:08 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb.c
@@ -58,6 +58,12 @@ ULONG
 DbgProcessListCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
 ULONG
 DbgProcessHelpCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
+ULONG
+DbgShowFilesCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
+ULONG
+DbgEnableFileCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
+ULONG
+DbgDisableFileCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
 
 struct
 {
@@ -73,6 +79,9 @@ struct
   {"bugcheck", "bugcheck", "Bugcheck the system", DbgBugCheckCommand},
   {"bt", "bt [*frame-address]|[thread-id]","Do a backtrace", DbgBackTraceCommand},
   {"plist", "plist", "Display processes in the system", DbgProcessListCommand},
+  {"sfiles", "sfiles", "Show files that print debug prints", DbgShowFilesCommand},
+  {"efile", "efile <filename>", "Enable debug prints from file", DbgEnableFileCommand},
+  {"dfile", "dfile <filename>", "Disable debug prints from file", DbgDisableFileCommand},
   {"help", "help", "Display help screen", DbgProcessHelpCommand},
   {NULL, NULL, NULL}
 };
@@ -571,6 +580,39 @@ DbgBugCheckCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
 }
 
 ULONG
+DbgShowFilesCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
+{
+  DbgShowFiles();
+  return(1);
+}
+
+ULONG
+DbgEnableFileCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
+{
+  if (Argc == 2)
+    {
+      if (strlen(Argv[1]) > 0)
+        {
+          DbgEnableFile(Argv[1]);
+        }
+    }
+  return(1);
+}
+
+ULONG
+DbgDisableFileCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
+{
+  if (Argc == 2)
+    {
+      if (strlen(Argv[1]) > 0)
+        {
+          DbgDisableFile(Argv[1]);
+        }
+    }
+  return(1);
+}
+
+ULONG
 KdbDoCommand(PCH CommandLine, PKTRAP_FRAME Tf)
 {
   ULONG i;
@@ -614,7 +656,7 @@ KdbMainLoop(PKTRAP_FRAME Tf)
   DbgPrint("\nEntered kernel debugger (type \"help\" for a list of commands)\n");
   do
     {
-      DbgPrint("kdb:> ");
+      DbgPrint("\nkdb:> ");
 
       KdbGetCommand(Command);
 

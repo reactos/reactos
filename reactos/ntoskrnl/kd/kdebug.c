@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.25 2001/04/26 14:26:22 phreak Exp $
+/* $Id: kdebug.c,v 1.26 2001/05/05 19:13:09 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -71,6 +71,12 @@ KdInitSystem (
 	KD_PORT_INFORMATION PortInfo;
 	ULONG Value;
 	PCHAR p1, p2;
+
+#ifdef KDBG
+  /* Initialize runtime debugging if available */
+  DbgRDebugInit();
+
+#endif
 
 	/* set debug port default values */
 	PortInfo.ComPort  = DEFAULT_DEBUG_PORT;

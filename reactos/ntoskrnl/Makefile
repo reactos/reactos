@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.39 2001/05/01 23:08:17 chorns Exp $
+# $Id: Makefile,v 1.40 2001/05/05 19:13:08 chorns Exp $
 #
 # ReactOS Operating System
 #
@@ -31,7 +31,8 @@ STRIP_FLAGS := -Wl,-s
 endif
 
 ifeq ($(KDBG), 1)
-OBJECTS_KDBG := dbg/kdb.o dbg/kdb_keyboard.o dbg/i386/kdb_help.o
+OBJECTS_KDBG := dbg/kdb.o dbg/kdb_keyboard.o dbg/rdebug.o \
+                dbg/i386/kdb_help.o
 CONFIG += KDBG
 else
 OBJECTS_KDBG :=

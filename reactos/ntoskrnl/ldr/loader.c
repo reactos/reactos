@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.78 2001/05/05 15:19:14 ekohl Exp $
+/* $Id: loader.c,v 1.79 2001/05/05 19:13:09 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -668,7 +668,7 @@ VOID LdrLoadAutoConfigDrivers (VOID)
     * Minix filesystem driver
     */
    LdrLoadAutoConfigDriver(L"minixfs.sys");
-   
+
    /*
     * Mailslot filesystem driver
     */
@@ -677,8 +677,8 @@ VOID LdrLoadAutoConfigDrivers (VOID)
    /*
     * Named pipe filesystem driver
     */
-//   LdrLoadAutoConfigDriver(L"npfs.sys");
-   
+   LdrLoadAutoConfigDriver(L"npfs.sys");
+
    /*
     * Networking
     */

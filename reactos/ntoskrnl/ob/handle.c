@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: handle.c,v 1.30 2001/03/20 16:09:44 dwelch Exp $
+/* $Id: handle.c,v 1.31 2001/05/05 19:13:10 chorns Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -403,7 +403,7 @@ NTSTATUS ObCreateHandle(PEPROCESS Process,
  * ARGUMENTS:
  *         obj = Object body that the handle should refer to
  * RETURNS: The created handle
- * NOTE: THe handle is valid only in the context of the current process
+ * NOTE: The handle is valid only in the context of the current process
  */
 {
    LIST_ENTRY* current;
@@ -412,19 +412,18 @@ NTSTATUS ObCreateHandle(PEPROCESS Process,
    HANDLE_BLOCK* new_blk = NULL;
    PHANDLE_TABLE HandleTable;
    KIRQL oldlvl;
-   
+
    DPRINT("ObCreateHandle(Process %x, obj %x)\n",Process,ObjectBody);
-   
+
+   assert(Process);
+
    if (ObjectBody != NULL)
      {
 	BODY_TO_HEADER(ObjectBody)->HandleCount++;
      }
-   
    HandleTable = &Process->HandleTable;
-   
    KeAcquireSpinLock(&HandleTable->ListLock, &oldlvl);
    current = HandleTable->ListHead.Flink;
-   
    /*
     * Scan through the currently allocated handle blocks looking for a free
     * slot
@@ -452,14 +451,19 @@ NTSTATUS ObCreateHandle(PEPROCESS Process,
 	handle = handle + HANDLE_BLOCK_ENTRIES;
 	current = current->Flink;
      }
-   
+
    /*
     * Add a new handle block to the end of the list
     */
    new_blk = 
      (HANDLE_BLOCK *)ExAllocatePoolWithTag(NonPagedPool,sizeof(HANDLE_BLOCK),
 					   TAG_HANDLE_TABLE);
-   memset(new_blk,0,sizeof(HANDLE_BLOCK));
+   if (!new_blk)
+    {
+      *HandleReturn = (PHANDLE)NULL;
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
+   RtlZeroMemory(new_blk,sizeof(HANDLE_BLOCK));
    InsertTailList(&(Process->HandleTable.ListHead),
 		  &new_blk->entry);
    KeReleaseSpinLock(&HandleTable->ListLock, oldlvl);

@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.27 2001/05/01 23:08:19 chorns Exp $
+/* $Id: device.c,v 1.28 2001/05/05 19:13:09 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -434,20 +434,20 @@ IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
 	            ExFreePool(DriverObject);
 	            return(Status);
             }
-          else
-            {
+        }
+      else if (Fdo->DeviceType == FILE_DEVICE_ACPI)
+        {
 #ifdef ACPI
-              static BOOLEAN SystemPowerDeviceNodeCreated = FALSE;
+          static BOOLEAN SystemPowerDeviceNodeCreated = FALSE;
 
-              /* The system power device node is the first bus enumerator
-                 device node created after the root device node */
-              if (!SystemPowerDeviceNodeCreated)
-                {
-                  PopSystemPowerDeviceNode = DeviceNode;
-                  SystemPowerDeviceNodeCreated = TRUE;
-                }
-#endif /* ACPI */
+          /* The system power device node is the first bus enumerator
+             device node created after the root device node */
+          if (!SystemPowerDeviceNodeCreated)
+            {
+              PopSystemPowerDeviceNode = DeviceNode;
+              SystemPowerDeviceNodeCreated = TRUE;
             }
+#endif /* ACPI */
         }
       ObDereferenceObject(Fdo);
     }

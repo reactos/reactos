@@ -1,4 +1,4 @@
-/* $Id: cont.c,v 1.11 2001/03/26 04:38:39 phreak Exp $
+/* $Id: cont.c,v 1.12 2001/05/05 19:13:10 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -14,6 +14,7 @@
 #include <ddk/ntddk.h>
 #include <internal/mm.h>
 
+#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/
