@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.54 2003/08/09 07:09:57 jimtabor Exp $
+/* $Id: window.c,v 1.55 2003/08/11 10:30:19 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -45,14 +45,7 @@ User32SendNCCALCSIZEMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
       DPRINT("Wrong length.\n");
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
-  if (IsWindowUnicode(CallbackArgs->Wnd))
-  {
-    Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
-  }
-  else
-  {
-    Proc = (WNDPROC)GetWindowLongA(CallbackArgs->Wnd, GWL_WNDPROC);
-  }
+  Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
   DPRINT("Proc %X\n", Proc);
   /* Call the window procedure; notice kernel messages are always unicode. */
   if (CallbackArgs->Validate)
@@ -87,14 +80,7 @@ User32SendGETMINMAXINFOMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
       DPRINT("Wrong length.\n");
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
-  if (IsWindowUnicode(CallbackArgs->Wnd))
-  {
-    Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
-  }
-  else
-  {
-    Proc = (WNDPROC)GetWindowLongA(CallbackArgs->Wnd, GWL_WNDPROC);
-  }
+  Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
   DPRINT("Proc %X\n", Proc);
   /* Call the window procedure; notice kernel messages are always unicode. */
   Result.Result = CallWindowProcW(Proc, CallbackArgs->Wnd, WM_GETMINMAXINFO, 
@@ -119,14 +105,7 @@ User32SendCREATEMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
       DPRINT("Wrong length.\n");
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
-  if (IsWindowUnicode(CallbackArgs->Wnd))
-  {
-    Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
-  }
-  else
-  {
-    Proc = (WNDPROC)GetWindowLongA(CallbackArgs->Wnd, GWL_WNDPROC);
-  }
+  Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
   DPRINT("Proc %X\n", Proc);
   /* Call the window procedure; notice kernel messages are always unicode. */
   Result = CallWindowProcW(Proc, CallbackArgs->Wnd, WM_CREATE, 0, 
@@ -150,14 +129,7 @@ User32SendNCCREATEMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
       DPRINT("Wrong length.\n");
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
-  if (IsWindowUnicode(CallbackArgs->Wnd))
-  {
-    Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
-  }
-  else
-  {
-    Proc = (WNDPROC)GetWindowLongA(CallbackArgs->Wnd, GWL_WNDPROC);
-  }
+  Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
   DPRINT("Proc %X\n", Proc);
   /* Call the window procedure; notice kernel messages are always unicode. */
   Result = CallWindowProcW(Proc, CallbackArgs->Wnd, WM_NCCREATE, 0, 
@@ -181,14 +153,7 @@ User32SendWINDOWPOSCHANGINGMessageForKernel(PVOID Arguments, ULONG ArgumentLengt
       DPRINT("Wrong length.\n");
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
-  if (IsWindowUnicode(CallbackArgs->Wnd))
-  {
-    Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
-  }
-  else
-  {
-    Proc = (WNDPROC)GetWindowLongA(CallbackArgs->Wnd, GWL_WNDPROC);
-  }
+  Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
   DPRINT("Proc %X\n", Proc);
   /* Call the window procedure; notice kernel messages are always unicode. */
   Result = CallWindowProcW(Proc, CallbackArgs->Wnd, WM_WINDOWPOSCHANGING, 0, 
@@ -212,14 +177,7 @@ User32SendWINDOWPOSCHANGEDMessageForKernel(PVOID Arguments, ULONG ArgumentLength
       DPRINT("Wrong length.\n");
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
-  if (IsWindowUnicode(CallbackArgs->Wnd))
-  {
-    Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
-  }
-  else
-  {
-    Proc = (WNDPROC)GetWindowLongA(CallbackArgs->Wnd, GWL_WNDPROC);
-  }
+  Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
   DPRINT("Proc %X\n", Proc);
   /* Call the window procedure; notice kernel messages are always unicode. */
   Result = CallWindowProcW(Proc, CallbackArgs->Wnd, WM_WINDOWPOSCHANGED, 0, 
@@ -243,14 +201,7 @@ User32SendSTYLECHANGINGMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
       DPRINT("Wrong length.\n");
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
-  if (IsWindowUnicode(CallbackArgs->Wnd))
-  {
-    Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
-  }
-  else
-  {
-    Proc = (WNDPROC)GetWindowLongA(CallbackArgs->Wnd, GWL_WNDPROC);
-  }
+  Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
   DPRINT("Proc %X\n", Proc);
   /* Call the window procedure; notice kernel messages are always unicode. */
   Result = CallWindowProcW(Proc, CallbackArgs->Wnd, WM_STYLECHANGING, CallbackArgs->WhichStyle,
@@ -274,14 +225,7 @@ User32SendSTYLECHANGEDMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
       DPRINT("Wrong length.\n");
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
-  if (IsWindowUnicode(CallbackArgs->Wnd))
-  {
-    Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
-  }
-  else
-  {
-    Proc = (WNDPROC)GetWindowLongA(CallbackArgs->Wnd, GWL_WNDPROC);
-  }
+  Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
   DPRINT("Proc %X\n", Proc);
   /* Call the window procedure; notice kernel messages are always unicode. */
   Result = CallWindowProcW(Proc, CallbackArgs->Wnd, WM_STYLECHANGED, CallbackArgs->WhichStyle,
@@ -321,14 +265,7 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
     }
   if (CallbackArgs->Proc == NULL)
     {
-	  if (IsWindowUnicode(CallbackArgs->Wnd))
-	  {
-        CallbackArgs->Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
-	  }
-	  else
-	  {
-	  	CallbackArgs->Proc = (WNDPROC)GetWindowLongA(CallbackArgs->Wnd, GWL_WNDPROC);
-	  }
+      CallbackArgs->Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
     }
   Result = CallWindowProcW(CallbackArgs->Proc, CallbackArgs->Wnd, 
 			   CallbackArgs->Msg, CallbackArgs->wParam, 

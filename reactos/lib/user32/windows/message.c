@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.22 2003/08/02 16:55:59 gdalsnes Exp $
+/* $Id: message.c,v 1.23 2003/08/11 10:30:19 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -221,6 +221,16 @@ CallWindowProcA(WNDPROC lpPrevWndFunc,
 		WPARAM wParam,
 		LPARAM lParam)
 {
+  BOOL IsHandle;
+  if ((DWORD)lpPrevWndFunc > 0x80000000)
+  {
+	  lpPrevWndFunc -= 0x80000000;
+	  IsHandle = TRUE;
+  }
+  else
+  {
+	  IsHandle = FALSE;
+  }
   if (IsWindowUnicode(hWnd))
     {
       LRESULT Result;
@@ -246,6 +256,16 @@ CallWindowProcW(WNDPROC lpPrevWndFunc,
 		WPARAM wParam,
 		LPARAM lParam)
 {
+  BOOL IsHandle;
+  if ((DWORD)lpPrevWndFunc > 0x80000000)
+  {
+	  lpPrevWndFunc-= 0x80000000;
+	  IsHandle = TRUE;
+  }
+  else
+  {
+	  IsHandle = FALSE;
+  }
   if (!IsWindowUnicode(hWnd))
     {
       LRESULT Result;

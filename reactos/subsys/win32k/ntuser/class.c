@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.26 2003/08/09 07:09:57 jimtabor Exp $
+/* $Id: class.c,v 1.27 2003/08/11 10:30:19 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -165,10 +165,6 @@ NtUserGetClassInfo(HINSTANCE hInst,
 		SetLastNtError(Status);
 		return 0;
 	}
-	if (Class->hInstance != hInst)
-	{
-		return 0;
-	}
 	wcex->cbSize = sizeof(LPWNDCLASSEXW);
 	wcex->style = Class->style;
 	if (Ansi)
@@ -302,19 +298,20 @@ W32kCreateClass(CONST WNDCLASSEXW *lpwcx,
 	if (bUnicodeClass)
 	{
 		ClassObject->lpfnWndProcW = lpwcx->lpfnWndProc;
-		ClassObject->lpfnWndProcA = (WNDPROC)0xCCCCCCCC;
+		ClassObject->lpfnWndProcA = lpwcx->lpfnWndProc+0x80000000;
 	}
 	else
 	{
 		ClassObject->lpfnWndProcA = lpwcx->lpfnWndProc;
-		ClassObject->lpfnWndProcW = (WNDPROC)0xCCCCCCCC;
+		ClassObject->lpfnWndProcW = lpwcx->lpfnWndProc+0x80000000;
 	}
 	if (IS_INTRESOURCE(lpwcx->lpszMenuName))
 	{
 		ClassObject->lpszMenuName = (PUNICODE_STRING)lpwcx->lpszMenuName;
 	}
 	else
-	{
+	{		
+		ClassObject->lpszMenuName = ExAllocatePool(NonPagedPool,sizeof(UNICODE_STRING));
 		RtlCreateUnicodeString(ClassObject->lpszMenuName,(LPWSTR)lpwcx->lpszMenuName);
 	}
 	return(ClassObject);
@@ -504,12 +501,12 @@ W32kSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BOOL
 	  if (Ansi)
 	  {
 		WindowObject->Class->lpfnWndProcA = (WNDPROC)dwNewLong;
-		WindowObject->Class->lpfnWndProcW = (WNDPROC)0xCCCCCCCC;
+		WindowObject->Class->lpfnWndProcW = (WNDPROC)dwNewLong+0x80000000;
 	  }
 	  else
 	  {
 		WindowObject->Class->lpfnWndProcW = (WNDPROC)dwNewLong;
-		WindowObject->Class->lpfnWndProcA = (WNDPROC)0xCCCCCCCC;
+		WindowObject->Class->lpfnWndProcA = (WNDPROC)dwNewLong+0x80000000;
 	  }
       break;
     }
