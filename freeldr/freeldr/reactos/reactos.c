@@ -520,7 +520,7 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	    szBootPath[strlen(szBootPath)] != '\\')
 		strcat(szBootPath, "\\");
 
-	DebugPrint(DPRINT_REACTOS,"SystemRoot: '%s'\n", szBootPath);
+	DbgPrint((DPRINT_REACTOS,"SystemRoot: '%s'\n", szBootPath));
 
 	UiDrawBackdrop();
 	UiDrawStatusText("Loading...");
@@ -625,7 +625,7 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 		strcat(szFileName, value);
 	}
 
-	DebugPrint(DPRINT_REACTOS, "SystemHive: '%s'", szFileName);
+	DbgPrint((DPRINT_REACTOS, "SystemHive: '%s'", szFileName));
 
 	FilePointer = OpenFile(szFileName);
 	if (FilePointer == NULL)
@@ -652,7 +652,7 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	RegImportHive(Base, Size);
 
 	UiDrawProgressBarCenter(15, 100);
-	DebugPrint(DPRINT_REACTOS, "SystemHive loaded at 0x%x size %u", (unsigned)Base, (unsigned)Size);
+	DbgPrint((DPRINT_REACTOS, "SystemHive loaded at 0x%x size %u", (unsigned)Base, (unsigned)Size));
 
 	/*
 	 * Retrieve hardware information and create the hardware hive

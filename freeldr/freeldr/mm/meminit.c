@@ -55,7 +55,9 @@ BOOL MmInitializeMemoryManager(VOID)
 	U32				BiosMemoryMapEntryCount;
 	U32				ExtendedMemorySize;
 	U32				ConventionalMemorySize;
+#ifdef DEBUG
 	U32				Index;
+#endif
 
 	DbgPrint((DPRINT_MEMORY, "Initializing Memory Manager.\n"));
 
