@@ -81,7 +81,7 @@ void BaseTest::Fail()
 	Failed = true;
 }
 
-class BaseTestList : public vector<BaseTest*>
+class BaseTestList : public std::vector<BaseTest*>
 {
 public:
 	~BaseTestList()
