@@ -31,7 +31,7 @@ int main()
   bSuccess = SetWaitableTimer(
            hTimer,
            &DueTime,
-           2000 /*interval*/,
+           2001 /*interval (using an odd number to be able to find it easy in kmode) */,
            TimerApcProc,
            &value /*callback argument*/,
            FALSE );
