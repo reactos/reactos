@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.7 2002/10/29 04:44:59 rex Exp $
+# $Id: Makefile,v 1.8 2002/12/26 18:28:25 robd Exp $
 #
 # Tu run it in Win32 console mode, undefine __SUBSYSTEM_WINDOWS__
 # and pass "console" in the ld's --subsystem option.
@@ -8,11 +8,11 @@ PATH_TO_TOP=../../../reactos
 
 PATH_TO_PSX_TOP=../..
 
-TARGET_NAME=sh
+TARGET_NAME=baresh
 
 CFLAGS=-D__SUBSYSTEM_WINDOWS__
 
-OBJECTS=$(TARGET_NAME).o $(TARGET_NAME).coff
+OBJECTS=sh.o $(TARGET_NAME).coff
 
 LIBRARIES=\
 	$(PATH_TO_PSX_TOP)/lib/crt0w32.o \
@@ -28,7 +28,7 @@ $(TARGET_NAME): $(OBJECTS) $(LIBRARIES)
 		-nostartfiles \
 		-nostdlib
 
-$(TARGET_NAME).coff: $(TARGET_NAME).rc
+$(TARGET_NAME).coff: sh.rc
 	$(RC) \
 		--include-dir $(PATH_TO_TOP)/include \
 		--output-format coff \
