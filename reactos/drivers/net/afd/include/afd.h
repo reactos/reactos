@@ -1,4 +1,4 @@
-/* $Id: afd.h,v 1.24 2004/11/17 05:17:22 arty Exp $
+/* $Id: afd.h,v 1.25 2004/11/21 20:54:52 arty Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -82,6 +82,7 @@ typedef struct _AFD_ACTIVE_POLL {
     PAFD_DEVICE_EXTENSION DeviceExt;
     KDPC TimeoutDpc;
     KTIMER Timer;
+    PKEVENT EventObject;
 } AFD_ACTIVE_POLL, *PAFD_ACTIVE_POLL;
 
 typedef struct _IRP_LIST {
@@ -129,6 +130,9 @@ typedef struct _AFD_FCB {
     AFD_DATA_WINDOW Send, Recv;
     FAST_MUTEX Mutex;
     KEVENT StateLockedEvent;
+    PKEVENT EventSelect;
+    DWORD EventSelectTriggers;
+    DWORD EventsFired;
     UNICODE_STRING TdiDeviceName;
     PVOID Context;
     DWORD PollState;
@@ -223,6 +227,12 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 NTSTATUS STDCALL
 AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp, 
 	   PIO_STACK_LOCATION IrpSp );
+NTSTATUS STDCALL
+AfdEventSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp, 
+		PIO_STACK_LOCATION IrpSp );
+NTSTATUS STDCALL
+AfdEnumEvents( PDEVICE_OBJECT DeviceObject, PIRP Irp, 
+	       PIO_STACK_LOCATION IrpSp );
 VOID PollReeval( PAFD_DEVICE_EXTENSION DeviceObject, PFILE_OBJECT FileObject );
 
 /* tdi.c */

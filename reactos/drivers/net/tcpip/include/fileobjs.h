@@ -27,6 +27,8 @@ NTSTATUS FileOpenConnection(
   PTDI_REQUEST Request,
   PVOID ClientContext);
 
+PCONNECTION_ENDPOINT FileFindConnectionByContext( PVOID Context );
+
 NTSTATUS FileCloseConnection(
   PTDI_REQUEST Request);
 

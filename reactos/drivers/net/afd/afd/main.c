@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.12 2004/11/17 05:17:22 arty Exp $
+/* $Id: main.c,v 1.13 2004/11/21 20:54:52 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/main.c
@@ -163,8 +163,6 @@ VOID DestroySocket( PAFD_FCB FCB ) {
 	return;
     }
 
-    FCB->PollState |= AFD_EVENT_CLOSE;
-    PollReeval( FCB->DeviceExt, FCB->FileObject ); 
     /* After PoolReeval, this FCB should not be involved in any outstanding
      * poll requests */
 
@@ -211,10 +209,11 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     
     AFD_DbgPrint(MID_TRACE,("FCB %x\n", FCB));
 
-    FileObject->FsContext = NULL;
     FCB->PollState |= AFD_EVENT_CLOSE;
     PollReeval( FCB->DeviceExt, FileObject );
+    if( FCB->EventSelect ) ObDereferenceObject( FCB->EventSelect );
 
+    FileObject->FsContext = NULL;
     DestroySocket( FCB );
     
     Irp->IoStatus.Status = STATUS_SUCCESS;
@@ -280,6 +279,12 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	case IOCTL_AFD_SELECT:
 	    return AfdSelect( DeviceObject, Irp, IrpSp );
 
+	case IOCTL_AFD_EVENT_SELECT:
+	    return AfdEventSelect( DeviceObject, Irp, IrpSp );
+
+	case IOCTL_AFD_ENUM_NETWORK_EVENTS:
+	    return AfdEnumEvents( DeviceObject, Irp, IrpSp );
+
 	case IOCTL_AFD_RECV_DATAGRAM:
 	    return AfdPacketSocketReadData( DeviceObject, Irp, IrpSp );
 
@@ -333,8 +338,6 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_SET_DISCONNECT_DATA_SIZE\n"));
   case IOCTL_AFD_SET_DISCONNECT_OPTIONS_SIZE:
 	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_SET_DISCONNECT_OPTIONS_SIZE\n"));
-  case IOCTL_AFD_EVENT_SELECT:
-	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_EVENT_SELECT\n"));
   case IOCTL_AFD_DEFER_ACCEPT:
 	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_DEFER_ACCEPT\n"));
   case IOCTL_AFD_GET_PENDING_CONNECT_DATA:

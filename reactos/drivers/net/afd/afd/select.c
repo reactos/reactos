@@ -1,4 +1,4 @@
-/* $Id: select.c,v 1.6 2004/11/17 05:17:22 arty Exp $
+/* $Id: select.c,v 1.7 2004/11/21 20:54:52 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/select.c
@@ -172,6 +172,72 @@ AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     return Status;
 }
 
+NTSTATUS STDCALL
+AfdEventSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp, 
+		PIO_STACK_LOCATION IrpSp ) {
+    PFILE_OBJECT FileObject = IrpSp->FileObject;
+    NTSTATUS Status = STATUS_NO_MEMORY;
+    PAFD_EVENT_SELECT_INFO EventSelectInfo = 
+	(PAFD_EVENT_SELECT_INFO)LockRequest( Irp, IrpSp );
+    PAFD_FCB FCB = FileObject->FsContext;
+
+    AFD_DbgPrint(MID_TRACE,("Called (Event %x Triggers %x)\n", 
+			    EventSelectInfo->EventObject,
+			    EventSelectInfo->Events));
+    
+    if( !SocketAcquireStateLock( FCB ) ) {
+	UnlockRequest( Irp, IrpSp );
+	return LostSocket( Irp, FALSE );
+    }
+
+    FCB->EventSelectTriggers = FCB->EventsFired = 0;
+    if( FCB->EventSelect ) ObDereferenceObject( FCB->EventSelect );
+    FCB->EventSelect = NULL;
+
+    if( EventSelectInfo->EventObject && EventSelectInfo->Events ) {
+	Status = ObReferenceObjectByHandle( (PVOID)EventSelectInfo->
+					    EventObject,
+					    FILE_ALL_ACCESS,
+					    NULL,
+					    KernelMode,
+					    (PVOID *)&FCB->EventSelect,
+					    NULL );
+	
+	if( !NT_SUCCESS(Status) )
+	    FCB->EventSelect = NULL;
+	else
+	    FCB->EventSelectTriggers = EventSelectInfo->Events;
+    } else /* Work done, cancelling select */
+	Status = STATUS_SUCCESS;
+    
+    AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
+
+    return UnlockAndMaybeComplete( FCB, STATUS_SUCCESS, Irp,
+				   0, NULL, TRUE );
+}
+
+NTSTATUS STDCALL
+AfdEnumEvents( PDEVICE_OBJECT DeviceObject, PIRP Irp, 
+	       PIO_STACK_LOCATION IrpSp ) {
+    PFILE_OBJECT FileObject = IrpSp->FileObject;
+    PAFD_ENUM_NETWORK_EVENTS_INFO EnumReq = 
+	(PAFD_ENUM_NETWORK_EVENTS_INFO)LockRequest( Irp, IrpSp );
+    PAFD_FCB FCB = FileObject->FsContext;
+
+    AFD_DbgPrint(MID_TRACE,("Called (FCB %x)\n", FCB));
+    
+    if( !SocketAcquireStateLock( FCB ) ) {
+	UnlockRequest( Irp, IrpSp );
+	return LostSocket( Irp, FALSE );
+    }
+
+    EnumReq->PollEvents = FCB->PollState;
+    RtlZeroMemory( EnumReq->EventStatus, sizeof(EnumReq->EventStatus) );
+    
+    return UnlockAndMaybeComplete( FCB, STATUS_SUCCESS, Irp,
+				   0, NULL, TRUE );
+}
+
 /* * * NOTE ALWAYS CALLED AT DISPATCH_LEVEL * * */
 BOOLEAN UpdatePollWithFCB( PAFD_ACTIVE_POLL Poll, PFILE_OBJECT FileObject ) {
     UINT i;
@@ -186,7 +252,7 @@ BOOLEAN UpdatePollWithFCB( PAFD_ACTIVE_POLL Poll, PFILE_OBJECT FileObject ) {
 
 	FileObject = (PFILE_OBJECT)PollReq->InternalUse[i].Handle;
 	FCB = FileObject->FsContext;
-	
+
 	if( (FCB->PollState & AFD_EVENT_CLOSE) ||
 	    (PollReq->Handles[i].Status & AFD_EVENT_CLOSE) ) {
 	    PollReq->InternalUse[i].Handle = 0;
@@ -210,14 +276,35 @@ BOOLEAN UpdatePollWithFCB( PAFD_ACTIVE_POLL Poll, PFILE_OBJECT FileObject ) {
 VOID PollReeval( PAFD_DEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject ) {
     PAFD_ACTIVE_POLL Poll = NULL;
     PLIST_ENTRY ThePollEnt = NULL;
+    PAFD_FCB FCB;
     KIRQL OldIrql;
     PAFD_POLL_INFO PollReq;
+    PKEVENT EventSelect = NULL;
 
     AFD_DbgPrint(MID_TRACE,("Called: DeviceExt %x FileObject %x\n", 
 			    DeviceExt, FileObject));
-
+    
     KeAcquireSpinLock( &DeviceExt->Lock, &OldIrql );
 
+    /* Take care of any event select signalling */
+    FCB = (PAFD_FCB)FileObject->FsContext;
+
+    /* Not sure if i can do this at DISPATCH_LEVEL ... try it at passive */
+    AFD_DbgPrint(MID_TRACE,("Current State: %x, Events Fired: %x, "
+			    "Select Triggers %x\n",
+			    FCB->PollState, FCB->EventsFired, 
+			    FCB->EventSelectTriggers));
+    if( FCB->PollState & ~FCB->EventsFired & FCB->EventSelectTriggers ) {
+	FCB->EventsFired |= FCB->PollState;
+	EventSelect = FCB->EventSelect;
+    }
+
+    if( !FCB ) {
+	KeReleaseSpinLock( &DeviceExt->Lock, OldIrql );
+	return;
+    }
+
+    /* Now signal normal select irps */
     ThePollEnt = DeviceExt->Polls.Flink;
 
     while( ThePollEnt != &DeviceExt->Polls ) {
@@ -234,6 +321,9 @@ VOID PollReeval( PAFD_DEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject ) {
     }
 
     KeReleaseSpinLock( &DeviceExt->Lock, OldIrql );
+
+    AFD_DbgPrint(MID_TRACE,("Setting event %x\n", EventSelect));
+    if( EventSelect ) KeSetEvent( EventSelect, IO_NETWORK_INCREMENT, FALSE );
 
     AFD_DbgPrint(MID_TRACE,("Leaving\n"));
 }

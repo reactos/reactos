@@ -1,4 +1,4 @@
-/* $Id: bind.c,v 1.5 2004/10/03 20:36:45 arty Exp $
+/* $Id: bind.c,v 1.6 2004/11/21 20:54:52 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/bind.c
@@ -18,6 +18,11 @@ NTSTATUS WarmSocketForBind( PAFD_FCB FCB ) {
 
     AFD_DbgPrint(MID_TRACE,("Called (AF %d)\n",
 			    FCB->LocalAddress->Address[0].AddressType));
+
+    if( !FCB->TdiDeviceName.Length || !FCB->TdiDeviceName.Buffer ) {
+	AFD_DbgPrint(MID_TRACE,("Null Device\n"));
+	return STATUS_NO_SUCH_DEVICE;
+    }
 
     if( FCB->LocalAddress ) {
 	Status = TdiOpenAddressFile

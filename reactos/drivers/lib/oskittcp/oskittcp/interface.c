@@ -155,9 +155,7 @@ int OskitTCPRecv( void *connection,
 		       &tcp_flags );
 
     if( error == 0 ) {
-	OS_DbgPrint(OSK_MID_TRACE,("Successful read from TCP:\n"));
 	*OutLen = Len - uio.uio_resid;
-	OskitDumpBuffer( Data, *OutLen );
     }
 
     return error;
@@ -202,8 +200,6 @@ int OskitTCPBind( void *socket, void *connection,
     
     addr.sa_family = addr.sa_len;
     addr.sa_len = sizeof(struct sockaddr);
-
-    OskitDumpBuffer( (OSK_PCHAR)&addr, sizeof(addr) );
 
     error = sobind(so, &sabuf);
 
@@ -274,7 +270,6 @@ int OskitTCPSend( void *socket, OSK_PCHAR Data, OSK_UINT Len,
     int error = 0;
 	if ( !m )
 		return ENOBUFS;
-    OskitDumpBuffer( Data, Len );
     error = sosend( socket, NULL, NULL, m, NULL, 0 );
     *OutLen = Len;
     return error;
@@ -317,8 +312,6 @@ void OskitTCPReceiveDatagram( OSK_PCHAR Data, OSK_UINT Len,
     OS_DbgPrint(OSK_MAX_TRACE, 
 		("OskitTCPReceiveDatagram: %d (%d header) Bytes\n", Len,
 		 IpHeaderLen));
-
-    OskitDumpBuffer( Data, Len );
 
     tcp_input(Ip, IpHeaderLen);
 

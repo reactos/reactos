@@ -1,4 +1,4 @@
-/* $Id: read.c,v 1.11 2004/11/17 05:17:22 arty Exp $
+/* $Id: read.c,v 1.12 2004/11/21 20:54:52 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/read.c
@@ -88,9 +88,6 @@ NTSTATUS DDKAPI ReceiveComplete
 	DestroySocket( FCB );
 	return STATUS_SUCCESS;
     }
-
-    /* Reset in flight request because the last has been completed */
-    FCB->ReceiveIrp.InFlightRequest = NULL;
     
     if( NT_SUCCESS(Irp->IoStatus.Status) ) {
 	/* Update the receive window */
@@ -153,8 +150,10 @@ NTSTATUS DDKAPI ReceiveComplete
 				 FCB );
 
 	    SocketCalloutLeave( FCB );
-	}
+	} else
+	    FCB->PollState |= AFD_EVENT_RECEIVE;
     } else {
+	/* Kill remaining recv irps */
 	while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_RECV] ) ) {
 	    NextIrpEntry = 
 		RemoveHeadList(&FCB->PendingIrpList[FUNCTION_RECV]);
@@ -166,13 +165,17 @@ NTSTATUS DDKAPI ReceiveComplete
 	    Irp->IoStatus.Information = 0;
 	    IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
 	}
+
+	/* Handle closing signal */
+	FCB->PollState |= AFD_EVENT_CLOSE;
     }
 
     if( FCB->Recv.Content ) {
 	FCB->PollState |= AFD_EVENT_RECEIVE;
-	PollReeval( FCB->DeviceExt, FCB->FileObject );
     } else
 	FCB->PollState &= ~AFD_EVENT_RECEIVE;
+
+    PollReeval( FCB->DeviceExt, FCB->FileObject );    
 
     SocketStateUnlock( FCB );
 
@@ -195,6 +198,10 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
+
+    FCB->EventsFired &= ~AFD_EVENT_RECEIVE;
+    PollReeval( FCB->DeviceExt, FCB->FileObject );
+
     if( !(RecvReq = LockRequest( Irp, IrpSp )) ) 
 	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, 
 				       Irp, 0, NULL, FALSE );
@@ -415,9 +422,10 @@ PacketSocketRecvComplete(
     if( !IsListEmpty( &FCB->DatagramList ) ) { 
 	AFD_DbgPrint(MID_TRACE,("Signalling\n"));
 	FCB->PollState |= AFD_EVENT_RECEIVE;
-	PollReeval( FCB->DeviceExt, FCB->FileObject );
     } else 
 	FCB->PollState &= ~AFD_EVENT_RECEIVE;
+
+    PollReeval( FCB->DeviceExt, FCB->FileObject );
 
     if( NT_SUCCESS(Irp->IoStatus.Status) ) {
 	/* Now relaunch the datagram request */
@@ -455,6 +463,9 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
+
+    FCB->EventsFired &= ~AFD_EVENT_RECEIVE;
+
     /* Check that the socket is bound */
     if( FCB->State != SOCKET_STATE_BOUND ) 
 	return UnlockAndMaybeComplete
@@ -481,22 +492,38 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			    &DatagramRecv->ListEntry );
 	    Status = Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
 	    Irp->IoStatus.Information = DatagramRecv->Len;
+
+	    if( IsListEmpty( &FCB->DatagramList ) )
+		FCB->PollState &= ~AFD_EVENT_RECEIVE;
+	    else
+		FCB->PollState |= AFD_EVENT_RECEIVE;
+	    
+	    PollReeval( FCB->DeviceExt, FCB->FileObject );
+	    
 	    return UnlockAndMaybeComplete
 		( FCB, Status, Irp, RecvReq->BufferArray[0].len, NULL, TRUE );
 	} else {
 	    Status = SatisfyPacketRecvRequest
 		( FCB, Irp, DatagramRecv, 
 		  (PUINT)&Irp->IoStatus.Information );
+
+	    if( IsListEmpty( &FCB->DatagramList ) )
+		FCB->PollState &= ~AFD_EVENT_RECEIVE;
+	    else
+		FCB->PollState |= AFD_EVENT_RECEIVE;
+
+	    PollReeval( FCB->DeviceExt, FCB->FileObject );
+
 	    return UnlockAndMaybeComplete
 		( FCB, Status, Irp, Irp->IoStatus.Information, NULL, TRUE );
 	}
     } else if( RecvReq->AfdFlags & AFD_IMMEDIATE ) {
-	FCB->PollState &= ~AFD_EVENT_RECEIVE;
 	AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
 	Status = STATUS_CANT_WAIT;
+	PollReeval( FCB->DeviceExt, FCB->FileObject );
 	return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL, TRUE );
     } else {
-	FCB->PollState &= ~AFD_EVENT_RECEIVE;
+	PollReeval( FCB->DeviceExt, FCB->FileObject );
 	return LeaveIrpUntilLater( FCB, Irp, FUNCTION_RECV );
     }
 }

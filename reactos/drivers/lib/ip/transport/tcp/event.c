@@ -19,37 +19,47 @@ int TCPSocketState(void *ClientData,
 		   void *WhichSocket, 
 		   void *WhichConnection,
 		   OSK_UINT NewState ) {
+    NTSTATUS Status = STATUS_SUCCESS;
     PCONNECTION_ENDPOINT Connection = WhichConnection;
     PTCP_COMPLETION_ROUTINE Complete;
     PTDI_BUCKET Bucket;
     PLIST_ENTRY Entry;
 
-    TI_DbgPrint(MID_TRACE,("Called: NewState %x (Conn %x)\n", 
-			   NewState, Connection));
-
-    if( !Connection ) {
-	TI_DbgPrint(MID_TRACE,("Socket closing.\n"));
-	return 0;
-    }
+    TI_DbgPrint(MID_TRACE,("Called: NewState %x (Conn %x) (Change %x)\n", 
+			   NewState, Connection,
+			   Connection ? Connection->State ^ NewState : 
+			   NewState));
 
     TcpipRecursiveMutexEnter( &TCPLock, TRUE );
 
-    if( (NewState & SEL_CONNECT) && 
-	!(Connection->State & SEL_CONNECT) ) {
+    if( !Connection ) {
+	TI_DbgPrint(MID_TRACE,("Socket closing.\n"));
+	Connection = FileFindConnectionByContext( WhichSocket );
+	if( !Connection ) {
+	    TcpipRecursiveMutexLeave( &TCPLock );
+	    return 0;
+	} else 
+	    TI_DbgPrint(MID_TRACE,("Found socket %x\n", Connection));
+    }
+
+    if( ((NewState & SEL_CONNECT) || (NewState & SEL_FIN)) &&
+	!(Connection->State & (SEL_CONNECT | SEL_FIN)) ) {
 	while( !IsListEmpty( &Connection->ConnectRequest ) ) {
-	    Connection->State |= SEL_CONNECT;
+	    Connection->State |= NewState & (SEL_CONNECT | SEL_FIN);
 	    Entry = RemoveHeadList( &Connection->ConnectRequest );
 	    Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
 	    Complete = Bucket->Request.RequestNotifyObject;
 	    TI_DbgPrint(MID_TRACE,
 			("Completing Connect Request %x\n", Bucket->Request));
+	    if( NewState & SEL_FIN ) Status = STATUS_CONNECTION_REFUSED;
 	    TcpipRecursiveMutexLeave( &TCPLock );
-	    Complete( Bucket->Request.RequestContext, STATUS_SUCCESS, 0 );
+	    Complete( Bucket->Request.RequestContext, Status, 0 );
 	    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
 	    /* Frees the bucket allocated in TCPConnect */
 	    PoolFreeBuffer( Bucket );
 	}
-    } else if( (NewState & SEL_READ) || (NewState & SEL_FIN) ) {
+    }
+    if( (NewState & SEL_READ) || (NewState & SEL_FIN) ) {
 	TI_DbgPrint(MID_TRACE,("Readable (or closed): irp list %s\n",
 			       IsListEmpty(&Connection->ReceiveRequest) ?
 			       "empty" : "nonempty"));
@@ -81,6 +91,7 @@ int TCPSocketState(void *ClientData,
 			("Reading %d bytes to %x\n", RecvLen, RecvBuffer));
 
 	    if( (NewState & SEL_FIN) && !RecvLen ) {
+		TI_DbgPrint(MID_TRACE, ("EOF From socket\n"));
 		Status = STATUS_END_OF_FILE;
 		Received = 0;
 	    } else {

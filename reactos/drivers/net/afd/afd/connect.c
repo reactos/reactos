@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.4 2004/10/03 21:16:27 arty Exp $
+/* $Id: connect.c,v 1.5 2004/11/21 20:54:52 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/connect.c
@@ -13,7 +13,14 @@
 #include "debug.h"
 
 NTSTATUS WarmSocketForConnection( PAFD_FCB FCB ) {
-    NTSTATUS Status = TdiOpenConnectionEndpointFile
+    NTSTATUS Status;
+
+    if( !FCB->TdiDeviceName.Length || !FCB->TdiDeviceName.Buffer ) {
+	AFD_DbgPrint(MID_TRACE,("Null Device\n"));
+	return STATUS_NO_SUCH_DEVICE;
+    }
+
+    Status = TdiOpenConnectionEndpointFile
 	( &FCB->TdiDeviceName,
 	  &FCB->Connection.Handle,
 	  &FCB->Connection.Object );
@@ -55,12 +62,12 @@ NTSTATUS DDKAPI StreamSocketConnectComplete
 			    Irp->IoStatus.Status));
 
     if( NT_SUCCESS(Irp->IoStatus.Status) ) {
-	FCB->PollState |= AFD_EVENT_CONNECT;
+	FCB->PollState |= AFD_EVENT_CONNECT | AFD_EVENT_SEND;
 	FCB->State = SOCKET_STATE_CONNECTED;
 	AFD_DbgPrint(MID_TRACE,("Going to connected state %d\n", FCB->State));
 	PollReeval( FCB->DeviceExt, FCB->FileObject );
     } else {
-	FCB->PollState |= AFD_EVENT_CONNECT_FAIL;
+	FCB->PollState |= AFD_EVENT_CONNECT_FAIL | AFD_EVENT_RECEIVE;
 	AFD_DbgPrint(MID_TRACE,("Going to bound state\n"));
 	FCB->State = SOCKET_STATE_BOUND;
 	PollReeval( FCB->DeviceExt, FCB->FileObject );

@@ -1,4 +1,4 @@
-/* $Id: write.c,v 1.11 2004/11/15 18:24:57 arty Exp $
+/* $Id: write.c,v 1.12 2004/11/21 20:54:52 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/write.c
@@ -163,6 +163,9 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
+    
+    FCB->EventsFired &= ~AFD_EVENT_SEND;
+
     if( !(SendReq = LockRequest( Irp, IrpSp )) ) 
 	return UnlockAndMaybeComplete
 	    ( FCB, STATUS_NO_MEMORY, Irp, TotalBytesCopied, NULL, FALSE );
@@ -307,6 +310,9 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
+
+    FCB->EventsFired &= ~AFD_EVENT_SEND;
+
     /* Check that the socket is bound */
     if( FCB->State != SOCKET_STATE_BOUND ) 
 	return UnlockAndMaybeComplete

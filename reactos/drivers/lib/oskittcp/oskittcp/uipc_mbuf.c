@@ -417,8 +417,6 @@ m_copydata(m, off, len, cp)
 			panic("m_copydata");
 		count = min(m->m_len - off, len);
 		bcopy(mtod(m, caddr_t) + off, cp, count);
-		OS_DbgPrint(OSK_MID_TRACE,("buf %x, len %d\n", m, count));
-		OskitDumpBuffer(m->m_data, count);
 		len -= count;
 		cp += count;
 		off = 0;

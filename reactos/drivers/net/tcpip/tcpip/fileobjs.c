@@ -403,6 +403,36 @@ TI_DbgPrint(MIN_TRACE, ("X1 Blink 0x%x\n", Connection->ReceivedSegments.Blink));
 
 
 /*
+ * FUNCTION: Find a connection by examining the context field.  This
+ * is needed in some situations where a FIN reply is needed after a 
+ * socket is formally broken.
+ * ARGUMENTS:
+ *     Request = Pointer to TDI request structure for this request
+ * RETURNS:
+ *     Status of operation
+ */
+PCONNECTION_ENDPOINT FileFindConnectionByContext( PVOID Context ) {
+    PLIST_ENTRY Entry;
+    KIRQL OldIrql;
+    PCONNECTION_ENDPOINT Connection = NULL;
+
+    KeAcquireSpinLock( &ConnectionEndpointListLock, &OldIrql );
+
+    for( Entry = ConnectionEndpointListHead.Flink; 
+	 Entry != &ConnectionEndpointListHead;
+	 Entry = Entry->Flink ) { 
+	Connection = 
+	    CONTAINING_RECORD( Entry, CONNECTION_ENDPOINT, ListEntry );
+	if( Connection->SocketContext == Context ) break;
+	else Connection = NULL;
+    }
+
+    KeReleaseSpinLock( &ConnectionEndpointListLock, OldIrql );
+
+    return Connection;
+}
+
+/*
  * FUNCTION: Closes an connection file object
  * ARGUMENTS:
  *     Request = Pointer to TDI request structure for this request
@@ -467,7 +497,6 @@ NTSTATUS FileOpenControlChannel(
 
   return STATUS_SUCCESS;
 }
-
 
 /*
  * FUNCTION: Closes a control channel file object

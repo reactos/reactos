@@ -289,12 +289,14 @@ tcp_input(m, iphlen)
 	ti->ti_x1 = 0;
 	ti->ti_len = (u_short)tlen;
 	HTONS(ti->ti_len);
+#ifndef __REACTOS__ /* Checksum already done in IPReceive */
 	ti->ti_sum = in_cksum(m, len);
 	if (ti->ti_sum) {
 	    printf("TCP: Bad Checksum\n");
 	    tcpstat.tcps_rcvbadsum++;
 	    goto drop;
 	}
+#endif
 #endif /* TUBA_INCLUDE */
 
 	/*
