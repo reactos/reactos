@@ -8,9 +8,11 @@ cp loaders/dos/loadros.com $1
 cp ntoskrnl/ntoskrnl.exe $1
 cp services/fs/vfat/vfatfs.sys $1
 cp services/dd/ide/ide.sys $1
+#cp services/dd/floppy/floppy.sys $1
 cp ntoskrnl/ntoskrnl.exe $1/reactos/system32/
 cp services/fs/vfat/vfatfs.sys $1/reactos/system32/drivers/
 cp services/dd/ide/ide.sys $1/reactos/system32/drivers/
+#cp services/dd/floppy/floppy.sys $1/reactos/system32/drivers/
 cp services/dd/keyboard/keyboard.sys $1/reactos/system32/drivers
 cp services/dd/blue/blue.sys $1/reactos/system32/drivers
 #cp services/dd/vga/miniport/vgamp.sys $1/reactos/system32/drivers

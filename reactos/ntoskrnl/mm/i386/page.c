@@ -1,4 +1,4 @@
-/* $Id: page.c,v 1.12 2000/07/07 10:30:57 dwelch Exp $
+/* $Id: page.c,v 1.13 2000/07/19 14:18:19 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -22,8 +22,6 @@
 #include <internal/debug.h>
 
 /* GLOBALS *****************************************************************/
-
-extern ULONG MiNrFreePages;
 
 #define PA_BIT_PRESENT   (0)
 #define PA_BIT_READWRITE (1)
@@ -218,9 +216,9 @@ VOID MmDeletePageEntry(PEPROCESS Process, PVOID Address, BOOL FreePage)
      {
 	if (PAGE_MASK(*page_tlb) >= 0x400000)
 	  {
-	     DbgPrint("MmDeletePageEntry(Address %x) Physical %x Free %d, "
+	     DbgPrint("MmDeletePageEntry(Address %x) Physical %x "
                       "Entry %x\n",
-		      Address, PAGE_MASK(*page_tlb), MiNrFreePages,
+		      Address, PAGE_MASK(*page_tlb), 
 		      *page_tlb);
 	     KeBugCheck(0);
 	  }
@@ -384,12 +382,9 @@ PHYSICAL_ADDRESS STDCALL MmGetPhysicalAddress(PVOID vaddr)
 {
    PHYSICAL_ADDRESS p;
 
-   p.QuadPart = 0;
-   
    DPRINT("MmGetPhysicalAddress(vaddr %x)\n", vaddr);
    
-   p.u.LowPart = PAGE_MASK(*MmGetPageEntry(vaddr));
-   p.u.HighPart = 0;
+   p.QuadPart = PAGE_MASK(*MmGetPageEntry(vaddr));
    
    return p;
 }

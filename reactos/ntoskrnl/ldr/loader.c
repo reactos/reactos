@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.58 2000/07/04 08:52:41 dwelch Exp $
+/* $Id: loader.c,v 1.59 2000/07/19 14:18:18 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -189,16 +189,25 @@ static VOID LdrLoadAutoConfigDriver (LPWSTR	RelativeDriverName)
 
 VOID LdrLoadAutoConfigDrivers (VOID)
 {
-	/*
-	 * Keyboard driver
-	 */
-	LdrLoadAutoConfigDriver( L"keyboard.sys" );
-	/*
-	 * Raw console driver
-	 */
-	LdrLoadAutoConfigDriver( L"blue.sys" );
-
-//   LdrLoadAutoConfigDriver(L"minixfs.sys");
+   /*
+    * Keyboard driver
+    */
+   LdrLoadAutoConfigDriver( L"keyboard.sys" );
+   
+   /*
+    * Raw console driver
+    */
+   LdrLoadAutoConfigDriver( L"blue.sys" );
+   
+   /*
+    * Floppy disk driver
+    */
+//   LdrLoadAutoConfigDriver(L"floppy.sys");
+   
+   /*
+    * Minix filesystem driver
+    */
+   LdrLoadAutoConfigDriver(L"minixfs.sys");
 }
 
 

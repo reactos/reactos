@@ -1,4 +1,4 @@
-/* $Id: pager.c,v 1.3 2000/07/06 14:34:51 dwelch Exp $
+/* $Id: pager.c,v 1.4 2000/07/19 14:18:19 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -99,6 +99,7 @@ static NTSTATUS MmPagerThreadMain(PVOID Ignored)
 		       LastProcess = PsGetNextProcess(LastProcess);
 		    }
 	       }
+	     DbgPrint("Out of memory\n");
 	     KeSetEvent(&FreedMemEvent, IO_NO_INCREMENT, FALSE);
 	  }
      }

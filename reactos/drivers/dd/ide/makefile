@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.11 2000/06/29 23:35:48 dwelch Exp $
+# $Id: makefile,v 1.12 2000/07/19 14:18:20 dwelch Exp $
 #
 #
 TARGET=ide
@@ -7,7 +7,7 @@ OBJECTS = $(TARGET).o $(TARGET).coff ../../../ntoskrnl/ntoskrnl.a
 
 BASE_CFLAGS = -I. -I../../../include
 
-all: $(TARGET).sys
+all: $(TARGET).nostrip.sys $(TARGET).sys
 
 .phony: all
 
@@ -40,6 +40,7 @@ else
 endif
 
 $(TARGET).sys: $(OBJECTS)
+	$(STRIP) --strip-debug $(OBJECTS)
 	$(CC) \
 		-specs=../../svc_specs \
 		-mdll \
@@ -66,4 +67,33 @@ $(TARGET).sys: $(OBJECTS)
 		$(OBJECTS)
 	- $(RM) temp.exp
 
+$(TARGET).nostrip.sys: $(OBJECTS)
+	$(CC) \
+		-specs=../../svc_specs \
+		-mdll \
+		-o junk.tmp \
+		-Wl,--defsym,_end=end \
+		-Wl,--defsym,_edata=__data_end__ \
+		-Wl,--defsym,_etext=etext \
+		-Wl,--base-file,base.tmp $(OBJECTS)
+	- $(RM) junk.tmp
+	$(DLLTOOL) \
+		--dllname $(TARGET).sys \
+		--base-file base.tmp \
+		--output-exp temp.exp \
+		--kill-at
+	- $(RM) base.tmp
+	$(CC) \
+		--verbose \
+		-Wl,--image-base,0x10000 \
+		-Wl,-e,_DriverEntry@8 \
+		-Wl,temp.exp \
+		-specs=../../svc_specs \
+		-mdll \
+		-o $(TARGET).nostrip.sys \
+		$(OBJECTS)
+	- $(RM) temp.exp
+
+
+WITH_DEBUGGING=yes
 include ../../../rules.mak

@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.3 2000/07/07 10:30:56 dwelch Exp $
+/* $Id: mminit.c,v 1.4 2000/07/19 14:18:19 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -163,6 +163,23 @@ VOID MmInit1(PLOADER_PARAMETER_BLOCK bp, ULONG LastKernelAddress)
    MmUserProbeAddress = (PVOID)0x7fff0000;
    MmHighestUserAddress = (PVOID)0x7ffeffff;
    
+   /*
+    * Initialize memory managment statistics
+    */
+   MmStats.NrTotalPages = 0;
+   MmStats.NrSystemPages = 0;
+   MmStats.NrUserPages = 0;
+   MmStats.NrReservedPages = 0;
+   MmStats.NrUserPages = 0;
+   MmStats.NrFreePages = 0;
+   MmStats.NrLockedPages = 0;
+   MmStats.PagingRequestsInLastMinute = 0;
+   MmStats.PagingRequestsInLastFiveMinutes = 0;
+   MmStats.PagingRequestsInLastFifteenMinutes = 0;
+   
+   /*
+    * Initialize the kernel address space
+    */
    MmInitializeKernelAddressSpace();
    
    /*

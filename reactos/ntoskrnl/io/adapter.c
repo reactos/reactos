@@ -1,4 +1,4 @@
-/* $Id: adapter.c,v 1.3 2000/05/09 16:13:49 ekohl Exp $
+/* $Id: adapter.c,v 1.4 2000/07/19 14:18:18 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -23,17 +23,14 @@ USHORT       EXPORTED IoDeviceHandlerObjectSize = 0;	/* FIXME */
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS
-STDCALL
-IoAllocateAdapterChannel (
-	PADAPTER_OBJECT	AdapterObject,
-	PDEVICE_OBJECT	DeviceObject,
-	ULONG		NumberOfMapRegisters,
-	PDRIVER_CONTROL	ExecutionRoutine,
-	PVOID		Context
-	)
+NTSTATUS STDCALL
+IoAllocateAdapterChannel (PADAPTER_OBJECT	AdapterObject,
+			  PDEVICE_OBJECT	DeviceObject,
+			  ULONG		NumberOfMapRegisters,
+			  PDRIVER_CONTROL	ExecutionRoutine,
+			  PVOID		Context)
 {
-	UNIMPLEMENTED;
+   UNIMPLEMENTED;
 }
 
 

@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.10 2000/05/14 13:10:00 dwelch Exp $
+# $Id: makefile_rex,v 1.11 2000/07/19 14:18:20 dwelch Exp $
 #
 # Minix IFS Driver makefile
 #
@@ -27,7 +27,35 @@ clean:
 minix.o: $(OBJECTS)
 	$(LD) -r $(OBJECTS) -o minix.o
 
+minixfs.nostrip.sys: $(OBJECTS)
+	$(CC) \
+		-specs=../../svc_specs \
+		-mdll \
+		-o junk.tmp \
+		-Wl,--defsym,_end=end \
+		-Wl,--defsym,_edata=__data_end__ \
+		-Wl,--defsym,_etext=etext \
+		-Wl,--base-file,base.tmp \
+		$(OBJECTS)
+	- $(RM) junk.tmp
+	$(DLLTOOL) \
+		--dllname $(TARGETNAME).sys \
+		--base-file base.tmp \
+		--output-exp temp.exp
+	- $(RM) base.tmp
+	$(CC) \
+		--verbose \
+		-Wl,--image-base,0x10000 \
+		-Wl,-e,_DriverEntry@8 \
+		-specs=../../svc_specs \
+		-mdll \
+		-o $(TARGETNAME).nostrip.sys \
+		$(OBJECTS) \
+		-Wl,temp.exp
+	- $(RM) temp.exp
+
 minixfs.sys: $(OBJECTS)
+	$(STRIP) --strip-debug $(OBJECTS)
 	$(CC) \
 		-specs=../../svc_specs \
 		-mdll \
@@ -76,5 +104,6 @@ endif
 
 WIN32_LEAN_AND_MEAN = yes
 WARNINGS_ARE_ERRORS = yes
+WITH_DEBUGGING = yes
 include ../../../rules.mak
 # EOF

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.17 2000/07/07 02:14:14 ekohl Exp $
+# $Id: makefile,v 1.18 2000/07/19 14:18:20 dwelch Exp $
 #
 #
 TARGET=vfatfs
@@ -9,7 +9,7 @@ LIBS = ../../../ntoskrnl/ntoskrnl.a
 
 BASE_CFLAGS = -I. -I../../../include
 
-all: $(TARGET).sys
+all: $(TARGET).nostrip.sys $(TARGET).sys
 
 .phony: all
 
@@ -45,7 +45,21 @@ else
 	$(CP) $(TARGET).sys ../../../$(DIST_DIR)/drivers/$(TARGET).sys
 endif
 
+$(TARGET).nostrip.sys: $(OBJECTS) $(LIBS)
+	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext -Wl,--base-file,base.tmp -Wl,"-h vfatfs.sys" $(OBJECTS) $(LIBS)
+	- $(RM) junk.tmp
+	$(DLLTOOL) \
+		--dllname $(TARGET).sys \
+		--base-file base.tmp \
+		--output-exp temp.exp \
+		--def vfatfs.def
+	- $(RM) base.tmp
+	$(CC) --verbose -Wl,--image-base,0x10000 -Wl,-e,_DriverEntry@8 -Wl,temp.exp -Wl,"-h vfatfs.sys" -specs=../../svc_specs -mdll -o $(TARGET).nostrip.sys $(OBJECTS) $(LIBS)
+	- $(RM) temp.exp
+
+
 $(TARGET).sys: $(OBJECTS) $(LIBS)
+	$(STRIP) --strip-debug $(OBJECTS)
 	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext -Wl,--base-file,base.tmp -Wl,"-h vfatfs.sys" $(OBJECTS) $(LIBS)
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
@@ -57,6 +71,6 @@ $(TARGET).sys: $(OBJECTS) $(LIBS)
 	$(CC) --verbose -Wl,--image-base,0x10000 -Wl,-e,_DriverEntry@8 -Wl,temp.exp -Wl,"-h vfatfs.sys" -specs=../../svc_specs -mdll -o $(TARGET).sys $(OBJECTS) $(LIBS)
 	- $(RM) temp.exp
 
-
+WITH_DEBUGGING=yes
 WARNINGS_ARE_ERRORS = yes
 include ../../../rules.mak

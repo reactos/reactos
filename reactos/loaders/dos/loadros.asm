@@ -34,7 +34,7 @@ org 100h
 ;
 BITS 16
 
-%define NDEBUG 1
+;%define NDEBUG 1
 
 %macro	DPRINT	1+
 %ifndef	NDEBUG
@@ -195,7 +195,7 @@ l16:
         ;
         ; Begin the pmode initalization
         ;
-        jmp     _to_pmode
+        ;jmp     _to_pmode
 
 exit:
         mov     ax,04c00h

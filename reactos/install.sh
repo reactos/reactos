@@ -27,3 +27,4 @@ cp apps/event/event.exe $1/reactos/bin
 cp apps/file/file.exe $1/reactos/bin
 cp apps/pteb/pteb.exe $1/reactos/bin
 cp apps/consume/consume.exe $1/reactos/bin
+cp apps/float/float.exe $1/reactos/bin

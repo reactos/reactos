@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.48 2000/05/14 13:10:00 dwelch Exp $
+# $Id: makefile,v 1.49 2000/07/19 14:18:17 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -121,5 +121,6 @@ else
 	$(CP) $(TARGET).dll ../../$(DIST_DIR)/dlls/$(TARGET).dll
 endif
 
+WITH_DEBUGGING=yes
 #WARNINGS_ARE_ERRORS = yes
 include ../../rules.mak

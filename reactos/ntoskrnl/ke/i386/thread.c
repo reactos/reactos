@@ -72,6 +72,7 @@ VOID HalTaskSwitch(PKTHREAD thread)
 	   : /* No outputs */
 	   : "i" (TEB_SELECTOR)
 	   : "ax");
+   __asm__("clts\n\t");
 
 #if 0
    Thread = PsGetCurrentThread();

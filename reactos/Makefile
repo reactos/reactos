@@ -34,7 +34,7 @@ LOADERS = dos
 #
 # Select the device drivers and filesystems you want
 #
-DEVICE_DRIVERS = blue ide keyboard null parallel serial vidport
+DEVICE_DRIVERS = blue ide keyboard null parallel serial vidport floppy
 # DEVICE_DRIVERS = beep event floppy ide_test mouse sound test test1
 FS_DRIVERS = vfat minix
 # FS_DRIVERS = minix ext2 template
@@ -54,7 +54,7 @@ clean: buildno_clean $(COMPONENTS:%=%_clean) $(DLLS:%=%_clean) $(LOADERS:%=%_cle
        
 .PHONY: clean
 
-floppy: make_floppy_dirs autoexec_floppy $(COMPONENTS:%=%_floppy) \
+install_floppy: make_floppy_dirs autoexec_floppy $(COMPONENTS:%=%_floppy) \
         $(DLLS:%=%_floppy) $(LOADERS:%=%_floppy) \
         $(KERNEL_SERVICES:%=%_floppy) $(SUBSYS:%=%_floppy) \
         $(APPS:%=%_floppy)

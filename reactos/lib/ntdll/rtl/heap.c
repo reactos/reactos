@@ -886,24 +886,37 @@ BOOL STDCALL RtlDestroyHeap(
  *	Pointer to allocated memory block
  *	NULL: Failure
  */
-PVOID STDCALL RtlAllocateHeap(
-              HANDLE heap, /* [in] Handle of private heap block */
-			     ULONG flags,   /* [in] Heap allocation control flags */
-              ULONG size     /* [in] Number of bytes to allocate */
-) {
-    ARENA_FREE *pArena;
-    ARENA_INUSE *pInUse;
-    SUBHEAP *subheap;
-    HEAP *heapPtr = HEAP_GetPtr( heap );
-
-    /* Validate the parameters */
-
-    if (!heapPtr) return NULL;
-    flags &= HEAP_GENERATE_EXCEPTIONS | HEAP_NO_SERIALIZE | HEAP_ZERO_MEMORY;
-    flags |= heapPtr->flags;
-    if (!(flags & HEAP_NO_SERIALIZE)) RtlLockHeap( heap );
-    size = (size + 3) & ~3;
-    if (size < HEAP_MIN_BLOCK_SIZE) size = HEAP_MIN_BLOCK_SIZE;
+PVOID STDCALL 
+RtlAllocateHeap(HANDLE heap, /* [in] Handle of private heap block */
+		ULONG flags,   /* [in] Heap allocation control flags */
+		ULONG size     /* [in] Number of bytes to allocate */) 
+{
+   ARENA_FREE* pArena;
+   ARENA_INUSE* pInUse;
+   SUBHEAP* subheap;
+   HEAP* heapPtr = NULL;
+   
+   DPRINT("RtlAllocateHeap(heap 0x%x, flags 0x%x, size %d)\n",
+	  heap, flags, size);
+   
+   /* Validate the parameters */      
+   
+   heapPtr = HEAP_GetPtr(heap);
+   if (!heapPtr) 
+     {
+	return NULL;
+     }
+   flags &= HEAP_GENERATE_EXCEPTIONS | HEAP_NO_SERIALIZE | HEAP_ZERO_MEMORY;
+   flags |= heapPtr->flags;
+   if (!(flags & HEAP_NO_SERIALIZE)) 
+     {
+	RtlLockHeap(heap);
+     }
+   size = (size + 3) & ~3;
+   if (size < HEAP_MIN_BLOCK_SIZE) 
+     {
+	size = HEAP_MIN_BLOCK_SIZE;
+     }
 
     /* Locate a suitable free block */
 
@@ -911,9 +924,9 @@ PVOID STDCALL RtlAllocateHeap(
     {
         DPRINT("(%08x,%08lx,%08lx): returning NULL\n",
                   heap, flags, size  );
-        if (!(flags & HEAP_NO_SERIALIZE)) RtlUnlockHeap( heap );
-//        SetLastError( ERROR_COMMITMENT_LIMIT );
-        return NULL;
+       if (!(flags & HEAP_NO_SERIALIZE)) RtlUnlockHeap( heap );
+       /* SetLastError( ERROR_COMMITMENT_LIMIT ); */
+       return NULL;
     }
 
     /* Remove the arena from the free list */
@@ -927,7 +940,7 @@ PVOID STDCALL RtlAllocateHeap(
     pInUse->size      = (pInUse->size & ~ARENA_FLAG_FREE)
                         + sizeof(ARENA_FREE) - sizeof(ARENA_INUSE);
     pInUse->callerEIP = *((DWORD *)&heap - 1);  /* hack hack */
-//    pInUse->threadId  = GetCurrentTask();
+/*  pInUse->threadId  = GetCurrentTask(); */
     pInUse->magic     = ARENA_INUSE_MAGIC;
 
     /* Shrink the block */

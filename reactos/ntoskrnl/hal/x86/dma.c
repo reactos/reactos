@@ -1,4 +1,4 @@
-/* $Id: dma.c,v 1.7 2000/07/01 18:23:06 ekohl Exp $
+/* $Id: dma.c,v 1.8 2000/07/19 14:18:18 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -15,51 +15,13 @@
 
 #include <internal/debug.h>
 
-/* TYPES *********************************************************************/
-
-#define MAP_REGISTER_SIZE (PAGESIZE)
-#define NR_MAP_REGISTERS  (32)
-
-typedef struct 
-{
-   PVOID VirtualAddress;
-   PVOID PhysicalAddress;
-} MAP_REGISTER, *PMAP_REGISTER;
-/*
-typedef struct _ADAPTER_OBJECT
-{
-   DEVICE_DESCRIPTION desc;
-   KDEVICE_QUEUE wait_queue;
-} ADAPTER_OBJECT, *PADAPTER_OBJECT
-*/
-/* GLOBALS *******************************************************************/
-
-static PMAP_REGISTER map_registers[];
-
 /* FUNCTIONS *****************************************************************/
 
-VOID HalInitializeAdapterSupport(VOID)
-{
-   /* ?? */
-}
-
-ULONG HalGetDmaAlignmentRequirement()
-/*
- * FUNCTION: Returns the size of the cache boundary
- */
-{
-   return(1);
-}
-
-
-PVOID
-STDCALL
-HalAllocateCommonBuffer (
-	PADAPTER_OBJECT		AdapterObject,
-	ULONG			Length,
-	PPHYSICAL_ADDRESS	LogicalAddress,
-	BOOLEAN			CacheEnabled
-	)
+PVOID STDCALL
+HalAllocateCommonBuffer (PADAPTER_OBJECT		AdapterObject,
+			 ULONG			Length,
+			 PPHYSICAL_ADDRESS	LogicalAddress,
+			 BOOLEAN			CacheEnabled)
 /*
  * FUNCTION: Allocates memory that is visible to both the processor(s) and
  * a dma device
@@ -74,61 +36,35 @@ HalAllocateCommonBuffer (
  *          NULL on failure
  */
 {
-/*
-   PVOID Buffer;
-   PHYSICAL_ADDRESS highest_address;
-  
-   highest_address.HighPart = 0;
-   if (AdapterObject->Desc.Dma32BitAddresses )
-     {
-	highest_address.LowPart = 0xffffffff;
-     }
-   else
-     {
-	highest_address.LowPart = 0xfffff;
-     }
-   Buffer = MmAllocateContiguousMemory(Length,&highest_address);
-   LogicalAddress->HighPart = 0;
-   LogicalAddress->LowPart = MmGetPhysicalAddress(Buffer);
-   return(Buffer);*/
-   return NULL;
+   UNIMPLEMENTED;
 }
 
-BOOLEAN
-STDCALL
-HalFlushCommonBuffer (
-	ULONG	Unknown1,
-	ULONG	Unknown2,
-	ULONG	Unknown3,
-	ULONG	Unknown4,
-	ULONG	Unknown5,
-	ULONG	Unknown6,
-	ULONG	Unknown7,
-	ULONG	Unknown8
-	)
+BOOLEAN STDCALL
+HalFlushCommonBuffer (ULONG	Unknown1,
+		      ULONG	Unknown2,
+		      ULONG	Unknown3,
+		      ULONG	Unknown4,
+		      ULONG	Unknown5,
+		      ULONG	Unknown6,
+		      ULONG	Unknown7,
+		      ULONG	Unknown8)
 {
    return TRUE;
 }
 
-VOID
-STDCALL
-HalFreeCommonBuffer (
-	PADAPTER_OBJECT		AdapterObject,
-	ULONG			Length,
-	PHYSICAL_ADDRESS	LogicalAddress,
-	PVOID			VirtualAddress,
-	BOOLEAN			CacheEnabled
-	)
+VOID STDCALL 
+HalFreeCommonBuffer (PADAPTER_OBJECT		AdapterObject,
+		     ULONG			Length,
+		     PHYSICAL_ADDRESS	LogicalAddress,
+		     PVOID			VirtualAddress,
+		     BOOLEAN			CacheEnabled)
 {
-   MmFreeContiguousMemory (VirtualAddress);
+   UNIMPLEMENTED;
 }
 
-PADAPTER_OBJECT
-STDCALL
-HalGetAdapter (
-	PDEVICE_DESCRIPTION	DeviceDescription,
-	PULONG			NumberOfMapRegisters
-	)
+PADAPTER_OBJECT STDCALL
+HalGetAdapter (PDEVICE_DESCRIPTION	DeviceDescription,
+	       PULONG			NumberOfMapRegisters)
 /*
  * FUNCTION: Returns a pointer to an adapter object for the DMA device 
  * defined the device description structure
@@ -141,20 +77,12 @@ HalGetAdapter (
  *          NULL on failure
  */
 {
-/*   PADAPTER_OBJECT adapter;
-   
-   adapter = ExAllocatePool(NonPagedPool,sizeof(ADAPTER_OBJECT));
-   RtlCopyMemory(&adapter->desc,DeviceDescription,sizeof(DEVICE_DESCRIPTION));
- */
-   return NULL;
+   UNIMPLEMENTED;
 }
 
 
-ULONG
-STDCALL
-HalReadDmaCounter (
-	PADAPTER_OBJECT	AdapterObject
-	)
+ULONG STDCALL
+HalReadDmaCounter (PADAPTER_OBJECT	AdapterObject)
 {
    UNIMPLEMENTED;
 }
