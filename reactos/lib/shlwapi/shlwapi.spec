@@ -426,7 +426,7 @@
 426 stub -noname DestroyMenuWrap
 427 stub -noname TrackPopupMenuWrap
 428 stdcall @(long long long long long ptr) user32.TrackPopupMenuEx
-429 stub -noname MLIsMLHInstance
+429 stdcall -noname MLIsMLHInstance(long)
 430 stdcall -noname MLSetMLHInstance(long long)
 431 stdcall -noname MLClearMLHInstance(long)
 432 stub -noname SHSendMessageBroadcastA
@@ -796,10 +796,11 @@
 
 # exported in later versions
 @ stdcall AssocIsDangerous(long)
-@ stdcall StrRetToBufA (ptr ptr ptr long)
-@ stdcall StrRetToBufW (ptr ptr ptr long)
-@ stdcall StrRetToStrA (ptr ptr ptr)
-@ stdcall StrRetToStrW (ptr ptr ptr)
+@ stdcall StrRetToBufA(ptr ptr ptr long)
+@ stdcall StrRetToBufW(ptr ptr ptr long)
+@ stdcall StrRetToBSTR(ptr ptr ptr)
+@ stdcall StrRetToStrA(ptr ptr ptr)
+@ stdcall StrRetToStrW(ptr ptr ptr)
 @ stdcall SHRegGetPathA(long str str ptr long)
 @ stdcall SHRegGetPathW(long wstr wstr ptr long)
 @ stdcall PathIsDirectoryEmptyA(str)

@@ -414,11 +414,20 @@ HRESULT WINAPI AssocQueryStringByKeyA(ASSOCF cfFlags, ASSOCSTR str, HKEY hkAssoc
 
 /**************************************************************************
  *  AssocIsDangerous  (SHLWAPI.@)
+ *  
+ * Determine if a file association is dangerous (potentially malware).
+ *
+ * PARAMS
+ *  lpszAssoc [I] Name of file or file extention to check.
+ *
+ * RETURNS
+ *  TRUE, if lpszAssoc may potentially be malware (executable),
+ *  FALSE, Otherwise.
  */
-HRESULT WINAPI AssocIsDangerous( ASSOCSTR str )
+BOOL WINAPI AssocIsDangerous(LPCWSTR lpszAssoc)
 {
-    FIXME("%08x\n", str);
-    return S_FALSE;
+    FIXME("%s\n", debugstr_w(lpszAssoc));
+    return FALSE;
 }
 
 /**************************************************************************

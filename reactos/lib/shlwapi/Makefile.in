@@ -5,6 +5,7 @@ SRCDIR    = @srcdir@
 VPATH     = @srcdir@
 MODULE    = shlwapi.dll
 IMPORTS   = ole32 user32 gdi32 advapi32 kernel32
+DELAYIMPORTS = oleaut32
 EXTRALIBS = -luuid $(LIBUNICODE)
 
 C_SRCS = \

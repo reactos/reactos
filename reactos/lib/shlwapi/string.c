@@ -1333,7 +1333,7 @@ LPWSTR WINAPI StrCatBuffW(LPWSTR lpszStr, LPCWSTR lpszCat, INT cchMax)
  *
  * PARAMS
  *  lpStrRet [O] STRRET to convert
- *  pIdl     [I] ITEMIDLIST for lpStrRet->uType = STRRET_OFFSETA
+ *  pIdl     [I] ITEMIDLIST for lpStrRet->uType == STRRET_OFFSET
  *  lpszDest [O] Destination for normal string
  *  dwLen    [I] Length of lpszDest
  *
@@ -1444,7 +1444,7 @@ HRESULT WINAPI StrRetToBufW (LPSTRRET src, const ITEMIDLIST *pidl, LPWSTR dest, 
  *
  * PARAMS
  *  lpStrRet [O] STRRET to convert
- *  pidl     [I] ITEMIDLIST for lpStrRet->uType = STRRET_OFFSETA
+ *  pidl     [I] ITEMIDLIST for lpStrRet->uType == STRRET_OFFSET
  *  ppszName [O] Destination for converted string
  *
  * RETURNS
@@ -1503,6 +1503,71 @@ HRESULT WINAPI StrRetToStrW(LPSTRRET lpStrRet, const ITEMIDLIST *pidl, LPWSTR *p
 
   default:
     *ppszName = NULL;
+  }
+
+  return hRet;
+}
+
+/* Create an ASCII string copy using SysAllocString() */
+static HRESULT _SHStrDupAToBSTR(LPCSTR src, BSTR *pBstrOut)
+{
+    *pBstrOut = NULL;
+
+    if (src)
+    {
+        INT len = MultiByteToWideChar(CP_ACP, 0, src, -1, NULL, 0);
+        WCHAR* szTemp = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+
+        if (szTemp)
+        {
+            MultiByteToWideChar(CP_ACP, 0, src, -1, szTemp, len);
+            *pBstrOut = SysAllocString(szTemp);
+            HeapFree(GetProcessHeap(), 0, szTemp);
+
+            if (*pBstrOut)
+                return S_OK;
+        }
+    }
+    return E_OUTOFMEMORY;
+}
+
+/*************************************************************************
+ * StrRetToBSTR	[SHLWAPI.@]
+ *
+ * Converts a STRRET to a BSTR.
+ *
+ * PARAMS
+ *  lpStrRet [O] STRRET to convert
+ *  pidl     [I] ITEMIDLIST for lpStrRet->uType = STRRET_OFFSET
+ *  pBstrOut [O] Destination for converted BSTR
+ *
+ * RETURNS
+ *  Success: S_OK. pBstrOut contains the new string.
+ *  Failure: E_FAIL, if any parameters are invalid.
+ */
+HRESULT WINAPI StrRetToBSTR(STRRET *lpStrRet, LPCITEMIDLIST pidl, BSTR* pBstrOut)
+{
+  HRESULT hRet = E_FAIL;
+
+  switch (lpStrRet->uType)
+  {
+  case STRRET_WSTR:
+    *pBstrOut = SysAllocString(lpStrRet->u.pOleStr);
+    if (*pBstrOut)
+      hRet = S_OK;
+    CoTaskMemFree(lpStrRet->u.pOleStr);
+    break;
+
+  case STRRET_CSTR:
+    hRet = _SHStrDupAToBSTR(lpStrRet->u.cStr, pBstrOut);
+    break;
+
+  case STRRET_OFFSET:
+    hRet = _SHStrDupAToBSTR(((LPCSTR)&pidl->mkid) + lpStrRet->u.uOffset, pBstrOut);
+    break;
+
+  default:
+    *pBstrOut = NULL;
   }
 
   return hRet;

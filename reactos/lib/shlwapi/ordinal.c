@@ -3678,6 +3678,17 @@ BOOL WINAPI MLFreeLibrary(HMODULE hModule)
 }
 
 /*************************************************************************
+ *      @      [SHLWAPI.429]
+ * FIXME I have no idea what this function does or what its arguments are.
+ */
+BOOL WINAPI MLIsMLHInstance(HINSTANCE hInst)
+{
+       FIXME("(%p) stub\n", hInst);
+       return FALSE;
+}
+
+
+/*************************************************************************
  *      @	[SHLWAPI.430]
  */
 DWORD WINAPI MLSetMLHInstance(HINSTANCE hInst, HANDLE hHeap)
