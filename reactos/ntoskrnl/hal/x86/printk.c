@@ -232,7 +232,40 @@ int bad_user_access_length(void)
 
 ULONG DbgPrint(PCH Format, ...)
 {
-   UNIMPLEMENTED;
+   char buffer[256];
+   char* str=buffer;
+   va_list ap;
+   unsigned int eflags;
+
+   /*
+    * Because this is used by alomost every subsystem including irqs it
+    * must be atomic. The following code sequence disables interrupts after
+    * saving the previous state of the interrupt flag
+    */
+   __asm__("pushf\n\tpop %0\n\tcli\n\t"
+	   : "=m" (eflags)
+	   : /* */);
+
+   /*
+    * Process the format string into a fixed length buffer using the
+    * standard C RTL function
+    */
+   va_start(ap,Format);
+   vsprintf(buffer,Format,ap);
+   va_end(ap);
+   
+   while ((*str)!=0)
+     {
+	putchar(*str);
+	str++;
+     }
+   
+   /*
+    * Restore the interrupt flag
+    */
+   __asm__("push %0\n\tpopf\n\t"
+	   :
+	   : "m" (eflags));
 }
 
 void InitConsole(boot_param* bp)

@@ -133,17 +133,9 @@ typedef struct _OBJECT
 typedef struct _OBJECT_ATTRIBUTES
 {
    ULONG Length;
-   
-   /*
-    * PURPOSE: Attributes of the object
-    */
+   HANDLE RootDirectory;
+   PUNICODE_STRING ObjectName;
    ULONG Attributes;
-   
-   SECURITY_DESCRIPTOR SecurityDescriptor;
-//   SecurityQualityOfService
-   
-   struct _DIRECTORY_OBJECT* parent;
-   UNICODE_STRING name;
-   UNICODE_STRING path;
-   
+   PVOID SecurityDescriptor;
+   PVOID SecurityQualityOfService;
 } OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;

@@ -38,7 +38,7 @@ extern __kernel_size_t strnlen(const char *,__kernel_size_t);
 extern __kernel_size_t strspn(const char *,const char *);
 extern int strcmp(const char *,const char *);
 extern int strncmp(const char *,const char *,__kernel_size_t);
-extern int stricmp(const char* cs,const char * ct)
+extern int stricmp(const char* cs,const char * ct);
 extern int strnicmp(const char* cs,const char * ct, size_t count);
 
 extern void * memset(void *,int,__kernel_size_t);

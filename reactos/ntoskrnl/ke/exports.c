@@ -8,6 +8,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+void free_page(void);
+void get_dma_page(void);
 void DbgPrint(void);
 void printk(void);
 void ExAcquireFastMutex(void);
@@ -378,6 +380,8 @@ void sprintf(void);
 }
 #endif
 export symbol_table[]={
+{"_free_page",(unsigned int)free_page},
+{"_get_dma_page",(unsigned int)get_dma_page},
 {"_DbgPrint",(unsigned int)DbgPrint},
 {"_printk",(unsigned int)printk},
 {"_ExAcquireFastMutex",(unsigned int)ExAcquireFastMutex},

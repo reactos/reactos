@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top directory
- * PROJECT:     ReactOS kernel v0.0.2
- * FILE:        hal/page.cc
+ * PROJECT:     ReactOS kernel
+ * FILE:        ntoskrnl/hal/x86/page.c
  * PURPOSE:     low level memory managment manipulation
  * PROGRAMER:   David Welch
  * UPDATE HISTORY:

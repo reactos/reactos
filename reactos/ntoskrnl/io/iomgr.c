@@ -17,12 +17,29 @@
 
 /* GLOBALS *******************************************************************/
 
-OBJECT_TYPE DeviceObjectType = {{NULL,0,0},
+OBJECT_TYPE DeviceObjectType = {{0,0,NULL},
                                 0,
                                 0,
                                 ULONG_MAX,
                                 ULONG_MAX,
                                 sizeof(DEVICE_OBJECT),
+                                0,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               };
+
+OBJECT_TYPE FileObjectType = {{0,0,NULL},
+                                0,
+                                0,
+                                ULONG_MAX,
+                                ULONG_MAX,
+                                sizeof(FILE_OBJECT),
                                 0,
                                NULL,
                                NULL,
@@ -44,12 +61,25 @@ VOID IoInit(VOID)
    UNICODE_STRING string;
    ANSI_STRING astring;
    
+   /*
+    * Register iomgr types
+    */
+   RtlInitAnsiString(&astring,"Device");
+   RtlAnsiStringToUnicodeString(&DeviceObjectType.TypeName,&astring,TRUE);
    ObRegisterType(OBJTYP_DEVICE,&DeviceObjectType);
+   
+   RtlInitAnsiString(&astring,"File");
+   RtlAnsiStringToUnicodeString(&FileObjectType.TypeName,&astring,TRUE);   
+   ObRegisterType(OBJTYP_FILE,&FileObjectType);
 
+   /*
+    * Create the device directory
+    */
    RtlInitAnsiString(&astring,"\\Device");
    RtlAnsiStringToUnicodeString(&string,&astring,TRUE);
    InitializeObjectAttributes(&attr,&string,0,NULL,NULL);
    ZwCreateDirectoryObject(&handle,0,&attr);
    
    IoInitCancelHandling();
+   IoInitSymbolicLinkImplementation();
 }

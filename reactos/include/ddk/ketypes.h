@@ -34,7 +34,7 @@ typedef struct
    USHORT WaitType;
 } KWAIT_BLOCK, *PKWAIT_BLOCK;
 
-
+#define _KTHREAD _ETHREAD
 
 typedef struct _ETHREAD
 /*
@@ -47,7 +47,7 @@ typedef struct _ETHREAD
    /*
     * PURPOSE: Head of the queue of apcs
     */
-   LIST_ENTRY apc_queue_head;
+   LIST_ENTRY ApcQueueHead;
    
    /*
     * PURPOSE: Entry in the linked list of threads

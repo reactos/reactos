@@ -42,3 +42,6 @@ NTSTATUS ObReferenceObjectByPointer(PVOID Object,
 				    ACCESS_MASK DesiredAccess,
 				    POBJECT_TYPE ObjectType,
 				    KPROCESSOR_MODE AccessMode);
+
+NTSTATUS ObOpenObjectByName(POBJECT_ATTRIBUTES ObjectAttributes,
+			    PVOID* Object);

@@ -10,6 +10,7 @@
  *                         in take_block (if current bigger than required)
  *                         in remove_from_used_list 
  *                         in ExFreePool
+ *               23/08/98: Fixes from Robert Bergkvist (fragdance@hotmail.com)
  */
 
 /* INCLUDES ****************************************************************/
@@ -250,15 +251,20 @@ static void remove_from_free_list(block_hdr* current)
         }
         else
         {
-                if (current->previous!=NULL)
-                {
-                        current->previous->next=current->next;
-                }
-                if (current->next!=NULL)
-                {
-		   DPRINT("current->previous %x\n",current->previous);
-                        current->next->previous=current->previous;
-                }
+	   if (current->next==NULL)
+	     {
+		current->previous->next=NULL;
+	     }
+	   else if (current->previous==NULL)
+	     {
+		current->next->previous=NULL;
+		free_list_head=current->next;
+	     }
+	   else
+	     {
+		current->next->previous=current->previous;
+		current->previous->next=current->next;
+	     }
         }
         nr_free_blocks--;
 }

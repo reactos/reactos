@@ -8,7 +8,8 @@ include hal/x86/sources
 
 RTL_OBJECTS = rtl/vsprintf.o rtl/lookas.o rtl/unicode.o rtl/strtok.o \
               rtl/time.o rtl/unalign.o rtl/mem.o rtl/largeint.o rtl/ctype.o \
-	      rtl/list.o rtl/slist.o rtl/interlck.o
+	      rtl/list.o rtl/slist.o rtl/interlck.o rtl/return.o \
+	      rtl/wstring.o
 
 KE_OBJECTS = ke/main.o ke/timer.o ke/error.o ke/catch.o ke/exports.o \
              ke/module.o ke/dpc.o ke/wait.o ke/kqueue.o ke/dispatch.o \
@@ -24,13 +25,15 @@ IO_OBJECTS = io/iomgr.o io/create.o io/irp.o io/device.o io/rw.o \
              io/queue.o io/drvlck.o io/timer.o io/share.o io/errlog.o \
 	     io/shutdown.o io/fdisk.o io/cancel.o io/error.o io/arc.o \
 	     io/dpc.o io/symlink.o io/adapter.o io/cntrller.o io/mdl.o \
-	     io/resource.o io/event.o io/process.o io/file.o io/ioctrl.o
+	     io/resource.o io/event.o io/process.o io/file.o io/ioctrl.o \
+	     io/fs.o
 
 OB_OBJECTS = ob/object.o ob/handle.o ob/namespc.o
 
 PS_OBJECTS = ps/psmgr.o ps/thread.o ps/process.o
 
-EX_OBJECTS = ex/work.o ex/fmutex.o ex/resource.o ex/time.o ex/interlck.o
+EX_OBJECTS = ex/work.o ex/fmutex.o ex/resource.o ex/time.o ex/interlck.o \
+             ex/callback.o
 
 SE_OBJECTS = se/semgr.o
 
@@ -38,10 +41,14 @@ CFG_OBJECTS = cfg/registry.o
 
 TST_OBJECTS = tst/test.o
 
+DBG_OBJECTS = dbg/brkpoint.o
+
+LDR_OBJECTS = ldr/loader.o
+
 OBJECTS = $(HAL_OBJECTS) $(KE_OBJECTS) $(RTL_OBJECTS) $(MM_OBJECTS) \
           $(IO_OBJECTS) $(OB_OBJECTS) $(PS_OBJECTS) $(EX_OBJECTS) \
-	  $(SE_OBJECTS) $(CFG_OBJECTS) $(TST_OBJECTS)
-	 
+	  $(SE_OBJECTS) $(CFG_OBJECTS) $(TST_OBJECTS) $(DBG_OBJECTS) 
+	  
 utils/export/export$(EXE_POSTFIX): utils/export/export.c
 	$(NATIVE_CC) -g utils/export/export.c -o utils/export/export$(EXE_POSTFIX)
 

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
- * FILE:           mkernel/iomgr/device.cc
+ * FILE:           ntoskrnl/io/device.c
  * PURPOSE:        Manage devices
  * PROGRAMMER:     David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
@@ -21,6 +21,16 @@
 #include <internal/debug.h>
 
 /* FUNCTIONS ***************************************************************/
+
+NTSTATUS ZwLoadDriver(PUNICODE_STRING DriverServiceName)
+/*
+ * FUNCTION: Loads a driver
+ * ARGUMENTS:
+ *         DriverServiceName = Name of the service to load (registry key)
+ * RETURNS: Status
+ */
+{
+}
 
 NTSTATUS IoAttachDeviceByPointer(PDEVICE_OBJECT SourceDevice,
 				 PDEVICE_OBJECT TargetDevice)
@@ -143,7 +153,10 @@ NTSTATUS IoCreateDevice(PDRIVER_OBJECT DriverObject,
    PDEVICE_OBJECT dev;
    OBJECT_ATTRIBUTES dev_attr;
    HANDLE devh;
-   
+
+   DPRINT("IoCreateDevice(DriverObject %x, DeviceName %w)\n",DriverObject,
+	  DeviceName->Buffer);
+
    InitializeObjectAttributes(&dev_attr,DeviceName,0,NULL,NULL);
    dev = ObGenericCreateObject(&devh,0,&dev_attr,OBJTYP_DEVICE);
 					      
@@ -166,6 +179,9 @@ NTSTATUS IoCreateDevice(PDRIVER_OBJECT DriverObject,
      }
    
    dev->DriverObject = DriverObject;
+   DPRINT("dev %x\n",dev);
+   DPRINT("dev->DriverObject %x\n",dev->DriverObject);
+		  
    dev->CurrentIrp=NULL;
    dev->Flags=0;
 
@@ -181,6 +197,7 @@ NTSTATUS IoCreateDevice(PDRIVER_OBJECT DriverObject,
    dev->AlignmentRequirement=1;
    
    *DeviceObject=dev;
+   DPRINT("dev->DriverObject %x\n",dev->DriverObject);
    
    return(STATUS_SUCCESS);
 }

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top directory
- * PROJECT:     ReactOS kernel v0.0.2
- * FILE:        mm/virtual.cc
+ * PROJECT:     ReactOS kernel
+ * FILE:        ntoskrnl/mm/virtual.c
  * PURPOSE:     implementing the Virtualxxx section of the win32 api
  * PROGRAMMER:  David Welch
  * UPDATE HISTORY:
@@ -22,17 +22,22 @@
 
 /* TYPES *******************************************************************/
 
+extern unsigned int etext;
+extern unsigned int end;
+
 /*
  * These two are statically declared because mm is initalized before the
  * memory pool
  */
-static memory_area kernel_area_desc;
+static memory_area kernel_text_desc;
+static memory_area kernel_data_desc;
+static memory_area kernel_param_desc;
 static memory_area kernel_pool_desc;
 
 /*
  * Head of the list of system memory areas 
  */
-memory_area* system_memory_area_list_head=&kernel_area_desc;
+memory_area* system_memory_area_list_head=&kernel_text_desc;
 
 /*
  * Head of the list of user memory areas (this should be per process)
@@ -62,16 +67,33 @@ void VirtualInit(boot_param* bp)
    /*
     * Setup the system area descriptor list
     */
-   kernel_area_desc.base = KERNEL_BASE;
-   kernel_area_desc.length = kernel_len;
-   kernel_area_desc.next = &kernel_pool_desc;
-   kernel_area_desc.load_page=NULL;
+   kernel_text_desc.base = KERNEL_BASE;
+   kernel_text_desc.length = ((ULONG)&etext) - KERNEL_BASE;
+   kernel_text_desc.previous = NULL;
+   kernel_text_desc.next = &kernel_data_desc;
+   kernel_text_desc.load_page=NULL;
+   kernel_text_desc.access = PAGE_EXECUTE_READ;
+   
+   kernel_data_desc.base = PAGE_ROUND_UP(((ULONG)&etext));
+   kernel_data_desc.length = ((ULONG)&end) - kernel_text_desc.base;
+   kernel_data_desc.previous = &kernel_text_desc;
+   kernel_data_desc.next = &kernel_param_desc;
+   kernel_data_desc.load_page=NULL;
+   kernel_data_desc.access = PAGE_READWRITE;
+   
+   kernel_param_desc.base = PAGE_ROUND_UP(((ULONG)&end));
+   kernel_param_desc.length =  kernel_len - (kernel_data_desc.length +
+					     kernel_text_desc.length);
+   kernel_param_desc.previous = &kernel_data_desc;
+   kernel_param_desc.next = &kernel_pool_desc;
+   kernel_param_desc.load_page=NULL;
    
    /*
     * The kmalloc area starts one page after the kernel area
     */
    kernel_pool_desc.base = KERNEL_BASE+ PAGE_ROUND_UP(kernel_len) + PAGESIZE;
    kernel_pool_desc.length = NONPAGED_POOL_SIZE;
+   kernel_pool_desc.previous = &kernel_param_desc;
    kernel_pool_desc.next = NULL;
    kernel_pool_desc.load_page=NULL;
 
@@ -98,8 +120,10 @@ memory_area* find_first_marea(memory_area* list_head, unsigned int base,
         {
 	   if (current==NULL)
 	     {
+//		printk("current is null\n");
 		return(NULL);
 	     }
+//	   printk("current %x current->base %x\n",current,current->base);
 	   if (current->base == base && length==0)
 	     {
 		return(current);
@@ -210,11 +234,14 @@ static LPVOID allocate_marea(DWORD dwSize, DWORD flAllocationType,
  */
 {
    memory_area* current=*list_head;
+   memory_area* previous;
    memory_area* ndesc=NULL;
    
+   previous=current;
    while (current!=NULL)
      {
 	last_addr = PAGE_ROUND_UP(current->base + current->length);
+	previous=current;
 	current=current->next;
      }
    ndesc = ExAllocatePool(NonPagedPool,sizeof(memory_area));
@@ -223,14 +250,14 @@ static LPVOID allocate_marea(DWORD dwSize, DWORD flAllocationType,
    ndesc->lock=FALSE;
    ndesc->base=last_addr+PAGESIZE;
    ndesc->length=dwSize;
-   ndesc->previous=current;
-   if (current!=NULL)
+   ndesc->previous=previous;
+   if (previous!=NULL)
      {
-	ndesc->next=current->next;
-	current->next=ndesc;
-	if (current->next!=NULL)
+	ndesc->next=previous->next;
+        previous->next=ndesc;
+	if (previous->next!=NULL)
 	  {
-	     current->next->previous=ndesc;
+	     previous->next->previous=ndesc;
 	  }
      }
    else

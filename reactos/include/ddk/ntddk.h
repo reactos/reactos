@@ -64,9 +64,8 @@ enum {
 #include <ddk/iofuncs.h> 
 #include <ddk/psfuncs.h>
 #include <ddk/obfuncs.h>
-   
-ULONG DbgPrint(PCH Format,...);   
-   
+#include <ddk/dbgfuncs.h>
+      
 #ifdef __cplusplus
 };
 #endif

@@ -40,6 +40,7 @@ enum
    OBJTYP_SYMLNK,
    OBJTYP_DEVICE,
    OBJTYP_THREAD,
+   OBJTYP_FILE,
    OBJTYP_MAX,
 };
 
@@ -47,7 +48,7 @@ BOOL ObAddObjectToNameSpace(PUNICODE_STRING path, POBJECT_HEADER Object);
 
 VOID ObRegisterType(CSHORT id, OBJECT_TYPE* type);
 
-VOID ObInitializeObjectHeader(CSHORT id, PUNICODE_STRING name, 
+VOID ObInitializeObjectHeader(CSHORT id, PWSTR name,
 			      POBJECT_HEADER obj);
 
 /*
@@ -58,9 +59,8 @@ VOID ObInitializeObjectHeader(CSHORT id, PUNICODE_STRING name,
  */
 ULONG ObSizeOf(CSHORT Type);
 HANDLE ObAddHandle(PVOID obj);
-
+PVOID ObLookupObject(HANDLE rooth, PWSTR _string);
 PVOID ObGetObjectByHandle(HANDLE h);
-PVOID ObLookupObject(PDIRECTORY_OBJECT root, PUNICODE_STRING _string);
 PVOID ObGenericCreateObject(PHANDLE Handle,
 			    ACCESS_MASK DesiredAccess,
 			    POBJECT_ATTRIBUTES ObjectAttributes,

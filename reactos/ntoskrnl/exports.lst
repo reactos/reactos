@@ -7,6 +7,8 @@
 #
 #
 #
+free_page
+get_dma_page
 DbgPrint
 printk
 ExAcquireFastMutex
