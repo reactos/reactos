@@ -8,12 +8,12 @@ CFG=make_explorer - Win32 Debug
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
-!MESSAGE NMAKE /f "make_explorer.mak".
+!MESSAGE NMAKE /f "make_winefile.mak".
 !MESSAGE 
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "make_explorer.mak" CFG="make_explorer - Win32 Debug"
+!MESSAGE NMAKE /f "make_winefile.mak" CFG="make_explorer - Win32 Debug"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
@@ -41,7 +41,7 @@ CFG=make_explorer - Win32 Debug
 # PROP Use_Debug_Libraries 0
 # PROP Output_Dir "Release"
 # PROP Intermediate_Dir "Release"
-# PROP Cmd_Line "make 2>&1 | perl d:\tools\gSTLFilt.pl | javac2vc "
+# PROP Cmd_Line "msdevfilt -gcc -pipe "perl d:\tools\gSTLFilt.pl" make"
 # PROP Rebuild_Opt "clean all"
 # PROP Target_File "explorer.exe"
 # PROP Bsc_Name ""
@@ -62,7 +62,7 @@ CFG=make_explorer - Win32 Debug
 # PROP Use_Debug_Libraries 1
 # PROP Output_Dir "Debug"
 # PROP Intermediate_Dir "Debug"
-# PROP Cmd_Line "make 2>&1 | perl d:\tools\gSTLFilt.pl | javac2vc "
+# PROP Cmd_Line "msdevfilt -gcc -pipe "perl d:\tools\gSTLFilt.pl" make DEBUG=1"
 # PROP Rebuild_Opt "clean all"
 # PROP Target_File "explorer.exe"
 # PROP Bsc_Name ""
