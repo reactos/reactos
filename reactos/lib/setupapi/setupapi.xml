@@ -1,5 +1,4 @@
 <module name="setupapi" type="win32dll" baseaddress="${BASEADDRESS_SETUPAPI}">
-	<dependency>winebuild</dependency>
 	<importlibrary definition="setupapi.spec.def" />
 	<include base="setupapi">.</include>
 	<include base="ReactOS">include/wine</include>

@@ -64,6 +64,7 @@ include tools/cdmake/cdmake.mak
 include tools/nci/nci.mak
 include tools/rbuild/rbuild.mak
 include tools/unicode/unicode.mak
+include tools/winebuild/winebuild.mak
 include tools/wmc/wmc.mak
 include tools/wpp/wpp.mak
 include tools/wrc/wrc.mak

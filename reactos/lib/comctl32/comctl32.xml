@@ -1,5 +1,4 @@
 <module name="comctl32" type="win32dll" baseaddress="${BASEADDRESS_COMCTL32}">
-	<dependency>winebuild</dependency>
 	<importlibrary definition="comctl32.spec.def" />
 	<include base="comctl32">.</include>
 	<include base="ReactOS">include/wine</include>

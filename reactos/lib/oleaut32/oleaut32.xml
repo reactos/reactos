@@ -1,5 +1,4 @@
 <module name="oleaut32" type="win32dll" baseaddress="${BASEADDRESS_OLEAUT32}">
-	<dependency>winebuild</dependency>
 	<importlibrary definition="oleaut32.spec.def" />
 	<include base="oleaut32">.</include>
 	<include base="ReactOS">include/wine</include>

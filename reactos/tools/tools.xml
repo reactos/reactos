@@ -4,6 +4,3 @@
 <directory name="cabman">
 	<xi:include href="cabman/cabman.xml" />
 </directory>
-<directory name="winebuild">
-	<xi:include href="winebuild/winebuild.xml" />
-</directory>

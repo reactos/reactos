@@ -1,5 +1,4 @@
 <module name="midimap" type="win32dll" baseaddress="${BASEADDRESS_MIDIMAP}">
-	<dependency>winebuild</dependency>
 	<importlibrary definition="midimap.spec.def" />
 	<include base="midimap">.</include>
 	<include base="ReactOS">include/wine</include>

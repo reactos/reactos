@@ -1,5 +1,4 @@
 <module name="dbghelp" type="win32dll" baseaddress="${BASEADDRESS_DBGHELP}">
-	<dependency>winebuild</dependency>
 	<importlibrary definition="dbghelp.spec.def" />
 	<include base="dbghelp">.</include>
 	<include base="ReactOS">include/wine</include>
