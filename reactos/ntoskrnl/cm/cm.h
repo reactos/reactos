@@ -247,6 +247,7 @@ typedef struct _REGISTRY_HIVE
   UNICODE_STRING  LogFileName;
   ULONG  FileSize;
   PHIVE_HEADER  HiveHeader;
+  ULONG  UpdateCounter;
   ULONG  BlockListSize;
   PHBIN  *BlockList;
   ULONG  FreeListSize;
