@@ -1,3 +1,32 @@
+2003-04-18  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* subsys/system/usetup/partlist.c (AddPartitionList): Create
+	unpartitioned areas.
+	(CreatePartitionListNoGUI): Save disk geometry.
+	(PrintDiskData): Do not print hidden partition list entries.
+	(ScrollDownPartitionList, ScrollUpPartitionList): Skip hidden partition
+	list entries.
+	(GetActiveBootPartition): Use CurrentDisk as index.
+	(CreateSelectedPartition): New function.
+	* subsys/system/usetup/partlist.h (PARTDATA): Add field NewPartSize.
+	(PARTENTRY): Add fields StartingOffset and HidePartEntry.
+	(DISKENTRY): Add fields Cylinders, TracksPerCylinder, SectorsPerTrack,
+	and BytesPerSector;
+	(CreateSelectedPartition): Add Prototype.
+	* subsys/system/usetup/usetup.c (PAGE_NUMBER): Add CREATE_PARTITION_PAGE
+	and FORMAT_PARTITION_PAGE
+	(CurrentPartitionList, CurrentFileSystemList): New globals.
+	(SelectPartitionPage): Set CurrentPartitionList.
+	(PARTITION_SIZE_INPUT_FIELD_LENGTH): Define as 6.
+	(DrawInputField, ShowPartitionSizeInputBox, CreatePartitionPage,
+	CreateFileSystemList, DestroyFileSystemList, DrawFileSystemList,
+	ScrollDownFileSystemList, ScrollUpFileSystemList, FormatPartitionPage):
+	New functions.
+	(SelectFileSystemPage): Draw partition screen.
+	(CheckFileSystemPage): Handle CREATE_PARTITION_PAGE and
+	FORMAT_PARTITION_PAGE.
+	* subsys/system/usetup/usetup.h (FILE_SYSTEM, FILE_SYSTEM_LIST): Add enums.
+
 2003-04-17  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* tools/mkhive/infcache.c (InfpCacheFindSection, InfpCacheFindKeyLine,

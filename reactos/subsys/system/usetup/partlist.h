@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.h,v 1.8 2003/04/05 15:36:34 chorns Exp $
+/* $Id: partlist.h,v 1.9 2003/04/18 14:00:17 chorns Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.h
@@ -36,6 +36,7 @@ typedef struct _PARTDATA
   USHORT Id;
 
   ULONGLONG PartSize;
+  ULONGLONG NewPartSize;
   ULONG PartNumber;
   ULONG PartType;
 
@@ -47,6 +48,7 @@ typedef struct _PARTDATA
 
 typedef struct _PARTENTRY
 {
+  ULONGLONG StartingOffset;
   ULONGLONG PartSize;
   ULONG PartNumber;
   ULONG PartType;
@@ -59,11 +61,17 @@ typedef struct _PARTENTRY
   BOOL Unpartitioned;
 
   BOOL Used;
+
+  BOOLEAN HidePartEntry;
 } PARTENTRY, *PPARTENTRY;
 
 typedef struct _DISKENTRY
 {
   ULONGLONG DiskSize;
+  ULONGLONG Cylinders;
+  ULONGLONG TracksPerCylinder;
+  ULONGLONG SectorsPerTrack;
+  ULONGLONG BytesPerSector;
   ULONG DiskNumber;
   USHORT Port;
   USHORT Bus;
@@ -131,6 +139,11 @@ GetSelectedPartition(PPARTLIST List,
 BOOL
 GetActiveBootPartition(PPARTLIST List,
 		       PPARTDATA Data);
+
+BOOL
+CreateSelectedPartition(PPARTLIST List,
+  ULONG PartType,
+  ULONGLONG NewPartSize);
 
 #endif /* __PARTLIST_H__ */
 
