@@ -61,7 +61,7 @@ ULONG VGADDISetPointerShape(PSURFOBJ pso, PSURFOBJ psoMask, PSURFOBJ psoColor, P
   PCHAR DFBTmp;
   ULONG DFBAllocSize;
 
-  // Hide the cursor (if it's there -- FIXME?)
+  // Hide the cursor
   if(ppdev->pPointerAttributes->Enable != 0) vgaHideCursor(ppdev);
 
   // Copy the mask and color bitmaps into the PPDEV
@@ -95,18 +95,12 @@ void vgaHideCursor(PPDEV ppdev)
 {
   ULONG i, j, cx, cy, bitpos;
 
-  // Clip so as not to hide where we are just going to be repainting (if called from vgaShowCursor)
-
-
   // Display what was behind cursor
   DFB_BltToVGA(oldx, oldy,
                ppdev->pPointerAttributes->Width,
                ppdev->pPointerAttributes->Height,
                behindCursor,
                ppdev->pPointerAttributes->WidthInBytes);
-
-  oldx = ppdev->xyCursor.x;
-  oldy = ppdev->xyCursor.y;
 
   ppdev->pPointerAttributes->Enable = 0;
 }
@@ -121,7 +115,7 @@ void vgaShowCursor(PPDEV ppdev)
   cx = ppdev->xyCursor.x;
   cy = ppdev->xyCursor.y;
 
-  // repaint background
+  // Used to repaint background
   DFB_BltFromVGA(ppdev->xyCursor.x, ppdev->xyCursor.y,
                  ppdev->pPointerAttributes->Width, ppdev->pPointerAttributes->Height,
                  behindCursor, ppdev->pPointerAttributes->WidthInBytes);
@@ -132,6 +126,9 @@ void vgaShowCursor(PPDEV ppdev)
                            ppdev->pPointerAttributes->Height,
                            ppdev->pPointerAttributes->Pixels,
                            ppdev->pPointerAttributes->WidthInBytes, 5);
+
+  oldx = ppdev->xyCursor.x;
+  oldy = ppdev->xyCursor.y;
 
   ppdev->pPointerAttributes->Enable = 1;
 }

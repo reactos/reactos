@@ -398,7 +398,6 @@ void DIB_BltFromVGA(int x, int y, int w, int h, void *b, int Dest_lDelta)
 
     opb += Dest_lDelta; // new test code
     pb = opb; // new test code
-
   }
 }
 
@@ -565,6 +564,12 @@ void DFB_BltFromVGA(int x, int y, int w, int h, void *b, int bw)
       vpY += byte_per_line;
     }
   }
+
+  // We don't need this if the next call is a DFB blt to VGA (as in the case of moving the mouse pointer)
+  WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x05);      // write mode 2
+  WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0x02);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x03);      // replace
+  WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0x00);
 }
 
 void DFB_BltToVGA(int x, int y, int w, int h, void *b, int bw)
