@@ -28,6 +28,10 @@ PREFIX = mingw32-
 EXE_POSTFIX :=
 EXE_PREFIX := ./
 DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
+#
+# Do not change NASM_CMD to NASM because older versions of 
+# nasm doesn't like an environment variable NASM
+#
 NASM_CMD = nasm
 DOSCLI =
 FLOPPY_DIR = /mnt/floppy
@@ -41,6 +45,10 @@ PREFIX =
 EXE_PREFIX :=
 EXE_POSTFIX := .exe
 DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
+#
+# Do not change NASM_CMD to NASM because older versions of 
+# nasm doesn't like an environment variable NASM
+#
 NASM_CMD = nasmw
 DOSCLI = yes
 FLOPPY_DIR = A:
