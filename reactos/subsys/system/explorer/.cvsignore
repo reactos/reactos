@@ -18,3 +18,4 @@ doxy-doc
 *.ncb
 *.plg
 *.suo
+buildno.h
