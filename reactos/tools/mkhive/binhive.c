@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: binhive.c,v 1.3 2003/04/22 21:14:39 ekohl Exp $
+/* $Id: binhive.c,v 1.4 2003/05/18 13:50:58 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/binhive.c
@@ -1319,16 +1319,26 @@ CmiWriteHive(PREGISTRY_HIVE Hive,
   FILE *File;
   ULONG i;
 
-  /* FIXME: Calculate header checksum */
+  /* Check for existing hive file */
+  File = fopen (FileName, "rb");
+  if (File != NULL)
+    {
+      printf ("    File already exists\n");
+      fclose (File);
+      return TRUE;
+    }
 
+  /* Create new hive file */
   File = fopen (FileName, "w+b");
   if (File == NULL)
     {
-
       return FALSE;
     }
 
   fseek (File, 0, SEEK_SET);
+
+  /* Calculate header checksum */
+  CmiCalcHiveChecksum (Hive);
 
   /* Write hive header */
   fwrite (Hive->HiveHeader, REG_BLOCK_SIZE, 1, File);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: infcache.c,v 1.4 2003/05/18 12:12:07 ekohl Exp $
+/* $Id: infcache.c,v 1.5 2003/05/18 13:50:58 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/infcache.c
@@ -426,7 +426,6 @@ inline static int is_eof( struct parser *parser, const CHAR *ptr )
 /* check if the pointer points to an end of line */
 inline static int is_eol( struct parser *parser, const CHAR *ptr )
 {
-//  return (ptr >= parser->end || *ptr == CONTROL_Z || *ptr == '\r' /*'\n'*/);
   return (ptr >= parser->end ||
 	  *ptr == CONTROL_Z ||
 	  *ptr == '\n' ||
