@@ -87,29 +87,18 @@ BOOLEAN DIB_To_4BPP_Bitblt(  SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       break;
 
     case 4:
-      SourceBits_4BPP = SourceSurf->pvBits + (SourcePoint->y * SourceSurf->lDelta) + SourcePoint->x;
+      sy = SourcePoint->y;
 
       for (j=DestRect->top; j<DestRect->bottom; j++)
       {
-        SourceLine_4BPP = SourceBits_4BPP;
-        DestLine = DestBits;
         sx = SourcePoint->x;
-        f1 = sx & 1;
-        f2 = DestRect->left & 1;
-
-        // FIXME: handle odd begin pixel
 
         for (i=DestRect->left; i<DestRect->right; i++)
         {
-          if(f1 == 1) { SourceLine_4BPP++; f1 = 0; } else { f1 = 1; }
-          if(f2 == 1) { DestLine++; f2 = 0; } else { f2 = 1; *DestLine = *SourceLine_4BPP; }
+          DIB_4BPP_PutPixel(DestSurf, i, j, XLATEOBJ_iXlate(ColorTranslation, DIB_4BPP_GetPixel(SourceSurf, sx, sy)));
           sx++;
         }
-
-        // FIXME: handle odd end pixel
-
-        SourceBits_4BPP += SourceSurf->lDelta;
-        DestBits += DestSurf->lDelta;
+        sy++;
       }
       break;
 

@@ -232,6 +232,9 @@ XLATEOBJ_iXlate(XLATEOBJ *XlateObj,
   PALGDI   *PalGDI;
   XLATEGDI *XlateGDI = (XLATEGDI*)AccessInternalObjectFromUserObject(XlateObj);
 
+  // Return the original color if there's no color translation object
+  if(!XlateObj) return Color;
+
   if(XlateObj->flXlate & XO_TRIVIAL)
   {
     return Color;
