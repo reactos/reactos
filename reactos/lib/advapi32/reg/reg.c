@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.55 2004/09/13 08:51:40 ekohl Exp $
+/* $Id: reg.c,v 1.56 2004/09/13 11:41:26 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -1521,6 +1521,7 @@ RegGetKeySecurity(HKEY hKey,
 
   if (hKey == HKEY_PERFORMANCE_DATA)
     {
+      SetLastError(ERROR_INVALID_HANDLE);
       return ERROR_INVALID_HANDLE;
     }
 
@@ -1528,18 +1529,20 @@ RegGetKeySecurity(HKEY hKey,
 			 hKey);
   if (!NT_SUCCESS(Status))
     {
+      DPRINT("MapDefaultKey() failed (Status %lx)\n", Status);
       ErrorCode = RtlNtStatusToDosError(Status);
       SetLastError(ErrorCode);
       return ErrorCode;
     }
 
-  Status = NtQuerySecurityObject(hKey,
+  Status = NtQuerySecurityObject(KeyHandle,
 				 SecurityInformation,
 				 pSecurityDescriptor,
 				 *lpcbSecurityDescriptor,
 				 lpcbSecurityDescriptor);
   if (!NT_SUCCESS(Status))
     {
+      DPRINT("NtQuerySecurityObject() failed (Status %lx)\n", Status);
       ErrorCode = RtlNtStatusToDosError(Status);
       SetLastError(ErrorCode);
       return ErrorCode;
@@ -1599,6 +1602,7 @@ RegLoadKeyW (HKEY hKey,
 
   if (hKey == HKEY_PERFORMANCE_DATA)
     {
+      SetLastError(ERROR_INVALID_HANDLE);
       return ERROR_INVALID_HANDLE;
     }
 
@@ -2991,6 +2995,7 @@ RegSetKeySecurity (HKEY hKey,
 
   if (hKey == HKEY_PERFORMANCE_DATA)
     {
+      SetLastError(ERROR_INVALID_HANDLE);
       return ERROR_INVALID_HANDLE;
     }
 
@@ -3329,7 +3334,10 @@ RegUnLoadKeyW (HKEY hKey,
   NTSTATUS Status;
 
   if (hKey == HKEY_PERFORMANCE_DATA)
-    return ERROR_INVALID_HANDLE;
+    {
+      SetLastError(ERROR_INVALID_HANDLE);
+      return ERROR_INVALID_HANDLE;
+    }
 
   Status = MapDefaultKey (&KeyHandle, hKey);
   if (!NT_SUCCESS(Status))
