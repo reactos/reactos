@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.244 2004/07/14 21:52:23 sedwards Exp $
+/* $Id: window.c,v 1.245 2004/07/24 01:28:15 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1627,6 +1627,17 @@ IntCreateWindowEx(DWORD dwExStyle,
     }
 
 
+  /*
+   * This has been tested for WS_CHILD | WS_VISIBLE.  It has not been
+   * tested for WS_POPUP
+   */
+  if ((dwExStyle & WS_EX_DLGMODALFRAME) ||
+      ((!(dwExStyle & WS_EX_STATICEDGE)) &&
+      (dwStyle & (WS_DLGFRAME | WS_THICKFRAME))))
+    dwExStyle |= WS_EX_WINDOWEDGE;
+  else
+    dwExStyle &= ~WS_EX_WINDOWEDGE;
+
   /* Correct the window style. */
   if (!(dwStyle & WS_CHILD))
     {
@@ -1637,19 +1648,12 @@ IntCreateWindowEx(DWORD dwExStyle,
 	  WindowObject->Style |= WS_CAPTION;
           WindowObject->Flags |= WINDOWOBJECT_NEED_SIZE;
           DPRINT("4: Style is now %lx\n", WindowObject->Style);
-	  /* FIXME: Note the window needs a size. */ 
 	}
     }
   
-  if(!(WindowObject->Style & (WS_POPUP | WS_CHILD)))
-  {
-    /* Automatically assign the caption and border style. Also always
-       clip siblings for overlapped windows. */
-    WindowObject->Style |= (WS_CAPTION | WS_BORDER | WS_CLIPSIBLINGS);
-  }
-  
   /* create system menu */
-  if((WindowObject->Style & WS_SYSMENU) && (WindowObject->Style & WS_CAPTION))
+  if((WindowObject->Style & WS_SYSMENU) &&
+     (WindowObject->Style & WS_CAPTION) == WS_CAPTION)
   {
     SystemMenu = IntGetSystemMenu(WindowObject, TRUE, TRUE);
     if(SystemMenu)
