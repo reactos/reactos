@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.185 2004/03/15 21:10:34 hbirr Exp $
+/* $Id: main.c,v 1.186 2004/04/30 20:49:39 gvg Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -787,7 +787,7 @@ ExpInitializeExecutive(VOID)
     				 &Timeout);
       if (Status != STATUS_TIMEOUT)
         {
-          KEBUGCHECKEX(SESSION5_INITIALIZATION_FAILED, Status, 0, 0, 0);
+          KEBUGCHECKEX(SESSION5_INITIALIZATION_FAILED, Status, 1, 0, 0);
         }
     }
 
