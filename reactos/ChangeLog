@@ -1,5 +1,11 @@
 2003-07-05  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* lib/user32/windows/defwnd.c (DefWndHandleLButtonUpNC,
+	User32DefWindowProc): Only send WM_SYSCOMMAND message, not WM_CLOSE.
+	(DefWndHandleSysCommand): Handle SC_CLOSE message.
+
+2003-07-05  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* include/win32k/ntuser.h (NtUserSetFocus): Correct prototype.
 	* lib/user32/misc/stubs.c (SetFocus): Remove.
 	* lib/user32/windows/defwnd.c (KEYDATA_ALT): New.

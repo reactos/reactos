@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.39 2003/06/16 13:46:26 gvg Exp $
+/* $Id: window.c,v 1.40 2003/07/05 17:57:22 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -411,7 +411,6 @@ ChildWindowFromPointEx(HWND hwndParent,
 WINBOOL STDCALL
 CloseWindow(HWND hWnd)
 {
-    SendMessageA(hWnd, WM_CLOSE, 0, 0);
     SendMessageA(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0);
 
     return (WINBOOL)(hWnd);

@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.53 2003/07/05 16:04:01 chorns Exp $
+/* $Id: defwnd.c,v 1.54 2003/07/05 17:57:22 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -792,7 +792,6 @@ DefWndHandleLButtonUpNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
         }
         case HTCLOSE:
         {
-            SendMessageA(hWnd, WM_CLOSE, 0, 0);
             SendMessageA(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0);
             break;
         }
@@ -876,7 +875,17 @@ DefWndHandleSetCursor(HWND hWnd, WPARAM wParam, LPARAM lParam)
 LRESULT
 DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, POINT Pt)
 {
-  UNIMPLEMENTED;
+  switch (wParam)
+    {
+      case SC_CLOSE:
+        SendMessageA(hWnd, WM_CLOSE, 0, 0);
+        break;
+      default:
+      /* FIXME: Implement */
+        UNIMPLEMENTED;
+        break;
+    }
+
   return(0);
 }
 
@@ -1385,12 +1394,10 @@ User32DefWindowProc(HWND hWnd,
                 {
                 	if (bUnicode)
                 	  {
-                      PostMessageW(hTopWnd, WM_CLOSE, 0, 0);
                 	    PostMessageW(hTopWnd, WM_SYSCOMMAND, SC_CLOSE, 0);
                 	  }
                 	else
                 	  {
-                      PostMessageA(hTopWnd, WM_CLOSE, 0, 0);
                 	    PostMessageA(hTopWnd, WM_SYSCOMMAND, SC_CLOSE, 0);
                 	  }
                 }
