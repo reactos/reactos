@@ -15,7 +15,7 @@ Environment:
     LINUX 2.2.X
     Kernel mode only
 
-Author: 
+Author:
 
     Klaus P. Gerlicher
 
@@ -55,7 +55,7 @@ void ListSWBreakpoints(void);
 PSW_BP FindSwBp(ULONG ulAddress);
 BOOLEAN IsSwBpAtAddress(ULONG ulAddress);
 BOOLEAN IsSwBpAtAddressInstalled(ULONG ulAddress);
-void RevirtualizeBreakpointsForModule(struct module* pMod);
+void RevirtualizeBreakpointsForModule(PDEBUG_MODULE pMod);
 
 void InstallInt3Hook(void);
 void DeInstallInt3Hook(void);

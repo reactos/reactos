@@ -17,6 +17,7 @@ Environment:
 Author:
 
     Klaus P. Gerlicher
+	Reactos Port by Eugene Ingerman
 
 Revision History:
 
@@ -242,7 +243,10 @@ void process_stabs(
         PVOID pFile;
         PICE_SYMBOLFILE_SOURCE pss;
 
-        file = CreateFile(SrcFileNames[i],O_RDONLY, 0, NULL, OPEN_EXISTING, 0, 0);
+		file = CreateFile(SrcFileNames[i],GENERIC_READ , 0, NULL, OPEN_EXISTING, 0, 0);
+		//printf("Trying To Open: %s, result: %x\n", SrcFileNames[i], file );
+
+
 		if( file == INVALID_HANDLE_VALUE ){
 			//let's try win format drive:/file
 			char srctmp[2048];
@@ -251,7 +255,8 @@ void process_stabs(
 				*(srctmp) = *(srctmp+2);
 				*(srctmp+1) = ':';
 				*(srctmp+2) = '/';
-				file = CreateFile(srctmp,O_RDONLY, 0, NULL, OPEN_EXISTING, 0, 0);
+				file = CreateFile(srctmp,GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, 0);
+				//printf("Trying To Open: %s, handle: %x\n", srctmp, file );
 				if( file == INVALID_HANDLE_VALUE )
 					printf("Can't open file: %s\n", srctmp );
 			}
@@ -261,23 +266,23 @@ void process_stabs(
             //printf("LOADER: [%u] opened %s as FD %x\n",i,SrcFileNames[i],file);
 
             len = SetFilePointer(file,0,NULL,FILE_END);
-            //printf("LOADER: length = %x\n",(int)len);
+            //printf("LOADER: length = %d\n",(int)len);
 
             SetFilePointer(file,0,NULL,FILE_BEGIN);
 
             strcpy(pss.filename,SrcFileNames[i]);
             pss.ulOffsetToNext = len+sizeof(PICE_SYMBOLFILE_SOURCE);
 
-            pFile = malloc(len);
+            pFile = malloc(len+1);
             //printf("LOADER: memory for file @ %x\n",pFile);
             if(pFile)
             {
                 //printf("LOADER: reading file...\n");
-                ReadFile(file,pFile,len,&wrote,NULL);
-
+                ReadFile(file,pFile,len+1,&wrote,NULL);
+				//printf("read: %d, error: %d\n", wrote, GetLastError());
                 WriteFile(fileout,&pss,sizeof(PICE_SYMBOLFILE_SOURCE),&wrote, NULL);
-                //printf("LOADER: writing file...\n");
                 WriteFile(fileout,pFile,len,&wrote, NULL);
+                //printf("LOADER: writing file...%d\n%s\n",wrote,pFile );
                 free(pFile);
             }
 

@@ -347,6 +347,14 @@ USHORT PICE_strlen(char* s)
     return 0;
 }
 
+WCHAR * PICE_wcscpy(WCHAR * str1,const WCHAR * str2)
+{
+  WCHAR *save = str1;
+
+  for (; (*str1 = *str2); ++str2, ++str1);
+  return save;
+}
+
 #ifndef LINUX
 //*************************************************************************
 // GetShortName()
@@ -610,32 +618,6 @@ ULONG i,NumPages,PageNum;
 	}
 
 	return TRUE;
-}
-
-//*************************************************************************
-// IsModuleLoaded()
-//
-//*************************************************************************
-struct module* IsModuleLoaded(LPSTR p)
-{
-    struct module* pMod;
-    DPRINT((0,"IsModuleLoaded(%s)\n",p));
-
-    if(pmodule_list)
-    {
-        pMod = *pmodule_list;
-        do
-        {
-            DPRINT((0,"module (%x) %s\n",pMod->size,pMod->name));
-            if(pMod->size && strcmp(p,(LPSTR)pMod->name) == 0)
-            {
-                DPRINT((0,"module %s is loaded!\n",pMod->name));
-                return pMod;
-            }
-        }while((pMod = pMod->next));
-    }
-
-    return NULL;
 }
 
 //*************************************************************************

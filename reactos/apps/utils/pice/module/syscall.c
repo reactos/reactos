@@ -12,7 +12,7 @@ Environment:
 
     Kernel mode only
 
-Author: 
+Author:
 
     Klaus P. Gerlicher
 
@@ -56,7 +56,7 @@ ULONG OldSyscallHandler=0;
 
 ULONG ulFreeModule=0;
 
-struct module* pModJustFreed=NULL;
+PDEBUG_MODULE pModJustFreed=NULL;
 void (*old_cleanup_module)(void)=NULL;
 
 void other_module_cleanup_module(void)
@@ -68,14 +68,14 @@ void other_module_cleanup_module(void)
         DPRINT((0,"other_module_cleanup_module(): calling %x\n",(ULONG)old_cleanup_module));
         old_cleanup_module();
     }
-    
+
     if(pModJustFreed)
     {
         DPRINT((0,"other_module_cleanup_module(): calling RevirtualizeBreakpointsForModule(%x)\n",(ULONG)pModJustFreed));
         RevirtualizeBreakpointsForModule(pModJustFreed);
     }
 }
-
+#error fix that
 void CSyscallHandler(FRAME_SYSCALL* ptr,ULONG ulSysCall,ULONG ebx)
 {
 //	DPRINT((0,"CSyscallHandler(): %.4X:%.8X (syscall = %u)\n",ptr->cs,ptr->eip,ulSysCall));
@@ -162,14 +162,14 @@ void CSyscallHandler(FRAME_SYSCALL* ptr,ULONG ulSysCall,ULONG ebx)
     }
 }
 
-__asm__ (" 
+__asm__ ("
 NewSyscallHandler:
 		// save used regs
 		pushfl
 		cli
         cld
         pushal
-	    pushl %ds 
+	    pushl %ds
 
         // push the syscall number
         pushl %ebx
@@ -179,9 +179,9 @@ NewSyscallHandler:
         lea 48(%esp),%eax
         pushl %eax
 
-	    // setup default data selectors 
+	    // setup default data selectors
 	    movw %ss,%ax
-	    movw %ax,%ds 
+	    movw %ax,%ds
 
     	call CSyscallHandler
 
@@ -189,11 +189,11 @@ NewSyscallHandler:
         add $12,%esp
 
 		// restore used regs
-	    popl %ds 
+	    popl %ds
         popal
 		popfl
 
-		// chain to old handler 
+		// chain to old handler
 		.byte 0x2e
 		jmp *OldSyscallHandler");
 
@@ -211,7 +211,7 @@ void InstallSyscallHook(void)
 			:
 			:"eax");
 		OldSyscallHandler=SetGlobalInt(0x80,(ULONG)LocalSyscallHandler);
-	    
+
 		ScanExports("free_module",(PULONG)&ulFreeModule);
 
 		DPRINT((0,"InstallSyscallHook(): free_module @ %x\n",ulFreeModule));

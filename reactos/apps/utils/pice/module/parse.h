@@ -15,7 +15,7 @@ Environment:
     LINUX 2.2.X
     Kernel mode only
 
-Author: 
+Author:
 
     Klaus P. Gerlicher
 
@@ -93,7 +93,7 @@ extern BOOLEAN bInt3Here;
 extern BOOLEAN bStepping;
 
 extern char szCurrentFile[256];
-extern struct module* pCurrentMod;
+extern PDEBUG_MODULE pCurrentMod;
 extern PICE_SYMBOLFILE_HEADER* pCurrentSymbols;
 extern LONG ulCurrentlyDisplayedLineNumber;
 

@@ -15,7 +15,7 @@ Environment:
     LINUX 2.2.X
     Kernel mode only
 
-Author: 
+Author:
 
     Klaus P. Gerlicher
 
@@ -161,7 +161,7 @@ typedef struct tagIdt
 	ULONG Offset_31_16		:16;
 }IDT,*PIDT;
 
-typedef struct tagDESCRIPTOR 
+typedef struct tagDESCRIPTOR
 {
 	USHORT Cpl	:2;		// current privilege level
 	USHORT Ti	:1;		// table index (GDT=0 LDT=1)
@@ -186,12 +186,11 @@ char* PICE_strchr(char* s,char c);
 int PICE_sprintf(char * buf, const char *fmt, ...);
 int PICE_vsprintf(char *buf, const char *fmt, va_list args);
 
-BOOLEAN IsAddressValid(ULONG Addr); 
+BOOLEAN IsAddressValid(ULONG Addr);
 BOOLEAN IsAddressWriteable(ULONG Addr);
 BOOLEAN SetAddressWriteable(ULONG address,BOOLEAN bSet);
-BOOLEAN IsRangeValid(ULONG addr,ULONG Length); 
+BOOLEAN IsRangeValid(ULONG addr,ULONG Length);
 void IntelStackWalk(ULONG pc,ULONG ebp,ULONG esp);
-struct module* IsModuleLoaded(LPSTR p);
 
 ULONG ReadPhysMem(ULONG Address,ULONG ulSize);
 void WritePhysMem(ULONG Address,ULONG Datum,ULONG ulSize);
@@ -199,27 +198,27 @@ void WritePhysMem(ULONG Address,ULONG Datum,ULONG ulSize);
 BOOLEAN IsRetAtEIP(void);
 BOOLEAN IsCallInstrAtEIP(void);
 
-ULONG GetLinearAddress(USHORT Segment,ULONG Offset); 
+ULONG GetLinearAddress(USHORT Segment,ULONG Offset);
 
-#define OUTPUT_BUFFER_FULL       0x01 
-#define INPUT_BUFFER_FULL        0x02 
-#define MOUSE_OUTPUT_BUFFER_FULL 0x20 
+#define OUTPUT_BUFFER_FULL       0x01
+#define INPUT_BUFFER_FULL        0x02
+#define MOUSE_OUTPUT_BUFFER_FULL 0x20
 
 void ShowStoppedMsg(void);
 void ShowRunningMsg(void);
 
-void SetHardwareBreakPoints(void); 
+void SetHardwareBreakPoints(void);
 void SetHardwareBreakPoint(ULONG ulAddress,ULONG ulReg);
 
 // this should be in disasm.h but someone misused the header files
 BOOLEAN Disasm(PULONG pOffset, PUCHAR pchDst);
 //////////////////////////////////////////////////////////////////
 
-#define GLOBAL_CODE_SEGMENT (__KERNEL_CS) 
-#define GLOBAL_DATA_SEGMENT (__KERNEL_DS) 
+#define GLOBAL_CODE_SEGMENT (__KERNEL_CS)
+#define GLOBAL_DATA_SEGMENT (__KERNEL_DS)
 
-//#define OVR_CS .byte 0x2e 
-//#define OVR_FS .byte 0x64 
+//#define OVR_CS .byte 0x2e
+//#define OVR_FS .byte 0x64
 
 void DisplayRegs(void);
 void SaveOldRegs(void);
@@ -268,3 +267,4 @@ HANDLE PICE_open (LPCWSTR	lpPathName,	int	iReadWrite);
 long PICE_read(HANDLE hFile, LPVOID lpBuffer, long lBytes);
 int PICE_close (HANDLE	hFile);
 size_t PICE_len( HANDLE hFile );
+WCHAR * PICE_wcscpy(WCHAR * str1,const WCHAR * str2);

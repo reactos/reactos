@@ -61,7 +61,7 @@ extern unsigned long sys_call_table[];
 BOOLEAN (*DisplayMemory)(PARGS) = DisplayMemoryDword;
 
 char szCurrentFile[256]="";
-struct module* pCurrentMod=NULL;
+PDEBUG_MODULE pCurrentMod=NULL;
 PICE_SYMBOLFILE_HEADER* pCurrentSymbols=NULL;
 
 // suppresses passing on of function keys while stepping code
@@ -107,7 +107,7 @@ LPSTR LocalVarRegs[]=
     "EAX",
     "ECX",
     "EDX",
-    "EBX", 
+    "EBX",
     "ESP",
     "EBP",
     "ESI",
@@ -239,10 +239,10 @@ CPUINFO CPUInfo[]={
 	{"DR3",&CurrentDR3},
 	{"DR6",&CurrentDR6},
 	{"DR7",&CurrentDR7},
-	{"EFLAGS",&CurrentEFL}, 
-	{"CR0",&CurrentCR0}, 
-	{"CR2",&CurrentCR2}, 
-	{"CR3",&CurrentCR3}, 
+	{"EFLAGS",&CurrentEFL},
+	{"CR0",&CurrentCR0},
+	{"CR2",&CurrentCR2},
+	{"CR3",&CurrentCR3},
 	{"",NULL},
 };
 
@@ -313,7 +313,7 @@ void RepaintSource(void)
 
     // disassembly from current address
     PICE_memset(&Args,0,sizeof(ARGS));
-    // make unassembler refresh all again 
+    // make unassembler refresh all again
     ulLastDisassStartAddress=ulLastDisassEndAddress=0;
 	Args.Count=0;
 	Unassemble(&Args);
@@ -343,7 +343,7 @@ void RepaintDesktop(void)
 
     // disassembly from current address
     PICE_memset(&Args,0,sizeof(ARGS));
-    // make unassembler refresh all again 
+    // make unassembler refresh all again
     ulLastDisassStartAddress=ulLastDisassEndAddress=0;
 	Args.Count=0;
 	Unassemble(&Args);
@@ -435,7 +435,7 @@ COMMAND_PROTOTYPE(SingleStep)
     }
     else
     {
-	    // modify trace flag 
+	    // modify trace flag
 	    CurrentEFL|=0x100; // set trace flag (TF)
 
 	    bSingleStep=TRUE;
@@ -509,7 +509,7 @@ proceed_as_normal:
 		}
 		else
 		{
-	        // modify trace flag 
+	        // modify trace flag
 	        CurrentEFL|=0x100; // set trace flag (TF)
 
 	        bSingleStep=TRUE;
@@ -560,13 +560,13 @@ COMMAND_PROTOTYPE(StepInto)
 
 proceed_as_normal_into:
 
-	    // modify trace flag 
+	    // modify trace flag
 	    CurrentEFL|=0x100; // set trace flag (TF)
 
 	    bSingleStep=TRUE;
 	    bNotifyToExit=TRUE;
     }
-    
+
     bStepInto = TRUE;
 
     bStepping = TRUE;
@@ -580,102 +580,102 @@ proceed_as_normal_into:
 // SetBreakpoint()
 //
 //*************************************************************************
-COMMAND_PROTOTYPE(SetBreakpoint) 
-{ 
-    ULONG addr,addrorg; 
-    USHORT segment; 
- 
-	if(pArgs->Count<=2) 
-	{ 
+COMMAND_PROTOTYPE(SetBreakpoint)
+{
+    ULONG addr,addrorg;
+    USHORT segment;
+
+	if(pArgs->Count<=2)
+	{
         if(pArgs->bNotTranslated[0]==FALSE)
         {
-		    if(gCurrentSelector) 
-		    { 
-			    addr=pArgs->Value[0]; 
-			    addrorg=gCurrentOffset; 
-			    segment=gCurrentSelector; 
-		    } 
-		    else 
-		    { 
-			    addrorg=addr=pArgs->Value[0]; 
-			    segment=CurrentCS; 
-		    } 
+		    if(gCurrentSelector)
+		    {
+			    addr=pArgs->Value[0];
+			    addrorg=gCurrentOffset;
+			    segment=gCurrentSelector;
+		    }
+		    else
+		    {
+			    addrorg=addr=pArgs->Value[0];
+			    segment=CurrentCS;
+		    }
 
             if(InstallSWBreakpoint(GetLinearAddress(segment,addr),FALSE,NULL) )
             {
-		        PICE_sprintf(tempCmd,"BP #%u set to %.4X:%.8X\n",0,segment,addr); 
+		        PICE_sprintf(tempCmd,"BP #%u set to %.4X:%.8X\n",0,segment,addr);
             }
             else
             {
-		        PICE_sprintf(tempCmd,"BP #%u NOT set (either page not valid OR already used)\n",0); 
+		        PICE_sprintf(tempCmd,"BP #%u NOT set (either page not valid OR already used)\n",0);
             }
-	        Print(OUTPUT_WINDOW,tempCmd); 
+	        Print(OUTPUT_WINDOW,tempCmd);
         }
         else
         {
             if(InstallVirtualSWBreakpoint((LPSTR)pArgs->Value[0],(LPSTR)pArgs->Value[1]) )
             {
-		        PICE_sprintf(tempCmd,"BP #%u virtually set to %s!%s\n",0,(LPSTR)pArgs->Value[0],(LPSTR)pArgs->Value[1]); 
+		        PICE_sprintf(tempCmd,"BP #%u virtually set to %s!%s\n",0,(LPSTR)pArgs->Value[0],(LPSTR)pArgs->Value[1]);
             }
             else
             {
-		        PICE_sprintf(tempCmd,"BP #%u NOT set (maybe no symbols loaded)\n",0); 
+		        PICE_sprintf(tempCmd,"BP #%u NOT set (maybe no symbols loaded)\n",0);
             }
-	        Print(OUTPUT_WINDOW,tempCmd); 
+	        Print(OUTPUT_WINDOW,tempCmd);
         }
-		
+
 		RepaintSource();
 
-	} 
-	return TRUE; 
-} 
- 
+	}
+	return TRUE;
+}
+
 //*************************************************************************
 // ListBreakpoints()
 //
 //*************************************************************************
-COMMAND_PROTOTYPE(ListBreakpoints) 
-{ 
-	ULONG i; 
- 
+COMMAND_PROTOTYPE(ListBreakpoints)
+{
+	ULONG i;
+
     ListSWBreakpoints();
 
-	for(i=0;i<4;i++) 
-	{ 
-		if(Bp[i].Used) 
-		{ 
-			PICE_sprintf(tempCmd,"(%u) %s %.4X:%.8X(linear %.8X)\n",i,Bp[i].Active?"*":" ",Bp[i].Segment,Bp[i].Offset,Bp[i].LinearAddress); 
-			Print(OUTPUT_WINDOW,tempCmd); 
-		} 
-	} 
-	return TRUE; 
-} 
+	for(i=0;i<4;i++)
+	{
+		if(Bp[i].Used)
+		{
+			PICE_sprintf(tempCmd,"(%u) %s %.4X:%.8X(linear %.8X)\n",i,Bp[i].Active?"*":" ",Bp[i].Segment,Bp[i].Offset,Bp[i].LinearAddress);
+			Print(OUTPUT_WINDOW,tempCmd);
+		}
+	}
+	return TRUE;
+}
 
 //*************************************************************************
 // ClearBreakpoints()
 //
 //*************************************************************************
-COMMAND_PROTOTYPE(ClearBreakpoints) 
-{ 
-	if(pArgs->Count) 
-	{ 
-		if(pArgs->Value[0]<4) 
-		{ 
-			Bp[pArgs->Value[0]].Used=Bp[pArgs->Value[0]].Active=FALSE; 
-		} 
+COMMAND_PROTOTYPE(ClearBreakpoints)
+{
+	if(pArgs->Count)
+	{
+		if(pArgs->Value[0]<4)
+		{
+			Bp[pArgs->Value[0]].Used=Bp[pArgs->Value[0]].Active=FALSE;
+		}
 		RepaintSource();
-	} 
-	else 
-	{ 
-    	ULONG i; 
- 
+	}
+	else
+	{
+    	ULONG i;
+
         RemoveAllSWBreakpoints(FALSE);
 
-		for(i=0;i<4;i++)Bp[i].Used=Bp[i].Active=FALSE; 
+		for(i=0;i<4;i++)Bp[i].Used=Bp[i].Active=FALSE;
 		RepaintSource();
-	} 
-	return TRUE; 
-} 
+	}
+	return TRUE;
+}
 
 //*************************************************************************
 // LeaveIce()
@@ -683,7 +683,7 @@ COMMAND_PROTOTYPE(ClearBreakpoints)
 //*************************************************************************
 COMMAND_PROTOTYPE(LeaveIce)
 {
-	//	SetHardwareBreakPoints(); 
+	//	SetHardwareBreakPoints();
 
 	bSingleStep=FALSE;
 	bNotifyToExit=TRUE;
@@ -705,7 +705,7 @@ COMMAND_PROTOTYPE(ShowGdt)
 	// get GDT register
 	__asm__ ("sgdt %0\n"
 	 	:"=m" (gdtr));
-	
+
     // info out
 	PICE_sprintf(tempCmd,"Address=%.8X Limit=%.4X\n",(gdtr[1]<<16)|(gdtr[0]>>16),gdtr[0]&0xFFFF);
 	Print(OUTPUT_WINDOW,tempCmd);
@@ -833,41 +833,41 @@ void OutputIdtEntry(PIDT pIdt,ULONG i)
 // ShowIdt()
 //
 //*************************************************************************
-COMMAND_PROTOTYPE(ShowIdt) 
-{ 
-	ULONG idtr[2]; 
-	USHORT i; 
-	PIDT pIdt; 
+COMMAND_PROTOTYPE(ShowIdt)
+{
+	ULONG idtr[2];
+	USHORT i;
+	PIDT pIdt;
 	ULONG addr=0;
- 
+
 	ENTER_FUNC();
 
-    // get GDT register 
+    // get GDT register
 	__asm__ ("sidt %0\n"
 	 	:"=m" (idtr));
-	// info out 
-	PICE_sprintf(tempCmd,"Address=%.8X Limit=%.4X\n",(idtr[1]<<16)|(idtr[0]>>16),idtr[0]&0xFFFF); 
-	Print(OUTPUT_WINDOW,tempCmd); 
+	// info out
+	PICE_sprintf(tempCmd,"Address=%.8X Limit=%.4X\n",(idtr[1]<<16)|(idtr[0]>>16),idtr[0]&0xFFFF);
+	Print(OUTPUT_WINDOW,tempCmd);
     WaitForKey();
-	// make pointer to GDT 
-	pIdt=(PIDT)(((ULONG)(idtr[1]<<16))|((ULONG)(idtr[0]>>16))); 
-	if(pArgs->Count==1) 
-	{ 
-		addr=pArgs->Value[0]; 
-		addr&=(~0x7); 
- 
-	} 
-	else if(pArgs->Count==0) 
-	{ 
-		for(i=0;i<((idtr[0]&0xFFFF)>>3);i++) 
-		{ 
+	// make pointer to GDT
+	pIdt=(PIDT)(((ULONG)(idtr[1]<<16))|((ULONG)(idtr[0]>>16)));
+	if(pArgs->Count==1)
+	{
+		addr=pArgs->Value[0];
+		addr&=(~0x7);
+
+	}
+	else if(pArgs->Count==0)
+	{
+		for(i=0;i<((idtr[0]&0xFFFF)>>3);i++)
+		{
             OutputIdtEntry(pIdt,i);
-			if(WaitForKey()==FALSE)break; 
-		} 
-	} 
+			if(WaitForKey()==FALSE)break;
+		}
+	}
 	LEAVE_FUNC();
-	return TRUE; 
-} 
+	return TRUE;
+}
 
 //*************************************************************************
 // ShowHelp()
@@ -901,7 +901,7 @@ COMMAND_PROTOTYPE(ShowHelp)
 // ShowPageDirs()
 //
 //*************************************************************************
-COMMAND_PROTOTYPE(ShowPageDirs) 
+COMMAND_PROTOTYPE(ShowPageDirs)
 {
 	ULONG i;
 	PPAGEDIR pPageDir;
@@ -939,8 +939,8 @@ COMMAND_PROTOTYPE(ShowPageDirs)
 		{
             PutStatusText("Linear            Physical Attributes");
             // there are 1024 page directories each mapping 1024*4k of address space
-			for(i=0;i<1024;i++) 
-			{ 
+			for(i=0;i<1024;i++)
+			{
                 ULONG ulAddress = i<<22;
                 // from the mm_struct get pointer to page directory for this address
                 pPGD = pgd_offset(mm,ulAddress);
@@ -950,17 +950,17 @@ COMMAND_PROTOTYPE(ShowPageDirs)
                     // create a structurized pointer from PGD
                     pPageDir = (PPAGEDIR)pPGD;
 
-				    PICE_sprintf(tempCmd,"%.8X-%.8X %.8X %s %s %s\n", 
+				    PICE_sprintf(tempCmd,"%.8X-%.8X %.8X %s %s %s\n",
 							    ulAddress, ulAddress + 0x400000,
-							    (pPageDir->PTBase<<12), 
-							    pPageDir->P?"P ":"NP", 
-							    pPageDir->RW?"RW":"R ", 
-							    pPageDir->US?"U":"S"); 
-				    Print(OUTPUT_WINDOW,tempCmd); 
+							    (pPageDir->PTBase<<12),
+							    pPageDir->P?"P ":"NP",
+							    pPageDir->RW?"RW":"R ",
+							    pPageDir->US?"U":"S");
+				    Print(OUTPUT_WINDOW,tempCmd);
 
-    				if(WaitForKey()==FALSE)break; 
+    				if(WaitForKey()==FALSE)break;
                 }
-			} 
+			}
 		}
         // one arg supplied -> show individual page
 		else if(pArgs->Count == 1)
@@ -979,11 +979,11 @@ COMMAND_PROTOTYPE(ShowPageDirs)
 
                     PutStatusText("Linear    Physical   Attributes");
 
-                    PICE_sprintf(tempCmd,"%.8X  %.8X     %s %s %s (LARGE PAGE PTE @ %.8X)\n", 
-						        pArgs->Value[0], 
-						        (pPage->PTBase<<12)|(pArgs->Value[0]&0x7FFFFF), 
-						        pPage->P?"P ":"NP", 
-						        pPage->RW?"RW":"R ", 
+                    PICE_sprintf(tempCmd,"%.8X  %.8X     %s %s %s (LARGE PAGE PTE @ %.8X)\n",
+						        pArgs->Value[0],
+						        (pPage->PTBase<<12)|(pArgs->Value[0]&0x7FFFFF),
+						        pPage->P?"P ":"NP",
+						        pPage->RW?"RW":"R ",
 						        pPage->US?"U":"S",
                                 (ULONG)pPGD);
                 }
@@ -1002,39 +1002,39 @@ COMMAND_PROTOTYPE(ShowPageDirs)
 
                         PutStatusText("Linear    Physical   Attributes");
 
-                        PICE_sprintf(tempCmd,"%.8X  %.8X     %s %s %s (PTE @ %.8X)\n", 
-						            pArgs->Value[0], 
-						            (pPage->PTBase<<12)|(pArgs->Value[0]&(PAGE_SIZE-1)), 
-						            (pPage->P==1)?"P ":"NP", 
-						            pPage->RW?"RW":"R ", 
+                        PICE_sprintf(tempCmd,"%.8X  %.8X     %s %s %s (PTE @ %.8X)\n",
+						            pArgs->Value[0],
+						            (pPage->PTBase<<12)|(pArgs->Value[0]&(PAGE_SIZE-1)),
+						            (pPage->P==1)?"P ":"NP",
+						            pPage->RW?"RW":"R ",
 						            pPage->US?"U":"S",
-                                    (ULONG)pPTE); 
+                                    (ULONG)pPTE);
                     }
 
                 }
-    			Print(OUTPUT_WINDOW,tempCmd); 
+    			Print(OUTPUT_WINDOW,tempCmd);
             }
             else
             {
                 PICE_sprintf(tempCmd,"page at %.8X not present.\n",pArgs->Value[0]);
-    			Print(OUTPUT_WINDOW,tempCmd); 
+    			Print(OUTPUT_WINDOW,tempCmd);
             }
 
 		}
 	}
-	return TRUE; 
-} 
+	return TRUE;
+}
 
 //*************************************************************************
 // ShowProcesses()
 //
 //*************************************************************************
-COMMAND_PROTOTYPE(ShowProcesses) 
-{ 
+COMMAND_PROTOTYPE(ShowProcesses)
+{
 	struct task_struct* p;
  	struct task_struct* my_current = (struct task_struct*)0xFFFFE000;
 	ULONG i;
-
+														  \
 	(ULONG)my_current &= ulRealStackPtr;
 
 	ENTER_FUNC();
@@ -1051,16 +1051,16 @@ COMMAND_PROTOTYPE(ShowProcesses)
 		for(i=0,p = my_current; (p = p->next_task) != my_current;i++)
 		{
 			DPRINT((0,"p = %x\n",p));
-			PICE_sprintf(tempCmd,"%-16.16s %-12x %x\n",(LPSTR)&(p->comm),(ULONG)p,p->pid); 
-			Print(OUTPUT_WINDOW,tempCmd); 
+			PICE_sprintf(tempCmd,"%-16.16s %-12x %x\n",(LPSTR)&(p->comm),(ULONG)p,p->pid);
+			Print(OUTPUT_WINDOW,tempCmd);
 			if(WaitForKey()==FALSE)
-				break; 
-		} 
+				break;
+		}
 	}
 
     LEAVE_FUNC();
-	return TRUE; 
-} 
+	return TRUE;
+}
 
 //*************************************************************************
 // DisplayMemoryDword()
@@ -1347,7 +1347,7 @@ void DisplaySourceFile(LPSTR pSrcLine,LPSTR pSrcEnd,ULONG ulLineNumber,ULONG ulL
         // goto end of current line
         while(*pSrcLine!=0x0a && *pSrcLine!=0x0d)
             pSrcLine++;
-       
+
         // skip over the line end
         if(*pSrcLine == 0x0d)
             pSrcLine++;
@@ -1381,7 +1381,7 @@ void DisplaySourceFile(LPSTR pSrcLine,LPSTR pSrcEnd,ULONG ulLineNumber,ULONG ulL
                     *pTemp++ = *pSrcLine++;
                 }
             }
-        
+
             if(pSrcLine<pSrcEnd)
             {
                 // skip over the line end
@@ -1501,7 +1501,7 @@ void UnassembleOneLineUp(void)
     }
     else
     {
-        // max instruction length is 15 bytes 
+        // max instruction length is 15 bytes
         offset = 15;
     }
 
@@ -1556,7 +1556,7 @@ void UnassembleOnePageUp(ULONG page)
         }
         else
         {
-            // max instruction length is 15 bytes 
+            // max instruction length is 15 bytes
             offset = 15;
         }
 
@@ -1648,7 +1648,7 @@ COMMAND_PROTOTYPE(Unassemble)
     DisableScroll(SOURCE_WINDOW);
 
     // if we're inside last disassembly range we only need to move to highlight
-    if(addr>=ulLastDisassStartAddress && 
+    if(addr>=ulLastDisassStartAddress &&
        addr<ulLastDisassEndAddress )
 	{
 		addr=ulLastDisassStartAddress;
@@ -1678,20 +1678,9 @@ COMMAND_PROTOTYPE(Unassemble)
     if(pCurrentMod)
     {
         ULONG mod_addr;
-	    DPRINT((0,"Unassemble(): pCurrentMod->name = %s\n",pCurrentMod->name));
+	    DPRINT((0,"Unassemble(): pCurrentMod->name = %S\n",pCurrentMod->name));
+        mod_addr = (ULONG)pCurrentMod->BaseAddress;
 
-        // in case we query for the kernel we need to use the fake kernel module
-        if(pCurrentMod == &fake_kernel_module)
-        {
-            mod_addr = KERNEL_START;
-        }
-        else
-        {
-            mod_addr = (ULONG)pCurrentMod;
-        }
-
-        mod_addr += sizeof(struct module);
-        
         pCurrentSymbols = FindModuleSymbols(mod_addr);
    	    DPRINT((0,"Unassemble(): pCurrentSymbols = %x\n",(ULONG)pCurrentSymbols));
     }
@@ -1718,7 +1707,7 @@ COMMAND_PROTOTYPE(Unassemble)
         else
         {
             LPSTR p;
-            
+
             p = strrchr(pFilename,'/');
             if(!p)
             {
@@ -1777,7 +1766,7 @@ COMMAND_PROTOTYPE(Unassemble)
 			    ulLastInvertedAddress = CurrentEIP;
 		    }
 
-		    // output segment:offset address 
+		    // output segment:offset address
 		    PICE_sprintf(tempCmd,"%0.4X:%0.8X ",segment,addr);
 		    Print(SOURCE_WINDOW,tempCmd);
 
@@ -1845,7 +1834,7 @@ COMMAND_PROTOTYPE(Unassemble)
 		    {
 				HatchLine(wWindow[SOURCE_WINDOW].y+i);
 		    }
-		    
+
 		    // if breakpoint was installed before disassembly, put it back
 		    if(bSWBpAtAddr)
 		    {
@@ -1879,40 +1868,34 @@ COMMAND_PROTOTYPE(Unassemble)
 //*************************************************************************
 COMMAND_PROTOTYPE(ShowModules)
 {
-	struct module *pMod;
-
+	PDEBUG_MODULE pMod;
 	DPRINT((0,"ShowModules()\n"));
 
-    if(pmodule_list)
+	if(BuildModuleList())
     {
-        pMod = *pmodule_list;
+        pMod = pdebug_module_head;
         do
         {
 			if(pMod->size)
 			{
                 if(pMod == pCurrentMod)
                 {
-				    PICE_sprintf(tempCmd,"%.8X - %.8X *%-32s (%6u symbols @ %.8X)\n",
-						    (unsigned int)pMod,
-						    (unsigned int) ((unsigned int)pMod+pMod->size),pMod->name,pMod->nsyms,pMod->syms);
+				    PICE_sprintf(tempCmd,"%.8X - %.8X *%-32S\n",
+						    (unsigned int)pMod->BaseAddress,
+						    (unsigned int) ((unsigned int)pMod->BaseAddress+pMod->size),pMod->name);
                 }
                 else
                 {
-				    PICE_sprintf(tempCmd,"%.8X - %.8X  %-32s (%6u symbols @ %.8X)\n",
-						    (unsigned int)pMod,
-						    (unsigned int) ((unsigned int)pMod+pMod->size),pMod->name,pMod->nsyms,pMod->syms);
+				    PICE_sprintf(tempCmd,"%.8X - %.8X  %-32S\n",
+						    (unsigned int)pMod->BaseAddress,
+						    (unsigned int) ((unsigned int)pMod->BaseAddress+pMod->size),
+							pMod->name);
                 }
-			}
-			else
-			{
-				PICE_sprintf(tempCmd,"%.8X - %.8X  vmlinux                          (%6u symbols @ %.8X)\n",
-						(unsigned int)pMod,
-						kernel_end,pMod->nsyms,pMod->syms);
 			}
             Print(OUTPUT_WINDOW,tempCmd);
 			if(WaitForKey()==FALSE)
-				break; 
-        }while((pMod = pMod->next));
+				break;
+        }while((pMod = pMod->next)!=pdebug_module_tail);
     }
 	return TRUE;
 }
@@ -1925,24 +1908,24 @@ LPSTR DecodeVmFlags(ULONG flags)
 {
     ULONG i;
 /*
-#define VM_READ		0x0001	
+#define VM_READ		0x0001
 #define VM_WRITE	0x0002
 #define VM_EXEC		0x0004
 #define VM_SHARED	0x0008
 
-#define VM_MAYREAD	0x0010	
+#define VM_MAYREAD	0x0010
 #define VM_MAYWRITE	0x0020
 #define VM_MAYEXEC	0x0040
 #define VM_MAYSHARE	0x0080
 
-#define VM_GROWSDOWN	0x0100	
+#define VM_GROWSDOWN	0x0100
 #define VM_GROWSUP	0x0200
-#define VM_SHM		0x0400	
-#define VM_DENYWRITE	0x0800	
+#define VM_SHM		0x0400
+#define VM_DENYWRITE	0x0800
 
 #define VM_EXECUTABLE	0x1000
 #define VM_LOCKED	0x2000
-#define VM_IO           0x4000  
+#define VM_IO           0x4000
 
 #define VM_STACK_FLAGS	0x0177
 */
@@ -2014,7 +1997,7 @@ COMMAND_PROTOTYPE(ShowVirtualMemory)
                         DecodeVmFlags(vma->vm_flags),
                         filename);
                 Print(OUTPUT_WINDOW,tempCmd);
-                
+
                 if(WaitForKey()==FALSE)break;
             }
         }
@@ -2071,7 +2054,7 @@ COMMAND_PROTOTYPE(SetSrcDisplay)
 	{
 		bShowSrc=bShowSrc?FALSE:TRUE;
         PICE_memset(&Args,0,sizeof(ARGS));
-        // make unassembler refresh all again 
+        // make unassembler refresh all again
         ulLastDisassStartAddress=ulLastDisassEndAddress=0;
 		Args.Count=0;
 		Unassemble(&Args);
@@ -2123,7 +2106,7 @@ COMMAND_PROTOTYPE(I3here)
 	return TRUE;
 }
 
-#ifndef LINUX 
+#ifndef LINUX
 COMMAND_PROTOTYPE(I1here)
 {
 	if(pArgs->Count==1)
@@ -2184,7 +2167,7 @@ COMMAND_PROTOTYPE(NextInstr)
 		// unassemble
 		DPRINT((0,"new CS:EIP %04.x:%.8X\n",CurrentCS,CurrentEIP));
         PICE_memset(pArgs,0,sizeof(ARGS));
-        // make unassembler refresh all again 
+        // make unassembler refresh all again
         ulLastDisassStartAddress=ulLastDisassEndAddress=0;
 		pArgs->Count=2;
 		pArgs->Value[0]=(ULONG)CurrentCS;
@@ -2286,7 +2269,7 @@ COMMAND_PROTOTYPE(SetCodeDisplay)
 
         PICE_memset(&Args,0,sizeof(ARGS));
 		Args.Count=0;
-        // make unassembler refresh all again 
+        // make unassembler refresh all again
         ulLastDisassStartAddress=ulLastDisassEndAddress=0;
 		Unassemble(&Args);
 	}
@@ -2296,7 +2279,7 @@ COMMAND_PROTOTYPE(SetCodeDisplay)
 
         PICE_memset(&Args,0,sizeof(ARGS));
 		Args.Count=0;
-        // make unassembler refresh all again 
+        // make unassembler refresh all again
         ulLastDisassStartAddress=ulLastDisassEndAddress=0;
 		Unassemble(&Args);
 	}
@@ -2324,14 +2307,14 @@ ULONG i;
 // WalkStack()
 //
 //*************************************************************************
-COMMAND_PROTOTYPE(WalkStack) 
-{ 
-	if(!pArgs->Count) 
-	{ 
-		IntelStackWalk(CurrentEIP,CurrentEBP,CurrentESP); 
-	} 
- 
-	return TRUE; 
+COMMAND_PROTOTYPE(WalkStack)
+{
+	if(!pArgs->Count)
+	{
+		IntelStackWalk(CurrentEIP,CurrentEBP,CurrentESP);
+	}
+
+	return TRUE;
 }
 
 //*************************************************************************
@@ -2482,7 +2465,7 @@ COMMAND_PROTOTYPE(UnassembleAtCurrentEip)
 COMMAND_PROTOTYPE(SwitchTables)
 {
     ULONG i;
-    struct module* pMod;
+    PDEBUG_MODULE pMod;
 
     DPRINT((0,"SwitchTables()\n"));
 
@@ -2494,9 +2477,9 @@ COMMAND_PROTOTYPE(SwitchTables)
             if(apSymbols[i])
             {
                 if(apSymbols[i] == pCurrentSymbols)
-                    PICE_sprintf(tempCmd,"*%-32s @ %.8X (%5u source files)\n",apSymbols[i]->name,(ULONG)apSymbols[i],apSymbols[i]->ulNumberOfSrcFiles);
+                    PICE_sprintf(tempCmd,"*%-32S @ %.8X (%5u source files)\n",apSymbols[i]->name,(ULONG)apSymbols[i],apSymbols[i]->ulNumberOfSrcFiles);
                 else
-                    PICE_sprintf(tempCmd," %-32s @ %.8X (%5u source files)\n",apSymbols[i]->name,(ULONG)apSymbols[i],apSymbols[i]->ulNumberOfSrcFiles);
+                    PICE_sprintf(tempCmd," %-32S @ %.8X (%5u source files)\n",apSymbols[i]->name,(ULONG)apSymbols[i],apSymbols[i]->ulNumberOfSrcFiles);
                 Print(OUTPUT_WINDOW,tempCmd);
                 if(WaitForKey()==FALSE)break;
             }
@@ -2505,33 +2488,11 @@ COMMAND_PROTOTYPE(SwitchTables)
     // 1 argument -> set new current symbols
     else if(pArgs->Count == 1)
     {
-        if(pmodule_list)
-        {
-
-            pCurrentSymbols = (PICE_SYMBOLFILE_HEADER*)pArgs->Value[0];
-
-            pMod = *pmodule_list;
-            do
-            {
-			    if(pMod->size)
-			    {
-                    if(PICE_strcmpi((LPSTR)pMod->name,pCurrentSymbols->name)==0)
-                    {
-                        pCurrentMod = pMod;
-                        break;
-                    }
-                        
-                }
-                else
-                {
-                    if(PICE_strcmpi((LPSTR)fake_kernel_module.name,pCurrentSymbols->name)==0)
-                    {
-                        pCurrentMod = &fake_kernel_module;
-                        break;
-                    }
-                }
-            }while((pMod = pMod->next));
-        }
+		PDEBUG_MODULE pTempMod;
+		pCurrentSymbols = (PICE_SYMBOLFILE_HEADER*)pArgs->Value[0];
+		pTempMod = IsModuleLoaded(pCurrentSymbols->name);
+		if( pTempMod )
+			pCurrentMod = pTempMod;
     }
 
     return TRUE;
@@ -2700,23 +2661,12 @@ COMMAND_PROTOTYPE(ShowSymbols)
         // have current module ?
         if(pCurrentMod)
         {
-            DPRINT((0,"ShowSymbols(): full listing of symbols for %s\n",pCurrentMod->name));
-
-            // in case we query for the kernel we need to use the fake kernel module
-            if(pCurrentMod == &fake_kernel_module)
-            {
-                addr = KERNEL_START;
-            }
-            else
-            {
-                addr = (ULONG)pCurrentMod;
-            }
-
-            addr += sizeof(struct module);
+            DPRINT((0,"ShowSymbols(): full listing of symbols for %S\n",pCurrentMod->name));
+            addr = (ULONG)pCurrentMod->BaseAddress;
 
             if((pSymbols = FindModuleSymbols(addr)) )
             {
-                PICE_sprintf(tempCmd,"symbols for module \"%s\"\n",pCurrentMod->name);
+                PICE_sprintf(tempCmd,"symbols for module \"%S\"\n",pCurrentMod->name);
                 Print(OUTPUT_WINDOW,tempCmd);
 
                 index = 0;
@@ -2733,22 +2683,13 @@ COMMAND_PROTOTYPE(ShowSymbols)
     {
         if(pCurrentMod)
         {
-            if(pCurrentMod == &fake_kernel_module)
-            {
-                addr = KERNEL_START;
-            }
-            else
-            {
-                addr = (ULONG)pCurrentMod;
-            }
-
-            addr += sizeof(struct module);
+            addr = (ULONG)pCurrentMod->BaseAddress;
 
             if((pSymbols = FindModuleSymbols(addr)))
             {
                 pSearchString = (LPSTR)pArgs->Value[0];
 
-                PICE_sprintf(tempCmd,"symbols for module \"%s\" (searching for \"%s\")\n",pCurrentMod->name,pSearchString);
+                PICE_sprintf(tempCmd,"symbols for module \"%S\" (searching for \"%s\")\n",pCurrentMod->name,pSearchString);
                 Print(OUTPUT_WINDOW,tempCmd);
 
                 if(pSearchString)
@@ -2775,7 +2716,7 @@ COMMAND_PROTOTYPE(ShowSymbols)
                     {
                         pSearchString[PICE_strlen(pSearchString)-1] = 0;
                         index = 0;
-                        
+
 						index = ListSymbolStartingAt(pCurrentMod,pSymbols,index,tempCmd);
 						if(index)
                         {
@@ -2792,8 +2733,6 @@ COMMAND_PROTOTYPE(ShowSymbols)
 							}while((index = ListSymbolStartingAt(pCurrentMod,pSymbols,index,tempCmd)));
 						}
                     }
-
-
                 }
             }
         }
@@ -2815,18 +2754,7 @@ COMMAND_PROTOTYPE(EvaluateExpression)
 	{
 		if(pCurrentMod)
 		{
-
-            // in case we query for the kernel we need to use the fake kernel module
-            if(pCurrentMod == &fake_kernel_module)
-            {
-                addr = KERNEL_START;
-            }
-            else
-            {
-                addr = (ULONG)pCurrentMod;
-            }
-
-            addr += sizeof(struct module);
+            addr = (ULONG)pCurrentMod->BaseAddress;
 
 			if( (pSymbols = FindModuleSymbols(addr) ) )
 			{
@@ -2857,7 +2785,7 @@ COMMAND_PROTOTYPE(SizeCodeWindow)
             if(wWindow[SOURCE_WINDOW].cy != NewHeight)
 			{
 				wWindow[SOURCE_WINDOW].cy = NewHeight;
-				wWindow[OUTPUT_WINDOW].y = wWindow[SOURCE_WINDOW].y + wWindow[SOURCE_WINDOW].cy + 1;  
+				wWindow[OUTPUT_WINDOW].y = wWindow[SOURCE_WINDOW].y + wWindow[SOURCE_WINDOW].cy + 1;
 				wWindow[OUTPUT_WINDOW].cy = TotalHeight - NewHeight;
 
 				RepaintDesktop();
@@ -2893,7 +2821,7 @@ COMMAND_PROTOTYPE(SizeDataWindow)
             if(wWindow[DATA_WINDOW].cy != NewHeight)
 			{
 				wWindow[DATA_WINDOW].cy = NewHeight;
-				wWindow[SOURCE_WINDOW].y = wWindow[DATA_WINDOW].y + wWindow[DATA_WINDOW].cy + 1;  
+				wWindow[SOURCE_WINDOW].y = wWindow[DATA_WINDOW].y + wWindow[DATA_WINDOW].cy + 1;
 				wWindow[SOURCE_WINDOW].cy = TotalHeight - NewHeight;
 
 				RepaintDesktop();
@@ -2987,7 +2915,7 @@ COMMAND_PROTOTYPE(ShowMappings)
 							pPTE = pte_offset(pPMD,address);
 							if(pPTE)
 							{
-                                if(*(PULONG)pPTE & _PAGE_PRESENT) 
+                                if(*(PULONG)pPTE & _PAGE_PRESENT)
                                 {
 								    ULONG ulPte = *(PULONG)pPTE & 0xFFFFF000;
 
@@ -3002,7 +2930,7 @@ COMMAND_PROTOTYPE(ShowMappings)
 						}
 					}
 				}
-				// large page 
+				// large page
 				else
 				{
        				address = (ulPageDir<<22);
@@ -3063,7 +2991,7 @@ COMMAND_PROTOTYPE(ShowPCI)
     LPSTR pVendorName;
     char temp[32];
     BOOLEAN bShowAll = FALSE,bUseDev=TRUE,bUseBus=TRUE;
-    
+
 
     DPRINT((0,"ShowPCI()\n"));
 
@@ -3137,7 +3065,7 @@ COMMAND_PROTOTYPE(ShowPCI)
                     PICE_sprintf(tempCmd,"SubVendorId %.4X SubSystemId %.4X\n",pciConfig.SubVendorID,pciConfig.SubSystemID);
                     Print(OUTPUT_WINDOW,tempCmd);
                     if(WaitForKey()==FALSE)goto CommonShowPCIExit;
-                    
+
                     if(bShowAll)
                     {
                         for(ulNumBaseAddresses=0,i=0;i<6;i++)
@@ -3521,26 +3449,12 @@ BOOLEAN ConvertTokenToSymbol(LPSTR pToken,PULONG pValue)
         // now we have two pointers
         pEx++;
         DPRINT((0,"ConvertTokenToSymbol(): module = %s symbol = %s\n",p,pEx));
-        if(pmodule_list)
+
+		if( pModFound=IsModuleLoaded(p) )
         {
-            struct module* pMod = *pmodule_list,*pModFound=NULL;
-            do
-            {
-                if(PICE_strcmpi(p,(LPSTR)pMod->name)==0)
-                {
-                    DPRINT((0,"ConvertTokenToSymbol(): found the module\n"));
-                    pModFound = pMod;
-                    break;
-                }
-            }while((pMod = pMod->next));
-
-            if(pModFound)
-            {
-                if((*pValue = FindFunctionInModuleByName(pEx,pModFound)))
-                    return TRUE;
-            }
+            if((*pValue = FindFunctionInModuleByName(pEx,pModFound)))
+                return TRUE;
         }
-
     }
     else
     {
@@ -3599,12 +3513,14 @@ BOOLEAN ConvertTokenToModuleAndName(LPSTR pToken,PULONG pulModuleName,PULONG pul
 BOOLEAN ConvertTokenToModule(LPSTR p,PULONG pValue)
 {
     ULONG i;
+	char temp[DEBUG_MODULE_NAME_LEN];
 
     for(i=0;i<DIM(apSymbols);i++)
     {
         if(apSymbols[i])
         {
-            if(PICE_strcmpi(p,apSymbols[i]->name)==0)
+			CopyWideToAnsi(temp,apSymbols[i]->name);
+            if(PICE_strcmpi(p,temp)==0)
             {
                 *pValue = (ULONG)apSymbols[i];
                 return TRUE;
@@ -3616,7 +3532,8 @@ BOOLEAN ConvertTokenToModule(LPSTR p,PULONG pValue)
     {
         if(apSymbols[i])
         {
-            if(PICE_strncmpi(apSymbols[i]->name,p,PICE_strlen(p))==0)
+			CopyWideToAnsi(temp,apSymbols[i]->name);
+            if(PICE_strncmpi(temp,p,PICE_strlen(p))==0)
             {
                 *pValue = (ULONG)apSymbols[i];
                 return TRUE;
@@ -3733,7 +3650,7 @@ BOOLEAN ConvertSizeToKeyword(LPSTR p,PULONG pValue)
 	count=StrLenUpToWhiteChar(p," ");
     if(count > 1)
 	    return FALSE;
-    
+
     switch(*p)
     {
         // BYTE
@@ -3778,7 +3695,7 @@ BOOLEAN ConvertTokenToSrcFile(LPSTR p,PULONG pValue)
 
     if(pCurrentSymbols && pCurrentSymbols->ulNumberOfSrcFiles)
     {
-        DPRINT((0,"ConvertTokenToSrcFile(): current symbols for %s\n",pCurrentSymbols->name));
+        DPRINT((0,"ConvertTokenToSrcFile(): current symbols for %S\n",pCurrentSymbols->name));
 
         pSrc = (PICE_SYMBOLFILE_SOURCE*)((ULONG)pCurrentSymbols + pCurrentSymbols->ulOffsetToSrcFiles);
 
@@ -3857,7 +3774,7 @@ BOOLEAN ConvertTokenToLineNumber(LPSTR p,PULONG pValue)
             DPRINT((0,"ConvertTokenToLineNumber(): current file  = %s\n",szCurrentFile));
             if(pCurrentMod && PICE_strlen(szCurrentFile))
             {
-                DPRINT((0,"ConvertTokenToLineNumber(): current file  %s\n",pCurrentMod->name));
+                DPRINT((0,"ConvertTokenToLineNumber(): current file  %S\n",pCurrentMod->name));
                 if(FindAddressForSourceLine(ulDecimal,szCurrentFile,pCurrentMod,pValue))
                 {
                     DPRINT((0,"ConvertTokenToLineNumber(): value  = %x\n",*pValue));
@@ -3937,7 +3854,7 @@ void Parse(LPSTR pCmdLine,BOOLEAN bInvokedByFkey)
 		Print(OUTPUT_WINDOW,":");
 		goto CommonParseReturnPoint;
 	}
-	
+
 	pToken = PICE_strtok( pCmdLine);
 	// get the args and convert them into numbers
 	i=0;

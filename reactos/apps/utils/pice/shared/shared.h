@@ -77,10 +77,11 @@ typedef struct _DEBUGGER_STATUS_BLOCK
 
 #define PICE_MAGIC     MAGIC_ULONG('P','I','C','E')
 
+#define DEBUG_MODULE_NAME_LEN 32
 typedef struct _PICE_SYMBOLFILE_HEADER
 {
 	ULONG magic;
-	WCHAR name[64];
+	WCHAR name[DEBUG_MODULE_NAME_LEN];
 	ULONG ulOffsetToHeaders,ulSizeOfHeader;
 	ULONG ulOffsetToGlobals,ulSizeOfGlobals;
 	ULONG ulOffsetToGlobalsStrings,ulSizeOfGlobalsStrings;

@@ -15,7 +15,7 @@ Environment:
     LINUX 2.2.X
     Kernel mode only
 
-Author: 
+Author:
 
     Klaus P. Gerlicher
 
@@ -45,10 +45,10 @@ ULONG OldInt3Handler=0;
 
 SW_BP aSwBreakpoints[64]={{0,0,0,0},};
 
-//************************************************************************* 
-// FindSwBp() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// FindSwBp()
+//
+//*************************************************************************
 PSW_BP FindSwBp(ULONG ulAddress)
 {
     ULONG i;
@@ -62,10 +62,10 @@ PSW_BP FindSwBp(ULONG ulAddress)
     return NULL;
 }
 
-//************************************************************************* 
-// FindEmptySwBpSlot() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// FindEmptySwBpSlot()
+//
+//*************************************************************************
 PSW_BP FindEmptySwBpSlot(void)
 {
     ULONG i;
@@ -81,10 +81,10 @@ PSW_BP FindEmptySwBpSlot(void)
     return NULL;
 }
 
-//************************************************************************* 
-// FindVirtualSwBp() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// FindVirtualSwBp()
+//
+//*************************************************************************
 PSW_BP FindVirtualSwBp(LPSTR ModName,LPSTR szFunctionName)
 {
     ULONG i;
@@ -106,10 +106,10 @@ PSW_BP FindVirtualSwBp(LPSTR ModName,LPSTR szFunctionName)
     return NULL;
 }
 
-//************************************************************************* 
-// IsSwBpAtAddressInstalled() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// IsSwBpAtAddressInstalled()
+//
+//*************************************************************************
 BOOLEAN IsSwBpAtAddressInstalled(ULONG ulAddress)
 {
     ULONG i;
@@ -126,10 +126,10 @@ BOOLEAN IsSwBpAtAddressInstalled(ULONG ulAddress)
 	return FALSE;
 }
 
-//************************************************************************* 
-// IsSwBpAtAddress() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// IsSwBpAtAddress()
+//
+//*************************************************************************
 BOOLEAN IsSwBpAtAddress(ULONG ulAddress)
 {
     ULONG i;
@@ -143,10 +143,10 @@ BOOLEAN IsSwBpAtAddress(ULONG ulAddress)
 	return FALSE;
 }
 
-//************************************************************************* 
-// NeedToReInstallSWBreakpoints() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// NeedToReInstallSWBreakpoints()
+//
+//*************************************************************************
 BOOLEAN NeedToReInstallSWBreakpoints(ULONG ulAddress,BOOLEAN bUseAddress)
 {
     PSW_BP p;
@@ -190,10 +190,10 @@ BOOLEAN NeedToReInstallSWBreakpoints(ULONG ulAddress,BOOLEAN bUseAddress)
     return bResult;
 }
 
-//************************************************************************* 
-// ReInstallSWBreakpoint() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// ReInstallSWBreakpoint()
+//
+//*************************************************************************
 BOOLEAN ReInstallSWBreakpoint(ULONG ulAddress)
 {
     PSW_BP p;
@@ -223,10 +223,10 @@ BOOLEAN ReInstallSWBreakpoint(ULONG ulAddress)
 }
 
 
-//************************************************************************* 
-// InstallSWBreakpoint() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// InstallSWBreakpoint()
+//
+//*************************************************************************
 BOOLEAN InstallSWBreakpoint(ULONG ulAddress,BOOLEAN bPermanent,void (*SWBreakpointCallback)(void))
 {
     PSW_BP p;
@@ -235,7 +235,7 @@ BOOLEAN InstallSWBreakpoint(ULONG ulAddress,BOOLEAN bPermanent,void (*SWBreakpoi
     ENTER_FUNC();
     DPRINT((0,"InstallSWBreakpoint()\n"));
 
-    // check if page is present 
+    // check if page is present
     // TODO: must also check if it's a writable page
     if(IsAddressValid(ulAddress) )
     {
@@ -278,10 +278,10 @@ BOOLEAN InstallSWBreakpoint(ULONG ulAddress,BOOLEAN bPermanent,void (*SWBreakpoi
     return bResult;
 }
 
-//************************************************************************* 
-// InstallVirtualSWBreakpoint() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// InstallVirtualSWBreakpoint()
+//
+//*************************************************************************
 BOOLEAN InstallVirtualSWBreakpoint(LPSTR ModName,LPSTR FunctionName)
 {
     PSW_BP p;
@@ -309,16 +309,16 @@ BOOLEAN InstallVirtualSWBreakpoint(LPSTR ModName,LPSTR FunctionName)
     return bResult;
 }
 
-//************************************************************************* 
-// TryToInstallVirtualSWBreakpoints() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// TryToInstallVirtualSWBreakpoints()
+//
+//*************************************************************************
 void TryToInstallVirtualSWBreakpoints(void)
 {
     ULONG i,ulAddress;
-    struct module* pMod;
+    PDEBUG_MODULE pMod;
     PSW_BP p;
-    
+
     DPRINT((0,"TryToInstallVirtualSWBreakpoints()\n"));
 
     for(i=0;i<(sizeof(aSwBreakpoints)/sizeof(SW_BP));i++)
@@ -363,11 +363,11 @@ void TryToInstallVirtualSWBreakpoints(void)
     }
 }
 
-//************************************************************************* 
-// RemoveSWBreakpoint() 
-// 
+//*************************************************************************
+// RemoveSWBreakpoint()
+//
 // removes breakpoint from breakpoint list
-//************************************************************************* 
+//*************************************************************************
 BOOLEAN RemoveSWBreakpoint(ULONG ulAddress)
 {
     PSW_BP p;
@@ -395,10 +395,10 @@ BOOLEAN RemoveSWBreakpoint(ULONG ulAddress)
 }
 
 
-//************************************************************************* 
-// DeInstallSWBreakpoint() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// DeInstallSWBreakpoint()
+//
+//*************************************************************************
 BOOLEAN DeInstallSWBreakpoint(ULONG ulAddress)
 {
     PSW_BP p;
@@ -425,10 +425,10 @@ BOOLEAN DeInstallSWBreakpoint(ULONG ulAddress)
     return bResult;
 }
 
-//************************************************************************* 
-// RemoveAllSWBreakpoints() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// RemoveAllSWBreakpoints()
+//
+//*************************************************************************
 BOOLEAN RemoveAllSWBreakpoints(BOOLEAN bEvenPermanents)
 {
     PSW_BP p;
@@ -472,10 +472,10 @@ BOOLEAN RemoveAllSWBreakpoints(BOOLEAN bEvenPermanents)
     return bResult;
 }
 
-//************************************************************************* 
-// IsPermanentSWBreakpoint() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// IsPermanentSWBreakpoint()
+//
+//*************************************************************************
 PSW_BP IsPermanentSWBreakpoint(ULONG ulAddress)
 {
     PSW_BP p;
@@ -487,7 +487,7 @@ PSW_BP IsPermanentSWBreakpoint(ULONG ulAddress)
     for(i=0;i<(sizeof(aSwBreakpoints)/sizeof(aSwBreakpoints[0]));i++)
     {
         p = &aSwBreakpoints[i];
-        if(p->ulAddress == ulAddress && 
+        if(p->ulAddress == ulAddress &&
            p->bUsed == TRUE &&
            p->bPermanent == TRUE)
         {
@@ -501,16 +501,16 @@ PSW_BP IsPermanentSWBreakpoint(ULONG ulAddress)
     return NULL;
 }
 
-//************************************************************************* 
-// ListSWBreakpoints() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// ListSWBreakpoints()
+//
+//*************************************************************************
 void ListSWBreakpoints(void)
 {
     PSW_BP p;
     ULONG i;
     LPSTR pSymbolName;
-    struct module* pMod;
+    PDEBUG_MODULE pMod;
 
     ENTER_FUNC();
     DPRINT((0,"ListSWBreakpoints()\n"));
@@ -518,12 +518,12 @@ void ListSWBreakpoints(void)
     for(i=0;i<(sizeof(aSwBreakpoints)/sizeof(SW_BP));i++)
     {
         p = &aSwBreakpoints[i];
-        if(p->bUsed == TRUE && p->bVirtual == FALSE) 
+        if(p->bUsed == TRUE && p->bVirtual == FALSE)
         {
             if((pSymbolName = FindFunctionByAddress(p->ulAddress,NULL,NULL)) )
             {
                 pMod = FindModuleFromAddress(p->ulAddress);
-                PICE_sprintf(tempBp,"[%u] %.8X (%s!%s) %s\n",i,p->ulAddress,pMod->name,pSymbolName,p->bPermanent?"PERMANENT":"");
+                PICE_sprintf(tempBp,"[%u] %.8X (%S!%s) %s\n",i,p->ulAddress,pMod->name,pSymbolName,p->bPermanent?"PERMANENT":"");
             }
             else
             {
@@ -544,21 +544,22 @@ void ListSWBreakpoints(void)
     LEAVE_FUNC();
 }
 
-//************************************************************************* 
-// RevirtualizeBreakpointsForModule() 
-// 
-//************************************************************************* 
-void RevirtualizeBreakpointsForModule(struct module* pMod)
+//*************************************************************************
+// RevirtualizeBreakpointsForModule()
+//
+//*************************************************************************
+void RevirtualizeBreakpointsForModule(PDEBUG_MODULE pMod)
 {
     ULONG i,start,end;
     PSW_BP p;
+	char temp[DEBUG_MODULE_NAME_LEN];
 
     DPRINT((0,"RevirtualizeBreakpointsForModule(%x)\n",(ULONG)pMod));
 
-    if(IsRangeValid((ULONG)pMod,sizeof(struct module)) )
+	if(IsRangeValid((ULONG)pMod,sizeof(DEBUG_MODULE)) )
     {
-        start = (ULONG)pMod;
-        end = (ULONG)pMod+pMod->size;
+        start = (ULONG)pMod->BaseAddress;
+        end = (ULONG)pMod->BaseAddress+pMod->size;
 
 		DPRINT((0,"RevirtualizeBreakpointsForModule(): module %x (%x-%x)\n",(ULONG)pMod,start,end));
 		// go through all breakpoints
@@ -593,7 +594,8 @@ void RevirtualizeBreakpointsForModule(struct module* pMod)
                         while(*pFind!='!')pFind++;
                         pFind++;
 						// remember the function and the module for reinstallation
-                        PICE_strcpy(p->szModName,(LPSTR)pMod->name);
+						CopyWideToAnsi(temp,pMod->name);
+						PICE_strcpy(p->szModName,temp);
                         PICE_strcpy(p->szFunctionName,pFind);
 					    DPRINT((0,"RevirtualizeBreakpointsForModule(): %s!%s\n",p->szModName,p->szFunctionName));
 						// if function name contains a '+' it's an offset
@@ -642,11 +644,11 @@ void RevirtualizeBreakpointsForModule(struct module* pMod)
     }
 }
 
-//************************************************************************* 
-// NewInt3Handler() 
-// 
-//************************************************************************* 
-__asm__ (" 
+//*************************************************************************
+// NewInt3Handler()
+//
+//*************************************************************************
+__asm__ ("
 NewInt3Handler:
         pushl $" STR(REASON_INT3) "
 		// call debugger loop
@@ -654,10 +656,10 @@ NewInt3Handler:
 ");
 
 
-//************************************************************************* 
-// InstallInt3Hook() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// InstallInt3Hook()
+//
+//*************************************************************************
 void InstallInt3Hook(void)
 {
 	ULONG LocalInt3Handler;
@@ -681,10 +683,10 @@ void InstallInt3Hook(void)
     LEAVE_FUNC();
 }
 
-//************************************************************************* 
-// DeInstallInt3Hook() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// DeInstallInt3Hook()
+//
+//*************************************************************************
 void DeInstallInt3Hook(void)
 {
 	ENTER_FUNC();

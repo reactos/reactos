@@ -41,6 +41,7 @@ typedef struct _LOCAL_VARIABLE
     BOOLEAN bRegister;
 }LOCAL_VARIABLE,*PLOCAL_VARIABLE;
 
+
 struct _DEBUG_MODULE_SYMBOL_
 {
 	ULONG value;
@@ -53,7 +54,7 @@ typedef struct _DEBUG_MODULE_
 	ULONG size;
 	PVOID BaseAddress;
 	PVOID EntryPoint;
-	UNICODE_STRING name;
+	WCHAR name[DEBUG_MODULE_NAME_LEN];
 	struct _DEBUG_MODULE_SYMBOL_ syms;
 }DEBUG_MODULE, *PDEBUG_MODULE;
 
@@ -70,17 +71,18 @@ BOOLEAN ReloadSymbols(void);
 LPSTR FindFunctionByAddress(ULONG ulValue,PULONG pulstart,PULONG pulend);
 LPSTR FindSourceLineForAddress(ULONG addr,PULONG pulLineNumber,LPSTR* ppSrcStart,LPSTR* ppSrcEnd,LPSTR* ppFilename);
 PLOCAL_VARIABLE FindLocalsByAddress(ULONG addr);
-ULONG FindFunctionInModuleByName(LPSTR szFunctionname,struct module* pMod);
+ULONG FindFunctionInModuleByName(LPSTR szFunctionname, PDEBUG_MODULE pMod);
 PICE_SYMBOLFILE_HEADER* FindModuleSymbolsByModuleName(LPSTR modname);
-BOOLEAN FindAddressForSourceLine(ULONG ulLineNumber,LPSTR pFilename,struct module* pMod,PULONG pValue);
+BOOLEAN FindAddressForSourceLine(ULONG ulLineNumber,LPSTR pFilename, PDEBUG_MODULE pMod,PULONG pValue);
 ULONG ConvertDecimalToUlong(LPSTR p);
-struct module* FindModuleFromAddress(ULONG addr);
+PDEBUG_MODULE FindModuleFromAddress(ULONG addr);
 PICE_SYMBOLFILE_HEADER* FindModuleSymbols(ULONG addr);
-ULONG ListSymbolStartingAt(struct module* pMod,PICE_SYMBOLFILE_HEADER* pSymbols,ULONG index,LPSTR pOutput);
-struct module* FindModuleByName(LPSTR modname);
+ULONG ListSymbolStartingAt(PDEBUG_MODULE pMod,PICE_SYMBOLFILE_HEADER* pSymbols,ULONG index,LPSTR pOutput);
+PDEBUG_MODULE FindModuleByName(LPSTR modname);
 void Evaluate(PICE_SYMBOLFILE_HEADER* pSymbols,LPSTR p);
 LONG ExtractNumber(LPSTR p);
 LPSTR ExtractTypeName(LPSTR p);
+PDEBUG_MODULE IsModuleLoaded(LPSTR p);
 
 //extern ULONG kernel_end;
 extern PICE_SYMBOLFILE_HEADER* apSymbols[32];
