@@ -1,4 +1,4 @@
-/* $Id: pnpdma.c,v 1.6 2004/08/15 16:39:03 chorns Exp $
+/* $Id: pnpdma.c,v 1.7 2004/10/18 21:07:42 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -232,7 +232,7 @@ IoGetDmaAdapter(
       &GUID_BUS_INTERFACE_STANDARD;
     Status = IopInitiatePnpIrp(PhysicalDeviceObject, &IoStatusBlock,
       IRP_MN_QUERY_BUS_INFORMATION, &Stack);
-    if (!NT_SUCCESS(Status))
+    if (NT_SUCCESS(Status))
     {
       Result = BusInterface.GetDmaAdapter(BusInterface.Context,
         DeviceDescription, NumberOfMapRegisters);
