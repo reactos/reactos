@@ -1,4 +1,4 @@
-; $Id: advapi32.edf,v 1.5 1999/11/12 12:01:10 dwelch Exp $
+; $Id: advapi32.edf,v 1.6 2000/03/18 13:48:24 ekohl Exp $
 ;
 ; advapi32.def
 ;
@@ -146,11 +146,11 @@ GetAclInformation=GetAclInformation@16
 ;GetNumberOfEventLogRecords=GetNumberOfEventLogRecords@8
 ;GetOldestEventLogRecord=GetOldestEventLogRecord@8
 ;GetPrivateObjectSecurity=GetPrivateObjectSecurity@20
-;GetSecurityDescriptorControl=GetSecurityDescriptorControl@12
-;GetSecurityDescriptorDacl=GetSecurityDescriptorDacl@16
-;GetSecurityDescriptorGroup=GetSecurityDescriptorGroup@12
-;GetSecurityDescriptorLength=GetSecurityDescriptorLength@4
-;GetSecurityDescriptorOwner=GetSecurityDescriptorOwner@12
+GetSecurityDescriptorControl=GetSecurityDescriptorControl@12
+GetSecurityDescriptorDacl=GetSecurityDescriptorDacl@16
+GetSecurityDescriptorGroup=GetSecurityDescriptorGroup@12
+GetSecurityDescriptorLength=GetSecurityDescriptorLength@4
+GetSecurityDescriptorOwner=GetSecurityDescriptorOwner@12
 ;GetSecurityDescriptorSacl=GetSecurityDescriptorSacl@16
 ;GetSecurityInfo=GetSecurityInfo@32
 GetServiceDisplayNameA=GetServiceDisplayNameA@16
@@ -178,7 +178,7 @@ GetTokenInformation=GetTokenInformation@20
 ;ImpersonateNamedPipeClient=ImpersonateNamedPipeClient@4
 ;ImpersonateSelf=ImpersonateSelf@4
 InitializeAcl=InitializeAcl@12
-;InitializeSecurityDescriptor=InitializeSecurityDescriptor@8
+InitializeSecurityDescriptor=InitializeSecurityDescriptor@8
 ;InitializeSid=InitializeSid@12
 InitiateSystemShutdownA=InitiateSystemShutdownA@20
 InitiateSystemShutdownW=InitiateSystemShutdownW@20
@@ -186,7 +186,7 @@ InitiateSystemShutdownW=InitiateSystemShutdownW@20
 ;IsAccessPermittedW=IsAccessPermittedW@20
 ;IsTextUnicode=IsTextUnicode@12
 IsValidAcl=IsValidAcl@4
-;IsValidSecurityDescriptor=IsValidSecurityDescriptor@4
+IsValidSecurityDescriptor=IsValidSecurityDescriptor@4
 ;IsValidSid=IsValidSid@4
 LockServiceDatabase=LockServiceDatabase@4
 ;LogonUserA=LogonUserA@24
@@ -356,9 +356,9 @@ SetAclInformation=SetAclInformation@16
 ;SetNamedSecurityInfoA=SetNamedSecurityInfoA@28
 ;SetNamedSecurityInfoW=SetNamedSecurityInfoW@28
 ;SetPrivateObjectSecurity=SetPrivateObjectSecurity@20
-;SetSecurityDescriptorDacl=SetSecurityDescriptorDacl@16
-;SetSecurityDescriptorGroup=SetSecurityDescriptorGroup@12
-;SetSecurityDescriptorOwner=SetSecurityDescriptorOwner@12
+SetSecurityDescriptorDacl=SetSecurityDescriptorDacl@16
+SetSecurityDescriptorGroup=SetSecurityDescriptorGroup@12
+SetSecurityDescriptorOwner=SetSecurityDescriptorOwner@12
 ;SetSecurityDescriptorSacl=SetSecurityDescriptorSacl@16
 ;SetSecurityInfo=SetSecurityInfo@28
 ;SetServiceBits=SetServiceBits@16
