@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.10 2002/02/10 13:55:45 ekohl Exp $
+/* $Id: registry.c,v 1.11 2002/04/29 23:19:53 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -240,8 +240,51 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 				   &ResultSize);
 	  if (!NT_SUCCESS(Status))
 	    {
-	      RtlFreeHeap(RtlGetProcessHeap(), 0, ValueInfo);
-	      break;
+	      if (QueryEntry->Flags & RTL_QUERY_REGISTRY_REQUIRED)
+		{
+		  RtlFreeHeap(RtlGetProcessHeap(), 0, ValueInfo);
+		  Status = STATUS_OBJECT_NAME_NOT_FOUND;
+		  break;
+		}
+	
+	      if (QueryEntry->DefaultType == REG_SZ)
+		{
+		  PUNICODE_STRING ValueString;
+		  PUNICODE_STRING SourceString;
+
+		  SourceString = (PUNICODE_STRING)QueryEntry->DefaultData;
+		  ValueString = (PUNICODE_STRING)QueryEntry->EntryContext;
+		  if (ValueString->Buffer == 0)
+		    {
+		      ValueString->Length = SourceString->Length;
+		      ValueString->MaximumLength = SourceString->MaximumLength;
+		      ValueString->Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+							    0,
+							    ValueString->MaximumLength);
+		      if (!ValueString->Buffer)
+			break;
+		      ValueString->Buffer[0] = 0;
+		      memcpy(ValueString->Buffer,
+			     SourceString->Buffer,
+			     SourceString->MaximumLength);
+		    }
+		  else
+		    {
+		      ValueString->Length = min(SourceString->Length,
+						ValueString->MaximumLength - sizeof(WCHAR));
+		      memcpy(ValueString->Buffer,
+			     SourceString->Buffer,
+			     ValueString->Length);
+		      ((PWSTR)ValueString->Buffer)[ValueString->Length / sizeof(WCHAR)] = 0;
+		    }
+		}
+	      else
+		{
+		  memcpy(QueryEntry->EntryContext,
+			 QueryEntry->DefaultData,
+			 QueryEntry->DefaultLength);
+		}
+	      Status = STATUS_SUCCESS;
 	    }
 	  else
 	    {

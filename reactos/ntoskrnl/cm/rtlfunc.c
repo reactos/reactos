@@ -225,9 +225,50 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 				   &ResultSize);
 	  if (!NT_SUCCESS(Status))
 	    {
-	      DPRINT("ZwQueryValueKey() failed with status %x\n", Status);
-	      ExFreePool(ValueInfo);
-	      break;
+	      if (QueryEntry->Flags & RTL_QUERY_REGISTRY_REQUIRED)
+		{
+		  ExFreePool(ValueInfo);
+		  Status = STATUS_OBJECT_NAME_NOT_FOUND;
+		  goto ByeBye;
+		}
+	
+	      if (QueryEntry->DefaultType == REG_SZ)
+		{
+		  PUNICODE_STRING ValueString;
+		  PUNICODE_STRING SourceString;
+
+		  SourceString = (PUNICODE_STRING)QueryEntry->DefaultData;
+		  ValueString = (PUNICODE_STRING)QueryEntry->EntryContext;
+		  if (ValueString->Buffer == 0)
+		    {
+		      ValueString->Length = SourceString->Length;
+		      ValueString->MaximumLength = SourceString->MaximumLength;
+		      ValueString->Buffer = ExAllocatePool(PagedPool,
+							   ValueString->MaximumLength);
+		      if (!ValueString->Buffer)
+			break;
+		      ValueString->Buffer[0] = 0;
+		      memcpy(ValueString->Buffer,
+			     SourceString->Buffer,
+			     SourceString->MaximumLength);
+		    }
+		  else
+		    {
+		      ValueString->Length = RtlMin(SourceString->Length,
+						   ValueString->MaximumLength - sizeof(WCHAR));
+		      memcpy(ValueString->Buffer,
+			     SourceString->Buffer,
+			     ValueString->Length);
+		      ((PWSTR)ValueString->Buffer)[ValueString->Length / sizeof(WCHAR)] = 0;
+		    }
+		}
+	      else
+		{
+		  memcpy(QueryEntry->EntryContext,
+			 QueryEntry->DefaultData,
+			 QueryEntry->DefaultLength);
+		}
+	      Status = STATUS_SUCCESS;
 	    }
 	  else
 	    {
@@ -450,6 +491,8 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 
       QueryEntry++;
     }
+
+ByeBye:
 
   if (CurrentKeyHandle != BaseKeyHandle)
     NtClose(CurrentKeyHandle);
