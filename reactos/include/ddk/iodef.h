@@ -354,7 +354,7 @@ enum
 
 #define FILE_COMPLETE_IF_OPLOCKED               0x00000100
 #define FILE_NO_EA_KNOWLEDGE                    0x00000200
-
+#define FILE_OPEN_FOR_RECOVERY                  0x00000400
 #define FILE_RANDOM_ACCESS                      0x00000800
 
 #define FILE_DELETE_ON_CLOSE                    0x00001000
