@@ -44,9 +44,7 @@ extern "C" {
 
 #include <internal/types.h>
 
-__DJ_va_list
-#undef __DJ_va_list
-#define __DJ_va_list
+typedef void *va_list;
 
 #ifndef _FILE_DEFINED
 typedef struct {

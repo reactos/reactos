@@ -29,6 +29,13 @@ extern "C" {
 #define _A_ARCH     0x20    /* Archive file */
 
 
+#define F_OK	0x01
+#define R_OK	0x02
+#define W_OK	0x04
+#define X_OK	0x08
+#define D_OK	0x10
+
+
 struct _finddata_t {
   char reserved[21] __attribute__((packed));
   unsigned char attrib __attribute__((packed));
@@ -39,46 +46,68 @@ struct _finddata_t {
   char name[256] __attribute__((packed));
 };
 
-int		chsize(int handle, long size);
-int		close(int _fd);
+int 		_access( const char *_path, int _amode );
+int		_chmod(const char *filename, int func);
+int		_chsize(int _fd, long size);
 int		_close(int _fd);
 int		_creat(const char *_path, int _attrib);
-unsigned int   _commit(int _handle);
-ssize_t		crlf2nl(char *_buffer, ssize_t _length);
-int		_dos_lock(int _fd, long _offset, long _length);
-long		filelength(int _handle);
+unsigned int    _commit(int _fd);
+int 		_dup(int _fd);
+int 		_dup2( int _fd1, int _fd2 );
+int 		_eof( int _fd );
+long		_filelength(int _fd);
 long  		_findfirst(char *_name, struct _finddata_t *_result);
 int  		_findnext(long handle, struct _finddata_t  *_result);
 int  		_findclose(long handle);
-short		_get_dev_info(int _arg);
-int		lock(int _fd, long _offset, long _length);
+void *		_get_osfhandle(int fileno);
+int 		_locking( int _fd, int mode, long nbytes );
+off_t		_lseek(int _fd, off_t _offset, int _whence);
+char *		_mktemp (char *_template);
 int		_open(const char *_path, int _oflag, ...);
+int 		_open_osfhandle ( void *osfhandle, int flags );
+int 		_pipe(int _fildes[2], unsigned int size, int mode );
 size_t		_read(int _fd, void *_buf,size_t _nbyte);
-int		setmode(int _fd, int _newmode);
+int		remove(const char *fn);
+int		rename(const char *old, const char *new);
 int		_setmode(int _fd, int _newmode);
-off_t		tell(int _fd);
-int		_dos_unlock(int _fd, long _offset, long _length);
-int		unlock(int _fd, long _offset, long _length);
+int		_sopen(const char *path, int access, int shflag, ...);
+off_t		_tell(int _fd);
+mode_t		_umask(mode_t newmask);
+int		_unlink(const char *_path);
+//int		unlock(int _fd, long _offset, long _length);
 size_t		_write(int _fd, const void *_buf, size_t _nbyte);
-int	        _chmod(const char *_path, int _func, ...);
-void		_flush_disk_cache(void);
-
-int _dup( int handle);
-int _dup2( int handle1, int handle2 );
-long _lseek(int _filedes, long _offset, int _whence);
-int _open_osfhandle ( void *osfhandle, int flags );
-
-#define open _open
-#define dup _dup
-#define dup2 _dup2
-#define lseek _lseek
-#define open_osfhandle _open_osfhandle
 
 
-
-
+#define access			_access            
+#define chmod                  _chmod             
+#define chsize                 _chsize            
+#define close                  _close             
+#define creat                  _creat             
+#define commit                 _commit            
+#define dup                    _dup               
+#define dup2                   _dup2              
+#define eof                    _eof               
+#define filelength             _filelength        
+#define findfirst              _findfirst         
+#define findnext               _findnext          
+#define findclose              _findclose         
+#define get_osfhandle          _get_osfhandle     
+#define locking                _locking           
+#define lseek                  _lseek             
+#define mktemp                 _mktemp            
+#define open                   _open              
+#define open_osfhandle         _open_osfhandle    
+#define pipe                   _pipe              
+#define read                   _read              
+#define setmode                _setmode           
 #define sopen(path, access, shflag, mode) \
-	open((path), (access)|(shflag), (mode))
+		_open((path), (access)|(shflag), (mode))            
+#define tell                   _tell              
+#define umask                  _umask             
+#define unlink                 _unlink            
+#define unlock                  unlock             
+#define write                  _write       
+
 
 #endif /* !_POSIX_SOURCE */
 #endif /* !__STRICT_ANSI__ */
