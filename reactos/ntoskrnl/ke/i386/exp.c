@@ -630,16 +630,38 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 VOID
 KeDumpStackFrames(PULONG Frame)
 {
+	PULONG StackBase, StackEnd;
+	MEMORY_BASIC_INFORMATION mbi;
+	ULONG ResultLength = sizeof(mbi);
+	NTSTATUS Status;
+
 	DbgPrint("Frames: ");
 	_SEH_TRY
 	{
-		while ( MmIsAddressValid(Frame) )
+		Status = MiQueryVirtualMemory (
+			(HANDLE)-1,
+			Frame,
+			MemoryBasicInformation,
+			&mbi,
+			sizeof(mbi),
+			&ResultLength );
+		if ( !NT_SUCCESS(Status) )
+		{
+			DPRINT1("Can't dump stack frames: NtQueryVirtualMemory() failed: %x\n", Status );
+			return;
+		}
+
+		StackBase = Frame;
+		StackEnd = mbi.BaseAddress + mbi.RegionSize;
+
+		while ( Frame >= StackBase && Frame < StackEnd )
 		{
 			ULONG Addr = Frame[1];
 			if (!KeRosPrintAddress((PVOID)Addr))
 				DbgPrint("<%X>", Addr);
 			if ( Addr == 0 || Addr == 0xDEADBEEF )
 				break;
+			StackBase = Frame;
 			Frame = (PULONG)Frame[0];
 			DbgPrint(" ");
 		}
@@ -655,6 +677,10 @@ VOID STDCALL
 KeRosDumpStackFrames ( PULONG Frame, ULONG FrameCount )
 {
 	ULONG i=0;
+	PULONG StackBase, StackEnd;
+	MEMORY_BASIC_INFORMATION mbi;
+	ULONG ResultLength = sizeof(mbi);
+	NTSTATUS Status;
 
 	DbgPrint("Frames: ");
 	_SEH_TRY
@@ -668,13 +694,31 @@ KeRosDumpStackFrames ( PULONG Frame, ULONG FrameCount )
 #endif
 			//Frame = (PULONG)Frame[0]; // step out of KeRosDumpStackFrames
 		}
-		while ( MmIsAddressValid(Frame) && i++ < FrameCount )
+
+		Status = MiQueryVirtualMemory (
+			(HANDLE)-1,
+			Frame,
+			MemoryBasicInformation,
+			&mbi,
+			sizeof(mbi),
+			&ResultLength );
+		if ( !NT_SUCCESS(Status) )
+		{
+			DPRINT1("Can't dump stack frames: NtQueryVirtualMemory() failed: %x\n", Status );
+			return;
+		}
+
+		StackBase = Frame;
+		StackEnd = mbi.BaseAddress + mbi.RegionSize;
+
+		while ( Frame >= StackBase && Frame < StackEnd && i++ < FrameCount )
 		{
 			ULONG Addr = Frame[1];
 			if (!KeRosPrintAddress((PVOID)Addr))
 				DbgPrint("<%X>", Addr);
 			if ( Addr == 0 || Addr == 0xDEADBEEF )
 				break;
+			StackBase = Frame;
 			Frame = (PULONG)Frame[0];
 			DbgPrint(" ");
 		}
@@ -690,7 +734,11 @@ ULONG STDCALL
 KeRosGetStackFrames ( PULONG Frames, ULONG FrameCount )
 {
 	ULONG Count = 0;
-	PULONG Frame;
+	PULONG StackBase, StackEnd, Frame;
+	MEMORY_BASIC_INFORMATION mbi;
+	ULONG ResultLength = sizeof(mbi);
+	NTSTATUS Status;
+
 	_SEH_TRY
 	{
 #if defined __GNUC__
@@ -698,9 +746,27 @@ KeRosGetStackFrames ( PULONG Frames, ULONG FrameCount )
 #elif defined(_MSC_VER)
 		__asm mov [Frame], ebp
 #endif
-		while ( Count < FrameCount )
+
+		Status = MiQueryVirtualMemory (
+			(HANDLE)-1,
+			Frame,
+			MemoryBasicInformation,
+			&mbi,
+			sizeof(mbi),
+			&ResultLength );
+		if ( !NT_SUCCESS(Status) )
+		{
+			DPRINT1("Can't get stack frames: NtQueryVirtualMemory() failed: %x\n", Status );
+			return 0;
+		}
+
+		StackBase = Frame;
+		StackEnd = mbi.BaseAddress + mbi.RegionSize;
+
+		while ( Count < FrameCount && Frame >= StackBase && Frame < StackEnd )
 		{
 			Frames[Count++] = Frame[1];
+			StackBase = Frame;
 			Frame = (PULONG)Frame[0];
 		}
 	}

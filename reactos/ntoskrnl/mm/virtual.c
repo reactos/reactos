@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: virtual.c,v 1.85 2004/11/13 22:27:16 hbirr Exp $
+/* $Id: virtual.c,v 1.86 2004/12/22 05:17:44 royce Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/virtual.c
@@ -41,12 +41,12 @@ NtFlushVirtualMemory(IN HANDLE ProcessHandle,
 /*
  * FUNCTION: Flushes virtual memory to file
  * ARGUMENTS:
- *        ProcessHandle = Points to the process that allocated the virtual 
+ *        ProcessHandle = Points to the process that allocated the virtual
  *                        memory
  *        BaseAddress = Points to the memory address
  *        NumberOfBytesToFlush = Limits the range to flush,
  *        NumberOfBytesFlushed = Actual number of bytes flushed
- * RETURNS: Status 
+ * RETURNS: Status
  */
 {
    UNIMPLEMENTED;
@@ -125,43 +125,18 @@ NtLockVirtualMemory(HANDLE ProcessHandle,
 }
 
 
-/* (tMk 2004.II.4)
- * FUNCTION: 
- * Called from VirtualQueryEx (lib\kernel32\mem\virtual.c)
- *
- */
-NTSTATUS STDCALL 
-NtQueryVirtualMemory (IN HANDLE ProcessHandle,
+NTSTATUS FASTCALL
+MiQueryVirtualMemory (IN HANDLE ProcessHandle,
                       IN PVOID Address,
                       IN CINT VirtualMemoryInformationClass,
                       OUT PVOID VirtualMemoryInformation,
                       IN ULONG Length,
-                      OUT PULONG UnsafeResultLength)
+                      OUT PULONG ResultLength)
 {
    NTSTATUS Status;
    PEPROCESS Process;
    MEMORY_AREA* MemoryArea;
-   ULONG ResultLength = 0;
    PMADDRESS_SPACE AddressSpace;
-   KPROCESSOR_MODE PrevMode;
-   union
-   {
-      MEMORY_BASIC_INFORMATION BasicInfo;
-   }
-   VirtualMemoryInfo;
-
-   DPRINT("NtQueryVirtualMemory(ProcessHandle %x, Address %x, "
-          "VirtualMemoryInformationClass %d, VirtualMemoryInformation %x, "
-          "Length %lu ResultLength %x)\n",ProcessHandle,Address,
-          VirtualMemoryInformationClass,VirtualMemoryInformation,
-          Length,ResultLength);
-
-   PrevMode =  ExGetPreviousMode();
-
-   if (PrevMode == UserMode && Address >= (PVOID)KERNEL_BASE)
-   {
-      return STATUS_INVALID_PARAMETER;
-   }
 
    if (Address < (PVOID)KERNEL_BASE)
    {
@@ -190,14 +165,15 @@ NtQueryVirtualMemory (IN HANDLE ProcessHandle,
    {
       case MemoryBasicInformation:
          {
-	    PMEMORY_BASIC_INFORMATION Info = &VirtualMemoryInfo.BasicInfo;
+	    PMEMORY_BASIC_INFORMATION Info =
+		(PMEMORY_BASIC_INFORMATION)VirtualMemoryInformation;
             if (Length != sizeof(MEMORY_BASIC_INFORMATION))
             {
                MmUnlockAddressSpace(AddressSpace);
                ObDereferenceObject(Process);
                return(STATUS_INFO_LENGTH_MISMATCH);
             }
-            
+
             if (MemoryArea == NULL)
             {
 	       Info->Type = 0;
@@ -208,19 +184,19 @@ NtQueryVirtualMemory (IN HANDLE ProcessHandle,
 	       Info->AllocationBase = NULL;
 	       Info->RegionSize = MmFindGapAtAddress(AddressSpace, Info->BaseAddress);
                Status = STATUS_SUCCESS;
-               ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
+               *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
 	    }
-            else 
+            else
 	    {
 	       switch(MemoryArea->Type)
 	       {
 		  case MEMORY_AREA_VIRTUAL_MEMORY:
                      Status = MmQueryAnonMem(MemoryArea, Address, Info,
-                                             &ResultLength);
+                                             ResultLength);
 		     break;
 	          case MEMORY_AREA_SECTION_VIEW:
                      Status = MmQuerySectionView(MemoryArea, Address, Info,
-                                                 &ResultLength);
+                                                 ResultLength);
                      break;
 		  case MEMORY_AREA_NO_ACCESS:
 	             Info->Type = 0;
@@ -231,7 +207,7 @@ NtQueryVirtualMemory (IN HANDLE ProcessHandle,
 	             Info->AllocationBase = MemoryArea->BaseAddress;
 	             Info->RegionSize = MemoryArea->Length;
                      Status = STATUS_SUCCESS;
-                     ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
+                     *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
 	             break;
 		  case MEMORY_AREA_SHARED_DATA:
 	             Info->Type = 0;
@@ -242,11 +218,52 @@ NtQueryVirtualMemory (IN HANDLE ProcessHandle,
 	             Info->AllocationBase = MemoryArea->BaseAddress;
 	             Info->RegionSize = MemoryArea->Length;
                      Status = STATUS_SUCCESS;
-                     ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
+                     *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
+		     break;
+		  case MEMORY_AREA_SYSTEM:
+		     {
+			static int warned = 0;
+			if ( !warned )
+			{
+			  DPRINT1("FIXME: MEMORY_AREA_SYSTEM case incomplete (or possibly wrong) for NtQueryVirtualMemory()\n");
+			  warned = 1;
+			}
+		     }
+		     /* FIXME - don't have a clue if this is right, but it's better than nothing */
+	             Info->Type = 0;
+                     Info->State = MEM_COMMIT;
+	             Info->Protect = MemoryArea->Attributes;
+		     Info->AllocationProtect = MemoryArea->Attributes;
+                     Info->BaseAddress = MemoryArea->BaseAddress;
+	             Info->AllocationBase = MemoryArea->BaseAddress;
+	             Info->RegionSize = MemoryArea->Length;
+                     Status = STATUS_SUCCESS;
+                     *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
+		     break;
+		  case MEMORY_AREA_KERNEL_STACK:
+		     {
+			static int warned = 0;
+			if ( !warned )
+			{
+			  DPRINT1("FIXME: MEMORY_AREA_KERNEL_STACK case incomplete (or possibly wrong) for NtQueryVirtualMemory()\n");
+			  warned = 1;
+			}
+		     }
+		     /* FIXME - don't have a clue if this is right, but it's better than nothing */
+	             Info->Type = 0;
+                     Info->State = MEM_COMMIT;
+	             Info->Protect = MemoryArea->Attributes;
+		     Info->AllocationProtect = MemoryArea->Attributes;
+                     Info->BaseAddress = MemoryArea->BaseAddress;
+	             Info->AllocationBase = MemoryArea->BaseAddress;
+	             Info->RegionSize = MemoryArea->Length;
+                     Status = STATUS_SUCCESS;
+                     *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
 		     break;
 		  default:
+		     DPRINT1("unhandled memory area type: 0x%x\n", MemoryArea->Type);
 	             Status = STATUS_UNSUCCESSFUL;
-                     ResultLength = 0;
+                     *ResultLength = 0;
 	       }
 	    }
             break;
@@ -255,7 +272,7 @@ NtQueryVirtualMemory (IN HANDLE ProcessHandle,
       default:
          {
             Status = STATUS_INVALID_INFO_CLASS;
-            ResultLength = 0;
+            *ResultLength = 0;
             break;
          }
    }
@@ -266,6 +283,52 @@ NtQueryVirtualMemory (IN HANDLE ProcessHandle,
       ObDereferenceObject(Process);
    }
 
+   return Status;
+}
+
+/* (tMk 2004.II.4)
+ * FUNCTION:
+ * Called from VirtualQueryEx (lib\kernel32\mem\virtual.c)
+ *
+ */
+NTSTATUS STDCALL
+NtQueryVirtualMemory (IN HANDLE ProcessHandle,
+                      IN PVOID Address,
+                      IN CINT VirtualMemoryInformationClass,
+                      OUT PVOID VirtualMemoryInformation,
+                      IN ULONG Length,
+                      OUT PULONG UnsafeResultLength)
+{
+   NTSTATUS Status;
+   ULONG ResultLength = 0;
+   KPROCESSOR_MODE PrevMode;
+   union
+   {
+      MEMORY_BASIC_INFORMATION BasicInfo;
+   }
+   VirtualMemoryInfo;
+
+   DPRINT("NtQueryVirtualMemory(ProcessHandle %x, Address %x, "
+          "VirtualMemoryInformationClass %d, VirtualMemoryInformation %x, "
+          "Length %lu ResultLength %x)\n",ProcessHandle,Address,
+          VirtualMemoryInformationClass,VirtualMemoryInformation,
+          Length,ResultLength);
+
+   PrevMode =  ExGetPreviousMode();
+
+   if (PrevMode == UserMode && Address >= (PVOID)KERNEL_BASE)
+   {
+      DPRINT1("Invalid parameter\n");
+      return STATUS_INVALID_PARAMETER;
+   }
+
+   Status = MiQueryVirtualMemory ( ProcessHandle,
+       Address,
+       VirtualMemoryInformationClass,
+       &VirtualMemoryInfo,
+       Length,
+       &ResultLength );
+
    if (NT_SUCCESS(Status) && ResultLength > 0)
    {
       Status = MmCopyToCaller(VirtualMemoryInformation, &VirtualMemoryInfo, ResultLength);
@@ -274,7 +337,7 @@ NtQueryVirtualMemory (IN HANDLE ProcessHandle,
          ResultLength = 0;
       }
    }
-   
+
    if (UnsafeResultLength != NULL)
    {
       MmCopyToCaller(UnsafeResultLength, &ResultLength, sizeof(ULONG));
@@ -284,7 +347,7 @@ NtQueryVirtualMemory (IN HANDLE ProcessHandle,
 
 
 /* (tMk 2004.II.5)
- * FUNCTION: 
+ * FUNCTION:
  * Called from VirtualProtectEx (lib\kernel32\mem\virtual.c)
  *
  */
@@ -310,13 +373,13 @@ NtProtectVirtualMemory(IN HANDLE ProcessHandle,
    if (!NT_SUCCESS(Status))
       return Status;
 
-   // (tMk 2004.II.5) in Microsoft SDK I read: 
+   // (tMk 2004.II.5) in Microsoft SDK I read:
    // 'if this parameter is NULL or does not point to a valid variable, the function fails'
-   if(UnsafeOldAccessProtection == NULL) 
+   if(UnsafeOldAccessProtection == NULL)
    {
       return(STATUS_INVALID_PARAMETER);
    }
-   
+
    NumberOfBytesToProtect =
       PAGE_ROUND_UP(BaseAddress + NumberOfBytesToProtect) -
       PAGE_ROUND_DOWN(BaseAddress);
@@ -372,7 +435,7 @@ NtProtectVirtualMemory(IN HANDLE ProcessHandle,
 
 
 /* (tMk 2004.II.05)
- * FUNCTION: 
+ * FUNCTION:
  * Called from ReadProcessMemory (lib\kernel32\mem\procmem.c) and KlInitPeb(lib\kernel32\process\create.c)
  *
  * NOTE: This function will be correct if MmProbeAndLockPages() would be fully IMPLEMENTED.
@@ -416,7 +479,7 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
       Mdl = MmCreateMdl(NULL,
                         Buffer,
                         NumberOfBytesToRead);
-      if(Mdl == NULL) 
+      if(Mdl == NULL)
       {
          ObDereferenceObject(Process);
          return(STATUS_NO_MEMORY);
@@ -482,7 +545,7 @@ NtUnlockVirtualMemory(HANDLE ProcessHandle,
    Mdl = MmCreateMdl(NULL,
                      BaseAddress,
                      NumberOfBytesToUnlock);
-   if(Mdl == NULL) 
+   if(Mdl == NULL)
    {
       ObDereferenceObject(Process);
       return(STATUS_NO_MEMORY);
@@ -506,7 +569,7 @@ NtUnlockVirtualMemory(HANDLE ProcessHandle,
 /* (tMk 2004.II.05)
  * FUNCTION:
  * Called from WriteProcessMemory (lib\kernel32\mem\procmem.c) and KlInitPeb(lib\kernel32\process\create.c)
- * 
+ *
  * NOTE: This function will be correct if MmProbeAndLockPages() would be fully IMPLEMENTED.
  */
 NTSTATUS STDCALL
