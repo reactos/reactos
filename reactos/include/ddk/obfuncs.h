@@ -8,6 +8,14 @@
  */
 VOID STDCALL ObDereferenceObject(PVOID Object);
 
+NTSTATUS STDCALL ObOpenObjectByName(POBJECT_ATTRIBUTES ObjectAttributes,
+				    POBJECT_TYPE ObjectType,
+				    ULONG Unknown3,	/* ?? */
+				    KPROCESSOR_MODE AccessMode,
+				    ACCESS_MASK DesiredAccess,
+				    PACCESS_STATE PassedAccessState,
+				    PHANDLE Handle);
+
 /*
  * FUNCTION: Performs access validation on an object handle and if access
  * is granted returns a pointer to the object's body

@@ -26,14 +26,15 @@ PDIRECTORY_OBJECT NameSpaceRoot = NULL;
 
 /* FUNCTIONS **************************************************************/
 
-NTSTATUS STDCALL ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
-					 ULONG Attributes,
-					 PACCESS_STATE PassedAccessState,
-					 ACCESS_MASK DesiredAccess,
-					 POBJECT_TYPE ObjectType,
-					 KPROCESSOR_MODE AccessMode,
-					 PVOID ParseContext,
-					 PVOID* ObjectPtr)
+NTSTATUS STDCALL
+ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
+			ULONG Attributes,
+			PACCESS_STATE PassedAccessState,
+			ACCESS_MASK DesiredAccess,
+			POBJECT_TYPE ObjectType,
+			KPROCESSOR_MODE AccessMode,
+			PVOID ParseContext,
+			PVOID* ObjectPtr)
 {
    PVOID Object = NULL;
    UNICODE_STRING RemainingPath;
@@ -42,7 +43,7 @@ NTSTATUS STDCALL ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
 
    InitializeObjectAttributes(&ObjectAttributes,
 			      ObjectPath,
-			      0,
+			      Attributes,
 			      NULL,
 			      NULL);
    Status = ObFindObject(&ObjectAttributes,
@@ -51,12 +52,15 @@ NTSTATUS STDCALL ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
 			 ObjectType);
    if (!NT_SUCCESS(Status))
      {
-	return(STATUS_UNSUCCESSFUL);
+	return(Status);
      }
+CHECKPOINT;
+DPRINT("RemainingPath.Buffer '%S' Object %p\n", RemainingPath.Buffer, Object);
 
-   if (RemainingPath.Buffer != NULL ||
-       Object == NULL)
+   if (RemainingPath.Buffer != NULL || Object == NULL)
      {
+CHECKPOINT;
+DPRINT("Object %p\n", Object);
 	*ObjectPtr = NULL;
 	RtlFreeUnicodeString (&RemainingPath);
 	return(STATUS_UNSUCCESSFUL);
@@ -65,6 +69,77 @@ NTSTATUS STDCALL ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
    RtlFreeUnicodeString (&RemainingPath);
    return(STATUS_SUCCESS);
 }
+
+
+/**********************************************************************
+ * NAME							EXPORTED
+ *	ObOpenObjectByName
+ *	
+ * DESCRIPTION
+ *	Obtain a handle to an existing object.
+ *	
+ * ARGUMENTS
+ *	ObjectAttributes
+ *		...
+ *	ObjectType
+ *		...
+ *	Unknown3
+ *		???
+ *	AccessMode
+ *		...
+ *	DesiredAccess
+ *		...
+ *	PassedAccessState
+ *		...
+ *	Handle
+ *		Handle to close.
+ *
+ * RETURN VALUE
+ * 	Status.
+ */
+NTSTATUS STDCALL
+ObOpenObjectByName(POBJECT_ATTRIBUTES ObjectAttributes,
+		   POBJECT_TYPE ObjectType,
+		   ULONG Unknown3,			/* ?? */
+		   KPROCESSOR_MODE AccessMode,
+		   ACCESS_MASK DesiredAccess,
+		   PACCESS_STATE PassedAccessState,
+		   PHANDLE Handle)
+{
+   UNICODE_STRING RemainingPath;
+   PVOID Object = NULL;
+   NTSTATUS Status;
+
+   DPRINT("ObOpenObjectByName()\n");
+
+   Status = ObFindObject(ObjectAttributes,
+			 &Object,
+			 &RemainingPath,
+			 ObjectType);
+   if (!NT_SUCCESS(Status))
+     {
+	return Status;
+     }
+
+   if (RemainingPath.Buffer != NULL ||
+       Object == NULL)
+     {
+	RtlFreeUnicodeString(&RemainingPath);
+	return STATUS_UNSUCCESSFUL;
+     }
+
+   Status = ObCreateHandle(PsGetCurrentProcess(),
+			   Object,
+			   DesiredAccess,
+			   FALSE,
+			   Handle);
+
+   ObDereferenceObject(Object);
+   RtlFreeUnicodeString(&RemainingPath);
+
+   return Status;
+}
+
 
 VOID STDCALL ObAddEntryDirectory(PDIRECTORY_OBJECT Parent,
 				 POBJECT Object,
@@ -95,7 +170,7 @@ PVOID ObpFindEntryDirectory(PDIRECTORY_OBJECT DirectoryObject,
    PLIST_ENTRY current = DirectoryObject->head.Flink;
    POBJECT_HEADER current_obj;
 
-   DPRINT("ObDirLookup(dir %x, name %S)\n",DirectoryObject, Name);
+   DPRINT("ObFindEntryDirectory(dir %x, name %S)\n",DirectoryObject, Name);
    
    if (Name[0]==0)
      {
@@ -133,7 +208,6 @@ PVOID ObpFindEntryDirectory(PDIRECTORY_OBJECT DirectoryObject,
      }
    DPRINT("%s() = NULL\n",__FUNCTION__);
    return(NULL);
-
 }
 
 NTSTATUS

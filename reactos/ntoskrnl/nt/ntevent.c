@@ -80,7 +80,7 @@ NTSTATUS STDCALL NtClearEvent (IN HANDLE EventHandle)
 				      UserMode,
 				      (PVOID*)&Event,
 				      NULL);
-   if (Status != STATUS_SUCCESS)
+   if (!NT_SUCCESS(Status))
      {
 	return(Status);
      }
@@ -111,34 +111,24 @@ NTSTATUS STDCALL NtCreateEvent (OUT PHANDLE		EventHandle,
 }
 
 
-NTSTATUS STDCALL NtOpenEvent (OUT PHANDLE		EventHandle,
-			      IN ACCESS_MASK		DesiredAccess,
-			      IN POBJECT_ATTRIBUTES	ObjectAttributes)
+NTSTATUS STDCALL
+NtOpenEvent(OUT PHANDLE EventHandle,
+	    IN ACCESS_MASK DesiredAccess,
+	    IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
    NTSTATUS Status;
-   PKEVENT Event;
 
-   Status = ObReferenceObjectByName(ObjectAttributes->ObjectName,
-				    ObjectAttributes->Attributes,
-				    NULL,
-				    DesiredAccess,
-				    ExEventObjectType,
-				    UserMode,
-				    NULL,
-				    (PVOID*)&Event);
-   if (Status != STATUS_SUCCESS)
-     {
-	return(Status);
-     }
+   DPRINT("ObjectName '%wZ'\n", ObjectAttributes->ObjectName);
 
-   Status = ObCreateHandle(PsGetCurrentProcess(),
-			   Event,
-			   DesiredAccess,
-			   FALSE,
-			   EventHandle);
-   ObDereferenceObject(Event);
+   Status = ObOpenObjectByName(ObjectAttributes,
+			       ExEventObjectType,
+			       0,
+			       UserMode,
+			       DesiredAccess,
+			       NULL,
+			       EventHandle);
    
-   return(STATUS_SUCCESS);
+   return(Status);
 }
 
 
@@ -222,7 +212,7 @@ NTSTATUS STDCALL NtResetEvent(HANDLE	EventHandle,
 				      UserMode,
 				      (PVOID*)&Event,
 				      NULL);
-   if (Status != STATUS_SUCCESS)
+   if (!NT_SUCCESS(Status))
      {
 	return(Status);
      }
@@ -246,13 +236,11 @@ NTSTATUS STDCALL NtSetEvent(IN	HANDLE	EventHandle,
 				      UserMode,
 				      (PVOID*)&Event,
 				      NULL);
-   if (Status != STATUS_SUCCESS)
+   if (!NT_SUCCESS(Status))
      {
 	return(Status);
      }
    KeSetEvent(Event,EVENT_INCREMENT,FALSE);
-      
-   
    ObDereferenceObject(Event);
    return(STATUS_SUCCESS);
 }

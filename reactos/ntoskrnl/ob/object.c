@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.29 2000/10/22 16:36:53 ekohl Exp $
+/* $Id: object.c,v 1.30 2001/01/20 18:33:05 ekohl Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -150,17 +150,12 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
    
    if ((ObjectAttributes->RootDirectory == NULL) && (Path[0] != '\\'))
      {
+	ObDereferenceObject(CurrentObject);
 	return(STATUS_UNSUCCESSFUL);
      }
    
    if (Path)
      {
-//	if ( Path[0] != '\\' )
-//	{
-//	  RtlCreateUnicodeString (&PathString, L"\\");
-//	  RtlAppendUnicodeToString (&PathString, Path);
-//	}
-//	else
 	RtlCreateUnicodeString (&PathString, Path);
 	current = PathString.Buffer;
      }
