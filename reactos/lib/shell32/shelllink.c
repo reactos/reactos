@@ -649,9 +649,6 @@ static HRESULT Stream_WriteLocationInfo( IStream* stm, LPCSTR filename )
     return IStream_Write( stm, &loc, loc.dwTotalSize, &count );
 }
 
-extern UINT SHELL_FindExecutable(LPCSTR lpPath, LPCSTR lpFile, LPCSTR lpOperation,
-                                 LPSTR lpResult, LPSTR key, void **env, LPCSTR args);
-
 /************************************************************************
  * IPersistStream_Save (IPersistStream)
  *
