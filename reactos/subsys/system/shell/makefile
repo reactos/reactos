@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.2 2001/02/12 03:50:00 phreak Exp $
+# $Id: makefile,v 1.3 2001/02/19 15:04:50 dwelch Exp $
 #
 # Shell: Simple shell application
 #
@@ -18,7 +18,7 @@ BASE_CFLAGS = -I../../../include
 all: shell.exe
 
 shell.exe: $(OBJECTS) $(LIBS)
-	$(CC) $(OBJECTS) $(LIBS) -lgcc -o shell.exe
+	$(CC) $(OBJECTS) $(LIBS) -o shell.exe
 	$(NM) --numeric-sort shell.exe > shell.sym
 
 clean: $(CLEAN_FILES:%=%_clean)
@@ -40,3 +40,6 @@ $(PROGS:%=../../../$(DIST_DIR)/apps/%): ../../../$(DIST_DIR)/apps/%: %
 
 
 include $(PATH_TO_TOP)/rules.mak
+
+
+

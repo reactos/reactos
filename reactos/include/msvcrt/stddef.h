@@ -28,14 +28,14 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.1 $
- * $Author: ekohl $
- * $Date: 2000/12/03 17:49:21 $
+ * $Revision: 1.2 $
+ * $Author: dwelch $
+ * $Date: 2001/02/19 15:04:50 $
  *
  */
 
 
-#ifndef _STDDEF_H_
+#ifndef __MSVCRT_STDDEF_H_
 
 /*
  * Any one of these symbols __need_* means that a standard header file
@@ -45,7 +45,7 @@
 #if (!defined(__need_wchar_t) && !defined(__need_wint_t)	\
      && !defined(__need_size_t) && !defined(__need_ptrdiff_t)	\
      && !defined(__need_NULL))
-#define _STDDEF_H_
+#define __MSVCRT_STDDEF_H_
 #endif
 
 /*
@@ -64,7 +64,7 @@
 
 /* Define this type if we are doing the whole job, or if we want this type
  * in particular.  */
-#if defined (_STDDEF_H_) || defined (__need_ptrdiff_t)
+#if defined (__MSVCRT_STDDEF_H_) || defined (__need_ptrdiff_t)
 
 #ifndef _PTRDIFF_T_
 #define _PTRDIFF_T_
@@ -77,7 +77,7 @@ typedef __PTRDIFF_TYPE__	ptrdiff_t;
 /* If this symbol has done its job, get rid of it.  */
 #undef	__need_ptrdiff_t
 
-#endif /* _STDDEF_H_ or __need_ptrdiff_t.  */
+#endif /* __MSVCRT_STDDEF_H_ or __need_ptrdiff_t.  */
 
 /*
  * Unsigned type of `sizeof' something.
@@ -86,7 +86,7 @@ typedef __PTRDIFF_TYPE__	ptrdiff_t;
 
 /* Define this type if we are doing the whole job,
  * or if we want this type in particular.  */
-#if defined (_STDDEF_H_) || defined (__need_size_t)
+#if defined (__MSVCRT_STDDEF_H_) || defined (__need_size_t)
 
 #ifndef _SIZE_T_
 #define _SIZE_T_
@@ -100,7 +100,7 @@ typedef __SIZE_TYPE__		size_t;
 
 #undef	__need_size_t
 
-#endif /* _STDDEF_H_ or __need_size_t.  */
+#endif /* __MSVCRT_STDDEF_H_ or __need_size_t.  */
 
 /* Wide character type.
    Locale-writers should change this as necessary to
@@ -109,7 +109,7 @@ typedef __SIZE_TYPE__		size_t;
 
 /* Define this type if we are doing the whole job,
    or if we want this type in particular.  */
-#if defined (_STDDEF_H_) || defined (__need_wchar_t)
+#if defined (__MSVCRT_STDDEF_H_) || defined (__need_wchar_t)
 
 #ifndef _WCHAR_T_
 #define _WCHAR_T_
@@ -125,12 +125,12 @@ typedef __WCHAR_TYPE__		wchar_t;
 
 #undef	__need_wchar_t
 
-#endif	/* _STDDEF_H_ or __need_wchar_t. */
+#endif	/* __MSVCRT_STDDEF_H_ or __need_wchar_t. */
 
 /*
  * wint_t, the equivalent of int in wchar ctype functions.
  */
-#if defined (_STDDEF_H_) || defined (__need_wint_t)
+#if defined (__MSVCRT_STDDEF_H_) || defined (__need_wint_t)
 
 #ifndef _WINT_T_
 #define _WINT_T_
@@ -144,18 +144,18 @@ typedef	__WINT_TYPE__		wint_t;
 
 #undef	__need_wint_t
 
-#endif	/* _STDDEF_H_ or __need_wint_t. */
+#endif	/* __MSVCRT_STDDEF_H_ or __need_wint_t. */
 
 
 /*
  * A null pointer constant.
  */
 
-#if defined (_STDDEF_H_) || defined (__need_NULL)
+#if defined (__MSVCRT_STDDEF_H_) || defined (__need_NULL)
 
 #undef NULL
 #define NULL (0)
-#endif /* _STDDEF_H_ or __need_NULL */
+#endif /* __MSVCRT_STDDEF_H_ or __need_NULL */
 
 #undef	__need_NULL
 
@@ -166,9 +166,9 @@ typedef	__WINT_TYPE__		wint_t;
  * zero.
  */
 
-#if defined (_STDDEF_H_)
+#if defined (__MSVCRT_STDDEF_H_)
 #define	offsetof(TYPE, MEMBER)	((size_t) &( ((TYPE *) 0)->MEMBER ))
-#endif	/* _STDDEF_H_ */
+#endif	/* __MSVCRT_STDDEF_H_ */
 
 
-#endif /* not _STDDEF_H_ */
+#endif /* not __MSVCRT_STDDEF_H_ */

@@ -1,4 +1,4 @@
-/* $Id: sprintf.c,v 1.3 2000/04/12 22:40:42 ariadne Exp $
+/* $Id: sprintf.c,v 1.4 2001/02/19 15:04:51 dwelch Exp $
  *
  * user32.dll
  *
@@ -393,7 +393,7 @@ wvsnprintfA(
 		switch (format.type)
 		{
 		case WPR_WCHAR:
-			if ((*p = (CHAR) va_arg( args, WCHAR )))
+			if ((*p = (CHAR) (WCHAR) va_arg( args, int)))
 			{
 				p++;
 			}
@@ -408,7 +408,7 @@ wvsnprintfA(
 			break;
 			
 		case WPR_CHAR:
-			if ((*p = va_arg( args, CHAR )))
+			if ((*p = (CHAR) va_arg( args, int )))
 			{
 				p++;
 			}
@@ -764,7 +764,7 @@ wvsnprintfW(
 		switch (format.type)
 		{
 		case WPR_WCHAR:
-			if ((*p = va_arg( args, WCHAR )))
+			if ((*p = (WCHAR) va_arg( args, int)))
 			{
 				p++;
 			}
@@ -779,7 +779,7 @@ wvsnprintfW(
 			break;
 			
 		case WPR_CHAR:
-			if ((*p = (WCHAR) va_arg( args, CHAR )))
+			if ((*p = (WCHAR)(CHAR) va_arg( args, int )))
 			{
 				p++;
 			}

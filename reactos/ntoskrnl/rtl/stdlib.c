@@ -1,4 +1,4 @@
-/* $Id: stdlib.c,v 1.4 1999/12/30 14:37:54 ekohl Exp $
+/* $Id: stdlib.c,v 1.5 2001/02/19 15:04:51 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

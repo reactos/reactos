@@ -146,28 +146,28 @@ HICON LoadStandardIcon(UINT IconId)
 	HMODULE hModule = LoadLibraryA("user32.dll");
 	switch (IconId )
 	{	
-		case IDI_APPLICATION:
+		case (UINT)IDI_APPLICATION:
 			IconId = 100;
 			return LoadIconW(hModule,(LPWSTR)IconId);
 			break;
-		case IDI_ASTERISK:
+		case (UINT)IDI_ASTERISK:
 		//
 			IconId = 103;
 			return LoadIconW(hModule,(LPWSTR)IconId);
 			break;
-		case IDI_EXCLAMATION:
+		case (UINT)IDI_EXCLAMATION:
 			IconId = 101;
 			return LoadIconW(hModule,(LPWSTR)IconId);
 			break;
-		case IDI_HAND:
+		case (UINT)IDI_HAND:
 		// 
 			return LoadIconW(hModule,(LPWSTR)MAKEINTRESOURCE(104));
 			break;
-		case IDI_QUESTION:
+		case (UINT)IDI_QUESTION:
 			IconId = 102;
 			return LoadIconW(hModule,(LPWSTR)IconId);
 			break;
-		case IDI_WINLOGO:
+		case (UINT)IDI_WINLOGO:
 			IconId = 105;
 			return LoadIconW(hModule,(LPWSTR)IconId);
 			break;

@@ -1,4 +1,4 @@
-/* $Id: sprintf.c,v 1.3 2000/02/27 15:43:10 ekohl Exp $
+/* $Id: sprintf.c,v 1.4 2001/02/19 15:04:51 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -212,7 +212,8 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 				while (--field_width > 0)
 					*str++ = ' ';
 			if (qualifier == 'l' || qualifier == 'w')
-				*str++ = (unsigned char) va_arg(args, wchar_t);
+				*str++ 
+				  = (unsigned char)(wchar_t) va_arg(args, int);
 			else
 				*str++ = (unsigned char) va_arg(args, int);
 			while (--field_width > 0)
@@ -226,7 +227,8 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 			if (qualifier == 'h')
 				*str++ = (unsigned char) va_arg(args, int);
 			else
-				*str++ = (unsigned char) va_arg(args, wchar_t);
+				*str++ 
+				  = (unsigned char)(wchar_t) va_arg(args, int);
 			while (--field_width > 0)
 				*str++ = ' ';
 			continue;
@@ -390,9 +392,9 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 			num = va_arg(args, unsigned long);
 		else if (qualifier == 'h') {
 			if (flags & SIGN)
-				num = va_arg(args, short);
+				num = va_arg(args, int);
 			else
-				num = va_arg(args, unsigned short);
+				num = va_arg(args, unsigned int);
 		}
 		else {
 			if (flags & SIGN)

@@ -602,7 +602,7 @@ int __vfwprintf(FILE *f, const wchar_t *fmt, va_list args)
 			if (qualifier == L'h')
 				putwc((wchar_t) va_arg(args, int), f);
 			else
-				putwc((wchar_t) va_arg(args, wchar_t), f);
+				putwc((wchar_t) va_arg(args, int), f);
 			while (--field_width > 0)
 				putwc(L' ', f);
 			continue;
@@ -612,7 +612,7 @@ int __vfwprintf(FILE *f, const wchar_t *fmt, va_list args)
 				while (--field_width > 0)
 					putwc(L' ', f);
 			if (qualifier == L'l' || qualifier == L'w')
-				putwc((unsigned char) va_arg(args, wchar_t), f);
+				putwc((unsigned char) va_arg(args, int), f);
 			else
 				putwc((unsigned char) va_arg(args, int), f);
 			while (--field_width > 0)
@@ -848,9 +848,9 @@ int __vfwprintf(FILE *f, const wchar_t *fmt, va_list args)
 			num = va_arg(args, unsigned long);
 		else if (qualifier == L'h') {
 			if (flags & SIGN)
-				num = va_arg(args, short);
+				num = va_arg(args, int);
 			else
-				num = va_arg(args, unsigned short);
+				num = va_arg(args, unsigned int);
 		}
 		else if (flags & SIGN)
 			num = va_arg(args, int);

@@ -33,7 +33,7 @@ $(PROGS:%=../../$(DIST_DIR)/apps/%.exe): ../../$(DIST_DIR)/apps/%.exe: %.exe
 	$(CP) $*.exe ../../$(DIST_DIR)/apps/$*.exe
 
 gditest.exe: gditest.c
-	$(CC) gditest.c $(LIBS) -lgcc -o gditest.exe
+	$(CC) $(CFLAGS) gditest.c $(LIBS) -o gditest.exe
 	$(NM) --numeric-sort gditest.exe > gditest.sym
 
 include ../../rules.mak

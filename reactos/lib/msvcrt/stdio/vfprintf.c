@@ -598,7 +598,7 @@ int __vfprintf(FILE *f, const char *fmt, va_list args)
 				while (--field_width > 0)
 					putc(' ', f);
 			if (qualifier == 'l' || qualifier == 'w')
-				putc((unsigned char) va_arg(args, wchar_t), f);
+				putc((unsigned char)(wchar_t) va_arg(args, int), f);
 			else
 				putc((unsigned char) va_arg(args, int), f);
 			while (--field_width > 0)
@@ -612,7 +612,7 @@ int __vfprintf(FILE *f, const char *fmt, va_list args)
 			if (qualifier == 'h')
 				putc((unsigned char) va_arg(args, int), f);
 			else
-				putc((unsigned char) va_arg(args, wchar_t), f);
+				putc((unsigned char)(wchar_t) va_arg(args, int), f);
 			while (--field_width > 0)
 				putc(' ', f);
 			continue;
@@ -846,9 +846,9 @@ int __vfprintf(FILE *f, const char *fmt, va_list args)
 			num = va_arg(args, unsigned long);
 		else if (qualifier == 'h') {
 			if (flags & SIGN)
-				num = va_arg(args, short);
+				num = va_arg(args, int);
 			else
-				num = va_arg(args, unsigned short);
+				num = va_arg(args, unsigned int);
 		}
 		else if (flags & SIGN)
 			num = va_arg(args, int);

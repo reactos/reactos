@@ -1,4 +1,4 @@
-/* $Id: swprintf.c,v 1.5 2000/02/27 15:43:58 ekohl Exp $
+/* $Id: swprintf.c,v 1.6 2001/02/19 15:04:51 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -228,7 +228,8 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 			if (qualifier == 'h')
 				*str++ = (wchar_t) va_arg(args, int);
 			else
-				*str++ = (wchar_t) va_arg(args, wchar_t);
+				*str++ = 
+				  (wchar_t) va_arg(args, int);
 			while (--field_width > 0)
 				*str++ = L' ';
 			continue;
@@ -238,7 +239,7 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 				while (--field_width > 0)
 					*str++ = L' ';
 			if (qualifier == 'l' || qualifier == 'w')
-				*str++ = (wchar_t) va_arg(args, wchar_t);
+				*str++ = (wchar_t) va_arg(args, int);
 			else
 				*str++ = (wchar_t) va_arg(args, int);
 			while (--field_width > 0)
@@ -404,9 +405,9 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 			num = va_arg(args, unsigned long);
 		else if (qualifier == 'h') {
 			if (flags & SIGN)
-				num = va_arg(args, short);
+				num = va_arg(args, int);
 			else
-				num = va_arg(args, unsigned short);
+				num = va_arg(args, unsigned int);
 		}
 		else {
 			if (flags & SIGN)

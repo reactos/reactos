@@ -1,4 +1,4 @@
-/* $Id: sid.c,v 1.6 2000/10/08 19:12:01 ekohl Exp $
+/* $Id: sid.c,v 1.7 2001/02/19 15:04:51 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -12,6 +12,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <string.h>
 
 #include <internal/debug.h>
 
