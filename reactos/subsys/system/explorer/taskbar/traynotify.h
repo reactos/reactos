@@ -120,6 +120,6 @@ protected:
 	bool	FormatTime();
 	void	Paint();
 
-	WCHAR	_time[16];
+	TCHAR	_time[16];
 	ToolTip	_tooltip;
 };
