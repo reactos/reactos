@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.115 2004/01/04 21:26:59 weiden Exp $
+/* $Id: dc.c,v 1.116 2004/01/05 15:43:55 weiden Exp $
  *
  * DC.C - Device context functions
  *
@@ -2000,8 +2000,8 @@ DC_UpdateXforms(PDC  dc)
   FLOAT  scaleX, scaleY;
 
   /* Construct a transformation to do the window-to-viewport conversion */
-  scaleX = (FLOAT)dc->vportExtX / (FLOAT)dc->wndExtX;
-  scaleY = (FLOAT)dc->vportExtY / (FLOAT)dc->wndExtY;
+  scaleX = (dc->wndExtX ? (FLOAT)dc->vportExtX / (FLOAT)dc->wndExtX : 0.0);
+  scaleY = (dc->wndExtY ? (FLOAT)dc->vportExtY / (FLOAT)dc->wndExtY : 0.0);
   xformWnd2Vport.eM11 = scaleX;
   xformWnd2Vport.eM12 = 0.0;
   xformWnd2Vport.eM21 = 0.0;
