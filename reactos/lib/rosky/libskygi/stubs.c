@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.7 2004/08/13 20:14:40 navaraf Exp $
+/* $Id: stubs.c,v 1.8 2004/08/14 01:03:38 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         SkyOS GI library
@@ -18,10 +18,10 @@
  * @unimplemented
  */
 int __cdecl
-DefaultWindowFunc(HANDLE hWin,
+DefaultWindowFunc(s_window *win,
                   s_gi_msg *pMsg)
 {
-  STUB("DefaultWindowFunc(0x%x, 0x%x) returns 0!\n", hWin, pMsg);
+  STUB("DefaultWindowFunc(0x%x, 0x%x) returns 0!\n", win, pMsg);
   return 0;
 }
 
@@ -162,9 +162,9 @@ GI_CreateApplication(sCreateApplication *application)
  * @unimplemented
  */
 int __cdecl
-GI_EnableMouseTracking(HANDLE hWnd)
+GI_EnableMouseTracking(s_window *win)
 {
-  STUB("GI_EnableMouseTracking(0x%x) returns 0!\n", hWnd);
+  STUB("GI_EnableMouseTracking(0x%x) returns 0!\n", win);
   return 0;
 }
 
@@ -223,14 +223,14 @@ GI_init(void)
  * @unimplemented
  */
 int __cdecl
-GI_set_dimension(HANDLE hWnd,
+GI_set_dimension(s_window *win,
                  int notify,
                  int x1,
                  int y1,
                  unsigned int width,
                  unsigned int height)
 {
-  STUB("GI_set_dimension(0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x) returns 0!\n", hWnd, notify, x1, y1, width, height);
+  STUB("GI_set_dimension(0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x) returns 0!\n", win, notify, x1, y1, width, height);
   return 0;
 }
 

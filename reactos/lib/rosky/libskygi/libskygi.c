@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-/* $Id: libskygi.c,v 1.8 2004/08/14 00:44:06 weiden Exp $
+/* $Id: libskygi.c,v 1.9 2004/08/14 01:03:38 weiden Exp $
  *
  * PROJECT:         SkyOS GI library
  * FILE:            lib/libskygi/libskygi.c
@@ -1018,11 +1018,11 @@ GC_destroy(GC *Gc)
  * @implemented
  */
 widget_menu* __cdecl
-GI_create_menu(HANDLE Window)
+GI_create_menu(s_window *win)
 {
    PSKY_MENU Menu;
 
-   DBG("GI_create_menu(0x%x)\n", Window);
+   DBG("GI_create_menu(0x%x)\n", win);
 
    Menu = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SKY_MENU));
    if (Menu == NULL)
@@ -1038,8 +1038,10 @@ GI_create_menu(HANDLE Window)
       return NULL;
    }
 
-   if (Window)
-      SetMenu(((PSKY_WINDOW)Window)->hWnd, Menu->hMenu);
+   if (win)
+   {
+      SetMenu(((PSKY_WINDOW)win)->hWnd, Menu->hMenu);
+   }
 
    return (widget_menu *)Menu;
 }
@@ -1127,7 +1129,7 @@ GI_add_menu_sub(widget_menu *Menu,
  * @unimplemented
  */
 int __cdecl
-GI_messagebox(HANDLE Window,
+GI_messagebox(s_window *win,
               unsigned int Flags,
               char *Title,
               char *Fmt,
@@ -1137,14 +1139,14 @@ GI_messagebox(HANDLE Window,
    va_list ArgList;
 
    DBG("GI_messagebox(0x%x, 0x%x, 0x%x, 0x%x, ...)\n",
-       Window, Flags, Title, Fmt);
+       win, Flags, Title, Fmt);
 
    va_start(ArgList, Fmt);
    _vsnprintf(Buffer, sizeof(Buffer) / sizeof(Buffer[0]), Fmt, ArgList);
    va_end(ArgList);
 
    /** @todo Convert flags and fix return value! */
-   MessageBoxA(Window ? ((PSKY_WINDOW)Window)->hWnd : NULL, 
+   MessageBoxA(win ? ((PSKY_WINDOW)win)->hWnd : NULL,
                Buffer, Title, MB_OK);
 
    return 1;
