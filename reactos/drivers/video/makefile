@@ -7,6 +7,9 @@ all: $(DISPLAY_DRIVERS:%=DD%) $(MINIPORT_DRIVERS:%=MP%)
 implib: $(DISPLAY_DRIVERS:%=DD%_implib) $(MINIPORT_DRIVERS:%=MP%_implib)
 	$(MAKE) -C videoprt implib
 
+test: $(DISPLAY_DRIVERS:%=DD%_test) $(MINIPORT_DRIVERS:%=MP%_test)
+	$(MAKE) -C videoprt test
+
 clean: $(DISPLAY_DRIVERS:%=DD%_clean) $(MINIPORT_DRIVERS:%=MP%_clean)
 	$(MAKE) -C videoprt clean
 
@@ -26,6 +29,9 @@ $(DISPLAY_DRIVERS:%=DD%): DD%:
 $(DISPLAY_DRIVERS:%=DD%_implib): DD%_implib:
 	$(MAKE) -C displays/$* implib
 
+$(DISPLAY_DRIVERS:%=DD%_test): DD%_test:
+	$(MAKE) -C displays/$* test
+
 $(DISPLAY_DRIVERS:%=DD%_clean): DD%_clean:
 	$(MAKE) -C displays/$* clean
 
@@ -35,7 +41,8 @@ $(DISPLAY_DRIVERS:%=DD%_install): DD%_install:
 $(DISPLAY_DRIVERS:%=DD%_bootcd): DD%_bootcd:
 	$(MAKE) -C displays/$* bootcd
 
-.PHONY: $(DISPLAY_DRIVERS:%=DD%) $(DISPLAY_DRIVERS:%=DD%_implib) $(DISPLAY_DRIVERS:%=DD%_clean)\
+.PHONY: $(DISPLAY_DRIVERS:%=DD%) $(DISPLAY_DRIVERS:%=DD%_implib) \
+        $(DISPLAY_DRIVERS:%=DD%_test) $(DISPLAY_DRIVERS:%=DD%_clean) \
         $(DISPLAY_DRIVERS:%=DD%_install) $(DISPLAY_DRIVERS:%=DD%_bootcd)
 
 
@@ -49,6 +56,9 @@ $(MINIPORT_DRIVERS:%=MP%): MP%:
 $(MINIPORT_DRIVERS:%=MP%_implib): MP%_implib:
 	$(MAKE) -C miniport/$* implib
 
+$(MINIPORT_DRIVERS:%=MP%_test): MP%_test:
+	$(MAKE) -C miniport/$* test
+
 $(MINIPORT_DRIVERS:%=MP%_clean): MP%_clean:
 	$(MAKE) -C miniport/$* clean
 
@@ -58,5 +68,6 @@ $(MINIPORT_DRIVERS:%=MP%_install): MP%_install:
 $(MINIPORT_DRIVERS:%=MP%_bootcd): MP%_bootcd:
 	$(MAKE) -C miniport/$* bootcd
 
-.PHONY: $(MINIPORT_DRIVERS:%=MP%) $(MINIPORT_DRIVERS:%=MP%_implib) $(MINIPORT_DRIVERS:%=MP%_clean)\
+.PHONY: $(MINIPORT_DRIVERS:%=MP%) $(MINIPORT_DRIVERS:%=MP%_implib) \
+        $(MINIPORT_DRIVERS:%=MP%_test) $(MINIPORT_DRIVERS:%=MP%_clean) \
         $(MINIPORT_DRIVERS:%=MP%_install) $(MINIPORT_DRIVERS:%=MP%_bootcd)

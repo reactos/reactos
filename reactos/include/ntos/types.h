@@ -25,10 +25,12 @@
 
 /* Fixed precision types */
 typedef signed char         INT8, *PINT8;
-typedef signed short        INT16, *PINT16;
-
 typedef unsigned char       UINT8, *PUINT8;
+
+#ifndef __USE_W32API
+typedef signed short        INT16, *PINT16;
 typedef unsigned short      UINT16, *PUINT16;
+#endif
 
 
 /* Check VOID before defining CHAR, SHORT */

@@ -7,11 +7,13 @@
  *      06-07-2003  CSH  Created
  */
 #include <roscfg.h>
+#include <ctype.h>
+#include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #define NTOS_MODE_USER
 #include <ntos.h>
 #include "regtests.h"
-#include <string.h>
 
 #define NDEBUG
 #include <debug.h>

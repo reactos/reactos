@@ -6,7 +6,8 @@
  * UPDATE HISTORY:
  *      06-07-2003  CSH  Created
  */
-#include <ntos.h>
+#include <stdio.h>
+#include <windows.h>
 
 /* Valid values for Command parameter of TestRoutine */
 #define TESTCMD_RUN       0   /* Buffer contains information about what failed */
@@ -18,18 +19,23 @@
 #define TS_FAILED         1
 
 /* Macros to simplify tests */
-#define DISPATCHER(TestName)    \
-  switch (Command)              \
-  {                             \
-    case TESTCMD_RUN:           \
-      return RunTest(Buffer);   \
-    case TESTCMD_TESTNAME:      \
+#define DISPATCHER(FunctionName, TestName) \
+int \
+FunctionName(int Command, \
+  char *Buffer) \
+{ \
+  switch (Command) \
+    { \
+    case TESTCMD_RUN: \
+      return RunTest(Buffer); \
+    case TESTCMD_TESTNAME: \
       strcpy(Buffer, TestName); \
-      return TS_OK;             \
-    default:                    \
-      break;                    \
-  }                             \
-  return TS_FAILED;
+      return TS_OK; \
+    default: \
+      break; \
+    } \
+  return TS_FAILED; \
+}
 
 #define FAIL(ErrorMessage) \
   sprintf(Buffer, "%s\n", ErrorMessage); \

@@ -3,7 +3,8 @@
 
 #include "regtests.h"
 
-static int RunTest(char *Buffer)
+static int
+RunTest(char *Buffer)
 {
   VOID *pmem1, *pmem2, *pmem3, *pmem4, *pmem5;
   PHYSICAL_ADDRESS LowestAcceptableAddress, HighestAcceptableAddress, BoundryAddressMultiple,
@@ -117,8 +118,4 @@ static int RunTest(char *Buffer)
   return TS_OK;
 }
 
-int
-Mm_1Test(int Command, char *Buffer)
-{
-  DISPATCHER("Kernel Core Memory API");
-}
+DISPATCHER(Mm_1Test, "Kernel Core Memory API")

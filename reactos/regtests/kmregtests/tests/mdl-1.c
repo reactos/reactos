@@ -3,7 +3,8 @@
 
 #include "regtests.h"
 
-static int RunTest(char *Buffer)
+static int
+RunTest(char *Buffer)
 {
   VOID *pmem1, *MdlPfnArray, *MdlVirtAddr;
   ULONG MdlSize, MdlOffset, AllocSize;
@@ -48,8 +49,4 @@ static int RunTest(char *Buffer)
   return TS_OK;
 }
 
-int
-Mdl_1Test(int Command, char *Buffer)
-{
-  DISPATCHER("Kernel Memory MDL API (1)");
-}
+DISPATCHER(Mdl_1Test, "Kernel Memory MDL API (1)")

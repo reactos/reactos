@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.70 2004/07/21 18:17:50 chorns Exp $
+# $Id: helper.mk,v 1.71 2004/07/23 20:03:25 chorns Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -50,6 +50,7 @@
 #   $TARGET_BOOTSTRAP  = Whether this file is needed to bootstrap the installation (no,yes) (optional)
 #   $TARGET_BOOTSTRAP_NAME = Name on the installation medium (optional)
 #   $TARGET_REGTESTS   = This module has regression tests (no,yes) (optional)
+#   $TARGET_BUILDENV_TEST = Build this test to be run in the build environment (no,yes) (optional)
 #   $WINE_MODE         = Compile using WINE headers (no,yes) (optional)
 #   $WINE_RC           = Name of .rc file for WINE modules (optional)
 #   $SUBDIRS           = Subdirs in which to run make (optional)
@@ -988,7 +989,11 @@ REGTEST_TESTS = $(wildcard tests/tests/*.c)
 
 $(REGTEST_TARGETS): $(REGTEST_TESTS)
 ifeq ($(MK_MODE),user)
+ifeq ($(TARGET_BUILDENV_TEST),yes)
+	$(REGTESTS) ./tests/tests ./tests/_regtests.c ./tests/Makefile.tests -e ./tests/_rtstub.c
+else
 	$(REGTESTS) ./tests/tests ./tests/_regtests.c ./tests/Makefile.tests -u ./tests/_rtstub.c
+endif
 	$(MAKE) -C tests TARGET_REGTESTS=no all
 else
 ifeq ($(MK_MODE),kernel)
@@ -1010,6 +1015,9 @@ $(SUBDIRS:%=%_all): %_all:
 $(SUBDIRS:%=%_implib): %_implib:
 	$(MAKE) -C $* SUBDIRS= implib
 
+$(SUBDIRS:%=%_test): %_test:
+	$(MAKE) -C $* SUBDIRS= test
+
 $(SUBDIRS:%=%_clean): %_clean:
 	$(MAKE) -C $* SUBDIRS= clean
 
@@ -1022,8 +1030,9 @@ $(SUBDIRS:%=%_dist): %_dist:
 $(SUBDIRS:%=%_bootcd): %_bootcd:
 	$(MAKE) -C $* SUBDIRS= bootcd
 
-.PHONY: $(SUBDIRS:%=%_all) $(SUBDIRS:%=%_implib) $(SUBDIRS:%=%_clean) \
-        $(SUBDIRS:%=%_install) $(SUBDIRS:%=%_dist) $(SUBDIRS:%=%_bootcd)
+.PHONY: $(SUBDIRS:%=%_all) $(SUBDIRS:%=%_implib) $(SUBDIRS:%=%_test) \
+        $(SUBDIRS:%=%_clean) $(SUBDIRS:%=%_install) $(SUBDIRS:%=%_dist) \
+        $(SUBDIRS:%=%_bootcd)
 endif
 
 # Precompiled header support
@@ -1051,6 +1060,20 @@ include depend.d
 
 endif # TARGET_PCH
 endif # ROS_USE_PCH
+
+
+ifeq ($(TARGET_REGTESTS),yes)
+ifeq ($(TARGET_BUILDENV_TEST),yes)
+test: all
+	$(MAKE) -C tests run
+else
+test:
+	-
+endif
+else
+test:
+	-
+endif
 
 
 %.o: %.c $(MK_PCHNAME)

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.237 2004/07/20 19:24:39 sedwards Exp $
+# $Id: Makefile,v 1.238 2004/07/23 20:03:24 chorns Exp $
 #
 # Global makefile
 #
@@ -126,9 +126,14 @@ depends: $(LIB_STATIC:%=%_depends) $(LIB_FSLIB:%=%_depends) $(DLLS:%=%_depends) 
          $(EXT_MODULES:%=%_depends) $(POSIX_LIBS:%=%_depends)
 
 implib: $(COMPONENTS:%=%_implib) $(HALS:%=%_implib) $(BUS:%=%_implib) \
-	$(LIB_STATIC:%=%_implib) $(LIB_FSLIB:%=%_implib) $(DLLS:%=%_implib) $(LOADERS:%=%_implib) \
-	$(KERNEL_DRIVERS:%=%_implib) $(SUBSYS:%=%_implib) \
-	$(SYS_SVC:%=%_implib) $(EXT_MODULES:%=%_implib)
+	      $(LIB_STATIC:%=%_implib) $(LIB_FSLIB:%=%_implib) $(DLLS:%=%_implib) $(LOADERS:%=%_implib) \
+	      $(KERNEL_DRIVERS:%=%_implib) $(SUBSYS:%=%_implib) \
+	      $(SYS_SVC:%=%_implib) $(EXT_MODULES:%=%_implib)
+
+test: $(COMPONENTS:%=%_test) $(HALS:%=%_test) $(BUS:%=%_test) \
+	    $(LIB_STATIC:%=%_test) $(LIB_FSLIB:%=%_test) $(DLLS:%=%_test) $(LOADERS:%=%_test) \
+	    $(KERNEL_DRIVERS:%=%_test) $(SUBSYS:%=%_test) \
+	    $(SYS_SVC:%=%_test) $(EXT_MODULES:%=%_test)
 
 clean: tools dk_clean $(HALS:%=%_clean) \
        $(COMPONENTS:%=%_clean) $(BUS:%=%_clean) $(LIB_STATIC:%=%_clean) $(LIB_FSLIB:%=%_clean) $(DLLS:%=%_clean) \
@@ -194,7 +199,7 @@ bootcd_makecd:
 	$(CABMAN) /C bootdata/packages/reactos.dff /L $(BOOTCD_DIR)/reactos /I
 	$(CABMAN) /C bootdata/packages/reactos.dff /RC $(BOOTCD_DIR)/reactos/reactos.inf /L $(BOOTCD_DIR)/reactos /N
 	- $(RM) $(BOOTCD_DIR)/reactos/reactos.inf
-	$(TOOLS_PATH)/cdmake/cdmake -v -m -b $(BOOTCD_DIR)/../isoboot.bin $(BOOTCD_DIR) REACTOS ReactOS.iso
+	$(CDMAKE) -v -m -b $(BOOTCD_DIR)/../isoboot.bin $(BOOTCD_DIR) REACTOS ReactOS.iso
 
 ubootcd_unattend:
 	$(CP) bootdata/unattend.inf $(BOOTCD_DIR)/reactos/unattend.inf
@@ -214,12 +219,12 @@ livecd_bootstrap_files:
 	$(MAKE) LIVECD_INSTALL=yes fastinstall
 
 livecd_install_before:
-	$(TOOLS_PATH)/mkhive/mkhive$(EXE_POSTFIX) bootdata $(LIVECD_DIR)/reactos/system32/config bootdata/livecd.inf bootdata/hiveinst.inf
+	$(MKHIVE) bootdata $(LIVECD_DIR)/reactos/system32/config bootdata/livecd.inf bootdata/hiveinst.inf
 
 livecd_basic: livecd_directory_layout livecd_bootstrap_files livecd_install_before
 
 livecd_makecd:
-	$(TOOLS_PATH)/cdmake/cdmake -m -j -b $(LIVECD_DIR)/../isoboot.bin $(LIVECD_DIR) REACTOS roslive.iso
+	$(CDMAKE) -m -j -b $(LIVECD_DIR)/../isoboot.bin $(LIVECD_DIR) REACTOS roslive.iso
 
 bootcd: bootcd_basic bootcd_makecd
 
@@ -228,9 +233,9 @@ ubootcd: bootcd_basic ubootcd_unattend bootcd_makecd
 livecd: livecd_basic livecd_makecd
 
 registry: tools
-	$(TOOLS_PATH)/mkhive/mkhive$(EXE_POSTFIX) bootdata $(INSTALL_DIR)/system32/config bootdata/hiveinst.inf
+	$(MKHIVE) bootdata $(INSTALL_DIR)/system32/config bootdata/hiveinst.inf
 
-.PHONY: all depends implib clean clean_before install freeldr bootcd_directory_layout \
+.PHONY: all depends implib test clean clean_before install freeldr bootcd_directory_layout \
 bootcd_bootstrap_files bootcd_install_before bootcd_basic bootcd_makecd ubootcd_unattend bootcd
 
 
@@ -243,6 +248,9 @@ $(SYS_APPS): %:
 $(SYS_APPS:%=%_implib): %_implib:
 	$(MAKE) -C subsys/system/$* implib
 
+$(SYS_APPS:%=%_test): %_test:
+	$(MAKE) -C subsys/system/$* test
+
 $(SYS_APPS:%=%_clean): %_clean:
 	$(MAKE) -C subsys/system/$* clean
 
@@ -252,7 +260,8 @@ $(SYS_APPS:%=%_install): %_install:
 $(SYS_APPS:%=%_bootcd): %_bootcd:
 	$(MAKE) -C subsys/system/$* bootcd
 
-.PHONY: $(SYS_APPS) $(SYS_APPS:%=%_implib) $(SYS_APPS:%=%_clean) $(SYS_APPS:%=%_install) $(SYS_APPS:%=%_bootcd)
+.PHONY: $(SYS_APPS) $(SYS_APPS:%=%_implib) $(SYS_APPS:%=%_test) \
+  $(SYS_APPS:%=%_clean) $(SYS_APPS:%=%_install) $(SYS_APPS:%=%_bootcd)
 
 #
 # System Services
@@ -266,13 +275,17 @@ $(SYS_SVC:%=%_depends): %_depends:
 $(SYS_SVC:%=%_implib): %_implib:
 	$(MAKE) -C services/$* implib
 
+$(SYS_SVC:%=%_test): %_test:
+	$(MAKE) -C services/$* test
+
 $(SYS_SVC:%=%_clean): %_clean:
 	$(MAKE) -C services/$* clean
 
 $(SYS_SVC:%=%_install): %_install:
 	$(MAKE) -C services/$* install
 
-.PHONY: $(SYS_SVC) $(SYS_SVC:%=%_depends) $(SYS_SVC:%=%_implib) $(SYS_SVC:%=%_clean) $(SYS_SVC:%=%_install)
+.PHONY: $(SYS_SVC) $(SYS_SVC:%=%_depends) $(SYS_SVC:%=%_implib) \
+  $(SYS_SVC:%=%_test) $(SYS_SVC:%=%_clean) $(SYS_SVC:%=%_install)
 
 
 #
@@ -288,13 +301,16 @@ $(APPS): %:
 # $(APPS:%=%_implib): %_implib:
 #	$(MAKE) -C apps/$* implib
 
+$(APPS:%=%_test): %_test:
+	$(MAKE) -C apps/$* test
+
 $(APPS:%=%_clean): %_clean:
 	$(MAKE) -C apps/$* clean
 
 $(APPS:%=%_install): %_install:
 	$(MAKE) -C apps/$* install
 
-.PHONY: $(APPS) $(APPS:%=%_implib) $(APPS:%=%_clean) $(APPS:%=%_install)
+.PHONY: $(APPS) $(APPS:%=%_test) $(APPS:%=%_clean) $(APPS:%=%_install)
 
 
 #
@@ -325,13 +341,17 @@ tools:
 	$(MAKE) -C tools
 
 tools_implib:
+	
+
+tools_test:
+	
 
 tools_clean:
 	$(MAKE) -C tools clean
 
 tools_install:
 
-.PHONY: tools tools_implib tools_clean tools_install
+.PHONY: tools tools_implib tools_test tools_clean tools_install
 
 
 #
@@ -379,7 +399,9 @@ iface_native:
 	$(MAKE) -C iface/native
 
 iface_native_implib:
-
+	
+iface_native_test:
+	
 iface_native_clean:
 	$(MAKE) -C iface/native clean
 
@@ -391,7 +413,9 @@ iface_additional:
 	$(MAKE) -C iface/addsys
 
 iface_additional_implib:
-
+	
+iface_additional_test:
+	
 iface_additional_clean:
 	$(MAKE) -C iface/addsys clean
 
@@ -399,9 +423,9 @@ iface_additional_install:
 
 iface_additional_bootcd:
 
-.PHONY: iface_native iface_native_implib iface_native_clean iface_native_install \
-        iface_native_bootcd \
-        iface_additional iface_additional_implib iface_additional_clean \
+.PHONY: iface_native iface_native_implib iface_native_test iface_native_clean \
+        iface_native_install iface_native_bootcd iface_additional \
+        iface_additional_implib iface_additional_test iface_additional_clean \
         iface_additional_install iface_additional_bootcd
 
 
@@ -413,6 +437,9 @@ $(BUS): %:
 
 $(BUS:%=%_implib): %_implib:
 	$(MAKE) -C drivers/bus/$* implib
+
+$(BUS:%=%_test): %_test:
+	$(MAKE) -C drivers/bus/$* test
 
 $(BUS:%=%_clean): %_clean:
 	$(MAKE) -C drivers/bus/$* clean
@@ -436,6 +463,9 @@ $(DRIVERS_LIB): %:
 $(DRIVERS_LIB:%=%_implib): %_implib:
 	$(MAKE) -C drivers/lib/$* implib
 
+$(DRIVERS_LIB:%=%_test): %_test:
+	$(MAKE) -C drivers/lib/$* test
+
 $(DRIVERS_LIB:%=%_clean): %_clean:
 	$(MAKE) -C drivers/lib/$* clean
 
@@ -445,8 +475,8 @@ $(DRIVERS_LIB:%=%_install): %_install:
 $(DRIVERS_LIB:%=%_bootcd): %_bootcd:
 	$(MAKE) -C drivers/lib/$* bootcd
 
-.PHONY: $(DRIVERS_LIB) $(DRIVERS_LIB:%=%_implib) $(DRIVERS_LIB:%=%_clean) \
-        $(DRIVERS_LIB:%=%_install) $(DRIVERS_LIB:%=%_bootcd)
+.PHONY: $(DRIVERS_LIB) $(DRIVERS_LIB:%=%_implib) $(DRIVERS_LIB:%=%_test) \
+        $(DRIVERS_LIB:%=%_clean) $(DRIVERS_LIB:%=%_install) $(DRIVERS_LIB:%=%_bootcd)
 
 
 #
@@ -458,6 +488,9 @@ $(DEVICE_DRIVERS): %:
 $(DEVICE_DRIVERS:%=%_implib): %_implib:
 	$(MAKE) -C drivers/dd/$* implib
 
+$(DEVICE_DRIVERS:%=%_test): %_test:
+	$(MAKE) -C drivers/dd/$* test
+
 $(DEVICE_DRIVERS:%=%_clean): %_clean:
 	$(MAKE) -C drivers/dd/$* clean
 
@@ -467,8 +500,8 @@ $(DEVICE_DRIVERS:%=%_install): %_install:
 $(DEVICE_DRIVERS:%=%_bootcd): %_bootcd:
 	$(MAKE) -C drivers/dd/$* bootcd
 
-.PHONY: $(DEVICE_DRIVERS) $(DEVICE_DRIVERS:%=%_implib) $(DEVICE_DRIVERS:%=%_clean) \
-        $(DEVICE_DRIVERS:%=%_install) $(DEVICE_DRIVERS:%=%_bootcd)
+.PHONY: $(DEVICE_DRIVERS) $(DEVICE_DRIVERS:%=%_implib) $(DEVICE_DRIVERS:%=%_test) \
+        $(DEVICE_DRIVERS:%=%_clean) $(DEVICE_DRIVERS:%=%_install) $(DEVICE_DRIVERS:%=%_bootcd)
 
 
 #
@@ -480,6 +513,9 @@ VIDEO_DRIVERS:
 VIDEO_DRIVERS_implib:
 	$(MAKE) -C drivers/video implib
 
+VIDEO_DRIVERS_test:
+	$(MAKE) -C drivers/video test
+
 VIDEO_DRIVERS_clean:
 	$(MAKE) -C drivers/video clean
 
@@ -489,8 +525,8 @@ VIDEO_DRIVERS_install:
 VIDEO_DRIVERS_bootcd:
 	$(MAKE) -C drivers/video bootcd
 
-.PHONY: VIDEO_DRIVERS VIDEO_DRIVERS_implib VIDEO_DRIVERS_clean \
-        VIDEO_DRIVERS_install VIDEO_DRIVERS_bootcd
+.PHONY: VIDEO_DRIVERS VIDEO_DRIVERS_implib VIDEO_DRIVERS_test\
+        VIDEO_DRIVERS_clean VIDEO_DRIVERS_install VIDEO_DRIVERS_bootcd
 
 
 #
@@ -502,6 +538,9 @@ $(INPUT_DRIVERS): %:
 $(INPUT_DRIVERS:%=%_implib): %_implib:
 	$(MAKE) -C drivers/input/$* implib
 
+$(INPUT_DRIVERS:%=%_test): %_test:
+	$(MAKE) -C drivers/input/$* test
+
 $(INPUT_DRIVERS:%=%_clean): %_clean:
 	$(MAKE) -C drivers/input/$* clean
 
@@ -511,8 +550,8 @@ $(INPUT_DRIVERS:%=%_install): %_install:
 $(INPUT_DRIVERS:%=%_bootcd): %_bootcd:
 	$(MAKE) -C drivers/input/$* bootcd
 
-.PHONY: $(INPUT_DRIVERS) $(INPUT_DRIVERS:%=%_implib) $(INPUT_DRIVERS:%=%_clean)\
-        $(INPUT_DRIVERS:%=%_install) $(INPUT_DRIVERS:%=%_bootcd)
+.PHONY: $(INPUT_DRIVERS) $(INPUT_DRIVERS:%=%_implib) $(INPUT_DRIVERS:%=%_test) \
+        $(INPUT_DRIVERS:%=%_clean) $(INPUT_DRIVERS:%=%_install) $(INPUT_DRIVERS:%=%_bootcd)
 
 #
 # Filesystem driver rules
@@ -523,6 +562,9 @@ $(FS_DRIVERS): %:
 $(FS_DRIVERS:%=%_implib): %_implib:
 	$(MAKE) -C drivers/fs/$* implib
 
+$(FS_DRIVERS:%=%_test): %_test:
+	$(MAKE) -C drivers/fs/$* test
+
 $(FS_DRIVERS:%=%_clean): %_clean:
 	$(MAKE) -C drivers/fs/$* clean
 
@@ -532,8 +574,8 @@ $(FS_DRIVERS:%=%_install): %_install:
 $(FS_DRIVERS:%=%_bootcd): %_bootcd:
 	$(MAKE) -C drivers/fs/$* bootcd
 
-.PHONY: $(FS_DRIVERS) $(FS_DRIVERS:%=%_implib) $(FS_DRIVERS:%=%_clean) \
-        $(FS_DRIVERS:%=%_install) $(FS_DRIVERS:%=%_bootcd)
+.PHONY: $(FS_DRIVERS) $(FS_DRIVERS:%=%_implib) $(FS_DRIVERS:%=%_test) \
+        $(FS_DRIVERS:%=%_clean) $(FS_DRIVERS:%=%_install) $(FS_DRIVERS:%=%_bootcd)
 
 
 #
@@ -545,6 +587,9 @@ $(NET_DRIVERS): %:
 $(NET_DRIVERS:%=%_implib): %_implib:
 	$(MAKE) -C drivers/net/$* implib
 
+$(NET_DRIVERS:%=%_test): %_test:
+	$(MAKE) -C drivers/net/$* test
+
 $(NET_DRIVERS:%=%_clean): %_clean:
 	$(MAKE) -C drivers/net/$* clean
 
@@ -554,8 +599,8 @@ $(NET_DRIVERS:%=%_install): %_install:
 $(NET_DRIVERS:%=%_bootcd): %_bootcd:
 	$(MAKE) -C drivers/net/$* bootcd
 
-.PHONY: $(NET_DRIVERS) $(NET_DRIVERS:%=%_implib) $(NET_DRIVERS:%=%_clean) \
-        $(NET_DRIVERS:%=%_install) $(NET_DRIVERS:%=%_bootcd)
+.PHONY: $(NET_DRIVERS) $(NET_DRIVERS:%=%_implib) $(NET_DRIVERS:%=%_test) \
+        $(NET_DRIVERS:%=%_clean) $(NET_DRIVERS:%=%_install) $(NET_DRIVERS:%=%_bootcd)
 
 
 #
@@ -567,6 +612,9 @@ $(NET_DEVICE_DRIVERS): %:
 $(NET_DEVICE_DRIVERS:%=%_implib): %_implib:
 	$(MAKE) -C drivers/net/dd/$* implib
 
+$(NET_DEVICE_DRIVERS:%=%_test): %_test:
+	$(MAKE) -C drivers/net/dd/$* test
+
 $(NET_DEVICE_DRIVERS:%=%_clean): %_clean:
 	$(MAKE) -C drivers/net/dd/$* clean
 
@@ -576,7 +624,8 @@ $(NET_DEVICE_DRIVERS:%=%_install): %_install:
 $(NET_DEVICE_DRIVERS:%=%_bootcd): %_bootcd:
 	$(MAKE) -C drivers/net/dd/$* bootcd
 
-.PHONY: $(NET_DEVICE_DRIVERS) $(NET_DEVICE_DRIVERS:%=%_clean) $(NET_DEVICE_DRIVERS:%=%_implib) \
+.PHONY: $(NET_DEVICE_DRIVERS) $(NET_DEVICE_DRIVERS:%=%_clean) \
+        $(NET_DEVICE_DRIVERS:%=%_implib) $(NET_DEVICE_DRIVERS:%=%_test) \
         $(NET_DEVICE_DRIVERS:%=%_install) $(NET_DEVICE_DRIVERS:%=%_bootcd)
 
 
@@ -589,6 +638,9 @@ $(STORAGE_DRIVERS): %:
 $(STORAGE_DRIVERS:%=%_implib): %_implib:
 	$(MAKE) -C drivers/storage/$* implib
 
+$(STORAGE_DRIVERS:%=%_test): %_test:
+	$(MAKE) -C drivers/storage/$* test
+
 $(STORAGE_DRIVERS:%=%_clean): %_clean:
 	$(MAKE) -C drivers/storage/$* clean
 
@@ -598,8 +650,9 @@ $(STORAGE_DRIVERS:%=%_install): %_install:
 $(STORAGE_DRIVERS:%=%_bootcd): %_bootcd:
 	$(MAKE) -C drivers/storage/$* bootcd
 
-.PHONY: $(STORAGE_DRIVERS) $(STORAGE_DRIVERS:%=%_clean) $(STORAGE_DRIVERS:%=%_implib) \
-		$(STORAGE_DRIVERS:%=%_install) $(STORAGE_DRIVERS:%=%_bootcd)
+.PHONY: $(STORAGE_DRIVERS) $(STORAGE_DRIVERS:%=%_clean) \
+        $(STORAGE_DRIVERS:%=%_implib) $(STORAGE_DRIVERS:%=%_test) \
+        $(STORAGE_DRIVERS:%=%_install) $(STORAGE_DRIVERS:%=%_bootcd)
 
 
 #
@@ -610,13 +663,16 @@ $(LOADERS): %:
 
 $(LOADERS:%=%_implib): %_implib:
 
+$(LOADERS:%=%_test): %_test:
+
 $(LOADERS:%=%_clean): %_clean:
 	$(MAKE) -C loaders/$* clean
 
 $(LOADERS:%=%_install): %_install:
 	$(MAKE) -C loaders/$* install
 
-.PHONY: $(LOADERS) $(LOADERS:%=%_implib) $(LOADERS:%=%_clean) $(LOADERS:%=%_install)
+.PHONY: $(LOADERS) $(LOADERS:%=%_implib) $(LOADERS:%=%_test) \
+        $(LOADERS:%=%_clean) $(LOADERS:%=%_install)
 
 
 #
@@ -628,6 +684,9 @@ ntoskrnl:
 ntoskrnl_implib:
 	$(MAKE) -C ntoskrnl implib
 
+ntoskrnl_test:
+	$(MAKE) -C ntoskrnl test
+
 ntoskrnl_clean:
 	$(MAKE) -C ntoskrnl clean
 
@@ -637,7 +696,8 @@ ntoskrnl_install:
 ntoskrnl_bootcd:
 	$(MAKE) -C ntoskrnl bootcd
 
-.PHONY: ntoskrnl ntoskrnl_implib ntoskrnl_clean ntoskrnl_install ntoskrnl_bootcd
+.PHONY: ntoskrnl ntoskrnl_implib ntoskrnl_test \
+        ntoskrnl_clean ntoskrnl_install ntoskrnl_bootcd
 
 
 #
@@ -649,6 +709,9 @@ hallib:
 hallib_implib:
 	$(MAKE) -C hal/hal implib
 
+hallib_test:
+	$(MAKE) -C hal/hal test
+
 hallib_clean:
 	$(MAKE) -C hal/hal clean
 
@@ -658,7 +721,8 @@ hallib_install:
 hallib_bootcd:
 	$(MAKE) -C hal/hal bootcd
 
-.PHONY: hallib hallib_implib hallib_clean hallib_install hallib_bootcd
+.PHONY: hallib hallib_implib hallib_test hallib_clean \
+        hallib_install hallib_bootcd
 
 
 #
@@ -670,6 +734,9 @@ $(HALS): %:
 $(HALS:%=%_implib): %_implib:
 	$(MAKE) -C hal/$* implib
 
+$(HALS:%=%_test): %_test:
+	$(MAKE) -C hal/$* test
+
 $(HALS:%=%_clean): %_clean:
 	$(MAKE) -C hal/$* clean
 
@@ -679,7 +746,8 @@ $(HALS:%=%_install): %_install:
 $(HALS:%=%_bootcd): %_bootcd:
 	$(MAKE) -C hal/$* bootcd
 
-.PHONY: $(HALS) $(HALS:%=%_implib) $(HALS:%=%_clean) $(HALS:%=%_install) $(HALS:%=%_bootcd)
+.PHONY: $(HALS) $(HALS:%=%_implib) $(HALS:%=%_test) \
+        $(HALS:%=%_clean) $(HALS:%=%_install) $(HALS:%=%_bootcd)
 
 
 #
@@ -694,6 +762,9 @@ $(LIB_FSLIB:%=%_depends): %_depends:
 $(LIB_FSLIB:%=%_implib): %_implib:
 	$(MAKE) -C lib/fslib/$* implib
 
+$(LIB_FSLIB:%=%_test): %_test:
+	$(MAKE) -C lib/fslib/$* test
+
 $(LIB_FSLIB:%=%_clean): %_clean:
 	$(MAKE) -C lib/fslib/$* clean
 
@@ -703,8 +774,9 @@ $(LIB_FSLIB:%=%_install): %_install:
 $(LIB_FSLIB:%=%_bootcd): %_bootcd:
 	$(MAKE) -C lib/fslib/$* bootcd
 
-.PHONY: $(LIB_FSLIB) $(LIB_FSLIB:%=%_depends) $(LIB_FSLIB:%=%_implib) $(LIB_FSLIB:%=%_clean) \
-	$(LIB_FSLIB:%=%_install) $(LIB_FSLIB:%=%_bootcd)
+.PHONY: $(LIB_FSLIB) $(LIB_FSLIB:%=%_depends) $(LIB_FSLIB:%=%_implib) \
+        $(LIB_FSLIB:%=%_test) $(LIB_FSLIB:%=%_clean) \
+        $(LIB_FSLIB:%=%_install) $(LIB_FSLIB:%=%_bootcd)
 
 
 #
@@ -719,6 +791,9 @@ $(LIB_STATIC:%=%_depends): %_depends:
 $(LIB_STATIC:%=%_implib): %_implib:
 	$(MAKE) -C lib/$* implib
 
+$(LIB_STATIC:%=%_test): %_test:
+	$(MAKE) -C lib/$* test
+
 $(LIB_STATIC:%=%_clean): %_clean:
 	$(MAKE) -C lib/$* clean
 
@@ -728,8 +803,9 @@ $(LIB_STATIC:%=%_install): %_install:
 $(LIB_STATIC:%=%_bootcd): %_bootcd:
 	$(MAKE) -C lib/$* bootcd
 
-.PHONY: $(LIB_STATIC) $(LIB_STATIC:%=%_depends) $(LIB_STATIC:%=%_implib) $(LIB_STATIC:%=%_clean) \
-	$(LIB_STATIC:%=%_install) $(LIB_STATIC:%=%_bootcd)
+.PHONY: $(LIB_STATIC) $(LIB_STATIC:%=%_depends) $(LIB_STATIC:%=%_implib) \
+        $(LIB_STATIC:%=%_test) $(LIB_STATIC:%=%_clean) \
+        $(LIB_STATIC:%=%_install) $(LIB_STATIC:%=%_bootcd)
 
 
 #
@@ -744,6 +820,9 @@ $(DLLS:%=%_depends): %_depends:
 $(DLLS:%=%_implib): %_implib:
 	$(MAKE) -C lib/$* implib
 
+$(DLLS:%=%_test): %_test:
+	$(MAKE) -C lib/$* test
+
 $(DLLS:%=%_clean): %_clean:
 	$(MAKE) -C lib/$* clean
 
@@ -753,8 +832,8 @@ $(DLLS:%=%_install): %_install:
 $(DLLS:%=%_bootcd): %_bootcd:
 	$(MAKE) -C lib/$* bootcd
 
-.PHONY: $(DLLS) $(DLLS:%=%_depends) $(DLLS:%=%_implib) $(DLLS:%=%_clean) $(DLLS:%=%_install) \
-        $(DLLS:%=%_bootcd)
+.PHONY: $(DLLS) $(DLLS:%=%_depends) $(DLLS:%=%_implib) $(DLLS:%=%_test) \
+        $(DLLS:%=%_clean) $(DLLS:%=%_install) $(DLLS:%=%_bootcd)
 
 
 #
@@ -769,6 +848,9 @@ $(SUBSYS:%=%_depends): %_depends:
 $(SUBSYS:%=%_implib): %_implib:
 	$(MAKE) -C subsys/$* implib
 
+$(SUBSYS:%=%_test): %_test:
+	$(MAKE) -C subsys/$* test
+
 $(SUBSYS:%=%_clean): %_clean:
 	$(MAKE) -C subsys/$* clean
 
@@ -778,8 +860,8 @@ $(SUBSYS:%=%_install): %_install:
 $(SUBSYS:%=%_bootcd): %_bootcd:
 	$(MAKE) -C subsys/$* bootcd
 
-.PHONY: $(SUBSYS) $(SUBSYS:%=%_depends) $(SUBSYS:%=%_implib) $(SUBSYS:%=%_clean) $(SUBSYS:%=%_install) \
-        $(SUBSYS:%=%_bootcd)
+.PHONY: $(SUBSYS) $(SUBSYS:%=%_depends) $(SUBSYS:%=%_implib) $(SUBSYS:%=%_test) \
+        $(SUBSYS:%=%_clean) $(SUBSYS:%=%_install) $(SUBSYS:%=%_bootcd)
 
 #
 # Regression testsuite
@@ -883,7 +965,3 @@ docu:
 	doxygen Doxyfile
 
 .PHONY: docu
-
-
-# EOF
-

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.133 2004/07/19 04:52:23 ion Exp $
+# $Id: Makefile,v 1.134 2004/07/23 20:03:25 chorns Exp $
 #
 # ReactOS Operating System
 #
@@ -689,6 +689,9 @@ $(DDK_PATH_LIB)/$(TARGETNAME).a: $(TARGETNAME).def
 		--kill-at
 
 implib: $(DDK_PATH_LIB)/$(TARGETNAME).a
+
+test:
+	-
 
 clean:
 	- $(RM) $(OBJECTS_PATH)/*.o cc/*.o cm/*.o dbg/*.o dbg/i386/*.o ex/*.o \

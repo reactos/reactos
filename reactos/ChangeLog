@@ -1,5 +1,20 @@
 2004-07-23  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* Makefile, drivers/video/makefile, lib/cpl/Makefile, ntoskrnl/Makefile,
+	tools/helper.mk: Add test target.
+	* include/ntos/types.h (UINT16, PUINT16): Declare.
+	* regtests/kmregtests/tests/mdl-1.c, regtests/kmregtests/tests/mdl-2.c,
+	regtests/kmregtests/tests/mm-1.c, subsys/win32k/tests/tests/eng-mem-1.c:
+	Simplify tests.
+	* regtests/shared/regtests.c: Include <ctype.h> and <stdlib.h>.
+	* regtests/shared/regtests.h (DISPATCHER): Declare the whole function.
+	* tools/regtests.c: Refactor part of register_test into get_test_name();
+	Stub for running tests in the build environment.
+	* w32api/include/basetsd.h (INT16, PINT16, UINT16, PUINT16): Declare.
+	* lib/user32/misc/exticon.c (UINT16): Remove declaration. 
+
+2004-07-23  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* rules.mak: Be silent only if VERBOSE=no.
 
 2004-07-23  Casper S. Hornstrup  <chorns@users.sourceforge.net>

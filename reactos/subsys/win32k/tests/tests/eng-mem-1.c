@@ -45,9 +45,4 @@ static int RunTest(char *Buffer)
   return TS_OK;
 }
 
-int
-Eng_mem_1Test(int Command, char *Buffer)
-{
-  DISPATCHER("Win32k Engine Memory API");
-}
-
+DISPATCHER(Eng_mem_1Test, "Win32k Engine Memory API")
