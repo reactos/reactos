@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.46 2003/10/15 03:09:23 vizzini Exp $
+ * $Id: gdiobj.c,v 1.47 2003/10/16 03:26:51 vizzini Exp $
  *
  */
 
@@ -149,20 +149,15 @@ static FAST_MUTEX  RefCountHandling;
 /*!
  * Allocate GDI object table.
  * \param	Size - number of entries in the object table.
+ * Notes:: Must be called at IRQL < DISPATCH_LEVEL.
 */
 static PGDI_HANDLE_TABLE FASTCALL
 GDIOBJ_iAllocHandleTable (WORD Size)
 {
   PGDI_HANDLE_TABLE  handleTable;
-  KIRQL OldIrql;
-  BOOLEAN IrqlRaised = FALSE;
 
-  if(KeGetCurrentIrql() < APC_LEVEL)
-    {
-      KeRaiseIrql(APC_LEVEL, &OldIrql);
-      IrqlRaised = TRUE;
-    }
-
+  /* prevent APC delivery for the *FastMutexUnsafe calls */
+  const KIRQL PrevIrql = KfRaiseIrql(APC_LEVEL);
   ExAcquireFastMutexUnsafe (&HandleTableMutex);
   handleTable = ExAllocatePool(PagedPool,
                                sizeof(GDI_HANDLE_TABLE) +
@@ -173,9 +168,7 @@ GDIOBJ_iAllocHandleTable (WORD Size)
           sizeof(GDI_HANDLE_TABLE) + sizeof(PGDIOBJ) * Size);
   handleTable->wTableSize = Size;
   ExReleaseFastMutexUnsafe (&HandleTableMutex);
-
-  if(IrqlRaised)
-    KeLowerIrql(OldIrql);
+  KfLowerIrql(PrevIrql);
 
   return handleTable;
 }
@@ -203,15 +196,9 @@ static WORD FASTCALL
 GDIOBJ_iGetNextOpenHandleIndex (void)
 {
   WORD tableIndex;
-  BOOLEAN IrqlRaised = FALSE;
-  KIRQL OldIrql;
 
-  if(KeGetCurrentIrql() < APC_LEVEL)
-    {
-      KeRaiseIrql(APC_LEVEL, &OldIrql);
-      IrqlRaised = TRUE;
-    }
-
+  /* prevent APC delivery for the *FastMutexUnsafe calls */
+  const KIRQL PrevIrql = KfRaiseIrql(APC_LEVEL);
   ExAcquireFastMutexUnsafe (&HandleTableMutex);
   for (tableIndex = 1; tableIndex < HandleTable->wTableSize; tableIndex++)
     {
@@ -222,9 +209,7 @@ GDIOBJ_iGetNextOpenHandleIndex (void)
 	}
     }
   ExReleaseFastMutexUnsafe (&HandleTableMutex);
-
-  if(IrqlRaised)
-    KeLowerIrql(OldIrql);
+  KfLowerIrql(PrevIrql);
 
   return (tableIndex < HandleTable->wTableSize) ? tableIndex : 0;
 }
