@@ -84,7 +84,7 @@ int main (int argc, char **argv)
 {
 	SHORT maxx,maxy;
 	SHORT line_count=0,ch_count=0;
-	INT i;
+	INT i, last;
 
 	/*reading/writing buffer*/
 	TCHAR *buff;
@@ -100,7 +100,7 @@ int main (int argc, char **argv)
 	hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
 	hStdErr = GetStdHandle(STD_ERROR_HANDLE);
 
-	if (_tcsncmp (argv[1], _T("/?"), 2) == 0)
+	if (argc > 1 && _tcsncmp (argv[1], _T("/?"), 2) == 0)
 	{
 		ConOutPuts(_T("Help text still missing!!"));
 		return 0;
@@ -111,32 +111,34 @@ int main (int argc, char **argv)
 
 	GetScreenSize(&maxx,&maxy);
 
-	buff=malloc(maxx);
+	buff=malloc(4096);
 
 	FlushConsoleInputBuffer (hKeyboard);
 
 	do
 	{
-		bRet = ReadFile(hStdIn,buff,1,&dwRead,NULL);
+		bRet = ReadFile(hStdIn,buff,4096,&dwRead,NULL);
 
-		if (dwRead>0 && bRet)
-			WriteFile(hStdOut,buff,dwRead,&dwWritten,NULL);
-
-		for(i=0;i<dwRead;i++)
+		for(last=i=0;i<dwRead && bRet;i++)
 		{
 			ch_count++;
-			if(buff[i] == _T('\x0a') || ch_count == maxx)
+			if(buff[i] == _T('\n') || ch_count == maxx)
 			{
 				ch_count=0;
 				line_count++;
 				if (line_count == maxy-1)
 				{
 					line_count = 0;
+					WriteFile(hStdOut,&buff[last], i-last+1, &dwWritten, NULL);
+					last=i+1;
 					FlushFileBuffers (hStdOut);
 					WaitForKey ();
 				}
 			}
 		}
+		if (last<dwRead && bRet)
+			WriteFile(hStdOut,&buff[last], dwRead-last, &dwWritten, NULL);
+
 	}
 	while(dwRead>0 && bRet);
 
