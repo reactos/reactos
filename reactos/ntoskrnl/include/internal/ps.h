@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.26 2001/09/07 21:36:48 ea Exp $
+/* $Id: ps.h,v 1.27 2001/11/24 14:08:54 jfilby Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -51,6 +51,7 @@
 #ifndef __ASM__
 
 #include <internal/mm.h>
+#include <napi/teb.h>
 
 struct _KTHREAD;
 struct _KTRAPFRAME;
@@ -233,12 +234,6 @@ typedef struct
    UCHAR Pad[2];                                     // 0x6
    SECURITY_IMPERSONATION_LEVEL Level;               // 0x8
 } PS_IMPERSONATION_INFO, *PPS_IMPERSONATION_INFO;
-
-
-typedef struct _W32THREAD
-{
-  PVOID MessageQueue;
-} __attribute__((packed)) W32THREAD, *PW32THREAD;
 
 
 typedef struct _ETHREAD

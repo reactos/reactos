@@ -154,6 +154,12 @@ typedef struct _GDI_TEB_BATCH
    ULONG Buffer[0x136];
 } GDI_TEB_BATCH, *PGDI_TEB_BATCH;
 
+// FIXME: Redundant definition of W32THREAD also in ntoskrnl\include\internal\ps.h
+typedef struct _W32THREAD
+{
+  PVOID MessageQueue;
+} __attribute__((packed)) W32THREAD, *PW32THREAD;
+
 typedef struct _TEB
 {
    NT_TIB Tib;                         // 00h
@@ -165,7 +171,7 @@ typedef struct _TEB
    ULONG LastErrorValue;               // 34h
    ULONG CountOfOwnedCriticalSections; // 38h
    PVOID CsrClientThread;              // 3Ch
-   PVOID Win32ThreadInfo;              // 40h
+   PW32THREAD Win32ThreadInfo;         // 40h
    ULONG Win32ClientInfo[0x1F];        // 44h
    PVOID WOW32Reserved;                // C0h
    ULONG CurrentLocale;                // C4h
