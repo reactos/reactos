@@ -260,12 +260,6 @@ void ShellDirectory::read_directory(int scan_flags)
 
 				memcpy(&entry->_data, &w32fd, sizeof(WIN32_FIND_DATA));
 
-				if (!(w32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-					if (scan_flags & SCAN_EXTRACT_ICONS)
-						entry->extract_icon();
-				} else
-					entry->_icon_id = ICID_NONE;	// don't try again later
-
 				entry->_down = NULL;
 				entry->_expanded = false;
 				entry->_scanned = false;
@@ -314,6 +308,11 @@ void ShellDirectory::read_directory(int scan_flags)
 					attribs |= SFGAO_LINK;
 
 				entry->_shell_attribs = attribs;
+
+				if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+					entry->_icon_id = ICID_FOLDER;
+				else if (scan_flags & SCAN_EXTRACT_ICONS)
+					entry->extract_icon();
 
 				last = entry;
 			} while(FindNextFile(hFind, &w32fd));
@@ -402,20 +401,22 @@ void ShellDirectory::read_directory(int scan_flags)
 							entry->_display_name = _tcsdup(name);	// store display name separate from file name; sort display by file name
 					}
 
-					 // get icons for files and virtual objects
-					if (!(entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||
-						!(attribs & SFGAO_FILESYSTEM)) {
-						if (scan_flags & SCAN_EXTRACT_ICONS)
-							entry->extract_icon();
-					} else
-						entry->_icon_id = ICID_NONE;	// don't try again later
-
 					entry->_down = NULL;
 					entry->_expanded = false;
 					entry->_scanned = false;
 					entry->_level = level;
 					entry->_shell_attribs = attribs;
 					entry->_bhfi_valid = bhfi_valid;
+
+					 // get icons for files and virtual objects
+					if (!(entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||
+						!(attribs & SFGAO_FILESYSTEM)) {
+						if (scan_flags & SCAN_EXTRACT_ICONS)
+							entry->extract_icon();
+					} else if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+						entry->_icon_id = ICID_FOLDER;
+					else
+						entry->_icon_id = ICID_NONE;	// don't try again later
 
 					last = entry;
 				} catch(COMException& e) {
@@ -470,8 +471,6 @@ int ShellDirectory::extract_icons()
 
 			if (entry->_icon_id != ICID_NONE)
 				++cnt;
-			else
-				entry->_icon_id = ICID_NONE;	// don't try again later
 		}
 
 	return cnt;

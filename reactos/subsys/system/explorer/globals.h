@@ -85,11 +85,11 @@ struct Icon {
 struct IconCache {
 	void	init();
 
+	const Icon&	extract(String path);
+	const Icon&	extract(LPCTSTR path, int idx);
 	const Icon&	extract(IExtractIcon* pExtract, LPCTSTR path, int idx);
-	const Icon&	extract_from_file(LPCTSTR path, int idx);
 
-	const Icon&	add(HICON hIcon);
-	const Icon&	add_cached(HICON hIcon, LPCTSTR path, int idx);
+	const Icon&	add(HICON hIcon, ICON_TYPE type=IT_DYNAMIC);
 
 	const Icon&	get_icon(int icon_id);
 	HBITMAP	get_icon_bitmap(int icon_id, HBRUSH hbrBkgnd, HDC hdc);
@@ -97,15 +97,17 @@ struct IconCache {
 	void	free_icon(int icon_id);
 
 protected:
-	typedef map<int, Icon> IconMap;
-
-	typedef pair<String, int> CachePair;
-	typedef map<CachePair, ICON_ID> CacheMap;
-
 	static int s_next_id;
 
+	typedef map<int, Icon> IconMap;
 	IconMap	_icons;
-	CacheMap _cache_map;
+
+	typedef map<String, ICON_ID> PathMap;
+	PathMap	_pathMap;
+
+	typedef pair<String, int> CachePair;
+	typedef map<CachePair, ICON_ID> PathIdxMap;
+	PathIdxMap _pathIdxMap;
 };
 
 

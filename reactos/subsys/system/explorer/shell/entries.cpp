@@ -310,57 +310,62 @@ ShellPath Entry::create_absolute_pidl() const
 
 void Entry::extract_icon()
 {
+	TCHAR path[MAX_PATH];
+
 	ICON_ID icon_id = ICID_NONE;
 
-	IExtractIcon* pExtract;
-	if (SUCCEEDED(GetUIObjectOf(0, IID_IExtractIcon, (LPVOID*)&pExtract))) {
-		TCHAR path[MAX_PATH];
-		unsigned flags;
-		int idx;
-
-		if (SUCCEEDED(pExtract->GetIconLocation(GIL_FORSHELL, path, MAX_PATH, &idx, &flags))) {
-			if (flags & GIL_NOTFILENAME)
-				icon_id = g_Globals._icon_cache.extract(pExtract, path, idx)._id;
-			else {
-				if (idx == -1)
-					idx = 0;	// special case for some control panel applications ("System")
-
-				icon_id = g_Globals._icon_cache.extract_from_file(path, idx)._id;
-			}
-
-/* using create_absolute_pidl() [see below] results in more correct icons for some control panel applets ("NVidia").
-			if (icon_id == ICID_NONE) {
-				SHFILEINFO sfi;
-
-				if (SHGetFileInfo(path, 0, &sfi, sizeof(sfi), SHGFI_ICON|SHGFI_SMALLICON))
-					icon_id = g_Globals._icon_cache.add(sfi.hIcon)._id;
-			}
-*/
-/*
-			if (icon_id == ICID_NONE) {
-				LPBYTE b = (LPBYTE) alloca(0x10000);
-				SHFILEINFO sfi;
-
-				FILE* file = fopen(path, "rb");
-				if (file) {
-					int l = fread(b, 1, 0x10000, file);
-					fclose(file);
-
-					if (l)
-						icon_id = g_Globals._icon_cache.add(CreateIconFromResourceEx(b, l, TRUE, 0x00030000, 16, 16, LR_DEFAULTCOLOR));
-				}
-			}
-*/		}
-	}
+	if (get_path(path))
+		icon_id = g_Globals._icon_cache.extract(path)._id;
 
 	if (icon_id == ICID_NONE) {
-		SHFILEINFO sfi;
+		IExtractIcon* pExtract;
+		if (SUCCEEDED(GetUIObjectOf(0, IID_IExtractIcon, (LPVOID*)&pExtract))) {
+			unsigned flags;
+			int idx;
 
-		const ShellPath& pidl_abs = create_absolute_pidl();
-		LPCITEMIDLIST pidl = pidl_abs;
+			if (SUCCEEDED(pExtract->GetIconLocation(GIL_FORSHELL, path, MAX_PATH, &idx, &flags))) {
+				if (flags & GIL_NOTFILENAME)
+					icon_id = g_Globals._icon_cache.extract(pExtract, path, idx)._id;
+				else {
+					if (idx == -1)
+						idx = 0;	// special case for some control panel applications ("System")
 
-		if (SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_ICON|SHGFI_SMALLICON))	//@@ besser SHGFI_SYSICONINDEX ?
-			icon_id = g_Globals._icon_cache.add(sfi.hIcon)._id;
+					icon_id = g_Globals._icon_cache.extract(path, idx)._id;
+				}
+
+			/* using create_absolute_pidl() [see below] results in more correct icons for some control panel applets ("NVidia").
+				if (icon_id == ICID_NONE) {
+					SHFILEINFO sfi;
+
+					if (SHGetFileInfo(path, 0, &sfi, sizeof(sfi), SHGFI_ICON|SHGFI_SMALLICON))
+						icon_id = g_Globals._icon_cache.add(sfi.hIcon)._id;
+				} */
+			/*
+				if (icon_id == ICID_NONE) {
+					LPBYTE b = (LPBYTE) alloca(0x10000);
+					SHFILEINFO sfi;
+
+					FILE* file = fopen(path, "rb");
+					if (file) {
+						int l = fread(b, 1, 0x10000, file);
+						fclose(file);
+
+						if (l)
+							icon_id = g_Globals._icon_cache.add(CreateIconFromResourceEx(b, l, TRUE, 0x00030000, 16, 16, LR_DEFAULTCOLOR));
+					}
+				} */
+			}
+		}
+
+		if (icon_id == ICID_NONE) {
+			SHFILEINFO sfi;
+
+			const ShellPath& pidl_abs = create_absolute_pidl();
+			LPCITEMIDLIST pidl = pidl_abs;
+
+			if (SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_ICON|SHGFI_SMALLICON))	//@@ besser SHGFI_SYSICONINDEX ?
+				icon_id = g_Globals._icon_cache.add(sfi.hIcon)._id;
+		}
 	}
 
 	_icon_id = icon_id;

@@ -172,6 +172,55 @@ void IconCache::init()
 }
 
 
+const Icon& IconCache::extract(String path)
+{
+#ifndef __WINE__ ///@todo
+	_tcslwr((LPTSTR)path.c_str());
+#endif
+
+	PathMap::iterator found = _pathMap.find(path);
+
+	if (found != _pathMap.end())
+		return _icons[found->second];
+
+	SHFILEINFO sfi;
+
+	if (SHGetFileInfo(path, 0, &sfi, sizeof(sfi), SHGFI_ICON|SHGFI_SMALLICON)) {	//@@ besser SHGFI_SYSICONINDEX ?
+		const Icon& icon = add(sfi.hIcon, IT_CACHED);
+
+		///@todo limit cache size
+		_pathMap[path] = icon._id;
+
+		return icon;
+	} else
+		return _icons[ICID_NONE];
+}
+
+const Icon& IconCache::extract(LPCTSTR path, int idx)
+{
+	CachePair key(path, idx);
+
+#ifndef __WINE__ ///@todo
+	_tcslwr((LPTSTR)key.first.c_str());
+#endif
+
+	PathIdxMap::iterator found = _pathIdxMap.find(key);
+
+	if (found != _pathIdxMap.end())
+		return _icons[found->second];
+
+	HICON hIcon;
+
+	if ((int)ExtractIconEx(path, idx, NULL, &hIcon, 1) > 0) {
+		const Icon& icon = add(hIcon, IT_CACHED);
+
+		_pathIdxMap[key] = icon._id;
+
+		return icon;
+	} else
+		return _icons[ICID_NONE];
+}
+
 const Icon& IconCache::extract(IExtractIcon* pExtract, LPCTSTR path, int idx)
 {
 	HICON hIconLarge = 0;
@@ -190,43 +239,11 @@ const Icon& IconCache::extract(IExtractIcon* pExtract, LPCTSTR path, int idx)
 	return _icons[ICID_NONE];
 }
 
-const Icon& IconCache::extract_from_file(LPCTSTR path, int idx)
-{
-	CachePair key(path, idx);
-
-#ifndef __WINE__ ///@todo
-	_tcslwr((LPTSTR)key.first.c_str());
-#endif
-
-	CacheMap::iterator found = _cache_map.find(key);
-
-	if (found != _cache_map.end())
-		return _icons[found->second];
-
-	HICON hIcon;
-
-	if ((int)ExtractIconEx(path, idx, NULL, &hIcon, 1) > 0) {
-		const Icon& icon = add_cached(hIcon, path, idx);
-
-		_cache_map[key] = icon._id;
-
-		return icon;
-	} else
-		return _icons[ICID_NONE];
-}
-
-const Icon& IconCache::add(HICON hIcon)
+const Icon& IconCache::add(HICON hIcon, ICON_TYPE type)
 {
 	int id = ++s_next_id;
 
-	return _icons[id] = Icon(IT_DYNAMIC, id, hIcon);
-}
-
-const Icon& IconCache::add_cached(HICON hIcon, LPCTSTR path, int idx)
-{
-	int id = ++s_next_id;
-
-	return _icons[id] = Icon(IT_CACHED, id, hIcon);
+	return _icons[id] = Icon(type, id, hIcon);
 }
 
 const Icon& IconCache::get_icon(int id)
