@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: polyfill.c,v 1.8 2003/08/16 04:47:41 royce Exp $
+/* $Id: polyfill.c,v 1.9 2003/08/16 05:12:37 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -39,6 +39,8 @@
 
 #define NDEBUG
 #include <win32k/debug1.h>
+
+INT abs(INT nm);
 
 #define FILL_EDGE_ALLOC_TAG 0x45465044
 
