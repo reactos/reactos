@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.2 2001/08/22 03:53:53 rex Exp $
+# $Id: helper.mk,v 1.3 2001/08/23 15:34:00 ekohl Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -249,7 +249,7 @@ ifeq ($(TARGET_TYPE),program)
 
   ifeq ($(TARGET_APPTYPE),console)
     MK_DEFENTRY := _mainCRTStartup
-    MK_SDKLIBS := msvcrt.a
+    MK_SDKLIBS :=
     TARGET_LFLAGS += -Wl,--subsystem,console
   endif
 endif
