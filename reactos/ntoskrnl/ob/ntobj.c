@@ -1,4 +1,4 @@
-/* $Id: ntobj.c,v 1.17 2003/10/21 15:50:51 ekohl Exp $
+/* $Id: ntobj.c,v 1.18 2003/11/16 13:47:20 ekohl Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -87,6 +87,7 @@ NtQueryObject (IN HANDLE ObjectHandle,
 	       IN ULONG Length,
 	       OUT PULONG ReturnLength OPTIONAL)
 {
+  OBJECT_HANDLE_INFORMATION HandleInfo;
   POBJECT_HEADER ObjectHeader;
   ULONG InfoLength;
   PVOID Object;
@@ -97,7 +98,7 @@ NtQueryObject (IN HANDLE ObjectHandle,
 				      NULL,
 				      KeGetPreviousMode(),
 				      &Object,
-				      NULL);
+				      &HandleInfo);
   if (!NT_SUCCESS (Status))
     {
       return Status;
@@ -118,8 +119,8 @@ NtQueryObject (IN HANDLE ObjectHandle,
 	    POBJECT_BASIC_INFORMATION BasicInfo;
 
 	    BasicInfo = (POBJECT_BASIC_INFORMATION)ObjectInformation;
-	    BasicInfo->Attributes = 0; /* FIXME*/
-	    BasicInfo->GrantedAccess = 0; /* FIXME*/
+	    BasicInfo->Attributes = HandleInfo.HandleAttributes;
+	    BasicInfo->GrantedAccess = HandleInfo.GrantedAccess;
 	    BasicInfo->HandleCount = ObjectHeader->HandleCount;
 	    BasicInfo->PointerCount = ObjectHeader->RefCount;
 	    BasicInfo->PagedPoolUsage = 0; /* FIXME*/
