@@ -167,8 +167,8 @@ HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0809",0x00000000,"l_intl.n
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","Default",0x00000000,"0409"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","InstallLanguage",0x00000000,"0409"
 
-; Currently selected language for input
-HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","(Default)",0x00000000,"00000409"
+; Suported and installed locales
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale",,0x00000012
 
 ; Some installers check for SP6
 HKLM,"SYSTEM\CurrentControlSet\Control\Windows","CSDVersion",0x00010001,0x00000600
