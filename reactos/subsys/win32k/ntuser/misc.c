@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.65 2004/05/01 09:31:59 weiden Exp $
+/* $Id: misc.c,v 1.66 2004/05/01 11:38:28 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -8,6 +8,7 @@
  * REVISION HISTORY:
  *       2003/05/22  Created
  */
+#define __WIN32K__
 #include <ddk/ntddk.h>
 #include <ddk/ntddmou.h>
 #include <win32k/win32k.h>
@@ -34,6 +35,12 @@
 
 #define NDEBUG
 #include <debug.h>
+
+/* FIXME - not yet defined in w32api :( */
+#define SPI_GETFOCUSBORDERWIDTH	(8206)
+#define SPI_SETFOCUSBORDERWIDTH	(8207)
+#define SPI_GETFOCUSBORDERHEIGHT	(8208)
+#define SPI_SETFOCUSBORDERHEIGHT	(8209)
 
 void W32kRegisterPrimitiveMessageQueue() {
   extern PUSER_MESSAGE_QUEUE pmPrimitiveMessageQueue;
@@ -507,24 +514,22 @@ IntGetFontMetricSetting(LPWSTR lpValueName, PLOGFONTW font)
    }
 }
 
-/*
- * @implemented
- */
-DWORD
-STDCALL
-NtUserSystemParametersInfo(
+ULONG FASTCALL
+IntSystemParametersInfo(
   UINT uiAction,
   UINT uiParam,
   PVOID pvParam,
   UINT fWinIni)
 {
-  static BOOL GradientCaptions = TRUE;
-  NTSTATUS Status;
   PWINSTATION_OBJECT WinStaObject;
+  NTSTATUS Status;
 
   static BOOL bInitialized = FALSE;
   static LOGFONTW IconFont;
   static NONCLIENTMETRICSW pMetrics;
+  static BOOL GradientCaptions = TRUE;
+  static UINT FocusBorderHeight = 1;
+  static UINT FocusBorderWidth = 1;
   
   if (!bInitialized)
   {
@@ -551,161 +556,279 @@ NtUserSystemParametersInfo(
     
     bInitialized = TRUE;
   }
+  
+  switch(uiAction)
+  {
+    case SPI_SETDOUBLECLKWIDTH:
+    case SPI_SETDOUBLECLKHEIGHT:
+    case SPI_SETDOUBLECLICKTIME:
+    {
+      Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+                                              KernelMode,
+                                              0,
+                                              &WinStaObject);
+      if(!NT_SUCCESS(Status))
+      {
+        SetLastNtError(Status);
+        return (DWORD)FALSE;
+      }
+      
+      switch(uiAction)
+      {
+        case SPI_SETDOUBLECLKWIDTH:
+          /* FIXME limit the maximum value? */
+          WinStaObject->SystemCursor.DblClickWidth = uiParam;
+          break;
+        case SPI_SETDOUBLECLKHEIGHT:
+          /* FIXME limit the maximum value? */
+          WinStaObject->SystemCursor.DblClickHeight = uiParam;
+          break;
+        case SPI_SETDOUBLECLICKTIME:
+          /* FIXME limit the maximum time to 1000 ms? */
+          WinStaObject->SystemCursor.DblClickSpeed = uiParam;
+          break;
+      }
+      
+      /* FIXME save the value to the registry */
+      
+      ObDereferenceObject(WinStaObject);
+      return TRUE;
+    }
+    case SPI_SETWORKAREA:
+    {
+      RECT *rc;
+      PDESKTOP_OBJECT Desktop = PsGetWin32Thread()->Desktop;
+      
+      if(!Desktop)
+      {
+        /* FIXME - Set last error */
+        return FALSE;
+      }
+      
+      ASSERT(pvParam);
+      rc = (RECT*)pvParam;
+      Desktop->WorkArea = *rc;
+      
+      return TRUE;
+    }
+    case SPI_GETWORKAREA:
+    {
+      PDESKTOP_OBJECT Desktop = PsGetWin32Thread()->Desktop;
+      
+      if(!Desktop)
+      {
+        /* FIXME - Set last error */
+        return FALSE;
+      }
+      
+      ASSERT(pvParam);
+      *((PRECT)pvParam) = *(IntGetDesktopWorkArea(Desktop));
+      
+      return TRUE;
+    }
+    case SPI_SETGRADIENTCAPTIONS:
+    {
+      GradientCaptions = (pvParam != NULL);
+      /* FIXME - should be checked if the color depth is higher than 8bpp? */
+      return TRUE;
+    }
+    case SPI_GETGRADIENTCAPTIONS:
+    {
+      HDC hDC;
+      PDC dc;
+      SURFOBJ *SurfObj;
+      BOOL Ret = GradientCaptions;
+      
+      hDC = IntGetScreenDC();
+      if(hDC)
+      {
+        dc = DC_LockDc(hDC);
+        SurfObj = (SURFOBJ*)AccessUserObject((ULONG) dc->Surface);
+        if(SurfObj)
+          Ret = (SurfObj->iBitmapFormat > BMF_8BPP) && Ret;
+        DC_UnlockDc(hDC);
+        
+        ASSERT(pvParam);
+        *((PBOOL)pvParam) = Ret;
+        return TRUE;
+      }
+      return FALSE;
+    }
+    case SPI_SETFONTSMOOTHING:
+    {
+      IntEnableFontRendering(uiParam != 0);
+      return TRUE;
+    }
+    case SPI_GETFONTSMOOTHING:
+    {
+      ASSERT(pvParam);
+      *((BOOL*)pvParam) = IntIsFontRenderingEnabled();
+      return TRUE;
+    }
+    case SPI_GETICONTITLELOGFONT:
+    {
+      ASSERT(pvParam);
+      *((LOGFONTW*)pvParam) = IconFont;
+      return TRUE;
+    }
+    case SPI_GETNONCLIENTMETRICS:
+    {
+      ASSERT(pvParam);
+      *((NONCLIENTMETRICSW*)pvParam) = pMetrics;
+      return TRUE;
+    }
+    case SPI_GETFOCUSBORDERHEIGHT:
+    {
+      ASSERT(pvParam);
+      *((UINT*)pvParam) = FocusBorderHeight;
+      return TRUE;
+    }
+    case SPI_GETFOCUSBORDERWIDTH:
+    {
+      ASSERT(pvParam);
+      *((UINT*)pvParam) = FocusBorderWidth;
+      return TRUE;
+    }
+    case SPI_SETFOCUSBORDERHEIGHT:
+    {
+      FocusBorderHeight = (UINT)pvParam;
+      return TRUE;
+    }
+    case SPI_SETFOCUSBORDERWIDTH:
+    {
+      FocusBorderWidth = (UINT)pvParam;
+      return TRUE;
+    }
+    
+    default:
+    {
+      DPRINT1("SystemParametersInfo: Unsupported Action 0x%x (uiParam: 0x%x, pvParam: 0x%x, fWinIni: 0x%x)\n",
+              uiAction, uiParam, pvParam, fWinIni);
+      return FALSE;
+    }
+  }
+  return FALSE;
+}
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+NtUserSystemParametersInfo(
+  UINT uiAction,
+  UINT uiParam,
+  PVOID pvParam,
+  UINT fWinIni)
+{
+  NTSTATUS Status;
 
   switch(uiAction)
   {
     case SPI_SETDOUBLECLKWIDTH:
     case SPI_SETDOUBLECLKHEIGHT:
     case SPI_SETDOUBLECLICKTIME:
-      {
-        Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-                                                KernelMode,
-                                                0,
-                                                &WinStaObject);
-        if (!NT_SUCCESS(Status))
-          return (DWORD)FALSE;
-        
-        switch(uiAction)
-        {
-          case SPI_SETDOUBLECLKWIDTH:
-            /* FIXME limit the maximum value? */
-            WinStaObject->SystemCursor.DblClickWidth = uiParam;
-            break;
-          case SPI_SETDOUBLECLKHEIGHT:
-            /* FIXME limit the maximum value? */
-            WinStaObject->SystemCursor.DblClickHeight = uiParam;
-            break;
-          case SPI_SETDOUBLECLICKTIME:
-            /* FIXME limit the maximum time to 1000 ms? */
-            WinStaObject->SystemCursor.DblClickSpeed = uiParam;
-            break;
-        }
-        
-        /* FIXME save the value to the registry */
-        
-        ObDereferenceObject(WinStaObject);
-        return TRUE;
-      }
-    case SPI_SETWORKAREA:
-      {
-        PDESKTOP_OBJECT Desktop = PsGetWin32Thread()->Desktop;
-        
-        if(!Desktop)
-        {
-          /* FIXME - Set last error */
-          return FALSE;
-        }
-        
-        Status = MmCopyFromCaller(Desktop->WorkArea, (PRECT)pvParam, sizeof(RECT));
-        if(!NT_SUCCESS(Status))
-        {
-          SetLastNtError(Status);
-          return FALSE;
-        }
-        
-        return TRUE;
-      }
-    case SPI_GETWORKAREA:
-      {
-        PRECT Rect;
-        PDESKTOP_OBJECT Desktop = PsGetWin32Thread()->Desktop;
-        
-        if(!Desktop)
-        {
-          /* FIXME - Set last error */
-          return FALSE;
-        }
-        
-        Rect = IntGetDesktopWorkArea(Desktop);
-        
-        Status = MmCopyToCaller((PRECT)pvParam, Desktop->WorkArea, sizeof(RECT));
-        if(!NT_SUCCESS(Status))
-        {
-          SetLastNtError(Status);
-          return FALSE;
-        }
-        
-        return TRUE;
-      }
-    case SPI_GETGRADIENTCAPTIONS:
-      {
-        HDC hDC;
-        PDC dc;
-        SURFOBJ *SurfObj;
-        BOOL Ret = GradientCaptions;
-        
-        hDC = IntGetScreenDC();
-        if(hDC)
-        {
-          dc = DC_LockDc(hDC);
-          SurfObj = (SURFOBJ*)AccessUserObject((ULONG) dc->Surface);
-          if(SurfObj)
-            Ret = (SurfObj->iBitmapFormat > BMF_8BPP);
-          DC_UnlockDc(hDC);
-        }
-        
-        Status = MmCopyToCaller(pvParam, &Ret, sizeof(BOOL));
-        if(!NT_SUCCESS(Status))
-        {
-          SetLastNtError(Status);
-          return FALSE;
-        }
-        return TRUE;
-      }
     case SPI_SETGRADIENTCAPTIONS:
-      {
-        Status = MmCopyFromCaller(&GradientCaptions, pvParam, sizeof(BOOL));
-        if(!NT_SUCCESS(Status))
-        {
-          SetLastNtError(Status);
-          return FALSE;
-        }
-        return TRUE;
-      }
     case SPI_SETFONTSMOOTHING:
+    case SPI_SETFOCUSBORDERHEIGHT:
+    case SPI_SETFOCUSBORDERWIDTH:
+    {
+      return (DWORD)IntSystemParametersInfo(uiAction, uiParam, pvParam, fWinIni);
+    }
+    case SPI_SETWORKAREA:
+    {
+      RECT rc;
+      Status = MmCopyFromCaller(&rc, (PRECT)pvParam, sizeof(RECT));
+      if(!NT_SUCCESS(Status))
       {
-        BOOL Enable;
-        
-        Status = MmCopyFromCaller(&Enable, pvParam, sizeof(BOOL));
-        if(!NT_SUCCESS(Status))
-        {
-          SetLastNtError(Status);
-          return FALSE;
-        }
-        
-        IntEnableFontRendering(Enable);
-        
-        return TRUE;
+        SetLastNtError(Status);
+        return FALSE;
       }
+      return (DWORD)IntSystemParametersInfo(uiAction, uiParam, &rc, fWinIni);
+    }
+    case SPI_GETWORKAREA:
+    {
+      RECT rc;
+      
+      if(!IntSystemParametersInfo(uiAction, uiParam, &rc, fWinIni))
+      {
+        return FALSE;
+      }
+      
+      Status = MmCopyToCaller((PRECT)pvParam, &rc, sizeof(RECT));
+      if(!NT_SUCCESS(Status))
+      {
+        SetLastNtError(Status);
+        return FALSE;
+      }
+      return TRUE;
+    }
     case SPI_GETFONTSMOOTHING:
+    case SPI_GETGRADIENTCAPTIONS:
+    case SPI_GETFOCUSBORDERHEIGHT:
+    case SPI_GETFOCUSBORDERWIDTH:
+    {
+      BOOL Ret;
+      
+      if(!IntSystemParametersInfo(uiAction, uiParam, &Ret, fWinIni))
       {
-        BOOL Enabled = IntIsFontRenderingEnabled();
-        
-        Status = MmCopyToCaller(pvParam, &Enabled, sizeof(BOOL));
-        if(!NT_SUCCESS(Status))
-        {
-          SetLastNtError(Status);
-          return FALSE;
-        }
-        return TRUE;
+        return FALSE;
       }
+      
+      Status = MmCopyToCaller(pvParam, &Ret, sizeof(BOOL));
+      if(!NT_SUCCESS(Status))
+      {
+        SetLastNtError(Status);
+        return FALSE;
+      }
+      return TRUE;
+    }
     case SPI_GETICONTITLELOGFONT:
     {
-        MmCopyToCaller(pvParam, (PVOID)&IconFont, sizeof(LOGFONTW));
-        return TRUE;
-    } 
+      LOGFONTW IconFont;
+      
+      if(!IntSystemParametersInfo(uiAction, uiParam, &IconFont, fWinIni))
+      {
+        return FALSE;
+      }
+      
+      Status = MmCopyToCaller(pvParam, &IconFont, sizeof(LOGFONTW));
+      if(!NT_SUCCESS(Status))
+      {
+        SetLastNtError(Status);
+        return FALSE;
+      }
+      return TRUE;
+    }
     case SPI_GETNONCLIENTMETRICS:
     {
-        /* FIXME:  Is this windows default behavior? */
-        LPNONCLIENTMETRICSW lpMetrics = (LPNONCLIENTMETRICSW)pvParam;
-        if ( lpMetrics->cbSize != sizeof(NONCLIENTMETRICSW) || 
-             uiParam != sizeof(NONCLIENTMETRICSW ))
-        {
-            return FALSE;
-        }
-        DPRINT("FontName: %S, Size:  %i\n",pMetrics.lfMessageFont.lfFaceName, pMetrics.lfMessageFont.lfHeight);
-        MmCopyToCaller(pvParam, (PVOID)&pMetrics, sizeof(NONCLIENTMETRICSW));
-        return TRUE;
+      NONCLIENTMETRICSW metrics;
+      
+      Status = MmCopyFromCaller(&metrics.cbSize, pvParam, sizeof(UINT));
+      if(!NT_SUCCESS(Status))
+      {
+        SetLastNtError(Status);
+        return FALSE;
+      }
+      if((metrics.cbSize != sizeof(NONCLIENTMETRICSW)) ||
+         (uiParam != sizeof(NONCLIENTMETRICSW)))
+      {
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        return FALSE;
+      }
+      
+      if(!IntSystemParametersInfo(uiAction, uiParam, &metrics, fWinIni))
+      {
+        return FALSE;
+      }
+      
+      Status = MmCopyToCaller(pvParam, &metrics.cbSize, sizeof(NONCLIENTMETRICSW));
+      if(!NT_SUCCESS(Status))
+      {
+        SetLastNtError(Status);
+        return FALSE;
+      }
+      return TRUE;
     }
   }
   return FALSE;

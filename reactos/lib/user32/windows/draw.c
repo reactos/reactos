@@ -37,7 +37,14 @@
 #include <windows.h>
 #include <string.h>
 #include <wine/unicode.h>
-#include <wine/debug.h>
+#include <user32.h>
+#include <debug.h>
+
+/* FIXME - not yet defined in w32api :( */
+#define SPI_GETFOCUSBORDERWIDTH	(8206)
+#define SPI_SETFOCUSBORDERWIDTH	(8207)
+#define SPI_GETFOCUSBORDERHEIGHT	(8208)
+#define SPI_SETFOCUSBORDERHEIGHT	(8209)
 
 /* GLOBALS *******************************************************************/
 
@@ -1845,6 +1852,7 @@ DrawFocusRect(HDC hdc, CONST RECT *rect)
 {
    static HBRUSH hFocusRectBrush = NULL;
    HGDIOBJ OldObj;
+   UINT cx, cy;
    
    if(!hFocusRectBrush)
    {
@@ -1855,16 +1863,19 @@ DrawFocusRect(HDC hdc, CONST RECT *rect)
       hFocusRectBrush = CreatePatternBrush(hFocusPattern);
    }
    
+   NtUserSystemParametersInfo(SPI_GETFOCUSBORDERWIDTH, 0, &cx, 0);
+   NtUserSystemParametersInfo(SPI_GETFOCUSBORDERHEIGHT, 0, &cy, 0);
+   
    OldObj = SelectObject(hdc, hFocusRectBrush);
    
-   PatBlt(hdc, rect->left, rect->top,
-      rect->right - rect->left - 1, 1, PATINVERT);
-   PatBlt(hdc, rect->left, rect->top + 1, 1,
-      rect->bottom - rect->top - 1, PATINVERT);
-   PatBlt(hdc, rect->left + 1, rect->bottom - 1,
-      rect->right - rect->left - 1, -1, PATINVERT);
-   PatBlt(hdc, rect->right - 1, rect->top, -1,
-      rect->bottom - rect->top - 1, PATINVERT);
+   /* top */
+   PatBlt(hdc, rect->left, rect->top, rect->right - rect->left, cy, PATINVERT);
+   /* bottom */
+   PatBlt(hdc, rect->left, rect->bottom - cy, rect->right - rect->left, cy, PATINVERT);
+   /* left */
+   PatBlt(hdc, rect->left, rect->top + cy, cx, rect->bottom - rect->top - (2 * cy), PATINVERT);
+   /* right */
+   PatBlt(hdc, rect->right - cx, rect->top + cy, cx, rect->bottom - rect->top - (2 * cy), PATINVERT);
    
    SelectObject(hdc, OldObj);
    return TRUE;
