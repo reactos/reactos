@@ -99,15 +99,74 @@ NtCreateJobObject(PHANDLE JobHandle,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 STDCALL
-NtIsProcessInJob(IN HANDLE ProcessHandle, // ProcessHandle must PROCESS_QUERY_INFORMATION grant access.
-                 IN HANDLE JobHandle OPTIONAL) // JobHandle must grant JOB_OBJECT_QUERY access. Defaults to the current process's job object.
+NtIsProcessInJob(IN HANDLE ProcessHandle,
+                 IN HANDLE JobHandle OPTIONAL)
 {
-  UNIMPLEMENTED;
-  return STATUS_NOT_IMPLEMENTED;
+  KPROCESSOR_MODE PreviousMode;
+  PEPROCESS Process;
+  NTSTATUS Status;
+  
+  PreviousMode = ExGetPreviousMode();
+  
+  Status = ObReferenceObjectByHandle(ProcessHandle,
+                                     PROCESS_QUERY_INFORMATION,
+                                     PsProcessType,
+                                     PreviousMode,
+                                     (PVOID*)&Process,
+                                     NULL);
+  if(NT_SUCCESS(Status))
+  {
+    /* FIXME - make sure the job object doesn't get exchanged or deleted while trying to
+               reference it, e.g. by locking it somehow... */
+
+    PEJOB ProcessJob = Process->Job;
+
+    /* reference the object without caring about access rights as it does not necessarily
+       have to be accessible from the calling process */
+    Status = ObReferenceObjectByPointer(ProcessJob,
+                                        0,
+                                        PsJobType,
+                                        KernelMode);
+    if(NT_SUCCESS(Status))
+    {
+      if(JobHandle == NULL)
+      {
+        /* simply test whether the process is assigned to a job */
+        Status = ((Process->Job != NULL) ? STATUS_PROCESS_IN_JOB : STATUS_PROCESS_NOT_IN_JOB);
+      }
+      else if(ProcessJob != NULL)
+      {
+        PEJOB JobObject;
+
+        /* get the job object and compare the object pointer with the one assigned to the process */
+        Status = ObReferenceObjectByHandle(JobHandle,
+                                           JOB_OBJECT_QUERY,
+                                           PsJobType,
+                                           PreviousMode,
+                                           (PVOID*)&JobObject,
+                                           NULL);
+        if(NT_SUCCESS(Status))
+        {
+          Status = ((ProcessJob == JobObject) ? STATUS_PROCESS_IN_JOB : STATUS_PROCESS_NOT_IN_JOB);
+          ObDereferenceObject(JobObject);
+        }
+      }
+      else
+      {
+        /* the process is not assigned to any job */
+        Status = STATUS_PROCESS_NOT_IN_JOB;
+      }
+      
+      ObDereferenceObject(ProcessJob);
+    }
+    ObDereferenceObject(Process);
+  }
+
+  return Status;
 }
 
 

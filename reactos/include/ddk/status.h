@@ -54,6 +54,8 @@ Note that !NT_SUCCESS(errCode) is NOT the same as NT_ERROR(errCode)
 #define STATUS_NOTIFY_ENUM_DIR                      ((NTSTATUS)0x0000010C)
 #define STATUS_NO_QUOTAS_NO_ACCOUNT                 ((NTSTATUS)0x0000010D)
 #define STATUS_PRIMARY_TRANSPORT_CONNECT_FAILED     ((NTSTATUS)0x0000010E)
+#define STATUS_PROCESS_NOT_IN_JOB                   ((NTSTATUS)0x00000123)
+#define STATUS_PROCESS_IN_JOB                       ((NTSTATUS)0x00000124)
 
 #define STATUS_OBJECT_EXISTS                        ((NTSTATUS)0x40000000)
 #define STATUS_THREAD_WAS_SUSPENDED                 ((NTSTATUS)0x40000001)
