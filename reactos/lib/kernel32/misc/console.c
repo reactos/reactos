@@ -60,7 +60,7 @@ HANDLE STDCALL GetStdHandle(DWORD nStdHandle)
       case STD_OUTPUT_HANDLE:	return Ppb->OutputHandle;
       case STD_ERROR_HANDLE:	return Ppb->ErrorHandle;
      }
-   SetLastError(0); /* FIXME: What error code? */
+   SetLastError( ERROR_INVALID_PARAMETER );
    return INVALID_HANDLE_VALUE;
 }
 
@@ -78,7 +78,7 @@ WINBASEAPI BOOL WINAPI SetStdHandle(DWORD nStdHandle,
    /* More checking needed? */
    if (hHandle == INVALID_HANDLE_VALUE)
      {
-	SetLastError(0);	/* FIXME: What error code? */
+	SetLastError( ERROR_INVALID_HANDLE );
 	return FALSE;
      }
    
@@ -95,7 +95,7 @@ WINBASEAPI BOOL WINAPI SetStdHandle(DWORD nStdHandle,
 	Ppb->ErrorHandle = hHandle;
 	return TRUE;
      }
-   SetLastError(0); /* FIXME: What error code? */
+   SetLastError( ERROR_INVALID_PARAMETER );
    return FALSE;
 }
 
@@ -186,11 +186,31 @@ WINBOOL STDCALL ReadConsoleA(HANDLE hConsoleInput,
 				sizeof(CSRSS_API_REQUEST),
 				sizeof(CSRSS_API_REPLY) + 
 				nNumberOfCharsToRead);
+   //   DbgPrint( "Csrss Returned\n" );
    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Reply->Status))
      {
+	DbgPrint( "CSR returned error in ReadConsole\n" );
+	HeapFree( GetProcessHeap(), 0, Reply );
 	return(FALSE);
      }
-   
+   if( Reply->Status == STATUS_PENDING )
+     {
+       //DbgPrint( "Read pending, waiting on object %x\n", Reply->Data.ReadConsoleReply.EventHandle );
+       Status = NtWaitForSingleObject( Reply->Data.ReadConsoleReply.EventHandle, FALSE, 0 );
+       if( !NT_SUCCESS( Status ) )
+	 {
+	   DbgPrint( "Wait for console input failed!\n" );
+	   HeapFree( GetProcessHeap(), 0, Reply );
+	   return FALSE;
+	 }
+       Status = CsrClientCallServer( &Request, Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) + nNumberOfCharsToRead );
+       if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Reply->Status ) )
+	 {
+	   SetLastError( RtlNtStatusToDosError( Reply->Status ) );
+	   HeapFree( GetProcessHeap(), 0, Reply );
+	   return FALSE;
+	 }
+     }
    if (lpNumberOfCharsRead != NULL)
      {
 	*lpNumberOfCharsRead =
@@ -199,7 +219,6 @@ WINBOOL STDCALL ReadConsoleA(HANDLE hConsoleInput,
    memcpy(lpBuffer, 
 	  Reply->Data.ReadConsoleReply.Buffer,
 	  Reply->Data.ReadConsoleReply.NrCharactersRead);
-   
    HeapFree(GetProcessHeap(),
 	    0,
 	    Reply);
@@ -213,7 +232,18 @@ WINBOOL STDCALL ReadConsoleA(HANDLE hConsoleInput,
  */
 WINBOOL STDCALL AllocConsole(VOID)
 {
-   DbgPrint("AllocConsole() is unimplemented\n");
+   CSRSS_API_REQUEST Request;
+   CSRSS_API_REPLY Reply;
+   NTSTATUS Status;
+
+   Request.Type = CSRSS_ALLOC_CONSOLE;
+   Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
+   if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Reply.Status ) )
+     DbgPrint( "AllocConsole Failed\n" );
+   SetStdHandle( STD_INPUT_HANDLE, Reply.Data.AllocConsoleReply.ConsoleHandle );
+   SetStdHandle( STD_OUTPUT_HANDLE, Reply.Data.AllocConsoleReply.ConsoleHandle );
+   SetStdHandle( STD_ERROR_HANDLE, Reply.Data.AllocConsoleReply.ConsoleHandle );
+   return TRUE;
 }
 
 
