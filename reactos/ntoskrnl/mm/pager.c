@@ -1,4 +1,4 @@
-/* $Id: pager.c,v 1.12 2003/07/12 01:52:10 dwelch Exp $
+/* $Id: pager.c,v 1.13 2003/07/13 14:36:32 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -25,7 +25,7 @@ static HANDLE PagerThreadHandle;
 static CLIENT_ID PagerThreadId;
 static KEVENT PagerThreadEvent;
 static BOOLEAN PagerThreadShouldTerminate;
-static ULONG PagerThreadWorking;
+static ULONG PagerThreadWorkCount;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -40,11 +40,17 @@ MiStartPagerThread(VOID)
 {
   ULONG WasWorking;
 
-  WasWorking = InterlockedExchange(&PagerThreadWorking, 1);
-  if (WasWorking == 0)
+  WasWorking = InterlockedIncrement(&PagerThreadWorkCount);
+  if (WasWorking == 1)
     {
       KeSetEvent(&PagerThreadEvent, IO_NO_INCREMENT, FALSE);
     }
+}
+
+VOID
+MiStopPagerThread(VOID)
+{
+  (VOID)InterlockedDecrement(&PagerThreadWorkCount);
 }
 
 static NTSTATUS STDCALL
@@ -70,10 +76,11 @@ MmPagerThreadMain(PVOID Ignored)
 	   DbgPrint("PagerThread: Terminating\n");
 	   return(STATUS_SUCCESS);
 	 }
-       /* Try and make some memory available to the system. */
-       MmRebalanceMemoryConsumers();
-       /* Let the rest of the system know we finished this run. */
-       (VOID)InterlockedExchange(&PagerThreadWorking, 0);
+       do
+	 {
+	   /* Try and make some memory available to the system. */
+	   MmRebalanceMemoryConsumers();
+	 } while(PagerThreadWorkCount > 0);
      }
 }
 
@@ -82,7 +89,7 @@ NTSTATUS MmInitPagerThread(VOID)
    NTSTATUS Status;
    
    PagerThreadShouldTerminate = FALSE;
-   PagerThreadWorking = 0;
+   PagerThreadWorkCount = 0;
    KeInitializeEvent(&PagerThreadEvent,
 		     SynchronizationEvent,
 		     FALSE);

@@ -640,5 +640,9 @@ VOID
 MiStartPagerThread(VOID);
 VOID
 MmSetLRULastPage(PHYSICAL_ADDRESS PhysicalAddress);
+VOID
+MmRawDeleteVirtualMapping(PVOID Address);
+VOID
+MiStopPagerThread(VOID);
 
 #endif

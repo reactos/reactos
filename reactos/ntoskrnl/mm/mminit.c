@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.52 2003/07/10 21:05:03 royce Exp $
+/* $Id: mminit.c,v 1.53 2003/07/13 14:36:32 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -386,7 +386,7 @@ VOID MmInit1(ULONG FirstKrnlPhysAddr,
 	 i<(KERNEL_BASE + 2 * PAGE_TABLE_SIZE); 
 	 i=i+PAGE_SIZE)
      {
-	 MmDeleteVirtualMapping(NULL, (PVOID)(i), FALSE, NULL, NULL);
+	 MmRawDeleteVirtualMapping((PVOID)(i));
      }
    DPRINT("Almost done MmInit()\n");
 #ifndef MP

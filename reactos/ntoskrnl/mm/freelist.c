@@ -553,6 +553,11 @@ MmMarkPageMapped(PHYSICAL_ADDRESS PhysicalAddress)
   if (Start < MmPageArraySize)
     {   
       KeAcquireSpinLock(&PageListLock, &oldIrql);
+      if (MmPageArray[Start].Flags.Type == MM_PHYSICAL_PAGE_FREE)
+	{
+	  DbgPrint("Mapping non-used page\n");
+	  KeBugCheck(0);
+	}
       MmPageArray[Start].MapCount++;
       KeReleaseSpinLock(&PageListLock, oldIrql);
     }
@@ -563,10 +568,20 @@ MmMarkPageUnmapped(PHYSICAL_ADDRESS PhysicalAddress)
 {
   ULONG Start = PhysicalAddress.u.LowPart / PAGE_SIZE;
   KIRQL oldIrql;
-   
+
   if (Start < MmPageArraySize)
     {   
       KeAcquireSpinLock(&PageListLock, &oldIrql);
+      if (MmPageArray[Start].Flags.Type == MM_PHYSICAL_PAGE_FREE)
+	{
+	  DbgPrint("Unmapping non-used page\n");
+	  KeBugCheck(0);
+	}
+      if (MmPageArray[Start].MapCount == 0)
+	{
+	  DbgPrint("Unmapping not mapped page\n");
+	  KeBugCheck(0);
+	}
       MmPageArray[Start].MapCount--;
       KeReleaseSpinLock(&PageListLock, oldIrql);
     }
@@ -620,7 +635,7 @@ MmReferencePage(PHYSICAL_ADDRESS PhysicalAddress)
    KIRQL oldIrql;
    
    DPRINT("MmReferencePage(PhysicalAddress %x)\n", PhysicalAddress);
-   
+
    if (PhysicalAddress.u.LowPart == 0)
      {
 	KeBugCheck(0);
@@ -871,6 +886,11 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SavedSwapEntry)
       DbgPrint("Got non-free page from freelist\n");
       KeBugCheck(0);
     }
+  if (PageDescriptor->MapCount != 0)
+    {
+      DbgPrint("Got mapped page from freelist\n");
+      KeBugCheck(0);
+    }
   PageDescriptor->Flags.Type = MM_PHYSICAL_PAGE_USED;
   PageDescriptor->Flags.Consumer = Consumer;
   PageDescriptor->ReferenceCount = 1;
@@ -890,6 +910,11 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SavedSwapEntry)
   if (NeedClear)
     {
       MiZeroPage(PageOffset);
+    }
+  if (PageDescriptor->MapCount != 0)
+    {
+      DbgPrint("Returning mapped page.\n");
+      KeBugCheck(0);
     }
   return(PageOffset);
 }
@@ -953,6 +978,11 @@ MmZeroPageThreadMain(PVOID Ignored)
          memset(Address, 0, PAGE_SIZE);
          MmDeleteVirtualMapping(NULL, (PVOID)Address, FALSE, NULL, NULL);
          KeAcquireSpinLock(&PageListLock, &oldIrql);
+	 if (PageDescriptor->MapCount != 0)
+	   {
+	     DbgPrint("Mapped page on freelist.\n");
+	     KeBugCheck(0);
+	   }
  	 PageDescriptor->Flags.Type = MM_PHYSICAL_PAGE_FREE;
 	 InsertHeadList(&FreeZeroedPageListHead, ListEntry);
       }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: balance.c,v 1.18 2003/07/12 01:52:10 dwelch Exp $
+/* $Id: balance.c,v 1.19 2003/07/13 14:36:32 dwelch Exp $
  *
  * PROJECT:     ReactOS kernel 
  * FILE:        ntoskrnl/mm/balance.c
@@ -181,10 +181,6 @@ MmRebalanceMemoryConsumers(VOID)
 	  Target = Target - NrFreedPages;
 	}
     }
-  if (Target > 0)
-    {
-      KeBugCheck(0);
-    }
 }
 
 NTSTATUS
@@ -264,6 +260,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
       MmTransferOwnershipPage(Page, Consumer);
       *AllocatedPage = Page;
       InterlockedDecrement((LONG *)&MiPagesRequired);
+      MiStopPagerThread();
       return(STATUS_SUCCESS);
     }
   

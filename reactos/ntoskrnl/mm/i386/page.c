@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.54 2003/07/11 01:23:15 royce Exp $
+/* $Id: page.c,v 1.55 2003/07/13 14:36:32 dwelch Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -440,6 +440,38 @@ MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOL* WasDirty, PHYSIC
        PhysicalAddr->u.HighPart = 0;
        PhysicalAddr->u.LowPart = PAGE_MASK(Pte);
      }
+}
+
+VOID
+MmRawDeleteVirtualMapping(PVOID Address)
+{
+   PULONG Pde, kePde;
+
+   /*
+    * Set the page directory entry, we may have to copy the entry from
+    * the global page directory.
+    */
+   Pde = ADDR_TO_PDE(Address);
+   if (*Pde == 0 && Address >= (PVOID)KERNEL_BASE)
+   {
+      kePde = MmGlobalKernelPageDirectory + ADDR_TO_PDE_OFFSET(Address);
+      if (*kePde != 0)
+      {
+         *Pde = *kePde;
+	 FLUSH_TLB;
+      }
+   }
+   
+   if (*Pde == 0)
+     {
+	return;
+     }
+
+   /*
+    * Set the entry to zero
+    */
+   *ADDR_TO_PTE(Address) = 0;
+   FLUSH_TLB;
 }
 
 VOID
