@@ -1,4 +1,4 @@
-/* $Id: atom.c,v 1.17 2003/07/10 18:50:51 chorns Exp $
+/* $Id: atom.c,v 1.18 2003/10/28 09:49:04 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -201,7 +201,7 @@ GlobalGetAtomNameA(ATOM nAtom,
 
    Status = NtQueryInformationAtom(nAtom,
 				   AtomBasicInformation,
-				   (PVOID)&Buffer,
+				   Buffer,
 				   BufferSize,
 				   &ReturnLength);
    if (!NT_SUCCESS(Status))
@@ -250,7 +250,7 @@ GlobalGetAtomNameW(ATOM nAtom,
 
    Status = NtQueryInformationAtom(nAtom,
 				   AtomBasicInformation,
-				   (PVOID)&Buffer,
+				   Buffer,
 				   BufferSize,
 				   &ReturnLength);
    if (!NT_SUCCESS(Status))
@@ -261,8 +261,9 @@ GlobalGetAtomNameW(ATOM nAtom,
 	return 0;
      }
 
-   wcscpy(lpBuffer, Buffer->Name);
+   memcpy(lpBuffer, Buffer->Name, Buffer->NameLength);
    ReturnLength = Buffer->NameLength / sizeof(WCHAR);
+   *(lpBuffer + ReturnLength) = 0;
    RtlFreeHeap(RtlGetProcessHeap(),
 	       0,
 	       Buffer);

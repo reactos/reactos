@@ -1,4 +1,4 @@
-/* $Id: atom.c,v 1.5 2003/07/11 01:23:15 royce Exp $
+/* $Id: atom.c,v 1.6 2003/10/28 09:49:04 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -17,8 +17,6 @@
 
 #define NDEBUG
 #include <internal/debug.h>
-
-
 
 typedef struct _RTL_ATOM_ENTRY
 {
@@ -635,8 +633,8 @@ RtlQueryAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
 	     return STATUS_BUFFER_TOO_SMALL;
 	  }
 
-	Length = swprintf(AtomName, L"%s", AtomEntry->Name.Buffer);
-	*NameLength = Length * sizeof(WCHAR);
+	memcpy(AtomName, AtomEntry->Name.Buffer, AtomEntry->Name.Length);
+	*NameLength = AtomEntry->Name.Length;
      }
 
    RtlpUnlockAtomTable(AtomTable);
@@ -874,6 +872,7 @@ RtlpQueryAtomInformation(PRTL_ATOM_TABLE AtomTable,
 				    &Flags,
 				    AtomInformation->Name,
 				    &NameLength);
+
    if (!NT_SUCCESS(Status))
      {
 	return Status;
