@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.38 2002/11/12 00:48:26 mdill Exp $
+/* $Id: conio.c,v 1.39 2003/01/15 00:36:10 hbirr Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -573,11 +573,16 @@ static VOID CsrpDrawRegion(
 	        return;
 	      }
 
-      /* wrap back around the end of the buffer */
-      if( ++y == ScreenBuffer->MaxY )
-	      y = 0;
-
-      SrcOffset += SrcDelta;
+       /* wrap back around the end of the buffer */
+       if( ++y == ScreenBuffer->MaxY )
+       {
+	 y = 0;
+         SrcOffset = Region.Left * 2;
+       }
+       else
+       {
+         SrcOffset += SrcDelta;
+       }
      }
    Mode.dwMode = ENABLE_PROCESSED_OUTPUT;
    Status = NtDeviceIoControlFile( ConsoleDeviceHandle, NULL, NULL, NULL, &Iosb,
@@ -634,7 +639,7 @@ NTSTATUS STDCALL CsrInitConsoleScreenBuffer( PCSRSS_SCREEN_BUFFER Console )
   Console->Header.Type = CSRSS_SCREEN_BUFFER_MAGIC;
   Console->Header.ReferenceCount = 0;
   Console->MaxX = PhysicalConsoleSize.X;
-  Console->MaxY = PhysicalConsoleSize.Y * 2;
+  Console->MaxY = PhysicalConsoleSize.Y;
   Console->ShowX = 0;
   Console->ShowY = 0;
   Console->CurrentX = 0;
@@ -1247,7 +1252,6 @@ CSR_API(CsrFillOutputChar)
       }
    X = Request->Data.FillOutputRequest.Position.X + Buff->ShowX;
    Y = Request->Data.FillOutputRequest.Position.Y + Buff->ShowY;
-   for( i = 0; i < 20000; i++ );
    for( i = 0; i < Request->Data.FillOutputRequest.Length; i++ )
       {
 	 Buff->Buffer[ (Y * 2 * Buff->MaxX) + (X * 2) ] = Request->Data.FillOutputRequest.Char;
