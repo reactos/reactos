@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.51 2004/10/30 22:18:16 weiden Exp $
+/* $Id: rtl.h,v 1.52 2004/11/19 01:30:34 weiden Exp $
  *
  */
 
@@ -54,7 +54,7 @@ typedef struct _DEBUG_BUFFER
 
 typedef struct _DEBUG_MODULE_INFORMATION {
 	ULONG  Reserved[2];
-	ULONG  Base;
+	PVOID  Base;
 	ULONG  Size;
 	ULONG  Flags;
 	USHORT  Index;
@@ -65,7 +65,7 @@ typedef struct _DEBUG_MODULE_INFORMATION {
 } DEBUG_MODULE_INFORMATION, *PDEBUG_MODULE_INFORMATION;
 
 typedef struct _DEBUG_HEAP_INFORMATION {
-	ULONG  Base;
+	PVOID  Base;
 	ULONG  Flags;
 	USHORT  Granularity;
 	USHORT  Unknown;
@@ -119,19 +119,6 @@ typedef PCRITICAL_SECTION PRTL_CRITICAL_SECTION;
 typedef LPCRITICAL_SECTION LPRTL_CRITICAL_SECTION;
 
 #endif /* !__USE_W32API */
-
-
-typedef struct _LOCK_INFORMATION
-{
-  ULONG LockCount;
-  DEBUG_LOCK_INFORMATION LockEntry[1];
-} LOCK_INFORMATION, *PLOCK_INFORMATION;
-
-typedef struct _HEAP_INFORMATION
-{
-  ULONG HeapCount;
-  DEBUG_HEAP_INFORMATION HeapEntry[1];
-} HEAP_INFORMATION, *PHEAP_INFORMATION;
 
 typedef struct _RTL_PROCESS_INFO
 {

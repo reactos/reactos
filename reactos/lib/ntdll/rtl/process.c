@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.35 2003/09/12 17:51:48 vizzini Exp $
+/* $Id: process.c,v 1.36 2004/11/19 01:30:35 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,6 +12,7 @@
 /* INCLUDES ****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <windows.h>
 #include <napi/i386/segment.h>
 #include <ntdll/ldr.h>
 #include <ntdll/base.h>

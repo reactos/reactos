@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: toolhelp.c,v 1.9 2004/11/05 11:51:18 weiden Exp $
+/* $Id: toolhelp.c,v 1.10 2004/11/19 01:30:35 weiden Exp $
  *
  * KERNEL32.DLL toolhelp functions
  *
@@ -348,8 +348,8 @@ TH32CreateSnapshotSectionInitialize(DWORD dwFlags,
     {
       HeapListEntry->dwSize = sizeof(HEAPLIST32);
       HeapListEntry->th32ProcessID = th32ProcessID;
-      HeapListEntry->th32HeapID = 0; /* FIXME - use the base address of the heap we're iterating */
-      HeapListEntry->dwFlags = 0; /* FIXME - use the flags of the heap we're iterating */
+      HeapListEntry->th32HeapID = (ULONG_PTR)hi->HeapEntry[i].Base;
+      HeapListEntry->dwFlags = hi->HeapEntry[i].Flags;
 
       HeapListEntry++;
     }
@@ -366,9 +366,27 @@ TH32CreateSnapshotSectionInitialize(DWORD dwFlags,
     for(i = 0; i < nModules; i++)
     {
       ModuleListEntry->dwSize = sizeof(MODULEENTRY32W);
+      ModuleListEntry->th32ModuleID = 1; /* no longer used, always set to one! */
       ModuleListEntry->th32ProcessID = th32ProcessID;
-
-      /* FIXME - fill the MODULEENTRY32W structure */
+      ModuleListEntry->GlblcntUsage = mi->ModuleEntry[i].LoadCount;
+      ModuleListEntry->ProccntUsage = mi->ModuleEntry[i].LoadCount;
+      ModuleListEntry->modBaseAddr = (BYTE*)mi->ModuleEntry[i].Base;
+      ModuleListEntry->modBaseSize = mi->ModuleEntry[i].Size;
+      ModuleListEntry->hModule = (HMODULE)mi->ModuleEntry[i].Base;
+      
+      MultiByteToWideChar(CP_ACP,
+                          0,
+                          &mi->ModuleEntry[i].ImageName[mi->ModuleEntry[i].ModuleNameOffset],
+                          -1,
+                          ModuleListEntry->szModule,
+                          sizeof(ModuleListEntry->szModule) / sizeof(ModuleListEntry->szModule[0]));
+      
+      MultiByteToWideChar(CP_ACP,
+                          0,
+                          mi->ModuleEntry[i].ImageName,
+                          -1,
+                          ModuleListEntry->szExePath,
+                          sizeof(ModuleListEntry->szExePath) / sizeof(ModuleListEntry->szExePath[0]));
 
       ModuleListEntry++;
     }
@@ -728,6 +746,9 @@ Module32Next(HANDLE hSnapshot, LPMODULEENTRY32 lpme)
 }
 
 
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 Module32NextW(HANDLE hSnapshot, LPMODULEENTRY32W lpme)

@@ -1644,7 +1644,7 @@ RtlDestroyQueryDebugBuffer(
 
 typedef struct _DEBUG_MODULE_INFORMATION {
 	ULONG  Reserved[2];
-	ULONG  Base;
+	PVOID  Base;
 	ULONG  Size;
 	ULONG  Flags;
 	USHORT  Index;
@@ -1655,7 +1655,7 @@ typedef struct _DEBUG_MODULE_INFORMATION {
 } DEBUG_MODULE_INFORMATION, *PDEBUG_MODULE_INFORMATION;
 
 typedef struct _DEBUG_HEAP_INFORMATION {
-	ULONG  Base;
+	PVOID  Base;
 	ULONG  Flags;
 	USHORT  Granularity;
 	USHORT  Unknown;

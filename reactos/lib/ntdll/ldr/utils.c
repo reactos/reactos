@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.100 2004/10/30 14:02:03 navaraf Exp $
+/* $Id: utils.c,v 1.101 2004/11/19 01:30:35 weiden Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -2629,7 +2629,7 @@ LdrQueryProcessModuleInformation(IN PMODULE_INFORMATION ModuleInformation OPTION
   PLIST_ENTRY ModuleListHead;
   PLIST_ENTRY Entry;
   PLDR_MODULE Module;
-  PMODULE_ENTRY ModulePtr = NULL;
+  PDEBUG_MODULE_INFORMATION ModulePtr = NULL;
   NTSTATUS Status = STATUS_SUCCESS;
   ULONG UsedSize = sizeof(ULONG);
   ANSI_STRING AnsiString;
@@ -2666,31 +2666,30 @@ LdrQueryProcessModuleInformation(IN PMODULE_INFORMATION ModuleInformation OPTION
         }
       else if (ModuleInformation != NULL)
         {
-          ModulePtr->Unknown0 = 0;      // FIXME: ??
-          ModulePtr->Unknown1 = 0;      // FIXME: ??
-          ModulePtr->BaseAddress = Module->BaseAddress;
-          ModulePtr->SizeOfImage = Module->SizeOfImage;
+          ModulePtr->Reserved[0] = ModulePtr->Reserved[1] = 0;      // FIXME: ??
+          ModulePtr->Base = Module->BaseAddress;
+          ModulePtr->Size = Module->SizeOfImage;
           ModulePtr->Flags = Module->Flags;
-          ModulePtr->Unknown2 = 0;      // FIXME: load order index ??
-          ModulePtr->Unknown3 = 0;      // FIXME: ??
+          ModulePtr->Index = 0;      // FIXME: index ??
+          ModulePtr->Unknown = 0;      // FIXME: ??
           ModulePtr->LoadCount = Module->LoadCount;
 
           AnsiString.Length = 0;
           AnsiString.MaximumLength = 256;
-          AnsiString.Buffer = ModulePtr->ModuleName;
+          AnsiString.Buffer = ModulePtr->ImageName;
           RtlUnicodeStringToAnsiString(&AnsiString,
                                        &Module->FullDllName,
                                        FALSE);
-          p = strrchr(ModulePtr->ModuleName, '\\');
+          p = strrchr(ModulePtr->ImageName, '\\');
           if (p != NULL)
-            ModulePtr->PathLength = p - ModulePtr->ModuleName + 1;
+            ModulePtr->ModuleNameOffset = p - ModulePtr->ImageName + 1;
           else
-            ModulePtr->PathLength = 0;
+            ModulePtr->ModuleNameOffset = 0;
 
           ModulePtr++;
           ModuleInformation->ModuleCount++;
         }
-      UsedSize += sizeof(MODULE_ENTRY);
+      UsedSize += sizeof(DEBUG_MODULE_INFORMATION);
 
       Entry = Entry->Flink;
     }

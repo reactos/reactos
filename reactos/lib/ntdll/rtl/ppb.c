@@ -1,4 +1,4 @@
-/* $Id: ppb.c,v 1.19 2004/09/29 08:41:39 weiden Exp $
+/* $Id: ppb.c,v 1.20 2004/11/19 01:30:35 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,6 +12,7 @@
 /* INCLUDES ****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <windows.h>
 #include <ntdll/ldr.h>
 #include <napi/teb.h>
 #include <ntdll/base.h>
