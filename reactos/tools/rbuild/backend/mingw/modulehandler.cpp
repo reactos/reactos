@@ -34,13 +34,13 @@ MingwModuleHandler::~MingwModuleHandler()
 	}
 }
 
-/*static*/ void
+void
 MingwModuleHandler::SetMakefile ( FILE* f )
 {
 	fMakefile = f;
 }
 
-/*static*/ MingwModuleHandler*
+MingwModuleHandler*
 MingwModuleHandler::LookupHandler ( const string& location,
                                     ModuleType moduletype )
 {
@@ -160,8 +160,14 @@ MingwModuleHandler::GetSourceFilenames ( const Module& module ) const
 string
 MingwModuleHandler::GetObjectFilename ( const string& sourceFilename ) const
 {
+	string newExtension;
+	string extension = GetExtension ( sourceFilename );
+	if ( extension == ".rc" || extension == ".RC" )
+		newExtension = ".coff";
+	else
+		newExtension = ".o";
 	return FixupTargetFilename ( ReplaceExtension ( sourceFilename,
-	                                                ".o" ) );
+		                                            newExtension ) );
 }
 
 string
@@ -239,19 +245,6 @@ MingwModuleHandler::GenerateGccIncludeParametersFromVector ( const vector<Includ
 	return parameters;
 }
 
-void
-MingwModuleHandler::GenerateGccModuleIncludeVariable ( const Module& module ) const
-{
-#if 0
-	string name ( module.name + "_CFLAGS" );
-	fprintf ( fMakefile,
-	          "%s := %s %s\n",
-	          name.c_str(),
-	          GenerateGccDefineParameters(module).c_str(),
-	          GenerateGccIncludeParameters(module).c_str() );
-#endif
-}
-
 string
 MingwModuleHandler::GenerateGccIncludeParameters ( const Module& module ) const
 {
@@ -287,6 +280,42 @@ MingwModuleHandler::GenerateLinkerParameters ( const Module& module ) const
 }
 
 void
+MingwModuleHandler::GenerateMacro ( const char* assignmentOperation,
+                                    const string& macro,
+                                    const vector<Include*>& includes,
+                                    const vector<Define*>& defines ) const
+{
+	size_t i;
+	
+	fprintf (
+		fMakefile,
+		"%s %s",
+		macro.c_str(),
+		assignmentOperation );
+	for ( i = 0; i < includes.size(); i++ )
+	{
+		fprintf (
+			fMakefile,
+			" -I%s",
+			includes[i]->directory.c_str() );
+	}
+	for ( i = 0; i < defines.size(); i++ )
+	{
+		Define& d = *defines[i];
+		fprintf (
+			fMakefile,
+			" -D%s",
+			d.name.c_str() );
+		if ( d.value.size() )
+			fprintf (
+				fMakefile,
+				"=%s",
+				d.value.c_str() );
+	}
+	fprintf ( fMakefile, "\n" );
+}
+	
+void
 MingwModuleHandler::GenerateMacros (
 	const char* assignmentOperation,
 	const vector<File*>& files,
@@ -296,6 +325,7 @@ MingwModuleHandler::GenerateMacros (
 	const vector<If*>& ifs,
 	const string& cflags_macro,
 	const string& nasmflags_macro,
+	const string& windresflags_macro,
 	const string& linkerflags_macro,
 	const string& objs_macro) const
 {
@@ -303,32 +333,14 @@ MingwModuleHandler::GenerateMacros (
 
 	if ( includes.size() || defines.size() )
 	{
-		fprintf (
-			fMakefile,
-			"%s %s",
-			cflags_macro.c_str(),
-			assignmentOperation );
-		for ( i = 0; i < includes.size(); i++ )
-		{
-			fprintf (
-				fMakefile,
-				" -I%s",
-				includes[i]->directory.c_str() );
-		}
-		for ( i = 0; i < defines.size(); i++ )
-		{
-			Define& d = *defines[i];
-			fprintf (
-				fMakefile,
-				" -D%s",
-				d.name.c_str() );
-			if ( d.value.size() )
-				fprintf (
-					fMakefile,
-					"=%s",
-					d.value.c_str() );
-		}
-		fprintf ( fMakefile, "\n" );
+		GenerateMacro ( assignmentOperation,
+		                cflags_macro,
+		                includes,
+		                defines );
+		GenerateMacro ( assignmentOperation,
+		                windresflags_macro,
+		                includes,
+		                defines );
 	}
 	
 	if ( linkerFlags != NULL )
@@ -382,6 +394,7 @@ MingwModuleHandler::GenerateMacros (
 				rIf.ifs,
 				cflags_macro,
 				nasmflags_macro,
+				windresflags_macro,
 				linkerflags_macro,
 				objs_macro );
 			fprintf ( 
@@ -396,6 +409,7 @@ MingwModuleHandler::GenerateMacros (
 	const Module& module,
 	const string& cflags_macro,
 	const string& nasmflags_macro,
+	const string& windresflags_macro,
 	const string& linkerflags_macro,
 	const string& objs_macro) const
 {
@@ -408,6 +422,7 @@ MingwModuleHandler::GenerateMacros (
 		module.ifs,
 		cflags_macro,
 		nasmflags_macro,
+		windresflags_macro,
 		linkerflags_macro,
 		objs_macro );
 	fprintf ( fMakefile, "\n" );
@@ -416,6 +431,11 @@ MingwModuleHandler::GenerateMacros (
 		fMakefile,
 		"%s += $(PROJECT_CFLAGS)\n\n",
 		cflags_macro.c_str () );
+
+	fprintf (
+		fMakefile,
+		"%s += $(PROJECT_RCFLAGS)\n\n",
+		windresflags_macro.c_str () );
 
 	fprintf (
 		fMakefile,
@@ -465,11 +485,25 @@ MingwModuleHandler::GenerateNasmCommand ( const Module& module,
 }
 
 string
+MingwModuleHandler::GenerateWindresCommand ( const Module& module,
+                                             const string& sourceFilename,
+                                             const string& windresflagsMacro ) const
+{
+	string objectFilename = GetObjectFilename ( sourceFilename );
+	return ssprintf ( "%s %s -o %s ${%s}\n",
+		              "${windres}",
+		              sourceFilename.c_str (),
+		              objectFilename.c_str (),
+		              windresflagsMacro.c_str () );
+}
+
+string
 MingwModuleHandler::GenerateCommand ( const Module& module,
                                       const string& sourceFilename,
                                       const string& cc,
                                       const string& cflagsMacro,
-                                      const string& nasmflagsMacro ) const
+                                      const string& nasmflagsMacro,
+                                      const string& windresflagsMacro ) const
 {
 	string extension = GetExtension ( sourceFilename );
 	if ( extension == ".c" || extension == ".C" )
@@ -486,6 +520,10 @@ MingwModuleHandler::GenerateCommand ( const Module& module,
 		return GenerateNasmCommand ( module,
 		                             sourceFilename,
 		                             nasmflagsMacro );
+	else if ( extension == ".rc" || extension == ".RC" )
+		return GenerateWindresCommand ( module,
+		                                sourceFilename,
+		                                windresflagsMacro );
 
 	throw InvalidOperationException ( __FILE__,
 	                                  __LINE__,
@@ -517,7 +555,8 @@ MingwModuleHandler::GenerateObjectFileTargets ( const Module& module,
                                                 const vector<If*>& ifs,
                                                 const string& cc,
                                                 const string& cflagsMacro,
-                                                const string& nasmflagsMacro ) const
+                                                const string& nasmflagsMacro,
+                                                const string& windresflagsMacro ) const
 {
 	size_t i;
 
@@ -535,20 +574,34 @@ MingwModuleHandler::GenerateObjectFileTargets ( const Module& module,
 		                            sourceFilename,
 		                            cc,
 		                            cflagsMacro,
-		                            nasmflagsMacro ).c_str () );
+		                            nasmflagsMacro,
+		                            windresflagsMacro ).c_str () );
 	}
 
 	for ( i = 0; i < ifs.size(); i++ )
-		GenerateObjectFileTargets ( module, ifs[i]->files, ifs[i]->ifs, cc, cflagsMacro, nasmflagsMacro );
+		GenerateObjectFileTargets ( module,
+		                            ifs[i]->files,
+		                            ifs[i]->ifs,
+		                            cc,
+		                            cflagsMacro,
+		                            nasmflagsMacro,
+		                            windresflagsMacro );
 }
 
 void
 MingwModuleHandler::GenerateObjectFileTargets ( const Module& module,
                                                 const string& cc,
                                                 const string& cflagsMacro,
-                                                const string& nasmflagsMacro ) const
+                                                const string& nasmflagsMacro,
+                                                const string& windresflagsMacro ) const
 {
-	GenerateObjectFileTargets ( module, module.files, module.ifs, cc, cflagsMacro, nasmflagsMacro );
+	GenerateObjectFileTargets ( module,
+	                            module.files,
+	                            module.ifs,
+	                            cc,
+	                            cflagsMacro,
+	                            nasmflagsMacro,
+	                            windresflagsMacro );
 	fprintf ( fMakefile, "\n" );
 }
 
@@ -609,10 +662,16 @@ MingwModuleHandler::GenerateMacrosAndTargets (
 {
 	string cflagsMacro = ssprintf ("%s_CFLAGS", module.name.c_str ());
 	string nasmflagsMacro = ssprintf ("%s_NASMFLAGS", module.name.c_str ());
+	string windresflagsMacro = ssprintf ("%s_RCFLAGS", module.name.c_str ());
 	string linkerFlagsMacro = ssprintf ("%s_LFLAGS", module.name.c_str ());
 	string objectsMacro = ssprintf ("%s_OBJS", module.name.c_str ());
 
-	GenerateMacros ( module, cflagsMacro, nasmflagsMacro, linkerFlagsMacro, objectsMacro );
+	GenerateMacros ( module,
+	                cflagsMacro,
+	                nasmflagsMacro,
+	                windresflagsMacro,
+	                linkerFlagsMacro,
+	                objectsMacro );
 
 	// generate phony target for module name
 	fprintf ( fMakefile, ".PHONY: %s\n",
@@ -627,7 +686,11 @@ MingwModuleHandler::GenerateMacrosAndTargets (
 	objectsMacro = ssprintf ("$(%s)", objectsMacro.c_str ());
 
 	string ar_target = GenerateArchiveTarget ( module, ar, objectsMacro );
-	GenerateObjectFileTargets ( module, cc, cflagsMacro, nasmflagsMacro );
+	GenerateObjectFileTargets ( module,
+	                            cc,
+	                            cflagsMacro,
+	                            nasmflagsMacro,
+	                            windresflagsMacro );
 
 	vector<string> clean_files;
 	clean_files.push_back ( FixupTargetFilename(module.GetPath()) );

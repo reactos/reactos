@@ -154,13 +154,16 @@ MingwBackend::GenerateGlobalVariables ()
 	fprintf ( fMakefile, "ld = ld\n" );
 	fprintf ( fMakefile, "ar = ar\n" );
 	fprintf ( fMakefile, "dlltool = dlltool\n\n" );
+	fprintf ( fMakefile, "windres = windres\n\n" );
 	GenerateGlobalCFlagsAndProperties (
 		"=",
 		ProjectNode.properties,
 		ProjectNode.includes,
 		ProjectNode.defines,
 		ProjectNode.ifs );
-	fprintf ( fMakefile, "PROJECT_LFLAGS = %s\n", GenerateProjectLFLAGS ().c_str () );
+	fprintf ( fMakefile, "PROJECT_RCFLAGS = $(PROJECT_CFLAGS)\n" );
+	fprintf ( fMakefile, "PROJECT_LFLAGS = %s\n",
+	          GenerateProjectLFLAGS ().c_str () );
 	fprintf ( fMakefile, "\n" );
 
 	fprintf ( fMakefile, ".PHONY: clean\n\n" );

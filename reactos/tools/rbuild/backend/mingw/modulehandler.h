@@ -38,9 +38,6 @@ protected:
 	void GeneratePreconditionDependencies ( const Module& module ) const;
 	std::string GetObjectsMacro ( const Module& module ) const;
 	std::string GetLinkerMacro ( const Module& module ) const;
-	std::string GenerateMacros ( const Module& module,
-	                             const std::string& cflags_macro,
-	                             const std::string& objs_macro ) const;
 	std::string GenerateLinkerCommand ( const Module& module,
 	                                    const std::string& linker,
 	                                    const std::string& linkerParameters,
@@ -54,6 +51,10 @@ private:
 	std::string GenerateGccIncludeParametersFromVector ( const std::vector<Include*>& includes ) const;
 	std::string GenerateLinkerParametersFromVector ( const std::vector<LinkerFlag*>& linkerFlags ) const;
 	std::string GenerateLinkerParameters ( const Module& module ) const;
+	void GenerateMacro ( const char* assignmentOperation,
+	                     const std::string& macro,
+	                     const std::vector<Include*>& includes,
+	                     const std::vector<Define*>& defines ) const;
 	void GenerateMacros ( const char* op,
 	                      const std::vector<File*>& files,
 	                      const std::vector<Include*>& includes,
@@ -62,14 +63,15 @@ private:
 	                      const std::vector<If*>& ifs,
 	                      const std::string& cflags_macro,
 	                      const std::string& nasmflags_macro,
+	                      const std::string& windresflags_macro,
 	                      const std::string& linkerflags_macro,
 	                      const std::string& objs_macro) const;
 	void GenerateMacros ( const Module& module,
 	                      const std::string& cflags_macro,
 	                      const std::string& nasmflags_macro,
+	                      const std::string& windresflags_macro,
 	                      const std::string& linkerflags_macro,
 	                      const std::string& objs_macro) const;
-	void GenerateGccModuleIncludeVariable ( const Module& module ) const;
 	std::string GenerateGccIncludeParameters ( const Module& module ) const;
 	std::string GenerateGccParameters ( const Module& module ) const;
 	std::string GenerateNasmParameters ( const Module& module ) const;
@@ -84,21 +86,27 @@ private:
 	std::string GenerateNasmCommand ( const Module& module,
 	                                  const std::string& sourceFilename,
 	                                  const std::string& nasmflagsMacro ) const;
+	std::string GenerateWindresCommand ( const Module& module,
+	                                     const std::string& sourceFilename,
+	                                     const std::string& windresflagsMacro ) const;
 	std::string GenerateCommand ( const Module& module,
 	                              const std::string& sourceFilename,
 	                              const std::string& cc,
 	                              const std::string& cflagsMacro,
-	                              const std::string& nasmflagsMacro ) const;
+	                              const std::string& nasmflagsMacro,
+	                              const std::string& windresflagsMacro ) const;
 	void GenerateObjectFileTargets ( const Module& module,
 	                                 const std::vector<File*>& files,
 	                                 const std::vector<If*>& ifs,
 	                                 const std::string& cc,
 	                                 const std::string& cflagsMacro,
-	                                 const std::string& nasmflagsMacro ) const;
+	                                 const std::string& nasmflagsMacro,
+	                                 const std::string& windresflagsMacro ) const;
 	void GenerateObjectFileTargets ( const Module& module,
 	                                 const std::string& cc,
 	                                 const std::string& cflagsMacro,
-	                                 const std::string& nasmflagsMacro ) const;
+	                                 const std::string& nasmflagsMacro,
+	                                 const std::string& windresflagsMacro ) const;
 	void GetCleanTargets ( std::vector<std::string>& out,
 	                       const std::vector<File*>& files,
 	                       const std::vector<If*>& ifs ) const;
