@@ -19,6 +19,7 @@
  */
 
 #include <freeldr.h>
+#include <debug.h>
 #include <arch.h>
 #include <reactos.h>
 #include <rtl.h>
@@ -113,6 +114,7 @@ LoadDriver(PCHAR szFileName, int nPos)
 }
 
 
+#if 0
 static BOOL
 LoadNlsFile(PCHAR szFileName, PCHAR szModuleName)
 {
@@ -147,6 +149,7 @@ LoadNlsFile(PCHAR szFileName, PCHAR szModuleName)
 
   return(TRUE);
 }
+#endif
 
 
 static VOID
@@ -158,10 +161,7 @@ LoadBootDrivers(PCHAR szSystemRoot, int nPos)
   char ServiceName[256];
   ULONG BufferSize;
   ULONG Index;
-  char *s, *p;
-  char GroupName[256];
-  ULONG len;
-  BOOL done;
+  char *GroupName;
 
   ULONG ValueSize;
   ULONG ValueType;
@@ -200,23 +200,9 @@ LoadBootDrivers(PCHAR szSystemRoot, int nPos)
 
 //  printf("ValueBuffer: '%s' \n", ValueBuffer);
 
-  done = FALSE;
-  s = ValueBuffer;
-  do
+  GroupName = ValueBuffer;
+  while (*GroupName)
     {
-      p = strchr(s, ';');
-      if (p != NULL)
-	{
-	  len = p - s;
-	  memcpy(GroupName, s, len);
-	  GroupName[len] = 0;
-	  s = p + 1;
-	}
-      else
-	{
-	  strcpy(GroupName, s);
-	  done = TRUE;
-	}
 //      printf("Driver group: '%s'\n", GroupName);
 
       /* enumerate all drivers */
@@ -272,11 +258,13 @@ LoadBootDrivers(PCHAR szSystemRoot, int nPos)
 	    }
 	  Index++;
 	}
+
+      GroupName = GroupName + strlen(GroupName) + 1;
     }
-  while(done == FALSE);
 }
 
 
+#if 0
 static BOOL
 LoadNlsFiles(PCHAR szSystemRoot)
 {
@@ -362,20 +350,22 @@ LoadNlsFiles(PCHAR szSystemRoot)
 
   return(TRUE);
 }
+#endif
 
 
-void LoadAndBootReactOS(PUCHAR OperatingSystemName)
+void
+LoadAndBootReactOS(PUCHAR OperatingSystemName)
 {
-	PFILE		FilePointer;
-	char		name[1024];
-	char		value[1024];
-	char		szFileName[1024];
-	char		szBootPath[256];
+	PFILE FilePointer;
+	char  name[1024];
+	char  value[1024];
+	char  szFileName[1024];
+	char  szBootPath[256];
 //	int		i;
 //	int		nNumDriverFiles=0;
 //	int		nNumFilesLoaded=0;
-	char		MsgBuffer[256];
-	ULONG		SectionId;
+	char  MsgBuffer[256];
+	ULONG SectionId;
 
 	char* Base;
 	ULONG Size;
@@ -458,10 +448,7 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	    szBootPath[strlen(szBootPath)] != '\\')
 		strcat(szBootPath, "\\");
 
-#ifndef NDEBUG
-	sprintf(MsgBuffer,"SystemRoot: '%s'", szBootPath);
-	UiMessageBox(MsgBuffer);
-#endif
+	DebugPrint(DPRINT_REACTOS,"SystemRoot: '%s'", szBootPath);
 
 	UiDrawBackdrop();
 
@@ -567,10 +554,7 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 		strcat(szFileName, value);
 	}
 
-#ifndef NDEBUG
-	sprintf(MsgBuffer,"SystemHive: '%s'", szFileName);
-	UiMessageBox(MsgBuffer);
-#endif
+	DebugPrint(DPRINT_REACTOS, "SystemHive: '%s'", szFileName);
 
 	FilePointer = OpenFile(szFileName);
 	if (FilePointer == NULL)
@@ -598,19 +582,17 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 
 	UiDrawProgressBarCenter(15, 100);
 
-#ifndef NDEBUG
-	sprintf(MsgBuffer,"SystemHive loaded at 0x%x size %u", (unsigned)Base, (unsigned)Size);
-	UiMessageBox(MsgBuffer);
-#endif
+	DebugPrint(DPRINT_REACTOS, "SystemHive loaded at 0x%x size %u", (unsigned)Base, (unsigned)Size);
 
 	/*
 	 * Retrieve hardware information and create the hardware hive
 	 */
 	DetectHardware();
-//	Base = MultiBootCreateModule(HARDWARE.HIV);
-//	RegExportHive("\\Registry\\Machine\\HARDWARE", Base, &Size);
-//	MultiBootCloseModule(Base, Size);
-
+#if 0
+	Base = MultiBootCreateModule(HARDWARE.HIV);
+	RegExportHive("\\Registry\\Machine\\HARDWARE", Base, &Size);
+	MultiBootCloseModule(Base, Size);
+#endif
 	UiDrawProgressBarCenter(20, 100);
 
 	/*
