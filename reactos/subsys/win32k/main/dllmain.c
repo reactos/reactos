@@ -1,5 +1,5 @@
-/* $Id: dllmain.c,v 1.26 2002/07/04 19:56:37 dwelch Exp $
- * 
+/* $Id: dllmain.c,v 1.27 2002/07/13 21:37:26 ei Exp $
+ *
  *  Entry Point for win32k.sys
  */
 
@@ -16,6 +16,9 @@
 #include <include/winsta.h>
 #include <include/class.h>
 #include <include/window.h>
+
+//#define NDEBUG
+#include <win32k/debug1.h>
 
 extern SSDT Win32kSSDT[];
 extern SSPT Win32kSSPT[];
@@ -94,6 +97,7 @@ BOOLEAN
 STDCALL
 W32kInitialize (VOID)
 {
+  DPRINT("in W32kInitialize\n");
   InitGdiObjectHandleTable ();
 
   // Create surface used to draw the internal font onto

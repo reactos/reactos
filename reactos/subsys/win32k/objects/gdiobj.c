@@ -1,7 +1,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.11 2001/11/02 06:10:11 rex Exp $
+ * $Id: gdiobj.c,v 1.12 2002/07/13 21:37:27 ei Exp $
  *
  */
 
@@ -12,6 +12,10 @@
 #include <win32k/brush.h>
 #include <win32k/pen.h>
 #include <win32k/text.h>
+#include <win32k/dc.h>
+#include <win32k/bitmaps.h>
+//#define NDEBUG
+#include <win32k/debug1.h>
 
 //  GDI stock objects
 
@@ -100,21 +104,25 @@ HBITMAP hPseudoStockBitmap; /* 1x1 bitmap for memory DCs */
 
 static PGDI_HANDLE_TABLE  HandleTable = 0;
 static FAST_MUTEX  HandleTableMutex;
+static FAST_MUTEX  RefCountHandling;
+
+#define GDI_HANDLE_NUMBER  0x4000
 
 static PGDI_HANDLE_TABLE
 GDIOBJ_iAllocHandleTable (WORD Size)
 {
   PGDI_HANDLE_TABLE  handleTable;
 
-//  ExAcquireFastMutexUnsafe (&HandleTableMutex);
-  handleTable = ExAllocatePool(PagedPool, 
-                               sizeof (GDI_HANDLE_TABLE) + 
+  ExAcquireFastMutexUnsafe (&HandleTableMutex);
+  handleTable = ExAllocatePool(PagedPool,
+                               sizeof (GDI_HANDLE_TABLE) +
                                  sizeof (GDI_HANDLE_ENTRY) * Size);
-  memset (handleTable, 
-          0, 
+  ASSERT( handleTable );
+  memset (handleTable,
+          0,
           sizeof (GDI_HANDLE_TABLE) + sizeof (GDI_HANDLE_ENTRY) * Size);
   handleTable->wTableSize = Size;
-//  ExReleaseFastMutexUnsafe (&HandleTableMutex);
+  ExReleaseFastMutexUnsafe (&HandleTableMutex);
 
   return  handleTable;
 }
@@ -122,7 +130,10 @@ GDIOBJ_iAllocHandleTable (WORD Size)
 static PGDI_HANDLE_ENTRY
 GDIOBJ_iGetHandleEntryForIndex (WORD TableIndex)
 {
-  return  &HandleTable->Handles [TableIndex];
+  //DPRINT("GDIOBJ_iGetHandleEntryForIndex: TableIndex: %d,\n handle: %x, ptr: %x\n", TableIndex, HandleTable->Handles [TableIndex], &(HandleTable->Handles [TableIndex])  );
+  //DPRINT("GIG: HandleTable: %x, Handles: %x, \n TableIndex: %x, pt: %x\n", HandleTable,  HandleTable->Handles, TableIndex, ((PGDI_HANDLE_ENTRY)HandleTable->Handles+TableIndex));
+  DPRINT("GIG: Hndl: %x, mag: %x\n", ((PGDI_HANDLE_ENTRY)HandleTable->Handles+TableIndex), ((PGDI_HANDLE_ENTRY)HandleTable->Handles+TableIndex)->wMagic);
+  return  ((PGDI_HANDLE_ENTRY)HandleTable->Handles+TableIndex);
 }
 
 static WORD
@@ -130,7 +141,7 @@ GDIOBJ_iGetNextOpenHandleIndex (void)
 {
   WORD  tableIndex;
 
-//  ExAcquireFastMutexUnsafe (&HandleTableMutex);
+  ExAcquireFastMutexUnsafe (&HandleTableMutex);
   for (tableIndex = 1; tableIndex < HandleTable->wTableSize; tableIndex++)
   {
     if (HandleTable->Handles [tableIndex].wMagic == 0)
@@ -139,12 +150,156 @@ GDIOBJ_iGetNextOpenHandleIndex (void)
       break;
     }
   }
-//  ExReleaseFastMutexUnsafe (&HandleTableMutex);
-  
+  ExReleaseFastMutexUnsafe (&HandleTableMutex);
+
   return  (tableIndex < HandleTable->wTableSize) ? tableIndex : 0;
 }
 
-PGDIOBJ  GDIOBJ_AllocObject(WORD Size, WORD Magic)
+/*-----------------7/12/2002 11:38AM----------------
+ * Allocate memory for GDI object and return handle to it
+ * Use GDIOBJ_Lock to obtain pointer to the new object.
+ * --------------------------------------------------*/
+HGDIOBJ GDIOBJ_AllocObj(WORD Size, WORD Magic)
+{
+  	PGDIOBJHDR  newObject;
+  	PGDI_HANDLE_ENTRY  handleEntry;
+
+	DPRINT("GDIOBJ_AllocObj: size: %d, magic: %x\n", Size, Magic);
+  	newObject = ExAllocatePool (PagedPool, Size + sizeof (GDIOBJHDR));
+  	if (newObject == NULL)
+  	{
+  	  return  NULL;
+  	}
+  	RtlZeroMemory (newObject, Size + sizeof (GDIOBJHDR));
+
+  	newObject->wTableIndex = GDIOBJ_iGetNextOpenHandleIndex ();
+	newObject->dwCount = 0;
+  	handleEntry = GDIOBJ_iGetHandleEntryForIndex (newObject->wTableIndex);
+  	handleEntry->wMagic = Magic;
+  	handleEntry->hProcessId = PsGetCurrentProcessId ();
+  	handleEntry->pObject = newObject;
+	DPRINT("GDIOBJ_AllocObj: object handle %d\n", newObject->wTableIndex );
+  	return  (HGDIOBJ) newObject->wTableIndex;
+}
+
+BOOL  GDIOBJ_FreeObj(HGDIOBJ hObj, WORD Magic)
+{
+  	PGDIOBJHDR  objectHeader;
+  	PGDI_HANDLE_ENTRY  handleEntry;
+	PGDIOBJ 	Obj;
+	BOOL 	bRet = TRUE;
+
+  	handleEntry = GDIOBJ_iGetHandleEntryForIndex ((WORD)hObj & 0xffff);
+	DPRINT("GDIOBJ_FreeObj: hObj: %d, magic: %x, handleEntry: %x\n", hObj, Magic, handleEntry );
+  	if (handleEntry == 0 || (handleEntry->wMagic != Magic && handleEntry->wMagic != GO_MAGIC_DONTCARE )
+	     || handleEntry->hProcessId != PsGetCurrentProcessId ())
+  	  return  FALSE;
+
+	objectHeader = (PGDIOBJHDR) handleEntry->pObject;
+	ASSERT(objectHeader);
+
+  	// check that the reference count is zero. if not then set flag
+  	// and delete object when releaseobj is called
+  	ExAcquireFastMutex(&RefCountHandling);
+  	if( ( objectHeader->dwCount & ~0x80000000 ) > 0 ){
+  		objectHeader->dwCount |= 0x80000000;
+		DPRINT("GDIOBJ_FreeObj: delayed object deletion");
+  		ExReleaseFastMutex(&RefCountHandling);
+		return TRUE;
+  	}
+  	ExReleaseFastMutex(&RefCountHandling);
+
+	//allow object to delete internal data
+	Obj = (PGDIOBJ)((PCHAR)handleEntry->pObject + sizeof(GDIOBJHDR));
+	switch( handleEntry->wMagic ){
+ 		case GO_REGION_MAGIC:
+
+ 		case GO_PEN_MAGIC:
+ 		case GO_PALETTE_MAGIC:
+ 		case GO_BITMAP_MAGIC:
+			bRet = Bitmap_InternalDelete( (PBITMAPOBJ) Obj );
+			break;
+ 		case GO_DC_MAGIC:
+			bRet = DC_InternalDeleteDC( (PDC) Obj );
+			break;
+ 		case GO_DISABLED_DC_MAGIC:
+ 		case GO_META_DC_MAGIC:
+ 		case GO_METAFILE_MAGIC:
+ 		case GO_METAFILE_DC_MAGIC:
+ 		case GO_ENHMETAFILE_MAGIC:
+ 		case GO_ENHMETAFILE_DC_MAGIC:
+
+ 		case GO_BRUSH_MAGIC:
+ 		case GO_FONT_MAGIC:
+			break;
+	}
+  	handleEntry->hProcessId = 0;
+	ExFreePool (handleEntry->pObject);
+	handleEntry->pObject = 0;
+  	// (RJJ) set wMagic last to avoid race condition
+  	handleEntry->wMagic = 0;
+
+
+  	return  TRUE;
+}
+
+PGDIOBJ GDIOBJ_LockObj( HGDIOBJ hObj, WORD Magic )
+{
+  	PGDI_HANDLE_ENTRY handleEntry = GDIOBJ_iGetHandleEntryForIndex ((WORD) hObj & 0xffff);
+  	PGDIOBJHDR  objectHeader;
+
+	DPRINT("GDIOBJ_LockObj: hObj: %d, magic: %x, \n handleEntry: %x, mag %x\n", hObj, Magic, handleEntry, handleEntry->wMagic);
+  	if (handleEntry == 0 || (handleEntry->wMagic != Magic && handleEntry->wMagic != GO_MAGIC_DONTCARE )
+	     || handleEntry->hProcessId != PsGetCurrentProcessId () )
+  	  return  NULL;
+
+	objectHeader = (PGDIOBJHDR) handleEntry->pObject;
+	ASSERT(objectHeader);
+
+	ExAcquireFastMutex(&RefCountHandling);
+	objectHeader->dwCount++;
+	ExReleaseFastMutex(&RefCountHandling);
+
+	DPRINT("GDIOBJ_LockObj: PGDIOBJ %x\n",  ((PCHAR)objectHeader + sizeof(GDIOBJHDR)) );
+	return (PGDIOBJ)((PCHAR)objectHeader + sizeof(GDIOBJHDR));
+}
+
+BOOL GDIOBJ_UnlockObj( HGDIOBJ hObj, WORD Magic )
+{
+  	PGDI_HANDLE_ENTRY handleEntry = GDIOBJ_iGetHandleEntryForIndex ((WORD) hObj & 0xffff);
+  	PGDIOBJHDR  objectHeader;
+
+	DPRINT("GDIOBJ_UnlockObj: hObj: %d, magic: %x, \n handleEntry: %x\n", hObj, Magic, handleEntry);
+  	if (handleEntry == 0 || (handleEntry->wMagic != Magic && handleEntry->wMagic != GO_MAGIC_DONTCARE )
+	      || handleEntry->hProcessId != PsGetCurrentProcessId ())
+  	  return  FALSE;
+
+	objectHeader = (PGDIOBJHDR) handleEntry->pObject;
+	ASSERT(objectHeader);
+
+  	ExAcquireFastMutex(&RefCountHandling);
+	if( ( objectHeader->dwCount & ~0x80000000 ) == 0 ){
+		ExReleaseFastMutex(&RefCountHandling);
+		DPRINT( "GDIOBJ_UnLockObj: unlock object that is not locked\n" );
+		return FALSE;
+	}
+
+	objectHeader = (PGDIOBJHDR) handleEntry->pObject;
+	ASSERT(objectHeader);
+	objectHeader->dwCount--;
+
+	if( objectHeader->dwCount  == 0x80000000 ){
+		//delayed object release
+		ExReleaseFastMutex(&RefCountHandling);
+		DPRINT("GDIOBJ_UnlockObj: delayed delete\n");
+		return GDIOBJ_FreeObj( hObj, Magic );
+	}
+	ExReleaseFastMutex(&RefCountHandling);
+	return TRUE;
+}
+
+/*
+PGDIOBJ GDIOBJ_AllocObject(WORD Size, WORD Magic)
 {
   PGDIOBJHDR  newObject;
   PGDI_HANDLE_ENTRY  handleEntry;
@@ -159,7 +314,7 @@ PGDIOBJ  GDIOBJ_AllocObject(WORD Size, WORD Magic)
   newObject->wTableIndex = GDIOBJ_iGetNextOpenHandleIndex ();
   handleEntry = GDIOBJ_iGetHandleEntryForIndex (newObject->wTableIndex);
   handleEntry->wMagic = Magic;
-  handleEntry->hProcessId = 0; // PsGetCurrentProcessId ();
+  handleEntry->hProcessId = PsGetCurrentProcessId ();
   handleEntry->pObject = newObject;
 
   return  (PGDIOBJ)(((PCHAR) newObject) + sizeof (GDIOBJHDR));
@@ -187,16 +342,16 @@ HGDIOBJ  GDIOBJ_PtrToHandle (PGDIOBJ Obj, WORD Magic)
 {
   PGDIOBJHDR  objectHeader;
   PGDI_HANDLE_ENTRY  handleEntry;
-  
-  if (Obj == NULL) 
+
+  if (Obj == NULL)
     return  NULL;
   objectHeader = (PGDIOBJHDR) (((PCHAR)Obj) - sizeof (GDIOBJHDR));
   handleEntry = GDIOBJ_iGetHandleEntryForIndex (objectHeader->wTableIndex);
-  if (handleEntry == 0 || 
+  if (handleEntry == 0 ||
       handleEntry->wMagic != Magic ||
-      handleEntry->hProcessId != 0 /* PsGetCurrentProcess () */)
+      handleEntry->hProcessId != PsGetCurrentProcessId () )
     return  NULL;
-  
+
   return  (HGDIOBJ) objectHeader->wTableIndex;
 }
 
@@ -208,13 +363,14 @@ PGDIOBJ  GDIOBJ_HandleToPtr (HGDIOBJ ObjectHandle, WORD Magic)
     return NULL;
 
   handleEntry = GDIOBJ_iGetHandleEntryForIndex ((WORD)ObjectHandle & 0xffff);
-  if (handleEntry == 0 || 
+  if (handleEntry == 0 ||
       (Magic != GO_MAGIC_DONTCARE && handleEntry->wMagic != Magic) ||
-      handleEntry->hProcessId != 0 /* PsGetCurrentProcess () */)
+      handleEntry->hProcessId != PsGetCurrentProcessId () )
     return  NULL;
 
   return  (PGDIOBJ) (((PCHAR)handleEntry->pObject) + sizeof (GDIOBJHDR));
 }
+*/
 
 WORD  GDIOBJ_GetHandleMagic (HGDIOBJ ObjectHandle)
 {
@@ -224,8 +380,8 @@ WORD  GDIOBJ_GetHandleMagic (HGDIOBJ ObjectHandle)
     return  0;
 
   handleEntry = GDIOBJ_iGetHandleEntryForIndex ((WORD)ObjectHandle & 0xffff);
-  if (handleEntry == 0 || 
-      handleEntry->hProcessId != 0 /* PsGetCurrentProcess () */)
+  if (handleEntry == 0 ||
+      handleEntry->hProcessId != PsGetCurrentProcessId ())
     return  0;
 
   return  handleEntry->wMagic;
@@ -234,9 +390,13 @@ WORD  GDIOBJ_GetHandleMagic (HGDIOBJ ObjectHandle)
 VOID
 InitGdiObjectHandleTable (void)
 {
-  DbgPrint ("InitGdiObjectHandleTable\n");
-//  ExInitializeFastMutex (&HandleTableMutex);
-  HandleTable = GDIOBJ_iAllocHandleTable (0x1000);
+  DPRINT ("InitGdiObjectHandleTable\n");
+  ExInitializeFastMutex (&HandleTableMutex);
+  ExInitializeFastMutex (&RefCountHandling);
+  //per http://www.wd-mag.com/articles/1999/9902/9902b/9902b.htm?topic=articles
+  //gdi handle table can hold 0x4000 handles
+  HandleTable = GDIOBJ_iAllocHandleTable (GDI_HANDLE_NUMBER);
+  DPRINT("HandleTable: %x\n", HandleTable );
 }
 
 VOID CreateStockObjects(void)
@@ -275,4 +435,51 @@ HGDIOBJ STDCALL  W32kGetStockObject(INT  Object)
   return ret; */
 
   return StockObjects[Object]; // FIXME........
+}
+
+BOOL STDCALL  W32kDeleteObject(HGDIOBJ hObject)
+{
+/* ei: Now this is handled in gdiobj.c
+  PGDIOBJ  Obj;
+  PGDIOBJHDR  ObjHdr;
+  WORD  magic;
+
+  magic = GDIOBJ_GetHandleMagic (hObject);
+  Obj = GDIOBJ_HandleToPtr( hObject, GO_MAGIC_DONTCARE );
+  if( !Obj )
+    return FALSE;
+  ObjHdr = (PGDIOBJHDR)(((PCHAR)Obj) - sizeof (GDIOBJHDR));
+  switch( magic )
+  {
+    case GO_BITMAP_MAGIC: {
+      DPRINT( "Deleting bitmap\n" );
+      ExFreePool( ((PBITMAPOBJ)Obj)->bitmap.bmBits );
+      BITMAPOBJ_FreeBitmap( Obj );
+      break;
+    }
+    default: {
+      DPRINT( "W32kDeleteObject: Deleting object of unknown type %x\n", magic );
+      return FALSE;
+    }
+  }
+  return TRUE;
+ */
+  return GDIOBJ_FreeObj( hObject, GO_MAGIC_DONTCARE );
+}
+
+// dump all the objects for process. if process == 0 dump all the objects
+VOID STDCALL W32kDumpGdiObjects( INT Process )
+{
+	DWORD i;
+  	PGDI_HANDLE_ENTRY handleEntry;
+  	PGDIOBJHDR  objectHeader;
+
+	for( i=1; i < GDI_HANDLE_NUMBER; i++ ){
+		handleEntry = GDIOBJ_iGetHandleEntryForIndex ((WORD) i & 0xffff);
+		if( handleEntry && handleEntry->wMagic != 0 ){
+			objectHeader = (PGDIOBJHDR) handleEntry->pObject;
+			DPRINT("\nHandle: %d, magic: %x \n process: %d, locks: %d", i, handleEntry->wMagic, handleEntry->hProcessId, objectHeader->dwCount);
+		}
+	}
+
 }

@@ -1,4 +1,4 @@
-/* $Id: brush.c,v 1.13 2001/11/02 06:10:11 rex Exp $
+/* $Id: brush.c,v 1.14 2002/07/13 21:37:26 ei Exp $
  */
 
 
@@ -17,20 +17,25 @@ HBRUSH STDCALL W32kCreateBrushIndirect(CONST LOGBRUSH  *lb)
   PBRUSHOBJ  brushPtr;
   HBRUSH  hBrush;
 
-  brushPtr = BRUSHOBJ_AllocBrush();
-  hBrush = BRUSHOBJ_PtrToHandle (brushPtr);
-
+  hBrush = BRUSHOBJ_AllocBrush();
   if (hBrush == NULL)
   {
     return 0;
   }
 
-  brushPtr->iSolidColor = lb->lbColor;
-  brushPtr->logbrush.lbStyle = lb->lbStyle;
-  brushPtr->logbrush.lbColor = lb->lbColor;
-  brushPtr->logbrush.lbHatch = lb->lbHatch;
+  brushPtr = BRUSHOBJ_LockBrush (hBrush);
+  ASSERT( brushPtr ); //I want to know if this ever occurs
 
-  return  hBrush;
+  if( brushPtr ){
+  	brushPtr->iSolidColor = lb->lbColor;
+  	brushPtr->logbrush.lbStyle = lb->lbStyle;
+  	brushPtr->logbrush.lbColor = lb->lbColor;
+  	brushPtr->logbrush.lbHatch = lb->lbHatch;
+
+  	BRUSHOBJ_UnlockBrush( hBrush );
+  	return  hBrush;
+  }
+  return NULL;
 }
 
 HBRUSH STDCALL W32kCreateDIBPatternBrush(HGLOBAL  hDIBPacked,
@@ -41,7 +46,7 @@ HBRUSH STDCALL W32kCreateDIBPatternBrush(HGLOBAL  hDIBPacked,
   LOGBRUSH  logbrush;
   PBITMAPINFO  info, newInfo;
   INT  size;
-    
+
   DPRINT("%04x\n", hbitmap );
 
   logbrush.lbStyle = BS_DIBPATTERN;
@@ -49,11 +54,11 @@ HBRUSH STDCALL W32kCreateDIBPatternBrush(HGLOBAL  hDIBPacked,
   logbrush.lbHatch = 0;
 
   /* Make a copy of the bitmap */
-  if (!(info = (BITMAPINFO *)GlobalLock( hbitmap ))) 
+  if (!(info = (BITMAPINFO *)GlobalLock( hbitmap )))
   {
     return 0;
   }
-  
+
 
   if (info->bmiHeader.biCompression) size = info->bmiHeader.biSizeImage;
   else
@@ -80,16 +85,16 @@ HBRUSH STDCALL W32kCreateDIBPatternBrushPt(CONST VOID  *PackedDIB,
   LOGBRUSH  logbrush;
   PBITMAPINFO  info;
   PBITMAPINFO  newInfo;
-    
+
   info = (BITMAPINFO *) PackedDIB;
   if (info == NULL)
   {
     return 0;
   }
-  DPRINT ("%p %ldx%ld %dbpp\n", 
-          info, 
+  DPRINT ("%p %ldx%ld %dbpp\n",
+          info,
           info->bmiHeader.biWidth,
-          info->bmiHeader.biHeight, 
+          info->bmiHeader.biHeight,
           info->bmiHeader.biBitCount);
 
   logbrush.lbStyle = BS_DIBPATTERN;
@@ -107,15 +112,17 @@ HBRUSH STDCALL W32kCreateDIBPatternBrushPt(CONST VOID  *PackedDIB,
     size = DIB_GetDIBImageBytes (info->bmiHeader.biWidth, info->bmiHeader.biHeight, info->bmiHeader.biBitCount);
   }
   size += DIB_BitmapInfoSize (info, Usage);
-  
-  logbrush.lbHatch = (INT)GDIOBJ_PtrToHandle (GDIOBJ_AllocObject (size, GO_MAGIC_DONTCARE), GO_MAGIC_DONTCARE);
+
+  logbrush.lbHatch = (LONG) GDIOBJ_AllocObj(size, GO_MAGIC_DONTCARE);
   if (logbrush.lbHatch == 0)
   {
     return 0;
   }
-  newInfo = (PBITMAPINFO) GDIOBJ_HandleToPtr ((HGDIOBJ) logbrush.lbHatch, GO_MAGIC_DONTCARE);
+  newInfo = (PBITMAPINFO) GDIOBJ_LockObj ((HGDIOBJ) logbrush.lbHatch, GO_MAGIC_DONTCARE);
+  ASSERT(newInfo);
   memcpy(newInfo, info, size);
-  
+  GDIOBJ_UnlockObj( (HGDIOBJ) logbrush.lbHatch, GO_MAGIC_DONTCARE );
+
   return  W32kCreateBrushIndirect (&logbrush);
 }
 
@@ -133,7 +140,7 @@ HBRUSH STDCALL W32kCreateHatchBrush(INT  Style,
   logbrush.lbStyle = BS_HATCHED;
   logbrush.lbColor = Color;
   logbrush.lbHatch = Style;
-  
+
   return  W32kCreateBrushIndirect (&logbrush);
 }
 

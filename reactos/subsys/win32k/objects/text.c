@@ -95,7 +95,7 @@ W32kAddFontResource(LPCWSTR  Filename)
     DbgPrint("could not allocate memory for module");
     return 0;
   }
-   
+
   //  Load driver into memory chunk
   Status = NtReadFile(FileHandle, 0, 0, 0, &Iosb, buffer, FileStdInfo.EndOfFile.u.LowPart, 0, 0);
   if (!NT_SUCCESS(Status))
@@ -177,10 +177,10 @@ W32kCreateFont(int  Height,
   logfont.lfClipPrecision = ClipPrecision;
   logfont.lfQuality = Quality;
   logfont.lfPitchAndFamily = PitchAndFamily;
-   
+
   if(Face)
     memcpy(logfont.lfFaceName, Face, sizeof(logfont.lfFaceName));
-  else 
+  else
     logfont.lfFaceName[0] = '\0';
 
   return W32kCreateFontIndirect(&logfont);
@@ -195,15 +195,19 @@ W32kCreateFontIndirect(CONST LPLOGFONT  lf)
 
   if (lf)
   {
-    if(fontPtr = TEXTOBJ_AllocText())
+    if(hFont = TEXTOBJ_AllocText())
     {
-      memcpy(&fontPtr->logfont, lf, sizeof(LOGFONT));
+	  fontPtr = TEXTOBJ_LockText( hFont );
+	  ASSERT( fontPtr );  //I want to know when this happens
+	  if( fontPtr ){
+      	memcpy(&fontPtr->logfont, lf, sizeof(LOGFONT));
 
-      if (lf->lfEscapement != lf->lfOrientation) {
-        /* this should really depend on whether GM_ADVANCED is set */
-        fontPtr->logfont.lfOrientation = fontPtr->logfont.lfEscapement;
-      }
-      hFont = TEXTOBJ_PtrToHandle(fontPtr);
+      	if (lf->lfEscapement != lf->lfOrientation) {
+      	  /* this should really depend on whether GM_ADVANCED is set */
+      	  fontPtr->logfont.lfOrientation = fontPtr->logfont.lfEscapement;
+      	}
+		TEXTOBJ_UnlockText( hFont );
+	  }
     }
   }
 
@@ -521,34 +525,34 @@ W32kSetTextAlign(HDC  hDC,
 {
   UINT prevAlign;
   DC *dc;
-  
+
   dc = DC_HandleToPtr(hDC);
-  if (!dc) 
+  if (!dc)
     {
       return  0;
     }
   prevAlign = dc->w.textAlign;
   dc->w.textAlign = Mode;
-  
+  DC_ReleasePtr( hDC );
   return  prevAlign;
 }
 
 COLORREF
 STDCALL
-W32kSetTextColor(HDC hDC, 
+W32kSetTextColor(HDC hDC,
                  COLORREF color)
 {
   COLORREF  oldColor;
   PDC  dc = DC_HandleToPtr(hDC);
-  
-  if (!dc) 
+
+  if (!dc)
   {
     return 0x80000000;
   }
 
   oldColor = dc->w.textColor;
   dc->w.textColor = color;
-
+  DC_ReleasePtr( hDC );
   return  oldColor;
 }
 
@@ -580,8 +584,8 @@ W32kTextOut(HDC  hDC,
   FT_Bool use_kerning;
   RECTL DestRect, MaskRect;
   POINTL SourcePoint, BrushOrigin;
-  HBRUSH hBrush;
-  PBRUSHOBJ Brush;
+  HBRUSH hBrush = NULL;
+  PBRUSHOBJ Brush = NULL;
   HBITMAP HSourceGlyph;
   PSURFOBJ SourceGlyphSurf;
   SIZEL bitSize;
@@ -594,7 +598,10 @@ W32kTextOut(HDC  hDC,
   PPALGDI PalDestGDI;
   PXLATEOBJ XlateObj;
 
-  TextObj = TEXTOBJ_HandleToPtr(dc->w.hFont);
+  if( !dc )
+	return FALSE;
+
+  TextObj = TEXTOBJ_LockText(dc->w.hFont);
 
   for(i=0; i<FontsLoaded; i++)
   {
@@ -605,7 +612,7 @@ W32kTextOut(HDC  hDC,
   if(hFont == 0)
   {
     DbgPrint("Specified font %s is not loaded\n", TextObj->logfont.lfFaceName);
-    return FALSE;
+	goto fail;
   }
 
   FontObj = (PFONTOBJ)AccessUserObject(hFont);
@@ -635,14 +642,14 @@ W32kTextOut(HDC  hDC,
   error = FT_Set_Pixel_Sizes(face, TextObj->logfont.lfHeight, TextObj->logfont.lfWidth);
   if(error) {
     DbgPrint("Error in setting pixel sizes: %u\n", error);
-    return FALSE;
+	goto fail;
   }
 
   // Create the brush
   PalDestGDI = (PPALGDI)AccessInternalObject(dc->w.hPalette);
   XlateObj = (PXLATEOBJ)EngCreateXlate(PalDestGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
   hBrush = W32kCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->w.textColor));
-  Brush = BRUSHOBJ_HandleToPtr(hBrush);
+  Brush = BRUSHOBJ_LockBrush(hBrush);
   EngDeleteXlate(XlateObj);
 
   SourcePoint.x = 0;
@@ -655,9 +662,12 @@ W32kTextOut(HDC  hDC,
   // Do we use the current TEXTOBJ's logfont.lfOrientation or the DC's textAlign?
   if (dc->w.textAlign & TA_BASELINE) {
     yoff = 0;
-  } else if (dc->w.textAlign & TA_BOTTOM) {
+  }
+  else
+  if (dc->w.textAlign & TA_BOTTOM) {
     yoff = -face->size->metrics.descender / 64;
-  } else { // TA_TOP
+  }
+  else { // TA_TOP
     yoff = face->size->metrics.ascender / 64;
   }
 
@@ -670,7 +680,7 @@ W32kTextOut(HDC  hDC,
     error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
     if(error) {
       DbgPrint("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
-      return FALSE;
+      goto fail;
     }
     glyph = face->glyph;
 
@@ -687,7 +697,7 @@ W32kTextOut(HDC  hDC,
       error = FT_Render_Glyph(glyph, ft_render_mode_mono);
       if(error) {
         DbgPrint("WARNING: Failed to render glyph!\n");
-        return FALSE;
+		goto fail;
       }
       pitch = glyph->bitmap.pitch;
     } else {
@@ -719,12 +729,26 @@ W32kTextOut(HDC  hDC,
 
     String++;
   }
+  TEXTOBJ_UnlockText( dc->w.hFont );
+  BRUSHOBJ_UnlockBrush(hBrush);
+  W32kDeleteObject( hBrush );
+  DC_ReleasePtr( hDC );
+  return TRUE;
+
+fail:
+  TEXTOBJ_UnlockText( dc->w.hFont );
+  if( hBrush ){
+    BRUSHOBJ_UnlockBrush(hBrush);
+    W32kDeleteObject( hBrush );
+  }
+  DC_ReleasePtr( hDC );
+  return FALSE;
 }
 
 UINT
 STDCALL
 W32kTranslateCharsetInfo(PDWORD  Src,
-                               LPCHARSETINFO  CSI,   
+                               LPCHARSETINFO  CSI,
                                DWORD  Flags)
 {
   UNIMPLEMENTED;

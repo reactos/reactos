@@ -39,7 +39,7 @@ typedef struct _DEVICECAPS
   WORD   pad2[6];       /*  92-102: reserved */
   WORD   sizePalette;   /* 104: entries in system palette */
   WORD   numReserved;   /* 106: reserved entries */
-  WORD   colorRes;      /* 108: color resolution */    
+  WORD   colorRes;      /* 108: color resolution */
 } DEVICECAPS, *PDEVICECAPS;
 
 typedef struct _WIN_DC_INFO
@@ -58,7 +58,7 @@ typedef struct _WIN_DC_INFO
 // #if 0
     HANDLE      hDevice;
     HPALETTE    hPalette;
-    
+
     GdiPath       path;
 // #endif
 
@@ -69,44 +69,44 @@ typedef struct _WIN_DC_INFO
   WORD  backgroundMode;
   COLORREF  backgroundColor;
   COLORREF  textColor;
-  
+
   short  brushOrgX;
   short  brushOrgY;
-  
+
   WORD  textAlign;         /* Text alignment from SetTextAlign() */
   short  charExtra;         /* Spacing from SetTextCharacterExtra() */
   short  breakTotalExtra;   /* Total extra space for justification */
   short  breakCount;        /* Break char. count */
   short  breakExtra;        /* breakTotalExtra / breakCount */
   short  breakRem;          /* breakTotalExtra % breakCount */
-  
+
   RECT   totalExtent;
   BYTE   bitsPerPixel;
-  
+
   INT  MapMode;
   INT  GraphicsMode;      /* Graphics mode */
   INT  DCOrgX;            /* DC origin */
   INT  DCOrgY;
-  
+
 #if 0
     FARPROC     lpfnPrint;         /* AbortProc for Printing */
 #endif
-  
+
   INT  CursPosX;          /* Current position */
   INT  CursPosY;
   INT  ArcDirection;
-  
+
   XFORM  xformWorld2Wnd;    /* World-to-window transformation */
   XFORM  xformWorld2Vport;  /* World-to-viewport transformation */
   XFORM  xformVport2World;  /* Inverse of the above transformation */
-  BOOL  vport2WorldValid;  /* Is xformVport2World valid? */  
+  BOOL  vport2WorldValid;  /* Is xformVport2World valid? */
 } WIN_DC_INFO;
 
   /* DC flags */
 #define DC_MEMORY     0x0001   /* It is a memory DC */
 #define DC_SAVED      0x0002   /* It is a saved DC */
 #define DC_DIRTY      0x0004   /* hVisRgn has to be updated */
-#define DC_THUNKHOOK  0x0008   /* DC hook is in the 16-bit code */ 
+#define DC_THUNKHOOK  0x0008   /* DC hook is in the 16-bit code */
 
 #define  GDI_DC_TYPE  (1)
 
@@ -114,7 +114,7 @@ typedef struct _DC
 {
   HDC  hSelf;
   HDC  hNext;
-  DHPDEV  PDev;  
+  DHPDEV  PDev;
   DEVMODEW  DMW;
   HSURF  FillPatternSurfaces[HS_DDI_MAX];
   GDIINFO  GDIInfo;
@@ -124,7 +124,7 @@ typedef struct _DC
   DRIVER_FUNCTIONS  DriverFunctions;
   PWSTR  DriverName;
   HANDLE  DeviceDriver;
-  
+
   INT  wndOrgX;          /* Window origin */
   INT  wndOrgY;
   INT  wndExtX;          /* Window extent */
@@ -141,17 +141,24 @@ typedef struct _DC
 
 /*  Internal functions  */
 
+/*
 #define  DC_PtrToHandle(pDC)  \
   ((HDC) GDIOBJ_PtrToHandle ((PGDIOBJ) pDC, GO_DC_MAGIC))
+*/
+
 #define  DC_HandleToPtr(hDC)  \
-  ((PDC) GDIOBJ_HandleToPtr ((HGDIOBJ) hDC, GO_DC_MAGIC))
+  ((PDC) GDIOBJ_LockObj ((HGDIOBJ) hDC, GO_DC_MAGIC))
+#define  DC_ReleasePtr(hDC)  \
+  GDIOBJ_UnlockObj ((HGDIOBJ) hDC, GO_DC_MAGIC)
+
 HDC RetrieveDisplayHDC(VOID);
-PDC  DC_AllocDC(LPCWSTR  Driver);
-void  DC_InitDC(PDC  DCToInit);
-PDC  DC_FindOpenDC(LPCWSTR  Driver);
-void  DC_FreeDC(PDC  DCToFree);
+HDC  DC_AllocDC(LPCWSTR  Driver);
+void  DC_InitDC(HDC  DCToInit);
+HDC  DC_FindOpenDC(LPCWSTR  Driver);
+void  DC_FreeDC(HDC  DCToFree);
 HDC  DC_GetNextDC (PDC pDC);
 void  DC_SetNextDC (PDC pDC, HDC hNextDC);
+BOOL DC_InternalDeleteDC( PDC DCToDelete );
 
 void DC_UpdateXforms(PDC  dc);
 BOOL DC_InvertXform(const XFORM *xformSrc, XFORM *xformDest);

@@ -13,14 +13,16 @@ typedef struct
 /*  Internal interface  */
 
 #define  PENOBJ_AllocPen()  \
-  ((PPENOBJ) GDIOBJ_AllocObject (sizeof (PENOBJ), GO_PEN_MAGIC))
-#define  PENOBJ_FreePen(hBMObj)  GDIOBJ_FreeObject((HGDIOBJ) hBMObj)
+  ((HPEN) GDIOBJ_AllocObj (sizeof (PENOBJ), GO_PEN_MAGIC))
+#define  PENOBJ_FreePen(hBMObj)  GDIOBJ_FreeObj((HGDIOBJ) hBMObj)
+/*
 #define  PENOBJ_HandleToPtr(hBMObj)  \
   ((PPENOBJ) GDIOBJ_HandleToPtr ((HGDIOBJ) hBMObj, GO_PEN_MAGIC))
 #define  PENOBJ_PtrToHandle(hBMObj)  \
   ((HPEN) GDIOBJ_PtrToHandle ((PGDIOBJ) hBMObj, GO_PEN_MAGIC))
-#define  PENOBJ_LockPen(hBMObj) GDIOBJ_LockObject ((HGDIOBJ) hBMObj)
-#define  PENOBJ_UnlockPen(hBMObj) GDIOBJ_UnlockObject ((HGDIOBJ) hBMObj)
+*/
+#define  PENOBJ_LockPen(hBMObj) ((PPENOBJ)GDIOBJ_LockObj ((HGDIOBJ) hBMObj, GO_PEN_MAGIC))
+#define  PENOBJ_UnlockPen(hBMObj) GDIOBJ_UnlockObj ((HGDIOBJ) hBMObj, GO_PEN_MAGIC)
 
 HPEN STDCALL W32kCreatePen(INT  PenStyle,
                     INT  Width,

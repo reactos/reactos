@@ -4,7 +4,7 @@
  * FILE:            include/internal/debug.h
  * PURPOSE:         Useful debugging macros
  * PROGRAMMER:      David Welch (welch@mcmail.com)
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:
  *                28/05/98: Created
  */
 
@@ -25,8 +25,10 @@
 
 #ifndef NASSERT
 #define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); KeBugCheck(0); }
+#define ASSERT(x) assert(x)
 #else
 #define assert(x)
+#define ASSERT(x)
 #endif
 
 #define DPRINT1(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); ExAllocatePool(NonPagedPool,0); } while(0);
@@ -81,16 +83,16 @@ extern unsigned int old_idt_valid;
  * NOTES:
  *       The variable to watch must be aligned to its length (i.e. a dword
  *	 breakpoint must be aligned to a dword boundary)
- * 
+ *
  *       A fatal exception will be generated on the access to the variable.
  *       It is (at the moment) only really useful for catching undefined
  *       pointers if you know the variable effected but not the buggy
- *       routine. 
- * 
+ *       routine.
+ *
  * FIXME: Extend to call out to kernel debugger on breakpoint
  *        Add support for I/O breakpoints
  * REFERENCES: See the i386 programmer manual for more details
- */ 
+ */
 void set_breakpoint(unsigned int i, unsigned int addr, unsigned int type,
 		    unsigned int len);
 

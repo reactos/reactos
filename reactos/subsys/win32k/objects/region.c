@@ -11,11 +11,13 @@
 INT STDCALL
 W32kGetBoxRgn(HRGN hRgn, PRECT Rect)
 {
+	return 0;
 }
 
 HRGN STDCALL
 W32kCropRgn(HRGN hDest, HRGN hSrc, const RECT* Rect, const POINT* Point)
 {
+	return NULL;
 }
 
 INT STDCALL
@@ -67,7 +69,7 @@ W32kCreateRectRgn(INT  LeftRect,
 {
   RGNDATA* Region;
   PRECT Rect;
-
+/*
   DPRINT("W32kCreateRectRgn(LeftRect %d, TopRect %d, RightRect %d, "
 	 "BottomRect %d)\n", LeftRect, TopRect, RightRect, BottomRect);
 
@@ -83,6 +85,8 @@ W32kCreateRectRgn(INT  LeftRect,
   Region->rdh.rcBound = *Rect;
 
   return(GDIOBJ_PtrToHandle((PGDIOBJ)Region, 0));
+*/
+return NULL;
 }
 
 HRGN STDCALL

@@ -13,6 +13,10 @@
 #include <win32k/pen.h>
 #include "../eng/objects.h"
 
+//#define NDEBUG
+#include <win32k/debug1.h>
+
+
 PBRUSHOBJ PenToBrushObj(PDC dc, PENOBJ *pen)
 {
   BRUSHOBJ *BrushObj;
@@ -26,17 +30,21 @@ PBRUSHOBJ PenToBrushObj(PDC dc, PENOBJ *pen)
 
 VOID BitmapToSurf(HDC hdc, PSURFGDI SurfGDI, PSURFOBJ SurfObj, PBITMAPOBJ Bitmap)
 {
-  if(Bitmap->dib)
-  {
-    SurfGDI->BitsPerPixel = Bitmap->dib->dsBm.bmBitsPixel;
-    SurfObj->lDelta       = Bitmap->dib->dsBm.bmWidthBytes;
-    SurfObj->pvBits       = Bitmap->dib->dsBm.bmBits;
-    SurfObj->cjBits       = Bitmap->dib->dsBm.bmHeight * Bitmap->dib->dsBm.bmWidthBytes;
-  } else {
-    SurfGDI->BitsPerPixel = Bitmap->bitmap.bmBitsPixel;
-    SurfObj->lDelta	  = Bitmap->bitmap.bmWidthBytes;
-    SurfObj->pvBits	  = Bitmap->bitmap.bmBits;
-    SurfObj->cjBits       = Bitmap->bitmap.bmHeight * Bitmap->bitmap.bmWidthBytes;
+  ASSERT( SurfGDI );
+  if( Bitmap ){
+  	if(Bitmap->dib)
+  	{
+  	  SurfGDI->BitsPerPixel = Bitmap->dib->dsBm.bmBitsPixel;
+  	  SurfObj->lDelta       = Bitmap->dib->dsBm.bmWidthBytes;
+  	  SurfObj->pvBits       = Bitmap->dib->dsBm.bmBits;
+  	  SurfObj->cjBits       = Bitmap->dib->dsBm.bmHeight * Bitmap->dib->dsBm.bmWidthBytes;
+  	} else {
+  	  SurfGDI->BitsPerPixel = Bitmap->bitmap.bmBitsPixel;
+  	  SurfObj->lDelta	  = Bitmap->bitmap.bmWidthBytes;
+  	  SurfObj->pvBits	  = Bitmap->bitmap.bmBits;
+  	  SurfObj->cjBits       = Bitmap->bitmap.bmHeight * Bitmap->bitmap.bmWidthBytes;
+  	}
+	SurfObj->sizlBitmap	= Bitmap->size; // FIXME: alloc memory for our own struct?
   }
 
   SurfObj->dhsurf	= NULL;
@@ -44,7 +52,6 @@ VOID BitmapToSurf(HDC hdc, PSURFGDI SurfGDI, PSURFOBJ SurfObj, PBITMAPOBJ Bitmap
   SurfObj->dhpdev	= NULL;
   SurfObj->hdev		= NULL;
   SurfObj->pvScan0	= SurfObj->pvBits; // start of bitmap
-  SurfObj->sizlBitmap	= Bitmap->size; // FIXME: alloc memory for our own struct?
   SurfObj->iUniq	 = 0; // not sure..
   SurfObj->iBitmapFormat = BitmapFormat(SurfGDI->BitsPerPixel, BI_RGB);
   SurfObj->iType	 = STYPE_BITMAP;

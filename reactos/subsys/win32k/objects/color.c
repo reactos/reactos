@@ -19,7 +19,7 @@ int COLOR_max = 256;
 static HPALETTE hPrimaryPalette = 0; // used for WM_PALETTECHANGED
 static HPALETTE hLastRealizedPalette = 0; // UnrealizeObject() needs it
 
-const PALETTEENTRY COLOR_sysPalTemplate[NB_RESERVED_COLORS] = 
+const PALETTEENTRY COLOR_sysPalTemplate[NB_RESERVED_COLORS] =
 {
   // first 10 entries in the system palette
   // red  green blue  flags
@@ -49,6 +49,10 @@ const PALETTEENTRY COLOR_sysPalTemplate[NB_RESERVED_COLORS] =
   { 0x00, 0xff, 0xff, PC_SYS_USED },
   { 0xff, 0xff, 0xff, PC_SYS_USED }     // last 10
 };
+
+//forward declarations
+COLORREF COLOR_LookupNearestColor( PALETTEENTRY* palPalEntry, int size, COLORREF color );
+
 
 const PALETTEENTRY* COLOR_GetSystemPaletteTemplate(void)
 {
@@ -102,7 +106,7 @@ HPALETTE STDCALL W32kCreateHalftonePalette(HDC  hDC)
         Palette.aEntries[i].peRed = r * 51;
         Palette.aEntries[i].peGreen = g * 51;
         Palette.aEntries[i].peBlue = b * 51;
-      }    
+      }
      }
    }
 
@@ -120,7 +124,7 @@ HPALETTE STDCALL W32kCreatePalette(CONST PLOGPALETTE palette)
 {
   PPALOBJ  PalObj;
 
-  HPALETTE NewPalette = (HPALETTE)EngCreatePalette(PAL_INDEXED, palette->palNumEntries, palette->palPalEntry, 0, 0, 0);
+  HPALETTE NewPalette = (HPALETTE)EngCreatePalette(PAL_INDEXED, palette->palNumEntries, (PULONG*) palette->palPalEntry, 0, 0, 0);
   ULONG size;
 
   PalObj = (PPALOBJ)AccessUserObject(NewPalette);
@@ -147,7 +151,7 @@ COLORREF STDCALL W32kGetNearestColor(HDC  hDC,
   PDC dc;
   PPALOBJ palObj;
 
-  if(DC_HandleToPtr(hDC))
+  if( (dc = DC_HandleToPtr(hDC) ) )
   {
     HPALETTE hpal = (dc->w.hPalette)? dc->w.hPalette : W32kGetStockObject(DEFAULT_PALETTE);
     palObj = (PPALOBJ)AccessUserObject(hpal);
@@ -158,9 +162,9 @@ COLORREF STDCALL W32kGetNearestColor(HDC  hDC,
 
     nearest = COLOR_LookupNearestColor(palObj->logpalette->palPalEntry,
                                        palObj->logpalette->palNumEntries, Color);
-
+	// FIXME: release hpal!!
 //    GDI_ReleaseObj( hpal );
-//    GDI_ReleaseObj( hdc );
+    DC_ReleasePtr( hDC );
   }
 
   return nearest;
@@ -196,8 +200,8 @@ UINT STDCALL W32kGetPaletteEntries(HPALETTE  hpal,
   numEntries = palPtr->logpalette->palNumEntries;
   if (StartIndex + Entries > numEntries) Entries = numEntries - StartIndex;
   if (pe)
-  { 
-    if (StartIndex >= numEntries) 
+  {
+    if (StartIndex >= numEntries)
     {
 //      GDI_ReleaseObj( hpalette );
       return 0;
@@ -253,7 +257,7 @@ UINT STDCALL W32kGetSystemPaletteUse(HDC  hDC)
 
 UINT STDCALL W32kRealizePalette(HDC  hDC)
 /*
-The RealizePalette function modifies the palette for the device associated with the specified device context. If the device context is a memory DC, the color table for the bitmap selected into the DC is modified. If the device context is a display DC, the physical palette for that device is modified. 
+The RealizePalette function modifies the palette for the device associated with the specified device context. If the device context is a memory DC, the color table for the bitmap selected into the DC is modified. If the device context is a display DC, the physical palette for that device is modified.
 
 A logical palette is a buffer between color-intensive applications and the system, allowing these applications to use as many colors as needed without interfering with colors displayed by other windows.
 
@@ -332,13 +336,13 @@ BOOL STDCALL W32kResizePalette(HPALETTE  hpal,
   prevsize = sizeof(LOGPALETTE) + (cPrevEnt - 1) * sizeof(PALETTEENTRY) + sizeof(int*) + sizeof(GDIOBJHDR);
   size += sizeof(int*) + sizeof(GDIOBJHDR);
   XlateObj = palPtr->logicalToSystem;
-    
+
   if (!(palPtr = GDI_ReallocObject(size, hPal, palPtr))) return FALSE;
 
   if(XlateObj)
   {
     PXLATEOBJ NewXlateObj = (int*) HeapReAlloc(GetProcessHeap(), 0, XlateObj, cEntries * sizeof(int));
-    if(NewXlateObj == NULL) 
+    if(NewXlateObj == NULL)
     {
       ERR("Can not resize logicalToSystem -- out of memory!");
       GDI_ReleaseObj( hPal );
@@ -475,7 +479,7 @@ COLORREF COLOR_LookupNearestColor( PALETTEENTRY* palPalEntry, int size, COLORREF
 
   else if( spec_type == 1 ) /* PALETTEINDEX */
   {
-    if( (i = color & 0x0000ffff) >= size ) 
+    if( (i = color & 0x0000ffff) >= size )
     {
       DbgPrint("RGB(%lx) : idx %d is out of bounds, assuming NULL\n", color, i);
       color = *(COLORREF*)palPalEntry;

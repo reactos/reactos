@@ -12,7 +12,7 @@ W32kCreatePen(INT PenStyle, INT Width, COLORREF Color)
 {
   LOGPEN logpen;
 
-  logpen.lopnStyle = PenStyle; 
+  logpen.lopnStyle = PenStyle;
   logpen.lopnWidth.x = Width;
   logpen.lopnWidth.y = 0;
   logpen.lopnColor = Color;
@@ -29,14 +29,16 @@ W32kCreatePenIndirect(CONST PLOGPEN lgpn)
 
   if (lgpn->lopnStyle > PS_INSIDEFRAME) return 0;
 
-  penPtr = PENOBJ_AllocPen();
-  hpen   = PENOBJ_PtrToHandle(penPtr);
+  hpen = PENOBJ_AllocPen();
   if (!hpen) return 0;
+
+  penPtr   = PENOBJ_LockPen( hpen );
+  ASSERT( penPtr );
 
   penPtr->logpen.lopnStyle = lgpn->lopnStyle;
   penPtr->logpen.lopnWidth = lgpn->lopnWidth;
   penPtr->logpen.lopnColor = lgpn->lopnColor;
-
+  PENOBJ_UnlockPen( hpen );
   return hpen;
 }
 

@@ -81,15 +81,23 @@ W32kRectangle(HDC  hDC,
   SURFOBJ	*SurfObj = (SURFOBJ*)AccessUserObject(dc->Surface);
   PBRUSHOBJ	BrushObj;
   BOOL ret;
-  PRECTL	RectBounds = GDIOBJ_HandleToPtr(dc->w.hGCClipRgn, GO_REGION_MAGIC);
+  PRECTL	RectBounds;
+  PENOBJ * pen;
 
-  if(!dc) return FALSE;
+  if(!dc)
+   return FALSE;
+
+  RectBounds = GDIOBJ_LockObj(dc->w.hGCClipRgn, GO_REGION_MAGIC);
+  //ei not yet implemented ASSERT(RectBounds);
 
   if(PATH_IsPathOpen(dc->w.path)) {
     ret = PATH_Rectangle(hDC, LeftRect, TopRect, RightRect, BottomRect);
   } else {
     // Draw the rectangle with the current pen
-    BrushObj = (PBRUSHOBJ)PenToBrushObj(dc, GDIOBJ_HandleToPtr(dc->w.hPen, GO_PEN_MAGIC));
+	pen = (PENOBJ*) GDIOBJ_LockObj(dc->w.hPen, GO_PEN_MAGIC);
+	ASSERT(pen);
+	BrushObj = (PBRUSHOBJ)PenToBrushObj(dc, pen);
+	GDIOBJ_UnlockObj( dc->w.hPen, GO_PEN_MAGIC );
 
     ret = EngLineTo(SurfObj,
                     NULL, // ClipObj,
@@ -123,7 +131,8 @@ W32kRectangle(HDC  hDC,
   }
 
 // FIXME: Move current position in DC?
-
+  GDIOBJ_UnlockObj(dc->w.hGCClipRgn, GO_REGION_MAGIC);
+  DC_ReleasePtr( hDC );
   return TRUE;
 }
 
@@ -131,8 +140,8 @@ BOOL
 STDCALL
 W32kRoundRect(HDC  hDC,
                     int  LeftRect,
-                    int  TopRect,  
-                    int  RightRect, 
+                    int  TopRect,
+                    int  RightRect,
                     int  BottomRect,
                     int  Width,
                     int  Height)

@@ -7,6 +7,9 @@
 #include <win32k/bitmaps.h>
 #include "../eng/objects.h"
 
+//#define NDEBUG
+#include <win32k/debug1.h>
+
 // #include "grfont.h"
 // #include <string.h>
 
@@ -275,6 +278,8 @@ const unsigned char  font_8x8[2048] =
 static PSURFOBJ CharCellSurfObj;
 static HBITMAP  hCharCellBitmap;
 
+VOID BitmapToSurf(HDC hdc, PSURFGDI SurfGDI, PSURFOBJ SurfObj, PBITMAPOBJ Bitmap);
+
 // Set things up for a character cell surface
 void CreateCellCharSurface()
 {
@@ -287,9 +292,10 @@ void CreateCellCharSurface()
    hCharCellBitmap = W32kCreateBitmap(8, 8, 1, 8, NULL); // 8x8, 1 plane, 8 bits per pel
 
    pbo = BITMAPOBJ_HandleToPtr(hCharCellBitmap);
-
+   ASSERT( pbo );
 // VOID BitmapToSurf(HDC hdc, PSURFGDI SurfGDI, PSURFOBJ SurfObj, PBITMAPOBJ Bitmap)
    BitmapToSurf(0, surfgdi, CharCellSurfObj, pbo); // Make the bitmap a surface
+   BITMAPOBJ_ReleasePtr( hCharCellBitmap );
 }
 
 void  grWriteCellChar(PSURFOBJ  target,

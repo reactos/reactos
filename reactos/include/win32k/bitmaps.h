@@ -17,7 +17,7 @@ typedef struct _BITMAPOBJ
 {
   BITMAP      bitmap;
   SIZE        size;   /* For SetBitmapDimension() */
-  
+
   DDBITMAP   *DDBitmap;
 
   /* For device-independent bitmaps: */
@@ -27,12 +27,16 @@ typedef struct _BITMAPOBJ
 /*  Internal interface  */
 
 #define  BITMAPOBJ_AllocBitmap()  \
-  ((PBITMAPOBJ) GDIOBJ_AllocObject (sizeof (BITMAPOBJ), GO_BITMAP_MAGIC))
-#define  BITMAPOBJ_FreeBitmap(hBMObj)  GDIOBJ_FreeObject((HGDIOBJ) hBMObj, GO_BITMAP_MAGIC)
+  ((HBITMAP) GDIOBJ_AllocObj (sizeof (BITMAPOBJ), GO_BITMAP_MAGIC))
+#define  BITMAPOBJ_FreeBitmap(hBMObj)  \
+  GDIOBJ_FreeObj((HGDIOBJ) hBMObj, GO_BITMAP_MAGIC)
 #define  BITMAPOBJ_HandleToPtr(hBMObj)  \
-  ((PBITMAPOBJ) GDIOBJ_HandleToPtr ((HGDIOBJ) hBMObj, GO_BITMAP_MAGIC))
-#define  BITMAPOBJ_PtrToHandle(hBMObj)  \
-  ((HBITMAP) GDIOBJ_PtrToHandle ((PGDIOBJ) hBMObj, GO_BITMAP_MAGIC))
+  ((PBITMAPOBJ) GDIOBJ_LockObj ((HGDIOBJ) hBMObj, GO_BITMAP_MAGIC))
+#define  BITMAPOBJ_ReleasePtr(hBMObj)  \
+  GDIOBJ_UnlockObj ((HGDIOBJ) hBMObj, GO_BITMAP_MAGIC)
+
+/*#define  BITMAPOBJ_PtrToHandle(hBMObj)  \
+  ((HBITMAP) GDIOBJ_PtrToHandle ((PGDIOBJ) hBMObj, GO_BITMAP_MAGIC))*/
 #define  BITMAPOBJ_LockBitmap(hBMObj) GDIOBJ_LockObject ((HGDIOBJ) hBMObj)
 #define  BITMAPOBJ_UnlockBitmap(hBMObj) GDIOBJ_UnlockObject ((HGDIOBJ) hBMObj)
 
@@ -41,6 +45,8 @@ HBITMAP  BITMAPOBJ_CopyBitmap (HBITMAP  hBitmap);
 int DIB_GetDIBWidthBytes (int  width, int  depth);
 int DIB_GetDIBImageBytes (int  width, int  height, int  depth);
 int DIB_BitmapInfoSize (const BITMAPINFO * info, WORD coloruse);
+INT BITMAP_GetObject(BITMAPOBJ * bmp, INT count, LPVOID buffer);
+BOOL Bitmap_InternalDelete( PBITMAPOBJ pBmp );
 
 /*  User Entry Points  */
 BOOL
@@ -110,7 +116,7 @@ W32kExtFloodFill (
 	HDC		hDC,
 	INT		XStart,
 	INT		YStart,
-	COLORREF	Color, 
+	COLORREF	Color,
 	UINT		FillType
 	);
 BOOL
@@ -169,7 +175,7 @@ W32kMaskBlt (
 	INT	Width,
 	INT	Height,
 	HDC	hDCSrc,
-	INT	XSrc, 
+	INT	XSrc,
 	INT	YSrc,
 	HBITMAP	hMaskBitmap,
 	INT	xMask,
@@ -181,13 +187,13 @@ STDCALL
 W32kPlgBlt (
 	HDC		hDCDest,
 	CONST POINT	* Point,
-	HDC		hDCSrc, 
-	INT		XSrc,  
-	INT		YSrc,  
-	INT		Width, 
+	HDC		hDCSrc,
+	INT		XSrc,
+	INT		YSrc,
+	INT		Width,
 	INT		Height,
 	HBITMAP		hMaskBitmap,
-	INT		xMask,      
+	INT		xMask,
 	INT		yMask
 	);
 LONG
@@ -267,8 +273,8 @@ W32kStretchBlt (
 	HDC	hDCSrc,
 	INT	XOriginSrc,
 	INT	YOriginSrc,
-	INT	WidthSrc,    
-	INT	HeightSrc, 
+	INT	WidthSrc,
+	INT	HeightSrc,
 	DWORD	ROP
 	);
 INT
@@ -279,13 +285,13 @@ W32kStretchDIBits (
 	INT			YDest,
 	INT			DestWidth,
 	INT			DestHeight,
-	INT			XSrc,       
-	INT			YSrc,       
-	INT			SrcWidth,  
-	INT			SrcHeight, 
+	INT			XSrc,
+	INT			YSrc,
+	INT			SrcWidth,
+	INT			SrcHeight,
 	CONST VOID		* Bits,
 	CONST BITMAPINFO	* BitsInfo,
-	UINT			Usage,                 
+	UINT			Usage,
 	DWORD			ROP
 	);
 #endif

@@ -1,7 +1,7 @@
-/* $Id: dc.c,v 1.31 2002/02/16 00:51:02 jfilby Exp $
+/* $Id: dc.c,v 1.32 2002/07/13 21:37:26 ei Exp $
  *
  * DC.C - Device context functions
- * 
+ *
  */
 
 #undef WIN32_LEAN_AND_MEAN
@@ -19,8 +19,9 @@
 #include <win32k/text.h>
 #include "../eng/objects.h"
 
-#define NDEBUG
+//#define NDEBUG
 #include <win32k/debug1.h>
+
 
 /* FIXME: DCs should probably be thread safe  */
 
@@ -39,11 +40,12 @@ func_type STDCALL  func_name( HDC hdc ) \
     return 0;                       \
   }                                 \
   ft = dc->dc_field;                \
+  DC_ReleasePtr( hdc );				\
   return ft;                        \
 }
 
-/* DC_GET_VAL_EX is used to define functions returning a POINT or a SIZE. It is 
- * important that the function has the right signature, for the implementation 
+/* DC_GET_VAL_EX is used to define functions returning a POINT or a SIZE. It is
+ * important that the function has the right signature, for the implementation
  * we can do whatever we want.
  */
 #define DC_GET_VAL_EX( func_name, ret_x, ret_y, type ) \
@@ -56,6 +58,7 @@ BOOL STDCALL  func_name( HDC hdc, LP##type pt ) \
   }                                 \
   ((LPPOINT)pt)->x = dc->ret_x;     \
   ((LPPOINT)pt)->y = dc->ret_y;     \
+  DC_ReleasePtr( hdc );				\
   return  TRUE;                     \
 }
 
@@ -74,8 +77,11 @@ INT STDCALL  func_name( HDC hdc, INT mode ) \
   }                                         \
   prevMode = dc->dc_field;                  \
   dc->dc_field = mode;                      \
+  DC_ReleasePtr( hdc );						\
   return prevMode;                          \
 }
+
+VOID BitmapToSurf(HDC hdc, PSURFGDI SurfGDI, PSURFOBJ SurfObj, PBITMAPOBJ Bitmap);
 
 //  ---------------------------------------------------------  File Statics
 
@@ -93,17 +99,23 @@ HDC STDCALL  W32kCreateCompatableDC(HDC  hDC)
   PDC  NewDC, OrigDC = NULL;
   HBITMAP  hBitmap;
   SIZEL onebyone;
+  HDC hNewDC;
 
   OrigDC = DC_HandleToPtr(hDC);
   if (OrigDC == NULL)
   {
-    NewDC = DC_AllocDC(L"DISPLAY");
-  } else {
+    hNewDC = DC_AllocDC(L"DISPLAY");
+	if( hNewDC )
+		NewDC = DC_HandleToPtr( hNewDC );
+  }
+  else {
     /*  Allocate a new DC based on the original DC's device  */
-    NewDC = DC_AllocDC(OrigDC->DriverName);
+    hNewDC = DC_AllocDC(OrigDC->DriverName);
+	if( hNewDC )
+		NewDC = DC_HandleToPtr( hNewDC );
   }
 
-  if (NewDC == NULL) 
+  if (NewDC == NULL)
   {
     return  NULL;
   }
@@ -116,7 +128,7 @@ HDC STDCALL  W32kCreateCompatableDC(HDC  hDC)
   } else {
     NewDC->PDev = OrigDC->PDev;
     NewDC->DMW = OrigDC->DMW;
-    memcpy(NewDC->FillPatternSurfaces, 
+    memcpy(NewDC->FillPatternSurfaces,
            OrigDC->FillPatternSurfaces,
            sizeof OrigDC->FillPatternSurfaces);
     NewDC->GDIInfo = OrigDC->GDIInfo;
@@ -143,13 +155,13 @@ HDC STDCALL  W32kCreateCompatableDC(HDC  hDC)
     NewDC->vportExtY = OrigDC->vportExtY;
   }
 
-  DC_InitDC(NewDC);
+  DC_InitDC(hNewDC);
 
   /* Create default bitmap */
   if (!(hBitmap = W32kCreateBitmap( 1, 1, 1, 1, NULL )))
   {
-    DC_FreeDC(NewDC);
-      
+	DC_ReleasePtr( hNewDC );
+    DC_FreeDC( hNewDC );
     return NULL;
   }
   NewDC->w.flags        = DC_MEMORY;
@@ -163,8 +175,10 @@ HDC STDCALL  W32kCreateCompatableDC(HDC  hDC)
     NewDC->w.textColor = OrigDC->w.textColor;
     NewDC->w.textAlign = OrigDC->w.textAlign;
   }
+  DC_ReleasePtr( hDC );
+  DC_ReleasePtr( hNewDC );
 
-  return  DC_PtrToHandle(NewDC);
+  return  hNewDC;
 }
 
 #include <ddk/ntddvid.h>
@@ -175,26 +189,29 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
                   CONST PDEVMODEW  InitData)
 {
   PGD_ENABLEDRIVER  GDEnableDriver;
+  HDC  hNewDC;
   PDC  NewDC;
   HDC  hDC = NULL;
   DRVENABLEDATA  DED;
-  HDC hNewDC;
   PSURFOBJ SurfObj;
 
   /*  Check for existing DC object  */
-  if ((NewDC = DC_FindOpenDC(Driver)) != NULL)
+  if ((hNewDC = DC_FindOpenDC(Driver)) != NULL)
   {
-    hDC = DC_PtrToHandle(NewDC);
+    hDC = hNewDC;
     return  W32kCreateCompatableDC(hDC);
   }
 
   DPRINT("NAME: %S\n", Driver); // FIXME: Should not crash if NULL
 
   /*  Allocate a DC object  */
-  if ((NewDC = DC_AllocDC(Driver)) == NULL)
+  if ((hNewDC = DC_AllocDC(Driver)) == NULL)
   {
     return  NULL;
   }
+
+  NewDC = DC_HandleToPtr( hNewDC );
+  ASSERT( NewDC );
 
   /*  Open the miniport driver  */
   if ((NewDC->DeviceDriver = DRIVER_FindMPDriver(Driver)) == NULL)
@@ -238,7 +255,7 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
   NewDC->DMW.dmFields = 0x000fc000;
 
   /* FIXME: get mode selection information from somewhere  */
-  
+
   NewDC->DMW.dmLogPixels = 96;
   NewDC->DMW.dmBitsPerPel = 4;
   NewDC->DMW.dmPelsWidth = 640;
@@ -288,16 +305,16 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
   DPRINT("Bits per pel: %u\n", NewDC->w.bitsPerPixel);
 
   /*  Initialize the DC state  */
-  DC_InitDC(NewDC);
-  hNewDC = DC_PtrToHandle(NewDC);
+  DC_InitDC(hNewDC);
 
   W32kSetTextColor(hNewDC, RGB(0xff, 0xff, 0xff));
   W32kSetTextAlign(hNewDC, TA_BASELINE);
-
+  DC_ReleasePtr( hNewDC );
   return hNewDC;
 
 Failure:
-  DC_FreeDC(NewDC);
+  DC_ReleasePtr( hNewDC );
+  DC_FreeDC(hNewDC);
   return  NULL;
 }
 
@@ -313,7 +330,7 @@ HDC STDCALL W32kCreateIC(LPCWSTR  Driver,
 BOOL STDCALL W32kDeleteDC(HDC  DCHandle)
 {
   PDC  DCToDelete;
-  
+
   DCToDelete = DC_HandleToPtr(DCHandle);
   if (DCToDelete == NULL)
     {
@@ -338,7 +355,7 @@ BOOL STDCALL W32kDeleteDC(HDC  DCHandle)
   {
     PDC  savedDC;
     HDC  savedHDC;
-      
+
     savedHDC = DC_GetNextDC (DCToDelete);
     savedDC = DC_HandleToPtr (savedHDC);
     if (savedDC == NULL)
@@ -347,9 +364,10 @@ BOOL STDCALL W32kDeleteDC(HDC  DCHandle)
     }
     DC_SetNextDC (DCToDelete, DC_GetNextDC (savedDC));
     DCToDelete->saveLevel--;
+	DC_ReleasePtr( savedHDC );
     W32kDeleteDC (savedHDC);
   }
-  
+
   /*  Free GDI resources allocated to this DC  */
   if (!(DCToDelete->w.flags & DC_SAVED))
   {
@@ -357,57 +375,30 @@ BOOL STDCALL W32kDeleteDC(HDC  DCHandle)
     W32kSelectObject (DCHandle, STOCK_BLACK_PEN);
     W32kSelectObject (DCHandle, STOCK_WHITE_BRUSH);
     W32kSelectObject (DCHandle, STOCK_SYSTEM_FONT);
-    DC_LockDC (DCHandle); W32kSelectObject does not recognize stock objects yet  */ 
-    if (DCToDelete->w.flags & DC_MEMORY) 
+    DC_LockDC (DCHandle); W32kSelectObject does not recognize stock objects yet  */
+    if (DCToDelete->w.flags & DC_MEMORY)
     {
       W32kDeleteObject (DCToDelete->w.hFirstBitmap);
     }
   }
-  if (DCToDelete->w.hClipRgn) 
+  if (DCToDelete->w.hClipRgn)
   {
     W32kDeleteObject (DCToDelete->w.hClipRgn);
   }
-  if (DCToDelete->w.hVisRgn) 
+  if (DCToDelete->w.hVisRgn)
   {
     W32kDeleteObject (DCToDelete->w.hVisRgn);
   }
-  if (DCToDelete->w.hGCClipRgn) 
+  if (DCToDelete->w.hGCClipRgn)
   {
     W32kDeleteObject (DCToDelete->w.hGCClipRgn);
   }
 #if 0 /* FIXME */
   PATH_DestroyGdiPath (&DCToDelete->w.path);
 #endif
-      
+  DC_ReleasePtr( DCToDelete );
   DC_FreeDC (DCToDelete);
-  
-  return TRUE;
-}
 
-BOOL STDCALL  W32kDeleteObject(HGDIOBJ hObject)
-{
-  PGDIOBJ  Obj;
-  PGDIOBJHDR  ObjHdr;
-  WORD  magic;
-
-  magic = GDIOBJ_GetHandleMagic (hObject);
-  Obj = GDIOBJ_HandleToPtr( hObject, GO_MAGIC_DONTCARE );
-  if( !Obj )
-    return FALSE;
-  ObjHdr = (PGDIOBJHDR)(((PCHAR)Obj) - sizeof (GDIOBJHDR));
-  switch( magic )
-  {
-    case GO_BITMAP_MAGIC: {
-      DPRINT( "Deleting bitmap\n" );
-      ExFreePool( ((PBITMAPOBJ)Obj)->bitmap.bmBits );
-      BITMAPOBJ_FreeBitmap( Obj );
-      break;
-    }
-    default: {
-      DPRINT( "W32kDeleteObject: Deleting object of unknown type %x\n", magic );
-      return FALSE;
-    }
-  }
   return TRUE;
 }
 
@@ -443,54 +434,58 @@ DC_GET_VAL_EX( W32kGetCurrentPositionEx, w.CursPosX, w.CursPosY, POINT )
 BOOL STDCALL W32kGetDCOrgEx(HDC  hDC,
                      LPPOINT  Point)
 {
-  DC * dc;
+  PDC dc;
 
-  if (!Point) 
+  if (!Point)
   {
     return FALSE;
   }
   dc = DC_HandleToPtr(hDC);
-  if (dc == NULL) 
+  if (dc == NULL)
   {
     return FALSE;
   }
 
   Point->x = Point->y = 0;
 
-  Point->x += dc->w.DCOrgX; 
+  Point->x += dc->w.DCOrgX;
   Point->y += dc->w.DCOrgY;
-  
+  DC_ReleasePtr( hDC );
   return  TRUE;
 }
 
 HDC STDCALL W32kGetDCState16(HDC  hDC)
 {
   PDC  newdc, dc;
-    
+  HDC hnewdc;
+
   dc = DC_HandleToPtr(hDC);
-  if (dc == NULL) 
+  if (dc == NULL)
   {
     return 0;
   }
-  
-  newdc = DC_AllocDC(NULL);
-  if (newdc == NULL)
+
+  hnewdc = DC_AllocDC(NULL);
+  if (hnewdc == NULL)
   {
+	DC_ReleasePtr( hDC );
     return 0;
   }
+  newdc = DC_HandleToPtr( hnewdc );
+  ASSERT( newdc );
 
   newdc->w.flags            = dc->w.flags | DC_SAVED;
 #if 0
   newdc->w.devCaps          = dc->w.devCaps;
 #endif
-  newdc->w.hPen             = dc->w.hPen;       
-  newdc->w.hBrush           = dc->w.hBrush;     
-  newdc->w.hFont            = dc->w.hFont;      
-  newdc->w.hBitmap          = dc->w.hBitmap;    
+  newdc->w.hPen             = dc->w.hPen;
+  newdc->w.hBrush           = dc->w.hBrush;
+  newdc->w.hFont            = dc->w.hFont;
+  newdc->w.hBitmap          = dc->w.hBitmap;
   newdc->w.hFirstBitmap     = dc->w.hFirstBitmap;
 #if 0
   newdc->w.hDevice          = dc->w.hDevice;
-  newdc->w.hPalette         = dc->w.hPalette;   
+  newdc->w.hPalette         = dc->w.hPalette;
 #endif
   newdc->w.totalExtent      = dc->w.totalExtent;
   newdc->w.bitsPerPixel     = dc->w.bitsPerPixel;
@@ -534,7 +529,7 @@ HDC STDCALL W32kGetDCState16(HDC  hDC)
   newdc->vportExtX          = dc->vportExtX;
   newdc->vportExtY          = dc->vportExtY;
 
-  newdc->hSelf = DC_PtrToHandle(newdc);
+  newdc->hSelf = hnewdc;
   newdc->saveLevel = 0;
 
 #if 0
@@ -555,8 +550,8 @@ HDC STDCALL W32kGetDCState16(HDC  hDC)
   {
     newdc->w.hClipRgn = 0;
   }
-  
-  return  newdc->hSelf;
+  DC_ReleasePtr( hnewdc );
+  return  hnewdc;
 }
 
 INT STDCALL W32kGetDeviceCaps(HDC  hDC,
@@ -565,9 +560,9 @@ INT STDCALL W32kGetDeviceCaps(HDC  hDC,
   PDC  dc;
   INT  ret;
   POINT  pt;
-    
+
   dc = DC_HandleToPtr(hDC);
-  if (dc == NULL) 
+  if (dc == NULL)
   {
     return 0;
   }
@@ -581,35 +576,35 @@ INT STDCALL W32kGetDeviceCaps(HDC  hDC,
         return pt.x;
       }
       break;
-      
+
     case PHYSICALHEIGHT:
       if(W32kEscape(hDC, GETPHYSPAGESIZE, 0, NULL, (LPVOID)&pt) > 0)
       {
         return pt.y;
       }
       break;
-      
+
     case PHYSICALOFFSETX:
       if(W32kEscape(hDC, GETPRINTINGOFFSET, 0, NULL, (LPVOID)&pt) > 0)
       {
         return pt.x;
       }
       break;
-      
+
     case PHYSICALOFFSETY:
       if(W32kEscape(hDC, GETPRINTINGOFFSET, 0, NULL, (LPVOID)&pt) > 0)
       {
         return pt.y;
       }
       break;
-      
+
     case SCALINGFACTORX:
       if(W32kEscape(hDC, GETSCALINGFACTOR, 0, NULL, (LPVOID)&pt) > 0)
       {
         return pt.x;
       }
       break;
-      
+
     case SCALINGFACTORY:
       if(W32kEscape(hDC, GETSCALINGFACTOR, 0, NULL, (LPVOID)&pt) > 0)
       {
@@ -622,11 +617,12 @@ INT STDCALL W32kGetDeviceCaps(HDC  hDC,
   {
     return 0;
   }
-    
+
   DPRINT("(%04x,%d): returning %d\n",
          hDC, Index, *(WORD *)(((char *)dc->w.devCaps) + Index));
   ret = *(WORD *)(((char *)dc->w.devCaps) + Index);
 
+  DC_ReleasePtr( hDC );
   return ret;
 }
 
@@ -639,10 +635,10 @@ INT STDCALL W32kGetObjectA(HANDLE handle, INT count, LPVOID buffer)
   INT  result = 0;
   WORD  magic;
 
-  if (!count) 
+  if (!count)
     return  0;
-  gdiObject = GDIOBJ_HandleToPtr (handle, GO_MAGIC_DONTCARE);
-  if (gdiObject == 0) 
+  gdiObject = GDIOBJ_LockObj (handle, GO_MAGIC_DONTCARE);
+  if (gdiObject == 0)
     return  0;
 
   magic = GDIOBJ_GetHandleMagic (handle);
@@ -651,10 +647,10 @@ INT STDCALL W32kGetObjectA(HANDLE handle, INT count, LPVOID buffer)
 /*    case GO_PEN_MAGIC:
       result = PEN_GetObject((PENOBJ *)gdiObject, count, buffer);
       break;
-    case GO_BRUSH_MAGIC: 
+    case GO_BRUSH_MAGIC:
       result = BRUSH_GetObject((BRUSHOBJ *)gdiObject, count, buffer);
       break; */
-    case GO_BITMAP_MAGIC: 
+    case GO_BITMAP_MAGIC:
       result = BITMAP_GetObject((BITMAPOBJ *)gdiObject, count, buffer);
       break;
 /*    case GO_FONT_MAGIC:
@@ -684,7 +680,7 @@ INT STDCALL W32kGetObjectA(HANDLE handle, INT count, LPVOID buffer)
       DbgPrint("Invalid GDI Magic %04x\n", magic);
       break;
   }
-
+  GDIOBJ_UnlockObj (handle, GO_MAGIC_DONTCARE);
   return  result;
 }
 
@@ -694,10 +690,10 @@ INT STDCALL W32kGetObjectW(HANDLE handle, INT count, LPVOID buffer)
   INT  result = 0;
   WORD  magic;
 
-  if (!count) 
+  if (!count)
     return 0;
-  gdiObject = GDIOBJ_HandleToPtr(handle, GO_MAGIC_DONTCARE);
-  if (gdiObject == 0) 
+  gdiObject = GDIOBJ_LockObj(handle, GO_MAGIC_DONTCARE);
+  if (gdiObject == 0)
     return 0;
 
   magic = GDIOBJ_GetHandleMagic (handle);
@@ -706,10 +702,10 @@ INT STDCALL W32kGetObjectW(HANDLE handle, INT count, LPVOID buffer)
 /*    case GO_PEN_MAGIC:
       result = PEN_GetObject((PENOBJ *)gdiObject, count, buffer);
       break;
-    case GO_BRUSH_MAGIC: 
+    case GO_BRUSH_MAGIC:
       result = BRUSH_GetObject((BRUSHOBJ *)gdiObject, count, buffer);
        break; */
-    case GO_BITMAP_MAGIC: 
+    case GO_BITMAP_MAGIC:
       result = BITMAP_GetObject((BITMAPOBJ *)gdiObject, count, buffer);
       break;
 /*    case GO_FONT_MAGIC:
@@ -727,10 +723,10 @@ INT STDCALL W32kGetObjectW(HANDLE handle, INT count, LPVOID buffer)
       // FIXME("Magic %04x not implemented\n", gdiObject->magic);
       break;
   }
-
+  GDIOBJ_UnlockObj(handle, GO_MAGIC_DONTCARE);
   return  result;
 }
- 
+
 INT STDCALL W32kGetObject(HANDLE handle, INT count, LPVOID buffer)
 {
   return W32kGetObjectW(handle, count, buffer);
@@ -742,20 +738,20 @@ DWORD STDCALL W32kGetObjectType(HANDLE handle)
   INT result = 0;
   WORD  magic;
 
-  ptr = GDIOBJ_HandleToPtr(handle, GO_MAGIC_DONTCARE);
-  if (ptr == 0) 
+  ptr = GDIOBJ_LockObj(handle, GO_MAGIC_DONTCARE);
+  if (ptr == 0)
     return 0;
-    
+
   magic = GDIOBJ_GetHandleMagic (handle);
   switch(magic)
   {
     case GO_PEN_MAGIC:
       result = OBJ_PEN;
       break;
-    case GO_BRUSH_MAGIC: 
+    case GO_BRUSH_MAGIC:
       result = OBJ_BRUSH;
       break;
-    case GO_BITMAP_MAGIC: 
+    case GO_BITMAP_MAGIC:
       result = OBJ_BITMAP;
       break;
     case GO_FONT_MAGIC:
@@ -789,7 +785,7 @@ DWORD STDCALL W32kGetObjectType(HANDLE handle)
       // FIXME("Magic %04x not implemented\n", magic);
       break;
   }
-
+  GDIOBJ_UnlockObj(handle, GO_MAGIC_DONTCARE);
   return result;
 }
 
@@ -814,26 +810,26 @@ BOOL STDCALL W32kRestoreDC(HDC  hDC, INT  SaveLevel)
   BOOL  success;
 
   dc = DC_HandleToPtr(hDC);
-  if(!dc) 
+  if(!dc)
   {
     return FALSE;
   }
-  
-  if (SaveLevel == -1) 
+
+  if (SaveLevel == -1)
   {
     SaveLevel = dc->saveLevel;
   }
-  
+
   if ((SaveLevel < 1) || (SaveLevel > dc->saveLevel))
   {
     return FALSE;
   }
-    
+
   success = TRUE;
   while (dc->saveLevel >= SaveLevel)
   {
     HDC hdcs = DC_GetNextDC (dc);
-      
+
     dcs = DC_HandleToPtr (hdcs);
     if (dcs == NULL)
     {
@@ -852,9 +848,10 @@ BOOL STDCALL W32kRestoreDC(HDC  hDC, INT  SaveLevel)
         }
 #endif
       }
+	  DC_ReleasePtr( hdcs );
     W32kDeleteDC (hdcs);
   }
-  
+  DC_ReleasePtr( hDC );
   return  success;
 }
 
@@ -889,10 +886,12 @@ INT STDCALL W32kSaveDC(HDC  hDC)
     return 0;
   }
 #endif
-    
+
   DC_SetNextDC (dcs, DC_GetNextDC (dc));
   DC_SetNextDC (dc, hdcs);
   ret = ++dc->saveLevel;
+  DC_ReleasePtr( hdcs );
+  DC_ReleasePtr( hDC );
 
   return  ret;
 }
@@ -925,8 +924,9 @@ HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       // Convert the color of the pen to the format of the DC
       PalGDI = (PPALGDI)AccessInternalObject(dc->w.hPalette);
       XlateObj = (PXLATEOBJ)EngCreateXlate(PalGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
-      pen = GDIOBJ_HandleToPtr(dc->w.hPen, GO_PEN_MAGIC);
+      pen = GDIOBJ_LockObj(dc->w.hPen, GO_PEN_MAGIC);
       pen->logpen.lopnColor = XLATEOBJ_iXlate(XlateObj, pen->logpen.lopnColor);
+	  GDIOBJ_UnlockObj( dc->w.hPen, GO_PEN_MAGIC);
       break;
     case GO_BRUSH_MAGIC:
       objOrg = (HGDIOBJ)dc->w.hBrush;
@@ -973,11 +973,11 @@ HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
     default:
       return NULL;
   }
-
+  DC_ReleasePtr( hDC );
   return objOrg;
 }
 
-DC_SET_MODE( W32kSetBkMode, w.backgroundMode, TRANSPARENT, OPAQUE ) 
+DC_SET_MODE( W32kSetBkMode, w.backgroundMode, TRANSPARENT, OPAQUE )
 DC_SET_MODE( W32kSetPolyFillMode, w.polyFillMode, ALTERNATE, WINDING )
 // DC_SET_MODE( W32kSetRelAbs, w.relAbsMode, ABSOLUTE, RELATIVE )
 DC_SET_MODE( W32kSetROP2, w.ROPmode, R2_BLACK, R2_WHITE )
@@ -987,31 +987,32 @@ COLORREF STDCALL W32kSetBkColor(HDC hDC, COLORREF color)
 {
   COLORREF  oldColor;
   PDC  dc = DC_HandleToPtr(hDC);
-  
-  if (!dc) 
+
+  if (!dc)
   {
     return 0x80000000;
   }
-  
+
   oldColor = dc->w.backgroundColor;
   dc->w.backgroundColor = color;
-  
+  DC_ReleasePtr( hDC );
   return  oldColor;
 }
 
 static void  W32kSetDCState16(HDC  hDC, HDC  hDCSave)
 {
   PDC  dc, dcs;
-    
+
   dc = DC_HandleToPtr(hDC);
   if (dc == NULL)
   {
     return;
   }
-  
+
   dcs = DC_HandleToPtr(hDCSave);
   if (dcs == NULL)
   {
+	DC_ReleasePtr( hDC );
     return;
   }
   if (!dcs->w.flags & DC_SAVED)
@@ -1064,7 +1065,7 @@ static void  W32kSetDCState16(HDC  hDC, HDC  hDCSave)
   dc->w.xformVport2World = dcs->w.xformVport2World;
   dc->w.vport2WorldValid = dcs->w.vport2WorldValid;
 #endif
-  
+
   dc->wndOrgX            = dcs->wndOrgX;
   dc->wndOrgY            = dcs->wndOrgY;
   dc->wndExtX            = dcs->wndExtX;
@@ -1073,16 +1074,16 @@ static void  W32kSetDCState16(HDC  hDC, HDC  hDCSave)
   dc->vportOrgY          = dcs->vportOrgY;
   dc->vportExtX          = dcs->vportExtX;
   dc->vportExtY          = dcs->vportExtY;
-  
-  if (!(dc->w.flags & DC_MEMORY)) 
+
+  if (!(dc->w.flags & DC_MEMORY))
   {
     dc->w.bitsPerPixel = dcs->w.bitsPerPixel;
   }
-  
+
 #if 0
   if (dcs->w.hClipRgn)
   {
-    if (!dc->w.hClipRgn) 
+    if (!dc->w.hClipRgn)
     {
       dc->w.hClipRgn = W32kCreateRectRgn( 0, 0, 0, 0 );
     }
@@ -1090,16 +1091,16 @@ static void  W32kSetDCState16(HDC  hDC, HDC  hDCSave)
   }
   else
   {
-    if (dc->w.hClipRgn) 
+    if (dc->w.hClipRgn)
     {
       W32kDeleteObject( dc->w.hClipRgn );
     }
-      
+
     dc->w.hClipRgn = 0;
   }
   CLIPPING_UpdateGCRegion( dc );
 #endif
-  
+
   W32kSelectObject( hDC, dcs->w.hBitmap );
   W32kSelectObject( hDC, dcs->w.hBrush );
   W32kSelectObject( hDC, dcs->w.hFont );
@@ -1110,55 +1111,68 @@ static void  W32kSetDCState16(HDC  hDC, HDC  hDCSave)
 #if 0
   GDISelectPalette16( hDC, dcs->w.hPalette, FALSE );
 #endif
-  
+
+  DC_ReleasePtr( hDCSave );
+  DC_ReleasePtr( hDC );
 }
 
 //  ----------------------------------------------------  Private Interface
 
-PDC  DC_AllocDC(LPCWSTR  Driver)
+HDC  DC_AllocDC(LPCWSTR  Driver)
 {
-  PDC  NewDC;
-  
-  NewDC = (PDC) GDIOBJ_AllocObject(sizeof(DC), GO_DC_MAGIC);
-  if (NewDC == NULL)
-  {
-    return  NULL;
-  }
-  if (Driver != NULL)
-  {
-    NewDC->DriverName = ExAllocatePool(PagedPool, (wcslen(Driver) + 1) * sizeof(WCHAR));
-    wcscpy(NewDC->DriverName, Driver);
-  }
-  
-  return  NewDC;
+  	PDC  NewDC;
+  	HDC  hDC;
+
+  	hDC = (HDC) GDIOBJ_AllocObj(sizeof(DC), GO_DC_MAGIC);
+  	if (hDC == NULL)
+  	{
+  	  return  NULL;
+  	}
+
+	NewDC = (PDC) GDIOBJ_LockObj( hDC, GO_DC_MAGIC );
+
+  	if (Driver != NULL)
+  	{
+  	  NewDC->DriverName = ExAllocatePool(PagedPool, (wcslen(Driver) + 1) * sizeof(WCHAR));
+  	  wcscpy(NewDC->DriverName, Driver);
+  	}
+
+	GDIOBJ_UnlockObj( hDC, GO_DC_MAGIC );
+  	return  hDC;
 }
 
-PDC  DC_FindOpenDC(LPCWSTR  Driver)
+HDC  DC_FindOpenDC(LPCWSTR  Driver)
 {
   return NULL;
 }
 
-void  DC_InitDC(PDC  DCToInit)
+void  DC_InitDC(HDC  DCHandle)
 {
-  HDC  DCHandle;
-  
-  DCHandle = DC_PtrToHandle(DCToInit);
 //  W32kRealizeDefaultPalette(DCHandle);
-  W32kSetTextColor(DCHandle, DCToInit->w.textColor);
-  W32kSetBkColor(DCHandle, DCToInit->w.backgroundColor);
-  W32kSelectObject(DCHandle, DCToInit->w.hPen);
-  W32kSelectObject(DCHandle, DCToInit->w.hBrush);
-  W32kSelectObject(DCHandle, DCToInit->w.hFont);
+  PDC DCToInit;
+  if( (DCToInit = DC_HandleToPtr( DCHandle ) ) ){
+	  W32kSetTextColor(DCHandle, DCToInit->w.textColor);
+	  W32kSetBkColor(DCHandle, DCToInit->w.backgroundColor);
+	  W32kSelectObject(DCHandle, DCToInit->w.hPen);
+	  W32kSelectObject(DCHandle, DCToInit->w.hBrush);
+	  W32kSelectObject(DCHandle, DCToInit->w.hFont);
+  }
+  DPRINT("DC_InitDC: can't get dc for handle %d\n", DCHandle );
 //  CLIPPING_UpdateGCRegion(DCToInit);
 }
 
-void  DC_FreeDC(PDC  DCToFree)
+void  DC_FreeDC(HDC  DCToFree)
 {
-  ExFreePool(DCToFree->DriverName);
-  if (!GDIOBJ_FreeObject((PGDIOBJ)DCToFree, GO_DC_MAGIC))
+  if (!GDIOBJ_FreeObj(DCToFree, GO_DC_MAGIC))
   {
     DPRINT("DC_FreeDC failed\n");
   }
+}
+
+BOOL DC_InternalDeleteDC( PDC DCToDelete )
+{
+	ExFreePool(DCToDelete->DriverName);
+	return TRUE;
 }
 
 HDC  DC_GetNextDC (PDC pDC)
@@ -1171,12 +1185,12 @@ void  DC_SetNextDC (PDC pDC, HDC hNextDC)
   pDC->hNext = hNextDC;
 }
 
-void 
+void
 DC_UpdateXforms(PDC  dc)
 {
   XFORM  xformWnd2Vport;
   FLOAT  scaleX, scaleY;
-  
+
   /* Construct a transformation to do the window-to-viewport conversion */
   scaleX = (FLOAT)dc->vportExtX / (FLOAT)dc->wndExtX;
   scaleY = (FLOAT)dc->vportExtY / (FLOAT)dc->wndExtY;
@@ -1186,32 +1200,32 @@ DC_UpdateXforms(PDC  dc)
   xformWnd2Vport.eM22 = scaleY;
   xformWnd2Vport.eDx  = (FLOAT)dc->vportOrgX - scaleX * (FLOAT)dc->wndOrgX;
   xformWnd2Vport.eDy  = (FLOAT)dc->vportOrgY - scaleY * (FLOAT)dc->wndOrgY;
-  
+
   /* Combine with the world transformation */
   W32kCombineTransform(&dc->w.xformWorld2Vport, &dc->w.xformWorld2Wnd, &xformWnd2Vport);
-  
+
   /* Create inverse of world-to-viewport transformation */
   dc->w.vport2WorldValid = DC_InvertXform(&dc->w.xformWorld2Vport, &dc->w.xformVport2World);
 }
 
-BOOL 
-DC_InvertXform(const XFORM *xformSrc, 
+BOOL
+DC_InvertXform(const XFORM *xformSrc,
                XFORM *xformDest)
 {
   FLOAT  determinant;
-  
+
   determinant = xformSrc->eM11*xformSrc->eM22 - xformSrc->eM12*xformSrc->eM21;
   if (determinant > -1e-12 && determinant < 1e-12)
   {
     return  FALSE;
   }
-  
+
   xformDest->eM11 =  xformSrc->eM22 / determinant;
   xformDest->eM12 = -xformSrc->eM12 / determinant;
   xformDest->eM21 = -xformSrc->eM21 / determinant;
   xformDest->eM22 =  xformSrc->eM11 / determinant;
   xformDest->eDx  = -xformSrc->eDx * xformDest->eM11 - xformSrc->eDy * xformDest->eM21;
   xformDest->eDy  = -xformSrc->eDx * xformDest->eM12 - xformSrc->eDy * xformDest->eM22;
-  
+
   return  TRUE;
 }

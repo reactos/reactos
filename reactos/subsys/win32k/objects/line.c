@@ -28,11 +28,11 @@ STDCALL
 W32kArc(HDC  hDC,
               int  LeftRect,
               int  TopRect,
-              int  RightRect, 
+              int  RightRect,
               int  BottomRect,
               int  XStartArc,
               int  YStartArc,
-              int  XEndArc,  
+              int  XEndArc,
               int  YEndArc)
 {
   DC *dc = DC_HandleToPtr(hDC);
@@ -42,6 +42,7 @@ W32kArc(HDC  hDC,
     return PATH_Arc(hDC, LeftRect, TopRect, RightRect, BottomRect,
                     XStartArc, YStartArc, XEndArc, YEndArc);
 
+  DC_ReleasePtr( hDC );
 //   EngArc(dc, LeftRect, TopRect, RightRect, BottomRect, UNIMPLEMENTED
 //          XStartArc, YStartArc, XEndArc, YEndArc);
 }
@@ -74,7 +75,7 @@ W32kArcTo(HDC  hDC,
   {
     W32kMoveToEx(hDC, XRadial2, YRadial2, NULL);
   }
-
+  DC_ReleasePtr( hDC );
   return result;
 }
 
@@ -84,7 +85,7 @@ W32kGetArcDirection(HDC  hDC)
 {
   PDC dc;
   int ret;
-  
+
   dc = DC_HandleToPtr (hDC);
   if (!dc)
   {
@@ -92,7 +93,7 @@ W32kGetArcDirection(HDC  hDC)
   }
 
   ret = dc->w.ArcDirection;
-  
+  DC_ReleasePtr( hDC );
   return ret;
 }
 
@@ -105,24 +106,35 @@ W32kLineTo(HDC  hDC,
   DC		*dc = DC_HandleToPtr(hDC);
   SURFOBJ	*SurfObj = (SURFOBJ*)AccessUserObject(dc->Surface);
   BOOL ret;
+  PPENOBJ   pen;
+  PRGNDATA  reg;
 
   if(!dc) return FALSE;
 
   if(PATH_IsPathOpen(dc->w.path)) {
     ret = PATH_LineTo(hDC, XEnd, YEnd);
   } else {
+  	pen = (PPENOBJ) GDIOBJ_LockObj(dc->w.hPen, GO_PEN_MAGIC);
+	reg = (PRGNDATA)GDIOBJ_LockObj(dc->w.hGCClipRgn, GO_REGION_MAGIC);
+
+	ASSERT( pen );
+	// not yet implemented ASSERT( reg );
+
     ret = EngLineTo(SurfObj,
                     NULL, // ClipObj
-                    PenToBrushObj(dc, GDIOBJ_HandleToPtr(dc->w.hPen, GO_PEN_MAGIC)),
+                    PenToBrushObj(dc, pen),
                     dc->w.CursPosX, dc->w.CursPosY, XEnd, YEnd,
-                    GDIOBJ_HandleToPtr(dc->w.hGCClipRgn, GO_REGION_MAGIC), // Bounding rectangle
+                    reg, // Bounding rectangle
                     dc->w.ROPmode); // MIX
+
+	GDIOBJ_UnlockObj( dc->w.hGCClipRgn, GO_REGION_MAGIC );
+	GDIOBJ_UnlockObj( dc->w.hPen, GO_PEN_MAGIC);
   }
   if(ret) {
     dc->w.CursPosX = XEnd;
     dc->w.CursPosY = YEnd;
   }
-
+  DC_ReleasePtr( hDC );
   return ret;
 }
 
@@ -144,9 +156,11 @@ W32kMoveToEx(HDC  hDC,
   dc->w.CursPosX = X;
   dc->w.CursPosY = Y;
 
-  if(PATH_IsPathOpen(dc->w.path))
+  if(PATH_IsPathOpen(dc->w.path)){
+  	DC_ReleasePtr( hDC );
     return PATH_MoveTo(hDC);
-
+  }
+  DC_ReleasePtr( hDC );
   return FALSE;
 }
 
@@ -159,8 +173,10 @@ W32kPolyBezier(HDC  hDC,
   DC *dc = DC_HandleToPtr(hDC);
   if(!dc) return FALSE;
 
-  if(PATH_IsPathOpen(dc->w.path))
+  if(PATH_IsPathOpen(dc->w.path)){
+	DC_ReleasePtr( hDC );
     return PATH_PolyBezier(hDC, pt, Count);
+  }
 
   /* We'll convert it into line segments and draw them using Polyline */
   {
@@ -173,6 +189,7 @@ W32kPolyBezier(HDC  hDC,
     DbgPrint("Pts = %p, no = %d\n", Pts, nOut);
     ret = W32kPolyline(dc->hSelf, Pts, nOut);
     ExFreePool(Pts);
+	DC_ReleasePtr( hDC );
     return ret;
   }
 }
@@ -204,6 +221,7 @@ W32kPolyBezierTo(HDC  hDC,
     dc->w.CursPosX = pt[Count-1].x;
     dc->w.CursPosY = pt[Count-1].y;
   }
+  DC_ReleasePtr( hDC );
   return ret;
 }
 
@@ -255,6 +273,7 @@ W32kPolylineTo(HDC  hDC,
     dc->w.CursPosX = pt[Count-1].x;
     dc->w.CursPosY = pt[Count-1].y;
   }
+  DC_ReleasePtr( hDC );
   return ret;
 }
 
@@ -284,11 +303,12 @@ W32kSetArcDirection(HDC  hDC,
   if (ArcDirection != AD_COUNTERCLOCKWISE && ArcDirection != AD_CLOCKWISE)
   {
 //    SetLastError(ERROR_INVALID_PARAMETER);
+	DC_ReleasePtr( hDC );
     return 0;
   }
 
   nOldDirection = dc->w.ArcDirection;
   dc->w.ArcDirection = ArcDirection;
-
+  DC_ReleasePtr( hDC );
   return nOldDirection;
 }

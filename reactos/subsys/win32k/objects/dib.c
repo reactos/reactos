@@ -7,6 +7,8 @@
 #include "../eng/objects.h"
 #include <ntos/minmax.h>
 
+VOID BitmapToSurf(HDC hdc, PSURFGDI SurfGDI, PSURFOBJ SurfObj, PBITMAPOBJ Bitmap);
+
 UINT STDCALL W32kSetDIBColorTable(HDC  hDC,
                            UINT  StartIndex,
                            UINT  Entries,
@@ -78,16 +80,17 @@ INT STDCALL W32kSetDIBits(HDC  hDC,
 
 
   // Check parameters
-  if (!(dc = DC_HandleToPtr(hDC))) return 0;
+  if (!(dc = DC_HandleToPtr(hDC)))
+     return 0;
 
-  if (!(bitmap = (BITMAPOBJ *)GDIOBJ_HandleToPtr(hBitmap, GO_BITMAP_MAGIC)))
+  if (!(bitmap = (BITMAPOBJ *)GDIOBJ_LockObj(hBitmap, GO_BITMAP_MAGIC)))
   {
-    // GDI_ReleaseObj(hDC);
+    DC_ReleasePtr(hDC);
     return 0;
   }
 
   // Get RGB values
-  if (ColorUse == DIB_PAL_COLORS) 
+  if (ColorUse == DIB_PAL_COLORS)
     lpRGB = DIB_MapPaletteColors(hDC, bmi);
   else
     lpRGB = &bmi->bmiColors[0];
@@ -132,11 +135,12 @@ INT STDCALL W32kSetDIBits(HDC  hDC,
   EngDeleteSurface(SourceBitmap);
   EngDeleteSurface(DestBitmap);
 
-//  if (ColorUse == DIB_PAL_COLORS) 
+//  if (ColorUse == DIB_PAL_COLORS)
 //    WinFree((LPSTR)lpRGB);
 
 //  GDI_ReleaseObj(hBitmap); unlock?
-//  GDI_ReleaseObj(hDC);
+  GDIOBJ_UnlockObj(hBitmap, GO_BITMAP_MAGIC);
+  DC_ReleasePtr(hDC);
 
   return result;
 }
@@ -182,13 +186,13 @@ INT STDCALL W32kStretchDIBits(HDC  hDC,
                        INT  YDest,
                        INT  DestWidth,
                        INT  DestHeight,
-                       INT  XSrc,       
-                       INT  YSrc,       
-                       INT  SrcWidth,  
-                       INT  SrcHeight, 
+                       INT  XSrc,
+                       INT  YSrc,
+                       INT  SrcWidth,
+                       INT  SrcHeight,
                        CONST VOID  *Bits,
                        CONST BITMAPINFO  *BitsInfo,
-                       UINT  Usage,                 
+                       UINT  Usage,
                        DWORD  ROP)
 {
   UNIMPLEMENTED;
@@ -200,20 +204,20 @@ LONG STDCALL W32kGetBitmapBits(HBITMAP  hBitmap,
 {
   PBITMAPOBJ  bmp;
   LONG  height, ret;
-  
+
   bmp = BITMAPOBJ_HandleToPtr (hBitmap);
-  if (!bmp) 
+  if (!bmp)
   {
     return 0;
   }
-    
+
   /* If the bits vector is null, the function should return the read size */
   if (Bits == NULL)
   {
     return bmp->bitmap.bmWidthBytes * bmp->bitmap.bmHeight;
   }
 
-  if (Count < 0) 
+  if (Count < 0)
   {
     DPRINT ("(%ld): Negative number of bytes passed???\n", Count);
     Count = -Count;
@@ -221,7 +225,7 @@ LONG STDCALL W32kGetBitmapBits(HBITMAP  hBitmap,
 
   /* Only get entire lines */
   height = Count / bmp->bitmap.bmWidthBytes;
-  if (height > bmp->bitmap.bmHeight) 
+  if (height > bmp->bitmap.bmHeight)
   {
     height = bmp->bitmap.bmHeight;
   }
@@ -237,7 +241,7 @@ LONG STDCALL W32kGetBitmapBits(HBITMAP  hBitmap,
          1 << bmp->bitmap.bmBitsPixel, height );
 #if 0
   /* FIXME: Call DDI CopyBits here if available  */
-  if(bmp->DDBitmap) 
+  if(bmp->DDBitmap)
   {
     DPRINT("Calling device specific BitmapBits\n");
     if(bmp->DDBitmap->funcs->pBitmapBits)
@@ -245,21 +249,21 @@ LONG STDCALL W32kGetBitmapBits(HBITMAP  hBitmap,
       ret = bmp->DDBitmap->funcs->pBitmapBits(hbitmap, bits, count,
                                               DDB_GET);
     }
-    else 
+    else
     {
       ERR_(bitmap)("BitmapBits == NULL??\n");
       ret = 0;
     }
-  } 
-  else 
+  }
+  else
 #endif
   {
-    if(!bmp->bitmap.bmBits) 
+    if(!bmp->bitmap.bmBits)
     {
       DPRINT ("Bitmap is empty\n");
       ret = 0;
-    } 
-    else 
+    }
+    else
     {
       memcpy(Bits, bmp->bitmap.bmBits, Count);
       ret = Count;
@@ -375,6 +379,7 @@ HBITMAP STDCALL W32kCreateDIBSection(HDC hDC,
   if ((dc = DC_HandleToPtr(hDC)))
   {
     hbitmap = DIB_CreateDIBSection(dc, bmi, Usage, Bits, hSection, dwOffset, 0);
+	DC_ReleasePtr( hDC );
   }
 
   if (bDesktopDC)
@@ -393,16 +398,16 @@ HBITMAP DIB_CreateDIBSection(
   DIBSECTION *dib = NULL;
   int *colorMap = NULL;
   int nColorMap;
-  
+
   // Fill BITMAP32 structure with DIB data
   BITMAPINFOHEADER *bi = &bmi->bmiHeader;
   INT effHeight, totalSize;
   BITMAP bm;
-  
+
   DbgPrint("format (%ld,%ld), planes %d, bpp %d, size %ld, colors %ld (%s)\n",
 	bi->biWidth, bi->biHeight, bi->biPlanes, bi->biBitCount,
 	bi->biSizeImage, bi->biClrUsed, usage == DIB_PAL_COLORS? "PAL" : "RGB");
-  
+
   effHeight = bi->biHeight >= 0 ? bi->biHeight : -bi->biHeight;
   bm.bmType = 0;
   bm.bmWidth = bi->biWidth;
@@ -412,7 +417,7 @@ HBITMAP DIB_CreateDIBSection(
   bm.bmPlanes = bi->biPlanes;
   bm.bmBitsPixel = bi->biBitCount;
   bm.bmBits = NULL;
-  
+
   // Get storage location for DIB bits.  Only use biSizeImage if it's valid and
   // we're dealing with a compressed bitmap.  Otherwise, use width * height.
   totalSize = bi->biSizeImage && bi->biCompression != BI_RGB
@@ -420,13 +425,13 @@ HBITMAP DIB_CreateDIBSection(
 
 /*
   if (section)
-    bm.bmBits = MapViewOfFile(section, FILE_MAP_ALL_ACCESS, 
+    bm.bmBits = MapViewOfFile(section, FILE_MAP_ALL_ACCESS,
 			      0L, offset, totalSize);
   else if (ovr_pitch && offset)
     bm.bmBits = (LPVOID) offset;
   else { */
     offset = 0;
-/*    bm.bmBits = VirtualAlloc(NULL, totalSize, 
+/*    bm.bmBits = VirtualAlloc(NULL, totalSize,
 			     MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE); */
 
   bm.bmBits = ExAllocatePool(NonPagedPool, totalSize);
@@ -476,7 +481,7 @@ HBITMAP DIB_CreateDIBSection(
   }
 
   // Create Device Dependent Bitmap and add DIB pointer
-  if (dib) 
+  if (dib)
   {
     res = W32kCreateDIBitmap(dc->hSelf, bi, 0, NULL, bmi, usage);
     if (res)
@@ -500,11 +505,11 @@ HBITMAP DIB_CreateDIBSection(
       else if (!offset)
       VirtualFree(bm.bmBits, 0L, MEM_RELEASE), bm.bmBits = NULL;
     } */
-      
+
     if (colorMap) { ExFreePool(colorMap); colorMap = NULL; }
     if (dib) { ExFreePool(dib); dib = NULL; }
     if (bmp) { bmp = NULL; }
-    if (res) { GDIOBJ_FreeObject(res, GO_BITMAP_MAGIC); res = 0; }
+    if (res) { GDIOBJ_FreeObj(res, GO_BITMAP_MAGIC); res = 0; }
   }
 
   // Install fault handler, if possible
@@ -525,6 +530,9 @@ HBITMAP DIB_CreateDIBSection(
     }
   } */
 
+  if( bmp )
+	BITMAPOBJ_ReleasePtr(res);
+
   // Return BITMAP handle and storage location
   if (bm.bmBits && bits) *bits = bm.bmBits;
   return res;
@@ -540,7 +548,7 @@ HBITMAP DIB_CreateDIBSection(
 int DIB_GetDIBWidthBytes(int  width, int  depth)
 {
   int words;
-  
+
   switch(depth)
   {
     case 1:  words = (width + 31) / 32; break;
@@ -549,7 +557,7 @@ int DIB_GetDIBWidthBytes(int  width, int  depth)
     case 15:
     case 16: words = (width + 1) / 2; break;
     case 24: words = (width * 3 + 3)/4; break;
-      
+
     default:
       DPRINT("(%d): Unsupported depth\n", depth );
       /* fall through */
@@ -642,7 +650,7 @@ PBITMAPOBJ DIBtoDDB(HGLOBAL hPackedDIB, HDC hdc) // FIXME: This should be remove
   // GlobalUnlock(hPackedDIB);
 
   // Retrieve the internal Pixmap from the DDB
-  pBmp = (BITMAPOBJ *)GDIOBJ_HandleToPtr(hBmp, GO_BITMAP_MAGIC);
+  pBmp = (BITMAPOBJ *)GDIOBJ_LockObj(hBmp, GO_BITMAP_MAGIC);
 
   return pBmp;
 }

@@ -1,6 +1,6 @@
 /*
  *  GDI object common header definition
- * 
+ *
  * (RJJ) taken from WINE
  */
 
@@ -56,6 +56,7 @@
 typedef struct _GDIOBJHDR
 {
   WORD  wTableIndex;
+  DWORD dwCount; 		//reference count.
 } GDIOBJHDR, *PGDIOBJHDR;
 
 typedef PVOID PGDIOBJ;
@@ -70,14 +71,15 @@ typedef struct _GDI_HANDLE_ENTRY
 typedef struct _GDI_HANDLE_TABLE
 {
   WORD  wTableSize;
-  GDI_HANDLE_ENTRY  Handles [0];
+  GDI_HANDLE_ENTRY  Handles [1];
 } GDI_HANDLE_TABLE, *PGDI_HANDLE_TABLE;
 
-PGDIOBJ  GDIOBJ_AllocObject(WORD Size, WORD Magic);
-BOOL  GDIOBJ_FreeObject (PGDIOBJ Obj, WORD Magic);
-HGDIOBJ  GDIOBJ_PtrToHandle (PGDIOBJ Obj, WORD Magic);
-PGDIOBJ  GDIOBJ_HandleToPtr (HGDIOBJ Obj, WORD Magic);
+HGDIOBJ  GDIOBJ_AllocObj(WORD Size, WORD Magic);
+BOOL  GDIOBJ_FreeObj (HGDIOBJ Obj, WORD Magic);
+PGDIOBJ  GDIOBJ_LockObj (HGDIOBJ Obj, WORD Magic);
+BOOL     GDIOBJ_UnlockObj (HGDIOBJ Obj, WORD Magic);
 WORD  GDIOBJ_GetHandleMagic (HGDIOBJ ObjectHandle);
+VOID STDCALL W32kDumpGdiObjects( INT Process );
 
 #endif
 

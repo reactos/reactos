@@ -1,4 +1,4 @@
-/* $Id: coord.c,v 1.7 2002/07/04 19:56:37 dwelch Exp $
+/* $Id: coord.c,v 1.8 2002/07/13 21:37:26 ei Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -24,7 +24,7 @@ BOOL STDCALL W32kCombineTransform(LPXFORM  XFormResult,
                            CONST LPXFORM  xform2)
 {
   XFORM  xformTemp;
-    
+
   /* Check for illegal parameters */
   if (!XFormResult || !xform1 || !xform2)
   {
@@ -47,34 +47,35 @@ BOOL STDCALL W32kCombineTransform(LPXFORM  XFormResult,
 
 VOID STATIC
 CoordDPtoLP(PDC Dc, LPPOINT Point)
-{ 
+{
 FLOAT x, y;
   x = (FLOAT)Point->x;
   y = (FLOAT)Point->y;
   Point->x = x * Dc->w.xformVport2World.eM11 +
     y * Dc->w.xformVport2World.eM21 + Dc->w.xformVport2World.eDx;
   Point->y = x * Dc->w.xformVport2World.eM12 +
-    y * Dc->w.xformVport2World.eM22 + Dc->w.xformVport2World.eDy; 
+    y * Dc->w.xformVport2World.eM22 + Dc->w.xformVport2World.eDy;
 }
 
-BOOL STDCALL 
+BOOL STDCALL
 W32kDPtoLP(HDC  hDC,
 	   LPPOINT  Points,
 	   int  Count)
 {
-  PDC Dc;  
+  PDC Dc;
   ULONG i;
-  
+
   Dc = DC_HandleToPtr (hDC);
-  if (Dc == NULL || !Dc->w.vport2WorldValid) 
+  if (Dc == NULL || !Dc->w.vport2WorldValid)
     {
       return(FALSE);
     }
-  
+
   for (i = 0; i < Count; i++)
     {
       CoordDPtoLP(Dc, &Points[i]);
     }
+  DC_ReleasePtr( hDC );
   return(TRUE);
 }
 
@@ -84,15 +85,15 @@ W32kGetGraphicsMode(HDC  hDC)
 {
   PDC  dc;
   int  GraphicsMode;
-  
+
   dc = DC_HandleToPtr (hDC);
-  if (!dc) 
+  if (!dc)
   {
     return  0;
   }
-  
+
   GraphicsMode = dc->w.GraphicsMode;
-  
+  DC_ReleasePtr( hDC );
   return  GraphicsMode;
 }
 
@@ -102,7 +103,7 @@ W32kGetWorldTransform(HDC  hDC,
                       LPXFORM  XForm)
 {
   PDC  dc;
-  
+
   dc = DC_HandleToPtr (hDC);
   if (!dc)
   {
@@ -113,7 +114,7 @@ W32kGetWorldTransform(HDC  hDC,
     return  FALSE;
   }
   *XForm = dc->w.xformWorld2Wnd;
-    
+  DC_ReleasePtr( hDC );
   return  TRUE;
 }
 
@@ -132,19 +133,20 @@ CoordLPtoDP(PDC Dc, LPPOINT Point)
 BOOL STDCALL
 W32kLPtoDP(HDC hDC, LPPOINT Points, INT Count)
 {
-  PDC Dc;  
+  PDC Dc;
   ULONG i;
-  
+
   Dc = DC_HandleToPtr (hDC);
-  if (Dc == NULL) 
+  if (Dc == NULL)
     {
       return(FALSE);
     }
-  
+
   for (i = 0; i < Count; i++)
     {
       CoordLPtoDP(Dc, &Points[i]);
     }
+  DC_ReleasePtr( hDC );
   return(TRUE);
 }
 
@@ -155,7 +157,7 @@ W32kModifyWorldTransform(HDC  hDC,
                                DWORD  Mode)
 {
   PDC  dc;
-  
+
   dc = DC_HandleToPtr (hDC);
   if (!dc)
   {
@@ -166,7 +168,7 @@ W32kModifyWorldTransform(HDC  hDC,
   {
     return FALSE;
   }
-    
+
   /* Check that graphics mode is GM_ADVANCED */
   if (dc->w.GraphicsMode!=GM_ADVANCED)
   {
@@ -178,24 +180,25 @@ W32kModifyWorldTransform(HDC  hDC,
       dc->w.xformWorld2Wnd.eM11 = 1.0f;
       dc->w.xformWorld2Wnd.eM12 = 0.0f;
       dc->w.xformWorld2Wnd.eM21 = 0.0f;
-      dc->w.xformWorld2Wnd.eM22 = 1.0f; 
+      dc->w.xformWorld2Wnd.eM22 = 1.0f;
       dc->w.xformWorld2Wnd.eDx  = 0.0f;
       dc->w.xformWorld2Wnd.eDy  = 0.0f;
       break;
-      
+
     case MWT_LEFTMULTIPLY:
       W32kCombineTransform(&dc->w.xformWorld2Wnd, XForm, &dc->w.xformWorld2Wnd );
       break;
-      
+
     case MWT_RIGHTMULTIPLY:
       W32kCombineTransform(&dc->w.xformWorld2Wnd, &dc->w.xformWorld2Wnd, XForm);
       break;
-      
+
     default:
+	  DC_ReleasePtr( hDC );
       return FALSE;
   }
   DC_UpdateXforms (dc);
-
+  DC_ReleasePtr( hDC );
   return  TRUE;
 }
 
@@ -250,7 +253,7 @@ W32kSetGraphicsMode(HDC  hDC,
 {
   INT ret;
   DC *dc;
-  
+
   dc = DC_HandleToPtr (hDC);
   if (!dc)
   {
@@ -262,14 +265,15 @@ W32kSetGraphicsMode(HDC  hDC,
    * matrix. However, in Windows, this is not the case. This doesn't
    * make a lot of sense to me, but that's the way it is.
    */
-  
-  if ((Mode != GM_COMPATIBLE) && (Mode != GM_ADVANCED)) 
+
+  if ((Mode != GM_COMPATIBLE) && (Mode != GM_ADVANCED))
   {
+	DC_ReleasePtr( hDC );
     return 0;
   }
   ret = dc->w.GraphicsMode;
   dc->w.GraphicsMode = Mode;
-  
+  DC_ReleasePtr( hDC );
   return  ret;
 }
 
@@ -327,26 +331,27 @@ W32kSetWorldTransform(HDC  hDC,
                             CONST LPXFORM  XForm)
 {
   PDC  dc;
-  
+
   dc = DC_HandleToPtr (hDC);
   if (!dc)
   {
-//    SetLastError( ERROR_INVALID_HANDLE );
     return  FALSE;
   }
   if (!XForm)
   {
+	DC_ReleasePtr( hDC );
     return  FALSE;
   }
-    
+
   /* Check that graphics mode is GM_ADVANCED */
   if (dc->w.GraphicsMode != GM_ADVANCED)
   {
+  	DC_ReleasePtr( hDC );
     return  FALSE;
   }
   dc->w.xformWorld2Wnd = *XForm;
   DC_UpdateXforms (dc);
-
+  DC_ReleasePtr( hDC );
   return  TRUE;
 }
 

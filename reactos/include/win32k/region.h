@@ -2,6 +2,28 @@
 #ifndef __WIN32K_REGION_H
 #define __WIN32K_REGION_H
 
+#include <structs.h>
+#include <win32k/gdiobj.h>
+
+/*  Internal functions  */
+/*
+#define  RGNDATA_PtrToHandle(pRgn)  \
+  ((HRGN) GDIOBJ_PtrToHandle ((PGDIOBJ) pRgn, GO_REGION_MAGIC))
+*/
+#define  RGNDATA_HandleToPtr(hRgn)  \
+  ((RGNDATA *) GDIOBJ_LockObj ((HGDIOBJ) hRgn, GO_REGION_MAGIC))
+
+/* call GDIOBJ_ReleaseObj when reference counting is added */
+#define RGNDATA_Release(hRgn) {}
+
+/* GDI logical region object */
+typedef struct tagRGNOBJ
+{
+    GDIOBJHDR   header;
+    RGNDATA*    rgn;
+} RGNOBJ;
+
+/*  User entry points */
 INT STDCALL
 W32kGetBoxRgn(HRGN hRgn, PRECT Rect);
 HRGN STDCALL
@@ -124,4 +146,4 @@ W32kSetRectRgn(HRGN  hRgn,
                      INT  BottomRect);
 
 #endif
-               
+

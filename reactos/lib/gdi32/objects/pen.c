@@ -20,3 +20,10 @@ CreatePenIndirect(CONST LOGPEN *lgpn)
 {
    return W32kCreatePenIndirect((CONST PLOGPEN)lgpn);
 }
+/*
+VOID STDCALL
+DumpGdiObjects( INT process )
+{
+	W32kDumpGdiObjects( process );
+}
+*/

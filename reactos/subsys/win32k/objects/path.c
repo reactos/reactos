@@ -203,11 +203,11 @@ BOOL PATH_AssignGdiPath(GdiPath *pPathDest, const GdiPath *pPathSrc)
 BOOL PATH_MoveTo(HDC hdc)
 {
   GdiPath *pPath;
-   
+
   /* Get pointer to path */
   if(!PATH_GetPathFromHDC(hdc, &pPath))
     return FALSE;
-   
+
   /* Check that path is open */
   if(pPath->state!=PATH_Open)
     /* FIXME: Do we have to call SetLastError? */
@@ -230,11 +230,11 @@ BOOL PATH_LineTo(HDC hdc, INT x, INT y)
 {
   GdiPath *pPath;
   POINT point, pointCurPos;
-   
+
   /* Get pointer to path */
   if(!PATH_GetPathFromHDC(hdc, &pPath))
     return FALSE;
-   
+
   /* Check that path is open */
   if(pPath->state!=PATH_Open)
     return FALSE;
@@ -244,7 +244,7 @@ BOOL PATH_LineTo(HDC hdc, INT x, INT y)
   point.y=y;
   if(!W32kLPtoDP(hdc, &point, 1))
     return FALSE;
-   
+
   /* Add a PT_MOVETO if necessary */
   if(pPath->newStroke)
   {
@@ -255,7 +255,7 @@ BOOL PATH_LineTo(HDC hdc, INT x, INT y)
     if(!PATH_AddEntry(pPath, &pointCurPos, PT_MOVETO))
       return FALSE;
   }
-   
+
   /* Add a PT_LINETO entry */
   return PATH_AddEntry(pPath, &point, PT_LINETO);
 }
@@ -274,7 +274,7 @@ BOOL PATH_Rectangle(HDC hdc, INT x1, INT y1, INT x2, INT y2)
   /* Get pointer to path */
   if(!PATH_GetPathFromHDC(hdc, &pPath))
     return FALSE;
-   
+
   /* Check that path is open */
   if(pPath->state!=PATH_Open)
     return FALSE;
@@ -286,7 +286,7 @@ BOOL PATH_Rectangle(HDC hdc, INT x1, INT y1, INT x2, INT y2)
   corners[1].y=y2;
   if(!W32kLPtoDP(hdc, corners, 2))
     return FALSE;
-   
+
   /* Make sure first corner is top left and second corner is bottom right */
   if(corners[0].x>corners[1].x)
   {
@@ -300,7 +300,7 @@ BOOL PATH_Rectangle(HDC hdc, INT x1, INT y1, INT x2, INT y2)
     corners[0].y=corners[1].y;
     corners[1].y=temp;
   }
-   
+
   /* In GM_COMPATIBLE, don't include bottom and right edges */
   if(W32kGetGraphicsMode(hdc)==GM_COMPATIBLE)
   {
@@ -342,7 +342,7 @@ BOOL PATH_Rectangle(HDC hdc, INT x1, INT y1, INT x2, INT y2)
 }
 
 /* PATH_Ellipse
- * 
+ *
  * Should be called when a call to Ellipse is performed on a DC that has
  * an open path. This adds four Bezier splines representing the ellipse
  * to the path. Returns TRUE if successful, else FALSE.
@@ -374,27 +374,33 @@ BOOL PATH_Arc(HDC hdc, INT x1, INT y1, INT x2, INT y2,
 
   /* FIXME: This function should check for all possible error returns */
   /* FIXME: Do we have to respect newStroke? */
-   
+
   /* Get pointer to DC */
   pDC=DC_HandleToPtr(hdc);
   if(pDC==NULL)
     return FALSE;
 
   /* Get pointer to path */
-  if(!PATH_GetPathFromHDC(hdc, &pPath))
+  if(!PATH_GetPathFromHDC(hdc, &pPath)){
+	DC_ReleasePtr( hdc );
     return FALSE;
-   
+  }
+
   /* Check that path is open */
-  if(pPath->state!=PATH_Open)
+  if(pPath->state!=PATH_Open){
+	DC_ReleasePtr( hdc );
     return FALSE;
+  }
 
   /* FIXME: Do we have to close the current figure? */
-   
+
   /* Check for zero height / width */
   /* FIXME: Only in GM_COMPATIBLE? */
-  if(x1==x2 || y1==y2)
+  if(x1==x2 || y1==y2){
+	DC_ReleasePtr( hdc );
     return TRUE;
-   
+  }
+
   /* Convert points to device coordinates */
   corners[0].x=(FLOAT)x1;
   corners[0].y=(FLOAT)y1;
@@ -453,7 +459,7 @@ BOOL PATH_Arc(HDC hdc, INT x1, INT y1, INT x2, INT y2,
     corners[1].x--;
     corners[1].y--;
   }
-   
+
   /* Add the arc to the path with one Bezier spline per quadrant that the
    * arc spans */
   start=TRUE;
@@ -494,6 +500,7 @@ BOOL PATH_Arc(HDC hdc, INT x1, INT y1, INT x2, INT y2,
     start=FALSE;
   }  while(!end);
 
+  DC_ReleasePtr( hdc );
   return TRUE;
 }
 
@@ -505,7 +512,7 @@ BOOL PATH_PolyBezierTo(HDC hdc, const POINT *pts, DWORD cbPoints)
 
   if(!PATH_GetPathFromHDC(hdc, &pPath))
     return FALSE;
-   
+
   /* Check that path is open */
   if(pPath->state!=PATH_Open)
     return FALSE;
@@ -529,7 +536,7 @@ BOOL PATH_PolyBezierTo(HDC hdc, const POINT *pts, DWORD cbPoints)
   }
   return TRUE;
 }
-   
+
 BOOL PATH_PolyBezier(HDC hdc, const POINT *pts, DWORD cbPoints)
 {
   GdiPath *pPath;
@@ -538,7 +545,7 @@ BOOL PATH_PolyBezier(HDC hdc, const POINT *pts, DWORD cbPoints)
 
   if(!PATH_GetPathFromHDC(hdc, &pPath))
     return FALSE;
-   
+
    /* Check that path is open */
   if(pPath->state!=PATH_Open)
     return FALSE;
@@ -560,7 +567,7 @@ BOOL PATH_Polyline(HDC hdc, const POINT *pts, DWORD cbPoints)
 
   if(!PATH_GetPathFromHDC(hdc, &pPath))
     return FALSE;
-   
+
   /* Check that path is open */
   if(pPath->state!=PATH_Open)
     return FALSE;
@@ -573,7 +580,7 @@ BOOL PATH_Polyline(HDC hdc, const POINT *pts, DWORD cbPoints)
   }
   return TRUE;
 }
-   
+
 BOOL PATH_PolylineTo(HDC hdc, const POINT *pts, DWORD cbPoints)
 {
   GdiPath *pPath;
@@ -582,7 +589,7 @@ BOOL PATH_PolylineTo(HDC hdc, const POINT *pts, DWORD cbPoints)
 
   if(!PATH_GetPathFromHDC(hdc, &pPath))
     return FALSE;
-   
+
   /* Check that path is open */
   if(pPath->state!=PATH_Open)
     return FALSE;
@@ -617,7 +624,7 @@ BOOL PATH_Polygon(HDC hdc, const POINT *pts, DWORD cbPoints)
 
   if(!PATH_GetPathFromHDC(hdc, &pPath))
     return FALSE;
-   
+
   /* Check that path is open */
   if(pPath->state!=PATH_Open)
     return FALSE;
@@ -642,7 +649,7 @@ BOOL PATH_PolyPolygon( HDC hdc, const POINT* pts, const INT* counts,
 
   if(!PATH_GetPathFromHDC(hdc, &pPath))
     return FALSE;
-   
+
   /* Check that path is open */
   if(pPath->state!=PATH_Open)
     return FALSE;
@@ -670,7 +677,7 @@ BOOL PATH_PolyPolyline( HDC hdc, const POINT* pts, const DWORD* counts,
 
   if(!PATH_GetPathFromHDC(hdc, &pPath))
     return FALSE;
-   
+
   /* Check that path is open */
   if(pPath->state!=PATH_Open)
     return FALSE;
@@ -685,7 +692,7 @@ BOOL PATH_PolyPolyline( HDC hdc, const POINT* pts, const DWORD* counts,
   }
   return TRUE;
 }
-   
+
 /***********************************************************************
  * Internal functions
  */
@@ -738,7 +745,7 @@ static BOOL PATH_FlattenPath(GdiPath *pPath)
   PATH_EmptyPath(&newPath);
   return TRUE;
 }
-	  
+
 /* PATH_PathToRegion
  *
  * Creates a region from the specified path using the specified polygon
@@ -760,7 +767,7 @@ static BOOL PATH_PathToRegion(const GdiPath *pPath, INT nPolyFillMode,
   PATH_FlattenPath(pPath);
 
   /* FIXME: What happens when number of points is zero? */
-   
+
   /* First pass: Find out how many strokes there are in the path */
   /* FIXME: We could eliminate this with some bookkeeping in GdiPath */
   numStrokes=0;
@@ -775,7 +782,7 @@ static BOOL PATH_PathToRegion(const GdiPath *pPath, INT nPolyFillMode,
 //    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
     return FALSE;
   }
-   
+
   /* Second pass: remember number of points in each polygon */
   iStroke=-1;  /* Will get incremented to 0 at beginning of first stroke */
   for(i=0; i<pPath->numEntriesUsed; i++)
@@ -828,7 +835,7 @@ static void PATH_EmptyPath(GdiPath *pPath)
 BOOL PATH_AddEntry(GdiPath *pPath, const POINT *pPoint, BYTE flags)
 {
   assert(pPath!=NULL);
-   
+
   /* FIXME: If newStroke is true, perhaps we want to check that we're
    * getting a PT_MOVETO
    */
@@ -836,7 +843,7 @@ BOOL PATH_AddEntry(GdiPath *pPath, const POINT *pPoint, BYTE flags)
   /* Check that path is open */
   if(pPath->state!=PATH_Open)
     return FALSE;
-   
+
   /* Reserve enough memory for an extra path entry */
   if(!PATH_ReserveEntries(pPath, pPath->numEntriesUsed+1))
     return FALSE;
@@ -866,7 +873,7 @@ static BOOL PATH_ReserveEntries(GdiPath *pPath, INT numEntries)
   INT   numEntriesToAllocate;
   POINT *pPointsNew;
   BYTE    *pFlagsNew;
-   
+
   assert(pPath!=NULL);
   assert(numEntries>=0);
 
@@ -927,9 +934,10 @@ static BOOL PATH_GetPathFromHDC(HDC hdc, GdiPath **ppPath)
   if(pDC)
   {
     *ppPath=&pDC->w.path;
+	DC_ReleasePtr( hdc );
     return TRUE;
-  } else
-    return FALSE;
+  }
+  return FALSE;
 }
 
 /* PATH_DoArcPart
@@ -972,7 +980,7 @@ static BOOL PATH_DoArcPart(GdiPath *pPath, FLOAT_POINT corners[],
       xNorm[i]=cos(angleStart);
       yNorm[i]=sin(angleStart);
     }
-   
+
   /* Add starting point to path if desired */
   if(addMoveTo)
   {
