@@ -427,7 +427,7 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 #ifndef _NO_MDI
 		return DefFrameProc(_hwnd, _hmdiclient, nmsg, wparam, lparam);
 #else
-		return super::WNdProc(nmsg, wparam, lparam);
+		return super::WndProc(nmsg, wparam, lparam);
 #endif
 	}
 
@@ -454,8 +454,10 @@ int MainFrame::Command(int id, int code)
 			while(*root)
 				++root;
 
+#ifndef _NO_MDI
 		if (activate_drive_window(root))
 			return 0;
+#endif
 
 		_tsplitpath(root, drv, 0, 0, 0);
 
@@ -547,12 +549,12 @@ int MainFrame::Command(int id, int code)
 		TCHAR path[MAX_PATH];
 		FileChildWindow* child;
 
-		if (activate_child_window(TEXT("unixfs")))
-			break;
-
 		getcwd(path, MAX_PATH);
 
 #ifndef _NO_MDI
+		if (activate_child_window(TEXT("unixfs")))
+			break;
+
 		FileChildWindow::create(_hmdiclient, FileChildWndInfo(path));
 #else
 		///@todo SDI implementation
@@ -563,8 +565,10 @@ int MainFrame::Command(int id, int code)
 	  case ID_DRIVE_DESKTOP: {
 		TCHAR path[MAX_PATH];
 
+#ifndef _NO_MDI
 		if (activate_child_window(TEXT("Desktop")))
 			break;
+#endif
 
 		GetCurrentDirectory(MAX_PATH, path);
 
@@ -573,13 +577,12 @@ int MainFrame::Command(int id, int code)
 
 	  case ID_DRIVE_SHELL_NS: {
 		TCHAR path[MAX_PATH];
-
-		if (activate_child_window(TEXT("Shell")))
-			break;
-
 		GetCurrentDirectory(MAX_PATH, path);
 
 #ifndef _NO_MDI
+		if (activate_child_window(TEXT("Shell")))
+			break;
+
 		FileChildWindow::create(ShellChildWndInfo(_hmdiclient, path, DesktopFolderPath()));
 #else
 		///@todo SDI implementation
@@ -587,10 +590,10 @@ int MainFrame::Command(int id, int code)
 		break;}
 
 	  case ID_DRIVE_NTOBJ_NS: {
+#ifndef _NO_MDI
 		if (activate_child_window(TEXT("NTOBJ")))
 			break;
 
-#ifndef _NO_MDI
 		FileChildWindow::create(NtObjChildWndInfo(_hmdiclient, TEXT("\\")));
 #else
 		///@todo SDI implementation
@@ -612,10 +615,10 @@ int MainFrame::Command(int id, int code)
 
 	  	///@todo prompt for image file
 
+#ifndef _NO_MDI
 		if (activate_child_window(TEXT("FAT")))
 			break;
 
-#ifndef _NO_MDI
 		FileChildWindow::create(FATChildWndInfo(_hmdiclient, TEXT("FAT Image")));	//@@
 #else
 		///@todo SDI implementation
