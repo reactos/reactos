@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.27 2001/12/02 23:34:43 dwelch Exp $
+/* $Id: init.c,v 1.28 2001/12/02 23:37:25 dwelch Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -448,7 +448,7 @@ BOOL InitSessionManager (HANDLE	Children[])
    /* Load the kernel mode driver win32k.sys */
    RtlInitUnicodeString (&CmdLineW,
 			 L"\\SystemRoot\\system32\\drivers\\win32k.sys");
-   //   Status = NtLoadDriver (&CmdLineW);
+   Status = NtLoadDriver (&CmdLineW);
    
 #if 0
    if (!NT_SUCCESS(Status))
