@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.121 2003/07/11 01:23:15 royce Exp $
+/* $Id: section.c,v 1.122 2003/07/12 01:55:50 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -1595,7 +1595,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
 	   PageOp->Status = STATUS_UNSUCCESSFUL;
 	   KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
 	   MmReleasePageOp(PageOp);
-	   return(STATUS_UNSUCCESSFUL);
+	   return(STATUS_PAGEFILE_QUOTA);
 	}
     }
 
@@ -1797,7 +1797,7 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
 	  PageOp->Status = STATUS_UNSUCCESSFUL;
 	  KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
 	  MmReleasePageOp(PageOp);
-	  return(STATUS_UNSUCCESSFUL);
+	  return(STATUS_PAGEFILE_QUOTA);
 	}
     }
 
