@@ -51,6 +51,7 @@ drivers\net\tcpip\tcpip.sys             2
 drivers\net\tdi\tdi.sys                 2
 drivers\net\wshtcpip\wshtcpip.dll       1
 drivers\net\dd\ne2000\ne2000.sys        2
+drivers\net\dd\pcnet\pcnet.sys          2
 lib\advapi32\advapi32.dll               1
 lib\advpack\advpack.dll                 1
 lib\aclui\aclui.dll                     1
