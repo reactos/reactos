@@ -119,6 +119,9 @@ NtClearEvent(IN HANDLE EventHandle)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtCreateEvent(OUT PHANDLE UnsafeEventHandle,
 	      IN ACCESS_MASK DesiredAccess,
@@ -308,6 +311,9 @@ NtResetEvent(IN HANDLE EventHandle,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtSetEvent(IN HANDLE EventHandle,
 	   OUT PULONG UnsafeNumberOfThreadsReleased)

@@ -35,6 +35,9 @@ NtEarlyInitVdm(VOID)
   memcpy(OrigBDA, (PVOID)0x400, 256);
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL NtVdmControl(ULONG ControlCode,
 			      PVOID ControlData)
 {
