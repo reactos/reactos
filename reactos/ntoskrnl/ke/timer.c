@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.90 2004/11/21 18:33:54 gdalsnes Exp $
+/* $Id: timer.c,v 1.91 2004/11/27 16:57:03 hbirr Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -68,7 +68,6 @@ EXPORTED ULONG KeMinimumIncrement = 100000;
 static LIST_ENTRY AbsoluteTimerListHead;
 static LIST_ENTRY RelativeTimerListHead;
 static KSPIN_LOCK TimerListLock;
-static KSPIN_LOCK TimerValueLock;
 static KDPC ExpireTimerDpc;
 
 /* must raise IRQL to PROFILE_LEVEL and grab spin lock there, to sync with ISR */
@@ -641,7 +640,6 @@ KeInitializeTimerImpl(VOID)
    InitializeListHead(&AbsoluteTimerListHead);
    InitializeListHead(&RelativeTimerListHead);
    KeInitializeSpinLock(&TimerListLock);
-   KeInitializeSpinLock(&TimerValueLock);
    KeInitializeDpc(&ExpireTimerDpc, KeExpireTimers, 0);
    /*
     * Calculate the starting time for the system clock
@@ -716,7 +714,7 @@ KeUpdateRunTime(
    {
       InterlockedIncrement((PLONG)&CurrentThread->UserTime);
       InterlockedIncrement((PLONG)&CurrentProcess->UserTime);
-      InterlockedIncrement((PLONG)&Pcr->PrcbData.UserTime);
+      Pcr->PrcbData.UserTime++;
    }
    else
    {
@@ -732,6 +730,7 @@ KeUpdateRunTime(
       {
          InterlockedIncrement((PLONG)&CurrentThread->KernelTime);
          InterlockedIncrement((PLONG)&CurrentProcess->KernelTime);
+	 Pcr->PrcbData.KernelTime++;
       }
    }
 
@@ -796,7 +795,6 @@ KeUpdateSystemTime(
     */
    KeTickCount++;
    SharedUserData->TickCountLowDeprecated++;
-   KiAcquireSpinLock(&TimerValueLock);
 
    Time.u.LowPart = SharedUserData->InterruptTime.LowPart;
    Time.u.HighPart = SharedUserData->InterruptTime.High1Time;
@@ -813,8 +811,6 @@ KeUpdateSystemTime(
    SharedUserData->SystemTime.High1Time = Time.u.HighPart;
 
    /* FIXME: Here we should check for remote debugger break-ins */
-
-   KiReleaseSpinLock(&TimerValueLock);
 
    /* Update process and thread times */
    KeUpdateRunTime(TrapFrame, Irql);
