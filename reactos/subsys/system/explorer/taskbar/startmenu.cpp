@@ -1473,31 +1473,22 @@ void StartMenuRoot::Paint(PaintCanvas& canvas)
 {
 	int clr_bits;
 	{WindowCanvas dc(_hwnd); clr_bits=GetDeviceCaps(dc, BITSPIXEL);}
-	bool logo256 = clr_bits<=8;
 
 	MemCanvas mem_dc;
-	ResBitmap bmp(logo256? IDB_LOGOV256: IDB_LOGOV);
+	ResBitmap bmp(clr_bits<=8? clr_bits<=4? IDB_LOGOV16: IDB_LOGOV256: IDB_LOGOV);
 	BitmapSelection sel(mem_dc, bmp);
 
 	ClientRect clnt(_hwnd);
 	int h = min(_logo_size.cy, clnt.bottom);
 
-	RECT rect = {0, 0, _logo_size.cx-1, clnt.bottom-h};
-	HBRUSH hbr = CreateSolidBrush(logo256? RGB(166,202,240): RGB(71,103,121));	//RGB(255,255,255));	// same color as the background color in the logo bitmap
+	RECT rect = {0, 0, _logo_size.cx, clnt.bottom-h};
+	HBRUSH hbr = CreateSolidBrush(clr_bits<=8? clr_bits<=4? RGB(192,192,192): RGB(166,202,240): RGB(71,103,121));	// same color as the background color in the logo bitmap
 	FillRect(canvas, &rect, hbr);
 	DeleteObject(hbr);
 
 	PatBlt(canvas, _logo_size.cx, 0, 1, clnt.bottom, WHITENESS);
 
 	BitBlt(canvas, 0, clnt.bottom-h, _logo_size.cx, h, mem_dc, 0, 0, SRCCOPY);
-
-	if (!logo256) {
-		rect.left = rect.right++;
-		rect.bottom = clnt.bottom;
-		HBRUSH hbr_border = GetStockBrush(GRAY_BRUSH);	//CreateSolidBrush(RGB(71,88,85));
-		FillRect(canvas, &rect, hbr_border);
-		//DeleteObject(hbr_border);
-	}
 
 	super::Paint(canvas);
 }

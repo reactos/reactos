@@ -151,6 +151,7 @@ IDB_TOOLBAR             BITMAP  DISCARDABLE     "res/toolbar.bmp"
 IDB_DRIVEBAR            BITMAP  DISCARDABLE     "res/drivebar.bmp"
 IDB_LOGOV               BITMAP  DISCARDABLE     "res/logov.bmp"
 IDB_LOGOV256            BITMAP  DISCARDABLE     "res/logov256.bmp"
+IDB_LOGOV16             BITMAP  DISCARDABLE     "res/logov16.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //

@@ -86,6 +86,7 @@
 #define IDB_ICON_ALIGN_8                161
 #define IDB_ICON_ALIGN_9                162
 #define IDB_ICON_ALIGN_10               163
+#define IDB_LOGOV16                     164
 #define ID_VIEW_NAME                    401
 #define ID_VIEW_ALL_ATTRIBUTES          402
 #define ID_VIEW_SELECTED_ATTRIBUTES     403
