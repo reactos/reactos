@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.42 2004/05/07 05:12:10 royce Exp $
+/* $Id: catch.c,v 1.42.8.1 2004/06/26 00:49:38 hyperion Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -56,7 +56,17 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
   CONTEXT TContext;
   KD_CONTINUE_TYPE Action = kdContinue;
 
+  PVOID ExceptionList;
+
+  __asm__("cli");
+
+  ExceptionList = NtCurrentTeb()->Tib.ExceptionList;
+
+  if(NtCurrentTeb()->Tib.ExceptionList != ExceptionList) DbgBreakPoint();
+
   DPRINT("KiDispatchException() called\n");
+
+  if(NtCurrentTeb()->Tib.ExceptionList != ExceptionList) DbgBreakPoint();
 
   /* PCR->KeExceptionDispatchCount++; */
 
@@ -73,6 +83,8 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
       Context = &TContext;
     }
 
+  if(NtCurrentTeb()->Tib.ExceptionList != ExceptionList) DbgBreakPoint();
+
 #if 0
   if (ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT) 
     {
@@ -80,17 +92,22 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
     }
 #endif
       
+  if(NtCurrentTeb()->Tib.ExceptionList != ExceptionList) DbgBreakPoint();
+
   if (KdDebuggerEnabled && KdDebugState & KD_DEBUG_GDB)
     {
       Action = KdEnterDebuggerException (ExceptionRecord, Context, Tf);
     }
+
+  if(NtCurrentTeb()->Tib.ExceptionList != ExceptionList) DbgBreakPoint();
+
 #ifdef KDBG
   else if (KdDebuggerEnabled && KdDebugState & KD_DEBUG_KDB)
     {
       Action = KdbEnterDebuggerException (ExceptionRecord, Context, Tf);
       if (Action == kdContinue)
 	{
-	  return;
+	  goto l_return;
 	}
     }
 #endif /* KDBG */
@@ -139,7 +156,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 	          DPRINT1("User-mode stack was invalid. Terminating target thread\nn");
 	        }
 	      Tf->Eip = (ULONG)LdrpGetSystemDllExceptionDispatcher();
-	      return;
+	      goto l_return;
 	    }
 
 	  /* FIXME: Forward the exception to the debugger */
@@ -156,9 +173,13 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 	}
       else
 	{
+          if(NtCurrentTeb()->Tib.ExceptionList != ExceptionList) DbgBreakPoint();
+
 	  /* PreviousMode == KernelMode */
 	  Value = RtlpDispatchException (ExceptionRecord, Context);
-	  
+
+          if(NtCurrentTeb()->Tib.ExceptionList != ExceptionList) DbgBreakPoint();
+
 	  DPRINT("RtlpDispatchException() returned with 0x%X\n", Value);
 	  /* 
 	   * If RtlpDispatchException() does not handle the exception then 
@@ -177,6 +198,9 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
     {
       KeContextToTrapFrame (Context, KeGetCurrentThread()->TrapFrame);
     }
+
+l_return:
+  __asm__("sti");
 }
 
 /*
