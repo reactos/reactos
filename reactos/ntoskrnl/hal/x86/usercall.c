@@ -58,7 +58,7 @@ void interrupt_handler2e(void);
      "rep\n\tmovsb\n\t"
      "movw %bx,%ds\n\t"
      "movl %ds:__SystemServiceTable+4(,%eax,8),%eax\n\t"
-     "call %eax\n\t"
+     "call *%eax\n\t"
      "movl %ebp,%esp\n\t"
      "popl %ebx\n\t"
      "popl %ebp\n\t"
