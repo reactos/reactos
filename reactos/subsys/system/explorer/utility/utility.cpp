@@ -98,10 +98,13 @@ void display_error(HWND hwnd, DWORD error)	//@@ CONTEXT mit ausgeben
 	PTSTR msg;
 
 	if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM,
-		0, error, MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT), (PTSTR)&msg, 0, NULL))
+		0, error, MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT), (PTSTR)&msg, 0, NULL)) {
+		LOG(msg);
 		MessageBox(hwnd, msg, TEXT("ROS Explorer"), MB_OK);
-	else
+	} else {
+		LOG(TEXT("display_error: Unknown Error"));
 		MessageBox(hwnd, TEXT("Unknown Error"), TEXT("ROS Explorer"), MB_OK);
+	}
 
 	LocalFree(msg);
 }

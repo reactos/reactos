@@ -45,7 +45,13 @@ extern struct ExplorerGlobals
 #endif
 } g_Globals;
 
-#define	LOG(x) if (g_Globals._log) _ftprintf(g_Globals._log, TEXT("%s\n"), (LPCTSTR)(x));
+#undef LOG
+
+#define	LOG(x) \
+{ \
+	if (g_Globals._log) _ftprintf(g_Globals._log, TEXT("%s\n"), (LPCTSTR)(x)); \
+	OutputDebugString(x); \
+}
 
 
  /// convenient loading of string resources

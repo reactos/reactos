@@ -106,6 +106,7 @@ struct COMException : public COMExceptionBase
 		_obj(Context::current()._obj),
 		_file(NULL), _line(0)
 	{
+		LOG(toString());
 	}
 
 	COMException(HRESULT hr, const char* file, int line)
@@ -114,6 +115,7 @@ struct COMException : public COMExceptionBase
 		_obj(Context::current()._obj),
 		_file(file), _line(line)
 	{
+		LOG(toString());
 	}
 
 	COMException(HRESULT hr, const String& obj)
@@ -123,6 +125,7 @@ struct COMException : public COMExceptionBase
 		_file(NULL), _line(0)
 	{
 		_ctx = Context::current()._ctx;
+		LOG(toString());
 	}
 
 	COMException(HRESULT hr, const String& obj, const char* file, int line)
@@ -131,7 +134,10 @@ struct COMException : public COMExceptionBase
 		_obj(obj),
 		_file(file), _line(line)
 	{
+		LOG(toString());
 	}
+
+	String toString() const;
 
 	LPCTSTR _ctx;
 	String	_obj;

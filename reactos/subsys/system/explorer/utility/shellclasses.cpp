@@ -68,25 +68,33 @@ Context* Context::s_current = &Context::s_main;
 
  // Exception Handler for COM exceptions
 
-void HandleException(COMException& e, HWND hwnd)
+String COMException::toString() const
 {
 	TCHAR msg[4*BUFFER_LEN];
 	LPTSTR p = msg;
 
-	p += _stprintf(p, TEXT("%s"), e.ErrorMessage());
+	p += _stprintf(p, TEXT("%s"), super::ErrorMessage());
 
-	if (e._ctx)
-		p += _stprintf(p, TEXT("\nContext: %s"), e._ctx);
+	if (_ctx)
+		p += _stprintf(p, TEXT("\nContext: %s"), _ctx);
 
-	if (!e._obj.empty())
-		p += _stprintf(p, TEXT("\nObject: %s"), (LPCTSTR)e._obj);
+	if (!_obj.empty())
+		p += _stprintf(p, TEXT("\nObject: %s"), (LPCTSTR)_obj);
 
-	if (e._file)
+	if (_file)
 #ifdef UNICODE
-		p += _stprintf(p, TEXT("\nLocation: %hs(%d)"), e._file, e._line);
+		p += _stprintf(p, TEXT("\nLocation: %hs(%d)"), _file, _line);
 #else
-		p += _stprintf(p, TEXT("\nLocation: %s, line %d"), e._file, e._line);
+		p += _stprintf(p, TEXT("\nLocation: %s, line %d"), _file, _line);
 #endif
+
+	return msg;
+}
+
+
+void HandleException(COMException& e, HWND hwnd)
+{
+	String msg = e.toString();
 
 	SetLastError(0);
 

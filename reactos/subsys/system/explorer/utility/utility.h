@@ -85,6 +85,9 @@ using namespace _com_util;
 #define	BUFFER_LEN				1024
 
 
+#define	LOG(x) OutputDebugString(x)
+
+
  /// initialization of windows common controls
 struct CommonControlInit
 {
@@ -496,11 +499,11 @@ struct String
 #ifdef UNICODE
 	String(LPCSTR s) {assign(s);}
 	String& operator=(LPCSTR s) {assign(s); return *this;}
-	void assign(LPCSTR s) {TCHAR b[BUFFER_LEN]; MultiByteToWideChar(CP_ACP, 0, s, -1, b, BUFFER_LEN); super::assign(b);}
+	void assign(LPCSTR s) {TCHAR b[BUFFER_LEN]; super::assign(b, MultiByteToWideChar(CP_ACP, 0, s, -1, b, BUFFER_LEN));}
 #else
 	String(LPCWSTR s) {assign(s);}
 	String& operator=(LPCWSTR s) {assign(s); return *this;}
-	void assign(LPCWSTR s) {char b[BUFFER_LEN]; WideCharToMultiByte(CP_ACP, 0, s, -1, b, BUFFER_LEN, 0, 0); super::assign(b);}
+	void assign(LPCWSTR s) {char b[BUFFER_LEN]; super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, -1, b, BUFFER_LEN, 0, 0));}
 #endif
 
 	String& operator=(LPCTSTR s) {super::assign(s); return *this;}
