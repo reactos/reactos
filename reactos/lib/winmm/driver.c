@@ -22,37 +22,25 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifdef __WINE_FOR_REACTOS__
-
-#include "internal.h"
-#include <windows.h>
-#include <wine/windef16.h>
-typedef UINT *LPUINT;
-
-#else
-
-#include "heap.h"
+#include <string.h>
+#include <stdarg.h>
 #include "windef.h"
+#include "winbase.h"
 #include "wingdi.h"
 #include "winuser.h"
-#include "wine/debug.h"
-
-#endif
-
-#include <string.h>
+#include "winnls.h"
 #include "mmddk.h"
 #include "winemm.h"
+#include "wine/debug.h"
 
-#ifndef __WINE_FOR_REACTOS__ 
 WINE_DEFAULT_DEBUG_CHANNEL(driver);
-#endif
 
 static LPWINE_DRIVER   lpDrvItemList  /* = NULL */;
 
-WINE_MMTHREAD*  (*pFnGetMMThread16)(HANDLE16 h) /* = NULL */;
+WINE_MMTHREAD*  (*pFnGetMMThread16)(UINT16 h) /* = NULL */;
 LPWINE_DRIVER   (*pFnOpenDriver16)(LPCSTR,LPCSTR,LPARAM) /* = NULL */;
-LRESULT         (*pFnCloseDriver16)(HDRVR16,LPARAM,LPARAM) /* = NULL */;
-LRESULT         (*pFnSendMessage16)(HDRVR16,UINT,LPARAM,LPARAM) /* = NULL */;
+LRESULT         (*pFnCloseDriver16)(UINT16,LPARAM,LPARAM) /* = NULL */;
+LRESULT         (*pFnSendMessage16)(UINT16,UINT,LPARAM,LPARAM) /* = NULL */;
 
 /**************************************************************************
  *			DRIVER_GetNumberOfModuleRefs		[internal]
@@ -340,9 +328,28 @@ HDRVR WINAPI OpenDriverA(LPCSTR lpDriverName, LPCSTR lpSectionName, LPARAM lPara
  */
 HDRVR WINAPI OpenDriverW(LPCWSTR lpDriverName, LPCWSTR lpSectionName, LPARAM lParam)
 {
-    LPSTR 		dn = HEAP_strdupWtoA(GetProcessHeap(), 0, lpDriverName);
-    LPSTR 		sn = HEAP_strdupWtoA(GetProcessHeap(), 0, lpSectionName);
-    HDRVR		ret = OpenDriverA(dn, sn, lParam);
+    INT                 len;
+    LPSTR 		dn = NULL;
+    LPSTR 		sn = NULL;
+    HDRVR		ret;
+
+    if (lpDriverName)
+    {
+        len = WideCharToMultiByte( CP_ACP, 0, lpDriverName, -1, NULL, 0, NULL, NULL );
+        dn = HeapAlloc( GetProcessHeap(), 0, len );
+        if (!dn) return 0;
+        WideCharToMultiByte( CP_ACP, 0, lpDriverName, -1, dn, len, NULL, NULL );
+    }
+
+    if (lpSectionName)
+    {
+        len = WideCharToMultiByte( CP_ACP, 0, lpSectionName, -1, NULL, 0, NULL, NULL );
+        sn = HeapAlloc( GetProcessHeap(), 0, len );
+        if (!sn) return 0;
+        WideCharToMultiByte( CP_ACP, 0, lpSectionName, -1, sn, len, NULL, NULL );
+    }
+
+    ret = OpenDriverA(dn, sn, lParam);
 
     if (dn) HeapFree(GetProcessHeap(), 0, dn);
     if (sn) HeapFree(GetProcessHeap(), 0, sn);
