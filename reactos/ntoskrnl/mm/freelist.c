@@ -40,6 +40,7 @@ typedef struct _PHYSICAL_PAGE
 /* GLOBALS ****************************************************************/
 
 static PPHYSICAL_PAGE MmPageArray;
+static ULONG MmPageArraySize;
 
 static KSPIN_LOCK PageListLock;
 static LIST_ENTRY UsedPageListHeads[MC_MAXIMUM];
@@ -303,8 +304,9 @@ MmInitializePageList(PVOID FirstPhysKernelAddress,
 
    LastKernelAddress = PAGE_ROUND_UP(LastKernelAddress);
    
+   MmPageArraySize = MemorySizeInPages;
    Reserved = 
-     PAGE_ROUND_UP((MemorySizeInPages * sizeof(PHYSICAL_PAGE))) / PAGE_SIZE;
+     PAGE_ROUND_UP((MmPageArraySize * sizeof(PHYSICAL_PAGE))) / PAGE_SIZE;
    MmPageArray = (PHYSICAL_PAGE *)LastKernelAddress;
    
    DPRINT("Reserved %d\n", Reserved);
@@ -490,23 +492,29 @@ MmGetRmapListHeadPage(PHYSICAL_ADDRESS PhysicalAddress)
 VOID 
 MmMarkPageMapped(PHYSICAL_ADDRESS PhysicalAddress)
 {
-   ULONG Start = PhysicalAddress.u.LowPart / PAGE_SIZE;
-   KIRQL oldIrql;
-   
-   KeAcquireSpinLock(&PageListLock, &oldIrql);
-   MmPageArray[Start].MapCount++;
-   KeReleaseSpinLock(&PageListLock, oldIrql);
+  ULONG Start = PhysicalAddress.u.LowPart / PAGE_SIZE;
+  KIRQL oldIrql;
+
+  if (Start < MmPageArraySize)
+    {   
+      KeAcquireSpinLock(&PageListLock, &oldIrql);
+      MmPageArray[Start].MapCount++;
+      KeReleaseSpinLock(&PageListLock, oldIrql);
+    }
 }
 
 VOID 
 MmMarkPageUnmapped(PHYSICAL_ADDRESS PhysicalAddress)
 {
-   ULONG Start = PhysicalAddress.u.LowPart / PAGE_SIZE;
-   KIRQL oldIrql;
+  ULONG Start = PhysicalAddress.u.LowPart / PAGE_SIZE;
+  KIRQL oldIrql;
    
-   KeAcquireSpinLock(&PageListLock, &oldIrql);
-   MmPageArray[Start].MapCount--;
-   KeReleaseSpinLock(&PageListLock, oldIrql);
+  if (Start < MmPageArraySize)
+    {   
+      KeAcquireSpinLock(&PageListLock, &oldIrql);
+      MmPageArray[Start].MapCount--;
+      KeReleaseSpinLock(&PageListLock, oldIrql);
+    }
 }
 
 ULONG 
