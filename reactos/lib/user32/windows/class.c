@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.52 2004/12/04 22:08:29 navaraf Exp $
+/* $Id: class.c,v 1.53 2004/12/17 09:56:10 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -170,7 +170,10 @@ GetClassInfoA(
   }
 
   retval = GetClassInfoExA(hInstance,lpClassName,&w);
-  RtlCopyMemory ( lpWndClass, &w.style, sizeof(WNDCLASSA) );
+  if (retval)
+  {
+    RtlCopyMemory ( lpWndClass, &w.style, sizeof(WNDCLASSA) );
+  }
   return retval;
 }
 
