@@ -191,6 +191,7 @@ void test2(void)
 		,0,NULL,REG_OPTION_VOLATILE,NULL);
   dprintf("\t\tStatus=%x\n",Status);
   NtClose(hKey);
+  do_enumeratekey(L"\\Registry\\Machine\\Software");
   dprintf("  ...\\test2 :");
   RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\Software\\test2reactos\\test2");
   InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE
@@ -596,8 +597,10 @@ void test5(void)
   Status=NtOpenProcessToken(GetCurrentProcess()
 	,TOKEN_ADJUST_PRIVILEGES|TOKEN_QUERY,&Token);
   dprintf("\t\t\t\tStatus =%x\n",Status);
+/*
   bRes=LookupPrivilegeValueA(NULL,SE_RESTORE_NAME,&Luid);
   dprintf("\t\t\t\tbRes =%x\n",bRes);
+*/
   NewPrivileges.PrivilegeCount = 1; 
   NewPrivileges.Privileges[0].Luid = Luid; 
   NewPrivileges.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED; 
