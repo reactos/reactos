@@ -1248,7 +1248,6 @@ void dump_Variant(VARIANT * pvar)
       case VT_BSTR: TRACE(",%s", debugstr_w(V_BSTR(pvar))); break;
       case VT_CY:   TRACE(",0x%08lx,0x%08lx", V_CY(pvar).s.Hi,
                            V_CY(pvar).s.Lo); break;
-#ifndef __REACTOS /*FIXME*/
       case VT_DATE:
         if(!VariantTimeToSystemTime(V_DATE(pvar), &st))
           TRACE(",<invalid>");
@@ -1256,7 +1255,6 @@ void dump_Variant(VARIANT * pvar)
           TRACE(",%04d/%02d/%02d %02d:%02d:%02d", st.wYear, st.wMonth, st.wDay,
                 st.wHour, st.wMinute, st.wSecond);
         break;
-#endif
       case VT_ERROR:
       case VT_VOID:
       case VT_USERDEFINED:

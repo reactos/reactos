@@ -51,25 +51,19 @@ static inline void VARIANT_CopyData(const VARIANT *srcVar, VARTYPE vt, void *pOu
   case VT_UI1: memcpy(pOut, &V_UI1(srcVar), sizeof(BYTE)); break;
   case VT_BOOL:
   case VT_I2:
-#ifndef __REACTOS__ /*FIXME*/
   case VT_UI2: memcpy(pOut, &V_UI2(srcVar), sizeof(SHORT));
-#endif
 	break;
   case VT_R4:
   case VT_INT:
   case VT_I4:
   case VT_UINT:
-#ifndef __REACTOS__ /*FIXME*/
   case VT_UI4: memcpy(pOut, &V_UI4(srcVar), sizeof (LONG));
-#endif
 	break;
   case VT_R8:
   case VT_DATE:
   case VT_CY:
   case VT_I8:
-#ifndef __REACTOS__ /*FIXME*/
   case VT_UI8: memcpy(pOut, &V_UI8(srcVar), sizeof (LONG64));
-#endif
 	break;
   case VT_INT_PTR: memcpy(pOut, &V_INT_PTR(srcVar), sizeof (INT_PTR)); break;
   case VT_DECIMAL: memcpy(pOut, &V_DECIMAL(srcVar), sizeof (DECIMAL)); break;
