@@ -110,9 +110,9 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 				WaitForSingleObject (prci.hProcess, INFINITE);
 				GetExitCodeProcess (prci.hProcess, &dwExitCode);
 				nErrorLevel = (INT)dwExitCode;
-				CloseHandle (prci.hThread);
-				CloseHandle (prci.hProcess);
 			}
+			CloseHandle (prci.hThread);
+			CloseHandle (prci.hProcess);
 		}
 		else
 		{
