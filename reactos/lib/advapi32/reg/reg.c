@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.45 2004/04/01 13:53:08 ekohl Exp $
+/* $Id: reg.c,v 1.46 2004/04/03 13:12:43 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -2292,13 +2292,16 @@ RegQueryValueExA (HKEY hKey,
   RtlCreateUnicodeStringFromAsciiz (&ValueName,
 				    (LPSTR)lpValueName);
 
-  Length = *lpcbData * sizeof(WCHAR);
+  if (NULL != lpcbData)
+    {
+      Length = *lpcbData * sizeof(WCHAR);
+    }
   ErrorCode = RegQueryValueExW (hKey,
 				ValueName.Buffer,
 				lpReserved,
 				&Type,
 				(LPBYTE)ValueData.Buffer,
-				&Length);
+				NULL == lpcbData ? NULL : &Length);
   DPRINT("ErrorCode %lu\n", ErrorCode);
 
   if (ErrorCode == ERROR_SUCCESS ||
@@ -2322,7 +2325,7 @@ RegQueryValueExA (HKEY hKey,
 	    }
 	  Length = Length / sizeof(WCHAR);
 	}
-      else
+      else if (lpcbData != NULL)
 	{
 	  Length = min(*lpcbData, Length);
 	  if (ErrorCode == ERROR_SUCCESS && ValueData.Buffer != NULL)
