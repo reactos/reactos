@@ -108,6 +108,8 @@ void PolygonTest ( HDC hdc )
 
   Mode = GetPolyFillMode(hdc);
 
+  RoundRect ( hdc, 32, 8, 48, 24, 8, 8 );
+
   SetPolyFillMode(hdc, ALTERNATE);
   Polygon(hdc,PointsAlternate,nelem(PointsAlternate));
 
