@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.74 2003/08/29 09:29:11 gvg Exp $
+/* $Id: defwnd.c,v 1.75 2003/08/29 11:00:19 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -2133,7 +2133,7 @@ DefWindowProcA(HWND hWnd,
                 RtlFreeHeap(RtlGetProcessHeap(), 0, WindowText);
             }
             WindowText = RtlAllocateHeap(RtlGetProcessHeap(), 0,
-                strlen((PSTR)lParam) * sizeof(CHAR));
+                (strlen((PSTR)lParam) + 1) * sizeof(CHAR));
             strcpy(WindowText, (PSTR)lParam);
             SetPropA(hWnd, WindowTextAtom, WindowText);
             if (0 != (GetWindowLongW(hWnd, GWL_STYLE) & WS_CAPTION))
@@ -2237,7 +2237,7 @@ DefWindowProcW(HWND hWnd,
                 RtlFreeHeap(RtlGetProcessHeap(), 0, WindowText);
             }
             WindowText = RtlAllocateHeap(RtlGetProcessHeap(), 0,
-			    wcslen((PWSTR)lParam) * sizeof(WCHAR));
+			    (wcslen((PWSTR)lParam) + 1) * sizeof(WCHAR));
             wcscpy(WindowText, (PWSTR)lParam);
             SetPropW(hWnd, WindowTextAtom, WindowText);
             if ((GetWindowLongW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
