@@ -28,6 +28,14 @@ CleanupMenuImpl(VOID);
 
 DWORD
 STDCALL
+NtUserBuildMenuItemList(
+ HMENU hMenu,
+ LPCMENUITEMINFO* lpmiil,
+ ULONG nBufSize,
+ DWORD Reserved);
+
+DWORD
+STDCALL
 NtUserCheckMenuItem(
   HMENU hmenu,
   UINT uIDCheckItem,
@@ -65,13 +73,13 @@ NtUserEnableMenuItem(
   UINT uIDEnableItem,
   UINT uEnable);
   
-/*DWORD
+DWORD
 STDCALL
 NtUserInsertMenuItem(
   HMENU hMenu,
   UINT uItem,
   WINBOOL fByPosition,
-  LPCMENUITEMINFO lpmii);*/
+  LPCMENUITEMINFO lpmii);
   
 BOOL
 STDCALL
@@ -106,6 +114,13 @@ NtUserHiliteMenuItem(
   HMENU hmenu,
   UINT uItemHilite,
   UINT uHilite);
+
+BOOL
+STDCALL
+NtUserMenuInfo(
+ HMENU hmenu,
+ LPCMENUINFO lpcmi,
+ BOOL fsog);
   
 int
 STDCALL
@@ -114,6 +129,15 @@ NtUserMenuItemFromPoint(
   HMENU hMenu,
   DWORD X,
   DWORD Y);
+
+BOOL
+STDCALL
+NtUserMenuItemInfo(
+ HMENU hMenu,
+ UINT uItem,
+ BOOL fByPosition,
+ LPMENUITEMINFO lpmii,
+ BOOL fsog);
   
 BOOL
 STDCALL

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.1 2003/07/31 23:13:55 weiden Exp $
+/* $Id: menu.c,v 1.2 2003/08/01 10:56:28 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -151,6 +151,23 @@ W32kSetMenuContextHelpId(PMENU_OBJECT MenuObject, DWORD dwContextHelpId)
 /*
  * @unimplemented
  */
+DWORD
+STDCALL
+NtUserBuildMenuItemList(
+ HMENU hMenu,
+ LPCMENUITEMINFO* lpmiil,
+ ULONG nBufSize,
+ DWORD Reserved)
+{
+  UNIMPLEMENTED
+
+  return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 NtUserCheckMenuItem(
   HMENU hmenu,
@@ -262,7 +279,7 @@ NtUserEnableMenuItem(
 /*
  * @unimplemented
  */
-/*DWORD STDCALL
+DWORD STDCALL
 NtUserInsertMenuItem(
   HMENU hMenu,
   UINT uItem,
@@ -272,7 +289,7 @@ NtUserInsertMenuItem(
   UNIMPLEMENTED
   
   return 0;
-}*/
+}
 
 
 /*
@@ -352,12 +369,44 @@ NtUserHiliteMenuItem(
 /*
  * @unimplemented
  */
+BOOL
+STDCALL
+NtUserMenuInfo(
+ HMENU hmenu,
+ LPCMENUINFO lpcmi,
+ BOOL fsog)
+{
+
+}
+
+
+/*
+ * @unimplemented
+ */
 int STDCALL
 NtUserMenuItemFromPoint(
   HWND hWnd,
   HMENU hMenu,
   DWORD X,
   DWORD Y)
+{
+  UNIMPLEMENTED
+
+  return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtUserMenuItemInfo(
+ HMENU hMenu,
+ UINT uItem,
+ BOOL fByPosition,
+ LPMENUITEMINFO lpmii,
+ BOOL fsog)
 {
   UNIMPLEMENTED
 
@@ -484,5 +533,6 @@ NtUserTrackPopupMenuEx(
 
   return 0;
 }
+
 
 /* EOF */
