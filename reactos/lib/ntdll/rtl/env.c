@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.1 1999/12/01 15:14:59 ekohl Exp $
+/* $Id: env.c,v 1.2 1999/12/01 17:34:55 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -29,15 +29,15 @@ RtlCreateEnvironment (
 	PVOID EnvPtr = NULL;
 	NTSTATUS Status = STATUS_SUCCESS;
 	ULONG RegionSize = 1;
-
+#if 0
 	if (Inherit == TRUE)
 	{
 		RtlAcquirePebLock ();
 
-		if (NtCurrentPeb()->ProcessInfo->Environment != NULL)
+		if (NtCurrentPeb()->ProcessParameters->Environment != NULL)
 		{
 			Status = NtQueryVirtualMemory (NtCurrentProcess (),
-			                               NtCurrentPeb ()->ProcessInfo->Environment,
+			                               NtCurrentPeb ()->ProcessParameters->Environment,
 			                               MemoryBasicInformation,
 			                               &MemInfo,
 			                               sizeof(MEMORY_BASIC_INFORMATION),
@@ -64,7 +64,7 @@ RtlCreateEnvironment (
 			}
 
 			memmove (EnvPtr,
-			         NtCurrentPeb ()->ProcessInfo->Environment,
+			         NtCurrentPeb ()->ProcessParameters->Environment,
 			         MemInfo.RegionSize);
 
 			*Environment = EnvPtr;
@@ -83,7 +83,7 @@ RtlCreateEnvironment (
 		if (NT_SUCCESS(Status))
 			*Environment = EnvPtr;
 	}
-
+#endif
 	return Status;
 }
 
@@ -113,13 +113,13 @@ RtlSetCurrentEnvironment (
 	PVOID EnvPtr;
 
 	RtlAcquirePebLock ();
-
-	EnvPtr = NtCurrentPeb()->ProcessInfo->Environment;
-	NtCurrentPeb()->ProcessInfo->Environment = NewEnvironment;
+#if 0
+	EnvPtr = NtCurrentPeb()->ProcessParameters->Environment;
+	NtCurrentPeb()->ProcessParameters->Environment = NewEnvironment;
 
 	if (OldEnvironment != NULL)
 		*OldEnvironment = EnvPtr;
-
+#endif
 	RtlReleasePebLock ();
 }
 
@@ -160,7 +160,5 @@ RtlQueryEnvironmentVariable_U (
 
 	return Status;
 }
-
-
 
 /* EOF */
