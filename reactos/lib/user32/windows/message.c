@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.40 2004/06/16 06:09:40 gvg Exp $
+/* $Id: message.c,v 1.41 2004/06/16 06:18:14 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -16,11 +16,6 @@
 #include <message.h>
 #define NTOS_MODE_USER
 #include <ntos.h>
-
-#ifndef TODO
-#define NDEBUG
-#include <debug.h>
-#endif
 
 /* DDE message exchange
  * 
