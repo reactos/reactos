@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: misc.c,v 1.5 2004/05/28 21:33:41 gvg Exp $
+/* $Id: misc.c,v 1.6 2004/07/08 14:35:10 ekohl Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/misc.c
@@ -59,17 +59,20 @@ PrivateCsrssManualGuiCheck(LONG Check)
 
 VOID
 STDCALL
-PrivateCsrssInitialized()
+PrivateCsrssInitialized(VOID)
 {
   NtUserCallNoParam(NOPARAM_ROUTINE_CSRSS_INITIALIZED);
 }
+
 
 /*
  * @implemented
  */
 BOOL
 STDCALL
-RegisterLogonProcess ( HANDLE hprocess, BOOL x )
+RegisterLogonProcess(DWORD dwProcessId, BOOL bRegister)
 {
-  return NtUserRegisterLogonProcess(hprocess, x);
+  return NtUserCallTwoParam(dwProcessId,
+			    (DWORD)bRegister,
+			    TWOPARAM_ROUTINE_REGISTERLOGONPROC);
 }

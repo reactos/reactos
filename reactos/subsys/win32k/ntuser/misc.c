@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.81 2004/07/03 13:55:36 navaraf Exp $
+/* $Id: misc.c,v 1.82 2004/07/08 14:36:18 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -37,39 +37,44 @@ PUSER_MESSAGE_QUEUE W32kGetPrimitiveMessageQueue() {
 }
 
 BOOL FASTCALL
-IntRegisterLogonProcess(HANDLE hProcess, BOOL x)
+IntRegisterLogonProcess(DWORD dwProcessId, BOOL bRegister)
 {
   PEPROCESS Process;
   NTSTATUS Status;
-  
-  if(LogonProcess != NULL && LogonProcess != PsGetWin32Process())
+
+  Status = PsLookupProcessByProcessId((PVOID)dwProcessId,
+				      &Process);
+  if (!NT_SUCCESS(Status))
   {
-    SetLastWin32Error(ERROR_ACCESS_DENIED);
+    SetLastWin32Error(RtlNtStatusToDosError(Status));
     return FALSE;
   }
-  
-  if(hProcess)
+
+  if (bRegister)
   {
-    Status = ObReferenceObjectByHandle(hProcess,
-                                       PROCESS_QUERY_INFORMATION,
-                                       PsProcessType,
-                                       ExGetPreviousMode(),
-                                       (PVOID*)&Process,
-                                       NULL);
-    if(!NT_SUCCESS(Status))
+    /* Register the logon process */
+    if (LogonProcess != NULL)
     {
-      SetLastNtError(Status);
-      return 0;
+      ObDereferenceObject(Process);
+      return FALSE;
     }
-  
+
     LogonProcess = Process->Win32Process;
-    ObDereferenceObject(Process);
   }
   else
   {
-    /* deregister the logon process */
+    /* Deregister the logon process */
+    if (LogonProcess != Process->Win32Process)
+    {
+      ObDereferenceObject(Process);
+      return FALSE;
+    }
+
     LogonProcess = NULL;
   }
+
+  ObDereferenceObject(Process);
+
   return TRUE;
 }
 
@@ -489,7 +494,7 @@ NtUserCallTwoParam(
     }
     
     case TWOPARAM_ROUTINE_REGISTERLOGONPROC:
-      return (DWORD)IntRegisterLogonProcess((HANDLE)Param1, (BOOL)Param2);
+      return (DWORD)IntRegisterLogonProcess(Param1, (BOOL)Param2);
     
   }
   DPRINT1("Calling invalid routine number 0x%x in NtUserCallTwoParam(), Param1=0x%x Parm2=0x%x\n",
@@ -532,7 +537,7 @@ NtUserCallHwndLock(
          /* FIXME */
          break;
 
-      case HWNDLOCK_ROUTINE_SETFOREGROUNDWINDOW:         
+      case HWNDLOCK_ROUTINE_SETFOREGROUNDWINDOW:
          Ret = IntSetForegroundWindow(Window);
          break;
 

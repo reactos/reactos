@@ -4604,8 +4604,8 @@ RegisterSystemThread(
 BOOL
 STDCALL
 RegisterLogonProcess(
-		     HANDLE hprocess,
-		     BOOL x
+		     DWORD dwPprocessId,
+		     BOOL bRegister
 		     );
 
 WINBOOL
