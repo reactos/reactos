@@ -66,12 +66,11 @@ STORAGE_DRIVERS = class2 scsiport atapi disk
 #SYS_APPS = lsass services shell winlogon
 SYS_APPS = services shell winlogon
 
+#readfile
 APPS = args hello test cat bench apc shm lpc thread event file gditest \
        pteb consume dump_shared_data vmtest regtest alive mstest nptest \
-       objdir atomtest winhello partinfo mutex readfile
-
-#NET_APPS = ncftp ping roshttpd telnet
-NET_APPS =  
+       objdir atomtest winhello partinfo mutex 
+  
 
 #lzexpand mapi32 (missing imports)
 #dsound (missing winmm.dll)
@@ -166,27 +165,6 @@ $(APPS:%=%_install): %_install:
 	make -C apps/$* install
 
 .PHONY: $(APPS) $(APPS:%=%_implib) $(APPS:%=%_clean) $(APPS:%=%_install) $(APPS:%=%_dist)
-
-#
-# Network applications
-#
-$(NET_APPS): %:
-	make -C apps/net/$*
-
-$(NET_APPS:%=%_implib): %_implib:
-	make -C apps/net/$* implib
-
-$(NET_APPS:%=%_clean): %_clean:
-	make -C apps/net/$* clean
-
-$(NET_APPS:%=%_dist): %_dist:
-	make -C apps/net/$* dist
-
-$(NET_APPS:%=%_install): %_install:
-	make -C apps/net/$* install
-
-.PHONY: $(NET_APPS) $(NET_APPS:%=%_implib) $(NET_APPS:%=%_clean) $(NET_APPS:%=%_install) $(NET_APPS:%=%_dist)
-
 
 #
 # Wine DLLs
