@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.27 1999/12/04 21:03:22 ea Exp $
+; $Id: ntdll.def,v 1.28 1999/12/06 00:22:00 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -440,9 +440,10 @@ RtlAppendUnicodeToString@12
 RtlCharToInteger@12
 RtlCreateEnvironment@8
 RtlCreateHeap@24
+RtlCreateProcessParameters@40
 RtlCreateUnicodeString@8
 RtlCreateUnicodeStringFromAsciiz@8
-RtlCreateUserProcess@32
+RtlCreateUserProcess@40
 RtlCreateUserThread@40
 RtlCompactHeap@8
 RtlCompareString@12
@@ -451,8 +452,10 @@ RtlConvertLongToLargeInteger@4
 RtlConvertUlongToLargeInteger@4
 RtlCopyString@8
 RtlCopyUnicodeString@8
+RtlDeNormalizeProcessParams@4
 RtlDestroyEnvironment@4
 RtlDestroyHeap@4
+RtlDestroyProcessParameters@4
 RtlDowncaseUnicodeString@12
 RtlEnlargedIntegerMultiply@8
 RtlEnlargedUnsignedDivide@16
@@ -486,6 +489,7 @@ RtlLengthSecurityDescriptor
 RtlLockHeap@4
 RtlMoveMemory@12
 RtlMultiByteToUnicodeN@20
+RtlNormalizeProcessParams@4
 RtlNtStatusToDosError
 RtlNtStatusToPsxErrno@4
 RtlOemStringToUnicodeSize@4
@@ -494,6 +498,7 @@ RtlOemToUnicodeN@20
 RtlQueryEnvironmentVariable_U@12
 RtlReAllocateHeap@16
 RtlReleasePebLock@0
+RtlSetCurrentEnvironment@8
 RtlSetEnvironmentVariable@12
 RtlSizeHeap@12
 RtlUnlockHeap@4

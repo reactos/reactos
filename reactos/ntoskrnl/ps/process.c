@@ -141,7 +141,7 @@ static NTSTATUS PsCreatePeb(HANDLE ProcessHandle)
    NTSTATUS Status;
    PVOID PebBase;
    ULONG PebSize;
-   NT_PEB Peb;
+   PEB Peb;
    ULONG BytesWritten;
    
    PebBase = (PVOID)PEB_BASE;

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.13 1999/11/24 11:51:45 dwelch Exp $
+/* $Id: create.c,v 1.14 1999/12/06 00:23:40 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -23,6 +23,7 @@
 #include <ntdll/ldr.h>
 #include <internal/teb.h>
 #include <ntdll/base.h>
+#include <ntdll/rtl.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
@@ -123,14 +124,13 @@ HANDLE STDCALL CreateFirstThread(HANDLE ProcessHandle,
 	  lpThreadAttributes->lpSecurityDescriptor;
      }
    ObjectAttributes.SecurityQualityOfService = NULL;
-   
+
    if ((dwCreationFlags & CREATE_SUSPENDED) == CREATE_SUSPENDED)
      CreateSuspended = TRUE;
    else
      CreateSuspended = FALSE;
-   
-   
-   
+
+
    BaseAddress = (PVOID)(STACK_TOP - dwStackSize);
    Status = NtAllocateVirtualMemory(ProcessHandle,
 				    &BaseAddress,
@@ -153,9 +153,9 @@ HANDLE STDCALL CreateFirstThread(HANDLE ProcessHandle,
    ThreadContext.SegSs = USER_DS;
    ThreadContext.Esp = STACK_TOP - 16;
    ThreadContext.EFlags = (1<<1) + (1<<9);
-   
+
    DPRINT("ThreadContext.Eip %x\n",ThreadContext.Eip);
-   
+
    NtDuplicateObject(NtCurrentProcess(),
 		     &SectionHandle,
 		     ProcessHandle,
@@ -187,7 +187,7 @@ HANDLE STDCALL CreateFirstThread(HANDLE ProcessHandle,
 			sizeof(DupSectionHandle),
 			&BytesWritten);
 
-   
+
     Status = NtCreateThread(&ThreadHandle,
 			    THREAD_ALL_ACCESS,
 			    &ObjectAttributes,
@@ -198,7 +198,7 @@ HANDLE STDCALL CreateFirstThread(HANDLE ProcessHandle,
 			    CreateSuspended);
    if ( lpThreadId != NULL )
      memcpy(lpThreadId, &ClientId.UniqueThread,sizeof(ULONG));
-   
+
    return ThreadHandle;
 }
 
@@ -222,10 +222,10 @@ HANDLE KERNEL32_MapFile(LPCWSTR lpApplicationName,
    DWORD len = 0;
 
    hFile = NULL;
-   
+
    /*
     * Find the application name
-    */   
+    */
    TempApplicationName[0] = '\\';
    TempApplicationName[1] = '?';
    TempApplicationName[2] = '?';
@@ -233,7 +233,7 @@ HANDLE KERNEL32_MapFile(LPCWSTR lpApplicationName,
    TempApplicationName[4] = 0;
    
    DPRINT("TempApplicationName '%w'\n",TempApplicationName);
-   	     
+
    if (lpApplicationName != NULL)
      {
 	wcscpy(TempFileName, lpApplicationName);
@@ -241,7 +241,7 @@ HANDLE KERNEL32_MapFile(LPCWSTR lpApplicationName,
 	DPRINT("TempFileName '%w'\n",TempFileName);
      }
    else
-     {	
+     {
 	wcscpy(TempFileName, lpCommandLine);
 	
 	DPRINT("TempFileName '%w'\n",TempFileName);
@@ -261,11 +261,11 @@ HANDLE KERNEL32_MapFile(LPCWSTR lpApplicationName,
 	wcscat(TempApplicationName,TempDirectoryName);
      }
    wcscat(TempApplicationName,TempFileName);
-   
+
    RtlInitUnicodeString(&ApplicationNameString, TempApplicationName);
-   
+
    DPRINT("ApplicationName %w\n",ApplicationNameString.Buffer);
-   
+
    InitializeObjectAttributes(&ObjectAttributes,
 			      &ApplicationNameString,
 			      OBJ_CASE_INSENSITIVE,
@@ -275,20 +275,20 @@ HANDLE KERNEL32_MapFile(LPCWSTR lpApplicationName,
    /*
     * Try to open the executable
     */
-   
+
    Status = NtOpenFile(&hFile,
 			SYNCHRONIZE|FILE_EXECUTE|FILE_READ_DATA,
 			&ObjectAttributes,
 			&IoStatusBlock,
 			FILE_SHARE_DELETE|FILE_SHARE_READ,
 			FILE_SYNCHRONOUS_IO_NONALERT|FILE_NON_DIRECTORY_FILE);
-   
+
    if (!NT_SUCCESS(Status))
      {
 	SetLastError(RtlNtStatusToDosError(Status));
 	return(NULL);
      }
-   
+
    Status = NtReadFile(hFile,
 		       NULL,
 		       NULL,
@@ -303,7 +303,7 @@ HANDLE KERNEL32_MapFile(LPCWSTR lpApplicationName,
 	SetLastError(RtlNtStatusToDosError(Status));
 	return(NULL);	
      }
-   
+
    FileOffset.u.LowPart = DosHeader->e_lfanew;
    FileOffset.u.HighPart = 0;
 
@@ -319,10 +319,10 @@ HANDLE KERNEL32_MapFile(LPCWSTR lpApplicationName,
    if (!NT_SUCCESS(Status))
      {
 	SetLastError(RtlNtStatusToDosError(Status));
-	return(NULL);	
+	return(NULL);
      }
 
-   
+
    Status = NtCreateSection(&hSection,
 			    SECTION_ALL_ACCESS,
 			    NULL,
@@ -332,25 +332,27 @@ HANDLE KERNEL32_MapFile(LPCWSTR lpApplicationName,
 			    hFile);
    NtClose(hFile);
 
-   if (!NT_SUCCESS(Status)) 
+   if (!NT_SUCCESS(Status))
      {
 	SetLastError(RtlNtStatusToDosError(Status));
 	return(NULL);
      }
-   
+
    return(hSection);
 }
 
-static NTSTATUS CreatePeb(HANDLE ProcessHandle, PWSTR CommandLine)
+static NTSTATUS
+CreatePeb (
+	HANDLE	ProcessHandle,
+	PPPB	Ppb)
 {
    NTSTATUS Status;
    PVOID PebBase;
    ULONG PebSize;
-   NT_PEB Peb;
+   PEB Peb;
+   PVOID PpbBase;
+   ULONG PpbSize;
    ULONG BytesWritten;
-   PVOID ProcessInfoBase;
-   ULONG ProcessInfoSize;
-   PROCESSINFO ProcessInfo;
 
    PebBase = (PVOID)PEB_BASE;
    PebSize = 0x1000;
@@ -361,7 +363,7 @@ static NTSTATUS CreatePeb(HANDLE ProcessHandle, PWSTR CommandLine)
 		       sizeof(Peb),
 		       &BytesWritten);
 
-   Peb.ProcessInfo = (PPROCESSINFO)PEB_STARTUPINFO;
+   Peb.Ppb = (PPPB)PEB_STARTUPINFO;
 
    NtWriteVirtualMemory(ProcessHandle,
 			(PVOID)PEB_BASE,
@@ -369,12 +371,12 @@ static NTSTATUS CreatePeb(HANDLE ProcessHandle, PWSTR CommandLine)
 			sizeof(Peb),
 			&BytesWritten);
 
-   ProcessInfoBase = (PVOID)PEB_STARTUPINFO;
-   ProcessInfoSize = 0x1000;
+   PpbBase = (PVOID)PEB_STARTUPINFO;
+   PpbSize = Ppb->TotalSize;
    Status = NtAllocateVirtualMemory(ProcessHandle,
-				    &ProcessInfoBase,
+				    &PpbBase,
 				    0,
-				    &ProcessInfoSize,
+				    &PpbSize,
 				    MEM_COMMIT,
 				    PAGE_READWRITE);
    if (!NT_SUCCESS(Status))
@@ -382,30 +384,30 @@ static NTSTATUS CreatePeb(HANDLE ProcessHandle, PWSTR CommandLine)
 	return(Status);
      }
 
-   memset(&ProcessInfo, 0, sizeof(PROCESSINFO));
-   wcscpy(ProcessInfo.CommandLine, CommandLine);
-
-   DPRINT("ProcessInfoSize %x\n",ProcessInfoSize);
+   DPRINT("Ppb size %x\n", Ppb->TotalSize);
    ZwWriteVirtualMemory(ProcessHandle,
 			(PVOID)PEB_STARTUPINFO,
-			&ProcessInfo,
-			ProcessInfoSize,
+			&Ppb,
+			Ppb->TotalSize,
 			&BytesWritten);
 
    return(STATUS_SUCCESS);
 }
 
 
-WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
-			       LPWSTR lpCommandLine,
-			       LPSECURITY_ATTRIBUTES lpProcessAttributes,
-			       LPSECURITY_ATTRIBUTES lpThreadAttributes,
-			       WINBOOL bInheritHandles,
-			       DWORD dwCreationFlags,
-			       LPVOID lpEnvironment,
-			       LPCWSTR lpCurrentDirectory,
-			       LPSTARTUPINFOW lpStartupInfo,
-			       LPPROCESS_INFORMATION lpProcessInformation)
+WINBOOL
+STDCALL
+CreateProcessW (
+	LPCWSTR lpApplicationName,
+	LPWSTR lpCommandLine,
+	LPSECURITY_ATTRIBUTES lpProcessAttributes,
+	LPSECURITY_ATTRIBUTES lpThreadAttributes,
+	WINBOOL bInheritHandles,
+	DWORD dwCreationFlags,
+	LPVOID lpEnvironment,
+	LPCWSTR lpCurrentDirectory,
+	LPSTARTUPINFOW lpStartupInfo,
+	LPPROCESS_INFORMATION lpProcessInformation)
 {
    HANDLE hSection, hProcess, hThread;
    NTSTATUS Status;
@@ -421,7 +423,9 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
    PROCESS_BASIC_INFORMATION ProcessBasicInfo;
    ULONG retlen;
    DWORD len = 0;
-   
+   PPPB Ppb;
+   UNICODE_STRING CommandLine_U;
+
    DPRINT("CreateProcessW(lpApplicationName '%w', lpCommandLine '%w')\n",
 	   lpApplicationName,lpCommandLine);
 
@@ -443,15 +447,31 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
 	wcscat(TempCommandLine, L" ");
 	wcscat(TempCommandLine, lpCommandLine);
      }
-   
-   
-   hSection = KERNEL32_MapFile(lpApplicationName, 
-			       lpCommandLine,
-			       &Headers, 
-			       &DosHeader);
-   
+
+	RtlInitUnicodeString (
+		&CommandLine_U,
+		TempCommandLine);
+
+	RtlCreateProcessParameters (
+		&Ppb,
+		&CommandLine_U,
+		NULL,
+		NULL,
+		NULL,
+		lpEnvironment,
+		NULL,
+		NULL,
+		NULL,
+		NULL);
+
+	hSection = KERNEL32_MapFile (
+		lpApplicationName,
+		lpCommandLine,
+		&Headers,
+		&DosHeader);
+
    Status = NtCreateProcess(&hProcess,
-			    PROCESS_ALL_ACCESS, 
+			    PROCESS_ALL_ACCESS,
 			    NULL,
 			    NtCurrentProcess(),
 			    bInheritHandles,
@@ -466,16 +486,16 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
    DPRINT("ProcessBasicInfo.UniqueProcessId %d\n",
 	  ProcessBasicInfo.UniqueProcessId);
    lpProcessInformation->dwProcessId = ProcessBasicInfo.UniqueProcessId;
-   
+
    /*
     * Map NT DLL into the process
     */
    Status = LdrMapNTDllForProcess(hProcess,
 				  &NTDllSection);
-   
-   InitialViewSize = DosHeader.e_lfanew + sizeof(IMAGE_NT_HEADERS) 
+
+   InitialViewSize = DosHeader.e_lfanew + sizeof(IMAGE_NT_HEADERS)
      + sizeof(IMAGE_SECTION_HEADER) * Headers.FileHeader.NumberOfSections;
-   
+
    BaseAddress = (PVOID)Headers.OptionalHeader.ImageBase;
    SectionOffset.QuadPart = 0;
    Status = NtMapViewOfSection(hSection,
@@ -490,6 +510,7 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
 			       PAGE_READWRITE);
    if (!NT_SUCCESS(Status))
      {
+	RtlDestroyProcessParameters (Ppb);
 	SetLastError(RtlNtStatusToDosError(Status));
 	return FALSE;
      }
@@ -498,18 +519,20 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
     * Create Process Environment Block
     */
    DPRINT("Creating peb\n");
-   CreatePeb(hProcess, TempCommandLine);
+   CreatePeb(hProcess, Ppb);
+
+   RtlDestroyProcessParameters (Ppb);
 
    DPRINT("Creating thread for process\n");
    lpStartAddress = (LPTHREAD_START_ROUTINE)
      ((PIMAGE_OPTIONAL_HEADER)OPTHDROFFSET(NTDLL_BASE))->
      AddressOfEntryPoint + 
      ((PIMAGE_OPTIONAL_HEADER)OPTHDROFFSET(NTDLL_BASE))->ImageBase;
-   hThread =  CreateFirstThread(hProcess,	
+   hThread =  CreateFirstThread(hProcess,
 				lpThreadAttributes,
 				Headers.OptionalHeader.SizeOfStackReserve,
-				lpStartAddress,	
-				lpParameter,	
+				lpStartAddress,
+				lpParameter,
 				dwCreationFlags,
 				&lpProcessInformation->dwThreadId,
 				TempCommandLine,

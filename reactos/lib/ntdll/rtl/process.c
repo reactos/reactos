@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.4 1999/12/01 15:14:59 ekohl Exp $
+/* $Id: process.c,v 1.5 1999/12/06 00:22:43 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -53,7 +53,7 @@ RtlpCreateFirstThread(HANDLE ProcessHandle,
    PVOID BaseAddress;
    ULONG BytesWritten;
    HANDLE DupNTDllSectionHandle, DupSectionHandle;
-      
+
    ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
    ObjectAttributes.RootDirectory = NULL;
    ObjectAttributes.ObjectName = NULL;
@@ -61,14 +61,12 @@ RtlpCreateFirstThread(HANDLE ProcessHandle,
 //   ObjectAttributes.Attributes = OBJ_INHERIT;
    ObjectAttributes.SecurityDescriptor = SecurityDescriptor;
    ObjectAttributes.SecurityQualityOfService = NULL;
-   
+
    if ((dwCreationFlags & CREATE_SUSPENDED) == CREATE_SUSPENDED)
      CreateSuspended = TRUE;
    else
      CreateSuspended = FALSE;
-   
-   
-   
+
    BaseAddress = (PVOID)(STACK_TOP - dwStackSize);
    Status = NtAllocateVirtualMemory(ProcessHandle,
 				    &BaseAddress,
@@ -80,7 +78,7 @@ RtlpCreateFirstThread(HANDLE ProcessHandle,
      {
 	return(NULL);
      }
-   
+
 
    memset(&ThreadContext,0,sizeof(CONTEXT));
    ThreadContext.Eip = (ULONG)lpStartAddress;
@@ -89,12 +87,12 @@ RtlpCreateFirstThread(HANDLE ProcessHandle,
    ThreadContext.SegEs = USER_DS;
    ThreadContext.SegDs = USER_DS;
    ThreadContext.SegCs = USER_CS;
-   ThreadContext.SegSs = USER_DS;        
+   ThreadContext.SegSs = USER_DS;
    ThreadContext.Esp = STACK_TOP - 16;
    ThreadContext.EFlags = (1<<1) + (1<<9);
-   
+
    DPRINT("ThreadContext.Eip %x\n",ThreadContext.Eip);
-   
+
    NtDuplicateObject(NtCurrentProcess(),
 		     &SectionHandle,
 		     ProcessHandle,
@@ -136,7 +134,7 @@ RtlpCreateFirstThread(HANDLE ProcessHandle,
                            CreateSuspended);
    if ( lpThreadId != NULL )
      memcpy(lpThreadId, &ClientId.UniqueThread,sizeof(ULONG));
-   
+
    return ThreadHandle;
 }
 
@@ -176,7 +174,6 @@ RtlpMapFile(PUNICODE_STRING ApplicationName,
 			&IoStatusBlock,
 			FILE_SHARE_DELETE|FILE_SHARE_READ,
 			FILE_SYNCHRONOUS_IO_NONALERT|FILE_NON_DIRECTORY_FILE);
-   
     if (!NT_SUCCESS(Status))
         return Status;
 
@@ -205,7 +202,7 @@ RtlpMapFile(PUNICODE_STRING ApplicationName,
 		       &FileOffset,
 		       NULL);
     if (!NT_SUCCESS(Status))
-        return Status; 
+        return Status;
 
     Status = NtCreateSection(Section,
                              SECTION_ALL_ACCESS,
@@ -216,7 +213,7 @@ RtlpMapFile(PUNICODE_STRING ApplicationName,
                              hFile);
     NtClose(hFile);
 
-    if (!NT_SUCCESS(Status)) 
+    if (!NT_SUCCESS(Status))
         return Status;
 
     return STATUS_SUCCESS;
@@ -224,28 +221,31 @@ RtlpMapFile(PUNICODE_STRING ApplicationName,
 
 
 static NTSTATUS
-RtlpCreatePeb(HANDLE ProcessHandle, PUNICODE_STRING CommandLine)
+RtlpCreatePeb (
+	HANDLE	ProcessHandle,
+	PPPB	Ppb)
 {
     NTSTATUS Status;
+    ULONG BytesWritten;
     PVOID PebBase;
     ULONG PebSize;
-    NT_PEB Peb;
-    ULONG BytesWritten;
-    PVOID ProcessInfoBase;
-    ULONG ProcessInfoSize;
-    PROCESSINFO ProcessInfo;
+    PEB Peb;
+    PVOID PpbBase;
+    ULONG PpbSize;
 
     PebBase = (PVOID)PEB_BASE;
     PebSize = 0x1000;
 
-    NtReadVirtualMemory(ProcessHandle,
-                        (PVOID)PEB_BASE,
-                        &Peb,
-                        sizeof(Peb),
-                        &BytesWritten);
+	Status = NtAllocateVirtualMemory (
+		ProcessHandle,
+		&PebBase,
+		0,
+		&PebSize,
+		MEM_COMMIT,
+		PAGE_READWRITE);
 
-    memset(&Peb, 0, sizeof(Peb));
-    Peb.ProcessInfo = (PPROCESSINFO)PEB_STARTUPINFO;
+	memset(&Peb, 0, sizeof(Peb));
+	Peb.Ppb = (PPPB)PEB_STARTUPINFO;
 
     NtWriteVirtualMemory(ProcessHandle,
                          (PVOID)PEB_BASE,
@@ -253,40 +253,42 @@ RtlpCreatePeb(HANDLE ProcessHandle, PUNICODE_STRING CommandLine)
                          sizeof(Peb),
                          &BytesWritten);
 
-    ProcessInfoBase = (PVOID)PEB_STARTUPINFO;
-    ProcessInfoSize = 0x1000;
+    PpbBase = (PVOID)PEB_STARTUPINFO;
+    PpbSize = Ppb->TotalSize;
     Status = NtAllocateVirtualMemory(ProcessHandle,
-                                     &ProcessInfoBase,
+                                     &PpbBase,
                                      0,
-                                     &ProcessInfoSize,
+                                     &PpbSize,
                                      MEM_COMMIT,
                                      PAGE_READWRITE);
     if (!NT_SUCCESS(Status))
 	return(Status);
 
-    memset(&ProcessInfo, 0, sizeof(PROCESSINFO));
-    wcscpy(ProcessInfo.CommandLine, CommandLine->Buffer);
+	DPRINT("Ppb size %x\n", PpbSize);
+	NtWriteVirtualMemory (
+		ProcessHandle,
+		(PVOID)PEB_STARTUPINFO,
+		Ppb,
+		Ppb->TotalSize,
+		&BytesWritten);
 
-    DPRINT("ProcessInfoSize %x\n",ProcessInfoSize);
-    NtWriteVirtualMemory(ProcessHandle,
-                         (PVOID)PEB_STARTUPINFO,
-                         &ProcessInfo,
-                         ProcessInfoSize,
-                         &BytesWritten);
-
-    return STATUS_SUCCESS;
+	return STATUS_SUCCESS;
 }
 
 
-NTSTATUS STDCALL
-RtlCreateUserProcess(PUNICODE_STRING ApplicationName,
-                     PSECURITY_DESCRIPTOR ProcessSd,
-                     PSECURITY_DESCRIPTOR ThreadSd,
-                     WINBOOL bInheritHandles,
-                     DWORD dwCreationFlags,
-                     PCLIENT_ID ClientId,
-                     PHANDLE ProcessHandle,
-                     PHANDLE ThreadHandle)
+NTSTATUS
+STDCALL
+RtlCreateUserProcess (
+	PUNICODE_STRING		CommandLine,
+	ULONG			Unknown1,
+	PPPB			Ppb,
+	PSECURITY_DESCRIPTOR ProcessSd,
+	PSECURITY_DESCRIPTOR ThreadSd,
+	WINBOOL bInheritHandles,
+	DWORD dwCreationFlags,
+	PCLIENT_ID ClientId,
+	PHANDLE ProcessHandle,
+	PHANDLE ThreadHandle)
 {
    HANDLE hSection, hProcess, hThread;
    NTSTATUS Status;
@@ -303,16 +305,16 @@ RtlCreateUserProcess(PUNICODE_STRING ApplicationName,
    CLIENT_ID LocalClientId;
    ULONG retlen;
 
-    DPRINT("RtlCreateUserProcess(ApplicationName '%w')\n",
-           ApplicationName->Buffer);
+	DPRINT ("RtlCreateUserProcess(CommandLine '%w')\n",
+		CommandLine->Buffer);
 
-    Status = RtlpMapFile(ApplicationName,
+    Status = RtlpMapFile(CommandLine,
                          &Headers,
                          &DosHeader,
                          &hSection);
 
     Status = NtCreateProcess(&hProcess,
-                             PROCESS_ALL_ACCESS, 
+                             PROCESS_ALL_ACCESS,
                              NULL,
                              NtCurrentProcess(),
                              bInheritHandles,
@@ -328,16 +330,16 @@ RtlCreateUserProcess(PUNICODE_STRING ApplicationName,
     DPRINT("ProcessBasicInfo.UniqueProcessId %d\n",
            ProcessBasicInfo.UniqueProcessId);
     LocalClientId.UniqueProcess = ProcessBasicInfo.UniqueProcessId;
-   
+
     /*
      * Map NT DLL into the process
      */
     Status = LdrMapNTDllForProcess(hProcess,
                                    &NTDllSection);
-   
+
    InitialViewSize = DosHeader.e_lfanew + sizeof(IMAGE_NT_HEADERS) 
      + sizeof(IMAGE_SECTION_HEADER) * Headers.FileHeader.NumberOfSections;
-   
+
    BaseAddress = (PVOID)Headers.OptionalHeader.ImageBase;
    SectionOffset.QuadPart = 0;
    Status = NtMapViewOfSection(hSection,
@@ -352,29 +354,30 @@ RtlCreateUserProcess(PUNICODE_STRING ApplicationName,
 			       PAGE_READWRITE);
    if (!NT_SUCCESS(Status))
        return Status;
-   
+
    /*
     * 
     */
    DPRINT("Creating peb\n");
-   RtlpCreatePeb(hProcess, ApplicationName);
-   
+   RtlpCreatePeb (hProcess, Ppb);
+
    DPRINT("Creating thread for process\n");
    lpStartAddress = (LPTHREAD_START_ROUTINE)
      ((PIMAGE_OPTIONAL_HEADER)OPTHDROFFSET(NTDLL_BASE))->
      AddressOfEntryPoint + 
      ((PIMAGE_OPTIONAL_HEADER)OPTHDROFFSET(NTDLL_BASE))->ImageBase;
-   hThread = RtlpCreateFirstThread(hProcess, 
-                                   ThreadSd,
-				Headers.OptionalHeader.SizeOfStackReserve,
-				lpStartAddress,	
-				lpParameter,	
-				dwCreationFlags,
-                                &LocalClientId.UniqueThread,
-				TempCommandLine,
-				NTDllSection,
-				hSection,
-				(PVOID)Headers.OptionalHeader.ImageBase);
+	hThread = RtlpCreateFirstThread (
+		hProcess,
+		ThreadSd,
+		Headers.OptionalHeader.SizeOfStackReserve,
+		lpStartAddress,
+		lpParameter,
+		dwCreationFlags,
+		&LocalClientId.UniqueThread,
+		TempCommandLine,
+		NTDllSection,
+		hSection,
+		(PVOID)Headers.OptionalHeader.ImageBase);
 
     if ( hThread == NULL )
         return Status;
@@ -408,6 +411,348 @@ STDCALL
 RtlReleasePebLock (VOID)
 {
 
+}
+
+NTSTATUS
+STDCALL
+RtlCreateProcessParameters (
+	PPPB		*Ppb,
+	PUNICODE_STRING	CommandLine,
+	PUNICODE_STRING	LibraryPath,
+	PUNICODE_STRING	CurrentDirectory,
+	PUNICODE_STRING	ImageName,
+	PVOID		Environment,
+	PUNICODE_STRING	Title,
+	PUNICODE_STRING	Desktop,
+	PUNICODE_STRING	Reserved,
+	PVOID		Reserved2
+	)
+{
+	NTSTATUS Status = STATUS_SUCCESS;
+	PPPB Param = NULL;
+	ULONG RegionSize = 0;
+	ULONG DataSize = 0;
+	PWCHAR Dest;
+
+	DPRINT ("RtlCreateProcessParameters\n");
+
+	RtlAcquirePebLock ();
+
+	/* size of process parameter block */
+	DataSize = sizeof (PPB);
+
+	/* size of (reserved) buffer */
+	DataSize += (256 * sizeof(WCHAR));
+
+	/* size of current directory buffer */
+	DataSize += (MAX_PATH * sizeof(WCHAR));
+
+	/* add string lengths */
+	if (LibraryPath != NULL)
+		DataSize += (LibraryPath->Length + sizeof(WCHAR));
+
+	if (CommandLine != NULL)
+		DataSize += (CommandLine->Length + sizeof(WCHAR));
+
+	if (ImageName != NULL)
+		DataSize += (ImageName->Length + sizeof(WCHAR));
+
+	if (Title != NULL)
+		DataSize += (Title->Length + sizeof(WCHAR));
+
+	if (Desktop != NULL)
+		DataSize += (Desktop->Length + sizeof(WCHAR));
+
+	if (Reserved != NULL)
+		DataSize += (Reserved->Length + sizeof(WCHAR));
+
+	/* Calculate the required block size */
+	RegionSize = DataSize;
+
+	Status = NtAllocateVirtualMemory (
+		NtCurrentProcess (),
+		(PVOID*)&Param,
+		0,
+		&RegionSize,
+		MEM_COMMIT,
+		PAGE_READWRITE);
+	if (!NT_SUCCESS(Status))
+	{
+		RtlReleasePebLock ();
+		return Status;
+	}
+
+	DPRINT ("Ppb allocated\n");
+
+	Param->TotalSize = RegionSize;
+	Param->DataSize = DataSize;
+	Param->Normalized = TRUE;
+	Param->Environment = Environment;
+//	Param->Unknown1 =
+//	Param->Unknown2 =
+//	Param->Unknown3 =
+//	Param->Unknown4 =
+
+	/* copy current directory */
+	Dest = (PWCHAR)(((PBYTE)Param) + sizeof(PPB) + (256 * sizeof(WCHAR)));
+
+	Param->CurrentDirectory.Buffer = Dest;
+	if (CurrentDirectory != NULL)
+	{
+		Param->CurrentDirectory.Length = CurrentDirectory->Length;
+		Param->CurrentDirectory.MaximumLength = CurrentDirectory->Length + sizeof(WCHAR);
+		memcpy (Dest,
+		        CurrentDirectory->Buffer,
+		        CurrentDirectory->Length);
+		Dest = (PWCHAR)(((PBYTE)Dest) + CurrentDirectory->Length);
+	}
+	*Dest = 0;
+
+	Dest = (PWCHAR)(((PBYTE)Param) + sizeof(PPB) +
+			(256 * sizeof(WCHAR)) + (MAX_PATH * sizeof(WCHAR)));
+
+	/* copy library path */
+	Param->LibraryPath.Buffer = Dest;
+	if (LibraryPath != NULL)
+	{
+		Param->LibraryPath.Length = LibraryPath->Length;
+		memcpy (Dest,
+		        LibraryPath->Buffer,
+		        LibraryPath->Length);
+		Dest = (PWCHAR)(((PBYTE)Dest) + LibraryPath->Length);
+	}
+	Param->LibraryPath.MaximumLength = Param->LibraryPath.Length + sizeof(WCHAR);
+	*Dest = 0;
+	Dest++;
+
+	/* copy command line */
+	Param->CommandLine.Buffer = Dest;
+	if (CommandLine != NULL)
+	{
+		Param->CommandLine.Length = CommandLine->Length;
+		memcpy (Dest,
+		        CommandLine->Buffer,
+		        CommandLine->Length);
+		Dest = (PWCHAR)(((PBYTE)Dest) + CommandLine->Length);
+	}
+	Param->CommandLine.MaximumLength = Param->CommandLine.Length + sizeof(WCHAR);
+	*Dest = 0;
+	Dest++;
+
+	/* copy image name */
+	Param->ImageName.Buffer = Dest;
+	if (ImageName != NULL)
+	{
+		Param->ImageName.Length = ImageName->Length;
+		memcpy (Dest,
+		        ImageName->Buffer,
+		        ImageName->Length);
+		Dest = (PWCHAR)(((PBYTE)Dest) + ImageName->Length);
+	}
+	Param->ImageName.MaximumLength = Param->ImageName.Length + sizeof(WCHAR);
+	*Dest = 0;
+	Dest++;
+
+	/* copy title */
+	Param->Title.Buffer = Dest;
+	if (Title != NULL)
+	{
+		Param->Title.Length = Title->Length;
+		memcpy (Dest,
+		        Title->Buffer,
+		        Title->Length);
+		Dest = (PWCHAR)(((PBYTE)Dest) + Title->Length);
+	}
+	Param->Title.MaximumLength = Param->Title.Length + sizeof(WCHAR);
+	*Dest = 0;
+	Dest++;
+
+	/* copy desktop */
+	Param->Desktop.Buffer = Dest;
+	if (Desktop != NULL)
+	{
+		Param->Desktop.Length = Desktop->Length;
+		memcpy (Dest,
+		        Desktop->Buffer,
+		        Desktop->Length);
+		Dest = (PWCHAR)(((PBYTE)Dest) + Desktop->Length);
+	}
+	Param->Desktop.MaximumLength = Param->Desktop.Length + sizeof(WCHAR);
+	*Dest = 0;
+	Dest++;
+
+	/* copy reserved */
+	Param->Reserved.Buffer = Dest;
+	if (Reserved != NULL)
+	{
+		Param->Reserved.Length = Reserved->Length;
+		memcpy (Dest,
+		        Reserved->Buffer,
+		        Reserved->Length);
+		Dest = (PWCHAR)(((PBYTE)Dest) + Reserved->Length);
+	}
+	Param->Reserved.MaximumLength = Param->Reserved.Length + sizeof(WCHAR);
+	*Dest = 0;
+	Dest++;
+
+	/* set reserved2 */
+	Param->Reserved2.Length = 0;
+	Param->Reserved2.MaximumLength = 0;
+	Param->Reserved2.Buffer = NULL;
+
+	RtlDeNormalizeProcessParams (Param);
+	*Ppb = Param;
+	RtlReleasePebLock ();
+
+	return Status;
+}
+
+VOID
+STDCALL
+RtlDestroyProcessParameters (
+	PPPB	Ppb
+	)
+{
+	ULONG RegionSize = 0;
+
+	NtFreeVirtualMemory (NtCurrentProcess (),
+	                     (PVOID)Ppb,
+	                     &RegionSize,
+	                     MEM_RELEASE);
+}
+
+/*
+ * denormalize process parameters (Pointer-->Offset)
+ */
+VOID
+STDCALL
+RtlDeNormalizeProcessParams (
+	PPPB	Ppb
+	)
+{
+	if (Ppb == NULL)
+		return;
+
+	if (Ppb->Normalized == FALSE)
+		return;
+
+	if (Ppb->CurrentDirectory.Buffer != NULL)
+	{
+		Ppb->CurrentDirectory.Buffer =
+			(PWSTR)((ULONG)Ppb->CurrentDirectory.Buffer -
+				(ULONG)Ppb);
+	}
+
+	if (Ppb->LibraryPath.Buffer != NULL)
+	{
+		Ppb->LibraryPath.Buffer =
+			(PWSTR)((ULONG)Ppb->LibraryPath.Buffer -
+				(ULONG)Ppb);
+	}
+
+	if (Ppb->CommandLine.Buffer != NULL)
+	{
+		Ppb->CommandLine.Buffer =
+			(PWSTR)((ULONG)Ppb->CommandLine.Buffer -
+				(ULONG)Ppb);
+	}
+
+	if (Ppb->ImageName.Buffer != NULL)
+	{
+		Ppb->ImageName.Buffer =
+			(PWSTR)((ULONG)Ppb->ImageName.Buffer -
+				(ULONG)Ppb);
+	}
+
+	if (Ppb->Title.Buffer != NULL)
+	{
+		Ppb->Title.Buffer =
+			(PWSTR)((ULONG)Ppb->Title.Buffer -
+				(ULONG)Ppb);
+	}
+
+	if (Ppb->Desktop.Buffer != NULL)
+	{
+		Ppb->Desktop.Buffer =
+			(PWSTR)((ULONG)Ppb->Desktop.Buffer -
+				(ULONG)Ppb);
+	}
+
+	if (Ppb->Reserved.Buffer != NULL)
+	{
+		Ppb->Reserved.Buffer =
+			(PWSTR)((ULONG)Ppb->Reserved.Buffer -
+				(ULONG)Ppb);
+	}
+
+	Ppb->Normalized = FALSE;
+}
+
+/*
+ * normalize process parameters (Offset-->Pointer)
+ */
+VOID
+STDCALL
+RtlNormalizeProcessParams (
+	PPPB	Ppb
+	)
+{
+	if (Ppb == NULL)
+		return;
+
+	if (Ppb->Normalized == TRUE)
+		return;
+
+	if (Ppb->CurrentDirectory.Buffer != NULL)
+	{
+		Ppb->CurrentDirectory.Buffer =
+			(PWSTR)((ULONG)Ppb->CurrentDirectory.Buffer +
+				(ULONG)Ppb);
+	}
+
+	if (Ppb->LibraryPath.Buffer != NULL)
+	{
+		Ppb->LibraryPath.Buffer =
+			(PWSTR)((ULONG)Ppb->LibraryPath.Buffer +
+				(ULONG)Ppb);
+	}
+
+	if (Ppb->CommandLine.Buffer != NULL)
+	{
+		Ppb->CommandLine.Buffer =
+			(PWSTR)((ULONG)Ppb->CommandLine.Buffer +
+				(ULONG)Ppb);
+	}
+
+	if (Ppb->ImageName.Buffer != NULL)
+	{
+		Ppb->ImageName.Buffer =
+			(PWSTR)((ULONG)Ppb->ImageName.Buffer +
+				(ULONG)Ppb);
+	}
+
+	if (Ppb->Title.Buffer != NULL)
+	{
+		Ppb->Title.Buffer =
+			(PWSTR)((ULONG)Ppb->Title.Buffer +
+				(ULONG)Ppb);
+	}
+
+	if (Ppb->Desktop.Buffer != NULL)
+	{
+		Ppb->Desktop.Buffer =
+			(PWSTR)((ULONG)Ppb->Desktop.Buffer +
+				(ULONG)Ppb);
+	}
+
+	if (Ppb->Reserved.Buffer != NULL)
+	{
+		Ppb->Reserved.Buffer =
+			(PWSTR)((ULONG)Ppb->Reserved.Buffer +
+				(ULONG)Ppb);
+	}
+
+	Ppb->Normalized = TRUE;
 }
 
 /* EOF */

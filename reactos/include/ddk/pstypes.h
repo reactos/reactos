@@ -46,32 +46,37 @@ typedef struct linux_sigcontext {
 
 typedef ULONG THREADINFOCLASS;
 
-typedef struct _PROCESSINFO
+typedef struct _PPB
 {
-	WCHAR	WindowTitle[MAX_PATH];
-	WCHAR	ImageFile[MAX_PATH];
-	WCHAR	CommandLine[MAX_PATH];
-	WCHAR	DllPath[MAX_PATH];
-	WCHAR	Reserved[MAX_PATH];
-	WCHAR	Desktop[MAX_PATH];
-	WCHAR	Title[MAX_PATH];
-	PVOID	Environment;
-	DWORD	dwX;
-	DWORD	dwY;
-	DWORD	dwXSize;
-	DWORD	dwYSize;
-	DWORD	dwXCountChars;
-	DWORD	dwYCountChars;
-	DWORD	dwFillAttribute;
-	DWORD	dwFlags;
-	WORD	wShowWindow;
-	WORD	cbReserved2;
-	unsigned char	*lpReserved2;
-	HANDLE	hStdInput;
-	HANDLE	hStdOutput;
-	HANDLE	hStdError;
-} PROCESSINFO, *PPROCESSINFO;
-
+	ULONG		TotalSize;		//  00h
+	ULONG		DataSize;		//  04h
+	BOOLEAN		Normalized;		//  08h
+	ULONG		Unknown1;		//  0Ch
+	ULONG		Unknown2;		//  10h
+	ULONG		Unknown3;		//  14h
+	HANDLE		InputHandle;		//  18h
+	HANDLE		OutputHandle;		//  1Ch
+	HANDLE		ErrorHandle;		//  20h
+	UNICODE_STRING	CurrentDirectory;	//  24h
+	ULONG		Unknown4;		//  2Ch
+	UNICODE_STRING	LibraryPath;		//  30h
+	UNICODE_STRING	CommandLine;		//  38h
+	UNICODE_STRING	ImageName;		//  40h
+	PVOID		Environment;		//  48h
+	DWORD		X;			//  4Ch
+	DWORD		Y;			//  50h
+	DWORD		XSize;			//  54h
+	DWORD		YSize;			//  58h
+	DWORD		XCountChars;		//  5Ch
+	DWORD		YCountChars;		//  60h
+	DWORD		FillAttribute;		//  64h
+	DWORD		Flags;			//  68h
+	DWORD		ShowWindow;		//  6Ch
+	UNICODE_STRING	Title;			//  70h
+	UNICODE_STRING	Desktop;		//  78h
+	UNICODE_STRING	Reserved;		//  80h
+	UNICODE_STRING	Reserved2;		//  88h
+} PPB, *PPPB;
 
 
 typedef struct _LDR {
@@ -82,7 +87,7 @@ typedef struct _LDR {
 } LDR, *PLDR;
 
 
-typedef struct _NT_PEB
+typedef struct _PEB
 {
 	UCHAR			InheritedAddressSpace;      // 00
 	UCHAR			ReadImageFileExecOptions;   // 01h
@@ -90,10 +95,11 @@ typedef struct _NT_PEB
 	LONG			ImageBaseAddress;           // 03h
 	LDR			Ldr;                        // 07h
 
+	PPPB			Ppb;				// 10h
+
 	WORD			NumberOfProcessors;         // 11h
 	WORD			NtGlobalFlag;               // 13h
 
-	PPROCESSINFO		ProcessInfo;                // 15h
 	HANDLE			ProcessHeap;                // 19h
 	ATOMTABLE		LocalAtomTable;             // 1Dh
 	LPCRITICAL_SECTION	CriticalSection;            // 35h
@@ -102,7 +108,7 @@ typedef struct _NT_PEB
 	WORD			MinorVersion;               // 3Fh
 	WORD			BuildNumber;                // 41h
 	WORD			PlatformId;                 // 43h
-} NT_PEB, *PNT_PEB;
+} PEB, *PPEB;
 
 typedef struct _CLIENT_ID
 {
@@ -130,7 +136,7 @@ typedef struct _NT_TEB
 	CLIENT_ID		Cid;              // 20h
 	ULONG			reserved2;        // 28h  ???
 	ULONG			reserved3;        // 2Ch  ???
-	PNT_PEB			Peb;             // 30h 
+	PPEB			Peb;             // 30h 
 	DWORD			LastErrorCode;    // 34h
 
 	HANDLE			RPCHandle;        // 36
@@ -371,7 +377,7 @@ typedef struct _EPROCESS
    UCHAR ExitProcessCalled;
    UCHAR CreateProcessReported;
    HANDLE SectionHandle;
-   PNT_PEB Peb;
+   PPEB Peb;
    PVOID SectionBaseAddress;
    PVOID QuotaBlock;
    NTSTATUS LastThreadExitStatus;

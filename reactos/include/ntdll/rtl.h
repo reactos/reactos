@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.4 1999/12/01 15:16:56 ekohl Exp $
+/* $Id: rtl.h,v 1.5 1999/12/06 00:16:33 ekohl Exp $
  *
  */
 
@@ -109,32 +109,17 @@ RtlCreateUserThread (
 	IN OUT	PCLIENT_ID		ClientId
 	);
 
-
-VOID
-STDCALL
-RtlDeNormalizeProcessParams (
-	IN OUT	PSTARTUP_ARGUMENT	pArgument
-	);
-
-VOID
-STDCALL
-RtlDestroyProcessParameters (
-	IN OUT	PSTARTUP_ARGUMENT	pArgument
-	);
-
-VOID
-STDCALL
-RtlNormalizeProcessParams (
-	IN OUT	PSTARTUP_ARGUMENT	pArgument
-	);
-
-
-/* Preliminary prototype!! */
-
+/*
+ * Preliminary prototype!!
+ *
+ * This prototype is not finished yet. It will change in the future.
+ */
 NTSTATUS
 STDCALL
 RtlCreateUserProcess (
-	PUNICODE_STRING		ApplicationName,
+	PUNICODE_STRING		CommandLine,
+	ULONG			Unknown1,
+	PPPB			Ppb,
 	PSECURITY_DESCRIPTOR	ProcessSd,
 	PSECURITY_DESCRIPTOR	ThreadSd,
 	WINBOOL			bInheritHandles,
@@ -144,5 +129,37 @@ RtlCreateUserProcess (
 	PHANDLE			ThreadHandle
 	);
 
+NTSTATUS
+STDCALL
+RtlCreateProcessParameters (
+	IN OUT	PPPB		*Ppb,
+	IN	PUNICODE_STRING	CommandLine,
+	IN	PUNICODE_STRING	LibraryPath,
+	IN	PUNICODE_STRING	CurrentDirectory,
+	IN	PUNICODE_STRING	ImageName,
+	IN	PVOID		Environment,
+	IN	PUNICODE_STRING	Title,
+	IN	PUNICODE_STRING	Desktop,
+	IN	PUNICODE_STRING	Reserved,
+	IN	PVOID		Reserved2
+	);
+
+VOID
+STDCALL
+RtlDeNormalizeProcessParams (
+	IN OUT	PPPB	Ppb
+	);
+
+VOID
+STDCALL
+RtlDestroyProcessParameters (
+	IN OUT	PPPB	Ppb
+	);
+
+VOID
+STDCALL
+RtlNormalizeProcessParams (
+	IN OUT	PPPB	Ppb
+	);
 
 /* EOF */

@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.17 1999/12/04 21:03:22 ea Exp $
+; $Id: ntdll.edf,v 1.18 1999/12/06 00:22:00 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -438,9 +438,10 @@ RtlAppendUnicodeToString=RtlAppendUnicodeToString@8
 RtlCharToInteger=RtlCharToInteger@12
 RtlCreateEnvironment=RtlCreateEnvironment@8
 RtlCreateHeap=RtlCreateHeap@24
+RtlCreateProcessParameters=RtlCreateProcessParameters@40
 RtlCreateUnicodeString=RtlCreateUnicodeString@8
 RtlCreateUnicodeStringFromAsciiz=RtlCreateUnicodeStringFromAsciiz@8
-RtlCreateUserProcess=RtlCreateUserProcess@32
+RtlCreateUserProcess=RtlCreateUserProcess@40
 RtlCreateUserThread=RtlCreateUserThread@40
 RtlCompactHeap=RtlCompactHeap@8
 RtlCompareString=RtlCompareString@12
@@ -449,8 +450,10 @@ RtlConvertLongToLargeInteger=RtlConvertLongToLargeInteger@4
 RtlConvertUlongToLargeInteger=RtlConvertUlongToLargeInteger@4
 RtlCopyString=RtlCopyString@8
 RtlCopyUnicodeString=RtlCopyUnicodeString@8
+RtlDeNormalizeProcessParams=RtlDeNormalizeProcessParams@4
 RtlDestroyEnvironment=RtlDestroyEnvironment@4
 RtlDestroyHeap=RtlDestroyHeap@4
+RtlDestroyProcessParameters=RtlDestroyProcessParameters@4
 RtlDowncaseUnicodeString=RtlDowncaseUnicodeString@12
 RtlEnlargedIntegerMultiply=RtlEnlargedIntegerMultiply@8
 RtlEnlargedUnsignedDivide=RtlEnlargedUnsignedDivide@16
@@ -483,6 +486,7 @@ RtlLengthSecurityDescriptor
 RtlLockHeap=RtlLockHeap@4
 RtlMoveMemory=RtlMoveMemory@12
 RtlMultiByteToUnicodeN=RtlMultiByteToUnicodeN@20
+RtlNormalizeProcessParams=RtlNormalizeProcessParams@4
 RtlNtStatusToDosError
 RtlNtStatusToPsxErrno=RtlNtStatusToPsxErrno@4
 RtlOemStringToUnicodeSize=RtlOemStringToUnicodeSize@4
@@ -491,6 +495,7 @@ RtlOemToUnicodeN=RtlOemToUnicodeN@20
 RtlQueryEnvironmentVariable_U=RtlQueryEnvironmentVariable_U@12
 RtlReAllocateHeap=RtlReAllocateHeap@16
 RtlReleasePebLock=RtlReleasePebLock@0
+RtlSetCurrentEnvironment=RtlSetCurrentEnvironment@8
 RtlSetEnvironmentVariable=RtlSetEnvironmentVariable@12
 RtlSizeHeap=RtlSizeHeap@12
 RtlUnlockHeap=RtlUnlockHeap@4

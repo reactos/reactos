@@ -57,27 +57,80 @@
 
 static NTSTATUS LdrCreatePeb(HANDLE ProcessHandle)
 {
-   PVOID		PebBase;
-   ULONG		PebSize;
-   NT_PEB		Peb;
-   ULONG		BytesWritten;
+	PVOID		PebBase;
+	ULONG		PebSize;
+	PEB		Peb;
+	PVOID		PpbBase;
+	ULONG		PpbSize;
+	PPB		Ppb;
+	ULONG		BytesWritten;
+	NTSTATUS	Status;
 
-   PebBase = (PVOID)PEB_BASE;
-   PebSize = 0x1000;
+	PebBase = (PVOID)PEB_BASE;
+	PebSize = 0x1000;
 
-   memset(&Peb, 0, sizeof Peb);
+	memset(&Peb, 0, sizeof Peb);
 
-   Peb.ProcessInfo = (PPROCESSINFO) PEB_STARTUPINFO;
+	Peb.Ppb = (PPPB)PEB_STARTUPINFO;
 
-   ZwWriteVirtualMemory(ProcessHandle,
-			(PVOID)PEB_BASE,
-			&Peb,
-			sizeof(Peb),
+	Status = ZwAllocateVirtualMemory (
+		ProcessHandle,
+		(PVOID*)&PebBase,
+		0,
+		&PebSize,
+		MEM_COMMIT,
+		PAGE_READWRITE
+		);
+	if (!NT_SUCCESS(Status))
+	{
+		DbgPrint ("Peb allocation failed \n");
+		DbgPrintErrorMessage (Status);
+	}
+
+	ZwWriteVirtualMemory (
+		ProcessHandle,
+		PebBase,
+		&Peb,
+		sizeof(Peb),
+		&BytesWritten);
+
+	/* write pointer to peb on the stack (parameter of NtProcessStartup) */
+	ZwWriteVirtualMemory(
+		ProcessHandle,
+		(PVOID) (STACK_TOP - 16),
+		&PebBase,
+		sizeof (PVOID),
+		& BytesWritten
+		);
+
+	/* Create process parameters block (PPB)*/
+	PpbBase = (PVOID)PEB_STARTUPINFO;
+	PpbSize = sizeof (PPB);
+
+	Status = ZwAllocateVirtualMemory (
+		ProcessHandle,
+		(PVOID*)&PpbBase,
+		0,
+		&PpbSize,
+		MEM_COMMIT,
+		PAGE_READWRITE
+		);
+	if (!NT_SUCCESS(Status))
+	{
+		DbgPrint ("Ppb allocation failed \n");
+		DbgPrintErrorMessage (Status);
+	}
+
+	memset(&Ppb, 0, sizeof(PPB));
+
+	ZwWriteVirtualMemory (
+			ProcessHandle,
+			PpbBase,
+			&Ppb,
+			sizeof(PPB),
 			&BytesWritten);
 
-   /* FIXME: Create ProcessInfo block */
-
-   return(STATUS_SUCCESS);
+	return(STATUS_SUCCESS);
 }
 
 
@@ -117,23 +170,23 @@ NTSTATUS LdrLoadImage(HANDLE		ProcessHandle,
     */
    LdrGetSystemDirectory(TmpNameBuffer, sizeof TmpNameBuffer);
    wcscat(TmpNameBuffer, L"\\ntdll.dll");
-   RtlInitUnicodeString(&DllPathname, TmpNameBuffer); 
+   RtlInitUnicodeString(&DllPathname, TmpNameBuffer);
    InitializeObjectAttributes(&FileObjectAttributes,
-			      &DllPathname, 
+			      &DllPathname,
 			      0,
 			      NULL,
 			      NULL);
    DPRINT("Opening NTDLL\n");
-   Status = ZwOpenFile(&FileHandle, 
-		       FILE_ALL_ACCESS, 
-		       &FileObjectAttributes, 
-		       NULL, 
-		       0, 
+   Status = ZwOpenFile(&FileHandle,
+		       FILE_ALL_ACCESS,
+		       &FileObjectAttributes,
+		       NULL,
+		       0,
 		       0);
    if (!NT_SUCCESS(Status))
      {
 	DbgPrint("NTDLL open failed ");
-	DbgPrintErrorMessage(Status);	
+	DbgPrintErrorMessage(Status);
 	return Status;
      }
    Status = ZwReadFile(FileHandle,
@@ -149,10 +202,10 @@ NTSTATUS LdrLoadImage(HANDLE		ProcessHandle,
      {
 	DPRINT("NTDLL header read failed ");
 	DbgPrintErrorMessage(Status);
-	ZwClose(FileHandle);	
+	ZwClose(FileHandle);
 	return Status;
      }
-   
+
    /*
     * FIXME: this will fail if the NT headers are
     * more than 1024 bytes from start.
@@ -192,7 +245,7 @@ NTSTATUS LdrLoadImage(HANDLE		ProcessHandle,
 	
 	return Status;
      }
-   
+
    /*
     * Map the NTDLL into the process
     */
@@ -222,7 +275,7 @@ NTSTATUS LdrLoadImage(HANDLE		ProcessHandle,
 	
 	return Status;
      }
-   
+
    for (i = 0;
 	(i < NTHeaders->FileHeader.NumberOfSections);
 	i++)
@@ -399,9 +452,9 @@ NTSTATUS LdrLoadImage(HANDLE		ProcessHandle,
 
 	Status = ZwAllocateVirtualMemory(
 			ProcessHandle,
-                        (PVOID *) & StackBase,
+			(PVOID *) & StackBase,
 			0,
-                        & StackSize,
+			& StackSize,
 			MEM_COMMIT,
 			PAGE_READWRITE
 			);
@@ -415,7 +468,7 @@ NTSTATUS LdrLoadImage(HANDLE		ProcessHandle,
 
 		return Status;
 	}
-   
+
 	ZwDuplicateObject(
 		NtCurrentProcess(),
 		& SectionHandle,
@@ -434,7 +487,7 @@ NTSTATUS LdrLoadImage(HANDLE		ProcessHandle,
 		FALSE,
 		DUPLICATE_SAME_ACCESS
 		);
-   
+
 	ZwWriteVirtualMemory(
 		ProcessHandle,
 		(PVOID) (STACK_TOP - 4),
@@ -458,14 +511,14 @@ NTSTATUS LdrLoadImage(HANDLE		ProcessHandle,
 		);
    /*
     * Create a peb (grungy)
-    */ 
+    */
    Status = LdrCreatePeb(ProcessHandle);
    if (!NT_SUCCESS(Status))
      {
 	DbgPrint("LDR: Failed to create initial peb\n");
 	return (Status);
      }
-   
+
    /*
     * Initialize context to point to LdrStartup
     */
@@ -479,7 +532,7 @@ NTSTATUS LdrLoadImage(HANDLE		ProcessHandle,
    Context.SegEs = USER_DS;
    Context.SegFs = USER_DS;
    Context.SegGs = USER_DS;
-   
+
    DPRINT("LdrStartupAddr %x\n",LdrStartupAddr);
    /*
     * FIXME: Create process and let 'er rip
@@ -519,8 +572,8 @@ NTSTATUS LdrLoadInitialProcess (VOID)
    HANDLE		ProcessHandle;
    UNICODE_STRING	ProcessName;
    WCHAR		TmpNameBuffer [MAX_PATH];
-   
-   
+
+
    Status = ZwCreateProcess(&ProcessHandle,
 			    PROCESS_ALL_ACCESS,
 			    NULL,
@@ -540,7 +593,6 @@ NTSTATUS LdrLoadInitialProcess (VOID)
     * alias name which is in \\??\\).
     */
    LdrGetSystemDirectory(TmpNameBuffer, sizeof TmpNameBuffer);
-//   wcscat(TmpNameBuffer, L"\\shell.exe");
    wcscat(TmpNameBuffer, L"\\smss.exe");
    RtlInitUnicodeString(&ProcessName, TmpNameBuffer);
    Status = LdrLoadImage(ProcessHandle, &ProcessName);

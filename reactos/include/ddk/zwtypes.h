@@ -44,9 +44,9 @@ typedef struct _LPC_MESSAGE
 
 //process query / set information class
 
-#define	ProcessBasicInformation 		0
-#define	ProcessQuotaLimits			1
-#define	ProcessIoCounters			2
+#define ProcessBasicInformation			0
+#define ProcessQuotaLimits			1
+#define ProcessIoCounters			2
 #define ProcessVmCounters			3
 #define ProcessTimes				4
 #define ProcessBasePriority			5
@@ -104,16 +104,15 @@ typedef struct _LPC_MESSAGE
 
 // system information
 
-#define SystemPerformanceInformation		 5
+#define SystemPerformanceInformation		5
 #define SystemDriverInformation			11
 #define SystemCacheInformation			21
 #define SystemTimeAdjustmentInformation		28
-
 #define SystemTimeZoneInformation		44
 
 // memory information
 
-#define MemoryBasicInformation                  0
+#define MemoryBasicInformation			0
 
 // shutdown action
 
@@ -130,17 +129,17 @@ typedef enum SHUTDOWN_ACTION_TAG {
 
 // number of wait objects
 
-#define THREAD_WAIT_OBJECTS                     3
-//#define MAXIMUM_WAIT_OBJECTS                    64
+#define THREAD_WAIT_OBJECTS			3
+//#define MAXIMUM_WAIT_OBJECTS			64
 
 // key restore flags
 
-#define REG_WHOLE_HIVE_VOLATILE     		1   
-#define REG_REFRESH_HIVE            		2   
+#define REG_WHOLE_HIVE_VOLATILE			1
+#define REG_REFRESH_HIVE			2
 
 // object type  access rights
 
-#define OBJECT_TYPE_CREATE		0x0001 
+#define OBJECT_TYPE_CREATE		0x0001
 #define OBJECT_TYPE_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0x1)
 
 // directory access rights
@@ -154,9 +153,9 @@ typedef enum SHUTDOWN_ACTION_TAG {
 
 // symbolic link access rights
 
-#define SYMBOLIC_LINK_QUERY 			0x0001
+#define SYMBOLIC_LINK_QUERY			0x0001
 #define SYMBOLIC_LINK_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0x1)
-   
+
 typedef struct _PROCESS_WS_WATCH_INFORMATION
 {
 	PVOID FaultingPc;
@@ -166,14 +165,14 @@ typedef struct _PROCESS_WS_WATCH_INFORMATION
 typedef struct _PROCESS_BASIC_INFORMATION
 {
 	NTSTATUS ExitStatus;
-	PNT_PEB PebBaseAddress;
+	PPEB PebBaseAddress;
 	KAFFINITY AffinityMask;
 	KPRIORITY BasePriority;
 	ULONG UniqueProcessId;
 	ULONG InheritedFromUniqueProcessId;
 } PROCESS_BASIC_INFORMATION, *PPROCESS_BASIC_INFORMATION;
 
-typedef struct _QUOTA_LIMITS 
+typedef struct _QUOTA_LIMITS
 {
 	ULONG PagedPoolLimit;
 	ULONG NonPagedPoolLimit;
@@ -194,7 +193,7 @@ typedef struct _IO_COUNTERS
 } IO_COUNTERS, *PIO_COUNTERS;
 
 
-typedef struct _VM_COUNTERS_ 
+typedef struct _VM_COUNTERS_
 {
 	ULONG PeakVirtualSize;
 	ULONG VirtualSize;
@@ -210,7 +209,7 @@ typedef struct _VM_COUNTERS_
 } VM_COUNTERS, *PVM_COUNTERS;
 
 
-typedef struct _POOLED_USAGE_AND_LIMITS_ 
+typedef struct _POOLED_USAGE_AND_LIMITS_
 {
 	ULONG PeakPagedPoolUsage;
 	ULONG PagedPoolUsage;
@@ -224,13 +223,13 @@ typedef struct _POOLED_USAGE_AND_LIMITS_
 } POOLED_USAGE_AND_LIMITS, *PPOOLED_USAGE_AND_LIMITS;
 
 
-typedef struct _PROCESS_ACCESS_TOKEN 
+typedef struct _PROCESS_ACCESS_TOKEN
 {
 	HANDLE Token;
 	HANDLE Thread;
 } PROCESS_ACCESS_TOKEN, *PPROCESS_ACCESS_TOKEN;
 
-typedef struct _KERNEL_USER_TIMES 
+typedef struct _KERNEL_USER_TIMES
 {
 	TIME CreateTime;
 	TIME ExitTime;
@@ -253,22 +252,22 @@ typedef struct _THREAD_BASIC_INFORMATION
 } THREAD_BASIC_INFORMATION, *PTHREAD_BASIC_INFORMATION;
 
 // object information
-   
-typedef struct _OBJECT_NAME_INFORMATION 
-{               
-    UNICODE_STRING Name;                                
-} OBJECT_NAME_INFORMATION, *POBJECT_NAME_INFORMATION;   
+
+typedef struct _OBJECT_NAME_INFORMATION
+{
+	UNICODE_STRING	Name;
+} OBJECT_NAME_INFORMATION, *POBJECT_NAME_INFORMATION;
 
 
 
-typedef struct _OBJECT_DATA_INFORMATION 
+typedef struct _OBJECT_DATA_INFORMATION
 {
 	BOOLEAN bInheritHandle;
 	BOOLEAN bProtectFromClose;
-} OBJECT_DATA_INFORMATION,  *POBJECT_DATA_INFORMATION;
+} OBJECT_DATA_INFORMATION, *POBJECT_DATA_INFORMATION;
 
 
-typedef struct _OBJECT_TYPE_INFORMATION 
+typedef struct _OBJECT_TYPE_INFORMATION
 {
 	UNICODE_STRING	Name;
 	UNICODE_STRING Type;
@@ -300,9 +299,9 @@ typedef struct _SYSTEM_TIME_ADJUSTMENT
 	ULONG TimeAdjustment;
 	BOOL  TimeAdjustmentDisabled;
 } SYSTEM_TIME_ADJUSTMENT, *PSYSTEM_TIME_ADJUSTMENT;
-	
-typedef struct _SYSTEM_CONFIGURATION_INFO { 
-    	union { 
+
+typedef struct _SYSTEM_CONFIGURATION_INFO {
+	union {
 		ULONG  	OemId; 
 		struct { 
 			WORD ProcessorArchitecture; 
@@ -321,56 +320,58 @@ typedef struct _SYSTEM_CONFIGURATION_INFO {
 } SYSTEM_CONFIGURATION_INFO, *PSYSTEM_CONFIGURATION_INFO; 
 
 
-typedef struct _SYSTEM_CACHE_INFORMATION {
-	ULONG    	CurrentSize;
-	ULONG    	PeakSize;
-	ULONG    	PageFaultCount;
-	ULONG    	MinimumWorkingSet;
-	ULONG    	MaximumWorkingSet;
-	ULONG    	Unused[4];
+typedef struct _SYSTEM_CACHE_INFORMATION
+{
+	ULONG	CurrentSize;
+	ULONG	PeakSize;
+	ULONG	PageFaultCount;
+	ULONG	MinimumWorkingSet;
+	ULONG	MaximumWorkingSet;
+	ULONG	Unused[4];
 } SYSTEM_CACHE_INFORMATION;
 
 // file information
 
-typedef struct _FILE_BASIC_INFORMATION 
-{                    
-	TIME CreationTime;                             
-	TIME LastAccessTime;                           
-	TIME LastWriteTime;                            
-	TIME ChangeTime;                               
-	ULONG FileAttributes;                                   
-} FILE_BASIC_INFORMATION, *PFILE_BASIC_INFORMATION;         
-                                                            
-typedef struct _FILE_STANDARD_INFORMATION 
-{                 
-	LARGE_INTEGER AllocationSize;                           
-	LARGE_INTEGER EndOfFile;                                
-	ULONG NumberOfLinks;                                    
-	BOOLEAN DeletePending;                                  
-	BOOLEAN Directory;                                      
+typedef struct _FILE_BASIC_INFORMATION
+{
+	TIME CreationTime;
+	TIME LastAccessTime;
+	TIME LastWriteTime;
+	TIME ChangeTime;
+	ULONG FileAttributes;
+} FILE_BASIC_INFORMATION, *PFILE_BASIC_INFORMATION;
+
+typedef struct _FILE_STANDARD_INFORMATION
+{
+	LARGE_INTEGER AllocationSize;
+	LARGE_INTEGER EndOfFile;
+	ULONG NumberOfLinks;
+	BOOLEAN DeletePending;
+	BOOLEAN Directory;
 } FILE_STANDARD_INFORMATION, *PFILE_STANDARD_INFORMATION;
-                                                            
-typedef struct _FILE_POSITION_INFORMATION 
-{                 
-	LARGE_INTEGER CurrentByteOffset;                        
-} FILE_POSITION_INFORMATION, *PFILE_POSITION_INFORMATION;   
-                                                            
-typedef struct _FILE_ALIGNMENT_INFORMATION 
-{                
-	ULONG AlignmentRequirement;                             
-} FILE_ALIGNMENT_INFORMATION, *PFILE_ALIGNMENT_INFORMATION; 
-                                                            
+
+typedef struct _FILE_POSITION_INFORMATION
+{
+	LARGE_INTEGER CurrentByteOffset;
+} FILE_POSITION_INFORMATION, *PFILE_POSITION_INFORMATION;
+
+typedef struct _FILE_ALIGNMENT_INFORMATION
+{
+	ULONG AlignmentRequirement;
+} FILE_ALIGNMENT_INFORMATION, *PFILE_ALIGNMENT_INFORMATION;
+
 typedef struct _FILE_DISPOSITION_INFORMATION
-{                  
-	BOOLEAN DeleteFile;                                         
-} FILE_DISPOSITION_INFORMATION, *PFILE_DISPOSITION_INFORMATION; 
-                                                                
+{
+	BOOLEAN DeleteFile;
+} FILE_DISPOSITION_INFORMATION, *PFILE_DISPOSITION_INFORMATION;
+
 typedef struct _FILE_END_OF_FILE_INFORMATION
-{                  
-	LARGE_INTEGER EndOfFile;                                    
-} FILE_END_OF_FILE_INFORMATION, *PFILE_END_OF_FILE_INFORMATION; 
-                                                                
-typedef struct _FILE_NETWORK_OPEN_INFORMATION {
+{
+	LARGE_INTEGER EndOfFile;
+} FILE_END_OF_FILE_INFORMATION, *PFILE_END_OF_FILE_INFORMATION;
+
+typedef struct _FILE_NETWORK_OPEN_INFORMATION
+{
 	TIME CreationTime;
 	TIME LastAccessTime;
 	TIME LastWriteTime;
@@ -402,11 +403,11 @@ typedef struct _FILE_GET_EA_INFORMATION {
 } FILE_GET_EA_INFORMATION, *PFILE_GET_EA_INFORMATION;
 
 typedef struct _FILE_STREAM_INFORMATION {
-        ULONG NextEntryOffset;
-        ULONG StreamNameLength;
-        LARGE_INTEGER StreamSize;
-        LARGE_INTEGER StreamAllocationSize;
-        WCHAR StreamName[0];
+	ULONG NextEntryOffset;
+	ULONG StreamNameLength;
+	LARGE_INTEGER StreamSize;
+	LARGE_INTEGER StreamAllocationSize;
+	WCHAR StreamName[0];
 } FILE_STREAM_INFORMATION, *PFILE_STREAM_INFORMATION;
 
 typedef struct _FILE_ALLOCATION_INFORMATION {
@@ -430,7 +431,7 @@ typedef struct _FILE_NAMES_INFORMATION
 typedef struct _FILE_RENAME_INFORMATION {
 	BOOLEAN Replace;
 	HANDLE RootDir;
-        ULONG FileNameLength;
+	ULONG FileNameLength;
 	WCHAR FileName[0];
 } FILE_RENAME_INFORMATION, *PFILE_RENAME_INFORMATION;
 
@@ -471,9 +472,9 @@ typedef struct _FILE_ALL_INFORMATION {
 
 // file system information structures
 
-typedef struct _FILE_FS_DEVICE_INFORMATION {                    
-	DEVICE_TYPE DeviceType;                                     
-	ULONG Characteristics;                                      
+typedef struct _FILE_FS_DEVICE_INFORMATION {
+	DEVICE_TYPE DeviceType;
+	ULONG Characteristics;
 } FILE_FS_DEVICE_INFORMATION,  *PFILE_FS_DEVICE_INFORMATION;
 
 
@@ -496,13 +497,13 @@ typedef struct _FILE_FS_ATTRIBUTE_INFORMATION {
 	ULONG FileSystemAttributes;
 	LONG MaximumComponentNameLength;
 	ULONG FileSystemNameLength;
-	WCHAR FileSystemName[0]; 
+	WCHAR FileSystemName[0];
 } FILE_FS_ATTRIBUTE_INFORMATION, *PFILE_FS_ATTRIBUTE_INFORMATION;
 
 /*
 	FileSystemAttributes is one of the following values:
 
-   	FILE_CASE_SENSITIVE_SEARCH      0x00000001
+	FILE_CASE_SENSITIVE_SEARCH      0x00000001
         FILE_CASE_PRESERVED_NAMES       0x00000002
         FILE_UNICODE_ON_DISK            0x00000004
         FILE_PERSISTENT_ACLS            0x00000008
@@ -518,17 +519,17 @@ typedef struct _FILE_FS_LABEL_INFORMATION {
 // read file scatter / write file scatter
 //FIXME I am a win32 struct aswell
 
-typedef union _FILE_SEGMENT_ELEMENT {     
-	PVOID Buffer; 
-	ULONG Alignment; 
-}FILE_SEGMENT_ELEMENT, *PFILE_SEGMENT_ELEMENT; 
+typedef union _FILE_SEGMENT_ELEMENT {
+	PVOID Buffer;
+	ULONG Alignment;
+}FILE_SEGMENT_ELEMENT, *PFILE_SEGMENT_ELEMENT;
 
 // directory information
 
 typedef struct _OBJDIR_INFORMATION {
 	UNICODE_STRING ObjectName;
 	UNICODE_STRING ObjectTypeName; // Directory, Device ...
-	UCHAR          Data[0];        
+	UCHAR          Data[0];
 } OBJDIR_INFORMATION, *POBJDIR_INFORMATION;
 
 
@@ -622,28 +623,14 @@ typedef struct _FILE_NOTIFY_INFORMATION {
 */
 
 
-//FIXME: I am a win32 object 
-typedef 
-VOID 
-(*PTIMERAPCROUTINE)( 
-	LPVOID lpArgToCompletionRoutine, 
-	DWORD dwTimerLowValue, 
-	DWORD dwTimerHighValue 
-	); 
-
-// NtProcessStartup parameters
-
-typedef struct _ENVIRONMENT_INFORMATION {
-       ULONG            Unknown[21];     
-       UNICODE_STRING   CommandLine;
-       UNICODE_STRING   ImageFile;
-} ENVIRONMENT_INFORMATION, *PENVIRONMENT_INFORMATION;
-
-
-typedef struct _STARTUP_ARGUMENT {
-       ULONG                     Unknown[3];
-       PENVIRONMENT_INFORMATION  Environment;
-} STARTUP_ARGUMENT, *PSTARTUP_ARGUMENT;
+//FIXME: I am a win32 object
+typedef
+VOID
+(*PTIMERAPCROUTINE)(
+	LPVOID lpArgToCompletionRoutine,
+	DWORD dwTimerLowValue,
+	DWORD dwTimerHighValue
+	);
 
 
 // File System Control commands ( related to defragging )
@@ -653,7 +640,7 @@ typedef struct _STARTUP_ARGUMENT {
 #define FSCTL_GET_RETRIEVAL_POINTERS		0x90073
 #define FSCTL_MOVE_FILE				0x90074
 
-typedef struct _MAPPING_PAIR 
+typedef struct _MAPPING_PAIR
 {
 	ULONGLONG	Vcn;
 	ULONGLONG	Lcn;
@@ -670,17 +657,17 @@ typedef struct _BITMAP_DESCRIPTOR
 {
 	ULONGLONG	StartLcn;
 	ULONGLONG	ClustersToEndOfVol;
-	BYTE		Map[0]; // variable size 
-} BITMAP_DESCRIPTOR, *PBITMAP_DESCRIPTOR; 
+	BYTE		Map[0]; // variable size
+} BITMAP_DESCRIPTOR, *PBITMAP_DESCRIPTOR;
 
 typedef struct _MOVEFILE_DESCRIPTOR
 {
-	HANDLE            FileHandle; 
-	ULONG             Reserved;   
-	LARGE_INTEGER     StartVcn; 
+	HANDLE            FileHandle;
+	ULONG             Reserved;
+	LARGE_INTEGER     StartVcn;
 	LARGE_INTEGER     TargetLcn;
-	ULONG             NumVcns; 
-	ULONG             Reserved1;	
+	ULONG             NumVcns;
+	ULONG             Reserved1;
 } MOVEFILE_DESCRIPTOR, *PMOVEFILE_DESCRIPTOR;
 
 
@@ -694,7 +681,7 @@ typedef struct _SEMAPHORE_BASIC_INFORMATION
 
 // event information
 
-typedef struct _EVENT_BASIC_INFORMATION 
+typedef struct _EVENT_BASIC_INFORMATION
 {
 	BOOL AutomaticReset;
 	BOOL Signaled;
@@ -706,7 +693,7 @@ typedef struct _EVENT_BASIC_INFORMATION
 //	SynchronizationTimer
 //} TIMER_TYPE;
 
-typedef 
+typedef
 struct _LPC_PORT_BASIC_INFORMATION
 {
 	DWORD	Unknown0;

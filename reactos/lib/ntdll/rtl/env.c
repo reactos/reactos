@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.2 1999/12/01 17:34:55 ekohl Exp $
+/* $Id: env.c,v 1.3 1999/12/06 00:22:43 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -16,12 +16,15 @@
 #include <internal/teb.h>
 #include <string.h>
 
+//#define NDEBUG
+#include <ntdll/ntdll.h>
+
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
 STDCALL
 RtlCreateEnvironment (
-	BOOLEAN	Inherit,
+	BOOLEAN	Initialize,
 	PVOID	*Environment
 	)
 {
@@ -29,11 +32,11 @@ RtlCreateEnvironment (
 	PVOID EnvPtr = NULL;
 	NTSTATUS Status = STATUS_SUCCESS;
 	ULONG RegionSize = 1;
-#if 0
-	if (Inherit == TRUE)
+
+	if (Initialize == FALSE)
 	{
 		RtlAcquirePebLock ();
-
+#if 0
 		if (NtCurrentPeb()->ProcessParameters->Environment != NULL)
 		{
 			Status = NtQueryVirtualMemory (NtCurrentProcess (),
@@ -69,6 +72,7 @@ RtlCreateEnvironment (
 
 			*Environment = EnvPtr;
 		}
+#endif
 		RtlReleasePebLock ();
 	}
 	else
@@ -83,7 +87,7 @@ RtlCreateEnvironment (
 		if (NT_SUCCESS(Status))
 			*Environment = EnvPtr;
 	}
-#endif
+
 	return Status;
 }
 
@@ -112,14 +116,17 @@ RtlSetCurrentEnvironment (
 {
 	PVOID EnvPtr;
 
+	DPRINT ("NewEnvironment %x OldEnvironment %x\n",
+	        NewEnvironment, OldEnvironment);
+
 	RtlAcquirePebLock ();
-#if 0
-	EnvPtr = NtCurrentPeb()->ProcessParameters->Environment;
-	NtCurrentPeb()->ProcessParameters->Environment = NewEnvironment;
+
+	EnvPtr = NtCurrentPeb()->Ppb->Environment;
+	NtCurrentPeb()->Ppb->Environment = NewEnvironment;
 
 	if (OldEnvironment != NULL)
 		*OldEnvironment = EnvPtr;
-#endif
+
 	RtlReleasePebLock ();
 }
 

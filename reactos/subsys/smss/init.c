@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.5 1999/12/04 21:11:00 ea Exp $
+/* $Id: init.c,v 1.6 1999/12/06 00:25:14 ekohl Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -74,6 +74,8 @@ InitSessionManager (
 	UNICODE_STRING UnicodeString;
 	OBJECT_ATTRIBUTES ObjectAttributes;
 	UNICODE_STRING CmdLineW;
+	PPPB Ppb;
+
 
 	/* Create the "\SmApiPort" object (LPC) */
 	RtlInitUnicodeString (&UnicodeString,
@@ -131,6 +133,12 @@ InitSessionManager (
 	DisplayString (L"SM: System Environment created\n");
 #endif
 
+	RtlSetCurrentEnvironment (SmSystemEnvironment,
+	                          NULL);
+#ifndef NDEBUG
+	DisplayString (L"System Environment set\n");
+#endif
+
 	/* FIXME: Define symbolic links to kernel devices (MS-DOS names) */
 
 	/* FIXME: Run all programs in the boot execution list */
@@ -184,13 +192,27 @@ InitSessionManager (
 	DisplayString (L"SM: Executing shell\n");
 	RtlInitUnicodeString (&UnicodeString,
 	                      L"\\??\\C:\\reactos\\system32\\shell.exe");
-
 #if 0
 	/* Start the logon process (winlogon.exe) */
 	RtlInitUnicodeString (&CmdLineW,
 	                      L"\\??\\C:\\reactos\\system32\\winlogon.exe");
 #endif
+
+	RtlCreateProcessParameters (&Ppb,
+	                            &UnicodeString,
+	                            NULL,
+	                            NULL,
+	                            NULL,
+	                            NULL,
+	                            NULL,
+	                            NULL,
+	                            NULL,
+	                            NULL);
+
+
 	Status = RtlCreateUserProcess (&UnicodeString,
+	                               0,
+	                               Ppb,
 	                               NULL,
 	                               NULL,
 	                               FALSE,
@@ -198,6 +220,8 @@ InitSessionManager (
 	                               NULL,
 	                               &Children[CHILD_WINLOGON],
 	                               NULL);
+
+	RtlDestroyProcessParameters (Ppb);
 
 	if (!NT_SUCCESS(Status))
 	{

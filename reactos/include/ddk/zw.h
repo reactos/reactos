@@ -1,4 +1,4 @@
-/* $Id: zw.h,v 1.21 1999/11/25 10:47:53 dwelch Exp $
+/* $Id: zw.h,v 1.22 1999/12/06 00:14:47 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -75,7 +75,7 @@ typedef struct _TOKEN_USER {
  * FUNCTION: Checks a clients access rights to a object
  * ARGUMENTS: 
  *	  SecurityDescriptor = Security information against which the access is checked
- *        ClientToken = Represents a client
+ *	  ClientToken = Represents a client
  *	  DesiredAcces = 
  *	  GenericMapping =
  *	  PrivilegeSet =
@@ -93,11 +93,12 @@ NtAccessCheck(
 	IN HANDLE ClientToken,
 	IN ACCESS_MASK DesiredAcces,
 	IN PGENERIC_MAPPING GenericMapping,
-        OUT PPRIVILEGE_SET PrivilegeSet,
+	OUT PPRIVILEGE_SET PrivilegeSet,
 	OUT PULONG ReturnLength,
 	OUT PULONG GrantedAccess,
 	OUT PBOOLEAN AccessStatus
 	);
+
 NTSTATUS
 STDCALL
 ZwAccessCheck(
@@ -105,7 +106,7 @@ ZwAccessCheck(
 	IN HANDLE ClientToken,
 	IN ACCESS_MASK DesiredAcces,
 	IN PGENERIC_MAPPING GenericMapping,
-        OUT PPRIVILEGE_SET PrivilegeSet,
+	OUT PPRIVILEGE_SET PrivilegeSet,
 	OUT PULONG ReturnLength,
 	OUT PULONG GrantedAccess,
 	OUT PBOOLEAN AccessStatus
@@ -114,15 +115,15 @@ ZwAccessCheck(
 /*
  * FUNCTION: Checks a clients access rights to a object and issues a audit a alarm. ( it logs the access )
  * ARGUMENTS: 
-	  SubsystemName = Specifies the name of the subsystem, can be "WIN32" or "DEBUG"
-          ObjectHandle =
-	  ObjectAttributes =
-          DesiredAcces = 
-	  GenericMapping =
-	  ObjectCreation = 
-	  GrantedAccess = 
-	  AccessStatus =
-	  GenerateOnClose =
+ *	  SubsystemName = Specifies the name of the subsystem, can be "WIN32" or "DEBUG"
+ *	  ObjectHandle =
+ *	  ObjectAttributes =
+ *	  DesiredAcces = 
+ *	  GenericMapping =
+ *	  ObjectCreation = 
+ *	  GrantedAccess = 
+ *	  AccessStatus =
+ *	  GenerateOnClose =
  * REMARKS: The arguments map to the win32 AccessCheck 
  * RETURNS: Status
  */
@@ -131,29 +132,29 @@ NTSTATUS
 STDCALL
 NtAccessCheckAndAuditAlarm(
 	IN PUNICODE_STRING SubsystemName,
-	IN PHANDLE ObjectHandle,	
+	IN PHANDLE ObjectHandle,
 	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	IN ACCESS_MASK DesiredAccess,	
-	IN PGENERIC_MAPPING GenericMapping,	
-	IN BOOLEAN ObjectCreation,	
-	OUT PULONG GrantedAccess,	
-	OUT PBOOLEAN AccessStatus,	
-	OUT PBOOLEAN GenerateOnClose 	
-	);	
+	IN ACCESS_MASK DesiredAccess,
+	IN PGENERIC_MAPPING GenericMapping,
+	IN BOOLEAN ObjectCreation,
+	OUT PULONG GrantedAccess,
+	OUT PBOOLEAN AccessStatus,
+	OUT PBOOLEAN GenerateOnClose
+	);
 
 NTSTATUS
 STDCALL
 ZwAccessCheckAndAuditAlarm(
 	IN PUNICODE_STRING SubsystemName,
-	IN PHANDLE ObjectHandle,	
+	IN PHANDLE ObjectHandle,
 	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	IN ACCESS_MASK DesiredAccess,	
-	IN PGENERIC_MAPPING GenericMapping,	
-	IN BOOLEAN ObjectCreation,	
-	OUT PULONG GrantedAccess,	
-	OUT PBOOLEAN AccessStatus,	
-	OUT PBOOLEAN GenerateOnClose 	
-	);	
+	IN ACCESS_MASK DesiredAccess,
+	IN PGENERIC_MAPPING GenericMapping,
+	IN BOOLEAN ObjectCreation,
+	OUT PULONG GrantedAccess,
+	OUT PBOOLEAN AccessStatus,
+	OUT PBOOLEAN GenerateOnClose
+	);
 
 /*
  * FUNCTION: Adds an atom to the global atom table
@@ -182,14 +183,14 @@ ZwAddAtom(
 /*
  * FUNCTION: Adjusts the groups in an access token
  * ARGUMENTS: 
-	  TokenHandle = Specifies the access token
- *        ResetToDefault = If true the NewState parameter is ignored and the groups are set to
-			their default state, if false the groups specified in 
-			NewState are set. 
-	  NewState = 
-	  BufferLength = Specifies the size of the buffer for the PreviousState.
-	  PreviousState = 
-	  ReturnLength = Bytes written in PreviousState buffer.
+ *	  TokenHandle = Specifies the access token
+ *	  ResetToDefault = If true the NewState parameter is ignored and the groups are set to
+ *			their default state, if false the groups specified in
+ *			NewState are set.
+ *	  NewState = 
+ *	  BufferLength = Specifies the size of the buffer for the PreviousState.
+ *	  PreviousState = 
+ *	  ReturnLength = Bytes written in PreviousState buffer.
  * REMARKS: The arguments map to the win32 AdjustTokenGroups
  * RETURNS: Status
  */
@@ -198,29 +199,29 @@ NTSTATUS
 STDCALL 
 NtAdjustGroupsToken(
 	IN HANDLE TokenHandle,
-	IN BOOLEAN  ResetToDefault,	
-	IN PTOKEN_GROUPS  NewState, 
-	IN ULONG  BufferLength,	
-	OUT PTOKEN_GROUPS  PreviousState OPTIONAL,	
-	OUT PULONG  ReturnLength 	
+	IN BOOLEAN  ResetToDefault,
+	IN PTOKEN_GROUPS  NewState,
+	IN ULONG  BufferLength,
+	OUT PTOKEN_GROUPS  PreviousState OPTIONAL,
+	OUT PULONG  ReturnLength
 	);
 
-NTSTATUS 
-STDCALL 
+NTSTATUS
+STDCALL
 ZwAdjustGroupsToken(
-        IN HANDLE TokenHandle,
- 	IN BOOLEAN  ResetToDefault,	
-	IN PTOKEN_GROUPS  NewState,	
-	IN ULONG  BufferLength,	
-	OUT PTOKEN_GROUPS  PreviousState,	
-	OUT PULONG  ReturnLength 	
+	IN HANDLE TokenHandle,
+	IN BOOLEAN  ResetToDefault,
+	IN PTOKEN_GROUPS  NewState,
+	IN ULONG  BufferLength,
+	OUT PTOKEN_GROUPS  PreviousState,
+	OUT PULONG  ReturnLength
 	);
 
 
 /*
- * FUNCTION: 
- *           
- * ARGUMENTS: 
+ * FUNCTION:
+ *
+ * ARGUMENTS:
  *        TokenHandle = Handle to the access token
  *        DisableAllPrivileges =  The resulting suspend count.
 	  NewState = 
@@ -235,23 +236,23 @@ ZwAdjustGroupsToken(
 NTSTATUS 
 STDCALL 
 NtAdjustPrivilegesToken(
-	IN HANDLE  TokenHandle,	
+	IN HANDLE  TokenHandle,
 	IN BOOLEAN  DisableAllPrivileges,
-	IN PTOKEN_PRIVILEGES  NewState,	
-	IN ULONG  BufferLength,	
-	OUT PTOKEN_PRIVILEGES  PreviousState,	
-	OUT PULONG ReturnLength 	
+	IN PTOKEN_PRIVILEGES  NewState,
+	IN ULONG  BufferLength,
+	OUT PTOKEN_PRIVILEGES  PreviousState,
+	OUT PULONG ReturnLength
 	);
 
 NTSTATUS 
 STDCALL 
 ZwAdjustPrivilegesToken(
-	IN HANDLE  TokenHandle,	
+	IN HANDLE  TokenHandle,
 	IN BOOLEAN  DisableAllPrivileges,
-	IN PTOKEN_PRIVILEGES  NewState,	
-	IN ULONG  BufferLength,	
-	OUT PTOKEN_PRIVILEGES  PreviousState,	
-	OUT PULONG ReturnLength 	
+	IN PTOKEN_PRIVILEGES  NewState,
+	IN ULONG  BufferLength,
+	OUT PTOKEN_PRIVILEGES  PreviousState,
+	OUT PULONG ReturnLength
 	);
 
 
@@ -357,21 +358,24 @@ ZwAllocateUuids(
  */
 NTSTATUS
 STDCALL
-NtAllocateVirtualMemory( 
+NtAllocateVirtualMemory (
 	IN HANDLE ProcessHandle,
 	IN OUT PVOID *BaseAddress,
 	IN ULONG  ZeroBits,
 	IN OUT PULONG  RegionSize,
-	IN ULONG  AllocationType, 
+	IN ULONG  AllocationType,
 	IN ULONG  Protect
 	);
 
-NTSTATUS STDCALL ZwAllocateVirtualMemory(IN HANDLE ProcessHandle,
-					 IN OUT PVOID *BaseAddress,
-					 IN ULONG  ZeroBits,
-					 IN OUT PULONG  RegionSize,
-					 IN ULONG  AllocationType, 
-					 IN ULONG  Protect);
+NTSTATUS
+STDCALL
+ZwAllocateVirtualMemory (
+	IN HANDLE ProcessHandle,
+	IN OUT PVOID *BaseAddress,
+	IN ULONG  ZeroBits,
+	IN OUT PULONG  RegionSize,
+	IN ULONG  AllocationType,
+	IN ULONG  Protect);
 
 /*
  * FUNCTION: Returns from a callback into user mode
@@ -396,23 +400,23 @@ ZwCallbackReturn(
  * ARGUMENTS: 
  *        FileHandle = Handle to the file
  *        IoStatusBlock  = 
-			   
+ *
  * REMARKS:
- *        This function maps to the win32 CancelIo. 
+ *        This function maps to the win32 CancelIo.
  * RETURNS: Status
  */
 NTSTATUS
 STDCALL
 NtCancelIoFile(
 	IN HANDLE FileHandle,
-	OUT PIO_STATUS_BLOCK IoStatusBlock   
+	OUT PIO_STATUS_BLOCK IoStatusBlock
 	);
 
 NTSTATUS
 STDCALL
 ZwCancelIoFile(
 	IN HANDLE FileHandle,
-	OUT PIO_STATUS_BLOCK IoStatusBlock   
+	OUT PIO_STATUS_BLOCK IoStatusBlock
 	);
 /*
  * FUNCTION: Cancels a timer
@@ -447,8 +451,8 @@ ZwCancelTimer(
 
 NTSTATUS
 STDCALL
-NtClearEvent( 
-	IN HANDLE  EventHandle 
+NtClearEvent(
+	IN HANDLE  EventHandle
 	);
 
 NTSTATUS
@@ -469,14 +473,14 @@ ZwClearEvent(
 NTSTATUS
 STDCALL
 NtClose(
-    	IN HANDLE Handle
-    	);
+	IN HANDLE Handle
+	);
 
 NTSTATUS
 STDCALL
 ZwClose(
-    	IN HANDLE Handle
-    	);
+	IN HANDLE Handle
+	);
 
 /*
  * FUNCTION: Generates an audit message when a handle to an object is dereferenced
@@ -494,17 +498,17 @@ ZwClose(
 NTSTATUS
 STDCALL
 NtCloseObjectAuditAlarm(
-	IN PUNICODE_STRING SubsystemName,	
-	IN PVOID HandleId,	
-	IN BOOLEAN GenerateOnClose 	
+	IN PUNICODE_STRING SubsystemName,
+	IN PVOID HandleId,
+	IN BOOLEAN GenerateOnClose
 	);
 
 NTSTATUS
 STDCALL
 ZwCloseObjectAuditAlarm(
-	IN PUNICODE_STRING SubsystemName,	
-	IN PVOID HandleId,	
-	IN BOOLEAN GenerateOnClose 	
+	IN PUNICODE_STRING SubsystemName,
+	IN PVOID HandleId,
+	IN BOOLEAN GenerateOnClose
 	);
 
 
@@ -545,18 +549,18 @@ NTSTATUS STDCALL ZwContinue(IN PCONTEXT Context, IN CINT IrqLevel);
 NTSTATUS
 STDCALL
 NtCreateDirectoryObject(
-    	OUT PHANDLE DirectoryHandle,
-    	IN ACCESS_MASK DesiredAccess,
-    	IN POBJECT_ATTRIBUTES ObjectAttributes
-    	);
+	OUT PHANDLE DirectoryHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes
+	);
 
 NTSTATUS
 STDCALL
 ZwCreateDirectoryObject(
-    	OUT PHANDLE DirectoryHandle,
-    	IN ACCESS_MASK DesiredAccess,
-    	IN POBJECT_ATTRIBUTES ObjectAttributes
-    	);
+	OUT PHANDLE DirectoryHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes
+	);
 
 /*
  * FUNCTION: Creates an event object
@@ -637,38 +641,38 @@ ZwCreateEventPair(
  * REMARKS: This function maps to the win32 CreateFile. 
  * RETURNS: Status
  */
-                                        
-NTSTATUS                                        
-STDCALL                                           
-NtCreateFile(                                   
-	OUT PHANDLE FileHandle,                     
-	IN ACCESS_MASK DesiredAccess,               
-	IN POBJECT_ATTRIBUTES ObjectAttributes,     
-	OUT PIO_STATUS_BLOCK IoStatusBlock,         
-	IN PLARGE_INTEGER AllocationSize OPTIONAL,  
-	IN ULONG FileAttributes,                    
-	IN ULONG ShareAccess,                       
-	IN ULONG CreateDisposition,                 
-	IN ULONG CreateOptions,                     
-	IN PVOID EaBuffer OPTIONAL,                 
-	IN ULONG EaLength                           
-    	);                                          
 
-NTSTATUS                                        
-STDCALL                                           
-ZwCreateFile(                                   
-	OUT PHANDLE FileHandle,                     
-	IN ACCESS_MASK DesiredAccess,               
-	IN POBJECT_ATTRIBUTES ObjectAttributes,     
-	OUT PIO_STATUS_BLOCK IoStatusBlock,         
-	IN PLARGE_INTEGER AllocationSize OPTIONAL,  
-	IN ULONG FileAttributes,                    
-	IN ULONG ShareAccess,                       
-	IN ULONG CreateDisposition,                 
-	IN ULONG CreateOptions,                     
-	IN PVOID EaBuffer OPTIONAL,                 
-	IN ULONG EaLength                           
-    	);          
+NTSTATUS
+STDCALL
+NtCreateFile(
+	OUT PHANDLE FileHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	IN PLARGE_INTEGER AllocationSize OPTIONAL,
+	IN ULONG FileAttributes,
+	IN ULONG ShareAccess,
+	IN ULONG CreateDisposition,
+	IN ULONG CreateOptions,
+	IN PVOID EaBuffer OPTIONAL,
+	IN ULONG EaLength
+	);
+
+NTSTATUS
+STDCALL
+ZwCreateFile(
+	OUT PHANDLE FileHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	IN PLARGE_INTEGER AllocationSize OPTIONAL,
+	IN ULONG FileAttributes,
+	IN ULONG ShareAccess,
+	IN ULONG CreateDisposition,
+	IN ULONG CreateOptions,
+	IN PVOID EaBuffer OPTIONAL,
+	IN ULONG EaLength
+	);
 
 /*
  * FUNCTION: Creates or opens a file, directory or device object.
@@ -688,7 +692,7 @@ NtCreateIoCompletion(
 	OUT PHANDLE CompletionPort,
 	IN ACCESS_MASK DesiredAccess,
 	OUT PIO_STATUS_BLOCK IoStatusBlock,
-	IN ULONG NumberOfConcurrentThreads 
+	IN ULONG NumberOfConcurrentThreads
 	);
 
 NTSTATUS
@@ -697,7 +701,7 @@ ZwCreateIoCompletion(
 	OUT PHANDLE CompletionPort,
 	IN ACCESS_MASK DesiredAccess,
 	OUT PIO_STATUS_BLOCK IoStatusBlock,
-	IN ULONG NumberOfConcurrentThreads 
+	IN ULONG NumberOfConcurrentThreads
 	);
 
 
@@ -725,11 +729,11 @@ NtCreateMailslotFile(
 	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes,
 	OUT PIO_STATUS_BLOCK IoStatusBlock,
-	IN ULONG FileAttributes,                   
-	IN ULONG ShareAccess,   
+	IN ULONG FileAttributes,
+	IN ULONG ShareAccess,
 	IN ULONG MaxMessageSize,
 	IN PLARGE_INTEGER TimeOut
-	); 
+	);
 
 NTSTATUS
 STDCALL
@@ -738,11 +742,11 @@ ZwCreateMailslotFile(
 	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes,
 	OUT PIO_STATUS_BLOCK IoStatusBlock,
-	IN ULONG FileAttributes,                   
-	IN ULONG ShareAccess,   
+	IN ULONG FileAttributes,
+	IN ULONG ShareAccess,
 	IN ULONG MaxMessageSize,
 	IN PLARGE_INTEGER TimeOut
-	); 
+	);
 
 /*
  * FUNCTION: Creates or opens a mutex
@@ -800,39 +804,39 @@ NTSTATUS
 STDCALL
 NtCreateNamedPipeFile(
 	OUT PHANDLE NamedPipeFileHandle,
-	IN ACCESS_MASK DesiredAccess,               
-	IN POBJECT_ATTRIBUTES ObjectAttributes,     
-	OUT PIO_STATUS_BLOCK IoStatusBlock,    
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
 	IN ULONG FileAttributes,
 	IN ULONG ShareAccess,
-	IN ULONG OpenMode,  
-	IN ULONG PipeType, 
-	IN ULONG PipeRead, 
-	IN ULONG PipeWait, 
+	IN ULONG OpenMode,
+	IN ULONG PipeType,
+	IN ULONG PipeRead,
+	IN ULONG PipeWait,
 	IN ULONG MaxInstances,
 	IN ULONG InBufferSize,
 	IN ULONG OutBufferSize,
 	IN PLARGE_INTEGER TimeOut
-	);    
+	);
 
 NTSTATUS
 STDCALL
 ZwCreateNamedPipeFile(
 	OUT PHANDLE NamedPipeFileHandle,
-	IN ACCESS_MASK DesiredAccess,               
-	IN POBJECT_ATTRIBUTES ObjectAttributes,     
-	OUT PIO_STATUS_BLOCK IoStatusBlock,    
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
 	IN ULONG FileAttributes,
 	IN ULONG ShareAccess,
-	IN ULONG OpenMode,  
-	IN ULONG PipeType, 
-	IN ULONG PipeRead, 
-	IN ULONG PipeWait, 
+	IN ULONG OpenMode,
+	IN ULONG PipeType,
+	IN ULONG PipeRead,
+	IN ULONG PipeWait,
 	IN ULONG MaxInstances,
 	IN ULONG InBufferSize,
 	IN ULONG OutBufferSize,
 	IN PLARGE_INTEGER TimeOut
-	);    
+	);
 
 
 /*
@@ -845,22 +849,22 @@ ZwCreateNamedPipeFile(
  * RETURNS: Status
  */
 
-NTSTATUS 
-STDCALL 
+NTSTATUS
+STDCALL
 NtCreatePagingFile(
 	IN PUNICODE_STRING PageFileName,
 	IN ULONG MiniumSize,
 	IN ULONG MaxiumSize,
-	OUT PULONG ActualSize 
+	OUT PULONG ActualSize
 	);
 
-NTSTATUS 
-STDCALL 
+NTSTATUS
+STDCALL
 ZwCreatePagingFile(
 	IN PUNICODE_STRING PageFileName,
 	IN ULONG MiniumSize,
 	IN ULONG MaxiumSize,
-	OUT PULONG ActualSize 
+	OUT PULONG ActualSize
 	);
 
 /*
@@ -874,9 +878,9 @@ ZwCreatePagingFile(
  *        InheritObjectTable = Specifies to inherit the objects of the parent process if true.
  *        SectionHandle = Handle to a section object to back the image file
  *        DebugPort = Handle to a DebugPort if NULL the system default debug port will be used.
- *        ExceptionPort = Handle to a exception port. 
+ *        ExceptionPort = Handle to a exception port.
  * REMARKS:
- *        This function maps to the win32 CreateProcess. 
+ *        This function maps to the win32 CreateProcess.
  * RETURNS: Status
  */
 NTSTATUS 
@@ -2366,18 +2370,18 @@ ZwOpenProcess (
 
 NTSTATUS
 STDCALL
-NtOpenProcessToken(  
-	IN HANDLE ProcessHandle, 
-	IN ACCESS_MASK DesiredAccess,  
-	OUT PHANDLE TokenHandle  
+NtOpenProcessToken(
+	IN HANDLE ProcessHandle,
+	IN ACCESS_MASK DesiredAccess,
+	OUT PHANDLE TokenHandle
 	);
 
 NTSTATUS
 STDCALL
-ZwOpenProcessToken(  
-	IN HANDLE ProcessHandle, 
-	IN ACCESS_MASK DesiredAccess,  
-	OUT PHANDLE TokenHandle  
+ZwOpenProcessToken(
+	IN HANDLE ProcessHandle,
+	IN ACCESS_MASK DesiredAccess,
+	OUT PHANDLE TokenHandle
 	);
 
 /*
@@ -2475,20 +2479,20 @@ ZwOpenThread(
 
 NTSTATUS
 STDCALL
-NtOpenThreadToken(  
-	IN HANDLE ThreadHandle,  
-  	IN ACCESS_MASK DesiredAccess,  
-  	IN BOOLEAN OpenAsSelf,     
-  	OUT PHANDLE TokenHandle  
+NtOpenThreadToken(
+	IN HANDLE ThreadHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN BOOLEAN OpenAsSelf,
+	OUT PHANDLE TokenHandle
 	);
 
 NTSTATUS
 STDCALL
-ZwOpenThreadToken(  
-	IN HANDLE ThreadHandle,  
-  	IN ACCESS_MASK DesiredAccess,  
-  	IN BOOLEAN OpenAsSelf,     
-  	OUT PHANDLE TokenHandle  
+ZwOpenThreadToken(
+	IN HANDLE ThreadHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN BOOLEAN OpenAsSelf,
+	OUT PHANDLE TokenHandle
 	);
 /*
  * FUNCTION: Opens an existing timer
@@ -2504,14 +2508,14 @@ NtOpenTimer(
 	OUT PHANDLE TimerHandle,
 	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes
-    	);
+	);
 NTSTATUS
 STDCALL
 ZwOpenTimer(
 	OUT PHANDLE TimerHandle,
 	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes
-    	);
+	);
 
 /*
  * FUNCTION: Checks an access token for specific privileges
@@ -2527,27 +2531,28 @@ ZwOpenTimer(
 NTSTATUS
 STDCALL
 NtPrivilegeCheck(
-	IN HANDLE ClientToken,             
-	IN PPRIVILEGE_SET RequiredPrivileges,  
-	IN PBOOLEAN Result                    
+	IN HANDLE ClientToken,
+	IN PPRIVILEGE_SET RequiredPrivileges,
+	IN PBOOLEAN Result
 	);
+
 NTSTATUS
 STDCALL
 ZwPrivilegeCheck(
-	IN HANDLE ClientToken,             
-	IN PPRIVILEGE_SET RequiredPrivileges,  
-	IN PBOOLEAN Result                    
+	IN HANDLE ClientToken,
+	IN PPRIVILEGE_SET RequiredPrivileges,
+	IN PBOOLEAN Result
 	);
 
 NTSTATUS
 STDCALL
 NtPrivilegedServiceAuditAlarm(
-	IN PUNICODE_STRING SubsystemName,	
-	IN PUNICODE_STRING ServiceName,	
+	IN PUNICODE_STRING SubsystemName,
+	IN PUNICODE_STRING ServiceName,
 	IN HANDLE ClientToken,
-	IN PPRIVILEGE_SET Privileges,	
-	IN BOOLEAN AccessGranted 	
-	);	
+	IN PPRIVILEGE_SET Privileges,
+	IN BOOLEAN AccessGranted
+	);
 
 NTSTATUS
 STDCALL
@@ -2563,34 +2568,36 @@ NTSTATUS
 STDCALL
 NtPrivilegeObjectAuditAlarm(
 	IN PUNICODE_STRING SubsystemName,
-	IN PVOID HandleId,	
+	IN PVOID HandleId,
 	IN HANDLE ClientToken,
 	IN ULONG DesiredAccess,
 	IN PPRIVILEGE_SET Privileges,
-	IN BOOLEAN AccessGranted 
+	IN BOOLEAN AccessGranted
 	);
 
 NTSTATUS
 STDCALL
 ZwPrivilegeObjectAuditAlarm(
 	IN PUNICODE_STRING SubsystemName,
-	IN PVOID HandleId,	
+	IN PVOID HandleId,
 	IN HANDLE ClientToken,
 	IN ULONG DesiredAccess,
 	IN PPRIVILEGE_SET Privileges,
-	IN BOOLEAN AccessGranted 
+	IN BOOLEAN AccessGranted
 	);
 
 /*
  * FUNCTION: Entry point for native applications
  * ARGUMENTS:
- *	Argument = Arguments passed to the application by the system [ at boot time ]
+ *	Peb = Pointes to the Process Environment Block (PEB)
  * REMARKS:
- *	 Native applications should use this function instead of a main. Calling proces should terminate itself.
+ *	Native applications should use this function instead of a main.
+ *	Calling proces should terminate itself.
  * RETURNS: Status
  */ 	
-void NtProcessStartup( 
-	IN PSTARTUP_ARGUMENT Argument 
+VOID
+NtProcessStartup(
+	IN	PPEB	Peb
 	);
 
 /*
@@ -2615,8 +2622,9 @@ NtProtectVirtualMemory(
 	IN PVOID BaseAddress,
 	IN ULONG NumberOfBytesToProtect,
 	IN ULONG NewAccessProtection,
-	OUT PULONG OldAccessProtection 
+	OUT PULONG OldAccessProtection
 	);
+
 NTSTATUS
 STDCALL
 ZwProtectVirtualMemory(
@@ -2624,7 +2632,7 @@ ZwProtectVirtualMemory(
 	IN PVOID BaseAddress,
 	IN ULONG NumberOfBytesToProtect,
 	IN ULONG NewAccessProtection,
-	OUT PULONG OldAccessProtection 
+	OUT PULONG OldAccessProtection
 	);
 
 
@@ -2635,15 +2643,15 @@ ZwProtectVirtualMemory(
  *        PulseCount = Number of times the action is repeated
  * RETURNS: Status
  */
-NTSTATUS 
-STDCALL 
+NTSTATUS
+STDCALL
 NtPulseEvent(
 	IN HANDLE EventHandle,
 	IN PULONG PulseCount OPTIONAL
 	);
 
-NTSTATUS 
-STDCALL 
+NTSTATUS
+STDCALL
 ZwPulseEvent(
 	IN HANDLE EventHandle,
 	IN PULONG PulseCount OPTIONAL
@@ -2741,29 +2749,29 @@ ZwQueryDirectoryFile(
         DataWritten  = Actual size of the ObjectIndex ???
  * RETURNS: Status
  */
-NTSTATUS 
-STDCALL 
+NTSTATUS
+STDCALL
 NtQueryDirectoryObject(
-	IN HANDLE DirObjHandle,
-	OUT POBJDIR_INFORMATION DirObjInformation, 
-	IN ULONG                BufferLength, 
-	IN BOOLEAN              GetNextIndex, 
-	IN BOOLEAN              IgnoreInputIndex, 
-	IN OUT PULONG           ObjectIndex,
-	OUT PULONG              DataWritten OPTIONAL
-	); 
+	IN	HANDLE			DirObjHandle,
+	OUT	POBJDIR_INFORMATION	DirObjInformation,
+	IN	ULONG			BufferLength,
+	IN	BOOLEAN			GetNextIndex,
+	IN	BOOLEAN			IgnoreInputIndex,
+	IN OUT	PULONG			ObjectIndex,
+	OUT	PULONG			DataWritten OPTIONAL
+	);
 
-NTSTATUS 
-STDCALL 
+NTSTATUS
+STDCALL
 ZwQueryDirectoryObject(
 	IN HANDLE DirObjHandle,
-	OUT POBJDIR_INFORMATION DirObjInformation, 
-	IN ULONG                BufferLength, 
-	IN BOOLEAN              GetNextIndex, 
-	IN BOOLEAN              IgnoreInputIndex, 
+	OUT POBJDIR_INFORMATION DirObjInformation,
+	IN ULONG                BufferLength,
+	IN BOOLEAN              GetNextIndex,
+	IN BOOLEAN              IgnoreInputIndex,
 	IN OUT PULONG           ObjectIndex,
 	OUT PULONG              DataWritten OPTIONAL
-	); 
+	);
 
 /*
  * FUNCTION: Queries the extended attributes of a file
@@ -2932,18 +2940,26 @@ NtQueryInformationAtom(
           GetFullPathName, GetFileType, GetFileSize, GetFileTime  functions. 
  * RETURNS: Status
  */
-NTSTATUS STDCALL NtQueryInformationFile(IN HANDLE FileHandle,
-					OUT PIO_STATUS_BLOCK IoStatusBlock,
-					OUT PVOID FileInformation,
-					IN ULONG Length,
-					IN FILE_INFORMATION_CLASS FileInformationClass);
+NTSTATUS
+STDCALL
+NtQueryInformationFile(
+	IN HANDLE FileHandle,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	OUT PVOID FileInformation,
+	IN ULONG Length,
+	IN FILE_INFORMATION_CLASS FileInformationClass
+	);
 
-NTSTATUS STDCALL ZwQueryInformationFile(HANDLE FileHandle,
-					PIO_STATUS_BLOCK IoStatusBlock,
-					PVOID FileInformation,
-					ULONG Length,
-					FILE_INFORMATION_CLASS FileInformationClass);
-  
+NTSTATUS
+STDCALL
+ZwQueryInformationFile(
+	HANDLE FileHandle,
+	PIO_STATUS_BLOCK IoStatusBlock,
+	PVOID FileInformation,
+	ULONG Length,
+	FILE_INFORMATION_CLASS FileInformationClass
+	);
+
 /*
  * FUNCTION: Queries the information of a process object.
  * ARGUMENTS: 
@@ -2986,9 +3002,6 @@ NTSTATUS STDCALL ZwQueryInformationFile(HANDLE FileHandle,
  * RETURNS: Status
 */
 
-
-
-
 NTSTATUS
 STDCALL
 NtQueryInformationProcess(
@@ -3008,7 +3021,6 @@ ZwQueryInformationProcess(
 	IN ULONG ProcessInformationLength,
 	OUT PULONG ReturnLength 
 	);
-
 
 
 /*
@@ -3056,24 +3068,25 @@ NtQueryInformationThread(
 	OUT PULONG ReturnLength 
 	);
 
+
 NTSTATUS
 STDCALL
-NtQueryInformationToken(  
-	IN HANDLE TokenHandle,     
+NtQueryInformationToken(
+	IN HANDLE TokenHandle,
 	IN TOKEN_INFORMATION_CLASS TokenInformationClass,
-	OUT PVOID TokenInformation,  
-  	IN ULONG TokenInformationLength,
-  	OUT PULONG ReturnLength       
+	OUT PVOID TokenInformation,
+	IN ULONG TokenInformationLength,
+	OUT PULONG ReturnLength
 	);
 
 NTSTATUS
 STDCALL
-ZwQueryInformationToken(  
-	IN HANDLE TokenHandle,     
+ZwQueryInformationToken(
+	IN HANDLE TokenHandle,
 	IN TOKEN_INFORMATION_CLASS TokenInformationClass,
-	OUT PVOID TokenInformation,  
-  	IN ULONG TokenInformationLength,
-  	OUT PULONG ReturnLength       
+	OUT PVOID TokenInformation,
+	IN ULONG TokenInformationLength,
+	OUT PULONG ReturnLength
 	);
 
 /*
@@ -3152,10 +3165,10 @@ ZwQueryKey(
 NTSTATUS
 STDCALL
 NtQueryMultipleValueKey(
-   HANDLE KeyHandle,	
-   PVALENT ListOfValuesToQuery,	
-   ULONG NumberOfItems,	
-   PVOID MultipleValueInformation,		
+   HANDLE KeyHandle,
+   PVALENT ListOfValuesToQuery,
+   ULONG NumberOfItems,
+   PVOID MultipleValueInformation,
    ULONG Length,
    PULONG  ReturnLength
 );	
@@ -3163,13 +3176,13 @@ NtQueryMultipleValueKey(
 NTSTATUS
 STDCALL
 ZwQueryMultipleValueKey(
-   HANDLE KeyHandle,	
-   PVALENT ListOfValuesToQuery,	
-   ULONG NumberOfItems,	
-   PVOID MultipleValueInformation,		
+   HANDLE KeyHandle,
+   PVALENT ListOfValuesToQuery,
+   ULONG NumberOfItems,
+   PVOID MultipleValueInformation,
    ULONG Length,
    PULONG  ReturnLength
-);	
+);
 
 /*
  * FUNCTION: Queries the information of a mutant object.
@@ -3187,7 +3200,7 @@ NtQueryMutant(
 	IN CINT MutantInformationClass,
 	OUT PVOID MutantInformation,
 	IN ULONG Length,
-	OUT PULONG ResultLength 
+	OUT PULONG ResultLength
 	);
 
 NTSTATUS
@@ -3197,7 +3210,7 @@ ZwQueryMutant(
 	IN CINT MutantInformationClass,
 	OUT PVOID MutantInformation,
 	IN ULONG Length,
-	OUT PULONG ResultLength 
+	OUT PULONG ResultLength
 	);
 /*
  * FUNCTION: Queries the information of a  object.
@@ -3224,6 +3237,7 @@ NtQueryObject(
 	IN ULONG Length,
 	OUT PULONG ResultLength
 	);
+
 NTSTATUS
 STDCALL
 ZwQueryObject(
@@ -3244,7 +3258,7 @@ ZwQueryObject(
 	This procedure maps to the win32 QueryPerformanceCounter, QueryPerformanceFrequency 
  * RETURNS: Status
  *
-*/    
+*/
 NTSTATUS
 STDCALL
 NtQueryPerformanceCounter(
@@ -3268,24 +3282,25 @@ ZwQueryPerformanceCounter(
  *        ResultLength = Data written
  * RETURNS: Status
  *
-*/    
+*/
 NTSTATUS
 STDCALL
 NtQuerySection(
 	IN HANDLE SectionHandle,
 	IN CINT SectionInformationClass,
 	OUT PVOID SectionInformation,
-	IN ULONG Length, 
-	OUT PULONG ResultLength 
+	IN ULONG Length,
+	OUT PULONG ResultLength
 	);
+
 NTSTATUS
 STDCALL
 ZwQuerySection(
 	IN HANDLE SectionHandle,
 	IN CINT SectionInformationClass,
 	OUT PVOID SectionInformation,
-	IN ULONG Length, 
-	OUT PULONG ResultLength 
+	IN ULONG Length,
+	OUT PULONG ResultLength
 	);
 
 NTSTATUS
@@ -3330,6 +3345,7 @@ NtQuerySemaphore(
 	ULONG Length,
 	PULONG ReturnLength
 	);
+
 NTSTATUS
 STDCALL
 ZwQuerySemaphore(
@@ -3348,20 +3364,20 @@ ZwQuerySemaphore(
  *        DataWritten = size of the LinkName.
  * RETURNS: Status
  *
-*/                       
+*/
 NTSTATUS
 STDCALL 
 NtQuerySymbolicLinkObject(
 	IN HANDLE               SymLinkObjHandle,
-	OUT PUNICODE_STRING     LinkTarget,    
+	OUT PUNICODE_STRING     LinkTarget,
 	OUT PULONG              DataWritten OPTIONAL
-	); 
+	);
 
 NTSTATUS
 STDCALL 
 ZwQuerySymbolicLinkObject(
 	IN HANDLE               SymLinkObjHandle,
-	OUT PUNICODE_STRING     LinkName,    
+	OUT PUNICODE_STRING     LinkName,
 	OUT PULONG              DataWritten OPTIONAL
 	); 
 
@@ -3375,17 +3391,18 @@ ZwQuerySymbolicLinkObject(
  *        ReturnLength = data written
  * RETURNS: Status
  *
-*/      
+*/
 NTSTATUS
-STDCALL 
+STDCALL
 NtQuerySystemEnvironmentValue(
 	IN PUNICODE_STRING Name,
 	OUT PVOID Value,
 	ULONG Length,
 	PULONG ReturnLength
 	);
+
 NTSTATUS
-STDCALL 
+STDCALL
 ZwQuerySystemEnvironmentValue(
 	IN PUNICODE_STRING Name,
 	OUT PVOID Value,
@@ -3408,7 +3425,7 @@ ZwQuerySystemEnvironmentValue(
 	  ResultLength = Data written
  * RETURNS: Status
  *
-*/        
+*/
 NTSTATUS
 STDCALL
 NtQuerySystemInformation(
@@ -3417,6 +3434,7 @@ NtQuerySystemInformation(
 	IN ULONG Length,
 	OUT PULONG ResultLength
 	);
+
 NTSTATUS
 STDCALL
 ZwQuerySystemInformation(
@@ -3432,7 +3450,7 @@ ZwQuerySystemInformation(
  *        CurrentTime (OUT) = Caller should supply storage for the resulting time.
  * RETURNS: Status
  *
-*/        
+*/
 
 NTSTATUS
 STDCALL
@@ -3622,8 +3640,8 @@ ZwQueryVolumeInformationFile(
 	OUT PIO_STATUS_BLOCK IoStatusBlock,
 	OUT PVOID FsInformation,
 	IN ULONG Length,
-	IN FS_INFORMATION_CLASS FsInformationClass 
-    );
+	IN FS_INFORMATION_CLASS FsInformationClass
+	);
 // draft
 // FIXME: Should I specify if the apc is user or kernel mode somewhere ??
 /*
@@ -3656,6 +3674,8 @@ ZwQueueApcThread(
 	PVOID NormalContext,
 	PVOID SystemArgument1,
 	PVOID SystemArgument2);
+
+
 /*
  * FUNCTION: Raises an exception
  * ARGUMENTS: 
@@ -3664,8 +3684,7 @@ ZwQueueApcThread(
  *        IsDebugger = 
  * RETURNS: Status
  *
-*/        
-
+*/
 
 NTSTATUS
 STDCALL

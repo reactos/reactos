@@ -1,4 +1,4 @@
-/* $Id: smss.c,v 1.2 1999/12/01 15:18:54 ekohl Exp $
+/* $Id: smss.c,v 1.3 1999/12/06 00:25:14 ekohl Exp $
  *
  * smss.c - Session Manager
  * 
@@ -41,15 +41,39 @@ DisplayString( LPCWSTR lpwString )
 }
 
 
+void
+PrintString (char* fmt,...)
+{
+	char buffer[512];
+	va_list ap;
+	UNICODE_STRING UnicodeString;
+	ANSI_STRING AnsiString;
+	ULONG i;
+
+	va_start(ap, fmt);
+	vsprintf(buffer, fmt, ap);
+	va_end(ap);
+
+	RtlInitAnsiString (&AnsiString, buffer);
+	RtlAnsiStringToUnicodeString (
+		&UnicodeString,
+		&AnsiString,
+		TRUE);
+	NtDisplayString(&UnicodeString);
+	RtlFreeUnicodeString (&UnicodeString);
+}
+
+
 /* Native image's entry point */
 
 void
-NtProcessStartup( PSTARTUP_ARGUMENT StartupArgument )
+NtProcessStartup (PPEB Peb)
 {
 	HANDLE	Children[2]; /* csrss, winlogon */
 	
 	DisplayString( L"Session Manager\n" );
 
+	PrintString ("Peb %x\n", Peb);
 
 	if (TRUE == InitSessionManager(Children))
 	{

@@ -103,7 +103,7 @@ RtlCreateUserThread(HANDLE ProcessHandle,
                             &RegionSize,
                             MEM_RELEASE);
 
-        DPRINT("Error committing stack page!\n");
+        DPRINT("Error comitting stack page!\n");
         return Status;
     }
 
@@ -126,7 +126,7 @@ RtlCreateUserThread(HANDLE ProcessHandle,
                             &RegionSize,
                             MEM_RELEASE);
 
-        DPRINT("Error committing guard page!\n");
+        DPRINT("Error comitting guard page!\n");
         return Status;
     }
 
@@ -212,7 +212,7 @@ RtlInitializeContext(HANDLE ProcessHandle,
     Context->SegEs = USER_DS;
     Context->SegDs = USER_DS;
     Context->SegCs = USER_CS;
-    Context->SegSs = USER_DS;        
+    Context->SegSs = USER_DS;
     Context->Esp = (ULONG)InitialTeb->StackBase - 8;
     Context->EFlags = (1<<1) + (1<<9);
 

@@ -39,8 +39,8 @@ LPSTR STDCALL GetCommandLineA(VOID)
    return(CommandLineA);
 }
 
-LPWSTR STDCALL GetCommandLineW(VOID)
+LPWSTR STDCALL GetCommandLineW (VOID)
 {
-   return(NtCurrentPeb()->ProcessInfo->CommandLine);
+	return (NtCurrentPeb()->Ppb->CommandLine.Buffer);
 }
 
