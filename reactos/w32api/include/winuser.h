@@ -593,6 +593,7 @@ extern "C" {
 #define CS_SAVEBITS 2048
 #define CS_VREDRAW 1
 #define CS_IME 0x10000
+#define CS_DROPSHADOW 0x20000
 #define GCW_ATOM (-32)
 #define GCL_CBCLSEXTRA (-20)
 #define GCL_CBWNDEXTRA (-18)
