@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: resource.c,v 1.6 2001/08/31 19:30:16 dwelch Exp $
+/* $Id: resource.c,v 1.7 2001/09/05 09:21:47 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/resource.c
@@ -35,15 +35,15 @@
 
 /* GLOBALS *******************************************************************/
 
-static CONFIGURATION_INFORMATION SystemConfigurationInformation = 
-	{0, 0, 0, 0, 0, 0, 0, FALSE, FALSE};
+static CONFIGURATION_INFORMATION
+SystemConfigurationInformation = {0, 0, 0, 0, 0, 0, 0, FALSE, FALSE};
 
 /* FUNCTIONS *****************************************************************/
 
 PCONFIGURATION_INFORMATION STDCALL
 IoGetConfigurationInformation(VOID)
 {
-   return(&SystemConfigurationInformation);
+  return(&SystemConfigurationInformation);
 }
 
 NTSTATUS STDCALL
@@ -79,7 +79,7 @@ IoReportResourceUsage(PUNICODE_STRING DriverClassName,
       *       a conflict is detected with another driver.
       */
 {
-   UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
 NTSTATUS STDCALL
@@ -107,12 +107,115 @@ IoQueryDeviceDescription(PINTERFACE_TYPE BusType,
 }
 
 NTSTATUS STDCALL
-IoReportHalResourceUsage (PUNICODE_STRING	HalDescription,
-			  ULONG		Unknown1,
-			  ULONG		Unknown2,
-			  ULONG		Unknown3)
+IoReportHalResourceUsage(PUNICODE_STRING HalDescription,
+			 PCM_RESOURCE_LIST RawList,
+			 PCM_RESOURCE_LIST TranslatedList,
+			 ULONG ListSize)
+/*
+ * FUNCTION:
+ *      Reports hardware resources of the HAL in the
+ *      \Registry\Machine\Hardware\ResourceMap tree.
+ * ARGUMENTS:
+ *      HalDescription: Descriptive name of the HAL.
+ *      RawList: List of raw (bus specific) resources which should be
+ *               claimed for the HAL.
+ *      TranslatedList: List of translated (system wide) resources which
+ *                      should be claimed for the HAL.
+ *      ListSize: Size in bytes of the raw and translated resource lists.
+ *                Both lists have the same size.
+ * RETURNS:
+ *      Status.
+ */
 {
-  UNIMPLEMENTED;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING Name;
+  ULONG Disposition;
+  NTSTATUS Status;
+  HANDLE ResourcemapKey;
+  HANDLE HalKey;
+  HANDLE DescriptionKey;
+
+  /* Open/Create 'RESOURCEMAP' key. */
+  RtlInitUnicodeString(&Name,
+		       L"\\Registry\\Machine\\HARDWARE\\RESOURCEMAP");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &Name,
+			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
+			     0,
+			     NULL);
+  Status = NtCreateKey(&ResourcemapKey,
+		       KEY_ALL_ACCESS,
+		       &ObjectAttributes,
+		       0,
+		       NULL,
+		       REG_OPTION_VOLATILE,
+		       &Disposition);
+  if (!NT_SUCCESS(Status))
+    return(Status);
+
+  /* Open/Create 'Hardware Abstraction Layer' key */
+  RtlInitUnicodeString(&Name,
+		       L"Hardware Abstraction Layer");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &Name,
+			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
+			     ResourcemapKey,
+			     NULL);
+  Status = NtCreateKey(&HalKey,
+		       KEY_ALL_ACCESS,
+		       &ObjectAttributes,
+		       0,
+		       NULL,
+		       REG_OPTION_VOLATILE,
+		       &Disposition);
+  NtClose(ResourcemapKey);
+  if (!NT_SUCCESS(Status))
+      return(Status);
+
+  /* Create 'HalDescription' key */
+  InitializeObjectAttributes(&ObjectAttributes,
+			     HalDescription,
+			     OBJ_CASE_INSENSITIVE,
+			     HalKey,
+			     NULL);
+  Status = NtCreateKey(&DescriptionKey,
+		       KEY_ALL_ACCESS,
+		       &ObjectAttributes,
+		       0,
+		       NULL,
+		       REG_OPTION_VOLATILE,
+		       &Disposition);
+  NtClose(HalKey);
+  if (!NT_SUCCESS(Status))
+    return(Status);
+
+  /* Add '.Raw' value. */
+  RtlInitUnicodeString(&Name,
+		       L".Raw");
+  Status = NtSetValueKey(DescriptionKey,
+			 &Name,
+			 0,
+			 REG_RESOURCE_LIST,
+			 RawList,
+			 ListSize);
+  if (!NT_SUCCESS(Status))
+    {
+      NtClose(DescriptionKey);
+      return(Status);
+    }
+
+  /* Add '.Translated' value. */
+  RtlInitUnicodeString(&Name,
+		       L".Translated");
+  Status = NtSetValueKey(DescriptionKey,
+			 &Name,
+			 0,
+			 REG_RESOURCE_LIST,
+			 TranslatedList,
+			 ListSize);
+  NtClose(DescriptionKey);
+
+  return(Status);
 }
 
 /* EOF */

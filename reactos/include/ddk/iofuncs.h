@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.24 2001/06/08 15:06:51 ekohl Exp $ */
+/* $Id: iofuncs.h,v 1.25 2001/09/05 09:21:09 ekohl Exp $ */
 
 /* --- EXPORTED BY NTOSKRNL --- */
 
@@ -891,10 +891,10 @@ IoRemoveShareAccess (
 NTSTATUS
 STDCALL
 IoReportHalResourceUsage (
-	PUNICODE_STRING	HalDescription,
-	ULONG		Unknown1,
-	ULONG		Unknown2,
-	ULONG		Unknown3
+	IN	PUNICODE_STRING		HalDescription,
+	IN	PCM_RESOURCE_LIST	RawList,
+	IN	PCM_RESOURCE_LIST	TranslatedList,
+	IN	ULONG			ListSize
 	);
 NTSTATUS
 STDCALL
