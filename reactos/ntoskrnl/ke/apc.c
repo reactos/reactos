@@ -220,7 +220,7 @@ VOID STDCALL KiDeliverApc(ULONG Unknown1,
    KeReleaseSpinLock(&PiApcLock, oldlvl);
 }
 
-VOID STDCALL 
+VOID STDCALL
 KeInsertQueueApc (PKAPC	Apc,
 		  PVOID	SystemArgument1,
 		  PVOID	SystemArgument2,
@@ -295,6 +295,45 @@ KeInsertQueueApc (PKAPC	Apc,
      }
    KeReleaseSpinLock(&PiApcLock, oldlvl);
 }
+
+BOOLEAN STDCALL
+KeRemoveQueueApc (PKAPC Apc)
+/*
+ * FUNCTION: Removes APC object from the apc queue
+ * ARGUMENTS:
+ *          Apc = APC to remove
+ * RETURNS: TRUE if the APC was in the queue
+ *          FALSE otherwise
+ * NOTE: This function is not exported.
+ */
+{
+   KIRQL oldIrql;
+   PKTHREAD TargetThread;
+   
+   KeAcquireSpinLockAtDpcLevel(&PiApcLock);
+   KeRaiseIrql(HIGH_LEVEL, &oldIrql);
+   if (Apc->Inserted == FALSE)
+     {
+	KeReleaseSpinLock(&PiApcLock, oldIrql);
+	return(FALSE);
+     }
+
+   TargetThread = Apc->Thread;
+   RemoveEntryList(&Apc->ApcListEntry);
+   if (Apc->ApcMode == KernelMode)
+     {
+	TargetThread->ApcState.KernelApcPending--;
+     }
+   else
+     {
+	TargetThread->ApcState.UserApcPending--;
+     }
+   Apc->Inserted = FALSE;
+
+   KeReleaseSpinLock(&PiApcLock, oldIrql);
+   return(TRUE);
+}
+
 
 VOID STDCALL
 KeInitializeApc (PKAPC			Apc,

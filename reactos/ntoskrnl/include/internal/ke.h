@@ -103,6 +103,8 @@ VOID KeContextToTrapFrame(PCONTEXT Context,
 			  PKTRAP_FRAME TrapFrame);
 VOID KeReleaseDispatcherDatabaseLockAtDpcLevel(BOOLEAN Wait);
 
+BOOLEAN STDCALL KeRemoveQueueApc (PKAPC Apc);
+
 /* INITIALIZATION FUNCTIONS *************************************************/
 
 VOID KeInitExceptions(VOID);
