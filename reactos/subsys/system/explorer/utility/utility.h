@@ -397,6 +397,47 @@ struct String
 };
 
 
+ /// link dynamicly to functions by using GetModuleHandle() and GetProcAddress()
+template<typename FCT> struct DynamicFct
+{
+	DynamicFct(LPCTSTR moduleName, UINT ordinal)
+	{
+		HMODULE hModule = GetModuleHandle(moduleName);
+
+		_fct = (FCT) GetProcAddress(hModule, (LPCSTR)ordinal);
+	}
+
+	FCT operator*() const {return _fct;}
+	operator bool() const {return _fct? true: false;}
+
+protected:
+	FCT	_fct;
+};
+
+
+ /// link dynamicly to functions by using LoadLibrary() and GetProcAddress()
+template<typename FCT> struct DynamicLoadLibFct
+{
+	DynamicLoadLibFct(LPCTSTR moduleName, UINT ordinal)
+	{
+		_hModule = LoadLibrary(moduleName);
+
+		_fct = (FCT) GetProcAddress(_hModule, (LPCSTR)ordinal);
+	}
+
+	~DynamicLoadLibFct()
+	{
+		FreeLibrary(_hModule);
+	}
+
+	FCT operator*() const {return _fct;}
+	operator bool() const {return _fct? true: false;}
+
+protected:
+	HMODULE _hModule;
+	FCT	_fct;
+};
+
 #endif // __cplusplus
 
 

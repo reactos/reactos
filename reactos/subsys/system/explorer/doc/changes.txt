@@ -32,3 +32,5 @@
 28.08.2003	m. fuchs	control panel window in cabinet view mode
 29.09.2003	m. fuchs	Now we handle start menu popups via StartMenuRoot::TrackStartmenu().
 30.09.2003	m. fuchs	compatibility to building as Winelib application
+10.09.2003	m. fuchs	compatibility changes for correct desktop windows size on Windows NT
+19.09.2003	m. fuchs	compatibility changes for correct start menu subentries on Windows 9x

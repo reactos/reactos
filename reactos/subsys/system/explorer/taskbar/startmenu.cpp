@@ -777,8 +777,7 @@ void StartMenuRoot::ShowLaunchDialog(HWND hwndDesktopBar)
 	static LPCSTR szTitle = "Create New Task";
 	static LPCSTR szText = "Type the name of a program, folder, document, or Internet resource, and Task Manager will open it for you.";
 
-	HMODULE hShell32 = GetModuleHandle(_T("SHELL32"));
-	RUNFILEDLG RunFileDlg = (RUNFILEDLG)GetProcAddress(hShell32, (LPCSTR)61);
+	static DynamicFct<RUNFILEDLG> RunFileDlg(_T("SHELL32"), 61);
 
 	 // Show "Run..." dialog
 	if (RunFileDlg) {
@@ -789,47 +788,43 @@ void StartMenuRoot::ShowLaunchDialog(HWND hwndDesktopBar)
 			MultiByteToWideChar(CP_ACP, 0, szTitle, -1, wTitle, 40);
 			MultiByteToWideChar(CP_ACP, 0, szText, -1, wText, 256);
 
-			RunFileDlg(hwndDesktopBar, 0, NULL, (LPCSTR)wTitle, (LPCSTR)wText, RFF_CALCDIRECTORY);
+			(*RunFileDlg)(hwndDesktopBar, 0, NULL, (LPCSTR)wTitle, (LPCSTR)wText, RFF_CALCDIRECTORY);
 		}
 		else
-			RunFileDlg(hwndDesktopBar, 0, NULL, szTitle, szText, RFF_CALCDIRECTORY);
+			(*RunFileDlg)(hwndDesktopBar, 0, NULL, szTitle, szText, RFF_CALCDIRECTORY);
 	}
 }
 
 void StartMenuRoot::ShowExitWindowsDialog(HWND hwndOwner)
 {
-	HMODULE hShell32 = GetModuleHandle(_T("SHELL32"));
-	EXITWINDOWSDLG ExitWindowsDlg = (EXITWINDOWSDLG)GetProcAddress(hShell32, (LPCSTR)60);
+	static DynamicFct<EXITWINDOWSDLG> ExitWindowsDlg(_T("SHELL32"), 60);
 
 	if (ExitWindowsDlg)
-		ExitWindowsDlg(hwndOwner);
+		(*ExitWindowsDlg)(hwndOwner);
 }
 
 void StartMenuRoot::ShowRestartDialog(HWND hwndOwner, UINT flags)
 {
-	HMODULE hShell32 = GetModuleHandle(_T("SHELL32"));
-	RESTARTWINDOWSDLG RestartDlg = (RESTARTWINDOWSDLG)GetProcAddress(hShell32, (LPCSTR)59);
+	static DynamicFct<RESTARTWINDOWSDLG> RestartDlg(_T("SHELL32"), 59);
 
 	if (RestartDlg)
-		RestartDlg(hwndOwner, (LPWSTR)L"You selected <Log Off>.\n\n", flags);	//TODO: ANSI string conversion if needed
+		(*RestartDlg)(hwndOwner, (LPWSTR)L"You selected <Log Off>.\n\n", flags);	//TODO: ANSI string conversion if needed
 }
 
 void StartMenuRoot::ShowSearchDialog()
 {
-	HMODULE hShell32 = GetModuleHandle(_T("SHELL32"));
-	SHFINDFILES SHFindFiles = (SHFINDFILES)GetProcAddress(hShell32, (LPCSTR)90);
+	static DynamicFct<SHFINDFILES> SHFindFiles(_T("SHELL32"), 90);
 
 	if (SHFindFiles)
-		SHFindFiles(NULL, NULL);
+		(*SHFindFiles)(NULL, NULL);
 }
 
 void StartMenuRoot::ShowSearchComputer()
 {
-	HMODULE hShell32 = GetModuleHandle(_T("SHELL32"));
-	SHFINDCOMPUTER SHFindComputer = (SHFINDCOMPUTER)GetProcAddress(hShell32, (LPCSTR)91);
+	static DynamicFct<SHFINDCOMPUTER> SHFindComputer(_T("SHELL32"), 91);
 
 	if (SHFindComputer)
-		SHFindComputer(NULL, NULL);
+		(*SHFindComputer)(NULL, NULL);
 }
 
 

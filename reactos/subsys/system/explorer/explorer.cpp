@@ -159,6 +159,12 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	 // the first explorer instance
 	BOOL startup_desktop = !IsAnyDesktopRunning();
 
+	bool autostart = true;
+
+#ifdef _DEBUG	//MF: disabled for debugging
+	autostart = false;
+#endif
+
 	 // If there is given the command line option "-desktop", create desktop window anyways
 	if (!lstrcmp(lpCmdLine,TEXT("-desktop")))
 		startup_desktop = TRUE;
@@ -171,6 +177,14 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 		startup_desktop = TRUE;
 	}
 
+	if (!lstrcmp(lpCmdLine,TEXT("-noautostart")))
+		autostart = false;
+
+//REMOTE DBG
+startup_desktop = TRUE;
+nShowCmd = SW_HIDE;
+
+
 	g_Globals._hInstance = hInstance;
 
 	HWND hwndDesktop = 0;
@@ -179,12 +193,11 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	{
 		hwndDesktop = DesktopWindow::Create();
 
-#ifndef _DEBUG	//MF: disabled for debugging
+		if (autostart)
 		{
-		char* argv[] = {""};
-		startup(1, argv);
+			char* argv[] = {""};
+			startup(1, argv);
 		}
-#endif
 	}
 
 	int ret = explorer_main(hInstance, hwndDesktop, nShowCmd);

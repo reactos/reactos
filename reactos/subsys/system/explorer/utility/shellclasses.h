@@ -555,42 +555,9 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 		_malloc->Free(h);
 	}
 
-	void split(ShellPath& parent, ShellPath& obj) const
-	{
-		SHITEMID *piid, *piidLast;
-		int size = 0;
-    
-		 // find last item-id and calculate total size of pidl
-		for(piid=piidLast=&_p->mkid; piid->cb; ) {
-			piidLast = piid;
-			size += (piid->cb);
-			piid = (SHITEMID*)((LPBYTE)piid + (piid->cb));
-		}
-    
-		 // copy parent folder portion
-		size -= piidLast->cb;  // don't count "object" item-id
+	void split(ShellPath& parent, ShellPath& obj) const;
 
-		if (size > 0)
-			parent.assign(_p, size);
-
-		 // copy "object" portion
-		obj.assign((ITEMIDLIST*)piidLast, piidLast->cb);
-	}
-
-	void GetUIObjectOf(REFIID riid, LPVOID* ppvOut, HWND hWnd=0, ShellFolder& sf=Desktop())
-	{
-		ShellPath parent, obj;
-
-		split(parent, obj);
-
-		LPCITEMIDLIST idl = obj;
-
-		if (parent && parent->mkid.cb)
-			 // use the IShellFolder of the parent
-			CheckError(ShellFolder((IShellFolder*)sf,parent)->GetUIObjectOf(hWnd, 1, &idl, riid, 0, ppvOut));
-		else // else use desktop folder
-			CheckError(sf->GetUIObjectOf(hWnd, 1, &idl, riid, 0, ppvOut));
-	}
+	void GetUIObjectOf(REFIID riid, LPVOID* ppvOut, HWND hWnd=0, ShellFolder& sf=Desktop());
 
 	ShellFolder get_folder()
 	{
@@ -602,21 +569,8 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 		return ShellFolder(parent, _p);
 	}
 
-
 	 // convert an item id list from relative to absolute (=relative to the desktop) format
-	LPITEMIDLIST create_absolute_pidl(LPCITEMIDLIST parent_pidl, HWND hwnd) const
-	{
-		 // create a new item id list with _p append behind parent_pidl
-		int l1 = _malloc->GetSize((void*)parent_pidl) - sizeof(USHORT/*SHITEMID::cb*/);
-		int l2 = _malloc->GetSize(_p);
-
-		LPITEMIDLIST p = (LPITEMIDLIST) _malloc->Alloc(l1+l2);
-
-		memcpy(p, parent_pidl, l1);
-		memcpy((LPBYTE)p+l1, _p, l2);
-
-		return p;
-	}
+	LPITEMIDLIST create_absolute_pidl(LPCITEMIDLIST parent_pidl, HWND hwnd) const;
 };
 
 

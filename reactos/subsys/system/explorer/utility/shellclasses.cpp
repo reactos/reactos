@@ -35,6 +35,31 @@
 #pragma comment(lib, "shell32")	// link to shell32.dll
 
 
+ // helper functions for string copying
+
+LPSTR strcpyn(LPSTR dest, LPCSTR source, size_t count)
+{
+	LPCSTR s;
+	LPSTR d = dest;
+
+	for(s=source; count&&(*d++=*s++); )
+		count--;
+
+	return dest;
+}
+
+LPWSTR wcscpyn(LPWSTR dest, LPCWSTR source, size_t count)
+{
+	LPCWSTR s;
+	LPWSTR d = dest;
+
+	for(s=source; count&&(*d++=*s++); )
+		count--;
+
+	return dest;
+}
+
+
  // Exception Handler for COM exceptions
 
 void HandleException(COMException& e, HWND hwnd)
@@ -240,26 +265,83 @@ String ShellFolder::get_name(LPCITEMIDLIST pidl, SHGDNF flags) const
 }
 
 
- // helper function for string copying
-
-LPSTR strcpyn(LPSTR dest, LPCSTR source, size_t count)
+void ShellPath::split(ShellPath& parent, ShellPath& obj) const
 {
-	LPCSTR s;
-	LPSTR d = dest;
+	SHITEMID *piid, *piidLast;
+	int size = 0;
 
-	for(s=source; count&&(*d++=*s++); )
-		count--;
+	 // find last item-id and calculate total size of pidl
+	for(piid=piidLast=&_p->mkid; piid->cb; ) {
+		piidLast = piid;
+		size += (piid->cb);
+		piid = (SHITEMID*)((LPBYTE)piid + (piid->cb));
+	}
 
-	return dest;
+	 // copy parent folder portion
+	size -= piidLast->cb;  // don't count "object" item-id
+
+	if (size > 0)
+		parent.assign(_p, size);
+
+	 // copy "object" portion
+	obj.assign((ITEMIDLIST*)piidLast, piidLast->cb);
 }
 
-LPWSTR wcscpyn(LPWSTR dest, LPCWSTR source, size_t count)
+void ShellPath::GetUIObjectOf(REFIID riid, LPVOID* ppvOut, HWND hWnd, ShellFolder& sf)
 {
-	LPCWSTR s;
-	LPWSTR d = dest;
+	ShellPath parent, obj;
 
-	for(s=source; count&&(*d++=*s++); )
-		count--;
+	split(parent, obj);
 
-	return dest;
+	LPCITEMIDLIST idl = obj;
+
+	if (parent && parent->mkid.cb)
+		 // use the IShellFolder of the parent
+		CheckError(ShellFolder((IShellFolder*)sf,parent)->GetUIObjectOf(hWnd, 1, &idl, riid, 0, ppvOut));
+	else // else use desktop folder
+		CheckError(sf->GetUIObjectOf(hWnd, 1, &idl, riid, 0, ppvOut));
 }
+
+#ifndef __MINGW32__	// ILCombine() is currently missing in MinGW.
+
+ // convert an item id list from relative to absolute (=relative to the desktop) format
+LPITEMIDLIST ShellPath::create_absolute_pidl(LPCITEMIDLIST parent_pidl, HWND hwnd) const
+{
+	return ILCombine(parent_pidl, _p);
+
+/* seems to work only for NT upwards
+	 // create a new item id list with _p append behind parent_pidl
+	int l1 = _malloc->GetSize((void*)parent_pidl) - sizeof(USHORT/ SHITEMID::cb /);
+	int l2 = _malloc->GetSize(_p);
+
+	LPITEMIDLIST p = (LPITEMIDLIST) _malloc->Alloc(l1+l2);
+
+	memcpy(p, parent_pidl, l1);
+	memcpy((LPBYTE)p+l1, _p, l2);
+
+	return p;
+*/
+}
+
+#else
+
+LPITEMIDLIST ShellPath::create_absolute_pidl(LPCITEMIDLIST parent_pidl, HWND hwnd) const
+{
+	static DynamicFct<LPITEMIDLIST(WINAPI*)(LPCITEMIDLIST, LPCITEMIDLIST)> ILCombine(_T("SHELL32"), 25);
+
+	if (ILCombine.found())
+		return ILCombine(parent_pidl, _p);
+
+	 // create a new item id list with _p append behind parent_pidl
+	int l1 = _malloc->GetSize((void*)parent_pidl) - sizeof(USHORT/*SHITEMID::cb*/);
+	int l2 = _malloc->GetSize(_p);
+
+	LPITEMIDLIST p = (LPITEMIDLIST) _malloc->Alloc(l1+l2);
+
+	memcpy(p, parent_pidl, l1);
+	memcpy((LPBYTE)p+l1, _p, l2);
+
+	return p;
+}
+
+#endif
