@@ -169,6 +169,8 @@ SmCreateClient(PSM_PORT_MESSAGE Request, PSM_CLIENT_DATA * ClientData)
 	 * Initialize the client data
 	 */
 	pClient->SubsystemId = ConnectData->Subsystem;
+	/* SM auto-initializes; other subsystems are required to call
+	 * SM_API_COMPLETE_SESSION via SMDLL. */
 	pClient->Initialized = (IMAGE_SUBSYSTEM_NATIVE == pClient->SubsystemId);
 	if (SbApiPortNameSize > 0)
 	{

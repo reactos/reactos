@@ -36,14 +36,14 @@
 static NTSTATUS
 SmpSignalInitEvent(VOID)
 {
-  NTSTATUS Status;
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING UnicodeString;
-  HANDLE ReactOSInitEvent;
+  NTSTATUS          Status = STATUS_SUCCESS;
+  OBJECT_ATTRIBUTES ObjectAttributes = {0};
+  UNICODE_STRING    EventName ={0};
+  HANDLE            ReactOSInitEvent = NULL;
 
-  RtlRosInitUnicodeStringFromLiteral(&UnicodeString, L"\\ReactOSInitDone");
+  RtlInitUnicodeString (& EventName, L"\\ReactOSInitDone");
   InitializeObjectAttributes(&ObjectAttributes,
-    &UnicodeString,
+    & EventName,
     EVENT_ALL_ACCESS,
     0,
     NULL);

@@ -30,18 +30,32 @@
 #define NDEBUG
 #include <debug.h>
 
+HANDLE SmSsProcessId = 0;
+
 /* Native image's entry point */
 
 VOID STDCALL
 NtProcessStartup(PPEB Peb)
 {
   NTSTATUS Status;
-
+  PROCESS_BASIC_INFORMATION PBI = {0};
+  
   DisplayString(L"SMSS\n");
   PrintString("ReactOS Session Manager %s (Build %s)\n",
 	     KERNEL_RELEASE_STR,
 	     KERNEL_VERSION_BUILD_STR);
 
+  /* Lookup yourself */
+  Status = NtQueryInformationProcess (NtCurrentProcess(),
+		    		      ProcessBasicInformation,
+				      & PBI,
+				      sizeof PBI,
+      				      NULL);
+  if(NT_SUCCESS(Status))
+  {
+	  SmSsProcessId = PBI.UniqueProcessId;
+  }
+  /* Initialize the system */
   Status = InitSessionManager();
   if (!NT_SUCCESS(Status))
     {
@@ -64,7 +78,7 @@ NtProcessStartup(PPEB Peb)
 				    NULL);	/* NULL for infinite */
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("SM: NtWaitForMultipleObjects failed!\n");
+      DPRINT1("SM: NtWaitForMultipleObjects failed! (Status=0x%08lx)\n", Status);
     }
   else
     {

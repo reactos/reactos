@@ -9,6 +9,9 @@
 #define CHILD_CSRSS     0
 #define CHILD_WINLOGON  1
 
+/* smss.c */
+extern HANDLE SmSsProcessId;
+
 /* init.c */
 NTSTATUS InitSessionManager(VOID);
 
