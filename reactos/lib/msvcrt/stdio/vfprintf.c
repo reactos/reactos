@@ -679,9 +679,20 @@ static int stringw(FILE *f, const wchar_t* sw, int len, int field_width, int pre
 		}
 	for (i = 0; i < len; ++i)
 	{
-		if (putc((unsigned char)(*sw++), f) == EOF)
-			return -1;
-		done++;
+#define MB_CUR_MAX 1
+		char mb[MB_CUR_MAX];
+		int mbcount, j;
+		mbcount = wctomb(mb, *sw++);
+		if (mbcount <= 0)
+		{
+			break;
+		}
+		for (j = 0; j < mbcount; j++)
+		{
+			if (putc(mb[j], f) == EOF)
+				return -1;
+			done++;
+		}
 	}
 	while (len < field_width--)
 	{
