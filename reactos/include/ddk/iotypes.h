@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.64 2004/10/19 20:36:52 navaraf Exp $
+/* $Id: iotypes.h,v 1.65 2004/10/19 22:47:38 ekohl Exp $
  *
  */
 
@@ -827,7 +827,7 @@ typedef struct _IRP
      {
 	struct _IRP* MasterIrp;
 	LONG IrpCount;
-	PVOID SystemBuffer;	
+	PVOID SystemBuffer;
      } AssociatedIrp;
    LIST_ENTRY ThreadListEntry;
    IO_STATUS_BLOCK IoStatus;
