@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dirctl.c,v 1.6 2002/06/06 16:20:52 ekohl Exp $
+/* $Id: dirctl.c,v 1.7 2002/06/06 19:01:04 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -141,7 +141,7 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
 {
   WCHAR name[256];
   WCHAR TempStr[2];
-  WCHAR ShortNameBuffer[12];
+  WCHAR ShortNameBuffer[13];
   UNICODE_STRING ShortName;
   UNICODE_STRING LongName;
   PVOID Block;

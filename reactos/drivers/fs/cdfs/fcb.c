@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fcb.c,v 1.6 2002/05/14 23:16:23 ekohl Exp $
+/* $Id: fcb.c,v 1.7 2002/06/06 19:01:04 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -268,8 +268,6 @@ CdfsMakeRootFCB(PDEVICE_EXTENSION Vcb)
 
   Fcb = CdfsCreateFCB(L"\\");
 
-//  memset(Fcb->entry.Filename, ' ', 11);
-
   Fcb->Entry.DataLengthL = Vcb->CdInfo.RootSize;
   Fcb->Entry.ExtentLocationL = Vcb->CdInfo.RootStart;
   Fcb->Entry.FileFlags = 0x02; // FILE_ATTRIBUTE_DIRECTORY;
@@ -307,7 +305,7 @@ CdfsGetDirEntryName(PDEVICE_EXTENSION DeviceExt,
 		    PDIR_RECORD Record,
 		    PWSTR Name)
 /*
- * FUNCTION: Retrieves the file name, be it in short or long file name format
+ * FUNCTION: Retrieves the file name from a directory record.
  */
 {
   if (Record->FileIdLength == 1 && Record->FileId[0] == 0)
@@ -330,7 +328,9 @@ CdfsGetDirEntryName(PDEVICE_EXTENSION DeviceExt,
 	}
       else
 	{
-	  CdfsSwapString(Name, Record->FileId, Record->FileIdLength);
+	  CdfsSwapString(Name,
+			 Record->FileId,
+			 Record->FileIdLength);
 	}
     }
 
@@ -341,7 +341,8 @@ CdfsGetDirEntryName(PDEVICE_EXTENSION DeviceExt,
 NTSTATUS
 CdfsMakeFCBFromDirEntry(PVCB Vcb,
 			PFCB DirectoryFCB,
-			PWSTR Name,
+			PWSTR LongName,
+			PWSTR ShortName,
 			PDIR_RECORD Record,
 			PFCB * fileFCB)
 {
@@ -349,8 +350,8 @@ CdfsMakeFCBFromDirEntry(PVCB Vcb,
   PFCB rcFCB;
   ULONG Size;
 
-  if (Name [0] != 0 && wcslen (DirectoryFCB->PathName) +
-        sizeof(WCHAR) + wcslen (Name) > MAX_PATH)
+  if (LongName [0] != 0 && wcslen (DirectoryFCB->PathName) +
+        sizeof(WCHAR) + wcslen (LongName) > MAX_PATH)
     {
       return(STATUS_OBJECT_NAME_INVALID);
     }
@@ -361,9 +362,9 @@ CdfsMakeFCBFromDirEntry(PVCB Vcb,
       wcscat(pathName, L"\\");
     }
 
-  if (Name[0] != 0)
+  if (LongName[0] != 0)
     {
-      wcscat(pathName, Name);
+      wcscat(pathName, LongName);
     }
   else
     {
@@ -376,16 +377,21 @@ CdfsMakeFCBFromDirEntry(PVCB Vcb,
   rcFCB = CdfsCreateFCB(pathName);
   memcpy(&rcFCB->Entry, Record, sizeof(DIR_RECORD));
 
+  /* Copy short name into FCB */
+  rcFCB->ShortNameLength = wcslen(ShortName) * sizeof(WCHAR);
+  wcscpy(rcFCB->ShortName, ShortName);
+
   Size = rcFCB->Entry.DataLengthL;
 
   rcFCB->RFCB.FileSize.QuadPart = Size;
   rcFCB->RFCB.ValidDataLength.QuadPart = Size;
   rcFCB->RFCB.AllocationSize.QuadPart = ROUND_UP(Size, BLOCKSIZE);
-//  DPRINT1("%S %d %d\n", longName, Size, (ULONG)rcFCB->RFCB.AllocationSize.QuadPart);
   CdfsFCBInitializeCache(Vcb, rcFCB);
   rcFCB->RefCount++;
   CdfsAddFCBToTable(Vcb, rcFCB);
   *fileFCB = rcFCB;
+
+  DPRINT("%S %d %I64d\n", LongName, Size, rcFCB->RFCB.AllocationSize.QuadPart);
 
   return(STATUS_SUCCESS);
 }
@@ -453,6 +459,13 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
   LARGE_INTEGER StreamOffset;
   PVOID Context;
 
+  WCHAR ShortNameBuffer[13];
+  UNICODE_STRING ShortName;
+  UNICODE_STRING LongName;
+  BOOLEAN HasSpaces;
+  GENERATE_NAME_CONTEXT NameContext;
+
+
   assert(DeviceExt);
   assert(DirectoryFcb);
   assert(FileToFind);
@@ -498,12 +511,38 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
       CdfsGetDirEntryName(DeviceExt, Record, Name);
       DPRINT("Name '%S'\n", Name);
 
-      if (wstrcmpjoki(Name, FileToFind))
+      RtlInitUnicodeString(&LongName, Name);
+      ShortName.Length = 0;
+      ShortName.MaximumLength = 26;
+      ShortName.Buffer = ShortNameBuffer;
+      memset(ShortNameBuffer, 0, 26);
+
+      if ((RtlIsNameLegalDOS8Dot3(&LongName, NULL, &HasSpaces) == FALSE) ||
+	  (HasSpaces == TRUE))
+	{
+	  /* Build short name */
+	  RtlGenerate8dot3Name(&LongName,
+			       FALSE,
+			       &NameContext,
+			       &ShortName);
+	}
+      else
+	{
+	  /* copy short name */
+	  RtlUpcaseUnicodeString(&ShortName,
+				 &LongName,
+				 FALSE);
+	}
+
+      DPRINT("ShortName '%wZ'\n", &ShortName);
+
+      if (wstrcmpjoki(Name, FileToFind) || wstrcmpjoki(ShortNameBuffer, FileToFind))
 	{
 	  DPRINT("Match found, %S\n", Name);
 	  Status = CdfsMakeFCBFromDirEntry(DeviceExt,
 					   DirectoryFcb,
 					   Name,
+					   ShortNameBuffer,
 					   Record,
 					   FoundFCB);
 
