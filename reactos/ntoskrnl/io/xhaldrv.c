@@ -446,7 +446,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 				 NULL,
 				 NULL);
 
-      Status = NtOpenFile(&FileHandle,
+      Status = ZwOpenFile(&FileHandle,
 			  0x10001,
 			  &ObjectAttributes,
 			  &StatusBlock,
@@ -454,7 +454,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 			  FILE_SYNCHRONOUS_IO_NONALERT);
       if (NT_SUCCESS(Status))
 	{
-	  NtClose(FileHandle);
+	  ZwClose(FileHandle);
 
 	  swprintf(Buffer2,
 		   L"\\??\\PhysicalDrive%d",

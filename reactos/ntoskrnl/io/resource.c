@@ -836,7 +836,7 @@ IoReportHalResourceUsage(PUNICODE_STRING HalDescription,
 			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
 			     0,
 			     NULL);
-  Status = NtCreateKey(&ResourcemapKey,
+  Status = ZwCreateKey(&ResourcemapKey,
 		       KEY_ALL_ACCESS,
 		       &ObjectAttributes,
 		       0,
@@ -854,14 +854,14 @@ IoReportHalResourceUsage(PUNICODE_STRING HalDescription,
 			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
 			     ResourcemapKey,
 			     NULL);
-  Status = NtCreateKey(&HalKey,
+  Status = ZwCreateKey(&HalKey,
 		       KEY_ALL_ACCESS,
 		       &ObjectAttributes,
 		       0,
 		       NULL,
 		       REG_OPTION_VOLATILE,
 		       &Disposition);
-  NtClose(ResourcemapKey);
+  ZwClose(ResourcemapKey);
   if (!NT_SUCCESS(Status))
       return(Status);
 
@@ -871,21 +871,21 @@ IoReportHalResourceUsage(PUNICODE_STRING HalDescription,
 			     OBJ_CASE_INSENSITIVE,
 			     HalKey,
 			     NULL);
-  Status = NtCreateKey(&DescriptionKey,
+  Status = ZwCreateKey(&DescriptionKey,
 		       KEY_ALL_ACCESS,
 		       &ObjectAttributes,
 		       0,
 		       NULL,
 		       REG_OPTION_VOLATILE,
 		       &Disposition);
-  NtClose(HalKey);
+  ZwClose(HalKey);
   if (!NT_SUCCESS(Status))
     return(Status);
 
   /* Add '.Raw' value. */
   RtlRosInitUnicodeStringFromLiteral(&Name,
 		       L".Raw");
-  Status = NtSetValueKey(DescriptionKey,
+  Status = ZwSetValueKey(DescriptionKey,
 			 &Name,
 			 0,
 			 REG_RESOURCE_LIST,
@@ -893,20 +893,20 @@ IoReportHalResourceUsage(PUNICODE_STRING HalDescription,
 			 ListSize);
   if (!NT_SUCCESS(Status))
     {
-      NtClose(DescriptionKey);
+      ZwClose(DescriptionKey);
       return(Status);
     }
 
   /* Add '.Translated' value. */
   RtlRosInitUnicodeStringFromLiteral(&Name,
 		       L".Translated");
-  Status = NtSetValueKey(DescriptionKey,
+  Status = ZwSetValueKey(DescriptionKey,
 			 &Name,
 			 0,
 			 REG_RESOURCE_LIST,
 			 TranslatedList,
 			 ListSize);
-  NtClose(DescriptionKey);
+  ZwClose(DescriptionKey);
 
   return(Status);
 }

@@ -135,7 +135,7 @@ IopConnectLogPort (VOID)
   RtlInitUnicodeString (&PortName,
 			L"\\ErrorLogPort");
 
-  Status = NtConnectPort (&IopLogPort,
+  Status = ZwConnectPort (&IopLogPort,
 			  &PortName,
 			  NULL,
 			  NULL,
@@ -145,7 +145,7 @@ IopConnectLogPort (VOID)
 			  NULL);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT ("NtConnectPort() failed (Status %lx)\n", Status);
+      DPRINT ("ZwConnectPort() failed (Status %lx)\n", Status);
       return FALSE;
     }
 
@@ -290,7 +290,7 @@ IopLogWorker (PVOID Parameter)
 	Request->Header.DataSize + sizeof(LPC_MESSAGE);
 
       /* Send the error message to the log port */
-      Status = NtRequestPort (IopLogPort,
+      Status = ZwRequestPort (IopLogPort,
 			      &Request->Header);
 
       /* Release request buffer */
@@ -298,7 +298,7 @@ IopLogWorker (PVOID Parameter)
 
       if (!NT_SUCCESS(Status))
 	{
-	  DPRINT ("NtRequestPort() failed (Status %lx)\n", Status);
+	  DPRINT ("ZwRequestPort() failed (Status %lx)\n", Status);
 
 	  /* Requeue log message and restart the worker */
 	  ExInterlockedInsertTailList (&IopLogListHead,

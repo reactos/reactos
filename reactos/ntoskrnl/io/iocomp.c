@@ -32,14 +32,14 @@ static GENERIC_MAPPING ExIoCompletionMapping =
 
 NTSTATUS 
 STDCALL
-NtpCreateIoCompletion(
+IopCreateIoCompletion(
    PVOID                ObjectBody,
    PVOID                Parent,
    PWSTR                RemainingPath,
    POBJECT_ATTRIBUTES   ObjectAttributes
    )
 {
-   DPRINT("NtpCreateIoCompletion(ObjectBody %x, Parent %x, RemainingPath %S)\n",
+   DPRINT("IopCreateIoCompletion(ObjectBody %x, Parent %x, RemainingPath %S)\n",
       ObjectBody, Parent, RemainingPath);
 
    if (RemainingPath != NULL && wcschr(RemainingPath+1, '\\') != NULL)
@@ -51,11 +51,11 @@ NtpCreateIoCompletion(
 }
 
 VOID STDCALL
-NtpDeleteIoCompletion(PVOID ObjectBody)
+IopDeleteIoCompletion(PVOID ObjectBody)
 {
    PKQUEUE Queue = ObjectBody;
 
-   DPRINT("NtpDeleteIoCompletion()\n");
+   DPRINT("IopDeleteIoCompletion()\n");
 
    KeRundownQueue(Queue);
 }
@@ -132,12 +132,12 @@ IopInitIoCompletionImplementation(VOID)
    ExIoCompletionType->Dump = NULL;
    ExIoCompletionType->Open = NULL;
    ExIoCompletionType->Close = NULL;
-   ExIoCompletionType->Delete = NtpDeleteIoCompletion;
+   ExIoCompletionType->Delete = IopDeleteIoCompletion;
    ExIoCompletionType->Parse = NULL;
    ExIoCompletionType->Security = NULL;
    ExIoCompletionType->QueryName = NULL;
    ExIoCompletionType->OkayToClose = NULL;
-   ExIoCompletionType->Create = NtpCreateIoCompletion;
+   ExIoCompletionType->Create = IopCreateIoCompletion;
    ExIoCompletionType->DuplicationNotify = NULL;
 
    ExInitializeNPagedLookasideList(&IoCompletionPacketLookaside,

@@ -465,7 +465,7 @@ IoInit (VOID)
 			     0,
 			     NULL,
 			     NULL);
-  NtCreateDirectoryObject(&Handle,
+  ZwCreateDirectoryObject(&Handle,
 			  0,
 			  &ObjectAttributes);
 
@@ -479,7 +479,7 @@ IoInit (VOID)
 			     0,
 			     NULL,
 			     NULL);
-  NtCreateDirectoryObject(&Handle,
+  ZwCreateDirectoryObject(&Handle,
 			  0,
 			  &ObjectAttributes);
 

@@ -339,7 +339,7 @@ IoGetDeviceObjectPointer(
       NULL,
       NULL);
 
-   Status = NtOpenFile(
+   Status = ZwOpenFile(
       &FileHandle,
       DesiredAccess,
       &ObjectAttributes,
@@ -364,7 +364,7 @@ IoGetDeviceObjectPointer(
       *FileObject = LocalFileObject;
    }
 
-   NtClose(FileHandle);
+   ZwClose(FileHandle);
 
    return Status;
 }

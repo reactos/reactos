@@ -959,7 +959,7 @@ IoCreateDriverList(VOID)
 			     NULL,
 			     NULL);
 
-  Status = NtOpenKey(&KeyHandle,
+  Status = ZwOpenKey(&KeyHandle,
 		     0x10001,
 		     &ObjectAttributes);
   if (!NT_SUCCESS(Status))
@@ -971,14 +971,14 @@ IoCreateDriverList(VOID)
   KeyInfo = ExAllocatePool(NonPagedPool, KeyInfoLength);
   if (KeyInfo == NULL)
     {
-      NtClose(KeyHandle);
+      ZwClose(KeyHandle);
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
   Index = 0;
   while (TRUE)
     {
-      Status = NtEnumerateKey(KeyHandle,
+      Status = ZwEnumerateKey(KeyHandle,
 			      Index,
 			      KeyBasicInformation,
 			      KeyInfo,
@@ -1006,7 +1006,7 @@ IoCreateDriverList(VOID)
     }
 
   ExFreePool(KeyInfo);
-  NtClose(KeyHandle);
+  ZwClose(KeyHandle);
 
   DPRINT("IoCreateDriverList() done\n");
 
@@ -1270,7 +1270,7 @@ IopLoadDriver(PSERVICE Service)
    NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
    IopDisplayLoadingMessage(Service->ServiceName.Buffer);
-   Status = NtLoadDriver(&Service->RegistryPath);
+   Status = ZwLoadDriver(&Service->RegistryPath);
    IopBootLog(&Service->ImagePath, NT_SUCCESS(Status) ? TRUE : FALSE);
    if (!NT_SUCCESS(Status))
    {

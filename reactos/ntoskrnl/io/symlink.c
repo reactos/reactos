@@ -51,17 +51,17 @@ IoCreateSymbolicLink(PUNICODE_STRING SymbolicLinkName,
 			     NULL,
 			     SePublicDefaultSd);
 
-  Status = NtCreateSymbolicLinkObject(&Handle,
+  Status = ZwCreateSymbolicLinkObject(&Handle,
 				      SYMBOLIC_LINK_ALL_ACCESS,
 				      &ObjectAttributes,
 				      DeviceName);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtCreateSymbolicLinkObject() failed (Status %lx)\n", Status);
+      DPRINT1("ZwCreateSymbolicLinkObject() failed (Status %lx)\n", Status);
       return(Status);
     }
 
-  NtClose(Handle);
+  ZwClose(Handle);
 
   return(STATUS_SUCCESS);
 }
@@ -120,17 +120,17 @@ IoCreateUnprotectedSymbolicLink(PUNICODE_STRING SymbolicLinkName,
 			     NULL,
 			     &SecurityDescriptor);
 
-  Status = NtCreateSymbolicLinkObject(&Handle,
+  Status = ZwCreateSymbolicLinkObject(&Handle,
 				      SYMBOLIC_LINK_ALL_ACCESS,
 				      &ObjectAttributes,
 				      DeviceName);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtCreateSymbolicLinkObject() failed (Status %lx)\n", Status);
+      DPRINT1("ZwCreateSymbolicLinkObject() failed (Status %lx)\n", Status);
       return(Status);
     }
 
-  NtClose(Handle);
+  ZwClose(Handle);
 
   return(STATUS_SUCCESS);
 }
@@ -168,14 +168,14 @@ IoDeleteSymbolicLink(PUNICODE_STRING SymbolicLinkName)
 			     NULL,
 			     NULL);
 
-  Status = NtOpenSymbolicLinkObject(&Handle,
+  Status = ZwOpenSymbolicLinkObject(&Handle,
 				    SYMBOLIC_LINK_ALL_ACCESS,
 				    &ObjectAttributes);
   if (!NT_SUCCESS(Status))
     return(Status);
 
-  Status = NtMakeTemporaryObject(Handle);
-  NtClose(Handle);
+  Status = ZwMakeTemporaryObject(Handle);
+  ZwClose(Handle);
 
   return(Status);
 }

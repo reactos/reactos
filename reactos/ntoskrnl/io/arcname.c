@@ -207,32 +207,32 @@ IopCheckCdromDevices(PULONG DeviceNumber)
 				 NULL,
 				 NULL);
 
-      Status = NtOpenFile(&Handle,
+      Status = ZwOpenFile(&Handle,
 			  FILE_ALL_ACCESS,
 			  &ObjectAttributes,
 			  &IoStatusBlock,
 			  0,
 			  0);
-      DPRINT("NtOpenFile()  DeviceNumber %lu  Status %lx\n", i, Status);
+      DPRINT("ZwOpenFile()  DeviceNumber %lu  Status %lx\n", i, Status);
       if (NT_SUCCESS(Status))
 	{
-	  Status = NtQueryVolumeInformationFile(Handle,
+	  Status = ZwQueryVolumeInformationFile(Handle,
 						&IoStatusBlock,
 						FileFsVolume,
 						FS_VOLUME_BUFFER_SIZE,
 						FileFsVolumeInformation);
-	  DPRINT("NtQueryVolumeInformationFile()  Status %lx\n", Status);
+	  DPRINT("ZwQueryVolumeInformationFile()  Status %lx\n", Status);
 	  if (NT_SUCCESS(Status))
 	    {
 	      DPRINT("VolumeLabel: '%S'\n", FileFsVolume->VolumeLabel);
 	      if (_wcsicmp(FileFsVolume->VolumeLabel, L"REACTOS") == 0)
 		{
-		  NtClose(Handle);
+		  ZwClose(Handle);
 		  *DeviceNumber = i;
 		  return(STATUS_SUCCESS);
 		}
 	    }
-	  NtClose(Handle);
+	  ZwClose(Handle);
 	}
 #endif
 
@@ -252,17 +252,17 @@ IopCheckCdromDevices(PULONG DeviceNumber)
 				 NULL,
 				 NULL);
 
-      Status = NtOpenFile(&Handle,
+      Status = ZwOpenFile(&Handle,
 			  FILE_ALL_ACCESS,
 			  &ObjectAttributes,
 			  &IoStatusBlock,
 			  0,
 			  0);
-      DPRINT("NtOpenFile()  DeviceNumber %lu  Status %lx\n", i, Status);
+      DPRINT("ZwOpenFile()  DeviceNumber %lu  Status %lx\n", i, Status);
       if (NT_SUCCESS(Status))
 	{
 	  DPRINT("Found ntoskrnl.exe on Cdrom%lu\n", i);
-	  NtClose(Handle);
+	  ZwClose(Handle);
 	  *DeviceNumber = i;
 	  return(STATUS_SUCCESS);
 	}
@@ -283,17 +283,17 @@ IopCheckCdromDevices(PULONG DeviceNumber)
 				 NULL,
 				 NULL);
 
-      Status = NtOpenFile(&Handle,
+      Status = ZwOpenFile(&Handle,
 			  FILE_ALL_ACCESS,
 			  &ObjectAttributes,
 			  &IoStatusBlock,
 			  0,
 			  0);
-      DPRINT("NtOpenFile()  DeviceNumber %lu  Status %lx\n", i, Status);
+      DPRINT("ZwOpenFile()  DeviceNumber %lu  Status %lx\n", i, Status);
       if (NT_SUCCESS(Status))
 	{
 	  DPRINT("Found ntoskrnl.exe on Cdrom%lu\n", i);
-	  NtClose(Handle);
+	  ZwClose(Handle);
 	  *DeviceNumber = i;
 	  return(STATUS_SUCCESS);
 	}
@@ -407,14 +407,14 @@ IoCreateSystemRootLink(PCHAR ParameterLine)
 			     NULL,
 			     NULL);
 
-  Status = NtOpenSymbolicLinkObject(&Handle,
+  Status = ZwOpenSymbolicLinkObject(&Handle,
 				    SYMBOLIC_LINK_ALL_ACCESS,
 				    &ObjectAttributes);
   if (!NT_SUCCESS(Status))
     {
       RtlFreeUnicodeString(&BootPath);
       RtlFreeUnicodeString(&DeviceName);
-      CPRINT("NtOpenSymbolicLinkObject() '%wZ' failed (Status %x)\n",
+      CPRINT("ZwOpenSymbolicLinkObject() '%wZ' failed (Status %x)\n",
 	     &ArcName,
 	     Status);
       RtlFreeUnicodeString(&ArcName);
@@ -423,15 +423,15 @@ IoCreateSystemRootLink(PCHAR ParameterLine)
     }
   RtlFreeUnicodeString(&ArcName);
 
-  Status = NtQuerySymbolicLinkObject(Handle,
+  Status = ZwQuerySymbolicLinkObject(Handle,
 				     &DeviceName,
 				     &Length);
-  NtClose (Handle);
+  ZwClose (Handle);
   if (!NT_SUCCESS(Status))
     {
       RtlFreeUnicodeString(&BootPath);
       RtlFreeUnicodeString(&DeviceName);
-      CPRINT("NtQuerySymbolicObject() failed (Status %x)\n",
+      CPRINT("ZwQuerySymbolicObject() failed (Status %x)\n",
 	     Status);
 
       return(Status);
@@ -466,7 +466,7 @@ IoCreateSystemRootLink(PCHAR ParameterLine)
 			     NULL,
 			     NULL);
 
-  Status = NtOpenFile(&Handle,
+  Status = ZwOpenFile(&Handle,
 		      FILE_ALL_ACCESS,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
@@ -474,12 +474,12 @@ IoCreateSystemRootLink(PCHAR ParameterLine)
 		      0);
   if (!NT_SUCCESS(Status))
     {
-      CPRINT("NtOpenFile() failed to open '\\SystemRoot' (Status %x)\n",
+      CPRINT("ZwOpenFile() failed to open '\\SystemRoot' (Status %x)\n",
 	     Status);
       return(Status);
     }
 
-  NtClose(Handle);
+  ZwClose(Handle);
 
   return(STATUS_SUCCESS);
 }
