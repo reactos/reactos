@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.47 2003/06/14 17:46:24 hbirr Exp $
+/* $Id: mminit.c,v 1.48 2003/06/19 15:48:39 gvg Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -344,14 +344,14 @@ VOID MmInit1(ULONG FirstKrnlPhysAddr,
 	 i<(KERNEL_BASE + 2 * PAGE_TABLE_SIZE); 
 	 i=i+PAGE_SIZE)
      {
-	 MmDeleteVirtualMapping(NULL, (PVOID)(i), FALSE, NULL, NULL);
+	 MmDeleteVirtualMapping(NULL, (PVOID)(i), FALSE, NULL, NULL, TRUE);
      }
    DPRINT("Almost done MmInit()\n");
 #ifndef MP
    /* FIXME: This is broken in SMP mode */
-   MmDeleteVirtualMapping(NULL, (PVOID)&unmap_me, FALSE, NULL, NULL);
-   MmDeleteVirtualMapping(NULL, (PVOID)&unmap_me2, FALSE, NULL, NULL);
-   MmDeleteVirtualMapping(NULL, (PVOID)&unmap_me3, FALSE, NULL, NULL);
+   MmDeleteVirtualMapping(NULL, (PVOID)&unmap_me, FALSE, NULL, NULL, TRUE);
+   MmDeleteVirtualMapping(NULL, (PVOID)&unmap_me2, FALSE, NULL, NULL, TRUE);
+   MmDeleteVirtualMapping(NULL, (PVOID)&unmap_me3, FALSE, NULL, NULL, TRUE);
 #endif
    /*
     * Intialize memory areas

@@ -234,7 +234,8 @@ MmDeleteVirtualMapping(struct _EPROCESS* Process,
 		       PVOID Address, 
 		       BOOL FreePage,
 		       BOOL* WasDirty,
-		       PHYSICAL_ADDRESS* PhysicalPage);
+		       PHYSICAL_ADDRESS* PhysicalPage,
+                       BOOL MarkPageUnmapped);
 VOID MmUpdateStackPageDir(PULONG LocalPageDir, struct _KTHREAD* KThread);
 
 #define MM_PAGE_CLEAN     (0)

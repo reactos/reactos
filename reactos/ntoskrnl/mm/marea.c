@@ -396,7 +396,8 @@ MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
 	 {
 	   MmDeleteVirtualMapping(AddressSpace->Process, 
 				  MemoryArea->BaseAddress + (i*PAGE_SIZE),
-				  FALSE, &Dirty, &PhysAddr);
+				  FALSE, &Dirty, &PhysAddr,
+                                  MemoryArea->Type != MEMORY_AREA_IO_MAPPING);
 	 }
        if (FreePage != NULL)
 	 {

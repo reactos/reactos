@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.48 2003/05/17 15:28:58 ekohl Exp $
+/* $Id: mdl.c,v 1.49 2003/06/19 15:48:39 gvg Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -232,7 +232,8 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
 			     BaseAddress + (i * PAGE_SIZE),
 			     FALSE,
 			     NULL,
-			     NULL);
+			     NULL,
+			     TRUE);
     }
 
   KeAcquireSpinLock(&MiMdlMappingRegionLock, &oldIrql);

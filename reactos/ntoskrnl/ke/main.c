@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.162 2003/06/16 16:45:52 ekohl Exp $
+/* $Id: main.c,v 1.163 2003/06/19 15:48:39 gvg Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -295,7 +295,7 @@ MiFreeBootDriverMemory(PVOID StartAddress, ULONG Length)
   for (i = 0; i < PAGE_ROUND_UP(Length)/PAGE_SIZE; i++)
   {
      Page = MmGetPhysicalAddressForProcess(NULL, StartAddress + i * PAGE_SIZE);
-     MmDeleteVirtualMapping(NULL, StartAddress + i * PAGE_SIZE, FALSE, NULL, NULL);
+     MmDeleteVirtualMapping(NULL, StartAddress + i * PAGE_SIZE, FALSE, NULL, NULL, TRUE);
      MmDereferencePage(Page);
   }
 }
