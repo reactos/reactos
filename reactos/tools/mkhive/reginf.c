@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: reginf.c,v 1.3 2003/05/18 12:12:07 ekohl Exp $
+/* $Id: reginf.c,v 1.4 2003/07/27 22:00:26 sedwards Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/reginf.h
@@ -300,7 +300,7 @@ do_reg_operation(HKEY KeyHandle,
 
       if (Type == REG_DWORD)
 	{
-	  ULONG dw = Str ? strtol (Str, NULL, 0) : 0;
+	  ULONG dw = Str ? strtoul (Str, NULL, 0) : 0;
 
 	  DPRINT("setting dword %s to %lx\n", ValueName, dw);
 
