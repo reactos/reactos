@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.53 2003/08/25 01:37:47 sedwards Exp $
+/* $Id: iotypes.h,v 1.54 2003/09/04 16:52:10 vizzini Exp $
  *
  */
 
@@ -44,6 +44,7 @@ enum
 {
    DeallocateObject,
    KeepObject,
+   DeallocateObjectKeepRegisters
 };
 
 
