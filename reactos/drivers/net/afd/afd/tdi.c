@@ -59,6 +59,8 @@ NTSTATUS TdiCall(
     NTSTATUS Status;
 
     AFD_DbgPrint(MID_TRACE, ("Called\n"));
+
+    AFD_DbgPrint(MID_TRACE, ("Irp->UserEvent = %x\n", Irp->UserEvent));
     
     Status = IoCallDriver(DeviceObject, Irp);
     AFD_DbgPrint(MID_TRACE, ("IoCallDriver: %08x\n", Status));

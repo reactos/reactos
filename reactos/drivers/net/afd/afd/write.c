@@ -1,4 +1,4 @@
-/* $Id: write.c,v 1.1.2.3 2004/07/14 16:54:14 arty Exp $
+/* $Id: write.c,v 1.1.2.4 2004/07/15 03:21:47 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/write.c
@@ -36,7 +36,7 @@ NTSTATUS DDKAPI SendComplete
 	
 	while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_SEND] ) ) {
 	    NextIrpEntry = 
-		RemoveHeadList(&FCB->PendingIrpList[FUNCTION_RECV]);
+		RemoveHeadList(&FCB->PendingIrpList[FUNCTION_SEND]);
 	    NextIrp = 
 		CONTAINING_RECORD(NextIrpEntry, IRP, Tail.Overlay.ListEntry);
 	    SendReq = NextIrp->AssociatedIrp.SystemBuffer;

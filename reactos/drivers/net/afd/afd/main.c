@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.1.2.2 2004/07/14 16:54:14 arty Exp $
+/* $Id: main.c,v 1.1.2.3 2004/07/15 03:21:47 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/main.c
@@ -162,9 +162,11 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     /* Cancel our pending requests */
     for( i = 0; i < IN_FLIGHT_REQUESTS; i++ ) {
 	NTSTATUS Status = STATUS_NO_SUCH_FILE;
-	InFlightRequest[i]->InFlightRequest->IoStatus.Status = Status;
-	InFlightRequest[i]->InFlightRequest->IoStatus.Information = 0;
-	IoCancelIrp( InFlightRequest[i]->InFlightRequest );
+	if( InFlightRequest[i]->InFlightRequest ) {
+	    InFlightRequest[i]->InFlightRequest->IoStatus.Status = Status;
+	    InFlightRequest[i]->InFlightRequest->IoStatus.Information = 0;
+	    IoCancelIrp( InFlightRequest[i]->InFlightRequest );
+	}
     }
 
     SocketStateUnlock( FCB );

@@ -1,4 +1,4 @@
-/* $Id: lock.c,v 1.1.2.1 2004/07/09 04:41:18 arty Exp $
+/* $Id: lock.c,v 1.1.2.2 2004/07/15 03:21:47 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/lock.c
@@ -110,6 +110,7 @@ UINT SocketAcquireStateLock( PAFD_FCB FCB ) {
 }
 
 VOID SocketStateUnlock( PAFD_FCB FCB ) {
+    ASSERT(FCB->LockCount > 0);
     FCB->LockCount--;
 
     if( !FCB->LockCount ) {
