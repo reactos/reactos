@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.96 2004/01/26 08:44:51 weiden Exp $
+/* $Id: window.c,v 1.97 2004/02/02 00:18:58 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -156,29 +156,25 @@ CascadeWindows(HWND hwndParent,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HWND STDCALL
 ChildWindowFromPoint(HWND hWndParent,
 		     POINT Point)
 {
-  DbgPrint("FIXME: ChildWindowFromPoint is not implemented\n");
-  UNIMPLEMENTED;
-  return (HWND)0;
+  return NtUserChildWindowFromPointEx(hWndParent, Point.x, Point.y, 0);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HWND STDCALL
 ChildWindowFromPointEx(HWND hwndParent,
 		       POINT pt,
 		       UINT uFlags)
 {
-  DbgPrint("FIXME: ChildWindowFromPointEx is not implemented\n");
-  UNIMPLEMENTED;
-  return (HWND)0;
+  return NtUserChildWindowFromPointEx(hwndParent, pt.x, pt.y, uFlags);
 }
 
 
