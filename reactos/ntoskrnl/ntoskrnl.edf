@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.170 2004/06/13 10:35:53 navaraf Exp $
+; $Id: ntoskrnl.edf,v 1.171 2004/06/19 05:04:33 sedwards Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -6,16 +6,50 @@
 ;
 EXPORTS
 CcRosInitializeFileCache=CcRosInitializeFileCache@8
-CcMdlReadComplete=CcMdlReadComplete@8
 CcRosReleaseFileCache=CcRosReleaseFileCache@4
+CcCanIWrite=CcCanIWrite@16
 CcCopyRead=CcCopyRead@24
 CcCopyWrite=CcCopyWrite@20
+CcDeferWrite=CcDeferWrite@24
+CcFastCopyRead=CcFastCopyRead@24
+CcFastCopyWrite=CcFastCopyWrite@16
 CcFlushCache=CcFlushCache@16
+CcGetDirtyPages=CcGetDirtyPages@16
+CcGetFileObjectFromBcb=CcGetFileObjectFromBcb@4
 CcGetFileObjectFromSectionPtrs=CcGetFileObjectFromSectionPtrs@4
+CcGetFlushedValidData=CcGetFlushedValidData@8
+CcGetLsnForFileObject=CcGetLsnForFileObject@8
+CcInitializeCacheMap=CcInitializeCacheMap@20
+CcIsThereDirtyData=CcIsThereDirtyData@4
+CcFastMdlReadWait DATA
+CcFastReadNotPossible DATA
+CcFastReadWait DATA
 CcMapData=CcMapData@24
+CcMdlRead=CcMdlRead@20
+CcMdlReadComplete=CcMdlReadComplete@8
+CcMdlWriteAbort=CcMdlWriteAbort@8
+CcMdlWriteComplete=CcMdlWriteComplete@12
+CcPinMappedData=CcPinMappedData@20
+CcPinRead=CcPinRead@24
+CcPrepareMdlWrite=CcPrepareMdlWrite@20
+CcPreparePinWrite=CcPreparePinWrite@28
+CcPurgeCacheSection=CcPurgeCacheSection@16
+CcRemapBcb=CcRemapBcb@4
+CcRepinBcb=CcRepinBcb@4
+CcScheduleReadAhead=CcScheduleReadAhead@12
+CcSetAdditionalCacheAttributes=CcSetAdditionalCacheAttributes@12
+CcSetBcbOwnerPointer=CcSetBcbOwnerPointer@8
+CcSetDirtyPageThreshold=CcSetDirtyPageThreshold@8
 CcSetDirtyPinnedData=CcSetDirtyPinnedData@8
+CcSetLogHandleForFile=CcSetLogHandleForFile@12
+CcSetReadAheadGranularity=CcSetReadAheadGranularity@8
+CcUninitializeCacheMap=CcUninitializeCacheMap@12
 CcUnpinData=CcUnpinData@4
+CcUnpinDataForThread=CcUnpinDataForThread@8
+CcUnpinRepinnedBcb=CcUnpinRepinnedBcb@12
+CcWaitForCurrentLazyWriterActivity=CcWaitForCurrentLazyWriterActivity@0
 CcSetFileSizes=CcSetFileSizes@8
+CcUnpinData=CcUnpinData@4
 CcZeroData=CcZeroData@16
 DbgBreakPoint=DbgBreakPoint@0
 DbgBreakPointWithStatus=DbgBreakPointWithStatus@4

@@ -1,14 +1,14 @@
 
 #ifndef _NTOS_CCFUNCS_H
 #define _NTOS_CCFUNCS_H
-/* $Id: ccfuncs.h,v 1.8 2002/09/08 10:47:43 chorns Exp $ */
+/* $Id: ccfuncs.h,v 1.9 2004/06/19 05:04:08 sedwards Exp $ */
 
 /* exported variables */
-/*
-CcFastMdlReadWait
-CcFastReadNotPossible
-CcFastReadWait
-*/
+/* these should be in the KPCR */
+
+extern ULONG CcFastMdlReadWait;
+extern ULONG CcFastReadNotPossible;
+extern ULONG CcFastReadWait;
 
 BOOLEAN
 STDCALL
@@ -103,6 +103,13 @@ CcGetFileObjectFromSectionPtrs (
 
 LARGE_INTEGER
 STDCALL
+CcGetFlushedValidData (
+    IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
+    IN BOOLEAN BcbListHeld
+    );
+
+LARGE_INTEGER
+STDCALL
 CcGetLsnForFileObject (
 	IN	PFILE_OBJECT	FileObject,
 	OUT	PLARGE_INTEGER	OldestLsn OPTIONAL
@@ -151,6 +158,13 @@ CcMdlReadComplete (
 	IN	PFILE_OBJECT	FileObject,
 	IN	PMDL		MdlChain
 	);
+
+VOID
+STDCALL
+CcMdlWriteAbort (
+    IN PFILE_OBJECT FileObject,
+    IN PMDL MdlChain
+    );
 
 VOID
 STDCALL
@@ -225,6 +239,12 @@ STDCALL
 CcRepinBcb (
 	IN	PVOID	Bcb
 	);
+
+VOID
+STDCALL
+CcRemapBcb (
+    IN PVOID Bcb
+    );
 
 VOID
 STDCALL
@@ -313,6 +333,12 @@ CcUnpinRepinnedBcb (
 	IN	BOOLEAN			WriteThrough,
 	IN	PIO_STATUS_BLOCK	IoStatus
 	);
+
+NTSTATUS
+STDCALL
+CcWaitForCurrentLazyWriterActivity (
+    VOID
+    );
 
 BOOLEAN
 STDCALL
