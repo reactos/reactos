@@ -19,6 +19,8 @@
 #endif
 
 #ifndef WIN32
+#include <string.h>
+#include <ctype.h>
 #include <wctype.h>
 #include <math.h>
 
@@ -28,6 +30,14 @@ inline char* strlwr ( char* str )
   while ( *p )
     *p++ = tolower(*p);
   return str;
+}
+
+inline char* strupr ( char* str )
+{
+  char *c = str;
+  while ( *str++ )
+    toupper( *str );
+  return c;
 }
 
 #define _finite __finite
