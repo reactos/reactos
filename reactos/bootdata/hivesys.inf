@@ -542,9 +542,10 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters\Tcpip","SubnetMask",0
 ; one day this will happen automatically; until then we need this since ndis5 drivers
 ; rely on the fact that their resources are handed to them by ndis, so we have to find
 ; the driver that goes with the detected cards.  this is how.
-;HKLM,"SYSTEM\CurrentControlSet\Enum\Root\Ne2000\0000","Service",0x00000000,"Ne2000"
-;HKLM,"SYSTEM\CurrentControlSet\Enum\Root\Ne2000\0000","Class",0x00000000,"Net"
-;HKLM,"SYSTEM\CurrentControlSet\Enum\Root\Ne2000\0000","ClassGUID",0x00000000,"{4D36E972-E325-11CE-BFC1-08002BE10318}"
+HKLM,"SYSTEM\CurrentControlSet\Enum\Root\Ne2000\0000","Service",0x00000000,"Ne2000"
+HKLM,"SYSTEM\CurrentControlSet\Enum\Root\Ne2000\0000","Class",0x00000000,"Net"
+HKLM,"SYSTEM\CurrentControlSet\Enum\Root\Ne2000\0000","ClassGUID",0x00000000,"{4D36E972-E325-11CE-BFC1-08002BE10318}"
+HKLM,"SYSTEM\CurrentControlSet\Enum\Root\Ne2000\0000","Driver",0x00000000,"{4D36E972-E325-11CE-BFC1-08002BE10318}\0001"
 
 ; PCI driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Pci","ErrorControl",0x00010001,0x00000000
