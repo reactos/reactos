@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.6 2004/02/25 23:33:42 hbirr Exp $
+/* $Id: conio.c,v 1.7 2004/02/27 17:35:42 hbirr Exp $
  *
  * reactos/subsys/csrss/win32csr/conio.c
  *
@@ -177,9 +177,11 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
   Console->ActiveEvent = CreateEventW(&SecurityAttributes, FALSE, FALSE, NULL);
   if (NULL == Console->ActiveEvent)
     {
+      RtlFreeUnicodeString(&Console->Title);
       return STATUS_UNSUCCESSFUL;
     }
   Console->PrivateData = NULL;
+  RtlInitializeCriticalSection(&Console->Header.Lock);
   GuiMode = DtbgIsDesktopVisible();
   if (! GuiMode)
     {
@@ -195,6 +197,8 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
       Status = GuiInitConsole(Console);
       if (! NT_SUCCESS(Status))
         {
+          RtlFreeUnicodeString(&Console->Title);
+	  RtlDeleteCriticalSection(&Console->Header.Lock);
           CloseHandle(Console->ActiveEvent);
           return Status;
         }
@@ -203,12 +207,16 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
   NewBuffer = HeapAlloc(Win32CsrApiHeap, 0, sizeof(CSRSS_SCREEN_BUFFER));
   if (NULL == NewBuffer)
     {
+      RtlFreeUnicodeString(&Console->Title);
+      RtlDeleteCriticalSection(&Console->Header.Lock);
       CloseHandle(Console->ActiveEvent);
       return STATUS_INSUFFICIENT_RESOURCES;
     }
   Status = CsrInitConsoleScreenBuffer(Console, NewBuffer);
   if (! NT_SUCCESS(Status))
     {
+      RtlFreeUnicodeString(&Console->Title);
+      RtlDeleteCriticalSection(&Console->Header.Lock);
       CloseHandle(Console->ActiveEvent);
       HeapFree(Win32CsrApiHeap, 0, NewBuffer);
       return Status;
@@ -917,6 +925,7 @@ ConioDeleteConsole(Object_t *Object)
   ConioCleanupConsole(Console);
 
   CloseHandle(Console->ActiveEvent);
+  RtlDeleteCriticalSection(&Console->Header.Lock);
   RtlFreeUnicodeString(&Console->Title);
   HeapFree(Win32CsrApiHeap, 0, Console);
 }
@@ -2521,6 +2530,7 @@ CSR_API(CsrGetNumberOfConsoleInputEvents)
   PCSRSS_CONSOLE Console;
   PLIST_ENTRY CurrentItem;
   DWORD NumEvents;
+  ConsoleInput *Input;
   
   DPRINT("CsrGetNumberOfConsoleInputEvents\n");
 
@@ -2533,18 +2543,18 @@ CSR_API(CsrGetNumberOfConsoleInputEvents)
       return Reply->Status = Status;
     }
   
-  CurrentItem = &Console->InputEvents;
+  CurrentItem = Console->InputEvents.Flink;
   NumEvents = 0;
   
   /* If there are any events ... */
-  if (CurrentItem->Flink != CurrentItem)
+  while (CurrentItem != &Console->InputEvents)
     {
-      do
+      Input = CONTAINING_RECORD(CurrentItem, ConsoleInput, ListEntry);
+      CurrentItem = CurrentItem->Flink;
+      if (!Input->Fake)
         {
-          CurrentItem = CurrentItem->Flink;
-          ++NumEvents;
-        }
-      while (CurrentItem != &Console->InputEvents);
+          NumEvents++;
+	}
     }
 
   ConioUnlockConsole(Console);
