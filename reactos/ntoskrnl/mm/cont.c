@@ -1,4 +1,4 @@
-/* $Id: cont.c,v 1.10 2001/03/25 02:34:28 dwelch Exp $
+/* $Id: cont.c,v 1.11 2001/03/26 04:38:39 phreak Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -34,7 +34,7 @@ MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
 {
    PMEMORY_AREA MArea;
    NTSTATUS Status;
-   PVOID BaseAddress;
+   PVOID BaseAddress = 0;
    PVOID PBase;
    ULONG i;
 
@@ -50,7 +50,7 @@ MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
      {
 	return(NULL);
      }
-   
+   DPRINT( "Base = %x\n", BaseAddress );
    PBase = MmGetContinuousPages(NumberOfBytes,
 				HighestAcceptableAddress,
 				Alignment);
