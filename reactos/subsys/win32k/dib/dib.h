@@ -1,6 +1,6 @@
 extern unsigned char notmask[2];
 extern unsigned char altnotmask[2];
-extern unsigned char mask1Bpp[8];
+#define MASK1BPP(x) (1<<(7-((x)&7)))
 ULONG   DIB_DoRop(ULONG Rop, ULONG Dest, ULONG Source, ULONG Pattern);
 ULONG   DIB_GetSource(SURFOBJ* SourceSurf, SURFGDI* SourceGDI, ULONG sx, ULONG sy, XLATEOBJ* ColorTranslation);
 
@@ -93,3 +93,4 @@ BOOLEAN DIB_32BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                             RECTL* DestRect, RECTL *SourceRect,
                             POINTL* MaskOrigin, POINTL* BrushOrigin,
 			                XLATEOBJ *ColorTranslation, ULONG Mode);			             
+

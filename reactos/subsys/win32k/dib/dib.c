@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib.c,v 1.6 2004/01/24 11:59:00 navaraf Exp $ */
+/* $Id: dib.c,v 1.7 2004/03/21 04:17:33 royce Exp $ */
 
 #include <windows.h>
 #include <ddk/winddi.h>
@@ -29,7 +29,6 @@
 
 unsigned char notmask[2] = { 0x0f, 0xf0 };
 unsigned char altnotmask[2] = { 0xf0, 0x0f };
-unsigned char mask1Bpp[8] = { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
 
 ULONG
 DIB_GetSource(SURFOBJ* SourceSurf, SURFGDI* SourceGDI, ULONG sx, ULONG sy, XLATEOBJ* ColorTranslation)
