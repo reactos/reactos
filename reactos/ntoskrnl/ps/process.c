@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.56 2001/01/28 17:38:40 ekohl Exp $
+/* $Id: process.c,v 1.57 2001/02/02 20:47:14 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -111,7 +111,7 @@ NTSTATUS STDCALL NtOpenProcessToken(IN	HANDLE		ProcessHandle,
 PACCESS_TOKEN STDCALL PsReferencePrimaryToken(PEPROCESS Process)
 {
    ObReferenceObjectByPointer(Process->Token,
-			      GENERIC_ALL,
+			      TOKEN_ALL_ACCESS,
 			      SeTokenType,
 			      UserMode);
    return(Process->Token);

@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.31 2001/01/29 00:31:24 ekohl Exp $
+/* $Id: object.c,v 1.32 2001/02/02 20:46:36 ekohl Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -252,6 +252,10 @@ PVOID STDCALL ObCreateObject(PHANDLE Handle,
      {
 	RtlInitUnicodeString (&RemainingPath, NULL);
      }
+
+   RtlMapGenericMask(&DesiredAccess,
+		     Type->Mapping);
+
    Header = (POBJECT_HEADER)ExAllocatePool(NonPagedPool,
 					   OBJECT_ALLOC_SIZE(Type));
    ObInitializeObject(Header,

@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.9 2001/01/28 17:42:56 ekohl Exp $
+/* $Id: token.c,v 1.10 2001/02/02 20:47:43 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -56,7 +56,7 @@ NTSTATUS SeExchangePrimaryToken(PEPROCESS Process,
    Process->Token = NewToken;
    NewToken->TokenInUse = 1;
    ObReferenceObjectByPointer(NewToken,
-			      GENERIC_ALL,
+			      TOKEN_ALL_ACCESS,
 			      SeTokenType,
 			      KernelMode);
    OldToken->TokenInUse = 0;

@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.26 2001/01/29 00:31:24 ekohl Exp $
+/* $Id: handle.c,v 1.27 2001/02/02 20:46:36 ekohl Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -134,7 +134,7 @@ NTSTATUS STDCALL NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
      }
    ObjectBody = SourceHandleRep->ObjectBody;
    ObReferenceObjectByPointer(ObjectBody,
-			      GENERIC_ALL,
+			      0,
 			      NULL,
 			      UserMode);
    
@@ -199,7 +199,7 @@ VOID ObCloseAllHandles(PEPROCESS Process)
 		    }
 		  
 		  ObReferenceObjectByPointer(ObjectBody,
-					     GENERIC_ALL,
+					     0,
 					     NULL,
 					     UserMode);
 		  Header->HandleCount--;
@@ -347,7 +347,7 @@ PVOID ObDeleteHandle(PEPROCESS Process, HANDLE Handle)
 	Header = BODY_TO_HEADER(ObjectBody);
 	BODY_TO_HEADER(ObjectBody)->HandleCount--;
 	ObReferenceObjectByPointer(ObjectBody,
-				   GENERIC_ALL,
+				   0,
 				   NULL,
 				   UserMode);
 	Rep->ObjectBody = NULL;
@@ -530,7 +530,7 @@ NTSTATUS STDCALL ObReferenceObjectByHandle(HANDLE Handle,
      }
    ObjectBody = HandleRep->ObjectBody;
    ObReferenceObjectByPointer(ObjectBody,
-			      GENERIC_ALL,
+			      0,
 			      NULL,
 			      UserMode);
    GrantedAccess = HandleRep->GrantedAccess;
@@ -550,12 +550,16 @@ NTSTATUS STDCALL ObReferenceObjectByHandle(HANDLE Handle,
 	DPRINT("Reference from %x\n", ((PULONG)&Handle)[-1]);
      }
    
-   if ((AccessMode == UserMode) &&
-       (!(GrantedAccess & DesiredAccess) &&
-        !((~GrantedAccess) & DesiredAccess)))
+   if (AccessMode == UserMode)
      {
-	CHECKPOINT;
-	return(STATUS_ACCESS_DENIED);
+	RtlMapGenericMask(&DesiredAccess, ObjectHeader->ObjectType->Mapping);
+
+	if (!(GrantedAccess & DesiredAccess) &&
+	    !((~GrantedAccess) & DesiredAccess))
+	  {
+	     CHECKPOINT;
+	     return(STATUS_ACCESS_DENIED);
+	  }
      }
    
    *Object = ObjectBody;

@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.21 2000/12/28 20:38:28 ekohl Exp $
+/* $Id: init.c,v 1.22 2001/02/02 20:48:38 ekohl Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -180,7 +180,7 @@ BOOL InitSessionManager (HANDLE	Children[])
 			 L"\\SmApiPort");
    InitializeObjectAttributes (&ObjectAttributes,
 			       &UnicodeString,
-			       0xff,
+			       PORT_ALL_ACCESS,
 			       NULL,
 			       NULL);
    
@@ -226,7 +226,9 @@ BOOL InitSessionManager (HANDLE	Children[])
    Status = RtlCreateEnvironment (FALSE,
 				  &SmSystemEnvironment);
    if (!NT_SUCCESS(Status))
-     return FALSE;
+     {
+	return FALSE;
+     }
 #ifndef NDEBUG
    DisplayString (L"SM: System Environment created\n");
 #endif
@@ -378,7 +380,7 @@ BOOL InitSessionManager (HANDLE	Children[])
 	                      L"\\DbgSsApiPort");
 	InitializeObjectAttributes (&ObjectAttributes,
 	                            &UnicodeString,
-	                            0xff,
+	                            PORT_ALL_ACCESS,
 	                            NULL,
 	                            NULL);
 
@@ -401,7 +403,7 @@ BOOL InitSessionManager (HANDLE	Children[])
 	                      L"\\DbgUiApiPort");
 	InitializeObjectAttributes (&ObjectAttributes,
 	                            &UnicodeString,
-	                            0xff,
+	                            PORT_ALL_ACCESS,
 	                            NULL,
 	                            NULL);
 

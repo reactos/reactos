@@ -39,11 +39,6 @@ LpcSendTerminationPort (PEPORT	Port,
 			TIME	CreationTime);
 
 
-/* Port Object Access */
-
-#define PORT_ALL_ACCESS               (0x1)
-
-
 /* EPORT.State */
 
 #define EPORT_INACTIVE                (0)

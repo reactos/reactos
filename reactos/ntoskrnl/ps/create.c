@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.29 2001/01/21 14:54:29 dwelch Exp $
+/* $Id: create.c,v 1.30 2001/02/02 20:47:14 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -250,7 +250,7 @@ PsReferenceImpersonationToken(PETHREAD Thread,
    *Unknown1 = Thread->ImpersonationInfo->Unknown1;
    *Unknown2 = Thread->ImpersonationInfo->Unknown2;
    ObReferenceObjectByPointer(Thread->ImpersonationInfo->Token,
-			      GENERIC_ALL,
+			      TOKEN_ALL_ACCESS,
 			      SeTokenType,
 			      KernelMode);
    return(Thread->ImpersonationInfo->Token);
