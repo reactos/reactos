@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: diskdump.c,v 1.1 2003/08/27 21:28:08 dwelch Exp $
+/* $Id: diskdump.c,v 1.2 2003/10/18 18:49:08 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -42,7 +42,7 @@
 /* PROTOTYPES ***************************************************************/
 
 NTSTATUS STDCALL
-DiskDumpPrepare(PDEVICE_OBJECT StorageDevice, PDUMP_POINTERS DumpPointers);
+DiskDumpPrepare(PDEVICE_OBJECT DeviceObject, PDUMP_POINTERS DumpPointers);
 VOID
 DiskDumpScsiInvalid(VOID);
 VOID
@@ -287,7 +287,7 @@ DiskDumpWrite(LARGE_INTEGER Address, PMDL Mdl)
 }
 
 NTSTATUS STDCALL
-DiskDumpPrepare(PDEVICE_OBJECT StorageDevice, PDUMP_POINTERS DumpPointers)
+DiskDumpPrepare(PDEVICE_OBJECT DeviceObject, PDUMP_POINTERS DumpPointers)
 {
   PIMAGE_NT_HEADERS NtHeader;
   PVOID ImportDirectory;
@@ -301,7 +301,7 @@ DiskDumpPrepare(PDEVICE_OBJECT StorageDevice, PDUMP_POINTERS DumpPointers)
   PULONG FunctionNameList;
 
   /* Save the information from the kernel. */
-  CoreDumpClassDevice = StorageDevice;
+  CoreDumpClassDevice = DeviceObject;
   CoreDumpPointers = *DumpPointers;
   CoreDumpClass2DeviceExtension = (PDEVICE_EXTENSION)CoreDumpClassDevice->DeviceExtension;
   CoreDumpPortDevice = DumpPointers->DeviceObject;

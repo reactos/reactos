@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: welcome.c,v 1.2 2003/07/31 22:00:18 mf Exp $
+/* $Id: welcome.c,v 1.3 2003/10/18 18:49:08 weiden Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS welcome/autorun application
@@ -119,7 +119,7 @@ WinMain(HINSTANCE hInst,
   wndclass.cbWndExtra = 0;
   wndclass.hInstance = hInstance;
   wndclass.hIcon = hMainIcon;
-  wndclass.hCursor = LoadCursor (NULL, IDC_ARROW);
+  wndclass.hCursor = LoadCursor (NULL, (LPCTSTR)IDC_ARROW);
   wndclass.hbrBackground = 0;
   wndclass.lpszMenuName = NULL;
   wndclass.lpszClassName = szFrameClass;

@@ -70,7 +70,7 @@ BOOL mkfile()
 
 }
 
-void main(void)
+int main(void)
 {
   DWORD ass;
 
@@ -108,5 +108,6 @@ void main(void)
   CloseHandle(hFile);
   Sleep(10000);
 
-
+  return(0);
 }
+

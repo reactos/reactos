@@ -19,7 +19,9 @@
 
 #define SEEK_BEGIN    0
 #define SEEK_CURRENT  1
+#ifndef SEEK_END
 #define SEEK_END      2
+#endif
 
 typedef struct __DOSTIME
 {
