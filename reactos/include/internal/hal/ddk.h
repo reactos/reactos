@@ -65,7 +65,7 @@ typedef BOOLEAN (*PHAL_RESET_DISPLAY_PARAMETERS)(ULONG Columns, ULONG Rows);
 
 
 VOID HalAcquireDisplayOwnership (
-        PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters);
+	PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters);
 
 PVOID HalAllocateCommonBuffer(PADAPTER_OBJECT AdapterObject,
 			      ULONG Length,
@@ -120,7 +120,7 @@ ULONG HalGetInterruptVector(INTERFACE_TYPE InterfaceType,
 			    PKAFFINITY Affinity);
 
 BOOLEAN HalInitSystem (ULONG Phase,
-                       boot_param *bp);
+		       boot_param *bp);
 
 BOOLEAN HalMakeBeep (ULONG Frequency);
 
@@ -151,12 +151,79 @@ ULONG HalSetBusDataByOffset(BUS_DATA_TYPE BusDataType,
 			    ULONG Length);
 
 VOID HalSetDisplayParameters(ULONG CursorPosX,
-                             ULONG CursorPosY);
+			     ULONG CursorPosY);
 
 BOOLEAN HalTranslateBusAddress(INTERFACE_TYPE InterfaceType,
 			       ULONG BusNumber,
 			       PHYSICAL_ADDRESS BusAddress,
 			       PULONG AddressSpace,
 			       PPHYSICAL_ADDRESS TranslatedAddress);
+
+/*
+ * Kernel debugger section
+ */
+
+typedef struct _KD_PORT_INFORMATION
+{
+	ULONG ComPort;
+	ULONG BaudRate;
+	ULONG BaseAddress;
+} KD_PORT_INFORMATION, *PKD_PORT_INFORMATION;
+
+
+extern ULONG KdComPortInUse;
+
+
+BOOLEAN
+STDCALL
+KdPortInitialize (PKD_PORT_INFORMATION PortInformation,
+		  DWORD Unknown1,
+		  DWORD Unknown2);
+
+VOID
+STDCALL
+KdPortPutByte (UCHAR ByteToSend);
+
+
+/*
+ * Port I/O functions
+ */
+
+UCHAR
+READ_PORT_BUFFER_UCHAR (PUCHAR Port, PUCHAR Value, ULONG Count);
+
+ULONG
+READ_PORT_BUFFER_ULONG (PULONG Port, PULONG Value, ULONG Count);
+
+USHORT
+READ_PORT_BUFFER_USHORT (PUSHORT Port, PUSHORT Value, ULONG Count);
+
+UCHAR
+READ_PORT_UCHAR (PUCHAR Port);
+
+ULONG
+READ_PORT_ULONG (PULONG Port);
+
+USHORT
+READ_PORT_USHORT (PUSHORT Port);
+
+VOID
+WRITE_PORT_BUFFER_UCHAR (PUCHAR Port, PUCHAR Value, ULONG Count);
+
+VOID
+WRITE_PORT_BUFFER_ULONG (PULONG Port, PULONG Value, ULONG Count);
+
+VOID
+WRITE_PORT_BUFFER_USHORT (PUSHORT Port, PUSHORT Value, ULONG Count);
+
+VOID
+WRITE_PORT_UCHAR (PUCHAR Port, UCHAR Value);
+
+VOID
+WRITE_PORT_ULONG (PULONG Port, ULONG Value);
+
+VOID
+WRITE_PORT_USHORT (PUSHORT Port, USHORT Value);
+
 
 #endif /* __INCLUDE_INTERNAL_HAL_DDK_H */

@@ -164,19 +164,6 @@ __OUTS(l)
 	__inlc_p(port) : \
 	__inl_p(port))
 
-/*  HAL port mapped I/O functions  */
-#define READ_PORT_UCHAR(port) inb_p(port)
-#define READ_PORT_USHORT(port) inw_p(port)
-#define READ_PORT_ULONG(port) inl_p(port)
-#define READ_PORT_BUFFER_UCHAR(port, buffer, count) insb(port, buffer, count)
-#define READ_PORT_BUFFER_USHORT(port, buffer, count) insw(port, buffer, count)
-#define READ_PORT_BUFFER_ULONG(port, buffer, count) insl(port, buffer, count)
-#define WRITE_PORT_UCHAR(port, value) outb_p(port, value)
-#define WRITE_PORT_USHORT(port, value) outw_p(port, value)
-#define WRITE_PORT_ULONG(port, value) outl_p(port, value)
-#define WRITE_PORT_BUFFER_UCHAR(port, buffer, count) outsb(port, buffer, count)
-#define WRITE_PORT_BUFFER_USHORT(port, buffer, count) outsw(port, buffer, count)
-#define WRITE_PORT_BUFFER_ULONG(port, buffer, count) outsl(port, buffer, count)
 
 /*  HAL Memory mapped I/O functions  */
 /* FIXME: these ops should be 'lock' prefixed */
