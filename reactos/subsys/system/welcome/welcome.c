@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: welcome.c,v 1.4 2003/12/21 14:38:25 ekohl Exp $
+/* $Id: welcome.c,v 1.5 2003/12/21 16:24:19 weiden Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS welcome/autorun application
@@ -57,7 +57,6 @@ HINSTANCE hInstance;
 HWND hwndMain = 0;
 HWND hwndDefaultTopic = 0;
 
-HDC hdcDisplay=0;
 HDC hdcMem = 0;
 
 int nTopic = -1;
@@ -110,7 +109,9 @@ WinMain(HINSTANCE hInst,
   int yHeight;
   RECT rcWindow;
   HICON hMainIcon;
-  DWORD dwStyle = WS_OVERLAPPED | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU | WS_VISIBLE;
+  HMENU hSystemMenu;
+  DWORD dwStyle = WS_OVERLAPPED | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | 
+                  WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
   BITMAP BitmapInfo;
 
   hInstance = hInst;
@@ -119,7 +120,7 @@ WinMain(HINSTANCE hInst,
   hMainIcon = LoadIcon (hInstance, MAKEINTRESOURCE(IDI_MAIN));
 
   /* Register the window class */
-  wndclass.style = CS_OWNDC;
+  wndclass.style = CS_HREDRAW | CS_VREDRAW;
   wndclass.lpfnWndProc = (WNDPROC)MainWndProc;
   wndclass.cbClsExtra = 0;
   wndclass.cbWndExtra = 0;
@@ -189,7 +190,14 @@ WinMain(HINSTANCE hInst,
 			  0,
 			  hInstance,
 			  NULL);
-
+  
+  hSystemMenu = GetSystemMenu(hwndMain, FALSE);
+  if(hSystemMenu)
+  {
+    RemoveMenu(hSystemMenu, SC_SIZE, MF_BYCOMMAND);
+    RemoveMenu(hSystemMenu, SC_MAXIMIZE, MF_BYCOMMAND);
+  }
+  
   ShowWindow(hwndMain, nCmdShow);
   UpdateWindow(hwndMain);
 
@@ -301,6 +309,7 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
   TCHAR szText[80];
   int i,nLength;
+  HDC ScreenDC;
   DWORD dwTop;
   DWORD dwHeight = 0;
 
@@ -345,9 +354,10 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
     {
       hTopicBitmap[i] = LoadBitmap (hInstance, MAKEINTRESOURCE(IDB_TOPICBITMAP0+i));
     }
-
-  hdcDisplay = CreateDC (TEXT("DISPLAY"), NULL, NULL, NULL);
-  hdcMem = CreateCompatibleDC (hdcDisplay);
+  
+  ScreenDC = GetWindowDC(hWnd);
+  hdcMem = CreateCompatibleDC (ScreenDC);
+  ReleaseDC(hWnd, ScreenDC);
 
   /* load and create buttons */
   dwTop = rcLeftPanel.top;
@@ -748,7 +758,6 @@ OnDestroy(HWND hWnd, WPARAM wParam, LPARAM lParam)
     DestroyWindow(hwndCheckButton);
 
   DeleteDC(hdcMem);
-  DeleteDC(hdcDisplay);
 
   /* delete bitmaps */
   DeleteObject(hDefaultTopicBitmap);
