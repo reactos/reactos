@@ -1,0 +1,66 @@
+SubDir ROS_TOP lib kernel32 ;
+
+# This stuff should actually be moved to Jamrules
+# in order to more easily support other compilers
+CCFLAGS += -Wall -fno-builtin ;
+
+# NOTE - I'm no Jam expert, yet. This stuff should be
+# abstracted into the Jamrules file.
+LINKFLAGS = -nostartfiles -nostdlib -shared ;
+LINKFLAGS += -Wl,--image-base,0x77F00000 -lgcc ;
+
+
+SYNCH_SRCS =
+	critical event intrlck mutex
+	sem timer wait
+	;
+
+MISC_SRCS =
+	error atom handle env
+	dllmain comm errormsg
+	console time toolhelp
+	stubs ldr res
+	sysinfo profile
+	mbchars muldiv getname
+	perfcnt
+	;
+
+FILE_SRCS =
+	file curdir lfile dir
+	iocompl volume deviceio dosdev
+	create find copy pipe
+	move lock rw delete
+	npipe tape mailslot backup
+	cnotify
+	;
+
+MEM_SRCS =
+	global heap isbad local
+	procmem section virtual
+	;
+
+THREAD_SRCS = fiber thread tls ;
+
+PROCESS_SRCS = proc cmdline create session ;
+
+STRING_SRCS = lstring ;
+
+EXCEPT_SRCS = except ;
+
+KERNEL32_SRCS =
+	misc/$(MISC_SRCS).c
+	file/$(FILE_SRCS).c
+	thread/$(THREAD_SRCS).c
+	process/$(PROCESS_SRCS).c
+	string/$(STRING_SRCS).c
+	mem/$(MEM_SRCS).c
+	synch/$(SYNCH_SRCS).c
+	except/$(EXCEPT_SRCS).c
+	;
+
+
+SharedLibrary kernel32 : $(KERNEL32_SRCS) ;
+LINKLIBS =
+	$(ROS_TOP)/dk/w32/lib/ntdll.a
+	$(ROS_TOP)/dk/w32/lib/rosrtl.a
+	;

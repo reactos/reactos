@@ -1,0 +1,54 @@
+# customization for ReactOS goes here
+
+# The SharedLibrary and SharedLibraryFromObjects rules were
+# borrowed from here:
+# http://www.differentpla.net/~roger/devel/jam/tutorial/shared_lib/index.html
+
+SUFSHR = .dll ;
+RM = rm ; # rm comes with MinGW, and the default del doesn't work in some cases
+
+rule SharedLibrary
+{
+	SharedLibraryFromObjects $(<) : $(>:S=$(SUFOBJ)) ;
+	Objects $(>) ;
+}
+
+rule SharedLibraryFromObjects
+{
+	local _s _t ;
+
+	# Add grist to file names
+	# Add suffix to dll
+
+	_s = [ FGristFiles $(>) ] ;
+	_t = [ FAppendSuffix $(<) : $(SUFSHR) ] ;
+
+	if $(_t) != $(<)
+	{
+	    DEPENDS $(<) : $(_t) ;
+	    NOTFILE $(<) ;
+	}
+
+	# make compiled sources a dependency of target
+
+	DEPENDS exe : $(_t) ;
+	DEPENDS $(_t) : $(_s) ;
+	MakeLocate $(_t) : $(LOCATE_TARGET) ;
+
+	Clean clean : $(_t) ;
+
+	Link $(_t) : $(_s) ;
+}
+
+# nasm needs to know the output file first, or it doesn't
+# recognize -I  :(
+actions As
+{
+	$(AS) -o $(<) $(ASFLAGS) -I$(HDRS) $(>)
+}
+
+AS = nasm ;
+
+# why isn't DEFINES working? :(
+#DEFINES += _M_IX86 ;
+CCFLAGS += -D_M_IX86 ;

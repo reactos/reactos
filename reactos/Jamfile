@@ -1,0 +1,5 @@
+# Main jamfile for ReactOS
+
+SubDir ROS_TOP ;
+
+SubInclude ROS_TOP Lib ;

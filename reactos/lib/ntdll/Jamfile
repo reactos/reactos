@@ -1,0 +1,88 @@
+SubDir ROS_TOP Lib Ntdll ;
+
+HDRS += $(ROS_TOP)/Include ;
+#Echo HDRS is $(HDRS) ;
+
+#Echo AS is $(AS) ;
+
+# for some reason DEFINES isn't coming in :(
+#DEFINES += __NTDLL__ ;
+CCFLAGS += -D__NTDLL__ ; # less portable :(
+
+# This stuff should actually be moved to Jamrules
+# in order to more easily support other compilers
+#CCFLAGS += -Wall -Werror -fno-builtin ;
+CCFLAGS += -Wall -fno-builtin ;
+
+# NOTE - I'm no Jam expert, yet. This stuff should be
+# abstracted into the Jamrules file.
+LINKFLAGS += -Wl,--image-base,0x77f60000 ;
+LINKFLAGS += -Wl,--file-alignment,0x1000
+	-Wl,--section-alignment,0x1000
+	-nostartfiles
+	;
+
+# This needs to be abstracted to Jamrules, too
+LINKFLAGS += -Wl,--entry,_LdrInitializeThunk@16 ;
+
+# we need to override action As here, because we're
+# compiling except.s with gcc instead of as...
+actions As
+{
+	$(CC) -c -x assembler-with-cpp $(ASFLAGS) -c $(>) -o $(<)
+}
+
+
+CSR_SRCS = lpc capture probe thread ;
+
+DBG_SRCS = brkpoint debug print ; #winedbg
+
+RTL_I386_SRCS = exception.c except.s ;
+
+RTL_SRCS = critical error heap largeint
+	math mem nls process sd
+	thread unicode env path ppb
+	bitmap time acl sid image
+	access apc callback luid misc
+	registry exception intrlck resource
+	handle atom message timezone
+	propvar security dos8dot3 compress
+	;
+
+STDIO_SRCS = sprintf swprintf ;
+
+STDLIB_SRCS = abs atoi atoi64 atol
+	itoa itow labs splitp
+	strtol strtoul wcstol
+	wcstoul wtoi wtoi64 wtol
+	mbstowcs wcstombs qsort
+	;
+
+STRING_SRCS = ctype memccpy memchr
+	memcmp memcpy memicmp
+	memmove memset strcat
+	strchr strcmp strcspn
+	strcpy stricmp strlen
+	strlwr strncat strncmp
+	strncpy strnicmp strnlen
+	strpbrk strrchr strspn
+	strstr strupr wstring
+	;
+
+NTDLL_SRCS =
+	napi.c
+	ldr/startup.c
+	rtl/i386/$(RTL_I386_SRCS)
+	dbg/$(DBG_SRCS).c
+	rtl/$(RTL_SRCS).c
+	stdio/$(STDIO_SRCS).c
+	stdlib/$(STDLIB_SRCS).c
+	string/$(STRING_SRCS).c
+	stubs/stubs.c
+	ldr/res.c
+	ldr/utils.c
+	csr/$(CSR_SRCS).c
+	;
+
+
+SharedLibrary ntdll : $(NTDLL_SRCS) ;
