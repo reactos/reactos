@@ -1,4 +1,4 @@
-/* $Id: sid.c,v 1.2 2000/04/15 23:10:41 ekohl Exp $
+/* $Id: sid.c,v 1.3 2002/06/15 10:10:19 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -68,7 +68,7 @@ BOOLEAN STDCALL RtlEqualSid (PSID Sid1, PSID Sid2)
      {
 	return(FALSE);
      }
-   if (memcmp(Sid1, Sid2, RtlLengthSid(Sid1) != 0))
+   if (memcmp(Sid1, Sid2, RtlLengthSid(Sid1)) != 0)
      {
 	return(FALSE);
      }
