@@ -714,9 +714,9 @@ NdisRegisterProtocol(
 		wcscpy(RegistryPathStr, SERVICES_KEY);
 		wcscat(RegistryPathStr, (((WCHAR *)(KeyInformation->Data)) +8 ));
 		wcscat(RegistryPathStr, PARAMETERS_KEY);
-		wcsncat(RegistryPathStr, ProtocolCharacteristics->Name.Buffer, ProtocolCharacteristics->Name.Length);
+		wcsncat(RegistryPathStr, ProtocolCharacteristics->Name.Buffer, ProtocolCharacteristics->Name.Length / sizeof(WCHAR) );
 
-		RegistryPathStr[PathLength/sizeof(WCHAR)] = 0;
+		RegistryPathStr[PathLength/sizeof(WCHAR) - 1] = 0;
 
 		RtlInitUnicodeString(&RegistryPath, RegistryPathStr);
 
