@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.16 2003/08/05 15:41:03 weiden Exp $
+/* $Id: menu.c,v 1.17 2003/08/05 19:50:57 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -476,7 +476,7 @@ CheckMenuRadioItem(HMENU hmenu,
 HMENU STDCALL
 CreateMenu(VOID)
 {
-    return NtUserCreateMenu();
+  return NtUserCreateMenu();
 }
 
 
@@ -486,14 +486,8 @@ CreateMenu(VOID)
 HMENU STDCALL
 CreatePopupMenu(VOID)
 {
-  HMENU hMenu;
-  PPOPUP_MENU Menu;
-
-  hMenu = CreateMenu();
-  Menu = MenuGetMenu(hMenu);
-  Menu->Flags |= MF_POPUP;
-
-  return (HMENU)Menu;
+  /* FIXME - add MF_POPUP style */
+  return NtUserCreateMenu();
 }
 
 
@@ -505,19 +499,7 @@ DeleteMenu(HMENU hMenu,
 	   UINT uPosition,
 	   UINT uFlags)
 {
-  PMENUITEM Item;
-
-  Item = MenuFindItem(&hMenu, &uPosition, uFlags);
-  if (Item == NULL)
-    {
-      return(FALSE);
-    }
-  if (Item->TypeData & MF_POPUP)
-    {
-      DestroyMenu(Item->SubMenu);
-    }
-  RemoveMenu(hMenu, uPosition, uFlags | MF_BYPOSITION);
-  return(TRUE);
+  return NtUserDeleteMenu(hMenu, uPosition, uFlags);
 }
 
 VOID
@@ -600,12 +582,13 @@ EndMenu(VOID)
 
 
 /*
- * @implemented
+ * @unimplemented
  */
 HMENU STDCALL
 GetMenu(HWND hWnd)
 {
-  return((HMENU)GetWindowLong(hWnd, GWL_ID));
+  UNIMPLEMENTED;
+  return (HWND)0;
 }
 
 
@@ -683,37 +666,26 @@ GetMenuDefaultItem(HMENU hMenu,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL STDCALL
 GetMenuInfo(HMENU hmenu,
 	    LPMENUINFO lpcmi)
 {
-  PPOPUP_MENU Menu;
-
-  Menu = MenuGetMenu(hmenu);
-
-  if (lpcmi->fMask & MIM_BACKGROUND)
-    {
-      lpcmi->hbrBack = Menu->hbrBack;
-    }
-  if (lpcmi->fMask & MIM_HELPID)
-    {
-      lpcmi->dwContextHelpID = Menu->HelpId;
-    }
-  if (lpcmi->fMask & MIM_MAXHEIGHT)
-    {
-      lpcmi->cyMax = Menu->cyMax;
-    }
-  if (lpcmi->fMask & MIM_MENUDATA)
-    {
-      lpcmi->dwMenuData = Menu->MenuData;
-    }
-  if (lpcmi->fMask & MIM_STYLE)
-    {
-      lpcmi->dwStyle = Menu->Style;
-    }
-  return(TRUE);
+  MENUINFO mi;
+  BOOL res = FALSE;
+  
+  if(!lpcmi || (lpcmi->cbSize != sizeof(MENUINFO)))
+    return FALSE;
+  
+  RtlZeroMemory(&mi, sizeof(MENUINFO));
+  mi.cbSize = sizeof(MENUINFO);
+  mi.fMask = lpcmi->fMask;
+  
+  res = NtUserMenuInfo(hmenu, &mi, FALSE);
+  
+  memcpy(lpcmi, &mi, sizeof(MENUINFO));
+  return res;
 }
 
 
@@ -734,18 +706,20 @@ UINT STDCALL
 GetMenuItemID(HMENU hMenu,
 	      int nPos)
 {
-  PMENUITEM Item;
-
-  Item = MenuFindItem(&hMenu, &nPos, MF_BYPOSITION);
-  if (Item == NULL)
-    {
-      return(0);
-    }
-  if (Item->TypeData & MF_POPUP)
-    {
-      return(-1);
-    }
-  return(Item->Id);
+  MENUITEMINFOW mii;
+  
+  mii.cbSize = sizeof(MENUITEMINFOW);
+  mii.fMask = MIIM_ID | MIIM_SUBMENU;
+  
+  if(!NtUserMenuItemInfo(hMenu, nPos, MF_BYPOSITION, &mii, FALSE))
+  {
+    return -1;
+  }
+  
+  if(mii.hSubMenu) return -1;
+  if(mii.wID == 0) return -1;
+  
+  return mii.wID;
 }
 
 
@@ -795,7 +769,7 @@ GetMenuItemRect(HWND hWnd,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 UINT
 STDCALL
@@ -804,8 +778,29 @@ GetMenuState(
   UINT uId,
   UINT uFlags)
 {
-  UNIMPLEMENTED;
-  return 0;
+  MENUITEMINFOW mii;
+  mii.cbSize = sizeof(MENUITEMINFOW);
+  mii.fMask = MIIM_STATE | MIIM_TYPE | MIIM_SUBMENU;
+  
+  if(NtUserMenuItemInfo(hMenu, uId, uFlags, &mii, FALSE))
+  {
+    UINT nSubItems = 0;
+    if(mii.hSubMenu)
+    {
+      nSubItems = (UINT)NtUserBuildMenuItemList(mii.hSubMenu, NULL, 0, 0);
+      
+      /* FIXME - ported from wine, does that work (0xff)? */
+      if(GetLastError() != ERROR_INVALID_HANDLE)
+        return (nSubItems << 8) | ((mii.fState | mii.fType) & 0xff);
+
+      return (UINT)-1; /* Invalid submenu */
+    }
+    
+    /* FIXME - ported from wine, does that work? */
+    return (mii.fType | mii.fState);
+  }
+  
+  return (UINT)-1;
 }
 
 
@@ -844,7 +839,7 @@ GetMenuStringW(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HMENU
 STDCALL
@@ -852,7 +847,13 @@ GetSubMenu(
   HMENU hMenu,
   int nPos)
 {
-  UNIMPLEMENTED;
+  MENUITEMINFOW mi;
+  mi.cbSize = sizeof(MENUITEMINFO);
+  mi.fMask = MIIM_SUBMENU;
+  if(NtUserMenuItemInfo(hMenu, (UINT)nPos, MF_BYPOSITION, &mi, FALSE))
+  {
+    return mi.hSubMenu;
+  }
   return (HMENU)0;
 }
 
@@ -890,7 +891,7 @@ InsertMenuA(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL
 STDCALL
@@ -933,7 +934,7 @@ InsertMenuItemA(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL
 STDCALL
@@ -960,7 +961,7 @@ InsertMenuItemW(
       (MENU_ITEM_TYPE(mi.fType) == MF_STRING) && mi.dwTypeData)
     {
       len = lstrlenW(lpmii->dwTypeData);
-      DbgPrint("InsertMenuItemW() len = %d\n", len);
+
       mi.dwTypeData = RtlAllocateHeap(hHeap, 0, (len + 1) * sizeof(WCHAR));
       if(!mi.dwTypeData)
       {
@@ -970,11 +971,6 @@ InsertMenuItemW(
       memcpy(&mi.dwTypeData, &lpmii->dwTypeData, len);
       CleanHeap = TRUE;
       mi.cch = len;
-      DbgPrint("InsertMenuItemW() Text = %ws\n", (PWSTR)mi.dwTypeData);
-    }
-    else
-    {
-      DbgPrint("InsertMenuItemW() No Text\n");
     }
     
     res = NtUserInsertMenuItem(hMenu, uItem, fByPosition, &mi);
@@ -1003,15 +999,15 @@ InsertMenuW(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL
 STDCALL
 IsMenu(
   HMENU hMenu)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  DWORD ret = NtUserBuildMenuItemList(hMenu, NULL, 0, 0);
+  return ((ret != -1) && (GetLastError() != ERROR_INVALID_HANDLE));
 }
 
 
@@ -1202,7 +1198,7 @@ SetMenu(HWND hWnd,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL
 STDCALL
@@ -1211,13 +1207,12 @@ SetMenuDefaultItem(
   UINT uItem,
   UINT fByPos)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return NtUserSetMenuDefaultItem(hMenu, uItem, fByPos);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL
 STDCALL
@@ -1225,8 +1220,13 @@ SetMenuInfo(
   HMENU hmenu,
   LPCMENUINFO lpcmi)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  MENUINFO mi;
+  BOOL res = FALSE;
+  if(lpcmi->cbSize != sizeof(MENUINFO))
+    return res;
+    
+  memcpy(&mi, lpcmi, sizeof(MENUINFO));
+  return NtUserMenuInfo(hmenu, &mi, TRUE);
 }
 
 
@@ -1317,7 +1317,7 @@ TrackPopupMenuEx(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL
 STDCALL
@@ -1329,14 +1329,21 @@ SetMenuContextHelpId(HMENU hmenu,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD
 STDCALL
 GetMenuContextHelpId(HMENU hmenu)
 {
-  UNIMPLEMENTED;
-  return(0);
+  MENUINFO mi;
+  mi.cbSize = sizeof(MENUINFO);
+  mi.fMask = MIM_HELPID;
+  
+  if(NtUserMenuInfo(hmenu, &mi, FALSE))
+  {
+    return mi.dwContextHelpID;
+  }
+  return 0;
 }
 
 

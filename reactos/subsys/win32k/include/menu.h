@@ -30,12 +30,8 @@ typedef struct _MENU_OBJECT
   int MenuItemCount;
   FAST_MUTEX MenuItemsLock;
   PMENU_ITEM MenuItemList;
+  MENUINFO MenuInfo;
   BOOL RtoL;
-  DWORD dwStyle;
-  UINT cyMax;
-  HBRUSH hbrBack;
-  DWORD dwContextHelpID;
-  ULONG_PTR dwMenuData;
 } MENU_OBJECT, *PMENU_OBJECT;
 
 NTSTATUS FASTCALL
@@ -212,3 +208,4 @@ NtUserTrackPopupMenuEx(
 #endif /* __WIN32K_MENU_H */
 
 /* EOF */
+
