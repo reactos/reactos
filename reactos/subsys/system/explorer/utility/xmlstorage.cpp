@@ -262,7 +262,7 @@ std::string EncodeXMLString(LPCTSTR s)
 	return get_utf8(buffer, o-buffer);
 }
 
-String DecodeXMLString(LPCTSTR s)
+XS_String DecodeXMLString(LPCTSTR s)
 {
 	LPTSTR buffer = (LPTSTR)alloca(sizeof(TCHAR)*_tcslen(s));
 	LPTSTR o = buffer;
@@ -283,7 +283,7 @@ String DecodeXMLString(LPCTSTR s)
 		} else
 			*o++ = *p;
 
-	return String(buffer, o-buffer);
+	return XS_String(buffer, o-buffer);
 }
 
 

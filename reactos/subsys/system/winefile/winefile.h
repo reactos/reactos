@@ -41,9 +41,7 @@
 #include <tchar.h>
 #include <ctype.h>
 
-#ifdef _MSC_VER
 #include <malloc.h>	/* for alloca() */
-#endif
 
 #ifndef _NO_EXTENSIONS
 #define	_SHELL_FOLDERS

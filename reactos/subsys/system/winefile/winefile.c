@@ -2510,7 +2510,7 @@ static void draw_item(Pane* pane, LPDRAWITEMSTRUCT dis, Entry* entry, int calcWi
 	}
 
 	if (calcWidthCol == -1) {
-		focusRect.left = img_pos -2;
+		focusRect.left = img_pos - 2;
 
 #ifdef _NO_EXTENSIONS
 		if (pane->treePane && entry) {
@@ -3721,12 +3721,12 @@ void explorer_show_frame(HWND hwndParent, int cmdshow)
 
 	ShowWindow(Globals.hMainWnd, cmdshow);
 
-#if defined(_SHELL_FOLDERS) && !defined(__WINE__)
-	 // Shell Namespace as default:
-	child = alloc_child_window(path, get_path_pidl(path,Globals.hMainWnd), Globals.hMainWnd);
-#else
+//#if defined(_SHELL_FOLDERS) && !defined(__WINE__)
+//	 // Shell Namespace as default:
+//	child = alloc_child_window(path, get_path_pidl(path,Globals.hMainWnd), Globals.hMainWnd);
+//#else
 	child = alloc_child_window(path, NULL, Globals.hMainWnd);
-#endif
+//#endif
 
 	child->pos.showCmd = SW_SHOWMAXIMIZED;
 	child->pos.rcNormalPosition.left = 0;
@@ -3819,8 +3819,6 @@ int explorer_main(HINSTANCE hinstance, HWND hwndParent, int cmdshow)
 }
 
 
-#ifndef _ROS_
-
 int APIENTRY WinMain(HINSTANCE hinstance,
 					 HINSTANCE previnstance,
 					 LPSTR	   cmdline,
@@ -3835,5 +3833,3 @@ int APIENTRY WinMain(HINSTANCE hinstance,
 
 	return 0;
 }
-
-#endif

@@ -27,7 +27,7 @@ CFG=winefile - Win32 Unicode Debug
 # PROP AllowPerConfigDependencies 0
 # PROP Scc_ProjName ""
 # PROP Scc_LocalPath ""
-CPP=cl.cmd
+CPP=cl.exe
 MTL=midl.exe
 RSC=rc.exe
 
@@ -53,7 +53,7 @@ RSC=rc.exe
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=link.cmd
+LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
 # ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib ole32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
 
@@ -79,7 +79,7 @@ LINK32=link.cmd
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=link.cmd
+LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
 # ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib ole32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
 
@@ -106,7 +106,7 @@ LINK32=link.cmd
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=link.cmd
+LINK32=link.exe
 # ADD BASE LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib /nologo /subsystem:windows /machine:I386
 # ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib ole32.lib /nologo /subsystem:windows /machine:I386
 
@@ -133,7 +133,7 @@ LINK32=link.cmd
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=link.cmd
+LINK32=link.exe
 # ADD BASE LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib /nologo /subsystem:windows /machine:I386
 # ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib ole32.lib /nologo /subsystem:windows /machine:I386
 
@@ -155,7 +155,7 @@ SOURCE=.\de.rc
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\drivebar.bmp
+SOURCE=.\drivebar.bmp
 # End Source File
 # Begin Source File
 
@@ -164,7 +164,7 @@ SOURCE=.\en.rc
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\images.bmp
+SOURCE=.\images.bmp
 # End Source File
 # Begin Source File
 
@@ -177,11 +177,11 @@ SOURCE=.\resource.rc
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\toolbar.bmp
+SOURCE=.\toolbar.bmp
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\winefile.ico
+SOURCE=.\winefile.ico
 # End Source File
 # Begin Source File
 
