@@ -7,6 +7,7 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
+#include <roscfg.h>
 #include <tcpip.h>
 #include <dispatch.h>
 #include <fileobjs.h>
@@ -839,6 +840,8 @@ DriverEntry(
   DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = TiDispatch;
 
   DriverObject->DriverUnload = TiUnload;
+
+  PREPARE_TESTS
 
   return STATUS_SUCCESS;
 }

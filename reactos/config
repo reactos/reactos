@@ -26,10 +26,14 @@ MP := 0
 ACPI := 0
 
 #
+# Whether to build regression tests
+#
+REGRESSIONTESTS := 0
+
+#
 # Whether to use Structured Exception Handling
 #
 SEH := 0
-
 
 #
 # Which version of NDIS do we support up to?

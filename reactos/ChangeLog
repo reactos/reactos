@@ -1,3 +1,31 @@
+2004-02-22  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* config (REGRESSIONTESTS): Add.
+	* rules.mak (REGTESTS_PATH_INC): Add.
+	* drivers/net/tcpip/makefile: Support regression tests.
+	* drivers/net/tcpip/tcpip/main.c: Prepare regression tests.
+	* hal/halx86/Makefile: Rename TARGET_LIBPATH to TARGET_IMPLIBPATH.
+	* regtests/kmregtests/driver.c (KMRegTestsRegister): Add.
+	(KMRegTestsRun): Move call to InitializeTests() and RegisterTests() to
+	DriverEntry().
+	(KMRegTestsDispatch): Support IOCTL_KMREGTESTS_REGISTER.
+	* regtests/kmregtests/kmregtests.h (IOCTL_KMREGTESTS_REGISTER): Define.
+	* tools/config.mk: Define REGTESTS if REGRESSIONTESTS = 1.
+	* tools/helper.mk: Support module private regression tests.
+	(TARGET_LIBPATH): Rename to TARGET_IMPLIBPATH.
+	(TARGET_LIBPATH, TARGET_REGTESTS): Add.
+	* tools/mkconfig.c: Support REGTESTS.
+	* tools/regtests.c (umstubfile, kmstubfile): Add.
+	(is_file_changed, write_file_if_changed): Add.
+	(KMSTUB): Add.
+	(HELP): Mention -u and -k switches.
+	(main): Parse -u and -k switches.
+	* drivers/net/tcpip/tests: New directory.
+	* drivers/net/tcpip/tests/.cvsignore: New file.
+	* drivers/net/tcpip/tests/Makefile: Makefile.
+	* drivers/net/tcpip/tests/tests: New directory.
+	* drivers/net/tcpip/tests/tests/.cvsignore: New file.
+
 2004-02-18  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* apistatus.lst: Correct path of videoprt.dll.

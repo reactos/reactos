@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.53 2004/02/21 09:20:33 gvg Exp $
+# $Id: helper.mk,v 1.54 2004/02/22 09:59:17 chorns Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -18,7 +18,8 @@
 #                        subsystem = Kernel subsystem
 #                        kmdll = Kernel mode DLL
 #                        winedll = DLL imported from wine
-#   $TARGET_APPTYPE    = Application type (windows,native,console)
+#   $TARGET_APPTYPE    = Application type (windows,native,console).
+#                        Required only for TARGET_TYPEs program and proglib
 #   $TARGET_NAME       = Base name of output file and .rc, .def, and .edf files
 #   $TARGET_OBJECTS    = Object files that compose the module
 #   $TARGET_CPPAPP     = C++ application (no,yes) (optional)
@@ -42,11 +43,13 @@
 #   $TARGET_ENTRY      = Entry point (optional)
 #   $TARGET_DEFONLY    = Use .def instead of .edf extension (no,yes) (optional)
 #   $TARGET_NORC       = Do not include standard resource file (no,yes) (optional)
-#   $TARGET_LIBPATH    = Destination path for import libraries (optional)
+#   $TARGET_LIBPATH    = Destination path for static libraries (optional)
+#   $TARGET_IMPLIBPATH = Destination path for import libraries (optional)
 #   $TARGET_INSTALLDIR = Destination path when installed (optional)
 #   $TARGET_PCH        = Filename of header to use to generate a PCH if supported by the compiler (optional)
 #   $TARGET_BOOTSTRAP  = Whether this file is needed to bootstrap the installation (no,yes) (optional)
 #   $TARGET_BOOTSTRAP_NAME = Name on the installation medium (optional)
+#   $TARGET_REGTESTS   = This module has regression tests (no,yes) (optional)
 #   $WINE_MODE         = Compile using WINE headers (no,yes) (optional)
 #   $WINE_RC           = Name of .rc file for WINE modules (optional)
 #   $SUBDIRS           = Subdirs in which to run make (optional)
@@ -483,9 +486,15 @@ endif
 
 
 ifeq ($(TARGET_LIBPATH),)
+  MK_LIBPATH := $(SDK_PATH_LIB)
+else
+  MK_LIBPATH := $(TARGET_LIBPATH)
+endif
+
+ifeq ($(TARGET_IMPLIBPATH),)
   MK_IMPLIBPATH := $(MK_IMPLIBDEFPATH)
 else
-  MK_IMPLIBPATH := $(TARGET_LIBPATH)
+  MK_IMPLIBPATH := $(TARGET_IMPLIBPATH)
 endif
 
 
@@ -583,8 +592,8 @@ TARGET_NFLAGS += $(MK_NFLAGS)
 
 MK_GCCLIBS := $(addprefix -l, $(TARGET_GCCLIBS))
 
-ifeq ($(TARGET_TYPE), library)
-  MK_FULLNAME := $(SDK_PATH_LIB)/$(MK_BASENAME)$(MK_EXT)
+ifeq ($(MK_MODE),static)
+  MK_FULLNAME := $(MK_LIBPATH)/$(MK_BASENAME)$(MK_EXT)
 else
   MK_FULLNAME := $(MK_BASENAME)$(MK_EXT)
 endif
@@ -608,13 +617,23 @@ else
   MK_STRIPPED_OBJECT := $(MK_BASENAME).stripped.o
 endif
 
+ifeq ($(TARGET_REGTESTS),yes)
+  MK_REGTESTS := gen_regtests
+  MK_REGTESTS_CLEAN := clean_regtests
+  MK_OBJECTS += tests/_rtstub.o tests/regtests.a
+  TARGET_CFLAGS += -I$(REGTESTS_PATH_INC)
+else
+  MK_REGTESTS :=
+  MK_REGTESTS_CLEAN :=
+endif
+
 ifeq ($(MK_IMPLIBONLY),yes)
 
 TARGET_CLEAN += $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME)
 
-all: $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME)
+all: $(MK_REGTESTS) $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME)
 
-$(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME): $(TARGET_OBJECTS) $(MK_DEFNAME)
+$(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME): $(MK_OBJECTS) $(MK_DEFNAME)
 	$(DLLTOOL) \
 		--dllname $(MK_FULLNAME) \
 		--def $(MK_DEFNAME) \
@@ -623,7 +642,7 @@ $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME): $(TARGET_OBJECTS) $(MK_DEFNAME)
 
 else # MK_IMPLIBONLY
 
-all: $(MK_FULLNAME) $(MK_NOSTRIPNAME) $(SUBDIRS:%=%_all)
+all: $(MK_REGTESTS) $(MK_FULLNAME) $(MK_NOSTRIPNAME) $(SUBDIRS:%=%_all)
 
 
 ifeq ($(MK_IMPLIB),yes)
@@ -644,7 +663,7 @@ else
   MK_EXTRACMD2 :=
 endif
 
-$(MK_NOSTRIPNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_EXTRADEP) $(MK_LIBS)
+$(MK_NOSTRIPNAME): $(MK_FULLRES) $(MK_OBJECTS) $(MK_EXTRADEP) $(MK_LIBS)
 ifeq ($(MK_EXETYPE),dll)
 	$(LD_CC) -Wl,--base-file,base.tmp \
 		-Wl,--entry,$(TARGET_ENTRY) \
@@ -736,7 +755,7 @@ else
   MK_EXTRADEP :=
 endif
 
-$(MK_NOSTRIPNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_EXTRADEP) $(MK_LIBS)
+$(MK_NOSTRIPNAME): $(MK_FULLRES) $(MK_OBJECTS) $(MK_EXTRADEP) $(MK_LIBS)
 	$(LD_CC) -Wl,--base-file,base.tmp \
 		-Wl,--entry,$(TARGET_ENTRY) \
 		$(TARGET_LFLAGS) \
@@ -766,7 +785,7 @@ else
 	$(NM) --numeric-sort $(MK_NOSTRIPNAME) > $(MK_BASENAME).map
 endif
 
-$(MK_FULLNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_EXTRADEP) $(MK_LIBS) $(MK_NOSTRIPNAME)
+$(MK_FULLNAME): $(MK_FULLRES) $(MK_OBJECTS) $(MK_EXTRADEP) $(MK_LIBS) $(MK_NOSTRIPNAME)
 	-
 ifneq ($(TARGET_CPPAPP),yes)
 	$(LD) -r -o $(MK_STRIPPED_OBJECT) $(MK_OBJECTS)
@@ -843,7 +862,7 @@ MK_CLEANFILES := $(filter %.o,$(MK_OBJECTS))
 MK_CLEANFILTERED := $(MK_OBJECTS:.o=.d)
 MK_CLEANDEPS := $(join $(dir $(MK_CLEANFILTERED)), $(addprefix ., $(notdir $(MK_CLEANFILTERED))))
 
-clean: $(SUBDIRS:%=%_clean)
+clean: $(MK_REGTESTS_CLEAN) $(SUBDIRS:%=%_clean)
 	- $(RM) *.o depend.d *.pch $(MK_BASENAME).sym $(MK_BASENAME).a $(MK_RESOURCE) \
 	  $(MK_FULLNAME) $(MK_NOSTRIPNAME) $(MK_CLEANFILES) $(MK_CLEANDEPS) $(MK_BASENAME).map \
 	  junk.tmp base.tmp temp.exp $(MK_RC_BINARIES) $(MK_SPECDEF) $(MK_GENERATED_MAKEFILE) \
@@ -921,7 +940,22 @@ $(MK_RC_BINARIES): $(TARGET_RC_BINSRC)
 $(MK_RESOURCE): $(MK_RC_BINARIES)
 endif
 
-.PHONY: all depends implib clean install dist bootcd depends
+gen_regtests:
+ifeq ($(MK_MODE),user)
+	$(REGTESTS) ./tests/tests ./tests/_regtests.c ./tests/Makefile.tests -u ./tests/_rtstub.c
+	$(MAKE) -C tests TARGET_REGTESTS=no all
+else
+ifeq ($(MK_MODE),kernel)
+	$(REGTESTS) ./tests/tests ./tests/_regtests.c ./tests/Makefile.tests -k ./tests/_rtstub.c
+	$(MAKE) -C tests TARGET_REGTESTS=no all
+endif
+endif
+
+clean_regtests:
+	$(MAKE) -C tests TARGET_REGTESTS=no clean
+	$(RM) ./tests/_rtstub.c ./tests/_regtests.c ./tests/Makefile.tests
+
+.PHONY: all depends implib clean install dist bootcd depends gen_regtests clean_regtests
 
 ifneq ($(SUBDIRS),)
 $(SUBDIRS:%=%_all): %_all:

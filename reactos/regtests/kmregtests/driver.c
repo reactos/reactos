@@ -14,6 +14,8 @@
 #define NDEBUG
 #include <debug.h>
 
+extern void AddTest(TestRoutine Routine);
+
 PVOID
 AllocateMemory(ULONG Size)
 {
@@ -38,12 +40,26 @@ ShutdownBochs()
 
 NTSTATUS
 STDCALL
+KMRegTestsRegister(
+  PIRP Irp,
+  PIO_STACK_LOCATION IrpSp)
+{
+  TestRoutine *pTestRoutine;
+
+  pTestRoutine = (TestRoutine*)Irp->AssociatedIrp.SystemBuffer;
+  AddTest(*pTestRoutine);
+
+  Irp->IoStatus.Status = STATUS_SUCCESS;
+  Irp->IoStatus.Information = 0;
+  return STATUS_SUCCESS;
+}
+
+NTSTATUS
+STDCALL
 KMRegTestsRun(
   PIRP Irp,
   PIO_STACK_LOCATION IrpSp)
 {
-  InitializeTests();
-  RegisterTests();
   PerformTests();
   ShutdownBochs();
 
@@ -77,6 +93,10 @@ KMRegTestsDispatch(
   Irp->IoStatus.Information = 0;
 
   switch (IrpSp->Parameters.DeviceIoControl.IoControlCode) {
+  case IOCTL_KMREGTESTS_REGISTER:
+      Status = KMRegTestsRegister(Irp, IrpSp);
+      break;
+
   case IOCTL_KMREGTESTS_RUN:
       Status = KMRegTestsRun(Irp, IrpSp);
       break;
@@ -95,18 +115,21 @@ KMRegTestsDispatch(
 
   DPRINT("Leaving. Status (0x%X).\n", Status);
 
-	return Status;
+  return Status;
 }
 
 NTSTATUS STDCALL
 KMRegTestsOpenClose(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
-  PIO_STACK_LOCATION piosStack = IoGetCurrentIrpStackLocation(Irp);
-  NTSTATUS nErrCode;
+  PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
+  NTSTATUS Status;
 
-  nErrCode = STATUS_SUCCESS;
+  DPRINT("Called. DeviceObject is at (0x%X), IRP is at (0x%X), IrpSp->FileObject (0x%X).\n",
+    DeviceObject, Irp, IrpSp->FileObject);
 
-  switch(piosStack->MajorFunction)
+  Status = STATUS_SUCCESS;
+
+  switch (IrpSp->MajorFunction)
     {
       /* Opening and closing handles to the device */
       case IRP_MJ_CREATE:
@@ -123,18 +146,18 @@ KMRegTestsOpenClose(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
       case IRP_MJ_READ:
         /* Ignore */
         Irp->IoStatus.Information = 0;
-        nErrCode = STATUS_END_OF_FILE;
+        Status = STATUS_END_OF_FILE;
         break;
 
       /* Unsupported operations */
       default:
-        nErrCode = STATUS_NOT_IMPLEMENTED;
+        Status = STATUS_NOT_IMPLEMENTED;
     }
 
-  Irp->IoStatus.Status = nErrCode;
+  Irp->IoStatus.Status = Status;
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-  return nErrCode;
+  return Status;
 }
 
 NTSTATUS STDCALL
@@ -176,6 +199,9 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     }
 
   DeviceObject->Flags |= DO_BUFFERED_IO;
+
+  InitializeTests();
+  RegisterTests();
 
   return Status;
 }

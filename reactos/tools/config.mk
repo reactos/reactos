@@ -25,10 +25,13 @@ ifeq ($(ACPI), 1)
 CONFIG += ACPI
 endif
 
+ifeq ($(REGRESSIONTESTS), 1)
+CONFIG += REGTESTS
+endif
+
 ifeq ($(SEH), 1)
 CONFIG += SEH
 endif
-
 
 $(PATH_TO_TOP)/tools/mkconfig$(EXE_POSTFIX): $(PATH_TO_TOP)/tools/mkconfig.c
 	$(HOST_CC) -g -o $(PATH_TO_TOP)/tools/mkconfig$(EXE_POSTFIX) $(PATH_TO_TOP)/tools/mkconfig.c
