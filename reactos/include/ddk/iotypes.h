@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.59 2003/11/19 12:50:11 ekohl Exp $
+/* $Id: iotypes.h,v 1.60 2003/12/20 16:51:05 navaraf Exp $
  *
  */
 
@@ -8,6 +8,8 @@
 #include <ntos/obtypes.h>
 #include <ntos/disk.h>
 #include <ntos/file.h>
+
+#pragma pack(push,4)
 
 /* from winddk.h */
 #define POINTER_ALIGNMENT
@@ -620,7 +622,6 @@ typedef struct _IO_STACK_LOCATION {
   PVOID  Context;
 } IO_STACK_LOCATION, *PIO_STACK_LOCATION;
 
-
 // AG: The commented lines in this structure are due to PMAILSLOT_CREATE_PARAMETERS
 // and PNAMED_PIPE_CREATE_PARAMETERS and PFILE_GET_QUOTA_INFORMATION not being
 // defined.
@@ -711,14 +712,11 @@ typedef struct _EXTENDED_IO_STACK_LOCATION {
 
 } EXTENDED_IO_STACK_LOCATION, *PEXTENDED_IO_STACK_LOCATION;
 
-
-
 typedef struct _IO_STATUS_BLOCK
 {
   NTSTATUS Status;
   ULONG Information;
 } IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
-
 
 /*
  * Driver entry point declaration
@@ -1317,5 +1315,7 @@ typedef struct _BUS_INTERFACE_STANDARD {
   PGET_SET_DEVICE_DATA SetBusData;
   PGET_SET_DEVICE_DATA GetBusData;
 } BUS_INTERFACE_STANDARD, *PBUS_INTERFACE_STANDARD;
+
+#pragma pack(pop)
 
 #endif /* __INCLUDE_DDK_IOTYPES_H */
