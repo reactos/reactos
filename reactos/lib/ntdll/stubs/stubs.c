@@ -1,4 +1,3 @@
-#include <windows.h>
 #include <ddk/ntddk.h>
 
 #define STUB(x) void x(void) { UNICODE_STRING UnicodeString; \

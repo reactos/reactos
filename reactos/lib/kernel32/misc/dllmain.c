@@ -8,8 +8,8 @@
  *                  Created 01/11/98
  */
 
-#include <windows.h>
 #include <ddk/ntddk.h>
+#include <windows.h>
 #include <wchar.h>
 #include <kernel32/proc.h>
 #include <internal/teb.h>

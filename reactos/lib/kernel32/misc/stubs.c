@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.6 1999/10/03 23:19:15 ea Exp $
+/* $Id: stubs.c,v 1.7 1999/10/07 23:45:07 ekohl Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -815,8 +815,6 @@ ExitVDM (
 }
 
 
-
-
 DWORD
 STDCALL
 ExpungeConsoleCommandHistoryW (
@@ -985,12 +983,11 @@ FindResourceExA (
 }
 
 
-
 WINBOOL
 STDCALL
-FlushViewOfFile (
+FlushViewOfFile(
 	LPCVOID	lpBaseAddress,
-	DWORD	dwNumberOfBytesToFlush
+	DWORD		dwNumberOfBytesToFlush
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1013,7 +1010,6 @@ FoldStringW (
 }
 
 
-
 int
 STDCALL
 FoldStringA (
@@ -1029,7 +1025,6 @@ FoldStringA (
 }
 
 
-   
 DWORD
 STDCALL
 FormatMessageW (
@@ -2713,8 +2708,6 @@ InitAtomTable (
 }
 
 
-
-
 DWORD
 STDCALL
 InvalidateConsoleDIBits (
@@ -2725,8 +2718,6 @@ InvalidateConsoleDIBits (
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
-
-
 
 
 WINBOOL
@@ -2989,7 +2980,6 @@ LockResource (
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return NULL;
 }
-
 
 
 int
@@ -3815,8 +3805,6 @@ TrimVirtualBuffer (
 }
 
 
-
-
 WINBOOL
 STDCALL
 UpdateResourceA (
@@ -3922,9 +3910,6 @@ VirtualBufferExceptionHandler (
 }
 
 
-
-
-
 WINBOOL
 STDCALL
 WaitCommEvent (
@@ -4018,9 +4003,6 @@ WriteConsoleInputVDMW (
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
-
-
-
 
 
 WINBOOL

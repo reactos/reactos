@@ -8,8 +8,8 @@
  *                  Created 01/11/98
  */
 
-#include <windows.h>
 #include <ddk/ntddk.h>
+#include <windows.h>
 
 
 WINBOOL
@@ -25,27 +25,24 @@ DefineDosDeviceA(
 	WCHAR DeviceNameW[MAX_PATH];
 	WCHAR TargetPathW[MAX_PATH];
 
-	
-
-    	i = 0;
-   	while ((*lpDeviceName)!=0 && i < MAX_PATH)
-     	{
+	i = 0;
+	while ((*lpDeviceName)!=0 && i < MAX_PATH)
+	{
 		DeviceNameW[i] = *lpDeviceName;
 		lpDeviceName++;
 		i++;
-     	}
-   	DeviceNameW[i] = 0;
+	}
+	DeviceNameW[i] = 0;
 
 	i = 0;
-   	while ((*lpTargetPath)!=0 && i < MAX_PATH)
-     	{
+	while ((*lpTargetPath)!=0 && i < MAX_PATH)
+	{
 		TargetPathW[i] = *lpTargetPath;
 		lpTargetPath++;
 		i++;
-     	}
-   	TargetPathW[i] = 0;
+	}
+	TargetPathW[i] = 0;
 	return DefineDosDeviceW(dwFlags,DeviceNameW,TargetPathW);
-    
 }
 
 

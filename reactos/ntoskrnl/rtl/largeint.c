@@ -10,9 +10,9 @@
 
 /* INCLUDES *****************************************************************/
 
+#include <ddk/ntddk.h>
 #include <internal/ke.h>
 #include <internal/linkage.h>
-#include <ddk/ntddk.h>
 
 #define NDEBUG
 #include <internal/debug.h>

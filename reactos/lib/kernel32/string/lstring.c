@@ -32,6 +32,7 @@ lstrcmpiA(
 {
         return _stricmp(lpString1,lpString2); 
 }
+
 LPSTR
 STDCALL
 lstrcpynA(
@@ -75,9 +76,9 @@ lstrlenA(
 int
 STDCALL
 lstrcmpW(
-    LPCWSTR lpString1,
-    LPCWSTR lpString2
-    )
+	 LPCWSTR lpString1,
+	 LPCWSTR lpString2
+	 )
 {
 	return wcscmp(lpString1,lpString2);
 }
@@ -130,7 +131,6 @@ lstrlenW(
     )
 {
 	return wcslen(lpString);
-	
 }
 
 

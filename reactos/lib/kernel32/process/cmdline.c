@@ -11,6 +11,7 @@
 /* INCLUDES ****************************************************************/
 
 #define UNICODE
+#include <ddk/ntddk.h>
 #include <windows.h>
 #include <kernel32/proc.h>
 #include <kernel32/thread.h>

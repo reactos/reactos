@@ -9,9 +9,9 @@
  *	19990204 EA	SetConsoleTitleA
  *      19990306 EA	Stubs
  */
-#include <windows.h>
 #include <ddk/ntddk.h>
 #include <ddk/ntddblue.h>
+#include <windows.h>
 #include <assert.h>
 #include <wchar.h>
 

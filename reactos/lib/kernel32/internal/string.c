@@ -1,5 +1,5 @@
-#include <windows.h>
 #include <ddk/ntddk.h>
+#include <windows.h>
 #include <stdarg.h>
 
 BOOL KERNEL32_AnsiToUnicode(PWSTR DestStr,

@@ -10,8 +10,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <internal/ke.h>
 #include <ddk/ntddk.h>
+#include <internal/ke.h>
 
 #include <internal/debug.h>
 

@@ -8,7 +8,6 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <windows.h>
 #include <ddk/ntddk.h>
 
 #define NDEBUG

@@ -14,8 +14,8 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <windows.h>
 #include <ddk/ntddk.h>
+#include <windows.h>
 #include <string.h>
 #include <wchar.h>
 

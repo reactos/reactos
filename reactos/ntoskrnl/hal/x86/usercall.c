@@ -1,4 +1,15 @@
-#include <windows.h>
+/* $Id: usercall.c,v 1.4 1999/10/07 23:35:10 ekohl Exp $
+ *
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/hal/x86/usercall.c
+ * PURPOSE:         2E interrupt handler
+ * PROGRAMMER:      ???
+ * UPDATE HISTORY:
+ *                  ???
+ */
+
+#include <ddk/ntddk.h>
 #include <internal/ntoskrnl.h>
 #include <internal/ke.h>
 #include <internal/symbol.h>

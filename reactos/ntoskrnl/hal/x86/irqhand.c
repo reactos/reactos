@@ -1,5 +1,5 @@
 
-#include <windows.h>
+#include <ddk/ntddk.h>
 #include <internal/ntoskrnl.h>
 #include <internal/ke.h>
 #include <internal/symbol.h>

@@ -290,7 +290,7 @@ NTSTATUS STDCALL NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 			       IN HANDLE ClientToken,
 			       IN ACCESS_MASK DesiredAccess,
 			       IN PGENERIC_MAPPING GenericMapping,
-			       OUT PPRIVILEGE_SET PrivilegeSet,
+                               OUT PPRIVILEGE_SET PrivilegeSet,
 			       OUT PULONG ReturnLength,
 			       OUT PULONG GrantedAccess,
 			       OUT PBOOLEAN AccessStatus)

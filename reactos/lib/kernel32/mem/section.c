@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.4 1999/10/03 23:19:15 ea Exp $
+/* $Id: section.c,v 1.5 1999/10/07 23:44:28 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -9,7 +9,6 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <windows.h>
 #include <ddk/ntddk.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -31,7 +30,17 @@ CreateFileMappingA (
    OBJECT_ATTRIBUTES ObjectAttributes;
    ANSI_STRING AnsiName;
    UNICODE_STRING UnicodeName;
-   
+   PSECURITY_DESCRIPTOR SecurityDescriptor;
+
+   if (lpFileMappingAttributes)
+     {
+        SecurityDescriptor = lpFileMappingAttributes->lpSecurityDescriptor;
+     }
+   else
+     {
+        SecurityDescriptor = NULL;
+     }
+
    MaximumSize.u.LowPart = dwMaximumSizeLow;
    MaximumSize.u.HighPart = dwMaximumSizeHigh;
    RtlInitAnsiString(&AnsiName, (LPSTR)lpName);
@@ -40,8 +49,8 @@ CreateFileMappingA (
 			      &UnicodeName,
 			      0,
 			      NULL,
-			      lpFileMappingAttributes);
-   Status = ZwCreateSection(&SectionHandle,
+			      SecurityDescriptor);
+   Status = NtCreateSection(&SectionHandle,
 			    SECTION_ALL_ACCESS,
 			    &ObjectAttributes,
 			    &MaximumSize,
@@ -74,7 +83,17 @@ CreateFileMappingW (
    LARGE_INTEGER MaximumSize;
    OBJECT_ATTRIBUTES ObjectAttributes;
    UNICODE_STRING UnicodeName;
-   
+   PSECURITY_DESCRIPTOR SecurityDescriptor;
+
+   if (lpFileMappingAttributes)
+     {
+        SecurityDescriptor = lpFileMappingAttributes->lpSecurityDescriptor;
+     }
+   else
+     {
+        SecurityDescriptor = NULL;
+     }
+
    MaximumSize.u.LowPart = dwMaximumSizeLow;
    MaximumSize.u.HighPart = dwMaximumSizeHigh;
    RtlInitUnicodeString(&UnicodeName, lpName);
@@ -82,8 +101,8 @@ CreateFileMappingW (
 			      &UnicodeName,
 			      0,
 			      NULL,
-			      lpFileMappingAttributes);
-   Status = ZwCreateSection(&SectionHandle,
+			      SecurityDescriptor);
+   Status = NtCreateSection(&SectionHandle,
 			    SECTION_ALL_ACCESS,
 			    &ObjectAttributes,
 			    &MaximumSize,
@@ -112,10 +131,6 @@ MapViewOfFileEx (
 	)
 {
    NTSTATUS Status;
-   
-
-
-
    LARGE_INTEGER SectionOffset;
    ULONG ViewSize;
    ULONG Protect;
@@ -124,22 +139,16 @@ MapViewOfFileEx (
    SectionOffset.u.LowPart = dwFileOffsetLow;
    SectionOffset.u.HighPart = dwFileOffsetHigh;
 
-   
-  
-   
-
-
-   if ( ( dwDesiredAccess & FILE_MAP_WRITE ) == FILE_MAP_WRITE ) 
+   if ( ( dwDesiredAccess & FILE_MAP_WRITE ) == FILE_MAP_WRITE )
 	Protect  = PAGE_READWRITE;
-   else if ( ( dwDesiredAccess & FILE_MAP_READ ) == FILE_MAP_READ ) 
+   else if ( ( dwDesiredAccess & FILE_MAP_READ ) == FILE_MAP_READ )
 	Protect = PAGE_READONLY;
-   else if ( ( dwDesiredAccess & FILE_MAP_ALL_ACCESS ) == FILE_MAP_ALL_ACCESS ) 
-	Protect  = PAGE_READWRITE;	
-   else if ( ( dwDesiredAccess & FILE_MAP_COPY ) == FILE_MAP_COPY ) 
+   else if ( ( dwDesiredAccess & FILE_MAP_ALL_ACCESS ) == FILE_MAP_ALL_ACCESS )
+	Protect  = PAGE_READWRITE;
+   else if ( ( dwDesiredAccess & FILE_MAP_COPY ) == FILE_MAP_COPY )
 	Protect = PAGE_WRITECOPY;
    else
 	Protect  = PAGE_READWRITE;
-
 
    Status = ZwMapViewOfSection(hFileMappingObject,
 			NtCurrentProcess(),
@@ -154,14 +163,13 @@ MapViewOfFileEx (
 			
 			
 
-  	if (!NT_SUCCESS(Status))
+	if (!NT_SUCCESS(Status))
 		{
 		SetLastError(RtlNtStatusToDosError(Status));
 		return NULL;
 		}
 
 	return BaseAddress;
-			       
 }
 
 LPVOID
@@ -188,7 +196,7 @@ UnmapViewOfFile (
 	NTSTATUS Status;
 	Status = NtUnmapViewOfSection(NtCurrentProcess(),lpBaseAddress);
 	
-  	if (!NT_SUCCESS(Status))
+	if (!NT_SUCCESS(Status))
 	{
 		SetLastError(RtlNtStatusToDosError(Status));
 		return FALSE;
@@ -202,8 +210,8 @@ HANDLE
 STDCALL
 OpenFileMappingA (
 	DWORD	dwDesiredAccess,
-    	WINBOOL	bInheritHandle,	
-   	LPCSTR	lpName 	
+	WINBOOL	bInheritHandle,
+	LPCSTR	lpName
 	)
 {
    NTSTATUS Status;
@@ -211,12 +219,12 @@ OpenFileMappingA (
    OBJECT_ATTRIBUTES ObjectAttributes;
    ANSI_STRING AnsiName;
    UNICODE_STRING UnicodeName;
-  
+
    ULONG Attributes = 0;
 
    if ( bInheritHandle )
-		Attributes = OBJ_INHERIT; 
-  	 
+		Attributes = OBJ_INHERIT;
+
    RtlInitAnsiString(&AnsiName, lpName);
    RtlAnsiStringToUnicodeString(&UnicodeName, &AnsiName, TRUE);
 
@@ -226,7 +234,7 @@ OpenFileMappingA (
 			      Attributes,
 			      NULL,
 			      NULL);
-   Status = ZwOpenSection(&SectionHandle,
+   Status = NtOpenSection(&SectionHandle,
 			    SECTION_ALL_ACCESS,
 			    &ObjectAttributes
 		);
@@ -244,20 +252,20 @@ HANDLE
 STDCALL
 OpenFileMappingW (
 	DWORD	dwDesiredAccess,
-    	WINBOOL	bInheritHandle,	
-   	LPCWSTR	lpName 	
+	WINBOOL	bInheritHandle,
+	LPCWSTR	lpName
 	)
 {
    NTSTATUS Status;
    HANDLE SectionHandle;
    OBJECT_ATTRIBUTES ObjectAttributes;
    UNICODE_STRING UnicodeName;
-   
+
    ULONG Attributes = 0;
 
    if ( bInheritHandle )
 		Attributes = OBJ_INHERIT;
-  
+
    RtlInitUnicodeString(&UnicodeName, lpName);
    InitializeObjectAttributes(&ObjectAttributes,
 			      &UnicodeName,
@@ -275,6 +283,5 @@ OpenFileMappingW (
 
 	return SectionHandle;
 }
-
 
 /* EOF */

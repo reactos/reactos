@@ -363,6 +363,17 @@ typedef struct _DISK_GEOMETRY {
   DWORD  BytesPerSector; 
 } DISK_GEOMETRY ; 
 
+typedef struct _MEMORY_BASIC_INFORMATION { 
+  PVOID BaseAddress;
+  PVOID AllocationBase; 
+  DWORD AllocationProtect; 
+  DWORD RegionSize; 
+  DWORD State; 
+  DWORD Protect; 
+  DWORD Type; 
+} MEMORY_BASIC_INFORMATION;
+typedef MEMORY_BASIC_INFORMATION *PMEMORY_BASIC_INFORMATION;
+
 typedef struct _SYSTEMTIME {  
   WORD wYear; 
   WORD wMonth; 
@@ -2699,17 +2710,6 @@ typedef struct tagMEASUREITEMSTRUCT {
   UINT  itemHeight;   
   DWORD itemData;     
 } MEASUREITEMSTRUCT, *LPMEASUREITEMSTRUCT; 
- 
-typedef struct _MEMORY_BASIC_INFORMATION { 
-  PVOID BaseAddress;            
-  PVOID AllocationBase;         
-  DWORD AllocationProtect;      
-  DWORD RegionSize;             
-  DWORD State;                  
-  DWORD Protect;                
-  DWORD Type;                   
-} MEMORY_BASIC_INFORMATION; 
-typedef MEMORY_BASIC_INFORMATION *PMEMORY_BASIC_INFORMATION; 
  
 typedef struct _MEMORYSTATUS { 
   DWORD dwLength;        

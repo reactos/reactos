@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.11 1999/08/29 06:59:11 ea Exp $
+/* $Id: handle.c,v 1.12 1999/10/07 23:38:08 ekohl Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -11,7 +11,6 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <windows.h>
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
 #include <string.h>

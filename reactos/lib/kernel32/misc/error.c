@@ -1,9 +1,8 @@
-/* $Id: error.c,v 1.11 1999/08/29 06:59:02 ea Exp $
+/* $Id: error.c,v 1.12 1999/10/07 23:45:07 ekohl Exp $
  *
  * reactos/lib/kernel32/misc/error.c
  *
  */
-#include <windows.h>
 #include <ddk/ntddk.h>
 #include <ddk/ntddbeep.h>
 

@@ -11,9 +11,9 @@
 
 /* INCLUDES ******************************************************************/
 
+#include <ddk/ntddk.h>
 #include <windows.h>
 #include <kernel32/thread.h>
-#include <ddk/ntddk.h>
 #include <string.h>
 #include <internal/i386/segment.h>
 

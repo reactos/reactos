@@ -8,9 +8,9 @@
  *                  Created 01/11/98
  */
 
+#include <ddk/ntddk.h>
 #include <windows.h>
 #include <wchar.h>
-#include <ddk/ntddk.h>
 
 HANDLE
 STDCALL

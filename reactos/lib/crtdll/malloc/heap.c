@@ -1,7 +1,5 @@
 
 #include <windows.h>
-#include <kernel32/proc.h>
-#include <kernel32/heap.h>
 #include <crtdll/malloc.h>
 
 int	_heapchk (void)

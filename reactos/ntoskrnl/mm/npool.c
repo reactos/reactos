@@ -15,6 +15,7 @@
 
 /* INCLUDES ****************************************************************/
 
+#include <ddk/ntddk.h>
 #include <string.h>
 #include <internal/string.h>
 #include <internal/stddef.h>
@@ -26,7 +27,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-#include <ddk/ntddk.h>
 
 
 #if 0

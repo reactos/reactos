@@ -131,6 +131,10 @@ struct _LPC_MESSAGE
 
 #define SystemTimeZoneInformation		44
 
+// memory information
+
+#define MemoryBasicInformation                  0
+
 // shutdown action
 
 typedef enum SHUTDOWN_ACTION_TAG {
@@ -143,7 +147,12 @@ typedef enum SHUTDOWN_ACTION_TAG {
 
 #define WaitAll					0
 #define WaitAny					1
- 
+
+// number of wait objects
+
+#define THREAD_WAIT_OBJECTS                     3
+//#define MAXIMUM_WAIT_OBJECTS                    64
+
 // key restore flags
 
 #define REG_WHOLE_HIVE_VOLATILE     		1   
@@ -737,4 +746,4 @@ struct _LPC_PORT_BASIC_INFORMATION
 
 } LPC_PORT_BASIC_INFORMATION, * PLPC_PORT_BASIC_INFORMATION;
 
-#endif 
+#endif

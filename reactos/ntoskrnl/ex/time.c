@@ -24,6 +24,7 @@
 /* Note: Bias[minutes] = UTC - local time */
 TIME_ZONE_INFORMATION SystemTimeZoneInfo;
 
+
 /* FUNCTIONS ****************************************************************/
 
 VOID
@@ -35,6 +36,7 @@ ExInitTimeZoneInfo (VOID)
   /* FIXME: Read time zone information from the registry */
 
 }
+
 
 NTSTATUS
 STDCALL

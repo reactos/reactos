@@ -7,17 +7,16 @@
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
-#include <windows.h>
 #include <ddk/ntddk.h>
+#include <windows.h>
 
 
 
- 
-WINBOOL 
-WINAPI 
-GetHandleInformation( 
-    HANDLE hObject, 
-    LPDWORD lpdwFlags 
+WINBOOL
+WINAPI
+GetHandleInformation(
+    HANDLE hObject,
+    LPDWORD lpdwFlags
     )
 {
 	OBJECT_DATA_INFORMATION HandleInfo;
@@ -34,18 +33,17 @@ GetHandleInformation(
 	if ( HandleInfo.bProtectFromClose )
 		*lpdwFlags &= HANDLE_FLAG_PROTECT_FROM_CLOSE;
 	return TRUE;
-	
-	
-} 
- 
-WINBOOL 
-STDCALL 
-SetHandleInformation( 
-    HANDLE hObject, 
-    DWORD dwMask, 
-    DWORD dwFlags 
+}
+
+
+WINBOOL
+STDCALL
+SetHandleInformation(
+    HANDLE hObject,
+    DWORD dwMask,
+    DWORD dwFlags
     )
-{	
+{
 	OBJECT_DATA_INFORMATION HandleInfo;
 	NTSTATUS errCode;
 	ULONG BytesWritten;
@@ -70,53 +68,45 @@ SetHandleInformation(
 
 	return TRUE;
 }
- 
 
 
-WINBOOL 
+WINBOOL
 STDCALL
 CloseHandle(    HANDLE  hObject )
 {
-
 	NTSTATUS errCode;
 
-        errCode = NtClose(hObject);
-        if(!NT_SUCCESS(errCode)) {
-          	SetLastError(RtlNtStatusToDosError(errCode));
-          	return FALSE;
+	errCode = NtClose(hObject);
+	if(!NT_SUCCESS(errCode)) {
+		SetLastError(RtlNtStatusToDosError(errCode));
+		return FALSE;
 	}
-      	
+
 	return TRUE;
 }
-
 
 
 WINBOOL
 STDCALL
 DuplicateHandle(
-    HANDLE hSourceProcessHandle,	
-    HANDLE hSourceHandle,	
-    HANDLE hTargetProcessHandle,	
-    LPHANDLE lpTargetHandle,	
-    DWORD dwDesiredAccess,	 
-    BOOL bInheritHandle,	
-    DWORD dwOptions 	
+    HANDLE hSourceProcessHandle,
+    HANDLE hSourceHandle,
+    HANDLE hTargetProcessHandle,
+    LPHANDLE lpTargetHandle,
+    DWORD dwDesiredAccess,
+    BOOL bInheritHandle,
+    DWORD dwOptions
    )
 {
-
-	
 	NTSTATUS errCode;
-	
+
 	errCode = NtDuplicateObject(hSourceProcessHandle,hSourceHandle,hTargetProcessHandle,lpTargetHandle, dwDesiredAccess, (BOOLEAN)bInheritHandle,dwOptions);
 	if ( !NT_SUCCESS(errCode) ) {
 		SetLastError(RtlNtStatusToDosError(errCode));
 		return FALSE;
 	}
-		
-			
-	
+
 	return TRUE;
-		
 }
 
 UINT STDCALL
@@ -124,10 +114,3 @@ SetHandleCount(UINT nCount)
 {
 	return nCount;
 }
-
-
-
-
- 
-
-

@@ -1,4 +1,4 @@
-/* $Id: lib.c,v 1.3 1999/08/29 06:59:03 ea Exp $
+/* $Id: lib.c,v 1.4 1999/10/07 23:45:25 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,6 +12,7 @@
 /* INCLUDES ****************************************************************/
 
 #define UNICODE
+#include <ddk/ntddk.h>
 #include <windows.h>
 #include <kernel32/proc.h>
 #include <kernel32/thread.h>

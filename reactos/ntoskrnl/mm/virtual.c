@@ -12,6 +12,7 @@
  
 /* INCLUDE *****************************************************************/
 
+#include <ddk/ntddk.h>
 #include <internal/mm.h>
 #include <internal/mmhal.h>
 #include <internal/ob.h>
@@ -416,7 +417,82 @@ NtQueryVirtualMemory (
 	OUT	PULONG	ResultLength
 	)
 {
-	UNIMPLEMENTED;
+   NTSTATUS Status;
+   PEPROCESS Process;
+   MEMORY_AREA* MemoryArea;
+
+#if 0
+   DbgPrint("NtReadVirtualMemory(ProcessHandle %x, Address %x, "
+            "VirtualMemoryInformationClass %d, VirtualMemoryInformation %x, "
+            "Length %lu ResultLength %x)\n",ProcessHandle,Address,
+            VirtualMemoryInformationClass,VirtualMemoryInformation,
+            Length,ResultLength);
+#endif
+   switch(VirtualMemoryInformationClass)
+     {
+        case MemoryBasicInformation:
+          {
+             PMEMORY_BASIC_INFORMATION Info =
+                (PMEMORY_BASIC_INFORMATION)VirtualMemoryInformation;
+
+             if (Length < sizeof(MEMORY_BASIC_INFORMATION))
+               {
+                  ObDereferenceObject(Process);
+                  return(STATUS_INFO_LENGTH_MISMATCH);
+               }
+
+             *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
+
+
+             Status = ObReferenceObjectByHandle(ProcessHandle,
+                                                PROCESS_QUERY_INFORMATION,
+                                                NULL,
+                                                UserMode,
+                                                (PVOID*)(&Process),
+                                                NULL);
+
+             if (!NT_SUCCESS(Status))
+               {
+//                  DbdPrint("NtQueryVirtualMemory() = %x\n",Status);
+                  return(Status);
+               }
+
+             MemoryArea = MmOpenMemoryAreaByAddress(Process,
+                                                    Address);
+
+             if (MemoryArea == NULL)
+               {
+                  Info->State = MEM_FREE;
+                  DbgPrint("Virtual memory at %p is free.\n", Address);
+                  ObDereferenceObject(Process);
+                  return (STATUS_SUCCESS);
+               }
+
+             if (MemoryArea->Type == MEMORY_AREA_COMMIT)
+               {
+                  Info->State = MEM_COMMIT;
+               }
+             else
+               {
+                  Info->State = MEM_RESERVE;
+               }
+
+             Info->BaseAddress = MemoryArea->BaseAddress;
+             Info->RegionSize  = MemoryArea->Length;
+
+   DbgPrint("BaseAddress %p, Length %x\n",
+             Info->BaseAddress, Info->RegionSize);
+
+
+             ObDereferenceObject(Process);
+             return (STATUS_SUCCESS);
+          }
+          break;
+     }
+
+   return(STATUS_INVALID_INFO_CLASS);
+
+//    UNIMPLEMENTED;
 }
 
 

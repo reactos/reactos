@@ -10,6 +10,7 @@
 
 /* INCLUDES *****************************************************************/
 
+#include <ddk/ntddk.h>
 #include <internal/hal/io.h>
 #include <internal/i386/segment.h>
 #include <internal/stddef.h>

@@ -8,8 +8,8 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <internal/ntoskrnl.h>
 #include <ddk/ntddk.h>
+#include <internal/ntoskrnl.h>
 #include <internal/pool.h>
 
 #define NDEBUG

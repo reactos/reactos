@@ -12,9 +12,6 @@
 
 #define WIN32_NO_PEHDR
 #include <ddk/ntddk.h>
-//#include <windows.h>
-//#include <kernel32/proc.h>
-//#include <kernel32/thread.h>
 #include <wchar.h>
 #include <string.h>
 #include <pe.h>
@@ -23,7 +20,7 @@
 #include <internal/teb.h>
 #include <ntdll/base.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <ntdll/ntdll.h>
 
 /* FUNCTIONS ****************************************************************/

@@ -8,34 +8,34 @@
  *                  Created 01/11/98
  */
 
-#include <windows.h>
 #include <ddk/ntddk.h>
+#include <windows.h>
 #include <wchar.h>
 
 
-typedef struct _FILE_COMPLETION_INFORMATION {                    
-    HANDLE CompletionPort;                                     
-    ULONG CompletionKey;                                      
+typedef struct _FILE_COMPLETION_INFORMATION {
+    HANDLE CompletionPort;
+    ULONG CompletionKey;
 } FILE_COMPLETION_INFORMATION;
-typedef FILE_COMPLETION_INFORMATION *PFILE_COMPLETION_INFORMATION;   
+typedef FILE_COMPLETION_INFORMATION *PFILE_COMPLETION_INFORMATION;
 
 
-VOID 
-STDCALL 
+VOID
+STDCALL
 FileIOCompletionRoutine(
-	DWORD dwErrorCode,	
-	DWORD dwNumberOfBytesTransfered,	
-	LPOVERLAPPED lpOverlapped 	 
+	DWORD dwErrorCode,
+	DWORD dwNumberOfBytesTransfered,
+	LPOVERLAPPED lpOverlapped
 	);
 
 
-HANDLE 
+HANDLE
 STDCALL
-CreateIoCompletionPort( 
-    HANDLE FileHandle, 
-    HANDLE ExistingCompletionPort, 
-    DWORD CompletionKey, 
-    DWORD NumberOfConcurrentThreads 
+CreateIoCompletionPort(
+    HANDLE FileHandle,
+    HANDLE ExistingCompletionPort,
+    DWORD CompletionKey,
+    DWORD NumberOfConcurrentThreads
     )
 {
 	HANDLE CompletionPort = NULL;
@@ -48,7 +48,7 @@ CreateIoCompletionPort(
                 return FALSE;
         }
 
-        if ( ExistingCompletionPort != NULL )  {
+        if ( ExistingCompletionPort != NULL ) {
                 CompletionPort = ExistingCompletionPort;
 	}
 	else {
@@ -57,25 +57,24 @@ CreateIoCompletionPort(
                         SetLastError(RtlNtStatusToDosError(errCode));
                         return FALSE;
                 }
-                
+
         }
         if ( FileHandle != INVALID_HANDLE_VALUE ) {
 
 		CompletionInformation.CompletionPort = CompletionPort;
                 CompletionInformation.CompletionKey  = CompletionKey;
-              
+
                 errCode = NtSetInformationFile(FileHandle, &IoStatusBlock,&CompletionInformation,sizeof(FILE_COMPLETION_INFORMATION),FileCompletionInformation);
                 if ( !NT_SUCCESS(errCode) ) {
 			if ( ExistingCompletionPort == NULL )
                         	NtClose(CompletionPort);
                         SetLastError(RtlNtStatusToDosError(errCode));
                         return FALSE;
-                }    
+                }
         }
-        
+
         return CompletionPort;
 }
-
 
 
 WINBOOL
@@ -88,7 +87,6 @@ GetQueuedCompletionStatus(
 			  DWORD dwMilliseconds
 			  )
 {
-
 	NTSTATUS errCode;
 	ULONG CompletionStatus;
 	LARGE_INTEGER TimeToWait;
@@ -99,50 +97,38 @@ GetQueuedCompletionStatus(
 		return FALSE;
 	}
 
-	return TRUE; 
-	
+	return TRUE;
 }
 
 
-
-WINBOOL 
+WINBOOL
 STDCALL
 PostQueuedCompletionStatus(
-  HANDLE CompletionPort,  
-  DWORD dwNumberOfBytesTransferred,  
-  DWORD dwCompletionKey, 
-  LPOVERLAPPED lpOverlapped  
+  HANDLE CompletionPort,
+  DWORD dwNumberOfBytesTransferred,
+  DWORD dwCompletionKey,
+  LPOVERLAPPED lpOverlapped
 )
 {
+	NTSTATUS errCode;
+	errCode = NtSetIoCompletion(CompletionPort,  dwCompletionKey, (PIO_STATUS_BLOCK)lpOverlapped , 0, (PULONG)&dwNumberOfBytesTransferred );
 
-        NTSTATUS errCode;
-        errCode = NtSetIoCompletion(CompletionPort,  dwCompletionKey, (PIO_STATUS_BLOCK)lpOverlapped , 0, (PULONG)&dwNumberOfBytesTransferred );
-
-                                  
-        if ( !NT_SUCCESS(errCode) ) {
+	if ( !NT_SUCCESS(errCode) ) {
 		SetLastError(RtlNtStatusToDosError(errCode));
 		return FALSE;
-        }
-        return TRUE;
+	}
+	return TRUE;
 }
 
 
 // this should be a place holder ??????????????????
-VOID 
-STDCALL 
+VOID
+STDCALL
 FileIOCompletionRoutine(
-	DWORD dwErrorCode,	
-	DWORD dwNumberOfBytesTransfered,	
-	LPOVERLAPPED lpOverlapped 	 
+	DWORD dwErrorCode,
+	DWORD dwNumberOfBytesTransfered,
+	LPOVERLAPPED lpOverlapped
 	)
 {
 	return;
 }
-
-
-
-
-
-
-
-

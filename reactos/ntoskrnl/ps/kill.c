@@ -44,6 +44,7 @@ VOID PsTerminateCurrentThread(NTSTATUS ExitStatus)
    CurrentThread->ThreadsProcess = NULL;
    KeRaiseIrql(DISPATCH_LEVEL,&oldlvl);
    CurrentThread->Tcb.State = THREAD_STATE_TERMINATED;
+   CurrentThread->Tcb.DispatcherHeader.SignalState = TRUE;
    KeDispatcherObjectWake(&CurrentThread->Tcb.DispatcherHeader);
    ZwYieldExecution();
    for(;;);
@@ -59,6 +60,7 @@ VOID PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus)
    PiNrThreads--;
    KeRaiseIrql(DISPATCH_LEVEL, &oldlvl);
    Thread->Tcb.State = THREAD_STATE_TERMINATED;
+   Thread->Tcb.DispatcherHeader.SignalState = TRUE;
    KeDispatcherObjectWake(&Thread->Tcb.DispatcherHeader);
    ObDereferenceObject(Thread->ThreadsProcess);
    Thread->ThreadsProcess = NULL;
@@ -94,6 +96,7 @@ NtTerminateProcess (
    PiTerminateProcessThreads(Process, ExitStatus);
    KeRaiseIrql(DISPATCH_LEVEL, &oldlvl);
    Process->Pcb.ProcessState = PROCESS_STATE_TERMINATED;
+   Process->Pcb.DispatcherHeader.SignalState = TRUE;
    KeDispatcherObjectWake(&Process->Pcb.DispatcherHeader);
    if (PsGetCurrentThread()->ThreadsProcess == Process)
    {

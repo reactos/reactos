@@ -9,8 +9,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <windows.h>
 #include <ddk/ntddk.h>
+#include <windows.h>
 #include <wchar.h>
 #include <string.h>
 

@@ -4,16 +4,16 @@
  * FILE:            lib/kernel32/thread/tls.c
  * PURPOSE:         Thread functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
- *			Tls functions are modified from WINE
+ *                  Tls functions are modified from WINE
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
 
 /* INCLUDES ******************************************************************/
 
+#include <ddk/ntddk.h>
 #include <windows.h>
 #include <kernel32/thread.h>
-#include <ddk/ntddk.h>
 #include <string.h>
 
 /* FUNCTIONS *****************************************************************/

@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.20 1999/09/12 20:58:29 ekohl Exp $
+/* $Id: proc.c,v 1.21 1999/10/07 23:45:25 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,6 +12,7 @@
 /* INCLUDES ****************************************************************/
 
 #define UNICODE
+#include <ddk/ntddk.h>
 #include <windows.h>
 #include <kernel32/proc.h>
 #include <kernel32/thread.h>

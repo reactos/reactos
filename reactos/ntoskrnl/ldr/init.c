@@ -17,8 +17,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <windows.h>
-
+#include <ddk/ntddk.h>
 #include <internal/i386/segment.h>
 #include <internal/linkage.h>
 #include <internal/module.h>
@@ -29,7 +28,6 @@
 #include <internal/string.h>
 #include <internal/symbol.h>
 #include <internal/teb.h>
-#include <ddk/ntddk.h>
 
 //#define NDEBUG
 #include <internal/debug.h>

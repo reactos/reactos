@@ -10,7 +10,6 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <windows.h>
 #include <ddk/ntddk.h>
 
 #include <internal/debug.h>

@@ -1,4 +1,4 @@
-/* $Id: syspath.c,v 1.1 1999/07/17 23:10:27 ea Exp $
+/* $Id: syspath.c,v 1.2 1999/10/07 23:36:25 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,10 +11,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <windows.h>
+#include <ddk/ntddk.h>
 #include <wchar.h>
 #include <string.h>
-#include <ddk/ntddk.h>
 
 
 /**********************************************************************

@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.31 1999/09/05 12:40:20 ekohl Exp $
+/* $Id: loader.c,v 1.32 1999/10/07 23:36:24 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -17,8 +17,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <windows.h>
-
+#include <ddk/ntddk.h>
 #include <internal/i386/segment.h>
 #include <internal/linkage.h>
 #include <internal/module.h>
@@ -29,8 +28,6 @@
 #include <string.h>
 #include <internal/string.h>
 #include <internal/symbol.h>
-
-#include <ddk/ntddk.h>
 
 #define NDEBUG
 #include <internal/debug.h>

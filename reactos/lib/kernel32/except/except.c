@@ -4,18 +4,18 @@
  * FILE:            lib/kernel32/misc/except.c
  * PURPOSE:         Exception functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
-		    modified from WINE [ Onno Hovers, (onno@stack.urc.tue.nl) ]
+ *                  modified from WINE [ Onno Hovers, (onno@stack.urc.tue.nl) ]
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
 
-#include <windows.h>
 #include <ddk/ntddk.h>
+#include <windows.h>
 
 
 typedef LONG (STDCALL *LPTOP_LEVEL_EXCEPTION_FILTER)(
 	struct _EXCEPTION_POINTERS *ExceptionInfo
- 	);
+	);
 
 UINT GlobalErrMode;
 LPTOP_LEVEL_EXCEPTION_FILTER GlobalTopLevelExceptionFilter;
@@ -51,17 +51,7 @@ SetUnhandledExceptionFilter(
 }
 
 
-
-
-
-
-
-
-
-
-
-
-LONG 
+LONG
 STDCALL
 UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
 {
@@ -69,20 +59,18 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
 	HANDLE DebugPort;
 	NTSTATUS errCode;
 
-
-
 	if(ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION) {
 		// might check read only resource
 		// Is there a debugger running ?
 		errCode = NtQueryInformationProcess(NtCurrentProcess(),ProcessDebugPort,&DebugPort,sizeof(HANDLE),NULL);
-  		if ( !NT_SUCCESS(errCode) ) {
+		if ( !NT_SUCCESS(errCode) ) {
 			SetLastError(RtlNtStatusToDosError(errCode));
 			return EXCEPTION_EXECUTE_HANDLER;
 		}
 		if ( DebugPort ) {
 			//return EXCEPTION_CONTINUE_SEARCH;
-		}   
-    	if(GlobalTopLevelExceptionFilter != NULL) {
+		}
+		if(GlobalTopLevelExceptionFilter != NULL) {
 		dbgRet = GlobalTopLevelExceptionFilter(ExceptionInfo);
         	if(dbgRet == EXCEPTION_EXECUTE_HANDLER) 
         		return EXCEPTION_EXECUTE_HANDLER;
@@ -91,7 +79,7 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
 		}
 
 	}
-	
+
 	//if ( GetErrorMode() & SEM_NOGPFAULTERRORBOX == SEM_NOGPFAULTERRORBOX ) {
 		// produce a stack trace or pop a message
 		//sprintf( message, "Unhandled exception 0x%08lx at address 0x%08lx.",
@@ -107,10 +95,3 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
 	return EXCEPTION_EXECUTE_HANDLER;
 	
 }
-
-
-
-
-
-
-

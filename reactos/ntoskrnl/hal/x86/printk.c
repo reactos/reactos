@@ -11,11 +11,17 @@
 
 /* INCLUDES *****************************************************************/
 
+#include <ddk/ntddk.h>
 #include <internal/ntoskrnl.h>
 #include <string.h>
 #include <internal/string.h>
 #include <internal/mmhal.h>
 #include <internal/halio.h>
+
+#define NDEBUG
+#include <internal/debug.h>
+
+/* GLOBALS ******************************************************************/
 
 //#define BOCHS_DEBUGGING 1
 //#define SERIAL_DEBUGGING
@@ -23,10 +29,6 @@
 #define SERIAL_BAUD_RATE 19200
 #define SERIAL_LINE_CONTROL (SR_LCR_CS8 | SR_LCR_ST1 | SR_LCR_PNO)
 
-#define NDEBUG
-#include <internal/debug.h>
-
-/* GLOBALS ******************************************************************/
 
 #define IDMAP_BASE         (0xd0000000)
 

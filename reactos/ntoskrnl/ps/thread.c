@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.26 1999/09/06 21:28:33 ekohl Exp $
+/* $Id: thread.c,v 1.27 1999/10/07 23:38:30 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -19,7 +19,6 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <windows.h>
 #include <ddk/ntddk.h>
 #include <internal/ke.h>
 #include <internal/ob.h>
@@ -398,6 +397,139 @@ PsInitThreadManagment(VOID)
 }
 
 
+static NTSTATUS
+PsCreateTeb (HANDLE ProcessHandle,
+             PNT_TEB *TebPtr,
+             PETHREAD Thread,
+             PINITIAL_TEB InitialTeb)
+{
+   MEMORY_BASIC_INFORMATION Info;
+   NTSTATUS Status;
+   ULONG ByteCount;
+   ULONG RegionSize;
+   ULONG TebSize;
+   PVOID TebBase;
+   NT_TEB Teb;
+
+   TebBase = (PVOID)0x7FFDE000;
+   TebSize = PAGESIZE;
+
+   while (TRUE)
+     {
+        Status = NtQueryVirtualMemory(ProcessHandle,
+                                      TebBase,
+                                      MemoryBasicInformation,
+                                      &Info,
+                                      sizeof(MEMORY_BASIC_INFORMATION),
+                                      &ByteCount);
+        if (!NT_SUCCESS(Status))
+          {
+             DbgPrint ("NtQueryVirtualMemory (Status %x)\n",Status);
+             return Status;
+          }
+
+        if (Info.State == MEM_FREE)
+          {
+             DbgPrint("Virtual memory at %p is free.\n",
+                      TebBase);
+          }
+        else
+          {
+             DbgPrint("Virtual memory at %p is allocated (BaseAddress %p RegionSize %x).\n",
+                      TebBase, Info.BaseAddress, Info.RegionSize);
+          }
+
+        if (Info.State == MEM_FREE)
+          {
+             break;
+          }
+          
+        TebBase = Info.BaseAddress - TebSize;
+   }
+
+//   if (Info.State != MEM_FREE)
+//       return STATUS_SUCCESS;
+
+
+   /* The TEB must reside in user space */
+   Status = NtAllocateVirtualMemory(ProcessHandle,
+                                    &TebBase,
+                                    0,
+                                    &TebSize,
+                                    MEM_COMMIT,
+                                    PAGE_READWRITE);
+
+   if (!NT_SUCCESS(Status))
+     {
+        DbgPrint ("TEB allocation failed!\n");
+        DbgPrint ("Status %x\n",Status);
+        return Status;
+     }
+
+   DbgPrint ("TebBase %p TebSize %lu\n", TebBase, TebSize);
+
+
+   /* set all pointers to and from the TEB */
+   Teb.Tib.Self = TebBase;
+   if (Thread->ThreadsProcess)
+     {
+        Teb.Peb = Thread->ThreadsProcess->Peb; /* No PEB yet!! */
+     }
+
+   /* store stack information from InitialTeb */
+   if (InitialTeb != NULL)
+     {
+        Teb.Tib.StackBase = InitialTeb->StackBase;
+        Teb.Tib.StackLimit = InitialTeb->StackLimit;
+
+        /*
+         * I don't know if this is really stored in a WNT-TEB,
+         * but it's needed to free the thread stack. (Eric Kohl)
+         */
+        Teb.StackCommit = InitialTeb->StackCommit;
+        Teb.StackCommitMax = InitialTeb->StackCommitMax;
+        Teb.StackReserved = InitialTeb->StackReserved;
+     }
+
+
+   /* more initialization */
+   Teb.Cid.UniqueThread = Thread->Cid.UniqueThread;
+   Teb.Cid.UniqueProcess = Thread->Cid.UniqueProcess;
+
+   /* write TEB data into teb page */
+   Status = NtWriteVirtualMemory(ProcessHandle,
+                                 TebBase,
+                                 &Teb,
+                                 sizeof(NT_TEB),
+                                 &ByteCount);
+
+   if (!NT_SUCCESS(Status))
+     {
+        /* free TEB */
+        DbgPrint ("Writing TEB failed!\n");
+
+        RegionSize = 0;
+        NtFreeVirtualMemory(ProcessHandle,
+                            TebBase,
+                            &RegionSize,
+                            MEM_RELEASE);
+
+        return Status;
+     }
+
+   /* FIXME: fs:[0] = TEB */
+
+   if (TebPtr != NULL)
+     {
+//        *TebPtr = (PNT_TEB)TebBase;
+     }
+
+   DbgPrint ("TEB allocated at %p\n", TebBase);
+
+   return Status;
+}
+
+
 NTSTATUS
 STDCALL
 NtCreateThread (
@@ -412,6 +544,7 @@ NtCreateThread (
 	)
 {
    PETHREAD Thread;
+   PNT_TEB  TebBase;
    NTSTATUS Status;
    
    DPRINT("NtCreateThread(ThreadHandle %x, PCONTEXT %x)\n",
@@ -429,6 +562,19 @@ NtCreateThread (
      {
 	return(Status);
      }
+
+   Status = PsCreateTeb (ProcessHandle,
+                         &TebBase,
+                         Thread,
+                         InitialTeb);
+   if (!NT_SUCCESS(Status))
+     {
+        return(Status);
+     }
+
+   /* Attention: TebBase is in user memory space */
+//   Thread->Tcb.Teb = TebBase;
+
    Thread->StartAddress=NULL;
 
    if (Client!=NULL)

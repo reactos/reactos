@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.18 1999/08/29 06:59:05 ea Exp $
+/* $Id: registry.c,v 1.19 1999/10/07 23:33:22 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,7 +11,6 @@
  */
 
 #undef WIN32_LEAN_AND_MEAN
-#include <windows.h>
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
 #include <wchar.h>

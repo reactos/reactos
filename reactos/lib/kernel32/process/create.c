@@ -11,6 +11,7 @@
 /* INCLUDES ****************************************************************/
 
 #define WIN32_NO_PEHDR
+#include <ddk/ntddk.h>
 #include <windows.h>
 #include <kernel32/proc.h>
 #include <kernel32/thread.h>

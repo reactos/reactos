@@ -4,11 +4,12 @@
  * FILE:            lib/kernel32/misc/atom.c
  * PURPOSE:         Atom functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
-		    modified from WINE [ Onno Hovers, (onno@stack.urc.tue.nl) ]
+ *                  modified from WINE [ Onno Hovers, (onno@stack.urc.tue.nl) ]
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
 
+#include <ddk/ntddk.h>
 #include <kernel32/atom.h>
 #include <kernel32/proc.h>
 #include <kernel32/thread.h>

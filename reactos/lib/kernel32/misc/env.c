@@ -8,8 +8,8 @@
  *                  Created 01/11/98
  */
 
-#include <windows.h>
 #include <ddk/ntddk.h>
+#include <windows.h>
 #include <wchar.h>
 #include <string.h>
 
@@ -18,7 +18,7 @@
 #define MAX_ENVIRONMENT_VARS 255
 #define MAX_VALUE 1024
 
-typedef struct _ENV_ELEMENT 
+typedef struct _ENV_ELEMENT
 {
 	UNICODE_STRING Name;
 	UNICODE_STRING Value;
@@ -66,7 +66,7 @@ GetEnvironmentVariableW(
 
 	while (i < nEnvVar) 
 	{
-                if ( _wcsnicmp(Environment[i].Name.Buffer,lpName,min(NameLen,Environment[i].Name.Length/sizeof(WCHAR))) != 0 ) {
+		if ( _wcsnicmp(Environment[i].Name.Buffer,lpName,min(NameLen,Environment[i].Name.Length/sizeof(WCHAR))) != 0 ) {
 			lstrcpynW(lpBuffer,Environment[i].Value.Buffer,min(nSize,Environment[i].Value.Length/sizeof(WCHAR)));
 			
 			return lstrlenW(Environment[i].Value.Buffer);
@@ -92,26 +92,25 @@ SetEnvironmentVariableA(
 
 	int i=0;
 	while ((*lpName)!=0 && i < MAX_PATH)
-     	{
+	{
 		NameW[i] = *lpName;
 		lpName++;
 		i++;
-     	}
-   	NameW[i] = 0;
+	}
+	NameW[i] = 0;
 
 	i = 0;
-	
+
 	while ((*lpValue)!=0 && i < MAX_PATH)
-     	{
+	{
 		ValueW[i] = *lpValue;
 		lpValue++;
 		i++;
-     	}
-   	ValueW[i] = 0;
+	}
+	ValueW[i] = 0;
 	return SetEnvironmentVariableW(NameW,ValueW);
-
-	
 }
+
 
 WINBOOL
 STDCALL
@@ -130,7 +129,7 @@ SetEnvironmentVariableW(
 
 	while (i < nEnvVar) 
 	{
-                if ( _wcsnicmp(Environment[i].Name.Buffer,lpName,min(NameLen,Environment[i].Name.Length/sizeof(WCHAR))) != 0 ) {
+		if ( _wcsnicmp(Environment[i].Name.Buffer,lpName,min(NameLen,Environment[i].Name.Length/sizeof(WCHAR))) != 0 ) {
 			if ( lpValue != NULL ) {
 				lstrcpynW(Environment[i].Value.Buffer,lpValue,min(ValueLen,Environment[i].Value.MaximumLength/sizeof(WCHAR)));
 				return TRUE;
@@ -141,9 +140,6 @@ SetEnvironmentVariableW(
 				Environment[i].Name.Length = 0;
 				return FALSE;
 			}
-				
-				
-			
 		}
 		i++;
 	}
@@ -151,9 +147,9 @@ SetEnvironmentVariableW(
 	if ( nEnvVar >= MAX_ENVIRONMENT_VARS )
 		return FALSE;
 
-	while (i < nEnvVar) 
+	while (i < nEnvVar)
 	{
-		if ( Environment[i].Valid == FALSE ) 
+		if ( Environment[i].Valid == FALSE )
 			break;
 		i++;
 	}
@@ -173,36 +169,31 @@ SetEnvironmentVariableW(
 	lstrcpynW(Environment[i].Name.Buffer,lpValue,min(NameLen,(Environment[i].Name.MaximumLength-sizeof(WCHAR))/sizeof(WCHAR)));
 	Environment[i].Name.Length = NameLen*sizeof(WCHAR);
 
-	
 	lstrcpynW(Environment[i].Value.Buffer,lpValue,min(ValueLen,(Environment[i].Value.MaximumLength-sizeof(WCHAR)))/sizeof(WCHAR));
 	Environment[i].Value.Length = ValueLen*sizeof(WCHAR);
-	
-	
-	
-	return TRUE;
 
+	return TRUE;
 }
 
-DWORD 
+DWORD
 STDCALL
 GetVersion(VOID)
 {
 	DWORD Version = 0;
 	OSVERSIONINFO VersionInformation;
 	GetVersionExW(&VersionInformation);
-	
+
 	Version |= ( VersionInformation.dwMajorVersion << 8 );
 	Version |= VersionInformation.dwMinorVersion;
-	
+
 	Version |= ( VersionInformation.dwPlatformId << 16 );
 
 	return Version;
-		
 }
 
 
 
-WINBOOL 
+WINBOOL
 STDCALL
 GetVersionExW(
     LPOSVERSIONINFO lpVersionInformation 	
@@ -217,7 +208,7 @@ GetVersionExW(
 	return TRUE;
 }
 
-WINBOOL 
+WINBOOL
 STDCALL
 GetVersionExA(
     LPOSVERSIONINFO lpVersionInformation 	
@@ -233,10 +224,9 @@ GetVersionExA(
 }
 
 
-
-
-
-LPSTR STDCALL GetEnvironmentStringsA(VOID)
+LPSTR
+STDCALL
+GetEnvironmentStringsA(VOID)
 {
 #if 0
    WCHAR *EnvironmentStringsW;
@@ -271,7 +261,9 @@ LPSTR STDCALL GetEnvironmentStringsA(VOID)
 }
 
 
-LPWSTR STDCALL GetEnvironmentStringsW(VOID)
+LPWSTR
+STDCALL
+GetEnvironmentStringsW(VOID)
 {
 #if 0
    int size = 0;
