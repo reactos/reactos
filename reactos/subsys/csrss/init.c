@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.12 2001/06/25 23:48:20 ekohl Exp $
+/* $Id: init.c,v 1.13 2002/06/14 14:23:14 ekohl Exp $
  * 
  * reactos/subsys/csrss/init.c
  *
@@ -75,6 +75,34 @@ CsrParseCommandLine (
 }
 
 
+static VOID
+CsrInitVideo(VOID)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING DeviceName;
+  IO_STATUS_BLOCK Iosb;
+  HANDLE VideoHandle;
+  NTSTATUS Status;
+
+  RtlInitUnicodeString(&DeviceName, L"\\??\\DISPLAY1");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &DeviceName,
+			     0,
+			     NULL,
+			     NULL);
+  Status = NtOpenFile(&VideoHandle,
+		      FILE_ALL_ACCESS,
+		      &ObjectAttributes,
+		      &Iosb,
+		      0,
+		      0);
+  if (NT_SUCCESS(Status))
+    {
+      NtClose(VideoHandle);
+    }
+}
+
+
 /**********************************************************************
  * NAME
  * 	CsrServerInitialization
@@ -108,7 +136,9 @@ CsrServerInitialization (
 	PrintString("CSR: Unable to parse the command line (Status: %x)\n", Status);
 	return(FALSE);
      }
-   
+
+   CsrInitVideo();
+
    /* NEW NAMED PORT: \ApiPort */
    RtlInitUnicodeString(&PortName, L"\\Windows\\ApiPort");
    InitializeObjectAttributes(&ObAttributes,

@@ -1,4 +1,4 @@
-/* $Id: vidport.c,v 1.22 2002/02/12 12:00:28 jfilby Exp $
+/* $Id: vidport.c,v 1.23 2002/06/14 14:22:22 ekohl Exp $
  *
  * VideoPort driver
  *   Written by Rex Jolliff
@@ -11,7 +11,10 @@
 
 #include "vidport.h"
 
-#define UNIMPLEMENTED do {DbgPrint("%s:%d: Function not implemented", __FILE__, __LINE__); for(;;);} while (0)
+#define NDEBUG
+#include <debug.h>
+
+//#define UNIMPLEMENTED do {DbgPrint("%s:%d: Function not implemented", __FILE__, __LINE__); for(;;);} while (0)
 
 #define VERSION "0.0.0"
 
@@ -19,8 +22,9 @@ static VOID STDCALL VidStartIo(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 static NTSTATUS STDCALL VidDispatchOpenClose(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
 static NTSTATUS STDCALL VidDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 
-static HANDLE CsrssHandle;
-static struct _EPROCESS* Csrss;
+static BOOLEAN CsrssInitialized = FALSE;
+static HANDLE CsrssHandle = 0;
+static struct _EPROCESS* Csrss = NULL;
 
 PBYTE ReturnCsrssAddress(void)
 {
@@ -46,11 +50,11 @@ PBYTE ReturnCsrssAddress(void)
 //  RETURNS:
 //    NTSTATUS  
 
-STDCALL NTSTATUS 
-DriverEntry(IN PDRIVER_OBJECT DriverObject, 
-            IN PUNICODE_STRING RegistryPath) 
+STDCALL NTSTATUS
+DriverEntry(IN PDRIVER_OBJECT DriverObject,
+            IN PUNICODE_STRING RegistryPath)
 {
-  return  STATUS_SUCCESS;
+  return(STATUS_SUCCESS);
 }
 
 VOID
@@ -170,8 +174,7 @@ VideoPortGetRegistryParameters(IN PVOID  HwDeviceExtension,
   UNIMPLEMENTED;
 }
 
-ULONG 
-STDCALL
+ULONG STDCALL
 VideoPortInitialize(IN PVOID  Context1,
                     IN PVOID  Context2,
                     IN PVIDEO_HW_INITIALIZATION_DATA  HwInitializationData,
@@ -201,15 +204,15 @@ VideoPortInitialize(IN PVOID  Context1,
       RtlInitUnicodeString(&DeviceName, DeviceBuffer);
 
       /*  Create the device  */
-      Status = IoCreateDevice(MPDriverObject, 
+      Status = IoCreateDevice(MPDriverObject,
                               HwInitializationData->HwDeviceExtensionSize +
                                 sizeof(VIDEOPORT_EXTENSION_DATA),
-                              &DeviceName, 
-                              FILE_DEVICE_VIDEO, 
-                              0, 
-                              TRUE, 
+                              &DeviceName,
+                              FILE_DEVICE_VIDEO,
+                              0,
+                              TRUE,
                               &MPDeviceObject);
-      if (!NT_SUCCESS(Status)) 
+      if (!NT_SUCCESS(Status))
         {
           DbgPrint("IoCreateDevice call failed\n",0);
           return Status;
@@ -259,6 +262,7 @@ VideoPortInitialize(IN PVOID  Context1,
           !(ConfigInfo.BusInterruptLevel == 0 &&
             ConfigInfo.BusInterruptVector == 0))
         {
+#if 0
           ExtensionData->IRQL = ConfigInfo.BusInterruptLevel;
           ExtensionData->InterruptLevel = 
             HalGetInterruptVector(ConfigInfo.AdapterInterfaceType,
@@ -287,38 +291,11 @@ VideoPortInitialize(IN PVOID  Context1,
               
               return Status;
             }
-          
+#endif
         }
       DeviceNumber++;
     }
   while (Again);
-
-  /* Find a process handle for csrss */
-  Cid.UniqueProcess = (HANDLE)3;
-  Cid.UniqueThread = 0;
-  Status = ZwOpenProcess(&CsrssHandle,
-			 PROCESS_ALL_ACCESS,
-			 NULL,
-			 &Cid);
-  if (!NT_SUCCESS(Status))
-    {
-      DbgPrint("VIDPORT: Failed to open csrss\n");
-      Csrss = NULL;
-    }
-  else
-    {
-      Status = ObReferenceObjectByHandle(CsrssHandle,
-					 PROCESS_ALL_ACCESS,
-					 NULL,
-					 KernelMode,
-					 (PVOID*)&Csrss,
-					 NULL);
-      if (!NT_SUCCESS(Status))
-	{
-	  DbgPrint("VIDPORT: Failed to reference csrss handle\n");
-	  Csrss = NULL;
-	}
-    }  
 
   /* FIXME: initialize timer routine for MP Driver  */
   if (HwInitializationData->HwTimer != NULL)
@@ -340,7 +317,7 @@ VideoPortInitialize(IN PVOID  Context1,
           return Status;
         }
     }
-  
+
   return  STATUS_SUCCESS;
 }
 
@@ -350,9 +327,9 @@ VideoPortInt10(IN PVOID  HwDeviceExtension,
 {
   KV86M_REGISTERS Regs;
   NTSTATUS Status;
-   
+
   KeAttachProcess(Csrss);
-   
+
   memset(&Regs, 0, sizeof(Regs));
   Regs.Eax = BiosArguments->Eax;
   Regs.Ebx = BiosArguments->Ebx;
@@ -690,28 +667,25 @@ VideoPortWriteRegisterBufferUchar(IN PUCHAR  Register,
   WRITE_REGISTER_BUFFER_UCHAR(Register, Buffer, Count);
 }
 
-VOID 
-STDCALL
-VideoPortWriteRegisterBufferUshort(IN PUSHORT  Register, 
-                                   IN PUSHORT  Buffer, 
+VOID STDCALL
+VideoPortWriteRegisterBufferUshort(IN PUSHORT  Register,
+                                   IN PUSHORT  Buffer,
                                    IN ULONG  Count)
 {
   WRITE_REGISTER_BUFFER_USHORT(Register, Buffer, Count);
 }
 
-VOID 
-STDCALL
-VideoPortWriteRegisterBufferUlong(IN PULONG  Register, 
-                                  IN PULONG  Buffer, 
+VOID STDCALL
+VideoPortWriteRegisterBufferUlong(IN PULONG  Register,
+                                  IN PULONG  Buffer,
                                   IN ULONG  Count)
 {
   WRITE_REGISTER_BUFFER_ULONG(Register, Buffer, Count);
 }
 
-VOID
-STDCALL
-VideoPortZeroDeviceMemory(OUT PVOID  Destination, 
-                               IN ULONG  Length)
+VOID STDCALL
+VideoPortZeroDeviceMemory(OUT PVOID  Destination,
+			  IN ULONG  Length)
 {
   UNIMPLEMENTED;
 }
@@ -734,11 +708,25 @@ VideoPortZeroDeviceMemory(OUT PVOID  Destination,
 //    NTSTATUS
 //
 
-static  NTSTATUS  
-STDCALL
-VidDispatchOpenClose(IN PDEVICE_OBJECT pDO, 
-                     IN PIRP Irp) 
+static NTSTATUS STDCALL
+VidDispatchOpenClose(IN PDEVICE_OBJECT pDO,
+                     IN PIRP Irp)
 {
+  PIO_STACK_LOCATION IrpStack;
+
+  DPRINT("VidDispatchOpenClose() called\n");
+
+  IrpStack = IoGetCurrentIrpStackLocation(Irp);
+
+  if (IrpStack->MajorFunction == IRP_MJ_CREATE &&
+      CsrssInitialized == FALSE)
+    {
+      DPRINT("Referencing CSRSS\n");
+      Csrss = PsGetCurrentProcess();
+      CsrssInitialized = TRUE;
+      DPRINT("Csrss %p\n", Csrss);
+    }
+
   Irp->IoStatus.Status = STATUS_SUCCESS;
   Irp->IoStatus.Information = FILE_OPENED;
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -761,10 +749,9 @@ VidDispatchOpenClose(IN PDEVICE_OBJECT pDO,
 //    NTSTATUS
 //
 
-static  VOID  
-STDCALL
-VidStartIo(IN PDEVICE_OBJECT DeviceObject, 
-           IN PIRP Irp) 
+static VOID STDCALL
+VidStartIo(IN PDEVICE_OBJECT DeviceObject,
+           IN PIRP Irp)
 {
   UNIMPLEMENTED;
 }
@@ -784,30 +771,32 @@ VidStartIo(IN PDEVICE_OBJECT DeviceObject,
 //    NTSTATUS
 //
 
-static  NTSTATUS  
-STDCALL
-VidDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject, 
-                         IN PIRP Irp) 
+static NTSTATUS STDCALL
+VidDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
+                         IN PIRP Irp)
 {
+  PIO_STACK_LOCATION IrpStack;
   PVIDEO_REQUEST_PACKET vrp;
+
+  IrpStack = IoGetCurrentIrpStackLocation(Irp);
 
   // Translate the IRP to a VRP
   vrp = ExAllocatePool(PagedPool, sizeof(VIDEO_REQUEST_PACKET));
   vrp->StatusBlock = ExAllocatePool(PagedPool, sizeof(STATUS_BLOCK));
-  vrp->IoControlCode      = Irp->Stack[0].Parameters.DeviceIoControl.IoControlCode;
+  vrp->IoControlCode      = IrpStack->Parameters.DeviceIoControl.IoControlCode;
 
   // We're assuming METHOD_BUFFERED
   vrp->InputBuffer        = Irp->AssociatedIrp.SystemBuffer;
-  vrp->InputBufferLength  = Irp->Stack[0].Parameters.DeviceIoControl.InputBufferLength;
+  vrp->InputBufferLength  = IrpStack->Parameters.DeviceIoControl.InputBufferLength;
   vrp->OutputBuffer       = Irp->UserBuffer;
-  vrp->OutputBufferLength = Irp->Stack[0].Parameters.DeviceIoControl.OutputBufferLength;
+  vrp->OutputBufferLength = IrpStack->Parameters.DeviceIoControl.OutputBufferLength;
 
   // Call the Miniport Driver with the VRP
   DeviceObject->DriverObject->DriverStartIo(DeviceObject->DeviceExtension, (PIRP)vrp);
 
   // Translate the VRP back into the IRP for OutputBuffer
   Irp->UserBuffer                                             = vrp->OutputBuffer;
-  Irp->Stack[0].Parameters.DeviceIoControl.OutputBufferLength = vrp->OutputBufferLength;
+  IrpStack->Parameters.DeviceIoControl.OutputBufferLength = vrp->OutputBufferLength;
 
   // Free the VRP
   ExFreePool(vrp->StatusBlock);
