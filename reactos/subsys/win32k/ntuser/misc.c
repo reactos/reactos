@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.22 2003/11/10 17:44:49 weiden Exp $
+/* $Id: misc.c,v 1.23 2003/11/11 20:28:21 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -261,7 +261,7 @@ NtUserCallTwoParam(
     case TWOPARAM_ROUTINE_SETCARETPOS:
       return (DWORD)IntSetCaretPos((int)Param1, (int)Param2);
   }
-  DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam()\n Param1=0x%x Parm2=0x%x\n",
+  DPRINT1("Calling invalid routine number 0x%x in NtUserCallTwoParam()\n Param1=0x%x Parm2=0x%x\n",
           Routine, Param1, Param2);
   SetLastWin32Error(ERROR_INVALID_PARAMETER);
   return 0;

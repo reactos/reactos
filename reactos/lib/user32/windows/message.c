@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.26 2003/11/08 09:33:14 navaraf Exp $
+/* $Id: message.c,v 1.27 2003/11/11 20:28:21 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -398,29 +398,25 @@ CallWindowProcA(WNDPROC lpPrevWndFunc,
   MSG UnicodeMsg;
   LRESULT Result;
   BOOL IsHandle;
+  WndProcHandle wphData;
 
-  if ((DWORD)lpPrevWndFunc > 0x80000000)
-    {
-      lpPrevWndFunc -= 0x80000000;
-      IsHandle = TRUE;
-    }
-  else
-    {
-      IsHandle = FALSE;
-    }
-
+  IsHandle = NtUserDereferenceWndProcHandle(lpPrevWndFunc,&wphData);
   AnsiMsg.hwnd = hWnd;
   AnsiMsg.message = Msg;
   AnsiMsg.wParam = wParam;
   AnsiMsg.lParam = lParam;
-  
-  if (IsWindowUnicode(hWnd))
+  if (!IsHandle)
+  {
+      return(lpPrevWndFunc(hWnd, Msg, wParam, lParam));
+  } else {
+    if (wphData.IsUnicode)
     {
       if (!MsgiAnsiToUnicodeMessage(&UnicodeMsg, &AnsiMsg))
         {
           return(FALSE);
         }
-      Result = lpPrevWndFunc(hWnd, Msg, wParam, lParam);
+      Result = wphData.WindowProc(UnicodeMsg.hwnd, UnicodeMsg.message,
+                                  UnicodeMsg.wParam, UnicodeMsg.lParam);
       if (!MsgiAnsiToUnicodeReply(&UnicodeMsg, &AnsiMsg, &Result))
         {
           return(FALSE);
@@ -429,7 +425,8 @@ CallWindowProcA(WNDPROC lpPrevWndFunc,
     }
   else
     {
-      return(lpPrevWndFunc(hWnd, Msg, wParam, lParam));
+		return(wphData.WindowProc(hWnd, Msg, wParam, lParam));
+	}
     }
 }
 
@@ -445,26 +442,25 @@ CallWindowProcW(WNDPROC lpPrevWndFunc,
 		LPARAM lParam)
 {
   BOOL IsHandle;
-  if ((DWORD)lpPrevWndFunc > 0x80000000)
+  WndProcHandle wphData;
+
+  IsHandle = NtUserDereferenceWndProcHandle(lpPrevWndFunc,&wphData);
+  if (!IsHandle)
   {
-	  lpPrevWndFunc-= 0x80000000;
-	  IsHandle = TRUE;
-  }
-  else
-  {
-	  IsHandle = FALSE;
-  }
-  if (!IsWindowUnicode(hWnd))
+      return(lpPrevWndFunc(hWnd, Msg, wParam, lParam));
+  } else {
+   if (!wphData.IsUnicode)
     {
       LRESULT Result;
       User32ConvertToAsciiMessage(&Msg, &wParam, &lParam);
-      Result = lpPrevWndFunc(hWnd, Msg, wParam, lParam);
+      Result = wphData.WindowProc(hWnd, Msg, wParam, lParam);
       User32FreeAsciiConvertedMessage(Msg, wParam, lParam);
       return(Result);
     }
   else
     {
-      return(lpPrevWndFunc(hWnd, Msg, wParam, lParam));
+		return(wphData.WindowProc(hWnd, Msg, wParam, lParam));
+	}
     }
 }
 

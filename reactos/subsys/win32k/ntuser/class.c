@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.38 2003/10/28 20:19:45 gvg Exp $
+/* $Id: class.c,v 1.39 2003/11/11 20:28:21 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -291,6 +291,7 @@ NtUserGetWOWClass(DWORD Unknown0,
 PWNDCLASS_OBJECT FASTCALL
 IntCreateClass(CONST WNDCLASSEXW *lpwcx,
                 BOOL bUnicodeClass,
+                WNDPROC wpExtra,
                 RTL_ATOM Atom)
 {
 	PWNDCLASS_OBJECT ClassObject;
@@ -326,15 +327,28 @@ IntCreateClass(CONST WNDCLASSEXW *lpwcx,
 	ClassObject->Unicode = bUnicodeClass;
 	ClassObject->hIconSm = lpwcx->hIconSm;
 	ClassObject->lpszClassName = (PUNICODE_STRING)(ULONG)Atom;
+	if (wpExtra == 0) {
 	if (bUnicodeClass)
 	{
 		ClassObject->lpfnWndProcW = lpwcx->lpfnWndProc;
-		ClassObject->lpfnWndProcA = lpwcx->lpfnWndProc+0x80000000;
+			ClassObject->lpfnWndProcA = (WNDPROC)IntAddWndProcHandle(lpwcx->lpfnWndProc,TRUE);
 	}
 	else
 	{
 		ClassObject->lpfnWndProcA = lpwcx->lpfnWndProc;
-		ClassObject->lpfnWndProcW = lpwcx->lpfnWndProc+0x80000000;
+			ClassObject->lpfnWndProcW = (WNDPROC)IntAddWndProcHandle(lpwcx->lpfnWndProc,FALSE);
+		}
+	} else {
+		if (bUnicodeClass)
+		{
+			ClassObject->lpfnWndProcW = lpwcx->lpfnWndProc;
+			ClassObject->lpfnWndProcA = wpExtra;
+		}
+		else
+		{
+			ClassObject->lpfnWndProcA = lpwcx->lpfnWndProc;
+			ClassObject->lpfnWndProcW = wpExtra;
+		}
 	}
 	if (IS_INTRESOURCE(lpwcx->lpszMenuName))
 	{
@@ -363,7 +377,7 @@ RTL_ATOM STDCALL
 NtUserRegisterClassExWOW(
 	CONST WNDCLASSEXW *lpwcx,
 	BOOL bUnicodeClass,
-	DWORD Unknown3,
+	WNDPROC wpExtra,
 	DWORD Unknown4,
 	DWORD Unknown5)
 
@@ -374,6 +388,7 @@ NtUserRegisterClassExWOW(
  *   lpwcx          = Win32 extended window class structure
  *   bUnicodeClass = Whether to send ANSI or unicode strings
  *                   to window procedures
+ *   wpExtra       = Extra window procedure, if this is not null, its used for the second window procedure for standard controls.
  * RETURNS:
  *   Atom identifying the new class
  */
@@ -412,7 +427,7 @@ NtUserRegisterClassExWOW(
   {
     Atom = (RTL_ATOM)(ULONG)lpwcx->lpszClassName;
   }
-  ClassObject = IntCreateClass(lpwcx, bUnicodeClass, Atom);
+  ClassObject = IntCreateClass(lpwcx, bUnicodeClass, wpExtra, Atom);
   if (ClassObject == NULL)
   {
     if (!IS_ATOM(lpwcx->lpszClassName))
@@ -575,13 +590,13 @@ IntSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BOOL 
 	  if (Ansi)
 	  {
 		WindowObject->Class->lpfnWndProcA = (WNDPROC)dwNewLong;
-		WindowObject->Class->lpfnWndProcW = (WNDPROC)dwNewLong+0x80000000;
+        WindowObject->Class->lpfnWndProcW = (WNDPROC) IntAddWndProcHandle((WNDPROC)dwNewLong,FALSE);
 		WindowObject->Class->Unicode = FALSE;
 	  }
 	  else
 	  {
 		WindowObject->Class->lpfnWndProcW = (WNDPROC)dwNewLong;
-		WindowObject->Class->lpfnWndProcA = (WNDPROC)dwNewLong+0x80000000;
+        WindowObject->Class->lpfnWndProcA = (WNDPROC) IntAddWndProcHandle((WNDPROC)dwNewLong,TRUE);
 		WindowObject->Class->Unicode = TRUE;
 	  }
       break;

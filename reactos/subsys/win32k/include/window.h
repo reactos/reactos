@@ -192,6 +192,9 @@ WINLOCK_TYPE FASTCALL IntSuspendWinLock();
 VOID FASTCALL IntRestoreWinLock(WINLOCK_TYPE Type);
 inline BOOL IntInitializeWinLock();
 inline VOID IntDeleteWinLock();
+DWORD IntRemoveWndProcHandle(WNDPROC Handle);
+DWORD IntRemoveProcessWndProcHandles(HANDLE ProcessID);
+DWORD IntAddWndProcHandle(WNDPROC WindowProc, BOOL IsUnicode);
 
 #endif /* __WIN32K_WINDOW_H */
 

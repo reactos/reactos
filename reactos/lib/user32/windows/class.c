@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.38 2003/08/20 03:07:33 silverblade Exp $
+/* $Id: class.c,v 1.39 2003/11/11 20:28:21 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -524,7 +524,7 @@ RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
     wndclass.lpszMenuName = MenuName;
   }
 
-  Atom = NtUserRegisterClassExWOW ( &wndclass, FALSE, 0, 0, 0 );
+  Atom = NtUserRegisterClassExWOW ( &wndclass, FALSE, (WNDPROC)0, 0, 0 );
 
   /* free strings if neccessary */
   if ( MenuName  ) HEAP_free ( MenuName );
@@ -582,7 +582,7 @@ RegisterClassExW(CONST WNDCLASSEXW *lpwcx)
     wndclass.lpszMenuName = MenuName;
   }
 
-  Atom = NtUserRegisterClassExWOW ( &wndclass, TRUE, 0, 0, 0 );
+  Atom = NtUserRegisterClassExWOW ( &wndclass, TRUE, (WNDPROC)0, 0, 0 );
 
   /* free strings if neccessary */
   if ( MenuName  ) HEAP_free ( MenuName  );

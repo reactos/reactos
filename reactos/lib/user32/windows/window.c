@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.80 2003/11/09 13:50:04 navaraf Exp $
+/* $Id: window.c,v 1.81 2003/11/11 20:28:21 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -501,7 +501,8 @@ CreateWindowExA(DWORD dwExStyle,
 				hMenu,
 				hInstance,
 				lpParam,
-				sw);
+				sw,
+				FALSE);
 
 #if 0
   DbgPrint("[window] NtUserCreateWindowEx() == %d\n", Handle);
@@ -631,7 +632,8 @@ CreateWindowExW(DWORD dwExStyle,
 				hMenu,
 				hInstance,
 				lpParam,
-				sw);
+				sw,
+				TRUE);
 
   return (HWND)Handle;
 }

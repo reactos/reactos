@@ -48,6 +48,7 @@ ClassReferenceClassByNameOrAtom(PWNDCLASS_OBJECT *Class,
 PWNDCLASS_OBJECT FASTCALL
 IntCreateClass(CONST WNDCLASSEXW *lpwcx,
 		BOOL bUnicodeClass,
+		WNDPROC wpExtra,
 		RTL_ATOM Atom);
 struct _WINDOW_OBJECT;
 ULONG FASTCALL

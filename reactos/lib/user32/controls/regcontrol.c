@@ -1,4 +1,4 @@
-/* $Id: regcontrol.c,v 1.14 2003/11/02 06:58:57 navaraf Exp $
+/* $Id: regcontrol.c,v 1.15 2003/11/11 20:28:20 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -11,22 +11,26 @@
 
 #include "windows.h"
 #include "user32/regcontrol.h"
+#include "win32k/ntuser.h"
 
 static void RegisterBuiltinClass(const struct builtin_class_descr *Descr)
 {
-  WNDCLASSW wc;
+  WNDCLASSEXW wc;
   ATOM Class;
   
+  wc.cbSize = sizeof(WNDCLASSEXW);
   wc.lpszClassName = Descr->name;
   wc.lpfnWndProc = Descr->procW;
   wc.style = Descr->style;
   wc.hInstance = NULL;
   wc.hIcon = NULL;
+  wc.hIconSm = NULL;
   wc.hCursor = LoadCursorW(NULL, Descr->cursor);
   wc.hbrBackground = Descr->brush;
   wc.lpszMenuName = NULL;
   wc.cbClsExtra = 0;
   wc.cbWndExtra = Descr->extra;
+
 
 #if 0
   if(IS_ATOM(wc.lpszClassName))
@@ -34,7 +38,7 @@ static void RegisterBuiltinClass(const struct builtin_class_descr *Descr)
   else
     DbgPrint("Registering built-in class %wS\n", wc.lpszClassName);
 #endif
-  Class = RegisterClassW(&wc);
+  Class = NtUserRegisterClassExWOW(&wc,TRUE,Descr->procA,0,0);
 #if 0
   DbgPrint("RegisterClassW = %d\n", Class);
 #endif

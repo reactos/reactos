@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.131 2003/11/09 11:42:08 navaraf Exp $
+/* $Id: window.c,v 1.132 2003/11/11 20:28:21 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -62,9 +62,12 @@ typedef struct _REGISTERED_MESSAGE
 } REGISTERED_MESSAGE, *PREGISTERED_MESSAGE;
 
 static LIST_ENTRY RegisteredMessageListHead;
+static WndProcHandle *WndProcHandlesArray = 0;
+static WORD WndProcHandlesArraySize = 0;
 
 #define REGISTERED_MESSAGE_MIN 0xc000
 #define REGISTERED_MESSAGE_MAX 0xffff
+#define WPH_SIZE 0x40 /* the size to add to the WndProcHandle array each time */
 
 /* globally stored handles to the shell windows */
 HWND hwndShellWindow = 0;
@@ -82,6 +85,8 @@ NTSTATUS FASTCALL
 InitWindowImpl(VOID)
 {
    InitializeListHead(&RegisteredMessageListHead);
+   WndProcHandlesArray = ExAllocatePool(PagedPool,WPH_SIZE * sizeof(WndProcHandle));
+   WndProcHandlesArraySize = WPH_SIZE;
    return STATUS_SUCCESS;
 }
 
@@ -94,6 +99,9 @@ InitWindowImpl(VOID)
 NTSTATUS FASTCALL
 CleanupWindowImpl(VOID)
 {
+   ExFreePool(WndProcHandlesArray);
+   WndProcHandlesArray = 0;
+   WndProcHandlesArraySize = 0;
    return STATUS_SUCCESS;
 }
 
@@ -1321,7 +1329,8 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 		     HMENU hMenu,
 		     HINSTANCE hInstance,
 		     LPVOID lpParam,
-		     DWORD dwShowMode)
+		     DWORD dwShowMode,
+			 BOOL bUnicodeWindow)
 {
   PWINSTATION_OBJECT WinStaObject;
   PWNDCLASS_OBJECT ClassObject;
@@ -1460,7 +1469,12 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->Parent = ParentWindow;
   WindowObject->Owner = IntGetWindowObject(OwnerWindowHandle);
   WindowObject->UserData = 0;
+  if ((((DWORD)ClassObject->lpfnWndProcA & 0xFFFF0000) != 0xFFFF0000) || (((DWORD)ClassObject->lpfnWndProcW & 0xFFFF0000) != 0xFFFF0000)) 
+  {
   WindowObject->Unicode = ClassObject->Unicode;
+  } else {
+	WindowObject->Unicode = bUnicodeWindow;
+  }
   WindowObject->WndProcA = ClassObject->lpfnWndProcA;
   WindowObject->WndProcW = ClassObject->lpfnWndProcW;
   WindowObject->OwnerThread = PsGetCurrentThread();
@@ -2787,14 +2801,14 @@ NtUserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
             {
                OldValue = (LONG) WindowObject->WndProcA;
                WindowObject->WndProcA = (WNDPROC) NewValue;
-               WindowObject->WndProcW = (WNDPROC) NewValue + 0x80000000;
+               WindowObject->WndProcW = (WNDPROC) IntAddWndProcHandle((WNDPROC)NewValue,FALSE);
                WindowObject->Unicode = FALSE;
             }
             else
             {
                OldValue = (LONG) WindowObject->WndProcW;
                WindowObject->WndProcW = (WNDPROC) NewValue;
-               WindowObject->WndProcA = (WNDPROC) NewValue + 0x80000000;
+               WindowObject->WndProcA = (WNDPROC) IntAddWndProcHandle((WNDPROC)NewValue,TRUE);
                WindowObject->Unicode = TRUE;
             }
             break;
@@ -3739,6 +3753,87 @@ NtUserInternalGetWindowText(HWND WindowHandle, LPWSTR Text, INT MaxCount)
    IntReleaseWindowObject(WindowObject);
 
    return Result;
+}
+
+DWORD STDCALL
+NtUserDereferenceWndProcHandle(WNDPROC wpHandle, WndProcHandle *Data)
+{
+	WndProcHandle Entry;
+	if (((DWORD)wpHandle & 0xFFFF0000) == 0xFFFF0000)
+	{
+		Entry = WndProcHandlesArray[(DWORD)wpHandle & 0x0000FFFF];
+		Data->WindowProc = Entry.WindowProc;
+		Data->IsUnicode = Entry.IsUnicode;
+		Data->ProcessID = Entry.ProcessID;
+		return TRUE;
+	} else {
+		return FALSE;
+	}
+	return FALSE;
+}
+
+DWORD
+IntAddWndProcHandle(WNDPROC WindowProc, BOOL IsUnicode)
+{
+	WORD i;
+	WORD FreeSpot;
+	BOOL found;
+	WndProcHandle *OldArray;
+	WORD OldArraySize;
+	found = FALSE;
+	for (i = 0;i < WndProcHandlesArraySize;i++)
+	{
+		if (WndProcHandlesArray[i].WindowProc == NULL)
+		{
+			FreeSpot = i;
+			found = TRUE;
+		}
+	}
+	if (!found)
+	{
+		OldArray = WndProcHandlesArray;
+		OldArraySize = WndProcHandlesArraySize;
+        WndProcHandlesArray = ExAllocatePool(PagedPool,(OldArraySize + WPH_SIZE) * sizeof(WndProcHandle));
+		WndProcHandlesArraySize = OldArraySize + WPH_SIZE;
+		RtlCopyMemory(WndProcHandlesArray,OldArray,OldArraySize * sizeof(WndProcHandle));
+		ExFreePool(OldArray);
+		FreeSpot = OldArraySize + 1;
+	}
+	WndProcHandlesArray[FreeSpot].WindowProc = WindowProc;
+	WndProcHandlesArray[FreeSpot].IsUnicode = IsUnicode;
+	WndProcHandlesArray[FreeSpot].ProcessID = PsGetCurrentProcessId();
+	return FreeSpot + 0xFFFF0000;
+}
+
+DWORD
+IntRemoveWndProcHandle(WNDPROC Handle)
+{
+	WORD position;
+	position = (DWORD)Handle & 0x0000FFFF;
+	if (position > WndProcHandlesArraySize)
+	{
+		return FALSE;
+	}
+	WndProcHandlesArray[position].WindowProc = NULL;
+	WndProcHandlesArray[position].IsUnicode = FALSE;
+	WndProcHandlesArray[position].ProcessID = NULL;
+	return TRUE;
+}
+
+DWORD
+IntRemoveProcessWndProcHandles(HANDLE ProcessID)
+{
+	WORD i;
+	for (i = 0;i < WndProcHandlesArraySize;i++)
+	{
+		if (WndProcHandlesArray[i].ProcessID == ProcessID)
+		{
+			WndProcHandlesArray[i].WindowProc = NULL;
+			WndProcHandlesArray[i].IsUnicode = FALSE;
+			WndProcHandlesArray[i].ProcessID = NULL;
+		}
+	}
+	return TRUE;
 }
 
 /* EOF */

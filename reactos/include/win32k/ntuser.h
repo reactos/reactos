@@ -312,7 +312,8 @@ NtUserCreateWindowEx(
   HMENU hMenu,
   HINSTANCE hInstance,
   LPVOID lpParam,
-  DWORD Unknown12);
+  DWORD dwShowMode,
+  BOOL bUnicodeWindow);
 
 HWINSTA
 STDCALL
@@ -1190,7 +1191,7 @@ RTL_ATOM
 STDCALL
 NtUserRegisterClassExWOW(CONST WNDCLASSEXW* lpwcx,
 			 BOOL bUnicodeClass,
-			 DWORD Unknown3,
+			 WNDPROC wpExtra,
 			 DWORD Unknown4,
 			 DWORD Unknown5);
 
@@ -1832,7 +1833,15 @@ NtUserGetWindow(HWND hWnd, UINT Relationship);
 
 HWND STDCALL
 NtUserGetLastActivePopup(HWND hWnd);
+typedef struct _WndProcHandle
+{
+  WNDPROC WindowProc;
+  BOOL IsUnicode;
+  HANDLE ProcessID;
+} WndProcHandle;
                                     
+DWORD STDCALL
+NtUserDereferenceWndProcHandle(WNDPROC wpHandle, WndProcHandle *Data);
 #endif /* __WIN32K_NTUSER_H */
 
 /* EOF */

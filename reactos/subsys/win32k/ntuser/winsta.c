@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winsta.c,v 1.40 2003/11/10 17:44:49 weiden Exp $
+/* $Id: winsta.c,v 1.41 2003/11/11 20:28:21 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -173,7 +173,7 @@ InitWindowStationImpl(VOID)
   wcx.hbrBackground = NULL;
   wcx.lpszMenuName = NULL;
   wcx.lpszClassName = L"DesktopWindowClass";
-  DesktopWindowClass = IntCreateClass(&wcx, TRUE, (RTL_ATOM)32880);
+  DesktopWindowClass = IntCreateClass(&wcx, TRUE, IntDesktopWindowProc, (RTL_ATOM)32880);
 
   return(STATUS_SUCCESS);
 }

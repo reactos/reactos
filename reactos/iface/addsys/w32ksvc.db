@@ -318,7 +318,7 @@ NtUserCreateCursorIconHandle            2
 NtUserCreateDesktop                     5
 NtUserCreateLocalMemHandle              4
 NtUserCreateMenu			0
-NtUserCreateWindowEx                    13
+NtUserCreateWindowEx                    14
 NtUserCreateWindowStation               6
 NtUserDdeGetQualityOfService            3
 NtUserDdeInitialize                     5
@@ -563,6 +563,7 @@ NtUserGetParent                         1
 NtUserGetWindow                         2
 NtUserGetLastActivePopup                1
 NtUserGetShellWindow                    0
+NtUserDereferenceWndProcHandle          2
 # DirectDraw system calls
 NtGdiD3dContextCreate                   4
 NtGdiD3dContextDestroy                  1

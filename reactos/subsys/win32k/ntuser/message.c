@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.30 2003/10/09 06:13:04 gvg Exp $
+/* $Id: message.c,v 1.31 2003/11/11 20:28:21 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -109,22 +109,11 @@ NtUserDispatchMessage(CONST MSG* UnsafeMsg)
   /* FIXME: Call hook procedures. */
 
   /* Call the window procedure. */
-  if (WindowObject->Unicode == TRUE)
-  {
 	Result = IntCallWindowProc(WindowObject->WndProcW,
 					Msg.hwnd,
 					Msg.message,
 					Msg.wParam,
 					Msg.lParam);
-  }
-  else
-  {
-	Result = IntCallWindowProc(WindowObject->WndProcA,
-					Msg.hwnd,
-					Msg.message,
-					Msg.wParam,
-					Msg.lParam);
-  }
 
   return Result;
 }
@@ -532,14 +521,7 @@ IntSendMessage(HWND hWnd,
 	}
       else
 	{
-	if (Window->Unicode == TRUE)
-	{
 	  Result = IntCallWindowProc(Window->WndProcW, hWnd, Msg, wParam, lParam);
-	}
-	else
-	{
-	  Result = IntCallWindowProc(Window->WndProcA, hWnd, Msg, wParam, lParam);
-	}
 	return Result;
 	}
     }
