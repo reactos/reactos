@@ -4,6 +4,16 @@
 
 /* KERNEL FUNCTIONS ********************************************************/
 
+NTSTATUS
+STDCALL
+KeRestoreFloatingPointState(
+  IN PKFLOATING_SAVE  FloatSave);
+
+NTSTATUS
+STDCALL
+KeSaveFloatingPointState(
+  OUT PKFLOATING_SAVE  FloatSave);
+
 #ifndef KeFlushIoBuffers
 #define KeFlushIoBuffers(Mdl, ReadOperation, DmaOperation)
 #endif
