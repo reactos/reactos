@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.77 2003/08/13 20:25:41 chorns Exp $
+# $Id: makefile,v 1.78 2003/08/13 22:43:15 royce Exp $
 
 PATH_TO_TOP = ../..
 
@@ -65,7 +65,7 @@ OBJECTS_OBJECTS = objects/bitmaps.o objects/brush.o objects/cliprgn.o  \
                   objects/region.o objects/text.o objects/wingl.o \
                   objects/bezier.o objects/objconv.o objects/dib.o \
                   objects/palette.o objects/rect.o objects/polyfill.o \
-                  objects/cursoricon.o
+                  objects/cursoricon.o objects/semaphor.o
 
 DIB_OBJECTS = dib/dib.o dib/dib1bpp.o dib/dib4bpp.o dib/dib8bpp.o dib/dib16bpp.o \
               dib/dib24bpp.o dib/dib32bpp.o

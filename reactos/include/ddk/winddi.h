@@ -1159,10 +1159,6 @@ CLIPOBJ_cEnumStart(IN PCLIPOBJ ClipObj,
 PPATHOBJ STDCALL
 CLIPOBJ_ppoGetPath(PCLIPOBJ ClipObj);
 
-/*
-EngAcquireSemaphore
-*/
-
 /* FIXME: find correct defines for following symbols  */
 #define  FL_ZERO_MEMORY  1
 
@@ -1239,6 +1235,30 @@ EngCreatePalette(IN ULONG Mode,
 		 IN ULONG Green,
 		 IN ULONG Blue);
 
+HSEMAPHORE
+STDCALL
+EngCreateSemaphore ( VOID );
+
+VOID
+STDCALL
+EngAcquireSemaphore ( IN HSEMAPHORE hsem );
+
+VOID
+STDCALL
+EngReleaseSemaphore ( IN HSEMAPHORE hsem );
+
+VOID
+STDCALL
+EngDeleteSemaphore ( IN HSEMAPHORE hsem );
+
+BOOL
+STDCALL
+EngIsSemaphoreOwned ( IN HSEMAPHORE hsem );
+
+BOOL
+STDCALL
+EngIsSemaphoreOwnedByCurrentThread ( IN HSEMAPHORE hsem );
+
 /*
 EngCreatePath
 EngCreateSemaphore
@@ -1266,7 +1286,6 @@ EngDeletePalette(IN HPALETTE Palette);
 
 /*
 EngDeletePath
-EngDeleteSemaphore
 */
 
 BOOL STDCALL
@@ -1388,7 +1407,6 @@ EngQueryLocalTime
 EngQueryPalette
 EngQueryPerformanceCounter
 EngQueryPerformanceFrequency
-EngReleaseSemaphore
 EngRestoreFloatingPointState
 EngSaveFloatingPointState
 EngSecureMem
