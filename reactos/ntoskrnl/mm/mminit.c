@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.42 2002/12/16 22:59:44 hbirr Exp $
+/* $Id: mminit.c,v 1.43 2003/01/11 15:26:59 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -364,6 +364,7 @@ VOID MmInit3(VOID)
    MmInitPagerThread();
    MmCreatePhysicalMemorySection();
    MmInitializeRmapList();
+   MmInitializePageOp();
 
    /*
     * Initialise the modified page writer.

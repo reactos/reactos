@@ -410,7 +410,11 @@ MmReleasePageOp(PMM_PAGEOP PageOp);
 PMM_PAGEOP
 MmGetPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
 	    PMM_SECTION_SEGMENT Segment, ULONG Offset, ULONG OpType);
-
+PMM_PAGEOP
+MmCheckForPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
+		 PMM_SECTION_SEGMENT Segment, ULONG Offset);
+VOID
+MmInitializePageOp(VOID);
 VOID
 MiDebugDumpNonPagedPool(BOOLEAN NewOnly);
 VOID
@@ -523,9 +527,6 @@ VOID MmSetDirtyPage(PEPROCESS Process, PVOID Address);
 VOID
 MmInitializeMdlImplementation(VOID);
 extern PHYSICAL_ADDRESS MmSharedDataPagePhysicalAddress;
-PMM_PAGEOP
-MmCheckForPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
-		 PMM_SECTION_SEGMENT Segment, ULONG Offset);
 struct _KTRAP_FRAME;
 NTSTATUS STDCALL 
 MmDumpToPagingFile(ULONG BugCode,

@@ -1,4 +1,4 @@
-/* $Id: pageop.c,v 1.14 2002/10/01 19:27:24 chorns Exp $
+/* $Id: pageop.c,v 1.15 2003/01/11 15:26:59 hbirr Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -22,8 +22,9 @@
 
 #define PAGEOP_HASH_TABLE_SIZE       (32)
 
-KSPIN_LOCK MmPageOpHashTableLock;
-PMM_PAGEOP MmPageOpHashTable[PAGEOP_HASH_TABLE_SIZE] = {NULL, } ;
+static KSPIN_LOCK MmPageOpHashTableLock;
+static PMM_PAGEOP MmPageOpHashTable[PAGEOP_HASH_TABLE_SIZE];
+static NPAGED_LOOKASIDE_LIST MmPageOpLookasideList;
 
 #define TAG_MM_PAGEOP   TAG('M', 'P', 'O', 'P')
 
@@ -51,7 +52,7 @@ MmReleasePageOp(PMM_PAGEOP PageOp)
     {
       MmPageOpHashTable[PageOp->Hash] = PageOp->Next;
       KeReleaseSpinLock(&MmPageOpHashTableLock, oldIrql);
-      ExFreePool(PageOp);
+      ExFreeToNPagedLookasideList(&MmPageOpLookasideList, PageOp);
       return;
     }
   while (PrevPageOp->Next != NULL)
@@ -60,7 +61,7 @@ MmReleasePageOp(PMM_PAGEOP PageOp)
 	{
 	  PrevPageOp->Next = PageOp->Next;
 	  KeReleaseSpinLock(&MmPageOpHashTableLock, oldIrql);
-	  ExFreePool(PageOp);
+          ExFreeToNPagedLookasideList(&MmPageOpLookasideList, PageOp);
 	  return;
 	}
       PrevPageOp = PrevPageOp->Next;
@@ -198,8 +199,7 @@ MmGetPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
   /*
    * Otherwise add a new pageop.
    */
-  PageOp = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_PAGEOP), 
-				 TAG_MM_PAGEOP);
+  PageOp = ExAllocateFromNPagedLookasideList(&MmPageOpLookasideList);
   if (PageOp == NULL)
     {
       KeReleaseSpinLock(&MmPageOpHashTableLock, oldIrql);
@@ -232,6 +232,20 @@ MmGetPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
   return(PageOp);
 }
 
+VOID
+MmInitializePageOp(VOID)
+{
+  memset(MmPageOpHashTable, 0, sizeof(MmPageOpHashTable));
+  KeInitializeSpinLock(&MmPageOpHashTableLock);
+
+  ExInitializeNPagedLookasideList (&MmPageOpLookasideList,
+	                           NULL,
+				   NULL,
+				   0,
+				   sizeof(MM_PAGEOP),
+				   TAG_MM_PAGEOP,
+				   50);
+}
 
 
 
