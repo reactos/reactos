@@ -1,11 +1,104 @@
-Index: main.c
-===================================================================
-RCS file: /home/wine/wine/tools/winebuild/main.c,v
-retrieving revision 1.55
-diff -u -r1.55 main.c
---- main.c	25 Mar 2004 00:40:52 -0000	1.55
-+++ main.c	23 Sep 2004 20:38:14 -0000
-@@ -412,9 +412,7 @@
+--- build.h	Thu Mar 25 07:35:37 2004
++++ build.h	Sun Dec 26 19:03:46 2004
+@@ -185,6 +185,7 @@
+ extern void BuildSpec32File( FILE *outfile, DLLSPEC *spec );
+ extern void BuildDef32File( FILE *outfile, DLLSPEC *spec );
+ extern void BuildDebugFile( FILE *outfile, const char *srcdir, char **argv );
++extern void BuildPedllFile( FILE *outfile, DLLSPEC *spec );
+ 
+ extern int parse_spec_file( FILE *file, DLLSPEC *spec );
+ extern int parse_def_file( FILE *file, DLLSPEC *spec );
+--- import.c	Thu Jul 29 07:35:19 2004
++++ import.c	Sun Dec 26 19:05:00 2004
+@@ -20,7 +20,6 @@
+  */
+ 
+ #include "config.h"
+-#include "wine/port.h"
+ 
+ #include <ctype.h>
+ #include <fcntl.h>
+@@ -31,8 +30,7 @@
+ # include <unistd.h>
+ #endif
+ 
+-#include "windef.h"
+-#include "winbase.h"
++#include "winglue.h"
+ #include "build.h"
+ 
+ struct import
+--- main.c	Thu Mar 25 07:35:37 2004
++++ main.c	Sun Dec 26 19:05:06 2004
+@@ -23,7 +23,6 @@
+  */
+ 
+ #include "config.h"
+-#include "wine/port.h"
+ 
+ #include <assert.h>
+ #include <stdio.h>
+@@ -35,8 +34,7 @@
+ # include <getopt.h>
+ #endif
+ 
+-#include "windef.h"
+-#include "winbase.h"
++#include "winglue.h"
+ #include "build.h"
+ 
+ int UsePIC = 0;
+@@ -74,7 +72,8 @@
+     MODE_DEF,
+     MODE_DEBUG,
+     MODE_RELAY16,
+-    MODE_RELAY32
++    MODE_RELAY32,
++    MODE_PEDLL
+ };
+ 
+ static enum exec_mode_values exec_mode = MODE_NONE;
+@@ -159,7 +158,8 @@
+ "       --exe=NAME           Build a .c file for the named executable\n"
+ "       --debug [FILES]      Build a .c file with the debug channels declarations\n"
+ "       --relay16            Build the 16-bit relay assembly routines\n"
+-"       --relay32            Build the 32-bit relay assembly routines\n\n"
++"       --relay32            Build the 32-bit relay assembly routines\n"
++"       --pedll              Build a .c file for PE dll\n\n"
+ "The mode options are mutually exclusive; you must specify one and only one.\n\n";
+ 
+ enum long_options_values
+@@ -171,7 +171,8 @@
+     LONG_OPT_RELAY16,
+     LONG_OPT_RELAY32,
+     LONG_OPT_SUBSYSTEM,
+-    LONG_OPT_VERSION
++    LONG_OPT_VERSION,
++    LONG_OPT_PEDLL
+ };
+ 
+ static const char short_options[] = "C:D:F:H:I:K:L:M:N:d:e:f:hi:kl:m:o:r:w";
+@@ -186,6 +187,7 @@
+     { "relay32",  0, 0, LONG_OPT_RELAY32 },
+     { "subsystem",1, 0, LONG_OPT_SUBSYSTEM },
+     { "version",  0, 0, LONG_OPT_VERSION },
++    { "pedll",    1, 0, LONG_OPT_PEDLL },
+     /* aliases for short options */
+     { "source-dir",    1, 0, 'C' },
+     { "delay-lib",     1, 0, 'd' },
+@@ -341,6 +343,11 @@
+         case LONG_OPT_VERSION:
+             printf( "winebuild version " PACKAGE_VERSION "\n" );
+             exit(0);
++        case LONG_OPT_PEDLL:
++            set_exec_mode( MODE_PEDLL );
++            spec_file_name = xstrdup( optarg );
++            set_dll_file_name( optarg, spec );
++            break;
+         case '?':
+             usage(1);
+             break;
+@@ -412,9 +419,7 @@
          switch (spec->type)
          {
              case SPEC_WIN16:
@@ -16,7 +109,7 @@ diff -u -r1.55 main.c
                  break;
              case SPEC_WIN32:
                  read_undef_symbols( argv );
-@@ -439,12 +437,10 @@
+@@ -439,12 +444,15 @@
          BuildDebugFile( output_file, current_src_dir, argv );
          break;
      case MODE_RELAY16:
@@ -25,39 +118,170 @@ diff -u -r1.55 main.c
 +        fatal_error( "Win16 relays are not supported in ReactOS version of winebuild\n" );
          break;
      case MODE_RELAY32:
--        if (argv[0]) fatal_error( "file argument '%s' not allowed in this mode\n", argv[0] );
--        BuildRelays32( output_file );
 +        fatal_error( "Win32 relays are not supported in ReactOS version of winebuild\n" );
++        break;
++    case MODE_PEDLL:
+         if (argv[0]) fatal_error( "file argument '%s' not allowed in this mode\n", argv[0] );
+-        BuildRelays32( output_file );
++        if (!parse_input_file( spec )) break;
++        BuildPedllFile( output_file, spec );
          break;
      default:
          usage(1);
-Index: spec32.c
-===================================================================
-RCS file: /home/wine/wine/tools/winebuild/spec32.c,v
-retrieving revision 1.83
-diff -u -r1.83 spec32.c
---- spec32.c	15 Jul 2004 18:58:42 -0000	1.83
-+++ spec32.c	23 Sep 2004 20:38:15 -0000
-@@ -30,9 +30,15 @@
+--- parser.c	Sat Aug 28 07:35:50 2004
++++ parser.c	Sun Dec 26 19:05:14 2004
+@@ -23,7 +23,6 @@
+  */
+ 
+ #include "config.h"
+-#include "wine/port.h"
+ 
+ #include <assert.h>
+ #include <ctype.h>
+@@ -32,8 +31,7 @@
+ #include <stdlib.h>
+ #include <string.h>
+ 
+-#include "windef.h"
+-#include "winbase.h"
++#include "winglue.h"
+ #include "build.h"
+ 
+ int current_line = 0;
+--- relay.c	Wed May 19 07:35:43 2004
++++ relay.c	Sun Dec 26 19:04:48 2004
+@@ -23,7 +23,6 @@
+  */
+ 
+ #include "config.h"
+-#include "wine/port.h"
+ 
+ #include <ctype.h>
+ 
+--- res16.c	Thu Feb 12 06:50:19 2004
++++ res16.c	Sun Dec 26 19:05:20 2004
+@@ -19,7 +19,6 @@
+  */
+ 
+ #include "config.h"
+-#include "wine/port.h"
+ 
+ #include <ctype.h>
+ #include <stdlib.h>
+@@ -37,8 +36,7 @@
+ #include <sys/mman.h>
+ #endif
+ 
+-#include "windef.h"
+-#include "winbase.h"
++#include "winglue.h"
+ #include "build.h"
+ 
+ #define ALIGNMENT 2 /* alignment for resource data */
+--- res32.c	Wed Sep  8 07:35:21 2004
++++ res32.c	Sun Dec 26 19:05:26 2004
+@@ -19,7 +19,6 @@
+  */
+ 
+ #include "config.h"
+-#include "wine/port.h"
+ 
+ #include <ctype.h>
+ #include <stdlib.h>
+@@ -37,8 +36,7 @@
+ #include <sys/mman.h>
+ #endif
+ 
+-#include "windef.h"
+-#include "winbase.h"
++#include "winglue.h"
+ #include "build.h"
+ 
+ /* Unicode string or integer id */
+--- spec16.c	Wed May 19 07:35:43 2004
++++ spec16.c	Sun Dec 26 19:04:48 2004
+@@ -23,7 +23,6 @@
+  */
+ 
+ #include "config.h"
+-#include "wine/port.h"
+ 
+ #include <assert.h>
+ #include <ctype.h>
+--- spec32.c	Fri Jul 16 07:35:18 2004
++++ spec32.c	Sun Dec 26 19:05:36 2004
+@@ -23,16 +23,17 @@
+  */
+ 
+ #include "config.h"
+-#include "wine/port.h"
+ 
+ #include <assert.h>
+ #include <ctype.h>
  #include <stdarg.h>
  #include <string.h>
  
-+#ifdef WIN32
- #include "windef.h"
- #include "winbase.h"
+-#include "windef.h"
+-#include "winbase.h"
 -#include "wine/exception.h"
-+#else
 +#include "winglue.h"
-+#endif
++
 +#define EXCEPTION_WINE_STUB       0x80000100  /* stub entry point called */
 +#define EH_NONCONTINUABLE   0x01
 +
  #include "build.h"
  
  
-@@ -886,7 +892,10 @@
+@@ -845,12 +846,10 @@
+         int is_data = 0;
+ 
+         if (!odp) continue;
+-        if (odp->flags & FLAG_REGISTER) continue;
+-        if (odp->type == TYPE_STUB) continue;
+-
+         if (odp->name) name = odp->name;
++        else if (odp->type == TYPE_STUB) name = make_internal_name( odp, spec, "stub" );
+         else if (odp->export_name) name = odp->export_name;
+-        else continue;
++        else name = make_internal_name( odp, spec, "noname_export" );
+ 
+         fprintf(outfile, "  %s", name);
+ 
+@@ -880,13 +879,42 @@
+             }
+             break;
+         }
++        case TYPE_STUB:
++        {
++            if (!kill_at)
++            {
++                const char *check = name + strlen(name);
++                while (name != check &&
++                       '0' <= check[-1] && check[-1] <= '9')
++                {
++                    check--;
++                }
++                if (name != check && check != name + strlen(name) &&
++                    '@' == check[-1])
++                {
++                    fprintf(outfile, "%s", check - 1);
++                }
++            }
++            if (NULL != odp->name)
++            {
++                fprintf(outfile, "=%s", make_internal_name( odp, spec, "stub" ));
++            }
++            break;
++        }
+         default:
+             assert(0);
+         }
          fprintf( outfile, " @%d", odp->ordinal );
++#if 0 /* MinGW binutils cannot handle this correctly */
          if (!odp->name) fprintf( outfile, " NONAME" );
++#else
++        if (!odp->name && (odp->type == TYPE_STUB || odp->export_name)) fprintf( outfile, " NONAME" );
++#endif
          if (is_data) fprintf( outfile, " DATA" );
 +#if 0
 +        /* MinGW binutils cannot handle this correctly */
@@ -66,21 +290,43 @@ diff -u -r1.83 spec32.c
          fprintf( outfile, "\n" );
      }
  }
-Index: utils.c
-===================================================================
-RCS file: /home/wine/wine/tools/winebuild/utils.c,v
-retrieving revision 1.20
-diff -u -r1.20 utils.c
---- utils.c	25 Mar 2004 00:40:52 -0000	1.20
-+++ utils.c	23 Sep 2004 20:38:15 -0000
-@@ -21,6 +21,10 @@
- #include "config.h"
- #include "wine/port.h"
+@@ -984,4 +1012,25 @@
+              "}\n", prefix );
  
+     free( prefix );
++}
++
++
++/*******************************************************************
++ *         BuildPedllFile
++ *
++ * Build a PE DLL C file from a spec file.
++ */
++void BuildPedllFile( FILE *outfile, DLLSPEC *spec )
++{
++    int nr_exports;
++
++    nr_exports = spec->base <= spec->limit ? spec->limit - spec->base + 1 : 0;
++    output_standard_file_header( outfile );
++
++    if (nr_exports)
++    {
++        /* Output the stub functions */
++
++        output_stub_funcs( outfile, spec );
++    }
+ }
+--- winebuild/utils.c	Thu Mar 25 07:35:37 2004
++++ winebuild/utils.c	Sun Dec 26 19:04:48 2004
+@@ -19,7 +19,10 @@
+  */
+ 
+ #include "config.h"
+-#include "wine/port.h"
++
 +#if !defined(WIN32)
 +#undef strdup
 +#endif
-+
+ 
  #include <ctype.h>
  #include <stdarg.h>
- #include <stdio.h>

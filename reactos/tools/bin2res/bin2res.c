@@ -21,7 +21,6 @@
  */
 
 #include "config.h"
-#include "wine/port.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,6 +31,11 @@
 #ifdef HAVE_SYS_PARAM_H
 # include <sys/param.h>
 #endif
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>
+#endif
+
+extern int mkstemps(char *template, int suffix_len);
 
 static const char* help =
         "Usage: bin2res [OPTIONS] <rsrc.rc>\n"
