@@ -1,4 +1,4 @@
-/* $Id: global.c,v 1.26 2004/07/03 17:40:22 navaraf Exp $
+/* $Id: global.c,v 1.27 2004/08/28 22:16:27 navaraf Exp $
  *
  * Win32 Global/Local heap functions (GlobalXXX, LocalXXX).
  * These functions included in Win32 for compatibility with 16 bit Windows
@@ -491,8 +491,6 @@ GlobalReAlloc(HGLOBAL hMem,
 
     DPRINT("GlobalReAlloc( 0x%lX, 0x%lX, 0x%X )\n", (ULONG)hMem, dwBytes, uFlags);
 
-    hnew = 0;
-    
     if (uFlags & GMEM_ZEROINIT)
     {
         heap_flags = HEAP_ZERO_MEMORY;
@@ -546,13 +544,6 @@ GlobalReAlloc(HGLOBAL hMem,
         {
             /* reallocate a moveable block */
             phandle= HANDLE_TO_INTERN(hMem);
-#if 0
-            if(phandle->LockCount != 0)
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-            }
-            else
-#endif
             if (0 != dwBytes)
             {
                 hnew = hMem;
@@ -587,7 +578,6 @@ GlobalReAlloc(HGLOBAL hMem,
             }
             else
             {
-                hnew = hMem;
                 if(phandle->Pointer)
                 {
                     RtlFreeHeap(GetProcessHeap(), 0, phandle->Pointer - HANDLE_SIZE);
@@ -694,7 +684,7 @@ GlobalUnlock(HGLOBAL hMem)
       else if (GLOBAL_LOCK_MAX > phandle->LockCount)
       {
          phandle->LockCount--;
-         locked = (0 == phandle->LockCount) ? TRUE : FALSE;
+         locked = (0 != phandle->LockCount) ? TRUE : FALSE;
          SetLastError(NO_ERROR);
       }
    }
@@ -727,12 +717,4 @@ GlobalWire(HGLOBAL hMem)
    return GlobalLock(hMem);
 }
 
-/*
- * @implemented
- */
-//HGLOBAL STDCALL
-//GlobalDiscard(HGLOBAL hMem)
-//{
-//    return GlobalReAlloc(hMem, 0, GMEM_MOVEABLE);
-//}
 /* EOF */
