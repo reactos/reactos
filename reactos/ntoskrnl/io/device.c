@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.50 2003/02/19 00:05:07 gvg Exp $
+/* $Id: device.c,v 1.51 2003/05/12 10:00:46 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -262,14 +262,14 @@ IopCreateDriverObject(PDRIVER_OBJECT *DriverObject,
       DPRINT("Driver name: '%wZ'\n", &DriverName);
     }
 
-  /*  Initialize ObjectAttributes for ModuleObject  */
+  /* Initialize ObjectAttributes for driver object */
   InitializeObjectAttributes(&ObjectAttributes,
 			     (ServiceName != NULL)? &DriverName : NULL,
 			     OBJ_PERMANENT,
 			     NULL,
 			     NULL);
 
-  /*  Create module object  */
+  /* Create module object */
   Status = ObCreateObject(&DriverHandle,
                           STANDARD_RIGHTS_REQUIRED,
                           &ObjectAttributes,

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.62 2002/11/05 20:24:33 hbirr Exp $
+/* $Id: create.c,v 1.63 2003/05/12 10:00:46 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -67,8 +67,9 @@ IopCreateFile(PVOID			ObjectBody,
 	      PWSTR			RemainingPath,
 	      POBJECT_ATTRIBUTES	ObjectAttributes)
 {
-  PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT) Parent;
+  PDEVICE_OBJECT DeviceObject;
   PFILE_OBJECT FileObject = (PFILE_OBJECT) ObjectBody;
+  POBJECT_TYPE ParentObjectType;
   NTSTATUS Status;
 
   DPRINT("IopCreateFile(ObjectBody %x, Parent %x, RemainingPath %S)\n",
@@ -76,73 +77,97 @@ IopCreateFile(PVOID			ObjectBody,
 	 Parent,
 	 RemainingPath);
 
-  if (NULL == DeviceObject)
+  if (NULL == Parent)
     {
       /* This is probably an attempt to create a meta fileobject (eg. for FAT)
          for the cache manager, so return STATUS_SUCCESS */
-      DPRINT("DeviceObject was NULL\n");
+      DPRINT("Parent object was NULL\n");
       return(STATUS_SUCCESS);
     }
 
-  if (IoDeviceObjectType != BODY_TO_HEADER(Parent)->ObjectType)
+  ParentObjectType = BODY_TO_HEADER(Parent)->ObjectType;
+
+  if (ParentObjectType != IoDeviceObjectType &&
+      ParentObjectType != IoFileObjectType)
     {
-      CPRINT("Parent is a %S which is not a device type\n",
+      CPRINT("Parent is a %S which is neither a file type nor a device type\n",
 	     BODY_TO_HEADER(Parent)->ObjectType->TypeName.Buffer);
       return(STATUS_UNSUCCESSFUL);
     }
 
-  Status = ObReferenceObjectByPointer(DeviceObject,
+  Status = ObReferenceObjectByPointer(Parent,
 				      STANDARD_RIGHTS_REQUIRED,
-				      IoDeviceObjectType,
+				      ParentObjectType,
 				      UserMode);
   if (!NT_SUCCESS(Status))
     {
-      CPRINT("Failed to reference device object %x\n", DeviceObject);
+      CPRINT("Failed to reference parent object %x\n", Parent);
       return(Status);
     }
 
-  DeviceObject = IoGetAttachedDevice(DeviceObject);
-  DPRINT("DeviceObject %x\n", DeviceObject);
-
-  if (NULL == RemainingPath)
+  if (ParentObjectType == IoDeviceObjectType)
     {
-      FileObject->Flags = FileObject->Flags | FO_DIRECT_DEVICE_OPEN;
-      FileObject->FileName.Buffer = 0;
-      FileObject->FileName.Length = FileObject->FileName.MaximumLength = 0;
+      /* Parent is a devce object */
+      DeviceObject = IoGetAttachedDevice((PDEVICE_OBJECT)Parent);
+      DPRINT("DeviceObject %x\n", DeviceObject);
+
+      if (RemainingPath == NULL)
+	{
+	  FileObject->Flags = FileObject->Flags | FO_DIRECT_DEVICE_OPEN;
+	  FileObject->FileName.Buffer = 0;
+	  FileObject->FileName.Length = FileObject->FileName.MaximumLength = 0;
+	}
+      else
+	{
+	  if ((DeviceObject->DeviceType != FILE_DEVICE_FILE_SYSTEM)
+	      && (DeviceObject->DeviceType != FILE_DEVICE_DISK)
+	      && (DeviceObject->DeviceType != FILE_DEVICE_CD_ROM)
+	      && (DeviceObject->DeviceType != FILE_DEVICE_TAPE)
+	      && (DeviceObject->DeviceType != FILE_DEVICE_NETWORK)
+	      && (DeviceObject->DeviceType != FILE_DEVICE_NAMED_PIPE)
+	      && (DeviceObject->DeviceType != FILE_DEVICE_MAILSLOT))
+	    {
+	      CPRINT("Device was wrong type\n");
+	      return(STATUS_UNSUCCESSFUL);
+	    }
+
+	  if (DeviceObject->DeviceType != FILE_DEVICE_NETWORK
+	      && (DeviceObject->DeviceType != FILE_DEVICE_NAMED_PIPE)
+	      && (DeviceObject->DeviceType != FILE_DEVICE_MAILSLOT))
+	    {
+	      if (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
+		{
+		  DPRINT("Mount the logical volume\n");
+		  Status = IoMountVolume(DeviceObject, FALSE);
+		  DPRINT("Status %x\n", Status);
+		  if (!NT_SUCCESS(Status))
+		    {
+		      CPRINT("Failed to mount logical volume (Status %x)\n",
+			     Status);
+		      return(Status);
+		    }
+		}
+	      DeviceObject = DeviceObject->Vpb->DeviceObject;
+	      DPRINT("FsDeviceObject %lx\n", DeviceObject);
+	    }
+	  RtlCreateUnicodeString(&(FileObject->FileName),
+				 RemainingPath);
+	}
     }
   else
     {
-      if ((DeviceObject->DeviceType != FILE_DEVICE_FILE_SYSTEM)
-	  && (DeviceObject->DeviceType != FILE_DEVICE_DISK)
-	  && (DeviceObject->DeviceType != FILE_DEVICE_CD_ROM)
-	  && (DeviceObject->DeviceType != FILE_DEVICE_TAPE)
-	  && (DeviceObject->DeviceType != FILE_DEVICE_NETWORK)
-	  && (DeviceObject->DeviceType != FILE_DEVICE_NAMED_PIPE)
-	  && (DeviceObject->DeviceType != FILE_DEVICE_MAILSLOT))
+      /* Parent is a file object */
+      if (RemainingPath == NULL)
 	{
-	  CPRINT("Device was wrong type\n");
-	  return(STATUS_UNSUCCESSFUL);
+	  CPRINT("Device is unnamed\n");
+	  return STATUS_UNSUCCESSFUL;
 	}
 
-      if (DeviceObject->DeviceType != FILE_DEVICE_NETWORK
-	  && (DeviceObject->DeviceType != FILE_DEVICE_NAMED_PIPE)
-	  && (DeviceObject->DeviceType != FILE_DEVICE_MAILSLOT))
-	{
-	  if (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
-	    {
-	      DPRINT("Mount the logical volume\n");
-	      Status = IoMountVolume(DeviceObject, FALSE);
-	      DPRINT("Status %x\n", Status);
-	      if (!NT_SUCCESS(Status))
-		{
-		  CPRINT("Failed to mount logical volume (Status %x)\n",
-			 Status);
-		  return(Status);
-		}
-	    }
-	  DeviceObject = DeviceObject->Vpb->DeviceObject;
-	  DPRINT("FsDeviceObject %lx\n", DeviceObject);
-	}
+      DeviceObject = ((PFILE_OBJECT)Parent)->DeviceObject;
+      DPRINT("DeviceObject %x\n", DeviceObject);
+
+      FileObject->RelatedFileObject = (PFILE_OBJECT)Parent;
+
       RtlCreateUnicodeString(&(FileObject->FileName),
 			     RemainingPath);
     }
