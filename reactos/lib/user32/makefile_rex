@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.16 2001/05/07 22:03:27 chorns Exp $
+# $Id: makefile_rex,v 1.17 2001/06/12 17:35:43 chorns Exp $
 #
 # ReactOS Operating System
 #
@@ -6,19 +6,27 @@
 #
 PATH_TO_TOP = ../..
 
-CFLAGS = -I../../include -DDBG
+CFLAGS = -I./include -DUNICODE -DDBG
 
 TARGET=user32
 
 MISC_OBJECTS = \
+  misc/desktop.o  \
 	misc/dllmain.o  \
 	misc/sprintf.o  \
 	misc/stubs.o    \
-	misc/win32k.o
+	misc/win32k.o   \
+	misc/winsta.o
+
+WINDOWS_OBJECTS = \
+	windows/class.o    \
+	windows/message.o  \
+	windows/window.o
 
 RESOURCE_OBJECT = $(TARGET).coff
 
-OBJECTS = $(MISC_OBJECTS) $(RESOURCE_OBJECT)
+OBJECTS = $(MISC_OBJECTS) $(WINDOWS_OBJECTS) \
+          $(RESOURCE_OBJECT)
 
 LIBS = ../ntdll/ntdll.a \
        ../kernel32/kernel32.a \

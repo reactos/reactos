@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.2 2001/05/07 22:03:27 chorns Exp $
+/* $Id: stubs.c,v 1.3 2001/06/12 17:35:45 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -18,45 +18,6 @@ ActivateKeyboardLayout(
   UINT Flags)
 {
   return (HKL)0;
-}
-
-WINBOOL
-STDCALL
-AdjustWindowRect(
-  LPRECT lpRect,
-  DWORD dwStyle,
-  WINBOOL bMenu)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-AdjustWindowRectEx( 
-  LPRECT lpRect, 
-  DWORD dwStyle, 
-  WINBOOL bMenu, 
-  DWORD dwExStyle)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-AllowSetForegroundWindow(
-  DWORD dwProcessId)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-AnimateWindow(
-  HWND hwnd,
-  DWORD dwTime,
-  DWORD dwFlags)
-{
-  return FALSE;
 }
 
 WINBOOL
@@ -88,14 +49,6 @@ AppendMenuW(
   return FALSE;
 }
 
-UINT
-STDCALL
-ArrangeIconicWindows(
-  HWND hWnd)
-{
-  return 0;
-}
-
 WINBOOL
 STDCALL
 AttachThreadInput(
@@ -104,14 +57,6 @@ AttachThreadInput(
   WINBOOL fAttach)
 {
   return FALSE;
-}
-
-HDWP
-STDCALL
-BeginDeferWindowPos(
-  int nNumWindows)
-{
-  return (HDWP)0;
 }
 
 HDC
@@ -127,14 +72,6 @@ WINBOOL
 STDCALL
 BlockInput(
   WINBOOL fBlockIt)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-BringWindowToTop(
-  HWND hWnd)
 {
   return FALSE;
 }
@@ -237,18 +174,6 @@ CallWindowProcW(
   LPARAM lParam)
 {
   return (LRESULT)0;
-}
-
-WORD
-STDCALL
-CascadeWindows(
-  HWND hwndParent,
-  UINT wHow,
-  CONST RECT *lpRect,
-  UINT cKids,
-  const HWND *lpKids)
-{
-  return 0;
 }
 
 WINBOOL
@@ -505,25 +430,6 @@ CheckRadioButton(
   return FALSE;
 }
 
-HWND
-STDCALL
-ChildWindowFromPoint(
-  HWND hWndParent,
-  POINT Point)
-{
-  return (HWND)0;
-}
-
-HWND
-STDCALL
-ChildWindowFromPointEx(
-  HWND hwndParent,
-  POINT pt,
-  UINT uFlags)
-{
-  return (HWND)0;
-}
-
 WINBOOL
 STDCALL
 ClientToScreen(
@@ -544,30 +450,6 @@ ClipCursor(
 WINBOOL
 STDCALL
 CloseClipboard(VOID)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-CloseDesktop(
-  HDESK hDesktop)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-CloseWindow(
-  HWND hWnd)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-CloseWindowStation(
-  HWINSTA hWinSta)
 {
   return FALSE;
 }
@@ -669,32 +551,6 @@ CreateCursor(
   CONST VOID *pvXORPlane)
 {
   return (HCURSOR)0;
-}
-
-HDESK
-STDCALL
-CreateDesktopA(
-  LPCSTR lpszDesktop,
-  LPCSTR lpszDevice,
-  LPDEVMODE pDevmode,
-  DWORD dwFlags,
-  ACCESS_MASK dwDesiredAccess,
-  LPSECURITY_ATTRIBUTES lpsa)
-{
-  return (HDESK)0;
-}
-
-HDESK
-STDCALL
-CreateDesktopW(
-  LPCWSTR lpszDesktop,
-  LPCWSTR lpszDevice,
-  LPDEVMODE pDevmode,
-  DWORD dwFlags,
-  ACCESS_MASK dwDesiredAccess,
-  LPSECURITY_ATTRIBUTES lpsa)
-{
-  return (HDESK)0;
 }
 
 HWND
@@ -850,66 +706,6 @@ STDCALL
 CreatePopupMenu(VOID)
 {
   return (HMENU)0;
-}
-
-HWND
-STDCALL
-CreateWindowExA(
-  DWORD dwExStyle,
-  LPCSTR lpClassName,
-  LPCSTR lpWindowName,
-  DWORD dwStyle,
-  int x,
-  int y,
-  int nWidth,
-  int nHeight,
-  HWND hWndParent,
-  HMENU hMenu,
-  HINSTANCE hInstance,
-  LPVOID lpParam)
-{
-  return (HWND)0;
-}
-
-HWND
-STDCALL
-CreateWindowExW(
-  DWORD dwExStyle,
-  LPCWSTR lpClassName,
-  LPCWSTR lpWindowName,
-  DWORD dwStyle,
-  int x,
-  int y,
-  int nWidth,
-  int nHeight,
-  HWND hWndParent,
-  HMENU hMenu,
-  HINSTANCE hInstance,
-  LPVOID lpParam)
-{
-  return (HWND)0;
-}
-
-HWINSTA
-STDCALL
-CreateWindowStationA(
-  LPSTR lpwinsta,
-  DWORD dwReserved,
-  ACCESS_MASK dwDesiredAccess,
-  LPSECURITY_ATTRIBUTES lpsa)
-{
-  return (HWINSTA)0;
-}
-
-HWINSTA
-STDCALL
-CreateWindowStationW(
-  LPWSTR lpwinsta,
-  DWORD dwReserved,
-  ACCESS_MASK dwDesiredAccess,
-  LPSECURITY_ATTRIBUTES lpsa)
-{
-  return (HWINSTA)0;
 }
 
 WINBOOL
@@ -1299,43 +1095,6 @@ DefMDIChildProcW(
   return (LRESULT)0;
 }
 
-LRESULT
-STDCALL
-DefWindowProcA(
-  HWND hWnd,
-  UINT Msg,
-  WPARAM wParam,
-  LPARAM lParam)
-{
-  return (LRESULT)0;
-}
-
-LRESULT
-STDCALL
-DefWindowProcW(
-  HWND hWnd,
-  UINT Msg,
-  WPARAM wParam,
-  LPARAM lParam)
-{
-  return (LRESULT)0;
-}
-
-HDWP
-STDCALL
-DeferWindowPos(
-  HDWP hWinPosInfo,
-  HWND hWnd,
-  HWND hWndInsertAfter,
-  int x,
-  int y,
-  int cx,
-  int cy,
-  UINT uFlags)
-{
-  return (HDWP)0;
-}
-
 WINBOOL
 STDCALL
 DeleteMenu(
@@ -1381,14 +1140,6 @@ WINBOOL
 STDCALL
 DestroyMenu(
   HMENU hMenu)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-DestroyWindow(
-  HWND hWnd)
 {
   return FALSE;
 }
@@ -1451,22 +1202,6 @@ DialogBoxParamW(
   LPARAM dwInitParam)
 {
   return (INT_PTR)0;
-}
-
-LRESULT
-STDCALL
-DispatchMessageA(
-  CONST MSG *lpmsg)
-{
-  return (LRESULT)0;
-}
-
-LRESULT
-STDCALL
-DispatchMessageW(
-  CONST MSG *lpmsg)
-{
-  return (LRESULT)0;
 }
 
 int
@@ -1769,14 +1504,6 @@ EnableWindow(
 
 WINBOOL
 STDCALL
-EndDeferWindowPos(
-  HDWP hWinPosInfo)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
 EndDialog(
   HWND hDlg,
   INT_PTR nResult)
@@ -1800,52 +1527,12 @@ EndPaint(
   return FALSE;
 }
 
-WINBOOL
-STDCALL
-EnumChildWindows(
-  HWND hWndParent,
-  ENUMWINDOWSPROC lpEnumFunc,
-  LPARAM lParam)
-{
-  return FALSE;
-}
-
 UINT
 STDCALL
 EnumClipboardFormats(
   UINT format)
 {
   return 0;
-}
-
-WINBOOL
-STDCALL
-EnumDesktopWindows(
-  HDESK hDesktop,
-  ENUMWINDOWSPROC lpfn,
-  LPARAM lParam)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-EnumDesktopsA(
-  HWINSTA hwinsta,
-  DESKTOPENUMPROC lpEnumFunc,
-  LPARAM lParam)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-EnumDesktopsW(
-  HWINSTA hwinsta,
-  DESKTOPENUMPROC lpEnumFunc,
-  LPARAM lParam)
-{
-  return FALSE;
 }
 
 WINBOOL
@@ -1963,43 +1650,6 @@ EnumPropsW(
 
 WINBOOL
 STDCALL
-EnumThreadWindows(
-  DWORD dwThreadId,
-  ENUMWINDOWSPROC lpfn,
-  LPARAM lParam)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-EnumWindowStationsA(
-  ENUMWINDOWSTATIONPROC lpEnumFunc,
-  LPARAM lParam)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-EnumWindowStationsW(
-  ENUMWINDOWSTATIONPROC lpEnumFunc,
-  LPARAM lParam)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-EnumWindows(
-  ENUMWINDOWSPROC lpEnumFunc,
-  LPARAM lParam)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
 EqualRect(
   CONST RECT *lprc1,
   CONST RECT *lprc2)
@@ -2033,46 +1683,6 @@ FillRect(
   HBRUSH hbr)
 {
   return 0;
-}
-
-HWND
-STDCALL
-FindWindowA(
-  LPCSTR lpClassName,
-  LPCSTR lpWindowName)
-{
-  return (HWND)0;
-}
-
-HWND
-STDCALL
-FindWindowExA(
-  HWND hwndParent,
-  HWND hwndChildAfter,
-  LPCSTR lpszClass,
-  LPCSTR lpszWindow)
-{
-  return (HWND)0;
-}
-
-HWND
-STDCALL
-FindWindowExW(
-  HWND hwndParent,
-  HWND hwndChildAfter,
-  LPCWSTR lpszClass,
-  LPCWSTR lpszWindow)
-{
-  return (HWND)0;
-}
-
-HWND
-STDCALL
-FindWindowW(
-  LPCWSTR lpClassName,
-  LPCWSTR lpWindowName)
-{
-  return (HWND)0;
 }
 
 WINBOOL
@@ -2118,51 +1728,6 @@ GetActiveWindow(VOID)
   return (HWND)0;
 }
 
-WINBOOL
-STDCALL
-GetAltTabInfo(
-  HWND hwnd,
-  int iItem,
-  PALTTABINFO pati,
-  LPTSTR pszItemText,
-  UINT cchItemText)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-GetAltTabInfoA(
-  HWND hwnd,
-  int iItem,
-  PALTTABINFO pati,
-  LPSTR pszItemText,
-  UINT cchItemText)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-GetAltTabInfoW(
-  HWND hwnd,
-  int iItem,
-  PALTTABINFO pati,
-  LPWSTR pszItemText,
-  UINT cchItemText)
-{
-  return FALSE;
-}
-
-HWND
-STDCALL
-GetAncestor(
-  HWND hwnd,
-  UINT gaFlags)
-{
-  return (HWND)0;
-}
-
 SHORT
 STDCALL
 GetAsyncKeyState(
@@ -2189,102 +1754,6 @@ WINBOOL
 STDCALL
 GetCaretPos(
   LPPOINT lpPoint)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-GetClassInfoA(
-  HINSTANCE hInstance,
-  LPCSTR lpClassName,
-  LPWNDCLASS lpWndClass)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-GetClassInfoExA(
-  HINSTANCE hinst,
-  LPCSTR lpszClass,
-  LPWNDCLASSEX lpwcx)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-GetClassInfoExW(
-  HINSTANCE hinst,
-  LPCWSTR lpszClass,
-  LPWNDCLASSEX lpwcx)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-GetClassInfoW(
-  HINSTANCE hInstance,
-  LPCWSTR lpClassName,
-  LPWNDCLASS lpWndClass)
-{
-  return FALSE;
-}
-
-DWORD
-STDCALL
-GetClassLongA(
-  HWND hWnd,
-  int nIndex)
-{
-  return 0;
-}
-
-DWORD
-STDCALL
-GetClassLongW(
-  HWND hWnd,
-  int nIndex)
-{
-  return 0;
-}
-
-int
-STDCALL
-GetClassNameA(
-  HWND hWnd,
-  LPSTR lpClassName,
-  int nMaxCount)
-{
-  return 0;
-}
-
-int
-STDCALL
-GetClassNameW(
-  HWND hWnd,
-  LPWSTR lpClassName,
-  int nMaxCount)
-{
-  return 0;
-}
-
-WORD
-STDCALL
-GetClassWord(
-  HWND hWnd,
-  int nIndex)
-{
-  return 0;
-}
-
-WINBOOL
-STDCALL
-GetClientRect(
-  HWND hWnd,
-  LPRECT lpRect)
 {
   return FALSE;
 }
@@ -2396,13 +1865,6 @@ GetDCEx(
   return (HDC)0;
 }
 
-HWND
-STDCALL
-GetDesktopWindow(VOID)
-{
-  return (HWND)0;
-}
-
 LONG
 STDCALL
 GetDialogBaseUnits(VOID)
@@ -2472,22 +1934,6 @@ STDCALL
 GetFocus(VOID)
 {
   return (HWND)0;
-}
-
-HWND
-STDCALL
-GetForegroundWindow(VOID)
-{
-  return (HWND)0;
-}
-
-WINBOOL
-STDCALL
-GetGUIThreadInfo(
-  DWORD idThread,
-  LPGUITHREADINFO lpgui)
-{
-  return FALSE;
 }
 
 DWORD
@@ -2597,14 +2043,6 @@ GetKeyboardType(
   int nTypeFlag)
 {
   return 0;
-}
-
-HWND
-STDCALL
-GetLastActivePopup(
-  HWND hWnd)
-{
-  return (HWND)0;
 }
 
 WINBOOL
@@ -2752,17 +2190,6 @@ GetMenuStringW(
   return 0;
 }
 
-WINBOOL
-STDCALL
-GetMessageA(
-  LPMSG lpMsg,
-  HWND hWnd,
-  UINT wMsgFilterMin,
-  UINT wMsgFilterMax)
-{
-  return FALSE;
-}
-
 LPARAM
 STDCALL
 GetMessageExtraInfo(VOID)
@@ -2782,17 +2209,6 @@ STDCALL
 GetMessageTime(VOID)
 {
   return 0;
-}
-
-WINBOOL
-STDCALL
-GetMessageW(
-  LPMSG lpMsg,
-  HWND hWnd,
-  UINT wMsgFilterMin,
-  UINT wMsgFilterMax)
-{
-  return FALSE;
 }
 
 WINBOOL
@@ -2852,14 +2268,6 @@ GetOpenClipboardWindow(VOID)
   return (HWND)0;
 }
 
-HWND
-STDCALL
-GetParent(
-  HWND hWnd)
-{
-  return (HWND)0;
-}
-
 int
 STDCALL
 GetPriorityClipboardFormat(
@@ -2867,21 +2275,6 @@ GetPriorityClipboardFormat(
   int cFormats)
 {
   return 0;
-}
-
-WINBOOL
-STDCALL
-GetProcessDefaultLayout(
-  DWORD *pdwDefaultLayout)
-{
-  return FALSE;
-}
-
-HWINSTA
-STDCALL
-GetProcessWindowStation(VOID)
-{
-  return (HWINSTA)0;
 }
 
 HANDLE
@@ -3015,31 +2408,6 @@ GetTabbedTextExtentW(
   return 0;
 }
 
-HDESK
-STDCALL
-GetThreadDesktop(
-  DWORD dwThreadId)
-{
-  return (HDESK)0;
-}
-
-WINBOOL
-STDCALL
-GetTitleBarInfo(
-  HWND hwnd,
-  PTITLEBARINFO pti)
-{
-  return FALSE;
-}
-
-HWND
-STDCALL
-GetTopWindow(
-  HWND hWnd)
-{
-  return (HWND)0;
-}
-
 WINBOOL
 STDCALL
 GetUpdateRect(
@@ -3084,15 +2452,6 @@ GetUserObjectInformationW(
   return FALSE;
 }
 
-HWND
-STDCALL
-GetWindow(
-  HWND hWnd,
-  UINT uCmd)
-{
-  return (HWND)0;
-}
-
 HDC
 STDCALL
 GetWindowDC(
@@ -3101,131 +2460,11 @@ GetWindowDC(
   return (HDC)0;
 }
 
-WINBOOL
-STDCALL
-GetWindowInfo(
-  HWND hwnd,
-  PWINDOWINFO pwi)
-{
-  return FALSE;
-}
-
-LONG
-STDCALL
-GetWindowLongA(
-  HWND hWnd,
-  int nIndex)
-{
-  return 0;
-}
-
-LONG
-STDCALL
-GetWindowLongW(
-  HWND hWnd,
-  int nIndex)
-{
-  return 0;
-}
-
-UINT
-STDCALL
-GetWindowModuleFileName(
-  HWND hwnd,
-  LPSTR lpszFileName,
-  UINT cchFileNameMax)
-{
-  return 0;
-}
-
-UINT
-STDCALL
-GetWindowModuleFileNameA(
-  HWND hwnd,
-  LPSTR lpszFileName,
-  UINT cchFileNameMax)
-{
-  return 0;
-}
-
-UINT
-STDCALL
-GetWindowModuleFileNameW(
-  HWND hwnd,
-  LPWSTR lpszFileName,
-  UINT cchFileNameMax)
-{
-  return 0;
-}
-
-WINBOOL
-STDCALL
-GetWindowPlacement(
-  HWND hWnd,
-  WINDOWPLACEMENT *lpwndpl)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-GetWindowRect(
-  HWND hWnd,
-  LPRECT lpRect)
-{
-  return FALSE;
-}
-
 int
 STDCALL
 GetWindowRgn(
   HWND hWnd,
   HRGN hRgn)
-{
-  return 0;
-}
-
-int
-STDCALL
-GetWindowTextA(
-  HWND hWnd,
-  LPSTR lpString,
-  int nMaxCount)
-{
-  return 0;
-}
-
-int
-STDCALL
-GetWindowTextLengthA(
-  HWND hWnd)
-{
-  return 0;
-}
-
-int
-STDCALL
-GetWindowTextLengthW(
-  HWND hWnd)
-{
-  return 0;
-}
-
-int
-STDCALL
-GetWindowTextW(
-  HWND hWnd,
-  LPWSTR lpString,
-  int nMaxCount)
-{
-  return 0;
-}
-
-DWORD
-STDCALL
-GetWindowThreadProcessId(
-  HWND hWnd,
-  LPDWORD lpdwProcessId)
 {
   return 0;
 }
@@ -3466,15 +2705,6 @@ IsCharUpperW(
 
 WINBOOL
 STDCALL
-IsChild(
-  HWND hWndParent,
-  HWND hWnd)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
 IsClipboardFormatAvailable(
   UINT format)
 {
@@ -3521,14 +2751,6 @@ IsDlgButtonChecked(
 
 WINBOOL
 STDCALL
-IsIconic(
-  HWND hWnd)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
 IsMenu(
   HMENU hMenu)
 {
@@ -3545,39 +2767,7 @@ IsRectEmpty(
 
 WINBOOL
 STDCALL
-IsWindow(
-  HWND hWnd)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
 IsWindowEnabled(
-  HWND hWnd)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-IsWindowUnicode(
-  HWND hWnd)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-IsWindowVisible(
-  HWND hWnd)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-IsZoomed(
   HWND hWnd)
 {
   return FALSE;
@@ -3778,14 +2968,6 @@ LoadStringW(
   int nBufferMax)
 {
   return 0;
-}
-
-WINBOOL
-STDCALL
-LockSetForegroundWindow(
-  UINT uLockCode)
-{
-  return FALSE;
 }
 
 WINBOOL
@@ -4013,19 +3195,6 @@ MonitorFromWindow(
   return (HMONITOR)0;
 }
 
-WINBOOL
-STDCALL
-MoveWindow(
-  HWND hWnd,
-  int X,
-  int Y,
-  int nWidth,
-  int nHeight,
-  WINBOOL bRepaint)
-{
-  return FALSE;
-}
-
 DWORD
 STDCALL
 MsgWaitForMultipleObjects(
@@ -4114,66 +3283,6 @@ OpenClipboard(
   return FALSE;
 }
 
-HDESK
-STDCALL
-OpenDesktopA(
-  LPSTR lpszDesktop,
-  DWORD dwFlags,
-  WINBOOL fInherit,
-  ACCESS_MASK dwDesiredAccess)
-{
-  return (HDESK)0;
-}
-
-HDESK
-STDCALL
-OpenDesktopW(
-  LPWSTR lpszDesktop,
-  DWORD dwFlags,
-  WINBOOL fInherit,
-  ACCESS_MASK dwDesiredAccess)
-{
-  return (HDESK)0;
-}
-
-WINBOOL
-STDCALL
-OpenIcon(
-  HWND hWnd)
-{
-  return FALSE;
-}
-
-HDESK
-STDCALL
-OpenInputDesktop(
-  DWORD dwFlags,
-  WINBOOL fInherit,
-  ACCESS_MASK dwDesiredAccess)
-{
-  return (HDESK)0;
-}
-
-HWINSTA
-STDCALL
-OpenWindowStationA(
-  LPSTR lpszWinSta,
-  WINBOOL fInherit,
-  ACCESS_MASK dwDesiredAccess)
-{
-  return (HWINSTA)0;
-}
-
-HWINSTA
-STDCALL
-OpenWindowStationW(
-  LPWSTR lpszWinSta,
-  WINBOOL fInherit,
-  ACCESS_MASK dwDesiredAccess)
-{
-  return (HWINSTA)0;
-}
-
 LPARAM
 STDCALL
 PackDDElParam(
@@ -4186,133 +3295,11 @@ PackDDElParam(
 
 WINBOOL
 STDCALL
-PaintDesktop(
-  HDC hdc)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-PeekMessageA(
-  LPMSG lpMsg,
-  HWND hWnd,
-  UINT wMsgFilterMin,
-  UINT wMsgFilterMax,
-  UINT wRemoveMsg)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-PeekMessageW(
-  LPMSG lpMsg,
-  HWND hWnd,
-  UINT wMsgFilterMin,
-  UINT wMsgFilterMax,
-  UINT wRemoveMsg)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-PostMessageA(
-  HWND hWnd,
-  UINT Msg,
-  WPARAM wParam,
-  LPARAM lParam)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-PostMessageW(
-  HWND hWnd,
-  UINT Msg,
-  WPARAM wParam,
-  LPARAM lParam)
-{
-  return FALSE;
-}
-
-VOID
-STDCALL
-PostQuitMessage(
-  int nExitCode)
-{
-}
-
-WINBOOL
-STDCALL
-PostThreadMessageA(
-  DWORD idThread,
-  UINT Msg,
-  WPARAM wParam,
-  LPARAM lParam)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-PostThreadMessageW(
-  DWORD idThread,
-  UINT Msg,
-  WPARAM wParam,
-  LPARAM lParam)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
 PtInRect(
   CONST RECT *lprc,
   POINT pt)
 {
   return FALSE;
-}
-
-HWND
-STDCALL
-RealChildWindowFromPoint(
-  HWND hwndParent,
-  POINT ptParentClientCoords)
-{
-  return (HWND)0;
-}
-
-UINT
-STDCALL
-RealGetWindowClass(
-  HWND  hwnd,
-  LPSTR pszType,
-  UINT  cchType)
-{
-  return 0;
-}
-
-UINT
-STDCALL
-RealGetWindowClassA(
-  HWND  hwnd,
-  LPSTR pszType,
-  UINT  cchType)
-{
-  return 0;
-}
-
-UINT
-STDCALL
-RealGetWindowClassW(
-  HWND  hwnd,
-  LPWSTR pszType,
-  UINT  cchType)
-{
-  return 0;
 }
 
 WINBOOL
@@ -4324,38 +3311,6 @@ RedrawWindow(
   UINT flags)
 {
   return FALSE;
-}
-
-ATOM
-STDCALL
-RegisterClassA(
-  CONST WNDCLASS *lpWndClass)
-{
-  return (ATOM)0;
-}
-
-ATOM
-STDCALL
-RegisterClassExA(
-  CONST WNDCLASSEX *lpwcx)
-{
-  return (ATOM)0;
-}
-
-ATOM
-STDCALL
-RegisterClassExW(
-  CONST WNDCLASSEX *lpwcx)
-{
-  return (ATOM)0;
-}
-
-ATOM
-STDCALL
-RegisterClassW(
-  CONST WNDCLASS *lpWndClass)
-{
-  return (ATOM)0;
 }
 
 UINT
@@ -4560,105 +3515,6 @@ SendInput(
   return 0;
 }
 
-LRESULT
-STDCALL
-SendMessageA(
-  HWND hWnd,
-  UINT Msg,
-  WPARAM wParam,
-  LPARAM lParam)
-{
-  return (LRESULT)0;
-}
-
-WINBOOL
-STDCALL
-SendMessageCallbackA(
-  HWND hWnd,
-  UINT Msg,
-  WPARAM wParam,
-  LPARAM lParam,
-  SENDASYNCPROC lpCallBack,
-  ULONG_PTR dwData)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-SendMessageCallbackW(
-  HWND hWnd,
-  UINT Msg,
-  WPARAM wParam,
-  LPARAM lParam,
-  SENDASYNCPROC lpCallBack,
-  ULONG_PTR dwData)
-{
-  return FALSE;
-}
-
-LRESULT
-STDCALL
-SendMessageTimeoutA(
-  HWND hWnd,
-  UINT Msg,
-  WPARAM wParam,
-  LPARAM lParam,
-  UINT fuFlags,
-  UINT uTimeout,
-  PDWORD_PTR lpdwResult)
-{
-  return (LRESULT)0;
-}
-
-LRESULT
-STDCALL
-SendMessageTimeoutW(
-  HWND hWnd,
-  UINT Msg,
-  WPARAM wParam,
-  LPARAM lParam,
-  UINT fuFlags,
-  UINT uTimeout,
-  PDWORD_PTR lpdwResult)
-{
-  return (LRESULT)0;
-}
-
-
-LRESULT
-STDCALL
-SendMessageW(
-  HWND hWnd,
-  UINT Msg,
-  WPARAM wParam,
-  LPARAM lParam)
-{
-  return (LRESULT)0;
-}
-
-WINBOOL
-STDCALL
-SendNotifyMessageA(
-  HWND hWnd,
-  UINT Msg,
-  WPARAM wParam,
-  LPARAM lParam)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-SendNotifyMessageW(
-  HWND hWnd,
-  UINT Msg,
-  WPARAM wParam,
-  LPARAM lParam)
-{
-  return FALSE;
-}
-
 HWND
 STDCALL
 SetActiveWindow(
@@ -4690,36 +3546,6 @@ SetCaretPos(
   int Y)
 {
   return FALSE;
-}
-
-DWORD
-STDCALL
-SetClassLongA(
-  HWND hWnd,
-  int nIndex,
-  LONG dwNewLong)
-{
-  return 0;
-}
-
-DWORD
-STDCALL
-SetClassLongW(
-  HWND hWnd,
-  int nIndex,
-  LONG dwNewLong)
-{
-  return 0;
-}
-
-WORD
-STDCALL
-SetClassWord(
-  HWND hWnd,
-  int nIndex,
-  WORD wNewWord)
-{
-  return 0;
 }
 
 HANDLE
@@ -4805,14 +3631,6 @@ SetFocus(
 
 WINBOOL
 STDCALL
-SetForegroundWindow(
-  HWND hWnd)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
 SetKeyboardState(
   LPBYTE lpKeyState)
 {
@@ -4825,17 +3643,6 @@ SetLastErrorEx(
   DWORD dwErrCode,
   DWORD dwType)
 {
-}
-
-WINBOOL
-STDCALL
-SetLayeredWindowAttributes(
-  HWND hwnd,
-  COLORREF crKey,
-  BYTE bAlpha,
-  DWORD dwFlags)
-{
-  return FALSE;
 }
 
 WINBOOL
@@ -4906,31 +3713,6 @@ SetMessageExtraInfo(
   LPARAM lParam)
 {
   return (LPARAM)0;
-}
-
-HWND
-STDCALL
-SetParent(
-  HWND hWndChild,
-  HWND hWndNewParent)
-{
-  return (HWND)0;
-}
-
-WINBOOL
-STDCALL
-SetProcessDefaultLayout(
-  DWORD dwDefaultLayout)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-SetProcessWindowStation(
-  HWINSTA hWinSta)
-{
-  return FALSE;
 }
 
 WINBOOL
@@ -5026,14 +3808,6 @@ SetSystemCursor(
   return FALSE;
 }
 
-WINBOOL
-STDCALL
-SetThreadDesktop(
-  HDESK hDesktop)
-{
-  return FALSE;
-}
-
 UINT_PTR
 STDCALL
 SetTimer(
@@ -5067,49 +3841,6 @@ SetUserObjectInformationW(
   return FALSE;
 }
 
-LONG
-STDCALL
-SetWindowLongA(
-  HWND hWnd,
-  int nIndex,
-  LONG dwNewLong)
-{
-  return 0;
-}
-
-LONG
-STDCALL
-SetWindowLongW(
-  HWND hWnd,
-  int nIndex,
-  LONG dwNewLong)
-{
-  return 0;
-}
-
-WINBOOL
-STDCALL
-SetWindowPlacement(
-  HWND hWnd,
-  CONST WINDOWPLACEMENT *lpwndpl)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-SetWindowPos(
-  HWND hWnd,
-  HWND hWndInsertAfter,
-  int X,
-  int Y,
-  int cx,
-  int cy,
-  UINT uFlags)
-{
-  return FALSE;
-}
-
 int
 STDCALL
 SetWindowRgn(
@@ -5118,24 +3849,6 @@ SetWindowRgn(
   WINBOOL bRedraw)
 {
   return 0;
-}
-
-WINBOOL
-STDCALL
-SetWindowTextA(
-  HWND hWnd,
-  LPCSTR lpString)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-SetWindowTextW(
-  HWND hWnd,
-  LPCWSTR lpString)
-{
-  return FALSE;
 }
 
 WINBOOL
@@ -5156,37 +3869,10 @@ ShowCursor(
 
 WINBOOL
 STDCALL
-ShowOwnedPopups(
-  HWND hWnd,
-  WINBOOL fShow)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
 ShowScrollBar(
   HWND hWnd,
   int wBar,
   WINBOOL bShow)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-ShowWindow(
-  HWND hWnd,
-  int nCmdShow)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-ShowWindowAsync(
-  HWND hWnd,
-  int nCmdShow)
 {
   return FALSE;
 }
@@ -5205,14 +3891,6 @@ WINBOOL
 STDCALL
 SwapMouseButton(
   WINBOOL fSwap)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-SwitchDesktop(
-  HDESK hDesktop)
 {
   return FALSE;
 }
@@ -5265,18 +3943,6 @@ TabbedTextOutW(
   int nTabPositions,
   CONST LPINT lpnTabStopPositions,
   int nTabOrigin)
-{
-  return 0;
-}
-
-WORD
-STDCALL
-TileWindows(
-  HWND hwndParent,
-  UINT wHow,
-  CONST RECT *lpRect,
-  UINT cKids,
-  const HWND *lpKids)
 {
   return 0;
 }
@@ -5411,14 +4077,6 @@ TranslateMDISysAccel(
 
 WINBOOL
 STDCALL
-TranslateMessage(
-  CONST MSG *lpMsg)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
 UnhookWindowsHookEx(
   HHOOK hhk)
 {
@@ -5456,24 +4114,6 @@ UnpackDDElParam(
 
 WINBOOL
 STDCALL
-UnregisterClassA(
-  LPCSTR lpClassName,
-  HINSTANCE hInstance)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-UnregisterClassW(
-  LPCWSTR lpClassName,
-  HINSTANCE hInstance)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
 UnregisterDeviceNotification(
   HDEVNOTIFY Handle)
 {
@@ -5485,22 +4125,6 @@ STDCALL
 UnregisterHotKey(
   HWND hWnd,
   int id)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-UpdateLayeredWindow(
-  HWND hwnd,
-  HDC hdcDst,
-  POINT *pptDst,
-  SIZE *psize,
-  HDC hdcSrc,
-  POINT *pptSrc,
-  COLORREF crKey,
-  BLENDFUNCTION *pblend,
-  DWORD dwFlags)
 {
   return FALSE;
 }
@@ -5584,25 +4208,10 @@ WaitForInputIdle(
   return 0;
 }
 
-WINBOOL
-STDCALL
-WaitMessage(VOID)
-{
-  return FALSE;
-}
-
 HWND
 STDCALL
 WindowFromDC(
   HDC hDC)
-{
-  return (HWND)0;
-}
-
-HWND
-STDCALL
-WindowFromPoint(
-  POINT Point)
 {
   return (HWND)0;
 }
