@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.62 2004/05/02 20:16:46 hbirr Exp $ */
+/* $Id: vfat.h,v 1.63 2004/05/15 23:00:02 hbirr Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -288,7 +288,8 @@ typedef struct __DOSDATE
 }
 DOSDATE, *PDOSDATE;
 
-#define IRPCONTEXT_CANWAIT  0x0001
+#define IRPCONTEXT_CANWAIT	    0x0001
+#define IRPCONTEXT_PENDINGRETURNED  0x0002
 
 typedef struct
 {
@@ -301,6 +302,8 @@ typedef struct
    UCHAR MajorFunction;
    UCHAR MinorFunction;
    PFILE_OBJECT FileObject;
+   ULONG RefCount;
+   KEVENT Event;
 } VFAT_IRP_CONTEXT, *PVFAT_IRP_CONTEXT;
 
 typedef struct _VFAT_DIRENTRY_CONTEXT
@@ -332,10 +335,17 @@ NTSTATUS VfatReadDisk(IN PDEVICE_OBJECT pDeviceObject,
                       IN PUCHAR Buffer,
                       IN BOOLEAN Override);
 
-NTSTATUS VfatWriteDisk(IN PDEVICE_OBJECT pDeviceObject,
-                       IN PLARGE_INTEGER WriteOffset,
-                       IN ULONG WriteLength,
-                       IN PUCHAR Buffer);
+NTSTATUS VfatReadDiskPartial (IN PVFAT_IRP_CONTEXT IrpContext,
+			      IN PLARGE_INTEGER ReadOffset,
+			      IN ULONG ReadLength,
+			      IN ULONG BufferOffset,
+			      IN BOOLEAN Wait);
+
+NTSTATUS VfatWriteDiskPartial(IN PVFAT_IRP_CONTEXT IrpContext,
+			      IN PLARGE_INTEGER WriteOffset,
+			      IN ULONG WriteLength,
+			      IN ULONG BufferOffset,
+			      IN BOOLEAN Wait);
 
 NTSTATUS VfatBlockDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
 				   IN ULONG CtlCode,

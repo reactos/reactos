@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.12 2004/03/04 01:29:24 gdalsnes Exp $
+/* $Id: misc.c,v 1.13 2004/05/15 23:00:02 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -164,7 +164,7 @@ PVFAT_IRP_CONTEXT VfatAllocateIrpContext(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    IrpContext = ExAllocateFromNPagedLookasideList(&VfatGlobalData->IrpContextLookasideList);
    if (IrpContext)
    {
-      RtlZeroMemory(IrpContext, sizeof(IrpContext));
+      RtlZeroMemory(IrpContext, sizeof(VFAT_IRP_CONTEXT));
       IrpContext->Irp = Irp;
       IrpContext->DeviceObject = DeviceObject;
       IrpContext->DeviceExt = DeviceObject->DeviceExtension;
@@ -173,6 +173,7 @@ PVFAT_IRP_CONTEXT VfatAllocateIrpContext(PDEVICE_OBJECT DeviceObject, PIRP Irp)
       MajorFunction = IrpContext->MajorFunction = IrpContext->Stack->MajorFunction;
       IrpContext->MinorFunction = IrpContext->Stack->MinorFunction;
       IrpContext->FileObject = IrpContext->Stack->FileObject;
+      IrpContext->Flags = 0;
       if (MajorFunction == IRP_MJ_FILE_SYSTEM_CONTROL ||
           MajorFunction == IRP_MJ_DEVICE_CONTROL ||
           MajorFunction == IRP_MJ_SHUTDOWN)
@@ -185,6 +186,8 @@ PVFAT_IRP_CONTEXT VfatAllocateIrpContext(PDEVICE_OBJECT DeviceObject, PIRP Irp)
       {
          IrpContext->Flags |= IRPCONTEXT_CANWAIT;
       }
+      KeInitializeEvent(&IrpContext->Event, NotificationEvent, FALSE);
+      IrpContext->RefCount = 0;
    }
    return IrpContext;
 }

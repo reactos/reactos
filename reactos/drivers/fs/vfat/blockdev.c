@@ -38,10 +38,51 @@ VfatReadWriteCompletion (IN PDEVICE_OBJECT DeviceObject,
      }
 
    *Irp->UserIosb = Irp->IoStatus;
-   KeSetEvent(Irp->UserEvent, IO_NO_INCREMENT, FALSE);
+   if (Irp->PendingReturned)
+     {
+       KeSetEvent(Irp->UserEvent, IO_NO_INCREMENT, FALSE);
+     }
+
    IoFreeIrp(Irp);
 
    return STATUS_MORE_PROCESSING_REQUIRED;
+}
+
+NTSTATUS STDCALL
+VfatReadWritePartialCompletion (IN PDEVICE_OBJECT DeviceObject,
+				IN PIRP Irp,
+				IN PVOID Context)
+{
+  PVFAT_IRP_CONTEXT IrpContext;
+  PMDL Mdl;
+
+  DPRINT("VfatReadWritePartialCompletion() called\n");
+
+  IrpContext = (PVFAT_IRP_CONTEXT)Context;
+
+  while ((Mdl = Irp->MdlAddress))
+    {
+      Irp->MdlAddress = Mdl->Next;
+      IoFreeMdl(Mdl);
+    }
+  if (Irp->PendingReturned)
+    {
+      IrpContext->Flags |= IRPCONTEXT_PENDINGRETURNED;
+    }
+  if (!NT_SUCCESS(Irp->IoStatus.Status))
+    {
+      IrpContext->Irp->IoStatus.Status = Irp->IoStatus.Status;
+    }
+  if (0 == InterlockedDecrement((PLONG)&IrpContext->RefCount) &&
+      IrpContext->Flags & IRPCONTEXT_PENDINGRETURNED)
+    {
+      KeSetEvent(&IrpContext->Event, IO_NO_INCREMENT, FALSE);
+    }
+  IoFreeIrp(Irp);
+
+  DPRINT("VfatReadWritePartialCompletion() done\n");
+
+  return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
 NTSTATUS
@@ -113,29 +154,100 @@ VfatReadDisk (IN PDEVICE_OBJECT pDeviceObject,
 }
 
 NTSTATUS
-VfatWriteDisk (IN PDEVICE_OBJECT pDeviceObject,
-	       IN PLARGE_INTEGER WriteOffset,
-	       IN ULONG WriteLength,
-	       IN PUCHAR Buffer)
+VfatReadDiskPartial (IN PVFAT_IRP_CONTEXT IrpContext,
+		     IN PLARGE_INTEGER ReadOffset,
+		     IN ULONG ReadLength,
+		     ULONG BufferOffset,
+		     IN BOOLEAN Wait)
 {
   PIRP Irp;
-  IO_STATUS_BLOCK IoStatus;
-  KEVENT event;
   NTSTATUS Status;
+  PVOID Buffer;
 
-  DPRINT ("VfatWriteSectors(pDeviceObject %x, Offset %I64x, Size %d, Buffer %x)\n",
-	  pDeviceObject, WriteOffset->QuadPart, WriteLength, Buffer);
+  DPRINT ("VfatReadDiskPartial(IrpContext %x, ReadOffset %I64x, ReadLength %d, BufferOffset %x, Wait %d)\n",
+	  IrpContext, ReadOffset->QuadPart, ReadLength, BufferOffset, Wait);
 
-  KeInitializeEvent (&event, NotificationEvent, FALSE);
+  DPRINT ("Building synchronous FSD Request...\n");
+
+  Buffer = MmGetMdlVirtualAddress(IrpContext->Irp->MdlAddress) + BufferOffset;
+
+  Irp = IoBuildSynchronousFsdRequest (IRP_MJ_READ,
+                                      IrpContext->DeviceExt->StorageDevice,
+				      NULL,
+				      ReadLength,
+				      ReadOffset,
+				      NULL,
+                                      NULL);
+  if (Irp == NULL)
+    {
+      DPRINT("IoBuildSynchronousFsdRequest failed\n");
+      return(STATUS_UNSUCCESSFUL);
+    }
+
+  if (!IoAllocateMdl(Buffer, ReadLength, FALSE, FALSE, Irp))
+    {
+      DPRINT("IoAllocateMdl failed\n");
+      IoFreeIrp(Irp);
+      return STATUS_UNSUCCESSFUL;
+    }
+
+  IoBuildPartialMdl(IrpContext->Irp->MdlAddress, Irp->MdlAddress, Buffer, ReadLength);
+
+  IoSetCompletionRoutine(Irp,
+                         VfatReadWritePartialCompletion,
+			 IrpContext,
+			 TRUE,
+			 TRUE,
+			 TRUE);
+
+  if (Wait)
+    {
+      KeInitializeEvent(&IrpContext->Event, NotificationEvent, FALSE);
+      IrpContext->RefCount = 1;
+    }
+  else
+    {
+      InterlockedIncrement((PLONG)&IrpContext->RefCount);
+    }
+
+  DPRINT ("Calling IO Driver... with irp %x\n", Irp);
+  Status = IoCallDriver (IrpContext->DeviceExt->StorageDevice, Irp);
+
+  if (Wait && Status == STATUS_PENDING)
+    {
+      KeWaitForSingleObject(&IrpContext->Event, Executive, KernelMode, FALSE, NULL);
+      Status = IrpContext->Irp->IoStatus.Status;
+    }
+
+  DPRINT("%x\n", Status);
+  return Status;
+}
+
+
+NTSTATUS
+VfatWriteDiskPartial (IN PVFAT_IRP_CONTEXT IrpContext,
+		      IN PLARGE_INTEGER WriteOffset,
+		      IN ULONG WriteLength,
+		      IN ULONG BufferOffset,
+		      IN BOOLEAN Wait)
+{
+  PIRP Irp;
+  NTSTATUS Status;
+  PVOID Buffer;
+
+  DPRINT ("VfatWriteDiskPartial(IrpContext %x, WriteOffset %I64x, WriteLength %d, BufferOffset %x, Wait %d)\n",
+	  IrpContext, WriteOffset->QuadPart, WriteLength, BufferOffset, Wait);
+
+  Buffer = MmGetMdlVirtualAddress(IrpContext->Irp->MdlAddress) + BufferOffset;
 
   DPRINT ("Building synchronous FSD Request...\n");
   Irp = IoBuildSynchronousFsdRequest (IRP_MJ_WRITE,
-				      pDeviceObject,
-				      Buffer,
+				      IrpContext->DeviceExt->StorageDevice,
+				      NULL,
 				      WriteLength,
 				      WriteOffset, 
-				      &event, 
-				      &IoStatus);
+				      NULL, 
+				      NULL);
 
   if (!Irp)
     {
@@ -143,32 +255,41 @@ VfatWriteDisk (IN PDEVICE_OBJECT pDeviceObject,
       return (STATUS_UNSUCCESSFUL);
     }
 
+  if (!IoAllocateMdl(Buffer, WriteLength, FALSE, FALSE, Irp))
+    {
+      DPRINT("IoAllocateMdl failed\n");
+      IoFreeIrp(Irp);
+      return STATUS_UNSUCCESSFUL;
+    }
+  IoBuildPartialMdl(IrpContext->Irp->MdlAddress, Irp->MdlAddress, Buffer, WriteLength);
+
   IoSetCompletionRoutine(Irp,
-			 VfatReadWriteCompletion,
-			 NULL,
+                         VfatReadWritePartialCompletion,
+			 IrpContext,
 			 TRUE,
 			 TRUE,
 			 TRUE);
 
+  if (Wait)
+    {
+      KeInitializeEvent(&IrpContext->Event, NotificationEvent, FALSE);
+      IrpContext->RefCount = 1;
+    }
+  else
+    {
+      InterlockedIncrement((PLONG)&IrpContext->RefCount);
+    }
+
+
   DPRINT ("Calling IO Driver...\n");
-  Status = IoCallDriver (pDeviceObject, Irp);
-
-  DPRINT ("Waiting for IO Operation...\n");
-  if (Status == STATUS_PENDING)
+  Status = IoCallDriver (IrpContext->DeviceExt->StorageDevice, Irp);
+  if (Wait && Status == STATUS_PENDING)
     {
-      KeWaitForSingleObject (&event, Suspended, KernelMode, FALSE, NULL);
-      DPRINT ("Getting IO Status...\n");
-      Status = IoStatus.Status;
+      KeWaitForSingleObject(&IrpContext->Event, Executive, KernelMode, FALSE, NULL);
+      Status = IrpContext->Irp->IoStatus.Status;
     }
 
-  if (!NT_SUCCESS (Status))
-    {
-      DPRINT ("IO failed!!! VfatWriteSectors : Error code: %x\n", Status);
-      return (Status);
-    }
-
-  DPRINT ("Block request succeeded\n");
-  return (STATUS_SUCCESS);
+  return Status;
 }
 
 NTSTATUS
@@ -188,9 +309,9 @@ VfatBlockDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
 
   DPRINT("VfatBlockDeviceIoControl(DeviceObject %x, CtlCode %x, "
          "InputBuffer %x, InputBufferSize %x, OutputBuffer %x, "
-         "POutputBufferSize %x (%x)\n", DeviceObject, CtlCode,
-         InputBuffer, InputBufferSize, OutputBuffer, pOutputBufferSize,
-         pOutputBufferSize ? *pOutputBufferSize : 0);
+         "OutputBufferSize %x (%x)\n", DeviceObject, CtlCode,
+         InputBuffer, InputBufferSize, OutputBuffer, OutputBufferSize,
+         OutputBufferSize ? *OutputBufferSize : 0);
 
   KeInitializeEvent (&Event, NotificationEvent, FALSE);
 
