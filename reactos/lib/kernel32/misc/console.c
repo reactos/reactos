@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.50 2003/01/15 21:24:34 chorns Exp $
+/* $Id: console.c,v 1.51 2003/01/18 00:10:59 mdill Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -1306,6 +1306,7 @@ WriteConsoleOutputA(HANDLE		 hConsoleOutput,
 			    sizeof(CSRSS_API_REQUEST));
   if (Request == NULL)
     {
+      CsrReleaseParameterBuffer(BufferBase);
       SetLastError(ERROR_OUTOFMEMORY);
       return FALSE;
     }
@@ -1322,6 +1323,7 @@ WriteConsoleOutputA(HANDLE		 hConsoleOutput,
 			       sizeof(CSRSS_API_REPLY));
   if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
     {
+      CsrReleaseParameterBuffer(BufferBase);
       RtlFreeHeap(GetProcessHeap(), 0, Request);
       SetLastErrorByStatus(Status);
       return FALSE;
@@ -1554,6 +1556,8 @@ WriteConsoleOutputCharacterA(HANDLE		hConsoleOutput,
       lpCharacter += Size;
       Request->Data.WriteConsoleOutputCharRequest.Coord = Reply.Data.WriteConsoleOutputCharReply.EndCoord;
     }
+  
+  RtlFreeHeap( GetProcessHeap(), 0, Request );	
   return TRUE;
 }
 
@@ -1620,7 +1624,7 @@ WriteConsoleOutputAttribute(
 	 Status = CsrClientCallServer( Request, &Reply, sizeof( CSRSS_API_REQUEST ) + (Size * 2), sizeof( CSRSS_API_REPLY ) );
 	 if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
 	    {
-         RtlFreeHeap( GetProcessHeap(), 0, Request );
+	       RtlFreeHeap( GetProcessHeap(), 0, Request );
 	       SetLastErrorByStatus ( Status );
 	       return FALSE;
 	    }
@@ -1628,6 +1632,8 @@ WriteConsoleOutputAttribute(
 	 lpAttribute += Size;
 	 Request->Data.WriteConsoleOutputAttribRequest.Coord = Reply.Data.WriteConsoleOutputAttribReply.EndCoord;
       }
+   
+   RtlFreeHeap( GetProcessHeap(), 0, Request );
    return TRUE;
 }
 
@@ -1719,9 +1725,9 @@ GetNumberOfConsoleInputEvents(
    Request.Type = CSRSS_GET_NUM_INPUT_EVENTS;
    Request.Data.GetNumInputEventsRequest.ConsoleHandle = hConsoleInput;
    Status = CsrClientCallServer(&Request, &Reply, sizeof(CSRSS_API_REQUEST), sizeof(CSRSS_API_REPLY));
-   if(!NT_SUCCESS(Status) || !NT_SUCCESS(Reply.Status))
+   if(!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
    {
-      SetLastErrorByStatus(Reply.Status);
+      SetLastErrorByStatus(Status);
       return FALSE;
    }
    
@@ -2006,7 +2012,7 @@ WINBASEAPI
 BOOL
 WINAPI
 SetConsoleTextAttribute(
-	HANDLE		hConsoleOutput,
+        HANDLE		hConsoleOutput,
         WORD            wAttributes
         )
 {
