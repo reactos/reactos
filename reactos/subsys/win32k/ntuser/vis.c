@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: vis.c,v 1.15 2003/12/27 15:09:51 navaraf Exp $
+ * $Id: vis.c,v 1.15.2.1 2004/01/17 15:25:38 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -29,7 +29,6 @@
 #include <include/painting.h>
 #include <include/rect.h>
 #include <include/vis.h>
-
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -131,7 +130,7 @@ VIS_AddClipRects(PWINDOW_OBJECT Parent, PWINDOW_OBJECT End,
 }
 
 HRGN FASTCALL
-VIS_ComputeVisibleRegion(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
+VIS_ComputeVisibleRegion(PWINDOW_OBJECT Window,
                          BOOLEAN ClientArea, BOOLEAN ClipChildren,
                          BOOLEAN ClipSiblings)
 {
@@ -140,6 +139,7 @@ VIS_ComputeVisibleRegion(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
   HRGN ClipRgn;
   PWINDOW_OBJECT DesktopWindow;
   INT LeftOffset, TopOffset;
+  PDESKTOP_OBJECT Desktop = PsGetWin32Thread()->Desktop;
 
   DesktopWindow = IntGetWindowObject(Desktop->DesktopWindow);
   if (NULL == DesktopWindow)
@@ -211,8 +211,9 @@ VIS_ComputeVisibleRegion(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
 }
 
 VOID FASTCALL
-VIS_WindowLayoutChanged(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
-                        HRGN NewlyExposed)
+VIS_WindowLayoutChanged(
+   PWINDOW_OBJECT Window,
+   HRGN NewlyExposed)
 {
    HRGN Temp;
    
