@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.218 2004/04/14 23:17:56 weiden Exp $
+/* $Id: window.c,v 1.219 2004/04/17 11:00:14 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -410,8 +410,7 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
   IntReferenceWindowObject(Window);
   ObmCloseHandle(ProcessData->WindowStation->HandleTable, Window->Self);
   
-  IntDestroyScrollBar(Window, SB_VERT);
-  IntDestroyScrollBar(Window, SB_HORZ);
+  IntDestroyScrollBars(Window);
   
   IntLockThreadWindows(Window->OwnerThread->Win32Thread);
   Window->Status |= WINDOWSTATUS_DESTROYED;
@@ -1648,18 +1647,6 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->ClientRect = WindowObject->WindowRect;
 
   /* FIXME: Initialize the window menu. */
-  
-  /* Initialize the window's scrollbars */
-  if (dwStyle & WS_VSCROLL)
-  {
-     WindowObject->Style &= ~WS_VSCROLL;
-     NtUserShowScrollBar(WindowObject->Self, SB_VERT, TRUE);
-  }
-  if (dwStyle & WS_HSCROLL)
-  {
-     WindowObject->Style &= ~WS_HSCROLL;
-     NtUserShowScrollBar(WindowObject->Self, SB_HORZ, TRUE);
-  }
 
   /* Send a NCCREATE message. */
   Cs.cx = nWidth;
@@ -1822,7 +1809,17 @@ NtUserCreateWindowEx(DWORD dwExStyle,
     {
       IntReleaseWindowObject(ParentWindow);
     }
-
+  
+  /* Initialize and show the window's scrollbars */
+  if (WindowObject->Style & WS_VSCROLL)
+  {
+     NtUserShowScrollBar(WindowObject->Self, SB_VERT, TRUE);
+  }
+  if (WindowObject->Style & WS_HSCROLL)
+  {
+     NtUserShowScrollBar(WindowObject->Self, SB_HORZ, TRUE);
+  }
+  
   if (dwStyle & WS_VISIBLE)
     {
       DPRINT("NtUserCreateWindow(): About to show window\n");

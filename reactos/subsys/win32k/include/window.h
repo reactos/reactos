@@ -13,6 +13,7 @@ typedef struct _WINDOW_OBJECT *PWINDOW_OBJECT;
 #include <include/winsta.h>
 #include <include/dce.h>
 #include <include/prop.h>
+#include <include/scroll.h>
 
 
 VOID FASTCALL
@@ -85,9 +86,7 @@ typedef struct _WINDOW_OBJECT
   FAST_MUTEX PropListLock;
   ULONG PropListItems;
   /* Scrollbar info */
-  PSCROLLBARINFO pHScroll;
-  PSCROLLBARINFO pVScroll;
-  PSCROLLBARINFO wExtra;
+  PWINDOW_SCROLLINFO Scroll;
   LONG UserData;
   BOOL Unicode;
   WNDPROC WndProcA;

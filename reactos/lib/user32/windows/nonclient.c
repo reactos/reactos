@@ -67,6 +67,10 @@ Already defined in makefile now.
              (WindowRect.right - WindowRect.left == ParentClientRect.right) && \
              (WindowRect.bottom - WindowRect.top == ParentClientRect.bottom)))
 
+#ifndef STATE_SYSTEM_OFFSCREEN
+#define STATE_SYSTEM_OFFSCREEN	0x00010000
+#endif
+
 /*
  * FIXME: This should be moved to a header
  */
@@ -82,6 +86,17 @@ BOOL STDCALL GdiGradientFill(HDC,PTRIVERTEX,ULONG,PVOID,ULONG,ULONG);
 extern ATOM AtomInternalPos;
 
 /* PRIVATE FUNCTIONS **********************************************************/
+
+BOOL
+IntIsScrollBarVisible(HWND hWnd, INT hBar)
+{
+  SCROLLBARINFO sbi;
+  sbi.cbSize = sizeof(SCROLLBARINFO);
+  if(!NtUserGetScrollBarInfo(hWnd, hBar, &sbi))
+    return FALSE;
+  
+  return !(sbi.rgstate[0] & STATE_SYSTEM_OFFSCREEN);
+}
 
 BOOL
 UserHasWindowEdge(DWORD Style, DWORD ExStyle)
@@ -459,7 +474,7 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn)
      
      /* Draw the scrollbars */
      if ((Style & WS_VSCROLL) && (Style & WS_HSCROLL) &&
-         (CurrentRect.bottom - CurrentRect.top) > GetSystemMetrics(SM_CYHSCROLL))
+         IntIsScrollBarVisible(hWnd, OBJID_VSCROLL) && IntIsScrollBarVisible(hWnd, OBJID_HSCROLL))
      {
         RECT ParentClientRect;
         
@@ -469,7 +484,7 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn)
         else
            TempRect.left = TempRect.right - GetSystemMetrics(SM_CXVSCROLL);
         TempRect.top = TempRect.bottom - GetSystemMetrics(SM_CYHSCROLL);
-        FillRect(hDC, &TempRect, GetSysColorBrush(COLOR_SCROLLBAR));
+        FillRect(hDC, &TempRect, GetSysColorBrush(COLOR_BTNFACE));
         /* FIXME: Correct drawing of size-box with WS_EX_LEFTSCROLLBAR */
         if(Parent)
           GetClientRect(Parent, &ParentClientRect);
@@ -482,9 +497,9 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn)
      }
      else
      {
-        if (Style & WS_VSCROLL)
+        if (Style & WS_VSCROLL && IntIsScrollBarVisible(hWnd, OBJID_VSCROLL))
            IntDrawScrollBar(hWnd, hDC, SB_VERT);
-        else if (Style & WS_HSCROLL)
+        else if (Style & WS_HSCROLL && IntIsScrollBarVisible(hWnd, OBJID_HSCROLL))
            IntDrawScrollBar(hWnd, hDC, SB_HORZ);
      }
    }
@@ -561,9 +576,53 @@ DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect)
          InflateRect(Rect, -2 * GetSystemMetrics(SM_CXBORDER),
             -2 * GetSystemMetrics(SM_CYBORDER));
       }
+      
+      if(Style & (WS_VSCROLL | WS_HSCROLL))
+      {
+        SCROLLBARINFO sbi;
+        SETSCROLLBARINFO ssbi;
+        
+        sbi.cbSize = sizeof(SCROLLBARINFO);
+        if((Style & WS_VSCROLL) && NtUserGetScrollBarInfo(hWnd, OBJID_VSCROLL, &sbi))
+        {
+          int i;
+          LONG sx = Rect->right;
+          
+          sx -= GetSystemMetrics(SM_CXVSCROLL);
+          for(i = 0; i <= CCHILDREN_SCROLLBAR; i++)
+            ssbi.rgstate[i] = sbi.rgstate[i];
+          if(sx <= Rect->left)
+            ssbi.rgstate[0] |= STATE_SYSTEM_OFFSCREEN;
+          else
+            ssbi.rgstate[0] &= ~STATE_SYSTEM_OFFSCREEN;
+          NtUserSetScrollBarInfo(hWnd, OBJID_VSCROLL, &ssbi);
+          if(ssbi.rgstate[0] & STATE_SYSTEM_OFFSCREEN)
+            Style &= ~WS_VSCROLL;
+        }
+        else
+          Style &= ~WS_VSCROLL;
+        
+        if((Style & WS_HSCROLL) && NtUserGetScrollBarInfo(hWnd, OBJID_HSCROLL, &sbi))
+        {
+          int i;
+          LONG sy = Rect->bottom;
+          
+          sy -= GetSystemMetrics(SM_CYHSCROLL);
+          for(i = 0; i <= CCHILDREN_SCROLLBAR; i++)
+            ssbi.rgstate[i] = sbi.rgstate[i];
+          if(sy <= Rect->top)
+            ssbi.rgstate[0] |= STATE_SYSTEM_OFFSCREEN;
+          else
+            ssbi.rgstate[0] &= ~STATE_SYSTEM_OFFSCREEN;
+          NtUserSetScrollBarInfo(hWnd, OBJID_HSCROLL, &ssbi);
+          if(ssbi.rgstate[0] & STATE_SYSTEM_OFFSCREEN)
+            Style &= ~WS_HSCROLL;
+        }
+        else
+          Style &= ~WS_HSCROLL;
+      }
 
-      if ((Style & WS_VSCROLL) && (Style & WS_HSCROLL) &&
-          (Rect->bottom - Rect->top) > GetSystemMetrics(SM_CYHSCROLL))
+      if ((Style & WS_VSCROLL) && (Style & WS_HSCROLL))
       {
          if ((ExStyle & WS_EX_LEFTSCROLLBAR) != 0)
             Rect->left += GetSystemMetrics(SM_CXVSCROLL);
