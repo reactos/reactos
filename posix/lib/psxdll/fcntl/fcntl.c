@@ -1,4 +1,4 @@
-/* $Id: fcntl.c,v 1.2 2002/02/20 09:17:57 hyperion Exp $
+/* $Id: fcntl.c,v 1.3 2002/03/07 06:03:11 hyperion Exp $
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -36,7 +36,7 @@ int fcntl(int fildes, int cmd, ...)
  __PdxAcquirePdataLock();
 
  /* get the file descriptors table */
- pftFdTable = __PdxGetProcessData()->FdTable;
+ pftFdTable = &__PdxGetProcessData()->FdTable;
 
  /* fildes is an invalid, closed or uninitialized descriptor */
  if
