@@ -1,4 +1,4 @@
-/* $Id: batch.c,v 1.3 1999/10/03 22:20:32 ekohl Exp $
+/* $Id: batch.c,v 1.4 2001/02/28 22:33:23 ekohl Exp $
  *
  *  BATCH.C - batch file processor for CMD.EXE.
  *
@@ -51,6 +51,9 @@
  *    26-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Replaced CRT io functions by Win32 io functions.
  *        Unicode safe!
+ *    
+ *    23-Feb-2001 (Carl Nettelblad <cnettel@hem.passagen.es>)
+ *        Fixes made to get "for" working.
  */
 
 #include "config.h"
@@ -294,7 +297,6 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 
 LPTSTR ReadBatchLine (LPBOOL bLocalEcho)
 {
-	HANDLE hFind = INVALID_HANDLE_VALUE;
 	LPTSTR first;
 	LPTSTR ip;
 
@@ -346,7 +348,8 @@ LPTSTR ReadBatchLine (LPBOOL bLocalEcho)
 				if (bc->ffind)
 				{
 					/* First already done so do next */
-					fv = FindNextFile (hFind, bc->ffind) ? bc->ffind->cFileName : NULL;
+
+					fv = FindNextFile (bc->hFind, bc->ffind) ? bc->ffind->cFileName : NULL;
 				}
 				else
 				{
@@ -357,8 +360,9 @@ LPTSTR ReadBatchLine (LPBOOL bLocalEcho)
 						return NULL;
 					}
 
-					hFind = FindFirstFile (fv, bc->ffind);
-					fv = !(hFind==INVALID_HANDLE_VALUE) ? bc->ffind->cFileName : NULL;
+					bc->hFind = FindFirstFile (fv, bc->ffind);
+
+					fv = !(bc->hFind==INVALID_HANDLE_VALUE) ? bc->ffind->cFileName : NULL;
 				}
 
 				if (fv == NULL)

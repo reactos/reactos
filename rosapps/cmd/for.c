@@ -21,6 +21,10 @@
  *
  *    01-Sep-1999 (Eric Kohl)
  *        Added help text.
+ *    
+ *    23-Feb-2001 (Carl Nettelblad <cnettel@hem.passagen.se>)
+ *        Implemented preservation of echo flag. Some other for related
+ *        code in other files fixed, too.
  */
 
 #include "config.h"
@@ -142,6 +146,10 @@ INT cmd_for (LPTSTR cmd, LPTSTR param)
 	bc->shiftlevel = 0;
 	bc->forvar = var;
 	bc->forproto = _tcsdup (pp);
+	if (bc->prev)
+		bc->bEcho = bc->prev->bEcho;
+	else
+		bc->bEcho = bEcho;
 
 	return 0;
 }

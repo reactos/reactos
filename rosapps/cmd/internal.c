@@ -119,6 +119,9 @@
  *    15-Mar-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Fixed bug in "cd -" feature. If the previous directory was a root
  *        directory, it was ignored.
+ *
+ *    23-Feb-2001 (Carl Nettelblad <cnettel@hem.passagen.se>)
+ *        Improved chdir/cd command.
  */
 
 #include "config.h"

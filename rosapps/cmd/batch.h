@@ -16,11 +16,10 @@ typedef struct tagBATCHCONTEXT
 	LPTSTR forproto;
 	LPTSTR params;
 	INT    shiftlevel;
-	BOOL   bEcho;        /* Preserve echo flag across batch calls [HBP_001] */
+	BOOL   bEcho;        /* Preserve echo flag across batch calls */
+	HANDLE hFind;        /* Preserve find handle when doing a for */
 	TCHAR forvar;
 } BATCH_CONTEXT, *LPBATCH_CONTEXT;
-
-/* HBP_002 } */
 
 
 /*  The stack of current batch contexts.

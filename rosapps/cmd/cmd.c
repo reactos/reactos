@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.23 2001/02/03 10:40:19 ekohl Exp $
+/* $Id: cmd.c,v 1.24 2001/02/28 22:33:23 ekohl Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -116,6 +116,9 @@
  *
  *    03-Feb-2001 (Eric Kohl <ekohl@rz-online.de>)
  *        Workaround because argc[0] is NULL under ReactOS
+ *
+ *    23-Feb-2001 (Carl Nettelblad <cnettel@hem.passagen.se>)
+ *        %envvar% replacement conflicted with for.
  */
 
 #include "config.h"
@@ -797,7 +800,7 @@ ProcessInput (BOOL bFlag)
 						break;
 
 					default:
-						if ((tp = _tcschr (ip, _T('%'))))
+						if ((tp = _tcschr (ip, _T('%'))) && (tp<=(unsigned int)strchr(ip,_T(' '))-1))
 						{
 							char evar[512];
 							*tp = _T('\0');
@@ -808,6 +811,10 @@ ProcessInput (BOOL bFlag)
 								cp = stpcpy (cp, evar);
 
 							ip = tp + 1;
+						}
+						else
+						{
+							*cp++ = _T('%');
 						}
 						break;
 				}
@@ -822,8 +829,7 @@ ProcessInput (BOOL bFlag)
 		*cp = _T('\0');
 
 		/* strip trailing spaces */
-		while ((--cp >= commandline) && _istspace (*cp))
-			;
+		while ((--cp >= commandline) && _istspace (*cp));
 
 		*(cp + 1) = _T('\0');
 

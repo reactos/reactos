@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.9 1999/12/15 00:50:41 ekohl Exp $
+/* $Id: dir.c,v 1.10 2001/02/28 22:33:23 ekohl Exp $
  *
  *  DIR.C - dir internal command.
  *
@@ -110,6 +110,9 @@
  *
  *    01-Mar-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Replaced all runtime io functions by their Win32 counterparts.
+ *  
+ *    23-Feb-2001 (Carl Nettelblad <cnettel@hem.passagen.se>)
+ *        dir /s now works in deeper trees
  */
 
 #include "config.h"
@@ -998,7 +1001,12 @@ DirRead (LPTSTR szPath, LPTSTR szFilespec, LPINT pLine, DWORD dwFlags)
 
 		if (file.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 		{
-			if (DirList (file.cFileName, szFilespec, pLine, dwFlags))
+			_tcscpy (szFullPath, szPath);
+			if (szFullPath[_tcslen (szFullPath) - 1] != _T('\\'))
+				_tcscat (szFullPath, _T("\\"));
+			_tcscat (szFullPath, file.cFileName);
+			
+			if (DirList (szFullPath, szFilespec, pLine, dwFlags))
 			{
 				FindClose (hFile);
 				return 1;
@@ -1009,9 +1017,12 @@ DirRead (LPTSTR szPath, LPTSTR szFilespec, LPINT pLine, DWORD dwFlags)
 				ConOutPrintf ("\n");
 				if (IncLine (pLine, dwFlags) != 0)
 					return 1;
+				ConOutPrintf ("\n");
+				if (IncLine (pLine, dwFlags) != 0)
+					return 1;
 			}
 
-			if (DirRead (file.cFileName, szFilespec, pLine, dwFlags) == 1)
+			if (DirRead (szFullPath, szFilespec, pLine, dwFlags) == 1)
 			{
 				FindClose (hFile);
 				return 1;
