@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.30 2003/08/14 20:25:52 royce Exp $
+/* $Id: stubs.c,v 1.31 2003/08/17 20:29:56 silverblade Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -217,19 +217,6 @@ GetSystemMenu(
 {
   UNIMPLEMENTED;
   return (HMENU)0;
-}
-
-
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-IsWindowEnabled(
-  HWND hWnd)
-{
-  UNIMPLEMENTED;
-  return FALSE;
 }
 
 

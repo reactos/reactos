@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.11 2003/08/04 16:56:40 gdalsnes Exp $
+/* $Id: input.c,v 1.12 2003/08/17 20:29:57 silverblade Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -72,14 +72,20 @@ BlockInput(WINBOOL fBlockIt)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL STDCALL
 EnableWindow(HWND hWnd,
 	     WINBOOL bEnable)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+    LONG Style = GetWindowLongW(hWnd, GWL_STYLE);
+    Style = bEnable ? Style & ~WS_DISABLED : Style | WS_DISABLED;
+    SetWindowLongW(hWnd, GWL_STYLE, Style);
+    
+    SendMessageA(hWnd, WM_ENABLE, (LPARAM) IsWindowEnabled(hWnd), 0);
+    
+    // Return nonzero if it was disabled, or zero if it wasn't:
+    return IsWindowEnabled(hWnd);
 }
 
 

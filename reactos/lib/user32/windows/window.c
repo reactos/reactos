@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.61 2003/08/17 19:07:11 silverblade Exp $
+/* $Id: window.c,v 1.62 2003/08/17 20:29:57 silverblade Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1284,6 +1284,22 @@ IsWindowVisible(HWND hWnd)
       hWnd = GetAncestor(hWnd, GA_PARENT);
     }
   return(GetWindowLongW(hWnd, GWL_STYLE) & WS_VISIBLE);
+}
+
+
+/*
+ * @implemented
+ */
+WINBOOL
+STDCALL
+IsWindowEnabled(
+  HWND hWnd)
+{
+    // AG: I don't know if child windows are affected if the parent is
+    // disabled. I think they stop processing messages but stay appearing
+    // as enabled.
+    
+    return (! (GetWindowLongW(hWnd, GWL_STYLE) & WS_DISABLED));
 }
 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: draw.c,v 1.21 2003/08/17 19:07:11 silverblade Exp $
+/* $Id: draw.c,v 1.22 2003/08/17 20:29:57 silverblade Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -1615,12 +1615,16 @@ WINBOOL INTERNAL_DrawStateDraw(HDC hdc, UINT type, DRAWSTATEPROC lpOutputFunc,
     BOOL retval = FALSE;
     INT cx = rc->right - rc->left;
     INT cy = rc->bottom - rc->top;
+    
+    if (((type == DST_TEXT) || (type == DST_PREFIXTEXT)) && (lpOutputFunc))
+        type = DST_COMPLEX;
 
     switch(type)
     {
         case DST_TEXT :
         case DST_PREFIXTEXT :
         {
+            DbgPrint("DST_TEXT\n");
             if (unicode)
                 return DrawTextW(hdc, (LPWSTR)lData, (INT)wData, rc, dtflags);
             else
@@ -1641,10 +1645,12 @@ WINBOOL INTERNAL_DrawStateDraw(HDC hdc, UINT type, DRAWSTATEPROC lpOutputFunc,
         
         case DST_COMPLEX :
         {
+            DbgPrint("DST_COMPLEX\n");
             // Call lpOutputFunc, if necessary
             if (lpOutputFunc)
             {
                 OffsetViewportOrgEx(hdc, rc->left, rc->top, NULL);
+                DbgPrint("Calling lpOutputFunc\n");
                 retval = lpOutputFunc(hdc, lData, wData, cx, cy);
                 OffsetViewportOrgEx(hdc, -rc->left, -rc->top, NULL);
                 return retval;
@@ -1769,8 +1775,11 @@ WINBOOL INTERNAL_DrawState(
     {
         DbgPrint("DSS_NORMAL\n");
         SetRect(&rect, x, y, x + cx, y + cy);
+        DbgPrint("L == %d  R == %d  T == %d  B == %d\n", rect.left, rect.right, rect.top, rect.bottom);
         return INTERNAL_DrawStateDraw(hdc, type, lpOutputFunc, lData, wData, &rect, dtflags, unicode);
     }
+    
+    // WARNING: FROM THIS POINT ON THE CODE IS VERY BUGGY
 
     // Set the rectangle to that of the memory DC
     SetRect(&rect, 0, 0, cx, cy);
