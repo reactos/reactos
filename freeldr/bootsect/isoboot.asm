@@ -996,7 +996,8 @@ dapa:		dw 16				; Packet size
 		alignb 4, db 0
 MaxTransfer	dw 2 ;32				; Max sectors per transfer
 
-		times 2048-($-$$) nop		; Pad to file offset 2048
+		times 2046-($-$$) db 0		; Pad to file offset 2046
+		dw 0aa55h			; BootSector signature
 
 
 
