@@ -1,4 +1,4 @@
-; $Id: kernel32.edf,v 1.10 2001/02/17 00:02:32 ekohl Exp $
+; $Id: kernel32.edf,v 1.11 2001/12/11 23:18:16 ea Exp $
 ;
 ; kernel32.edf
 ;
@@ -473,6 +473,7 @@ PeekConsoleInputW=PeekConsoleInputW@16
 PeekNamedPipe=PeekNamedPipe@24
 PostQueuedCompletionStatus=PostQueuedCompletionStatus@16
 PrepareTape=PrepareTape@12
+ProcessIdToSessionId=ProcessIdToSessionId@8
 PulseEvent=PulseEvent@4
 PurgeComm=PurgeComm@8
 QueryDosDeviceA=QueryDosDeviceA@12

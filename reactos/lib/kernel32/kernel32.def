@@ -469,6 +469,7 @@ PeekConsoleInputW@16
 PeekNamedPipe@24
 PostQueuedCompletionStatus@16
 PrepareTape@12
+ProcessIdToSessionId@8
 PulseEvent@4
 PurgeComm@8
 QueryDosDeviceA@12
