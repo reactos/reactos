@@ -861,6 +861,7 @@ static BOOLEAN NTAPI AddControllers(PDRIVER_OBJECT DriverObject)
       DeviceDescription.DmaChannel = gControllerInfo[i].Dma;
       DeviceDescription.InterfaceType = gControllerInfo[i].InterfaceType;
       DeviceDescription.BusNumber = gControllerInfo[i].BusNumber;
+      DeviceDescription.MaximumLength = 2*18*512; /* based on a 1.44MB floppy */
 
       /* DMA 0,1,2,3 are 8-bit; 4,5,6,7 are 16-bit (4 is chain i think) */
       DeviceDescription.DmaWidth = gControllerInfo[i].Dma > 3 ? Width16Bits: Width8Bits;
