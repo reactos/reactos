@@ -40,8 +40,6 @@ typedef struct _WINDOW_OBJECT
   INT Height;
   /* Context help id */
   DWORD ContextHelpId;
-  /* Parent window handle. */
-  HWND ParentHandle;
   /* system menu handle. */
   HMENU SystemMenu;
   /* Handle of the module that created the window. */

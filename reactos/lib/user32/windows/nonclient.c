@@ -25,7 +25,10 @@
 /*
  * Define this to get the code working on ReactOS. It should be removed later.
  */
+/*
+Already defined in makefile now.
 #define __REACTOS__
+*/
 
 /*
  * Use w32api headers

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.28 2003/10/31 18:25:56 navaraf Exp $
+/* $Id: msgqueue.c,v 1.29 2003/11/02 14:08:34 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -226,7 +226,7 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
         Window = IntGetWindowObject(Wnd);
         SpareLParam = MAKELONG(WinPosWindowFromPoint(ScopeWin, Message->Msg.pt, &Window), Msg);
         
-        Result = NtUserSendMessage(Wnd, WM_MOUSEACTIVATE, (WPARAM)Window->ParentHandle, (LPARAM)SpareLParam);
+        Result = NtUserSendMessage(Wnd, WM_MOUSEACTIVATE, (WPARAM)NtUserGetParent(Window->Self), (LPARAM)SpareLParam);
 
         IntReleaseWindowObject(Window);
 
