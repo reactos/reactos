@@ -24,7 +24,7 @@ TOOLSDIR	= ../tools
 
 .PHONY : clean
 
-all: $(BIN2C) fat.bin fat32.bin isoboot.bin
+all: $(BIN2C) fat.bin fat32.bin isoboot.bin ext2.bin
 
 $(BIN2C) :
 	@$(MAKE) --no-print-directory -C $(TOOLSDIR)
@@ -43,6 +43,11 @@ fat32.bin : fat32.asm $(BIN2C)
 isoboot.bin : isoboot.asm
 	@echo ===================================================== Assembling isoboot
 	@$(NASM_CMD) -o isoboot.bin -f bin isoboot.asm
+
+ext2.bin : ext2.asm
+	@echo ===================================================== Assembling ext2
+	@$(NASM_CMD) -o ext2.bin -f bin ext2.asm
+	@$(BIN2C) ext2.bin ext2.h ext2_data
 
 clean:
 	@-$(RM) *.bin

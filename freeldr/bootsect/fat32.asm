@@ -159,17 +159,18 @@ ReadSectorsSetupDiskAddressPacket:
 		int  13h								; Call BIOS
 		jc   PrintDiskError						; If the read failed then abort
 
-		add  sp,0x10							; Remove disk address packet from stack
+		add  sp,byte 0x10							; Remove disk address packet from stack
 
 		popad									; Restore sector count & logical sector number
 
-		movzx ebx,WORD [LBASectorsRead]
+		push bx
+		mov  ebx,DWORD [LBASectorsRead]
         add  eax,ebx							; Increment sector to read
-		shr  ebx,4
+		shl  ebx,5
         mov  dx,es
         add  dx,bx								; Setup read buffer for next sector
         mov  es,dx
-		xor  bx,bx
+		pop  bx
 
 		sub  cx,[LBASectorsRead]
         jnz  ReadSectorsLBA						; Read next sector
@@ -177,7 +178,7 @@ ReadSectorsSetupDiskAddressPacket:
         ret
 
 LBASectorsRead:
-	dw	0
+	dd	0
 
 
 ; Reads logical sectors into [ES:BX]
