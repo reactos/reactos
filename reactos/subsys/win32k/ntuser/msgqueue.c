@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.35 2003/11/22 12:22:07 weiden Exp $
+/* $Id: msgqueue.c,v 1.36 2003/11/23 11:39:48 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -35,6 +35,7 @@
 #include <include/callback.h>
 #include <include/window.h>
 #include <include/winpos.h>
+#include <include/winsta.h>
 #include <include/class.h>
 #include <include/object.h>
 #include <include/input.h>

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: metric.c,v 1.14 2003/09/08 18:50:00 weiden Exp $
+/* $Id: metric.c,v 1.15 2003/11/23 11:39:48 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -73,10 +73,10 @@ NtUserGetSystemMetrics(ULONG Index)
     case SM_CXDOUBLECLK:
     case SM_CYDOUBLECLK:
     case SM_SWAPBUTTON:
-      Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-                                           KernelMode,
-                                           0,
-                                           &WinStaObject);
+      Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+                                              KernelMode,
+                                              0,
+                                              &WinStaObject);
       if (!NT_SUCCESS(Status))
         return 0xFFFFFFFF;
       

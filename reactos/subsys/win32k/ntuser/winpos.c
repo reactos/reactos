@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.45 2003/11/21 17:01:16 navaraf Exp $
+/* $Id: winpos.c,v 1.46 2003/11/23 11:39:48 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -36,7 +36,6 @@
 #include <include/class.h>
 #include <include/error.h>
 #include <include/winsta.h>
-#include <windows.h>
 #include <include/winpos.h>
 #include <include/rect.h>
 #include <include/callback.h>

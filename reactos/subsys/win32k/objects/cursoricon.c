@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.24 2003/11/21 22:46:27 weiden Exp $ */
+/* $Id: cursoricon.c,v 1.25 2003/11/23 11:39:48 navaraf Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -105,14 +105,14 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL Fo
     goto done;
   
   /* FIXME use the desktop's HDC instead of using ScreenDeviceContext */
-  dc = DC_LockDc(ScreenDeviceContext);
+  dc = DC_LockDc(IntGetScreenDC());
   if(!dc)
     goto done;
   
   SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface);
   SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
   DevInfo = dc->DevInfo;
-  DC_UnlockDc(ScreenDeviceContext);
+  DC_UnlockDc(IntGetScreenDC());
   
   if(!NewCursor && (CurInfo->CurrentCursorObject || ForceChange))
   {
@@ -459,7 +459,7 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo, BOOL Indirect)
   NTSTATUS Status;
   HICON Ret;
   
-  Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
 				                               KernelMode,
 				                               0,
 				                               &WinStaObject);
@@ -535,7 +535,7 @@ NtUserGetIconInfo(
   NTSTATUS Status;
   BOOL Ret = FALSE;
   
-  Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
 				                               KernelMode,
 				                               0,
 				                               &WinStaObject);
@@ -596,7 +596,7 @@ NtUserGetIconSize(
   NTSTATUS Status;
   BOOL Ret = FALSE;
   
-  Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
 				                               KernelMode,
 				                               0,
 				                               &WinStaObject);
@@ -686,7 +686,7 @@ NtUserGetCursorInfo(
     return FALSE;
   }
   
-  Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
 				                               KernelMode,
 				                               0,
 				                               &WinStaObject);
@@ -733,7 +733,7 @@ NtUserClipCursor(
   RECT Rect;
   PWINDOW_OBJECT DesktopWindow = NULL;
 
-  NTSTATUS Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+  NTSTATUS Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
 				       KernelMode,
 				       0,
 				       &WinStaObject);
@@ -789,7 +789,7 @@ NtUserDestroyCursor(
   PWINSTATION_OBJECT WinStaObject;
   NTSTATUS Status;
   
-  Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
 				                               KernelMode,
 				                               0,
 				                               &WinStaObject);
@@ -826,7 +826,7 @@ NtUserFindExistingCursorIcon(
   NTSTATUS Status;
   HICON Ret = (HICON)0;
   
-  Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
 				                               KernelMode,
 				                               0,
 				                               &WinStaObject);
@@ -870,7 +870,7 @@ NtUserGetClipCursor(
   if(!lpRect)
     return FALSE;
 
-  Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
 	       KernelMode,
 	       0,
 	       &WinStaObject);
@@ -924,7 +924,7 @@ NtUserSetCursor(
   PWINSTATION_OBJECT WinStaObject;
   NTSTATUS Status;
   
-  Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
 				                               KernelMode,
 				                               0,
 				                               &WinStaObject);
@@ -963,7 +963,7 @@ NtUserSetCursorIconContents(
   NTSTATUS Status;
   BOOL Ret = FALSE;
   
-  Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
 				                               KernelMode,
 				                               0,
 				                               &WinStaObject);
@@ -1037,7 +1037,7 @@ NtUserSetCursorIconData(
   POINT SafeHotspot;
   BOOL Ret = FALSE;
   
-  Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
 				                               KernelMode,
 				                               0,
 				                               &WinStaObject);
@@ -1155,7 +1155,7 @@ NtUserDrawIconEx(
   INT nStretchMode;
   #endif
   
-  Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
 				                               KernelMode,
 				                               0,
 				                               &WinStaObject);

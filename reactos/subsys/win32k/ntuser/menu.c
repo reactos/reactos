@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.31 2003/10/04 16:04:01 weiden Exp $
+/* $Id: menu.c,v 1.32 2003/11/23 11:39:48 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1108,7 +1108,7 @@ NtUserCheckMenuItem(
 
 
 /*
- * @implemented
+ * @unimplemented
  */
 HMENU STDCALL
 NtUserCreateMenu(VOID)
@@ -1116,7 +1116,7 @@ NtUserCreateMenu(VOID)
   PWINSTATION_OBJECT WinStaObject;
   HANDLE Handle;
 
-  NTSTATUS Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+  NTSTATUS Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
 				       KernelMode,
 				       0,
 				       &WinStaObject);

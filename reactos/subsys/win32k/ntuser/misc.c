@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.27 2003/11/22 11:01:28 navaraf Exp $
+/* $Id: misc.c,v 1.28 2003/11/23 11:39:48 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -137,10 +137,10 @@ NtUserCallOneParam(
       return Result;
     
     case ONEPARAM_ROUTINE_SWAPMOUSEBUTTON:
-      Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-                                           KernelMode,
-                                           0,
-                                           &WinStaObject);
+      Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+                                              KernelMode,
+                                              0,
+                                              &WinStaObject);
       if (!NT_SUCCESS(Status))
         return (DWORD)FALSE;
 
@@ -216,10 +216,10 @@ NtUserCallTwoParam(
     case TWOPARAM_ROUTINE_CURSORPOSITION:
       if(!Param1)
         return (DWORD)FALSE;
-      Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-                                           KernelMode,
-                                           0,
-                                           &WinStaObject);
+      Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+                                              KernelMode,
+                                              0,
+                                              &WinStaObject);
       if (!NT_SUCCESS(Status))
         return (DWORD)FALSE;
       
@@ -321,10 +321,10 @@ NtUserSystemParametersInfo(
     case SPI_SETDOUBLECLKHEIGHT:
     case SPI_SETDOUBLECLICKTIME:
       {
-        Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-                                             KernelMode,
-                                             0,
-                                             &WinStaObject);
+        Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+                                                KernelMode,
+                                                0,
+                                                &WinStaObject);
         if (!NT_SUCCESS(Status))
           return (DWORD)FALSE;
         
@@ -441,10 +441,10 @@ NtUserGetDoubleClickTime(VOID)
   NTSTATUS Status;
   PWINSTATION_OBJECT WinStaObject;
   
-  Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-                                       KernelMode,
-                                       0,
-                                       &WinStaObject);
+  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+                                          KernelMode,
+                                          0,
+                                          &WinStaObject);
   if (!NT_SUCCESS(Status))
     return (DWORD)FALSE;
 

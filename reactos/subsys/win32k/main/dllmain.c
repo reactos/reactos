@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.52 2003/11/19 13:19:40 weiden Exp $
+/* $Id: dllmain.c,v 1.53 2003/11/23 11:39:48 navaraf Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -77,10 +77,10 @@ Win32kProcessCallback (struct _EPROCESS *Process,
       if (Process->Win32WindowStation != NULL)
 	{
 	  Status = 
-	    ValidateWindowStationHandle(Process->Win32WindowStation,
-					UserMode,
-					GENERIC_ALL,
-					&Win32Process->WindowStation);
+	    IntValidateWindowStationHandle(Process->Win32WindowStation,
+					   UserMode,
+					   GENERIC_ALL,
+					   &Win32Process->WindowStation);
 	  if (!NT_SUCCESS(Status))
 	    {
 	      DbgPrint("Win32K: Failed to reference a window station for "
@@ -214,6 +214,13 @@ DllMain (
   if (!NT_SUCCESS(Status))
   {
     DbgPrint("Failed to initialize window class implementation!\n");
+    return STATUS_UNSUCCESSFUL;
+  }
+
+  Status = InitDesktopImpl();
+  if (!NT_SUCCESS(Status))
+  {
+    DbgPrint("Failed to initialize window station implementation!\n");
     return STATUS_UNSUCCESSFUL;
   }
 

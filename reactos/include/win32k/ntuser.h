@@ -92,14 +92,12 @@ NtUserBuildMenuItemList(
  ULONG nBufSize,
  DWORD Reserved);
 
-
-DWORD
-STDCALL
+NTSTATUS STDCALL
 NtUserBuildNameList(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+   HWINSTA hWinSta,
+   ULONG dwSize,
+   PVOID lpBuffer,
+   PULONG pRequiredSize);
 
 NTSTATUS
 STDCALL

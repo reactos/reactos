@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.142 2003/11/21 21:12:08 navaraf Exp $
+/* $Id: window.c,v 1.143 2003/11/23 11:39:48 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -441,64 +441,6 @@ DestroyThreadWindows(struct _ETHREAD *Thread)
 }
 
 
-HWND STDCALL
-IntCreateDesktopWindow(PWINSTATION_OBJECT WindowStation,
-			PWNDCLASS_OBJECT DesktopClass,
-			ULONG Width, ULONG Height)
-{
-  PWSTR WindowName;
-  HWND Handle;
-  PWINDOW_OBJECT WindowObject;
-
-  /* Create the window object. */
-  WindowObject = (PWINDOW_OBJECT)ObmCreateObject(WindowStation->HandleTable, 
-						 &Handle, 
-						 otWindow,
-						 sizeof(WINDOW_OBJECT));
-  if (!WindowObject) 
-    {
-      return((HWND)0);
-    }
-
-  /*
-   * Fill out the structure describing it.
-   */
-  WindowObject->Class = DesktopClass;
-  WindowObject->ExStyle = 0;
-  WindowObject->Style = WS_VISIBLE;
-  WindowObject->Flags = 0;
-  WindowObject->Parent = NULL;
-  WindowObject->Owner = NULL;
-  WindowObject->IDMenu = 0;
-  WindowObject->Instance = NULL;
-  WindowObject->Self = Handle;
-  WindowObject->MessageQueue = NULL;
-  WindowObject->ExtraData = NULL;
-  WindowObject->ExtraDataSize = 0;
-  WindowObject->WindowRect.left = 0;
-  WindowObject->WindowRect.top = 0;
-  WindowObject->WindowRect.right = Width;
-  WindowObject->WindowRect.bottom = Height;
-  WindowObject->ClientRect = WindowObject->WindowRect;
-  WindowObject->UserData = 0;
-  /*FIXME: figure out what the correct strange value is and what to do with it (and how to set the wndproc values correctly) */
-  WindowObject->WndProcA = DesktopClass->lpfnWndProcA;
-  WindowObject->WndProcW = DesktopClass->lpfnWndProcW;
-  WindowObject->OwnerThread = PsGetCurrentThread();
-  WindowObject->FirstChild = NULL;
-  WindowObject->LastChild = NULL;
-  WindowObject->PrevSibling = NULL;
-  WindowObject->NextSibling = NULL;
-
-  ExInitializeFastMutex(&WindowObject->ChildrenListLock);
-
-  WindowName = ExAllocatePool(NonPagedPool, sizeof(L"DESKTOP"));
-  wcscpy(WindowName, L"DESKTOP");
-  RtlInitUnicodeString(&WindowObject->WindowName, WindowName);
-
-  return(Handle);
-}
-
 
 HWND FASTCALL
 IntGetActiveWindow(VOID)
@@ -654,6 +596,64 @@ IntGetWindowThreadProcessId(PWINDOW_OBJECT Wnd, PDWORD pid)
    return (DWORD) Wnd->OwnerThread->Cid.UniqueThread;
 }
 
+
+HWND STDCALL
+IntCreateDesktopWindow(PWINSTATION_OBJECT WindowStation,
+			PWNDCLASS_OBJECT DesktopClass,
+			ULONG Width, ULONG Height)
+{
+  PWSTR WindowName;
+  HWND Handle;
+  PWINDOW_OBJECT WindowObject;
+
+  /* Create the window object. */
+  WindowObject = (PWINDOW_OBJECT)ObmCreateObject(WindowStation->HandleTable, 
+						 &Handle, 
+						 otWindow,
+						 sizeof(WINDOW_OBJECT));
+  if (!WindowObject) 
+    {
+      return((HWND)0);
+    }
+
+  /*
+   * Fill out the structure describing it.
+   */
+  WindowObject->Class = DesktopClass;
+  WindowObject->ExStyle = 0;
+  WindowObject->Style = WS_VISIBLE;
+  WindowObject->Flags = 0;
+  WindowObject->Parent = NULL;
+  WindowObject->Owner = NULL;
+  WindowObject->IDMenu = 0;
+  WindowObject->Instance = NULL;
+  WindowObject->Self = Handle;
+  WindowObject->MessageQueue = NULL;
+  WindowObject->ExtraData = NULL;
+  WindowObject->ExtraDataSize = 0;
+  WindowObject->WindowRect.left = 0;
+  WindowObject->WindowRect.top = 0;
+  WindowObject->WindowRect.right = Width;
+  WindowObject->WindowRect.bottom = Height;
+  WindowObject->ClientRect = WindowObject->WindowRect;
+  WindowObject->UserData = 0;
+  /*FIXME: figure out what the correct strange value is and what to do with it (and how to set the wndproc values correctly) */
+  WindowObject->WndProcA = DesktopClass->lpfnWndProcA;
+  WindowObject->WndProcW = DesktopClass->lpfnWndProcW;
+  WindowObject->OwnerThread = PsGetCurrentThread();
+  WindowObject->FirstChild = NULL;
+  WindowObject->LastChild = NULL;
+  WindowObject->PrevSibling = NULL;
+  WindowObject->NextSibling = NULL;
+
+  ExInitializeFastMutex(&WindowObject->ChildrenListLock);
+
+  WindowName = ExAllocatePool(NonPagedPool, sizeof(L"DESKTOP"));
+  wcscpy(WindowName, L"DESKTOP");
+  RtlInitUnicodeString(&WindowObject->WindowName, WindowName);
+
+  return(Handle);
+}
 
 VOID FASTCALL
 IntInitDesktopWindow(ULONG Width, ULONG Height)
@@ -1236,9 +1236,11 @@ NtUserBuildHwndList(
       KIRQL OldIrql;
       PWINDOW_OBJECT Child, WndDesktop;
 
+#if 0
       if ( hDesktop )
 	DesktopObject = IntGetDesktopObject ( hDesktop );
       else
+#endif
 	DesktopObject = IntGetActiveDesktop();
       if (!DesktopObject)
 	{
@@ -1387,10 +1389,10 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   /* Check the window station. */
   DPRINT("IoGetCurrentProcess() %X\n", IoGetCurrentProcess());
   DPRINT("PROCESS_WINDOW_STATION %X\n", PROCESS_WINDOW_STATION());
-  Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-				       KernelMode,
-				       0,
-				       &WinStaObject);
+  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+					  KernelMode,
+					  0,
+					  &WinStaObject);
   if (!NT_SUCCESS(Status))
     {
       RtlFreeUnicodeString(&WindowName);

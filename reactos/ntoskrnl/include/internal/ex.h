@@ -77,7 +77,11 @@ typedef struct _DESKTOP_OBJECT
   /* Pointer to the active queue. */
   PVOID ActiveMessageQueue;
   /* Rectangle of the work area */
-  struct RECT* WorkArea;
+#ifdef __WIN32K__
+  RECT WorkArea;
+#else
+  LONG WorkArea[4];
+#endif
   /* Handle of the desktop window. */
   HANDLE DesktopWindow;
   HANDLE PrevActiveWindow;

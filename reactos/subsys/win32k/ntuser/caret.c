@@ -1,4 +1,4 @@
-/* $Id: caret.c,v 1.7 2003/11/22 11:49:09 weiden Exp $
+/* $Id: caret.c,v 1.8 2003/11/23 11:39:48 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -56,10 +56,10 @@ IntSetCaretBlinkTime(UINT uMSeconds)
   NTSTATUS Status;
   PWINSTATION_OBJECT WinStaObject;
   
-  Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-				                               KernelMode,
-				                               0,
-				                               &WinStaObject);
+  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+	                                  KernelMode,
+				          0,
+				          &WinStaObject);
   if(!NT_SUCCESS(Status))
   {
     SetLastNtError(Status);
@@ -155,10 +155,10 @@ IntGetCaretBlinkTime(VOID)
   PWINSTATION_OBJECT WinStaObject;
   UINT Ret;
   
-  Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-				                               KernelMode,
-				                               0,
-				                               &WinStaObject);
+  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+	                                  KernelMode,
+				          0,
+				          &WinStaObject);
   if(!NT_SUCCESS(Status))
   {
     SetLastNtError(Status);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.39 2003/11/11 20:28:21 gvg Exp $
+/* $Id: class.c,v 1.40 2003/11/23 11:39:48 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -99,10 +99,10 @@ ClassReferenceClassByName(PWNDCLASS_OBJECT *Class,
       return(STATUS_INVALID_PARAMETER);
     }
 
-  Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-				       KernelMode,
-				       0,
-				       &WinStaObject);
+  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+					  KernelMode,
+					  0,
+					  &WinStaObject);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("Validation of window station handle (0x%X) failed\n",
@@ -218,7 +218,7 @@ IntGetClassName(struct _WINDOW_OBJECT *WindowObject,
   {
 	DPRINT("About to open window station handle (0x%X)\n", 
 	PROCESS_WINDOW_STATION());
-	Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+	Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
 	KernelMode,
 	0,
 	&WinStaObject);
@@ -399,7 +399,7 @@ NtUserRegisterClassExWOW(
   RTL_ATOM Atom;
   DPRINT("About to open window station handle (0x%X)\n", 
     PROCESS_WINDOW_STATION());
-  Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
     KernelMode,
     0,
     &WinStaObject);
