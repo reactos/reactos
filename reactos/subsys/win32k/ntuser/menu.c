@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.46 2004/02/19 21:12:09 weiden Exp $
+/* $Id: menu.c,v 1.47 2004/02/22 18:04:52 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -888,58 +888,96 @@ IntBuildMenuItemList(PMENU_OBJECT MenuObject, PVOID Buffer, ULONG nMax)
 {
   DWORD res = 0;
   UINT sz;
-  MENUITEMINFOW mii;
+  ROSMENUITEMINFO mii;
   PVOID Buf;
   PMENU_ITEM CurItem = MenuObject->MenuItemList;
-  if(nMax)
-  {
-    sz = sizeof(MENUITEMINFOW) + sizeof(RECT);
-    Buf = Buffer;
-    mii.cbSize = sz;
-    mii.fMask = 0;
-    while(CurItem && (nMax >= sz))
-    {
-      mii.cch = CurItem->Text.Length / sizeof(WCHAR);
-      mii.dwItemData = CurItem->dwItemData;
-      if(CurItem->Text.Length)
-        mii.dwTypeData = NULL;
-      else
-        mii.dwTypeData = (LPWSTR)CurItem->Text.Buffer;
-      mii.fState = CurItem->fState;
-      mii.fType = CurItem->fType;
-      mii.hbmpChecked = CurItem->hbmpChecked;
-      mii.hbmpItem = CurItem->hbmpItem;
-      mii.hbmpUnchecked = CurItem->hbmpUnchecked;
-      mii.hSubMenu = CurItem->hSubMenu;
-      RtlCopyMemory(Buf, &mii, sizeof(MENUITEMINFOW));
-      Buf += sizeof(MENUITEMINFOW);
-      RtlCopyMemory(Buf, &CurItem->Rect, sizeof(RECT));
-      Buf += sizeof(RECT);      
-      nMax -= sz;
-      
-      if(CurItem->Text.Length && (nMax >= CurItem->Text.Length + sizeof(WCHAR)))
-      {
-        /* copy string */
-        RtlCopyMemory(Buf, (LPWSTR)CurItem->Text.Buffer, CurItem->Text.Length);
-        Buf += CurItem->Text.Length + sizeof(WCHAR);
-        nMax -= CurItem->Text.Length + sizeof(WCHAR);
-      }
-      else
-        break;
+  PWCHAR StrOut;
+  NTSTATUS Status;
+  WCHAR NulByte;
 
-      CurItem = CurItem->Next;
-      res++;
-    }
-  }
-  else
-  {
-    while(CurItem)
+  if (0 != nMax)
     {
-      res += sizeof(MENUITEMINFOW) + sizeof(RECT);
-      res += CurItem->Text.Length + sizeof(WCHAR);
-      CurItem = CurItem->Next;
+      if (nMax < MenuObject->MenuInfo.MenuItemCount * sizeof(ROSMENUITEMINFO))
+        {
+          return 0;
+        }
+      StrOut = (PWCHAR)((char *) Buffer + MenuObject->MenuInfo.MenuItemCount
+                                          * sizeof(ROSMENUITEMINFO));
+      nMax -= MenuObject->MenuInfo.MenuItemCount * sizeof(ROSMENUITEMINFO);
+      sz = sizeof(ROSMENUITEMINFO);
+      Buf = Buffer;
+      mii.cbSize = sizeof(ROSMENUITEMINFO);
+      mii.fMask = 0;
+      NulByte = L'\0';
+
+      while (NULL != CurItem)
+        {
+          mii.cch = CurItem->Text.Length / sizeof(WCHAR);
+          mii.dwItemData = CurItem->dwItemData;
+          if (0 != CurItem->Text.Length)
+            {
+              mii.dwTypeData = StrOut;
+            }
+          else
+            {
+              mii.dwTypeData = NULL;
+            }
+          mii.fState = CurItem->fState;
+          mii.fType = CurItem->fType;
+          mii.hbmpChecked = CurItem->hbmpChecked;
+          mii.hbmpItem = CurItem->hbmpItem;
+          mii.hbmpUnchecked = CurItem->hbmpUnchecked;
+          mii.hSubMenu = CurItem->hSubMenu;
+          mii.Rect = CurItem->Rect;
+          mii.XTab = CurItem->XTab;
+
+          Status = MmCopyToCaller(Buf, &mii, sizeof(ROSMENUITEMINFO));
+          if (! NT_SUCCESS(Status))
+            {
+              SetLastNtError(Status);
+              return 0;
+            }
+          Buf += sizeof(ROSMENUITEMINFO);
+      
+          if (0 != CurItem->Text.Length
+              && (nMax >= CurItem->Text.Length + sizeof(WCHAR)))
+            {
+              /* copy string */
+              Status = MmCopyToCaller(StrOut, CurItem->Text.Buffer,
+                                      CurItem->Text.Length);
+              if (! NT_SUCCESS(Status))
+                {
+                  SetLastNtError(Status);
+                  return 0;
+                }
+              StrOut += CurItem->Text.Length / sizeof(WCHAR);
+              Status = MmCopyToCaller(StrOut, &NulByte, sizeof(WCHAR));
+              if (! NT_SUCCESS(Status))
+                {
+                  SetLastNtError(Status);
+                  return 0;
+                }
+              StrOut++;
+              nMax -= CurItem->Text.Length + sizeof(WCHAR);
+            }
+          else if (0 != CurItem->Text.Length)
+            {
+              break;
+            }
+
+          CurItem = CurItem->Next;
+          res++;
+        }
     }
-  }
+  else
+    {
+      while (NULL != CurItem)
+        {
+          res += sizeof(ROSMENUITEMINFO) + CurItem->Text.Length + sizeof(WCHAR);
+          CurItem = CurItem->Next;
+        }
+    }
+
   return res;
 }
 

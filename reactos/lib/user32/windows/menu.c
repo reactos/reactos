@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.48 2004/02/15 07:39:12 gvg Exp $
+/* $Id: menu.c,v 1.49 2004/02/22 18:04:52 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -33,12 +33,15 @@
 
 /* INCLUDES ******************************************************************/
 
+#define __NTAPP__
+
 #include <windows.h>
 #include <user32.h>
 #include <string.h>
 #include <draw.h>
 #include <window.h>
 #include <strpool.h>
+#include <ntos/rtl.h>
 
 #include <user32/callback.h>
 #include "user32/regcontrol.h"
@@ -329,6 +332,41 @@ MenuCleanupRosMenuItemInfo(PROSMENUITEMINFO ItemInfo)
       ItemInfo->dwTypeData = NULL;
       ItemInfo->cch = 0;
     }
+}
+
+/***********************************************************************
+ *           MenuGetAllRosMenuItemInfo
+ *
+ * Get full information about all menu items
+ */
+static INT FASTCALL
+MenuGetAllRosMenuItemInfo(HMENU Menu, PROSMENUITEMINFO *ItemInfo)
+{
+  DWORD BufSize;
+
+  BufSize = NtUserBuildMenuItemList(Menu, (VOID *) 1, 0, 0);
+  if (BufSize <= 0)
+    {
+      return -1;
+    }
+  *ItemInfo = HeapAlloc(GetProcessHeap(), 0, BufSize);
+  if (NULL == *ItemInfo)
+    {
+      return -1;
+    }
+
+  return NtUserBuildMenuItemList(Menu, *ItemInfo, BufSize, 0);
+}
+
+/***********************************************************************
+ *           MenuCleanupAllRosMenuItemInfo
+ *
+ * Cleanup after use of MenuGetAllRosMenuItemInfo
+ */
+static VOID FASTCALL
+MenuCleanupAllRosMenuItemInfo(PROSMENUITEMINFO ItemInfo)
+{
+  HeapFree(GetProcessHeap(), 0, ItemInfo);
 }
 
 /***********************************************************************
@@ -941,8 +979,8 @@ MenuInit(VOID)
 }
 
 
-static BOOL
-MeasureMenuItem(HWND hWnd, HMENU mnu, HDC hDC, MENUITEMINFOW *mii, RECT *mir, LPWSTR str)
+static BOOL FASTCALL
+MeasureMenuItem(HWND hWnd, HMENU mnu, HDC hDC, PROSMENUITEMINFO mii, LPWSTR str)
 {
   BOOL res = FALSE;
   MEASUREITEMSTRUCT mis;
@@ -960,14 +998,14 @@ MeasureMenuItem(HWND hWnd, HMENU mnu, HDC hDC, MENUITEMINFOW *mii, RECT *mir, LP
     res = (BOOL)SendMessageW(hWnd, WM_MEASUREITEM, 0, (LPARAM)&mis);
     if(res)
     {
-      mir->right = mir->left + mis.itemWidth;
-      mir->bottom = mir->top + mis.itemHeight;
+      mii->Rect.right = mii->Rect.left + mis.itemWidth;
+      mii->Rect.bottom = mii->Rect.top + mis.itemHeight;
     }
     else
     {
       /* FIXME calculate size internally assuming the menu item is empty */
-      mir->right = mir->left + 1;
-      mir->bottom = mir->top + 1;
+      mii->Rect.right = mii->Rect.left + 1;
+      mii->Rect.bottom = mii->Rect.top + 1;
     }
     return res;
   }
@@ -975,14 +1013,14 @@ MeasureMenuItem(HWND hWnd, HMENU mnu, HDC hDC, MENUITEMINFOW *mii, RECT *mir, LP
   {
     GetTextExtentPoint32W(hDC, str, mii->cch, &sz);
     /* FIXME calculate the size of the menu item */
-    mir->right = mir->left + sz.cx + 6;
-    mir->bottom = mir->top + max(sz.cy, GetSystemMetrics(SM_CYMENU));
+    mii->Rect.right = mii->Rect.left + sz.cx + 6;
+    mii->Rect.bottom = mii->Rect.top + max(sz.cy, GetSystemMetrics(SM_CYMENU));
     return TRUE;
   }
 }
 
 static BOOL
-DrawMenuItem(HWND hWnd, HMENU mnu, HDC hDC, MENUITEMINFOW *mii, RECT *mir, LPWSTR str)
+DrawMenuItem(HWND hWnd, HMENU mnu, HDC hDC, PROSMENUITEMINFO mii, LPWSTR str)
 {
   BOOL res = FALSE;
   DRAWITEMSTRUCT dis;
@@ -997,7 +1035,7 @@ DrawMenuItem(HWND hWnd, HMENU mnu, HDC hDC, MENUITEMINFOW *mii, RECT *mir, LPWST
     dis.itemState = 0; /* FIXME */
     dis.hwndItem = (HWND)mnu;
     dis.hDC = hDC;
-    RtlCopyMemory(&dis.rcItem, mir, sizeof(RECT));
+    RtlCopyMemory(&dis.rcItem, &mii->Rect, sizeof(RECT));
     dis.itemData = mii->dwItemData;
     res = (BOOL)SendMessageW(hWnd, WM_DRAWITEM, 0, (LPARAM)&dis);
     return res;
@@ -1007,7 +1045,7 @@ DrawMenuItem(HWND hWnd, HMENU mnu, HDC hDC, MENUITEMINFOW *mii, RECT *mir, LPWST
     /* FIXME draw the menu item */
     SetTextColor(hDC, COLOR_MENUTEXT);
     SetBkMode(hDC, TRANSPARENT);
-    DrawTextW(hDC, str, mii->cch, mir, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
+    DrawTextW(hDC, str, mii->cch, &mii->Rect, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
   }
   return res;
 }
@@ -1392,10 +1430,10 @@ MenuDrawMenuBar(HDC hDC, LPRECT Rect, HWND hWnd, BOOL Draw)
   HANDLE hHeap;
   PVOID Buf, hBuf;
   DWORD BufSize, Items, Items2, hItems;
-  MENUITEMINFOW *mii;
+  ROSMENUITEMINFO *mii;
   PVOID milist, *mih;
   SETMENUITEMRECT smir;
-  RECT *omir, *mir = NULL;
+  RECT omir;
   LPWSTR str;
 
   mnu = GetMenu(hWnd); /* Fixme - pass menu handle as parameter */
@@ -1421,50 +1459,46 @@ MenuDrawMenuBar(HDC hDC, LPRECT Rect, HWND hWnd, BOOL Draw)
       hItems = 0;
       while(Items > 0)
       {
-        omir = mir;
-        mii = (LPMENUITEMINFOW)Buf;
-        Buf += sizeof(MENUITEMINFOW);
-        mir = (LPRECT)Buf;
-        Buf += sizeof(RECT);
+        mii = (PROSMENUITEMINFO)Buf;
+        Buf += sizeof(ROSMENUITEMINFO);
         if(mii->cch)
         {
-          str = (LPWSTR)Buf;
-          Buf += (mii->cch + 1) * sizeof(WCHAR);
+          str = (LPWSTR)mii->dwTypeData;
         }
         else
           str = NULL;
-        if(omir)
+        if(Items != Items2)
         {
-          mir->left = omir->right + 1;
-          mir->top = omir->top;
-          mir->right += mir->left;
-          mir->bottom += mir->top;
+          mii->Rect.left = omir.right + 1;
+          mii->Rect.top = omir.top;
+          mii->Rect.right += mii->Rect.left;
+          mii->Rect.bottom += mii->Rect.top;
         }
         else
         {
-          mir->left = Rect->left;
-          mir->top = Rect->top;
+          mii->Rect.left = Rect->left;
+          mii->Rect.top = Rect->top;
         }
         if((mii->fType & MFT_RIGHTJUSTIFY) && !milist)
         {
-          milist = mih = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Items * sizeof(MENUITEMINFOW*));
+          milist = mih = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Items * sizeof(PROSMENUITEMINFO));
           hItems = Items;
         }
         
-        MeasureMenuItem(hWnd, mnu, hDC, mii, mir, str);
+        MeasureMenuItem(hWnd, mnu, hDC, mii, str);
         
-        if((mir->right > Rect->right) || (mii->fType & (MFT_MENUBREAK | MFT_MENUBARBREAK)))
+        if((mii->Rect.right > Rect->right) || (mii->fType & (MFT_MENUBREAK | MFT_MENUBARBREAK)))
         {
-          mir->right -= (mir->left - Rect->left);
-          mir->left = Rect->left;
-          mir->top += line;
-          mir->bottom += line;
-          line = mir->bottom - mir->top;
+          mii->Rect.right -= (mii->Rect.left - Rect->left);
+          mii->Rect.left = Rect->left;
+          mii->Rect.top += line;
+          mii->Rect.bottom += line;
+          line = mii->Rect.bottom - mii->Rect.top;
         }
         
         if(!milist)
         {
-          smir.rcRect = *mir;
+          smir.rcRect = mii->Rect;
           NtUserSetMenuItemRect(mnu, &smir);
           smir.uItem++;
         }
@@ -1473,8 +1507,9 @@ MenuDrawMenuBar(HDC hDC, LPRECT Rect, HWND hWnd, BOOL Draw)
           *(mih++) = mii;
         }
         
-        bottom = max(bottom, mir->bottom);
-        line = max(line, mir->bottom - mir->top);
+        bottom = max(bottom, mii->Rect.bottom);
+        line = max(line, mii->Rect.bottom - mii->Rect.top);
+        omir = mii->Rect;
         Items--;
       }
       /* align help menus to the right */
@@ -1487,23 +1522,22 @@ MenuDrawMenuBar(HDC hDC, LPRECT Rect, HWND hWnd, BOOL Draw)
         while(hItems > 0)
         {
           LONG wd;
-          MENUITEMINFOW *omii;
+          PROSMENUITEMINFO omii;
           
           omii = mii;
-          mii = (MENUITEMINFOW*)(*(--mih));
-          mir = (LPRECT)(mii + 1);
+          mii = (PROSMENUITEMINFO)(*(--mih));
           
-          if(omii && ((mir->right > x) || (omii->fType & (MFT_MENUBREAK | MFT_MENUBARBREAK))))
+          if(omii && ((mii->Rect.right > x) || (omii->fType & (MFT_MENUBREAK | MFT_MENUBARBREAK))))
           {
             x = Rect->right;
           }
           
-          wd = (mir->right - mir->left);
-          mir->right = x - 1;
-          mir->left = mir->right - wd;
-          x = mir->left;
+          wd = (mii->Rect.right - mii->Rect.left);
+          mii->Rect.right = x - 1;
+          mii->Rect.left = mii->Rect.right - wd;
+          x = mii->Rect.left;
           
-          smir.rcRect = *mir;
+          smir.rcRect = mii->Rect;
           
           NtUserSetMenuItemRect(mnu, &smir);
           smir.uItem--;
@@ -1528,19 +1562,16 @@ MenuDrawMenuBar(HDC hDC, LPRECT Rect, HWND hWnd, BOOL Draw)
       /* draw menu items */
       while (Items2 > 0)
       {
-        mii = (LPMENUITEMINFOW)Buf;
-        Buf += sizeof(MENUITEMINFOW);
-        mir = (LPRECT)Buf;
-        Buf += sizeof(RECT);
+        mii = (PROSMENUITEMINFO)Buf;
+        Buf += sizeof(ROSMENUITEMINFO);
         if(mii->cch)
         {
-          str = (LPWSTR)Buf;
-          Buf += (mii->cch + 1) * sizeof(WCHAR);
+          str = (LPWSTR)mii->dwTypeData;
         }
         else
           str = NULL;
         /* DbgPrint("Draw menu item %ws at (%d, %d, %d, %d)\n", str, mir->left, mir->top, mir->right, mir->bottom); */
-        DrawMenuItem(hWnd, mnu, hDC, mii, mir, str);
+        DrawMenuItem(hWnd, mnu, hDC, mii, str);
         Items2--;
       }
     }
@@ -1908,6 +1939,7 @@ MenuShowSubPopup(HWND WndOwner, PROSMENUINFO MenuInfo, BOOL SelectFirst, UINT Fl
 {
   RECT Rect;
   ROSMENUITEMINFO ItemInfo;
+  ROSMENUINFO SubMenuInfo;
   HDC Dc;
   HMENU Ret;
 
@@ -2012,9 +2044,9 @@ MenuShowSubPopup(HWND WndOwner, PROSMENUINFO MenuInfo, BOOL SelectFirst, UINT Fl
 
   MenuShowPopup(WndOwner, ItemInfo.hSubMenu, MenuInfo->FocusedItem,
                 Rect.left, Rect.top, Rect.right, Rect.bottom );
-  if (SelectFirst)
+  if (SelectFirst && MenuGetRosMenuInfo(&SubMenuInfo, ItemInfo.hSubMenu))
     {
-      MenuMoveSelection(WndOwner, ItemInfo.hSubMenu, ITEM_NEXT);
+      MenuMoveSelection(WndOwner, &SubMenuInfo, ITEM_NEXT);
     }
 
   Ret = ItemInfo.hSubMenu;
@@ -2376,6 +2408,545 @@ MenuMouseMove(MTRACKER *Mt, HMENU PtMenu, UINT Flags)
   return TRUE;
 }
 
+/******************************************************************************
+ *
+ *   UINT MenuGetStartOfNextColumn(PROSMENUINFO MenuInfo)
+ */
+static UINT MenuGetStartOfNextColumn(PROSMENUINFO MenuInfo)
+{
+  UINT i;
+  PROSMENUITEMINFO MenuItems;
+
+  i = MenuInfo->FocusedItem;
+  if (NO_SELECTED_ITEM == i)
+    {
+      return i;
+    }
+
+  if (MenuGetAllRosMenuItemInfo(MenuInfo->Self, &MenuItems) <= 0)
+    {
+      return NO_SELECTED_ITEM;
+    }
+
+  for (i++ ; i < MenuInfo->MenuItemCount; i++)
+    {
+      if (0 != (MenuItems[i].fType & MF_MENUBARBREAK))
+        {
+          return i;
+        }
+    }
+
+  return NO_SELECTED_ITEM;
+}
+
+/******************************************************************************
+ *
+ *   UINT MenuGetStartOfPrevColumn(PROSMENUINFO MenuInfo)
+ */
+static UINT FASTCALL
+MenuGetStartOfPrevColumn(PROSMENUINFO MenuInfo)
+{
+  UINT i;
+  PROSMENUITEMINFO MenuItems;
+
+  if (0 == MenuInfo->FocusedItem || NO_SELECTED_ITEM == MenuInfo->FocusedItem)
+    {
+      return NO_SELECTED_ITEM;
+    }
+
+  if (MenuGetAllRosMenuItemInfo(MenuInfo->Self, &MenuItems) <= 0)
+    {
+      return NO_SELECTED_ITEM;
+    }
+
+  /* Find the start of the column */
+
+  for (i = MenuInfo->FocusedItem;
+       0 != i && 0 == (MenuItems[i].fType & MF_MENUBARBREAK);
+       --i)
+    {
+      ; /* empty */
+    }
+
+  if (0 == i)
+    {
+      MenuCleanupAllRosMenuItemInfo(MenuItems);
+      return NO_SELECTED_ITEM;
+    }
+
+  for (--i; 0 != i; --i)
+    {
+      if (MenuItems[i].fType & MF_MENUBARBREAK)
+        {
+          break;
+        }
+    }
+
+  MenuCleanupAllRosMenuItemInfo(MenuItems);
+  DPRINT("ret %d.\n", i );
+
+  return i;
+}
+
+/***********************************************************************
+ *           MenuGetSubPopup
+ *
+ * Return the handle of the selected sub-popup menu (if any).
+ */
+static HMENU FASTCALL
+MenuGetSubPopup(HMENU Menu)
+{
+  ROSMENUINFO MenuInfo;
+  ROSMENUITEMINFO ItemInfo;
+
+  if (! MenuGetRosMenuInfo(&MenuInfo, Menu)
+      || NO_SELECTED_ITEM == MenuInfo.FocusedItem)
+    {
+      return NULL;
+    }
+
+  MenuInitRosMenuItemInfo(&ItemInfo);
+  if (! MenuGetRosMenuItemInfo(MenuInfo.Self, MenuInfo.FocusedItem, &ItemInfo))
+    {
+      MenuCleanupRosMenuItemInfo(&ItemInfo);
+      return NULL;
+    }
+  if (0 != (ItemInfo.fType & MF_POPUP) && 0 != (ItemInfo.fState & MF_MOUSESELECT))
+    {
+      MenuCleanupRosMenuItemInfo(&ItemInfo);
+      return ItemInfo.hSubMenu;
+    }
+
+  MenuCleanupRosMenuItemInfo(&ItemInfo);
+  return NULL;
+}
+
+/***********************************************************************
+ *           MenuDoNextMenu
+ *
+ * NOTE: WM_NEXTMENU documented in Win32 is a bit different.
+ */
+static LRESULT FASTCALL
+MenuDoNextMenu(MTRACKER* Mt, UINT Vk)
+{
+#if 0 /* FIXME */
+  ROSMENUINFO TopMenuInfo;
+  ROSMENUINFO MenuInfo;
+
+  if (! MenuGetRosMenuInfo(&TopMenuInfo, Mt->TopMenu))
+    {
+      return (LRESULT) FALSE;
+    }
+
+  if ((VK_LEFT == Vk && 0 == TopMenuInfo.FocusedItem)
+      || (VK_RIGHT == Vk && TopMenuInfo.FocusedItem == TopMenuInfo.MenuItemCount - 1))
+    {
+      MDINEXTMENU NextMenu;
+      HMENU NewMenu;
+      HWND NewWnd;
+      UINT Id = 0;
+
+      NextMenu.hmenuIn = (IS_SYSTEM_MENU(&TopMenuInfo)) ? GetSubMenu(Mt->TopMenu, 0) : Mt->TopMenu;
+      NextMenu.hmenuNext = NULL;
+      NextMenu.hwndNext = NULL;
+      SendMessageW(Mt->OwnerWnd, WM_NEXTMENU, Vk, (LPARAM) &NextMenu);
+
+      DPRINT("%p [%p] -> %p [%p]\n",
+             Mt->CurrentMenu, Mt->OwnerWnd, NextMenu.hmenuNext, NextMenu.hwndNext );
+
+      if (NULL == NextMenu.hmenuNext || NULL == NextMenu.hwndNext)
+        {
+          DWORD Style = GetWindowLongW(Mt->OwnerWnd, GWL_STYLE);
+          NewWnd = Mt->OwnerWnd;
+          if (IS_SYSTEM_MENU(&TopMenuInfo))
+            {
+              /* switch to the menu bar */
+
+              if (0 != (Style & WS_CHILD)
+                  || NULL == (NewMenu = GetMenu(NewWnd)))
+                {
+                  return FALSE;
+                }
+
+              if (VK_LEFT == Vk)
+                {
+                  if (! MenuGetRosMenuInfo(&MenuInfo, NewMenu))
+                    {
+                      return FALSE;
+                    }
+                  Id = MenuInfo.MenuItemCount - 1;
+                }
+            }
+          else if (0 != (Style & WS_SYSMENU))
+            {
+#if 0 /* FIXME */
+              /* switch to the system menu */
+              NewMenu = get_win_sys_menu(NewWnd);
+#endif
+            }
+          else
+            {
+              return FALSE;
+            }
+        }
+      else    /* application returned a new menu to switch to */
+        {
+          NewMenu = NextMenu.hmenuNext;
+          NewWnd = NextMenu.hwndNext;
+
+          if (IsMenu(NewMenu) && IsWindow(NewWnd))
+            {
+              DWORD Style = GetWindowLongW(NewWnd, GWL_STYLE);
+
+#if 0 /* FIXME */
+              if (0 != (Style & WS_SYSMENU)
+                  && GetSubMenu(get_win_sys_menu(NewWnd), 0) == NewMenu)
+                {
+                  /* get the real system menu */
+                  NewMenu =  get_win_sys_menu(NewWnd);
+                }
+              else if (0 != (Style & WS_CHILD) || GetMenu(NewWnd) != NewMenu)
+#else
+              if (0 != (Style & WS_CHILD) || GetMenu(NewWnd) != NewMenu)
+#endif
+                {
+                  /* FIXME: Not sure what to do here;
+                   * perhaps try to track NewMenu as a popup? */
+
+                  DPRINT(" -- got confused.\n");
+                  return FALSE;
+                }
+            }
+          else
+            {
+              return FALSE;
+            }
+        }
+
+      if (NewMenu != Mt->TopMenu)
+        {
+          MenuSelectItem(Mt->OwnerWnd, &TopMenuInfo, NO_SELECTED_ITEM,
+                         FALSE, 0 );
+          if (Mt->CurrentMenu != Mt->TopMenu)
+            {
+              MenuHideSubPopups(Mt->OwnerWnd, &TopMenuInfo, FALSE);
+            }
+        }
+
+      if (NewWnd != Mt->OwnerWnd)
+        {
+          Mt->OwnerWnd = NewWnd;
+          SetCapture(Mt->OwnerWnd);
+        }
+
+      Mt->TopMenu = Mt->CurrentMenu = NewMenu; /* all subpopups are hidden */
+      if (MenuGetRosMenuInfo(&TopMenuInfo, Mt->TopMenu))
+        {
+          MenuSelectItem(Mt->OwnerWnd, &TopMenuInfo, Id, TRUE, 0);
+        }
+
+      return TRUE;
+    }
+#endif
+
+  return FALSE;
+}
+
+/***********************************************************************
+ *           MenuSuspendPopup
+ *
+ * The idea is not to show the popup if the next input message is
+ * going to hide it anyway.
+ */
+static BOOL FASTCALL
+MenuSuspendPopup(MTRACKER* Mt, UINT Message)
+{
+  MSG Msg;
+
+  Msg.hwnd = Mt->OwnerWnd;
+
+  PeekMessageW(&Msg, 0, 0, 0, PM_NOYIELD | PM_REMOVE);
+  Mt->TrackFlags |= TF_SKIPREMOVE;
+
+  switch (Message)
+    {
+      case WM_KEYDOWN:
+        PeekMessageW(&Msg, 0, 0, 0, PM_NOYIELD | PM_NOREMOVE);
+        if (WM_KEYUP == Msg.message || WM_PAINT == Msg.message)
+          {
+            PeekMessageW(&Msg, 0, 0, 0, PM_NOYIELD | PM_REMOVE);
+            PeekMessageW(&Msg, 0, 0, 0, PM_NOYIELD | PM_NOREMOVE);
+            if (WM_KEYDOWN == Msg.message
+                && (VK_LEFT == Msg.wParam || VK_RIGHT == Msg.wParam))
+              {
+                Mt->TrackFlags |= TF_SUSPENDPOPUP;
+                return TRUE;
+              }
+          }
+        break;
+    }
+
+  /* failures go through this */
+  Mt->TrackFlags &= ~TF_SUSPENDPOPUP;
+
+  return FALSE;
+}
+
+/***********************************************************************
+ *           MenuKeyEscape
+ *
+ * Handle a VK_ESCAPE key event in a menu.
+ */
+static BOOL FASTCALL
+MenuKeyEscape(MTRACKER *Mt, UINT Flags)
+{
+  BOOL EndMenu = TRUE;
+  ROSMENUINFO MenuInfo;
+  HMENU MenuTmp, MenuPrev;
+
+  if (Mt->CurrentMenu != Mt->TopMenu)
+    {
+      if (MenuGetRosMenuInfo(&MenuInfo, Mt->CurrentMenu)
+          && 0 != (MenuInfo.Flags & MF_POPUP))
+        {
+          MenuPrev = MenuTmp = Mt->TopMenu;
+
+          /* close topmost popup */
+          while (MenuTmp != Mt->CurrentMenu)
+            {
+              MenuPrev = MenuTmp;
+              MenuTmp = MenuGetSubPopup(MenuPrev);
+            }
+
+          if (MenuGetRosMenuInfo(&MenuInfo, MenuPrev))
+            {
+              MenuHideSubPopups(Mt->OwnerWnd, &MenuInfo, TRUE);
+            }
+          Mt->CurrentMenu = MenuPrev;
+          EndMenu = FALSE;
+        }
+    }
+
+  return EndMenu;
+}
+
+/***********************************************************************
+ *           MenuKeyLeft
+ *
+ * Handle a VK_LEFT key event in a menu.
+ */
+static void FASTCALL
+MenuKeyLeft(MTRACKER* Mt, UINT Flags)
+{
+  ROSMENUINFO MenuInfo;
+  ROSMENUINFO TopMenuInfo;
+  ROSMENUINFO PrevMenuInfo;
+  HMENU MenuTmp, MenuPrev;
+  UINT PrevCol;
+
+  MenuPrev = MenuTmp = Mt->TopMenu;
+
+  if (! MenuGetRosMenuInfo(&MenuInfo, Mt->CurrentMenu))
+    {
+      return;
+    }
+
+  /* Try to move 1 column left (if possible) */
+  if (NO_SELECTED_ITEM != (PrevCol = MenuGetStartOfPrevColumn(&MenuInfo)))
+    {
+      if (MenuGetRosMenuInfo(&MenuInfo, Mt->CurrentMenu))
+        {
+          MenuSelectItem(Mt->OwnerWnd, &MenuInfo, PrevCol, TRUE, 0);
+        }
+      return;
+    }
+
+  /* close topmost popup */
+  while (MenuTmp != Mt->CurrentMenu)
+    {
+      MenuPrev = MenuTmp;
+      MenuTmp = MenuGetSubPopup(MenuPrev);
+    }
+
+  if (! MenuGetRosMenuInfo(&PrevMenuInfo, MenuPrev))
+    {
+      return;
+    }
+  MenuHideSubPopups(Mt->OwnerWnd, &PrevMenuInfo, TRUE);
+  Mt->CurrentMenu = MenuPrev;
+
+  if (! MenuGetRosMenuInfo(&TopMenuInfo, Mt->TopMenu))
+    {
+      return;
+    }
+  if ((MenuPrev == Mt->TopMenu) && 0 == (TopMenuInfo.Flags & MF_POPUP))
+    {
+      /* move menu bar selection if no more popups are left */
+
+      if (! MenuDoNextMenu(Mt, VK_LEFT))
+        {
+          MenuMoveSelection(Mt->OwnerWnd, &TopMenuInfo, ITEM_PREV);
+        }
+
+      if (MenuPrev != MenuTmp || 0 != (Mt->TrackFlags & TF_SUSPENDPOPUP))
+        {
+          /* A sublevel menu was displayed - display the next one
+           * unless there is another displacement coming up */
+
+          if (! MenuSuspendPopup(Mt, WM_KEYDOWN))
+            {
+              Mt->CurrentMenu = MenuShowSubPopup(Mt->OwnerWnd, &TopMenuInfo,
+                                                 TRUE, Flags);
+            }
+        }
+    }
+}
+
+/***********************************************************************
+ *           MenuKeyRight
+ *
+ * Handle a VK_RIGHT key event in a menu.
+ */
+static void FASTCALL
+MenuKeyRight(MTRACKER *Mt, UINT Flags)
+{
+  HMENU MenuTmp;
+  ROSMENUINFO MenuInfo;
+  ROSMENUINFO CurrentMenuInfo;
+  UINT NextCol;
+
+  DPRINT("MenuKeyRight called, cur %p, top %p.\n",
+         Mt->CurrentMenu, Mt->TopMenu);
+
+  if (! MenuGetRosMenuInfo(&MenuInfo, Mt->TopMenu))
+    {
+      return;
+    }
+  if (0 != (MenuInfo.Flags & MF_POPUP) || (Mt->CurrentMenu != Mt->TopMenu))
+    {
+      /* If already displaying a popup, try to display sub-popup */
+
+      MenuTmp = Mt->CurrentMenu;
+      if (MenuGetRosMenuInfo(&CurrentMenuInfo, Mt->CurrentMenu))
+        {
+          Mt->CurrentMenu = MenuShowSubPopup(Mt->OwnerWnd, &CurrentMenuInfo, TRUE, Flags);
+        }
+
+      /* if subpopup was displayed then we are done */
+      if (MenuTmp != Mt->CurrentMenu)
+        {
+          return;
+        }
+    }
+
+  if (! MenuGetRosMenuInfo(&CurrentMenuInfo, Mt->CurrentMenu))
+    {
+      return;
+    }
+
+  /* Check to see if there's another column */
+  if (NO_SELECTED_ITEM != (NextCol = MenuGetStartOfNextColumn(&CurrentMenuInfo)))
+    {
+      DPRINT("Going to %d.\n", NextCol);
+      if (MenuGetRosMenuInfo(&MenuInfo, Mt->CurrentMenu))
+        {
+          MenuSelectItem(Mt->OwnerWnd, &MenuInfo, NextCol, TRUE, 0);
+        }
+      return;
+    }
+
+  if (0 == (MenuInfo.Flags & MF_POPUP))	/* menu bar tracking */
+    {
+      if (Mt->CurrentMenu != Mt->TopMenu)
+        {
+          MenuHideSubPopups(Mt->OwnerWnd, &MenuInfo, FALSE );
+          MenuTmp = Mt->CurrentMenu = Mt->TopMenu;
+        }
+      else
+        {
+          MenuTmp = NULL;
+        }
+
+      /* try to move to the next item */
+      if (! MenuDoNextMenu(Mt, VK_RIGHT))
+        {
+          MenuMoveSelection(Mt->OwnerWnd, &MenuInfo, ITEM_NEXT);
+        }
+
+      if (NULL != MenuTmp || 0 != (Mt->TrackFlags & TF_SUSPENDPOPUP))
+        {
+          if (! MenuSuspendPopup(Mt, WM_KEYDOWN))
+            {
+              Mt->CurrentMenu = MenuShowSubPopup(Mt->OwnerWnd, &MenuInfo,
+                                                 TRUE, Flags);
+            }
+        }
+    }
+}
+
+/***********************************************************************
+ *           MenuFindItemByKey
+ *
+ * Find the menu item selected by a key press.
+ * Return item id, -1 if none, -2 if we should close the menu.
+ */
+static UINT FASTCALL
+MenuFindItemByKey(HWND WndOwner, PROSMENUINFO MenuInfo,
+                  WCHAR Key, BOOL ForceMenuChar)
+{
+  PROSMENUITEMINFO Items, ItemInfo;
+  LRESULT MenuChar;
+  UINT i;
+
+  DPRINT("\tlooking for '%c' (0x%02x) in [%p]\n", (char) Key, Key, MenuInfo);
+
+#if 0 /* FIXME */
+  if (! IsMenu( hmenu )) hmenu = GetSubMenu( get_win_sys_menu(hwndOwner), 0);
+#endif
+
+  if (NULL != MenuInfo)
+    {
+      if (MenuGetAllRosMenuItemInfo(MenuInfo->Self, &Items) <= 0)
+        {
+          return -1;
+        }
+      if (! ForceMenuChar)
+        {
+          Key = towupper(Key);
+          ItemInfo = Items;
+          for (i = 0; i < MenuInfo->MenuItemCount; i++, ItemInfo++)
+            {
+              if (IS_STRING_ITEM(ItemInfo->fType) && NULL != ItemInfo->dwTypeData)
+                {
+                  WCHAR *p = (WCHAR *) ItemInfo->dwTypeData - 2;
+                  do
+                    {
+                      p = wcschr(p + 2, '&');
+		    }
+                  while (NULL != p && L'&' == p[1]);
+                  if (NULL != p && (towupper(p[1]) == Key))
+                    {
+                      return i;
+                    }
+                }
+            }
+        }
+
+      MenuChar = SendMessageW(WndOwner, WM_MENUCHAR,
+                              MAKEWPARAM(Key, MenuInfo->Flags), (LPARAM) MenuInfo->Self);
+      if (2 == HIWORD(MenuChar))
+        {
+          return LOWORD(MenuChar);
+        }
+      if (1 == HIWORD(MenuChar))
+        {
+          return (UINT) (-2);
+        }
+    }
+
+  return (UINT)(-1);
+}
+
 /***********************************************************************
  *           MenuTrackMenu
  *
@@ -2387,6 +2958,7 @@ MenuTrackMenu(HMENU Menu, UINT Flags, INT x, INT y,
 {
   MSG Msg;
   ROSMENUINFO MenuInfo;
+  ROSMENUITEMINFO ItemInfo;
   BOOL fRemove;
   INT ExecutedMenuId = -1;
   MTRACKER Mt;
@@ -2537,106 +3109,148 @@ MenuTrackMenu(HMENU Menu, UINT Flags, INT x, INT y,
 	}
       else if (WM_KEYFIRST <= Msg.message && Msg.message <= WM_KEYLAST)
 	{
-#if 0 /* FIXME */
-            fRemove = TRUE;  /* Keyboard messages are always removed */
-	    switch(msg.message)
-	    {
-	    case WM_KEYDOWN:
-		switch(msg.wParam)
-		{
-		case VK_HOME:
-		case VK_END:
-		    MENU_SelectItem( mt.hOwnerWnd, mt.hCurrentMenu,
-				     NO_SELECTED_ITEM, FALSE, 0 );
-		/* fall through */
-		case VK_UP:
-		    MENU_MoveSelection( mt.hOwnerWnd, mt.hCurrentMenu,
-				       (msg.wParam == VK_HOME)? ITEM_NEXT : ITEM_PREV );
-		    break;
+          fRemove = TRUE;  /* Keyboard messages are always removed */
+          switch(Msg.message)
+            {
+              case WM_KEYDOWN:
+                switch(Msg.wParam)
+                  {
+                    case VK_HOME:
+                    case VK_END:
+                      if (MenuGetRosMenuInfo(&MenuInfo, Mt.CurrentMenu))
+                        {
+                          MenuSelectItem(Mt.OwnerWnd, &MenuInfo, NO_SELECTED_ITEM,
+                                         FALSE, 0 );
+                        }
+                      /* fall through */
 
-		case VK_DOWN: /* If on menu bar, pull-down the menu */
+                    case VK_UP:
+                      if (MenuGetRosMenuInfo(&MenuInfo, Mt.CurrentMenu))
+                        {
+                          MenuMoveSelection(Mt.OwnerWnd, &MenuInfo,
+                                            VK_HOME == Msg.wParam ? ITEM_NEXT : ITEM_PREV);
+                        }
+                      break;
 
-		    menu = MENU_GetMenu( mt.hCurrentMenu );
-		    if (!(menu->wFlags & MF_POPUP))
-			mt.hCurrentMenu = MENU_ShowSubPopup(mt.hOwnerWnd, mt.hTopMenu, TRUE, wFlags);
-		    else      /* otherwise try to move selection */
-			MENU_MoveSelection( mt.hOwnerWnd, mt.hCurrentMenu, ITEM_NEXT );
-		    break;
+                    case VK_DOWN: /* If on menu bar, pull-down the menu */
+                      if (MenuGetRosMenuInfo(&MenuInfo, Mt.CurrentMenu))
+                        {
+                          if (0 == (MenuInfo.Flags & MF_POPUP))
+                            {
+                              if (MenuGetRosMenuInfo(&MenuInfo, Mt.TopMenu))
+                                {
+                                  Mt.CurrentMenu = MenuShowSubPopup(Mt.OwnerWnd, &MenuInfo,
+                                                                    TRUE, Flags);
+                                }
+                            }
+                          else      /* otherwise try to move selection */
+                            {
+                              MenuMoveSelection(Mt.OwnerWnd, &MenuInfo, ITEM_NEXT);
+                            }
+                        }
+                      break;
 
-		case VK_LEFT:
-		    MENU_KeyLeft( &mt, wFlags );
-		    break;
+                    case VK_LEFT:
+                      MenuKeyLeft(&Mt, Flags);
+                      break;
 
-		case VK_RIGHT:
-		    MENU_KeyRight( &mt, wFlags );
-		    break;
+                    case VK_RIGHT:
+                      MenuKeyRight(&Mt, Flags);
+                      break;
 
-		case VK_ESCAPE:
-                    fEndMenu = MENU_KeyEscape(&mt, wFlags);
-		    break;
+                    case VK_ESCAPE:
+                      fEndMenu = MenuKeyEscape(&Mt, Flags);
+                      break;
 
-		case VK_F1:
-		    {
-			HELPINFO hi;
-			hi.cbSize = sizeof(HELPINFO);
-			hi.iContextType = HELPINFO_MENUITEM;
-			if (menu->FocusedItem == NO_SELECTED_ITEM)
-			    hi.iCtrlId = 0;
-		        else
-			    hi.iCtrlId = menu->items[menu->FocusedItem].wID;
-			hi.hItemHandle = hmenu;
-			hi.dwContextId = menu->dwContextHelpID;
-			hi.MousePos = msg.pt;
-			SendMessageW(hwnd, WM_HELP, 0, (LPARAM)&hi);
-			break;
-		    }
+                    case VK_F1:
+                      {
+                        HELPINFO hi;
+                        hi.cbSize = sizeof(HELPINFO);
+                        hi.iContextType = HELPINFO_MENUITEM;
+                        if (MenuGetRosMenuInfo(&MenuInfo, Mt.CurrentMenu))
+                          {
+                            if (NO_SELECTED_ITEM == MenuInfo.FocusedItem)
+                              {
+                                hi.iCtrlId = 0;
+                              }
+                            else
+                              {
+                                MenuInitRosMenuItemInfo(&ItemInfo);
+                                if (MenuGetRosMenuItemInfo(MenuInfo.Self,
+                                                           MenuInfo.FocusedItem,
+                                                           &ItemInfo))
+                                  {
+                                    hi.iCtrlId = ItemInfo.wID;
+                                  }
+                                else
+                                  {
+                                    hi.iCtrlId = 0;
+                                  }
+                                MenuCleanupRosMenuItemInfo(&ItemInfo);
+                              }
+                          }
+                        hi.hItemHandle = Menu;
+			hi.dwContextId = MenuInfo.dwContextHelpID;
+			hi.MousePos = Msg.pt;
+			SendMessageW(Wnd, WM_HELP, 0, (LPARAM) &hi);
+                        break;
+                      }
 
-		default:
-		    break;
+                    default:
+                      break;
+                  }
+                break;  /* WM_KEYDOWN */
+
+              case WM_SYSKEYDOWN:
+                switch (Msg.wParam)
+                  {
+                    case VK_MENU:
+                      fEndMenu = TRUE;
+                      break;
+                  }
+                break;  /* WM_SYSKEYDOWN */
+
+              case WM_CHAR:
+                {
+                  UINT Pos;
+
+                  if (! MenuGetRosMenuInfo(&MenuInfo, Mt.CurrentMenu))
+                    {
+                      break;
+                    }
+                  if (L'\r' == Msg.wParam || L' ' == Msg.wParam)
+                    {
+                      ExecutedMenuId = MenuExecFocusedItem(&Mt, &MenuInfo, Flags);
+                      fEndMenu = (ExecutedMenuId != -1);
+                      break;
+                    }
+
+                  /* Hack to avoid control chars. */
+                  /* We will find a better way real soon... */
+                  if (Msg.wParam < 32)
+                    {
+                      break;
+                    }
+
+                  Pos = MenuFindItemByKey(Mt.OwnerWnd, &MenuInfo,
+                                          LOWORD(Msg.wParam), FALSE);
+                  if ((UINT) -2 == Pos)
+                    {
+                      fEndMenu = TRUE;
+                    }
+                  else if ((UINT) -1 == Pos)
+                    {
+                      MessageBeep(0);
+                    }
+                  else
+                    {
+                      MenuSelectItem(Mt.OwnerWnd, &MenuInfo, Pos, TRUE, 0);
+                      ExecutedMenuId = MenuExecFocusedItem(&Mt, &MenuInfo, Flags);
+                      fEndMenu = (-1 != ExecutedMenuId);
+                    }
 		}
-		break;  /* WM_KEYDOWN */
-
-	    case WM_SYSKEYDOWN:
-		switch(msg.wParam)
-		{
-		case VK_MENU:
-		    fEndMenu = TRUE;
-		    break;
-
-		}
-		break;  /* WM_SYSKEYDOWN */
-
-	    case WM_CHAR:
-		{
-		    UINT	pos;
-
-		    if (msg.wParam == '\r' || msg.wParam == ' ')
-		    {
-                        ExecutedMenuId = MENU_ExecFocusedItem(&mt,mt.hCurrentMenu, wFlags);
-                        fEndMenu = (ExecutedMenuId != -1);
-
-			break;
-		    }
-
-		      /* Hack to avoid control chars. */
-		      /* We will find a better way real soon... */
-		    if (msg.wParam < 32) break;
-
-		    pos = MENU_FindItemByKey( mt.hOwnerWnd, mt.hCurrentMenu,
-                                              LOWORD(msg.wParam), FALSE );
-		    if (pos == (UINT)-2) fEndMenu = TRUE;
-		    else if (pos == (UINT)-1) MessageBeep(0);
-		    else
-		    {
-			MENU_SelectItem( mt.hOwnerWnd, mt.hCurrentMenu, pos,
-                                TRUE, 0 );
-                        ExecutedMenuId = MENU_ExecFocusedItem(&mt,mt.hCurrentMenu, wFlags);
-                        fEndMenu = (ExecutedMenuId != -1);
-		    }
-		}
-		break;
-	    }  /* switch(msg.message) - kbd */
-#endif
+              break;
+            }  /* switch(msg.message) - kbd */
         }
       else
         {
@@ -2970,9 +3584,11 @@ GetMenuInfo(HMENU hmenu,
  * @implemented
  */
 int STDCALL
-GetMenuItemCount(HMENU hMenu)
+GetMenuItemCount(HMENU Menu)
 {
-  return NtUserBuildMenuItemList(hMenu, NULL, 0, 0);
+  ROSMENUINFO MenuInfo;
+
+  return MenuGetRosMenuInfo(&MenuInfo, Menu) ? MenuInfo.MenuItemCount : 0;
 }
 
 
@@ -3061,6 +3677,7 @@ GetMenuState(
   UINT uId,
   UINT uFlags)
 {
+  ROSMENUINFO MenuInfo;
   ROSMENUITEMINFO mii;
 
   mii.cbSize = sizeof(MENUITEMINFOW);
@@ -3072,7 +3689,11 @@ GetMenuState(
       UINT nSubItems = 0;
       if(mii.hSubMenu)
         {
-          nSubItems = (UINT)NtUserBuildMenuItemList(mii.hSubMenu, NULL, 0, 0);
+          if (! MenuGetRosMenuInfo(&MenuInfo, mii.hSubMenu))
+            {
+              return (UINT) -1;
+            }
+          nSubItems = MenuInfo.MenuItemCount;
       
           /* FIXME - ported from wine, does that work (0xff)? */
           if(GetLastError() != ERROR_INVALID_MENU_HANDLE)
@@ -3392,9 +4013,11 @@ InsertMenuW(
 BOOL
 STDCALL
 IsMenu(
-  HMENU hMenu)
+  HMENU Menu)
 {
-  return 0 <= NtUserBuildMenuItemList(hMenu, NULL, 0, 0);
+  ROSMENUINFO MenuInfo;
+
+  return MenuGetRosMenuInfo(&MenuInfo, Menu);
 }
 
 

@@ -1054,6 +1054,7 @@ extern "C" {
 #define WM_NCXBUTTONUP	(172)
 #define WM_NCXBUTTONDBLCLK	(173)
 #define WM_NEXTDLGCTL	(40)
+#define WM_NEXTMENU	(531)
 #define WM_NOTIFY	(78)
 #define WM_NOTIFYFORMAT	(85)
 #define WM_NULL         (0)

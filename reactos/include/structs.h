@@ -3136,6 +3136,12 @@ typedef struct tagMDICREATESTRUCTW {
 typedef_tident(MDICREATESTRUCT)
 typedef_tident(LPMDICREATESTRUCT)
 
+typedef struct tagMDINEXTMENU {
+	HMENU hmenuIn;
+	HMENU hmenuNext;
+	HWND hwndNext;
+} MDINEXTMENU,*PMDINEXTMENU,*LPMDINEXTMENU;
+
 typedef struct tagMEASUREITEMSTRUCT {
   UINT  CtlType;
   UINT  CtlID;
