@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.270 2004/12/13 02:20:08 blight Exp $
+# $Id: Makefile,v 1.271 2004/12/15 05:08:44 sedwards Exp $
 #
 # Global makefile
 #
@@ -99,7 +99,7 @@ STORAGE_DRIVERS = atapi cdrom class2 disk floppy scsiport diskdump
 # autochk cmd format services setup usetup welcome winlogon msiexec 
 SYS_APPS = autochk calc cmd explorer expand format regedt32 regsvr32 \
   services setup taskmgr userinit usetup welcome vmwinst winlogon \
-  regedit winefile
+  regedit winefile notepad
 
 # System services
 # rpcss eventlog
