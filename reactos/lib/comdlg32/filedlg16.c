@@ -170,7 +170,8 @@ static BOOL CALLBACK FD16_Init(LPARAM lParam, PFD31_DATA lfs, DWORD data)
         if (priv->ofn16->lpfnHook)
             lfs->hook = TRUE;
 
-    FD16_MapOfnStruct16(priv->ofn16, &lfs->ofnW, lfs->open);
+    lfs->ofnW = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*lfs->ofnW));
+    FD16_MapOfnStruct16(priv->ofn16, lfs->ofnW, lfs->open);
 
     if (! FD16_GetTemplate(lfs)) return FALSE;
 
@@ -204,7 +205,7 @@ BOOL CALLBACK FD16_CallWindowProc(PFD31_DATA lfs, UINT wMsg, WPARAM wParam,
 static void CALLBACK FD16_UpdateResult(PFD31_DATA lfs)
 {
     PFD16_PRIVATE priv = (PFD16_PRIVATE) lfs->private1632;
-    LPOPENFILENAMEW ofnW = &lfs->ofnW;
+    LPOPENFILENAMEW ofnW = lfs->ofnW;
 
     if (priv->ofn16)
     { /* we have to convert to short (8.3) path */
@@ -240,7 +241,7 @@ static void CALLBACK FD16_UpdateResult(PFD31_DATA lfs)
 static void CALLBACK FD16_UpdateFileTitle(PFD31_DATA lfs)
 {
     PFD16_PRIVATE priv = (PFD16_PRIVATE) lfs->private1632;
-    LPOPENFILENAMEW ofnW = &lfs->ofnW;
+    LPOPENFILENAMEW ofnW = lfs->ofnW;
 
     if (priv->ofn16)
     {
@@ -279,7 +280,8 @@ static void CALLBACK FD16_Destroy(PFD31_DATA lfs)
             GlobalUnlock16(priv->hGlobal16);
             GlobalFree16(priv->hGlobal16);
         }
-        FD31_FreeOfnW(&lfs->ofnW);
+        FD31_FreeOfnW(lfs->ofnW);
+        HeapFree(GetProcessHeap(), 0, lfs->ofnW);
     }
 }
 

@@ -3377,7 +3377,7 @@ static void MemFree(void *mem)
  */
 static BOOL FD32_GetTemplate(PFD31_DATA lfs)
 {
-    LPOPENFILENAMEW ofnW = &lfs->ofnW;
+    LPOPENFILENAMEW ofnW = lfs->ofnW;
     PFD32_PRIVATE priv = (PFD32_PRIVATE) lfs->private1632;
     HANDLE hDlgTmpl;
 
@@ -3445,9 +3445,9 @@ static BOOL CALLBACK FD32_Init(LPARAM lParam, PFD31_DATA lfs, DWORD data)
     if (NULL == lfs->private1632) return FALSE;
     if (IsUnicode)
     {
-        lfs->ofnW = *((LPOPENFILENAMEW) lParam);
-        if (lfs->ofnW.Flags & OFN_ENABLEHOOK)
-            if (lfs->ofnW.lpfnHook)
+        lfs->ofnW = (LPOPENFILENAMEW) lParam;
+        if (lfs->ofnW->Flags & OFN_ENABLEHOOK)
+            if (lfs->ofnW->lpfnHook)
                 lfs->hook = TRUE;
     }
     else
@@ -3456,7 +3456,8 @@ static BOOL CALLBACK FD32_Init(LPARAM lParam, PFD31_DATA lfs, DWORD data)
         if (priv->ofnA->Flags & OFN_ENABLEHOOK)
             if (priv->ofnA->lpfnHook)
                 lfs->hook = TRUE;
-        FD31_MapOfnStructA(priv->ofnA, &lfs->ofnW, lfs->open);
+        lfs->ofnW = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*lfs->ofnW));
+        FD31_MapOfnStructA(priv->ofnA, lfs->ofnW, lfs->open);
     }
 
     if (! FD32_GetTemplate(lfs)) return FALSE;
@@ -3472,18 +3473,25 @@ static BOOL CALLBACK FD32_Init(LPARAM lParam, PFD31_DATA lfs, DWORD data)
 BOOL CALLBACK FD32_CallWindowProc(PFD31_DATA lfs, UINT wMsg, WPARAM wParam,
                                  LPARAM lParam)
 {
+    BOOL ret;
     PFD32_PRIVATE priv = (PFD32_PRIVATE) lfs->private1632;
 
     if (priv->ofnA)
     {
-        return (BOOL) CallWindowProcA(
-          (WNDPROC)priv->ofnA->lpfnHook, lfs->hwnd,
-          wMsg, wParam, lParam);
+        TRACE("Call hookA %p (%p, %04x, %08x, %08lx)\n",
+               priv->ofnA->lpfnHook, lfs->hwnd, wMsg, wParam, lParam);
+        ret = priv->ofnA->lpfnHook(lfs->hwnd, wMsg, wParam, lParam);
+        TRACE("ret hookA %p (%p, %04x, %08x, %08lx)\n",
+               priv->ofnA->lpfnHook, lfs->hwnd, wMsg, wParam, lParam);
+        return ret;
     }
 
-    return (BOOL) CallWindowProcW(
-          (WNDPROC)lfs->ofnW.lpfnHook, lfs->hwnd,
-          wMsg, wParam, lParam);
+    TRACE("Call hookW %p (%p, %04x, %08x, %08lx)\n",
+           lfs->ofnW->lpfnHook, lfs->hwnd, wMsg, wParam, lParam);
+    ret = lfs->ofnW->lpfnHook(lfs->hwnd, wMsg, wParam, lParam);
+    TRACE("Ret hookW %p (%p, %04x, %08x, %08lx)\n",
+           lfs->ofnW->lpfnHook, lfs->hwnd, wMsg, wParam, lParam);
+    return ret;
 }
 
 /***********************************************************************
@@ -3493,7 +3501,7 @@ BOOL CALLBACK FD32_CallWindowProc(PFD31_DATA lfs, UINT wMsg, WPARAM wParam,
 static void CALLBACK FD32_UpdateResult(PFD31_DATA lfs)
 {
     PFD32_PRIVATE priv = (PFD32_PRIVATE) lfs->private1632;
-    LPOPENFILENAMEW ofnW = &lfs->ofnW;
+    LPOPENFILENAMEW ofnW = lfs->ofnW;
 
     if (priv->ofnA)
     {
@@ -3513,7 +3521,7 @@ static void CALLBACK FD32_UpdateResult(PFD31_DATA lfs)
 static void CALLBACK FD32_UpdateFileTitle(PFD31_DATA lfs)
 {
     PFD32_PRIVATE priv = (PFD32_PRIVATE) lfs->private1632;
-    LPOPENFILENAMEW ofnW = &lfs->ofnW;
+    LPOPENFILENAMEW ofnW = lfs->ofnW;
 
     if (priv->ofnA)
     {
@@ -3544,7 +3552,10 @@ static void CALLBACK FD32_Destroy(PFD31_DATA lfs)
 
     /* if ofnW has been allocated, have to free everything in it */
     if (NULL != priv && NULL != priv->ofnA)
-        FD31_FreeOfnW(&lfs->ofnW);
+    {
+        FD31_FreeOfnW(lfs->ofnW);
+        HeapFree(GetProcessHeap(), 0, lfs->ofnW);
+    }
 }
 
 static void FD32_SetupCallbacks(PFD31_CALLBACKS callbacks)
@@ -3667,7 +3678,7 @@ static BOOL GetFileName31W(LPOPENFILENAMEW lpofn, /* addess of structure with da
     if (!lpofn || !FD31_Init()) return FALSE;
 
     FD32_SetupCallbacks(&callbacks);
-    lfs = FD31_AllocPrivate((LPARAM) lpofn, dlgType, &callbacks, (DWORD) FALSE);
+    lfs = FD31_AllocPrivate((LPARAM) lpofn, dlgType, &callbacks, (DWORD) TRUE);
     if (lfs)
     {
         hInst = (HINSTANCE)GetWindowLongPtrW( lpofn->hwndOwner, GWLP_HINSTANCE );
@@ -3676,7 +3687,8 @@ static BOOL GetFileName31W(LPOPENFILENAMEW lpofn, /* addess of structure with da
         FD31_DestroyPrivate(lfs);
     }
 
-    TRACE("return lpstrFile=%s !\n", debugstr_w(lpofn->lpstrFile));
+    TRACE("file %s, file offset %d, ext offset %d\n",
+          debugstr_w(lpofn->lpstrFile), lpofn->nFileOffset, lpofn->nFileExtension);
     return bRet;
 }
 
@@ -3696,6 +3708,10 @@ BOOL WINAPI GetOpenFileNameA(
 	LPOPENFILENAMEA ofn) /* [in/out] address of init structure */
 {
     BOOL win16look = FALSE;
+
+    /* OFN_FILEMUSTEXIST implies OFN_PATHMUSTEXIST */
+    if (ofn->Flags & OFN_FILEMUSTEXIST)
+        ofn->Flags |= OFN_PATHMUSTEXIST;
 
     if (ofn->Flags & (OFN_ALLOWMULTISELECT|OFN_ENABLEHOOK|OFN_ENABLETEMPLATE))
         win16look = (ofn->Flags & OFN_EXPLORER) ? FALSE : TRUE;

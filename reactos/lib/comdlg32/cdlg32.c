@@ -63,7 +63,7 @@ BOOL (WINAPI *COMDLG32_SHGetFolderPathW)(HWND,int,HANDLE,DWORD,LPWSTR);
  *	FALSE if sibling could not be loaded or instantiated twice, TRUE
  *	otherwise.
  */
-static char * GPA_string = "Failed to get entry point %s for hinst = 0x%08x\n";
+static const char * GPA_string = "Failed to get entry point %s for hinst = 0x%08x\n";
 #define GPA(dest, hinst, name) \
 	if(!(dest = (void*)GetProcAddress(hinst,name)))\
 	{ \

@@ -235,9 +235,9 @@ FONT 8, "MS Shell Dlg"
     LTEXT           "&Имя:",         stc6,  16, 20,  36,8
     COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "Статус:",        stc8,  16, 36,  36,10, SS_NOPREFIX
-    LTEXT           "Эмулирован",    stc12, 60, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Эмулирован",    stc12, 52, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Тип:",          stc7,  16, 48,  36,10, SS_NOPREFIX
-    LTEXT           "Эмулирован",     stc11, 60, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Эмулирован",     stc11, 52, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Место:",         stc10, 16, 60,  36,10, SS_NOPREFIX
     LTEXT           "Эмулировано", stc14, 60, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Примечание:",   stc9,  16, 72,  36,10, SS_NOPREFIX
