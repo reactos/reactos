@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2003/05/28 18:09:10 chorns Exp $
+# $Id: Makefile,v 1.3 2003/06/01 19:23:18 hbirr Exp $
 
 PATH_TO_TOP = ../..
 
@@ -19,6 +19,7 @@ else
 endif
 
 TARGET_OBJECTS = \
+	memccpy.o \
  	memchr.o \
 	memcmp.o \
 	memcpy.o \
