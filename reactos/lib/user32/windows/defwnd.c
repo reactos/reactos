@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.132 2004/04/09 20:03:14 navaraf Exp $
+/* $Id: defwnd.c,v 1.133 2004/04/13 16:48:44 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1482,42 +1482,50 @@ DefWindowProcA(HWND hWnd,
 
         case WM_GETTEXTLENGTH:
         {
-            return InternalGetWindowText(hWnd, NULL, 0);
+            return (LRESULT)NtUserInternalGetWindowText(hWnd, NULL, 0);
         }
 
         case WM_GETTEXT:
         {
-            UNICODE_STRING UnicodeString;
+            LPWSTR Buffer;
             LPSTR AnsiBuffer = (LPSTR)lParam;
-            BOOL Result;
+            INT Length;
 
             if (wParam > 1)
             {
                 *((PWSTR)lParam) = '\0';
             }
-            UnicodeString.Length = UnicodeString.MaximumLength =
-                wParam * sizeof(WCHAR);
-            UnicodeString.Buffer = HeapAlloc(GetProcessHeap(), 0,
-                UnicodeString.Length);
-            if (!UnicodeString.Buffer)
+            Buffer = HeapAlloc(GetProcessHeap(), 0, wParam * sizeof(WCHAR));
+            if (!Buffer)
                 return FALSE;
-            Result = InternalGetWindowText(hWnd, UnicodeString.Buffer, wParam);
-            if (wParam > 0 &&
-                !WideCharToMultiByte(CP_ACP, 0, UnicodeString.Buffer, -1,
+            Length = NtUserInternalGetWindowText(hWnd, Buffer, wParam);
+            if (Length > 0 && wParam > 0 &&
+                !WideCharToMultiByte(CP_ACP, 0, Buffer, -1,
                 AnsiBuffer, wParam, NULL, NULL))
             {
-                AnsiBuffer[wParam - 1] = 0;
+                AnsiBuffer[0] = '\0';
             }
-            HeapFree(GetProcessHeap(), 0, UnicodeString.Buffer);
 
-            return Result;
+            HeapFree(GetProcessHeap(), 0, Buffer);
+
+            return (LRESULT)Length;
         }
 
         case WM_SETTEXT:
         {
             ANSI_STRING AnsiString;
-            RtlInitAnsiString(&AnsiString, (LPSTR)lParam);
-            NtUserDefSetText(hWnd, &AnsiString);
+            UNICODE_STRING UnicodeString;
+            
+            if(lParam)
+            {
+              RtlInitAnsiString(&AnsiString, (LPSTR)lParam);
+              RtlAnsiStringToUnicodeString(&UnicodeString, &AnsiString, TRUE);
+              NtUserDefSetText(hWnd, &UnicodeString);
+              RtlFreeUnicodeString(&UnicodeString);
+            }
+            else
+              NtUserDefSetText(hWnd, NULL);
+            
             if ((GetWindowLongW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
             {
                 DefWndNCPaint(hWnd, (HRGN)1);
@@ -1557,29 +1565,27 @@ DefWindowProcW(HWND hWnd,
 
         case WM_GETTEXTLENGTH:
         {
-            return InternalGetWindowText(hWnd, NULL, 0);
+            return (LRESULT)NtUserInternalGetWindowText(hWnd, NULL, 0);
         }
 
         case WM_GETTEXT:
         {
-            DWORD Result;
             if (wParam > 1)
             {
                 *((PWSTR)lParam) = '\0';
             }
-            Result = InternalGetWindowText(hWnd, (PWSTR)lParam, wParam);
-            return Result;
+            return (LRESULT)NtUserInternalGetWindowText(hWnd, (PWSTR)lParam, wParam);
         }
 
         case WM_SETTEXT:
         {
             UNICODE_STRING UnicodeString;
-            ANSI_STRING AnsiString;
 
-            RtlInitUnicodeString(&UnicodeString, (LPWSTR)lParam);
-            RtlUnicodeStringToAnsiString(&AnsiString, &UnicodeString, TRUE);
-            NtUserDefSetText(hWnd, &AnsiString);
-            RtlFreeAnsiString(&AnsiString);
+            if(lParam)
+              RtlInitUnicodeString(&UnicodeString, (LPWSTR)lParam);
+            
+            NtUserDefSetText(hWnd, (lParam ? &UnicodeString : NULL));
+            
             if ((GetWindowLongW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
             {
                 DefWndNCPaint(hWnd, (HRGN)1);

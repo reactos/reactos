@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.211 2004/04/10 07:37:28 navaraf Exp $
+/* $Id: window.c,v 1.212 2004/04/13 16:48:45 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -54,6 +54,7 @@
 #include <include/useratom.h>
 #include <include/tags.h>
 #include <include/timer.h>
+#include <include/cleanup.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -423,6 +424,11 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
   if(Window->WindowRegion)
   {
     NtGdiDeleteObject(Window->WindowRegion);
+  }
+  
+  if(Window->WindowName.Buffer)
+  {
+    ExFreePool(Window->WindowName.Buffer);
   }
   
   IntReleaseWindowObject(Window);
@@ -1343,14 +1349,18 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   BOOL MenuChanged;
 
   DPRINT("NtUserCreateWindowEx(): (%d,%d-%d,%d)\n", x, y, nWidth, nHeight);
-
-  if (! RtlCreateUnicodeString(&WindowName,
-                               NULL == lpWindowName->Buffer ?
-                               L"" : lpWindowName->Buffer))
+  
+  if(lpWindowName)
+  {
+    Status = IntSafeCopyUnicodeString(&WindowName, lpWindowName);
+    if (!NT_SUCCESS(Status))
     {
-      SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
+      SetLastNtError(Status);
       return((HWND)0);
     }
+  }
+  else
+    RtlInitUnicodeString(&WindowName, NULL);
 
   ParentWindowHandle = PsGetWin32Thread()->Desktop->DesktopWindow;
   OwnerWindowHandle = NULL;
@@ -1511,8 +1521,8 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   ExInitializeFastMutex(&WindowObject->PropListLock);
   ExInitializeFastMutex(&WindowObject->RelativesLock);
   ExInitializeFastMutex(&WindowObject->UpdateLock);
-
-  RtlInitUnicodeString(&WindowObject->WindowName, WindowName.Buffer);
+  
+  WindowObject->WindowName = WindowName;
 
   /* Correct the window style. */
   if (!(dwStyle & WS_CHILD))
@@ -3708,76 +3718,112 @@ NtUserWindowFromPoint(LONG X, LONG Y)
  * Undocumented function that is called from DefWindowProc to set
  * window text.
  *
- * FIXME: Call this from user32.dll!
- *
  * Status
- *    @unimplemented
+ *    @implemented
  */
 
 BOOL STDCALL
-NtUserDefSetText(HWND WindowHandle, PANSI_STRING Text)
+NtUserDefSetText(HWND WindowHandle, PUNICODE_STRING WindowText)
 {
-   PWINDOW_OBJECT WindowObject;
-   UNICODE_STRING NewWindowName;
-   BOOL Result = FALSE;
-
-   WindowObject = IntGetWindowObject(WindowHandle);
-   if (!WindowObject)
-   {
-      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+  PWINDOW_OBJECT WindowObject;
+  UNICODE_STRING SafeText;
+  NTSTATUS Status;
+  
+  WindowObject = IntGetWindowObject(WindowHandle);
+  if(!WindowObject)
+  {
+    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+    return FALSE;
+  }
+  
+  if(WindowText)
+  {
+    Status = IntSafeCopyUnicodeString(&SafeText, WindowText);
+    if(!NT_SUCCESS(Status))
+    {
+      SetLastNtError(Status);
+      IntReleaseWindowObject(WindowObject);
       return FALSE;
-   }
-
-   if (NT_SUCCESS(RtlAnsiStringToUnicodeString(&NewWindowName, Text, TRUE)))
-   {
-      RtlFreeUnicodeString(&WindowObject->WindowName);
-      WindowObject->WindowName.Buffer = NewWindowName.Buffer;
-      WindowObject->WindowName.Length = NewWindowName.Length;
-      WindowObject->WindowName.MaximumLength = NewWindowName.MaximumLength;
-      Result = TRUE;
-   }
-
-   IntReleaseWindowObject(WindowObject);
-
-   return Result;
+    }
+  }
+  else
+  {
+    RtlInitUnicodeString(&SafeText, NULL);
+  }
+  
+  /* FIXME - do this thread-safe! otherwise one could crash here! */
+  if(WindowObject->WindowName.Buffer)
+  {
+    ExFreePool(WindowObject->WindowName.Buffer);
+  }
+  
+  WindowObject->WindowName = SafeText;
+  
+  IntReleaseWindowObject(WindowObject);
+  return TRUE;
 }
 
 /*
  * NtUserInternalGetWindowText
  *
- * FIXME: Call this from user32.dll!
- *
  * Status
  *    @implemented
  */
 
-DWORD STDCALL
-NtUserInternalGetWindowText(HWND WindowHandle, LPWSTR Text, INT MaxCount)
+INT STDCALL
+NtUserInternalGetWindowText(HWND hWnd, LPWSTR lpString, INT nMaxCount)
 {
-   PWINDOW_OBJECT WindowObject;
-   DWORD Result;
-
-   WindowObject = IntGetWindowObject(WindowHandle);
-   if (!WindowObject)
-   {
-      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-      return 0;
-   }
-
-   Result = WindowObject->WindowName.Length / sizeof(WCHAR);
-   if (Text)
-   {
-      /* FIXME: Shouldn't it be always NULL terminated? */
-      wcsncpy(Text, WindowObject->WindowName.Buffer, MaxCount);
-      if (MaxCount < Result)
+  PWINDOW_OBJECT WindowObject;
+  NTSTATUS Status;
+  INT Result;
+  
+  if(lpString && (nMaxCount <= 1))
+  {
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return 0;
+  }
+  
+  WindowObject = IntGetWindowObject(hWnd);
+  if(!WindowObject)
+  {
+    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+    return 0;
+  }
+  
+  /* FIXME - do this thread-safe! otherwise one could crash here! */
+  Result = WindowObject->WindowName.Length / sizeof(WCHAR);
+  if(lpString)
+  {
+    const WCHAR Terminator = L'\0';
+    INT Copy;
+    WCHAR *Buffer = (WCHAR*)lpString;
+    
+    Copy = min(nMaxCount - 1, Result);
+    if(Copy > 0)
+    {
+      Status = MmCopyToCaller(Buffer, WindowObject->WindowName.Buffer, Copy * sizeof(WCHAR));
+      if(!NT_SUCCESS(Status))
       {
-         Result = MaxCount;
+        SetLastNtError(Status);
+        IntReleaseWindowObject(WindowObject);
+        return 0;
       }
-   }
-
-   IntReleaseWindowObject(WindowObject);
-
-   return Result;
+      Buffer += Copy;
+    }
+    
+    Status = MmCopyToCaller(Buffer, &Terminator, sizeof(WCHAR));
+    if(!NT_SUCCESS(Status))
+    {
+      SetLastNtError(Status);
+      IntReleaseWindowObject(WindowObject);
+      return 0;
+    }
+    
+    Result = Copy;
+  }
+  
+  IntReleaseWindowObject(WindowObject);
+  return Result;
 }
 
 DWORD STDCALL

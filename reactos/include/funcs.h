@@ -4478,7 +4478,7 @@ EndTask(
 	WINBOOL fForce
 	);
 
-DWORD
+int
 STDCALL
 InternalGetWindowText(
 		      HWND hWnd,

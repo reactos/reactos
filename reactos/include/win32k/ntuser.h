@@ -365,7 +365,7 @@ NtUserDeferWindowPos(HDWP WinPosInfo,
          int cy,
 		     UINT Flags);
 BOOL STDCALL
-NtUserDefSetText(HWND WindowHandle, PANSI_STRING Text);
+NtUserDefSetText(HWND WindowHandle, PUNICODE_STRING WindowText);
 
 BOOLEAN
 STDCALL
@@ -865,12 +865,12 @@ NtUserInitTask(
   DWORD Unknown9,
   DWORD Unknown10);
 
-DWORD
+INT
 STDCALL
 NtUserInternalGetWindowText(
   HWND hWnd,
   LPWSTR lpString,
-  int nMaxCount);
+  INT nMaxCount);
 
 DWORD
 STDCALL

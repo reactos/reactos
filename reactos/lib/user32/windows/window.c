@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.109 2004/04/10 07:37:28 navaraf Exp $
+/* $Id: window.c,v 1.110 2004/04/13 16:48:45 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1464,7 +1464,7 @@ GetWindowContextHelpId(HWND hwnd)
 /*
  * @implemented
  */
-INT
+int
 STDCALL
 InternalGetWindowText(HWND hWnd, LPWSTR lpString, int nMaxCount)
 {
