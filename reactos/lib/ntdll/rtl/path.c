@@ -241,59 +241,33 @@ RtlGetCurrentDirectory_U(ULONG MaximumLength,
  * @implemented
  */
 NTSTATUS STDCALL
-RtlSetCurrentDirectory_U(PUNICODE_STRING name)
+RtlSetCurrentDirectory_U(PUNICODE_STRING dir)
 {
    UNICODE_STRING full;
    UNICODE_STRING envvar;
+   FILE_FS_DEVICE_INFORMATION device_info;
    OBJECT_ATTRIBUTES Attr;
    IO_STATUS_BLOCK iosb;
    PCURDIR cd;
    NTSTATUS Status;
    ULONG size;
    HANDLE handle = NULL;
-   PWSTR wcs;
-   PWSTR buf = 0;
-   PFILE_NAME_INFORMATION filenameinfo;
-   ULONG backslashcount = 0;
-   ULONG Index;
    WCHAR var[4];
+   PWSTR ptr;
    
-   DPRINT ("RtlSetCurrentDirectory %wZ\n", name);
+   DPRINT("RtlSetCurrentDirectory %wZ\n", dir);
    
    RtlAcquirePebLock ();
+   
    cd = (PCURDIR)&NtCurrentPeb ()->ProcessParameters->CurrentDirectoryName;
 
-   size = cd->DosPath.MaximumLength;
-   buf = RtlAllocateHeap (RtlGetProcessHeap(),
-			  0,
-			  size);
-   if (buf == NULL)
-     {
-	RtlReleasePebLock ();
-	return STATUS_NO_MEMORY;
-     }
+   if (!RtlDosPathNameToNtPathName_U (dir->Buffer, &full, 0, 0))
+   {
+      RtlReleasePebLock ();
+      return STATUS_OBJECT_NAME_INVALID;
+   }
    
-   size = RtlGetFullPathName_U (name->Buffer, size, buf, 0);
-   if (!size)
-     {
-	RtlFreeHeap (RtlGetProcessHeap (),
-		     0,
-		     buf);
-	RtlReleasePebLock ();
-	return STATUS_OBJECT_NAME_INVALID;
-     }
-   
-   if (!RtlDosPathNameToNtPathName_U (buf, &full, 0, 0))
-     {
-	RtlFreeHeap (RtlGetProcessHeap (),
-		     0,
-		     buf);
-	RtlFreeHeap (RtlGetProcessHeap (),
-		     0,
-		     full.Buffer);
-	RtlReleasePebLock ();
-	return STATUS_OBJECT_NAME_INVALID;
-     }
+   DPRINT("RtlSetCurrentDirectory: full %wZ\n",&full);
    
    InitializeObjectAttributes (&Attr,
 			       &full,
@@ -307,114 +281,124 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING name)
 			&iosb,
 			FILE_SHARE_READ | FILE_SHARE_WRITE,
 			FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT);
+         
    if (!NT_SUCCESS(Status))
-     {
-	RtlFreeHeap (RtlGetProcessHeap (),
-		     0,
-		     buf);
-	RtlFreeHeap (RtlGetProcessHeap (),
-		     0,
-		     full.Buffer);
-	RtlReleasePebLock ();
-	return Status;
-     }
+   {
+      RtlFreeUnicodeString( &full);
+      RtlReleasePebLock ();
+      return Status;
+   }
 
+   /* don't keep the directory handle open on removable media */
+   if (!NtQueryVolumeInformationFile( handle, &iosb, &device_info,
+                                    sizeof(device_info), FileFsDeviceInformation ) &&
+     (device_info.Characteristics & FILE_REMOVABLE_MEDIA))
+   {
+      DPRINT1("don't keep the directory handle open on removable media\n");
+      NtClose( handle );
+      handle = 0;
+   }
+
+
+/* What the heck is this all about??? It looks like its getting the long path,
+ * and if does, ITS WRONG! If current directory is set with a short path,
+ * GetCurrentDir should return a short path.
+ * If anyone agrees with me, remove this stuff.
+ * -Gunnar
+ */
+#if 0
    filenameinfo = RtlAllocateHeap(RtlGetProcessHeap(),
-				  0,
-				  MAX_PATH*sizeof(WCHAR)+sizeof(ULONG));
+              0,
+              MAX_PATH*sizeof(WCHAR)+sizeof(ULONG));
    
    Status = NtQueryInformationFile(handle,
-				   &iosb,
-				   filenameinfo,
-				   MAX_PATH*sizeof(WCHAR)+sizeof(ULONG),
-				   FileNameInformation);
+               &iosb,
+               filenameinfo,
+               MAX_PATH*sizeof(WCHAR)+sizeof(ULONG),
+               FileNameInformation);
    if (!NT_SUCCESS(Status))
      {
-	RtlFreeHeap(RtlGetProcessHeap(),
-		    0,
-		    filenameinfo);
-	RtlFreeHeap(RtlGetProcessHeap(),
-		    0,
-		    buf);
-	RtlFreeHeap(RtlGetProcessHeap(),
-		    0,
-		    full.Buffer);
-	RtlReleasePebLock();
-	return(Status);
+   RtlFreeHeap(RtlGetProcessHeap(),
+          0,
+          filenameinfo);
+   RtlFreeHeap(RtlGetProcessHeap(),
+          0,
+          buf);
+   RtlFreeHeap(RtlGetProcessHeap(),
+          0,
+          full.Buffer);
+   RtlReleasePebLock();
+   return(Status);
      }
    
    /* If it's just "\", we need special handling */
    if (filenameinfo->FileNameLength > sizeof(WCHAR))
      {
-	wcs = buf + size / sizeof(WCHAR) - 1;
-	if (*wcs == L'\\')
-	  {
-	    *(wcs) = 0;
-	    wcs--;
-	    size -= sizeof(WCHAR);
-	  }
-
-	for (Index = 0;
-	     Index < filenameinfo->FileNameLength / sizeof(WCHAR);
-	     Index++)
-	  {
-	     if (filenameinfo->FileName[Index] == '\\') backslashcount++;
-	  }
-
-	DPRINT("%d \n",backslashcount);
-	for (;backslashcount;wcs--)
-	  {
-	     if (*wcs=='\\') backslashcount--;
-	  }
-	wcs++;
-
-	RtlCopyMemory(wcs, filenameinfo->FileName, filenameinfo->FileNameLength);
-	wcs[filenameinfo->FileNameLength / sizeof(WCHAR)] = 0;
-
-	size = (wcs - buf) * sizeof(WCHAR) + filenameinfo->FileNameLength;
-     }
-   
-   RtlFreeHeap (RtlGetProcessHeap (),
-		0,
-		filenameinfo);
-   
-   /* append backslash if missing */
    wcs = buf + size / sizeof(WCHAR) - 1;
-   if (*wcs != L'\\')
+   if (*wcs == L'\\')
      {
-	*(++wcs) = L'\\';
-	*(++wcs) = 0;
-	size += sizeof(WCHAR);
+       *(wcs) = 0;
+       wcs--;
+       size -= sizeof(WCHAR);
      }
-   
-   memmove(cd->DosPath.Buffer,
-	   buf,
-	   size + sizeof(WCHAR));
-   cd->DosPath.Length = size;
+
+   for (Index = 0;
+        Index < filenameinfo->FileNameLength / sizeof(WCHAR);
+        Index++)
+     {
+        if (filenameinfo->FileName[Index] == '\\') backslashcount++;
+     }
+
+   DPRINT("%d \n",backslashcount);
+   for (;backslashcount;wcs--)
+     {
+        if (*wcs=='\\') backslashcount--;
+     }
+   wcs++;
+
+   RtlCopyMemory(wcs, filenameinfo->FileName, filenameinfo->FileNameLength);
+   wcs[filenameinfo->FileNameLength / sizeof(WCHAR)] = 0;
+
+   size = (wcs - buf) * sizeof(WCHAR) + filenameinfo->FileNameLength;
+     }
+#endif
+
+
 
    if (cd->Handle)
-     NtClose(cd->Handle);
+      NtClose(cd->Handle);
    cd->Handle = handle;
 
-   if (cd->DosPath.Buffer[1]==':')
-     {
-	envvar.Length = 2 * swprintf (var, L"=%c:", cd->DosPath.Buffer[0]);
-	envvar.MaximumLength = 8;
-	envvar.Buffer = var;
+   /* append trailing \ if missing */
+   size = full.Length / sizeof(WCHAR);
+   ptr = full.Buffer;
+   ptr += 4;  /* skip \??\ prefix */
+   size -= 4;
    
-	RtlSetEnvironmentVariable(NULL,
-				  &envvar,
-				  &cd->DosPath);
+   /* This is ok because RtlDosPathNameToNtPathName_U returns a nullterminated string.
+    * So the nullterm is replaced with \
+    * -Gunnar
+    */
+   if (size && ptr[size - 1] != '\\') ptr[size++] = '\\';
+
+   memcpy( cd->DosPath.Buffer, ptr, size * sizeof(WCHAR));
+   cd->DosPath.Buffer[size] = 0;
+   cd->DosPath.Length = size * sizeof(WCHAR);
+
+
+   /* FIXME: whats this all about??? Wine doesnt have this. -Gunnar */
+   if (cd->DosPath.Buffer[1]==':')
+   {
+      envvar.Length = 2 * swprintf (var, L"=%c:", cd->DosPath.Buffer[0]);
+      envvar.MaximumLength = 8;
+      envvar.Buffer = var;
+   
+      RtlSetEnvironmentVariable(NULL,
+                 &envvar,
+                 &cd->DosPath);
    }
    
-   RtlFreeHeap (RtlGetProcessHeap (),
-		0,
-		buf);
-   
-   RtlFreeHeap (RtlGetProcessHeap (),
-		0,
-		full.Buffer);
-   
+   RtlFreeUnicodeString( &full);
    RtlReleasePebLock();
    
    return STATUS_SUCCESS;

@@ -188,43 +188,19 @@ GetDiskFreeSpaceA (
 	LPDWORD	lpTotalNumberOfClusters
 	)
 {
-	UNICODE_STRING RootPathNameU;
-	ANSI_STRING RootPathName;
-	BOOL Result;
+   PWCHAR RootPathNameW=NULL;
 
-	RtlInitAnsiString (&RootPathName,
-	                   (LPSTR)lpRootPathName);
-
-	RtlInitUnicodeString (&RootPathNameU,
-	                      NULL);
-
-	if (lpRootPathName)
-	{
-		/* convert ansi (or oem) string to unicode */
-		if (bIsFileApiAnsi)
-			RtlAnsiStringToUnicodeString (&RootPathNameU,
-			                              &RootPathName,
-			                              TRUE);
-		else
-			RtlOemStringToUnicodeString (&RootPathNameU,
-			                             &RootPathName,
-			                             TRUE);
-	}
-
-	Result = GetDiskFreeSpaceW (RootPathNameU.Buffer,
+   if (lpRootPathName)
+   {
+      if (!(RootPathNameW = FilenameA2W(lpRootPathName, FALSE)))
+         return FALSE;
+   }
+      
+	return GetDiskFreeSpaceW (RootPathNameW,
 	                            lpSectorsPerCluster,
 	                            lpBytesPerSector,
 	                            lpNumberOfFreeClusters,
 	                            lpTotalNumberOfClusters);
-
-	if (lpRootPathName)
-	{
-		RtlFreeHeap (RtlGetProcessHeap (),
-		             0,
-		             RootPathNameU.Buffer);
-	}
-
-	return Result;
 }
 
 
@@ -290,48 +266,24 @@ GetDiskFreeSpaceW(
  */
 BOOL STDCALL
 GetDiskFreeSpaceExA (
-	LPCSTR		lpDirectoryName,
+	LPCSTR lpDirectoryName   OPTIONAL,
 	PULARGE_INTEGER	lpFreeBytesAvailableToCaller,
 	PULARGE_INTEGER	lpTotalNumberOfBytes,
 	PULARGE_INTEGER	lpTotalNumberOfFreeBytes
 	)
 {
-	UNICODE_STRING DirectoryNameU;
-	ANSI_STRING DirectoryName;
-	BOOL Result;
-
-	RtlInitAnsiString (&DirectoryName,
-	                   (LPSTR)lpDirectoryName);
-
-	RtlInitUnicodeString (&DirectoryNameU,
-	                      NULL);
+   PWCHAR DirectoryNameW=NULL;
 
 	if (lpDirectoryName)
 	{
-		/* convert ansi (or oem) string to unicode */
-		if (bIsFileApiAnsi)
-			RtlAnsiStringToUnicodeString (&DirectoryNameU,
-			                              &DirectoryName,
-			                              TRUE);
-		else
-			RtlOemStringToUnicodeString (&DirectoryNameU,
-			                             &DirectoryName,
-			                             TRUE);
+      if (!(DirectoryNameW = FilenameA2W(lpDirectoryName, FALSE)))
+         return FALSE;
 	}
 
-	Result = GetDiskFreeSpaceExW (DirectoryNameU.Buffer,
+   return GetDiskFreeSpaceExW (DirectoryNameW ,
 	                              lpFreeBytesAvailableToCaller,
 	                              lpTotalNumberOfBytes,
 	                              lpTotalNumberOfFreeBytes);
-
-	if (lpDirectoryName)
-	{
-		RtlFreeHeap (RtlGetProcessHeap (),
-		             0,
-		             DirectoryNameU.Buffer);
-	}
-
-	return Result;
 }
 
 
@@ -340,7 +292,7 @@ GetDiskFreeSpaceExA (
  */
 BOOL STDCALL
 GetDiskFreeSpaceExW(
-    LPCWSTR lpDirectoryName,
+    LPCWSTR lpDirectoryName OPTIONAL,
     PULARGE_INTEGER lpFreeBytesAvailableToCaller,
     PULARGE_INTEGER lpTotalNumberOfBytes,
     PULARGE_INTEGER lpTotalNumberOfFreeBytes
@@ -353,6 +305,10 @@ GetDiskFreeSpaceExW(
     HANDLE hFile;
     NTSTATUS errCode;
 
+    /*
+    FIXME: this is obviously wrong for UNC paths, symbolic directories etc.
+    -Gunnar
+    */
     if (lpDirectoryName)
     {
         wcsncpy (RootPathName, lpDirectoryName, 3);
@@ -408,30 +364,12 @@ GetDiskFreeSpaceExW(
 UINT STDCALL
 GetDriveTypeA(LPCSTR lpRootPathName)
 {
-	UNICODE_STRING RootPathNameU;
-	ANSI_STRING RootPathName;
-	UINT Result;
+   PWCHAR RootPathNameW;
+   
+   if (!(RootPathNameW = FilenameA2W(lpRootPathName, FALSE)))
+      return DRIVE_UNKNOWN;
 
-	RtlInitAnsiString (&RootPathName,
-	                   (LPSTR)lpRootPathName);
-
-	/* convert ansi (or oem) string to unicode */
-	if (bIsFileApiAnsi)
-		RtlAnsiStringToUnicodeString (&RootPathNameU,
-		                              &RootPathName,
-		                              TRUE);
-	else
-		RtlOemStringToUnicodeString (&RootPathNameU,
-		                             &RootPathName,
-		                             TRUE);
-
-	Result = GetDriveTypeW (RootPathNameU.Buffer);
-
-	RtlFreeHeap (RtlGetProcessHeap (),
-	             0,
-	             RootPathNameU.Buffer);
-
-	return Result;
+   return GetDriveTypeW(RootPathNameW);
 }
 
 
@@ -505,27 +443,16 @@ GetVolumeInformationA(
 	DWORD	nFileSystemNameSize
 	)
 {
-  UNICODE_STRING RootPathNameU;
   UNICODE_STRING FileSystemNameU;
   UNICODE_STRING VolumeNameU;
-  ANSI_STRING RootPathName;
   ANSI_STRING VolumeName;
   ANSI_STRING FileSystemName;
+  PWCHAR RootPathNameW;
   BOOL Result;
 
-  RtlInitAnsiString (&RootPathName,
-	             (LPSTR)lpRootPathName);
-
-  /* convert ansi (or oem) string to unicode */
-  if (bIsFileApiAnsi)
-    RtlAnsiStringToUnicodeString (&RootPathNameU,
-		                  &RootPathName,
-		                  TRUE);
-  else
-    RtlOemStringToUnicodeString (&RootPathNameU,
-		                 &RootPathName,
-		                 TRUE);
-
+  if (!(RootPathNameW = FilenameA2W(lpRootPathName, FALSE)))
+     return FALSE;
+  
   if (lpVolumeNameBuffer)
     {
       VolumeNameU.Length = 0;
@@ -544,7 +471,7 @@ GetVolumeInformationA(
 	                                        FileSystemNameU.MaximumLength);
     }
 
-  Result = GetVolumeInformationW (RootPathNameU.Buffer,
+  Result = GetVolumeInformationW (RootPathNameW,
 	                          lpVolumeNameBuffer ? VolumeNameU.Buffer : NULL,
 	                          nVolumeNameSize,
 	                          lpVolumeSerialNumber,
@@ -604,9 +531,6 @@ GetVolumeInformationA(
 	}
     }
 
-  RtlFreeHeap (RtlGetProcessHeap (),
-	       0,
-	       RootPathNameU.Buffer);
   if (lpVolumeNameBuffer)
     {
       RtlFreeHeap (RtlGetProcessHeap (),
@@ -750,49 +674,31 @@ BOOL
 STDCALL
 SetVolumeLabelA (
 	LPCSTR	lpRootPathName,
-	LPCSTR	lpVolumeName
+	LPCSTR	lpVolumeName /* NULL if deleting label */
 	)
 {
-	UNICODE_STRING RootPathNameU;
-	ANSI_STRING RootPathName;
-	UNICODE_STRING VolumeNameU;
-	ANSI_STRING VolumeName;
+	PWCHAR RootPathNameW;
+   PWCHAR VolumeNameW = NULL;
 	BOOL Result;
 
-	RtlInitAnsiString (&RootPathName,
-	                   (LPSTR)lpRootPathName);
-	RtlInitAnsiString (&VolumeName,
-	                   (LPSTR)lpVolumeName);
+   if (!(RootPathNameW = FilenameA2W(lpRootPathName, FALSE)))
+      return FALSE;
 
-	/* convert ansi (or oem) strings to unicode */
-	if (bIsFileApiAnsi)
-	{
-		RtlAnsiStringToUnicodeString (&RootPathNameU,
-		                              &RootPathName,
-		                              TRUE);
-		RtlAnsiStringToUnicodeString (&VolumeNameU,
-		                              &VolumeName,
-		                              TRUE);
-	}
-	else
-	{
-		RtlOemStringToUnicodeString (&RootPathNameU,
-		                             &RootPathName,
-		                             TRUE);
-		RtlOemStringToUnicodeString (&VolumeNameU,
-		                             &VolumeName,
-		                             TRUE);
-	}
+   if (lpVolumeName)
+   {
+      if (!(VolumeNameW = FilenameA2W(lpVolumeName, TRUE)))
+         return FALSE;
+   }
+      
+   Result = SetVolumeLabelW (RootPathNameW,
+                             VolumeNameW);
 
-	Result = SetVolumeLabelW (RootPathNameU.Buffer,
-	                          VolumeNameU.Buffer);
-
-	RtlFreeHeap (RtlGetProcessHeap (),
-	             0,
-	             RootPathNameU.Buffer);
-	RtlFreeHeap (RtlGetProcessHeap (),
-	             0,
-	             VolumeNameU.Buffer);
+   if (VolumeNameW)
+   {
+	   RtlFreeHeap (RtlGetProcessHeap (),
+	                0,
+                   VolumeNameW );
+   }
 
 	return Result;
 }
@@ -802,8 +708,10 @@ SetVolumeLabelA (
  * @implemented
  */
 BOOL STDCALL
-SetVolumeLabelW(LPCWSTR lpRootPathName,
-		LPCWSTR lpVolumeName)
+SetVolumeLabelW(
+   LPCWSTR lpRootPathName,
+   LPCWSTR lpVolumeName /* NULL if deleting label */
+   )
 {
    PFILE_FS_LABEL_INFORMATION LabelInfo;
    IO_STATUS_BLOCK IoStatusBlock;

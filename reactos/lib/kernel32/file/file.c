@@ -25,6 +25,162 @@ BOOL bIsFileApiAnsi = TRUE; // set the file api to ansi or oem
 
 /* FUNCTIONS ****************************************************************/
 
+
+PWCHAR 
+FilenameA2W(LPCSTR NameA, BOOL alloc)
+{
+   PUNICODE_STRING pstrW;
+
+   pstrW = FilenameA2U(NameA, alloc);
+   
+   return pstrW ? pstrW->Buffer : NULL;
+}
+
+
+PUNICODE_STRING
+FilenameA2U(LPCSTR NameA, BOOL alloc)
+{
+   ANSI_STRING str;
+   UNICODE_STRING strW;
+   PUNICODE_STRING pstrW;
+   NTSTATUS Status;
+
+   ASSERT(NtCurrentTeb()->StaticUnicodeString.Buffer == NtCurrentTeb()->StaticUnicodeBuffer);
+   ASSERT(NtCurrentTeb()->StaticUnicodeString.MaximumLength == sizeof(NtCurrentTeb()->StaticUnicodeBuffer));
+
+   RtlInitAnsiString(&str, NameA);
+   pstrW = alloc ? &strW : &NtCurrentTeb()->StaticUnicodeString;
+
+   if (bIsFileApiAnsi)
+        Status= RtlAnsiStringToUnicodeString( pstrW, &str, alloc );
+   else
+        Status= RtlOemStringToUnicodeString( pstrW, &str, alloc );
+
+    if (NT_SUCCESS(Status))
+       return pstrW;
+
+    if (Status== STATUS_BUFFER_OVERFLOW)
+        SetLastError( ERROR_FILENAME_EXCED_RANGE );
+    else
+        SetLastErrorByStatus(Status);
+        
+    return NULL;
+}
+
+
+/*
+No copy/conversion is done if the dest. buffer is too small.
+
+Returns:
+   Success: number of TCHARS copied into dest. buffer NOT including nullterm
+   Fail: size of buffer in TCHARS required to hold the converted filename, including nullterm
+*/
+DWORD 
+FilenameU2A_FitOrFail(
+   LPSTR  DestA,
+   INT destLen, /* buffer size in TCHARS incl. nullchar */
+   PUNICODE_STRING SourceU
+   )
+{
+   DWORD ret;
+
+   ret = bIsFileApiAnsi? RtlUnicodeStringToAnsiSize(SourceU) : RtlUnicodeStringToOemSize(SourceU);
+   /* ret incl. nullchar */
+    
+   if (DestA && ret <= destLen)
+   {
+      ANSI_STRING str;
+       
+      str.Buffer = DestA;
+      str.MaximumLength = destLen;
+       
+       
+      if (bIsFileApiAnsi)
+         RtlUnicodeStringToAnsiString(&str, SourceU, FALSE );
+      else
+         RtlUnicodeStringToOemString(&str, SourceU, FALSE );
+            
+      ret = str.Length;  /* SUCCESS: length without terminating 0 */
+   }
+    
+   return ret;
+}
+
+
+/*
+No copy/conversion is done if the dest. buffer is too small.
+
+Returns:
+   Success: number of TCHARS copied into dest. buffer NOT including nullterm
+   Fail: size of buffer in TCHARS required to hold the converted filename, including nullterm
+*/
+DWORD 
+FilenameW2A_FitOrFail(
+   LPSTR  DestA,
+   INT destLen, /* buffer size in TCHARS incl. nullchar */
+   LPCWSTR SourceW,
+   INT sourceLen /* buffer size in TCHARS incl. nullchar */
+   )
+{
+   UNICODE_STRING strW;
+
+   if (sourceLen < 0) sourceLen = wcslen(SourceW) + 1;
+
+   strW.Buffer = (PWCHAR)SourceW;
+   strW.MaximumLength = sourceLen * sizeof(WCHAR);
+   strW.Length = strW.MaximumLength - sizeof(WCHAR);
+
+   return FilenameU2A_FitOrFail(DestA, destLen, &strW);     
+}
+
+
+
+DWORD 
+FilenameA2W_N( 
+   LPWSTR dest, 
+   INT destlen, /* buffer size in TCHARS incl. nullchar */
+   LPCSTR src, 
+   INT srclen /* buffer size in TCHARS incl. nullchar */
+   )
+{
+    DWORD ret;
+
+    if (srclen < 0) srclen = strlen( src ) + 1;
+    
+    if (bIsFileApiAnsi)
+        RtlMultiByteToUnicodeN( dest, destlen* sizeof(WCHAR), &ret, (LPSTR)src, srclen  );    
+    else
+        RtlOemToUnicodeN( dest, destlen* sizeof(WCHAR), &ret, (LPSTR)src, srclen );
+    
+    if (ret) dest[(ret/sizeof(WCHAR))-1]=0;
+    
+    return ret;
+}
+
+
+DWORD 
+FilenameW2A_N( 
+   LPSTR dest, 
+   INT destlen, /* buffer size in TCHARS incl. nullchar */
+   LPCWSTR src, 
+   INT srclen /* buffer size in TCHARS incl. nullchar */
+   )
+{
+    DWORD ret;
+
+    if (srclen < 0) srclen = wcslen( src ) + 1;
+    
+    if (bIsFileApiAnsi)
+        RtlUnicodeToMultiByteN( dest, destlen, &ret, (LPWSTR) src, srclen * sizeof(WCHAR));
+    else
+        RtlUnicodeToOemN( dest, destlen, &ret, (LPWSTR) src, srclen * sizeof(WCHAR) );    
+        
+    if (ret) dest[ret-1]=0;
+    
+    return ret;
+}
+
+
 /*
  * @implemented
  */
@@ -518,29 +674,12 @@ DWORD STDCALL
 GetCompressedFileSizeA(LPCSTR lpFileName,
 		       LPDWORD lpFileSizeHigh)
 {
-   UNICODE_STRING FileNameU;
-   ANSI_STRING FileName;
-   DWORD Size;
+   PWCHAR FileNameW;
 
-   RtlInitAnsiString(&FileName,
-		     (LPSTR)lpFileName);
+   if (!(FileNameW = FilenameA2W(lpFileName, FALSE)))
+      return INVALID_FILE_SIZE;
 
-   /* convert ansi (or oem) string to unicode */
-   if (bIsFileApiAnsi)
-     RtlAnsiStringToUnicodeString(&FileNameU,
-				  &FileName,
-				  TRUE);
-   else
-     RtlOemStringToUnicodeString(&FileNameU,
-				 &FileName,
-				 TRUE);
-
-   Size = GetCompressedFileSizeW(FileNameU.Buffer,
-				 lpFileSizeHigh);
-
-   RtlFreeUnicodeString (&FileNameU);
-
-   return Size;
+   return GetCompressedFileSizeW(FileNameW, lpFileSizeHigh);
 }
 
 
@@ -563,23 +702,28 @@ GetCompressedFileSizeW(LPCWSTR lpFileName,
 		       OPEN_EXISTING,
 		       FILE_ATTRIBUTE_NORMAL,
 		       NULL);
+             
+   if (hFile == INVALID_HANDLE_VALUE)
+      return INVALID_FILE_SIZE;
 
    errCode = NtQueryInformationFile(hFile,
 				    &IoStatusBlock,
 				    &FileCompression,
 				    sizeof(FILE_COMPRESSION_INFORMATION),
 				    FileCompressionInformation);
+
+   CloseHandle(hFile);
+
    if (!NT_SUCCESS(errCode))
      {
-	CloseHandle(hFile);
 	SetLastErrorByStatus(errCode);
 	return INVALID_FILE_SIZE;
      }
-   CloseHandle(hFile);
 
    if(lpFileSizeHigh)
     *lpFileSizeHigh = FileCompression.CompressedFileSize.u.HighPart;
 
+   SetLastError(NO_ERROR);
    return FileCompression.CompressedFileSize.u.LowPart;
 }
 
@@ -773,27 +917,12 @@ GetFileAttributesExA(LPCSTR lpFileName,
 		     GET_FILEEX_INFO_LEVELS fInfoLevelId, 
 		     LPVOID lpFileInformation)
 {
-	UNICODE_STRING FileNameU;
-	ANSI_STRING FileName;
-	BOOL Result;
-	RtlInitAnsiString (&FileName,
-	                   (LPSTR)lpFileName);
+   PWCHAR FileNameW;
+   
+   if (!(FileNameW = FilenameA2W(lpFileName, FALSE)))
+      return FALSE;
 
-	/* convert ansi (or oem) string to unicode */
-	if (bIsFileApiAnsi)
-		RtlAnsiStringToUnicodeString (&FileNameU,
-		                              &FileName,
-		                              TRUE);
-	else
-		RtlOemStringToUnicodeString (&FileNameU,
-		                             &FileName,
-		                             TRUE);
-
-        Result = GetFileAttributesExW(FileNameU.Buffer, fInfoLevelId, lpFileInformation);
-
-	RtlFreeUnicodeString (&FileNameU);
-
-	return Result;
+   return GetFileAttributesExW(FileNameW, fInfoLevelId, lpFileInformation);
 }
 
 
@@ -803,29 +932,16 @@ GetFileAttributesExA(LPCSTR lpFileName,
 DWORD STDCALL
 GetFileAttributesA(LPCSTR lpFileName)
 {
-        WIN32_FILE_ATTRIBUTE_DATA FileAttributeData;
-	UNICODE_STRING FileNameU;
-	ANSI_STRING FileName;
-	BOOL Result;
+   WIN32_FILE_ATTRIBUTE_DATA FileAttributeData;
+   PWSTR FileNameW;
+	BOOL ret;
 
-	RtlInitAnsiString (&FileName,
-	                   (LPSTR)lpFileName);
+   if (!(FileNameW = FilenameA2W(lpFileName, FALSE)))
+      return INVALID_FILE_ATTRIBUTES;
+   
+   ret = GetFileAttributesExW(FileNameW, GetFileExInfoStandard, &FileAttributeData);
 
-	/* convert ansi (or oem) string to unicode */
-	if (bIsFileApiAnsi)
-		RtlAnsiStringToUnicodeString (&FileNameU,
-		                              &FileName,
-		                              TRUE);
-	else
-		RtlOemStringToUnicodeString (&FileNameU,
-		                             &FileName,
-		                             TRUE);
-
-        Result = GetFileAttributesExW(FileNameU.Buffer, GetFileExInfoStandard, &FileAttributeData);
-
-	RtlFreeUnicodeString (&FileNameU);
-
-	return Result ? FileAttributeData.dwFileAttributes : 0xffffffff;
+   return ret ? FileAttributeData.dwFileAttributes : INVALID_FILE_ATTRIBUTES;
 }
 
 
@@ -842,36 +958,20 @@ GetFileAttributesW(LPCWSTR lpFileName)
 
   Result = GetFileAttributesExW(lpFileName, GetFileExInfoStandard, &FileAttributeData);
 
-  return Result ? FileAttributeData.dwFileAttributes : 0xffffffff;
+  return Result ? FileAttributeData.dwFileAttributes : INVALID_FILE_ATTRIBUTES;
 }
 
 BOOL STDCALL
-SetFileAttributesA(LPCSTR lpFileName,
-		   DWORD dwFileAttributes)
+SetFileAttributesA(
+   LPCSTR lpFileName,
+	DWORD dwFileAttributes)
 {
-  UNICODE_STRING FileNameU;
-  ANSI_STRING FileName;
-  BOOL Result;
+   PWCHAR FileNameW;
 
-  RtlInitAnsiString (&FileName,
-		     (LPSTR)lpFileName);
+   if (!(FileNameW = FilenameA2W(lpFileName, FALSE)))
+      return FALSE;
 
-  /* convert ansi (or oem) string to unicode */
-  if (bIsFileApiAnsi)
-    RtlAnsiStringToUnicodeString (&FileNameU,
-				  &FileName,
-				  TRUE);
-   else
-    RtlOemStringToUnicodeString (&FileNameU,
-				 &FileName,
-				 TRUE);
-
-  Result = SetFileAttributesW (FileNameU.Buffer,
-			       dwFileAttributes);
-
-  RtlFreeUnicodeString (&FileNameU);
-
-  return Result;
+   return SetFileAttributesW(FileNameW, dwFileAttributes);
 }
 
 
@@ -956,100 +1056,91 @@ SetFileAttributesW(LPCWSTR lpFileName,
 }
 
 
-/*
- * @implemented
+
+
+/***********************************************************************
+ *           GetTempFileNameA   (KERNEL32.@)
  */
-UINT STDCALL
-GetTempFileNameA(LPCSTR lpPathName,
-		 LPCSTR lpPrefixString,
-		 UINT uUnique,
-		 LPSTR lpTempFileName)
+UINT WINAPI GetTempFileNameA( LPCSTR path, LPCSTR prefix, UINT unique, LPSTR buffer)
 {
-   HANDLE hFile;
-   UINT unique = uUnique;
-   UINT len;
-   const char *format = "%.*s\\~%.3s%4.4x.TMP";
-
-   DPRINT("GetTempFileNameA(lpPathName %s, lpPrefixString %.*s, "
-	  "uUnique %x, lpTempFileName %x)\n", lpPathName, 4, 
-	  lpPrefixString, uUnique, lpTempFileName);
-  
-   if (lpPathName == NULL)
-     return 0;
-
-   len = strlen(lpPathName);
-   if (len > 0 && (lpPathName[len-1] == '\\' || lpPathName[len-1] == '/'))
-     len--;
-
-   if (uUnique == 0)
-     uUnique = GetCurrentTime();
+   WCHAR BufferW[MAX_PATH];
+   PWCHAR PathW;
+   WCHAR PrefixW[3+1];
+   UINT ret;
    
-   sprintf(lpTempFileName,format,len,lpPathName,lpPrefixString,uUnique);
+   if (!(PathW = FilenameA2W(path, FALSE)))
+      return 0;
+    
+   if (prefix)
+      FilenameA2W_N(PrefixW, 3+1, prefix, -1);
    
-   if (unique)
-     return uUnique;
+   ret = GetTempFileNameW(PathW, prefix ? PrefixW : NULL, unique, BufferW);
+    
+   if (ret)
+      FilenameW2A_N(buffer, MAX_PATH, BufferW, -1);
    
-   while ((hFile = CreateFileA(lpTempFileName, GENERIC_WRITE, 0, NULL,
-			       CREATE_NEW, FILE_ATTRIBUTE_TEMPORARY,
-			       0)) == INVALID_HANDLE_VALUE)
-   {
-      if (GetLastError() != ERROR_FILE_EXISTS)
-      {
-         return 0;
-      }
-      sprintf(lpTempFileName,format,len,lpPathName,lpPrefixString,++uUnique);
-   }
-   CloseHandle(hFile);
-   return uUnique;
+   return ret;
+}
+
+/***********************************************************************
+ *           GetTempFileNameW   (KERNEL32.@)
+ */
+UINT WINAPI GetTempFileNameW( LPCWSTR path, LPCWSTR prefix, UINT unique, LPWSTR buffer )
+{
+    static const WCHAR formatW[] = L"%x.tmp";
+
+    int i;
+    LPWSTR p;
+
+    if ( !path || !prefix || !buffer )
+    {
+        SetLastError( ERROR_INVALID_PARAMETER );
+        return 0;
+    }
+
+    wcscpy( buffer, path );
+    p = buffer + wcslen(buffer);
+
+    /* add a \, if there isn't one  */
+    if ((p == buffer) || (p[-1] != '\\')) *p++ = '\\';
+
+    for (i = 3; (i > 0) && (*prefix); i--) *p++ = *prefix++;
+
+    unique &= 0xffff;
+
+    if (unique) swprintf( p, formatW, unique );
+    else
+    {
+        /* get a "random" unique number and try to create the file */
+        HANDLE handle;
+        UINT num = GetTickCount() & 0xffff;
+
+        if (!num) num = 1;
+        unique = num;
+        do
+        {
+            swprintf( p, formatW, unique );
+            handle = CreateFileW( buffer, GENERIC_WRITE, 0, NULL,
+                                  CREATE_NEW, FILE_ATTRIBUTE_NORMAL, 0 );
+            if (handle != INVALID_HANDLE_VALUE)
+            {  /* We created it */
+                DPRINT("created %S\n", buffer);
+                CloseHandle( handle );
+                break;
+            }
+            if (GetLastError() != ERROR_FILE_EXISTS &&
+                GetLastError() != ERROR_SHARING_VIOLATION)
+                break;  /* No need to go on */
+            if (!(++unique & 0xffff)) unique = 1;
+        } while (unique != num);
+    }
+
+    DPRINT("returning %S\n", buffer);
+    return unique;
 }
 
 
-/*
- * @implemented
- */
-UINT STDCALL
-GetTempFileNameW(LPCWSTR lpPathName,
-		 LPCWSTR lpPrefixString,
-		 UINT uUnique,
-		 LPWSTR lpTempFileName)
-{
-   HANDLE hFile;
-   UINT unique = uUnique;
-   UINT len;
-   const WCHAR *format = L"%.*s\\~%.3s%4.4x.TMP";
-   
-   DPRINT("GetTempFileNameW(lpPathName %S, lpPrefixString %.*S, "
-	  "uUnique %x, lpTempFileName %x)\n", lpPathName, 4, 
-	  lpPrefixString, uUnique, lpTempFileName);
 
-   if (lpPathName == NULL)
-     return 0;
-
-   len = wcslen(lpPathName);
-   if (len > 0 && (lpPathName[len-1] == L'\\' || lpPathName[len-1] == L'/'))
-     len--;
-   
-   if (uUnique == 0)
-     uUnique = GetCurrentTime();
-   
-   swprintf(lpTempFileName,format,len,lpPathName,lpPrefixString,uUnique);
-   
-   if (unique)
-     return uUnique;
-  
-   while ((hFile = CreateFileW(lpTempFileName, GENERIC_WRITE, 0, NULL,
-			       CREATE_NEW, FILE_ATTRIBUTE_TEMPORARY,
-			       0)) == INVALID_HANDLE_VALUE)
-   {
-      if (GetLastError() != ERROR_FILE_EXISTS)
-      {
-         return 0;
-      }
-      swprintf(lpTempFileName,format,len,lpPathName,lpPrefixString,++uUnique);
-   }
-   CloseHandle(hFile);
-   return uUnique;
-}
 
 
 /*
@@ -1258,6 +1349,7 @@ SetFileValidData(
 }
 
 
+
 /*
  * @implemented
  */
@@ -1324,10 +1416,7 @@ SetFileShortNameA(
     LPCSTR lpShortName
     )
 {
-  NTSTATUS Status;
-  BOOL Ret;
-  ANSI_STRING ShortNameA;
-  UNICODE_STRING ShortName;
+  PWCHAR ShortNameW;
   
   if(IsConsoleHandle(hFile))
   {
@@ -1341,22 +1430,10 @@ SetFileShortNameA(
     return FALSE;
   }
   
-  RtlInitAnsiString(&ShortNameA, (LPSTR)lpShortName);
-  
-  if(bIsFileApiAnsi)
-    Status = RtlAnsiStringToUnicodeString(&ShortName, &ShortNameA, TRUE);
-  else
-    Status = RtlOemStringToUnicodeString(&ShortName, &ShortNameA, TRUE);
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastErrorByStatus(Status);
-    return FALSE;
-  }
-  
-  Ret = SetFileShortNameW(hFile, ShortName.Buffer);
-  
-  RtlFreeUnicodeString(&ShortName);
-  return Ret;
+  if (!(ShortNameW = FilenameA2W(lpShortName, FALSE)))
+     return FALSE;
+
+  return SetFileShortNameW(hFile, ShortNameW);
 }
 
 
