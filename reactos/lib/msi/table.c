@@ -1220,7 +1220,10 @@ static UINT TABLE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
     TRACE("%p %p\n", tv, record);
 
     if( tv->table )
-        return ERROR_FUNCTION_FAILED;
+    {
+        release_table( tv->db, tv->table );
+        tv->table = NULL;
+    }
 
     r = get_table( tv->db, tv->name, &tv->table );
     if( r != ERROR_SUCCESS )

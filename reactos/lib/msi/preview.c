@@ -77,6 +77,7 @@ UINT WINAPI MsiEnableUIPreview( MSIHANDLE hdb, MSIHANDLE* phPreview )
         msiobj_release( &preview->hdr );
         r = ERROR_SUCCESS;
     }
+    msiobj_release( &db->hdr );
 
     return r;
 }

@@ -131,6 +131,8 @@ UINT INSERT_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,
 UINT UPDATE_CreateView( MSIDATABASE *db, MSIVIEW **, LPWSTR table,
                         column_assignment *list, struct expr *expr );
 
+UINT DELETE_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table );
+
 void delete_expr( struct expr *e );
 void delete_string_list( string_list *sl );
 void delete_value_list( value_list *vl );

@@ -231,13 +231,13 @@ static BOOL find_next_outermost_key(LPCWSTR source, DWORD len_remaining,
     *nested = FALSE;
     for (i = 1; (*mark - source) + i < len_remaining && count > 0; i++)
     {
-        if ((*mark)[i] == '[') 
+        if ((*mark)[i] == '[' && (*mark)[i-1] != '\\')
         {
             count ++;
             total_count ++;
             *nested = TRUE;
         }
-        else if ((*mark)[i] == ']')
+        else if ((*mark)[i] == ']' && (*mark)[i-1] != '\\')
         {
             count --;
         }
@@ -538,11 +538,8 @@ UINT WINAPI MsiFormatRecordW( MSIHANDLE hInstall, MSIHANDLE hRecord,
 
     package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE );
 
-    if( record )
-    {
-        r = MSI_FormatRecordW( package, record, szResult, sz );
-        msiobj_release( &record->hdr );
-    }
+    r = MSI_FormatRecordW( package, record, szResult, sz );
+    msiobj_release( &record->hdr );
     if (package)
         msiobj_release( &package->hdr );
     return r;
@@ -572,11 +569,8 @@ UINT WINAPI MsiFormatRecordA( MSIHANDLE hInstall, MSIHANDLE hRecord,
 
     package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE );
 
-    if( record )
-    {
-        r = MSI_FormatRecordA( package, record, szResult, sz );
-        msiobj_release( &record->hdr );
-    }
+    r = MSI_FormatRecordA( package, record, szResult, sz );
+    msiobj_release( &record->hdr );
     if (package)
         msiobj_release( &package->hdr );
     return r;

@@ -123,10 +123,10 @@
 123 stdcall MsiRecordSetStreamW(long long wstr)
 124 stdcall MsiRecordSetStringA(long long str)
 125 stdcall MsiRecordSetStringW(long long wstr)
-126 stub MsiReinstallFeatureA
+126 stdcall MsiReinstallFeatureA(str str long)
 127 stub MsiReinstallFeatureFromDescriptorA
 128 stub MsiReinstallFeatureFromDescriptorW
-129 stub MsiReinstallFeatureW
+129 stdcall MsiReinstallFeatureW(wstr wstr long)
 130 stdcall MsiReinstallProductA(str long)
 131 stdcall MsiReinstallProductW(wstr long)
 132 stub MsiSequenceA
@@ -151,8 +151,8 @@
 151 stdcall MsiSummaryInfoPersist(long)
 152 stdcall MsiSummaryInfoSetPropertyA(long long long long ptr str)
 153 stdcall MsiSummaryInfoSetPropertyW(long long long long ptr wstr)
-154 stub MsiUseFeatureA
-155 stub MsiUseFeatureW
+154 stdcall MsiUseFeatureA(str str)
+155 stdcall MsiUseFeatureW(wstr wstr)
 156 stdcall MsiVerifyPackageA(str)
 157 stdcall MsiVerifyPackageW(wstr)
 158 stdcall MsiViewClose(long)
@@ -189,7 +189,7 @@
 189 stdcall MsiConfigureProductExA(str long long str)
 190 stdcall MsiConfigureProductExW(wstr long long wstr)
 191 stub MsiInvalidateFeatureCache
-192 stub MsiUseFeatureExA
+192 stdcall MsiUseFeatureExA(str str long long)
 193 stdcall MsiUseFeatureExW(wstr wstr long long)
 194 stdcall MsiGetFileVersionA(str str ptr str ptr)
 195 stdcall MsiGetFileVersionW(wstr wstr ptr wstr ptr)

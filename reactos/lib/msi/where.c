@@ -247,6 +247,7 @@ static UINT WHERE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
     if( !wv->reorder )
         return ERROR_FUNCTION_FAILED;
 
+    wv->row_count = 0;
     for( i=0; i<count; i++ )
     {
         val = 0;
