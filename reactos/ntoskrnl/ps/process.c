@@ -1603,6 +1603,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
    PEPROCESS Process;
    NTSTATUS Status;
    KPROCESSOR_MODE PreviousMode;
+   ACCESS_MASK Access;
    
    PreviousMode = ExGetPreviousMode();
    
@@ -1613,8 +1614,8 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
      {
        /* probe with 32bit alignment */
        ProbeForRead(ProcessInformation,
-                     ProcessInformationLength,
-                     sizeof(ULONG));
+                    ProcessInformationLength,
+                    sizeof(ULONG));
        Status = STATUS_SUCCESS;
      }
      _SEH_HANDLE
@@ -1629,8 +1630,21 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
      }
    }
    
+   Access = PROCESS_SET_INFORMATION;
+   
+   switch(ProcessInformationClass)
+   {
+     case ProcessSessionInformation:
+       Access |= PROCESS_SET_SESSIONID;
+       break;
+     case ProcessExceptionPort:
+     case ProcessDebugPort:
+       Access |= PROCESS_SET_PORT;
+       break;
+   }
+   
    Status = ObReferenceObjectByHandle(ProcessHandle,
-				      PROCESS_SET_INFORMATION,
+				      Access,
 				      PsProcessType,
 				      PreviousMode,
 				      (PVOID*)&Process,
@@ -1645,13 +1659,92 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
       case ProcessQuotaLimits:
       case ProcessBasePriority:
       case ProcessRaisePriority:
-      case ProcessDebugPort:
 	Status = STATUS_NOT_IMPLEMENTED;
 	break;
 
+      case ProcessDebugPort:
+      {
+        if(ProcessInformationLength != sizeof(HANDLE))
+        {
+          Status = STATUS_INFO_LENGTH_MISMATCH;
+        }
+        else
+        {
+          HANDLE PortHandle;
+
+          /* make a safe copy of the buffer on the stack */
+          _SEH_TRY
+          {
+            PortHandle = *(PHANDLE)ProcessInformation;
+            Status = (PortHandle != NULL ? STATUS_SUCCESS : STATUS_INVALID_PARAMETER);
+          }
+          _SEH_HANDLE
+          {
+            Status = _SEH_GetExceptionCode();
+          }
+          _SEH_END;
+
+          if(NT_SUCCESS(Status))
+          {
+            PEPORT DebugPort;
+
+            /* in case we had success reading from the buffer, verify the provided
+             * LPC port handle
+             */
+            Status = ObReferenceObjectByHandle(PortHandle,
+                                               0,
+                                               LpcPortObjectType,
+                                               PreviousMode,
+                                               (PVOID)&DebugPort,
+                                               NULL);
+            if(NT_SUCCESS(Status))
+            {
+              /* lock the process to be thread-safe! */
+
+              Status = PsLockProcess(Process, FALSE);
+              if(NT_SUCCESS(Status))
+              {
+                /*
+                 * according to "NT Native API" documentation, setting the debug
+                 * port is only permitted once!
+                 */
+                if(Process->DebugPort == NULL)
+                {
+                  /* keep the reference to the handle! */
+                  Process->DebugPort = DebugPort;
+                  
+                  if(Process->Peb)
+                  {
+                    /* we're now debugging the process, so set the flag in the PEB
+                       structure. However, to access it we need to attach to the
+                       process so we're sure we're in the right context! */
+
+                    KeAttachProcess(&Process->Pcb);
+                    Process->Peb->BeingDebugged = TRUE;
+                    KeDetachProcess();
+                  }
+                  Status = STATUS_SUCCESS;
+                }
+                else
+                {
+                  ObDereferenceObject(DebugPort);
+                  Status = STATUS_PORT_ALREADY_SET;
+                }
+                PsUnlockProcess(Process);
+              }
+              else
+              {
+                ObDereferenceObject(DebugPort);
+              }
+            }
+          }
+        }
+        break;
+      }
+
       case ProcessExceptionPort:
       {
-        if(ProcessInformationLength != sizeof(PROCESS_ACCESS_TOKEN))
+        if(ProcessInformationLength != sizeof(HANDLE))
         {
           Status = STATUS_INFO_LENGTH_MISMATCH;
         }
@@ -1697,17 +1790,21 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
                  */
                 if(Process->ExceptionPort == NULL)
                 {
+                  /* keep the reference to the handle! */
                   Process->ExceptionPort = ExceptionPort;
                   Status = STATUS_SUCCESS;
                 }
                 else
                 {
+                  ObDereferenceObject(ExceptionPort);
                   Status = STATUS_PORT_ALREADY_SET;
                 }
                 PsUnlockProcess(Process);
               }
-              
-              ObDereferenceObject(ExceptionPort);
+              else
+              {
+                ObDereferenceObject(ExceptionPort);
+              }
             }
           }
         }
@@ -1792,7 +1889,6 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
           
           if(NT_SUCCESS(Status))
           {
-            PEPROCESS Process2;
             /* we successfully copied the structure to the stack, continue processing */
             
             /*
@@ -1805,26 +1901,6 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
               Status = STATUS_PRIVILEGE_NOT_HELD;
               break;
             }
-            
-            /*
-             * ntinternals documents a PROCESS_SET_SESSIONID flag for NtOpenProcess,
-             * so we need to open the handle again with this access flag to make
-             * sure the handle has the required permissions to change the session id!
-             */
-            Status = ObReferenceObjectByHandle(ProcessHandle,
-                                               PROCESS_SET_INFORMATION | PROCESS_SET_SESSIONID,
-                                               PsProcessType,
-                                               PreviousMode,
-                                               (PVOID*)&Process2,
-                                               NULL);
-            if(!NT_SUCCESS(Status))
-            {
-              /* the handle doesn't have the access rights */
-              break;
-            }
-            
-            /* SANITY check, Process2 MUST be the same as Process as it's the same handle! */
-            ASSERT(Process2 == Process);
             
             /* FIXME - update the session id for the process token */
 
@@ -1857,8 +1933,6 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
 
               PsUnlockProcess(Process);
             }
-            
-            ObDereferenceObject(Process2);
           }
         }
         break;
