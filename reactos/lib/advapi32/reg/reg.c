@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.30 2003/08/30 14:46:29 hbirr Exp $
+/* $Id: reg.c,v 1.31 2003/10/14 18:18:27 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -19,7 +19,7 @@
 #include <windows.h>
 #include <wchar.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /* DEFINES ******************************************************************/
@@ -2180,7 +2180,7 @@ RegQueryValueExW (HKEY hKey,
 /************************************************************************
  *  RegQueryValueExA
  *
- * @unimplemented
+ * @implemented
  */
 LONG
 STDCALL
@@ -2192,69 +2192,65 @@ RegQueryValueExA(
   LPBYTE  lpData,
   LPDWORD lpcbData)
 {
-  WCHAR ValueNameBuffer[MAX_PATH+1];
   UNICODE_STRING ValueName;
   UNICODE_STRING ValueData;
   ANSI_STRING AnsiString;
   LONG ErrorCode;
-  DWORD ResultSize;
-  DWORD Type;
 
-  /* FIXME: HKEY_PERFORMANCE_DATA is special, see MS SDK */
-
-  if ((lpData) && (!lpcbData)) {
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return ERROR_INVALID_PARAMETER;
-  }
-  RtlInitUnicodeString(&ValueData, NULL);
-  if (lpData) {
-    ValueData.MaximumLength = *lpcbData * sizeof(WCHAR);
-    ValueData.Buffer = RtlAllocateHeap(
-      ProcessHeap,
-      0,
-      ValueData.MaximumLength);
-    if (!ValueData.Buffer) {
-      SetLastError(ERROR_OUTOFMEMORY);
-      return ERROR_OUTOFMEMORY;
+  if ((lpData) && (!lpcbData))
+    {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return ERROR_INVALID_PARAMETER;
     }
-  }
-  RtlInitAnsiString(&AnsiString, (LPSTR)lpValueName);
-  RtlInitUnicodeString(&ValueName, NULL);
-  ValueName.Buffer = &ValueNameBuffer[0];
-  ValueName.MaximumLength = sizeof(ValueNameBuffer);
-  RtlAnsiStringToUnicodeString(&ValueName, &AnsiString, FALSE);
-  if (lpcbData) {
-    ResultSize = *lpcbData;
-  } else {
-    ResultSize = 0;
-  }
+
+  if (lpData)
+    {
+      ValueData.Length = ValueData.MaximumLength = *lpcbData * sizeof(WCHAR);
+      ValueData.Buffer = RtlAllocateHeap(
+        ProcessHeap,
+        0,
+        ValueData.Length);
+      if (!ValueData.Buffer)
+        {
+          SetLastError(ERROR_OUTOFMEMORY);
+          return ERROR_OUTOFMEMORY;
+        }
+    }
+  else
+    {
+      ValueData.Buffer = NULL;
+    }
+
+  RtlCreateUnicodeStringFromAsciiz(&ValueName, (LPSTR)lpValueName);
+
   ErrorCode = RegQueryValueExW(
     hKey,
     ValueName.Buffer,
     lpReserved,
-    &Type,
+    lpType,
     (LPBYTE)ValueData.Buffer,
-    &ResultSize);
-  if ((ErrorCode == ERROR_SUCCESS) && (ValueData.Buffer != NULL)) {
-    if (lpType) {
-      *lpType = Type;
+    (LPDWORD)&ValueData.Length);
+
+  if ((ErrorCode == ERROR_SUCCESS) && (ValueData.Buffer != NULL))
+    {
+      if (lpType && ((*lpType == REG_SZ) || (*lpType == REG_MULTI_SZ) || (*lpType == REG_EXPAND_SZ)))
+        {
+          RtlInitAnsiString(&AnsiString, NULL);
+          AnsiString.Buffer = lpData;
+          AnsiString.MaximumLength = *lpcbData;
+          RtlUnicodeStringToAnsiString(&AnsiString, &ValueData, FALSE);
+          *lpcbData = ValueData.Length / sizeof(WCHAR);
+        } else {
+          RtlMoveMemory(lpData, ValueData.Buffer, *lpcbData);
+          *lpcbData = ValueData.Length;
+        }
+      }
+
+  if (ValueData.Buffer)
+    {
+      RtlFreeHeap(ProcessHeap, 0, ValueData.Buffer);
     }
-    if ((Type == REG_SZ) || (Type == REG_MULTI_SZ) || (Type == REG_EXPAND_SZ)) {
-      ValueData.Length = ResultSize;
-      RtlInitAnsiString(&AnsiString, NULL);
-      AnsiString.Buffer = lpData;
-      AnsiString.MaximumLength = *lpcbData;
-      RtlUnicodeStringToAnsiString(&AnsiString, &ValueData, FALSE);
-    } else {
-      RtlMoveMemory(lpData, ValueData.Buffer, ResultSize);
-    }
-  }
-  if (lpcbData) {
-    *lpcbData = ResultSize;
-  }
-  if (ValueData.Buffer) {
-    RtlFreeHeap(ProcessHeap, 0, ValueData.Buffer);
-  }
+
   return ErrorCode;
 }
 
