@@ -268,10 +268,10 @@ NTSTATUS FileOpenAddress(
   /* Protocol specific handling */
   switch (Protocol) {
   case IPPROTO_TCP:
-    /* FIXME: If specified port is 0, a port is chosen dynamically */
-    AddrFile->Port = TCPAllocatePort(Address->Address[0].Address[0].sin_port);
-    AddrFile->Send = NULL; /* TCPSendData */
-    break;
+      AddrFile->Port = 
+          TCPAllocatePort(Address->Address[0].Address[0].sin_port);
+      AddrFile->Send = NULL; /* TCPSendData */
+      break;
 
   case IPPROTO_UDP:
       TI_DbgPrint(MID_TRACE,("Allocating udp port\n"));

@@ -103,7 +103,7 @@ WSPRecv(
 	HANDLE                                  SockEvent;
 	PSOCKET_INFORMATION			Socket;
 
-	AFD_DbgPrint(MID_TRACE,("Called\n"));
+	AFD_DbgPrint(MID_TRACE,("Called (%x)\n", Handle));
 
 	/* Get the Socket Structure associate to this Socket*/
 	Socket = GetSocketStructure(Handle);

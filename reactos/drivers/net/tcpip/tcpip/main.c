@@ -9,10 +9,10 @@
  */
 #include "precomp.h"
 
-//#define NDEBUG
+#define NDEBUG
 
 #ifndef NDEBUG
-DWORD DebugTraceLevel = MAX_TRACE | DEBUG_TCP;
+DWORD DebugTraceLevel = DEBUG_ULTRA & ~(DEBUG_LOCK | DEBUG_PBUFFER);
 #else
 DWORD DebugTraceLevel = 0;
 #endif /* NDEBUG */

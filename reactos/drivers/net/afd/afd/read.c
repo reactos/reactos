@@ -159,9 +159,14 @@ NTSTATUS DDKAPI ReceiveComplete
     FCB->Recv.BytesUsed = 0;
 
     if( FCB->State == SOCKET_STATE_CLOSED ) {
+        AFD_DbgPrint(MIN_TRACE,("!!! CLOSED SOCK GOT A RECEIVE COMPLETE !!!\n"));
 	SocketStateUnlock( FCB );
 	DestroySocket( FCB );
 	return STATUS_SUCCESS;
+    } else if( FCB->State == SOCKET_STATE_LISTENING ) {
+        AFD_DbgPrint(MIN_TRACE,("!!! LISTENER GOT A RECEIVE COMPLETE !!!\n"));
+        SocketStateUnlock( FCB );
+        return STATUS_UNSUCCESSFUL;
     }
     
     if( NT_SUCCESS(Irp->IoStatus.Status) && 
@@ -240,6 +245,12 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
 
+    if( FCB->State != SOCKET_STATE_CONNECTED ) {
+        AFD_DbgPrint(MID_TRACE,("Called recv on wrong kind of socket (s%x)\n",
+                                FCB->State));
+        return STATUS_UNSUCCESSFUL;
+    }
+
     if( FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS )
     {
 	AFD_DbgPrint(MID_TRACE,("Receive on connection-less sockets not implemented\n"));
@@ -295,6 +306,7 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
        return UnlockAndMaybeComplete( FCB, Status, Irp, 
 				      TotalBytesCopied, NULL, TRUE );
     } else {
+        AFD_DbgPrint(MID_TRACE,("Leaving read irp\n"));
        return LeaveIrpUntilLater( FCB, Irp, FUNCTION_RECV );
     }
 }

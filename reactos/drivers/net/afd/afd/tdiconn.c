@@ -80,7 +80,8 @@ NTSTATUS TdiBuildNullConnectionInfoInPlace
  */
 {
   ULONG TdiAddressSize;
-  
+  PTRANSPORT_ADDRESS TransportAddress;
+
   TdiAddressSize = TdiAddressSizeFromType(Type);
 
   RtlZeroMemory(ConnInfo,
@@ -88,8 +89,11 @@ NTSTATUS TdiBuildNullConnectionInfoInPlace
 		TdiAddressSize);
 
   ConnInfo->OptionsLength = sizeof(ULONG);
-  ConnInfo->RemoteAddressLength = 0;
-  ConnInfo->RemoteAddress = NULL;
+  ConnInfo->RemoteAddressLength = TdiAddressSize;
+  ConnInfo->RemoteAddress = TransportAddress = 
+      (PTRANSPORT_ADDRESS)&ConnInfo[1];
+  TransportAddress->TAAddressCount = 1;
+  TransportAddress->Address[0].AddressType = Type;
 
   return STATUS_SUCCESS;
 }

@@ -30,9 +30,13 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
     PIRP Irp;
     PMDL Mdl;
 
+    TI_DbgPrint(MID_TRACE,("Handling signalled state on %x (%x)\n",
+                           Connection, Connection->SocketContext));
+                
     /* Things that can happen when we try the initial connection */
     if( ((NewState & SEL_CONNECT) || (NewState & SEL_FIN)) &&
 	!(Connection->State & (SEL_CONNECT | SEL_FIN)) ) {
+
 	while( !IsListEmpty( &Connection->ConnectRequest ) ) {
 	    Connection->State |= NewState & (SEL_CONNECT | SEL_FIN);
 	    Entry = RemoveHeadList( &Connection->ConnectRequest );
@@ -529,7 +533,8 @@ NTSTATUS TCPReceiveData
     NTSTATUS Status;
     PTDI_BUCKET Bucket;
 
-    TI_DbgPrint(DEBUG_TCP,("Called for %d bytes\n", ReceiveLength));
+    TI_DbgPrint(DEBUG_TCP,("Called for %d bytes (on socket %x)\n", 
+                           ReceiveLength, Connection->SocketContext));
 
     ASSERT_KM_POINTER(Connection->SocketContext);
 
@@ -616,12 +621,37 @@ VOID TCPTimeout(VOID) {
 UINT TCPAllocatePort( UINT HintPort ) {
     if( HintPort ) {
 	if( AllocatePort( &TCPPorts, HintPort ) ) return HintPort; 
-	else return (UINT)-1;
+	else {
+            TI_DbgPrint
+                (MID_TRACE,("We got a hint port but couldn't allocate it\n"));
+            return (UINT)-1;
+        }
     } else return AllocatePortFromRange( &TCPPorts, 1024, 5000 );
 }
 
 VOID TCPFreePort( UINT Port ) {
     DeallocatePort( &TCPPorts, Port );
+}
+
+NTSTATUS TCPGetPeerAddress
+( PCONNECTION_ENDPOINT Connection,
+  PTRANSPORT_ADDRESS Address ) {
+    OSK_UINT LocalAddress, RemoteAddress;
+    OSK_UI16 LocalPort, RemotePort;
+    PTA_IP_ADDRESS AddressIP = (PTA_IP_ADDRESS)Address;
+
+    OskitTCPGetAddress
+        ( Connection->SocketContext,
+          &LocalAddress, &LocalPort,
+          &RemoteAddress, &RemotePort );
+
+    AddressIP->TAAddressCount = 1;
+    AddressIP->Address[0].AddressLength = TDI_ADDRESS_LENGTH_IP;
+    AddressIP->Address[0].AddressType = TDI_ADDRESS_TYPE_IP;
+    AddressIP->Address[0].Address[0].sin_port = RemotePort;
+    AddressIP->Address[0].Address[0].in_addr = RemoteAddress;
+    
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

@@ -22,8 +22,8 @@ struct linker_set domain_set;
 
 OSKITTCP_EVENT_HANDLERS OtcpEvent = { 0 };
 
-OSK_UINT OskitDebugTraceLevel = OSK_DEBUG_ULTRA;
-//OSK_UINT OskitDebugTraceLevel = 0;
+//OSK_UINT OskitDebugTraceLevel = OSK_DEBUG_ULTRA;
+OSK_UINT OskitDebugTraceLevel = 0;
 
 /* SPL */
 unsigned cpl;
@@ -295,6 +295,7 @@ int OskitTCPAccept( void *socket,
     struct socket *so = socket;
     struct sockaddr_in sa;
     struct mbuf mnam;
+    struct inpcb *inp;
     int namelen = 0, error = 0, s;
 
     OS_DbgPrint(OSK_MID_TRACE,("OSKITTCP: Doing accept (Finish %d)\n",
@@ -307,8 +308,6 @@ int OskitTCPAccept( void *socket,
 	namelen = *OutAddrLen;
 
     s = splnet();
-
-    OskitDumpBuffer( so, sizeof(*so) );
 
 #if 0
     if ((head->so_options & SO_ACCEPTCONN) == 0) {
@@ -363,6 +362,13 @@ int OskitTCPAccept( void *socket,
      */
     so = head->so_q;
 
+    inp = so ? so->so_pcb : 0;
+    if( inp ) {
+        ((struct sockaddr_in *)AddrOut)->sin_addr.s_addr = 
+            inp->inp_faddr.s_addr;
+        ((struct sockaddr_in *)AddrOut)->sin_port = inp->inp_fport;
+    }
+
     OS_DbgPrint(OSK_MID_TRACE,("error = %d\n", error));
     if( FinishAccepting ) {
 	head->so_q = so->so_q;
@@ -379,8 +385,6 @@ int OskitTCPAccept( void *socket,
 	(void) soaccept(so, &mnam);
 
 	so->so_state = SS_NBIO | SS_ISCONNECTED;
-
-	OskitDumpBuffer( so, sizeof(*so) );
 
 	OS_DbgPrint(OSK_MID_TRACE,("error = %d\n", error));
 	if (name) {

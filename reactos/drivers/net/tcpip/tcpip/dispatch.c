@@ -580,7 +580,9 @@ NTSTATUS DispTdiQueryInformation(
             break;
 
           case TDI_CONNECTION_FILE:
-            AddrFile = ((PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext)->AddressFile;
+            AddrFile = 
+              ((PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext)->
+              AddressFile;
             break;
 
           default:
@@ -605,12 +607,52 @@ NTSTATUS DispTdiQueryInformation(
         Address->Address[0].AddressLength = TDI_ADDRESS_LENGTH_IP;
         Address->Address[0].AddressType = TDI_ADDRESS_TYPE_IP;
         Address->Address[0].Address[0].sin_port = AddrFile->Port;
-        Address->Address[0].Address[0].in_addr = AddrFile->Address.Address.IPv4Address;        
+        Address->Address[0].Address[0].in_addr = 
+          AddrFile->Address.Address.IPv4Address;        
         RtlZeroMemory(
           &Address->Address[0].Address[0].sin_zero,
           sizeof(Address->Address[0].Address[0].sin_zero));
 
         return STATUS_SUCCESS;
+      }
+
+    case TDI_QUERY_CONNECTION_INFO:
+      {
+        PTDI_CONNECTION_INFORMATION AddressInfo;
+        PADDRESS_FILE AddrFile;
+        PCONNECTION_ENDPOINT Endpoint = NULL;
+
+        AddressInfo = (PTDI_CONNECTION_INFORMATION)
+          MmGetSystemAddressForMdl(Irp->MdlAddress);
+
+        switch ((ULONG)IrpSp->FileObject->FsContext2) {
+          case TDI_TRANSPORT_ADDRESS_FILE:
+            AddrFile = (PADDRESS_FILE)TranContext->Handle.AddressHandle;
+            break;
+
+          case TDI_CONNECTION_FILE:
+            Endpoint = 
+              (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
+            break;
+
+          default:
+            TI_DbgPrint(MIN_TRACE, ("Invalid transport context\n"));
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        if (!Endpoint) {
+          TI_DbgPrint(MID_TRACE, ("No connection object.\n"));
+          return STATUS_INVALID_PARAMETER;
+        }
+
+        if (MmGetMdlByteCount(Irp->MdlAddress) <
+            (FIELD_OFFSET(TDI_CONNECTION_INFORMATION, RemoteAddress) +
+             sizeof(PVOID))) {
+          TI_DbgPrint(MID_TRACE, ("MDL buffer too small (ptr).\n"));
+          return STATUS_BUFFER_OVERFLOW;
+        }
+
+        return TCPGetPeerAddress( Endpoint, AddressInfo->RemoteAddress );
       }
   }
 
