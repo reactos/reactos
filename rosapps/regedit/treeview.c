@@ -245,8 +245,8 @@ HWND CreateTreeView(HWND hwndParent, LPTSTR pHostName, int id)
  
     // Get the dimensions of the parent window's client area, and create the tree view control. 
     GetClientRect(hwndParent, &rcClient); 
-    hwndTV = CreateWindowEx(0, WC_TREEVIEW, _T("Tree View"), 
-        WS_VISIBLE | WS_CHILD | WS_EX_CLIENTEDGE | TVS_HASLINES | TVS_HASBUTTONS | TVS_LINESATROOT,
+    hwndTV = CreateWindowEx(WS_EX_CLIENTEDGE, WC_TREEVIEW, _T("Tree View"), 
+        WS_VISIBLE | WS_CHILD | TVS_HASLINES | TVS_HASBUTTONS | TVS_LINESATROOT,
         0, 0, rcClient.right, rcClient.bottom, 
         hwndParent, (HMENU)id, hInst, NULL); 
     // Initialize the image list, and add items to the control. 

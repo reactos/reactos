@@ -270,8 +270,8 @@ HWND CreateListView(HWND hwndParent, int id)
  
     // Get the dimensions of the parent window's client area, and create the list view control. 
     GetClientRect(hwndParent, &rcClient); 
-    hwndLV = CreateWindowEx(0, WC_LISTVIEW, _T("List View"), 
-        WS_VISIBLE | WS_CHILD | WS_EX_CLIENTEDGE | LVS_REPORT, 
+    hwndLV = CreateWindowEx(WS_EX_CLIENTEDGE, WC_LISTVIEW, _T("List View"), 
+        WS_VISIBLE | WS_CHILD | LVS_REPORT, 
         0, 0, rcClient.right, rcClient.bottom, 
         hwndParent, (HMENU)id, hInst, NULL); 
     ListView_SetExtendedListViewStyle(hwndLV,  LVS_EX_FULLROWSELECT);
