@@ -1,4 +1,5 @@
-/*
+/* $Id: dma.c,v 1.6 2000/06/12 14:53:38 ekohl Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/hal/x86/dma.c
@@ -50,11 +51,15 @@ ULONG HalGetDmaAlignmentRequirement()
    return(1);
 }
 
-#if 0
-PVOID HalAllocateCommonBuffer(PADAPTER_OBJECT AdapterObject,
-			      ULONG Length,
-			      PPHYSICAL_ADDRESS LogicalAddress,
-			      BOOLEAN CacheEnabled)
+
+PVOID
+STDCALL
+HalAllocateCommonBuffer (
+	PADAPTER_OBJECT		AdapterObject,
+	ULONG			Length,
+	PPHYSICAL_ADDRESS	LogicalAddress,
+	BOOLEAN			CacheEnabled
+	)
 /*
  * FUNCTION: Allocates memory that is visible to both the processor(s) and
  * a dma device
@@ -68,7 +73,8 @@ PVOID HalAllocateCommonBuffer(PADAPTER_OBJECT AdapterObject,
  * RETURNS: The base virtual address of the memory allocated
  *          NULL on failure
  */
-{/*
+{
+/*
    PVOID Buffer;
    PHYSICAL_ADDRESS highest_address;
   
@@ -85,15 +91,36 @@ PVOID HalAllocateCommonBuffer(PADAPTER_OBJECT AdapterObject,
    LogicalAddress->HighPart = 0;
    LogicalAddress->LowPart = MmGetPhysicalAddress(Buffer);
    return(Buffer);*/
+   return NULL;
 }
 
-VOID HalFreeCommonBuffer(PADAPTER_OBJECT AdapterObject,
-			 ULONG Length,
-			 PHYSICAL_ADDRESS LogicalAddress,
-			 PVOID VirtualAddress,
-			 BOOLEAN CacheEnabled)
+BOOLEAN
+STDCALL
+HalFlushCommonBuffer (
+	ULONG	Unknown1,
+	ULONG	Unknown2,
+	ULONG	Unknown3,
+	ULONG	Unknown4,
+	ULONG	Unknown5,
+	ULONG	Unknown6,
+	ULONG	Unknown7,
+	ULONG	Unknown8
+	)
 {
-   MmFreeContiguousMemory(VirtualAddress);
+   return TRUE;
+}
+
+VOID
+STDCALL
+HalFreeCommonBuffer (
+	PADAPTER_OBJECT		AdapterObject,
+	ULONG			Length,
+	PHYSICAL_ADDRESS	LogicalAddress,
+	PVOID			VirtualAddress,
+	BOOLEAN			CacheEnabled
+	)
+{
+   MmFreeContiguousMemory (VirtualAddress);
 }
 
 PADAPTER_OBJECT
@@ -119,10 +146,15 @@ HalGetAdapter (
    adapter = ExAllocatePool(NonPagedPool,sizeof(ADAPTER_OBJECT));
    RtlCopyMemory(&adapter->desc,DeviceDescription,sizeof(DEVICE_DESCRIPTION));
  */
+   return NULL;
 }
-#endif
 
-ULONG HalReadDmaCounter(PADAPTER_OBJECT AdapterObject)
+
+ULONG
+STDCALL
+HalReadDmaCounter (
+	PADAPTER_OBJECT	AdapterObject
+	)
 {
    UNIMPLEMENTED;
 }
@@ -134,3 +166,5 @@ ULONG KeGetDcacheFillSize()
 {
    return(1);
 }
+
+/* EOF */

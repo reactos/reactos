@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.12 2000/06/09 20:02:05 ekohl Exp $ */
+/* $Id: iofuncs.h,v 1.13 2000/06/12 14:51:26 ekohl Exp $ */
 
 /* --- EXPORTED BY NTOSKRNL --- */
 
@@ -75,27 +75,27 @@ IoAllocateAdapterChannel (
 /**********************************************************************
  * NAME							EXPORTED
  *	IoAllocateController@16
- *	
+ *
  * DESCRIPTION
- * 	Sets up a call to a driver supplied controller object as 
+ *	Sets up a call to a driver supplied controller object as 
  *	soon as it is available.
- *	
+ *
  * ARGUMENTS
  *	ControllerObject
  *		Driver created controller object;
- *		
+ *
  *	DeviceObject
  *		Target device;
- *		
+ *
  *	ExecutionObject
  *		Routine to be called;
- *		
+ *
  *	Context
  *		Driver determined context to be based to the
  *		routine.
  *
  * RETURN VALUE
- * 	None.
+ *	None.
  *
  * REVISIONS
  *
@@ -113,17 +113,17 @@ IoAllocateController (
  *	IoAllocateErrorLogEntry@8
  *	
  * DESCRIPTION
- * 	Allocates an error log packet.
- * 	
+ *	Allocates an error log packet.
+ *
  * ARGUMENTS
  *	IoObject
  *		Object which found the error;
  *		
  *	EntrySize
  *		Size in bytes of the packet to be allocated.
- *         
+ *
  * RETURN VALUE
- * 	On success, a pointer to the allocated packet.
+ *	On success, a pointer to the allocated packet.
  *	On failure, it returns NULL.
  */
 PVOID
@@ -191,13 +191,22 @@ IoAllocateMdl (
 	PIRP	Irp
 	);
 
-/*
- * FUNCTION: Creates a symbolic link between the ARC name of a physical
- * device and the name of the corresponding device object
- * ARGUMENTS:
- *        ArcName = ARC name of the device
- *        DeviceName = Name of the device object
- * NOTES:
+/**********************************************************************
+ * NAME							MACRO
+ *	IoAssignArcName
+ *
+ * DESCRIPTION
+ *	Creates a symbolic link between the ARC name of a physical
+ *	device and the name of the corresponding device object
+ *
+ * ARGUMENTS
+ *	ArcName
+ *		ARC name of the device
+ *
+ *	DeviceName
+ *		Name of the device object
+ *
+ * NOTES
  *	VOID
  *	IoAssignArcName (
  *		PUNICODE_STRING	ArcName,
@@ -209,28 +218,28 @@ IoAllocateMdl (
 
 /**********************************************************************
  * NAME							EXPORTED
- * 	IoAssignResources@24
- * 	
+ *	IoAssignResources@24
+ *
  * DESCRIPTION
- * 	Takes a list of requested hardware resources and allocates
- * 	them.
- * 	
+ *	Takes a list of requested hardware resources and allocates
+ *	them.
+ *
  * ARGUMENTS
  *	RegisterPath
  *		?
- *		
+ *
  *	DriverClassName
  *		?
- *		
+ *
  *	DriverObject
  *		Driver object passed to the DriverEntry routine;
- *		
+ *
  *	DeviceObject
  *		?
- *		
+ *
  *	RequestedResources
  *		List of resources.
- *		
+ *
  * RETURN VALUE
  */
 NTSTATUS
@@ -589,6 +598,26 @@ STDCALL
 IoGetConfigurationInformation (
 	VOID
 	);
+
+/*
+ * FUNCTION: Gets a pointer to the callers location in the I/O stack in
+ * the given IRP
+ * ARGUMENTS:
+ *         Irp = Points to the IRP
+ * RETURNS: A pointer to the stack location
+ *
+ * NOTES:
+ *      PIO_STACK_LOCATION
+ *      IoGetCurrentIrpStackLocation (PIRP Irp)
+ */
+#define IoGetCurrentIrpStackLocation(Irp) \
+	(&(Irp)->Stack[(ULONG)((Irp)->CurrentLocation)])
+
+/* original macro */
+/*
+#define IoGetCurrentIrpStackLocation(Irp) \
+	((Irp)->Tail.Overlay.CurrentStackLocation)
+*/
 PEPROCESS
 STDCALL
 IoGetCurrentProcess (
@@ -612,11 +641,36 @@ STDCALL
 IoGetFileObjectGenericMapping (
 	VOID
 	);
+
+#define IoGetFunctionCodeFromCtlCode(ControlCode) \
+	((ControlCode >> 2) & 0x00000FFF)
+
 PVOID
 STDCALL
 IoGetInitialStack (
 	VOID
 	);
+
+/*
+ * FUNCTION: Gives a higher level driver access to the next lower driver's 
+ * I/O stack location
+ * ARGUMENTS: 
+ *           Irp = points to the irp
+ * RETURNS: A pointer to the stack location
+ *
+ * NOTES:
+ *      PIO_STACK_LOCATION
+ *      IoGetNextIrpStackLocation (PIRP Irp)
+ */
+#define IoGetNextIrpStackLocation(Irp) \
+	(&(Irp)->Stack[(Irp)->CurrentLocation-1])
+
+/* original macro */
+/*
+#define IoGetNextIrpStackLocation(Irp) \
+	((Irp)->Tail.Overlay.CurrentStackLocation-1)
+*/
+
 PDEVICE_OBJECT
 STDCALL
 IoGetRelatedDeviceObject (
@@ -638,6 +692,12 @@ STDCALL
 IoGetTopLevelIrp (
 	VOID
 	);
+
+#define IoInitializeDpcRequest(DeviceObject, DpcRoutine) \
+	(KeInitializeDpc(&(DeviceObject)->Dpc, \
+			 (PKDEFERRED_ROUTINE)(DpcRoutine), \
+			 (DeviceObject)))
+
 /*
  * FUNCTION: Initalizes an irp allocated by the caller
  * ARGUMENTS:
@@ -659,6 +719,21 @@ IoInitializeTimer (
 	PIO_TIMER_ROUTINE	TimerRoutine,
 	PVOID			Context
 	);
+
+/*
+ * NOTES:
+ *	BOOLEAN
+ *	IsErrorUserInduced (NTSTATUS Status)
+ */
+#define IoIsErrorUserInduced(Status) \
+	((BOOLEAN)(((Status) == STATUS_DEVICE_NOT_READY) || \
+		   ((Status) == STATUS_IO_TIMEOUT) || \
+		   ((Status) == STATUS_MEDIA_WRITE_PROTECTED) || \
+		   ((Status) == STATUS_NO_MEDIA_IN_DRIVE) || \
+		   ((Status) == STATUS_VERIFY_REQUIRED) || \
+		   ((Status) == STATUS_UNRECOGNIZED_MEDIA) || \
+		   ((Status) == STATUS_WRONG_VOLUME)))
+
 BOOLEAN
 STDCALL
 IoIsOperationSynchronous (
@@ -675,6 +750,20 @@ IoMakeAssociatedIrp (
 	PIRP	Irp,
 	CCHAR	StackSize
 	);
+
+/*
+ * FUNCTION: Marks the specified irp, indicating further processing will
+ * be required by other driver routines
+ * ARGUMENTS:
+ *      Irp = Irp to mark
+ * NOTES:
+ *      VOID
+ *      IoMarkIrpPending (PIRP Irp)
+ */
+#define IoMarkIrpPending(Irp) \
+	(IoGetCurrentIrpStackLocation(Irp)->Control |= SL_PENDING_RETURNED)
+
+
 NTSTATUS
 STDCALL
 IoOpenDeviceInstanceKey (
@@ -684,10 +773,14 @@ IoOpenDeviceInstanceKey (
 	DWORD	Unknown3,
 	DWORD	Unknown4
 	);
-NTSTATUS STDCALL IoPageRead (PFILE_OBJECT FileObject,
-			     PMDL Mdl,
-			     PLARGE_INTEGER Offset,
-			     PIO_STATUS_BLOCK StatusBlock);
+NTSTATUS
+STDCALL
+IoPageRead (
+	PFILE_OBJECT		FileObject,
+	PMDL			Mdl,
+	PLARGE_INTEGER		Offset,
+	PIO_STATUS_BLOCK	StatusBlock
+	);
 NTSTATUS
 STDCALL
 IoQueryDeviceDescription (
@@ -806,6 +899,30 @@ IoReportResourceUsage (
 	BOOLEAN			OverrideConflict,
 	PBOOLEAN		ConflictDetected
 	);
+
+#define IoRequestDpc(DeviceObject, Irp, Context) \
+	(KeInsertQueueDpc(&(DeviceObject)->Dpc,(Irp),(Context)))
+
+#define IoSetCancelRoutine(Irp, NewCancelRoutine) \
+	((PDRIVER_CANCEL)InterlockedExchange((PULONG)&(Irp)->CancelRoutine, \
+					     (ULONG)(NewCancelRoutine)));
+
+#define IoSetCompletionRoutine (Irp,Routine,Context,Success,Error,Cancel) \
+	{ \
+		PIO_STACK_LOCATION param; \
+		assert((Success)||(Error)||(Cancel)?(Routine)!=NULL:TRUE); \
+		param = IoGetNextIrpStackLocation((Irp)); \
+		param->CompletionRoutine=(Routine); \
+		param->CompletionContext=(Context); \
+		param->Control = 0; \
+		if ((Success)) \
+			param->Control = SL_INVOKE_ON_SUCCESS; \
+		if ((Error)) \
+			param->Control |= SL_INVOKE_ON_ERROR; \
+		if ((Cancel)) \
+			param->Control |= SL_INVOKE_ON_CANCEL; \
+	} 
+
 VOID
 STDCALL
 IoSetDeviceToVerify (
@@ -826,6 +943,13 @@ IoSetInformation (
 	IN	ULONG			Length,
 	OUT	PVOID			FileInformation
 	);
+
+#define IoSetNextIrpStackLocation(Irp) \
+{ \
+	(Irp)->CurrentLocation--; \
+	(Irp)->Tail.Overlay.CurrentStackLocation--; \
+} 
+
 VOID
 STDCALL
 IoSetShareAccess (
@@ -844,6 +968,24 @@ STDCALL
 IoSetTopLevelIrp (
 	IN	PIRP	Irp
 	);
+
+/*
+ * FUNCTION:  Determines the size of an IRP
+ * ARGUMENTS: 
+ *           StackSize = number of stack locations in the IRP
+ * RETURNS: The size of the IRP in bytes 
+USHORT
+IoSizeOfIrp (CCHAR StackSize)
+ */
+#define IoSizeOfIrp(StackSize) \
+	((USHORT)(sizeof(IRP)+(((StackSize)-1)*sizeof(IO_STACK_LOCATION))))
+
+/* original macro */
+/*
+#define IoSizeOfIrp(StackSize) \
+	((USHORT)(sizeof(IRP)+((StackSize)*sizeof(IO_STACK_LOCATION))))
+*/
+
 /*
  * FUNCTION: Dequeues the next IRP from the device's associated queue and
  * calls its StartIo routine
@@ -860,7 +1002,7 @@ IoStartNextPacket (
 VOID
 STDCALL
 IoStartNextPacketByKey (
-	PDEVICE_OBJECT	DeviceObject, 
+	PDEVICE_OBJECT	DeviceObject,
 	BOOLEAN		Cancelable,
 	ULONG		Key
 	);
@@ -1051,30 +1193,40 @@ IoWritePartitionTable (
  * FUNCTION: Returns a pointer to the callers
  * stack location in the irp 
  */
+/*
 PIO_STACK_LOCATION
 IoGetCurrentIrpStackLocation (
 	IRP	* irp
 	);
+*/
+/*
 ULONG
 IoGetFunctionCodeFromCtlCode (
 	ULONG	ControlCode
 	);
+*/
 /*
  * FUNCTION:  
  */
+/*
 PIO_STACK_LOCATION
 IoGetNextIrpStackLocation (
 	IRP	* irp
 	);
+*/
+/*
 VOID
 IoInitializeDpcRequest (
 	PDEVICE_OBJECT	DeviceObject,
 	PIO_DPC_ROUTINE	DpcRoutine
 	);
+*/
+/*
 BOOLEAN
 IoIsErrorUserInduced (
 	NTSTATUS	Status
 	);
+*/
 BOOLEAN
 IoIsTotalDeviceFailure (
 	NTSTATUS	Status
@@ -1087,21 +1239,28 @@ IoIsTotalDeviceFailure (
  * must mark it pending otherwise the I/O manager will complete it on
  * return from the dispatch routine.
  */
+/*
 VOID
 IoMarkIrpPending (
 	PIRP	Irp
 	);
+*/
+/*
 VOID
 IoRequestDpc (
 	PDEVICE_OBJECT	DeviceObject,
 	PIRP		Irp,
 	PVOID		Context
 	);
+*/
+/*
 PDRIVER_CANCEL
 IoSetCancelRoutine (
 	PIRP		Irp,
 	PDRIVER_CANCEL	CancelRoutine
 	);
+*/
+/*
 VOID
 IoSetCompletionRoutine (
 	PIRP			Irp,
@@ -1111,29 +1270,34 @@ IoSetCompletionRoutine (
 	BOOLEAN			InvokeOnError,
 	BOOLEAN			InvokeOnCancel
 	);
+*/
+/*
 VOID
 IoSetNextIrpStackLocation (
 	PIRP	Irp
 	);
+*/
 /*
  * FUNCTION:  Determines the size of an IRP
  * ARGUMENTS: 
  *           StackSize = number of stack locations in the IRP
  * RETURNS: The size of the IRP in bytes 
  */
+/*
 USHORT
 IoSizeOfIrp (
 	CCHAR	StackSize
 	);
+*/
 #if 0
 // Preliminary guess
 NTKERNELAPI
 NTSTATUS
 IoQueryFileVolumeInformation (
-	IN	PFILE_OBJECT		FileObject, 
-	IN	FS_INFORMATION_CLASS	FsInformationClass, 
-	IN	ULONG			Length, 
-	OUT	PVOID			FsInformation, 
+	IN	PFILE_OBJECT		FileObject,
+	IN	FS_INFORMATION_CLASS	FsInformationClass,
+	IN	ULONG			Length,
+	OUT	PVOID			FsInformation,
 	OUT	PULONG			ReturnedLength
 	);
 #endif

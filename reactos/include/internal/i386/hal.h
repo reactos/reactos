@@ -84,6 +84,7 @@ HalpInitBusHandlers (VOID);
 VOID HalpCalibrateStallExecution(VOID);
 
 /* irq.c */
+VOID HalpDispatchInterrupt (ULONG irq);
 VOID HalpInitIRQs (VOID);
 
 

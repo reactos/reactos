@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.74 2000/06/09 20:02:37 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.75 2000/06/12 14:53:09 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -195,11 +195,16 @@ FsRtlUninitializeMcb@4
 FsRtlUninitializeOplock@4
 ;HalDispatchTable DATA
 ;HalPrivateDispatchTable DATA
-;InterlockedCompareExchange
-;InterlockedDecrement
-;InterlockedExchange
-;InterlockedExchangeAdd
-;InterlockedIncrement
+;@InterlockedCompareExchange@12
+InterlockedCompareExchange@12
+;@InterlockedDecrement@4
+InterlockedDecrement@4
+;@InterlockedExchange@8
+InterlockedExchange@8
+;@InterlockedExchangeAdd@8
+InterlockedExchangeAdd@8
+;@InterlockedIncrement@4
+InterlockedIncrement@4
 IoAcquireCancelSpinLock@4
 IoAcquireVpbSpinLock@4
 IoAdapterObjectType DATA
@@ -1009,10 +1014,8 @@ wctomb
 ;
 ;	ReactOS Extensions (these should be macros!)
 ;
-IoGetCurrentIrpStackLocation
-IoInitializeDpcRequest
-IoMarkIrpPending
-IoRequestDpc
+;IoInitializeDpcRequest
+;IoRequestDpc
 MmGetSystemAddressForMdl
 InitializeListHead
 InsertTailList
@@ -1028,23 +1031,23 @@ ExTryToAcquireFastMutex@4
 HalAcquireDisplayOwnership@4
 HalAdjustResourceList@4
 HalAllProcessorsStarted@0
-;HalAllocateAdapterChannel
-;HalAllocateCommonBuffer
-;HalAllocateCrashDumpRegisters
+;HalAllocateAdapterChannel@16
+HalAllocateCommonBuffer@16
+;HalAllocateCrashDumpRegisters@8
 HalAssignSlotResources@32
-;HalBeginSystemInterrupt
-;HalCalibratePerformanceCounter
-;HalClearSoftwareInterrupt
-;HalDisableSystemInterrupt
+;HalBeginSystemInterrupt@12
+;HalCalibratePerformanceCounter@4
+;@HalClearSoftwareInterrupt@4
+;HalDisableSystemInterrupt@8
 HalDisplayString@4
-;HalEnableSystemInterrupt
-;HalEndSystemInterrupt
-;HalFlushCommonBuffer
-;HalFreeCommonBuffer
-;HalGetAdapter
+;HalEnableSystemInterrupt@12
+;HalEndSystemInterrupt@8
+HalFlushCommonBuffer@32
+HalFreeCommonBuffer@24
+HalGetAdapter@8
 HalGetBusData@20
 HalGetBusDataByOffset@24
-;HalGetEnvironmentVariable
+;HalGetEnvironmentVariable@12
 HalGetInterruptVector@24
 HalHandleNMI@4
 HalInitSystem@8
@@ -1053,21 +1056,21 @@ HalMakeBeep@4
 HalProcessorIdle@0
 HalQueryDisplayParameters@16
 HalQueryRealTimeClock@4
-;HalReadDmaCounter
+HalReadDmaCounter@4
 HalReportResourceUsage@0
-;HalRequestIpi
-;HalRequestSoftwareInterrupt
+;HalRequestIpi@4
+;@HalRequestSoftwareInterrupt@4
 HalReturnToFirmware@4
 HalSetBusData@20
 HalSetBusDataByOffset@24
 HalSetDisplayParameters@8
-;HalSetEnvironmentVariable
-;HalSetProfileInterval
+;HalSetEnvironmentVariable@8
+;HalSetProfileInterval@4
 HalSetRealTimeClock@4
-;HalSetTimeIncrement
+;HalSetTimeIncrement@4
 HalStartNextProcessor@8
-;HalStartProfileInterrupt
-;HalStopProfileInterrupt
+;HalStartProfileInterrupt@4
+;HalStopProfileInterrupt@4
 HalSystemVectorDispatchEntry@12
 HalTranslateBusAddress@24
 IoAssignDriveLetters@16

@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.2 2000/03/26 19:38:22 ea Exp $
+/* $Id: error.c,v 1.3 2000/06/12 14:57:10 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -17,21 +17,6 @@
 
 /* FUNCTIONS *****************************************************************/
 
-BOOLEAN IoIsErrorUserInduced(NTSTATUS Status)
-{
-   switch(Status)
-     {
-      case STATUS_DEVICE_NOT_READY:
-      case STATUS_IO_TIMEOUT:
-      case STATUS_MEDIA_WRITE_PROTECTED:
-      case STATUS_NO_MEDIA_IN_DRIVE:
-      case STATUS_VERIFY_REQUIRED:
-      case STATUS_UNRECOGNIZED_MEDIA:
-      case STATUS_WRONG_VOLUME:
-	return(TRUE);
-     }
-   return(FALSE);
-}
 
 VOID STDCALL IoSetHardErrorOrVerifyDevice(PIRP Irp, PDEVICE_OBJECT DeviceObject)
 {

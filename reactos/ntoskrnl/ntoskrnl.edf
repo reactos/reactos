@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.61 2000/06/09 20:02:37 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.62 2000/06/12 14:53:09 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -194,6 +194,16 @@ FsRtlUninitializeMcb=FsRtlUninitializeMcb@4
 FsRtlUninitializeOplock=FsRtlUninitializeOplock@4
 ;HalDispatchTable DATA
 ;HalPrivateDispatchTable DATA
+;InterlockedCompareExchange=@InterlockedCompareExchange@12
+InterlockedCompareExchange=InterlockedCompareExchange@12
+;InterlockedDecrement=@InterlockedDecrement@4
+InterlockedDecrement=InterlockedDecrement@4
+;InterlockedExchange=@InterlockedExchange@8
+InterlockedExchange=InterlockedExchange@8
+;InterlockedExchangeAdd=@InterlockedExchangeAdd@8
+InterlockedExchangeAdd=InterlockedExchangeAdd@8
+;InterlockedIncrement=@InterlockedIncrement@4
+InterlockedIncrement=InterlockedIncrement@4
 IoAcquireCancelSpinLock=IoAcquireCancelSpinLock@4
 IoAcquireVpbSpinLock=IoAcquireVpbSpinLock@4
 IoAdapterObjectType DATA
@@ -937,10 +947,8 @@ wctomb
 ;
 ;	ReactOS Extensions
 ;
-IoGetCurrentIrpStackLocation
-IoInitializeDpcRequest
-IoMarkIrpPending
-IoRequestDpc
+;IoInitializeDpcRequest
+;IoRequestDpc
 MmGetSystemAddressForMdl
 InitializeListHead
 InsertTailList
@@ -956,23 +964,24 @@ ExTryToAcquireFastMutex=ExTryToAcquireFastMutex@4
 HalAcquireDisplayOwnership=HalAcquireDisplayOwnership@4
 HalAdjustResourceList=HalAdjustResourceList@4
 HalAllProcessorsStarted=HalAllProcessorsStarted@0
-;HalAllocateAdapterChannel
-;HalAllocateCommonBuffer
-;HalAllocateCrashDumpRegisters
+;HalAllocateAdapterChannel=HalAllocateAdapterChannel@16
+HalAllocateCommonBuffer=HalAllocateCommonBuffer@16
+;HalAllocateCrashDumpRegisters=HalAllocateCrashDumpRegisters@8
 HalAssignSlotResource=HalAssignSlotResources@32
-;HalBeginSystemInterrupt
-;HalCalibratePerformanceCounter
-;HalClearSoftwareInterrupt
-;HalDisableSystemInterrupt
+;HalBeginSystemInterrupt=HalBeginSystemInterrupt@12
+;HalCalibratePerformanceCounter=HalCalibratePerformanceCounter@4
+;HalClearSoftwareInterrupt=@HalClearSoftwareInterrupt@4
+;HalClearSoftwareInterrupt=HalClearSoftwareInterrupt@4
+;HalDisableSystemInterrupt=HalDisableSystemInterrupt@8
 HalDisplayString=HalDisplayString@4
-;HalEnableSystemInterrupt
-;HalEndSystemInterrupt
-;HalFlushCommonBuffer
-;HalFreeCommonBuffer
-;HalGetAdapter
+;HalEnableSystemInterrupt=HalEnableSystemInterrupt@12
+;HalEndSystemInterrupt=HalEndSystemInterrupt@8
+HalFlushCommonBuffer=HalFlushCommonBuffer@32
+HalFreeCommonBuffer=HalFreeCommonBuffer@24
+HalGetAdapter=HalGetAdapter@8
 HalGetBusData=HalGetBusData@20
 HalGetBusDataByOffset=HalGetBusDataByOffset@24
-;HalGetEnvironmentVariable
+;HalGetEnvironmentVariable=HalGetEnvironmentVariable@12
 HalGetInterruptVector=HalGetInterruptVector@24
 HalHandleNMI=HalHandleNMI@4
 HalInitSystem=HalInitSystem@8
@@ -981,21 +990,22 @@ HalMakeBeep=HalMakeBeep@4
 HalProcessorIdle=HalProcessorIdle@0
 HalQueryDisplayParameters=HalQueryDisplayParameters@16
 HalQueryRealTimeClock=HalQueryRealTimeClock@4
-;HalReadDmaCounter
+HalReadDmaCounter=HalReadDmaCounter@4
 HalReportResourceUsage=HalReportResourceUsage@0
-;HalRequestIpi
-;HalRequestSoftwareInterrupt
+;HalRequestIpi=HalRequestIpi@4
+;HalRequestSoftwareInterrupt=@HalRequestSoftwareInterrupt@4
+;HalRequestSoftwareInterrupt=HalRequestSoftwareInterrupt@4
 HalReturnToFirmware=HalReturnToFirmware@4
 HalSetBusData=HalSetBusData@20
 HalSetBusDataByOffset=HalSetBusDataByOffset@24
 HalSetDisplayParameters=HalSetDisplayParameters@8
-;HalSetEnvironmentVariable
-;HalSetProfileInterval
+;HalSetEnvironmentVariable=HalSetEnvironmentVariable@8
+;HalSetProfileInterval=HalSetProfileInterval@4
 HalSetRealTimeClock=HalSetRealTimeClock@4
-;HalSetTimeIncrement
+;HalSetTimeIncrement=HalSetTimeIncrement@4
 HalStartNextProcessor=HalStartNextProcessor@8
-;HalStartProfileInterrupt
-;HalStopProfileInterrupt
+;HalStartProfileInterrupt=HalStartProfileInterrupt@4
+;HalStopProfileInterrupt=HalStopProfileInterrupt@4
 ;HalSystemVectorDispatchEntry=@HalSystemVectorDispatchEntry@12
 HalSystemVectorDispatchEntry=HalSystemVectorDispatchEntry@12
 HalTranslateBusAddress=HalTranslateBusAddress@24
@@ -1046,4 +1056,3 @@ WRITE_PORT_BUFFER_USHORT=WRITE_PORT_BUFFER_USHORT@12
 WRITE_PORT_UCHAR=WRITE_PORT_UCHAR@8
 WRITE_PORT_ULONG=WRITE_PORT_ULONG@8
 WRITE_PORT_USHORT=WRITE_PORT_USHORT@8
-

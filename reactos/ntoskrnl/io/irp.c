@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.27 2000/03/26 19:38:25 ea Exp $
+/* $Id: irp.c,v 1.28 2000/06/12 14:57:10 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -83,42 +83,6 @@ IoMakeAssociatedIrp (PIRP Irp, CCHAR StackSize)
 }
 
 
-/**********************************************************************
- * NAME							INTERNAL
- * 	IoMarkIrpPending
- */
-VOID
-IoMarkIrpPending (PIRP Irp)
-/*
- * FUNCTION: Marks the specified irp, indicating further processing will
- * be required by other driver routines
- * ARGUMENTS:
- *      Irp = Irp to mark
- */
-{
-//   DPRINT("IoGetCurrentIrpStackLocation(Irp) %x\n",
-//	  IoGetCurrentIrpStackLocation(Irp));
-   IoGetCurrentIrpStackLocation(Irp)->Control |= SL_PENDING_RETURNED;
-}
-
-
-/**********************************************************************
- * NAME							INTERNAL
- * 	IoSizeOfIrp
- */
-USHORT
-IoSizeOfIrp (CCHAR StackSize)
-/*
- * FUNCTION:  Determines the size of an IRP
- * ARGUMENTS: 
- *           StackSize = number of stack locations in the IRP
- * RETURNS: The size of the IRP in bytes 
- */
-{
-   return(sizeof(IRP)+((StackSize-1)*sizeof(IO_STACK_LOCATION)));
-}
-
-
 VOID
 STDCALL
 IoInitializeIrp (PIRP Irp, USHORT PacketSize, CCHAR StackSize)
@@ -137,63 +101,6 @@ IoInitializeIrp (PIRP Irp, USHORT PacketSize, CCHAR StackSize)
    Irp->StackCount = StackSize;
    Irp->CurrentLocation = StackSize;
    Irp->Tail.Overlay.CurrentStackLocation = IoGetCurrentIrpStackLocation(Irp);
-}
-
-
-/**********************************************************************
- * NAME							INTERNAL
- *	IoGetCurrentIrpStackLocation
- */
-PIO_STACK_LOCATION
-IoGetCurrentIrpStackLocation (PIRP Irp)
-/*
- * FUNCTION: Gets a pointer to the callers location in the I/O stack in
- * the given IRP
- * ARGUMENTS:
- *         Irp = Points to the IRP
- * RETURNS: A pointer to the stack location
- */
-{
-//   DPRINT("IoGetCurrentIrpStackLocation: Irp %08lx CurLoc %d StkCnt %d\n", 
-//          Irp,
-//          Irp->CurrentLocation,
-//          Irp->StackCount);
-
-   return(&Irp->Stack[(ULONG)Irp->CurrentLocation]);
-}
-
-
-/**********************************************************************
- * NAME							INTERNAL
- *	IoSetNextIrpStackLocation
- */
-VOID
-IoSetNextIrpStackLocation (PIRP Irp)
-{
-   Irp->CurrentLocation--;
-   Irp->Tail.Overlay.CurrentStackLocation--;
-}
-
-
-/**********************************************************************
- * NAME							INTERNAL
- *	IoGetNextIrpStackLocation
- */
-PIO_STACK_LOCATION
-IoGetNextIrpStackLocation (PIRP Irp)
-/*
- * FUNCTION: Gives a higher level driver access to the next lower driver's 
- * I/O stack location
- * ARGUMENTS: 
- *           Irp = points to the irp
- * RETURNS: A pointer to the stack location 
- */
-{
-//   DPRINT("IoGetNextIrpStackLocation(Irp %x)\n",Irp);
-
-   assert(Irp!=NULL);
-//   DPRINT("Irp %x Irp->StackPtr %x\n",Irp,Irp->CurrentLocation);
-   return(&Irp->Stack[Irp->CurrentLocation-1]);
 }
 
 
@@ -278,36 +185,6 @@ IoAllocateIrp (CCHAR StackSize, BOOLEAN ChargeQuota)
    return Irp;
 }
 
-
-/**********************************************************************
- * NAME							INTERNAL
- *	IoSetCompletionRoutine
- */
-VOID
-IoSetCompletionRoutine (PIRP Irp,
-			    PIO_COMPLETION_ROUTINE CompletionRoutine,
-			    PVOID Context,
-			    BOOLEAN InvokeOnSuccess,
-			    BOOLEAN InvokeOnError,
-			    BOOLEAN InvokeOnCancel)
-{
-   IO_STACK_LOCATION* param = IoGetNextIrpStackLocation(Irp);
-   
-   param->CompletionRoutine=CompletionRoutine;
-   param->CompletionContext=Context;
-   if (InvokeOnSuccess)
-     {
-	param->Control = param->Control | SL_INVOKE_ON_SUCCESS;
-     }
-   if (InvokeOnError)
-     {
-	param->Control = param->Control | SL_INVOKE_ON_ERROR;
-     }
-   if (InvokeOnCancel)
-     {
-	param->Control = param->Control | SL_INVOKE_ON_CANCEL;
-     }
-}
 
 VOID IopCompleteRequest(struct _KAPC* Apc,
 			PKNORMAL_ROUTINE* NormalRoutine,
@@ -474,7 +351,10 @@ IoSetTopLevelIrp (
 	IN	PIRP	Irp
 	)
 {
-	UNIMPLEMENTED;
+	PETHREAD Thread;
+
+	Thread = PsGetCurrentThread ();
+	Thread->TopLevelIrp.TopLevelIrp = Irp;
 }
 
 
@@ -484,8 +364,7 @@ IoGetTopLevelIrp (
 	VOID
 	)
 {
-	UNIMPLEMENTED;
-	return (NULL);
+	return (PsGetCurrentThread ()->TopLevelIrp.TopLevelIrp);
 }
 
 
@@ -497,6 +376,5 @@ IoQueueThreadIrp (
 {
 	UNIMPLEMENTED;
 }
-
 
 /* EOF */

@@ -15,7 +15,7 @@
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/
-
+#if 0
 VOID IoInitializeDpcRequest(PDEVICE_OBJECT DeviceObject, 
 			    PIO_DPC_ROUTINE DpcRoutine)
 {
@@ -29,3 +29,4 @@ VOID IoRequestDpc(PDEVICE_OBJECT DeviceObject,
 {
    KeInsertQueueDpc(&DeviceObject->Dpc,Irp,Context);
 }
+#endif

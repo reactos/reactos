@@ -1,4 +1,4 @@
-/* $Id: ddk.h,v 1.14 2000/04/08 19:06:29 ekohl Exp $
+/* $Id: ddk.h,v 1.15 2000/06/12 14:52:05 ekohl Exp $
  *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel
@@ -84,12 +84,29 @@ HalAdjustResourceList (
 	PCM_RESOURCE_LIST	Resources
 	);
 
+NTSTATUS
+STDCALL
+HalAllocateAdapterChannel (
+	IN	PADAPTER_OBJECT	AdapterObject,
+	ULONG	Unknown2,
+	ULONG	Unknown3,
+	ULONG	Unknown4
+	);
+
 PVOID
+STDCALL
 HalAllocateCommonBuffer (
 	PADAPTER_OBJECT		AdapterObject,
 	ULONG			Length,
 	PPHYSICAL_ADDRESS	LogicalAddress,
 	BOOLEAN			CacheEnabled
+	);
+
+PVOID
+STDCALL
+HalAllocateCrashDumpRegisters (
+	IN	PADAPTER_OBJECT	AdapterObject,
+	IN OUT	PULONG		NumberOfMapRegisters
 	);
 
 BOOLEAN
@@ -111,12 +128,38 @@ HalAssignSlotResources (
 	PCM_RESOURCE_LIST	*AllocatedResources
 	);
 
+/*
+HalBeginSystemInterrupt
+*/
+
+/*
+HalCalibratePerformanceCounter
+*/
+
+/*
+FASTCALL
+HalClearSoftwareInterrupt
+*/
+
+/*
+HalDisableSystemInterrupt
+*/
+
 VOID
 STDCALL
 HalDisplayString (
 	IN	PCH	String
 	);
 
+/*
+HalEnableSystemInterrupt
+*/
+
+/*
+HalEndSystemInterrupt
+*/
+
+/* Is this function really exported ?? */
 VOID
 HalExamineMBR (
 	PDEVICE_OBJECT	DeviceObject,
@@ -125,7 +168,21 @@ HalExamineMBR (
 	PVOID		Buffer
 	);
 
+BOOLEAN
+STDCALL
+HalFlushCommonBuffer (
+	ULONG	Unknown1,
+	ULONG	Unknown2,
+	ULONG	Unknown3,
+	ULONG	Unknown4,
+	ULONG	Unknown5,
+	ULONG	Unknown6,
+	ULONG	Unknown7,
+	ULONG	Unknown8
+	);
+
 VOID
+STDCALL
 HalFreeCommonBuffer (
 	PADAPTER_OBJECT		AdapterObject,
 	ULONG			Length,
@@ -135,6 +192,7 @@ HalFreeCommonBuffer (
 	);
 
 PADAPTER_OBJECT
+STDCALL
 HalGetAdapter (
 	PDEVICE_DESCRIPTION	DeviceDescription,
 	PULONG			NumberOfMapRegisters
@@ -161,10 +219,15 @@ HalGetBusDataByOffset (
 	ULONG		Length
 	);
 
+/* Is this function really exported ?? */
 ULONG
 HalGetDmaAlignmentRequirement (
 	VOID
 	);
+
+/*
+HalGetEnvironmentVariable
+*/
 
 ULONG
 STDCALL
@@ -211,17 +274,32 @@ HalQueryRealTimeClock (
 	PTIME_FIELDS	Time
 	);
 
+/* Is this function really exported ?? */
 VOID
 HalQuerySystemInformation(VOID);
 
 ULONG
-HalReadDmaCounter(PADAPTER_OBJECT AdapterObject);
+STDCALL
+HalReadDmaCounter (
+	PADAPTER_OBJECT	AdapterObject
+	);
 
 VOID
 STDCALL
 HalReportResourceUsage (
 	VOID
 	);
+
+VOID
+STDCALL
+HalRequestIpi (
+	ULONG	Unknown
+	);
+
+/*
+FASTCALL
+HalRequestSoftwareInterrupt
+*/
 
 VOID
 STDCALL
@@ -257,11 +335,23 @@ HalSetDisplayParameters (
 	ULONG	CursorPosY
 	);
 
+/*
+HalSetEnvironmentVariable
+*/
+
+/*
+HalSetProfileInterval
+*/
+
 VOID
 STDCALL
 HalSetRealTimeClock (
 	PTIME_FIELDS	Time
 	);
+
+/*
+HalSetTimeIncrement
+*/
 
 BOOLEAN
 STDCALL
@@ -269,6 +359,14 @@ HalStartNextProcessor (
 	ULONG	Unknown1,
 	ULONG	Unknown2
 	);
+
+/*
+HalStartProfileInterrupt
+*/
+
+/*
+HalStopProfileInterrupt
+*/
 
 ULONG
 FASTCALL

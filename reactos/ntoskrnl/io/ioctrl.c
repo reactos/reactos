@@ -1,4 +1,4 @@
-/* $Id: ioctrl.c,v 1.10 2000/05/13 13:51:02 dwelch Exp $
+/* $Id: ioctrl.c,v 1.11 2000/06/12 14:57:10 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -21,12 +21,6 @@
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/
-
-ULONG IoGetFunctionCodeFromCtlCode(ULONG ControlCode)
-{
-   UNIMPLEMENTED;
-}
-
 
 NTSTATUS STDCALL NtDeviceIoControlFile (IN HANDLE DeviceHandle,
 					IN HANDLE Event,

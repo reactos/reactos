@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.5 2000/05/13 14:56:46 ea Exp $
+/* $Id: process.c,v 1.6 2000/06/12 14:57:10 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -55,8 +55,7 @@ IoThreadToProcess (
 	IN	PETHREAD	Thread
 	)
 {
-	UNIMPLEMENTED;
-	return (NULL);
+	return (Thread->ThreadsProcess);
 }
 
 

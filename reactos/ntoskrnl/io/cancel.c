@@ -1,4 +1,4 @@
-/* $Id: cancel.c,v 1.4 2000/03/26 19:38:21 ea Exp $
+/* $Id: cancel.c,v 1.5 2000/06/12 14:57:10 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -63,12 +63,5 @@ VOID STDCALL IoReleaseCancelSpinLock(KIRQL Irql)
 {
    KeReleaseSpinLock(&CancelSpinLock,Irql);
 }
-
-PDRIVER_CANCEL IoSetCancelRoutine(PIRP Irp, PDRIVER_CANCEL CancelRoutine)
-{
-   return((PDRIVER_CANCEL)InterlockedExchange((PULONG)&Irp->CancelRoutine,
-					      (ULONG)CancelRoutine));
-}
-
 
 /* EOF */

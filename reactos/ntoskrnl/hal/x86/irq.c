@@ -1,4 +1,4 @@
-/* $Id: irq.c,v 1.12 2000/06/04 19:49:37 ekohl Exp $
+/* $Id: irq.c,v 1.13 2000/06/12 14:53:38 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -92,7 +92,9 @@ static KSPIN_LOCK isr_table_lock = {0,};
 #define PRESENT (0x8000)
 #define I486_INTERRUPT_GATE (0xe00)
 
-asmlinkage VOID KiInterruptDispatch(ULONG irq)
+asmlinkage
+VOID
+HalpDispatchInterrupt (ULONG irq)
 /*
  * FUNCTION: Calls the irq specific handler for an irq
  * ARGUMENTS:
@@ -127,7 +129,8 @@ asmlinkage VOID KiInterruptDispatch(ULONG irq)
    }
    else
    {
-      DPRINT("KiInterruptDispatch(irq %d)\n",irq);
+      DPRINT("HalpDispatchInterrupt(irq %d)\n",irq);
+//      KiInterruptDispatch (irq);
       /*
        * Iterate the list until one of the isr tells us its device interrupted
        */
@@ -371,20 +374,20 @@ IoDisconnectInterrupt(PKINTERRUPT InterruptObject)
 }
 
 #if 0
-ULONG
+BOOLEAN
 STDCALL
 HalDisableSystemInterrupt (
-	ULONG	Unknown0,
-	ULONG	Unknown1
+	ULONG	Vector,
+	KIRQL	Irql
 	)
 {
 
 }
 
-ULONG
+BOOLEAN
 STDCALL
 HalEnableSystemInterrupt (
-	ULONG	Unknown0,
+	ULONG	Vector,
 	ULONG	Unknown1,
 	ULONG	Unknown2
 	)
