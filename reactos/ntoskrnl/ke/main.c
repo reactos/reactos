@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.72 2001/01/12 21:00:07 dwelch Exp $
+/* $Id: main.c,v 1.73 2001/01/14 15:30:47 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -434,6 +434,7 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
    ULONG i;
    ULONG last_kernel_address;
    ULONG start;
+   PCHAR name;
    
    /*
     * Copy the parameters to a local buffer because lowmem will go away
@@ -534,28 +535,33 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
     * Initalize services loaded at boot time
     */
    DPRINT1("%d files loaded\n",KeLoaderBlock.ModsCount);
+   for (i=0; i < KeLoaderBlock.ModsCount; i++)
+     {
+	DPRINT1("module: %s\n", KeLoaderModules[i].String);
+     }
 
-  /*  Pass 1: load registry chunks passed in  */
-  for (i = 1; i < KeLoaderBlock.ModsCount; i++)
-    {
+   /*  Pass 1: load registry chunks passed in  */
+   for (i = 1; i < KeLoaderBlock.ModsCount; i++)
+     {
        start = KeLoaderModules[i].ModStart;
        if (strcmp ((PCHAR) start, "REGEDIT4") == 0)
 	 {
 	    DPRINT1("process registry chunk at %08lx\n", start);
 	    CmImportHive((PCHAR) start);
 	 }
-    }
+     }
 
-  /*  Pass 2: process boot loaded drivers  */
-  for (i=1; i < KeLoaderBlock.ModsCount; i++)
-    {
+   /*  Pass 2: process boot loaded drivers  */
+   for (i=1; i < KeLoaderBlock.ModsCount; i++)
+     {
        start = KeLoaderModules[i].ModStart;
+       name = (PCHAR)KeLoaderModules[i].String;
        if (strcmp ((PCHAR) start, "REGEDIT4") != 0)
 	 {
-	    DPRINT1("process module at %08lx\n", start);
+	    DPRINT1("process module '%s' at %08lx\n", name, start);
 	    LdrProcessDriver((PVOID)start);
 	 }
-    }
+     }
    
    /* Create the SystemRoot symbolic link */
    CreateSystemRootLink ((PUCHAR)KeLoaderBlock.CommandLine);
