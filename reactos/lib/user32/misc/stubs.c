@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.17 2003/01/07 17:30:32 robd Exp $
+/* $Id: stubs.c,v 1.18 2003/02/02 17:35:30 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -241,19 +241,6 @@ IsWindowEnabled(
 
 
 
-
-
-
-int
-STDCALL
-LoadStringW(
-  HINSTANCE hInstance,
-  UINT uID,
-  LPWSTR lpBuffer,
-  int nBufferMax)
-{
-  return 0;
-}
 
 WINBOOL
 STDCALL
