@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.53 2000/07/30 18:22:35 dwelch Exp $
+/* $Id: thread.c,v 1.54 2000/09/06 03:08:22 phreak Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -111,7 +111,7 @@ PKTHREAD STDCALL KeGetCurrentThread(VOID)
    return(&(CurrentThread->Tcb));
 }
 
-PETHREAD PsGetCurrentThread(VOID)
+PETHREAD STDCALL PsGetCurrentThread(VOID)
 {
    return(CurrentThread);
 }
