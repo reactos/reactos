@@ -32,8 +32,10 @@ LOADERS = dos
 #
 # Select the device drivers and filesystems you want
 #
-DEVICE_DRIVERS = vidport vga blue ide keyboard null floppy
+DEVICE_DRIVERS = vidport vga blue ide null floppy
 # DEVICE_DRIVERS = beep event floppy ide_test mouse sound test test1 parallel serial
+
+INPUT_DRIVERS = keyboard
 
 FS_DRIVERS = vfat
 # FS_DRIVERS = minix ext2 template
@@ -53,7 +55,7 @@ APPS = args hello shell test cat bench apc shm lpc thread event file gditest \
 NET_APPS = ping
 
 
-KERNEL_SERVICES = $(DEVICE_DRIVERS) $(FS_DRIVERS) $(NET_DRIVERS) $(NET_DEVICE_DRIVERS)
+KERNEL_SERVICES = $(DEVICE_DRIVERS) $(INPUT_DRIVERS) $(FS_DRIVERS) $(NET_DRIVERS) $(NET_DEVICE_DRIVERS)
 
 all: buildno $(COMPONENTS) $(DLLS) $(SUBSYS) $(LOADERS) $(KERNEL_SERVICES) $(APPS) $(NET_APPS)
 
@@ -186,6 +188,24 @@ $(DEVICE_DRIVERS:%=%_dist): %_dist:
 
 .PHONY: $(DEVICE_DRIVERS) $(DEVICE_DRIVERS:%=%_clean) \
         $(DEVICE_DRIVERS:%=%_install) $(DEVICE_DRIVERS:%=%_dist)
+
+#
+# Input driver rules
+#
+$(INPUT_DRIVERS): %:
+	make -C services/input/$*
+
+$(INPUT_DRIVERS:%=%_clean): %_clean:
+	make -C services/input/$* clean
+
+$(INPUT_DRIVERS:%=%_install): %_install:
+	make -C services/input/$* install
+
+$(INPUT_DRIVERS:%=%_dist): %_dist:
+	make -C services/input/$* dist
+
+.PHONY: $(INPUT_DRIVERS) $(INPUT_DRIVERS:%=%_clean) \
+        $(INPUT_DRIVERS:%=%_install) $(INPUT_DRIVERS:%=%_dist)
 
 $(FS_DRIVERS): %:
 	make -C services/fs/$*
