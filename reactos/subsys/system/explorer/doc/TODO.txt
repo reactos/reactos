@@ -31,7 +31,6 @@
   Yes, ROS epxlorer doesn't read many settings from the registry currently,
   as it doesn't have a way to configure them. (missing configuration dialogs)
 
-- Unterdrücken des Taskbar-Kontext-Menüs über Taskbar Buttons
 - Vollbildfenster suchen -> Taskleiste ausblenden
 - Fenster-Aktivierung nach Desktop-Umschaltung
 - Desktop-Manager: Speicherung der Verteilung von Applikations-Fenstern auf die verschiedenen Desktops; Desktop-Namen

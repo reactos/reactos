@@ -113,6 +113,13 @@ LRESULT TaskBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	  case WM_TIMER:
 		Refresh();
 		return 0;
+
+	  case WM_CONTEXTMENU: {
+		Point pt(lparam);
+		ScreenToClient(_htoolbar, &pt);
+		if ((HWND)wparam==_htoolbar && SendMessage(_htoolbar, TB_HITTEST, 0, (LPARAM)&pt)>0)
+			break;	// avoid displaying context menu for application button _and_ desktop bar at the same time
+		goto def;}
 /*
 //#define PM_SHELLHOOK_NOTIFY		(WM_APP+0x10)
 
@@ -130,7 +137,7 @@ LRESULT TaskBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		Refresh();
 		break;}
 */
-	  default:
+	  default: def:
 		return super::WndProc(nmsg, wparam, lparam);
 	}
 
