@@ -96,14 +96,14 @@ SearchForExecutableSingle (LPCTSTR pFileName, LPTSTR pFullName, LPTSTR pExtensio
 	LPTSTR pszBuffer = NULL;
 	DWORD  dwBuffer, len;
 	LPTSTR s,f;
-	// initialize full name buffer
+	/* initialize full name buffer */
 	*pFullName = _T('\0');
 
 #ifdef _DEBUG
 	DebugPrintf (_T("SearchForExecutableSingle: \'%s\' with ext: \'%s\'\n"), pFileName, pExtension);
 #endif
 
-	// Check if valid directly on specified path
+	/* Check if valid directly on specified path */
 	if (_tcschr (pFileName, _T('\\')) != NULL)
 	{
 		LPTSTR pFilePart;
@@ -119,7 +119,7 @@ SearchForExecutableSingle (LPCTSTR pFileName, LPTSTR pFullName, LPTSTR pExtensio
 
 		if(pFilePart == 0)
 			return FALSE;
-		// Add extension and test file:
+		/* Add extension and test file: */
 		if (pExtension)
 			_tcscat(szPathBuffer, pExtension);
 
@@ -134,7 +134,7 @@ SearchForExecutableSingle (LPCTSTR pFileName, LPTSTR pFullName, LPTSTR pExtensio
 		return FALSE;
 	}
 
-	// search in current directory
+	/* search in current directory */
 	len = GetCurrentDirectory (MAX_PATH, szPathBuffer);
 	if (szPathBuffer[len - 1] != _T('\\'))
 	{
@@ -157,7 +157,7 @@ SearchForExecutableSingle (LPCTSTR pFileName, LPTSTR pFullName, LPTSTR pExtensio
 
 
 
-	// load environment varable PATH into buffer
+	/* load environment varable PATH into buffer */
 	pszBuffer = (LPTSTR)malloc (ENV_BUFFER_SIZE * sizeof(TCHAR));
 	dwBuffer = GetEnvironmentVariable (_T("PATH"), pszBuffer, ENV_BUFFER_SIZE);
 	if (dwBuffer > ENV_BUFFER_SIZE)
@@ -167,7 +167,7 @@ SearchForExecutableSingle (LPCTSTR pFileName, LPTSTR pFullName, LPTSTR pExtensio
 	}
 
 
-	// search in PATH
+	/* search in PATH */
 	s = pszBuffer;
 	while (s && *s)
 	{
@@ -214,25 +214,30 @@ SearchForExecutableSingle (LPCTSTR pFileName, LPTSTR pFullName, LPTSTR pExtensio
 BOOL
 SearchForExecutable (LPCTSTR pFileName, LPTSTR pFullName)
 {
+	static TCHAR pszDefaultPathExt[] = _T(".COM;.EXE;.BAT;.CMD");
 	LPTSTR pszBuffer = NULL;
 	LPTSTR pCh;
 	DWORD  dwBuffer;
 #ifdef _DEBUG
 	DebugPrintf (_T("SearchForExecutable: \'%s\'\n"), pFileName);
 #endif
-	// check the filename directly
+	/* check the filename directly */
 	if (SearchForExecutableSingle(pFileName, pFullName, NULL))
 	{
 		return TRUE;
 	}
 
-	// load environment varable PATHEXT
+	/* load environment varable PATHEXT */
 	pszBuffer = (LPTSTR)malloc (ENV_BUFFER_SIZE * sizeof(TCHAR));
 	dwBuffer = GetEnvironmentVariable (_T("PATHEXT"), pszBuffer, ENV_BUFFER_SIZE);
 	if (dwBuffer > ENV_BUFFER_SIZE)
 	{
 		pszBuffer = (LPTSTR)realloc (pszBuffer, dwBuffer * sizeof (TCHAR));
 		GetEnvironmentVariable (_T("PATHEXT"), pszBuffer, dwBuffer * sizeof (TCHAR));
+	}
+	else if (0 == dwBuffer)
+	{
+		_tcscpy(pszBuffer, pszDefaultPathExt);
 	}
 
 #ifdef _DEBUG
