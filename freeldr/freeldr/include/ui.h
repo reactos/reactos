@@ -44,6 +44,8 @@ extern	PUCHAR	UiMessageBoxLineText;
 
 extern	BOOL	UserInterfaceUp;								// Tells us if the user interface is displayed
 
+extern	BOOL	UiUseSpecialEffects;							// Tells us if we should use fade effects
+
 extern	UCHAR	UiMonthNames[12][15];
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -52,6 +54,7 @@ extern	UCHAR	UiMonthNames[12][15];
 //
 ///////////////////////////////////////////////////////////////////////////////////////
 BOOL	UiInitialize(VOID);										// Initialize User-Interface
+VOID	UiUnInitialize(PUCHAR BootText);						// Un-initialize User-Interface
 VOID	UiDrawBackdrop(VOID);									// Fills the entire screen with a backdrop
 VOID	UiFillArea(U32 Left, U32 Top, U32 Right, U32 Bottom, UCHAR FillChar, UCHAR Attr /* Color Attributes */);	// Fills the area specified with FillChar and Attr
 VOID	UiDrawShadow(U32 Left, U32 Top, U32 Right, U32 Bottom);	// Draws a shadow on the bottom and right sides of the area specified
@@ -60,6 +63,7 @@ VOID	UiDrawText(U32 X, U32 Y, PUCHAR Text, UCHAR Attr);	// Draws text at coordin
 VOID	UiDrawCenteredText(U32 Left, U32 Top, U32 Right, U32 Bottom, PUCHAR TextString, UCHAR Attr);	// Draws centered text at the coordinates specified and clips the edges
 VOID	UiDrawStatusText(PUCHAR StatusText);					// Draws text at the very bottom line on the screen
 VOID	UiUpdateDateTime(VOID);									// Updates the date and time
+VOID	UiInfoBox(PUCHAR MessageText);							// Displays a info box on the screen
 VOID	UiMessageBox(PUCHAR MessageText);						// Displays a message box on the screen with an ok button
 VOID	UiMessageBoxCritical(PUCHAR MessageText);				// Displays a message box on the screen with an ok button using no system resources
 VOID	UiMessageLine(PUCHAR MessageText);						// Adds a line of text to the message box buffer
@@ -71,6 +75,9 @@ UCHAR	UiTextToColor(PUCHAR ColorText);						// Converts the text color into it's
 UCHAR	UiTextToFillStyle(PUCHAR FillStyleText);				// Converts the text fill into it's equivalent fill value
 
 VOID	UiTruncateStringEllipsis(PUCHAR StringText, U32 MaxChars);	// Truncates a string to MaxChars by adding an ellipsis on the end '...'
+
+VOID	UiFadeInBackdrop(VOID);									// Draws the backdrop and fades the screen in
+VOID	UiFadeOut(VOID);										// Fades the screen out
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //

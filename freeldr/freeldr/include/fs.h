@@ -33,14 +33,14 @@
 #define PFILE			FILE *
 
 VOID	FileSystemError(PUCHAR ErrorString);
-BOOL	OpenDiskDrive(U32 DriveNumber, U32 PartitionNumber);
-PFILE	OpenFile(PUCHAR FileName);
-VOID	CloseFile(PFILE FileHandle);
-BOOL	ReadFile(PFILE FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer);
-U32		GetFileSize(PFILE FileHandle);
-VOID	SetFilePointer(PFILE FileHandle, U32 NewFilePointer);
-U32		GetFilePointer(PFILE FileHandle);
-BOOL	IsEndOfFile(PFILE FileHandle);
+BOOL	FsOpenVolume(U32 DriveNumber, U32 PartitionNumber);
+PFILE	FsOpenFile(PUCHAR FileName);
+VOID	FsCloseFile(PFILE FileHandle);
+BOOL	FsReadFile(PFILE FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer);
+U32		FsGetFileSize(PFILE FileHandle);
+VOID	FsSetFilePointer(PFILE FileHandle, U32 NewFilePointer);
+U32		FsGetFilePointer(PFILE FileHandle);
+BOOL	FsIsEndOfFile(PFILE FileHandle);
 U32		FsGetNumPathParts(PUCHAR Path);
 VOID	FsGetFirstNameFromPath(PUCHAR Buffer, PUCHAR Path);
 

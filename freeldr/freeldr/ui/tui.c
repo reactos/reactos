@@ -26,6 +26,42 @@
 #include <debug.h>
 #include <inifile.h>
 #include <version.h>
+#include <video.h>
+
+
+PVOID	TextVideoBuffer = NULL;
+
+BOOL TuiInitialize(VOID)
+{
+	VideoClearScreen();
+	VideoHideTextCursor();
+	BiosVideoDisableBlinkBit();
+
+	TextVideoBuffer = VideoAllocateOffScreenBuffer();
+	if (TextVideoBuffer == NULL)
+	{
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+VOID TuiUnInitialize(VOID)
+{
+	if (UiUseSpecialEffects)
+	{
+		TuiFadeOut();
+	}
+	else
+	{
+		VideoSetMode(VIDEOMODE_NORMAL_TEXT);
+	}
+
+	//VideoClearScreen();
+	VideoSetMode(VIDEOMODE_NORMAL_TEXT);
+	VideoShowTextCursor();
+	BiosVideoEnableBlinkBit();
+}
 
 VOID TuiDrawBackdrop(VOID)
 {
@@ -88,12 +124,14 @@ VOID TuiDrawBackdrop(VOID)
 	//
 	// Draw status bar
 	//
-	TuiDrawStatusText("");
+	TuiDrawStatusText("Welcome to FreeLoader!");
 
 	//
 	// Update the date & time
 	//
 	TuiUpdateDateTime();
+
+	VideoCopyOffScreenBufferToVRAM();
 }
 
 /*
@@ -102,7 +140,7 @@ VOID TuiDrawBackdrop(VOID)
  */
 VOID TuiFillArea(U32 Left, U32 Top, U32 Right, U32 Bottom, UCHAR FillChar, UCHAR Attr /* Color Attributes */)
 {
-	PUCHAR	ScreenMemory = (PUCHAR)TUI_SCREEN_MEM;
+	PUCHAR	ScreenMemory = (PUCHAR)TextVideoBuffer;
 	U32		i, j;
 
 	// Clip the area to the screen
@@ -138,7 +176,7 @@ VOID TuiFillArea(U32 Left, U32 Top, U32 Right, U32 Bottom, UCHAR FillChar, UCHAR
  */
 VOID TuiDrawShadow(U32 Left, U32 Top, U32 Right, U32 Bottom)
 {
-	PUCHAR	ScreenMemory = (PUCHAR)TUI_SCREEN_MEM;
+	PUCHAR	ScreenMemory = (PUCHAR)TextVideoBuffer;
 	U32		Idx;
 
 	// Shade the bottom of the area
@@ -270,7 +308,7 @@ VOID TuiDrawBox(U32 Left, U32 Top, U32 Right, U32 Bottom, UCHAR VertStyle, UCHAR
  */
 VOID TuiDrawText(U32 X, U32 Y, PUCHAR Text, UCHAR Attr)
 {
-	PUCHAR	ScreenMemory = (PUCHAR)TUI_SCREEN_MEM;
+	PUCHAR	ScreenMemory = (PUCHAR)TextVideoBuffer;
 	U32		i, j;
 
 	// Draw the text
@@ -283,6 +321,63 @@ VOID TuiDrawText(U32 X, U32 Y, PUCHAR Text, UCHAR Attr)
 
 VOID TuiDrawCenteredText(U32 Left, U32 Top, U32 Right, U32 Bottom, PUCHAR TextString, UCHAR Attr)
 {
+	U32		TextLength;
+	U32		BoxWidth;
+	U32		BoxHeight;
+	U32		LineBreakCount;
+	U32		Index;
+	U32		LastIndex;
+	U32		RealLeft;
+	U32		RealTop;
+	U32		X;
+	U32		Y;
+	UCHAR	Temp[2];
+
+	TextLength = strlen(TextString);
+
+	// Count the new lines and the box width
+	LineBreakCount = 0;
+	BoxWidth = 0;
+	LastIndex = 0;
+	for (Index=0; Index<TextLength; Index++)
+	{
+		if (TextString[Index] == '\n')
+		{
+			LastIndex = Index;
+			LineBreakCount++;
+		}
+		else
+		{
+			if ((Index - LastIndex) > BoxWidth)
+			{
+				BoxWidth = (Index - LastIndex);
+			}
+		}
+	}
+
+	BoxHeight = LineBreakCount + 1;
+
+	RealLeft = (((Right - Left) - BoxWidth) / 2) + Left;
+	RealTop = (((Bottom - Top) - BoxHeight) / 2) + Top;
+
+	LastIndex = 0;
+	for (Index=0; Index<TextLength; Index++)
+	{
+		if (TextString[Index] == '\n')
+		{
+			RealTop++;
+			LastIndex = 0;
+		}
+		else
+		{
+			X = RealLeft + LastIndex;
+			Y = RealTop;
+			LastIndex++;
+			Temp[0] = TextString[Index];
+			Temp[1] = 0;
+			TuiDrawText(X, Y, Temp, Attr);
+		}
+	}
 }
 
 VOID TuiDrawStatusText(PUCHAR StatusText)
@@ -296,6 +391,8 @@ VOID TuiDrawStatusText(PUCHAR StatusText)
 	{
 		TuiDrawText(i, UiScreenHeight-1, " ", ATTR(UiStatusBarFgColor, UiStatusBarBgColor));
 	}
+
+	VideoCopyOffScreenBufferToVRAM();
 }
 
 VOID TuiUpdateDateTime(VOID)
@@ -380,11 +477,13 @@ VOID TuiUpdateDateTime(VOID)
 
 	// Draw the time
 	TuiDrawText(UiScreenWidth-strlen(TimeString)-2, 2, TimeString, ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
+
+	VideoCopyOffScreenBufferToVRAM();
 }
 
 VOID TuiSaveScreen(PUCHAR Buffer)
 {
-	PUCHAR	ScreenMemory = (PUCHAR)TUI_SCREEN_MEM;
+	PUCHAR	ScreenMemory = (PUCHAR)TextVideoBuffer;
 	U32		i;
 
 	for (i=0; i < (UiScreenWidth * UiScreenHeight * 2); i++)
@@ -395,7 +494,7 @@ VOID TuiSaveScreen(PUCHAR Buffer)
 
 VOID TuiRestoreScreen(PUCHAR Buffer)
 {
-	PUCHAR	ScreenMemory = (PUCHAR)TUI_SCREEN_MEM;
+	PUCHAR	ScreenMemory = (PUCHAR)TextVideoBuffer;
 	U32		i;
 
 	for (i=0; i < (UiScreenWidth * UiScreenHeight * 2); i++)
@@ -483,6 +582,8 @@ VOID TuiMessageBoxCritical(PUCHAR MessageText)
 	// Draw status text
 	UiDrawStatusText("Press ENTER to continue");
 
+	VideoCopyOffScreenBufferToVRAM();
+
 	for (;;)
 	{
 		if (kbhit())
@@ -500,6 +601,8 @@ VOID TuiMessageBoxCritical(PUCHAR MessageText)
 		}
 
 		TuiUpdateDateTime();
+
+		VideoCopyOffScreenBufferToVRAM();
 	}
 
 }
@@ -549,6 +652,8 @@ VOID TuiDrawProgressBar(U32 Left, U32 Top, U32 Right, U32 Bottom, U32 Position, 
 	}
 
 	TuiUpdateDateTime();
+
+	VideoCopyOffScreenBufferToVRAM();
 }
 
 UCHAR TuiTextToColor(PUCHAR ColorText)
@@ -605,4 +710,58 @@ UCHAR TuiTextToFillStyle(PUCHAR FillStyleText)
 	}
 
 	return LIGHT_FILL;
+}
+
+VOID TuiFadeInBackdrop(VOID)
+{
+	PPALETTE_ENTRY TuiFadePalette = NULL;
+
+	if (UiUseSpecialEffects)
+	{
+		TuiFadePalette = (PPALETTE_ENTRY)MmAllocateMemory(sizeof(PALETTE_ENTRY) * 64);
+
+		if (TuiFadePalette != NULL)
+		{
+			VideoSavePaletteState(TuiFadePalette, 64);
+			VideoSetAllColorsToBlack(64);
+		}
+	}
+
+	// Draw the backdrop and title box
+	TuiDrawBackdrop();
+
+	if (UiUseSpecialEffects && TuiFadePalette != NULL)
+	{
+		VideoFadeIn(TuiFadePalette, 64);
+		MmFreeMemory(TuiFadePalette);
+	}
+}
+
+VOID TuiFadeOut(VOID)
+{
+	PPALETTE_ENTRY TuiFadePalette = NULL;
+
+	if (UiUseSpecialEffects)
+	{
+		TuiFadePalette = (PPALETTE_ENTRY)MmAllocateMemory(sizeof(PALETTE_ENTRY) * 64);
+
+		if (TuiFadePalette != NULL)
+		{
+			VideoSavePaletteState(TuiFadePalette, 64);
+		}
+	}
+
+	if (UiUseSpecialEffects && TuiFadePalette != NULL)
+	{
+		VideoFadeOut(64);
+	}
+
+	VideoSetMode(VIDEOMODE_NORMAL_TEXT);
+
+	if (UiUseSpecialEffects && TuiFadePalette != NULL)
+	{
+		VideoRestorePaletteState(TuiFadePalette, 64);
+		MmFreeMemory(TuiFadePalette);
+	}
+
 }

@@ -33,7 +33,7 @@
 // DATA
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-U32			FileSystemType = 0;	// Type of filesystem on boot device, set by OpenDiskDrive()
+U32			FileSystemType = 0;	// Type of filesystem on boot device, set by FsOpenVolume()
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS
@@ -48,9 +48,9 @@ VOID FileSystemError(PUCHAR ErrorString)
 
 /*
  *
- * BOOL OpenDiskDrive(U32 DriveNumber, U32 PartitionNumber);
+ * BOOL FsOpenVolume(U32 DriveNumber, U32 PartitionNumber);
  *
- * This function is called to open a disk drive for file access.
+ * This function is called to open a disk volume for file access.
  * It must be called before any of the file functions will work.
  * It takes two parameters:
  *
@@ -61,12 +61,12 @@ VOID FileSystemError(PUCHAR ErrorString)
  *            If it is zero then it opens the active (bootable) partition
  *
  */
-BOOL OpenDiskDrive(U32 DriveNumber, U32 PartitionNumber)
+BOOL FsOpenVolume(U32 DriveNumber, U32 PartitionNumber)
 {
 	PARTITION_TABLE_ENTRY	PartitionTableEntry;
 	UCHAR					ErrorText[80];
 
-	DbgPrint((DPRINT_FILESYSTEM, "OpenDiskDrive() DriveNumber: 0x%x PartitionNumber: 0x%x\n", DriveNumber, PartitionNumber));
+	DbgPrint((DPRINT_FILESYSTEM, "FsOpenVolume() DriveNumber: 0x%x PartitionNumber: 0x%x\n", DriveNumber, PartitionNumber));
 
 	// Check and see if it is a floppy drive
 	// If so then just assume FAT12 file system type
@@ -141,7 +141,7 @@ BOOL OpenDiskDrive(U32 DriveNumber, U32 PartitionNumber)
 	return TRUE;
 }
 
-PFILE OpenFile(PUCHAR FileName)
+PFILE FsOpenFile(PUCHAR FileName)
 {
 	PFILE	FileHandle = NULL;
 
@@ -183,18 +183,18 @@ PFILE OpenFile(PUCHAR FileName)
 	//
 	if (FileHandle != NULL)
 	{
-		DbgPrint((DPRINT_FILESYSTEM, "OpenFile() succeeded. FileHandle: 0x%x\n", FileHandle));
+		DbgPrint((DPRINT_FILESYSTEM, "FsOpenFile() succeeded. FileHandle: 0x%x\n", FileHandle));
 	}
 	else
 	{
-		DbgPrint((DPRINT_FILESYSTEM, "OpenFile() failed.\n"));
+		DbgPrint((DPRINT_FILESYSTEM, "FsOpenFile() failed.\n"));
 	}
 #endif // defined DEBUG
 
 	return FileHandle;
 }
 
-VOID CloseFile(PFILE FileHandle)
+VOID FsCloseFile(PFILE FileHandle)
 {
 }
 
@@ -202,12 +202,15 @@ VOID CloseFile(PFILE FileHandle)
  * ReadFile()
  * returns number of bytes read or EOF
  */
-BOOL ReadFile(PFILE FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer)
+BOOL FsReadFile(PFILE FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer)
 {
+	U64		BytesReadBig;
+	BOOL	Success;
+
 	//
 	// Set the number of bytes read equal to zero
 	//
-	if (BytesRead !=NULL)
+	if (BytesRead != NULL)
 	{
 		*BytesRead = 0;
 	}
@@ -224,7 +227,10 @@ BOOL ReadFile(PFILE FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer)
 
 	case FS_EXT2:
 
-		return Ext2ReadFile(FileHandle, BytesToRead, BytesRead, Buffer);
+		//return Ext2ReadFile(FileHandle, BytesToRead, BytesRead, Buffer);
+		Success = Ext2ReadFile(FileHandle, BytesToRead, &BytesReadBig, Buffer);
+		*BytesRead = (U32)BytesReadBig;
+		return Success;
 
 	default:
 
@@ -235,7 +241,7 @@ BOOL ReadFile(PFILE FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer)
 	return FALSE;
 }
 
-U32 GetFileSize(PFILE FileHandle)
+U32 FsGetFileSize(PFILE FileHandle)
 {
 	switch (FileSystemType)
 	{
@@ -259,7 +265,7 @@ U32 GetFileSize(PFILE FileHandle)
 	return 0;
 }
 
-VOID SetFilePointer(PFILE FileHandle, U32 NewFilePointer)
+VOID FsSetFilePointer(PFILE FileHandle, U32 NewFilePointer)
 {
 	switch (FileSystemType)
 	{
@@ -284,7 +290,7 @@ VOID SetFilePointer(PFILE FileHandle, U32 NewFilePointer)
 	}
 }
 
-U32 GetFilePointer(PFILE FileHandle)
+U32 FsGetFilePointer(PFILE FileHandle)
 {
 	switch (FileSystemType)
 	{
@@ -311,9 +317,9 @@ U32 GetFilePointer(PFILE FileHandle)
 	return 0;
 }
 
-BOOL IsEndOfFile(PFILE FileHandle)
+BOOL FsIsEndOfFile(PFILE FileHandle)
 {
-	if (GetFilePointer(FileHandle) >= GetFileSize(FileHandle))
+	if (FsGetFilePointer(FileHandle) >= FsGetFileSize(FileHandle))
 	{
 		return TRUE;
 	}

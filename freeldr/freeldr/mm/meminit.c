@@ -63,7 +63,7 @@ BOOL MmInitializeMemoryManager(VOID)
 
 	RtlZeroMemory(BiosMemoryMap, sizeof(BIOS_MEMORY_MAP) * 32);
 
-	BiosMemoryMapEntryCount = GetBiosMemoryMap((PBIOS_MEMORY_MAP_ARRAY)BiosMemoryMap);
+	BiosMemoryMapEntryCount = GetBiosMemoryMap(BiosMemoryMap);
 	ExtendedMemorySize = GetExtendedMemorySize();
 	ConventionalMemorySize = GetConventionalMemorySize();
 
@@ -97,7 +97,7 @@ BOOL MmInitializeMemoryManager(VOID)
 	// to handle just a flat extended memory size I'm going
 	// to create a 'fake' memory map entry out of the
 	// extended memory size if GetBiosMemoryMap() fails.
-	if (BiosMemoryMapEntryCount == 0)
+	//if (BiosMemoryMapEntryCount == 0)
 	{
 		BiosMemoryMap[0].BaseAddress = 0x100000;		// Start at 1MB
 		BiosMemoryMap[0].Length = ExtendedMemorySize * 1024;
@@ -385,7 +385,7 @@ VOID MmFixupSystemMemoryMap(BIOS_MEMORY_MAP BiosMemoryMap[32], U32* MapCount)
 		// If the entry type isn't usable then remove
 		// it from the memory map (this will help reduce
 		// the size of our lookup table)
-		if (BiosMemoryMap[Index].Type != 0)
+		if (BiosMemoryMap[Index].Type != MEMTYPE_USABLE)
 		{
 			// Slide every entry after this down one
 			for (Index2=Index; Index2<(*MapCount - 1); Index2++)

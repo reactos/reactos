@@ -23,9 +23,9 @@
 #
 TARGET		=	i386
 # Debugging information on (bigger binary)
-DEBUG		=	yes
+#DEBUG		=	yes
 # Debugging information off (smaller binary)
-#DEBUG		=	no
+DEBUG		=	no
 
 OBJDIR		=	obj
 OUTPUT_DIR	=	$(OBJDIR)/$(TARGET)
@@ -192,17 +192,20 @@ ARCH_OBJS	=	fathelp.o	\
 				boot.o		\
 				linux.o		\
 				mb.o		\
-				mem.o		\
-				biosdisk.o	\
-				rtlcode.o	\
-				biosvid.o	\
-				drvmap.o
+				i386mem.o	\
+				i386rtl.o	\
+				i386vid.o	\
+				drvmap.o	\
+				int386.o	\
+				i386disk.o
 
-RTL_OBJS	=	memory.o	\
-				print.o		\
+RTL_OBJS	=	print.o		\
 				stdlib.o	\
 				string.o	\
-				list.o
+				list.o		\
+				memcmp.o	\
+				memcpy.o	\
+				memset.o
 
 FS_OBJS		=	fs.o		\
 				fat.o		\
@@ -238,7 +241,11 @@ INIFILE_OBJS=	inifile.o	\
 				parse.o
 
 VIDEO_OBJS	=	video.o		\
-				vidmode.o
+				vidmode.o	\
+				fade.o		\
+				palette.o	\
+				pixel.o		\
+				bank.o
 
 # libgcc2.o contains code (__udivdi3, __umoddi3) necessary to do
 # 64-bit division on the i386 (and other 32-bit) architectures

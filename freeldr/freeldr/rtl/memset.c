@@ -19,49 +19,31 @@
 
 #include <freeldr.h>
 
-int RtlCompareMemory(const PVOID Source1, const PVOID Source2, U32 Length)
+#ifdef __i386__
+void *memset(void *src, int val, size_t count)
 {
-	U32			i;
-	const PCHAR buffer1 = Source1;
-	const PCHAR buffer2 = Source2;
+	__asm__( \
+		"or	%%ecx,%%ecx\n\t"\
+		"jz	.L1\n\t"	\
+		"cld\t\n"		\
+		"rep\t\n"		\
+		"stosb\t\n"		\
+		".L1:\n\t"
+		: 
+		: "D" (src), "c" (count), "a" (val));
+	return src;
+}
+#else
+void *memset(void *src, int val, size_t count)
+{
+	unsigned int	i;
+	unsigned char*	buf1 = src;
 
-	for (i=0; i<Length; i++)
+	for (i=0; i<count; i++)
 	{
-		if(buffer1[i] == buffer2[i])
-			continue;
-		else
-			return (buffer1[i] - buffer2[i]);
+		buf1[i] = val;
 	}
 
-	return 0;
+	return src;
 }
-
-VOID RtlCopyMemory(PVOID Destination, const PVOID Source, U32 Length)
-{
-	U32			i;
-	PCHAR		buf1 = Destination;
-	const PCHAR	buf2 = Source;
-
-	for (i=0; i<Length; i++)
-	{
-		buf1[i] = buf2[i];
-	}
-
-}
-
-VOID RtlFillMemory(PVOID Destination, U32 Length, UCHAR Fill)
-{
-	U32			i;
-	PUCHAR		buf1 = Destination;
-
-	for (i=0; i<Length; i++)
-	{
-		buf1[i] = Fill;
-	}
-
-}
-
-VOID RtlZeroMemory(PVOID Destination, U32 Length)
-{
-	RtlFillMemory(Destination, Length, 0);
-}
+#endif

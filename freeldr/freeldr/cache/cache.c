@@ -82,25 +82,13 @@ BOOL CacheInitializeDrive(U32 DriveNumber)
 	// Initialize the structure
 	RtlZeroMemory(&CacheManagerDrive, sizeof(CACHE_DRIVE));
 	CacheManagerDrive.DriveNumber = DriveNumber;
-	CacheManagerDrive.LbaSupported = BiosInt13ExtensionsSupported(DriveNumber);
 	if (!DiskGetDriveGeometry(DriveNumber, &CacheManagerDrive.DriveGeometry))
 	{
 		return FALSE;
 	}
 
-	// If LBA is supported then the block size will be 128 sectors (64k)
-	// If not then the block size is the size of one track
-	if (CacheManagerDrive.LbaSupported)
-	{
-		// FIXME: Temporarily reduced this to
-		// 64 sectors since not all BIOS calls
-		// support reading as many as 128 sectors
-		CacheManagerDrive.BlockSize = 64;//128;
-	}
-	else
-	{
-		CacheManagerDrive.BlockSize = CacheManagerDrive.DriveGeometry.Sectors;
-	}
+	// Get the number of sectors in each cache block
+	CacheManagerDrive.BlockSize = DiskGetCacheableBlockCount(DriveNumber);
 
 	CacheBlockCount = 0;
 	CacheSizeLimit = GetSystemMemorySize() / 8;
@@ -113,7 +101,6 @@ BOOL CacheInitializeDrive(U32 DriveNumber)
 	CacheManagerInitialized = TRUE;
 
 	DbgPrint((DPRINT_CACHE, "Initializing BIOS drive 0x%x.\n", DriveNumber));
-	DbgPrint((DPRINT_CACHE, "LbaSupported = %s.\n", CacheManagerDrive.LbaSupported ? "TRUE" : "FALSE"));
 	DbgPrint((DPRINT_CACHE, "Cylinders: %d.\n", CacheManagerDrive.DriveGeometry.Cylinders));
 	DbgPrint((DPRINT_CACHE, "Heads: %d.\n", CacheManagerDrive.DriveGeometry.Heads));
 	DbgPrint((DPRINT_CACHE, "Sectors: %d.\n", CacheManagerDrive.DriveGeometry.Sectors));

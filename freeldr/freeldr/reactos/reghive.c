@@ -225,7 +225,7 @@ getKeyValueTypeFromChunk (PCHAR  regChunk, PCHAR  dataFormat, int *keyValueType)
   }
   else
   {
-    UNIMPLEMENTED;
+    UNIMPLEMENTED();
   }
 
   return  *regChunk ? regChunk : 0;
@@ -311,7 +311,7 @@ computeKeyValueDataSize (PCHAR  regChunk, PCHAR  dataFormat)
   }
   else
   {
-    UNIMPLEMENTED;
+    UNIMPLEMENTED();
   }
 
   return  dataSize;
@@ -425,7 +425,7 @@ getKeyValueDataFromChunk (PCHAR  regChunk, PCHAR  dataFormat, PCHAR data)
   }
   else
   {
-    UNIMPLEMENTED;
+    UNIMPLEMENTED();
   }
 
   return  *regChunk ? regChunk : 0;

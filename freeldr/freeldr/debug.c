@@ -24,13 +24,13 @@
 
 #ifdef DEBUG
 
-//#define DEBUG_ULTRA
+#define DEBUG_ALL
 //#define DEBUG_INIFILE
 //#define DEBUG_REACTOS
 //#define DEBUG_CUSTOM
 #define DEBUG_NONE
 
-#if defined (DEBUG_ULTRA)
+#if defined (DEBUG_ALL)
 U32		DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY | DPRINT_FILESYSTEM |
 						DPRINT_UI | DPRINT_DISK | DPRINT_CACHE | DPRINT_REACTOS |
 						DPRINT_LINUX;
@@ -55,8 +55,8 @@ U32		DebugPrintMask = 0;
 
 #define BOCHS_OUTPUT_PORT	0xe9
 
-//U32		DebugPort = RS232;
-U32		DebugPort = SCREEN;
+U32		DebugPort = RS232;
+//U32		DebugPort = SCREEN;
 //U32		DebugPort = BOCHS;
 U32		ComPort = COM1;
 //U32		BaudRate = 19200;

@@ -57,6 +57,8 @@ BOOL	UserInterfaceUp				= FALSE;				// Tells us if the user interface is display
 
 BOOL	UiDisplayMode				= DISPLAYMODE_TEXT;		// Tells us if we are in text or graphics mode
 
+BOOL	UiUseSpecialEffects			= FALSE;				// Tells us if we should use fade effects
+
 UCHAR	UiMonthNames[12][15] = { "January ", "February ", "March ", "April ", "May ", "June ", "July ", "August ", "September ", "October ", "November ", "December " };
 
 
@@ -86,38 +88,49 @@ BOOL UiInitialize(VOID)
 			if (BiosDetectVideoCard() == VIDEOCARD_CGA_OR_OTHER)
 			{
 				DbgPrint((DPRINT_UI, "CGA or other display adapter detected.\n"));
+				printf("CGA or other display adapter detected.\n");
+				printf("Using 80x25 text mode.\n");
+				VideoMode = VIDEOMODE_NORMAL_TEXT;
 			}
 			else if (BiosDetectVideoCard() == VIDEOCARD_EGA)
 			{
 				DbgPrint((DPRINT_UI, "EGA display adapter detected.\n"));
-			}
-			else if (BiosDetectVideoCard() == VIDEOCARD_VGA)
-			{
-				DbgPrint((DPRINT_UI, "VGA display adapter detected.\n"));
-			}
-
-			if (stricmp(SettingText, "NORMAL_VGA") == 0)
-			{
+				printf("EGA display adapter detected.\n");
+				printf("Using 80x25 text mode.\n");
 				VideoMode = VIDEOMODE_NORMAL_TEXT;
 			}
-			else if (stricmp(SettingText, "EXTENDED_VGA") == 0)
+			else //if (BiosDetectVideoCard() == VIDEOCARD_VGA)
 			{
-				VideoMode = VIDEOMODE_EXTENDED_TEXT;
-			}
-			else
-			{
-				VideoMode = atoi(SettingText);
+				DbgPrint((DPRINT_UI, "VGA display adapter detected.\n"));
+
+				if (stricmp(SettingText, "NORMAL_VGA") == 0)
+				{
+					VideoMode = VIDEOMODE_NORMAL_TEXT;
+				}
+				else if (stricmp(SettingText, "EXTENDED_VGA") == 0)
+				{
+					VideoMode = VIDEOMODE_EXTENDED_TEXT;
+				}
+				else
+				{
+					VideoMode = atoi(SettingText);
+				}
 			}
 
 			if (!VideoSetMode(VideoMode))
 			{
-				printf("Error: unable to set video display mode 0x%lx\n", VideoMode);
+				printf("Error: unable to set video display mode 0x%x\n", VideoMode);
+				printf("Defaulting to 80x25 text mode.\n");
 				printf("Press any key to continue.\n");
 				getch();
+
+				VideoMode = VIDEOMODE_NORMAL_TEXT;
+				VideoSetMode(VIDEOMODE_NORMAL_TEXT);
 			}
 
 			UiScreenWidth = VideoGetCurrentModeResolutionX();
 			UiScreenHeight = VideoGetCurrentModeResolutionY();
+			UiDisplayMode = VideoGetCurrentModeType();
 		}
 		if (IniReadSettingByName(SectionId, "TitleText", SettingText, 260))
 		{
@@ -179,20 +192,62 @@ BOOL UiInitialize(VOID)
 		{
 			UiSelectedTextBgColor = UiTextToColor(SettingText);
 		}
+		if (IniReadSettingByName(SectionId, "SpecialEffects", SettingText, 260))
+		{
+			if (stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3)
+			{
+				UiUseSpecialEffects = TRUE;
+			}
+			else
+			{
+				UiUseSpecialEffects = FALSE;
+			}
+		}
 	}
 
-	VideoClearScreen();
-	VideoHideTextCursor();
-	BiosVideoDisableBlinkBit();
+	if (UiDisplayMode == DISPLAYMODE_TEXT)
+	{
+		if (!TuiInitialize())
+		{
+			VideoSetMode(VIDEOMODE_NORMAL_TEXT);
+			return FALSE;
+		}
+	}
+	else
+	{
+		UNIMPLEMENTED();
+		//if (!GuiInitialize())
+		//{
+		//	VideoSetMode(VIDEOMODE_NORMAL_TEXT);
+		//	return FALSE;
+		//}
+	}
 
-	// Draw the backdrop and title box
-	UiDrawBackdrop();
+	// Draw the backdrop and fade it in if special effects are enabled
+	UiFadeInBackdrop();
 	
 	UserInterfaceUp = TRUE;
 
 	DbgPrint((DPRINT_UI, "UiInitialize() returning TRUE.\n"));
 
 	return TRUE;
+}
+
+VOID UiUnInitialize(PUCHAR BootText)
+{
+	UiDrawBackdrop();
+	UiDrawStatusText("Booting...");
+	UiInfoBox(BootText);
+
+	if (UiDisplayMode == DISPLAYMODE_TEXT)
+	{
+		TuiUnInitialize();
+	}
+	else
+	{
+		UNIMPLEMENTED();
+		//GuiUnInitialize();
+	}
 }
 
 VOID UiDrawBackdrop(VOID)
@@ -203,7 +258,7 @@ VOID UiDrawBackdrop(VOID)
 	}
 	else
 	{
-    UNIMPLEMENTED
+		UNIMPLEMENTED();
 		//GuiDrawBackdrop();
 	}
 }
@@ -216,7 +271,7 @@ VOID UiFillArea(U32 Left, U32 Top, U32 Right, U32 Bottom, UCHAR FillChar, UCHAR 
 	}
 	else
 	{
-    UNIMPLEMENTED
+		UNIMPLEMENTED();
 		//GuiFillArea(Left, Top, Right, Bottom, FillChar, Attr);
 	}
 }
@@ -229,7 +284,7 @@ VOID UiDrawShadow(U32 Left, U32 Top, U32 Right, U32 Bottom)
 	}
 	else
 	{
-    UNIMPLEMENTED
+		UNIMPLEMENTED();
 		//GuiDrawShadow(Left, Top, Right, Bottom);
 	}
 }
@@ -242,7 +297,7 @@ VOID UiDrawBox(U32 Left, U32 Top, U32 Right, U32 Bottom, UCHAR VertStyle, UCHAR 
 	}
 	else
 	{
-    UNIMPLEMENTED
+		UNIMPLEMENTED();
 		//GuiDrawBox(Left, Top, Right, Bottom, VertStyle, HorzStyle, Fill, Shadow, Attr);
 	}
 }
@@ -255,7 +310,7 @@ VOID UiDrawText(U32 X, U32 Y, PUCHAR Text, UCHAR Attr)
 	}
 	else
 	{
-    UNIMPLEMENTED
+		UNIMPLEMENTED();
 		//GuiDrawText(X, Y, Text, Attr);
 	}
 }
@@ -268,7 +323,7 @@ VOID UiDrawCenteredText(U32 Left, U32 Top, U32 Right, U32 Bottom, PUCHAR TextStr
 	}
 	else
 	{
-    UNIMPLEMENTED
+		UNIMPLEMENTED();
 		//GuiDrawCenteredText(Left, Top, Right, Bottom, TextString, Attr);
 	}
 }
@@ -281,7 +336,7 @@ VOID UiDrawStatusText(PUCHAR StatusText)
 	}
 	else
 	{
-    UNIMPLEMENTED
+		UNIMPLEMENTED();
 		//GuiDrawStatusText(StatusText);
 	}
 }
@@ -294,9 +349,70 @@ VOID UiUpdateDateTime(VOID)
 	}
 	else
 	{
-    UNIMPLEMENTED
-		//TuiUpdateDateTime();
+		UNIMPLEMENTED();
+		//GuiUpdateDateTime();
 	}
+}
+
+VOID UiInfoBox(PUCHAR MessageText)
+{
+	U32		TextLength;
+	U32		BoxWidth;
+	U32		BoxHeight;
+	U32		LineBreakCount;
+	U32		Index;
+	U32		LastIndex;
+	U32		Left;
+	U32		Top;
+	U32		Right;
+	U32		Bottom;
+
+	TextLength = strlen(MessageText);
+
+	// Count the new lines and the box width
+	LineBreakCount = 0;
+	BoxWidth = 0;
+	LastIndex = 0;
+	for (Index=0; Index<TextLength; Index++)
+	{
+		if (MessageText[Index] == '\n')
+		{
+			LastIndex = Index;
+			LineBreakCount++;
+		}
+		else
+		{
+			if ((Index - LastIndex) > BoxWidth)
+			{
+				BoxWidth = (Index - LastIndex);
+			}
+		}
+	}
+
+	// Calc the box width & height
+	BoxWidth += 6;
+	BoxHeight = LineBreakCount + 4;
+
+	// Calc the box coordinates
+	Left = (UiScreenWidth / 2) - (BoxWidth / 2);
+	Top =(UiScreenHeight / 2) - (BoxHeight / 2);
+	Right = (UiScreenWidth / 2) + (BoxWidth / 2);
+	Bottom = (UiScreenHeight / 2) + (BoxHeight / 2);
+
+	// Draw the box
+	UiDrawBox(Left,
+			  Top,
+			  Right,
+			  Bottom,
+			  VERT,
+			  HORZ,
+			  TRUE,
+			  TRUE,
+			  ATTR(UiMenuFgColor, UiMenuBgColor)
+			  );
+
+	// Draw the text
+	UiDrawCenteredText(Left, Top, Right, Bottom, MessageText, ATTR(UiTextColor, UiMenuBgColor));
 }
 
 VOID UiMessageBox(PUCHAR MessageText)
@@ -321,7 +437,7 @@ VOID UiMessageBox(PUCHAR MessageText)
 	}
 	else
 	{
-    UNIMPLEMENTED
+		UNIMPLEMENTED();
 		//GuiMessageBox(UiMessageBoxLineText);
 	}
 
@@ -348,7 +464,7 @@ VOID UiMessageBoxCritical(PUCHAR MessageText)
 	}
 	else
 	{
-    UNIMPLEMENTED
+		UNIMPLEMENTED();
 		//GuiMessageBoxCritical(MessageText);
 	}
 }
@@ -367,8 +483,8 @@ UCHAR UiTextToColor(PUCHAR ColorText)
 	}
 	else
 	{
-    UNIMPLEMENTED
-    return 0;
+		UNIMPLEMENTED();
+		return 0;
 		//return GuiTextToColor(ColorText);
 	}
 }
@@ -381,8 +497,8 @@ UCHAR UiTextToFillStyle(PUCHAR FillStyleText)
 	}
 	else
 	{
-    UNIMPLEMENTED
-    return 0;
+		UNIMPLEMENTED();
+		return 0;
 		//return GuiTextToFillStyle(FillStyleText);
 	}
 }
@@ -395,7 +511,7 @@ VOID UiDrawProgressBarCenter(U32 Position, U32 Range)
 	}
 	else
 	{
-    UNIMPLEMENTED
+		UNIMPLEMENTED();
 		//GuiDrawProgressBarCenter(Position, Range);
 	}
 }
@@ -408,7 +524,7 @@ VOID UiDrawProgressBar(U32 Left, U32 Top, U32 Right, U32 Bottom, U32 Position, U
 	}
 	else
 	{
-    UNIMPLEMENTED
+		UNIMPLEMENTED();
 		//GuiDrawProgressBar(Left, Top, Right, Bottom, Position, Range);
 	}
 }
@@ -457,7 +573,10 @@ VOID UiShowMessageBoxesInSection(PUCHAR SectionName)
 
 VOID UiTruncateStringEllipsis(PUCHAR StringText, U32 MaxChars)
 {
-    UNIMPLEMENTED
+	if (strlen(StringText) > MaxChars)
+	{
+		strcpy(&StringText[MaxChars - 3], "...");
+	}
 }
 
 BOOL UiDisplayMenu(PUCHAR MenuItemList[], U32 MenuItemCount, U32 DefaultMenuItem, S32 MenuTimeOut, U32* SelectedMenuItem)
@@ -468,8 +587,34 @@ BOOL UiDisplayMenu(PUCHAR MenuItemList[], U32 MenuItemCount, U32 DefaultMenuItem
 	}
 	else
 	{
-    UNIMPLEMENTED
-    return FALSE;
+		UNIMPLEMENTED();
+		return FALSE;
 		//return GuiDisplayMenu(MenuItemList, MenuItemCount, DefaultMenuItem, MenuTimeOut, SelectedMenuItem);
+	}
+}
+
+VOID UiFadeInBackdrop(VOID)
+{
+	if (UiDisplayMode == DISPLAYMODE_TEXT)
+	{
+		TuiFadeInBackdrop();
+	}
+	else
+	{
+		UNIMPLEMENTED();
+		//GuiFadeInBackdrop();
+	}
+}
+
+VOID UiFadeOut(VOID)
+{
+	if (UiDisplayMode == DISPLAYMODE_TEXT)
+	{
+		TuiFadeOut();
+	}
+	else
+	{
+		UNIMPLEMENTED();
+		//GuiFadeInOut();
 	}
 }

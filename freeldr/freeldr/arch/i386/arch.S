@@ -74,6 +74,19 @@ EXTERN(switch_to_prot)
 
 	cli		/* None of these */
 
+	/* We don't know what values are currently */
+	/* in the segment registers. So we are */
+	/* going to reload them with sane values. */
+	/* Of course CS has to already be valid. */
+	/* We are currently in real-mode so we */
+	/* need real-mode segment values. */
+	movw	$0x0000,%ax
+	movw	%ax,%ds
+	movw	%ax,%es
+	movw	%ax,%fs
+	movw	%ax,%gs
+	movw	%ax,%ss
+
 	/* Get the return address off the stack */
 	popw	(code32ret)
 
@@ -120,6 +133,19 @@ EXTERN(switch_to_real)
 
 	.code32
 
+	/* We don't know what values are currently */
+	/* in the segment registers. So we are */
+	/* going to reload them with sane values. */
+	/* Of course CS has to already be valid. */
+	/* We are currently in protected-mode so we */
+	/* need protected-mode segment values. */
+	movw	$PMODE_DS,%ax
+	movw	%ax,%ds
+	movw	%ax,%es
+	movw	%ax,%fs
+	movw	%ax,%gs
+	movw	%ax,%ss
+
 	/* Get the return address off the stack */
 	popl	(code16ret)
 
@@ -157,9 +183,9 @@ inrmode:
 	movw	%ax,%ss
 
 	/* Clear out the high 16-bits of ESP */
-	/* This is needed because I have a stupid */
-	/* MS-Win98 boot disk that hangs if there is */
-	/* anything other than 0x0000 in the high */
+	/* This is needed because I have one */
+	/* machine that hangs when booted to dos if */
+	/* anything other than 0x0000 is in the high */
 	/* 16-bits of ESP. Even though real-mode */
 	/* code should only use SP and not ESP. */
 	xorl	%esp,%esp

@@ -214,7 +214,6 @@ VOID CacheInternalDumpBlockList(PCACHE_DRIVE CacheDrive)
 	PCACHE_BLOCK	CacheBlock;
 
 	DbgPrint((DPRINT_CACHE, "Dumping block list for BIOS drive 0x%x.\n", CacheDrive->DriveNumber));
-	DbgPrint((DPRINT_CACHE, "LbaSupported = %s.\n", CacheDrive->LbaSupported ? "TRUE" : "FALSE"));
 	DbgPrint((DPRINT_CACHE, "Cylinders: %d.\n", CacheDrive->DriveGeometry.Cylinders));
 	DbgPrint((DPRINT_CACHE, "Heads: %d.\n", CacheDrive->DriveGeometry.Heads));
 	DbgPrint((DPRINT_CACHE, "Sectors: %d.\n", CacheDrive->DriveGeometry.Sectors));

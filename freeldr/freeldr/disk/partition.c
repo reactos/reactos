@@ -25,51 +25,6 @@
 #include <arch.h>
 
 
-
-BOOL DiskIsDriveRemovable(U32 DriveNumber)
-{
-	// Hard disks use drive numbers >= 0x80
-	// So if the drive number indicates a hard disk
-	// then return FALSE
-	if (DriveNumber >= 0x80)
-	{
-		return FALSE;
-	}
-
-	// Drive is a floppy diskette so return TRUE
-	return TRUE;
-}
-
-
-BOOL DiskIsDriveCdRom(U32 DriveNumber)
-{
-	PUCHAR Sector = (PUCHAR)DISKREADBUFFER;
-
-	// Hard disks use drive numbers >= 0x80
-	// So if the drive number indicates a hard disk
-	// then return FALSE
-	if ((DriveNumber >= 0x80) && (IsSetupLdr || BiosInt13ExtensionsSupported(DriveNumber)))
-	{
-
-		if (!BiosInt13ReadExtended(DriveNumber, 16, 1, Sector))
-		{
-			DiskError("Disk read error.");
-			return FALSE;
-		}
-
-		return (Sector[0] == 1 &&
-			Sector[1] == 'C' &&
-			Sector[2] == 'D' &&
-			Sector[3] == '0' &&
-			Sector[4] == '0' &&
-			Sector[5] == '1');
-	}
-
-	// Drive is not CdRom so return FALSE
-	return FALSE;
-}
-
-
 BOOL DiskGetActivePartitionEntry(U32 DriveNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
 {
 	U32					BootablePartitionCount = 0;
@@ -106,12 +61,12 @@ BOOL DiskGetActivePartitionEntry(U32 DriveNumber, PPARTITION_TABLE_ENTRY Partiti
 	// Make sure there was only one bootable partition
 	if (BootablePartitionCount == 0)
 	{
-		DiskError("No bootable (active) partitions found.");
+		DiskError("No bootable (active) partitions found.", 0);
 		return FALSE;
 	}
 	else if (BootablePartitionCount != 1)
 	{
-		DiskError("Too many bootable (active) partitions found.");
+		DiskError("Too many bootable (active) partitions found.", 0);
 		return FALSE;
 	}
 
@@ -235,7 +190,7 @@ BOOL DiskGetFirstExtendedPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PP
 	return FALSE;
 }
 
-BOOL DiskReadBootRecord(U32 DriveNumber, U32 LogicalSectorNumber, PMASTER_BOOT_RECORD BootRecord)
+BOOL DiskReadBootRecord(U32 DriveNumber, U64 LogicalSectorNumber, PMASTER_BOOT_RECORD BootRecord)
 {
 #ifdef DEBUG
 	U32		Index;
@@ -276,7 +231,7 @@ BOOL DiskReadBootRecord(U32 DriveNumber, U32 LogicalSectorNumber, PMASTER_BOOT_R
 	// Check the partition table magic value
 	if (BootRecord->MasterBootRecordMagic != 0xaa55)
 	{
-		DiskError("Invalid partition table magic (0xaa55)");
+		DiskError("Invalid partition table magic (0xaa55)", 0);
 		return FALSE;
 	}
 

@@ -23,10 +23,10 @@
 
 typedef struct _GEOMETRY
 {
-	U32		Cylinders;
-	U32		Heads;
-	U32		Sectors;
-	U32		BytesPerSector;
+	U32		Cylinders;						// Number of cylinders on the disk
+	U32		Heads;							// Number of heads on the disk
+	U32		Sectors;						// Number of sectors per track
+	U32		BytesPerSector;					// Number of bytes per sector
 
 } GEOMETRY, *PGEOMETRY;
 
@@ -83,42 +83,44 @@ typedef struct _MASTER_BOOT_RECORD
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //
-// BIOS Disk Functions
+// i386 BIOS Disk Functions (i386disk.c)
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-int		biosdisk(int cmd, int drive, int head, int track, int sector, int nsects, void *buffer); // Implemented in asmcode.S
+#ifdef __i386__
 
-BOOL	BiosInt13Read(U32 Drive, U32 Head, U32 Track, U32 Sector, U32 SectorCount, PVOID Buffer); // Implemented in asmcode.S
-BOOL	BiosInt13ReadExtended(U32 Drive, U32 Sector, U32 SectorCount, PVOID Buffer); // Implemented in asmcode.S
-BOOL	BiosInt13ExtensionsSupported(U32 Drive);
-U32		BiosInt13GetLastErrorCode(VOID);
+//BOOL	DiskReadLogicalSectors(U32 DriveNumber, U64 SectorNumber, U32 SectorCount, PVOID Buffer);
+BOOL	DiskReadLogicalSectorsLBA(U32 DriveNumber, U64 SectorNumber, U32 SectorCount, PVOID Buffer);
+BOOL	DiskReadLogicalSectorsCHS(U32 DriveNumber, U64 SectorNumber, U32 SectorCount, PVOID Buffer);
+BOOL	DiskResetController(U32 DriveNumber);
+BOOL	DiskInt13ExtensionsSupported(U32 DriveNumber);
+//VOID	DiskStopFloppyMotor(VOID);
+BOOL	DiskGetDriveParameters(U32 DriveNumber, PGEOMETRY Geometry);
+//U32	DiskGetCacheableBlockCount(U32 DriveNumber);
 
-void	StopFloppyMotor(void);		// Implemented in asmcode.S
-int		get_heads(int drive);		// Implemented in asmcode.S
-int		get_cylinders(int drive);	// Implemented in asmcode.S
-int		get_sectors(int drive);		// Implemented in asmcode.S
-BOOL	BiosInt13GetDriveParameters(U32 Drive, PGEOMETRY Geometry);	// Implemented in disk.S
+#endif // defined __i386__
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //
 // FreeLoader Disk Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-VOID	DiskError(PUCHAR ErrorString);
+VOID	DiskError(PUCHAR ErrorString, U32 ErrorCode);
 BOOL	DiskGetDriveGeometry(U32 DriveNumber, PGEOMETRY DriveGeometry);
-BOOL	DiskReadLogicalSectors(U32 DriveNumber, U32 SectorNumber, U32 SectorCount, PVOID Buffer);
+BOOL	DiskReadLogicalSectors(U32 DriveNumber, U64 SectorNumber, U32 SectorCount, PVOID Buffer); // Implemented in i386disk.c
+BOOL	DiskIsDriveRemovable(U32 DriveNumber);
+BOOL	DiskIsDriveCdRom(U32 DriveNumber);
+VOID	DiskStopFloppyMotor(VOID);	// Implemented in i386disk.c
+U32		DiskGetCacheableBlockCount(U32 DriveNumber);	// Implemented in i386disk.c
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //
 // Fixed Disk Partition Management Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-BOOL	DiskIsDriveRemovable(U32 DriveNumber);
-BOOL	DiskIsDriveCdRom(U32 DriveNumber);
 BOOL	DiskGetActivePartitionEntry(U32 DriveNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
 BOOL	DiskGetPartitionEntry(U32 DriveNumber, U32 PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
 BOOL	DiskGetFirstPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry);
 BOOL	DiskGetFirstExtendedPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry);
-BOOL	DiskReadBootRecord(U32 DriveNumber, U32 LogicalSectorNumber, PMASTER_BOOT_RECORD BootRecord);
+BOOL	DiskReadBootRecord(U32 DriveNumber, U64 LogicalSectorNumber, PMASTER_BOOT_RECORD BootRecord);
 
 #endif  // defined __DISK_H

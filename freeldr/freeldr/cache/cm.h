@@ -56,7 +56,6 @@ typedef struct
 typedef struct
 {
 	U32					DriveNumber;
-	BOOL				LbaSupported;
 	GEOMETRY			DriveGeometry;
 
 	U32					BlockSize;			// Block size (in sectors)

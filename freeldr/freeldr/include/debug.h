@@ -23,7 +23,7 @@
 
 #ifdef DEBUG
 
-	#define DPRINT_NONE		    0x00000000  // Simple debug print
+	#define DPRINT_NONE		    0x00000000  // No debug print
 	#define DPRINT_WARNING		0x00000001  // OR this with DebugPrintMask to enable debugger messages and other misc stuff
 	#define DPRINT_MEMORY		  0x00000002  // OR this with DebugPrintMask to enable memory management messages
 	#define DPRINT_FILESYSTEM	0x00000004  // OR this with DebugPrintMask to enable file system messages
@@ -39,8 +39,8 @@
 	VOID	DebugPrint(U32 Mask, char *format, ...);
 	VOID	DebugDumpBuffer(U32 Mask, PVOID Buffer, U32 Length);
 
-	#define DbgPrint(_x_)					{ DebugPrint(DPRINT_NONE, "%s:%d(%s)\n", __FILE__, __LINE__, __FUNCTION__);  DebugPrint _x_ ; }
-	#define BugCheck(_x_)				  { DebugPrint(DPRINT_WARNING, "Fatal Error: %s:%d(%s)\n", __FILE__, __LINE__, __FUNCTION__); DebugPrint _x_ ; for (;;); }
+	#define DbgPrint(_x_)					DebugPrint _x_ ;
+	#define BugCheck(_x_)					{ DebugPrint(DPRINT_WARNING, "Fatal Error: %s:%d(%s)\n", __FILE__, __LINE__, __FUNCTION__); DebugPrint _x_ ; for (;;); }
 	#define DbgDumpBuffer(_x_, _y_, _z_)	DebugDumpBuffer(_x_, _y_, _z_)
 
 #ifdef __i386__
@@ -78,6 +78,6 @@ void	MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
 
 #endif // defined DEBUG
 
-#define UNIMPLEMENTED   BugCheck((DPRINT_WARNING, "Unimplemented\n"));
+#define UNIMPLEMENTED()   BugCheck((DPRINT_WARNING, "This function is unimplemented!\n"))
 
 #endif // defined __DEBUG_H

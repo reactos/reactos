@@ -20,7 +20,10 @@
 #include <freeldr.h>
 #include <video.h>
 #include <comm.h>
+#include <mm.h>
 
+
+PVOID	VideoOffScreenBuffer = NULL;
 
 VOID VideoClearScreen(VOID)
 {
@@ -29,29 +32,36 @@ VOID VideoClearScreen(VOID)
 
 VOID VideoWaitForVerticalRetrace(VOID)
 {
-	while ((READ_PORT_UCHAR((PUCHAR)VIDEOPORT_VERTICAL_RETRACE) & 0x08))
+
+	while ((READ_PORT_UCHAR((U8*)VIDEOPORT_VERTICAL_RETRACE) & 0x08) == 1)
 	{
-		// Keep reading the port until bit 4 is clear
+		// Keep reading the port until bit 3 is clear
+		// This waits for the current retrace to end and
+		// we can catch the next one so we know we are
+		// getting a full retrace.
 	}
 
-	while (!(READ_PORT_UCHAR((PUCHAR)VIDEOPORT_VERTICAL_RETRACE) & 0x08))
+	while ((READ_PORT_UCHAR((U8*)VIDEOPORT_VERTICAL_RETRACE) & 0x08) == 0)
 	{
-		// Keep reading the port until bit 4 is set
+		// Keep reading the port until bit 3 is set
+		// Now that we know we aren't doing a vertical
+		// retrace we need to wait for the next one.
 	}
 }
 
-VOID VideoSetPaletteColor(UCHAR Color, UCHAR Red, UCHAR Green, UCHAR Blue)
+PVOID VideoAllocateOffScreenBuffer(VOID)
 {
-	WRITE_PORT_UCHAR((PUCHAR)VIDEOPORT_PALETTE_WRITE, Color);
-	WRITE_PORT_UCHAR((PUCHAR)VIDEOPORT_PALETTE_DATA, Red);
-	WRITE_PORT_UCHAR((PUCHAR)VIDEOPORT_PALETTE_DATA, Green);
-	WRITE_PORT_UCHAR((PUCHAR)VIDEOPORT_PALETTE_DATA, Blue);
-}
+	U32		BufferSize;
 
-VOID VideoGetPaletteColor(UCHAR Color, PUCHAR Red, PUCHAR Green, PUCHAR Blue)
-{
-	WRITE_PORT_UCHAR((PUCHAR)VIDEOPORT_PALETTE_READ, Color);
-	*Red = READ_PORT_UCHAR((PUCHAR)VIDEOPORT_PALETTE_DATA);
-	*Green = READ_PORT_UCHAR((PUCHAR)VIDEOPORT_PALETTE_DATA);
-	*Blue = READ_PORT_UCHAR((PUCHAR)VIDEOPORT_PALETTE_DATA);
+	if (VideoOffScreenBuffer != NULL)
+	{
+		MmFreeMemory(VideoOffScreenBuffer);
+		VideoOffScreenBuffer = NULL;
+	}
+
+	BufferSize = VideoGetCurrentModeResolutionX() * VideoGetBytesPerScanLine();
+
+	VideoOffScreenBuffer = MmAllocateMemory(BufferSize);
+
+	return VideoOffScreenBuffer;
 }

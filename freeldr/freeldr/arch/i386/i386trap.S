@@ -76,59 +76,6 @@
 	str		i386_TR
 .endm
 
-.macro SAVE_CPU_REGS_ERROR_CODE
-	movl	%eax,i386_EAX
-	movl	%ebx,i386_EBX
-	movl	%ecx,i386_ECX
-	movl	%edx,i386_EDX
-	movl	%esp,i386_ESP
-	movl	%ebp,i386_EBP
-	movl	%esi,i386_ESI
-	movl	%edi,i386_EDI
-	movw	%ds,%ax
-	movw	%ax,i386_DS
-	movw	%es,%ax
-	movw	%ax,i386_ES
-	movw	%fs,%ax
-	movw	%ax,i386_FS
-	movw	%gs,%ax
-	movw	%ax,i386_GS
-	movw	%ss,%ax
-	movw	%ax,i386_SS
-	popl	%eax
-	movl	%eax,i386_ERROR_CODE
-	popl	%eax
-	movl	%eax,i386_EIP
-	popl	%eax
-	movw	%ax,i386_CS
-	popl	%eax
-	movl	%eax,i386_EFLAGS
-	movl	%cr0,%eax
-	movl	%eax,i386_CR0
-	//movl	%cr1,%eax
-	//movl	%eax,i386_CR1
-	movl	%cr2,%eax
-	movl	%eax,i386_CR2
-	movl	%cr3,%eax
-	movl	%eax,i386_CR3
-	movl	%dr0,%eax
-	movl	%eax,i386_DR0
-	movl	%dr1,%eax
-	movl	%eax,i386_DR1
-	movl	%dr2,%eax
-	movl	%eax,i386_DR2
-	movl	%dr3,%eax
-	movl	%eax,i386_DR3
-	movl	%dr6,%eax
-	movl	%eax,i386_DR6
-	movl	%dr7,%eax
-	movl	%eax,i386_DR7
-	sgdt	i386_GDTR
-	sidt	i386_IDTR
-	sldt	i386_LDTR
-	str		i386_TR
-.endm
-
 
 
 i386ExceptionHandlerText:
@@ -316,6 +263,8 @@ i386_ScreenPosY:
 /************************************************************************/
 i386CommonExceptionHandler:
 	.code32
+
+	SAVE_CPU_REGS
 
 	call	i386ClearScreenToBlue
 
@@ -630,16 +579,12 @@ i386PrintHexByte1:
 EXTERN(i386DivideByZero)
 	.code32
 
-	SAVE_CPU_REGS
-
 	movl	$i386DivideByZeroText,i386ExceptionDescriptionText
 	jmp		i386CommonExceptionHandler
 
 /************************************************************************/
 EXTERN(i386DebugException)
 	.code32
-
-	SAVE_CPU_REGS
 
 	movl	$i386DebugExceptionText,i386ExceptionDescriptionText
 	jmp		i386CommonExceptionHandler
@@ -648,16 +593,12 @@ EXTERN(i386DebugException)
 EXTERN(i386NMIException)
 	.code32
 
-	SAVE_CPU_REGS
-
 	movl	$i386NMIExceptionText,i386ExceptionDescriptionText
 	jmp		i386CommonExceptionHandler
 
 /************************************************************************/
 EXTERN(i386Breakpoint)
 	.code32
-
-	SAVE_CPU_REGS
 
 	movl	$i386BreakpointText,i386ExceptionDescriptionText
 	jmp		i386CommonExceptionHandler
@@ -666,16 +607,12 @@ EXTERN(i386Breakpoint)
 EXTERN(i386Overflow)
 	.code32
 
-	SAVE_CPU_REGS
-
 	movl	$i386OverflowText,i386ExceptionDescriptionText
 	jmp		i386CommonExceptionHandler
 
 /************************************************************************/
 EXTERN(i386BoundException)
 	.code32
-
-	SAVE_CPU_REGS
 
 	movl	$i386BoundExceptionText,i386ExceptionDescriptionText
 	jmp		i386CommonExceptionHandler
@@ -684,16 +621,12 @@ EXTERN(i386BoundException)
 EXTERN(i386InvalidOpcode)
 	.code32
 
-	SAVE_CPU_REGS
-
 	movl	$i386InvalidOpcodeText,i386ExceptionDescriptionText
 	jmp		i386CommonExceptionHandler
 
 /************************************************************************/
 EXTERN(i386FPUNotAvailable)
 	.code32
-
-	SAVE_CPU_REGS
 
 	movl	$i386FPUNotAvailableText,i386ExceptionDescriptionText
 	jmp		i386CommonExceptionHandler
@@ -702,7 +635,8 @@ EXTERN(i386FPUNotAvailable)
 EXTERN(i386DoubleFault)
 	.code32
 
-	SAVE_CPU_REGS_ERROR_CODE
+	popl	%eax
+	movl	%eax,i386_ERROR_CODE
 
 	movl	$i386DoubleFaultText,i386ExceptionDescriptionText
 	jmp		i386CommonExceptionHandler
@@ -711,8 +645,6 @@ EXTERN(i386DoubleFault)
 EXTERN(i386CoprocessorSegment)
 	.code32
 
-	SAVE_CPU_REGS
-
 	movl	$i386CoprocessorSegmentText,i386ExceptionDescriptionText
 	jmp		i386CommonExceptionHandler
 
@@ -720,7 +652,8 @@ EXTERN(i386CoprocessorSegment)
 EXTERN(i386InvalidTSS)
 	.code32
 
-	SAVE_CPU_REGS_ERROR_CODE
+	popl	%eax
+	movl	%eax,i386_ERROR_CODE
 
 	movl	$i386InvalidTSSText,i386ExceptionDescriptionText
 	jmp		i386CommonExceptionHandler
@@ -729,7 +662,8 @@ EXTERN(i386InvalidTSS)
 EXTERN(i386SegmentNotPresent)
 	.code32
 
-	SAVE_CPU_REGS_ERROR_CODE
+	popl	%eax
+	movl	%eax,i386_ERROR_CODE
 
 	movl	$i386SegmentNotPresentText,i386ExceptionDescriptionText
 	jmp		i386CommonExceptionHandler
@@ -738,7 +672,8 @@ EXTERN(i386SegmentNotPresent)
 EXTERN(i386StackException)
 	.code32
 
-	SAVE_CPU_REGS_ERROR_CODE
+	popl	%eax
+	movl	%eax,i386_ERROR_CODE
 
 	movl	$i386StackExceptionText,i386ExceptionDescriptionText
 	jmp		i386CommonExceptionHandler
@@ -747,7 +682,8 @@ EXTERN(i386StackException)
 EXTERN(i386GeneralProtectionFault)
 	.code32
 
-	SAVE_CPU_REGS_ERROR_CODE
+	popl	%eax
+	movl	%eax,i386_ERROR_CODE
 
 	movl	$i386GeneralProtectionFaultText,i386ExceptionDescriptionText
 	jmp		i386CommonExceptionHandler
@@ -756,7 +692,8 @@ EXTERN(i386GeneralProtectionFault)
 EXTERN(i386PageFault)
 	.code32
 
-	SAVE_CPU_REGS_ERROR_CODE
+	popl	%eax
+	movl	%eax,i386_ERROR_CODE
 
 	movl	$i386PageFaultText,i386ExceptionDescriptionText
 	jmp		i386CommonExceptionHandler
@@ -765,8 +702,6 @@ EXTERN(i386PageFault)
 EXTERN(i386CoprocessorError)
 	.code32
 
-	SAVE_CPU_REGS
-
 	movl	$i386CoprocessorErrorText,i386ExceptionDescriptionText
 	jmp		i386CommonExceptionHandler
 
@@ -774,16 +709,12 @@ EXTERN(i386CoprocessorError)
 EXTERN(i386AlignmentCheck)
 	.code32
 
-	SAVE_CPU_REGS
-
 	movl	$i386AlignmentCheckText,i386ExceptionDescriptionText
 	jmp		i386CommonExceptionHandler
 
 /************************************************************************/
 EXTERN(i386MachineCheck)
 	.code32
-
-	SAVE_CPU_REGS
 
 	movl	$i386MachineCheckText,i386ExceptionDescriptionText
 	jmp		i386CommonExceptionHandler

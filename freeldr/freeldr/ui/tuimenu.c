@@ -24,6 +24,7 @@
 #include "keycodes.h"
 #include <options.h>
 #include <mm.h>
+#include <video.h>
 
 
 BOOL TuiDisplayMenu(PUCHAR MenuItemList[], U32 MenuItemCount, U32 DefaultMenuItem, S32 MenuTimeOut, U32* SelectedMenuItem)
@@ -88,7 +89,9 @@ BOOL TuiDisplayMenu(PUCHAR MenuItemList[], U32 MenuItemCount, U32 DefaultMenuIte
 		//
 		// Update the date & time
 		//
-		UiUpdateDateTime();
+		TuiUpdateDateTime();
+
+		VideoCopyOffScreenBufferToVRAM();
 
 		if (MenuInformation.MenuTimeRemaining > 0)
 		{
@@ -104,6 +107,8 @@ BOOL TuiDisplayMenu(PUCHAR MenuItemList[], U32 MenuItemCount, U32 DefaultMenuIte
 				// Update the menu
 				//
 				TuiDrawMenuBox(&MenuInformation);
+
+				VideoCopyOffScreenBufferToVRAM();
 			}
 		}
 		else if (MenuInformation.MenuTimeRemaining == 0)
@@ -183,6 +188,8 @@ VOID TuiDrawMenu(PTUI_MENU_INFO MenuInfo)
 	{
 		TuiDrawMenuItem(MenuInfo, Idx);
 	}
+
+	VideoCopyOffScreenBufferToVRAM();
 }
 
 VOID TuiDrawMenuBox(PTUI_MENU_INFO MenuInfo)
@@ -347,6 +354,8 @@ U32 TuiProcessMenuKeyboardEvent(PTUI_MENU_INFO MenuInfo)
 
 			break;
 		}
+
+		VideoCopyOffScreenBufferToVRAM();
 	}
 
 	return KeyEvent;

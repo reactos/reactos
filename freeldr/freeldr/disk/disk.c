@@ -19,126 +19,95 @@
 
 #include <freeldr.h>
 #include <disk.h>
-#include <fs.h>
+#include <arch.h>
 #include <rtl.h>
 #include <ui.h>
-#include <arch.h>
 #include <debug.h>
 
+
+#undef  UNIMPLEMENTED
+#define UNIMPLEMENTED   BugCheck((DPRINT_WARNING, "Unimplemented\n"));
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-VOID DiskError(PUCHAR ErrorString)
+VOID DiskError(PUCHAR ErrorString, U32 ErrorCode)
 {
 	UCHAR	ErrorCodeString[80];
 
-	sprintf(ErrorCodeString, "%s\nError Code: 0x%x", ErrorString, BiosInt13GetLastErrorCode());
+	sprintf(ErrorCodeString, "%s\n\nError Code: 0x%x", ErrorString, ErrorCode);
 
 	DbgPrint((DPRINT_DISK, "%s\n", ErrorCodeString));
 
 	UiMessageBox(ErrorCodeString);
 }
 
-BOOL DiskReadLogicalSectors(U32 DriveNumber, U32 SectorNumber, U32 SectorCount, PVOID Buffer)
+// This function is in arch/i386/i386disk.c
+//BOOL DiskReadLogicalSectors(U32 DriveNumber, U64 SectorNumber, U32 SectorCount, PVOID Buffer)
+
+BOOL DiskIsDriveRemovable(U32 DriveNumber)
 {
-	U32			PhysicalSector;
-	U32			PhysicalHead;
-	U32			PhysicalTrack;
-	GEOMETRY	DriveGeometry;
-	U32			NumberOfSectorsToRead;
-
-	DbgPrint((DPRINT_DISK, "ReadLogicalSectors() DriveNumber: 0x%x SectorNumber: %d SectorCount: %d Buffer: 0x%x\n", DriveNumber, SectorNumber, SectorCount, Buffer));
-
-	//
-	// Check to see if it is a fixed disk drive
-	// If so then check to see if Int13 extensions work
-	// If they do then use them, otherwise default back to BIOS calls
-	//
-	if ((DriveNumber >= 0x80) && (IsSetupLdr || BiosInt13ExtensionsSupported(DriveNumber)))
+	// Hard disks use drive numbers >= 0x80
+	// So if the drive number indicates a hard disk
+	// then return FALSE
+	if (DriveNumber >= 0x80)
 	{
-		DbgPrint((DPRINT_DISK, "Using Int 13 Extensions for read. BiosInt13ExtensionsSupported(%d) = %s\n", DriveNumber, BiosInt13ExtensionsSupported(DriveNumber) ? "TRUE" : "FALSE"));
-
-		//
-		// LBA is easy, nothing to calculate
-		// Just do the read
-		//
-		if (!BiosInt13ReadExtended(DriveNumber, SectorNumber, SectorCount, Buffer))
-		{
-			DiskError("Disk read error.");
-			return FALSE;
-		}
-	}
-	else
-	{
-		//
-		// Get the drive geometry
-		//
-		if (!DiskGetDriveGeometry(DriveNumber, &DriveGeometry))
-		{
-			return FALSE;
-		}
-
-		while (SectorCount)
-		{
-
-			//
-			// Calculate the physical disk offsets
-			//
-			PhysicalSector = 1 + (SectorNumber % DriveGeometry.Sectors);
-			PhysicalHead = (SectorNumber / DriveGeometry.Sectors) % DriveGeometry.Heads;
-			PhysicalTrack = (SectorNumber / DriveGeometry.Sectors) / DriveGeometry.Heads;
-
-			//
-			// Calculate how many sectors we are supposed to read
-			//
-			if (PhysicalSector > 1)
-			{
-				if (SectorCount >= (DriveGeometry.Sectors - (PhysicalSector - 1)))
-					NumberOfSectorsToRead = (DriveGeometry.Sectors - (PhysicalSector - 1));
-				else
-					NumberOfSectorsToRead = SectorCount;
-			}
-			else
-			{
-				if (SectorCount >= DriveGeometry.Sectors)
-					NumberOfSectorsToRead = DriveGeometry.Sectors;
-				else
-					NumberOfSectorsToRead = SectorCount;
-			}
-
-			DbgPrint((DPRINT_DISK, "Calling BiosInt13Read() with PhysicalHead: %d\n", PhysicalHead));
-			DbgPrint((DPRINT_DISK, "Calling BiosInt13Read() with PhysicalTrack: %d\n", PhysicalTrack));
-			DbgPrint((DPRINT_DISK, "Calling BiosInt13Read() with PhysicalSector: %d\n", PhysicalSector));
-			DbgPrint((DPRINT_DISK, "Calling BiosInt13Read() with NumberOfSectorsToRead: %d\n", NumberOfSectorsToRead));
-
-			//
-			// Make sure the read is within the geometry boundaries
-			//
-			if ((PhysicalHead >= DriveGeometry.Heads) ||
-				(PhysicalTrack >= DriveGeometry.Cylinders) ||
-				((NumberOfSectorsToRead + PhysicalSector) > (DriveGeometry.Sectors + 1)) ||
-				(PhysicalSector > DriveGeometry.Sectors))
-			{
-				DiskError("Disk read exceeds drive geometry limits.");
-				return FALSE;
-			}
-
-			//
-			// Perform the read
-			//
-			if (!BiosInt13Read(DriveNumber, PhysicalHead, PhysicalTrack, PhysicalSector, NumberOfSectorsToRead, Buffer))
-			{
-				DiskError("Disk read error.");
-				return FALSE;
-			}
-
-			Buffer += (NumberOfSectorsToRead * DriveGeometry.BytesPerSector);
-			SectorCount -= NumberOfSectorsToRead;
-			SectorNumber += NumberOfSectorsToRead;
-		}
+		return FALSE;
 	}
 
+	// Drive is a floppy diskette so return TRUE
 	return TRUE;
 }
+
+
+BOOL DiskIsDriveCdRom(U32 DriveNumber)
+{
+	PUCHAR Sector = (PUCHAR)DISKREADBUFFER;
+
+	// FIXME:
+	// I need to move this code to somewhere else
+	// probably in the file system code.
+	// I don't like the fact that the disk code
+	// reads the on-disk structures to determine
+	// if it's a CD-ROM drive. Only the file system
+	// should interpret on-disk data.
+	// The disk code should use some other method
+	// to determine if it's a CD-ROM drive.
+
+	// Hard disks use drive numbers >= 0x80
+	// So if the drive number indicates a hard disk
+	// then return FALSE
+	//
+	// We first check if we are running as a SetupLoader
+	// If so then we are probably booting from a CD-ROM
+	// So we shouldn't call i386DiskInt13ExtensionsSupported()
+	// because apparently it screws up some BIOSes
+	if ((DriveNumber >= 0x80) && (IsSetupLdr || DiskInt13ExtensionsSupported(DriveNumber)))
+	{
+
+		// We are a CD-ROM drive so we should only
+		// use the extended Int13 disk functions
+		if (!DiskReadLogicalSectorsLBA(DriveNumber, 16, 1, Sector))
+		{
+			DiskError("Disk read error.", 0);
+			return FALSE;
+		}
+
+		return (Sector[0] == 1 &&
+			Sector[1] == 'C' &&
+			Sector[2] == 'D' &&
+			Sector[3] == '0' &&
+			Sector[4] == '0' &&
+			Sector[5] == '1');
+	}
+
+	// Drive is not CdRom so return FALSE
+	return FALSE;
+}
+
+// This function is in arch/i386/i386disk.c
+//VOID DiskStopFloppyMotor(VOID)
+
+// This function is in arch/i386/i386disk.c
+//U32 DiskGetCacheableBlockCount(U32 DriveNumber)

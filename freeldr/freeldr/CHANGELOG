@@ -1,3 +1,20 @@
+Changes in v1.7.10 (11/24/2002) (brianp)
+
+- Added assembler versions of memcmp() memcpy() memset()
+- Implemented Int386() so that real-mode interrupts can be called from C-code
+- Removed unnecessary call in DbgPrint() macro (freeldr.sys is ~16k smaller now)
+- 64-bit lba sector addressing for disk calls
+- Re-coded biosdisk.S as i386disk.c
+- Re-coded mem.S as i386mem.c
+- Re-coded rtlcode.S as i386rtl.c
+- Cleaned up i386trap.S so that it only saves the registers once.
+- Re-coded biosvid.S as i386vid.c
+- Video fade in/out
+- VESA text modes supported now
+- Offscreen buffering to remove flicker
+- Standardized format of boot sector so that BootPartition is stored right before 0xaa55
+- Prefixed all file system functions with 'Fs'
+
 Changes in v1.7.9 (9/30/2002) (brianp)
 
 - Fix for bug in BiosInt13ReadExtended() (biosdisk.S)

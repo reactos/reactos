@@ -23,6 +23,7 @@
 #include <arch.h>
 #include <reactos.h>
 #include <rtl.h>
+#include <disk.h>
 #include <fs.h>
 #include <ui.h>
 #include <multiboot.h>
@@ -49,7 +50,7 @@ LoadKernel(PCHAR szFileName, int nPos)
   else
     szShortName = szShortName + 1;
 
-  FilePointer = OpenFile(szFileName);
+  FilePointer = FsOpenFile(szFileName);
   if (FilePointer == NULL)
     {
       strcpy(szBuffer, szShortName);
@@ -108,7 +109,7 @@ LoadSymbolFile(PCHAR szSystemRoot,
   strncat(SymbolFileName, Start, Length);
   strcat(SymbolFileName, ".sym");
 
-  FilePointer = OpenFile((PCHAR)&SymbolFileName[0]);
+  FilePointer = FsOpenFile((PCHAR)&SymbolFileName[0]);
   if (FilePointer == NULL)
     {
       DbgPrint((DPRINT_REACTOS, "Symbol file %s not loaded.\n", SymbolFileName));
@@ -146,7 +147,7 @@ LoadDriver(PCHAR szFileName, int nPos)
   char value[256];
   char *p;
 
-  FilePointer = OpenFile(szFileName);
+  FilePointer = FsOpenFile(szFileName);
   if (FilePointer == NULL)
     {
       strcpy(value, szFileName);
@@ -185,7 +186,7 @@ LoadNlsFile(PCHAR szFileName, PCHAR szModuleName)
   char value[256];
   char *p;
 
-  FilePointer = OpenFile(szFileName);
+  FilePointer = FsOpenFile(szFileName);
   if (FilePointer == NULL)
     {
       strcpy(value, szFileName);
@@ -463,7 +464,7 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	mb_info.cmdline = (unsigned long)multiboot_kernel_cmdline;
 	mb_info.mods_count = 0;
 	mb_info.mods_addr = (unsigned long)multiboot_modules;
-	mb_info.mmap_length = (unsigned long)GetBiosMemoryMap((PBIOS_MEMORY_MAP_ARRAY)&multiboot_memory_map) * sizeof(memory_map_t);
+	mb_info.mmap_length = (unsigned long)GetBiosMemoryMap((PBIOS_MEMORY_MAP)&multiboot_memory_map) * sizeof(memory_map_t);
 	if (mb_info.mmap_length)
 	{
 		mb_info.mmap_addr = (unsigned long)&multiboot_memory_map;
@@ -531,7 +532,7 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	/*
 	 * Try to open boot drive
 	 */
-	if (!OpenDiskDrive(BootDrive, BootPartition))
+	if (!FsOpenVolume(BootDrive, BootPartition))
 	{
 		UiMessageBox("Failed to open boot drive.");
 		return;
@@ -629,7 +630,7 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 
 	DbgPrint((DPRINT_REACTOS, "SystemHive: '%s'", szFileName));
 
-	FilePointer = OpenFile(szFileName);
+	FilePointer = FsOpenFile(szFileName);
 	if (FilePointer == NULL)
 	{
 		strcat(value, " not found.");
@@ -708,10 +709,13 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	strcat(name, ".");
 	//MessageBox(name);
 
+
+	UiUnInitialize("Booting ReactOS...");
+
 	/*
 	 * Now boot the kernel
 	 */
-	StopFloppyMotor();
+	DiskStopFloppyMotor();
 	boot_reactos();
 }
 

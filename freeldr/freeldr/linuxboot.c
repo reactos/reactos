@@ -20,6 +20,7 @@
 	
 #include <freeldr.h>
 #include <arch.h>
+#include <disk.h>
 #include <miscboot.h>
 #include <rtl.h>
 #include <fs.h>
@@ -31,11 +32,17 @@
 #include <oslist.h> // For RemoveQuotes()
 #include <video.h>
 
+
+
+#define	LINUX_READ_CHUNK_SIZE	0x20000			// Read 128k at a time
+
+
 PLINUX_BOOTSECTOR	LinuxBootSector = NULL;
 PLINUX_SETUPSECTOR	LinuxSetupSector = NULL;
 U32					SetupSectorSize = 0;
 BOOL				NewStyleLinuxKernel = FALSE;
 U32					LinuxKernelSize = 0;
+U32					LinuxInitrdSize = 0;
 UCHAR				LinuxKernelName[260];
 UCHAR				LinuxInitrdName[260];
 BOOL				LinuxHasInitrd = FALSE;
@@ -47,9 +54,13 @@ PVOID				LinuxInitrdLoadAddress = NULL;
 VOID LoadAndBootLinux(PUCHAR OperatingSystemName)
 {
 	PFILE	LinuxKernel = NULL;
+	PFILE	LinuxInitrdFile = NULL;
 	UCHAR	TempString[260];
 
 	UiDrawBackdrop();
+
+	UiDrawStatusText("Loading Linux...");
+	UiDrawProgressBarCenter(0, 100);
 
 	// Parse the .ini file section
 	if (!LinuxParseIniSection(OperatingSystemName))
@@ -58,19 +69,31 @@ VOID LoadAndBootLinux(PUCHAR OperatingSystemName)
 	}
 
 	// Open the boot volume
-	if (!OpenDiskDrive(BootDrive, BootPartition))
+	if (!FsOpenVolume(BootDrive, BootPartition))
 	{
 		UiMessageBox("Failed to open boot drive.");
 		goto LinuxBootFailed;
 	}
 
 	// Open the kernel
-	LinuxKernel = OpenFile(LinuxKernelName);
+	LinuxKernel = FsOpenFile(LinuxKernelName);
 	if (LinuxKernel == NULL)
 	{
 		sprintf(TempString, "Linux kernel \'%s\' not found.", LinuxKernelName);
 		UiMessageBox(TempString);
 		goto LinuxBootFailed;
+	}
+
+	// Open the initrd file image (if necessary)
+	if (LinuxHasInitrd)
+	{
+		LinuxInitrdFile = FsOpenFile(LinuxInitrdName);
+		if (LinuxInitrdFile == NULL)
+		{
+			sprintf(TempString, "Linux initrd image \'%s\' not found.", LinuxInitrdName);
+			UiMessageBox(TempString);
+			goto LinuxBootFailed;
+		}
 	}
 
 	// Read the boot sector
@@ -85,6 +108,12 @@ VOID LoadAndBootLinux(PUCHAR OperatingSystemName)
 		goto LinuxBootFailed;
 	}
 
+	// Calc kernel size
+	LinuxKernelSize = FsGetFileSize(LinuxKernel) - (512 + SetupSectorSize);
+
+	// Get the file size
+	LinuxInitrdSize = FsGetFileSize(LinuxInitrdFile);
+
 	// Read the kernel
 	if (!LinuxReadKernel(LinuxKernel))
 	{
@@ -94,7 +123,7 @@ VOID LoadAndBootLinux(PUCHAR OperatingSystemName)
 	// Read the initrd (if necessary)
 	if (LinuxHasInitrd)
 	{
-		if (!LinuxReadInitrd())
+		if (!LinuxReadInitrd(LinuxInitrdFile))
 		{
 			goto LinuxBootFailed;
 		}
@@ -122,10 +151,9 @@ VOID LoadAndBootLinux(PUCHAR OperatingSystemName)
 	RtlCopyMemory((PVOID)0x90200, LinuxSetupSector, SetupSectorSize);
 	RtlCopyMemory((PVOID)0x99000, LinuxCommandLine, LinuxCommandLineSize);
 
-	VideoShowTextCursor();
-	VideoClearScreen();
+	UiUnInitialize("Booting Linux...");
 
-	StopFloppyMotor();
+	DiskStopFloppyMotor();
 
 	if (LinuxSetupSector->LoadFlags & LINUX_FLAG_LOAD_HIGH)
 	{
@@ -141,7 +169,11 @@ LinuxBootFailed:
 
 	if (LinuxKernel != NULL)
 	{
-		CloseFile(LinuxKernel);
+		FsCloseFile(LinuxKernel);
+	}
+	if (LinuxInitrdFile != NULL)
+	{
+		FsCloseFile(LinuxInitrdFile);
 	}
 
 	if (LinuxBootSector != NULL)
@@ -237,8 +269,8 @@ BOOL LinuxReadBootSector(PFILE LinuxKernelFile)
 	}
 
 	// Read linux boot sector
-	SetFilePointer(LinuxKernelFile, 0);
-	if (!ReadFile(LinuxKernelFile, 512, NULL, LinuxBootSector))
+	FsSetFilePointer(LinuxKernelFile, 0);
+	if (!FsReadFile(LinuxKernelFile, 512, NULL, LinuxBootSector))
 	{
 		return FALSE;
 	}
@@ -271,8 +303,8 @@ BOOL LinuxReadSetupSector(PFILE LinuxKernelFile)
 	LinuxSetupSector = (PLINUX_SETUPSECTOR)TempLinuxSetupSector;
 
 	// Read first linux setup sector
-	SetFilePointer(LinuxKernelFile, 512);
-	if (!ReadFile(LinuxKernelFile, 512, NULL, TempLinuxSetupSector))
+	FsSetFilePointer(LinuxKernelFile, 512);
+	if (!FsReadFile(LinuxKernelFile, 512, NULL, TempLinuxSetupSector))
 	{
 		return FALSE;
 	}
@@ -303,8 +335,8 @@ BOOL LinuxReadSetupSector(PFILE LinuxKernelFile)
 	RtlCopyMemory(LinuxSetupSector, TempLinuxSetupSector, 512);
 
 	// Read in the rest of the linux setup sectors
-	SetFilePointer(LinuxKernelFile, 1024);
-	if (!ReadFile(LinuxKernelFile, SetupSectorSize - 512, NULL, ((PVOID)LinuxSetupSector) + 512))
+	FsSetFilePointer(LinuxKernelFile, 1024);
+	if (!FsReadFile(LinuxKernelFile, SetupSectorSize - 512, NULL, ((PVOID)LinuxSetupSector) + 512))
 	{
 		return FALSE;
 	}
@@ -338,10 +370,6 @@ BOOL LinuxReadKernel(PFILE LinuxKernelFile)
 
 	sprintf(StatusText, "Loading %s", LinuxKernelName);
 	UiDrawStatusText(StatusText);
-	UiDrawProgressBarCenter(0, 100);
-
-	// Calc kernel size
-	LinuxKernelSize = GetFileSize(LinuxKernelFile) - (512 + SetupSectorSize);
 
 	// Allocate memory for Linux kernel
 	LinuxKernelLoadAddress = MmAllocateMemoryAtAddress(LinuxKernelSize, (PVOID)LINUX_KERNEL_LOAD_ADDRESS);
@@ -353,18 +381,18 @@ BOOL LinuxReadKernel(PFILE LinuxKernelFile)
 	LoadAddress = LinuxKernelLoadAddress;
 
 	// Read linux kernel to 0x100000 (1mb)
-	SetFilePointer(LinuxKernelFile, 512 + SetupSectorSize);
+	FsSetFilePointer(LinuxKernelFile, 512 + SetupSectorSize);
 	for (BytesLoaded=0; BytesLoaded<LinuxKernelSize; )
 	{
-		if (!ReadFile(LinuxKernelFile, 0x4000, NULL, LoadAddress))
+		if (!FsReadFile(LinuxKernelFile, LINUX_READ_CHUNK_SIZE, NULL, LoadAddress))
 		{
 			return FALSE;
 		}
 
-		BytesLoaded += 0x4000;
-		LoadAddress += 0x4000;
+		BytesLoaded += LINUX_READ_CHUNK_SIZE;
+		LoadAddress += LINUX_READ_CHUNK_SIZE;
 
-		UiDrawProgressBarCenter(BytesLoaded, LinuxKernelSize);
+		UiDrawProgressBarCenter(BytesLoaded, LinuxKernelSize + LinuxInitrdSize);
 	}
 
 	return TRUE;
@@ -407,29 +435,13 @@ BOOL LinuxCheckKernelVersion(VOID)
 	return TRUE;
 }
 
-BOOL LinuxReadInitrd(VOID)
+BOOL LinuxReadInitrd(PFILE LinuxInitrdFile)
 {
-	PFILE	LinuxInitrdFile;
-	UCHAR	TempString[260];
-	U32		LinuxInitrdSize;
 	U32		BytesLoaded;
 	UCHAR	StatusText[260];
 
 	sprintf(StatusText, "Loading %s", LinuxInitrdName);
 	UiDrawStatusText(StatusText);
-	UiDrawProgressBarCenter(0, 100);
-
-	// Open the initrd file image
-	LinuxInitrdFile = OpenFile(LinuxInitrdName);
-	if (LinuxInitrdFile == NULL)
-	{
-		sprintf(TempString, "Linux initrd image \'%s\' not found.", LinuxInitrdName);
-		UiMessageBox(TempString);
-		return FALSE;
-	}
-
-	// Get the file size
-	LinuxInitrdSize = GetFileSize(LinuxInitrdFile);
 
 	// Allocate memory for the ramdisk
 	LinuxInitrdLoadAddress = MmAllocateMemory(LinuxInitrdSize);
@@ -445,15 +457,15 @@ BOOL LinuxReadInitrd(VOID)
 	// Read in the ramdisk
 	for (BytesLoaded=0; BytesLoaded<LinuxInitrdSize; )
 	{
-		if (!ReadFile(LinuxInitrdFile, 0x4000, NULL, (PVOID)LinuxInitrdLoadAddress))
+		if (!FsReadFile(LinuxInitrdFile, LINUX_READ_CHUNK_SIZE, NULL, (PVOID)LinuxInitrdLoadAddress))
 		{
 			return FALSE;
 		}
 
-		BytesLoaded += 0x4000;
-		LinuxInitrdLoadAddress += 0x4000;
+		BytesLoaded += LINUX_READ_CHUNK_SIZE;
+		LinuxInitrdLoadAddress += LINUX_READ_CHUNK_SIZE;
 
-		UiDrawProgressBarCenter(BytesLoaded, LinuxInitrdSize);
+		UiDrawProgressBarCenter(BytesLoaded + LinuxKernelSize, LinuxInitrdSize + LinuxKernelSize);
 	}
 
 	return TRUE;

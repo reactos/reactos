@@ -272,7 +272,7 @@ msgDiskError		db 'Disk error',0dh,0ah,0
 msgFileSystemError	db 'File system error',0dh,0ah,0
 msgAnyKey			db 'Press any key to restart',0dh,0ah,0
 
-        times 509-($-$$) db 0   ; Pad to 510 bytes
+        times 509-($-$$) db 0   ; Pad to 509 bytes
 
 BootPartition:
 		db 0

@@ -21,6 +21,7 @@
 #include <freeldr.h>
 #include <debug.h>
 #include <arch.h>
+#include <disk.h>
 #include <reactos.h>
 #include <rtl.h>
 #include <fs.h>
@@ -44,7 +45,7 @@ LoadKernel(PCHAR szFileName)
   else
     szShortName = szShortName + 1;
 
-  FilePointer = OpenFile(szFileName);
+  FilePointer = FsOpenFile(szFileName);
   if (FilePointer == NULL)
     {
       printf("Could not find %s\n", szShortName);
@@ -78,7 +79,7 @@ LoadDriver(PCHAR szFileName)
     szShortName = szShortName + 1;
 
 
-  FilePointer = OpenFile(szFileName);
+  FilePointer = FsOpenFile(szFileName);
   if (FilePointer == NULL)
     {
       printf("Could not find %s\n", szFileName);
@@ -108,7 +109,7 @@ VOID RunLoader(VOID)
   mb_info.cmdline = (unsigned long)multiboot_kernel_cmdline;
   mb_info.mods_count = 0;
   mb_info.mods_addr = (unsigned long)multiboot_modules;
-  mb_info.mmap_length = (unsigned long)GetBiosMemoryMap((PBIOS_MEMORY_MAP_ARRAY)&multiboot_memory_map);
+  mb_info.mmap_length = (unsigned long)GetBiosMemoryMap((PBIOS_MEMORY_MAP)&multiboot_memory_map);
   if (mb_info.mmap_length)
     {
       mb_info.mmap_addr = (unsigned long)&multiboot_memory_map;
@@ -146,7 +147,7 @@ VOID RunLoader(VOID)
 	  (unsigned int)BootDrive);
 
   /* Open boot drive */
-  if (!OpenDiskDrive(BootDrive, BootPartition))
+  if (!FsOpenVolume(BootDrive, BootPartition))
     {
       printf("Failed to open boot drive.");
       return;
@@ -247,7 +248,7 @@ VOID RunLoader(VOID)
 	/*
 	 * Now boot the kernel
 	 */
-	StopFloppyMotor();
+	DiskStopFloppyMotor();
 	boot_reactos();
 
 

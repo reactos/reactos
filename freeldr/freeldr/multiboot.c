@@ -51,7 +51,7 @@ BOOL MultiBootLoadKernel(FILE *KernelImage)
 	 * Load the first 8192 bytes of the kernel image
 	 * so we can search for the multiboot header
 	 */
-	if (!ReadFile(KernelImage, 8192, NULL, ImageHeaders))
+	if (!FsReadFile(KernelImage, 8192, NULL, ImageHeaders))
 	{
 		MmFreeMemory(ImageHeaders);
 		return FALSE;
@@ -111,13 +111,13 @@ BOOL MultiBootLoadKernel(FILE *KernelImage)
 	 * Get the file offset, this should be 0, and move the file pointer
 	 */
 	dwFileLoadOffset = (Idx * sizeof(U32)) - (mb_header.header_addr - mb_header.load_addr);
-	SetFilePointer(KernelImage, dwFileLoadOffset);
+	FsSetFilePointer(KernelImage, dwFileLoadOffset);
 	
 	/*
 	 * Load the file image
 	 */
 	dwDataSize = (mb_header.load_end_addr - mb_header.load_addr);
-	ReadFile(KernelImage, dwDataSize, NULL, (void*)mb_header.load_addr);
+	FsReadFile(KernelImage, dwDataSize, NULL, (void*)mb_header.load_addr);
 
 	/*
 	 * Initialize bss area
@@ -150,7 +150,7 @@ BOOL MultiBootLoadModule(FILE *ModuleImage, char *ModuleName)
 
 	ModuleNameString = multiboot_module_strings[mb_info.mods_count];
 	
-	dwModuleSize = GetFileSize(ModuleImage);
+	dwModuleSize = FsGetFileSize(ModuleImage);
 	pModule->mod_start = next_module_load_base;
 	pModule->mod_end = next_module_load_base + dwModuleSize;
 	strcpy(ModuleNameString, ModuleName);
@@ -159,7 +159,7 @@ BOOL MultiBootLoadModule(FILE *ModuleImage, char *ModuleName)
 	/*
 	 * Load the file image
 	 */
-	ReadFile(ModuleImage, dwModuleSize, NULL, (void*)next_module_load_base);
+	FsReadFile(ModuleImage, dwModuleSize, NULL, (void*)next_module_load_base);
 
 	next_module_load_base = ROUND_UP(pModule->mod_end, /*PAGE_SIZE*/4096);
 	mb_info.mods_count++;
@@ -187,7 +187,7 @@ PVOID MultiBootLoadModule(FILE *ModuleImage, char *ModuleName, U32* ModuleSize)
 
 	ModuleNameString = multiboot_module_strings[mb_info.mods_count];
 	
-	dwModuleSize = GetFileSize(ModuleImage);
+	dwModuleSize = FsGetFileSize(ModuleImage);
 	pModule->mod_start = next_module_load_base;
 	pModule->mod_end = next_module_load_base + dwModuleSize;
 	strcpy(ModuleNameString, ModuleName);
@@ -196,7 +196,7 @@ PVOID MultiBootLoadModule(FILE *ModuleImage, char *ModuleName, U32* ModuleSize)
 	/*
 	 * Load the file image
 	 */
-	ReadFile(ModuleImage, dwModuleSize, NULL, (void*)next_module_load_base);
+	FsReadFile(ModuleImage, dwModuleSize, NULL, (void*)next_module_load_base);
 
 	next_module_load_base = ROUND_UP(pModule->mod_end, /*PAGE_SIZE*/4096);
 	mb_info.mods_count++;

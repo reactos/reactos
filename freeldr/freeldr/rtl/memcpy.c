@@ -18,27 +18,33 @@
  */
 
 #include <freeldr.h>
-#include <disk.h>
-#include <rtl.h>
-#include <mm.h>
-
 
 #ifdef __i386__
-BOOL DiskGetDriveGeometry(U32 DriveNumber, PGEOMETRY DriveGeometry)
+void *memcpy(void *to, const void *from, size_t count)
 {
-	// For now just return the geometry as the BIOS reports it
-	// BytesPerSector is always set to 512 by i386DiskGetDriveParameters()
-	if (!DiskGetDriveParameters(DriveNumber, DriveGeometry))
-	{
-		DiskError("Drive geometry unknown.", 0);
-		return FALSE;
-	}
-
-	return TRUE;
+  __asm__( \
+	"or	%%ecx,%%ecx\n\t"\
+	"jz	.L1\n\t"	\
+	"cld\n\t"		\
+	"rep\n\t"		\
+	"movsb\n\t"		\
+	".L1:\n\t"
+	  :
+	  : "D" (to), "S" (from), "c" (count));
+  return to;
 }
 #else
-BOOL DiskGetDriveGeometry(U32 DriveNumber, PGEOMETRY DriveGeometry)
+void *memcpy(void *to, const void *from, size_t count)
 {
-	UNIMPLEMENTED();
+	unsigned int	i;
+	char*			buf1 = to;
+	const char*		buf2 = from;
+
+	for (i=0; i<count; i++)
+	{
+		buf1[i] = buf2[i];
+	}
+
+	return to;
 }
 #endif

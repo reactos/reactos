@@ -58,26 +58,26 @@ BOOL IniFileInitialize(VOID)
 	}
 
 	// Get the file size & allocate enough memory for it
-	FreeLoaderIniFileSize = GetFileSize(Freeldr_Ini);
+	FreeLoaderIniFileSize = FsGetFileSize(Freeldr_Ini);
 	FreeLoaderIniFileData = MmAllocateMemory(FreeLoaderIniFileSize);
 
 	// If we are out of memory then return FALSE
 	if (FreeLoaderIniFileData == NULL)
 	{
 		printf("Out of memory while loading freeldr.ini.\n");
-		CloseFile(Freeldr_Ini);
+		FsCloseFile(Freeldr_Ini);
 		return FALSE;
 	}
 
 	// Read freeldr.ini off the disk
-	if (!ReadFile(Freeldr_Ini, FreeLoaderIniFileSize, NULL, FreeLoaderIniFileData))
+	if (!FsReadFile(Freeldr_Ini, FreeLoaderIniFileSize, NULL, FreeLoaderIniFileData))
 	{
-		CloseFile(Freeldr_Ini);
+		FsCloseFile(Freeldr_Ini);
 		MmFreeMemory(FreeLoaderIniFileData);
 		return FALSE;
 	}
 
-	CloseFile(Freeldr_Ini);
+	FsCloseFile(Freeldr_Ini);
 
 	// Parse the .ini file data
 	Success = IniParseFile(FreeLoaderIniFileData, FreeLoaderIniFileSize);
@@ -91,7 +91,7 @@ PFILE IniOpenIniFile(U8 BootDriveNumber, U8 BootPartitionNumber)
 {
 	PFILE	IniFileHandle;	// File handle for freeldr.ini
 
-	if (!OpenDiskDrive(BootDriveNumber, BootPartitionNumber))
+	if (!FsOpenVolume(BootDriveNumber, BootPartitionNumber))
 	{
 		if (BootPartitionNumber == 0)
 		{
@@ -106,7 +106,7 @@ PFILE IniOpenIniFile(U8 BootDriveNumber, U8 BootPartitionNumber)
 	}
 
 	// Try to open freeldr.ini
-	IniFileHandle = OpenFile("freeldr.ini");
+	IniFileHandle = FsOpenFile("freeldr.ini");
 
 	return IniFileHandle;
 }

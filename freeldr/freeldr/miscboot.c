@@ -26,7 +26,6 @@
 #include <ui.h>
 #include <inifile.h>
 #include <disk.h>
-#include <video.h>
 
 VOID LoadAndBootBootSector(PUCHAR OperatingSystemName)
 {
@@ -68,13 +67,13 @@ VOID LoadAndBootBootSector(PUCHAR OperatingSystemName)
 		return;
 	}
 
-	if (!OpenDiskDrive(BootDrive, BootPartition))
+	if (!FsOpenVolume(BootDrive, BootPartition))
 	{
 		UiMessageBox("Failed to open boot drive.");
 		return;
 	}
 
-	FilePointer = OpenFile(FileName);
+	FilePointer = FsOpenFile(FileName);
 	if (FilePointer == NULL)
 	{
 		strcat(FileName, " not found.");
@@ -83,7 +82,7 @@ VOID LoadAndBootBootSector(PUCHAR OperatingSystemName)
 	}
 
 	// Read boot sector
-	if (!ReadFile(FilePointer, 512, &BytesRead, (void*)0x7c00) || (BytesRead != 512))
+	if (!FsReadFile(FilePointer, 512, &BytesRead, (void*)0x7c00) || (BytesRead != 512))
 	{
 		return;
 	}
@@ -95,8 +94,7 @@ VOID LoadAndBootBootSector(PUCHAR OperatingSystemName)
 		return;
 	}
 
-	VideoClearScreen();
-	VideoShowTextCursor();
+	UiUnInitialize("Booting...");
 	// Don't stop the floppy drive motor when we
 	// are just booting a bootsector, or drive, or partition.
 	// If we were to stop the floppy motor then
@@ -104,7 +102,7 @@ VOID LoadAndBootBootSector(PUCHAR OperatingSystemName)
 	// next read is to a floppy then the BIOS will
 	// still think the motor is on and this will
 	// result in a read error.
-	//StopFloppyMotor();
+	//DiskStopFloppyMotor();
 	//DisableA20();
 	ChainLoadBiosBootSectorCode();
 }
@@ -165,8 +163,7 @@ VOID LoadAndBootPartition(PUCHAR OperatingSystemName)
 		return;
 	}
 
-	VideoClearScreen();
-	VideoShowTextCursor();
+	UiUnInitialize("Booting...");
 	// Don't stop the floppy drive motor when we
 	// are just booting a bootsector, or drive, or partition.
 	// If we were to stop the floppy motor then
@@ -174,7 +171,7 @@ VOID LoadAndBootPartition(PUCHAR OperatingSystemName)
 	// next read is to a floppy then the BIOS will
 	// still think the motor is on and this will
 	// result in a read error.
-	//StopFloppyMotor();
+	//DiskStopFloppyMotor();
 	//DisableA20();
 	ChainLoadBiosBootSectorCode();
 }
@@ -218,8 +215,7 @@ VOID LoadAndBootDrive(PUCHAR OperatingSystemName)
 		return;
 	}
 
-	VideoClearScreen();
-	VideoShowTextCursor();
+	UiUnInitialize("Booting...");
 	// Don't stop the floppy drive motor when we
 	// are just booting a bootsector, or drive, or partition.
 	// If we were to stop the floppy motor then
@@ -227,7 +223,7 @@ VOID LoadAndBootDrive(PUCHAR OperatingSystemName)
 	// next read is to a floppy then the BIOS will
 	// still think the motor is on and this will
 	// result in a read error.
-	//StopFloppyMotor();
+	//DiskStopFloppyMotor();
 	//DisableA20();
 	ChainLoadBiosBootSectorCode();
 }

@@ -29,7 +29,7 @@ start:
         nop
 
 BootDrive				db 0x80
-BootPartition			db 0
+;BootPartition			db 0					; Moved to end of boot sector to have a standard format across all boot sectors
 ;SectorsPerTrack		db 63					; Moved to [bp-SECTORS_PER_TRACK]
 ;NumberOfHeads			dw 16					; Moved to [bp-NUMBER_OF_HEADS]
 ;BiosCHSDriveSize		dd (1024 * 1024 * 63)	; Moved to [bp-BIOS_CHS_DRIVE_SIZE]
@@ -274,8 +274,8 @@ ReadSectorsCHSLoop:
         mov   dh,dl									; Head in DH
         mov   dl,[BYTE bp+BootDrive]				; Drive number in DL
         mov   ch,al									; Cylinder in CX
-        ror   ah,1									; Low 8 bits of cylinder in CH, high 2 bits
-        ror   ah,1									;  in CL shifted to bits 6 & 7
+        ror   ah,2									; Low 8 bits of cylinder in CH, high 2 bits
+                									;  in CL shifted to bits 6 & 7
         or    cl,ah									; Or with sector number
         mov   ax,0201h
         int   13h    ; DISK - READ SECTORS INTO MEMORY
@@ -336,7 +336,10 @@ Done:
 msgDiskError		db 'Disk error',0
 msgAnyKey			db 'Press any key to restart',0
 
-        times 510-($-$$) db 0   ; Pad to 510 bytes
+        times 509-($-$$) db 0   ; Pad to 509 bytes
+
+BootPartition			db 0
+
         dw 0aa55h       ; BootSector signature
         
 

@@ -28,6 +28,9 @@
 // Textual User Interface Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
+BOOL	TuiInitialize(VOID);									// Initialize User-Interface
+VOID	TuiUnInitialize(VOID);									// Un-initialize User-Interface
+
 VOID	TuiDrawBackdrop(VOID);									// Fills the entire screen with a backdrop
 VOID	TuiFillArea(U32 Left, U32 Top, U32 Right, U32 Bottom, UCHAR FillChar, UCHAR Attr /* Color Attributes */);	// Fills the area specified with FillChar and Attr
 VOID	TuiDrawShadow(U32 Left, U32 Top, U32 Right, U32 Bottom);	// Draws a shadow on the bottom and right sides of the area specified
@@ -45,6 +48,9 @@ VOID	TuiDrawProgressBar(U32 Left, U32 Top, U32 Right, U32 Bottom, U32 Position, 
 
 UCHAR	TuiTextToColor(PUCHAR ColorText);						// Converts the text color into it's equivalent color value
 UCHAR	TuiTextToFillStyle(PUCHAR FillStyleText);				// Converts the text fill into it's equivalent fill value
+
+VOID	TuiFadeInBackdrop(VOID);								// Draws the backdrop and fades the screen in
+VOID	TuiFadeOut(VOID);										// Fades the screen out
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //

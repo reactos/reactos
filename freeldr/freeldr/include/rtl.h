@@ -44,14 +44,14 @@ int		strnicmp(const char *string1, const char *string2, size_t length);
 // Memory Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-int		RtlCompareMemory(const PVOID Source1, const PVOID Source2, U32 Length);
-VOID	RtlCopyMemory(PVOID Destination, const PVOID Source, U32 Length);
-VOID	RtlFillMemory(PVOID Destination, U32 Length, UCHAR Fill);
-VOID	RtlZeroMemory(PVOID Destination, U32 Length);
+int		memcmp(const void *buf1, const void *buf2, size_t count);
+void *	memcpy(void *to, const void *from, size_t count);
+void *	memset(void *src, int val, size_t count);
 
-#define	memcmp(buf1, buf2, count)	RtlCompareMemory(buf1, buf2, count)
-#define	memcpy(dest, src, count)	RtlCopyMemory(dest, src,count)
-#define	memset(dest, c, count)		RtlFillMemory(dest,count, c)
+#define RtlCompareMemory(Source1, Source2, Length)	memcmp(Source1, Source2, Length)
+#define RtlCopyMemory(Destination, Source, Length)	memcpy(Destination, Source, Length)
+#define RtlFillMemory(Destination, Length, Fill)	memset(Destination, Fill, Length)
+#define RtlZeroMemory(Destination, Length)			memset(Destination, 0, Length)
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //

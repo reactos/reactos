@@ -1,8 +1,6 @@
 FreeLoader notes
 
 To build FreeLoader you will need DJGPP because Mingw32 doesn't support 16-bit code
-ext2 filesystem support needs to be added.
-The MessageBox() function needs to not allocate memory. Because it gets called when memory allocation fails.
 
 Memory layout:
 

@@ -127,6 +127,6 @@ BOOL	LinuxReadBootSector(PFILE LinuxKernelFile);
 BOOL	LinuxReadSetupSector(PFILE LinuxKernelFile);
 BOOL	LinuxReadKernel(PFILE LinuxKernelFile);
 BOOL	LinuxCheckKernelVersion(VOID);
-BOOL	LinuxReadInitrd(VOID);
+BOOL	LinuxReadInitrd(PFILE LinuxInitrdFile);
 
 #endif // defined __LINUX_H
