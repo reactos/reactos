@@ -15,7 +15,7 @@
 
 # Compiler command line name
 #
-#CC := gcc
+CC := gcc
 
 # The object file extension (for standard and static libraries).  This can be
 # .o, .tco, .obj, etc., depending on the platform.

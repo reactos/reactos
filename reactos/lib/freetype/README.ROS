@@ -39,14 +39,6 @@ Setup the FreeType build by copying the correct configuration file:
 
 copy lib\freetype\builds\win32\w32-mingw32.mk lib\freetype\config.mk
 
-Support cross-compillation by not setting CC in builds\compiler\gcc.mk:
-
-# Compiler command line name
-#
-#CC := gcc
-
-The CC variable from rules.mak will be used then (with the correct prefix).
-
 Copy the ReactOS specific files from the old directory to the new:
 
 move lib\freetype\Makefile lib\freetype\Makefile.freetype
@@ -73,4 +65,4 @@ file, so it is obvious to everyone which FreeType version we're using.
 After testing, you can commit the new/changed files to CVS. ALthough files
 config.mk and freetype.def are generated, they should be included in CVS.
 
-$Id: README.ROS,v 1.2 2003/04/04 21:30:30 chorns Exp $
+$Id: README.ROS,v 1.3 2003/04/18 10:48:12 gvg Exp $
