@@ -1,25 +1,22 @@
-# $Id: Makefile,v 1.1 1999/11/07 08:03:21 ea Exp $
+# $Id: Makefile,v 1.2 1999/11/11 21:22:08 rex Exp $
 #
 
 BASE_CFLAGS = -I../../include
 TARGETNAME=buildno
-CLEAN_FILES= $(TARGETNAME).o $(TARGETNAME).exe $(TARGETNAME).sym
+CLEAN_FILES= $(TARGETNAME).o $(TARGETNAME)$(EXE_POSTFIX) $(TARGETNAME).sym
 
 all: $(TARGETNAME)$(EXE_POSTFIX)
 	$(TARGETNAME)$(EXE_POSTFIX) -q
 
-$(TARGETNAME)$(EXE_POSTFIX): $(TARGETNAME).o
-	$(CC) -o $(TARGETNAME)$(EXE_POSTFIX) $(TARGETNAME).o
-	$(NM) --numeric-sort $(TARGETNAME)$(EXE_POSTFIX) > $(TARGETNAME).sym
+$(TARGETNAME)$(EXE_POSTFIX): $(TARGETNAME).c ../../include/reactos/version.h
+	$(NATIVE_CC) -I../../include -o $(TARGETNAME)$(EXE_POSTFIX) $(TARGETNAME).c
 
-$(TARGETNAME).o: $(TARGETNAME).c ../../include/reactos/version.h
+clean:
+	$(RM) $(TARGETNAME).o
+	$(RM) $(TARGETNAME).sym
+	$(RM) $(TARGETNAME)$(EXE_POSTFIX)
 
-clean: $(CLEAN_FILES:%=%_clean)
-
-$(CLEAN_FILES:%=%_clean): %_clean:
-	- $(RM) $*
-
-.phony: clean $(CLEAN_FILES:%=%_clean)
+.phony: clean 
 
 include ../../rules.mak
 
