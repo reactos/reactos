@@ -1141,12 +1141,6 @@ KdbEnterDebuggerException(
    BOOLEAN EnterConditionMet = TRUE;
    ULONG OldEflags;
 
-   /* Exception inside the debugger? Game over. */
-   if (InterlockedIncrement(&KdbEntryCount) > 1)
-   {
-      return kdHandleException;
-   }
-
    KdbCurrentProcess = PsGetCurrentProcess();
 
    /* Set continue type to kdContinue for single steps and breakpoints */
@@ -1342,7 +1336,6 @@ KdbEnterDebuggerException(
       {
          if (!EnterConditionMet)
          {
-            InterlockedDecrement(&KdbEntryCount);
             return ContinueType;
          }
          DbgPrint("Entered debugger on unexpected debug trap!\n");
@@ -1357,7 +1350,6 @@ KdbEnterDebuggerException(
       }
       if (!EnterConditionMet)
       {
-         InterlockedDecrement(&KdbEntryCount);
          return ContinueType;
       }
 
@@ -1372,7 +1364,6 @@ KdbEnterDebuggerException(
 
       if (!EnterConditionMet)
       {
-         InterlockedDecrement(&KdbEntryCount);
          return ContinueType;
       }
 
@@ -1419,6 +1410,12 @@ KdbEnterDebuggerException(
    Ke386SaveFlags(OldEflags);
    Ke386DisableInterrupts();
 
+   /* Exception inside the debugger? Game over. */
+   if (InterlockedIncrement(&KdbEntryCount) > 1)
+   {
+      return kdHandleException;
+   }
+
    /* Call the main loop. */
    KdbpInternalEnter();
 
@@ -1461,6 +1458,9 @@ KdbEnterDebuggerException(
           "r"(KdbTrapFrame.Cr3), "r"(KdbTrapFrame.Cr4));
 #endif
 
+   /* Decrement the entry count */
+   InterlockedDecrement(&KdbEntryCount);
+
    /* Leave critical section */
    Ke386RestoreFlags(OldEflags);
 
@@ -1479,7 +1479,6 @@ continue_execution:
 
    }
 
-   InterlockedDecrement(&KdbEntryCount);
    return ContinueType;
 }
 
