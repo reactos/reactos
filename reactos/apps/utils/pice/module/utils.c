@@ -2172,7 +2172,7 @@ HANDLE PICE_open (LPCWSTR	lpPathName,	int	iReadWrite)
 	status = NtOpenFile( &hfile,
                       dwAccessMask,
                       &ObjectAttributes,
-                      NULL, dwShareMode, 0);
+                      NULL, dwShareMode, FILE_NO_INTERMEDIATE_BUFFERING);
 	//BUG BUG check status!!!
 	if( !NT_SUCCESS( status ) ){
 		DPRINT((0,"PICE_open: NtOpenFile error: %x\n", status));
