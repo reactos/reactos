@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c,v 1.10 2004/03/08 04:09:02 jimtabor Exp $
+ * $Id: videoprt.c,v 1.11 2004/03/08 04:41:20 jimtabor Exp $
  */
 
 #include "videoprt.h"
@@ -1605,18 +1605,24 @@ STDCALL
 VideoPortGetVersion ( IN PVOID HwDeviceExtension,
 		      IN OUT PVPOSVERSIONINFO VpOsVersionInfo )
 {
-PPEB Peb;
-
+  PPEB Peb;
+  
   DPRINT1("VideoPortGetVersion()\n");
-
+  if(KeGetCurrentIrql() == PASSIVE_LEVEL)
+  {
+     if(VpOsVersionInfo->Size >= sizeof(VPOSVERSIONINFO))
+     {
 	Peb = NtCurrentPeb();
-
 	VpOsVersionInfo->MajorVersion = Peb->OSMajorVersion;
 	VpOsVersionInfo->MinorVersion = Peb->OSMinorVersion;
 	VpOsVersionInfo->BuildNumber = Peb->OSBuildNumber;
 	VpOsVersionInfo->ServicePackMajor = Peb->SPMajorVersion;
 	VpOsVersionInfo->ServicePackMinor = Peb->SPMinorVersion;
-
+	return STATUS_SUCCESS;
+      }	
+     else
+	return ERROR_INVALID_PARAMETER;
+  }
   return STATUS_UNSUCCESSFUL;
 }
 
