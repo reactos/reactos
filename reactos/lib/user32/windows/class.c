@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.35 2003/08/19 23:41:20 weiden Exp $
+/* $Id: class.c,v 1.36 2003/08/19 23:54:26 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -82,7 +82,7 @@ GetClassInfoExA(
   {
     lpwcx->lpszMenuName = heap_string_poolA ( str2.Buffer, str2.Length );
   }
-  if ( !IS_INTRESOURCE(w.lpszClassName) && w.lpszClassName )
+  if ( !IS_ATOM(w.lpszClassName) && w.lpszClassName )
   {
     lpwcx->lpszClassName = heap_string_poolA ( str3.Buffer, str3.Length );
   }
@@ -158,7 +158,7 @@ GetClassInfoExW(
   {
     lpwcx->lpszMenuName = heap_string_poolW ( str2.Buffer, str2.Length );
   }
-  if ( !IS_INTRESOURCE(w.lpszClassName) && w.lpszClassName )
+  if ( !IS_ATOM(w.lpszClassName) && w.lpszClassName )
   {
     lpwcx->lpszClassName = heap_string_poolW ( str3.Buffer, str3.Length );
   }
