@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.44 2003/07/23 04:52:44 jimtabor Exp $
+/* $Id: window.c,v 1.45 2003/07/23 06:14:12 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1169,13 +1169,12 @@ IsChild(HWND hWndParent,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL STDCALL
 IsIconic(HWND hWnd)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return (NtUserGetWindowLong( hWnd, GWL_STYLE ) & WS_MINIMIZE) != 0;  
 }
 
 
