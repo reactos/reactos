@@ -19,7 +19,7 @@ char* convert_path(char* origpath)
 	  }
 #else
 #ifdef DOS_PATHS
-	if (newpath[i] == '/');
+	if (newpath[i] == '/')
 	  {
 	     newpath[i] = '\\';
 	  }
