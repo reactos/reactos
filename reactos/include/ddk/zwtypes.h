@@ -87,7 +87,10 @@ extern ULONG IMPORTED NtBuildNumber;
 
 // event information
 
-#define EventBasicInformation			0
+typedef enum _EVENT_INFORMATION_CLASS
+{
+	EventBasicInformation			= 0
+} EVENT_INFORMATION_CLASS;
 
 // system information
 // {Nt|Zw}{Query|Set}SystemInformation
@@ -1186,9 +1189,10 @@ typedef struct _SEMAPHORE_BASIC_INFORMATION
 
 typedef struct _EVENT_BASIC_INFORMATION
 {
-	BOOL AutomaticReset;
-	BOOL Signaled;
-} EVENT_BASIC_INFORMATION, *PEVENT_INFORMATION;
+	EVENT_TYPE EventType;
+	LONG EventState;
+} EVENT_BASIC_INFORMATION, *PEVENT_BASIC_INFORMATION;
+
 
 //typedef enum _TIMER_TYPE 
 //{

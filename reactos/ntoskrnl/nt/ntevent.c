@@ -14,6 +14,7 @@
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
 #include <ntos/synch.h>
+#include <internal/id.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -92,11 +93,11 @@ NTSTATUS STDCALL NtClearEvent (IN HANDLE EventHandle)
 }
 
 
-NTSTATUS STDCALL NtCreateEvent (OUT PHANDLE			EventHandle,
+NTSTATUS STDCALL NtCreateEvent (OUT PHANDLE		EventHandle,
 				IN ACCESS_MASK		DesiredAccess,
 				IN POBJECT_ATTRIBUTES	ObjectAttributes,
-				IN BOOLEAN			ManualReset,
-				IN BOOLEAN	InitialState)
+				IN BOOLEAN		ManualReset,
+				IN BOOLEAN		InitialState)
 {
    PKEVENT Event;
 
@@ -113,7 +114,7 @@ NTSTATUS STDCALL NtCreateEvent (OUT PHANDLE			EventHandle,
 }
 
 
-NTSTATUS STDCALL NtOpenEvent (OUT PHANDLE			EventHandle,
+NTSTATUS STDCALL NtOpenEvent (OUT PHANDLE		EventHandle,
 			      IN ACCESS_MASK		DesiredAccess,
 			      IN POBJECT_ATTRIBUTES	ObjectAttributes)
 {
@@ -147,17 +148,66 @@ NTSTATUS STDCALL NtOpenEvent (OUT PHANDLE			EventHandle,
 NTSTATUS STDCALL NtPulseEvent(IN	HANDLE	EventHandle,
 			      IN	PULONG	PulseCount	OPTIONAL)
 {
-   UNIMPLEMENTED;
+   PKEVENT Event;
+   NTSTATUS Status;
+
+   DPRINT("NtPulseEvent(EventHandle %x PulseCount %x)\n",
+	  EventHandle, PulseCount);
+
+   Status = ObReferenceObjectByHandle(EventHandle,
+				      EVENT_MODIFY_STATE,
+				      ExEventObjectType,
+				      UserMode,
+				      (PVOID*)&Event,
+				      NULL);
+   if (!NT_SUCCESS(Status))
+     return(Status);
+
+   KePulseEvent(Event,EVENT_INCREMENT,FALSE);
+
+   ObDereferenceObject(Event);
+   return(STATUS_SUCCESS);
 }
 
 
 NTSTATUS STDCALL NtQueryEvent (IN	HANDLE	EventHandle,
-			       IN	CINT	EventInformationClass,
+			       IN	EVENT_INFORMATION_CLASS	EventInformationClass,
 			       OUT	PVOID	EventInformation,
 			       IN	ULONG	EventInformationLength,
 			       OUT	PULONG	ReturnLength)
 {
-   UNIMPLEMENTED;
+   PEVENT_BASIC_INFORMATION Info;
+   PKEVENT Event;
+   NTSTATUS Status;
+
+   Info = (PEVENT_BASIC_INFORMATION)EventInformation;
+
+   if (EventInformationClass > EventBasicInformation)
+     return STATUS_INVALID_INFO_CLASS;
+
+   if (EventInformationLength < sizeof(EVENT_BASIC_INFORMATION))
+     return STATUS_INFO_LENGTH_MISMATCH;
+
+   Status = ObReferenceObjectByHandle(EventHandle,
+				      EVENT_QUERY_STATE,
+				      ExEventObjectType,
+				      UserMode,
+				      (PVOID*)&Event,
+				      NULL);
+   if (!NT_SUCCESS(Status))
+     return Status;
+
+   if (Event->Header.Type == InternalNotificationEvent)
+     Info->EventType = NotificationEvent;
+   else
+     Info->EventType = SynchronizationEvent;
+   Info->EventState = KeReadStateEvent(Event);
+
+   *ReturnLength = sizeof(EVENT_BASIC_INFORMATION);
+
+   ObDereferenceObject(Event);
+
+   return STATUS_SUCCESS;
 }
 
 
@@ -186,7 +236,7 @@ NTSTATUS STDCALL NtResetEvent(HANDLE	EventHandle,
 
 
 NTSTATUS STDCALL NtSetEvent(IN	HANDLE	EventHandle,
-			    PULONG NumberOfThreadsReleased)
+			    OUT	PULONG	NumberOfThreadsReleased)
 {
    PKEVENT Event;
    NTSTATUS Status;
@@ -203,7 +253,7 @@ NTSTATUS STDCALL NtSetEvent(IN	HANDLE	EventHandle,
      {
 	return(Status);
      }
-   KeSetEvent(Event,IO_NO_INCREMENT,FALSE);
+   KeSetEvent(Event,EVENT_INCREMENT,FALSE);
       
    
    ObDereferenceObject(Event);

@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.19 2000/09/12 10:12:10 jean Exp $
+/* $Id: iotypes.h,v 1.20 2000/10/06 22:53:21 ekohl Exp $
  * 
  */
 
@@ -704,10 +704,5 @@ VOID
 	IN	BOOLEAN		DriverActive
 	);
 #endif // (_WIN32_WINNT >= 0x0400)
-
-enum
-{
-	IO_NO_INCREMENT,
-};
 
 #endif __INCLUDE_DDK_IOTYPES_H

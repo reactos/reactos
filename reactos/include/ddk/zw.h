@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.35 2000/09/08 22:52:17 ekohl Exp $
+/* $Id: zw.h,v 1.36 2000/10/06 22:53:22 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2574,20 +2574,43 @@ ZwPulseEvent(
  * RETURNS: Status
  */
 
-NTSTATUS 
-STDCALL 
+NTSTATUS
+STDCALL
 NtQueryAttributesFile(
 	IN POBJECT_ATTRIBUTES ObjectAttributes,
 	IN PVOID Buffer
 	);
 
-NTSTATUS 
-STDCALL 
+NTSTATUS
+STDCALL
 ZwQueryAttributesFile(
 	IN POBJECT_ATTRIBUTES ObjectAttributes,
 	IN PVOID Buffer
 	);
 
+/*
+ * FUNCTION: Queries the default locale id
+ * ARGUMENTS:
+ *        UserProfile = Type of locale id
+ *              TRUE: thread locale id
+ *              FALSE: system locale id
+ *        DefaultLocaleId = Caller supplies storage for the locale id
+ * RETURNS: Status
+ */
+
+NTSTATUS
+STDCALL
+NtQueryDefaultLocale(
+	IN BOOLEAN UserProfile,
+	OUT PLCID DefaultLocaleId
+	);
+
+NTSTATUS
+STDCALL
+ZwQueryDefaultLocale(
+	IN BOOLEAN UserProfile,
+	OUT PLCID DefaultLocaleId
+	);
 
 /*
  * FUNCTION: Queries a directory file.
@@ -2614,8 +2637,8 @@ ZwQueryAttributesFile(
  *		     STATUS_INVALID_INFO_CLASS, STATUS_NO_SUCH_FILE, STATUS_NO_MORE_FILES ]
  */
 
-NTSTATUS 
-STDCALL 
+NTSTATUS
+STDCALL
 NtQueryDirectoryFile(
 	IN HANDLE FileHandle,
 	IN HANDLE Event OPTIONAL,
@@ -2630,8 +2653,8 @@ NtQueryDirectoryFile(
 	IN BOOLEAN RestartScan
 	);
 
-NTSTATUS 
-STDCALL 
+NTSTATUS
+STDCALL
 ZwQueryDirectoryFile(
 	IN HANDLE FileHandle,
 	IN HANDLE Event OPTIONAL,
@@ -2645,7 +2668,7 @@ ZwQueryDirectoryFile(
 	IN PUNICODE_STRING FileName OPTIONAL,
 	IN BOOLEAN RestartScan
 	);
-	
+
 /*
  * FUNCTION: Query information about the content of a directory object
  * ARGUMENTS:
@@ -2724,6 +2747,7 @@ ZwQueryEaFile(
 	IN PULONG EaIndex OPTIONAL,
 	IN BOOLEAN RestartScan
 	);
+
 /*
  * FUNCTION: Queries an event
  * ARGUMENTS:
@@ -2737,35 +2761,33 @@ ZwQueryEaFile(
  *	  ReturnLength = Data written
  * RETURNS: Status
  */
-
-
 NTSTATUS
 STDCALL
 NtQueryEvent(
 	IN HANDLE EventHandle,
-	IN CINT EventInformationClass,
-	OUT PVOID EventInformation,
-	IN ULONG EventInformationLength,
-	OUT PULONG ReturnLength
-	); 
-
-NTSTATUS
-STDCALL
-ZwQueryEvent(
-	IN HANDLE EventHandle,
-	IN CINT EventInformationClass,
+	IN EVENT_INFORMATION_CLASS EventInformationClass,
 	OUT PVOID EventInformation,
 	IN ULONG EventInformationLength,
 	OUT PULONG ReturnLength
 	);
 NTSTATUS
-STDCALL 
+STDCALL
+ZwQueryEvent(
+	IN HANDLE EventHandle,
+	IN EVENT_INFORMATION_CLASS EventInformationClass,
+	OUT PVOID EventInformation,
+	IN ULONG EventInformationLength,
+	OUT PULONG ReturnLength
+	);
+
+NTSTATUS
+STDCALL
 NtQueryFullAttributesFile(
 	IN HANDLE FileHandle,
 	IN PVOID Attributes
 	);
 NTSTATUS
-STDCALL 
+STDCALL
 ZwQueryFullAttributesFile(
 	IN HANDLE FileHandle,
 	IN PVOID Attributes
@@ -2774,21 +2796,21 @@ ZwQueryFullAttributesFile(
 NTSTATUS
 STDCALL
 NtQueryInformationAtom(
-	IN HANDLE AtomHandle,
+	IN RTL_ATOM Atom,
 	IN CINT AtomInformationClass,
 	OUT PVOID AtomInformation,
 	IN ULONG AtomInformationLength,
 	OUT PULONG ReturnLength
-	); 
+	);
 NTSTATUS
 STDCALL
 NtQueryInformationAtom(
-	IN HANDLE AtomHandle,
+	IN RTL_ATOM Atom,
 	IN CINT AtomInformationClass,
 	OUT PVOID AtomInformation,
 	IN ULONG AtomInformationLength,
 	OUT PULONG ReturnLength
-	); 
+	);
 
 
 
@@ -3953,6 +3975,7 @@ ZwSaveKey(
 	IN HANDLE KeyHandle,
 	IN HANDLE FileHandle
 	);
+
 /*
  * FUNCTION: Sets the context of a specified thread.
  * ARGUMENTS: 
@@ -3975,27 +3998,52 @@ ZwSetContextThread(
 	);
 
 /*
+ * FUNCTION: Sets the default locale id
+ * ARGUMENTS:
+ *        UserProfile = Type of locale id
+ *              TRUE: thread locale id
+ *              FALSE: system locale id
+ *        DefaultLocaleId = Locale id
+ * RETURNS: Status
+ */
+
+NTSTATUS
+STDCALL
+NtSetDefaultLocale(
+	IN BOOLEAN UserProfile,
+	IN LCID DefaultLocaleId
+	);
+
+NTSTATUS
+STDCALL
+ZwSetDefaultLocale(
+	IN BOOLEAN UserProfile,
+	IN LCID DefaultLocaleId
+	);
+
+/*
  * FUNCTION: Sets the default hard error port
- * ARGUMENTS: 
+ * ARGUMENTS:
  *        PortHandle = Handle to the port
  * NOTE: The hard error port is used for first change exception handling
  * RETURNS: Status
  */
-NTSTATUS 
-STDCALL 
+NTSTATUS
+STDCALL
 NtSetDefaultHardErrorPort(
 	IN HANDLE PortHandle
 	);
-NTSTATUS 
-STDCALL 
+NTSTATUS
+STDCALL
 ZwSetDefaultHardErrorPort(
 	IN HANDLE PortHandle
 	);
+
 /*
  * FUNCTION: Sets the extended attributes of a file.
- * ARGUMENTS: 
+ * ARGUMENTS:
  *        FileHandle = Handle to the file
- *        IoStatusBlock = Storage for a resulting status and information 
+ *        IoStatusBlock = Storage for a resulting status and information
  *                        on the current operation.
  *        EaBuffer = Extended Attributes buffer.
  *        EaBufferSize = Size of the extended attributes buffer
@@ -4005,16 +4053,16 @@ NTSTATUS
 STDCALL
 NtSetEaFile(
 	IN HANDLE FileHandle,
-	IN PIO_STATUS_BLOCK IoStatusBlock,	
-	PVOID EaBuffer, 
+	IN PIO_STATUS_BLOCK IoStatusBlock,
+	PVOID EaBuffer,
 	ULONG EaBufferSize
 	);
 NTSTATUS
 STDCALL
 ZwSetEaFile(
 	IN HANDLE FileHandle,
-	IN PIO_STATUS_BLOCK IoStatusBlock,	
-	PVOID EaBuffer, 
+	IN PIO_STATUS_BLOCK IoStatusBlock,
+	PVOID EaBuffer,
 	ULONG EaBufferSize
 	);
 
@@ -4508,6 +4556,7 @@ ZwSetTimer(
 	IN ULONG Period OPTIONAL,
 	OUT PBOOLEAN PreviousState OPTIONAL
 	);
+
 /*
  * FUNCTION: Sets the frequency of the system timer
  * ARGUMENTS: 
@@ -4530,6 +4579,7 @@ ZwSetTimerResolution(
 	IN BOOL SetOrUnset,
 	OUT PULONG ActualResolution
 	);
+
 /*
  * FUNCTION: Sets the value of a registry key
  * ARGUMENTS: 
@@ -4573,9 +4623,10 @@ ZwSetValueKey(
 	IN PVOID Data,
 	IN ULONG DataSize
 	);
+
 /*
- * FUNCTION: Sets the volume information of a file. 
- * ARGUMENTS: 
+ * FUNCTION: Sets the volume information of a file.
+ * ARGUMENTS:
  *      FileHandle = Handle to the file
  *	VolumeInformationClass = specifies the particular volume information to set
  *	VolumeInformation = pointer to a structure containing the new volume information
@@ -4599,15 +4650,35 @@ ZwSetVolumeInformationFile(
 	PVOID VolumeInformation,
 	ULONG Length
 	);
+
+/*
+ * FUNCTION: Shuts the system down
+ * ARGUMENTS:
+ *        Action = Specifies the type of shutdown, it can be one of the following values:
+ *              ShutdownNoReboot, ShutdownReboot, ShutdownPowerOff
+ * RETURNS: Status
+ */
+NTSTATUS
+STDCALL
+NtShutdownSystem(
+	IN SHUTDOWN_ACTION Action
+	);
+
+NTSTATUS
+STDCALL
+ZwShutdownSystem(
+	IN SHUTDOWN_ACTION Action
+	);
+
+
 /* --- PROFILING --- */
 
 /*
  * FUNCTION: Starts profiling
  * ARGUMENTS: 
  *       ProfileHandle = Handle to the profile
- * RETURNS: Status    
+ * RETURNS: Status
  */
-
 
 NTSTATUS
 STDCALL
@@ -5148,20 +5219,6 @@ NtGetPlugPlayEvent (
 	VOID
 	);
 
-/* --- NATIONAL LANGUAGE SUPPORT (NLS) --- */
-
-NTSTATUS
-STDCALL
-NtQueryDefaultLocale (
-	VOID
-	);
-
-NTSTATUS
-STDCALL
-NtSetDefaultLocale (
-	VOID
-	);
-
 /* --- POWER MANAGEMENT --- */
 
 NTSTATUS
@@ -5244,24 +5301,6 @@ NtSetLdtEntries (
 	PULONG	Entries
 	);
 
-/*
- * FUNCTION: Shuts the system down
- * ARGUMENTS: 
- *        Action: Specifies the type of shutdown, it can be one of the following values:
-			ShutdownNoReboot, ShutdownReboot, ShutdownPowerOff
- * RETURNS: Status
- */ 
-NTSTATUS 
-STDCALL 
-NtShutdownSystem(
-	IN SHUTDOWN_ACTION Action
-	);
-
-NTSTATUS 
-STDCALL 
-ZwShutdownSystem(
-	IN SHUTDOWN_ACTION Action
-	);
 
 NTSTATUS
 STDCALL

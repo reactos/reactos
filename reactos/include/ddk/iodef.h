@@ -235,7 +235,24 @@ enum
 #define IRP_MN_VERIFY_VOLUME            0x02
 #define IRP_MN_LOAD_FILE_SYSTEM         0x03
 
-#define IO_DISK_INCREMENT  4
+/*
+ * Priority increments
+ */
+#define EVENT_INCREMENT                 1
+#define IO_NO_INCREMENT                 0
+#define IO_CD_ROM_INCREMENT             1
+#define IO_DISK_INCREMENT               4
+#define IO_KEYBOARD_INCREMENT           6
+#define IO_MAILSLOT_INCREMENT           2
+#define IO_MOUSE_INCREMENT              6
+#define IO_NAMED_PIPE_INCREMENT         2
+#define IO_NETWORK_INCREMENT            2
+#define IO_PARALLEL_INCREMENT           1
+#define IO_SERIAL_INCREMENT             2
+#define IO_SOUND_INCREMENT              8
+#define IO_VIDEO_INCREMENT              1
+#define SEMAPHORE_INCREMENT             1
+
 
 #define  FILE_WORD_ALIGNMENT  0x0001
 

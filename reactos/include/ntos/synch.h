@@ -19,6 +19,7 @@
 #define SEMAPHORE_MODIFY_STATE	(2)
 #define EVENT_ALL_ACCESS	(0x1f0003L)
 #define EVENT_MODIFY_STATE	(2)
+#define EVENT_QUERY_STATE	(1)
 
 
 #endif /* __INCLUDE_PS_H */

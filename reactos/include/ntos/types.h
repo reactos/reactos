@@ -68,6 +68,11 @@ typedef union _LARGE_INTEGER
     DWORD LowPart;
     LONG  HighPart;
   } u;
+  struct
+  {
+    DWORD LowPart;
+    LONG  HighPart;
+  };
   LONGLONG QuadPart;
 } LARGE_INTEGER, *PLARGE_INTEGER;
 
@@ -78,6 +83,11 @@ typedef union _ULARGE_INTEGER
     DWORD LowPart;
     DWORD HighPart;
   } u;
+  struct
+  {
+    DWORD LowPart;
+    DWORD HighPart;
+  };
   ULONGLONG QuadPart;
 } ULARGE_INTEGER, *PULARGE_INTEGER;
 
@@ -264,14 +274,14 @@ typedef struct value_ent {
 
 #define EXCEPTION_MAXIMUM_PARAMETERS	(15)
 
-typedef struct _EXCEPTION_RECORD { 
-  DWORD ExceptionCode; 
-  DWORD ExceptionFlags; 
-  struct _EXCEPTION_RECORD *ExceptionRecord; 
-  PVOID ExceptionAddress; 
-  DWORD NumberParameters; 
-  DWORD ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS]; 
-} EXCEPTION_RECORD, *PEXCEPTION_RECORD, *LPEXCEPTION_RECORD; 
+typedef struct _EXCEPTION_RECORD {
+  DWORD ExceptionCode;
+  DWORD ExceptionFlags;
+  struct _EXCEPTION_RECORD *ExceptionRecord;
+  PVOID ExceptionAddress;
+  DWORD NumberParameters;
+  DWORD ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
+} EXCEPTION_RECORD, *PEXCEPTION_RECORD, *LPEXCEPTION_RECORD;
 
 typedef long *PLONG;
 
@@ -281,6 +291,7 @@ typedef BYTE *LPBYTE;
 typedef BYTE *PBYTE;
 
 typedef DWORD LCID;
+typedef DWORD *PLCID;
 
 typedef const char *LPCSTR;
 
@@ -289,15 +300,15 @@ typedef char *LPSTR;
 typedef const unsigned short *LPCWSTR;
 
 typedef struct _COORD {
-  SHORT X;    
-  SHORT Y;    
-} COORD; 
+  SHORT X;
+  SHORT Y;
+} COORD;
 
-typedef struct _SMALL_RECT { 
-  SHORT Left;      
-  SHORT Top;       
-  SHORT Right;     
-  SHORT Bottom;    
-} SMALL_RECT, *PSMALL_RECT; 
+typedef struct _SMALL_RECT {
+  SHORT Left;
+  SHORT Top;
+  SHORT Right;
+  SHORT Bottom;
+} SMALL_RECT, *PSMALL_RECT;
 
 #endif /* __INCLUDE_TYPES_H */
