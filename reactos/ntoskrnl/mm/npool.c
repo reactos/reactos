@@ -555,6 +555,44 @@ asmlinkage VOID ExFreePool(PVOID block)
    VALIDATE_POOL;
 }
 
+static void defrag_free_list(void)
+/*
+ * FUNCTION: defrag the list of free blocks
+ */
+{
+ block_hdr* current=free_list_head,*current2;
+ ULONG addr1,addr2,max=0;
+   
+   DPRINT("Begin defrag free,tot free=%d,tot used=%d\n"
+     ,EiFreeNonPagedPool
+     ,EiUsedNonPagedPool);
+   while (current)
+   {
+      addr1=(ULONG)current;
+      current2=current->next;
+      while(current2)
+      {
+         addr2=(ULONG)current2;
+         if(addr2==addr1+current->size+sizeof(block_hdr))
+         {
+            remove_from_free_list(current2);
+            current->size+=current2->size+sizeof(block_hdr);
+            if(current->size>max)max=current->size;
+         }
+         else if(addr1==addr2+current2->size+sizeof(block_hdr))
+         {
+            remove_from_free_list(current);
+            current2->size+=current->size+sizeof(block_hdr);
+            if(current2->size>max)max=current2->size;
+            break;
+         }
+         current2=current2->next;
+      }
+      current=current->next;
+   }
+   DPRINT("Finish To defrag free blocks,max=%d\n",max);
+}
+
 PVOID ExAllocateNonPagedPoolWithTag(ULONG type, ULONG size, ULONG Tag)
 {
    block_hdr* current=NULL;
@@ -597,7 +635,33 @@ PVOID ExAllocateNonPagedPoolWithTag(ULONG type, ULONG size, ULONG Tag)
 	  }
 	current=current->next;
      }
-   
+   if(EiFreeNonPagedPool>size+32*PAGESIZE)
+   {//try defrag free list before growing kernel pool
+      defrag_free_list();
+      /*
+       * reLook after defrag
+       */
+      current=free_list_head;
+
+      while (current!=NULL)
+        {
+       OLD_DPRINT("current %x size %x next %x\n",current,current->size,
+              current->next);
+       if (current->magic != BLOCK_HDR_MAGIC)
+         {
+            DbgPrint("Bad block magic (probable pool corruption)\n");
+            KeBugCheck(KBUG_POOL_FREE_LIST_CORRUPT);
+         }
+       if (current->size>=size)
+         {
+            OLD_DPRINT("found block %x of size %d\n",current,size);
+            block=take_block(current,size);
+            memset(block,0,size);
+            return(block);
+         }
+       current=current->next;
+        }
+   }
    /*
     * Otherwise create a new block
     */
