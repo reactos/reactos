@@ -50,8 +50,14 @@ DefaultLayout    = 00000409
 pci_up = "Standard-PC"
 
 [Display]
-vga = "VGA display"
-vbe = "VESA display"
+;<id> = <user friendly name>,<spare>,<service key name>
+vga = "VGA Display",,Vga
+vbe = "VESA Display",,VBE
+
+[Map.Display]
+;<id> = <pnp id string>
+vga = "VGA Display"
+vbe = "VBE Display"
 
 [Keyboard]
 Default = "XT-, AT- or extended keyboard (83-105 keys)"

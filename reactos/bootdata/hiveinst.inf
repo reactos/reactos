@@ -5,6 +5,17 @@ Signature = "$ReactOS$"
 ; Enable _one_ driver per section by removing the leading semicolon.
 
 ;
+; Display driver section
+;
+
+; VBE SVGA driver
+HKLM,"SYSTEM\CurrentControlSet\Services\VBE","Start",0x00010001,0x00000001
+
+; VGA miniport driver
+HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Start",0x00010001,0x00000001
+
+
+;
 ; Mouse driver section
 ;
 

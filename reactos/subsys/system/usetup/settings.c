@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: settings.c,v 1.3 2004/06/07 12:21:36 ekohl Exp $
+/* $Id: settings.c,v 1.4 2004/06/20 12:14:23 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/settings.c
@@ -89,6 +89,165 @@ CreateComputerTypeList(HINF InfFile)
 }
 
 
+static BOOLEAN
+GetDisplayIdentifier(PWSTR Identifier,
+		     ULONG IdentifierLength)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING KeyName;
+  WCHAR Buffer[32];
+  HANDLE BusKey;
+  HANDLE BusInstanceKey;
+  HANDLE ControllerKey;
+  HANDLE ControllerInstanceKey;
+  ULONG BusInstance;
+  ULONG ControllerInstance;
+  ULONG BufferLength;
+  ULONG ReturnedLength;
+  PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
+  NTSTATUS Status;
+
+  DPRINT("GetDisplayIdentifier() called\n");
+
+  /* Open the bus key */
+  RtlInitUnicodeString(&KeyName,
+		       L"\\Registry\\Machine\\HARDWARE\\Description\\System\\MultifunctionAdapter");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &KeyName,
+			     OBJ_CASE_INSENSITIVE,
+			     NULL,
+			     NULL);
+  Status = NtOpenKey(&BusKey,
+		     KEY_ALL_ACCESS,
+		     &ObjectAttributes);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("NtOpenKey() failed (Status %lx)\n", Status);
+      return FALSE;
+    }
+
+  BusInstance = 0;
+  while (TRUE)
+    {
+      swprintf(Buffer, L"%lu", BusInstance);
+      RtlInitUnicodeString(&KeyName,
+			   Buffer);
+      InitializeObjectAttributes(&ObjectAttributes,
+				 &KeyName,
+				 OBJ_CASE_INSENSITIVE,
+				 BusKey,
+				 NULL);
+      Status = NtOpenKey(&BusInstanceKey,
+			 KEY_ALL_ACCESS,
+			 &ObjectAttributes);
+      if (!NT_SUCCESS(Status))
+	{
+	  DPRINT("NtOpenKey() failed (Status %lx)\n", Status);
+	  NtClose(BusKey);
+	  return FALSE;
+	}
+
+      /* Open the controller type key */
+      RtlInitUnicodeString(&KeyName,
+			   L"DisplayController");
+      InitializeObjectAttributes(&ObjectAttributes,
+				 &KeyName,
+				 OBJ_CASE_INSENSITIVE,
+				 BusInstanceKey,
+				 NULL);
+      Status = NtOpenKey(&ControllerKey,
+			 KEY_ALL_ACCESS,
+			 &ObjectAttributes);
+      if (NT_SUCCESS(Status))
+	{
+	  ControllerInstance = 0;
+	  while (TRUE)
+	    {
+	      /* Open the pointer controller instance key */
+	      swprintf(Buffer, L"%lu", ControllerInstance);
+	      RtlInitUnicodeString(&KeyName,
+				   Buffer);
+	      InitializeObjectAttributes(&ObjectAttributes,
+					 &KeyName,
+					 OBJ_CASE_INSENSITIVE,
+					 ControllerKey,
+					 NULL);
+	      Status = NtOpenKey(&ControllerInstanceKey,
+				 KEY_ALL_ACCESS,
+				 &ObjectAttributes);
+	      if (!NT_SUCCESS(Status))
+		{
+		  DPRINT("NtOpenKey() failed (Status %lx)\n", Status);
+		  NtClose(ControllerKey);
+		  NtClose(BusInstanceKey);
+		  NtClose(BusKey);
+		  return FALSE;
+		}
+
+	      /* Get controller identifier */
+	      RtlInitUnicodeString(&KeyName,
+				   L"Identifier");
+
+	      BufferLength = sizeof(KEY_VALUE_PARTIAL_INFORMATION) +
+			     256 * sizeof(WCHAR);
+	      ValueInfo = RtlAllocateHeap(RtlGetProcessHeap(),
+					  0,
+					  BufferLength);
+	      if (ValueInfo == NULL)
+		{
+		  DPRINT("RtlAllocateHeap() failed\n");
+		  NtClose(ControllerInstanceKey);
+		  NtClose(ControllerKey);
+		  NtClose(BusInstanceKey);
+		  NtClose(BusKey);
+		  return FALSE;
+		}
+
+	      Status = NtQueryValueKey(ControllerInstanceKey,
+				       &KeyName,
+				       KeyValuePartialInformation,
+				       ValueInfo,
+				       BufferLength,
+				       &ReturnedLength);
+	      if (NT_SUCCESS(Status))
+		{
+		  DPRINT("Identifier: %S\n", (PWSTR)ValueInfo->Data);
+
+		  BufferLength = min(ValueInfo->DataLength / sizeof(WCHAR), IdentifierLength);
+		  RtlCopyMemory (Identifier,
+				 ValueInfo->Data,
+				 BufferLength * sizeof(WCHAR));
+		  Identifier[BufferLength] = 0;
+
+		  RtlFreeHeap(RtlGetProcessHeap(),
+			      0,
+			      ValueInfo);
+		  NtClose(ControllerInstanceKey);
+		  NtClose(ControllerKey);
+		  NtClose(BusInstanceKey);
+		  NtClose(BusKey);
+		  return TRUE;
+		}
+
+	      NtClose(ControllerInstanceKey);
+
+	      ControllerInstance++;
+	    }
+
+	  NtClose(ControllerKey);
+	}
+
+      NtClose(BusInstanceKey);
+
+      BusInstance++;
+    }
+
+  NtClose(BusKey);
+
+  return FALSE;
+}
+
+
 PGENERIC_LIST
 CreateDisplayDriverList(HINF InfFile)
 {
@@ -98,6 +257,49 @@ CreateDisplayDriverList(HINF InfFile)
   PWCHAR KeyName;
   PWCHAR KeyValue;
   PWCHAR UserData;
+  WCHAR DisplayIdentifier[128];
+  WCHAR DisplayKey[32];
+
+  /* Get the display identification */
+  if (!GetDisplayIdentifier(DisplayIdentifier, 128))
+    {
+      DisplayIdentifier[0] = 0;
+    }
+
+  DPRINT("Display identifier: '%S'\n", DisplayIdentifier);
+
+  /* Search for matching device identifier */
+  if (!InfFindFirstLine(InfFile, L"Map.Display", NULL, &Context))
+    {
+      /* FIXME: error message */
+      return NULL;
+    }
+
+  do
+    {
+      if (!InfGetDataField(&Context, 1, &KeyValue))
+	{
+	  /* FIXME: Handle error! */
+	  DPRINT("InfGetDataField() failed\n");
+	  return NULL;
+	}
+
+      DPRINT("KeyValue: %S\n", KeyValue);
+      if (wcsstr(DisplayIdentifier, KeyValue))
+	{
+	  if (!InfGetDataField(&Context, 0, &KeyName))
+	    {
+	      /* FIXME: Handle error! */
+	      DPRINT("InfGetDataField() failed\n");
+	      return NULL;
+	    }
+
+	  DPRINT("Display key: %S\n", KeyName);
+	  wcscpy(DisplayKey, KeyName);
+	}
+    }
+  while (InfFindNextLine(&Context, &Context));
+
 
   List = CreateGenericList();
   if (List == NULL)
@@ -111,10 +313,15 @@ CreateDisplayDriverList(HINF InfFile)
 
   do
     {
-      if (!InfGetData (&Context, &KeyName, &KeyValue))
+      if (!InfGetDataField(&Context, 0, &KeyName))
 	{
-	  /* FIXME: Handle error! */
-	  DPRINT("InfGetData() failed\n");
+	  DPRINT1("InfGetDataField() failed\n");
+	  break;
+	}
+
+      if (!InfGetDataField(&Context, 1, &KeyValue))
+	{
+	  DPRINT1("InfGetDataField() failed\n");
 	  break;
 	}
 
@@ -123,19 +330,77 @@ CreateDisplayDriverList(HINF InfFile)
 				 (wcslen(KeyName) + 1) * sizeof(WCHAR));
       if (UserData == NULL)
 	{
-	  /* FIXME: Handle error! */
+	  DPRINT1("RtlAllocateHeap() failed\n");
+	  DestroyGenericList(List, TRUE);
+	  return NULL;
 	}
 
       wcscpy(UserData, KeyName);
 
       sprintf(Buffer, "%S", KeyValue);
-      AppendGenericListEntry(List, Buffer, UserData, FALSE);
+      AppendGenericListEntry(List,
+			     Buffer,
+			     UserData,
+			     _wcsicmp(KeyName, DisplayKey) ? FALSE : TRUE);
     }
   while (InfFindNextLine(&Context, &Context));
 
-  AppendGenericListEntry(List, "Automatic detection", NULL, TRUE);
+#if 0
+  AppendGenericListEntry(List, "Other display driver", NULL, TRUE);
+#endif
 
   return List;
+}
+
+
+BOOLEAN
+ProcessDisplayRegistry(HINF InfFile, PGENERIC_LIST List)
+{
+  PGENERIC_LIST_ENTRY Entry;
+  INFCONTEXT Context;
+  PWCHAR ServiceName;
+  ULONG StartValue;
+  NTSTATUS Status;
+
+  DPRINT("ProcessDisplayRegistry() called\n");
+
+  Entry = GetGenericListEntry(List);
+  if (Entry == NULL)
+    {
+      DPRINT("GetGenericListEntry() failed\n");
+      return FALSE;
+    }
+
+  if (!InfFindFirstLine(InfFile, L"Display", Entry->UserData, &Context))
+    {
+      DPRINT("InfFindFirstLine() failed\n");
+      return FALSE;
+    }
+
+  if (!InfGetDataField(&Context, 3, &ServiceName))
+    {
+      DPRINT("InfGetDataField() failed\n");
+      return FALSE;
+    }
+
+  DPRINT("Service name: %S\n", ServiceName);
+
+  StartValue = 1;
+  Status = RtlWriteRegistryValue(RTL_REGISTRY_SERVICES,
+				 ServiceName,
+				 L"Start",
+				 REG_DWORD,
+				 &StartValue,
+				 sizeof(ULONG));
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("RtlWriteRegistryValue() failed (Status %lx)\n", Status);
+      return FALSE;
+    }
+
+  DPRINT("ProcessDisplayRegistry() done\n");
+
+  return TRUE;
 }
 
 

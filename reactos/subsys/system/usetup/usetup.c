@@ -3182,6 +3182,24 @@ RegistryPage(PINPUT_RECORD Ir)
     }
   while (InfFindNextLine (&InfContext, &InfContext));
 
+  /* Update display registry settings */
+  SetStatusText("   Updating display registry settings...");
+  if (!ProcessDisplayRegistry(SetupInf, DisplayList))
+    {
+      PopupError("Setup failed to update display registry settings.",
+		 "ENTER = Reboot computer");
+
+      while(TRUE)
+	{
+	  ConInKey(Ir);
+
+	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	    {
+	      return QUIT_PAGE;
+	    }
+	}
+    }
+
   /* Update keyboard layout settings */
   SetStatusText("   Updating keyboard layout settings...");
   if (!ProcessKeyboardLayoutRegistry(LayoutList))
