@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.5 2003/04/03 00:06:23 hyperion Exp $
+/* $Id: process.c,v 1.6 2003/04/04 20:35:24 hyperion Exp $
 */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -328,6 +328,10 @@ PsaWalkFirstThread
  /* get the offset of the Threads field (dependant on the kernel version) */
  if(!nOffsetOfThreads)
  {
+  /*
+   FIXME: we should probably use the build number, instead, but it isn't
+   available as reliably as the major and minor version numbers
+  */
   switch(SharedUserData->NtMajorVersion)
   {
    /* NT 3 and 4 */
