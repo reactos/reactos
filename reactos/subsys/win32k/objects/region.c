@@ -20,6 +20,11 @@ W32kCropRgn(HRGN hDest, HRGN hSrc, const RECT* Rect, const POINT* Point)
 	return NULL;
 }
 
+HRGN STDCALL
+W32kUnionRectWithRgn(HRGN hDest, const RECT* Rect)
+{
+}
+
 INT STDCALL
 W32kCombineRgn(HRGN  hDest,
 	       HRGN  hSrc1,

@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.8 2002/07/04 19:56:37 dwelch Exp $
+/* $Id: window.c,v 1.9 2002/07/17 21:04:57 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -21,11 +21,69 @@
 #include <include/winpos.h>
 #include <include/callback.h>
 #include <include/msgqueue.h>
+#include <include/rect.h>
 
 //#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
+
+VOID
+W32kSetFocusWindow(HWND hWnd)
+{
+}
+
+BOOL
+W32kIsChildWindow(HWND Parent, HWND Child)
+{
+  PWINDOW_OBJECT BaseWindow = W32kGetWindowObject(Child);
+  PWINDOW_OBJECT Window = BaseWindow;
+  while (Window != NULL && Window->Style & WS_CHILD)
+    {
+      if (Window->Self == Parent)
+	{
+	  W32kReleaseWindowObject(BaseWindow);
+	  return(TRUE);
+	}
+      Window = Window->Parent;
+    }
+  W32kReleaseWindowObject(BaseWindow);
+  return(FALSE);  
+}
+
+BOOL
+W32kIsWindowVisible(HWND Wnd)
+{
+  PWINDOW_OBJECT BaseWindow = W32kGetWindowObject(Wnd);
+  PWINDOW_OBJECT Window = BaseWindow;
+  BOOLEAN Result = FALSE;
+  while (Window != NULL && Window->Style & WS_CHILD)
+    {
+      if (!(Window->Style & WS_VISIBLE))
+	{
+	  W32kReleaseWindowObject(BaseWindow);
+	  return(FALSE);
+	}
+      Window = Window->Parent;
+    }
+  if (Window != NULL && Window->Style & WS_VISIBLE)
+    {
+      Result = TRUE;
+    }
+  W32kReleaseWindowObject(BaseWindow);
+  return(Result);
+}
+
+BOOL
+W32kIsDesktopWindow(HWND hWnd)
+{
+  PWINDOW_OBJECT WindowObject;
+  BOOL IsDesktop;
+  WindowObject = W32kGetWindowObject(hWnd);
+  IsDesktop = WindowObject->Parent == NULL;
+  W32kReleaseWindowObject(WindowObject);
+  return(IsDesktop);
+}
 
 PWINDOW_OBJECT
 W32kGetWindowObject(HWND hWnd)
@@ -54,16 +112,52 @@ W32kReleaseWindowObject(PWINDOW_OBJECT Window)
 VOID
 W32kGetClientRect(PWINDOW_OBJECT WindowObject, PRECT Rect)
 {
+  Rect->left = Rect->bottom = 0;
+  Rect->right = WindowObject->ClientRect.right - WindowObject->ClientRect.left;
+  Rect->top = WindowObject->ClientRect.bottom - WindowObject->ClientRect.top;
 }
 
 HWND
 W32kGetActiveWindow(VOID)
 {
+  PUSER_MESSAGE_QUEUE Queue;
+  Queue = (PUSER_MESSAGE_QUEUE)W32kGetActiveDesktop()->ActiveMessageQueue;
+  if (Queue == NULL)
+    {
+      return(NULL);
+    }
+  else
+    {
+      return(Queue->ActiveWindow);
+    }
 }
+
+HWND
+W32kGetFocusWindow(VOID)
+{
+  PUSER_MESSAGE_QUEUE Queue;
+  Queue = (PUSER_MESSAGE_QUEUE)W32kGetActiveDesktop()->ActiveMessageQueue;
+  if (Queue == NULL)
+    {
+      return(NULL);
+    }
+  else
+    {
+      return(Queue->FocusWindow);
+    }
+}
+
 
 WNDPROC
 W32kGetWindowProc(HWND Wnd)
 {
+  PWINDOW_OBJECT WindowObject;
+  WNDPROC WndProc;
+
+  WindowObject = W32kGetWindowObject(Wnd);
+  WndProc = WindowObject->Class->Class.lpfnWndProc;
+  W32kReleaseWindowObject(Wnd);
+  return(WndProc);
 }
 
 NTSTATUS
@@ -101,6 +195,57 @@ NtUserChildWindowFromPointEx(HWND Parent,
 }
 
 HWND STDCALL
+W32kCreateDesktopWindow(PWINSTATION_OBJECT WindowStation,
+			PWNDCLASS_OBJECT DesktopClass,
+			ULONG Width, ULONG Height)
+{
+  PWSTR WindowName;
+  HWND Handle;
+  PWINDOW_OBJECT WindowObject;
+
+  /* Create the window object. */
+  WindowObject = (PWINDOW_OBJECT)ObmCreateObject(WindowStation->HandleTable, 
+						 &Handle, 
+						 otWindow, 
+						 sizeof(WINDOW_OBJECT));
+  if (!WindowObject) 
+    {
+      return((HWND)0);
+    }
+
+  /*
+   * Fill out the structure describing it.
+   */
+  WindowObject->Class = DesktopClass;
+  WindowObject->ExStyle = 0;
+  WindowObject->Style = WS_VISIBLE;
+  WindowObject->x = 0;
+  WindowObject->y = 0;
+  WindowObject->Width = Width;
+  WindowObject->Height = Height;
+  WindowObject->ParentHandle = NULL;
+  WindowObject->Parent = NULL;
+  WindowObject->Menu = NULL;
+  WindowObject->Instance = NULL;
+  WindowObject->Parameters = NULL;
+  WindowObject->Self = Handle;
+  WindowObject->MessageQueue = NULL;
+  WindowObject->ExtraData = NULL;
+  WindowObject->ExtraDataSize = 0;
+  WindowObject->WindowRect.left = 0;
+  WindowObject->WindowRect.top = 0;
+  WindowObject->WindowRect.right = Width;
+  WindowObject->WindowRect.bottom = Height;
+  WindowObject->ClientRect = WindowObject->WindowRect;
+
+  WindowName = ExAllocatePool(NonPagedPool, sizeof(L"DESKTOP"));
+  wcscpy(WindowName, L"DESKTOP");
+  RtlInitUnicodeString(&WindowObject->WindowName, WindowName);
+
+  return(Handle);
+}
+
+HWND STDCALL
 NtUserCreateWindowEx(DWORD dwExStyle,
 		     PUNICODE_STRING lpClassName,
 		     PUNICODE_STRING lpWindowName,
@@ -118,11 +263,12 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   PWINSTATION_OBJECT WinStaObject;
   PWNDCLASS_OBJECT ClassObject;
   PWINDOW_OBJECT WindowObject;
+  PWINDOW_OBJECT ParentWindow;
   UNICODE_STRING WindowName;
   NTSTATUS Status;
   HANDLE Handle;
   POINT MaxSize, MaxPos, MinTrack, MaxTrack;
-  CREATESTRUCT Cs;
+  CREATESTRUCTW Cs;
   LRESULT Result;
   
   DPRINT("NtUserCreateWindowEx\n");
@@ -136,7 +282,15 @@ NtUserCreateWindowEx(DWORD dwExStyle,
       return((HWND)0);
     }
 
-  /* FIXME: Validate the parent window. */
+  if (hWndParent != NULL)
+    {
+      ParentWindow = W32kGetWindowObject(hWndParent);
+    }
+  else
+    {
+      hWndParent = PsGetWin32Thread()->Desktop->DesktopWindow;
+      ParentWindow = W32kGetWindowObject(hWndParent);
+    }
 
   /* Check the class. */
   Status = ClassReferenceClassByNameOrAtom(&ClassObject, lpClassName->Buffer);
@@ -187,14 +341,13 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->y = y;
   WindowObject->Width = nWidth;
   WindowObject->Height = nHeight;
-  WindowObject->Parent = hWndParent;
+  WindowObject->ParentHandle = hWndParent;
   WindowObject->Menu = hMenu;
   WindowObject->Instance = hInstance;
   WindowObject->Parameters = lpParam;
   WindowObject->Self = Handle;
   WindowObject->MessageQueue = PsGetWin32Thread()->MessageQueue;
-
-  /* FIXME: Add the window parent. */
+  WindowObject->Parent = ParentWindow;
 
   RtlInitUnicodeString(&WindowObject->WindowName, WindowName.Buffer);
   RtlFreeUnicodeString(&WindowName);
@@ -229,7 +382,12 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 		  &WindowObject->ListEntry);
   ExReleaseFastMutexUnsafe (&PsGetWin32Thread()->WindowListLock);
 
-  /* FIXME: Insert the window into the desktop window list. */
+  /* 
+   * Insert the window into the list of windows associated with the thread's
+   * desktop. 
+   */
+  InsertTailList(&PsGetWin32Thread()->Desktop->WindowListHead,
+		 &WindowObject->DesktopListEntry);
 
   /* FIXME: Maybe allocate a DCE for this window. */
 
@@ -342,8 +500,6 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 			 NewPos.right, NewPos.bottom, SwFlag);
     }
 
-  /* FIXME: Need to set up parent window. */
-#if 0
   /* Notify the parent window of a new child. */
   if ((WindowObject->Style & WS_CHILD) ||
       (!(WindowObject->ExStyle & WS_EX_NOPARENTNOTIFY)))
@@ -354,7 +510,6 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 			 MAKEWPARAM(WM_CREATE, WindowObject->IDMenu),
 			 (LPARAM)WindowObject->Self);
     }
-#endif
 
   if (dwStyle & WS_VISIBLE)
     {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bug.c,v 1.23 2002/05/14 21:19:18 dwelch Exp $
+/* $Id: bug.c,v 1.24 2002/07/17 21:04:55 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/bug.c
@@ -81,8 +81,13 @@ KeBugCheckWithTf(ULONG BugCheckCode,
 		 ULONG BugCheckParameter4,
 		 PKTRAP_FRAME Tf)
 {
+  KIRQL oldIrql;
+  KeRaiseIrql(HIGH_LEVEL, &oldIrql);
   DbgPrint("Bug detected code: 0x%X\n", BugCheckCode);
   KiDumpTrapFrame(Tf, BugCheckParameter1, BugCheckParameter2);
+  MmDumpToPagingFile(BugCheckCode, BugCheckParameter1, 
+		     BugCheckParameter2, BugCheckParameter3,
+		     BugCheckParameter4, Tf);
   for(;;);
 }
 
@@ -104,7 +109,6 @@ KeBugCheckEx(ULONG BugCheckCode,
   PRTL_MESSAGE_RESOURCE_ENTRY Message;
   NTSTATUS Status;
   
-  /* PJS: disable interrupts first, then do the rest */
   __asm__("cli\n\t");
   DbgPrint("Bug detected (code %x param %x %x %x %x)\n",
 	   BugCheckCode,
@@ -150,8 +154,10 @@ KeBugCheckEx(ULONG BugCheckCode,
 	       PsGetCurrentThread(),
 	       PsGetCurrentThread()->Cid.UniqueThread);
     }
-//   PsDumpThreads();
   KeDumpStackFrames((PULONG)__builtin_frame_address(0));
+  MmDumpToPagingFile(BugCheckCode, BugCheckParameter1, 
+		     BugCheckParameter2, BugCheckParameter3,
+		     BugCheckParameter4, NULL);
   
   if (KdDebuggerEnabled)
     {

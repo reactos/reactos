@@ -33,6 +33,9 @@ ClassReferenceClassByAtom(PWNDCLASS_OBJECT *Class,
 NTSTATUS
 ClassReferenceClassByNameOrAtom(PWNDCLASS_OBJECT *Class,
 				LPWSTR ClassNameOrAtom);
+PWNDCLASS_OBJECT
+W32kCreateClass(LPWNDCLASSEX lpwcx,
+		BOOL bUnicodeClass);
 
 #endif /* __WIN32K_CLASS_H */
 

@@ -1,4 +1,4 @@
-/* $Id: callback.c,v 1.5 2002/07/04 19:56:37 dwelch Exp $
+/* $Id: callback.c,v 1.6 2002/07/17 21:04:57 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -95,7 +95,7 @@ W32kSendNCCALCSIZEMessage(HWND Wnd, BOOL Validate, PRECT Rect,
 }
 
 LRESULT STDCALL
-W32kSendCREATEMessage(HWND Wnd, CREATESTRUCT* CreateStruct)
+W32kSendCREATEMessage(HWND Wnd, CREATESTRUCTW* CreateStruct)
 {
   SENDCREATEMESSAGE_CALLBACK_ARGUMENTS Arguments;
   LRESULT Result;
@@ -120,7 +120,7 @@ W32kSendCREATEMessage(HWND Wnd, CREATESTRUCT* CreateStruct)
 }
 
 LRESULT STDCALL
-W32kSendNCCREATEMessage(HWND Wnd, CREATESTRUCT* CreateStruct)
+W32kSendNCCREATEMessage(HWND Wnd, CREATESTRUCTW* CreateStruct)
 {
   SENDNCCREATEMESSAGE_CALLBACK_ARGUMENTS Arguments;
   LRESULT Result;
@@ -157,6 +157,11 @@ W32kCallWindowProc(WNDPROC Proc,
   PVOID ResultPointer;
   ULONG ResultLength;
 
+  if (W32kIsDesktopWindow(Wnd))
+    {
+      return(W32kDesktopWindowProc(Wnd, Message, wParam, lParam));
+    }
+
   Arguments.Proc = Proc;
   Arguments.Wnd = Wnd;
   Arguments.Msg = Message;
@@ -174,6 +179,67 @@ W32kCallWindowProc(WNDPROC Proc,
       return(0xFFFFFFFF);
     }
   return(Result);
+}
+
+LRESULT STDCALL
+W32kSendGETMINMAXINFOMessage(HWND Wnd, MINMAXINFO* MinMaxInfo)
+{
+  SENDGETMINMAXINFO_CALLBACK_ARGUMENTS Arguments;
+  SENDGETMINMAXINFO_CALLBACK_RESULT Result;
+  NTSTATUS Status;
+  PVOID ResultPointer;
+  ULONG ResultLength;
+
+  Arguments.Wnd = Wnd;
+  Arguments.MinMaxInfo = *MinMaxInfo;
+  ResultPointer = &Result;
+  ResultLength = sizeof(Result);
+  Status = NtW32Call(USER32_CALLBACK_SENDGETMINMAXINFO,
+		     &Arguments,
+		     sizeof(SENDGETMINMAXINFO_CALLBACK_ARGUMENTS),
+		     &ResultPointer,
+		     &ResultLength);
+  if (!NT_SUCCESS(Status))
+    {
+      return(0);
+    }
+  return(Result.Result);  
+}
+
+LRESULT STDCALL
+W32kCallTrampolineWindowProc(WNDPROC Proc,
+			     HWND Wnd,
+			     UINT Message,
+			     WPARAM wParam,
+			     LPARAM lParam)
+{
+  switch (Message)
+    {
+    case WM_NCCREATE:
+      return(W32kSendNCCREATEMessage(Wnd, (CREATESTRUCTW*)lParam));
+     
+    case WM_CREATE:
+      return(W32kSendCREATEMessage(Wnd, (CREATESTRUCTW*)lParam));
+
+    case WM_GETMINMAXINFO:
+      return(W32kSendGETMINMAXINFOMessage(Wnd, (MINMAXINFO*)lParam));
+
+    case WM_NCCALCSIZE:
+      {
+	if (wParam)
+	  {
+	    return(W32kSendNCCALCSIZEMessage(Wnd, TRUE, NULL, 
+					     (NCCALCSIZE_PARAMS*)lParam));
+	  }
+	else
+	  {
+	    return(W32kSendNCCALCSIZEMessage(Wnd, FALSE, (RECT*)lParam, NULL));
+	  }
+      }
+
+    default:
+      return(W32kCallWindowProc(Proc, Wnd, Message, wParam, lParam));
+    }
 }
 
 /* EOF */

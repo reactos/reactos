@@ -1,4 +1,4 @@
-/* $Id: winsta.c,v 1.4 2002/07/04 19:56:37 dwelch Exp $
+/* $Id: winsta.c,v 1.5 2002/07/17 21:04:57 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -14,18 +14,42 @@
  *                   the first USER32/GDI32 call not related
  *                   to window station/desktop handling
  */
+
+/* INCLUDES ******************************************************************/
+
 #include <ddk/ntddk.h>
 #include <win32k/win32k.h>
 #include <include/winsta.h>
 #include <include/object.h>
+#include <include/guicheck.h>
+#include <napi/win32.h>
+#include <include/class.h>
+#include <include/window.h>
 
 //#define NDEBUG
 #include <debug.h>
 
+/* GLOBALS *******************************************************************/
+
 #define WINSTA_ROOT_NAME L"\\Windows\\WindowStations"
 
+LRESULT CALLBACK
+W32kDesktopWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-HDESK InputDesktop; /* Currently active desktop */
+STATIC PWNDCLASS_OBJECT DesktopWindowClass;
+
+/* Currently active desktop */
+STATIC HDESK InputDesktopHandle = NULL; 
+STATIC PDESKTOP_OBJECT InputDesktop = NULL;
+STATIC PWINSTATION_OBJECT InputWindowStation = NULL;
+
+/* FUNCTIONS *****************************************************************/
+
+PDESKTOP_OBJECT
+W32kGetActiveDesktop(VOID)
+{
+  return(InputDesktop);
+}
 
 NTSTATUS
 InitWindowStationImpl(VOID)
@@ -34,6 +58,7 @@ InitWindowStationImpl(VOID)
   HANDLE WindowStationsDirectory;
   UNICODE_STRING UnicodeString;
   NTSTATUS Status;
+  WNDCLASSEX wcx;
 
   /*
    * Create the '\Windows\WindowStations' directory
@@ -57,7 +82,19 @@ InitWindowStationImpl(VOID)
       return Status;
     }
 
-  return STATUS_SUCCESS;
+  /* 
+   * Create the desktop window class
+   */
+  wcx.style = 0;
+  wcx.lpfnWndProc = W32kDesktopWindowProc;
+  wcx.cbClsExtra = wcx.cbWndExtra = 0;
+  wcx.hInstance = wcx.hIcon = wcx.hCursor = NULL;
+  wcx.hbrBackground = NULL;
+  wcx.lpszMenuName = NULL;
+  wcx.lpszClassName = L"DesktopWindowClass";
+  DesktopWindowClass = W32kCreateClass(&wcx, TRUE);
+
+  return(STATUS_SUCCESS);
 }
 
 NTSTATUS
@@ -475,14 +512,12 @@ NtUserCloseDesktop(
  *   Handle to the new desktop that can be closed with NtUserCloseDesktop()
  *   Zero on failure
  */
-HDESK
-STDCALL
-NtUserCreateDesktop(
-  PUNICODE_STRING lpszDesktopName,
-  DWORD dwFlags,
-  ACCESS_MASK dwDesiredAccess,
-  LPSECURITY_ATTRIBUTES lpSecurity,
-  HWINSTA hWindowStation)
+HDESK STDCALL
+NtUserCreateDesktop(PUNICODE_STRING lpszDesktopName,
+		    DWORD dwFlags,
+		    ACCESS_MASK dwDesiredAccess,
+		    LPSECURITY_ATTRIBUTES lpSecurity,
+		    HWINSTA hWindowStation)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   PWINSTATION_OBJECT WinStaObject;
@@ -492,17 +527,17 @@ NtUserCreateDesktop(
   NTSTATUS Status;
   HDESK Desktop;
 
-  Status = ValidateWindowStationHandle(
-    hWindowStation,
-    KernelMode,
-    0,
-    &WinStaObject);
+  Status = ValidateWindowStationHandle(hWindowStation,
+				       KernelMode,
+				       0,
+				       &WinStaObject);
   if (!NT_SUCCESS(Status))
-  {
-    DPRINT("Failed validation of window station handle (0x%X)\n", hWindowStation);
-    return (HDESK)0;
-  }
-
+    {
+      DPRINT("Failed validation of window station handle (0x%X)\n", 
+	     hWindowStation);
+      return((HDESK)0);
+    }
+  
   wcscpy(NameBuffer, WINSTA_ROOT_NAME);
   wcscat(NameBuffer, L"\\");
   wcscat(NameBuffer, WinStaObject->Name.Buffer);
@@ -515,43 +550,47 @@ NtUserCreateDesktop(
   DPRINT("Trying to open desktop (%wZ)\n", &DesktopName);
 
   /* Initialize ObjectAttributes for the desktop object */
-  InitializeObjectAttributes(
-    &ObjectAttributes,
-    &DesktopName,
-    0,
-    NULL,
-    NULL);
-
-  Status = ObOpenObjectByName(
-    &ObjectAttributes,
-    ExDesktopObjectType,
-    NULL,
-    UserMode,
-    dwDesiredAccess,
-    NULL,
-    &Desktop);
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &DesktopName,
+			     0,
+			     NULL,
+			     NULL);
+  Status = ObOpenObjectByName(&ObjectAttributes,
+			      ExDesktopObjectType,
+			      NULL,
+			      UserMode,
+			      dwDesiredAccess,
+			      NULL,
+			      &Desktop);
   if (NT_SUCCESS(Status))
-  {
-    DPRINT("Successfully opened desktop (%wZ)\n", &DesktopName);
-    return (HDESK)Desktop;
-  }
+    {
+      DPRINT("Successfully opened desktop (%wZ)\n", &DesktopName);
+      return((HDESK)Desktop);
+    }
 
   DPRINT("Status for open operation (0x%X)\n", Status);
 
-  Status = ObCreateObject(
-    &Desktop,
-    STANDARD_RIGHTS_REQUIRED,
-    &ObjectAttributes,
-    ExDesktopObjectType,
-    (PVOID*)&DesktopObject);
+  Status = ObCreateObject(&Desktop,
+			  STANDARD_RIGHTS_REQUIRED,
+			  &ObjectAttributes,
+			  ExDesktopObjectType,
+			  (PVOID*)&DesktopObject);
   if (!NT_SUCCESS(Status))
-  {
-    DPRINT("Failed creating desktop (%wZ)\n", &DesktopName);
-    SetLastNtError(STATUS_UNSUCCESSFUL);
-    return (HDESK)0;
-  }
+    {
+      DPRINT("Failed creating desktop (%wZ)\n", &DesktopName);
+      SetLastNtError(STATUS_UNSUCCESSFUL);
+      return((HDESK)0);
+    }
+  
+  /* Initialize some local (to win32k) desktop state. */
+  DesktopObject->ActiveMessageQueue = NULL;  
+  InitializeListHead(&DesktopObject->WindowListHead);
+  DesktopObject->DesktopWindow = 
+    W32kCreateDesktopWindow(DesktopObject->WindowStation,
+			    DesktopWindowClass,
+			    640, 480);
 
-  return (HDESK)Desktop;
+  return((HDESK)Desktop);
 }
 
 HDESK STDCALL
@@ -703,30 +742,54 @@ NtUserOpenInputDesktop(
   return (HDESK)0;
 }
 
-BOOL
-STDCALL
-NtUserPaintDesktop(
-  HDC hDC)
+BOOL STDCALL
+NtUserPaintDesktop(HDC hDC)
 {
   UNIMPLEMENTED
 
   return FALSE;
 }
 
-DWORD
-STDCALL
-NtUserResolveDesktopForWOW(
-  DWORD Unknown0)
+DWORD STDCALL
+NtUserResolveDesktopForWOW(DWORD Unknown0)
 {
   UNIMPLEMENTED
-
   return 0;
 }
 
 BOOL STDCALL
 NtUserSetThreadDesktop(HDESK hDesktop)
-{
-  return(FALSE);
+{  
+  PDESKTOP_OBJECT DesktopObject;
+  NTSTATUS Status;
+
+  /* Initialize the Win32 state if necessary. */
+  W32kGuiCheck();
+
+  /* Validate the new desktop. */
+  Status = ValidateDesktopHandle(hDesktop,
+				 KernelMode,
+				 0,
+				 &DesktopObject);
+  if (!NT_SUCCESS(Status)) 
+    {
+      DPRINT("Validation of desktop handle (0x%X) failed\n", hDesktop);
+      return(FALSE);
+    }
+
+  /* Check for setting the same desktop as before. */
+  if (DesktopObject == PsGetWin32Thread()->Desktop)
+    {
+      ObDereferenceObject(DesktopObject);
+      return(TRUE);
+    }
+
+  /* FIXME: Should check here to see if the thread has any windows. */
+
+  ObDereferenceObject(PsGetWin32Thread()->Desktop);
+  PsGetWin32Thread()->Desktop = DesktopObject;
+
+  return(TRUE);
 }
 
 /*
@@ -737,34 +800,56 @@ NtUserSetThreadDesktop(HDESK hDesktop)
  * RETURNS:
  *   Status
  */
-BOOL
-STDCALL
-NtUserSwitchDesktop(
-  HDESK hDesktop)
+BOOL STDCALL
+NtUserSwitchDesktop(HDESK hDesktop)
 {
-  PDESKTOP_OBJECT Object;
+  PDESKTOP_OBJECT DesktopObject;
   NTSTATUS Status;
 
   DPRINT("About to switch desktop (0x%X)\n", hDesktop);
 
-  Status = ValidateDesktopHandle(
-    hDesktop,
-    KernelMode,
-    0,
-    &Object);
-  if (!NT_SUCCESS(Status)) {
-    DPRINT("Validation of desktop handle (0x%X) failed\n", hDesktop);
-    return FALSE;
-  }
-
-  ObDereferenceObject(Object);
+  Status = ValidateDesktopHandle(hDesktop,
+				 KernelMode,
+				 0,
+				 &DesktopObject);
+  if (!NT_SUCCESS(Status)) 
+    {
+      DPRINT("Validation of desktop handle (0x%X) failed\n", hDesktop);
+      return(FALSE);
+    }
 
   /* FIXME: Fail if the desktop belong to an invisible window station */
   /* FIXME: Fail if the process is associated with a secured
             desktop such as Winlogon or Screen-Saver */
-
   /* FIXME: Connect to input device */
-  return TRUE;
+
+  /* Set the active desktop in the desktop's window station. */
+  DesktopObject->WindowStation->ActiveDesktop = DesktopObject;
+
+  /* Set the global state. */
+  InputDesktopHandle = hDesktop;
+  InputDesktop = DesktopObject;
+  InputWindowStation = DesktopObject->WindowStation;
+
+  ObDereferenceObject(DesktopObject);
+
+  return(TRUE);
+}
+
+LRESULT CALLBACK
+W32kDesktopWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+  switch (msg)
+    {
+    case WM_CREATE:
+      return(0);
+
+    case WM_NCCREATE:
+      return(1);
+
+    default:
+      return(0);
+    }
 }
 
 /* EOF */

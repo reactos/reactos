@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.85 2002/07/13 12:44:08 chorns Exp $
+/* $Id: process.c,v 1.86 2002/07/17 21:04:56 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -194,7 +194,6 @@ PiKillMostProcesses(VOID)
 VOID
 PsInitProcessManagment(VOID)
 {
-
    PKPROCESS KProcess;
    KIRQL oldIrql;
    NTSTATUS Status;
@@ -970,7 +969,6 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
 	
       case ProcessImageFileName:
 	memcpy(Process->ImageFileName, ProcessInformation, 8);
-//      DPRINT1("Process->ImageFileName %.8s\n", Process->ImageFileName);
 	Status = STATUS_SUCCESS;
 	break;
 	
@@ -996,6 +994,11 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
       case ProcessWow64Information:
       default:
 	Status = STATUS_INVALID_INFO_CLASS;
+
+     case ProcessDesktop:
+       Process->Win32Desktop = *(PHANDLE)ProcessInformation;
+       Status = STATUS_SUCCESS;
+       break;
      }
    ObDereferenceObject(Process);
    return(Status);

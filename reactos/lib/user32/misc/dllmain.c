@@ -59,6 +59,8 @@ Init(VOID)
     (PVOID)User32SendNCCREATEMessageForKernel;
   NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_SENDCREATE] =
     (PVOID)User32SendCREATEMessageForKernel;
+  NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_SENDGETMINMAXINFO] =
+    (PVOID)User32SendGETMINMAXINFOMessageForKernel;
 
   //ProcessWindowStation = CreateWindowStationW(L"WinStaName",0,GENERIC_ALL,NULL);
   //Desktop = CreateDesktopA(NULL,NULL,NULL,0,0,NULL);

@@ -1,4 +1,4 @@
-/* $Id: msgqueue.c,v 1.4 2002/07/04 19:56:37 dwelch Exp $
+/* $Id: msgqueue.c,v 1.5 2002/07/17 21:04:57 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -138,6 +138,7 @@ MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
   ExAcquireFastMutex(&MessageQueue->Lock);
   if (IsListEmpty(&MessageQueue->SentMessagesListHead))
     {
+      ExReleaseFastMutex(&MessageQueue->Lock);
       return(FALSE);
     }
   Entry = RemoveHeadList(&MessageQueue->SentMessagesListHead);

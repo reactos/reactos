@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: trap.s,v 1.12 2002/01/27 01:11:23 dwelch Exp $
+/* $Id: trap.s,v 1.13 2002/07/17 21:04:55 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/trap.s
@@ -136,8 +136,9 @@ _KiTrapProlog:
 	pushl	$0     /* XXX: TempCS */
 	pushl	$0     /* XXX: DebugPointer */
 	pushl	$0     /* XXX: DebugArgMark */
-	pushl	$0     /* XXX: DebugEIP */
-	pushl	$0     /* XXX: DebugEBP */
+	movl    0x60(%esp), %ebx
+	pushl	%ebx   /* XXX: DebugEIP */
+	pushl	%ebp   /* XXX: DebugEBP */
 
 	/* Load the segment registers */
 	movl	$KERNEL_DS, %ebx
@@ -150,10 +151,14 @@ _KiTrapProlog:
 	movw	%bx,%es
 
 	movl	%esp, %ebx
-
+	movl	%esp, %ebp
+	
 	/* Save a pointer to the trap frame in the current KTHREAD */
-	movl  %ebx, %ss:KTHREAD_TRAP_FRAME(%edi)
-
+	cmpl	$0, %edi
+	je	.L6
+	movl	%ebx, %ss:KTHREAD_TRAP_FRAME(%edi)
+.L6:	
+	
 	/* Call the C exception handler */
 	pushl	%esi
 	pushl	%ebx
@@ -172,7 +177,7 @@ _KiTrapProlog:
 .L4:
 	pushl	$0	
 	jmp	.L3	
-				
+					
 .globl _KiTrap0
 _KiTrap0:
 	/* No error code */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.128 2002/06/27 17:47:55 ekohl Exp $
+/* $Id: main.c,v 1.129 2002/07/17 21:04:55 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -507,10 +507,10 @@ ExpInitializeExecutive(VOID)
   NtEarlyInitVdm();
   
   MmInit1(FirstKrnlPhysAddr,
-    LastKrnlPhysAddr,
-    LastKernelAddress,
-    (PADDRESS_RANGE)&KeMemoryMap,
-    KeMemoryMapRangeCount);
+	  LastKrnlPhysAddr,
+	  LastKernelAddress,
+	  (PADDRESS_RANGE)&KeMemoryMap,
+	  KeMemoryMapRangeCount);
   
   /* create default nls tables */
   RtlpInitNlsTables();
@@ -613,6 +613,7 @@ ExpInitializeExecutive(VOID)
   /*
    * Initalize services loaded at boot time
    */
+  *(PULONG)0 = 0;
   DPRINT("%d files loaded\n",KeLoaderBlock.ModsCount);
   for (i=0; i < KeLoaderBlock.ModsCount; i++)
     {

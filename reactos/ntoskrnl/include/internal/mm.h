@@ -538,5 +538,13 @@ extern PHYSICAL_ADDRESS MmSharedDataPagePhysicalAddress;
 PMM_PAGEOP
 MmCheckForPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
 		 PMM_SECTION_SEGMENT Segment, ULONG Offset);
+struct _KTRAP_FRAME;
+NTSTATUS STDCALL 
+MmDumpToPagingFile(ULONG BugCode,
+		   ULONG BugCodeParameter1,
+		   ULONG BugCodeParameter2,
+		   ULONG BugCodeParameter3,
+		   ULONG BugCodeParameter4,
+		   struct _KTRAP_FRAME* TrapFrame);
 
 #endif

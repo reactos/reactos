@@ -58,6 +58,10 @@ typedef struct _USER_MESSAGE_QUEUE
   BOOLEAN PaintPosted;
   /* Count of paints pending. */
   ULONG PaintCount;
+  /* Current active window for this queue. */
+  HWND ActiveWindow;
+  /* Current capture window for this queue. */
+  HWND CaptureWindow;
 } USER_MESSAGE_QUEUE, *PUSER_MESSAGE_QUEUE;
 
 VOID
@@ -103,6 +107,12 @@ MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue);
 VOID
 MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 		     PUSER_SENT_MESSAGE_NOTIFY NotifyMessage);
+LRESULT STDCALL
+W32kSendMessage(HWND hWnd,
+		UINT Msg,
+		WPARAM wParam,
+		LPARAM lParam,
+		BOOL KernelMessage);
 
 #define MAKE_LONG(x, y) ((((y) & 0xFFFF) << 16) | ((x) & 0xFFFF))
 

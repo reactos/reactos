@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.35 2002/06/04 15:26:57 dwelch Exp $
+/* $Id: mminit.c,v 1.36 2002/07/17 21:04:56 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -267,7 +267,7 @@ VOID MmInit1(ULONG FirstKrnlPhysAddr,
     */
 #ifndef MP
    /* FIXME: This is broken in SMP mode */
-   //MmDeletePageTable(NULL, 0);
+   MmDeletePageTable(NULL, 0);
 #endif
    /*
     * Free all pages not used for kernel memory

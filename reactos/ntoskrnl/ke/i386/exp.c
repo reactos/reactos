@@ -423,13 +423,15 @@ KiDoubleFaultHandler(VOID)
 }
 
 VOID
-KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG ExceptionNr, ULONG cr2)
+KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG Parameter1, ULONG Parameter2)
 {
   unsigned int cr3;
   unsigned int i;
   ULONG StackLimit;
   PULONG Frame;
   ULONG Esp0;
+  ULONG ExceptionNr = (ULONG)Tf->DebugArgMark;
+  ULONG cr2 = (ULONG)Tf->DebugPointer;
 
   Esp0 = (ULONG)Tf;
   
@@ -519,11 +521,15 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
    NTSTATUS Status;
    ULONG Esp0;
 
+   /* Store the exception number in an unused field in the trap frame. */
+   Tf->DebugArgMark = (PVOID)ExceptionNr;
+
    /* Use the address of the trap frame as approximation to the ring0 esp */
    Esp0 = (ULONG)&Tf->Eip;
   
    /* Get CR2 */
    __asm__("movl %%cr2,%0\n\t" : "=d" (cr2));
+   Tf->DebugPointer = (PVOID)cr2;
    
    /*
     * If this was a V86 mode exception then handle it specially

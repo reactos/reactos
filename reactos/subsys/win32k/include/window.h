@@ -5,6 +5,7 @@
 #include <ddk/ntddk.h>
 #include <include/class.h>
 #include <include/msgqueue.h>
+#include <include/winsta.h>
 
 typedef struct _INTERNALPOS
 {
@@ -91,6 +92,18 @@ PWINDOW_OBJECT
 W32kGetWindowObject(HWND hWnd);
 VOID
 W32kReleaseWindowObject(PWINDOW_OBJECT Window);
+HWND STDCALL
+W32kCreateDesktopWindow(PWINSTATION_OBJECT WindowStation,
+			PWNDCLASS_OBJECT DesktopClass,
+			ULONG Width, ULONG Height);
+BOOL
+W32kIsDesktopWindow(HWND hWnd);
+HWND
+W32kGetActiveWindow(VOID);
+BOOL
+W32kIsWindowVisible(HWND Wnd);
+BOOL
+W32kIsChildWindow(HWND Parent, HWND Child);
 
 #endif /* __WIN32K_WINDOW_H */
 

@@ -1,4 +1,4 @@
- /* $Id: guicheck.c,v 1.5 2002/07/04 19:56:37 dwelch Exp $
+ /* $Id: guicheck.c,v 1.6 2002/07/17 21:04:57 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -68,7 +68,7 @@ W32kGuiCheck(VOID)
 					 GENERIC_ALL,
 					 ExDesktopObjectType,
 					 UserMode,
-					 &PsGetWin32Thread()->Desktop,
+					 (PVOID*)&PsGetWin32Thread()->Desktop,
 					 NULL);
       if (!NT_SUCCESS(Status))
 	{

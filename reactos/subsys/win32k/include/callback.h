@@ -8,9 +8,15 @@ W32kCallWindowProc(WNDPROC Proc,
 		   WPARAM wParam,
 		   LPARAM lParam);
 LRESULT STDCALL
-W32kSendNCCREATEMessage(HWND Wnd, CREATESTRUCT* CreateStruct);
+W32kCallTrampolineWindowProc(WNDPROC Proc,
+			     HWND Wnd,
+			     UINT Message,
+			     WPARAM wParam,
+			     LPARAM lParam);
 LRESULT STDCALL
-W32kSendCREATEMessage(HWND Wnd, CREATESTRUCT* CreateStruct);
+W32kSendNCCREATEMessage(HWND Wnd, CREATESTRUCTW* CreateStruct);
+LRESULT STDCALL
+W32kSendCREATEMessage(HWND Wnd, CREATESTRUCTW* CreateStruct);
 VOID STDCALL
 W32kCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
 			    HWND hWnd,
@@ -20,5 +26,7 @@ W32kCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
 LRESULT STDCALL
 W32kSendNCCALCSIZEMessage(HWND Wnd, BOOL Validate, RECT Rect1,
 			  RECT Rect2, RECT Rect3, PWINDOWPOS Pos);
+LRESULT STDCALL
+W32kSendGETMINMAXINFOMessage(HWND Wnd, MINMAXINFO* MinMaxInfo);
 
 #endif /* __SUBSYS_WIN32K_INCLUDE_CALLBACK_H */

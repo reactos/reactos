@@ -30,6 +30,10 @@ ValidateDesktopHandle(HDESK Desktop,
 		      KPROCESSOR_MODE AccessMode,
 		      ACCESS_MASK DesiredAccess,
 		      PDESKTOP_OBJECT *Object);
+LRESULT CALLBACK
+W32kDesktopWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+PDESKTOP_OBJECT
+W32kGetActiveDesktop(VOID);
 
 #endif /* __WIN32K_WINSTA_H */
 

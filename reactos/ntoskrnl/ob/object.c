@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.51 2002/06/20 21:31:39 ekohl Exp $
+/* $Id: object.c,v 1.52 2002/07/17 21:04:56 dwelch Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -321,7 +321,10 @@ ObCreateObject(OUT PHANDLE Handle,
     }
   RtlFreeUnicodeString( &RemainingPath );
 
-  *Object = HEADER_TO_BODY(Header);
+  if (Object != NULL)
+    {
+      *Object = HEADER_TO_BODY(Header);
+    }
 
   if (Handle != NULL)
   {

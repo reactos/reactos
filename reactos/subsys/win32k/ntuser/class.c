@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.8 2002/07/04 19:56:37 dwelch Exp $
+/* $Id: class.c,v 1.9 2002/07/17 21:04:57 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -164,6 +164,37 @@ NtUserGetWOWClass(DWORD Unknown0,
   return(0);
 }
 
+PWNDCLASS_OBJECT
+W32kCreateClass(LPWNDCLASSEX lpwcx,
+		BOOL bUnicodeClass)
+{
+  PWNDCLASS_OBJECT ClassObject;
+  WORD  objectSize;
+  LPTSTR  namePtr;
+
+  objectSize = sizeof(WNDCLASS_OBJECT) +
+    (lpwcx->lpszMenuName != 0 ? ((wcslen (lpwcx->lpszMenuName) + 1) * 2) : 0) +
+    ((wcslen (lpwcx->lpszClassName) + 1) * 2);
+  ClassObject = ObmCreateObject(NULL, NULL, otClass, objectSize);
+  if (ClassObject == 0)
+    {          
+      return(NULL);
+    }
+
+  ClassObject->Class = *lpwcx;
+  ClassObject->Unicode = bUnicodeClass;
+  namePtr = (LPTSTR)(((PCHAR)ClassObject) + sizeof (WNDCLASS_OBJECT));
+  if (lpwcx->lpszMenuName != 0)
+    {
+      ClassObject->Class.lpszMenuName = namePtr;
+      wcscpy (namePtr, lpwcx->lpszMenuName);
+      namePtr += wcslen (lpwcx->lpszMenuName + 1);
+    }
+  ClassObject->Class.lpszClassName = namePtr;
+  wcscpy (namePtr, lpwcx->lpszClassName);
+  return(ClassObject);
+}
+
 RTL_ATOM STDCALL
 NtUserRegisterClassExWOW(LPWNDCLASSEX lpwcx,
 			 BOOL bUnicodeClass,
@@ -186,8 +217,6 @@ NtUserRegisterClassExWOW(LPWNDCLASSEX lpwcx,
   PWNDCLASS_OBJECT ClassObject;
   NTSTATUS Status;
   RTL_ATOM Atom;
-  WORD  objectSize;
-  LPTSTR  namePtr;
   
   W32kGuiCheck();
 
@@ -216,33 +245,16 @@ NtUserRegisterClassExWOW(LPWNDCLASSEX lpwcx,
       SetLastNtError(Status);
 
       return((RTL_ATOM)0);
-  }
-
-  objectSize = sizeof(WNDCLASS_OBJECT) +
-    (lpwcx->lpszMenuName != 0 ? ((wcslen (lpwcx->lpszMenuName) + 1) * 2) : 0) +
-    ((wcslen (lpwcx->lpszClassName) + 1) * 2);
-  ClassObject = ObmCreateObject(NULL, NULL, otClass, objectSize);
-  if (ClassObject == 0)
+    }
+  ClassObject = W32kCreateClass(lpwcx, bUnicodeClass);
+  if (ClassObject == NULL)
     {
       RtlDeleteAtomFromAtomTable(WinStaObject->AtomTable, Atom);
       ObDereferenceObject(WinStaObject);
       DPRINT("Failed creating window class object\n");
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
-      
       return((RTL_ATOM)0);
     }
-
-  ClassObject->Class = *lpwcx;
-  ClassObject->Unicode = bUnicodeClass;
-  namePtr = (LPTSTR)(((PCHAR)ClassObject) + sizeof (WNDCLASS_OBJECT));
-  if (lpwcx->lpszMenuName != 0)
-    {
-      ClassObject->Class.lpszMenuName = namePtr;
-      wcscpy (namePtr, lpwcx->lpszMenuName);
-      namePtr += wcslen (lpwcx->lpszMenuName + 1);
-    }
-  ClassObject->Class.lpszClassName = namePtr;
-  wcscpy (namePtr, lpwcx->lpszClassName);
   ExAcquireFastMutex(&PsGetWin32Process()->ClassListLock);
   InsertTailList(&PsGetWin32Process()->ClassListHead, &ClassObject->ListEntry);
   ExReleaseFastMutex(&PsGetWin32Process()->ClassListLock);

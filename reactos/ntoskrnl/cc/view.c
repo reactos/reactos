@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.43 2002/06/10 21:11:56 hbirr Exp $
+/* $Id: view.c,v 1.44 2002/07/17 21:04:55 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -61,8 +61,6 @@
 
 #define NDEBUG
 #include <internal/debug.h>
-
-extern void * alloca(size_t);
 
 /* GLOBALS *******************************************************************/
 
@@ -144,26 +142,32 @@ CcRosReleaseCacheSegment(PBCB Bcb,
 			 BOOLEAN Dirty,
 			 BOOLEAN Mapped)
 {
-   DPRINT("CcReleaseCachePage(Bcb %x, CacheSeg %x, Valid %d)\n",
-	  Bcb, CacheSeg, Valid);
-   
-   CacheSeg->Valid = Valid;
-   CacheSeg->Dirty = CacheSeg->Dirty || Dirty;
-   if (Mapped)
-     {
-       CacheSeg->MappedCount++;
-     }
-   ExReleaseFastMutex(&CacheSeg->Lock);
-   ExAcquireFastMutex(&ViewLock);
-   RemoveEntryList(&CacheSeg->CacheSegmentLRUListEntry);
-   InsertTailList(&CacheSegmentLRUListHead, 
-		  &CacheSeg->CacheSegmentLRUListEntry);
-   ExReleaseFastMutex(&ViewLock);
-   InterlockedDecrement(&CacheSeg->ReferenceCount);
+  BOOLEAN WasDirty = CacheSeg->Dirty;
 
-   DPRINT("CcReleaseCachePage() finished\n");
-   
-   return(STATUS_SUCCESS);
+  DPRINT("CcReleaseCachePage(Bcb %x, CacheSeg %x, Valid %d)\n",
+	 Bcb, CacheSeg, Valid);
+  
+  CacheSeg->Valid = Valid;
+  CacheSeg->Dirty = CacheSeg->Dirty || Dirty;
+  if (Mapped)
+    {
+      CacheSeg->MappedCount++;
+    }
+  ExReleaseFastMutex(&CacheSeg->Lock);
+  ExAcquireFastMutex(&ViewLock);
+  if (!WasDirty && CacheSeg->Dirty)
+    {
+      InsertTailList(&DirtySegmentListHead, &CacheSeg->DirtySegmentListEntry);
+    }
+  RemoveEntryList(&CacheSeg->CacheSegmentLRUListEntry);
+  InsertTailList(&CacheSegmentLRUListHead, 
+		 &CacheSeg->CacheSegmentLRUListEntry);
+  ExReleaseFastMutex(&ViewLock);
+  InterlockedDecrement(&CacheSeg->ReferenceCount);
+  
+  DPRINT("CcReleaseCachePage() finished\n");
+  
+  return(STATUS_SUCCESS);
 }
 
 PCACHE_SEGMENT CcRosLookupCacheSegment(PBCB Bcb, ULONG FileOffset)
@@ -510,11 +514,34 @@ CcRosReleaseFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
 {
    PLIST_ENTRY current_entry;
    PCACHE_SEGMENT current;
+   NTSTATUS Status;
    
    DPRINT("CcRosReleaseFileCache(FileObject %x, Bcb %x)\n", Bcb->FileObject, 
 	  Bcb);
 
    MmFreeSectionSegments(Bcb->FileObject);
+
+   /*
+    * Write back dirty cache segments.
+    */
+   current_entry = Bcb->BcbSegmentListHead.Flink;
+   while (current_entry != &Bcb->BcbSegmentListHead)
+     {
+       current = 
+	  CONTAINING_RECORD(current_entry, CACHE_SEGMENT, BcbSegmentListEntry);
+       if (current->Dirty)
+	 {
+	   Status = WriteCacheSegment(current);
+	   if (!NT_SUCCESS(Status))
+	     {
+	       DPRINT1("Failed to write cache segment (Status %X)\n", Status);
+	     }
+	   ExAcquireFastMutex(&ViewLock);
+	   RemoveEntryList(&current->DirtySegmentListEntry);
+	   ExReleaseFastMutex(&ViewLock);
+	 }
+       current_entry = current_entry->Flink;
+     }
    
    /*
     * Release all cache segments.

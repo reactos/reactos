@@ -18,6 +18,7 @@ typedef struct _WINSTATION_OBJECT
   LIST_ENTRY DesktopListHead;
   PRTL_ATOM_TABLE AtomTable;
   PVOID HandleTable;
+  struct _DESKTOP_OBJECT* ActiveDesktop;
   /* FIXME: Clipboard */
 } WINSTATION_OBJECT, *PWINSTATION_OBJECT;
 
@@ -28,8 +29,15 @@ typedef struct _DESKTOP_OBJECT
   LIST_ENTRY ListEntry;
   KSPIN_LOCK Lock;
   UNICODE_STRING Name;
+  /* Pointer to the associated window station. */
   struct _WINSTATION_OBJECT *WindowStation;
+  /* Head of the list of windows in this desktop. */
   LIST_ENTRY WindowListHead;
+  /* Pointer to the active queue. */
+  PVOID ActiveMessageQueue;
+  /* Handle of the desktop window. */
+  HANDLE DesktopWindow;
+  HANDLE PrevActiveWindow;
 } DESKTOP_OBJECT, *PDESKTOP_OBJECT;
 
 

@@ -82,13 +82,15 @@ typedef enum _JOBOBJECTINFOCLASS {               // Q S
 #define ProcessWx86Information			19
 #define ProcessHandleCount			20
 #define ProcessAffinityMask			21
-#define ProcessImageFileName			22	// ???
 #define ProcessPriorityBoost			22
 #define ProcessDeviceMap			23
 #define ProcessSessionInformation		24
 #define ProcessForegroundInformation		25
 #define ProcessWow64Information			26
-#define MaxProcessInfoClass			26
+/* ReactOS private. */
+#define ProcessImageFileName			27
+#define ProcessDesktop                          28
+#define MaxProcessInfoClass			29
 
 /*
  * thread query / set information class

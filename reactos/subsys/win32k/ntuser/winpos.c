@@ -1,4 +1,4 @@
-/* $Id: winpos.c,v 1.2 2002/07/04 19:56:37 dwelch Exp $
+/* $Id: winpos.c,v 1.3 2002/07/17 21:04:57 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -34,6 +34,19 @@
 #define SWP_EX_PAINTSELF 0x0002
 
 /* FUNCTIONS *****************************************************************/
+
+#define HAS_DLGFRAME(Style, ExStyle) \
+       (((ExStyle) & WS_EX_DLGMODALFRAME) || \
+        (((Style) & WS_DLGFRAME) && !((Style) & WS_BORDER)))
+
+#define HAS_THICKFRAME(Style, ExStyle) \
+       (((Style) & WS_THICKFRAME) && \
+        !((Style) & (WS_DLGFRAME | WS_BORDER)) == WS_DLGFRAME)
+
+BOOL
+WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
+{
+}
 
 POINT STATIC
 WinPosFindIconPos(HWND hWnd, POINT Pos)
@@ -223,6 +236,62 @@ UINT
 WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
 		    POINT* MinTrack, POINT* MaxTrack)
 {
+  MINMAXINFO MinMax;
+  INT XInc, YInc;
+  INTERNALPOS* Pos;
+
+  /* Get default values. */
+  MinMax.ptMaxSize.x = NtUserGetSystemMetrics(SM_CXSCREEN);
+  MinMax.ptMaxSize.y = NtUserGetSystemMetrics(SM_CYSCREEN);
+  MinMax.ptMinTrackSize.x = NtUserGetSystemMetrics(SM_CXMINTRACK);
+  MinMax.ptMinTrackSize.y = NtUserGetSystemMetrics(SM_CYMINTRACK);
+  MinMax.ptMaxTrackSize.x = NtUserGetSystemMetrics(SM_CXSCREEN);
+  MinMax.ptMaxTrackSize.y = NtUserGetSystemMetrics(SM_CYSCREEN);
+
+  if (HAS_DLGFRAME(Window->Style, Window->ExStyle))
+    {
+      XInc = NtUserGetSystemMetrics(SM_CXDLGFRAME);
+      YInc = NtUserGetSystemMetrics(SM_CYDLGFRAME);
+    }
+  else
+    {
+      XInc = YInc = 0;
+      if (HAS_THICKFRAME(Window->Style, Window->ExStyle))
+	{
+	  XInc += NtUserGetSystemMetrics(SM_CXFRAME);
+	  YInc += NtUserGetSystemMetrics(SM_CYFRAME);
+	}
+      if (Window->Style & WS_BORDER)
+	{
+	  XInc += NtUserGetSystemMetrics(SM_CXBORDER);
+	  YInc += NtUserGetSystemMetrics(SM_CYBORDER);
+	}
+    }
+  MinMax.ptMaxSize.x += 2 * XInc;
+  MinMax.ptMaxSize.y += 2 * YInc;
+
+  Pos = Window->InternalPos;
+  if (Pos != NULL)
+    {
+      MinMax.ptMaxPosition = Pos->MaxPos;
+    }
+  else
+    {
+      MinMax.ptMaxPosition.x -= XInc;
+      MinMax.ptMaxPosition.y -= YInc;
+    }
+
+  W32kSendMessage(Window->Self, WM_GETMINMAXINFO, 0, (LPARAM)&MinMax, TRUE);
+
+  MinMax.ptMaxTrackSize.x = max(MinMax.ptMaxTrackSize.x,
+				MinMax.ptMinTrackSize.x);
+  MinMax.ptMaxTrackSize.y = max(MinMax.ptMaxTrackSize.y,
+				MinMax.ptMinTrackSize.y);
+
+  if (MaxSize) *MaxSize = MinMax.ptMaxSize;
+  if (MaxPos) *MaxPos = MinMax.ptMaxPosition;
+  if (MinTrack) *MinTrack = MinMax.ptMinTrackSize;
+  if (MaxTrack) *MaxTrack = MinMax.ptMaxTrackSize;
 }
 
 BOOL STATIC
@@ -288,7 +357,11 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 
   /* FIXME: Get current active window from active queue. */
 
-  /* FIXME: Check if the window is for a desktop. */
+  /* Check if the window is for a desktop. */
+  if (Wnd == PsGetWin32Thread()->Desktop->DesktopWindow)
+    {
+      return(FALSE);
+    }
 
   Status = 
     ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable,
@@ -557,7 +630,7 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
     }
 
   if (Window->Style & WS_CHILD &&
-      /* !IsWindowVisible(WindowObject->Parent->Self) && */
+      !W32kIsWindowVisible(Window->Parent->Self) &&
       (Swp & (SWP_NOSIZE | SWP_NOMOVE)) == (SWP_NOSIZE | SWP_NOMOVE))
     {
       if (Cmd == SW_HIDE)
@@ -583,10 +656,24 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
 	  if (Cmd == SW_HIDE)
 	    {
 	      /* Hide the window. */
+	      if (Wnd == W32kGetActiveWindow())
+		{
+		  WinPosActivateOtherWindow(Window);
+		}
+	      /* Revert focus to parent. */
+	      if (Wnd == W32kGetFocusWindow() ||
+		  W32kIsChildWindow(Wnd, W32kGetFocusWindow()))
+		{
+		  W32kSetFocusWindow(Window->Parent->Self);
+		}
 	    }
 	}
       /* FIXME: Check for window destruction. */
-      /* FIXME: Show title for minimized windows. */
+      /* Show title for minimized windows. */
+      if (Window->Style & WS_MINIMIZE)
+	{
+	  WinPosShowIconTitle(Window, TRUE);
+	}
     }
 
   if (Window->Flags & WINDOWOBJECT_NEED_SIZE)

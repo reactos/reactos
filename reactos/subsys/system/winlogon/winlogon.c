@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.9 2002/06/11 22:09:03 dwelch Exp $
+/* $Id: winlogon.c,v 1.10 2002/07/17 21:04:57 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -204,36 +204,37 @@ WinMain(HINSTANCE hInstance,
 	int nShowCmd)
 {
 #if 0
-   LSA_STRING ProcessName;
-   NTSTATUS Status;
-   HANDLE LsaHandle;
-   LSA_OPERATIONAL_MODE Mode;
+  LSA_STRING ProcessName;
+  NTSTATUS Status;
+  HANDLE LsaHandle;
+  LSA_OPERATIONAL_MODE Mode;
 #endif
-   CHAR LoginPrompt[] = "login:";
-   CHAR PasswordPrompt[] = "password:";
-   DWORD Result;
-   CHAR LoginName[255];
-   CHAR Password[255];
-   BOOL Success;
-   ULONG i;
-
-   /*
-    * FIXME: Create a security descriptor with
-    *        one ACE containing the Winlogon SID
-    */
-
-   /*
-    * Create the interactive window station
-    */
-   InteractiveWindowStation = CreateWindowStationW(
-      L"WinSta0", 0, GENERIC_ALL, NULL);
+  CHAR LoginPrompt[] = "login:";
+  CHAR PasswordPrompt[] = "password:";
+  DWORD Result;
+  CHAR LoginName[255];
+  CHAR Password[255];
+  BOOL Success;
+  ULONG i;
+  NTSTATUS Status;
+  
+  /*
+   * FIXME: Create a security descriptor with
+   *        one ACE containing the Winlogon SID
+   */
+  
+  /*
+   * Create the interactive window station
+   */
+   InteractiveWindowStation = 
+     CreateWindowStationW(L"WinSta0", 0, GENERIC_ALL, NULL);
    if (InteractiveWindowStation == NULL)
      {
        DbgPrint("Failed to create window station (0x%X)\n", GetLastError());
        NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, 0, 0, 0);
        ExitProcess(1);
      }
-
+   
    /*
     * Set the process window station
     */
@@ -242,46 +243,53 @@ WinMain(HINSTANCE hInstance,
    /*
     * Create the application desktop
     */
-   ApplicationDesktop = CreateDesktopW(
-      L"Default",
-      NULL,
-      NULL,
-      0,      /* FIXME: Set some flags */
-      GENERIC_ALL,
-      NULL);  /* FIXME: Create security descriptor (access to all) */
+   ApplicationDesktop = 
+     CreateDesktopW(L"Default",
+		    NULL,
+		    NULL,
+		    0,      /* FIXME: Set some flags */
+		    GENERIC_ALL,
+		    NULL); 
 
    /*
     * Create the winlogon desktop
     */
-   WinlogonDesktop = CreateDesktopW(
-      L"Winlogon",
-      NULL,
-      NULL,
-      0,      /* FIXME: Set some flags */
-      GENERIC_ALL,
-      NULL);  /* FIXME: Create security descriptor (access for winlogon only) */
-
+   WinlogonDesktop = CreateDesktopW(L"Winlogon",
+				    NULL,
+				    NULL,
+				    0,      /* FIXME: Set some flags */
+				    GENERIC_ALL,
+				    NULL);  
+   
    /*
     * Create the screen saver desktop
     */
-   ScreenSaverDesktop = CreateDesktopW(
-      L"Screen-Saver",
-      NULL,
-      NULL,
-      0,      /* FIXME: Set some flags */
-      GENERIC_ALL,
-      NULL);  /* FIXME: Create security descriptor (access to all) */
-
+   ScreenSaverDesktop = CreateDesktopW(L"Screen-Saver",
+				       NULL,
+				       NULL,
+				       0,      /* FIXME: Set some flags */
+				       GENERIC_ALL,
+				       NULL);  
+   
    /*
     * Switch to winlogon desktop
     */
-   Success = SwitchDesktop(WinlogonDesktop);
+   /* FIXME: Do start up in the application desktop for now. */
+   Status = NtSetInformationProcess(NtCurrentProcess(),
+				    ProcessDesktop,
+				    &ApplicationDesktop,
+				    sizeof(ApplicationDesktop));
+   if (!NT_SUCCESS(Status))
+     {
+       DbgPrint("WL: Cannot set default desktop for winlogon.\n");
+     }
+   SetThreadDesktop(ApplicationDesktop);
+   Success = SwitchDesktop(ApplicationDesktop);
    if (!Success)
-   {
-      DbgPrint("Cannot switch to Winlogon desktop (0x%X)\n", GetLastError());
-   }
-
-
+     {
+       DbgPrint("Cannot switch to Winlogon desktop (0x%X)\n", GetLastError());
+     }
+   
    AllocConsole();
    SetConsoleTitle( "Winlogon" );
    /* start system processes (services.exe & lsass.exe) */
@@ -296,7 +304,7 @@ WinMain(HINSTANCE hInstance,
    Status = LsaRegisterLogonProcess(&ProcessName, &LsaHandle, &Mode);
    if (!NT_SUCCESS(Status))
      {
-	DbgPrint("WL: Failed to connect to lsass\n");
+       DbgPrint("WL: Failed to connect to lsass\n");
 	return(1);
      }
 #endif
@@ -306,51 +314,51 @@ WinMain(HINSTANCE hInstance,
     *        Register SAS with the window.
     *        Register for logoff notification
     */
-
+   
    /* Main loop */
    for (;;)
      {
 #if 0
-	/* Display login prompt */
-	WriteConsole(GetStdHandle(STD_OUTPUT_HANDLE),
-		     LoginPrompt,
-		     strlen(LoginPrompt),  // wcslen(LoginPrompt),
-		     &Result,
-		     NULL);
-	i = 0;
-	do
-	  {
-	     ReadConsole(GetStdHandle(STD_INPUT_HANDLE),
-			 &LoginName[i],
-			 1,
-			 &Result,
-			 NULL);
-	     i++;
-	  } while (LoginName[i - 1] != '\n');
-	LoginName[i - 1] = 0;
-	
+       /* Display login prompt */
+       WriteConsole(GetStdHandle(STD_OUTPUT_HANDLE),
+		    LoginPrompt,
+		    strlen(LoginPrompt),  // wcslen(LoginPrompt),
+		    &Result,
+		    NULL);
+       i = 0;
+       do
+	 {
+	   ReadConsole(GetStdHandle(STD_INPUT_HANDLE),
+		       &LoginName[i],
+		       1,
+		       &Result,
+		       NULL);
+	   i++;
+	 } while (LoginName[i - 1] != '\n');
+       LoginName[i - 1] = 0;
+       
 	/* Display password prompt */
-	WriteConsole(GetStdHandle(STD_OUTPUT_HANDLE),
-		     PasswordPrompt,
-		     strlen(PasswordPrompt),  // wcslen(PasswordPrompt),
-		     &Result,
-		     NULL);
-	i = 0;
-	do
-	  {
-	     ReadConsole(GetStdHandle(STD_INPUT_HANDLE),
-			 &Password[i],
-			 1,
-			 &Result,
-			 NULL);
-	     i++;
-	  } while (Password[i - 1] != '\n');
-	Password[i - 1] =0;
+       WriteConsole(GetStdHandle(STD_OUTPUT_HANDLE),
+		    PasswordPrompt,
+		    strlen(PasswordPrompt),  // wcslen(PasswordPrompt),
+		    &Result,
+		    NULL);
+       i = 0;
+       do
+	 {
+	   ReadConsole(GetStdHandle(STD_INPUT_HANDLE),
+		       &Password[i],
+		       1,
+		       &Result,
+		       NULL);
+	   i++;
+	 } while (Password[i - 1] != '\n');
+       Password[i - 1] =0;
 #endif
-	DoLoginUser(LoginName, Password);
+       DoLoginUser(LoginName, Password);
      }
-
+   
    ExitProcess(0);
-
+   
    return 0;
 }

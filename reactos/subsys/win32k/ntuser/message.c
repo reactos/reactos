@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.7 2002/07/04 19:56:37 dwelch Exp $
+/* $Id: message.c,v 1.8 2002/07/17 21:04:57 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -231,7 +231,6 @@ NtUserPeekMessage(LPMSG lpMsg,
   PUSER_MESSAGE_QUEUE ThreadQueue;
   BOOLEAN Present;
   PUSER_MESSAGE Message;
-  NTSTATUS Status;
   BOOLEAN RemoveMessages;
 
   /* Initialize the thread's win32 state if necessary. */ 
@@ -325,10 +324,11 @@ NtUserQuerySendMessage(DWORD Unknown0)
 }
 
 LRESULT STDCALL
-NtUserSendMessage(HWND hWnd,
-		  UINT Msg,
-		  WPARAM wParam,
-		  LPARAM lParam)
+W32kSendMessage(HWND hWnd,
+		UINT Msg,
+		WPARAM wParam,
+		LPARAM lParam,
+		BOOL KernelMessage)
 {
   LRESULT Result;
   NTSTATUS Status;
@@ -352,8 +352,17 @@ NtUserSendMessage(HWND hWnd,
 
   if (Window->MessageQueue == PsGetWin32Thread()->MessageQueue)
     {
-      Result = W32kCallWindowProc(NULL, hWnd, Msg, wParam, lParam);
-      return(Result);
+      if (KernelMessage)
+	{
+	  Result = W32kCallTrampolineWindowProc(NULL, hWnd, Msg, wParam,
+						lParam);
+	  return(Result);
+	}
+      else
+	{
+	  Result = W32kCallWindowProc(NULL, hWnd, Msg, wParam, lParam);
+	  return(Result);
+	}
     }
   else
     {
@@ -389,6 +398,15 @@ NtUserSendMessage(HWND hWnd,
 	  return(FALSE);
 	}
     }
+}
+
+LRESULT STDCALL
+NtUserSendMessage(HWND hWnd,
+		  UINT Msg,
+		  WPARAM wParam,
+		  LPARAM lParam)
+{
+  return(W32kSendMessage(hWnd, Msg, wParam, lParam, FALSE));
 }
 
 BOOL STDCALL
