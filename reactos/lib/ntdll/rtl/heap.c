@@ -1046,7 +1046,7 @@ RtlDestroyHeap(HANDLE heap) /* [in] Handle of heap */
 {
     HEAP *heapPtr = HEAP_GetPtr( heap );
     SUBHEAP *subheap;
-    ULONG i;
+    ULONG i, flags;
    
     TRACE("%08x\n", heap );
     if (!heapPtr) return FALSE;
@@ -1064,11 +1064,15 @@ RtlDestroyHeap(HANDLE heap) /* [in] Handle of heap */
    
     RtlDeleteCriticalSection( &heapPtr->critSection );
     subheap = &heapPtr->subheap;
+    // We must save the flags. The first subheap is located after 
+    // the heap structure. If we release the first subheap, 
+    // we release also the heap structure.
+    flags = heapPtr->flags;
     while (subheap)
     {
         SUBHEAP *next = subheap->next;
 
-	if (!(heapPtr->flags & HEAP_NO_VALLOC))
+	if (!(flags & HEAP_NO_VALLOC))
 	  {
 	    ULONG dummySize = 0;
 	    ZwFreeVirtualMemory(NtCurrentProcess(),
