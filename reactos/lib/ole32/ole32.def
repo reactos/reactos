@@ -137,7 +137,7 @@ EXPORTS
 ;OleGetClipboard	@221
 ;OleGetIconOfClass	@222
 ;OleGetIconOfFile	@223
-;OleInitialize	@224
+OleInitialize=OleInitialize@4
 ;OleIsCurrentClipboard	@226
 ;OleIsRunning	@227
 ;OleLoad	@228
@@ -159,7 +159,7 @@ EXPORTS
 ;OleSetContainedObject	@244
 ;OleSetMenuDescriptor	@245
 ;OleTranslateAccelerator	@246
-;OleUninitialize	@247
+OleUninitialize=OleUninitialize@0
 ;ProgIDFromCLSID	@249
 ;PropStgNameToFmtId	@250
 ;PropVariantClear			@253

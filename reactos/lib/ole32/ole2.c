@@ -29,19 +29,23 @@ Cambridge, MA 02139, USA.
 ********************************************************************/
 #include "ole32.h"
 
-/*
-
+#if 0
 WINOLEAPI_(DWORD) OleBuildVersion( VOID ){return S_OK;}
+#endif
 
-
-
-WINOLEAPI OleInitialize(IN LPVOID pvReserved){return S_OK;}
-WINOLEAPI_(void) OleUninitialize(void)
+WINOLEAPI 
+OleInitialize (IN LPVOID pvReserved)
 {
-	return;
+  return E_FAIL;
 }
 
+WINOLEAPI_(void) 
+OleUninitialize(void)
+{
+  return;
+}
 
+#if 0
 
 WINOLEAPI  OleQueryLinkFromData(IN LPDATAOBJECT pSrcDataObject){return S_OK;}
 WINOLEAPI  OleQueryCreateFromData(IN LPDATAOBJECT pSrcDataObject){return S_OK;}
@@ -243,4 +247,8 @@ WINOLEAPI OleConvertOLESTREAMToIStorageEx
      OUT LONG FAR*          plwWidth,   //      width
      OUT LONG FAR*          plHeight,   //      height
      OUT DWORD FAR*         pdwSize,    //      size in bytes
-     OUT LPSTGMEDIUM        pmedium){return S_OK;}   //      bits*/
+     OUT LPSTGMEDIUM        pmedium){return S_OK;}   //      bits
+
+#endif
+
+

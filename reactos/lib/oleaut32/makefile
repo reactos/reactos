@@ -1,37 +1,29 @@
-# ReactOS 0.17
-# Jurgen Van Gael [jurgen.vangael@student.kuleuven.ac.be]
+# $Id: makefile,v 1.1 2001/07/16 01:45:43 rex Exp $
 #
-# Makefile for ReactOS ole32.dll
+# Makefile for ReactOS oleaut32.dll
 #
 PATH_TO_TOP = ../..
 
-CFLAGS = -fno-rtti -I../../include/
+BASE_CFLAGS = -I../../include
 
-TARGETNAME=ole32
+TARGETNAME=oleaut32
+
+IMAGE_BASE = 0x76260000
 
 DLLTARGET=$(TARGETNAME).dll
-
-
-OBJECTS=\
-	DllMain.o \
-	CoXxx.o \
-	Moniker.o \
-	Ole2.o \
-	OleAuto.o \
-	Misc.o \
-	Storage.o
-
-
-CLEAN_FILES = *.o \
-              $(TARGETNAME).o $(TARGETNAME).a junk.tmp base.tmp temp.exp \
-	      $(TARGETNAME).dll $(TARGETNAME).sym
+OBJECTS = dllmain.o stubs.o 
+CLEAN_FILES = $(OBJECTS) $(TARGETNAME).o $(TARGETNAME).a junk.tmp  \
+	base.tmp temp.exp $(TARGETNAME).dll $(TARGETNAME).sym  \
+	$(TARGETNAME).coff
 
 all: $(DLLTARGET)
+
+$(TARGETNAME).coff: $(TARGETNAME).rc ../../include/reactos/resource.h
 
 $(TARGETNAME).a: $(OBJECTS)
 	$(LD) -r $(OBJECTS) -o $(TARGETNAME).a
 
-$(TARGETNAME).dll: $(DLLMAIN) $(OBJECTS) $(TARGETNAME).def
+$(TARGETNAME).dll: $(OBJECTS) $(TARGETNAME).def
 	$(LD) -r $(OBJECTS) -o $(TARGETNAME).o
 	$(DLLTOOL) \
 		--dllname $(TARGETNAME).dll \
@@ -40,6 +32,7 @@ $(TARGETNAME).dll: $(DLLMAIN) $(OBJECTS) $(TARGETNAME).def
 		--output-lib $(TARGETNAME).a
 	$(CC) \
 		$(TARGETNAME).o \
+		../ntdll/ntdll.a \
 		../kernel32/kernel32.a \
 		-nostartfiles \
 		-nostdlib \
@@ -56,13 +49,14 @@ $(TARGETNAME).dll: $(DLLMAIN) $(OBJECTS) $(TARGETNAME).def
 	- $(RM) base.tmp
 	$(CC) \
 		$(TARGETNAME).o \
+		../ntdll/ntdll.a \
 		../kernel32/kernel32.a \
 		-nostartfiles \
 		-nostdlib \
 		-mdll \
 		-o $(TARGETNAME).dll \
 		-Wl,--entry=_DllMain@12\
-		-Wl,--image-base,0x77A50000 \
+		-Wl,--image-base,$(IMAGE_BASE) \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
 		-Wl,temp.exp
@@ -75,4 +69,17 @@ clean:
 
 .PHONY: clean 
 
+install: $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll
+
+$(FLOPPY_DIR)/dlls/$(TARGETNAME).dll: $(TARGETNAME).dll
+	$(CP) $(TARGETNAME).dll $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll
+
+
+dist: $(DIST_DIR)/dlls/$(TARGETNAME).dll
+
+$(DIST_DIR)/dlls/$(TARGETNAME).dll: $(TARGETNAME).dll
+	$(CP) $(TARGETNAME).dll ../../$(DIST_DIR)/dlls/$(TARGETNAME).dll
+
+
 include ../../rules.mak
+
