@@ -4,7 +4,8 @@
 #  Makefile
 #
 
-PATH_TO_TOP = ../../reactos
+PATH_TO_TOP = ../../..
+TOOLS_PATH = $(PATH_TO_TOP)/tools
 
 TARGET_TYPE = program
 
@@ -16,7 +17,7 @@ WINE_MODE = yes
 
 WINE_RC = $(TARGET_NAME)
 
-WINE_INCLUDE = ./
+WINE_INCLUDE = $(PATH_TO_TOP)/include/reactos
 
 TARGET_SDKLIBS = \
 	kernel32.a \
@@ -31,7 +32,7 @@ TARGET_OBJECTS = \
           set.o shift.o start.o strtoclr.o time.o timer.o title.o type.o \
           ver.o verify.o vol.o where.o window.o #cmd.coff
 
-include $(PATH_TO_TOP)/rules.mak
+# include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
 
