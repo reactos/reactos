@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: accelerator.c,v 1.6 2003/12/26 22:52:11 gvg Exp $
+/* $Id: accelerator.c,v 1.7 2003/12/29 23:28:46 sedwards Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -278,7 +278,7 @@ IntTranslateAccelerator(HWND hWnd,
 
   if (wParam != key)
     {
-      DPRINT1("T0\n");
+      DPRINT("T0\n");
       return FALSE;
     }
 
@@ -529,7 +529,7 @@ NtUserTranslateAccelerator(
 
   ObDereferenceObject(WindowStation);
 
-  DPRINT1("NtUserTranslateAccelerator(Window %x, Table %x, Message %p) = %i end\n",
+  DPRINT("NtUserTranslateAccelerator(Window %x, Table %x, Message %p) = %i end\n",
     Window, Table, Message, 0);
 
   return 0;
