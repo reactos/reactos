@@ -1244,7 +1244,7 @@ DetectPS2AuxPort(VOID)
 	  break;
 	}
 
-      KeStallExecutionProcessor(1000);
+      KeStallExecutionProcessor(10000);
     }
 
   return FALSE;
@@ -1266,7 +1266,7 @@ DetectPS2AuxDevice(VOID)
   WRITE_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_DATA,
 		   0xF2);
 
-  KeStallExecutionProcessor(1000);
+  KeStallExecutionProcessor(10000);
 
   Status = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_STATUS);
   if ((Status & CONTROLLER_STATUS_MOUSE_OUTPUT_BUFFER_FULL) == 0)
@@ -1278,7 +1278,7 @@ DetectPS2AuxDevice(VOID)
   if (Scancode != 0xFA)
     return FALSE;
 
-  KeStallExecutionProcessor(1000);
+  KeStallExecutionProcessor(10000);
 
   Status = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_STATUS);
   if ((Status & CONTROLLER_STATUS_MOUSE_OUTPUT_BUFFER_FULL) == 0)
