@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.43 1999/12/18 07:33:53 phreak Exp $
+/* $Id: thread.c,v 1.44 1999/12/18 17:48:23 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -71,32 +71,6 @@ HANDLE PsGetCurrentThreadId(VOID)
    return(CurrentThread->Cid.UniqueThread);
 }
 
-VOID PiTerminateProcessThreads(PEPROCESS Process, NTSTATUS ExitStatus)
-{
-   KIRQL oldlvl;
-   PLIST_ENTRY current_entry;
-   PETHREAD current;
-
-   KeAcquireSpinLock(&PiThreadListLock, &oldlvl);
-
-   current_entry = PiThreadListHead.Flink;
-   while (current_entry != &PiThreadListHead)
-     {
-	current = CONTAINING_RECORD(current_entry,ETHREAD,Tcb.QueueListEntry);
-	if (current->ThreadsProcess == Process &&
-	    current != PsGetCurrentThread())
-	  {
-	     KeReleaseSpinLock(&PiThreadListLock, oldlvl);
-	     PsTerminateOtherThread(current, ExitStatus);
-	     KeAcquireSpinLock(&PiThreadListLock, &oldlvl);
-	     current_entry = PiThreadListHead.Flink;
-	  }
-	current_entry = current_entry->Flink;
-     }
-
-   KeReleaseSpinLock(&PiThreadListLock, oldlvl);
-}
-
 static VOID PsInsertIntoThreadList(KPRIORITY Priority, PETHREAD Thread)
 {
 //   DPRINT("PsInsertIntoThreadList(Priority %x, Thread %x)\n",Priority,
@@ -129,61 +103,15 @@ VOID PsDumpThreads(VOID)
 	     DbgPrint("Too many threads on list\n");
 	     return;
 	  }
-	DPRINT1("current %x current->Tcb.State %d eip %x ",
+	DbgPrint("current %x current->Tcb.State %d eip %x ",
 		current, current->Tcb.State,
 		current->Tcb.Context.eip);
 //	KeDumpStackFrames(0, 16);
-	DPRINT1("PID %d ", current->ThreadsProcess->UniqueProcessId);
-	DPRINT1("\n");
+	DbgPrint("PID %d ", current->ThreadsProcess->UniqueProcessId);
+	DbgPrint("\n");
 	
 	current_entry = current_entry->Flink;
      }
-}
-
-VOID PsReapThreads(VOID)
-{
-   PLIST_ENTRY current_entry;
-   PETHREAD current;
-   KIRQL oldIrql;
-   
-//   DPRINT1("PsReapThreads()\n");
-   
-   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
-   
-   current_entry = PiThreadListHead.Flink;
-   
-   while (current_entry != &PiThreadListHead)
-     {
-	current = CONTAINING_RECORD(current_entry, ETHREAD, 
-				    Tcb.ThreadListEntry);
-	
-	current_entry = current_entry->Flink;
-	
-	if (current->Tcb.State == THREAD_STATE_TERMINATED_1)
-	  {
-         PEPROCESS Process = current->ThreadsProcess; 
-         NTSTATUS Status = current->ExitStatus;
-
-         ObReferenceObjectByPointer( Process, 0, PsProcessType, KernelMode );
-	     DPRINT("Reaping thread %x\n", current);
-	     current->Tcb.State = THREAD_STATE_TERMINATED_2;
-         RemoveEntryList( &current->Tcb.ProcessThreadListEntry );
-         KeReleaseSpinLock(&PiThreadListLock, oldIrql);
-	     ObDereferenceObject(current);
-	     KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
-         if( IsListEmpty( &Process->Pcb.ThreadListHead ) )
-         {
-             //TODO: Optimize this so it doesnt jerk the IRQL around so much :)
-             DPRINT( "Last thread terminated, terminating process\n" );
-             KeReleaseSpinLock(&PiThreadListLock, oldIrql);
-             PiTerminateProcess( Process, Status );
-             KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
-         }
-         ObDereferenceObject( Process );
-	     current_entry = PiThreadListHead.Flink;
-	  }
-     }
-   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 }
 
 static PETHREAD PsScanThreadList (KPRIORITY Priority)
@@ -282,14 +210,15 @@ ULONG PsUnfreezeThread(PETHREAD Thread, PNTSTATUS WaitStatus)
    Thread->Tcb.FreezeCount--;
    r = Thread->Tcb.FreezeCount;
    
+   if (WaitStatus != NULL)
+     {
+	Thread->Tcb.WaitStatus = *WaitStatus;
+     }
+   
    if (r <= 0)
      {
 	DPRINT("Resuming thread\n");
 	Thread->Tcb.State = THREAD_STATE_RUNNABLE;
-	if (WaitStatus != NULL)
-	  {
-	     Thread->Tcb.WaitStatus = *WaitStatus;
-	  }
 	PsInsertIntoThreadList(Thread->Tcb.Priority, Thread);
      }
    

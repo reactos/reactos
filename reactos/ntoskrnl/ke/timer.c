@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.24 1999/12/13 22:04:36 dwelch Exp $
+/* $Id: timer.c,v 1.25 1999/12/18 17:48:22 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -129,13 +129,18 @@ NTSTATUS KeAddThreadTimeout(PKTHREAD Thread, PLARGE_INTEGER Interval)
 }
 
 
-NTSTATUS STDCALL NtDelayExecution(IN BOOLEAN Alertable,
+NTSTATUS STDCALL NtDelayExecution(IN ULONG Alertable,
 				  IN TIME* Interval)
 {
    NTSTATUS Status;
+   PLARGE_INTEGER IntervalP;
    
-   Status = KeDelayExecutionThread(UserMode, Alertable, 
-				   (PLARGE_INTEGER)Internal);
+   IntervalP = (PLARGE_INTEGER)Interval;
+   
+   DPRINT1("NtDelayExecution(Alertable %d, Internal %x) IntervalP %x\n",
+	  Alertable, Internal, IntervalP);
+   
+   Status = KeDelayExecutionThread(UserMode, Alertable, IntervalP);
    return(Status);
 }
 

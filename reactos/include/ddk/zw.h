@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.23 1999/12/10 17:04:33 dwelch Exp $
+/* $Id: zw.h,v 1.24 1999/12/18 17:48:21 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1201,12 +1201,7 @@ NtCurrentTeb(VOID
  *        Interval  = Specifies the interval to wait.      
  * RETURNS: Status
  */
-NTSTATUS
-STDCALL
-NtDelayExecution(
-	IN BOOLEAN Alertable,
-	IN TIME* Interval
-	);
+NTSTATUS STDCALL NtDelayExecution(IN ULONG Alertable, IN TIME* Interval);
 
 NTSTATUS
 STDCALL

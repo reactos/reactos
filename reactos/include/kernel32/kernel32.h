@@ -10,6 +10,8 @@
 #define CHECKPOINT do { dprintf("(KERNEL32:%s:%d) Checkpoint\n",__FILE__,__LINE__); } while(0);
 #endif
 
+#define DPRINT1(args...) do { dprintf("(KERNEL32:%s:%d) ",__FILE__,__LINE__); dprintf(args);  } while(0);
+
 void dprintf(char* fmt, ...);
 void aprintf(char* fmt, ...);
 

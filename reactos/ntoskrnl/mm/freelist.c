@@ -168,7 +168,11 @@ VOID MmFreePage(PVOID PhysicalAddress, ULONG Nr)
    
    DPRINT("MmFreePage(PhysicalAddress %x, Nr %x)\n", PhysicalAddress, Nr);
    
-   assert(((ULONG)PhysicalAddress) <= 0x400000);
+   if (((ULONG)PhysicalAddress) > 0x400000)
+     {
+	DbgPrint("MmFreePage() failed with %x\n", PhysicalAddress);
+	KeBugCheck(0);
+     }
    
    MiNrFreePages = MiNrFreePages + Nr;
    MiNrUsedPages = MiNrUsedPages - Nr;
@@ -218,7 +222,11 @@ PVOID MmAllocPage(VOID)
    MiNrUsedPages = MiNrUsedPages + 1;
    MiNrFreePages = MiNrFreePages - 1;
    
-   assert(offset <= 0x400000);
+   if (offset > 0x400000)
+     {
+	DbgPrint("Failed in MmAllocPage() with offset %x\n", offset);
+	KeBugCheck(0);
+     }
    
    DPRINT("MmAllocPage() = %x\n",offset);
    return((PVOID)offset);

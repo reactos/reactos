@@ -31,6 +31,7 @@ ULONG PsFreezeThread(PETHREAD Thread, PNTSTATUS WaitStatus,
 VOID PiInitApcManagement(VOID);
 VOID PiDeleteThread(PVOID ObjectBody);
 VOID PiCloseThread(PVOID ObjectBody, ULONG HandleCount);
+VOID PsReapThreads(VOID);
 NTSTATUS PsInitializeThread(HANDLE ProcessHandle,
 			    PETHREAD* ThreadPtr,
 			    PHANDLE ThreadHandle,

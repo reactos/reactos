@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.32 1999/12/13 22:04:36 dwelch Exp $
+/* $Id: main.c,v 1.33 1999/12/18 17:48:22 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -26,7 +26,7 @@
 #include <internal/mmhal.h>
 #include <internal/i386/segment.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS ****************************************************************/

@@ -24,8 +24,87 @@
 extern ULONG PiNrThreads;
 extern ULONG PiNrRunnableThreads;
 extern KSPIN_LOCK PiThreadListLock;
+extern LIST_ENTRY PiThreadListHead;
 
 /* FUNCTIONS *****************************************************************/
+
+VOID PiTerminateProcessThreads(PEPROCESS Process, NTSTATUS ExitStatus)
+{
+   KIRQL oldlvl;
+   PLIST_ENTRY current_entry;
+   PETHREAD current;
+
+   KeAcquireSpinLock(&PiThreadListLock, &oldlvl);
+
+   current_entry = PiThreadListHead.Flink;
+   while (current_entry != &PiThreadListHead)
+     {
+	current = CONTAINING_RECORD(current_entry,ETHREAD,Tcb.QueueListEntry);
+	if (current->ThreadsProcess == Process &&
+	    current != PsGetCurrentThread())
+	  {
+	     KeReleaseSpinLock(&PiThreadListLock, oldlvl);
+	     PsTerminateOtherThread(current, ExitStatus);
+	     KeAcquireSpinLock(&PiThreadListLock, &oldlvl);
+	     current_entry = PiThreadListHead.Flink;
+	  }
+	current_entry = current_entry->Flink;
+     }
+
+   KeReleaseSpinLock(&PiThreadListLock, oldlvl);
+}
+
+VOID PsReapThreads(VOID)
+{
+   PLIST_ENTRY current_entry;
+   PETHREAD current;
+   KIRQL oldIrql;
+   
+//   DPRINT1("PsReapThreads()\n");
+   
+   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
+   
+   current_entry = PiThreadListHead.Flink;
+   
+   while (current_entry != &PiThreadListHead)
+     {
+	current = CONTAINING_RECORD(current_entry, ETHREAD, 
+				    Tcb.ThreadListEntry);
+	
+	current_entry = current_entry->Flink;
+	
+	if (current->Tcb.State == THREAD_STATE_TERMINATED_1)
+	  {
+	     PEPROCESS Process = current->ThreadsProcess; 
+	     NTSTATUS Status = current->ExitStatus;
+	     
+	     ObReferenceObjectByPointer(Process, 
+					0, 
+					PsProcessType, 
+					KernelMode );
+	     DPRINT("Reaping thread %x\n", current);
+	     current->Tcb.State = THREAD_STATE_TERMINATED_2;
+	     RemoveEntryList(&current->Tcb.ProcessThreadListEntry);
+	     KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+	     ObDereferenceObject(current);
+	     KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
+	     if(IsListEmpty( &Process->Pcb.ThreadListHead))
+	       {
+		  /* 
+		   * TODO: Optimize this so it doesnt jerk the IRQL around so 
+		   * much :)
+		   */
+		  DPRINT("Last thread terminated, terminating process\n");
+		  KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+		  PiTerminateProcess(Process, Status);
+		  KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
+	       }
+	     ObDereferenceObject(Process);
+	     current_entry = PiThreadListHead.Flink;
+	  }
+     }
+   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+}
 
 VOID PsTerminateCurrentThread(NTSTATUS ExitStatus)
 /*
@@ -34,7 +113,6 @@ VOID PsTerminateCurrentThread(NTSTATUS ExitStatus)
 {
    KIRQL oldIrql;
    PETHREAD CurrentThread;
-   
    
    CurrentThread = PsGetCurrentThread();
    
@@ -65,15 +143,13 @@ VOID PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus)
    KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
    if (Thread->Tcb.State == THREAD_STATE_RUNNABLE)
      {
-	PiNrRunnableThreads--;
 	RemoveEntryList(&Thread->Tcb.QueueListEntry);
      }
-   RemoveEntryList(&Thread->Tcb.ThreadListEntry);
    Thread->Tcb.State = THREAD_STATE_TERMINATED_2;
    Thread->Tcb.DispatcherHeader.SignalState = TRUE;
    KeDispatcherObjectWake(&Thread->Tcb.DispatcherHeader);
-   ObDereferenceObject(Thread);
    KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+   ObDereferenceObject(Thread);
 }
 
 NTSTATUS STDCALL PiTerminateProcess(PEPROCESS Process,

@@ -14,6 +14,7 @@ DWORD WINAPI thread_main1(LPVOID param)
    s = s % 10;
    printf("s %d\n", s);
    Sleep(s);
+   printf("Thread %d finished\n", (DWORD)param);
    return 0;
 }
 

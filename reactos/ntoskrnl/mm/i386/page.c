@@ -23,6 +23,8 @@
 
 /* GLOBALS *****************************************************************/
 
+extern ULONG MiNrFreePages;
+
 #define PA_BIT_PRESENT   (0)
 #define PA_BIT_READWRITE (1)
 #define PA_BIT_USER      (2)
@@ -168,9 +170,17 @@ VOID MmDeletePageEntry(PEPROCESS Process, PVOID Address, BOOL FreePage)
 	  }	
 	return;
      }
-   page_tlb = ADDR_TO_PTE(Address);
+   page_tlb = ADDR_TO_PTE(Address);   
    if (FreePage && PAGE_MASK(*page_tlb) != 0)
      {
+	if (PAGE_MASK(*page_tlb) >= 0x400000)
+	  {
+	     DbgPrint("MmDeletePageEntry(Address %x) Physical %x Free %d, "
+                      "Entry %x\n",
+		      Address, PAGE_MASK(*page_tlb), MiNrFreePages,
+		      *page_tlb);
+	     KeBugCheck(0);
+	  }
         MmFreePage((PVOID)PAGE_MASK(*page_tlb),1);
      }
    *page_tlb = 0;
@@ -219,11 +229,19 @@ VOID MmSetPage(PEPROCESS Process,
    PEPROCESS CurrentProcess = PsGetCurrentProcess();
    ULONG Attributes = 0;
    
-   DPRINT("MmSetPage(Process %x, Address %x, flProtect %x, "
-	  "PhysicalAddress %x)\n",Process,Address,flProtect,
-	  PhysicalAddress);
+   if (PAGE_ROUND_DOWN(Address) == 0x77631000)
+     {
+	DPRINT1("MmSetPage(Process %x, Address %x, flProtect %x, "
+		"PhysicalAddress %x)\n",Process,Address,flProtect,
+		PhysicalAddress);
+     }
    
-   assert(((ULONG)PhysicalAddress)<0x400000);
+    if (((ULONG)PhysicalAddress) >= 0x400000)
+     {
+	DbgPrint("MmSetPage(Process %x, Address %x, PhysicalAddress %x)\n",
+		 Process, Address, PhysicalAddress);
+	KeBugCheck(0);
+     }
    
    Attributes = ProtectToPTE(flProtect);
    

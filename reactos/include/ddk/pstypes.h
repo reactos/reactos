@@ -174,7 +174,7 @@ typedef struct _KTHREAD
    PVOID             KernelStack;
    UCHAR             DebugActive;
    UCHAR             State;
-   USHORT            Alerted;
+   UCHAR             Alerted[2];
    UCHAR             Iopl;
    UCHAR             NpxState;
    UCHAR             Saturation;
@@ -199,9 +199,9 @@ typedef struct _KTHREAD
    KAFFINITY         UserAffinity;
    UCHAR             SystemAffinityActive;
    UCHAR             Pad;
-   PKQUEUE           Queue;     
+   PKQUEUE           Queue;    
+   KSPIN_LOCK        ApcQueueLock;
    KTIMER            Timer;
-   KDPC              TimerDpc;			// Added by Phillip Susi for internal KeAddThreadTimeout() impl.
    LIST_ENTRY        QueueListEntry;
    KAFFINITY         Affinity;
    UCHAR             Preempted;
@@ -234,7 +234,7 @@ typedef struct _KTHREAD
 
    /* Provisionally added by David Welch */
    hal_thread_state                   Context;
-
+   KDPC              TimerDpc;			// Added by Phillip Susi for internal KeAddThreadTimeout() impl.
 } KTHREAD, *PKTHREAD;
 
 // According to documentation the stack should have a commited [ 1 page ] and

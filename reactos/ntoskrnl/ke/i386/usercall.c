@@ -1,4 +1,4 @@
-/* $Id: usercall.c,v 1.3 1999/12/02 20:53:53 dwelch Exp $
+/* $Id: usercall.c,v 1.4 1999/12/18 17:48:22 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -99,11 +99,24 @@ void PsBeginThreadWithContextInternal(void);
      "popl %ebp\n\t"
      "iret\n\t");
 
-VOID KiSystemCallHook(ULONG Nr)
+VOID KiSystemCallHook(ULONG Nr, ...)
 {
-//   DbgPrint("KiSystemCallHook(Nr %d) %x ", Nr, PsGetCurrentProcess());
-//   DbgPrint("SystemCall %x\n", _SystemServiceTable[Nr].Function);
+#ifdef TRACE_SYSTEM_CALLS
+   va_list ap;
+   ULONG i;
+   
+   va_start(ap, Nr);
+   
+   DbgPrint("%x/%d ", _SystemServiceTable[Nr].Function,Nr);
+   DbgPrint("%x (", _SystemServiceTable[Nr].ParametersSize);
+   for (i = 0; i < _SystemServiceTable[Nr].ParametersSize / 4; i++)
+     {
+	DbgPrint("%x, ", va_arg(ap, ULONG));
+     }
+   DbgPrint(")\n");
    assert_irql(PASSIVE_LEVEL);
+   va_end(ap);
+#endif
 }
 
 ULONG KiAfterSystemCallHook(ULONG NtStatus, PCONTEXT Context)
@@ -209,63 +222,4 @@ void interrupt_handler2e(void);
 	   "popl %ebp\n\t"       /* Ebp */
 	   
            "iret\n\t");
-
-
-void old_interrupt_handler2e(void);
-   __asm__("\n\t.global _old_interrupt_handler2e\n\t"
-           "_old_interrupt_handler2e:\n\t"
-           
-           /*  Save the users context  */
-           "pushl %ds\n\t"
-           "pushl %es\n\t"
-           "pushl %esi\n\t"
-           "pushl %edi\n\t"
-           "pushl %ebp\n\t"
-           "pushl %ebx\n\t"
-           
-           /*  Set ES to kernel segment  */
-           "movw  $"STR(KERNEL_DS)",%bx\n\t"
-           "movw %bx,%es\n\t"
-           
-           /*  Allocate new Kernel stack frame  */
-           "movl %esp,%ebp\n\t"
-           
-           /*  Users's current stack frame pointer is source  */
-           "movl %edx,%esi\n\t"
-
-           /* FIXME: determine system service table to use  */
-           /* FIXME: chech to see if SS is valid/inrange  */
-           
-           /*  Allocate room for argument list from kernel stack  */
-           "movl %es:__SystemServiceTable(,%eax,8),%ecx\n\t"
-           "subl %ecx,%esp\n\t"
-           
-           /*  Copy the arguments from the user stack to the kernel stack  */
-           "movl %esp,%edi\n\t"
-           "rep\n\tmovsb\n\t"
-           
-           /*  DS is now also kernel segment  */
-           "movw %bx,%ds\n\t"
-           
-	   /* Call system call hook */
-	   "pushl %eax\n\t"
-	   "call _KiSystemCallHook\n\t"
-	   "popl %eax\n\t"
-	   
-           /*  Make the system service call  */
-           "movl %ds:__SystemServiceTable+4(,%eax,8),%eax\n\t"
-           "call *%eax\n\t"
-           
-           /*  Deallocate the kernel stack frame  */
-           "movl %ebp,%esp\n\t"
-           
-           /*  Restore the user context  */
-           "popl %ebx\n\t"
-           "popl %ebp\n\t"
-           "popl %edi\n\t"
-           "popl %esi\n\t"
-           "popl %es\n\t"
-           "popl %ds\n\t"
-           "iret\n\t");
-
 
