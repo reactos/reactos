@@ -9,7 +9,7 @@ include $(PATH_TO_TOP)/rules.mak
 
 # Console system utilities
 # cabman cat net objdir partinfo pice ps sc stats
-UTIL_APPS = cat objdir partinfo pnpdump sc stats tickcount consw rundll32
+UTIL_APPS = cat objdir partinfo pnpdump sc stats tickcount consw rundll32 regsvr32
 
 UTIL_NET_APPS = 
 
