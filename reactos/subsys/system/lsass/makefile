@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.3 2001/07/15 21:19:00 rex Exp $
+# $Id: makefile,v 1.1 2001/07/24 10:18:05 ekohl Exp $
 #
 # Local Security Authority Subsystem
 #
