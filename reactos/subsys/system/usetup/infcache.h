@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: infcache.h,v 1.2 2003/03/13 17:58:52 ekohl Exp $
+/* $Id: infcache.h,v 1.3 2003/03/15 19:36:11 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/infcache.h
@@ -34,6 +34,7 @@
 #define STATUS_WRONG_INF_STYLE         (0xC0700003)
 #define STATUS_NOT_ENOUGH_MEMORY       (0xC0700004)
 
+#define MAX_INF_STRING_LENGTH  512
 
 typedef PVOID HINF, *PHINF;
 
@@ -49,12 +50,12 @@ typedef struct _INFCONTEXT
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS
-InfOpenFile(PHINF InfHandle,
-	    PUNICODE_STRING FileName,
-	    PULONG ErrorLine);
+InfOpenFile (PHINF InfHandle,
+	     PUNICODE_STRING FileName,
+	     PULONG ErrorLine);
 
 VOID
-InfCloseFile(HINF InfHandle);
+InfCloseFile (HINF InfHandle);
 
 
 BOOLEAN
@@ -67,16 +68,62 @@ BOOLEAN
 InfFindNextLine (PINFCONTEXT ContextIn,
 		 PINFCONTEXT ContextOut);
 
+BOOLEAN
+InfFindFirstMatchLine (PINFCONTEXT ContextIn,
+		       PCWSTR Key,
+		       PINFCONTEXT ContextOut);
+
+BOOLEAN
+InfFindNextMatchLine (PINFCONTEXT ContextIn,
+		      PCWSTR Key,
+		      PINFCONTEXT ContextOut);
+
 
 LONG
-InfGetLineCount(HINF InfHandle,
-		PCWSTR Section);
+InfGetLineCount (HINF InfHandle,
+		 PCWSTR Section);
+
+LONG
+InfGetFieldCount (PINFCONTEXT Context);
+
+
+BOOLEAN
+InfGetBinaryField (PINFCONTEXT Context,
+		   ULONG FieldIndex,
+		   PUCHAR ReturnBuffer,
+		   ULONG ReturnBufferSize,
+		   PULONG RequiredSize);
+
+BOOLEAN
+InfGetIntField (PINFCONTEXT Context,
+		ULONG FieldIndex,
+		PLONG IntegerValue);
+
+BOOLEAN
+InfGetMultiSzField (PINFCONTEXT Context,
+		    ULONG FieldIndex,
+		    PWSTR ReturnBuffer,
+		    ULONG ReturnBufferSize,
+		    PULONG RequiredSize);
+
+BOOLEAN
+InfGetStringField (PINFCONTEXT Context,
+		   ULONG FieldIndex,
+		   PWSTR ReturnBuffer,
+		   ULONG ReturnBufferSize,
+		   PULONG RequiredSize);
+
 
 
 BOOLEAN
 InfGetData (PINFCONTEXT Context,
 	    PWCHAR *Key,
 	    PWCHAR *Data);
+
+BOOLEAN
+InfGetDataField (PINFCONTEXT Context,
+		 ULONG FieldIndex,
+		 PWCHAR *Data);
 
 #endif /* __INFCACHE_H__ */
 

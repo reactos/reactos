@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: infcache.c,v 1.2 2003/03/13 17:58:52 ekohl Exp $
+/* $Id: infcache.c,v 1.3 2003/03/15 19:36:10 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/infcache.c
@@ -55,7 +55,7 @@ typedef struct _INFCACHELINE
 
   LONG FieldCount;
 
-  PWCHAR Name;
+  PWCHAR Key;
 
   PINFCACHEFIELD FirstField;
   PINFCACHEFIELD LastField;
@@ -160,12 +160,12 @@ InfpCacheFreeLine (PINFCACHELINE Line)
     }
 
   Next = Line->Next;
-  if (Line->Name != NULL)
+  if (Line->Key != NULL)
     {
       RtlFreeHeap (ProcessHeap,
 		   0,
-		   Line->Name);
-      Line->Name = NULL;
+		   Line->Key);
+      Line->Key = NULL;
     }
 
   /* Remove data fields */
@@ -329,23 +329,23 @@ InfpCacheAddLine (PINFCACHESECTION Section)
 
 static PVOID
 InfpAddKeyToLine (PINFCACHELINE Line,
-		  PWCHAR Name)
+		  PWCHAR Key)
 {
   if (Line == NULL)
     return NULL;
 
-  if (Line->Name != NULL)
+  if (Line->Key != NULL)
     return NULL;
 
-  Line->Name = (PWCHAR)RtlAllocateHeap (ProcessHeap,
-					0,
-					(wcslen (Name) + 1) * sizeof(WCHAR));
-  if (Line->Name == NULL)
+  Line->Key = (PWCHAR)RtlAllocateHeap (ProcessHeap,
+				       0,
+				       (wcslen (Key) + 1) * sizeof(WCHAR));
+  if (Line->Key == NULL)
     return NULL;
 
-  wcscpy (Line->Name, Name);
+  wcscpy (Line->Key, Key);
 
-  return (PVOID)Line->Name;
+  return (PVOID)Line->Key;
 }
 
 
@@ -388,14 +388,14 @@ InfpAddFieldToLine (PINFCACHELINE Line,
 
 static PINFCACHELINE
 InfpCacheFindKeyLine (PINFCACHESECTION Section,
-		      PWCHAR Name)
+		      PWCHAR Key)
 {
   PINFCACHELINE Line;
 
   Line = Section->FirstLine;
   while (Line != NULL)
     {
-      if (Line->Name != NULL && _wcsicmp (Line->Name, Name) == 0)
+      if (Line->Key != NULL && _wcsicmp (Line->Key, Key) == 0)
 	{
 	  return Line;
 	}
@@ -1126,9 +1126,86 @@ InfFindNextLine (PINFCONTEXT ContextIn,
   if (CacheLine->Next == NULL)
     return FALSE;
 
+  if (ContextIn != ContextOut)
+    {
+      ContextOut->Inf = ContextIn->Inf;
+      ContextOut->Section = ContextIn->Section;
+    }
   ContextOut->Line = (PVOID)(CacheLine->Next);
 
   return TRUE;
+}
+
+
+BOOLEAN
+InfFindFirstMatchLine (PINFCONTEXT ContextIn,
+		       PCWSTR Key,
+		       PINFCONTEXT ContextOut)
+{
+  PINFCACHELINE CacheLine;
+
+  if (ContextIn == NULL || ContextOut == NULL || Key == NULL || *Key == 0)
+    return FALSE;
+
+  if (ContextIn->Inf == NULL || ContextIn->Section == NULL)
+    return FALSE;
+
+  CacheLine = ((PINFCACHESECTION)(ContextIn->Section))->FirstLine;
+  while (CacheLine != NULL)
+    {
+      if (CacheLine->Key != NULL && _wcsicmp (CacheLine->Key, Key) == 0)
+	{
+
+	  if (ContextIn != ContextOut)
+	    {
+	      ContextOut->Inf = ContextIn->Inf;
+	      ContextOut->Section = ContextIn->Section;
+	    }
+	  ContextOut->Line = (PVOID)CacheLine;
+
+	  return TRUE;
+	}
+
+      CacheLine = CacheLine->Next;
+    }
+
+  return FALSE;
+}
+
+
+BOOLEAN
+InfFindNextMatchLine (PINFCONTEXT ContextIn,
+		      PCWSTR Key,
+		      PINFCONTEXT ContextOut)
+{
+  PINFCACHELINE CacheLine;
+
+  if (ContextIn == NULL || ContextOut == NULL || Key == NULL || *Key == 0)
+    return FALSE;
+
+  if (ContextIn->Inf == NULL || ContextIn->Section == NULL || ContextIn->Line == NULL)
+    return FALSE;
+
+  CacheLine = (PINFCACHELINE)ContextIn->Line;
+  while (CacheLine != NULL)
+    {
+      if (CacheLine->Key != NULL && _wcsicmp (CacheLine->Key, Key) == 0)
+	{
+
+	  if (ContextIn != ContextOut)
+	    {
+	      ContextOut->Inf = ContextIn->Inf;
+	      ContextOut->Section = ContextIn->Section;
+	    }
+	  ContextOut->Line = (PVOID)CacheLine;
+
+	  return TRUE;
+	}
+
+      CacheLine = CacheLine->Next;
+    }
+
+  return FALSE;
 }
 
 
@@ -1169,6 +1246,246 @@ InfGetLineCount(HINF InfHandle,
 }
 
 
+/* InfGetLineText */
+
+
+LONG
+InfGetFieldCount(PINFCONTEXT Context)
+{
+  if (Context == NULL || Context->Line == NULL)
+    return 0;
+
+  return ((PINFCACHELINE)Context->Line)->FieldCount;
+}
+
+
+BOOLEAN
+InfGetBinaryField (PINFCONTEXT Context,
+		   ULONG FieldIndex,
+		   PUCHAR ReturnBuffer,
+		   ULONG ReturnBufferSize,
+		   PULONG RequiredSize)
+{
+  PINFCACHELINE CacheLine;
+  PINFCACHEFIELD CacheField;
+  ULONG Index;
+  ULONG Size;
+  PUCHAR Ptr;
+
+  if (Context == NULL || Context->Line == NULL || FieldIndex == 0)
+    {
+      DPRINT("Invalid parameter\n");
+      return FALSE;
+    }
+
+  if (RequiredSize != NULL)
+    *RequiredSize = 0;
+
+  CacheLine = (PINFCACHELINE)Context->Line;
+
+  if (FieldIndex > CacheLine->FieldCount)
+    return FALSE;
+
+  CacheField = CacheLine->FirstField;
+  for (Index = 1; Index < FieldIndex; Index++)
+    CacheField = CacheField->Next;
+
+  Size = CacheLine->FieldCount - FieldIndex + 1;
+
+  if (RequiredSize != NULL)
+    *RequiredSize = Size;
+
+  if (ReturnBuffer != NULL)
+    {
+      if (ReturnBufferSize < Size)
+	return FALSE;
+
+      /* Copy binary data */
+      Ptr = ReturnBuffer;
+      while (CacheField != NULL)
+	{
+	  *Ptr = (UCHAR)wcstoul (CacheField->Data, NULL, 16);
+
+	  Ptr++;
+	  CacheField = CacheField->Next;
+	}
+    }
+
+  return TRUE;
+}
+
+
+BOOLEAN
+InfGetIntField (PINFCONTEXT Context,
+		ULONG FieldIndex,
+		PLONG IntegerValue)
+{
+  PINFCACHELINE CacheLine;
+  PINFCACHEFIELD CacheField;
+  ULONG Index;
+  PWCHAR Ptr;
+
+  if (Context == NULL || Context->Line == NULL || IntegerValue == NULL)
+    {
+      DPRINT("Invalid parameter\n");
+      return FALSE;
+    }
+
+  CacheLine = (PINFCACHELINE)Context->Line;
+
+  if (FieldIndex > CacheLine->FieldCount)
+    {
+      DPRINT("Invalid parameter\n");
+      return FALSE;
+    }
+
+  if (FieldIndex == 0)
+    {
+      Ptr = CacheLine->Key;
+    }
+  else
+    {
+      CacheField = CacheLine->FirstField;
+      for (Index = 1; Index < FieldIndex; Index++)
+	CacheField = CacheField->Next;
+
+      Ptr = CacheField->Data;
+    }
+
+  *IntegerValue = wcstol (Ptr, NULL, 0);
+
+  return TRUE;
+}
+
+
+BOOLEAN
+InfGetMultiSzField (PINFCONTEXT Context,
+		    ULONG FieldIndex,
+		    PWSTR ReturnBuffer,
+		    ULONG ReturnBufferSize,
+		    PULONG RequiredSize)
+{
+  PINFCACHELINE CacheLine;
+  PINFCACHEFIELD CacheField;
+  PINFCACHEFIELD FieldPtr;
+  ULONG Index;
+  ULONG Size;
+  PWCHAR Ptr;
+
+  if (Context == NULL || Context->Line == NULL || FieldIndex == 0)
+    {
+      DPRINT("Invalid parameter\n");
+      return FALSE;
+    }
+
+  if (RequiredSize != NULL)
+    *RequiredSize = 0;
+
+  CacheLine = (PINFCACHELINE)Context->Line;
+
+  if (FieldIndex > CacheLine->FieldCount)
+    return FALSE;
+
+  CacheField = CacheLine->FirstField;
+  for (Index = 1; Index < FieldIndex; Index++)
+    CacheField = CacheField->Next;
+
+  /* Calculate the required buffer size */
+  FieldPtr = CacheField;
+  Size = 0;
+  while (FieldPtr != NULL)
+    {
+      Size += (wcslen (FieldPtr->Data) + 1);
+      FieldPtr = FieldPtr->Next;
+    }
+  Size++;
+
+  if (RequiredSize != NULL)
+    *RequiredSize = Size;
+
+  if (ReturnBuffer != NULL)
+    {
+      if (ReturnBufferSize < Size)
+	return FALSE;
+
+      /* Copy multi-sz string */
+      Ptr = ReturnBuffer;
+      FieldPtr = CacheField;
+      while (FieldPtr != NULL)
+	{
+	  Size = wcslen (FieldPtr->Data) + 1;
+
+	  wcscpy (Ptr, FieldPtr->Data);
+
+	  Ptr = Ptr + Size;
+	  FieldPtr = FieldPtr->Next;
+	}
+      *Ptr = 0;
+    }
+
+  return TRUE;
+}
+
+
+BOOLEAN
+InfGetStringField (PINFCONTEXT Context,
+		   ULONG FieldIndex,
+		   PWSTR ReturnBuffer,
+		   ULONG ReturnBufferSize,
+		   PULONG RequiredSize)
+{
+  PINFCACHELINE CacheLine;
+  PINFCACHEFIELD CacheField;
+  ULONG Index;
+  PWCHAR Ptr;
+  ULONG Size;
+
+  if (Context == NULL || Context->Line == NULL || FieldIndex == 0)
+    {
+      DPRINT("Invalid parameter\n");
+      return FALSE;
+    }
+
+  if (RequiredSize != NULL)
+    *RequiredSize = 0;
+
+  CacheLine = (PINFCACHELINE)Context->Line;
+
+  if (FieldIndex > CacheLine->FieldCount)
+    return FALSE;
+
+  if (FieldIndex == 0)
+    {
+      Ptr = CacheLine->Key;
+    }
+  else
+    {
+      CacheField = CacheLine->FirstField;
+      for (Index = 1; Index < FieldIndex; Index++)
+	CacheField = CacheField->Next;
+
+      Ptr = CacheField->Data;
+    }
+
+  Size = wcslen (Ptr) + 1;
+
+  if (RequiredSize != NULL)
+    *RequiredSize = Size;
+
+  if (ReturnBuffer != NULL)
+    {
+      if (ReturnBufferSize < Size)
+	return FALSE;
+
+      wcscpy (ReturnBuffer, Ptr);
+    }
+
+  return TRUE;
+}
+
+
+
+
 BOOLEAN
 InfGetData (PINFCONTEXT Context,
 	    PWCHAR *Key,
@@ -1184,7 +1501,7 @@ InfGetData (PINFCONTEXT Context,
 
   CacheKey = (PINFCACHELINE)Context->Line;
   if (Key != NULL)
-    *Key = CacheKey->Name;
+    *Key = CacheKey->Key;
 
   if (Data != NULL)
     {
@@ -1196,6 +1513,43 @@ InfGetData (PINFCONTEXT Context,
 	{
 	  *Data = CacheKey->FirstField->Data;
 	}
+    }
+
+  return TRUE;
+}
+
+
+BOOLEAN
+InfGetDataField (PINFCONTEXT Context,
+		 ULONG FieldIndex,
+		 PWCHAR *Data)
+{
+  PINFCACHELINE CacheLine;
+  PINFCACHEFIELD CacheField;
+  ULONG Index;
+
+  if (Context == NULL || Context->Line == NULL || Data == NULL)
+    {
+      DPRINT("Invalid parameter\n");
+      return FALSE;
+    }
+
+  CacheLine = (PINFCACHELINE)Context->Line;
+
+  if (FieldIndex > CacheLine->FieldCount)
+    return FALSE;
+
+  if (FieldIndex == 0)
+    {
+      *Data = CacheLine->Key;
+    }
+  else
+    {
+      CacheField = CacheLine->FirstField;
+      for (Index = 1; Index < FieldIndex; Index++)
+	CacheField = CacheField->Next;
+
+      *Data = CacheField->Data;
     }
 
   return TRUE;
