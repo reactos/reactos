@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.221 2004/04/29 21:17:36 gvg Exp $
+/* $Id: window.c,v 1.222 2004/05/01 18:06:59 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1068,6 +1068,36 @@ IntUnlinkWindow(PWINDOW_OBJECT Wnd)
   }
   Wnd->PrevSibling = Wnd->NextSibling = Wnd->Parent = NULL;
   IntUnLockRelatives(Wnd);
+}
+
+BOOL FASTCALL
+IntAnyPopup(VOID)
+{
+  PWINDOW_OBJECT Window, Child;
+  
+  if(!(Window = IntGetWindowObject(IntGetDesktopWindow())))
+  {
+    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+    return FALSE;
+  }
+  
+  IntLockRelatives(Window);
+  for(Child = Window->FirstChild; Child; Child = Child->NextSibling)
+  {
+    if(Child->Owner && Child->Style & WS_VISIBLE)
+    {
+      /*
+       * The desktop has a popup window if one of them has 
+       * an owner window and is visible
+       */
+      IntUnLockRelatives(Window);
+      IntReleaseWindowObject(Window);
+      return TRUE;
+    }
+  }
+  IntUnLockRelatives(Window);
+  IntReleaseWindowObject(Window);
+  return FALSE;
 }
 
 /* FUNCTIONS *****************************************************************/

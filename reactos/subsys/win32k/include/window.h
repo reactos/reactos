@@ -210,6 +210,9 @@ IntGetWindowInfo(PWINDOW_OBJECT WindowObject, PWINDOWINFO pwi);
 VOID FASTCALL
 IntGetWindowBorderMeasures(PWINDOW_OBJECT WindowObject, INT *cx, INT *cy);
 
+BOOL FASTCALL
+IntAnyPopup(VOID);
+
 DWORD IntRemoveWndProcHandle(WNDPROC Handle);
 DWORD IntRemoveProcessWndProcHandles(HANDLE ProcessID);
 DWORD IntAddWndProcHandle(WNDPROC WindowProc, BOOL IsUnicode);

@@ -30,6 +30,8 @@ VOID CreateFrameBrushes(VOID);
 VOID DeleteFrameBrushes(VOID);
 void DrawCaret(HWND hWnd, PTHRDCARETINFO CaretInfo);
 
+#define NtUserAnyPopup() \
+  (BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_ANYPOPUP)
 
 #define NtUserValidateRgn(hWnd, hRgn) \
   (BOOL)NtUserCallTwoParam((DWORD)hWnd, (DWORD)hRgn, TWOPARAM_ROUTINE_VALIDATERGN)

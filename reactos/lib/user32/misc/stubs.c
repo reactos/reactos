@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.60 2004/05/01 16:43:14 weiden Exp $
+/* $Id: stubs.c,v 1.61 2004/05/01 18:06:59 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -17,17 +17,6 @@
 #ifdef __USE_W32API
 typedef PVOID LPIMEPROW, LPIMEPROA;
 #endif
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-AnyPopup(VOID)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
 
 /*
  * @unimplemented

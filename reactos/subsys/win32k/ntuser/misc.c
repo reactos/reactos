@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.67 2004/05/01 16:43:15 weiden Exp $
+/* $Id: misc.c,v 1.68 2004/05/01 18:06:59 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -132,7 +132,11 @@ NtUserCallNoParam(DWORD Routine)
     case NOPARAM_ROUTINE_GETMESSAGEEXTRAINFO:
       Result = (DWORD)MsqGetMessageExtraInfo();
       break;
-
+    
+    case NOPARAM_ROUTINE_ANYPOPUP:
+      Result = (DWORD)IntAnyPopup();
+      break;
+    
     default:
       DPRINT1("Calling invalid routine number 0x%x in NtUserCallNoParam\n");
       SetLastWin32Error(ERROR_INVALID_PARAMETER);

@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.113 2004/04/29 21:13:16 gvg Exp $
+/* $Id: window.c,v 1.114 2004/05/01 18:06:59 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1643,6 +1643,16 @@ ScrollWindowEx(HWND hWnd, int dx, int dy, CONST RECT *prcScroll,
 {
    return NtUserScrollWindowEx(hWnd, dx, dy, prcScroll, prcClip, hrgnUpdate,
       prcUpdate, flags);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+AnyPopup(VOID)
+{
+  return NtUserAnyPopup();
 }
 
 /* EOF */
