@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.67 2004/09/21 21:53:45 weiden Exp $
+/* $Id: proc.c,v 1.68 2004/09/23 19:01:38 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -959,7 +959,7 @@ GetProcessHandleCount(HANDLE hProcess,
                                        &BytesWritten);
     if(NT_SUCCESS(Status))
     {
-      *pdwHandleCount = ProcessHandleCount;
+      *pdwHandleCount = phc;
       return TRUE;
     }
 
