@@ -18,6 +18,7 @@ DEFINE_GUID(GUID_SERENUM_BUS_ENUMERATOR, 0x4D36E978L, 0xE325, 0x11CE, 0xBF, 0xC1
 #endif
 #define NDEBUG
 #include <internal/debug.h>
+#define ASSERT assert
 
 /* FUNCTIONS *****************************************************************/
 
@@ -99,13 +100,16 @@ IoGetDeviceInterfaces(
    UNICODE_STRING BaseKeyName;
    UNICODE_STRING AliasKeyName;
    UNICODE_STRING SymbolicLink;
+   UNICODE_STRING Control;
    UNICODE_STRING SubKeyName;
    UNICODE_STRING SymbolicLinkKeyName;
+   UNICODE_STRING ControlKeyName;
    UNICODE_STRING TempString;
    HANDLE InterfaceKey;
    HANDLE SubKey;
    HANDLE SymbolicLinkKey;
    PKEY_FULL_INFORMATION fip;
+   PKEY_FULL_INFORMATION bfip;
    PKEY_BASIC_INFORMATION bip;
    PKEY_VALUE_PARTIAL_INFORMATION vpip;
    PWCHAR SymLinkList = NULL;
@@ -113,6 +117,7 @@ IoGetDeviceInterfaces(
    NTSTATUS Status;
    ULONG Size = 0;
    ULONG i = 0;
+   ULONG j = 0;
    OBJECT_ATTRIBUTES ObjectAttributes;
   
    Status = RtlStringFromGUID(InterfaceClassGuid, &GuidString);
@@ -124,33 +129,34 @@ IoGetDeviceInterfaces(
 
    RtlInitUnicodeString(&AliasKeyName, BaseInterfaceString);
    RtlInitUnicodeString(&SymbolicLink, L"SymbolicLink");
+   RtlInitUnicodeString(&Control, L"\\Control");
    BaseKeyName.Length = wcslen(BaseKeyString) * sizeof(WCHAR);
    BaseKeyName.MaximumLength = BaseKeyName.Length + (38 * sizeof(WCHAR));
    BaseKeyName.Buffer = ExAllocatePool(
       NonPagedPool,
       BaseKeyName.MaximumLength);
-   assert(BaseKeyName.Buffer != NULL);
+   ASSERT(BaseKeyName.Buffer != NULL);
    wcscpy(BaseKeyName.Buffer, BaseKeyString);
    RtlAppendUnicodeStringToString(&BaseKeyName, &GuidString);
 
    if (PhysicalDeviceObject)
    {
-      WCHAR GuidBuffer[32];
+      WCHAR GuidBuffer[40];
       UNICODE_STRING PdoGuidString;
 
       RtlFreeUnicodeString(&BaseKeyName);
 
       IoGetDeviceProperty(
          PhysicalDeviceObject,
-  	  	 DevicePropertyClassGuid,
-  			 sizeof(GuidBuffer),
-  			 GuidBuffer,
-  			 &Size);
+         DevicePropertyClassGuid,
+         sizeof(GuidBuffer),
+         GuidBuffer,
+         &Size);
 
-  		RtlInitUnicodeString(&PdoGuidString, GuidBuffer);
+      RtlInitUnicodeString(&PdoGuidString, GuidBuffer);
       if (RtlCompareUnicodeString(&GuidString, &PdoGuidString, TRUE))
       {
-	       DPRINT("Inconsistent Guid's asked for in IoGetDeviceInterfaces()\n");
+         DPRINT("Inconsistent Guid's asked for in IoGetDeviceInterfaces()\n");
          return STATUS_INVALID_HANDLE;
       }
 
@@ -180,7 +186,7 @@ IoGetDeviceInterfaces(
 
       Status = ZwQueryKey(
          InterfaceKey,
-  			 KeyFullInformation,
+         KeyFullInformation,
          NULL,
          0,
          &Size);
@@ -194,14 +200,14 @@ IoGetDeviceInterfaces(
       }
 
       fip = (PKEY_FULL_INFORMATION)ExAllocatePool(NonPagedPool, Size);
-      assert(fip != NULL);
+      ASSERT(fip != NULL);
 
       Status = ZwQueryKey(
          InterfaceKey,
-  			 KeyFullInformation,
-  			 fip,
-  			 Size,
-  			 &Size);
+         KeyFullInformation,
+         fip,
+         Size,
+         &Size);
   
       if (!NT_SUCCESS(Status))
       {
@@ -216,15 +222,15 @@ IoGetDeviceInterfaces(
       {
          Status = ZwEnumerateKey(
             InterfaceKey,
-    			  i,
-    			  KeyBasicInformation,
-    			  NULL,
-    			  0,
-    			  &Size);
+            i,
+            KeyBasicInformation,
+            NULL,
+            0,
+            &Size);
 
          if (Status != STATUS_BUFFER_TOO_SMALL)
          {
-            DPRINT("ZwEnumerateKey() Failed. (0x%X)\n", Status);
+            DPRINT("ZwEnumerateKey() Failed.(0x%X)\n", Status);
             ExFreePool(fip);
             if (SymLinkList != NULL)
                ExFreePool(SymLinkList);
@@ -234,7 +240,7 @@ IoGetDeviceInterfaces(
          }
 
          bip = (PKEY_BASIC_INFORMATION)ExAllocatePool(NonPagedPool, Size);
-         assert(bip != NULL);
+         ASSERT(bip != NULL);
     
          Status = ZwEnumerateKey(
             InterfaceKey,
@@ -246,7 +252,7 @@ IoGetDeviceInterfaces(
       
          if (!NT_SUCCESS(Status))
          {
-            DPRINT("ZwEnumerateKey() Failed. (0x%X)\n", Status);
+            DPRINT("ZwEnumerateKey() Failed.(0x%X)\n", Status);
             ExFreePool(fip);
             ExFreePool(bip);
             if (SymLinkList != NULL)
@@ -255,11 +261,11 @@ IoGetDeviceInterfaces(
             ZwClose(InterfaceKey);
             return Status;
          }
-
+         
          SubKeyName.Length = 0;
          SubKeyName.MaximumLength = BaseKeyName.Length + bip->NameLength + sizeof(WCHAR);
          SubKeyName.Buffer = ExAllocatePool(NonPagedPool, SubKeyName.MaximumLength);
-         assert(SubKeyName.Buffer != NULL);
+         ASSERT(SubKeyName.Buffer != NULL);
          TempString.Length = TempString.MaximumLength = bip->NameLength;
          TempString.Buffer = bip->Name;
          RtlCopyUnicodeString(&SubKeyName, &BaseKeyName);
@@ -292,181 +298,263 @@ IoGetDeviceInterfaces(
             return Status;
          }
 
-         Status = ZwEnumerateKey(
+         Status = ZwQueryKey(
             SubKey,
-            0,
-            KeyBasicInformation,
+            KeyFullInformation,
             NULL,
             0,
             &Size);
 
          if (Status != STATUS_BUFFER_TOO_SMALL)
          {
-            DPRINT("ZwEnumerateKey() Failed. (0x%X)\n", Status);
+            DPRINT("ZwQueryKey() Failed. (0x%X)\n", Status);
             ExFreePool(fip);
-            if (SymLinkList != NULL)
-               ExFreePool(SymLinkList);
-            RtlFreeUnicodeString(&SubKeyName);
             RtlFreeUnicodeString(&BaseKeyName);
+            RtlFreeUnicodeString(&SubKeyName);
             ZwClose(SubKey);
             ZwClose(InterfaceKey);
             return Status;
          }
 
-         bip = (PKEY_BASIC_INFORMATION)ExAllocatePool(NonPagedPool, Size);
-         assert(bip != NULL);
+         bfip = (PKEY_FULL_INFORMATION)ExAllocatePool(NonPagedPool, Size);
+         ASSERT(bfip != NULL);
 
-         Status = ZwEnumerateKey(
+         Status = ZwQueryKey(
             SubKey,
-            0,
-            KeyBasicInformation,
-            bip,
+            KeyFullInformation,
+            bfip,
             Size,
             &Size);
-
+  
          if (!NT_SUCCESS(Status))
          {
-            DPRINT("ZwEnumerateKey() Failed. (0x%X)\n", Status);
+            DPRINT("ZwQueryKey() Failed. (0x%X)\n", Status);
             ExFreePool(fip);
+            RtlFreeUnicodeString(&SubKeyName);
+            RtlFreeUnicodeString(&BaseKeyName);
+            ZwClose(SubKey);
+            ZwClose(InterfaceKey);
+            return Status;
+         }
+         
+         for(j = 0; j < bfip->SubKeys; j++)
+         {
+            Status = ZwEnumerateKey(
+               SubKey,
+               j,
+               KeyBasicInformation,
+               NULL,
+               0,
+               &Size);
+
+            if (Status == STATUS_NO_MORE_ENTRIES)
+               continue;
+
+            if (Status != STATUS_BUFFER_TOO_SMALL)
+            {
+               DPRINT("ZwEnumerateKey() Failed.(0x%X)\n", Status);
+               ExFreePool(bfip);
+               ExFreePool(fip);
+               if (SymLinkList != NULL)
+                  ExFreePool(SymLinkList);
+               RtlFreeUnicodeString(&SubKeyName);
+               RtlFreeUnicodeString(&BaseKeyName);
+               ZwClose(SubKey);
+               ZwClose(InterfaceKey);
+               return Status;
+            }
+
+            bip = (PKEY_BASIC_INFORMATION)ExAllocatePool(NonPagedPool, Size);
+            ASSERT(bip != NULL);
+
+            Status = ZwEnumerateKey(
+               SubKey,
+               j,
+               KeyBasicInformation,
+               bip,
+               Size,
+               &Size);
+
+            if (!NT_SUCCESS(Status))
+            {
+               DPRINT("ZwEnumerateKey() Failed.(0x%X)\n", Status);
+               ExFreePool(fip);
+               ExFreePool(bfip);
+               ExFreePool(bip);
+               if (SymLinkList != NULL)
+                  ExFreePool(SymLinkList);
+               RtlFreeUnicodeString(&SubKeyName);
+               RtlFreeUnicodeString(&BaseKeyName);
+               ZwClose(SubKey);
+               ZwClose(InterfaceKey);
+               return Status;
+            }
+         
+            if (!wcsncmp(bip->Name, L"Control", bip->NameLength))
+            {
+               continue;
+            }
+            
+            SymbolicLinkKeyName.Length = 0;
+            SymbolicLinkKeyName.MaximumLength = SubKeyName.Length + bip->NameLength + sizeof(WCHAR);
+            SymbolicLinkKeyName.Buffer = ExAllocatePool(NonPagedPool, SymbolicLinkKeyName.MaximumLength);
+            ASSERT(SymbolicLinkKeyName.Buffer != NULL);
+            TempString.Length = TempString.MaximumLength = bip->NameLength;
+            TempString.Buffer = bip->Name;
+            RtlCopyUnicodeString(&SymbolicLinkKeyName, &SubKeyName);
+            RtlAppendUnicodeToString(&SymbolicLinkKeyName, L"\\");
+            RtlAppendUnicodeStringToString(&SymbolicLinkKeyName, &TempString);
+
+            ControlKeyName.Length = 0;
+            ControlKeyName.MaximumLength = SymbolicLinkKeyName.Length + Control.Length + sizeof(WCHAR);
+            ControlKeyName.Buffer = ExAllocatePool(NonPagedPool, ControlKeyName.MaximumLength);
+            ASSERT(ControlKeyName.Buffer != NULL);
+            RtlCopyUnicodeString(&ControlKeyName, &SymbolicLinkKeyName);
+            RtlAppendUnicodeStringToString(&ControlKeyName, &Control);
+   
             ExFreePool(bip);
-            if (SymLinkList != NULL)
-               ExFreePool(SymLinkList);
-            RtlFreeUnicodeString(&SubKeyName);
-            RtlFreeUnicodeString(&BaseKeyName);
-            ZwClose(SubKey);
-            ZwClose(InterfaceKey);
-            return Status;
-         }
 
-         SymbolicLinkKeyName.Length = 0;
-         SymbolicLinkKeyName.MaximumLength = SubKeyName.Length + bip->NameLength + sizeof(WCHAR);
-         SymbolicLinkKeyName.Buffer = ExAllocatePool(NonPagedPool, SymbolicLinkKeyName.MaximumLength);
-         assert(SymbolicLinkKeyName.Buffer != NULL);
-         TempString.Length = TempString.MaximumLength = bip->NameLength;
-         TempString.Buffer = bip->Name;
-         RtlCopyUnicodeString(&SymbolicLinkKeyName, &SubKeyName);
-         RtlAppendUnicodeToString(&SymbolicLinkKeyName, L"\\");
-         RtlAppendUnicodeStringToString(&SymbolicLinkKeyName, &TempString);
+            InitializeObjectAttributes(
+               &ObjectAttributes,
+               &SymbolicLinkKeyName,
+               OBJ_CASE_INSENSITIVE,
+               NULL,
+               NULL);
+
+            Status = ZwOpenKey(
+               &SymbolicLinkKey,
+               KEY_READ,
+               &ObjectAttributes);
+
+            if (!NT_SUCCESS(Status))
+            {
+               DPRINT("ZwOpenKey() Failed. (0x%X)\n", Status);
+               ExFreePool(fip);
+               ExFreePool(bfip);
+               if (SymLinkList != NULL)
+                  ExFreePool(SymLinkList);
+               RtlFreeUnicodeString(&SymbolicLinkKeyName);
+               RtlFreeUnicodeString(&SubKeyName);
+               RtlFreeUnicodeString(&BaseKeyName);
+               ZwClose(SubKey);
+               ZwClose(InterfaceKey);
+               return Status;
+            }
+
+            Status = ZwQueryValueKey(
+               SymbolicLinkKey, 
+               &SymbolicLink, 
+               KeyValuePartialInformation,
+               NULL,
+               0,
+               &Size);
+               
+            if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+               continue;
       
-         ExFreePool(bip);
+            if (Status != STATUS_BUFFER_TOO_SMALL)
+            {
+               DPRINT("ZwQueryValueKey() Failed.(0x%X)\n", Status);
+               ExFreePool(fip);
+               ExFreePool(bfip);
+               if (SymLinkList != NULL)
+                  ExFreePool(SymLinkList);
+               RtlFreeUnicodeString(&SymbolicLinkKeyName);
+               RtlFreeUnicodeString(&SubKeyName);
+               RtlFreeUnicodeString(&BaseKeyName);
+               ZwClose(SymbolicLinkKey);
+               ZwClose(SubKey);
+               ZwClose(InterfaceKey);
+               return Status;
+            }
 
-         InitializeObjectAttributes(
-            &ObjectAttributes,
-            &SymbolicLinkKeyName,
-            OBJ_CASE_INSENSITIVE,
-            NULL,
-            NULL);
+            vpip = (PKEY_VALUE_PARTIAL_INFORMATION)ExAllocatePool(NonPagedPool, Size);
+            ASSERT(vpip != NULL);
 
-         Status = ZwOpenKey(
-            &SymbolicLinkKey,
-            KEY_READ,
-            &ObjectAttributes);
+            Status = ZwQueryValueKey(
+               SymbolicLinkKey,
+               &SymbolicLink,
+               KeyValuePartialInformation,
+               vpip,
+               Size,
+               &Size);
 
-         if (!NT_SUCCESS(Status))
-         {
-            DPRINT("ZwOpenKey() Failed. (0x%X)\n", Status);
-            ExFreePool(fip);
-            if (SymLinkList != NULL)
-               ExFreePool(SymLinkList);
+            if (!NT_SUCCESS(Status))
+            {
+               DPRINT("ZwQueryValueKey() Failed.(0x%X)\n", Status);
+               ExFreePool(fip);
+               ExFreePool(bfip);
+               ExFreePool(vpip);
+               if (SymLinkList != NULL)
+                  ExFreePool(SymLinkList);
+               RtlFreeUnicodeString(&SymbolicLinkKeyName);
+               RtlFreeUnicodeString(&SubKeyName);
+               RtlFreeUnicodeString(&BaseKeyName);
+               ZwClose(SymbolicLinkKey);
+               ZwClose(SubKey);
+               ZwClose(InterfaceKey);
+               return Status;
+            }
+
+            Status = RtlCheckRegistryKey(RTL_REGISTRY_ABSOLUTE, ControlKeyName.Buffer);
+
+            if (NT_SUCCESS(Status))
+            {         
+               /* Put the name in the string here */
+               if (SymLinkList == NULL)
+               {
+                  SymLinkListSize = vpip->DataLength;
+                  SymLinkList = ExAllocatePool(NonPagedPool, SymLinkListSize + sizeof(WCHAR));
+                  ASSERT(SymLinkList != NULL);
+                  RtlCopyMemory(SymLinkList, vpip->Data, vpip->DataLength);
+                  SymLinkList[vpip->DataLength / sizeof(WCHAR)] = 0;
+                  SymLinkList[1] = '?';
+               }
+               else
+               {
+                  PWCHAR OldSymLinkList;
+                  ULONG OldSymLinkListSize;
+                  PWCHAR SymLinkListPtr;
+
+                  OldSymLinkList = SymLinkList;
+                  OldSymLinkListSize = SymLinkListSize;
+                  SymLinkListSize += vpip->DataLength;
+                  SymLinkList = ExAllocatePool(NonPagedPool, SymLinkListSize + sizeof(WCHAR));
+                  ASSERT(SymLinkList != NULL);
+                  RtlCopyMemory(SymLinkList, OldSymLinkList, OldSymLinkListSize);
+                  ExFreePool(OldSymLinkList);
+                  SymLinkListPtr = SymLinkList + (OldSymLinkListSize / sizeof(WCHAR));
+                  RtlCopyMemory(SymLinkListPtr, vpip->Data, vpip->DataLength);
+                  SymLinkListPtr[vpip->DataLength / sizeof(WCHAR)] = 0;
+                  SymLinkListPtr[1] = '?';
+               }               
+            }
+
             RtlFreeUnicodeString(&SymbolicLinkKeyName);
-            RtlFreeUnicodeString(&SubKeyName);
-            RtlFreeUnicodeString(&BaseKeyName);
-            ZwClose(SubKey);
-            ZwClose(InterfaceKey);
-            return Status;
-         }
-
-         Status = ZwQueryValueKey(
-            SymbolicLinkKey, 
-            &SymbolicLink, 
-            KeyValuePartialInformation,
-            NULL,
-            0,
-            &Size);
-      
-         if (Status != STATUS_BUFFER_TOO_SMALL)
-         {
-            DPRINT("ZwQueryValueKey() Failed. (0x%X)\n", Status);
-            ExFreePool(fip);
-            if (SymLinkList != NULL)
-               ExFreePool(SymLinkList);
-            RtlFreeUnicodeString(&SymbolicLinkKeyName);
-            RtlFreeUnicodeString(&SubKeyName);
-            RtlFreeUnicodeString(&BaseKeyName);
+            RtlFreeUnicodeString(&ControlKeyName);
             ZwClose(SymbolicLinkKey);
-            ZwClose(SubKey);
-            ZwClose(InterfaceKey);
-            return Status;
          }
 
-         vpip = (PKEY_VALUE_PARTIAL_INFORMATION)ExAllocatePool(NonPagedPool, Size);
-         assert(vpip != NULL);
-
-         Status = ZwQueryValueKey(
-            SymbolicLinkKey,
-         		&SymbolicLink,
-         		KeyValuePartialInformation,
-         		vpip,
-         		Size,
-         		&Size);
-
-         if (!NT_SUCCESS(Status))
-         {
-            ExFreePool(fip);
-            ExFreePool(vpip);
-            if (SymLinkList != NULL)
-               ExFreePool(SymLinkList);
-            RtlFreeUnicodeString(&SymbolicLinkKeyName);
-            RtlFreeUnicodeString(&SubKeyName);
-            RtlFreeUnicodeString(&BaseKeyName);
-            ZwClose(SymbolicLinkKey);
-            ZwClose(SubKey);
-            ZwClose(InterfaceKey);
-            return Status;
-         }
-
-         /* Put the name in the string here */
-         if (SymLinkList == NULL)
-         {
-            SymLinkListSize = vpip->DataLength;
-            SymLinkList = ExAllocatePool(NonPagedPool, SymLinkListSize + sizeof(WCHAR));
-            assert(SymLinkList != NULL);
-            RtlCopyMemory(SymLinkList, vpip->Data, vpip->DataLength);
-            SymLinkList[vpip->DataLength / sizeof(WCHAR)] = 0;
-            SymLinkList[1] = '?';
-         }
-         else
-         {
-            PWCHAR OldSymLinkList;
-            ULONG OldSymLinkListSize;
-            PWCHAR SymLinkListPtr;
-
-            OldSymLinkList = SymLinkList;
-            OldSymLinkListSize = SymLinkListSize;
-            SymLinkListSize += vpip->DataLength;
-            SymLinkList = ExAllocatePool(NonPagedPool, SymLinkListSize + sizeof(WCHAR));
-            assert(SymLinkList != NULL);
-            RtlCopyMemory(SymLinkList, OldSymLinkList, OldSymLinkListSize);
-            ExFreePool(OldSymLinkList);
-            SymLinkListPtr = SymLinkList + (OldSymLinkListSize / sizeof(WCHAR));
-            RtlCopyMemory(SymLinkListPtr, vpip->Data, vpip->DataLength);
-            SymLinkListPtr[vpip->DataLength / sizeof(WCHAR)] = 0;
-            SymLinkListPtr[1] = '?';
-         }
-
-         RtlFreeUnicodeString(&SymbolicLinkKeyName);
-         RtlFreeUnicodeString(&SubKeyName);
-         ZwClose(SymbolicLinkKey);
-         ZwClose(SubKey);
          ExFreePool(vpip);
+         RtlFreeUnicodeString(&SubKeyName);
+         ZwClose(SubKey);
       }
 
       if (SymLinkList != NULL)
+      {
          SymLinkList[SymLinkListSize / sizeof(WCHAR)] = 0;
+      }
+      else
+      {
+         SymLinkList = ExAllocatePool(NonPagedPool, 2 * sizeof(WCHAR));
+         SymLinkList[0] = 0;
+      }
+
       *SymbolicLinkList = SymLinkList;
     
       RtlFreeUnicodeString(&BaseKeyName);
       ZwClose(InterfaceKey);
+      ExFreePool(bfip);
       ExFreePool(fip);
    }
 
