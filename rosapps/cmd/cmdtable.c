@@ -33,7 +33,7 @@ COMMAND cmds[] =
 	{_T("?"), 0, CommandShowCommands},
 
 #ifdef INCLUDE_CMD_ACTIVATE
-	{_T("activate"),   0, CommandActivate},
+	{_T("activate"), 0, CommandActivate},
 #endif
 
 #ifdef FEATURE_ALIASES
@@ -41,7 +41,7 @@ COMMAND cmds[] =
 #endif
 
 #ifdef INCLUDE_CMD_ATTRIB
-	{_T("attrib"),   0, CommandAttrib},
+	{_T("attrib"), 0, CommandAttrib},
 #endif
 
 #ifdef INCLUDE_CMD_BEEP
@@ -63,13 +63,12 @@ COMMAND cmds[] =
 	{_T("choice"), 0, CommandChoice},
 #endif
 
-
 #ifdef INCLUDE_CMD_CLS
 	{_T("cls"), 0, cmd_cls},
 #endif
 
 #ifdef INCLUDE_CMD_COLOR
-	{_T("color"),    0, cmd_color},
+	{_T("color"), 0, CommandColor},
 #endif
 
 #ifdef INCLUDE_CMD_COPY
@@ -81,8 +80,8 @@ COMMAND cmds[] =
 #endif
 
 #ifdef INCLUDE_CMD_DEL
-	{_T("del"),      0, CommandDelete},
-	{_T("delete"),   0, CommandDelete},
+	{_T("del"), 0, CommandDelete},
+	{_T("delete"), 0, CommandDelete},
 #endif
 
 #ifdef INCLUDE_CMD_DELAY
@@ -94,7 +93,7 @@ COMMAND cmds[] =
 #endif
 
 #ifdef FEATURE_DIRECTORY_STACK
-        {_T("dirs"), 0, CommandDirs},
+	{_T("dirs"), 0, CommandDirs},
 #endif
 
 	{_T("echo"), 0, CommandEcho},

@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.13 1999/10/23 18:17:37 ekohl Exp $
+/* $Id: cmd.c,v 1.14 1999/11/04 11:29:36 ekohl Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -122,7 +122,7 @@
 #include "batch.h"
 
 
-#define CMDLINE_LENGTH  512
+#define CMDLINE_LENGTH  1024
 
 
 BOOL bExit = FALSE;       /* indicates EXIT was typed */
@@ -987,7 +987,7 @@ Initialize (int argc, char *argv[])
 				/* process /t (color) argument */
 				wDefColor = (WORD)strtoul (&argv[i][3], NULL, 16);
 				wColor = wDefColor;
-				SetScreenColor (wColor);
+				SetScreenColor (wColor, TRUE);
 			}
 #endif
 		}

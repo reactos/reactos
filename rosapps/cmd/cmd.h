@@ -131,8 +131,9 @@ typedef struct tagCOMMAND
 
 
 /* Prototypes for COLOR.C */
-VOID SetScreenColor (WORD);
-INT cmd_color (LPTSTR, LPTSTR); 
+VOID SetScreenColor(WORD wArgColor, BOOL bFill);
+//VOID SetScreenColor (WORD);
+INT CommandColor (LPTSTR, LPTSTR);
 
 
 /* Prototypes for CONSOLE.C */
@@ -335,6 +336,10 @@ INT cmd_set (LPTSTR, LPTSTR);
 
 /* Prototypes for START.C */
 INT cmd_start (LPTSTR, LPTSTR);
+
+
+/* Prototypes for STRTOCLR.C */
+BOOL StringToColor (LPWORD, LPTSTR *);
 
 
 /* Prototypes for TIME.C */

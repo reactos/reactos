@@ -1,4 +1,5 @@
-/*
+/* $Id: color.c,v 1.3 1999/11/04 11:29:36 ekohl Exp $
+ *
  *  COLOR.C - color internal command.
  *
  *
@@ -12,6 +13,9 @@
  *
  *    20-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Redirection ready!
+ *
+ *    14-Oct-1999 (Paolo Pantaleo <paolopan@freemail.it>)
+ *        4nt's syntax implemented
  */
 
 #include "config.h"
@@ -24,21 +28,59 @@
 
 #include "cmd.h"
 
+static VOID ColorHelp (VOID)
+{
+		ConOutPuts (_T(
+			"Sets the default foreground and background colors.\n"
+			"\n"
+			"COLOR [attr [/F]] \n\n"
+			"  attr        Specifies color attribute of console output\n"
+			"  /F          fill the console with color attribute\n"
+			"\n"			
+			"There are three ways to specify the colors:"
+			));
 
-VOID SetScreenColor (WORD wColor)
+		ConOutPuts (_T(
+			"\n"
+			"1) [bright] name on [bright] name  (only the first three letters are required)\n"
+			"2) decimal on decimal\n"
+			"3) two hex digits\n"
+			"\n"
+			"Colors are:"
+			));
+
+		ConOutPuts (_T(
+			"dec  hex  name       dec  hex  name\n"
+			"0    0    Black       8   8    Gray(Bright black)\n"
+			"1    1    Blue        9   9    Bright Blue\n"
+			"2    2    Green      10   A    Bright Green\n"
+			"3    3    Cyan       11   B    Bright Cyan\n"
+			"4    4    Red        12   C    Bright Red\n"
+			"5    5    Magenta    13   D    Bright Magenta\n"
+			"6    6    Yellow     14   E    Bright Yellow\n"
+			"7    7    White      15   F    Bright White"));
+}
+
+
+VOID SetScreenColor (WORD wColor, BOOL bFill)
 {
 	DWORD dwWritten;
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	COORD coPos;
 
-	GetConsoleScreenBufferInfo (hOut, &csbi);
+	if (bFill == TRUE)
+	{
+		GetConsoleScreenBufferInfo (hOut, &csbi);
 
-	coPos.X = 0;
-	coPos.Y = 0;
-	FillConsoleOutputAttribute (hOut, wColor,
-								(csbi.dwSize.X)*(csbi.dwSize.Y),
-								coPos, &dwWritten);
-	SetConsoleTextAttribute (hOut, wColor);
+		coPos.X = 0;
+		coPos.Y = 0;
+		FillConsoleOutputAttribute (hOut,
+		                            wColor & 0x00FF,
+		                            (csbi.dwSize.X)*(csbi.dwSize.Y),
+		                            coPos,
+		                            &dwWritten);
+	}
+	SetConsoleTextAttribute (hOut, wColor & 0x00FF);
 }
 
 
@@ -47,25 +89,11 @@ VOID SetScreenColor (WORD wColor)
  *
  * internal dir command
  */
-INT cmd_color (LPTSTR first, LPTSTR rest)
+INT CommandColor (LPTSTR first, LPTSTR rest)
 {
 	if (_tcsncmp (rest, _T("/?"), 2) == 0)
 	{
-		ConOutPuts (_T("Sets the default foreground and background colors.\n\n"
-				   "COLOR [attr]\n\n"
-				   "  attr        Specifies color attribute of console output\n\n"
-				   "Color attributes are specified by TWO hex digits -- the first\n"
-				   "corresponds to the background; the second to the foreground. Each digit\n"
-				   "can be one of the following:\n"));
-
-		ConOutPuts (_T("    0 = Black       8 = Gray\n"
-				   "    1 = Blue        9 = Light Blue\n"
-				   "    2 = Green       A = Light Green\n"
-				   "    3 = Aqua        B = Light Aqua\n"
-				   "    4 = Red         C = Light Red\n"
-				   "    5 = Purple      D = Light Purple\n"
-				   "    6 = Yellow      E = Light Yellow\n"
-				   "    7 = White       F = Bright White\n"));
+		ColorHelp ();
 		return 0;
 	}
 
@@ -73,17 +101,17 @@ INT cmd_color (LPTSTR first, LPTSTR rest)
 	{
 		/* set default color */
 		wColor = wDefColor;
-		SetScreenColor (wColor);
+		SetScreenColor (wColor, TRUE);
 		return 0;
 	}
 
-	if (_tcslen (rest) != 2)
+	if (StringToColor (&wColor, &rest) == FALSE)
 	{
-		ConErrPuts (_T("parameter error!"));
+		ConErrPuts("error in color specification");
 		return 1;
 	}
 
-	wColor = (WORD)_tcstoul (rest, NULL, 16);
+	ConErrPrintf ("Color %x\n", wColor);
 
 	if ((wColor & 0xF) == (wColor &0xF0) >> 4)
 	{
@@ -92,9 +120,12 @@ INT cmd_color (LPTSTR first, LPTSTR rest)
 	}
 
 	/* set color */
-	SetScreenColor (wColor);
+	SetScreenColor (wColor,
+	                (_tcsstr (rest,"/F") || _tcsstr (rest,"/f")));
 
 	return 0;
 }
 
-#endif
+#endif /* INCLUDE_CMD_COLOR */
+
+/* EOF */

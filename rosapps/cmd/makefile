@@ -11,8 +11,8 @@ OBJECTS = cmd.o attrib.o alias.o batch.o beep.o call.o chcp.o choice.o \
           delay.o dir.o dirstack.o echo.o error.o filecomp.o for.o free.o \
           goto.o history.o if.o internal.o label.o locale.o memory.o misc.o \
           move.o msgbox.o path.o pause.o prompt.o redir.o ren.o screen.o \
-          set.o shift.o start.o time.o timer.o title.o type.o ver.o \
-          verify.o vol.o where.o window.o cmd.coff
+          set.o shift.o start.o strtoclr.o time.o timer.o title.o type.o \
+          ver.o verify.o vol.o where.o window.o cmd.coff
 
 CLEAN_FILES = *.o cmd.exe cmd.sym cmd.coff
 
