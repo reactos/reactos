@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.40 2003/07/11 18:13:57 chorns Exp $
+# $Id: helper.mk,v 1.41 2003/07/27 14:08:38 hbirr Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -452,7 +452,11 @@ endif
 
 
 ifeq ($(MK_MODE),user)
-  MK_DEFBASE := 0x400000
+  ifeq ($(MK_EXETYPE),dll)
+    MK_DEFBASE := 0x10000000
+  else
+    MK_DEFBASE := 0x400000
+  endif
   ifneq ($(TARGET_SDKLIBS),)
     MK_LIBS := $(addprefix $(SDK_PATH_LIB)/, $(TARGET_SDKLIBS))
   else
@@ -587,24 +591,10 @@ ifeq ($(MK_EXETYPE),dll)
 		--base-file base.tmp \
 		--output-exp temp.exp $(MK_EXTRACMD)
 	- $(RM) base.tmp
-endif
-	$(CC) $(TARGET_LFLAGS) \
-		-Wl,--entry,$(TARGET_ENTRY) $(MK_EXTRACMD2) \
-	  -o $(MK_NOSTRIPNAME) \
-	  $(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS) $(MK_GCCLIBS)
-	- $(RM) temp.exp
-	- $(RSYM) $(MK_NOSTRIPNAME) $(MK_BASENAME).sym
-ifeq ($(FULL_MAP),yes)
-	$(OBJDUMP) -d -S $(MK_NOSTRIPNAME) > $(MK_BASENAME).map
-else
-	$(NM) --numeric-sort $(MK_NOSTRIPNAME) > $(MK_BASENAME).map
-endif
-
-$(MK_FULLNAME): $(MK_NOSTRIPNAME) $(MK_EXTRADEP)
-ifeq ($(MK_EXETYPE),dll)
 	$(CC) -Wl,--base-file,base.tmp \
 		-Wl,--entry,$(TARGET_ENTRY) \
 		$(TARGET_LFLAGS) \
+		temp.exp \
 		-o junk.tmp \
 		$(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS) $(MK_GCCLIBS)
 	- $(RM) junk.tmp
@@ -615,10 +605,51 @@ ifeq ($(MK_EXETYPE),dll)
 endif
 	$(CC) $(TARGET_LFLAGS) \
 		-Wl,--entry,$(TARGET_ENTRY) $(MK_EXTRACMD2) \
-	  -o $(MK_FULLNAME) \
-	  -Wl,--strip-debug \
-	  $(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS) $(MK_GCCLIBS)
+	  	-o $(MK_NOSTRIPNAME) \
+	  	$(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS) $(MK_GCCLIBS)
 	- $(RM) temp.exp
+	- $(RSYM) $(MK_NOSTRIPNAME) $(MK_BASENAME).sym
+ifeq ($(FULL_MAP),yes)
+	$(OBJDUMP) -d -S $(MK_NOSTRIPNAME) > $(MK_BASENAME).map
+else
+	$(NM) --numeric-sort $(MK_NOSTRIPNAME) > $(MK_BASENAME).map
+endif
+
+$(MK_FULLNAME): $(MK_NOSTRIPNAME) $(MK_EXTRADEP)
+	$(LD) -r -o $(MK_STRIPPED_OBJECT) $(MK_OBJECTS)
+	$(STRIP) --strip-debug $(MK_STRIPPED_OBJECT)
+ifeq ($(MK_EXETYPE),dll)
+	$(CC) -Wl,--base-file,base.tmp \
+		-Wl,--entry,$(TARGET_ENTRY) \
+		-Wl,--strip-debug \
+		$(TARGET_LFLAGS) \
+		-o junk.tmp \
+		$(MK_FULLRES) $(MK_STRIPPED_OBJECT) $(MK_LIBS) $(MK_GCCLIBS)
+	- $(RM) junk.tmp
+	$(DLLTOOL) --dllname $(MK_FULLNAME) \
+		--base-file base.tmp \
+		--output-exp temp.exp $(MK_EXTRACMD)
+	- $(RM) base.tmp
+	$(CC) -Wl,--base-file,base.tmp \
+		-Wl,--entry,$(TARGET_ENTRY) \
+		-Wl,--strip-debug \
+		$(TARGET_LFLAGS) \
+		temp.exp \
+		-o junk.tmp \
+		$(MK_FULLRES) $(MK_STRIPPED_OBJECT) $(MK_LIBS) $(MK_GCCLIBS)
+	- $(RM) junk.tmp
+	$(DLLTOOL) --dllname $(MK_FULLNAME) \
+		--base-file base.tmp \
+		--output-exp temp.exp $(MK_EXTRACMD)
+	- $(RM) base.tmp
+endif
+	$(CC) $(TARGET_LFLAGS) \
+		-Wl,--entry,$(TARGET_ENTRY) \
+		-Wl,--strip-debug \
+		$(MK_EXTRACMD2) \
+	  	-o $(MK_FULLNAME) \
+	  	$(MK_FULLRES) $(MK_STRIPPED_OBJECT) $(MK_LIBS) $(MK_GCCLIBS)
+	- $(RM) temp.exp $(MK_STRIPPED_OBJECT)
 
 endif # KM_MODE
 
@@ -654,7 +685,7 @@ $(MK_NOSTRIPNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_EXTRADEP) $(MK_LIBS)
 		-Wl,temp.exp \
 		-mdll -nostartfiles -nostdlib \
 		-o $(MK_NOSTRIPNAME) \
-	  $(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS) $(MK_GCCLIBS)
+	  	$(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS) $(MK_GCCLIBS)
 	- $(RM) temp.exp
 	$(RSYM) $(MK_NOSTRIPNAME) $(MK_BASENAME).sym
 ifeq ($(FULL_MAP),yes)
@@ -686,7 +717,7 @@ $(MK_FULLNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_EXTRADEP) $(MK_LIBS) $(MK_N
 		-Wl,temp.exp \
 		-mdll -nostartfiles -nostdlib \
 		-o $(MK_FULLNAME) \
-	  $(MK_FULLRES) $(MK_STRIPPED_OBJECT) $(MK_LIBS) $(MK_GCCLIBS)
+	  	$(MK_FULLRES) $(MK_STRIPPED_OBJECT) $(MK_LIBS) $(MK_GCCLIBS)
 	- $(RM) temp.exp
 
 endif # MK_MODE
