@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.160 2004/08/20 21:23:49 navaraf Exp $
+/* $Id: section.c,v 1.161 2004/08/23 22:29:43 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -806,8 +806,8 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
       }
 
       /*
-      * Store the swap entry for later use.
-      */
+       * Store the swap entry for later use.
+       */
       MmSetSavedSwapEntryPage(Page, SwapEntry);
 
       /*
@@ -2199,7 +2199,7 @@ MmCreatePageFileSection(PSECTION_OBJECT *SectionObject,
                            sizeof(SECTION_OBJECT),
                            0,
                            0,
-                           (PVOID*)&Section);
+                           (PVOID*)(PVOID)&Section);
    if (!NT_SUCCESS(Status))
    {
       return(Status);
@@ -2274,7 +2274,7 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
                            sizeof(SECTION_OBJECT),
                            0,
                            0,
-                           (PVOID*)&Section);
+                           (PVOID*)(PVOID)&Section);
    if (!NT_SUCCESS(Status))
    {
       return(Status);
@@ -2309,7 +2309,7 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
                                       FileAccess,
                                       IoFileObjectType,
                                       UserMode,
-                                      (PVOID*)&FileObject,
+                                      (PVOID*)(PVOID)&FileObject,
                                       NULL);
    if (!NT_SUCCESS(Status))
    {
@@ -2538,7 +2538,7 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
                                       FileAccess,
                                       IoFileObjectType,
                                       UserMode,
-                                      (PVOID*)&FileObject,
+                                      (PVOID*)(PVOID)&FileObject,
                                       NULL);
    if (!NT_SUCCESS(Status))
    {
@@ -2659,7 +2659,7 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
                                sizeof(SECTION_OBJECT),
                                0,
                                0,
-                               (PVOID*)&Section);
+                               (PVOID*)(PVOID)&Section);
       if (!NT_SUCCESS(Status))
       {
          ObDereferenceObject(FileObject);
@@ -2841,7 +2841,7 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
                                sizeof(SECTION_OBJECT),
                                0,
                                0,
-                               (PVOID*)&Section);
+                               (PVOID*)(PVOID)&Section);
       if (!NT_SUCCESS(Status))
       {
          ObDereferenceObject(FileObject);
@@ -3110,7 +3110,7 @@ NtMapViewOfSection(HANDLE SectionHandle,
                                       PROCESS_VM_OPERATION,
                                       PsProcessType,
                                       UserMode,
-                                      (PVOID*)&Process,
+                                      (PVOID*)(PVOID)&Process,
                                       NULL);
    if (!NT_SUCCESS(Status))
    {
@@ -3123,7 +3123,7 @@ NtMapViewOfSection(HANDLE SectionHandle,
                                       SECTION_MAP_READ,
                                       MmSectionObjectType,
                                       UserMode,
-                                      (PVOID*)&Section,
+                                      (PVOID*)(PVOID)&Section,
                                       NULL);
    if (!(NT_SUCCESS(Status)))
    {
@@ -3334,9 +3334,11 @@ MmUnmapViewOfSection(PEPROCESS Process,
    AddressSpace = &Process->AddressSpace;
    MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
                                           BaseAddress);
-   if (MemoryArea == NULL)
+   if (MemoryArea == NULL ||
+       MemoryArea->Type != MEMORY_AREA_SECTION_VIEW ||
+       MemoryArea->DeleteInProgress)
    {
-      return(STATUS_UNSUCCESSFUL);
+      return STATUS_NOT_MAPPED_VIEW;
    }
 
    Section = MemoryArea->Data.SectionData.Section;
@@ -3422,7 +3424,7 @@ NtUnmapViewOfSection (HANDLE ProcessHandle,
                                       PROCESS_VM_OPERATION,
                                       PsProcessType,
                                       UserMode,
-                                      (PVOID*)&Process,
+                                      (PVOID*)(PVOID)&Process,
                                       NULL);
    if (!NT_SUCCESS(Status))
    {
@@ -3477,7 +3479,7 @@ NtQuerySection(IN HANDLE SectionHandle,
                                       SECTION_QUERY,
                                       MmSectionObjectType,
                                       UserMode,
-                                      (PVOID*)&Section,
+                                      (PVOID*)(PVOID)&Section,
                                       NULL);
    if (!(NT_SUCCESS(Status)))
    {
