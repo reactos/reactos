@@ -20,7 +20,7 @@
          and therefore subject to change.
 */
 
-#if defined(__GNUC__) && defined(__i386__) && !defined(__MINGW32__)	//MF
+#if defined(__GNUC__) && defined(__i386__)
 /* We'll use this version by default only where we know it helps.
 
    regparm() generates warnings on Solaris boxes.   See SF bug #692878.

@@ -8,12 +8,6 @@
 #include <expat_config.h>
 #endif
 
-#ifdef HAVE_CHECK_H
-#include <check.h>
-#else
-#error This test suite requires the 'check' unit test framework (http://check.sf.net/)
-#endif
-
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -21,6 +15,7 @@
 
 #include "expat.h"
 #include "chardata.h"
+#include "minicheck.h"
 
 
 static XML_Parser parser;
@@ -252,7 +247,7 @@ START_TEST(test_danish_latin1)
 {
     char *text =
         "<?xml version='1.0' encoding='iso-8859-1'?>\n"
-        "<e>Jørgen æøåÆØÅ</e>";
+        "<e>J\xF8rgen \xE6\xF8\xE5\xC6\xD8\xC5</e>";
     run_character_check(text,
              "J\xC3\xB8rgen \xC3\xA6\xC3\xB8\xC3\xA5\xC3\x86\xC3\x98\xC3\x85");
 }
@@ -383,8 +378,8 @@ START_TEST(test_latin1_umlauts)
 {
     char *text =
         "<?xml version='1.0' encoding='iso-8859-1'?>\n"
-        "<e a='ä ö ü &#228; &#246; &#252; &#x00E4; &#x0F6; &#xFC; >'\n"
-        "  >ä ö ü &#228; &#246; &#252; &#x00E4; &#x0F6; &#xFC; ></e>";
+        "<e a='\xE4 \xF6 \xFC &#228; &#246; &#252; &#x00E4; &#x0F6; &#xFC; >'\n"
+        "  >\xE4 \xF6 \xFC &#228; &#246; &#252; &#x00E4; &#x0F6; &#xFC; ></e>";
     char *utf8 =
         "\xC3\xA4 \xC3\xB6 \xC3\xBC "
         "\xC3\xA4 \xC3\xB6 \xC3\xBC "
@@ -1216,7 +1211,7 @@ START_TEST(test_ns_prefix_with_empty_uri_1)
         "</doc>";
 
     expect_failure(text,
-                   XML_ERROR_SYNTAX,
+                   XML_ERROR_UNDECLARING_PREFIX,
                    "Did not report re-setting namespace"
                    " URI with prefix to ''.");
 }
@@ -1230,7 +1225,7 @@ START_TEST(test_ns_prefix_with_empty_uri_2)
         "<docelem xmlns:pre=''/>";
 
     expect_failure(text,
-                   XML_ERROR_SYNTAX,
+                   XML_ERROR_UNDECLARING_PREFIX,
                    "Did not report setting namespace URI with prefix to ''.");
 }
 END_TEST
@@ -1247,7 +1242,7 @@ START_TEST(test_ns_prefix_with_empty_uri_3)
         "<doc/>";
 
     expect_failure(text,
-                   XML_ERROR_SYNTAX,
+                   XML_ERROR_UNDECLARING_PREFIX,
                    "Didn't report attr default setting NS w/ prefix to ''.");
 }
 END_TEST
@@ -1428,7 +1423,6 @@ main(int argc, char *argv[])
     srunner_run_all(sr, verbosity);
     nf = srunner_ntests_failed(sr);
     srunner_free(sr);
-    suite_free(s);
 
     return (nf == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

@@ -31,32 +31,40 @@ OUTPUT="$TS/out/"
 # OUTPUT=/home/tmp/xml-testsuite-out/
 
 
+# RunXmlwfNotWF file reldir
+# reldir includes trailing slash
 RunXmlwfNotWF() {
-  $XMLWF $1 $2 > outfile || return $?
+  file="$1"
+  reldir="$2"
+  $XMLWF -p "$file" > outfile || return $?
   read outdata < outfile
   if test "$outdata" = "" ; then
-      echo "Well formed: $3$2"
+      echo "Expected well-formed: $reldir$file"
       return 1
   else
       return 0
   fi 
 }
 
+# RunXmlwfWF file reldir
+# reldir includes trailing slash
 RunXmlwfWF() {
-  $XMLWF $1 -d "$OUTPUT$3" $2 > outfile || return $?
+  file="$1"
+  reldir="$2"
+  $XMLWF -p -d "$OUTPUT$reldir" "$file" > outfile || return $?
   read outdata < outfile 
   if test "$outdata" = "" ; then 
-      if [ -f out/$2 ] ; then 
-          diff "$OUTPUT$3$2" out/$2 > outfile 
+      if [ -f "out/$file" ] ; then 
+          diff "$OUTPUT$reldir$file" "out/$file" > outfile 
           if [ -s outfile ] ; then 
-              cp outfile $OUTPUT$3${2}.diff 
-              echo "Output differs: $3$2"
+              cp outfile "$OUTPUT$reldir$file.diff"
+              echo "Output differs: $reldir$file"
               return 1
           fi 
       fi 
       return 0
   else 
-      echo "In $3: $outdata"
+      echo "In $reldir: $outdata"
       return 1
   fi 
 }
@@ -64,40 +72,42 @@ RunXmlwfWF() {
 SUCCESS=0
 ERROR=0
 
+UpdateStatus() {
+  if [ "$1" -eq 0 ] ; then
+    SUCCESS=`expr $SUCCESS + 1`
+  else
+    ERROR=`expr $ERROR + 1`
+  fi
+}
+
 ##########################
 # well-formed test cases #
 ##########################
 
 cd "$TS/xmlconf"
-for xmldir in ibm/valid/P*/ \
-              ibm/invalid/P*/ \
-              xmltest/valid/ext-sa/ \
-              xmltest/valid/not-sa/ \
-              xmltest/invalid/ \
-              xmltest/invalid/not-sa/ \
-              xmltest/valid/sa/ \
-              sun/valid/ \
-              sun/invalid/ ; do
+for xmldir in ibm/valid/P* \
+              ibm/invalid/P* \
+              xmltest/valid/ext-sa \
+              xmltest/valid/not-sa \
+              xmltest/invalid \
+              xmltest/invalid/not-sa \
+              xmltest/valid/sa \
+              sun/valid \
+              sun/invalid ; do
   cd "$TS/xmlconf/$xmldir"
   mkdir -p "$OUTPUT$xmldir"
   for xmlfile in *.xml ; do
-      if RunXmlwfWF -p "$xmlfile" "$xmldir" ; then
-          SUCCESS=`expr $SUCCESS + 1`
-      else
-          ERROR=`expr $ERROR + 1`
-      fi
+      RunXmlwfWF "$xmlfile" "$xmldir/"
+      UpdateStatus $?
   done
   rm outfile
 done
 
 cd "$TS/xmlconf/oasis"
-mkdir -p "$OUTPUT"oasis/
+mkdir -p "$OUTPUT"oasis
 for xmlfile in *pass*.xml ; do
-    if RunXmlwfWF -p "$xmlfile" "oasis/" ; then
-        SUCCESS=`expr $SUCCESS + 1`
-    else
-        ERROR=`expr $ERROR + 1`
-    fi
+    RunXmlwfWF "$xmlfile" "oasis/"
+    UpdateStatus $?
 done
 rm outfile
 
@@ -106,30 +116,24 @@ rm outfile
 ##############################
 
 cd "$TS/xmlconf"
-for xmldir in ibm/not-wf/P*/ \
-              ibm/not-wf/misc/ \
-              xmltest/not-wf/ext-sa/ \
-              xmltest/not-wf/not-sa/ \
-              xmltest/not-wf/sa/ \
-              sun/not-wf/ ; do
+for xmldir in ibm/not-wf/P* \
+              ibm/not-wf/misc \
+              xmltest/not-wf/ext-sa \
+              xmltest/not-wf/not-sa \
+              xmltest/not-wf/sa \
+              sun/not-wf ; do
   cd "$TS/xmlconf/$xmldir"
   for xmlfile in *.xml ; do
-      if RunXmlwfNotWF -p "$xmlfile" "$xmldir" ; then
-          SUCCESS=`expr $SUCCESS + 1`
-      else
-          ERROR=`expr $ERROR + 1`
-      fi
+      RunXmlwfNotWF "$xmlfile" "$xmldir/"
+      UpdateStatus $?
   done
   rm outfile
 done
 
 cd "$TS/xmlconf/oasis"
 for xmlfile in *fail*.xml ; do
-    if RunXmlwfNotWF -p "$xmlfile" "oasis/" ; then
-        SUCCESS=`expr $SUCCESS + 1`
-    else
-        ERROR=`expr $ERROR + 1`
-    fi
+    RunXmlwfNotWF "$xmlfile" "oasis/"
+    UpdateStatus $?
 done
 rm outfile
 
