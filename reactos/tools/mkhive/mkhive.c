@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mkhive.c,v 1.4 2004/05/29 21:15:58 navaraf Exp $
+/* $Id: mkhive.c,v 1.5 2004/11/15 19:20:23 gdalsnes Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/mkhive.c
@@ -126,27 +126,42 @@ int main (int argc, char *argv[])
   convert_path (FileName, argv[2]);
   strcat (FileName, DIR_SEPARATOR_STRING);
   strcat (FileName, "system");
-  ExportBinaryHive (FileName, "\\Registry\\Machine\\SYSTEM");
+  if (!ExportBinaryHive (FileName, "\\Registry\\Machine\\SYSTEM"))
+  {
+     return 1;
+  }
 
   convert_path (FileName, argv[2]);
   strcat (FileName, DIR_SEPARATOR_STRING);
   strcat (FileName, "software");
-  ExportBinaryHive (FileName, "\\Registry\\Machine\\SOFTWARE");
+  if (!ExportBinaryHive (FileName, "\\Registry\\Machine\\SOFTWARE"))
+  {
+     return 1;
+  }
 
   convert_path (FileName, argv[2]);
   strcat (FileName, DIR_SEPARATOR_STRING);
   strcat (FileName, "sam");
-  ExportBinaryHive (FileName, "\\Registry\\Machine\\SAM");
+  if (!ExportBinaryHive (FileName, "\\Registry\\Machine\\SAM"))
+  {
+     return 1;
+  }
 
   convert_path (FileName, argv[2]);
   strcat (FileName, DIR_SEPARATOR_STRING);
   strcat (FileName, "security");
-  ExportBinaryHive (FileName, "\\Registry\\Machine\\SECURITY");
+  if (!ExportBinaryHive (FileName, "\\Registry\\Machine\\SECURITY"))
+  {
+     return 1;
+  }
 
   convert_path (FileName, argv[2]);
   strcat (FileName, DIR_SEPARATOR_STRING);
   strcat (FileName, "default");
-  ExportBinaryHive (FileName, "\\Registry\\User\\.DEFAULT");
+  if (!ExportBinaryHive (FileName, "\\Registry\\User\\.DEFAULT"))
+  {
+     return 1;
+  }
 
 //  RegShutdownRegistry ();
 
