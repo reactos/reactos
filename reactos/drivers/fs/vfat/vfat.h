@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.64 2004/06/23 20:23:59 hbirr Exp $ */
+/* $Id: vfat.h,v 1.65 2004/07/05 21:39:02 hbirr Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -163,9 +163,6 @@ typedef struct
   struct _VFATFCB * VolumeFcb;
 
   LIST_ENTRY VolumeListEntry;
-
-  ULONG MediaChangeCount;
-
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION, VCB, *PVCB;
 
 typedef struct

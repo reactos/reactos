@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.69 2004/07/03 17:31:30 hbirr Exp $
+/* $Id: create.c,v 1.70 2004/07/05 21:39:02 hbirr Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/fs/vfat/create.c
@@ -178,7 +178,7 @@ FindFile (PDEVICE_EXTENSION DeviceExt,
   PVOID Page;
   PVFATFCB rcFcb;
   BOOLEAN FoundLong;
-  BOOLEAN FoundShort;
+  BOOLEAN FoundShort = FALSE;
   UNICODE_STRING PathNameU;
   BOOLEAN WildCard;
   PWCHAR curr, last;
@@ -339,8 +339,7 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   PVFATFCB ParentFcb;
   PVFATFCB Fcb;
   NTSTATUS Status;
-  ULONG Size;
-  ULONG MediaChangeCount;
+
 
 //  PDEVICE_OBJECT DeviceObject = DeviceExt->StorageDevice->Vpb->DeviceObject;
   
@@ -373,39 +372,34 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 
   if (!DeviceExt->FatInfo.FixedMedia)
     {
-      Size = sizeof(ULONG);
       Status = VfatBlockDeviceIoControl (DeviceExt->StorageDevice,
 					 IOCTL_DISK_CHECK_VERIFY,
 					 NULL,
 					 0,
-					 &MediaChangeCount,
-					 &Size,
+					 NULL,
+					 0,
 					 FALSE);
 
-      if (Status == STATUS_VERIFY_REQUIRED || MediaChangeCount != DeviceExt->MediaChangeCount)
+      if (Status == STATUS_VERIFY_REQUIRED) 
+
         {
           PDEVICE_OBJECT DeviceToVerify;
 
           DPRINT ("Media change detected!\n");
           DPRINT ("Device %p\n", DeviceExt->StorageDevice);
 
-          DeviceToVerify = IoGetDeviceToVerify (PsGetCurrentThread ());
-          IoSetDeviceToVerify (PsGetCurrentThread (),
+	  DeviceToVerify = IoGetDeviceToVerify (PsGetCurrentThread ());
+	  
+	  IoSetDeviceToVerify (PsGetCurrentThread (),
 			       NULL);
-
-          Status = IoVerifyVolume (DeviceToVerify,
-			          FALSE);
-          if (!NT_SUCCESS(Status))
-	    {
-	      DPRINT ("Status %lx\n", Status);
-	      return Status;
-	    }
-        }
-      else if (!NT_SUCCESS(Status))
-        {
-          DPRINT ("Status %lx\n", Status);
-          return Status;
-        }
+          Status = IoVerifyVolume (DeviceExt->StorageDevice,
+			           FALSE);
+	}
+      if (!NT_SUCCESS(Status))
+	{
+	  DPRINT ("Status %lx\n", Status);
+	  return Status;
+	}
     }
 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.32 2004/06/23 20:23:59 hbirr Exp $
+/* $Id: fsctl.c,v 1.33 2004/07/05 21:39:02 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -275,7 +275,6 @@ VfatMountDevice(PDEVICE_EXTENSION DeviceExt,
 {
    NTSTATUS Status;
    BOOLEAN RecognizedFS;
-   ULONG Size;
 
    DPRINT("Mounting VFAT device...\n");
 
@@ -286,21 +285,6 @@ VfatMountDevice(PDEVICE_EXTENSION DeviceExt,
    }
    DPRINT("MountVfatdev %d, PAGE_SIZE = %d\n", DeviceExt->FatInfo.BytesPerCluster, PAGE_SIZE);
 
-   if (!DeviceExt->FatInfo.FixedMedia)
-     {
-       Size = sizeof(ULONG);
-       Status = VfatBlockDeviceIoControl (DeviceToMount,
-					  IOCTL_DISK_CHECK_VERIFY,
-					  NULL,
-					  0,
-					  &DeviceExt->MediaChangeCount,
-					  &Size,
-					  FALSE);
-       if (!NT_SUCCESS(Status))
-         {
-	   return Status;
-	 }
-     }
 
    return(STATUS_SUCCESS);
 }
@@ -498,20 +482,19 @@ VfatVerify (PVFAT_IRP_CONTEXT IrpContext)
   NTSTATUS Status = STATUS_SUCCESS;
   FATINFO FatInfo;
   BOOLEAN RecognizedFS;
-  ULONG Size;
   PDEVICE_EXTENSION DeviceExt = IrpContext->DeviceExt;
 
   DPRINT("VfatVerify(IrpContext %x)\n", IrpContext);
 
   DeviceToVerify = IrpContext->Stack->Parameters.VerifyVolume.DeviceObject;
-  Size = sizeof(ULONG);
   Status = VfatBlockDeviceIoControl(DeviceToVerify,
 				    IOCTL_DISK_CHECK_VERIFY,
 				    NULL,
 				    0,
-				    &DeviceExt->MediaChangeCount,
-				    &Size,
-				    FALSE);
+				    NULL,
+				    0,
+				    TRUE);
+  DeviceToVerify->Flags &= ~DO_VERIFY_VOLUME;
   if (!NT_SUCCESS(Status) && Status != STATUS_VERIFY_REQUIRED)
     {
       DPRINT("VfatBlockDeviceIoControl() failed (Status %lx)\n", Status);
@@ -533,7 +516,6 @@ VfatVerify (PVFAT_IRP_CONTEXT IrpContext)
 	   *   Each write to the root directory must update this crc sum.
            */
   
-          DeviceToVerify->Flags &= ~DO_VERIFY_VOLUME;
         }
       else
       	{
