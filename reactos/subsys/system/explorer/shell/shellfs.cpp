@@ -35,11 +35,11 @@
 #include "shellfs.h"
 
 
-bool ShellDirectory::fill_w32fdata_shell(LPCITEMIDLIST pidl, SFGAOF attribs, WIN32_FIND_DATA* pw32fdata, BY_HANDLE_FILE_INFORMATION* pbhfi)
+bool ShellDirectory::fill_w32fdata_shell(LPCITEMIDLIST pidl, SFGAOF attribs, WIN32_FIND_DATA* pw32fdata, BY_HANDLE_FILE_INFORMATION* pbhfi, bool access)
 {
 	bool bhfi_valid = false;
 
-	if (!( (attribs & SFGAO_FILESYSTEM) && SUCCEEDED(
+	if (access && !( (attribs & SFGAO_FILESYSTEM) && SUCCEEDED(
 				SHGetDataFromIDList(_folder, pidl, SHGDFIL_FINDDATA, pw32fdata, sizeof(WIN32_FIND_DATA))) )) {
 		WIN32_FILE_ATTRIBUTE_DATA fad;
 		IDataObject* pDataObj;
@@ -88,7 +88,7 @@ bool ShellDirectory::fill_w32fdata_shell(LPCITEMIDLIST pidl, SFGAOF attribs, WIN
 		}
 	}
 
-	if (!(attribs & SFGAO_FILESYSTEM))	// Archiv files should not be displayed as folders in explorer view.
+	if (!(attribs & SFGAO_FILESYSTEM) || !access)	// Archiv files should not be displayed as folders in explorer view.
 		if (attribs & (SFGAO_FOLDER|SFGAO_HASSUBFOLDER))
 			pw32fdata->dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
 
@@ -213,6 +213,7 @@ void ShellDirectory::read_directory()
 
 	ShellItemEnumerator enumerator(_folder, SHCONTF_FOLDERS|SHCONTF_NONFOLDERS|SHCONTF_INCLUDEHIDDEN|SHCONTF_SHAREABLE|SHCONTF_STORAGE);
 
+	TCHAR name[MAX_PATH];
 	HRESULT hr_next = S_OK;
 
 	do {
@@ -239,16 +240,26 @@ void ShellDirectory::read_directory()
 
 			memset(&w32fd, 0, sizeof(WIN32_FIND_DATA));
 
-			SFGAOF attribs = ~SFGAO_FILESYSTEM; //SFGAO_HASSUBFOLDER|SFGAO_FOLDER; SFGAO_FILESYSTEM sorgt dafür, daß "My Documents" anstatt von "Martin's Documents" angezeigt wird
+			SFGAOF attribs_before = ~SFGAO_READONLY&~SFGAO_VALIDATE;
+			SFGAOF attribs = attribs_before;
 			HRESULT hr = _folder->GetAttributesOf(1, (LPCITEMIDLIST*)&pidls[n], &attribs);
 
-			if (SUCCEEDED(hr)) {
-				if (attribs != (SFGAOF)~SFGAO_FILESYSTEM)
-					bhfi_valid = fill_w32fdata_shell(pidls[n], attribs, &w32fd, &bhfi);
-				else
-					attribs = 0;
+			if (SUCCEEDED(hr) && attribs!=attribs_before) {
+				 // avoid accessing floppy drives when browsing "My Computer"
+				if (attribs & SFGAO_REMOVABLE)
+					attribs |= SFGAO_HASSUBFOLDER;
+				else {
+					DWORD attribs2 = SFGAO_READONLY;
+
+					HRESULT hr = _folder->GetAttributesOf(1, (LPCITEMIDLIST*)&pidls[n], &attribs2);
+
+					if (SUCCEEDED(hr))
+						attribs |= attribs2;
+				}
 			} else
 				attribs = 0;
+
+			bhfi_valid = fill_w32fdata_shell(pidls[n], attribs, &w32fd, &bhfi, !(attribs&SFGAO_REMOVABLE));
 
 			Entry* entry;
 
@@ -268,8 +279,8 @@ void ShellDirectory::read_directory()
 			if (bhfi_valid)
 				memcpy(&entry->_bhfi, &bhfi, sizeof(BY_HANDLE_FILE_INFORMATION));
 
-			if (!entry->_data.cFileName[0])
-				/*hr = */name_from_pidl(_folder, pidls[n], entry->_data.cFileName, MAX_PATH, SHGDN_INFOLDER|0x2000/*0x2000=SHGDN_INCLUDE_NONFILESYS*/);
+			if (SUCCEEDED(name_from_pidl(_folder, pidls[n], name, MAX_PATH, SHGDN_INFOLDER|0x2000/*0x2000=SHGDN_INCLUDE_NONFILESYS*/)))
+				_tcscpy(entry->_data.cFileName, name);
 
 			 // get display icons for files and virtual objects
 			if (!(entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||

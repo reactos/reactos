@@ -119,7 +119,7 @@ protected:
 
 	LRESULT	Init(LPCREATESTRUCT);
 	void	InitializeTree(/*const FileChildWndInfo& info*/);
-	void	InsertSubitems(HTREEITEM hParentItem, Entry* entry, IShellFolder* pParentFolder);
+	int		InsertSubitems(HTREEITEM hParentItem, Entry* entry, IShellFolder* pParentFolder);
 	bool	InitDragDrop();
 
 	HRESULT OnDefaultCommand(LPIDA pIDList);

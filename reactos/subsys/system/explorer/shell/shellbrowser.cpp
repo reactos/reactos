@@ -310,13 +310,24 @@ void ShellBrowserChild::OnTreeItemExpanding(int idCtrl, LPNMTREEVIEW pnmtv)
 		ShellDirectory* entry = (ShellDirectory*)TreeView_GetItemData(_left_hwnd, pnmtv->itemNew.hItem);
 
 		if (entry)
-			InsertSubitems(pnmtv->itemNew.hItem, entry, entry->_folder);
+			if (!InsertSubitems(pnmtv->itemNew.hItem, entry, entry->_folder)) {
+				 // remove subitem "+"
+				TV_ITEM tvItem;
+
+				tvItem.mask = TVIF_CHILDREN;
+				tvItem.hItem = pnmtv->itemNew.hItem;
+				tvItem.cChildren = 0;
+
+				TreeView_SetItem(_left_hwnd, &tvItem);
+			}
 	}
 }
 
-void ShellBrowserChild::InsertSubitems(HTREEITEM hParentItem, Entry* entry, IShellFolder* pParentFolder)
+int ShellBrowserChild::InsertSubitems(HTREEITEM hParentItem, Entry* entry, IShellFolder* pParentFolder)
 {
 	WaitCursor wait;
+
+	int cnt = 0;
 
 	SendMessage(_left_hwnd, WM_SETREDRAW, FALSE, 0);
 
@@ -354,9 +365,13 @@ void ShellBrowserChild::InsertSubitems(HTREEITEM hParentItem, Entry* entry, IShe
 
 			TreeView_InsertItem(_left_hwnd, &tvInsert);
 		}
+
+		++cnt;
 	}
 
 	SendMessage(_left_hwnd, WM_SETREDRAW, TRUE, 0);
+
+	return cnt;
 }
 
 void ShellBrowserChild::OnTreeItemSelected(int idCtrl, LPNMTREEVIEW pnmtv)
@@ -470,8 +485,13 @@ HRESULT ShellBrowserChild::OnDefaultCommand(LPIDA pIDList)
 				}
 			}
 		} else { // no tree control
-			if (MainFrame::OpenShellFolders(pIDList))
+			if (MainFrame::OpenShellFolders(pIDList, _hWndFrame))
 				return S_OK;
+
+/* create new Frame Window
+			if (MainFrame::OpenShellFolders(pIDList, 0))
+				return S_OK;
+*/
 		}
 	}
 

@@ -267,7 +267,7 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 HRESULT DesktopWindow::OnDefaultCommand(LPIDA pIDList)
 {
-	if (MainFrame::OpenShellFolders(pIDList))
+	if (MainFrame::OpenShellFolders(pIDList, 0))
 		return S_OK;
 
 	return E_NOTIMPL;

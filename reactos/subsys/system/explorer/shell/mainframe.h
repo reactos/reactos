@@ -40,7 +40,7 @@ struct MainFrame : public PreTranslateWindow
 	static HWND Create();
 	static HWND Create(LPCTSTR path, int mode=OWM_EXPLORE|OWM_DETAILS);
 	static HWND Create(LPCITEMIDLIST pidl, int mode=OWM_EXPLORE|OWM_DETAILS|OWM_PIDL);
-	static int OpenShellFolders(LPIDA pIDList);
+	static int OpenShellFolders(LPIDA pIDList, HWND hFrameWnd);
 
 	ChildWindow* CreateChild(LPCTSTR path=NULL, int mode=OWM_EXPLORE|OWM_DETAILS);
 	ChildWindow* CreateChild(LPCITEMIDLIST pidl, int mode=OWM_EXPLORE|OWM_DETAILS|OWM_PIDL);

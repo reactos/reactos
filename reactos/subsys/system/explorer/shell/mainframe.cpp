@@ -211,7 +211,7 @@ ChildWindow* MainFrame::CreateChild(LPCITEMIDLIST pidl, int mode)
 }
 
 
-int MainFrame::OpenShellFolders(LPIDA pIDList)
+int MainFrame::OpenShellFolders(LPIDA pIDList, HWND hFrameWnd)
 {
 	int cnt = 0;
 
@@ -226,8 +226,15 @@ int MainFrame::OpenShellFolders(LPIDA pIDList)
 
 		if (SUCCEEDED(hr) && (attribs&SFGAO_FOLDER))
 			try {
-				if (MainFrame::Create(ShellPath(pidl).create_absolute_pidl(parent_pidl), FALSE))
-					++cnt;
+				ShellPath pidl_abs = ShellPath(pidl).create_absolute_pidl(parent_pidl);
+
+				if (hFrameWnd) {
+					if (SendMessage(hFrameWnd, PM_OPEN_WINDOW, OWM_PIDL, (LPARAM)(LPCITEMIDLIST)pidl_abs))
+						++cnt;
+				} else {
+					if (MainFrame::Create(pidl_abs, 0))
+						++cnt;
+				}
 			} catch(COMException& e) {
 				HandleException(e, g_Globals._hMainWnd);
 			}
