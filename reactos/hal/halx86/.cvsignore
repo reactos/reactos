@@ -1,6 +1,7 @@
 *.d
 hal.dll
 hal.nostrip.dll
+halx86up.coff
 *.a
 *.o
 *.sym
