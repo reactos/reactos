@@ -852,7 +852,7 @@ InterlockedIncrement (
 
 typedef
 unsigned int
-(exception_hook) (
+(*exception_hook) (
 	CONTEXT		* c,
 	unsigned int	exp
 	);
