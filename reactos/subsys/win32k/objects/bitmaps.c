@@ -615,7 +615,7 @@ int DIB_GetDIBWidthBytes(int  width, int  depth)
 
 int DIB_GetDIBImageBytes (int  width, int  height, int  depth)
 {
-  return DIB_GetDIBWidthBytes( width, depth ) * abs( height );
+  return DIB_GetDIBWidthBytes( width, depth ) * (height < 0 ? -height : height);
 }
 
 /***********************************************************************
