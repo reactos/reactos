@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dos8dot3.c,v 1.8 2003/10/11 17:38:42 hbirr Exp $
+/* $Id: dos8dot3.c,v 1.9 2003/12/08 19:47:07 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -312,6 +312,11 @@ RtlIsNameLegalDOS8Dot3(IN PUNICODE_STRING UnicodeName,
 		  return(FALSE);
 		HasDot = TRUE;
 		break;
+	      default:
+  	        if (RtlpIsShortIllegal(*str))
+		  {
+		    return(FALSE);
+		  }
 	    }
 	}
     }
