@@ -63,6 +63,12 @@ NTSTATUS STDCALL SmCreateUserProcess(LPWSTR ImagePath,
 				     PLARGE_INTEGER Timeout OPTIONAL,
 				     BOOLEAN TerminateIt,
 				     PRTL_PROCESS_INFO ProcessInfo OPTIONAL);
+NTSTATUS STDCALL
+SmLookupSubsystem (IN     PWSTR   Name,
+		   IN OUT PWSTR   Data,
+		   IN OUT PULONG  DataLength,
+		   IN OUT PULONG  DataType,
+		   IN     BOOLEAN Expand);
 NTSTATUS FASTCALL SmExecPgm(PSM_PORT_MESSAGE);
 
 /* smapicomp.c */

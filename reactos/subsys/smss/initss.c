@@ -32,6 +32,10 @@
 #define NDEBUG
 #include <debug.h>
 
+/* SM handle for its own \SmApiPort */
+HANDLE hSmApiPort = (HANDLE) 0;
+
+
 /* TODO: this file should be totally rewritten
  *
  * a) look if a special option is set for smss.exe in
@@ -39,9 +43,6 @@
  *
  * b) make smss register with itself for IMAGE_SUBSYSTEM_NATIVE
  *    (programmatically)
- *
- * c) make smss load win32k.sys as set in Kmode key
- *    HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\SubSystems
  *
  * d) make smss initialize Debug (DBGSS) and Windows (CSRSS) as described
  *    in the registry key Required="Debug Windows"
@@ -56,30 +57,41 @@
 NTSTATUS
 SmLoadSubsystems(VOID)
 {
-  SYSTEM_LOAD_AND_CALL_IMAGE ImageInfo;
-  NTSTATUS Status;
+	SYSTEM_LOAD_AND_CALL_IMAGE ImageInfo;
+	NTSTATUS                   Status = STATUS_SUCCESS;
+	WCHAR                      Data [MAX_PATH + 1];
+	ULONG                      DataLength = sizeof Data;
+	ULONG                      DataType = 0;
 
-  DPRINT("SM: loading subsystems\n");
+
+	DPRINT("SM: loading subsystems\n");
  
-  /* Load kernel mode subsystem (aka win32k.sys) */
-  RtlRosInitUnicodeStringFromLiteral(&ImageInfo.ModuleName,
-		       L"\\SystemRoot\\system32\\win32k.sys");
+	/* Load Kmode subsystem (aka win32k.sys) */
+	Status = SmLookupSubsystem (L"Kmode",
+				    Data,
+				    & DataLength,
+				    & DataType,
+				    TRUE);
+	if((STATUS_SUCCESS == Status) && (DataLength > sizeof Data[0]))
+	{
+		WCHAR ImagePath [MAX_PATH + 1] = {0};
 
-  Status = NtSetSystemInformation(SystemLoadAndCallImage,
-				  &ImageInfo,
-				  sizeof(SYSTEM_LOAD_AND_CALL_IMAGE));
-
-  DPRINT("SMSS: Loaded win32k.sys (Status %lx)\n", Status);
-#if 0
-  if (!NT_SUCCESS(Status))
-    {
-      return(Status);
-    }
-#endif
-
-  /* FIXME: load more subsystems (csrss!) */
-
-  return(Status);
+		wcscpy (ImagePath, L"\\??\\");
+		wcscat (ImagePath, Data);
+		RtlZeroMemory (& ImageInfo, sizeof ImageInfo);
+		RtlInitUnicodeString (& ImageInfo.ModuleName, ImagePath);
+		Status = NtSetSystemInformation(SystemLoadAndCallImage,
+					  & ImageInfo,
+					  sizeof ImageInfo);
+		if(!NT_SUCCESS(Status))
+		{
+			DPRINT("SM: loading Kmode failed (Status=0x%08lx)\n",
+				Status);
+			return Status;
+		}
+	}
+	/* TODO: load Required subsystems (Debug Windows) */
+	return Status;
 }
 
 NTSTATUS
