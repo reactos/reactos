@@ -1,4 +1,4 @@
-/* $Id: import.c,v 1.30 2004/08/15 16:39:00 chorns Exp $
+/* $Id: import.c,v 1.31 2004/12/12 22:36:10 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -134,18 +134,15 @@ CmImportBinaryHive (PCHAR ChunkBase,
 	}
     }
 
-  /* Initialize the hive's executive resource */
-  ExInitializeResourceLite(&Hive->HiveResource);
-
   /* Acquire hive list lock exclusively */
   KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite(&CmiHiveListLock, TRUE);
+  ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
 
   /* Add the new hive to the hive list */
   InsertTailList(&CmiHiveListHead, &Hive->HiveList);
 
   /* Release hive list lock */
-  ExReleaseResourceLite(&CmiHiveListLock);
+  ExReleaseResourceLite(&CmiRegistryLock);
   KeLeaveCriticalRegion();
 
   *RegistryHive = Hive;
@@ -192,7 +189,7 @@ CmImportSystemHive(PCHAR ChunkBase,
 			   RegistryHive);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1 ("CmiConnectHive() failed (Status %lx)\n", Status);
+      DPRINT1 ("CmiConnectHive(%wZ) failed (Status %lx)\n", &KeyName, Status);
 //      CmiRemoveRegistryHive(RegistryHive);
       return FALSE;
     }
@@ -344,7 +341,7 @@ CmImportHardwareHive(PCHAR ChunkBase,
 			   RegistryHive);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1 ("CmiConnectHive() failed (Status %lx)\n", Status);
+      DPRINT1 ("CmiConnectHive(%wZ) failed (Status %lx)\n", &KeyName, Status);
 //      CmiRemoveRegistryHive(RegistryHive);
       return FALSE;
     }

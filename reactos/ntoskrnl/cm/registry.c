@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.128 2004/11/20 21:14:16 navaraf Exp $
+/* $Id: registry.c,v 1.129 2004/12/12 22:36:10 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -24,7 +24,8 @@ PREGISTRY_HIVE  CmiVolatileHive = NULL;
 KSPIN_LOCK  CmiKeyListLock;
 
 LIST_ENTRY CmiHiveListHead;
-ERESOURCE CmiHiveListLock;
+
+ERESOURCE CmiRegistryLock;
 
 volatile BOOLEAN CmiHiveSyncEnabled = FALSE;
 volatile BOOLEAN CmiHiveSyncPending = FALSE;
@@ -279,7 +280,9 @@ CmInitializeRegistry(VOID)
 
   /* Initialize the hive list */
   InitializeListHead(&CmiHiveListHead);
-  ExInitializeResourceLite(&CmiHiveListLock);
+
+  /* Initialize registry lock */
+  ExInitializeResourceLite(&CmiRegistryLock);
 
   /*  Build volatile registry store  */
   Status = CmiCreateVolatileHive (&CmiVolatileHive);
@@ -1067,7 +1070,7 @@ CmShutdownRegistry(VOID)
 
   /* Acquire hive list lock exclusively */
   KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite(&CmiHiveListLock, TRUE);
+  ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
 
   Entry = CmiHiveListHead.Flink;
   while (Entry != &CmiHiveListHead)
@@ -1076,22 +1079,15 @@ CmShutdownRegistry(VOID)
 
       if (!(IsNoFileHive(Hive) || IsNoSynchHive(Hive)))
 	{
-	  /* Acquire hive resource exclusively */
-	  ExAcquireResourceExclusiveLite(&Hive->HiveResource,
-					 TRUE);
-
 	  /* Flush non-volatile hive */
 	  CmiFlushRegistryHive(Hive);
-
-	  /* Release hive resource */
-	  ExReleaseResourceLite(&Hive->HiveResource);
 	}
 
       Entry = Entry->Flink;
     }
 
   /* Release hive list lock */
-  ExReleaseResourceLite(&CmiHiveListLock);
+  ExReleaseResourceLite(&CmiRegistryLock);
   KeLeaveCriticalRegion();
 
   DPRINT("CmShutdownRegistry() done\n");
@@ -1110,7 +1106,7 @@ CmiHiveSyncRoutine(PVOID DeferredContext)
 
   /* Acquire hive list lock exclusively */
   KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite(&CmiHiveListLock, TRUE);
+  ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
 
   Entry = CmiHiveListHead.Flink;
   while (Entry != &CmiHiveListHead)
@@ -1119,22 +1115,15 @@ CmiHiveSyncRoutine(PVOID DeferredContext)
 
       if (!(IsNoFileHive(Hive) || IsNoSynchHive(Hive)))
 	{
-	  /* Acquire hive resource exclusively */
-	  ExAcquireResourceExclusiveLite(&Hive->HiveResource,
-					 TRUE);
-
 	  /* Flush non-volatile hive */
 	  CmiFlushRegistryHive(Hive);
-
-	  /* Release hive resource */
-	  ExReleaseResourceLite(&Hive->HiveResource);
 	}
 
       Entry = Entry->Flink;
     }
 
   /* Release hive list lock */
-  ExReleaseResourceLite(&CmiHiveListLock);
+  ExReleaseResourceLite(&CmiRegistryLock);
   KeLeaveCriticalRegion();
 
   DPRINT("DeferredContext %x\n", DeferredContext);
