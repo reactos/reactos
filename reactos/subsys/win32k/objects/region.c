@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.48 2004/04/09 20:03:20 navaraf Exp $ */
+/* $Id: region.c,v 1.49 2004/04/23 13:34:04 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -1952,7 +1952,30 @@ STDCALL
 NtGdiInvertRgn(HDC  hDC,
                     HRGN  hRgn)
 {
-  UNIMPLEMENTED;
+  PROSRGNDATA RgnData;
+  ULONG i;
+  PRECT rc;
+  
+  if(!(RgnData = RGNDATA_LockRgn(hRgn)))
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
+  
+  rc = (PRECT)RgnData->Buffer;
+  for(i = 0; i < RgnData->rdh.nCount; i++)
+  {
+    
+    if(!NtGdiPatBlt(hDC, rc->left, rc->top, rc->right - rc->left, rc->bottom - rc->top, DSTINVERT))
+    {
+      RGNDATA_UnlockRgn(hRgn);
+      return FALSE;
+    }
+    rc++;
+  }
+  
+  RGNDATA_UnlockRgn(hRgn);
+  return TRUE;
 }
 
 INT

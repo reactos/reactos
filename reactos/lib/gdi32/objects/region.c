@@ -296,3 +296,16 @@ RectInRegion(
 {
 	return NtGdiRectInRegion(a0,(CONST PRECT)a1);
 }
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+InvertRgn(
+	HDC	hDc,
+	HRGN	hRgn
+	)
+{
+	return NtGdiInvertRgn(hDc, hRgn);
+}

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.52 2004/04/09 20:03:12 navaraf Exp $
+/* $Id: stubs.c,v 1.53 2004/04/23 13:34:04 weiden Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -407,20 +407,6 @@ GetFontLanguageInfo(
 	return 0;
 }
 
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-InvertRgn(
-	HDC	hDc,
-	HRGN	hRgn
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 /*
  * @unimplemented
