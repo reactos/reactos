@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.32 2002/09/08 10:22:45 chorns Exp $
+/* $Id: stubs.c,v 1.33 2002/09/23 19:20:34 sedwards Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -679,6 +679,17 @@ GetThreadLocale (VOID)
 		);
 }
 
+WINBOOL
+STDCALL
+GetThreadPriorityBoost (
+	HANDLE		hThread,
+	DWORD		dwSelector,
+	LPLDT_ENTRY	lpSelectorEntry
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
 
 WINBOOL
 STDCALL
@@ -1196,6 +1207,13 @@ SetSystemPowerState (
 	return FALSE;
 }
 
+WINBOOL
+STDCALL
+SetThreadIdealProcessor(VOID)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
 
 WINBOOL
 STDCALL
@@ -1207,6 +1225,13 @@ SetThreadLocale (
 	return FALSE;
 }
 
+WINBOOL
+STDCALL
+SetThreadPriorityBoost(VOID)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
 
 WINBOOL
 STDCALL

@@ -1,4 +1,4 @@
-; $Id: kernel32.edf,v 1.13 2002/09/08 10:22:41 chorns Exp $
+; $Id: kernel32.edf,v 1.14 2002/09/23 19:20:34 sedwards Exp $
 ;
 ; kernel32.edf
 ;
@@ -348,6 +348,7 @@ GetTempPathW=GetTempPathW@8
 GetThreadContext=GetThreadContext@8
 GetThreadLocale=GetThreadLocale@0
 GetThreadPriority=GetThreadPriority@4
+GetThreadPriorityBoost=GetThreadPriorityBoost@8
 GetThreadSelectorEntry=GetThreadSelectorEntry@12
 GetThreadTimes=GetThreadTimes@20
 GetTickCount=GetTickCount@0
@@ -578,8 +579,10 @@ SetTapeParameters=SetTapeParameters@12
 SetTapePosition=SetTapePosition@24
 SetThreadAffinityMask=SetThreadAffinityMask@8
 SetThreadContext=SetThreadContext@8
+SetThreadIdealProcessor=SetThreadIdealProcessor@8
 SetThreadLocale=SetThreadLocale@4
 SetThreadPriority=SetThreadPriority@8
+SetThreadPriorityBoost=SetThreadPriorityBoost@8
 SetTimeZoneInformation=SetTimeZoneInformation@4
 SetUnhandledExceptionFilter=SetUnhandledExceptionFilter@4
 SetVDMCurrentDirectories=SetVDMCurrentDirectories@8

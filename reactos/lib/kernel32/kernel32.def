@@ -344,6 +344,7 @@ GetTempPathW@8
 GetThreadContext@8
 GetThreadLocale@0
 GetThreadPriority@4
+GetThreadPriorityBoost@8
 GetThreadSelectorEntry@12
 GetThreadTimes@20
 GetTickCount@0
@@ -574,8 +575,10 @@ SetTapeParameters@12
 SetTapePosition@24
 SetThreadAffinityMask@8
 SetThreadContext@8
+SetThreadIdealProcessor@8
 SetThreadLocale@4
 SetThreadPriority@8
+SetThreadPriorityBoost@8
 SetTimeZoneInformation@4
 SetUnhandledExceptionFilter@4
 SetVDMCurrentDirectories@8
