@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.29 2004/05/31 19:51:47 gdalsnes Exp $
+/* $Id: rtl.h,v 1.30 2004/06/20 23:37:52 gdalsnes Exp $
  * 
  */
 #ifndef __DDK_RTL_H
@@ -1180,7 +1180,7 @@ RtlFreeOemString (IN POEM_STRING OemString);
 VOID STDCALL
 RtlFreeRangeList (IN PRTL_RANGE_LIST RangeList);
 
-PSID STDCALL
+PVOID STDCALL
 RtlFreeSid (PSID Sid);
 
 VOID STDCALL
@@ -2291,6 +2291,13 @@ RtlpUnicodeStringToCountedOemString(
    IN BOOLEAN AllocateDestinationString,
    IN POOL_TYPE PoolType);
 
+NTSTATUS STDCALL
+RtlpDuplicateUnicodeString(
+   INT AddNull,
+   IN PUNICODE_STRING SourceString,
+   PUNICODE_STRING DestinationString,
+   POOL_TYPE PoolType);
+   
 /* Register io functions */
 
 UCHAR
