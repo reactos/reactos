@@ -39,6 +39,7 @@
 #include <internal/trap.h>
 #include <ntdll/ldr.h>
 #include <internal/safe.h>
+#include <internal/kd.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -559,7 +560,7 @@ KeDumpStackFrames(PULONG Frame)
       print_address((PVOID)Frame[1]);
       Frame = (PULONG)Frame[0];
       i++;
-      DbgPrint("\n");
+      DbgPrint(" ");
     }
 }
 

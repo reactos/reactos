@@ -1,4 +1,4 @@
-/* $Id: kd.h,v 1.11 2002/07/17 22:56:10 dwelch Exp $
+/* $Id: kd.h,v 1.12 2002/07/18 00:25:30 dwelch Exp $
  *
  * kernel debugger prototypes
  */
@@ -7,6 +7,7 @@
 #define __INCLUDE_INTERNAL_KERNEL_DEBUGGER_H
 
 #include <internal/ke.h>
+#include <internal/ldr.h>
 
 #define KD_DEBUG_DISABLED	0x00
 #define KD_DEBUG_GDB		0x01
@@ -71,10 +72,31 @@ VOID KdPrintMda(PCH pch);
 #define KDB_DELETEPROCESS_HOOK(PROCESS)
 #define KDB_LOADDRIVER_HOOK(MODULE)
 #define KDB_UNLOADDRIVER_HOOK(MODULE)
+#define KDB_LOADERINIT_HOOK(NTOS, HAL)
+#define KDB_SYMBOLFILE_HOOK(LOADBASE, FILENAME, LENGTH)
 #else
-#define KDB_DELETEPROCESS_HOOK(PROCESS) XXXX
-#define KDB_LOADDRIVER_HOOK(MODULE) XXXX
-#define KDB_UNLOADDRIVER_HOOK(MODULE) XXXX
+#define KDB_DELETEPROCESS_HOOK(PROCESS) KdbFreeSymbolsProcess(PROCESS)
+#define KDB_LOADDRIVER_HOOK(FILENAME, MODULE) KdbLoadDriver(FILENAME, MODULE)
+#define KDB_UNLOADDRIVER_HOOK(MODULE) KdbUnloadDriver(MODULE)
+#define KDB_LOADERINIT_HOOK(NTOS, HAL) KdbLdrInit(NTOS, HAL)
+#define KDB_SYMBOLFILE_HOOK(LOADBASE, FILENAME, LENGTH) \
+        KdbProcessSymbolFile(LOADBASE, FILENAME, LENGTH)
 #endif /* KDBG */
+
+VOID
+KdbLdrLoadUserModuleSymbols(PLDR_MODULE LdrModule);
+VOID
+KdbProcessSymbolFile(PVOID ModuleLoadBase, PCHAR FileName, ULONG Length);
+VOID
+KdbLdrInit(MODULE_TEXT_SECTION* NtoskrnlTextSection,
+	   MODULE_TEXT_SECTION* LdrHalTextSection);
+VOID
+KdbUnloadDriver(PMODULE_OBJECT ModuleObject);
+VOID
+KdbLoadDriver(PUNICODE_STRING Filename, PMODULE_OBJECT Module);
+VOID
+KdbFreeSymbolsProcess(PPEB Peb);
+BOOLEAN 
+KdbPrintAddress(PVOID address);
 
 #endif /* __INCLUDE_INTERNAL_KERNEL_DEBUGGER_H */

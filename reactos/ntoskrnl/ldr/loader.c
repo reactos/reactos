@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.117 2002/07/17 22:56:11 dwelch Exp $
+/* $Id: loader.c,v 1.118 2002/07/18 00:25:31 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -145,6 +145,7 @@ LdrInit1(VOID)
   NtoskrnlTextSection.Length = SectionList[0].Misc.VirtualSize +
     SectionList[0].VirtualAddress;
   NtoskrnlTextSection.Name = KERNEL_MODULE_NAME;
+  NtoskrnlTextSection.OptionalHeader = OptionalHeader;
   InsertTailList(&ModuleTextListHead, &NtoskrnlTextSection.ListEntry);
 
   /* Setup hal.dll text section */
@@ -160,7 +161,11 @@ LdrInit1(VOID)
   LdrHalTextSection.Length = SectionList[0].Misc.VirtualSize +
     SectionList[0].VirtualAddress;
   LdrHalTextSection.Name = HAL_MODULE_NAME;
+  LdrHalTextSection.OptionalHeader = OptionalHeader;
   InsertTailList(&ModuleTextListHead, &LdrHalTextSection.ListEntry);
+
+  /* Hook for KDB on initialization of the loader. */
+  KDB_LOADERINIT_HOOK(&NtoskrnlTextSection, &LdrHalTextSection);
 }
 
 
@@ -407,7 +412,7 @@ LdrLoadModule(PUNICODE_STRING Filename,
   *ModuleObject = Module;
 
   /* Hook for KDB on loading a driver. */
-  KDB_LOADDRIVER_HOOK(Module);
+  KDB_LOADDRIVER_HOOK(Filename, Module);
 
   return(STATUS_SUCCESS);
 }
@@ -459,7 +464,6 @@ LdrInitializeBootStartDriver(PVOID ModuleLoadBase,
   LPWSTR Start;
   LPWSTR Ext;
   PCHAR FileExt;
-
   CHAR TextBuffer [256];
   ULONG x, y, cx, cy;
 
@@ -481,7 +485,12 @@ LdrInitializeBootStartDriver(PVOID ModuleLoadBase,
   else
     Length = strlen(FileName);
 
-  if ((FileExt != NULL) && !(strcmp(FileExt, ".sys") == 0))
+  if ((FileExt != NULL) && (strcmp(FileExt, ".sym") == 0))
+    {
+      KDB_SYMBOLFILE_HOOK(ModuleLoadBase, FileName, Length);
+      return(STATUS_SUCCESS);
+    }
+  else if ((FileExt != NULL) && !(strcmp(FileExt, ".sys") == 0))
     {
       CPRINT("Ignoring non-driver file %s\n", FileName);
       return STATUS_SUCCESS;
@@ -1142,6 +1151,8 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
     ExAllocatePool(NonPagedPool, 
 		   (wcslen(NameBuffer) + 1) * sizeof(WCHAR));
   wcscpy(ModuleTextSection->Name, NameBuffer);
+  ModuleTextSection->OptionalHeader = 
+    CreatedModuleObject->Image.PE.OptionalHeader;
   InsertTailList(&ModuleTextListHead, &ModuleTextSection->ListEntry);
 
   CreatedModuleObject->TextSection = ModuleTextSection;

@@ -13,9 +13,10 @@ typedef struct _MODULE_TEXT_SECTION
   ULONG Length;
   LIST_ENTRY ListEntry;
   PWCH Name;
-#ifdef DBG
+  PIMAGE_OPTIONAL_HEADER OptionalHeader;
+#ifdef KDBG
   IMAGE_SYMBOL_INFO SymbolInfo;
-#endif /* DBG */
+#endif /* KDBG */
 } MODULE_TEXT_SECTION, *PMODULE_TEXT_SECTION;
 
 typedef struct _MODULE_OBJECT

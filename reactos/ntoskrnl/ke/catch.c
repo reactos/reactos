@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.20 2002/05/08 17:05:32 chorns Exp $
+/* $Id: catch.c,v 1.21 2002/07/18 00:25:30 dwelch Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -200,6 +200,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
   CONTEXT TContext;
 
   DPRINT("KiDispatchException() called\n");
+
   /* PCR->KeExceptionDispatchCount++; */
 
   if (Context == NULL)

@@ -28,6 +28,7 @@
 #include <ddk/ntddk.h>
 #include <roscfg.h>
 #include <internal/ldr.h>
+#include <internal/kd.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -52,8 +53,8 @@ NtSystemDebugControl(DEBUG_CONTROL_CODE ControlCode,
       break;
 #ifdef KDBG
     case DebugDbgLoadSymbols:
-      LdrLoadUserModuleSymbols((PLDR_MODULE) InputBuffer);
-#endif /* DBG */
+      KdbLdrLoadUserModuleSymbols((PLDR_MODULE) InputBuffer);
+#endif /* KDBG */
       break;
     default:
       break;

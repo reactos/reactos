@@ -1,3 +1,6 @@
+#ifndef __NTOSKRNL_INCLUDE_INTERNAL_LDR_H
+#define __NTOSKRNL_INCLUDE_INTERNAL_LDR_H
+
 #include <ntos/kdbgsyms.h>
 #include <roscfg.h>
 
@@ -19,9 +22,9 @@ typedef struct _LDR_MODULE
    HANDLE         SectionHandle;
    ULONG          CheckSum;
    ULONG          TimeDateStamp;
-#ifdef DBG
+#ifdef KDBG
   IMAGE_SYMBOL_INFO SymbolInfo;
-#endif /* DBG */
+#endif /* KDBG */
 } LDR_MODULE, *PLDR_MODULE;
 
 typedef struct _LDR_SYMBOL_INFO {
@@ -57,7 +60,7 @@ typedef struct _MODULE_INFORMATION
   MODULE_ENTRY ModuleEntry[1];
 } MODULE_INFORMATION, *PMODULE_INFORMATION;
 
-#ifdef DBG
+#ifdef KDBG
 
 VOID
 LdrpLoadUserModuleSymbols(PLDR_MODULE LdrModule);
@@ -117,5 +120,7 @@ LdrShutdownThread(VOID);
 
 NTSTATUS STDCALL
 LdrUnloadDll(IN PVOID BaseAddress);
+
+#endif /* __NTOSKRNL_INCLUDE_INTERNAL_LDR_H */
 
 /* EOF */

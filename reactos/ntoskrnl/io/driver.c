@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.8 2002/06/27 17:49:34 ekohl Exp $
+/* $Id: driver.c,v 1.9 2002/07/18 00:25:30 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -484,33 +484,7 @@ LdrLoadAutoConfigDrivers(VOID)
   CHAR TextBuffer [256];
   ULONG x, y, cx, cy;
 
-#ifdef KDBG
-  UNICODE_STRING ModuleName;
-  PMODULE_OBJECT ModuleObject;
-#endif
-
   DPRINT("LdrLoadAutoConfigDrivers() called\n");
-
-#ifdef KDBG
-  /*
-   * Load symbols for ntoskrnl.exe and hal.dll because \SystemRoot
-   * is created after their module entries
-   */
-
-  RtlInitUnicodeString(&ModuleName, KERNEL_MODULE_NAME);
-  ModuleObject = LdrGetModuleObject(&ModuleName);
-  if (ModuleObject != NULL)
-    {
-      LdrpLoadModuleSymbols(ModuleObject);
-    }
-
-  RtlInitUnicodeString(&ModuleName, HAL_MODULE_NAME);
-  ModuleObject = LdrGetModuleObject(&ModuleName);
-  if (ModuleObject != NULL)
-    {
-      LdrpLoadModuleSymbols(ModuleObject);
-    }
-#endif /* KDBG */
 
   GroupEntry = GroupListHead.Flink;
   while (GroupEntry != &GroupListHead)

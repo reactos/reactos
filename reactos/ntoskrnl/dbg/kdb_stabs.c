@@ -39,13 +39,12 @@
 #include <internal/trap.h>
 #include <ntdll/ldr.h>
 #include <internal/safe.h>
+#include <internal/kd.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS ******************************************************************/
-
-#ifdef DBG
 
 typedef struct _SYMBOLFILE_HEADER {
   unsigned long StabsOffset;
@@ -91,11 +90,8 @@ typedef struct _STAB_ENTRY {
  */
 #define N_SO 0x64
 
-LIST_ENTRY SymbolListHead;
-
-#endif /* DBG */
-
-#ifdef DBG
+static LIST_ENTRY SymbolListHead;
+static KSPIN_LOCK SymbolListLock;
 
 NTSTATUS
 LdrGetAddressInformation(IN PIMAGE_SYMBOL_INFO  SymbolInfo,
@@ -104,24 +100,23 @@ LdrGetAddressInformation(IN PIMAGE_SYMBOL_INFO  SymbolInfo,
   OUT PCH FileName  OPTIONAL,
   OUT PCH FunctionName  OPTIONAL);
 
-#endif /* DBG */
+VOID
+KdbLdrUnloadModuleSymbols(PIMAGE_SYMBOL_INFO SymbolInfo);
 
 /* FUNCTIONS ****************************************************************/
 
-STATIC BOOLEAN 
-print_user_address(PVOID address)
+BOOLEAN 
+KdbPrintUserAddress(PVOID address)
 {
    PLIST_ENTRY current_entry;
    PLDR_MODULE current;
    PEPROCESS CurrentProcess;
    PPEB Peb = NULL;
    ULONG_PTR RelativeAddress;
-#ifdef DBG
    NTSTATUS Status;
    ULONG LineNumber;
    CHAR FileName[256];
    CHAR FunctionName[256];
-#endif
 
    CurrentProcess = PsGetCurrentProcess();
    if (NULL != CurrentProcess)
@@ -147,7 +142,6 @@ print_user_address(PVOID address)
 	    address < (PVOID)(current->BaseAddress + current->SizeOfImage))
 	  {
             RelativeAddress = (ULONG_PTR) address - (ULONG_PTR)current->BaseAddress;
-#ifdef DBG
             Status = LdrGetAddressInformation(&current->SymbolInfo,
               RelativeAddress,
               &LineNumber,
@@ -162,10 +156,6 @@ print_user_address(PVOID address)
              {
                DbgPrint("<%wZ: %x>", &current->BaseDllName, RelativeAddress);
              }
-#else /* !DBG */
-             DbgPrint("<%wZ: %x>", &current->BaseDllName, RelativeAddress);
-#endif /* !DBG */
-
 	     return(TRUE);
 	  }
 
@@ -174,19 +164,17 @@ print_user_address(PVOID address)
    return(FALSE);
 }
 
-STATIC BOOLEAN 
-print_address(PVOID address)
+BOOLEAN 
+KdbPrintAddress(PVOID address)
 {
    PLIST_ENTRY current_entry;
    MODULE_TEXT_SECTION* current;
    extern LIST_ENTRY ModuleTextListHead;
    ULONG_PTR RelativeAddress;
-#ifdef DBG
    NTSTATUS Status;
    ULONG LineNumber;
    CHAR FileName[256];
    CHAR FunctionName[256];
-#endif
 
    current_entry = ModuleTextListHead.Flink;
    
@@ -200,7 +188,6 @@ print_address(PVOID address)
 	    address < (PVOID)(current->Base + current->Length))
 	  {
             RelativeAddress = (ULONG_PTR) address - current->Base;
-#ifdef kDBG
             Status = LdrGetAddressInformation(&current->SymbolInfo,
               RelativeAddress,
               &LineNumber,
@@ -215,9 +202,6 @@ print_address(PVOID address)
              {
                DbgPrint("<%ws: %x>", current->Name, RelativeAddress);
              }
-#else /* !DBG */
-             DbgPrint("<%ws: %x>", current->Name, RelativeAddress);
-#endif /* !DBG */
 	     return(TRUE);
 	  }
 	current_entry = current_entry->Flink;
@@ -225,10 +209,8 @@ print_address(PVOID address)
    return(FALSE);
 }
 
-#ifdef DBG
-
 VOID
-PiFreeSymbols(PPEB Peb)
+KdbFreeSymbolsProcess(PPEB Peb)
 {
   PLIST_ENTRY CurrentEntry;
   PLDR_MODULE Current;
@@ -245,33 +227,31 @@ PiFreeSymbols(PPEB Peb)
 				  InLoadOrderModuleList);
 
       SymbolInfo = &Current->SymbolInfo;
-      LdrUnloadModuleSymbols(SymbolInfo);
+      KdbLdrUnloadModuleSymbols(SymbolInfo);
 
       CurrentEntry = CurrentEntry->Flink;
     }
 }
 
 VOID
-KdbLdrInit(VOID)
+KdbLdrInit(MODULE_TEXT_SECTION* NtoskrnlTextSection,
+	   MODULE_TEXT_SECTION* LdrHalTextSection)
 {
-#ifdef DBG
-  RtlZeroMemory(&NtoskrnlTextSection.SymbolInfo, sizeof(NtoskrnlTextSection.SymbolInfo));
-  NtoskrnlTextSection.SymbolInfo.ImageBase = OptionalHeader->ImageBase;
-  NtoskrnlTextSection.SymbolInfo.ImageSize = NtoskrnlTextSection.Length;
-#endif
+  RtlZeroMemory(&NtoskrnlTextSection->SymbolInfo, 
+		sizeof(NtoskrnlTextSection->SymbolInfo));
+  NtoskrnlTextSection->SymbolInfo.ImageBase = 
+    NtoskrnlTextSection->OptionalHeader->ImageBase;
+  NtoskrnlTextSection->SymbolInfo.ImageSize = NtoskrnlTextSection->Length;
 
-#ifdef DBG
-  RtlZeroMemory(&LdrHalTextSection.SymbolInfo, sizeof(LdrHalTextSection.SymbolInfo));
-  LdrHalTextSection.SymbolInfo.ImageBase = OptionalHeader->ImageBase;
-  LdrHalTextSection.SymbolInfo.ImageSize = LdrHalTextSection.Length;
-#endif
+  RtlZeroMemory(&LdrHalTextSection->SymbolInfo, 
+		sizeof(LdrHalTextSection->SymbolInfo));
+  LdrHalTextSection->SymbolInfo.ImageBase = 
+    LdrHalTextSection->OptionalHeader->ImageBase;
+  LdrHalTextSection->SymbolInfo.ImageSize = LdrHalTextSection->Length;
 
-#ifdef DBG
   InitializeListHead(&SymbolListHead);
-#endif
+  KeInitializeSpinLock(&SymbolListLock);
 }
-
-#ifdef DBG
 
 VOID
 LdrpParseImageSymbols(PIMAGE_SYMBOL_INFO SymbolInfo)
@@ -577,7 +557,7 @@ LdrGetAddressInformation(IN PIMAGE_SYMBOL_INFO  SymbolInfo,
 
 VOID
 LdrpLoadModuleSymbols(PUNICODE_STRING FileName,
-  PIMAGE_SYMBOL_INFO SymbolInfo)
+		      PIMAGE_SYMBOL_INFO SymbolInfo)
 {
   FILE_STANDARD_INFORMATION FileStdInfo;
   OBJECT_ATTRIBUTES ObjectAttributes;
@@ -681,9 +661,8 @@ LdrpLoadModuleSymbols(PUNICODE_STRING FileName,
   SymbolInfo->SymbolStringsLength = SymbolFileHeader->StabstrLength;
 }
 
-
 VOID
-LdrUnloadModuleSymbols(PIMAGE_SYMBOL_INFO SymbolInfo)
+KdbLdrUnloadModuleSymbols(PIMAGE_SYMBOL_INFO SymbolInfo)
 {
   PSYMBOL NextSymbol;
   PSYMBOL Symbol;
@@ -752,7 +731,7 @@ LdrpLookupUserSymbolInfo(PLDR_MODULE LdrModule)
 
   DPRINT("Searching symbols for %S\n", LdrModule->FullDllName.Buffer);
 
-  KeAcquireSpinLock(&ModuleListLock,&Irql);
+  KeAcquireSpinLock(&SymbolListLock, &Irql);
 
   CurrentEntry = SymbolListHead.Flink;
   while (CurrentEntry != (&SymbolListHead))
@@ -761,21 +740,20 @@ LdrpLookupUserSymbolInfo(PLDR_MODULE LdrModule)
 
       if (RtlEqualUnicodeString(&Current->FullName, &LdrModule->FullDllName, TRUE))
         {
-          KeReleaseSpinLock(&ModuleListLock, Irql);
+          KeReleaseSpinLock(&SymbolListLock, Irql);
           return Current;
         }
 
       CurrentEntry = CurrentEntry->Flink;
     }
 
-  KeReleaseSpinLock(&ModuleListLock, Irql);
+  KeReleaseSpinLock(&SymbolListLock, Irql);
 
   return(NULL);
 }
 
-
 VOID
-LdrLoadUserModuleSymbols(PLDR_MODULE LdrModule)
+KdbLdrLoadUserModuleSymbols(PLDR_MODULE LdrModule)
 {
   PIMAGE_SYMBOL_INFO_CACHE CacheEntry;
 
@@ -801,6 +779,7 @@ LdrLoadUserModuleSymbols(PLDR_MODULE LdrModule)
       CacheEntry = ExAllocatePool(NonPagedPool, sizeof(IMAGE_SYMBOL_INFO_CACHE));
       assert(CacheEntry);
       RtlZeroMemory(CacheEntry, sizeof(IMAGE_SYMBOL_INFO_CACHE));
+
       RtlCreateUnicodeString(&CacheEntry->FullName, LdrModule->FullDllName.Buffer);
       assert(CacheEntry->FullName.Buffer);
       LdrpLoadModuleSymbols(&LdrModule->FullDllName, &LdrModule->SymbolInfo);
@@ -808,92 +787,99 @@ LdrLoadUserModuleSymbols(PLDR_MODULE LdrModule)
     }
 }
 
-#endif /* DBG */
-
 VOID
-KdbLoadDriver(VOID)
+KdbLoadDriver(PUNICODE_STRING Filename, PMODULE_OBJECT Module)
 {
-#ifdef DBG
   /* Load symbols for the image if available */
   LdrpLoadModuleSymbols(Filename, &Module->TextSection->SymbolInfo);
-#endif /* DBG */
 }
 
 VOID
-KdbUnloadDriver(VOID)
+KdbUnloadDriver(PMODULE_OBJECT ModuleObject)
 {
-#ifdef DBG
   /* Unload symbols for module if available */
-  LdrUnloadModuleSymbols(&ModuleObject->TextSection->SymbolInfo);
-#endif /* DBG */
+  KdbLdrUnloadModuleSymbols(&ModuleObject->TextSection->SymbolInfo);
 }
 
 VOID
-KdbInitializeDriver(VOID)
+KdbProcessSymbolFile(PVOID ModuleLoadBase, PCHAR FileName, ULONG Length)
 {
-#ifdef DBG
-  PSYMBOLFILE_HEADER SymbolFileHeader;
-  PIMAGE_SYMBOL_INFO SymbolInfo;
-#endif /* DBG */
-
-#ifdef DBG
+  PMODULE_OBJECT ModuleObject;
+  UNICODE_STRING ModuleName;
   CHAR TmpBaseName[MAX_PATH];
   CHAR TmpFileName[MAX_PATH];
+  PSYMBOLFILE_HEADER SymbolFileHeader;
+  PIMAGE_SYMBOL_INFO SymbolInfo;
   ANSI_STRING AnsiString;
-#endif /* DBG */
 
-#ifdef DBG
+  DPRINT("Module %s is a symbol file\n", FileName);
 
-  if ((FileExt != NULL) && (strcmp(FileExt, ".sym") == 0))
+  strncpy(TmpBaseName, FileName, Length);
+  TmpBaseName[Length] = '\0';
+  
+  DPRINT("base: %s (Length %d)\n", TmpBaseName, Length);
+  
+  strcpy(TmpFileName, TmpBaseName);
+  strcat(TmpFileName, ".sys");
+  RtlInitAnsiString(&AnsiString, TmpFileName);
+  
+  RtlAnsiStringToUnicodeString(&ModuleName, &AnsiString, TRUE);
+  ModuleObject = LdrGetModuleObject(&ModuleName);
+  RtlFreeUnicodeString(&ModuleName);
+  if (ModuleObject == NULL)
     {
-      DPRINT("Module %s is a symbol file\n", FileName);
-
-      strncpy(TmpBaseName, FileName, Length);
-      TmpBaseName[Length] = '\0';
-
-      DPRINT("base: %s (Length %d)\n", TmpBaseName, Length);
-
       strcpy(TmpFileName, TmpBaseName);
-      strcat(TmpFileName, ".sys");
+      strcat(TmpFileName, ".exe");
       RtlInitAnsiString(&AnsiString, TmpFileName);
-
       RtlAnsiStringToUnicodeString(&ModuleName, &AnsiString, TRUE);
       ModuleObject = LdrGetModuleObject(&ModuleName);
       RtlFreeUnicodeString(&ModuleName);
-      if (ModuleObject == NULL)
-	{
-	  strcpy(TmpFileName, TmpBaseName);
-	  strcat(TmpFileName, ".exe");
-	  RtlInitAnsiString(&AnsiString, TmpFileName);
-	  RtlAnsiStringToUnicodeString(&ModuleName, &AnsiString, TRUE);
-	  ModuleObject = LdrGetModuleObject(&ModuleName);
-	  RtlFreeUnicodeString(&ModuleName);
-	}
-      if (ModuleObject != NULL)
-	{
-          SymbolInfo = (PIMAGE_SYMBOL_INFO) &ModuleObject->TextSection->SymbolInfo;
-          SymbolFileHeader = (PSYMBOLFILE_HEADER) ModuleLoadBase;
-          SymbolInfo->FileBuffer = ModuleLoadBase;
-          SymbolInfo->SymbolsBase = ModuleLoadBase + SymbolFileHeader->StabsOffset;
-          SymbolInfo->SymbolsLength = SymbolFileHeader->StabsLength;
-          SymbolInfo->SymbolStringsBase = ModuleLoadBase + SymbolFileHeader->StabstrOffset;
-          SymbolInfo->SymbolStringsLength = SymbolFileHeader->StabstrLength;
-	}
-
-      return(STATUS_SUCCESS);
     }
-  else
+  if (ModuleObject != NULL)
     {
-      DPRINT("Module %s is non-symbol file\n", FileName);
-    }
-
-#endif /* !DBG */
-
-#ifdef DBG
-  RtlZeroMemory(&ModuleTextSection->SymbolInfo, sizeof(ModuleTextSection->SymbolInfo));
-  ModuleTextSection->SymbolInfo.ImageBase = PEOptionalHeader->ImageBase;
-  ModuleTextSection->SymbolInfo.ImageSize = ModuleTextSection->Length;
-#endif /* DBG */
+      SymbolInfo = (PIMAGE_SYMBOL_INFO) &ModuleObject->TextSection->SymbolInfo;
+      SymbolFileHeader = (PSYMBOLFILE_HEADER) ModuleLoadBase;
+      SymbolInfo->FileBuffer = ModuleLoadBase;
+      SymbolInfo->SymbolsBase = ModuleLoadBase + SymbolFileHeader->StabsOffset;
+      SymbolInfo->SymbolsLength = SymbolFileHeader->StabsLength;
+      SymbolInfo->SymbolStringsBase = ModuleLoadBase + SymbolFileHeader->StabstrOffset;
+      SymbolInfo->SymbolStringsLength = SymbolFileHeader->StabstrLength;
+    } 
 }
 
-#endif /* DBG */
+VOID
+KdbInitializeDriver(PMODULE_TEXT_SECTION ModuleTextSection)
+{
+  RtlZeroMemory(&ModuleTextSection->SymbolInfo, sizeof(ModuleTextSection->SymbolInfo));
+  ModuleTextSection->SymbolInfo.ImageBase = 
+    ModuleTextSection->OptionalHeader->ImageBase;
+  ModuleTextSection->SymbolInfo.ImageSize = ModuleTextSection->Length;
+}
+
+VOID
+KdbLdrLoadAutoConfigDrivers(VOID)
+{
+  UNICODE_STRING ModuleName;
+  PMODULE_OBJECT ModuleObject;
+
+  /*
+   * Load symbols for ntoskrnl.exe and hal.dll because \SystemRoot
+   * is created after their module entries
+   */
+
+  RtlInitUnicodeString(&ModuleName, KERNEL_MODULE_NAME);
+  ModuleObject = LdrGetModuleObject(&ModuleName);
+  if (ModuleObject != NULL)
+    {
+      LdrpLoadModuleSymbols(&ModuleName, 
+			    &ModuleObject->TextSection->SymbolInfo);
+    }
+
+  RtlInitUnicodeString(&ModuleName, HAL_MODULE_NAME);
+  ModuleObject = LdrGetModuleObject(&ModuleName);
+  if (ModuleObject != NULL)
+    {
+      LdrpLoadModuleSymbols(&ModuleName,
+			    &ModuleObject->TextSection->SymbolInfo);
+    }
+}

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kdb.c,v 1.6 2002/05/05 14:57:43 chorns Exp $
+/* $Id: kdb.c,v 1.7 2002/07/18 00:25:30 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb.c
@@ -33,6 +33,7 @@
 #include <internal/ps.h>
 #include <limits.h>
 #include <ctype.h>
+#include <internal/kd.h>
 #include "kdb.h"
 
 #define NDEBUG
@@ -259,7 +260,11 @@ DbgPrintBackTrace(PULONG Frame, ULONG StackBase, ULONG StackLimit)
   while (Frame != NULL && (ULONG)Frame >= StackLimit && 
 	 (ULONG)Frame < StackBase)
     {
+#if 0
       DbgPrint("%.8x  ", Frame[1]);
+#else
+      KdbPrintAddress((PVOID)Frame[1]);
+#endif
       Frame = (PULONG)Frame[0];
       i++;
     }
