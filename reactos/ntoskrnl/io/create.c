@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.50 2001/11/02 22:22:33 hbirr Exp $
+/* $Id: create.c,v 1.51 2001/12/05 12:11:55 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -313,9 +313,10 @@ IoCreateFile(
    PFILE_OBJECT		FileObject;
    NTSTATUS		Status;
    PIRP			Irp;
-   KEVENT			Event;
+   KEVENT		Event;
    PIO_STACK_LOCATION	StackLoc;
    IO_STATUS_BLOCK      IoSB;
+   IO_SECURITY_CONTEXT  SecurityContext;
    
    DPRINT("IoCreateFile(FileHandle %x, DesiredAccess %x, "
 	  "ObjectAttributes %x ObjectAttributes->ObjectName->Buffer %S)\n",
@@ -344,6 +345,12 @@ IoCreateFile(
      {
 	FileObject->Flags |= FO_SYNCHRONOUS_IO;
      }
+   
+   SecurityContext.SecurityQos = NULL; /* ?? */
+   SecurityContext.AccessState = NULL; /* ?? */
+   SecurityContext.DesiredAccess = DesiredAccess;
+   SecurityContext.FullCreateOptions = 0; /* ?? */
+   
    KeInitializeEvent(&FileObject->Lock, NotificationEvent, TRUE);
    KeInitializeEvent(&Event, NotificationEvent, FALSE);
    
@@ -392,8 +399,12 @@ IoCreateFile(
    StackLoc->Control = 0;
    StackLoc->DeviceObject = FileObject->DeviceObject;
    StackLoc->FileObject = FileObject;
+   StackLoc->Parameters.Create.SecurityContext = &SecurityContext;
    StackLoc->Parameters.Create.Options = (CreateOptions & FILE_VALID_OPTION_FLAGS);
    StackLoc->Parameters.Create.Options |= (CreateDisposition << 24);
+   StackLoc->Parameters.Create.FileAttributes = FileAttributes;
+   StackLoc->Parameters.Create.ShareAccess = ShareAccess;
+   StackLoc->Parameters.Create.EaLength = EaLength;
    
    /*
     * Now call the driver and 
