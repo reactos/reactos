@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.71 2004/05/10 17:07:18 weiden Exp $
+/* $Id: misc.c,v 1.72 2004/05/12 15:28:01 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -428,6 +428,11 @@ NtUserCallTwoParam(
         return FALSE;
       }
       
+#if 0
+      /*
+       * According to WINE, Windows' doesn't check the cbSize field
+       */
+      
       Status = MmCopyFromCaller(&wi.cbSize, (PVOID)Param2, sizeof(wi.cbSize));
       if(!NT_SUCCESS(Status))
       {
@@ -442,6 +447,7 @@ NtUserCallTwoParam(
         SetLastWin32Error(ERROR_INVALID_PARAMETER);
         return FALSE;
       }
+#endif
       
       if((Ret = (DWORD)IntGetWindowInfo(WindowObject, &wi)))
       {
