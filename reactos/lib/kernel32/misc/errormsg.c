@@ -1,4 +1,4 @@
-/* $Id: errormsg.c,v 1.11 2003/11/16 10:45:15 mf Exp $
+/* $Id: errormsg.c,v 1.12 2003/11/16 11:35:25 mf Exp $
  *
  * reactos/lib/kernel32/misc/errormsg.c
  *
@@ -288,6 +288,7 @@ DWORD WINAPI FormatMessageA(
         }
 
         if (!bufsize) {
+            TRACE("FormatMessageA: dwFlags=%x hmodule=%x dwMessageId=%x - could not load message\n", dwFlags, hmodule, dwMessageId);
             SetLastError (ERROR_RESOURCE_LANG_NOT_FOUND);
             return 0;
         }
@@ -457,6 +458,7 @@ DWORD WINAPI FormatMessageA(
         lstrlenA(*(LPSTR*)lpBuffer):
             lstrlenA(lpBuffer);
 #else
+    FIXME("FormatMessageA: unimplemented\n");
     return 0;
 #endif /* __i386__ */
 }
@@ -537,6 +539,7 @@ DWORD WINAPI FormatMessageW(
         }
 
         if (!bufsize) {
+            TRACE("FormatMessageW: dwFlags=%x hmodule=%x dwMessageId=%x - could not load message\n", dwFlags, hmodule, dwMessageId);
             SetLastError (ERROR_RESOURCE_LANG_NOT_FOUND);
             return 0;
         }
@@ -705,6 +708,7 @@ DWORD WINAPI FormatMessageW(
         lstrlenW(*(LPWSTR*)lpBuffer):
             lstrlenW(lpBuffer);
 #else
+    FIXME("FormatMessageW: unimplemented\n");
     return 0;
 #endif /* __i386__ */
 }
