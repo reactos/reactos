@@ -1,4 +1,4 @@
-/* $Id: lib.c,v 1.5 1999/10/18 21:50:11 ariadne Exp $
+/* $Id: lib.c,v 1.6 2000/04/14 01:49:18 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -25,6 +25,7 @@
 
 /* FUNCTIONS ****************************************************************/
 
+#if 0
 HINSTANCE
 STDCALL
 LoadLibraryW (
@@ -34,7 +35,7 @@ LoadLibraryW (
    UNIMPLEMENTED;
    return(NULL);
 }
-
+#endif
 
 
 

@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.39 2000/04/06 02:28:45 ekohl Exp $
+; $Id: ntdll.edf,v 1.40 2000/04/14 01:43:20 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -9,6 +9,12 @@ CsrClientCallServer=CsrClientCallServer@16
 ;CsrClientConnectToServer=CsrClientConnectToServer@24
 DbgBreakPoint=DbgBreakPoint@0
 DbgPrint
+;DbgPrompt
+;DbgSsHandleKmApiMsg
+;DbgSsInitialize
+;DbgUiConnectToDbg
+DbgUiContinue=DbgUiContinue@8
+;DbgUiWaitStateChange
 DbgUserBreakPoint=DbgUserBreakPoint@0
 NlsAnsiCodePage DATA
 NlsMbCodePageTag DATA
@@ -240,6 +246,7 @@ RtlAreAllAccessesGranted=RtlAreAllAccessesGranted@8
 RtlAreAnyAccessesGranted=RtlAreAnyAccessesGranted@8
 RtlAreBitsClear=RtlAreBitsClear@12
 RtlAreBitsSet=RtlAreBitsSet@12
+RtlAssert=RtlAssert@16
 RtlCharToInteger=RtlCharToInteger@12
 RtlClearAllBits=RtlClearAllBits@4
 RtlClearBits=RtlClearBits@12
@@ -336,6 +343,7 @@ RtlLeaveCriticalSection=RtlLeaveCriticalSection@4
 RtlLengthRequiredSid=RtlLengthRequiredSid@4
 RtlLengthSecurityDescriptor=RtlLengthSecurityDescriptor@4
 RtlLengthSid=RtlLengthSid@4
+RtlLocalTimeToSystemTime=RtlLocalTimeToSystemTime@8
 RtlLockHeap=RtlLockHeap@4
 RtlMakeSelfRelativeSD=RtlMakeSelfRelativeSD@12
 RtlMapGenericMask=RtlMapGenericMask@8
@@ -370,6 +378,7 @@ RtlSetSaclSecurityDescriptor=RtlSetSaclSecurityDescriptor@16
 RtlSizeHeap=RtlSizeHeap@12
 RtlSubAuthorityCountSid=RtlSubAuthorityCountSid@4
 RtlSubAuthoritySid=RtlSubAuthoritySid@8
+RtlSystemTimeToLocalTime=RtlSystemTimeToLocalTime@8
 RtlTimeFieldsToTime=RtlTimeFieldsToTime@8
 RtlTimeToSecondsSince1970=RtlTimeToSecondsSince1970@8
 RtlTimeToSecondsSince1980=RtlTimeToSecondsSince1980@8
@@ -678,6 +687,7 @@ memcpy
 memmove
 memset
 pow
+qsort
 sin
 sprintf
 sqrt

@@ -1,8 +1,14 @@
-#define WIN32_NO_STATUS
-#define WIN32_NO_PEHDR
-#include <windows.h>
+/* $Id: res.c,v 1.4 2000/04/14 01:50:38 ekohl Exp $
+ *
+ * COPYRIGHT: See COPYING in the top level directory
+ * PROJECT  : ReactOS user mode libraries
+ * MODULE   : kernel32.dll
+ * FILE     : reactos/lib/kernel32/misc/res.c
+ * AUTHOR   : ???
+ */
+
 #include <ddk/ntddk.h>
-#include <pe.h>
+#include <windows.h>
 #include <ntdll/ldr.h>
 #include <kernel32/kernel32.h>
 

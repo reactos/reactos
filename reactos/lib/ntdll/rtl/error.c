@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.3 1999/12/18 10:16:11 ea Exp $
+/* $Id: error.c,v 1.4 2000/04/14 01:43:38 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -19,6 +19,22 @@
 #include <ntdll/ntdll.h>
 
 /* FUNCTIONS ***************************************************************/
+
+VOID
+STDCALL
+RtlAssert (
+	PVOID FailedAssertion,
+	PVOID FileName,
+	ULONG LineNumber,
+	PCHAR Message
+	)
+{
+	DbgPrint ("Assertion \'%s\' failed at %s line %d: %s\n",
+	          (PCHAR)FailedAssertion,
+	          (PCHAR)FileName,
+	          LineNumber,
+	          Message);
+}
 
 
 DWORD STDCALL RtlNtStatusToDosError (NTSTATUS Status)

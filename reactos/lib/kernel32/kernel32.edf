@@ -1,4 +1,4 @@
-; $Id: kernel32.edf,v 1.5 2000/04/07 21:45:32 phreak Exp $
+; $Id: kernel32.edf,v 1.6 2000/04/14 01:46:20 ekohl Exp $
 ;
 ; kernel32.edf
 ;
@@ -563,7 +563,6 @@ SetTapeParameters=SetTapeParameters@12
 SetTapePosition=SetTapePosition@24
 SetThreadAffinityMask=SetThreadAffinityMask@8
 SetThreadContext=SetThreadContext@8
-;_imp__SetThreadContext@8
 SetThreadLocale=SetThreadLocale@4
 SetThreadPriority=SetThreadPriority@8
 SetTimeZoneInformation=SetTimeZoneInformation@4

@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.50 2000/04/06 02:28:45 ekohl Exp $
+; $Id: ntdll.def,v 1.51 2000/04/14 01:43:20 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -9,6 +9,12 @@ CsrClientCallServer@16
 ;CsrClientConnectToServer@24
 DbgBreakPoint@0
 DbgPrint
+;DbgPrompt
+;DbgSsHandleKmApiMsg
+;DbgSsInitialize
+;DbgUiConnectToDbg
+DbgUiContinue@8
+;DbgUiWaitStateChange
 DbgUserBreakPoint@0
 NlsAnsiCodePage DATA
 NlsMbCodePageTag DATA
@@ -257,7 +263,7 @@ RtlAreAllAccessesGranted@8
 RtlAreAnyAccessesGranted@8
 RtlAreBitsClear@12
 RtlAreBitsSet@12
-;RtlAssert
+RtlAssert@16
 ;RtlCaptureStackBackTrace
 RtlCharToInteger@12
 ;RtlCheckRegistryKey
@@ -428,7 +434,7 @@ RtlLeaveCriticalSection@4
 RtlLengthRequiredSid@4
 RtlLengthSecurityDescriptor@4
 RtlLengthSid@4
-;RtlLocalTimeToSystemTime
+RtlLocalTimeToSystemTime@8
 RtlLockHeap@4
 ;RtlLookupAtomInAtomTable
 ;RtlLookupElementGenericTable
@@ -511,7 +517,7 @@ RtlSubAuthorityCountSid@4
 RtlSubAuthoritySid@8
 ;RtlSubtreePredecessor
 ;RtlSubtreeSuccessor
-;RtlSystemTimeToLocalTime
+RtlSystemTimeToLocalTime@8
 RtlTimeFieldsToTime@8
 ;RtlTimeToElapsedTimeFields
 RtlTimeToSecondsSince1970@8
@@ -848,7 +854,7 @@ memcpy
 memmove
 memset
 pow
-;qsort
+qsort
 sin
 sprintf
 sqrt

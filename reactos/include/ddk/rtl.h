@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.30 2000/03/18 13:53:26 ekohl Exp $
+/* $Id: rtl.h,v 1.31 2000/04/14 01:42:07 ekohl Exp $
  * 
  */
 
@@ -276,6 +276,15 @@ RtlAreBitsSet (
 	PRTL_BITMAP	BitMapHeader,
 	ULONG		StartingIndex,
 	ULONG		Length
+	);
+
+VOID
+STDCALL
+RtlAssert (
+	PVOID FailedAssertion,
+	PVOID FileName,
+	ULONG LineNumber,
+	PCHAR Message
 	);
 
 NTSTATUS

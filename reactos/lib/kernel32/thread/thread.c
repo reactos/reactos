@@ -1,4 +1,5 @@
-/*
+/* $Id: thread.c,v 1.14 2000/04/14 01:48:26 ekohl Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/thread/thread.c
@@ -108,14 +109,13 @@ HANDLE STDCALL CreateRemoteThread(HANDLE hProcess,
    DPRINT("Stack base address: %p\n", BaseAddress);
    
    memset(&ThreadContext,0,sizeof(CONTEXT));
-//   ThreadContext.Eip = (LONG)lpStartAddress;
    ThreadContext.Eip = (LONG)ThreadStartup;
    ThreadContext.SegGs = USER_DS;
    ThreadContext.SegFs = USER_DS;
    ThreadContext.SegEs = USER_DS;
    ThreadContext.SegDs = USER_DS;
    ThreadContext.SegCs = USER_CS;
-   ThreadContext.SegSs = USER_DS;        
+   ThreadContext.SegSs = USER_DS;
    ThreadContext.Esp = (ULONG)(BaseAddress + StackSize - 12);
    ThreadContext.EFlags = (1<<1) + (1<<9);
 
@@ -150,7 +150,7 @@ HANDLE STDCALL CreateRemoteThread(HANDLE hProcess,
 
 NT_TEB *GetTeb(VOID)
 {
-	return NULL;
+	return NtCurrentTeb();
 }
 
 WINBOOL STDCALL SwitchToThread(VOID)
@@ -162,16 +162,16 @@ WINBOOL STDCALL SwitchToThread(VOID)
 
 DWORD STDCALL GetCurrentThreadId()
 {
-   return((DWORD)(GetTeb()->Cid).UniqueThread);
+   return((DWORD)(NtCurrentTeb()->Cid).UniqueThread);
 }
 
-VOID STDCALL ExitThread(UINT uExitCode) 
+VOID STDCALL ExitThread(UINT uExitCode)
 {
-   NTSTATUS errCode;	 
+   NTSTATUS errCode;
 
    errCode = NtTerminateThread(NtCurrentThread(),
 			       uExitCode);
-   if (!NT_SUCCESS(errCode)) 
+   if (!NT_SUCCESS(errCode))
      {
 	SetLastError(RtlNtStatusToDosError(errCode));
      }
@@ -192,7 +192,7 @@ WINBOOL STDCALL GetThreadTimes(HANDLE hThread,
 				      &KernelUserTimes,
 				      sizeof(KERNEL_USER_TIMES),
 				      &ReturnLength);
-   if (!NT_SUCCESS(errCode)) 
+   if (!NT_SUCCESS(errCode))
      {
 	SetLastError(RtlNtStatusToDosError(errCode));
 	return FALSE;
@@ -201,18 +201,18 @@ WINBOOL STDCALL GetThreadTimes(HANDLE hThread,
    memcpy(lpExitTime, &KernelUserTimes.ExitTime, sizeof(FILETIME));
    memcpy(lpKernelTime, &KernelUserTimes.KernelTime, sizeof(FILETIME));
    memcpy(lpUserTime, &KernelUserTimes.UserTime, sizeof(FILETIME));
-   return TRUE;   
+   return TRUE;
 }
 
 
-WINBOOL STDCALL GetThreadContext(HANDLE hThread,	
+WINBOOL STDCALL GetThreadContext(HANDLE hThread,
 				 LPCONTEXT lpContext)
 {
    NTSTATUS errCode;
    
    errCode = NtGetContextThread(hThread,
 				lpContext);
-   if (!NT_SUCCESS(errCode)) 
+   if (!NT_SUCCESS(errCode))
      {
 	SetLastError(RtlNtStatusToDosError(errCode));
 	return FALSE;
@@ -220,14 +220,14 @@ WINBOOL STDCALL GetThreadContext(HANDLE hThread,
    return TRUE;
 }
 
-WINBOOL STDCALL SetThreadContext(HANDLE hThread,	
+WINBOOL STDCALL SetThreadContext(HANDLE hThread,
 				 CONST CONTEXT *lpContext)
 {
    NTSTATUS errCode;
    
    errCode = NtSetContextThread(hThread,
 				(void *)lpContext);
-   if (!NT_SUCCESS(errCode)) 
+   if (!NT_SUCCESS(errCode))
      {
 	SetLastError(RtlNtStatusToDosError(errCode));
 	return FALSE;
@@ -235,7 +235,7 @@ WINBOOL STDCALL SetThreadContext(HANDLE hThread,
    return TRUE;
 }
 
-WINBOOL STDCALL GetExitCodeThread(HANDLE hThread,	
+WINBOOL STDCALL GetExitCodeThread(HANDLE hThread,
 				  LPDWORD lpExitCode)
 {
    NTSTATUS errCode;
@@ -247,13 +247,13 @@ WINBOOL STDCALL GetExitCodeThread(HANDLE hThread,
 				      &ThreadBasic,
 				      sizeof(THREAD_BASIC_INFORMATION),
 				      &DataWritten);
-   if (!NT_SUCCESS(errCode)) 
+   if (!NT_SUCCESS(errCode))
      {
 	SetLastError(RtlNtStatusToDosError(errCode));
 	return FALSE;
      }
    memcpy(lpExitCode, &ThreadBasic.ExitStatus, sizeof(DWORD));
-   return TRUE;	
+   return TRUE;
 }
 
 DWORD STDCALL ResumeThread(HANDLE hThread)
@@ -263,7 +263,7 @@ DWORD STDCALL ResumeThread(HANDLE hThread)
    
    errCode = NtResumeThread(hThread,
 			    &PreviousResumeCount);
-   if (!NT_SUCCESS(errCode)) 
+   if (!NT_SUCCESS(errCode))
      {
 	SetLastError(RtlNtStatusToDosError(errCode));
 	return  -1;
@@ -283,7 +283,7 @@ TerminateThread (
    
    errCode = NtTerminateThread(hThread,
 			    dwExitCode);
-   if (!NT_SUCCESS(errCode)) 
+   if (!NT_SUCCESS(errCode))
      {
 	SetLastError(RtlNtStatusToDosError(errCode));
 	return  FALSE;
@@ -299,7 +299,7 @@ DWORD STDCALL SuspendThread(HANDLE hThread)
    
    errCode = NtSuspendThread(hThread,
 			     &PreviousSuspendCount);
-   if (!NT_SUCCESS(errCode)) 
+   if (!NT_SUCCESS(errCode))
      {
 	SetLastError(RtlNtStatusToDosError(errCode));
 	return -1;
@@ -325,7 +325,7 @@ WINBOOL STDCALL SetThreadPriority(HANDLE hThread,
 				      &ThreadBasic,
 				      sizeof(THREAD_BASIC_INFORMATION),
 				      &DataWritten);
-   if (!NT_SUCCESS(errCode)) 
+   if (!NT_SUCCESS(errCode))
      {
 	SetLastError(RtlNtStatusToDosError(errCode));
 	return FALSE;
@@ -335,7 +335,7 @@ WINBOOL STDCALL SetThreadPriority(HANDLE hThread,
 				    ThreadBasicInformation,
 				    &ThreadBasic,
 				    sizeof(THREAD_BASIC_INFORMATION));
-   if (!NT_SUCCESS(errCode)) 
+   if (!NT_SUCCESS(errCode))
      {
 	SetLastError(RtlNtStatusToDosError(errCode));
 	return FALSE;
@@ -354,10 +354,12 @@ int STDCALL GetThreadPriority(HANDLE hThread)
 				      &ThreadBasic,
 				      sizeof(THREAD_BASIC_INFORMATION),
 				      &DataWritten);
-   if (!NT_SUCCESS(errCode)) 
+   if (!NT_SUCCESS(errCode))
      {
 	SetLastError(RtlNtStatusToDosError(errCode));
 	return THREAD_PRIORITY_ERROR_RETURN;
      }
    return ThreadBasic.BasePriority;
 }
+
+/* EOF */

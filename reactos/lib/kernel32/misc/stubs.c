@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.13 2000/03/22 18:35:47 dwelch Exp $
+/* $Id: stubs.c,v 1.14 2000/04/14 01:49:40 ekohl Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -344,19 +344,6 @@ ConsoleMenuControl (
 }
 
 
-WINBOOL
-STDCALL
-ContinueDebugEvent (
-	DWORD	dwProcessId,
-	DWORD	dwThreadId,
-	DWORD	dwContinueStatus
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
 LCID
 STDCALL
 ConvertDefaultLocale (
@@ -366,9 +353,6 @@ ConvertDefaultLocale (
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
-
-
-
 
 
 HANDLE
@@ -459,25 +443,6 @@ CreateVirtualBuffer (
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
-}
-
-
-WINBOOL
-STDCALL
-DebugActiveProcess (
-	DWORD	dwProcessId
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-VOID
-STDCALL
-DebugBreak (VOID)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 }
 
 
@@ -982,11 +947,6 @@ FormatMessageA (
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
-
-
-
-
-
 
 
 BOOL
@@ -2643,15 +2603,6 @@ IsDBCSLeadByteEx (
 }
 
 
-BOOL
-STDCALL
-IsDebuggerPresent (VOID)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE; /* FIXME: */
-}
-
-
 WINBOOL
 STDCALL
 IsValidCodePage (
@@ -2700,32 +2651,6 @@ LCMapStringW (
 	int	cchSrc,
 	LPWSTR	lpDestStr,
 	int	cchDest
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-HINSTANCE
-STDCALL
-LoadLibraryExA (
-	LPCSTR	lpLibFileName,
-	HANDLE	hFile,
-	DWORD	dwFlags
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-HINSTANCE
-STDCALL
-LoadLibraryExW (
-	LPCWSTR	lpLibFileName,
-	HANDLE	hFile,
-	DWORD	dwFlags
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -3867,18 +3792,6 @@ WaitCommEvent (
 	HANDLE		hFile,
 	LPDWORD		lpEvtMask,
 	LPOVERLAPPED	lpOverlapped
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-WaitForDebugEvent (
-	LPDEBUG_EVENT	lpDebugEvent,
-	DWORD		dwMilliseconds
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

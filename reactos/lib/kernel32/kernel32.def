@@ -559,7 +559,6 @@ SetTapeParameters@12
 SetTapePosition@24
 SetThreadAffinityMask@8
 SetThreadContext@8
-;_imp__SetThreadContext@8
 SetThreadLocale@4
 SetThreadPriority@8
 SetTimeZoneInformation@4

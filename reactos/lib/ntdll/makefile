@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.43 2000/04/06 02:28:27 ekohl Exp $
+# $Id: makefile,v 1.44 2000/04/14 01:45:17 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -25,7 +25,7 @@ all: $(DLLTARGET)
 
 CSR_OBJECTS = csr/api.o
 
-DBG_OBJECTS = dbg/brkpoint.o dbg/print.o
+DBG_OBJECTS = dbg/brkpoint.o dbg/debug.o dbg/print.o
 
 RTL_OBJECTS = rtl/critical.o rtl/error.o rtl/heap.o rtl/largeint.o \
               rtl/math.o rtl/mem.o rtl/nls.o rtl/process.o rtl/sd.o \
@@ -39,7 +39,7 @@ STDLIB_OBJECTS = stdlib/abs.o stdlib/atoi.o stdlib/atoi64.o stdlib/atol.o \
                  stdlib/itoa.o stdlib/itow.o stdlib/labs.o stdlib/splitp.o \
                  stdlib/strtol.o stdlib/strtoul.o stdlib/wcstol.o \
                  stdlib/wcstoul.o stdlib/wtoi.o stdlib/wtoi64.o stdlib/wtol.o \
-                 stdlib/mbstowcs.o stdlib/wcstombs.o
+                 stdlib/mbstowcs.o stdlib/wcstombs.o stdlib/qsort.o
 
 STRING_OBJECTS = string/ctype.o string/memccpy.o string/memchr.o \
                  string/memcmp.o string/memcpy.o string/memicmp.o\
