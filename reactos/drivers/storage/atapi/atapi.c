@@ -1,4 +1,4 @@
-/* $Id: atapi.c,v 1.1 2001/09/09 21:31:13 ekohl Exp $
+/* $Id: atapi.c,v 1.2 2001/11/01 00:30:29 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -27,6 +27,8 @@
 
 #define NDEBUG
 #include <debug.h>
+
+#include "../include/srb.h"
 
 #include "atapi.h"
 #include "partitio.h"
@@ -102,6 +104,14 @@ AtapiCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
 		      IN PCONTROLLER_OBJECT ControllerObject,
 		      IN ULONG ControllerNumber);
 
+static BOOLEAN
+AtapiFindDrives(PIDE_CONTROLLER_EXTENSION ControllerExtension);
+
+BOOLEAN
+AtapiIdentifyATAPIDrive(IN int CommandPort,
+                        IN int DriveNum,
+                        OUT PIDE_DRIVE_IDENTIFY DrvParms);
+
 static BOOLEAN IDEResetController(IN WORD CommandPort, IN WORD ControlPort);
 static BOOLEAN IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
                                 IN PCONTROLLER_OBJECT ControllerObject,
@@ -132,7 +142,14 @@ static int IDEPolledRead(IN WORD Address,
 static NTSTATUS STDCALL IDEDispatchOpenClose(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
 static NTSTATUS STDCALL IDEDispatchReadWrite(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
 static NTSTATUS STDCALL IDEDispatchDeviceControl(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
-static VOID STDCALL IDEStartIo(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+
+static NTSTATUS STDCALL
+AtapiDispatchScsi(IN PDEVICE_OBJECT pDO,
+		  IN PIRP Irp);
+
+static VOID STDCALL
+IDEStartIo(IN PDEVICE_OBJECT DeviceObject,
+	   IN PIRP Irp);
 
 static IO_ALLOCATION_ACTION STDCALL
 IDEAllocateController(IN PDEVICE_OBJECT DeviceObject,
@@ -157,47 +174,6 @@ static VOID IDEFinishOperation(PIDE_CONTROLLER_EXTENSION ControllerExtension);
 static VOID STDCALL IDEIoTimer(PDEVICE_OBJECT DeviceObject, PVOID Context);
 
 
-
-
-#define PCI_TYPE0_ADDRESSES             6
-#define PCI_TYPE1_ADDRESSES             2
-
-typedef struct _PCI_COMMON_CONFIG
-{
-  USHORT VendorID;                   // (ro)
-  USHORT DeviceID;                   // (ro)
-  USHORT Command;                    // Device control
-  USHORT Status;
-  UCHAR  RevisionID;                 // (ro)
-  UCHAR  ProgIf;                     // (ro)
-  UCHAR  SubClass;                   // (ro)
-  UCHAR  BaseClass;                  // (ro)
-  UCHAR  CacheLineSize;              // (ro+)
-  UCHAR  LatencyTimer;               // (ro+)
-  UCHAR  HeaderType;                 // (ro)
-  UCHAR  BIST;                       // Built in self test
-  union
-    {
-      struct _PCI_HEADER_TYPE_0
-	{
-	  ULONG  BaseAddresses[PCI_TYPE0_ADDRESSES];
-	  ULONG  CIS;
-	  USHORT SubVendorID;
-	  USHORT SubSystemID;
-	  ULONG  ROMBaseAddress;
-	  ULONG  Reserved2[2];
-
-	  UCHAR  InterruptLine;      //
-	  UCHAR  InterruptPin;       // (ro)
-	  UCHAR  MinimumGrant;		/* read-only */
-	  UCHAR  MaximumLatency;	/* read-only */
-	} type0;
-    } u;
-  UCHAR DeviceSpecific[192];
-} PCI_COMMON_CONFIG, *PPCI_COMMON_CONFIG;
-
-
-
 //  ----------------------------------------------------------------  Inlines
 
 void
@@ -214,6 +190,28 @@ IDESwapBytePairs(char *Buf,
       Buf[i+1] = t;
     }
 }
+
+
+static BOOLEAN
+IdeFindDrive(int Address,
+	     int DriveIdx)
+{
+  ULONG Cyl;
+
+  DPRINT1("IdeFindDrive(Address %lx DriveIdx %lu) called!\n", Address, DriveIdx);
+
+  IDEWriteDriveHead(Address, IDE_DH_FIXED | (DriveIdx ? IDE_DH_DRV1 : 0));
+  IDEWriteCylinderLow(Address, 0x30);
+
+  Cyl = IDEReadCylinderLow(Address);
+  DPRINT1("Cylinder %lx\n", Cyl);
+
+
+  DPRINT1("IdeFindDrive() done!\n");
+//  for(;;);
+  return(Cyl == 0x30);
+}
+
 
 //  -------------------------------------------------------  Public Interface
 
@@ -244,15 +242,12 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 
   DbgPrint("ATAPI Driver %s\n", VERSION);
 
-  /* Export other driver entry points... */
-  DriverObject->DriverStartIo = IDEStartIo;
   DriverObject->MajorFunction[IRP_MJ_CREATE] = IDEDispatchOpenClose;
   DriverObject->MajorFunction[IRP_MJ_CLOSE] = IDEDispatchOpenClose;
   DriverObject->MajorFunction[IRP_MJ_READ] = IDEDispatchReadWrite;
   DriverObject->MajorFunction[IRP_MJ_WRITE] = IDEDispatchReadWrite;
-//  DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = IDEDispatchQueryInformation;
-//  DriverObject->MajorFunction[IRP_MJ_SET_INFORMATION] = IDEDispatchSetInformation;
   DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = IDEDispatchDeviceControl;
+  DriverObject->MajorFunction[IRP_MJ_SCSI] = AtapiDispatchScsi;
 
   Status = AtapiFindControllers(DriverObject);
   if (NT_SUCCESS(Status))
@@ -397,6 +392,14 @@ AtapiFindControllers(IN PDRIVER_OBJECT DriverObject)
 		      DPRINT1("BaseAddress: 0x%08X\n", PciConfig.u.type0.BaseAddresses[i]);
 		    }
 		}
+#if 0
+	      else if ((PciConfig.BaseClass == 0x01) &&
+		       (PciConfig.SubClass == 0x80))
+		{
+		  /* found other mass storage controller */
+		  DPRINT1("Found other mass storage controller!\n");
+		}
+#endif
 	    }
 	}
     }
@@ -535,6 +538,8 @@ AtapiCreateController(IN PDRIVER_OBJECT DriverObject,
       return(Status);
    }
 
+  AtapiFindDrives(ControllerExtension);
+
   return(STATUS_SUCCESS);
 }
 
@@ -602,6 +607,87 @@ AtapiCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
 		    ControllerExtension);
 
   return(Status);
+}
+
+
+static BOOLEAN
+AtapiFindDrives(PIDE_CONTROLLER_EXTENSION ControllerExtension)
+{
+  ULONG DriveIndex;
+  ULONG Retries;
+  BYTE High, Low;
+  IDE_DRIVE_IDENTIFY     DrvParms;
+
+  DPRINT1("AtapiFindDrives() called\n");
+
+  for (DriveIndex = 0; DriveIndex < 2; DriveIndex++)
+    {
+      /* disable interrupts */
+      IDEWriteDriveControl(ControllerExtension->ControlPortBase, IDE_DC_nIEN);
+
+      /* select drive */
+      IDEWriteDriveHead(ControllerExtension->CommandPortBase,
+			IDE_DH_FIXED | (DriveIndex ? IDE_DH_DRV1 : 0));
+      KeStallExecutionProcessor(500);
+      IDEWriteCylinderHigh(ControllerExtension->CommandPortBase, 0);
+      IDEWriteCylinderLow(ControllerExtension->CommandPortBase, 0);
+      IDEWriteCommand(ControllerExtension->CommandPortBase, 0x08); /* IDE_COMMAND_ATAPI_RESET */
+//      KeStallExecutionProcessor(1000*1000);
+//      IDEWriteDriveHead(ControllerExtension->CommandPortBase,
+//			IDE_DH_FIXED | (DriveIndex ? IDE_DH_DRV1 : 0));
+//			IDE_DH_FIXED);
+
+      for (Retries = 0; Retries < 20000; Retries++)
+	{
+	  if (!(IDEReadStatus(ControllerExtension->CommandPortBase) & IDE_SR_BUSY))
+	    {
+	      break;
+	    }
+	  KeStallExecutionProcessor(150);
+	}
+      if (Retries >= IDE_RESET_BUSY_TIMEOUT * 1000)
+	{
+	  DPRINT1("Timeout on drive %lu\n", DriveIndex);
+//	  return FALSE;
+	}
+
+      High = IDEReadCylinderHigh(ControllerExtension->CommandPortBase);
+      Low = IDEReadCylinderLow(ControllerExtension->CommandPortBase);
+
+      DPRINT1("Check drive %lu: High 0x%lx Low 0x%lx\n", DriveIndex, High, Low);
+      if (High == 0xEB && Low == 0x14)
+	{
+//	  DPRINT1("ATAPI drive found!\n");
+	  if (!AtapiIdentifyATAPIDrive(ControllerExtension->CommandPortBase, DriveIndex, &DrvParms))
+	    {
+	      DPRINT1("No drive found!\n");
+	    }
+	  else
+	    {
+	      DPRINT1("ATAPI drive found!\n");
+	    }
+	}
+      else
+	{
+
+	  if (!IDEGetDriveIdentification(ControllerExtension->CommandPortBase, DriveIndex, &DrvParms))
+	    {
+	      DPRINT1("No drive found!\n");
+//	      DPRINT1("Giving up on drive %d on controller %d...\n", 
+//	             DriveIndex,
+//	             ControllerExtension->CommandPortBase);
+//	     return  FALSE;
+	    }
+	  else
+	    {
+	      DPRINT1("IDE drive found!\n");
+	    }
+
+
+	}
+
+    }
+  return TRUE;
 }
 
 
@@ -905,8 +991,66 @@ IDEGetDriveIdentification(IN int CommandPort,
          DrvParms->TMSectorCountLo,
          (ULONG)((DrvParms->TMSectorCountHi << 16) + DrvParms->TMSectorCountLo));
 
-  DPRINT("BytesPerSector %d\n", DrvParms->BytesPerSector);
-  DrvParms->BytesPerSector = 512; /* FIXME !!!*/
+  DPRINT1("BytesPerSector %d\n", DrvParms->BytesPerSector);
+  if (DrvParms->BytesPerSector == 0)
+    DrvParms->BytesPerSector = 512; /* FIXME !!!*/
+  return TRUE;
+}
+
+
+BOOLEAN
+AtapiIdentifyATAPIDrive(IN int CommandPort,
+                        IN int DriveNum,
+                        OUT PIDE_DRIVE_IDENTIFY DrvParms)
+{
+
+    //  Get the Drive Identify block from drive or die
+  if (IDEPolledRead(CommandPort, 0, 0, 0, 0, 0, (DriveNum ? IDE_DH_DRV1 : 0),
+                    0xA1 /*IDE_CMD_IDENT_DRV*/, (BYTE *)DrvParms) != 0) /* atapi_identify */
+    {
+      DPRINT1("IDEPolledRead() failed\n");
+      return FALSE;
+    }
+
+    //  Report on drive parameters if debug mode
+  IDESwapBytePairs(DrvParms->SerialNumber, 20);
+  IDESwapBytePairs(DrvParms->FirmwareRev, 8);
+  IDESwapBytePairs(DrvParms->ModelNumber, 40);
+  DPRINT1("Config:%04x  Cyls:%5d  Heads:%2d  Sectors/Track:%3d  Gaps:%02d %02d\n", 
+         DrvParms->ConfigBits, 
+         DrvParms->LogicalCyls, 
+         DrvParms->LogicalHeads, 
+         DrvParms->SectorsPerTrack, 
+         DrvParms->InterSectorGap, 
+         DrvParms->InterSectorGapSize);
+  DPRINT1("Bytes/PLO:%3d  Vendor Cnt:%2d  Serial number:[%.20s]\n", 
+         DrvParms->BytesInPLO, 
+         DrvParms->VendorUniqueCnt, 
+         DrvParms->SerialNumber);
+  DPRINT1("Cntlr type:%2d  BufSiz:%5d  ECC bytes:%3d  Firmware Rev:[%.8s]\n", 
+         DrvParms->ControllerType, 
+         DrvParms->BufferSize * IDE_SECTOR_BUF_SZ, 
+         DrvParms->ECCByteCnt, 
+         DrvParms->FirmwareRev);
+  DPRINT1("Model:[%.40s]\n", DrvParms->ModelNumber);
+  DPRINT1("RWMult?:%02x  LBA:%d  DMA:%d  MinPIO:%d ns  MinDMA:%d ns\n", 
+         (DrvParms->RWMultImplemented) & 0xff, 
+         (DrvParms->Capabilities & IDE_DRID_LBA_SUPPORTED) ? 1 : 0,
+         (DrvParms->Capabilities & IDE_DRID_DMA_SUPPORTED) ? 1 : 0, 
+         DrvParms->MinPIOTransTime,
+         DrvParms->MinDMATransTime);
+  DPRINT1("TM:Cyls:%d  Heads:%d  Sectors/Trk:%d Capacity:%ld\n",
+         DrvParms->TMCylinders, 
+         DrvParms->TMHeads, 
+         DrvParms->TMSectorsPerTrk,
+         (ULONG)(DrvParms->TMCapacityLo + (DrvParms->TMCapacityHi << 16)));
+  DPRINT1("TM:SectorCount: 0x%04x%04x = %lu\n",
+         DrvParms->TMSectorCountHi,
+         DrvParms->TMSectorCountLo,
+         (ULONG)((DrvParms->TMSectorCountHi << 16) + DrvParms->TMSectorCountLo));
+
+  DPRINT1("BytesPerSector %d\n", DrvParms->BytesPerSector);
+//  DrvParms->BytesPerSector = 512; /* FIXME !!!*/
   return TRUE;
 }
 
@@ -1058,70 +1202,74 @@ IDECreateDevice(IN PDRIVER_OBJECT DriverObject,
 //
 
 static int 
-IDEPolledRead(IN WORD Address, 
-              IN BYTE PreComp, 
-              IN BYTE SectorCnt, 
-              IN BYTE SectorNum , 
-              IN BYTE CylinderLow, 
-              IN BYTE CylinderHigh, 
-              IN BYTE DrvHead, 
-              IN BYTE Command, 
-              OUT BYTE *Buffer) 
+IDEPolledRead(IN WORD Address,
+              IN BYTE PreComp,
+              IN BYTE SectorCnt,
+              IN BYTE SectorNum,
+              IN BYTE CylinderLow,
+              IN BYTE CylinderHigh,
+              IN BYTE DrvHead,
+              IN BYTE Command,
+              OUT BYTE *Buffer)
 {
   BYTE   Status;
   int    RetryCount;
 
   /*  Wait for STATUS.BUSY to clear  */
-  for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES; RetryCount++) 
+  for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES; RetryCount++)
     {
       Status = IDEReadStatus(Address);
-      if (!(Status & IDE_SR_BUSY))
+      if (!(Status & IDE_SR_BUSY) && !(Status & IDE_SR_DRQ))
+//      if (!(Status & IDE_SR_BUSY))
         {
           break;
         }
       KeStallExecutionProcessor(10);
     }
-  if (RetryCount == IDE_MAX_BUSY_RETRIES) 
+  if (RetryCount == IDE_MAX_BUSY_RETRIES)
     {
+      CHECKPOINT1;
       return IDE_ER_ABRT;
     }
 
   /*  Write Drive/Head to select drive  */
   IDEWriteDriveHead(Address, IDE_DH_FIXED | DrvHead);
 
-  /*  Wait for STATUS.BUSY to clear and STATUS.DRDY to assert  */
-  for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES; RetryCount++) 
+  /*  Wait for STATUS.BUSY to clear and STATUS.DRQ to clear  */
+  for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES; RetryCount++)
     {
       Status = IDEReadStatus(Address);
-      if (!(Status & IDE_SR_BUSY) && (Status & IDE_SR_DRDY))
+//      if (!(Status & IDE_SR_BUSY) && (Status & IDE_SR_DRDY))
+      if (!(Status & IDE_SR_BUSY) && !(Status & IDE_SR_DRQ))
         {
           break;
         }
       KeStallExecutionProcessor(10);
     }
-  if (RetryCount == IDE_MAX_BUSY_RETRIES) 
+  if (RetryCount >= IDE_MAX_BUSY_RETRIES)
     {
+      CHECKPOINT1;
       return IDE_ER_ABRT;
     }
 
   /*  Issue command to drive  */
-  if (DrvHead & IDE_DH_LBA) 
+  if (DrvHead & IDE_DH_LBA)
     {
       DPRINT("READ:DRV=%d:LBA=1:BLK=%08d:SC=%02x:CM=%02x\n",
-             DrvHead & IDE_DH_DRV1 ? 1 : 0, 
+             DrvHead & IDE_DH_DRV1 ? 1 : 0,
              ((DrvHead & 0x0f) << 24) + (CylinderHigh << 16) + (CylinderLow << 8) + SectorNum,
-             SectorCnt, 
+             SectorCnt,
              Command);
-    } 
-  else 
+    }
+  else
     {
       DPRINT("READ:DRV=%d:LBA=0:CH=%02x:CL=%02x:HD=%01x:SN=%02x:SC=%02x:CM=%02x\n",
-             DrvHead & IDE_DH_DRV1 ? 1 : 0, 
-             CylinderHigh, 
-             CylinderLow, 
-             DrvHead & 0x0f, 
-             SectorNum, 
-             SectorCnt, 
+             DrvHead & IDE_DH_DRV1 ? 1 : 0,
+             CylinderHigh,
+             CylinderLow,
+             DrvHead & 0x0f,
+             SectorNum,
+             SectorCnt,
              Command);
     }
 
@@ -1137,29 +1285,41 @@ IDEPolledRead(IN WORD Address,
   IDEWriteCommand(Address, Command);
   KeStallExecutionProcessor(50);
 
-  while (1) 
+  while (1)
     {
-
         //  wait for DRQ or error
       for (RetryCount = 0; RetryCount < IDE_MAX_POLL_RETRIES; RetryCount++)
         {
           Status = IDEReadStatus(Address);
-          if (!(Status & IDE_SR_BUSY)) 
+          if (!(Status & IDE_SR_BUSY))
             {
-              if (Status & IDE_SR_ERR) 
+/*
+              if (Status & IDE_SR_ERR)
                 {
                   BYTE  Err = IDEReadError(Address);
+                  CHECKPOINT1;
                   return Err;
-                } 
-              else if (Status & IDE_SR_DRQ) 
+                }
+              else if (Status & IDE_SR_DRQ)
                 {
                   break;
+                }
+*/
+              if (Status & IDE_SR_DRQ)
+                {
+                  break;
+                }
+              else
+                {
+                  CHECKPOINT1;
+                  return IDE_ER_ABRT;
                 }
             }
           KeStallExecutionProcessor(10);
         }
       if (RetryCount >= IDE_MAX_POLL_RETRIES)
         {
+          CHECKPOINT1;
           return IDE_ER_ABRT;
         }
 
@@ -1168,12 +1328,31 @@ IDEPolledRead(IN WORD Address,
       Buffer += IDE_SECTOR_BUF_SZ;
 
         //  Check for more sectors to read
+/*
       for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES &&
           (IDEReadStatus(Address) & IDE_SR_DRQ); RetryCount++)
         ;
-      if (!(IDEReadStatus(Address) & IDE_SR_BUSY)) 
+      if (!(IDEReadStatus(Address) & IDE_SR_BUSY))
         {
+          CHECKPOINT1;
           return 0;
+        }
+*/
+      for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES; RetryCount++)
+        {
+          Status = IDEReadStatus(Address);
+          if (!(Status & IDE_SR_BUSY))
+            {
+              if (Status & IDE_SR_DRQ)
+                {
+                  break;
+                }
+              else
+                {
+                  CHECKPOINT1;
+                  return 0;
+                }
+            }
         }
     }
 }
@@ -1458,6 +1637,34 @@ IDEDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
   return  RC;
 }
 
+//    AtapiDispatchScsi
+//
+//  DESCRIPTION:
+//    Answer requests for Scsi calls
+//
+//  RUN LEVEL:
+//    PASSIVE_LEVEL
+//
+//  ARGUMENTS:
+//    Standard dispatch arguments
+//
+//  RETURNS:
+//    NTSTATUS
+//
+
+static NTSTATUS STDCALL
+AtapiDispatchScsi(IN PDEVICE_OBJECT pDO,
+		  IN PIRP Irp)
+{
+  DPRINT1("AtapiDispatchScsi()\n");
+
+  Irp->IoStatus.Status = STATUS_SUCCESS;
+  Irp->IoStatus.Information = FILE_OPENED;
+  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+  return STATUS_SUCCESS;
+}
+
 //    IDEStartIo
 //
 //  DESCRIPTION:
@@ -1473,9 +1680,9 @@ IDEDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 //    NTSTATUS
 //
 
-static  VOID  
-STDCALL IDEStartIo(IN PDEVICE_OBJECT DeviceObject, 
-           IN PIRP Irp) 
+static VOID STDCALL
+IDEStartIo(IN PDEVICE_OBJECT DeviceObject,
+           IN PIRP Irp)
 {
   LARGE_INTEGER              SectorLI;
   PIO_STACK_LOCATION         IrpStack;
