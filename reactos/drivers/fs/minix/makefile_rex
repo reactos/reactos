@@ -11,6 +11,7 @@ clean:
 	- $(RM) inode.o
 	- $(RM) dir.o
 	- $(RM) mount.o
+	- $(RM) block.o
 	- $(RM) blockdev.o
 	- $(RM) junk.tmp
 	- $(RM) base.tmp
