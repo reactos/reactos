@@ -32,6 +32,7 @@
 #ifndef _GNU_H_WINDOWS32_DEFINES
 #define _GNU_H_WINDOWS32_DEFINES
 
+#include <ntos/ntdef.h>
 #include <ntos/registry.h>
 
 #define WINBASEAPI
@@ -541,8 +542,6 @@ extern "C" {
 #define SERVICE_START	(16)
 #define SERVICE_STOP	(32)
 #define SERVICE_USER_DEFINED_CONTROL	(256)
-#define DELETE	(0x10000L)
-#define READ_CONTROL	(0x20000L)
 #define SERVICE_WIN32_OWN_PROCESS	(16)
 #define SERVICE_WIN32_SHARE_PROCESS	(32)
 #define SERVICE_KERNEL_DRIVER	(1)
