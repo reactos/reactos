@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.68 2004/02/21 13:13:26 navaraf Exp $
+ *  $Id: painting.c,v 1.69 2004/02/21 13:51:13 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -505,8 +505,7 @@ IntRedrawWindow(PWINDOW_OBJECT Window, const RECT* UpdateRect, HRGN UpdateRgn,
     * Repaint and erase windows if needed.
     */
 
-   if ((Flags & (RDW_ERASENOW | RDW_UPDATENOW)) &&
-       IntIsWindowVisible(Window))
+   if (Flags & (RDW_ERASENOW | RDW_UPDATENOW))
    {
       IntPaintWindows(Window, Flags);
    }
