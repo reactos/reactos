@@ -667,7 +667,6 @@ MmReleaseMemoryAreaIfDecommitted(PEPROCESS Process,
 
       if (Reserved)
         {
-          DPRINT("Release TebBlock at %p\n", TebBlock);
           MmFreeVirtualMemory(Process, MemoryArea);
         }
     }
