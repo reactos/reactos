@@ -1,22 +1,22 @@
-# $Id: makefile,v 1.10 2001/11/03 16:48:07 chorns Exp $
+# $Id: makefile,v 1.11 2003/02/28 22:51:17 gvg Exp $
 #
 #
 all:
-	make -C display
-	make -C miniport
+	$(MAKE) -C display
+	$(MAKE) -C miniport
 
 implib:
-	make -C display implib
-	make -C miniport implib
+	$(MAKE) -C display implib
+	$(MAKE) -C miniport implib
 	
 clean:
-	make -C display clean
-	make -C miniport clean
+	$(MAKE) -C display clean
+	$(MAKE) -C miniport clean
 
 dist:
-	make -C display dist
-	make -C miniport dist
+	$(MAKE) -C display dist
+	$(MAKE) -C miniport dist
 
 install:
-	make -C display install
-	make -C miniport install
+	$(MAKE) -C display install
+	$(MAKE) -C miniport install

@@ -71,17 +71,17 @@ endif
 
 
 wmc_directory_target:
-	make -C wmc wmc$(EXE_POSTFIX)
+	$(MAKE) -C wmc wmc$(EXE_POSTFIX)
 
 ifeq ($(HOST),mingw32-linux)
 clean:
-	make -C wmc clean
+	$(MAKE) -C wmc clean
 	rm mkconfig
 	rm $(TOOLS)
 endif
 ifeq ($(HOST),mingw32-windows)
 clean:
-	make -C wmc clean
+	$(MAKE) -C wmc clean
 	del *$(EXE_POSTFIX)
 endif
 

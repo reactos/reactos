@@ -144,19 +144,19 @@ dist: $(TOOLS_PATH)/rcopy$(EXE_POSTFIX) dist_clean dist_dirs \
 # System Applications
 #
 $(SYS_APPS): %:
-	make -C subsys/system/$*
+	$(MAKE) -C subsys/system/$*
 
 $(SYS_APPS:%=%_implib): %_implib:
-	make -C subsys/system/$* implib
+	$(MAKE) -C subsys/system/$* implib
 
 $(SYS_APPS:%=%_clean): %_clean:
-	make -C subsys/system/$* clean
+	$(MAKE) -C subsys/system/$* clean
 
 $(SYS_APPS:%=%_dist): %_dist:
-	make -C subsys/system/$* dist
+	$(MAKE) -C subsys/system/$* dist
 
 $(SYS_APPS:%=%_install): %_install:
-	make -C subsys/system/$* install
+	$(MAKE) -C subsys/system/$* install
 
 .PHONY: $(SYS_APPS) $(SYS_APPS:%=%_implib) $(SYS_APPS:%=%_clean) $(SYS_APPS:%=%_install) $(SYS_APPS:%=%_dist)
 
@@ -164,22 +164,22 @@ $(SYS_APPS:%=%_install): %_install:
 # System Services
 #
 $(SYS_SVC): %:
-	make -C services/$*
+	$(MAKE) -C services/$*
 
 $(SYS_SVC:%=%_depends): %_depends:
-	make -C services/$* depends
+	$(MAKE) -C services/$* depends
 
 $(SYS_SVC:%=%_implib): %_implib:
-	make -C services/$* implib
+	$(MAKE) -C services/$* implib
 
 $(SYS_SVC:%=%_clean): %_clean:
-	make -C services/$* clean
+	$(MAKE) -C services/$* clean
 
 $(SYS_SVC:%=%_dist): %_dist:
-	make -C services/$* dist
+	$(MAKE) -C services/$* dist
 
 $(SYS_SVC:%=%_install): %_install:
-	make -C services/$* install
+	$(MAKE) -C services/$* install
 
 .PHONY: $(SYS_SVC) $(SYS_SVC:%=%_depends) $(SYS_SVC:%=%_implib) $(SYS_SVC:%=%_clean) $(SYS_SVC:%=%_install) $(SYS_SVC:%=%_dist)
 
@@ -191,19 +191,19 @@ $(SYS_SVC:%=%_install): %_install:
 # Extra (optional system) Applications
 #
 $(APPS): %:
-	make -C apps/$*
+	$(MAKE) -C apps/$*
 
 $(APPS:%=%_implib): %_implib:
-	make -C apps/$* implib
+	$(MAKE) -C apps/$* implib
 
 $(APPS:%=%_clean): %_clean:
-	make -C apps/$* clean
+	$(MAKE) -C apps/$* clean
 
 $(APPS:%=%_dist): %_dist:
-	make -C apps/$* dist
+	$(MAKE) -C apps/$* dist
 
 $(APPS:%=%_install): %_install:
-	make -C apps/$* install
+	$(MAKE) -C apps/$* install
 
 .PHONY: $(APPS) $(APPS:%=%_implib) $(APPS:%=%_clean) $(APPS:%=%_install) $(APPS:%=%_dist)
 
@@ -212,22 +212,22 @@ $(APPS:%=%_install): %_install:
 # External ports and subsystem personalities
 #
 $(EXTERNALS): %:
-	make -C $(ROOT_PATH)/$*
+	$(MAKE) -C $(ROOT_PATH)/$*
 
 $(EXTERNALS:%=%_depends): %_depends:
-	make -C $(ROOT_PATH)/$* depends
+	$(MAKE) -C $(ROOT_PATH)/$* depends
 
 $(EXTERNALS:%=%_implib): %_implib:
-	make -C $(ROOT_PATH)/$* implib
+	$(MAKE) -C $(ROOT_PATH)/$* implib
 
 $(EXTERNALS:%=%_clean): %_clean:
-	make -C $(ROOT_PATH)/$* clean
+	$(MAKE) -C $(ROOT_PATH)/$* clean
 
 $(EXTERNALS:%=%_dist): %_dist:
-	make -C $(ROOT_PATH)/$* dist
+	$(MAKE) -C $(ROOT_PATH)/$* dist
 
 $(EXTERNALS:%=%_install): %_install:
-	make -C $(ROOT_PATH)/$* install
+	$(MAKE) -C $(ROOT_PATH)/$* install
 
 .PHONY: $(EXTERNALS) $(EXTERNALS:%=%_depends) $(EXTERNALS:%=%_implib) $(EXTERNALS:%=%_clean) $(EXTERNALS:%=%_install) $(EXTERNALS:%=%_dist)
 
@@ -236,12 +236,12 @@ $(EXTERNALS:%=%_install): %_install:
 # Tools
 #
 tools:
-	make -C tools
+	$(MAKE) -C tools
 
 tools_implib:
 
 tools_clean:
-	make -C tools clean
+	$(MAKE) -C tools clean
 
 tools_install:
 
@@ -294,24 +294,24 @@ dk_dist:
 # Interfaces
 #
 iface_native:
-	make -C iface/native
+	$(MAKE) -C iface/native
 
 iface_native_implib:
 
 iface_native_clean:
-	make -C iface/native clean
+	$(MAKE) -C iface/native clean
 
 iface_native_install:
 
 iface_native_dist:
 
 iface_additional:
-	make -C iface/addsys
+	$(MAKE) -C iface/addsys
 
 iface_additional_implib:
 
 iface_additional_clean:
-	make -C iface/addsys clean
+	$(MAKE) -C iface/addsys clean
 
 iface_additional_install:
 
@@ -326,19 +326,19 @@ iface_additional_dist:
 # Bus driver rules
 #
 $(BUS): %:
-	make -C drivers/bus/$*
+	$(MAKE) -C drivers/bus/$*
 
 $(BUS:%=%_implib): %_implib:
-	make -C drivers/bus/$* implib
+	$(MAKE) -C drivers/bus/$* implib
 
 $(BUS:%=%_clean): %_clean:
-	make -C drivers/bus/$* clean
+	$(MAKE) -C drivers/bus/$* clean
 
 $(BUS:%=%_install): %_install:
-	make -C drivers/bus/$* install
+	$(MAKE) -C drivers/bus/$* install
 
 $(BUS:%=%_dist): %_dist:
-	make -C drivers/bus/$* dist
+	$(MAKE) -C drivers/bus/$* dist
 
 .PHONY: $(BUS) $(BUS:%=%_implib) $(BUS:%=%_clean) \
         $(BUS:%=%_install) $(BUS:%=%_dist)
@@ -347,19 +347,19 @@ $(BUS:%=%_dist): %_dist:
 # Driver support libraries rules
 #
 $(DRIVERS_LIB): %:
-	make -C drivers/lib/$*
+	$(MAKE) -C drivers/lib/$*
 
 $(DRIVERS_LIB:%=%_implib): %_implib:
-	make -C drivers/lib/$* implib
+	$(MAKE) -C drivers/lib/$* implib
 
 $(DRIVERS_LIB:%=%_clean): %_clean:
-	make -C drivers/lib/$* clean
+	$(MAKE) -C drivers/lib/$* clean
 
 $(DRIVERS_LIB:%=%_install): %_install:
-	make -C drivers/lib/$* install
+	$(MAKE) -C drivers/lib/$* install
 
 $(DRIVERS_LIB:%=%_dist): %_dist:
-	make -C drivers/lib/$* dist
+	$(MAKE) -C drivers/lib/$* dist
 
 .PHONY: $(DRIVERS_LIB) $(DRIVERS_LIB:%=%_implib) $(DRIVERS_LIB:%=%_clean) \
         $(DRIVERS_LIB:%=%_install) $(DRIVERS_LIB:%=%_dist)
@@ -368,19 +368,19 @@ $(DRIVERS_LIB:%=%_dist): %_dist:
 # Device driver rules
 #
 $(DEVICE_DRIVERS): %:
-	make -C drivers/dd/$*
+	$(MAKE) -C drivers/dd/$*
 
 $(DEVICE_DRIVERS:%=%_implib): %_implib:
-	make -C drivers/dd/$* implib
+	$(MAKE) -C drivers/dd/$* implib
 
 $(DEVICE_DRIVERS:%=%_clean): %_clean:
-	make -C drivers/dd/$* clean
+	$(MAKE) -C drivers/dd/$* clean
 
 $(DEVICE_DRIVERS:%=%_install): %_install:
-	make -C drivers/dd/$* install
+	$(MAKE) -C drivers/dd/$* install
 
 $(DEVICE_DRIVERS:%=%_dist): %_dist:
-	make -C drivers/dd/$* dist
+	$(MAKE) -C drivers/dd/$* dist
 
 .PHONY: $(DEVICE_DRIVERS) $(DEVICE_DRIVERS:%=%_implib) $(DEVICE_DRIVERS:%=%_clean) \
         $(DEVICE_DRIVERS:%=%_install) $(DEVICE_DRIVERS:%=%_dist)
@@ -389,37 +389,37 @@ $(DEVICE_DRIVERS:%=%_dist): %_dist:
 # Input driver rules
 #
 $(INPUT_DRIVERS): %:
-	make -C drivers/input/$*
+	$(MAKE) -C drivers/input/$*
 
 $(INPUT_DRIVERS:%=%_implib): %_implib:
-	make -C drivers/input/$* implib
+	$(MAKE) -C drivers/input/$* implib
 
 $(INPUT_DRIVERS:%=%_clean): %_clean:
-	make -C drivers/input/$* clean
+	$(MAKE) -C drivers/input/$* clean
 
 $(INPUT_DRIVERS:%=%_install): %_install:
-	make -C drivers/input/$* install
+	$(MAKE) -C drivers/input/$* install
 
 $(INPUT_DRIVERS:%=%_dist): %_dist:
-	make -C drivers/input/$* dist
+	$(MAKE) -C drivers/input/$* dist
 
 .PHONY: $(INPUT_DRIVERS) $(INPUT_DRIVERS:%=%_implib) $(INPUT_DRIVERS:%=%_clean)\
         $(INPUT_DRIVERS:%=%_install) $(INPUT_DRIVERS:%=%_dist)
 
 $(FS_DRIVERS): %:
-	make -C drivers/fs/$*
+	$(MAKE) -C drivers/fs/$*
 
 $(FS_DRIVERS:%=%_implib): %_implib:
-	make -C drivers/fs/$* implib
+	$(MAKE) -C drivers/fs/$* implib
 
 $(FS_DRIVERS:%=%_clean): %_clean:
-	make -C drivers/fs/$* clean
+	$(MAKE) -C drivers/fs/$* clean
 
 $(FS_DRIVERS:%=%_install): %_install:
-	make -C drivers/fs/$* install
+	$(MAKE) -C drivers/fs/$* install
 
 $(FS_DRIVERS:%=%_dist): %_dist:
-	make -C drivers/fs/$* dist
+	$(MAKE) -C drivers/fs/$* dist
 
 .PHONY: $(FS_DRIVERS) $(FS_DRIVERS:%=%_implib) $(FS_DRIVERS:%=%_clean) \
         $(FS_DRIVERS:%=%_install) $(FS_DRIVERS:%=%_dist)
@@ -428,37 +428,37 @@ $(FS_DRIVERS:%=%_dist): %_dist:
 # Network driver rules
 #
 $(NET_DRIVERS): %:
-	make -C drivers/net/$*
+	$(MAKE) -C drivers/net/$*
 
 $(NET_DRIVERS:%=%_implib): %_implib:
-	make -C drivers/net/$* implib
+	$(MAKE) -C drivers/net/$* implib
 
 $(NET_DRIVERS:%=%_clean): %_clean:
-	make -C drivers/net/$* clean
+	$(MAKE) -C drivers/net/$* clean
 
 $(NET_DRIVERS:%=%_install): %_install:
-	make -C drivers/net/$* install
+	$(MAKE) -C drivers/net/$* install
 
 $(NET_DRIVERS:%=%_dist): %_dist:
-	make -C drivers/net/$* dist
+	$(MAKE) -C drivers/net/$* dist
 
 .PHONY: $(NET_DRIVERS) $(NET_DRIVERS:%=%_implib) $(NET_DRIVERS:%=%_clean) \
         $(NET_DRIVERS:%=%_install) $(NET_DRIVERS:%=%_dist)
 
 $(NET_DEVICE_DRIVERS): %:
-	make -C drivers/net/dd/$*
+	$(MAKE) -C drivers/net/dd/$*
 
 $(NET_DEVICE_DRIVERS:%=%_implib): %_implib:
-	make -C drivers/net/dd/$* implib
+	$(MAKE) -C drivers/net/dd/$* implib
 
 $(NET_DEVICE_DRIVERS:%=%_clean): %_clean:
-	make -C drivers/net/dd/$* clean
+	$(MAKE) -C drivers/net/dd/$* clean
 
 $(NET_DEVICE_DRIVERS:%=%_install): %_install:
-	make -C drivers/net/dd/$* install
+	$(MAKE) -C drivers/net/dd/$* install
 
 $(NET_DEVICE_DRIVERS:%=%_dist): %_dist:
-	make -C drivers/net/dd/$* dist
+	$(MAKE) -C drivers/net/dd/$* dist
 
 .PHONY: $(NET_DEVICE_DRIVERS) $(NET_DEVICE_DRIVERS:%=%_clean) $(NET_DEVICE_DRIVERS:%=%_implib) \
         $(NET_DEVICE_DRIVERS:%=%_install) $(NET_DEVICE_DRIVERS:%=%_dist)
@@ -467,19 +467,19 @@ $(NET_DEVICE_DRIVERS:%=%_dist): %_dist:
 # storage driver rules
 #
 $(STORAGE_DRIVERS): %:
-	make -C drivers/storage/$*
+	$(MAKE) -C drivers/storage/$*
 
 $(STORAGE_DRIVERS:%=%_implib): %_implib:
-	make -C drivers/storage/$* implib
+	$(MAKE) -C drivers/storage/$* implib
 
 $(STORAGE_DRIVERS:%=%_clean): %_clean:
-	make -C drivers/storage/$* clean
+	$(MAKE) -C drivers/storage/$* clean
 
 $(STORAGE_DRIVERS:%=%_install): %_install:
-	make -C drivers/storage/$* install
+	$(MAKE) -C drivers/storage/$* install
 
 $(STORAGE_DRIVERS:%=%_dist): %_dist:
-	make -C drivers/storage/$* dist
+	$(MAKE) -C drivers/storage/$* dist
 
 .PHONY: $(STORAGE_DRIVERS) $(STORAGE_DRIVERS:%=%_clean) \
         $(STORAGE_DRIVERS:%=%_install) $(STORAGE_DRIVERS:%=%_dist)
@@ -489,18 +489,18 @@ $(STORAGE_DRIVERS:%=%_dist): %_dist:
 #
 
 $(LOADERS): %:
-	make -C loaders/$*
+	$(MAKE) -C loaders/$*
 
 $(LOADERS:%=%_implib): %_implib:
 
 $(LOADERS:%=%_clean): %_clean:
-	make -C loaders/$* clean
+	$(MAKE) -C loaders/$* clean
 
 $(LOADERS:%=%_install): %_install:
-	make -C loaders/$* install
+	$(MAKE) -C loaders/$* install
 
 $(LOADERS:%=%_dist): %_dist:
-	make -C loaders/$* dist
+	$(MAKE) -C loaders/$* dist
 
 .PHONY: $(LOADERS) $(LOADERS:%=%_implib) $(LOADERS:%=%_clean) $(LOADERS:%=%_install) \
         $(LOADERS:%=%_dist)
@@ -510,19 +510,19 @@ $(LOADERS:%=%_dist): %_dist:
 #
 
 ntoskrnl:
-	make -C ntoskrnl
+	$(MAKE) -C ntoskrnl
 
 ntoskrnl_implib:
-	make -C ntoskrnl implib
+	$(MAKE) -C ntoskrnl implib
 
 ntoskrnl_clean:
-	make -C ntoskrnl clean
+	$(MAKE) -C ntoskrnl clean
 
 ntoskrnl_install:
-	make -C ntoskrnl install
+	$(MAKE) -C ntoskrnl install
 
 ntoskrnl_dist:
-	make -C ntoskrnl dist
+	$(MAKE) -C ntoskrnl dist
 
 .PHONY: ntoskrnl ntoskrnl_implib ntoskrnl_clean ntoskrnl_install ntoskrnl_dist
 
@@ -531,19 +531,19 @@ ntoskrnl_dist:
 #
 
 hallib:
-	make -C hal/hal
+	$(MAKE) -C hal/hal
 
 hallib_implib:
-	make -C hal/hal implib
+	$(MAKE) -C hal/hal implib
 
 hallib_clean:
-	make -C hal/hal clean
+	$(MAKE) -C hal/hal clean
 
 hallib_install:
-	make -C hal/hal install
+	$(MAKE) -C hal/hal install
 
 hallib_dist:
-	make -C hal/hal dist
+	$(MAKE) -C hal/hal dist
 
 .PHONY: hallib hallib_implib hallib_clean hallib_install hallib_dist
 
@@ -552,19 +552,19 @@ hallib_dist:
 #
 
 $(HALS): %:
-	make -C hal/$*
+	$(MAKE) -C hal/$*
 
 $(HALS:%=%_implib): %_implib:
-	make -C hal/$* implib
+	$(MAKE) -C hal/$* implib
 
 $(HALS:%=%_clean): %_clean:
-	make -C hal/$* clean
+	$(MAKE) -C hal/$* clean
 
 $(HALS:%=%_install): %_install:
-	make -C hal/$* install
+	$(MAKE) -C hal/$* install
 
 $(HALS:%=%_dist): %_dist:
-	make -C hal/$* dist
+	$(MAKE) -C hal/$* dist
 
 .PHONY: $(HALS) $(HALS:%=%_implib) $(HALS:%=%_clean) $(HALS:%=%_install) $(HALS:%=%_dist)
 
@@ -573,22 +573,22 @@ $(HALS:%=%_dist): %_dist:
 #
 
 $(DLLS): %:
-	make -C lib/$*
+	$(MAKE) -C lib/$*
 
 $(DLLS:%=%_depends): %_depends:
-	make -C lib/$* depends
+	$(MAKE) -C lib/$* depends
 
 $(DLLS:%=%_implib): %_implib:
-	make -C lib/$* implib
+	$(MAKE) -C lib/$* implib
 
 $(DLLS:%=%_clean): %_clean:
-	make -C lib/$* clean
+	$(MAKE) -C lib/$* clean
 
 $(DLLS:%=%_install): %_install:
-	make -C lib/$* install
+	$(MAKE) -C lib/$* install
 
 $(DLLS:%=%_dist): %_dist:
-	make -C lib/$* dist
+	$(MAKE) -C lib/$* dist
 
 .PHONY: $(DLLS) $(DLLS:%=%_depends) $(DLLS:%=%_implib) $(DLLS:%=%_clean) $(DLLS:%=%_install) $(DLLS:%=%_dist)
 
@@ -597,22 +597,22 @@ $(DLLS:%=%_dist): %_dist:
 #
 
 $(SUBSYS): %:
-	make -C subsys/$*
+	$(MAKE) -C subsys/$*
 
 $(SUBSYS:%=%_depends): %_depends:
-	make -C subsys/$* depends
+	$(MAKE) -C subsys/$* depends
 
 $(SUBSYS:%=%_implib): %_implib:
-	make -C subsys/$* implib
+	$(MAKE) -C subsys/$* implib
 
 $(SUBSYS:%=%_clean): %_clean:
-	make -C subsys/$* clean
+	$(MAKE) -C subsys/$* clean
 
 $(SUBSYS:%=%_install): %_install:
-	make -C subsys/$* install
+	$(MAKE) -C subsys/$* install
 
 $(SUBSYS:%=%_dist): %_dist:
-	make -C subsys/$* dist
+	$(MAKE) -C subsys/$* dist
 
 .PHONY: $(SUBSYS) $(SUBSYS:%=%_depends) $(SUBSYS:%=%_implib) $(SUBSYS:%=%_clean) $(SUBSYS:%=%_install) \
         $(SUBSYS:%=%_dist)

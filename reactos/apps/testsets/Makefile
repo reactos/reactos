@@ -59,19 +59,19 @@ dist:	$(TEST_SETS:%=%_dist) \
 # Testset Applications
 #
 $(TEST_SETS): %:
-	make -C $*
+	$(MAKE) -C $*
 
 $(TEST_SETS:%=%_implib): %_implib:
-	make -C $* implib
+	$(MAKE) -C $* implib
 
 $(TEST_SETS:%=%_clean): %_clean:
-	make -C $* clean
+	$(MAKE) -C $* clean
 
 $(TEST_SETS:%=%_dist): %_dist:
-	make -C $* dist
+	$(MAKE) -C $* dist
 
 $(TEST_SETS:%=%_install): %_install:
-	make -C $* install
+	$(MAKE) -C $* install
 
 .PHONY: $(TEST_SETS) $(TEST_SETS:%=%_implib) $(TEST_SETS:%=%_clean) $(TEST_SETS:%=%_install) $(TEST_SETS:%=%_dist)
 
@@ -80,19 +80,19 @@ $(TEST_SETS:%=%_install): %_install:
 # Kernel32 Test Applications
 #
 $(TEST_KERNEL32): %:
-	make -C kernel32/$*
+	$(MAKE) -C kernel32/$*
 
 $(TEST_KERNEL32:%=%_implib): %_implib:
-	make -C kernel32/$* implib
+	$(MAKE) -C kernel32/$* implib
 
 $(TEST_KERNEL32:%=%_clean): %_clean:
-	make -C kernel32/$* clean
+	$(MAKE) -C kernel32/$* clean
 
 $(TEST_KERNEL32:%=%_dist): %_dist:
-	make -C kernel32/$* dist
+	$(MAKE) -C kernel32/$* dist
 
 $(TEST_KERNEL32:%=%_install): %_install:
-	make -C kernel32/$* install
+	$(MAKE) -C kernel32/$* install
 
 .PHONY: $(TEST_KERNEL32) $(TEST_KERNEL32:%=%_implib) $(TEST_KERNEL32:%=%_clean) $(TEST_KERNEL32:%=%_install) $(TEST_KERNEL32:%=%_dist)
 
@@ -101,19 +101,19 @@ $(TEST_KERNEL32:%=%_install): %_install:
 # msvcrt Test Applications
 #
 $(TEST_MSVCRT): %:
-	make -C msvcrt/$*
+	$(MAKE) -C msvcrt/$*
 
 $(TEST_MSVCRT:%=%_implib): %_implib:
-	make -C msvcrt/$* implib
+	$(MAKE) -C msvcrt/$* implib
 
 $(TEST_MSVCRT:%=%_clean): %_clean:
-	make -C msvcrt/$* clean
+	$(MAKE) -C msvcrt/$* clean
 
 $(TEST_MSVCRT:%=%_dist): %_dist:
-	make -C msvcrt/$* dist
+	$(MAKE) -C msvcrt/$* dist
 
 $(TEST_MSVCRT:%=%_install): %_install:
-	make -C msvcrt/$* install
+	$(MAKE) -C msvcrt/$* install
 
 .PHONY: $(TEST_MSVCRT) $(TEST_MSVCRT:%=%_implib) $(TEST_MSVCRT:%=%_clean) $(TEST_MSVCRT:%=%_install) $(TEST_MSVCRT:%=%_dist)
 
@@ -122,19 +122,19 @@ $(TEST_MSVCRT:%=%_install): %_install:
 # COM Test Applications
 #
 $(TEST_COM): %:
-	make -C com/$*
+	$(MAKE) -C com/$*
 
 $(TEST_COM:%=%_implib): %_implib:
-	make -C com/$* implib
+	$(MAKE) -C com/$* implib
 
 $(TEST_COM:%=%_clean): %_clean:
-	make -C com/$* clean
+	$(MAKE) -C com/$* clean
 
 $(TEST_COM:%=%_dist): %_dist:
-	make -C com/$* dist
+	$(MAKE) -C com/$* dist
 
 $(TEST_COM:%=%_install): %_install:
-	make -C com/$* install
+	$(MAKE) -C com/$* install
 
 .PHONY: $(TEST_COM) $(TEST_COM:%=%_implib) $(TEST_COM:%=%_clean) $(TEST_COM:%=%_install) $(TEST_COM:%=%_dist)
 
@@ -143,19 +143,19 @@ $(TEST_COM:%=%_install): %_install:
 # SEH Test Applications
 #
 $(TEST_SEH): %:
-	make -C seh/$*
+	$(MAKE) -C seh/$*
 
 $(TEST_SEH:%=%_implib): %_implib:
-	make -C seh/$* implib
+	$(MAKE) -C seh/$* implib
 
 $(TEST_SEH:%=%_clean): %_clean:
-	make -C seh/$* clean
+	$(MAKE) -C seh/$* clean
 
 $(TEST_SEH:%=%_dist): %_dist:
-	make -C seh/$* dist
+	$(MAKE) -C seh/$* dist
 
 $(TEST_SEH:%=%_install): %_install:
-	make -C seh/$* install
+	$(MAKE) -C seh/$* install
 
 .PHONY: $(TEST_SEH) $(TEST_SEH:%=%_implib) $(TEST_SEH:%=%_clean) $(TEST_SEH:%=%_install) $(TEST_SEH:%=%_dist)
 
@@ -164,19 +164,19 @@ $(TEST_SEH:%=%_install): %_install:
 # Regression Test Applications
 #
 $(TEST_REGRESSIONS): %:
-	make -C regres/$*
+	$(MAKE) -C regres/$*
 
 $(TEST_REGRESSIONS:%=%_implib): %_implib:
-	make -C regres/$* implib
+	$(MAKE) -C regres/$* implib
 
 $(TEST_REGRESSIONS:%=%_clean): %_clean:
-	make -C regres/$* clean
+	$(MAKE) -C regres/$* clean
 
 $(TEST_REGRESSIONS:%=%_dist): %_dist:
-	make -C regres/$* dist
+	$(MAKE) -C regres/$* dist
 
 $(TEST_REGRESSIONS:%=%_install): %_install:
-	make -C regres/$* install
+	$(MAKE) -C regres/$* install
 
 .PHONY: $(TEST_REGRESSIONS) $(TEST_REGRESSIONS:%=%_implib) $(TEST_REGRESSIONS:%=%_clean) $(TEST_REGRESSIONS:%=%_install) $(TEST_REGRESSIONS:%=%_dist)
 

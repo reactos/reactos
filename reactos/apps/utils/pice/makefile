@@ -1,21 +1,21 @@
-# $Id: makefile,v 1.1 2002/02/10 02:01:31 chorns Exp $
+# $Id: makefile,v 1.2 2003/02/28 22:51:16 gvg Exp $
 
 all:
-	make -C loader
-	make -C module
+	$(MAKE) -C loader
+	$(MAKE) -C module
 
 implib:
-	make -C loader implib
-	make -C module implib
+	$(MAKE) -C loader implib
+	$(MAKE) -C module implib
 	
 clean:
-	make -C loader clean
-	make -C module clean
+	$(MAKE) -C loader clean
+	$(MAKE) -C module clean
 
 dist:
-	make -C loader dist
-	make -C module dist
+	$(MAKE) -C loader dist
+	$(MAKE) -C module dist
 
 install:
-	make -C loader install
-	make -C module install
+	$(MAKE) -C loader install
+	$(MAKE) -C module install

@@ -37,19 +37,19 @@ dist:	$(UTIL_APPS:%=%_dist) \
 # Utility Applications
 #
 $(UTIL_APPS): %:
-	make -C $*
+	$(MAKE) -C $*
 
 $(UTIL_APPS:%=%_implib): %_implib:
-	make -C $* implib
+	$(MAKE) -C $* implib
 
 $(UTIL_APPS:%=%_clean): %_clean:
-	make -C $* clean
+	$(MAKE) -C $* clean
 
 $(UTIL_APPS:%=%_dist): %_dist:
-	make -C $* dist
+	$(MAKE) -C $* dist
 
 $(UTIL_APPS:%=%_install): %_install:
-	make -C $* install
+	$(MAKE) -C $* install
 
 .PHONY: $(UTIL_APPS) $(UTIL_APPS:%=%_implib) $(UTIL_APPS:%=%_clean) $(UTIL_APPS:%=%_install) $(UTIL_APPS:%=%_dist)
 
@@ -58,19 +58,19 @@ $(UTIL_APPS:%=%_install): %_install:
 # GUI Utility Applications
 #
 $(UTIL_NET_APPS): %:
-	make -C net/$*
+	$(MAKE) -C net/$*
 
 $(UTIL_NET_APPS:%=%_implib): %_implib:
-	make -C net/$* implib
+	$(MAKE) -C net/$* implib
 
 $(UTIL_NET_APPS:%=%_clean): %_clean:
-	make -C net/$* clean
+	$(MAKE) -C net/$* clean
 
 $(UTIL_NET_APPS:%=%_dist): %_dist:
-	make -C net/$* dist
+	$(MAKE) -C net/$* dist
 
 $(UTIL_NET_APPS:%=%_install): %_install:
-	make -C net/$* install
+	$(MAKE) -C net/$* install
 
 .PHONY: $(UTIL_NET_APPS) $(UTIL_NET_APPS:%=%_implib) $(UTIL_NET_APPS:%=%_clean) $(UTIL_NET_APPS:%=%_install) $(UTIL_NET_APPS:%=%_dist)
 

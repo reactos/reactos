@@ -50,7 +50,7 @@ endif
 
 #FIXME: zlib should be compiled and installed in the SDK by the master makefile
 $(ZLIB_PATH)/zlib.a:
-	make -C $(ZLIB_PATH) -f makefile.reactos
+	$(MAKE) -C $(ZLIB_PATH) -f makefile.reactos
 
 $(TARGET).exe: $(OBJECTS) $(ZLIB_PATH)/zlib.a
 	$(CC) $(OBJECTS) -lstdc++ -o $(TARGET).exe
