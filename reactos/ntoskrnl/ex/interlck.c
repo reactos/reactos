@@ -1,4 +1,4 @@
-/* $Id: interlck.c,v 1.13 2004/06/23 21:01:27 ion Exp $
+/* $Id: interlck.c,v 1.14 2004/06/23 21:37:06 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,7 +13,8 @@
 
 #include <ddk/ntddk.h>
 
-
+#define NDEBUG
+#include <internal/debug.h>
 /* FUNCTIONS *****************************************************************/
 
 #ifdef ExInterlockedDecrementLong
