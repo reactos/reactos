@@ -1,4 +1,4 @@
-/* $Id: exception.c,v 1.4 2002/11/14 18:21:07 chorns Exp $
+/* $Id: exception.c,v 1.5 2003/04/05 22:20:49 guido Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -321,11 +321,12 @@ RtlUnwind(PEXCEPTION_REGISTRATION RegistrationFrame,
  
   DPRINT("ERHead is 0x%X\n", ERHead);
 
+  pExceptRec = &TempER;
+
   if (ExceptionRecord == NULL) // The normal case
   {
-	DPRINT("ExceptionRecord == NULL (normal)\n");
+    DPRINT("ExceptionRecord == NULL (normal)\n");
 
-    pExceptRec = &TempER;
     pExceptRec->ExceptionFlags = 0;
     pExceptRec->ExceptionCode = STATUS_UNWIND;
     pExceptRec->ExceptionRecord = NULL;
@@ -342,11 +343,11 @@ RtlUnwind(PEXCEPTION_REGISTRATION RegistrationFrame,
   DPRINT("ExceptionFlags == 0x%x:\n", pExceptRec->ExceptionFlags);
   if (pExceptRec->ExceptionFlags & EXCEPTION_UNWINDING)
   {
-	  DPRINT("  * EXCEPTION_UNWINDING (0x%x)\n", EXCEPTION_UNWINDING);
+    DPRINT("  * EXCEPTION_UNWINDING (0x%x)\n", EXCEPTION_UNWINDING);
   }
   if (pExceptRec->ExceptionFlags & EXCEPTION_EXIT_UNWIND)
   {
-	  DPRINT("  * EXCEPTION_EXIT_UNWIND (0x%x)\n", EXCEPTION_EXIT_UNWIND);
+    DPRINT("  * EXCEPTION_EXIT_UNWIND (0x%x)\n", EXCEPTION_EXIT_UNWIND);
   }
 #endif /* NDEBUG */
 

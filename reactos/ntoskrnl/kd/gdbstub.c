@@ -400,7 +400,7 @@ GspHex2Mem (PCHAR Buffer,
   ULONG countinpage;
   ULONG i;
   CHAR ch;
-  ULONG oldprot;
+  ULONG oldprot = 0;
 
   current = Address;
   while ( current < Address + Count )
