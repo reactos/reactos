@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: filesup.c,v 1.9 2003/12/01 18:28:54 navaraf Exp $
+/* $Id: filesup.c,v 1.10 2004/01/18 22:34:40 hbirr Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/filesup.c
@@ -54,6 +54,20 @@ CreateDirectory(PWCHAR DirectoryName)
 
   RtlCreateUnicodeString(&PathName,
 			 DirectoryName);
+  if (PathName.Length > sizeof(WCHAR) &&
+      PathName.Buffer[PathName.Length / sizeof(WCHAR) - 2] == L'\\' &&
+      PathName.Buffer[PathName.Length / sizeof(WCHAR) - 1] == L'.')
+    {
+       PathName.Length -= sizeof(WCHAR);
+       PathName.Buffer[PathName.Length / sizeof(WCHAR)] = 0;
+    }
+      
+  if (PathName.Length > sizeof(WCHAR) && 
+      PathName.Buffer[PathName.Length / sizeof(WCHAR) - 1] == L'\\')
+    {
+      PathName.Length -= sizeof(WCHAR);
+      PathName.Buffer[PathName.Length / sizeof(WCHAR)] = 0;
+   }
 
   InitializeObjectAttributes(&ObjectAttributes,
 			     &PathName,
