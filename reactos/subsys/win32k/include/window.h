@@ -3,6 +3,7 @@
 
 struct _PROPERTY;
 struct _WINDOW_OBJECT;
+typedef struct _WINDOW_OBJECT *PWINDOW_OBJECT;
 
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -92,7 +93,7 @@ typedef struct _WINDOW_OBJECT
   PETHREAD OwnerThread;
   HWND hWndOwner; /* handle to the owner window (wine doesn't use pointer, for unk. reason)*/
   HWND hWndLastPopup; /* handle to last active popup window (wine doesn't use pointer, for unk. reason)*/
-} WINDOW_OBJECT, *PWINDOW_OBJECT;
+} WINDOW_OBJECT; /* PWINDOW_OBJECT already declared at top of file */
 
 /* Window flags. */
 #define WINDOWOBJECT_NEED_SIZE            (0x00000001)

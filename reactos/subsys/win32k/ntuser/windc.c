@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.33 2003/10/20 17:57:05 gvg Exp $
+/* $Id: windc.c,v 1.34 2003/10/22 13:34:25 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -637,22 +637,21 @@ DceFreeDCE(PDCE dce)
  * Remove owned DCE and reset unreleased cache DCEs.
  */
 void FASTCALL
-DceFreeWindowDCE(HWND hwnd)
+DceFreeWindowDCE(PWINDOW_OBJECT Window)
 {
   DCE *pDCE;
-  PWINDOW_OBJECT pWnd = IntGetWindowObject(hwnd);
 
   pDCE = FirstDce;
   while (pDCE)
     {
-      if (pDCE->hwndCurrent == hwnd)
+      if (pDCE->hwndCurrent == Window->Self)
         {
-          if (pDCE == pWnd->Dce) /* owned or Class DCE*/
+          if (pDCE == Window->Dce) /* owned or Class DCE*/
             {
-              if (pWnd->Class->style & CS_OWNDC) /* owned DCE*/
+              if (Window->Class->style & CS_OWNDC) /* owned DCE*/
                 {
                   pDCE = DceFreeDCE(pDCE);
-                  pWnd->Dce = NULL;
+                  Window->Dce = NULL;
                   continue;
                 }
               else if (pDCE->DCXFlags & (DCX_INTERSECTRGN | DCX_EXCLUDERGN))	/* Class DCE*/
@@ -672,7 +671,7 @@ DceFreeWindowDCE(HWND hwnd)
                    * We should change this to DPRINT when ReactOS is more stable
                    * (for 1.0?).
                    */
-                  DPRINT1("[%p] GetDC() without ReleaseDC()!\n", hwnd);
+                  DPRINT1("[%p] GetDC() without ReleaseDC()!\n", Window->Self);
                   DceReleaseDC(pDCE);
                 }
 
@@ -683,8 +682,6 @@ DceFreeWindowDCE(HWND hwnd)
         }
       pDCE = pDCE->next;
     }
-
-  IntReleaseWindowObject(pWnd);
 }
 
 /* EOF */

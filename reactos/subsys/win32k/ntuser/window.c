@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.115 2003/10/18 10:35:52 navaraf Exp $
+/* $Id: window.c,v 1.116 2003/10/22 13:34:25 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -101,6 +101,26 @@ inline BOOL IntIsDesktopWindow(PWINDOW_OBJECT Wnd)
 }
 
 
+static PWINDOW_OBJECT FASTCALL
+IntGetProcessWindowObject(PW32PROCESS ProcessData, HWND hWnd)
+{
+  PWINDOW_OBJECT WindowObject;
+  NTSTATUS Status;
+
+  Status = 
+    ObmReferenceObjectByHandle(ProcessData->WindowStation->
+	    		       HandleTable,
+			       hWnd,
+			       otWindow,
+			       (PVOID*)&WindowObject);
+  if (!NT_SUCCESS(Status))
+    {
+      return(NULL);
+    }
+  return(WindowObject);
+}
+
+
 static BOOL BuildChildWindowArray(PWINDOW_OBJECT Window, HWND **Children, unsigned *NumChildren)
 {
   unsigned Index;
@@ -172,7 +192,7 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
     }
   for (Index = NumChildren; 0 < Index; Index--)
     {
-      Child = IntGetWindowObject(Children[Index - 1]);
+      Child = IntGetProcessWindowObject(ProcessData, Children[Index - 1]);
       if (NULL != Child)
 	{
 	  if (IntWndBelongsToThread(Child, ThreadData))
@@ -243,7 +263,7 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
       Window->hSysMenu = 0;
     }
 #endif
-  DceFreeWindowDCE(Window->Self);    /* Always do this to catch orphaned DCs */
+  DceFreeWindowDCE(Window);    /* Always do this to catch orphaned DCs */
 #if 0 /* FIXME */
   WINPROC_FreeProc(Window->winproc, WIN_PROC_WINDOW);
   CLASS_RemoveWindow(Window->Class);
@@ -540,20 +560,7 @@ IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert, BOOL RetMenu)
 PWINDOW_OBJECT FASTCALL
 IntGetWindowObject(HWND hWnd)
 {
-  PWINDOW_OBJECT WindowObject;
-  NTSTATUS Status;
-
-  Status = 
-    ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->
-	    		       HandleTable,
-			       hWnd,
-			       otWindow,
-			       (PVOID*)&WindowObject);
-  if (!NT_SUCCESS(Status))
-    {
-      return(NULL);
-    }
-  return(WindowObject);
+  return IntGetProcessWindowObject(PsGetWin32Process(), hWnd);
 }
 
 

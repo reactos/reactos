@@ -3,7 +3,10 @@
 
 /* Ported from WINE by Jason Filby */
 
+typedef struct tagDCE *PDCE;
+
 #include <user32/wininternal.h>
+#include <include/window.h>
 
 typedef HANDLE HDCE;
 
@@ -31,8 +34,7 @@ typedef struct tagDCE
     DCE_TYPE     type;
     DWORD        DCXFlags;
     HANDLE       Self;
-} DCE, *PDCE;
-
+} DCE;  /* PDCE already declared at top of file */
 
 #define  DCEOBJ_AllocDCE()  \
   ((HDCE) GDIOBJ_AllocObj (sizeof (DCE), GDI_OBJECT_TYPE_DCE, (GDICLEANUPPROC) DCE_InternalDelete))
@@ -50,6 +52,6 @@ BOOL FASTCALL DCE_InvalidateDCE(HWND, const PRECTL);
 BOOL FASTCALL DCE_InternalDelete(PDCE dce);
 HWND FASTCALL IntWindowFromDC(HDC hDc);
 PDCE FASTCALL DceFreeDCE(PDCE dce);
-void FASTCALL DceFreeWindowDCE(HWND hwnd);
+void FASTCALL DceFreeWindowDCE(PWINDOW_OBJECT Window);
 
 #endif
