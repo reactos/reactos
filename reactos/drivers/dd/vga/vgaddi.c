@@ -3,9 +3,12 @@
  * 
  */
 
-#include <winddi.h>
+#include <ddk/ntddk.h>
+#include <ddk/winddi.h>
 
 #include "vgaddi.h"
+
+#define  DBG_PREFIX  "VGADDI: "
 
 VOID VGADDIAssertMode(IN DHPDEV  DPev, 
                       IN BOOL  Enable); 
@@ -150,7 +153,7 @@ DHPDEV VGADDIEnablePDEV(IN DEVMODEW  *DM,
   PDev = EngAllocMem(FL_ZERO_MEMORY, sizeof(PDEV), ALLOC_TAG);
   if (PDev == NULL)
     {
-      EngDebugPrint(1, "EngAllocMem failed for PDEV\n");
+      EngDebugPrint(DBG_PREFIX, "EngAllocMem failed for PDEV\n", 0);
       
       return  NULL;
     }
@@ -175,13 +178,33 @@ VOID VGADDICompletePDEV(IN DHPDEV  PDev,
 
 
 VOID VGADDIAssertMode(IN DHPDEV  DPev, 
-                      IN BOOL  Enable); 
-VOID VGADDIDisablePDEV(IN DHPDEV PDev); 
-VOID VGADDIDisableSurface(IN DHPDEV PDev); 
-HSURF VGADDIEnableSurface(IN DHPDEV  PDev);
+                      IN BOOL  Enable)
+{
+  EngDebugPrint(DBG_PREFIX, "UNIMPLEMENTED\n", 0);
+}
+
+VOID VGADDIDisablePDEV(IN DHPDEV PDev)
+{
+  EngDebugPrint(DBG_PREFIX, "UNIMPLEMENTED\n", 0);
+}
+
+VOID VGADDIDisableSurface(IN DHPDEV PDev)
+{
+  EngDebugPrint(DBG_PREFIX, "UNIMPLEMENTED\n", 0);
+}
+
+HSURF VGADDIEnableSurface(IN DHPDEV  PDev)
+{
+  EngDebugPrint(DBG_PREFIX, "UNIMPLEMENTED\n", 0);
+}
+
 ULONG VGADDIGetModes(IN HANDLE Driver,
                      IN ULONG DataSize,
-                     OUT PDEVMODEW DM);
+                     OUT PDEVMODEW DM)
+{
+  EngDebugPrint(DBG_PREFIX, "UNIMPLEMENTED\n", 0);
+}
+
 
 
 

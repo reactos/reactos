@@ -77,17 +77,17 @@ DriverEntry(IN PVOID Context1,
   VideoPortZeroMemory(&InitData, sizeof InitData);
   
   /* FIXME: Fill in InitData members  */
-  InitData->StartingDeviceNumber = 0;
+  InitData.StartingDeviceNumber = 0;
   
   /*  Export driver entry points...  */
-  InitData->HwVidFindAdapter = VGAFindAdapter;
-  InitData->HwVidInitialize = VGAInitialize;
-  InitData->HwVidStartIO = VGAStartIO;
-  /* InitData->HwVidInterrupt = VGAInterrupt;  */
-  /* InitData->HwVidResetHw = VGAResetHw;  */
-  /* InitData->HwVidTimer = VGATimer;  */
+  InitData.HwFindAdapter = VGAFindAdapter;
+  InitData.HwInitialize = VGAInitialize;
+  InitData.HwStartIO = VGAStartIO;
+  /* InitData.HwInterrupt = VGAInterrupt;  */
+  /* InitData.HwResetHw = VGAResetHw;  */
+  /* InitData.HwTimer = VGATimer;  */
   
-  return  VideoPortInitialize(Context1, Context2, InitData, NULL);
+  return  VideoPortInitialize(Context1, Context2, &InitData, NULL);
 }
 
 //    VGAFindAdapter
@@ -247,7 +247,7 @@ VGAStartIO(PVOID  DeviceExtension,
       break;
       
     case  IOCTL_VIDEO_SHARE_VIDEO_MEMORY:
-      VGAShareVideoMemory((PVIDEO_SHAR_MEMORY) RequestPacket->InputBuffer,
+      VGAShareVideoMemory((PVIDEO_SHARE_MEMORY) RequestPacket->InputBuffer,
                           (PVIDEO_MEMORY_INFORMATION) RequestPacket->OutputBuffer,
                           &RequestPacket->StatusBlock);
       break;
@@ -302,7 +302,7 @@ VGAStartIO(PVOID  DeviceExtension,
 #endif    
       
     default:
-      RequestPacket->StatusBlock.Status = ERROR_INVALID_FUNCTION;
+      RequestPacket->StatusBlock->Status = ERROR_INVALID_FUNCTION;
       break;
     }
   
@@ -366,24 +366,64 @@ static VOID VGATimer(PVOID  DeviceExtension);
 
 VOID  VGAMapVideoMemory(IN PVIDEO_MEMORY  RequestedAddress,
                         OUT PVIDEO_MEMORY_INFORMATION  MapInformation,
-                        OUT PSTATUS_BLOCK  StatusBlock);
+                        OUT PSTATUS_BLOCK  StatusBlock)
+{
+  UNIMPLEMENTED;
+}
+
 VOID  VGAQueryAvailModes(OUT PVIDEO_MODE_INFORMATION  ReturnedModes,
-                         OUT PSTATUS_BLOCK  StatusBlock);
+                         OUT PSTATUS_BLOCK  StatusBlock)
+{
+  UNIMPLEMENTED;
+}
+
 VOID  VGAQueryCurrentMode(OUT PVIDEO_MODE_INFORMATION  CurrentMode,
-                          OUT PSTATUS_BLOCK  StatusBlock);
+                          OUT PSTATUS_BLOCK  StatusBlock)
+{
+  UNIMPLEMENTED;
+}
+
 VOID  VGAQueryNumAvailModes(OUT PVIDEO_NUM_MODES  NumberOfModes,
-                            OUT PSTATUS_BLOCK  StatusBlock);
-VOID  VGAResetDevice(OUT PSTATUS_BLOCK  StatusBlock);
+                            OUT PSTATUS_BLOCK  StatusBlock)
+{
+  UNIMPLEMENTED;
+}
+
+VOID  VGAResetDevice(OUT PSTATUS_BLOCK  StatusBlock)
+{
+  UNIMPLEMENTED;
+}
+
 VOID  VGASetColorRegisters(IN PVIDEO_CLUT  ColorLookUpTable,
-                           OUT PSTATUS_BLOCK  StatusBlock);
+                           OUT PSTATUS_BLOCK  StatusBlock)
+{
+  UNIMPLEMENTED;
+}
+
 VOID  VGASetCurrentMode(IN PVIDEO_MODE  RequestedMode,
-                        OUT PSTATUS_BLOCK  StatusBlock);
+                        OUT PSTATUS_BLOCK  StatusBlock)
+{
+  UNIMPLEMENTED;
+}
+
 VOID  VGAShareVideoMemory(IN PVIDEO_SHARE_MEMORY  RequestedMemory,
                           OUT PVIDEO_MEMORY_INFORMATION  ReturnedMemory,
-                          OUT PSTATUS_BLOCK  StatusBlock);
+                          OUT PSTATUS_BLOCK  StatusBlock)
+{
+  UNIMPLEMENTED;
+}
+
 VOID  VGAUnmapVideoMemory(IN PVIDEO_MEMORY  MemoryToUnmap,
-                          OUT PSTATUS_BLOCK  StatusBlock);
+                          OUT PSTATUS_BLOCK  StatusBlock)
+{
+  UNIMPLEMENTED;
+}
+
 VOID  VGAUnshareVideoMemory(IN PVIDEO_MEMORY  MemoryToUnshare,
-                            OUT PSTATUS_BLOCK  StatusBlock);
+                            OUT PSTATUS_BLOCK  StatusBlock)
+{
+  UNIMPLEMENTED;
+}
+
 
 

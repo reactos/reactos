@@ -10,6 +10,7 @@
 typedef struct _PDEV
 {
   HANDLE  KMDriver;
+  HDEV  GDIDevHandle;
 } PDEV, *PPDEV;
 
 
