@@ -31,11 +31,11 @@ OBJECTS = napi.o ldr/startup.o rtl/largeint.o rtl/namespc.o rtl/unicode.o \
           ldr/utils.o ntdll.coff
 
 ifeq ($(DOSCLI),yes)
-CLEAN_FILES = napi.o ldr\*.o rtl\*.o stdio\*.o string\*.o stubs\*.o ntdll.a  \
-              main\dllmain.o ntdll.o ntdll.dll junk.tmp base.tmp temp.exp ntdll.sym
+CLEAN_FILES = napi.o ldr\*.o rtl\*.o stdio\*.o stdlib\*.o string\*.o stubs\*.o \
+              ntdll.a main\dllmain.o ntdll.o ntdll.dll junk.tmp base.tmp temp.exp ntdll.sym
 else
-CLEAN_FILES = napi.o ldr/*.o rtl/*.o stdio/*.o string/*.o stubs/*.o ntall.a  \
-              main/dllmain.o ntdll.o ntdll.dll junk.tmp base.tmp temp.exp ntdll.sym
+CLEAN_FILES = napi.o ldr/*.o rtl/*.o stdio/*.o stdlib/*.o string/*.o stubs/*.o \
+              ntall.a main/dllmain.o ntdll.o ntdll.dll junk.tmp base.tmp temp.exp ntdll.sym
 endif
 
 ntdll.coff: ntdll.rc ../../include/reactos/resource.h
