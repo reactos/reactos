@@ -120,20 +120,16 @@ HWND NotifyArea::Create(HWND hwndParent)
 {
 	ClientRect clnt(hwndParent);
 
-	return Window::Create(WINDOW_CREATOR(NotifyArea), 0,
+	return Window::Create(WINDOW_CREATOR(NotifyArea), WS_EX_STATICEDGE,
 							BtnWindowClass(CLASSNAME_TRAYNOTIFY,CS_DBLCLKS), TITLE_TRAYNOTIFY, WS_CHILD|WS_VISIBLE,
 							clnt.right-(NOTIFYAREA_WIDTH_DEF+1), 1, NOTIFYAREA_WIDTH_DEF, clnt.bottom-2, hwndParent);
 }
 
 LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
-	RECT rc;
 	switch(nmsg) {
 	  case WM_PAINT:
 		Paint();
-		GetClientRect(_hwnd, &rc);
-		DrawEdge(GetDC(_hwnd),&rc,BDR_SUNKENOUTER,BF_RECT);
-
 		break;
 
 	  case WM_TIMER: {
@@ -265,6 +261,10 @@ void NotifyArea::Paint()
 	 // first fill with the background color
 	FillRect(canvas, &canvas.rcPaint, GetSysColorBrush(COLOR_BTNFACE));
 
+#ifdef _ROS_
+	DrawEdge(canvas, ClientRect(_hwnd), BDR_SUNKENOUTER, BF_RECT);
+#endif
+
 	 // draw icons
 	int x = 2;
 	int y = 2;
@@ -274,7 +274,6 @@ void NotifyArea::Paint()
 
 		x += NOTIFYICON_DIST;
 	}
-	
 }
 
 void NotifyArea::TimerTick()
@@ -351,13 +350,9 @@ HWND ClockWindow::Create(HWND hwndParent)
 
 LRESULT ClockWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
-	RECT rc;
 	switch(nmsg) {
 	  case WM_PAINT:
 		Paint();
-		GetClientRect(_hwnd, &rc);
-		DrawEdge(GetDC(_hwnd),&rc,BDR_SUNKENOUTER,BF_TOP | BF_RIGHT);
-
 		break;
 
 	  case WM_LBUTTONDBLCLK:
@@ -412,6 +407,11 @@ bool ClockWindow::FormatTime()
 void ClockWindow::Paint()
 {
 	PaintCanvas canvas(_hwnd);
+
+#ifdef _ROS_
+	DrawEdge(canvas, ClientRect(_hwnd), BDR_SUNKENOUTER, BF_TOP|BF_RIGHT);
+#endif
+
 	BkMode bkmode(canvas, TRANSPARENT);
 	FontSelection font(canvas, GetStockFont(ANSI_VAR_FONT));
 
