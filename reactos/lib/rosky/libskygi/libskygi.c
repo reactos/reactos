@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: libskygi.c,v 1.2 2004/08/12 19:27:12 weiden Exp $
+/* $Id: libskygi.c,v 1.3 2004/08/12 23:38:17 weiden Exp $
  *
  * PROJECT:         SkyOS GI library
  * FILE:            lib/libskygi/libskygi.c
@@ -41,36 +41,223 @@ typedef struct
 static ATOM SkyClassAtom;
 static BOOL SkyClassRegistered = FALSE;
 
-LRESULT CALLBACK
-SkyWndDefaultWin32Proc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+/**
+ * Map a SkyOS window style to Windows one.
+ *
+ * @param SkyStyle SkyOS window style (WF_* flags).
+ * @param ExStyle Contains Windows extended window style on exit.
+ *
+ * @return Windows window style (WS_* flags).
+ *
+ * @todo Handle
+ *  WF_MODAL, WF_HAS_MENU, WF_HAS_STATUSBAR, WF_FREEFORM, WF_FOCUSABLE,
+ *  WF_USER, WF_DESKTOP, WF_NOT_MOVEABLE, WF_NO_BUTTONS, WF_TRANSPARENT,
+ *  WF_NO_INITIAL_DRAW, WF_USE_BACKGROUND, WF_DONT_EREASE_BACKGROUND,
+ *  WF_NO_FRAME.
+ */
+ULONG
+IntMapWindowStyle(ULONG SkyStyle, ULONG *ExStyle)
 {
-  PSKY_WINDOW skw = (PSKY_WINDOW)GetWindowLong(hWnd, GWL_USERDATA);
+   ULONG Style;
+
+   Style = (SkyStyle & WF_HIDE) ? 0 : WS_VISIBLE;
+   Style |= (SkyStyle & WF_NO_TITLE) ? 0 : WS_CAPTION;
+   Style |= (SkyStyle & WF_NOT_SIZEABLE) ? WS_THICKFRAME : 0;
+   Style |= (SkyStyle & WF_POPUP) ? WS_POPUP : 0;
+   Style |= (SkyStyle & WF_NO_BUTTONS) ? 0 : WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SYSMENU;
+   *ExStyle = (SkyStyle & WF_SMALL_TITLE) ? WS_EX_TOOLWINDOW : 0;
+
+   return Style;
+}
+
+
+/**
+ * Dispatch a Sky Message to the appropriate window callback
+ *
+ * @param win Specifies the destination window
+ * @param type The type of the message (see MSG_ constants)
+ * @param para1 Additional parameter 1
+ * @param para2 Additional parameter 2
+ *
+ * @return Returns the return value of the window callback function
+ */
+unsigned long
+IntDispatchMsg(s_window *win, unsigned int type, unsigned int para1, unsigned int para2)
+{
+  s_gi_msg msg;
+  unsigned long Ret;
+  
+  /* fill the members of the struct */
+  msg.win = win;
+  msg.type = type;
+  msg.para1 = para1;
+  msg.para2 = para2;
+  msg.next = NULL; /* ??? */
+  msg.prev = NULL; /* ??? */
+  /* FIXME */
+  msg.timestamp = (unsigned long long)GetTickCount() * 1000LL;
+  
+  DBG("Dispatching window (0x%x) message type %d\n", win, type);
+  Ret = win->win_func(win, &msg);
+  DBG("Dispatched window (0x%x) message type %d, returned 0x%x\n", win, type, Ret);
+  return Ret;
+}
+
+
+/**
+ * Dispatch a Sky Message with a update rect to the appropriate window callback
+ *
+ * @param win Specifies the destination window
+ * @param type The type of the message (see MSG_ constants)
+ * @param para1 Additional parameter 1
+ * @param para2 Additional parameter 2
+ * @param rect Rectangle of the window to be repainted
+ *
+ * @return Returns the return value of the window callback function
+ */
+unsigned long
+IntDispatchMsgRect(s_window *win, unsigned int type, unsigned int para1, unsigned int para2, s_region *rect)
+{
+  s_gi_msg msg;
+  unsigned long Ret;
+
+  /* fill the members of the struct */
+  msg.win = win;
+  msg.type = type;
+  msg.para1 = para1;
+  msg.para2 = para2;
+  msg.next = NULL; /* ??? */
+  msg.prev = NULL; /* ??? */
+  msg.rect = *rect;
+  /* FIXME */
+  msg.timestamp = (unsigned long long)GetTickCount() * 1000LL;
+
+  DBG("Dispatching window (0x%x) message type %d\n", win, type);
+  Ret = win->win_func(win, &msg);
+  DBG("Dispatched window (0x%x) message type %d, returned 0x%x\n", win, type, Ret);
+  return Ret;
+}
+
+
+/**
+ * Determines whether a win32 message should cause a Sky message to be dispatched
+ *
+ * @param skw Specifies the destination window
+ * @param Msg Contains the win32 message
+ * @param smsg Address to the sky message structure that will be filled in with
+ *             appropriate information in case a sky message should be dispatched
+ *
+ * @return Returns TRUE if a Sky message should be dispatched
+ */
+BOOL
+IntIsSkyMessage(PSKY_WINDOW skw, MSG *Msg, s_gi_msg *smsg)
+{
+  switch(Msg->message)
+  {
+    case WM_DESTROY:
+      smsg->type = MSG_DESTROY;
+      smsg->para1 = 0;
+      smsg->para2 = 0;
+      return TRUE;
+
+    case WM_PAINT:
+    {
+      RECT rc;
+      
+      if(GetUpdateRect(skw->hWnd, &rc, FALSE))
+      {
+        smsg->type = MSG_GUI_REDRAW;
+        smsg->para1 = 0;
+        smsg->para2 = 0;
+
+        smsg->rect.x1 = rc.left;
+        smsg->rect.y1 = rc.top;
+        smsg->rect.x2 = rc.right;
+        smsg->rect.y2 = rc.bottom;
+
+        return TRUE;
+      }
+    }
+
+    case WM_QUIT:
+      smsg->type = MSG_QUIT;
+      smsg->para1 = 0;
+      smsg->para2 = 0;
+      smsg->win = (s_window*)Msg->wParam;
+      return TRUE;
+  }
+  
+  return FALSE;
+}
+
+
+/**
+ * The standard win32 window procedure that handles win32 messages delivered from ReactOS
+ *
+ * @param hWnd Handle of the window
+ * @param msg Specifies the type of the message
+ * @param wParam Additional data to the message
+ * @param lParam Additional data to the message
+ *
+ * @return Depends on the message type
+ */
+LRESULT CALLBACK
+IntDefaultWin32Proc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+  PSKY_WINDOW skw = (PSKY_WINDOW)GetWindowLongW(hWnd, GWL_USERDATA);
   
   if(skw != NULL)
   {
     switch(msg)
     {
+      case WM_ERASEBKGND:
+        return 1; /* don't handle this message */
+      
+      case WM_PAINT:
+      {
+        PAINTSTRUCT ps;
+        s_region srect;
+        
+        BeginPaint(hWnd, &ps);
+        srect.x1 = ps.rcPaint.left;
+        srect.y1 = ps.rcPaint.top;
+        srect.x2 = ps.rcPaint.right;
+        srect.y2 = ps.rcPaint.bottom;
+        IntDispatchMsgRect(&skw->Window, MSG_GUI_REDRAW, 0, 0, &srect);
+        EndPaint(hWnd, &ps);
+        
+        return 0;
+      }
+      
       case WM_CLOSE:
-        PostQuitMessage(0);
-        break;
-      case WM_NCDESTROY:
+        IntDispatchMsg(&skw->Window, MSG_DESTROY, 0, 0);
+        return 0;
+
+      case WM_DESTROY:
+        SetWindowLongW(hWnd, GWL_USERDATA, 0);
         /* free the SKY_WINDOW structure */
         HeapFree(GetProcessHeap(), 0, skw);
-        break;
+        return 0;
     }
   }
-  return DefWindowProc(hWnd, msg, wParam, lParam);
+  return DefWindowProcW(hWnd, msg, wParam, lParam);
 }
 
+
+/**
+ * Registers a Win32 window class for all Sky windows
+ *
+ * @return Returns the atom of the class registered.
+ */
 ATOM
-SkyWndRegisterClass(void)
+IntRegisterClass(void)
 {
-  WNDCLASS wc;
+  WNDCLASSW wc;
   
-  wc.lpszClassName = "ROSkyWindow";
-  wc.lpfnWndProc = SkyWndDefaultWin32Proc;
+  wc.lpszClassName = L"ROSkyWindow";
+  wc.lpfnWndProc = IntDefaultWin32Proc;
   wc.style = CS_VREDRAW | CS_HREDRAW;
-  wc.hInstance = GetModuleHandle(NULL);
+  wc.hInstance = GetModuleHandleW(NULL);
   wc.hIcon = LoadIcon(NULL, (LPCTSTR)IDI_APPLICATION);
   wc.hCursor = LoadCursor(NULL, (LPCTSTR)IDC_ARROW);
   wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
@@ -78,7 +265,7 @@ SkyWndRegisterClass(void)
   wc.cbClsExtra = 0;
   wc.cbWndExtra = 0;
   
-  return RegisterClass(&wc);
+  return RegisterClassW(&wc);
 }
 
 
@@ -89,13 +276,15 @@ s_window* __cdecl
 GI_create_app(app_para *p)
 {
   PSKY_WINDOW skw;
+  ULONG Style, ExStyle;
+  WCHAR WindowName[sizeof(p->cpName) / sizeof(p->cpName[0])];
   
   DBG("GI_create_app(0x%x)\n", p);
 
   /* FIXME - lock */
   if(!SkyClassRegistered)
   {
-    SkyClassAtom = SkyWndRegisterClass();
+    SkyClassAtom = IntRegisterClass();
     SkyClassRegistered = SkyClassAtom != 0;
 
     if(!SkyClassRegistered)
@@ -105,7 +294,7 @@ GI_create_app(app_para *p)
     }
   }
   /* FIXME - unlock */
-  
+
   skw = (PSKY_WINDOW)HeapAlloc(GetProcessHeap(),
                                HEAP_ZERO_MEMORY,
                                sizeof(SKY_WINDOW));
@@ -115,17 +304,26 @@ GI_create_app(app_para *p)
     return NULL;
   }
   
-  skw->hWnd = CreateWindow("ROSkyWindow",
-                           (p->cpName[0] != '\0' ? (char*)p->cpName : ""),
-                           WS_OVERLAPPEDWINDOW | WS_HSCROLL | WS_VSCROLL,
-                           p->ulX,
-                           p->ulY,
-                           p->ulWidth,
-                           p->ulHeight,
-                           NULL,
-                           NULL,
-                           GetModuleHandle(NULL),
-                           NULL);
+  /* Convert the Sky window style to a Win32 window style */
+  Style = IntMapWindowStyle(p->ulStyle, &ExStyle);
+  
+  /* convert the window caption to unicode */
+  MultiByteToWideChar(CP_UTF8, 0, p->cpName, -1, WindowName,
+                      sizeof(WindowName) / sizeof(WindowName[0]));
+  
+  /* create the Win32 window */
+  skw->hWnd = CreateWindowExW(ExStyle,
+                              L"ROSkyWindow",
+                              WindowName,
+                              WS_OVERLAPPEDWINDOW,
+                              p->ulX,
+                              p->ulY,
+                              p->ulWidth,
+                              p->ulHeight,
+                              NULL,
+                              NULL,
+                              GetModuleHandleW(NULL),
+                              NULL);
 
   if(skw->hWnd == NULL)
   {
@@ -140,7 +338,7 @@ GI_create_app(app_para *p)
   /* save the pointer to the structure so we can access it later when dispatching
      the win32 messages so we know which sky window it is and dispatch the right
      messages */
-  SetWindowLong(skw->hWnd, GWL_USERDATA, (LONG)skw);
+  SetWindowLongW(skw->hWnd, GWL_USERDATA, (LONG)skw);
   
   DBG("Created Win32 window: 0x%x\n", skw->hWnd);
   
@@ -178,25 +376,47 @@ GI_wait_message(s_gi_msg *m,
   filterwnd = (w != NULL ? (PSKY_WINDOW)w : NULL);
   
   hwndFilter = (w != NULL ? filterwnd->hWnd : NULL);
-  Ret = GetMessage(&Msg, hwndFilter, 0, 0);
-  if(Ret)
+  for(;;)
   {
-    if(Msg.hwnd != NULL)
+    /* loop until we found a message that a sky app would handle, too */
+    RtlZeroMemory(m, sizeof(s_gi_msg));
+  
+    Ret = GetMessage(&Msg, hwndFilter, 0, 0);
+    if(Ret)
     {
-      msgwnd = (PSKY_WINDOW)GetWindowLong(Msg.hwnd, GWL_USERDATA);
-      msgwnd->LastMsg = Msg;
+      if(Msg.hwnd != NULL && (msgwnd = (PSKY_WINDOW)GetWindowLongW(Msg.hwnd, GWL_USERDATA)))
+      {
+        msgwnd->LastMsg = Msg;
+        if(!IntIsSkyMessage(msgwnd, &Msg, m))
+        {
+          /* We're not interested in dispatching a sky message, try again */
+          TranslateMessage(&Msg);
+          DispatchMessage(&Msg);
+        }
+      }
+      else
+      {
+        /* We're not interested in dispatching a sky message, try again */
+        TranslateMessage(&Msg);
+        DispatchMessage(&Msg);
+      }
     }
     else
     {
-      msgwnd = NULL;
+      /* break the loop, the sky app is supposed to shut down */
+      m->type = MSG_QUIT;
+      break;
     }
   }
   
-  RtlZeroMemory(m, sizeof(s_gi_msg));
-  m->win = (msgwnd != NULL ? &msgwnd->Window : NULL);
-  /* FIXME - fill in the other messags */
+  if(m->win == NULL)
+  {
+    /* only set the win field if it's not set yet by IntIsSkyMessage() */
+    m->win = (msgwnd != NULL ? &msgwnd->Window : NULL);
+  }
+  /* FIXME */
   
-  return (int)Ret;
+  return (m->type != MSG_QUIT);
 }
 
 
@@ -210,8 +430,16 @@ GI_dispatch_message(s_window *win,
   PSKY_WINDOW skywnd = (PSKY_WINDOW)win;
   DBG("GI_dispatch_message(0x%x, 0x%x)\n", win, m);
   
-  skywnd->DispatchMsg = *m;
-  DispatchMessage(&skywnd->LastMsg);
+  /* FIXME - why is win==1?! */
+  if(win == (s_window*)0x1) return 0;
+  
+  if(win != NULL)
+  {
+    /* save the dispatched message */
+    skywnd->DispatchMsg = *m;
+    /* dispatch the last win32 message to the win32 window procedure */
+    DispatchMessage(&skywnd->LastMsg);
+  }
   
   return 1;
 }
@@ -225,10 +453,35 @@ GI_ShowApplicationWindow(s_window *win)
 {
   PSKY_WINDOW skywnd = (PSKY_WINDOW)win;
   DBG("GI_ShowApplicationWindow(0x%x)\n", win);
-  
-  DBG("->0x%x\n", skywnd->hWnd);
   ShowWindow(skywnd->hWnd, SW_SHOW);
   return 1;
+}
+
+
+/*
+ * @implemented
+ */
+int __cdecl
+GI_redraw_window(s_window *win)
+{
+  DBG("GI_redraw_window(0x%x)!\n", win);
+  PSKY_WINDOW skywnd = (PSKY_WINDOW)win;
+  if(skywnd != NULL)
+  {
+    RedrawWindow(skywnd->hWnd, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+  }
+  return 1;
+}
+
+
+/*
+ * @unimplemented
+ */
+void __cdecl
+GI_post_quit(s_window *win)
+{
+  DBG("GI_post_quit(0x%x)\n", win);
+  PostQuitMessage((int)win);
 }
 
 

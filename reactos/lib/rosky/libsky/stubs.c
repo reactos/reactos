@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.2 2004/08/12 15:41:36 weiden Exp $
+/* $Id: stubs.c,v 1.3 2004/08/12 23:38:17 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         SkyOS library
@@ -118,8 +118,8 @@ ctor_dtor_initialize(func_ptr *__CTOR_LIST__,
 unsigned long long __cdecl
 get_usec_counter(void)
 {
-  STUB("get_usec_counter() returns 0x0LL!\n");
-  return 0x0LL;
+  /* FIXME - better implementation */
+  return (unsigned long long)GetTickCount() * 1000LL;
 }
 
 /* EOF */

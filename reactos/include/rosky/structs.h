@@ -191,7 +191,7 @@ typedef struct s_window
   unsigned int width;
   unsigned int orgx;
   unsigned int orgy;
-  unsigned long (__cdecl *win_func)(HANDLE win, s_gi_msg *m);
+  unsigned long (__cdecl *win_func)(struct s_window *win, s_gi_msg *m);
   HANDLE handle;
 
   struct s_window *parent;

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.3 2004/08/12 19:27:12 weiden Exp $
+/* $Id: stubs.c,v 1.4 2004/08/12 23:38:17 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         SkyOS GI library
@@ -213,15 +213,6 @@ GI_messagebox(HANDLE hWnd,
   return 0;
 }
 
-/*
- * @unimplemented
- */
-void __cdecl
-GI_post_quit(HANDLE win)
-{
-  STUB("GI_post_quit(0x%x)\n", win);
-}
-
 
 /*
  * @unimplemented
@@ -255,7 +246,7 @@ int __cdecl
 GC_set_fg_color(GC *gc,
                 COLOR col)
 {
-  STUB("GC_set_fg_color(0x%x, 0x%x) returns 0!\n", gc, col);
+  //STUB("GC_set_fg_color(0x%x, 0x%x) returns 0!\n", gc, col);
   return 0;
 }
 
@@ -476,7 +467,7 @@ GC_draw_pixel(GC *gc,
               int x,
               int y)
 {
-  STUB("GC_draw_pixel(0x%x, 0x%x, 0x%x) returns 0!\n", gc, x, y);
+  //STUB("GC_draw_pixel(0x%x, 0x%x, 0x%x) returns 0!\n", gc, x, y);
   return 0;
 }
 
@@ -506,17 +497,6 @@ GI_create_DIB(void *data,
 {
   STUB("GI_create_DIB(0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x) returns NULL!\n", data, width, height, bpp, palette, palette_size);
   return NULL;
-}
-
-
-/*
- * @unimplemented
- */
-int __cdecl
-GI_redraw_window(s_window *win)
-{
-  STUB("GI_redraw_window(0x%x) returns 0!\n", win);
-  return 0;
 }
 
 
