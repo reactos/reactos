@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.20 2003/11/02 16:32:25 ekohl Exp $
+/* $Id: input.c,v 1.21 2003/12/02 11:38:47 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -539,3 +539,25 @@ SendInput(
   UNIMPLEMENTED;
   return 0;
 }
+
+/*
+ * Private call for CSRSS
+ */
+VOID
+STDCALL
+PrivateCsrssRegisterPrimitive(VOID)
+{
+  NtUserCallNoParam(NOPARAM_ROUTINE_REGISTER_PRIMITIVE);
+}
+
+/*
+ * Another private call for CSRSS
+ */
+VOID
+STDCALL
+PrivateCsrssAcquireOrReleaseInputOwnership(BOOL Release)
+{
+  NtUserAcquireOrReleaseInputOwnership(Release);
+}
+
+/* EOF */

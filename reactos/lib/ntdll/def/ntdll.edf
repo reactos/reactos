@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.102 2003/09/13 06:17:51 vizzini Exp $
+; $Id: ntdll.edf,v 1.103 2003/12/02 11:38:46 gvg Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -1468,3 +1468,4 @@ iswlower
 iswxdigit
 vDbgPrintEx
 vDbgPrintExWithPrefix
+CsrIsCsrss=CsrIsCsrss@0

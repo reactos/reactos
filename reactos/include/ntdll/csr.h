@@ -1,4 +1,4 @@
-/* $Id: csr.h,v 1.7 2001/12/02 23:34:39 dwelch Exp $
+/* $Id: csr.h,v 1.8 2003/12/02 11:38:46 gvg Exp $
  *
  */
 
@@ -32,6 +32,8 @@ CsrCaptureParameterBuffer(PVOID ParameterBuffer,
 			  PVOID* ServerAddress);
 NTSTATUS STDCALL
 CsrReleaseParameterBuffer(PVOID ClientAddress);
+
+VOID STDCALL CsrIsCsrss(VOID);
 
 #endif /* __INCLUDE_NTDLL_CSR_H */
 

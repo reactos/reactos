@@ -1,14 +1,17 @@
-#ifndef _CSRSS_API_H
-#define _CSRSS_API_H
+/* $Id: api.h,v 1.3 2003/12/02 11:38:46 gvg Exp $
+ *
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
+ * FILE:            subsys/csrss/include/api.h
+ * PURPOSE:         CSRSS API interface
+ */
+
+#ifndef API_H_INCLUDED
+#define API_H_INCLUDED
 
 #include <ntos.h>
 
 #include <csrss/csrss.h>
-
-/* Object type magic numbers */
-
-#define CSRSS_CONSOLE_MAGIC         1
-#define CSRSS_SCREEN_BUFFER_MAGIC   2
 
 typedef struct Object_tt
 {
@@ -98,8 +101,38 @@ typedef struct _CSRSS_PROCESS_DATA
   LIST_ENTRY ProcessEntry;
   PCONTROLDISPATCHER CtrlDispatcher;
 } CSRSS_PROCESS_DATA, *PCSRSS_PROCESS_DATA;
+  
+typedef VOID (STDCALL *CSR_CLEANUP_OBJECT_PROC)(Object_t *Object);
 
-#define CSR_API(n) NTSTATUS n (\
+typedef struct tagCSRSS_OBJECT_DEFINITION
+{
+  LONG Type;
+  CSR_CLEANUP_OBJECT_PROC CsrCleanupObjectProc;
+} CSRSS_OBJECT_DEFINITION, *PCSRSS_OBJECT_DEFINITION;
+
+typedef NTSTATUS (STDCALL *CSRSS_API_PROC)(PCSRSS_PROCESS_DATA ProcessData,
+                                           PCSRSS_API_REQUEST Request,
+                                           PCSRSS_API_REPLY Reply);
+
+typedef struct _CSRSS_API_DEFINITION
+{
+  ULONG Type;
+  ULONG MinRequestSize;
+  ULONG MinReplySize;
+  CSRSS_API_PROC Handler;
+} CSRSS_API_DEFINITION, *PCSRSS_API_DEFINITION;
+
+#define CSRSS_DEFINE_API(Func, Handler) \
+  { Func, sizeof(Func##_REQUEST), sizeof(Func##_REPLY), Handler }
+
+typedef struct _CSRSS_LISTEN_DATA
+{
+  HANDLE ApiPortHandle;
+  ULONG ApiDefinitionsCount;
+  PCSRSS_API_DEFINITION *ApiDefinitions;
+} CSRSS_LISTEN_DATA, *PCSRSS_LISTEN_DATA;
+
+#define CSR_API(n) NTSTATUS STDCALL n (\
 PCSRSS_PROCESS_DATA ProcessData,\
 PCSRSS_API_REQUEST Request,\
 PCSRSS_API_REPLY Reply)
@@ -109,54 +142,15 @@ CSR_API(CsrConnectProcess);
 CSR_API(CsrCreateProcess);
 CSR_API(CsrTerminateProcess);
 
-/* api/conio.c */
-CSR_API(CsrWriteConsole);
-CSR_API(CsrAllocConsole);
-CSR_API(CsrFreeConsole);
-CSR_API(CsrReadConsole);
-CSR_API(CsrConnectProcess);
-CSR_API(CsrGetScreenBufferInfo);
-CSR_API(CsrSetCursor);
-CSR_API(CsrFillOutputChar);
-CSR_API(CsrReadInputEvent);
-CSR_API(CsrWriteConsoleOutputChar);
-CSR_API(CsrWriteConsoleOutputAttrib);
-CSR_API(CsrFillOutputAttrib);
-CSR_API(CsrGetCursorInfo);
-CSR_API(CsrSetCursorInfo);
-CSR_API(CsrSetTextAttrib);
-CSR_API(CsrSetConsoleMode);
-CSR_API(CsrGetConsoleMode);
-CSR_API(CsrCreateScreenBuffer);
-CSR_API(CsrSetScreenBuffer);
-CSR_API(CsrSetTitle);
-CSR_API(CsrGetTitle);
-CSR_API(CsrWriteConsoleOutput);
-CSR_API(CsrFlushInputBuffer);
-CSR_API(CsrScrollConsoleScreenBuffer);
-CSR_API(CsrReadConsoleOutputChar);
-CSR_API(CsrReadConsoleOutputAttrib);
-CSR_API(CsrGetNumberOfConsoleInputEvents);
-CSR_API(CsrRegisterServicesProcess);
-CSR_API(CsrExitReactos);
-CSR_API(CsrGetShutdownParameters);
-CSR_API(CsrSetShutdownParameters);
-CSR_API(CsrPeekConsoleInput);
-CSR_API(CsrReadConsoleOutput);
-CSR_API(CsrWriteConsoleInput);
-CSR_API(CsrGetInputHandle);
-CSR_API(CsrGetOutputHandle);
-CSR_API(CsrCloseHandle);
-CSR_API(CsrVerifyHandle);
-CSR_API(CsrDuplicateHandle);
-CSR_API(CsrHardwareStateProperty);
-CSR_API(CsrGetConsoleWindow);
-
 /* print.c */
 VOID STDCALL DisplayString(LPCWSTR lpwString);
 VOID STDCALL PrintString (char* fmt, ...);
 
 /* api/wapi.c */
+NTSTATUS FASTCALL CsrApiRegisterDefinitions(PCSRSS_API_DEFINITION NewDefinitions);
+VOID FASTCALL CsrApiCallHandler(PCSRSS_PROCESS_DATA ProcessData,
+                                PCSRSS_API_REQUEST Request,
+                                PCSRSS_API_REPLY Reply);
 VOID Thread_Api(PVOID PortHandle);
 VOID Console_Api( DWORD Ignored );
 
@@ -164,8 +158,6 @@ extern HANDLE CsrssApiHeap;
 
 /* api/conio.c */
 NTSTATUS STDCALL CsrInitConsole(PCSRSS_CONSOLE Console);
-VOID STDCALL CsrDeleteConsole( PCSRSS_CONSOLE Console );
-VOID STDCALL CsrDeleteScreenBuffer( PCSRSS_SCREEN_BUFFER Buffer );
 NTSTATUS STDCALL CsrInitConsoleScreenBuffer(PCSRSS_SCREEN_BUFFER Buffer,
                                             PCSRSS_CONSOLE Console,
                                             unsigned Width,
@@ -178,14 +170,30 @@ PCSRSS_PROCESS_DATA STDCALL CsrGetProcessData(ULONG ProcessId);
 NTSTATUS STDCALL CsrFreeProcessData( ULONG Pid );
 
 /* api/handle.c */
+NTSTATUS FASTCALL CsrRegisterObjectDefinitions(PCSRSS_OBJECT_DEFINITION NewDefinitions);
 NTSTATUS STDCALL CsrInsertObject( PCSRSS_PROCESS_DATA ProcessData, PHANDLE Handle, Object_t *Object );
 NTSTATUS STDCALL CsrGetObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle, Object_t **Object );
 BOOL STDCALL CsrServerInitialization (ULONG ArgumentCount, PWSTR *ArgumentArray);
+NTSTATUS STDCALL CsrReleaseObjectByPointer(Object_t *Object);
 NTSTATUS STDCALL CsrReleaseObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Object );
 NTSTATUS STDCALL CsrVerifyObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Object );
 VOID STDCALL CsrDrawConsole(PCSRSS_CONSOLE Console);
 NTSTATUS CsrpEchoUnicodeChar( PCSRSS_SCREEN_BUFFER Console, 
 			      WCHAR UnicodeChar );
 NTSTATUS STDCALL CsrpWriteConsole( PCSRSS_SCREEN_BUFFER Buff, CHAR *Buffer, DWORD Length, BOOL Attrib );
+CSR_API(CsrGetInputHandle);
+CSR_API(CsrGetOutputHandle);
+CSR_API(CsrCloseHandle);
+CSR_API(CsrVerifyHandle);
+CSR_API(CsrDuplicateHandle);
 
-#endif /* ndef _CSRSS_API_H */
+/* api/user.c */
+CSR_API(CsrRegisterServicesProcess);
+CSR_API(CsrExitReactos);
+CSR_API(CsrGetShutdownParameters);
+CSR_API(CsrSetShutdownParameters);
+
+#endif /* ndef API_H_INCLUDED */
+
+/* EOF */
+

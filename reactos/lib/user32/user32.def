@@ -520,6 +520,8 @@ PostQuitMessage@4
 PostThreadMessageA@16
 PostThreadMessageW@16
 PrintWindow@12
+PrivateCsrssRegisterPrimitive@0
+PrivateCsrssAcquireOrReleaseInputOwnership@4
 PrivateExtractIconExA@20
 PrivateExtractIconExW@20
 PrivateExtractIconsA@32

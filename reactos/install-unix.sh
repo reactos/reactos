@@ -101,7 +101,7 @@ cp lib/winmm/winmm.dll $ROS_INSTALL/system32
 cp lib/ole32/ole32.dll $ROS_INSTALL/system32
 cp subsys/smss/smss.exe $ROS_INSTALL/system32
 cp subsys/csrss/csrss.exe $ROS_INSTALL/system32
-cp subsys/csrss/usercsr/usercsr.dll $ROS_INSTALL/system32
+cp subsys/csrss/win32csr/win32csr.dll $ROS_INSTALL/system32
 cp subsys/ntvdm/ntvdm.exe $ROS_INSTALL/system32
 cp subsys/win32k/win32k.sys $ROS_INSTALL/system32
 cp subsys/system/usetup/usetup.exe $ROS_INSTALL/system32

@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.69 2003/09/12 17:51:47 vizzini Exp $
+/* $Id: console.c,v 1.70 2003/12/02 11:38:46 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -2250,7 +2250,7 @@ GetConsoleMode(
   CSRSS_API_REPLY Reply;
   NTSTATUS Status;
   
-  Request.Type = CSRSS_GET_MODE;
+  Request.Type = CSRSS_GET_CONSOLE_MODE;
   Request.Data.GetConsoleModeRequest.ConsoleHandle = hConsoleHandle;
   Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
   if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
@@ -2387,7 +2387,7 @@ SetConsoleMode(
   CSRSS_API_REPLY Reply;
   NTSTATUS Status;
   
-  Request.Type = CSRSS_SET_MODE;
+  Request.Type = CSRSS_SET_CONSOLE_MODE;
   Request.Data.SetConsoleModeRequest.ConsoleHandle = hConsoleHandle;
   Request.Data.SetConsoleModeRequest.Mode = dwMode;
   Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
@@ -2417,7 +2417,7 @@ SetConsoleActiveScreenBuffer(
    NTSTATUS Status;
 
    Request.Type = CSRSS_SET_SCREEN_BUFFER;
-   Request.Data.SetActiveScreenBufferRequest.OutputHandle = hConsoleOutput;
+   Request.Data.SetScreenBufferRequest.OutputHandle = hConsoleOutput;
    Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
    if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
       {

@@ -38,6 +38,14 @@ typedef struct
 
 typedef struct
 {
+} CSRSS_TERMINATE_PROCESS_REQUEST, PCSRSS_TERMINATE_PROCESS_REQUEST;
+
+typedef struct
+{
+} CSRSS_TERMINATE_PROCESS_REPLY, PCSRSS_TERMINATE_PROCESS_REPLY;
+
+typedef struct
+{
    HANDLE ConsoleHandle;
    ULONG NrCharactersToWrite;
    BYTE Buffer[1];
@@ -75,6 +83,14 @@ typedef struct
 
 typedef struct
 {
+} CSRSS_FREE_CONSOLE_REQUEST, *PCSRSS_FREE_CONSOLE_REQUEST;
+
+typedef struct
+{
+} CSRSS_FREE_CONSOLE_REPLY, *PCSRSS_FREE_CONSOLE_REPLY;
+
+typedef struct
+{
    HANDLE ConsoleHandle;
 } CSRSS_SCREEN_BUFFER_INFO_REQUEST, *PCSRSS_SCREEN_BUFFER_INFO_REQUEST;
 
@@ -91,6 +107,10 @@ typedef struct
 
 typedef struct
 {
+} CSRSS_SET_CURSOR_REPLY, *PCSRSS_SET_CURSOR_REPLY;
+
+typedef struct
+{
    HANDLE ConsoleHandle;
    CHAR Char;
    COORD Position;
@@ -99,11 +119,19 @@ typedef struct
 
 typedef struct
 {
+} CSRSS_FILL_OUTPUT_REPLY, *PCSRSS_FILL_OUTPUT_REPLY;
+
+typedef struct
+{
    HANDLE ConsoleHandle;
    CHAR Attribute;
    COORD Coord;
    WORD Length;
 } CSRSS_FILL_OUTPUT_ATTRIB_REQUEST, *PCSRSS_FILL_OUTPUT_ATTRIB_REQUEST;
+
+typedef struct
+{
+} CSRSS_FILL_OUTPUT_ATTRIB_REPLY, *PCSRSS_FILL_OUTPUT_ATTRIB_REPLY;
 
 typedef struct
 {
@@ -161,15 +189,27 @@ typedef struct
 
 typedef struct
 {
+} CSRSS_SET_CURSOR_INFO_REPLY, *PCSRSS_SET_CURSOR_INFO_REPLY;
+
+typedef struct
+{
    HANDLE ConsoleHandle;
    CHAR Attrib;
 } CSRSS_SET_ATTRIB_REQUEST, *PCSRSS_SET_ATTRIB_REQUEST;
 
 typedef struct
 {
+} CSRSS_SET_ATTRIB_REPLY, *PCSRSS_SET_ATTRIB_REPLY;
+
+typedef struct
+{
   HANDLE ConsoleHandle;
   DWORD Mode;
 } CSRSS_SET_CONSOLE_MODE_REQUEST, *PCSRSS_SET_CONSOLE_MODE_REQUEST;
+
+typedef struct
+{
+} CSRSS_SET_CONSOLE_MODE_REPLY, *PCSRSS_SET_CONSOLE_MODE_REPLY;
 
 typedef struct
 {
@@ -194,7 +234,11 @@ typedef struct
 typedef struct
 {
    HANDLE OutputHandle;  /* handle to screen buffer to switch to */
-} CSRSS_SET_ACTIVE_SCREEN_BUFFER_REQUEST, *PCSRSS_SET_ACTIVE_SCREEN_BUFFER_REQUEST;
+} CSRSS_SET_SCREEN_BUFFER_REQUEST, *PCSRSS_SET_SCREEN_BUFFER_REQUEST;
+
+typedef struct
+{
+} CSRSS_SET_SCREEN_BUFFER_REPLY, *PCSRSS_SET_SCREEN_BUFFER_REPLY;
 
 typedef struct
 {
@@ -212,6 +256,10 @@ typedef struct
   DWORD Length;
   WCHAR Title[1];
 } CSRSS_SET_TITLE_REQUEST, *PCSRSS_SET_TITLE_REQUEST;
+
+typedef struct
+{
+} CSRSS_SET_TITLE_REPLY, *PCSRSS_SET_TITLE_REPLY;
 
 typedef struct
 {
@@ -246,6 +294,10 @@ typedef struct
 
 typedef struct
 {
+} CSRSS_FLUSH_INPUT_BUFFER_REPLY, *PCSRSS_FLUSH_INPUT_BUFFER_REPLY;
+
+typedef struct
+{
   HANDLE     ConsoleHandle;
   SMALL_RECT ScrollRectangle;
   BOOLEAN    UseClipRectangle;
@@ -253,6 +305,10 @@ typedef struct
   COORD      DestinationOrigin;
   CHAR_INFO  Fill;
 } CSRSS_SCROLL_CONSOLE_SCREEN_BUFFER_REQUEST, *PCSRSS_SCROLL_CONSOLE_SCREEN_BUFFER_REQUEST;
+
+typedef struct
+{
+} CSRSS_SCROLL_CONSOLE_SCREEN_BUFFER_REPLY, *PCSRSS_SCROLL_CONSOLE_SCREEN_BUFFER_REPLY;
 
 typedef struct
 {
@@ -297,15 +353,37 @@ typedef struct
 
 typedef struct
 {
+} CSRSS_REGISTER_SERVICES_PROCESS_REPLY, *PCSRSS_REGISTER_SERVICES_PROCESS_REPLY;
+
+typedef struct
+{
   UINT Flags;
   DWORD Reserved;
 } CSRSS_EXIT_REACTOS_REQUEST, *PCSRSS_EXIT_REACTOS_REQUEST;
 
 typedef struct
 {
+} CSRSS_EXIT_REACTOS_REPLY, *PCSRSS_EXIT_REACTOS_REPLY;
+
+typedef struct
+{
   DWORD Level;
   DWORD Flags;
-} CSRSS_SHUTDOWN_PARAMETERS, *PCSRSS_SHUTDOWN_PARAMETERS;
+} CSRSS_SET_SHUTDOWN_PARAMETERS_REQUEST, *PCSRSS_SET_SHUTDOWN_PARAMETERS_REQUEST;
+
+typedef struct
+{
+} CSRSS_SET_SHUTDOWN_PARAMETERS_REPLY, *PCSRSS_SET_SHUTDOWN_PARAMETERS_REPLY;
+
+typedef struct
+{
+} CSRSS_GET_SHUTDOWN_PARAMETERS_REQUEST, *PCSRSS_GET_SHUTDOWN_PARAMETERS_REQUEST;
+
+typedef struct
+{
+  DWORD Level;
+  DWORD Flags;
+} CSRSS_GET_SHUTDOWN_PARAMETERS_REPLY, *PCSRSS_GET_SHUTDOWN_PARAMETERS_REPLY;
 
 typedef struct
 {
@@ -347,8 +425,16 @@ typedef struct
 
 typedef struct
 {
+} CSRSS_GET_INPUT_HANDLE_REQUEST, *PCSRSS_GET_INPUT_HANDLE_REQUEST;
+
+typedef struct
+{
   HANDLE InputHandle;
 } CSRSS_GET_INPUT_HANDLE_REPLY, *PCSRSS_GET_INPUT_HANDLE_REPLY;
+
+typedef struct
+{
+} CSRSS_GET_OUTPUT_HANDLE_REQUEST, *PCSRSS_GET_OUTPUT_HANDLE_REQUEST;
 
 typedef struct
 {
@@ -362,8 +448,16 @@ typedef struct
 
 typedef struct
 {
+} CSRSS_CLOSE_HANDLE_REPLY, *PCSRSS_CLOSE_HANDLE_REPLY;
+
+typedef struct
+{
   HANDLE Handle;
 } CSRSS_VERIFY_HANDLE_REQUEST, *PCSRSS_VERIFY_HANDLE_REQUEST;
+
+typedef struct
+{
+} CSRSS_VERIFY_HANDLE_REPLY, *PCSRSS_VERIFY_HANDLE_REPLY;
 
 typedef struct
 {
@@ -387,8 +481,14 @@ typedef struct
   HANDLE ConsoleHandle;
   DWORD SetGet; /* 0=get; 1=set */
   DWORD State;
+} CSRSS_SETGET_CONSOLE_HW_STATE_REQUEST, *PCSRSS_SETGET_CONSOLE_HW_STATE_REQUEST;
 
-} CSRSS_CONSOLE_HARDWARE_STATE, *PCSRSS_CONSOLE_HARDWARE_STATE;
+typedef struct
+{
+  HANDLE ConsoleHandle;
+  DWORD SetGet; /* 0=get; 1=set */
+  DWORD State;
+} CSRSS_SETGET_CONSOLE_HW_STATE_REPLY, *PCSRSS_SETGET_CONSOLE_HW_STATE_REPLY;
 
 typedef struct
 {
@@ -431,8 +531,8 @@ typedef struct
 #define CSRSS_GET_CURSOR_INFO               (0xE)
 #define CSRSS_SET_CURSOR_INFO               (0xF)
 #define CSRSS_SET_ATTRIB                    (0x10)
-#define CSRSS_GET_MODE                      (0x11)
-#define CSRSS_SET_MODE                      (0x12)
+#define CSRSS_GET_CONSOLE_MODE              (0x11)
+#define CSRSS_SET_CONSOLE_MODE              (0x12)
 #define CSRSS_CREATE_SCREEN_BUFFER          (0x13)
 #define CSRSS_SET_SCREEN_BUFFER             (0x14)
 #define CSRSS_SET_TITLE                     (0x15)
@@ -485,7 +585,7 @@ typedef struct
     CSRSS_SET_CONSOLE_MODE_REQUEST SetConsoleModeRequest;
     CSRSS_GET_CONSOLE_MODE_REQUEST GetConsoleModeRequest;
     CSRSS_CREATE_SCREEN_BUFFER_REQUEST CreateScreenBufferRequest;
-    CSRSS_SET_ACTIVE_SCREEN_BUFFER_REQUEST SetActiveScreenBufferRequest;
+    CSRSS_SET_SCREEN_BUFFER_REQUEST SetScreenBufferRequest;
     CSRSS_SET_TITLE_REQUEST SetTitleRequest;
     CSRSS_GET_TITLE_REQUEST GetTitleRequest;
     CSRSS_WRITE_CONSOLE_OUTPUT_REQUEST WriteConsoleOutputRequest;
@@ -497,14 +597,15 @@ typedef struct
     CSRSS_GET_NUM_INPUT_EVENTS_REQUEST GetNumInputEventsRequest;
     CSRSS_REGISTER_SERVICES_PROCESS_REQUEST RegisterServicesProcessRequest;
     CSRSS_EXIT_REACTOS_REQUEST ExitReactosRequest;
-    CSRSS_SHUTDOWN_PARAMETERS SetShutdownParametersRequest;
+    CSRSS_SET_SHUTDOWN_PARAMETERS_REQUEST SetShutdownParametersRequest;
+    CSRSS_GET_SHUTDOWN_PARAMETERS_REQUEST GetShutdownParametersRequest;
     CSRSS_PEEK_CONSOLE_INPUT_REQUEST PeekConsoleInputRequest;
     CSRSS_READ_CONSOLE_OUTPUT_REQUEST ReadConsoleOutputRequest;
     CSRSS_WRITE_CONSOLE_INPUT_REQUEST WriteConsoleInputRequest;
     CSRSS_CLOSE_HANDLE_REQUEST CloseHandleRequest;
     CSRSS_VERIFY_HANDLE_REQUEST VerifyHandleRequest;
     CSRSS_DUPLICATE_HANDLE_REQUEST DuplicateHandleRequest;
-    CSRSS_CONSOLE_HARDWARE_STATE ConsoleHardwareStateRequest;
+    CSRSS_SETGET_CONSOLE_HW_STATE_REQUEST ConsoleHardwareStateRequest;
     CSRSS_CONSOLE_WINDOW ConsoleWindowRequest;
   } Data;
 } CSRSS_API_REQUEST, *PCSRSS_API_REQUEST;
@@ -532,14 +633,15 @@ typedef struct
     CSRSS_READ_CONSOLE_OUTPUT_CHAR_REPLY ReadConsoleOutputCharReply;
     CSRSS_READ_CONSOLE_OUTPUT_ATTRIB_REPLY ReadConsoleOutputAttribReply;
     CSRSS_GET_NUM_INPUT_EVENTS_REPLY GetNumInputEventsReply;
-    CSRSS_SHUTDOWN_PARAMETERS GetShutdownParametersReply;
+    CSRSS_SET_SHUTDOWN_PARAMETERS_REPLY SetShutdownParametersReply;
+    CSRSS_GET_SHUTDOWN_PARAMETERS_REPLY GetShutdownParametersReply;
     CSRSS_PEEK_CONSOLE_INPUT_REPLY PeekConsoleInputReply;
     CSRSS_READ_CONSOLE_OUTPUT_REPLY ReadConsoleOutputReply;
     CSRSS_WRITE_CONSOLE_INPUT_REPLY WriteConsoleInputReply;
     CSRSS_GET_INPUT_HANDLE_REPLY GetInputHandleReply;
     CSRSS_GET_OUTPUT_HANDLE_REPLY GetOutputHandleReply;
     CSRSS_DUPLICATE_HANDLE_REPLY DuplicateHandleReply;
-    CSRSS_CONSOLE_HARDWARE_STATE ConsoleHardwareStateReply;
+    CSRSS_SETGET_CONSOLE_HW_STATE_REPLY ConsoleHardwareStateReply;
     CSRSS_CONSOLE_WINDOW ConsoleWindowReply;
   } Data;
 } CSRSS_API_REPLY, *PCSRSS_API_REPLY;

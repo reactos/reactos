@@ -1,16 +1,17 @@
-/* $Id: guiconsole.c,v 1.2 2003/11/24 00:22:53 arty Exp $
+/* $Id: guiconsole.c,v 1.1 2003/12/02 11:38:46 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            subsys/csrss/usercsr/dllmain.c
+ * FILE:            subsys/csrss/win32csr/dllmain.c
  * PURPOSE:         Initialization 
  */
 
 /* INCLUDES ******************************************************************/
 
 #include <windows.h>
+#include "conio.h"
 #include "guiconsole.h"
-#include "usercsr.h"
+#include "win32csr.h"
 
 /* GLOBALS *******************************************************************/
 
@@ -55,7 +56,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
   HFONT OldFont;
   TEXTMETRICW Metrics;
 
-  GuiData = HeapAlloc(UserCsrApiHeap, 0,
+  GuiData = HeapAlloc(Win32CsrApiHeap, 0,
                       sizeof(GUI_CONSOLE_DATA) +
                       (Console->Size.X + 1) * sizeof(WCHAR));
   if (NULL == GuiData)
@@ -73,14 +74,14 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
   if (NULL == GuiData->Font)
     {
       DbgPrint("GuiConsoleNcCreate: CreateFont failed\n");
-      HeapFree(UserCsrApiHeap, 0, GuiData);
+      HeapFree(Win32CsrApiHeap, 0, GuiData);
       return FALSE;
     }
   Dc = GetDC(hWnd);
   if (NULL == Dc)
     {
       DbgPrint("GuiConsoleNcCreate: GetDC failed\n");
-      HeapFree(UserCsrApiHeap, 0, GuiData);
+      HeapFree(Win32CsrApiHeap, 0, GuiData);
       return FALSE;
     }
   OldFont = SelectObject(Dc, GuiData->Font);
@@ -88,7 +89,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
     {
       DbgPrint("GuiConsoleNcCreate: SelectObject failed\n");
       ReleaseDC(hWnd, Dc);
-      HeapFree(UserCsrApiHeap, 0, GuiData);
+      HeapFree(Win32CsrApiHeap, 0, GuiData);
       return FALSE;
     }
   if (! GetTextMetricsW(Dc, &Metrics))
@@ -96,7 +97,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
       DbgPrint("GuiConsoleNcCreate: GetTextMetrics failed\n");
       SelectObject(Dc, OldFont);
       ReleaseDC(hWnd, Dc);
-      HeapFree(UserCsrApiHeap, 0, GuiData);
+      HeapFree(Win32CsrApiHeap, 0, GuiData);
       return FALSE;
     }
   GuiData->CharWidth = Metrics.tmMaxCharWidth;
@@ -275,7 +276,7 @@ GuiConsoleHandleKey(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
   Message.wParam = wParam;
   Message.lParam = lParam;
 
-  (*UserCsrProcessKey)(&Message, Console);
+  CsrProcessKey(&Message, Console);
 }
 
 static VOID FASTCALL
@@ -406,7 +407,7 @@ GuiConsoleHandleNcDestroy(HWND hWnd)
   GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
   KillTimer(hWnd, 1);
   Console->GuiConsoleData = NULL;
-  HeapFree(UserCsrApiHeap, 0, GuiData);
+  HeapFree(Win32CsrApiHeap, 0, GuiData);
 }
 
 static LRESULT CALLBACK
@@ -467,7 +468,7 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         SetWindowLongW(hWnd, GWL_USERDATA, 0);
         return 0;
       case PM_CREATE_CONSOLE:
-        NewWindow = CreateWindowW(L"UserCsrConsole",
+        NewWindow = CreateWindowW(L"Win32CsrConsole",
                                   Console->Title.Buffer,
                                   WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
                                   CW_USEDEFAULT,
@@ -507,7 +508,7 @@ GuiConsoleGuiThread(PVOID Data)
   MSG msg;
   PHANDLE GraphicsStartupEvent = (PHANDLE) Data;
 
-  wc.lpszClassName = L"UserCsrCreateNotify";
+  wc.lpszClassName = L"Win32CsrCreateNotify";
   wc.lpfnWndProc = GuiConsoleNotifyWndProc;
   wc.style = 0;
   wc.hInstance = (HINSTANCE) GetModuleHandleW(NULL);
@@ -523,7 +524,7 @@ GuiConsoleGuiThread(PVOID Data)
       return 1;
     }
 
-  wc.lpszClassName = L"UserCsrConsole";
+  wc.lpszClassName = L"Win32CsrConsole";
   wc.lpfnWndProc = GuiConsoleWndProc;
   wc.style = 0;
   wc.hInstance = (HINSTANCE) GetModuleHandleW(NULL);
@@ -539,7 +540,7 @@ GuiConsoleGuiThread(PVOID Data)
       return 1;
     }
 
-  NotifyWnd = CreateWindowW(L"UserCsrCreateNotify",
+  NotifyWnd = CreateWindowW(L"Win32CsrCreateNotify",
                             L"",
                             WS_OVERLAPPEDWINDOW,
                             CW_USEDEFAULT,
@@ -580,18 +581,18 @@ GuiConsoleInitConsoleSupport(VOID)
   WindowStation = OpenWindowStationW(L"WinSta0", FALSE, GENERIC_ALL);
   if (NULL == WindowStation)
     {
-      DbgPrint("UserCsr: failed to open window station\n");
+      DbgPrint("Win32Csr: failed to open window station\n");
       return;
     }
   if (! SetProcessWindowStation(WindowStation))
     {
-      DbgPrint("UserCsr: failed to set process window station\n");
+      DbgPrint("Win32Csr: failed to set process window station\n");
       return;
     }
   Desktop = OpenDesktopW(L"Default", 0, FALSE, GENERIC_ALL);
   if (NULL == Desktop)
     {
-      DbgPrint("UserCsr: failed to open desktop\n");
+      DbgPrint("Win32Csr: failed to open desktop\n");
       return;
     }
   Status = NtSetInformationProcess(NtCurrentProcess(),
@@ -600,12 +601,12 @@ GuiConsoleInitConsoleSupport(VOID)
                                    sizeof(Desktop));
   if (!NT_SUCCESS(Status))
     {
-      DbgPrint("UserCsr: cannot set default desktop.\n");
+      DbgPrint("Win32Csr: cannot set default desktop.\n");
       return;
     }
   if (! SetThreadDesktop(Desktop))
     {
-      DbgPrint("UserCsr: failed to set thread desktop\n");
+      DbgPrint("Win32Csr: failed to set thread desktop\n");
       return;
     }
 
@@ -626,7 +627,7 @@ GuiConsoleInitConsoleSupport(VOID)
   if (NULL == ThreadHandle)
     {
       NtClose(GraphicsStartupEvent);
-      DbgPrint("UserCsr: Failed to create graphics console thread. Expect problems\n");
+      DbgPrint("Win32Csr: Failed to create graphics console thread. Expect problems\n");
       return;
     }
   CloseHandle(ThreadHandle);
@@ -636,7 +637,7 @@ GuiConsoleInitConsoleSupport(VOID)
 
   if (NULL == NotifyWnd)
     {
-      DbgPrint("UserCsr: Failed to create notification window.\n");
+      DbgPrint("Win32Csr: Failed to create notification window.\n");
       return;
     }
 }

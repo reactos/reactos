@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.29 2003/10/20 18:02:04 gvg Exp $
+/* $Id: process.c,v 1.30 2003/12/02 11:38:47 gvg Exp $
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -25,7 +25,6 @@
 
 static ULONG NrProcess;
 static PCSRSS_PROCESS_DATA ProcessData[256];
-extern CRITICAL_SECTION ActiveConsoleLock;
 CRITICAL_SECTION ProcessDataLock;
 
 /* FUNCTIONS *****************************************************************/
@@ -97,66 +96,64 @@ PCSRSS_PROCESS_DATA STDCALL CsrCreateProcessData(ULONG ProcessId)
 
 NTSTATUS STDCALL CsrFreeProcessData(ULONG Pid)
 {
-   ULONG hash;
-   int c;
-   PCSRSS_PROCESS_DATA pProcessData, pPrevProcessData = NULL;
+  ULONG hash;
+  int c;
+  PCSRSS_PROCESS_DATA pProcessData, pPrevProcessData = NULL;
    
-   hash = Pid % (sizeof(ProcessData) / sizeof(*ProcessData));
+  hash = Pid % (sizeof(ProcessData) / sizeof(*ProcessData));
    
-   LOCK;
+  LOCK;
 
-   pProcessData = ProcessData[hash];
+  pProcessData = ProcessData[hash];
 
-   while (pProcessData && pProcessData->ProcessId != Pid)
-   {
+  while (pProcessData && pProcessData->ProcessId != Pid)
+    {
       pPrevProcessData = pProcessData;
       pProcessData = pProcessData->next;
-   }
+    }
 
-   if (pProcessData)
-   {
-      //DbgPrint("CsrFreeProcessData pid: %d\n", Pid);
+  if (pProcessData)
+    {
+      DPRINT("CsrFreeProcessData pid: %d\n", Pid);
       if (pProcessData->Console)
-      {
-	  RtlEnterCriticalSection(&ActiveConsoleLock);
-	  RemoveEntryList(&pProcessData->ProcessEntry);
-	  RtlLeaveCriticalSection(&ActiveConsoleLock);
-      }
+        {
+          RtlEnterCriticalSection(&ProcessDataLock);
+          RemoveEntryList(&pProcessData->ProcessEntry);
+          RtlLeaveCriticalSection(&ProcessDataLock);
+        }
       if (pProcessData->HandleTable)
-      {
-	 for( c = 0; c < pProcessData->HandleTableSize; c++ )
-	 {
-	    if( pProcessData->HandleTable[c] )
-	    {
-               CsrReleaseObject( pProcessData, (HANDLE)((c + 1) << 2) );
-	    }
-	 }
-	 RtlFreeHeap( CsrssApiHeap, 0, pProcessData->HandleTable );
-      }
-      if( pProcessData->Console )
-      {
-         if( InterlockedDecrement( &(pProcessData->Console->Header.ReferenceCount) ) == 0 )
-	 {
-            CsrDeleteConsole( pProcessData->Console );
-	 }
-      }
+        {
+          for (c = 0; c < pProcessData->HandleTableSize; c++)
+            {
+              if (pProcessData->HandleTable[c])
+                {
+                  CsrReleaseObject(pProcessData, (HANDLE)((c + 1) << 2));
+                }
+            }
+          RtlFreeHeap(CsrssApiHeap, 0, pProcessData->HandleTable);
+        }
+      if (pProcessData->Console)
+        {
+          CsrReleaseObjectByPointer((Object_t *) pProcessData->Console);
+        }
       if (pProcessData->CsrSectionViewBase)
-      {
-         NtUnmapViewOfSection(NtCurrentProcess(), pProcessData->CsrSectionViewBase);
-      }
+        {
+          NtUnmapViewOfSection(NtCurrentProcess(), pProcessData->CsrSectionViewBase);
+        }
       if (pPrevProcessData)
-      {
-	 pPrevProcessData->next = pProcessData->next;
-      }
+        {
+          pPrevProcessData->next = pProcessData->next;
+        }
       else
-      {
-	 ProcessData[hash] = pProcessData->next;
-      }
+        {
+          ProcessData[hash] = pProcessData->next;
+        }
 
-      RtlFreeHeap( CsrssApiHeap, 0, pProcessData );
+      RtlFreeHeap(CsrssApiHeap, 0, pProcessData);
       UNLOCK;
       return STATUS_SUCCESS;
    }
+
    UNLOCK;
    return STATUS_INVALID_PARAMETER;
 }
@@ -171,6 +168,8 @@ CSR_API(CsrCreateProcess)
    PCSRSS_PROCESS_DATA NewProcessData;
    NTSTATUS Status;
    HANDLE Process;
+   CSRSS_API_REQUEST ApiRequest;
+   CSRSS_API_REPLY ApiReply;
 
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
      sizeof(LPC_MESSAGE);
@@ -193,39 +192,39 @@ CSR_API(CsrCreateProcess)
      }
    else if (Request->Data.CreateProcessRequest.Flags & CREATE_NEW_CONSOLE)
      {
-	PCSRSS_CONSOLE Console;
+        ApiRequest.Type = CSRSS_ALLOC_CONSOLE;
+        ApiRequest.Header.DataSize = sizeof(CSRSS_ALLOC_CONSOLE_REQUEST);
+        ApiRequest.Header.MessageSize = sizeof(LPC_MESSAGE) + sizeof(CSRSS_ALLOC_CONSOLE_REQUEST);
+        ApiRequest.Data.AllocConsoleRequest.CtrlDispatcher = Request->Data.CreateProcessRequest.CtrlDispatcher;
 
-	Console = RtlAllocateHeap(CsrssApiHeap,
-				  HEAP_ZERO_MEMORY,
-				  sizeof(CSRSS_CONSOLE));
-	Status = CsrInitConsole(Console);
-	if( !NT_SUCCESS( Status ) )
-	  {
-	    CsrFreeProcessData( NewProcessData->ProcessId );
-	    Reply->Status = Status;
-	    return Status;
-	  }
-	NewProcessData->Console = Console;
-	Console->Header.ReferenceCount++;
+        ApiReply.Header.DataSize = sizeof(CSRSS_ALLOC_CONSOLE_REPLY);
+        ApiReply.Header.MessageSize = sizeof(LPC_MESSAGE) + sizeof(CSRSS_ALLOC_CONSOLE_REPLY);
+
+        CsrApiCallHandler(NewProcessData, &ApiRequest, &ApiReply);
+
+        Reply->Status = ApiReply.Status;
+        if (! NT_SUCCESS(Reply->Status))
+          {
+            return Reply->Status;
+          }
+        Reply->Data.CreateProcessReply.InputHandle = ApiReply.Data.AllocConsoleReply.InputHandle;
+        Reply->Data.CreateProcessReply.OutputHandle = ApiReply.Data.AllocConsoleReply.OutputHandle;
      }
    else
      {
-	NewProcessData->Console = ProcessData->Console;
-	InterlockedIncrement( &(ProcessData->Console->Header.ReferenceCount) );
-     }
-
-   if( NewProcessData->Console )
-     {
        CLIENT_ID ClientId;
+
+       NewProcessData->Console = ProcessData->Console;
+       InterlockedIncrement( &(ProcessData->Console->Header.ReferenceCount) );
        CsrInsertObject(NewProcessData,
 		       &Reply->Data.CreateProcessReply.InputHandle,
 		       (Object_t *)NewProcessData->Console);
-       RtlEnterCriticalSection( &ActiveConsoleLock );
+       RtlEnterCriticalSection(&ProcessDataLock );
        CsrInsertObject( NewProcessData,
           &Reply->Data.CreateProcessReply.OutputHandle,
           &(NewProcessData->Console->ActiveBuffer->Header) );
 
-       RtlLeaveCriticalSection( &ActiveConsoleLock );
+       RtlLeaveCriticalSection(&ProcessDataLock);
        ClientId.UniqueProcess = (HANDLE)NewProcessData->ProcessId;
        Status = NtOpenProcess( &Process, PROCESS_DUP_HANDLE, 0, &ClientId );
        if( !NT_SUCCESS( Status ) )
@@ -248,11 +247,10 @@ CSR_API(CsrCreateProcess)
 	 }
        NtClose( Process );
        NewProcessData->CtrlDispatcher = Request->Data.CreateProcessRequest.CtrlDispatcher;
-       RtlEnterCriticalSection( &ActiveConsoleLock );
+       RtlEnterCriticalSection(&ProcessDataLock );
        InsertHeadList(&NewProcessData->Console->ProcessList, &NewProcessData->ProcessEntry);
-       RtlLeaveCriticalSection( &ActiveConsoleLock );
+       RtlLeaveCriticalSection(&ProcessDataLock);
      }
-   else Reply->Data.CreateProcessReply.OutputHandle = Reply->Data.CreateProcessReply.InputHandle = INVALID_HANDLE_VALUE;
 
    Reply->Status = STATUS_SUCCESS;
    return(STATUS_SUCCESS);
@@ -363,11 +361,11 @@ CSR_API(CsrGetOutputHandle)
    }
    else if (ProcessData->Console)
    {
-      RtlEnterCriticalSection( &ActiveConsoleLock );
+      RtlEnterCriticalSection(&ProcessDataLock);
       Reply->Status = CsrInsertObject(ProcessData,
                                       &Reply->Data.GetOutputHandleReply.OutputHandle,
                                       &(ProcessData->Console->ActiveBuffer->Header));
-      RtlLeaveCriticalSection( &ActiveConsoleLock );
+      RtlLeaveCriticalSection(&ProcessDataLock);
    }
    else
    {
@@ -410,39 +408,24 @@ CSR_API(CsrVerifyHandle)
 
 CSR_API(CsrDuplicateHandle)
 {
-   Object_t *Object;
+  Object_t *Object;
 
-   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
+  Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
 
-   ProcessData = CsrGetProcessData(Request->Data.DuplicateHandleRequest.ProcessId);
-   Reply->Status = CsrGetObject(ProcessData, Request->Data.DuplicateHandleRequest.Handle, &Object);
-   if (!NT_SUCCESS(Reply->Status))
-   {
+  ProcessData = CsrGetProcessData(Request->Data.DuplicateHandleRequest.ProcessId);
+  Reply->Status = CsrGetObject(ProcessData, Request->Data.DuplicateHandleRequest.Handle, &Object);
+  if (! NT_SUCCESS(Reply->Status))
+    {
       DPRINT("CsrGetObject failed, status=%x\n", Reply->Status);
-   }
-   else
-   {
-      if (Object->Type == CSRSS_CONSOLE_MAGIC)
-      {
-         Reply->Status = CsrInsertObject(ProcessData,
-		                         &Reply->Data.DuplicateHandleReply.Handle,
-		                         (Object_t *)ProcessData->Console);
-      }
-      else if (Object->Type == CSRSS_SCREEN_BUFFER_MAGIC)
-      {
-         RtlEnterCriticalSection( &ActiveConsoleLock );
-         Reply->Status = CsrInsertObject(ProcessData,
-                                         &Reply->Data.DuplicateHandleReply.Handle,
-                                         &(ProcessData->Console->ActiveBuffer->Header));
-         RtlLeaveCriticalSection( &ActiveConsoleLock );
-      }
-      else
-      {
-         Reply->Status = STATUS_INVALID_PARAMETER;
-      }
-   }
-   return Reply->Status;
+    }
+  else
+    {
+      Reply->Status = CsrInsertObject(ProcessData,
+                                      &Reply->Data.DuplicateHandleReply.Handle,
+                                      Object);
+    }
+  return Reply->Status;
 }
 
 /* EOF */

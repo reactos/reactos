@@ -24,9 +24,9 @@ BEGIN
             VALUE "CompanyName",	RES_STR_COMPANY_NAME
             VALUE "FileDescription",	"CSRSS subsystem usermode code\0"
             VALUE "FileVersion",	RES_STR_FILE_VERSION
-            VALUE "InternalName",	"usercsr\0"
+            VALUE "InternalName",	"win32csr\0"
             VALUE "LegalCopyright",	RES_STR_LEGAL_COPYRIGHT
-            VALUE "OriginalFilename",	"usercsr.dll\0"
+            VALUE "OriginalFilename",	"win32csr.dll\0"
             VALUE "ProductName",	RES_STR_PRODUCT_NAME
             VALUE "ProductVersion",	RES_STR_PRODUCT_VERSION
         END

@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.45 2003/11/24 14:41:29 ekohl Exp $
+# $Id: helper.mk,v 1.46 2003/12/02 11:38:47 gvg Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -825,13 +825,13 @@ else # MK_MODE
 
 ifeq ($(INSTALL_SYMBOLS),yes)
 
-install:
+install: $(SUBDIRS:%=%_install)
 	-$(CP) $(MK_FULLNAME) $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME)
 	-$(CP) $(MK_BASENAME).sym $(INSTALL_DIR)/symbols/$(MK_BASENAME).sym
 
 else # INSTALL_SYMBOLS
 
-install:
+install: $(SUBDIRS:%=%_install)
 	-$(CP) $(MK_FULLNAME) $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME)
 
 endif # INSTALL_SYMBOLS

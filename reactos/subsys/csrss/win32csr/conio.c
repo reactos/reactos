@@ -1,6 +1,6 @@
-/* $Id: conio.c,v 1.58 2003/11/24 14:04:36 gvg Exp $
+/* $Id: conio.c,v 1.1 2003/12/02 11:38:46 gvg Exp $
  *
- * reactos/subsys/csrss/api/conio.c
+ * reactos/subsys/csrss/win32csr/conio.c
  *
  * Console I/O functions
  *
@@ -9,17 +9,19 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
+#include <string.h>
+#include <windows.h>
 
 #include <csrss/csrss.h>
 #include <ntdll/rtl.h>
 #include <ntdll/ldr.h>
 #include <ddk/ntddblue.h>
-#include <win32k/ntuser.h>
 #include <rosrtl/string.h>
 #include <rosrtl/minmax.h>
 #include "api.h"
-#include "usercsr.h"
+#include "conio.h"
+#include "guiconsole.h"
+#include "win32csr.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -31,6 +33,10 @@
 #define ALIAS(Name, Target) typeof(Target) Name = Target
 extern VOID CsrConsoleCtrlEvent(DWORD Event, PCSRSS_PROCESS_DATA ProcessData);
 
+/* Private user32 routines for CSRSS, not defined in any header file */
+extern VOID STDCALL PrivateCsrssRegisterPrimitive(VOID);
+extern VOID STDCALL PrivateCsrssAcquireOrReleaseInputOwnership(BOOL Release);
+
 /* GLOBALS *******************************************************************/
 
 static HANDLE ConsoleDeviceHandle;
@@ -38,8 +44,7 @@ static PCSRSS_CONSOLE ActiveConsole;
 CRITICAL_SECTION ActiveConsoleLock;
 static COORD PhysicalConsoleSize;
 static BOOL TextMode = TRUE;
-static BOOL UserCsrInitialized = FALSE;
-static USERCSRFUNCS UserCsrFuncs;
+static BOOL GuiConsolesInitialized = FALSE;
 
 #define CsrpInitRect(_Rect, _Top, _Left, _Bottom, _Right) \
 { \
@@ -61,8 +66,6 @@ static USERCSRFUNCS UserCsrFuncs;
 /* FUNCTIONS *****************************************************************/
 
 /* Text (blue screen) console support ****************************************/
-
-static void STDCALL CsrpProcessKey(MSG *msg, PCSRSS_CONSOLE Console);
 
 static BOOL FASTCALL
 CsrInitTextConsoleSupport(VOID)
@@ -208,7 +211,7 @@ static VOID FASTCALL
 CsrInitGraphicsConsoleSupport(VOID)
 {
   RtlInitializeCriticalSection(&ActiveConsoleLock);
-  UserCsrInitialized = FALSE;
+  GuiConsolesInitialized = FALSE;
 }
 
 /*
@@ -225,7 +228,7 @@ static VOID CsrpDrawRegion(
     }
   else
     {
-      (*(UserCsrFuncs.DrawRegion))(Console, Region);
+      GuiConsoleDrawRegion(Console, Region);
     }
 }
 
@@ -270,120 +273,98 @@ VOID CsrConsoleCtrlEvent(DWORD Event, PCSRSS_PROCESS_DATA ProcessData)
 
 CSR_API(CsrAllocConsole)
 {
-   PCSRSS_CONSOLE Console;
-   HANDLE Process;
-   NTSTATUS Status;
-   CLIENT_ID ClientId;
-   UNICODE_STRING DllName;
-   HINSTANCE hInst;
-   ANSI_STRING ProcName;
-   USERCSRINITIALIZEPROC InitProc;
+  PCSRSS_CONSOLE Console;
+  HANDLE Process;
+  NTSTATUS Status;
+  CLIENT_ID ClientId;
 
-   DPRINT("CsrAllocConsole\n");
+  DPRINT("CsrAllocConsole\n");
 
-   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
-     sizeof(LPC_MESSAGE);
+  Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
 
-   if (ProcessData == NULL)
-   {
-     return(Reply->Status = STATUS_INVALID_PARAMETER);
-   }
+  if (ProcessData == NULL)
+    {
+      return(Reply->Status = STATUS_INVALID_PARAMETER);
+    }
 
-   if( ProcessData->Console )
-      {
-	 Reply->Status = STATUS_INVALID_PARAMETER;
-	 return STATUS_INVALID_PARAMETER;
-      }
+  if (ProcessData->Console)
+    {
+      Reply->Status = STATUS_INVALID_PARAMETER;
+      return STATUS_INVALID_PARAMETER;
+    }
 
-   if (! UserCsrInitialized && ! TextMode)
-      {
-         RtlInitUnicodeString(&DllName, L"usercsr.dll");
-         Status = LdrLoadDll(NULL, 0, &DllName, (PVOID *) &hInst);
-         if (! NT_SUCCESS(Status))
-            {
-               Reply->Status = Status;
-               return Status;
-            }
-         RtlInitAnsiString(&ProcName, "UserCsrInitialization");
-         Status = LdrGetProcedureAddress(hInst, &ProcName, 0, (PVOID *) &InitProc);
-         if (! NT_SUCCESS(Status))
-            {
-               Reply->Status = Status;
-               return Status;
-            }
-         if (! (*InitProc)(&UserCsrFuncs, CsrssApiHeap, CsrpProcessKey))
-            {
-               Reply->Status = STATUS_UNSUCCESSFUL;
-               return STATUS_UNSUCCESSFUL;
-            }
-         UserCsrInitialized = TRUE;
-      }
+  if (! GuiConsolesInitialized && ! TextMode)
+    {
+      GuiConsoleInitConsoleSupport();
+      GuiConsolesInitialized = TRUE;
+    }
 
-   Reply->Status = STATUS_SUCCESS;
-   Console = RtlAllocateHeap( CsrssApiHeap, 0, sizeof( CSRSS_CONSOLE ) );
-   if( Console == 0 )
-      {
-	Reply->Status = STATUS_INSUFFICIENT_RESOURCES;
-	return STATUS_INSUFFICIENT_RESOURCES;
-      }
-   Reply->Status = CsrInitConsole( Console );
-   if( !NT_SUCCESS( Reply->Status ) )
-     {
-       RtlFreeHeap( CsrssApiHeap, 0, Console );
-       return Reply->Status;
-     }
-   ProcessData->Console = Console;
-   /* add a reference count because the process is tied to the console */
-   Console->Header.ReferenceCount++;
-   Status = CsrInsertObject( ProcessData, &Reply->Data.AllocConsoleReply.InputHandle, &Console->Header );
-   if( !NT_SUCCESS( Status ) )
-      {
-	 CsrDeleteConsole( Console );
-	 ProcessData->Console = 0;
-	 return Reply->Status = Status;
-      }
-   Status = CsrInsertObject( ProcessData, &Reply->Data.AllocConsoleReply.OutputHandle, &Console->ActiveBuffer->Header );
-   if( !NT_SUCCESS( Status ) )
-      {
-	 Console->Header.ReferenceCount--;
-	 CsrReleaseObject( ProcessData, Reply->Data.AllocConsoleReply.InputHandle );
-	 ProcessData->Console = 0;
-	 return Reply->Status = Status;
-      }
+  Reply->Status = STATUS_SUCCESS;
+  Console = RtlAllocateHeap( Win32CsrApiHeap, 0, sizeof( CSRSS_CONSOLE ) );
+  if (NULL == Console)
+    {
+      Reply->Status = STATUS_NO_MEMORY;
+      return STATUS_NO_MEMORY;
+    }
+  Reply->Status = CsrInitConsole(Console);
+  if (! NT_SUCCESS(Reply->Status))
+    {
+      RtlFreeHeap(Win32CsrApiHeap, 0, Console);
+      return Reply->Status;
+    }
+  ProcessData->Console = Console;
 
-   ClientId.UniqueProcess = (HANDLE)ProcessData->ProcessId;
-   Status = NtOpenProcess( &Process, PROCESS_DUP_HANDLE, 0, &ClientId );
-   if( !NT_SUCCESS( Status ) )
-     {
-       DbgPrint( "CSR: NtOpenProcess() failed for handle duplication\n" );
-       Console->Header.ReferenceCount--;
-       ProcessData->Console = 0;
-       CsrReleaseObject( ProcessData, Reply->Data.AllocConsoleReply.OutputHandle );
-       CsrReleaseObject( ProcessData, Reply->Data.AllocConsoleReply.InputHandle );
-       Reply->Status = Status;
-       return Status;
-     }
-   Status = NtDuplicateObject( NtCurrentProcess(), ProcessData->Console->ActiveEvent, Process, &ProcessData->ConsoleEvent, SYNCHRONIZE, FALSE, 0 );
-   if( !NT_SUCCESS( Status ) )
-     {
-       DbgPrint( "CSR: NtDuplicateObject() failed: %x\n", Status );
-       NtClose( Process );
-       Console->Header.ReferenceCount--;
-       CsrReleaseObject( ProcessData, Reply->Data.AllocConsoleReply.OutputHandle );
-       CsrReleaseObject( ProcessData, Reply->Data.AllocConsoleReply.InputHandle );
-       ProcessData->Console = 0;
-       Reply->Status = Status;
-       return Status;
-     }
-   NtClose( Process );
-   LOCK;
-   ProcessData->CtrlDispatcher = Request->Data.AllocConsoleRequest.CtrlDispatcher;
-   DPRINT("CSRSS:CtrlDispatcher address: %x\n", ProcessData->CtrlDispatcher);      
-   InsertHeadList(&ProcessData->Console->ProcessList, &ProcessData->ProcessEntry);
-   UNLOCK;
+  /* add a reference count because the process is tied to the console */
+  Console->Header.ReferenceCount++;
+  Status = Win32CsrInsertObject(ProcessData, &Reply->Data.AllocConsoleReply.InputHandle, &Console->Header);
+  if (! NT_SUCCESS(Status))
+    {
+      ConioDeleteConsole((Object_t *) Console);
+      ProcessData->Console = 0;
+      return Reply->Status = Status;
+    }
+  Status = Win32CsrInsertObject(ProcessData, &Reply->Data.AllocConsoleReply.OutputHandle, &Console->ActiveBuffer->Header);
+  if (!NT_SUCCESS(Status))
+    {
+      Console->Header.ReferenceCount--;
+      Win32CsrReleaseObject(ProcessData, Reply->Data.AllocConsoleReply.InputHandle);
+      ProcessData->Console = 0;
+      return Reply->Status = Status;
+    }
 
-   return STATUS_SUCCESS;
+  ClientId.UniqueProcess = (HANDLE) ProcessData->ProcessId;
+  Status = NtOpenProcess(&Process, PROCESS_DUP_HANDLE, 0, &ClientId);
+  if (! NT_SUCCESS(Status))
+    {
+      DbgPrint( "CSR: NtOpenProcess() failed for handle duplication\n" );
+      Console->Header.ReferenceCount--;
+      ProcessData->Console = 0;
+      Win32CsrReleaseObject(ProcessData, Reply->Data.AllocConsoleReply.OutputHandle);
+      Win32CsrReleaseObject(ProcessData, Reply->Data.AllocConsoleReply.InputHandle);
+      Reply->Status = Status;
+      return Status;
+    }
+  Status = NtDuplicateObject(NtCurrentProcess(), ProcessData->Console->ActiveEvent, Process, &ProcessData->ConsoleEvent, SYNCHRONIZE, FALSE, 0);
+  if (! NT_SUCCESS(Status))
+    {
+      DbgPrint( "CSR: NtDuplicateObject() failed: %x\n", Status );
+      NtClose(Process);
+      Console->Header.ReferenceCount--;
+      Win32CsrReleaseObject(ProcessData, Reply->Data.AllocConsoleReply.OutputHandle);
+      Win32CsrReleaseObject(ProcessData, Reply->Data.AllocConsoleReply.InputHandle);
+      ProcessData->Console = 0;
+      Reply->Status = Status;
+      return Status;
+    }
+  NtClose(Process);
+  LOCK;
+  ProcessData->CtrlDispatcher = Request->Data.AllocConsoleRequest.CtrlDispatcher;
+  DPRINT("CSRSS:CtrlDispatcher address: %x\n", ProcessData->CtrlDispatcher);      
+  InsertHeadList(&ProcessData->Console->ProcessList, &ProcessData->ProcessEntry);
+  UNLOCK;
+
+  return STATUS_SUCCESS;
 }
 
 CSR_API(CsrFreeConsole)
@@ -408,7 +389,7 @@ CSR_API(CsrFreeConsole)
      ProcessData->Console = 0;
    if( Console->Header.ReferenceCount == 0 ) {
      if( Console != ActiveConsole ) 
-       CsrDeleteConsole( Console );
+       ConioDeleteConsole((Object_t *) Console);
    }
 
    UNLOCK;
@@ -436,14 +417,14 @@ CSR_API(CsrReadConsole)
 
    Buffer = Reply->Data.ReadConsoleReply.Buffer;
    LOCK;   
-   Status = CsrGetObject( ProcessData, Request->Data.ReadConsoleRequest.ConsoleHandle, (Object_t **)&Console );
+   Status = Win32CsrGetObject( ProcessData, Request->Data.ReadConsoleRequest.ConsoleHandle, (Object_t **)&Console );
    if( !NT_SUCCESS( Status ) )
       {
 	 Reply->Status = Status;
 	 UNLOCK;
 	 return Status;
       }
-   if( Console->Header.Type != CSRSS_CONSOLE_MAGIC )
+   if( Console->Header.Type != CONIO_CONSOLE_MAGIC )
       {
 	 Reply->Status = STATUS_INVALID_HANDLE;
 	 UNLOCK;
@@ -474,7 +455,7 @@ CSR_API(CsrReadConsole)
 			   Reply->Data.ReadConsoleReply.NrCharactersRead = 0;
 			   Reply->Status = STATUS_NOTIFY_CLEANUP;
 			   Console->WaitingChars--;
-			   RtlFreeHeap( CsrssApiHeap, 0, Input );
+			   RtlFreeHeap( Win32CsrApiHeap, 0, Input );
 			   UNLOCK;
 			   return STATUS_NOTIFY_CLEANUP;
 			}
@@ -493,7 +474,7 @@ CSR_API(CsrReadConsole)
 	    }
 	 else i--;
 	 Console->WaitingChars--;
-	 RtlFreeHeap( CsrssApiHeap, 0, Input );
+	 RtlFreeHeap( Win32CsrApiHeap, 0, Input );
       }
    Reply->Data.ReadConsoleReply.NrCharactersRead = i;
    if( !i )
@@ -583,7 +564,7 @@ CsrpScrollUpOneLine(PCSRSS_CONSOLE Console)
       Dest.bottom = Console->Size.Y - 2;
       Dest.right = Console->Size.X - 1;
 
-      (*(UserCsrFuncs.CopyRegion))(Console, &Source, &Dest);
+      GuiConsoleCopyRegion(Console, &Source, &Dest);
     }
 }
 
@@ -953,19 +934,29 @@ static VOID CsrpFillRegion(
 
 CSR_API(CsrWriteConsole)
 {
-   BYTE *Buffer = Request->Data.WriteConsoleRequest.Buffer;
-   PCSRSS_SCREEN_BUFFER Buff;
+  BYTE *Buffer = Request->Data.WriteConsoleRequest.Buffer;
+  PCSRSS_SCREEN_BUFFER Buff;
 
-   DPRINT("CsrWriteConsole\n");
+  DPRINT("CsrWriteConsole\n");
    
-   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
-     sizeof(LPC_MESSAGE);
+  Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
+                           sizeof(LPC_MESSAGE);
 
-   LOCK;
-   if( !NT_SUCCESS( CsrGetObject( ProcessData, Request->Data.WriteConsoleRequest.ConsoleHandle,
-     (Object_t **)&Buff ) ) || Buff->Header.Type != CSRSS_SCREEN_BUFFER_MAGIC )
-      {
+  if (Request->Header.DataSize
+      < sizeof(CSRSS_WRITE_CONSOLE_REQUEST) - 1
+        + Request->Data.WriteConsoleRequest.NrCharactersToWrite)
+    {
+      DPRINT1("Invalid request size\n");
+      return Reply->Status = STATUS_INVALID_PARAMETER;
+    }
+
+  LOCK;
+  if (! NT_SUCCESS(Win32CsrGetObject(ProcessData,
+                                     Request->Data.WriteConsoleRequest.ConsoleHandle,
+                                     (Object_t **) &Buff))
+      || Buff->Header.Type != CONIO_SCREEN_BUFFER_MAGIC)
+    {
 	 UNLOCK;
 	 return Reply->Status = STATUS_INVALID_HANDLE;
       }
@@ -982,7 +973,7 @@ NTSTATUS STDCALL CsrInitConsoleScreenBuffer(PCSRSS_SCREEN_BUFFER Buffer,
                                             unsigned Width,
                                             unsigned Height)
 {
-  Buffer->Header.Type = CSRSS_SCREEN_BUFFER_MAGIC;
+  Buffer->Header.Type = CONIO_SCREEN_BUFFER_MAGIC;
   Buffer->Header.ReferenceCount = 0;
   Buffer->MaxX = Width;
   Buffer->MaxY = Height;
@@ -990,7 +981,7 @@ NTSTATUS STDCALL CsrInitConsoleScreenBuffer(PCSRSS_SCREEN_BUFFER Buffer,
   Buffer->ShowY = 0;
   Buffer->CurrentX = 0;
   Buffer->CurrentY = 0;
-  Buffer->Buffer = RtlAllocateHeap( CsrssApiHeap, 0, Buffer->MaxX * Buffer->MaxY * 2 );
+  Buffer->Buffer = RtlAllocateHeap( Win32CsrApiHeap, 0, Buffer->MaxX * Buffer->MaxY * 2 );
   if( Buffer->Buffer == 0 )
     return STATUS_INSUFFICIENT_RESOURCES;
   Buffer->DefaultAttrib = (TextMode ? 0x17 : 0x0f);
@@ -1010,10 +1001,11 @@ NTSTATUS STDCALL CsrInitConsoleScreenBuffer(PCSRSS_SCREEN_BUFFER Buffer,
   return STATUS_SUCCESS;
 }
 
-VOID STDCALL CsrDeleteScreenBuffer( PCSRSS_SCREEN_BUFFER Buffer )
+VOID STDCALL ConioDeleteScreenBuffer(Object_t *Object)
 {
-  RtlFreeHeap( CsrssApiHeap, 0, Buffer->Buffer );
-  RtlFreeHeap( CsrssApiHeap, 0, Buffer );
+  PCSRSS_SCREEN_BUFFER Buffer = (PCSRSS_SCREEN_BUFFER) Object;
+  RtlFreeHeap(Win32CsrApiHeap, 0, Buffer->Buffer);
+  RtlFreeHeap(Win32CsrApiHeap, 0, Buffer);
 }
 
 NTSTATUS STDCALL CsrInitConsole(PCSRSS_CONSOLE Console)
@@ -1031,7 +1023,7 @@ NTSTATUS STDCALL CsrInitConsole(PCSRSS_CONSOLE Console)
   Console->WaitingChars = 0;
   Console->WaitingLines = 0;
   Console->EchoCount = 0;
-  Console->Header.Type = CSRSS_CONSOLE_MAGIC;
+  Console->Header.Type = CONIO_CONSOLE_MAGIC;
   Console->Mode = ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_MOUSE_INPUT;
   Console->EarlyReturn = FALSE;
   InitializeListHead(&Console->InputEvents);
@@ -1048,14 +1040,14 @@ NTSTATUS STDCALL CsrInitConsole(PCSRSS_CONSOLE Console)
   if (! TextMode)
      {
         Console->ActiveBuffer = NULL;
-        (*(UserCsrFuncs.InitConsole))(Console);
+        GuiConsoleInitConsole(Console);
      }
   else
      {
         Console->hWindow = (HWND) NULL;
         Console->Size = PhysicalConsoleSize;
      }
-  NewBuffer = RtlAllocateHeap( CsrssApiHeap, 0, sizeof( CSRSS_SCREEN_BUFFER ) );
+  NewBuffer = RtlAllocateHeap( Win32CsrApiHeap, 0, sizeof( CSRSS_SCREEN_BUFFER ) );
   if (! NewBuffer )
      {
 	NtClose(Console->ActiveEvent);
@@ -1065,7 +1057,7 @@ NTSTATUS STDCALL CsrInitConsole(PCSRSS_CONSOLE Console)
   if( !NT_SUCCESS( Status ) )
      {
 	NtClose( Console->ActiveEvent );
-	RtlFreeHeap( CsrssApiHeap, 0, NewBuffer );
+	RtlFreeHeap( Win32CsrApiHeap, 0, NewBuffer );
 	return Status;
      }
   Console->ActiveBuffer = NewBuffer;
@@ -1110,47 +1102,49 @@ VOID STDCALL CsrDrawConsole(PCSRSS_CONSOLE Console)
 }
 
 
-VOID STDCALL CsrDeleteConsole( PCSRSS_CONSOLE Console )
+VOID STDCALL ConioDeleteConsole(Object_t *Object)
 {
-   ConsoleInput *Event;
-   DPRINT( "CsrDeleteConsole\n" );
-   LOCK;
-   /* Drain input event queue */
-   while( Console->InputEvents.Flink != &Console->InputEvents )
-      {
-	 Event = (ConsoleInput *)Console->InputEvents.Flink;
-	 Console->InputEvents.Flink = Console->InputEvents.Flink->Flink;
-	 Console->InputEvents.Flink->Flink->Blink = &Console->InputEvents;
-	 RtlFreeHeap( CsrssApiHeap, 0, Event );
-      }
-   /* Switch to next console */
-   if( ActiveConsole == Console )
-      {
-	 if( Console->Next != Console )
-	    {
-	       ActiveConsole = Console->Next;
-	    }
-	 else ActiveConsole = 0;
-      }
-   if (Console->Next != Console)
-   {
+  PCSRSS_CONSOLE Console = (PCSRSS_CONSOLE) Object;
+  ConsoleInput *Event;
+  DPRINT("ConioDeleteConsole\n");
+  LOCK;
+  /* Drain input event queue */
+  while (Console->InputEvents.Flink != &Console->InputEvents)
+    {
+      Event = (ConsoleInput *) Console->InputEvents.Flink;
+      Console->InputEvents.Flink = Console->InputEvents.Flink->Flink;
+      Console->InputEvents.Flink->Flink->Blink = &Console->InputEvents;
+      RtlFreeHeap(Win32CsrApiHeap, 0, Event);
+    }
+  /* Switch to next console */
+  if (ActiveConsole == Console)
+    {
+      ActiveConsole = Console->Next != Console ? Console->Next : NULL;
+    }
+  if (Console->Next != Console)
+    {
       Console->Prev->Next = Console->Next;
       Console->Next->Prev = Console->Prev;
-   }
+    }
    
-   if( ActiveConsole )
-     CsrDrawConsole(ActiveConsole);
-   if( !--Console->ActiveBuffer->Header.ReferenceCount )
-     CsrDeleteScreenBuffer( Console->ActiveBuffer );
-   Console->ActiveBuffer = NULL;
-   if (! TextMode)
-     {
-       (*(UserCsrFuncs.DeleteConsole))(Console);
-     }
-   UNLOCK;
-   NtClose( Console->ActiveEvent );
-   RtlFreeUnicodeString( &Console->Title );
-   RtlFreeHeap( CsrssApiHeap, 0, Console );
+  if (ActiveConsole)
+    {
+      CsrDrawConsole(ActiveConsole);
+    }
+
+  if (! --Console->ActiveBuffer->Header.ReferenceCount)
+    {
+      ConioDeleteScreenBuffer((Object_t *) Console->ActiveBuffer);
+    }
+  Console->ActiveBuffer = NULL;
+  if (! TextMode)
+    {
+      GuiConsoleDeleteConsole(Console);
+    }
+  UNLOCK;
+  NtClose(Console->ActiveEvent);
+  RtlFreeUnicodeString(&Console->Title);
+  RtlFreeHeap(Win32CsrApiHeap, 0, Console);
 }
 
 VOID STDCALL CsrInitConsoleSupport(VOID)
@@ -1195,7 +1189,7 @@ static void CsrpProcessChar( PCSRSS_CONSOLE Console,
 	  CsrConsoleCtrlEvent((DWORD)CTRL_C_EVENT, current);
 	}
       UNLOCK;
-      RtlFreeHeap( CsrssApiHeap, 0, KeyEventRecord );
+      RtlFreeHeap( Win32CsrApiHeap, 0, KeyEventRecord );
       return;
     }
   if( KeyEventRecord->InputEvent.Event.KeyEvent.dwControlKeyState &
@@ -1211,7 +1205,7 @@ static void CsrpProcessChar( PCSRSS_CONSOLE Console,
 	    {
 	      DbgPrint( "CSR: No Active Console!\n" );
 	      UNLOCK;
-	      RtlFreeHeap( CsrssApiHeap, 0, KeyEventRecord );
+	      RtlFreeHeap( Win32CsrApiHeap, 0, KeyEventRecord );
 	      return;
 	    }
 	  if( KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode == VK_UP )
@@ -1234,14 +1228,14 @@ static void CsrpProcessChar( PCSRSS_CONSOLE Console,
 	  CsrDrawConsole(Console);
 	  UNLOCK;
 	}
-      RtlFreeHeap( CsrssApiHeap, 0, KeyEventRecord );
+      RtlFreeHeap( Win32CsrApiHeap, 0, KeyEventRecord );
       return;
     }
   if( Console == 0 )
     {
       DbgPrint( "CSR: No Active Console!\n" );
       UNLOCK;
-      RtlFreeHeap( CsrssApiHeap, 0, KeyEventRecord );
+      RtlFreeHeap( Win32CsrApiHeap, 0, KeyEventRecord );
       return;
     }
 
@@ -1257,7 +1251,7 @@ static void CsrpProcessChar( PCSRSS_CONSOLE Console,
 	KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar = '\r';
         InsertTailList(&Console->InputEvents, &KeyEventRecord->ListEntry);
 	Console->WaitingChars++;
-	KeyEventRecord = RtlAllocateHeap( CsrssApiHeap, 0, sizeof( ConsoleInput ) );
+	KeyEventRecord = RtlAllocateHeap( Win32CsrApiHeap, 0, sizeof( ConsoleInput ) );
 	if( !KeyEventRecord )
 	  {
 	    DbgPrint( "CSR: Failed to allocate KeyEventRecord\n" );
@@ -1303,9 +1297,9 @@ static void CsrpProcessChar( PCSRSS_CONSOLE Console,
 	  RemoveEntryList(&TempInput->ListEntry);
 	  if( TempInput->Echoed )
 	    CsrpWriteConsole( Console->ActiveBuffer, &KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar, 1, TRUE );	
-  RtlFreeHeap( CsrssApiHeap, 0, TempInput );
+  RtlFreeHeap( Win32CsrApiHeap, 0, TempInput );
 	  RemoveEntryList(&KeyEventRecord->ListEntry);
-	  RtlFreeHeap( CsrssApiHeap, 0, KeyEventRecord );
+	  RtlFreeHeap( Win32CsrApiHeap, 0, KeyEventRecord );
 	  Console->WaitingChars -= 2;
 	}
       else {
@@ -1337,7 +1331,7 @@ static DWORD CsrpGetShiftState( PBYTE KeyState ) {
 
   for( i = 0; i < 0x100; i++ ) {
     if( KeyState[i] & 0x80 ) {
-      UINT vk = NtUserMapVirtualKeyEx( i, 3, 0, 0 ) & 0xff;
+      UINT vk = MapVirtualKeyExW( i, 3, 0 ) & 0xff;
       switch( vk ) {
       case VK_LSHIFT:
       case VK_RSHIFT:
@@ -1381,8 +1375,8 @@ static DWORD CsrpGetShiftState( PBYTE KeyState ) {
   return ssOut;
 }
 
-static void STDCALL
-CsrpProcessKey(MSG *msg, PCSRSS_CONSOLE Console)
+void STDCALL
+CsrProcessKey(MSG *msg, PCSRSS_CONSOLE Console)
 {
   static PCSRSS_CONSOLE SwapConsole = 0; /* console we are thinking about swapping with */
   static BYTE KeyState[256] = { 0 };
@@ -1408,7 +1402,7 @@ CsrpProcessKey(MSG *msg, PCSRSS_CONSOLE Console)
   Down = msg->message == WM_KEYDOWN || msg->message == WM_CHAR || 
     msg->message == WM_SYSKEYDOWN || msg->message == WM_SYSCHAR;
 
-  NtUserGetKeyboardState((VOID *)KeyState);
+  GetKeyboardState(KeyState);
   ShiftState = CsrpGetShiftState(KeyState);
 
   if (msg->message == WM_CHAR || msg->message == WM_SYSCHAR)
@@ -1422,13 +1416,13 @@ CsrpProcessKey(MSG *msg, PCSRSS_CONSOLE Console)
       INT RetChars = 0;
 
       VirtualKeyCode = msg->wParam;
-      RetChars = NtUserToUnicodeEx(VirtualKeyCode,
-				   VirtualScanCode,
-				   KeyState,
-				   Chars,
-				   2,
-				   0,
-				   0);
+      RetChars = ToUnicodeEx(VirtualKeyCode,
+                             VirtualScanCode,
+                             KeyState,
+                             Chars,
+                             2,
+                             0,
+                             0);
       UnicodeChar = (1 == RetChars ? Chars[0] : 0);
     }
 
@@ -1469,7 +1463,7 @@ CsrpProcessKey(MSG *msg, PCSRSS_CONSOLE Console)
                          SwapConsole->Next);
           Title.MaximumLength = RtlUnicodeStringToAnsiSize(&SwapConsole->Title);
           Title.Length = 0;
-          Buffer = RtlAllocateHeap(CsrssApiHeap,
+          Buffer = RtlAllocateHeap(Win32CsrApiHeap,
 		                   0,
 				   sizeof( COORD ) + Title.MaximumLength);
           pos = (COORD *)Buffer;
@@ -1494,7 +1488,7 @@ CsrpProcessKey(MSG *msg, PCSRSS_CONSOLE Console)
             {
               DPRINT1( "Error writing to console\n" );
 	    }
-          RtlFreeHeap(CsrssApiHeap, 0, Buffer);
+          RtlFreeHeap(Win32CsrApiHeap, 0, Buffer);
 	      
           UNLOCK;
         }
@@ -1531,7 +1525,7 @@ CsrpProcessKey(MSG *msg, PCSRSS_CONSOLE Console)
       return;
     }
 
-  ConInRec = RtlAllocateHeap(CsrssApiHeap, 0, sizeof(ConsoleInput));
+  ConInRec = RtlAllocateHeap(Win32CsrApiHeap, 0, sizeof(ConsoleInput));
 
   if (NULL == ConInRec)
     {
@@ -1562,7 +1556,7 @@ CsrpProcessKey(MSG *msg, PCSRSS_CONSOLE Console)
   if (!ConInRec->Fake || !ConInRec->NotChar)
     CsrpProcessChar(Console, ConInRec);
   else
-    RtlFreeHeap(CsrssApiHeap,0,ConInRec);
+    RtlFreeHeap(Win32CsrApiHeap,0,ConInRec);
   UNLOCK;
 }
 
@@ -1573,24 +1567,24 @@ VOID Console_Api( DWORD RefreshEvent )
   MSG msg;
 
   /* This call establishes our message queue */
-  NtUserPeekMessage( &msg, 0,0,0, PM_NOREMOVE );
+  PeekMessageW( &msg, 0,0,0, PM_NOREMOVE );
   /* This call registers our message queue */
-  NtUserCallNoParam( NOPARAM_ROUTINE_REGISTER_PRIMITIVE );
+  PrivateCsrssRegisterPrimitive();
   /* This call turns on the input system in win32k */
-  NtUserAcquireOrReleaseInputOwnership( FALSE );
+  PrivateCsrssAcquireOrReleaseInputOwnership(FALSE);
   
   while (TRUE) {
-    NtUserGetMessage( &msg, 0,0,0 );
-    NtUserTranslateMessage( &msg, 0 );
+    GetMessageW(&msg, 0, 0, 0);
+    TranslateMessage(&msg);
 
     if ((msg.message == WM_CHAR || msg.message == WM_SYSCHAR ||
 	 msg.message == WM_KEYDOWN || msg.message == WM_KEYUP ||
 	 msg.message == WM_SYSKEYDOWN || msg.message == WM_SYSKEYUP)) {
-       CsrpProcessKey(&msg, ActiveConsole);
+       CsrProcessKey(&msg, ActiveConsole);
     }
   }
 
-  NtUserAcquireOrReleaseInputOwnership( TRUE );
+  PrivateCsrssAcquireOrReleaseInputOwnership( TRUE );
 }
 
 CSR_API(CsrGetScreenBufferInfo)
@@ -1607,8 +1601,8 @@ CSR_API(CsrGetScreenBufferInfo)
      sizeof(LPC_MESSAGE);
 
    LOCK;
-   if( !NT_SUCCESS( CsrGetObject( ProcessData, Request->Data.ScreenBufferInfoRequest.ConsoleHandle,
-     (Object_t **)&Buff ) ) || Buff->Header.Type != CSRSS_SCREEN_BUFFER_MAGIC )
+   if( !NT_SUCCESS( Win32CsrGetObject( ProcessData, Request->Data.ScreenBufferInfoRequest.ConsoleHandle,
+     (Object_t **)&Buff ) ) || Buff->Header.Type != CONIO_SCREEN_BUFFER_MAGIC )
       {
 	 UNLOCK;
 	 return Reply->Status = STATUS_INVALID_HANDLE;
@@ -1652,8 +1646,8 @@ CSR_API(CsrSetCursor)
   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
 
   LOCK;
-  if( !NT_SUCCESS( CsrGetObject( ProcessData, Request->Data.SetCursorRequest.ConsoleHandle,
-     (Object_t **)&Buff ) ) || Buff->Header.Type != CSRSS_SCREEN_BUFFER_MAGIC )
+  if( !NT_SUCCESS( Win32CsrGetObject( ProcessData, Request->Data.SetCursorRequest.ConsoleHandle,
+     (Object_t **)&Buff ) ) || Buff->Header.Type != CONIO_SCREEN_BUFFER_MAGIC )
     {
       UNLOCK;
       return Reply->Status = STATUS_INVALID_HANDLE;
@@ -1698,76 +1692,91 @@ CSR_API(CsrSetCursor)
 
 CSR_API(CsrWriteConsoleOutputChar)
 {
-   PBYTE String = Request->Data.WriteConsoleOutputCharRequest.String;
-   PBYTE Buffer;
-   PCSRSS_SCREEN_BUFFER Buff;
-   DWORD X, Y, Length;
-   NTSTATUS Status;
-   IO_STATUS_BLOCK Iosb;
-   SMALL_RECT UpdateRect;
+  PBYTE String = Request->Data.WriteConsoleOutputCharRequest.String;
+  PBYTE Buffer;
+  PCSRSS_SCREEN_BUFFER Buff;
+  DWORD X, Y, Length;
+  NTSTATUS Status;
+  IO_STATUS_BLOCK Iosb;
+  SMALL_RECT UpdateRect;
 
-   DPRINT("CsrWriteConsoleOutputChar\n");
-   
-   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
-     sizeof(LPC_MESSAGE);
-   LOCK;
-   if( !NT_SUCCESS( CsrGetObject( ProcessData, Request->Data.WriteConsoleOutputCharRequest.ConsoleHandle, (Object_t **)&Buff ) ) || Buff->Header.Type != CSRSS_SCREEN_BUFFER_MAGIC )
-      {
-	 UNLOCK;
-	 return Reply->Status = STATUS_INVALID_HANDLE;
-      }
+  DPRINT("CsrWriteConsoleOutputChar\n");
+
+  Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
+                           sizeof(LPC_MESSAGE);
+
+  if (Request->Header.DataSize
+      < sizeof(CSRSS_WRITE_CONSOLE_OUTPUT_CHAR_REQUEST) - 1
+        + Request->Data.WriteConsoleOutputCharRequest.Length)
+    {
+      DPRINT1("Invalid request size\n");
+      return Reply->Status = STATUS_INVALID_PARAMETER;
+    }
+
+  LOCK;
+  if (! NT_SUCCESS(Win32CsrGetObject(ProcessData,
+                                     Request->Data.WriteConsoleOutputCharRequest.ConsoleHandle,
+                                     (Object_t **) &Buff))
+      || Buff->Header.Type != CONIO_SCREEN_BUFFER_MAGIC)
+    {
+      UNLOCK;
+      return Reply->Status = STATUS_INVALID_HANDLE;
+    }
 
 
-   X = Request->Data.WriteConsoleOutputCharRequest.Coord.X + Buff->ShowX;
-   Y = (Request->Data.WriteConsoleOutputCharRequest.Coord.Y + Buff->ShowY) % Buff->MaxY;
-   Length = Request->Data.WriteConsoleOutputCharRequest.Length;
-   Buffer = &Buff->Buffer[2 * (Y * Buff->MaxX + X)];
-   CsrpPhysicalToLogical(Buff, X, Y, &(UpdateRect.Left), &(UpdateRect.Top));
-   while(Length--)
-   {
+  X = Request->Data.WriteConsoleOutputCharRequest.Coord.X + Buff->ShowX;
+  Y = (Request->Data.WriteConsoleOutputCharRequest.Coord.Y + Buff->ShowY) % Buff->MaxY;
+  Length = Request->Data.WriteConsoleOutputCharRequest.Length;
+  Buffer = &Buff->Buffer[2 * (Y * Buff->MaxX + X)];
+  CsrpPhysicalToLogical(Buff, X, Y, &(UpdateRect.Left), &(UpdateRect.Top));
+  while (Length--)
+    {
       *Buffer = *String++;
       Buffer += 2;
       if (++X == Buff->MaxX)
-      {
-         if (! TextMode && NULL != Buff->Console)
-         {
-            CsrpPhysicalToLogical(Buff, X - 1, Y, &(UpdateRect.Right), &(UpdateRect.Bottom));
-            CsrpDrawRegion(Buff->Console, UpdateRect);
-            CsrpPhysicalToLogical(Buff, 0, Y + 1, &(UpdateRect.Left), &(UpdateRect.Top));
-         }
-         if (++Y == Buff->MaxY)
-	 {
-	    Y = 0;
-	    Buffer = Buff->Buffer;
-	 }
-	 X = 0;
-      }
-   }
-   if (! TextMode && NULL != Buff->Console)
-     {
-       CsrpPhysicalToLogical(Buff, X - 1, Y, &(UpdateRect.Right), &(UpdateRect.Bottom));
-       CsrpDrawRegion(Buff->Console, UpdateRect);
-     }
-   else if (TextMode && ActiveConsole->ActiveBuffer == Buff)
-     {
-       Status = NtDeviceIoControlFile( ConsoleDeviceHandle,
-				       NULL,
-				       NULL,
-				       NULL,
-				       &Iosb,
-				       IOCTL_CONSOLE_WRITE_OUTPUT_CHARACTER,
-				       &Request->Data.WriteConsoleOutputCharRequest.Coord,
-				       sizeof (COORD) + Request->Data.WriteConsoleOutputCharRequest.Length,
-				       NULL,
-				       0);
-       if( !NT_SUCCESS( Status ) )
-	 DPRINT1( "Failed to write output chars: %x\n", Status );
-     }
-   Reply->Data.WriteConsoleOutputCharReply.EndCoord.X = X - Buff->ShowX;
-   Reply->Data.WriteConsoleOutputCharReply.EndCoord.Y = (Y + Buff->MaxY - Buff->ShowY) % Buff->MaxY;
-   UNLOCK;
-   return Reply->Status = STATUS_SUCCESS;
+        {
+          if (! TextMode && NULL != Buff->Console)
+            {
+              CsrpPhysicalToLogical(Buff, X - 1, Y, &(UpdateRect.Right), &(UpdateRect.Bottom));
+              CsrpDrawRegion(Buff->Console, UpdateRect);
+              CsrpPhysicalToLogical(Buff, 0, Y + 1, &(UpdateRect.Left), &(UpdateRect.Top));
+            }
+          if (++Y == Buff->MaxY)
+            {
+              Y = 0;
+              Buffer = Buff->Buffer;
+            }
+          X = 0;
+        }
+    }
+
+  if (! TextMode && NULL != Buff->Console)
+    {
+      CsrpPhysicalToLogical(Buff, X - 1, Y, &(UpdateRect.Right), &(UpdateRect.Bottom));
+      CsrpDrawRegion(Buff->Console, UpdateRect);
+    }
+  else if (TextMode && ActiveConsole->ActiveBuffer == Buff)
+    {
+      Status = NtDeviceIoControlFile(ConsoleDeviceHandle,
+                                     NULL,
+				     NULL,
+				     NULL,
+				     &Iosb,
+				     IOCTL_CONSOLE_WRITE_OUTPUT_CHARACTER,
+				     &Request->Data.WriteConsoleOutputCharRequest.Coord,
+				     sizeof(COORD) + Request->Data.WriteConsoleOutputCharRequest.Length,
+				     NULL,
+				     0);
+      if (! NT_SUCCESS(Status))
+        {
+          DPRINT1( "Failed to write output chars: %x\n", Status );
+        }
+    }
+  Reply->Data.WriteConsoleOutputCharReply.EndCoord.X = X - Buff->ShowX;
+  Reply->Data.WriteConsoleOutputCharReply.EndCoord.Y = (Y + Buff->MaxY - Buff->ShowY) % Buff->MaxY;
+  UNLOCK;
+  return Reply->Status = STATUS_SUCCESS;
 }
 
 CSR_API(CsrFillOutputChar)
@@ -1788,7 +1797,7 @@ CSR_API(CsrFillOutputChar)
      sizeof(LPC_MESSAGE);
 
    LOCK;
-   if( !NT_SUCCESS( CsrGetObject( ProcessData, Request->Data.FillOutputRequest.ConsoleHandle, (Object_t **)&Buff ) ) || Buff->Header.Type != CSRSS_SCREEN_BUFFER_MAGIC )
+   if( !NT_SUCCESS( Win32CsrGetObject( ProcessData, Request->Data.FillOutputRequest.ConsoleHandle, (Object_t **)&Buff ) ) || Buff->Header.Type != CONIO_SCREEN_BUFFER_MAGIC )
       {
 	 UNLOCK;
 	 return Reply->Status = STATUS_INVALID_HANDLE;
@@ -1862,8 +1871,8 @@ CSR_API(CsrReadInputEvent)
    Reply->Data.ReadInputReply.Event = ProcessData->ConsoleEvent;
    
    LOCK;
-   Status = CsrGetObject( ProcessData, Request->Data.ReadInputRequest.ConsoleHandle, (Object_t **)&Console );
-   if( !NT_SUCCESS( Status ) || (Status = Console->Header.Type == CSRSS_CONSOLE_MAGIC ? 0 : STATUS_INVALID_HANDLE))
+   Status = Win32CsrGetObject( ProcessData, Request->Data.ReadInputRequest.ConsoleHandle, (Object_t **)&Console );
+   if( !NT_SUCCESS( Status ) || (Status = Console->Header.Type == CONIO_CONSOLE_MAGIC ? 0 : STATUS_INVALID_HANDLE))
       {
          Reply->Status = Status;
          UNLOCK;
@@ -1888,7 +1897,7 @@ CSR_API(CsrReadInputEvent)
            }
 	   Console->WaitingChars--;
 	 }
-       RtlFreeHeap( CsrssApiHeap, 0, Input );
+       RtlFreeHeap( Win32CsrApiHeap, 0, Input );
 
        Reply->Data.ReadInputReply.MoreEvents = (Console->InputEvents.Flink != &Console->InputEvents) ? TRUE : FALSE;
        Status = STATUS_SUCCESS;
@@ -1907,77 +1916,94 @@ CSR_API(CsrReadInputEvent)
 
 CSR_API(CsrWriteConsoleOutputAttrib)
 {
-   PCSRSS_SCREEN_BUFFER Buff;
-   PUCHAR Buffer, Attribute;
-   NTSTATUS Status;
-   int X, Y, Length;
-   IO_STATUS_BLOCK Iosb;
-   SMALL_RECT UpdateRect;
+  PCSRSS_SCREEN_BUFFER Buff;
+  PUCHAR Buffer, Attribute;
+  NTSTATUS Status;
+  int X, Y, Length;
+  IO_STATUS_BLOCK Iosb;
+  SMALL_RECT UpdateRect;
 
-   DPRINT("CsrWriteConsoleOutputAttrib\n");
+  DPRINT("CsrWriteConsoleOutputAttrib\n");
    
-   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
-      sizeof(LPC_MESSAGE);
-   LOCK;
-   Status = CsrGetObject( ProcessData, Request->Data.WriteConsoleOutputAttribRequest.ConsoleHandle, (Object_t **)&Buff );
-   if( !NT_SUCCESS( Status ) || (Status = Buff->Header.Type == CSRSS_SCREEN_BUFFER_MAGIC ? 0 : STATUS_INVALID_HANDLE ))
-      {
-	 Reply->Status = Status;
-	 UNLOCK;
-	 return Status;
-      }
-   X = Request->Data.WriteConsoleOutputAttribRequest.Coord.X + Buff->ShowX;
-   Y = (Request->Data.WriteConsoleOutputAttribRequest.Coord.Y + Buff->ShowY) % Buff->MaxY;
-   Length = Request->Data.WriteConsoleOutputAttribRequest.Length;
-   Buffer = &Buff->Buffer[2 * (Y * Buff->MaxX + X) + 1];
-   Attribute = Request->Data.WriteConsoleOutputAttribRequest.String;
-   CsrpPhysicalToLogical(Buff, X, Y, &(UpdateRect.Left), &(UpdateRect.Top));
-   while (Length--)
-   {
+  Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
+                           sizeof(LPC_MESSAGE);
+
+  if (Request->Header.DataSize
+      < sizeof(CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB_REQUEST) - 1
+        + Request->Data.WriteConsoleOutputAttribRequest.Length)
+    {
+      DPRINT1("Invalid request size\n");
+      return Reply->Status = STATUS_INVALID_PARAMETER;
+    }
+
+  LOCK;
+  Status = Win32CsrGetObject(ProcessData,
+                             Request->Data.WriteConsoleOutputAttribRequest.ConsoleHandle,
+                             (Object_t **) &Buff);
+  if (! NT_SUCCESS(Status)
+      || (Status = Buff->Header.Type == CONIO_SCREEN_BUFFER_MAGIC ? 0 : STATUS_INVALID_HANDLE ))
+    {
+      Reply->Status = Status;
+      UNLOCK;
+      return Status;
+    }
+  X = Request->Data.WriteConsoleOutputAttribRequest.Coord.X + Buff->ShowX;
+  Y = (Request->Data.WriteConsoleOutputAttribRequest.Coord.Y + Buff->ShowY) % Buff->MaxY;
+  Length = Request->Data.WriteConsoleOutputAttribRequest.Length;
+  Buffer = &Buff->Buffer[2 * (Y * Buff->MaxX + X) + 1];
+  Attribute = Request->Data.WriteConsoleOutputAttribRequest.String;
+  CsrpPhysicalToLogical(Buff, X, Y, &(UpdateRect.Left), &(UpdateRect.Top));
+  while (Length--)
+    {
       *Buffer = *Attribute++;
       Buffer += 2;
       if( ++X == Buff->MaxX )
-      {
-         if (! TextMode && NULL != Buff->Console)
-         {
-            CsrpPhysicalToLogical(Buff, X - 1, Y, &(UpdateRect.Right), &(UpdateRect.Bottom));
-            CsrpDrawRegion(Buff->Console, UpdateRect);
-            CsrpPhysicalToLogical(Buff, 0, Y + 1, &(UpdateRect.Left), &(UpdateRect.Top));
-         }
-	 if( ++Y == Buff->MaxY )
-	 {
-	    Y = 0;
-	    Buffer = Buff->Buffer + 1;
-	 }
-         X = 0;
-      }
-   }
-   if (! TextMode && NULL != Buff->Console)
-     {
-       CsrpPhysicalToLogical(Buff, X - 1, Y, &(UpdateRect.Right), &(UpdateRect.Bottom));
-       CsrpDrawRegion(Buff->Console, UpdateRect);
-     }
-   else if (TextMode && Buff == ActiveConsole->ActiveBuffer )
-     {
-       Status = NtDeviceIoControlFile(ConsoleDeviceHandle,
-                                      NULL,
-                                      NULL,
-                                      NULL,
-                                      &Iosb,
-                                      IOCTL_CONSOLE_WRITE_OUTPUT_ATTRIBUTE,
-                                      &Request->Data.WriteConsoleOutputAttribRequest.Coord,
-                                      Request->Data.WriteConsoleOutputAttribRequest.Length +
-                                      sizeof(COORD),
-                                      NULL,
-                                      0);
-       if( !NT_SUCCESS( Status ) )
-	  DPRINT1( "Failed to write output attributes to console\n" );
-     }
-   Reply->Data.WriteConsoleOutputAttribReply.EndCoord.X = Buff->CurrentX - Buff->ShowX;
-   Reply->Data.WriteConsoleOutputAttribReply.EndCoord.Y = ( Buff->CurrentY + Buff->MaxY - Buff->ShowY ) % Buff->MaxY;
-   UNLOCK;
-   return Reply->Status = STATUS_SUCCESS;
+        {
+          if (! TextMode && NULL != Buff->Console)
+            {
+              CsrpPhysicalToLogical(Buff, X - 1, Y, &(UpdateRect.Right), &(UpdateRect.Bottom));
+              CsrpDrawRegion(Buff->Console, UpdateRect);
+              CsrpPhysicalToLogical(Buff, 0, Y + 1, &(UpdateRect.Left), &(UpdateRect.Top));
+            }
+          if (++Y == Buff->MaxY)
+            {
+              Y = 0;
+              Buffer = Buff->Buffer + 1;
+            }
+          X = 0;
+        }
+    }
+
+  if (! TextMode && NULL != Buff->Console)
+    {
+      CsrpPhysicalToLogical(Buff, X - 1, Y, &(UpdateRect.Right), &(UpdateRect.Bottom));
+      CsrpDrawRegion(Buff->Console, UpdateRect);
+    }
+  else if (TextMode && Buff == ActiveConsole->ActiveBuffer)
+    {
+      Status = NtDeviceIoControlFile(ConsoleDeviceHandle,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     &Iosb,
+                                     IOCTL_CONSOLE_WRITE_OUTPUT_ATTRIBUTE,
+                                     &Request->Data.WriteConsoleOutputAttribRequest.Coord,
+                                     Request->Data.WriteConsoleOutputAttribRequest.Length +
+                                     sizeof(COORD),
+                                     NULL,
+                                     0);
+      if (! NT_SUCCESS(Status))
+        {
+          DPRINT1( "Failed to write output attributes to console\n" );
+        }
+    }
+
+  Reply->Data.WriteConsoleOutputAttribReply.EndCoord.X = Buff->CurrentX - Buff->ShowX;
+  Reply->Data.WriteConsoleOutputAttribReply.EndCoord.Y = ( Buff->CurrentY + Buff->MaxY - Buff->ShowY ) % Buff->MaxY;
+  UNLOCK;
+
+  return Reply->Status = STATUS_SUCCESS;
 }
 
 CSR_API(CsrFillOutputAttrib)
@@ -1997,8 +2023,8 @@ CSR_API(CsrFillOutputAttrib)
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
       sizeof(LPC_MESSAGE);
    LOCK;
-   Status = CsrGetObject( ProcessData, Request->Data.FillOutputAttribRequest.ConsoleHandle, (Object_t **)&Buff );
-   if( !NT_SUCCESS( Status ) || (Status = Buff->Header.Type == CSRSS_SCREEN_BUFFER_MAGIC ? 0 : STATUS_INVALID_HANDLE ))
+   Status = Win32CsrGetObject( ProcessData, Request->Data.FillOutputAttribRequest.ConsoleHandle, (Object_t **)&Buff );
+   if( !NT_SUCCESS( Status ) || (Status = Buff->Header.Type == CONIO_SCREEN_BUFFER_MAGIC ? 0 : STATUS_INVALID_HANDLE ))
       {
 	 Reply->Status = Status;
 	 UNLOCK;
@@ -2074,8 +2100,8 @@ CSR_API(CsrGetCursorInfo)
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
       sizeof(LPC_MESSAGE);
    LOCK;
-   Status = CsrGetObject( ProcessData, Request->Data.GetCursorInfoRequest.ConsoleHandle, (Object_t **)&Buff );
-   if( !NT_SUCCESS( Status ) || (Status = Buff->Header.Type == CSRSS_SCREEN_BUFFER_MAGIC ? 0 : STATUS_INVALID_HANDLE ))
+   Status = Win32CsrGetObject( ProcessData, Request->Data.GetCursorInfoRequest.ConsoleHandle, (Object_t **)&Buff );
+   if( !NT_SUCCESS( Status ) || (Status = Buff->Header.Type == CONIO_SCREEN_BUFFER_MAGIC ? 0 : STATUS_INVALID_HANDLE ))
       {
 	 Reply->Status = Status;
 	 UNLOCK;
@@ -2098,10 +2124,10 @@ CSR_API(CsrSetCursorInfo)
   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
   LOCK;
-  Status = CsrGetObject( ProcessData,
+  Status = Win32CsrGetObject( ProcessData,
      Request->Data.SetCursorInfoRequest.ConsoleHandle, (Object_t **)&Buff );
 
-  if (! NT_SUCCESS(Status) || (Status = Buff->Header.Type == CSRSS_SCREEN_BUFFER_MAGIC ? 0 : STATUS_INVALID_HANDLE ))
+  if (! NT_SUCCESS(Status) || (Status = Buff->Header.Type == CONIO_SCREEN_BUFFER_MAGIC ? 0 : STATUS_INVALID_HANDLE ))
     {
       Reply->Status = Status;
       UNLOCK;
@@ -2153,8 +2179,8 @@ CSR_API(CsrSetTextAttrib)
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
       sizeof(LPC_MESSAGE);
    LOCK;
-   Status = CsrGetObject( ProcessData, Request->Data.SetAttribRequest.ConsoleHandle, (Object_t **)&Buff );
-   if( !NT_SUCCESS( Status ) || (Status = Buff->Header.Type == CSRSS_SCREEN_BUFFER_MAGIC ? 0 : STATUS_INVALID_HANDLE ))
+   Status = Win32CsrGetObject( ProcessData, Request->Data.SetAttribRequest.ConsoleHandle, (Object_t **)&Buff );
+   if( !NT_SUCCESS( Status ) || (Status = Buff->Header.Type == CONIO_SCREEN_BUFFER_MAGIC ? 0 : STATUS_INVALID_HANDLE ))
       {
 	 Reply->Status = Status;
 	 UNLOCK;
@@ -2189,7 +2215,7 @@ CSR_API(CsrSetConsoleMode)
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
    LOCK;
-   Status = CsrGetObject( ProcessData,
+   Status = Win32CsrGetObject( ProcessData,
      Request->Data.SetConsoleModeRequest.ConsoleHandle,
      (Object_t **)&Console );
    if( !NT_SUCCESS( Status ) )
@@ -2200,9 +2226,9 @@ CSR_API(CsrSetConsoleMode)
       }
 
    Buff = (PCSRSS_SCREEN_BUFFER)Console;
-   if( Console->Header.Type == CSRSS_CONSOLE_MAGIC )
+   if( Console->Header.Type == CONIO_CONSOLE_MAGIC )
       Console->Mode = Request->Data.SetConsoleModeRequest.Mode & CONSOLE_INPUT_MODE_VALID;
-   else if( Console->Header.Type == CSRSS_SCREEN_BUFFER_MAGIC )
+   else if( Console->Header.Type == CONIO_SCREEN_BUFFER_MAGIC )
       Buff->Mode = Request->Data.SetConsoleModeRequest.Mode & CONSOLE_OUTPUT_MODE_VALID;
    else {
       Reply->Status = STATUS_INVALID_HANDLE;
@@ -2225,7 +2251,7 @@ CSR_API(CsrGetConsoleMode)
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
    LOCK;
-   Status = CsrGetObject( ProcessData,
+   Status = Win32CsrGetObject( ProcessData,
      Request->Data.GetConsoleModeRequest.ConsoleHandle,
      (Object_t **)&Console );
    if( !NT_SUCCESS( Status ) )
@@ -2236,9 +2262,9 @@ CSR_API(CsrGetConsoleMode)
       }
    Reply->Status = STATUS_SUCCESS;
    Buff = (PCSRSS_SCREEN_BUFFER)Console;
-   if( Console->Header.Type == CSRSS_CONSOLE_MAGIC )
+   if( Console->Header.Type == CONIO_CONSOLE_MAGIC )
       Reply->Data.GetConsoleModeReply.ConsoleMode = Console->Mode;
-   else if( Buff->Header.Type == CSRSS_SCREEN_BUFFER_MAGIC )
+   else if( Buff->Header.Type == CONIO_SCREEN_BUFFER_MAGIC )
       Reply->Data.GetConsoleModeReply.ConsoleMode = Buff->Mode;
    else Status = STATUS_INVALID_HANDLE;
    UNLOCK;
@@ -2260,7 +2286,7 @@ CSR_API(CsrCreateScreenBuffer)
      return(Reply->Status = STATUS_INVALID_PARAMETER);
    }
 
-   Buff = RtlAllocateHeap( CsrssApiHeap, 0, sizeof( CSRSS_SCREEN_BUFFER ) );
+   Buff = RtlAllocateHeap( Win32CsrApiHeap, 0, sizeof( CSRSS_SCREEN_BUFFER ) );
    if( !Buff )
       Reply->Status = STATUS_INSUFFICIENT_RESOURCES;
    LOCK;
@@ -2274,7 +2300,7 @@ CSR_API(CsrCreateScreenBuffer)
    if( !NT_SUCCESS( Status ) )
       Reply->Status = Status;
    else {
-      Status = CsrInsertObject( ProcessData, &Reply->Data.CreateScreenBufferReply.OutputHandle, &Buff->Header );
+      Status = Win32CsrInsertObject( ProcessData, &Reply->Data.CreateScreenBufferReply.OutputHandle, &Buff->Header );
       if( !NT_SUCCESS( Status ) )
 	 Reply->Status = Status;
       else Reply->Status = STATUS_SUCCESS;
@@ -2293,14 +2319,14 @@ CSR_API(CsrSetScreenBuffer)
    Reply->Header.MessageSize = sizeof( CSRSS_API_REPLY );
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
    LOCK;
-   Status = CsrGetObject( ProcessData, Request->Data.SetActiveScreenBufferRequest.OutputHandle, (Object_t **)&Buff );
+   Status = Win32CsrGetObject( ProcessData, Request->Data.SetScreenBufferRequest.OutputHandle, (Object_t **)&Buff );
    if( !NT_SUCCESS( Status ) )
       Reply->Status = Status;
    else {
       // drop reference to old buffer, maybe delete
       ProcessData->Console->ActiveBuffer->Console = NULL;
       if( !InterlockedDecrement( &ProcessData->Console->ActiveBuffer->Header.ReferenceCount ) )
-	 CsrDeleteScreenBuffer( ProcessData->Console->ActiveBuffer );
+	 ConioDeleteScreenBuffer((Object_t *) ProcessData->Console->ActiveBuffer);
       // tie console to new buffer
       ProcessData->Console->ActiveBuffer = Buff;
       Buff->Console = ProcessData->Console;
@@ -2319,26 +2345,42 @@ CSR_API(CsrSetTitle)
 {
   NTSTATUS Status;
   PCSRSS_CONSOLE Console;
-  
+
   DPRINT("CsrSetTitle\n");
 
   Reply->Header.MessageSize = sizeof( CSRSS_API_REPLY );
   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
+
+  if (Request->Header.DataSize
+      < sizeof(CSRSS_SET_TITLE_REQUEST) - 1
+        + Request->Data.SetTitleRequest.Length)
+    {
+      DPRINT1("Invalid request size\n");
+      return Reply->Status = STATUS_INVALID_PARAMETER;
+    }
+
   LOCK;
-  Status = CsrGetObject( ProcessData, Request->Data.SetTitleRequest.Console, (Object_t **)&Console );
-  if( !NT_SUCCESS( Status ) )
-    Reply->Status = Status;  
-  else {
-    // copy title to console
-    RtlFreeUnicodeString( &Console->Title );
-    RtlCreateUnicodeString( &Console->Title, Request->Data.SetTitleRequest.Title );
-    if (! TextMode)
-      {
-        (*(UserCsrFuncs.ChangeTitle))(Console);
-      }
-    Reply->Status = STATUS_SUCCESS;
-  }
+  Status = Win32CsrGetObject(ProcessData,
+                             Request->Data.SetTitleRequest.Console,
+                             (Object_t **) &Console);
+  if(! NT_SUCCESS(Status))
+    {
+      Reply->Status = Status;  
+    }
+  else
+    {
+      /* copy title to console */
+      RtlFreeUnicodeString(&Console->Title);
+      RtlCreateUnicodeString(&Console->Title, Request->Data.SetTitleRequest.Title);
+      if (! TextMode)
+        {
+          GuiConsoleChangeTitle(Console);
+        }
+      Reply->Status = STATUS_SUCCESS;
+    }
+
   UNLOCK;
+
   return Reply->Status;
 }
 
@@ -2354,7 +2396,7 @@ CSR_API(CsrGetTitle)
 		sizeof (CSRSS_API_REPLY)
 		- sizeof(LPC_MESSAGE);
 	LOCK;
-	Status = CsrGetObject (
+	Status = Win32CsrGetObject (
 			ProcessData,
 			Request->Data.GetTitleRequest.ConsoleHandle,
 			(Object_t **) & Console
@@ -2402,8 +2444,8 @@ CSR_API(CsrWriteConsoleOutput)
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
    LOCK;
-   Status = CsrGetObject( ProcessData, Request->Data.WriteConsoleOutputRequest.ConsoleHandle, (Object_t **)&Buff );
-   if( !NT_SUCCESS( Status ) || (Status = Buff->Header.Type == CSRSS_SCREEN_BUFFER_MAGIC ? STATUS_SUCCESS : STATUS_INVALID_HANDLE ))
+   Status = Win32CsrGetObject( ProcessData, Request->Data.WriteConsoleOutputRequest.ConsoleHandle, (Object_t **)&Buff );
+   if( !NT_SUCCESS( Status ) || (Status = Buff->Header.Type == CONIO_SCREEN_BUFFER_MAGIC ? STATUS_SUCCESS : STATUS_INVALID_HANDLE ))
       {
 	 Reply->Status = Status;
 	 UNLOCK;
@@ -2475,8 +2517,8 @@ CSR_API(CsrFlushInputBuffer)
   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
   LOCK;
-  Status = CsrGetObject( ProcessData, Request->Data.FlushInputBufferRequest.ConsoleInput, (Object_t **)&Console );
-  if( !NT_SUCCESS( Status ) || (Status = Console->Header.Type == CSRSS_CONSOLE_MAGIC ? STATUS_SUCCESS : STATUS_INVALID_HANDLE ))
+  Status = Win32CsrGetObject( ProcessData, Request->Data.FlushInputBufferRequest.ConsoleInput, (Object_t **)&Console );
+  if( !NT_SUCCESS( Status ) || (Status = Console->Header.Type == CONIO_CONSOLE_MAGIC ? STATUS_SUCCESS : STATUS_INVALID_HANDLE ))
     {
 	Reply->Status = Status;
 	UNLOCK;
@@ -2489,7 +2531,7 @@ CSR_API(CsrFlushInputBuffer)
       CurrentEntry = RemoveHeadList(&Console->InputEvents);
       Input = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
       /* Destroy the event */
-      RtlFreeHeap( CsrssApiHeap, 0, Input );
+      RtlFreeHeap( Win32CsrApiHeap, 0, Input );
     }
   Console->WaitingChars=0;
   UNLOCK;
@@ -2519,8 +2561,8 @@ CSR_API(CsrScrollConsoleScreenBuffer)
   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
   LOCK;
-  Status = CsrGetObject( ProcessData, ConsoleHandle, (Object_t **)&Buff );
-  if( !NT_SUCCESS( Status ) || (Status = Buff->Header.Type == CSRSS_SCREEN_BUFFER_MAGIC ? STATUS_SUCCESS : STATUS_INVALID_HANDLE ))
+  Status = Win32CsrGetObject( ProcessData, ConsoleHandle, (Object_t **)&Buff );
+  if( !NT_SUCCESS( Status ) || (Status = Buff->Header.Type == CONIO_SCREEN_BUFFER_MAGIC ? STATUS_SUCCESS : STATUS_INVALID_HANDLE ))
   {
     Reply->Status = Status;
     UNLOCK;
@@ -2610,7 +2652,7 @@ CSR_API(CsrReadConsoleOutputChar)
 
   LOCK;
 
-  Status = CsrGetObject(ProcessData, Request->Data.ReadConsoleOutputCharRequest.ConsoleHandle, (Object_t**)&ScreenBuffer);
+  Status = Win32CsrGetObject(ProcessData, Request->Data.ReadConsoleOutputCharRequest.ConsoleHandle, (Object_t**)&ScreenBuffer);
   if (!NT_SUCCESS(Status))
     {
       Reply->Status = Status;
@@ -2618,7 +2660,7 @@ CSR_API(CsrReadConsoleOutputChar)
       return(Reply->Status);
     }
 
-  if (ScreenBuffer->Header.Type != CSRSS_SCREEN_BUFFER_MAGIC)
+  if (ScreenBuffer->Header.Type != CONIO_SCREEN_BUFFER_MAGIC)
     {
       Reply->Status = STATUS_INVALID_HANDLE;
       UNLOCK;
@@ -2675,7 +2717,7 @@ CSR_API(CsrReadConsoleOutputAttrib)
 
   LOCK;
 
-  Status = CsrGetObject(ProcessData, Request->Data.ReadConsoleOutputAttribRequest.ConsoleHandle, (Object_t**)&ScreenBuffer);
+  Status = Win32CsrGetObject(ProcessData, Request->Data.ReadConsoleOutputAttribRequest.ConsoleHandle, (Object_t**)&ScreenBuffer);
   if (!NT_SUCCESS(Status))
     {
       Reply->Status = Status;
@@ -2683,7 +2725,7 @@ CSR_API(CsrReadConsoleOutputAttrib)
       return(Reply->Status);
     }
 
-  if (ScreenBuffer->Header.Type != CSRSS_SCREEN_BUFFER_MAGIC)
+  if (ScreenBuffer->Header.Type != CONIO_SCREEN_BUFFER_MAGIC)
     {
       Reply->Status = STATUS_INVALID_HANDLE;
       UNLOCK;
@@ -2738,7 +2780,7 @@ CSR_API(CsrGetNumberOfConsoleInputEvents)
 
   LOCK;
 
-  Status = CsrGetObject(ProcessData, Request->Data.GetNumInputEventsRequest.ConsoleHandle, (Object_t**)&Console);
+  Status = Win32CsrGetObject(ProcessData, Request->Data.GetNumInputEventsRequest.ConsoleHandle, (Object_t**)&Console);
   if (!NT_SUCCESS(Status))
     {
       Reply->Status = Status;
@@ -2746,7 +2788,7 @@ CSR_API(CsrGetNumberOfConsoleInputEvents)
       return(Reply->Status);
     }
 
-  if (Console->Header.Type != CSRSS_CONSOLE_MAGIC)
+  if (Console->Header.Type != CONIO_CONSOLE_MAGIC)
     {
       Reply->Status = STATUS_INVALID_HANDLE;
       UNLOCK;
@@ -2793,7 +2835,7 @@ CSR_API(CsrPeekConsoleInput)
    
    LOCK;
    
-   Status = CsrGetObject(ProcessData, Request->Data.GetNumInputEventsRequest.ConsoleHandle, (Object_t**)&Console);
+   Status = Win32CsrGetObject(ProcessData, Request->Data.GetNumInputEventsRequest.ConsoleHandle, (Object_t**)&Console);
    if(!NT_SUCCESS(Status))
    {
       Reply->Status = Status;
@@ -2801,7 +2843,7 @@ CSR_API(CsrPeekConsoleInput)
       return Reply->Status;
    }
 
-   if(Console->Header.Type != CSRSS_CONSOLE_MAGIC)
+   if(Console->Header.Type != CONIO_CONSOLE_MAGIC)
    {
       Reply->Status = STATUS_INVALID_HANDLE;
       UNLOCK;
@@ -2869,7 +2911,7 @@ CSR_API(CsrReadConsoleOutput)
   
    LOCK;
   
-   Status = CsrGetObject(ProcessData, Request->Data.ReadConsoleOutputRequest.ConsoleHandle, (Object_t**)&ScreenBuffer);
+   Status = Win32CsrGetObject(ProcessData, Request->Data.ReadConsoleOutputRequest.ConsoleHandle, (Object_t**)&ScreenBuffer);
    if(!NT_SUCCESS(Status))
    {
       Reply->Status = Status;
@@ -2877,7 +2919,7 @@ CSR_API(CsrReadConsoleOutput)
       return Reply->Status;
    }
 
-   if(ScreenBuffer->Header.Type != CSRSS_SCREEN_BUFFER_MAGIC)
+   if(ScreenBuffer->Header.Type != CONIO_SCREEN_BUFFER_MAGIC)
    {
       Reply->Status = STATUS_INVALID_HANDLE;
       UNLOCK;
@@ -2954,7 +2996,7 @@ CSR_API(CsrWriteConsoleInput)
    
    LOCK;
    
-   Status = CsrGetObject(ProcessData, Request->Data.WriteConsoleInputRequest.ConsoleHandle, (Object_t**)&Console);
+   Status = Win32CsrGetObject(ProcessData, Request->Data.WriteConsoleInputRequest.ConsoleHandle, (Object_t**)&Console);
    if(!NT_SUCCESS(Status))
    {
       Reply->Status = Status;
@@ -2962,7 +3004,7 @@ CSR_API(CsrWriteConsoleInput)
       return Reply->Status;
    }
 
-   if(Console->Header.Type != CSRSS_CONSOLE_MAGIC)
+   if(Console->Header.Type != CONIO_CONSOLE_MAGIC)
    {
       Reply->Status = STATUS_INVALID_HANDLE;
       UNLOCK;
@@ -2983,7 +3025,7 @@ CSR_API(CsrWriteConsoleInput)
    
    for(i = 0; i < Length; ++i)
    {
-      Record = RtlAllocateHeap(CsrssApiHeap, 0, sizeof(ConsoleInput));
+      Record = RtlAllocateHeap(Win32CsrApiHeap, 0, sizeof(ConsoleInput));
       if(Record == NULL)
       {
          UNLOCK;
@@ -3050,7 +3092,7 @@ CSR_API(CsrHardwareStateProperty)
 
    LOCK;
    
-   Status = CsrGetObject (
+   Status = Win32CsrGetObject (
 		   ProcessData,
 		   Request->Data.ConsoleHardwareStateRequest.ConsoleHandle,
 		   (Object_t**) & Console
@@ -3062,7 +3104,7 @@ CSR_API(CsrHardwareStateProperty)
    }
    else
    {
-      if(Console->Header.Type != CSRSS_CONSOLE_MAGIC)
+      if(Console->Header.Type != CONIO_CONSOLE_MAGIC)
       {
 	DbgPrint( "Bad magic on Console: %08x\n", Console->Header.Type );
         Reply->Status = STATUS_INVALID_HANDLE;
@@ -3104,7 +3146,7 @@ CSR_API(CsrGetConsoleWindow)
 
    LOCK;
    
-   Status = CsrGetObject (
+   Status = Win32CsrGetObject (
 		   ProcessData,
 		   Request->Data.ConsoleWindowRequest.ConsoleHandle,
 		   (Object_t**) & Console
@@ -3115,7 +3157,7 @@ CSR_API(CsrGetConsoleWindow)
    }
    else
    {
-      if(Console->Header.Type != CSRSS_CONSOLE_MAGIC)
+      if(Console->Header.Type != CONIO_CONSOLE_MAGIC)
       {
          Reply->Status = STATUS_INVALID_HANDLE;
       }

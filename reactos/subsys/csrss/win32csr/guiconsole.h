@@ -1,9 +1,9 @@
-/* $Id: guiconsole.h,v 1.1 2003/10/20 18:02:04 gvg Exp $
+/* $Id: guiconsole.h,v 1.1 2003/12/02 11:38:46 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            subsys/csrss/usercsr/usercsr.h
- * PURPOSE:         Interface to usercsr.dll
+ * FILE:            subsys/csrss/win32csr/guiconsole.h
+ * PURPOSE:         Interface to GUI consoles
  */
 
 #include "api.h"

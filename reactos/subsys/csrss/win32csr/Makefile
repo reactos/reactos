@@ -1,10 +1,10 @@
-# $Id: makefile,v 1.1 2003/10/20 18:02:04 gvg Exp $
+# $Id: Makefile,v 1.1 2003/12/02 11:38:46 gvg Exp $
 
 PATH_TO_TOP = ../../..
 
 TARGET_TYPE = dynlink
 
-TARGET_NAME = usercsr
+TARGET_NAME = win32csr
 
 TARGET_BASE = 0x5ffb0000
 
@@ -15,7 +15,7 @@ TARGET_LFLAGS = -nostartfiles -nostdlib
 
 TARGET_SDKLIBS = ntdll.a kernel32.a user32.a gdi32.a
 
-TARGET_OBJECTS = dllmain.o guiconsole.o
+TARGET_OBJECTS = dllmain.o conio.o guiconsole.o
 
 TARGET_ENTRY = _DllMain@12
 

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.24 2003/11/24 16:42:53 ekohl Exp $
+# $Id: makefile,v 1.25 2003/12/02 11:38:47 gvg Exp $
 
 PATH_TO_TOP = ../..
 
@@ -20,12 +20,11 @@ TARGET_LFLAGS = -nostdlib
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS
 
-SUBDIRS = usercsr
+SUBDIRS = win32csr
 
 OBJECTS_API = \
   api/process.o \
   api/wapi.o \
-  api/conio.o \
   api/handle.o \
   api/user.o
 
@@ -47,17 +46,5 @@ include $(PATH_TO_TOP)/rules.mak
 include $(TOOLS_PATH)/helper.mk
 
 include $(TOOLS_PATH)/depend.mk
-
-#all::
-#	$(MAKE) -C usercsr all
-#
-#clean::
-#	$(MAKE) -C usercsr clean
-#
-#install::
-#	$(MAKE) -C usercsr install
-#
-#bootcd::
-#	$(MAKE) -C usercsr bootcd
 
 # EOF
