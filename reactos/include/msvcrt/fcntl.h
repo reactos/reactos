@@ -19,9 +19,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.1 $
- * $Author: ekohl $
- * $Date: 2001/07/03 12:55:00 $
+ * $Revision: 1.2 $
+ * $Author: hbirr $
+ * $Date: 2002/05/07 22:20:00 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
@@ -79,6 +79,7 @@ extern unsigned int _fmode;
 
 #define	_O_TEMPORARY	0x0040	/* Make the file dissappear after closing.
 				 * WARNING: Even if not created by _open! */
+#define	_O_NOINHERIT	0x0080
 
 
 #define _O_RANDOM	0x0010
@@ -100,6 +101,7 @@ extern unsigned int _fmode;
 #define	O_TEXT		_O_TEXT
 #define	O_BINARY	_O_BINARY
 #define	O_TEMPORARY	_O_TEMPORARY
+#define	O_NOINHERIT	_O_NOINHERIT
 
 #define O_RANDOM	_O_RANDOM
 #define O_SEQUENTIAL	_O_RANDOM
