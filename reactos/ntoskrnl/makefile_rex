@@ -26,7 +26,7 @@ IO_OBJECTS = io/iomgr.o io/create.o io/irp.o io/device.o io/rw.o \
 	     io/shutdown.o io/fdisk.o io/cancel.o io/error.o io/arc.o \
 	     io/dpc.o io/symlink.o io/adapter.o io/cntrller.o io/mdl.o \
 	     io/resource.o io/event.o io/process.o io/file.o io/ioctrl.o \
-	     io/fs.o
+	     io/fs.o io/vpb.o io/buildirp.o
 
 OB_OBJECTS = ob/object.o ob/handle.o ob/namespc.o
 
@@ -39,7 +39,7 @@ SE_OBJECTS = se/semgr.o
 
 CFG_OBJECTS = cfg/registry.o
 
-TST_OBJECTS = tst/test.o
+TST_OBJECTS = tst/test.o tst/sshell.o tst/readline.o
 
 DBG_OBJECTS = dbg/brkpoint.o
 

@@ -12,20 +12,49 @@
 
 #include <windows.h>
 #include <ddk/ntddk.h>
-#include <internal/iomgr.h>
+#include <internal/io.h>
 #include <internal/string.h>
-#include <internal/objmgr.h>
+#include <internal/ob.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
-#ifndef NDEBUG
-#define DPRINT1(x) printk(x)
-#else
-#define DPRINT1(x)
-#endif
-
 /* FUNCTIONS ***************************************************************/
+
+static VOID IoSecondStageCompletion(PIRP Irp, 
+				    BOOLEAN FromDevice,
+				    PDEVICE_OBJECT DeviceObject,
+				    ULONG Length, 
+				    PVOID Buffer)
+/*
+ * FUNCTION: Performs the second stage of irp completion for read/write irps
+ * ARGUMENTS:
+ *          Irp = Irp to completion
+ *          FromDevice = True if the operation transfered data from the device
+ */
+{
+   if (Irp->UserIosb!=NULL)
+     {
+	*Irp->UserIosb=Irp->IoStatus;
+     }
+   
+   if (DeviceObject->Flags & DO_BUFFERED_IO && FromDevice)
+     {		
+	memcpy(Buffer,Irp->AssociatedIrp.SystemBuffer,Length);
+     }
+   if (DeviceObject->Flags & DO_DIRECT_IO)
+     {
+	if (Irp->MdlAddress->MappedSystemVa!=NULL)
+	  {	     
+	     MmUnmapLockedPages(Irp->MdlAddress->MappedSystemVa,
+				Irp->MdlAddress);
+	  }
+	MmUnlockPages(Irp->MdlAddress);
+	ExFreePool(Irp->MdlAddress);
+     }
+   
+   IoFreeIrp(Irp);
+}
 
 NTSTATUS ZwReadFile(HANDLE FileHandle,
                     HANDLE EventHandle,
@@ -43,49 +72,33 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
    PIRP Irp;
    PIO_STACK_LOCATION StackPtr;
    KEVENT Event;
-
+   NTSTATUS Status;
+   
+   DPRINT("ZwReadFile(FileHandle %x Buffer %x Length %x ByteOffset %x, "
+	  "IoStatusBlock %x)\n",
+	  FileHandle,Buffer,Length,ByteOffset,IoStatusBlock);
+   
    if (hdr==NULL)
      {
+	DPRINT("%s() = STATUS_INVALID_HANDLE\n",__FUNCTION__);
 	return(STATUS_INVALID_HANDLE);
      }
    
-   Irp = IoAllocateIrp(FileObject->DeviceObject->StackSize,TRUE);
-   if (Irp==NULL)
+   if (ByteOffset==NULL)
      {
-	return(STATUS_UNSUCCESSFUL);
+	ByteOffset = &(FileObject->CurrentByteOffset);
      }
    
-   Irp->UserBuffer = (LPVOID)Buffer;
-   if (FileObject->DeviceObject->Flags&DO_BUFFERED_IO)
-     {
-	DPRINT1("Doing buffer i/o\n");
-	Irp->AssociatedIrp.SystemBuffer = (PVOID)
-	                   ExAllocatePool(NonPagedPool,Length);
-	if (Irp->AssociatedIrp.SystemBuffer==NULL)
-	  {
-	     return(STATUS_UNSUCCESSFUL);
-	  }
-	Irp->UserBuffer = NULL;
-     }
-   if (FileObject->DeviceObject->Flags&DO_DIRECT_IO)
-     {
-	DPRINT1("Doing direct i/o\n");
-	
-	Irp->MdlAddress = MmCreateMdl(NULL,Buffer,Length);
-	MmProbeAndLockPages(Irp->MdlAddress,UserMode,IoWriteAccess);
-	Irp->UserBuffer = NULL;
-	Irp->AssociatedIrp.SystemBuffer = NULL;
-     }
    KeInitializeEvent(&Event,NotificationEvent,FALSE);
-   Irp->UserEvent=&Event;
+   Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
+				      FileObject->DeviceObject,
+				      Buffer,
+				      Length,
+				      ByteOffset,
+				      &Event,
+				      IoStatusBlock);
 
    StackPtr = IoGetNextIrpStackLocation(Irp);
-   DPRINT("StackPtr %x\n",StackPtr);
-   StackPtr->MajorFunction = IRP_MJ_READ;
-   StackPtr->MinorFunction = 0;
-   StackPtr->Flags = 0;
-   StackPtr->Control = 0;
-   StackPtr->DeviceObject = FileObject->DeviceObject;
    StackPtr->FileObject = FileObject;
    StackPtr->Parameters.Read.Length = Length;
    if (ByteOffset!=NULL)
@@ -139,6 +152,7 @@ NTSTATUS ZwWriteFile(HANDLE FileHandle,
    PFILE_OBJECT FileObject = (PFILE_OBJECT)hdr;
    PIRP Irp;
    PIO_STACK_LOCATION StackPtr;
+   NTSTATUS Status;
    
    if (hdr==NULL)
      {
@@ -204,6 +218,11 @@ NTSTATUS ZwWriteFile(HANDLE FileHandle,
    
    DPRINT("FileObject->DeviceObject %x\n",FileObject->DeviceObject);
    Status = IoCallDriver(FileObject->DeviceObject,Irp);
+   if (Status==STATUS_PENDING)
+     {
+	KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
+	Status = IoStatusBlock->Status;
+     }
    return(Status);
 }
 

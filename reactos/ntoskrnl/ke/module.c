@@ -15,7 +15,7 @@
 
 #include <ddk/ntddk.h>
 
-#include <internal/iomgr.h>
+#include <internal/io.h>
 #include <internal/symbol.h>
 #include <internal/string.h>
 #include <internal/mm.h>
@@ -65,6 +65,27 @@ static void get_symbol_name(module* mod, unsigned int i, char* name)
         {
                 strcpy(name,&mod->str_tab[mod->sym_list[i].e.e.e_offset]);
         }
+}
+
+static unsigned int get_symbol_value_by_name(module* mod, char* sname,
+					     unsigned int idx)
+{
+   unsigned int i;
+   char name[255];
+   
+   DPRINT("get_symbol_value_by_name(sname %s, idx %x)\n",sname,idx);
+   
+   for (i=0; i<mod->nsyms; i++)
+     {
+	get_symbol_name(mod,i,name);
+//	DPRINT("Scanning %s Value %x\n",name,mod->sym_list[i].e_value);
+	if (strcmp(name,sname)==0)
+	  {
+	     DPRINT("Returning %x\n",mod->sym_list[i].e_value);
+	     return(mod->sym_list[i].e_value);
+	  }
+     }
+   return(0);
 }
 
 static unsigned int get_symbol_value(module* mod, unsigned int i)
@@ -119,17 +140,32 @@ static int do_reloc32_reloc(module* mod, SCNHDR* scn, RELOC* reloc)
    val = get_kernel_symbol_addr(name);
    if (val==0)
      {
-	DbgPrint("Undefined symbol %s in module\n",name);
-	return(0);
+	val = get_symbol_value_by_name(mod,name,reloc->r_symndx);
+	if (val==0)
+	  {
+	     DbgPrint("Undefined symbol %s in module\n",name);
+	     return(0);
+	  }
+	loc=(unsigned int *)(mod->base+reloc->r_vaddr);
+           DPRINT("old %x ",*loc);	
+//	   (*loc) = (*loc) + val + mod->base - scn->s_vaddr;
+	   (*loc) = (*loc);
+	DPRINT("mod->base %x scn->s_vaddr %x\n",mod->base,scn->s_vaddr);
+   
+         DPRINT("new %x\n",*loc);
+
      }
-   //        DPRINT("REL32 value %x name %s\n",val,name);
-   //        printk("value %x\n",val);
+   else
+     {
+           DPRINT("REL32 value %x name %s\n",val,name);
+           DPRINT("value %x\n",val);
    loc=(unsigned int *)(mod->base+reloc->r_vaddr);
-   //        printk("old %x ",*loc);
+           DPRINT("old %x ",*loc);
+   DPRINT("mod->base %x scn->s_vaddr %x\n",mod->base,scn->s_vaddr);
    (*loc) = (*loc) + val - mod->base + scn->s_vaddr;
    
-   //        printk("new %x\n",*loc);
-   
+         DPRINT("new %x\n",*loc);
+     }
    return(1);
 }
 
@@ -238,6 +274,7 @@ BOOLEAN process_boot_module(unsigned int start)
    mod=(module *)ExAllocatePool(NonPagedPool,sizeof(module));
    
    DPRINT("magic %x\n",((FILHDR *)start)->f_magic);
+//   DbgPrint("Start1 %x\n",*((unsigned int *)0xc0017000));
 
    memcpy(&hdr,(void *)start,FILHSZ);
 
@@ -258,6 +295,7 @@ BOOLEAN process_boot_module(unsigned int start)
    mod->scn_list = (SCNHDR *)(start+FILHSZ+hdr.f_opthdr);
    mod->size=0;
    mod->raw_data_off = start;
+   mod->nsyms = hdr.f_nsyms;
    
    /*
     * Determine the length of the module 
@@ -288,7 +326,9 @@ BOOLEAN process_boot_module(unsigned int start)
         }
    
    CHECKPOINT;
+//   DbgPrint("Start1 %x\n",*((unsigned int *)0xc0017000));
    mod->base = (unsigned int)MmAllocateSection(mod->size);
+//   DbgPrint("Start1 %x\n",*((unsigned int *)0xc0017000));
    if (mod->base == 0)
      {
 	DbgPrint("Failed to alloc section for module\n");
