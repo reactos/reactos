@@ -480,9 +480,9 @@ typedef struct _TA_ADDRESS_IPX
 {
     LONG    TAAddressCount;
     struct  _AddrIpx {
-        USHORT          AddressLength;
-        USHORT          AddressType;
-        TDI_ADDRESS_IP  Address[1];
+        USHORT           AddressLength;
+        USHORT           AddressType;
+        TDI_ADDRESS_IPX Address[1];
     } Address[1];
 } TA_IPX_ADDRESS, *PTA_IPX_ADDRESS;
 
