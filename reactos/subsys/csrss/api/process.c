@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.14 2001/09/01 15:36:45 chorns Exp $
+/* $Id: process.c,v 1.15 2001/09/02 12:19:34 chorns Exp $
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -156,7 +156,7 @@ CSR_API(CsrCreateProcess)
 	NewProcessData->Console = ProcessData->Console;
 	InterlockedIncrement( &(ProcessData->Console->Header.ReferenceCount) );
      }
-   DbgPrint("Before type\n");
+
    if( NewProcessData->Console )
      {
        CLIENT_ID ClientId;
@@ -167,13 +167,6 @@ CSR_API(CsrCreateProcess)
        CsrInsertObject( NewProcessData,
           &Reply->Data.CreateProcessReply.OutputHandle,
           &(NewProcessData->Console->ActiveBuffer->Header) );
-
-
-       DbgPrint("OutputHandle %x\n", Reply->Data.CreateProcessReply.OutputHandle);
-       DbgPrint("Console %x\n", NewProcessData->Console);
-       DbgPrint("Console->ActiveBuffer %x\n", NewProcessData->Console->ActiveBuffer);
-       DbgPrint("Type %x\n", NewProcessData->Console->ActiveBuffer->Header.Type);
-
 
        RtlLeaveCriticalSection( &ActiveConsoleLock );
        ClientId.UniqueProcess = (HANDLE)NewProcessData->ProcessId;
