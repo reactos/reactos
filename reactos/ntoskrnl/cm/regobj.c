@@ -292,6 +292,15 @@ CmiObjectDelete(PVOID DeletedObject)
 	  CmiSyncHives();
 	}
     }
+  if (KeyObject->NumberOfSubKeys)
+    {
+      KEBUGCHECK(0);
+    }
+  if (KeyObject->SizeOfSubKeys)
+    {
+      ExFreePool(KeyObject->SubKeys);
+    }
+
 }
 
 
