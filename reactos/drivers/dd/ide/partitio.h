@@ -71,6 +71,9 @@ typedef enum PartitionTypes {
     (P)->PartitionType == PTWin95FAT16LBA ||  \
     (P)->PartitionType == PTLinuxExt2)
 
+#define PartitionIsExtended(P)  \
+    ((P)->PartitionType == PTDosExtended)
+
 typedef struct Partition {
   __u8   BootFlags;
   __u8   StartingHead;
