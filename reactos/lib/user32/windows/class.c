@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.29 2003/08/14 20:25:52 royce Exp $
+/* $Id: class.c,v 1.30 2003/08/18 23:52:03 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -27,7 +27,7 @@ GetClassInfoExA(
   LPWNDCLASSEXA lpwcx)
 {
   LPWSTR str;
-  PUNICODE_STRING str2;
+  UNICODE_STRING str2;
   WNDCLASSEXW w;
   BOOL retval;
   NTSTATUS Status;
@@ -37,18 +37,27 @@ GetClassInfoExA(
     SetLastError (RtlNtStatusToDosError(Status));
     return 0;
   }
-  retval = (BOOL)NtUserGetClassInfo(hinst,str,&w,TRUE,0);
-  if (str)
+  
+  str2.Length = 0;
+  str2.MaximumLength = 255;
+  str2.Buffer = (PWSTR)RtlAllocateHeap(RtlGetProcessHeap(), 0, 
+                                       str2.MaximumLength * sizeof(WCHAR));
+  if(!str2.Buffer)
   {
-	HEAP_free(str);
+    SetLastError (RtlNtStatusToDosError(STATUS_NO_MEMORY));
+    return 0;
   }
-  RtlCopyMemory (&w,lpwcx,sizeof(WNDCLASSEXW));
+  
+  w.lpszMenuName = (LPCWSTR)&str2;  
+  retval = (BOOL)NtUserGetClassInfo(hinst, str, &w, TRUE, 0);
+  HEAP_free(str);
+  RtlCopyMemory ( lpwcx, &w, sizeof(WNDCLASSEXW) );
+
   if (!IS_INTRESOURCE(w.lpszMenuName))
   {
-	str = (LPWSTR)w.lpszMenuName;
-	str2 = (PUNICODE_STRING)str;
-    lpwcx->lpszMenuName = heap_string_poolA (str2->Buffer, str2->Length);
+    lpwcx->lpszMenuName = heap_string_poolA (str2.Buffer, str2.Length);
   }
+  RtlFreeHeap(RtlGetProcessHeap(), 0, str2.Buffer);
   return retval;
 }
 
@@ -64,22 +73,31 @@ GetClassInfoExW(
   LPWNDCLASSEXW lpwcx)
 {
   LPWSTR str;
-  PUNICODE_STRING str2;
+  UNICODE_STRING str2;
   WNDCLASSEXW w;
   WINBOOL retval;
   str = HEAP_strdupW (lpszClass, wcslen(lpszClass) );
-  retval = (BOOL)NtUserGetClassInfo(hinst,lpszClass,&w,FALSE,0);
-  if (str)
+  
+  str2.Length = 0;
+  str2.MaximumLength = 255;
+  str2.Buffer = (PWSTR)RtlAllocateHeap(RtlGetProcessHeap(), 0, 
+                                       str2.MaximumLength * sizeof(WCHAR));
+  if(!str2.Buffer)
   {
-	HEAP_free(str);
+    SetLastError (RtlNtStatusToDosError(STATUS_NO_MEMORY));
+    return 0;
   }
-  RtlCopyMemory (&w,lpwcx,sizeof(WNDCLASSEXW));
+
+  w.lpszMenuName = (LPCWSTR)&str2;  
+  retval = (BOOL)NtUserGetClassInfo(hinst, str, &w, TRUE, 0);
+  HEAP_free(str);
+  RtlCopyMemory ( lpwcx, &w, sizeof(WNDCLASSEXW) );
+
   if (!IS_INTRESOURCE(w.lpszMenuName) )
   {
-	str = (LPWSTR)w.lpszMenuName;
-	str2 = (PUNICODE_STRING)str;
-    lpwcx->lpszMenuName = heap_string_poolW (str2->Buffer, str2->Length);
+    lpwcx->lpszMenuName = heap_string_poolW (str2.Buffer, str2.Length);
   }
+  RtlFreeHeap(RtlGetProcessHeap(), 0, str2.Buffer);
   return retval;
 }
 

@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.65 2003/08/18 00:11:17 weiden Exp $
+/* $Id: window.c,v 1.66 2003/08/18 23:52:03 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -508,6 +508,7 @@ CreateWindowExA(DWORD dwExStyle,
 {
   UNICODE_STRING WindowName;
   UNICODE_STRING ClassName;
+  WNDCLASSEXA wce;
   HWND Handle;
   INT sw;
 
@@ -593,6 +594,15 @@ CreateWindowExA(DWORD dwExStyle,
 	    }
 	}
     }
+    
+  if(!hMenu)
+  {
+    wce.cbSize = sizeof(WNDCLASSEXA);
+    if(GetClassInfoExA(hInstance, lpClassName, &wce) && wce.lpszMenuName)
+    {
+      hMenu = LoadMenuA(hInstance, wce.lpszMenuName);
+    }
+  }
 
   Handle = NtUserCreateWindowEx(dwExStyle,
 				&ClassName,
@@ -640,6 +650,7 @@ CreateWindowExW(DWORD dwExStyle,
 {
   UNICODE_STRING WindowName;
   UNICODE_STRING ClassName;
+  WNDCLASSEXW wce;
   HANDLE Handle;
   UINT sw;
 
@@ -711,6 +722,15 @@ CreateWindowExW(DWORD dwExStyle,
 	    }
 	}
     }
+    
+  if(!hMenu)
+  {
+    wce.cbSize = sizeof(WNDCLASSEXW);
+    if(GetClassInfoExW(hInstance, lpClassName, &wce) && wce.lpszMenuName)
+    {
+      hMenu = LoadMenuW(hInstance, wce.lpszMenuName);
+    }
+  }
 
   Handle = NtUserCreateWindowEx(dwExStyle,
 				&ClassName,
