@@ -136,14 +136,13 @@ crtdll.dll: $(DLLMAIN) $(OBJECTS) crtdll.def
 	$(DLLTOOL) --dllname crtdll.dll --def crtdll.def \
 	           --output-lib crtdll.a
 	$(CC) -specs=crt_specs -mdll -o junk.tmp \
-	      -Wl,--base-file,base.tmp crtdll.o  ../kernel32/kernel32.a \
-	      ../ntdll/ntdll.a
+	      -Wl,--base-file,base.tmp crtdll.o  ../kernel32/kernel32.a 
 	- $(RM) junk.tmp
 	$(DLLTOOL) --dllname crtdll.dll --base-file base.tmp \
 	           --output-exp temp.exp --def crtdll.def
 	- $(RM) base.tmp
 	$(CC) -specs=crt_specs -mdll -o crtdll.dll crtdll.o  \
-	       ../kernel32/kernel32.a ../ntdll/ntdll.a\
+	       ../kernel32/kernel32.a 
 	      -Wl,--image-base,0x20000000 \
 	      -Wl,--file-alignment,0x1000 \
 	      -Wl,--section-alignment,0x1000 \

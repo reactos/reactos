@@ -62,7 +62,9 @@ CloseHandle = CloseHandle@4
 ;CommConfigDialogW@12
 ;CompareFileTime@8
 ;CompareStringA@24
+;CompareStringA = CompareStringA@24
 ;CompareStringW@24
+;CompareStringW = CompareStringW@24
 ;ConnectNamedPipe@8
 ;ConsoleMenuControl@12
 ;ContinueDebugEvent@12

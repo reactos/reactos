@@ -1,4 +1,16 @@
 
+#if 1
+
+long double modfl(long double __x, long double *__i)
+{
+}
+
+double modf(double __x, double *__i)
+{
+}
+
+
+#else
 
 /* @(#)s_modf.c 1.3 95/01/18 */
 /*
@@ -133,3 +145,4 @@ long double modfl(long double __x, long double *__i)
 
 	}
 }
+#endif

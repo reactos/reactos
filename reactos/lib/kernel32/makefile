@@ -42,7 +42,7 @@ NLS_OBJECTS =  nls/codepage.o nls/cpmisc.o nls/cptable.o\
  nls/lcHRV.o nls/lcHUN.o nls/lcIND.o nls/lcISL.o nls/lcITA.o nls/lcITS.o nls/lcLTH.o nls/lcLVI.o nls/lcNLB.o\
  nls/lcNLD.o nls/lcNON.o nls/lcNOR.o nls/lcPLK.o nls/lcPTB.o nls/lcPTG.o nls/lcROM.o nls/lcRUS.o nls/lcSKY.o\
  nls/lcSLV.o nls/lcSQI.o nls/lcSRB.o nls/lcSRL.o nls/lcSVE.o nls/lcSVF.o nls/lcTRK.o nls/lcUKR.o\
- nls/locale.o nls/mbtowc.o nls/wctomb.o
+ nls/locale.o nls/mbtowc.o nls/wctomb.o nls/ole2nls.o
 
 THREAD_OBJECTS = thread/thread.o
 
@@ -58,7 +58,7 @@ EXCEPT_OBJECTS = except/except.o
 
 OBJECTS = $(MISC_OBJECTS) $(FILE_OBJECTS) $(THREAD_OBJECTS) \
           $(PROCESS_OBJECTS) $(STRING_OBJECTS) $(MEM_OBJECTS) \
-          $(INTERNAL_OBJECTS) $(SYNCH_OBJECTS) $(EXCEPT_OBJECTS)
+          $(INTERNAL_OBJECTS) $(SYNCH_OBJECTS) $(EXCEPT_OBJECTS) 
 
 ifeq ($(DOSCLI),yes)
 CLEAN_FILES = except\*.o file\*.o internal\*.o mem\*.o misc\*.o nls\*.o  \
@@ -69,6 +69,9 @@ CLEAN_FILES = except/*.o file/*.o internal/*.o mem/*.o misc/*.o nls/*.o  \
               process/*.o string/*.o synch/*.o thread/*.o  \
               kernel32.o kernel32.a junk.tmp base.tmp temp.exp kernel32.dll kernel32.sym
 endif
+
+nls/ole2nls.o: nls/ole2nls.c
+	$(CC) $(CFLAGS) -I. nls/ole2nls.c
 
 kernel32.a: $(OBJECTS)
 	$(AR) csr kernel32.a $(OBJECTS)

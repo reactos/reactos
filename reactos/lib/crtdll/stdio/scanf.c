@@ -21,6 +21,14 @@ Cambridge, MA 02139, USA.  */
 #include <crtdll/wchar.h>
 #include <crtdll/alloc.h>
 
+#if 1
+
+int scanf (const char *format, ...)
+{
+}
+
+#else
+
 /* The function `vscanf' is not defined in ISO C.  Therefore we must
    use the protected form here.  In stdio it is called `__vscanf' and
    in libio `_IO_vscanf'.  */
@@ -35,8 +43,7 @@ int __vscanf (const char *format, va_list arg);
 
 /* Read formatted input from stdin according to the format string FORMAT.  */
 /* VARARGS1 */
-int
-scanf (const char *format, ...)
+int scanf (const char *format, ...)
 {
   va_list arg;
   int done;
@@ -73,3 +80,5 @@ void *alloca(size_t x)
 {
 	return malloc(x);
 }
+
+#endif

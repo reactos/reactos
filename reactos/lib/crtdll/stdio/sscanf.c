@@ -21,12 +21,19 @@
 #include <crtdll/wchar.h>
 #include <crtdll/alloc.h>
 
+#if 1
+
+int sscanf (const char *s,const char *format, ...)
+{
+}
+
+#else
+
 int __vsscanf (const char *s,const char *format,va_list arg);
 
 /* Read formatted input from S, according to the format string FORMAT.  */
 /* VARARGS2 */
-int
-sscanf (const char *s,const char *format, ...)
+int sscanf (const char *s,const char *format, ...)
 {
   va_list arg;
   int done;
@@ -73,3 +80,5 @@ swscanf(const wchar_t *str, const wchar_t *fmt, ...)
 
 
 }
+
+#endif

@@ -22,6 +22,15 @@ Cambridge, MA 02139, USA.  */
 #include <crtdll/wchar.h>
 #include <crtdll/alloc.h>
 
+#if 1
+
+int fscanf(FILE *stream,const char *format, ...)
+{
+}
+
+
+#else
+
 int __vfscanf (FILE *s, const char *format, va_list argptr);
 /* Read formatted input from STREAM according to the format string FORMAT.  */
 /* VARARGS2 */
@@ -57,3 +66,4 @@ fwscanf(FILE *stream, const wchar_t *fmt, ...)
   return done;
 }
 
+#endif

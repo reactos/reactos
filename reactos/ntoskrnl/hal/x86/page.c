@@ -60,8 +60,6 @@ static ULONG ProtectToPTE(ULONG flProtect)
 
 NTSTATUS Mmi386ReleaseMmInfo(PEPROCESS Process)
 {
-   ULONG i,j,addr;
-   
    DPRINT("Mmi386ReleaseMmInfo(Process %x)\n",Process);
    
    MmFreePage(Process->Pcb.PageTableDirectory, 1);

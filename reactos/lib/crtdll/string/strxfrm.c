@@ -1,6 +1,11 @@
 #include <windows.h>
 #include <crtdll/string.h>
 
+#if 1
+size_t strxfrm( char *dest, const char *src, size_t n )
+{
+}
+#else
 size_t strxfrm( char *dest, const char *src, size_t n )
 {
 	
@@ -14,3 +19,4 @@ size_t strxfrm( char *dest, const char *src, size_t n )
 	return ret;
 
 }
+#endif

@@ -8,15 +8,16 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
-#include "windows.h"
-#include "heap.h"
-#include "ole.h"
-#include "options.h"
-#include "winnls.h"
-#include "winreg.h"
-#include "winerror.h"
-#include "debug.h"
-#include "main.h"
+#include <windows.h>
+#include <kernel32/winnls.h>
+//#include "heap.h"
+//#include "ole.h"
+//#include "options.h"
+//#include "winnls.h"
+//#include "winreg.h"
+//#include "winerror.h"
+//#include "debug.h"
+//#include "main.h"
 
 struct NLS_langlocale {
 	const int lang;
@@ -573,6 +574,7 @@ LCID WINAPI GetSystemDefaultLCID()
 /***********************************************************************
  *         GetUserDefaultLangID       (OLE2NLS.3)
  */
+#if 0
 LANGID WINAPI GetUserDefaultLangID()
 {
 	/* caching result, if defined from environment, which should (?) not change during a WINE session */
@@ -616,6 +618,7 @@ LANGID WINAPI GetUserDefaultLangID()
 	}
 	return userLCID;
 }
+#endif
 
 /***********************************************************************
  *         GetSystemDefaultLangID     (OLE2NLS.4)
@@ -626,27 +629,18 @@ LANGID WINAPI GetSystemDefaultLangID()
 }
 
 /******************************************************************************
- *		GetLocaleInfo16	[OLE2NLS.5]
- * Is the last parameter really WORD for Win16?
- */
-INT16 WINAPI GetLocaleInfo16(LCID lcid,LCTYPE LCType,LPSTR buf,INT16 len)
-{
-	return GetLocaleInfo32A(lcid,LCType,buf,len);
-}
-
-/******************************************************************************
  * GetLocaleInfo32A [KERNEL32.342]
  *
  * NOTES 
  *  LANG_NEUTRAL is equal to LOCALE_SYSTEM_DEFAULT
  */
-INT32 WINAPI GetLocaleInfo32A(LCID lcid,LCTYPE LCType,LPSTR buf,INT32 len)
+ULONG WINAPI GetLocaleInfo32A(LCID lcid,LCTYPE LCType,LPSTR buf,ULONG len)
 {
   LPCSTR  retString;
 	int	found,i;
 	int	lang=0;
 
-  TRACE(ole,"(lcid=0x%lx,lctype=0x%lx,%p,%x)\n",lcid,LCType,buf,len);
+  DPRINT("(lcid=0x%lx,lctype=0x%lx,%p,%x)\n",lcid,LCType,buf,len);
 
   if (len && (! buf) ) {
     SetLastError(ERROR_INSUFFICIENT_BUFFER);
@@ -724,7 +718,7 @@ INT32 WINAPI GetLocaleInfo32A(LCID lcid,LCTYPE LCType,LPSTR buf,INT32 len)
  *		GetLocaleInfo32W	[KERNEL32.343]
  *
  */
-INT32 WINAPI GetLocaleInfo32W(LCID lcid,LCTYPE LCType,LPWSTR wbuf,INT32 len)
+ULONG WINAPI GetLocaleInfo32W(LCID lcid,LCTYPE LCType,LPWSTR wbuf,ULONG len)
 {	WORD wlen;
 	LPSTR abuf;
 	
@@ -1358,18 +1352,10 @@ static const WORD CT_CType3_LUT[] = {
 };
 
 /******************************************************************************
- *		GetStringType16	[OLE2NLS.7]
- */
-BOOL16 WINAPI GetStringType16(LCID locale,DWORD dwInfoType,LPCSTR src,
-                              INT16 cchSrc,LPWORD chartype)
-{
-	return GetStringTypeEx32A(locale,dwInfoType,src,cchSrc,chartype);
-}
-/******************************************************************************
  *		GetStringType32A	[KERNEL32.396]
  */
 BOOL32 WINAPI GetStringType32A(LCID locale,DWORD dwInfoType,LPCSTR src,
-                               INT32 cchSrc,LPWORD chartype)
+                               ULONG cchSrc,LPWORD chartype)
 {
 	return GetStringTypeEx32A(locale,dwInfoType,src,cchSrc,chartype);
 }
@@ -1380,7 +1366,7 @@ BOOL32 WINAPI GetStringType32A(LCID locale,DWORD dwInfoType,LPCSTR src,
  * FIXME: Ignores the locale.
  */
 BOOL32 WINAPI GetStringTypeEx32A(LCID locale,DWORD dwInfoType,LPCSTR src,
-                                 INT32 cchSrc,LPWORD chartype)
+                                 ULONG cchSrc,LPWORD chartype)
 {
 	int	i;
 	
@@ -1438,7 +1424,7 @@ BOOL32 WINAPI GetStringTypeEx32A(LCID locale,DWORD dwInfoType,LPCSTR src,
  * NOTES
  * Yes, this is missing LCID locale. MS fault.
  */
-BOOL32 WINAPI GetStringType32W(DWORD dwInfoType,LPCWSTR src,INT32 cchSrc,
+BOOL32 WINAPI GetStringType32W(DWORD dwInfoType,LPCWSTR src,ULONG cchSrc,
                                LPWORD chartype)
 {
 	return GetStringTypeEx32W(0/*defaultlocale*/,dwInfoType,src,cchSrc,chartype);
@@ -1450,9 +1436,9 @@ BOOL32 WINAPI GetStringType32W(DWORD dwInfoType,LPCWSTR src,INT32 cchSrc,
  * FIXME: unicode chars are assumed chars
  */
 BOOL32 WINAPI GetStringTypeEx32W(LCID locale,DWORD dwInfoType,LPCWSTR src,
-                                 INT32 cchSrc,LPWORD chartype)
+                                 ULONG cchSrc,LPWORD chartype)
 {
-	int	i;
+   int	i;
 
 
 	if (cchSrc==-1)
@@ -1485,41 +1471,10 @@ BOOL32 WINAPI GetStringTypeEx32W(LCID locale,DWORD dwInfoType,LPCWSTR src,
 }
 
 /*****************************************************************
- * VerLanguageName16   [VER.10] 
- */
-DWORD WINAPI VerLanguageName16(UINT16 langid,LPSTR langname,UINT16 langnamelen)
-{
-	int	i;
-	DWORD	result;
-	char	buffer[80];
-
-	TRACE(ver,"(%d,%p,%d)\n",langid,langname,langnamelen);
-	/* First, check \System\CurrentControlSet\control\Nls\Locale\<langid>
-	 * from the registry. 
-	 */
-	sprintf(buffer,
-		"\\System\\CurrentControlSet\\control\\Nls\\Locale\\%08x",
-		langid);
-	result = RegQueryValue16(HKEY_LOCAL_MACHINE, buffer, langname,
-				(LPDWORD)&langnamelen);
-	if (result == ERROR_SUCCESS) {
-		langname[langnamelen-1]='\0';
-		return langnamelen;
-	}
-	/* if that fails, use the internal table */
-	for (i=0;languages[i].langid!=0;i++)
-		if (langid==languages[i].langid)
-			break;
-	strncpy(langname,languages[i].langname,langnamelen);
-	langname[langnamelen-1]='\0';
-	return strlen(languages[i].langname);
-}
-
-/*****************************************************************
  * VerLanguageName32A				[VERSION.9] 
  */
-DWORD WINAPI VerLanguageName32A(UINT32 langid,LPSTR langname,
-                                UINT32 langnamelen)
+DWORD WINAPI VerLanguageName32A(ULONG langid,LPSTR langname,
+                                ULONG langnamelen)
 {
 	return VerLanguageName16(langid,langname,langnamelen);
 }
@@ -1527,8 +1482,8 @@ DWORD WINAPI VerLanguageName32A(UINT32 langid,LPSTR langname,
 /*****************************************************************
  * VerLanguageName32W				[VERSION.10] 
  */
-DWORD WINAPI VerLanguageName32W(UINT32 langid,LPWSTR langname,
-                                UINT32 langnamelen)
+DWORD WINAPI VerLanguageName32W(ULONG langid,LPWSTR langname,
+                                ULONG langnamelen)
 {
 	int	i;
 	LPWSTR	keyname;
@@ -1994,15 +1949,15 @@ static int identity(int c)
  *    to make MS Word 95 not print several thousand fixme messages for 
  *    this function.
  */
-INT32 WINAPI LCMapString32A(
+ULONG WINAPI LCMapString32A(
 	LCID lcid /* locale identifier created with MAKELCID; 
 		     LOCALE_SYSTEM_DEFAULT and LOCALE_USER_DEFAULT are 
                      predefined values. */,
 	DWORD mapflags /* flags */,
 	LPCSTR srcstr  /* source buffer */,
-	INT32 srclen   /* source length */,
+	ULONG srclen   /* source length */,
 	LPSTR dststr   /* destination buffer */,
-	INT32 dstlen   /* destination buffer length */) 
+	ULONG dstlen   /* destination buffer length */) 
 {
   int i;
 
@@ -2197,9 +2152,9 @@ INT32 WINAPI LCMapString32A(
  *
  * See LCMapString32A for documentation
  */
-INT32 WINAPI LCMapString32W(
-	LCID lcid,DWORD mapflags,LPCWSTR srcstr,INT32 srclen,LPWSTR dststr,
-	INT32 dstlen)
+ULONG WINAPI LCMapString32W(
+	LCID lcid,DWORD mapflags,LPCWSTR srcstr,ULONG srclen,LPWSTR dststr,
+	ULONG dstlen)
 {
   int i;
  
@@ -2271,7 +2226,7 @@ UINT16 WINAPI CompareString16(DWORD lcid,DWORD fdwStyle,
  * 
  * Quite inefficient.
  */
-UINT32 WINAPI CompareString32A(
+ULONG WINAPI CompareStringA(
     DWORD lcid,     /* locale ID */
     DWORD fdwStyle, /* comparison-style options */
     LPCSTR s1,      /* first string */
@@ -2334,7 +2289,7 @@ UINT32 WINAPI CompareString32A(
  * FIXME :  Does only string sort.  Should
  * be reimplemented the same way as CompareString32A.
  */
-UINT32 WINAPI CompareString32W(DWORD lcid, DWORD fdwStyle, 
+ULONG WINAPI CompareStringW(DWORD lcid, DWORD fdwStyle, 
                                LPCWSTR s1, DWORD l1, LPCWSTR s2,DWORD l2)
 {
 	int len,ret;
@@ -2394,15 +2349,15 @@ UINT32 WINAPI CompareString32W(DWORD lcid, DWORD fdwStyle,
 
  These functions REQUIRE valid locale, date,  and format. 
  */
-static INT32 OLE_GetFormatA(LCID locale,
+static ULONG OLE_GetFormatA(LCID locale,
 			    DWORD flags,
 			    DWORD tflags,
 			    LPSYSTEMTIME xtime,
 			    LPCSTR _format, 	/*in*/
 			    LPSTR date,		/*out*/
-			    INT32 datelen)
+			    ULONG datelen)
 {
-   INT32 inpos, outpos;
+   ULONG inpos, outpos;
    int count, type, inquote, Overflow;
    char buf[40];
    char format[40];
@@ -2606,12 +2561,12 @@ static INT32 OLE_GetFormatA(LCID locale,
 /******************************************************************************
  * OLE_GetFormatW [INTERNAL]
  */
-static INT32 OLE_GetFormatW(LCID locale, DWORD flags, DWORD tflags,
+static ULONG OLE_GetFormatW(LCID locale, DWORD flags, DWORD tflags,
 			    LPSYSTEMTIME xtime,
 			    LPCWSTR format,
-			    LPWSTR output, INT32 outlen)
+			    LPWSTR output, ULONG outlen)
 {
-   INT32   inpos, outpos;
+   ULONG   inpos, outpos;
    int     count, type=0, inquote;
    int     Overflow; /* loop check */
    WCHAR   buf[40];
@@ -2829,9 +2784,9 @@ static INT32 OLE_GetFormatW(LCID locale, DWORD flags, DWORD tflags,
  * - gg   era string
  *
  */
-INT32 WINAPI GetDateFormat32A(LCID locale,DWORD flags,
+ULONG WINAPI GetDateFormat32A(LCID locale,DWORD flags,
 			      LPSYSTEMTIME xtime,
-			      LPCSTR format, LPSTR date,INT32 datelen) 
+			      LPCSTR format, LPSTR date,ULONG datelen) 
 {
    
   char format_buf[40];
@@ -2839,7 +2794,7 @@ INT32 WINAPI GetDateFormat32A(LCID locale,DWORD flags,
   SYSTEMTIME t;
   LPSYSTEMTIME thistime;
   LCID thislocale;
-  INT32 ret;
+  ULONG ret;
 
   TRACE(ole,"(0x%04lx,0x%08lx,%p,%s,%p,%d)\n",
 	      locale,flags,xtime,format,date,datelen);
@@ -2892,7 +2847,7 @@ INT32 WINAPI GetDateFormat32A(LCID locale,DWORD flags,
  * Accepts & returns sizes as counts of Unicode characters.
  *
  */
-INT32 WINAPI GetDateFormat32W(LCID locale,DWORD flags,
+ULONG WINAPI GetDateFormat32W(LCID locale,DWORD flags,
 			      LPSYSTEMTIME xtime,
 			      LPCWSTR format,
 			      LPWSTR date, INT32 datelen)
