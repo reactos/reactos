@@ -18,49 +18,41 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-/*
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS User32
- * PURPOSE:          Static control
- * FILE:             lib/user32/controls/icontitle.c
- * PROGRAMER:        Steven Edwards
- * REVISION HISTORY: 2003/06/21 SAE Created
- * NOTES:            Adapted from Wine
- */
-
 #include "windows.h"
 #include "user32/regcontrol.h"
 #include "controls.h"
+#include "wine/unicode.h"
+
+#ifdef __REACTOS__
+#define MAKEINTATOMW(atom)  ((LPCWSTR)((ULONG_PTR)((WORD)(atom))))
+#define ICONTITLE_CLASS_ATOM MAKEINTATOMW(32772)
+#endif
 
 static BOOL bMultiLineTitle;
 static HFONT hIconTitleFont;
 
-static LRESULT CALLBACK IconTitleWndProcW( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam );
-static LRESULT CALLBACK IconTitleWndProcA( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam );
-
-#define MAKEINTATOMW(atom)  ((LPCWSTR)((ULONG_PTR)((WORD)(atom))))
-#define ICONTITLE_CLASS_ATOM MAKEINTATOMW(32772)
+static LRESULT WINAPI IconTitleWndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam );
 
 /*********************************************************************
  * icon title class descriptor
  */
 const struct builtin_class_descr ICONTITLE_builtin_class =
 {
-    ICONTITLE_CLASS_ATOM,        /* name */
-    0,                           /* style */
-    (WNDPROC) IconTitleWndProcW, /* procW */
-    (WNDPROC) IconTitleWndProcA, /* procA */
-    0,                           /* extra */
-    (LPCWSTR) IDC_ARROW,         /* cursor */ /* FIXME Wine uses IDC_ARROWA */
-    0                            /* brush */
+    ICONTITLE_CLASS_ATOM, /* name */
+    0,                    /* style */
+    NULL,                 /* procA (winproc is Unicode only) */
+    IconTitleWndProc,     /* procW */
+    0,                    /* extra */
+    IDC_ARROW,            /* cursor */
+    0                     /* brush */
 };
 
 
 
+#ifndef __REACTOS__
 /***********************************************************************
  *           ICONTITLE_Create
  */
-#ifndef __REACTOS__
 HWND ICONTITLE_Create( HWND owner )
 {
     HWND hWnd;
@@ -76,7 +68,7 @@ HWND ICONTITLE_Create( HWND owner )
 	hWnd = CreateWindowExA( 0, ICONTITLE_CLASS_ATOM, NULL,
                                 style, 0, 0, 1, 1,
                                 owner, 0, instance, NULL );
-    //WIN_SetOwner( hWnd, owner );  /* MDI depends on this */
+    WIN_SetOwner( hWnd, owner );  /* MDI depends on this */
     SetWindowLongW( hWnd, GWL_STYLE,
                     GetWindowLongW( hWnd, GWL_STYLE ) & ~(WS_CAPTION | WS_BORDER) );
     return hWnd;
@@ -88,7 +80,7 @@ HWND ICONTITLE_Create( HWND owner )
  */
 static BOOL ICONTITLE_SetTitlePos( HWND hwnd, HWND owner )
 {
-    static WCHAR emptyTitleText[] = {'<','.','.','.','>',0};
+    static const WCHAR emptyTitleText[] = {'<','.','.','.','>',0};
     WCHAR str[80];
     HDC hDC;
     HFONT hPrevFont;
@@ -103,8 +95,8 @@ static BOOL ICONTITLE_SetTitlePos( HWND hwnd, HWND owner )
 
     if( !length )
     {
-        lstrcpyW( str, emptyTitleText );
-        length = lstrlenW( str );
+        strcpyW( str, emptyTitleText );
+        length = strlenW( str );
     }
 
     if (!(hDC = GetDC( hwnd ))) return FALSE;
@@ -199,8 +191,8 @@ static BOOL ICONTITLE_Paint( HWND hwnd, HWND owner, HDC hDC, BOOL bActive )
 /***********************************************************************
  *           IconTitleWndProc
  */
-LRESULT WINAPI IconTitleWndProc_common( HWND hWnd, UINT msg,
-                                 WPARAM wParam, LPARAM lParam, BOOL unicode )
+LRESULT WINAPI IconTitleWndProc( HWND hWnd, UINT msg,
+                                 WPARAM wParam, LPARAM lParam )
 {
     HWND owner = GetWindow( hWnd, GW_OWNER );
 
@@ -221,8 +213,7 @@ LRESULT WINAPI IconTitleWndProc_common( HWND hWnd, UINT msg,
 	     return HTCAPTION;
 	case WM_NCMOUSEMOVE:
 	case WM_NCLBUTTONDBLCLK:
-	     return unicode ? SendMessageW(owner, msg, wParam, lParam) :
-				 SendMessageA(owner, msg, wParam, lParam);
+	     return SendMessageW( owner, msg, wParam, lParam );
 	case WM_ACTIVATE:
 	     if( wParam ) SetActiveWindow( owner );
              return 0;
@@ -240,25 +231,5 @@ LRESULT WINAPI IconTitleWndProc_common( HWND hWnd, UINT msg,
                 ValidateRect( hWnd, NULL );
             return 1;
     }
-
-    return unicode ? DefWindowProcW(hWnd, msg, wParam, lParam) :
-			DefWindowProcA(hWnd, msg, wParam, lParam);
-}
-
-/*********************************************************************
- *
- *	IconTitleWndProcW   (USER32.@)
- */
-LRESULT CALLBACK IconTitleWndProcW(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    return IconTitleWndProc_common(hWnd, uMsg, wParam, lParam, TRUE);
-}
-
-/*********************************************************************
- *
- *	IconTitleWndProc   (USER32.@)
- */
-LRESULT CALLBACK IconTitleWndProcA(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    return IconTitleWndProc_common(hWnd, uMsg, wParam, lParam, FALSE);
+    return DefWindowProcW( hWnd, msg, wParam, lParam );
 }
