@@ -12,8 +12,13 @@
 /* FUNCTIONS **************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/halio.h>
 
 #include "parallel.h"
+
+#define NDEBUG
+#include <internal/debug.h>
+
 
 #define LP_B (0x378)
 #define LP_S (inb_p(LP_B+1))
@@ -52,7 +57,7 @@ static void Parallel_putchar(unsigned char ch)
 	  
         if (count==500000)
 	  {
-             printk("printer_putchar(): timed out\n");
+             DPRINT("printer_putchar(): timed out\n");
 	     return;
 	  }
 	
@@ -79,7 +84,7 @@ NTSTATUS Dispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    switch (Stack->MajorFunction)
      {
       case IRP_MJ_CREATE:
-        printk("(Parallel Port Driver) Creating\n");
+        DPRINT("(Parallel Port Driver) Creating\n");
 	Parallel_Reset();
 	status = STATUS_SUCCESS;
 	break;
@@ -89,7 +94,7 @@ NTSTATUS Dispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	break;
 	
       case IRP_MJ_WRITE:
-        printk("(Parallel Port Driver) Writing %d bytes\n",
+        DPRINT("(Parallel Port Driver) Writing %d bytes\n",
                Stack->Parameters.Write.Length);
 	for (i=0;i<Stack->Parameters.Write.Length;i++)
 	  {
@@ -110,7 +115,8 @@ NTSTATUS Dispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    return(status);
 }
 
-NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
+STDCALL NTSTATUS
+DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 /*
  * FUNCTION: Called by the system to initalize the driver
  * ARGUMENTS:
@@ -121,12 +127,20 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
    PDEVICE_OBJECT DeviceObject;
    NTSTATUS ret;
+   ANSI_STRING ansi_device_name;
+   UNICODE_STRING device_name;
    
-   printk("Parallel Port Driver 0.0.1\n");
+   DbgPrint("Parallel Port Driver 0.0.1\n");
           
-   
-   ret = IoCreateDevice(DriverObject,0,"\\Device\\Parallel",
-                        FILE_DEVICE_PARALLEL_PORT,0,FALSE,&DeviceObject);
+   RtlInitAnsiString (&ansi_device_name, "\\Device\\Parallel");
+   RtlAnsiStringToUnicodeString (&device_name, &ansi_device_name, TRUE);
+   ret = IoCreateDevice(DriverObject,
+                        0,
+                        &device_name,
+                        FILE_DEVICE_PARALLEL_PORT,
+                        0,
+                        FALSE,
+                        &DeviceObject);
    if (ret!=STATUS_SUCCESS)
      {
 	return(ret);

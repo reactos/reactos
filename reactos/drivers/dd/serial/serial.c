@@ -10,6 +10,10 @@
 #include <internal/mmhal.h>
 #include <internal/halio.h>
 
+#define NDEBUG
+#include <internal/debug.h>
+
+
 #define COM1    0x3F8
 #define COM2    0x2F8
 #define COM3    0x3E8
@@ -141,7 +145,8 @@ void testserial(void)
         };
 };
 
-NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
+STDCALL NTSTATUS
+DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
         DbgPrint("Serial Driver 0.0.2\n");
         InitializeSerial();

@@ -3,7 +3,7 @@
 #
 OBJECTS= serial.o ../../../ntoskrnl/ntoskrnl.a
 
-all: serial.o
+all: serial.sys
 
 .phony: all
 

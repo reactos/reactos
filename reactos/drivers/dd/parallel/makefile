@@ -3,7 +3,7 @@
 #
 OBJECTS= parallel.o ../../../ntoskrnl/ntoskrnl.a
 
-all: parallel.o
+all: parallel.sys
 
 .phony: all
 
