@@ -96,11 +96,11 @@ typedef struct _IP_PACKET {
 
 /* Packet context */
 typedef struct _PACKET_CONTEXT {
-    PACKET_COMPLETION_ROUTINE Complete;   /* Transport level completion handler */
+    PACKET_COMPLETION_ROUTINE DLComplete; /* Data link level completion handler
+					   * Also used to link to next packet 
+					   * in a queue */
     PVOID Context;                        /* Context information for handler */
-    PACKET_COMPLETION_ROUTINE DLComplete; /* Data link level completion handler. Also
-                                             used to link to next packet in a queue */
-    UINT DLOffset;                        /* Offset where data (IP header) starts */
+    UINT  PacketType;                     /* Type of packet */
 } PACKET_CONTEXT, *PPACKET_CONTEXT;
 
 /* The ProtocolReserved field is structured as a PACKET_CONTEXT */

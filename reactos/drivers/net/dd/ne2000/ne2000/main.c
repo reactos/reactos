@@ -764,14 +764,16 @@ NDIS_STATUS STDCALL MiniportTransferData(
     NdisQueryPacket(Packet, NULL, NULL, &DstBuffer, NULL);
     NdisQueryBuffer(DstBuffer, (PVOID)&DstData, &DstSize);
 
-    SrcData = Adapter->PacketOffset + sizeof(PACKET_HEADER) + ByteOffset;
-    if (ByteOffset + sizeof(PACKET_HEADER) + BytesToTransfer > Adapter->PacketHeader.PacketLength)
-        BytesToTransfer = Adapter->PacketHeader.PacketLength- sizeof(PACKET_HEADER) - ByteOffset;
+    SrcData = Adapter->PacketOffset + sizeof(DISCARD_HEADER) + ByteOffset;
+    if (ByteOffset + sizeof(DISCARD_HEADER) + BytesToTransfer > 
+	Adapter->PacketHeader.PacketLength)
+        BytesToTransfer = Adapter->PacketHeader.PacketLength - 
+	    sizeof(DISCARD_HEADER) - ByteOffset;
 
     /* Start copying the data */
     BytesCopied = 0;
     for (;;) {
-        BytesToCopy = (DstSize < BytesToTransfer)? DstSize : BytesToTransfer;
+        BytesToCopy = (DstSize < BytesToTransfer) ? DstSize : BytesToTransfer;
         if (SrcData + BytesToCopy > RecvStop)
             BytesToCopy = (RecvStop - SrcData);
 

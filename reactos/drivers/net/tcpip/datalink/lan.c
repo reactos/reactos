@@ -227,10 +227,8 @@ VOID STDCALL LanReceiveWorker( PVOID Context ) {
 
 	/*OskitDumpBuffer( IPPacket.Header, IPPacket.TotalSize );*/
 
-        PacketType = ((PETH_HEADER)IPPacket.Header)->EType;
-	IPPacket.Header = ((PCHAR)IPPacket.Header) + sizeof(ETH_HEADER);
-	IPPacket.Position = sizeof(ETH_HEADER);
-	IPPacket.TotalSize -= sizeof(ETH_HEADER);
+        PacketType = PC(IPPacket.NdisPacket)->PacketType;
+	IPPacket.Position = 0;
 
 	TI_DbgPrint
 		(DEBUG_DATALINK,
@@ -358,12 +356,13 @@ NDIS_STATUS STDCALL ProtocolReceive(
     TI_DbgPrint(DEBUG_DATALINK, ("Adapter: %x (MTU %d)\n", 
 				 Adapter, Adapter->MTU));
 
-    //TcpipAcquireSpinLockAtDpcLevel(&Adapter->Lock);
-    NdisStatus = AllocatePacketWithBuffer( &NdisPacket, NULL, Adapter->MTU );
+    NdisStatus = AllocatePacketWithBuffer( &NdisPacket, NULL,
+                                           PacketSize + HeaderBufferSize );
     if( NdisStatus != NDIS_STATUS_SUCCESS ) {
-	//TcpipReleaseSpinLockFromDpcLevel(&Adapter->Lock);
 	return NDIS_STATUS_NOT_ACCEPTED;
     }
+
+    PC(NdisPacket)->PacketType = PacketType;
 
     TI_DbgPrint(DEBUG_DATALINK, ("pretransfer LookaheadBufferSize %d packsize %d\n",LookaheadBufferSize,PacketSize));
 
@@ -371,43 +370,36 @@ NDIS_STATUS STDCALL ProtocolReceive(
 
     IPPacket.NdisPacket = NdisPacket;
     IPPacket.Position = 0;
-	
-    if ((LookaheadBufferSize + HeaderBufferSize) < PacketSize)
+
+    if (LookaheadBufferSize == PacketSize)
     {
-        TI_DbgPrint(DEBUG_DATALINK, ("pretransfer LookaheadBufferSize %d packsize %d bufferdata %x\n",LookaheadBufferSize,PacketSize, BufferData));
-	/* The following is this way because we want a nice, whole packet
-	 * in NdisPacket, including ethernet header (which this code assumes)
-	 * is in there.  We are indeed retransferring some bytes.  Eventually,
-	 * I will change the downstream functions to take the payload only. 
-	 * 
-	 * Below: Count the ethernet header size, but don't count the crc */
-        NdisTransferData(&NdisStatus,
-                         Adapter->NdisHandle,
-                         MacReceiveContext,
-			 0,
-                         PacketSize + sizeof(ETH_HEADER) - sizeof(ULONG),
-                         NdisPacket,
-                         &BytesTransferred);
-    } else {
-	TI_DbgPrint(DEBUG_DATALINK, ("copy\n"));
-	NdisStatus = NDIS_STATUS_SUCCESS;
-	BytesTransferred = PacketSize;
-	RtlCopyMemory(BufferData,
-		      HeaderBuffer, 
-		      HeaderBufferSize);
-	RtlCopyMemory(BufferData + HeaderBufferSize,
-		      LookaheadBuffer, LookaheadBufferSize);
+        /* Optimized code path for packets that are fully contained in
+         * the lookahead buffer. */
+        NdisCopyLookaheadData(BufferData,
+                              LookaheadBuffer,
+                              LookaheadBufferSize,
+                              Adapter->MacOptions);
+    }
+    else
+    {
+	if (NdisStatus == NDIS_STATUS_SUCCESS)
+        {
+            NdisTransferData(&NdisStatus, Adapter->NdisHandle,
+                             MacReceiveContext, 0, PacketSize, 
+			     NdisPacket, &BytesTransferred);
+        }
+        else
+        {
+            BytesTransferred = 0;
+        }
     }
     TI_DbgPrint(DEBUG_DATALINK, ("Calling complete\n"));
-
-    /* Release the packet descriptor */
-    //TcpipReleaseSpinLockFromDpcLevel(&Adapter->Lock);
 
     if (NdisStatus != NDIS_STATUS_PENDING)
 	ProtocolTransferDataComplete(BindingContext,
 				     NdisPacket,
 				     NdisStatus,
-				     PacketSize + HeaderBufferSize);    
+				     PacketSize);
 
     TI_DbgPrint(DEBUG_DATALINK, ("leaving\n"));
 
