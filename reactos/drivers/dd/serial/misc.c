@@ -105,9 +105,6 @@ SerialSendByte(
 	DeviceExtension = (PSERIAL_DEVICE_EXTENSION)pDeviceExtension;
 	ComPortBase = (PUCHAR)DeviceExtension->BaseAddress;
 	
-	DPRINT1("Serial: sending bytes (if any) on COM%lu\n",
-		DeviceExtension->ComPort);
-	
 	KeAcquireSpinLock(&DeviceExtension->OutputBufferLock, &Irql);
 	while (!IsCircularBufferEmpty(&DeviceExtension->OutputBuffer)
 		&& READ_PORT_UCHAR(SER_LSR(ComPortBase)) & SR_LSR_TBE)

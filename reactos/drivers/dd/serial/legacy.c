@@ -96,8 +96,8 @@ DetectLegacyDevice(
 	if (!ResourceList)
 		return STATUS_INSUFFICIENT_RESOURCES;
 	ResourceList->Count = 1;
-	ResourceList->List[0].InterfaceType = Isa;
-	ResourceList->List[0].BusNumber = -1; /* FIXME */
+	ResourceList->List[0].InterfaceType = InterfaceTypeUndefined;
+	ResourceList->List[0].BusNumber = -1; /* unknown */
 	ResourceList->List[0].PartialResourceList.Version = 1;
 	ResourceList->List[0].PartialResourceList.Revision = 1;
 	ResourceList->List[0].PartialResourceList.Count = 2;
@@ -137,7 +137,7 @@ DetectLegacyDevice(
 	{
 		Status = IoReportDetectedDevice(
 			DriverObject,
-			ResourceList->List[0].InterfaceType, ResourceList->List[0].BusNumber, -1/*FIXME*/,
+			ResourceList->List[0].InterfaceType, ResourceList->List[0].BusNumber, -1 /* unknown */,
 			ResourceList, NULL,
 			TRUE,
 			&Pdo);

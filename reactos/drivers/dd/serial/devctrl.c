@@ -7,7 +7,6 @@
  * 
  * PROGRAMMERS:     Hervé Poussineau (poussine@freesurf.fr)
  */
-/* FIXME: call IoAcquireRemoveLock/IoReleaseRemoveLock around each I/O operation */
 
 #define NDEBUG
 #include "serial.h"
@@ -219,22 +218,30 @@ SerialGetCommProp(
 	pCommProp->ServiceMask = SERIAL_SP_SERIALCOMM;
 	pCommProp->MaxTxQueue = pCommProp->CurrentTxQueue = DeviceExtension->OutputBuffer.Length - 1;
 	pCommProp->MaxRxQueue = pCommProp->CurrentRxQueue = DeviceExtension->InputBuffer.Length - 1;
-	pCommProp->MaxBaud = SERIAL_BAUD_115200;
 	pCommProp->ProvSubType = 1; // PST_RS232;
-	/* FIXME: ProvCapabilities may be related to Uart type */
 	pCommProp->ProvCapabilities = SERIAL_PCF_DTRDSR | SERIAL_PCF_INTTIMEOUTS | SERIAL_PCF_PARITY_CHECK
 		| SERIAL_PCF_RTSCTS | SERIAL_PCF_SETXCHAR | SERIAL_PCF_SPECIALCHARS | SERIAL_PCF_TOTALTIMEOUTS
 		| SERIAL_PCF_XONXOFF;
-	/* FIXME: SettableParams may be related to Uart type */
 	pCommProp->SettableParams = SERIAL_SP_BAUD | SERIAL_SP_DATABITS | SERIAL_SP_HANDSHAKING
 		| SERIAL_SP_PARITY | SERIAL_SP_PARITY_CHECK | SERIAL_SP_STOPBITS;
-	/* FIXME: SettableBaud may be related to Uart type */
+	
+	/* SettableBaud is related to Uart type */
 	pCommProp->SettableBaud = SERIAL_BAUD_075 | SERIAL_BAUD_110 | SERIAL_BAUD_134_5
 		| SERIAL_BAUD_150 | SERIAL_BAUD_300 | SERIAL_BAUD_600 | SERIAL_BAUD_1200
 		| SERIAL_BAUD_1800 | SERIAL_BAUD_2400 | SERIAL_BAUD_4800 | SERIAL_BAUD_7200
-		| SERIAL_BAUD_9600 | SERIAL_BAUD_14400 | SERIAL_BAUD_19200 | SERIAL_BAUD_38400
-		| SERIAL_BAUD_56K | SERIAL_BAUD_57600 | SERIAL_BAUD_115200 | SERIAL_BAUD_128K
-		| SERIAL_BAUD_USER;
+		| SERIAL_BAUD_9600 | SERIAL_BAUD_USER;
+	pCommProp->MaxBaud = SERIAL_BAUD_9600;
+	if (DeviceExtension->UartType >= Uart16450)
+	{
+		pCommProp->SettableBaud |= SERIAL_BAUD_14400 | SERIAL_BAUD_19200 | SERIAL_BAUD_38400;
+		pCommProp->MaxBaud = SERIAL_BAUD_38400;
+	}
+	if (DeviceExtension->UartType >= Uart16550)
+	{
+		pCommProp->SettableBaud |= SERIAL_BAUD_56K | SERIAL_BAUD_57600 | SERIAL_BAUD_115200 | SERIAL_BAUD_128K;
+		pCommProp->MaxBaud = SERIAL_BAUD_115200;
+	}
+	
 	pCommProp->SettableData = SERIAL_DATABITS_5 | SERIAL_DATABITS_6 | SERIAL_DATABITS_7 | SERIAL_DATABITS_8;
 	pCommProp->SettableStopParity = SERIAL_STOPBITS_10 | SERIAL_STOPBITS_15 | SERIAL_STOPBITS_20
 		| SERIAL_PARITY_NONE | SERIAL_PARITY_ODD | SERIAL_PARITY_EVEN | SERIAL_PARITY_MARK | SERIAL_PARITY_SPACE;
@@ -264,8 +271,8 @@ SerialGetCommStatus(
 		- DeviceExtension->OutputBuffer.ReadPosition) % DeviceExtension->OutputBuffer.Length;
 	KeReleaseSpinLock(&DeviceExtension->OutputBufferLock, Irql);
 	
-	pSerialStatus->EofReceived = FALSE; /* FIXME */
-	pSerialStatus->WaitForImmediate = FALSE; /* FIXME */
+	pSerialStatus->EofReceived = FALSE; /* always FALSE */
+	pSerialStatus->WaitForImmediate = FALSE; /* always FALSE */
 	
 	return STATUS_SUCCESS;
 }
@@ -285,8 +292,6 @@ SerialDeviceControl(
 	NTSTATUS Status;
 	
 	DPRINT("Serial: IRP_MJ_DEVICE_CONTROL dispatch\n");
-	
-	/* FIXME: pend operation if possible */
 	
 	Stack = IoGetCurrentIrpStackLocation(Irp);
 	LengthIn = Stack->Parameters.DeviceIoControl.InputBufferLength;
@@ -315,9 +320,13 @@ SerialDeviceControl(
 			DPRINT("Serial: IOCTL_SERIAL_CLR_DTR\n");
 			/* FIXME: If the handshake flow control of the device is configured to 
 			 * automatically use DTR, return STATUS_INVALID_PARAMETER */
-			DeviceExtension->MCR &= ~SR_MCR_DTR;
-			WRITE_PORT_UCHAR(SER_MCR(ComPortBase), DeviceExtension->MCR);
-			Status = STATUS_SUCCESS;
+			Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
+			if (NT_SUCCESS(Status))
+			{
+				DeviceExtension->MCR &= ~SR_MCR_DTR;
+				WRITE_PORT_UCHAR(SER_MCR(ComPortBase), DeviceExtension->MCR);
+				IoReleaseRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
+			}
 			break;
 		}
 		case IOCTL_SERIAL_CLR_RTS:
@@ -325,9 +334,13 @@ SerialDeviceControl(
 			DPRINT("Serial: IOCTL_SERIAL_CLR_RTS\n");
 			/* FIXME: If the handshake flow control of the device is configured to 
 			 * automatically use RTS, return STATUS_INVALID_PARAMETER */
-			DeviceExtension->MCR &= ~SR_MCR_RTS;
-			WRITE_PORT_UCHAR(SER_MCR(ComPortBase), DeviceExtension->MCR);
-			Status = STATUS_SUCCESS;
+			Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
+			if (NT_SUCCESS(Status))
+			{
+				DeviceExtension->MCR &= ~SR_MCR_RTS;
+				WRITE_PORT_UCHAR(SER_MCR(ComPortBase), DeviceExtension->MCR);
+				IoReleaseRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
+			}
 			break;
 		}
 		case IOCTL_SERIAL_CONFIG_SIZE:
@@ -546,14 +559,20 @@ SerialDeviceControl(
 			DeviceExtension->InputBuffer.ReadPosition = DeviceExtension->InputBuffer.WritePosition = 0;
 			DeviceExtension->OutputBuffer.ReadPosition = DeviceExtension->OutputBuffer.WritePosition = 0;
 			/* Clear receive/transmit buffers */
-			if (DeviceExtension->UartType >= Uart16550)
+			if (DeviceExtension->UartType >= Uart16550A)
 			{
-				WRITE_PORT_UCHAR(SER_FCR(ComPortBase),
-					SR_FCR_CLEAR_RCVR | SR_FCR_CLEAR_XMIT);
+				/* 16550 UARTs also have FIFO queues, but they are unusable due to a bug */
+				Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
+				if (NT_SUCCESS(Status))
+				{
+					WRITE_PORT_UCHAR(SER_FCR(ComPortBase), SR_FCR_CLEAR_RCVR | SR_FCR_CLEAR_XMIT);
+					IoReleaseRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
+				}
 			}
+			else
+				Status = STATUS_SUCCESS;
 			KeReleaseSpinLock(&DeviceExtension->OutputBufferLock, Irql2);
 			KeReleaseSpinLock(&DeviceExtension->InputBufferLock, Irql1);
-			Status = STATUS_SUCCESS;
 			break;
 		}
 		case IOCTL_SERIAL_RESET_DEVICE:
@@ -604,10 +623,16 @@ SerialDeviceControl(
 			DPRINT("Serial: IOCTL_SERIAL_SET_DTR\n");
 			if (!(DeviceExtension->MCR & SR_MCR_DTR))
 			{
-				DeviceExtension->MCR |= SR_MCR_DTR;
-				WRITE_PORT_UCHAR(SER_MCR(ComPortBase), DeviceExtension->MCR);
+				Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
+				if (NT_SUCCESS(Status))
+				{
+					DeviceExtension->MCR |= SR_MCR_DTR;
+					WRITE_PORT_UCHAR(SER_MCR(ComPortBase), DeviceExtension->MCR);
+					IoReleaseRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
+				}
 			}
-			Status = STATUS_SUCCESS;
+			else
+				Status = STATUS_SUCCESS;
 			break;
 		}
 		case IOCTL_SERIAL_SET_FIFO_CONTROL:
@@ -617,8 +642,12 @@ SerialDeviceControl(
 				Status = STATUS_INVALID_PARAMETER;
 			else
 			{
-				WRITE_PORT_UCHAR(SER_FCR(ComPortBase), (UCHAR)((*(PULONG)BufferIn) & 0xff));
-				Status = STATUS_SUCCESS;
+				Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
+				if (NT_SUCCESS(Status))
+				{
+					WRITE_PORT_UCHAR(SER_FCR(ComPortBase), (UCHAR)((*(PULONG)BufferIn) & 0xff));
+					IoReleaseRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
+				}
 			}
 			break;
 		}
@@ -648,10 +677,14 @@ SerialDeviceControl(
 				Status = STATUS_INVALID_PARAMETER;
 			else
 			{
-				pMCR = (PULONG)BufferIn;
-				DeviceExtension->MCR = (UCHAR)(*pMCR & 0xff);
-				WRITE_PORT_UCHAR(SER_MCR(ComPortBase), DeviceExtension->MCR);
-				Status = STATUS_SUCCESS;
+				Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
+				if (NT_SUCCESS(Status))
+				{
+					pMCR = (PULONG)BufferIn;
+					DeviceExtension->MCR = (UCHAR)(*pMCR & 0xff);
+					WRITE_PORT_UCHAR(SER_MCR(ComPortBase), DeviceExtension->MCR);
+					IoReleaseRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
+				}
 			}
 			break;
 		}
@@ -688,10 +721,16 @@ SerialDeviceControl(
 			DPRINT("Serial: IOCTL_SERIAL_SET_RTS\n");
 			if (!(DeviceExtension->MCR & SR_MCR_RTS))
 			{
-				DeviceExtension->MCR |= SR_MCR_RTS;
-				WRITE_PORT_UCHAR(SER_MCR(ComPortBase), DeviceExtension->MCR);
+				Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
+				if (NT_SUCCESS(Status))
+				{
+					DeviceExtension->MCR |= SR_MCR_RTS;
+					WRITE_PORT_UCHAR(SER_MCR(ComPortBase), DeviceExtension->MCR);
+					IoReleaseRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
+				}
 			}
-			Status = STATUS_SUCCESS;
+			else
+				Status = STATUS_SUCCESS;
 			break;
 		}
 		case IOCTL_SERIAL_SET_TIMEOUTS:

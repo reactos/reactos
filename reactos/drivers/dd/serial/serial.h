@@ -20,7 +20,7 @@
   #define STDCALL
   
   #define DPRINT1 DbgPrint("(%s:%d) ", __FILE__, __LINE__), DbgPrint
-  #define CHECKPOINT1 DbgPrint("(%s:%d)\n")
+  #define CHECKPOINT1 DbgPrint("(%s:%d)\n", __FILE__, __LINE__)
   
   #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
   
@@ -101,6 +101,18 @@ typedef struct _SERIAL_DEVICE_EXTENSION
 	UCHAR MCR; /* Base+4, Modem Control Register */
 	UCHAR MSR; /* Base+6, Modem Status Register */
 } SERIAL_DEVICE_EXTENSION, *PSERIAL_DEVICE_EXTENSION;
+
+typedef struct _WORKITEM_DATA
+{
+	PIRP Irp;
+	
+	BOOLEAN UseIntervalTimeout;
+	BOOLEAN UseTotalTimeout;
+	ULONG IntervalTimeout;
+	LARGE_INTEGER TotalTimeoutTime;
+	BOOLEAN DontWait;
+	BOOLEAN ReadAtLeastOneByte;
+} WORKITEM_DATA, *PWORKITEM_DATA;
 
 #define SERIAL_TAG TAG('S', 'e', 'r', 'l')
 

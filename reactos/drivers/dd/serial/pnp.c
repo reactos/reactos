@@ -80,7 +80,7 @@ SerialAddDeviceInternal(
 	KeInitializeSpinLock(&DeviceExtension->OutputBufferLock);
 	KeInitializeDpc(&DeviceExtension->ReceivedByteDpc, SerialReceiveByte, DeviceExtension);
 	KeInitializeDpc(&DeviceExtension->SendByteDpc, SerialSendByte, DeviceExtension);
-	//Fdo->Flags |= DO_POWER_PAGEABLE (or DO_POWER_INRUSH?)
+	Fdo->Flags |= DO_POWER_PAGABLE;
 	Status = IoAttachDeviceToDeviceStackSafe(Fdo, Pdo, &DeviceExtension->LowerDevice);
 	if (!NT_SUCCESS(Status))
 	{
@@ -126,8 +126,8 @@ SerialAddDevice(
 	 * not called with a NULL Pdo. Block this call (blocks
 	 * unfortunately all the other PnP serial ports devices).
 	 */
-	//return SerialAddDeviceInternal(DriverObject, Pdo, UartUnknown, NULL);
-	return STATUS_UNSUCCESSFUL;
+	return SerialAddDeviceInternal(DriverObject, Pdo, UartUnknown, NULL);
+	//return STATUS_UNSUCCESSFUL;
 }
 
 NTSTATUS STDCALL
@@ -230,8 +230,9 @@ SerialPnpStartDevice(
 	}
 	
 	/* Clear receive/transmit buffers */
-	if (DeviceExtension->UartType >= Uart16550)
+	if (DeviceExtension->UartType >= Uart16550A)
 	{
+		/* 16550 UARTs also have FIFO queues, but they are unusable due to a bug */
 		WRITE_PORT_UCHAR(SER_FCR(ComPortBase),
 			SR_FCR_CLEAR_RCVR | SR_FCR_CLEAR_XMIT);
 	}
@@ -306,6 +307,69 @@ SerialPnp(
 		case IRP_MN_START_DEVICE:
 		{
 			DPRINT("Serial: IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
+			
+			/* FIXME: first HACK: PnP manager can send multiple
+			 * IRP_MN_START_DEVICE for one device
+			 */
+			if (((PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->PnpState != dsStopped)
+			{
+				DPRINT1("Serial: device already started. Ignoring this irp!\n");
+				Status = STATUS_SUCCESS;
+				break;
+			}
+			/* FIXME: AllocatedResources MUST never be NULL ;
+			 * that's the second HACK because resource arbitration
+			 * doesn't exist in ReactOS yet...
+			 */
+			if (Stack->Parameters.StartDevice.AllocatedResources == NULL)
+			{
+				ULONG ResourceListSize;
+				PCM_RESOURCE_LIST ResourceList;
+				PCM_PARTIAL_RESOURCE_DESCRIPTOR ResourceDescriptor;
+				KIRQL Dirql;
+				ULONG ComPortBase;
+				ULONG Irq;
+				
+				DPRINT1("Serial: no allocated resources for this device! Creating fake list\n");
+				/* These values are resources of the ONLY serial
+				 * port that will be managed by this driver
+				 * (default is COM2) */
+				ComPortBase = 0x2f8;
+				Irq = 3;
+				
+				/* Create resource list */
+				ResourceListSize = sizeof(CM_RESOURCE_LIST) + sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+				ResourceList = (PCM_RESOURCE_LIST)ExAllocatePoolWithTag(PagedPool, ResourceListSize, SERIAL_TAG);
+				if (!ResourceList)
+					return STATUS_INSUFFICIENT_RESOURCES;
+				ResourceList->Count = 1;
+				ResourceList->List[0].InterfaceType = Isa;
+				ResourceList->List[0].BusNumber = -1; /* FIXME */
+				ResourceList->List[0].PartialResourceList.Version = 1;
+				ResourceList->List[0].PartialResourceList.Revision = 1;
+				ResourceList->List[0].PartialResourceList.Count = 2;
+				ResourceDescriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[0];
+				ResourceDescriptor->Type = CmResourceTypePort;
+				ResourceDescriptor->ShareDisposition = CmResourceShareDriverExclusive;
+				ResourceDescriptor->Flags = CM_RESOURCE_PORT_IO;
+				ResourceDescriptor->u.Port.Start.u.HighPart = 0;
+				ResourceDescriptor->u.Port.Start.u.LowPart = ComPortBase;
+				ResourceDescriptor->u.Port.Length = 8;
+				
+				ResourceDescriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[1];
+				ResourceDescriptor->Type = CmResourceTypeInterrupt;
+				ResourceDescriptor->ShareDisposition = CmResourceShareShared;
+				ResourceDescriptor->Flags = CM_RESOURCE_INTERRUPT_LATCHED;
+				ResourceDescriptor->u.Interrupt.Vector = HalGetInterruptVector(
+					Internal, 0, 0, Irq,
+					&Dirql,
+					&ResourceDescriptor->u.Interrupt.Affinity);
+				ResourceDescriptor->u.Interrupt.Level = (ULONG)Dirql;
+				
+				Stack->Parameters.StartDevice.AllocatedResources =
+					Stack->Parameters.StartDevice.AllocatedResourcesTranslated =
+					ResourceList;
+			}
 			
 			/* Call lower driver */
 			Status = ForwardIrpAndWait(DeviceObject, Irp);
