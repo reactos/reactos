@@ -90,8 +90,10 @@ failbasiccleanup:
   }
   else if(AccessMode == KernelMode && !CaptureIfKernel)
   {
-    if(AttributesCopy.Length != sizeof(OBJECT_ATTRIBUTES))
+    if(ObjectAttributes->Length != sizeof(OBJECT_ATTRIBUTES))
     {
+      /* we don't have to capture any memory, the caller considers the passed data
+         as valid */
       if(ObjectName != NULL)
       {
         *ObjectName = *ObjectAttributes->ObjectName;
@@ -102,14 +104,14 @@ failbasiccleanup:
         CapturedObjectAttributes->Attributes = ObjectAttributes->Attributes;
         CapturedObjectAttributes->SecurityDescriptor = ObjectAttributes->SecurityDescriptor;
       }
+
+      return STATUS_SUCCESS;
     }
     else
     {
       Status = STATUS_INVALID_PARAMETER;
       goto failbasiccleanup;
     }
-
-    return STATUS_SUCCESS;
   }
   else
   {
