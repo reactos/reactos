@@ -5,6 +5,12 @@
 #ifndef __DDK_WINDDI_H
 #define __DDK_WINDDI_H
 
+#ifdef __USE_W32API
+
+#include_next <ddk/winddi.h>
+
+#else /* __USE_W32API */
+
 #if defined(WIN32_LEAN_AND_MEAN) && defined(_GNU_H_WINDOWS32_STRUCTURES)
 #error "windows.h cannot be included before winddi.h if WIN32_LEAN_AND_MEAN is defined"
 #endif
@@ -1720,5 +1726,7 @@ BOOL STDCALL
 XFORMOBJ_bApplyXform(XFORMOBJ *pxo,ULONG iMode,ULONG cPoints,PVOID pvIn,PVOID pvOut);
 HANDLE STDCALL
 XLATEOBJ_hGetColorTransform(XLATEOBJ *pxlo);
+
+#endif /* __USE_W32API */
 
 #endif

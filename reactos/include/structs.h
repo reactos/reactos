@@ -3781,8 +3781,8 @@ typedef struct _SERVICE_ADDRESSES {
   SERVICE_ADDRESS   Addresses[1];
 } SERVICE_ADDRESSES, *LPSERVICE_ADDRESSES;
 
-#ifndef _GUID_DEFINED
-#define _GUID_DEFINED
+#ifndef GUID_DEFINED
+#define GUID_DEFINED
 typedef struct _GUID
 {
     unsigned long  Data1;

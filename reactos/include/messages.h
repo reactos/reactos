@@ -32,6 +32,12 @@
 #ifndef _GNU_H_WINDOWS32_MESSAGES
 #define _GNU_H_WINDOWS32_MESSAGES
 
+#ifdef __USE_W32API
+
+#include <winuser.h>
+
+#else /* __USE_W32API */
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -1128,5 +1134,7 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
+
+#endif /* __USE_W32API */
 
 #endif /* _GNU_H_WINDOWS32_MESSAGES */

@@ -1115,8 +1115,15 @@ typedef struct _IO_COMPLETION_BASIC_INFORMATION {
 
 #endif /* __USE_W32API */
 
+#ifdef __USE_W32API
+#include <ddk/ntddk.h>
+#endif /* __USE_W32API */
+#ifndef NtCurrentProcess
 #define NtCurrentProcess() ( (HANDLE) 0xFFFFFFFF )
+#endif /* NtCurrentProcess */
+#ifndef NtCurrentThread
 #define NtCurrentThread() ( (HANDLE) 0xFFFFFFFE )
+#endif /* NtCurrentThread */
 #if 1
 extern ULONG NtBuildNumber;
 #else

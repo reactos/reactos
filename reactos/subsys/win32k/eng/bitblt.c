@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.27 2003/09/09 09:39:21 gvg Exp $
+/* $Id: bitblt.c,v 1.28 2003/10/29 08:38:55 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -46,20 +46,20 @@
 //#define NDEBUG
 #include <win32k/debug1.h>
 
-typedef BOOLEAN STDCALL (*PBLTRECTFUNC)(PSURFOBJ OutputObj,
-                                        PSURFGDI OutputGDI,
-                                        PSURFOBJ InputObj,
-                                        PSURFGDI InputGDI,
-                                        PSURFOBJ Mask,
-                                        PXLATEOBJ ColorTranslation,
-                                        PRECTL OutputRect,
-                                        PPOINTL InputPoint,
-                                        PPOINTL MaskOrigin,
-                                        PBRUSHOBJ Brush,
-                                        PPOINTL BrushOrigin,
+typedef BOOLEAN STDCALL (*PBLTRECTFUNC)(SURFOBJ* OutputObj,
+                                        SURFGDI* OutputGDI,
+                                        SURFOBJ* InputObj,
+                                        SURFGDI* InputGDI,
+                                        SURFOBJ* Mask,
+                                        XLATEOBJ* ColorTranslation,
+                                        RECTL* OutputRect,
+                                        POINTL* InputPoint,
+                                        POINTL* MaskOrigin,
+                                        BRUSHOBJ* Brush,
+                                        POINTL* BrushOrigin,
                                         ROP4 Rop4);
 
-BOOL STDCALL EngIntersectRect(PRECTL prcDst, PRECTL prcSrc1, PRECTL prcSrc2)
+BOOL STDCALL EngIntersectRect(RECTL* prcDst, RECTL* prcSrc1, RECTL* prcSrc2)
 {
   static const RECTL rclEmpty = { 0, 0, 0, 0 };
 
@@ -83,17 +83,17 @@ BOOL STDCALL EngIntersectRect(PRECTL prcDst, PRECTL prcSrc1, PRECTL prcSrc2)
 }
 
 static BOOLEAN STDCALL
-BltMask(PSURFOBJ Dest,
-	PSURFGDI DestGDI,
-	PSURFOBJ Source,
-	PSURFGDI SourceGDI,
-	PSURFOBJ Mask, 
-	PXLATEOBJ ColorTranslation,
-	PRECTL DestRect,
-	PPOINTL SourcePoint,
-	PPOINTL MaskPoint,
-	PBRUSHOBJ Brush,
-	PPOINTL BrushPoint,
+BltMask(SURFOBJ* Dest,
+	SURFGDI* DestGDI,
+	SURFOBJ* Source,
+	SURFGDI* SourceGDI,
+	SURFOBJ* Mask, 
+	XLATEOBJ* ColorTranslation,
+	RECTL* DestRect,
+	POINTL* SourcePoint,
+	POINTL* MaskPoint,
+	BRUSHOBJ* Brush,
+	POINTL* BrushPoint,
 	ROP4 Rop4)
 {
   LONG i, j, dx, dy, c8;
@@ -134,17 +134,17 @@ BltMask(PSURFOBJ Dest,
 }
 
 static BOOLEAN STDCALL
-BltPatCopy(PSURFOBJ Dest,
-	   PSURFGDI DestGDI,
-	   PSURFOBJ Source,
-	   PSURFGDI SourceGDI,
-	   PSURFOBJ Mask, 
-	   PXLATEOBJ ColorTranslation,
-	   PRECTL DestRect,
-	   PPOINTL SourcePoint,
-	   PPOINTL MaskPoint,
-	   PBRUSHOBJ Brush,
-	   PPOINTL BrushPoint,
+BltPatCopy(SURFOBJ* Dest,
+	   SURFGDI* DestGDI,
+	   SURFOBJ* Source,
+	   SURFGDI* SourceGDI,
+	   SURFOBJ* Mask, 
+	   XLATEOBJ* ColorTranslation,
+	   RECTL* DestRect,
+	   POINTL* SourcePoint,
+	   POINTL* MaskPoint,
+	   BRUSHOBJ* Brush,
+	   POINTL* BrushPoint,
 	   ROP4 Rop4)
 {
   // These functions are assigned if we're working with a DIB
@@ -162,17 +162,17 @@ BltPatCopy(PSURFOBJ Dest,
 }
 
 static BOOLEAN STDCALL
-CallDibBitBlt(PSURFOBJ OutputObj,
-              PSURFGDI OutputGDI,
-              PSURFOBJ InputObj,
-              PSURFGDI InputGDI,
-              PSURFOBJ Mask,
-              PXLATEOBJ ColorTranslation,
-              PRECTL OutputRect,
-              PPOINTL InputPoint,
-              PPOINTL MaskOrigin,
-              PBRUSHOBJ Brush,
-              PPOINTL BrushOrigin,
+CallDibBitBlt(SURFOBJ* OutputObj,
+              SURFGDI* OutputGDI,
+              SURFOBJ* InputObj,
+              SURFGDI* InputGDI,
+              SURFOBJ* Mask,
+              XLATEOBJ* ColorTranslation,
+              RECTL* OutputRect,
+              POINTL* InputPoint,
+              POINTL* MaskOrigin,
+              BRUSHOBJ* Brush,
+              POINTL* BrushOrigin,
               ROP4 Rop4)
 {
   return OutputGDI->DIB_BitBlt(OutputObj, InputObj, OutputGDI, InputGDI, OutputRect, InputPoint, Brush, BrushOrigin, ColorTranslation, Rop4);
@@ -200,15 +200,16 @@ EngBitBlt(SURFOBJ *DestObj,
   RECTL              CombinedRect;
   RECT_ENUM          RectEnum;
   BOOL               EnumMore;
-  PSURFGDI           OutputGDI, InputGDI;
+  SURFGDI*           OutputGDI;
+  SURFGDI*           InputGDI;
   POINTL             InputPoint;
   RECTL              InputRect;
   RECTL              OutputRect;
   POINTL             Translate;
   INTENG_ENTER_LEAVE EnterLeaveSource;
   INTENG_ENTER_LEAVE EnterLeaveDest;
-  PSURFOBJ           InputObj;
-  PSURFOBJ           OutputObj;
+  SURFOBJ*           InputObj;
+  SURFOBJ*           OutputObj;
   PBLTRECTFUNC       BltRectFunc;
   BOOLEAN            Ret;
   RECTL              ClipRect;
@@ -249,7 +250,7 @@ EngBitBlt(SURFOBJ *DestObj,
 
   if (NULL != InputObj)
     {
-    InputGDI = (PSURFGDI) AccessInternalObjectFromUserObject(InputObj);
+    InputGDI = (SURFGDI*) AccessInternalObjectFromUserObject(InputObj);
     }
   else
     {
@@ -304,7 +305,7 @@ EngBitBlt(SURFOBJ *DestObj,
 
   if (NULL != OutputObj)
     {
-    OutputGDI = (PSURFGDI)AccessInternalObjectFromUserObject(OutputObj);
+    OutputGDI = (SURFGDI*)AccessInternalObjectFromUserObject(OutputObj);
     }
 
   // Determine clipping type
@@ -436,7 +437,7 @@ IntEngBitBlt(SURFOBJ *DestObj,
 
   if (NULL != SourceObj)
     {
-    SourceGDI = (PSURFGDI) AccessInternalObjectFromUserObject(SourceObj);
+    SourceGDI = (SURFGDI*) AccessInternalObjectFromUserObject(SourceObj);
     MouseSafetyOnDrawStart(SourceObj, SourceGDI, InputPoint.x, InputPoint.y,
                            (InputPoint.x + abs(DestRect->right - DestRect->left)),
 			   (InputPoint.y + abs(DestRect->bottom - DestRect->top)));

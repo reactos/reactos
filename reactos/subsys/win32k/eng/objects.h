@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: objects.h,v 1.18 2003/08/28 12:35:59 gvg Exp $
+/* $Id: objects.h,v 1.19 2003/10/29 08:38:55 gvg Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -101,44 +101,44 @@ typedef struct _STRGDI {
   STROBJ		StrObj;
 } STRGDI;
 
-typedef BOOL STDCALL (*PFN_BitBlt)(PSURFOBJ, PSURFOBJ, PSURFOBJ, PCLIPOBJ,
-                           PXLATEOBJ, PRECTL, PPOINTL, PPOINTL,
-                           PBRUSHOBJ, PPOINTL, ROP4);
+typedef BOOL STDCALL (*PFN_BitBlt)(SURFOBJ *, SURFOBJ *, SURFOBJ *, CLIPOBJ *,
+                           XLATEOBJ *, RECTL *, POINTL *, POINTL *,
+                           BRUSHOBJ *, POINTL *, ROP4);
 
-typedef BOOL STDCALL (*PFN_TransparentBlt)(PSURFOBJ, PSURFOBJ, PCLIPOBJ, PXLATEOBJ, PRECTL, PRECTL, ULONG, ULONG);
+typedef BOOL STDCALL (*PFN_TransparentBlt)(SURFOBJ *, SURFOBJ *, CLIPOBJ *, XLATEOBJ *, RECTL *, RECTL *, ULONG, ULONG);
 
-typedef BOOL STDCALL (*PFN_StretchBlt)(PSURFOBJ, PSURFOBJ, PSURFOBJ, PCLIPOBJ,
-                               PXLATEOBJ, PCOLORADJUSTMENT, PPOINTL,
-                               PRECTL, PRECTL, PPOINT, ULONG);
+typedef BOOL STDCALL (*PFN_StretchBlt)(SURFOBJ *, SURFOBJ *, SURFOBJ *, CLIPOBJ *,
+                               XLATEOBJ *, COLORADJUSTMENT *, POINTL *,
+                               RECTL *, RECTL *, PPOINT, ULONG);
 
-typedef BOOL STDCALL (*PFN_TextOut)(PSURFOBJ, PSTROBJ, PFONTOBJ, PCLIPOBJ,
-                            PRECTL, PRECTL, PBRUSHOBJ, PBRUSHOBJ,
-                            PPOINTL, MIX);
+typedef BOOL STDCALL (*PFN_TextOut)(SURFOBJ *, STROBJ *, FONTOBJ *, CLIPOBJ *,
+                            RECTL *, RECTL *, BRUSHOBJ *, BRUSHOBJ *,
+                            POINTL *, MIX);
 
-typedef BOOL STDCALL (*PFN_Paint)(PSURFOBJ, PCLIPOBJ, PBRUSHOBJ, PPOINTL, MIX);
+typedef BOOL STDCALL (*PFN_Paint)(SURFOBJ *, CLIPOBJ *, BRUSHOBJ *, POINTL *, MIX);
 
-typedef BOOL STDCALL (*PFN_StrokePath)(PSURFOBJ, PPATHOBJ, PCLIPOBJ, PXFORMOBJ,
-                               PBRUSHOBJ, PPOINTL, PLINEATTRS, MIX);
+typedef BOOL STDCALL (*PFN_StrokePath)(SURFOBJ *, PATHOBJ *, CLIPOBJ *, XFORMOBJ *,
+                               BRUSHOBJ *, POINTL *, LINEATTRS *, MIX);
 
-typedef BOOL STDCALL (*PFN_FillPath)(PSURFOBJ, PPATHOBJ, PCLIPOBJ, PBRUSHOBJ,
-                             PPOINTL, MIX, ULONG);
+typedef BOOL STDCALL (*PFN_FillPath)(SURFOBJ *, PATHOBJ *, CLIPOBJ *, BRUSHOBJ *,
+                             POINTL *, MIX, ULONG);
 
-typedef BOOL STDCALL (*PFN_StrokeAndFillPath)(PSURFOBJ, PPATHOBJ, PCLIPOBJ,
-                PXFORMOBJ, PBRUSHOBJ, PLINEATTRS, PBRUSHOBJ,
-                PPOINTL, MIX, ULONG);
+typedef BOOL STDCALL (*PFN_StrokeAndFillPath)(SURFOBJ *, PATHOBJ *, CLIPOBJ *,
+                XFORMOBJ *, BRUSHOBJ *, LINEATTRS *, BRUSHOBJ *,
+                POINTL *, MIX, ULONG);
 
-typedef BOOL STDCALL (*PFN_LineTo)(PSURFOBJ, PCLIPOBJ, PBRUSHOBJ,
-                           LONG, LONG, LONG, LONG, PRECTL, MIX);
+typedef BOOL STDCALL (*PFN_LineTo)(SURFOBJ *, CLIPOBJ *, BRUSHOBJ *,
+                           LONG, LONG, LONG, LONG, RECTL *, MIX);
 
-typedef BOOL STDCALL (*PFN_CopyBits)(PSURFOBJ, PSURFOBJ, PCLIPOBJ,
-                             PXLATEOBJ, PRECTL, PPOINTL);
+typedef BOOL STDCALL (*PFN_CopyBits)(SURFOBJ *, SURFOBJ *, CLIPOBJ *,
+                             XLATEOBJ *, RECTL *, POINTL *);
 
-typedef VOID STDCALL (*PFN_Synchronize)(DHPDEV, PRECTL);
+typedef VOID STDCALL (*PFN_Synchronize)(DHPDEV, RECTL *);
 
-typedef VOID STDCALL (*PFN_MovePointer)(PSURFOBJ, LONG, LONG, PRECTL);
+typedef VOID STDCALL (*PFN_MovePointer)(SURFOBJ *, LONG, LONG, RECTL *);
 
-typedef ULONG STDCALL (*PFN_SetPointerShape)(PSURFOBJ, PSURFOBJ, PSURFOBJ, PXLATEOBJ,
-			    LONG, LONG, LONG, LONG, PRECTL, ULONG);
+typedef ULONG STDCALL (*PFN_SetPointerShape)(SURFOBJ *, SURFOBJ *, SURFOBJ *, XLATEOBJ *,
+			    LONG, LONG, LONG, LONG, RECTL *, ULONG);
 
 typedef HBITMAP STDCALL (*PFN_CreateDeviceBitmap)(DHPDEV, SIZEL, ULONG);
 
@@ -147,14 +147,14 @@ typedef BOOL STDCALL (*PFN_SetPalette)(DHPDEV, PALOBJ*, ULONG, ULONG, ULONG);
 /* Forward declare (circular reference) */
 typedef struct _SURFGDI *PSURFGDI;
 
-typedef VOID    (*PFN_DIB_PutPixel)(PSURFOBJ, LONG, LONG, ULONG);
-typedef ULONG   (*PFN_DIB_GetPixel)(PSURFOBJ, LONG, LONG);
-typedef VOID    (*PFN_DIB_HLine)   (PSURFOBJ, LONG, LONG, LONG, ULONG);
-typedef VOID    (*PFN_DIB_VLine)   (PSURFOBJ, LONG, LONG, LONG, ULONG);
-typedef BOOLEAN (*PFN_DIB_BitBlt)  (PSURFOBJ DestSurf, PSURFOBJ SourceSurf,
+typedef VOID    (*PFN_DIB_PutPixel)(SURFOBJ *, LONG, LONG, ULONG);
+typedef ULONG   (*PFN_DIB_GetPixel)(SURFOBJ *, LONG, LONG);
+typedef VOID    (*PFN_DIB_HLine)   (SURFOBJ *, LONG, LONG, LONG, ULONG);
+typedef VOID    (*PFN_DIB_VLine)   (SURFOBJ *, LONG, LONG, LONG, ULONG);
+typedef BOOLEAN (*PFN_DIB_BitBlt)  (SURFOBJ * DestSurf, SURFOBJ * SourceSurf,
                                     PSURFGDI DestGDI,  PSURFGDI SourceGDI,
-                                    PRECTL   DestRect, PPOINTL  SourcePoint,
-				    PBRUSHOBJ BrushObj, PPOINTL BrushOrigin,
+                                    RECTL *  DestRect, POINTL *  SourcePoint,
+				    BRUSHOBJ *BrushObj, POINTL * BrushOrigin,
                                     XLATEOBJ *ColorTranslation, ULONG Rop4);
 
 typedef struct _SURFGDI {

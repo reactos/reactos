@@ -24,11 +24,19 @@
 #endif
 
 #ifndef NASSERT
+#ifndef assert
 #define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); KeBugCheck(0); }
+#endif
+#ifndef ASSERT
 #define ASSERT(x) assert(x)
+#endif
 #else
+#ifndef assert
 #define assert(x)
+#endif
+#ifndef ASSERT
 #define ASSERT(x)
+#endif
 #endif
 
 #define DPRINT1(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); ExAllocatePool(NonPagedPool,0); } while(0);

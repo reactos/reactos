@@ -244,8 +244,8 @@ KeStallExecutionProcessor(
 
 
 #if !defined(_MSC_VER)
-#ifndef _GUID_DEFINED
-#define _GUID_DEFINED
+#ifndef GUID_DEFINED
+#define GUID_DEFINED
 typedef struct _GUID {
     ULONG   Data1;
     USHORT  Data2;

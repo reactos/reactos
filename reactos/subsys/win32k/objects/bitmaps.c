@@ -16,10 +16,11 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.42 2003/10/28 17:43:42 navaraf Exp $ */
+/* $Id: bitmaps.c,v 1.43 2003/10/29 08:38:55 gvg Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
+#include <win32k/color.h>
 #include <win32k/gdiobj.h>
 #include <win32k/bitmaps.h>
 #include <win32k/brush.h>
@@ -33,9 +34,6 @@
 
 #define NDEBUG
 #include <win32k/debug1.h>
-
-//FIXME: where should CLR_INVALID be defined?
-#define CLR_INVALID 0xffffffff
 
 BOOL STDCALL NtGdiBitBlt(HDC  hDCDest,
                  INT  XDest,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mem.c,v 1.13 2003/10/09 06:13:04 gvg Exp $
+/* $Id: mem.c,v 1.14 2003/10/29 08:38:55 gvg Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -27,6 +27,10 @@
  *                 3/7/1999: Created
  */
 
+#ifdef __USE_W32API
+#include <windows.h>
+#include <ddk/ntapi.h>
+#endif
 #include <ddk/ntddk.h>
 #include <ddk/winddi.h>
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: lineto.c,v 1.24 2003/10/02 21:32:45 gvg Exp $
+ * $Id: lineto.c,v 1.25 2003/10/29 08:38:55 gvg Exp $
  */
 
 #include <ddk/winddi.h>
@@ -501,17 +501,24 @@ IntEngLineTo(SURFOBJ *DestSurf,
 {
   BOOLEAN ret;
   SURFGDI *SurfGDI;
+RECTL b;
 
   /* No success yet */
   ret = FALSE;
   SurfGDI = (SURFGDI*)AccessInternalObjectFromUserObject(DestSurf);
 
+b.left = min(x1, x2);
+b.right = max(x1, x2);
+b.top = min(y1, y2);
+b.bottom = max(y1, y2);
+if (b.left == b.right) b.right++;
+if (b.top == b.bottom) b.bottom++;
   MouseSafetyOnDrawStart(DestSurf, SurfGDI, x1, y1, x2, y2);
 
   if (NULL != SurfGDI->LineTo)
     {
     /* Call the driver's DrvLineTo */
-    ret = SurfGDI->LineTo(DestSurf, Clip, Brush, x1, y1, x2, y2, RectBounds, mix);
+    ret = SurfGDI->LineTo(DestSurf, Clip, Brush, x1, y1, x2, y2, /*RectBounds*/&b, mix);
     }
 
 #if 0
