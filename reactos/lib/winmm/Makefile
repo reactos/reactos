@@ -14,7 +14,7 @@ TARGET_SDKLIBS = ntdll.a kernel32.a
 
 TARGET_OBJECTS = \
 	dllmain.o \
-	misc\stubs.o
+	misc/stubs.o
 
 include $(PATH_TO_TOP)/rules.mak
 
