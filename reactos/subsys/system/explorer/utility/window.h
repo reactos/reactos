@@ -627,3 +627,17 @@ struct ToolTip : public WindowHandle
 		SendMessage(_hwnd, TTM_ADDTOOL, 0, (LPARAM)&ti);
 	}
 };
+
+
+inline int ListView_GetItemData(HWND list_ctrl, int idx)
+{
+	LV_ITEM item;
+
+	item.mask = LVIF_PARAM;
+	item.iItem = idx;
+
+	if (!ListView_GetItem(list_ctrl, &item))
+		return 0;
+
+	return item.lParam;
+}

@@ -788,7 +788,7 @@ int StartMenuRoot::Command(int id, int code)
 
 	  case IDC_SEARCH_PROGRAM:
 		CloseStartMenu(id);
-		Dialog::DoModal(IDD_SEARCH_PROGRAM, WINDOW_CREATOR(FindProgramTopicDlg));
+		Dialog::DoModal(IDD_SEARCH_PROGRAM, WINDOW_CREATOR(FindProgramDlg));
 		break;
 
 	  case IDC_EXPLORE:

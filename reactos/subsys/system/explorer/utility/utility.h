@@ -449,9 +449,12 @@ struct String
 
 	String() {}
 	String(LPCTSTR s) : super(s) {}
+	String(const super& other) : super(other) {}
 	String(const String& other) : super(other) {}
 
 	String& operator=(LPCTSTR s) {assign(s); return *this;}
+	String& operator=(const super& s) {assign(s); return *this;}
+
 	operator LPCTSTR() const {return c_str();}
 };
 
@@ -551,7 +554,14 @@ extern void _splitpath(const CHAR* path, CHAR* drv, CHAR* dir, CHAR* name, CHAR*
 #define	Window_SetIcon(hwnd, type, hicon) (HICON)SendMessage(hwnd, WM_SETICON, type, (LPARAM)(hicon))
 
 
- // display 
+
+ // center window in respect to its parent window
+extern void CenterWindow(HWND hwnd);
+
+ // move window into visibility
+extern void MoveVisible(HWND hwnd);
+
+ // display error message
 extern void display_error(HWND hwnd, DWORD error);
 
  // convert time_t to WIN32 FILETIME

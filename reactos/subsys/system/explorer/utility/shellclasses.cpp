@@ -162,7 +162,7 @@ ShellFolder::ShellFolder()
 }
 
 ShellFolder::ShellFolder(IShellFolder* p)
- :	IShellFolderPtr(p)
+ :	super(p)
 {
 	p->AddRef();
 }
@@ -220,7 +220,7 @@ ShellFolder::ShellFolder()
 }
 
 ShellFolder::ShellFolder(IShellFolder* p)
- :	SIfacePtr<IShellFolder>(p)
+ :	super(p)
 {
 	_p->AddRef();
 }

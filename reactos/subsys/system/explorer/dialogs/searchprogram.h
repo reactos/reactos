@@ -27,61 +27,79 @@
  // Martin Fuchs, 02.10.2003
  //
 
-
-struct ShellPathWithFolder
-{
-	ShellPathWithFolder(const ShellFolder& folder, const ShellPath& path)
-	 :	_folder(folder), _path(path) {}
-
-	ShellFolder	_folder;
-	ShellPath	_path;
-};
+#include <stack>
 
 
-typedef void (*COLLECT_CALLBACK)(ShellFolder& folder, const ShellEntry* entry, void* param);
+typedef void (*COLLECT_CALLBACK)(ShellFolder& folder, ShellEntry* shell_entry, void* param);
+typedef stack<ShellDirectory*> ShellDirectoryStack;
 
 struct CollectProgramsThread : public Thread
 {
 	CollectProgramsThread(COLLECT_CALLBACK callback, HWND hwnd, void* para)
-	 :	_callback(callback),
+	 :	_cache_valid(false),
+		_callback(callback),
 		_hwnd(hwnd),
 		_para(para)
 	{
 	}
 
-	int Run();
+	~CollectProgramsThread()
+	{
+		free_dirs();
+	}
+
+	int		Run();
+	void	free_dirs();
+
+	bool	_cache_valid;
 
 protected:
 	COLLECT_CALLBACK _callback;
 	HWND	_hwnd;
 	void*	_para;
+	ShellDirectoryStack _dirs;
 
-	void CollectProgramsThread::collect_programs(const ShellPath& path);
+	void	collect_programs(const ShellPath& path);
 };
 
 
-struct FindProgramTopicDlg : public ResizeController<Dialog>
+struct FPDEntry
+{
+	ShellEntry* _shell_entry;
+	int		_idxIcon;
+	String	_menu_path;
+	String	_path;
+};
+
+typedef list<FPDEntry> FPDCache;
+
+
+struct FindProgramDlg : public ResizeController<Dialog>
 {
 	typedef ResizeController<Dialog> super;
 
-	FindProgramTopicDlg(HWND hwnd);
-	~FindProgramTopicDlg();
+	FindProgramDlg(HWND hwnd);
+	~FindProgramDlg();
 
 protected:
 	CommonControlInit _usingCmnCtrl;
 	HWND	_list_ctrl;
 	HACCEL	_haccel;
 	HIMAGELIST _himl;
-	int		_idxNoIcon;	// Ersatzicon für Links ohne Symbole
-	String	_filter;
+	int		_idxNoIcon;	// replacement icon
+	String	_lwr_filter;
 
 	CollectProgramsThread _thread;
+	FPDCache _cache;
+
+	String	_common_programs, _user_programs;
 
 	virtual LRESULT WndProc(UINT message, WPARAM wparam, LPARAM lparam);
-	virtual int		Command(int id, int code);
+	virtual int	Command(int id, int code);
 	virtual int	Notify(int id, NMHDR* pnmh);
 
-	void	Refresh();
+	void	Refresh(bool delete_cache=false);
+	void	add_entry(const FPDEntry& cache_entry);
 
-	static void collect_programs_callback(ShellFolder& folder, const ShellEntry* entry, void* param);
+	static void collect_programs_callback(ShellFolder& folder, ShellEntry* entry, void* param);
 };

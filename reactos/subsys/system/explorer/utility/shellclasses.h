@@ -392,6 +392,25 @@ struct ShellFolder : public IShellFolderPtr	// IShellFolderPtr uses intrinsic ex
 	bool	empty() const {return !operator bool();}	//NOTE: see SIfacePtr::empty()
 };
 
+#ifdef UNICODE
+#define	IShellLinkPtr IShellLinkWPtr
+#else
+#define	IShellLinkPtr IShellLinkAPtr
+#endif
+
+struct ShellLinkPtr : public IShellLinkPtr
+{
+	typedef IShellLinkPtr super;
+
+	ShellLinkPtr(IShellLink* p)
+	 :	super(p)
+	{
+		p->AddRef();
+	}
+
+	bool	empty() const {return !operator bool();}	//NOTE: see SIfacePtr::empty()
+};
+
 #else // _com_ptr not available -> use SIfacePtr
 
 struct ShellFolder : public SIfacePtr<IShellFolder>
@@ -405,6 +424,18 @@ struct ShellFolder : public SIfacePtr<IShellFolder>
 
 	void	attach(IShellFolder* parent, LPCITEMIDLIST pidl);
 	String	get_name(LPCITEMIDLIST pidl, SHGDNF flags=SHGDN_NORMAL) const;
+};
+
+struct ShellLinkPtr : public SIfacePtr<IShellLink>
+{
+	typedef SIfacePtr<IShellLink> super;
+
+	ShellLinkPtr(IShellLink* p)
+	 :	super(p)
+	{
+		_p->AddRef();
+	}
+
 };
 
 #endif

@@ -44,6 +44,55 @@ DWORD WINAPI Thread::ThreadProc(void* para)
 }
 
 
+void CenterWindow(HWND hwnd)
+{
+	RECT rt, prt;
+	GetWindowRect(hwnd, &rt);
+
+	DWORD style;
+	HWND owner = 0;
+
+	for(HWND wh=hwnd; (wh=GetWindow(wh,GW_OWNER))!=0; )
+		if (((style=GetWindowStyle(wh))&WS_VISIBLE) && !(style&WS_MINIMIZE))
+			{owner=wh; break;}
+
+	if (owner)
+		GetWindowRect(owner, &prt);
+	else
+		SystemParametersInfo(SPI_GETWORKAREA, 0, &prt, 0);	//@@ GetDesktopWindow() wäre auch hilfreich.
+
+	SetWindowPos(hwnd, 0, (prt.left+prt.right+rt.left-rt.right)/2,
+					   (prt.top+prt.bottom+rt.top-rt.bottom)/2, 0,0, SWP_NOACTIVATE|SWP_NOSIZE|SWP_NOZORDER);
+
+	MoveVisible(hwnd);
+}
+
+void MoveVisible(HWND hwnd)
+{
+	RECT rc;
+	GetWindowRect(hwnd, &rc);
+	int left=rc.left, top=rc.top;
+
+	int xmax = GetSystemMetrics(SM_CXSCREEN);
+	int ymax = GetSystemMetrics(SM_CYSCREEN);
+
+	if (rc.left < 0)
+		rc.left = 0;
+	else if (rc.right > xmax)
+		if ((rc.left-=rc.right-xmax) < 0)
+			rc.left = 0;
+
+	if (rc.top < 0)
+		rc.top = 0;
+	else if (rc.bottom > ymax)
+		if ((rc.top-=rc.bottom-ymax) < 0)
+			rc.top = 0;
+
+	if (rc.left!=left || rc.top!=top)
+		SetWindowPos(hwnd, 0, rc.left,rc.top, 0,0, SWP_NOZORDER|SWP_NOSIZE|SWP_NOACTIVATE);
+}
+
+
 void display_error(HWND hwnd, DWORD error)
 {
 	PTSTR msg;

@@ -26,6 +26,7 @@
 #define IDS_PRINTERS                    22
 #define IDS_BROWSE                      23
 #define IDS_SEARCH_PRG                  24
+#define IDS_ALL_USERS                   25
 #define IDI_REACTOS                     100
 #define IDI_EXPLORER                    101
 #define IDI_STARTMENU                   102
@@ -77,6 +78,7 @@
 #define ID_FILE_EXIT                    0xE141
 #define ID_HELP_USING                   0xE144
 #define ID_HELP                         0xE146
+#define IDC_STATIC                      -1
 
 // Next default values for new objects
 // 
