@@ -23,7 +23,7 @@ TARGET_LFLAGS = -Wl,--file-alignment,0x1000 \
   -Wl,--section-alignment,0x1000 \
   -nostartfiles -nostdlib
 
-TARGET_SDKLIBS = rosrtl.a rtl.a string.a
+TARGET_SDKLIBS = rtl.a rosrtl.a string.a
 
 TARGET_GCCLIBS = gcc
 
@@ -81,7 +81,6 @@ RTL_OBJECTS = \
 	rtl/rangelist.o \
 	rtl/resource.o \
 	rtl/teb.o \
-	rtl/thread.o \
 	rtl/timerqueue.o \
 	rtl/libsupp.o
 

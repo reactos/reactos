@@ -91,7 +91,7 @@ SmCreateUserProcess (LPWSTR ImagePath,
 		return Status;
 	}
 
-   NtResumeThread(pProcessInfo->ThreadHandle, NULL);
+   ZwResumeThread(pProcessInfo->ThreadHandle, NULL);
 
 
 	/* Wait for process termination */

@@ -20,6 +20,8 @@ TARGET_OBJECTS = \
 	acl.o \
 	ppb.o \
 	bit.o \
+	thread.o \
+	process.o \
 	bitmap.o \
 	bootdata.o \
 	compress.o \
