@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.37 2003/12/14 11:36:43 gvg Exp $
+/* $Id: message.c,v 1.38 2003/12/14 23:52:54 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -101,7 +101,12 @@ NtUserDispatchMessage(CONST MSG* UnsafeMsg)
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       return 0;
     }
-
+  if(WindowObject->OwnerThread != PsGetCurrentThread())
+  {
+    IntReleaseWindowObject(WindowObject);
+    DPRINT1("Window doesn't belong to the calling thread!\n");
+    return 0;
+  }
   /* FIXME: Call hook procedures. */
 
   /* Call the window procedure. */
