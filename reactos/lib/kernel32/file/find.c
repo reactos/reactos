@@ -1,4 +1,4 @@
-/* $Id: find.c,v 1.28 2001/08/01 19:26:41 hbirr Exp $
+/* $Id: find.c,v 1.29 2001/08/06 18:37:23 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -350,7 +350,7 @@ FindClose (
 
 	DPRINT("FindClose(hFindFile %x)\n",hFindFile);
 
-	if (hFindFile || hFindFile == INVALID_HANDLE_VALUE)
+	if (!hFindFile || hFindFile == INVALID_HANDLE_VALUE)
 	{
 		SetLastError (ERROR_INVALID_HANDLE);
 		return FALSE;
