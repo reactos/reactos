@@ -31,7 +31,7 @@ int _wcsicmp (const wchar_t* cs, const wchar_t* ct)
 	return *cs - *ct;
 }
 
-wchar_t * _wcslwr (wchar_t *x)
+wchar_t *_wcslwr (wchar_t *x)
 {
 	wchar_t  *y=x;
 
@@ -46,19 +46,19 @@ wchar_t * _wcslwr (wchar_t *x)
 
 int _wcsnicmp (const wchar_t * cs,const wchar_t * ct,size_t count)
 {
-   wchar_t *save = (wchar_t *)cs;
-   while (towlower(*cs) == towlower(*ct) && (int)(cs - save) < count)
-     {
-	if (*cs == 0)
-	   return 0;
-	cs++;
-	ct++;
-     }
-   return towlower(*cs) - towlower(*ct);
+	if (count == 0)
+		return 0;
+	do {
+		if (towupper(*cs) != towupper(*ct++))
+			return towupper(*cs) - towupper(*--ct);
+		if (*cs++ == 0)
+			break;
+	} while (--count != 0);
+	return 0;
 }
 
 
-wchar_t* _wcsnset (wchar_t* wsToFill, wchar_t wcFill, size_t sizeMaxFill)
+wchar_t *_wcsnset (wchar_t* wsToFill, wchar_t wcFill, size_t sizeMaxFill)
 {
 	wchar_t *t = wsToFill;
 	int i = 0;
@@ -72,7 +72,7 @@ wchar_t* _wcsnset (wchar_t* wsToFill, wchar_t wcFill, size_t sizeMaxFill)
 }
 
 
-wchar_t * _wcsrev(wchar_t *s) 
+wchar_t *_wcsrev(wchar_t *s)
 {
 	wchar_t  *e;
 	wchar_t   a;
@@ -235,8 +235,7 @@ int wcsncmp(const wchar_t *cs, const wchar_t *ct, size_t count)
 }
 
 
-wchar_t * 
-wcsncpy(wchar_t *dest, const wchar_t *src, size_t count)
+wchar_t *wcsncpy(wchar_t *dest, const wchar_t *src, size_t count)
 {
   int i;
    
@@ -254,7 +253,7 @@ wcsncpy(wchar_t *dest, const wchar_t *src, size_t count)
 }
 
 
-wchar_t * wcsrchr(const wchar_t *str, wchar_t ch)
+wchar_t *wcsrchr(const wchar_t *str, wchar_t ch)
 {
   unsigned int len = 0;
   while (str[len] != ((wchar_t)0))
