@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.31 2003/10/09 07:30:02 gvg Exp $
+/* $Id: windc.c,v 1.32 2003/10/17 21:35:45 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -396,7 +396,6 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
     }
 
   Dce->hwndCurrent = hWnd;
-  Dce->hClipRgn = NULL;
   Dce->DCXFlags = DcxFlags | (Flags & DCX_WINDOWPAINT) | DCX_DCEBUSY;
 
   if (0 == (Flags & (DCX_EXCLUDERGN | DCX_INTERSECTRGN)) && NULL != ClipRegion)
@@ -408,6 +407,7 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
   if (NULL != Dce->hClipRgn)
     {
       DceDeleteClipRgn(Dce);
+      Dce->hClipRgn = NULL;
     }
 
   if (NULL != ClipRegion)
