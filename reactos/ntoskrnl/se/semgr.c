@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.32 2004/07/13 16:59:35 ekohl Exp $
+/* $Id: semgr.c,v 1.33 2004/07/14 14:25:31 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -15,6 +15,7 @@
 #include <internal/ps.h>
 #include <internal/se.h>
 
+#define NDEBUG
 #include <internal/debug.h>
 
 #define TAG_SXPT   TAG('S', 'X', 'P', 'T')
@@ -273,50 +274,55 @@ SeDeassignSecurity(PSECURITY_DESCRIPTOR* SecurityDescriptor)
 
 
 #if 0
-VOID SepGetDefaultsSubjectContext(PSECURITY_SUBJECT_CONTEXT SubjectContext,
-				  PSID* Owner,
-				  PSID* PrimaryGroup,
-				  PSID* ProcessOwner,
-				  PSID* ProcessPrimaryGroup,
-				  PACL* DefaultDacl)
+VOID
+SepGetDefaultsSubjectContext(PSECURITY_SUBJECT_CONTEXT SubjectContext,
+			     PSID* Owner,
+			     PSID* PrimaryGroup,
+			     PSID* ProcessOwner,
+			     PSID* ProcessPrimaryGroup,
+			     PACL* DefaultDacl)
 {
-   PACCESS_TOKEN Token;
-   
-   if (SubjectContext->ClientToken != NULL)
-     {
+  PACCESS_TOKEN Token;
+
+  if (SubjectContext->ClientToken != NULL)
+    {
 	Token = SubjectContext->ClientToken;
-     }
-   else
-     {
+    }
+  else
+    {
 	Token = SubjectContext->PrimaryToken;
-     }
-   *Owner = Token->UserAndGroups[Token->DefaultOwnerIndex].Sid;
-   *PrimaryGroup = Token->PrimaryGroup;
-   *DefaultDacl = Token->DefaultDacl;
-   *ProcessOwner = SubjectContext->PrimaryToken->
-     UserAndGroups[Token->DefaultOwnerIndex].Sid;
-   *ProcessPrimaryGroup = SubjectContext->PrimaryToken->PrimaryGroup;
+    }
+  *Owner = Token->UserAndGroups[Token->DefaultOwnerIndex].Sid;
+  *PrimaryGroup = Token->PrimaryGroup;
+  *DefaultDacl = Token->DefaultDacl;
+  *ProcessOwner = SubjectContext->PrimaryToken->
+    UserAndGroups[Token->DefaultOwnerIndex].Sid;
+  *ProcessPrimaryGroup = SubjectContext->PrimaryToken->PrimaryGroup;
 }
 
-NTSTATUS SepInheritAcl(PACL Acl,
-		       BOOLEAN IsDirectoryObject,
-		       PSID Owner,
-		       PSID PrimaryGroup,
-		       PACL DefaultAcl,
-		       PSID ProcessOwner,
-		       PSID ProcessGroup,
-		       PGENERIC_MAPPING GenericMapping)
+
+NTSTATUS
+SepInheritAcl(PACL Acl,
+	      BOOLEAN IsDirectoryObject,
+	      PSID Owner,
+	      PSID PrimaryGroup,
+	      PACL DefaultAcl,
+	      PSID ProcessOwner,
+	      PSID ProcessGroup,
+	      PGENERIC_MAPPING GenericMapping)
 {
-   if (Acl == NULL)
-     {
+  if (Acl == NULL)
+    {
 	return(STATUS_UNSUCCESSFUL);
-     }
-   if (Acl->AclRevision != 2 &&
-       Acl->AclRevision != 3 )
-     {
+    }
+
+  if (Acl->AclRevision != 2 &&
+      Acl->AclRevision != 3 )
+    {
 	return(STATUS_UNSUCCESSFUL);
-     }
-   
+    }
+
+
 }
 #endif
 
@@ -448,64 +454,117 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 	      OUT PACCESS_MASK GrantedAccess,
 	      OUT PNTSTATUS AccessStatus)
 {
-   ULONG i;
-   PACL Dacl;
-   BOOLEAN Present;
-   BOOLEAN Defaulted;
-   NTSTATUS Status;
-   PACE CurrentAce;
-   PSID Sid;
-   ACCESS_MASK CurrentAccess;
+  LUID_AND_ATTRIBUTES Privilege;
+  ACCESS_MASK CurrentAccess;
+  PACCESS_TOKEN Token;
+  ULONG i;
+  PACL Dacl;
+  BOOLEAN Present;
+  BOOLEAN Defaulted;
+  PACE CurrentAce;
+  PSID Sid;
+  NTSTATUS Status;
 
-   CurrentAccess = PreviouslyGrantedAccess;
+  CurrentAccess = PreviouslyGrantedAccess;
 
-   /*
-    * Check the DACL
-    */
-   Status = RtlGetDaclSecurityDescriptor(SecurityDescriptor,
-					 &Present,
-					 &Dacl,
+  Token = SubjectSecurityContext->ClientToken ?
+	    SubjectSecurityContext->ClientToken : SubjectSecurityContext->PrimaryToken;
+
+  /* Get the DACL */
+  Status = RtlGetDaclSecurityDescriptor(SecurityDescriptor,
+					&Present,
+					&Dacl,
+					&Defaulted);
+  if (!NT_SUCCESS(Status))
+    {
+      *AccessStatus = Status;
+      return FALSE;
+    }
+
+  /* RULE 1: Grant desired access if the object is unprotected */
+  if (Dacl == NULL)
+    {
+      *GrantedAccess = DesiredAccess;
+      *AccessStatus = STATUS_SUCCESS;
+      return TRUE;
+    }
+
+  CurrentAccess = PreviouslyGrantedAccess;
+
+  /* RULE 2: Check token for 'take ownership' privilege */
+  Privilege.Luid = SeTakeOwnershipPrivilege;
+  Privilege.Attributes = SE_PRIVILEGE_ENABLED;
+
+  if (SepPrivilegeCheck(Token,
+			&Privilege,
+			1,
+			PRIVILEGE_SET_ALL_NECESSARY,
+			AccessMode))
+    {
+      CurrentAccess |= WRITE_OWNER;
+      if (DesiredAccess == CurrentAccess)
+	{
+	  *GrantedAccess = CurrentAccess;
+	  *AccessStatus = STATUS_SUCCESS;
+	  return TRUE;
+	}
+    }
+
+  /* RULE 3: Check whether the token is the owner */
+  Status = RtlGetOwnerSecurityDescriptor(SecurityDescriptor,
+					 &Sid,
 					 &Defaulted);
-   if (!NT_SUCCESS(Status))
-     {
-	*AccessStatus = Status;
-	return FALSE;
-     }
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("RtlGetOwnerSecurityDescriptor() failed (Status %lx)\n", Status);
+      *AccessStatus = Status;
+      return FALSE;
+   }
 
-   CurrentAce = (PACE)(Dacl + 1);
-   for (i = 0; i < Dacl->AceCount; i++)
-     {
-	Sid = (PSID)(CurrentAce + 1);
-	if (CurrentAce->Header.AceType == ACCESS_DENIED_ACE_TYPE)
-	  {
-	     if (SepSidInToken(SubjectSecurityContext->ClientToken, Sid))
-	       {
-		  *AccessStatus = STATUS_ACCESS_DENIED;
-		  *GrantedAccess = 0;
-		  return(STATUS_SUCCESS);
-	       }
-	  }
+  if (SepSidInToken(Token, Sid))
+    {
+      CurrentAccess |= (READ_CONTROL | WRITE_DAC);
+      if (DesiredAccess == CurrentAccess)
+	{
+	  *GrantedAccess = CurrentAccess;
+	  *AccessStatus = STATUS_SUCCESS;
+	  return TRUE;
+	}
+    }
 
-	if (CurrentAce->Header.AceType == ACCESS_ALLOWED_ACE_TYPE)
-	  {
-	     if (SepSidInToken(SubjectSecurityContext->ClientToken, Sid))
-	       {
-		  CurrentAccess |= CurrentAce->AccessMask;
-	       }
-	  }
-     }
-   if (!(CurrentAccess & DesiredAccess) &&
-       !((~CurrentAccess) & DesiredAccess))
-     {
-	*AccessStatus = STATUS_ACCESS_DENIED;
-     }
-   else
-     {
-	*AccessStatus = STATUS_SUCCESS;
-     }
-   *GrantedAccess = CurrentAccess;
+  /* RULE 4: Grant rights according to the DACL */
+  CurrentAce = (PACE)(Dacl + 1);
+  for (i = 0; i < Dacl->AceCount; i++)
+    {
+      Sid = (PSID)(CurrentAce + 1);
+      if (CurrentAce->Header.AceType == ACCESS_DENIED_ACE_TYPE)
+	{
+	  if (SepSidInToken(Token, Sid))
+	    {
+	      *GrantedAccess = 0;
+	      *AccessStatus = STATUS_ACCESS_DENIED;
+	      return TRUE;
+	    }
+	}
 
-   return TRUE;
+      if (CurrentAce->Header.AceType == ACCESS_ALLOWED_ACE_TYPE)
+	{
+	  if (SepSidInToken(Token, Sid))
+	    {
+	      CurrentAccess |= CurrentAce->AccessMask;
+	    }
+	}
+    }
+
+  DPRINT("CurrentAccess %08lx\n DesiredAccess %08lx\n",
+         CurrentAccess, DesiredAccess);
+
+  *GrantedAccess = CurrentAccess & DesiredAccess;
+
+  *AccessStatus =
+    (*GrantedAccess == DesiredAccess) ? STATUS_SUCCESS : STATUS_ACCESS_DENIED;
+
+  return TRUE;
 }
 
 
@@ -519,15 +578,9 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 	      OUT PACCESS_MASK GrantedAccess,
 	      OUT PNTSTATUS AccessStatus)
 {
+  SECURITY_SUBJECT_CONTEXT SubjectSecurityContext;
   KPROCESSOR_MODE PreviousMode;
   PACCESS_TOKEN Token;
-  BOOLEAN Present;
-  BOOLEAN Defaulted;
-  PACE CurrentAce;
-  PACL Dacl;
-  PSID Sid;
-  ACCESS_MASK CurrentAccess;
-  ULONG i;
   NTSTATUS Status;
 
   DPRINT("NtAccessCheck() called\n");
@@ -568,89 +621,38 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
       return STATUS_ACCESS_VIOLATION;
     }
 
-  /* Get the DACL */
-  Status = RtlGetDaclSecurityDescriptor(SecurityDescriptor,
-					&Present,
-					&Dacl,
-					&Defaulted);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("RtlGetDaclSecurityDescriptor() failed (Status %lx)\n", Status);
-      ObDereferenceObject(Token);
-      return Status;
-   }
+  RtlZeroMemory(&SubjectSecurityContext,
+		sizeof(SECURITY_SUBJECT_CONTEXT));
+  SubjectSecurityContext.ClientToken = Token;
+  SubjectSecurityContext.ImpersonationLevel = Token->ImpersonationLevel;
 
-  /* RULE 1: Grant desired access if the object is unprotected */
-  if (Dacl == NULL)
+  /* FIXME: Lock subject context */
+
+  if (!SeAccessCheck(SecurityDescriptor,
+		     &SubjectSecurityContext,
+		     TRUE,
+		     DesiredAccess,
+		     0,
+		     &PrivilegeSet,
+		     GenericMapping,
+		     PreviousMode,
+		     GrantedAccess,
+		     AccessStatus))
     {
-      *GrantedAccess = DesiredAccess;
-      *AccessStatus = STATUS_SUCCESS;
-      return STATUS_SUCCESS;
+      Status = *AccessStatus;
+    }
+  else
+    {
+      Status = STATUS_SUCCESS;
     }
 
-  CurrentAccess = 0;
-
-  /* FIXME: RULE 2: Check token for 'take ownership' privilege */
-
-  /* RULE 3: Check whether the token is the owner */
-  Status = RtlGetOwnerSecurityDescriptor(SecurityDescriptor,
-					 &Sid,
-					 &Defaulted);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("RtlGetOwnerSecurityDescriptor() failed (Status %lx)\n", Status);
-      ObDereferenceObject(Token);
-      return Status;
-   }
-
-  if (SepSidInToken(Token, Sid))
-    {
-      CurrentAccess |= (READ_CONTROL | WRITE_DAC);
-      if (DesiredAccess == CurrentAccess)
-	{
-	  *AccessStatus = STATUS_SUCCESS;
-	  *GrantedAccess = CurrentAccess;
-	  return STATUS_SUCCESS;
-	}
-    }
-
-  /* RULE 4: Grant rights according to the DACL */
-  CurrentAce = (PACE)(Dacl + 1);
-  for (i = 0; i < Dacl->AceCount; i++)
-    {
-      Sid = (PSID)(CurrentAce + 1);
-      if (CurrentAce->Header.AceType == ACCESS_DENIED_ACE_TYPE)
-	{
-	  if (SepSidInToken(Token, Sid))
-	    {
-	      *AccessStatus = STATUS_ACCESS_DENIED;
-	      *GrantedAccess = 0;
-	      return STATUS_SUCCESS;
-	    }
-	}
-
-      if (CurrentAce->Header.AceType == ACCESS_ALLOWED_ACE_TYPE)
-	{
-	  if (SepSidInToken(Token, Sid))
-	    {
-	      CurrentAccess |= CurrentAce->AccessMask;
-	    }
-	}
-    }
-
-  DPRINT("CurrentAccess %08lx\n DesiredAccess %08lx\n",
-         CurrentAccess, DesiredAccess);
+  /* FIXME: Unlock subject context */
 
   ObDereferenceObject(Token);
 
-  *GrantedAccess = CurrentAccess & DesiredAccess;
-
-  *AccessStatus =
-    (*GrantedAccess == DesiredAccess) ? STATUS_SUCCESS : STATUS_ACCESS_DENIED;
-
   DPRINT("NtAccessCheck() done\n");
 
-  return STATUS_SUCCESS;
+  return Status;
 }
 
 /* EOF */

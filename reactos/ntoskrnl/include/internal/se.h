@@ -136,6 +136,13 @@ SeReleaseLuidAndAttributesArray(PLUID_AND_ATTRIBUTES Privilege,
 				KPROCESSOR_MODE PreviousMode,
 				ULONG a);
 
+BOOLEAN
+SepPrivilegeCheck(PACCESS_TOKEN Token,
+		  PLUID_AND_ATTRIBUTES Privileges,
+		  ULONG PrivilegeCount,
+		  ULONG PrivilegeControl,
+		  KPROCESSOR_MODE PreviousMode);
+
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_SE_H */
 
