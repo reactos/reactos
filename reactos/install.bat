@@ -80,6 +80,7 @@ copy lib\gdi32\gdi32.dll %ROS_INSTALL%\system32
 copy lib\iphlpapi\iphlpapi.dll %ROS_INSTALL%\system32
 copy lib\kernel32\kernel32.dll %ROS_INSTALL%\system32
 copy lib\libpcap\libpcap.dll %ROS_INSTALL%\system32
+copy lib\lzexpand\lz32.dll %ROS_INSTALL%\system32
 copy lib\msafd\msafd.dll %ROS_INSTALL%\system32
 copy lib\msvcrt\msvcrt.dll %ROS_INSTALL%\system32
 copy lib\ntdll\ntdll.dll %ROS_INSTALL%\system32
@@ -88,6 +89,7 @@ copy lib\secur32\secur32.dll %ROS_INSTALL%\system32
 copy lib\shell32\roshel32.dll %ROS_INSTALL%\system32
 copy lib\snmpapi\snmpapi.dll %ROS_INSTALL%\system32
 copy lib\syssetup\syssetup.dll %ROS_INSTALL%\system32
+copy lib\twain\twain_32.dll %ROS_INSTALL%\system32
 copy lib\user32\user32.dll %ROS_INSTALL%\system32
 copy lib\version\version.dll %ROS_INSTALL%\system32
 copy lib\winedbgc\winedbgc.dll %ROS_INSTALL%\system32
