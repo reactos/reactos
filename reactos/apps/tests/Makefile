@@ -14,8 +14,8 @@ hivetest icontest isotest lineclip linetest lock lpc messagebox mktime \
 mstest multiwin mutex nptest patblt pipe primitives pteb regtest \
 sectest sertest shaptest shm statst statst2 stretchblt suspend \
 tcpsvr terminate txtscale thread thread_msg tokentest vmtest \
-winhello winhello2 wm_erasebkgnd wm_paint eventpair threadwait
-
+winhello winhello2 wm_erasebkgnd wm_paint eventpair threadwait \
+map_dup_inherit
 
 TEST_MISC = 
 
