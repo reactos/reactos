@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmap.c,v 1.3 2004/09/25 19:39:57 navaraf Exp $
+/* $Id: bitmap.c,v 1.4 2004/09/25 20:49:57 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -600,6 +600,9 @@ RtlFindSetBits(PRTL_BITMAP BitMapHeader,
   ULONG Count;
   PULONG Ptr;
   ULONG Mask;
+  ULONG Loop;
+  ULONG End;
+  ULONG OriginalHint = HintIndex;
 
   Size = BitMapHeader->SizeOfBitMap;
   if (NumberToFind > Size || NumberToFind == 0)
@@ -608,40 +611,60 @@ RtlFindSetBits(PRTL_BITMAP BitMapHeader,
   if (HintIndex >= Size)
     HintIndex = 0;
 
+  /* Initialize the values to the hint location. */
   Index = HintIndex;
-  Ptr = (PULONG)BitMapHeader->Buffer + (Index / 32);
+  Ptr = BitMapHeader->Buffer + (Index / 32);
   Mask = 1 << (Index & 0x1F);
+  End = Size;
 
-  while (HintIndex < Size)
+  /* The outer loop does the magic of first searching from the
+   * hint to the bitmap end and then going again from beginning
+   * of the bitmap to the hint location.
+   */
+  for (Loop = 0; Loop < 2; Loop++)
   {
-    /* Count set bits */
-    for (Count = 0; Index < Size && *Ptr & Mask; Index++)
+    while (HintIndex < End)
     {
-      if (++Count >= NumberToFind)
-	return HintIndex;
-
-      Mask <<= 1;
-
-      if (Mask == 0)
+      /* Count set bits */
+      for (Count = 0; Index < End && *Ptr & Mask; Index++)
       {
-	Mask = 1;
-	Ptr++;
+        if (++Count >= NumberToFind)
+          return HintIndex;
+
+        Mask <<= 1;
+
+        if (Mask == 0)
+        {
+          Mask = 1;
+          Ptr++;
+        }
       }
+
+      /* Skip clear bits */
+      for (; Index < End && ~*Ptr & Mask; Index++)
+      {
+        Mask <<= 1;
+
+        if (Mask == 0)
+        {
+          Mask = 1;
+          Ptr++;
+        }
+      }
+
+      HintIndex = Index;
     }
 
-    /* Skip clear bits */
-    for (; Index < Size && ~*Ptr & Mask; Index++)
-    {
-      Mask <<= 1;
+    /* Optimalization */
+    if (OriginalHint == 0)
+      break;
 
-      if (Mask == 0)
-      {
-	Mask = 1;
-	Ptr++;
-      }
-    }
-
-    HintIndex = Index;
+    /* Initialize the values for the beginning -> hint loop. */
+    HintIndex = Index = 0;
+    End = OriginalHint + NumberToFind - 1;
+    End = End > Size ? Size : End;
+    Ptr = BitMapHeader->Buffer;
+    Mask = 1;
   }
 
   return (ULONG)-1;
