@@ -1,4 +1,4 @@
-/* $Id: database.c,v 1.7 2002/09/08 10:23:47 chorns Exp $
+/* $Id: database.c,v 1.8 2003/08/04 17:54:52 royce Exp $
  *
  * service control manager
  * 
@@ -547,7 +547,7 @@ ScmStartService(PSERVICE Service,
 	      DPRINT1("Process Id: %lu  Handle %lx\n",
 		      ProcessInformation.dwProcessId,
 		      ProcessInformation.hProcess);
-	      DPRINT1("Tread Id: %lu  Handle %lx\n",
+	      DPRINT1("Thread Id: %lu  Handle %lx\n",
 		      ProcessInformation.dwThreadId,
 		      ProcessInformation.hThread);
 
