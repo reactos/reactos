@@ -1,4 +1,4 @@
-; $Id: videoprt.def,v 1.1 2004/01/19 15:56:53 navaraf Exp $
+; $Id: videoprt.def,v 1.2 2004/02/25 02:59:55 jimtabor Exp $
 ;
 ; vidport.def - export definition file for ReactOS
 ;
@@ -15,6 +15,7 @@ VideoPortGetDeviceBase@20
 VideoPortGetDeviceData@16
 VideoPortGetAccessRanges@32
 VideoPortGetRegistryParameters@20
+VideoPortGetVgaStatus@8
 VideoPortInitialize@16
 VideoPortInt10@8
 VideoPortLogError@16

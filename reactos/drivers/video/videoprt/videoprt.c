@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c,v 1.2 2004/02/10 16:22:56 navaraf Exp $
+ * $Id: videoprt.c,v 1.3 2004/02/25 02:55:28 jimtabor Exp $
  */
 
 #include "videoprt.h"
@@ -405,6 +405,21 @@ VideoPortGetRegistryParameters(IN PVOID  HwDeviceExtension,
                                            DeviceExtension->RegistryPath.Buffer,
                                            QueryTable, &Context, NULL))
          ? ERROR_SUCCESS : ERROR_INVALID_PARAMETER;
+}
+
+
+/*
+ * @unimplemented
+ */
+VP_STATUS
+STDCALL
+VideoPortGetVgaStatus(IN PVOID  HwDeviceExtension,
+		      OUT PULONG  VgaStatus)
+{
+ DPRINT("VideoPortGetVgaStatus\n");
+ UNIMPLEMENTED;
+ return STATUS_NOT_IMPLEMENTED;
+      
 }
 
 static BOOLEAN
