@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.23 2003/11/21 21:12:09 navaraf Exp $ */
+/* $Id: cursoricon.c,v 1.24 2003/11/21 22:46:27 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -106,6 +106,9 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL Fo
   
   /* FIXME use the desktop's HDC instead of using ScreenDeviceContext */
   dc = DC_LockDc(ScreenDeviceContext);
+  if(!dc)
+    goto done;
+  
   SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface);
   SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
   DevInfo = dc->DevInfo;
