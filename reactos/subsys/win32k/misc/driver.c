@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: driver.c,v 1.32 2003/11/17 02:12:52 hyperion Exp $
+/* $Id: driver.c,v 1.33 2003/12/12 12:53:10 gvg Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -236,7 +236,7 @@ BOOL DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED,
 
 typedef VP_STATUS (*PMP_DRIVERENTRY)(PVOID, PVOID);
 
-PDEVICE_OBJECT DRIVER_FindMPDriver(LPCWSTR Name)
+PFILE_OBJECT DRIVER_FindMPDriver(LPCWSTR Name)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING DeviceName;
@@ -244,8 +244,8 @@ PDEVICE_OBJECT DRIVER_FindMPDriver(LPCWSTR Name)
   HANDLE DisplayHandle;
   NTSTATUS Status;
   PFILE_OBJECT VideoFileObject;
-  PDEVICE_OBJECT VideoDeviceObject;
 
+__asm__("int $3\n");
   RtlRosInitUnicodeStringFromLiteral(&DeviceName, L"\\??\\DISPLAY1");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &DeviceName,
@@ -266,12 +266,6 @@ PDEVICE_OBJECT DRIVER_FindMPDriver(LPCWSTR Name)
                                          KernelMode,
                                          (PVOID *)&VideoFileObject,
                                          NULL);
-      if (NT_SUCCESS(Status))
-        {
-          VideoDeviceObject = VideoFileObject->DeviceObject;
-          ObReferenceObject(VideoDeviceObject);
-          ObDereferenceObject(VideoFileObject);
-        }
       ZwClose(DisplayHandle);
     }
 
@@ -282,7 +276,7 @@ PDEVICE_OBJECT DRIVER_FindMPDriver(LPCWSTR Name)
       return(NULL);
     }
 
-  return VideoDeviceObject;
+  return VideoFileObject;
 }
 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.108 2003/12/07 23:02:57 gvg Exp $
+/* $Id: dc.c,v 1.109 2003/12/12 12:53:10 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -472,7 +472,7 @@ IntCreatePrimarySurface()
   BOOL DoDefault;
 
   /*  Open the miniport driver  */
-  if ((PrimarySurface.VideoDeviceObject = DRIVER_FindMPDriver(L"DISPLAY")) == NULL)
+  if ((PrimarySurface.VideoFileObject = DRIVER_FindMPDriver(L"DISPLAY")) == NULL)
     {
       DPRINT1("FindMPDriver failed\n");
       return FALSE;
@@ -530,7 +530,7 @@ IntCreatePrimarySurface()
   RtlFreeUnicodeString(&DriverFileNames);
   if (! GotDriver)
     {
-      ObDereferenceObject(PrimarySurface.VideoDeviceObject);
+      ObDereferenceObject(PrimarySurface.VideoFileObject);
       DPRINT1("No suitable DDI driver found\n");
       return FALSE;
     }
@@ -545,7 +545,7 @@ IntCreatePrimarySurface()
   /*  Construct DDI driver function dispatch table  */
   if (! DRIVER_BuildDDIFunctions(&DED, &PrimarySurface.DriverFunctions))
     {
-      ObDereferenceObject(PrimarySurface.VideoDeviceObject);
+      ObDereferenceObject(PrimarySurface.VideoFileObject);
       DPRINT1("BuildDDIFunctions failed\n");
       return FALSE;
     }
@@ -564,7 +564,7 @@ IntCreatePrimarySurface()
                                                   &PrimarySurface.DevInfo,
                                                   NULL,
                                                   L"",
-                                                  (HANDLE) (PrimarySurface.VideoDeviceObject));
+                                                  (HANDLE) (PrimarySurface.VideoFileObject->DeviceObject));
       DoDefault = (NULL == PrimarySurface.PDev);
       if (DoDefault)
         {
@@ -590,11 +590,11 @@ IntCreatePrimarySurface()
                                                   &PrimarySurface.DevInfo,
                                                   NULL,
                                                   L"",
-                                                  (HANDLE) (PrimarySurface.VideoDeviceObject));
+                                                  (HANDLE) (PrimarySurface.VideoFileObject->DeviceObject));
 
       if (NULL == PrimarySurface.PDev)
         {
-          ObDereferenceObject(PrimarySurface.VideoDeviceObject);
+          ObDereferenceObject(PrimarySurface.VideoFileObject);
           DPRINT1("DrvEnablePDEV with default parameters failed\n");
           DPRINT1("Perhaps DDI driver doesn't match miniport driver?\n");
           return FALSE;
@@ -629,7 +629,7 @@ IntCreatePrimarySurface()
     PrimarySurface.DriverFunctions.EnableSurface(PrimarySurface.PDev);
   if (NULL == PrimarySurface.Handle)
     {
-      ObDereferenceObject(PrimarySurface.VideoDeviceObject);
+      ObDereferenceObject(PrimarySurface.VideoFileObject);
       DPRINT1("DrvEnableSurface failed\n");
       return FALSE;
     }
@@ -656,7 +656,7 @@ IntDestroyPrimarySurface()
 
     DceEmptyCache();
 
-    ObDereferenceObject(PrimarySurface.VideoDeviceObject);
+    ObDereferenceObject(PrimarySurface.VideoFileObject);
   }
 
 HDC STDCALL

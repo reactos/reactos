@@ -114,7 +114,7 @@ typedef struct
   GDIINFO GDIInfo;
   DEVINFO DevInfo;
   DRIVER_FUNCTIONS DriverFunctions;
-  PDEVICE_OBJECT VideoDeviceObject;
+  PFILE_OBJECT VideoFileObject;
 } GDIDEVICE;
 
 /*  Internal functions  */
