@@ -2002,7 +2002,7 @@ typedef struct _FILE_ATTRIBUTE_TAG_INFORMATION {
 } FILE_ATTRIBUTE_TAG_INFORMATION, *PFILE_ATTRIBUTE_TAG_INFORMATION;
 
 typedef struct _FILE_DISPOSITION_INFORMATION {                  
-  BOOLEAN  DoDeleteFile;                                         
+  BOOLEAN  DeleteFile;                                         
 } FILE_DISPOSITION_INFORMATION, *PFILE_DISPOSITION_INFORMATION; 
                                                                 
 typedef struct _FILE_END_OF_FILE_INFORMATION {                  

@@ -1,4 +1,4 @@
-/* $Id: delete.c,v 1.16 2004/01/23 21:16:03 ekohl Exp $
+/* $Id: delete.c,v 1.17 2004/08/18 02:13:27 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -109,7 +109,7 @@ DeleteFileW (
 		return FALSE;
 	}
 
-	FileDispInfo.DoDeleteFile = TRUE;
+	FileDispInfo.DeleteFile = TRUE;
 
 	Status = NtSetInformationFile (FileHandle,
 	                               &IoStatusBlock,
