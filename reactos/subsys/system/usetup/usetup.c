@@ -35,6 +35,7 @@
 #include "partlist.h"
 #include "inicache.h"
 #include "filequeue.h"
+#include "progress.h"
 
 
 #define START_PAGE			0
@@ -60,7 +61,7 @@ typedef struct _COPYCONTEXT
 {
   ULONG TotalOperations;
   ULONG CompletedOperations;
-  ULONG Progress;
+  PPROGRESS ProgressBar;
 } COPYCONTEXT, *PCOPYCONTEXT;
 
 
@@ -1186,6 +1187,8 @@ FileCopyCallback(PVOID Context,
   {
     case SPFILENOTIFY_STARTSUBQUEUE:
       CopyContext->TotalOperations = (ULONG)Param2;
+      ProgressSetStepCount(CopyContext->ProgressBar,
+			   CopyContext->TotalOperations);
       break;
 
     case SPFILENOTIFY_STARTCOPY:
@@ -1200,6 +1203,7 @@ FileCopyCallback(PVOID Context,
 
     case SPFILENOTIFY_ENDCOPY:
       CopyContext->CompletedOperations++;
+      ProgressNextStep(CopyContext->ProgressBar);
       break;
   }
 
@@ -1212,14 +1216,21 @@ FileCopyPage(PINPUT_RECORD Ir)
 {
   WCHAR TargetRootPath[MAX_PATH];
   COPYCONTEXT CopyContext;
-
-  CopyContext.TotalOperations = 0;
-  CopyContext.CompletedOperations = 0;
-  CopyContext.Progress = 0;
+  SHORT xScreen;
+  SHORT yScreen;
 
   SetStatusText("   Please wait...");
 
   SetTextXY(6, 8, "Copying files");
+
+  GetScreenSize(&xScreen, &yScreen);
+
+  CopyContext.TotalOperations = 0;
+  CopyContext.CompletedOperations = 0;
+  CopyContext.ProgressBar = CreateProgressBar(6,
+					      yScreen - 14,
+					      xScreen - 7,
+					      yScreen - 10);
 
   swprintf(TargetRootPath,
 	   L"\\Device\\Harddisk%lu\\Partition%lu",
@@ -1233,6 +1244,8 @@ FileCopyPage(PINPUT_RECORD Ir)
 		       &CopyContext);
 
   SetupCloseFileQueue(SetupFileQueue);
+
+  DestroyProgressBar(CopyContext.ProgressBar);
 
   SetStatusText("   ENTER = Continue   F3 = Quit");
 
