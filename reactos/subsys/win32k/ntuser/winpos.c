@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.104 2004/03/23 18:08:07 weiden Exp $
+/* $Id: winpos.c,v 1.105 2004/03/23 21:30:18 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -441,6 +441,43 @@ WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
   return 0; //FIXME: what does it return?
 }
 
+STATIC VOID FASTCALL
+FixClientRect(PRECT ClientRect, PRECT WindowRect)
+{
+  if (ClientRect->left < WindowRect->left)
+    {
+      ClientRect->left = WindowRect->left;
+    }
+  else if (WindowRect->right < ClientRect->left)
+    {
+      ClientRect->left = WindowRect->right;
+    }
+  if (ClientRect->right < WindowRect->left)
+    {
+      ClientRect->right = WindowRect->left;
+    }
+  else if (WindowRect->right < ClientRect->right)
+    {
+      ClientRect->right = WindowRect->right;
+    }
+  if (ClientRect->top < WindowRect->top)
+    {
+      ClientRect->top = WindowRect->top;
+    }
+  else if (WindowRect->bottom < ClientRect->top)
+    {
+      ClientRect->top = WindowRect->bottom;
+    }
+  if (ClientRect->bottom < WindowRect->top)
+    {
+      ClientRect->bottom = WindowRect->top;
+    }
+  else if (WindowRect->bottom < ClientRect->bottom)
+    {
+      ClientRect->bottom = WindowRect->bottom;
+    }
+}
+
 LONG STATIC FASTCALL
 WinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
 		   RECT* WindowRect, RECT* ClientRect)
@@ -482,6 +519,7 @@ WinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
 	      NtGdiOffsetRect(ClientRect, Parent->ClientRect.left,
 	                      Parent->ClientRect.top);
 	    }
+          FixClientRect(ClientRect, WindowRect);
 	}
 
        /* FIXME: WVR_ALIGNxxx */
@@ -1137,8 +1175,14 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 LRESULT FASTCALL
 WinPosGetNonClientSize(HWND Wnd, RECT* WindowRect, RECT* ClientRect)
 {
+  LRESULT Result;
+
   *ClientRect = *WindowRect;
-  return(IntSendMessage(Wnd, WM_NCCALCSIZE, FALSE, (LPARAM) ClientRect));
+  Result = IntSendMessage(Wnd, WM_NCCALCSIZE, FALSE, (LPARAM) ClientRect);
+
+  FixClientRect(ClientRect, WindowRect);
+
+  return Result;
 }
 
 BOOLEAN FASTCALL
