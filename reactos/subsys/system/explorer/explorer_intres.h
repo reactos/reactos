@@ -107,7 +107,8 @@
 #define ID_STOP                         40009
 #define ID_MINIMIZE_ALL                 40010
 #define ID_EXPLORE                      40011
-#define ID_SWITCH_DESKTOP_1             40012
+#define ID_SWITCH_DESKTOP_1             50000
+#define ID_TASKMGR                      40012
 #define ID_WINDOW_NEW                   0xE130
 #define ID_EDIT_PROPERTIES              57656
 #define ID_FILE_EXIT                    0xE141

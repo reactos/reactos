@@ -245,6 +245,10 @@ int DesktopBar::Command(int id, int code)
 		explorer_show_frame(SW_SHOWNORMAL);
 		break;
 
+	  case ID_TASKMGR:
+		launch_file(_hwnd, TEXT("taskmgr.exe"), SW_SHOWNORMAL);
+		break;
+
 	  case ID_SWITCH_DESKTOP_1:
 	  case ID_SWITCH_DESKTOP_1+1:
 	  case ID_SWITCH_DESKTOP_1+2:
