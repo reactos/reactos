@@ -52,6 +52,13 @@ endif
 # that it has the same meaning as PATH_TO_TOP.
 TOPDIR = $(PATH_TO_TOP)
 
+# Directory to build a bootable CD image in
+BOOTCD_DIR=$(TOPDIR)/../bootcd/disk
+LIVECD_DIR=$(TOPDIR)/../livecd/disk
+
+ifeq ($(LIVECD_INSTALL),yes)
+INSTALL_DIR=$(LIVECD_DIR)/reactos
+else
 # Use environment var ROS_INSTALL to override default install dir
 ifeq ($(ROS_INSTALL),)
 ifeq ($(HOST),mingw32-windows)
@@ -62,9 +69,8 @@ endif
 else
 INSTALL_DIR = $(ROS_INSTALL)
 endif
+endif
 
-# Directory to build a bootable CD image in
-BOOTCD_DIR=$(TOPDIR)/../bootcd/disk
 
 CC = $(PREFIX)gcc
 CXX = $(PREFIX)g++

@@ -142,14 +142,20 @@ notifyhook.dll: notifyhook/notifyhook.c notifyhook/notifyhook.h
 clean:
 	$(TOOLS_PATH)/rdel $(TARGET) $(OBJECTS) $(PROGRAM)$(RES_SUFFIX)
 
-# Use environment var ROS_INSTALL to override default install dir
-ifneq ($(ROS_INSTALL),)
-INSTALL_DIR = $(ROS_INSTALL)
+LIVECD_DIR=$(PATH_TO_TOP)/../livecd/disk
+
+ifeq ($(LIVECD_INSTALL),yes)
+INSTALL_DIR=$(LIVECD_DIR)/reactos
 else
+# Use environment var ROS_INSTALL to override default install dir
+ifeq ($(ROS_INSTALL),)
 ifeq ($(HOST),mingw32-windows)
 INSTALL_DIR = C:/reactos
 else
 INSTALL_DIR = $(PATH_TO_TOP)/reactos
+endif
+else
+INSTALL_DIR = $(ROS_INSTALL)
 endif
 endif
 

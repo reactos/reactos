@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.225 2004/06/03 11:14:38 ekohl Exp $
+# $Id: Makefile,v 1.226 2004/06/04 23:44:26 navaraf Exp $
 #
 # Global makefile
 #
@@ -199,9 +199,33 @@ bootcd_makecd:
 ubootcd_unattend:
 	$(CP) bootdata/unattend.inf $(BOOTCD_DIR)/reactos/unattend.inf
 
+livecd_directory_layout:
+	$(RMKDIR) $(LIVECD_DIR)
+	$(RMKDIR) $(LIVECD_DIR)/loader
+	$(RMKDIR) $(LIVECD_DIR)/reactos
+	$(RMKDIR) $(LIVECD_DIR)/Profiles/All\ Users/Desktop
+	$(RMKDIR) $(LIVECD_DIR)/Profiles/Default\ User/Desktop
+	$(RMKDIR) $(LIVECD_DIR)/Profiles/Default\ User/My\ Documents
+	$(CP) ${FREELDR_DIR}/bootsect/isoboot.bin ${LIVECD_DIR}/../isoboot.bin
+	$(CP) ${FREELDR_DIR}/freeldr/obj/i386/freeldr.sys ${LIVECD_DIR}/loader/setupldr.sys
+	$(RLINE) bootdata/livecd.ini $(LIVECD_DIR)/freeldr.ini
+
+livecd_bootstrap_files:
+	$(MAKE) LIVECD_INSTALL=yes fastinstall
+
+livecd_install_before:
+	$(TOOLS_PATH)/mkhive/mkhive$(EXE_POSTFIX) bootdata $(LIVECD_DIR)/reactos/system32/config bootdata/livecd.inf
+
+livecd_basic: livecd_directory_layout livecd_bootstrap_files livecd_install_before
+
+livecd_makecd:
+	$(TOOLS_PATH)/cdmake/cdmake -m -j -b $(LIVECD_DIR)/../isoboot.bin $(LIVECD_DIR) REACTOS roslive.iso
+
 bootcd: bootcd_basic bootcd_makecd
 
 ubootcd: bootcd_basic ubootcd_unattend bootcd_makecd
+
+livecd: livecd_basic livecd_makecd
 
 registry: tools
 	$(TOOLS_PATH)/mkhive/mkhive$(EXE_POSTFIX) bootdata $(INSTALL_DIR)/system32/config
