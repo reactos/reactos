@@ -35,33 +35,23 @@
 #define GDI_OBJECT_TYPE_DONTCARE    0x007f0000
 /*@}*/
 
+typedef PVOID PGDIOBJ;
+
+typedef BOOL (FASTCALL *GDICLEANUPPROC)(PGDIOBJ Obj);
+
 /*!
  * GDI object header. This is a part of any GDI object
 */
 typedef struct _GDIOBJHDR
 {
-  WORD  wTableIndex;
   DWORD dwCount; 		/* reference count for the object */
-} GDIOBJHDR, *PGDIOBJHDR;
-
-typedef PVOID PGDIOBJ;
-
-typedef BOOL (FASTCALL *GDICLEANUPPROC)(PGDIOBJ Obj);
-
-typedef struct _GDI_HANDLE_ENTRY
-{
-  GDICLEANUPPROC CleanupProc;
   HANDLE hProcessId;
-  PGDIOBJ pObject;
+  GDICLEANUPPROC CleanupProc;
+  WORD wTableIndex;
+  WORD Magic;
   const char* lockfile;
   int lockline;
-} GDI_HANDLE_ENTRY, *PGDI_HANDLE_ENTRY;
-
-typedef struct _GDI_HANDLE_TABLE
-{
-  WORD  wTableSize;
-  GDI_HANDLE_ENTRY  Handles [1];
-} GDI_HANDLE_TABLE, *PGDI_HANDLE_TABLE;
+} GDIOBJHDR, *PGDIOBJHDR;
 
 typedef struct _GDIMULTILOCK
 {
@@ -90,7 +80,7 @@ PGDIOBJ FASTCALL GDIOBJ_LockObjDbg (const char* file, int line, HGDIOBJ Obj, DWO
 BOOL FASTCALL GDIOBJ_UnlockObjDbg (const char* file, int line, HGDIOBJ Obj, DWORD ObjectType);
 #endif /* GDIOBJ_UnlockObj */
 
-#define GDIOBJFLAG_DEFAULT		(0x0)
+#define GDIOBJFLAG_DEFAULT	(0x0)
 #define GDIOBJFLAG_IGNOREPID 	(0x1)
 #define GDIOBJFLAG_IGNORELOCK 	(0x2)
 

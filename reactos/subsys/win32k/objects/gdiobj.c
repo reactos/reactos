@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.38 2003/08/20 07:45:02 gvg Exp $
+ * $Id: gdiobj.c,v 1.39 2003/08/21 20:16:55 gvg Exp $
  *
  */
 
@@ -41,6 +41,8 @@
 #define NDEBUG
 #include <win32k/debug1.h>
 
+#define GDI_GLOBAL_PROCESS ((HANDLE) 0xffffffff)
+
 #define GDI_HANDLE_INDEX_MASK 0x00000fff
 #define GDI_HANDLE_TYPE_MASK  0x007f0000
 #define GDI_HANDLE_STOCK_MASK 0x00800000
@@ -51,6 +53,23 @@
 #define GDI_HANDLE_IS_TYPE(h, t)   ((t) == (((DWORD)(h)) & GDI_HANDLE_TYPE_MASK))
 #define GDI_HANDLE_IS_STOCKOBJ(h)  (0 != (((DWORD)(h)) & GDI_HANDLE_STOCK_MASK))
 #define GDI_HANDLE_SET_STOCKOBJ(h) ((h) = (HANDLE)(((DWORD)(h)) | GDI_HANDLE_STOCK_MASK))
+
+#define GDI_TYPE_TO_MAGIC(t) ((WORD) ((t) >> 16))
+#define GDI_MAGIC_TO_TYPE(m) ((DWORD)(m) << 16)
+
+#define GDI_VALID_OBJECT(h, obj, t, f) \
+  (NULL != (obj) \
+   && (GDI_MAGIC_TO_TYPE((obj)->Magic) == (t) || GDI_OBJECT_TYPE_DONTCARE == (t)) \
+   && (GDI_HANDLE_GET_TYPE((h)) == (t) || GDI_OBJECT_TYPE_DONTCARE == (t)) \
+   && (((obj)->hProcessId == PsGetCurrentProcessId()) \
+       || (GDI_GLOBAL_PROCESS == (obj)->hProcessId) \
+       || ((f) & GDIOBJFLAG_IGNOREPID)))
+
+typedef struct _GDI_HANDLE_TABLE
+{
+  WORD  wTableSize;
+  PGDIOBJHDR Handles[1];
+} GDI_HANDLE_TABLE, *PGDI_HANDLE_TABLE;
 
 /*  GDI stock objects */
 
@@ -138,28 +157,31 @@ GDIOBJ_iAllocHandleTable (WORD Size)
 
   ExAcquireFastMutexUnsafe (&HandleTableMutex);
   handleTable = ExAllocatePool(PagedPool,
-                               sizeof (GDI_HANDLE_TABLE) +
-                                 sizeof (GDI_HANDLE_ENTRY) * Size);
+                               sizeof(GDI_HANDLE_TABLE) +
+                               sizeof(PGDIOBJ) * Size);
   ASSERT( handleTable );
   memset (handleTable,
           0,
-          sizeof (GDI_HANDLE_TABLE) + sizeof (GDI_HANDLE_ENTRY) * Size);
+          sizeof(GDI_HANDLE_TABLE) + sizeof(PGDIOBJ) * Size);
   handleTable->wTableSize = Size;
   ExReleaseFastMutexUnsafe (&HandleTableMutex);
 
-  return  handleTable;
+  return handleTable;
 }
 
 /*!
  * Returns the entry into the handle table by index.
 */
-static PGDI_HANDLE_ENTRY FASTCALL
-GDIOBJ_iGetHandleEntryForIndex (WORD TableIndex)
+static PGDIOBJHDR FASTCALL
+GDIOBJ_iGetObjectForIndex(WORD TableIndex)
 {
-  /*DPRINT("GDIOBJ_iGetHandleEntryForIndex: TableIndex: %d,\n handle: %x, ptr: %x\n", TableIndex, HandleTable->Handles [TableIndex], &(HandleTable->Handles [TableIndex])  );*/
-  /*DPRINT("GIG: HandleTable: %x, Handles: %x, \n TableIndex: %x, pt: %x\n", HandleTable,  HandleTable->Handles, TableIndex, ((PGDI_HANDLE_ENTRY)HandleTable->Handles+TableIndex));*/
-  /*DPRINT("GIG: Hndl: %x\n", ((PGDI_HANDLE_ENTRY)HandleTable->Handles+TableIndex));*/
-  return  ((PGDI_HANDLE_ENTRY)HandleTable->Handles+TableIndex);
+  if (0 == TableIndex || HandleTable->wTableSize < TableIndex)
+    {
+      DPRINT1("Invalid TableIndex %u\n", (unsigned) TableIndex);
+      return NULL;
+    }
+
+  return HandleTable->Handles[TableIndex];
 }
 
 /*!
@@ -174,15 +196,15 @@ GDIOBJ_iGetNextOpenHandleIndex (void)
   ExAcquireFastMutexUnsafe (&HandleTableMutex);
   for (tableIndex = 1; tableIndex < HandleTable->wTableSize; tableIndex++)
     {
-      if (NULL == HandleTable->Handles[tableIndex].pObject)
+      if (NULL == HandleTable->Handles[tableIndex])
 	{
-	  HandleTable->Handles[tableIndex].pObject = (PGDIOBJ) -1;
+	  HandleTable->Handles[tableIndex] = (PGDIOBJHDR) -1;
 	  break;
 	}
     }
   ExReleaseFastMutexUnsafe (&HandleTableMutex);
 
-  return  (tableIndex < HandleTable->wTableSize) ? tableIndex : 0;
+  return (tableIndex < HandleTable->wTableSize) ? tableIndex : 0;
 }
 
 /*!
@@ -201,26 +223,33 @@ HGDIOBJ FASTCALL
 GDIOBJ_AllocObj(WORD Size, DWORD ObjectType, GDICLEANUPPROC CleanupProc)
 {
   PGDIOBJHDR  newObject;
-  PGDI_HANDLE_ENTRY  handleEntry;
 
   DPRINT("GDIOBJ_AllocObj: size: %d, type: 0x%08x\n", Size, ObjectType);
-  newObject = ExAllocatePool (PagedPool, Size + sizeof (GDIOBJHDR));
+  newObject = ExAllocatePool(PagedPool, Size + sizeof (GDIOBJHDR));
   if (newObject == NULL)
   {
-    DPRINT("GDIOBJ_AllocObj: failed\n");
-    return  NULL;
+    DPRINT1("GDIOBJ_AllocObj: failed\n");
+    return NULL;
   }
-  RtlZeroMemory (newObject, Size + sizeof (GDIOBJHDR));
+  RtlZeroMemory (newObject, Size + sizeof(GDIOBJHDR));
 
   newObject->wTableIndex = GDIOBJ_iGetNextOpenHandleIndex ();
-  newObject->dwCount = 0;
-  handleEntry = GDIOBJ_iGetHandleEntryForIndex (newObject->wTableIndex);
-  handleEntry->CleanupProc = CleanupProc;
-  handleEntry->hProcessId = PsGetCurrentProcessId ();
-  handleEntry->pObject = newObject;
-  handleEntry->lockfile = NULL;
-  handleEntry->lockline = 0;
   DPRINT("GDIOBJ_AllocObj: object handle %d\n", newObject->wTableIndex );
+  if (0 == newObject->wTableIndex)
+    {
+      DPRINT1("Out of GDI handles\n");
+      ExFreePool(newObject);
+      return NULL;
+    }
+
+  newObject->dwCount = 0;
+  newObject->hProcessId = PsGetCurrentProcessId ();
+  newObject->CleanupProc = CleanupProc;
+  newObject->Magic = GDI_TYPE_TO_MAGIC(ObjectType);
+  newObject->lockfile = NULL;
+  newObject->lockline = 0;
+  HandleTable->Handles[newObject->wTableIndex] = newObject;
+
   return GDI_HANDLE_CREATE(newObject->wTableIndex, ObjectType);
 }
 
@@ -243,23 +272,20 @@ BOOL STDCALL
 GDIOBJ_FreeObj(HGDIOBJ hObj, DWORD ObjectType, DWORD Flag)
 {
   PGDIOBJHDR objectHeader;
-  PGDI_HANDLE_ENTRY handleEntry;
   PGDIOBJ Obj;
   BOOL 	bRet = TRUE;
 
-  handleEntry = GDIOBJ_iGetHandleEntryForIndex(GDI_HANDLE_GET_INDEX(hObj));
-  DPRINT("GDIOBJ_FreeObj: hObj: 0x%08x, handleEntry: %x\n", hObj, handleEntry );
+  objectHeader = GDIOBJ_iGetObjectForIndex(GDI_HANDLE_GET_INDEX(hObj));
+  DPRINT("GDIOBJ_FreeObj: hObj: 0x%08x, object: %x\n", hObj, objectHeader);
 
-  if (NULL == handleEntry
-      || (GDI_HANDLE_GET_TYPE(hObj) != ObjectType && ObjectType != GDI_OBJECT_TYPE_DONTCARE)
-      || ((handleEntry->hProcessId != PsGetCurrentProcessId()) && !(Flag & GDIOBJFLAG_IGNOREPID)))
+  if (! GDI_VALID_OBJECT(hObj, objectHeader, ObjectType, Flag)
+      || GDI_GLOBAL_PROCESS == objectHeader->hProcessId)
+
     {
-      DPRINT("Can't Delete hObj: 0x%08x, type: 0x%08x, pid:%d\n currpid:%d, flag:%d, hmm:%d\n", hObj, ObjectType, handleEntry->hProcessId, PsGetCurrentProcessId(), (Flag&GDIOBJFLAG_IGNOREPID), ((handleEntry->hProcessId != PsGetCurrentProcessId()) && !(Flag&GDIOBJFLAG_IGNOREPID)) );
+      DPRINT1("Can't delete hObj:0x%08x, type:0x%08x, flag:%d\n", hObj, ObjectType, Flag);
       return FALSE;
     }
 
-  objectHeader = handleEntry->pObject;
-  ASSERT(objectHeader);
   DPRINT("FreeObj: locks: %x\n", objectHeader->dwCount );
   if (!(Flag & GDIOBJFLAG_IGNORELOCK))
     {
@@ -277,13 +303,14 @@ GDIOBJ_FreeObj(HGDIOBJ hObj, DWORD ObjectType, DWORD Flag)
     }
 
   /* allow object to delete internal data */
-  if (NULL != handleEntry->CleanupProc)
+  if (NULL != objectHeader->CleanupProc)
     {
-      Obj = (PGDIOBJ)((PCHAR)handleEntry->pObject + sizeof(GDIOBJHDR));
-      bRet = (*(handleEntry->CleanupProc))(Obj);
+      Obj = (PGDIOBJ)((PCHAR)objectHeader + sizeof(GDIOBJHDR));
+      bRet = (*(objectHeader->CleanupProc))(Obj);
     }
-  ExFreePool (handleEntry->pObject);
-  memset(handleEntry, 0, sizeof(GDI_HANDLE_ENTRY));
+
+  ExFreePool(objectHeader);
+  HandleTable->Handles[GDI_HANDLE_GET_INDEX(hObj)] = NULL;
 
   return bRet;
 }
@@ -368,7 +395,7 @@ GDIOBJ_UnlockMultipleObj(PGDIMULTILOCK pList, INT nObj)
 }
 
 /*!
- * Marks the object as global. (Creator process ID is set to 0xFFFFFFFF). Global objects may be
+ * Marks the object as global. (Creator process ID is set to GDI_GLOBAL_PROCESS). Global objects may be
  * accessed by any process.
  * \param 	ObjectHandle - handle of the object to make global.
  *
@@ -377,20 +404,16 @@ GDIOBJ_UnlockMultipleObj(PGDIMULTILOCK pList, INT nObj)
 VOID FASTCALL
 GDIOBJ_MarkObjectGlobal(HGDIOBJ ObjectHandle)
 {
-  PGDI_HANDLE_ENTRY  handleEntry;
+  PGDIOBJHDR ObjHdr;
 
-  if (NULL == ObjectHandle)
+  DPRINT("GDIOBJ_MarkObjectGlobal handle 0x%08x\n", ObjectHandle);
+  ObjHdr = GDIOBJ_iGetObjectForIndex(GDI_HANDLE_GET_INDEX(ObjectHandle));
+  if (NULL == ObjHdr)
     {
       return;
     }
 
-  handleEntry = GDIOBJ_iGetHandleEntryForIndex(GDI_HANDLE_GET_INDEX(ObjectHandle));
-  if (NULL == handleEntry)
-    {
-      return;
-    }
-
-  handleEntry->hProcessId = (HANDLE)0xFFFFFFFF;
+  ObjHdr->hProcessId = GDI_GLOBAL_PROCESS;
 }
 
 /*!
@@ -401,7 +424,18 @@ GDIOBJ_MarkObjectGlobal(HGDIOBJ ObjectHandle)
 DWORD FASTCALL
 GDIOBJ_GetObjectType(HGDIOBJ ObjectHandle)
 {
-  return GDI_HANDLE_GET_TYPE(ObjectHandle);
+  PGDIOBJHDR ObjHdr;
+
+  ObjHdr = GDIOBJ_iGetObjectForIndex(GDI_HANDLE_GET_INDEX(ObjectHandle));
+  if (NULL == ObjHdr)
+    {
+      DPRINT1("Invalid ObjectHandle 0x%08x\n", ObjectHandle);
+      return 0;
+    }
+  DPRINT("GDIOBJ_GetObjectType for handle 0x%08x returns 0x%08x\n", ObjectHandle,
+         GDI_MAGIC_TO_TYPE(ObjHdr->Magic));
+
+  return GDI_MAGIC_TO_TYPE(ObjHdr->Magic);
 }
 
 /*!
@@ -410,7 +444,7 @@ GDIOBJ_GetObjectType(HGDIOBJ ObjectHandle)
 VOID FASTCALL
 InitGdiObjectHandleTable (VOID)
 {
-  DPRINT ("InitGdiObjectHandleTable\n");
+  DPRINT("InitGdiObjectHandleTable\n");
   ExInitializeFastMutex (&HandleTableMutex);
   ExInitializeFastMutex (&RefCountHandling);
 
@@ -427,6 +461,8 @@ VOID FASTCALL
 CreateStockObjects(void)
 {
   unsigned Object;
+
+  DPRINT("Beginning creation of stock objects\n");
 
   /* Create GDI Stock Objects from the logical structures we've defined */
 
@@ -452,9 +488,14 @@ CreateStockObjects(void)
 
   for (Object = 0; Object < NB_STOCK_OBJECTS; Object++)
     {
-      GDIOBJ_MarkObjectGlobal(StockObjects[Object]);
-      GDI_HANDLE_SET_STOCKOBJ(StockObjects[Object]);
+      if (NULL != StockObjects[Object])
+	{
+	  GDIOBJ_MarkObjectGlobal(StockObjects[Object]);
+	  GDI_HANDLE_SET_STOCKOBJ(StockObjects[Object]);
+	}
     }
+
+  DPRINT("Completed creation of stock objects\n");
 }
 
 /*!
@@ -465,17 +506,21 @@ CreateStockObjects(void)
 HGDIOBJ STDCALL
 NtGdiGetStockObject(INT Object)
 {
+  DPRINT("NtGdiGetStockObject index %d\n", Object);
+
   return ((Object < 0) || (NB_STOCK_OBJECTS <= Object)) ? NULL : StockObjects[Object];
 }
 
 /*!
  * Delete GDI object
  * \param	hObject object handle
- * \return	if the function fails the returned value is NULL.
+ * \return	if the function fails the returned value is FALSE.
 */
 BOOL STDCALL
 NtGdiDeleteObject(HGDIOBJ hObject)
 {
+  DPRINT("NtGdiDeleteObject handle 0x%08x\n", hObject);
+
   return GDIOBJ_FreeObj(hObject, GDI_OBJECT_TYPE_DONTCARE, GDIOBJFLAG_DEFAULT);
 }
 
@@ -487,27 +532,26 @@ BOOL FASTCALL
 CleanupForProcess (struct _EPROCESS *Process, INT Pid)
 {
   DWORD i;
-  PGDI_HANDLE_ENTRY handleEntry;
   PGDIOBJHDR objectHeader;
   PEPROCESS CurrentProcess;
 
+  DPRINT("Starting CleanupForProcess prochandle %x Pid %d\n", Process, Pid);
   CurrentProcess = PsGetCurrentProcess();
   if (CurrentProcess != Process)
     {
       KeAttachProcess(Process);
     }
 
-  for(i = 1; i < GDI_HANDLE_NUMBER; i++)
+  for(i = 1; i < HandleTable->wTableSize; i++)
     {
-      handleEntry = GDIOBJ_iGetHandleEntryForIndex(i);
-      if (NULL != handleEntry && NULL != handleEntry->pObject &&
-          (INT)handleEntry->hProcessId == Pid)
+      objectHeader = GDIOBJ_iGetObjectForIndex(i);
+      if (NULL != objectHeader &&
+          (INT) objectHeader->hProcessId == Pid)
 	{
-	  objectHeader = (PGDIOBJHDR) handleEntry->pObject;
-	  DPRINT("\nNtGdiCleanup: %d, process: %d, locks: %d", i, handleEntry->hProcessId, objectHeader->dwCount);
+	  DPRINT("CleanupForProcess: %d, process: %d, locks: %d, magic: 0x%x", i, objectHeader->hProcessId, objectHeader->dwCount, objectHeader->Magic);
 	  GDIOBJ_FreeObj(GDI_HANDLE_CREATE(i, GDI_OBJECT_TYPE_DONTCARE),
 	                 GDI_OBJECT_TYPE_DONTCARE,
-	                 GDIOBJFLAG_IGNOREPID|GDIOBJFLAG_IGNORELOCK );
+	                 GDIOBJFLAG_IGNOREPID | GDIOBJFLAG_IGNORELOCK);
 	}
     }
 
@@ -515,6 +559,8 @@ CleanupForProcess (struct _EPROCESS *Process, INT Pid)
     {
       KeDetachProcess();
     }
+
+  DPRINT("Completed cleanup for process %d\n", Pid);
 
   return TRUE;
 }
@@ -527,47 +573,45 @@ PGDIOBJ FASTCALL
 GDIOBJ_LockObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType)
 {
   PGDIOBJ rc;
-  PGDI_HANDLE_ENTRY handleEntry
-    = GDIOBJ_iGetHandleEntryForIndex(GDI_HANDLE_GET_INDEX(hObj));
-  if (NULL == handleEntry
-      || (GDI_HANDLE_GET_TYPE(hObj) != ObjectType && ObjectType != GDI_OBJECT_TYPE_DONTCARE)
-      || (handleEntry->hProcessId != (HANDLE)0xFFFFFFFF
-	  && handleEntry->hProcessId != PsGetCurrentProcessId ()
-	 )
-     )
+  PGDIOBJHDR ObjHdr = GDIOBJ_iGetObjectForIndex(GDI_HANDLE_GET_INDEX(hObj));
+
+  if (! GDI_VALID_OBJECT(hObj, ObjHdr, ObjectType, GDIOBJFLAG_DEFAULT))
     {
       int reason = 0;
-      if (NULL == handleEntry)
+      if (NULL == ObjHdr)
 	{
 	  reason = 1;
 	}
-      else if (GDI_HANDLE_GET_TYPE(hObj) != ObjectType && ObjectType != GDI_OBJECT_TYPE_DONTCARE)
+      else if (GDI_MAGIC_TO_TYPE(ObjHdr->Magic) != ObjectType && ObjectType != GDI_OBJECT_TYPE_DONTCARE)
 	{
 	  reason = 2;
 	}
-      else if (handleEntry->hProcessId != (HANDLE)0xFFFFFFFF
-	   && handleEntry->hProcessId != PsGetCurrentProcessId())
+      else if (ObjHdr->hProcessId != GDI_GLOBAL_PROCESS
+	   && ObjHdr->hProcessId != PsGetCurrentProcessId())
 	{
 	  reason = 3;
 	}
-
+      else if (GDI_HANDLE_GET_TYPE(hObj) != ObjectType && ObjectType != GDI_OBJECT_TYPE_DONTCARE)
+	{
+	  reason = 4;
+	}
       DPRINT1("GDIOBJ_LockObj failed for 0x%08x, reqtype 0x%08x reason %d\n",
               hObj, ObjectType, reason );
       DPRINT1("\tcalled from: %s:%i\n", file, line );
       return NULL;
     }
-  if (NULL != handleEntry->lockfile)
+  if (NULL != ObjHdr->lockfile)
     {
       DPRINT1("Caution! GDIOBJ_LockObj trying to lock object (0x%x) second time\n", hObj );
       DPRINT1("\tcalled from: %s:%i\n", file, line );
-      DPRINT1("\tpreviously locked from: %s:%i\n", handleEntry->lockfile, handleEntry->lockline );
+      DPRINT1("\tpreviously locked from: %s:%i\n", ObjHdr->lockfile, ObjHdr->lockline );
     }
   DPRINT("(%s:%i) GDIOBJ_LockObj(0x%08x,0x%08x)\n", file, line, hObj, ObjectType);
   rc = GDIOBJ_LockObj(hObj, ObjectType);
-  if (rc && NULL == handleEntry->lockfile)
+  if (rc && NULL == ObjHdr->lockfile)
     {
-      handleEntry->lockfile = file;
-      handleEntry->lockline = line;
+      ObjHdr->lockfile = file;
+      ObjHdr->lockline = line;
     }
 
   return rc;
@@ -579,14 +623,9 @@ GDIOBJ_LockObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType)
 BOOL FASTCALL
 GDIOBJ_UnlockObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType)
 {
-  PGDI_HANDLE_ENTRY handleEntry
-    = GDIOBJ_iGetHandleEntryForIndex (GDI_HANDLE_GET_INDEX(hObj));
-  if (NULL == handleEntry
-      || (GDI_HANDLE_GET_TYPE(hObj) != ObjectType && ObjectType != GDI_OBJECT_TYPE_DONTCARE)
-      || (handleEntry->hProcessId != (HANDLE)0xFFFFFFFF
-          && handleEntry->hProcessId != PsGetCurrentProcessId ()
-         )
-     )
+  PGDIOBJHDR ObjHdr = GDIOBJ_iGetObjectForIndex(GDI_HANDLE_GET_INDEX(hObj));
+
+  if (! GDI_VALID_OBJECT(hObj, ObjHdr, ObjectType, GDIOBJFLAG_DEFAULT))
     {
       DPRINT1("GDIBOJ_UnlockObj failed for 0x%08x, reqtype 0x%08x\n",
 		  hObj, ObjectType);
@@ -594,8 +633,9 @@ GDIOBJ_UnlockObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType)
       return FALSE;
     }
   DPRINT("(%s:%i) GDIOBJ_UnlockObj(0x%08x,0x%08x)\n", file, line, hObj, ObjectType);
-  handleEntry->lockfile = NULL;
-  handleEntry->lockline = 0;
+  ObjHdr->lockfile = NULL;
+  ObjHdr->lockline = 0;
+
   return GDIOBJ_UnlockObj(hObj, ObjectType);
 }
 #endif//GDIOBJ_LockObj
@@ -614,35 +654,26 @@ GDIOBJ_UnlockObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType)
 PGDIOBJ FASTCALL
 GDIOBJ_LockObj(HGDIOBJ hObj, DWORD ObjectType)
 {
-  PGDI_HANDLE_ENTRY handleEntry
-    = GDIOBJ_iGetHandleEntryForIndex(GDI_HANDLE_GET_INDEX(hObj));
-  PGDIOBJHDR  objectHeader;
+  PGDIOBJHDR ObjHdr = GDIOBJ_iGetObjectForIndex(GDI_HANDLE_GET_INDEX(hObj));
 
-  DPRINT("GDIOBJ_LockObj: hObj: 0x%08x, type: 0x%08x, handleEntry: %x\n", hObj, ObjectType, handleEntry);
-  if (NULL == handleEntry
-      || (GDI_HANDLE_GET_TYPE(hObj) != ObjectType && ObjectType != GDI_OBJECT_TYPE_DONTCARE)
-      || (handleEntry->hProcessId != (HANDLE)0xFFFFFFFF
-          && handleEntry->hProcessId != PsGetCurrentProcessId()
-	 )
-     )
+  DPRINT("GDIOBJ_LockObj: hObj: 0x%08x, type: 0x%08x, objhdr: %x\n", hObj, ObjectType, ObjHdr);
+  if (! GDI_VALID_OBJECT(hObj, ObjHdr, ObjectType, GDIOBJFLAG_DEFAULT))
     {
       DPRINT1("GDIBOJ_LockObj failed for 0x%08x, type 0x%08x\n",
 		  hObj, ObjectType);
       return NULL;
     }
 
-  objectHeader = (PGDIOBJHDR) handleEntry->pObject;
-  ASSERT(objectHeader);
-  if(0 < objectHeader->dwCount)
+  if(0 < ObjHdr->dwCount)
     {
       DPRINT1("Caution! GDIOBJ_LockObj trying to lock object (0x%x) second time\n", hObj);
       DPRINT1("\t called from: %x\n", __builtin_return_address(0));
     }
 
   ExAcquireFastMutex(&RefCountHandling);
-  objectHeader->dwCount++;
+  ObjHdr->dwCount++;
   ExReleaseFastMutex(&RefCountHandling);
-  return (PGDIOBJ)((PCHAR)objectHeader + sizeof(GDIOBJHDR));
+  return (PGDIOBJ)((PCHAR)ObjHdr + sizeof(GDIOBJHDR));
 }
 
 /*!
@@ -661,39 +692,29 @@ GDIOBJ_LockObj(HGDIOBJ hObj, DWORD ObjectType)
 BOOL FASTCALL
 GDIOBJ_UnlockObj(HGDIOBJ hObj, DWORD ObjectType)
 {
-  PGDI_HANDLE_ENTRY handleEntry
-    = GDIOBJ_iGetHandleEntryForIndex(GDI_HANDLE_GET_INDEX(hObj));
-  PGDIOBJHDR  objectHeader;
+  PGDIOBJHDR ObjHdr = GDIOBJ_iGetObjectForIndex(GDI_HANDLE_GET_INDEX(hObj));
 
-  DPRINT("GDIOBJ_UnlockObj: hObj: 0x%08x, type: 0x%08x, handleEntry: %x\n", hObj, ObjectType, handleEntry);
-  if (NULL == handleEntry
-      || (GDI_HANDLE_GET_TYPE(hObj) != ObjectType && ObjectType != GDI_OBJECT_TYPE_DONTCARE)
-      || (handleEntry->hProcessId != (HANDLE)0xFFFFFFFF
-          && handleEntry->hProcessId != PsGetCurrentProcessId ()
-	 )
-     )
-  {
+  DPRINT("GDIOBJ_UnlockObj: hObj: 0x%08x, type: 0x%08x, objhdr: %x\n", hObj, ObjectType, ObjHdr);
+  if (! GDI_VALID_OBJECT(hObj, ObjHdr, ObjectType, GDIOBJFLAG_DEFAULT))
+    {
     DPRINT1( "GDIOBJ_UnLockObj: failed\n");
     return FALSE;
   }
 
-  objectHeader = (PGDIOBJHDR) handleEntry->pObject;
-  ASSERT(objectHeader);
-
   ExAcquireFastMutex(&RefCountHandling);
-  if (0 == (objectHeader->dwCount & ~0x80000000))
+  if (0 == (ObjHdr->dwCount & ~0x80000000))
     {
       ExReleaseFastMutex(&RefCountHandling);
       DPRINT1( "GDIOBJ_UnLockObj: unlock object (0x%x) that is not locked\n", hObj );
       return FALSE;
     }
 
-  objectHeader->dwCount--;
+  ObjHdr->dwCount--;
 
-  if( objectHeader->dwCount == 0x80000000 )
+  if (ObjHdr->dwCount == 0x80000000)
     {
       //delayed object release
-      objectHeader->dwCount = 0;
+      ObjHdr->dwCount = 0;
       ExReleaseFastMutex(&RefCountHandling);
       DPRINT("GDIOBJ_UnlockObj: delayed delete\n");
       return GDIOBJ_FreeObj(hObj, ObjectType, GDIOBJFLAG_DEFAULT);
