@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: gradient.c,v 1.11 2004/11/15 23:10:41 gvg Exp $
+/* $Id: gradient.c,v 1.12 2004/12/12 21:43:17 royce Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -529,9 +529,14 @@ IntEngGradientFill(
 {
   BOOL Ret;
   SURFOBJ *psoDest = &pboDest->SurfObj;
+  ASSERT(psoDest);
   
-  MouseSafetyOnDrawStart(psoDest, pco->rclBounds.left, pco->rclBounds.top, 
-                         pco->rclBounds.right, pco->rclBounds.bottom);
+  MouseSafetyOnDrawStart(
+	  psoDest,
+	  pco->rclBounds.left,
+	  pco->rclBounds.top, 
+      pco->rclBounds.right,
+	  pco->rclBounds.bottom);
   if((psoDest->iType != STYPE_BITMAP) && (pboDest->flHooks & HOOK_GRADIENTFILL))
   {
     Ret = GDIDEVFUNCS(psoDest).GradientFill(
