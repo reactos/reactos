@@ -71,8 +71,16 @@ Desktop::~Desktop()
 
 
 Desktops::Desktops()
+ :	_current_desktop(0)
 {
-	_current_desktop = 0;
+}
+
+Desktops::~Desktops()
+{
+	 // show all hidden windows
+	for(iterator it_dsk=begin(); it_dsk!=end(); ++it_dsk)
+		for(WindowSet::iterator it=it_dsk->_windows.begin(); it!=it_dsk->_windows.end(); ++it)
+			ShowWindowAsync(*it, SW_SHOW);
 }
 
 void Desktops::init()

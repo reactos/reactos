@@ -191,6 +191,7 @@ typedef Desktop DesktopRef;
 struct Desktops : public vector<DesktopRef>
 {
 	Desktops();
+	~Desktops();
 
 	void	init();
 	void	SwitchToDesktop(int idx);
