@@ -33,7 +33,7 @@ extern "C" {
  * Fundamental types and data structures
  */
 
-typedef LONG NTSTATUS;
+typedef LONG NTSTATUS, *PNTSTATUS;
 
 typedef CONST char *PCSZ;
 
