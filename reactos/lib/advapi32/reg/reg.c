@@ -8,17 +8,13 @@
  *                  Created 01/11/98
  *                  19990309 EA Stubs
  */
+//#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <wstring.h>
+#include <wchar.h>
 #include <ddk/ntddk.h>
-#undef WIN32_LEAN_AND_MEAN
-
-#ifndef ERROR_INVALID_FUNCTION
-#error "ERROR_INVALID_FUNCTION undefined!"
-#endif
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegCloseKey
  */
 LONG
@@ -27,12 +23,12 @@ RegCloseKey(
 	HKEY	hKey
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION;	/* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegConnectRegistryA
  */
 LONG
@@ -43,28 +39,28 @@ RegConnectRegistryA(
 	PHKEY	phkResult
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegConnectRegistryW
  */
 LONG
 STDCALL
-RegConnectRegistry(
+RegConnectRegistryW(
 	LPWSTR	lpMachineName,
 	HKEY	hKey,
 	PHKEY	phkResult
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegCreateKeyA
  */
 LONG
@@ -75,12 +71,12 @@ RegCreateKeyA(
 	PHKEY	phkResult
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegCreateKeyW
  */
 LONG
@@ -91,12 +87,12 @@ RegCreateKeyW(
 	PHKEY	phkResult
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegCreateKeyExA
  */
 LONG
@@ -113,12 +109,12 @@ RegCreateKeyExA(
 	LPDWORD			lpdwDisposition
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegCreateKeyExW
  */
 LONG
@@ -135,12 +131,12 @@ RegCreateKeyExW(
 	LPDWORD			lpdwDisposition
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegDeleteKeyA
  */
 LONG
@@ -150,12 +146,12 @@ RegDeleteKeyA(
 	LPCSTR	lpSubKey
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegDeleteKeyW
  */
 LONG
@@ -165,12 +161,12 @@ RegDeleteKeyW(
 	LPCWSTR	lpSubKey
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegDeleteValueA
  */
 LONG
@@ -180,12 +176,12 @@ RegDeleteValueA(
 	LPCSTR	lpValueName
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegDeleteValueW
  */
 LONG
@@ -195,12 +191,12 @@ RegDeleteValueW(
 	LPCWSTR	lpValueName
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegEnumKeyA
  */
 LONG
@@ -212,12 +208,12 @@ RegEnumKeyA(
 	DWORD	cbName
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegEnumKeyW
  */
 LONG
@@ -229,12 +225,12 @@ RegEnumKeyW(
 	DWORD	cbName
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegEnumKeyExA
  */
 LONG
@@ -250,12 +246,12 @@ RegEnumKeyExA(
 	PFILETIME	lpftLastWriteTime
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegEnumKeyExW
  */
 LONG
@@ -271,12 +267,12 @@ RegEnumKeyExW(
 	PFILETIME	lpftLastWriteTime
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegEnumValueA
  */
 LONG
@@ -292,12 +288,12 @@ RegEnumValueA(
 	LPDWORD	lpcbData
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegEnumValueW
  */
 LONG
@@ -313,12 +309,12 @@ RegEnumValueW(
 	LPDWORD	lpcbData
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegFlushKey
  */
 LONG
@@ -327,29 +323,29 @@ RegFlushKey(
 	HKEY	hKey
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegGetKeySecurity
  */
 LONG
 STDCALL
-RegGetKeySecurity(
+RegGetKeySecurity (
 	HKEY			hKey,
 	SECURITY_INFORMATION	SecurityInformation,
 	PSECURITY_DESCRIPTOR	pSecurityDescriptor,
-	LPDWORD			lpcbSecurityDescriptor               
+	LPDWORD			lpcbSecurityDescriptor
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegLoadKeyA
  */
 LONG
@@ -359,12 +355,12 @@ RegLoadKey(
 	LPCSTR	lpFile
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegLoadKeyW
  */
 LONG
@@ -374,12 +370,12 @@ RegLoadKeyW(
 	LPCWSTR	lpFile
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegNotifyChangeKeyValue
  */
 LONG
@@ -392,13 +388,13 @@ RegNotifyChangeKeyValue(
 	BOOL	fAsynchronous
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegOpenKeyA
  */
 LONG
@@ -409,15 +405,16 @@ RegOpenKeyA(
 	PHKEY	phkResult
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegOpenKeyW
  *
- *	19991101 Ariadne
+ *	19981101 Ariadne
+ *	19990525 EA
  */
 LONG
 STDCALL
@@ -427,30 +424,35 @@ RegOpenKeyW (
 	PHKEY	phkResult
 	)
 {
-	NTSTATUS errCode;
-	UNICODE_STRING SubKeyString;
+	NTSTATUS		errCode;
+	UNICODE_STRING		SubKeyString;
+	OBJECT_ATTRIBUTES	ObjectAttributes;
 
-	SubKeyString.Buffer = lpSubKey;
+
+	SubKeyString.Buffer = (LPWSTR) lpSubKey;
 	SubKeyString.Length = wcslen(lpSubKey);
 	SubKeyString.MaximumLength = SubKeyString.Length;
 
 	ObjectAttributes.RootDirectory =  hKey;
-	ObjectAttributes.ObjectName = &SubKeyString;
+	ObjectAttributes.ObjectName = & SubKeyString;
 	ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE; 
 	errCode = NtOpenKey(
-		phkResult,
-		GENERIC_ALL,
-		&ObjectAttributes
-		);
-	if ( !NT_SUCCESS(errCode) ) {
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return FALSE;
+			phkResult,
+			GENERIC_ALL,
+			& ObjectAttributes
+			);
+	if ( !NT_SUCCESS(errCode) )
+	{
+		LONG LastError = RtlNtStatusToDosError(errCode);
+		
+		SetLastError(LastError);
+		return LastError;
 	}
-	return TRUE;	
+	return ERROR_SUCCESS;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegOpenKeyExA
  */
 LONG
@@ -462,12 +464,12 @@ RegOpenKeyExA(
 	PHKEY	phkResult
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegOpenKeyExW
  */
 LONG
@@ -479,12 +481,12 @@ RegOpenKeyExW(
 	PHKEY	phkResult
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegQueryInfoKeyA
  */
 LONG
@@ -503,12 +505,12 @@ RegQueryInfoKeyA(
 	PFILETIME	lpftLastWriteTime
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegQueryInfoKeyW
  */
 LONG
@@ -527,12 +529,12 @@ RegQueryInfoKeyW(
 	PFILETIME	lpftLastWriteTime
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegQueryMultipleValuesA
  */
 LONG
@@ -545,12 +547,12 @@ RegQueryMultipleValuesA(
 	LPDWORD	ldwTotsize
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegQueryMultipleValuesW
  */
 LONG
@@ -563,12 +565,12 @@ RegQueryMultipleValuesW(
 	LPDWORD	ldwTotsize
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegQueryValueA
  */
 LONG
@@ -580,12 +582,12 @@ RegQueryValueA(
 	PLONG	lpcbValue
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegQueryValueW
  */
 LONG
@@ -597,12 +599,12 @@ RegQueryValueW(
 	PLONG	lpcbValue
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegQueryValueExA
  */
 LONG
@@ -616,12 +618,12 @@ RegQueryValueExA(
 	LPDWORD	lpcbData
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegQueryValueExW
  */
 LONG
@@ -635,12 +637,12 @@ RegQueryValueExW(
 	LPDWORD	lpcbData
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegReplaceKeyA
  */
 LONG
@@ -652,12 +654,12 @@ RegReplaceKeyA(
 	LPCSTR	lpOldFile
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegReplaceKeyW
  */
 LONG
@@ -669,12 +671,12 @@ RegReplaceKeyW(
 	LPCWSTR	lpOldFile
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegRestoreKeyA
  */
 LONG
@@ -685,12 +687,12 @@ RegRestoreKeyA(
 	DWORD	dwFlags
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegRestoreKeyW
  */
 LONG
@@ -701,12 +703,12 @@ RegRestoreKeyW(
 	DWORD	dwFlags
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegSaveKeyA
  */
 LONG
@@ -717,12 +719,12 @@ RegSaveKeyA(
 	LPSECURITY_ATTRIBUTES	lpSecurityAttributes 
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegSaveKeyW
  */
 LONG
@@ -733,12 +735,12 @@ RegSaveKeyW(
 	LPSECURITY_ATTRIBUTES	lpSecurityAttributes 
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegSetKeySecurity
  */
 LONG
@@ -749,12 +751,12 @@ RegSetKeySecurity(
 	PSECURITY_DESCRIPTOR	pSecurityDescriptor
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegSetValueA
  */
 LONG
@@ -767,12 +769,12 @@ RegSetValueA(
 	DWORD	cbData
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegSetValueW
  */
 LONG
@@ -785,12 +787,12 @@ RegSetValueW(
 	DWORD	cbData
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegSetValueExA
  */
 LONG
@@ -804,12 +806,12 @@ RegSetValueExA(
 	DWORD		cbData
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegSetValueExW
  */
 LONG
@@ -823,12 +825,12 @@ RegSetValueExW(
 	DWORD		cbData
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegUnLoadKeyA
  */
 LONG
@@ -838,12 +840,12 @@ RegUnLoadKeyA(
 	LPCSTR	lpSubKey
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/*---------------------------------------------------------------------
+/************************************************************************
  *	RegUnLoadKeyW
  */
 LONG
@@ -853,8 +855,8 @@ RegUnLoadKeyW(
 	LPCWSTR	lpSubKey
 	)
 {
-/* TO DO */
-	return ERROR_INVALID_FUNCTION; /* FIXME */
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
