@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.35 2004/10/10 15:51:52 blight Exp $
+/* $Id: pnpmgr.c,v 1.36 2004/10/11 18:36:20 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -80,22 +80,22 @@ IoGetDeviceProperty(
 
   DPRINT("IoGetDeviceProperty called\n");
 
-  if (DeviceNode == NULL ||
-      DeviceNode->BusInformation == NULL ||
-      DeviceNode->CapabilityFlags == NULL)
-  {
+  if (DeviceNode == NULL)
     return STATUS_INVALID_DEVICE_REQUEST;
-  }
 
   switch (DeviceProperty)
   {
     case DevicePropertyBusNumber:
+      if (DeviceNode->BusInformation == NULL)
+         return STATUS_INVALID_DEVICE_REQUEST;
       Length = sizeof(ULONG);
       Data = &DeviceNode->BusInformation->BusNumber;
       break;
 
     /* Complete, untested */
     case DevicePropertyBusTypeGuid:
+      if (DeviceNode->BusInformation == NULL)
+         return STATUS_INVALID_DEVICE_REQUEST;
       *ResultLength = 39 * sizeof(WCHAR);
       if (BufferLength < (39 * sizeof(WCHAR)))
         return STATUS_BUFFER_TOO_SMALL;
@@ -115,16 +115,22 @@ IoGetDeviceProperty(
       return STATUS_SUCCESS;
 
     case DevicePropertyLegacyBusType:
+      if (DeviceNode->BusInformation == NULL)
+         return STATUS_INVALID_DEVICE_REQUEST;
       Length = sizeof(INTERFACE_TYPE);
       Data = &DeviceNode->BusInformation->LegacyBusType;
       break;
 
     case DevicePropertyAddress:
+      if (DeviceNode->CapabilityFlags == NULL)
+         return STATUS_INVALID_DEVICE_REQUEST;
       Length = sizeof(ULONG);
       Data = &DeviceNode->CapabilityFlags->Address;
       break;
 
     case DevicePropertyUINumber:
+      if (DeviceNode->CapabilityFlags == NULL)
+         return STATUS_INVALID_DEVICE_REQUEST;
       Length = sizeof(ULONG);
       Data = &DeviceNode->CapabilityFlags->UINumber;
       break;
@@ -166,7 +172,7 @@ IoGetDeviceProperty(
 
         wcscpy(KeyNameBuffer, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
         wcscat(KeyNameBuffer, DeviceNode->InstancePath.Buffer);
-
+        
         RtlInitUnicodeString(&KeyName, KeyNameBuffer);
         InitializeObjectAttributes(&ObjectAttributes, &KeyName,
                                    OBJ_CASE_INSENSITIVE, NULL, NULL);
