@@ -4,3 +4,7 @@ wmc
 *.exe
 *.o
 *.sym
+*.dsp
+*.dsw
+*.ncb
+*.opt
