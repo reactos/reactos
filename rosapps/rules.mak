@@ -1,14 +1,18 @@
 #
-# Select your host
-#
-#HOST = mingw32-linux
-HOST = mingw32-windows
-
-
-#
 # Important
 #
 .EXPORT_ALL_VARIABLES:
+
+#
+# Select your host
+#HOST = mingw32-windows
+#HOST = mingw32-linux
+#
+# Windows is default host environment
+ifeq ($(HOST),)
+HOST = mingw32-windows
+endif
+
 
 ifeq ($(HOST),mingw32-linux)
 TOPDIR := $(shell if [ "$$PWD" != "" ]; then echo $$PWD; else pwd; fi)
@@ -84,6 +88,9 @@ CPP = $(PREFIX)cpp
 AR = $(PREFIX)ar
 RC = $(PREFIX)windres
 RCINC = --include-dir ../reactos/include --include-dir ../../reactos/include --include-dir ../../../reactos/include
+
+TOOLS_PATH = $(PATH_TO_TOP)/../reactos/tools
+RSYM = $(TOOLS_PATH)/rsym
 
 %.o: %.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
