@@ -40,8 +40,9 @@ REGEDIT4
 [\Registry\Machine\SYSTEM\CurrentControlSet\Control\ServiceGroupOrder]
 "List"=multi:"SCSI Port", "SCSI Miniport", "Primary Disk", "SCSI Class Helper", \
              "SCSI Class", "Boot File System", "Base", "Pointer Port", \
-             "Keyboard Port", "Pointer Class", "Keyboard Class", "Video", \
-             "File System", "NDIS", "PNP_TDI", "TDI", "Extended Base"
+             "Keyboard Port", "Pointer Class", "Keyboard Class", "Video Init", \
+             "Video", "File System", "Event log", "NDIS", "PNP_TDI", "TDI", \
+             "Extended Base"
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Control\Session Manager]
 "BootExecute"=multi:"autocheck autochk *"
@@ -87,18 +88,25 @@ REGEDIT4
 "Start"=dword:00000001
 "Type"=dword:00000001
 
+[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Blue]
+"ErrorControl"=dword:00000000
+"Group"="Video Init"
+"ImagePath"="system32\drivers\blue.sys"
+"Start"=dword:00000001
+"Type"=dword:00000001
+
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Cdfs]
 "ErrorControl"=dword:00000000
 "Group"="File System"
 "ImagePath"="system32\drivers\cdfs.sys"
-"Start"=dword:00000004
+"Start"=dword:00000003
 "Type"=dword:00000002
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Cdrom]
 "ErrorControl"=dword:00000000
 "Group"="SCSI Class"
 "ImagePath"="system32\drivers\cdrom.sys"
-"Start"=dword:00000000
+"Start"=dword:00000001
 "Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Class2]
@@ -117,8 +125,8 @@ REGEDIT4
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\EventLog]
 "ErrorControl"=dword:00000000
-"Group"="Error log"
-"ImagePath"="%SystemRoot%\system32\services.exe"
+"Group"="Event log"
+"ImagePath"="%SystemRoot%\system32\eventlog.exe"
 "Start"=dword:00000004
 "Type"=dword:00000020
 
@@ -126,14 +134,14 @@ REGEDIT4
 "ErrorControl"=dword:00000000
 "Group"="Primary Disk"
 "ImagePath"="system32\drivers\floppy.sys"
-"Start"=dword:00000001
+"Start"=dword:00000004
 "Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Fs_Rec]
 "ErrorControl"=dword:00000000
 "Group"="Boot file system"
 "ImagePath"="system32\drivers\fs_rec.sys"
-"Start"=dword:00000000
+"Start"=dword:00000001
 "Type"=dword:00000008
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Ide]
@@ -141,6 +149,13 @@ REGEDIT4
 "Group"="Primary Disk"
 "ImagePath"="system32\drivers\ide.sys"
 "Start"=dword:00000004
+"Type"=dword:00000001
+
+[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Keyboard]
+"ErrorControl"=dword:00000000
+"Group"="Keyboard Port"
+"ImagePath"="system32\drivers\keyboard.sys"
+"Start"=dword:00000001
 "Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Msfs]
@@ -169,6 +184,13 @@ REGEDIT4
 "Group"="File System"
 "ImagePath"="system32\drivers\npfs.sys"
 "Start"=dword:00000001
+"Type"=dword:00000002
+
+[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Ntfs]
+"ErrorControl"=dword:00000000
+"Group"="File System"
+"ImagePath"="system32\drivers\ntfs.sys"
+"Start"=dword:00000003
 "Type"=dword:00000002
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Null]
