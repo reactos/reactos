@@ -1496,9 +1496,9 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
          */
         if(Process->Peb != NULL)
         {
-          PRTL_USER_PROCESS_PARAMETERS ProcParams;
+          PRTL_USER_PROCESS_PARAMETERS ProcParams = NULL;
           UNICODE_STRING LocalDest;
-          ULONG ImagePathLen;
+          ULONG ImagePathLen = 0;
           PUNICODE_STRING DstPath = (PUNICODE_STRING)ProcessInformation;
 
           /* we need to attach to the process to make sure we're in the right context! */
