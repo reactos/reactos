@@ -1,11 +1,12 @@
 
-/* $Id: rw.c,v 1.60 2003/08/07 11:47:32 silverblade Exp $
+/* $Id: rw.c,v 1.61 2003/10/11 17:51:56 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/vfat/rw.c
+ * FILE:             drivers/fs/vfat/rw.c
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
+ *                   Hartmut Birr
  *
  */
 
@@ -303,7 +304,7 @@ NTSTATUS VfatWriteFileData(PVFAT_IRP_CONTEXT IrpContext,
    ULONG BytesDone;
    ULONG StartCluster;
    ULONG ClusterCount;
-   NTSTATUS Status;
+   NTSTATUS Status = STATUS_SUCCESS;
    BOOLEAN First = TRUE;
    ULONG BytesPerSector;
    ULONG BytesPerCluster;
@@ -323,9 +324,9 @@ NTSTATUS VfatWriteFileData(PVFAT_IRP_CONTEXT IrpContext,
    BytesPerSector = DeviceExt->FatInfo.BytesPerSector;
 
    DPRINT("VfatWriteFileData(DeviceExt %x, FileObject %x, Buffer %x, "
-	  "Length %d, WriteOffset 0x%I64x), '%S'\n", DeviceExt,
+	  "Length %d, WriteOffset 0x%I64x), '%wZ'\n", DeviceExt,
 	  IrpContext->FileObject, Buffer, Length, WriteOffset,
-	  Fcb->PathName);
+	  &Fcb->PathNameU);
 
    assert(WriteOffset.QuadPart + Length <= Fcb->RFCB.AllocationSize.QuadPart);
    assert(WriteOffset.u.LowPart % BytesPerSector == 0);
@@ -482,7 +483,7 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
    Fcb = IrpContext->FileObject->FsContext;
    assert(Fcb);
 
-   DPRINT("<%S>\n", Fcb->PathName);
+   DPRINT("<%wZ>\n", &Fcb->PathNameU);
 
    if (Fcb->Flags & FCB_IS_PAGE_FILE)
    {
@@ -509,7 +510,7 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
    }
 
 
-   DPRINT("'%S', Offset: %d, Length %d\n", Fcb->PathName, ByteOffset.u.LowPart, Length);
+   DPRINT("'%wZ', Offset: %d, Length %d\n", &Fcb->PathNameU, ByteOffset.u.LowPart, Length);
 
    if (ByteOffset.u.HighPart && !(Fcb->Flags & FCB_IS_VOLUME))
    {
@@ -720,7 +721,7 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
    Fcb = IrpContext->FileObject->FsContext;
    assert(Fcb);
 
-   DPRINT("<%S>\n", Fcb->PathName);
+   DPRINT("<%wZ>\n", &Fcb->PathNameU);
 
    if (Fcb->Flags & FCB_IS_PAGE_FILE)
    {
@@ -939,8 +940,8 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
          FsdFileTimeToDosDateTime ((TIME*)&LocalTime, &Fcb->entry.UpdateDate,
 		    	           &Fcb->entry.UpdateTime);
          Fcb->entry.AccessDate = Fcb->entry.UpdateDate;
-         // update dates/times and length
-         VfatUpdateEntry (IrpContext->DeviceExt, IrpContext->FileObject);
+         /* set date and times to dirty */
+	 Fcb->Flags |= FCB_IS_DIRTY;
       }
    }
 

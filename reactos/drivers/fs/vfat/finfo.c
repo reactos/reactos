@@ -1,10 +1,11 @@
-/* $Id: finfo.c,v 1.33 2003/09/20 20:31:57 weiden Exp $
+/* $Id: finfo.c,v 1.34 2003/10/11 17:51:56 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/vfat/finfo.c
+ * FILE:             drivers/fs/vfat/finfo.c
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
+ *                   Hartmut Birr
  *
  */
 
@@ -119,7 +120,7 @@ VfatSetBasicInformation(PFILE_OBJECT FileObject,
                         FILE_ATTRIBUTE_READONLY)));
   DPRINT("Setting attributes 0x%02x\n", FCB->entry.Attrib);
 
-  VfatUpdateEntry(DeviceExt, FileObject);
+  VfatUpdateEntry(FCB);
 
   return(STATUS_SUCCESS);
 }
@@ -170,10 +171,6 @@ VfatSetDispositionInformation(PFILE_OBJECT FileObject,
 			      PDEVICE_OBJECT DeviceObject,
 			      PFILE_DISPOSITION_INFORMATION DispositionInfo)
 {
-  KIRQL oldIrql;
-  VFATFCB tmpFcb;
-  WCHAR star[2];
-  ULONG Index;
   NTSTATUS Status = STATUS_SUCCESS;
   int count;
 
@@ -185,60 +182,53 @@ VfatSetDispositionInformation(PFILE_OBJECT FileObject,
   assert (DeviceExt->FatInfo.BytesPerCluster != 0);
   assert (FCB != NULL);
 
-  if (!wcscmp(FCB->PathName, L"\\") || !wcscmp(FCB->ObjectName, L"..")
-    || !wcscmp(FCB->ObjectName, L"."))
-  {
-    // we cannot delete a '.', '..' or the root directory
-    return STATUS_ACCESS_DENIED;
-  }
+  if (vfatFCBIsRoot(FCB) || 
+     (FCB->LongNameU.Length == sizeof(WCHAR) && FCB->LongNameU.Buffer[0] == L'.') ||
+     (FCB->LongNameU.Length == 2 * sizeof(WCHAR) && FCB->LongNameU.Buffer[0] == L'.' && FCB->LongNameU.Buffer[1] == L'.'))
+    {
+      // we cannot delete a '.', '..' or the root directory
+      return STATUS_ACCESS_DENIED;
+    }
   if (DispositionInfo->DoDeleteFile)
-  {
-    if (MmFlushImageSection (FileObject->SectionObjectPointer, MmFlushForDelete))
     {
-      KeAcquireSpinLock (&DeviceExt->FcbListLock, &oldIrql);
-      count = FCB->RefCount;
-      if (FCB->RefCount > 1)
-      {
-	DPRINT1("%d %x\n", FCB->RefCount, CcGetFileObjectFromSectionPtrs(FileObject->SectionObjectPointer));
-        Status = STATUS_ACCESS_DENIED;
-      }
+      if (MmFlushImageSection (FileObject->SectionObjectPointer, MmFlushForDelete))
+        {
+          count = FCB->RefCount;
+          if (FCB->RefCount > 1)
+            {
+	      DPRINT1("%d %x\n", FCB->RefCount, CcGetFileObjectFromSectionPtrs(FileObject->SectionObjectPointer));
+              Status = STATUS_ACCESS_DENIED;
+            }
+          else
+            {
+              FCB->Flags |= FCB_DELETE_PENDING;
+              FileObject->DeletePending = TRUE;
+            }
+        }
       else
-      {
-        FCB->Flags |= FCB_DELETE_PENDING;
-        FileObject->DeletePending = TRUE;
-      }
-      KeReleaseSpinLock(&DeviceExt->FcbListLock, oldIrql);
-    }
-    else
-    {
-      DPRINT1("MmFlushImageSection returned FALSE\n");
-      Status = STATUS_ACCESS_DENIED;
-    }
-    DPRINT("RefCount:%d\n", count);
-    if (NT_SUCCESS(Status) && vfatFCBIsDirectory(FCB))
-    {
-      memset (&tmpFcb, 0, sizeof(VFATFCB));
-      tmpFcb.ObjectName = tmpFcb.PathName;
-      star[0] = L'*';
-      star[1] = 0;
-      // skip '.' and '..', start by 2
-      Index = 2;
-      Status = FindFile (DeviceExt, &tmpFcb, FCB, star, &Index, NULL);
-      if (NT_SUCCESS(Status))
-      {
-        DPRINT1("found: \'%S\'\n", tmpFcb.PathName);
-        Status = STATUS_DIRECTORY_NOT_EMPTY;
-        FCB->Flags &= ~FCB_DELETE_PENDING;
-        FileObject->DeletePending = FALSE;
-      }
-      else
-      {
-        Status = STATUS_SUCCESS;
-      }
-    }
-  }
-  else
-    FileObject->DeletePending = FALSE;
+        {
+          DPRINT1("MmFlushImageSection returned FALSE\n");
+          Status = STATUS_ACCESS_DENIED;
+        }
+      DPRINT("RefCount:%d\n", count);
+      if (NT_SUCCESS(Status) && vfatFCBIsDirectory(FCB))
+        {
+          if (!VfatIsDirectoryEmpty(FCB))
+            {
+              Status = STATUS_DIRECTORY_NOT_EMPTY;
+              FCB->Flags &= ~FCB_DELETE_PENDING;
+              FileObject->DeletePending = FALSE;
+            }
+          else
+            {
+              Status = STATUS_SUCCESS;
+            }
+        }
+     }
+   else
+     {
+       FileObject->DeletePending = FALSE;
+     }
   return Status;
 }
 
@@ -252,19 +242,18 @@ VfatGetNameInformation(PFILE_OBJECT FileObject,
  * FUNCTION: Retrieve the file name information
  */
 {
-  ULONG NameLength;
 
   assert (NameInfo != NULL);
   assert (FCB != NULL);
 
-  NameLength = wcslen(FCB->PathName) * sizeof(WCHAR);
-  if (*BufferLength < sizeof(FILE_NAME_INFORMATION) + NameLength + sizeof(WCHAR))
+  if (*BufferLength < sizeof(FILE_NAME_INFORMATION) + FCB->PathNameU.Length + sizeof(WCHAR))
     return STATUS_BUFFER_OVERFLOW;
 
-  NameInfo->FileNameLength = NameLength;
-  memcpy(NameInfo->FileName, FCB->PathName, NameLength + sizeof(WCHAR));
+  NameInfo->FileNameLength = FCB->PathNameU.Length;
+  memcpy(NameInfo->FileName, FCB->PathNameU.Buffer, FCB->PathNameU.Length);
+  NameInfo->FileName[FCB->PathNameU.Length / sizeof(WCHAR)] = 0;
 
-  *BufferLength -= (sizeof(FILE_NAME_INFORMATION) + NameLength + sizeof(WCHAR));
+  *BufferLength -= (sizeof(FILE_NAME_INFORMATION) + FCB->PathNameU.Length + sizeof(WCHAR));
 
   return STATUS_SUCCESS;
 }
@@ -328,13 +317,11 @@ VfatGetAllInformation(PFILE_OBJECT FileObject,
  * FUNCTION: Retrieve the all file information
  */
 {
-  ULONG NameLength;
 
   assert (Info);
   assert (Fcb);
 
-  NameLength = wcslen(Fcb->PathName) * sizeof(WCHAR);
-  if (*BufferLength < sizeof(FILE_ALL_INFORMATION) + NameLength + sizeof(WCHAR))
+  if (*BufferLength < sizeof(FILE_ALL_INFORMATION) + Fcb->PathNameU.Length + sizeof(WCHAR))
     return(STATUS_BUFFER_OVERFLOW);
 
   /* Basic Information */
@@ -377,10 +364,11 @@ VfatGetAllInformation(PFILE_OBJECT FileObject,
   /* The IO-Manager adds this information */
 
   /* Name Information */
-  Info->NameInformation.FileNameLength = NameLength;
-  RtlCopyMemory(Info->NameInformation.FileName, Fcb->PathName, NameLength + sizeof(WCHAR));
+  Info->NameInformation.FileNameLength = Fcb->PathNameU.Length;
+  RtlCopyMemory(Info->NameInformation.FileName, Fcb->PathNameU.Buffer, Fcb->PathNameU.Length);
+  Info->NameInformation.FileName[Fcb->PathNameU.Length / sizeof(WCHAR)] = 0;
 
-  *BufferLength -= (sizeof(FILE_ALL_INFORMATION) + NameLength + sizeof(WCHAR));
+  *BufferLength -= (sizeof(FILE_ALL_INFORMATION) + Fcb->PathNameU.Length + sizeof(WCHAR));
 
   return STATUS_SUCCESS;
 }
@@ -421,6 +409,7 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
   ULONG ClusterSize = DeviceExt->FatInfo.BytesPerCluster;
   ULONG NewSize = AllocationSize->u.LowPart;
   ULONG NCluster;
+  BOOL AllocSizeChanged = FALSE;
 
   DPRINT("VfatSetAllocationSizeInformation()\n");
 
@@ -438,6 +427,7 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
   
   if (NewSize > Fcb->RFCB.AllocationSize.u.LowPart)
   {
+    AllocSizeChanged = TRUE;
     if (FirstCluster == 0)
     {
       Status = NextCluster (DeviceExt, FirstCluster, &FirstCluster, TRUE);
@@ -499,6 +489,7 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
   }
   else if (NewSize + ClusterSize <= Fcb->RFCB.AllocationSize.u.LowPart)
   {
+    AllocSizeChanged = TRUE;
     UpdateFileSize(FileObject, Fcb, NewSize, ClusterSize);
     if (NewSize > 0)
     {
@@ -531,7 +522,11 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
      UpdateFileSize(FileObject, Fcb, NewSize, ClusterSize);
   }
   /* Update the on-disk directory entry */
-  VfatUpdateEntry(DeviceExt, FileObject);
+  Fcb->Flags |= FCB_IS_DIRTY;
+  if (AllocSizeChanged)
+    {
+      VfatUpdateEntry(Fcb);
+    }
   return STATUS_SUCCESS;
 }
 
@@ -659,7 +654,7 @@ NTSTATUS VfatSetInformation(PVFAT_IRP_CONTEXT IrpContext)
   
   DPRINT("FileInformationClass %d\n", FileInformationClass);
   DPRINT("SystemBuffer %x\n", SystemBuffer);
-  
+
   if (!(FCB->Flags & FCB_IS_PAGE_FILE))
     {
       if (!ExAcquireResourceExclusiveLite(&FCB->MainResource,

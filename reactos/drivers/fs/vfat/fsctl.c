@@ -16,11 +16,11 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.23 2003/08/27 21:28:07 dwelch Exp $
+/* $Id: fsctl.c,v 1.24 2003/10/11 17:51:56 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/vfat/fsctl.c
+ * FILE:             drivers/fs/vfat/fsctl.c
  * PURPOSE:          VFAT Filesystem
  */
 
@@ -214,6 +214,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    PVFATFCB VolumeFcb = NULL;
    PVFATCCB Ccb = NULL;
    PDEVICE_OBJECT DeviceToMount;
+   UNICODE_STRING NameU;
 
    DPRINT("VfatMount(IrpContext %x)\n", IrpContext);
 
@@ -289,7 +290,8 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
   DPRINT("FsDeviceObject %lx\n", DeviceObject);
 
    DeviceExt->FATFileObject = IoCreateStreamFileObject(NULL, DeviceExt->StorageDevice);
-   Fcb = vfatNewFCB(NULL);
+   RtlInitUnicodeStringFromLiteral(&NameU, L"\\$$Fat$$");
+   Fcb = vfatNewFCB(&NameU);
    if (Fcb == NULL)
    {
       Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -301,9 +303,8 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
       Status =  STATUS_INSUFFICIENT_RESOURCES;
       goto ByeBye;
    }
+
    memset(Ccb, 0, sizeof (VFATCCB));
-   wcscpy(Fcb->PathName, L"$$Fat$$");
-   Fcb->ObjectName = Fcb->PathName;
    DeviceExt->FATFileObject->Flags = DeviceExt->FATFileObject->Flags | FO_FCB_IS_VALID | FO_DIRECT_CACHE_PAGING_READ;
    DeviceExt->FATFileObject->FsContext = Fcb;
    DeviceExt->FATFileObject->FsContext2 = Ccb;
@@ -335,17 +336,15 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    ExInitializeResourceLite(&DeviceExt->DirResource);
    ExInitializeResourceLite(&DeviceExt->FatResource);
 
-   KeInitializeSpinLock(&DeviceExt->FcbListLock);
    InitializeListHead(&DeviceExt->FcbListHead);
+   RtlInitUnicodeStringFromLiteral(&NameU, L"\\$$Volume$$");
 
-   VolumeFcb = vfatNewFCB(NULL);
+   VolumeFcb = vfatNewFCB(&NameU);
    if (VolumeFcb == NULL)
    {
       Status = STATUS_INSUFFICIENT_RESOURCES;
       goto ByeBye;
    }
-   wcscpy(VolumeFcb->PathName, L"$$Volume$$");
-   VolumeFcb->ObjectName = VolumeFcb->PathName;
    VolumeFcb->Flags = FCB_IS_VOLUME;
    VolumeFcb->RFCB.FileSize.QuadPart = DeviceExt->FatInfo.Sectors * DeviceExt->FatInfo.BytesPerSector;
    VolumeFcb->RFCB.ValidDataLength = VolumeFcb->RFCB.FileSize;

@@ -1,4 +1,4 @@
-/* $Id: flush.c,v 1.4 2003/07/24 20:52:58 chorns Exp $
+/* $Id: flush.c,v 1.5 2003/10/11 17:51:56 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -20,8 +20,9 @@
 NTSTATUS VfatFlushFile(PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb)
 {
    IO_STATUS_BLOCK IoStatus;
+   NTSTATUS Status;
 
-   DPRINT("VfatFlushFile(DeviceExt %x, Fcb %x) for '%S'\n", DeviceExt, Fcb, Fcb->PathName);
+   DPRINT("VfatFlushFile(DeviceExt %x, Fcb %x) for '%wZ'\n", DeviceExt, Fcb, &Fcb->PathNameU);
 
    CcFlushCache(&Fcb->SectionObjectPointers, NULL, 0, &IoStatus);
    if (IoStatus.Status == STATUS_INVALID_PARAMETER)
@@ -29,6 +30,14 @@ NTSTATUS VfatFlushFile(PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb)
       /* FIXME: Caching was possible not initialized */
       IoStatus.Status = STATUS_SUCCESS;
    }
+   if (Fcb->Flags & FCB_IS_DIRTY)
+     {
+       Status = VfatUpdateEntry(Fcb);
+       if (!NT_SUCCESS(Status))
+         {
+	   IoStatus.Status = Status;
+	 }
+     }
    return IoStatus.Status;
 }
 
@@ -42,20 +51,41 @@ NTSTATUS VfatFlushVolume(PDEVICE_EXTENSION DeviceExt, PVFATFCB VolumeFcb)
 
    ListEntry = DeviceExt->FcbListHead.Flink;
    while (ListEntry != &DeviceExt->FcbListHead)
-   {
-      Fcb = CONTAINING_RECORD(ListEntry, VFATFCB, FcbListEntry);
-      ListEntry = ListEntry->Flink;
-      ExAcquireResourceExclusiveLite(&Fcb->MainResource, TRUE);
-      Status = VfatFlushFile(DeviceExt, Fcb);
-      ExReleaseResourceLite (&Fcb->MainResource);
-      if (!NT_SUCCESS(Status))
-      {
-         DPRINT1("VfatFlushFile failed, status = %x\n", Status);
-	 ReturnStatus = Status;
-      }
-      /* FIXME: Stop flushing if this is a removable media and the media was removed */
-   }
-
+     {
+       Fcb = CONTAINING_RECORD(ListEntry, VFATFCB, FcbListEntry);
+       ListEntry = ListEntry->Flink;
+       if (!vfatFCBIsDirectory(Fcb))
+         {
+           ExAcquireResourceExclusiveLite(&Fcb->MainResource, TRUE);
+           Status = VfatFlushFile(DeviceExt, Fcb);
+           ExReleaseResourceLite (&Fcb->MainResource);
+           if (!NT_SUCCESS(Status))
+             {
+               DPRINT1("VfatFlushFile failed, status = %x\n", Status);
+	       ReturnStatus = Status;
+             }
+	 }
+       /* FIXME: Stop flushing if this is a removable media and the media was removed */
+     }
+   ListEntry = DeviceExt->FcbListHead.Flink;
+   while (ListEntry != &DeviceExt->FcbListHead)
+     {
+       Fcb = CONTAINING_RECORD(ListEntry, VFATFCB, FcbListEntry);
+       ListEntry = ListEntry->Flink;
+       if (vfatFCBIsDirectory(Fcb))
+         {
+           ExAcquireResourceExclusiveLite(&Fcb->MainResource, TRUE);
+           Status = VfatFlushFile(DeviceExt, Fcb);
+           ExReleaseResourceLite (&Fcb->MainResource);
+           if (!NT_SUCCESS(Status))
+             {
+               DPRINT1("VfatFlushFile failed, status = %x\n", Status);
+	       ReturnStatus = Status;
+             }
+	 }
+       /* FIXME: Stop flushing if this is a removable media and the media was removed */
+     }
+  
    Fcb = (PVFATFCB) DeviceExt->FATFileObject->FsContext;
   
    ExAcquireResourceExclusiveLite(&DeviceExt->FatResource, TRUE);

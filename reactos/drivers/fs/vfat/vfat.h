@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.59 2003/07/24 19:00:42 chorns Exp $ */
+/* $Id: vfat.h,v 1.60 2003/10/11 17:51:56 hbirr Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -67,6 +67,11 @@ typedef struct _BootSector BootSector;
 
 #define VFAT_CASE_LOWER_BASE	8			// base is lower case
 #define VFAT_CASE_LOWER_EXT	16			// extension is lower case
+
+#define ENTRY_DELETED(DirEntry)	((DirEntry)->Filename[0] == 0xe5)
+#define ENTRY_END(DirEntry)	((DirEntry)->Filename[0] == 0)
+#define ENTRY_LONG(DirEntry)	(((DirEntry)->Attrib & 0x3f) == 0x0f)
+#define ENTRY_VOLUME(DirEntry)	(((DirEntry)->Attrib & 0x1f) == 0x08)
 
 struct _FATDirEntry
 {
@@ -145,6 +150,7 @@ typedef struct
 
   KSPIN_LOCK FcbListLock;
   LIST_ENTRY FcbListHead;
+  struct _HASHENTRY* FcbHashTable[FCB_HASH_TABLE_SIZE];
 
   PDEVICE_OBJECT StorageDevice;
   PFILE_OBJECT FATFileObject;
@@ -154,7 +160,6 @@ typedef struct
   BOOLEAN AvailableClustersValid;
   ULONG Flags;  
   struct _VFATFCB * VolumeFcb;
-  struct _HASHENTRY* FcbHashTable[FCB_HASH_TABLE_SIZE];
 
   LIST_ENTRY VolumeListEntry;
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION, VCB, *PVCB;
@@ -178,6 +183,7 @@ extern PVFAT_GLOBAL_DATA VfatGlobalData;
 #define FCB_IS_FAT              0x0004
 #define FCB_IS_PAGE_FILE        0x0008
 #define FCB_IS_VOLUME           0x0010
+#define FCB_IS_DIRTY		0x0020
 
 typedef struct _VFATFCB
 {
@@ -188,17 +194,26 @@ typedef struct _VFATFCB
   ERESOURCE PagingIoResource;
   /* end FCB header required by ROS/NT */
 
-  /* */
+  /* directory entry for this file or directory */
   FATDirEntry entry;
 
-  /* point on filename (250 chars max) in PathName */
-  WCHAR *ObjectName;
-
-  /* path+filename 260 max */
-  WCHAR PathName[MAX_PATH];
+  /* long file name, points into PathNameBuffer */
+  UNICODE_STRING LongNameU;
 
   /* short file name */
-  WCHAR ShortName[14];
+  UNICODE_STRING ShortNameU;
+
+  /* directory name, points into PathNameBuffer */
+  UNICODE_STRING DirNameU;
+
+  /* path + long file name 260 max*/
+  UNICODE_STRING PathNameU;
+
+  /* buffer for PathNameU */
+  WCHAR PathNameBuffer[MAX_PATH];
+
+  /* buffer for ShortNameU */
+  WCHAR ShortNameBuffer[13];
 
   /* */
   LONG RefCount;
@@ -241,7 +256,7 @@ typedef struct _VFATCCB
   /* for DirectoryControl */
   ULONG Entry;
   /* for DirectoryControl */
-  PWCHAR DirectorySearchPattern;
+  UNICODE_STRING SearchPattern;
   ULONG LastCluster;
   ULONG LastOffset;
 
@@ -287,6 +302,16 @@ typedef struct
    UCHAR MinorFunction;
    PFILE_OBJECT FileObject;
 } VFAT_IRP_CONTEXT, *PVFAT_IRP_CONTEXT;
+
+typedef struct _VFAT_DIRENTRY_CONTEXT
+{
+  ULONG StartIndex;
+  ULONG DirIndex;
+  FAT_DIR_ENTRY FatDirEntry;
+  UNICODE_STRING LongNameU;
+  UNICODE_STRING ShortNameU;
+} VFAT_DIRENTRY_CONTEXT, *PVFAT_DIRENTRY_CONTEXT;
+
 
 /*  ------------------------------------------------------  shutdown.c  */
 
@@ -336,26 +361,19 @@ NTSTATUS VfatCreate (PVFAT_IRP_CONTEXT IrpContext);
 
 NTSTATUS VfatOpenFile (PDEVICE_EXTENSION DeviceExt,
                        PFILE_OBJECT FileObject,
-                       PWSTR FileName);
+                       PUNICODE_STRING FileNameU);
 
 NTSTATUS FindFile (PDEVICE_EXTENSION DeviceExt,
-                   PVFATFCB Fcb,
                    PVFATFCB Parent,
-                   PWSTR FileToFind,
-                   PULONG pDirIndex,
-                   PULONG pDirIndex2);
+                   PUNICODE_STRING FileToFindU,
+		   PVFAT_DIRENTRY_CONTEXT DirContext,
+		   BOOLEAN First);
 
 VOID vfat8Dot3ToString (PFAT_DIR_ENTRY pEntry,
-                        PWSTR pName);
+                        PUNICODE_STRING NameU);
 
 NTSTATUS ReadVolumeLabel(PDEVICE_EXTENSION DeviceExt,
                          PVPB Vpb);
-
-BOOLEAN IsDeletedEntry (PVOID Block,
-                        ULONG Offset);
-
-BOOLEAN IsLastEntry (PVOID Block,
-                     ULONG Offset);
 
 /*  ---------------------------------------------------------  close.c  */
 
@@ -392,27 +410,26 @@ NTSTATUS STDCALL DriverEntry (PDRIVER_OBJECT DriverObject,
 /*  ---------------------------------------------------------  dirwr.c  */
 
 NTSTATUS VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
+		       PUNICODE_STRING PathNameU,
 		       PFILE_OBJECT pFileObject,
-		       ULONG RequestedOptions,UCHAR ReqAttr);
+		       ULONG RequestedOptions,
+		       UCHAR ReqAttr);
 
-NTSTATUS VfatUpdateEntry (PDEVICE_EXTENSION DeviceExt,
-			  PFILE_OBJECT pFileObject);
+NTSTATUS VfatUpdateEntry (PVFATFCB pFcb);
 
-NTSTATUS delEntry(PDEVICE_EXTENSION,
-                  PFILE_OBJECT);
+NTSTATUS VfatDelEntry(PDEVICE_EXTENSION, PVFATFCB);
 
 /*  --------------------------------------------------------  string.c  */
 
+VOID
+vfatSplitPathName(PUNICODE_STRING PathNameU, 
+		  PUNICODE_STRING DirNameU, 
+		  PUNICODE_STRING FileNameU);
+
+BOOLEAN vfatIsLongIllegal(WCHAR c);
+
 BOOLEAN wstrcmpjoki (PWSTR s1,
                      PWSTR s2);
-
-PWCHAR vfatGetNextPathElement (PWCHAR  pFileName);
-
-VOID vfatWSubString (PWCHAR pTarget,
-                     const PWCHAR pSource,
-                     size_t pLength);
-
-BOOL  vfatIsFileNameValid (PWCHAR pFileName);
 
 /*  -----------------------------------------------------------  fat.c  */
 
@@ -443,26 +460,17 @@ WriteCluster(PDEVICE_EXTENSION DeviceExt,
 ULONG  vfatDirEntryGetFirstCluster (PDEVICE_EXTENSION  pDeviceExt,
                                     PFAT_DIR_ENTRY  pDirEntry);
 
-BOOL  vfatIsDirEntryDeleted (FATDirEntry * pFatDirEntry);
-
-BOOL  vfatIsDirEntryVolume (FATDirEntry * pFatDirEntry);
-
-BOOL  vfatIsDirEntryEndMarker (FATDirEntry * pFatDirEntry);
-
-VOID vfatGetDirEntryName (PFAT_DIR_ENTRY pDirEntry,
-                          PWSTR  pEntryName);
+BOOL VfatIsDirectoryEmpty(PVFATFCB Fcb);
 
 NTSTATUS vfatGetNextDirEntry(PVOID * pContext,
 			     PVOID * pPage,
 			     IN PVFATFCB pDirFcb,
-			     IN OUT PULONG pDirIndex,
-			     OUT PWSTR pFileName,
-			     OUT PFAT_DIR_ENTRY pDirEntry,
-			     OUT PULONG pStartIndex);
+			     IN PVFAT_DIRENTRY_CONTEXT DirContext,
+			     BOOLEAN First);
 
 /*  -----------------------------------------------------------  fcb.c  */
 
-PVFATFCB vfatNewFCB (PWCHAR pFileName);
+PVFATFCB vfatNewFCB (PUNICODE_STRING pFileNameU);
 
 VOID vfatDestroyFCB (PVFATFCB  pFCB);
 
@@ -478,7 +486,7 @@ VOID vfatAddFCBToTable (PDEVICE_EXTENSION  pVCB,
                         PVFATFCB  pFCB);
 
 PVFATFCB vfatGrabFCBFromTable (PDEVICE_EXTENSION  pDeviceExt,
-                               PWSTR  pFileName);
+                               PUNICODE_STRING  pFileNameU);
 
 PVFATFCB vfatMakeRootFCB (PDEVICE_EXTENSION  pVCB);
 
@@ -494,20 +502,17 @@ NTSTATUS vfatAttachFCBToFileObject (PDEVICE_EXTENSION  vcb,
 
 NTSTATUS vfatDirFindFile (PDEVICE_EXTENSION  pVCB,
                           PVFATFCB  parentFCB,
-                          PWSTR  elementName,
+                          PUNICODE_STRING FileToFindU,
                           PVFATFCB * fileFCB);
 
 NTSTATUS vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB,
                             PVFATFCB  *pParentFCB,
                             PVFATFCB  *pFCB,
-                            const PWSTR  pFileName);
+                            PUNICODE_STRING pFileNameU);
 
 NTSTATUS vfatMakeFCBFromDirEntry (PVCB  vcb,
                                   PVFATFCB  directoryFCB,
-                                  PWSTR  longName,
-                                  PFAT_DIR_ENTRY  dirEntry,
-				  ULONG startIndex,
-                                  ULONG dirIndex,
+				  PVFAT_DIRENTRY_CONTEXT DirContext,
                                   PVFATFCB * fileFCB);
 
 /*  ------------------------------------------------------------  rw.c  */
@@ -547,5 +552,6 @@ VfatSetExtendedAttributes(PFILE_OBJECT FileObject,
 NTSTATUS VfatFlush(PVFAT_IRP_CONTEXT IrpContext);
 
 NTSTATUS VfatFlushVolume(PDEVICE_EXTENSION DeviceExt, PVFATFCB VolumeFcb);
+
 
 /* EOF */

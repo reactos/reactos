@@ -1,9 +1,9 @@
 /*
- * $Id: dir.c,v 1.31 2003/08/07 11:47:32 silverblade Exp $
+ * $Id: dir.c,v 1.32 2003/10/11 17:51:56 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/vfat/dir.c
+ * FILE:             drivers/fs/vfat/dir.c
  * PURPOSE:          VFAT Filesystem : directory control
  * UPDATE HISTORY:
      19-12-1998 : created
@@ -78,118 +78,106 @@ FsdFileTimeToDosDateTime (TIME * FileTime, WORD * pwDosDate, WORD * pwDosTime)
 #define DWORD_ROUND_UP(x)   ROUND_UP((x), (sizeof(DWORD)))
 
 NTSTATUS
-VfatGetFileNameInformation (PVFATFCB pFcb,
-			   PFILE_NAMES_INFORMATION pInfo, ULONG BufferLength)
+VfatGetFileNameInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
+			    PFILE_NAMES_INFORMATION pInfo, ULONG BufferLength)
 {
-  ULONG Length;
-  Length = wcslen (pFcb->ObjectName) * sizeof(WCHAR);
-  if ((sizeof (FILE_DIRECTORY_INFORMATION) + Length) > BufferLength)
+  if ((sizeof (FILE_DIRECTORY_INFORMATION) + DirContext->LongNameU.Length) > BufferLength)
     return STATUS_BUFFER_OVERFLOW;
-  pInfo->FileNameLength = Length;
+  pInfo->FileNameLength = DirContext->LongNameU.Length;
   pInfo->NextEntryOffset =
-    DWORD_ROUND_UP (sizeof (FILE_DIRECTORY_INFORMATION) + Length);
-  memcpy (pInfo->FileName, pFcb->ObjectName, Length);
+    DWORD_ROUND_UP (sizeof (FILE_DIRECTORY_INFORMATION) + DirContext->LongNameU.Length);
+  memcpy (pInfo->FileName, DirContext->LongNameU.Buffer, DirContext->LongNameU.Length);
   return STATUS_SUCCESS;
 }
 
 NTSTATUS
-VfatGetFileDirectoryInformation (PVFATFCB pFcb,
-				PDEVICE_EXTENSION DeviceExt,
-				PFILE_DIRECTORY_INFORMATION pInfo,
-				ULONG BufferLength)
+VfatGetFileDirectoryInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
+				 PDEVICE_EXTENSION DeviceExt,
+				 PFILE_DIRECTORY_INFORMATION pInfo,
+				 ULONG BufferLength)
 {
-  ULONG Length;
-  Length = wcslen (pFcb->ObjectName) * sizeof(WCHAR);
-  if ((sizeof (FILE_DIRECTORY_INFORMATION) + Length) > BufferLength)
+  if ((sizeof (FILE_DIRECTORY_INFORMATION) + DirContext->LongNameU.Length) > BufferLength)
     return STATUS_BUFFER_OVERFLOW;
-  pInfo->FileNameLength = Length;
+  pInfo->FileNameLength = DirContext->LongNameU.Length;
   pInfo->NextEntryOffset =
-    DWORD_ROUND_UP (sizeof (FILE_DIRECTORY_INFORMATION) + Length);
-  memcpy (pInfo->FileName, pFcb->ObjectName, Length);
+    DWORD_ROUND_UP (sizeof (FILE_DIRECTORY_INFORMATION) + DirContext->LongNameU.Length);
+  memcpy (pInfo->FileName, DirContext->LongNameU.Buffer, DirContext->LongNameU.Length);
 //      pInfo->FileIndex=;
-  FsdDosDateTimeToFileTime (pFcb->entry.CreationDate,
-			    pFcb->entry.CreationTime, &pInfo->CreationTime);
-  FsdDosDateTimeToFileTime (pFcb->entry.AccessDate, 0,
+  FsdDosDateTimeToFileTime (DirContext->FatDirEntry.CreationDate,
+			    DirContext->FatDirEntry.CreationTime, &pInfo->CreationTime);
+  FsdDosDateTimeToFileTime (DirContext->FatDirEntry.AccessDate, 0,
 			    &pInfo->LastAccessTime);
-  FsdDosDateTimeToFileTime (pFcb->entry.UpdateDate, pFcb->entry.UpdateTime,
-			    &pInfo->LastWriteTime);
+  FsdDosDateTimeToFileTime (DirContext->FatDirEntry.UpdateDate, 
+                            DirContext->FatDirEntry.UpdateTime, &pInfo->LastWriteTime);
   pInfo->ChangeTime = pInfo->LastWriteTime;
   pInfo->EndOfFile.u.HighPart = 0;
-  pInfo->EndOfFile.u.LowPart = pFcb->entry.FileSize;
+  pInfo->EndOfFile.u.LowPart = DirContext->FatDirEntry.FileSize;
   /* Make allocsize a rounded up multiple of BytesPerCluster */
   pInfo->AllocationSize.u.HighPart = 0;
-  pInfo->AllocationSize.u.LowPart = ROUND_UP(pFcb->entry.FileSize, DeviceExt->FatInfo.BytesPerCluster);
-  pInfo->FileAttributes = pFcb->entry.Attrib;
+  pInfo->AllocationSize.u.LowPart = ROUND_UP(DirContext->FatDirEntry.FileSize, DeviceExt->FatInfo.BytesPerCluster);
+  pInfo->FileAttributes = DirContext->FatDirEntry.Attrib;
 
   return STATUS_SUCCESS;
 }
 
 NTSTATUS
-VfatGetFileFullDirectoryInformation (PVFATFCB pFcb,
-				    PDEVICE_EXTENSION DeviceExt,
-				    PFILE_FULL_DIRECTORY_INFORMATION pInfo,
-				    ULONG BufferLength)
+VfatGetFileFullDirectoryInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
+				     PDEVICE_EXTENSION DeviceExt,
+				     PFILE_FULL_DIRECTORY_INFORMATION pInfo,
+				     ULONG BufferLength)
 {
-  ULONG Length;
-  Length = wcslen (pFcb->ObjectName) * sizeof(WCHAR);
-  if ((sizeof (FILE_FULL_DIRECTORY_INFORMATION) + Length) > BufferLength)
+  if ((sizeof (FILE_FULL_DIRECTORY_INFORMATION) + DirContext->LongNameU.Length) > BufferLength)
     return STATUS_BUFFER_OVERFLOW;
-  pInfo->FileNameLength = Length;
+  pInfo->FileNameLength = DirContext->LongNameU.Length;
   pInfo->NextEntryOffset =
-    DWORD_ROUND_UP (sizeof (FILE_FULL_DIRECTORY_INFORMATION) + Length);
-  memcpy (pInfo->FileName, pFcb->ObjectName, Length);
+    DWORD_ROUND_UP (sizeof (FILE_FULL_DIRECTORY_INFORMATION) + DirContext->LongNameU.Length);
+  memcpy (pInfo->FileName, DirContext->LongNameU.Buffer, DirContext->LongNameU.Length);
 //      pInfo->FileIndex=;
-  FsdDosDateTimeToFileTime (pFcb->entry.CreationDate,
-			    pFcb->entry.CreationTime, &pInfo->CreationTime);
-  FsdDosDateTimeToFileTime (pFcb->entry.AccessDate, 0,
-			    &pInfo->LastAccessTime);
-  FsdDosDateTimeToFileTime (pFcb->entry.UpdateDate, pFcb->entry.UpdateTime,
-			    &pInfo->LastWriteTime);
+  FsdDosDateTimeToFileTime (DirContext->FatDirEntry.CreationDate,
+			    DirContext->FatDirEntry.CreationTime, &pInfo->CreationTime);
+  FsdDosDateTimeToFileTime (DirContext->FatDirEntry.AccessDate, 
+                            0, &pInfo->LastAccessTime);
+  FsdDosDateTimeToFileTime (DirContext->FatDirEntry.UpdateDate, 
+                            DirContext->FatDirEntry.UpdateTime, &pInfo->LastWriteTime);
   pInfo->ChangeTime = pInfo->LastWriteTime;
   pInfo->EndOfFile.u.HighPart = 0;
-  pInfo->EndOfFile.u.LowPart = pFcb->entry.FileSize;
+  pInfo->EndOfFile.u.LowPart = DirContext->FatDirEntry.FileSize;
   /* Make allocsize a rounded up multiple of BytesPerCluster */
   pInfo->AllocationSize.u.HighPart = 0;
-  pInfo->AllocationSize.u.LowPart = ROUND_UP(pFcb->entry.FileSize, DeviceExt->FatInfo.BytesPerCluster);
-  pInfo->FileAttributes = pFcb->entry.Attrib;
+  pInfo->AllocationSize.u.LowPart = ROUND_UP(DirContext->FatDirEntry.FileSize, DeviceExt->FatInfo.BytesPerCluster);
+  pInfo->FileAttributes = DirContext->FatDirEntry.Attrib;
 //      pInfo->EaSize=;
   return STATUS_SUCCESS;
 }
 
 NTSTATUS
-VfatGetFileBothInformation (PVFATFCB pFcb,
-			   PDEVICE_EXTENSION DeviceExt,
-			   PFILE_BOTH_DIRECTORY_INFORMATION pInfo,
-			   ULONG BufferLength)
+VfatGetFileBothInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
+			    PDEVICE_EXTENSION DeviceExt,
+			    PFILE_BOTH_DIRECTORY_INFORMATION pInfo,
+			    ULONG BufferLength)
 {
-  ULONG Length;
-  Length = wcslen (pFcb->ObjectName) * sizeof(WCHAR);
-  if ((sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + Length) > BufferLength)
+  if ((sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + DirContext->LongNameU.Length) > BufferLength)
     return STATUS_BUFFER_OVERFLOW;
-  pInfo->FileNameLength = Length;
+  pInfo->FileNameLength = DirContext->LongNameU.Length;
   pInfo->NextEntryOffset = 
-    DWORD_ROUND_UP (sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + Length);
-  /* 
-   * vfatGetDirEntryName must be called befor the long name is copyed.
-   * The terminating null will overwrite the first character from long name. 
-   */
-  vfatGetDirEntryName(&pFcb->entry, pInfo->ShortName);
-  pInfo->ShortNameLength = wcslen(pInfo->ShortName) * sizeof(WCHAR);
-  memcpy (pInfo->FileName, pFcb->ObjectName, Length);
+    DWORD_ROUND_UP (sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + DirContext->LongNameU.Length);
+  memcpy(pInfo->ShortName, DirContext->ShortNameU.Buffer, DirContext->ShortNameU.Length);
+  pInfo->ShortNameLength = DirContext->ShortNameU.Length;
+  memcpy (pInfo->FileName, DirContext->LongNameU.Buffer, DirContext->LongNameU.Length);
 //      pInfo->FileIndex=;
-  FsdDosDateTimeToFileTime (pFcb->entry.CreationDate,
-			    pFcb->entry.CreationTime, &pInfo->CreationTime);
-  FsdDosDateTimeToFileTime (pFcb->entry.AccessDate, 0,
+  FsdDosDateTimeToFileTime (DirContext->FatDirEntry.CreationDate,
+			    DirContext->FatDirEntry.CreationDate, &pInfo->CreationTime);
+  FsdDosDateTimeToFileTime (DirContext->FatDirEntry.AccessDate, 0,
 			    &pInfo->LastAccessTime);
-  FsdDosDateTimeToFileTime (pFcb->entry.UpdateDate, pFcb->entry.UpdateTime,
-			    &pInfo->LastWriteTime);
+  FsdDosDateTimeToFileTime (DirContext->FatDirEntry.UpdateDate, 
+                            DirContext->FatDirEntry.UpdateTime, &pInfo->LastWriteTime);
   pInfo->ChangeTime = pInfo->LastWriteTime;
   pInfo->EndOfFile.u.HighPart = 0;
-  pInfo->EndOfFile.u.LowPart = pFcb->entry.FileSize;
+  pInfo->EndOfFile.u.LowPart = DirContext->FatDirEntry.FileSize;
   /* Make allocsize a rounded up multiple of BytesPerCluster */
   pInfo->AllocationSize.u.HighPart = 0;
-  pInfo->AllocationSize.u.LowPart = ROUND_UP(pFcb->entry.FileSize, DeviceExt->FatInfo.BytesPerCluster);
-  pInfo->FileAttributes = pFcb->entry.Attrib;
+  pInfo->AllocationSize.u.LowPart = ROUND_UP(DirContext->FatDirEntry.FileSize, DeviceExt->FatInfo.BytesPerCluster);
+  pInfo->FileAttributes = DirContext->FatDirEntry.Attrib;
 //      pInfo->EaSize=;
   return STATUS_SUCCESS;
 }
@@ -204,148 +192,178 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
   unsigned char *Buffer = NULL;
   PFILE_NAMES_INFORMATION Buffer0 = NULL;
   PVFATFCB pFcb;
-  VFATFCB tmpFcb;
   PVFATCCB pCcb;
   BOOLEAN First = FALSE;
+  BOOLEAN FirstCall;
+  VFAT_DIRENTRY_CONTEXT DirContext;
+  WCHAR LongNameBuffer[MAX_PATH];
+  WCHAR ShortNameBuffer[13];
   
   PEXTENDED_IO_STACK_LOCATION Stack = (PEXTENDED_IO_STACK_LOCATION) IrpContext->Stack;
 
   pCcb = (PVFATCCB) IrpContext->FileObject->FsContext2;
   pFcb = (PVFATFCB) IrpContext->FileObject->FsContext;
 
+  // determine Buffer for result :
+  BufferLength = Stack->Parameters.QueryDirectory.Length;
+  if (IrpContext->Irp->RequestorMode != KernelMode &&
+      IrpContext->Irp->MdlAddress == NULL && 
+      IrpContext->Irp->UserBuffer != NULL)
+    {
+      ProbeForWrite(IrpContext->Irp->UserBuffer, BufferLength, 1);
+    }
+  Buffer = VfatGetUserBuffer(IrpContext->Irp);
+
   if (!ExAcquireResourceSharedLite(&pFcb->MainResource,
                                    (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
-  {
-     return STATUS_PENDING;
-  }
+    {
+      RC = VfatLockUserBuffer(IrpContext->Irp, BufferLength, IoWriteAccess);
+      if (NT_SUCCESS(RC))
+        {
+          RC = STATUS_PENDING;
+        }
+      return RC;
+    }
 
-  // Obtain the callers parameters
-  BufferLength = Stack->Parameters.QueryDirectory.Length;
+  /* Obtain the callers parameters */
   pSearchPattern = Stack->Parameters.QueryDirectory.FileName;
   FileInformationClass =
     Stack->Parameters.QueryDirectory.FileInformationClass;
   FileIndex = Stack->Parameters.QueryDirectory.FileIndex;
   if (pSearchPattern)
-  {
-    if (!pCcb->DirectorySearchPattern)
+    {
+      if (!pCcb->SearchPattern.Buffer)
+        {
+          First = TRUE;
+          pCcb->SearchPattern.MaximumLength = pSearchPattern->Length + sizeof(WCHAR);
+          pCcb->SearchPattern.Buffer = ExAllocatePool(NonPagedPool, pCcb->SearchPattern.MaximumLength);
+          if (!pCcb->SearchPattern.Buffer)
+            {
+              ExReleaseResourceLite(&pFcb->MainResource);
+              return STATUS_INSUFFICIENT_RESOURCES;
+            }
+          RtlCopyUnicodeString(&pCcb->SearchPattern, pSearchPattern);
+          pCcb->SearchPattern.Buffer[pCcb->SearchPattern.Length / sizeof(WCHAR)] = 0;
+	}
+    }
+  else if (!pCcb->SearchPattern.Buffer)
     {
       First = TRUE;
-      pCcb->DirectorySearchPattern =
-        ExAllocatePool(NonPagedPool, pSearchPattern->Length + sizeof(WCHAR));
-      if (!pCcb->DirectorySearchPattern)
-      {
-        ExReleaseResourceLite(&pFcb->MainResource);
-        return STATUS_INSUFFICIENT_RESOURCES;
-      }
-      memcpy(pCcb->DirectorySearchPattern, pSearchPattern->Buffer,
-        pSearchPattern->Length);
-      pCcb->DirectorySearchPattern[pSearchPattern->Length / sizeof(WCHAR)] = 0;
+      pCcb->SearchPattern.MaximumLength = 2 * sizeof(WCHAR);
+      pCcb->SearchPattern.Buffer = ExAllocatePool(NonPagedPool, 2 * sizeof(WCHAR));
+      if (!pCcb->SearchPattern.Buffer)
+        {
+          ExReleaseResourceLite(&pFcb->MainResource);
+          return STATUS_INSUFFICIENT_RESOURCES;
+        }
+      pCcb->SearchPattern.Buffer[0] = L'*';
+      pCcb->SearchPattern.Buffer[1] = 0;
+      pCcb->SearchPattern.Length = sizeof(WCHAR);
     }
-  }
-  else if (!pCcb->DirectorySearchPattern)
-  {
-    First = TRUE;
-    pCcb->DirectorySearchPattern = ExAllocatePool(NonPagedPool, 2 * sizeof(WCHAR));
-    if (!pCcb->DirectorySearchPattern)
-    {
-      ExReleaseResourceLite(&pFcb->MainResource);
-      return STATUS_INSUFFICIENT_RESOURCES;
-    }
-    pCcb->DirectorySearchPattern[0] = L'*';
-    pCcb->DirectorySearchPattern[1] = 0;
-  }
 
   if (IrpContext->Stack->Flags & SL_INDEX_SPECIFIED)
-  {
-    pCcb->Entry = pCcb->CurrentByteOffset.u.LowPart;
-  }
+    {
+      DirContext.DirIndex = pCcb->Entry = pCcb->CurrentByteOffset.u.LowPart;
+      FirstCall = TRUE;
+    }
   else if (First || (IrpContext->Stack->Flags & SL_RESTART_SCAN))
-  {
-    pCcb->Entry = 0;
-  }
-  // determine Buffer for result :
-  if (IrpContext->Irp->MdlAddress)
-  {
-    Buffer = MmGetSystemAddressForMdl (IrpContext->Irp->MdlAddress);
-  }
+    {
+      DirContext.DirIndex = pCcb->Entry = 0;
+      FirstCall = TRUE;
+    }
   else
-  {
-    Buffer = IrpContext->Irp->UserBuffer;
-  }
-  DPRINT ("Buffer=%x tofind=%S\n", Buffer, pCcb->DirectorySearchPattern);
+    {
+      DirContext.DirIndex = pCcb->Entry;
+      FirstCall = FALSE;
+    }
 
-  tmpFcb.ObjectName = tmpFcb.PathName;
+  DPRINT ("Buffer=%x tofind=%wZ\n", Buffer, &pCcb->SearchPattern);
+
+  DirContext.LongNameU.Buffer = LongNameBuffer;
+  DirContext.LongNameU.MaximumLength = sizeof(LongNameBuffer);
+  DirContext.ShortNameU.Buffer = ShortNameBuffer;
+  DirContext.ShortNameU.MaximumLength = sizeof(ShortNameBuffer);
+
   while (RC == STATUS_SUCCESS && BufferLength > 0)
-  {
-    RC = FindFile (IrpContext->DeviceExt, &tmpFcb, pFcb, 
-           pCcb->DirectorySearchPattern, &pCcb->Entry, NULL);
-    DPRINT ("Found %S, RC=%x, entry %x\n", tmpFcb.ObjectName, RC, pCcb->Entry);
-    if (NT_SUCCESS (RC))
     {
-      switch (FileInformationClass)
-      {
-        case FileNameInformation:
-          RC = VfatGetFileNameInformation (&tmpFcb,
-            (PFILE_NAMES_INFORMATION) Buffer, BufferLength);
-          break;
-        case FileDirectoryInformation:
-          RC = VfatGetFileDirectoryInformation (&tmpFcb, IrpContext->DeviceExt,
-                 (PFILE_DIRECTORY_INFORMATION) Buffer, BufferLength);
-          break;
-        case FileFullDirectoryInformation:
-          RC = VfatGetFileFullDirectoryInformation (&tmpFcb, IrpContext->DeviceExt,
-                 (PFILE_FULL_DIRECTORY_INFORMATION) Buffer, BufferLength);
-          break;
-        case FileBothDirectoryInformation:
-          RC = VfatGetFileBothInformation (&tmpFcb, IrpContext->DeviceExt,
-                 (PFILE_BOTH_DIRECTORY_INFORMATION) Buffer, BufferLength);
-          break;
-        default:
-          RC = STATUS_INVALID_INFO_CLASS;
-      }
-      if (RC == STATUS_BUFFER_OVERFLOW)
-      {
-        if (Buffer0)
+      RC = FindFile (IrpContext->DeviceExt, pFcb, 
+                     &pCcb->SearchPattern, &DirContext, FirstCall);
+      pCcb->Entry = DirContext.DirIndex;
+      DPRINT ("Found %wZ, RC=%x, entry %x\n", &DirContext.LongNameU, RC, pCcb->Entry);
+      FirstCall = FALSE;
+      if (NT_SUCCESS (RC))
         {
-          Buffer0->NextEntryOffset = 0;
-        }
-        break;
-      }
-    }
-    else
-    {
-      if (Buffer0)
-      {
-        Buffer0->NextEntryOffset = 0;
-      }
-      if (First)
-      {
-        RC = STATUS_NO_SUCH_FILE;
-      }
+          switch (FileInformationClass)
+            {
+              case FileNameInformation:
+                RC = VfatGetFileNameInformation (&DirContext,
+                                                 (PFILE_NAMES_INFORMATION) Buffer, 
+					         BufferLength);
+                break;
+              case FileDirectoryInformation:
+                RC = VfatGetFileDirectoryInformation (&DirContext, 
+	                                              IrpContext->DeviceExt,
+						      (PFILE_DIRECTORY_INFORMATION) Buffer, 
+						      BufferLength);
+                break;
+             case FileFullDirectoryInformation:
+               RC = VfatGetFileFullDirectoryInformation (&DirContext, 
+	                                                 IrpContext->DeviceExt,
+						         (PFILE_FULL_DIRECTORY_INFORMATION) Buffer, 
+						         BufferLength);
+               break;
+             case FileBothDirectoryInformation:
+               RC = VfatGetFileBothInformation (&DirContext, 
+	                                        IrpContext->DeviceExt,
+					        (PFILE_BOTH_DIRECTORY_INFORMATION) Buffer, 
+					        BufferLength);
+               break;
+             default:
+               RC = STATUS_INVALID_INFO_CLASS;
+	    }
+          if (RC == STATUS_BUFFER_OVERFLOW)
+            {
+              if (Buffer0)
+                {
+                  Buffer0->NextEntryOffset = 0;
+                }
+              break;
+            }
+	}
       else
-      {
-        RC = STATUS_NO_MORE_FILES;
-      }
-      break;
+        {
+          if (Buffer0)
+            {
+              Buffer0->NextEntryOffset = 0;
+            }
+          if (First)
+            {
+              RC = STATUS_NO_SUCH_FILE;
+            }
+          else
+            {
+              RC = STATUS_NO_MORE_FILES;
+            }
+          break;
+	}
+      Buffer0 = (PFILE_NAMES_INFORMATION) Buffer;
+      Buffer0->FileIndex = FileIndex++;
+      pCcb->Entry = ++DirContext.DirIndex;
+      if (IrpContext->Stack->Flags & SL_RETURN_SINGLE_ENTRY)
+        {
+          break;
+        }
+      BufferLength -= Buffer0->NextEntryOffset;
+      Buffer += Buffer0->NextEntryOffset;
     }
-    Buffer0 = (PFILE_NAMES_INFORMATION) Buffer;
-    Buffer0->FileIndex = FileIndex++;
-    pCcb->Entry++;
-    if (IrpContext->Stack->Flags & SL_RETURN_SINGLE_ENTRY)
-    {
-      break;
-    }
-    BufferLength -= Buffer0->NextEntryOffset;
-    Buffer += Buffer0->NextEntryOffset;
-  }
   if (Buffer0)
-  {
-    Buffer0->NextEntryOffset = 0;
-  }
+    {
+      Buffer0->NextEntryOffset = 0;
+    }
   if (FileIndex > 0)
-  {
-    RC = STATUS_SUCCESS;
-  }
+    {
+      RC = STATUS_SUCCESS;
+    }
   ExReleaseResourceLite(&pFcb->MainResource);
   return RC;
 }

@@ -1,9 +1,10 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/vfat/blockdev.c
+ * FILE:             drivers/fs/vfat/blockdev.c
  * PURPOSE:          Temporary sector reading support
  * PROGRAMMER:       David Welch (welch@cwcom.net)
+ *                   Hartmut Birr
  * UPDATE HISTORY: 
  */
 

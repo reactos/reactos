@@ -1,10 +1,11 @@
-/* $Id: close.c,v 1.20 2003/07/24 20:52:58 chorns Exp $
+/* $Id: close.c,v 1.21 2003/10/11 17:51:56 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/vfat/close.c
+ * FILE:             drivers/fs/vfat/close.c
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
+ *                   Hartmut Birr
  */
 
 /* INCLUDES *****************************************************************/
@@ -55,7 +56,7 @@ VfatCloseFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject)
     {
       if (pFcb->Flags & FCB_DELETE_PENDING)
       {
-        delEntry (DeviceExt, FileObject);
+        VfatDelEntry (DeviceExt, pFcb);
       }
       else
       {

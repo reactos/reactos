@@ -1,8 +1,8 @@
-/* $Id: misc.c,v 1.10 2003/07/24 20:52:58 chorns Exp $
+/* $Id: misc.c,v 1.11 2003/10/11 17:51:56 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/vfat/misc.c
+ * FILE:             drivers/fs/vfat/misc.c
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Hartmut Birr
  *
@@ -189,16 +189,16 @@ PVFAT_IRP_CONTEXT VfatAllocateIrpContext(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
 VOID STDCALL VfatDoRequest (PVOID IrpContext)
 {
-   ULONG Count = InterlockedDecrement(&QueueCount);
-   DPRINT ("VfatDoRequest (IrpContext %x), MajorFunction %x, %d\n", IrpContext, ((PVFAT_IRP_CONTEXT)IrpContext)->MajorFunction, Count);
+   InterlockedDecrement(&QueueCount);
+   DPRINT ("VfatDoRequest (IrpContext %x), MajorFunction %x, %d\n", IrpContext, ((PVFAT_IRP_CONTEXT)IrpContext)->MajorFunction, QueueCount);
    VfatDispatchRequest((PVFAT_IRP_CONTEXT)IrpContext);
 
 }
 
 NTSTATUS VfatQueueRequest(PVFAT_IRP_CONTEXT IrpContext)
 {
-   ULONG Count = InterlockedIncrement(&QueueCount);
-   DPRINT ("VfatQueueRequest (IrpContext %x), %d\n", IrpContext, Count);
+   InterlockedIncrement(&QueueCount);
+   DPRINT ("VfatQueueRequest (IrpContext %x), %d\n", IrpContext, QueueCount);
 
    assert (IrpContext != NULL);
    assert (IrpContext->Irp != NULL);

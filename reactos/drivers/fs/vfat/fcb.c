@@ -1,12 +1,13 @@
-/* $Id: fcb.c,v 1.33 2003/08/07 11:47:32 silverblade Exp $
+/* $Id: fcb.c,v 1.34 2003/10/11 17:51:56 hbirr Exp $
  *
  *
- * FILE:             fcb.c
+ * FILE:             drivers/fs/vfat/fcb.c
  * PURPOSE:          Routines to manipulate FCBs.
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
  *                   Rex Jolliff (rex@lvcablemodem.com)
+ *                   Hartmut Birr
  */
 
 /*  -------------------------------------------------------  INCLUDES  */
@@ -30,35 +31,79 @@
 
 /*  --------------------------------------------------------  PUBLICS  */
 
-ULONG vfatNameHash(ULONG hash, PWCHAR name)
+ULONG vfatNameHash(ULONG hash, PUNICODE_STRING NameU)
 {
-  WCHAR c;
-  while(c = *name++)
-  {
-    c = towlower(c);
-    hash = (hash + (c << 4) + (c >> 4)) * 11;
-  }
+  PWCHAR last; 
+  PWCHAR curr;
+  register WCHAR c;
+
+  curr = NameU->Buffer;
+  last = NameU->Buffer + NameU->Length / sizeof(WCHAR);
+
+  while(curr < last)
+    {
+      c = towlower(*curr++);
+      hash = (hash + (c << 4) + (c >> 4)) * 11;
+    }
   return hash;
 }
 
+VOID
+vfatSplitPathName(PUNICODE_STRING PathNameU, PUNICODE_STRING DirNameU, PUNICODE_STRING FileNameU)
+{
+  PWCHAR pName;
+  DirNameU->Buffer = PathNameU->Buffer;
+  pName = PathNameU->Buffer + PathNameU->Length / sizeof(WCHAR) - 1;
+  while (*pName != L'\\' && pName > PathNameU->Buffer)
+    {
+      pName--;
+    }
+  assert(*pName == L'\\');
+  FileNameU->Buffer = pName + 1;
+  DirNameU->Length = (FileNameU->Buffer - PathNameU->Buffer) * sizeof(WCHAR);
+  DirNameU->MaximumLength = DirNameU->Length;
+  FileNameU->Length = PathNameU->Length - DirNameU->Length;
+  FileNameU->MaximumLength = FileNameU->Length; 
+}
+
+VOID
+vfatInitFcb(PVFATFCB Fcb, PUNICODE_STRING NameU)
+{
+  Fcb->PathNameU.Length = 0;
+  Fcb->PathNameU.Buffer = Fcb->PathNameBuffer;
+  Fcb->PathNameU.MaximumLength = sizeof(Fcb->PathNameBuffer);
+  Fcb->ShortNameU.Length = 0;
+  Fcb->ShortNameU.Buffer = Fcb->ShortNameBuffer;
+  Fcb->ShortNameU.MaximumLength = sizeof(Fcb->ShortNameBuffer);
+  Fcb->DirNameU.Buffer = Fcb->PathNameU.Buffer;
+  if (NameU && NameU->Length)
+    {
+      RtlCopyUnicodeString(&Fcb->PathNameU, NameU);
+      vfatSplitPathName(&Fcb->PathNameU, &Fcb->DirNameU, &Fcb->LongNameU);
+    }
+  else
+    {
+      Fcb->DirNameU.Buffer = Fcb->LongNameU.Buffer = NULL;
+      Fcb->DirNameU.MaximumLength = Fcb->DirNameU.Length = 0;
+      Fcb->LongNameU.MaximumLength = Fcb->LongNameU.Length = 0; 
+    }
+}  
+
 PVFATFCB
-vfatNewFCB(PWCHAR pFileName)
+vfatNewFCB(PUNICODE_STRING pFileNameU)
 {
   PVFATFCB  rcFCB;
 
+  DPRINT("'%wZ'\n", pFileNameU);
+
   rcFCB = ExAllocateFromNPagedLookasideList(&VfatGlobalData->FcbLookasideList);
-  memset (rcFCB, 0, sizeof (VFATFCB));
-  if (pFileName)
-  {
-    wcscpy (rcFCB->PathName, pFileName);
-    rcFCB->ObjectName = wcsrchr(rcFCB->PathName, L'\\');
-    if (rcFCB->ObjectName == NULL)
+  if (rcFCB == NULL)
     {
-      rcFCB->ObjectName = rcFCB->PathName;
+      return NULL;
     }
-    rcFCB->Hash.Hash = vfatNameHash(0, rcFCB->PathName);
-    DPRINT("%08x (%03x) '%S'\n", rcFCB->Hash.Hash, rcFCB->Hash.Hash % FCB_HASH_TABLE_SIZE, pFileName);
-  }
+  memset(rcFCB, 0, sizeof(VFATFCB));
+  vfatInitFcb(rcFCB, pFileNameU);
+  rcFCB->Hash.Hash = vfatNameHash(0, &rcFCB->PathNameU);
   rcFCB->Hash.self = rcFCB;
   rcFCB->ShortHash.self = rcFCB;
   ExInitializeResourceLite(&rcFCB->PagingIoResource);
@@ -70,15 +115,15 @@ vfatNewFCB(PWCHAR pFileName)
 VOID 
 vfatDestroyCCB(PVFATCCB pCcb)
 {
-  if (pCcb->DirectorySearchPattern)
-  {
-     ExFreePool(pCcb->DirectorySearchPattern);
-  }
+  if (pCcb->SearchPattern.Buffer)
+    {
+      ExFreePool(pCcb->SearchPattern.Buffer);
+    }
   ExFreeToNPagedLookasideList(&VfatGlobalData->CcbLookasideList, pCcb);
 }
 
 VOID
-vfatDestroyFCB(PVFATFCB  pFCB)
+vfatDestroyFCB(PVFATFCB pFCB)
 {
   FsRtlUninitializeFileLock(&pFCB->FileLock); 
   ExDeleteResourceLite(&pFCB->PagingIoResource);
@@ -95,28 +140,26 @@ vfatFCBIsDirectory(PVFATFCB FCB)
 BOOL
 vfatFCBIsRoot(PVFATFCB FCB)
 {
-    return  FCB->PathName[0] == L'\\' && FCB->PathName[1] == 0 ? TRUE : FALSE;
+  return  FCB->PathNameU.Length == sizeof(WCHAR) && FCB->PathNameU.Buffer[0] == L'\\' ? TRUE : FALSE;
 }
 
 VOID
 vfatReleaseFCB(PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB)
 {
-  KIRQL  oldIrql;
   HASHENTRY* entry;
   ULONG Index;
   ULONG ShortIndex;
   PVFATFCB tmpFcb;
 
-  DPRINT ("releasing FCB at %x: %S, refCount:%d\n",
+  DPRINT ("releasing FCB at %x: %wZ, refCount:%d\n",
           pFCB,
-          pFCB->PathName,
+          &pFCB->PathNameU,
           pFCB->RefCount);
 
   while (pFCB)
   {
      Index = pFCB->Hash.Hash % FCB_HASH_TABLE_SIZE;
      ShortIndex = pFCB->ShortHash.Hash % FCB_HASH_TABLE_SIZE;
-     KeAcquireSpinLock (&pVCB->FcbListLock, &oldIrql);
      pFCB->RefCount--;
      if (pFCB->RefCount <= 0 && (!vfatFCBIsDirectory (pFCB) || pFCB->Flags & FCB_DELETE_PENDING))
      {
@@ -151,7 +194,6 @@ vfatReleaseFCB(PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB)
 	   }
            entry->next = pFCB->Hash.next;
         }
-        KeReleaseSpinLock (&pVCB->FcbListLock, oldIrql);
         if (vfatFCBIsDirectory(pFCB))
         {
            /* Uninitialize file cache if initialized for this file object. */
@@ -168,7 +210,6 @@ vfatReleaseFCB(PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB)
      }
      else
      {
-        KeReleaseSpinLock (&pVCB->FcbListLock, oldIrql);
 	tmpFcb = NULL;
      }
      pFCB = tmpFcb;
@@ -178,13 +219,12 @@ vfatReleaseFCB(PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB)
 VOID
 vfatAddFCBToTable(PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB)
 {
-  KIRQL  oldIrql;
   ULONG Index;
   ULONG ShortIndex;
 
   Index = pFCB->Hash.Hash % FCB_HASH_TABLE_SIZE;
   ShortIndex = pFCB->ShortHash.Hash % FCB_HASH_TABLE_SIZE;
-  KeAcquireSpinLock (&pVCB->FcbListLock, &oldIrql);
+
   InsertTailList (&pVCB->FcbListHead, &pFCB->FcbListEntry);
    
   pFCB->Hash.next = pVCB->FcbHashTable[Index];
@@ -198,69 +238,58 @@ vfatAddFCBToTable(PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB)
   {
      pFCB->parentFcb->RefCount++;
   }
-  KeReleaseSpinLock (&pVCB->FcbListLock, oldIrql);
 }
 
 PVFATFCB
-vfatGrabFCBFromTable(PDEVICE_EXTENSION  pVCB, PWSTR  pFileName)
+vfatGrabFCBFromTable(PDEVICE_EXTENSION  pVCB, PUNICODE_STRING  PathNameU)
 {
-  KIRQL  oldIrql;
   PVFATFCB  rcFCB;
   ULONG Hash;
-  PWCHAR ObjectName = NULL;
-  ULONG len;
+  UNICODE_STRING DirNameU;
+  UNICODE_STRING FileNameU;
+  PUNICODE_STRING FcbNameU;
   
   HASHENTRY* entry; 
 
-  Hash = vfatNameHash(0, pFileName);
+  DPRINT("'%wZ'\n", PathNameU);
+  
+  Hash = vfatNameHash(0, PathNameU);
 
-  KeAcquireSpinLock (&pVCB->FcbListLock, &oldIrql);
   entry = pVCB->FcbHashTable[Hash % FCB_HASH_TABLE_SIZE];
+  if (entry)
+    {
+      vfatSplitPathName(PathNameU, &DirNameU, &FileNameU);
+    }
 
   while (entry)
-  {
-     if (entry->Hash == Hash)
-     {
-        rcFCB = entry->self;
-	if (rcFCB->Hash.Hash == Hash)
-	{
-	   /* compare the long name */
-	   if (!_wcsicmp(pFileName, rcFCB->PathName))
-	   {
-              rcFCB->RefCount++;
-              KeReleaseSpinLock (&pVCB->FcbListLock, oldIrql);
-              return rcFCB;
-	   }
-	}
-	else
-	{
-	   len = rcFCB->ObjectName - rcFCB->PathName + 1;
-	   if (ObjectName == NULL)
-	   {
-	      ObjectName = wcsrchr(pFileName, L'\\');
-              if (ObjectName == NULL)
-	      {
-                ObjectName = pFileName;
-	      }
+    {
+      if (entry->Hash == Hash)
+        {
+          rcFCB = entry->self;
+	  DPRINT("'%wZ' '%wZ'\n", &DirNameU, &rcFCB->DirNameU);
+	  if (RtlEqualUnicodeString(&DirNameU, &rcFCB->DirNameU, TRUE))
+	    {
+	      if (rcFCB->Hash.Hash == Hash)
+	        {
+	          FcbNameU = &rcFCB->LongNameU;
+	        }
 	      else
-	      {
-		ObjectName++;
-	      }
-	   }
-
-	   /* compare the short name and the directory */
-	   if (!_wcsicmp(ObjectName, rcFCB->ShortName) && !_wcsnicmp(pFileName, rcFCB->PathName, len))
-	   {
-              rcFCB->RefCount++;
-              KeReleaseSpinLock (&pVCB->FcbListLock, oldIrql);
-              return rcFCB;
-	   }
+	        {
+	          FcbNameU = &rcFCB->ShortNameU;
+	        }
+	      /* compare the file name */
+	      DPRINT("'%wZ' '%wZ'\n", &FileNameU, FcbNameU);
+	      if (RtlEqualUnicodeString(&FileNameU, FcbNameU, TRUE))
+	        {
+                  rcFCB->RefCount++;
+		  CHECKPOINT;
+                  return rcFCB;
+	        }
+	    }
 	}
-     }
      entry = entry->next;
   }
-  KeReleaseSpinLock (&pVCB->FcbListLock, oldIrql);
-
+  CHECKPOINT;
   return  NULL;
 }
 
@@ -310,11 +339,12 @@ vfatMakeRootFCB(PDEVICE_EXTENSION  pVCB)
   PVFATFCB  FCB;
   ULONG FirstCluster, CurrentCluster, Size = 0;
   NTSTATUS Status = STATUS_SUCCESS;
+  UNICODE_STRING NameU;
 
-  FCB = vfatNewFCB(L"\\");
+  RtlInitUnicodeStringFromLiteral(&NameU, L"\\");
+
+  FCB = vfatNewFCB(&NameU);
   memset(FCB->entry.Filename, ' ', 11);
-  FCB->ShortName[0] = L'\\';
-  FCB->ShortName[1] = 0;
   FCB->ShortHash.Hash = FCB->Hash.Hash;
   FCB->entry.FileSize = pVCB->FatInfo.rootDirectorySectors * pVCB->FatInfo.BytesPerSector;
   FCB->entry.Attrib = FILE_ATTRIBUTE_DIRECTORY;
@@ -351,8 +381,11 @@ PVFATFCB
 vfatOpenRootFCB(PDEVICE_EXTENSION  pVCB)
 {
   PVFATFCB  FCB;
+  UNICODE_STRING NameU;
 
-  FCB = vfatGrabFCBFromTable (pVCB, L"\\");
+  RtlInitUnicodeStringFromLiteral(&NameU, L"\\");
+
+  FCB = vfatGrabFCBFromTable (pVCB, &NameU);
   if (FCB == NULL)
   {
     FCB = vfatMakeRootFCB (pVCB);
@@ -364,43 +397,45 @@ vfatOpenRootFCB(PDEVICE_EXTENSION  pVCB)
 NTSTATUS
 vfatMakeFCBFromDirEntry(PVCB  vcb,
 			PVFATFCB  directoryFCB,
-			PWSTR  longName,
-			PFAT_DIR_ENTRY  dirEntry,
-			ULONG startIndex,
-			ULONG dirIndex,
+			PVFAT_DIRENTRY_CONTEXT DirContext,
 			PVFATFCB* fileFCB)
 {
   PVFATFCB  rcFCB;
   WCHAR  pathName [MAX_PATH];
-  WCHAR  entryName [14];
   ULONG Size;
   ULONG hash;
   
-  if (longName [0] != 0 && wcslen (directoryFCB->PathName) +
-        sizeof(WCHAR) + wcslen (longName) > MAX_PATH)
+  UNICODE_STRING NameU;
+
+  if (directoryFCB->PathNameU.Length + 2 * sizeof(WCHAR) +
+      + DirContext->LongNameU.Length > MAX_PATH * sizeof(WCHAR))
   {
     return  STATUS_OBJECT_NAME_INVALID;
   }
-  wcscpy (pathName, directoryFCB->PathName);
+  NameU.Buffer = pathName;
+  NameU.Length = 0;
+  NameU.MaximumLength = sizeof(pathName);
+
+  RtlCopyUnicodeString(&NameU, &directoryFCB->PathNameU);
   if (!vfatFCBIsRoot (directoryFCB))
   {
-    wcscat (pathName, L"\\");
+    RtlAppendUnicodeToString(&NameU, L"\\");
   }
-  hash = vfatNameHash(0, pathName);
-  vfatGetDirEntryName (dirEntry, entryName);
-  if (longName [0] != 0)
+  hash = vfatNameHash(0, &NameU);
+  if (DirContext->LongNameU.Length > 0)
   {
-    wcscat (pathName, longName);
+    RtlAppendUnicodeStringToString(&NameU, &DirContext->LongNameU);
   }
   else
   {
-    wcscat (pathName, entryName);
+    RtlAppendUnicodeStringToString(&NameU, &DirContext->ShortNameU);
   }
-  rcFCB = vfatNewFCB (pathName);
-  memcpy (&rcFCB->entry, dirEntry, sizeof (FAT_DIR_ENTRY));
-  wcscpy(rcFCB->ShortName, entryName);
-  rcFCB->ShortHash.Hash = vfatNameHash(hash, entryName);
-  
+  NameU.Buffer[NameU.Length / sizeof(WCHAR)] = 0;
+  rcFCB = vfatNewFCB (&NameU);
+  memcpy (&rcFCB->entry, &DirContext->FatDirEntry, sizeof (FAT_DIR_ENTRY));
+  RtlCopyUnicodeString(&rcFCB->ShortNameU, &DirContext->ShortNameU);
+  rcFCB->ShortHash.Hash = vfatNameHash(hash, &rcFCB->ShortNameU);
+
   if (vfatFCBIsDirectory(rcFCB))
   {
     ULONG FirstCluster, CurrentCluster;
@@ -425,8 +460,8 @@ vfatMakeFCBFromDirEntry(PVCB  vcb,
   {
     Size = rcFCB->entry.FileSize;
   }
-  rcFCB->dirIndex = dirIndex;
-  rcFCB->startIndex = startIndex;
+  rcFCB->dirIndex = DirContext->DirIndex;
+  rcFCB->startIndex = DirContext->StartIndex;
   rcFCB->RFCB.FileSize.QuadPart = Size;
   rcFCB->RFCB.ValidDataLength.QuadPart = Size;
   rcFCB->RFCB.AllocationSize.QuadPart = ROUND_UP(Size, vcb->FatInfo.BytesPerCluster);
@@ -452,6 +487,7 @@ vfatAttachFCBToFileObject (PDEVICE_EXTENSION  vcb,
   newCCB = ExAllocateFromNPagedLookasideList(&VfatGlobalData->CcbLookasideList);
   if (newCCB == NULL)
   {
+    CHECKPOINT;
     return  STATUS_INSUFFICIENT_RESOURCES;
   }
   memset (newCCB, 0, sizeof (VFATCCB));
@@ -461,7 +497,7 @@ vfatAttachFCBToFileObject (PDEVICE_EXTENSION  vcb,
   fileObject->SectionObjectPointer = &fcb->SectionObjectPointers;
   fileObject->FsContext = fcb;
   fileObject->FsContext2 = newCCB;
-  DPRINT ("file open: fcb:%x file size: %d\n", fcb, fcb->entry.FileSize);
+  DPRINT ("file open: fcb:%x PathName:%wZ file size: %d\n", fcb, &fcb->PathNameU, fcb->entry.FileSize);
 
   return  STATUS_SUCCESS;
 }
@@ -469,92 +505,77 @@ vfatAttachFCBToFileObject (PDEVICE_EXTENSION  vcb,
 NTSTATUS
 vfatDirFindFile (PDEVICE_EXTENSION  pDeviceExt,
                  PVFATFCB  pDirectoryFCB,
-                 PWSTR  pFileToFind,
+                 PUNICODE_STRING FileToFindU,
                  PVFATFCB * pFoundFCB)
 {
-  ULONG  directoryIndex;
-  ULONG startIndex;
   NTSTATUS  status;
-  WCHAR  defaultFileName [2];
-  WCHAR  currentLongName [256];
-  FAT_DIR_ENTRY  currentDirEntry;
-  WCHAR  currentEntryName [256];
   PVOID Context = NULL;
   PVOID Page;
+  BOOLEAN First = TRUE;
+  VFAT_DIRENTRY_CONTEXT DirContext;
+  WCHAR LongNameBuffer[MAX_PATH];
+  WCHAR ShortNameBuffer[13];
+  BOOLEAN FoundLong;
+  BOOLEAN FoundShort;
 
   assert (pDeviceExt);
   assert (pDirectoryFCB);
-  assert (pFileToFind);
+  assert (FileToFindU);
 
-  DPRINT ("vfatDirFindFile(VCB:%08x, dirFCB:%08x, File:%S)\n",
+  DPRINT ("vfatDirFindFile(VCB:%08x, dirFCB:%08x, File:%wZ)\n",
           pDeviceExt,
           pDirectoryFCB,
-          pFileToFind);
-  DPRINT ("Dir Path:%S\n", pDirectoryFCB->PathName);
+          FileToFindU);
+  DPRINT ("Dir Path:%wZ\n", &pDirectoryFCB->PathNameU);
 
-  //  default to '.' if no filename specified
-  if (wcslen (pFileToFind) == 0)
-  {
-    defaultFileName [0] = L'.';
-    defaultFileName [1] = 0;
-    pFileToFind = defaultFileName;
-  }
+  DirContext.DirIndex = 0;
+  DirContext.LongNameU.Buffer = LongNameBuffer;
+  DirContext.LongNameU.Length = 0;
+  DirContext.LongNameU.MaximumLength = sizeof(LongNameBuffer);
+  DirContext.ShortNameU.Buffer = ShortNameBuffer;
+  DirContext.ShortNameU.Length = 0;
+  DirContext.ShortNameU.MaximumLength = sizeof(ShortNameBuffer);
 
-  directoryIndex = 0;
   while (TRUE)
-  {
-    status = vfatGetNextDirEntry(&Context,
-	                         &Page, 
-	                         pDirectoryFCB,
-				 &directoryIndex,
-				 currentLongName,
-				 &currentDirEntry,
-				 &startIndex);
-    if (status == STATUS_NO_MORE_ENTRIES)
     {
-      return STATUS_OBJECT_NAME_NOT_FOUND;
-    }
-
-    DPRINT ("  Index:%d  longName:%S\n",
-            directoryIndex,
-            currentLongName);
-
-    if (!vfatIsDirEntryVolume(&currentDirEntry))
-    {
-      if (currentLongName [0] != L'\0' && wstrcmpjoki (currentLongName, pFileToFind))
-      {
-        DPRINT ("Match found, %S\n", currentLongName);
-        status = vfatMakeFCBFromDirEntry (pDeviceExt,
-                                          pDirectoryFCB,
-                                          currentLongName,
-                                          &currentDirEntry,
-					  startIndex, 
-                                          directoryIndex,
-                                          pFoundFCB);
-	CcUnpinData(Context);
-        return  status;
-      }
-      else
-      {
-        vfatGetDirEntryName (&currentDirEntry, currentEntryName);
-        DPRINT ("  entryName:%S\n", currentEntryName);
-
-        if (wstrcmpjoki (currentEntryName, pFileToFind))
+      status = vfatGetNextDirEntry(&Context,
+	                           &Page, 
+	                           pDirectoryFCB,
+				   &DirContext,
+				   First);
+      First = FALSE;
+      if (status == STATUS_NO_MORE_ENTRIES)
         {
-          DPRINT ("Match found, %S\n", currentEntryName);
-          status = vfatMakeFCBFromDirEntry (pDeviceExt,
-                                            pDirectoryFCB,
-                                            currentLongName,
-                                            &currentDirEntry,
-					    startIndex,
-                                            directoryIndex,
-                                            pFoundFCB);
-          CcUnpinData(Context);
-          return  status;
+          return STATUS_OBJECT_NAME_NOT_FOUND;
         }
-      }
-    }
-    directoryIndex++;
+      if (!NT_SUCCESS(status))
+        {
+	  return status;
+	}
+
+      DPRINT ("  Index:%d  longName:%wZ\n",
+              DirContext.DirIndex,
+              &DirContext.LongNameU);
+      DirContext.LongNameU.Buffer[DirContext.LongNameU.Length / sizeof(WCHAR)] = 0;
+      DirContext.ShortNameU.Buffer[DirContext.ShortNameU.Length / sizeof(WCHAR)] = 0;
+      if (!ENTRY_VOLUME(&DirContext.FatDirEntry))
+        {
+	  FoundLong = RtlEqualUnicodeString(FileToFindU, &DirContext.LongNameU, TRUE);
+	  if (FoundLong == FALSE)
+	    {
+	      FoundShort = RtlEqualUnicodeString(FileToFindU, &DirContext.ShortNameU, TRUE);
+	    }
+	  if (FoundLong || FoundShort)
+	    {
+              status = vfatMakeFCBFromDirEntry (pDeviceExt,
+                                                pDirectoryFCB,
+						&DirContext,
+                                                pFoundFCB);
+	      CcUnpinData(Context);
+              return  status;
+            }
+	}
+      DirContext.DirIndex++;
   }
 
   return  STATUS_OBJECT_NAME_NOT_FOUND;
@@ -564,127 +585,119 @@ NTSTATUS
 vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB,
                    PVFATFCB  *pParentFCB,
                    PVFATFCB  *pFCB,
-                   const PWSTR  pFileName)
+                   PUNICODE_STRING pFileNameU)
 {
   NTSTATUS  status;
-  WCHAR  pathName [MAX_PATH];
-  WCHAR  elementName [MAX_PATH];
-  PWCHAR  currentElement;
-  PVFATFCB  FCB;
+  PVFATFCB  FCB = NULL;
   PVFATFCB  parentFCB;
+  UNICODE_STRING NameU;
+  UNICODE_STRING RootNameU;
+  PWCHAR curr, prev, last;
 
-  DPRINT ("vfatGetFCBForFile (%x,%x,%x,%S)\n",
+  DPRINT ("vfatGetFCBForFile (%x,%x,%x,%wZ)\n",
           pVCB,
           pParentFCB,
           pFCB,
-          pFileName);
+          pFileNameU);
+
+  RtlInitUnicodeStringFromLiteral(&RootNameU, L"\\");
 
   //  Trivial case, open of the root directory on volume
-  if (pFileName [0] == L'\0' || wcscmp (pFileName, L"\\") == 0)
-  {
-    DPRINT ("returning root FCB\n");
-
-    FCB = vfatOpenRootFCB (pVCB);
-    *pFCB = FCB;
-    *pParentFCB = NULL;
-
-    return  (FCB != NULL) ? STATUS_SUCCESS : STATUS_OBJECT_PATH_NOT_FOUND;
-  }
-
-  currentElement = wcsrchr(pFileName, L'\\');
-  wcsncpy(pathName, pFileName, currentElement - pFileName);
-  pathName[currentElement - pFileName] = L'\0';
-  currentElement++;
-
-  FCB = vfatGrabFCBFromTable(pVCB, pathName);
-  if (FCB == NULL)
-  {
-     currentElement = pFileName + 1;
-     wcscpy (pathName, L"\\");
-     FCB = vfatOpenRootFCB (pVCB);
-  }
-  parentFCB = NULL;
-
-  //  Parse filename and check each path element for existance and access
-  while (vfatGetNextPathElement (currentElement) != 0)
-  {
-    //  Skip blank directory levels
-    if ((vfatGetNextPathElement (currentElement) - currentElement) == 0)
+  if (RtlEqualUnicodeString(pFileNameU, &RootNameU, FALSE))
     {
-      currentElement++;
-      continue;
-    }
+      DPRINT ("returning root FCB\n");
 
-    DPRINT ("Parsing, currentElement:%S\n", currentElement);
-    DPRINT ("  parentFCB:%x FCB:%x\n", parentFCB, FCB);
-
-    //  descend to next directory level
-    if (parentFCB)
-    {
-      vfatReleaseFCB (pVCB, parentFCB);
-      parentFCB = 0;
-    }
-    //  fail if element in FCB is not a directory
-    if (!vfatFCBIsDirectory (FCB))
-    {
-      DPRINT ("Element in requested path is not a directory\n");
-
-      vfatReleaseFCB (pVCB, FCB);
-      FCB = 0;
+      FCB = vfatOpenRootFCB (pVCB);
+      *pFCB = FCB;
       *pParentFCB = NULL;
-      *pFCB = NULL;
 
-      return  STATUS_OBJECT_PATH_NOT_FOUND;
+      return  (FCB != NULL) ? STATUS_SUCCESS : STATUS_OBJECT_PATH_NOT_FOUND;
     }
-    parentFCB = FCB;
 
-    //  Extract next directory level into dirName
-    vfatWSubString (pathName,
-                    pFileName,
-                    vfatGetNextPathElement (currentElement) - pFileName);
-    DPRINT ("  pathName:%S\n", pathName);
-
-    FCB = vfatGrabFCBFromTable (pVCB, pathName);
-    if (FCB == NULL)
+  last = curr = pFileNameU->Buffer + pFileNameU->Length / sizeof(WCHAR) - 1;
+  while (*curr != L'\\' && curr > pFileNameU->Buffer)
     {
-      vfatWSubString (elementName,
-                      currentElement,
-                      vfatGetNextPathElement (currentElement) - currentElement);
-      DPRINT ("  elementName:%S\n", elementName);
-
-      status = vfatDirFindFile (pVCB, parentFCB, elementName, &FCB);
-      if (status == STATUS_OBJECT_NAME_NOT_FOUND)
-      {
-        *pParentFCB = parentFCB;
-        *pFCB = NULL;
-        currentElement = vfatGetNextPathElement(currentElement);
-        if (*currentElement == L'\0' || vfatGetNextPathElement(currentElement + 1) == 0)
-        {
-          return  STATUS_OBJECT_NAME_NOT_FOUND;
-        }
-        else
-        {
-          return  STATUS_OBJECT_PATH_NOT_FOUND;
-        }
-      }
-      else if (!NT_SUCCESS (status))
-      {
-        vfatReleaseFCB (pVCB, parentFCB);
-        *pParentFCB = NULL;
-        *pFCB = NULL;
-
-        return  status;
-      }
+      curr--;
     }
-    currentElement = vfatGetNextPathElement (currentElement);
-  }
+ 
+  if (curr > pFileNameU->Buffer)
+    {
+      NameU.Buffer = pFileNameU->Buffer;
+      NameU.MaximumLength = NameU.Length = (curr - pFileNameU->Buffer - 1) * sizeof(WCHAR);
+      FCB = vfatGrabFCBFromTable(pVCB, &NameU);
+    }
+  else
+    {
+      FCB = NULL;
+    }
+
+  if (FCB == NULL)
+    {
+      FCB = vfatOpenRootFCB(pVCB);
+      curr = pFileNameU->Buffer;
+    }
+  curr++;
+  parentFCB = NULL;
+  while (curr <= last)
+    {
+      if (parentFCB)
+        {
+          vfatReleaseFCB (pVCB, parentFCB);
+          parentFCB = 0;
+        }
+      //  fail if element in FCB is not a directory
+      if (!vfatFCBIsDirectory (FCB))
+        {
+          DPRINT ("Element in requested path is not a directory\n");
+
+          vfatReleaseFCB (pVCB, FCB);
+          FCB = NULL;
+          *pParentFCB = NULL;
+          *pFCB = NULL;
+
+          return  STATUS_OBJECT_PATH_NOT_FOUND;
+	}
+      parentFCB = FCB;
+      NameU.Buffer = pFileNameU->Buffer;
+      prev = curr;
+      while (*curr != L'\\' && curr <= last)
+        {
+	  curr++;
+	}
+      NameU.MaximumLength = NameU.Length = (curr - NameU.Buffer) * sizeof(WCHAR);
+      FCB = vfatGrabFCBFromTable(pVCB, &NameU);
+      if (FCB == NULL)
+        {
+	  NameU.Buffer = prev;
+          NameU.MaximumLength = NameU.Length = (curr - prev) * sizeof(WCHAR);
+	  status = vfatDirFindFile(pVCB, parentFCB, &NameU, &FCB);
+          if (status == STATUS_OBJECT_NAME_NOT_FOUND)
+            {
+              *pParentFCB = parentFCB;
+              *pFCB = NULL;
+	      if (curr > last)
+	        {
+                  return  STATUS_OBJECT_NAME_NOT_FOUND;
+		}
+              else
+                {
+                  return  STATUS_OBJECT_PATH_NOT_FOUND;
+                }
+	    }
+          else if (!NT_SUCCESS (status))
+            {
+              vfatReleaseFCB (pVCB, parentFCB);
+              *pParentFCB = NULL;
+              *pFCB = NULL;
+
+              return  status;
+	    }
+	}
+      curr++;
+    }
 
   *pParentFCB = parentFCB;
   *pFCB = FCB;
 
   return  STATUS_SUCCESS;
 }
-
-
-
-

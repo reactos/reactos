@@ -1,10 +1,11 @@
-/* $Id: string.c,v 1.11 2003/07/24 20:52:58 chorns Exp $
+/* $Id: string.c,v 1.12 2003/10/11 17:51:56 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/vfat/string.c
+ * FILE:             drivers/fs/vfat/string.c
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
+ *                   Hartmut Birr
  *
  */
 
@@ -20,13 +21,21 @@
 
 /* FUNCTIONS ****************************************************************/
 
+const WCHAR *long_illegals = L"\"*\\<>/?:|";
+
+BOOLEAN 
+vfatIsLongIllegal(WCHAR c)
+{
+  return wcschr(long_illegals, c) ? TRUE : FALSE;
+}
+
 BOOLEAN wstrcmpjoki(PWSTR s1, PWSTR s2)
 /*
  * FUNCTION: Compare two wide character strings, s2 with jokers (* or ?)
  * return TRUE if s1 like s2
  */
 {
-   while ((*s2=='*')||(*s2=='?')||(towlower(*s1)==towlower(*s2)))
+   while ((*s2==L'*')||(*s2==L'?')||(RtlUpcaseUnicodeChar(*s1)==RtlUpcaseUnicodeChar(*s2)))
    {
       if ((*s1)==0 && (*s2)==0)
         return(TRUE);
@@ -43,54 +52,16 @@ BOOLEAN wstrcmpjoki(PWSTR s1, PWSTR s2)
         s2++;
       }
    }
-   if ((*s2)=='.')
+   if ((*s2)==L'.')
    {
-   	for (;((*s2)=='.')||((*s2)=='*')||((*s2)=='?');s2++) {}
+   	for (;((*s2)==L'.')||((*s2)==L'*')||((*s2)==L'?');s2++) {}
    }
    if ((*s1)==0 && (*s2)==0)
         return(TRUE);
    return(FALSE);
 }
 
-PWCHAR  
-vfatGetNextPathElement (PWCHAR  pFileName)
-{
-  if (*pFileName == L'\0')
-  {
-    return  0;
-  }
 
-  while (*pFileName != L'\0' && *pFileName != L'\\')
-  {
-    pFileName++;
-  }
 
-  return  pFileName;
-}
-
-void
-vfatWSubString (PWCHAR pTarget, const PWCHAR pSource, size_t pLength)
-{
-  wcsncpy (pTarget, pSource, pLength);
-  pTarget [pLength] = L'\0';
-}
-
-BOOL  
-vfatIsFileNameValid (PWCHAR pFileName)
-{
-  PWCHAR  c;
-
-  c = pFileName;
-  while (*c != 0)
-  {
-    if (*c == L'*' || *c == L'?')
-    {
-      return FALSE;
-    }
-    c++;
-  }
-
-  return  TRUE;
-}
 
 

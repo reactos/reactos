@@ -1,8 +1,8 @@
-/* $Id: shutdown.c,v 1.7 2003/07/24 20:52:58 chorns Exp $
+/* $Id: shutdown.c,v 1.8 2003/10/11 17:51:56 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/vfat/shutdown.c
+ * FILE:             drivers/fs/vfat/shutdown.c
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Eric Kohl (ekohl@rz-online.de)
  */

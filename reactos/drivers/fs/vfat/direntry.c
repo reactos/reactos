@@ -1,4 +1,4 @@
-/* $Id: direntry.c,v 1.14 2003/07/24 20:52:58 chorns Exp $
+/* $Id: direntry.c,v 1.15 2003/10/11 17:51:56 hbirr Exp $
  *
  *
  * FILE:             DirEntry.c
@@ -7,6 +7,7 @@
  * PROJECT:          ReactOS kernel
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
  *                   Rex Jolliff (rex@lvcablemodem.com)
+ *                   Hartmut Birr
  */
 
 /*  -------------------------------------------------------  INCLUDES  */
@@ -41,44 +42,64 @@ vfatDirEntryGetFirstCluster (PDEVICE_EXTENSION  pDeviceExt,
   return  cluster;
 }
 
-BOOL
-vfatIsDirEntryDeleted (FATDirEntry * pFatDirEntry)
+BOOL VfatIsDirectoryEmpty(PVFATFCB Fcb)
 {
-  return  pFatDirEntry->Filename [0] == 0xe5;
-}
+   LARGE_INTEGER FileOffset;
+   PVOID Context = NULL;
+   PFAT_DIR_ENTRY FatDirEntry;
+   ULONG Index, MaxIndex;
 
-BOOL
-vfatIsDirEntryEndMarker (FATDirEntry * pFatDirEntry)
-{
-  return  pFatDirEntry->Filename [0] == 0;
-}
+   if (vfatFCBIsRoot(Fcb))
+     {
+       Index = 0;
+     }
+   else
+     {
+       Index = 2;
+     }
 
-BOOL
-vfatIsDirEntryLongName (FATDirEntry * pFatDirEntry)
-{
-  return  pFatDirEntry->Attrib == 0x0f;
-}
+   FileOffset.QuadPart = 0LL;
+   MaxIndex = Fcb->RFCB.FileSize.u.LowPart / sizeof(FAT_DIR_ENTRY);
 
-BOOL
-vfatIsDirEntryVolume (FATDirEntry * pFatDirEntry)
-{
-  return 0x08 == (pFatDirEntry->Attrib & 0x1f);
+   while (Index < MaxIndex)
+     {
+       if (Context == NULL || (Index % ENTRIES_PER_PAGE) == 0)
+         {
+	   if (Context != NULL)
+	     {
+	       CcUnpinData(Context);
+	     }
+	    if (!CcMapData(Fcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, &Context, (PVOID*)&FatDirEntry))
+	      {
+		return TRUE;
+	      }
+	    FatDirEntry += Index % ENTRIES_PER_PAGE;
+	 }
+       if (ENTRY_END(FatDirEntry))
+	  {
+	    CcUnpinData(Context);
+	    return TRUE;
+	  }
+       if (!ENTRY_DELETED(FatDirEntry))
+         {
+	   CcUnpinData(Context);
+	   return FALSE;
+	 }
+       Index++;
+       FatDirEntry++;
+     }
+   if (Context)
+     {
+       CcUnpinData(Context);
+     }
+   return TRUE;
 }
-
-void
-vfatGetDirEntryName (PFAT_DIR_ENTRY  dirEntry,  PWSTR  entryName)
-{
-  vfat8Dot3ToString (dirEntry, entryName);
-}
-
 
 NTSTATUS vfatGetNextDirEntry(PVOID * pContext,
 			     PVOID * pPage,
-			     IN PVFATFCB pDirFcb,
-			     IN OUT PULONG pDirIndex,
-			     OUT PWSTR pFileName,
-			     OUT PFAT_DIR_ENTRY pDirEntry,
-			     OUT PULONG pStartIndex)
+                             IN PVFATFCB pDirFcb,
+			     PVFAT_DIRENTRY_CONTEXT DirContext,
+			     BOOLEAN First)
 {
     ULONG dirMap;
     PWCHAR pName;
@@ -86,13 +107,18 @@ NTSTATUS vfatGetNextDirEntry(PVOID * pContext,
     FATDirEntry * fatDirEntry;
     slot * longNameEntry;
     ULONG index;
+    
+    UCHAR CheckSum, shortCheckSum;
+    USHORT i;
+    BOOLEAN Valid = TRUE;
+    BOOLEAN Back = FALSE;
 
-    *pFileName = 0;
+    DirContext->LongNameU.Buffer[0] = 0;
 
     FileOffset.u.HighPart = 0;
-    FileOffset.u.LowPart = ROUND_DOWN(*pDirIndex * sizeof(FATDirEntry), PAGE_SIZE);
+    FileOffset.u.LowPart = ROUND_DOWN(DirContext->DirIndex * sizeof(FATDirEntry), PAGE_SIZE);
 
-    if (*pContext == NULL || (*pDirIndex % ENTRIES_PER_PAGE) == 0)
+    if (*pContext == NULL || (DirContext->DirIndex % ENTRIES_PER_PAGE) == 0)
     {
        if (*pContext != NULL)
        {
@@ -106,42 +132,97 @@ NTSTATUS vfatGetNextDirEntry(PVOID * pContext,
     }
 
 
-    fatDirEntry = (FATDirEntry*)(*pPage) + *pDirIndex % ENTRIES_PER_PAGE;
+    fatDirEntry = (FATDirEntry*)(*pPage) + DirContext->DirIndex % ENTRIES_PER_PAGE;
     longNameEntry = (slot*) fatDirEntry;
     dirMap = 0;
 
-    if (pStartIndex)
-    {
-	*pStartIndex = *pDirIndex;
-    }
+    if (First)
+      {
+        /* This is the first call to vfatGetNextDirEntry. Possible the start index points 
+	 * into a long name or points to a short name with an assigned long name. 
+	 * We must go back to the real start of the entry */
+        while (DirContext->DirIndex > 0 && 
+	       !ENTRY_END(fatDirEntry) && 
+	       !ENTRY_DELETED(fatDirEntry) && 
+	       ((!ENTRY_LONG(fatDirEntry) && !Back) || 
+	        (ENTRY_LONG(fatDirEntry) && !(longNameEntry->id & 0x40))))
+          {
+            DirContext->DirIndex--;
+	    Back = TRUE;
+            if ((DirContext->DirIndex % ENTRIES_PER_PAGE) == ENTRIES_PER_PAGE - 1)
+              {
+                CcUnpinData(*pContext);
+                FileOffset.u.LowPart -= PAGE_SIZE;
+                if (!CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage))
+                  {
+	            CHECKPOINT;
+	            *pContext = NULL;
+	            return STATUS_NO_MORE_ENTRIES;
+		  }
+                fatDirEntry = (FATDirEntry*)(*pPage) + DirContext->DirIndex % ENTRIES_PER_PAGE;
+                longNameEntry = (slot*) fatDirEntry;
+              }
+	    else
+	      {
+                fatDirEntry--;
+	        longNameEntry--;
+	      }
+          }
+
+        if (!ENTRY_END(fatDirEntry) && 
+	    (ENTRY_DELETED(fatDirEntry) || !ENTRY_LONG(fatDirEntry)))
+          {
+            DirContext->DirIndex++;
+	    if ((DirContext->DirIndex % ENTRIES_PER_PAGE) == 0)
+	      {
+	        CcUnpinData(*pContext);
+	        FileOffset.u.LowPart += PAGE_SIZE;
+	        if (!CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage))
+	          {
+		    CHECKPOINT;
+		    *pContext = NULL;
+		    return STATUS_NO_MORE_ENTRIES;
+	          }
+	        fatDirEntry = (FATDirEntry*)*pPage;
+	        longNameEntry = (slot*) *pPage;
+	      }
+	    else
+ 	      {
+	        fatDirEntry++;
+	        longNameEntry++;
+	      }
+          }
+      }
+
+    DirContext->StartIndex = DirContext->DirIndex;
+    CheckSum = 0;
 
     while (TRUE)
-    {
-	if (vfatIsDirEntryEndMarker(fatDirEntry))
-	{
+      {
+	if (ENTRY_END(fatDirEntry))
+	  {
 	    CcUnpinData(*pContext);
 	    *pContext = NULL;
 	    return STATUS_NO_MORE_ENTRIES;
-	}
+	  }
 
-	if (vfatIsDirEntryDeleted (fatDirEntry))
-	{
+	if (ENTRY_DELETED(fatDirEntry))
+	  {
 	    dirMap = 0;
-	    *pFileName = 0;
-	    if (pStartIndex)
-	    {
-		*pStartIndex = *pDirIndex + 1;
-	    }
-	}
+	    DirContext->LongNameU.Buffer[0] = 0;
+	    DirContext->StartIndex = DirContext->DirIndex + 1;
+	  }
 	else
-	{
-	    if (vfatIsDirEntryLongName (fatDirEntry))
-	    {
+	  {
+	    if (ENTRY_LONG(fatDirEntry))
+	      {
 		if (dirMap == 0)
-		{
-		    DPRINT ("  long name entry found at %d\n", *pDirIndex);
-                    memset(pFileName, 0, 256 * sizeof(WCHAR));
-		}
+		  {
+		    DPRINT ("  long name entry found at %d\n", DirContext->DirIndex);
+                    memset(DirContext->LongNameU.Buffer, 0, DirContext->LongNameU.MaximumLength);
+		    CheckSum = longNameEntry->alias_checksum;
+		    Valid = TRUE;
+		  }
 
 		DPRINT ("  name chunk1:[%.*S] chunk2:[%.*S] chunk3:[%.*S]\n",
 			 5, longNameEntry->name0_4,
@@ -150,40 +231,70 @@ NTSTATUS vfatGetNextDirEntry(PVOID * pContext,
 
 		index = (longNameEntry->id & 0x1f) - 1;
 		dirMap |= 1 << index;
-		pName = pFileName + 13 * index;
+		pName = DirContext->LongNameU.Buffer + 13 * index;
 
 		memcpy(pName, longNameEntry->name0_4, 5 * sizeof(WCHAR));
 		memcpy(pName + 5, longNameEntry->name5_10, 6 * sizeof(WCHAR));
 		memcpy(pName + 11, longNameEntry->name11_12, 2 * sizeof(WCHAR));
       
-		DPRINT ("  longName: [%S]\n", pFileName);
-	    }
+		DPRINT ("  longName: [%S]\n", DirContext->LongNameU.Buffer);
+		if (CheckSum != longNameEntry->alias_checksum)
+		  {
+		    DPRINT1("Found wrong alias checksum in long name entry (first %x, current %x, %S)\n",
+			    CheckSum, longNameEntry->alias_checksum, DirContext->LongNameU.Buffer);
+		    Valid = FALSE;
+		  }
+	      }
 	    else
-	    {
-	        memcpy (pDirEntry, fatDirEntry, sizeof (FAT_DIR_ENTRY));
+	      {
+	        shortCheckSum = 0;
+                for (i = 0; i < 11; i++)
+                  {
+                    shortCheckSum = (((shortCheckSum & 1) << 7)
+                                  | ((shortCheckSum & 0xfe) >> 1))
+                                  + fatDirEntry->Filename[i];
+		  }
+	        if (shortCheckSum != CheckSum && DirContext->LongNameU.Buffer[0])
+		  {
+		    DPRINT1("Checksum from long and short name is not equal (short: %x, long: %x, %S)\n",
+			     shortCheckSum, CheckSum, DirContext->LongNameU.Buffer);
+		    DirContext->LongNameU.Buffer[0] = 0;
+		  }
+	        if (Valid == FALSE)
+		  {
+		    DirContext->LongNameU.Buffer[0] = 0;
+		  }
+    
+	        memcpy (&DirContext->FatDirEntry, fatDirEntry, sizeof (FAT_DIR_ENTRY));
 		break;
-	    }
-	}
-	(*pDirIndex)++;
-	if ((*pDirIndex % ENTRIES_PER_PAGE) == 0)
-	{
+	      }
+	   }
+	DirContext->DirIndex++;
+	if ((DirContext->DirIndex % ENTRIES_PER_PAGE) == 0)
+	  {
 	    CcUnpinData(*pContext);
 	    FileOffset.u.LowPart += PAGE_SIZE;
 	    if (!CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage))
-	    {
+	      {
 		CHECKPOINT;
 		*pContext = NULL;
 		return STATUS_NO_MORE_ENTRIES;
-	    }
+	      }
 	    fatDirEntry = (FATDirEntry*)*pPage;
 	    longNameEntry = (slot*) *pPage;
-	}
+	  }
 	else
-	{
+	  {
 	    fatDirEntry++;
 	    longNameEntry++;
-	}
-    }
+	  }
+      }
+    DirContext->LongNameU.Length = wcslen(DirContext->LongNameU.Buffer) * sizeof(WCHAR);
+    vfat8Dot3ToString(&DirContext->FatDirEntry, &DirContext->ShortNameU);
+    if (DirContext->LongNameU.Length == 0)
+      {
+        RtlCopyUnicodeString(&DirContext->LongNameU, &DirContext->ShortNameU);
+      }
     return STATUS_SUCCESS;
 }
 

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.42 2003/04/05 09:37:42 chorns Exp $
+# $Id: makefile,v 1.43 2003/10/11 17:51:56 hbirr Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -35,7 +35,13 @@ DEP_OBJECTS = $(TARGET_OBJECTS)
 
 TARGET_CLEAN = $(DEP_FILES) *.o *.sys *.sym
 
-TARGET_CFLAGS = -g
+include $(PATH_TO_TOP)/config
+
+ifeq ($(DBG), 1)
+TARGET_CFLAGS = -Wall -Werror -g
+else
+TARGET_CFLAGS = -Wall -Werror -fno-strict-aliasing -O6
+endif
 
 include $(PATH_TO_TOP)/rules.mak
 

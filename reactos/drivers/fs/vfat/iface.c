@@ -16,12 +16,13 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: iface.c,v 1.71 2003/09/20 20:31:57 weiden Exp $
+/* $Id: iface.c,v 1.72 2003/10/11 17:51:56 hbirr Exp $
  *
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/vfat/iface.c
+ * FILE:             drivers/fs/vfat/iface.c
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
+ *                   Hartmut Birr
  */
 
 /* INCLUDES *****************************************************************/

@@ -1,11 +1,12 @@
 /*
- * $Id: fat.c,v 1.43 2003/07/24 20:52:58 chorns Exp $
+ * $Id: fat.c,v 1.44 2003/10/11 17:51:56 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/vfat/fat.c
+ * FILE:             drivers/fs/vfat/fat.c
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
+ *                   Hartmut Birr
  *
  */
 
@@ -143,7 +144,7 @@ FAT16FindAvailableCluster(PDEVICE_EXTENSION DeviceExt,
   ULONG ChunkSize;
   PVOID Context = 0;
   LARGE_INTEGER Offset;
-  PUSHORT Block;
+  PUSHORT Block = NULL;
 
   ChunkSize = CACHEPAGESIZE(DeviceExt);
   FatLength = (DeviceExt->FatInfo.NumberOfClusters +2 ) * 2;
@@ -155,7 +156,7 @@ FAT16FindAvailableCluster(PDEVICE_EXTENSION DeviceExt,
     for (i = StartCluster * 2; i < FatLength; i += 2, Block++)
     {
       if ((i % ChunkSize) == 0 || Context == NULL)
-	   {
+      {
         Offset.QuadPart = ROUND_DOWN(i, ChunkSize);
         if (Context != NULL)
         {
@@ -168,8 +169,8 @@ FAT16FindAvailableCluster(PDEVICE_EXTENSION DeviceExt,
           return STATUS_UNSUCCESSFUL;
         }
         CHECKPOINT;
-		Block = (PUSHORT)((char*)BaseAddress + i % ChunkSize);
-	   }
+	Block = (PUSHORT)((char*)BaseAddress + i % ChunkSize);
+      }
 
       if (*Block == 0)
 	   {
@@ -256,7 +257,7 @@ FAT32FindAvailableCluster (PDEVICE_EXTENSION DeviceExt, PULONG Cluster)
   ULONG ChunkSize;
   PVOID Context = 0;
   LARGE_INTEGER Offset;
-  PULONG Block;
+  PULONG Block = NULL;
 
   ChunkSize = CACHEPAGESIZE(DeviceExt);
   FatLength = (DeviceExt->FatInfo.NumberOfClusters + 2) * 4;
@@ -354,7 +355,7 @@ FAT16CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
  * FUNCTION: Counts free clusters in a FAT16 table
  */
 {
-  PUSHORT Block;
+  PUSHORT Block = NULL;
   PVOID BaseAddress = NULL;
   ULONG ulCount = 0;
   ULONG i;
@@ -400,7 +401,7 @@ FAT32CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
  * FUNCTION: Counts free clusters in a FAT32 table
  */
 {
-  PULONG Block;
+  PULONG Block = NULL;
   PVOID BaseAddress = NULL;
   ULONG ulCount = 0;
   ULONG i;

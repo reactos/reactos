@@ -1,10 +1,11 @@
-/* $Id: volume.c,v 1.23 2003/08/07 11:47:32 silverblade Exp $
+/* $Id: volume.c,v 1.24 2003/10/11 17:51:56 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/vfat/volume.c
+ * FILE:             drivers/fs/vfat/volume.c
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
+ *                   Hartmut Birr
  */
 
 /* INCLUDES *****************************************************************/
