@@ -1,4 +1,4 @@
-/* $Id: except.c,v 1.17 2004/09/26 16:54:53 royce Exp $
+/* $Id: except.c,v 1.18 2004/11/10 01:07:45 blight Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -93,7 +93,7 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
    DWORD RetValue;
    HANDLE DebugPort = NULL;
    NTSTATUS ErrCode;
-   static int RescursionTrap = 3;
+   static int RecursionTrap = 3;
 
 #if 0
    if (ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
@@ -106,7 +106,7 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
    }
 #endif
 
-   if (--RescursionTrap > 0)
+   if (RecursionTrap > 0)
    {
       /* Is there a debugger running ? */
       ErrCode = NtQueryInformationProcess(NtCurrentProcess(), ProcessDebugPort,
@@ -135,7 +135,7 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
       }
    }
 
-   if (RescursionTrap >= 0 && (GetErrorMode() & SEM_NOGPFAULTERRORBOX) == 0)
+   if (RecursionTrap-- > 0 && (GetErrorMode() & SEM_NOGPFAULTERRORBOX) == 0)
    {
 #ifdef _X86_
       PULONG Frame;
