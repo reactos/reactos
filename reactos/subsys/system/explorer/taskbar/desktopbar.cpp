@@ -241,7 +241,7 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	  case WM_TIMER:
 		if (wparam == ID_TRAY_VOLUME) {
 			KillTimer(_hwnd, wparam);
-			WinExec("sndvol32.exe -t", SW_SHOWNORMAL);	// launch volume control in small mode
+			launch_file(_hwnd, TEXT("sndvol32.exe"), SW_SHOWNORMAL, TEXT("-t"));	// launch volume control in small mode
 		}
 		break;
 
@@ -323,7 +323,11 @@ int DesktopBar::Command(int id, int code)
 		break;}
 
 	  case ID_TRAY_VOLUME:
-		WinExec("sndvol32.exe", SW_SHOWNORMAL);
+		launch_file(_hwnd, TEXT("sndvol32.exe"), SW_SHOWNORMAL);	// launch volume control application
+		break;
+
+	  case ID_VOLUME_PROPERTIES:
+		RunDLL(_hwnd, TEXT("shell32"), "Control_RunDLL", TEXT("mmsys.cpl"), SW_SHOWNORMAL);
 		break;
 
 	  default:
@@ -394,7 +398,7 @@ void DesktopBar::TrayDblClick(UINT id, int btn)
 	switch(id) {
 	  case ID_TRAY_VOLUME:
 		KillTimer(_hwnd, ID_TRAY_VOLUME);	// finish one-click timer
-		WinExec("sndvol32.exe", SW_SHOWNORMAL);
+		launch_file(_hwnd, TEXT("sndvol32.exe"), SW_SHOWNORMAL);	// launch volume control application
 		break;
 	}
 }

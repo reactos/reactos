@@ -176,11 +176,11 @@ BOOL time_to_filetime(const time_t* t, FILETIME* ftime)
 }
 
 
-BOOL launch_file(HWND hwnd, LPCTSTR cmd, UINT nCmdShow)
+BOOL launch_file(HWND hwnd, LPCTSTR cmd, UINT nCmdShow, LPCTSTR parameters)
 {
 	CONTEXT("launch_file()");
 
-	HINSTANCE hinst = ShellExecute(hwnd, NULL/*operation*/, cmd, NULL/*parameters*/, NULL/*dir*/, nCmdShow);
+	HINSTANCE hinst = ShellExecute(hwnd, NULL/*operation*/, cmd, parameters, NULL/*dir*/, nCmdShow);
 
 	if ((int)hinst <= 32) {
 		display_error(hwnd, GetLastError());
@@ -191,9 +191,9 @@ BOOL launch_file(HWND hwnd, LPCTSTR cmd, UINT nCmdShow)
 }
 
 #ifdef UNICODE
-BOOL launch_fileA(HWND hwnd, LPSTR cmd, UINT nCmdShow)
+BOOL launch_fileA(HWND hwnd, LPSTR cmd, UINT nCmdShow, LPCSTR parameters)
 {
-	HINSTANCE hinst = ShellExecuteA(hwnd, NULL/*operation*/, cmd, NULL/*parameters*/, NULL/*dir*/, nCmdShow);
+	HINSTANCE hinst = ShellExecuteA(hwnd, NULL/*operation*/, cmd, parameters, NULL/*dir*/, nCmdShow);
 
 	if ((int)hinst <= 32) {
 		display_error(hwnd, GetLastError());

@@ -146,17 +146,6 @@ extern BOOL time_to_filetime(const time_t* t, FILETIME* ftime);
  // search for windows of a specific classname
 extern int find_window_class(LPCTSTR classname);
 
- // launch a program or document file
-extern BOOL launch_file(HWND hwnd, LPCTSTR cmd, UINT nCmdShow);
-#ifdef UNICODE
-extern BOOL launch_fileA(HWND hwnd, LPSTR cmd, UINT nCmdShow);
-#else
-#define	launch_fileA launch_file
-#endif
-
- // call an DLL export like rundll32
-BOOL RunDLL(HWND hwnd, LPCTSTR dllname, LPCSTR procname, LPCTSTR cmdline, UINT nCmdShow);
-
  // create a directory with all missing parent directories
 BOOL RecursiveCreateDirectory(LPCTSTR path_in);
 
@@ -195,6 +184,18 @@ using namespace std;
 using namespace _com_util;
 
 #endif	// _MSC_VER && !_NO_COMUTIL
+
+
+ // launch a program or document file
+extern BOOL launch_file(HWND hwnd, LPCTSTR cmd, UINT nCmdShow, LPCTSTR parameters=NULL);
+#ifdef UNICODE
+extern BOOL launch_fileA(HWND hwnd, LPSTR cmd, UINT nCmdShow, LPCSTR parameters=NULL);
+#else
+#define	launch_fileA launch_file
+#endif
+
+ // call an DLL export like rundll32
+BOOL RunDLL(HWND hwnd, LPCTSTR dllname, LPCSTR procname, LPCTSTR cmdline, UINT nCmdShow);
 
 
  /// initialization of windows common controls
