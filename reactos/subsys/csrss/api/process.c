@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.37 2004/12/18 19:23:05 gvg Exp $
+/* $Id: process.c,v 1.38 2004/12/23 18:02:12 gvg Exp $
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -270,9 +270,7 @@ CSR_API(CsrTerminateProcess)
       return(Reply->Status = STATUS_INVALID_PARAMETER);
    }
 
-   Status = CsrFreeProcessData(ProcessData->ProcessId);
-
-   Reply->Status = Status;
+   Reply->Status = STATUS_SUCCESS;
    return Status;
 }
 

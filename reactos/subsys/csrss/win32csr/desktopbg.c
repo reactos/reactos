@@ -1,4 +1,4 @@
-/* $Id: desktopbg.c,v 1.13 2004/12/21 21:38:26 weiden Exp $
+/* $Id: desktopbg.c,v 1.14 2004/12/23 18:02:12 gvg Exp $
  *
  * reactos/subsys/csrss/win32csr/desktopbg.c
  *
@@ -326,7 +326,7 @@ CSR_API(CsrHideDesktop)
   
   /* The hDesktop handle is only valid while processing this request! */
 
-  DPRINT1("CsrHideDesktop (hwnd: 0x%x) (PID:%d)\n", Request->Data.ShowDesktopRequest.DesktopWindow, GetCurrentProcessId());
+  DPRINT("CsrHideDesktop (hwnd: 0x%x) (PID:%d)\n", Request->Data.ShowDesktopRequest.DesktopWindow, GetCurrentProcessId());
 
   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
