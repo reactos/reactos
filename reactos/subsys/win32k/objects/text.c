@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.99 2004/06/23 15:30:21 weiden Exp $ */
+/* $Id: text.c,v 1.100 2004/06/27 11:23:57 navaraf Exp $ */
 #include <w32k.h>
 
 #include <ft2build.h>
@@ -1579,59 +1579,6 @@ NtGdiExtTextOut(
    XStart = Start.x + dc->w.DCOrgX;
    YStart = Start.y + dc->w.DCOrgY;
 
-   TextObj = TEXTOBJ_LockText(dc->w.hFont);
-
-   if (!NT_SUCCESS(GetFontObjectsFromTextObj(TextObj, NULL, &FontObj, &FontGDI)))
-   {
-      goto fail;
-   }
-
-   face = FontGDI->face;
-   if (face->charmap == NULL)
-   {
-      DPRINT("WARNING: No charmap selected!\n");
-      DPRINT("This font face has %d charmaps\n", face->num_charmaps);
-
-      for (n = 0; n < face->num_charmaps; n++)
-      {
-         charmap = face->charmaps[n];
-         DPRINT("found charmap encoding: %u\n", charmap->encoding);
-         if (charmap->encoding != 0)
-         {
-            found = charmap;
-            break;
-         }
-      }
-      if (!found)
-         DPRINT1("WARNING: Could not find desired charmap!\n");
-      IntLockFreeType;
-      error = FT_Set_Charmap(face, found);
-      IntUnLockFreeType;
-      if (error)
-         DPRINT1("WARNING: Could not set the charmap!\n");
-   }
-
-   Render = IntIsFontRenderingEnabled();
-   if (Render)
-      RenderMode = IntGetFontRenderMode(&TextObj->logfont);
-   else
-      RenderMode = FT_RENDER_MODE_MONO;
-  
-   IntLockFreeType;
-   error = FT_Set_Pixel_Sizes(
-      face,
-      /* FIXME should set character height if neg */
-      (TextObj->logfont.lfHeight < 0 ?
-      - TextObj->logfont.lfHeight :
-      TextObj->logfont.lfHeight),
-      TextObj->logfont.lfWidth);
-   IntUnLockFreeType;
-   if (error)
-   {
-      DPRINT1("Error in setting pixel sizes: %u\n", error);
-      goto fail;
-   }
-
    /* Create the brushes */
    PalDestGDI = PALETTE_LockPalette(dc->w.hPalette);
    if ( !PalDestGDI )
@@ -1693,6 +1640,59 @@ NtGdiExtTextOut(
       {
          fuOptions |= ETO_OPAQUE;
       }
+   }
+
+   TextObj = TEXTOBJ_LockText(dc->w.hFont);
+
+   if (!NT_SUCCESS(GetFontObjectsFromTextObj(TextObj, NULL, &FontObj, &FontGDI)))
+   {
+      goto fail;
+   }
+
+   face = FontGDI->face;
+   if (face->charmap == NULL)
+   {
+      DPRINT("WARNING: No charmap selected!\n");
+      DPRINT("This font face has %d charmaps\n", face->num_charmaps);
+
+      for (n = 0; n < face->num_charmaps; n++)
+      {
+         charmap = face->charmaps[n];
+         DPRINT("found charmap encoding: %u\n", charmap->encoding);
+         if (charmap->encoding != 0)
+         {
+            found = charmap;
+            break;
+         }
+      }
+      if (!found)
+         DPRINT1("WARNING: Could not find desired charmap!\n");
+      IntLockFreeType;
+      error = FT_Set_Charmap(face, found);
+      IntUnLockFreeType;
+      if (error)
+         DPRINT1("WARNING: Could not set the charmap!\n");
+   }
+
+   Render = IntIsFontRenderingEnabled();
+   if (Render)
+      RenderMode = IntGetFontRenderMode(&TextObj->logfont);
+   else
+      RenderMode = FT_RENDER_MODE_MONO;
+  
+   IntLockFreeType;
+   error = FT_Set_Pixel_Sizes(
+      face,
+      /* FIXME should set character height if neg */
+      (TextObj->logfont.lfHeight < 0 ?
+      - TextObj->logfont.lfHeight :
+      TextObj->logfont.lfHeight),
+      TextObj->logfont.lfWidth);
+   IntUnLockFreeType;
+   if (error)
+   {
+      DPRINT1("Error in setting pixel sizes: %u\n", error);
+      goto fail;
    }
 
    /*
@@ -1994,6 +1994,7 @@ NtGdiGetCharWidth32(HDC  hDC,
    FT_Face face;
    FT_CharMap charmap, found = NULL;
    UINT i, glyph_index, BufferSize;
+   HFONT hFont;
 
    if (LastChar < FirstChar)
    {
@@ -2016,10 +2017,17 @@ NtGdiGetCharWidth32(HDC  hDC,
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
    }
-   TextObj = TEXTOBJ_LockText(dc->w.hFont);
+   TextObj = TEXTOBJ_LockText(hFont);
+   hFont = dc->w.hFont;
    DC_UnlockDc(hDC);
 
-   GetFontObjectsFromTextObj(TextObj, NULL, NULL, &FontGDI);
+   if (!NT_SUCCESS(GetFontObjectsFromTextObj(TextObj, NULL, NULL, &FontGDI)))
+   {
+      ExFreePool(SafeBuffer);
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      TEXTOBJ_UnlockText(hFont);
+      return FALSE;
+   }
    
    face = FontGDI->face;
    if (face->charmap == NULL)
@@ -2062,7 +2070,7 @@ NtGdiGetCharWidth32(HDC  hDC,
       SafeBuffer[i - FirstChar] = face->glyph->advance.x >> 6;
    }
    IntUnLockFreeType;
-   TEXTOBJ_UnlockText(dc->w.hFont);
+   TEXTOBJ_UnlockText(hFont);
    MmCopyToCaller(Buffer, SafeBuffer, BufferSize);
    ExFreePool(SafeBuffer);
    return TRUE;
@@ -2161,7 +2169,11 @@ TextIntGetTextExtentPoint(HDC hDC,
   FT_CharMap charmap, found = NULL;
   BOOL use_kerning;
 
-  GetFontObjectsFromTextObj(TextObj, NULL, NULL, &FontGDI);
+  if (!NT_SUCCESS(GetFontObjectsFromTextObj(TextObj, NULL, NULL, &FontGDI)))
+    {
+      return FALSE;
+    }
+
   face = FontGDI->face;
   if (NULL != Fit)
     {
