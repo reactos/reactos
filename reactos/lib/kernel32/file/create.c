@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.15 2000/01/11 17:30:16 ekohl Exp $
+/* $Id: create.c,v 1.16 2000/01/21 23:06:26 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -94,7 +94,7 @@ HANDLE STDCALL CreateFileW(LPCWSTR lpFileName,
 	dwCreationDisposition = FILE_OVERWRITE;
      }
 
-   DPRINT("CreateFileW(lpFileName %S)\n",lpFileName);
+   DPRINT1("CreateFileW(lpFileName %S)\n",lpFileName);
 
    if (dwDesiredAccess & GENERIC_READ)
         dwDesiredAccess |= FILE_GENERIC_READ;
@@ -117,7 +117,9 @@ HANDLE STDCALL CreateFileW(LPCWSTR lpFileName,
 	    lpFileName[2] == (WCHAR)'.' &&
 	    lpFileName[3] == (WCHAR)'\\')
      {
-	wcscpy(PathNameW, lpFileName);
+	wcscpy(PathNameW, lpFileName+4);
+    OutputDebugStringA( "Fuck off\n" );
+    DPRINT1( "Fucking String: %S\n", PathNameW );
      }
    else if (lpFileName[0] == (WCHAR)'\\')
      {

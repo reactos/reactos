@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.28 1999/11/17 21:33:44 ariadne Exp $
+# $Id: makefile,v 1.29 2000/01/21 23:06:25 phreak Exp $
 #
 # ReactOS Operating System
 #
@@ -10,6 +10,7 @@ BASE_CFLAGS = -I../../include
 
 CFLAGS = $(CFLAGS) -DKERNEL32_BASE=$(KERNEL32_BASE)
 
+include ../../rules.mak
 ifneq ($(HOST),mingw32-windows)
   ifneq ($(HOST),mingw32-linux)
     DLLTARGET=$(TARGET).a
@@ -156,4 +157,4 @@ else
 endif
 
 #WARNINGS_ARE_ERRORS = yes
-include ../../rules.mak
+
