@@ -1,4 +1,4 @@
-/* $Id: iofuncs.h,v 1.6 2000/03/05 19:17:37 ea Exp $ */
+/* $Id: iofuncs.h,v 1.7 2000/03/06 01:02:30 ea Exp $ */
 /* IO MANAGER ***************************************************************/
 
 BOOLEAN
@@ -100,6 +100,7 @@ IoAllocateErrorLogEntry (
  *          On failure NULL
  */
 PIRP
+STDCALL
 IoAllocateIrp (
 	CCHAR	StackSize,
 	BOOLEAN	ChargeQuota
@@ -281,11 +282,17 @@ IoBuildSynchronousFsdRequest (
  * FUNCTION: Sends an irp to the next lower driver
  */
 NTSTATUS
+FASTCALL
+IofCallDriver (
+	PDEVICE_OBJECT	DeviceObject,
+	PIRP		Irp
+	);
+NTSTATUS
+STDCALL
 IoCallDriver (
 	PDEVICE_OBJECT	DeviceObject,
-	PIRP		irp
+	PIRP		Irp
 	);
-
 BOOLEAN
 IoCancelIrp (
 	PIRP	Irp
@@ -309,11 +316,17 @@ IoCheckShareAccess (
  *                         thread making the request
  */
 VOID
+FASTCALL
+IofCompleteRequest (
+	PIRP	Irp,
+	CCHAR	PriorityBoost
+	);
+VOID
+STDCALL
 IoCompleteRequest (
 	PIRP	Irp,
 	CCHAR	PriorityBoost
 	);
-
 NTSTATUS
 IoConnectInterrupt (
 	PKINTERRUPT		* InterruptObject,
@@ -458,12 +471,11 @@ VOID
 IoFreeController (
 	PCONTROLLER_OBJECT	ControllerObject
 	);
-
 VOID
+STDCALL
 IoFreeIrp (
 	PIRP	Irp
 	);
-
 VOID
 IoFreeMapRegisters (
 	PADAPTER_OBJECT	AdapterObject,
@@ -502,12 +514,11 @@ IoGetDeviceObjectPointer (
 	PFILE_OBJECT	* FileObject,
 	PDEVICE_OBJECT	* DeviceObject
 	);
-
 PDEVICE_OBJECT
+STDCALL
 IoGetDeviceToVerify (
 	PETHREAD	Thread
 	);
-
 PGENERIC_MAPPING
 IoGetFileObjectGenericMapping (VOID);
 
@@ -547,6 +558,7 @@ IoInitializeDpcRequest (
  *          StackSize = Number of stack locations in the IRP
  */
 VOID
+STDCALL
 IoInitializeIrp (
 	PIRP	Irp,
 	USHORT	PacketSize,
@@ -564,18 +576,21 @@ BOOLEAN
 IoIsErrorUserInduced (
 	NTSTATUS	Status
 	);
-
+BOOLEAN
+STDCALL
+IoIsOperationSynchronous (
+	IN	PIRP	Irp
+	);
 BOOLEAN
 IoIsTotalDeviceFailure (
 	NTSTATUS	Status
 	);
-
 PIRP
+STDCALL
 IoMakeAssociatedIrp (
 	PIRP	Irp,
 	CCHAR	StackSize
 	);
-
 PHYSICAL_ADDRESS
 IoMapTransfer (
 	PADAPTER_OBJECT	AdapterObject,

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.39 2000/03/05 19:17:40 ea Exp $
+; $Id: ntoskrnl.edf,v 1.40 2000/03/06 01:02:30 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -146,11 +146,12 @@ FsRtlTruncateMcb=FsRtlTruncateMcb@8
 FsRtlUninitializeFileLock=FsRtlUninitializeFileLock@4
 FsRtlUninitializeLargeMcb=FsRtlUninitializeLargeMcb@4
 FsRtlUninitializeMcb=FsRtlUninitializeMcb@4
+IoAllocateIrp=IoAllocateIrp@8
 IoAllocateController
 IoAttachDeviceToDeviceStack
 IoBuildSynchronousFsdRequest
-IoCallDriver
-IoCompleteRequest
+IoCallDriver=IoCallDriver@8
+IoCompleteRequest=IoCompleteRequest@8
 IoConnectInterrupt
 IoCreateController
 IoCreateDevice
@@ -161,11 +162,16 @@ IoDeleteController
 IoDeleteDevice
 IoDisconnectInterrupt
 IoFreeController
+IoFreeIrp=IoFreeIrp@4
 IoGetBaseFileSystemDeviceObject=IoGetBaseFileSystemDeviceObject@4
 IoGetCurrentIrpStackLocation
+IoGetDeviceToVerify=IoGetDeviceToVerify@4
 IoGetRelatedDeviceObject=IoGetRelatedDeviceObject@4
 IoInitializeDpcRequest
+IoInitializeIrp=IoInitializeIrp@12
 IoInitializeTimer
+IoIsOperationSynchronous=IoIsOperationSynchronous@4
+IoMakeAssociatedIrp@8
 IoMarkIrpPending
 IoRegisterFileSystem
 IoRequestDpc
@@ -174,6 +180,10 @@ IoStartNextPacket
 IoStartNextPacketByKey
 IoStartTimer
 IoStopTimer
+;IofCallDriver=@IofCallDriver@0
+IofCallDriver=IofCallDriver@8
+;IofCompleteRequest=@IofCompleteRequest@0
+IofCompleteRequest=IofCompleteRequest@8
 KdDebuggerEnabled		DATA
 KdDebuggerNotPresent	DATA
 KdPollBreakIn=KdPollBreakIn@0

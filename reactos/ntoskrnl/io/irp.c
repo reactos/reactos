@@ -1,4 +1,5 @@
-/*
+/* $Id: irp.c,v 1.26 2000/03/06 01:02:30 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/irp.c
@@ -39,7 +40,9 @@
 
 /* FUNCTIONS ****************************************************************/
 
-PDEVICE_OBJECT IoGetDeviceToVerify(PETHREAD Thread)
+PDEVICE_OBJECT
+STDCALL
+IoGetDeviceToVerify (PETHREAD Thread)
 /*
  * FUNCTION: Returns a pointer to the device, representing a removable-media
  * device, that is the target of the given thread's I/O request
@@ -48,7 +51,10 @@ PDEVICE_OBJECT IoGetDeviceToVerify(PETHREAD Thread)
    UNIMPLEMENTED;
 }
 
-VOID IoFreeIrp(PIRP Irp)
+
+VOID
+STDCALL
+IoFreeIrp (PIRP Irp)
 /*
  * FUNCTION: Releases a caller allocated irp
  * ARGUMENTS:
@@ -58,7 +64,10 @@ VOID IoFreeIrp(PIRP Irp)
    ExFreePool(Irp);
 }
 
-PIRP IoMakeAssociatedIrp(PIRP Irp, CCHAR StackSize)
+
+PIRP
+STDCALL
+IoMakeAssociatedIrp (PIRP Irp, CCHAR StackSize)
 /*
  * FUNCTION: Allocates and initializes an irp to associated with a master irp
  * ARGUMENTS:
@@ -73,7 +82,13 @@ PIRP IoMakeAssociatedIrp(PIRP Irp, CCHAR StackSize)
    UNIMPLEMENTED;
 }
 
-VOID IoMarkIrpPending(PIRP Irp)
+
+/**********************************************************************
+ * NAME							INTERNAL
+ * 	IoMarkIrpPending
+ */
+VOID
+IoMarkIrpPending (PIRP Irp)
 /*
  * FUNCTION: Marks the specified irp, indicating further processing will
  * be required by other driver routines
@@ -86,7 +101,13 @@ VOID IoMarkIrpPending(PIRP Irp)
    IoGetCurrentIrpStackLocation(Irp)->Control |= SL_PENDING_RETURNED;
 }
 
-USHORT IoSizeOfIrp(CCHAR StackSize)
+
+/**********************************************************************
+ * NAME							INTERNAL
+ * 	IoSizeOfIrp
+ */
+USHORT
+IoSizeOfIrp (CCHAR StackSize)
 /*
  * FUNCTION:  Determines the size of an IRP
  * ARGUMENTS: 
@@ -97,7 +118,10 @@ USHORT IoSizeOfIrp(CCHAR StackSize)
    return(sizeof(IRP)+((StackSize-1)*sizeof(IO_STACK_LOCATION)));
 }
 
-VOID IoInitializeIrp(PIRP Irp, USHORT PacketSize, CCHAR StackSize)
+
+VOID
+STDCALL
+IoInitializeIrp (PIRP Irp, USHORT PacketSize, CCHAR StackSize)
 /*
  * FUNCTION: Initalizes an irp allocated by the caller
  * ARGUMENTS:
@@ -109,12 +133,19 @@ VOID IoInitializeIrp(PIRP Irp, USHORT PacketSize, CCHAR StackSize)
    assert(Irp != NULL);
 
    memset(Irp, 0, PacketSize);
+   Irp->Size = PacketSize;
    Irp->StackCount = StackSize;
    Irp->CurrentLocation = StackSize;
    Irp->Tail.Overlay.CurrentStackLocation = IoGetCurrentIrpStackLocation(Irp);
 }
 
-PIO_STACK_LOCATION IoGetCurrentIrpStackLocation(PIRP Irp)
+
+/**********************************************************************
+ * NAME							INTERNAL
+ *	IoGetCurrentIrpStackLocation
+ */
+PIO_STACK_LOCATION
+IoGetCurrentIrpStackLocation (PIRP Irp)
 /*
  * FUNCTION: Gets a pointer to the callers location in the I/O stack in
  * the given IRP
@@ -131,13 +162,25 @@ PIO_STACK_LOCATION IoGetCurrentIrpStackLocation(PIRP Irp)
    return(&Irp->Stack[(ULONG)Irp->CurrentLocation]);
 }
 
-VOID IoSetNextIrpStackLocation(PIRP Irp)
+
+/**********************************************************************
+ * NAME							INTERNAL
+ *	IoSetNextIrpStackLocation
+ */
+VOID
+IoSetNextIrpStackLocation (PIRP Irp)
 {
    Irp->CurrentLocation--;
    Irp->Tail.Overlay.CurrentStackLocation--;
 }
 
-PIO_STACK_LOCATION IoGetNextIrpStackLocation(PIRP Irp)
+
+/**********************************************************************
+ * NAME							INTERNAL
+ *	IoGetNextIrpStackLocation
+ */
+PIO_STACK_LOCATION
+IoGetNextIrpStackLocation (PIRP Irp)
 /*
  * FUNCTION: Gives a higher level driver access to the next lower driver's 
  * I/O stack location
@@ -153,7 +196,10 @@ PIO_STACK_LOCATION IoGetNextIrpStackLocation(PIRP Irp)
    return(&Irp->Stack[Irp->CurrentLocation-1]);
 }
 
-NTSTATUS IoCallDriver(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+
+NTSTATUS
+FASTCALL
+IofCallDriver (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
   * FUNCTION: Sends an IRP to the next lower driver
  */
@@ -178,7 +224,21 @@ NTSTATUS IoCallDriver(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    return Status;
 }
 
-PIRP IoAllocateIrp(CCHAR StackSize, BOOLEAN ChargeQuota)
+
+NTSTATUS
+STDCALL
+IoCallDriver (PDEVICE_OBJECT DeviceObject, PIRP Irp)
+{
+	return IofCallDriver (
+			DeviceObject,
+			Irp
+			);
+}
+
+
+PIRP
+STDCALL
+IoAllocateIrp (CCHAR StackSize, BOOLEAN ChargeQuota)
 /*
  * FUNCTION: Allocates an IRP
  * ARGUMENTS:
@@ -218,7 +278,13 @@ PIRP IoAllocateIrp(CCHAR StackSize, BOOLEAN ChargeQuota)
    return Irp;
 }
 
-VOID IoSetCompletionRoutine(PIRP Irp,
+
+/**********************************************************************
+ * NAME							INTERNAL
+ *	IoSetCompletionRoutine
+ */
+VOID
+IoSetCompletionRoutine (PIRP Irp,
 			    PIO_COMPLETION_ROUTINE CompletionRoutine,
 			    PVOID Context,
 			    BOOLEAN InvokeOnSuccess,
@@ -256,7 +322,10 @@ VOID IopCompleteRequest(struct _KAPC* Apc,
                            (KPRIORITY)(*SystemArgument2));
 }
 
-VOID IoCompleteRequest(PIRP Irp, CCHAR PriorityBoost)
+
+VOID
+FASTCALL
+IofCompleteRequest (PIRP Irp, CCHAR PriorityBoost)
 /*
  * FUNCTION: Indicates the caller has finished all processing for a given
  * I/O request and is returning the given IRP to the I/O manager
@@ -320,3 +389,73 @@ VOID IoCompleteRequest(PIRP Irp, CCHAR PriorityBoost)
      }
 }
 
+
+VOID
+STDCALL
+IoCompleteRequest (PIRP Irp, CCHAR PriorityBoost)
+{
+	IofCompleteRequest (
+		Irp,
+		PriorityBoost
+		);
+}
+
+
+/**********************************************************************
+ * NAME							EXPORTED
+ * 	IoIsOperationSynchronous@4
+ *
+ * DESCRIPTION
+ *	Check if the I/O operation associated with the given IRP
+ *	is synchronous.
+ *
+ * ARGUMENTS
+ * 	Irp 	Packet to check.
+ *
+ * RETURN VALUE
+ * 	TRUE if Irp's operation is synchronous; otherwise FALSE.
+ */
+BOOLEAN
+STDCALL
+IoIsOperationSynchronous (
+	IN	PIRP	Irp
+	)
+{
+	ULONG		Flags = 0;
+	PFILE_OBJECT	FileObject = NULL;
+	
+	/*
+	 * Check the associated FILE_OBJECT's
+	 * flags first.
+	 */
+	FileObject = Irp->Tail.Overlay.OriginalFileObject;
+	if (!(FO_SYNCHRONOUS_IO & FileObject->Flags))
+	{
+		/* Check IRP's flags. */
+		Flags = Irp->Flags;
+		if (!(	(IRP_SYNCHRONOUS_API | IRP_SYNCHRONOUS_PAGING_IO)
+			& Flags
+			))
+		{
+			return FALSE;
+		}
+	}
+	/*
+	 * Check more IRP's flags.
+	 */
+	Flags = Irp->Flags;
+	if (	!(IRP_MOUNT_COMPLETION & Flags)
+		|| (IRP_SYNCHRONOUS_PAGING_IO & Flags)
+		)
+	{
+		return TRUE;
+	}
+	/*
+	 * Otherwise, it is an
+	 * asynchronous operation.
+	 */
+	return FALSE;
+}
+
+
+/* EOF */

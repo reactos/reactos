@@ -1,4 +1,5 @@
-/*
+/* $Id: fs.c,v 1.11 2000/03/06 01:02:30 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/fs.c

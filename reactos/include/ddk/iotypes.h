@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.11 2000/03/05 19:17:37 ea Exp $
+/* $Id: iotypes.h,v 1.12 2000/03/06 01:02:30 ea Exp $
  * 
  */
 
@@ -265,6 +265,8 @@ typedef struct _FILE_OBJECT
 
 typedef struct _IRP
 {
+   CSHORT Type;
+   USHORT Size;
    PMDL MdlAddress;
    ULONG Flags;
    union
