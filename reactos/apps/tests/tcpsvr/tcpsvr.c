@@ -65,10 +65,10 @@ int main (int argc, char *argv[]) {
   
   while(1) {
 
-    printf("%s: \n 
-          To start test, Please telnet to localhost (127.0.0.1) port 23 \n
-          When connected input raw data followed by End of Line\n
-          Test is now running on TCP port %u\n",argv[0],SERVER_PORT);
+    printf("%s: \n"
+          "To start test, Please telnet to localhost (127.0.0.1) port 23 \n"
+          "When connected input raw data followed by End of Line\n"
+          "Test is now running on TCP port %u\n",argv[0],SERVER_PORT);
 
     cliLen = sizeof(cliAddr);
     newSd = accept(sd, (struct sockaddr *) &cliAddr, &cliLen);
