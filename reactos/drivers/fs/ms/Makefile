@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.5 2001/07/24 16:31:17 ekohl Exp $
+# $Id: Makefile,v 1.6 2001/07/29 16:39:12 ekohl Exp $
 #
 # Mailslot File System
 #
@@ -20,6 +20,8 @@ clean:
 	- $(RM) *.o *.sym $(TARGET).coff junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).sys.unstripped
 
 .phony: clean
+
+install: $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
 $(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
 	$(CP) $(TARGET).sys $(FLOPPY_DIR)/drivers/$(TARGET).sys
