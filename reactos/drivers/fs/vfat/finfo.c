@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.17 2002/08/17 15:15:50 hbirr Exp $
+/* $Id: finfo.c,v 1.18 2002/08/17 15:46:36 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -359,7 +359,7 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
   ULONG NewSize = AllocationSize->u.LowPart;
   ULONG NCluster;
 
-  DPRINT1("VfatSetAllocationSizeInformation()\n");
+  DPRINT("VfatSetAllocationSizeInformation()\n");
 
   OldSize = Fcb->entry.FileSize;
   if (AllocationSize->u.HighPart > 0)
@@ -467,7 +467,6 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
   {
      CcSetFileSizes(FileObject, (PCC_FILE_SIZES)&Fcb->RFCB.AllocationSize);
   }
-  DPRINT1("\n");
   /* Update the on-disk directory entry */
   VfatUpdateEntry(DeviceExt, FileObject);
   return STATUS_SUCCESS;
