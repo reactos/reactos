@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.21 2003/08/20 14:01:16 weiden Exp $
+/* $Id: menu.c,v 1.22 2003/08/20 18:55:03 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -741,7 +741,7 @@ IntSetMenuDefaultItem(PMENU_OBJECT MenuObject, UINT uItem, UINT fByPos)
   BOOL ret = FALSE;
   PMENU_ITEM MenuItem = MenuObject->MenuItemList;
     
-  if(uItem == -1)
+  if(uItem == (UINT)-1)
   {
     while(MenuItem)
     {
@@ -836,7 +836,7 @@ IntGetMenuDefaultItem(PMENU_OBJECT MenuObject, UINT fByPos, UINT gmdiFlags,
         ExAcquireFastMutexUnsafe(&MenuObject->MenuItemsLock);
         IntReleaseMenuObject(SubMenuObject);
         
-        if(sres > -1)
+        if(sres > (UINT)-1)
           res = sres;
       }
       

@@ -1,3 +1,8 @@
+2003-08-19  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* subsys/win32k/ntuser/menu.c (IntSetMenuDefaultItem,
+	IntGetMenuDefaultItem): Fix unsigned/signed warnings.
+
 2003-08-19  Martin Fuchs	<martin-fuchs@gmx.net>
 
 	* subsys/system/explorer/taskbar/startmenu.cpp:
