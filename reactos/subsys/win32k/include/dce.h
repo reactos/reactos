@@ -44,5 +44,6 @@ PDCE DCE_FreeDCE(PDCE dce);
 VOID DCE_FreeWindowDCE(HWND);
 INT  DCE_ExcludeRgn(HDC, HWND, HRGN);
 BOOL DCE_InvalidateDCE(HWND, const PRECTL);
+BOOL DCE_InternalDelete(PDCE dce);
 
 #endif

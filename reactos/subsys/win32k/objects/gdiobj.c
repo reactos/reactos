@@ -1,13 +1,14 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.20 2003/01/18 20:50:43 ei Exp $
+ * $Id: gdiobj.c,v 1.21 2003/03/08 00:46:14 gvg Exp $
  *
  */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
+#include <include/dce.h>
 #include <win32k/gdiobj.h>
 #include <win32k/brush.h>
 #include <win32k/pen.h>
@@ -276,6 +277,9 @@ BOOL  GDIOBJ_FreeObj(HGDIOBJ hObj, WORD Magic, DWORD Flag)
 
  		case GO_BRUSH_MAGIC:
  		case GO_FONT_MAGIC:
+			break;
+		case GO_DCE_MAGIC:
+			bRet = DCE_InternalDelete( (PDCE) Obj );
 			break;
 	}
   	handleEntry->hProcessId = 0;

@@ -1,4 +1,4 @@
-/* $Id: windc.c,v 1.6 2002/09/01 20:39:56 dwelch Exp $
+/* $Id: windc.c,v 1.7 2003/03/08 00:46:14 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -527,5 +527,32 @@ NtUserGetDCEx(HWND hWnd, HANDLE hRegion, ULONG Flags)
   W32kReleaseWindowObject(Window);
   return(Dce->hDC);
 }
+
+BOOL
+DCE_InternalDelete(PDCE Dce)
+{
+  PDCE PrevInList;
+
+  if (Dce == FirstDce)
+    {
+      FirstDce = Dce->next;
+      PrevInList = Dce;
+    }
+  else
+    {
+      for (PrevInList = FirstDce; NULL != PrevInList; PrevInList = PrevInList->next)
+	{
+	  if (Dce == PrevInList->next)
+	    {
+	      PrevInList->next = Dce->next;
+	      break;
+	    }
+	}
+      assert(NULL != PrevInList);
+    }
+
+  return NULL != PrevInList;
+}
+  
 
 /* EOF */
