@@ -4,8 +4,8 @@
 PATH_TO_TOP = ../../..
 
 #FIXME: why doesn't this work?
-#ZLIB_OBJECTS    = $(PATH_TO_TOP)/lib/zlib/zlib.a
-ZLIB_PATH = $(PATH_TO_TOP)/lib/zlib
+#ZLIB_OBJECTS    = $(PATH_TO_TOP)/drivers/lib/zlib/zlib.a
+ZLIB_PATH = $(PATH_TO_TOP)/drivers/lib/zlib
 
 ZLIB_OBJECTS    = $(ZLIB_PATH)/adler32.o $(ZLIB_PATH)/deflate.o \
                   $(ZLIB_PATH)/infblock.o $(ZLIB_PATH)/infcodes.o \
@@ -60,5 +60,5 @@ test.exe: $(TEST_OBJECTS)
 	$(CC) $(TEST_OBJECTS) -o test.exe
 	$(NM) --numeric-sort test.exe > test.sym
 
-include ../../rules.mak
+include ../../../rules.mak
 
