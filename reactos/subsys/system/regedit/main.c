@@ -223,7 +223,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     } */
 
     hFrameWnd = CreateWindowEx(0, (LPCTSTR)(int)hFrameWndClass, szTitle,
-                    WS_OVERLAPPEDWINDOW | WS_EX_CLIENTEDGE,
+                    WS_OVERLAPPEDWINDOW,
                     CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                     NULL, hMenuFrame, hInstance, NULL/*lpParam*/);
 

@@ -513,7 +513,7 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         _tcsncpy(pChildWnd->szPath, _T("My Computer"), MAX_PATH);
         hChildWnd = CreateWindowEx(0, szChildClass, _T("regedit child window"),
 /*                    WS_CHILD|WS_CLIPCHILDREN|WS_VISIBLE|WS_BORDER,*/
-                    WS_CHILD|WS_VISIBLE | WS_EX_CLIENTEDGE,
+                    WS_CHILD|WS_VISIBLE,
                     CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                     hWnd, (HMENU)0, hInst, pChildWnd);
         }

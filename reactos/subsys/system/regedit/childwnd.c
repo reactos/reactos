@@ -85,7 +85,7 @@ static void OnPaint(HWND hWnd)
 
     GetClientRect(hWnd, &rt);
     hdc = BeginPaint(hWnd, &ps);
-    FillRect(ps.hdc, &rt, GetStockObject(LTGRAY_BRUSH));
+    FillRect(ps.hdc, &rt, GetSysColorBrush(COLOR_BTNFACE));
     EndPaint(hWnd, &ps);
 }
 
