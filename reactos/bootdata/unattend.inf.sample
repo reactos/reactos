@@ -1,6 +1,0 @@
-; Install to \Device\Harddisk0\Partition1\ReactOS
-[Unattend]
-Signature = "$ReactOS$"
-DestinationDiskNumber = 0
-DestinationPartitionNumber = 1
-InstallationDirectory=ReactOS
