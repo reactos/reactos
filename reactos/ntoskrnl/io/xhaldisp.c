@@ -1,4 +1,4 @@
-/* $Id: xhaldisp.c,v 1.7 2002/09/08 10:23:26 chorns Exp $
+/* $Id: xhaldisp.c,v 1.8 2003/02/26 14:12:43 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -42,8 +42,11 @@ HAL_PRIVATE_DISPATCH EXPORTED HalPrivateDispatchTable =
 				// HalHandlerForConfigSpace
 				// HalCompleteDeviceControl
 				// HalRegisterBusHandler
-				// any more??
+				// ??
+				// ??
+				// ??
+				// ??
+				// ??
 };
 
 /* EOF */
-

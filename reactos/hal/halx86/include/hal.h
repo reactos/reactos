@@ -45,4 +45,12 @@ struct _ADAPTER_OBJECT {
   BOOLEAN Inuse;
 };
 
+/* sysinfo.c */
+NTSTATUS STDCALL
+HalpQuerySystemInformation(IN HAL_QUERY_INFORMATION_CLASS InformationClass,
+			   IN ULONG BufferSize,
+			   IN OUT PVOID Buffer,
+			   OUT PULONG ReturnedLength);
+
+
 #endif /* __INTERNAL_HAL_HAL_H */

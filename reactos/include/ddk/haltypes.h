@@ -1,4 +1,4 @@
-/* $Id: haltypes.h,v 1.8 2002/11/24 18:26:40 robd Exp $
+/* $Id: haltypes.h,v 1.9 2003/02/26 14:11:41 ekohl Exp $
  *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel
@@ -430,13 +430,28 @@ typedef struct _HAL_DISPATCH
   pHalReferenceBusHandler	HalDereferenceBusHandler;
 } HAL_DISPATCH, *PHAL_DISPATCH;
 
-#define HAL_DISPATCH_VERSION 1
-
 #ifdef __NTOSKRNL__
 extern HAL_DISPATCH EXPORTED HalDispatchTable;
+#define HALDISPATCH (&HalDispatchTable)
 #else
-extern HAL_DISPATCH IMPORTED HalDispatchTable;
+extern PHAL_DISPATCH IMPORTED HalDispatchTable;
+#define HALDISPATCH ((PHAL_DISPATCH)&HalDispatchTable)
 #endif
+
+#define HAL_DISPATCH_VERSION		1
+#define HalDispatchTableVersion		HALDISPATCH->Version
+#define HalQuerySystemInformation	HALDISPATCH->HalQuerySystemInformation
+#define HalSetSystemInformation		HALDISPATCH->HalSetSystemInformation
+#define HalQueryBusSlots		HALDISPATCH->HalQueryBusSlots
+#define HalDeviceControl		HALDISPATCH->HalDeviceControl
+#define HalExamineMBR			HALDISPATCH->HalExamineMBR
+#define HalIoAssignDriveLetters		HALDISPATCH->HalIoAssignDriveLetters
+#define HalIoReadPartitionTable		HALDISPATCH->HalIoReadPartitionTable
+#define HalIoSetPartitionInformation	HALDISPATCH->HalIoSetPartitionInformation
+#define HalIoWritePartitionTable	HALDISPATCH->HalIoWritePartitionTable
+#define HalReferenceHandlerForBus	HALDISPATCH->HalReferenceHandlerForBus
+#define HalReferenceBusHandler		HALDISPATCH->HalReferenceBusHandler
+#define HalDereferenceBusHandler	HALDISPATCH->HalDereferenceBusHandler
 
 
 /* Hal private dispatch table */
@@ -446,14 +461,14 @@ typedef struct _HAL_PRIVATE_DISPATCH
   ULONG Version;
 } HAL_PRIVATE_DISPATCH, *PHAL_PRIVATE_DISPATCH;
 
-#define HAL_PRIVATE_DISPATCH_VERSION 1
-
 
 #ifdef __NTOSKRNL__
 extern HAL_PRIVATE_DISPATCH EXPORTED HalPrivateDispatchTable;
 #else
-extern HAL_PRIVATE_DISPATCH IMPORTED HalPrivateDispatchTable;
+extern PHAL_PRIVATE_DISPATCH IMPORTED HalPrivateDispatchTable;
 #endif
+
+#define HAL_PRIVATE_DISPATCH_VERSION	1
 
 
 

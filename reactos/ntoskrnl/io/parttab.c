@@ -1,4 +1,4 @@
-/* $Id: parttab.c,v 1.3 2002/09/08 10:23:25 chorns Exp $
+/* $Id: parttab.c,v 1.4 2003/02/26 14:12:43 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -25,10 +25,10 @@ IoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 		     BOOLEAN ReturnRecognizedPartitions,
 		     PDRIVE_LAYOUT_INFORMATION *PartitionBuffer)
 {
-	return HalDispatchTable.HalIoReadPartitionTable(DeviceObject,
-	                                                SectorSize,
-	                                                ReturnRecognizedPartitions,
-	                                                PartitionBuffer);
+  return(HalIoReadPartitionTable(DeviceObject,
+				 SectorSize,
+				 ReturnRecognizedPartitions,
+				 PartitionBuffer));
 }
 
 
@@ -38,10 +38,10 @@ IoSetPartitionInformation(PDEVICE_OBJECT DeviceObject,
 			  ULONG PartitionNumber,
 			  ULONG PartitionType)
 {
-   return HalDispatchTable.HalIoSetPartitionInformation(DeviceObject,
-							SectorSize,
-							PartitionNumber,
-							PartitionType);
+  return(HalIoSetPartitionInformation(DeviceObject,
+				      SectorSize,
+				      PartitionNumber,
+				      PartitionType));
 }
 
 
@@ -52,11 +52,11 @@ IoWritePartitionTable(PDEVICE_OBJECT DeviceObject,
 		      ULONG NumberOfHeads,
 		      PDRIVE_LAYOUT_INFORMATION PartitionBuffer)
 {
-   return HalDispatchTable.HalIoWritePartitionTable(DeviceObject,
-						    SectorSize,
-						    SectorsPerTrack,
-						    NumberOfHeads,
-						    PartitionBuffer);
+  return(HalIoWritePartitionTable(DeviceObject,
+				  SectorSize,
+				  SectorsPerTrack,
+				  NumberOfHeads,
+				  PartitionBuffer));
 }
 
 /* EOF */

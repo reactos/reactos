@@ -1,4 +1,4 @@
-/* $Id: halinit.c,v 1.3 2002/09/08 10:22:24 chorns Exp $
+/* $Id: halinit.c,v 1.4 2003/02/26 14:14:03 ekohl Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -14,7 +14,6 @@
 #include <ddk/ntddk.h>
 #include <roscfg.h>
 #include <hal.h>
-#include <internal/ntoskrnl.h>
 
 #ifdef MP
 #include <mps.h>
@@ -58,8 +57,8 @@ HalInitSystem (ULONG BootPhase,
     }
   else if (BootPhase == 1)
     {
-      HalpInitBusHandlers ();
-  	  HalpCalibrateStallExecution ();
+      HalpInitBusHandlers();
+      HalpCalibrateStallExecution();
 
       /* Enumerate the devices on the motherboard */
       HalpStartEnumerator();

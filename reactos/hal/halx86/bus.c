@@ -1,4 +1,4 @@
-/* $Id: bus.c,v 1.5 2002/12/09 19:44:44 hbirr Exp $
+/* $Id: bus.c,v 1.6 2003/02/26 14:14:03 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,7 +16,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <internal/pool.h>
+#include <hal.h>
 #include <bus.h>
 
 #define NDEBUG
@@ -40,6 +40,7 @@ HalpNoAdjustResourceList(PBUS_HANDLER BusHandler,
    return STATUS_UNSUCCESSFUL;
 }
 
+
 static NTSTATUS STDCALL
 HalpNoAssignSlotResources(PBUS_HANDLER BusHandler,
 			  ULONG BusNumber,
@@ -53,6 +54,7 @@ HalpNoAssignSlotResources(PBUS_HANDLER BusHandler,
    return STATUS_NOT_SUPPORTED;
 }
 
+
 static ULONG STDCALL
 HalpNoBusData(PBUS_HANDLER BusHandler,
 	      ULONG BusNumber,
@@ -64,6 +66,7 @@ HalpNoBusData(PBUS_HANDLER BusHandler,
    return 0;
 }
 
+
 static ULONG STDCALL
 HalpNoGetInterruptVector(PBUS_HANDLER BusHandler,
 			 ULONG BusNumber,
@@ -74,6 +77,7 @@ HalpNoGetInterruptVector(PBUS_HANDLER BusHandler,
 {
    return 0;
 }
+
 
 static ULONG STDCALL
 HalpNoTranslateBusAddress(PBUS_HANDLER BusHandler,
@@ -130,58 +134,59 @@ HalpAllocateBusHandler(INTERFACE_TYPE InterfaceType,
 VOID
 HalpInitBusHandlers(VOID)
 {
-   PBUS_HANDLER BusHandler;
+  PBUS_HANDLER BusHandler;
 
-   /* general preparations */
-   KeInitializeSpinLock(&HalpBusHandlerSpinLock);
-   InitializeListHead(&HalpBusHandlerList);
+  /* General preparations */
+  KeInitializeSpinLock(&HalpBusHandlerSpinLock);
+  InitializeListHead(&HalpBusHandlerList);
 
-   /* initialize hal dispatch tables */
+  /* Initialize hal dispatch tables */
+  HalQuerySystemInformation = HalpQuerySystemInformation;
+
 #if 0
+  HalSetSystemInformation = HalpSetSystemInformation;
 
-
-   HalDispatchTable->HalQueryBusSlots = HaliQueryBusSlots;
+  HalQueryBusSlots = HalpQueryBusSlots;
 #endif
 
-   /* add system bus handler */
-   BusHandler = HalpAllocateBusHandler(Internal,
-				       ConfigurationSpaceUndefined,
-				       0);
-   if (BusHandler == NULL)
-     return;
-   BusHandler->GetInterruptVector =
-	(pGetInterruptVector)HalpGetSystemInterruptVector;
-   BusHandler->TranslateBusAddress =
-	(pTranslateBusAddress)HalpTranslateSystemBusAddress;
+  /* Add system bus handler */
+  BusHandler = HalpAllocateBusHandler(Internal,
+				      ConfigurationSpaceUndefined,
+				      0);
+  if (BusHandler == NULL)
+    return;
+  BusHandler->GetInterruptVector =
+    (pGetInterruptVector)HalpGetSystemInterruptVector;
+  BusHandler->TranslateBusAddress =
+    (pTranslateBusAddress)HalpTranslateSystemBusAddress;
 
-   /* add cmos bus handler */
-   BusHandler = HalpAllocateBusHandler(InterfaceTypeUndefined,
-				       Cmos,
-				       0);
-   if (BusHandler == NULL)
-     return;
-   BusHandler->GetBusData = (pGetSetBusData)HalpGetCmosData;
-   BusHandler->SetBusData = (pGetSetBusData)HalpSetCmosData;
+  /* Add cmos bus handler */
+  BusHandler = HalpAllocateBusHandler(InterfaceTypeUndefined,
+				      Cmos,
+				      0);
+  if (BusHandler == NULL)
+    return;
+  BusHandler->GetBusData = (pGetSetBusData)HalpGetCmosData;
+  BusHandler->SetBusData = (pGetSetBusData)HalpSetCmosData;
 
-   /* add isa bus handler */
-   BusHandler = HalpAllocateBusHandler(Isa,
-				       ConfigurationSpaceUndefined,
-				       0);
-   if (BusHandler == NULL)
-     return;
+  /* Add isa bus handler */
+  BusHandler = HalpAllocateBusHandler(Isa,
+				      ConfigurationSpaceUndefined,
+				      0);
+  if (BusHandler == NULL)
+    return;
 
-   BusHandler->GetInterruptVector =
-	(pGetInterruptVector)HalpGetIsaInterruptVector;
-   BusHandler->TranslateBusAddress =
-	(pTranslateBusAddress)HalpTranslateIsaBusAddress;
+  BusHandler->GetInterruptVector =
+    (pGetInterruptVector)HalpGetIsaInterruptVector;
+  BusHandler->TranslateBusAddress =
+    (pTranslateBusAddress)HalpTranslateIsaBusAddress;
 
-
-  /* add MicroChannel bus handler */
+  /* Add MicroChannel bus handler */
   BusHandler = HalpAllocateBusHandler(MicroChannel,
 				      Pos,
 				      0);
-   if (BusHandler == NULL)
-     return;
+  if (BusHandler == NULL)
+    return;
 
   BusHandler->GetBusData = (pGetSetBusData)HalpGetMicroChannelData;
 }

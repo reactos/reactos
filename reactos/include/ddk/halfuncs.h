@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_HALFUNCS_H
 #define __INCLUDE_DDK_HALFUNCS_H
-/* $Id: halfuncs.h,v 1.3 2002/09/08 10:47:44 chorns Exp $ */
+/* $Id: halfuncs.h,v 1.4 2003/02/26 14:11:41 ekohl Exp $ */
 
 VOID STDCALL
 HalAcquireDisplayOwnership(IN PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters);
@@ -70,12 +70,16 @@ HalEndSystemInterrupt(KIRQL Irql,
 		      ULONG Unknown2);
 
 
-/* Is this function really exported ?? */
-VOID
-HalExamineMBR(PDEVICE_OBJECT DeviceObject,
-	      ULONG SectorSize,
-	      ULONG MBRTypeIdentifier,
-	      PVOID Buffer);
+/*
+ * HalExamineMBR() is not exported explicitly.
+ * It is exported by the HalDispatchTable.
+ *
+ * VOID
+ * HalExamineMBR(PDEVICE_OBJECT DeviceObject,
+ *               ULONG SectorSize,
+ *               ULONG MBRTypeIdentifier,
+ *               PVOID Buffer);
+ */
 
 BOOLEAN STDCALL
 HalFlushCommonBuffer(ULONG Unknown1,
@@ -150,9 +154,13 @@ HalQueryDisplayParameters(PULONG DispSizeX,
 VOID STDCALL
 HalQueryRealTimeClock(PTIME_FIELDS Time);
 
-/* Is this function really exported ?? */
-VOID
-HalQuerySystemInformation(VOID);
+/*
+ * HalQuerySystemInformation() is not exported explicitly.
+ * It is exported by the HalDispatchTable.
+ *
+ * VOID
+ * HalQuerySystemInformation(VOID);
+ */
 
 ULONG STDCALL
 HalReadDmaCounter(PADAPTER_OBJECT AdapterObject);
