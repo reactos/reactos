@@ -24,12 +24,12 @@ VGAStartIO(PVOID DeviceExtension,
 	   PVIDEO_REQUEST_PACKET RequestPacket);
 /*
 static BOOLEAN STDCALL
-VGAInterrupt(PVOID DeviceExtension);
+VGAInterrupt(PVOID DeviceExtension);*/
 static BOOLEAN STDCALL
 VGAResetHw(PVOID DeviceExtension,
 	   ULONG Columns,
 	   ULONG Rows);
-static VOID STDCALL
+/*static VOID STDCALL
 VGATimer(PVOID DeviceExtension);
 */
 
@@ -90,7 +90,7 @@ DriverEntry(IN PVOID Context1,
   InitData.HwInitialize = VGAInitialize;
   InitData.HwStartIO = VGAStartIO;
   /* InitData.HwInterrupt = VGAInterrupt;  */
-  /* InitData.HwResetHw = VGAResetHw;  */
+  InitData.HwResetHw = VGAResetHw;
   /* InitData.HwTimer = VGATimer;  */
   
   return  VideoPortInitialize(Context1, Context2, &InitData, NULL);
@@ -157,7 +157,7 @@ VGAFindAdapter(PVOID DeviceExtension,
 static BOOLEAN STDCALL
 VGAInitialize(PVOID DeviceExtension)
 {
-  return  FALSE;
+  return  TRUE;
 }
 
 //    VGAStartIO
@@ -339,6 +339,7 @@ VGAInterrupt(PVOID DeviceExtension)
 {
   return(TRUE);
 }
+#endif
 
 //    VGAResetHw
 //
@@ -362,9 +363,11 @@ VGAResetHw(PVOID DeviceExtension,
 	   ULONG Columns,
 	   ULONG Rows)
 {
-  return(TRUE);
+  /* We don't anything to the vga that int10 can't cope with. */
+  return(FALSE);
 }
 
+#if 0
 //    VGATimer
 //
 //  DESCRIPTION:
