@@ -75,7 +75,7 @@ typedef VOID (*PLOOKASIDE_MINMAX_ROUTINE)(
 
 /* GLOBAL VARIABLES *********************************************************/
 
-TIME_ZONE_INFORMATION _SystemTimeZoneInfo;
+TIME_ZONE_INFORMATION ExpTimeZoneInfo;
 extern POBJECT_TYPE ExEventPairObjectType;
 
 
@@ -84,13 +84,13 @@ extern POBJECT_TYPE ExEventPairObjectType;
 VOID
 ExpWin32kInit(VOID);
 
-VOID 
-ExInit2 (VOID);
 VOID
-ExInit3 (VOID);
-VOID 
-ExInitTimeZoneInfo (VOID);
-VOID 
+ExInit2(VOID);
+VOID
+ExInit3(VOID);
+VOID
+ExpInitTimeZoneInfo(VOID);
+VOID
 ExInitializeWorkerThreads(VOID);
 VOID
 ExpInitLookasideLists(VOID);

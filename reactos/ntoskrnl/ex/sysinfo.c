@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.55 2004/10/30 16:07:46 ion Exp $
+/* $Id: sysinfo.c,v 1.56 2004/11/05 17:42:20 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -543,7 +543,7 @@ QSI_DEF(SystemTimeOfDayInformation)
 
 	Sti->BootTime= SystemBootTime;
 	Sti->CurrentTime = CurrentTime;
-	Sti->TimeZoneBias.QuadPart = _SystemTimeZoneInfo.Bias;
+	Sti->TimeZoneBias.QuadPart = 0; /* FIXME */
 	Sti->TimeZoneId = 0;		/* FIXME */
 	Sti->Reserved = 0;		/* FIXME */
 
@@ -1182,39 +1182,36 @@ QSI_DEF(SystemProcessorSpeedInformation)
 /* Class 44 - Current Time Zone Information */
 QSI_DEF(SystemCurrentTimeZoneInformation)
 {
-	* ReqSize = sizeof (TIME_ZONE_INFORMATION);
+  * ReqSize = sizeof (TIME_ZONE_INFORMATION);
 
-	if (sizeof (TIME_ZONE_INFORMATION) != Size)
-	{
-		return (STATUS_INFO_LENGTH_MISMATCH);
-	}
-	/* Copy the time zone information struct */
-        memcpy (
-		Buffer,
-                & _SystemTimeZoneInfo,
-                sizeof (TIME_ZONE_INFORMATION)
-		);
+  if (sizeof (TIME_ZONE_INFORMATION) != Size)
+    {
+      return STATUS_INFO_LENGTH_MISMATCH;
+    }
 
-	return (STATUS_SUCCESS);
+  /* Copy the time zone information struct */
+  memcpy(Buffer,
+         &ExpTimeZoneInfo,
+         sizeof(TIME_ZONE_INFORMATION));
+
+  return STATUS_SUCCESS;
 }
 
 
 SSI_DEF(SystemCurrentTimeZoneInformation)
 {
-	/*
-	 * Check user buffer's size 
-	 */
-	if (Size < sizeof (TIME_ZONE_INFORMATION))
-	{
-		return (STATUS_INFO_LENGTH_MISMATCH);
-	}
-	/* Copy the time zone information struct */
-	memcpy (
-		& _SystemTimeZoneInfo,
-		(TIME_ZONE_INFORMATION *) Buffer,
-		sizeof (TIME_ZONE_INFORMATION)
-		);
-	return (STATUS_SUCCESS);
+  /* Check user buffer's size */
+  if (Size < sizeof (TIME_ZONE_INFORMATION))
+    {
+      return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+  /* Copy the time zone information struct */
+  memcpy(&ExpTimeZoneInfo,
+	 (TIME_ZONE_INFORMATION *)Buffer,
+	 sizeof(TIME_ZONE_INFORMATION));
+
+  return STATUS_SUCCESS;
 }
 
 

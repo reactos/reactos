@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.202 2004/10/24 15:26:14 weiden Exp $
+/* $Id: main.c,v 1.203 2004/11/05 17:41:34 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -640,6 +640,9 @@ ExpInitializeExecutive(VOID)
     {
       CmInit2((PCHAR)KeLoaderBlock.CommandLine);
     }
+
+  /* Initialize the time zone information from the registry */
+  ExpInitTimeZoneInfo();
 
   /*
    * Enter the kernel debugger before starting up the boot drivers

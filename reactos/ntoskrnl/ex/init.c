@@ -43,7 +43,6 @@ ExInit2(VOID)
 VOID INIT_FUNCTION
 ExInit3 (VOID)
 {
-  ExInitTimeZoneInfo();
   ExInitializeWorkerThreads();
   ExpWin32kInit();
 }
