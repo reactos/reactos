@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.4 2000/08/22 14:10:59 ekohl Exp $
+/* $Id: xhaldrv.c,v 1.5 2000/08/22 21:10:28 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,9 +11,6 @@
 
 /*
  * TODO:
- *  - Check/fix 'StartingOffset' and 'PartitionLength' in
- *    xHalIoReadPartitionTable().
- *  - Fix 'ReturnRecognizesPartitions' in xHalIoReadPartitionTable().
  *  - Read disk signature in xHalIoReadPartitionTable().
  *  - Build correct system path from nt device name or arc name.
  *    For example: \Device\Harddisk0\Partition1\reactos ==> C:\reactos
@@ -611,7 +608,7 @@ xHalIoReadPartitionTable (
 	return STATUS_INSUFFICIENT_RESOURCES;
      }
 
-   LayoutBuffer = (PDRIVE_LAYOUT_INFORMATION)ExAllocatePool (PagedPool,
+   LayoutBuffer = (PDRIVE_LAYOUT_INFORMATION)ExAllocatePool (NonPagedPool,
                                                              0x1000);
    if (LayoutBuffer == NULL)
      {
@@ -739,14 +736,16 @@ xHalIoReadPartitionTable (
 
 	     DPRINT(" Offset: 0x%I64x", Offset.QuadPart);
 
-	     if (IsExtendedPartition(PartitionTable->Partition[i].PartitionType))
+	     if (IsUsablePartition(PartitionTable->Partition[i].PartitionType))
 	       {
 		  Offset.QuadPart = (ULONGLONG)Offset.QuadPart +
-		     ((ULONGLONG)PartitionTable->Partition[i].StartingBlock * (ULONGLONG)SectorSize);
-		  ExtendedFound = TRUE;
+		     (((ULONGLONG)PartitionTable->Partition[i].StartingBlock + (ULONGLONG)PartitionTable->Partition[i].SectorCount)* (ULONGLONG)SectorSize);
 	       }
 
-	     DPRINT("  Offset: 0x%I64x\n", Offset.QuadPart);
+	     if (IsExtendedPartition(PartitionTable->Partition[i].PartitionType))
+	       {
+		  ExtendedFound = TRUE;
+	       }
 
 	     DPRINT(" %ld: nr: %d boot: %1x type: %x start: 0x%I64x count: 0x%I64x\n",
 		    Count,
