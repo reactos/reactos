@@ -45,7 +45,7 @@ NdisAcquireSpinLock(
  *     SpinLock = Pointer to the initialized NDIS spin lock to be acquired
  */
 {
-    UNIMPLEMENTED
+    KeAcquireSpinLock(&SpinLock->SpinLock, &SpinLock->OldIrql);
 }
 
 
@@ -59,7 +59,7 @@ NdisAllocateSpinLock(
  *     SpinLock = Pointer to an NDIS spin lock structure
  */
 {
-    UNIMPLEMENTED
+    KeInitializeSpinLock(&SpinLock->SpinLock);
 }
 
 
@@ -73,7 +73,8 @@ NdisDprAcquireSpinLock(
  *     SpinLock = Pointer to the initialized NDIS spin lock to be acquired
  */
 {
-    UNIMPLEMENTED
+    KeAcquireSpinLockAtDpcLevel(&SpinLock->SpinLock);
+    SpinLock->OldIrql = DISPATCH_LEVEL;
 }
 
 
@@ -87,7 +88,7 @@ NdisDprReleaseSpinLock(
  *     SpinLock = Pointer to the acquired NDIS spin lock to be released
  */
 {
-    UNIMPLEMENTED
+    KeReleaseSpinLockFromDpcLevel(&SpinLock->SpinLock);
 }
 
 
@@ -101,7 +102,7 @@ NdisFreeSpinLock(
  *     SpinLock = Pointer to an initialized NDIS spin lock
  */
 {
-    UNIMPLEMENTED
+    /* Nothing to do here! */
 }
 
 
@@ -129,7 +130,7 @@ NdisInitializeEvent(
  *     Event = Pointer to an NDIS event structure to be initialized
  */
 {
-    UNIMPLEMENTED
+    KeInitializeEvent(&Event->Event, NotificationEvent, FALSE);
 }
 
 
@@ -143,7 +144,7 @@ NdisReleaseSpinLock(
  *     SpinLock = Pointer to the acquired NDIS spin lock to be released
  */
 {
-    UNIMPLEMENTED
+    KeReleaseSpinLock(&SpinLock->SpinLock, SpinLock->OldIrql);
 }
 
 
@@ -157,7 +158,7 @@ NdisResetEvent(
  *     Event = Pointer to the initialized event object to be reset
  */
 {
-    UNIMPLEMENTED
+    KeResetEvent(&Event->Event);
 }
 
 
@@ -171,7 +172,7 @@ NdisSetEvent(
  *     Event = Pointer to the initialized event object to be set
  */
 {
-    UNIMPLEMENTED
+    KeSetEvent(&Event->Event, IO_NO_INCREMENT, FALSE);
 }
 
 
@@ -189,9 +190,18 @@ NdisWaitEvent(
  *     TRUE if the event is in the signaled state
  */
 {
-    UNIMPLEMENTED
+    LARGE_INTEGER Timeout;
+    NTSTATUS Status;
 
-    return FALSE;
+    Timeout.QuadPart = MsToWait * -10000LL;
+
+    Status = KeWaitForSingleObject(&Event->Event,
+				   Executive,
+				   KernelMode,
+				   TRUE,
+				   &Timeout);
+
+    return (Status == STATUS_SUCCESS);
 }
 
 /* EOF */
