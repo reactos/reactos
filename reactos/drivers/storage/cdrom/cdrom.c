@@ -16,13 +16,19 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdrom.c,v 1.9 2002/05/25 13:29:58 ekohl Exp $
+/* $Id: cdrom.c,v 1.10 2002/05/26 20:23:22 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            services/storage/cdrom/cdrom.c
  * PURPOSE:         cdrom class driver
  * PROGRAMMER:      Eric Kohl (ekohl@rz-online.de)
+ */
+
+/*
+ * TODO:
+ *  - Add io timer routine for autorun support.
+ *  - Add cdaudio support (cd player).
  */
 
 /* INCLUDES *****************************************************************/
@@ -62,7 +68,7 @@ CdromClassCheckReadWrite(IN PDEVICE_OBJECT DeviceObject,
 
 static NTSTATUS
 CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
-			     IN PUNICODE_STRING RegistryPath, /* what's this used for? */
+			     IN PUNICODE_STRING RegistryPath,
 			     IN PDEVICE_OBJECT PortDeviceObject,
 			     IN ULONG PortNumber,
 			     IN ULONG DeviceNumber,
@@ -79,27 +85,34 @@ NTSTATUS STDCALL
 CdromClassShutdownFlush(IN PDEVICE_OBJECT DeviceObject,
 			IN PIRP Irp);
 
+VOID STDCALL
+CdromTimerRoutine(IN PDEVICE_OBJECT DeviceObject,
+		  IN PVOID Context);
+
 
 /* FUNCTIONS ****************************************************************/
 
-//    DriverEntry
-//
-//  DESCRIPTION:
-//    This function initializes the driver, locates and claims 
-//    hardware resources, and creates various NT objects needed
-//    to process I/O requests.
-//
-//  RUN LEVEL:
-//    PASSIVE_LEVEL
-//
-//  ARGUMENTS:
-//    IN  PDRIVER_OBJECT   DriverObject  System allocated Driver Object
-//                                       for this driver
-//    IN  PUNICODE_STRING  RegistryPath  Name of registry driver service 
-//                                       key
-//
-//  RETURNS:
-//    NTSTATUS
+/**********************************************************************
+ * NAME							EXPORTED
+ *	DriverEntry
+ *
+ * DESCRIPTION:
+ *	This function initializes the driver, locates and claims 
+ *	hardware resources, and creates various NT objects needed
+ *	to process I/O requests.
+ *
+ * RUN LEVEL:
+ *	PASSIVE_LEVEL
+ *
+ * ARGUMENTS:
+ *	DriverObject
+ *		System allocated Driver Object for this driver
+ *	RegistryPath
+ *		Name of registry driver service key
+ *
+ * RETURNS:
+ *	Status.
+ */
 
 NTSTATUS STDCALL
 DriverEntry(IN PDRIVER_OBJECT DriverObject,
@@ -107,8 +120,8 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 {
   CLASS_INIT_DATA InitData;
 
-  DbgPrint("CD-ROM Class Driver %s\n",
-	   VERSION);
+  DPRINT("CD-ROM Class Driver %s\n",
+	 VERSION);
   DPRINT("RegistryPath '%wZ'\n",
 	 RegistryPath);
 
@@ -117,7 +130,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
   InitData.DeviceType = FILE_DEVICE_CD_ROM;
   InitData.DeviceCharacteristics = FILE_REMOVABLE_MEDIA | FILE_READ_ONLY_DEVICE;
 
-  InitData.ClassError = NULL;				// CdromClassProcessError;
+  InitData.ClassError = NULL;	// CdromClassProcessError;
   InitData.ClassReadWriteVerification = CdromClassCheckReadWrite;
   InitData.ClassFindDeviceCallBack = CdromClassCheckDevice;
   InitData.ClassFindDevices = CdromClassFindDevices;
@@ -132,25 +145,33 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 }
 
 
-//    CdromClassFindDevices
-//
-//  DESCRIPTION:
-//    This function searches for device that are attached to the given scsi port.
-//
-//  RUN LEVEL:
-//    PASSIVE_LEVEL
-//
-//  ARGUMENTS:
-//    IN  PDRIVER_OBJECT   DriverObject        System allocated Driver Object for this driver
-//    IN  PUNICODE_STRING  RegistryPath        Name of registry driver service key
-//    IN  PCLASS_INIT_DATA InitializationData  Pointer to the main initialization data
-//    IN PDEVICE_OBJECT    PortDeviceObject    Scsi port device object
-//    IN ULONG             PortNumber          Port number
-//
-//  RETURNS:
-//    TRUE: At least one disk drive was found
-//    FALSE: No disk drive found
-//
+/**********************************************************************
+ * NAME							EXPORTED
+ *	CdromClassFindDevices
+ *
+ * DESCRIPTION:
+ *	This function searches for device that are attached to the
+ *	given scsi port.
+ *
+ * RUN LEVEL:
+ *	PASSIVE_LEVEL
+ *
+ * ARGUMENTS:
+ *	DriverObject
+ *		System allocated Driver Object for this driver
+ *	RegistryPath
+ *		Name of registry driver service key.
+ *	InitializationData
+ *		Pointer to the main initialization data
+ *	PortDeviceObject
+ *		Scsi port device object
+ *	PortNumber
+ *		Port number
+ *
+ * RETURNS:
+ *	TRUE: At least one disk drive was found
+ *	FALSE: No disk drive found
+ */
 
 BOOLEAN STDCALL
 CdromClassFindDevices(IN PDRIVER_OBJECT DriverObject,
@@ -198,7 +219,7 @@ CdromClassFindDevices(IN PDRIVER_OBJECT DriverObject,
 					      AdapterBusInfo);
   if (DeviceCount == 0)
     {
-      DPRINT1("No unclaimed devices!\n");
+      DPRINT("No unclaimed devices!\n");
       return(FALSE);
     }
 
@@ -253,7 +274,8 @@ CdromClassFindDevices(IN PDRIVER_OBJECT DriverObject,
 
   DPRINT("CdromClassFindDevices() done\n");
 
-  return(TRUE);
+  return(FoundDevice);
+//  return(TRUE);
 }
 
 
@@ -298,7 +320,6 @@ CdromClassCheckDevice(IN PINQUIRYDATA InquiryData)
  * ARGUMENTS
  *	DeviceObject
  *		Pointer to the device.
- *
  *	Irp
  *		Irp to check.
  *
@@ -317,33 +338,35 @@ CdromClassCheckReadWrite(IN PDEVICE_OBJECT DeviceObject,
 }
 
 
-//    CdromClassCreateDeviceObject
-//
-//  DESCRIPTION:
-//    Create the raw device and any partition devices on this drive
-//
-//  RUN LEVEL:
-//    PASSIVE_LEVEL
-//
-//  ARGUMENTS:
-//    IN  PDRIVER_OBJECT  DriverObject  The system created driver object
-//    IN  PCONTROLLER_OBJECT         ControllerObject
-//    IN  PIDE_CONTROLLER_EXTENSION  ControllerExtension
-//                                      The IDE controller extension for
-//                                      this device
-//    IN  int             DriveIdx      The index of the drive on this
-//                                      controller
-//    IN  int             HarddiskIdx   The NT device number for this
-//                                      drive
-//
-//  RETURNS:
-//    TRUE   Drive exists and devices were created
-//    FALSE  no devices were created for this device
-//
+/**********************************************************************
+ * NAME							EXPORTED
+ *	CdromClassCreateDeviceObject
+ *
+ * DESCRIPTION:
+ *	Create the raw device and any partition devices on this drive
+ *
+ * RUN LEVEL:
+ *	PASSIVE_LEVEL
+ *
+ * ARGUMENTS:
+ *	DriverObject
+ *		System allocated Driver Object for this driver.
+ *	RegistryPath
+ *		Name of registry driver service key.
+ *	PortDeviceObject
+ *	PortNumber
+ *	DeviceNumber
+ *	Capabilities
+ *	InquiryData
+ *	InitializationData
+ *
+ * RETURNS:
+ *	Status.
+ */
 
 static NTSTATUS
 CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
-			     IN PUNICODE_STRING RegistryPath, /* what's this used for? */
+			     IN PUNICODE_STRING RegistryPath,
 			     IN PDEVICE_OBJECT PortDeviceObject,
 			     IN ULONG PortNumber,
 			     IN ULONG DeviceNumber,
@@ -481,6 +504,11 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 
   /* FIXME: initialize media change support */
 
+  IoInitializeTimer(DiskDeviceObject,
+		    CdromTimerRoutine,
+		    NULL);
+  IoStartTimer(DiskDeviceObject);
+
   DPRINT("CdromClassCreateDeviceObjects() done\n");
 
   return(STATUS_SUCCESS);
@@ -488,20 +516,24 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 
 
 
-//    CdromClassDeviceControl
-//
-//  DESCRIPTION:
-//    Answer requests for device control calls
-//
-//  RUN LEVEL:
-//    PASSIVE_LEVEL
-//
-//  ARGUMENTS:
-//    Standard dispatch arguments
-//
-//  RETURNS:
-//    NTSTATUS
-//
+/**********************************************************************
+ * NAME							EXPORTED
+ *	CdromClassDeviceControl
+ *
+ * DESCRIPTION:
+ *	Answer requests for device control calls
+ *
+ * RUN LEVEL:
+ *	PASSIVE_LEVEL
+ *
+ * ARGUMENTS:
+ *	DeviceObject
+ *	Irp
+ *		Standard dispatch arguments
+ *
+ * RETURNS:
+ *	Status.
+ */
 
 NTSTATUS STDCALL
 CdromClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
@@ -528,27 +560,32 @@ CdromClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
   switch (ControlCode)
     {
       case IOCTL_CDROM_GET_DRIVE_GEOMETRY:
-	DPRINT1("IOCTL_CDROM_GET_DRIVE_GEOMETRY\n");
+	DPRINT("IOCTL_CDROM_GET_DRIVE_GEOMETRY\n");
 	if (IrpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(DISK_GEOMETRY))
 	  {
 	    Status = STATUS_INVALID_PARAMETER;
-	  }
-	else if (DeviceExtension->DiskGeometry == NULL)
-	  {
-	    DPRINT1("No cdrom geometry available!\n");
-	    Status = STATUS_NO_SUCH_DEVICE;
 	  }
 	else
 	  {
 	    PDISK_GEOMETRY Geometry;
 
-	    Geometry = (PDISK_GEOMETRY) Irp->AssociatedIrp.SystemBuffer;
-	    RtlMoveMemory(Geometry,
-			  DeviceExtension->DiskGeometry,
-			  sizeof(DISK_GEOMETRY));
+	    if (DeviceExtension->DiskGeometry == NULL)
+	      {
+		DPRINT("No cdrom geometry available!\n");
+		DeviceExtension->DiskGeometry = ExAllocatePool(NonPagedPool,
+							       sizeof(DISK_GEOMETRY));
+	      }
+	    Status = ScsiClassReadDriveCapacity(DeviceObject);
+	    if (NT_SUCCESS(Status))
+	      {
+		Geometry = (PDISK_GEOMETRY) Irp->AssociatedIrp.SystemBuffer;
+		RtlMoveMemory(Geometry,
+			      DeviceExtension->DiskGeometry,
+			      sizeof(DISK_GEOMETRY));
 
-	    Status = STATUS_SUCCESS;
-	    Information = sizeof(DISK_GEOMETRY);
+		Status = STATUS_SUCCESS;
+		Information = sizeof(DISK_GEOMETRY);
+	      }
 	  }
 	break;
 
@@ -567,20 +604,24 @@ CdromClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 }
 
 
-//    CdromClassShutdownFlush
-//
-//  DESCRIPTION:
-//    Answer requests for shutdown and flush calls
-//
-//  RUN LEVEL:
-//    PASSIVE_LEVEL
-//
-//  ARGUMENTS:
-//    Standard dispatch arguments
-//
-//  RETURNS:
-//    NTSTATUS
-//
+/**********************************************************************
+ * NAME							EXPORTED
+ *	CdromClassShutdownFlush
+ *
+ * DESCRIPTION:
+ *	Answer requests for shutdown and flush calls
+ *
+ * RUN LEVEL:
+ *	PASSIVE_LEVEL
+ *
+ * ARGUMENTS:
+ *	DeviceObject
+ *	Irp
+ *		Standard dispatch arguments
+ *
+ * RETURNS:
+ *	Status.
+ */
 
 NTSTATUS STDCALL
 CdromClassShutdownFlush(IN PDEVICE_OBJECT DeviceObject,
@@ -595,5 +636,13 @@ CdromClassShutdownFlush(IN PDEVICE_OBJECT DeviceObject,
   return(STATUS_SUCCESS);
 }
 
+
+VOID STDCALL
+CdromTimerRoutine(PDEVICE_OBJECT DeviceObject,
+		  PVOID Context)
+{
+  DPRINT("CdromTimerRoutine() called\n");
+
+}
 
 /* EOF */
