@@ -20,7 +20,7 @@
  * MA 02139, USA.  
  *
  */
-/* $Id: timer.c,v 1.8 2004/11/28 01:30:01 hbirr Exp $
+/* $Id: timer.c,v 1.1 2004/12/03 20:10:43 gvg Exp $
  *
  * PROJECT:        ReactOS kernel
  * FILE:           ntoskrnl/hal/x86/udelay.c
@@ -32,7 +32,6 @@
 
 /* INCLUDES ***************************************************************/
 
-#include <roscfg.h>
 #include <ddk/ntddk.h>
 #include <internal/ps.h>
 #include <hal.h>

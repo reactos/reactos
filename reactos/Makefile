@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.266 2004/12/01 16:07:57 greatlrd Exp $
+# $Id: Makefile,v 1.267 2004/12/03 20:10:40 gvg Exp $
 #
 # Global makefile
 #
@@ -27,7 +27,7 @@ COMPONENTS = ntoskrnl
 
 # Hardware Abstraction Layers
 # halx86
-HALS = halx86
+HALS = halx86/up halx86/mp
 
 # Bus drivers
 # acpi isapnp pci

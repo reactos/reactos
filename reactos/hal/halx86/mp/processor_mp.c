@@ -1,8 +1,8 @@
-/* $Id: mp.c,v 1.12 2004/11/28 01:30:01 hbirr Exp $
+/* $Id: processor_mp.c,v 1.1 2004/12/03 20:10:44 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/hal/x86/mp.c
+ * FILE:            hal/halx86/mp/processor_mp.c
  * PURPOSE:         Intel MultiProcessor specification support
  * PROGRAMMER:      David Welch (welch@cwcom.net)
  *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
@@ -14,12 +14,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <roscfg.h>
 #include <ddk/ntddk.h>
-
-
-#ifdef MP
-
 #include <hal.h>
 #include <halirq.h>
 #include <mps.h>
@@ -30,13 +25,8 @@
 #include <internal/ke.h>
 #include <internal/ps.h>
 
-#endif
-
 #define NDEBUG
 #include <internal/debug.h>
-
-#ifdef MP
-
 
 /*
    Address of area to be used for communication between Application
@@ -91,13 +81,8 @@ extern VOID MpsIpiInterrupt(VOID);
    WRITE_PORT_UCHAR((PUCHAR)0x71, value); \
 })
 
-#endif /* MP */
-
-
 
 /* FUNCTIONS *****************************************************************/
-
-#ifdef MP
 
 /* Functions for handling 8259A PICs */
 
@@ -1003,19 +988,14 @@ SetInterruptGate(ULONG index, ULONG address)
   idt->b = 0x8e00 + (((ULONG)address)&0xffff0000);
 }
 
-#endif /* MP */
-
 VOID STDCALL
 HalInitializeProcessor(ULONG ProcessorNumber,
 		       PVOID /*PLOADER_PARAMETER_BLOCK*/ LoaderBlock)
 {
-#ifdef MP
    ULONG CPU;
-#endif
 
    DPRINT("HalInitializeProcessor(%x %x)\n", ProcessorNumber, LoaderBlock);
 
-#ifdef MP
    CPU = ThisCPU();
    if (OnlineCPUs & (1 << CPU))
    {
@@ -1041,17 +1021,14 @@ HalInitializeProcessor(ULONG ProcessorNumber,
 
    /* Setup busy waiting */
    HalpCalibrateStallExecution();
-#endif
 }
 
 BOOLEAN STDCALL
 HalAllProcessorsStarted (VOID)
 {
-    DPRINT("HalAllProcessorsStarted()\n");
-
-#ifdef MP
-
     ULONG CPUs = 0, i;
+
+    DPRINT("HalAllProcessorsStarted()\n");
     for (i = 0; i < 32; i++)
     {
        if (OnlineCPUs & (1 << i))
@@ -1069,19 +1046,12 @@ HalAllProcessorsStarted (VOID)
        return TRUE;
     }
     return FALSE;
-
-#else /* MP */
-
-    return TRUE;
-
-#endif /* MP */
 }
 
 BOOLEAN STDCALL 
 HalStartNextProcessor(ULONG Unknown1,
 		      ULONG ProcessorStack)
 {
-#ifdef MP
    PCOMMON_AREA_INFO Common;
    ULONG StartupCount;
    ULONG DeliveryStatus = 0;
@@ -1231,12 +1201,9 @@ HalStartNextProcessor(ULONG Unknown1,
    }
 #endif
 
-#endif /* MP */
    return TRUE;
 }
 
-
-#ifdef MP
 
 ULONG MPChecksum(PUCHAR Base,
                  ULONG Size)
@@ -1836,7 +1803,5 @@ HaliReconfigurePciInterrupts(VOID)
    }
 
 }
-
-#endif /* MP */
 
 /* EOF */

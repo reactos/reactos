@@ -11,7 +11,6 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <roscfg.h>
 #include <ddk/ntddk.h>
 #include <internal/ke.h>
 #include <internal/ps.h>

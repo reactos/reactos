@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.95 2004/11/20 17:48:38 chorns Exp $
+# $Id: helper.mk,v 1.96 2004/12/03 20:10:45 gvg Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -51,6 +51,7 @@
 #   $TARGET_BOOTSTRAP  = Whether this file is needed to bootstrap the installation (no,yes) (optional)
 #   $TARGET_BOOTSTRAP_NAME = Name on the installation medium (optional)
 #   $TARGET_REGTESTS   = This module has regression tests (no,yes) (optional)
+#   $TARGET_INSTALL    = Install the file (no,yes) (optional)
 #   $SUBDIRS           = Subdirs in which to run make (optional)
 
 include $(PATH_TO_TOP)/config
@@ -276,6 +277,8 @@ ifeq ($(TARGET_TYPE),hal)
   MK_BOOTCDDIR := .
   MK_DISTDIR := dlls
   MK_RES_BASE := $(TARGET_NAME)
+  MK_INSTALL_BASENAME := hal
+  MK_INSTALL_FULLNAME := hal.dll
 endif
 
 ifeq ($(TARGET_TYPE),bootpgm)
@@ -373,7 +376,6 @@ ifeq ($(TARGET_TYPE),test)
   MK_RES_BASE :=
   TARGET_OBJECTS := _rtstub.o _regtests.o $(TARGET_OBJECTS)
 endif
-
 
 # can be overidden with $(CXX) for linkage of c++ executables
 LD_CC = $(CC)
@@ -689,6 +691,19 @@ else
   MK_REGTESTS_CLEAN :=
 endif
 
+ifeq ($(TARGET_INSTALL),)
+ MK_INSTALL := yes
+else
+ MK_INSTALL := $(TARGET_INSTALL)
+endif
+
+ifeq ($(MK_INSTALL_BASENAME),)
+  MK_INSTALL_BASENAME := $(MK_BASENAME)
+endif
+ifeq ($(MK_INSTALL_FULLNAME),)
+  MK_INSTALL_FULLNAME := $(MK_FULLNAME)
+endif
+
 ifeq ($(MK_IMPLIBONLY),yes)
 
 TARGET_CLEAN += $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME)
@@ -963,6 +978,8 @@ ifeq ($(MK_IMPLIBONLY),yes)
 
 # Don't install import libraries
 
+forceinstall:
+
 install:
 
 bootcd:
@@ -973,23 +990,35 @@ else # MK_IMPLIBONLY
 # Don't install static libraries
 ifeq ($(MK_MODE),static)
 
+forceinstall:
+
 install:
 	
 bootcd:	
 
 else # MK_MODE
 
+ifneq ($(MK_INSTALL),no)
+
+install: forceinstall
+
+else # MK_INSTALL
+
+install:
+
+endif # MK_INSTALL
+
 ifeq ($(INSTALL_SYMBOLS),yes)
 
-install: $(SUBDIRS:%=%_install) $(MK_FULLNAME) $(MK_BASENAME).sym
-	-$(CP) $(MK_FULLNAME) $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME)
-	-$(CP) $(MK_BASENAME).sym $(INSTALL_DIR)/symbols/$(MK_BASENAME).sym
+forceinstall: $(SUBDIRS:%=%_install) $(MK_FULLNAME) $(MK_BASENAME).sym
+	-$(CP) $(MK_FULLNAME) $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_INSTALL_FULLNAME)
+	-$(CP) $(MK_BASENAME).sym $(INSTALL_DIR)/symbols/$(MK_INSTALL_BASENAME).sym
 	@echo $(MK_FULLNAME) was successfully installed.
 
 else # INSTALL_SYMBOLS
 
-install: $(SUBDIRS:%=%_install) $(MK_FULLNAME)
-	-$(CP) $(MK_FULLNAME) $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME)
+forceinstall: $(SUBDIRS:%=%_install) $(MK_FULLNAME)
+	-$(CP) $(MK_FULLNAME) $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_INSTALL_FULLNAME)
 
 endif # INSTALL_SYMBOLS
 

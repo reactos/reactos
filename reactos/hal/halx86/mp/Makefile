@@ -1,6 +1,8 @@
-# $Id: Makefile,v 1.15 2004/11/28 01:30:01 hbirr Exp $
+# $Id: Makefile,v 1.1 2004/12/03 20:10:44 gvg Exp $
 
-PATH_TO_TOP = ../..
+PATH_TO_TOP = ../../..
+
+VPATH = ../generic
 
 default: all
 
@@ -14,33 +16,26 @@ include $(PATH_TO_TOP)/rules.mak
 #
 include $(TOOLS_PATH)/config.mk
 
-TARGET_BOOTSTRAP = yes
-
 TARGET_TYPE = hal
 
-TARGET_BASENAME = hal
+TARGET_DEFNAME = ../../hal/hal
 
-TARGET_DEFNAME = ../hal/hal
+TARGET_ASFLAGS = -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/ntoskrnl/include -D__ASM__ -DMP
 
-TARGET_ASFLAGS = -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/ntoskrnl/include -D__ASM__
-
-TARGET_CFLAGS = -I./include -I$(PATH_TO_TOP)/ntoskrnl/include -Wall -Werror
+TARGET_CFLAGS = -I../include -I$(PATH_TO_TOP)/ntoskrnl/include -Wall -Werror -DMP
 
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS
 
+TARGET_NAME = halmp
 
-TARGET_NAME_UP = halx86up
-
-TARGET_NAME_MP = halx86mp
-
-ifeq ($(MP), 1)
-TARGET_NAME = $(TARGET_NAME_MP)
+ifneq ($(MP), 1)
+TARGET_INSTALL = no
 else
-TARGET_NAME = $(TARGET_NAME_UP)
+TARGET_BOOTSTRAP = yes
 endif
 
-HAL_OBJECTS = \
+GENERIC_OBJECTS = \
 	adapter.o \
 	beep.o \
 	bus.o \
@@ -54,7 +49,6 @@ HAL_OBJECTS = \
 	kdbg.o \
 	mca.o \
 	misc.o \
-	mp.o \
 	pci.o \
 	portio.o \
 	reboot.o \
@@ -64,24 +58,19 @@ HAL_OBJECTS = \
 	time.o \
 	timer.o
 
-	#pwroff.o
-
-HAL_UP = \
-  $(HAL_OBJECTS) \
-	irql.o  
-
-HAL_MP = \
-  $(HAL_OBJECTS) \
+MP_OBJECTS = \
 	apic.o \
+	halinit_mp.o \
+	ipi_mp.o \
 	mpsirql.o \
 	mpsboot.o \
-	mps.o
+	mps.o \
+	processor_mp.o \
+	resource_mp.o
 
-ifeq ($(MP), 1)
-DEP_OBJECTS := $(HAL_MP)
-else
-DEP_OBJECTS := $(HAL_UP)
-endif
+HAL_OBJECTS = $(GENERIC_OBJECTS) $(MP_OBJECTS)
+
+DEP_OBJECTS := $(HAL_OBJECTS)
 
 TARGET_OBJECTS := $(DEP_OBJECTS) $(PATH_TO_TOP)/include/roscfg.h
 

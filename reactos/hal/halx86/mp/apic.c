@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: apic.c,v 1.1 2004/11/28 01:30:01 hbirr Exp $
+/* $Id: apic.c,v 1.1 2004/12/03 20:10:44 gvg Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS kernel
@@ -25,8 +25,8 @@
  * PROGRAMMER:  
  */
 
-#include <roscfg.h>
 #include <ddk/ntddk.h>
+#include <internal/i386/ps.h>
 
 #include <hal.h>
 #include <halirq.h>

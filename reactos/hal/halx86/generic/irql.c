@@ -1,4 +1,4 @@
-/* $Id: irql.c,v 1.22 2004/11/21 21:53:06 ion Exp $
+/* $Id: irql.c,v 1.1 2004/12/03 20:10:43 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -9,7 +9,6 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <roscfg.h>
 #include <ddk/ntddk.h>
 #include <internal/ps.h>
 #include <ntos/minmax.h>

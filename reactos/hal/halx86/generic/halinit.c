@@ -1,4 +1,4 @@
-/* $Id: halinit.c,v 1.10 2004/11/28 01:30:01 hbirr Exp $
+/* $Id: halinit.c,v 1.1 2004/12/03 20:10:43 gvg Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -12,12 +12,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <roscfg.h>
 #include <hal.h>
-
-#ifdef MP
-#include <mps.h>
-#endif /* MP */
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -45,20 +40,8 @@ HalInitSystem (ULONG BootPhase,
     {
       /* Initialize display and make the screen black */
       HalInitializeDisplay (LoaderBlock);
-      
-#ifdef MP
-      
-      HalpInitMPS();
-      
-#else
 
-      HalpInitPICs();
-
-      /* Setup busy waiting */
-      HalpCalibrateStallExecution();
-
-#endif /* MP */
-
+      HalpInitPhase0();      
     }
   else if (BootPhase == 1)
     {

@@ -1,4 +1,4 @@
-/* $Id: pci.c,v 1.14 2004/11/15 09:18:19 ekohl Exp $
+/* $Id: pci.c,v 1.1 2004/12/03 20:10:43 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,7 +18,6 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <roscfg.h>
 #include <ddk/ntddk.h>
 #include <bus.h>
 #include <halirq.h>

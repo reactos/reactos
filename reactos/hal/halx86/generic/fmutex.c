@@ -1,4 +1,4 @@
-/* $Id: fmutex.c,v 1.5 2002/09/08 10:22:24 chorns Exp $
+/* $Id: fmutex.c,v 1.1 2004/12/03 20:10:43 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

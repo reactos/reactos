@@ -33,6 +33,9 @@ VOID HalpStartEnumerator (VOID);
 /* dma.c */
 VOID HalpInitDma (VOID);
 
+/* Non-generic initialization */
+VOID HalpInitPhase0 (VOID);
+
 /* DMA Page Register Structure  
  080     DMA        RESERVED
  081     DMA        Page Register (channel 2)

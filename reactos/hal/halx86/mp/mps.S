@@ -1,4 +1,4 @@
-/* $Id: mps.S,v 1.4 2004/11/28 01:30:01 hbirr Exp $
+/* $Id: mps.S,v 1.1 2004/12/03 20:10:44 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,7 +16,7 @@
 /* FUNCTIONS *****************************************************************/
 
 #define BEFORE \
-  cld; \	
+  cld; \
   pusha; \
   pushl %ds; \
   pushl %es; \

@@ -1,4 +1,4 @@
-/* $Id: adapter.c,v 1.14 2004/11/24 17:54:38 navaraf Exp $
+/* $Id: adapter.c,v 1.1 2004/12/03 20:10:43 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
