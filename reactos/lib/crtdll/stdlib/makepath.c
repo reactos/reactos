@@ -1,3 +1,5 @@
+/* $Id: makepath.c,v 1.7 2001/09/09 12:13:14 hbirr Exp $
+ */
 #include <crtdll/stdlib.h>
 #include <crtdll/string.h>
 
@@ -24,7 +26,7 @@ void _makepath(char *path, const char *drive, const char *dir, const char *fname
   if (fname != NULL)
     {
       strcat(path, fname);
-      if (ext != NULL)
+      if (ext != NULL && *ext != 0)
 	{
 	  if (*ext != '.')
 	    strcat(path, ".");

@@ -1,3 +1,5 @@
+/* $Id: makepath.c,v 1.7 2001/09/09 12:13:15 hbirr Exp $
+ */
 #include <msvcrt/stdlib.h>
 #include <msvcrt/string.h>
 
@@ -24,7 +26,7 @@ void _makepath(char *path, const char *drive, const char *dir, const char *fname
   if (fname != NULL)
     {
       strcat(path, fname);
-      if (ext != NULL)
+      if (ext != NULL && *ext != 0)
 	{
 	  if (*ext != '.')
 	    strcat(path, ".");
@@ -57,7 +59,7 @@ void _wmakepath(wchar_t *path, const wchar_t *drive, const wchar_t *dir, const w
   if (fname != NULL)
     {
       wcscat(path, fname);
-      if (ext != NULL)
+      if (ext != NULL && *ext != 0)
 	{
 	  if (*ext != L'.')
 	    wcscat(path, L".");
