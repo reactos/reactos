@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.176 2004/08/10 12:07:11 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.177 2004/08/10 19:12:40 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -943,10 +943,11 @@ RtlNumberOfSetBits=RtlNumberOfSetBits@4
 RtlOemStringToCountedUnicodeString=RtlOemStringToCountedUnicodeString@12
 RtlOemStringToUnicodeSize=RtlOemStringToUnicodeSize@4
 RtlOemStringToUnicodeString=RtlOemStringToUnicodeString@12
+RtlOemToUnicodeN=RtlOemToUnicodeN@20
 RtlPinAtomInAtomTable=RtlPinAtomInAtomTable@8
+@RtlPrefetchMemoryNonTemporal=@RtlPrefetchMemoryNonTemporal@8
 RtlPrefixString=RtlPrefixString@12
 RtlPrefixUnicodeString=RtlPrefixUnicodeString@12
-RtlOemToUnicodeN=RtlOemToUnicodeN@20
 RtlQueryAtomInAtomTable=RtlQueryAtomInAtomTable@24
 RtlQueryRegistryValues=RtlQueryRegistryValues@20
 RtlQueryTimeZoneInformation=RtlQueryTimeZoneInformation@4
