@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.67 2004/08/05 02:48:18 navaraf Exp $ */
+/* $Id: vfat.h,v 1.68 2004/08/28 22:19:12 navaraf Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -250,6 +250,9 @@ typedef struct _VFATFCB
 
   /* Share access for the file object */
   SHARE_ACCESS FCBShareAccess;
+
+  /* Incremented on IRP_MJ_CREATE, decremented on IRP_MJ_CLEANUP */
+  ULONG OpenHandleCount;
 
   /* Entry into the hash table for the path + long name */
   HASHENTRY Hash;

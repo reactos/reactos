@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.72 2004/08/05 02:48:18 navaraf Exp $
+/* $Id: create.c,v 1.73 2004/08/28 22:19:12 navaraf Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/fs/vfat/create.c
@@ -615,10 +615,6 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	      VfatSetExtendedAttributes(FileObject, 
 					Irp->AssociatedIrp.SystemBuffer,
 					Stack->Parameters.Create.EaLength);
-	      IoSetShareAccess(0 /*DesiredAccess*/,
-			       Stack->Parameters.Create.ShareAccess,
-			       FileObject,
-			       &pFcb->FCBShareAccess);
 
 	      if (PagingFileCreate)
                 {
@@ -646,6 +642,20 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	}
 
       pFcb = FileObject->FsContext;
+
+      if (pFcb->OpenHandleCount != 0)
+        {
+          Status = IoCheckShareAccess(Stack->Parameters.Create.SecurityContext->DesiredAccess,
+                                      Stack->Parameters.Create.ShareAccess,
+                                      FileObject,
+                                      &pFcb->FCBShareAccess,
+                                      FALSE);
+          if (!NT_SUCCESS(Status)) 
+            {
+              VfatCloseFile (DeviceExt, FileObject);
+              return(Status);
+            }
+        }
 
       /*
        * Check the file has the requested attributes
@@ -719,16 +729,21 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	  Irp->IoStatus.Information = FILE_SUPERSEDED;
 	}
       else if (RequestedDisposition == FILE_OVERWRITE || RequestedDisposition == FILE_OVERWRITE_IF)
-  {
-    Irp->IoStatus.Information = FILE_OVERWRITTEN;
-  }
+        {
+          Irp->IoStatus.Information = FILE_OVERWRITTEN;
+        }
       else
-  {
+        {
 	  Irp->IoStatus.Information = FILE_OPENED;
 	}
     }
-  
-  /* FIXME : test share access */
+
+  pFcb->OpenHandleCount++;
+  IoSetShareAccess(Stack->Parameters.Create.SecurityContext->DesiredAccess,
+                   Stack->Parameters.Create.ShareAccess,
+                   FileObject,
+                   &pFcb->FCBShareAccess);
+
   /* FIXME : test write access if requested */
 
   return(Status);

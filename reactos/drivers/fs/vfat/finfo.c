@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.36 2004/08/01 21:57:18 navaraf Exp $
+/* $Id: finfo.c,v 1.37 2004/08/28 22:19:12 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -187,6 +187,11 @@ VfatSetDispositionInformation(PFILE_OBJECT FileObject,
   assert (DeviceExt->FatInfo.BytesPerCluster != 0);
   assert (FCB != NULL);
 
+  if (FCB->entry.Attrib & FILE_ATTRIBUTE_READONLY) 
+    {
+      return STATUS_CANNOT_DELETE;
+    }
+
   if (vfatFCBIsRoot(FCB) || 
      (FCB->LongNameU.Length == sizeof(WCHAR) && FCB->LongNameU.Buffer[0] == L'.') ||
      (FCB->LongNameU.Length == 2 * sizeof(WCHAR) && FCB->LongNameU.Buffer[0] == L'.' && FCB->LongNameU.Buffer[1] == L'.'))
@@ -194,6 +199,7 @@ VfatSetDispositionInformation(PFILE_OBJECT FileObject,
       // we cannot delete a '.', '..' or the root directory
       return STATUS_ACCESS_DENIED;
     }
+
   if (DispositionInfo->DoDeleteFile)
     {
       if (MmFlushImageSection (FileObject->SectionObjectPointer, MmFlushForDelete))

@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.40 2004/08/01 21:57:17 navaraf Exp $
+/* $Id: fcb.c,v 1.41 2004/08/28 22:19:12 navaraf Exp $
  *
  *
  * FILE:             drivers/fs/vfat/fcb.c
@@ -88,6 +88,8 @@ vfatInitFcb(PVFATFCB Fcb, PUNICODE_STRING NameU)
       Fcb->DirNameU.MaximumLength = Fcb->DirNameU.Length = 0;
       Fcb->LongNameU.MaximumLength = Fcb->LongNameU.Length = 0; 
     }
+  RtlZeroMemory(&Fcb->FCBShareAccess, sizeof(SHARE_ACCESS));
+  Fcb->OpenHandleCount = 0;
 }  
 
 PVFATFCB

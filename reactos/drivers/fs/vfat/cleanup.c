@@ -1,4 +1,4 @@
-/* $Id: cleanup.c,v 1.14 2003/10/11 17:51:56 hbirr Exp $
+/* $Id: cleanup.c,v 1.15 2004/08/28 22:19:12 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -55,6 +55,9 @@ VfatCleanupFile(PVFAT_IRP_CONTEXT IrpContext)
        {
          CcRosReleaseFileCache (FileObject);
        }
+
+     pFcb->OpenHandleCount--;
+     IoRemoveShareAccess(FileObject, &pFcb->FCBShareAccess);
     }
   return STATUS_SUCCESS;
 }
