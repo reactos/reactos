@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.38 2004/11/06 13:44:57 ekohl Exp $
+/* $Id: finfo.c,v 1.39 2004/12/05 16:31:51 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -6,6 +6,7 @@
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
  *                   Hartmut Birr
+ *                   Herve Poussineau (reactos@poussine.freesurf.fr)
  *
  */
 
@@ -106,26 +107,47 @@ VfatSetBasicInformation(PFILE_OBJECT FileObject,
   ASSERT(NULL != DeviceExt);
   ASSERT(NULL != BasicInfo);
   /* Check volume label bit */
-  ASSERT(0 == (FCB->entry.Attrib & 0x08));
+  ASSERT(0 == (*FCB->Attributes & 0x08));
 
-  FsdSystemTimeToDosDateTime(&BasicInfo->CreationTime,
-                             &FCB->entry.CreationDate,
-                             &FCB->entry.CreationTime);
-  FsdSystemTimeToDosDateTime(&BasicInfo->LastAccessTime,
-                             &FCB->entry.AccessDate,
+  if (FCB->Flags & FCB_IS_FATX_ENTRY)
+  {
+    FsdSystemTimeToDosDateTime(DeviceExt,
+                             &BasicInfo->CreationTime,
+                             &FCB->entry.FatX.CreationDate,
+                             &FCB->entry.FatX.CreationTime);
+    FsdSystemTimeToDosDateTime(DeviceExt,
+                             &BasicInfo->LastAccessTime,
+                             &FCB->entry.FatX.AccessDate,
+                             &FCB->entry.FatX.AccessTime);
+    FsdSystemTimeToDosDateTime(DeviceExt,
+                             &BasicInfo->LastWriteTime,
+                             &FCB->entry.FatX.UpdateDate,
+                             &FCB->entry.FatX.UpdateTime);
+  }
+  else
+  {
+    FsdSystemTimeToDosDateTime(DeviceExt,
+                             &BasicInfo->CreationTime,
+                             &FCB->entry.Fat.CreationDate,
+                             &FCB->entry.Fat.CreationTime);
+    FsdSystemTimeToDosDateTime(DeviceExt,
+                             &BasicInfo->LastAccessTime,
+                             &FCB->entry.Fat.AccessDate,
                              NULL);
-  FsdSystemTimeToDosDateTime(&BasicInfo->LastWriteTime,
-                             &FCB->entry.UpdateDate,
-                             &FCB->entry.UpdateTime);
+    FsdSystemTimeToDosDateTime(DeviceExt,
+                             &BasicInfo->LastWriteTime,
+                             &FCB->entry.Fat.UpdateDate,
+                             &FCB->entry.Fat.UpdateTime);
+  }
 
-  FCB->entry.Attrib = (unsigned char)((FCB->entry.Attrib &
+  *FCB->Attributes = (unsigned char)((*FCB->Attributes &
                        (FILE_ATTRIBUTE_DIRECTORY | 0x48)) |
                       (BasicInfo->FileAttributes &
                        (FILE_ATTRIBUTE_ARCHIVE |
                         FILE_ATTRIBUTE_SYSTEM |
                         FILE_ATTRIBUTE_HIDDEN |
                         FILE_ATTRIBUTE_READONLY)));
-  DPRINT("Setting attributes 0x%02x\n", FCB->entry.Attrib);
+  DPRINT("Setting attributes 0x%02x\n", *FCB->Attributes);
 
   VfatUpdateEntry(FCB);
 
@@ -139,23 +161,48 @@ VfatGetBasicInformation(PFILE_OBJECT FileObject,
 			PFILE_BASIC_INFORMATION BasicInfo,
 			PULONG BufferLength)
 {
+  PDEVICE_EXTENSION DeviceExt;
   DPRINT("VfatGetBasicInformation()\n");
+  
+  DeviceExt = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
   if (*BufferLength < sizeof(FILE_BASIC_INFORMATION))
     return STATUS_BUFFER_OVERFLOW;
 
-  FsdDosDateTimeToSystemTime(FCB->entry.CreationDate,
-			     FCB->entry.CreationTime,
+  if (FCB->Flags & FCB_IS_FATX_ENTRY)
+  {
+    FsdDosDateTimeToSystemTime(DeviceExt,
+			     FCB->entry.FatX.CreationDate,
+			     FCB->entry.FatX.CreationTime,
 			     &BasicInfo->CreationTime);
-  FsdDosDateTimeToSystemTime(FCB->entry.AccessDate,
+    FsdDosDateTimeToSystemTime(DeviceExt,
+			     FCB->entry.FatX.AccessDate,
+			     FCB->entry.FatX.AccessTime,
+			     &BasicInfo->LastAccessTime);
+    FsdDosDateTimeToSystemTime(DeviceExt,
+			     FCB->entry.FatX.UpdateDate,
+			     FCB->entry.FatX.UpdateTime,
+			     &BasicInfo->LastWriteTime);
+    BasicInfo->ChangeTime = BasicInfo->LastWriteTime;
+  }
+  else
+  {
+    FsdDosDateTimeToSystemTime(DeviceExt,
+			     FCB->entry.Fat.CreationDate,
+			     FCB->entry.Fat.CreationTime,
+			     &BasicInfo->CreationTime);
+    FsdDosDateTimeToSystemTime(DeviceExt,
+			     FCB->entry.Fat.AccessDate,
 			     0,
 			     &BasicInfo->LastAccessTime);
-  FsdDosDateTimeToSystemTime(FCB->entry.UpdateDate,
-			     FCB->entry.UpdateTime,
+    FsdDosDateTimeToSystemTime(DeviceExt,
+			     FCB->entry.Fat.UpdateDate,
+			     FCB->entry.Fat.UpdateTime,
 			     &BasicInfo->LastWriteTime);
-  BasicInfo->ChangeTime = BasicInfo->LastWriteTime;
+    BasicInfo->ChangeTime = BasicInfo->LastWriteTime;
+  }
 
-  BasicInfo->FileAttributes = FCB->entry.Attrib & 0x3f;
+  BasicInfo->FileAttributes = *FCB->Attributes & 0x3f;
   /* Synthesize FILE_ATTRIBUTE_NORMAL */
   if (0 == (BasicInfo->FileAttributes & (FILE_ATTRIBUTE_DIRECTORY |
                                          FILE_ATTRIBUTE_ARCHIVE |
@@ -188,7 +235,7 @@ VfatSetDispositionInformation(PFILE_OBJECT FileObject,
   ASSERT(DeviceExt->FatInfo.BytesPerCluster != 0);
   ASSERT(FCB != NULL);
 
-  if (FCB->entry.Attrib & FILE_ATTRIBUTE_READONLY) 
+  if (*FCB->Attributes & FILE_ATTRIBUTE_READONLY) 
     {
       return STATUS_CANNOT_DELETE;
     }
@@ -259,7 +306,7 @@ VfatGetNameInformation(PFILE_OBJECT FileObject,
     return STATUS_BUFFER_OVERFLOW;
 
   NameInfo->FileNameLength = FCB->PathNameU.Length;
-  memcpy(NameInfo->FileName, FCB->PathNameU.Buffer, FCB->PathNameU.Length);
+  RtlCopyMemory(NameInfo->FileName, FCB->PathNameU.Buffer, FCB->PathNameU.Length);
   NameInfo->FileName[FCB->PathNameU.Length / sizeof(WCHAR)] = 0;
 
   *BufferLength -= (sizeof(FILE_NAME_INFORMATION) + FCB->PathNameU.Length + sizeof(WCHAR));
@@ -286,6 +333,7 @@ VfatGetInternalInformation(PVFATFCB Fcb,
 
 static NTSTATUS
 VfatGetNetworkOpenInformation(PVFATFCB Fcb,
+			      PDEVICE_EXTENSION DeviceExt,
 			      PFILE_NETWORK_OPEN_INFORMATION NetworkInfo,
 			      PULONG BufferLength)
 /*
@@ -298,16 +346,38 @@ VfatGetNetworkOpenInformation(PVFATFCB Fcb,
   if (*BufferLength < sizeof(FILE_NETWORK_OPEN_INFORMATION))
     return(STATUS_BUFFER_OVERFLOW);
 
-  FsdDosDateTimeToSystemTime(Fcb->entry.CreationDate,
-			     Fcb->entry.CreationTime,
+  if (Fcb->Flags & FCB_IS_FATX_ENTRY)
+  {
+    FsdDosDateTimeToSystemTime(DeviceExt,
+			     Fcb->entry.FatX.CreationDate,
+			     Fcb->entry.FatX.CreationTime,
 			     &NetworkInfo->CreationTime);
-  FsdDosDateTimeToSystemTime(Fcb->entry.AccessDate,
+    FsdDosDateTimeToSystemTime(DeviceExt,
+			     Fcb->entry.FatX.AccessDate,
+			     Fcb->entry.FatX.AccessTime,
+			     &NetworkInfo->LastAccessTime);
+    FsdDosDateTimeToSystemTime(DeviceExt,
+			     Fcb->entry.FatX.UpdateDate,
+			     Fcb->entry.FatX.UpdateTime,
+			     &NetworkInfo->LastWriteTime);
+    NetworkInfo->ChangeTime.QuadPart = NetworkInfo->LastWriteTime.QuadPart;
+  }
+  else
+  {
+    FsdDosDateTimeToSystemTime(DeviceExt,
+			     Fcb->entry.Fat.CreationDate,
+			     Fcb->entry.Fat.CreationTime,
+			     &NetworkInfo->CreationTime);
+    FsdDosDateTimeToSystemTime(DeviceExt,
+			     Fcb->entry.Fat.AccessDate,
 			     0,
 			     &NetworkInfo->LastAccessTime);
-  FsdDosDateTimeToSystemTime(Fcb->entry.UpdateDate,
-			     Fcb->entry.UpdateTime,
+    FsdDosDateTimeToSystemTime(DeviceExt,
+			     Fcb->entry.Fat.UpdateDate,
+			     Fcb->entry.Fat.UpdateTime,
 			     &NetworkInfo->LastWriteTime);
-  NetworkInfo->ChangeTime.QuadPart = NetworkInfo->LastWriteTime.QuadPart;
+    NetworkInfo->ChangeTime.QuadPart = NetworkInfo->LastWriteTime.QuadPart;
+  }
   if (vfatFCBIsDirectory(Fcb))
     {
       NetworkInfo->EndOfFile.QuadPart = 0L;
@@ -318,7 +388,7 @@ VfatGetNetworkOpenInformation(PVFATFCB Fcb,
       NetworkInfo->AllocationSize = Fcb->RFCB.AllocationSize;
       NetworkInfo->EndOfFile = Fcb->RFCB.FileSize;
     }
-  NetworkInfo->FileAttributes = Fcb->entry.Attrib & 0x3f;
+  NetworkInfo->FileAttributes = *Fcb->Attributes & 0x3f;
 
   *BufferLength -= sizeof(FILE_NETWORK_OPEN_INFORMATION);
   return STATUS_SUCCESS;
@@ -328,12 +398,16 @@ VfatGetNetworkOpenInformation(PVFATFCB Fcb,
 static NTSTATUS
 VfatGetAllInformation(PFILE_OBJECT FileObject,
 		      PVFATFCB Fcb,
+		      PDEVICE_OBJECT DeviceObject,
 		      PFILE_ALL_INFORMATION Info,
 		      PULONG BufferLength)
 /*
  * FUNCTION: Retrieve the all file information
  */
 {
+  NTSTATUS Status;
+  ULONG InitialBufferLength = *BufferLength;
+  
   ASSERT(Info);
   ASSERT(Fcb);
 
@@ -341,60 +415,28 @@ VfatGetAllInformation(PFILE_OBJECT FileObject,
     return(STATUS_BUFFER_OVERFLOW);
 
   /* Basic Information */
-  FsdDosDateTimeToSystemTime(Fcb->entry.CreationDate,
-			     Fcb->entry.CreationTime,
-			     &Info->BasicInformation.CreationTime);
-  FsdDosDateTimeToSystemTime(Fcb->entry.AccessDate,
-			     0,
-			     &Info->BasicInformation.LastAccessTime);
-  FsdDosDateTimeToSystemTime(Fcb->entry.UpdateDate,
-			     Fcb->entry.UpdateTime,
-			     &Info->BasicInformation.LastWriteTime);
-  Info->BasicInformation.ChangeTime.QuadPart = Info->BasicInformation.LastWriteTime.QuadPart;
-  Info->BasicInformation.FileAttributes = Fcb->entry.Attrib & 0x3f;
-
+  Status = VfatGetBasicInformation(FileObject, Fcb, DeviceObject, &Info->BasicInformation, BufferLength);
+  if (!NT_SUCCESS(Status)) return Status;
   /* Standard Information */
-  if (vfatFCBIsDirectory(Fcb))
-    {
-      Info->StandardInformation.AllocationSize.QuadPart = 0LL;
-      Info->StandardInformation.EndOfFile.QuadPart = 0LL;
-      Info->StandardInformation.Directory = TRUE;
-    }
-  else
-    {
-      Info->StandardInformation.AllocationSize = Fcb->RFCB.AllocationSize;
-      Info->StandardInformation.EndOfFile = Fcb->RFCB.FileSize;
-      Info->StandardInformation.Directory = FALSE;
-    }
-  Info->StandardInformation.NumberOfLinks = 0;
-  Info->StandardInformation.DeletePending = Fcb->Flags & FCB_DELETE_PENDING ? TRUE : FALSE;
-
+  Status = VfatGetStandardInformation(Fcb, &Info->StandardInformation, BufferLength);
+  if (!NT_SUCCESS(Status)) return Status;
   /* Internal Information */
-  /* FIXME: get a real index, that can be used in a create operation */
-  Info->InternalInformation.IndexNumber.QuadPart = 0;
-
+  Status = VfatGetInternalInformation(Fcb, &Info->InternalInformation, BufferLength);
+  if (!NT_SUCCESS(Status)) return Status;
   /* EA Information */
   Info->EaInformation.EaSize = 0;
-
-  /* Access Information */
-  /* The IO-Manager adds this information */
-
+  /* Access Information: The IO-Manager adds this information */
   /* Position Information */
-  Info->PositionInformation.CurrentByteOffset.QuadPart = FileObject->CurrentByteOffset.QuadPart;
-
-  /* Mode Information */
-  /* The IO-Manager adds this information */
-
-  /* Alignment Information */
-  /* The IO-Manager adds this information */
-
+  Status = VfatGetPositionInformation(FileObject, Fcb, DeviceObject, &Info->PositionInformation, BufferLength);
+  if (!NT_SUCCESS(Status)) return Status;
+  /* Mode Information: The IO-Manager adds this information */
+  /* Alignment Information: The IO-Manager adds this information */
   /* Name Information */
-  Info->NameInformation.FileNameLength = Fcb->PathNameU.Length;
-  RtlCopyMemory(Info->NameInformation.FileName, Fcb->PathNameU.Buffer, Fcb->PathNameU.Length);
-  Info->NameInformation.FileName[Fcb->PathNameU.Length / sizeof(WCHAR)] = 0;
-
-  *BufferLength -= (sizeof(FILE_ALL_INFORMATION) + Fcb->PathNameU.Length + sizeof(WCHAR));
-
+  Status = VfatGetNameInformation(FileObject, Fcb, DeviceObject, &Info->NameInformation, BufferLength);
+  if (!NT_SUCCESS(Status)) return Status;
+  
+  *BufferLength = InitialBufferLength - (sizeof(FILE_ALL_INFORMATION) + Fcb->PathNameU.Length + sizeof(WCHAR));
+  
   return STATUS_SUCCESS;
 }
 
@@ -410,7 +452,10 @@ VOID UpdateFileSize(PFILE_OBJECT FileObject, PVFATFCB Fcb, ULONG Size, ULONG Clu
    }
    if (!vfatFCBIsDirectory(Fcb))
    {
-      Fcb->entry.FileSize = Size;  
+      if (Fcb->Flags & FCB_IS_FATX_ENTRY)
+         Fcb->entry.FatX.FileSize = Size;  
+      else
+         Fcb->entry.Fat.FileSize = Size;  
    }
    Fcb->RFCB.FileSize.QuadPart = Size;
    Fcb->RFCB.ValidDataLength.QuadPart = Size;
@@ -438,7 +483,10 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
 
   DPRINT("VfatSetAllocationSizeInformation()\n");
 
-  OldSize = Fcb->entry.FileSize;
+  if (Fcb->Flags & FCB_IS_FATX_ENTRY)
+    OldSize = Fcb->entry.FatX.FileSize;
+  else
+    OldSize = Fcb->entry.Fat.FileSize;
   if (AllocationSize->u.HighPart > 0)
   {
     return STATUS_INVALID_PARAMETER;
@@ -482,8 +530,15 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
          }
          return STATUS_DISK_FULL;
       }
-      Fcb->entry.FirstCluster = (unsigned short)(FirstCluster & 0x0000FFFF);
-      Fcb->entry.FirstClusterHigh = (unsigned short)((FirstCluster & 0xFFFF0000) >> 16);
+      if (Fcb->Flags & FCB_IS_FATX_ENTRY)
+      {
+         Fcb->entry.FatX.FirstCluster = FirstCluster;
+      }
+      else
+      {
+        Fcb->entry.Fat.FirstCluster = (unsigned short)(FirstCluster & 0x0000FFFF);
+        Fcb->entry.Fat.FirstClusterHigh = (unsigned short)((FirstCluster & 0xFFFF0000) >> 16);
+      }
     }
     else
     {
@@ -547,8 +602,15 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
     }
     else
     {
-      Fcb->entry.FirstCluster = 0;
-      Fcb->entry.FirstClusterHigh = 0;
+      if (Fcb->Flags & FCB_IS_FATX_ENTRY)
+      {
+         Fcb->entry.FatX.FirstCluster = 0;
+      }
+      else
+      {
+        Fcb->entry.Fat.FirstCluster = 0;
+        Fcb->entry.Fat.FirstClusterHigh = 0;
+      }
 
       NCluster = Cluster = FirstCluster;
       Status = STATUS_SUCCESS;
@@ -640,12 +702,14 @@ NTSTATUS VfatQueryInformation(PVFAT_IRP_CONTEXT IrpContext)
       break;
     case FileNetworkOpenInformation:
       RC = VfatGetNetworkOpenInformation(FCB,
+					 IrpContext->DeviceExt,
 					 SystemBuffer,
 					 &BufferLength);
       break;
     case FileAllInformation:
       RC = VfatGetAllInformation(IrpContext->FileObject,
 				 FCB,
+				 IrpContext->DeviceObject,
 				 SystemBuffer,
 				 &BufferLength);
       break;

@@ -1,4 +1,4 @@
-/* $Id: shutdown.c,v 1.8 2003/10/11 17:51:56 hbirr Exp $
+/* $Id: shutdown.c,v 1.9 2004/12/05 16:31:51 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -48,9 +48,9 @@ VfatShutdown(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	    Irp->IoStatus.Status = Status;
 	 }
          /* FIXME: Unmount the logical volume */
-
-	 ExReleaseResourceLite(&VfatGlobalData->VolumeListLock);
       }
+	 ExReleaseResourceLite(&VfatGlobalData->VolumeListLock);
+      
       /* FIXME: Free all global acquired resources */
 
       Status = Irp->IoStatus.Status;

@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.71 2004/11/06 13:44:57 ekohl Exp $
+/* $Id: rw.c,v 1.72 2004/12/05 16:31:51 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -592,7 +592,7 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
    BytesPerSector = IrpContext->DeviceExt->FatInfo.BytesPerSector;
 
    /* fail if file is a directory and no paged read */
-   if (Fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY && !(IrpContext->Irp->Flags & IRP_PAGING_IO))
+   if (*Fcb->Attributes & FILE_ATTRIBUTE_DIRECTORY && !(IrpContext->Irp->Flags & IRP_PAGING_IO))
    {
       Status = STATUS_INVALID_PARAMETER;
       goto ByeBye;
@@ -821,7 +821,7 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
    }
 
   /* fail if file is a directory and no paged read */
-   if (Fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY && !(IrpContext->Irp->Flags & IRP_PAGING_IO))
+   if (*Fcb->Attributes & FILE_ATTRIBUTE_DIRECTORY && !(IrpContext->Irp->Flags & IRP_PAGING_IO))
    {
       Status = STATUS_INVALID_PARAMETER;
       goto ByeBye;
@@ -1020,14 +1020,26 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
    if (!(IrpContext->Irp->Flags & IRP_PAGING_IO) &&
       !(Fcb->Flags & (FCB_IS_FAT|FCB_IS_VOLUME)))
    {
-      if(!(Fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY))
+      if(!(*Fcb->Attributes & FILE_ATTRIBUTE_DIRECTORY))
       {
          LARGE_INTEGER SystemTime;
          // set dates and times
          KeQuerySystemTime (&SystemTime);
-         FsdSystemTimeToDosDateTime (&SystemTime, &Fcb->entry.UpdateDate,
-                                     &Fcb->entry.UpdateTime);
-         Fcb->entry.AccessDate = Fcb->entry.UpdateDate;
+         if (Fcb->Flags & FCB_IS_FATX_ENTRY)
+         {
+            FsdSystemTimeToDosDateTime (IrpContext->DeviceExt,
+                                     &SystemTime, &Fcb->entry.FatX.UpdateDate,
+                                     &Fcb->entry.FatX.UpdateTime);
+            Fcb->entry.FatX.AccessDate = Fcb->entry.FatX.UpdateDate;
+            Fcb->entry.FatX.AccessTime = Fcb->entry.FatX.UpdateTime;
+         }
+         else
+         {
+            FsdSystemTimeToDosDateTime (IrpContext->DeviceExt,
+                                     &SystemTime, &Fcb->entry.Fat.UpdateDate,
+                                     &Fcb->entry.Fat.UpdateTime);
+            Fcb->entry.Fat.AccessDate = Fcb->entry.Fat.UpdateDate;
+         }
          /* set date and times to dirty */
 	 Fcb->Flags |= FCB_IS_DIRTY;
       }

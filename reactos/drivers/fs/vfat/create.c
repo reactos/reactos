@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.75 2004/11/06 13:44:56 ekohl Exp $
+/* $Id: create.c,v 1.76 2004/12/05 16:31:50 gvg Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/fs/vfat/create.c
@@ -36,10 +36,6 @@
 
 #include "vfat.h"
 
-/* GLOBALS *******************************************************************/
-
-#define ENTRIES_PER_PAGE   (PAGE_SIZE / sizeof (FATDirEntry))
-
 /* FUNCTIONS *****************************************************************/
 
 void  vfat8Dot3ToString (PFAT_DIR_ENTRY pEntry, PUNICODE_STRING NameU)
@@ -48,7 +44,7 @@ void  vfat8Dot3ToString (PFAT_DIR_ENTRY pEntry, PUNICODE_STRING NameU)
   ULONG Length;
   CHAR  cString[12];
   
-  memcpy(cString, pEntry->Filename, 11);
+  RtlCopyMemory(cString, pEntry->Filename, 11);
   cString[11] = 0;
   if (cString[0] == 0x05)
     {
@@ -71,7 +67,7 @@ void  vfat8Dot3ToString (PFAT_DIR_ENTRY pEntry, PUNICODE_STRING NameU)
     {
       Length = NameU->Length;
       NameU->Buffer += Length / sizeof(WCHAR);
-      if (!ENTRY_VOLUME(pEntry))
+      if (!FAT_ENTRY_VOLUME(pEntry))
         {
 	  Length += sizeof(WCHAR);
           NameU->Buffer[0] = L'.';
@@ -106,16 +102,30 @@ ReadVolumeLabel (PDEVICE_EXTENSION DeviceExt, PVPB Vpb)
 {
   PVOID Context = NULL;
   ULONG DirIndex = 0;
-  FATDirEntry* Entry;
+  PDIR_ENTRY Entry;
   PVFATFCB pFcb;
   LARGE_INTEGER FileOffset;
   UNICODE_STRING NameU;
+  ULONG SizeDirEntry;
+  ULONG EntriesPerPage;
+  OEM_STRING StringO;
 
   NameU.Buffer = Vpb->VolumeLabel;
   NameU.Length = 0;
   NameU.MaximumLength = sizeof(Vpb->VolumeLabel);
   *(Vpb->VolumeLabel) = 0;
   Vpb->VolumeLabelLength = 0;
+  
+  if (DeviceExt->Flags & VCB_IS_FATX)
+  {
+    SizeDirEntry = sizeof(FATX_DIR_ENTRY);
+    EntriesPerPage = FATX_ENTRIES_PER_PAGE;
+  }
+  else
+  {
+    SizeDirEntry = sizeof(FAT_DIR_ENTRY);
+    EntriesPerPage = FAT_ENTRIES_PER_PAGE;
+  }
 
   ExAcquireResourceExclusiveLite (&DeviceExt->DirResource, TRUE);
   pFcb = vfatOpenRootFCB (DeviceExt);
@@ -126,20 +136,29 @@ ReadVolumeLabel (PDEVICE_EXTENSION DeviceExt, PVPB Vpb)
   {
      while (TRUE)
      {
-       if (ENTRY_VOLUME(Entry))
+       if (ENTRY_VOLUME(DeviceExt, Entry))
        {
           /* copy volume label */
-          vfat8Dot3ToString (Entry, &NameU);
+          if (DeviceExt->Flags & VCB_IS_FATX)
+          {
+            StringO.Buffer = Entry->FatX.Filename;
+            StringO.MaximumLength = StringO.Length = Entry->FatX.FilenameLength;
+            RtlOemStringToUnicodeString(&NameU, &StringO, FALSE);
+          }
+          else
+          {
+            vfat8Dot3ToString (&Entry->Fat, &NameU);
+          }
           Vpb->VolumeLabelLength = NameU.Length;
           break;
        }
-       if (ENTRY_END(Entry))
+       if (ENTRY_END(DeviceExt, Entry))
        {
           break;
        }
        DirIndex++;       
-       Entry++;
-       if ((DirIndex % ENTRIES_PER_PAGE) == 0)
+       Entry = (PDIR_ENTRY)((ULONG_PTR)Entry + SizeDirEntry);
+       if ((DirIndex % EntriesPerPage) == 0)
        {
 	  CcUnpinData(Context);
 	  FileOffset.u.LowPart += PAGE_SIZE;
@@ -212,7 +231,7 @@ FindFile (PDEVICE_EXTENSION DeviceExt,
 	    {
 	      RtlCopyUnicodeString(&DirContext->LongNameU, &rcFcb->LongNameU);
 	      RtlCopyUnicodeString(&DirContext->ShortNameU, &rcFcb->ShortNameU);
-	      memcpy(&DirContext->FatDirEntry, &rcFcb->entry, sizeof(FATDirEntry));
+	      RtlCopyMemory(&DirContext->DirEntry, &rcFcb->entry, sizeof(DIR_ENTRY));
 	      DirContext->StartIndex = rcFcb->startIndex;
 	      DirContext->DirIndex = rcFcb->dirIndex;
               DPRINT("FindFile: new Name %wZ, DirIndex %d (%d)\n",
@@ -231,13 +250,13 @@ FindFile (PDEVICE_EXTENSION DeviceExt,
 
   while(TRUE)
     {
-      Status = vfatGetNextDirEntry(&Context, &Page, Parent, DirContext, First);
+      Status = DeviceExt->GetNextDirEntry(&Context, &Page, Parent, DirContext, First);
       First = FALSE;
       if (Status == STATUS_NO_MORE_ENTRIES)
         {
 	  break;
         }
-      if (ENTRY_VOLUME(&DirContext->FatDirEntry))
+      if (ENTRY_VOLUME(DeviceExt, &DirContext->DirEntry))
         {
           DirContext->DirIndex++;
           continue;
@@ -269,7 +288,7 @@ FindFile (PDEVICE_EXTENSION DeviceExt,
               rcFcb = vfatGrabFCBFromTable(DeviceExt, &PathNameU);
 	      if (rcFcb != NULL)
 	        {
-	          memcpy(&DirContext->FatDirEntry, &rcFcb->entry, sizeof(FATDirEntry));
+	          RtlCopyMemory(&DirContext->DirEntry, &rcFcb->entry, sizeof(DIR_ENTRY));
                   vfatReleaseFCB(DeviceExt, rcFcb);
 		}
 	    }
@@ -407,17 +426,26 @@ VfatSupersedeFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   ULONG Cluster, NextCluster;
   NTSTATUS Status;
   
-  Fcb->entry.FileSize = 0;
-  if (DeviceExt->FatInfo.FatType == FAT32)
-    {
-      Cluster = Fcb->entry.FirstCluster + Fcb->entry.FirstClusterHigh * 65536;
-    }
+  if (Fcb->Flags & FCB_IS_FATX_ENTRY)
+  {
+    Fcb->entry.FatX.FileSize = 0;
+    Cluster = Fcb->entry.FatX.FirstCluster;
+    Fcb->entry.FatX.FirstCluster = 0;
+  }
   else
-    {
-      Cluster = Fcb->entry.FirstCluster;
-    }
-  Fcb->entry.FirstCluster = 0;
-  Fcb->entry.FirstClusterHigh = 0;
+  {
+    Fcb->entry.Fat.FileSize = 0;
+    if (DeviceExt->FatInfo.FatType == FAT32)
+      {
+        Cluster = Fcb->entry.Fat.FirstCluster + Fcb->entry.Fat.FirstClusterHigh * 65536;
+      }
+    else
+      {
+        Cluster = Fcb->entry.Fat.FirstCluster;
+      }
+    Fcb->entry.Fat.FirstCluster = 0;
+    Fcb->entry.Fat.FirstClusterHigh = 0;
+  }
   Fcb->LastOffset = Fcb->LastCluster = 0;
   VfatUpdateEntry (Fcb);
   if (Fcb->RFCB.FileSize.QuadPart > 0)
@@ -496,7 +524,7 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	{
 	  return (STATUS_INSUFFICIENT_RESOURCES);
 	}
-      memset(pCcb, 0, sizeof(VFATCCB));
+      RtlZeroMemory(pCcb, sizeof(VFATCCB));
       FileObject->Flags |= FO_FCB_IS_VALID;
       FileObject->SectionObjectPointer = &pFcb->SectionObjectPointers;
       FileObject->FsContext = pFcb;
@@ -626,13 +654,13 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
        * Check the file has the requested attributes
        */
       if (RequestedOptions & FILE_NON_DIRECTORY_FILE && 
-	  pFcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY)
+	  *pFcb->Attributes & FILE_ATTRIBUTE_DIRECTORY)
 	{
 	  VfatCloseFile (DeviceExt, FileObject);
 	  return(STATUS_FILE_IS_A_DIRECTORY);
 	}
       if (RequestedOptions & FILE_DIRECTORY_FILE && 
-	  !(pFcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY))
+	  !(*pFcb->Attributes & FILE_ATTRIBUTE_DIRECTORY))
 	{
 	  VfatCloseFile (DeviceExt, FileObject);
 	  return(STATUS_NOT_A_DIRECTORY);

@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.27 2004/11/06 13:44:57 ekohl Exp $
+/* $Id: volume.c,v 1.28 2004/12/05 16:31:51 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -6,6 +6,7 @@
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
  *                   Hartmut Birr
+ *                   Herve Poussineau (reactos@poussine.freesurf.fr)
  */
 
 /* INCLUDES *****************************************************************/
@@ -42,7 +43,7 @@ FsdGetFsVolumeInformation(PDEVICE_OBJECT DeviceObject,
   /* valid entries */
   FsVolumeInfo->VolumeSerialNumber = DeviceObject->Vpb->SerialNumber;
   FsVolumeInfo->VolumeLabelLength = DeviceObject->Vpb->VolumeLabelLength;
-  memcpy(FsVolumeInfo->VolumeLabel, DeviceObject->Vpb->VolumeLabel, FsVolumeInfo->VolumeLabelLength);
+  RtlCopyMemory(FsVolumeInfo->VolumeLabel, DeviceObject->Vpb->VolumeLabel, FsVolumeInfo->VolumeLabelLength);
 
   /* dummy entries */
   FsVolumeInfo->VolumeCreationTime.QuadPart = 0;
@@ -94,7 +95,7 @@ FsdGetFsAttributeInformation(PDEVICE_EXTENSION DeviceExt,
 
   FsAttributeInfo->FileSystemNameLength = Length;
 
-  memcpy(FsAttributeInfo->FileSystemName, pName, Length );
+  RtlCopyMemory(FsAttributeInfo->FileSystemName, pName, Length );
 
   DPRINT("Finished FsdGetFsAttributeInformation()\n");
 
@@ -162,9 +163,140 @@ static NTSTATUS
 FsdSetFsLabelInformation(PDEVICE_OBJECT DeviceObject,
 			 PFILE_FS_LABEL_INFORMATION FsLabelInfo)
 {
+  PDEVICE_EXTENSION DeviceExt;
+  PVOID Context = NULL;
+  ULONG DirIndex = 0;
+  PDIR_ENTRY Entry;
+  PVFATFCB pRootFcb;
+  LARGE_INTEGER FileOffset;
+  BOOL LabelFound = FALSE;
+  DIR_ENTRY VolumeLabelDirEntry;
+  ULONG VolumeLabelDirIndex;
+  ULONG LabelLen;
+  NTSTATUS Status = STATUS_UNSUCCESSFUL;
+  OEM_STRING StringO;
+  UNICODE_STRING StringW;
+  CHAR cString[43];
+  ULONG SizeDirEntry;
+  ULONG EntriesPerPage;
+  
   DPRINT("FsdSetFsLabelInformation()\n");
-
-  return(STATUS_NOT_IMPLEMENTED);
+  
+  DeviceExt = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+  
+  if (sizeof(DeviceObject->Vpb->VolumeLabel) < FsLabelInfo->VolumeLabelLength)
+  {
+    CHECKPOINT;
+    return STATUS_NAME_TOO_LONG;
+  }
+  
+  if (DeviceExt->Flags & VCB_IS_FATX)
+  {
+    if (FsLabelInfo->VolumeLabelLength / sizeof(WCHAR) > 42)
+      return STATUS_NAME_TOO_LONG;
+    SizeDirEntry = sizeof(FATX_DIR_ENTRY);
+    EntriesPerPage = FATX_ENTRIES_PER_PAGE;
+  }
+  else
+  {
+    if (FsLabelInfo->VolumeLabelLength / sizeof(WCHAR) > 11)
+      return STATUS_NAME_TOO_LONG;
+    SizeDirEntry = sizeof(FAT_DIR_ENTRY);
+    EntriesPerPage = FAT_ENTRIES_PER_PAGE;
+  }
+  
+  /* Create Volume label dir entry */
+  LabelLen = FsLabelInfo->VolumeLabelLength / sizeof(WCHAR);
+  RtlZeroMemory(&VolumeLabelDirEntry, SizeDirEntry);
+  StringW.Buffer = FsLabelInfo->VolumeLabel;
+  StringW.Length = StringW.MaximumLength = FsLabelInfo->VolumeLabelLength;
+  StringO.Buffer = cString;
+  StringO.Length = 0;
+  StringO.MaximumLength = 42;
+  Status = RtlUnicodeStringToOemString(&StringO, &StringW, FALSE);
+  if (!NT_SUCCESS(Status))
+    return Status;
+  if (DeviceExt->Flags & VCB_IS_FATX)
+  {
+    RtlCopyMemory(VolumeLabelDirEntry.FatX.Filename, cString, LabelLen);
+    memset(&VolumeLabelDirEntry.FatX.Filename[LabelLen], ' ', 42 - LabelLen);
+    VolumeLabelDirEntry.FatX.Attrib = 0x08;
+  }
+  else
+  {
+    RtlCopyMemory(VolumeLabelDirEntry.Fat.Filename, cString, LabelLen);
+    memset(&VolumeLabelDirEntry.Fat.Filename[LabelLen], ' ', 11 - LabelLen);
+    VolumeLabelDirEntry.Fat.Attrib = 0x08;
+  }
+  
+  pRootFcb = vfatOpenRootFCB(DeviceExt);
+   
+  /* Search existing volume entry on disk */
+  FileOffset.QuadPart = 0;
+  if (CcMapData(pRootFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, &Context, (PVOID*)&Entry))
+  {
+    while (TRUE)
+    {
+      if (ENTRY_VOLUME(DeviceExt, Entry))
+      {
+        /* Update entry */
+        LabelFound = TRUE;
+        RtlCopyMemory(Entry, &VolumeLabelDirEntry, SizeDirEntry);
+        CcSetDirtyPinnedData(Context, NULL);
+        Status = STATUS_SUCCESS;
+        break;
+      }
+      if (ENTRY_END(DeviceExt, Entry))
+      {
+        break;
+      }
+      DirIndex++;
+      Entry = (PDIR_ENTRY)((ULONG_PTR)Entry + SizeDirEntry);
+      if ((DirIndex % EntriesPerPage) == 0)
+      {
+	     CcUnpinData(Context);
+	     FileOffset.u.LowPart += PAGE_SIZE;
+	     if (!CcMapData(pRootFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, &Context, (PVOID*)&Entry))
+	     {
+	       Context = NULL;
+	       break;
+	     }
+      }
+    }
+    if (Context)
+    {
+      CcUnpinData(Context);
+    }
+  }
+  if (!LabelFound)
+  {
+    /* Add new entry for label */
+    if (!vfatFindDirSpace(DeviceExt, pRootFcb, 1, &VolumeLabelDirIndex))
+      Status = STATUS_DISK_FULL;
+    else
+    {
+      FileOffset.u.HighPart = 0;
+      FileOffset.u.LowPart = VolumeLabelDirIndex * SizeDirEntry;
+      CcMapData(pRootFcb->FileObject, &FileOffset, SizeDirEntry,
+                 TRUE, &Context, (PVOID*)&Entry);
+      RtlCopyMemory(Entry, &VolumeLabelDirEntry, SizeDirEntry);
+      CcSetDirtyPinnedData(Context, NULL);
+      CcUnpinData(Context);
+      Status = STATUS_SUCCESS;
+    }
+  }
+  
+  vfatReleaseFCB(DeviceExt, pRootFcb);
+  if (!NT_SUCCESS(Status))
+  {
+    return Status;
+  }
+  
+  /* Update volume label in memory */
+  DeviceObject->Vpb->VolumeLabelLength = FsLabelInfo->VolumeLabelLength;
+  RtlCopyMemory(DeviceObject->Vpb->VolumeLabel, FsLabelInfo->VolumeLabel, DeviceObject->Vpb->VolumeLabelLength);
+  
+  return Status;
 }
 
 
@@ -255,7 +387,7 @@ NTSTATUS VfatSetVolumeInformation(PVFAT_IRP_CONTEXT IrpContext)
   /* PRECONDITION */
   ASSERT(IrpContext);
 
-  DPRINT1("VfatSetVolumeInformation(IrpContext %x)\n", IrpContext);
+  DPRINT ("VfatSetVolumeInformation(IrpContext %x)\n", IrpContext);
 
   if (!ExAcquireResourceExclusiveLite(&((PDEVICE_EXTENSION)IrpContext->DeviceObject->DeviceExtension)->DirResource,
                                       (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
@@ -267,9 +399,9 @@ NTSTATUS VfatSetVolumeInformation(PVFAT_IRP_CONTEXT IrpContext)
   BufferLength = Stack->Parameters.SetVolume.Length;
   SystemBuffer = IrpContext->Irp->AssociatedIrp.SystemBuffer;
 
-  DPRINT1("FsInformationClass %d\n", FsInformationClass);
-  DPRINT1("BufferLength %d\n", BufferLength);
-  DPRINT1("SystemBuffer %x\n", SystemBuffer);
+  DPRINT ("FsInformationClass %d\n", FsInformationClass);
+  DPRINT ("BufferLength %d\n", BufferLength);
+  DPRINT ("SystemBuffer %x\n", SystemBuffer);
 
   switch(FsInformationClass)
     {

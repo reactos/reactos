@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.46 2004/08/05 02:48:18 navaraf Exp $
+ * $Id: fat.c,v 1.47 2004/12/05 16:31:50 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -459,7 +459,7 @@ CountAvailableClusters(PDEVICE_EXTENSION DeviceExt,
   {
 	if (DeviceExt->FatInfo.FatType == FAT12)
 	  Status = FAT12CountAvailableClusters(DeviceExt);
-	else if (DeviceExt->FatInfo.FatType == FAT16)
+	else if (DeviceExt->FatInfo.FatType == FAT16 || DeviceExt->FatInfo.FatType == FATX16)
 	  Status = FAT16CountAvailableClusters(DeviceExt);
 	else
 	  Status = FAT32CountAvailableClusters(DeviceExt);
@@ -641,7 +641,7 @@ GetNextCluster(PDEVICE_EXTENSION DeviceExt,
 	  DeviceExt, CurrentCluster);
 
   if (CurrentCluster == 0)
-     return(STATUS_UNSUCCESSFUL);
+     return(STATUS_INVALID_PARAMETER);
 
   ExAcquireResourceSharedLite(&DeviceExt->FatResource, TRUE);
   Status = DeviceExt->GetNextCluster(DeviceExt, CurrentCluster, NextCluster);

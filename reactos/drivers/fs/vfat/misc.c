@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.14 2004/11/06 13:44:57 ekohl Exp $
+/* $Id: misc.c,v 1.15 2004/12/05 16:31:51 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -41,7 +41,7 @@ NTSTATUS VfatLockControl(
       goto Fail;
    }
 
-   if (Fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY)
+   if (*Fcb->Attributes & FILE_ATTRIBUTE_DIRECTORY)
    {
       Status = STATUS_INVALID_PARAMETER;
       goto Fail;
