@@ -22,9 +22,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.11 $
- * $Author: ariadne $
- * $Date: 1999/05/09 14:00:05 $
+ * $Revision: 1.12 $
+ * $Author: jean $
+ * $Date: 2001/01/25 18:51:26 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
@@ -100,12 +100,12 @@ typedef struct {
  * The three standard file pointers provided by the run time library.
  * NOTE: These will go to the bit-bucket silently in GUI applications!
  */
-extern FILE (*_iob)[];	/* A pointer to an array of FILE */
-#define stdin	(&(*_iob)[0])
-#define stdout	(&(*_iob)[1])
-#define stderr	(&(*_iob)[2])
-#define stdaux	(&(*_iob)[3])
-#define stdprn	(&(*_iob)[4])
+extern FILE _iob[];	/* an array of FILE */
+#define stdin	(&_iob[0])
+#define stdout	(&_iob[1])
+#define stderr	(&_iob[2])
+#define stdaux	(&_iob[3])
+#define stdprn	(&_iob[4])
 
 /* Returned by various functions on end of file condition or error. */
 #define	EOF	(-1)
