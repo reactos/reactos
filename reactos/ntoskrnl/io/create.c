@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.68 2003/09/25 20:04:27 ekohl Exp $
+/* $Id: create.c,v 1.69 2003/11/06 18:05:54 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -327,7 +327,7 @@ NTSTATUS STDCALL
 IoCreateFile(OUT	PHANDLE			FileHandle,
 	     IN	ACCESS_MASK		DesiredAccess,
 	     IN	POBJECT_ATTRIBUTES	ObjectAttributes,
-	     OUT	PIO_STATUS_BLOCK	IoStatusBlock,
+	     OUT PIO_STATUS_BLOCK	IoStatusBlock,
 	     IN	PLARGE_INTEGER		AllocationSize		OPTIONAL,
 	     IN	ULONG			FileAttributes,
 	     IN	ULONG			ShareAccess,
@@ -343,7 +343,6 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
    NTSTATUS		Status;
    PIRP			Irp;
    PIO_STACK_LOCATION	StackLoc;
-   IO_STATUS_BLOCK      IoSB;
    IO_SECURITY_CONTEXT  SecurityContext;
    
    DPRINT("IoCreateFile(FileHandle %x, DesiredAccess %x, "
@@ -352,7 +351,10 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
 	  ObjectAttributes->ObjectName->Buffer);
    
    assert_irql(PASSIVE_LEVEL);
-   
+
+  if (IoStatusBlock == NULL)
+    return STATUS_ACCESS_VIOLATION;
+
    *FileHandle = 0;
 
    Status = ObCreateObject(ExGetPreviousMode(),
@@ -420,7 +422,7 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
    //trigger FileObject/Event dereferencing
    Irp->Tail.Overlay.OriginalFileObject = FileObject;
      
-   Irp->UserIosb = &IoSB;   //return iostatus
+   Irp->UserIosb = IoStatusBlock;
    Irp->AssociatedIrp.SystemBuffer = EaBuffer;
    Irp->Tail.Overlay.AuxiliaryBuffer = (PCHAR)ExtraCreateParameters;
    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
@@ -477,7 +479,7 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
 			      KernelMode,
 			      FALSE,
 			      NULL);
-	Status = IoSB.Status;
+	Status = IoStatusBlock->Status;
      }
    if (!NT_SUCCESS(Status))
      {
@@ -487,10 +489,7 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
 
 	ZwClose(*FileHandle);
      }
-   if (IoStatusBlock)
-     {
-       *IoStatusBlock = IoSB;
-     }
+
    assert_irql(PASSIVE_LEVEL);
 
    DPRINT("Finished IoCreateFile() (*FileHandle) %x\n", (*FileHandle));
