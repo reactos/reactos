@@ -7,7 +7,7 @@ TARGET_APPTYPE = console
 
 TARGET_NAME = netstat
 
-TARGET_SDKLIBS = user32.a snmpapi.a
+TARGET_SDKLIBS = user32.a snmpapi.a iphlpapi.a ws2_32.a
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 

@@ -35,25 +35,19 @@ NhpAllocateAndGetInterfaceInfoFromStack
 
  */
 
-TCHAR* GetNodeTypeName(int nNodeType)
+static TCHAR* GetNodeTypeName(int nNodeType)
 {
     switch (nNodeType) {
-    case 0:
-        return _T("zero");
-    case 1:
-        return _T("one");
-    case 2:
-        return _T("two");
-    case 3:
-        return _T("three");
-    case 4:
-        return _T("mixed");
-    default:
-        return _T("unknown");
+    case 0:  return _T("zero");
+    case 1:  return _T("one");
+    case 2:  return _T("two");
+    case 3:  return _T("three");
+    case 4:  return _T("mixed");
+    default: return _T("unknown");
     }
 }
 
-void ShowNetworkFixedInfo()
+static void ShowNetworkFixedInfo()
 {
     FIXED_INFO* pFixedInfo = NULL;
     ULONG OutBufLen = 0;
@@ -73,15 +67,25 @@ void ShowNetworkFixedInfo()
 
     result = GetNetworkParams(pFixedInfo, &OutBufLen);
     if (result == ERROR_SUCCESS) {
+        IP_ADDR_STRING* pIPAddr;
+
              printf("\tHostName. . . . . . . . . . . : %s\n",  pFixedInfo->HostName);
              printf("\tDomainName. . . . . . . . . . : %s\n",  pFixedInfo->DomainName);
+//
+             printf("\tDNS Servers . . . . . . . . . : %s\n",  pFixedInfo->DnsServerList.IpAddress.String);
+             pIPAddr = pFixedInfo->DnsServerList.Next;
+             while (pIPAddr) {
+                 printf("\t\t\t\t      : %s\n",  pIPAddr->IpAddress.String);
+                 pIPAddr = pIPAddr->Next;
+             }
+//
         _tprintf(_T("\tNodeType. . . . . . . . . . . : %d (%s)\n"), pFixedInfo->NodeType, GetNodeTypeName(pFixedInfo->NodeType));
              printf("\tScopeId . . . . . . . . . . . : %s\n",  pFixedInfo->ScopeId);
         _tprintf(_T("\tEnableRouting . . . . . . . . : %s\n"), pFixedInfo->EnableRouting ? _T("yes") : _T("no"));
         _tprintf(_T("\tEnableProxy . . . . . . . . . : %s\n"), pFixedInfo->EnableProxy ? _T("yes") : _T("no"));
         _tprintf(_T("\tEnableDns . . . . . . . . . . : %s\n"), pFixedInfo->EnableDns ? _T("yes") : _T("no"));
         _tprintf(_T("\n"));
-        //_tprintf(_T("\n"), );
+        //_tprintf(_T("\n"),);
         //_tprintf(_T("GetNetworkParams() returned with %d\n"), pIfTable->NumAdapters);
 
 //      _tprintf(_T("\tConnection specific DNS suffix: %s\n"), pFixedInfo->EnableDns ? _T("yes") : _T("no"));
@@ -107,7 +111,7 @@ void ShowNetworkFixedInfo()
     }
 }
 
-void ShowNetworkInterfaces()
+static void ShowNetworkInterfaces()
 {
     IP_INTERFACE_INFO* pIfTable = NULL;
     DWORD result;
@@ -162,6 +166,31 @@ void ShowNetworkInterfaces()
     free(pIfTable);
 }
 
+static void ShowAdapterInfo()
+{
+    IP_ADAPTER_INFO* pAdaptorInfo;
+    ULONG ulOutBufLen;
+    DWORD dwRetVal;
+
+    _tprintf(_T("\nAdaptor Information\t\n"));
+    pAdaptorInfo = (IP_ADAPTER_INFO*)GlobalAlloc(GPTR, sizeof(IP_ADAPTER_INFO));
+    ulOutBufLen = sizeof(IP_ADAPTER_INFO);
+
+    if (ERROR_BUFFER_OVERFLOW == GetAdaptersInfo(pAdaptorInfo, &ulOutBufLen)) {
+        GlobalFree(pAdaptorInfo);
+        pAdaptorInfo = (IP_ADAPTER_INFO*)GlobalAlloc(GPTR, ulOutBufLen);
+    }
+    if (dwRetVal = GetAdaptersInfo(pAdaptorInfo, &ulOutBufLen)) {
+        _tprintf(_T("Call to GetAdaptersInfo failed. Return Value: %08x\n"), dwRetVal);
+    } else {
+        while (pAdaptorInfo) {
+            printf("  AdapterName: %s\n", pAdaptorInfo->AdapterName);
+            printf("  Description: %s\n", pAdaptorInfo->Description);
+            pAdaptorInfo = pAdaptorInfo->Next;
+        }
+    }
+}
+
 const char szUsage[] = { "USAGE:\n" \
     "   ipconfig [/? | /all | /release [adapter] | /renew [adapter]\n" \
     "            | /flushdns | /registerdns\n" \
@@ -185,7 +214,6 @@ const char szUsage[] = { "USAGE:\n" \
     "The default is to display only the IP address, subnet mask and\n" \
     "default gateway for each adapter bound to TCP/IP.\n"
 };
-
 /*
     "\n" \
     "For Release and Renew, if no adapter name is specified, then the IP address\n" \
@@ -202,7 +230,7 @@ const char szUsage[] = { "USAGE:\n" \
                                          eg. ELINK-21, myELELINKi21adapter.\n"
  */
 
-void usage(void)
+static void usage(void)
 {
 	fputs(szUsage, stderr);
 }
@@ -210,7 +238,6 @@ void usage(void)
 
 int main(int argc, char *argv[])
 {
-
     // 10.0.0.100    // As of build 0.0.20 this is hardcoded in the ip stack
 
     if (argc > 1) {
@@ -220,6 +247,6 @@ int main(int argc, char *argv[])
     _tprintf(_T("ReactOS IP Configuration\n"));
     ShowNetworkFixedInfo();
     ShowNetworkInterfaces();
+    ShowAdapterInfo();
 	return 0;
 }
-

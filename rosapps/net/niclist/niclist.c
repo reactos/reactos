@@ -1,4 +1,4 @@
-/* $Id: niclist.c,v 1.1 2002/07/09 19:34:41 robd Exp $
+/* $Id: niclist.c,v 1.2 2002/09/24 14:26:47 robd Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS packet driver interface list utility
@@ -18,6 +18,8 @@
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "trace.h"
+
 
 #define MAX_ADAPTERS 10
 #define NIC_BUFFER_SIZE 2048
@@ -34,6 +36,7 @@ NIC_INFO_NT nic_info[MAX_ADAPTERS];
 
 // pointer to exported function in winpcap library
 BOOLEAN (*PacketGetAdapterNames)(PTSTR, PULONG) = NULL;
+PCHAR (*PacketGetVersion)(VOID) = NULL;
 
 
 int main(int argc, char **argv)
@@ -45,17 +48,29 @@ int main(int argc, char **argv)
     int nAdapterCount;
     int i;
 
+	char* PacketLibraryVersion; 
+
 
     // Attemp to load the WinPCap dynamic link library
     HINSTANCE hPacket = LoadLibrary("PACKET.DLL");
     if (hPacket) {
         PacketGetAdapterNames = (BOOLEAN (*)(PTSTR, PULONG))GetProcAddress(hPacket, "PacketGetAdapterNames");
+        PacketGetVersion = (BOOLEAN (*)(PTSTR, PULONG))GetProcAddress(hPacket, "PacketGetVersion");
     } else {
         printf("Could not load WinPCap driver! for more information goto:\n");
         printf ("http://netgroup-serv.polito.it/winpcap\n");
         return 1;
     }
-    PacketGetAdapterNames(AdapterInfo, &AdapterLength);
+    if (!(PacketLibraryVersion = PacketGetVersion())) {
+        printf("ERROR: Could not get Packet DLL Version string.\n");
+		return 2;
+	}
+	printf("Packet Library Version: %s\n", PacketLibraryVersion);
+
+    if (!PacketGetAdapterNames(AdapterInfo, &AdapterLength)) {
+        printf("ERROR: Could not get Packet Adaptor Names.\n");
+		return 2;
+	}
     wstrName = (LPWSTR)AdapterInfo;
 
     // Enumerate all the adapters names found...
@@ -64,8 +79,15 @@ int main(int argc, char **argv)
         nic_info[nAdapterCount].wstrName = wstrName;
         wstrName += lstrlenW(wstrName) + 1;
         nAdapterCount++;
+		if (nAdapterCount > 9) break;
     }
     strDesc = (LPSTR)++wstrName;
+
+	if (!nAdapterCount) {
+		printf("No Packet Adaptors found (%d)\n", AdapterLength);
+	} else {
+	    printf("Adaptor count: %d\n", nAdapterCount);
+	}
 
     // And obtain the adapter description strings....
     for (i = 0; i < nAdapterCount; i++) {
