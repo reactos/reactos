@@ -10,9 +10,11 @@ using std::vector;
 using std::map;
 using std::set;
 
+typedef set<string> set_string;
+
 map<ModuleType,MingwModuleHandler*>*
 MingwModuleHandler::handler_map = NULL;
-set<string> 
+set_string
 MingwModuleHandler::directory_set;
 int
 MingwModuleHandler::ref = 0;
@@ -74,19 +76,21 @@ string
 MingwModuleHandler::GetDirectory ( const string& filename ) const 
 {
 	size_t index = filename.find_last_of ( '/' );
-	if (index == string::npos) return ".";
-        else return filename.substr ( 0, index );
+	if (index == string::npos)
+		return ".";
+	else
+		return filename.substr ( 0, index );
 }
 
 string
 MingwModuleHandler::GetExtension ( const string& filename ) const
 {
 	size_t index = filename.find_last_of ( '/' );
-	if (index == string::npos) index = 0; 
-        string tmp = filename.substr( index, filename.size() - index );
-        size_t ext_index = tmp.find_last_of( '.' );
-        if (ext_index != string::npos) 
-            return filename.substr ( index + ext_index, filename.size() );
+	if (index == string::npos) index = 0;
+	string tmp = filename.substr( index, filename.size() - index );
+	size_t ext_index = tmp.find_last_of( '.' );
+	if (ext_index != string::npos) 
+		return filename.substr ( index + ext_index, filename.size() );
 	return "";
 }
 
@@ -101,14 +105,14 @@ MingwModuleHandler::GetBasename ( const string& filename ) const
 
 string
 MingwModuleHandler::ReplaceExtension ( const string& filename,
-	                                   const string& newExtension ) const
+                                       const string& newExtension ) const
 {
 	size_t index = filename.find_last_of ( '/' );
 	if (index == string::npos) index = 0;
-        string tmp = filename.substr( index, filename.size() - index );
-        size_t ext_index = tmp.find_last_of( '.' );
-        if (ext_index != string::npos) 
-            return filename.substr ( 0, index + ext_index ) + newExtension;
+	string tmp = filename.substr( index, filename.size() - index );
+	size_t ext_index = tmp.find_last_of( '.' );
+	if (ext_index != string::npos) 
+		return filename.substr ( 0, index + ext_index ) + newExtension;
 	return filename + newExtension;
 }
 
@@ -129,7 +133,7 @@ string
 MingwModuleHandler::GetModuleArchiveFilename ( const Module& module ) const
 {
 	return ReplaceExtension ( FixupTargetFilename ( module.GetPath () ),
-                                  ".a" );
+	                          ".a" );
 }
 
 string
@@ -218,9 +222,9 @@ MingwModuleHandler::GetObjectFilename ( const string& sourceFilename ) const
 		newExtension = ".stubs.o";
 	else
 		newExtension = ".o";
-	return  PassThruCacheDirectory
-            ( FixupTargetFilename ( ReplaceExtension ( sourceFilename,
-                                                       newExtension ) ) );
+	return PassThruCacheDirectory (
+		FixupTargetFilename (
+			ReplaceExtension ( sourceFilename, newExtension ) ) );
 }
 
 string
@@ -242,34 +246,39 @@ MingwModuleHandler::GetObjectFilenames ( const Module& module ) const
 void
 MingwModuleHandler::GenerateDirectoryTargets() const 
 {
-    fprintf( fMakefile, "ifneq ($(ROS_INTERMEDIATE),)\ndirectories::" );
+	set_string::iterator i;
+	fprintf( fMakefile, "ifneq ($(ROS_INTERMEDIATE),)\ndirectories::" );
 
-    for( set<string>::iterator i = directory_set.begin();
-         i != directory_set.end();
-         i++ )
-        fprintf( fMakefile, " %s", i->c_str() );
+	for ( i = directory_set.begin();
+	      i != directory_set.end();
+	      i++ )
+	{
+		fprintf ( fMakefile, " %s", i->c_str() );
+	}
 
-    fprintf( fMakefile, "\n\n" );
+	fprintf( fMakefile, "\n\n" );
 
-    for( set<string>::iterator i = directory_set.begin();
-         i != directory_set.end();
-         i++ )
-        fprintf( fMakefile, "%s ", i->c_str() );
+	for ( i = directory_set.begin();
+	      i != directory_set.end();
+	      i++ )
+	{
+		fprintf ( fMakefile, "%s ", i->c_str() );
+	}
 
-    fprintf ( fMakefile, 
-              "::\n\t${mkdir} $@\n\n"
-              "else\n"
-              "directories::\n\n"
-              "endif\n\n" );
+	fprintf ( fMakefile, 
+	          "::\n\t${mkdir} $@\n\n"
+	          "else\n"
+	          "directories::\n\n"
+	          "endif\n\n" );
 
-    directory_set.clear();
+	directory_set.clear();
 }
 
 string
 MingwModuleHandler::GenerateGccDefineParametersFromVector ( const vector<Define*>& defines ) const
 {
 	string parameters;
-	for (size_t i = 0; i < defines.size (); i++)
+	for ( size_t i = 0; i < defines.size (); i++ )
 	{
 		Define& define = *defines[i];
 		if (parameters.length () > 0)
@@ -290,7 +299,7 @@ MingwModuleHandler::GenerateGccDefineParameters ( const Module& module ) const
 {
 	string parameters = GenerateGccDefineParametersFromVector ( module.project.defines );
 	string s = GenerateGccDefineParametersFromVector ( module.defines );
-	if (s.length () > 0)
+	if ( s.length () > 0 )
 	{
 		parameters += " ";
 		parameters += s;
@@ -365,7 +374,7 @@ MingwModuleHandler::GenerateMacro ( const char* assignmentOperation,
                                     const vector<Define*>& defines ) const
 {
 	size_t i;
-	
+
 	fprintf (
 		fMakefile,
 		"%s %s",
@@ -714,11 +723,11 @@ MingwModuleHandler::GenerateLinkerCommand ( const Module& module,
 		          junk_tmp.c_str () );
 
 		fprintf ( fMakefile,
-	              "\t${dlltool} --dllname %s --base-file %s --def %s --output-exp %s --kill-at\n",
-	              targetName.c_str (),
-	              base_tmp.c_str (),
-                          (module.GetBasePath () + SSEP + module.importLibrary->definition ).c_str (),
-	              temp_exp.c_str () );
+		          "\t${dlltool} --dllname %s --base-file %s --def %s --output-exp %s --kill-at\n",
+		          targetName.c_str (),
+		          base_tmp.c_str (),
+		          ( module.GetBasePath () + SSEP + module.importLibrary->definition ).c_str (),
+		          temp_exp.c_str () );
 
 		fprintf ( fMakefile,
 		          "\t${rm} %s\n",
@@ -776,6 +785,7 @@ MingwModuleHandler::GenerateObjectFileTargets ( const Module& module,
 	}
 
 	for ( i = 0; i < ifs.size(); i++ )
+	{
 		GenerateObjectFileTargets ( module,
 		                            ifs[i]->files,
 		                            ifs[i]->ifs,
@@ -783,6 +793,7 @@ MingwModuleHandler::GenerateObjectFileTargets ( const Module& module,
 		                            cflagsMacro,
 		                            nasmflagsMacro,
 		                            windresflagsMacro );
+	}
 }
 
 void
@@ -821,11 +832,11 @@ MingwModuleHandler::GenerateArchiveTarget ( const Module& module,
                                             const string& ar,
                                             const string& objs_macro ) const
 {
-        string archiveFilename = GetModuleArchiveFilename ( module );
+	string archiveFilename = GetModuleArchiveFilename ( module );
 	
 	fprintf ( fMakefile,
 	          "%s: %s\n",
-                  archiveFilename.c_str (),
+	          archiveFilename.c_str (),
 	          objs_macro.c_str ());
 
 	fprintf ( fMakefile,
@@ -1002,8 +1013,10 @@ MingwModuleHandler::GenerateInvocations ( const Module& module ) const
 		const Invoke& invoke = *module.invocations[i];
 
 		if ( invoke.invokeModule->type != BuildTool )
+		{
 			throw InvalidBuildFileException ( module.node.location,
-		                                      "Only modules of type buildtool can be invoked." );
+			                                  "Only modules of type buildtool can be invoked." );
+		}
 
 		string invokeTarget = module.GetInvocationTarget ( i );
 		fprintf ( fMakefile,
@@ -1068,10 +1081,10 @@ MingwModuleHandler::GeneratePreconditionDependencies ( const Module& module ) co
 				p2 = end;
 		}
 		fprintf ( fMakefile,
-				  "%.*s: %s\n",
-				  p2-p,
-				  p,
-				  preconditionDependenciesName.c_str ());
+		          "%.*s: %s\n",
+		          p2-p,
+		          p,
+		          preconditionDependenciesName.c_str ());
 		p = p2;
 		p += strspn ( p, " \t" );
 	}
@@ -1091,7 +1104,7 @@ MingwModuleHandler::GenerateImportLibraryTargetIfNeeded ( const Module& module )
 		fprintf ( fMakefile,
 		          "\t${dlltool} --dllname %s --def %s --output-lib %s --kill-at\n\n",
 		          module.GetTargetName ().c_str (),
-                          (module.GetBasePath () + SSEP + module.importLibrary->definition).c_str (),
+		          ( module.GetBasePath () + SSEP + module.importLibrary->definition ).c_str (),
 		          FixupTargetFilename ( module.GetDependencyPath () ).c_str () );
 	}
 }
@@ -1298,9 +1311,9 @@ MingwKernelModeDLLModuleHandler::GenerateKernelModeDLLModuleTarget ( const Modul
 
 		string linkerParameters ( "-Wl,--subsystem,native -Wl,--entry,_DriverEntry@8 -Wl,--image-base,0x10000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll" );
 		GenerateLinkerCommand ( module,
-                                "${gcc}",
-                                linkerParameters,
-                                archiveFilename );
+		                        "${gcc}",
+		                        linkerParameters,
+		                        archiveFilename );
 	}
 	else
 	{
@@ -1347,15 +1360,15 @@ MingwKernelModeDriverModuleHandler::GenerateKernelModeDriverModuleTarget ( const
 		delete cflags;
 
 		fprintf ( fMakefile, "%s: %s %s\n",
-                          target.c_str (),
+		          target.c_str (),
 		          archiveFilename.c_str (),
 		          importLibraryDependencies.c_str () );
 
 		string linkerParameters ( "-Wl,--subsystem,native -Wl,--entry,_DriverEntry@8 -Wl,--image-base,0x10000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll" );
 		GenerateLinkerCommand ( module,
-                                "${gcc}",
-                                linkerParameters,
-                                archiveFilename );
+		                        "${gcc}",
+		                        linkerParameters,
+		                        archiveFilename );
 	}
 	else
 	{
@@ -1415,9 +1428,9 @@ MingwNativeDLLModuleHandler::GenerateNativeDLLModuleTarget ( const Module& modul
 
 		string linkerParameters ( "-Wl,--subsystem,native -Wl,--entry,_DllMainCRTStartup@12 -Wl,--image-base,0x10000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -nostdlib -mdll" );
 		GenerateLinkerCommand ( module,
-                                "${gcc}",
-                                linkerParameters,
-                                objectFilenames );
+		                        "${gcc}",
+		                        linkerParameters,
+		                        objectFilenames );
 	}
 	else
 	{
@@ -1465,9 +1478,9 @@ MingwWin32DLLModuleHandler::GenerateWin32DLLModuleTarget ( const Module& module 
 
 		string linkerParameters ( "-Wl,--subsystem,console -Wl,--entry,_DllMain@12 -Wl,--image-base,0x10000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -mdll" );
 		GenerateLinkerCommand ( module,
-                                "${gcc}",
-                                linkerParameters,
-                                objectFilenames );
+		                        "${gcc}",
+		                        linkerParameters,
+		                        objectFilenames );
 	}
 	else
 	{
@@ -1516,9 +1529,9 @@ MingwWin32GUIModuleHandler::GenerateWin32GUIModuleTarget ( const Module& module 
 
 		string linkerParameters ( "-Wl,--subsystem,windows -Wl,--entry,_WinMainCRTStartup -Wl,--image-base,0x00400000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000" );
 		GenerateLinkerCommand ( module,
-                                "${gcc}",
-                                linkerParameters,
-                                objectFilenames );
+		                        "${gcc}",
+		                        linkerParameters,
+		                        objectFilenames );
 	}
 	else
 	{
