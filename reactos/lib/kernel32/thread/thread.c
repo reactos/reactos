@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.54 2004/10/24 12:16:54 weiden Exp $
+/* $Id: thread.c,v 1.55 2004/11/02 20:42:06 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -712,6 +712,15 @@ SetThreadIdealProcessor(HANDLE hThread,
     }
 
   return dwIdealProcessor;
+}
+
+/*
+ * @unimplemented
+ */
+VOID STDCALL
+SetThreadUILanguage(DWORD Unknown1)
+{
+  DPRINT1("SetThreadUILanguage(0x%x) unimplemented!\n", Unknown1);
 }
 
 /* EOF */

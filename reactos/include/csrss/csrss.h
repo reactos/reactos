@@ -42,6 +42,7 @@ typedef struct
 typedef struct
 {
    HANDLE ConsoleHandle;
+   BOOL Unicode;
    ULONG NrCharactersToWrite;
    BYTE Buffer[1];
 } CSRSS_WRITE_CONSOLE_REQUEST, *PCSRSS_WRITE_CONSOLE_REQUEST;
@@ -54,6 +55,7 @@ typedef struct
 typedef struct
 {
    HANDLE ConsoleHandle;
+   BOOL Unicode;
    WORD NrCharactersToRead;
    WORD nCharsCanBeDeleted;     /* number of chars already in buffer that can be backspaced */
 } CSRSS_READ_CONSOLE_REQUEST, *PCSRSS_READ_CONSOLE_REQUEST;
@@ -108,13 +110,19 @@ typedef struct
 typedef struct
 {
    HANDLE ConsoleHandle;
-   CHAR Char;
+   BOOL Unicode;
+   union
+   {
+     CHAR AsciiChar;
+     WCHAR UnicodeChar;
+   } Char;
    COORD Position;
    WORD Length;
 } CSRSS_FILL_OUTPUT_REQUEST, *PCSRSS_FILL_OUTPUT_REQUEST;
 
 typedef struct
 {
+   ULONG NrCharactersWritten;
 } CSRSS_FILL_OUTPUT_REPLY, *PCSRSS_FILL_OUTPUT_REPLY;
 
 typedef struct
@@ -145,6 +153,7 @@ typedef struct
 typedef struct
 {
    HANDLE ConsoleHandle;
+   BOOL Unicode;
    WORD Length;
    COORD Coord;
    CHAR String[1];
@@ -153,6 +162,7 @@ typedef struct
 typedef struct
 {
    COORD EndCoord;
+   ULONG NrCharactersWritten;
 } CSRSS_WRITE_CONSOLE_OUTPUT_CHAR_REPLY, *PCSRSS_WRITE_CONSOLE_OUTPUT_CHAR_REPLY;
 
 typedef struct
@@ -296,12 +306,13 @@ typedef struct
 
 typedef struct
 {
-  HANDLE     ConsoleHandle;
+  HANDLE ConsoleHandle;
+  BOOL Unicode;
   SMALL_RECT ScrollRectangle;
-  BOOLEAN    UseClipRectangle;
+  BOOLEAN UseClipRectangle;
   SMALL_RECT ClipRectangle;
-  COORD      DestinationOrigin;
-  CHAR_INFO  Fill;
+  COORD DestinationOrigin;
+  CHAR_INFO Fill;
 } CSRSS_SCROLL_CONSOLE_SCREEN_BUFFER_REQUEST, *PCSRSS_SCROLL_CONSOLE_SCREEN_BUFFER_REQUEST;
 
 typedef struct
@@ -311,6 +322,7 @@ typedef struct
 typedef struct
 {
   HANDLE ConsoleHandle;
+  BOOL Unicode;
   DWORD NumCharsToRead;
   COORD ReadCoord;
 }CSRSS_READ_CONSOLE_OUTPUT_CHAR_REQUEST, *PCSRSS_READ_CONSOLE_OUTPUT_CHAR_REQUEST;
@@ -318,6 +330,7 @@ typedef struct
 typedef struct
 {
   COORD EndCoord;
+  DWORD CharsRead;
   CHAR String[1];
 }CSRSS_READ_CONSOLE_OUTPUT_CHAR_REPLY, *PCSRSS_READ_CONSOLE_OUTPUT_CHAR_REPLY;
 
@@ -414,6 +427,7 @@ typedef struct
 typedef struct
 {
   HANDLE ConsoleHandle;
+  BOOL Unicode;
   DWORD Length;
   INPUT_RECORD* InputRecord;
 } CSRSS_WRITE_CONSOLE_INPUT_REQUEST, *PCSRSS_WRITE_CONSOLE_INPUT_REQUEST;
@@ -701,8 +715,7 @@ typedef struct
         CSRSS_GET_TITLE_REQUEST GetTitleRequest;
         CSRSS_WRITE_CONSOLE_OUTPUT_REQUEST WriteConsoleOutputRequest;
         CSRSS_FLUSH_INPUT_BUFFER_REQUEST FlushInputBufferRequest;
-        CSRSS_SCROLL_CONSOLE_SCREEN_BUFFER_REQUEST 
-        ScrollConsoleScreenBufferRequest;
+        CSRSS_SCROLL_CONSOLE_SCREEN_BUFFER_REQUEST ScrollConsoleScreenBufferRequest;
         CSRSS_READ_CONSOLE_OUTPUT_CHAR_REQUEST ReadConsoleOutputCharRequest;
         CSRSS_READ_CONSOLE_OUTPUT_ATTRIB_REQUEST ReadConsoleOutputAttribRequest;
         CSRSS_GET_NUM_INPUT_EVENTS_REQUEST GetNumInputEventsRequest;
@@ -746,6 +759,7 @@ typedef struct
       {
         CSRSS_CREATE_PROCESS_REPLY CreateProcessReply;
         CSRSS_CONNECT_PROCESS_REPLY ConnectReply;
+        CSRSS_FILL_OUTPUT_REPLY FillOutputReply;
         CSRSS_WRITE_CONSOLE_REPLY WriteConsoleReply;
         CSRSS_READ_CONSOLE_REPLY ReadConsoleReply;
         CSRSS_ALLOC_CONSOLE_REPLY AllocConsoleReply;

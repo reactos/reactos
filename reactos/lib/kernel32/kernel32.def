@@ -841,7 +841,7 @@ SetThreadIdealProcessor@8
 SetThreadLocale@4
 SetThreadPriority@8
 SetThreadPriorityBoost@8
-;SetThreadUILanguage
+SetThreadUILanguage@4
 SetTimerQueueTimer@24
 SetTimeZoneInformation@4
 SetUnhandledExceptionFilter@4
