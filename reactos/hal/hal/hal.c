@@ -1,4 +1,4 @@
-/* $Id: hal.c,v 1.6 2003/10/20 06:03:28 vizzini Exp $
+/* $Id: hal.c,v 1.7 2004/10/23 23:43:23 ion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -165,7 +165,7 @@ BOOLEAN
 STDCALL
 HalDisableSystemInterrupt(
   ULONG Vector,
-  ULONG Unknown2)
+  KIRQL Irql)
 {
   UNIMPLEMENTED;
 
@@ -186,8 +186,8 @@ BOOLEAN
 STDCALL
 HalEnableSystemInterrupt(
   ULONG Vector,
-  ULONG Unknown2,
-  ULONG Unknown3)
+  KIRQL Irql,
+  KINTERRUPT_MODE InterruptMode)
 {
   UNIMPLEMENTED;
 

@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.65 2004/10/19 22:47:38 ekohl Exp $
+/* $Id: iotypes.h,v 1.66 2004/10/23 23:43:23 ion Exp $
  *
  */
 
@@ -1292,6 +1292,12 @@ typedef struct _IO_ERROR_LOG_MESSAGE
 
 
 /* DMA types */
+ 
+typedef struct _DMA_ADAPTER {
+  USHORT  Version;
+  USHORT  Size;
+  struct _DMA_OPERATIONS  *DmaOperations;
+} DMA_ADAPTER, *PDMA_ADAPTER;
 
 typedef struct _SCATTER_GATHER_ELEMENT {
   PHYSICAL_ADDRESS Address;
@@ -1304,15 +1310,6 @@ typedef struct _SCATTER_GATHER_LIST {
   ULONG_PTR Reserved;
   SCATTER_GATHER_ELEMENT Elements[];
 } SCATTER_GATHER_LIST, *PSCATTER_GATHER_LIST;
-
-typedef struct _DMA_OPERATIONS *PDMA_OPERATIONS;
-
-typedef struct _DMA_ADAPTER {
-  USHORT Version;
-  USHORT Size;
-  PDMA_OPERATIONS DmaOperations;
-  PADAPTER_OBJECT HalAdapter;
-} DMA_ADAPTER, *PDMA_ADAPTER;
 
 typedef VOID (*PPUT_DMA_ADAPTER)(
   PDMA_ADAPTER DmaAdapter
@@ -1415,8 +1412,7 @@ typedef struct _DMA_OPERATIONS {
   PREAD_DMA_COUNTER ReadDmaCounter;
   PGET_SCATTER_GATHER_LIST GetScatterGatherList;
   PPUT_SCATTER_GATHER_LIST PutScatterGatherList;
-} DMA_OPERATIONS;
-
+} DMA_OPERATIONS, *PDMA_OPERATIONS;
 
 /* Standard bus interface */
 

@@ -1,4 +1,4 @@
-/* $Id: irql.c,v 1.16 2004/10/17 15:39:27 hbirr Exp $
+/* $Id: irql.c,v 1.17 2004/10/23 23:43:23 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -404,8 +404,11 @@ VOID STDCALL HalEndSystemInterrupt (KIRQL Irql, ULONG Unknown2)
   HalpEndSystemInterrupt(Irql);
 }
   
-BOOLEAN STDCALL HalDisableSystemInterrupt (ULONG Vector,
-					   ULONG Unknown2)
+BOOLEAN
+STDCALL
+HalDisableSystemInterrupt(
+  ULONG Vector,
+  KIRQL Irql)
 {
   ULONG irq;
   
@@ -427,9 +430,12 @@ BOOLEAN STDCALL HalDisableSystemInterrupt (ULONG Vector,
 }
 
 
-BOOLEAN STDCALL HalEnableSystemInterrupt (ULONG Vector,
-					  ULONG Unknown2,
-					  ULONG Unknown3)
+BOOLEAN
+STDCALL
+HalEnableSystemInterrupt(
+  ULONG Vector,
+  KIRQL Irql,
+  KINTERRUPT_MODE InterruptMode)
 {
   ULONG irq;
 

@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.35 2004/10/22 20:53:11 ekohl Exp $
+/* $Id: rtl.h,v 1.36 2004/10/23 23:43:23 ion Exp $
  * 
  */
 #ifndef __DDK_RTL_H
@@ -1493,6 +1493,13 @@ RtlInitializeSid (PSID Sid,
 		  PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
 		  UCHAR SubAuthorityCount);
 
+VOID
+STDCALL
+RtlInitializeBitMap(
+  IN PRTL_BITMAP  BitMapHeader,
+  IN PULONG  BitMapBuffer,
+  IN ULONG  SizeOfBitMap); 
+  
 VOID
 STDCALL
 RtlInitNlsTables (

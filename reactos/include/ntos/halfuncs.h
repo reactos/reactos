@@ -13,12 +13,12 @@ HalBeginSystemInterrupt(ULONG Vector,
 
 BOOLEAN STDCALL
 HalDisableSystemInterrupt(ULONG Vector,
-  ULONG Unknown2);
+  KIRQL Irql);
 
 BOOLEAN STDCALL
 HalEnableSystemInterrupt(ULONG Vector,
-  ULONG Unknown2,
-  ULONG Unknown3);
+  KIRQL Irql,
+  KINTERRUPT_MODE InterruptMode);
 
 VOID STDCALL
 HalEndSystemInterrupt(KIRQL Irql,
