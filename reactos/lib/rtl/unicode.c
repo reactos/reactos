@@ -600,6 +600,22 @@ RtlIntegerToUnicodeString(
    return Status;
 }
 
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+RtlIntegerToUnicode(
+    IN ULONG Value,
+    IN ULONG Base  OPTIONAL,
+    IN ULONG Length OPTIONAL,
+    IN OUT LPWSTR String
+    )
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 
 /*
  * @implemented

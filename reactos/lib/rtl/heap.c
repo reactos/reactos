@@ -1753,4 +1753,18 @@ RtlValidateProcessHeaps(VOID)
    return Result;
 }
 
+/*
+ * @unimplemented
+ */
+ULONG
+STDCALL
+RtlZeroHeap(
+    IN PVOID HeapHandle,
+    IN ULONG Flags
+    )
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
 /* EOF */
