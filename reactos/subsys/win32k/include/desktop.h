@@ -19,6 +19,9 @@ InitDesktopImpl(VOID);
 NTSTATUS FASTCALL
 CleanupDesktopImpl(VOID);
 
+PRECT FASTCALL
+IntGetDesktopWorkArea(PDESKTOP_OBJECT Desktop);
+
 LRESULT CALLBACK
 IntDesktopWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 

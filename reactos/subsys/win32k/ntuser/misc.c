@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.40 2003/12/26 00:47:18 weiden Exp $
+/* $Id: misc.c,v 1.41 2003/12/26 00:58:33 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -457,27 +457,7 @@ NtUserSystemParametersInfo(
           return FALSE;
         }
         
-        Rect = (PRECT)Desktop->WorkArea;
-        if(Rect->right == -1)
-        {
-          HDC hDC;
-          PDC dc;
-          PSURFOBJ SurfObj;
-          
-          hDC = IntGetScreenDC();
-          if(hDC)
-          {
-            dc = DC_LockDc(hDC);
-            if(dc && (SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface)))
-            {
-              Rect->left = 0;
-              Rect->top = 0;
-              Rect->right = SurfObj->sizlBitmap.cx;
-              Rect->bottom = SurfObj->sizlBitmap.cy;
-              DC_UnlockDc(hDC);
-            }
-          }
-        }
+        Rect = IntGetDesktopWorkArea(Desktop);
         
         Status = MmCopyToCaller((PRECT)pvParam, Desktop->WorkArea, sizeof(RECT));
         if(!NT_SUCCESS(Status))
