@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: sort.c,v 1.1 2003/07/12 12:45:29 gvg Exp $ */
+/* $Id: sort.c,v 1.2 2003/07/12 14:00:05 gvg Exp $ */
 
 #include <stdlib.h>
 #include <ddk/winddi.h>
@@ -27,7 +27,7 @@
 void STDCALL
 EngSort(IN OUT PBYTE Buf, IN ULONG ElemSize, IN ULONG ElemCount, IN SORTCOMP CompFunc)
 {
-  qsort(Buf, ElemSize, ElemCount, CompFunc);
+  qsort(Buf, ElemCount, ElemSize, CompFunc);
 }
 
 /* EOF */
