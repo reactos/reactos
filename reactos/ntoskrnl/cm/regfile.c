@@ -24,9 +24,11 @@
 #include "cm.h"
 #endif
 
-
+#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 
 BOOLEAN CmiDoVerify = FALSE;
+
+/* FUNCTIONS ****************************************************************/
 
 VOID
 CmiCreateDefaultHiveHeader(PHIVE_HEADER Header)
@@ -366,7 +368,7 @@ CmiPopulateHive(HANDLE FileHandle)
   PHBIN BinCell;
   PCHAR tBuf;
   ULONG i;
-  
+
   tBuf = (PCHAR) ExAllocatePool(NonPagedPool, REG_BLOCK_SIZE);
   if (tBuf == NULL)
     return STATUS_INSUFFICIENT_RESOURCES;
@@ -390,14 +392,14 @@ CmiPopulateHive(HANDLE FileHandle)
       FileOffset.u.LowPart   = (2 + i) * REG_BLOCK_SIZE;
 
       Status = ZwWriteFile(FileHandle,
-		    NULL,
-		    NULL,
-		    NULL,
-		    &IoStatusBlock,
-		    tBuf,
-		    REG_BLOCK_SIZE,
-		    &FileOffset,
-        NULL);
+			   NULL,
+			   NULL,
+			   NULL,
+			   &IoStatusBlock,
+			   tBuf,
+			   REG_BLOCK_SIZE,
+			   &FileOffset,
+			   NULL);
       assertmsg(NT_SUCCESS(Status), ("Status: 0x%X\n", Status));
       if (!NT_SUCCESS(Status))
 	{
@@ -421,48 +423,48 @@ CmiCreateNewRegFile(HANDLE FileHandle)
   PKEY_CELL RootKeyCell;
   NTSTATUS Status;
   PHBIN BinCell;
-  PCHAR tBuf;
-  
-  tBuf = (PCHAR) ExAllocatePool(NonPagedPool, 2 * REG_BLOCK_SIZE);
-  if (tBuf == NULL)
+  PCHAR Buffer;
+
+  Buffer = (PCHAR) ExAllocatePool(NonPagedPool, 2 * REG_BLOCK_SIZE);
+  if (Buffer == NULL)
     return STATUS_INSUFFICIENT_RESOURCES;
-    
-  HiveHeader = (PHIVE_HEADER) tBuf;
-  BinCell = (PHBIN) ((ULONG_PTR) tBuf + REG_BLOCK_SIZE);
-  RootKeyCell = (PKEY_CELL) ((ULONG_PTR) tBuf + REG_BLOCK_SIZE + REG_HBIN_DATA_OFFSET);
-  FreeCell = (PCELL_HEADER) ((ULONG_PTR) tBuf + REG_BLOCK_SIZE + REG_HBIN_DATA_OFFSET + sizeof(KEY_CELL));
+
+  HiveHeader = (PHIVE_HEADER)Buffer;
+  BinCell = (PHBIN)((ULONG_PTR)Buffer + REG_BLOCK_SIZE);
+  RootKeyCell = (PKEY_CELL)((ULONG_PTR)Buffer + REG_BLOCK_SIZE + REG_HBIN_DATA_OFFSET);
+  FreeCell = (PCELL_HEADER)((ULONG_PTR)Buffer + REG_BLOCK_SIZE + REG_HBIN_DATA_OFFSET + sizeof(KEY_CELL));
 
   CmiCreateDefaultHiveHeader(HiveHeader);
   CmiCreateDefaultBinCell(BinCell);
   CmiCreateDefaultRootKeyCell(RootKeyCell);
 
-  // First block
+  /* First block */
   BinCell->BlockOffset = 0;
 
-  // Offset to root key block
+  /* Offset to root key block */
   HiveHeader->RootKeyCell = REG_HBIN_DATA_OFFSET;
 
-  // The rest of the block is free
+  /* The rest of the block is free */
   FreeCell->CellSize = REG_BLOCK_SIZE - (REG_HBIN_DATA_OFFSET + sizeof(KEY_CELL));
 
   Status = ZwWriteFile(FileHandle,
-    NULL,
-    NULL,
-    NULL,
-    &IoStatusBlock,
-    tBuf,
-    2 * REG_BLOCK_SIZE,
-    0,
-    NULL);
+		       NULL,
+		       NULL,
+		       NULL,
+		       &IoStatusBlock,
+		       Buffer,
+		       2 * REG_BLOCK_SIZE,
+		       0,
+		       NULL);
 
-  ExFreePool(tBuf);
+  ExFreePool(Buffer);
 
   assertmsg(NT_SUCCESS(Status), ("Status: 0x%X\n", Status));
 
 #if 1
   if (NT_SUCCESS(Status))
     {
-  CmiPopulateHive(FileHandle);
+      CmiPopulateHive(FileHandle);
     }
 #endif
 
@@ -472,8 +474,8 @@ CmiCreateNewRegFile(HANDLE FileHandle)
 
 NTSTATUS
 CmiInitPermanentRegistryHive(PREGISTRY_HIVE RegistryHive,
-  PWSTR Filename,
-  BOOLEAN CreateNew)
+			     PWSTR Filename,
+			     BOOLEAN CreateNew)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   FILE_STANDARD_INFORMATION fsi;
@@ -487,16 +489,18 @@ CmiInitPermanentRegistryHive(PREGISTRY_HIVE RegistryHive,
   NTSTATUS Status;
   PHBIN tmpBin;
   ULONG i, j;
+  ULONG BitmapSize;
+  PULONG BitmapBuffer;
 
-  DPRINT("CmiInitPermanentRegistryHive(%p, %S, %d) - Entered.\n", RegistryHive, Filename, CreateNew);
+  DPRINT1("CmiInitPermanentRegistryHive(%p, %S, %d) - Entered.\n", RegistryHive, Filename, CreateNew);
 
   /* Duplicate Filename */
   Status = RtlCreateUnicodeString(&RegistryHive->Filename, Filename);
   if (!NT_SUCCESS(Status))
-  {
-    DPRINT("CmiInitPermanentRegistryHive() - Failed 1.\n");
-    return Status;
-  }
+    {
+      DPRINT1("CmiInitPermanentRegistryHive() - Failed 1.\n");
+      return Status;
+    }
 
   InitializeObjectAttributes(&ObjectAttributes,
 			     &RegistryHive->Filename,
@@ -504,7 +508,7 @@ CmiInitPermanentRegistryHive(PREGISTRY_HIVE RegistryHive,
 			     NULL,
 			     NULL);
 
-  if (CreateNew)
+  if (CreateNew == TRUE)
     CreateDisposition = FILE_OPEN_IF;
   else
     CreateDisposition = FILE_OPEN;
@@ -532,18 +536,18 @@ CmiInitPermanentRegistryHive(PREGISTRY_HIVE RegistryHive,
       Status = CmiCreateNewRegFile(FileHandle);
       if (!NT_SUCCESS(Status))
 	{
+	  DPRINT1("CmiCreateNewRegFile() failed (Status %lx)\n", Status);
 	  RtlFreeUnicodeString(&RegistryHive->Filename);
-	  DPRINT1("CmiCreateNewRegFile() - Failed with status %x.\n", Status);
 	  return(Status);
 	}
     }
 
   Status = ObReferenceObjectByHandle(FileHandle,
-		FILE_ALL_ACCESS,
-		IoFileObjectType,
-		UserMode,
-		(PVOID*) &RegistryHive->FileObject,
-		NULL);
+				     FILE_ALL_ACCESS,
+				     IoFileObjectType,
+				     UserMode,
+				     (PVOID*)&RegistryHive->FileObject,
+				     NULL);
 
   assertmsg(NT_SUCCESS(Status), ("Status: 0x%X\n", Status));
 
@@ -551,10 +555,11 @@ CmiInitPermanentRegistryHive(PREGISTRY_HIVE RegistryHive,
     {
       NtClose(FileHandle);
       RtlFreeUnicodeString(&RegistryHive->Filename);
-      DPRINT("CmiInitPermanentRegistryHive() - ObReferenceObjectByHandle Failed with status %x.\n", Status);
+      DPRINT1("CmiInitPermanentRegistryHive() - ObReferenceObjectByHandle Failed with status %x.\n", Status);
       return Status;
     }
 
+  /* Read hive header */
   FileOffset.u.HighPart = 0;
   FileOffset.u.LowPart = 0;
   DPRINT("    Attempting to ZwReadFile(%d) for %d bytes into %p\n", FileHandle, sizeof(HIVE_HEADER), RegistryHive->HiveHeader);
@@ -567,9 +572,7 @@ CmiInitPermanentRegistryHive(PREGISTRY_HIVE RegistryHive,
 		      sizeof(HIVE_HEADER),
 		      &FileOffset,
 		      0);
-
   assertmsg(NT_SUCCESS(Status), ("Status: 0x%X\n", Status));
-
   if (!NT_SUCCESS(Status))
     {
       ObDereferenceObject(RegistryHive->FileObject);
@@ -744,7 +747,21 @@ CmiInitPermanentRegistryHive(PREGISTRY_HIVE RegistryHive,
       BlockOffset += tmpBin->BlockSize;
     }
 
-  DPRINT("CmiInitPermanentRegistryHive(%p, %S, %d) - Finished.\n", RegistryHive, Filename, CreateNew);
+  /* Create block bitmap and clear all bits */
+
+  /* Calculate bitmap size in bytes (always a multiple of 32 bits) */
+  BitmapSize = ROUND_UP(RegistryHive->BlockListSize, sizeof(ULONG) * 8) / 8;
+  DPRINT1("RegistryHive->BlockListSize: %lu\n", RegistryHive->BlockListSize);
+  DPRINT1("BitmapSize:  %lu Bytes  %lu Bits\n", BitmapSize, BitmapSize * 8);
+  BitmapBuffer = (PULONG)ExAllocatePool(PagedPool,
+					BitmapSize);
+  RtlInitializeBitMap(&RegistryHive->DirtyBitMap,
+		      BitmapBuffer,
+		      BitmapSize * 8);
+  RtlClearAllBits(&RegistryHive->DirtyBitMap);
+  RegistryHive->HiveDirty = FALSE;
+
+  DPRINT1("CmiInitPermanentRegistryHive(%p, %S, %d) - Finished.\n", RegistryHive, Filename, CreateNew);
 
   return(STATUS_SUCCESS);
 }
@@ -854,6 +871,113 @@ CmiRemoveRegistryHive(PREGISTRY_HIVE RegistryHive)
 
   /* Release hive */
   ExFreePool(RegistryHive);
+
+  return(STATUS_SUCCESS);
+}
+
+
+NTSTATUS
+CmiFlushRegistryHive(PREGISTRY_HIVE RegistryHive)
+{
+  ULONG BlockIndex;
+  ULONG BlockOffset;
+  PVOID BlockPtr;
+  LARGE_INTEGER FileOffset;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  IO_STATUS_BLOCK IoStatusBlock;
+  HANDLE FileHandle;
+  NTSTATUS Status;
+
+
+
+
+  DPRINT("CmiFlushRegistryHive() called\n");
+
+  if (RegistryHive->HiveDirty == FALSE)
+    {
+      return(STATUS_SUCCESS);
+    }
+
+  DPRINT1("Hive '%wZ' is dirty\n", &RegistryHive->Filename);
+
+
+  /* Open hive for writing */
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &RegistryHive->Filename,
+			     0,
+			     NULL,
+			     NULL);
+
+  Status = NtCreateFile(&FileHandle,
+			FILE_ALL_ACCESS,
+			&ObjectAttributes,
+			&IoStatusBlock,
+			NULL,
+			FILE_ATTRIBUTE_NORMAL,
+			0,
+			FILE_OPEN,
+			FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
+			NULL,
+			0);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("NtCreateFile() failed (Status %lx)\n", Status);
+      return(Status);
+    }
+
+
+
+  BlockIndex = 0;
+  while (TRUE)
+    {
+      BlockIndex = RtlFindSetBitsAndClear(&RegistryHive->DirtyBitMap,
+					  1,
+					  BlockIndex);
+      if (BlockIndex == (ULONG)-1)
+	{
+	  DPRINT("No more set bits\n");
+	  break;
+	}
+
+      DPRINT1("Block %lu is dirty\n", BlockIndex);
+
+      BlockOffset = RegistryHive->BlockList[BlockIndex]->BlockOffset;
+      DPRINT1("Block offset %lx\n", BlockOffset);
+
+      BlockPtr = RegistryHive->BlockList[BlockIndex] + ((BlockIndex * 4096) - BlockOffset);
+      DPRINT1("BlockPtr %p\n", BlockPtr);
+
+      FileOffset.QuadPart = (ULONGLONG)(BlockIndex + 1) * 4096ULL;
+      DPRINT1("File offset %I64x\n", FileOffset.QuadPart);
+
+
+      /* Write hive block */
+      Status = NtWriteFile(FileHandle,
+			   NULL,
+			   NULL,
+			   NULL,
+			   &IoStatusBlock,
+			   BlockPtr,
+			   REG_BLOCK_SIZE,
+			   &FileOffset,
+			   NULL);
+      if (!NT_SUCCESS(Status))
+	{
+	  DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
+	  NtClose(FileHandle);
+	  return(Status);
+	}
+
+
+    }
+
+  NtClose(FileHandle);
+
+
+  /* Clear dirty flag */
+  RegistryHive->HiveDirty = FALSE;
+
+  DPRINT("CmiFlushRegistryHive() done\n");
 
   return(STATUS_SUCCESS);
 }
@@ -1139,33 +1263,33 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
     }
   else
     {
-	    NewKeyCell->Id = REG_KEY_CELL_ID;
-	    NewKeyCell->Type = REG_KEY_CELL_TYPE;
-	    ZwQuerySystemTime((PTIME) &NewKeyCell->LastWriteTime);
-	    NewKeyCell->ParentKeyOffset = -1;
-	    NewKeyCell->NumberOfSubKeys = 0;
-	    NewKeyCell->HashTableOffset = -1;
-	    NewKeyCell->NumberOfValues = 0;
-	    NewKeyCell->ValuesOffset = -1;
-	    NewKeyCell->SecurityKeyOffset = -1;
-	    NewKeyCell->NameSize = NameSize;
-	    wcstombs(NewKeyCell->Name, NewSubKeyName, NameSize);
-	    NewKeyCell->ClassNameOffset = -1;
+      NewKeyCell->Id = REG_KEY_CELL_ID;
+      NewKeyCell->Type = REG_KEY_CELL_TYPE;
+      ZwQuerySystemTime((PTIME) &NewKeyCell->LastWriteTime);
+      NewKeyCell->ParentKeyOffset = -1;
+      NewKeyCell->NumberOfSubKeys = 0;
+      NewKeyCell->HashTableOffset = -1;
+      NewKeyCell->NumberOfValues = 0;
+      NewKeyCell->ValuesOffset = -1;
+      NewKeyCell->SecurityKeyOffset = -1;
+      NewKeyCell->NameSize = NameSize;
+      wcstombs(NewKeyCell->Name, NewSubKeyName, NameSize);
+      NewKeyCell->ClassNameOffset = -1;
 
       VERIFY_KEY_CELL(NewKeyCell);
 
-	    if (Class)
-		    {
-		      PDATA_CELL pClass;
+      if (Class)
+	{
+	  PDATA_CELL pClass;
 
-		      NewKeyCell->ClassSize = Class->Length + sizeof(WCHAR);
-		      Status = CmiAllocateBlock(RegistryHive,
-					  (PVOID) &pClass,
-					  NewKeyCell->ClassSize,
-					  &NewKeyCell->ClassNameOffset);
-		      wcsncpy((PWSTR) pClass->Data, Class->Buffer, Class->Length);
-		      ((PWSTR) (pClass->Data))[Class->Length] = 0;
-		    }
+	  NewKeyCell->ClassSize = Class->Length + sizeof(WCHAR);
+	  Status = CmiAllocateBlock(RegistryHive,
+				    (PVOID) &pClass,
+				    NewKeyCell->ClassSize,
+				    &NewKeyCell->ClassNameOffset);
+	  wcsncpy((PWSTR) pClass->Data, Class->Buffer, Class->Length);
+	  ((PWSTR) (pClass->Data))[Class->Length] = 0;
+	}
     }
 
   if (!NT_SUCCESS(Status))
@@ -1178,17 +1302,16 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
 
   /* Don't modify hash table if key is volatile and parent is not */
   if (IsVolatileHive(RegistryHive) && (!IsVolatileHive(Parent->RegistryHive)))
-	  {
-	    return Status;
-	  }
+    {
+      return Status;
+    }
 
   if (KeyCell->HashTableOffset == (ULONG_PTR) -1)
     {
       Status = CmiAllocateHashTableBlock(RegistryHive,
-        &HashBlock,
-				&KeyCell->HashTableOffset,
-        REG_INIT_HASH_TABLE_SIZE);
-
+					 &HashBlock,
+					 &KeyCell->HashTableOffset,
+					 REG_INIT_HASH_TABLE_SIZE);
       if (!NT_SUCCESS(Status))
         {
           return Status;
@@ -1199,19 +1322,18 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
       HashBlock = CmiGetBlock(RegistryHive, KeyCell->HashTableOffset, NULL);
       if (((KeyCell->NumberOfSubKeys + 1) >= HashBlock->HashTableSize))
         {
-          BLOCK_OFFSET HTOffset;
+	  BLOCK_OFFSET HTOffset;
 
-          /* Reallocate the hash table block */
-          Status = CmiAllocateHashTableBlock(RegistryHive,
-            &NewHashBlock,
-            &HTOffset,
-            HashBlock->HashTableSize +
-            REG_EXTEND_HASH_TABLE_SIZE);
-
-          if (!NT_SUCCESS(Status))
-            {
-              return Status;
-            }
+	  /* Reallocate the hash table block */
+	  Status = CmiAllocateHashTableBlock(RegistryHive,
+					     &NewHashBlock,
+					     &HTOffset,
+					     HashBlock->HashTableSize +
+					       REG_EXTEND_HASH_TABLE_SIZE);
+	  if (!NT_SUCCESS(Status))
+	    {
+	      return Status;
+	    }
 
           RtlZeroMemory(&NewHashBlock->Table[0],
             sizeof(NewHashBlock->Table[0]) * NewHashBlock->HashTableSize);
@@ -1470,9 +1592,9 @@ CmiAllocateHashTableBlock(IN PREGISTRY_HIVE RegistryHive,
   NewHashSize = sizeof(HASH_TABLE_CELL) + 
     (HashTableSize - 1) * sizeof(HASH_RECORD);
   Status = CmiAllocateBlock(RegistryHive,
-		(PVOID*) &NewHashBlock,
-		NewHashSize,
-    HBOffset);
+			    (PVOID*) &NewHashBlock,
+			    NewHashSize,
+			    HBOffset);
 
   if ((NewHashBlock == NULL) || (!NT_SUCCESS(Status)))
     {
@@ -1529,6 +1651,27 @@ CmiAddKeyToHashTable(PREGISTRY_HIVE RegistryHive,
 	{
 	  HashBlock->Table[i].KeyOffset = NKBOffset;
 	  RtlCopyMemory(&HashBlock->Table[i].HashValue, NewKeyCell->Name, 4);
+	  return STATUS_SUCCESS;
+	}
+    }
+
+  return STATUS_UNSUCCESSFUL;
+}
+
+
+NTSTATUS
+CmiRemoveKeyFromHashTable(PREGISTRY_HIVE RegistryHive,
+			  PHASH_TABLE_CELL HashBlock,
+			  BLOCK_OFFSET NKBOffset)
+{
+  ULONG i;
+
+  for (i = 0; i < HashBlock->HashTableSize; i++)
+    {
+      if (HashBlock->Table[i].KeyOffset == NKBOffset)
+	{
+	  HashBlock->Table[i].KeyOffset = 0;
+	  RtlZeroMemory(&HashBlock->Table[i].HashValue, 4);
 	  return STATUS_SUCCESS;
 	}
     }
@@ -1677,6 +1820,17 @@ CmiAddBin(PREGISTRY_HIVE RegistryHive,
   /* Initialize a free block in this heap : */
   tmpBlock = (PCELL_HEADER)((ULONG_PTR) tmpBin + REG_HBIN_DATA_OFFSET);
   tmpBlock->CellSize = (REG_BLOCK_SIZE - REG_HBIN_DATA_OFFSET);
+
+  /* Grow bitmap if necessary */
+  if (IsVolatileHive(RegistryHive) &&
+      (RegistryHive->BlockListSize % (sizeof(ULONG) * 8) == 0))
+    {
+      DPRINT1("Grow hive bitmap - BlockListSize %lu\n", RegistryHive->BlockListSize);
+
+      /* FIXME */
+
+    }
+
   *NewBlock = (PVOID) tmpBlock;
 
   if (NewBlockOffset)
@@ -1742,7 +1896,10 @@ CmiAllocateBlock(PREGISTRY_HIVE RegistryHive,
 	      Temp = CmiGetBlock(RegistryHive, RegistryHive->FreeListOffset[i], &pBin);
 
 	      if (Temp)
-		ZwQuerySystemTime((PTIME) &pBin->DateModified);
+		{
+		  ZwQuerySystemTime((PTIME) &pBin->DateModified);
+		  CmiMarkBlockDirty(RegistryHive, RegistryHive->FreeListOffset[i]);
+		}
 
 	      if ((i + 1) < RegistryHive->FreeListSize)
 		{
@@ -1777,6 +1934,7 @@ CmiAllocateBlock(PREGISTRY_HIVE RegistryHive,
 	      NewBlock = (PCELL_HEADER) ((ULONG_PTR) NewBlock+BlockSize);
 	      NewBlock->CellSize = ((PCELL_HEADER) (*Block))->CellSize - BlockSize;
 	      CmiAddFree(RegistryHive, NewBlock, *pBlockOffset + BlockSize);
+	      CmiMarkBlockDirty(RegistryHive, *pBlockOffset + BlockSize);
 	    }
 	  else if (NewBlock->CellSize < BlockSize)
 	    {
@@ -1815,12 +1973,18 @@ CmiDestroyBlock(PREGISTRY_HIVE RegistryHive,
       if (pFree->CellSize < 0)
         pFree->CellSize = -pFree->CellSize;
 
+      /* Clear block (except the block size) */
+      RtlZeroMemory(((PVOID)pFree) + sizeof(ULONG),
+		    pFree->CellSize - sizeof(ULONG));
+
       CmiAddFree(RegistryHive, Block, Offset);
       CmiReleaseBlock(RegistryHive, Block);
 
       /* Update time of heap */
       if (IsPermanentHive(RegistryHive) && CmiGetBlock(RegistryHive, Offset,&pBin))
 	ZwQuerySystemTime((PTIME) &pBin->DateModified);
+
+      CmiMarkBlockDirty(RegistryHive, Offset);
 
       /* FIXME: Set first dword to block_offset of another free block ? */
       /* FIXME: Concatenate with previous and next block if free */
@@ -1872,74 +2036,76 @@ DPRINT("\n");
       if (RegistryHive->FreeListMax)
 	{
 DPRINT("\n");
-        RtlMoveMemory(tmpList, RegistryHive->FreeList,
-          sizeof(PCELL_HEADER) * (RegistryHive->FreeListMax));
+	  RtlMoveMemory(tmpList,
+			RegistryHive->FreeList,
+			sizeof(PCELL_HEADER) * (RegistryHive->FreeListMax));
 DPRINT("\n");
-        RtlMoveMemory(tmpListOffset, RegistryHive->FreeListOffset,
-          sizeof(BLOCK_OFFSET *) * (RegistryHive->FreeListMax));
+	  RtlMoveMemory(tmpListOffset,
+			RegistryHive->FreeListOffset,
+			sizeof(BLOCK_OFFSET *) * (RegistryHive->FreeListMax));
 DPRINT("\n");
-		    ExFreePool(RegistryHive->FreeList);
+	  ExFreePool(RegistryHive->FreeList);
 DPRINT("\n");
-		    ExFreePool(RegistryHive->FreeListOffset);
+	  ExFreePool(RegistryHive->FreeListOffset);
 DPRINT("\n");
-      }
+	}
 DPRINT("\n");
-	    RegistryHive->FreeList = tmpList;
-	    RegistryHive->FreeListOffset = tmpListOffset;
-	    RegistryHive->FreeListMax += 32;
+      RegistryHive->FreeList = tmpList;
+      RegistryHive->FreeListOffset = tmpListOffset;
+      RegistryHive->FreeListMax += 32;
 DPRINT("\n");
-	  }
+    }
 DPRINT("\n");
 
-	  /* Add new offset to free list, maintaining list in ascending order */
-	  if ((RegistryHive->FreeListSize == 0)
-	     || (RegistryHive->FreeListOffset[RegistryHive->FreeListSize-1] < FreeOffset))
-		  {
+  /* Add new offset to free list, maintaining list in ascending order */
+  if ((RegistryHive->FreeListSize == 0)
+     || (RegistryHive->FreeListOffset[RegistryHive->FreeListSize-1] < FreeOffset))
+    {
 DPRINT("\n");
-		    /* Add to end of list */
-		    RegistryHive->FreeList[RegistryHive->FreeListSize] = FreeBlock;
-		    RegistryHive->FreeListOffset[RegistryHive->FreeListSize++] = FreeOffset;
-		  }
-	  else if (RegistryHive->FreeListOffset[0] > FreeOffset)
-		  {
+      /* Add to end of list */
+      RegistryHive->FreeList[RegistryHive->FreeListSize] = FreeBlock;
+      RegistryHive->FreeListOffset[RegistryHive->FreeListSize++] = FreeOffset;
+    }
+  else if (RegistryHive->FreeListOffset[0] > FreeOffset)
+    {
 DPRINT("\n");
-		    /* Add to begin of list */
-		    RtlMoveMemory(&RegistryHive->FreeList[1],
-          &RegistryHive->FreeList[0],
-			    sizeof(RegistryHive->FreeList[0]) * RegistryHive->FreeListSize);
-		    RtlMoveMemory(&RegistryHive->FreeListOffset[1],
-          &RegistryHive->FreeListOffset[0],
-			    sizeof(RegistryHive->FreeListOffset[0]) * RegistryHive->FreeListSize);
-		    RegistryHive->FreeList[0] = FreeBlock;
-		    RegistryHive->FreeListOffset[0] = FreeOffset;
-		    RegistryHive->FreeListSize++;
-		  }
+      /* Add to begin of list */
+      RtlMoveMemory(&RegistryHive->FreeList[1],
+		    &RegistryHive->FreeList[0],
+		    sizeof(RegistryHive->FreeList[0]) * RegistryHive->FreeListSize);
+      RtlMoveMemory(&RegistryHive->FreeListOffset[1],
+		    &RegistryHive->FreeListOffset[0],
+		    sizeof(RegistryHive->FreeListOffset[0]) * RegistryHive->FreeListSize);
+      RegistryHive->FreeList[0] = FreeBlock;
+      RegistryHive->FreeListOffset[0] = FreeOffset;
+      RegistryHive->FreeListSize++;
+    }
+  else
+    {
+DPRINT("\n");
+      /* Search where to insert */
+      minInd = 0;
+      maxInd = RegistryHive->FreeListSize - 1;
+      while ((maxInd - minInd) > 1)
+	{
+	  medInd = (minInd + maxInd) / 2;
+	  if (RegistryHive->FreeListOffset[medInd] > FreeOffset)
+	    maxInd = medInd;
 	  else
-	  {
-DPRINT("\n");
-	    /* Search where to insert */
-	    minInd = 0;
-	    maxInd = RegistryHive->FreeListSize - 1;
-	    while ((maxInd - minInd) > 1)
-		    {
-		      medInd = (minInd + maxInd) / 2;
-		      if (RegistryHive->FreeListOffset[medInd] > FreeOffset)
-		        maxInd = medInd;
-		      else
-		        minInd = medInd;
-		    }
+	    minInd = medInd;
+	}
 
-	    /* Insert before maxInd */
-	    RtlMoveMemory(&RegistryHive->FreeList[maxInd+1],
-        &RegistryHive->FreeList[maxInd],
+      /* Insert before maxInd */
+      RtlMoveMemory(&RegistryHive->FreeList[maxInd+1],
+		    &RegistryHive->FreeList[maxInd],
 		    sizeof(RegistryHive->FreeList[0]) * (RegistryHive->FreeListSize - minInd));
-	    RtlMoveMemory(&RegistryHive->FreeListOffset[maxInd + 1],
+      RtlMoveMemory(&RegistryHive->FreeListOffset[maxInd + 1],
 		    &RegistryHive->FreeListOffset[maxInd],
 		    sizeof(RegistryHive->FreeListOffset[0]) * (RegistryHive->FreeListSize-minInd));
-	    RegistryHive->FreeList[maxInd] = FreeBlock;
-	    RegistryHive->FreeListOffset[maxInd] = FreeOffset;
-	    RegistryHive->FreeListSize++;
-	  }
+      RegistryHive->FreeList[maxInd] = FreeBlock;
+      RegistryHive->FreeListOffset[maxInd] = FreeOffset;
+      RegistryHive->FreeListSize++;
+    }
 DPRINT("\n");
 
   return STATUS_SUCCESS;
@@ -1948,8 +2114,8 @@ DPRINT("\n");
 
 PVOID
 CmiGetBlock(PREGISTRY_HIVE RegistryHive,
-	BLOCK_OFFSET BlockOffset,
-	PHBIN * ppBin)
+	    BLOCK_OFFSET BlockOffset,
+	    PHBIN * ppBin)
 {
   if (ppBin)
     *ppBin = NULL;
@@ -1974,24 +2140,8 @@ CmiGetBlock(PREGISTRY_HIVE RegistryHive,
 
 
 VOID
-CmiPrepareForWrite(PREGISTRY_HIVE RegistryHive,
-  PHBIN pBin)
-{
-  if (IsVolatileHive(RegistryHive))
-    {
-      /* No need to do anything special for volatile hives */
-      return;
-    }
-  else
-    {
-      
-    }
-}
-
-
-VOID
 CmiLockBlock(PREGISTRY_HIVE RegistryHive,
-  PVOID Block)
+	     PVOID Block)
 {
   if (IsPermanentHive(RegistryHive))
     {
@@ -2002,12 +2152,32 @@ CmiLockBlock(PREGISTRY_HIVE RegistryHive,
 
 VOID
 CmiReleaseBlock(PREGISTRY_HIVE RegistryHive,
-  PVOID Block)
+		PVOID Block)
 {
   if (IsPermanentHive(RegistryHive))
     {
       /* FIXME: Implement */
     }
+}
+
+
+VOID
+CmiMarkBlockDirty(PREGISTRY_HIVE RegistryHive,
+		  BLOCK_OFFSET BlockOffset)
+{
+  ULONG Index;
+
+  if (IsVolatileHive(RegistryHive))
+      return;
+
+  Index = (ULONG)BlockOffset / 4096;
+
+  DPRINT1("CmiMarkBlockDirty(Offset 0x%lx)  Index %lu\n", (ULONG)BlockOffset, Index);
+
+  RegistryHive->HiveDirty = TRUE;
+  RtlSetBits(&RegistryHive->DirtyBitMap,
+	     Index,
+	     1);
 }
 
 
@@ -2043,12 +2213,10 @@ CmiComparePackedNames(IN PUNICODE_STRING Name,
   PWCHAR UNameBuffer;
   ULONG i;
 
-  if (NamePacked)
+  if (NamePacked == TRUE)
     {
       if (Name->Length != NameBufferSize * sizeof(WCHAR))
-	{
 	return(FALSE);
-	}
 
       for (i = 0; i < Name->Length / sizeof(WCHAR); i++)
 	{

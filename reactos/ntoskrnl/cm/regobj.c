@@ -277,10 +277,36 @@ CmiObjectDelete(PVOID DeletedObject)
 
   if (KeyObject->Flags & KO_MARKED_FOR_DELETE)
     {
+      PHASH_TABLE_CELL HashBlock;
+
       DPRINT("delete really key\n");
+
+      /* FIXME: Destroy the key's hash block */
+
+      /* Remove the key from the parent key's hash block */
+      HashBlock = CmiGetBlock(KeyObject->RegistryHive,
+			      KeyObject->ParentKey->KeyCell->HashTableOffset, NULL);
+      DPRINT1("HashBlock %p\n", HashBlock);
+      if (HashBlock != NULL)
+	{
+	  CmiRemoveKeyFromHashTable(KeyObject->RegistryHive,
+				    HashBlock,
+				    KeyObject->BlockOffset);
+	  CmiMarkBlockDirty(KeyObject->RegistryHive,
+			    KeyObject->ParentKey->KeyCell->HashTableOffset);
+	}
+
+      /* Remove the key from the parent key's hash block */
+      KeyObject->ParentKey->KeyCell->NumberOfSubKeys--;
+      CmiMarkBlockDirty(KeyObject->RegistryHive,
+			KeyObject->ParentKey->BlockOffset);
+
+      /* Destroy key cell */
       CmiDestroyBlock(KeyObject->RegistryHive,
 		      KeyObject->KeyCell,
 		      KeyObject->BlockOffset);
+      if (IsPermanentHive(KeyObject->RegistryHive))
+	CmiSyncHives();
     }
   else
     {

@@ -112,7 +112,6 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 			  NULL,
 			  CmiKeyType,
 			  (PVOID*)&KeyObject);
-
   if (!NT_SUCCESS(Status))
     {
       return(Status);
@@ -142,7 +141,6 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 			TitleIndex,
 			Class,
 			CreateOptions);
-
   if (!NT_SUCCESS(Status))
     {
       ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
@@ -200,15 +198,14 @@ NtDeleteKey(IN HANDLE KeyHandle)
 
   /* Verify that the handle is valid and is a registry key */
   Status = ObReferenceObjectByHandle(KeyHandle,
-		KEY_WRITE,
-		CmiKeyType,
-		UserMode,
-		(PVOID *) &KeyObject,
-		NULL);
-
+				     KEY_WRITE,
+				     CmiKeyType,
+				     UserMode,
+				     (PVOID *)&KeyObject,
+				     NULL);
   if (!NT_SUCCESS(Status))
     {
-      return Status;
+      return(Status);
     }
 
   /* Acquire hive lock */
@@ -219,21 +216,26 @@ NtDeleteKey(IN HANDLE KeyHandle)
   /*  Set the marked for delete bit in the key object  */
   KeyObject->Flags |= KO_MARKED_FOR_DELETE;
 
+  /* Release hive lock */
+  ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+
+  DPRINT("PointerCount %lu\n", ObGetObjectPointerCount((PVOID)KeyObject));
+
   /* Dereference the object */
   ObDereferenceObject(KeyObject);
   if(KeyObject->RegistryHive != KeyObject->ParentKey->RegistryHive)
     ObDereferenceObject(KeyObject);
-  /* Close the handle */
-  ObDeleteHandle(PsGetCurrentProcess(), KeyHandle);
-  /* FIXME: I think that ObDeleteHandle should dereference the object  */
-  ObDereferenceObject(KeyObject);
 
-  /* Release hive lock */
-  ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+  DPRINT("PointerCount %lu\n", ObGetObjectPointerCount((PVOID)KeyObject));
 
-  CmiSyncHives();
+  /*
+   * Note:
+   * Hive-Synchronization will not be triggered here. This is done in
+   * CmiObjectDelete() (in regobj.c) after all key-related structures
+   * have been released.
+   */
 
-  return STATUS_SUCCESS;
+  return(STATUS_SUCCESS);
 }
 
 
@@ -678,6 +680,7 @@ NtFlushKey(IN HANDLE KeyHandle)
   NTSTATUS Status;
   PKEY_OBJECT  KeyObject;
   PREGISTRY_HIVE  RegistryHive;
+#if 0
   WCHAR LogName[MAX_PATH];
   UNICODE_STRING TmpFileName;
   HANDLE FileHandle;
@@ -686,29 +689,42 @@ NtFlushKey(IN HANDLE KeyHandle)
   LARGE_INTEGER fileOffset;
   DWORD * pEntDword;
   ULONG i;
+#endif
 
   DPRINT("KeyHandle %x\n", KeyHandle);
 
   /* Verify that the handle is valid and is a registry key */
   Status = ObReferenceObjectByHandle(KeyHandle,
-		KEY_QUERY_VALUE,
-		CmiKeyType,
-		UserMode,
-		(PVOID *) &KeyObject,
-		NULL);
-
+				     KEY_QUERY_VALUE,
+				     CmiKeyType,
+				     UserMode,
+				     (PVOID *)&KeyObject,
+				     NULL);
   if (!NT_SUCCESS(Status))
     {
-      return Status;
+      return(Status);
     }
-
-  /* Acquire hive lock */
-  ExAcquireResourceExclusiveLite(&KeyObject->RegistryHive->HiveResource, TRUE);
 
   VERIFY_KEY_OBJECT(KeyObject);
 
   RegistryHive = KeyObject->RegistryHive;
 
+  /* Acquire hive lock */
+  ExAcquireResourceExclusiveLite(&RegistryHive->HiveResource,
+				 TRUE);
+
+  if (IsPermanentHive(RegistryHive))
+    {
+      /* Flush non-volatile hive */
+      Status = CmiFlushRegistryHive(RegistryHive);
+    }
+  else
+    {
+      Status = STATUS_SUCCESS;
+    }
+
+
+#if 0
   /* Then write changed blocks in .log */
   wcscpy(LogName,RegistryHive->Filename.Buffer);
   wcscat(LogName,L".log");
@@ -891,8 +907,12 @@ END FIXME*/
     }
 
   ZwClose(FileHandle);
-  ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+#endif
+
+  ExReleaseResourceLite(&RegistryHive->HiveResource);
+
   ObDereferenceObject(KeyObject);
+
   return STATUS_SUCCESS;
 }
 
@@ -1424,6 +1444,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
     {
       /* If new data size is <= current then overwrite current data */
       DataCell = CmiGetBlock(RegistryHive, ValueCell->DataOffset,&pBin);
+      RtlZeroMemory(DataCell->Data, ValueCell->DataSize);
       RtlCopyMemory(DataCell->Data, Data, DataSize);
       ValueCell->DataSize = DataSize;
       ValueCell->DataType = Type;

@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.81 2002/12/08 18:54:45 ekohl Exp $
+/* $Id: registry.c,v 1.82 2003/02/09 11:57:14 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -659,7 +659,11 @@ CmiConnectHive(PWSTR FileName,
 
   Status = CmiCreateRegistryHive(FileName, &RegistryHive, CreateNew);
   if (!NT_SUCCESS(Status))
-    return(Status);
+    {
+      DPRINT1("CmiCreateRegistryHive() failed (Status %lx)\n", Status);
+      KeBugCheck(0);
+      return(Status);
+    }
 
   RtlInitUnicodeString(&uKeyName, FullName);
 
@@ -675,7 +679,12 @@ CmiConnectHive(PWSTR FileName,
 			  CmiKeyType,
 			  (PVOID*)&NewKey);
   if (!NT_SUCCESS(Status))
-    return(Status);
+    {
+      DPRINT1("ObCreateObject() failed (Status %lx)\n", Status);
+      KeBugCheck(0);
+      CmiRemoveRegistryHive(RegistryHive);
+      return(Status);
+    }
 
   NewKey->RegistryHive = RegistryHive;
   NewKey->BlockOffset = RegistryHive->HiveHeader->RootKeyCell;
@@ -731,7 +740,9 @@ CmiInitializeHive(PWSTR FileName,
   //Status = CmiConnectHive(FileName, FullName, KeyName, Parent, FALSE);
   Status = CmiConnectHive(FileName, FullName, KeyName, Parent, CreateNew);
 
-  if (!NT_SUCCESS(Status)) {
+  if (!NT_SUCCESS(Status))
+    {
+#if 0
 #ifdef WIN32_REGDBG
       WCHAR AltFileName[MAX_PATH];
 
@@ -749,6 +760,7 @@ CmiInitializeHive(PWSTR FileName,
 	      CPRINT("WARNING! Alternative registry file %S not found\n", AltFileName);
 	    //DPRINT("Status %.08x\n", Status);
 	  }
+#endif
 #endif
     }
 
@@ -865,7 +877,6 @@ CmiInitHives(BOOLEAN SetUpBoot)
     DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
     return(Status);
   }
-  //assert(NT_SUCCESS(Status));
 
   /* Connect the SAM hive */
   wcscpy(EndPtr, REG_SAM_FILE_NAME);
@@ -881,7 +892,6 @@ CmiInitHives(BOOLEAN SetUpBoot)
     DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
     return(Status);
   }
-  //assert(NT_SUCCESS(Status));
 
   /* Connect the SECURITY hive */
   wcscpy(EndPtr, REG_SEC_FILE_NAME);
@@ -896,7 +906,6 @@ CmiInitHives(BOOLEAN SetUpBoot)
     DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
     return(Status);
   }
-  //assert(NT_SUCCESS(Status));
 
   /* Connect the DEFAULT hive */
   wcscpy(EndPtr, REG_USER_FILE_NAME);
@@ -912,7 +921,6 @@ CmiInitHives(BOOLEAN SetUpBoot)
     DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
     return(Status);
   }
-  //assert(NT_SUCCESS(Status));
 
   /* FIXME : initialize standards symbolic links */
 
@@ -936,42 +944,41 @@ CmShutdownRegistry(VOID)
 {
   PREGISTRY_HIVE Hive;
   PLIST_ENTRY Entry;
-  KIRQL oldlvl;
+//  KIRQL oldlvl;
 
   DPRINT1("CmShutdownRegistry() called\n");
 
   /* Stop automatic hive synchronization */
   CmiHiveSyncEnabled = FALSE;
 
-  KeAcquireSpinLock(&CmiHiveListLock,&oldlvl);
+//  KeAcquireSpinLock(&CmiHiveListLock,&oldlvl);
   Entry = CmiHiveListHead.Flink;
   while (Entry != &CmiHiveListHead)
-  {
-    Hive = CONTAINING_RECORD(Entry, REGISTRY_HIVE, HiveList);
-
-    if (Hive->Flags & HIVE_VOLATILE)
     {
-      DPRINT("Volatile hive\n");
+      Hive = CONTAINING_RECORD(Entry, REGISTRY_HIVE, HiveList);
+
+      if (IsPermanentHive(Hive))
+	{
+	  /* Acquire hive resource exclusively */
+	  ExAcquireResourceExclusiveLite(&Hive->HiveResource,
+					 TRUE);
+
+	  /* Flush non-volatile hive */
+	  CmiFlushRegistryHive(Hive);
+
+	  /* Dereference file */
+	  ObDereferenceObject(Hive->FileObject);
+	  Hive->FileObject = NULL;
+
+	  /* Release hive resource */
+	  ExReleaseResourceLite(&Hive->HiveResource);
+	}
+
+      Entry = Entry->Flink;
     }
-    else
-    {
-      DPRINT("Flush non-volatile hive '%wZ'\n", &Hive->Filename);
+//  KeReleaseSpinLock(&CmiHiveListLock,oldlvl);
 
-      /* Flush non-volatile hive */
-
-      /* Dereference file */
-      ObDereferenceObject(Hive->FileObject);
-      Hive->FileObject = NULL;
-    }
-
-    Entry = Entry->Flink;
-  }
-  KeReleaseSpinLock(&CmiHiveListLock,oldlvl);
-
-  /* Note:
-   *	Don't call UNIMPLEMENTED() here since this function is
-   *	called by NtShutdownSystem().
-   */
+  DPRINT1("CmShutdownRegistry() called\n");
 }
 
 
@@ -981,9 +988,36 @@ CmiHiveSyncDpcRoutine(PKDPC Dpc,
 		      PVOID SystemArgument1,
 		      PVOID SystemArgument2)
 {
-  DPRINT("CmiHiveSyncDpcRoutine() called\n");
+  PREGISTRY_HIVE Hive;
+  PLIST_ENTRY Entry;
+  KIRQL oldlvl;
+
+  DPRINT1("CmiHiveSyncDpcRoutine() called\n");
 
   CmiHiveSyncPending = FALSE;
+
+  KeAcquireSpinLock(&CmiHiveListLock,&oldlvl);
+  Entry = CmiHiveListHead.Flink;
+  while (Entry != &CmiHiveListHead)
+    {
+      Hive = CONTAINING_RECORD(Entry, REGISTRY_HIVE, HiveList);
+
+      if (IsPermanentHive(Hive))
+	{
+	  /* Acquire hive resource exclusively */
+	  ExAcquireResourceExclusiveLite(&Hive->HiveResource,
+					 TRUE);
+
+	  /* Flush non-volatile hive */
+	  CmiFlushRegistryHive(Hive);
+
+	  /* Release hive resource */
+	  ExReleaseResourceLite(&Hive->HiveResource);
+	}
+
+      Entry = Entry->Flink;
+    }
+  KeReleaseSpinLock(&CmiHiveListLock,oldlvl);
 }
 
 
@@ -991,6 +1025,8 @@ VOID
 CmiSyncHives(VOID)
 {
   LARGE_INTEGER Timeout;
+
+  DPRINT("CmiSyncHives() called\n");
 
   if (CmiHiveSyncEnabled == FALSE ||
       CmiHiveSyncPending == TRUE)

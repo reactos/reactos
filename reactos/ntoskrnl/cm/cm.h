@@ -55,7 +55,7 @@
 #define  MAX_REG_STD_HANDLE_NAME      19
 
 // BLOCK_OFFSET = offset in file after header block
-typedef DWORD BLOCK_OFFSET;
+typedef ULONG BLOCK_OFFSET;
 
 /* header for registry hive file : */
 typedef struct _HIVE_HEADER
@@ -256,6 +256,9 @@ typedef struct _REGISTRY_HIVE
   BLOCK_OFFSET *FreeListOffset;
   ERESOURCE HiveResource;
 
+  RTL_BITMAP DirtyBitMap;
+  BOOLEAN HiveDirty;
+
 //  NTSTATUS  (*Extend)(ULONG NewSize);
 //  PVOID  (*Flush)(VOID);
 } REGISTRY_HIVE, *PREGISTRY_HIVE;
@@ -396,6 +399,9 @@ CmiCreateRegistryHive(PWSTR Filename,
 NTSTATUS
 CmiRemoveRegistryHive(PREGISTRY_HIVE RegistryHive);
 
+NTSTATUS
+CmiFlushRegistryHive(PREGISTRY_HIVE RegistryHive);
+
 ULONG
 CmiGetMaxNameLength(IN PREGISTRY_HIVE  RegistryHive,
   IN PKEY_CELL  KeyCell);
@@ -474,6 +480,11 @@ CmiAddKeyToHashTable(PREGISTRY_HIVE  RegistryHive,
   BLOCK_OFFSET  NKBOffset);
 
 NTSTATUS
+CmiRemoveKeyFromHashTable(PREGISTRY_HIVE RegistryHive,
+			  PHASH_TABLE_CELL HashBlock,
+			  BLOCK_OFFSET NKBOffset);
+
+NTSTATUS
 CmiAllocateValueCell(IN PREGISTRY_HIVE  RegistryHive,
   OUT PVALUE_CELL  *ValueCell,
   OUT BLOCK_OFFSET  *VBOffset,
@@ -497,8 +508,8 @@ CmiDestroyBlock(PREGISTRY_HIVE  RegistryHive,
 
 PVOID
 CmiGetBlock(PREGISTRY_HIVE  RegistryHive,
-  BLOCK_OFFSET  BlockOffset,
-	OUT PHBIN * ppBin);
+	    BLOCK_OFFSET  BlockOffset,
+	    OUT PHBIN * ppBin);
 
 VOID
 CmiLockBlock(PREGISTRY_HIVE  RegistryHive,
@@ -506,7 +517,11 @@ CmiLockBlock(PREGISTRY_HIVE  RegistryHive,
 
 VOID
 CmiReleaseBlock(PREGISTRY_HIVE  RegistryHive,
-  PVOID  Block);
+		PVOID  Block);
+
+VOID
+CmiMarkBlockDirty(PREGISTRY_HIVE RegistryHive,
+		  BLOCK_OFFSET BlockOffset);
 
 NTSTATUS
 CmiAddFree(PREGISTRY_HIVE  RegistryHive,
