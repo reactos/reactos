@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.50 2002/09/15 10:45:00 guido Exp $
+/* $Id: view.c,v 1.51 2002/09/30 20:55:33 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/view.c
@@ -74,6 +74,8 @@ static LIST_ENTRY CacheSegmentListHead;
 static LIST_ENTRY CacheSegmentLRUListHead;
 
 static FAST_MUTEX ViewLock;
+
+void * alloca(size_t size);
 
 NTSTATUS STDCALL
 CcRosInternalFreeCacheSegment(PBCB Bcb, PCACHE_SEGMENT CacheSeg);

@@ -1,3 +1,9 @@
+2002-09-30  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* ntoskrnl/cc/view.c (alloca): Prototype.
+	* ntoskrnl/rtl/ctype.c: Undefine __MSVCRT__ to not have mingw runtime
+	import _pctype.
+
 2002-08-26  David Welch  <welch@computer2.darkstar.org>
 
 	* lib/gdi32/misc/dllmain.c (GdiDllInitialize): Don't initialize
