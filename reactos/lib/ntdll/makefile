@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.86 2003/06/09 20:23:06 hbirr Exp $
+# $Id: makefile,v 1.87 2003/06/11 15:42:31 ekohl Exp $
 
 PATH_TO_TOP = ../..
 
@@ -24,15 +24,31 @@ TARGET_BASE = 0x77f60000
 
 TARGET_PATH = def
 
-TARGET_ENTRY = _LdrInitializeThunk@16
+TARGET_ENTRY = 0x0
 
 CSR_OBJECTS = csr/lpc.o csr/capture.o csr/probe.o csr/thread.o
 
 DBG_OBJECTS = dbg/brkpoint.o dbg/debug.o dbg/print.o #dbg/winedbg.o
 
+LDR_OBJECTS = \
+	ldr/entry.o \
+	ldr/res.o \
+	ldr/startup.o \
+	ldr/utils.o
+
 RTL_I386_OBJECTS = \
+	rtl/i386/alldiv.o \
+	rtl/i386/allmul.o \
+	rtl/i386/allrem.o \
+	rtl/i386/allshl.o \
+	rtl/i386/allshr.o \
+	rtl/i386/aulldiv.o \
+	rtl/i386/aullrem.o \
+	rtl/i386/aullshr.o \
+	rtl/i386/chkstk.o \
 	rtl/i386/exception.o \
 	rtl/i386/except.o \
+	rtl/i386/float.o \
 	rtl/i386/ftol.o
 
 RTL_OBJECTS = rtl/critical.o rtl/error.o rtl/heap.o rtl/largeint.o \
@@ -65,19 +81,16 @@ ARCH_OBJECTS = \
 	$(RTL_I386_OBJECTS)
 
 TARGET_OBJECTS = \
-  napi.o \
-  ldr/entry.o \
-  ldr/startup.o \
-  $(ARCH_OBJECTS) \
-  $(DBG_OBJECTS) \
-  $(RTL_OBJECTS) \
-  $(STDIO_OBJECTS) \
-  $(STDLIB_OBJECTS) \
-  $(STRING_OBJECTS) \
-  stubs/stubs.o \
-  ldr/res.o \
-  ldr/utils.o \
-  $(CSR_OBJECTS)
+	napi.o \
+	$(ARCH_OBJECTS) \
+	$(CSR_OBJECTS) \
+	$(DBG_OBJECTS) \
+	$(LDR_OBJECTS) \
+	$(RTL_OBJECTS) \
+	$(STDIO_OBJECTS) \
+	$(STDLIB_OBJECTS) \
+	$(STRING_OBJECTS) \
+	stubs/stubs.o
 
 DEP_OBJECTS = $(TARGET_OBJECTS)
 DEP_EXCLUDE_FILTER = napi.%
