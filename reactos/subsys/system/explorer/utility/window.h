@@ -285,7 +285,7 @@ struct ChildWindow : public Window
 {
 	typedef Window super;
 
-	ChildWindow(HWND hwnd);
+	ChildWindow(HWND hwnd, const ChildWndInfo& info);
 
 	static ChildWindow* create(const ChildWndInfo& info, const RECT& rect, CREATORFUNC_INFO creator,
 								LPCTSTR classname, LPCTSTR title=NULL);
@@ -304,7 +304,12 @@ protected:
 
 	int 	_split_pos;
 	int		_last_split;
+
+	HWND	_hwndFrame;
+	String	_statusText;
 };
+
+#define	PM_SETSTATUSTEXT		(WM_APP+0x1D)
 
 
  /**

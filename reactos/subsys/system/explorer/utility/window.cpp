@@ -368,8 +368,9 @@ int SubclassedWindow::Notify(int id, NMHDR* pnmh)
 }
 
 
-ChildWindow::ChildWindow(HWND hwnd)
- :	super(hwnd)
+ChildWindow::ChildWindow(HWND hwnd, const ChildWndInfo& info)
+ :	super(hwnd),
+	_hwndFrame(GetParent(info._hmdiclient))
 {
 	_focus_pane = 0;
 	_split_pos = DEFAULT_SPLIT_POS;
@@ -486,6 +487,11 @@ LRESULT ChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 	  case PM_DISPATCH_COMMAND:
 		return FALSE;
+
+	  case WM_MDIACTIVATE:
+		if ((HWND)lparam == _hwnd)
+			SendMessage(_hwndFrame, PM_SETSTATUSTEXT, 0, (LPARAM)_statusText.c_str());
+		break;
 
 	  default: def:
 		return DefMDIChildProc(_hwnd, nmsg, wparam, lparam);

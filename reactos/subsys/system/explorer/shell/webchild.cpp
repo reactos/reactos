@@ -192,7 +192,8 @@ static const CLSID CLSID_MozillaBrowser =
 
 
 WebChildWindow::WebChildWindow(HWND hwnd, const WebChildWndInfo& info)
- :	super(hwnd)
+ :	super(hwnd, info),
+	web_super(_navigator)
 {
 	 // first try to create a web control with MS IE's CLASSID
 	HRESULT hr = create_control(hwnd, CLSID_WebBrowser, IID_IWebBrowser2);
@@ -204,15 +205,12 @@ WebChildWindow::WebChildWindow(HWND hwnd, const WebChildWndInfo& info)
 	if (SUCCEEDED(hr)) {
 		_navigator.attach(_control);
 
-		HWND hwndFrame = GetParent(info._hmdiclient);
-
-		 // handling events using DWebBrowserEvents2
-		_evt_handler = auto_ptr<DWebBrowserEvents2Handler>(new DWebBrowserEvents2Handler(_hwnd, hwndFrame, _navigator));
+		_connector = auto_ptr<EventConnector>(new EventConnector(_control, DIID_DWebBrowserEvents2, this));
 
 #ifdef __MINGW32__	// MinGW is lacking vtMissing (as of 07.02.2004)
 		Variant vtMissing;
 #endif
-		get_browser()->Navigate(BStr(info._path), &vtMissing, &vtMissing, &vtMissing, &vtMissing);
+		_control->Navigate(BStr(info._path), &vtMissing, &vtMissing, &vtMissing, &vtMissing);
 		//browser->Navigate2(&Variant(info._path), &vtMissing, &vtMissing, &vtMissing, &vtMissing);
 	}
 }

@@ -49,7 +49,7 @@ static LPARAM TreeView_GetItemData(HWND hwndTreeView, HTREEITEM hItem)
 
 
 ShellBrowserChild::ShellBrowserChild(HWND hwnd, const ShellChildWndInfo& info)
- :	super(hwnd),
+ :	super(hwnd, info),
 	_create_info(info)
 {
 	_pShellView = NULL;

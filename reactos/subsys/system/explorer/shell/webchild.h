@@ -398,6 +398,11 @@ template<typename BASE, typename SMARTPTR> struct IPCtrlWindow : public BASE
 	{
 	}
 
+	template<typename T> IPCtrlWindow(HWND hwnd, T& info)
+	 :	super(hwnd, info)
+	{
+	}
+
 	HRESULT create_control(HWND hwnd, REFIID clsid, REFIID riid)
 	{
 		 // Erzeugen einer Instanz des Controls
@@ -565,8 +570,8 @@ struct DWebBrowserEvents2IF
 };
 
 
- // Das Webbrowser-Control muß zunächst komplett initialisiert sein, bevor eine Seite,
- // die nicht auf das Internet zugreift (z.B. addcom/./index.html) dargestellt werden kann.
+ // The web browser control has to be initialized completely before being able,
+ // to display a page, that does not access internet.
 struct ANSUNC BrowserNavigator
 {
 	BrowserNavigator();
@@ -676,7 +681,7 @@ struct ANSUNC DWebBrowserEvents2Impl : public SimpleComObject,
 			break;
 
 
-			//-> anything below here is not present in DWebBrowserEvents, only in DWebBrowserEvents2:
+			// anything below here is not present in DWebBrowserEvents, only in DWebBrowserEvents2: ->
 
 		  case DISPID_FRAMEBEFORENAVIGATE:
 			if (pDispParams->cArgs != 6)
@@ -886,23 +891,28 @@ protected:
 };
 
 
- /// Web control Eventhandler using DWebBrowserEvents2Impl
-
-struct DWebBrowserEvents2Handler : public DWebBrowserEvents2Impl
+ /// encapsulation of Web control in MDI child windows
+struct WebChildWindow : public IPCtrlWindow<ChildWindow, SIfacePtr<IWebBrowser2> >,
+						public DWebBrowserEvents2Impl
 {
-	typedef DWebBrowserEvents2Impl super;
+	typedef IPCtrlWindow<ChildWindow, SIfacePtr<IWebBrowser2> > super;
+	typedef DWebBrowserEvents2Impl web_super;
 
-	DWebBrowserEvents2Handler(HWND hwnd, HWND hwndFrame, BrowserNavigator& navigator)
-	 :	DWebBrowserEvents2Impl(navigator),
-		_hwnd(hwnd),
-		_hwndFrame(hwndFrame),
-		_navigator(navigator),
-		_browser(navigator.get_browser(), IID_IWebBrowser2),
-		_connector(navigator.get_browser(), DIID_DWebBrowserEvents2, this)
+	WebChildWindow(HWND hwnd, const WebChildWndInfo& info);
+
+	static WebChildWindow* create(const FileChildWndInfo& info)
 	{
+		ChildWindow* child = ChildWindow::create(info, info._pos.rcNormalPosition,
+			WINDOW_CREATOR_INFO(WebChildWindow,WebChildWndInfo), CLASSNAME_CHILDWND, NULL);
+
+		ShowWindow(*child, info._pos.showCmd);
+
+		return static_cast<WebChildWindow*>(child);
 	}
 
-protected:
+
+	 // DWebBrowserEvents2Impl overides ->
+
     void BeforeNavigate2(IDispatch* pDisp, const Variant& url, const Variant& flags,
 							const Variant& targetFrameName, const Variant& postData,
 							const Variant& headers, VARIANT_BOOL& cancel)
@@ -913,12 +923,13 @@ protected:
     void NavigateComplete2(IDispatch* pDisp, const Variant& url)
 	{
 		//String adr = (BStr)url;
-		super::NavigateComplete2(pDisp, url);
+		web_super::NavigateComplete2(pDisp, url);
 	}
 
     void StatusTextChange(const BStr& text)
 	{
-		SendMessage(_hwndFrame, PM_SETSTATUSTEXT, 0, (LPARAM)String(text).c_str());
+		_statusText = text;
+		SendMessage(_hwndFrame, PM_SETSTATUSTEXT, 0, (LPARAM)_statusText.c_str());
 	}
 
     void ProgressChange(long Progress, long ProgressMax)
@@ -940,7 +951,7 @@ protected:
     void PropertyChange(const BStr& Property)
 	{
 		Variant value;
-		_browser->GetProperty(Property, &value);
+		_control->GetProperty(Property, &value);
 	}
 
     void CommandStateChange(long command/*CSC_NAVIGATEFORWARD, CSC_NAVIGATEBACK*/, bool enable)
@@ -1058,40 +1069,10 @@ protected:
 	{
 	}
 
-protected:
-	HWND	_hwnd;
-	HWND	_hwndFrame;
-	BrowserNavigator& _navigator;
-	SIfacePtr<IWebBrowser2> _browser;
-	EventConnector _connector;
-};
-
-
- /// encapsulation of Web control in MDI child windows
-struct WebChildWindow : public IPCtrlWindow<ChildWindow, SIfacePtr<IWebBrowser2> >
-{
-	typedef IPCtrlWindow<ChildWindow, SIfacePtr<IWebBrowser2> > super;
-
-	WebChildWindow(HWND hwnd, const WebChildWndInfo& info);
-
-	static WebChildWindow* create(const FileChildWndInfo& info)
-	{
-		ChildWindow* child = ChildWindow::create(info, info._pos.rcNormalPosition,
-			WINDOW_CREATOR_INFO(WebChildWindow,WebChildWndInfo), CLASSNAME_CHILDWND, NULL);
-
-		ShowWindow(*child, info._pos.showCmd);
-
-		return static_cast<WebChildWindow*>(child);
-	}
-
-	IWebBrowser2* get_browser()
-	{
-		return _control;
-	}
 
 protected:
 	BrowserNavigator _navigator;
-	auto_ptr<DWebBrowserEvents2Handler> _evt_handler;
+	auto_ptr<EventConnector> _connector;
 
 	LRESULT WndProc(UINT message, WPARAM wparam, LPARAM lparam);
 };

@@ -96,7 +96,7 @@ WebChildWndInfo::WebChildWndInfo(HWND hmdiclient, LPCTSTR url)
 
 
 FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
- :	ChildWindow(hwnd)
+ :	ChildWindow(hwnd, info)
 {
 	CONTEXT("FileChildWindow::FileChildWindow()");
 
