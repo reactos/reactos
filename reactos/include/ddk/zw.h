@@ -1,4 +1,5 @@
-/*
+/* $Id: zw.h,v 1.13 1999/06/24 19:35:31 ea Exp $
+ *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          System call definitions
@@ -5158,7 +5159,7 @@ NTSTATUS
 STDCALL
 NtAcceptConnectPort ( /* @24 */
 	IN	HANDLE	PortHandle,
-	DWORD	a1,
+	OUT	PHANDLE	ConnectedPort,
 	DWORD	a2,
 	DWORD	a3,
 	DWORD	a4,
@@ -5172,15 +5173,14 @@ NtCompleteConnectPort ( /* @4 */
 NTSTATUS
 STDCALL
 NtConnectPort ( /* @32 */
-	IN	HANDLE	PortHandle,
-	DWORD	a1,
-	DWORD	a2,
-	DWORD	a3,
-	DWORD	a4,
-	DWORD	a5,
-	DWORD	a6,
-	DWORD	a7,
-	DWORD	a8
+	OUT	PHANDLE		PortHandle,
+	IN	PUNICODE_STRING	PortName,
+		PVOID		a2,
+		DWORD		a3,
+		DWORD		a4,
+		DWORD		a5,
+		DWORD		a6,
+	IN	UINT		Flags	/* ??? */	
 	);
 NTSTATUS
 STDCALL
