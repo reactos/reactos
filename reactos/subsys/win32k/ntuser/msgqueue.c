@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.91 2004/04/29 21:13:16 gvg Exp $
+/* $Id: msgqueue.c,v 1.92 2004/04/29 22:42:51 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -859,7 +859,7 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
                 Entry = Entry->Flink;
               }
             IntUnLockMessageQueue(MessageQueue);
-            DbgPrint("MsqSendMessage timed out\n");
+            DPRINT("MsqSendMessage timed out\n");
             break;
           }
         while (MsqDispatchOneSentMessage(ThreadQueue))
