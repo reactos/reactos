@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -60,13 +60,13 @@ static PMEMORY_AREA MmIterateNextNode(PMEMORY_AREA Node)
    else
    {
       PMEMORY_AREA TempNode = NULL;
- 
+
       do
       {
          /* Check if we're at the end of tree. */
          if (Node->Parent == NULL)
             return NULL;
- 
+
          TempNode = Node;
          Node = Node->Parent;
       }
@@ -113,13 +113,13 @@ static PMEMORY_AREA MmIteratePrevNode(PMEMORY_AREA Node)
    else
    {
       PMEMORY_AREA TempNode = NULL;
- 
+
       do
       {
          /* Check if we're at the end of tree. */
          if (Node->Parent == NULL)
             return NULL;
- 
+
          TempNode = Node;
          Node = Node->Parent;
       }
@@ -134,7 +134,7 @@ static VOID MmVerifyMemoryAreas(PMADDRESS_SPACE AddressSpace)
    PMEMORY_AREA Node;
 
    ASSERT(AddressSpace != NULL);
-   
+
    /* Special case for empty tree. */
    if (AddressSpace->MemoryAreaRoot == NULL)
       return;
@@ -152,7 +152,7 @@ static VOID MmVerifyMemoryAreas(PMADDRESS_SPACE AddressSpace)
    }
 }
 #else
-#define MmVerifyMemoryAreas(x) 
+#define MmVerifyMemoryAreas(x)
 #endif
 
 VOID STDCALL
@@ -161,7 +161,7 @@ MmDumpMemoryAreas(PMADDRESS_SPACE AddressSpace)
    PMEMORY_AREA Node;
 
    DbgPrint("MmDumpMemoryAreas()\n");
-   
+
    /* Special case for empty tree. */
    if (AddressSpace->MemoryAreaRoot == NULL)
       return;
@@ -268,13 +268,13 @@ MmLocateMemoryAreaByRegion(
  * @name MmCompressHelper
  *
  * This is helper of MmRebalanceTree. Performs a compression transformation
- * count times, starting at root. 
+ * count times, starting at root.
  */
 
 static VOID
 MmCompressHelper(
    PMADDRESS_SPACE AddressSpace,
-   ULONG Count) 
+   ULONG Count)
 {
    PMEMORY_AREA Root = NULL;
    PMEMORY_AREA Red = AddressSpace->MemoryAreaRoot;
@@ -328,13 +328,13 @@ MmRebalanceTree(
    CurrentNode = AddressSpace->MemoryAreaRoot;
    while (CurrentNode != NULL)
    {
-      if (CurrentNode->RightChild == NULL) 
+      if (CurrentNode->RightChild == NULL)
       {
          PreviousNode = CurrentNode;
          CurrentNode = CurrentNode->LeftChild;
          NodeCount++;
       }
-      else 
+      else
       {
          TempNode = CurrentNode->RightChild;
 
@@ -358,7 +358,7 @@ MmRebalanceTree(
    /* Transform Vine back into a balanced tree. */
 
    Leaves = NodeCount + 1;
-   for (;;) 
+   for (;;)
    {
       ULONG Next = Leaves & (Leaves - 1);
       if (Next == 0)
@@ -371,7 +371,7 @@ MmRebalanceTree(
 
    Vine = NodeCount - Leaves;
    Height = 1 + (Leaves > 0);
-   while (Vine > 1) 
+   while (Vine > 1)
    {
       MmCompressHelper(AddressSpace, Vine / 2);
       Vine /= 2;
@@ -407,14 +407,14 @@ MmInsertMemoryArea(
       ASSERT(marea->EndingAddress <= Node->StartingAddress ||
              marea->StartingAddress >= Node->EndingAddress);
       ASSERT(marea->StartingAddress != Node->StartingAddress);
-      
+
       PreviousNode = Node;
-  
+
       if (marea->StartingAddress < Node->StartingAddress)
          Node = Node->LeftChild;
       else
          Node = Node->RightChild;
-      
+
       if (Node)
       {
          Depth++;
@@ -569,7 +569,7 @@ MmFindGapTopDown(
       /* Check for overflow. */
       if (AlignedAddress > PreviousNode->StartingAddress)
          return NULL;
-      
+
       if (Node->EndingAddress <= AlignedAddress)
       {
          DPRINT("MmFindGapTopDown: %p\n", AlignedAddress);
@@ -689,7 +689,7 @@ MmInitMemoryAreas(VOID)
  *
  * Free an existing memory area.
  *
- * @param AddressSpace 
+ * @param AddressSpace
  *        Address space to free the area from.
  * @param MemoryArea
  *        Memory area we're about to free.
@@ -721,7 +721,7 @@ MmFreeMemoryArea(
       KeAttachProcess(&AddressSpace->Process->Pcb);
    }
 
-   EndAddress = MM_ROUND_UP(MemoryArea->EndingAddress, PAGE_SIZE); 
+   EndAddress = MM_ROUND_UP(MemoryArea->EndingAddress, PAGE_SIZE);
    for (Address = (ULONG_PTR)MemoryArea->StartingAddress;
         Address < (ULONG_PTR)EndAddress;
         Address += PAGE_SIZE)
@@ -758,7 +758,7 @@ MmFreeMemoryArea(
       KeDetachProcess();
    }
 
-   /* Remove the tree item. */ 
+   /* Remove the tree item. */
    {
       if (MemoryArea->Parent != NULL)
       {
@@ -824,7 +824,7 @@ MmFreeMemoryArea(
  *
  * Free an existing memory area given a pointer inside it.
  *
- * @param AddressSpace 
+ * @param AddressSpace
  *        Address space to free the area from.
  * @param BaseAddress
  *        Address in the memory area we're about to free.
@@ -875,7 +875,7 @@ MmFreeMemoryAreaByPtr(
  *
  * Create a memory area.
  *
- * @param AddressSpace 
+ * @param AddressSpace
  *        Address space to create the area in.
  * @param Type
  *        Type of the memory area.
@@ -1000,7 +1000,7 @@ MmReleaseMemoryAreaIfDecommitted(PEPROCESS Process,
    PLIST_ENTRY Entry;
    PMM_REGION Region;
    BOOLEAN Reserved;
-  
+
    MmVerifyMemoryAreas(AddressSpace);
 
    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, BaseAddress);
