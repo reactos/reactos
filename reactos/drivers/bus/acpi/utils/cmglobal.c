@@ -389,6 +389,7 @@ acpi_cm_init_globals (
 		acpi_gbl_acpi_mutex_info[i].mutex   = NULL;
 		acpi_gbl_acpi_mutex_info[i].locked  = FALSE;
 		acpi_gbl_acpi_mutex_info[i].use_count = 0;
+		acpi_gbl_acpi_mutex_info[i].owner_id = 0;
 	}
 
 	/* Global notify handlers */
