@@ -49,7 +49,7 @@ EXPORTS
 ;?unexpected@std@@YAXXZ	@1557
 ;?what@exception@std@@UBEPBDXZ	@1575
 ;_AAFS_CloseAllFileHandles	@655
-_AFS_CreateDirectoryW	@644
+_AFS_CreateDirectoryW	=_AFS_CreateDirectoryW	@644
 ;_AFS_CreateFileW	@648
 ;_AFS_DeleteFileW	@649
 ;_AFS_FindFirstChangeNotificationW	@1685
@@ -722,7 +722,7 @@ _AFS_CreateDirectoryW	@644
 ;_LocalAlloc	@33
 ;_LocalAllocInProcess	@41
 ;_LocalFileTimeToFileTime	@22
-_LocalFree	@36
+;_LocalFree	@36
 ;_LocalFreeInProcess	@42
 ;_LocalReAlloc	@34
 ;_LocalSize	@35
@@ -1112,7 +1112,7 @@ _LocalFree	@36
 ;__EH_prolog     @1620
 ;__HUGE  @1181
 ;__InitStdioLib  @1151
-__XcptFilter    @1645
+;__XcptFilter    @1645
 ;___CxxFrameHandler      @1550
 ;___RTCastToVoid @1559
 ;___RTDynamicCast        @1561
@@ -1138,7 +1138,7 @@ __XcptFilter    @1645
 ;__controlfp     @1002
 ;__copysign      @1003
 ;__ecvt  @1008
-__except_handler3       @84
+;__except_handler3       @84
 ;__fcloseall     @1119
 ;__fcvt  @1011
 ;__fileno        @1124
