@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.70 2004/10/19 10:27:11 weiden Exp $
+/* $Id: proc.c,v 1.71 2004/11/02 21:51:25 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -25,10 +25,6 @@ LPSTARTUPINFOA lpLocalStartupInfo = NULL;
 
 VOID STDCALL
 RegisterWaitForInputIdle(WaitForInputIdleType lpfnRegisterWaitForInputIdle);
-
-BOOL STDCALL
-InternalGetProcessId (HANDLE hProcess, LPDWORD lpProcessId);
-
 
 /* FUNCTIONS ****************************************************************/
 
@@ -301,44 +297,25 @@ GetExitCodeProcess(HANDLE hProcess,
 /*
  * @implemented
  */
-BOOL STDCALL
-InternalGetProcessId(HANDLE hProcess,
-	     LPDWORD lpProcessId)
+DWORD
+STDCALL
+GetProcessId(HANDLE Process)
 {
   PROCESS_BASIC_INFORMATION ProcessBasic;
   NTSTATUS Status;
 
-  Status = NtQueryInformationProcess(hProcess,
+  Status = NtQueryInformationProcess(Process,
 				     ProcessBasicInformation,
 				     &ProcessBasic,
 				     sizeof(PROCESS_BASIC_INFORMATION),
 				     NULL);
   if (!NT_SUCCESS(Status))
-    {
-      SetLastErrorByStatus(Status);
-      return(FALSE);
-    }
-
-  memcpy(lpProcessId, &ProcessBasic.UniqueProcessId, sizeof(DWORD));
-
-  return(TRUE);
-}
-
-
-/*
- * @implemented
- */
-DWORD
-STDCALL
-GetProcessId(HANDLE Process)
-{
-  DWORD ProcessId;
-  
-  if(!InternalGetProcessId(Process, &ProcessId))
   {
+    SetLastErrorByStatus(Status);
     return 0;
   }
-  return ProcessId;
+
+  return ProcessBasic.UniqueProcessId;
 }
 
 

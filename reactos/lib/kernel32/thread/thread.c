@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.55 2004/11/02 20:42:06 weiden Exp $
+/* $Id: thread.c,v 1.56 2004/11/02 21:51:25 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -712,6 +712,54 @@ SetThreadIdealProcessor(HANDLE hThread,
     }
 
   return dwIdealProcessor;
+}
+
+
+/*
+ * @implemented
+ */
+DWORD STDCALL
+GetProcessIdOfThread(HANDLE Thread)
+{
+  THREAD_BASIC_INFORMATION ThreadBasic;
+  NTSTATUS Status;
+
+  Status = NtQueryInformationThread(Thread,
+                                    ThreadBasicInformation,
+                                    &ThreadBasic,
+                                    sizeof(THREAD_BASIC_INFORMATION),
+                                    NULL);
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastErrorByStatus(Status);
+    return 0;
+  }
+
+  return (DWORD)ThreadBasic.ClientId.UniqueProcess;
+}
+
+
+/*
+ * @implemented
+ */
+DWORD STDCALL
+GetThreadId(HANDLE Thread)
+{
+  THREAD_BASIC_INFORMATION ThreadBasic;
+  NTSTATUS Status;
+
+  Status = NtQueryInformationThread(Thread,
+                                    ThreadBasicInformation,
+                                    &ThreadBasic,
+                                    sizeof(THREAD_BASIC_INFORMATION),
+                                    NULL);
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastErrorByStatus(Status);
+    return 0;
+  }
+
+  return (DWORD)ThreadBasic.ClientId.UniqueThread;
 }
 
 /*

@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.18 2004/10/24 12:36:12 weiden Exp $
+/* $Id: handle.c,v 1.19 2004/11/02 21:51:25 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -213,8 +213,9 @@ BOOL STDCALL DuplicateHandle(HANDLE hSourceProcessHandle,
    
    if (IsConsoleHandle(hSourceHandle))
    {
-      if (FALSE == InternalGetProcessId(hSourceProcessHandle, &SourceProcessId) || 
-	  FALSE == InternalGetProcessId(hTargetProcessHandle, &TargetProcessId) ||
+      SourceProcessId = GetProcessId(hSourceProcessHandle);
+      TargetProcessId = GetProcessId(hTargetProcessHandle);
+      if (!SourceProcessId || !TargetProcessId ||
 	  SourceProcessId != TargetProcessId ||
 	  SourceProcessId != GetCurrentProcessId())
       {
