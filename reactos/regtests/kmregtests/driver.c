@@ -149,7 +149,6 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 {
   PDEVICE_OBJECT DeviceObject;
   UNICODE_STRING DeviceName;
-  UNICODE_STRING DosName;
   NTSTATUS Status;
 
   /* Register driver routines */

@@ -10,6 +10,7 @@
 #define NTOS_MODE_USER
 #include <ntos.h>
 #include "regtests.h"
+#include <string.h>
 
 #define NDEBUG
 #include <debug.h>

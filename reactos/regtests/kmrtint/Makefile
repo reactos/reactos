@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2003/07/11 18:13:57 chorns Exp $
+# $Id: Makefile,v 1.2 2003/11/19 05:53:37 vizzini Exp $
 
 PATH_TO_TOP = ../..
 
@@ -10,7 +10,7 @@ TARGET_NAME = kmrtint
 
 TARGET_SDKLIBS = ntdll.a kernel32.a
 
-TARGET_CFLAGS = -I../shared -I../kmregtests
+TARGET_CFLAGS = -I../shared -I../kmregtests -Werror -Wall
 
 TARGET_BASE = 0x50000000
 

@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "regtests.h"
 
@@ -21,7 +22,7 @@ static int RunTest(char *Buffer)
 
   if (file == INVALID_HANDLE_VALUE)
     {
-      sprintf(Buffer, "Error opening file (Status %x)", GetLastError());
+      sprintf(Buffer, "Error opening file (Status %lx)", GetLastError());
       return TS_FAILED;
     }
 
@@ -30,7 +31,7 @@ static int RunTest(char *Buffer)
 
   if (WriteFile( file, buffer, 4096, &wrote, NULL) == FALSE)
     {
-      sprintf(Buffer, "Error writing file (Status %x)", GetLastError());
+      sprintf(Buffer, "Error writing file (Status %lx)", GetLastError());
       return TS_FAILED;
     }
 
@@ -38,7 +39,7 @@ static int RunTest(char *Buffer)
 
   if (ReadFile( file, buffer, 4096, &wrote, NULL) == FALSE)
     {
-      sprintf(Buffer, "Error reading file (Status %x)", GetLastError());
+      sprintf(Buffer, "Error reading file (Status %lx)", GetLastError());
       return TS_FAILED;
     }
   for (c = 0; c < sizeof(buffer); c++)
