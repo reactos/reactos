@@ -39,7 +39,7 @@ FatxFormat (HANDLE FileHandle,
 	    PFORMAT_CONTEXT Context);
 
 VOID
-UpdateProgress (PFORMAT_CONTEXT Context,
-		ULONG Increment);
+VfatxUpdateProgress (PFORMAT_CONTEXT Context,
+		     ULONG Increment);
 
 /* EOF */

@@ -90,7 +90,7 @@ FatxWriteBootSector (IN HANDLE FileHandle,
       return Status;
     }
 
-  UpdateProgress (Context, 1);
+  VfatxUpdateProgress (Context, 1);
 
   /* Free the new boot sector */
   RtlFreeHeap(RtlGetProcessHeap(), 0, NewBootSector);
@@ -148,7 +148,7 @@ Fatx16WriteFAT (IN HANDLE FileHandle,
       return(Status);
     }
 
-  UpdateProgress (Context, 1);
+  VfatxUpdateProgress (Context, 1);
 
   /* Zero the begin of the buffer */
   memset(Buffer, 0, 4);
@@ -180,7 +180,7 @@ Fatx16WriteFAT (IN HANDLE FileHandle,
           return(Status);
         }
 
-      UpdateProgress (Context, Sectors);
+      VfatxUpdateProgress (Context, Sectors);
     }
 
   /* Free the buffer */
@@ -241,7 +241,7 @@ Fatx32WriteFAT (IN HANDLE FileHandle,
       return(Status);
     }
 
-  UpdateProgress (Context, 1);
+  VfatxUpdateProgress (Context, 1);
 
   /* Zero the begin of the buffer */
   memset(Buffer, 0, 8);
@@ -274,7 +274,7 @@ Fatx32WriteFAT (IN HANDLE FileHandle,
           return(Status);
         }
 
-      UpdateProgress (Context, Sectors);
+      VfatxUpdateProgress (Context, Sectors);
     }
 
   /* Free the buffer */
