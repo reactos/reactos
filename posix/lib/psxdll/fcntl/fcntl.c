@@ -1,4 +1,4 @@
-/* $Id: fcntl.c,v 1.3 2002/03/07 06:03:11 hyperion Exp $
+/* $Id: fcntl.c,v 1.4 2002/03/21 22:41:53 hyperion Exp $
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -15,6 +15,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <string.h>
 #include <stdarg.h>
 #include <psx/errno.h>
 #include <psx/stdlib.h>
@@ -72,7 +73,6 @@ int fcntl(int fildes, int cmd, ...)
  {
   case F_DUPFD:
   {
-   va_list     vlArgs;
    int         nDupFileNo;
    __fildes_t *pfdDupDescriptor;
 
