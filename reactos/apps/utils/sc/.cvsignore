@@ -1,8 +1,0 @@
-*.o
-*.d
-sc.exe
-sc.nostrip.exe
-sc.coff
-sc.sym
-sc.map
-*.map
