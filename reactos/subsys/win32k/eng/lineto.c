@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: lineto.c,v 1.20 2003/07/14 09:43:11 gvg Exp $
+ * $Id: lineto.c,v 1.21 2003/08/04 19:57:05 royce Exp $
  */
 
 #include <ddk/winddi.h>
@@ -330,7 +330,7 @@ SEtoNW(PSURFOBJ OutputObj, PSURFGDI OutputGDI, PCLIPOBJ Clip,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 EngLineTo(SURFOBJ *DestObj,

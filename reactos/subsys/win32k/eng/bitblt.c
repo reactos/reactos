@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.24 2003/07/27 18:37:23 dwelch Exp $
+/* $Id: bitblt.c,v 1.25 2003/08/04 19:57:05 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -181,7 +181,7 @@ CallDibBitBlt(PSURFOBJ OutputObj,
 INT abs(INT nm);
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 EngBitBlt(SURFOBJ *DestObj,

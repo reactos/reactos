@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: copybits.c,v 1.16 2003/07/27 18:37:23 dwelch Exp $
+/* $Id: copybits.c,v 1.17 2003/08/04 19:57:05 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -37,7 +37,7 @@
 #include <include/eng.h>
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 EngCopyBits(SURFOBJ *Dest,
