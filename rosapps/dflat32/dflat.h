@@ -409,19 +409,19 @@ BOOL DfGenericMessage(DFWINDOW, char *, char *, int,
 	char *, char *, int, int, int);
 #define DfTestErrorMessage(msg)	\
 	DfGenericMessage(NULL, "Error", msg, 2, DfErrorBoxProc,	  \
-		Ok, Cancel, DF_ID_OK, DF_ID_CANCEL, TRUE)
+		DfOk, DfCancel, DF_ID_OK, DF_ID_CANCEL, TRUE)
 #define DfErrorMessage(msg) \
 	DfGenericMessage(NULL, "Error", msg, 1, DfErrorBoxProc,   \
-		Ok, NULL, DF_ID_OK, 0, TRUE)
+		DfOk, NULL, DF_ID_OK, 0, TRUE)
 #define DfMessageBox(ttl, msg) \
 	DfGenericMessage(NULL, ttl, msg, 1, DfMessageBoxProc, \
-		Ok, NULL, DF_ID_OK, 0, TRUE)
+		DfOk, NULL, DF_ID_OK, 0, TRUE)
 #define DfYesNoBox(msg)	\
 	DfGenericMessage(NULL, NULL, msg, 2, DfYesNoBoxProc,   \
-		Yes, No, DF_ID_OK, DF_ID_CANCEL, TRUE)
+		DfYes, DfNo, DF_ID_OK, DF_ID_CANCEL, TRUE)
 #define DfCancelBox(wnd, msg) \
 	DfGenericMessage(wnd, "Wait...", msg, 1, DfCancelBoxProc, \
-		Cancel, NULL, DF_ID_CANCEL, 0, FALSE)
+		DfCancel, NULL, DF_ID_CANCEL, 0, FALSE)
 void DfCloseCancelBox(void);
 DFWINDOW DfMomentaryMessage(char *);
 int DfMsgHeight(char *);

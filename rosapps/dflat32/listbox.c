@@ -356,11 +356,11 @@ static BOOL SelectionInWindow(DFWINDOW wnd, int sel)
 }
 
 static void WriteSelection(DFWINDOW wnd, int sel,
-                                    int _reverse, DFRECT *rc)
+                                    int reverse, DFRECT *rc)
 {
     if (DfIsVisible(wnd))
         if (SelectionInWindow(wnd, sel))
-            DfWriteTextLine(wnd, rc, sel, _reverse);
+            DfWriteTextLine(wnd, rc, sel, reverse);
 }
 
 #ifdef INCLUDE_EXTENDEDSELECTIONS

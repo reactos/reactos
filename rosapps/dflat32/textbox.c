@@ -617,7 +617,7 @@ static char *GetTextLine(DFWINDOW wnd, int selection)
 }
 
 /* ------- write a line of text to a textbox window ------- */
-void DfWriteTextLine(DFWINDOW wnd, DFRECT *rcc, int y, BOOL _reverse)
+void DfWriteTextLine(DFWINDOW wnd, DFRECT *rcc, int y, BOOL reverse)
 {
     int len = 0;
     int dif = 0;
@@ -783,7 +783,7 @@ void DfWriteTextLine(DFWINDOW wnd, DFRECT *rcc, int y, BOOL _reverse)
     line[len] = '\0';
     dif = 0;
     /* ------ establish the line's main DfColor ----- */
-    if (_reverse)    {
+    if (reverse)    {
         char *cp = line;
         DfSetReverseColor(wnd);
         while ((cp = strchr(cp, DF_CHANGECOLOR)) != NULL)    {

@@ -47,9 +47,9 @@ typedef struct {
 
 #define DF_ENDDB {{NULL}} }};
 
-#define Cancel  " Cancel "
-#define Ok      "   OK   "
-#define Yes     "  Yes   "
-#define No      "   No   "
+#define DfCancel  " Cancel "
+#define DfOk      "   OK   "
+#define DfYes     "  Yes   "
+#define DfNo      "   No   "
 
 #endif
