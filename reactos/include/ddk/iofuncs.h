@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.45 2004/10/22 20:51:44 ekohl Exp $ */
+/* $Id: iofuncs.h,v 1.46 2004/10/31 22:21:41 ion Exp $ */
 
 #ifdef __NTOSKRNL__
 extern POBJECT_TYPE EXPORTED IoAdapterObjectType;
@@ -1043,13 +1043,7 @@ USHORT
 IoSizeOfIrp (CCHAR StackSize)
  */
 #define IoSizeOfIrp(StackSize) \
-	((USHORT)(sizeof(IRP)+(((StackSize)-1)*sizeof(IO_STACK_LOCATION))))
-
-/* original macro */
-/*
-#define IoSizeOfIrp(StackSize) \
 	((USHORT)(sizeof(IRP)+((StackSize)*sizeof(IO_STACK_LOCATION))))
-*/
 
 /*
  * FUNCTION: Dequeues the next IRP from the device's associated queue and

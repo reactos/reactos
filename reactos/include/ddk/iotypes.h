@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.66 2004/10/23 23:43:23 ion Exp $
+/* $Id: iotypes.h,v 1.67 2004/10/31 22:21:41 ion Exp $
  *
  */
 
@@ -869,7 +869,6 @@ typedef struct _IRP
 	KAPC Apc;
 	ULONG CompletionKey;
      } Tail;
-   IO_STACK_LOCATION Stack[1];
 } IRP, *PIRP;
 
 #define VPB_MOUNTED                     0x00000001

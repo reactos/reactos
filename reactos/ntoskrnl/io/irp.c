@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.68 2004/10/22 20:25:53 ekohl Exp $
+/* $Id: irp.c,v 1.69 2004/10/31 22:21:41 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -164,12 +164,14 @@ IoInitializeIrp(PIRP Irp,
 {
   ASSERT(Irp != NULL);
 
+  DPRINT("IoInitializeIrp(StackSize %x, Irp %x)\n",StackSize, Irp);
   memset(Irp, 0, PacketSize);
   Irp->Size = PacketSize;
   Irp->StackCount = StackSize;
   Irp->CurrentLocation = StackSize;
   InitializeListHead(&Irp->ThreadListEntry);
-  Irp->Tail.Overlay.CurrentStackLocation = &Irp->Stack[(ULONG)StackSize];
+  Irp->Tail.Overlay.CurrentStackLocation = (PIO_STACK_LOCATION)(Irp + 1) + StackSize;
+  DPRINT("Irp->Tail.Overlay.CurrentStackLocation %x\n", Irp->Tail.Overlay.CurrentStackLocation);
   Irp->ApcEnvironment =  KeGetCurrentThread()->ApcStateIndex;
 }
 
@@ -297,6 +299,7 @@ IofCompleteRequest(PIRP Irp,
    PDEVICE_OBJECT    DeviceObject;
    KIRQL             oldIrql;
    PMDL              Mdl;
+   PIO_STACK_LOCATION Stack = (PIO_STACK_LOCATION)(Irp + 1);
 
    DPRINT("IoCompleteRequest(Irp %x, PriorityBoost %d) Event %x THread %x\n",
       Irp,PriorityBoost, Irp->UserEvent, PsGetCurrentThread());
@@ -334,14 +337,14 @@ IofCompleteRequest(PIRP Irp,
          DeviceObject = NULL;
       }
 
-      if (Irp->Stack[i].CompletionRoutine != NULL &&
-         ((NT_SUCCESS(Irp->IoStatus.Status) && (Irp->Stack[i].Control & SL_INVOKE_ON_SUCCESS)) ||
-         (!NT_SUCCESS(Irp->IoStatus.Status) && (Irp->Stack[i].Control & SL_INVOKE_ON_ERROR)) ||
-         (Irp->Cancel && (Irp->Stack[i].Control & SL_INVOKE_ON_CANCEL))))
+      if (Stack[i].CompletionRoutine != NULL &&
+         ((NT_SUCCESS(Irp->IoStatus.Status) && (Stack[i].Control & SL_INVOKE_ON_SUCCESS)) ||
+         (!NT_SUCCESS(Irp->IoStatus.Status) && (Stack[i].Control & SL_INVOKE_ON_ERROR)) ||
+         (Irp->Cancel && (Stack[i].Control & SL_INVOKE_ON_CANCEL))))
       {
-         Status = Irp->Stack[i].CompletionRoutine(DeviceObject,
+         Status = Stack[i].CompletionRoutine(DeviceObject,
                                                   Irp,
-                                                  Irp->Stack[i].Context);
+                                                  Stack[i].Context);
 
          if (Status == STATUS_MORE_PROCESSING_REQUIRED)
          {
