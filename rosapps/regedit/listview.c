@@ -196,7 +196,7 @@ static LRESULT CALLBACK ListWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
 }
 
 
-HWND CreateListView(HWND hwndParent/*, Pane* pane*/, int id, LPTSTR lpszPathName)
+HWND CreateListView(HWND hwndParent/*, Pane* pane*/, int id, Root* pRoot/*Entry* pEntry*/)
 { 
     RECT rcClient;  // dimensions of client area 
     HWND hwndLV;    // handle to list view control 
@@ -221,7 +221,7 @@ HWND CreateListView(HWND hwndParent/*, Pane* pane*/, int id, LPTSTR lpszPathName
     ListView_SetExtendedListViewStyle(hwndLV,  LVS_EX_FULLROWSELECT);
     CreateListColumns(hwndLV);
 
-	SetWindowLong(hwndLV, GWL_USERDATA, (LPARAM)lpszPathName);
+	SetWindowLong(hwndLV, GWL_USERDATA, (LPARAM)pRoot);
 	g_orgListWndProc = SubclassWindow(hwndLV, ListWndProc);
 	//SendMessage(hwndLV, WM_SETFONT, (WPARAM)Globals.hFont, FALSE);
 
@@ -233,7 +233,7 @@ HWND CreateListView(HWND hwndParent/*, Pane* pane*/, int id, LPTSTR lpszPathName
     return hwndLV;
 } 
 
-void RefreshList(HWND hWnd/*, Entry* entry*/)
+void RefreshList(HWND hWnd, Entry* entry)
 {
     if (hWnd != NULL) {
         ListView_DeleteAllItems(hWnd);

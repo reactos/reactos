@@ -32,6 +32,38 @@ extern "C" {
 #endif // _MSC_VER > 1000
 
 #include "resource.h"
+#include "regproc.h"
+
+
+typedef struct _Entry {
+	struct _Entry*	next;
+	struct _Entry*	down;
+	struct _Entry*	up;
+	BOOL	expanded;
+	BOOL	scanned;
+	int		level;
+    BOOL    bKey;       // key or value?
+    HKEY    hKey;
+//    BOOL    bRoot;
+    HTREEITEM hTreeItem;
+} Entry;
+
+
+typedef struct {
+	Entry	entry;
+	TCHAR	path[MAX_PATH];
+//	DWORD	_flags;
+} Root;
+
+typedef struct {
+	HWND	hWnd;
+    HWND    hTreeWnd;
+    HWND    hListWnd;
+    int     nFocusPanel;      // 0: left  1: right
+	WINDOWPLACEMENT pos;
+	int		nSplitPos;
+	Root	root;
+} ChildWnd;
 
 
 #define STATUS_WINDOW   2001

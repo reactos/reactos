@@ -252,18 +252,26 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 //  WM_DESTROY  - post a quit message and return
 //
 //
+static ChildWnd Child;
+
 LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+
     switch (message) {
     case WM_CREATE:
         {
+        //Child.root.entry = ;
+        _tcsncpy(Child.root.path, _T("My Computer"), MAX_PATH);
+
 //        HMENU hMenuWindow = GetSubMenu(hMenuFrame, GetMenuItemCount(hMenuFrame)-2);
         hChildWnd = CreateWindowEx(0, szChildClass, _T("regedit child window"),
 //        hChildWnd = CreateWindowEx(0, (LPCTSTR)(int)hChildWndClass, _T("regedit child window"),
 //                    WS_CHILD|WS_CLIPCHILDREN|WS_VISIBLE|WS_BORDER,
                     WS_CHILD|WS_VISIBLE|WS_BORDER,
                     CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-                    hWnd, (HMENU)0, hInst, NULL/*lpParam*/);
+//                    hWnd, (HMENU)0, hInst, NULL/*lpParam*/);
+                    hWnd, (HMENU)0, hInst, &Child);
+        
         }
         break;
     case WM_COMMAND:

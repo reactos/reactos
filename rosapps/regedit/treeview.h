@@ -32,7 +32,7 @@ extern "C" {
 #endif // _MSC_VER > 1000
 
 
-HWND CreateTreeView(HWND hwndParent/*, Pane* pane*/, int id, LPTSTR lpszPathName);
+HWND CreateTreeView(HWND hwndParent, int id, Root* pRoot);
 
 
 #ifdef __cplusplus

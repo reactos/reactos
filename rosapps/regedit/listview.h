@@ -32,8 +32,8 @@ extern "C" {
 #endif // _MSC_VER > 1000
 
 
-HWND CreateListView(HWND hwndParent/*, Pane* pane*/, int id, LPTSTR lpszPathName);
-void RefreshList(HWND hWnd/*, Entry* entry*/);
+HWND CreateListView(HWND hwndParent, int id, Root* pRoot);
+void RefreshList(HWND hWnd, Entry* entry);
 
 
 #ifdef __cplusplus

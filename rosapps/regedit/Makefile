@@ -34,6 +34,7 @@ OBJS =	about.o \
         childwnd.o \
         listview.o \
         treeview.o \
+        trace.o \
         main.o
 
 LIBS = -lgdi32 -luser32 -lkernel32 -lcomctl32

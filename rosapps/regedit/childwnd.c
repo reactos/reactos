@@ -50,11 +50,11 @@
 #define hRightWnd hListWnd
 
 
-HWND hTreeWnd;                   // Tree Control Window
-HWND hListWnd;                   // List Control Window
+//HWND hTreeWnd;                   // Tree Control Window
+//HWND hListWnd;                   // List Control Window
 
-static int nSplitPos = 250;
-static int nFocusPanel;
+//static int nSplitPos = 250;
+//static int nFocusPanel;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -72,21 +72,21 @@ static void draw_splitbar(HWND hWnd, int x)
 
 #define _NO_EXTENSIONS
 
-static void ResizeWnd(int cx, int cy)
+static void ResizeWnd(ChildWnd* pChildWnd, int cx, int cy)
 {
 	HDWP hdwp = BeginDeferWindowPos(2);
 	RECT rt = {0, 0, cx, cy};
 
-	cx = nSplitPos + SPLIT_WIDTH/2;
-    DeferWindowPos(hdwp, hTreeWnd, 0, rt.left, rt.top, nSplitPos-SPLIT_WIDTH/2-rt.left, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
-	DeferWindowPos(hdwp, hListWnd, 0, rt.left+cx+1, rt.top, rt.right-cx, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
+	cx = pChildWnd->nSplitPos + SPLIT_WIDTH/2;
+    DeferWindowPos(hdwp, pChildWnd->hTreeWnd, 0, rt.left, rt.top, pChildWnd->nSplitPos-SPLIT_WIDTH/2-rt.left, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
+	DeferWindowPos(hdwp, pChildWnd->hListWnd, 0, rt.left+cx+1, rt.top, rt.right-cx, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
 	EndDeferWindowPos(hdwp);
 }
 
-static void OnSize(WPARAM wParam, LPARAM lParam)
+static void OnSize(ChildWnd* pChildWnd, WPARAM wParam, LPARAM lParam)
 {
-    if (wParam != SIZE_MINIMIZED) {
-		ResizeWnd(LOWORD(lParam), HIWORD(lParam));
+    if (wParam != SIZE_MINIMIZED && pChildWnd != NULL) {
+		ResizeWnd(pChildWnd, LOWORD(lParam), HIWORD(lParam));
     }
 }
 
@@ -142,13 +142,34 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 {
     static int last_split;
 //    ChildWnd* pChildWnd = (ChildWnd*)GetWindowLong(hWnd, GWL_USERDATA);
-//    ASSERT(pChildWnd);
+    static ChildWnd* pChildWnd;
 
     switch (message) {
     case WM_CREATE:
         //HWND CreateListView(HWND hwndParent/*, Pane* pane*/, int id, LPTSTR lpszPathName);
-        hTreeWnd = CreateTreeView(hWnd, 1000, _T("c:\\foobar.txt"));
-        hListWnd = CreateListView(hWnd, 1001, _T(""));
+/*
+typedef struct tagCREATESTRUCT {
+    LPVOID    lpCreateParams; 
+    HINSTANCE hInstance; 
+    HMENU     hMenu; 
+    HWND      hwndParent; 
+    int       cy; 
+    int       cx; 
+    int       y; 
+    int       x; 
+    LONG      style; 
+    LPCTSTR   lpszName; 
+    LPCTSTR   lpszClass; 
+    DWORD     dwExStyle; 
+} CREATESTRUCT, *LPCREATESTRUCT; 
+ */
+        pChildWnd = (ChildWnd*)((LPCREATESTRUCT)lParam)->lpCreateParams;
+        ASSERT(pChildWnd);
+
+        pChildWnd->nSplitPos = 250;
+
+        pChildWnd->hTreeWnd = CreateTreeView(hWnd, TREE_WINDOW, &pChildWnd->root);
+        pChildWnd->hListWnd = CreateListView(hWnd, LIST_WINDOW, &pChildWnd->root);
         break;
     case WM_COMMAND:
         if (!_CmdWndProc(hWnd, message, wParam, lParam)) {
@@ -163,7 +184,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 			POINT pt;
 			GetCursorPos(&pt);
 			ScreenToClient(hWnd, &pt);
-			if (pt.x>=nSplitPos-SPLIT_WIDTH/2 && pt.x<nSplitPos+SPLIT_WIDTH/2+1) {
+			if (pt.x>=pChildWnd->nSplitPos-SPLIT_WIDTH/2 && pt.x<pChildWnd->nSplitPos+SPLIT_WIDTH/2+1) {
 				SetCursor(LoadCursor(0, IDC_SIZEWE));
 				return TRUE;
 			}
@@ -178,8 +199,8 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 		RECT rt;
 		int x = LOWORD(lParam);
 		GetClientRect(hWnd, &rt);
-		if (x>=nSplitPos-SPLIT_WIDTH/2 && x<nSplitPos+SPLIT_WIDTH/2+1) {
-			last_split = nSplitPos;
+		if (x>=pChildWnd->nSplitPos-SPLIT_WIDTH/2 && x<pChildWnd->nSplitPos+SPLIT_WIDTH/2+1) {
+			last_split = pChildWnd->nSplitPos;
 #ifdef _NO_EXTENSIONS
 			draw_splitbar(hWnd, last_split);
 #endif
@@ -195,8 +216,8 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 			draw_splitbar(hWnd, last_split);
 			last_split = -1;
 			GetClientRect(hWnd, &rt);
-			nSplitPos = x;
-			ResizeWnd(rt.right, rt.bottom);
+			pChildWnd->nSplitPos = x;
+			ResizeWnd(pChildWnd, rt.right, rt.bottom);
 #endif
 			ReleaseCapture();
 		}
@@ -215,10 +236,10 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 #ifdef _NO_EXTENSIONS
 				draw_splitbar(hWnd, last_split);
 #else
-				nSplitPos = last_split;
+				pChildWnd->nSplitPos = last_split;
 #endif
 				GetClientRect(hWnd, &rt);
-                ResizeWnd(rt.right, rt.bottom);
+                ResizeWnd(pChildWnd, rt.right, rt.bottom);
 				last_split = -1;
 				ReleaseCapture();
 				SetCursor(LoadCursor(0, IDC_ARROW));
@@ -243,7 +264,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 #else
 			GetClientRect(hWnd, &rt);
 			if (x>=0 && x<rt.right) {
-				nSplitPos = x;
+				pChildWnd->nSplitPos = x;
 				//resize_tree(pChildWnd, rt.right, rt.bottom);
 				rt.left = x-SPLIT_WIDTH/2;
 				rt.right = x+SPLIT_WIDTH/2+1;
@@ -267,15 +288,38 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 
 	case WM_SETFOCUS:
 //		SetCurrentDirectory(szPath);
-		SetFocus(nFocusPanel? hRightWnd: hLeftWnd);
+        if (pChildWnd != NULL) {
+		    SetFocus(pChildWnd->nFocusPanel? pChildWnd->hRightWnd: pChildWnd->hLeftWnd);
+        }
 		break;
 
     case WM_TIMER:
         break;
 
+	case WM_NOTIFY:
+        if ((int)wParam == TREE_WINDOW) {
+            if ((((LPNMHDR)lParam)->code) == TVN_SELCHANGED) {
+                Entry* entry = (Entry*)((NMTREEVIEW*)lParam)->itemNew.lParam;
+                if (entry != NULL) {
+                    //RefreshList(pChildWnd->right.hWnd, entry);
+                    //void set_curdir(ChildWnd* child, Entry* entry)
+                    //set_curdir(pChildWnd, entry);
+                }
+            }
+            if (!SendMessage(pChildWnd->hTreeWnd, message, wParam, lParam)) {
+                goto def;
+            }
+        }
+        if ((int)wParam == LIST_WINDOW) {
+            if (!SendMessage(pChildWnd->hListWnd, message, wParam, lParam)) {
+                goto def;
+            }
+        }
+        break;
+
 	case WM_SIZE:
         if (wParam != SIZE_MINIMIZED) {
-            OnSize(wParam, lParam);
+            OnSize(pChildWnd, wParam, lParam);
         }
         // fall through
     default: def:
