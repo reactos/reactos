@@ -24,28 +24,32 @@ typedef struct
 VOID CsrInitProcessData(VOID);
 
 NTSTATUS CsrCreateProcess (PCSRSS_PROCESS_DATA ProcessData,
-			   PCSRSS_API_REQUEST LpcMessage);
+			   PCSRSS_CREATE_PROCESS_REQUEST Request,
+			   PLPCMESSAGE* Reply);
 
 NTSTATUS CsrTerminateProcess(PCSRSS_PROCESS_DATA ProcessData,
-			     PCSRSS_API_REQUEST LpcMessage);
+			     PCSRSS_API_REQUEST LpcMessage,
+			     PLPCMESSAGE* Reply);
 
 NTSTATUS CsrWriteConsole(PCSRSS_PROCESS_DATA ProcessData,
-			 PCSRSS_API_REQUEST LpcMessage, 
-			 PULONG CharCount);
+			 PCSRSS_API_REQUEST LpcMessage,
+			 PLPCMESSAGE* Reply);
 
 NTSTATUS CsrAllocConsole(PCSRSS_PROCESS_DATA ProcessData,
-			 PCSRSS_API_REQUEST LpcMessage, 
-			 PHANDLE ReturnedHandle);
+			 PCSRSS_API_REQUEST LpcMessage,
+			 PLPCMESSAGE* Reply);
 
 NTSTATUS CsrFreeConsole(PCSRSS_PROCESS_DATA ProcessData,
-			PCSRSS_API_REQUEST LpcMessage);
+			PCSRSS_API_REQUEST LpcMessage,
+			PLPCMESSAGE* Reply);
 
 NTSTATUS CsrReadConsole(PCSRSS_PROCESS_DATA ProcessData,
-			PCSRSS_API_REQUEST LpcMessage, 
-			PULONG CharCount);
+			PCSRSS_API_REQUEST LpcMessage,
+			PLPCMESSAGE* Reply);
 
 NTSTATUS CsrConnectProcess(PCSRSS_PROCESS_DATA ProcessData,
-			   PCSRSS_API_REQUEST Request);
+			   PCSRSS_API_REQUEST Request,
+			   PLPCMESSAGE* Reply);
 
 /* print.c */
 VOID DisplayString(LPCWSTR lpwString);
@@ -59,6 +63,18 @@ extern HANDLE CsrssApiHeap;
 /* api/conio.c */
 VOID CsrInitConsole(PCSRSS_PROCESS_DATA ProcessData,
 		    PCSRSS_CONSOLE Console);
+VOID CsrInitConsoleSupport(VOID);
 
 /* api/process.c */
 PCSRSS_PROCESS_DATA CsrGetProcessData(ULONG ProcessId);
+
+/* api/handle.c */
+NTSTATUS CsrInsertObject(PCSRSS_PROCESS_DATA ProcessData,
+			 PHANDLE Handle,
+			 PVOID Object);
+NTSTATUS CsrGetObject(PCSRSS_PROCESS_DATA ProcessData,
+		      HANDLE Handle,
+		      PVOID* Object);
+
+BOOL STDCALL CsrServerInitialization (ULONG ArgumentCount,
+				      PWSTR *ArgumentArray);

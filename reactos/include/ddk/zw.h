@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.25 2000/01/05 21:56:58 dwelch Exp $
+/* $Id: zw.h,v 1.26 2000/03/22 18:35:45 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1139,10 +1139,12 @@ ZwCreateToken(
  * FUNCTION: Returns the callers thread TEB.
  * RETURNS: The resulting teb.
  */
-NT_TEB *
+#if 0
+ NT_TEB *
 STDCALL 
 NtCurrentTeb(VOID
 	);
+#endif
 
 /*
  * FUNCTION: Delays the execution of the calling thread.

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.11 2000/03/16 18:44:57 dwelch Exp $
+/* $Id: create.c,v 1.12 2000/03/22 18:35:57 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -422,7 +422,7 @@ static NTSTATUS PsCreateTeb (HANDLE ProcessHandle,
                                          PAGE_READWRITE);
         if (NT_SUCCESS(Status))
           {
-             DPRINT1 ("TEB allocated at %x\n", TebBase);
+//             DPRINT1 ("TEB allocated at %x\n", TebBase);
              break;
           }
         else
@@ -444,7 +444,8 @@ static NTSTATUS PsCreateTeb (HANDLE ProcessHandle,
      {
         Teb.Peb = Thread->ThreadsProcess->Peb; /* No PEB yet!! */
      }
-
+//   DPRINT1("Teb.Peb %x\n", Teb.Peb);
+   
    /* store stack information from InitialTeb */
    if (InitialTeb != NULL)
      {
@@ -488,14 +489,12 @@ static NTSTATUS PsCreateTeb (HANDLE ProcessHandle,
         return Status;
      }
 
-   /* FIXME: fs:[0] = TEB */
-
    if (TebPtr != NULL)
      {
         *TebPtr = (PNT_TEB)TebBase;
      }
 
-   DPRINT1 ("TEB allocated at %p\n", TebBase);
+//   DPRINT1 ("TEB allocated at %p\n", TebBase);
 
    return Status;
 }

@@ -215,6 +215,21 @@ typedef struct _NT_TEB
 
 #define PEB_STARTUPINFO (0xb0003000)
 
-#define NtCurrentPeb() ((PPEB)PEB_BASE)
+//#define NtCurrentPeb() ((PPEB)PEB_BASE)
+#define NtCurrentPeb() (NtCurrentTeb()->Peb)
+
+static inline PNT_TEB NtCurrentTeb(VOID)
+{
+   int x;
+   
+   __asm__ __volatile__("movl %%fs:0x18, %0\n\t"
+			: "=g" (x)
+			: /* no inputs */
+			);
+   
+   return((PNT_TEB)x);
+}
+
+
 
 #endif /* __INCLUDE_INTERNAL_TEB */

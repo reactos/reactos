@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.12 2000/02/14 22:10:46 ea Exp $
+/* $Id: stubs.c,v 1.13 2000/03/22 18:35:47 dwelch Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -3714,15 +3714,6 @@ ShowConsoleCursor (
 
 
 
-LPVOID
-STDCALL
-TlsGetValue (
-	DWORD	dwTlsIndex
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return NULL;
-}
 
 
 WINBOOL

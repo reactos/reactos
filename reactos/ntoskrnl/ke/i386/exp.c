@@ -251,7 +251,8 @@ asmlinkage void exception_handler(unsigned int edi,
    DbgPrint("Process: %x\n",PsGetCurrentProcess());
    if (PsGetCurrentProcess() != NULL)
      {
-	DbgPrint("Process id: %x\n", PsGetCurrentProcess()->UniqueProcessId);
+	DbgPrint("Process id: %x <", PsGetCurrentProcess()->UniqueProcessId);
+	DbgPrint("%.8s>", PsGetCurrentProcess()->ImageFileName);
      }
    if (PsGetCurrentThread() != NULL)
      {
@@ -280,32 +281,34 @@ asmlinkage void exception_handler(unsigned int edi,
      }
   if ((cs & 0xffff) == KERNEL_CS)
     {
-      DbgPrint("ESP %x\n",esp);
+       DbgPrint("ESP %x\n",esp);
        stack = (PULONG) (esp + 24);
-       stack = (PULONG)(((ULONG)stack) & (~0x3));
+//       stack = (PULONG)(((ULONG)stack) & (~0x3));
        
-      DbgPrint("Stack:\n");
-      for (i = 0; i < 16; i = i + 4)
-        {
-          DbgPrint("%.8x %.8x %.8x %.8x\n", 
-                   stack[i], 
-                   stack[i+1], 
-                   stack[i+2], 
-                   stack[i+3]);
-        }
-      DbgPrint("Frames:\n");
-      for (i = 0; i < 32; i++)
-        {
-          if (stack[i] > ((unsigned int) &stext) &&
+       DbgPrint("stack: %p\n", stack);
+	 
+	 DbgPrint("Stack:\n");
+       for (i = 0; i < 16; i = i + 4)
+	 {
+	    DbgPrint("%.8x %.8x %.8x %.8x\n", 
+		     stack[i], 
+		     stack[i+1], 
+		     stack[i+2], 
+		     stack[i+3]);
+	 }
+       DbgPrint("Frames:\n");
+       for (i = 0; i < 32; i++)
+	 {
+	    if (stack[i] > ((unsigned int) &stext) &&
 	      !(stack[i] >= ((ULONG)&init_stack) &&
 		stack[i] <= ((ULONG)&init_stack_top)))
-            {
-//              DbgPrint("  %.8x", stack[i]);
-	       print_address((PVOID)stack[i]);
-	       DbgPrint(" ");
-            }
-        }
-     }
+	      {
+		 //              DbgPrint("  %.8x", stack[i]);
+		 print_address((PVOID)stack[i]);
+		 DbgPrint(" ");
+	      }
+	 }
+    }
    else
      {
 #if 0

@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.6 2000/02/29 23:57:45 ea Exp $
+/* $Id: init.c,v 1.7 2000/03/22 18:35:58 dwelch Exp $
  * 
  * reactos/subsys/csrss/init.c
  *
@@ -101,7 +101,7 @@ CsrServerInitialization (
 	PrintString("CSR: Unable to parse the command line (Status: %x)\n", Status);
 	return(FALSE);
      }
-
+   
    /* NEW NAMED PORT: \ApiPort */
    RtlInitUnicodeString(&PortName, L"\\Windows\\ApiPort");
    InitializeObjectAttributes(&ObAttributes,

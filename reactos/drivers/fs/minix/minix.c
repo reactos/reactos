@@ -5,7 +5,7 @@
  * PURPOSE:          Minix FSD
  * PROGRAMMER:       David Welch (welch@mcmail.com)
  * UPDATE HISTORY: 
- */
+4 */
 
 /* INCLUDES *****************************************************************/
 
@@ -421,24 +421,27 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT _DriverObject,
  */
 {
    PDEVICE_OBJECT DeviceObject;
-   NTSTATUS ret;
-   UNICODE_STRING ustr;
-   ANSI_STRING astr;
+   NTSTATUS Status;
+   UNICODE_STRING DeviceName;
    
    DbgPrint("Minix FSD 0.0.1\n");
           
    DriverObject = _DriverObject;
    
-   RtlInitAnsiString(&astr,"\\Device\\Minix");
-   RtlAnsiStringToUnicodeString(&ustr,&astr,TRUE);
-   ret = IoCreateDevice(DriverObject,0,&ustr,
-                        FILE_DEVICE_PARALLEL_PORT,0,FALSE,&DeviceObject);
-   if (ret!=STATUS_SUCCESS)
+   RtlInitUnicodeString(&DeviceName, "\\Device\\Minix");
+   Status = IoCreateDevice(DriverObject,
+			   0,
+			   &DeviceName,
+			   FILE_DEVICE_FILE_SYSTEM,
+			   0,
+			   FALSE,
+			   &DeviceObject);
+   if (!NT_SUCCESS(Status))
      {
-	return(ret);
+	return(Status);
      }
 
-   DeviceObject->Flags=0;
+   DeviceObject->Flags = DO_DIRECT_IO;
    DriverObject->MajorFunction[IRP_MJ_CLOSE] = MinixClose;
    DriverObject->MajorFunction[IRP_MJ_CREATE] = MinixCreate;
    DriverObject->MajorFunction[IRP_MJ_READ] = MinixRead;

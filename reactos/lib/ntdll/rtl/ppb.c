@@ -1,4 +1,4 @@
-/* $Id: ppb.c,v 1.5 2000/03/18 13:56:01 ekohl Exp $
+/* $Id: ppb.c,v 1.6 2000/03/22 18:35:51 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -75,47 +75,47 @@ RtlCreateProcessParameters (
 	PUNICODE_STRING	RuntimeData
 	)
 {
-	NTSTATUS Status = STATUS_SUCCESS;
-	PRTL_USER_PROCESS_PARAMETERS Param = NULL;
-	ULONG RegionSize = 0;
-	ULONG Length = 0;
-	PWCHAR Dest;
-	UNICODE_STRING EmptyString;
-	HANDLE CurrentDirectoryHandle;
-	HANDLE ConsoleHandle;
-	ULONG ConsoleFlags;
+   NTSTATUS Status = STATUS_SUCCESS;
+   PRTL_USER_PROCESS_PARAMETERS Param = NULL;
+   ULONG RegionSize = 0;
+   ULONG Length = 0;
+   PWCHAR Dest;
+   UNICODE_STRING EmptyString;
+   HANDLE CurrentDirectoryHandle;
+   HANDLE ConsoleHandle;
+   ULONG ConsoleFlags;
 
-	DPRINT ("RtlCreateProcessParameters\n");
+   DPRINT ("RtlCreateProcessParameters\n");
+   
+   RtlAcquirePebLock ();
 
-	RtlAcquirePebLock ();
+   EmptyString.Length = 0;
+   EmptyString.MaximumLength = sizeof(WCHAR);
+   EmptyString.Buffer = L"";
 
-	EmptyString.Length = 0;
-	EmptyString.MaximumLength = sizeof(WCHAR);
-	EmptyString.Buffer = L"";
-
-	if (NtCurrentPeb()->ProcessParameters)
-	{
-		if (DllPath == NULL)
-			DllPath = &NtCurrentPeb()->ProcessParameters->DllPath;
-		if (Environment == NULL)
-			Environment  = NtCurrentPeb()->ProcessParameters->Environment;
-		if (CurrentDirectory == NULL)
-			CurrentDirectory = &NtCurrentPeb()->ProcessParameters->CurrentDirectory.DosPath;
-		CurrentDirectoryHandle = NtCurrentPeb()->ProcessParameters->CurrentDirectory.Handle;
-		ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
-		ConsoleFlags = NtCurrentPeb()->ProcessParameters->ConsoleFlags;
-	}
-	else
-	{
-		if (DllPath == NULL)
-			DllPath = &EmptyString;
-		if (CurrentDirectory == NULL)
-			CurrentDirectory = &EmptyString;
-		CurrentDirectoryHandle = NULL;
-		ConsoleHandle = NULL;
-		ConsoleFlags = 0;
-	}
-
+   if (NtCurrentPeb()->ProcessParameters)
+     {
+	if (DllPath == NULL)
+	  DllPath = &NtCurrentPeb()->ProcessParameters->DllPath;
+	if (Environment == NULL)
+	  Environment  = NtCurrentPeb()->ProcessParameters->Environment;
+	if (CurrentDirectory == NULL)
+	  CurrentDirectory = &NtCurrentPeb()->ProcessParameters->CurrentDirectory.DosPath;
+	CurrentDirectoryHandle = NtCurrentPeb()->ProcessParameters->CurrentDirectory.Handle;
+	ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+	ConsoleFlags = NtCurrentPeb()->ProcessParameters->ConsoleFlags;
+     }
+   else
+     {
+	if (DllPath == NULL)
+	  DllPath = &EmptyString;
+	if (CurrentDirectory == NULL)
+	  CurrentDirectory = &EmptyString;
+	CurrentDirectoryHandle = NULL;
+	ConsoleHandle = NULL;
+	ConsoleFlags = 0;
+     }
+   
 	if (ImagePathName == NULL)
 		ImagePathName = CommandLine;
 	if (WindowTitle == NULL)

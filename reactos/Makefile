@@ -34,13 +34,14 @@ LOADERS = dos
 #
 # Select the device drivers and filesystems you want
 #
-DEVICE_DRIVERS = blue ide keyboard null parallel serial vidport vga/display vga/miniport
+DEVICE_DRIVERS = blue ide keyboard null parallel serial vidport
 # DEVICE_DRIVERS = beep event floppy ide_test mouse sound test test1
-FS_DRIVERS = vfat
+FS_DRIVERS = vfat minix
 # FS_DRIVERS = minix ext2 template
 KERNEL_SERVICES = $(DEVICE_DRIVERS) $(FS_DRIVERS)
 
-APPS = args hello shell test cat bench apc shm lpc thread event file gditest
+APPS = args hello shell test cat bench apc shm lpc thread event file gditest \
+       pteb
 
 all: buildno $(COMPONENTS) $(DLLS) $(SUBSYS) $(LOADERS) $(KERNEL_SERVICES) $(APPS)
 
@@ -232,7 +233,8 @@ $(SUBSYS:%=%_dist): %_dist:
 
 install: all
 	./install.sh /mnt/hda1
-
+	./install.sh /mnt/hda4
+	
 make_floppy_dirs:
 ifeq ($(DOSCLI),yes)
 	mkdir $(FLOPPY_DIR)\dlls

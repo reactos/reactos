@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.50 2000/03/19 09:14:50 ea Exp $
+/* $Id: loader.c,v 1.51 2000/03/22 18:35:56 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -208,6 +208,7 @@ VOID LdrLoadAutoConfigDrivers (VOID)
          * VGA Miniport driver
          */
 //        LdrLoadAutoConfigDriver( L"vgamp.sys" ); moving to win32k
+//   LdrLoadAutoConfigDriver(L"minixfs.sys");
 }
 
 
@@ -318,7 +319,7 @@ LdrLoadModule(PUNICODE_STRING Filename)
       return  0;
     }
   CHECKPOINT;
-
+   
   /*  Load driver into memory chunk  */
   Status = ZwReadFile(FileHandle, 
                       0, 0, 0, 0, 
@@ -541,6 +542,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING pModuleName)
       DbgPrint("Failed to allocate a virtual section for driver\n");
       return 0;
     }
+   DbgPrint("DriverBase: %x\n", DriverBase);
   CHECKPOINT;
   /*  Copy headers over */
   memcpy(DriverBase, ModuleLoadBase, PEOptionalHeader->SizeOfHeaders);

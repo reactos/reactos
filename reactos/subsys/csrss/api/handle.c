@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.2 1999/12/30 01:51:42 dwelch Exp $
+/* $Id: handle.c,v 1.3 2000/03/22 18:36:00 dwelch Exp $
  *
  * reactos/subsys/csrss/api/handle.c
  *
@@ -11,7 +11,7 @@
 
 #include <ddk/ntddk.h>
 
-#include "csrss.h"
+#include <csrss/csrss.h>
 #include "api.h"
 
 /* FUNCTIONS *****************************************************************/
@@ -51,7 +51,7 @@ NTSTATUS CsrInsertObject(PCSRSS_PROCESS_DATA ProcessData,
 			      sizeof(HANDLE));
    if (NewBlock == NULL)
      {
-	return(STATUS_NO_MORE_MEMORY);
+	return(STATUS_UNSUCCESSFUL);
      }
    RtlCopyMemory(NewBlock, 
 		 ProcessData->HandleTable,

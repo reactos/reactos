@@ -39,22 +39,12 @@ typedef union _LARGE_INTEGER
   {
     DWORD LowPart;
     LONG  HighPart;
-  };
-  struct
-  {
-    DWORD LowPart;
-    LONG  HighPart;
   } u;
   LONGLONG QuadPart;
 } LARGE_INTEGER, *PLARGE_INTEGER;
 
 typedef union _ULARGE_INTEGER
 {
-  struct
-  {
-    DWORD LowPart;
-    DWORD HighPart;
-  };
   struct
   {
     DWORD LowPart;
@@ -4556,6 +4546,7 @@ typedef struct
 
 /* PE executable header.  */
 /* Windows.h now includes pe.h to avoid conflicts! */
+
 
 #ifdef __cplusplus
 }

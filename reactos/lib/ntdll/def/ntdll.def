@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.47 2000/03/18 13:58:33 ekohl Exp $
+; $Id: ntdll.def,v 1.48 2000/03/22 18:35:50 dwelch Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -6,7 +6,7 @@ LIBRARY ntdll.dll
 
 EXPORTS
 CsrClientCallServer@16
-CsrClientConnectToServer@24
+;CsrClientConnectToServer@24
 DbgBreakPoint@0
 DbgPrint
 DbgUserBreakPoint@0

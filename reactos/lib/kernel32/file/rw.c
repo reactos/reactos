@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.8 2000/01/11 17:30:16 ekohl Exp $
+/* $Id: rw.c,v 1.9 2000/03/22 18:35:47 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -34,6 +34,15 @@ WINBOOL STDCALL WriteFile(HANDLE hFile,
    IO_STATUS_BLOCK IIosb;
    PIO_STATUS_BLOCK IoStatusBlock;
    PLARGE_INTEGER ptrOffset;
+
+   if (IsConsoleHandle(hFile))
+     {
+	return(WriteConsoleA(hFile,
+			     lpBuffer,
+			     nNumberOfBytesToWrite,
+			     lpNumberOfBytesWritten,
+			     NULL));
+     }
    
    DPRINT("WriteFile(hFile %x)\n",hFile);
    

@@ -20,7 +20,7 @@
 
 /* FUNCTIONS ***************************************************************/
 
-BOLEAN MinixReadPage(PDEVICE_OBJECT DeviceObject,
+BOOLEAN MinixReadPage(PDEVICE_OBJECT DeviceObject,
 		     ULONG Offset,
 		     PVOID Buffer)
 {
@@ -37,12 +37,12 @@ BOLEAN MinixReadPage(PDEVICE_OBJECT DeviceObject,
 	     return(Result);
 	  }
      }
-   return(True);
+   return(TRUE);
 }
 
 BOOLEAN MinixReadSector(IN PDEVICE_OBJECT pDeviceObject,
 			IN ULONG	DiskSector,
-			IN UCHAR*	Buffer)
+			IN PVOID	Buffer)
 {
     LARGE_INTEGER   sectorNumber;
     PIRP            irp;
@@ -107,7 +107,7 @@ BOOLEAN MinixReadSector(IN PDEVICE_OBJECT pDeviceObject,
 
 BOOLEAN MinixWriteSector(IN PDEVICE_OBJECT pDeviceObject,
 			IN ULONG	DiskSector,
-			IN UCHAR*	Buffer)
+			IN PVOID	Buffer)
 {
     LARGE_INTEGER   sectorNumber;
     PIRP            irp;

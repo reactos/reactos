@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.21 2000/03/18 13:57:02 ekohl Exp $
+/* $Id: startup.c,v 1.22 2000/03/22 18:35:51 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,6 +16,7 @@
 #include <ntdll/ldr.h>
 #include <ntdll/rtl.h>
 #include <csrss/csrss.h>
+#include <ntdll/csr.h>
 
 #define NDEBUG
 #include <ntdll/ntdll.h>
@@ -97,6 +98,16 @@ VOID LdrStartup(VOID)
 	ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
      }
 
+   /*
+    * Connect to the csrss server
+    */
+   Status = CsrClientConnectToServer();
+   if (!NT_SUCCESS(Status))
+     {
+	DbgPrint("Failed to connect to csrss.exe: expect trouble\n");
+//	ZwTerminateProcess(NtCurrentProcess(), Status);
+     }
+   
    DbgPrint("Transferring control to image at %x\n",EntryPoint);
    Status = EntryPoint(Peb);
    ZwTerminateProcess(NtCurrentProcess(),Status);

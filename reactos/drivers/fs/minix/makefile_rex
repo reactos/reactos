@@ -38,4 +38,5 @@ minixfs.sys: $(OBJECTS)
 	- $(RM) temp.exp
 
 WIN32_LEAN_AND_MEAN = yes
+WARNINGS_ARE_ERRORS = yes
 include ../../../rules.mak

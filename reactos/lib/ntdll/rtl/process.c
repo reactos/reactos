@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.17 2000/03/18 13:56:01 ekohl Exp $
+/* $Id: process.c,v 1.18 2000/03/22 18:35:51 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -97,18 +97,24 @@ HANDLE STDCALL KlCreateFirstThread(HANDLE ProcessHandle,
 static NTSTATUS RtlpMapFile(
 PRTL_USER_PROCESS_PARAMETERS	Ppb,
 //PUNICODE_STRING ApplicationName,
-			    PHANDLE Section)
+			    PHANDLE Section,
+			    PCHAR ImageFileName)
 {
    HANDLE hFile;
    IO_STATUS_BLOCK IoStatusBlock;
    OBJECT_ATTRIBUTES ObjectAttributes;
    PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
    NTSTATUS Status;
-
+   PWCHAR s;
+   PWCHAR e;
+   ULONG i;
+   
    hFile = NULL;
 
    RtlDeNormalizeProcessParams (Ppb);
 
+//   DbgPrint("ImagePathName %x\n", Ppb->ImagePathName.Buffer);
+   
    InitializeObjectAttributes(&ObjectAttributes,
 //			      ApplicationName,
 			      &(Ppb->ImagePathName),
@@ -117,7 +123,35 @@ PRTL_USER_PROCESS_PARAMETERS	Ppb,
 			      SecurityDescriptor);
 
    RtlNormalizeProcessParams (Ppb);
-
+   
+   /*
+    * 
+    */
+//   DbgPrint("ImagePathName %x\n", Ppb->ImagePathName.Buffer);
+//   DbgPrint("ImagePathName %S\n", Ppb->ImagePathName.Buffer);
+   s = wcsrchr(Ppb->ImagePathName.Buffer, '\\');
+   if (s == NULL)
+     {
+	s = Ppb->ImagePathName.Buffer;
+     }
+   else
+     {
+	s++;
+     }
+   e = wcschr(s, '.');
+   if (e != NULL)
+     {
+	*e = 0;
+     }
+   for (i = 0; i < 8; i++)
+     {
+	ImageFileName[i] = (CHAR)(s[i]);     
+     }
+   if (e != NULL)
+     {
+	*e = '.';
+     }
+   
    /*
     * Try to open the executable
     */
@@ -269,12 +303,14 @@ RtlCreateUserProcess (
    LPTHREAD_START_ROUTINE  lpStartAddress = NULL;
    PROCESS_BASIC_INFORMATION ProcessBasicInfo;
    ULONG retlen;
-
+   CHAR ImageFileName[8];
+   
    DPRINT("RtlCreateUserProcess\n");
    
 //   Status = RtlpMapFile(CommandLine,
    Status = RtlpMapFile(Ppb,
-			&hSection);
+			&hSection,
+			ImageFileName);
    
    /*
     * Create a new process
@@ -305,7 +341,12 @@ RtlCreateUserProcess (
    DPRINT("ProcessBasicInfo.UniqueProcessId %d\n",
 	  ProcessBasicInfo.UniqueProcessId);
    ProcessInfo->ClientId.UniqueProcess = (HANDLE)ProcessBasicInfo.UniqueProcessId;
-
+			  
+   Status = NtSetInformationProcess(ProcessInfo->ProcessHandle,
+				    ProcessImageFileName,
+				    ImageFileName,
+				    8);
+			  
    /*
     * Create Process Environment Block
     */

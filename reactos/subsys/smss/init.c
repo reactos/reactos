@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.15 2000/02/27 15:47:17 ekohl Exp $
+/* $Id: init.c,v 1.16 2000/03/22 18:36:00 dwelch Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -34,7 +34,7 @@
 #define NDEBUG
 
 /* uncomment to run csrss.exe */
-//#define RUN_CSRSS
+#define RUN_CSRSS
 
 /* GLOBAL VARIABLES *********************************************************/
 
@@ -155,147 +155,169 @@ SmSetEnvironmentVariables (VOID)
 }
 
 
-BOOL
-InitSessionManager (
-	HANDLE	Children[]
-	)
+BOOL InitSessionManager (HANDLE	Children[])
 {
-	NTSTATUS Status;
-	UNICODE_STRING UnicodeString;
-	OBJECT_ATTRIBUTES ObjectAttributes;
-	UNICODE_STRING CmdLineW;
-	UNICODE_STRING CurrentDirectoryW;
-	PRTL_USER_PROCESS_PARAMETERS ProcessParameters;
-	RTL_USER_PROCESS_INFO ProcessInfo;
+   NTSTATUS Status;
+   UNICODE_STRING UnicodeString;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   UNICODE_STRING CmdLineW;
+   UNICODE_STRING CurrentDirectoryW;
+   PRTL_USER_PROCESS_PARAMETERS ProcessParameters;
+   RTL_USER_PROCESS_INFO ProcessInfo;
+   HANDLE CsrssInitEvent;
+   
+   /* Create the "\SmApiPort" object (LPC) */
+   RtlInitUnicodeString (&UnicodeString,
+			 L"\\SmApiPort");
+   InitializeObjectAttributes (&ObjectAttributes,
+			       &UnicodeString,
+			       0xff,
+			       NULL,
+			       NULL);
+   
+   Status = NtCreatePort (&SmApiPort,
+			  &ObjectAttributes,
+			  0,
+			  0,
+			  0);
 
-	/* Create the "\SmApiPort" object (LPC) */
-	RtlInitUnicodeString (&UnicodeString,
-	                      L"\\SmApiPort");
-	InitializeObjectAttributes (&ObjectAttributes,
-	                            &UnicodeString,
-	                            0xff,
-	                            NULL,
-	                            NULL);
-
-	Status = NtCreatePort (&SmApiPort,
-	                       &ObjectAttributes,
-	                       0,
-	                       0,
-	                       0);
-
-	if (!NT_SUCCESS(Status))
-	{
-		return FALSE;
-	}
-
+   if (!NT_SUCCESS(Status))
+     {
+	return FALSE;
+     }
+   
 #ifndef NDEBUG
-	DisplayString (L"SM: \\SmApiPort created...\n");
+   DisplayString (L"SM: \\SmApiPort created...\n");
 #endif
+   
+   /* Create two threads for "\SmApiPort" */
+   RtlCreateUserThread (NtCurrentProcess (),
+			NULL,
+			FALSE,
+			0,
+			NULL,
+			NULL,
+			(PTHREAD_START_ROUTINE)SmApiThread,
+			(PVOID)SmApiPort,
+			NULL,
+			NULL);
 
-	/* Create two threads for "\SmApiPort" */
-	RtlCreateUserThread (NtCurrentProcess (),
-	                     NULL,
-	                     FALSE,
-	                     0,
-	                     NULL,
-	                     NULL,
-	                     (PTHREAD_START_ROUTINE)SmApiThread,
-	                     (PVOID)SmApiPort,
-	                     NULL,
-	                     NULL);
-
-	RtlCreateUserThread (NtCurrentProcess (),
-	                     NULL,
-	                     FALSE,
-	                     0,
-	                     NULL,
-	                     NULL,
-	                     (PTHREAD_START_ROUTINE)SmApiThread,
-	                     (PVOID)SmApiPort,
-	                     NULL,
-	                     NULL);
-
-	/* Create the system environment */
-	Status = RtlCreateEnvironment (TRUE,
-	                               &SmSystemEnvironment);
-	if (!NT_SUCCESS(Status))
-		return FALSE;
+   RtlCreateUserThread (NtCurrentProcess (),
+			NULL,
+			FALSE,
+			0,
+			NULL,
+			NULL,
+			(PTHREAD_START_ROUTINE)SmApiThread,
+			(PVOID)SmApiPort,
+			NULL,
+			NULL);
+   
+   /* Create the system environment */
+   Status = RtlCreateEnvironment (TRUE,
+				  &SmSystemEnvironment);
+   if (!NT_SUCCESS(Status))
+     return FALSE;
 #ifndef NDEBUG
-	DisplayString (L"SM: System Environment created\n");
+   DisplayString (L"SM: System Environment created\n");
 #endif
 
-	/* FIXME: Define symbolic links to kernel devices (MS-DOS names) */
-
-	/* FIXME: Run all programs in the boot execution list */
-
-	/* FIXME: Process the file rename list */
-
-	/* FIXME: Load the well known DLLs */
-
+   /* FIXME: Define symbolic links to kernel devices (MS-DOS names) */
+   
+   /* FIXME: Run all programs in the boot execution list */
+   
+   /* FIXME: Process the file rename list */
+   
+   /* FIXME: Load the well known DLLs */
+   
 #if 0
-	/* Create paging files */
-	SmCreatePagingFiles ();
+   /* Create paging files */
+   SmCreatePagingFiles ();
 #endif
-
+   
 #if 0
-	/* Load missing registry hives */
-	NtInitializeRegistry (FALSE);
+   /* Load missing registry hives */
+   NtInitializeRegistry (FALSE);
 #endif
+   
+   /* Set environment variables from registry */
+   SmSetEnvironmentVariables ();
 
-	/* Set environment variables from registry */
-	SmSetEnvironmentVariables ();
-
-	/* Load the kernel mode driver win32k.sys */
-	RtlInitUnicodeString (&CmdLineW,
-	                      L"\\??\\C:\\reactos\\system32\\drivers\\win32k.sys");
-	Status = NtLoadDriver (&CmdLineW);
-
-	if (!NT_SUCCESS(Status))
-	{
-		return FALSE;
-	}
-
+   /* Load the kernel mode driver win32k.sys */
+   RtlInitUnicodeString (&CmdLineW,
+			 L"\\??\\C:\\reactos\\system32\\drivers\\win32k.sys");
+   Status = NtLoadDriver (&CmdLineW);
+   
+   if (!NT_SUCCESS(Status))
+     {
+	return FALSE;
+     }
+   
 #ifdef RUN_CSRSS
-	/* Start the Win32 subsystem (csrss.exe) */
-	DisplayString (L"SM: Executing csrss.exe\n");
+   RtlInitUnicodeString(&UnicodeString,
+			L"\\CsrssInitDone");
+   InitializeObjectAttributes(&ObjectAttributes,
+			      &UnicodeString,
+			      EVENT_ALL_ACCESS,
+			      0,
+			      NULL);
+   Status = NtCreateEvent(&CsrssInitEvent,
+			  EVENT_ALL_ACCESS,
+			  &ObjectAttributes,
+			  TRUE,
+			  FALSE);
+   if (!NT_SUCCESS(Status))
+     {
+	DbgPrint("Failed to create csrss notification event\n");
+     }
+   
+   /* Start the Win32 subsystem (csrss.exe) */
+   DisplayString (L"SM: Executing csrss.exe\n");
+   
+   RtlInitUnicodeString (&UnicodeString,
+			 L"\\??\\C:\\reactos\\system32\\csrss.exe");
+   
+   /* initialize current directory */
+   RtlInitUnicodeString (&CurrentDirectoryW,
+			 L"C:\\reactos\\system32\\");
+   
+   RtlCreateProcessParameters (&ProcessParameters,
+			       &UnicodeString,
+			       NULL,
+			       &CurrentDirectoryW,
+			       NULL,
+			       SmSystemEnvironment,
+			       NULL,
+			       NULL,
+			       NULL,
+			       NULL);
 
-	RtlInitUnicodeString (&UnicodeString,
-	                      L"\\??\\C:\\reactos\\system32\\csrss.exe");
-
-	/* initialize current directory */
-	RtlInitUnicodeString (&CurrentDirectoryW,
-	                      L"C:\\reactos\\system32\\");
-
-	RtlCreateProcessParameters (&ProcessParameters,
-	                            &UnicodeString,
-	                            NULL,
-	                            &CurrentDirectoryW,
-	                            NULL,
-	                            SmSystemEnvironment,
-	                            NULL,
-	                            NULL,
-	                            NULL,
-	                            NULL);
-
-	Status = RtlCreateUserProcess (&UnicodeString,
+   Status = RtlCreateUserProcess (&UnicodeString,
+				  0,
+				  ProcessParameters,
+				  NULL,
+				  NULL,
+				  FALSE,
+				  0,
+				  0,
 	                               0,
-	                               ProcessParameters,
-	                               NULL,
-	                               NULL,
-	                               FALSE,
-	                               0,
-	                               0,
-	                               0,
-	                               &ProcessInfo);
-
-	RtlDestroyProcessParameters (ProcessParameters);
-
-	if (!NT_SUCCESS(Status))
-	{
-		DisplayString (L"SM: Loading csrss.exe failed!\n");
-		return FALSE;
-	}
-	Children[CHILD_CSRSS] = ProcessInfo.ProcessHandle;
+				  &ProcessInfo);
+   
+   RtlDestroyProcessParameters (ProcessParameters);
+   
+   if (!NT_SUCCESS(Status))
+     {
+	DisplayString (L"SM: Loading csrss.exe failed!\n");
+	return FALSE;
+     }
+   
+   DbgPrint("SM: Waiting for csrss\n");
+   NtWaitForSingleObject(CsrssInitEvent,
+			 FALSE,
+			 NULL);
+   DbgPrint("SM: Finished waiting for csrss\n");
+   
+   Children[CHILD_CSRSS] = ProcessInfo.ProcessHandle;
 #endif /* RUN_CSRSS */
 
 

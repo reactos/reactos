@@ -78,10 +78,10 @@ struct minix_dir_entry {
 
 BOOLEAN MinixReadSector(IN PDEVICE_OBJECT pDeviceObject,
 			IN ULONG	DiskSector,
-			IN UCHAR*	Buffer);
+			IN PVOID	Buffer);
 BOOLEAN MinixWriteSector(IN PDEVICE_OBJECT pDeviceObject,
 			IN ULONG	DiskSector,
-			IN UCHAR*	Buffer);
+			IN PVOID	Buffer);
 
 #define BLOCKSIZE (1024)
 
@@ -94,12 +94,10 @@ typedef struct
    char superblock_buf[BLOCKSIZE];
    struct minix_super_block* sb;
    PFILE_OBJECT FileObject;
-   PBCB Bcb;
 } MINIX_DEVICE_EXTENSION, *PMINIX_DEVICE_EXTENSION;
 
 typedef struct
 {
-   PBCB Bcb;
    struct minix_inode inode;
 } MINIX_FSCONTEXT, *PMINIX_FSCONTEXT;
 
@@ -129,9 +127,6 @@ NTSTATUS MinixReadBlock(PDEVICE_OBJECT DeviceObject,
 			ULONG FileOffset,
 			PULONG DiskOffset);
 
-
-NTSTATUS MinixRequestCacheBlock(PDEVICE_OBJECT DeviceObject,
-				PBCB Bcb,
-				ULONG FileOffset,
-				PVOID* BaseAddress,
-				PCACHE_SEGMENT* CacheSeg);
+BOOLEAN MinixReadPage(PDEVICE_OBJECT DeviceObject,
+		      ULONG Offset,
+		      PVOID Buffer);

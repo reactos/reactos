@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.24 2000/03/18 19:55:53 ekohl Exp $
+/* $Id: create.c,v 1.25 2000/03/22 18:35:48 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -22,6 +22,8 @@
 #include <internal/teb.h>
 #include <ntdll/base.h>
 #include <ntdll/rtl.h>
+#include <csrss/csrss.h>
+#include <ntdll/csr.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
@@ -383,10 +385,43 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
    ULONG retlen;
    PRTL_USER_PROCESS_PARAMETERS Ppb;
    UNICODE_STRING CommandLine_U;
-
+   CSRSS_API_REQUEST CsrRequest;
+   CSRSS_API_REPLY CsrReply;
+   HANDLE ConsoleHandle;
+   CHAR ImageFileName[8];
+   PWCHAR s;
+   PWCHAR e;
+   ULONG i;
+   
    DPRINT("CreateProcessW(lpApplicationName '%S', lpCommandLine '%S')\n",
 	   lpApplicationName,lpCommandLine);
 
+   /*
+    * Store the image file name for the process
+    */
+   s = wcsrchr(lpApplicationName, '\\');
+   if (s == NULL)
+     {
+	s = lpApplicationName;
+     }
+   else
+     {
+	s++;
+     } 
+   e = wcschr(s, '.');
+   if (e != NULL)
+     {
+	*e = 0;
+     }	
+   for (i = 0; i < 8; i++)
+     {
+	ImageFileName[i] = (CHAR)(s[i]);
+     }
+   if (e != NULL)
+     {
+	*e = 0;
+     }
+   
    /*
     * Process the application name and command line
     */
@@ -434,8 +469,7 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
    
    /*
     * Create a new process
-    */
-   
+    */   
    Status = NtCreateProcess(&hProcess,
 			    PROCESS_ALL_ACCESS,
 			    NULL,
@@ -447,8 +481,7 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
    
    /*
     * Get some information about the process
-    */
-   
+    */   
    ZwQueryInformationProcess(hProcess,
 			     ProcessBasicInformation,
 			     &ProcessBasicInfo,
@@ -457,21 +490,50 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
    DPRINT("ProcessBasicInfo.UniqueProcessId %d\n",
 	  ProcessBasicInfo.UniqueProcessId);
    lpProcessInformation->dwProcessId = ProcessBasicInfo.UniqueProcessId;
-
+   
+   /*
+    * Tell the csrss server we are creating a new process
+    */
+   CsrRequest.Type = CSRSS_CREATE_PROCESS;
+   CsrRequest.Data.CreateProcessRequest.NewProcessId = 
+     ProcessBasicInfo.UniqueProcessId;
+   CsrRequest.Data.CreateProcessRequest.Flags = 0;
+   Status = CsrClientCallServer(&CsrRequest, 
+				&CsrReply,
+				sizeof(CSRSS_API_REQUEST),
+				sizeof(CSRSS_API_REPLY));
+   if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrReply.Status))
+     {
+	DbgPrint("Failed to tell csrss about new process. Expect trouble.\n");
+     }
+   ConsoleHandle = CsrReply.Data.CreateProcessReply.ConsoleHandle;
+   
+//   DbgPrint("ConsoleHandle %x\n", ConsoleHandle);
+   
    /*
     * Create Process Environment Block
-    */
+    */   
    DPRINT("Creating peb\n");
+   
+   Ppb->ConsoleHandle = ConsoleHandle;      
    KlInitPeb(hProcess, Ppb);
 
    RtlDestroyProcessParameters (Ppb);
 
+   Status = NtSetInformationProcess(hProcess,
+				    ProcessImageFileName,
+				    ImageFileName,
+				    8);
+   
    DPRINT("Creating thread for process\n");
    lpStartAddress = (LPTHREAD_START_ROUTINE)
      ((PIMAGE_OPTIONAL_HEADER)OPTHDROFFSET(NTDLL_BASE))->
      AddressOfEntryPoint + 
      ((PIMAGE_OPTIONAL_HEADER)OPTHDROFFSET(NTDLL_BASE))->ImageBase;
-   
+      
+   /*
+    * Create the thread for the kernel
+    */
    hThread =  KlCreateFirstThread(hProcess,
 				  lpThreadAttributes,
 //				  Headers.OptionalHeader.SizeOfStackReserve,

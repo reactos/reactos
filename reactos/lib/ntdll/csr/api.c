@@ -1,4 +1,4 @@
-/* $Id: api.c,v 1.3 2000/02/27 02:05:06 ekohl Exp $
+/* $Id: api.c,v 1.4 2000/03/22 18:35:50 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -23,35 +23,30 @@ static HANDLE WindowsApiPort;
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS
-STDCALL
-CsrClientCallServer(PCSRSS_API_REQUEST Request,
-		    PCSRSS_API_REPLY Reply,
-		    ULONG Unknown3,
-		    ULONG Unknown4)
+NTSTATUS STDCALL CsrClientCallServer(PCSRSS_API_REQUEST Request,
+				     PCSRSS_API_REPLY Reply,
+				     ULONG Length,
+				     ULONG ReplyLength)
 {
    LPCMESSAGE LpcRequest;
    LPCMESSAGE LpcReply;
    NTSTATUS Status;
    
-   LpcRequest.ActualMessageLength = MAX_MESSAGE_DATA;
-   LpcRequest.TotalMessageLength = sizeof(LPCMESSAGE);
-   memcpy(LpcRequest.MessageData, Request, sizeof(CSRSS_API_REQUEST));
+//   DbgPrint("Length %d\n", Length);
+   
+   LpcRequest.ActualMessageLength = Length;
+   LpcRequest.TotalMessageLength = sizeof(LPCMESSAGE) + Length;
+   memcpy(LpcRequest.MessageData, Request, Length);
    
    Status = NtRequestWaitReplyPort(WindowsApiPort,
 				   &LpcRequest,
 				   &LpcReply);
+   memcpy(Reply, LpcReply.MessageData, ReplyLength);
+//   DbgPrint("Status %x Reply.Status %x\n", Status, Reply->Status);
    return(Status);
 }
 
-NTSTATUS
-STDCALL
-CsrClientConnectToServer(ULONG Unknown1,
-			 ULONG Unknown2,
-			 ULONG Unknown3,
-			 ULONG Unknown4,
-			 ULONG Unknown5,
-			 ULONG Unknown6)
+NTSTATUS STDCALL CsrClientConnectToServer(VOID)
 {
    NTSTATUS Status;
    UNICODE_STRING PortName;
@@ -77,7 +72,8 @@ CsrClientConnectToServer(ULONG Unknown1,
    Request.Type = CSRSS_CONNECT_PROCESS;
    Status = CsrClientCallServer(&Request,
 				&Reply,
-				0, 0);
+				sizeof(CSRSS_API_REQUEST),
+				sizeof(CSRSS_API_REPLY));
    if (!NT_SUCCESS(Status))
      {
 	return(Status);

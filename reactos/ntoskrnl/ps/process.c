@@ -173,6 +173,8 @@ VOID PsInitProcessManagment(VOID)
    InitializeListHead( &KProcess->ThreadListHead );
    KeReleaseSpinLock(&PsProcessListLock, oldIrql);
    
+   strcpy(SystemProcess->ImageFileName, "SYSTEM");
+   
    ObCreateHandle(SystemProcess,
 		  SystemProcess,
 		  PROCESS_ALL_ACCESS,
@@ -195,7 +197,8 @@ VOID PiDeleteProcess(PVOID ObjectBody)
 
 
 static NTSTATUS PsCreatePeb(HANDLE ProcessHandle,
-			    PVOID ImageBase)
+			    PVOID ImageBase,
+			    PVOID* RPeb)
 {
    NTSTATUS Status;
    PVOID PebBase;
@@ -226,7 +229,9 @@ static NTSTATUS PsCreatePeb(HANDLE ProcessHandle,
 			&BytesWritten);
 
    DPRINT("PsCreatePeb: Peb created at %x\n", PebBase);
-
+   
+   *RPeb = PebBase;
+   
    return(STATUS_SUCCESS);
 }
 
@@ -297,6 +302,7 @@ NTSTATUS STDCALL NtCreateProcess (OUT PHANDLE ProcessHandle,
    KIRQL oldIrql;
    PVOID LdrStartupAddr;
    PVOID ImageBase;
+   PVOID Peb;
    
    DPRINT("NtCreateProcess(ObjectAttributes %x)\n",ObjectAttributes);
 
@@ -383,12 +389,14 @@ NTSTATUS STDCALL NtCreateProcess (OUT PHANDLE ProcessHandle,
     */
    DPRINT("Creating PEB\n");
    Status = PsCreatePeb(*ProcessHandle,
-			ImageBase);
+			ImageBase,
+			&Peb);
    if (!NT_SUCCESS(Status))
      {
         DbgPrint("NtCreateProcess() Peb creation failed: Status %x\n",Status);
 	return(Status);
      }
+   Process->Peb = Peb;
    
    ObDereferenceObject(Process);
    ObDereferenceObject(ParentProcess);
@@ -617,6 +625,12 @@ NTSTATUS STDCALL NtSetInformationProcess(IN HANDLE ProcessHandle,
 	Status = PspAssignPrimaryToken(Process, *ProcessAccessTokenP);
 	break;
 	
+      case ProcessImageFileName:
+	memcpy(Process->ImageFileName, ProcessInformation, 8);
+//	DPRINT1("Process->ImageFileName %.8s\n", Process->ImageFileName);
+	Status = STATUS_SUCCESS;
+	break;
+	  
       case ProcessLdtInformation:
       case ProcessLdtSize:
       case ProcessDefaultHardErrorMode:

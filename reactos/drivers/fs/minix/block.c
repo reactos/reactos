@@ -11,7 +11,7 @@
 
 #include <ddk/ntddk.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 #include "minix.h"
@@ -25,12 +25,11 @@ static unsigned int MinixGetBlock(PDEVICE_OBJECT DeviceObject,
 {
    int block;
    PVOID BaseAddress;
-   PCACHE_SEGMENT CacheSeg;
    ULONG blk;
+      
+   blk = FileOffset / BLOCKSIZE;
    
    DPRINT("MinixGetBlock(inode %x, blk %d)\n",inode,blk);
-   
-   blk = FileOffset / BLOCKSIZE;
    
    /*
     * The first few blocks are available in the inode
@@ -49,17 +48,15 @@ static unsigned int MinixGetBlock(PDEVICE_OBJECT DeviceObject,
      {
 	block = inode->i_zone[7];
 	
-	MinixRequestCacheBlock(DeviceObject,
-			       DeviceExt->Bcb,
-			       block * BLOCKSIZE,
-			       &BaseAddress,
-			       &CacheSeg);
-			       
-	block = ((PUSHORT)BaseAddress)[blk];
+	BaseAddress = ExAllocatePool(NonPagedPool, 512);
+	
+	MinixReadSector(DeviceObject,
+			block, 
+			BaseAddress);
+	
+	block = ((PUSHORT)(BaseAddress))[blk];
 
-	CcReleaseCachePage(DeviceExt->Bcb,
-			   CacheSeg,
-			   TRUE);
+	ExFreePool(BaseAddress);
 	
 	return(block);
      }
@@ -69,31 +66,27 @@ static unsigned int MinixGetBlock(PDEVICE_OBJECT DeviceObject,
     */
    blk = blk - 512;
    block = inode->i_zone[8];
-
-   MinixRequestCacheBlock(DeviceObject,
-			  DeviceExt->Bcb,
-			  block * BLOCKSIZE,
-			  &BaseAddress,
-			  &CacheSeg);
+   
+   BaseAddress = ExAllocatePool(NonPagedPool, 512);
+   
+   MinixReadSector(DeviceObject,
+		   block,
+		   BaseAddress);
    
    block = ((PUSHORT)BaseAddress)[(blk>>9)&511];
 
-   CcReleaseCachePage(DeviceExt->Bcb,
-		      CacheSeg,
-		      TRUE);
+   ExFreePool(BaseAddress);
    
-   MinixRequestCacheBlock(DeviceObject,
-			  DeviceExt->Bcb,
-			  block * BLOCKSIZE,
-			  &BaseAddress,
-			  &CacheSeg);
+   
+   BaseAddress = ExAllocatePool(NonPagedPool, 512);
+      
+   MinixReadSector(DeviceObject,
+		   block,
+		   BaseAddress);
    
    block = ((PUSHORT)BaseAddress)[blk&512];
 
-   CcReleaseCachePage(DeviceExt->Bcb,
-		      CacheSeg,
-		      TRUE);
-
+   ExFreePool(BaseAddress);
    
    return(block);
 }
@@ -105,7 +98,6 @@ NTSTATUS MinixReadBlock(PDEVICE_OBJECT DeviceObject,
 			PULONG DiskOffset)
 {
    unsigned int block;
-   NTSTATUS Status;
    
    DPRINT("MinixReadBlock()\n");
    

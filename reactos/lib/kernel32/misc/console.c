@@ -18,6 +18,9 @@
 #include <assert.h>
 #include <wchar.h>
 
+#include <csrss/csrss.h>
+#include <ntdll/csr.h>
+
 #define NDEBUG
 #include <kernel32/kernel32.h>
 
@@ -96,117 +99,118 @@ WINBASEAPI BOOL WINAPI SetStdHandle(DWORD nStdHandle,
 /*--------------------------------------------------------------
  *	WriteConsoleA
  */
-WINBOOL
-STDCALL
-WriteConsoleA(
-    HANDLE hConsoleOutput,
-    CONST VOID *lpBuffer,
-    DWORD nNumberOfCharsToWrite,
-    LPDWORD lpNumberOfCharsWritten,
-    LPVOID lpReserved
-    )
+WINBOOL STDCALL WriteConsoleA(HANDLE hConsoleOutput,
+			      CONST VOID *lpBuffer,
+			      DWORD nNumberOfCharsToWrite,
+			      LPDWORD lpNumberOfCharsWritten,
+			      LPVOID lpReserved)
 {
-	return WriteFile(hConsoleOutput, lpBuffer, nNumberOfCharsToWrite,lpNumberOfCharsWritten, lpReserved);
+   PCSRSS_API_REQUEST Request;
+   CSRSS_API_REPLY Reply;
+   NTSTATUS Status;
+   
+   Request = HeapAlloc(GetProcessHeap(),
+		       HEAP_ZERO_MEMORY,
+		       sizeof(CSRSS_API_REQUEST) + nNumberOfCharsToWrite);
+   if (Request == NULL)
+     {
+	return(FALSE);
+     }
+   
+   Request->Type = CSRSS_WRITE_CONSOLE;
+   Request->Data.WriteConsoleRequest.ConsoleHandle = hConsoleOutput;
+   Request->Data.WriteConsoleRequest.NrCharactersToWrite =
+     nNumberOfCharsToWrite;
+//   DbgPrint("nNumberOfCharsToWrite %d\n", nNumberOfCharsToWrite);
+//   DbgPrint("Buffer %s\n", Request->Data.WriteConsoleRequest.Buffer);
+   memcpy(Request->Data.WriteConsoleRequest.Buffer,
+	  lpBuffer,
+	  nNumberOfCharsToWrite);
+   
+   Status = CsrClientCallServer(Request, 
+				&Reply,
+				sizeof(CSRSS_API_REQUEST) + 
+				nNumberOfCharsToWrite,
+				sizeof(CSRSS_API_REPLY));
+   if (!NT_SUCCESS(Status))
+     {
+	return(FALSE);
+     }
+   
+   if (lpNumberOfCharsWritten != NULL)
+     {
+	*lpNumberOfCharsWritten = 
+	  Reply.Data.WriteConsoleReply.NrCharactersWritten;
+     }
+   
+   return(TRUE);
 }
 
 
 /*--------------------------------------------------------------
  *	ReadConsoleA
  */
-WINBOOL
-STDCALL
-ReadConsoleA(HANDLE hConsoleInput,
+WINBOOL STDCALL ReadConsoleA(HANDLE hConsoleInput,
 			     LPVOID lpBuffer,
 			     DWORD nNumberOfCharsToRead,
 			     LPDWORD lpNumberOfCharsRead,
 			     LPVOID lpReserved)
 {
-   KEY_EVENT_RECORD KeyEventRecord;
-   BOOL  stat = TRUE;
-   PCHAR Buffer = (PCHAR)lpBuffer;
-   DWORD Result;
-   int   i;
+   CSRSS_API_REQUEST Request;
+   PCSRSS_API_REPLY Reply;
+   NTSTATUS Status;
    
-   for (i=0; (stat && i<nNumberOfCharsToRead);)     
+   Reply = HeapAlloc(GetProcessHeap(),
+		     HEAP_ZERO_MEMORY,
+		     sizeof(CSRSS_API_REPLY) + nNumberOfCharsToRead);
+   if (Reply == NULL)
      {
-	stat = ReadFile(hConsoleInput,
-			&KeyEventRecord,
-                        sizeof(KEY_EVENT_RECORD),
-			&Result,
-			NULL);
-        if (stat && KeyEventRecord.bKeyDown && KeyEventRecord.uChar.AsciiChar != 0)
-	  {
-             Buffer[i] = KeyEventRecord.uChar.AsciiChar;
-	     i++;
-	  }
+	return(FALSE);
      }
+   
+   Request.Type = CSRSS_READ_CONSOLE;
+   Request.Data.ReadConsoleRequest.ConsoleHandle = hConsoleInput;
+   Request.Data.ReadConsoleRequest.NrCharactersToRead =
+     nNumberOfCharsToRead;
+   
+   Status = CsrClientCallServer(&Request, 
+				Reply,
+				sizeof(CSRSS_API_REQUEST),
+				sizeof(CSRSS_API_REPLY) + 
+				nNumberOfCharsToRead);
+   if (!NT_SUCCESS(Status) || !NT_SUCCESS(Reply->Status))
+     {
+	return(FALSE);
+     }
+   
    if (lpNumberOfCharsRead != NULL)
      {
-	*lpNumberOfCharsRead = i;
+	*lpNumberOfCharsRead =
+	  Reply->Data.ReadConsoleReply.NrCharactersRead;
      }
-   return(stat);
+   memcpy(lpBuffer, 
+	  Reply->Data.ReadConsoleReply.Buffer,
+	  Reply->Data.ReadConsoleReply.NrCharactersRead);
+   
+   return(TRUE);
 }
 
 
 /*--------------------------------------------------------------
  *	AllocConsole
  */
-WINBOOL
-STDCALL
-AllocConsole( VOID )
+WINBOOL STDCALL AllocConsole(VOID)
 {
-	/* FIXME: add CreateFile error checking */
-	StdInput = CreateFile("\\\\.\\Keyboard",
-			       FILE_GENERIC_READ,
-			       0,
-			       NULL,
-			       OPEN_EXISTING,
-			       0,
-			       NULL);
-   
-	StdOutput = CreateFile("\\\\.\\BlueScreen",
-			       FILE_GENERIC_WRITE|FILE_GENERIC_READ,
-			       0,
-			       NULL,
-			       OPEN_EXISTING,
-			       0,
-			       NULL);
-
-	StdError = StdOutput;
-
-	return TRUE;
+   DbgPrint("AllocConsole() is unimplemented\n");
 }
 
 
 /*--------------------------------------------------------------
  *	FreeConsole
  */
-WINBOOL
-STDCALL
-FreeConsole( VOID )
+WINBOOL STDCALL FreeConsole(VOID)
 {
-	if (StdInput == INVALID_HANDLE_VALUE)
-	{
-		SetLastError(0); /* FIXME: What error code? */
-		return FALSE;
-	}
-	SetLastError(ERROR_SUCCESS);
-	CloseHandle(StdInput);
-
-	if (StdError != INVALID_HANDLE_VALUE)
-	{
-		if (StdError != StdOutput)
-			CloseHandle(StdError);
-		StdError = INVALID_HANDLE_VALUE;
-	}
-
-	CloseHandle(StdOutput);
-
-#ifdef EXTENDED_CONSOLE
-	CloseHandle(StdAux);
-	CloseHandle(StdPrint);
-#endif
-	return TRUE; /* FIXME: error check needed? */
+   DbgPrint("FreeConsole() is unimplemented");
 }
 
 

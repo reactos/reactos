@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.10 2000/02/27 02:04:06 ekohl Exp $
+/* $Id: dllmain.c,v 1.11 2000/03/22 18:35:47 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -41,18 +41,6 @@ WINBOOL STDCALL DllMain(HANDLE hInst,
 	  {
 	     NTSTATUS Status;
 	     DPRINT("DLL_PROCESS_ATTACH\n");
-
-	     /*
-	      * 
-	      */
-	     Status = CsrClientConnectToServer(0,0,0,0,0,0);
-	     if (!NT_SUCCESS(Status))
-	       {
-		  DbgPrint("Failed to connect to csrss.exe: expect trouble\n");
-		  /* return FALSE; */
-	       }
-
-	     AllocConsole();
 	     break;
 	  }
       case DLL_PROCESS_DETACH:

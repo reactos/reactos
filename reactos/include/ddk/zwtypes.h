@@ -92,7 +92,8 @@ typedef struct _LPCMESSAGE
 #define ProcessWx86Information			19
 #define ProcessHandleCount			20
 #define ProcessAffinityMask			21
-#define MaxProcessInfoClass			22
+#define ProcessImageFileName                    22
+#define MaxProcessInfoClass			23
 
 // thread query / set information class
 #define ThreadBasicInformation			0

@@ -15,7 +15,7 @@
 #include <internal/bitops.h>
 #include <ddk/ntifs.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 #include "minix.h"
@@ -106,13 +106,9 @@ NTSTATUS MinixReadInode(PDEVICE_OBJECT DeviceObject,
 			ULONG ino, 
 			struct minix_inode* result)
 {
-   PCCB Ccb;
    int block;
    struct minix_inode* inodes;
-   NTSTATUS Status;
    PVOID BaseAddress;
-   BOOLEAN UptoDate;
-   PCACHE_SEGMENT* CacheSeg;
    
    DPRINT("MinixReadInode(ino %x, result %x)\n",ino,result);
    
@@ -121,29 +117,21 @@ NTSTATUS MinixReadInode(PDEVICE_OBJECT DeviceObject,
    DPRINT("Reading block %x offset %x\n",block,block*BLOCKSIZE);
    DPRINT("Index %x\n",(ino-1)%MINIX_INODES_PER_BLOCK);
    
-   Status = CcRequestCachePage(DeviceExt->Bcb,
-			       block,
-			       &BaseAddress,
-			       &UptoDate,
-			       &CacheSeg);
+   BaseAddress = ExAllocatePool(NonPagedPool, PAGESIZE);
    
-   if (!UptoDate)
-     {
-	MinixReadPage(DeviceExt,
-		      PAGE_ROUND_DOWN(block),
-		      BaseAddress);
-     }
-   
+   MinixReadPage(DeviceObject,
+		 block,
+		 BaseAddress);
+
    inodes = (struct minix_inode *)(BaseAddress + ((block % 4) * 512));
      
-   memcpy(result,&inodes[(ino-1)%MINIX_INODES_PER_BLOCK],
+   memcpy(result,
+	  &inodes[(ino-1)%MINIX_INODES_PER_BLOCK],
 	  sizeof(struct minix_inode));
    DPRINT("result->i_uid %x\n",result->i_uid);
    DPRINT("result->i_size %x\n",result->i_size);
-
-   CcFreeCacheSegment(DeviceExt->FileObject,
-		      DeviceExt->Bcb,
-		      CacheSeg);
    
+   ExFreePool(BaseAddress);
+
    return(STATUS_SUCCESS);
 }

@@ -1,4 +1,4 @@
-/* $Id: shell.c,v 1.35 2000/03/16 20:02:44 ekohl Exp $
+/* $Id: shell.c,v 1.36 2000/03/22 18:35:45 dwelch Exp $
  *
  * PROJECT    : ReactOS Operating System
  * DESCRIPTION: ReactOS' Native Shell
@@ -454,7 +454,7 @@ void ParseCommandLine (void)
 int main(void)
 {
    static char line[255];
-
+   
    AllocConsole();
    InputHandle = GetStdHandle(STD_INPUT_HANDLE);
    OutputHandle = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -462,7 +462,6 @@ int main(void)
    debug_printf("Shell Starting...\n");
 
    ParseCommandLine ();
-//   SetCurrentDirectoryA("C:\\");
 
    for(;;)
      {

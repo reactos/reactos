@@ -44,14 +44,12 @@ VOID MinixMount(PDEVICE_OBJECT DeviceToMount)
    DeviceExt->AttachedDevice = IoAttachDeviceToDeviceStack(DeviceObject,
 							   DeviceToMount);
    DeviceExt->FileObject = IoCreateStreamFileObject(NULL, DeviceObject);
-   CcInitializeFileCache(DeviceExt->FileObject,
-			 &DeviceExt->Bcb);
 }
 
 NTSTATUS MinixFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
-   PVPB	vpb = Stack->Parameters.Mount.Vpb;
+//   PVPB	vpb = Stack->Parameters.Mount.Vpb;
    PDEVICE_OBJECT DeviceToMount = Stack->Parameters.Mount.DeviceObject;
    NTSTATUS Status;
    char* superblock_buf;

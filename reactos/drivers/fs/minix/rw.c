@@ -32,37 +32,24 @@ static NTSTATUS MinixReadFilePage(PDEVICE_OBJECT DeviceObject,
 				  PMINIX_DEVICE_EXTENSION DeviceExt,
 				  PMINIX_FSCONTEXT FsContext,
 				  ULONG Offset,
-				  PVOID* Buffer,
-				  PCACHE_SEGMENT* CacheSeg)
+				  PVOID* Buffer)
 {
-   BOOLEAN UptoDate;
    NTSTATUS Status;
    ULONG i;
    ULONG DiskOffset;
-   
-   Status = CcRequestCachePage(FsContext->Bcb,
-			       Offset,
-			       Buffer,
-			       &UptoDate,
-			       CacheSeg);
-   if (!NT_SUCCESS(Status))
+
+   *Buffer = ExAllocatePool(NonPagedPool, 4096);
+
+   for (i=0; i<4; i++)
      {
-	return(Status);
-     }
-   
-   if (!UptoDate)
-     {
-	for (i=0; i<4; i++)
-	  {
-	     Status = MinixReadBlock(DeviceObject,
-				     DeviceExt,
-				     &FsContext->inode,
-				     Offset + (i * BLOCKSIZE),
-				     &DiskOffset);
-	     MinixReadSector(DeviceObject,
-			     DiskOffset / BLOCKSIZE,
-			     (*Buffer) + (i * BLOCKSIZE));
-	  }
+	Status = MinixReadBlock(DeviceObject,
+				DeviceExt,
+				&FsContext->inode,
+				Offset + (i * BLOCKSIZE),
+				&DiskOffset);
+	MinixReadSector(DeviceObject,
+			DiskOffset / BLOCKSIZE,
+			(*Buffer) + (i * BLOCKSIZE));
      }
    return(STATUS_SUCCESS);
 }
@@ -79,7 +66,6 @@ NTSTATUS MinixRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    PMINIX_FSCONTEXT FsContext = (PMINIX_FSCONTEXT)FileObject->FsContext;
    unsigned int i;
    PVOID DiskBuffer;
-   PCACHE_SEGMENT CacheSeg;
    
    DPRINT("MinixRead(DeviceObject %x, Irp %x)\n",DeviceObject,Irp);
    
@@ -113,16 +99,13 @@ NTSTATUS MinixRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 			  DeviceExt,
 			  FsContext,
 			  CurrentOffset,
-			  &DiskBuffer,
-			  &CacheSeg);
+			  &DiskBuffer);
 
 	memcpy(Buffer,
 	       DiskBuffer+(Offset%PAGESIZE),
 	       min(PAGESIZE - (Offset%PAGESIZE),Length));
 	
-	CcReleaseCachePage(FsContext->Bcb,
-			   CacheSeg,
-			   TRUE);
+	ExFreePool(DiskBuffer);
 	
 	DPRINT("(BLOCKSIZE - (Offset%BLOCKSIZE)) %d\n",
 	       (BLOCKSIZE - (Offset%BLOCKSIZE)));
@@ -143,14 +126,11 @@ NTSTATUS MinixRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 			  DeviceExt,
 			  FsContext,
 			  CurrentOffset,
-			  &DiskBuffer,
-			  &CacheSeg);
+			  &DiskBuffer);
 	memcpy(Buffer, DiskBuffer, PAGESIZE);
 	
-	CcReleaseCachePage(FsContext->Bcb,
-			   CacheSeg,
-			   TRUE);
-
+	ExFreePool(DiskBuffer);
+	
 	CurrentOffset = CurrentOffset + PAGESIZE;
 	Buffer = Buffer + PAGESIZE;
      }
@@ -164,14 +144,11 @@ NTSTATUS MinixRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 			  DeviceExt,
 			  FsContext,
 			  CurrentOffset,
-			  &DiskBuffer,
-			  &CacheSeg);
+			  &DiskBuffer);
 
 	memcpy(Buffer, DiskBuffer, (Length%PAGESIZE));
 
-	CcReleaseCachePage(FsContext->Bcb,
-			   CacheSeg,
-			   TRUE);
+	ExFreePool(DiskBuffer);
 
      }
    

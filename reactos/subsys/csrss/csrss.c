@@ -1,4 +1,4 @@
-/* $Id: csrss.c,v 1.5 2000/02/27 02:11:54 ekohl Exp $
+/* $Id: csrss.c,v 1.6 2000/03/22 18:35:58 dwelch Exp $
  *
  * csrss.c - Client/Server Runtime subsystem
  * 
@@ -35,6 +35,8 @@
 #include <ntdll/rtl.h>
 #include <csrss/csrss.h>
 
+#include "api.h"
+
 VOID PrintString (char* fmt, ...);
 
 /* Native process' entry point */
@@ -47,7 +49,11 @@ VOID NtProcessStartup(PPEB Peb)
    ULONG argc = 0;
    int i = 0;
    int afterlastspace = 0;
-
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   HANDLE CsrssInitEvent;
+   UNICODE_STRING UnicodeString;
+   NTSTATUS Status;
+   
    DisplayString(L"Client/Server Runtime Subsystem\n");
 
    ProcParams = RtlNormalizeProcessParams (Peb->ProcessParameters);
@@ -85,11 +91,29 @@ VOID NtProcessStartup(PPEB Peb)
 	ArgBuffer[i] = L'\0';
 	argv[argc-1] = &(ArgBuffer[afterlastspace]);
      }
-
+   
+   RtlInitUnicodeString(&UnicodeString,
+			L"\\CsrssInitDone");
+   InitializeObjectAttributes(&ObjectAttributes,
+			      &UnicodeString,
+			      EVENT_ALL_ACCESS,
+			      0,
+			      NULL);
+   Status = NtOpenEvent(&CsrssInitEvent,
+			EVENT_ALL_ACCESS,
+			&ObjectAttributes);
+   if (!NT_SUCCESS(Status))
+     {
+	DbgPrint("CSR: Failed to open csrss notification event\n");
+     }
+   
    if (CsrServerInitialization (argc, argv) == TRUE)
      {
 	DisplayString( L"CSR: Subsystem initialized.\n" );
 
+	NtSetEvent(CsrssInitEvent,
+		   NULL);
+	
 	RtlFreeHeap (Peb->ProcessHeap,
 	             0, argv);
 	RtlFreeHeap (Peb->ProcessHeap,

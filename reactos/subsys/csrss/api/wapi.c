@@ -1,4 +1,4 @@
-/* $Id: wapi.c,v 1.4 2000/02/29 23:57:46 ea Exp $
+/* $Id: wapi.c,v 1.5 2000/03/22 18:36:00 dwelch Exp $
  * 
  * reactos/subsys/csrss/api/wapi.c
  *
@@ -28,8 +28,8 @@ static void Thread_Api2(HANDLE ServerPort)
    PLPCMESSAGE LpcReply;
    LPCMESSAGE LpcRequest;
    PCSRSS_API_REQUEST Request;
-   CSRSS_API_REPLY Reply;
    PCSRSS_PROCESS_DATA ProcessData;
+   PCSRSS_API_REPLY Reply;
    
    LpcReply = NULL;
    
@@ -43,58 +43,78 @@ static void Thread_Api2(HANDLE ServerPort)
 	  {
 	     DisplayString(L"CSR: NtReplyWaitReceivePort failed\n");
 	  }
+	if (LpcReply != NULL)
+	  {
+	     RtlFreeHeap(CsrssApiHeap,
+			 0,
+			 LpcReply);
+	  }
 	
 	Request = (PCSRSS_API_REQUEST)LpcRequest.MessageData;
+	LpcReply = NULL;
+	Reply = NULL;
 	
 	ProcessData = CsrGetProcessData(LpcRequest.ClientProcessId);
 	
-	DisplayString(L"CSR: Received request\n");
+//	DisplayString(L"CSR: Received request\n");
 	
 	switch (Request->Type)
 	  {
 	   case CSRSS_CREATE_PROCESS:
-	     Reply.Status = CsrCreateProcess(ProcessData, 
-					     Request);
+	     Status = CsrCreateProcess(ProcessData, 
+				       &Request->Data.CreateProcessRequest,
+				       &LpcReply);
 	     break;
 	     
 	   case CSRSS_TERMINATE_PROCESS:
-	     Reply.Status = CsrTerminateProcess(ProcessData, 
-						Request);
+	     Status = CsrTerminateProcess(ProcessData, 
+					  Request,
+					  &LpcReply);
 	     break;
 	     
 	   case CSRSS_WRITE_CONSOLE:
-	     Reply.Status = CsrWriteConsole(ProcessData, 
-					    Request, 
-					    &Reply.Count);
+	     Status = CsrWriteConsole(ProcessData, 
+				      Request,
+				      &LpcReply);
 	     break;
 	     
 	   case CSRSS_READ_CONSOLE:
-	     Reply.Status = CsrReadConsole(ProcessData, 
-					   Request,
-					   &Reply.Count);
+	     Status = CsrReadConsole(ProcessData, 
+				     Request,
+				     &LpcReply);
 	     break;
 	     
 	   case CSRSS_ALLOC_CONSOLE:
-	     Reply.Status = CsrAllocConsole(ProcessData, 
-					    Request, 
-					    &Reply.Handle);
+	     Status = CsrAllocConsole(ProcessData, 
+				      Request,
+				      &LpcReply);
 	     break;
 	     
 	   case CSRSS_FREE_CONSOLE:
-	     Reply.Status = CsrFreeConsole(ProcessData, 
-					   Request);
+	     Status = CsrFreeConsole(ProcessData, 
+				     Request,
+				     &LpcReply);
 	     break;
 	     
 	   case CSRSS_CONNECT_PROCESS:
-	     Reply.Status = CsrConnectProcess(ProcessData, 
-					      Request);
+	     Status = CsrConnectProcess(ProcessData, 
+					Request,
+					&LpcReply);
+	     break;
 	     
 	   default:
-	     Reply.Status = STATUS_NOT_IMPLEMENTED;
+	     LpcReply = RtlAllocateHeap(CsrssApiHeap,
+					HEAP_ZERO_MEMORY,
+					sizeof(LPCMESSAGE));
+	     Reply = (PCSRSS_API_REPLY)(LpcReply->MessageData);
+	     Reply->Status = STATUS_NOT_IMPLEMENTED;
 	  }
 	
-	LpcReply = &LpcRequest;
-	RtlCopyMemory(LpcReply->MessageData, &Reply, sizeof(Reply));
+	Reply = (PCSRSS_API_REPLY)(LpcReply->MessageData);
+	if (Reply->Status == STATUS_SUCCESS)
+	  {
+//	     DisplayString(L"CSR: Returning STATUS_SUCCESS\n");
+	  }
      }
 }
 
@@ -125,7 +145,8 @@ void Thread_Api(PVOID PortHandle)
      }
 
    CsrInitProcessData();
-
+   CsrInitConsoleSupport();
+   
    for (;;)
      {
 	Status = NtListenPort(PortHandle, &Request);
