@@ -80,7 +80,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
       Status = ObCreateHandle(PsGetCurrentProcess(),
 			      Object,
 			      DesiredAccess,
-			      FALSE,
+			      TRUE,
 			      KeyHandle);
 
       DPRINT("Status %x\n", Status);
@@ -815,7 +815,7 @@ NtOpenKey(OUT PHANDLE KeyHandle,
   Status = ObCreateHandle(PsGetCurrentProcess(),
 			  Object,
 			  DesiredAccess,
-			  FALSE,
+			  TRUE,
 			  KeyHandle);
   ObDereferenceObject(Object);
 
