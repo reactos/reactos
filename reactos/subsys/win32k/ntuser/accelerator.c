@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: accelerator.c,v 1.3 2003/12/07 16:54:44 chorns Exp $
+/* $Id: accelerator.c,v 1.4 2003/12/07 17:22:13 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -113,7 +113,7 @@ NtUserCopyAcceleratorTable(
   
   if(Entries)
   {
-    Ret = max(EntriesCount, AcceleratorTable->Count);
+    Ret = min(EntriesCount, AcceleratorTable->Count);
     Status = MmCopyToCaller(Entries, AcceleratorTable->Table, Ret * sizeof(ACCEL));
     if (!NT_SUCCESS(Status))
     {
