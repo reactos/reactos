@@ -1,10 +1,9 @@
-/* $Id: stubs.c,v 1.39 2003/01/04 18:33:18 robd Exp $
+/* $Id: stubs.c,v 1.40 2003/01/05 10:07:08 robd Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
  */
 #include <windows.h>
-#include <tlhelp32.h>
 
 #define _OLE2NLS_IN_BUILD_
 
@@ -1019,47 +1018,6 @@ VirtualBufferExceptionHandler (
     DWORD   Unknown1,
     DWORD   Unknown2
     )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-
-BOOL
-STDCALL
-Process32First(HANDLE hSnapshot, LPPROCESSENTRY32 lppe)
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-BOOL
-STDCALL
-Process32Next(HANDLE hSnapshot, LPPROCESSENTRY32 lppe)
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-BOOL
-STDCALL
-Process32FirstW(HANDLE hSnapshot, LPPROCESSENTRY32W lppe)
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-BOOL
-STDCALL
-Process32NextW(HANDLE hSnapshot, LPPROCESSENTRY32W lppe)
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-HANDLE
-STDCALL
-CreateToolhelp32Snapshot(DWORD dwFlags, DWORD th32ProcessID)
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
