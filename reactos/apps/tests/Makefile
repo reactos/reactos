@@ -13,7 +13,8 @@ include $(PATH_TO_TOP)/rules.mak
 # pteb regtest sectest shm simple thread vmtest winhello
 TEST_APPS = alive apc args atomtest bench consume copymove count dump_shared_data \
             event file gditest hello isotest lpc mstest mutex nptest \
-            pteb regtest sectest shm simple thread tokentest vmtest winhello dibtest
+            pteb regtest sectest shm simple thread tokentest vmtest winhello dibtest \
+	    lock
 
 TEST_MISC = 
 
