@@ -322,7 +322,7 @@ static BOOL ProcessRunKeys( HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
         'M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\',
         'C','u','r','r','e','n','t','V','e','r','s','i','o','n',0};
     HKEY hkWin=NULL, hkRun=NULL;
-    DWORD res=ERROR_SUCCESS;
+    LONG res=ERROR_SUCCESS;
     DWORD i, nMaxCmdLine=0, nMaxValue=0;
     WCHAR *szCmdLine=NULL;
     WCHAR *szValue=NULL;
