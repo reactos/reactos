@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.2 2002/11/05 20:55:59 hbirr Exp $ */
+/* $Id: process.c,v 1.3 2002/12/09 20:06:24 hbirr Exp $ */
 #include <msvcrt/process.h>
 #include <msvcrt/stdlib.h>
 #include <msvcrt/string.h>
@@ -241,9 +241,9 @@ do_spawn(int mode, const char* cmdname, const char* args, const char* envp)
 		    *hFile = INVALID_HANDLE_VALUE;
 		    *fmode = 0;
 		}
-		fmode++;
-		hFile++;
 	    }
+	    fmode++;
+	    hFile++;
 	}
     }
 
