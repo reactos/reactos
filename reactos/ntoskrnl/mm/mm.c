@@ -1,4 +1,4 @@
-/* $Id: mm.c,v 1.41 2001/02/10 22:51:10 dwelch Exp $
+/* $Id: mm.c,v 1.42 2001/02/14 02:53:53 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -129,13 +129,15 @@ BOOLEAN STDCALL MmIsAddressValid(PVOID VirtualAddress)
 }
 
 NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
-		       ULONG Address)
+		       ULONG Address,
+		       BOOLEAN FromMdl)
 {
    PMADDRESS_SPACE AddressSpace;
    MEMORY_AREA* MemoryArea;
    NTSTATUS Status;
+   BOOLEAN Locked = FromMdl;
    
-   DPRINT("MmNotPresentFault(Mode %d, Address %x)\n", Mode, Address);
+   DPRINT("MmAccessFault(Mode %d, Address %x)\n", Mode, Address);
    
    if (KeGetCurrentIrql() >= DISPATCH_LEVEL)
      {
@@ -168,12 +170,18 @@ NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
 	AddressSpace = &PsGetCurrentProcess()->AddressSpace;
      }
    
-   MmLockAddressSpace(AddressSpace);
+   if (!FromMdl)
+     {
+       MmLockAddressSpace(AddressSpace);
+     }
    MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace, (PVOID)Address);
    if (MemoryArea == NULL)
      {
 	DbgPrint("%s:%d\n",__FILE__,__LINE__);
-	MmUnlockAddressSpace(AddressSpace);
+	if (!FromMdl)
+	  {
+	    MmUnlockAddressSpace(AddressSpace);
+	  }
 	return(STATUS_UNSUCCESSFUL);
      }
    
@@ -186,7 +194,8 @@ NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
       case MEMORY_AREA_SECTION_VIEW_COMMIT:
 	Status = MmAccessFaultSectionView(AddressSpace,
 					  MemoryArea, 
-					  (PVOID)Address);
+					  (PVOID)Address,
+					  Locked);
 	break;
 	
       case MEMORY_AREA_VIRTUAL_MEMORY:
@@ -202,16 +211,21 @@ NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
 	break;
      }
    DPRINT("Completed page fault handling\n");
-   MmUnlockAddressSpace(AddressSpace);
+   if (!FromMdl)
+     {
+       MmUnlockAddressSpace(AddressSpace);
+     }
    return(Status);
 }
 
 NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
-			   ULONG Address)
+			   ULONG Address, 
+			   BOOLEAN FromMdl)
 {
    PMADDRESS_SPACE AddressSpace;
    MEMORY_AREA* MemoryArea;
    NTSTATUS Status;
+   BOOLEAN Locked = FromMdl;
    
    DPRINT("MmNotPresentFault(Mode %d, Address %x)\n", Mode, Address);
    
@@ -246,12 +260,18 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
 	AddressSpace = &PsGetCurrentProcess()->AddressSpace;
      }
    
-   MmLockAddressSpace(AddressSpace);
+   if (!FromMdl)
+     {
+       MmLockAddressSpace(AddressSpace);
+     }
    MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace, (PVOID)Address);
    if (MemoryArea == NULL)
      {
 	DbgPrint("%s:%d\n",__FILE__,__LINE__);
-	MmUnlockAddressSpace(AddressSpace);
+	if (!FromMdl)
+	  {
+	    MmUnlockAddressSpace(AddressSpace);
+	  }
 	return(STATUS_UNSUCCESSFUL);
      }
    
@@ -264,20 +284,23 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
       case MEMORY_AREA_SECTION_VIEW_COMMIT:
 	Status = MmNotPresentFaultSectionView(AddressSpace,
 					      MemoryArea, 
-					      (PVOID)Address);
+					      (PVOID)Address,
+					      Locked);
 	break;
 	
       case MEMORY_AREA_VIRTUAL_MEMORY:
 	Status = MmNotPresentFaultVirtualMemory(AddressSpace,
 						MemoryArea,
-						(PVOID)Address);
+						(PVOID)Address,
+						Locked);
 	break;
 	
       case MEMORY_AREA_SHARED_DATA:
-	Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
-					(PVOID)PAGE_ROUND_DOWN(Address),
-					PAGE_READONLY,
-				       (ULONG)MmSharedDataPagePhysicalAddress);
+	Status = 
+	  MmCreateVirtualMapping(PsGetCurrentProcess(),
+				 (PVOID)PAGE_ROUND_DOWN(Address),
+				 PAGE_READONLY,
+				 (ULONG)MmSharedDataPagePhysicalAddress);
 	break;
 	
       default:
@@ -285,7 +308,10 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
 	break;
      }
    DPRINT("Completed page fault handling\n");
-   MmUnlockAddressSpace(AddressSpace);
+   if (!FromMdl)
+     {
+       MmUnlockAddressSpace(AddressSpace);
+     }
    return(Status);
 }
 

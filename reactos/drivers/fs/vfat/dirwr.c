@@ -1,4 +1,4 @@
-/* $Id: dirwr.c,v 1.16 2001/01/16 09:55:02 dwelch Exp $
+/* $Id: dirwr.c,v 1.17 2001/02/14 02:53:54 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -446,6 +446,8 @@ addEntry (PDEVICE_EXTENSION DeviceExt,
   vfat_wcsncpy (newFCB->PathName, PathFileName, MAX_PATH);
   newFCB->ObjectName = newFCB->PathName + (PathFileName - FileName);
   newFCB->pDevExt = DeviceExt;
+  pFileObject->Flags |= FO_FCB_IS_VALID | FO_DIRECT_CACHE_PAGING_READ;
+  pFileObject->SectionObjectPointers = &newFCB->SectionObjectPointers;
   pFileObject->FsContext = (PVOID)&newFCB->RFCB;
   pFileObject->FsContext2 = newCCB;
   if (RequestedOptions & FILE_DIRECTORY_FILE)

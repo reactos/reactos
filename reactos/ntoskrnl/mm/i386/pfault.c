@@ -51,11 +51,11 @@ NTSTATUS MmPageFault(ULONG Cs,
    
    if (ErrorCode & 0x1)
      {
-	Status = MmAccessFault(Mode, Cr2);
+	Status = MmAccessFault(Mode, Cr2, FALSE);
      }
    else
      {
-	Status = MmNotPresentFault(Mode, Cr2);
+	Status = MmNotPresentFault(Mode, Cr2, FALSE);
      }
    
    if (KeGetCurrentThread() != NULL &&

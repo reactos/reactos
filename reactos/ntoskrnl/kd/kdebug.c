@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.18 2001/02/10 22:51:09 dwelch Exp $
+/* $Id: kdebug.c,v 1.19 2001/02/14 02:53:53 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -117,10 +117,7 @@ KdInitSystem (
 		p1 = p2;
 	}
 	
-#ifdef DBGPRINT_FILE_LOG
-	KdpDebugType |= FileLogDebug;
-	DebugLogInit();
-#endif /* DBGPRINT_FILE_LOG */
+
 	
 	/* check for 'BAUDRATE' */
 	p1 = (PCHAR)LoaderBlock->CommandLine;
@@ -203,6 +200,10 @@ KdInitSystem (
 		p1 = p2;
 	}
 
+#ifdef DBGPRINT_FILE_LOG
+	KdpDebugType |= FileLogDebug;
+	DebugLogInit();
+#endif /* DBGPRINT_FILE_LOG */
 
 	/* print some information */
 	if (KdDebuggerEnabled == TRUE)
@@ -271,12 +272,12 @@ ULONG KdpPrintString (PANSI_STRING String)
 	     pch++;
 	  }
      }
-#ifdef DEBUGPRINT_LOG_WRITE
+#ifdef DBGPRINT_FILE_LOG
    if (KdpDebugType & FileLogDebug)
      {
        DebugLogWrite(String->Buffer);
      }
-#endif /* DEBUGPRINT_LOG_WRITE */
+#endif /* DBGPRINT_FILE_LOG */
    return (ULONG)String->Length;
 }
 

@@ -248,16 +248,24 @@ NTSTATUS MmPageFault(ULONG Cs,
 		     ULONG Cr2,
 		     ULONG ErrorCode);
 
-NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
-		       ULONG Address);
-NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
-			   ULONG Address);
-NTSTATUS MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
-					MEMORY_AREA* MemoryArea, 
-					PVOID Address);
-NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
-				      MEMORY_AREA* MemoryArea, 
-				      PVOID Address);
+NTSTATUS 
+MmAccessFault(KPROCESSOR_MODE Mode,
+	      ULONG Address,
+	      BOOLEAN FromMdl);
+NTSTATUS 
+MmNotPresentFault(KPROCESSOR_MODE Mode,
+		  ULONG Address,
+		  BOOLEAN FromMdl);
+NTSTATUS 
+MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
+			       MEMORY_AREA* MemoryArea, 
+			       PVOID Address,
+			       BOOLEAN Locked);
+NTSTATUS 
+MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
+			     MEMORY_AREA* MemoryArea, 
+			     PVOID Address,
+			     BOOLEAN Locked);
 NTSTATUS MmWaitForPage(PVOID Page);
 VOID MmClearWaitPage(PVOID Page);
 VOID MmSetWaitPage(PVOID Page);
@@ -355,8 +363,9 @@ MmGetContinuousPages(ULONG NumberOfBytes,
 
 NTSTATUS 
 MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
-			     MEMORY_AREA* MemoryArea, 
-			     PVOID Address);
+			 MEMORY_AREA* MemoryArea, 
+			 PVOID Address,
+			 BOOLEAN Locked);
 ULONG
 MmGetPageProtect(struct _EPROCESS* Process, PVOID Address);
 PVOID 

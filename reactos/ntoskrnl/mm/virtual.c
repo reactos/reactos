@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.38 2001/02/10 22:51:10 dwelch Exp $
+/* $Id: virtual.c,v 1.39 2001/02/14 02:53:53 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -201,7 +201,8 @@ ULONG MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
 NTSTATUS
 MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
 			       MEMORY_AREA* MemoryArea, 
-			       PVOID Address)
+			       PVOID Address,
+			       BOOLEAN Locked)
 /*
  * FUNCTION: Move data into memory to satisfy a page not present fault
  * ARGUMENTS:
@@ -232,7 +233,11 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
    
    if (MmIsPagePresent(NULL, Address))
      {	
-	return(STATUS_SUCCESS);
+       if (Locked)
+	 {
+	   MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
+	 }
+       return(STATUS_SUCCESS);
      }
    
    /*
@@ -246,7 +251,12 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
 	MmLockAddressSpace(AddressSpace);
 	if (MmIsPagePresent(NULL, Address))
 	  {
-	     return(STATUS_SUCCESS);
+	    if (Locked)
+	      {
+		MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, 
+								 Address));
+	      }
+	    return(STATUS_SUCCESS);
 	  }
 	Page = MmAllocPage(0);
      }
@@ -271,20 +281,31 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
 	MmLockAddressSpace(AddressSpace);
 	if (MmIsPagePresent(NULL, Address))
 	  {
-	     MmDereferencePage(Page);
-	     return(STATUS_SUCCESS);
+	    if (Locked)
+	      {
+		MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, 
+								 Address));
+	      }
+	    MmDereferencePage(Page);
+	    return(STATUS_SUCCESS);
 	  }
 	Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
 					Address,
 					MemoryArea->Attributes,
 					(ULONG)Page);
-     }
+     }  
    if (!NT_SUCCESS(Status))
      {
 	return(Status);
      }
-   
-   return(STATUS_SUCCESS);
+   else
+     {
+       if (Locked)
+	 {
+	   MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
+	 }  
+       return(STATUS_SUCCESS);
+     }
 }
 
 VOID STATIC

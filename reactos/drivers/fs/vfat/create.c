@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.15 2001/02/10 22:51:11 dwelch Exp $
+/* $Id: create.c,v 1.16 2001/02/14 02:53:54 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -710,7 +710,7 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	  while (Cluster != 0xffffffff && Cluster > 1)
 	    {
 	      Status = GetNextCluster (DeviceExt, Cluster, &NextCluster, TRUE);
-	      //	      WriteCluster (DeviceExt, Cluster, 0);
+	      WriteCluster (DeviceExt, Cluster, 0);
 	      Cluster = NextCluster;
 	    }
 	}

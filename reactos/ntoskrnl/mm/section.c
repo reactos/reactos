@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.45 2001/02/10 22:51:10 dwelch Exp $
+/* $Id: section.c,v 1.46 2001/02/14 02:53:53 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -128,7 +128,8 @@ MmWaitForPendingOperationSection(PMADDRESS_SPACE AddressSpace,
 				 PMM_SECTION_SEGMENT Segment,
 				 LARGE_INTEGER Offset,
 				 ULONG Entry,
-				 ULONG Attributes)
+				 ULONG Attributes,
+				 BOOLEAN Locked)
 {
    PVOID Page;
    NTSTATUS Status;
@@ -197,6 +198,10 @@ MmWaitForPendingOperationSection(PMADDRESS_SPACE AddressSpace,
     */
    if (MmIsPagePresent(NULL, Address))
      {
+       if (Locked)
+	 {
+	   MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
+	 }  
        MmUnlockSectionSegment(Segment);
        MmUnlockSection(Section);
        return(STATUS_SUCCESS);
@@ -222,6 +227,10 @@ MmWaitForPendingOperationSection(PMADDRESS_SPACE AddressSpace,
 	DbgPrint("Unable to create virtual mapping\n");
 	KeBugCheck(0);
      }
+   if (Locked)
+     {
+       MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
+     }  
    MmUnlockSectionSegment(Segment);
    MmUnlockSection(Section);
    
@@ -231,7 +240,8 @@ MmWaitForPendingOperationSection(PMADDRESS_SPACE AddressSpace,
 NTSTATUS 
 MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 			     MEMORY_AREA* MemoryArea, 
-			     PVOID Address)
+			     PVOID Address,
+			     BOOLEAN Locked)
 {
    LARGE_INTEGER Offset;
    IO_STATUS_BLOCK IoStatus;
@@ -257,6 +267,10 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    if (MmIsPagePresent(NULL, Address))
      {
 	DbgPrint("Page is already present\n");
+	if (Locked)
+	  {
+	    MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
+	  }  
 	return(STATUS_SUCCESS);
      }
    
@@ -284,6 +298,10 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 				       Address,
 				       MemoryArea->Attributes,
 				       Offset.QuadPart);
+       if (Locked)
+	 {
+	   MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
+	 }  
        MmUnlockSectionSegment(Segment);
        MmUnlockSection(Section);
        return(STATUS_SUCCESS);
@@ -315,6 +333,10 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 				       Address,
 				       MemoryArea->Attributes,
 				       (ULONG)Page);
+       if (Locked)
+	 {
+	   MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
+	 }  
        MmUnlockSectionSegment(Segment);
        MmUnlockSection(Section);
        return(STATUS_SUCCESS);
@@ -376,7 +398,8 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 							Segment,
 							Offset,
 							Entry1,
-							Attributes));
+							Attributes,
+							Locked));
 	      }
 	    else if (Entry1 != 0)
 	      {
@@ -392,6 +415,11 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 		    DbgPrint("Unable to create virtual mapping\n");
 		    KeBugCheck(0);
 		  }
+		if (Locked)
+		  {
+		    MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, 
+								     Address));
+		  }  
 		MmUnlockSectionSegment(Segment);
 		MmUnlockSection(Section);
 		
@@ -481,6 +509,10 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	     DbgPrint("Unable to create virtual mapping\n");
 	     KeBugCheck(0);
 	  }
+       if (Locked)
+	 {
+	   MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
+	 }  
 	MmUnlockSectionSegment(Segment);
 	MmUnlockSection(Section);
 	DPRINT("MmNotPresentFaultSectionView succeeded\n");
@@ -496,7 +528,8 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 						Segment,
 						Offset,
 						Entry,
-						Attributes));
+						Attributes,
+						Locked));
      }
    else
      {
@@ -517,6 +550,10 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	     DbgPrint("Unable to create virtual mapping\n");
 	     KeBugCheck(0);
 	  }
+       if (Locked)
+	 {
+	   MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
+	 }  
 	MmUnlockSectionSegment(Segment);
 	MmUnlockSection(Section);
 	
@@ -526,8 +563,9 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 
 NTSTATUS 
 MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
-			     MEMORY_AREA* MemoryArea, 
-			     PVOID Address)
+			 MEMORY_AREA* MemoryArea, 
+			 PVOID Address,
+			 BOOLEAN Locked)
 {
   PMM_SECTION_SEGMENT Segment;
   PSECTION_OBJECT Section;
@@ -597,6 +635,10 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
        DbgPrint("Unable to create virtual mapping\n");
        KeBugCheck(0);
      }
+   if (Locked)
+     {
+       MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
+     }  
    MmUnlockSectionSegment(Segment);
    MmUnlockSection(Section);
    return(STATUS_SUCCESS);

@@ -42,44 +42,6 @@ typedef struct _LOADER_PARAMETER_BLOCK
    ULONG BootLoaderName;
 } LOADER_PARAMETER_BLOCK, *PLOADER_PARAMETER_BLOCK;
 
-#if 0
-typedef struct _LOADER_PARAMETER_BLOCK
-{
-	/*
-	 * Magic value (useless really)
-	 */
-        unsigned int magic;
-
-        /*
-         * Cursor position
-         */
-        unsigned int cursorx;
-        unsigned int cursory;
-
-        /*
-         * Number of files (including the kernel) loaded
-         */
-        unsigned int nr_files;
-
-        /*
-         * Range of physical memory being used by the system
-         */
-        unsigned int start_mem;
-        unsigned int end_mem;
-
-        /*
-         * List of module lengths (terminated by a 0)
-         */
-        unsigned int module_length[64];
-
-        /*
-         * Kernel parameter string
-         */
-        char kernel_parameters[256];
-
-} LOADER_PARAMETER_BLOCK, *PLOADER_PARAMETER_BLOCK;
-#endif
-
 #ifdef __NTOSKRNL__
 extern CHAR EXPORTED KeNumberProcessors;
 extern LOADER_PARAMETER_BLOCK EXPORTED KeLoaderBlock;

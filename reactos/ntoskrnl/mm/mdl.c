@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.28 2001/02/10 22:51:10 dwelch Exp $
+/* $Id: mdl.c,v 1.29 2001/02/14 02:53:53 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -174,10 +174,12 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
  */
 {
    PULONG MdlPages;
-   ULONG i;
-   PMEMORY_AREA MArea;
-   PMADDRESS_SPACE AddressSpace;
-   
+   ULONG i, j;
+   ULONG NrPages;
+   NTSTATUS Status;
+   KPROCESSOR_MODE Mode;
+   PEPROCESS CurrentProcess;
+
    DPRINT("MmProbeAndLockPages(Mdl %x)\n", Mdl);
    
    /*
@@ -188,44 +190,74 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
 	return;
      }
    
-   if (Mdl->StartVa > (PVOID)KERNEL_BASE)
+   CurrentProcess = PsGetCurrentProcess();
+
+   if (Mdl->Process != CurrentProcess)
      {
-	AddressSpace = MmGetKernelAddressSpace();
+       KeAttachProcess(Mdl->Process);
+     }
+
+   if (Mdl->StartVa >= (PVOID)KERNEL_BASE)
+     {
+       Mode = KernelMode;
      }
    else
      {
-	AddressSpace = &Mdl->Process->AddressSpace;
-     }
-   MmLockAddressSpace(AddressSpace);
-   MArea = MmOpenMemoryAreaByAddress(AddressSpace,
-				     Mdl->StartVa);
-
-   /*
-    * Check the area is valid
-    */
-   if (MArea == NULL)
-     {
-	DbgPrint("(%s:%d) Area is invalid\n",__FILE__,__LINE__);
-	MmUnlockAddressSpace(AddressSpace);
-	/* FIXME: ExRaiseStatus doesn't do anything sensible at the moment */
-	ExRaiseStatus(STATUS_INVALID_PARAMETER);
+       Mode = UserMode;
      }
 
    /*
     * Lock the pages
     */
-   MdlPages = (ULONG *)(Mdl + 1);
-   
-   for (i=0;i<(PAGE_ROUND_UP(Mdl->ByteOffset+Mdl->ByteCount)/PAGESIZE);i++)
+
+   MmLockAddressSpace(&Mdl->Process->AddressSpace);
+   MdlPages = (ULONG *)(Mdl + 1);      
+   NrPages = PAGE_ROUND_UP(Mdl->ByteOffset + Mdl->ByteCount) / PAGESIZE;
+   for (i = 0; i < NrPages; i++)
      {
 	PVOID Address;
 	
-	Address = Mdl->StartVa + (i*PAGESIZE);
-	MdlPages[i] = (MmGetPhysicalAddress(Address)).u.LowPart;
+	Address = Mdl->StartVa + (i*PAGESIZE);       
+	
+	if (!MmIsPagePresent(NULL, Address))
+	  {
+	    Status = MmNotPresentFault(Mode, (ULONG)Address, TRUE);
+	    if (!NT_SUCCESS(Status))
+	      {
+		for (j = 0; j < i; j++)
+		  {
+		    MmUnlockPage((PVOID)MdlPages[i]);
+		    MmDereferencePage((PVOID)MdlPages[i]);
+		  }
+		ExRaiseStatus(Status);
+	      }
+	  }
+	else
+	  {
+	    MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
+	  }
+	if ((Operation == IoWriteAccess || Operation == IoModifyAccess) &&
+	    (!(MmGetPageProtect(NULL, (PVOID)Address) & PAGE_READWRITE)))
+	  {
+	    Status = MmAccessFault(Mode, (ULONG)Address, TRUE);
+	    if (!NT_SUCCESS(Status))
+	      {
+		for (j = 0; j < i; j++)
+		  {
+			MmUnlockPage((PVOID)MdlPages[i]);
+			MmDereferencePage((PVOID)MdlPages[i]);
+		  }
+		ExRaiseStatus(Status);
+	      }
+	  }
+	MdlPages[i] = MmGetPhysicalAddressForProcess(NULL, Address);
 	MmReferencePage((PVOID)MdlPages[i]);
-	MmLockPage((PVOID)MdlPages[i]);
      }
-   MmUnlockAddressSpace(AddressSpace);
+   MmUnlockAddressSpace(&Mdl->Process->AddressSpace);
+   if (Mdl->Process != CurrentProcess)
+     {
+       KeDetachProcess();
+     }
    Mdl->MdlFlags = Mdl->MdlFlags | MDL_PAGES_LOCKED;
 }
 

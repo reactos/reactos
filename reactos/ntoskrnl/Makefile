@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.7 2001/01/19 15:09:01 dwelch Exp $
+# $Id: Makefile,v 1.8 2001/02/14 02:53:52 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -9,7 +9,8 @@ TARGETNAME = ntoskrnl
 OBJECTS_PATH = objects
 
 ASFLAGS = -Iinclude
-CFLAGS = -Iinclude -D__NTOSKRNL__ -DDBG -g -Wall -Werror
+CFLAGS = -Iinclude -D__NTOSKRNL__ -DDBG -g -Wall -Werror 
+#CFLAGS += -DDBGPRINT_FILE_LOG
 
 all: \
 	$(OBJECTS_PATH) \
@@ -278,7 +279,8 @@ OBJECTS_CC = \
 # Kernel Debugger Support (Kd)
 OBJECTS_KD = \
 	kd/kdebug.o \
-	kd/service.o
+	kd/service.o \
+	kd/dlog.o
 
 # Resources
 OBJECTS_RESOURCE = \
