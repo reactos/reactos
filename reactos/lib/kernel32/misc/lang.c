@@ -1,4 +1,4 @@
-/* $Id: lang.c,v 1.23 2004/09/24 00:36:14 weiden Exp $
+/* $Id: lang.c,v 1.24 2004/10/20 03:46:27 jimtabor Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -678,6 +678,130 @@ inline static UINT get_lcid_codepage( LCID lcid )
                          sizeof(ret)/sizeof(WCHAR) )) ret = 0;
     return ret;
 }
+
+
+/*
+ * @implemented
+ */
+int
+STDCALL
+CompareStringA (
+    LCID    Locale,
+    DWORD   dwCmpFlags,
+    LPCSTR  lpString1,
+    int cchCount1,
+    LPCSTR  lpString2,
+    int cchCount2
+    )
+{
+    WCHAR *buf1W = NtCurrentTeb()->StaticUnicodeBuffer;
+    WCHAR *buf2W = buf1W + 130;
+    LPWSTR str1W, str2W;
+    INT len1W, len2W, ret;
+    UINT locale_cp;
+
+    if (!lpString1 || !lpString2)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+    if (cchCount1 < 0) cchCount1 = strlen(lpString1);
+    if (cchCount2 < 0) cchCount2 = strlen(lpString2);
+
+    locale_cp = get_lcid_codepage(Locale);
+
+    len1W = MultiByteToWideChar(locale_cp, 0, lpString1, cchCount1, buf1W, 130);
+    if (len1W)
+        str1W = buf1W;
+    else
+    {
+        len1W = MultiByteToWideChar(locale_cp, 0, lpString1, cchCount1, NULL, 0);
+        str1W = HeapAlloc(GetProcessHeap(), 0, len1W * sizeof(WCHAR));
+        if (!str1W)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return 0;
+        }
+        MultiByteToWideChar(locale_cp, 0, lpString1, cchCount1, str1W, len1W);
+    }
+    len2W = MultiByteToWideChar(locale_cp, 0, lpString2, cchCount2, buf2W, 130);
+    if (len2W)
+        str2W = buf2W;
+    else
+    {
+        len2W = MultiByteToWideChar(locale_cp, 0, lpString2, cchCount2, NULL, 0);
+        str2W = HeapAlloc(GetProcessHeap(), 0, len2W * sizeof(WCHAR));
+        if (!str2W)
+        {
+            if (str1W != buf1W) HeapFree(GetProcessHeap(), 0, str1W);
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return 0;
+        }
+        MultiByteToWideChar(locale_cp, 0, lpString2, cchCount2, str2W, len2W);
+    }
+
+    ret = CompareStringW(Locale, dwCmpFlags, str1W, len1W, str2W, len2W);
+
+    if (str1W != buf1W) HeapFree(GetProcessHeap(), 0, str1W);
+    if (str2W != buf2W) HeapFree(GetProcessHeap(), 0, str2W);
+    return ret;
+}
+
+
+/*
+ * @unimplemented
+ */
+int
+STDCALL
+CompareStringW (
+    LCID    Locale,
+    DWORD   dwCmpFlags,
+    LPCWSTR lpString1,
+    int cchCount1,
+    LPCWSTR lpString2,
+    int cchCount2
+    )
+{
+    INT Result;
+    UNICODE_STRING String1, String2;
+
+    if (!lpString1 || !lpString2)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    if (dwCmpFlags & ~(NORM_IGNORECASE | NORM_IGNORENONSPACE |
+        NORM_IGNORESYMBOLS | SORT_STRINGSORT | NORM_IGNOREKANATYPE |
+        NORM_IGNOREWIDTH | 0x10000000))
+    {
+        SetLastError(ERROR_INVALID_FLAGS);
+        return 0;
+    }
+
+    if (dwCmpFlags & ~NORM_IGNORECASE)
+    {
+        DPRINT1("CompareString: STUB flags - 0x%x\n",
+           dwCmpFlags & ~NORM_IGNORECASE);
+    }
+
+    if (cchCount1 < 0) cchCount1 = lstrlenW(lpString1);
+    if (cchCount2 < 0) cchCount2 = lstrlenW(lpString2);
+
+    String1.Length = String1.MaximumLength = cchCount1 * sizeof(WCHAR);
+    String1.Buffer = (LPWSTR)lpString1;
+    String2.Length = String2.MaximumLength = cchCount2 * sizeof(WCHAR);
+    String2.Buffer = (LPWSTR)lpString2;
+
+    Result = RtlCompareUnicodeString(
+       &String1, &String2, dwCmpFlags & NORM_IGNORECASE);
+
+    if (Result) /* need to translate result */
+        return (Result < 0) ? CSTR_LESS_THAN : CSTR_GREATER_THAN;
+
+    return CSTR_EQUAL;
+}
+
 
 
 

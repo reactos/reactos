@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.93 2004/10/04 19:17:58 gvg Exp $
+/* $Id: stubs.c,v 1.94 2004/10/20 03:46:27 jimtabor Exp $
  *
  * KERNEL32.DLL stubs (STUB functions)
  * Remove from this file, if you implement them.
@@ -72,80 +72,6 @@ CmdBatNotification (
 {
     STUB;
     return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-CompareStringA (
-    LCID    Locale,
-    DWORD   dwCmpFlags,
-    LPCSTR  lpString1,
-    int cchCount1,
-    LPCSTR  lpString2,
-    int cchCount2
-    )
-{
-    STUB;
-    return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-CompareStringW (
-    LCID    Locale,
-    DWORD   dwCmpFlags,
-    LPCWSTR lpString1,
-    int cchCount1,
-    LPCWSTR lpString2,
-    int cchCount2
-    )
-{
-    INT Result;
-    UNICODE_STRING String1, String2;
-
-    if (!lpString1 || !lpString2)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
-
-    if (dwCmpFlags & ~(NORM_IGNORECASE | NORM_IGNORENONSPACE |
-        NORM_IGNORESYMBOLS | SORT_STRINGSORT | NORM_IGNOREKANATYPE |
-        NORM_IGNOREWIDTH | 0x10000000))
-    {
-        SetLastError(ERROR_INVALID_FLAGS);
-        return 0;
-    }
-
-    if (dwCmpFlags & ~NORM_IGNORECASE)
-    {
-        DPRINT1("CompareString: STUB flags - 0x%x\n",
-           dwCmpFlags & ~NORM_IGNORECASE);
-    }
-
-    if (cchCount1 < 0) cchCount1 = lstrlenW(lpString1);
-    if (cchCount2 < 0) cchCount2 = lstrlenW(lpString2);
-
-    String1.Length = String1.MaximumLength = cchCount1 * sizeof(WCHAR);
-    String1.Buffer = (LPWSTR)lpString1;
-    String2.Length = String2.MaximumLength = cchCount2 * sizeof(WCHAR);
-    String2.Buffer = (LPWSTR)lpString2;
-
-    Result = RtlCompareUnicodeString(
-       &String1, &String2, dwCmpFlags & NORM_IGNORECASE);
-
-    if (Result) /* need to translate result */
-        return (Result < 0) ? CSTR_LESS_THAN : CSTR_GREATER_THAN;
-
-    return CSTR_EQUAL;
 }
 
 
