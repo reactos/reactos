@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: binhive.c,v 1.2 2003/04/16 15:06:33 ekohl Exp $
+/* $Id: binhive.c,v 1.3 2003/04/22 21:14:39 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/binhive.c
@@ -454,14 +454,19 @@ CmiGetBlock(PREGISTRY_HIVE Hive,
 	    PHBIN * ppBin)
 {
   PHBIN pBin;
+  ULONG BlockIndex;
 
   if (ppBin)
     *ppBin = NULL;
 
-  if ((BlockOffset == 0) || (BlockOffset == (ULONG_PTR) -1))
+  if (BlockOffset == (ULONG_PTR) -1)
     return NULL;
 
-  pBin = Hive->BlockList[BlockOffset / 4096];
+  BlockIndex = BlockOffset / 4096;
+  if (BlockIndex >= Hive->BlockListSize)
+    return NULL;
+
+  pBin = Hive->BlockList[BlockIndex];
   if (ppBin)
     *ppBin = pBin;
 
@@ -520,6 +525,10 @@ CmiMergeFree(PREGISTRY_HIVE RegistryHive,
 
 	      if ((i + 2) < RegistryHive->FreeListSize)
 		{
+		  memmove (&RegistryHive->FreeList[i + 1],
+			   &RegistryHive->FreeList[i + 2],
+			   sizeof(RegistryHive->FreeList[0])
+			     * (RegistryHive->FreeListSize - i - 2));
 		  memmove (&RegistryHive->FreeListOffset[i + 1],
 			   &RegistryHive->FreeListOffset[i + 2],
 			   sizeof(RegistryHive->FreeListOffset[0])

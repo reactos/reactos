@@ -139,6 +139,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 			CreateOptions);
   if (!NT_SUCCESS(Status))
     {
+      DPRINT("CmiAddSubKey() failed (Status %lx)\n", Status);
       /* Release hive lock */
       ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
       ObDereferenceObject(KeyObject);
@@ -225,14 +226,14 @@ NtDeleteKey(IN HANDLE KeyHandle)
   /* Release hive lock */
   ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
 
-  DPRINT1("PointerCount %lu\n", ObGetObjectPointerCount((PVOID)KeyObject));
+  DPRINT("PointerCount %lu\n", ObGetObjectPointerCount((PVOID)KeyObject));
 
   /* Dereference the object */
   ObDereferenceObject(KeyObject);
   if(KeyObject->RegistryHive != KeyObject->ParentKey->RegistryHive)
     ObDereferenceObject(KeyObject);
 
-  DPRINT1("PointerCount %lu\n", ObGetObjectPointerCount((PVOID)KeyObject));
+  DPRINT("PointerCount %lu\n", ObGetObjectPointerCount((PVOID)KeyObject));
 
   /*
    * Note:
@@ -332,7 +333,21 @@ NtEnumerateKey(
     }
   else
     {
+      if (KeyCell->HashTableOffset == (BLOCK_OFFSET)-1)
+	{
+	  return(STATUS_NO_MORE_ENTRIES);
+	  ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+	  ObDereferenceObject(KeyObject);
+	}
+
       HashTableBlock = CmiGetBlock(RegistryHive, KeyCell->HashTableOffset, NULL);
+      if (HashTableBlock == NULL)
+	{
+	  DPRINT("CmiGetBlock() failed\n");
+	  ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+	  ObDereferenceObject(KeyObject);
+	  return STATUS_UNSUCCESSFUL;
+	}
       SubKeyCell = CmiGetKeyFromHashByIndex(RegistryHive,
 					    HashTableBlock,
 					    Index);
@@ -1196,7 +1211,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
 			      &VBOffset);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("Value not found. Status 0x%X\n", Status);
+      DPRINT("Value not found. Status 0x%X\n", Status);
 
       ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
       ObDereferenceObject(KeyObject);
@@ -1219,7 +1234,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
 
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("Cannot add value. Status 0x%X\n", Status);
+      DPRINT("Cannot add value. Status 0x%X\n", Status);
 
       ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
       ObDereferenceObject(KeyObject);

@@ -305,13 +305,13 @@ CmiAddKeyToList(PKEY_OBJECT ParentKey,
   if (ParentKey->SizeOfSubKeys <= ParentKey->NumberOfSubKeys)
     {
       PKEY_OBJECT *tmpSubKeys = ExAllocatePool(NonPagedPool,
-	(ParentKey->NumberOfSubKeys + 1) * sizeof(DWORD));
+	(ParentKey->NumberOfSubKeys + 1) * sizeof(ULONG));
 
       if (ParentKey->NumberOfSubKeys > 0)
 	{
-	  memcpy(tmpSubKeys,
-		 ParentKey->SubKeys,
-		 ParentKey->NumberOfSubKeys * sizeof(DWORD));
+	  RtlCopyMemory (tmpSubKeys,
+			 ParentKey->SubKeys,
+			 ParentKey->NumberOfSubKeys * sizeof(ULONG));
 	}
 
       if (ParentKey->SubKeys)

@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.93 2003/04/17 11:07:21 ekohl Exp $
+/* $Id: registry.c,v 1.94 2003/04/22 21:14:04 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -978,7 +978,7 @@ CmiHiveSyncRoutine(PVOID DeferredContext)
   PREGISTRY_HIVE Hive;
   PLIST_ENTRY Entry;
 
-  DPRINT1("CmiHiveSyncRoutine() called\n");
+  DPRINT("CmiHiveSyncRoutine() called\n");
 
   CmiHiveSyncPending = FALSE;
 
@@ -1012,7 +1012,7 @@ CmiHiveSyncRoutine(PVOID DeferredContext)
   DPRINT("DeferredContext %x\n", DeferredContext);
   ExFreePool(DeferredContext);
 
-  DPRINT1("CmiHiveSyncRoutine() done\n");
+  DPRINT("CmiHiveSyncRoutine() done\n");
 }
 
 
