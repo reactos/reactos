@@ -81,4 +81,10 @@ static inline unsigned short get_char_typeW( wchar_t ch )
     return wine_wctype_table[wine_wctype_table[ch >> 8] + (ch & 0xff)];
 }
 
+static inline WCHAR *strpbrkW( const WCHAR *str, const WCHAR *accept )
+{
+    for ( ; *str; str++) if (strchrW( accept, *str )) return (WCHAR *)str;
+    return NULL;
+}
+
 #endif
