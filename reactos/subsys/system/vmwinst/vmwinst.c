@@ -18,7 +18,7 @@
  *
  * VMware is a registered trademark of VMware, Inc.
  */
-/* $Id: vmwinst.c,v 1.10 2004/09/24 20:18:15 weiden Exp $
+/* $Id: vmwinst.c,v 1.11 2004/09/24 20:20:46 weiden Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS VMware(r) driver installation utility
@@ -70,7 +70,6 @@ DetectVMware(int *Version)
   magic = 0;
   ver = 0;
   
-return TRUE;
   /* Try using a VMware I/O port. If not running in VMware this'll throw an
      exception! */
   __asm__ __volatile__("inl  %%dx, %%eax"
