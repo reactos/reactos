@@ -91,43 +91,4 @@ typedef struct
    GRPCURSORICONDIRENTRY   idEntries[1] PACKED; // The entries for each image
 } PACKED GRPCURSORICONDIR;
 
-/* GDI logical Icon/Cursor object */
-typedef struct _ICONCURSOROBJ
-{
-	BOOL		fIcon;
-	DWORD		xHotspot;
-	DWORD		yHotspot;
-	BITMAP		ANDBitmap;
-	BITMAP		XORBitmap;
-} ICONCURSOROBJ, *PICONCURSOROBJ;
-
-/*  Internal interfaces  */
-#define  ICONCURSOROBJ_AllocIconCursor()  \
-  ((HICON) GDIOBJ_AllocObj (sizeof (ICONCURSOROBJ), GDI_OBJECT_TYPE_ICONCURSOR, (GDICLEANUPPROC) IconCursor_InternalDelete))
-
-#define  ICONCURSOROBJ_LockIconCursor(hICObj)  \
-  ((PICONCURSOROBJ) GDIOBJ_LockObj ((HGDIOBJ) hICObj, GDI_OBJECT_TYPE_ICONCURSOR))
-  
-#define  ICONCURSOROBJ_UnlockIconCursor(hICObj) GDIOBJ_UnlockObj ((HGDIOBJ) hICObj, GDI_OBJECT_TYPE_ICONCURSOR)
-
-
-BOOL FASTCALL IconCursor_InternalDelete( PICONCURSOROBJ pIconCursor );
-
-/*  User Entry Points  */
-HICON 
-STDCALL 
-NtGdiCreateIcon (
-    BOOL fIcon,
-	INT  Width,
-	INT  Height,
-	UINT  Planes,
-	UINT  BitsPerPel,
-	DWORD xHotspot,
-	DWORD yHotspot,
-	const VOID *ANDBits,
-	const VOID *XORBits
-	);
-
-
-
 #endif
