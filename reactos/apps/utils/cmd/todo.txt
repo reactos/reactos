@@ -1,0 +1,21 @@
+Things to do
+~~~~~~~~~~~~
+Fix bugs :)
+
+Rewrite DIR command (Unicode aware / new structure).
+
+Optimize the code!  For size and speed.  There are numerous places
+where the code is hardly optimal for either.
+
+Sorting in DIR command ("dir /o...").
+
+^S and ^Q to pause/resume displays.
+
+Improve DEL, COPY and MOVE commands.
+BREAK command on command-line.
+
+Add wildcard support to REN.
+
+Add "/?" support to all batch commands.
+
+And many, many more...
