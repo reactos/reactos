@@ -18,6 +18,12 @@ int TCPSocketState(void *ClientData,
 		   OSK_UINT NewState ) {
     PCONNECTION_ENDPOINT Connection = WhichConnection;
 
+    TI_DbgPrint(MID_TRACE,("Flags: %c%c%c%c\n",
+			   NewState & SEL_CONNECT ? 'C' : 'c',
+			   NewState & SEL_READ    ? 'R' : 'r',
+			   NewState & SEL_FIN     ? 'F' : 'f',
+			   NewState & SEL_ACCEPT  ? 'A' : 'a'));
+
     TI_DbgPrint(DEBUG_TCP,("Called: NewState %x (Conn %x) (Change %x)\n", 
 			   NewState, Connection,
 			   Connection ? Connection->State ^ NewState : 
@@ -33,6 +39,8 @@ int TCPSocketState(void *ClientData,
 	    TI_DbgPrint(DEBUG_TCP,("Found socket %x\n", Connection));
     }
 
+    TI_DbgPrint(MID_TRACE,("Connection signalled: %d\n", 
+			   Connection->Signalled));
     if( !Connection->Signalled ) {
 	Connection->Signalled = TRUE;
 	Connection->SignalState = NewState;

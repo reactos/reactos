@@ -20,11 +20,16 @@ void wakeup( struct socket *so, void *token ) {
     OSK_UINT flags = 0;
 
     OS_DbgPrint
-	(OSK_MID_TRACE,("XXX Bytes to receive: %d\n", so->so_rcv.sb_cc));
+	(OSK_MID_TRACE,("XXX Bytes to receive: %d state %x\n", 
+			so->so_rcv.sb_cc, so->so_state));
 
     if( so->so_state & SS_ISCONNECTED ) {
 	OS_DbgPrint(OSK_MID_TRACE,("Socket connected!\n"));
 	flags |= SEL_CONNECT;
+    }
+    if( so->so_q ) {
+	OS_DbgPrint(OSK_MID_TRACE,("Socket accepting q\n"));
+	flags |= SEL_ACCEPT;
     }
     if( so->so_rcv.sb_cc > 0 ) {
 	OS_DbgPrint(OSK_MID_TRACE,("Socket readable\n"));

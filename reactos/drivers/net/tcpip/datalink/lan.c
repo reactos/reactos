@@ -92,8 +92,8 @@ BOOLEAN LanShouldComplete( PLAN_ADAPTER Adapter, PNDIS_PACKET NdisPacket ) {
     }
     KeReleaseSpinLock( &LanSendCompleteLock, OldIrql );
 
-    TI_DbgPrint(MID_TRACE,("NDIS completed the same send packet twice "
-			   "(Adapter %x Packet %x)!!\n", Adapter, NdisPacket));
+    DbgPrint("NDIS completed the same send packet twice "
+	     "(Adapter %x Packet %x)!!\n", Adapter, NdisPacket);
 #ifdef BREAK_ON_DOUBLE_COMPLETE
     KeBugCheck(0);
 #endif
@@ -356,7 +356,8 @@ VOID LanSubmitReceiveWork(
     if( !LanReceiveWorkerBusy ) {
 	LanReceiveWorkerBusy = TRUE;
 	ExQueueWorkItem( &LanWorkItem, CriticalWorkQueue );
-	DbgPrint("Work item inserted %x %x\n", &LanWorkItem, WQItem);
+	TI_DbgPrint(DEBUG_DATALINK,
+		    ("Work item inserted %x %x\n", &LanWorkItem, WQItem));
     } else {
 	DbgPrint("LAN WORKER BUSY %x %x\n", &LanWorkItem, WQItem);
     }

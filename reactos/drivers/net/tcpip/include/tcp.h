@@ -87,6 +87,21 @@ extern LIST_ENTRY SleepingThreadsList;
 extern FAST_MUTEX SleepingThreadsLock;
 extern RECURSIVE_MUTEX TCPLock;
 
+/* accept.c */
+NTSTATUS TCPServiceListeningSocket( PCONNECTION_ENDPOINT Listener,
+				    PCONNECTION_ENDPOINT Connection,
+				    PTDI_REQUEST_KERNEL Request );
+NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog );
+VOID TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
+			      PCONNECTION_ENDPOINT Connection );
+NTSTATUS TCPAccept
+( PTDI_REQUEST Request,
+  PCONNECTION_ENDPOINT Listener,
+  PCONNECTION_ENDPOINT Connection,
+  PTCP_COMPLETION_ROUTINE Complete,
+  PVOID Context );
+
+/* tcp.c */
 PCONNECTION_ENDPOINT TCPAllocateConnectionEndpoint( PVOID ClientContext );
 VOID TCPFreeConnectionEndpoint( PCONNECTION_ENDPOINT Connection );
 
@@ -118,12 +133,6 @@ NTSTATUS TCPDisconnect(
   UINT Flags,
   PTDI_CONNECTION_INFORMATION ConnInfo,
   PTDI_CONNECTION_INFORMATION ReturnInfo,
-  PTCP_COMPLETION_ROUTINE Complete,
-  PVOID Context);
-
-NTSTATUS TCPListen(
-  PCONNECTION_ENDPOINT Connection,
-  UINT Backlog,
   PTCP_COMPLETION_ROUTINE Complete,
   PVOID Context);
 

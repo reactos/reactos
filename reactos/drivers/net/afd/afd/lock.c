@@ -1,4 +1,4 @@
-/* $Id: lock.c,v 1.7 2004/11/17 05:17:22 arty Exp $
+/* $Id: lock.c,v 1.8 2004/12/25 21:30:17 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/lock.c
@@ -142,7 +142,8 @@ VOID UnlockHandles( PAFD_HANDLE HandleArray, UINT HandleCount ) {
     UINT i;
 
     for( i = 0; i < HandleCount; i++ ) {
-	ObDereferenceObject( (PVOID)HandleArray[i].Handle );
+	if( HandleArray[i].Handle ) 
+	    ObDereferenceObject( (PVOID)HandleArray[i].Handle );
     }
 
     ExFreePool( HandleArray );

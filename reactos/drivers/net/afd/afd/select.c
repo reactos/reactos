@@ -1,4 +1,4 @@
-/* $Id: select.c,v 1.8 2004/11/25 23:36:36 arty Exp $
+/* $Id: select.c,v 1.9 2004/12/25 21:30:17 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/select.c
@@ -42,12 +42,12 @@ VOID RemoveSelect( PAFD_ACTIVE_POLL Poll ) {
 }
 
 VOID SignalSocket( PAFD_ACTIVE_POLL Poll, PAFD_POLL_INFO PollReq, 
-		   NTSTATUS Status, UINT Collected ) {
+		   NTSTATUS Status ) {
     PIRP Irp = Poll->Irp;
-    AFD_DbgPrint(MID_TRACE,("Called (Status %x Events %d)\n", 
-			    Status, Collected));
+    AFD_DbgPrint(MID_TRACE,("Called (Status %x)\n", Status));
     Poll->Irp->IoStatus.Status = Status;
-    Poll->Irp->IoStatus.Information = Collected;
+    Poll->Irp->IoStatus.Information =
+        FIELD_OFFSET(AFD_POLL_INFO, Handles) + sizeof(AFD_HANDLE) * PollReq->HandleCount;
     CopyBackStatus( PollReq->Handles,
 		    PollReq->HandleCount );
     UnlockHandles( AFD_HANDLES(PollReq), PollReq->HandleCount );
@@ -77,7 +77,7 @@ VOID SelectTimeout( PKDPC Dpc,
     ZeroEvents( PollReq->Handles, PollReq->HandleCount );
 
     KeAcquireSpinLock( &DeviceExt->Lock, &OldIrql );
-    SignalSocket( Poll, PollReq, STATUS_TIMEOUT, 0 );
+    SignalSocket( Poll, PollReq, STATUS_TIMEOUT );
     KeReleaseSpinLock( &DeviceExt->Lock, OldIrql );
 
     AFD_DbgPrint(MID_TRACE,("Timeout\n"));
@@ -100,7 +100,7 @@ VOID KillExclusiveSelects( PAFD_DEVICE_EXTENSION DeviceExt ) {
 	    Irp = Poll->Irp;
 	    PollReq = Irp->AssociatedIrp.SystemBuffer;
 	    ZeroEvents( PollReq->Handles, PollReq->HandleCount );
-	    SignalSocket( Poll, PollReq, STATUS_CANCELLED, 0 );
+	    SignalSocket( Poll, PollReq, STATUS_CANCELLED );
 	}
     }
 
@@ -135,7 +135,7 @@ AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !AFD_HANDLES(PollReq) ) {
 	Irp->IoStatus.Status = STATUS_NO_MEMORY;
-	Irp->IoStatus.Information = -1;
+	Irp->IoStatus.Information = 0;
 	IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
 	return Irp->IoStatus.Status;
     }
@@ -186,8 +186,7 @@ AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	if( Signalled ) {
 	    Status = STATUS_SUCCESS;
 	    Irp->IoStatus.Status = Status;
-	    Irp->IoStatus.Information = Signalled;
-	    SignalSocket( Poll, PollReq, Status, Signalled );
+	    SignalSocket( Poll, PollReq, Status );
 	} else {
 	    Status = STATUS_PENDING;
 	    IoMarkIrpPending( Irp );
@@ -344,7 +343,7 @@ VOID PollReeval( PAFD_DEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject ) {
 	if( UpdatePollWithFCB( Poll, FileObject ) ) {
 	    ThePollEnt = ThePollEnt->Flink;
 	    AFD_DbgPrint(MID_TRACE,("Signalling socket\n"));
-	    SignalSocket( Poll, PollReq, STATUS_SUCCESS, 1 );
+	    SignalSocket( Poll, PollReq, STATUS_SUCCESS );
 	} else 
 	    ThePollEnt = ThePollEnt->Flink;
     }

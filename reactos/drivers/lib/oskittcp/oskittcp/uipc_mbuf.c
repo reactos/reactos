@@ -330,7 +330,7 @@ m_copym(m, off0, len, wait)
 		copyhdr = 1;
 	while (off > 0) {
 		if (m == 0)
-			panic("m_copym");
+			panic("m_copym: %d", off);
 		if (off < m->m_len)
 			break;
 		off -= m->m_len;

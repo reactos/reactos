@@ -1,4 +1,3 @@
-
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS TCP/IP protocol driver
@@ -272,8 +271,8 @@ NTSTATUS DispTdiAssociateAddress(
     (PVOID*)&FileObject,
     NULL);
   if (!NT_SUCCESS(Status)) {
-    TI_DbgPrint(MID_TRACE, ("Bad address file object handle (0x%X).\n",
-      Parameters->AddressHandle));
+    TI_DbgPrint(MID_TRACE, ("Bad address file object handle (0x%X): %x.\n",
+      Parameters->AddressHandle, Status));
     return STATUS_INVALID_PARAMETER;
   }
 
@@ -465,7 +464,7 @@ NTSTATUS DispTdiListen(
   PTDI_REQUEST_KERNEL Parameters;
   PTRANSPORT_CONTEXT TranContext;
   PIO_STACK_LOCATION IrpSp;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
 
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
@@ -489,9 +488,50 @@ NTSTATUS DispTdiListen(
 
   Parameters = (PTDI_REQUEST_KERNEL)&IrpSp->Parameters;
 
-  Status = TCPListen( Connection, 1024 /* BACKLOG */,
-		      DispDataRequestComplete,
-		      Irp );
+  TI_DbgPrint(MIN_TRACE, ("Connection->AddressFile: %x\n", 
+			  Connection->AddressFile ));
+  if( Connection->AddressFile ) {
+      TI_DbgPrint(MIN_TRACE, ("Connection->AddressFile->Listener: %x\n",
+			      Connection->AddressFile->Listener));
+  }
+
+  /* Listening will require us to create a listening socket and store it in
+   * the address file.  It will be signalled, and attempt to complete an irp
+   * when a new connection arrives. */
+  /* The important thing to note here is that the irp we'll complete belongs
+   * to the socket to be accepted onto, not the listener */
+  if( !Connection->AddressFile->Listener ) {
+      Connection->AddressFile->Listener = 
+	  TCPAllocateConnectionEndpoint( NULL );
+
+      if( !Connection->AddressFile->Listener ) 
+	  Status = STATUS_NO_MEMORY;
+
+      if( NT_SUCCESS(Status) ) {
+	  Connection->AddressFile->Listener->AddressFile = 
+	      Connection->AddressFile;
+	  
+	  Status = TCPSocket( Connection->AddressFile->Listener,
+			      Connection->AddressFile->Family,
+			      SOCK_STREAM,
+			      Connection->AddressFile->Protocol );
+      }
+
+      if( NT_SUCCESS(Status) )
+	  Status = TCPListen( Connection->AddressFile->Listener, 1024 ); 
+	  /* BACKLOG */
+  }
+
+  if( NT_SUCCESS(Status) ) {
+      Status = TCPAccept
+	  ( (PTDI_REQUEST)Parameters, 
+	    Connection->AddressFile->Listener,
+	    Connection,
+	    DispDataRequestComplete,
+	    Irp );
+  }
+
+  TI_DbgPrint(MID_TRACE,("Leaving %x\n", Status));
 
   return Status;
 }

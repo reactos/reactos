@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.16 2004/12/11 14:59:31 navaraf Exp $
+/* $Id: main.c,v 1.17 2004/12/25 21:30:17 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/main.c
@@ -104,7 +104,8 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     }
 
     InitializeListHead( &FCB->DatagramList );
-
+    InitializeListHead( &FCB->PendingConnections );
+    
     AFD_DbgPrint(MID_TRACE,("%x: Checking command channel\n", FCB));
 
     if( ConnectInfo ) {
@@ -252,7 +253,8 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( DisReq->DisconnectType & AFD_DISCONNECT_SEND )
 	Flags |= TDI_DISCONNECT_RELEASE;
-    if( DisReq->DisconnectType & AFD_DISCONNECT_RECV )
+    if( DisReq->DisconnectType & AFD_DISCONNECT_RECV ||
+	DisReq->DisconnectType & AFD_DISCONNECT_ABORT )
 	Flags |= TDI_DISCONNECT_ABORT;
 
     Status = TdiDisconnect( FCB->Connection.Object,
@@ -349,12 +351,10 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	    return AfdSetContext( DeviceObject, Irp, IrpSp );
 
 	case IOCTL_AFD_WAIT_FOR_LISTEN:
-	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_WAIT_FOR_LISTEN\n"));
-	    break;
+	    return AfdWaitForListen( DeviceObject, Irp, IrpSp );
 
 	case IOCTL_AFD_ACCEPT:
-	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_ACCEPT\n"));
-	    break;
+	    return AfdAccept( DeviceObject, Irp, IrpSp );
 
 	case IOCTL_AFD_DISCONNECT:
 	    return AfdDisconnect( DeviceObject, Irp, IrpSp );

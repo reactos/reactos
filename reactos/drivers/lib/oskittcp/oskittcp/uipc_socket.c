@@ -608,6 +608,8 @@ restart:
 			}
 		if ((so->so_state & (SS_ISCONNECTED|SS_ISCONNECTING)) == 0 &&
 		    (so->so_proto->pr_flags & PR_CONNREQUIRED)) {
+		    printf("so: %x\n", so);
+		    __asm__("int3");
 			error = ENOTCONN;
 			goto release;
 		}
@@ -774,7 +776,7 @@ dontblock:
 		 * Keep sockbuf locked against other readers.
 		 */
 		while (flags & MSG_WAITALL && m == 0 && uio->uio_resid > 0 &&
-		    !sosendallatonce(so) && !nextrecord) {
+		       !sosendallatonce(so) && !nextrecord) {
 			if (so->so_error || so->so_state & SS_CANTRCVMORE)
 				break;
 			error = sbwait(&so->so_rcv);

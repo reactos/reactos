@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.33 2004/12/03 23:37:40 blight Exp $
+# $Id: makefile,v 1.34 2004/12/25 21:30:19 arty Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -14,7 +14,6 @@ TARGET_PCH = include/precomp.h
 TARGET_CFLAGS = \
 	-D__USE_W32API \
 	-D_SEH_NO_NATIVE_NLG \
-	-DMEMTRACK \
 	-DNDIS40 \
 	-Wall -Werror \
 	-I./include \

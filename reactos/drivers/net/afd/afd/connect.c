@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.9 2004/12/13 21:20:37 arty Exp $
+/* $Id: connect.c,v 1.10 2004/12/25 21:30:17 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/connect.c
@@ -40,12 +40,36 @@ NTSTATUS WarmSocketForConnection( PAFD_FCB FCB ) {
     return Status;
 }
 
+NTSTATUS MakeSocketIntoConnection( PAFD_FCB FCB ) {
+    NTSTATUS Status;
+
+    /* Allocate the receive area and start receiving */
+    FCB->Recv.Window = 
+	ExAllocatePool( NonPagedPool, FCB->Recv.Size );
+    FCB->Send.Window = 
+	ExAllocatePool( NonPagedPool, FCB->Send.Size );
+
+    FCB->State = SOCKET_STATE_CONNECTED;
+    
+    if( FCB->Recv.Window ) {
+	Status = TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
+			     FCB->Connection.Object,
+			     TDI_RECEIVE_NORMAL,
+			     FCB->Recv.Window,
+			     FCB->Recv.Size,
+			     &FCB->ReceiveIrp.Iosb,
+			     ReceiveComplete,
+			     FCB );
+    }
+    
+    return Status;
+}
+
 NTSTATUS DDKAPI StreamSocketConnectComplete
 ( PDEVICE_OBJECT DeviceObject,
   PIRP Irp,
   PVOID Context ) {
     NTSTATUS Status = Irp->IoStatus.Status;
-    PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     PAFD_FCB FCB = (PAFD_FCB)Context;
     PLIST_ENTRY NextIrpEntry;
     PIRP NextIrp;
@@ -83,22 +107,7 @@ NTSTATUS DDKAPI StreamSocketConnectComplete
     }
 
     if( NT_SUCCESS(Status) ) {
-	/* Allocate the receive area and start receiving */
-	FCB->Recv.Window = 
-	    ExAllocatePool( NonPagedPool, FCB->Recv.Size );
-	FCB->Send.Window = 
-	    ExAllocatePool( NonPagedPool, FCB->Send.Size );
-
-	if( FCB->Recv.Window ) {
-	    Status = TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
-				 IrpSp->FileObject,
-				 TDI_RECEIVE_NORMAL,
-				 FCB->Recv.Window,
-				 FCB->Recv.Size,
-				 &FCB->ReceiveIrp.Iosb,
-				 ReceiveComplete,
-				 FCB );
-	}
+	Status = MakeSocketIntoConnection( FCB );
 
 	if( FCB->Send.Window && 
 	    !IsListEmpty( &FCB->PendingIrpList[FUNCTION_SEND] ) ) {

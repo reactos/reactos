@@ -9,10 +9,10 @@
  */
 #include "precomp.h"
 
-#define NDEBUG
+//#define NDEBUG
 
 #ifndef NDEBUG
-DWORD DebugTraceLevel = DEBUG_ULTRA;
+DWORD DebugTraceLevel = MAX_TRACE | DEBUG_TCP;
 #else
 DWORD DebugTraceLevel = 0;
 #endif /* NDEBUG */
@@ -480,6 +480,7 @@ TiDispatchInternal(
 
   case TDI_LISTEN:
     Status = DispTdiListen(Irp);
+    Complete = FALSE;
     break;
 
   case TDI_CONNECT:
