@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.2 2000/04/05 15:49:52 ekohl Exp $
+/* $Id: misc.c,v 1.3 2000/04/08 19:08:50 ekohl Exp $
  *
  * COPYRIGHT:             See COPYING in the top level directory
  * PROJECT:               ReactOS kernel
@@ -60,6 +60,20 @@ KeFlushWriteBuffer (
 	VOID
 	)
 {
+	return;
+}
+
+VOID
+STDCALL
+HalReportResourceUsage (
+	VOID
+	)
+{
+	/*
+	 * FIXME: Report all resources used by hal.
+	          Calls IoReportHalResourceUsage()
+	 */
+
 	return;
 }
 

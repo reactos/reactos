@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.67 2000/04/07 02:23:59 dwelch Exp $
+# $Id: makefile_rex,v 1.68 2000/04/08 19:08:05 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -30,7 +30,7 @@ KE_OBJECTS = ke/head.o ke/main.o ke/timer.o ke/error.o ke/catch.o \
              ke/dpc.o ke/wait.o ke/kqueue.o ke/dispatch.o \
 	     ke/sem.o ke/critical.o ke/event.o ke/apc.o ke/bug.o \
 	     ke/mutex.o ke/kernel.o ke/ldt.o ke/spinlock.o\
-	     ke/process.o ke/gdt.o ke/idt.o ke/udelay.o
+	     ke/process.o ke/gdt.o ke/idt.o
 
 KE_I386_OBJECTS = ke/i386/thread.o ke/i386/usercall.o ke/i386/exp.o
  
@@ -66,7 +66,7 @@ FS_OBJECTS = fs/dbcsname.o fs/name.o fs/mcb.o fs/unc.o fs/util.o \
 	     fs/notify.o
 
 SE_OBJECTS = se/semgr.o se/acl.o se/sid.o se/sd.o se/token.o se/luid.o \
-             se/priv.o
+             se/priv.o se/access.o
 
 CM_OBJECTS = cm/registry.o
 

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.42 2000/03/26 19:38:27 ea Exp $
+/* $Id: main.c,v 1.43 2000/04/08 19:10:21 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -30,7 +30,7 @@
 
 /* DATA *********************************************************************/
 
-USHORT EXPORTED NtBuildNumber = KERNEL_VERSION_BUILD;	
+USHORT EXPORTED NtBuildNumber = KERNEL_VERSION_BUILD;
 ULONG EXPORTED NtGlobalFlag = 0;
 
 /* FUNCTIONS ****************************************************************/
@@ -208,10 +208,10 @@ asmlinkage void _main(boot_param* _bp)
     * Initialize the kernel debugger
     */
    KdInitSystem (0, &bp);
-//   if (KdPollBreakIn ())
-//     {
-//	DbgBreakPointWithStatus (DBG_STATUS_CONTROL_C);
-//     }
+   if (KdPollBreakIn ())
+     {
+	DbgBreakPointWithStatus (DBG_STATUS_CONTROL_C);
+     }
 
    /*
     * Initialization phase 1
@@ -239,15 +239,12 @@ asmlinkage void _main(boot_param* _bp)
    CmInitializeRegistry();
    NtInit();
    
+   /* Report all resources used by hal */
+   HalReportResourceUsage ();
+   
    memcpy(old_idt, KiIdt, sizeof(old_idt));
    old_idt_valid = 0;
    
-   /* Just a test. Exceptions and Interrupts are initialized now */
-   if (KdPollBreakIn ())
-     {
-	DbgBreakPointWithStatus (DBG_STATUS_CONTROL_C);
-     }
-
    /*
     * Initalize services loaded at boot time
     */

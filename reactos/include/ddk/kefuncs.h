@@ -110,7 +110,7 @@ BOOLEAN KeSetTimerEx(PKTIMER Timer,
 		     LARGE_INTEGER DueTime, 
 		     LONG Period,
 		     PKDPC Dpc);
-VOID KeStallExecutionProcessor(ULONG MicroSeconds);
+VOID STDCALL KeStallExecutionProcessor(ULONG MicroSeconds);
 BOOLEAN KeSynchronizeExecution(PKINTERRUPT Interrupt, 
 			       PKSYNCHRONIZE_ROUTINE SynchronizeRoutine,
 			       PVOID SynchronizeContext);

@@ -1,4 +1,4 @@
-/* $Id: ddk.h,v 1.13 2000/04/05 15:48:12 ekohl Exp $
+/* $Id: ddk.h,v 1.14 2000/04/08 19:06:29 ekohl Exp $
  *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel
@@ -216,6 +216,12 @@ HalQuerySystemInformation(VOID);
 
 ULONG
 HalReadDmaCounter(PADAPTER_OBJECT AdapterObject);
+
+VOID
+STDCALL
+HalReportResourceUsage (
+	VOID
+	);
 
 VOID
 STDCALL

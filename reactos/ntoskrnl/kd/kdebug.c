@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.9 2000/03/24 22:25:38 dwelch Exp $
+/* $Id: kdebug.c,v 1.10 2000/04/08 19:09:30 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -43,7 +43,7 @@ KdDebuggerNotPresent = TRUE;		/* EXPORTED */
 
 static BOOLEAN KdpBreakPending = FALSE;
 static BOOLEAN KdpBreakRecieved = FALSE;
-static ULONG KdpDebugType = ScreenDebug | BochsDebug;
+static ULONG KdpDebugType = 0;
 
 
 /* PRIVATE FUNCTIONS ********************************************************/

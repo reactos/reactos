@@ -29,6 +29,4 @@ VOID KeInit(VOID)
     * Allow interrupts
     */
    KeLowerIrql(PASSIVE_LEVEL);
-   
-   KeCalibrateTimerLoop();
 }

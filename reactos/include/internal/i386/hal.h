@@ -91,5 +91,6 @@ HalpGetSystemInterruptVector (
 	PKAFFINITY Affinity
 	);
 
+VOID HalpCalibrateStallExecution(VOID);
 
 #endif /* __INTERNAL_HAL_HAL_H */

@@ -1,4 +1,4 @@
-/* $Id: halinit.c,v 1.9 2000/03/20 17:59:42 ekohl Exp $
+/* $Id: halinit.c,v 1.10 2000/04/08 19:08:50 ekohl Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -31,6 +31,7 @@ HalInitSystem (
    if (Phase == 0)
    {
       HalInitializeDisplay (bp);
+      HalpCalibrateStallExecution ();
       KeInitExceptions();
       KeInitIRQ();
       KeLowerIrql(DISPATCH_LEVEL);

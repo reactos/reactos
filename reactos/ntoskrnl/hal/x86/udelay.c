@@ -1,8 +1,8 @@
-/* $Id: udelay.c,v 1.2 1999/11/24 11:51:50 dwelch Exp $
+/* $Id: udelay.c,v 1.1 2000/04/08 19:08:50 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
- * FILE:           ntoskrnl/ke/udelay.c
+ * FILE:           ntoskrnl/hal/x86/udelay.c
  * PURPOSE:        Busy waiting
  * PROGRAMMER:     David Welch (david.welch@seh.ox.ac.uk)
  * UPDATE HISTORY:
@@ -11,11 +11,8 @@
 
 /* INCLUDES ***************************************************************/
 
-#include <limits.h>
 #include <ddk/ntddk.h>
-#include <string.h>
-#include <internal/string.h>
-#include <stdio.h>
+#include <internal/hal.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -30,23 +27,23 @@
 
 static unsigned int loops_per_microsecond = 100;
 
-extern ULONGLONG KiTimerTicks;
+//extern ULONGLONG KiTimerTicks;
+
 
 /* FUNCTIONS **************************************************************/
 
-VOID KeCalibrateTimerLoop(VOID)
+VOID HalpCalibrateStallExecution(VOID)
 {
 //   unsigned int start_tick;
 //   unsigned int end_tick;
 //   unsigned int nr_ticks;
 //   unsigned int i;
 //   unsigned int microseconds;
-   
-   #if 0
+
+#if 0
    for (i=0;i<20;i++)
      {
-   
-	start_tick = KiTimerTicks;
+        start_tick = KiTimerTicks;
         microseconds = 0;
         while (start_tick == KiTimerTicks);
         while (KiTimerTicks == (start_tick+TICKS_TO_CALIBRATE))
@@ -68,10 +65,13 @@ VOID KeCalibrateTimerLoop(VOID)
 //        DbgPrint("loops_per_microsecond %d\n",loops_per_microsecond);
      }
 //     for(;;);
-   #endif
+#endif
 }
 
-VOID KeStallExecutionProcessor(ULONG MicroSeconds)
+
+VOID
+STDCALL
+KeStallExecutionProcessor(ULONG MicroSeconds)
 {
    unsigned int i;
    for (i=0; i<(loops_per_microsecond*MicroSeconds) ;i++)
@@ -80,3 +80,4 @@ VOID KeStallExecutionProcessor(ULONG MicroSeconds)
      }
 }
 
+/* EOF */

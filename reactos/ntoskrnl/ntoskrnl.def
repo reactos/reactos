@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.66 2000/04/05 15:52:45 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.67 2000/04/08 19:08:05 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -421,8 +421,8 @@ RtlAppendAsciizToString@8
 RtlAppendStringToString@8
 RtlAppendUnicodeStringToString@8
 RtlAppendUnicodeToString@8
-;RtlAreAllAccessesGranted
-;RtlAreAnyAccessesGranted
+RtlAreAllAccessesGranted@8
+RtlAreAnyAccessesGranted@8
 RtlAreBitsClear@12
 RtlAreBitsSet@12
 ;RtlAssert
@@ -527,7 +527,7 @@ RtlLengthSecurityDescriptor@4
 RtlLengthSid@4
 ;RtlLookupAtomInAtomTable
 ;RtlLookupElementGenericTable
-;RtlMapGenericMask
+RtlMapGenericMask@8
 RtlMoveMemory@12
 RtlMultiByteToUnicodeN@20
 RtlMultiByteToUnicodeSize@12
@@ -809,7 +809,7 @@ HalProcessorIdle@0
 HalQueryDisplayParameters@16
 HalQueryRealTimeClock@4
 ;HalReadDmaCounter
-;HalReportResourceUsage
+HalReportResourceUsage@0
 ;HalRequestIpi
 ;HalRequestSoftwareInterrupt
 HalReturnToFirmware@4
@@ -850,7 +850,7 @@ KeRaiseIrql@8
 ;KeRaiseIrqlToDpcLevel
 ;KeRaiseIrqlToSynchLevel
 KeReleaseSpinLock
-KeStallExecutionProcessor
+KeStallExecutionProcessor@4
 ;KfAcquireSpinLock
 ;@KfLowerIrql@4
 KfLowerIrql@4
