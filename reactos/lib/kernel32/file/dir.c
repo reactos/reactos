@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.34 2003/02/16 18:56:04 hbirr Exp $
+/* $Id: dir.c,v 1.35 2003/03/09 21:39:17 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -615,7 +615,8 @@ SearchPathW (
 		lpPath = EnvironmentBufferW;
 	}
 
-	retCode = RtlDosSearchPath_U ((PWCHAR)lpPath, (PWCHAR)lpFileName, (PWCHAR)lpExtension, nBufferLength, lpBuffer, lpFilePart);
+	retCode = RtlDosSearchPath_U ((PWCHAR)lpPath, (PWCHAR)lpFileName, (PWCHAR)lpExtension, 
+	                              nBufferLength * sizeof(WCHAR), lpBuffer, lpFilePart);
 
 	if (EnvironmentBufferW != NULL)
 	{
@@ -625,7 +626,7 @@ SearchPathW (
 	{
 		SetLastError(ERROR_FILE_NOT_FOUND);
 	}
-	return retCode;
+	return retCode / sizeof(WCHAR);
 }
 
 /* EOF */
