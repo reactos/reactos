@@ -697,6 +697,9 @@ SOURCE=.\dialogs\settings.cpp
 SOURCE=.\dialogs\settings.h
 # End Source File
 # End Group
+# Begin Group "main"
+
+# PROP Default_Filter ""
 # Begin Source File
 
 SOURCE=.\buildno.h
@@ -721,5 +724,6 @@ SOURCE=.\globals.h
 
 SOURCE=".\i386-stub-win32.c"
 # End Source File
+# End Group
 # End Target
 # End Project
