@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.79 2003/09/07 09:55:52 weiden Exp $
+/* $Id: defwnd.c,v 1.80 2003/09/07 11:52:54 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -800,7 +800,7 @@ DefWndHitTestNC(HWND hWnd, POINT Point)
 
 	  if (Style & WS_MAXIMIZEBOX || Style & WS_MINIMIZEBOX)
 	    {
-	      WindowRect.right -= GetSystemMetrics(SM_CXSIZE) - 2;
+	      WindowRect.right -= GetSystemMetrics(SM_CXSIZE);
 	    }
 	  if (Point.x >= WindowRect.right)
 	    {
@@ -809,7 +809,7 @@ DefWndHitTestNC(HWND hWnd, POINT Point)
 
 	  if (Style & WS_MINIMIZEBOX)
 	    {
-	      WindowRect.right -= GetSystemMetrics(SM_CXSIZE) - 2;
+	      WindowRect.right -= GetSystemMetrics(SM_CXSIZE);
 	    }
 	  if (Point.x >= WindowRect.right)
 	    {

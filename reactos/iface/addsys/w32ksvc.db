@@ -405,6 +405,7 @@ NtUserGetProp				2
 NtUserGetPriorityClipboardFormat        2
 NtUserGetProcessWindowStation           0
 NtUserGetScrollBarInfo                  3
+NtUserGetScrollInfo                     3
 NtUserGetSystemMenu                     2
 NtUserGetSystemMetrics			1
 NtUserGetThreadDesktop                  2

@@ -823,9 +823,19 @@ HWINSTA
 STDCALL
 NtUserGetProcessWindowStation(VOID);
 
-DWORD
+BOOL
 STDCALL
-NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi);
+NtUserGetScrollBarInfo(
+  HWND hWnd, 
+  LONG idObject, 
+  PSCROLLBARINFO psbi);
+
+BOOL
+STDCALL
+NtUserGetScrollInfo(
+  HWND hwnd, 
+  int fnBar, 
+  LPSCROLLINFO lpsi);
 
 HMENU
 STDCALL

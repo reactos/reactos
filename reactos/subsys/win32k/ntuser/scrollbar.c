@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scrollbar.c,v 1.9 2003/09/07 09:55:52 weiden Exp $
+/* $Id: scrollbar.c,v 1.10 2003/09/07 11:52:54 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -44,6 +44,14 @@
 
 #define SCROLL_MIN_RECT  4               /* Minimum size of the rectangle between the arrows */
 #define SCROLL_ARROW_THUMB_OVERLAP 0     /* Overlap between arrows and thumb */
+
+#define SBRG_SCROLLBAR     0 /* the scrollbar itself */
+#define SBRG_TOPRIGHTBTN   1 /* the top or right button */
+#define SBRG_PAGEUPRIGHT   2 /* the page up or page right region */
+#define SBRG_SCROLLBOX     3 /* the scroll box */
+#define SBRG_PAGEDOWNLEFT  4 /* the page down or page left region */
+#define SBRG_BOTTOMLEFTBTN 5 /* the bottom or left button */
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -122,7 +130,7 @@ IntCreateScrollBar(PWINDOW_OBJECT Window, LONG idObject)
 
   psbi->cbSize = sizeof(SCROLLBARINFO);
 
-  for (i=0; i<CCHILDREN_SCROLLBAR+1; i++)
+  for (i = 0; i < CCHILDREN_SCROLLBAR + 1; i++)
     psbi->rgstate[i] = 0;
 
   switch(idObject)
@@ -180,7 +188,7 @@ IntDestroyScrollBar(PWINDOW_OBJECT Window, LONG idObject)
 }
 
 
-DWORD
+BOOL
 STDCALL
 NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
 {
@@ -203,14 +211,26 @@ NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
   switch(idObject)
   {
     case SB_HORZ:
-      memcpy(psbi, Window->pHScroll, sizeof(SCROLLBARINFO));
-      break;
+      if(Window->pHScroll)
+      {
+        memcpy(psbi, Window->pHScroll, sizeof(SCROLLBARINFO));
+        break;
+      }
+      /* fall through */
     case SB_VERT:
-      memcpy(psbi, Window->pVScroll, sizeof(SCROLLBARINFO));
-      break;
+      if(Window->pVScroll)
+      {
+        memcpy(psbi, Window->pVScroll, sizeof(SCROLLBARINFO));
+        break;
+      }
+      /* fall through */
     case SB_CTL:
-      memcpy(psbi, Window->wExtra, sizeof(SCROLLBARINFO));
-      break;
+      if(Window->wExtra)
+      {
+        memcpy(psbi, Window->wExtra, sizeof(SCROLLBARINFO));
+        break;
+      }
+      /* fall through */
     default:
       IntReleaseWindowObject(Window);
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
@@ -223,6 +243,43 @@ NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
   return TRUE;
 }
 
+
+BOOL
+STDCALL
+NtUserGetScrollInfo(HWND hwnd, int fnBar, LPSCROLLINFO lpsi)
+{
+  PWINDOW_OBJECT Window;
+  PSCROLLBARINFO Info = NULL;
+  
+  Window = IntGetWindowObject(hwnd);
+
+  if(!Window)
+  {
+    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+    return FALSE;
+  }
+  
+  switch(fnBar)
+  {
+    case SB_HORZ:
+      Info = Window->pHScroll;
+      break;
+    case SB_VERT:
+      Info = Window->pVScroll;
+      break;
+    case SB_CTL:
+      Info = Window->wExtra;
+      break;
+    default:
+      IntReleaseWindowObject(Window);
+      return FALSE;
+  }
+  
+  IntReleaseWindowObject(Window);
+  return FALSE;
+}
+
+
 DWORD
 STDCALL
 NtUserEnableScrollBar(
@@ -230,7 +287,38 @@ NtUserEnableScrollBar(
   UINT wSBflags, 
   UINT wArrows)
 {
-  return 0;
+  PWINDOW_OBJECT Window;
+  PSCROLLBARINFO InfoV = NULL, InfoH = NULL;
+  
+  Window = IntGetWindowObject(hWnd);
+
+  if(!Window)
+  {
+    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+    return FALSE;
+  }
+  
+  switch(wSBflags)
+  {
+    case SB_BOTH:
+      InfoV = Window->pVScroll;
+      /* fall through */
+    case SB_HORZ:
+      InfoH = Window->pHScroll;
+      break;
+    case SB_VERT:
+      InfoV = Window->pVScroll;
+      break;
+    case SB_CTL:
+      InfoV = Window->wExtra;
+      break;
+    default:
+      IntReleaseWindowObject(Window);
+      return FALSE;
+  }
+  
+  IntReleaseWindowObject(Window);
+  return TRUE;
 }
 
 DWORD
@@ -258,8 +346,34 @@ NtUserSetScrollInfo(
   LPCSCROLLINFO lpsi, 
   WINBOOL fRedraw)
 {
-  UNIMPLEMENTED
+  PWINDOW_OBJECT Window;
+  PSCROLLBARINFO Info = NULL;
+  
+  Window = IntGetWindowObject(hwnd);
 
+  if(!Window)
+  {
+    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+    return 0;
+  }
+  
+  switch(fnBar)
+  {
+    case SB_HORZ:
+      Info = Window->pHScroll;
+      break;
+    case SB_VERT:
+      Info = Window->pVScroll;
+      break;
+    case SB_CTL:
+      Info = Window->wExtra;
+      break;
+    default:
+      IntReleaseWindowObject(Window);
+      return 0;
+  }
+  
+  IntReleaseWindowObject(Window);
   return 0;
 }
 
