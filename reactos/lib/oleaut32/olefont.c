@@ -1214,7 +1214,7 @@ static HRESULT WINAPI OLEFontImpl_GetTypeInfo(
     return E_FAIL;
   hres = LoadTypeLib(stdole32tlb, &tl);
   if (FAILED(hres)) {
-    FIXME("Could not load the stdole32.tlb?\n");
+    ERR("Could not load the stdole32.tlb?\n");
     return hres;
   }
   hres = ITypeLib_GetTypeInfoOfGuid(tl, &IID_IDispatch, ppTInfo);

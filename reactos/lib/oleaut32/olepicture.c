@@ -409,8 +409,11 @@ static ULONG WINAPI OLEPictureImpl_AddRef(
   IPicture* iface)
 {
   OLEPictureImpl *This = (OLEPictureImpl *)iface;
-  TRACE("(%p)->(ref=%ld)\n", This, This->ref);
-  return InterlockedIncrement(&This->ref);
+  ULONG refCount = InterlockedIncrement(&This->ref);
+
+  TRACE("(%p)->(ref before=%ld)\n", This, refCount - 1);
+
+  return refCount;
 }
 
 /************************************************************************
@@ -422,20 +425,16 @@ static ULONG WINAPI OLEPictureImpl_Release(
       IPicture* iface)
 {
   OLEPictureImpl *This = (OLEPictureImpl *)iface;
-  ULONG ret;
-  TRACE("(%p)->(ref=%ld)\n", This, This->ref);
+  ULONG refCount = InterlockedDecrement(&This->ref);
 
-  /*
-   * Decrease the reference count on this object.
-   */
-  ret = InterlockedDecrement(&This->ref);
+  TRACE("(%p)->(ref before=%ld)\n", This, refCount + 1);
 
   /*
    * If the reference count goes down to 0, perform suicide.
    */
-  if (ret==0) OLEPictureImpl_Destroy(This);
+  if (!refCount) OLEPictureImpl_Destroy(This);
 
-  return ret;
+  return refCount;
 }
 
 
