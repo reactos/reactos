@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: install.c,v 1.16 2004/08/28 11:08:50 ekohl Exp $
+/* $Id: install.c,v 1.17 2004/10/19 14:33:07 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -276,13 +276,10 @@ ProcessSysSetupInf(VOID)
       return FALSE;
     }
 
-#if 0
-    /* FIXME: Currently unsupported */
     if (!SetupDiInstallClass(NULL, LineBuffer, DI_QUIETINSTALL, NULL))
     {
       return FALSE;
     }
-#endif
   }
   while (SetupFindNextLine(&InfContext, &InfContext));
 
