@@ -1272,7 +1272,7 @@ StartMenuRoot::StartMenuRoot(HWND hwnd)
 	_logo_size.cx = bmp_hdr.bmWidth;
 	_logo_size.cy = bmp_hdr.bmHeight;
 
-	_border_left = _logo_size.cx;
+	_border_left = _logo_size.cx + 1;
 }
 
 
@@ -1483,11 +1483,11 @@ void StartMenuRoot::Paint(PaintCanvas& canvas)
 	int h = min(_logo_size.cy, clnt.bottom);
 
 	RECT rect = {0, 0, _logo_size.cx-1, clnt.bottom-h};
-	HBRUSH hbr = CreateSolidBrush(logo256? RGB(166,202,240): RGB(255,255,255));	// same color as the background color in the logo bitmap
+	HBRUSH hbr = CreateSolidBrush(logo256? RGB(166,202,240): RGB(71,103,121));	//RGB(255,255,255));	// same color as the background color in the logo bitmap
 	FillRect(canvas, &rect, hbr);
 	DeleteObject(hbr);
-	//PatBlt(canvas, _logo_size.cx-1, 0, 1, clnt.bottom-h, WHITENESS);
-	PatBlt(canvas, _logo_size.cx-1, 0, 1, clnt.bottom-h, WHITENESS);
+
+	PatBlt(canvas, _logo_size.cx, 0, 1, clnt.bottom, WHITENESS);
 
 	BitBlt(canvas, 0, clnt.bottom-h, _logo_size.cx, h, mem_dc, 0, 0, SRCCOPY);
 
