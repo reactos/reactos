@@ -1,4 +1,4 @@
-/* $Id: scm.c,v 1.9 2002/07/20 13:31:34 ekohl Exp $
+/* $Id: scm.c,v 1.10 2002/07/23 08:16:05 jvangael Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -407,117 +407,116 @@ OpenSCManagerA(LPCSTR lpMachineName,
 /**********************************************************************
  *	OpenSCManagerW
  */
-SC_HANDLE STDCALL
-OpenSCManagerW(LPCWSTR lpMachineName,
-	       LPCWSTR lpDatabaseName,
-	       DWORD dwDesiredAccess)
+SC_HANDLE STDCALL OpenSCManagerW(LPCWSTR lpMachineName,
+								 LPCWSTR lpDatabaseName,
+								 DWORD dwDesiredAccess)
 {
-  HANDLE hPipe;
-  DWORD dwMode;
-  BOOL fSuccess;
-  LPWSTR lpszPipeName = L"\\\\.\\pipe\\Ntsvcs";
-
-  if (lpMachineName == NULL || wcslen(lpMachineName) == 0)
-  {
-	  if (lpDatabaseName != NULL && wcscmp(lpDatabaseName, SERVICES_ACTIVE_DATABASEW) != 0)
-    {
-	    return(NULL);
-    }
+	HANDLE hPipe;
+	DWORD dwMode;
+	DWORD dwWait;
+	BOOL fSuccess;
+	HANDLE hStartEvent;
+	LPWSTR lpszPipeName = L"\\\\.\\pipe\\Ntsvcs";
 	
-    // Try to open a named pipe; wait for it, if necessary
-    while (1)
-    {
-      hPipe = CreateFileW(
-        lpszPipeName,     // pipe name
-        dwDesiredAccess,
-        0,                // no sharing
-        NULL,             // no security attributes
-        OPEN_EXISTING,    // opens existing pipe
-        0,                // default attributes
-        NULL);            // no template file
+	if(lpMachineName == NULL || wcslen(lpMachineName) == 0)
+	{
+		if(lpDatabaseName != NULL && wcscmp(lpDatabaseName, SERVICES_ACTIVE_DATABASEW) != 0)
+		{ return(NULL); }
 
-      // Break if the pipe handle is valid
-
-      if (hPipe != INVALID_HANDLE_VALUE)
-         break;
-
-      // Exit if an error other than ERROR_PIPE_BUSY occurs
-
-      if (GetLastError() != ERROR_PIPE_BUSY)
-      {
-         return(NULL);
-      }
-
-      // All pipe instances are busy, so wait for 20 seconds
-
-      if (!WaitNamedPipeW(lpszPipeName, 20000))
-      {
-         return(NULL);
-      }
-    }
-
-    // The pipe connected; change to message-read mode
-
-    dwMode = PIPE_READMODE_MESSAGE;
-    fSuccess = SetNamedPipeHandleState(
-      hPipe,    // pipe handle
-      &dwMode,  // new pipe mode
-      NULL,     // don't set maximum bytes
-      NULL);    // don't set maximum time
-    if (!fSuccess)
-    {
-      CloseHandle(hPipe);
-      return(NULL);
-    }
+		// Only connect to scm when event "SvcctrlStartEvent_A3725DX" is signaled
+		hStartEvent = OpenEvent(SYNCHRONIZE, FALSE, _T("SvcctrlStartEvent_A3725DX"));
+		if(hStartEvent == NULL)
+		{
+			SetLastError(ERROR_DATABASE_DOES_NOT_EXIST);
+			return (NULL);
+		}
+		dwWait = WaitForSingleObject(hStartEvent, INFINITE);
+		if(dwWait == WAIT_FAILED)
+		{
+			SetLastError(ERROR_ACCESS_DENIED);
+			return (NULL);
+		}
+		CloseHandle(hStartEvent);
+		
+		// Try to open a named pipe; wait for it, if necessary
+		while(1)
+		{
+			hPipe = CreateFileW(lpszPipeName,     // pipe name
+				dwDesiredAccess,
+				0,                // no sharing
+				NULL,             // no security attributes
+				OPEN_EXISTING,    // opens existing pipe
+				0,                // default attributes
+				NULL);            // no template file
+			
+			// Break if the pipe handle is valid
+			if(hPipe != INVALID_HANDLE_VALUE)
+				break;
+			
+			// Exit if an error other than ERROR_PIPE_BUSY occurs
+			if(GetLastError()!= ERROR_PIPE_BUSY)
+			{ return(NULL); }
+			
+			// All pipe instances are busy, so wait for 20 seconds
+			if(!WaitNamedPipeW(lpszPipeName, 20000))
+			{ return(NULL); }
+		}
+		
+		// The pipe connected; change to message-read mode
+		dwMode = PIPE_READMODE_MESSAGE;
+		fSuccess = SetNamedPipeHandleState(
+			hPipe,    // pipe handle
+			&dwMode,  // new pipe mode
+			NULL,     // don't set maximum bytes
+			NULL);    // don't set maximum time
+		if(!fSuccess)
+		{
+			CloseHandle(hPipe);
+			return(NULL);
+		}
 #if 0
-    // Send a message to the pipe server
-
-    lpvMessage = (argc > 1) ? argv[1] : "default message";
-
-    fSuccess = WriteFile(
-      hPipe,                  // pipe handle
-      lpvMessage,             // message
-      strlen(lpvMessage) + 1, // message length
-      &cbWritten,             // bytes written
-      NULL);                  // not overlapped
-    if (!fSuccess)
-    {
-      CloseHandle(hPipe);
-      return(NULL);
-    }
-
-    do
-    {
-      // Read from the pipe
-
-      fSuccess = ReadFile(
-        hPipe,    // pipe handle
-        chBuf,    // buffer to receive reply
-        512,      // size of buffer
-        &cbRead,  // number of bytes read
-        NULL);    // not overlapped
-
-      if (! fSuccess && GetLastError() != ERROR_MORE_DATA)
-        break;
-
-      // Reply from the pipe is written to STDOUT.
-
-      if (!WriteFile(GetStdHandle(STD_OUTPUT_HANDLE),
-         chBuf, cbRead, &cbWritten, NULL))
-      {
-        break;
-      }
-
-    } while (!fSuccess);  // repeat loop if ERROR_MORE_DATA
-    //CloseHandle(hPipe);
+		// Send a message to the pipe server
+		lpvMessage = (argc > 1) ? argv[1] : "default message";
+		
+		fSuccess = WriteFile(
+			hPipe,                  // pipe handle
+			lpvMessage,             // message
+			strlen(lpvMessage) + 1, // message length
+			&cbWritten,             // bytes written
+			NULL);                  // not overlapped
+		if(!fSuccess)
+		{
+			CloseHandle(hPipe);
+			return(NULL);
+		}
+		
+		do
+		{
+			// Read from the pipe
+			fSuccess = ReadFile(
+				hPipe,    // pipe handle
+				chBuf,    // buffer to receive reply
+				512,      // size of buffer
+				&cbRead,  // number of bytes read
+				NULL);    // not overlapped
+			
+			if(! fSuccess && GetLastError() != ERROR_MORE_DATA)
+				break;
+			
+			// Reply from the pipe is written to STDOUT.
+			if(!WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), chBuf, cbRead, &cbWritten, NULL))
+				break;
+		} while(!fSuccess);  // repeat loop if ERROR_MORE_DATA
+		
+		//CloseHandle(hPipe);
 #endif
-    return(hPipe);
-  }
-  else
-  {
-    /* FIXME: Connect to remote SCM */
-	  return(NULL);
-  }
+		return(hPipe);
+	}
+	else
+	{
+		/* FIXME: Connect to remote SCM */
+		return(NULL);
+	}
 }
 
 
