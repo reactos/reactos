@@ -141,6 +141,7 @@ copy apps\tests\regtest\regtest.exe %ROS_INSTALL_TESTS%
 copy apps\tests\hivetest\hivetest.exe %ROS_INSTALL_TESTS%
 copy apps\tests\restest\restest.exe %ROS_INSTALL_TESTS%
 copy apps\tests\tokentest\tokentest.exe %ROS_INSTALL_TESTS%
+copy apps\tests\icontest\icontest.exe %ROS_INSTALL_TESTS%
 copy apps\testsets\msvcrt\fileio\fileio.exe %ROS_INSTALL_TESTS%
 copy apps\testsets\msvcrt\mbtowc\mbtowc.exe %ROS_INSTALL_TESTS%
 copy apps\testsets\test\test.exe %ROS_INSTALL_TESTS%
