@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.102 2003/06/02 16:51:15 ekohl Exp $
+/* $Id: registry.c,v 1.103 2003/06/03 07:28:01 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -305,7 +305,7 @@ CmInitializeRegistry(VOID)
   RootKey->RegistryHive = CmiVolatileHive;
   RootKey->BlockOffset = CmiVolatileHive->HiveHeader->RootKeyCell;
   RootKey->KeyCell = CmiGetBlock(CmiVolatileHive, RootKey->BlockOffset, NULL);
-  RootKey->ParentKey = NULL;
+  RootKey->ParentKey = RootKey;
   RootKey->Flags = 0;
   RootKey->NumberOfSubKeys = 0;
   RootKey->SubKeys = NULL;

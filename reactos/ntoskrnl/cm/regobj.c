@@ -328,7 +328,7 @@ CmiObjectQueryName (PVOID ObjectBody,
   if (LocalInfo == NULL)
     return STATUS_INSUFFICIENT_RESOURCES;
 
-  if (KeyObject->ParentKey != NULL)
+  if (KeyObject->ParentKey != KeyObject)
     {
       Status = ObQueryNameString (KeyObject->ParentKey,
 				  LocalInfo,
@@ -337,6 +337,7 @@ CmiObjectQueryName (PVOID ObjectBody,
     }
   else
     {
+      /* KeyObject is the root key */
       Status = ObQueryNameString (BODY_TO_HEADER(KeyObject)->Parent,
 				  LocalInfo,
 				  MAX_PATH * sizeof(WCHAR),
