@@ -55,7 +55,7 @@ ENG_OBJECTS= eng/debug.o eng/error.o eng/mem.o eng/brush.o eng/bitblt.o \
     eng/clip.o eng/copybits.o eng/device.o eng/lineto.o \
     eng/paint.o eng/palette.o eng/perfcnt.o eng/semaphor.o eng/surface.o \
     eng/xlate.o eng/transblt.o eng/mouse.o eng/misc.o eng/sort.o \
-    eng/gradient.o eng/event.o eng/float.o
+    eng/gradient.o eng/event.o eng/float.o eng/driverobj.o eng/window.o
 
 MAIN_OBJECTS = main/dllmain.o main/svctabm.o
 

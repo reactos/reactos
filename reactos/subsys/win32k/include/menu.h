@@ -45,16 +45,16 @@ PMENU_OBJECT FASTCALL
 IntGetMenuObject(HMENU hMenu);
 
 #define IntLockMenuItems(MenuObj) \
-  ExAcquireFastMutex(&MenuObj->MenuItemsLock)
+  ExAcquireFastMutex(&(MenuObj)->MenuItemsLock)
 
 #define IntUnLockMenuItems(MenuObj) \
-  ExReleaseFastMutex(&MenuObj->MenuItemsLock)
+  ExReleaseFastMutex(&(MenuObj)->MenuItemsLock)
 
 #define IntLockProcessMenus(W32Process) \
-  ExAcquireFastMutex(&W32Process->MenuListLock)
+  ExAcquireFastMutex(&(W32Process)->MenuListLock)
 
 #define IntUnLockProcessMenus(W32Process) \
-  ExReleaseFastMutex(&W32Process->MenuListLock)
+  ExReleaseFastMutex(&(W32Process)->MenuListLock)
 
 #define IntReleaseMenuObject(MenuObj) \
   ObmDereferenceObject(MenuObj)

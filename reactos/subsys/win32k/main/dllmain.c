@@ -1,6 +1,6 @@
 /*
  *  ReactOS W32 Subsystem
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
+ *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -71,6 +71,9 @@ Win32kProcessCallback (struct _EPROCESS *Process,
       InitializeListHead(&Win32Process->PrivateFontListHead);
       ExInitializeFastMutex(&Win32Process->PrivateFontListLock);
       
+      InitializeListHead(&Win32Process->DriverObjListHead);
+      ExInitializeFastMutex(&Win32Process->DriverObjListLock);
+
       Win32Process->KeyboardLayout = W32kGetDefaultKeyLayout();
       
       /* setup process flags */
@@ -82,7 +85,9 @@ Win32kProcessCallback (struct _EPROCESS *Process,
       IntRemoveProcessWndProcHandles((HANDLE)Process->UniqueProcessId);
       IntCleanupMenus(Process, Win32Process);
       IntCleanupCurIcons(Process, Win32Process);
+      IntEngCleanupDriverObjs(Process, Win32Process);
       CleanupMonitorImpl();
+
 
       GDI_CleanupForProcess(Process);
 

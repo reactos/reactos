@@ -51,6 +51,12 @@ typedef struct _CLIPGDI {
   ENUMRECTS EnumRects;
 } CLIPGDI, *PCLIPGDI;
 
+typedef struct _DRIVERGDI {
+  DRIVEROBJ    DriverObj;
+  LIST_ENTRY   ListEntry;
+  FAST_MUTEX   Lock;
+} DRIVERGDI, *PDRIVERGDI;
+
 /*ei What is this for? */
 typedef struct _DRVFUNCTIONSGDI {
   HDEV  hdev;
@@ -121,6 +127,14 @@ typedef HBITMAP STDCALL (*PFN_CreateDeviceBitmap)(DHPDEV, SIZEL, ULONG);
 typedef BOOL STDCALL (*PFN_SetPalette)(DHPDEV, PALOBJ*, ULONG, ULONG, ULONG);
 
 typedef BOOL STDCALL (*PFN_GradientFill)(SURFOBJ*, CLIPOBJ*, XLATEOBJ*, TRIVERTEX*, ULONG, PVOID, ULONG, RECTL*, POINTL*, ULONG);
+
+typedef struct _WNDGDI {
+  WNDOBJ            WndObj;
+  CLIPOBJ           *ClientClipObj;
+  WNDOBJCHANGEPROC  ChangeProc;
+  FLONG             Flags;
+  int               PixelFormat;
+} WNDGDI, *PWNDGDI;
 
 typedef struct _XFORMGDI {
   ULONG Dummy;

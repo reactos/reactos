@@ -80,3 +80,50 @@ EngIsSemaphoreOwnedByCurrentThread ( IN HSEMAPHORE hsem )
   ASSERT(hsem);
   return ExIsResourceAcquiredExclusiveLite ( (PERESOURCE)hsem );
 }
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+EngInitializeSafeSemaphore(
+   OUT ENGSAFESEMAPHORE *Semaphore)
+{
+   HSEMAPHORE hSem;
+
+   if (InterlockedIncrement(&Semaphore->lCount) == 1)
+   {
+      /* Create the semaphore */
+      hSem = EngCreateSemaphore();
+      if (hSem == 0)
+      {
+         InterlockedDecrement(&Semaphore->lCount);
+         return FALSE;
+      }
+      InterlockedExchangePointer((volatile PVOID *)&Semaphore->hsem, hSem);
+   }
+   else
+   {
+      /* Wait for the other thread to create the semaphore */
+      ASSERT(Semaphore->lCount > 1);
+      ASSERT_IRQL(PASSIVE_LEVEL);
+      while (Semaphore->hsem == NULL);
+   }
+
+   return TRUE;
+}
+
+/*
+ * @implemented
+ */
+VOID STDCALL
+EngDeleteSafeSemaphore(
+   IN OUT ENGSAFESEMAPHORE *Semaphore)
+{
+   if (InterlockedDecrement(&Semaphore->lCount) == 0)
+   {
+      EngDeleteSemaphore(Semaphore->hsem);
+      InterlockedExchangePointer((volatile PVOID *)&Semaphore->hsem, NULL);
+   }
+}
+
+

@@ -15,6 +15,7 @@ CLIPOBJ_ppoGetPath@4
 EngAlphaBlend@28
 EngAcquireSemaphore@4
 EngAllocMem@12
+EngAllocPrivateUserMem@12
 EngAllocUserMem@8
 EngAssociateSurface@12
 EngBitBlt@44
@@ -39,6 +40,7 @@ EngDeleteDriverObj@12
 EngDeleteEvent@4
 EngDeletePalette@4
 EngDeletePath@4
+EngDeleteSafeSemaphore@4
 EngDeleteSemaphore@4
 EngDeleteSurface@4
 EngDeleteWnd@4
@@ -51,6 +53,7 @@ EngFindImageProcAddress@8
 EngFindResource@16
 EngFreeMem@4
 EngFreeModule@4
+EngFreePrivateUserMem@8
 EngFreeUserMem@4
 EngGetCurrentCodePage@8=ntoskrnl.RtlGetCurrentCodePage
 EngGetCurrentProcessId@0
@@ -66,6 +69,7 @@ EngGetPrinterDataFileName@4
 EngGetProcessHandle@0
 EngGetType1FontList@24
 EngGradientFill@40
+EngInitializeSafeSemaphore@4
 EngLineTo@36
 EngLoadImage@4
 EngLoadModule@4
