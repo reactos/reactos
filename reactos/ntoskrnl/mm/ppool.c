@@ -1,4 +1,4 @@
-/* $Id: ppool.c,v 1.21 2003/10/20 18:43:11 ekohl Exp $
+/* $Id: ppool.c,v 1.22 2003/12/13 21:11:53 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -308,7 +308,8 @@ ExAllocatePagedPoolWithTag (IN	POOL_TYPE	PoolType,
    */
   if (BestBlock == NULL)
     {
-      DPRINT("ExAllocatePagedPoolWithTag() - nothing suitable found, returning NULL\n" );
+      DPRINT1("Trying to allocate %lu bytes from paged pool - nothing suitable found, returning NULL\n",
+              NumberOfBytes );
       ExReleaseFastMutex(&MmPagedPoolLock);
       return(NULL);
     }

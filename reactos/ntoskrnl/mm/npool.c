@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.77 2003/10/23 18:43:36 hbirr Exp $
+/* $Id: npool.c,v 1.78 2003/12/13 21:11:53 gvg Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -1543,6 +1543,11 @@ ExAllocateNonPagedPoolWithTag(ULONG Type, ULONG Size, ULONG Tag, PVOID Caller)
 
    block = ExAllocateWholePageBlock(Size);
    KeReleaseSpinLock(&MmNpoolLock, oldIrql);
+   if (NULL == block)
+     {
+        DPRINT1("Trying to allocate %lu bytes from nonpaged pool - nothing suitable found, returning NULL\n",
+                Size );
+     }
    return(block);
 
 #else /* not WHOLE_PAGE_ALLOCATIONS */
@@ -1600,6 +1605,8 @@ ExAllocateNonPagedPoolWithTag(ULONG Type, ULONG Size, ULONG Tag, PVOID Caller)
    if (best == NULL)
      {
       KeReleaseSpinLock(&MmNpoolLock, oldIrql);
+      DPRINT1("Trying to allocate %lu bytes from nonpaged pool - nothing suitable found, returning NULL\n",
+              Size );
       return NULL;
      }
    best->Used.Tag = Tag;
