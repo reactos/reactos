@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: vis.c,v 1.13 2003/12/07 23:02:57 gvg Exp $
+ * $Id: vis.c,v 1.14 2003/12/12 18:59:24 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -208,13 +208,6 @@ VIS_ComputeVisibleRegion(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
   IntReleaseWindowObject(DesktopWindow);
 
   return VisRgn;
-}
-
-/* FIXME: to be replaced by a normal window proc in CSRSS */
-VOID FASTCALL
-VIS_RepaintDesktop(HWND Desktop, HRGN RepaintRgn)
-{
-  NtUserRedrawWindow(Desktop, NULL, RepaintRgn, RDW_UPDATENOW | RDW_INVALIDATE | RDW_NOCHILDREN);
 }
 
 static VOID FASTCALL
