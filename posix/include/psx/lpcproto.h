@@ -1,4 +1,4 @@
-/* $Id: lpcproto.h,v 1.2 2002/04/07 13:56:16 ea Exp $
+/* $Id: lpcproto.h,v 1.3 2002/04/10 21:30:20 ea Exp $
  *
  * ReactOS POSIX+ Environment Subsystem
  * LPC protocol spoken by PSXSS.EXE, PSXDLL.DLL, CSRTERM.EXE.
@@ -30,7 +30,8 @@
 
 typedef enum {
 	PSX_CONNECTION_TYPE_PROCESS,
-	PSX_CONNECTION_TYPE_TERMINAL
+	PSX_CONNECTION_TYPE_TERMINAL,
+	PSX_CONNECTION_TYPE_SERVER
 } PSX_CONNECTION_TYPE;
 
 typedef struct _PSX_CONNECT_PORT_DATA
@@ -38,7 +39,7 @@ typedef struct _PSX_CONNECT_PORT_DATA
 	PSX_CONNECTION_TYPE	ConnectionType; /* IN OUT */
 	ULONG			Version;	/* IN OUT */
 	ULONG			PortIdentifier; /* OUT */
-} PSX_CONNECT_PORT_DATA;
+} PSX_CONNECT_PORT_DATA, * PPSX_CONNECT_PORT_DATA;
 
 /* LPC message subsystem-specific header */
 
@@ -64,17 +65,20 @@ typedef struct _PSX_MAX_MESSAGE
 
 /* \POSIX+\SessionPort API */
 
+#define PSX_TERMINAL_SECTION_SIZE   65536L
+#define PSX_TERMINAL_SECTION_OFFSET 8192L
+
 typedef enum {
 	PSX_TERMINAL_INTERRUPT,
 	PSX_TERMINAL_SESSION_STATUS_REQUEST
 } PSX_TERMINAL_API;
 
-typedef struct _PSX_TERMINAL_READ
+typedef struct _PSX_TERMINAL_IO
 {
     LPC_MESSAGE_HEADER Header;
     PSX_MESSAGE_HEADER PsxHeader;
     ULONG              Size;
-    CHAR               Buffer [80]; /* FIXME! */
+    ULONG              Offset;
 } PSX_TERMINAL_READ, * PPSX_TERMINAL_READ;
 
 /* System I/O (system calls) */
