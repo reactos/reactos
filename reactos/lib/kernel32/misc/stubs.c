@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.81 2004/07/30 19:18:39 jimtabor Exp $
+/* $Id: stubs.c,v 1.82 2004/08/29 14:45:55 weiden Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -878,20 +878,6 @@ GetProcessHandleCount(
  */
 BOOL
 STDCALL
-GetProcessPriorityBoost(
-    HANDLE hProcess,
-    PBOOL pDisablePriorityBoost
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
 GetSystemRegistryQuota(
     PDWORD pdwQuotaAllowed,
     PDWORD pdwQuotaUsed
@@ -1292,20 +1278,6 @@ STDCALL
 SetMessageWaitingIndicator(
     HANDLE hMsgIndicator,
     ULONG ulMsgCount
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-SetProcessPriorityBoost(
-    HANDLE hProcess,
-    BOOL bDisablePriorityBoost
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

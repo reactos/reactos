@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.63 2004/07/02 12:18:04 gvg Exp $
+/* $Id: proc.c,v 1.64 2004/08/29 14:46:02 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -865,6 +865,58 @@ GetProcessIoCounters(
       return(FALSE);
     }
   
+  return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+GetProcessPriorityBoost(HANDLE hProcess,
+                        PBOOL pDisablePriorityBoost)
+{
+  NTSTATUS Status;
+  BOOL PriorityBoost;
+
+  Status = NtQueryInformationProcess(hProcess,
+				     ProcessPriorityBoost,
+				     &PriorityBoost,
+				     sizeof(BOOL),
+				     NULL);
+  if (NT_SUCCESS(Status))
+    {
+      *pDisablePriorityBoost = PriorityBoost;
+      return TRUE;
+    }
+
+  SetLastErrorByStatus(Status);
+  return FALSE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+SetProcessPriorityBoost(HANDLE hProcess,
+                        BOOL bDisablePriorityBoost)
+{
+  NTSTATUS Status;
+  BOOL PriorityBoost = (bDisablePriorityBoost ? TRUE : FALSE); /* prevent setting values other than 1 and 0 */
+
+  Status = NtSetInformationProcess(hProcess,
+				   ProcessPriorityBoost,
+				   &PriorityBoost,
+				   sizeof(BOOL));
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return FALSE;
+    }
+
   return TRUE;
 }
 
