@@ -423,10 +423,15 @@ NtCreateProfile(OUT PHANDLE UnsafeProfileHandle,
   /*
    * Create the object
    */
-  Profile = ObCreateObject(&ProfileHandle,
-			   STANDARD_RIGHTS_ALL,
-			   NULL,
-			   ExProfileObjectType);
+  Status = ObCreateObject(&ProfileHandle,
+			  STANDARD_RIGHTS_ALL,
+			  NULL,
+			  ExProfileObjectType,
+			  (PVOID*)&Profile);
+  if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
 
   /*
    * Initialize it

@@ -1,4 +1,4 @@
-/* $Id: nttimer.c,v 1.9 2001/03/07 16:48:44 dwelch Exp $
+/* $Id: nttimer.c,v 1.10 2001/06/16 14:10:08 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -172,12 +172,16 @@ NtCreateTimer(OUT PHANDLE TimerHandle,
 	      IN TIMER_TYPE TimerType)
 {
    PNTTIMER Timer;
+   NTSTATUS Status;
    
    DPRINT("NtCreateTimer()\n");
-   Timer = ObCreateObject(TimerHandle,
-			  DesiredAccess,
-			  ObjectAttributes,
-			  ExTimerType);
+   Status = ObCreateObject(TimerHandle,
+			   DesiredAccess,
+			   ObjectAttributes,
+			   ExTimerType,
+			   (PVOID*)&Timer);
+   if (!NT_SUCCESS(Status))
+     return Status;
    
    KeInitializeTimerEx(&Timer->Timer,
 		       TimerType);

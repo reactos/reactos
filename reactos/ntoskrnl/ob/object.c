@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.38 2001/06/12 17:50:27 chorns Exp $
+/* $Id: object.c,v 1.39 2001/06/16 14:10:55 ekohl Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -226,11 +226,12 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
  *
  * RETURN VALUE
  */
-PVOID STDCALL
+NTSTATUS STDCALL
 ObCreateObject(PHANDLE Handle,
 	       ACCESS_MASK DesiredAccess,
 	       POBJECT_ATTRIBUTES ObjectAttributes,
-	       POBJECT_TYPE Type)
+	       POBJECT_TYPE Type,
+	       PVOID *Object)
 {
    PVOID Parent = NULL;
    UNICODE_STRING RemainingPath;
@@ -257,7 +258,7 @@ ObCreateObject(PHANDLE Handle,
 	if (!NT_SUCCESS(Status))
 	  {
 	     DPRINT("ObFindObject() failed! (Status 0x%x)\n", Status);
-	     return (NULL);
+	     return(Status);
 	  }
      }
    else
@@ -293,11 +294,12 @@ ObCreateObject(PHANDLE Handle,
 	    RtlFreeUnicodeString( &Header->Name );
 	    RtlFreeUnicodeString( &RemainingPath );
 	    ExFreePool( Header );
-	    return(NULL);
+	    return(Status);
 	  }
      }
    RtlFreeUnicodeString( &RemainingPath );
-   return(HEADER_TO_BODY(Header));
+   *Object = HEADER_TO_BODY(Header);
+   return(STATUS_SUCCESS);
 }
 
 NTSTATUS STDCALL

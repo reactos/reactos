@@ -68,14 +68,14 @@ NTSTATUS CmiObjectParse(PVOID ParsedObject,
        }
        /*  Create new key object and put into linked list  */
 DPRINT("CmiObjectParse %s\n",cPath);
-       FoundObject = ObCreateObject(NULL, 
-                                     STANDARD_RIGHTS_REQUIRED, 
-                                     NULL, 
-                                     CmiKeyType);
-       if (FoundObject == NULL)
+       Status = ObCreateObject(NULL,
+                               STANDARD_RIGHTS_REQUIRED,
+                               NULL,
+                               CmiKeyType,
+                               (PVOID*)&FoundObject);
+       if (!NT_SUCCESS(Status))
          {
-           //FIXME : return the good error code
-           return  STATUS_UNSUCCESSFUL;
+           return(Status);
          }
        FoundObject->Flags = 0;
        FoundObject->Name = SubKeyBlock->Name;

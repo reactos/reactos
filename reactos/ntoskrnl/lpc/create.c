@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.3 2001/01/29 00:13:22 ea Exp $
+/* $Id: create.c,v 1.4 2001/06/16 14:08:57 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -141,20 +141,21 @@ NtCreatePort (
 			MaxDataLength,
 			Reserved
 			);
-	if (STATUS_SUCCESS != Status)
+	if (!NT_SUCCESS(Status))
 	{
 		return (Status);
 	}
 	/* Ask Ob to create the object */
-	Port = ObCreateObject (
+	Status = ObCreateObject (
 			PortHandle,
 			PORT_ALL_ACCESS,
 			ObjectAttributes,
-			ExPortType
+			ExPortType,
+			(PVOID*)&Port
 			);
-	if (Port == NULL)
+	if (!NT_SUCCESS(Status))
 	{
-		return (STATUS_UNSUCCESSFUL);
+		return (Status);
 	}
    
 	Status = NiInitializePort (Port);

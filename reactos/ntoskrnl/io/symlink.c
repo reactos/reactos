@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.20 2001/05/05 09:32:36 ekohl Exp $
+/* $Id: symlink.c,v 1.21 2001/06/16 14:07:30 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -335,6 +335,7 @@ IoCreateSymbolicLink(PUNICODE_STRING SymbolicLinkName,
 {
 	OBJECT_ATTRIBUTES	ObjectAttributes;
 	PSYMLNK_OBJECT		SymbolicLink;
+	NTSTATUS		Status;
 
 	assert_irql(PASSIVE_LEVEL);
 
@@ -351,15 +352,16 @@ IoCreateSymbolicLink(PUNICODE_STRING SymbolicLinkName,
 		NULL,
 		NULL
 		);
-	SymbolicLink = ObCreateObject(
+	Status = ObCreateObject(
 			NULL,
 			SYMBOLIC_LINK_ALL_ACCESS,
 			& ObjectAttributes,
-			IoSymbolicLinkType
+			IoSymbolicLinkType,
+			(PVOID*)&SymbolicLink
 			);
-	if (SymbolicLink == NULL)
+	if (!NT_SUCCESS(Status))
 	{
-		return STATUS_UNSUCCESSFUL;
+		return(Status);
 	}
 	SymbolicLink->TargetName.Length = 0;
 	SymbolicLink->TargetName.MaximumLength = 
@@ -453,6 +455,7 @@ NtCreateSymbolicLinkObject(OUT PHANDLE SymbolicLinkHandle,
 			   IN PUNICODE_STRING DeviceName)
 {
    PSYMLNK_OBJECT SymbolicLink;
+   NTSTATUS Status;
    
    assert_irql(PASSIVE_LEVEL);
    
@@ -462,13 +465,14 @@ NtCreateSymbolicLinkObject(OUT PHANDLE SymbolicLinkHandle,
 	  ObjectAttributes,
 	  DeviceName->Buffer);
 
-   SymbolicLink = ObCreateObject(SymbolicLinkHandle,
-				 DesiredAccess,
-				 ObjectAttributes,
-				 IoSymbolicLinkType);
-   if (SymbolicLink == NULL)
+   Status = ObCreateObject(SymbolicLinkHandle,
+			   DesiredAccess,
+			   ObjectAttributes,
+			   IoSymbolicLinkType,
+			   (PVOID*)&SymbolicLink);
+   if (!NT_SUCCESS(Status))
      {
-	return STATUS_UNSUCCESSFUL;
+	return(Status);
      }
    
    SymbolicLink->TargetName.Length = 0;

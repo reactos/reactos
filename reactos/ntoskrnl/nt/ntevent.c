@@ -150,10 +150,15 @@ NtCreateEvent(OUT PHANDLE UnsafeEventHandle,
        ObjectAttributes = NULL;
      }
 
-   Event = ObCreateObject(&EventHandle,
-			  DesiredAccess,
-			  ObjectAttributes,
-			  ExEventObjectType);
+   Status = ObCreateObject(&EventHandle,
+			   DesiredAccess,
+			   ObjectAttributes,
+			   ExEventObjectType,
+			   (PVOID*)&Event);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
    KeInitializeEvent(Event,
 		     ManualReset ? NotificationEvent : SynchronizationEvent,
 		     InitialState);
@@ -162,8 +167,8 @@ NtCreateEvent(OUT PHANDLE UnsafeEventHandle,
    Status = MmCopyToCaller(UnsafeEventHandle, &EventHandle, sizeof(HANDLE));
    if (!NT_SUCCESS(Status))
      {
-       ZwClose(EventHandle);
-       return(Status);
+	ZwClose(EventHandle);
+	return(Status);
      }
    return(STATUS_SUCCESS);
 }

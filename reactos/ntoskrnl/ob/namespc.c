@@ -1,4 +1,4 @@
-/* $Id: namespc.c,v 1.24 2001/06/12 12:32:11 ekohl Exp $
+/* $Id: namespc.c,v 1.25 2001/06/16 14:10:55 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -331,10 +331,11 @@ VOID ObInit(VOID)
    RtlInitUnicodeString(&ObDirectoryType->TypeName,
 			L"Directory");
    
-   NameSpaceRoot = ObCreateObject(NULL,
-				  STANDARD_RIGHTS_REQUIRED,
-				  NULL,
-				  ObDirectoryType);
+   ObCreateObject(NULL,
+		  STANDARD_RIGHTS_REQUIRED,
+		  NULL,
+		  ObDirectoryType,
+		  (PVOID*)&NameSpaceRoot);
 }
 
 VOID ObRemoveEntry(POBJECT_HEADER Header)

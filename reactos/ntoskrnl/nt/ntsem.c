@@ -1,4 +1,4 @@
-/* $Id: ntsem.c,v 1.11 2001/03/13 16:25:55 dwelch Exp $
+/* $Id: ntsem.c,v 1.12 2001/06/16 14:10:08 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -87,11 +87,17 @@ NtCreateSemaphore(OUT PHANDLE SemaphoreHandle,
 		  IN LONG MaximumCount)
 {
    PKSEMAPHORE Semaphore;
+   NTSTATUS Status;
    
-   Semaphore = ObCreateObject(SemaphoreHandle,
-			      DesiredAccess,
-			      ObjectAttributes,
-			      ExSemaphoreType);
+   Status = ObCreateObject(SemaphoreHandle,
+			   DesiredAccess,
+			   ObjectAttributes,
+			   ExSemaphoreType,
+			   (PVOID*)&Semaphore);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
    KeInitializeSemaphore(Semaphore,
 			 InitialCount,
 			 MaximumCount);

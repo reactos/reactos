@@ -1,9 +1,10 @@
 /* OBJECT MANAGER ************************************************************/
 
-PVOID STDCALL ObCreateObject(PHANDLE Handle,
-			     ACCESS_MASK DesiredAccess,
-			     POBJECT_ATTRIBUTES ObjectAttributes,
-			     POBJECT_TYPE Type);
+NTSTATUS STDCALL ObCreateObject(PHANDLE Handle,
+				ACCESS_MASK DesiredAccess,
+				POBJECT_ATTRIBUTES ObjectAttributes,
+				POBJECT_TYPE Type,
+				PVOID *Object);
 
 VOID
 FASTCALL

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.64 2001/06/12 17:50:28 chorns Exp $
+/* $Id: process.c,v 1.65 2001/06/16 14:11:15 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -174,10 +174,11 @@ VOID PsInitProcessManagment(VOID)
 
    PKPROCESS KProcess;
    KIRQL oldIrql;
+   NTSTATUS Status;
    
    /*
     * Register the process object type
-    */   
+    */
    
    PsProcessType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
 
@@ -207,10 +208,16 @@ VOID PsInitProcessManagment(VOID)
    /*
     * Initialize the system process
     */
-   PsInitialSystemProcess = ObCreateObject(NULL,
-					   PROCESS_ALL_ACCESS,
-					   NULL,
-					   PsProcessType);
+   Status = ObCreateObject(NULL,
+			   PROCESS_ALL_ACCESS,
+			   NULL,
+			   PsProcessType,
+			   (PVOID*)&PsInitialSystemProcess);
+   if (!NT_SUCCESS(Status))
+     {
+	return;
+     }
+   
    /* System threads may run on any processor. */
    PsInitialSystemProcess->Pcb.Affinity = 0xFFFFFFFF;
    PsInitialSystemProcess->Pcb.BasePriority = PROCESS_PRIO_NORMAL;
@@ -401,17 +408,24 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 				      UserMode,
 				      (PVOID*)&ParentProcess,
 				      NULL);
-
-   if (Status != STATUS_SUCCESS)
+   if (!NT_SUCCESS(Status))
      {
 	DPRINT("NtCreateProcess() = %x\n",Status);
 	return(Status);
      }
 
-   Process = ObCreateObject(ProcessHandle,
-			    DesiredAccess,
-			    ObjectAttributes,
-			    PsProcessType);
+   Status = ObCreateObject(ProcessHandle,
+			   DesiredAccess,
+			   ObjectAttributes,
+			   PsProcessType,
+			   (PVOID*)&Process);
+   if (!NT_SUCCESS(Status))
+     {
+	ObDereferenceObject(ParentProcess);
+	DPRINT("ObCreateObject() = %x\n",Status);
+	return(Status);
+     }
+
    KeInitializeDispatcherHeader(&Process->Pcb.DispatcherHeader,
 				InternalProcessType,
 				sizeof(EPROCESS),

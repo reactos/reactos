@@ -1,4 +1,4 @@
-/* $Id: winsta.c,v 1.1 2001/06/12 17:50:29 chorns Exp $
+/* $Id: winsta.c,v 1.2 2001/06/16 14:11:31 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -225,12 +225,13 @@ NtUserCreateWindowStation(
 
   DPRINT("Creating window station (%wZ)\n", &WindowStationName);
 
-  WinStaObject = (PWINSTATION_OBJECT)ObCreateObject(
+  Status = ObCreateObject(
     &WinSta,
     STANDARD_RIGHTS_REQUIRED,
     &ObjectAttributes,
-    ExWindowStationObjectType);
-  if (!WinStaObject)
+    ExWindowStationObjectType,
+    (PVOID*)&WinStaObject);
+  if (!NT_SUCCESS(Status))
   {
     DPRINT("Failed creating window station (%wZ)\n", &WindowStationName);
     SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
@@ -545,12 +546,13 @@ NtUserCreateDesktop(
 
   DPRINT("Status for open operation (0x%X)\n", Status);
 
-  DesktopObject = (PDESKTOP_OBJECT)ObCreateObject(
+  Status = ObCreateObject(
     &Desktop,
     STANDARD_RIGHTS_REQUIRED,
     &ObjectAttributes,
-    ExDesktopObjectType);
-  if (!DesktopObject)
+    ExDesktopObjectType,
+    (PVOID*)&DesktopObject);
+  if (!NT_SUCCESS(Status))
   {
     DPRINT("Failed creating desktop (%wZ)\n", &DesktopName);
     SetLastNtError(STATUS_UNSUCCESSFUL);

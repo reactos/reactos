@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.82 2001/06/12 12:31:28 ekohl Exp $
+/* $Id: loader.c,v 1.83 2001/06/16 14:08:33 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -58,7 +58,9 @@ STATIC MODULE_TEXT_SECTION NtoskrnlTextSection;
 /* FORWARD DECLARATIONS ******************************************************/
 
 PMODULE_OBJECT  LdrLoadModule(PUNICODE_STRING Filename);
-PMODULE_OBJECT  LdrProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING ModuleName);
+NTSTATUS LdrProcessModule(PVOID ModuleLoadBase,
+                          PUNICODE_STRING ModuleName,
+                          PMODULE_OBJECT *ModuleObject);
 PVOID  LdrGetExportAddress(PMODULE_OBJECT ModuleObject, char *Name, unsigned short Hint);
 static PMODULE_OBJECT LdrOpenModule(PUNICODE_STRING  Filename);
 static NTSTATUS LdrCreateModule(PVOID ObjectBody,
@@ -69,7 +71,9 @@ static VOID LdrpBuildModuleBaseName(PUNICODE_STRING BaseName,
 				    PUNICODE_STRING FullName);
 
 /*  PE Driver load support  */
-static PMODULE_OBJECT  LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING FileName);
+static NTSTATUS LdrPEProcessModule(PVOID ModuleLoadBase,
+                                   PUNICODE_STRING FileName,
+                                   PMODULE_OBJECT *ModuleObject);
 static PVOID  LdrPEGetExportAddress(PMODULE_OBJECT ModuleObject,
                                     char *Name,
                                     unsigned short Hint);
@@ -204,11 +208,12 @@ VOID LdrInitModuleManagement(VOID)
 
   /*  Create module object  */
   ModuleHandle = 0;
-  ModuleObject = ObCreateObject(&ModuleHandle,
-                                STANDARD_RIGHTS_REQUIRED,
-                                &ObjectAttributes,
-                                IoDriverObjectType);
-  assert(ModuleObject != NULL);
+  Status = ObCreateObject(&ModuleHandle,
+                          STANDARD_RIGHTS_REQUIRED,
+                          &ObjectAttributes,
+                          IoDriverObjectType,
+                          (PVOID*)&ModuleObject);
+  assert(NT_SUCCESS(Status));
 
    InitializeListHead(&ModuleListHead);
 
@@ -1031,7 +1036,15 @@ LdrLoadModule(PUNICODE_STRING Filename)
 
   NtClose(FileHandle);
 
-  ModuleObject = LdrProcessModule(ModuleLoadBase, Filename);
+  Status = LdrProcessModule(ModuleLoadBase,
+                            Filename,
+                            &ModuleObject);
+  if (!NT_SUCCESS(Status))
+    {
+      CPRINT("Could not process module");
+      ExFreePool(ModuleLoadBase);
+      return NULL;
+    }
 
   /*  Cleanup  */
   ExFreePool(ModuleLoadBase);
@@ -1121,8 +1134,9 @@ LdrProcessDriver(PVOID ModuleLoadBase, PCHAR FileName, ULONG ModuleLength)
 
    RtlCreateUnicodeStringFromAsciiz(&ModuleName,
 				    FileName);
-   ModuleObject = LdrProcessModule(ModuleLoadBase,
-				   &ModuleName);
+   Status = LdrProcessModule(ModuleLoadBase,
+			     &ModuleName,
+			     &ModuleObject);
    RtlFreeUnicodeString(&ModuleName);
    if (ModuleObject == NULL)
      {
@@ -1141,8 +1155,10 @@ LdrProcessDriver(PVOID ModuleLoadBase, PCHAR FileName, ULONG ModuleLength)
    return(Status);
 }
 
-PMODULE_OBJECT
-LdrProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING ModuleName)
+NTSTATUS
+LdrProcessModule(PVOID ModuleLoadBase,
+		 PUNICODE_STRING ModuleName,
+		 PMODULE_OBJECT *ModuleObject)
 {
   PIMAGE_DOS_HEADER PEDosHeader;
 
@@ -1150,11 +1166,13 @@ LdrProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING ModuleName)
   PEDosHeader = (PIMAGE_DOS_HEADER) ModuleLoadBase;
   if (PEDosHeader->e_magic == IMAGE_DOS_MAGIC && PEDosHeader->e_lfanew != 0L)
     {
-      return LdrPEProcessModule(ModuleLoadBase, ModuleName);
+      return LdrPEProcessModule(ModuleLoadBase,
+				ModuleName,
+				ModuleObject);
     }
 
   CPRINT("Module wasn't PE\n");
-  return 0;
+  return STATUS_UNSUCCESSFUL;
 }
 
 static PMODULE_OBJECT 
@@ -1335,8 +1353,10 @@ LdrpBuildModuleBaseName(PUNICODE_STRING BaseName,
 
 /*  ----------------------------------------------  PE Module support */
 
-PMODULE_OBJECT
-LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING FileName)
+static NTSTATUS
+LdrPEProcessModule(PVOID ModuleLoadBase,
+		   PUNICODE_STRING FileName,
+		   PMODULE_OBJECT *ModuleObject)
 {
   unsigned int DriverSize, Idx, Idx2;
   ULONG RelocDelta, NumRelocs;
@@ -1351,7 +1371,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING FileName)
   PRELOCATION_ENTRY RelocEntry;
   PMODULE_OBJECT  LibraryModuleObject;
   HANDLE  ModuleHandle;
-  PMODULE_OBJECT  ModuleObject;
+  PMODULE_OBJECT CreatedModuleObject;
   PVOID *ImportAddressList;
   PULONG FunctionNameList;
   PCHAR pName, SymbolNameBuf;
@@ -1360,6 +1380,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING FileName)
   UNICODE_STRING  ModuleName;
   WCHAR  NameBuffer[60];
   MODULE_TEXT_SECTION* ModuleTextSection;
+  NTSTATUS Status;
 
   DPRINT("Processing PE Module at module base:%08lx\n", ModuleLoadBase);
 
@@ -1380,22 +1401,22 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING FileName)
   if (PEDosHeader->e_magic != IMAGE_DOS_MAGIC)
     {
       CPRINT("Incorrect MZ magic: %04x\n", PEDosHeader->e_magic);
-      return 0;
+      return STATUS_UNSUCCESSFUL;
     }
   if (PEDosHeader->e_lfanew == 0)
     {
       CPRINT("Invalid lfanew offset: %08x\n", PEDosHeader->e_lfanew);
-      return NULL;
+      return STATUS_UNSUCCESSFUL;
     }
   if (*PEMagic != IMAGE_PE_MAGIC)
     {
       CPRINT("Incorrect PE magic: %08x\n", *PEMagic);
-      return NULL;
+      return STATUS_UNSUCCESSFUL;
     }
   if (PEFileHeader->Machine != IMAGE_FILE_MACHINE_I386)
     {
       CPRINT("Incorrect Architechture: %04x\n", PEFileHeader->Machine);
-      return NULL;
+      return STATUS_UNSUCCESSFUL;
     }
   CHECKPOINT;
 
@@ -1419,7 +1440,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING FileName)
   if (DriverBase == 0)
     {
       CPRINT("Failed to allocate a virtual section for driver\n");
-      return 0;
+      return STATUS_UNSUCCESSFUL;
     }
    CPRINT("DriverBase: %x\n", DriverBase);
   CHECKPOINT;
@@ -1519,7 +1540,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING FileName)
           else if (Type != 0)
             {
               CPRINT("Unknown relocation type %x at %x\n",Type, &Type);
-              return NULL;
+              return STATUS_UNSUCCESSFUL;
             }
         }
       TotalRelocs += RelocDir->SizeOfBlock;
@@ -1607,7 +1628,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING FileName)
               else
                 {
                   CPRINT("Unresolved kernel symbol: %s\n", pName);
-		              return(NULL);
+                  return STATUS_UNSUCCESSFUL;
                 }
               ImportAddressList++;
               FunctionNameList++;
@@ -1640,38 +1661,43 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING FileName)
 
   /*  Create module object  */
   ModuleHandle = 0;
-  ModuleObject = ObCreateObject(&ModuleHandle,
-                                STANDARD_RIGHTS_REQUIRED,
-                                &ObjectAttributes,
-                                IoDriverObjectType);
+  Status = ObCreateObject(&ModuleHandle,
+                          STANDARD_RIGHTS_REQUIRED,
+                          &ObjectAttributes,
+                          IoDriverObjectType,
+                          (PVOID*)&CreatedModuleObject);
+   if (!NT_SUCCESS(Status))
+     {
+       return(Status);
+     }
 
    /*  Initialize ModuleObject data  */
-   ModuleObject->Base = DriverBase;
-   ModuleObject->Flags = MODULE_FLAG_PE;
+   CreatedModuleObject->Base = DriverBase;
+   CreatedModuleObject->Flags = MODULE_FLAG_PE;
    InsertTailList(&ModuleListHead,
-		  &ModuleObject->ListEntry);
-   RtlCreateUnicodeString(&ModuleObject->FullName,
+		  &CreatedModuleObject->ListEntry);
+   RtlCreateUnicodeString(&CreatedModuleObject->FullName,
 			  FileName->Buffer);
-   LdrpBuildModuleBaseName(&ModuleObject->BaseName,
-			   &ModuleObject->FullName);
+   LdrpBuildModuleBaseName(&CreatedModuleObject->BaseName,
+			   &CreatedModuleObject->FullName);
 
-  ModuleObject->EntryPoint = (PVOID) ((DWORD)DriverBase + 
+  CreatedModuleObject->EntryPoint = (PVOID) ((DWORD)DriverBase + 
     PEOptionalHeader->AddressOfEntryPoint);
-  ModuleObject->Length = DriverSize;
-  DPRINT("entrypoint at %x\n", ModuleObject->EntryPoint);
+  CreatedModuleObject->Length = DriverSize;
+  DPRINT("EntryPoint at %x\n", CreatedModuleObject->EntryPoint);
 
-  ModuleObject->Image.PE.FileHeader =
+  CreatedModuleObject->Image.PE.FileHeader =
     (PIMAGE_FILE_HEADER) ((unsigned int) DriverBase + PEDosHeader->e_lfanew + sizeof(ULONG));
 
-  DPRINT("FileHeader at %x\n", ModuleObject->Image.PE.FileHeader);
-  ModuleObject->Image.PE.OptionalHeader = 
+  DPRINT("FileHeader at %x\n", CreatedModuleObject->Image.PE.FileHeader);
+  CreatedModuleObject->Image.PE.OptionalHeader = 
     (PIMAGE_OPTIONAL_HEADER) ((unsigned int) DriverBase + PEDosHeader->e_lfanew + sizeof(ULONG) +
     sizeof(IMAGE_FILE_HEADER));
-  DPRINT("OptionalHeader at %x\n", ModuleObject->Image.PE.OptionalHeader);
-  ModuleObject->Image.PE.SectionList = 
+  DPRINT("OptionalHeader at %x\n", CreatedModuleObject->Image.PE.OptionalHeader);
+  CreatedModuleObject->Image.PE.SectionList = 
     (PIMAGE_SECTION_HEADER) ((unsigned int) DriverBase + PEDosHeader->e_lfanew + sizeof(ULONG) +
     sizeof(IMAGE_FILE_HEADER) + sizeof(IMAGE_OPTIONAL_HEADER));
-  DPRINT("SectionList at %x\n", ModuleObject->Image.PE.SectionList);
+  DPRINT("SectionList at %x\n", CreatedModuleObject->Image.PE.SectionList);
 
   ModuleTextSection = ExAllocatePool(NonPagedPool, 
 				     sizeof(MODULE_TEXT_SECTION));
@@ -1685,9 +1711,11 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING FileName)
   wcscpy(ModuleTextSection->Name, NameBuffer);
   InsertTailList(&ModuleTextListHead, &ModuleTextSection->ListEntry);
 
-  ModuleObject->TextSection = ModuleTextSection;
+  CreatedModuleObject->TextSection = ModuleTextSection;
 
-  return  ModuleObject;
+  *ModuleObject = CreatedModuleObject;
+
+  return STATUS_SUCCESS;
 }
 
 static PVOID

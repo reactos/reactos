@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.28 2001/05/05 19:13:09 chorns Exp $
+/* $Id: device.c,v 1.29 2001/06/16 14:07:30 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -523,6 +523,7 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
    PDEVICE_OBJECT CreatedDeviceObject;
    OBJECT_ATTRIBUTES ObjectAttributes;
    HANDLE DeviceHandle;
+   NTSTATUS Status;
    
    assert_irql(PASSIVE_LEVEL);
    
@@ -539,24 +540,26 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
    if (DeviceName != NULL)
      {
 	InitializeObjectAttributes(&ObjectAttributes,DeviceName,0,NULL,NULL);
-	CreatedDeviceObject = ObCreateObject(&DeviceHandle,
-					     0,
-					     &ObjectAttributes,
-					     IoDeviceObjectType);
+	Status = ObCreateObject(&DeviceHandle,
+				0,
+				&ObjectAttributes,
+				IoDeviceObjectType,
+				(PVOID*)&CreatedDeviceObject);
      }
    else
      {
-	CreatedDeviceObject = ObCreateObject(&DeviceHandle,
-					     0,
-					     NULL,
-					     IoDeviceObjectType);
+	Status = ObCreateObject(&DeviceHandle,
+				0,
+				NULL,
+				IoDeviceObjectType,
+				(PVOID*)&CreatedDeviceObject);
      }
    
    *DeviceObject = NULL;
    
-   if (CreatedDeviceObject == NULL)
+   if (!NT_SUCCESS(Status))
      {
-	return(STATUS_INSUFFICIENT_RESOURCES);
+	return(Status);
      }
   
    if (DriverObject->DeviceObject == NULL)

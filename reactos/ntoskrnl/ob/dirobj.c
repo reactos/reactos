@@ -1,4 +1,4 @@
-/* $Id: dirobj.c,v 1.11 2001/05/04 21:44:21 ea Exp $
+/* $Id: dirobj.c,v 1.12 2001/06/16 14:10:55 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -324,9 +324,10 @@ NTSTATUS STDCALL NtQueryDirectoryObject (IN HANDLE DirObjHandle,
  * RETURN VALUE
  * 	Status.
  */
-NTSTATUS STDCALL NtCreateDirectoryObject (PHANDLE DirectoryHandle,
-					  ACCESS_MASK DesiredAccess,
-					  POBJECT_ATTRIBUTES ObjectAttributes)
+NTSTATUS STDCALL
+NtCreateDirectoryObject(PHANDLE DirectoryHandle,
+			ACCESS_MASK DesiredAccess,
+			POBJECT_ATTRIBUTES ObjectAttributes)
 {
    PDIRECTORY_OBJECT dir;
 
@@ -336,11 +337,11 @@ NTSTATUS STDCALL NtCreateDirectoryObject (PHANDLE DirectoryHandle,
 	  DirectoryHandle, DesiredAccess, ObjectAttributes,
 	  ObjectAttributes->ObjectName);
    
-   dir = ObCreateObject(DirectoryHandle,
-			DesiredAccess,
-			ObjectAttributes,
-			ObDirectoryType);
-   return(STATUS_SUCCESS);
+   return(ObCreateObject(DirectoryHandle,
+			 DesiredAccess,
+			 ObjectAttributes,
+			 ObDirectoryType,
+			 (PVOID*)&dir));
 }
 
 /* EOF */

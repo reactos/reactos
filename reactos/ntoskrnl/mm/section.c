@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.57 2001/05/04 01:21:44 rex Exp $
+/* $Id: section.c,v 1.58 2001/06/16 14:09:21 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -984,6 +984,7 @@ MmCreatePageFileSection(PHANDLE SectionHandle,
   LARGE_INTEGER MaximumSize;
   PSECTION_OBJECT Section;
   PMM_SECTION_SEGMENT Segment;
+  NTSTATUS Status;
 
   if (UMaximumSize == NULL)
     {
@@ -1003,13 +1004,14 @@ MmCreatePageFileSection(PHANDLE SectionHandle,
   /*
    * Create the section
    */
-  Section = ObCreateObject(SectionHandle,
-			   DesiredAccess,
-			   ObjectAttributes,
-			   MmSectionObjectType);
-  if (Section == NULL)
+  Status = ObCreateObject(SectionHandle,
+			  DesiredAccess,
+			  ObjectAttributes,
+			  MmSectionObjectType,
+			  (PVOID*)&Section);
+  if (!NT_SUCCESS(Status))
     {
-      return(STATUS_UNSUCCESSFUL);
+      return(Status);
     }
   
   /*
@@ -1038,10 +1040,10 @@ MmCreatePageFileSection(PHANDLE SectionHandle,
   Segment->Protection = SectionPageProtection;
   Segment->Attributes = AllocationAttributes;
   Segment->Length = MaximumSize.u.LowPart;
-  Segment->Flags = MM_PAGEFILE_SECTION; 
+  Segment->Flags = MM_PAGEFILE_SECTION;
   return(STATUS_SUCCESS);
-}			
-		      
+}
+
 
 NTSTATUS
 MmCreateDataFileSection(PHANDLE SectionHandle,
@@ -1074,13 +1076,14 @@ MmCreateDataFileSection(PHANDLE SectionHandle,
   /*
    * Create the section
    */
-  Section = ObCreateObject(SectionHandle,
-			   DesiredAccess,
-			   ObjectAttributes,
-			   MmSectionObjectType);
-  if (Section == NULL)
+  Status = ObCreateObject(SectionHandle,
+			  DesiredAccess,
+			  ObjectAttributes,
+			  MmSectionObjectType,
+			  (PVOID*)&Section);
+  if (!NT_SUCCESS(Status))
     {
-      return(STATUS_UNSUCCESSFUL);
+      return(Status);
     }
   
   /*
@@ -1400,14 +1403,15 @@ MmCreateImageSection(PHANDLE SectionHandle,
   /*
    * Create the section
    */
-  Section = ObCreateObject(SectionHandle,
-			   DesiredAccess,
-			   ObjectAttributes,
-			   MmSectionObjectType);
-  if (Section == NULL)
+  Status = ObCreateObject(SectionHandle,
+			  DesiredAccess,
+			  ObjectAttributes,
+			  MmSectionObjectType,
+			  (PVOID*)&Section);
+  if (!NT_SUCCESS(Status))
     {
       ExFreePool(ImageSections);
-      return(STATUS_UNSUCCESSFUL);
+      return(Status);
     }
 
   /*

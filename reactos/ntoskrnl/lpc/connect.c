@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.5 2001/03/07 16:48:43 dwelch Exp $
+/* $Id: connect.c,v 1.6 2001/06/16 14:08:57 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -94,10 +94,16 @@ NtConnectPort (PHANDLE				ConnectedPort,
   /*
    * Create a port to represent our side of the connection
    */
-  OurPort = ObCreateObject (&OurPortHandle,
-			    PORT_ALL_ACCESS,
-			    NULL,
-			    ExPortType);
+  Status = ObCreateObject (&OurPortHandle,
+			   PORT_ALL_ACCESS,
+			   NULL,
+			   ExPortType,
+			   (PVOID*)&OurPort);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("Failed to create port object (status %x)\n", Status);
+      return (Status);
+    }
   NiInitializePort(OurPort);
   /*
    * Create a request message
@@ -211,10 +217,16 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
    */
   if (AcceptIt == 1)
     {
-      OurPort = ObCreateObject (ServerPortHandle,
-				PORT_ALL_ACCESS,
-				NULL,
-				ExPortType);
+      Status = ObCreateObject(ServerPortHandle,
+			      PORT_ALL_ACCESS,
+			      NULL,
+			      ExPortType,
+			      (PVOID*)&OurPort);
+      if (!NT_SUCCESS(Status))
+	{
+	  ObDereferenceObject(NamedPort);
+	  return(Status);
+	}
       NiInitializePort(OurPort);
     }
   /*
@@ -226,8 +238,8 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
   
   if (AcceptIt != 1)
     {	
-      EiReplyOrRequestPort (ConnectionRequest->Sender, 
-			    LpcMessage, 
+      EiReplyOrRequestPort (ConnectionRequest->Sender,
+			    LpcMessage,
 			    LPC_CONNECTION_REFUSED,
 			    NamedPort);
       KeSetEvent (&ConnectionRequest->Sender->Event,
@@ -243,13 +255,13 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
    */
   OurPort->OtherPort = ConnectionRequest->Sender;
   OurPort->OtherPort->OtherPort = OurPort;
-  EiReplyOrRequestPort (ConnectionRequest->Sender, 
-			LpcMessage, 
+  EiReplyOrRequestPort (ConnectionRequest->Sender,
+			LpcMessage,
 			LPC_REPLY,
 			OurPort);
   ExFreePool (ConnectionRequest);
    
-  ObDereferenceObject (OurPort);   
+  ObDereferenceObject (OurPort);
   ObDereferenceObject (NamedPort);
   
   return (STATUS_SUCCESS);

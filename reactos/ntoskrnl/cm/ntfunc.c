@@ -69,15 +69,14 @@ DPRINT("Status=%x\n",Status);
   /*   because NtCreateKey don't create tree */
 
 DPRINT("NCK %S parent=%x\n",RemainingPath.Buffer,Object);
-  key = ObCreateObject(
-		KeyHandle,
-		DesiredAccess,
-		NULL,
-		CmiKeyType
-		);
+  Status = ObCreateObject(KeyHandle,
+			  DesiredAccess,
+			  NULL,
+			  CmiKeyType,
+			  (PVOID*)&key);
 
-  if (key == NULL)
-	return STATUS_INSUFFICIENT_RESOURCES;
+  if (!NT_SUCCESS(Status))
+	return(Status);
   key->ParentKey = Object;
 //    if ( (key->ParentKey ==NULL))
 //      key->ParentKey = ObjectAttributes->RootDirectory;

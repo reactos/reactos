@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.44 2001/06/14 21:05:07 jfilby Exp $
+/* $Id: create.c,v 1.45 2001/06/16 14:07:30 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -42,7 +42,7 @@
  * 
  */
 NTSTATUS STDCALL
-NtDeleteFile (IN	POBJECT_ATTRIBUTES	ObjectAttributes)
+NtDeleteFile(IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
    UNIMPLEMENTED;
 }
@@ -189,17 +189,19 @@ IoCreateStreamFileObject(PFILE_OBJECT FileObject,
 {
   HANDLE		FileHandle;
   PFILE_OBJECT	CreatedFileObject;
+  NTSTATUS Status;
 
   DPRINT("IoCreateStreamFileObject(FileObject %x, DeviceObject %x)\n",
 	   FileObject, DeviceObject);
    
   assert_irql (PASSIVE_LEVEL);
 
-  CreatedFileObject = ObCreateObject (&FileHandle,
-				      STANDARD_RIGHTS_REQUIRED,
-				      NULL,
-				      IoFileObjectType);
-  if (NULL == CreatedFileObject)
+  Status = ObCreateObject (&FileHandle,
+			   STANDARD_RIGHTS_REQUIRED,
+			   NULL,
+			   IoFileObjectType,
+			   (PVOID*)&CreatedFileObject);
+  if (!NT_SUCCESS(Status))
     {
       DPRINT("Could not create FileObject\n");
       return (NULL);
@@ -324,14 +326,15 @@ IoCreateFile(
    
    *FileHandle = 0;
 
-   FileObject = ObCreateObject(FileHandle,
-			       DesiredAccess,
-			       ObjectAttributes,
-			       IoFileObjectType);
-   if (FileObject == NULL)
+   Status = ObCreateObject(FileHandle,
+			   DesiredAccess,
+			   ObjectAttributes,
+			   IoFileObjectType,
+			   (PVOID*)&FileObject);
+   if (!NT_SUCCESS(Status))
      {
 	DPRINT1("ObCreateObject() failed!\n");
-	return (STATUS_UNSUCCESSFUL);
+	return (Status);
      }
    if (CreateOptions & FILE_SYNCHRONOUS_IO_ALERT)
      {

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.94 2001/06/01 17:14:40 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.95 2001/06/16 14:05:29 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -550,7 +550,7 @@ NtWriteFile=NtWriteFile@36
 ;ObCheckCreateObjectAccess=ObCheckCreateObjectAccess@28
 ;ObCheckObjectAccess=ObCheckObjectAccess@20
 ;ObCreateObject=ObCreateObject@36
-ObCreateObject=ObCreateObject@16
+ObCreateObject=ObCreateObject@20
 ;ObFindHandleForObject=ObFindHandleForObject@20
 ;ObGetObjectPointerCount=ObGetObjectPointerCount@4
 ;ObGetObjectSecurity=ObGetObjectSecurity@12

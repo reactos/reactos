@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.32 2001/03/18 19:35:13 dwelch Exp $
+/* $Id: create.c,v 1.33 2001/06/16 14:11:15 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -319,12 +319,13 @@ VOID PiCloseThread(PVOID ObjectBody, ULONG HandleCount)
 	   ObGetHandleCount(ObjectBody));
 }
 
-NTSTATUS PsInitializeThread(HANDLE ProcessHandle, 
-			    PETHREAD* ThreadPtr,
-			    PHANDLE ThreadHandle,
-			    ACCESS_MASK	DesiredAccess,
-			    POBJECT_ATTRIBUTES ThreadAttributes,
-			    BOOLEAN First)
+NTSTATUS
+PsInitializeThread(HANDLE ProcessHandle,
+		   PETHREAD* ThreadPtr,
+		   PHANDLE ThreadHandle,
+		   ACCESS_MASK	DesiredAccess,
+		   POBJECT_ATTRIBUTES ThreadAttributes,
+		   BOOLEAN First)
 {
    PETHREAD Thread;
    NTSTATUS Status;
@@ -361,10 +362,16 @@ NTSTATUS PsInitializeThread(HANDLE ProcessHandle,
    /*
     * Create and initialize thread
     */
-   Thread = ObCreateObject(ThreadHandle,
+   Status = ObCreateObject(ThreadHandle,
 			   DesiredAccess,
 			   ThreadAttributes,
-			   PsThreadType);
+			   PsThreadType,
+			   (PVOID*)&Thread);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
+
    DPRINT("Thread = %x\n",Thread);
    
    PiNrThreads++;
