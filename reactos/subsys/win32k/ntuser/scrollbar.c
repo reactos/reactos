@@ -16,13 +16,14 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scrollbar.c,v 1.14 2003/09/12 12:54:26 weiden Exp $
+/* $Id: scrollbar.c,v 1.15 2003/09/24 13:41:40 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Scrollbars
  * FILE:             subsys/win32k/ntuser/scrollbar.c
- * PROGRAMER:        Jason Filby (jasonfilby@yahoo.com)
+ * PROGRAMER:        Thomas Weidenmueller (w3seek@users.sourceforge.net)
+ *                   Jason Filby (jasonfilby@yahoo.com)
  * REVISION HISTORY:
  *       16-11-2002  Jason Filby  Created
  */
@@ -30,6 +31,7 @@
 
 #include <ddk/ntddk.h>
 #include <win32k/win32k.h>
+#include <internal/safe.h>
 #include <include/object.h>
 #include <include/window.h>
 #include <include/class.h>
@@ -42,8 +44,7 @@
 //#define NDEBUG
 #include <debug.h>
 
-#define SCROLL_MIN_RECT  4               /* Minimum size of the rectangle between the arrows */
-#define SCROLL_ARROW_THUMB_OVERLAP 0     /* Overlap between arrows and thumb */
+#define MINTRACKTHUMB    8               /* Minimum size of the rectangle between the arrows */
 
 #define SBRG_SCROLLBAR     0 /* the scrollbar itself */
 #define SBRG_TOPRIGHTBTN   1 /* the top or right button */
@@ -51,6 +52,15 @@
 #define SBRG_SCROLLBOX     3 /* the scroll box */
 #define SBRG_PAGEDOWNLEFT  4 /* the page down or page left region */
 #define SBRG_BOTTOMLEFTBTN 5 /* the bottom or left button */
+
+#define SBU_TOPRIGHT   0x10
+#define SBU_BOTTOMLEFT 0x20
+#define SBU_SCROLLBOX  0x40
+
+#ifndef SIZEOF_LONG_LONG
+  // FIXME enable this!
+  //#define SIZEOF_LONG_LONG 8
+#endif
 
 /***********************************************************************
  *           MulDiv  (copied from kernel32)
@@ -160,11 +170,12 @@ IntGetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect)
   return vertical;
 }
 
-#define MINTRACKTHUMB (8)
 BOOL FASTCALL
 IntCalculateThumb(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi, LPSCROLLINFO psi)
 {
   INT Thumb, ThumbBox, ThumbPos, cxy, mx;
+  RECT ClientRect;
+  
   switch(idObject)
   {
     case SB_HORZ:
@@ -176,8 +187,18 @@ IntCalculateThumb(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi, LPS
       cxy = psbi->rcScrollBar.bottom - psbi->rcScrollBar.top;
       break;
     case SB_CTL:
-      /* FIXME */
-      return FALSE;
+      IntGetClientRect (Window, &ClientRect);
+      if(Window->Style & SBS_VERT)
+      {
+        Thumb = NtUserGetSystemMetrics(SM_CYVSCROLL);
+        cxy = ClientRect.bottom - ClientRect.top;
+      }
+      else
+      {
+        Thumb = NtUserGetSystemMetrics(SM_CXHSCROLL);
+        cxy = ClientRect.right - ClientRect.left;
+      }
+      break;
     default:
       return FALSE;
   }
@@ -223,6 +244,236 @@ IntCalculateThumb(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi, LPS
   return TRUE;
 }
 
+BOOL FASTCALL
+IntGetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPSCROLLINFO lpsi)
+{
+  UINT Mask;
+  LPSCROLLINFO psi;
+  PSCROLLBARINFO Info;
+  
+  switch(nBar)
+  {
+    case SB_HORZ:
+      Info = Window->pHScroll;
+      if(Info)
+        break;
+      /* fall through */
+    case SB_VERT:
+      Info = Window->pVScroll;
+      if(Info)
+        break;
+      /* fall through */
+    case SB_CTL:
+      /* FIXME
+         Send a SBM_GETSCROLLINFO message to the window. Fail if the window
+         doesn't handle the message
+      */
+      return 0;
+      
+      Info = Window->wExtra;
+      if(Info)
+        break;
+      /* fall through */
+    default:
+      return FALSE;
+  }
+  
+  psi = (LPSCROLLINFO)((PSCROLLBARINFO)(Info + 1));
+  
+  if(lpsi->fMask == SIF_ALL)
+    Mask = SIF_PAGE | SIF_POS | SIF_RANGE | SIF_TRACKPOS;
+  else
+    Mask = lpsi->fMask;
+
+  if(Mask & SIF_PAGE)
+  {
+    lpsi->nPage = psi->nPage;
+  }
+  
+  if(Mask & SIF_POS)
+  {
+    lpsi->nPos = psi->nPos;
+  }
+  
+  if(Mask & SIF_RANGE)
+  {
+    lpsi->nMin = psi->nMin;
+    lpsi->nMax = psi->nMax;
+  }
+  
+  return TRUE;
+}
+
+DWORD FASTCALL
+IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPSCROLLINFO lpsi, DWORD *Action)
+{
+  PSCROLLBARINFO Info = NULL;
+  LPSCROLLINFO psi;
+  BOOL Chg = FALSE;
+  UINT Mask;
+  DWORD Ret;
+  
+  if(((lpsi->cbSize != sizeof(SCROLLINFO)) && 
+     (lpsi->cbSize != sizeof(SCROLLINFO) - sizeof(lpsi->nTrackPos))))
+  {
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return 0;
+  }
+  
+  switch(nBar)
+  {
+    case SB_HORZ:
+      Info = Window->pHScroll;
+      if(Info)
+        break;
+      /* fall through */
+    case SB_VERT:
+      Info = Window->pVScroll;
+      if(Info)
+        break;
+      /* fall through */
+    case SB_CTL:
+      /* FIXME
+         Send SBM_SETSCROLLINFO message, propably optimize it to SBM_SETPOS or SBM_SETRANGE.
+         If the window doesn't handle the message return 0
+      */
+      return 0;
+    
+      Info = Window->wExtra;
+      if(Info)
+        break;
+      /* fall through */
+    default:
+      return 0;
+  }
+  
+  psi = (LPSCROLLINFO)((PSCROLLBARINFO)(Info + 1));
+  
+  if(lpsi->fMask == SIF_ALL)
+    Mask = SIF_DISABLENOSCROLL | SIF_PAGE | SIF_POS | SIF_RANGE | SIF_TRACKPOS;
+  else
+    Mask = lpsi->fMask;
+  
+  if(Action)
+    *Action = 0;
+  
+  if(Mask & SIF_DISABLENOSCROLL)
+  {
+    /* FIXME */
+  }
+  
+  if((Mask & SIF_RANGE) && ((psi->nMin != lpsi->nMin) || (psi->nMax != lpsi->nMax)))
+  {
+    /* Invalid range -> range is set to (0,0) */
+    if((lpsi->nMin > lpsi->nMax) ||
+       ((UINT)(lpsi->nMax - lpsi->nMin) >= 0x80000000))
+    {
+      psi->nMin = 0;
+      psi->nMax = 0;
+      Chg = TRUE;
+      if(Action)
+        *Action |= SBU_SCROLLBOX;
+    }
+    else
+    {
+      if(psi->nMin != lpsi->nMin ||
+         psi->nMax != lpsi->nMax )
+      {
+        //*action |= SA_SSI_REFRESH;
+        psi->nMin = lpsi->nMin;
+        psi->nMax = lpsi->nMax;
+        Chg = TRUE;
+        if(Action)
+          *Action |= SBU_SCROLLBOX;
+      }
+    }
+  }
+  
+  if((Mask & SIF_PAGE) && (psi->nPage != lpsi->nPage))
+  {
+    psi->nPage = lpsi->nPage;
+    Chg = TRUE;
+    if(Action)
+      *Action |= SBU_SCROLLBOX;
+    if(psi->nPage < 0) psi->nPage = 0;
+    else if(psi->nPage > psi->nMax - psi->nMin + 1)
+      psi->nPage = psi->nMax - psi->nMin + 1;
+  }
+  
+  if((Mask & SIF_POS) && (psi->nPos != lpsi->nPos))
+  {
+    psi->nPos = lpsi->nPos;
+    Chg = TRUE;
+    if(Action)
+      *Action |= SBU_SCROLLBOX;
+    if(psi->nPos < psi->nMin)
+      psi->nPos = psi->nMin;
+    else if(psi->nPos > psi->nMax - max(psi->nPage - 1, 0))
+      psi->nPos = psi->nMax - max(psi->nPage - 1, 0);
+  }
+  
+  /* FIXME check assigned values */
+  
+  Ret = psi->nPos;
+  
+  return Ret;
+}
+
+BOOL FASTCALL
+IntGetScrollBarInfo(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi)
+{
+  INT Bar;
+  PSCROLLBARINFO sbi;
+  LPSCROLLINFO psi;
+  
+  switch(idObject)
+  {
+    case OBJID_HSCROLL:
+      if(Window->pHScroll)
+      {
+        Bar = SB_HORZ;
+        sbi = Window->pHScroll;
+        break;
+      }
+      /* fall through */
+    case OBJID_VSCROLL:
+      if(Window->pVScroll)
+      {
+        Bar = SB_VERT;
+        sbi = Window->pVScroll;
+        break;
+      }
+      /* fall through */
+    case OBJID_CLIENT:
+    
+      /* FIXME
+        Send a SBM_GETSCROLLBARINFO message if Window is not a system scrollbar.
+        If the window doesn't handle the message return FALSE.
+      */
+      return FALSE;
+    
+      if(Window->wExtra)
+      {
+        Bar = SB_CTL;
+        sbi = Window->wExtra;
+        break;
+      }
+      /* fall through */
+    default:
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return FALSE;
+  }
+  
+  psi = (LPSCROLLINFO)((PSCROLLBARINFO)(sbi + 1));
+
+  IntGetScrollBarRect(Window, Bar, &(sbi->rcScrollBar));
+  IntCalculateThumb(Window, Bar, sbi, psi);
+  
+  RtlCopyMemory(psbi, sbi, sizeof(SCROLLBARINFO));
+  
+  return TRUE;
+}
+
 DWORD FASTCALL 
 IntCreateScrollBar(PWINDOW_OBJECT Window, LONG idObject)
 {
@@ -256,15 +507,12 @@ IntCreateScrollBar(PWINDOW_OBJECT Window, LONG idObject)
   switch(idObject)
   {
     case SB_HORZ:
-      //psbi->dxyLineButton = NtUserGetSystemMetrics(SM_CXHSCROLL);
       Window->pHScroll = psbi;
       break;
     case SB_VERT:
-      //psbi->dxyLineButton = NtUserGetSystemMetrics(SM_CYVSCROLL);
       Window->pVScroll = psbi;
       break;
     case SB_CTL:
-      /* FIXME - set psbi->dxyLineButton */
       Window->wExtra = psbi;
       break;
     default:
@@ -360,17 +608,18 @@ BOOL
 STDCALL
 NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
 {
+  NTSTATUS Status;
+  SCROLLBARINFO sbi;
   PWINDOW_OBJECT Window;
-  PSCROLLBARINFO sbi;
-  LPSCROLLINFO psi;
-  INT Bar;
-  
-  if(!psbi || (psbi->cbSize != sizeof(SCROLLBARINFO)))
+  BOOL Ret;
+
+  Status = MmCopyFromCaller(&sbi, psbi, sizeof(SCROLLBARINFO));
+  if(!NT_SUCCESS(Status) || (sbi.cbSize != sizeof(SCROLLBARINFO)))
   {
-    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    SetLastNtError(Status);
     return FALSE;
   }
-  
+
   Window = IntGetWindowObject(hWnd);
 
   if(!Window)
@@ -379,47 +628,16 @@ NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
     return FALSE;
   }
 
-  switch(idObject)
+  Ret = IntGetScrollBarInfo(Window, idObject, &sbi);
+
+  Status = MmCopyToCaller(psbi, &sbi, sizeof(SCROLLBARINFO));
+  if(!NT_SUCCESS(Status))
   {
-    case OBJID_HSCROLL:
-      if(Window->pHScroll)
-      {
-        Bar = SB_HORZ;
-        sbi = Window->pHScroll;
-        break;
-      }
-      /* fall through */
-    case OBJID_VSCROLL:
-      if(Window->pVScroll)
-      {
-        Bar = SB_VERT;
-        sbi = Window->pVScroll;
-        break;
-      }
-      /* fall through */
-    case OBJID_CLIENT:
-      if(Window->wExtra)
-      {
-        Bar = SB_CTL;
-        sbi = Window->wExtra;
-        break;
-      }
-      /* fall through */
-    default:
-      IntReleaseWindowObject(Window);
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      return FALSE;
+    SetLastNtError(Status);
+    Ret = FALSE;
   }
-  
-  psi = (LPSCROLLINFO)((PSCROLLBARINFO)(sbi + 1));
-
-  IntGetScrollBarRect(Window, Bar, &(sbi->rcScrollBar));
-  IntCalculateThumb(Window, Bar, sbi, psi);
-  
-  memcpy(psbi, sbi, sizeof(SCROLLBARINFO));
-
   IntReleaseWindowObject(Window);
-  return TRUE;
+  return Ret;
 }
 
 
@@ -427,16 +645,17 @@ BOOL
 STDCALL
 NtUserGetScrollInfo(HWND hwnd, int fnBar, LPSCROLLINFO lpsi)
 {
+  NTSTATUS Status;
   PWINDOW_OBJECT Window;
-  LPSCROLLINFO psi;
-  UINT Mask;
-  PSCROLLBARINFO Info = NULL;
+  SCROLLINFO psi;
+  BOOL Ret;
   
-  if(!lpsi || ((lpsi->cbSize != sizeof(SCROLLINFO)) && 
-               (lpsi->cbSize != sizeof(SCROLLINFO) - sizeof(lpsi->nTrackPos))))
+  Status = MmCopyFromCaller(&psi, lpsi, sizeof(SCROLLINFO) - sizeof(psi.nTrackPos));
+  if(!NT_SUCCESS(Status) || 
+     (psi.cbSize != sizeof(SCROLLINFO)) || (psi.cbSize != sizeof(SCROLLINFO) - sizeof(psi.nTrackPos)))
   {
-    SetLastWin32Error(ERROR_INVALID_PARAMETER);
-    return 0;
+    SetLastNtError(Status);
+    return FALSE;
   }
   
   Window = IntGetWindowObject(hwnd);
@@ -447,53 +666,10 @@ NtUserGetScrollInfo(HWND hwnd, int fnBar, LPSCROLLINFO lpsi)
     return FALSE;
   }
   
-  switch(fnBar)
-  {
-    case SB_HORZ:
-      Info = Window->pHScroll;
-      if(Info)
-        break;
-      /* fall through */
-    case SB_VERT:
-      Info = Window->pVScroll;
-      if(Info)
-        break;
-      /* fall through */
-    case SB_CTL:
-      Info = Window->wExtra;
-      if(Info)
-        break;
-      /* fall through */
-    default:
-      IntReleaseWindowObject(Window);
-      return FALSE;
-  }
-  
-  psi = (LPSCROLLINFO)((PSCROLLBARINFO)(Info + 1));
-  
-  if(lpsi->fMask == SIF_ALL)
-    Mask = SIF_PAGE | SIF_POS | SIF_RANGE | SIF_TRACKPOS;
-  else
-    Mask = lpsi->fMask;
-
-  if(Mask & SIF_PAGE)
-  {
-    lpsi->nPage = psi->nPage;
-  }
-  
-  if(Mask & SIF_POS)
-  {
-    lpsi->nPos = psi->nPos;
-  }
-  
-  if(Mask & SIF_RANGE)
-  {
-    lpsi->nMin = psi->nMin;
-    lpsi->nMax = psi->nMax;
-  }
+  Ret = IntGetScrollInfo(Window, fnBar, &psi);
   
   IntReleaseWindowObject(Window);
-  return TRUE;
+  return Ret;
 }
 
 
@@ -571,21 +747,12 @@ NtUserSetScrollInfo(
   HWND hwnd, 
   int fnBar, 
   LPSCROLLINFO lpsi, 
-  WINBOOL fRedraw)
+  DWORD *Changed)
 {
   PWINDOW_OBJECT Window;
-  PSCROLLBARINFO Info = NULL;
-  LPSCROLLINFO psi;
-  BOOL Chg = FALSE;
-  UINT Mask;
-  DWORD Ret;
-  
-  if(!lpsi || ((lpsi->cbSize != sizeof(SCROLLINFO)) && 
-               (lpsi->cbSize != sizeof(SCROLLINFO) - sizeof(lpsi->nTrackPos))))
-  {
-    SetLastWin32Error(ERROR_INVALID_PARAMETER);
-    return 0;
-  }
+  NTSTATUS Status;
+  SCROLLINFO ScrollInfo;
+  DWORD Ret, Action;
   
   Window = IntGetWindowObject(hwnd);
 
@@ -595,92 +762,30 @@ NtUserSetScrollInfo(
     return 0;
   }
   
-  switch(fnBar)
+  Status = MmCopyFromCaller(&ScrollInfo, lpsi, sizeof(SCROLLINFO) - sizeof(ScrollInfo.nTrackPos));
+  if(!NT_SUCCESS(Status))
   {
-    case SB_HORZ:
-      Info = Window->pHScroll;
-      if(Info)
-        break;
-      /* fall through */
-    case SB_VERT:
-      Info = Window->pVScroll;
-      if(Info)
-        break;
-      /* fall through */
-    case SB_CTL:
-      Info = Window->wExtra;
-      if(Info)
-        break;
-      /* fall through */
-    default:
-      IntReleaseWindowObject(Window);
-      return 0;
+    IntReleaseWindowObject(Window);
+    SetLastNtError(Status);
+    return 0;
   }
   
-  psi = (LPSCROLLINFO)((PSCROLLBARINFO)(Info + 1));
+  Ret = IntSetScrollInfo(Window, fnBar, &ScrollInfo, &Action);
   
-  if(lpsi->fMask == SIF_ALL)
-    Mask = SIF_DISABLENOSCROLL | SIF_PAGE | SIF_POS | SIF_RANGE | SIF_TRACKPOS;
-  else
-    Mask = lpsi->fMask;
-  
-  if(Mask & SIF_DISABLENOSCROLL)
+  if(Changed)
   {
-    /* FIXME */
-  }
-  
-  if((Mask & SIF_RANGE) && ((psi->nMin != lpsi->nMin) || (psi->nMax != lpsi->nMax)))
-  {
-    /* Invalid range -> range is set to (0,0) */
-    if((lpsi->nMin > lpsi->nMax) ||
-       ((UINT)(lpsi->nMax - lpsi->nMin) >= 0x80000000))
+    if(Action && (Window->Style & WS_VISIBLE))
     {
-      psi->nMin = 0;
-      psi->nMax = 0;
-      Chg = TRUE;
+      MmCopyToCaller(Changed, &Action, sizeof(DWORD));
     }
     else
     {
-      if(psi->nMin != lpsi->nMin ||
-         psi->nMax != lpsi->nMax )
-      {
-        //*action |= SA_SSI_REFRESH;
-        psi->nMin = lpsi->nMin;
-        psi->nMax = lpsi->nMax;
-        Chg = TRUE;
-      }
+      MmCopyToCaller(Changed, &Action, sizeof(DWORD));
     }
   }
   
-  if((Mask & SIF_PAGE) && (psi->nPage != lpsi->nPage))
-  {
-    psi->nPage = lpsi->nPage;
-    Chg = TRUE;
-    if(psi->nPage < 0) psi->nPage = 0;
-    else if(psi->nPage > psi->nMax - psi->nMin + 1)
-      psi->nPage = psi->nMax - psi->nMin + 1;
-  }
-  
-  if((Mask & SIF_POS) && (psi->nPos != lpsi->nPos))
-  {
-    psi->nPos = lpsi->nPos;
-    Chg = TRUE;
-    if(psi->nPos < psi->nMin)
-      psi->nPos = psi->nMin;
-    else if(psi->nPos > psi->nMax - max(psi->nPage - 1, 0))
-      psi->nPos = psi->nMax - max(psi->nPage - 1, 0);
-  }
-  
-  /* FIXME check assigned values */
-  
-  if(fRedraw && Chg && (Window->Style & WS_VISIBLE))
-  {
-    /* FIXME - Redraw */
-  }
-  
-  Ret = psi->nPos;
-  
   IntReleaseWindowObject(Window);
+  
   return Ret;
 }
 

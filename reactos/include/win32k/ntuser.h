@@ -1453,7 +1453,7 @@ NtUserSetScrollInfo(
   HWND hwnd, 
   int fnBar, 
   LPSCROLLINFO lpsi, 
-  WINBOOL fRedraw);
+  DWORD *Changed);
 
 DWORD
 STDCALL

@@ -1,4 +1,4 @@
-/* $Id: scrollbar.c,v 1.16 2003/09/13 13:58:38 weiden Exp $
+/* $Id: scrollbar.c,v 1.17 2003/09/24 13:41:40 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -19,20 +19,11 @@
 #include <string.h>
 
 /* GLOBAL VARIABLES **********************************************************/
-/*
-static HBITMAP hUpArrow;
-static HBITMAP hDnArrow;
-static HBITMAP hLfArrow;
-static HBITMAP hRgArrow;
-static HBITMAP hUpArrowD;
-static HBITMAP hDnArrowD;
-static HBITMAP hLfArrowD;
-static HBITMAP hRgArrowD;
-static HBITMAP hUpArrowI;
-static HBITMAP hDnArrowI;
-static HBITMAP hLfArrowI;
-static HBITMAP hRgArrowI;
-*/
+
+#define SBU_TOPRIGHT   0x10
+#define SBU_BOTTOMLEFT 0x20
+#define SBU_SCROLLBOX  0x40
+
 #define TOP_ARROW(flags,pressed) \
    (((flags)&ESB_DISABLE_UP) ? hUpArrowI : ((pressed) ? hUpArrowD:hUpArrow))
 #define BOTTOM_ARROW(flags,pressed) \
@@ -423,23 +414,7 @@ EnableScrollBar(HWND hWnd, UINT wSBflags, UINT wArrows)
 WINBOOL STDCALL
 GetScrollBarInfo(HWND hwnd, LONG idObject, PSCROLLBARINFO psbi)
 {
-  SCROLLBARINFO sbi;
-  WINBOOL ret;
-  
-  if(!psbi)
-  {
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return FALSE;
-  }
-  
-  RtlCopyMemory(&sbi, psbi, sizeof(SCROLLBARINFO));
-  ret = NtUserGetScrollBarInfo (hwnd, idObject, psbi);
-  if(ret)
-  {
-    RtlCopyMemory(psbi, &sbi, sizeof(SCROLLBARINFO));
-  }
-
-  return ret;
+  return NtUserGetScrollBarInfo (hwnd, idObject, psbi);
 }
 
 
@@ -449,28 +424,7 @@ GetScrollBarInfo(HWND hwnd, LONG idObject, PSCROLLBARINFO psbi)
 WINBOOL STDCALL
 GetScrollInfo (HWND hwnd, int fnBar, LPSCROLLINFO lpsi)
 {
-  WINBOOL res;
-  SCROLLINFO si;
-  
-  if(!lpsi || 
-     ((lpsi->cbSize != sizeof(SCROLLINFO)) && (lpsi->cbSize != sizeof(SCROLLINFO) - sizeof(si.nTrackPos))))
-  {
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return 0;
-  }
-  
-  RtlZeroMemory(&si, sizeof(SCROLLINFO));
-  si.cbSize = lpsi->cbSize;
-  si.fMask = lpsi->fMask;
-  
-  res = (WINBOOL)NtUserGetScrollInfo(hwnd, fnBar, &si);
-  
-  if(res)
-  {
-    RtlCopyMemory(lpsi, &si, lpsi->cbSize);
-  }
-  
-  return res;
+  return (WINBOOL)NtUserGetScrollInfo(hwnd, fnBar, lpsi);
 }
 
 
@@ -527,16 +481,14 @@ GetScrollRange (HWND hWnd, int nBar, LPINT lpMinPos, LPINT lpMaxPos)
 int STDCALL
 SetScrollInfo (HWND hwnd, int fnBar, LPCSCROLLINFO lpsi, WINBOOL fRedraw)
 {
-  SCROLLINFO si;
-  
-  if(!lpsi || 
-     ((lpsi->cbSize != sizeof(SCROLLINFO)) && (lpsi->cbSize != sizeof(SCROLLINFO) - sizeof(si.nTrackPos))))
+  DWORD Changed;
+  int Ret = (int)NtUserSetScrollInfo(hwnd, fnBar, (LPSCROLLINFO)lpsi, &Changed);
+  if(fRedraw && Changed)
   {
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return 0;
+  
   }
-  RtlCopyMemory(&si, lpsi, lpsi->cbSize);
-  return (int)NtUserSetScrollInfo(hwnd, fnBar, &si, fRedraw);
+  
+  return Ret;
 }
 
 
@@ -548,6 +500,7 @@ SetScrollPos (HWND hWnd, int nBar, int nPos, WINBOOL bRedraw)
 {
   int Res = 0;
   BOOL ret;
+  DWORD Action;
   SCROLLINFO si;
   
   si.cbSize = sizeof(SCROLLINFO);
@@ -564,7 +517,7 @@ SetScrollPos (HWND hWnd, int nBar, int nPos, WINBOOL bRedraw)
     {
       si.nPos = nPos;
       /* finally set the new position */
-      NtUserSetScrollInfo(hWnd, nBar, &si, bRedraw);
+      NtUserSetScrollInfo(hWnd, nBar, &si, &Action);
     }
   }
   
@@ -580,13 +533,14 @@ SetScrollRange (HWND hWnd,
 		int nBar, int nMinPos, int nMaxPos, WINBOOL bRedraw)
 {
   SCROLLINFO si;
+  DWORD Action;
   
   si.cbSize = sizeof(SCROLLINFO);
   si.fMask = SIF_RANGE;
   si.nMin = nMinPos;
   si.nMax = nMaxPos;
   
-  NtUserSetScrollInfo(hWnd, nBar, &si, bRedraw);
+  NtUserSetScrollInfo(hWnd, nBar, &si, &Action);
   /* FIXME - check if called successfully */
   
   return TRUE;
