@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.2 2004/08/05 18:17:36 ion Exp $
+/* $Id: error.c,v 1.3 2004/12/16 23:06:07 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -241,8 +241,8 @@ static const WORD table_c0000001[411] =
       ERROR_FILE_CORRUPT,                     /* c0000051 (STATUS_NONEXISTENT_EA_ENTRY) */
       ERROR_FILE_CORRUPT,                     /* c0000052 (STATUS_NO_EAS_ON_FILE) */
       ERROR_FILE_CORRUPT,                     /* c0000053 (STATUS_EA_CORRUPT_ERROR) */
-      ERROR_LOCK_VIOLATION,                   /* c0000054 (STATUS_LOCK_NOT_GRANTED) */
-      ERROR_LOCK_VIOLATION,                   /* c0000055 (STATUS_FILE_LOCK_CONFLICT) */
+      ERROR_LOCK_VIOLATION,                   /* c0000054 (STATUS_FILE_LOCK_CONFLICT) */
+      ERROR_LOCK_VIOLATION,                   /* c0000055 (STATUS_LOCK_NOT_GRANTED) */
       ERROR_ACCESS_DENIED,                    /* c0000056 (STATUS_DELETE_PENDING) */
       ERROR_NOT_SUPPORTED,                    /* c0000057 (STATUS_CTL_FILE_NOT_SUPPORTED) */
       ERROR_UNKNOWN_REVISION,                 /* c0000058 (STATUS_UNKNOWN_REVISION) */
@@ -782,7 +782,7 @@ static const WORD table_c0030001[12] =
       RPC_X_SS_CHAR_TRANS_OPEN_FAIL,          /* c0030002 (RPC_NT_SS_CHAR_TRANS_OPEN_FAIL) */
       RPC_X_SS_CHAR_TRANS_SHORT_FILE,         /* c0030003 (RPC_NT_SS_CHAR_TRANS_SHORT_FILE) */
       ERROR_INVALID_HANDLE,                   /* c0030004 (RPC_NT_SS_IN_NULL_CONTEXT) */
-      ERROR_INVALID_HANDLE,                   /* c0030005 */
+      ERROR_INVALID_HANDLE,                   /* c0030005 (RPC_NT_SS_CONTEXT_MISMATCH)*/
       RPC_X_SS_CONTEXT_DAMAGED,               /* c0030006 (RPC_NT_SS_CONTEXT_DAMAGED) */
       RPC_X_SS_HANDLES_MISMATCH,              /* c0030007 (RPC_NT_SS_HANDLES_MISMATCH) */
       RPC_X_SS_CANNOT_GET_CALL_HANDLE,        /* c0030008 (RPC_NT_SS_CANNOT_GET_CALL_HANDLE) */
@@ -819,16 +819,6 @@ static const ERROR_TABLE ErrorTable[] =
       { 0xc0030059, 0xc003005f, table_c0030059 },
       { 0, 0, 0 }  /* last entry */
    };
-
-
-#if 0
-/* currently not assigned values */
-ERROR_ARENA_TRASHED
-STATUS_HANDLE_NOT_WAITABLE           ERROR_INVALID_HANDLE;
-STATUS_LOCK_NOT_GRANTED              ERROR_LOCK_VIOLATION;
-
-RPC_NT_SS_CONTEXT_MISMATCH           ERROR_INVALID_HANDLE
-#endif
 
 
 /* FUNCTIONS ***************************************************************/
