@@ -19,9 +19,9 @@
 ;  DISCLAMED. This includes but is not limited to warrenties of
 ;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ;
-; $Revision: 1.15 $
-; $Author: gvg $
-; $Date: 2003/04/24 22:21:13 $
+; $Revision: 1.16 $
+; $Author: hyperion $
+; $Date: 2003/07/06 23:04:19 $
 ;
 ; These three functions appear to be name mangled in some way, so GCC is
 ; probably not going to be able to use them in any case.
@@ -41,6 +41,8 @@ LIBRARY CRTDLL.DLL
 EXPORTS
 __builtin_new
 __builtin_delete
+??2@YAPAXI@Z=malloc
+??3@YAXPAX@Z=free
 _set_new_handler__FPFUi_i
 _CIacos
 _CIasin

@@ -1,26 +1,6 @@
-/* 
- * $Id: strlen.s,v 1.1 2003/05/27 18:58:15 hbirr Exp $
+/* $Id: strlen.s,v 1.2 2003/07/06 23:04:19 hyperion Exp $
  */
 
-/*
- * size_t strlen (const char* s)
- */
+#include "tcslen.h"
 
-.globl	_strlen
-
-_strlen:
-	push	%ebp
-	mov	%esp,%ebp
-	push	%edi
-	mov	0x8(%ebp),%edi
-	xor	%eax,%eax
-	mov	$-1,%ecx
-	cld
-	repne	scasb
-	not	%ecx
-	dec	%ecx
-	mov	%ecx,%eax
-	pop	%edi
-	leave
-	ret
-
+/* EOF */

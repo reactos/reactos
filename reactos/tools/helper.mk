@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.38 2003/06/17 19:40:07 hbirr Exp $
+# $Id: helper.mk,v 1.39 2003/07/06 23:04:19 hyperion Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -530,7 +530,7 @@ TARGET_CLEAN += $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME)
 
 all: $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME)
 
-$(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME): $(TARGET_OBJECTS)
+$(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME): $(TARGET_OBJECTS) $(MK_DEFNAME)
 	$(DLLTOOL) \
 		--dllname $(MK_FULLNAME) \
 		--def $(MK_DEFNAME) \
@@ -554,12 +554,14 @@ ifeq ($(MK_MODE),user)
 
 ifeq ($(MK_EXETYPE),dll)
   TARGET_LFLAGS += -mdll -Wl,--image-base,$(TARGET_BASE)
+  MK_EXTRADEP := $(MK_EDFNAME)
   MK_EXTRACMD2 := -Wl,temp.exp
 else
+  MK_EXTRADEP :=
   MK_EXTRACMD2 :=
 endif
 
-$(MK_NOSTRIPNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_LIBS)
+$(MK_NOSTRIPNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_EXTRADEP) $(MK_LIBS)
 ifeq ($(MK_EXETYPE),dll)
 	$(CC) -Wl,--base-file,base.tmp \
 		-Wl,--entry,$(TARGET_ENTRY) \
@@ -584,7 +586,7 @@ else
 	$(NM) --numeric-sort $(MK_NOSTRIPNAME) > $(MK_BASENAME).map
 endif
 
-$(MK_FULLNAME): $(MK_NOSTRIPNAME)
+$(MK_FULLNAME): $(MK_NOSTRIPNAME) $(MK_EXTRADEP)
 ifeq ($(MK_EXETYPE),dll)
 	$(CC) -Wl,--base-file,base.tmp \
 		-Wl,--entry,$(TARGET_ENTRY) \
@@ -611,11 +613,13 @@ ifeq ($(MK_MODE),kernel)
 
 ifeq ($(MK_IMPLIB),yes)
   MK_EXTRACMD := --def $(MK_EDFNAME)
+  MK_EXTRADEP := $(MK_EDFNAME)
 else
   MK_EXTRACMD :=
+  MK_EXTRADEP :=
 endif
 
-$(MK_NOSTRIPNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_LIBS)
+$(MK_NOSTRIPNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_EXTRADEP) $(MK_LIBS)
 	$(CC) -Wl,--base-file,base.tmp \
 		-Wl,--entry,$(TARGET_ENTRY) \
 		$(TARGET_LFLAGS) \
@@ -645,7 +649,7 @@ else
 	$(NM) --numeric-sort $(MK_NOSTRIPNAME) > $(MK_BASENAME).map
 endif
 
-$(MK_FULLNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_LIBS) $(MK_NOSTRIPNAME)
+$(MK_FULLNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_EXTRADEP) $(MK_LIBS) $(MK_NOSTRIPNAME)
 	$(LD) -r -o $(MK_STRIPPED_OBJECT) $(MK_OBJECTS)
 	$(STRIP) --strip-debug $(MK_STRIPPED_OBJECT)
 	$(CC) -Wl,--base-file,base.tmp \

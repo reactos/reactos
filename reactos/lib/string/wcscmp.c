@@ -1,17 +1,8 @@
-/*
- * $Id: wcscmp.c,v 1.1 2003/05/27 18:56:15 hbirr Exp $
+/* $Id: wcscmp.c,v 1.2 2003/07/06 23:04:19 hyperion Exp $
  */
 
-#include <string.h>
+#define _UNICODE
+#include <wchar.h>
+#include "tcscmp.h"
 
-int wcscmp(const wchar_t* s1, const wchar_t* s2)
-{
-  while (*s1 == *s2)
-  {
-    if (*s1 == 0)
-      return 0;
-    s1++;
-    s2++;
-  }
-  return *s1 - *s2;
-}
+/* EOF */

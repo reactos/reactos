@@ -1,14 +1,8 @@
-/*
- * $Id: wcscat.c,v 1.1 2003/05/27 18:56:15 hbirr Exp $
+/* $Id: wcscat.c,v 1.2 2003/07/06 23:04:19 hyperion Exp $
  */
 
-#include <string.h>
+#define _UNICODE
+#include <wchar.h>
+#include "tcscat.h"
 
-wchar_t* wcscat(wchar_t* s, const wchar_t* append)
-{
-    wchar_t* save = s;
-
-    for (; *s; ++s);
-        while ((*s++ = *append++));
-    return save;
-}
+/* EOF */

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.87 2003/06/11 15:42:31 ekohl Exp $
+# $Id: makefile,v 1.88 2003/07/06 23:04:19 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -14,7 +14,7 @@ TARGET_ASFLAGS = -I $(PATH_TO_TOP)/include
 
 TARGET_LFLAGS = -Wl,--file-alignment,0x1000 \
   -Wl,--section-alignment,0x1000 \
-  -nostartfiles
+  -nostartfiles -nostdlib
 
 TARGET_SDKLIBS = string.a rosrtl.a
 
@@ -59,7 +59,7 @@ RTL_OBJECTS = rtl/critical.o rtl/error.o rtl/heap.o rtl/largeint.o \
               rtl/registry.o rtl/exception.o rtl/intrlck.o rtl/resource.o \
               rtl/handle.o rtl/atom.o rtl/message.o rtl/timezone.o \
       	      rtl/propvar.o rtl/security.o rtl/dos8dot3.o rtl/compress.o \
-              rtl/encode.o rtl/random.o
+              rtl/encode.o rtl/random.o rtl/teb.o
 
 STDIO_OBJECTS = stdio/sprintf.o stdio/swprintf.o
 

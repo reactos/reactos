@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.4 2003/06/05 22:47:47 gdalsnes Exp $
+/* $Id: timer.c,v 1.5 2003/07/06 23:04:19 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -166,128 +166,133 @@ RemoveTimersThread(HANDLE ThreadID)
 
 
 
-NTSTATUS
+UINT_PTR
 STDCALL
-NtUserSetTimer(
-   HWND hWnd,
-   UINT_PTR * IDEvent,
-   UINT Period,
-   TIMERPROC TimerFunc
-   )
+NtUserSetTimer
+(
+ HWND hWnd,
+ UINT_PTR nIDEvent,
+ UINT uElapse,
+ TIMERPROC lpTimerFunc
+)
 {
-   ULONG  Index;
-   PMSG_TIMER_ENTRY MsgTimer = NULL;
-   PMSG_TIMER_ENTRY NewTimer;
-   LARGE_INTEGER CurrentTime;
-   HANDLE ThreadID;
+ ULONG Index;
+ PMSG_TIMER_ENTRY MsgTimer = NULL;
+ PMSG_TIMER_ENTRY NewTimer;
+ LARGE_INTEGER CurrentTime;
+ HANDLE ThreadID;
 
-   //FIXME: WINE: window must be owned by the calling thread
+ //FIXME: WINE: window must be owned by the calling thread
 #if 0
-   if (hWnd && !(hWnd = WIN_IsCurrentThread(hWnd))
-   {
-      return STATUS_UNSUCCESSFUL;
-   }
-
+ if(hWnd && !(hWnd = WIN_IsCurrentThread(hWnd))
+ {
+  return STATUS_UNSUCCESSFUL;
+ }
 #endif
 
-   ThreadID = PsGetCurrentThreadId();
-   KeQuerySystemTime(&CurrentTime);
-   ExAcquireFastMutex(&Mutex);
+ ThreadID = PsGetCurrentThreadId();
+ KeQuerySystemTime(&CurrentTime);
+ ExAcquireFastMutex(&Mutex);
 
-   if (hWnd == NULL)
-   {
-      //find a free, handle-less timer id
-      Index = RtlFindClearBitsAndSet(&HandleLessTimersBitMap, 1, HintIndex); 
-      if (Index == -1) 
-      {
-         ExReleaseFastMutex(&Mutex);
-         return STATUS_UNSUCCESSFUL;
-      }
+ if(hWnd == NULL)
+ {
+  /* find a free, handle-less timer id */
+  Index = RtlFindClearBitsAndSet(&HandleLessTimersBitMap, 1, HintIndex);
 
-      *IDEvent = HintIndex = Index + 1;
-   }
-   else
-   {
-      //remove timer if allready in the queue
-      MsgTimer = RemoveTimer(hWnd, *IDEvent, ThreadID); 
-   }
-
-   if (MsgTimer)
-   {
-      //modify existing (removed) timer
-      NewTimer = MsgTimer;
-
-      NewTimer->Period = Period;
-      NewTimer->Timeout.QuadPart = CurrentTime.QuadPart + (Period * 10000);
-      NewTimer->Msg.lParam = (LPARAM)TimerFunc;
-   }
-   else
-   {
-      //FIXME: use lookaside?
-      NewTimer = ExAllocatePool(PagedPool, sizeof(MSG_TIMER_ENTRY));
-
-      NewTimer->Msg.hwnd = hWnd;
-      NewTimer->Msg.message = WM_TIMER;
-      NewTimer->Msg.wParam = (WPARAM)*IDEvent;
-      NewTimer->Msg.lParam = (LPARAM)TimerFunc;
-      NewTimer->Period = Period;
-      NewTimer->Timeout.QuadPart = CurrentTime.QuadPart + (Period * 10000);
-      NewTimer->ThreadID = ThreadID;
-   }
-
-   if (InsertTimerAscendingOrder(NewTimer))
-   {
-      //new timer is first in queue and expires first
-      KeSetTimer(&Timer, NewTimer->Timeout, NULL);
-   }
-
+  if(Index == -1)
+  {
+   /* FIXME: set the last error */
    ExReleaseFastMutex(&Mutex);
+   return 0;
+  }
 
-   return STATUS_SUCCESS;
+  ++ Index;
+  HintIndex = Index;
+  return Index;
+ }
+ else
+ {
+  /* remove timer if already in the queue */
+  MsgTimer = RemoveTimer(hWnd, nIDEvent, ThreadID); 
+ }
+
+ if(MsgTimer)
+ {
+  /* modify existing (removed) timer */
+  NewTimer = MsgTimer;
+
+  NewTimer->Period = uElapse;
+  NewTimer->Timeout.QuadPart = CurrentTime.QuadPart + (uElapse * 10000);
+  NewTimer->Msg.lParam = (LPARAM)lpTimerFunc;
+ }
+ else
+ {
+  /* FIXME: use lookaside? */
+  NewTimer = ExAllocatePool(PagedPool, sizeof(MSG_TIMER_ENTRY));
+
+  NewTimer->Msg.hwnd = hWnd;
+  NewTimer->Msg.message = WM_TIMER;
+  NewTimer->Msg.wParam = (WPARAM)nIDEvent;
+  NewTimer->Msg.lParam = (LPARAM)lpTimerFunc;
+  NewTimer->Period = uElapse;
+  NewTimer->Timeout.QuadPart = CurrentTime.QuadPart + (uElapse * 10000);
+  NewTimer->ThreadID = ThreadID;
+ }
+
+ if(InsertTimerAscendingOrder(NewTimer))
+ {
+  /* new timer is first in queue and expires first */
+  KeSetTimer(&Timer, NewTimer->Timeout, NULL);
+ }
+
+ ExReleaseFastMutex(&Mutex);
+
+ return 1;
 }
 
 
-NTSTATUS
+BOOL
 STDCALL
-NtUserKillTimer(
-  HWND hWnd,
-  UINT_PTR IDEvent)
+NtUserKillTimer
+(
+ HWND hWnd,
+ UINT_PTR uIDEvent
+)
 {
-   PMSG_TIMER_ENTRY MsgTimer;
-   
-   ExAcquireFastMutex(&Mutex);
+ PMSG_TIMER_ENTRY MsgTimer;
+ 
+ ExAcquireFastMutex(&Mutex);
 
-   //handle-less timer?
-   if (hWnd == NULL)
-   {
-      if (!RtlAreBitsSet(&HandleLessTimersBitMap, IDEvent - 1, 1))
-      {
-         //bit was not set
-         ExReleaseFastMutex(&Mutex); 
-         return STATUS_UNSUCCESSFUL;
-      }
+ /* handle-less timer? */
+ if(hWnd == NULL)
+ {
+  if(!RtlAreBitsSet(&HandleLessTimersBitMap, uIDEvent - 1, 1))
+  {
+   /* bit was not set */
+   /* FIXME: set the last error */
+   ExReleaseFastMutex(&Mutex); 
+   return FALSE;
+  }
 
-      RtlClearBits(&HandleLessTimersBitMap, IDEvent - 1, 1);
-   }
+  RtlClearBits(&HandleLessTimersBitMap, uIDEvent - 1, 1);
+ }
 
-   MsgTimer = RemoveTimer(hWnd, IDEvent, PsGetCurrentThreadId());
+ MsgTimer = RemoveTimer(hWnd, uIDEvent, PsGetCurrentThreadId());
 
-   ExReleaseFastMutex(&Mutex);
+ ExReleaseFastMutex(&Mutex);
 
-   if (MsgTimer == NULL)
-   {
-      //didn't find timer
-      return STATUS_UNSUCCESSFUL;
-   }
+ if(MsgTimer == NULL)
+ {
+  /* didn't find timer */
+  /* FIXME: set the last error */
+  return FALSE;
+ }
 
-   //FIXME: use lookaside?
-   ExFreePool(MsgTimer);
+ /* FIXME: use lookaside? */
+ ExFreePool(MsgTimer);
 
-   return STATUS_SUCCESS;
+ return TRUE;
 }
-
-
-
 
 DWORD
 STDCALL

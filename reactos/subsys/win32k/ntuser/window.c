@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.59 2003/07/05 16:04:01 chorns Exp $
+/* $Id: window.c,v 1.60 2003/07/06 23:04:19 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1438,24 +1438,46 @@ NtUserRealChildWindowFromPoint(DWORD Unknown0,
   return 0;
 }
 
-NTSTATUS STDCALL
-NtUserRedrawWindow(HWND hWnd, CONST RECT *lprcUpdate, HRGN hrgnUpdate, UINT flags)
+BOOL
+STDCALL
+NtUserRedrawWindow
+(
+ HWND hWnd,
+ CONST RECT *lprcUpdate,
+ HRGN hrgnUpdate,
+ UINT flags
+)
 {
-  RECT SafeUpdateRect;
-  NTSTATUS Status;
+ RECT SafeUpdateRect;
+ NTSTATUS Status;
 
-  if (NULL != lprcUpdate)
-    {
-      Status = MmCopyFromCaller(&SafeUpdateRect, (PRECT) lprcUpdate, sizeof(RECT));
-      if (! NT_SUCCESS(Status))
-	{
-	  return Status;
-	}
-    }
+ if(NULL != lprcUpdate)
+ {
+  Status = MmCopyFromCaller(&SafeUpdateRect, (PRECT)lprcUpdate, sizeof(RECT));
 
-  return PaintRedrawWindow(hWnd, NULL == lprcUpdate ? NULL : &SafeUpdateRect, hrgnUpdate,
-                           flags, 0) ? STATUS_SUCCESS : STATUS_INVALID_PARAMETER;
-;
+  if(!NT_SUCCESS(Status))
+  {
+   /* FIXME: set last error */
+   return FALSE;
+  }
+ }
+
+ Status = PaintRedrawWindow
+ (
+  hWnd,
+  NULL == lprcUpdate ? NULL : &SafeUpdateRect,
+  hrgnUpdate,
+  flags,
+  0
+ );
+
+ if(!NT_SUCCESS(Status))
+ {
+  /* FIXME: set last error */
+  return FALSE;
+ }
+ 
+ return TRUE;
 }
 
 UINT STDCALL

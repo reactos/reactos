@@ -1,25 +1,9 @@
-/*
- * $Id: strspn.c,v 1.1 2003/06/09 20:23:06 hbirr Exp $
+/* $Id: strspn.c,v 1.2 2003/07/06 23:04:19 hyperion Exp $
  */
 
+#define _x(_X_) (!(_X_))
+#define _strxspn strspn
 #include <string.h>
+#include "strxspn.h"
 
-size_t strspn(const char *s1, const char *s2)
-{
-    unsigned long char_map[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-    register unsigned char* str = (unsigned char*)s1;
-
-    while (*s2)
-    {
-	char_map[*(unsigned char*)s2 / 32] |= (1 << (*(unsigned char*)s2 % 32));
-	s2++;
-    }
-
-    while (*str)
-    {
-	if (!(char_map[*str / 32] & (1 << (*str % 32))))
-	    break;
-	str++;
-    }
-    return str - (unsigned char*)s1;
-}
+/* EOF */

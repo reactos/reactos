@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: paint.c,v 1.14 2003/05/26 18:52:37 gvg Exp $
+/* $Id: paint.c,v 1.15 2003/07/06 23:04:19 hyperion Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -109,15 +109,7 @@ RedrawWindow(
   HRGN hrgnUpdate,
   UINT flags)
 {
-  NTSTATUS Status;
-
-  Status = NtUserRedrawWindow(hWnd, lprcUpdate, hrgnUpdate, flags);
-  if (! NT_SUCCESS(Status))
-    {
-    SetLastError(RtlNtStatusToDosError(Status));
-    }
-
-  return NT_SUCCESS(Status);
+ return NtUserRedrawWindow(hWnd, lprcUpdate, hrgnUpdate, flags);
 }
 
 WINBOOL

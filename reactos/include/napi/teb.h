@@ -227,6 +227,8 @@ typedef struct _TEB
    ULONG Spare5;                       // F7Ch
    PVOID ReservedForOle;               // F80h
    ULONG WaitingOnLoaderLock;          // F84h
+   ULONG Unknown[11];                  // F88h
+   PVOID FlsSlots;                     // FB4h
    PVOID WineDebugInfo;                // Needed for WINE DLL's
 } TEB, *PTEB;
 
@@ -236,10 +238,6 @@ typedef struct _TEB
 
 #if defined(_M_IX86)
 /* on the x86, the TEB is contained in the FS segment */
-/* 
- FIXME: GCC should allow defining a variable that directly maps to a register.
- It could make for even faster code
-*/
 static inline struct _TEB * NtCurrentTeb(void)
 {
  struct _TEB * pTeb;

@@ -906,11 +906,13 @@ STDCALL
 NtUserIsClipboardFormatAvailable(
   DWORD Unknown0);
 
-NTSTATUS
+BOOL
 STDCALL
-NtUserKillTimer(
-  HWND hWnd,
-  UINT_PTR IDEvent);
+NtUserKillTimer
+(
+ HWND hWnd,
+ UINT_PTR uIDEvent
+);
 
 DWORD
 STDCALL
@@ -1095,9 +1097,15 @@ NtUserRealChildWindowFromPoint(
   DWORD Unknown1,
   DWORD Unknown2);
 
-NTSTATUS STDCALL
-NtUserRedrawWindow(HWND hWnd, CONST RECT *lprcUpdate, HRGN hrgnUpdate, UINT flags);
-
+BOOL
+STDCALL
+NtUserRedrawWindow
+(
+ HWND hWnd,
+ CONST RECT *lprcUpdate,
+ HRGN hrgnUpdate,
+ UINT flags
+);
 
 RTL_ATOM
 STDCALL
@@ -1422,13 +1430,15 @@ NtUserSetThreadState(
   DWORD Unknown0,
   DWORD Unknown1);
 
-NTSTATUS
+UINT_PTR
 STDCALL
-NtUserSetTimer(
-  HWND hWnd,
-  UINT_PTR * IDEvent,
-  UINT Period,
-  TIMERPROC TimerFunc);
+NtUserSetTimer
+(
+ HWND hWnd,
+ UINT_PTR nIDEvent,
+ UINT uElapse,
+ TIMERPROC lpTimerFunc
+);
 
 DWORD
 STDCALL

@@ -1,4 +1,4 @@
-/* $Id: tickcount.c,v 1.1 2003/02/09 21:17:21 hyperion Exp $
+/* $Id: tickcount.c,v 1.2 2003/07/06 23:04:18 hyperion Exp $
 */
 /*
  tickcount -- Display the kernel tick count in human-readable format
@@ -71,7 +71,7 @@ void print_uptime
  uint64_t tick_cur = tickcount / ticks_per_slice[curslice];
  uint64_t tick_residual = tickcount % ticks_per_slice[curslice];
 
- assert(tick_cur <= (~((unsigned)0)));
+ assert(tick_cur <= (~((uint64_t)0)));
 
  if(tick_residual == 0)
  {

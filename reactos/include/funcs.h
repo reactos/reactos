@@ -4935,7 +4935,12 @@ EnableScrollBar(
 		UINT wSBflags,
 		UINT wArrows);
 
- 
+BOOL STDCALL GetScrollBarInfo(
+ HWND hwnd,
+ LONG idObject,
+ PSCROLLBARINFO psbi
+);
+
 WINBOOL
 STDCALL
 GetClientRect(

@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.92 2003/06/11 15:38:36 ekohl Exp $
+; $Id: ntdll.edf,v 1.93 2003/07/06 23:04:19 hyperion Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -830,7 +830,7 @@ __iscsymf
 __toascii
 _alldiv
 _allmul
-_alloca_probe = _chkstk
+_alloca_probe
 _allrem
 _allshl
 _allshr
@@ -943,6 +943,7 @@ wcsstr
 wcstol
 wcstombs
 wcstoul
+NtCurrentTeb=_NtCurrentTeb@0
 ;wine_dbgstr_an
 ;wine_dbgstr_wn
 ;wine_dbgstr_guid

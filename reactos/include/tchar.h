@@ -29,9 +29,9 @@
  *  DISCLAIMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.8 $
+ * $Revision: 1.9 $
  * $Author: hyperion $
- * $Date: 2003/04/22 03:20:25 $
+ * $Date: 2003/07/06 23:04:18 $
  *
  */
 
@@ -114,6 +114,7 @@ typedef wchar_t TCHAR;
 #define	_tcsncat		wcsncat
 #define	_tcsncmp	wcsncmp
 #define	_tcsncpy	wcsncpy
+#define _tcsnlen        wcsnlen
 #define	_tcspbrk		wcspbrk
 #define	_tcsrchr		wcsrchr
 #define	_tcsspn		wcsspn
@@ -218,6 +219,7 @@ typedef char TCHAR;
 #define	_tcsncat	strncat
 #define	_tcsncmp	strncmp
 #define	_tcsncpy	strncpy
+#define _tcsnlen        strnlen
 #define	_tcspbrk	strpbrk
 #define	_tcsrchr	strrchr
 #define _tcsspn		strspn

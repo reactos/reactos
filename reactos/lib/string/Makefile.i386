@@ -1,4 +1,4 @@
-# $Id: Makefile.i386,v 1.2 2003/06/04 18:14:46 hbirr Exp $
+# $Id: Makefile.i386,v 1.3 2003/07/06 23:04:19 hyperion Exp $
 
 
 EXCLUDE_FILTER = \
@@ -15,6 +15,7 @@ EXCLUDE_FILTER = \
 	strncmp.o \
 	strncpy.o \
 	strrchr.o \
+        strnlen.o \
 	wcscat.o \
 	wcschr.o \
 	wcscmp.o \
@@ -23,6 +24,7 @@ EXCLUDE_FILTER = \
 	wcsncat.o \
 	wcsncmp.o \
 	wcsncpy.o \
+	wcsnlen.o \
 	wcsrchr.o
 	
 

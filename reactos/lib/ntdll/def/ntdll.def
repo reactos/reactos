@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.103 2003/06/11 15:38:36 ekohl Exp $
+; $Id: ntdll.def,v 1.104 2003/07/06 23:04:19 hyperion Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -950,4 +950,5 @@ InterlockedIncrement@4
 InterlockedDecrement@4
 InterlockedExchange@8
 InterlockedCompareExchange@12
+_NtCurrentTeb@0
 ;EOF

@@ -1,4 +1,4 @@
-/* $Id: fls.c,v 1.1 2003/05/29 00:36:41 hyperion Exp $
+/* $Id: fls.c,v 1.2 2003/07/06 23:04:19 hyperion Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS system libraries
@@ -35,20 +35,68 @@ BOOL WINAPI FlsFree(DWORD dwFlsIndex)
 
 PVOID WINAPI FlsGetValue(DWORD dwFlsIndex)
 {
- (void)dwFlsIndex;
+ PVOID * ppFlsSlots;
+ PVOID pRetVal;
+ 
+ if(dwFlsIndex >= 128) goto l_InvalidParam;
 
- UNIMPLEMENTED;
- SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+ ppFlsSlots = NtCurrentTeb()->FlsSlots;
+ 
+ if(ppFlsSlots == NULL) goto l_InvalidParam;
+
+ SetLastError(0);
+ pRetVal = ppFlsSlots[dwFlsIndex + 2];
+ 
+ return pRetVal;
+
+l_InvalidParam:
+ SetLastError(ERROR_INVALID_PARAMETER);
  return NULL;
 }
 
 BOOL WINAPI FlsSetValue(DWORD dwFlsIndex, PVOID lpFlsData)
 {
- (void)dwFlsIndex;
- (void)lpFlsData;
+ PVOID * ppFlsSlots;
+ TEB * pTeb = NtCurrentTeb();
 
- UNIMPLEMENTED;
- SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+ if(dwFlsIndex >= 128) goto l_InvalidParam;
+
+ ppFlsSlots = pTeb->FlsSlots;
+
+ if(ppFlsSlots == NULL)
+ {
+  PEB * pPeb = pTeb->Peb;
+
+  ppFlsSlots = RtlAllocateHeap
+  (
+   pPeb->ProcessHeap,
+   HEAP_ZERO_MEMORY,
+   (128 + 2) * sizeof(PVOID)
+  );
+
+  if(ppFlsSlots == NULL) goto l_OutOfMemory;
+
+  pTeb->FlsSlots = ppFlsSlots;
+
+  RtlAcquirePebLock();
+
+  /* TODO: initialization */
+
+  RtlReleasePebLock();
+ }
+
+ ppFlsSlots[dwFlsIndex + 2] = lpFlsData;
+ 
+ return TRUE;
+
+l_OutOfMemory:
+ SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+ goto l_Fail;
+ 
+l_InvalidParam:
+ SetLastError(ERROR_INVALID_PARAMETER);
+
+l_Fail:
  return FALSE;
 }
 
