@@ -1,3 +1,7 @@
+# $Id: makefile,v 1.2 1999/05/21 05:25:12 ea Exp $
+#
+# Makefile for fmifs.dll
+#
 TARGET=fmifs
 ifneq ($(HOST),mingw32-windows)
   ifneq ($(HOST),mingw32-linux)
@@ -18,10 +22,10 @@ MISC_OBJECTS = dllmain.o $(TARGET).coff
 
 OBJECTS = $(IFS_OBJECTS) $(MISC_OBJECTS)
 
-CLEAN_FILES = *.o *.tmp *.dll *.sym
+CLEAN_FILES = *.o *.a *.tmp *.dll *.sym *.coff
 
 $(TARGET).coff: $(TARGET).rc ../../include/reactos/resource.h
-	windres $(TARGET).rc $(TARGET).coff
+	$(RC) $(TARGET).rc $(TARGET).coff
 
 $(TARGET).a: $(OBJECTS)
 	$(AR) csr $(TARGET).a $(OBJECTS)
@@ -70,4 +74,4 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 
 include ../../rules.mak
 
-
+# EOF
