@@ -22,12 +22,14 @@
 
 #include "usbuhci.h"
 #include "../../usbport/usbport.h"
-
+#include <debug.h>
 /* PUBLIC AND PRIVATE FUNCTIONS ***********************************************/
 
 NTSTATUS STDCALL
 DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegistryPath)
 {
+	//return STATUS_SUCCESS;
+	//DPRINT1("USBUHCI.SYS DriverEntry\n");
 	PUSB_CONTROLLER_INTERFACE ControllerInterface;
 
 	USBPORT_AllocateUsbControllerInterface(&ControllerInterface);

@@ -26,6 +26,7 @@
 #include <windef.h>
 #include <ddk/ntddk.h>
 #include "usbport.h"
+#include <debug.h>
 
 /* PUBLIC AND PRIVATE FUNCTIONS ***********************************************/
 
@@ -36,6 +37,7 @@
 NTSTATUS STDCALL
 DriverEntry(IN PVOID Context1, IN PVOID Context2)
 {
+	DPRINT1("USBPORT.SYS DriverEntry\n");
 	return STATUS_SUCCESS;
 }
 /*
@@ -45,6 +47,7 @@ NTSTATUS STDCALL
 USBPORT_RegisterUSBPortDriver(PDRIVER_OBJECT DriverObject, DWORD Unknown1,
     PUSB_CONTROLLER_INTERFACE Interface)
 {
+	//DPRINT1("USBPORT_RegisterUSBPortDriver\n");
 	ASSERT(KeGetCurrentIRQL() < DISPATCH_LEVEL);
 
 	return STATUS_SUCCESS;
@@ -61,6 +64,7 @@ USBPORT_GetHciMn(VOID)
 NTSTATUS STDCALL
 USBPORT_AllocateUsbControllerInterface(OUT PUSB_CONTROLLER_INTERFACE *pControllerInterface)
 {
+	//DPRINT1("USBPORT_AllocateUsbControllerInterface\n");
 	ASSERT(KeGetCurrentIRQL() < DISPATCH_LEVEL);
 	ASSERT(0 != ControllerObject);
 
@@ -73,6 +77,7 @@ USBPORT_AllocateUsbControllerInterface(OUT PUSB_CONTROLLER_INTERFACE *pControlle
 NTSTATUS STDCALL
 USBPORT_FreeUsbControllerInterface(IN PUSB_CONTROLLER_INTERFACE ControllerInterface)
 {
+	//DPRINT1("USBPORT_FreeUsbControllerInterface\n");
 	ASSERT(KeGetCurrentIRQL() < DISPATCH_LEVEL);	
 
 	ExFreePool(ControllerInterface);

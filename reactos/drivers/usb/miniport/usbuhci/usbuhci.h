@@ -28,12 +28,6 @@
 //#include <ddk/miniport.h>
 #include <ddk/ntapi.h>
 
-#ifdef DBG
-#define DPRINT(arg) DbgPrint arg;
-#else
-#define DPRINT(arg)
-#endif
-
 // Export funcs here
 /*
 BOOL FASTCALL
