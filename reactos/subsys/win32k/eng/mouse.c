@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.76.2.4 2004/09/14 01:00:42 weiden Exp $
+/* $Id: mouse.c,v 1.76.2.5 2004/11/23 01:57:21 weiden Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -30,65 +30,6 @@
 
 /* FUNCTIONS *****************************************************************/
 
-BOOL INTERNAL_CALL
-IntIsPrimarySurface(SURFOBJ *SurfObj);
-
-VOID INTERNAL_CALL
-EnableMouse(HDC hDisplayDC)
-{
-  PDC dc;
-  BITMAPOBJ *BitmapObj;
-  GDIDEVICE *GdiDev;
-  PSYSTEM_CURSORINFO CurInfo = IntGetSysCursorInfo(InputWindowStation);
-
-  if( hDisplayDC && InputWindowStation)
-  {
-    if(!IntGetWindowStationObject(InputWindowStation))
-    {
-       CurInfo->Enabled = FALSE;
-       return;
-    }
-    
-    dc = DC_LockDc(hDisplayDC);
-    /* FIXME - dc can be NULL!! Don't assert here! */
-    ASSERT(dc);
-    BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
-    /* FIXME - BitmapObj can be NULL!!!! Don't assert here! */
-    ASSERT(BitmapObj);
-    
-    /* Move the cursor to the screen center */
-    DPRINT("Setting Cursor up at 0x%x, 0x%x\n", SurfObj->sizlBitmap.cx / 2, SurfObj->sizlBitmap.cy / 2);
-    ExAcquireFastMutex(&CurInfo->CursorMutex);
-    CurInfo->x = BitmapObj->SurfObj.sizlBitmap.cx / 2;
-    CurInfo->y = BitmapObj->SurfObj.sizlBitmap.cy / 2;
-    ExReleaseFastMutex(&CurInfo->CursorMutex);
-    
-    GdiDev = GDIDEV(&BitmapObj->SurfObj);
-    BITMAPOBJ_UnlockBitmap(BitmapObj);
-    DC_UnlockDc( dc );
-    
-    IntSetCursor(NULL, TRUE);
-    
-    CurInfo->Enabled = (SPS_ACCEPT_EXCLUDE == GdiDev->PointerStatus ||
-                        SPS_ACCEPT_NOEXCLUDE == GdiDev->PointerStatus);
-
-    IntLoadDefaultCursors();
-    
-    ObDereferenceObject(InputWindowStation);
-  }
-  else
-  {
-    if(IntGetWindowStationObject(InputWindowStation))
-    {
-       IntSetCursor(NULL, TRUE);
-       CurInfo->Enabled = FALSE;
-       CurInfo->CursorClipInfo.IsClipped = FALSE;
-       ObDereferenceObject(InputWindowStation);
-       return;
-    }
-  }
-}
-
 INT INTERNAL_CALL
 MouseSafetyOnDrawStart(SURFOBJ *SurfObj, LONG HazardX1,
 		       LONG HazardY1, LONG HazardX2, LONG HazardY2)
@@ -98,45 +39,19 @@ MouseSafetyOnDrawStart(SURFOBJ *SurfObj, LONG HazardX1,
  */
 {
   LONG tmp;
-  PSYSTEM_CURSORINFO CurInfo;
-  BOOL MouseEnabled = FALSE;
-  PCURSOR_OBJECT Cursor;
-
-
-  /* Mouse is not allowed to move if GDI is busy drawing */
-   
-  if(IntGetWindowStationObject(InputWindowStation))
-  {
-    CurInfo = IntGetSysCursorInfo(InputWindowStation);
-    
-    MouseEnabled = CurInfo->Enabled && CurInfo->ShowingCursor;
-  }
-  else
-    return FALSE;
-    
-  if (SurfObj == NULL)
-    {
-      ObDereferenceObject(InputWindowStation);
-      return(FALSE);
-    }
-  if (!IntIsPrimarySurface(SurfObj) || MouseEnabled == FALSE)
-    {
-      ObDereferenceObject(InputWindowStation);
-      return(FALSE);
-    }
-
-  if (SPS_ACCEPT_NOEXCLUDE == GDIDEV(SurfObj)->PointerStatus)
-    {
-      /* Hardware cursor, no need to remove it */
-      ObDereferenceObject(InputWindowStation);
-      return(FALSE);
-    }
+  GDIDEVICE *ppdev;
+  GDIPOINTER *pgp;
   
-  if(!(Cursor = CurInfo->CurrentCursorObject))
-  {
-    ObDereferenceObject(InputWindowStation);
-    return(FALSE);
-  }
+  ASSERT(SurfObj != NULL);
+  
+  ppdev = GDIDEV(SurfObj);
+  pgp = &ppdev->Pointer;
+    
+  if (!ppdev->IsPrimarySurface ||
+      SPS_ACCEPT_NOEXCLUDE == pgp->Status)
+    {
+      return(FALSE);
+    }
 
   if (HazardX1 > HazardX2)
     {
@@ -147,39 +62,23 @@ MouseSafetyOnDrawStart(SURFOBJ *SurfObj, LONG HazardX1,
       tmp = HazardY2; HazardY2 = HazardY1; HazardY1 = tmp;
     }
 
-  if (CurInfo->PointerRectRight >= HazardX1
-      && CurInfo->PointerRectLeft <= HazardX2
-      && CurInfo->PointerRectBottom  >= HazardY1
-      && CurInfo->PointerRectTop <= HazardY2)
+  if (pgp->Pos.x + pgp->Size.cx >= HazardX1
+      && pgp->Pos.x <= HazardX2
+      && pgp->Pos.y + pgp->Size.cy >= HazardY1
+      && pgp->Pos.y <= HazardY2)
     {
-      /* Mouse is not allowed to move if GDI is busy drawing */
-      ExAcquireFastMutex(&CurInfo->CursorMutex);
-      if (0 != CurInfo->SafetyRemoveCount++)
+      if (0 != pgp->SafetyRemoveCount++)
         {
-          /* Was already removed */
-          ExReleaseFastMutex(&CurInfo->CursorMutex);
-          ObDereferenceObject(InputWindowStation);
           return FALSE;
         }
-      CurInfo->SafetySwitch = TRUE;
-      if (GDIDEVFUNCS(SurfObj).MovePointer)
-        GDIDEVFUNCS(SurfObj).MovePointer(SurfObj, -1, -1, NULL);
+      pgp->SafetySwitch = TRUE;
+      if (pgp->MovePointer)
+        pgp->MovePointer(SurfObj, -1, -1, NULL);
       else
         EngMovePointer(SurfObj, -1, -1, NULL);
-      ExReleaseFastMutex(&CurInfo->CursorMutex);
     }
     
-  ObDereferenceObject(InputWindowStation);
   return(TRUE);
-}
-
-VOID INTERNAL_CALL
-SetPointerRect(PSYSTEM_CURSORINFO CurInfo, PRECTL PointerRect)
-{
-  CurInfo->PointerRectLeft = PointerRect->left;
-  CurInfo->PointerRectRight = PointerRect->right;
-  CurInfo->PointerRectTop = PointerRect->top;
-  CurInfo->PointerRectBottom = PointerRect->bottom;
 }
 
 INT INTERNAL_CALL
@@ -188,60 +87,34 @@ MouseSafetyOnDrawEnd(SURFOBJ *SurfObj)
  * FUNCTION: Notify the mouse driver that drawing has finished on a surface.
  */
 {
-  PSYSTEM_CURSORINFO CurInfo;
-  BOOL MouseEnabled = FALSE;
-  RECTL PointerRect;
-    
-  if(IntGetWindowStationObject(InputWindowStation))
-  {
-    CurInfo = IntGetSysCursorInfo(InputWindowStation);
-  }
-  else
-    return FALSE;
-    
-  ExAcquireFastMutex(&CurInfo->CursorMutex);
-  if(SurfObj == NULL)
-  {
-    ExReleaseFastMutex(&CurInfo->CursorMutex);
-    ObDereferenceObject(InputWindowStation);
-    return FALSE;
-  }
+  GDIDEVICE *ppdev;
+  GDIPOINTER *pgp;
   
-  MouseEnabled = CurInfo->Enabled && CurInfo->ShowingCursor;
-  if (!IntIsPrimarySurface(SurfObj) || MouseEnabled == FALSE)
-    {
-      ExReleaseFastMutex(&CurInfo->CursorMutex);
-      ObDereferenceObject(InputWindowStation);
-      return(FALSE);
-    }
+  ASSERT(SurfObj != NULL);
+  
+  ppdev = GDIDEV(SurfObj);
+  pgp = &ppdev->Pointer;
 
-  if (SPS_ACCEPT_NOEXCLUDE == GDIDEV(SurfObj)->PointerStatus)
-    {
-      /* Hardware cursor, it wasn't removed so need to restore it */
-      ExReleaseFastMutex(&CurInfo->CursorMutex);
-      ObDereferenceObject(InputWindowStation);
-      return(FALSE);
-    }
+  if(!ppdev->IsPrimarySurface ||
+     SPS_ACCEPT_NOEXCLUDE == pgp->Status)
+  {
+    return FALSE;
+  }
   
-  if (CurInfo->SafetySwitch)
+  if (pgp->SafetySwitch)
     {
-      if (1 < CurInfo->SafetyRemoveCount--)
+      if (1 < pgp->SafetyRemoveCount--)
         {
           /* Someone else removed it too, let them restore it */
-          ExReleaseFastMutex(&CurInfo->CursorMutex);
-          ObDereferenceObject(InputWindowStation);
           return FALSE;
         }
-      if (GDIDEVFUNCS(SurfObj).MovePointer)
-        GDIDEVFUNCS(SurfObj).MovePointer(SurfObj, CurInfo->x, CurInfo->y, &PointerRect);
+      if (pgp->MovePointer)
+        pgp->MovePointer(SurfObj, pgp->Pos.x, pgp->Pos.y, NULL);
       else
-        EngMovePointer(SurfObj, CurInfo->x, CurInfo->y, &PointerRect);
-      SetPointerRect(CurInfo, &PointerRect);
-      CurInfo->SafetySwitch = FALSE;
+        EngMovePointer(SurfObj, pgp->Pos.x, pgp->Pos.y, NULL);
+     pgp->SafetySwitch = FALSE;
     }
 
-  ExReleaseFastMutex(&CurInfo->CursorMutex);
-  ObDereferenceObject(InputWindowStation);
   return(TRUE);
 }
 
@@ -250,39 +123,42 @@ MouseSafetyOnDrawEnd(SURFOBJ *SurfObj)
 VOID INTERNAL_CALL
 IntHideMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
 {
-   if (ppdev->PointerAttributes.Enable == FALSE)
+   GDIPOINTER *pgp;
+   
+   ASSERT(ppdev);
+   ASSERT(DestSurface);
+   
+   pgp = &ppdev->Pointer;
+   
+   if (!pgp->Enabled ||
+       pgp->Pos.x + pgp->HotSpot.x == -1)
    {
       return;
    }
 
-   ppdev->PointerAttributes.Enable = FALSE;
+   pgp->Enabled = FALSE;
 
-   if (ppdev->PointerAttributes.Column + ppdev->PointerHotSpot.x == -1)
-   {
-      return;
-   }
-
-   if (ppdev->PointerSaveSurface != NULL)
+   if (pgp->SaveSurface != NULL)
    {
       RECTL DestRect;
       POINTL SrcPoint;
       SURFOBJ *SaveSurface;
       SURFOBJ *MaskSurface;
 
-      DestRect.left = max(ppdev->PointerAttributes.Column, 0);
-      DestRect.top = max(ppdev->PointerAttributes.Row, 0);
+      DestRect.left = max(pgp->Pos.x, 0);
+      DestRect.top = max(pgp->Pos.y, 0);
       DestRect.right = min(
-         ppdev->PointerAttributes.Column + ppdev->PointerAttributes.Width,
+         pgp->Pos.x + pgp->Size.cx,
          DestSurface->sizlBitmap.cx);
       DestRect.bottom = min(
-         ppdev->PointerAttributes.Row + ppdev->PointerAttributes.Height,
+         pgp->Pos.y + pgp->Size.cy,
          DestSurface->sizlBitmap.cy);
 
-      SrcPoint.x = max(-ppdev->PointerAttributes.Column, 0);
-      SrcPoint.y = max(-ppdev->PointerAttributes.Row, 0);
+      SrcPoint.x = max(-pgp->Pos.x, 0);
+      SrcPoint.y = max(-pgp->Pos.y, 0);
 
-      SaveSurface = EngLockSurface(ppdev->PointerSaveSurface);
-      MaskSurface = EngLockSurface(ppdev->PointerMaskSurface);
+      SaveSurface = EngLockSurface(pgp->SaveSurface);
+      MaskSurface = EngLockSurface(pgp->MaskSurface);
       EngBitBlt(DestSurface, SaveSurface, MaskSurface, NULL, NULL,
                 &DestRect, &SrcPoint, &SrcPoint, NULL, NULL, SRCCOPY);
       EngUnlockSurface(MaskSurface);
@@ -293,36 +169,43 @@ IntHideMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
 VOID INTERNAL_CALL
 IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
 {
-   if (ppdev->PointerAttributes.Enable == TRUE)
+   GDIPOINTER *pgp;
+
+   ASSERT(ppdev);
+   ASSERT(DestSurface);
+
+   pgp = &ppdev->Pointer;
+   
+   if (pgp->Enabled)
    {
       return;
    }
 
-   ppdev->PointerAttributes.Enable = TRUE;
+   pgp->Enabled = TRUE;
 
    /*
     * Copy the pixels under the cursor to temporary surface.
     */
    
-   if (ppdev->PointerSaveSurface != NULL)
+   if (pgp->SaveSurface != NULL)
    {
       RECTL DestRect;
       POINTL SrcPoint;
       SURFOBJ *SaveSurface;
 
-      SrcPoint.x = max(ppdev->PointerAttributes.Column, 0);
-      SrcPoint.y = max(ppdev->PointerAttributes.Row, 0);
+      SrcPoint.x = max(pgp->Pos.x, 0);
+      SrcPoint.y = max(pgp->Pos.y, 0);
 
-      DestRect.left = SrcPoint.x - ppdev->PointerAttributes.Column;
-      DestRect.top = SrcPoint.y - ppdev->PointerAttributes.Row;
+      DestRect.left = SrcPoint.x - pgp->Pos.x;
+      DestRect.top = SrcPoint.y - pgp->Pos.y;
       DestRect.right = min(
-         ppdev->PointerAttributes.Width,
-         DestSurface->sizlBitmap.cx - ppdev->PointerAttributes.Column);
+         pgp->Size.cx,
+         DestSurface->sizlBitmap.cx - pgp->Pos.x);
       DestRect.bottom = min(
-         ppdev->PointerAttributes.Height,
-         DestSurface->sizlBitmap.cy - ppdev->PointerAttributes.Row);
+         pgp->Size.cy,
+         DestSurface->sizlBitmap.cy - pgp->Pos.y);
 
-      SaveSurface = EngLockSurface(ppdev->PointerSaveSurface);
+      SaveSurface = EngLockSurface(pgp->SaveSurface);
       EngBitBlt(SaveSurface, DestSurface, NULL, NULL, NULL,
                 &DestRect, &SrcPoint, NULL, NULL, NULL, SRCCOPY);
       EngUnlockSurface(SaveSurface);
@@ -338,32 +221,32 @@ IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
       SURFOBJ *ColorSurf;
       SURFOBJ *MaskSurf;
 
-      DestRect.left = max(ppdev->PointerAttributes.Column, 0);
-      DestRect.top = max(ppdev->PointerAttributes.Row, 0);
+      DestRect.left = max(pgp->Pos.x, 0);
+      DestRect.top = max(pgp->Pos.y, 0);
       DestRect.right = min(
-         ppdev->PointerAttributes.Column + ppdev->PointerAttributes.Width,
+         pgp->Pos.x + pgp->Size.cx,
          DestSurface->sizlBitmap.cx);
       DestRect.bottom = min(
-         ppdev->PointerAttributes.Row + ppdev->PointerAttributes.Height,
+         pgp->Pos.y + pgp->Size.cy,
          DestSurface->sizlBitmap.cy);
 
-      SrcPoint.x = max(-ppdev->PointerAttributes.Column, 0);
-      SrcPoint.y = max(-ppdev->PointerAttributes.Row, 0);
+      SrcPoint.x = max(-pgp->Pos.x, 0);
+      SrcPoint.y = max(-pgp->Pos.y, 0);
 
-      MaskSurf = EngLockSurface(ppdev->PointerMaskSurface);
-      if (ppdev->PointerColorSurface != NULL)
+      MaskSurf = EngLockSurface(pgp->MaskSurface);
+      if (pgp->ColorSurface != NULL)
       {
-         ColorSurf = EngLockSurface(ppdev->PointerColorSurface);
-         EngBitBlt(DestSurface, ColorSurf, MaskSurf, NULL, ppdev->PointerXlateObject,
+         ColorSurf = EngLockSurface(pgp->ColorSurface);
+         EngBitBlt(DestSurface, ColorSurf, MaskSurf, NULL, pgp->XlateObject,
                    &DestRect, &SrcPoint, &SrcPoint, NULL, NULL, 0xAACC);
          EngUnlockSurface(ColorSurf);
       }
       else
       {
-         EngBitBlt(DestSurface, MaskSurf, NULL, NULL, ppdev->PointerXlateObject,
+         EngBitBlt(DestSurface, MaskSurf, NULL, NULL, pgp->XlateObject,
                    &DestRect, &SrcPoint, NULL, NULL, NULL, SRCAND);
-         SrcPoint.y += ppdev->PointerAttributes.Height;
-         EngBitBlt(DestSurface, MaskSurf, NULL, NULL, ppdev->PointerXlateObject,
+         SrcPoint.y += pgp->Size.cy;
+         EngBitBlt(DestSurface, MaskSurf, NULL, NULL, pgp->XlateObject,
                    &DestRect, &SrcPoint, NULL, NULL, NULL, SRCINVERT);
       }
       EngUnlockSurface(MaskSurf);
@@ -387,45 +270,51 @@ EngSetPointerShape(
    IN RECTL *prcl,
    IN FLONG fl)
 {
-   GDIDEVICE *ppdev = (GDIDEVICE *)pso->hdev;
+   GDIDEVICE *ppdev;
    SURFOBJ *TempSurfObj;
+   GDIPOINTER *pgp;
+
+   ASSERT(pso);
+
+   ppdev = GDIDEV(pso);
+   pgp = &ppdev->Pointer;
    
    IntHideMousePointer(ppdev, pso);
 
-   if (ppdev->PointerColorSurface != NULL)
+   if (pgp->ColorSurface != NULL)
    {
       /* FIXME: Is this really needed? */
-      TempSurfObj = EngLockSurface(ppdev->PointerColorSurface);
+      TempSurfObj = EngLockSurface(pgp->ColorSurface);
       EngFreeMem(TempSurfObj->pvBits);
       TempSurfObj->pvBits = 0;
       EngUnlockSurface(TempSurfObj);
 
-      EngDeleteSurface(ppdev->PointerColorSurface);
-      ppdev->PointerMaskSurface = NULL;
+      EngDeleteSurface(pgp->ColorSurface);
+      pgp->MaskSurface = NULL;
    }
 
-   if (ppdev->PointerMaskSurface != NULL)
+   if (pgp->MaskSurface != NULL)
    {
       /* FIXME: Is this really needed? */
-      TempSurfObj = EngLockSurface(ppdev->PointerMaskSurface);
+      TempSurfObj = EngLockSurface(pgp->MaskSurface);
       EngFreeMem(TempSurfObj->pvBits);
       TempSurfObj->pvBits = 0;
       EngUnlockSurface(TempSurfObj);
 
-      EngDeleteSurface(ppdev->PointerMaskSurface);
-      ppdev->PointerMaskSurface = NULL;
+      EngDeleteSurface(pgp->MaskSurface);
+      pgp->MaskSurface = NULL;
    }
 
-   if (ppdev->PointerSaveSurface != NULL)
+   if (pgp->SaveSurface != NULL)
    {
-      EngDeleteSurface(ppdev->PointerSaveSurface);
-      ppdev->PointerSaveSurface = NULL;
+      EngDeleteSurface(pgp->SaveSurface);
+      pgp->SaveSurface = NULL;
    }
 
-   if (ppdev->PointerXlateObject != NULL)
+   if (pgp->XlateObject != NULL)
    {
-      EngDeleteXlate(ppdev->PointerXlateObject);
-      ppdev->PointerXlateObject = NULL;
+      EngDeleteXlate(pgp->XlateObject);
+      pgp->XlateObject = NULL;
    }
 
    /*
@@ -437,51 +326,48 @@ EngSetPointerShape(
       return SPS_ACCEPT_NOEXCLUDE;
    }
 
-   ppdev->PointerHotSpot.x = xHot;
-   ppdev->PointerHotSpot.y = yHot;
+   pgp->HotSpot.x = xHot;
+   pgp->HotSpot.y = yHot;
 
-   ppdev->PointerAttributes.Column = x - xHot;
-   ppdev->PointerAttributes.Row = y - yHot;
-   ppdev->PointerAttributes.Width = abs(psoMask->lDelta) << 3;
-   ppdev->PointerAttributes.Height = (psoMask->cjBits / abs(psoMask->lDelta)) >> 1;
+   pgp->Pos.x = x - xHot;
+   pgp->Pos.y = y - yHot;
+   pgp->Size.cx = abs(psoMask->lDelta) << 3;
+   pgp->Size.cy = (psoMask->cjBits / abs(psoMask->lDelta)) >> 1;
 
    if (prcl != NULL)
    {
-      prcl->left = ppdev->PointerAttributes.Column;
-      prcl->top = ppdev->PointerAttributes.Row;
-      prcl->right = prcl->left + ppdev->PointerAttributes.Width;
-      prcl->bottom = prcl->top + ppdev->PointerAttributes.Height;
+      prcl->left = pgp->Pos.x;
+      prcl->top = pgp->Pos.y;
+      prcl->right = pgp->Pos.x + pgp->Size.cx;
+      prcl->bottom = pgp->Pos.y + pgp->Size.cy;
    }
 
    if (psoColor != NULL)
    {
-      SIZEL Size;
       PBYTE Bits;
 
-      Size.cx = ppdev->PointerAttributes.Width;
-      Size.cy = ppdev->PointerAttributes.Height;
       Bits = EngAllocMem(0, psoColor->cjBits, TAG_MOUSE);
       memcpy(Bits, psoColor->pvBits, psoColor->cjBits);
 
-      ppdev->PointerColorSurface = (HSURF)EngCreateBitmap(Size,
+      pgp->ColorSurface = (HSURF)EngCreateBitmap(pgp->Size,
          psoColor->lDelta, psoColor->iBitmapFormat,
          psoColor->lDelta < 0 ? 0 : BMF_TOPDOWN, Bits);
    }
    else
    {
-      ppdev->PointerColorSurface = NULL;
+      pgp->ColorSurface = NULL;
    }
 
    {
       SIZEL Size;
       PBYTE Bits;
 
-      Size.cx = ppdev->PointerAttributes.Width;
-      Size.cy = ppdev->PointerAttributes.Height << 1;
+      Size.cx = pgp->Size.cx;
+      Size.cy = pgp->Size.cy << 1;
       Bits = EngAllocMem(0, psoMask->cjBits, TAG_MOUSE);
       memcpy(Bits, psoMask->pvBits, psoMask->cjBits);
 
-      ppdev->PointerMaskSurface = (HSURF)EngCreateBitmap(Size,
+      pgp->MaskSurface = (HSURF)EngCreateBitmap(Size,
          psoMask->lDelta, psoMask->iBitmapFormat,
          psoMask->lDelta < 0 ? 0 : BMF_TOPDOWN, Bits);
    }
@@ -495,21 +381,20 @@ EngSetPointerShape(
    {
       HPALETTE BWPalette, DestPalette;
       ULONG BWColors[] = {0, 0xFFFFFF};
-      PDC Dc;
 
       BWPalette = EngCreatePalette(PAL_INDEXED, sizeof(BWColors) / sizeof(ULONG),
          BWColors, 0, 0, 0);
-      Dc = DC_LockDc(IntGetScreenDC());
-      /* FIXME - Handle DC == NULL!!!!! */
-      DestPalette = Dc->w.hPalette;
-      DC_UnlockDc(Dc);
-      ppdev->PointerXlateObject = IntEngCreateXlate(0, PAL_INDEXED,
+
+      /* FIXME - where to get the palette from?
+         DestPalette = Dc->w.hPalette; */
+      DestPalette = 0;
+      pgp->XlateObject = IntEngCreateXlate(0, PAL_INDEXED,
          DestPalette, BWPalette);
       EngDeletePalette(BWPalette);
    }
    else
    {
-      ppdev->PointerXlateObject = pxlo;
+      pgp->XlateObject = pxlo;
    }
 
    /*
@@ -517,39 +402,35 @@ EngSetPointerShape(
     */
 
    {
-      SIZEL Size;
       LONG lDelta;
-
-      Size.cx = ppdev->PointerAttributes.Width;
-      Size.cy = ppdev->PointerAttributes.Height;
 
       switch (pso->iBitmapFormat)
       {
          case BMF_1BPP:
-	   lDelta = Size.cx >> 3;
+	   lDelta = pgp->Size.cx >> 3;
 	   break;
          case BMF_4BPP:
-	   lDelta = Size.cx >> 1;
+	   lDelta = pgp->Size.cx >> 1;
 	   break;
          case BMF_8BPP:
-	   lDelta = Size.cx;
+	   lDelta = pgp->Size.cx;
 	   break;
          case BMF_16BPP:
-	   lDelta = Size.cx << 1;
+	   lDelta = pgp->Size.cx << 1;
 	   break;
          case BMF_24BPP:
-	   lDelta = Size.cx * 3;
+	   lDelta = pgp->Size.cx * 3;
 	   break; 
          case BMF_32BPP:
-	   lDelta = Size.cx << 2;
+	   lDelta = pgp->Size.cx << 2;
 	   break;
          default:
 	   lDelta = 0;
 	   break;
       }
 
-      ppdev->PointerSaveSurface = (HSURF)EngCreateBitmap(
-         Size, lDelta, pso->iBitmapFormat, BMF_TOPDOWN | BMF_NOZEROINIT, NULL);
+      pgp->SaveSurface = (HSURF)EngCreateBitmap(
+         pgp->Size, lDelta, pso->iBitmapFormat, BMF_TOPDOWN | BMF_NOZEROINIT, NULL);
    }
 
    IntShowMousePointer(ppdev, pso);
@@ -568,11 +449,18 @@ EngMovePointer(
    IN LONG y,
    IN RECTL *prcl)
 {
-   GDIDEVICE *ppdev = (GDIDEVICE *)pso->hdev;
+   GDIDEVICE *ppdev;
+   
+   GDIPOINTER *pgp;
+
+   ASSERT(pso);
+
+   ppdev = GDIDEV(pso);
+   pgp = &ppdev->Pointer;
 
    IntHideMousePointer(ppdev, pso);
-   ppdev->PointerAttributes.Column = x - ppdev->PointerHotSpot.x;
-   ppdev->PointerAttributes.Row = y - ppdev->PointerHotSpot.y;
+   pgp->Pos.x = x - pgp->HotSpot.x;
+   pgp->Pos.y = y - pgp->HotSpot.y;
    if (x != -1)
    {
       IntShowMousePointer(ppdev, pso);
@@ -580,10 +468,10 @@ EngMovePointer(
 
    if (prcl != NULL)
    {
-      prcl->left = ppdev->PointerAttributes.Column;
-      prcl->top = ppdev->PointerAttributes.Row;
-      prcl->right = prcl->left + ppdev->PointerAttributes.Width;
-      prcl->bottom = prcl->top + ppdev->PointerAttributes.Height;
+      prcl->left = pgp->Pos.x;
+      prcl->top = pgp->Pos.y;
+      prcl->right = pgp->Pos.x + pgp->Size.cx;
+      prcl->bottom = pgp->Pos.y + pgp->Size.cy;
    }
 }
 

@@ -122,8 +122,6 @@ ExpWinStaObjectCreate(PVOID ObjectBody,
     return Status;
   }
 
-  WinSta->SystemMenuTemplate = (HANDLE)0;
-
   DPRINT("Window station successfully created. Name (%wZ)\n", &WinSta->Name);
 
   return STATUS_SUCCESS;

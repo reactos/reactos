@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.76.12.5 2004/09/29 10:27:03 weiden Exp $
+/* $Id: dllmain.c,v 1.76.12.6 2004/11/23 01:57:22 weiden Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -50,10 +50,9 @@ extern ULONG Win32kNumberOfSysCalls;
 
 NTSTATUS STDCALL
 Win32kProcessCallback (struct _EPROCESS *Process,
-		     BOOLEAN Create)
+		       BOOLEAN Create)
 {
   PW32PROCESS Win32Process;
-  NTSTATUS Status;
 
   DPRINT("Win32kProcessCallback() called\n");
 
@@ -61,48 +60,20 @@ Win32kProcessCallback (struct _EPROCESS *Process,
   if (Create)
     {
       DPRINT("W32k: Create process\n");
-      
-      InitializeListHead(&Win32Process->ClassListHead);     
 
-      InitializeListHead(&Win32Process->PrivateFontListHead);
-      ExInitializeFastMutex(&Win32Process->PrivateFontListLock);
-      
-      InitializeListHead(&Win32Process->CursorIconListHead);
-      ExInitializeFastMutex(&Win32Process->CursorIconListLock);
-
-      Win32Process->KeyboardLayout = W32kGetDefaultKeyLayout();
-      Win32Process->WindowStation = NULL;
-      if (Process->Win32WindowStation != NULL)
-	{
-	  Status = 
-	    IntValidateWindowStationHandle(Process->Win32WindowStation,
-					   UserMode,
-					   GENERIC_ALL,
-					   &Win32Process->WindowStation);
-	  if (!NT_SUCCESS(Status))
-	    {
-	      DPRINT1("Win32K: Failed to reference a window station for process.\n");
-	    }
-	}
-      
-      /* setup process flags */
-      Win32Process->Flags = 0;
     }
   else
     {
       DPRINT("W32k: Destroy process, IRQ level: %lu\n", KeGetCurrentIrql ());
 
-      CleanupForProcess(Process, Process->UniqueProcessId);
+      GDI_CleanupForProcess(Process);
 
       IntGraphicsCheck(FALSE);
       
       /*
        * Deregister logon application automatically
        */
-      if(LogonProcess == Win32Process)
-      {
-        LogonProcess = NULL;
-      }
+      InterlockedCompareExchangePointer(&LogonProcess, NULL, Process);
     }
 
   return STATUS_SUCCESS;
@@ -111,11 +82,10 @@ Win32kProcessCallback (struct _EPROCESS *Process,
 
 NTSTATUS STDCALL
 Win32kThreadCallback (struct _ETHREAD *Thread,
-		    BOOLEAN Create)
+		      BOOLEAN Create)
 {
   struct _EPROCESS *Process;
   PW32THREAD Win32Thread;
-  NTSTATUS Status;
 
   DPRINT("Win32kThreadCallback() called\n");
 
@@ -124,49 +94,10 @@ Win32kThreadCallback (struct _ETHREAD *Thread,
   if (Create)
     {
       DPRINT("W32k: Create thread\n");
-
-      Win32Thread->IsExiting = FALSE;
-      /* FIXME - destroy caret */
-      Win32Thread->MessageQueue = MsqCreateMessageQueue(Thread);
-      Win32Thread->KeyboardLayout = W32kGetDefaultKeyLayout();
-      Win32Thread->MessagePumpHookValue = 0;
-      InitializeListHead(&Win32Thread->WindowListHead);
-      ExInitializeFastMutex(&Win32Thread->WindowListLock);
-      InitializeListHead(&Win32Thread->W32CallbackListHead);
-      ExInitializeFastMutex(&Win32Thread->W32CallbackListLock);
-
-      /* By default threads get assigned their process's desktop. */
-      Win32Thread->Desktop = NULL;
-      Win32Thread->hDesktop = NULL;
-      if (Process->Win32Desktop != NULL)
-	{
-	  Status = ObReferenceObjectByHandle(Process->Win32Desktop,
-					     GENERIC_ALL,
-					     ExDesktopObjectType,
-					     UserMode,
-					     (PVOID*)&Win32Thread->Desktop,
-					     NULL);
-	  if (!NT_SUCCESS(Status))
-	    {
-	      DPRINT1("Win32K: Failed to reference a desktop for thread.\n");
-	    }
-	  
-	  Win32Thread->hDesktop = Process->Win32Desktop;
-	}
     }
   else
     {
-      DPRINT1("=== W32k: Destroy thread ===\n");
 
-      Win32Thread->IsExiting = TRUE;
-      #if 0
-      HOOK_DestroyThreadHooks(Thread);
-      #endif
-      RemoveTimersThread(Thread->Cid.UniqueThread);
-      DestroyThreadWindows(Thread);
-      IntBlockInput(Win32Thread, FALSE);
-      MsqDestroyMessageQueue(Win32Thread->MessageQueue);
-      IntCleanupThreadCallbacks(Win32Thread);
     }
 
   return STATUS_SUCCESS;
@@ -285,39 +216,6 @@ BOOLEAN STDCALL
 Win32kInitialize (VOID)
 {
   return TRUE;
-}
-
-NTSTATUS
-IntConvertProcessToGUIProcess(PEPROCESS Process)
-{
-  /* FIXME - Convert process to GUI process! */
-  DPRINT1("FIXME: Convert Process to GUI Process!!!!\n");
-  return STATUS_UNSUCCESSFUL;
-}
-
-inline NTSTATUS
-IntConvertThreadToGUIThread(PETHREAD Thread)
-{
-  NTSTATUS Status;
-  
-  /* FIXME - do this atomic!!! */
-  
-  if(Thread->Tcb.Win32Thread != NULL)
-  {
-    return STATUS_SUCCESS;
-  }
-  
-  /* FIXME - Convert thread to GUI thread! */
-  Status = STATUS_UNSUCCESSFUL;
-  DPRINT1("FIXME: Convert Thread to GUI Thread!!!!\n");
-  
-  if(NT_SUCCESS(Status) && Thread->ThreadsProcess->Win32Process == NULL)
-  {
-    /* We also need to convert the process */
-    return IntConvertProcessToGUIProcess(Thread->ThreadsProcess);
-  }
-  
-  return Status;
 }
 
 /* EOF */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.144.2.4 2004/09/14 01:00:45 weiden Exp $
+/* $Id: dc.c,v 1.144.2.5 2004/11/23 01:57:22 weiden Exp $
  *
  * DC.C - Device context functions
  *
@@ -471,6 +471,7 @@ IntCreatePrimarySurface()
       DPRINT("Trying to load display driver no. %d\n", DisplayNumber);
 
       RtlZeroMemory(&PrimarySurface, sizeof(PrimarySurface));
+      PrimarySurface.IsPrimarySurface = TRUE;
 
       PrimarySurface.VideoFileObject = DRIVER_FindMPDriver(DisplayNumber);
 
@@ -2126,16 +2127,6 @@ DC_SetOwnership(HDC hDC, PEPROCESS Owner)
         }
       DC_UnlockDc(DC);
     }
-}
-
-BOOL INTERNAL_CALL
-IntIsPrimarySurface(SURFOBJ *SurfObj)
-{
-   if (PrimarySurface.Handle == NULL)
-     {
-       return FALSE;
-     }
-   return SurfObj->hsurf == PrimarySurface.Handle;
 }
 
 /*

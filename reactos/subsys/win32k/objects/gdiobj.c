@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.71.4.5 2004/09/29 10:27:04 weiden Exp $
+ * $Id: gdiobj.c,v 1.71.4.6 2004/11/23 01:57:22 weiden Exp $
  */
 #include <w32k.h>
 
@@ -541,7 +541,7 @@ NtGdiDeleteObject(HGDIOBJ hObject)
  * \param	Process - PID of the process that will be destroyed.
 */
 BOOL INTERNAL_CALL
-CleanupForProcess (struct _EPROCESS *Process, INT Pid)
+GDI_CleanupForProcess (struct _EPROCESS *Process)
 {
   PGDI_TABLE_ENTRY Entry;
   PEPROCESS CurrentProcess;

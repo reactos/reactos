@@ -102,7 +102,7 @@ VOID  INTERNAL_CALL InitGdiObjectHandleTable (VOID);
 VOID  INTERNAL_CALL CreateStockObjects (VOID);
 VOID  INTERNAL_CALL CreateSysColorObjects (VOID);
 
-BOOL  INTERNAL_CALL CleanupForProcess (struct _EPROCESS *Process, INT Pid);
+BOOL  INTERNAL_CALL GDI_CleanupForProcess (struct _EPROCESS *Process);
 
 PPOINT INTERNAL_CALL GDI_Bezier (const POINT *Points, INT count, PINT nPtsOut);
 

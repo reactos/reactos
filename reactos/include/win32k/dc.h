@@ -108,7 +108,27 @@ typedef struct _DC
   WIN_DC_INFO  w;
 } DC, *PDC;
 
-typedef struct
+typedef struct _GDIPOINTER
+{
+  BOOL Enabled;
+  POINTL Pos;
+  SIZEL Size;
+  POINTL HotSpot;
+  
+  PGD_MOVEPOINTER MovePointer;
+  
+  XLATEOBJ *XlateObject;
+  HSURF ColorSurface;
+  HSURF MaskSurface;
+  HSURF SaveSurface;
+
+  ULONG Status;
+  
+  BOOL SafetySwitch;
+  UINT SafetyRemoveCount;
+} GDIPOINTER, *PGDIPOINTER;
+
+typedef struct _GDIDEVICE
 {
   HANDLE Handle;
   DHPDEV PDev;
@@ -119,22 +139,10 @@ typedef struct
   DRIVER_FUNCTIONS DriverFunctions;
   PFILE_OBJECT VideoFileObject;
 
-  PGD_MOVEPOINTER MovePointer;
-
-  struct {
-     BOOL Enable;
-     LONG Column;
-     LONG Row;
-     LONG Width;
-     LONG Height;
-  } PointerAttributes;
-  XLATEOBJ *PointerXlateObject;
-  HSURF PointerColorSurface;
-  HSURF PointerMaskSurface;
-  HSURF PointerSaveSurface;
-  POINTL PointerHotSpot;
-  ULONG PointerStatus;
-} GDIDEVICE;
+  GDIPOINTER Pointer;
+  
+  BOOL IsPrimarySurface;
+} GDIDEVICE, *PGDIDEVICE;
 
 /*  Internal functions  */
 
