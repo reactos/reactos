@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.42 2003/07/10 18:50:51 chorns Exp $
+/* $Id: thread.c,v 1.43 2003/07/24 13:50:26 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -312,6 +312,7 @@ ExitThread(DWORD uExitCode)
     {
       SetLastErrorByStatus(Status);
     }
+  for(;;); /* GCC complains noreturn function should not return */
 }
 
 
