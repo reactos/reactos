@@ -8,14 +8,34 @@ HKLM,"SOFTWARE\Classes",,0x00000010
 HKCR,".exe","",0x00000000,"exefile"
 HKCR,"exefile\Defaulticon","",0x00000000,"%1"
 HKCR,"exefile\shell\open\command","",0x00000000,"""%1"" %*"
+
 ; Show icons for shortcuts in shell views (lnkfile is handled specially in shell32)
-HKCR,".lnk","",0x00000000,"lnkfile"
 ; Don't display extension for shortcuts
+HKCR,".lnk","",0x00000000,"lnkfile"
 HKCR,"lnkfile","NeverShowExt",0x00000000,""
+HKCR,"lnkfile","IsShortcut",0x00000000,"yes"
+HKCR,"lnkfile\CLSID","",0x00000000,"{00021401-0000-0000-C000-000000000046}"
+HKCR,"lnkfile\shellex\IconHandler","",0x00000000,"{00021401-0000-0000-C000-000000000046}"
+
+; shell command files (e.g. "Show Desktop" in quicklaunch bar)
+HKCR,".scf","",0x00000000,"SHCmdFile"
+HKCR,"SHCmdFile","NeverShowExt",0x00000000,""
+HKCR,"SHCmdFile","IsShortcut",0x00000000,"yes"
+HKCR,"SHCmdFile\shell\open\command","",0x00000000,"explorer.exe ""%1"""
+HKCR,"SHCmdFile\CLSID","",0x00000000,"{57651662-CE3E-11D0-8D77-00C04FC99D61}"
+HKCR,"SHCmdFile\shellex\IconHandler","",0x00000000,"{57651662-CE3E-11D0-8D77-00C04FC99D61}"
+
+; URL shortcuts (e.g. used in favorites folder of IExplorer)
+HKCR,".url","",0x00000000,"InternetShortcut"
+HKCR,"InternetShortcut","NeverShowExt",0x00000000,""
+HKCR,"InternetShortcut","IsShortcut",0x00000000,"yes"
+HKCR,"InternetShortcut\shell\open\command","",0x00000000,"rundll32.exe shdocvw.dll,OpenURL %l"
+HKCR,"InternetShortcut\DefaultIcon","",0x00020000,"%SystemRoot%\system32\url.dll,0"
+
 ; install notepad as handler for .txt files
 HKCR,".txt","",0x00000000,"txtfile"
 HKCR,".txt","Content Type",0x00000000,"text/plain"
-HKCR,"txtfile\shell\open\command","",0x00000000,"%SystemRoot%\bin\notepad.exe"
+HKCR,"txtfile\shell\open\command","",0x00020000,"%SystemRoot%\bin\notepad.exe"
 
 HKCR,"CLSID",,0x00000012
 
