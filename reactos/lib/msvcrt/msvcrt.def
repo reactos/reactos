@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.9 2001/07/04 16:39:37 ekohl Exp $
+; $Id: msvcrt.def,v 1.10 2001/07/06 00:58:15 ekohl Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -59,28 +59,28 @@ EXPORTS
 ;----------------------------------------------------------------------
 ;	C Undecorated Symbols
 ;----------------------------------------------------------------------
-; _CIacos
-; _CIasin
-; _CIatan
-; _CIatan2
-; _CIcos
-; _CIcosh
-; _CIexp
-; _CIfmod
-; _CIlog
-; _CIlog10
-; _CIpow
-; _CIsin
-; _CIsinh
-; _CIsqrt
-; _CItan
-; _CItanh
+_CIacos
+_CIasin
+_CIatan
+_CIatan2
+_CIcos
+_CIcosh
+_CIexp
+_CIfmod
+_CIlog
+_CIlog10
+_CIpow
+_CIsin
+_CIsinh
+_CIsqrt
+_CItan
+_CItanh
 ; _CxxThrowException
 ; _EH_prolog
 ; _Getdays
 ; _Getmonths
 ; _Gettnames
-; _HUGE
+_HUGE DATA
 ; _Strftime
 _XcptFilter
 ; __CxxFrameHandler
@@ -178,7 +178,7 @@ _beep
 _beginthread
 _beginthreadex
 _c_exit
-; _cabs
+_cabs
 ; _callnewh
 _cexit
 _cgets
@@ -225,9 +225,9 @@ _exit
 ; _expand
 _fcloseall
 ; _fcvt
-; _fdopen
-; _fgetchar
-; _fgetwchar
+_fdopen
+_fgetchar
+_fgetwchar
 _filbuf
 ; _fileinfo
 _filelength
@@ -245,13 +245,13 @@ _fmode DATA
 _fpclass
 _fpieee_flt
 _fpreset
-; _fputchar
-; _fputwchar
-; _fsopen
+_fputchar
+_fputwchar
+_fsopen
 _fstat
 _fstati64
 ; _ftime
-; _ftol
+_ftol
 _fullpath
 _futime
 ; _gcvt
@@ -269,7 +269,7 @@ _getdrives
 ; _getmbcp
 _getpid
 ; _getsystime
-; _getw
+_getw
 ; _getws
 _global_unwind2
 ; _heapadd
@@ -278,7 +278,7 @@ _global_unwind2
 ; _heapset
 ; _heapused
 ; _heapwalk
-; _hypot
+_hypot
 _i64toa
 _i64tow
 _initterm
@@ -320,9 +320,9 @@ _isctype
 _isnan
 _itoa
 _itow
-; _j0
-; _j1
-; _jn
+_j0
+_j1
+_jn
 _kbhit
 ; _lfind
 _loaddll
@@ -407,20 +407,20 @@ _osver DATA
 ; _outp
 ; _outpd
 ; _outpw
-; _pclose
+_pclose
 _pctype DATA
 _pgmptr DATA
 _pipe
-; _popen
+_popen
 _purecall
 _putch
 _putenv
-; _putw
+_putw
 _putws
 _pwctype DATA
 _read
 _rmdir
-; _rmtmp
+_rmtmp
 _rotl
 _rotr
 ; _safe_fdiv
@@ -520,14 +520,14 @@ _wcsupr
 ; _wexecve
 ; _wexecvp
 ; _wexecvpe
-; _wfdopen
+_wfdopen
 _wfindfirst
 _wfindfirsti64
 _wfindnext
 _wfindnexti64
-; _wfopen
-; _wfreopen
-; _wfsopen
+_wfopen
+_wfreopen
+_wfsopen
 _wfullpath
 _wgetcwd
 _wgetdcwd
@@ -539,12 +539,12 @@ _wmakepath
 _wmkdir
 ; _wmktemp
 _wopen
-; _wperror
+_wperror
 ; _wpgmptr DATA
-; _wpopen
+_wpopen
 _wputenv
 _wremove
-; _wrename
+_wrename
 _write
 _wrmdir
 _wsearchenv
@@ -564,51 +564,51 @@ _wstati64
 ; _wstrdate
 ; _wstrtime
 ; _wsystem
-; _wtempnam
-; _wtmpnam
+_wtempnam
+_wtmpnam
 _wtoi
 _wtoi64
 _wtol
 _wunlink
 _wutime
-; _y0
-; _y1
-; _yn
+_y0
+_y1
+_yn
 abort
 abs
-; acos
+acos
 asctime
-; asin
-; atan
-; atan2
+asin
+atan
+atan2
 atexit
 atof
 atoi
 atol
 bsearch
 calloc
-; ceil
-; clearerr
+ceil
+clearerr
 ; clock
-; cos
-; cosh
+cos
+cosh
 ctime
 ; difftime
 div
 exit
-; exp
-; fabs
+exp
+fabs
 fclose
 feof
 ferror
 fflush
-; fgetc
-; fgetpos
+fgetc
+fgetpos
 fgets
-; fgetwc
+fgetwc
 ; fgetws
-; floor
-; fmod
+floor
+fmod
 fopen
 fprintf
 fputc
@@ -617,19 +617,19 @@ fputwc
 ; fputws
 fread
 free
-; freopen
-; frexp
+freopen
+frexp
 fscanf
-; fseek
-; fsetpos
-; ftell
+fseek
+fsetpos
+ftell
 fwprintf
 fwrite
 fwscanf
 getc
-; getchar
+getchar
 getenv
-; gets
+gets
 getwc
 ; getwchar
 gmtime
@@ -660,12 +660,12 @@ iswupper
 iswxdigit
 isxdigit
 labs
-; ldexp
+ldexp
 ldiv
 ; localeconv
 localtime
-; log
-; log10
+log
+log10
 ; longjmp
 malloc
 ; mblen
@@ -678,7 +678,7 @@ memmove
 memset
 mktime
 modf
-; perror
+perror
 pow
 printf
 putc
@@ -688,21 +688,21 @@ putwc
 putwchar
 qsort
 raise
-; rand
+rand
 realloc
 remove
-; rename
-; rewind
+rename
+rewind
 scanf
-; setbuf
+setbuf
 ; setlocale
 setvbuf
 signal
-; sin
-; sinh
+sin
+sinh
 sprintf
-; sqrt
-; srand
+sqrt
+srand
 sscanf
 strcat
 strchr
@@ -728,11 +728,11 @@ strxfrm
 swprintf
 swscanf
 ; system
-; tan
-; tanh
+tan
+tanh
 time
-; tmpfile
-; tmpnam
+tmpfile
+tmpnam
 tolower
 toupper
 towlower

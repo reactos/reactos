@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.14 2001/07/04 20:40:19 chorns Exp $
+# $Id: Makefile,v 1.15 2001/07/06 00:58:15 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -103,9 +103,37 @@ OBJECTS_IO = \
 	io/write.o
 
 OBJECTS_MATH = \
+	math/acos.o \
 	math/adjust.o \
+	math/asin.o \
+	math/atan.o \
+	math/atan2.o \
+	math/cabs.o \
+	math/ceil.o \
+	math/cos.o \
+	math/cosh.o \
+	math/exp.o \
+	math/fabs.o \
+	math/floor.o \
+	math/fmod.o \
+	math/frexp.o \
+	math/ftol.o \
+	math/huge_val.o \
+	math/hypot.o \
+	math/j0_y0.o \
+	math/j1_y1.o \
+	math/jn_yn.o \
+	math/ldexp.o \
+	math/log.o \
+	math/log10.o \
 	math/modf.o \
 	math/pow.o \
+	math/sin.o \
+	math/sinh.o \
+	math/sqrt.o \
+	math/stubs.o \
+	math/tan.o \
+	math/tanh.o
 
 OBJECTS_MISC = \
 	misc/amsg.o \
@@ -127,10 +155,15 @@ OBJECTS_SIGNAL = \
 
 OBJECTS_STDIO = \
 	stdio/allocfil.o \
+	stdio/clearerr.o \
 	stdio/fclose.o \
+	stdio/fdopen.o \
 	stdio/feof.o \
 	stdio/ferror.o \
 	stdio/fflush.o \
+	stdio/fgetc.o \
+	stdio/fgetchar.o \
+	stdio/fgetpos.o \
 	stdio/fgets.o \
 	stdio/filbuf.o \
 	stdio/fileno.o \
@@ -138,23 +171,41 @@ OBJECTS_STDIO = \
 	stdio/fopen.o \
 	stdio/fprintf.o \
 	stdio/fputc.o \
+	stdio/fputchar.o \
 	stdio/fputs.o \
 	stdio/fread.o \
+	stdio/freopen.o \
 	stdio/fscanf.o \
+	stdio/fseek.o \
+	stdio/fsetpos.o \
+	stdio/fsopen.o \
+	stdio/ftell.o \
 	stdio/fwalk.o \
 	stdio/fwrite.o \
 	stdio/getc.o \
+	stdio/getchar.o \
+	stdio/gets.o \
+	stdio/getw.o \
+	stdio/perror.o \
+	stdio/popen.o \
 	stdio/printf.o \
 	stdio/putc.o \
 	stdio/putchar.o \
 	stdio/puts.o \
+	stdio/putw.o \
 	stdio/remove.o \
+	stdio/rename.o \
+	stdio/rewind.o \
+	stdio/rmtmp.o \
 	stdio/scanf.o \
+	stdio/setbuf.o \
 	stdio/setvbuf.o \
 	stdio/sprintf.o \
 	stdio/sscanf.o \
 	stdio/stdhnd.o \
 	stdio/tempnam.o \
+	stdio/tmpfile.o \
+	stdio/tmpnam.o \
 	stdio/ungetc.o \
 	stdio/vfprintf.o \
 	stdio/vfscanf.o \

@@ -1,25 +1,33 @@
+/*
+ * COPYRIGHT:   See COPYING in the top level directory
+ * PROJECT:     ReactOS system libraries
+ * FILE:        lib/crtdll/conio/kbhit.c
+ * PURPOSE:     Checks for keyboard hits
+ * PROGRAMER:   Boudewijn Dekker
+ * UPDATE HISTORY:
+ *              28/12/98: Created
+ */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 
 #include <msvcrt/sys/types.h>
 #include <msvcrt/stdio.h>
 #include <msvcrt/io.h>
 #include <msvcrt/fcntl.h>
-//#include <msvcrt/internal/file.h>
+#include <msvcrt/share.h>
+#include <msvcrt/internal/file.h>
 
-//might change fopen(file,mode) -> fsopen(file,mode,_SH_DENYNO);
-
-#undef _fmode
-extern unsigned int _fmode;
 
 FILE *	__alloc_file(void);
 
 
-FILE* fopen(const char *file, const char *mode)
+FILE* _fsopen(const char *file, const char *mode, int shflag)
 {
   FILE *f;
   int fd, rw, oflags = 0;
   char tbchar;
    
+  int shf;
+
   if (file == 0)
     return 0;
   if (mode == 0)
@@ -56,7 +64,18 @@ FILE* fopen(const char *file, const char *mode)
   else
     oflags |= (_fmode & (O_TEXT|O_BINARY));
 
-  fd = _open(file, oflags, 0);
+  if ( shflag == _SH_DENYNO )
+    shf = _S_IREAD | _S_IWRITE;
+  else if( shflag == _SH_DENYRD )
+    shf =  _S_IWRITE;
+  else if( shflag == _SH_DENYRW )
+    shf =  0;
+  else if( shflag == _SH_DENYWR )
+    shf =  _S_IREAD;
+  else
+    shf = _S_IREAD | _S_IWRITE;
+
+  fd = _open(file, oflags, shf);
   if (fd < 0)
     return NULL;
 
@@ -79,12 +98,14 @@ FILE* fopen(const char *file, const char *mode)
   return f;
 }
 
-FILE* _wfopen(const wchar_t *file, const wchar_t *mode)
+FILE* _wfsopen(const wchar_t *file, const wchar_t *mode, int shflag)
 {
   FILE *f;
   int fd, rw, oflags = 0;
   wchar_t tbchar;
    
+  int shf;
+
   if (file == 0)
     return 0;
   if (mode == 0)
@@ -121,7 +142,18 @@ FILE* _wfopen(const wchar_t *file, const wchar_t *mode)
   else
     oflags |= (_fmode & (O_TEXT|O_BINARY));
 
-  fd = _wopen(file, oflags, 0);
+  if ( shflag == _SH_DENYNO )
+    shf = _S_IREAD | _S_IWRITE;
+  else if( shflag == _SH_DENYRD )
+    shf =  _S_IWRITE;
+  else if( shflag == _SH_DENYRW )
+    shf =  0;
+  else if( shflag == _SH_DENYWR )
+    shf =  _S_IREAD;
+  else
+    shf = _S_IREAD | _S_IWRITE;
+
+  fd = _wopen(file, oflags, shf);
   if (fd < 0)
     return NULL;
 
