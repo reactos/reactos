@@ -260,7 +260,7 @@ VOID STDCALL GetStartupInfoW(LPSTARTUPINFO lpStartupInfo)
 	return;
      }
    
-	lpStartupInfo->cb = sizeof(STARTUPINFO);
+        lpStartupInfo->cb = sizeof(STARTUPINFO);
     	lstrcpyW(lpStartupInfo->lpDesktop, pPeb->StartupInfo->Desktop); 
     	lstrcpyW(lpStartupInfo->lpTitle, pPeb->StartupInfo->Title);
     	lpStartupInfo->dwX = pPeb->StartupInfo->dwX; 
@@ -283,9 +283,6 @@ VOID STDCALL GetStartupInfoW(LPSTARTUPINFO lpStartupInfo)
 	
 	
 	return;
-  
-
-
 }
 
 
@@ -352,9 +349,21 @@ BOOL STDCALL FlushInstructionCache(HANDLE hProcess,
    return TRUE;
 }
 
-VOID STDCALL ExitProcess(UINT uExitCode) 
-{	
-   NtTerminateProcess(NtCurrentProcess() ,uExitCode);
+VOID STDCALL ExitProcess(UINT uExitCode)
+{
+   NtTerminateProcess(NtCurrentProcess(), uExitCode);
+}
+
+WINBOOL STDCALL TerminateProcess(HANDLE hProcess, UINT uExitCode)
+{
+   NTSTATUS errCode;
+   errCode = NtTerminateProcess(hProcess, uExitCode);
+   if (!NT_SUCCESS(errCode))
+     {
+	SetLastError(RtlNtStatusToDosError(errCode));
+	return FALSE;
+     }
+   return TRUE;
 }
 
 VOID STDCALL FatalAppExitA(UINT uAction, LPCSTR lpMessageText)
@@ -379,5 +388,3 @@ VOID STDCALL FatalAppExitW(UINT uAction, LPCWSTR lpMessageText)
 {
    return;	
 }
-
-
