@@ -75,7 +75,7 @@
 361 stdcall -noname StrCmpNIW(wstr wstr long)
 362 stdcall -noname StrStrW(wstr wstr)
 363 stdcall -noname StrStrIW(wstr wstr)
-364 stdcall -noname StrSpnW(wstr wstr)
+364 stdcall -noname StrCSpnW(wstr wstr)
 365 stdcall -noname StrToIntW(wstr)
 366 stdcall -noname StrChrIA(str long)
 367 stdcall -noname StrChrIW(wstr long)

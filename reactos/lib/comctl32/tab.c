@@ -27,7 +27,6 @@
  *   TCIF_RTLREADING
  *
  *  Messages:
- *   TCM_SETITEMEXTRA
  *   TCM_REMOVEIMAGE
  *   TCM_DESELECTALL
  *   TCM_GETEXTENDEDSTYLE
@@ -56,14 +55,17 @@ typedef struct
   DWORD  dwState;
   LPWSTR pszText;
   INT    iImage;
-  LPARAM lParam;
-  RECT   rect;    /* bounding rectangle of the item relative to the
-		   * leftmost item (the leftmost item, 0, would have a
-		   * "left" member of 0 in this rectangle)
-                   *
-                   * additionally the top member hold the row number
-                   * and bottom is unused and should be 0 */
+  RECT   rect;      /* bounding rectangle of the item relative to the
+                     * leftmost item (the leftmost item, 0, would have a
+                     * "left" member of 0 in this rectangle)
+                     *
+                     * additionally the top member hold the row number
+                     * and bottom is unused and should be 0 */
+  BYTE   extra[1];  /* Space for caller supplied info, variable size */
 } TAB_ITEM;
+
+/* The size of a tab item depends on how much extra data is requested */
+#define TAB_ITEM_SIZE(infoPtr) (sizeof(TAB_ITEM) - sizeof(BYTE) + infoPtr->cbInfo)
 
 typedef struct
 {
@@ -82,17 +84,18 @@ typedef struct
   HIMAGELIST himl;            /* handle to a image list (may be 0) */
   HWND       hwndToolTip;     /* handle to tab's tooltip */
   INT        leftmostVisible; /* Used for scrolling, this member contains
-			       * the index of the first visible item */
+                               * the index of the first visible item */
   INT        iSelected;       /* the currently selected item */
   INT        iHotTracked;     /* the highlighted item under the mouse */
   INT        uFocus;          /* item which has the focus */
   TAB_ITEM*  items;           /* pointer to an array of TAB_ITEM's */
   BOOL       DoRedraw;        /* flag for redrawing when tab contents is changed*/
   BOOL       needsScrolling;  /* TRUE if the size of the tabs is greater than
-			       * the size of the control */
+                               * the size of the control */
   BOOL       fHeightSet;      /* was the height of the tabs explicitly set? */
   BOOL       bUnicode;        /* Unicode control? */
   HWND       hwndUpDown;      /* Updown control used for scrolling */
+  INT        cbInfo;          /* Number of bytes of caller supplied info per tab */
 } TAB_INFO;
 
 /******************************************************************************
@@ -190,8 +193,8 @@ TAB_DumpItemInternal(TAB_INFO *infoPtr, UINT iItem)
 	TRACE("tab %d, mask=0x%08x, dwState=0x%08lx, pszText=%s, iImage=%d\n",
 	      iItem, ti->mask, ti->dwState, debugstr_w(ti->pszText),
 	      ti->iImage);
-	TRACE("tab %d, lParam=0x%08lx, rect.left=%ld, rect.top(row)=%ld\n",
-	      iItem, ti->lParam, ti->rect.left, ti->rect.top);
+	TRACE("tab %d, rect.left=%ld, rect.top(row)=%ld\n",
+	      iItem, ti->rect.left, ti->rect.top);
     }
 }
 
@@ -1654,7 +1657,8 @@ TAB_DrawItemInterior
     dis.hwndItem = hwnd;		/* */
     dis.hDC      = hdc;
     CopyRect(&dis.rcItem,drawRect);
-    dis.itemData = infoPtr->items[iItem].lParam;
+    dis.itemData = 0;
+    memcpy( &dis.itemData, infoPtr->items[iItem].extra, min(sizeof(dis.itemData),infoPtr->cbInfo) );
 
     /*
      * send the draw message
@@ -2520,7 +2524,7 @@ TAB_InsertItemA (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 
   if (infoPtr->uNumItem == 0) {
-    infoPtr->items = Alloc (sizeof (TAB_ITEM));
+    infoPtr->items = Alloc (TAB_ITEM_SIZE(infoPtr));
     infoPtr->uNumItem++;
     infoPtr->iSelected = 0;
   }
@@ -2528,18 +2532,18 @@ TAB_InsertItemA (HWND hwnd, WPARAM wParam, LPARAM lParam)
     TAB_ITEM *oldItems = infoPtr->items;
 
     infoPtr->uNumItem++;
-    infoPtr->items = Alloc (sizeof (TAB_ITEM) * infoPtr->uNumItem);
+    infoPtr->items = Alloc (TAB_ITEM_SIZE(infoPtr) * infoPtr->uNumItem);
 
     /* pre insert copy */
     if (iItem > 0) {
       memcpy (&infoPtr->items[0], &oldItems[0],
-	      iItem * sizeof(TAB_ITEM));
+              iItem * TAB_ITEM_SIZE(infoPtr));
     }
 
     /* post insert copy */
     if (iItem < infoPtr->uNumItem - 1) {
       memcpy (&infoPtr->items[iItem+1], &oldItems[iItem],
-	      (infoPtr->uNumItem - iItem - 1) * sizeof(TAB_ITEM));
+              (infoPtr->uNumItem - iItem - 1) * TAB_ITEM_SIZE(infoPtr));
 
     }
 
@@ -2557,8 +2561,10 @@ TAB_InsertItemA (HWND hwnd, WPARAM wParam, LPARAM lParam)
     infoPtr->items[iItem].iImage = pti->iImage;
 
   if (pti->mask & TCIF_PARAM)
-    infoPtr->items[iItem].lParam = pti->lParam;
-
+    memcpy(infoPtr->items[iItem].extra, &pti->lParam, infoPtr->cbInfo);
+  else
+    memset(infoPtr->items[iItem].extra, 0, infoPtr->cbInfo);
+  
   TAB_SetItemBounds(hwnd);
   if (infoPtr->uNumItem > 1)
     TAB_InvalidateTabArea(hwnd, infoPtr);
@@ -2566,7 +2572,7 @@ TAB_InsertItemA (HWND hwnd, WPARAM wParam, LPARAM lParam)
     InvalidateRect(hwnd, NULL, TRUE);
 
   TRACE("[%p]: added item %d %s\n",
-	hwnd, iItem, debugstr_w(infoPtr->items[iItem].pszText));
+        hwnd, iItem, debugstr_w(infoPtr->items[iItem].pszText));
 
   return iItem;
 }
@@ -2594,7 +2600,7 @@ TAB_InsertItemW (HWND hwnd, WPARAM wParam, LPARAM lParam)
   TAB_DumpItemExternalW(pti, iItem);
 
   if (infoPtr->uNumItem == 0) {
-    infoPtr->items = Alloc (sizeof (TAB_ITEM));
+    infoPtr->items = Alloc (TAB_ITEM_SIZE(infoPtr));
     infoPtr->uNumItem++;
     infoPtr->iSelected = 0;
   }
@@ -2602,18 +2608,18 @@ TAB_InsertItemW (HWND hwnd, WPARAM wParam, LPARAM lParam)
     TAB_ITEM *oldItems = infoPtr->items;
 
     infoPtr->uNumItem++;
-    infoPtr->items = Alloc (sizeof (TAB_ITEM) * infoPtr->uNumItem);
+    infoPtr->items = Alloc (TAB_ITEM_SIZE(infoPtr) * infoPtr->uNumItem);
 
     /* pre insert copy */
     if (iItem > 0) {
       memcpy (&infoPtr->items[0], &oldItems[0],
-	      iItem * sizeof(TAB_ITEM));
+              iItem * TAB_ITEM_SIZE(infoPtr));
     }
 
     /* post insert copy */
     if (iItem < infoPtr->uNumItem - 1) {
       memcpy (&infoPtr->items[iItem+1], &oldItems[iItem],
-	      (infoPtr->uNumItem - iItem - 1) * sizeof(TAB_ITEM));
+              (infoPtr->uNumItem - iItem - 1) * TAB_ITEM_SIZE(infoPtr));
 
   }
 
@@ -2631,7 +2637,9 @@ TAB_InsertItemW (HWND hwnd, WPARAM wParam, LPARAM lParam)
     infoPtr->items[iItem].iImage = pti->iImage;
 
   if (pti->mask & TCIF_PARAM)
-    infoPtr->items[iItem].lParam = pti->lParam;
+    memcpy(infoPtr->items[iItem].extra, &pti->lParam, infoPtr->cbInfo);
+  else
+    memset(infoPtr->items[iItem].extra, 0, infoPtr->cbInfo);
 
   TAB_SetItemBounds(hwnd);
   if (infoPtr->uNumItem > 1)
@@ -2640,7 +2648,7 @@ TAB_InsertItemW (HWND hwnd, WPARAM wParam, LPARAM lParam)
     InvalidateRect(hwnd, NULL, TRUE);
 
   TRACE("[%p]: added item %d %s\n",
-	hwnd, iItem, debugstr_w(infoPtr->items[iItem].pszText));
+        hwnd, iItem, debugstr_w(infoPtr->items[iItem].pszText));
 
   return iItem;
 }
@@ -2739,7 +2747,7 @@ TAB_SetItemA (HWND hwnd, WPARAM wParam, LPARAM lParam)
     wineItem->iImage = tabItem->iImage;
 
   if (tabItem->mask & TCIF_PARAM)
-    wineItem->lParam = tabItem->lParam;
+    memcpy(wineItem->extra, &tabItem->lParam, infoPtr->cbInfo);
 
   if (tabItem->mask & TCIF_RTLREADING)
     FIXME("TCIF_RTLREADING\n");
@@ -2780,7 +2788,7 @@ TAB_SetItemW (HWND hwnd, WPARAM wParam, LPARAM lParam)
     wineItem->iImage = tabItem->iImage;
 
   if (tabItem->mask & TCIF_PARAM)
-    wineItem->lParam = tabItem->lParam;
+    memcpy(wineItem->extra, &tabItem->lParam, infoPtr->cbInfo);
 
   if (tabItem->mask & TCIF_RTLREADING)
     FIXME("TCIF_RTLREADING\n");
@@ -2828,7 +2836,7 @@ TAB_GetItemA (HWND hwnd, WPARAM wParam, LPARAM lParam)
     tabItem->iImage = wineItem->iImage;
 
   if (tabItem->mask & TCIF_PARAM)
-    tabItem->lParam = wineItem->lParam;
+    memcpy(&tabItem->lParam, wineItem->extra, infoPtr->cbInfo);
 
   if (tabItem->mask & TCIF_RTLREADING)
     FIXME("TCIF_RTLREADING\n");
@@ -2865,7 +2873,7 @@ TAB_GetItemW (HWND hwnd, WPARAM wParam, LPARAM lParam)
     tabItem->iImage = wineItem->iImage;
 
   if (tabItem->mask & TCIF_PARAM)
-    tabItem->lParam = wineItem->lParam;
+    memcpy(&tabItem->lParam, wineItem->extra, infoPtr->cbInfo);
 
   if (tabItem->mask & TCIF_RTLREADING)
     FIXME("TCIF_RTLREADING\n");
@@ -2896,14 +2904,14 @@ TAB_DeleteItem (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	TAB_InvalidateTabArea(hwnd, infoPtr);
 
 	infoPtr->uNumItem--;
-	infoPtr->items = Alloc(sizeof (TAB_ITEM) * infoPtr->uNumItem);
+	infoPtr->items = Alloc(TAB_ITEM_SIZE(infoPtr) * infoPtr->uNumItem);
 
 	if (iItem > 0)
-	    memcpy(&infoPtr->items[0], &oldItems[0], iItem * sizeof(TAB_ITEM));
+	    memcpy(&infoPtr->items[0], &oldItems[0], iItem * TAB_ITEM_SIZE(infoPtr));
 
 	if (iItem < infoPtr->uNumItem)
 	    memcpy(&infoPtr->items[iItem], &oldItems[iItem + 1],
-		   (infoPtr->uNumItem - iItem) * sizeof(TAB_ITEM));
+		   (infoPtr->uNumItem - iItem) * TAB_ITEM_SIZE(infoPtr));
 
 	Free(oldItems);
 
@@ -3081,7 +3089,8 @@ TAB_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
   infoPtr->hwndUpDown      = 0;
   infoPtr->leftmostVisible = 0;
   infoPtr->fHeightSet      = FALSE;
-  infoPtr->bUnicode	   = IsWindowUnicode (hwnd);
+  infoPtr->bUnicode        = IsWindowUnicode (hwnd);
+  infoPtr->cbInfo          = sizeof(LPARAM);
 
   TRACE("Created tab control, hwnd [%p]\n", hwnd);
 
@@ -3174,6 +3183,25 @@ TAB_Destroy (HWND hwnd, WPARAM wParam, LPARAM lParam)
   return 0;
 }
 
+static LRESULT
+TAB_SetItemExtra (HWND hwnd, WPARAM wParam, LPARAM lParam)
+{
+  TAB_INFO *infoPtr = TAB_GetInfoPtr(hwnd);
+  INT cbInfo = wParam;
+   
+  if (!infoPtr || cbInfo <= 0)
+    return FALSE;
+
+  if (infoPtr->uNumItem)
+  {
+    /* FIXME: MSDN says this is not allowed, but this hasn't been verified */
+    return FALSE;
+  }
+    
+  infoPtr->cbInfo = cbInfo;
+  return TRUE;
+}
+
 static LRESULT WINAPI
 TAB_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -3231,8 +3259,7 @@ TAB_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       return TAB_InsertItemW (hwnd, wParam, lParam);
 
     case TCM_SETITEMEXTRA:
-      FIXME("Unimplemented msg TCM_SETITEMEXTRA\n");
-      return 0;
+      return TAB_SetItemExtra (hwnd, wParam, lParam);
 
     case TCM_ADJUSTRECT:
       return TAB_AdjustRect (hwnd, (BOOL)wParam, (LPRECT)lParam);

@@ -3,6 +3,7 @@
  *
  * Copyright 1998 Francis Beaudet
  * Copyright 1999 Thuy Nguyen
+ * Copyright 2004 Maxime Bellenge
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -94,6 +95,8 @@ typedef struct tagPropSheetInfo
   BOOL rebootSystem;
   BOOL activeValid;
   PropPageInfo* proppage;
+  HFONT hFont;
+  HFONT hFontBold;
   int x;
   int y;
   int width;
@@ -217,15 +220,9 @@ static VOID PROPSHEET_UnImplementedFlags(DWORD dwFlags)
     add_flag(PSH_RTLREADING);
     add_flag(PSH_WIZARDCONTEXTHELP);
     add_flag(PSH_WIZARD97_OLD);
-    add_flag(PSH_WATERMARK);
-    add_flag(PSH_USEHBMWATERMARK);
-    add_flag(PSH_USEHPLWATERMARK);
     add_flag(PSH_STRETCHWATERMARK);
-    add_flag(PSH_HEADER);
-    add_flag(PSH_USEHBMHEADER);
     add_flag(PSH_USEPAGELANG);
     add_flag(PSH_WIZARD_LITE);
-    add_flag(PSH_WIZARD97_NEW);
     add_flag(PSH_NOCONTEXTHELP);
     if (string[0] != '\0')
 	FIXME("%s\n", string);
@@ -886,7 +883,11 @@ static BOOL PROPSHEET_AdjustSizeWizard(HWND hwndDlg, PropSheetInfo* psInfo)
 
   /* Make room */
   rc.right += (padding.x * 2);
-  rc.bottom += (buttonHeight + (5 * padding.y) + lineHeight);
+  rc.bottom += (buttonHeight + lineHeight);
+  if (psInfo->ppshheader.dwFlags & (PSH_WIZARD97_OLD | PSH_WIZARD97_NEW))
+      rc.bottom += (4 * padding.y);
+  else 
+      rc.bottom += (5 * padding.y);
 
   /*
    * Resize the property sheet.
@@ -1003,6 +1004,7 @@ static BOOL PROPSHEET_AdjustButtonsWizard(HWND hwndParent,
 {
   HWND hwndButton = GetDlgItem(hwndParent, IDCANCEL);
   HWND hwndLine = GetDlgItem(hwndParent, IDC_SUNKEN_LINE);
+  HWND hwndLineHeader = GetDlgItem(hwndParent, IDC_SUNKEN_LINEHEADER);
   RECT rcSheet;
   int x, y;
   int num_buttons = 3;
@@ -1084,17 +1086,28 @@ static BOOL PROPSHEET_AdjustButtonsWizard(HWND hwndParent,
   else
     ShowWindow(hwndButton, SW_HIDE);
 
+  if (psInfo->ppshheader.dwFlags & (PSH_WIZARD97_OLD | PSH_WIZARD97_NEW)) 
+      padding.x = 0;
+
   /*
    * Position and resize the sunken line.
    */
   x = padding.x;
   y = rcSheet.bottom - ((padding.y * 2) + buttonHeight + lineHeight);
 
-  GetClientRect(hwndParent, &rcSheet);
   lineWidth = rcSheet.right - (padding.x * 2);
 
   SetWindowPos(hwndLine, 0, x, y, lineWidth, 2,
                SWP_NOZORDER | SWP_NOACTIVATE);
+
+  /*
+   * Position and resize the header sunken line.
+   */
+  
+  SetWindowPos(hwndLineHeader, 0, 0, 0, rcSheet.right, 2,
+	       SWP_NOZORDER | SWP_NOMOVE | SWP_NOACTIVATE);
+  if (!(psInfo->ppshheader.dwFlags & (PSH_WIZARD97_OLD | PSH_WIZARD97_NEW)))
+      ShowWindow(hwndLineHeader, SW_HIDE);
 
   return TRUE;
 }
@@ -1497,10 +1510,12 @@ static BOOL PROPSHEET_CreatePage(HWND hwndParent,
 
   psInfo->proppage[index].hwndPage = hwndPage;
 
-  if (psInfo->ppshheader.dwFlags & INTRNL_ANY_WIZARD) {
-      /* FIXME: This code may no longer be correct.
-       *        It was not for the non-wizard path.  (GLA 6/02)
-       */
+  if (psInfo->ppshheader.dwFlags & INTRNL_ANY_WIZARD) {     
+      int offsetx = 0;
+      int offsety = 0;
+      HWND hwndChild;
+      RECT r;
+
       rc.left = psInfo->x;
       rc.top = psInfo->y;
       rc.right = psInfo->width;
@@ -1515,10 +1530,58 @@ static BOOL PROPSHEET_CreatePage(HWND hwndParent,
       TRACE("setting page %08lx, rc (%ld,%ld)-(%ld,%ld) w=%d, h=%d, padx=%d, pady=%d\n",
 	    (DWORD)hwndPage, rc.left, rc.top, rc.right, rc.bottom,
 	    pageWidth, pageHeight, padding.x, padding.y);
+
+      /* If there is a watermark, offset the dialog items */     
+      if ( (psInfo->ppshheader.dwFlags & (PSH_WATERMARK | PSH_WIZARD97_NEW | PSH_WIZARD97_OLD)) &&
+	   ((index == 0) || (index == psInfo->nPages - 1)) )
+      {
+	  BITMAP bm;
+
+	  /* if PSH_USEHBMWATERMARK is not set, load the resource from pszbmWatermark 
+	     and put the HBITMAP in hbmWatermark. Thus all the rest of the code always 
+	     considers hbmWatermark as valid. */
+	  if (!(psInfo->ppshheader.dwFlags & PSH_USEHBMWATERMARK)) 
+	  {
+	      ((PropSheetInfo *)psInfo)->ppshheader.u4.hbmWatermark = 
+		  CreateMappedBitmap(ppshpage->hInstance, (INT)psInfo->ppshheader.u4.pszbmWatermark, 0, NULL, 0);
+	  }
+
+	  /* Compute the offset x */
+	  GetObjectA(psInfo->ppshheader.u4.hbmWatermark, sizeof(BITMAP), (LPVOID)&bm);
+	  offsetx = bm.bmWidth;
+      }
+
+      if (psInfo->ppshheader.dwFlags & (PSH_HEADER | PSH_WIZARD97_NEW | PSH_WIZARD97_OLD))
+      {
+	  /* Same behavior as for watermarks */
+	  if (!(psInfo->ppshheader.dwFlags & PSH_USEHBMHEADER))
+	  {
+	      ((PropSheetInfo *)psInfo)->ppshheader.u5.hbmHeader = 
+		  CreateMappedBitmap(ppshpage->hInstance, (INT)psInfo->ppshheader.u5.pszbmHeader, 0, NULL, 0);
+	  }
+
+	  hwndChild = GetDlgItem(hwndParent, IDC_SUNKEN_LINEHEADER);
+
+	  GetClientRect(hwndChild, &r);
+	  MapWindowPoints(hwndChild, hwndParent, (LPPOINT) &r, 2);
+	  offsety = (ppshpage->dwFlags & PSP_HIDEHEADER)?0:r.bottom + 1;
+      }
+
+      hwndChild = GetWindow(hwndPage, GW_CHILD);
+      while((offsetx!=0) && (hwndChild)) {
+	  GetWindowRect(hwndChild, &r);
+	  MapWindowPoints(0, hwndPage, (LPPOINT)&r, 2);
+	  OffsetRect(&r, -offsetx, 0);
+	  SetWindowPos(hwndChild, 0, r.left, r.top, 
+		       0, 0, SWP_NOSIZE | SWP_NOZORDER);
+	  
+	  hwndChild = GetWindow(hwndChild, GW_HWNDNEXT);
+      }      
+
       SetWindowPos(hwndPage, HWND_TOP,
-		   rc.left + padding.x/2,
-		   rc.top + padding.y/2,
-		   pageWidth, pageHeight, 0);
+		   rc.left + padding.x/2 + offsetx,
+		   rc.top + padding.y/2 + offsety,
+		   pageWidth - offsetx, pageHeight - offsety, 0);
   }
   else {
       /*
@@ -1547,6 +1610,8 @@ static BOOL PROPSHEET_CreatePage(HWND hwndParent,
 static BOOL PROPSHEET_ShowPage(HWND hwndDlg, int index, PropSheetInfo * psInfo)
 {
   HWND hwndTabCtrl;
+  HWND hwndLineHeader;
+  LPCPROPSHEETPAGEW ppshpage;
 
   TRACE("active_page %d, index %d\n", psInfo->active_page, index);
   if (index == psInfo->active_page)
@@ -1558,8 +1623,6 @@ static BOOL PROPSHEET_ShowPage(HWND hwndDlg, int index, PropSheetInfo * psInfo)
 
   if (psInfo->proppage[index].hwndPage == 0)
   {
-     LPCPROPSHEETPAGEW ppshpage;
-
      ppshpage = (LPCPROPSHEETPAGEW)psInfo->proppage[index].hpage;
      PROPSHEET_CreatePage(hwndDlg, index, psInfo, ppshpage);
   }
@@ -1579,6 +1642,20 @@ static BOOL PROPSHEET_ShowPage(HWND hwndDlg, int index, PropSheetInfo * psInfo)
 
   psInfo->active_page = index;
   psInfo->activeValid = TRUE;
+
+  if (psInfo->ppshheader.dwFlags & (PSH_WIZARD97_OLD | PSH_WIZARD97_NEW) )
+  {
+      hwndLineHeader = GetDlgItem(hwndDlg, IDC_SUNKEN_LINEHEADER);
+      ppshpage = (LPCPROPSHEETPAGEW)psInfo->proppage[index].hpage;
+      
+      if ((ppshpage->dwFlags & PSP_HIDEHEADER) || (!(psInfo->ppshheader.dwFlags & PSH_HEADER)) )
+	  ShowWindow(hwndLineHeader, SW_HIDE);
+      else
+	  ShowWindow(hwndLineHeader, SW_SHOW);
+
+      InvalidateRgn(hwndDlg, NULL, TRUE);
+      UpdateWindow(hwndDlg);
+  }
 
   return TRUE;
 }
@@ -2469,6 +2546,16 @@ static void PROPSHEET_CleanUp(HWND hwndDlg)
      }
   }
 
+  DeleteObject(psInfo->hFont);
+  DeleteObject(psInfo->hFontBold);
+  /* If we created the bitmaps, destroy them */
+  if ((psInfo->ppshheader.dwFlags & PSH_WATERMARK) &&
+      (!(psInfo->ppshheader.dwFlags & PSH_USEHBMWATERMARK)) )
+      DeleteObject(psInfo->ppshheader.u4.hbmWatermark);
+  if ((psInfo->ppshheader.dwFlags & PSH_HEADER) &&
+      (!(psInfo->ppshheader.dwFlags & PSH_USEHBMHEADER)) )
+      DeleteObject(psInfo->ppshheader.u5.hbmHeader);
+
   Free(psInfo->proppage);
   Free(psInfo->strPropertiesFor);
   ImageList_Destroy(psInfo->hImageList);
@@ -2814,6 +2901,129 @@ static BOOL PROPSHEET_DoCommand(HWND hwnd, WORD wID)
 }
 
 /******************************************************************************
+ *            PROPSHEET_Paint
+ */
+static LRESULT PROPSHEET_Paint(HWND hwnd)
+{
+    PropSheetInfo* psInfo = (PropSheetInfo*) GetPropW(hwnd, PropSheetInfoStr);
+    PAINTSTRUCT ps;
+    HDC hdc, hdcSrc;
+    BITMAP bm;
+    HBITMAP hbmp;
+    HPALETTE hOldPal = 0;
+    int offsety = 0;
+    HBRUSH hbr;
+    RECT r;
+    LPCPROPSHEETPAGEW ppshpage;
+
+    hdc = BeginPaint(hwnd, &ps);
+    if (!hdc) return 1;
+
+    hdcSrc = CreateCompatibleDC(0);
+    ppshpage = (LPCPROPSHEETPAGEW)psInfo->proppage[psInfo->active_page].hpage;
+
+    if (psInfo->ppshheader.dwFlags & PSH_USEHPLWATERMARK) 
+	hOldPal = SelectPalette(hdc, psInfo->ppshheader.hplWatermark, FALSE);
+
+    if ( (!(ppshpage->dwFlags & PSP_HIDEHEADER)) &&
+	 (psInfo->ppshheader.dwFlags & (PSH_WIZARD97_NEW | PSH_HEADER)) ) 
+    {
+	RECT rzone;
+	HWND hwndLineHeader = GetDlgItem(hwnd, IDC_SUNKEN_LINEHEADER);
+	HFONT hOldFont;
+	COLORREF clrOld = 0;
+	int oldBkMode = 0;
+
+	hbmp = SelectObject(hdcSrc, psInfo->ppshheader.u5.hbmHeader);
+	hOldFont = SelectObject(hdc, psInfo->hFontBold);		
+
+	GetClientRect(hwndLineHeader, &r);
+	MapWindowPoints(hwndLineHeader, hwnd, (LPPOINT) &r, 2);
+	SetRect(&rzone, 0, 0, r.right, r.top - 1);
+	hbr = CreateSolidBrush(GetPixel(hdcSrc, 0, 0));
+	FillRect(hdc, &rzone, hbr);
+	DeleteObject(hbr);
+
+	GetObjectA(psInfo->ppshheader.u5.hbmHeader, sizeof(BITMAP), (LPVOID)&bm);		
+
+	clrOld = SetTextColor (hdc, 0x00000000);
+	oldBkMode = SetBkMode (hdc, TRANSPARENT); 
+
+	if (ppshpage->dwFlags & PSP_USEHEADERTITLE) {	    
+	    SetRect(&r, 20, 10, rzone.right - bm.bmWidth, 18);
+	    if (psInfo->unicode)
+		DrawTextW(hdc, (LPWSTR)ppshpage->pszHeaderTitle, 
+			  -1, &r, DT_LEFT | DT_SINGLELINE | DT_NOCLIP);
+	    else
+		DrawTextA(hdc, (LPCSTR)ppshpage->pszHeaderTitle, 
+			  -1, &r, DT_LEFT | DT_SINGLELINE | DT_NOCLIP);	
+	}
+
+	if (ppshpage->dwFlags & PSP_USEHEADERSUBTITLE) {
+	    SelectObject(hdc, psInfo->hFont);
+	    SetRect(&r, 40, 25, rzone.right - bm.bmWidth, 43);
+	    if (psInfo->unicode)
+		DrawTextW(hdc, (LPWSTR)ppshpage->pszHeaderSubTitle, 
+		      -1, &r, DT_LEFT | DT_SINGLELINE);
+	    else
+		DrawTextA(hdc, (LPCSTR)ppshpage->pszHeaderSubTitle, 
+		      -1, &r, DT_LEFT | DT_SINGLELINE);	
+	}
+
+	BitBlt(hdc, rzone.right - bm.bmWidth, (rzone.bottom - bm.bmHeight)/2,
+	       bm.bmWidth, bm.bmHeight, 
+	       hdcSrc, 0, 0, SRCCOPY);
+	offsety = rzone.bottom + 2;
+
+	SetTextColor(hdc, clrOld);
+	SetBkMode(hdc, oldBkMode);
+	SelectObject(hdc, hOldFont);
+	SelectObject(hdcSrc, hbmp);
+    }
+
+    if ( ((psInfo->active_page == 0) || (psInfo->active_page == psInfo->nPages - 1)) &&
+	 (psInfo->ppshheader.dwFlags & (PSH_WIZARD97_NEW | PSH_WATERMARK)) ) 
+    {
+	if (psInfo->ppshheader.dwFlags & PSH_USEHBMWATERMARK ) 
+	{
+	    HWND hwndLine = GetDlgItem(hwnd, IDC_SUNKEN_LINE);	    
+
+	    GetClientRect(hwndLine, &r);
+	    MapWindowPoints(hwndLine, hwnd, (LPPOINT) &r, 2);
+
+	    GetObjectA(psInfo->ppshheader.u4.hbmWatermark, sizeof(BITMAP), (LPVOID)&bm);
+	    hbmp = SelectObject(hdcSrc, psInfo->ppshheader.u4.hbmWatermark);
+
+	    BitBlt(hdc, 0, offsety, bm.bmWidth, bm.bmHeight, 
+		   hdcSrc, 0, 0, SRCCOPY);
+
+	    /* If the bitmap is not big enough, fill the remaining area
+	       with the color of pixel (0,0) of bitmap - see MSDN */
+	    if (r.top > bm.bmHeight) {
+		r.bottom = r.top - 1;
+		r.top = bm.bmHeight;
+		r.left = 0;
+		r.right = bm.bmWidth;
+		hbr = CreateSolidBrush(GetPixel(hdcSrc, 0, 0));
+		FillRect(hdc, &r, hbr);
+		DeleteObject(hbr);
+	    }
+
+	    SelectObject(hdcSrc, hbmp);	    
+	}
+    }
+
+    if (psInfo->ppshheader.dwFlags & PSH_USEHPLWATERMARK) 
+	SelectPalette(hdc, hOldPal, FALSE);
+
+    DeleteDC(hdcSrc);
+
+    EndPaint(hwnd, &ps);
+
+    return 0;
+}
+
+/******************************************************************************
  *            PROPSHEET_DialogProc
  */
 INT_PTR CALLBACK
@@ -2831,6 +3041,7 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       HWND hwndTabCtrl = GetDlgItem(hwnd, IDC_TABCONTROL);
       LPCPROPSHEETPAGEW ppshpage;
       int idx;
+      LOGFONTA logFont;
 
       /* Using PropSheetInfoStr to store extra data doesn't match the native
        * common control: native uses TCM_[GS]ETITEM
@@ -2849,6 +3060,12 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       /* set up the Next and Back buttons by default */
       PROPSHEET_SetWizButtons(hwnd, PSWIZB_BACK|PSWIZB_NEXT);
 
+      /* Set up fonts */
+      SystemParametersInfoA (SPI_GETICONTITLELOGFONT, 0, &logFont, 0);
+      psInfo->hFont = CreateFontIndirectA (&logFont);
+      logFont.lfWeight = FW_BOLD;
+      psInfo->hFontBold = CreateFontIndirectA (&logFont);
+      
       /*
        * Small icon in the title bar.
        */
@@ -2882,6 +3099,7 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
       if (psInfo->ppshheader.dwFlags & INTRNL_ANY_WIZARD)
       {
+        ShowWindow(hwndTabCtrl, SW_HIDE);
         if (PROPSHEET_IsTooSmallWizard(hwnd, psInfo))
         {
           PROPSHEET_AdjustSizeWizard(hwnd, psInfo);
@@ -2929,6 +3147,10 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
       return TRUE;
     }
+
+    case WM_PAINT:
+      PROPSHEET_Paint(hwnd);
+      return TRUE;
 
     case WM_DESTROY:
       PROPSHEET_CleanUp(hwnd);

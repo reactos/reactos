@@ -1114,8 +1114,13 @@ static RANGE iterator_range(ITERATOR* i)
 
     if (!i->ranges) return i->range;
 
-    range.lower = (*(RANGE*)DPA_GetPtr(i->ranges->hdpa, 0)).lower;
-    range.upper = (*(RANGE*)DPA_GetPtr(i->ranges->hdpa, DPA_GetPtrCount(i->ranges->hdpa) - 1)).upper;
+    if (DPA_GetPtrCount(i->ranges->hdpa) > 0)
+    {
+        range.lower = (*(RANGE*)DPA_GetPtr(i->ranges->hdpa, 0)).lower;
+        range.upper = (*(RANGE*)DPA_GetPtr(i->ranges->hdpa, DPA_GetPtrCount(i->ranges->hdpa) - 1)).upper;
+    }
+    else range.lower = range.upper = 0;
+
     return range;
 }
 
@@ -3313,7 +3318,7 @@ static BOOL set_main_item(LISTVIEW_INFO *infoPtr, const LVITEMW *lpLVItem, BOOL 
 	    ranges_delitem(infoPtr->selectionRanges, lpLVItem->iItem);
 	
 	/* if we are asked to change focus, and we manage it, do it */
-	if (lpLVItem->state & lpLVItem->stateMask & ~infoPtr->uCallbackMask & LVIS_FOCUSED)
+	if (lpLVItem->stateMask & ~infoPtr->uCallbackMask & LVIS_FOCUSED)
 	{
 	    if (lpLVItem->state & LVIS_FOCUSED)
 	    {
@@ -6037,7 +6042,7 @@ static INT WINAPI LISTVIEW_InsertCompare(  LPVOID first, LPVOID second,  LPARAM 
 }
 
 /***
- * nESCRIPTION:
+ * DESCRIPTION:
  * Inserts a new item in the listview control.
  *
  * PARAMETER(S):
@@ -6068,8 +6073,7 @@ static INT LISTVIEW_InsertItemT(LISTVIEW_INFO *infoPtr, const LVITEMW *lpLVItem,
 
     if (!is_assignable_item(lpLVItem, infoPtr->dwStyle)) return -1;
 
-    if ( !(lpItem = (ITEM_INFO *)Alloc(sizeof(ITEM_INFO))) )
-	return -1;
+    if (!(lpItem = (ITEM_INFO *)Alloc(sizeof(ITEM_INFO)))) return -1;
     
     /* insert item in listview control data structure */
     if ( !(hdpaSubItems = DPA_Create(8)) ) goto fail;
@@ -6090,21 +6094,21 @@ static INT LISTVIEW_InsertItemT(LISTVIEW_INFO *infoPtr, const LVITEMW *lpLVItem,
     /* set the item attributes */
     if (lpLVItem->mask & (LVIF_GROUPID|LVIF_COLUMNS))
     {
-       /* full size structure expected - _WIN32IE >= 0x560 */
-       item = *lpLVItem;
+        /* full size structure expected - _WIN32IE >= 0x560 */
+        item = *lpLVItem;
     }
     else if (lpLVItem->mask & LVIF_INDENT)
     {
-       /* indent member expected - _WIN32IE >= 0x300 */
-       memcpy(&item, lpLVItem, offsetof( LVITEMW, iGroupId ));
+        /* indent member expected - _WIN32IE >= 0x300 */
+        memcpy(&item, lpLVItem, offsetof( LVITEMW, iGroupId ));
     }
     else
     {
-       /* minimal structure expected */
-       memcpy(&item, lpLVItem, offsetof( LVITEMW, iIndent ));
+        /* minimal structure expected */
+        memcpy(&item, lpLVItem, offsetof( LVITEMW, iIndent ));
     }
     item.iItem = nItem;
-    item.state &= ~LVIS_STATEIMAGEMASK;
+    if (infoPtr->dwLvExStyle & LVS_EX_CHECKBOXES) item.state &= ~LVIS_STATEIMAGEMASK;
     if (!set_main_item(infoPtr, &item, TRUE, isW, &has_changed)) goto undo;
 
     /* if we're sorted, sort the list, and update the index */

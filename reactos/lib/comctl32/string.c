@@ -763,19 +763,7 @@ LPWSTR WINAPI StrRChrIW(LPCWSTR lpszStr, LPCWSTR lpszEnd, WORD ch)
 }
 
 /*************************************************************************
- * StrSpnW	[COMCTL32.364]
- *
- * See StrSpnA.
- */
-int WINAPI StrSpnW(LPCWSTR lpszStr, LPCWSTR lpszMatch)
-{
-  TRACE("(%s,%s)\n",debugstr_w(lpszStr), debugstr_w(lpszMatch));
-
-  return COMCTL32_StrSpnHelperW(lpszStr, lpszMatch, StrChrW, FALSE);
-}
-
-/*************************************************************************
- * StrCSpnW	[COMCTL32.@]
+ * StrCSpnW	[COMCTL32.364]
  *
  * See StrCSpnA.
  */
