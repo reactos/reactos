@@ -13,6 +13,13 @@
 #include "ndissys.h"
 #include <buffer.h>
 
+VOID
+EXPORT
+NdisMSendComplete(
+    IN  NDIS_HANDLE     MiniportAdapterHandle,
+    IN  PNDIS_PACKET    Packet,
+    IN  NDIS_STATUS     Status);
+
 #define SERVICES_KEY L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\"
 #define LINKAGE_KEY  L"\\Linkage"
 #define PARAMETERS_KEY L"\\Parameters\\"
@@ -359,11 +366,14 @@ ProSend(
           NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's Send handler\n"));
           NdisStatus = (*Adapter->Miniport->Chars.SendHandler)(Adapter->NdisMiniportBlock.MiniportAdapterContext, Packet, 0);
           NDIS_DbgPrint(MAX_TRACE, ("back from miniport's send handler\n"));
-
+	  if( NdisStatus != NDIS_STATUS_PENDING ) {
+	      NdisMSendComplete( Adapter, Packet, NdisStatus );
+	      Adapter->MiniportBusy = FALSE;
+	  }
           KeLowerIrql(RaiseOldIrql);
         }
     }
-
+  
   /* XXX why the hell do we do this? */
   NDIS_DbgPrint(MAX_TRACE, ("acquiring miniport block lock\n"));
   KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &SpinOldIrql);
@@ -736,7 +746,7 @@ NdisRegisterProtocol(
     UNICODE_STRING RegistryPath;
     WCHAR *RegistryPathStr;
 
-    RegistryPathStr = ExAllocatePool(PagedPool, sizeof(SERVICES_KEY) + ProtocolCharacteristics->Name.Length + sizeof(LINKAGE_KEY));
+    RegistryPathStr = ExAllocatePoolWithTag(PagedPool, sizeof(SERVICES_KEY) + ProtocolCharacteristics->Name.Length + sizeof(LINKAGE_KEY), NDIS_TAG + __LINE__);
     if(!RegistryPathStr)
       {
         NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
@@ -785,7 +795,7 @@ NdisRegisterProtocol(
         return;
       }
 
-    KeyInformation = ExAllocatePool(PagedPool, sizeof(KEY_VALUE_PARTIAL_INFORMATION) + ResultLength);
+    KeyInformation = ExAllocatePoolWithTag(PagedPool, sizeof(KEY_VALUE_PARTIAL_INFORMATION) + ResultLength, NDIS_TAG + __LINE__);
     if(!KeyInformation)
       {
         NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
@@ -856,7 +866,7 @@ NdisRegisterProtocol(
 
       NDIS_DbgPrint(MAX_TRACE, ("Calling protocol's BindAdapter handler with DeviceName %wZ and RegistryPath %wZ\n",
           &DeviceName, &RegistryPath));
-
+      
       /* XXX SD must do something with bind context */
       *NdisProtocolHandle = Protocol;
 

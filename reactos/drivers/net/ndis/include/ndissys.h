@@ -39,6 +39,7 @@ typedef struct _ATM_ADDRESS *PATM_ADDRESS;
 #define EXPORT STDCALL
 #endif
 
+#define NDIS_TAG  0x4e4d4953
 
 #ifdef DBG
 

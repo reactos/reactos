@@ -18,6 +18,14 @@
 #include <buffer.h>
 #endif /* DBG */
 
+#undef NdisMSendComplete
+VOID
+EXPORT
+NdisMSendComplete(
+    IN  NDIS_HANDLE     MiniportAdapterHandle,
+    IN  PNDIS_PACKET    Packet,
+    IN  NDIS_STATUS     Status);
+
 /* Root of the scm database */
 #define SERVICES_ROOT L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\"
 
@@ -819,6 +827,8 @@ VOID STDCALL MiniportDpc(
                  */
                 (*Adapter->Miniport->Chars.SendPacketsHandler)(
                     Adapter->NdisMiniportBlock.MiniportAdapterContext, (PPNDIS_PACKET)&WorkItemContext, 1);
+		NdisStatus = 
+		    NDIS_GET_PACKET_STATUS((PNDIS_PACKET)WorkItemContext);
 
                 NDIS_DbgPrint(MAX_TRACE, ("back from miniport's SendPackets handler\n"));
               }
@@ -831,7 +841,9 @@ VOID STDCALL MiniportDpc(
 
                 NDIS_DbgPrint(MAX_TRACE, ("back from miniport's Send handler\n"));
               }
-
+	    NdisMSendComplete
+		( Adapter, (PNDIS_PACKET)WorkItemContext, NdisStatus );
+	    Adapter->MiniportBusy = FALSE;
             break;
 
           case NdisWorkItemSendLoopback:
@@ -1830,8 +1842,6 @@ NdisMResetComplete(
 {
   MiniResetComplete(MiniportAdapterHandle, Status, AddressingReset);
 }
-
-#undef NdisMSendComplete
 
 
 /*
