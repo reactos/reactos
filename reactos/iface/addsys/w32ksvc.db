@@ -348,7 +348,7 @@ NtUserEvent                             1
 NtUserExcludeUpdateRgn                  2
 NtUserFillWindow                        4
 NtUserFindExistingCursorIcon            3
-NtUserFindWindowEx                      5
+NtUserFindWindowEx                      4
 NtUserFlashWindowEx                     1
 NtUserGetAltTabInfo                     6
 NtUserGetAncestor                       2

@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.34 2003/05/23 16:44:12 rcampbell Exp $
+/* $Id: window.c,v 1.35 2003/05/23 17:07:12 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -671,8 +671,7 @@ FindWindowExW(HWND hwndParent,
 	      LPCWSTR lpszClass,
 	      LPCWSTR lpszWindow)
 {
-  UNIMPLEMENTED;
-  return (HWND)0;
+  return NtUserFindWindowEx(hwndParent, hwndChildAfter, lpszClass, lpszWindow);
 }
 
 WINBOOL STDCALL
