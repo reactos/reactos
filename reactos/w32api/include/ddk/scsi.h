@@ -1685,7 +1685,7 @@ typedef union _TWO_BYTE {
       break; \
     } \
   } \
-  assert(_val != 32); \
+  ASSERT(_val != 32); \
   (Bit) = _val; \
 }
 

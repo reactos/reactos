@@ -31,13 +31,10 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
 #include "ntddtdi.h"
 #include "tdistat.h"
 #include "netpnp.h"
-
 
 /* Basic types */
 
@@ -69,181 +66,6 @@ typedef struct _TDI_REQUEST_STATUS {
   PVOID  RequestContext;
   ULONG  BytesTransferred;
 } TDI_REQUEST_STATUS, *PTDI_REQUEST_STATUS;
-
-typedef struct _TA_ADDRESS {
-  USHORT  AddressLength;
-  USHORT  AddressType;
-  UCHAR  Address[1];
-} TA_ADDRESS, *PTA_ADDRESS;
-
-#define TDI_ADDRESS_TYPE_UNSPEC             0
-#define TDI_ADDRESS_TYPE_UNIX               1
-#define TDI_ADDRESS_TYPE_IP                 2
-#define TDI_ADDRESS_TYPE_IMPLINK            3
-#define TDI_ADDRESS_TYPE_PUP                4
-#define TDI_ADDRESS_TYPE_CHAOS              5
-#define TDI_ADDRESS_TYPE_NS                 6
-#define TDI_ADDRESS_TYPE_IPX                6
-#define TDI_ADDRESS_TYPE_NBS                7
-#define TDI_ADDRESS_TYPE_ECMA               8
-#define TDI_ADDRESS_TYPE_DATAKIT            9
-#define TDI_ADDRESS_TYPE_CCITT              10
-#define TDI_ADDRESS_TYPE_SNA                11
-#define TDI_ADDRESS_TYPE_DECnet             12
-#define TDI_ADDRESS_TYPE_DLI                13
-#define TDI_ADDRESS_TYPE_LAT                14
-#define TDI_ADDRESS_TYPE_HYLINK             15
-#define TDI_ADDRESS_TYPE_APPLETALK          16
-#define TDI_ADDRESS_TYPE_NETBIOS            17
-#define TDI_ADDRESS_TYPE_8022               18
-#define TDI_ADDRESS_TYPE_OSI_TSAP           19
-#define TDI_ADDRESS_TYPE_NETONE             20
-#define TDI_ADDRESS_TYPE_VNS                21
-#define TDI_ADDRESS_TYPE_NETBIOS_EX         22
-#define TDI_ADDRESS_TYPE_IP6                23
-#define TDI_ADDRESS_TYPE_NETBIOS_UNICODE_EX 24
-
-#define TdiTransportAddress               "TransportAddress"
-#define TdiConnectionContext              "ConnectionContext"
-#define TDI_TRANSPORT_ADDRESS_LENGTH      (sizeof(TdiTransportAddress) - 1)
-#define TDI_CONNECTION_CONTEXT_LENGTH     (sizeof(TdiConnectionContext) - 1)
-
-typedef struct _TRANSPORT_ADDRESS {
-  LONG  TAAddressCount;
-  TA_ADDRESS  Address[1];
-} TRANSPORT_ADDRESS, *PTRANSPORT_ADDRESS;
-
-typedef struct _TDI_ADDRESS_INFO {
-  ULONG  ActivityCount;
-  TRANSPORT_ADDRESS  Address;
-} TDI_ADDRESS_INFO, *PTDI_ADDRESS_INFO;
-
-typedef struct _TDI_ACTION_HEADER {
-  ULONG  TransportId;
-  USHORT  ActionCode;
-  USHORT  Reserved;
-} TDI_ACTION_HEADER, *PTDI_ACTION_HEADER;
-
-typedef struct _TDI_ADDRESS_8022 {
-  UCHAR  MACAddress[6];
-} TDI_ADDRESS_8022, *PTDI_ADDRESS_8022;
-
-#define TDI_ADDRESS_LENGTH_8022           sizeof(TDI_ADDRESS_8022);
-
-typedef struct _TDI_ADDRESS_APPLETALK {
-  USHORT  Network;
-  UCHAR  Node;
-  UCHAR  Socket;
-} TDI_ADDRESS_APPLETALK, *PTDI_ADDRESS_APPLETALK;
-
-#define TDI_ADDRESS_LENGTH_APPLETALK      sizeof(TDI_ADDRESS_APPLETALK)
-
-typedef struct _TDI_ADDRESS_IP {
-  USHORT  sin_port;
-  ULONG  in_addr;
-  UCHAR  sin_zero[8];
-} TDI_ADDRESS_IP, *PTDI_ADDRESS_IP;
-
-#define TDI_ADDRESS_LENGTH_IP             sizeof(TDI_ADDRESS_IP)
-
-typedef struct _TDI_ADDRESS_IPX {
-  ULONG  NetworkAddress;
-  UCHAR  NodeAddress[6];
-  USHORT  Socket;
-} TDI_ADDRESS_IPX, *PTDI_ADDRESS_IPX;
-
-#define TDI_ADDRESS_LENGTH_IPX            sizeof(TDI_ADDRESS_IPX)
-
-/* TDI_ADDRESS_NETBIOS.NetbiosNameType constants */
-#define TDI_ADDRESS_NETBIOS_TYPE_UNIQUE       0x0000
-#define TDI_ADDRESS_NETBIOS_TYPE_GROUP        0x0001
-#define TDI_ADDRESS_NETBIOS_TYPE_QUICK_UNIQUE 0x0002
-#define TDI_ADDRESS_NETBIOS_TYPE_QUICK_GROUP  0x0003
-
-typedef struct _TDI_ADDRESS_NETBIOS {
-  USHORT  NetbiosNameType;
-  UCHAR  NetbiosName[16];
-} TDI_ADDRESS_NETBIOS, *PTDI_ADDRESS_NETBIOS;
-
-#define TDI_ADDRESS_LENGTH_NETBIOS        sizeof(TDI_ADDRESS_NETBIOS)
-
-typedef struct _TDI_ADDRESS_NETBIOS_EX {
-  UCHAR  EndpointName[16];
-  TDI_ADDRESS_NETBIOS  NetbiosAddress;
-} TDI_ADDRESS_NETBIOS_EX, *PTDI_ADDRESS_NETBIOS_EX;
-
-#define TDI_ADDRESS_LENGTH_NETBIOS_EX     sizeof(TDI_ADDRESS_NETBIOS_EX)
-
-/* TDI_ADDRESS_NETONE.NetoneNameType constants */
-#define TDI_ADDRESS_NETONE_TYPE_UNIQUE    0x0000
-#define TDI_ADDRESS_NETONE_TYPE_ROTORED   0x0001
-
-typedef struct _TDI_ADDRESS_NETONE {
-  USHORT  NetoneNameType;
-  UCHAR  NetoneName[20];
-} TDI_ADDRESS_NETONE, *PTDI_ADDRESS_NETONE;
-
-#define TDI_ADDRESS_LENGTH_NETONE         sizeof(TDI_ADDRESS_NETONE)
-
-typedef struct _TDI_ADDRESS_NS
-{
-    ULONG   NetworkAddress;
-    UCHAR   NodeAddress[6];
-    USHORT  Socket;
-} TDI_ADDRESS_NS, *PTDI_ADDRESS_NS;
-
-#define TDI_ADDRESS_LENGTH_NS             sizeof(TDI_ADDRESS_NS)
-
-#define ISO_MAX_ADDR_LENGTH               64
-
-/* TDI_ADDRESS_OSI_TSAP.tp_addr_type constants */
-#define ISO_HIERARCHICAL                  0
-#define ISO_NON_HIERARCHICAL              1
-
-typedef struct _TDI_ADDRESS_OSI_TSAP {
-  USHORT  tp_addr_type;
-  USHORT  tp_taddr_len;
-  USHORT  tp_tsel_len;
-  UCHAR  tp_addr[ISO_MAX_ADDR_LENGTH];
-} TDI_ADDRESS_OSI_TSAP, *PTDI_ADDRESS_OSI_TSAP;
-
-#define TDI_ADDRESS_LENGTH_OSI_TSAP       sizeof(TDI_ADDRESS_OSI_TSAP)
-
-typedef struct _TDI_ADDRESS_VNS {
-  UCHAR  net_address[4];
-  UCHAR  subnet_addr[2];
-  UCHAR  port[2];
-  UCHAR  hops;
-  UCHAR  filler[5];
-} TDI_ADDRESS_VNS, *PTDI_ADDRESS_VNS;
-
-#define TDI_ADDRESS_LENGTH_VNS            sizeof(TDI_ADDRESS_VNS)
-
-typedef struct _TDI_ADDRESS_IP6 {
-  USHORT  sin6_port;
-  ULONG  sin6_flowinfo;
-  USHORT  sin6_addr[8];
-  ULONG  sin6_scope_id;
-} TDI_ADDRESS_IP6, *PTDI_ADDRESS_IP6;
-
-#define TDI_ADDRESS_LENGTH_IP6            sizeof(TDI_ADDRESS_IP6)
-
-enum eNameBufferType {
-	NBT_READONLY = 0,
-	NBT_WRITEONLY,
-	NBT_READWRITE,
-	NBT_WRITTEN
-};
-
-typedef struct _TDI_ADDRESS_NETBIOS_UNICODE_EX {
-  USHORT  NetbiosNameType;
-  enum eNameBufferType  NameBufferType;
-  UNICODE_STRING  EndpointName;
-  UNICODE_STRING  RemoteName;
-  WCHAR  EndpointBuffer[17];
-  WCHAR  RemoteNameBuffer[1];
-} TDI_ADDRESS_NETBIOS_UNICODE_EX, *PTDI_ADDRESS_NETBIOS_UNICODE_EX;
-
 
 typedef struct _TDI_CONNECT_REQUEST {
 	TDI_REQUEST  Request;
@@ -356,7 +178,6 @@ typedef union _TDI_REQUEST_TYPE {
   TDI_REQUEST_SET_INFORMATION   TdiSetInformation;
 } TDI_REQUEST_TYPE, *PTDI_REQUEST_TYPE;
 
-
 /* Query information types */
 
 /* Generic query info types that must be supported by all transports */
@@ -374,79 +195,6 @@ typedef union _TDI_REQUEST_TYPE {
 #define TDI_QUERY_ADAPTER_STATUS        0x00000100
 #define TDI_QUERY_SESSION_STATUS        0x00000200
 #define TDI_QUERY_FIND_NAME             0x00000300
-
-typedef struct _TA_APPLETALK_ADDR {
-  LONG  TAAddressCount;
-  struct _AddrAtalk {
-    USHORT  AddressLength;
-    USHORT  AddressType;
-    TDI_ADDRESS_APPLETALK  Address[1];
-  } Address[1];
-} TA_APPLETALK_ADDRESS, *PTA_APPLETALK_ADDRESS;
-
-typedef struct _TA_ADDRESS_IP {
-  LONG  TAAddressCount;
-  struct _AddrIp {
-    USHORT  AddressLength;
-    USHORT  AddressType;
-    TDI_ADDRESS_IP  Address[1];
-  } Address[1];
-} TA_ADDRESS_IP, *PTA_ADDRESS_IP;
-
-typedef struct _TA_ADDRESS_IPX {
-  LONG  TAAddressCount;
-  struct _AddrIpx {
-    USHORT  AddressLength;
-    USHORT  AddressType;
-    TDI_ADDRESS_IPX  Address[1];
-  } Address[1];
-} TA_IPX_ADDRESS, *PTA_IPX_ADDRESS;
-
-typedef struct _TA_NETBIOS_ADDRESS {
-  LONG  TAAddressCount;
-  struct _Addr{
-    USHORT  AddressLength;
-    USHORT  AddressType;
-    TDI_ADDRESS_NETBIOS  Address[1];
-  } Address[1];
-} TA_NETBIOS_ADDRESS, *PTA_NETBIOS_ADDRESS;
-
-typedef struct _TA_ADDRESS_NS {
-  LONG  TAAddressCount;
-  struct  _AddrNs {
-    USHORT  AddressLength;
-    USHORT  AddressType;
-    TDI_ADDRESS_NS  Address[1];
-  } Address[1];
-} TA_NS_ADDRESS, *PTA_NS_ADDRESS;
-
-typedef struct _TA_ADDRESS_VNS {
-  LONG  TAAddressCount;
-  struct  _AddrVns {
-    USHORT  AddressLength;
-    USHORT  AddressType;
-    TDI_ADDRESS_VNS  Address[1];
-  } Address[1];
-} TA_VNS_ADDRESS, *PTA_VNS_ADDRESS;
-
-typedef struct _TA_ADDRESS_IP6 {
-  LONG  TAAddressCount;
-  struct _AddrIp6 {
-    USHORT  AddressLength;
-    USHORT  AddressType;
-    TDI_ADDRESS_IP6  Address[1];
-  } Address [1];
-} TA_IP6_ADDRESS, *PTA_IP6_ADDRESS;
-
-typedef struct _TA_ADDRESS_NETBIOS_UNICODE_EX {
-  LONG  TAAddressCount;
-  struct _AddrNetbiosWCharEx {
-    USHORT  AddressLength;
-    USHORT  AddressType;
-    TDI_ADDRESS_NETBIOS_UNICODE_EX  Address[1];
-  } Address [1];
-} TA_NETBIOS_UNICODE_EX_ADDRESS, *PTA_NETBIOS_UNICODE_EX_ADDRESS;
-
 
 /* Structures used for TdiQueryInformation and TdiSetInformation */
 
@@ -588,7 +336,255 @@ typedef struct _TDI_REQUEST_ASSOCIATE {
 #define NDIS_PACKET_POOL_TAG_FOR_NBF        'bPDN'
 #define NDIS_PACKET_POOL_TAG_FOR_APPLETALK  'aPDN'
 
-#pragma pack(pop)
+typedef struct _TA_ADDRESS {
+  USHORT  AddressLength;
+  USHORT  AddressType;
+  UCHAR  Address[1];
+} TA_ADDRESS, *PTA_ADDRESS;
+
+#define TDI_ADDRESS_TYPE_UNSPEC             0
+#define TDI_ADDRESS_TYPE_UNIX               1
+#define TDI_ADDRESS_TYPE_IP                 2
+#define TDI_ADDRESS_TYPE_IMPLINK            3
+#define TDI_ADDRESS_TYPE_PUP                4
+#define TDI_ADDRESS_TYPE_CHAOS              5
+#define TDI_ADDRESS_TYPE_NS                 6
+#define TDI_ADDRESS_TYPE_IPX                6
+#define TDI_ADDRESS_TYPE_NBS                7
+#define TDI_ADDRESS_TYPE_ECMA               8
+#define TDI_ADDRESS_TYPE_DATAKIT            9
+#define TDI_ADDRESS_TYPE_CCITT              10
+#define TDI_ADDRESS_TYPE_SNA                11
+#define TDI_ADDRESS_TYPE_DECnet             12
+#define TDI_ADDRESS_TYPE_DLI                13
+#define TDI_ADDRESS_TYPE_LAT                14
+#define TDI_ADDRESS_TYPE_HYLINK             15
+#define TDI_ADDRESS_TYPE_APPLETALK          16
+#define TDI_ADDRESS_TYPE_NETBIOS            17
+#define TDI_ADDRESS_TYPE_8022               18
+#define TDI_ADDRESS_TYPE_OSI_TSAP           19
+#define TDI_ADDRESS_TYPE_NETONE             20
+#define TDI_ADDRESS_TYPE_VNS                21
+#define TDI_ADDRESS_TYPE_NETBIOS_EX         22
+#define TDI_ADDRESS_TYPE_IP6                23
+#define TDI_ADDRESS_TYPE_NETBIOS_UNICODE_EX 24
+
+#define TdiTransportAddress               "TransportAddress"
+#define TdiConnectionContext              "ConnectionContext"
+#define TDI_TRANSPORT_ADDRESS_LENGTH      (sizeof(TdiTransportAddress) - 1)
+#define TDI_CONNECTION_CONTEXT_LENGTH     (sizeof(TdiConnectionContext) - 1)
+
+typedef struct _TRANSPORT_ADDRESS {
+  LONG  TAAddressCount;
+  TA_ADDRESS  Address[1];
+} TRANSPORT_ADDRESS, *PTRANSPORT_ADDRESS;
+
+typedef struct _TDI_ACTION_HEADER {
+  ULONG  TransportId;
+  USHORT  ActionCode;
+  USHORT  Reserved;
+} TDI_ACTION_HEADER, *PTDI_ACTION_HEADER;
+
+typedef struct _TDI_ADDRESS_INFO {
+  ULONG  ActivityCount;
+  TRANSPORT_ADDRESS  Address;
+} TDI_ADDRESS_INFO, *PTDI_ADDRESS_INFO;
+
+#include "pshpack1.h"
+
+typedef struct _TDI_ADDRESS_8022 {
+  UCHAR  MACAddress[6];
+} TDI_ADDRESS_8022, *PTDI_ADDRESS_8022;
+
+#define TDI_ADDRESS_LENGTH_8022           sizeof(TDI_ADDRESS_8022);
+
+typedef struct _TDI_ADDRESS_APPLETALK {
+  USHORT  Network;
+  UCHAR  Node;
+  UCHAR  Socket;
+} TDI_ADDRESS_APPLETALK, *PTDI_ADDRESS_APPLETALK;
+
+#define TDI_ADDRESS_LENGTH_APPLETALK      sizeof(TDI_ADDRESS_APPLETALK)
+
+typedef struct _TDI_ADDRESS_IP {
+  USHORT  sin_port;
+  ULONG  in_addr;
+  UCHAR  sin_zero[8];
+} TDI_ADDRESS_IP, *PTDI_ADDRESS_IP;
+
+#define TDI_ADDRESS_LENGTH_IP             sizeof(TDI_ADDRESS_IP)
+
+typedef struct _TDI_ADDRESS_IPX {
+  ULONG  NetworkAddress;
+  UCHAR  NodeAddress[6];
+  USHORT  Socket;
+} TDI_ADDRESS_IPX, *PTDI_ADDRESS_IPX;
+
+#define TDI_ADDRESS_LENGTH_IPX            sizeof(TDI_ADDRESS_IPX)
+
+/* TDI_ADDRESS_NETBIOS.NetbiosNameType constants */
+#define TDI_ADDRESS_NETBIOS_TYPE_UNIQUE       0x0000
+#define TDI_ADDRESS_NETBIOS_TYPE_GROUP        0x0001
+#define TDI_ADDRESS_NETBIOS_TYPE_QUICK_UNIQUE 0x0002
+#define TDI_ADDRESS_NETBIOS_TYPE_QUICK_GROUP  0x0003
+
+typedef struct _TDI_ADDRESS_NETBIOS {
+  USHORT  NetbiosNameType;
+  UCHAR  NetbiosName[16];
+} TDI_ADDRESS_NETBIOS, *PTDI_ADDRESS_NETBIOS;
+
+#define TDI_ADDRESS_LENGTH_NETBIOS        sizeof(TDI_ADDRESS_NETBIOS)
+
+typedef struct _TDI_ADDRESS_NETBIOS_EX {
+  UCHAR  EndpointName[16];
+  TDI_ADDRESS_NETBIOS  NetbiosAddress;
+} TDI_ADDRESS_NETBIOS_EX, *PTDI_ADDRESS_NETBIOS_EX;
+
+#define TDI_ADDRESS_LENGTH_NETBIOS_EX     sizeof(TDI_ADDRESS_NETBIOS_EX)
+
+/* TDI_ADDRESS_NETONE.NetoneNameType constants */
+#define TDI_ADDRESS_NETONE_TYPE_UNIQUE    0x0000
+#define TDI_ADDRESS_NETONE_TYPE_ROTORED   0x0001
+
+typedef struct _TDI_ADDRESS_NETONE {
+  USHORT  NetoneNameType;
+  UCHAR  NetoneName[20];
+} TDI_ADDRESS_NETONE, *PTDI_ADDRESS_NETONE;
+
+#define TDI_ADDRESS_LENGTH_NETONE         sizeof(TDI_ADDRESS_NETONE)
+
+typedef struct _TDI_ADDRESS_NS
+{
+    ULONG   NetworkAddress;
+    UCHAR   NodeAddress[6];
+    USHORT  Socket;
+} TDI_ADDRESS_NS, *PTDI_ADDRESS_NS;
+
+#define TDI_ADDRESS_LENGTH_NS             sizeof(TDI_ADDRESS_NS)
+
+#define ISO_MAX_ADDR_LENGTH               64
+
+/* TDI_ADDRESS_OSI_TSAP.tp_addr_type constants */
+#define ISO_HIERARCHICAL                  0
+#define ISO_NON_HIERARCHICAL              1
+
+typedef struct _TDI_ADDRESS_OSI_TSAP {
+  USHORT  tp_addr_type;
+  USHORT  tp_taddr_len;
+  USHORT  tp_tsel_len;
+  UCHAR  tp_addr[ISO_MAX_ADDR_LENGTH];
+} TDI_ADDRESS_OSI_TSAP, *PTDI_ADDRESS_OSI_TSAP;
+
+#define TDI_ADDRESS_LENGTH_OSI_TSAP       sizeof(TDI_ADDRESS_OSI_TSAP)
+
+typedef struct _TDI_ADDRESS_VNS {
+  UCHAR  net_address[4];
+  UCHAR  subnet_addr[2];
+  UCHAR  port[2];
+  UCHAR  hops;
+  UCHAR  filler[5];
+} TDI_ADDRESS_VNS, *PTDI_ADDRESS_VNS;
+
+#define TDI_ADDRESS_LENGTH_VNS            sizeof(TDI_ADDRESS_VNS)
+
+typedef struct _TDI_ADDRESS_IP6 {
+  USHORT  sin6_port;
+  ULONG  sin6_flowinfo;
+  USHORT  sin6_addr[8];
+  ULONG  sin6_scope_id;
+} TDI_ADDRESS_IP6, *PTDI_ADDRESS_IP6;
+
+#define TDI_ADDRESS_LENGTH_IP6            sizeof(TDI_ADDRESS_IP6)
+
+enum eNameBufferType {
+	NBT_READONLY = 0,
+	NBT_WRITEONLY,
+	NBT_READWRITE,
+	NBT_WRITTEN
+};
+
+typedef struct _TDI_ADDRESS_NETBIOS_UNICODE_EX {
+  USHORT  NetbiosNameType;
+  enum eNameBufferType  NameBufferType;
+  UNICODE_STRING  EndpointName;
+  UNICODE_STRING  RemoteName;
+  WCHAR  EndpointBuffer[17];
+  WCHAR  RemoteNameBuffer[1];
+} TDI_ADDRESS_NETBIOS_UNICODE_EX, *PTDI_ADDRESS_NETBIOS_UNICODE_EX;
+
+typedef struct _TA_APPLETALK_ADDR {
+  LONG  TAAddressCount;
+  struct _AddrAtalk {
+    USHORT  AddressLength;
+    USHORT  AddressType;
+    TDI_ADDRESS_APPLETALK  Address[1];
+  } Address[1];
+} TA_APPLETALK_ADDRESS, *PTA_APPLETALK_ADDRESS;
+
+typedef struct _TA_ADDRESS_IP {
+  LONG  TAAddressCount;
+  struct _AddrIp {
+    USHORT  AddressLength;
+    USHORT  AddressType;
+    TDI_ADDRESS_IP  Address[1];
+  } Address[1];
+} TA_IP_ADDRESS, *PTA_IP_ADDRESS;
+
+typedef struct _TA_ADDRESS_IPX {
+  LONG  TAAddressCount;
+  struct _AddrIpx {
+    USHORT  AddressLength;
+    USHORT  AddressType;
+    TDI_ADDRESS_IPX  Address[1];
+  } Address[1];
+} TA_IPX_ADDRESS, *PTA_IPX_ADDRESS;
+
+typedef struct _TA_NETBIOS_ADDRESS {
+  LONG  TAAddressCount;
+  struct _Addr{
+    USHORT  AddressLength;
+    USHORT  AddressType;
+    TDI_ADDRESS_NETBIOS  Address[1];
+  } Address[1];
+} TA_NETBIOS_ADDRESS, *PTA_NETBIOS_ADDRESS;
+
+typedef struct _TA_ADDRESS_NS {
+  LONG  TAAddressCount;
+  struct  _AddrNs {
+    USHORT  AddressLength;
+    USHORT  AddressType;
+    TDI_ADDRESS_NS  Address[1];
+  } Address[1];
+} TA_NS_ADDRESS, *PTA_NS_ADDRESS;
+
+typedef struct _TA_ADDRESS_VNS {
+  LONG  TAAddressCount;
+  struct  _AddrVns {
+    USHORT  AddressLength;
+    USHORT  AddressType;
+    TDI_ADDRESS_VNS  Address[1];
+  } Address[1];
+} TA_VNS_ADDRESS, *PTA_VNS_ADDRESS;
+
+typedef struct _TA_ADDRESS_IP6 {
+  LONG  TAAddressCount;
+  struct _AddrIp6 {
+    USHORT  AddressLength;
+    USHORT  AddressType;
+    TDI_ADDRESS_IP6  Address[1];
+  } Address [1];
+} TA_IP6_ADDRESS, *PTA_IP6_ADDRESS;
+
+typedef struct _TA_ADDRESS_NETBIOS_UNICODE_EX {
+  LONG  TAAddressCount;
+  struct _AddrNetbiosWCharEx {
+    USHORT  AddressLength;
+    USHORT  AddressType;
+    TDI_ADDRESS_NETBIOS_UNICODE_EX  Address[1];
+  } Address [1];
+} TA_NETBIOS_UNICODE_EX_ADDRESS, *PTA_NETBIOS_UNICODE_EX_ADDRESS;
+
+#include "poppack.h"
 
 #ifdef __cplusplus
 }

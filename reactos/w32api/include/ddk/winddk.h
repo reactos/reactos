@@ -3992,8 +3992,6 @@ RtlAssert(
 
 #endif /* DBG */
 
-#define assert ASSERT
-
 
 /*
 ** Driver support routines
@@ -5551,7 +5549,7 @@ ExVerifySuite(
 #define PAGED_CODE() { \
   if (KeGetCurrentIrql() > APC_LEVEL) { \
     KdPrint( ("NTDDK: Pageable code called at IRQL > APC_LEVEL (%d)\n", KeGetCurrentIrql() )); \
-    assert(FALSE); \
+    ASSERT(FALSE); \
   } \
 }
 
@@ -6764,7 +6762,7 @@ IoReuseIrp(
                                _InvokeOnCancel) \
 { \
   PIO_STACK_LOCATION _IrpSp; \
-  assert(_InvokeOnSuccess || _InvokeOnError || _InvokeOnCancel ? \
+  ASSERT(_InvokeOnSuccess || _InvokeOnError || _InvokeOnCancel ? \
     _CompletionRoutine != NULL : TRUE); \
   _IrpSp = IoGetNextIrpStackLocation(_Irp); \
   _IrpSp->CompletionRoutine = (PIO_COMPLETION_ROUTINE)(_CompletionRoutine); \
@@ -8008,10 +8006,10 @@ MmUnsecureVirtualMemory(
 #define MmPrepareMdlForReuse(_Mdl) \
 { \
   if (((_Mdl)->MdlFlags & MDL_PARTIAL_HAS_BEEN_MAPPED) != 0) { \
-    assert(((_Mdl)->MdlFlags & MDL_PARTIAL) != 0); \
+    ASSERT(((_Mdl)->MdlFlags & MDL_PARTIAL) != 0); \
     MmUnmapLockedPages((_Mdl)->MappedSystemVa, (_Mdl)); \
   } else if (((_Mdl)->MdlFlags & MDL_PARTIAL) == 0) { \
-    assert(((_Mdl)->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA) == 0); \
+    ASSERT(((_Mdl)->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA) == 0); \
   } \
 }
 
