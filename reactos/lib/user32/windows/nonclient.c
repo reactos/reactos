@@ -882,79 +882,75 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
 VOID
 DefWndDoButton(HWND hWnd, WPARAM wParam)
 {
-  MSG Msg;
-  BOOL InBtn, HasBtn = FALSE;
-  ULONG Btn, Style;
-  WPARAM SCMsg, CurBtn = wParam, OrigBtn = wParam;
-  HDC WindowDC = NULL;
+   MSG Msg;
+   HDC WindowDC;
+   BOOL Pressed = TRUE, OldState;
+   WPARAM SCMsg;
+   ULONG ButtonType, Style;
   
-  Style = GetWindowLongW(hWnd, GWL_STYLE);
-  switch(wParam)
-  {
-    case HTCLOSE:
-      Btn = DFCS_CAPTIONCLOSE;
-      SCMsg = SC_CLOSE;
-      HasBtn = (Style & WS_SYSMENU);
-      break;
-    case HTMINBUTTON:
-      Btn = DFCS_CAPTIONMIN;
-      SCMsg = ((Style & WS_MINIMIZE) ? SC_RESTORE : SC_MINIMIZE);
-      HasBtn = (Style & WS_MINIMIZEBOX);
-      break;
-    case HTMAXBUTTON:
-      Btn = DFCS_CAPTIONMAX;
-      SCMsg = ((Style & WS_MAXIMIZE) ? SC_RESTORE : SC_MAXIMIZE);
-      HasBtn = (Style & WS_MAXIMIZEBOX);
-      break;
-    default:
-      return;
-  }
+   Style = GetWindowLongW(hWnd, GWL_STYLE);
+   switch (wParam)
+   {
+      case HTCLOSE:
+         if (!(Style & WS_SYSMENU))
+            return;
+         ButtonType = DFCS_CAPTIONCLOSE;
+         SCMsg = SC_CLOSE;
+         break;
+      case HTMINBUTTON:
+         if (!(Style & WS_MINIMIZEBOX))
+            return;
+         ButtonType = DFCS_CAPTIONMIN;
+         SCMsg = ((Style & WS_MINIMIZE) ? SC_RESTORE : SC_MINIMIZE);
+         break;
+      case HTMAXBUTTON:
+         if (!(Style & WS_MAXIMIZEBOX))
+            return;
+         ButtonType = DFCS_CAPTIONMAX;
+         SCMsg = ((Style & WS_MAXIMIZE) ? SC_RESTORE : SC_MAXIMIZE);
+         break;
+
+      default:
+         ASSERT(FALSE);
+         return;
+   }
   
-  InBtn = HasBtn;
+   /*
+    * FIXME: Not sure where to do this, but we must flush the pending
+    * window updates when someone clicks on the close button and at
+    * the same time the window is overlapped with another one. This
+    * looks like a good place for now...
+    */
+   UpdateWindow(hWnd);
+
+   WindowDC = GetWindowDC(hWnd);
+   UserDrawCaptionButtonWnd(hWnd, WindowDC, TRUE, ButtonType);
+
+   SetCapture(hWnd);
   
-  SetCapture(hWnd);
+   for (;;)
+   {
+      if (GetMessageW(&Msg, 0, WM_MOUSEFIRST, WM_MOUSELAST) <= 0)
+         break;
+    
+      if (Msg.message == WM_LBUTTONUP)
+         break;
+
+      if (Msg.message != WM_MOUSEMOVE)
+         continue;
+
+      OldState = Pressed;
+      Pressed = (DefWndNCHitTest(hWnd, Msg.pt) == wParam);
+      if (Pressed != OldState)
+         UserDrawCaptionButtonWnd(hWnd, WindowDC, Pressed, ButtonType);
+   }
   
-  if(HasBtn)
-  {
-    WindowDC = GetWindowDC(hWnd);
-    UserDrawCaptionButtonWnd(hWnd, WindowDC, HasBtn , Btn);
-  }
-  
- for(;;)
-  {
-    GetMessageW(&Msg, 0, 0, 0);
-    switch(Msg.message)
-    {
-      case WM_LBUTTONUP:
-        if(InBtn)
-          goto done;
-        else
-        {
-          ReleaseCapture();
-          if (HasBtn)
-            ReleaseDC(hWnd, WindowDC);
-          return;
-        }
-      case WM_MOUSEMOVE:
-        if(HasBtn)
-        {
-          CurBtn = DefWndNCHitTest(hWnd, Msg.pt);
-          if(InBtn != (CurBtn == OrigBtn))
-          {
-            UserDrawCaptionButtonWnd( hWnd, WindowDC, (CurBtn == OrigBtn) , Btn);
-          }
-          InBtn = CurBtn == OrigBtn;
-        }
-        break;
-    }
-  }
-  
-done:
-  UserDrawCaptionButtonWnd( hWnd, WindowDC, FALSE , Btn);
-  ReleaseDC(hWnd, WindowDC);
-  ReleaseCapture();
-  SendMessageW(hWnd, WM_SYSCOMMAND, SCMsg, 0);
-  return;
+   if (Pressed)
+      UserDrawCaptionButtonWnd(hWnd, WindowDC, FALSE, ButtonType);
+   ReleaseCapture();
+   ReleaseDC(hWnd, WindowDC);
+   if (Pressed)
+      SendMessageW(hWnd, WM_SYSCOMMAND, SCMsg, 0);
 }
 
 

@@ -317,7 +317,8 @@ DefWndStartSizeMove(HWND hWnd, WPARAM wParam, POINT *capturePoint)
     {
       while(!hittest)
 	{
-	  GetMessageW(&msg, NULL, 0, 0);
+	  if (GetMessageW(&msg, NULL, 0, 0) <= 0)
+	    break;
 	  switch(msg.message)
 	    {
 	    case WM_MOUSEMOVE:
@@ -572,7 +573,8 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
     {
       int dx = 0, dy = 0;
 
-      GetMessageW(&msg, 0, 0, 0);
+      if (GetMessageW(&msg, 0, 0, 0) <= 0)
+        break;
       
       /* Exit on button-up, Return, or Esc */
       if ((msg.message == WM_LBUTTONUP) ||
