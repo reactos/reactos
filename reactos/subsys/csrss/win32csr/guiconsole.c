@@ -1,4 +1,4 @@
-/* $Id: guiconsole.c,v 1.3 2003/12/07 23:02:57 gvg Exp $
+/* $Id: guiconsole.c,v 1.4 2003/12/18 09:51:08 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -482,6 +482,7 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                                   NULL,
                                   (HINSTANCE) GetModuleHandleW(NULL),
                                   (PVOID) Console);
+Console->hWindow = NewWindow;
         if (NULL != NewWindow)
           {
             SetWindowLongW(hWnd, GWL_USERDATA, GetWindowLongW(hWnd, GWL_USERDATA) + 1);
@@ -645,9 +646,15 @@ GuiConsoleInitConsole(PCSRSS_CONSOLE Console)
 {
   Console->Size.X = 80;
   Console->Size.Y = 25;
+#ifdef TODO
   Console->hWindow = (HWND) SendMessageW(NotifyWnd, PM_CREATE_CONSOLE, 0, (LPARAM) Console);
 
   return NULL != Console->hWindow;
+#else
+  PostMessageW(NotifyWnd, PM_CREATE_CONSOLE, 0, (LPARAM) Console);
+
+  return TRUE;
+#endif
 }
 
 VOID STDCALL

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.72 2003/10/31 16:27:01 navaraf Exp $
+/* $Id: create.c,v 1.73 2003/12/18 09:51:08 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -712,6 +712,8 @@ CreateProcessW
    WCHAR TempCommandLineNameW[256];
    UNICODE_STRING RuntimeInfo_U;
    PVOID ImageBaseAddress;
+   BOOL InputSet, OutputSet, ErrorSet;
+   BOOL InputDup, OutputDup, ErrorDup;
 
    DPRINT("CreateProcessW(lpApplicationName '%S', lpCommandLine '%S')\n",
 	   lpApplicationName, lpCommandLine);
@@ -1044,11 +1046,18 @@ CreateProcessW
    CsrRequest.Data.CreateProcessRequest.NewProcessId = 
      ProcessBasicInfo.UniqueProcessId;
    if (Sii.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI)
-   {
-      /* Do not create a console for GUI applications */
-      dwCreationFlags &= ~CREATE_NEW_CONSOLE;
-      dwCreationFlags |= DETACHED_PROCESS;
-   }
+     {
+        /* Do not create a console for GUI applications */
+        dwCreationFlags &= ~CREATE_NEW_CONSOLE;
+        dwCreationFlags |= DETACHED_PROCESS;
+     }
+   else if (Sii.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_CUI)
+     {
+        if (NULL == Ppb->hConsole)
+          {
+            dwCreationFlags |= CREATE_NEW_CONSOLE;
+          }
+     }
    CsrRequest.Data.CreateProcessRequest.Flags = dwCreationFlags;
    CsrRequest.Data.CreateProcessRequest.CtrlDispatcher = ConsoleControlDispatcher;
    Status = CsrClientCallServer(&CsrRequest, 
@@ -1059,92 +1068,163 @@ CreateProcessW
      {
 	DbgPrint("Failed to tell csrss about new process. Expect trouble.\n");
      }
+   else if (Sii.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_CUI)
+     {
+       Ppb->hConsole = CsrReply.Data.CreateProcessReply.Console;
+     }
 
-   // Set the child console handles 
-   Ppb->hStdInput = NtCurrentPeb()->ProcessParameters->hStdInput;
-   Ppb->hStdOutput = NtCurrentPeb()->ProcessParameters->hStdOutput;
-   Ppb->hStdError = NtCurrentPeb()->ProcessParameters->hStdError;
+   InputSet = FALSE;
+   OutputSet = FALSE;
+   ErrorSet = FALSE;
 
+   /* Set the child console handles */
+
+   /* First check if handles were passed in startup info */
    if (lpStartupInfo && (lpStartupInfo->dwFlags & STARTF_USESTDHANDLES))
    {
       if (lpStartupInfo->hStdInput)
+      {
 	 Ppb->hStdInput = lpStartupInfo->hStdInput;
+         InputSet = TRUE;
+         InputDup = TRUE;
+      }
       if (lpStartupInfo->hStdOutput)
+      {
 	 Ppb->hStdOutput = lpStartupInfo->hStdOutput;
+         OutputSet = TRUE;
+         OutputDup = TRUE;
+      }
       if (lpStartupInfo->hStdError)
+      {
 	 Ppb->hStdError = lpStartupInfo->hStdError;
-   }
-
-   if (IsConsoleHandle(Ppb->hStdInput))
-   {
-      Ppb->hStdInput = CsrReply.Data.CreateProcessReply.InputHandle;
-   }
-   else
-   {
-      DPRINT("Duplicate input handle\n");
-      Status = NtDuplicateObject (NtCurrentProcess(), 
-	                          Ppb->hStdInput,
-			          hProcess,
-			          &Ppb->hStdInput,
-			          0,
-			          TRUE,
-			          DUPLICATE_SAME_ACCESS);
-      if(!NT_SUCCESS(Status))
-      {
-	 DPRINT("NtDuplicateObject failed, status %x\n", Status);
+         ErrorSet = TRUE;
+         ErrorDup = TRUE;
       }
    }
 
-   if (IsConsoleHandle(Ppb->hStdOutput))
+   /* Check if new console was created, use it for input and output if
+      not overridden */
+   if (0 != (dwCreationFlags & CREATE_NEW_CONSOLE)
+       && NT_SUCCESS(Status) && NT_SUCCESS(CsrReply.Status))
    {
-      Ppb->hStdOutput = CsrReply.Data.CreateProcessReply.OutputHandle;
-   }
-   else
-   {
-      DPRINT("Duplicate output handle\n");
-      Status = NtDuplicateObject (NtCurrentProcess(), 
-	                          Ppb->hStdOutput,
-			          hProcess,
-			          &Ppb->hStdOutput,
-			          0,
-			          TRUE,
-			          DUPLICATE_SAME_ACCESS);
-      if(!NT_SUCCESS(Status))
+      if (! InputSet)
       {
-	 DPRINT("NtDuplicateObject failed, status %x\n", Status);
+         Ppb->hStdInput = CsrReply.Data.CreateProcessReply.InputHandle;
+         InputSet = TRUE;
+         InputDup = FALSE;
+      }
+      if (! OutputSet)
+      {
+         Ppb->hStdOutput = CsrReply.Data.CreateProcessReply.OutputHandle;
+         OutputSet = TRUE;
+         OutputDup = FALSE;
+      }
+      if (! ErrorSet)
+      {
+         Ppb->hStdError = CsrReply.Data.CreateProcessReply.OutputHandle;
+         ErrorSet = TRUE;
+         ErrorDup = FALSE;
       }
    }
-   if (IsConsoleHandle(Ppb->hStdError))
+
+   /* Use existing handles otherwise */
+   if (! InputSet)
    {
-      CsrRequest.Type = CSRSS_DUPLICATE_HANDLE;
-      CsrRequest.Data.DuplicateHandleRequest.ProcessId = ProcessBasicInfo.UniqueProcessId;
-      CsrRequest.Data.DuplicateHandleRequest.Handle = CsrReply.Data.CreateProcessReply.OutputHandle;
-      Status = CsrClientCallServer(&CsrRequest, 
-			  &CsrReply,
-			  sizeof(CSRSS_API_REQUEST),
-			  sizeof(CSRSS_API_REPLY));
-      if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrReply.Status))
+      Ppb->hStdInput = NtCurrentPeb()->ProcessParameters->hStdInput;
+      InputDup = TRUE;
+   }
+   if (! OutputSet)
+   {
+      Ppb->hStdOutput = NtCurrentPeb()->ProcessParameters->hStdOutput;
+      OutputDup = TRUE;
+   }
+   if (! ErrorSet)
+   {
+      Ppb->hStdError = NtCurrentPeb()->ProcessParameters->hStdError;
+      ErrorDup = TRUE;
+   }
+
+   /* Now duplicate handles if required */
+   if (InputDup)
+   {
+      if (IsConsoleHandle(Ppb->hStdInput))
       {
-	 Ppb->hStdError = INVALID_HANDLE_VALUE;
+         Ppb->hStdInput = CsrReply.Data.CreateProcessReply.InputHandle;
       }
       else
       {
-         Ppb->hStdError = CsrReply.Data.DuplicateHandleReply.Handle;
+         DPRINT("Duplicate input handle\n");
+         Status = NtDuplicateObject (NtCurrentProcess(), 
+                                     Ppb->hStdInput,
+                                     hProcess,
+                                     &Ppb->hStdInput,
+                                     0,
+                                     TRUE,
+                                     DUPLICATE_SAME_ACCESS);
+         if(!NT_SUCCESS(Status))
+         {
+	    DPRINT("NtDuplicateObject failed, status %x\n", Status);
+         }
       }
    }
-   else
+
+   if (OutputDup)
    {
-      DPRINT("Duplicate error handle\n");
-      Status = NtDuplicateObject (NtCurrentProcess(), 
-	                          Ppb->hStdError,
-			          hProcess,
-			          &Ppb->hStdError,
-			          0,
-			          TRUE,
-			          DUPLICATE_SAME_ACCESS);
-      if(!NT_SUCCESS(Status))
+      if (IsConsoleHandle(Ppb->hStdOutput))
       {
-	 DPRINT("NtDuplicateObject failed, status %x\n", Status);
+         Ppb->hStdOutput = CsrReply.Data.CreateProcessReply.OutputHandle;
+      }
+      else
+      {
+         DPRINT("Duplicate output handle\n");
+         Status = NtDuplicateObject (NtCurrentProcess(), 
+                                     Ppb->hStdOutput,
+                                     hProcess,
+                                     &Ppb->hStdOutput,
+                                     0,
+                                     TRUE,
+                                     DUPLICATE_SAME_ACCESS);
+         if(!NT_SUCCESS(Status))
+         {
+	    DPRINT("NtDuplicateObject failed, status %x\n", Status);
+         }
+      }
+   }
+
+   if (ErrorDup)
+   {
+      if (IsConsoleHandle(Ppb->hStdError))
+      {
+         CsrRequest.Type = CSRSS_DUPLICATE_HANDLE;
+         CsrRequest.Data.DuplicateHandleRequest.ProcessId = ProcessBasicInfo.UniqueProcessId;
+         CsrRequest.Data.DuplicateHandleRequest.Handle = CsrReply.Data.CreateProcessReply.OutputHandle;
+         Status = CsrClientCallServer(&CsrRequest, 
+                                      &CsrReply,
+                                      sizeof(CSRSS_API_REQUEST),
+                                      sizeof(CSRSS_API_REPLY));
+         if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrReply.Status))
+         {
+            Ppb->hStdError = INVALID_HANDLE_VALUE;
+         }
+         else
+         {
+            Ppb->hStdError = CsrReply.Data.DuplicateHandleReply.Handle;
+         }
+      }
+      else
+      {
+         DPRINT("Duplicate error handle\n");
+         Status = NtDuplicateObject (NtCurrentProcess(), 
+                                     Ppb->hStdError,
+                                     hProcess,
+                                     &Ppb->hStdError,
+                                     0,
+                                     TRUE,
+                                     DUPLICATE_SAME_ACCESS);
+         if(!NT_SUCCESS(Status))
+         {
+	    DPRINT("NtDuplicateObject failed, status %x\n", Status);
+         }
       }
    }
 

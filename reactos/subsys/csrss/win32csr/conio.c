@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.1 2003/12/02 11:38:46 gvg Exp $
+/* $Id: conio.c,v 1.2 2003/12/18 09:51:08 gvg Exp $
  *
  * reactos/subsys/csrss/win32csr/conio.c
  *
@@ -314,6 +314,7 @@ CSR_API(CsrAllocConsole)
       return Reply->Status;
     }
   ProcessData->Console = Console;
+  Reply->Data.AllocConsoleReply.Console = Console;
 
   /* add a reference count because the process is tied to the console */
   Console->Header.ReferenceCount++;

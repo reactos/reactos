@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.7 2003/08/18 11:55:43 hbirr Exp $
+/* $Id: cmd.c,v 1.8 2003/12/18 09:51:08 gvg Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -1227,9 +1227,6 @@ int main (int argc, char *argv[])
 #endif
 
   SetFileApisToOEM();
-
-  AllocConsole();
-
 
   hConsole = CreateFile(_T("CONOUT$"), GENERIC_READ|GENERIC_WRITE, 
                         FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, 

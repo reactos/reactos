@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.22 2003/12/07 00:04:20 weiden Exp $
+/* $Id: winlogon.c,v 1.23 2003/12/18 09:51:08 gvg Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -372,7 +372,7 @@ static BOOL DoLoginUser(PWCHAR Name, PWCHAR Password)
                           NULL,
                           NULL,
                           FALSE,
-                          DETACHED_PROCESS,
+                          CREATE_NEW_CONSOLE,
                           NULL,
                           CurrentDirectory,
                           &StartupInfo,

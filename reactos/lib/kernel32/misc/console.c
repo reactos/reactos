@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.70 2003/12/02 11:38:46 gvg Exp $
+/* $Id: console.c,v 1.71 2003/12/18 09:51:08 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -1253,6 +1253,7 @@ WINBOOL STDCALL AllocConsole(VOID)
 	 SetLastErrorByStatus ( Status );
 	 return FALSE;
       }
+   NtCurrentPeb()->ProcessParameters->hConsole = Reply.Data.AllocConsoleReply.Console;
    SetStdHandle( STD_INPUT_HANDLE, Reply.Data.AllocConsoleReply.InputHandle );
    SetStdHandle( STD_OUTPUT_HANDLE, Reply.Data.AllocConsoleReply.OutputHandle );
    hStdError = DuplicateConsoleHandle(Reply.Data.AllocConsoleReply.OutputHandle,

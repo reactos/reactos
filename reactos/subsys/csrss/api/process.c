@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.30 2003/12/02 11:38:47 gvg Exp $
+/* $Id: process.c,v 1.31 2003/12/18 09:51:08 gvg Exp $
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -251,6 +251,8 @@ CSR_API(CsrCreateProcess)
        InsertHeadList(&NewProcessData->Console->ProcessList, &NewProcessData->ProcessEntry);
        RtlLeaveCriticalSection(&ProcessDataLock);
      }
+
+   Reply->Data.CreateProcessReply.Console = NewProcessData->Console;
 
    Reply->Status = STATUS_SUCCESS;
    return(STATUS_SUCCESS);

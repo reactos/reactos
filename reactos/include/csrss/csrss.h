@@ -32,6 +32,7 @@ typedef struct
 
 typedef struct
 {
+   HANDLE Console;
    HANDLE InputHandle;
    HANDLE OutputHandle;
 } CSRSS_CREATE_PROCESS_REPLY, *PCSRSS_CREATE_PROCESS_REPLY;
@@ -77,6 +78,7 @@ typedef struct
 
 typedef struct
 {
+   HANDLE Console;
    HANDLE InputHandle;
    HANDLE OutputHandle;
 } CSRSS_ALLOC_CONSOLE_REPLY, *PCSRSS_ALLOC_CONSOLE_REPLY;
