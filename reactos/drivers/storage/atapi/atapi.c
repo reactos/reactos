@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.56 2004/11/18 08:32:32 gvg Exp $
+/* $Id$
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -2223,6 +2223,17 @@ AtapiFlushCache(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   DPRINT("AtapiFlushCache() called!\n");
   DPRINT("SCSIOP_SYNCRONIZE_CACHE: TargetId: %lu\n",
 	 Srb->TargetId);
+
+  if (DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_ATAPI)
+    {
+      /* NOTE: Don't flush the cache for ATAPI devices. Although
+       * the ATAPI-6 standard allows that, it has been experimentally
+       * proved that it can damage some broken LG drives. Afterall
+       * it doesn't make sense to flush cache on devices we don't 
+       * write to.
+       */
+      return STATUS_SUCCESS;
+    }
 
   /* Wait for BUSY to clear */
   for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++)
