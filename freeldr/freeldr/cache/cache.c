@@ -41,8 +41,11 @@ BOOL CacheInitializeDrive(ULONG DriveNumber)
 	PCACHE_BLOCK	NextCacheBlock;
 
 	// If we already have a cache for this drive then
-	// by all means lets keep it
-	if (CacheManagerInitialized && DriveNumber == CacheManagerDrive.DriveNumber)
+	// by all means lets keep it, unless it is a removable
+	// drive, in which case we'll invalidate the cache
+	if ((CacheManagerInitialized == TRUE) &&
+		(DriveNumber == CacheManagerDrive.DriveNumber) &&
+		(DriveNumber >= 0x80))
 	{
 		return TRUE;
 	}
@@ -85,7 +88,10 @@ BOOL CacheInitializeDrive(ULONG DriveNumber)
 	// If not then the block size is the size of one track
 	if (CacheManagerDrive.LbaSupported)
 	{
-		CacheManagerDrive.BlockSize = 128;
+		// FIXME: Temporarily reduced this to
+		// 64 sectors since not all BIOS calls
+		// support reading as many as 128 sectors
+		CacheManagerDrive.BlockSize = 64;//128;
 	}
 	else
 	{
