@@ -24,5 +24,7 @@
 #define isspaceW(n) iswspace((wint_t)n)
 #define atoiW(s) _wtoi((const wchar_t *)s)
 #define atolW(s) _wtol((const wchar_t *)s)
+#define strlwrW(s) _wcslwr((wchar_t *)s)
+#define struprW(s) _wcsupr((wchar_t *)s)
 
 #endif
