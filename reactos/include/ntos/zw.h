@@ -465,46 +465,24 @@ ZwCompleteConnectPort (HANDLE PortHandle);
 
 
 NTSTATUS STDCALL
-NtConnectPort(OUT PHANDLE PortHandle,
-              IN PUNICODE_STRING PortName,
-              IN PSECURITY_QUALITY_OF_SERVICE SecurityQos,
-              IN OUT PLPC_SECTION_WRITE ClientSharedMemory  OPTIONAL,
-              OUT PLPC_SECTION_READ ServerSharedMemory  OPTIONAL,
-              OUT PULONG MaxMessageSize  OPTIONAL,
-              IN PVOID ConnectInfo  OPTIONAL,
-              IN PULONG ConnectInfoLength  OPTIONAL);
+NtConnectPort (PHANDLE PortHandle,
+	       PUNICODE_STRING PortName,
+	       PSECURITY_QUALITY_OF_SERVICE SecurityQos,
+	       PLPC_SECTION_WRITE SectionInfo,
+	       PLPC_SECTION_READ MapInfo,
+	       PULONG MaxMessageSize,
+	       PVOID ConnectInfo,
+	       PULONG ConnectInfoLength);
 
 NTSTATUS STDCALL
-ZwConnectPort(OUT PHANDLE PortHandle,
-              IN PUNICODE_STRING PortName,
-              IN PSECURITY_QUALITY_OF_SERVICE SecurityQos,
-              IN OUT PLPC_SECTION_WRITE ClientSharedMemory  OPTIONAL,
-              OUT PLPC_SECTION_READ ServerSharedMemory  OPTIONAL,
-              OUT PULONG MaxMessageSize  OPTIONAL,
-              IN PVOID ConnectInfo  OPTIONAL,
-              IN PULONG ConnectInfoLength  OPTIONAL);
-
-NTSTATUS STDCALL
-NtSecureConnectPort(OUT PHANDLE PortHandle,
-                    IN PUNICODE_STRING PortName,
-                    IN PSECURITY_QUALITY_OF_SERVICE SecurityQos,
-                    IN OUT PLPC_SECTION_WRITE ClientSharedMemory  OPTIONAL,
-                    IN PSID ServerSid  OPTIONAL,
-                    OUT PLPC_SECTION_READ ServerSharedMemory  OPTIONAL,
-                    OUT PULONG MaxMessageSize  OPTIONAL,
-                    IN PVOID ConnectInfo  OPTIONAL,
-                    IN PULONG ConnectInfoLength  OPTIONAL);
-
-NTSTATUS STDCALL
-ZwSecureConnectPort(OUT PHANDLE PortHandle,
-                    IN PUNICODE_STRING PortName,
-                    IN PSECURITY_QUALITY_OF_SERVICE SecurityQos,
-                    IN OUT PLPC_SECTION_WRITE ClientSharedMemory  OPTIONAL,
-                    IN PSID ServerSid  OPTIONAL,
-                    OUT PLPC_SECTION_READ ServerSharedMemory  OPTIONAL,
-                    OUT PULONG MaxMessageSize  OPTIONAL,
-                    IN PVOID ConnectInfo  OPTIONAL,
-                    IN PULONG ConnectInfoLength  OPTIONAL);
+ZwConnectPort (PHANDLE PortHandle,
+	       PUNICODE_STRING PortName,
+	       PSECURITY_QUALITY_OF_SERVICE SecurityQos,
+	       PLPC_SECTION_WRITE SectionInfo,
+	       PLPC_SECTION_READ MapInfo,
+	       PULONG MaxMessageSize,
+	       PVOID ConnectInfo,
+	       PULONG ConnectInfoLength);
 
 /*
  * FUNCTION: Creates a directory object
