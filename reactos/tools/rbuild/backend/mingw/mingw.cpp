@@ -230,21 +230,15 @@ MingwBackend::GetBuildToolDependencies () const
 void
 MingwBackend::GenerateInitTarget () const
 {
+	string tools = "$(ROS_INTERMEDIATE)." SSEP "tools";
 	fprintf ( fMakefile,
-	          "init:");
-	fprintf ( fMakefile,
-	          " $(ROS_INTERMEDIATE)." SSEP "tools" );
-	fprintf ( fMakefile,
-	          " %s",
+	          "INIT = %s %s\n",
+	          tools.c_str (),
 	          GetBuildToolDependencies ().c_str () );
-	fprintf ( fMakefile,
-	          " %s",
-	          "include" SSEP "reactos" SSEP "buildno.h" );
-	fprintf ( fMakefile,
-	          "\n\t\n\n" );
 
 	fprintf ( fMakefile,
-	          "$(ROS_INTERMEDIATE)." SSEP "tools:\n" );
+	          "%s:\n",
+	          tools.c_str () );
 	fprintf ( fMakefile,
 	          "ifneq ($(ROS_INTERMEDIATE),)\n" );
 	fprintf ( fMakefile,
@@ -332,8 +326,17 @@ FixupTargetFilename ( const string& targetFilename )
 void
 MingwBackend::DetectPCHSupport()
 {
+#ifdef WIN32
+	string sNUL = "NUL";
+#else
+	string sNUL = "/dev/null";
+#endif
 	string path = "tools" SSEP "rbuild" SSEP "backend" SSEP "mingw" SSEP "pch_detection.h";
-	system ( ssprintf("gcc -c %s", path.c_str()).c_str() );
+	string cmd = ssprintf(
+		"gcc -c %s 2>%s",
+		path.c_str (),
+		sNUL.c_str () );
+	system ( cmd.c_str() );
 	path += ".gch";
 
 	FILE* f = fopen ( path.c_str(), "rb" );

@@ -133,9 +133,9 @@ enum ModuleType
 
 enum HostType
 {
+	HostFalse,
 	HostDefault,
-	HostTrue,
-	HostFalse
+	HostTrue
 };
 
 class Module

@@ -60,6 +60,8 @@ protected:
 	std::string GetLibsMacro ( const Module& module ) const;
 	std::string GetLinkerMacro ( const Module& module ) const;
 	void GenerateLinkerCommand ( const Module& module,
+	                             const std::string& target,
+	                             const std::string& dependencies,
 	                             const std::string& linker,
 	                             const std::string& linkerParameters,
 	                             const std::string& objectsMacro,
@@ -314,21 +316,21 @@ public:
 	virtual void Process ( const Module& module, string_list& clean_files );
 private:
 	void GenerateIsoModuleTarget ( const Module& module, string_list& clean_files );
-	std::string GetBootstrapCdDirectories ( const std::string bootcdDirectory,
+	std::string GetBootstrapCdDirectories ( const std::string& bootcdDirectory,
 	                                        const Module& module ) const;
-	std::string GetNonModuleCdDirectories ( const std::string bootcdDirectory,
+	std::string GetNonModuleCdDirectories ( const std::string& bootcdDirectory,
 	                                        const Module& module ) const;
-	std::string GetCdDirectories ( const std::string bootcdDirectory,
+	std::string GetCdDirectories ( const std::string& bootcdDirectory,
 	                               const Module& module ) const;
-	std::string GetBootstrapCdFiles ( const std::string bootcdDirectory,
-	                                  const Module& module ) const;
-	std::string GetNonModuleCdFiles ( const std::string bootcdDirectory,
-	                                  const Module& module ) const;
-	std::string GetCdFiles ( const std::string bootcdDirectory,
-	                         const Module& module ) const;
-	void OutputBootstrapfileCopyCommands ( const std::string bootcdDirectory,
+	void GetBootstrapCdFiles ( std::vector<std::string>& out,
+	                           const Module& module ) const;
+	void GetNonModuleCdFiles ( std::vector<std::string>& out,
+	                           const Module& module ) const;
+	void GetCdFiles ( std::vector<std::string>& out,
+	                  const Module& module ) const;
+	void OutputBootstrapfileCopyCommands ( const std::string& bootcdDirectory,
 	                                       const Module& module ) const;
-	void OutputCdfileCopyCommands ( const std::string bootcdDirectory,
+	void OutputCdfileCopyCommands ( const std::string& bootcdDirectory,
 	                                const Module& module ) const;
 };
 
