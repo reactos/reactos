@@ -1,4 +1,4 @@
-/* $Id: itow.c,v 1.4 2003/07/11 17:25:32 royce Exp $
+/* $Id: itow.c,v 1.5 2003/07/15 19:27:25 royce Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -19,7 +19,10 @@
 
 /*
  * @implemented
+ *
+ * this function is now forwarded to NTDLL._itow to reduce code duplication
  */
+#if 0
 wchar_t* _itow(int value, wchar_t* string, int radix)
 {
     wchar_t     tmp [33];
@@ -65,10 +68,14 @@ wchar_t* _itow(int value, wchar_t* string, int radix)
     *sp = (wchar_t) 0;
     return string;
 }
+#endif
 
 /*
  * @implemented
+ *
+ * this function is now forwarded to NTDLL._ltow to reduce code duplication
  */
+#if 0
 wchar_t* _ltow(long value, wchar_t* string, int radix)
 {
     wchar_t         tmp [33];
@@ -113,10 +120,14 @@ wchar_t* _ltow(long value, wchar_t* string, int radix)
     *sp = (wchar_t) 0;
     return string;
 }
+#endif
 
 /*
  * @implemented
+ *
+ * this function is now forwarded to NTDLL._ultow to reduce code duplication
  */
+#if 0
 wchar_t* _ultow(unsigned long value, wchar_t* string, int radix)
 {
     wchar_t         tmp [33];
@@ -154,3 +165,4 @@ wchar_t* _ultow(unsigned long value, wchar_t* string, int radix)
     *sp = (wchar_t) 0;
     return string;
 }
+#endif

@@ -209,7 +209,8 @@ static BOOL pendingRename()
         } else
         {
             /* Delete the file or directory */
-            if( (res=GetFileAttributesW(src))!=INVALID_FILE_ATTRIBUTES )
+			res = GetFileAttributesW ( src );
+            if ( res != (DWORD)-1 )
             {
                 if( (res&FILE_ATTRIBUTE_DIRECTORY)==0 )
                 {

@@ -17,7 +17,10 @@
 
 /*
  * @implemented
+ *
+ * this function is now forwarded to NTDLL._itoa to reduce code duplication
  */
+#if 0
 char* _itoa(int value, char* string, int radix)
 {
   char tmp[33];
@@ -59,10 +62,14 @@ char* _itoa(int value, char* string, int radix)
   *sp = 0;
   return string;
 }
+#endif
 
 /*
  * @implemented
+ *
+ * this function is now forwarded to NTDLL._ltoa to reduce code duplication
  */
+#if 0
 char* _ltoa(long value, char* string, int radix)
 {
   char tmp[33];
@@ -104,10 +111,14 @@ char* _ltoa(long value, char* string, int radix)
   *sp = 0;
   return string;
 }
+#endif
 
 /*
  * @implemented
+ *
+ * this function is now forwarded to NTDLL._ultoa to reduce code duplication
  */
+#if 0
 char* _ultoa(unsigned long value, char* string, int radix)
 {
   char tmp[33];
@@ -141,3 +152,4 @@ char* _ultoa(unsigned long value, char* string, int radix)
   *sp = 0;
   return string;
 }
+#endif
