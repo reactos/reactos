@@ -1,4 +1,4 @@
-/* $Id: import.c,v 1.17 2003/04/17 11:07:21 ekohl Exp $
+/* $Id: import.c,v 1.18 2003/04/24 12:28:57 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -866,9 +866,7 @@ BOOLEAN
 CmImportHardwareHive(PCHAR ChunkBase,
 		     ULONG ChunkSize)
 {
-#if 0
   PREGISTRY_HIVE RegistryHive;
-#endif
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING KeyName;
   HANDLE HardwareKey;
@@ -877,9 +875,11 @@ CmImportHardwareHive(PCHAR ChunkBase,
 
   DPRINT ("CmImportHardwareHive() called\n");
 
+  if (CmiHardwareHiveImported == TRUE)
+    return TRUE;
+
   if (ChunkBase == NULL &&
-      ChunkSize == 0 &&
-      CmiHardwareHiveImported == FALSE)
+      ChunkSize == 0)
     {
       /* Create '\Registry\Machine\HARDWARE' key. */
       RtlInitUnicodeString(&KeyName,
@@ -968,7 +968,6 @@ CmImportHardwareHive(PCHAR ChunkBase,
       return TRUE;
     }
 
-#if 0
   if (strncmp (ChunkBase, "regf", 4) != 0)
     {
       DPRINT1 ("Found invalid '%.*s' magic\n", 4, ChunkBase);
@@ -976,6 +975,7 @@ CmImportHardwareHive(PCHAR ChunkBase,
     }
 
   DPRINT ("Found '%.*s' magic\n", 4, ChunkBase);
+  DPRINT ("ChunkBase %lx  ChunkSize %lu\n", ChunkBase, ChunkSize);
 
   /* Import the binary system hive (volatile, offset-based, permanent) */
   if (!CmImportBinaryHive (ChunkBase, ChunkSize, HIVE_VOLATILE, &RegistryHive))
@@ -997,13 +997,12 @@ CmImportHardwareHive(PCHAR ChunkBase,
     }
 
   /* Set the hive filename */
-  RtlCreateUnicodeString (&RegistryHive->HiveFileName,
-			  NULL);
+  RtlInitUnicodeString (&RegistryHive->HiveFileName,
+			NULL);
 
   /* Set the log filename */
-  RtlCreateUnicodeString (&RegistryHive->LogFileName,
-			  NULL);
-#endif
+  RtlInitUnicodeString (&RegistryHive->LogFileName,
+			NULL);
 
   CmiHardwareHiveImported = TRUE;
 
