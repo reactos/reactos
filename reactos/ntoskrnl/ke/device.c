@@ -64,8 +64,8 @@ KeFlushEntireTb(
 	
 	/* All CPUs need to have the TB flushed. */
 	if (CurrentCpuOnly == FALSE) {
-	        Prcb = KeGetCurrentPrcb();
-
+		Prcb = KeGetCurrentPrcb();
+		
 		/* How many CPUs is our caller using? */
 		Process = Prcb->CurrentThread->ApcState.Process;
 		

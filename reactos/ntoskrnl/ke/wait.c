@@ -114,34 +114,34 @@ KiSideEffectsBeforeWake(DISPATCHER_HEADER * hdr,
 
    switch (hdr->Type)
    {
-      case InternalSynchronizationEvent:
+      case EventSynchronizationObject:
          hdr->SignalState = 0;
          break;
       
-      case InternalQueueType:
+      case QueueObject:
          break;
          
-      case InternalSemaphoreType:
+      case SemaphoreObject:
          hdr->SignalState--;
          break;
 
-      case InternalProcessType:
+      case ProcessObject:
          break;
 
       case ThreadObject:
          break;
 
-      case InternalNotificationEvent:
+      case EventNotificationObject:
          break;
 
-      case InternalSynchronizationTimer:
+      case TimerSynchronizationObject:
          hdr->SignalState = FALSE;
          break;
 
-      case InternalNotificationTimer:
+      case TimerNotificationObject:
          break;
 
-      case InternalMutexType:
+      case MutantObject:
       {
          PKMUTEX Mutex;
 
@@ -176,7 +176,7 @@ static BOOLEAN
 KiIsObjectSignalled(DISPATCHER_HEADER * hdr,
                     PKTHREAD Thread)
 {
-   if (hdr->Type == InternalMutexType)
+   if (hdr->Type == MutantObject)
    {
       PKMUTEX Mutex;
 
@@ -355,22 +355,22 @@ BOOLEAN KiDispatcherObjectWake(DISPATCHER_HEADER* hdr, KPRIORITY increment)
    DPRINT("hdr->Type %x\n",hdr->Type);
    switch (hdr->Type)
      {
-      case InternalNotificationEvent:
+      case EventNotificationObject:
 	return(KeDispatcherObjectWakeAll(hdr, increment));
 
-      case InternalNotificationTimer:
+      case TimerNotificationObject:
 	return(KeDispatcherObjectWakeAll(hdr, increment));
 
-      case InternalSynchronizationEvent:
+      case EventSynchronizationObject:
 	return(KeDispatcherObjectWakeOne(hdr, increment));
 
-      case InternalSynchronizationTimer:
+      case TimerSynchronizationObject:
 	return(KeDispatcherObjectWakeOne(hdr, increment));
 
-      case InternalQueueType:
+      case QueueObject:
 	return(KeDispatcherObjectWakeOne(hdr, increment));
       
-      case InternalSemaphoreType:
+      case SemaphoreObject:
 	DPRINT("hdr->SignalState %d\n", hdr->SignalState);
 	if(hdr->SignalState>0)
 	  {
@@ -383,13 +383,13 @@ BOOLEAN KiDispatcherObjectWake(DISPATCHER_HEADER* hdr, KPRIORITY increment)
 	  }
 	else return FALSE;
 
-     case InternalProcessType:
+     case ProcessObject:
 	return(KeDispatcherObjectWakeAll(hdr, increment));
 
      case ThreadObject:
        return(KeDispatcherObjectWakeAll(hdr, increment));
 
-     case InternalMutexType:
+     case MutantObject:
        return(KeDispatcherObjectWakeOne(hdr, increment));
      }
    DbgPrint("Dispatcher object %x has unknown type %d\n", hdr, hdr->Type);
@@ -463,7 +463,7 @@ PVOID
 KiGetWaitableObjectFromObject(PVOID Object)
 {
    //special case when waiting on file objects
-   if ( ((PDISPATCHER_HEADER)Object)->Type == InternalFileType)
+   if ( ((PDISPATCHER_HEADER)Object)->Type == IO_TYPE_FILE)
    {
       return &((PFILE_OBJECT)Object)->Event;
    }
@@ -1026,19 +1026,19 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
    hdr = (DISPATCHER_HEADER *)SignalObj;
    switch (hdr->Type)
      {
-      case InternalNotificationEvent:
-      case InternalSynchronizationEvent:
+      case EventNotificationObject:
+      case EventSynchronizationObject:
 	KeSetEvent(SignalObj,
 		   EVENT_INCREMENT,
 		   TRUE);
 	break;
 
-      case InternalMutexType:
+      case MutantObject:
 	KeReleaseMutex(SignalObj,
 		       TRUE);
 	break;
 
-      case InternalSemaphoreType:
+      case SemaphoreObject:
 	KeReleaseSemaphore(SignalObj,
 			   SEMAPHORE_INCREMENT,
 			   1,

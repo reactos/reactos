@@ -172,7 +172,9 @@ VOID KeContextToTrapFrame(PCONTEXT Context, PKTRAP_FRAME TrapFrame);
 VOID STDCALL KiDeliverApc(KPROCESSOR_MODE PreviousMode,
                   PVOID Reserved,
                   PKTRAP_FRAME TrapFrame);
-		  
+
+VOID STDCALL KeInitializeEventPair(PKEVENT_PAIR EventPair);
+
 VOID STDCALL KiInitializeUserApc(IN PVOID Reserved,
 			 IN PKTRAP_FRAME TrapFrame,
 			 IN PKNORMAL_ROUTINE NormalRoutine,

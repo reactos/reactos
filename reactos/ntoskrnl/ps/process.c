@@ -388,7 +388,7 @@ PsInitProcessManagment(VOID)
    PsInitialSystemProcess->Pcb.ThreadQuantum = 6;
    InitializeListHead(&PsInitialSystemProcess->Pcb.ThreadListHead);
    KeInitializeDispatcherHeader(&PsInitialSystemProcess->Pcb.DispatcherHeader,
-				InternalProcessType,
+				ProcessObject,
 				sizeof(EPROCESS),
 				FALSE);
    KProcess = &PsInitialSystemProcess->Pcb;
@@ -848,7 +848,7 @@ exitdereferenceobjects:
    }
 
    KeInitializeDispatcherHeader(&KProcess->DispatcherHeader,
-				InternalProcessType,
+				ProcessObject,
 				sizeof(EPROCESS),
 				FALSE);
 

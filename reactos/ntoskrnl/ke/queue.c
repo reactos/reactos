@@ -25,7 +25,7 @@ KeInitializeQueue(IN PKQUEUE Queue,
 		  IN ULONG Count OPTIONAL)
 {
   KeInitializeDispatcherHeader(&Queue->Header,
-			       InternalQueueType,
+			       QueueObject,
 			       sizeof(KQUEUE)/sizeof(ULONG),
 			       0);
   InitializeListHead(&Queue->EntryListHead);
