@@ -88,9 +88,7 @@ IntGdiPolygon(PDC    dc,
 
 	/* Now fill the polygon with the current brush. */
 	FillBrushObj = BRUSHOBJ_LockBrush(dc->w.hBrush);
-	/* FIXME - FillBrushObj can be NULL!!!!!!!! Don't Assert! */
-	ASSERT(FillBrushObj);
-	if (!(FillBrushObj->flAttrs & GDIBRUSH_IS_NULL))
+	if (FillBrushObj && !(FillBrushObj->flAttrs & GDIBRUSH_IS_NULL))
 	{
           IntGdiInitBrushInstance(&FillBrushInst, FillBrushObj, dc->XlateBrush);
 	  ret = FillPolygon ( dc, BitmapObj, &FillBrushInst.BrushObject, ROP2_TO_MIX(dc->w.ROPmode), UnsafePoints, Count, DestRect );
@@ -99,12 +97,10 @@ IntGdiPolygon(PDC    dc,
 
 	/* get BRUSHOBJ from current pen. */
 	PenBrushObj = PENOBJ_LockPen(dc->w.hPen);
-	/* FIXME - handle PenBrushObj == NULL !!!!! */
-        IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);
-
 	// Draw the Polygon Edges with the current pen ( if not a NULL pen )
-	if (!(PenBrushObj->flAttrs & GDIBRUSH_IS_NULL))
+	if (PenBrushObj && !(PenBrushObj->flAttrs & GDIBRUSH_IS_NULL))
 	{
+	  IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);
 	  for ( CurrentPoint = 0; CurrentPoint < Count; ++CurrentPoint )
 	  {
 	    POINT To, From; //, Next;
@@ -260,7 +256,7 @@ NtGdiEllipse(
    }
 
    BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
-   if (NULL = BitmapObj)
+   if (NULL == BitmapObj)
    {
       BRUSHOBJ_UnlockBrush(dc->w.hBrush);
       BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
@@ -968,14 +964,13 @@ IntRectangle(PDC dc,
     DestRect.bottom = BottomRect;
 
     FillBrushObj = BRUSHOBJ_LockBrush(dc->w.hBrush);
-    /* FIXME - Handle FillBrushObj == NULL !!!! */
-    IntGdiInitBrushInstance(&FillBrushInst, FillBrushObj, dc->XlateBrush);
 
     if ( FillBrushObj )
     {
       if (!(FillBrushObj->flAttrs & GDIBRUSH_IS_NULL))
       {
-	ret = IntEngBitBlt(BitmapObj,
+        IntGdiInitBrushInstance(&FillBrushInst, FillBrushObj, dc->XlateBrush);
+        ret = IntEngBitBlt(BitmapObj,
                            NULL,
                            NULL,
                            dc->CombinedClip,
