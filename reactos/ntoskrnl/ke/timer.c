@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.78 2004/09/28 15:02:29 weiden Exp $
+/* $Id: timer.c,v 1.79 2004/10/01 20:09:57 hbirr Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -37,6 +37,8 @@ CHAR KiTimerSystemAuditing = 0;
 volatile ULONGLONG KiKernelTime;
 volatile ULONGLONG KiUserTime;
 volatile ULONGLONG KiDpcTime;
+volatile ULONGLONG KiInterruptTime;
+volatile ULONG KiInterruptCount;
 
 /*
  * Number of timer interrupts since initialisation
@@ -60,7 +62,6 @@ static LIST_ENTRY AbsoluteTimerListHead;
 static LIST_ENTRY RelativeTimerListHead;
 static KSPIN_LOCK TimerListLock;
 static KSPIN_LOCK TimerValueLock;
-static KSPIN_LOCK TimeLock;
 static KDPC ExpireTimerDpc;
 
 /* must raise IRQL to PROFILE_LEVEL and grab spin lock there, to sync with ISR */
@@ -617,7 +618,7 @@ KeExpireTimers(PKDPC Dpc,
 
 VOID
 KiUpdateSystemTime(KIRQL oldIrql,
-		   ULONG Eip)
+		   PKIRQ_TRAPFRAME Tf)
 /*
  * FUNCTION: Handles a timer interrupt
  */
@@ -655,10 +656,13 @@ KiUpdateSystemTime(KIRQL oldIrql,
 
    KiReleaseSpinLock(&TimerValueLock);
 
+   /* Update process and thread times */
+   KiUpdateProcessThreadTime(oldIrql, Tf);
+
    /*
     * Queue a DPC that will expire timers
     */
-   KeInsertQueueDpc(&ExpireTimerDpc, (PVOID)Eip, 0);
+   KeInsertQueueDpc(&ExpireTimerDpc, (PVOID)Tf->Eip, 0);
 }
 
 
@@ -676,7 +680,6 @@ KeInitializeTimerImpl(VOID)
    InitializeListHead(&RelativeTimerListHead);
    KeInitializeSpinLock(&TimerListLock);
    KeInitializeSpinLock(&TimerValueLock);
-   KeInitializeSpinLock(&TimeLock);
    KeInitializeDpc(&ExpireTimerDpc, KeExpireTimers, 0);
    /*
     * Calculate the starting time for the system clock
@@ -699,12 +702,12 @@ KeInitializeTimerImpl(VOID)
 
 
 VOID
-KiUpdateProcessThreadTime(VOID)
+KiUpdateProcessThreadTime(KIRQL oldIrql, PKIRQ_TRAPFRAME Tf)
 {
    PKTHREAD CurrentThread;
-   PKPROCESS CurrentProcess;
+   PEPROCESS ThreadsProcess;
 
-   assert(KeGetCurrentIrql() == PASSIVE_LEVEL);
+
 /*
  *  Make sure no counting can take place until Processes and Threads are
  *  running!
@@ -715,31 +718,46 @@ KiUpdateProcessThreadTime(VOID)
        return;
      }
    	
-   CurrentProcess = KeGetCurrentProcess();
-   CurrentThread = KeGetCurrentThread();
-   
    DPRINT("KiKernelTime  %u, KiUserTime %u \n", KiKernelTime, KiUserTime);
 
-   /* Over kill with locks. */
-   KiAcquireSpinLock(&TimeLock);
-
-   if (CurrentThread->PreviousMode == UserMode)
-     {
-       /*  Lock the process & thread time. This should lock everything
-        *  all the way down to the process & thread stuct.
-        */
-       InterlockedIncrement((LONG *)&CurrentProcess->UserTime);
-       InterlockedIncrement((LONG *)&CurrentThread->UserTime);
-       ++KiUserTime;
-     }
-   if (CurrentThread->PreviousMode == KernelMode)
-     {
-       InterlockedIncrement((LONG *)&CurrentProcess->KernelTime);
-       InterlockedIncrement((LONG *)&CurrentThread->KernelTime);
-       ++KiKernelTime;
-     }
-
-    KiReleaseSpinLock(&TimeLock);       
+   if (oldIrql > DISPATCH_LEVEL)
+   {
+      KiInterruptTime++;
+   }
+   else if (oldIrql == DISPATCH_LEVEL)
+   {
+      KiDpcTime++;
+   }
+   else
+   {
+      CurrentThread = KeGetCurrentThread();
+      ThreadsProcess = ((PETHREAD)CurrentThread)->ThreadsProcess;
+      /* 
+       * Cs bit 0 is always set for user mode if we are in protected mode.
+       * V86 mode is counted as user time.
+       */
+      if (Tf->Cs & 0x1 ||
+	  Tf->Eflags & X86_EFLAGS_VM)
+      {
+#ifdef MP
+         InterlockedIncrement((PLONG)&ThreadsProcess->Pcb.UserTime);
+#else
+         ThreadsProcess->Pcb.UserTime++;
+#endif
+         CurrentThread->UserTime++;
+         KiUserTime++;
+      }
+      else
+      {
+#ifdef MP
+         InterlockedIncrement((PLONG)&ThreadsProcess->Pcb.KernelTime);
+#else
+         ThreadsProcess->Pcb.KernelTime++;  
+#endif
+         CurrentThread->KernelTime++;
+         KiKernelTime++;
+      }  	
+   }
 } 
 
 /*

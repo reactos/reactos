@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: irq.c,v 1.45 2004/08/15 16:39:05 chorns Exp $
+/* $Id: irq.c,v 1.46 2004/10/01 20:09:57 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/irq.c
@@ -246,25 +246,6 @@ KeInitInterrupts (VOID)
 
 }
 
-typedef struct _KIRQ_TRAPFRAME
-{
-   ULONG Magic;
-   ULONG Fs;
-   ULONG Es;
-   ULONG Ds;
-   ULONG Eax;
-   ULONG Ecx;
-   ULONG Edx;
-   ULONG Ebx;
-   ULONG Esp;
-   ULONG Ebp;
-   ULONG Esi;
-   ULONG Edi;
-   ULONG Eip;
-   ULONG Cs;
-   ULONG Eflags;
-} KIRQ_TRAPFRAME, *PKIRQ_TRAPFRAME;
-
 VOID
 KeIRQTrapFrameToTrapFrame(PKIRQ_TRAPFRAME IrqTrapFrame,
   PKTRAP_FRAME TrapFrame)
@@ -425,30 +406,23 @@ KiInterruptDispatch2 (ULONG Irq, KIRQL old_level)
   PKINTERRUPT isr;
   PLIST_ENTRY current;
 
-  if (Irq == 0)
-    {
-      KiUpdateSystemTime(old_level, 0);
-    }
-  else
-    {
-      /*
-       * Iterate the list until one of the isr tells us its device interrupted
-       */
-      current = isr_table[Irq].Flink;
-      while (current != &isr_table[Irq])
-      { 
-          isr = CONTAINING_RECORD(current,KINTERRUPT,Entry);
+  /*
+   * Iterate the list until one of the isr tells us its device interrupted
+   */
+  current = isr_table[Irq].Flink;
+  while (current != &isr_table[Irq])
+  { 
+     isr = CONTAINING_RECORD(current,KINTERRUPT,Entry);
 #if 0
-	  if (isr->ServiceRoutine(isr, isr->ServiceContext))
-	  {
-	     break;
-	  }
+     if (isr->ServiceRoutine(isr, isr->ServiceContext))
+     {
+        break;
+     }
 #else
-	  isr->ServiceRoutine(isr, isr->ServiceContext);
+     isr->ServiceRoutine(isr, isr->ServiceContext);
 #endif
-	  current = current->Flink;
-      }
-   }
+     current = current->Flink;
+  }
 }
 
 VOID 
@@ -468,6 +442,8 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
     * At this point we have interrupts disabled, nothing has been done to
     * the PIC.
     */
+    
+   KiInterruptCount++;
 
    /*
     * Notify the rest of the kernel of the raised irq level. For the
@@ -487,10 +463,18 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
     */
    Ke386EnableInterrupts();
 
-   /*
-    * Actually call the ISR.
-    */
-   KiInterruptDispatch2(irq, old_level);
+
+   if (irq == 0)
+   {
+      KiUpdateSystemTime(old_level, Trapframe);
+   }
+   else
+   {
+     /*
+      * Actually call the ISR.
+      */
+     KiInterruptDispatch2(irq, old_level);
+   }
 
 #ifdef KDBG
    if (irq == 0)
@@ -514,11 +498,6 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
    Ke386DisableInterrupts();
 
    HalEndSystemInterrupt (old_level, 0);
-
-   if (old_level==PASSIVE_LEVEL)
-     {
-       KiUpdateProcessThreadTime();
-     }
 
    if (old_level==PASSIVE_LEVEL && Trapframe->Cs != KERNEL_CS)
      {

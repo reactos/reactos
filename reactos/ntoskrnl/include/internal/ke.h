@@ -39,6 +39,7 @@ VOID KeSetGdtSelector(ULONG Entry, ULONG Value1, ULONG Value2);
 #ifndef __ASM__
 
 struct _KTHREAD;
+struct _KIRQ_TRAPFRAME;
 
 VOID STDCALL 
 DbgBreakPointNoBugCheck(VOID);
@@ -73,7 +74,7 @@ KeUpdateSystemTime(
 	IN ULONG  			Increment
 );
 
-VOID KiUpdateSystemTime (KIRQL oldIrql, ULONG Eip);
+VOID KiUpdateSystemTime (KIRQL oldIrql, struct _KIRQ_TRAPFRAME* Tf);
 
 KIRQL KeAcquireDispatcherDatabaseLock(VOID);
 VOID KeAcquireDispatcherDatabaseLockAtDpcLevel(VOID);
@@ -102,6 +103,8 @@ extern LARGE_INTEGER SystemBootTime;
 extern volatile ULONGLONG KiKernelTime;
 extern volatile ULONGLONG KiUserTime;
 extern volatile ULONGLONG KiDpcTime;
+extern volatile ULONGLONG KiInterruptTime;
+extern volatile ULONG KiInterruptCount;
 
 
 /* INITIALIZATION FUNCTIONS *************************************************/
@@ -158,7 +161,7 @@ VOID
 KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG ExceptionNr, ULONG cr2);
 
 VOID
-KiUpdateProcessThreadTime(VOID);
+KiUpdateProcessThreadTime(KIRQL pldIrql, struct _KIRQ_TRAPFRAME* Tf);
 
 VOID
 STDCALL

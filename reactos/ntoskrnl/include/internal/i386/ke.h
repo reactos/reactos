@@ -119,6 +119,27 @@ typedef struct _KTRAP_FRAME
    USHORT Reserved9;
 } KTRAP_FRAME, *PKTRAP_FRAME;
 
+typedef struct _KIRQ_TRAPFRAME
+{
+   ULONG Magic;
+   ULONG Fs;
+   ULONG Es;
+   ULONG Ds;
+   ULONG Eax;
+   ULONG Ecx;
+   ULONG Edx;
+   ULONG Ebx;
+   ULONG Esp;
+   ULONG Ebp;
+   ULONG Esi;
+   ULONG Edi;
+   ULONG Eip;
+   ULONG Cs;
+   ULONG Eflags;
+} KIRQ_TRAPFRAME, *PKIRQ_TRAPFRAME;
+
+extern ULONG Ke386CacheAlignment;
+
 struct _KPCR;
 VOID
 KiInitializeGdt(struct _KPCR* Pcr);
@@ -135,7 +156,7 @@ VOID KeFreeGdtSelector(ULONG Entry);
 VOID
 NtEarlyInitVdm(VOID);
 
-
+#define X86_EFLAGS_VM	    0x00020000 /* Virtual Mode */
 #define X86_EFLAGS_ID	    0x00200000 /* CPUID detection flag */
 
 #define X86_CR4_PAE	    0x00000020 /* enable physical address extensions */

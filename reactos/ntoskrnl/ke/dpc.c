@@ -18,7 +18,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dpc.c,v 1.35 2004/08/21 21:09:39 tamlin Exp $
+/* $Id: dpc.c,v 1.36 2004/10/01 20:09:57 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -40,15 +40,12 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-extern volatile ULONGLONG KeTickCount;
-
 /* TYPES *******************************************************************/
 
 /* GLOBALS ******************************************************************/
 
 static LIST_ENTRY DpcQueueHead; /* Head of the list of pending DPCs */
 static KSPIN_LOCK DpcQueueLock; /* Lock for the above list */
-static ULONGLONG DpcTimeInside = 0;
 
 /*
  * Number of pending DPCs. This is inspected by
@@ -109,7 +106,6 @@ KiDispatchInterrupt(VOID)
    KeRaiseIrql(HIGH_LEVEL, &oldlvl);
    KiAcquireSpinLock(&DpcQueueLock);
 
-   DpcTimeInside = KeTickCount;
    DpcCount = DpcCount + DpcQueueSize;
    
    while (!IsListEmpty(&DpcQueueHead))
@@ -130,7 +126,6 @@ KiDispatchInterrupt(VOID)
       KeRaiseIrql(HIGH_LEVEL, &oldlvl);
       KiAcquireSpinLock(&DpcQueueLock);
    }
-   KiDpcTime += (KeTickCount - DpcTimeInside);
 
    KiReleaseSpinLock(&DpcQueueLock);
    KeLowerIrql(oldlvl);

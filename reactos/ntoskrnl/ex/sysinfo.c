@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.48 2004/09/30 21:14:24 ea Exp $
+/* $Id: sysinfo.c,v 1.49 2004/10/01 20:09:56 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -720,8 +720,8 @@ QSI_DEF(SystemProcessorPerformanceInformation)
         Spi->TotalProcessorTime.QuadPart =  KiKernelTime * 100000LL; // KernelTime
         Spi->TotalProcessorUserTime.QuadPart = KiUserTime * 100000LL;
         Spi->TotalDPCTime.QuadPart = KiDpcTime * 100000LL;
-        Spi->TotalInterruptTime = CurrentTime;
-        Spi->TotalInterrupts = CurrentTime.QuadPart / 100000LL; // Interrupt Count
+        Spi->TotalInterruptTime.QuadPart = KiInterruptTime * 100000LL;
+        Spi->TotalInterrupts = KiInterruptCount; // Interrupt Count
 
 	ObDereferenceObject(TheIdleProcess);
         
