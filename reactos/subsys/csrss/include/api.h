@@ -1,4 +1,4 @@
-/* $Id: api.h,v 1.6 2004/07/12 20:09:34 gvg Exp $
+/* $Id: api.h,v 1.7 2004/11/14 18:47:10 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -124,6 +124,7 @@ CSR_API(CsrGetOutputHandle);
 CSR_API(CsrCloseHandle);
 CSR_API(CsrVerifyHandle);
 CSR_API(CsrDuplicateHandle);
+CSR_API(CsrGetInputWaitHandle);
 
 /* api/user.c */
 CSR_API(CsrRegisterServicesProcess);

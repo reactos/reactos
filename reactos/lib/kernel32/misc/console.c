@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.82 2004/11/02 20:42:05 weiden Exp $
+/* $Id: console.c,v 1.83 2004/11/14 18:47:09 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -559,7 +559,7 @@ GetConsoleHardwareState (HANDLE	hConsole,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD STDCALL
 GetConsoleInputWaitHandle (VOID)
@@ -567,9 +567,19 @@ GetConsoleInputWaitHandle (VOID)
       * Undocumented
       */
 {
-  DPRINT1("GetConsoleInputWaitHandle() UNIMPLEMENTED!\n");
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return FALSE;
+  CSRSS_API_REQUEST Request;
+  CSRSS_API_REPLY Reply;
+  NTSTATUS Status;
+
+  Request.Type = CSRSS_GET_INPUT_WAIT_HANDLE;
+  Status = CsrClientCallServer(&Request, &Reply, sizeof(CSRSS_API_REQUEST),
+				sizeof(CSRSS_API_REPLY));
+  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
+    {
+      SetLastErrorByStatus(Status);
+      return 0;
+    }
+  return (DWORD) Reply.Data.GetConsoleInputWaitHandle.InputWaitHandle;
 }
 
 

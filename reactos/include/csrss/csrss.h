@@ -606,6 +606,15 @@ typedef struct
 {
 } CSRSS_SET_CONSOLE_OUTPUT_CP_REPLY, *PCSRSS_SET_CONSOLE_OUTPUT_CP_REPLY;
 
+typedef struct
+{
+} CSRSS_GET_INPUT_WAIT_HANDLE_REQUEST, *PCSRSS_GET_INPUT_WAIT_HANDLE_REQUEST;
+
+typedef struct
+{
+  HANDLE InputWaitHandle;
+} CSRSS_GET_INPUT_WAIT_HANDLE_REPLY, *PCSRSS_GET_INPUT_WAIT_HANDLE_REPLY;
+
 #define CSRSS_MAX_WRITE_CONSOLE_REQUEST       \
       (MAX_MESSAGE_DATA - sizeof(ULONG) - sizeof(CSRSS_WRITE_CONSOLE_REQUEST))
 
@@ -677,6 +686,7 @@ typedef struct
 #define CSRSS_SET_CONSOLE_CP                (0x32)
 #define CSRSS_GET_CONSOLE_OUTPUT_CP         (0x33)
 #define CSRSS_SET_CONSOLE_OUTPUT_CP         (0x34)
+#define CSRSS_GET_INPUT_WAIT_HANDLE	    (0x35)
 
 /* Keep in sync with definition below. */
 #define CSRSS_REQUEST_HEADER_SIZE (LPC_MESSAGE_BASE_SIZE + sizeof(ULONG))
@@ -741,6 +751,7 @@ typedef struct
         CSRSS_SET_CONSOLE_CP_REQUEST SetConsoleCodePage;
         CSRSS_GET_CONSOLE_OUTPUT_CP_REQUEST GetConsoleOutputCodePage;
         CSRSS_SET_CONSOLE_OUTPUT_CP_REQUEST SetConsoleOutputCodePage;
+	CSRSS_GET_INPUT_WAIT_HANDLE_REQUEST GetConsoleInputWaitHandle;
       } Data;
     };
   };
@@ -795,6 +806,7 @@ typedef struct
         CSRSS_SET_CONSOLE_CP_REPLY SetConsoleCodePage;
         CSRSS_GET_CONSOLE_OUTPUT_CP_REPLY GetConsoleOutputCodePage;
         CSRSS_SET_CONSOLE_OUTPUT_CP_REPLY SetConsoleOutputCodePage;
+	CSRSS_GET_INPUT_WAIT_HANDLE_REPLY GetConsoleInputWaitHandle;
       } Data;
     };
   };

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.35 2004/06/27 12:21:31 weiden Exp $
+/* $Id: process.c,v 1.36 2004/11/14 18:47:10 hbirr Exp $
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -422,6 +422,25 @@ CSR_API(CsrDuplicateHandle)
                                       &Reply->Data.DuplicateHandleReply.Handle,
                                       Object);
     }
+  return Reply->Status;
+}
+
+CSR_API(CsrGetInputWaitHandle)
+{
+  Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
+
+  if (ProcessData == NULL)
+  {
+
+     Reply->Data.GetConsoleInputWaitHandle.InputWaitHandle = INVALID_HANDLE_VALUE;
+     Reply->Status = STATUS_INVALID_PARAMETER;
+  }
+  else
+  {
+     Reply->Data.GetConsoleInputWaitHandle.InputWaitHandle = ProcessData->ConsoleEvent;
+     Reply->Status = STATUS_SUCCESS;
+  }
   return Reply->Status;
 }
 

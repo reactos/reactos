@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.16 2004/11/02 20:42:06 weiden Exp $
+/* $Id: conio.c,v 1.17 2004/11/14 18:47:10 hbirr Exp $
  *
  * reactos/subsys/csrss/win32csr/conio.c
  *
@@ -186,7 +186,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
   SecurityAttributes.lpSecurityDescriptor = NULL;
   SecurityAttributes.bInheritHandle = TRUE;
 
-  Console->ActiveEvent = CreateEventW(&SecurityAttributes, FALSE, FALSE, NULL);
+  Console->ActiveEvent = CreateEventW(&SecurityAttributes, TRUE, FALSE, NULL);
   if (NULL == Console->ActiveEvent)
     {
       RtlFreeUnicodeString(&Console->Title);
@@ -559,6 +559,11 @@ CSR_API(CsrReadConsole)
     {
       /* remove input event from queue */
       CurrentEntry = RemoveHeadList(&Console->InputEvents);
+      if (IsListEmpty(&Console->InputEvents))
+      {
+         CHECKPOINT;
+         ResetEvent(Console->ActiveEvent);
+      }
       Input = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
 
       /* only pay attention to valid ascii chars, on key down */
@@ -1650,7 +1655,6 @@ CSR_API(CsrFillOutputChar)
       ConioUnlockConsole(Console);
     }
 
-  Reply->Data.FillOutputReply.NrCharactersWritten = Written;
   return Reply->Status;
 }
 
@@ -1675,17 +1679,29 @@ CSR_API(CsrReadInputEvent)
     }
 
   /* only get input if there is any */
-  while (Console->InputEvents.Flink != &Console->InputEvents && ! Done)
+  CurrentEntry = Console->InputEvents.Flink;
+  while (CurrentEntry != &Console->InputEvents)
     {
-      CurrentEntry = RemoveHeadList(&Console->InputEvents);
       Input = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
-      Done = !Input->Fake;
-      Reply->Data.ReadInputReply.Input = Input->InputEvent;
+      CurrentEntry = CurrentEntry->Flink;
 
-      if (Request->Data.ReadInputRequest.Unicode == FALSE)
+      if (Done && !Input->Fake)
         {
-          ConioInputEventToAnsi(Console, &Reply->Data.ReadInputReply.Input); /* FIXME */
-        }
+	  Reply->Data.ReadInputReply.MoreEvents = TRUE;
+	  break;
+	}
+      
+      RemoveEntryList(&Input->ListEntry);
+
+      if (!Done && !Input->Fake)
+        {
+          Reply->Data.ReadInputReply.Input = Input->InputEvent;
+          if (Request->Data.ReadInputRequest.Unicode == FALSE)
+            {
+              ConioInputEventToAnsi(Console, &Reply->Data.ReadInputReply.Input);
+            }
+	  Done = TRUE;
+	}
 
       if (Input->InputEvent.EventType == KEY_EVENT)
         {
@@ -1698,16 +1714,22 @@ CSR_API(CsrReadInputEvent)
           Console->WaitingChars--;
         }
       HeapFree(Win32CsrApiHeap, 0, Input);
-
-      Reply->Data.ReadInputReply.MoreEvents = (Console->InputEvents.Flink != &Console->InputEvents);
-      Status = STATUS_SUCCESS;
-      Console->EarlyReturn = FALSE; /* clear early return */
     }
    
-  if (! Done)
+  if (Done)
+    {
+      Status = STATUS_SUCCESS;
+      Console->EarlyReturn = FALSE;
+    }
+  else
     {
       Status = STATUS_PENDING;
       Console->EarlyReturn = TRUE;  /* mark for early return */
+    }
+
+  if (IsListEmpty(&Console->InputEvents))
+    {
+      ResetEvent(Console->ActiveEvent);
     }
 
   ConioUnlockConsole(Console);
@@ -2373,6 +2395,7 @@ CSR_API(CsrFlushInputBuffer)
       /* Destroy the event */
       HeapFree(Win32CsrApiHeap, 0, Input);
     }
+  ResetEvent(Console->ActiveEvent);
   Console->WaitingChars=0;
 
   ConioUnlockConsole(Console);

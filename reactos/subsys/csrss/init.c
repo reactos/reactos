@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.29 2004/07/12 20:09:34 gvg Exp $
+/* $Id: init.c,v 1.30 2004/11/14 18:47:10 hbirr Exp $
  * 
  * reactos/subsys/csrss/init.c
  *
@@ -214,6 +214,7 @@ CSRSS_API_DEFINITION NativeDefinitions[] =
     CSRSS_DEFINE_API(CSRSS_CLOSE_HANDLE,                 CsrCloseHandle),
     CSRSS_DEFINE_API(CSRSS_VERIFY_HANDLE,                CsrVerifyHandle),
     CSRSS_DEFINE_API(CSRSS_DUPLICATE_HANDLE,             CsrDuplicateHandle),
+    CSRSS_DEFINE_API(CSRSS_GET_INPUT_WAIT_HANDLE,        CsrGetInputWaitHandle),
     { 0, 0, 0, NULL }
   };
 
