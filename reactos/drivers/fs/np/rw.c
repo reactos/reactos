@@ -283,8 +283,7 @@ NpfsReadFromPipe(PNPFS_CONTEXT Context)
 	      goto done;
 	    }
 
-	  if (Fcb->PipeState != FILE_PIPE_CONNECTED_STATE &&
-	      !(Fcb->PipeState == FILE_PIPE_LISTENING_STATE && Fcb->PipeEnd == FILE_PIPE_SERVER_END))
+	  if (Fcb->PipeState != FILE_PIPE_CONNECTED_STATE)
 	    {
 	      DPRINT("PipeState: %x\n", Fcb->PipeState);
 	      Status = STATUS_PIPE_BROKEN;
