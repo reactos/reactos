@@ -323,9 +323,9 @@ NTSTATUS STDCALL NtLockVirtualMemory(HANDLE	ProcessHandle,
 }
 
 
-VOID MmChangeAreaProtection(PEPROCESS Process, 
+VOID MmChangeAreaProtection(PEPROCESS Process,
 			    PVOID BaseAddress,
-			    ULONG Length, 
+			    ULONG Length,
 			    ULONG Protect)
 {
    ULONG i;
@@ -393,24 +393,27 @@ NTSTATUS STDCALL NtProtectVirtualMemory(IN	HANDLE	ProcessHandle,
 }
 
 
-NTSTATUS STDCALL NtQueryVirtualMemory(IN	HANDLE	ProcessHandle,
-				      IN	PVOID	Address,
-				      IN CINT VirtualMemoryInformationClass,
-				      OUT PVOID	VirtualMemoryInformation,
-				      IN	ULONG	Length,
-				      OUT	PULONG	ResultLength)
+NTSTATUS
+STDCALL
+NtQueryVirtualMemory (
+	IN	HANDLE	ProcessHandle,
+	IN	PVOID	Address,
+	IN	CINT	VirtualMemoryInformationClass,
+	OUT	PVOID	VirtualMemoryInformation,
+	IN	ULONG	Length,
+	OUT	PULONG	ResultLength
+	)
 {
    NTSTATUS Status;
    PEPROCESS Process;
    MEMORY_AREA* MemoryArea;
 
-#if 0
-   DbgPrint("NtReadVirtualMemory(ProcessHandle %x, Address %x, "
-            "VirtualMemoryInformationClass %d, VirtualMemoryInformation %x, "
-            "Length %lu ResultLength %x)\n",ProcessHandle,Address,
-            VirtualMemoryInformationClass,VirtualMemoryInformation,
-            Length,ResultLength);
-#endif
+   DPRINT("NtQueryVirtualMemory(ProcessHandle %x, Address %x, "
+          "VirtualMemoryInformationClass %d, VirtualMemoryInformation %x, "
+          "Length %lu ResultLength %x)\n",ProcessHandle,Address,
+          VirtualMemoryInformationClass,VirtualMemoryInformation,
+          Length,ResultLength);
+
    switch(VirtualMemoryInformationClass)
      {
         case MemoryBasicInformation:
@@ -421,11 +424,13 @@ NTSTATUS STDCALL NtQueryVirtualMemory(IN	HANDLE	ProcessHandle,
              if (Length < sizeof(MEMORY_BASIC_INFORMATION))
                {
                   ObDereferenceObject(Process);
-                  return(STATUS_INFO_LENGTH_MISMATCH);
+                  return STATUS_INFO_LENGTH_MISMATCH;
                }
 
-             *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
-
+             if (ResultLength)
+               {
+                  *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
+               }
 
              Status = ObReferenceObjectByHandle(ProcessHandle,
                                                 PROCESS_QUERY_INFORMATION,
@@ -436,7 +441,7 @@ NTSTATUS STDCALL NtQueryVirtualMemory(IN	HANDLE	ProcessHandle,
 
              if (!NT_SUCCESS(Status))
                {
-//                  DbdPrint("NtQueryVirtualMemory() = %x\n",Status);
+                  DPRINT("NtQueryVirtualMemory() = %x\n",Status);
                   return(Status);
                }
 
@@ -446,7 +451,7 @@ NTSTATUS STDCALL NtQueryVirtualMemory(IN	HANDLE	ProcessHandle,
              if (MemoryArea == NULL)
                {
                   Info->State = MEM_FREE;
-                  DbgPrint("Virtual memory at %p is free.\n", Address);
+                  DPRINT("Virtual memory at %p is free.\n", Address);
                   ObDereferenceObject(Process);
                   return (STATUS_SUCCESS);
                }
@@ -463,17 +468,16 @@ NTSTATUS STDCALL NtQueryVirtualMemory(IN	HANDLE	ProcessHandle,
              Info->BaseAddress = MemoryArea->BaseAddress;
              Info->RegionSize  = MemoryArea->Length;
 
-	     DbgPrint("BaseAddress %p, Length %x\n",
-		      Info->BaseAddress, Info->RegionSize);
-
+             DPRINT("BaseAddress %p, RegionSize %x State %x\n",
+                    Info->BaseAddress, Info->RegionSize, Info->State);
 
              ObDereferenceObject(Process);
-             return (STATUS_SUCCESS);
+             return STATUS_SUCCESS;
           }
           break;
      }
 
-   return(STATUS_INVALID_INFO_CLASS);
+   return STATUS_INVALID_INFO_CLASS;
 }
 
 
