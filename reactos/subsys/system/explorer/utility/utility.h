@@ -895,6 +895,10 @@ protected:
 #endif
 
 
+ // determine windows version string
+String get_windows_version_str();
+
+
  /// link dynamicly to functions by using GetModuleHandle() and GetProcAddress()
 template<typename FCT> struct DynamicFct
 {

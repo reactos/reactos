@@ -149,6 +149,8 @@
 #define ID_DESKTOP_VERSION              1027
 #define IDC_BUTTON1                     1028
 #define IDC_CHECK_ENTRIES               1028
+#define IDC_VERSION_TXT                 1029
+#define IDC_WIN_VERSION                 1030
 #define ID_REFRESH                      1704
 #define ID_ABOUT_WINEFILE               1705
 #define IDS_VERSION_STR                 5000
@@ -204,7 +206,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        166
 #define _APS_NEXT_COMMAND_VALUE         40021
-#define _APS_NEXT_CONTROL_VALUE         1029
+#define _APS_NEXT_CONTROL_VALUE         1030
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

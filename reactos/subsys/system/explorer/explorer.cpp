@@ -568,6 +568,13 @@ struct ExplorerAboutDlg : public
 
 		new HyperlinkCtrl(hwnd, IDC_WWW);
 
+		FmtString ver_txt(ResString(IDS_EXPLORER_VERSION_STR), (LPCTSTR)ResString(IDS_VERSION_STR));
+		SetWindowText(GetDlgItem(hwnd, IDC_VERSION_TXT), ver_txt);
+
+		HWND hwnd_winver = GetDlgItem(hwnd, IDC_WIN_VERSION);
+		SetWindowText(hwnd_winver, get_windows_version_str());
+		SetWindowFont(hwnd_winver, GetStockFont(DEFAULT_GUI_FONT), FALSE);
+
 		CenterWindow(hwnd);
 	}
 

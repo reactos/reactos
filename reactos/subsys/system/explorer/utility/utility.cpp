@@ -206,7 +206,7 @@ BOOL launch_fileA(HWND hwnd, LPSTR cmd, UINT nCmdShow, LPCSTR parameters)
 #endif
 
 
-/* search for already running win[e]files */
+/* search for already running instance */
 
 static int g_foundPrevInstance = 0;
 
@@ -233,6 +233,101 @@ int find_window_class(LPCTSTR classname)
 		return 1;
 
 	return 0;
+}
+
+
+String get_windows_version_str()
+{
+	OSVERSIONINFOEX osvi = {sizeof(OSVERSIONINFOEX)};
+	BOOL osvie_val;
+	String str;
+
+	if (!(osvie_val = GetVersionEx((OSVERSIONINFO*)&osvi))) {
+		osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+
+		if (!GetVersionEx((OSVERSIONINFO*)&osvi))
+			return TEXT("???");
+	}
+
+	switch(osvi.dwPlatformId) {
+	  case VER_PLATFORM_WIN32_NT:
+		if (osvi.dwMajorVersion <= 4)
+			str = TEXT("Microsoft Windows NT");
+		else if (osvi.dwMajorVersion==5 && osvi.dwMinorVersion==0)
+			str = TEXT("Microsoft Windows 2000");
+		else if (osvi.dwMajorVersion==5 && osvi.dwMinorVersion==1)
+			str = TEXT("Microsoft Windows XP");
+
+		if (osvie_val) {
+			if (osvi.wProductType == VER_NT_WORKSTATION) {
+			   if (osvi.wSuiteMask & VER_SUITE_PERSONAL)
+				  str += TEXT(" Personal");
+			   else
+				  str += TEXT(" Professional");
+			} else if (osvi.wProductType == VER_NT_SERVER) {
+			   if (osvi.wSuiteMask & VER_SUITE_DATACENTER)
+				  str += TEXT(" DataCenter Server");
+			   else if (osvi.wSuiteMask & VER_SUITE_ENTERPRISE)
+				  str += TEXT(" Advanced Server");
+			   else
+				  str += TEXT(" Server");
+			} else if (osvi.wProductType == VER_NT_DOMAIN_CONTROLLER) {
+				str += TEXT(" Domain Controller");
+			}
+		} else {
+			TCHAR type[80];
+			DWORD dwBufLen;
+			HKEY hKey;
+
+			if (!RegOpenKeyEx(HKEY_LOCAL_MACHINE, TEXT("SYSTEM\\CurrentControlSet\\Control\\ProductOptions"), 0, KEY_QUERY_VALUE, &hKey)) {
+				RegQueryValueEx(hKey, TEXT("ProductType"), NULL, NULL, (LPBYTE)type, &dwBufLen);
+				RegCloseKey(hKey);
+
+				if (!_tcsicmp(TEXT("WINNT"), type))
+				   str += TEXT(" Workstation");
+				else if (!_tcsicmp(TEXT("LANMANNT"), type))
+				   str += TEXT(" Server");
+				else if (!_tcsicmp(TEXT("SERVERNT"), type))
+					str += TEXT(" Advanced Server");
+			}
+		}
+		break;
+
+	  case VER_PLATFORM_WIN32_WINDOWS:
+		if (osvi.dwMajorVersion>4 ||
+			(osvi.dwMajorVersion==4 && osvi.dwMinorVersion>0)) {
+			if (osvi.dwMinorVersion == 90)
+				str = TEXT("Microsoft Windows ME");
+			else
+				str = TEXT("Microsoft Windows 98");
+
+            if (osvi.szCSDVersion[1] == 'A')
+				str += TEXT(" SE");
+		} else {
+			str = TEXT("Microsoft Windows 95");
+
+            if (osvi.szCSDVersion[1]=='B' || osvi.szCSDVersion[1]=='C')
+				str += TEXT(" OSR2");
+		}
+		break;
+
+	  case VER_PLATFORM_WIN32s:
+		str = TEXT("Microsoft Win32s");
+
+	  default:
+		return TEXT("???");
+	}
+
+	String vstr;
+
+	if (osvi.dwMajorVersion <= 4)
+		vstr.printf(TEXT(" Version %d.%d %s Build %d"),
+						osvi.dwMajorVersion, osvi.dwMinorVersion,
+						osvi.szCSDVersion, osvi.dwBuildNumber&0xFFFF);
+	else
+		vstr.printf(TEXT(" %s (Build %d)"), osvi.szCSDVersion, osvi.dwBuildNumber&0xFFFF);
+
+	return str + vstr;
 }
 
 

@@ -299,15 +299,16 @@ void BackgroundWindow::DrawDesktopBkgnd(HDC hdc)
 	DeleteBrush(bkgndBrush);
 */
 	if (_display_version) {
-		static const String s_bkgnd_txt = ResString(IDS_EXPLORER_VERSION_STR) + TEXT("\nby Martin Fuchs");
+		static const String s_bkgnd_txt = ResString(IDS_EXPLORER_VERSION_STR) + TEXT("\nby Martin Fuchs\n%s");
+		static String s_version_str = get_windows_version_str();
 
-		FmtString txt(s_bkgnd_txt, (LPCTSTR)ResString(IDS_VERSION_STR));
+		FmtString txt(s_bkgnd_txt, (LPCTSTR)ResString(IDS_VERSION_STR), (LPCTSTR)s_version_str);
 		ClientRect rect(_hwnd);
 
-		rect.left = rect.right - 280;
-		rect.top = rect.bottom - 56 - DESKTOPBARBAR_HEIGHT;
-		rect.right = rect.left + 250;
-		rect.bottom = rect.top + 40;
+		rect.left = rect.right - 440;
+		rect.top = rect.bottom - 90 - DESKTOPBARBAR_HEIGHT;
+		rect.right = rect.left + 420;
+		rect.bottom = rect.top + 70;
 
 		BkMode bkMode(hdc, TRANSPARENT);
 
