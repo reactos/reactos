@@ -52,7 +52,7 @@ THOSE_ZIP_CONSTS;
 /* try to open a cabinet file, returns success */
 BOOL cabinet_open(struct cabinet *cab)
 {
-  char *name = (char *)cab->filename;
+  const char *name = cab->filename;
   HANDLE fh;
 
   TRACE("(cab == ^%p)\n", cab);
@@ -177,8 +177,9 @@ BOOL ensure_filepath(char *path) {
  */
 BOOL file_open(struct cab_file *fi, BOOL lower, LPCSTR dir)
 {
-  char c, *s, *d, *name;
+  char c, *d, *name;
   BOOL ok = FALSE;
+  const char *s;
 
   TRACE("(fi == ^%p, lower == %s, dir == %s)\n", fi, lower ? "TRUE" : "FALSE", debugstr_a(dir));
 
@@ -279,7 +280,7 @@ void cabinet_skip(struct cabinet *cab, cab_off_t distance)
   TRACE("(cab == ^%p, distance == %u)\n", cab, distance);
   if (SetFilePointer(cab->fh, distance, NULL, FILE_CURRENT) == INVALID_SET_FILE_POINTER) {
     if (distance != INVALID_SET_FILE_POINTER)
-      ERR("%s\n", debugstr_a((char *) cab->filename));
+      ERR("%s\n", debugstr_a(cab->filename));
   }
 }
 
@@ -291,7 +292,7 @@ void cabinet_skip(struct cabinet *cab, cab_off_t distance)
 void cabinet_seek(struct cabinet *cab, cab_off_t offset) {
   TRACE("(cab == ^%p, offset == %u)\n", cab, offset);
   if (SetFilePointer(cab->fh, offset, NULL, FILE_BEGIN) != offset)
-    ERR("%s seek failure\n", debugstr_a((char *)cab->filename));
+    ERR("%s seek failure\n", debugstr_a(cab->filename));
 }
 
 /*******************************************************************
@@ -317,15 +318,15 @@ BOOL cabinet_read(struct cabinet *cab, cab_UBYTE *buf, cab_off_t length)
   TRACE("(cab == ^%p, buf == ^%p, length == %u)\n", cab, buf, length);
 
   if (length > avail) {
-    WARN("%s: WARNING; cabinet is truncated\n", debugstr_a((char *)cab->filename));
+    WARN("%s: WARNING; cabinet is truncated\n", debugstr_a(cab->filename));
     length = avail;
   }
 
   if (! ReadFile( cab->fh, (LPVOID) buf, length, &bytes_read, NULL )) {
-    ERR("%s read error\n", debugstr_a((char *) cab->filename));
+    ERR("%s read error\n", debugstr_a(cab->filename));
     return FALSE;
   } else if (bytes_read != length) {
-    ERR("%s read size mismatch\n", debugstr_a((char *) cab->filename));
+    ERR("%s read size mismatch\n", debugstr_a(cab->filename));
     return FALSE;
   }
 
@@ -358,7 +359,7 @@ char *cabinet_read_string(struct cabinet *cab)
 
     if (!ok) {
       if (len == maxlen) {
-        ERR("%s: WARNING; cabinet is truncated\n", debugstr_a((char *) cab->filename));
+        ERR("%s: WARNING; cabinet is truncated\n", debugstr_a(cab->filename));
         break;
       }
       len += 256;
@@ -403,21 +404,21 @@ BOOL cabinet_read_entries(struct cabinet *cab)
   
   /* check basic MSCF signature */
   if (EndGetI32(buf+cfhead_Signature) != 0x4643534d) {
-    ERR("%s: not a Microsoft cabinet file\n", debugstr_a((char *) cab->filename));
+    ERR("%s: not a Microsoft cabinet file\n", debugstr_a(cab->filename));
     return FALSE;
   }
 
   /* get the number of folders */
   num_folders = EndGetI16(buf+cfhead_NumFolders);
   if (num_folders == 0) {
-    ERR("%s: no folders in cabinet\n", debugstr_a((char *) cab->filename));
+    ERR("%s: no folders in cabinet\n", debugstr_a(cab->filename));
     return FALSE;
   }
 
   /* get the number of files */
   num_files = EndGetI16(buf+cfhead_NumFiles);
   if (num_files == 0) {
-    ERR("%s: no files in cabinet\n", debugstr_a((char *) cab->filename));
+    ERR("%s: no files in cabinet\n", debugstr_a(cab->filename));
     return FALSE;
   }
 
@@ -425,7 +426,7 @@ BOOL cabinet_read_entries(struct cabinet *cab)
   if ((buf[cfhead_MajorVersion] > 1) ||
       (buf[cfhead_MajorVersion] == 1 && buf[cfhead_MinorVersion] > 3))
   {
-    WARN("%s: WARNING; cabinet format version > 1.3\n", debugstr_a((char *) cab->filename));
+    WARN("%s: WARNING; cabinet format version > 1.3\n", debugstr_a(cab->filename));
   }
 
   /* read the reserved-sizes part of header, if present */
@@ -437,13 +438,13 @@ BOOL cabinet_read_entries(struct cabinet *cab)
     cab->block_resv = buf[cfheadext_DataReserved];
 
     if (header_resv > 60000) {
-      WARN("%s: WARNING; header reserved space > 60000\n", debugstr_a((char *) cab->filename));
+      WARN("%s: WARNING; header reserved space > 60000\n", debugstr_a(cab->filename));
     }
 
     /* skip the reserved header */
     if (header_resv) 
       if (SetFilePointer(cab->fh, (cab_off_t) header_resv, NULL, FILE_CURRENT) == INVALID_SET_FILE_POINTER)
-        ERR("seek failure: %s\n", debugstr_a((char *) cab->filename));
+        ERR("seek failure: %s\n", debugstr_a(cab->filename));
   }
 
   if (cab->flags & cfheadPREV_CABINET) {
@@ -528,7 +529,7 @@ struct cabinet *load_cab_offset(LPCSTR name, cab_off_t offset)
   struct cabinet *cab = (struct cabinet *) calloc(1, sizeof(struct cabinet));
   int ok;
 
-  TRACE("(name == %s, offset == %u)\n", debugstr_a((char *) name), offset);
+  TRACE("(name == %s, offset == %u)\n", debugstr_a(name), offset);
 
   if (!cab) return NULL;
 
@@ -1954,7 +1955,7 @@ struct cabinet *find_cabs_in_file(LPCSTR name, cab_UBYTE search_buf[])
   cab_off_t offset, caboff, cablen = 0, foffset = 0, filelen, length;
   int state = 0, found = 0, ok = 0;
 
-  TRACE("(name == %s)\n", debugstr_a((char *) name));
+  TRACE("(name == %s)\n", debugstr_a(name));
 
   /* open the file and search for cabinet headers */
   if ((cab = (struct cabinet *) calloc(1, sizeof(struct cabinet)))) {
@@ -2489,7 +2490,7 @@ void extract_file(struct cab_file *fi, int lower, int fix, LPCSTR dir, cab_decom
 exit_handler:
   if (err) {
     const char *errmsg;
-    char *cabname;
+    const char *cabname;
     switch (err) {
     case DECR_NOMEMORY:
       errmsg = "out of memory!\n"; break;
@@ -2508,10 +2509,10 @@ exit_handler:
     }
 
     if (CAB(current)) {
-      cabname = (char *) (CAB(current)->cab[CAB(split)]->filename);
+      cabname = (CAB(current)->cab[CAB(split)]->filename);
     }
     else {
-      cabname = (char *) (fi->folder->cab[0]->filename);
+      cabname = (fi->folder->cab[0]->filename);
     }
 
     ERR((char *)errmsg, cabname);

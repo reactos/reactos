@@ -1,12 +1,12 @@
 Index: cabextract.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/cabinet/cabextract.c,v
-retrieving revision 1.14
-diff -u -r1.14 cabextract.c
---- cabextract.c	2 Sep 2004 23:00:54 -0000	1.14
-+++ cabextract.c	19 Sep 2004 09:31:32 -0000
-@@ -2514,7 +2514,7 @@
-       cabname = (char *) (fi->folder->cab[0]->filename);
+retrieving revision 1.15
+diff -u -r1.15 cabextract.c
+--- cabextract.c	30 Nov 2004 21:39:00 -0000	1.15
++++ cabextract.c	5 Dec 2004 21:40:05 -0000
+@@ -2515,7 +2515,7 @@
+       cabname = (fi->folder->cab[0]->filename);
      }
  
 -    ERR(errmsg, cabname);
