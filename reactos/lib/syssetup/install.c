@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: install.c,v 1.9 2004/03/21 14:37:19 navaraf Exp $
+/* $Id: install.c,v 1.10 2004/04/09 18:27:10 weiden Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -38,6 +38,7 @@
 #include "resource.h"
 
 // #define NO_GUI
+#define VMWINST
 
 #if 0
 VOID Wizard (VOID);
@@ -76,6 +77,28 @@ DebugPrint(char* fmt,...)
 	       MB_OK);
 #endif
 }
+
+#ifdef VMWINST
+static BOOL
+RunVMWInstall(VOID)
+{
+  PROCESS_INFORMATION ProcInfo;
+  STARTUPINFO si;
+  
+  ZeroMemory(&si, sizeof(STARTUPINFO));
+  si.cb = sizeof(STARTUPINFO);
+  
+  if(CreateProcessA(NULL, "vmwinst.exe", NULL, NULL, TRUE, NORMAL_PRIORITY_CLASS, 
+                    NULL, NULL, &si, &ProcInfo))
+  {
+    WaitForSingleObject(ProcInfo.hProcess, INFINITE);
+    CloseHandle(ProcInfo.hThread);
+    CloseHandle(ProcInfo.hProcess);
+    return TRUE;
+  }
+  return FALSE;
+}
+#endif
 
 
 static VOID
@@ -270,6 +293,9 @@ InstallReactOS (HINSTANCE hInstance)
   Wizard ();
 #endif
 
+#ifdef VMWINST
+  RunVMWInstall();
+#endif
   DialogBox(
      GetModuleHandle(TEXT("syssetup.dll")),
      MAKEINTRESOURCE(IDD_RESTART),
