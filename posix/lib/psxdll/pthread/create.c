@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.2 2002/02/20 09:17:57 hyperion Exp $
+/* $Id: create.c,v 1.3 2002/10/18 21:56:39 ea Exp $
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -63,10 +63,10 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
  itInitialTeb.StackReserve = 0x100000;
 
  /* stack commit size */
- itInitialTeb.StackCommit = itInitialTeb.StackReserve - PAGESIZE;
+ itInitialTeb.StackCommit = itInitialTeb.StackReserve - PAGE_SIZE;
 
  /* guard page */
- itInitialTeb.StackCommit += PAGESIZE;
+ itInitialTeb.StackCommit += PAGE_SIZE;
 
  /* reserve stack */
  itInitialTeb.StackAllocate = NULL;
@@ -118,7 +118,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
  (
   NtCurrentProcess(),
   itInitialTeb.StackLimit,
-  PAGESIZE,
+  PAGE_SIZE,
   PAGE_GUARD | PAGE_READWRITE,
   &nOldPageProtection
  );

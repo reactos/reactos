@@ -1,4 +1,4 @@
-/* $Id: spawn.c,v 1.5 2002/03/21 22:43:27 hyperion Exp $
+/* $Id: spawn.c,v 1.6 2002/10/18 21:56:39 ea Exp $
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -478,7 +478,7 @@ undoPData:
  /* 5.1: set up the stack */
  itInitialTeb.StackAllocate = NULL;
  nVirtualSize = 0x100000;
- nCommitSize = 0x100000 - PAGESIZE;
+ nCommitSize = 0x100000 - PAGE_SIZE;
 
  /* 5.1.1: reserve the stack */
  nErrCode = NtAllocateVirtualMemory
@@ -505,7 +505,7 @@ undoPData:
   (PVOID)((ULONG)itInitialTeb.StackBase - nCommitSize);
 
  /* 5.1.2: commit the stack */
- nVirtualSize = nCommitSize + PAGESIZE;
+ nVirtualSize = nCommitSize + PAGE_SIZE;
  pCommitBottom =
   (PVOID)((ULONG)itInitialTeb.StackBase - nVirtualSize);
 
@@ -527,7 +527,7 @@ undoPData:
  }
 
  /* 5.1.3: set up the guard page */
- nVirtualSize = PAGESIZE;
+ nVirtualSize = PAGE_SIZE;
 
  nErrCode = NtProtectVirtualMemory
  (
