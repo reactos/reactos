@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2004/07/18 22:37:07 kuehng Exp $
+# $Id: Makefile,v 1.2 2004/08/15 16:50:30 kuehng Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -31,7 +31,7 @@ TARGET_PCH =
 
 TARGET_CLEAN = 
 
-TARGET_OBJECTS = ncpa.o 
+TARGET_OBJECTS = ncpa.o tcpip_properties.o
 
 DEP_OBJECTS = $(TARGET_OBJECTS)
 

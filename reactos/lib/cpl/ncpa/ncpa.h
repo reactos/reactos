@@ -1,5 +1,5 @@
-#ifndef __CPL_APPWIZ_H
-#define __CPL_APPWIZ_H
+#ifndef __NCPA_H
+#define __NCPA_H
 
 typedef LONG (CALLBACK *CPLAPPLET_PROC)(VOID);
 
@@ -13,8 +13,8 @@ typedef struct
 
 extern HINSTANCE hApplet;
 
-void ShowLastWin32Error(HWND hWndOwner);
 
-#endif /* __CPL_APPWIZ_H */
+
+#endif // __NCPA_H
 
 /* EOF */

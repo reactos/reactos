@@ -15,7 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-/* $Id: ncpa.c,v 1.1 2004/07/18 22:37:07 kuehng Exp $
+/* $Id: ncpa.c,v 1.2 2004/08/15 16:50:30 kuehng Exp $
  *
  * PROJECT:         ReactOS Network Control Panel
  * FILE:            lib/cpl/system/ncpa.c
@@ -53,7 +53,7 @@
 #include <stdarg.h>
 #include <tchar.h>
 #include <windows.h>
-
+#include <iphlpapi.h>
 #ifdef __REACTOS__
 //#include <Netcfgn.h>
 #else
@@ -93,7 +93,9 @@ void EnumRegKeys(ENUMREGKEYCALLBACK *pCallback,void *pCookie,HKEY hBaseKey,TCHAR
 		ret = RegEnumKeyEx(hKey,i,tpszName,&dwNameLen,NULL,NULL,NULL,NULL);
 		if(ret != ERROR_SUCCESS)
 		{
-			OutputDebugString(_T("EnumRegKeys: RegEnumKeyEx failed\r\n"));
+			OutputDebugString(_T("EnumRegKeys: RegEnumKeyEx failed for\r\n"));
+			OutputDebugString(tpszName);
+			OutputDebugString(_T("\r\n"));
 			break;
 		}
 
@@ -128,7 +130,7 @@ void InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc,LPARAM lP
 
 LONG CALLBACK DisplayApplet(VOID);
 BOOL CALLBACK NetworkPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-//void DisplayTCPIPProperties(HWND hParent,IP_ADAPTER_INFO *pInfo);
+void DisplayTCPIPProperties(HWND hParent,IP_ADAPTER_INFO *pInfo);
 
 HINSTANCE hApplet = 0;
 
@@ -155,6 +157,7 @@ BOOL FindNICClassKeyForCfgInstance(TCHAR *tpszCfgInst,TCHAR *tpszSubKeyOut)
 		if(RegOpenKey(HKEY_LOCAL_MACHINE,tpszSubKey,&hKey)!=ERROR_SUCCESS)
 			continue;
 		dwType = REG_SZ;
+		dwSize = sizeof(tpszCfgInst2);
 		if(RegQueryValueEx(hKey,_T("NetCfgInstanceId"),NULL,&dwType,(BYTE*)tpszCfgInst2,&dwSize)!=ERROR_SUCCESS) {
 			RegCloseKey(hKey);
 			continue;
@@ -177,6 +180,8 @@ void NICPropertyProtocolCallback(void *pCookie,HKEY hBaseKey,TCHAR *tpszSubKey)
 	DWORD dwType,dwSize;
 	TCHAR tpszDescription[MAX_PATH];
 	TCHAR tpszNotifyObjectCLSID[MAX_PATH];
+	TCHAR *tpszSubKeyCopy;
+	int nIndex;
 //	CLSID CLSID_NotifObj;
 //	IUnknown *pUnk = NULL;
 //	INetCfgComponentControl *pNetCfg;
@@ -207,7 +212,7 @@ void NICPropertyProtocolCallback(void *pCookie,HKEY hBaseKey,TCHAR *tpszSubKey)
 	RegCloseKey(hNDIKey);
 
 	//
-	// Thise code works on Windows... but not on Reactos
+	// This code works on Windows... but not on Reactos
 	//
 
 //	CLSIDFromString(tpszNotifyObjectCLSID,&CLSID_NotifObj);
@@ -228,7 +233,9 @@ void NICPropertyProtocolCallback(void *pCookie,HKEY hBaseKey,TCHAR *tpszSubKey)
 	}
 
 	RegCloseKey(hKey);
-	SendDlgItemMessage(hwndDlg,IDC_COMPONENTSLIST,LB_ADDSTRING,0,(LPARAM)tpszDescription);
+	nIndex = SendDlgItemMessage(hwndDlg,IDC_COMPONENTSLIST,LB_ADDSTRING,0,(LPARAM)tpszDescription);
+	tpszSubKeyCopy = _tcsdup(tpszSubKey);
+	SendDlgItemMessage(hwndDlg,IDC_COMPONENTSLIST,LB_SETITEMDATA,nIndex,(LPARAM)tpszSubKeyCopy);
 }
 
 
@@ -248,7 +255,10 @@ BOOL CALLBACK NICPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
 			pPage = (PROPSHEETPAGE *)lParam;
 			tpszCfgInstanceID = (TCHAR*)pPage->lParam;
 			if(!FindNICClassKeyForCfgInstance(tpszCfgInstanceID,tpszSubKey))
+			{
 				MessageBox(hwndDlg,_T("NIC Entry not found"),_T("Registry error"),MB_ICONSTOP);
+				MessageBox(hwndDlg,tpszCfgInstanceID,tpszSubKey,MB_ICONSTOP);
+			}
 
 			if(RegOpenKey(HKEY_LOCAL_MACHINE,tpszSubKey,&hKey)!=ERROR_SUCCESS)
 				return 0;
@@ -272,12 +282,92 @@ BOOL CALLBACK NICPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
 		switch(LOWORD(wParam))
 		{
 		case IDC_COMPONENTSLIST:
+			if(HIWORD(wParam)==LBN_SELCHANGE)
+			{
+				TCHAR *tpszSubKey;
+				TCHAR tpszHelpKey[MAX_PATH];
+				TCHAR tpszHelpText[MAX_PATH];
+				HKEY hNDIKey;
+				DWORD dwType,dwSize;
+				HWND hListBox = GetDlgItem(hwndDlg,IDC_COMPONENTSLIST);
+				tpszSubKey = (TCHAR*)SendMessage(hListBox,LB_GETITEMDATA,SendMessage(hListBox,LB_GETCURSEL,0,0),0);
+				if(!tpszSubKey)
+					break;
+				_stprintf(tpszHelpKey,_T("%s\\Ndi"),tpszSubKey);
+
+				RegOpenKey(HKEY_LOCAL_MACHINE,tpszHelpKey,&hNDIKey);
+				dwType = REG_SZ;
+				dwSize = sizeof(tpszHelpText);
+				if(RegQueryValueEx(hNDIKey,_T("HelpText"),NULL,&dwType,(BYTE*)tpszHelpText,&dwSize)!= ERROR_SUCCESS)
+					;//return;
+				RegCloseKey(hNDIKey);
+
+				SetDlgItemText(hwndDlg,IDC_DESCRIPTION,tpszHelpText);
+				
+			}
 			if(HIWORD(wParam)!=LBN_DBLCLK)
 				break;
 			// drop though
 		case IDC_PROPERTIES:
-			MessageBox(NULL,_T("This control panel is incomplete.\r\nUsually, the \"Notify Object\" for this Network component should be invoked here. Reactos lacks the infrastructure to do this right now.\r\n- C++\r\n- DDK Headers for notify objects\r\n- clean header structure, that allow Windows-Compatible COM C++ Code"),_T("Error"),MB_ICONSTOP);
-//			DisplayTCPIPProperties(hwndDlg,&Info[pPage->lParam]);
+			{
+				TCHAR *tpszSubKey;
+				TCHAR tpszNDIKey[MAX_PATH];
+				TCHAR tpszClsIDText[MAX_PATH];
+				TCHAR *tpszTCPIPClsID = _T("{A907657F-6FDF-11D0-8EFB-00C04FD912B2}");
+				HKEY hNDIKey;
+				DWORD dwType,dwSize;
+				HWND hListBox = GetDlgItem(hwndDlg,IDC_COMPONENTSLIST);
+				tpszSubKey = (TCHAR*)SendMessage(hListBox,LB_GETITEMDATA,SendMessage(hListBox,LB_GETCURSEL,0,0),0);
+				if(!tpszSubKey)
+					break;
+				_stprintf(tpszNDIKey,_T("%s\\Ndi"),tpszSubKey);
+
+				RegOpenKey(HKEY_LOCAL_MACHINE,tpszNDIKey,&hNDIKey);
+				dwType = REG_SZ;
+				dwSize = sizeof(tpszClsIDText);
+				if(RegQueryValueEx(hNDIKey,_T("ClsId"),NULL,&dwType,(BYTE*)tpszClsIDText,&dwSize)!= ERROR_SUCCESS)
+					;//return;
+				RegCloseKey(hNDIKey);
+
+				if(_tcscmp(tpszTCPIPClsID,tpszClsIDText)==0)
+				{
+					IP_ADAPTER_INFO Adapters[64];
+					IP_ADAPTER_INFO *pAdapter;
+					TCHAR *tpszCfgInstanceID;
+					DWORD dwSize = sizeof(Adapters);
+					memset(&Adapters,0x00,sizeof(Adapters));
+					if(GetAdaptersInfo(Adapters,&dwSize)!=ERROR_SUCCESS)
+						break;;
+					pAdapter = Adapters;
+					tpszCfgInstanceID = (TCHAR*)pPage->lParam;
+					while(pAdapter)
+					{
+						TCHAR tpszAdatperName[MAX_PATH];
+						swprintf(tpszAdatperName,L"%S",pAdapter->AdapterName);
+						OutputDebugString(_T("IPHLPAPI returned:\r\n"));
+						OutputDebugString(tpszAdatperName);
+						OutputDebugString(_T("\r\n"));
+						if(_tcscmp(tpszAdatperName,tpszCfgInstanceID)==0)
+						{
+							DisplayTCPIPProperties(hwndDlg,pAdapter);
+							break;
+						} else
+						{
+							OutputDebugString(_T("... which is not the TCPIP property sheet\r\n"));
+						}
+						pAdapter = pAdapter->Next;
+						if(!pAdapter)
+						{
+							MessageBox(NULL,_T("If you see this, then the IPHLPAPI.DLL probably needs more work because GetAdaptersInfo did not return the expected data."),_T("Error"),MB_ICONSTOP);
+						}
+					}
+
+				} else
+				{
+					MessageBox(NULL,_T("This control panel is incomplete.\r\nUsually, the \"Notify Object\" for this Network component should be invoked here. Reactos lacks the infrastructure to do this right now.\r\n- C++\r\n- DDK Headers for notify objects\r\n- clean header structure, that allow Windows-Compatible COM C++ Code"),_T("Error"),MB_ICONSTOP);
+				}
+				
+			}
 			break;
 		}
 		break;
@@ -302,7 +392,6 @@ void DisplayNICProperties(HWND hParent,TCHAR *tpszCfgInstanceID)
 		return;
 	if(RegQueryValueEx(hKey,_T("Name"),NULL,&dwType,(BYTE*)tpszName,&dwSize)!=ERROR_SUCCESS)
 		_stprintf(tpszName,_T("[ERROR]"));
-		//_stprintf(tpszName,_T("[ERROR]") _T(__FILE__) _T(" %d"),__LINE__ );
 	else
 		_tcscat(tpszName,_T(" Properties"));
 	RegCloseKey(hKey);
@@ -311,7 +400,7 @@ void DisplayNICProperties(HWND hParent,TCHAR *tpszCfgInstanceID)
 	ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
 	psh.dwSize = sizeof(PROPSHEETHEADER);
 	psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_NOAPPLYNOW;
-	psh.hwndParent = NULL;
+	psh.hwndParent = hParent;
 	psh.hInstance = hApplet;
 #ifdef _MSC_VER
 	psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDI_CPLSYSTEM));
@@ -388,7 +477,7 @@ void DisplayNICStatus(HWND hParent,TCHAR *tpszCfgInstanceID)
 	ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
 	psh.dwSize = sizeof(PROPSHEETHEADER);
 	psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_NOAPPLYNOW;
-	psh.hwndParent = NULL;
+	psh.hwndParent = hParent;
 	psh.hInstance = hApplet;
 	// FIX THESE REACTOS HEADERS !!!!!!!!!
 #ifdef _MSC_VER
