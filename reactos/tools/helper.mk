@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.78 2004/09/07 08:20:06 hbirr Exp $
+# $Id: helper.mk,v 1.79 2004/09/12 10:22:31 navaraf Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -1073,7 +1073,7 @@ endif
 	$(PCH_CC) $(CFLAGS) $<
 # rule for msvc conversion
 %.c: %_msvc.c
-	$(MS2PS) -try try -except except -finally finally < $< > $@
+	$(subst /,$(SEP),$(MS2PS)) -try try -except except -finally finally < $< > $@
 
 # Kill implicit rule
 .o:;

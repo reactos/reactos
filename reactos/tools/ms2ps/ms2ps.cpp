@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ms2ps.cpp,v 1.4 2004/08/21 19:59:52 arty Exp $
+/* $Id: ms2ps.cpp,v 1.5 2004/09/12 10:22:31 navaraf Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS seh conversion tool
  * FILE:            tools/ms2ps/ms2ps.cpp
@@ -426,5 +426,6 @@ int main( int argc, char **argv ) {
 	handle_try( tok, try_found, tok.end() );
     }
 
+    tok.push_front("#include <pseh/framebased.h>\n");
     print_tokens( tok.begin(), tok.end() );
 }
