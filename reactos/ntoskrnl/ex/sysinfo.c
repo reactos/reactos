@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.34 2004/05/02 19:34:21 ekohl Exp $
+/* $Id: sysinfo.c,v 1.35 2004/05/26 19:56:35 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -763,13 +763,23 @@ QSI_DEF(SystemVdmBopInformation)
 /* Class 21 - File Cache Information */
 QSI_DEF(SystemFileCacheInformation)
 {
+	SYSTEM_CACHE_INFORMATION *Sci = (SYSTEM_CACHE_INFORMATION *) Buffer;
+
 	if (Size < sizeof (SYSTEM_CACHE_INFORMATION))
 	{
 		* ReqSize = sizeof (SYSTEM_CACHE_INFORMATION);
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
-	/* FIXME */
-	return (STATUS_NOT_IMPLEMENTED);
+
+	Sci->CurrentSize = 0; /* FIXME */
+	Sci->PeakSize = 0; /* FIXME */
+	Sci->PageFaultCount = 0; /* FIXME */
+	Sci->MinimumWorkingSet = 0; /* FIXME */
+	Sci->MaximumWorkingSet = 0; /* FIXME */
+	Sci->TransitionSharedPages = 0; /* FIXME */
+	Sci->TransitionSharedPagesPeak = 0; /* FIXME */
+
+	return (STATUS_SUCCESS);
 }
 
 SSI_DEF(SystemFileCacheInformation)

@@ -441,7 +441,9 @@ struct _SYSTEM_CACHE_INFORMATION
 	ULONG	PageFaultCount;
 	ULONG	MinimumWorkingSet;
 	ULONG	MaximumWorkingSet;
-	ULONG	Unused[4];
+	ULONG   TransitionSharedPages;
+	ULONG   TransitionSharedPagesPeak;
+	ULONG	Unused[2];
 
 } SYSTEM_CACHE_INFORMATION;
 
