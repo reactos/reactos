@@ -65,8 +65,8 @@ inline static const char *debugres_w( const WCHAR *s ) { return wine_dbgstr_wn( 
 #define FIXME_ON(ch) 1
 #endif
 
-#define ERR          DPRINT
-#define ERR_(ch)     DPRINT
+#define ERR          DPRINT1
+#define ERR_(ch)     DPRINT1
 #ifdef NDEBUG
 #define ERR_ON(ch)   0
 #else

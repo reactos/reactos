@@ -39,6 +39,12 @@
 /* Define to 1 if you have the <audio/soundlib.h> header file. */
 /* #undef HAVE_AUDIO_SOUNDLIB_H */
 
+/* Define to 1 if you have the <capi20.h> header file. */
+/* #undef HAVE_CAPI20_H */
+
+/* Define if you have capi4linux libs and headers */
+/* #undef HAVE_CAPI4LINUX */
+
 /* Define to 1 if you have the `chsize' function. */
 #define HAVE_CHSIZE 1
 
@@ -75,6 +81,12 @@
 /* Define to 1 if you have the <float.h> header file. */
 #define HAVE_FLOAT_H 1
 
+/* Define to 1 if you have the <fontconfig/fontconfig.h> header file. */
+/* #undef HAVE_FONTCONFIG_FONTCONFIG_H */
+
+/* Define to 1 if you have the 'fork' function. */
+/* #undef HAVE_FORK */
+
 /* Define to 1 if you have the `fpclass' function. */
 #define HAVE_FPCLASS 1
 
@@ -107,6 +119,9 @@
 
 /* Define to 1 if you have the <freetype/tttables.h> header file. */
 /* #undef HAVE_FREETYPE_TTTABLES_H */
+
+/* Define to 1 if you have the <ft2build.h> header file. */
+/* #undef HAVE_FT2BUILD_H */
 
 /* Define to 1 if you have the `ftruncate' function. */
 /* #undef HAVE_FTRUNCATE */
@@ -146,6 +161,9 @@
 
 /* Define to 1 if you have the `getservbyport' function. */
 /* #undef HAVE_GETSERVBYPORT */
+
+/* Define to 1 if you have the `gettid' function. */
+/* #undef HAVE_GETTID */
 
 /* Define to 1 if you have the `gettimeofday' function. */
 /* #undef HAVE_GETTIMEOFDAY */
@@ -225,9 +243,6 @@
 /* Define to 1 if you have the `m' library (-lm). */
 #define HAVE_LIBM 1
 
-/* Define to 1 if you have the `mmap' library (-lmmap). */
-/* #undef HAVE_LIBMMAP */
-
 /* Define if you have the ncurses library (-lncurses) */
 /* #undef HAVE_LIBNCURSES */
 
@@ -236,6 +251,9 @@
 
 /* Define to 1 if you have the `ossaudio' library (-lossaudio). */
 /* #undef HAVE_LIBOSSAUDIO */
+
+/* Define to 1 if you have the `poll' library (-lpoll). */
+/* #undef HAVE_LIBPOLL */
 
 /* Define to 1 if you have the `resolv' library (-lresolv). */
 /* #undef HAVE_LIBRESOLV */
@@ -251,6 +269,9 @@
 
 /* Define to 1 if you have the `xpg4' library (-lxpg4). */
 /* #undef HAVE_LIBXPG4 */
+
+/* Define if you have the Xrandr library */
+/* #undef HAVE_LIBXRANDR */
 
 /* Define if you have the X Shape extension */
 /* #undef HAVE_LIBXSHAPE */
@@ -272,6 +293,9 @@
 
 /* Define if <linux/joystick.h> defines the Linux 2.2 joystick API */
 /* #undef HAVE_LINUX_22_JOYSTICK_API */
+
+/* Define to 1 if you have the <linux/capi.h> header file. */
+/* #undef HAVE_LINUX_CAPI_H */
 
 /* Define to 1 if you have the <linux/cdrom.h> header file. */
 /* #undef HAVE_LINUX_CDROM_H */
@@ -363,9 +387,6 @@
 /* Define to 1 if you have the <net/route.h> header file. */
 /* #undef HAVE_NET_ROUTE_H */
 
-/* Define to use glibc NPTL threading support. */
-/* #undef HAVE_NPTL */
-
 /* Define to 1 if the system has the type `off_t'. */
 #define HAVE_OFF_T 1
 
@@ -387,6 +408,9 @@
 /* Define to 1 if the system has the type `pid_t'. */
 #define HAVE_PID_T 1
 
+/* Define to 1 if you have the `pipe' function. */
+/* #undef HAVE_PIPE */
+
 /* Define to 1 if you have the `popen' function. */
 #define HAVE_POPEN 1
 
@@ -396,20 +420,20 @@
 /* Define to 1 if you have the `pread' function. */
 /* #undef HAVE_PREAD */
 
-/* Define to 1 if you have the `pthread_getspecific' function. */
-/* #undef HAVE_PTHREAD_GETSPECIFIC */
+/* Define to 1 if you have the <process.h> header file. */
+#define HAVE_PROCESS_H 1
 
-/* Define to 1 if you have the `pthread_key_create' function. */
-/* #undef HAVE_PTHREAD_KEY_CREATE */
+/* Define to 1 if you have the `pthread_getattr_np' function. */
+/* #undef HAVE_PTHREAD_GETATTR_NP */
 
-/* Define to 1 if you have the `pthread_mutex_lock' function. */
-/* #undef HAVE_PTHREAD_MUTEX_LOCK */
+/* Define to 1 if you have the <pthread.h> header file. */
+/* #undef HAVE_PTHREAD_H */
 
-/* Define to 1 if you have the `pthread_mutex_unlock' function. */
-/* #undef HAVE_PTHREAD_MUTEX_UNLOCK */
+/* Define to 1 if the system has the type `pthread_rwlockattr_t'. */
+/* #undef HAVE_PTHREAD_RWLOCKATTR_T */
 
-/* Define to 1 if you have the `pthread_setspecific' function. */
-/* #undef HAVE_PTHREAD_SETSPECIFIC */
+/* Define to 1 if the system has the type `pthread_rwlock_t'. */
+/* #undef HAVE_PTHREAD_RWLOCK_T */
 
 /* Define to 1 if you have the <pty.h> header file. */
 /* #undef HAVE_PTY_H */
@@ -438,6 +462,12 @@
 /* Define to 1 if you have the <sched.h> header file. */
 /* #undef HAVE_SCHED_H */
 
+/* Define to 1 if you have the <scsi/scsi.h> header file. */
+/* #undef HAVE_SCSI_SCSI_H */
+
+/* Define to 1 if you have the <scsi/scsi_ioctl.h> header file. */
+/* #undef HAVE_SCSI_SCSI_IOCTL_H */
+
 /* Define to 1 if you have the <scsi/sg.h> header file. */
 /* #undef HAVE_SCSI_SG_H */
 
@@ -456,6 +486,9 @@
 /* Define to 1 if `si_fd' is member of `siginfo_t'. */
 /* #undef HAVE_SIGINFO_T_SI_FD */
 
+/* Define to 1 if you have the sigsetjmp (and siglongjmp) function */
+/* #undef HAVE_SIGSETJMP */
+
 /* Define to 1 if the system has the type `size_t'. */
 #define HAVE_SIZE_T 1
 
@@ -467,6 +500,9 @@
 
 /* Define to 1 if you have the <soundcard.h> header file. */
 /* #undef HAVE_SOUNDCARD_H */
+
+/* Define to 1 if you have the `spawnvp' function. */
+#define HAVE_SPAWNVP 1
 
 /* Define to 1 if the system has the type `ssize_t'. */
 /* #undef HAVE_SSIZE_T */
@@ -512,6 +548,9 @@
 
 /* Define to 1 if `f_bfree' is member of `struct statfs'. */
 /* #undef HAVE_STRUCT_STATFS_F_BFREE */
+
+/* Define to 1 if `st_blocks' is member of `struct stat'. */
+/* #undef HAVE_STRUCT_STAT_ST_BLOCKS */
 
 /* Define to 1 if you have the <syscall.h> header file. */
 /* #undef HAVE_SYSCALL_H */
@@ -672,6 +711,9 @@
 /* Define to 1 if you have the `vsnprintf' function. */
 #define HAVE_VSNPRINTF 1
 
+/* Define to 1 if you have the `wait' function. */
+/* #undef HAVE_WAIT */
+
 /* Define to 1 if you have the `wait4' function. */
 /* #undef HAVE_WAIT4 */
 
@@ -686,6 +728,9 @@
 
 /* Define to 1 if you have the <X11/extensions/xf86vmode.h> header file. */
 /* #undef HAVE_X11_EXTENSIONS_XF86VMODE_H */
+
+/* Define to 1 if you have the <X11/extensions/Xrandr.h> header file. */
+/* #undef HAVE_X11_EXTENSIONS_XRANDR_H */
 
 /* Define to 1 if you have the <X11/extensions/Xrender.h> header file. */
 /* #undef HAVE_X11_EXTENSIONS_XRENDER_H */
@@ -754,13 +799,13 @@
 #define PACKAGE_NAME "Wine"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Wine 20030709"
+#define PACKAGE_STRING "Wine 20031118"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "wine"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "20030709"
+#define PACKAGE_VERSION "20031118"
 
 /* The size of a `long long', as computed by sizeof. */
 #define SIZEOF_LONG_LONG 8
@@ -771,6 +816,12 @@
 /* Define to the soname of the libcups library. */
 /* #undef SONAME_LIBCUPS */
 
+/* Define to the soname of the libcurses library. */
+/* #undef SONAME_LIBCURSES */
+
+/* Define to the soname of the libfontconfig library. */
+/* #undef SONAME_LIBFONTCONFIG */
+
 /* Define to the soname of the libfreetype library. */
 /* #undef SONAME_LIBFREETYPE */
 
@@ -779,6 +830,9 @@
 
 /* Define to the soname of the libjack library. */
 /* #undef SONAME_LIBJACK */
+
+/* Define to the soname of the libncurses library. */
+/* #undef SONAME_LIBNCURSES */
 
 /* Define to the soname of the libssl library. */
 /* #undef SONAME_LIBSSL */
