@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib.c,v 1.5 2003/11/09 23:13:56 gvg Exp $ */
+/* $Id: dib.c,v 1.6 2004/01/24 11:59:00 navaraf Exp $ */
 
 #include <windows.h>
 #include <ddk/winddi.h>
@@ -63,7 +63,7 @@ DIB_GetSource(SURFOBJ* SourceSurf, SURFGDI* SourceGDI, ULONG sx, ULONG sy, XLATE
     case 32:
       return(XLATEOBJ_iXlate(ColorTranslation, DIB_32BPP_GetPixel(SourceSurf, sx, sy)));
     default:
-      DPRINT1("DIB_16BPP_ExpandSource: Unhandled number of bits per pixel in source.\n");
+      DPRINT1("DIB_GetSource: Unhandled number of bits per pixel in source (%d).\n", SourceGDI->BitsPerPixel);
       return(0);
     }
 }
