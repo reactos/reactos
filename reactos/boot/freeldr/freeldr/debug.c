@@ -33,17 +33,17 @@
 #define DEBUG_NONE
 
 #if defined (DEBUG_ALL)
-U32		DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY | DPRINT_FILESYSTEM |
+ULONG		DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY | DPRINT_FILESYSTEM |
 						DPRINT_UI | DPRINT_DISK | DPRINT_CACHE | DPRINT_REACTOS |
 						DPRINT_LINUX;
 #elif defined (DEBUG_INIFILE)
-U32		DebugPrintMask = DPRINT_INIFILE;
+ULONG		DebugPrintMask = DPRINT_INIFILE;
 #elif defined (DEBUG_REACTOS)
-U32		DebugPrintMask = DPRINT_REACTOS | DPRINT_REGISTRY;
+ULONG		DebugPrintMask = DPRINT_REACTOS | DPRINT_REGISTRY;
 #elif defined (DEBUG_CUSTOM)
-U32		DebugPrintMask = DPRINT_WARNING|DPRINT_FILESYSTEM|DPRINT_MEMORY|DPRINT_LINUX;
+ULONG		DebugPrintMask = DPRINT_WARNING|DPRINT_FILESYSTEM|DPRINT_MEMORY|DPRINT_LINUX;
 #else //#elif defined (DEBUG_NONE)
-U32		DebugPrintMask = 0;
+ULONG		DebugPrintMask = 0;
 #endif
 
 #define	SCREEN				1
@@ -57,13 +57,13 @@ U32		DebugPrintMask = 0;
 
 #define BOCHS_OUTPUT_PORT	0xe9
 
-U32		DebugPort = RS232;
-//U32		DebugPort = SCREEN;
-//U32		DebugPort = BOCHS;
-//U32		DebugPort = SCREEN|BOCHS;
-U32		ComPort = COM1;
-//U32		BaudRate = 19200;
-U32		BaudRate = 115200;
+ULONG		DebugPort = RS232;
+//ULONG		DebugPort = SCREEN;
+//ULONG		DebugPort = BOCHS;
+//ULONG		DebugPort = SCREEN|BOCHS;
+ULONG		ComPort = COM1;
+//ULONG		BaudRate = 19200;
+ULONG		BaudRate = 115200;
 
 BOOL	DebugStartOfLine = TRUE;
 
@@ -100,7 +100,7 @@ VOID DebugPrintChar(UCHAR Character)
 	}
 }
 
-VOID DebugPrintHeader(U32 Mask)
+VOID DebugPrintHeader(ULONG Mask)
 {
   /* No header */
   if (Mask == 0)
@@ -309,7 +309,7 @@ static VOID DebugPrintV(char *format, int *dataptr)
 
 }
 
-VOID DebugPrint(U32 Mask, char *format, ...)
+VOID DebugPrint(ULONG Mask, char *format, ...)
 {
 	int *dataptr = (int *) &format;
 
@@ -336,11 +336,11 @@ VOID DebugPrint1(char *format, ...)
 	DebugPrintV(format, ++dataptr);
 }
 
-VOID DebugDumpBuffer(U32 Mask, PVOID Buffer, U32 Length)
+VOID DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length)
 {
 	PUCHAR	BufPtr = (PUCHAR)Buffer;
-	U32		Idx;
-	U32		Idx2;
+	ULONG		Idx;
+	ULONG		Idx2;
 
 	// Mask out unwanted debug messages
 	if (!(Mask & DebugPrintMask))
