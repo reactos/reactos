@@ -241,12 +241,12 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   /* Specials */
   /* Ctrl-_ generates US */
   //{ VK_OEM_1       ,NOCAPS, '$', '£' },
-  { VK_OEM_5       ,NOCAPS, '*',L'µ'},
-  { VK_OEM_3       ,NOCAPS, L'ù', '%' },
+  { VK_OEM_5       ,NOCAPS, '*','µ'},
+  { VK_OEM_3       ,NOCAPS, 'ù', '%' },
   { VK_OEM_COMMA   ,NOCAPS, ',', '?' },
   { VK_OEM_PERIOD  ,NOCAPS, ';', '.' },
   { VK_OEM_2       ,NOCAPS, ':', '/' },
-  { VK_OEM_8       ,NOCAPS, '!', L'§' },
+  { VK_OEM_8       ,NOCAPS, '!', '§' },
   /* Keys that do not have shift states */
   { VK_TAB     ,NOCAPS, '\t','\t'},
   { VK_ADD     ,NOCAPS, '+', '+' },
@@ -263,25 +263,25 @@ ROSDATA VK_TO_WCHARS3 key_to_chars_3mod[] = {
   /* Legacy (telnet-style) ascii escapes */
   { VK_OEM_102, 0, '<', '>', 0x1c /* FS */ },
   { VK_OEM_6, 0, WCH_DEAD, WCH_DEAD, WCH_NONE },
-  { VK_EMPTY, 0, L'^', L'¨', WCH_NONE }, //OEM 6 DEAD
-  { VK_OEM_7, 0, L'²','|', 0x1c /* FS */ },
+  { VK_EMPTY, 0, '^', '¨', WCH_NONE }, //OEM 6 DEAD
+  { VK_OEM_7, 0, '²','|', 0x1c /* FS */ },
   { VK_RETURN,0, '\r', '\r', '\n' },
   { 0,0 }
 };
 
 ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
   /* Normal, shifted, control, Alt+Gr */
-  { '2' ,       1, L'é',   '2',      WCH_NONE, WCH_DEAD },
-  { VK_EMPTY,   0, WCH_NONE,  WCH_NONE, WCH_NONE, L'~' },
+  { '2' ,       1, 'é',   '2',      WCH_NONE, WCH_DEAD },
+  { VK_EMPTY,   0, WCH_NONE,  WCH_NONE, WCH_NONE, '~' },
   { '3' ,       0, '"',       '3',      WCH_NONE, '#' },
   { '4' ,       0, '\'',      '4',      WCH_NONE, '{' },
-  { '7' ,       1, L'è',   '7',      WCH_NONE, WCH_DEAD },
-  { VK_EMPTY,   0, WCH_NONE,  WCH_NONE, WCH_NONE, L'`' },
-  { '9' ,       1, L'ç',   '9',      WCH_NONE, L'^' },
-  { '0' ,       1, L'à',   '0',      WCH_NONE, '@' },
+  { '7' ,       1, 'è',   '7',      WCH_NONE, WCH_DEAD },
+  { VK_EMPTY,   0, WCH_NONE,  WCH_NONE, WCH_NONE, '`' },
+  { '9' ,       1, 'ç',   '9',      WCH_NONE, '^' },
+  { '0' ,       1, 'à',   '0',      WCH_NONE, '@' },
   { VK_OEM_PLUS,0, '=',       '+',      WCH_NONE, '}' },
-  { 'E' ,       1, 'e',       'E',      WCH_NONE, L'€' /* euro */ },
-  { VK_OEM_1,   0, '$',       L'£',  WCH_NONE, L'¤' },
+  { 'E' ,       1, 'e',       'E',      WCH_NONE, '€' /* euro */ },
+  { VK_OEM_1,   0, '$',       '£',  WCH_NONE, '¤' },
   { VK_OEM_4,   0, ')',       '°',   WCH_NONE, ']'  },
   { 0, 0 }
 };
@@ -326,30 +326,30 @@ ROSDATA VK_TO_WCHAR_TABLE vk_to_wchar_master_table[] = {
   { 0,0,0 }
 };
 
-#define DK(l,a) (l | a <<16)
+#define DEADTRANS(ch, accent, comp, flags) MAKELONG(ch, accent), comp, flags
 ROSDATA DEADKEY  deadkey[] =
 {
-	{ DK('a',L'¨'), L'ä' , 0 },
-	{ DK('e',L'¨'), L'ë' , 0 },
-	{ DK('i',L'¨'), L'ï' , 0 },
-	{ DK('o',L'¨'), L'ö' , 0 },
-	{ DK('u',L'¨'), L'ü' , 0 },
-	{ DK(' ',L'¨'), L'¨' , 0 },
-	{ DK('a',L'^'), L'â' , 0 },
-	{ DK(L'^',L'e'), L'ê' , 0 },
-	{ DK('i',L'^'), L'î' , 0 },
-	{ DK('o',L'^'), L'ô' , 0 },
-	{ DK('u',L'^'), L'û' , 0 },
-	{ DK(' ',L'^'), L'^' , 0 },
-	{ DK('a',L'`'), L'à' , 0 },
-	{ DK('e',L'`'), L'è' , 0 },
-	{ DK('i',L'`'), L'ì' , 0 },
-	{ DK('o',L'`'), L'ò' , 0 },
-	{ DK('u',L'`'), L'ù' , 0 },
-	{ DK(' ',L'`'), L'`' , 0 },
-	{ DK('n',L'~'), L'ñ' , 0 },
-	{ DK(' ',L'~'), L'~' , 0 },
-  { 0,0 ,0,}
+	{ DEADTRANS(0x0061, 0x00A8, 0x00E4, 0x0000) },
+	{ DEADTRANS(0x0065, 0x00A8, 0x00EB, 0x0000) },
+	{ DEADTRANS(0x0069, 0x00A8, 0x00EF, 0x0000) },
+	{ DEADTRANS(0x006F, 0x00A8, 0x00F6, 0x0000) },
+	{ DEADTRANS(0x0075, 0x00A8, 0x00FC, 0x0000) },
+	{ DEADTRANS(0x0020, 0x00A8, 0x00A8, 0x0000) },
+	{ DEADTRANS(0x0061, 0x005E, 0x00E2, 0x0000) },
+	{ DEADTRANS(0x005E, 0x0065, 0x00EA, 0x0000) },
+	{ DEADTRANS(0x0069, 0x005E, 0x00EE, 0x0000) },
+	{ DEADTRANS(0x006F, 0x005E, 0x00F4, 0x0000) },
+	{ DEADTRANS(0x0075, 0x005E, 0x00FB, 0x0000) },
+	{ DEADTRANS(0x0020, 0x005E, 0x005E, 0x0000) },
+	{ DEADTRANS(0x0061, 0x0060, 0x00E0, 0x0000) },
+	{ DEADTRANS(0x0065, 0x0060, 0x00E8, 0x0000) },
+	{ DEADTRANS(0x0069, 0x0060, 0x00EC, 0x0000) },
+	{ DEADTRANS(0x006F, 0x0060, 0x00F2, 0x0000) },
+	{ DEADTRANS(0x0075, 0x0060, 0x00F9, 0x0000) },
+	{ DEADTRANS(0x0020, 0x0060, 0x0060, 0x0000) },
+	{ DEADTRANS(0x006E, 0x007E, 0x00F1, 0x0000) },
+	{ DEADTRANS(0x0020, 0x007E, 0x007E, 0x0000) },
+	{ 0, 0, 0}
 };
 
 
