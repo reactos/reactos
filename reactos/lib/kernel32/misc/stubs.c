@@ -1,8 +1,9 @@
-/* $Id: stubs.c,v 1.70 2004/03/18 18:29:19 weiden Exp $
+/* $Id: stubs.c,v 1.71 2004/04/12 17:09:36 navaraf Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
  */
+
 #include <k32.h>
 
 //#define _OLE2NLS_IN_BUILD_
@@ -1026,8 +1027,17 @@ GlobalMemoryStatusEx(
     LPMEMORYSTATUSEX lpBuffer
     )
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    DPRINT1("GlobalMemoryStatusEx is unimplmented\n");
+    lpBuffer->dwLength = sizeof(MEMORYSTATUSEX);
+    lpBuffer->dwMemoryLoad = 0;
+    lpBuffer->ullTotalPhys = 32*1024*1024;
+    lpBuffer->ullAvailPhys = 32*1024*1024;
+    lpBuffer->ullTotalPageFile = 32*1024*1024;
+    lpBuffer->ullAvailPageFile = 32*1024*1024;
+    lpBuffer->ullTotalVirtual = 32*1024*1024;
+    lpBuffer->ullAvailVirtual = 32*1024*1024;
+    lpBuffer->ullAvailExtendedVirtual = 0;
+    return TRUE;
 }
 
 /*
