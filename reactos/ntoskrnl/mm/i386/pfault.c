@@ -38,7 +38,7 @@ NTSTATUS MmPageFault(ULONG Cs,
    NTSTATUS Status;
 
    DPRINT("MmPageFault(Eip %x, Cr2 %x, ErrorCode %x)\n",
-          Eip, Cr2, ErrorCode);
+          *Eip, Cr2, ErrorCode);
 
    if (ErrorCode & 0x4)
    {
