@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.26 2004/04/09 20:03:15 navaraf Exp $
+/* $Id: init.c,v 1.27 2004/05/28 21:33:41 gvg Exp $
  * 
  * reactos/subsys/csrss/init.c
  *
@@ -34,6 +34,53 @@ HANDLE CsrObjectDirectory = INVALID_HANDLE_VALUE;
 UNICODE_STRING CsrDirectoryName;
 
 extern HANDLE CsrssApiHeap;
+
+static unsigned InitCompleteProcCount;
+static CSRPLUGIN_INIT_COMPLETE_PROC *InitCompleteProcs = NULL;
+
+static NTSTATUS FASTCALL
+AddInitCompleteProc(CSRPLUGIN_INIT_COMPLETE_PROC Proc)
+{
+  CSRPLUGIN_INIT_COMPLETE_PROC *NewProcs;
+
+  NewProcs = RtlAllocateHeap(CsrssApiHeap, 0,
+                             (InitCompleteProcCount + 1)
+                             * sizeof(CSRPLUGIN_INIT_COMPLETE_PROC));
+  if (NULL == NewProcs)
+    {
+      return STATUS_NO_MEMORY;
+    }
+  if (0 != InitCompleteProcCount)
+    {
+      RtlCopyMemory(NewProcs, InitCompleteProcs,
+                    InitCompleteProcCount * sizeof(CSRPLUGIN_INIT_COMPLETE_PROC));
+      RtlFreeHeap(CsrssApiHeap, 0, InitCompleteProcs);
+    }
+  NewProcs[InitCompleteProcCount] = Proc;
+  InitCompleteProcs = NewProcs;
+  InitCompleteProcCount++;
+
+  return STATUS_SUCCESS;
+}
+
+static BOOL FASTCALL
+CallInitComplete(void)
+{
+  BOOL Ok;
+  unsigned i;
+
+  Ok = TRUE;
+  if (0 != InitCompleteProcCount)
+    {
+      for (i = 0; i < InitCompleteProcCount && Ok; i++)
+        {
+          Ok = (*(InitCompleteProcs[i]))();
+        }
+      RtlFreeHeap(CsrssApiHeap, 0, InitCompleteProcs);
+    }
+
+  return Ok;
+}
 
 ULONG
 InitializeVideoAddressSpace(VOID);
@@ -113,6 +160,7 @@ InitWin32Csr()
   CSRSS_EXPORTED_FUNCS Exports;
   PCSRSS_API_DEFINITION ApiDefinitions;
   PCSRSS_OBJECT_DEFINITION ObjectDefinitions;
+  CSRPLUGIN_INIT_COMPLETE_PROC InitCompleteProc;
 
   RtlInitUnicodeString(&DllName, L"win32csr.dll");
   Status = LdrLoadDll(NULL, 0, &DllName, (PVOID *) &hInst);
@@ -129,7 +177,8 @@ InitWin32Csr()
   Exports.CsrInsertObjectProc = CsrInsertObject;
   Exports.CsrGetObjectProc = CsrGetObject;
   Exports.CsrReleaseObjectProc = CsrReleaseObject;
-  if (! (*InitProc)(&ApiDefinitions, &ObjectDefinitions, &Exports, CsrssApiHeap))
+  if (! (*InitProc)(&ApiDefinitions, &ObjectDefinitions, &InitCompleteProc,
+                    &Exports, CsrssApiHeap))
     {
       return STATUS_UNSUCCESSFUL;
     }
@@ -140,6 +189,14 @@ InitWin32Csr()
       return Status;
     }
   Status = CsrRegisterObjectDefinitions(ObjectDefinitions);
+  if (! NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+  if (NULL != InitCompleteProc)
+    {
+      Status = AddInitCompleteProc(InitCompleteProc);
+    }
 
   return Status;
 }
@@ -254,7 +311,7 @@ CsrServerInitialization (
       return FALSE;
     }
 
-  return TRUE;
+  return CallInitComplete();
 }
 
 /* EOF */

@@ -34,6 +34,7 @@
 #include <include/cleanup.h>
 #include <include/clipboard.h>
 #include <include/color.h>
+#include <include/csr.h>
 #include <include/cursoricon.h>
 #include <include/dce.h>
 #include <include/desktop.h>

@@ -523,6 +523,7 @@ PrintWindow@12
 PrivateCsrssAcquireOrReleaseInputOwnership@4
 PrivateCsrssRegisterPrimitive@0
 PrivateCsrssManualGuiCheck@4
+PrivateCsrssInitialized@0
 PrivateExtractIconExA@20
 PrivateExtractIconExW@20
 PrivateExtractIconsA@32

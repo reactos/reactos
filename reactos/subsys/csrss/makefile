@@ -1,9 +1,9 @@
-# $Id: makefile,v 1.28 2004/04/09 20:03:15 navaraf Exp $
+# $Id: makefile,v 1.29 2004/05/28 21:33:41 gvg Exp $
 
 PATH_TO_TOP = ../..
 
-#TARGET_TYPE = program
-TARGET_TYPE = proglib
+TARGET_TYPE = program
+#TARGET_TYPE = proglib
 
 TARGET_APPTYPE = native
 

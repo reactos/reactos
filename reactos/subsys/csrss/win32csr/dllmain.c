@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.4 2004/01/19 20:14:28 gvg Exp $
+/* $Id: dllmain.c,v 1.5 2004/05/28 21:33:41 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -19,6 +19,7 @@
 
 /* Not defined in any header file */
 extern VOID STDCALL PrivateCsrssManualGuiCheck(LONG Check);
+extern VOID STDCALL PrivateCsrssInitialized();
 
 /* GLOBALS *******************************************************************/
 
@@ -141,10 +142,18 @@ Win32CsrReleaseObject(PCSRSS_PROCESS_DATA ProcessData,
   return (CsrExports.CsrReleaseObjectProc)(ProcessData, Object);
 }
 
+static BOOL STDCALL
+Win32CsrInitComplete(void)
+{
+  PrivateCsrssInitialized();
+
+  return TRUE;
+}
 
 BOOL STDCALL
 Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
                        PCSRSS_OBJECT_DEFINITION *ObjectDefinitions,
+                       CSRPLUGIN_INIT_COMPLETE_PROC *InitComplete,
                        PCSRSS_EXPORTED_FUNCS Exports,
                        HANDLE CsrssApiHeap)
 {
@@ -165,6 +174,7 @@ Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
 
   *ApiDefinitions = Win32CsrApiDefinitions;
   *ObjectDefinitions = Win32CsrObjectDefinitions;
+  *InitComplete = Win32CsrInitComplete;
 
   return TRUE;
 }

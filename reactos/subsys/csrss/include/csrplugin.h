@@ -1,4 +1,4 @@
-/* $Id: csrplugin.h,v 1.1 2003/12/02 11:38:46 gvg Exp $
+/* $Id: csrplugin.h,v 1.2 2004/05/28 21:33:41 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -38,8 +38,11 @@ typedef struct tagCSRSS_EXPORTED_FUNCS
   CSRSS_RELEASE_OBJECT_PROC CsrReleaseObjectProc;
 } CSRSS_EXPORTED_FUNCS, *PCSRSS_EXPORTED_FUNCS;
 
-typedef BOOL STDCALL (*CSRPLUGIN_INITIALIZE_PROC)(PCSRSS_API_DEFINITION *ApiDefinitions,
+typedef BOOL (STDCALL *CSRPLUGIN_INIT_COMPLETE_PROC)(void);
+
+typedef BOOL (STDCALL *CSRPLUGIN_INITIALIZE_PROC)(PCSRSS_API_DEFINITION *ApiDefinitions,
                                                   PCSRSS_OBJECT_DEFINITION *ObjectDefinitions,
+                                                  CSRPLUGIN_INIT_COMPLETE_PROC *InitCompleteProc,
                                                   PCSRSS_EXPORTED_FUNCS Exports,
                                                   HANDLE CsrssApiHeap);
 

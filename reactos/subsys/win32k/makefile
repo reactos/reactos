@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.99 2004/05/13 19:29:47 jfilby Exp $
+# $Id: makefile,v 1.100 2004/05/28 21:33:40 gvg Exp $
 
 PATH_TO_TOP = ../..
 
@@ -54,12 +54,12 @@ MISC_OBJECTS = misc/driver.o misc/error.o misc/math.o misc/object.o
 LDR_OBJECTS = ldr/loader.o
 
 NTUSER_OBJECTS = ntuser/accelerator.o ntuser/callback.o ntuser/caret.o ntuser/class.o \
-                 ntuser/clipboard.o ntuser/focus.o ntuser/desktop.o ntuser/guicheck.o \
-                 ntuser/hook.o ntuser/hotkey.o ntuser/input.o ntuser/keyboard.o \
-                 ntuser/menu.o ntuser/message.o ntuser/metric.o ntuser/misc.o \
-                 ntuser/msgqueue.o ntuser/painting.o ntuser/prop.o ntuser/scrollbar.o \
-                 ntuser/stubs.o ntuser/timer.o ntuser/useratom.o ntuser/vis.o \
-                 ntuser/windc.o ntuser/window.o ntuser/winpos.o ntuser/winsta.o
+                 ntuser/clipboard.o ntuser/csr.o ntuser/focus.o ntuser/desktop.o \
+                 ntuser/guicheck.o ntuser/hook.o ntuser/hotkey.o ntuser/input.o \
+                 ntuser/keyboard.o ntuser/menu.o ntuser/message.o ntuser/metric.o \
+                 ntuser/misc.o ntuser/msgqueue.o ntuser/painting.o ntuser/prop.o \
+                 ntuser/scrollbar.o ntuser/stubs.o ntuser/timer.o ntuser/useratom.o \
+                 ntuser/vis.o ntuser/windc.o ntuser/window.o ntuser/winpos.o ntuser/winsta.o
 
 OBJECTS_OBJECTS = objects/bitmaps.o objects/brush.o objects/cliprgn.o  \
                   objects/color.o objects/coord.o objects/dc.o  \

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: desktop.c,v 1.14 2004/05/10 17:07:18 weiden Exp $
+ *  $Id: desktop.c,v 1.15 2004/05/28 21:33:41 gvg Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -207,47 +207,6 @@ HWND FASTCALL IntGetDesktopWindow(VOID)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-
-static NTSTATUS FASTCALL
-NotifyCsrss(PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply)
-{
-  NTSTATUS Status;
-  UNICODE_STRING PortName;
-  ULONG ConnectInfoLength;
-  static HANDLE WindowsApiPort = NULL;
-
-  RtlInitUnicodeString(&PortName, L"\\Windows\\ApiPort");
-  ConnectInfoLength = 0;
-  Status = ZwConnectPort(&WindowsApiPort,
-                         &PortName,
-                         NULL,
-                         NULL,
-                         NULL,
-                         NULL,
-                         NULL,
-                         &ConnectInfoLength);
-  if (! NT_SUCCESS(Status))
-    {
-      return Status;
-    }
-
-   Request->Header.DataSize = sizeof(CSRSS_API_REQUEST) - LPC_MESSAGE_BASE_SIZE;
-   Request->Header.MessageSize = sizeof(CSRSS_API_REQUEST);
-   
-   Status = ZwRequestWaitReplyPort(WindowsApiPort,
-				   &Request->Header,
-				   &Reply->Header);
-   if (! NT_SUCCESS(Status) || ! NT_SUCCESS(Status = Reply->Status))
-     {
-       ZwClose(WindowsApiPort);
-       return Status;
-     }
-
-//  ZwClose(WindowsApiPort);
-
-  return STATUS_SUCCESS;
-}
-
 NTSTATUS FASTCALL
 IntShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height)
 {
@@ -259,7 +218,7 @@ IntShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height)
   Request.Data.ShowDesktopRequest.Width = Width;
   Request.Data.ShowDesktopRequest.Height = Height;
 
-  return NotifyCsrss(&Request, &Reply);
+  return CsrNotify(&Request, &Reply);
 }
 
 NTSTATUS FASTCALL
@@ -446,7 +405,7 @@ NtUserCreateDesktop(
          lpszDesktopName->Length);
   Request.Data.CreateDesktopRequest.DesktopName[lpszDesktopName->Length / sizeof(WCHAR)] = L'\0';
 
-  Status = NotifyCsrss(&Request, &Reply);
+  Status = CsrNotify(&Request, &Reply);
   if (! NT_SUCCESS(Status))
     {
       DPRINT1("Failed to notify CSRSS about new desktop\n");

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: misc.c,v 1.4 2004/05/01 16:43:14 weiden Exp $
+/* $Id: misc.c,v 1.5 2004/05/28 21:33:41 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/misc.c
@@ -48,13 +48,20 @@ GetGuiResources(
 
 
 /*
- * Private call for CSRSS
+ * Private calls for CSRSS
  */
 VOID
 STDCALL
 PrivateCsrssManualGuiCheck(LONG Check)
 {
   NtUserManualGuiCheck(Check);
+}
+
+VOID
+STDCALL
+PrivateCsrssInitialized()
+{
+  NtUserCallNoParam(NOPARAM_ROUTINE_CSRSS_INITIALIZED);
 }
 
 /*

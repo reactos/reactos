@@ -1,4 +1,4 @@
-; $Id: win32csr.edf,v 1.1 2003/12/02 11:38:46 gvg Exp $
+; $Id: win32csr.edf,v 1.2 2004/05/28 21:33:41 gvg Exp $
 ;
 ;
 
@@ -6,4 +6,4 @@ LIBRARY win32csr.dll
 
 EXPORTS
 
-Win32CsrInitialization=Win32CsrInitialization@16
+Win32CsrInitialization=Win32CsrInitialization@20
