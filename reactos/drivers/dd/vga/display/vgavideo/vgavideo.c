@@ -573,6 +573,52 @@ void DIB_BltToVGA(int x, int y, int w, int h, void *b, int Source_lDelta)
     }
 }
 
+/* DIB blt to the VGA. */
+void DIB_BltToVGAWithXlate(int x, int y, int w, int h, void *b, int Source_lDelta, PXLATEOBJ Xlate)
+{
+  PBYTE pb, opb = b;
+  ULONG i, j;
+  ULONG x2 = x + w;
+  ULONG y2 = y + h;
+  ULONG offset;
+  UCHAR a;
+
+  for (i = x; i < x2; i++)
+    {
+      pb = opb;
+      offset = xconv[i] + y80[y];
+
+      WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x08);       // set the mask
+      WRITE_PORT_UCHAR((PUCHAR)GRA_D, maskbit[i]);
+
+      if (0 == ((i - x) % 2))
+	{
+	  for (j = y; j < y2; j++)
+	    {
+	      a = READ_REGISTER_UCHAR(vidmem + offset);
+	      WRITE_REGISTER_UCHAR(vidmem + offset, XLATEOBJ_iXlate(Xlate, (*pb & 0xf0) >> 4));
+	      offset += 80;
+	      pb += Source_lDelta;
+	    }
+	}
+      else
+	{
+	  for (j = y; j < y2; j++)
+	    {
+	      a = READ_REGISTER_UCHAR(vidmem + offset);
+	      WRITE_REGISTER_UCHAR(vidmem + offset, XLATEOBJ_iXlate(Xlate, *pb & 0x0f));
+	      offset += 80;
+	      pb += Source_lDelta;
+	    }
+	}
+
+      if (0 != ((i - x) % 2))
+	{
+	  opb++;
+	}
+    }
+}
+
 void DIB_TransparentBltToVGA(int x, int y, int w, int h, void *b, int Source_lDelta, ULONG trans)
 
 //  DIB blt to the VGA.

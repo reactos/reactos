@@ -42,18 +42,12 @@ BOOL
 DIBtoVGA(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
 	 RECTL *DestRect, POINTL *SourcePoint)
 {
-  LONG i, j, dx, dy, alterx, altery, idxColor, RGBulong = 0, c8;
-  BYTE  *GDIpos, *initial, *tMask, *lMask;
-
-  GDIpos = Source->pvScan0;
+  LONG dx, dy;
 
   dx = DestRect->right  - DestRect->left;
   dy = DestRect->bottom - DestRect->top;
 
-  alterx = abs(SourcePoint->x - DestRect->left);
-  altery = abs(SourcePoint->y - DestRect->top);
-
-  if (NULL == ColorTranslation)
+  if (NULL == ColorTranslation || 0 != (ColorTranslation->flXlate & XO_TRIVIAL))
     {
       DIB_BltToVGA(DestRect->left, DestRect->top, dx, dy,
                    Source->pvScan0 + SourcePoint->y * Source->lDelta + (SourcePoint->x >> 1),
@@ -62,18 +56,9 @@ DIBtoVGA(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
   else
     {
       /* Perform color translation */
-      for (j = SourcePoint->y; j < SourcePoint->y+dy; j++)
-	{
-	  initial = GDIpos;
-
-	  for (i=SourcePoint->x; i<SourcePoint->x+dx; i++)
-	    {
-	      idxColor = XLATEOBJ_iXlate(ColorTranslation, *GDIpos);
-	      vgaPutPixel(i+alterx, j+altery, idxColor);
-	      GDIpos+=1;
-	    }
-	  GDIpos = initial + Source->lDelta;
-	}
+      DIB_BltToVGAWithXlate(DestRect->left, DestRect->top, dx, dy,
+                            Source->pvScan0 + SourcePoint->y * Source->lDelta + (SourcePoint->x >> 1),
+		            Source->lDelta, ColorTranslation);
     }
 }
 
