@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.62 2001/09/25 19:52:28 dwelch Exp $
+/* $Id: section.c,v 1.63 2001/10/10 22:40:36 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -289,11 +289,11 @@ MiReadPage(PMEMORY_AREA MemoryArea,
        * alignment less than the file system block size.
        */
       Status = CcRosGetCacheSegment(Fcb->Bcb,
-				    (ULONG)Offset->QuadPart,
-				    &BaseOffset,
-				    &BaseAddress,
-				    &UptoDate,
-				    &CacheSeg);
+				 (ULONG)Offset->QuadPart,
+				 &BaseOffset,
+				 &BaseAddress,
+				 &UptoDate,
+				 &CacheSeg);
       if (!NT_SUCCESS(Status))
 	{
 	  return(Status);
@@ -322,7 +322,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
       /*
        * Retrieve the page from the cache segment that we actually want.
        */
-      Addr = MmGetPhysicalAddress(BaseAddress + 
+      Addr = MmGetPhysicalAddress(BaseAddress +
 				  Offset->QuadPart - BaseOffset);
       (*Page) = (PVOID)(ULONG)Addr.QuadPart;
       MmReferencePage((*Page));
@@ -342,7 +342,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
 	  MmWaitForFreePages();
 	  (*Page) = MmAllocPage(0);
 	}
-      
+
       /*
        * Create an mdl to hold the page we are going to read data into.
        */
@@ -360,9 +360,9 @@ MiReadPage(PMEMORY_AREA MemoryArea,
     }
 }
 
-NTSTATUS 
+NTSTATUS
 MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
-			     MEMORY_AREA* MemoryArea, 
+			     MEMORY_AREA* MemoryArea,
 			     PVOID Address,
 			     BOOLEAN Locked)
 {
@@ -596,7 +596,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	      * FIXME: What do we know in this case?
 	      */
 	    DPRINT1("IoPageRead failed (Status %x)\n", Status);
-	    
+
 	    /*
 	     * Cleanup and release locks
 	     */
@@ -2200,7 +2200,7 @@ MmAllocateSection (IN ULONG Length)
 				0,
 				&marea,
 				FALSE);
-   if (!NT_SUCCESS(STATUS_SUCCESS))
+   if (!NT_SUCCESS(Status))
      {
 	MmUnlockAddressSpace(AddressSpace);
 	return (NULL);
