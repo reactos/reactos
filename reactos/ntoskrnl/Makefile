@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.28 2001/03/31 15:46:08 phreak Exp $
+# $Id: Makefile,v 1.29 2001/03/31 17:02:17 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -521,7 +521,7 @@ $(TARGETNAME).exe: $(TARGETNAME).o $(TARGETNAME).a
 		--kill-at
 	- $(RM) base.tmp
 	$(CC) \
-		-Wl,-T,ntoskrnl.lnk -Wl,-S\
+		-Wl,-T,ntoskrnl.lnk -Wl,-s\
 		-nostartfiles -nostdlib \
 		-mdll \
 		-o $(TARGETNAME).exe \
