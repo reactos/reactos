@@ -22,6 +22,7 @@
 #include <rtl.h>
 #include <mm.h>
 #include <debug.h>
+#include <arch.h>
 
 
 
@@ -192,10 +193,11 @@ BOOL DiskReadBootRecord(ULONG DriveNumber, ULONG LogicalSectorNumber, PMASTER_BO
 	ULONG	Index;
 
 	// Read master boot record
-	if (!DiskReadLogicalSectors(DriveNumber, LogicalSectorNumber, 1, BootRecord))
+	if (!DiskReadLogicalSectors(DriveNumber, LogicalSectorNumber, 1, (PVOID)DISKREADBUFFER))
 	{
 		return FALSE;
 	}
+	RtlCopyMemory(BootRecord, (PVOID)DISKREADBUFFER, sizeof(MASTER_BOOT_RECORD));
 
 
 #ifdef DEBUG

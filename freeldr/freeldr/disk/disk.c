@@ -58,7 +58,7 @@ BOOL DiskReadLogicalSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG SectorC
 	GEOMETRY	DriveGeometry;
 	ULONG		NumberOfSectorsToRead;
 
-	DbgPrint((DPRINT_DISK, "ReadLogicalSector() DriveNumber: 0x%x SectorNumber: %d Buffer: 0x%x\n", DriveNumber, SectorNumber, Buffer));
+	DbgPrint((DPRINT_DISK, "ReadLogicalSectors() DriveNumber: 0x%x SectorNumber: %d SectorCount: %d Buffer: 0x%x\n", DriveNumber, SectorNumber, SectorCount, Buffer));
 
 	//
 	// Check to see if it is a fixed disk drive

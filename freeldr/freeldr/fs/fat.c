@@ -284,35 +284,10 @@ PVOID FatBufferDirectory(UINT32 DirectoryStartCluster, PUINT32 EntryCountPointer
 	//
 	if ((RootDirectory) && (FatType != FAT32))
 	{
-		DbgPrint((DPRINT_FILESYSTEM, "We are here.\n"));
-		/*DbgPrint((DPRINT_FILESYSTEM, "sizeof(FAT_BOOTSECTOR) = 0x%x.\n", sizeof(FAT_BOOTSECTOR)));
-
-		DbgPrint((DPRINT_FILESYSTEM, "JumpBoot: 0x%x 0x%x 0x%x\n", FatVolumeBootSector->JumpBoot[0], FatVolumeBootSector->JumpBoot[1], FatVolumeBootSector->JumpBoot[2]));
-		DbgPrint((DPRINT_FILESYSTEM, "OemName: %c%c%c%c%c%c%c%c\n", FatVolumeBootSector->OemName[0], FatVolumeBootSector->OemName[1], FatVolumeBootSector->OemName[2], FatVolumeBootSector->OemName[3], FatVolumeBootSector->OemName[4], FatVolumeBootSector->OemName[5], FatVolumeBootSector->OemName[6], FatVolumeBootSector->OemName[7]));*/
-		DbgPrint((DPRINT_FILESYSTEM, "BytesPerSector: %d\n", FatVolumeBootSector->BytesPerSector));
-		DbgPrint((DPRINT_FILESYSTEM, "SectorsPerCluster: %d\n", FatVolumeBootSector->SectorsPerCluster));
-		DbgPrint((DPRINT_FILESYSTEM, "ReservedSectors: %d\n", FatVolumeBootSector->ReservedSectors));
-		DbgPrint((DPRINT_FILESYSTEM, "NumberOfFats: %d\n", FatVolumeBootSector->NumberOfFats));
-		DbgPrint((DPRINT_FILESYSTEM, "RootDirEntries: %d\n", FatVolumeBootSector->RootDirEntries));
-		DbgPrint((DPRINT_FILESYSTEM, "TotalSectors: %d\n", FatVolumeBootSector->TotalSectors));
-		DbgPrint((DPRINT_FILESYSTEM, "MediaDescriptor: 0x%x\n", FatVolumeBootSector->MediaDescriptor));
-		DbgPrint((DPRINT_FILESYSTEM, "SectorsPerFat: %d\n", FatVolumeBootSector->SectorsPerFat));
-		DbgPrint((DPRINT_FILESYSTEM, "SectorsPerTrack: %d\n", FatVolumeBootSector->SectorsPerTrack));
-		DbgPrint((DPRINT_FILESYSTEM, "NumberOfHeads: %d\n", FatVolumeBootSector->NumberOfHeads));
-		DbgPrint((DPRINT_FILESYSTEM, "HiddenSectors: %d\n", FatVolumeBootSector->HiddenSectors));
-		DbgPrint((DPRINT_FILESYSTEM, "TotalSectorsBig: %d\n", FatVolumeBootSector->TotalSectorsBig));
-		DbgPrint((DPRINT_FILESYSTEM, "DriveNumber: 0x%x\n", FatVolumeBootSector->DriveNumber));
-		DbgPrint((DPRINT_FILESYSTEM, "Reserved1: 0x%x\n", FatVolumeBootSector->Reserved1));
-		DbgPrint((DPRINT_FILESYSTEM, "BootSignature: 0x%x\n", FatVolumeBootSector->BootSignature));
-		DbgPrint((DPRINT_FILESYSTEM, "VolumeSerialNumber: 0x%x\n", FatVolumeBootSector->VolumeSerialNumber));
-		/*DbgPrint((DPRINT_FILESYSTEM, "VolumeLabel: %c%c%c%c%c%c%c%c%c%c%c\n", FatVolumeBootSector->VolumeLabel[0], FatVolumeBootSector->VolumeLabel[1], FatVolumeBootSector->VolumeLabel[2], FatVolumeBootSector->VolumeLabel[3], FatVolumeBootSector->VolumeLabel[4], FatVolumeBootSector->VolumeLabel[5], FatVolumeBootSector->VolumeLabel[6], FatVolumeBootSector->VolumeLabel[7], FatVolumeBootSector->VolumeLabel[8], FatVolumeBootSector->VolumeLabel[9], FatVolumeBootSector->VolumeLabel[10]));
-		DbgPrint((DPRINT_FILESYSTEM, "FileSystemType: %c%c%c%c%c%c%c%c\n", FatVolumeBootSector->FileSystemType[0], FatVolumeBootSector->FileSystemType[1], FatVolumeBootSector->FileSystemType[2], FatVolumeBootSector->FileSystemType[3], FatVolumeBootSector->FileSystemType[4], FatVolumeBootSector->FileSystemType[5], FatVolumeBootSector->FileSystemType[6], FatVolumeBootSector->FileSystemType[7]));*/
-		DbgPrint((DPRINT_FILESYSTEM, "BootSectorMagic: 0x%x\n", FatVolumeBootSector->BootSectorMagic));
 		DirectorySize = ROUND_UP((FatVolumeBootSector->RootDirEntries * 32), FatVolumeBootSector->BytesPerSector);
 	}
 	else
 	{
-		DbgPrint((DPRINT_FILESYSTEM, "No we are here.\n"));
 		if (RootDirectory)
 		{
 			DirectorySize = (FatCountClustersInChain(Fat32VolumeBootSector->RootDirStartCluster) * Fat32VolumeBootSector->SectorsPerCluster) * Fat32VolumeBootSector->BytesPerSector;

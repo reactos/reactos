@@ -24,8 +24,10 @@
 
 #ifdef DEBUG
 
+//ULONG	DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY | DPRINT_FILESYSTEM |
+//						 DPRINT_UI | DPRINT_DISK | DPRINT_CACHE;
 ULONG	DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY | DPRINT_FILESYSTEM |
-						 DPRINT_UI | DPRINT_DISK | DPRINT_CACHE;
+						 DPRINT_UI | DPRINT_DISK;
 //ULONG	DebugPrintMask = DPRINT_CACHE;
 
 #define	SCREEN				0
@@ -65,11 +67,11 @@ VOID DebugPrintChar(UCHAR Character)
 
 	if (DebugPort == RS232)
 	{
-		Rs232PortPutByte(Character);
 		if (Character == '\n')
 		{
 			Rs232PortPutByte('\r');
 		}
+		Rs232PortPutByte(Character);
 	}
 	else if (DebugPort == BOCHS)
 	{

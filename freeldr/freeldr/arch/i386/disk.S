@@ -159,9 +159,9 @@ _packet_reserved:
 	.byte	0
 _packet_sector_count:
 	.word	0
-_packet_transfer_buffer_segment:
-	.word	0
 _packet_transfer_buffer_offset:
+	.word	0
+_packet_transfer_buffer_segment:
 	.word	0
 _packet_lba_sector_number:
 	.quad	0
@@ -208,11 +208,10 @@ EXTERN(_BiosInt13ReadExtended)
 
 _int13_extended_read:
 	movb	_int13_extended_drive,%dl				// Get the drive
-	movb	$42,%ah									// BIOS int 0x13, function 42h - IBM/MS INT 13 Extensions - EXTENDED READ
+	movb	$0x42,%ah								// BIOS int 0x13, function 42h - IBM/MS INT 13 Extensions - EXTENDED READ
 	movw	$_disk_address_packet,%si				// DS:SI -> disk address packet
 	int		$0x13									// Read sectors
 
-	movb	$1,%al									// Set the return value to be one (will be set to zero later if needed)
 	jc		_int13_extended_error					// Jump if error (CF = 1 on error)
 
 	movl	_int13_extended_sector_count,%eax		// Get the sector count in eax
@@ -252,7 +251,6 @@ _int13_extended_done:
 	.code32
 
 	movl	_int13_extended_retval,%eax				// Get return value
-	//movl	$1,%eax
 
 	pop		%edx
 	pop		%ecx
