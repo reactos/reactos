@@ -1,4 +1,4 @@
-/* $Id: regcontrol.c,v 1.6 2003/07/11 18:00:14 sedwards Exp $
+/* $Id: regcontrol.c,v 1.7 2003/07/27 17:47:35 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -13,7 +13,7 @@
 #include "user32/regcontrol.h"
 
 static void RegisterBuiltinClass(const struct builtin_class_descr *Descr)
-  {
+{
   WNDCLASSA wca;
 
   wca.lpszClassName = Descr->name;
@@ -28,7 +28,7 @@ static void RegisterBuiltinClass(const struct builtin_class_descr *Descr)
   wca.cbWndExtra = Descr->extra;
 
   RegisterClassA(&wca);
-  }
+}
 
 /***********************************************************************
  *           ControlsInit
@@ -37,6 +37,7 @@ static void RegisterBuiltinClass(const struct builtin_class_descr *Descr)
  */
 void ControlsInit(void)
 {
+  RegisterBuiltinClass(&DIALOG_builtin_class);
 #if 0
   RegisterBuiltinClass(&COMBO_builtin_class);
   RegisterBuiltinClass(&COMBOLBOX_builtin_class);

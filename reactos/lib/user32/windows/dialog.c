@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dialog.c,v 1.12 2003/07/26 23:12:08 royce Exp $
+/* $Id: dialog.c,v 1.13 2003/07/27 17:48:43 ekohl Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -37,6 +37,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <debug.h>
+
+#include "user32/regcontrol.h"
+#include "../controls/controls.h"
+
 
 /* MACROS/DEFINITIONS ********************************************************/
 
@@ -110,6 +114,22 @@ typedef struct
     INT        nIDDlgItem;
     HWND       control;
 } GETDLGITEMINFO;
+
+
+/*********************************************************************
+ * dialog class descriptor
+ */
+const struct builtin_class_descr DIALOG_builtin_class =
+{
+    DIALOG_CLASS_ATOMA, /* name */
+    CS_GLOBALCLASS | CS_SAVEBITS | CS_DBLCLKS, /* style  */
+    (WNDPROC) DefDlgProcA,        /* procA */
+    (WNDPROC) DefDlgProcW,        /* procW */
+    sizeof(DIALOGINFO *),  /* extra */
+    (LPCSTR) IDC_ARROW,           /* cursor */
+    0                     /* brush */
+};
+
 
 /* INTERNAL FUNCTIONS ********************************************************/
 
