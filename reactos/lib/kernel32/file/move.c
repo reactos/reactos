@@ -1,4 +1,4 @@
-/* $Id: move.c,v 1.4 2000/06/29 23:35:24 dwelch Exp $
+/* $Id: move.c,v 1.5 2002/04/27 19:15:43 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -143,6 +143,7 @@ MoveFileExW (
 	                                FileRename,
 	                                FILE_RENAME_SIZE,
 	                                FileRenameInformation);
+	CloseHandle(hFile);
 	if (!NT_SUCCESS(errCode))
 	{
 		if (CopyFileW (lpExistingFileName,
@@ -150,8 +151,6 @@ MoveFileExW (
 		               FileRename->Replace))
 			DeleteFileW (lpExistingFileName);
 	}
-
-	CloseHandle(hFile);
 	return TRUE;
 }
 
