@@ -66,15 +66,15 @@ void RegDirectory::read_directory(int scan_flags)
 				break;
 
 			w32fd.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
-			lstrcpy(w32fd.cFileName, name);
+			_tcsncpy(w32fd.cFileName, name, name_len);
 
 			_tcscpy(pname, name);
 			entry = new RegDirectory(this, buffer, _hKeyRoot);
 
 			memcpy(&entry->_data, &w32fd, sizeof(WIN32_FIND_DATA));
 
-			if (*class_name)
-				entry->_type_name = _tcsdup(class_name);
+			if (class_len)
+				entry->_type_name = _tcsdup(String(class_name, class_len));
 
 			if (!first_entry)
 				first_entry = entry;
