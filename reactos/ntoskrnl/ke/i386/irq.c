@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: irq.c,v 1.34 2003/07/20 12:14:46 dwelch Exp $
+/* $Id: irq.c,v 1.35 2003/08/25 09:14:09 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/irq.c
@@ -485,13 +485,6 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
        return;
      }
 
-   CurrentThread = KeGetCurrentThread();
-   if (NULL != CurrentThread && NULL == CurrentThread->TrapFrame)
-      {
-	OldTrapFrame = CurrentThread->TrapFrame;
-	KeIRQTrapFrameToTrapFrame(Trapframe, &KernelTrapFrame);
-	CurrentThread->TrapFrame = &KernelTrapFrame;
-      }
 
    /*
     * Enable interrupts
@@ -526,19 +519,33 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
    __asm__("cli\n\t");
    HalEndSystemInterrupt (old_level, 0);
 
-   if (old_level==PASSIVE_LEVEL && CurrentThread!=NULL &&
-       CurrentThread->Alerted[1] != 0 &&
-       CurrentThread->TrapFrame->Cs != KERNEL_CS)
+   if (old_level==PASSIVE_LEVEL && Trapframe->Cs != KERNEL_CS)
      {
-       KiDeliverNormalApc();
+       CurrentThread = KeGetCurrentThread();
+       if (CurrentThread!=NULL && CurrentThread->Alerted[1])
+         {
+           DPRINT("PID: %d, TID: %d CS %04x/%04x\n", 
+	          ((PETHREAD)CurrentThread)->ThreadsProcess->UniqueProcessId,
+		  ((PETHREAD)CurrentThread)->Cid.UniqueThread,
+		  Trapframe->Cs, 
+		  CurrentThread->TrapFrame ? CurrentThread->TrapFrame->Cs : 0);
+	   if (CurrentThread->TrapFrame == NULL)
+	     {
+	       OldTrapFrame = CurrentThread->TrapFrame;
+	       KeIRQTrapFrameToTrapFrame(Trapframe, &KernelTrapFrame);
+	       CurrentThread->TrapFrame = &KernelTrapFrame;
+	     }
+	   
+           KiDeliverNormalApc();
+           
+	   assert(KeGetCurrentThread() == CurrentThread);
+           if (CurrentThread->TrapFrame == &KernelTrapFrame)
+	     {
+               KeTrapFrameToIRQTrapFrame(&KernelTrapFrame, Trapframe);
+	       CurrentThread->TrapFrame = OldTrapFrame;
+	     }
+	 }
      }
-
-   assert(KeGetCurrentThread() == CurrentThread);
-   if (NULL != CurrentThread && CurrentThread->TrapFrame == &KernelTrapFrame)
-      {
-	KeTrapFrameToIRQTrapFrame(&KernelTrapFrame, Trapframe);
-	CurrentThread->TrapFrame = OldTrapFrame;
-      }
 }
 
 #endif /* MP */
