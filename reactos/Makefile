@@ -15,8 +15,8 @@ include rules.mak
 # Required to run the system
 #
 COMPONENTS = iface_native iface_additional ntoskrnl
-DLLS = ntdll kernel32 crtdll advapi32 fmifs gdi32 
-#DLLS = mingw32 user32
+DLLS = ntdll kernel32 crtdll advapi32 fmifs gdi32
+#DLLS = mingw32
 SUBSYS = smss win32k
 #SUBSYS = csrss
 
@@ -41,7 +41,7 @@ FS_DRIVERS = vfat
 # FS_DRIVERS = minix ext2 template
 KERNEL_SERVICES = $(DEVICE_DRIVERS) $(FS_DRIVERS)
 
-APPS = args hello shell test cat bench apc shm lpc thread event file
+APPS = args hello shell test cat bench apc shm lpc thread event file gditest
 
 all: buildno $(COMPONENTS) $(DLLS) $(SUBSYS) $(LOADERS) $(KERNEL_SERVICES) $(APPS)
 
