@@ -15,7 +15,7 @@ Environment:
     LINUX 2.2.X
     Kernel mode only
 
-Author: 
+Author:
 
     Klaus P. Gerlicher
 
@@ -34,8 +34,6 @@ Copyright notice:
 // INCLUDES
 ////
 #include "remods.h"
-#include <asm/delay.h>
-
 #include "precomp.h"
 
 ////////////////////////////////////////////////////
@@ -47,31 +45,31 @@ ULONG OldDblFltHandler = 0;
 // FUNCTIONS
 ////
 
-//************************************************************************* 
-// HandleDoubleFault() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// HandleDoubleFault()
+//
+//*************************************************************************
 void HandleDoubleFault(FRAME* ptr)
 {
     DPRINT((0,"HandleDoubleFault(): ptr = %x\n",ptr));
 }
 
 
-//************************************************************************* 
-// NewDblFltHandler() 
-// 
-//************************************************************************* 
-__asm__ (" 
+//*************************************************************************
+// NewDblFltHandler()
+//
+//*************************************************************************
+__asm__ ("
 NewDblFltHandler:
 		pushfl
         cli
         cld
         pushal
-	    pushl %ds 
+	    pushl %ds
 
-	    // setup default data selectors 
+	    // setup default data selectors
 	    movw %ss,%ax
-	    movw %ax,%ds 
+	    movw %ax,%ds
 
         // get frame ptr
         lea 40(%esp),%eax
@@ -79,7 +77,7 @@ NewDblFltHandler:
         call HandleDoubleFault
         addl $4,%esp
 
-	    popl %ds 
+	    popl %ds
         popal
 		popfl
 		// remove error code from stack and replace with reason code
@@ -88,10 +86,10 @@ NewDblFltHandler:
 		jmp NewInt31Handler");
 
 
-//************************************************************************* 
-// InstallDblFltHook() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// InstallDblFltHook()
+//
+//*************************************************************************
 void InstallDblFltHook(void)
 {
 	ULONG LocalDblFltHandler;
@@ -112,10 +110,10 @@ void InstallDblFltHook(void)
     LEAVE_FUNC();
 }
 
-//************************************************************************* 
-// DeInstallDblFltHook() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// DeInstallDblFltHook()
+//
+//*************************************************************************
 void DeInstallDblFltHook(void)
 {
 	ENTER_FUNC();

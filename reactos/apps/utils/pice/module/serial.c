@@ -15,7 +15,7 @@ Environment:
     LINUX 2.2.X
     Kernel mode only
 
-Author: 
+Author:
 
     Klaus P. Gerlicher
 
@@ -30,7 +30,6 @@ Copyright notice:
 
 --*/
 #include "remods.h"
-#include <asm/io.h>
 #include "precomp.h"
 #include "serial_port.h"
 
@@ -72,17 +71,17 @@ void SerialSetSpeed(ULONG baudrate)
     divisor = (ULONG) (115200L/baudrate);
 
     c = inportb((USHORT)(usSerialPortBase + LCR));
-    outportb((USHORT)(usSerialPortBase + LCR), (UCHAR)(c | 0x80)); // Set DLAB 
+    outportb((USHORT)(usSerialPortBase + LCR), (UCHAR)(c | 0x80)); // Set DLAB
     outportb((USHORT)(usSerialPortBase + DLL), (UCHAR)(divisor & 0x00FF));
     outportb((USHORT)(usSerialPortBase + DLH), (UCHAR)((divisor >> 8) & 0x00FF));
-    outportb((USHORT)(usSerialPortBase + LCR), c);          // Reset DLAB 
+    outportb((USHORT)(usSerialPortBase + LCR), c);          // Reset DLAB
 
 }
 
 ///************************************************************************
 // SerialSetOthers()
 //
-// Set other communications parameters 
+// Set other communications parameters
 //************************************************************************
 void SerialSetOthers(ULONG Parity, ULONG Bits, ULONG StopBit)
 {
@@ -100,13 +99,13 @@ void SerialSetOthers(ULONG Parity, ULONG Bits, ULONG StopBit)
     setting |= Parity;
 
     c = inportb((USHORT)(usSerialPortBase + LCR));
-    outportb((USHORT)(usSerialPortBase + LCR), (UCHAR)(c & ~0x80)); // Reset DLAB 
+    outportb((USHORT)(usSerialPortBase + LCR), (UCHAR)(c & ~0x80)); // Reset DLAB
 
     // no ints
     outportb((USHORT)(usSerialPortBase + IER), (UCHAR)0);
 
     // clear FIFO and disable them
-    outportb((USHORT)(usSerialPortBase + FCR), (UCHAR)0); 
+    outportb((USHORT)(usSerialPortBase + FCR), (UCHAR)0);
 
     outportb((USHORT)(usSerialPortBase + LCR), (UCHAR)setting);
 
@@ -148,7 +147,7 @@ void SetupSerial(ULONG port,ULONG baudrate)
 ///************************************************************************
 // SerialReadByte()
 //
-// Output a character to the serial port 
+// Output a character to the serial port
 //************************************************************************
 BOOLEAN SerialReadByte(PUCHAR px)
 {
@@ -156,7 +155,7 @@ BOOLEAN SerialReadByte(PUCHAR px)
 
     timeout = 0x00FFFFL;
 
-    // Wait for transmitter to clear 
+    // Wait for transmitter to clear
     while ((inportb((USHORT)(usSerialPortBase + LSR)) & RCVRDY) == 0)
         if (!(--timeout))
         {
@@ -171,7 +170,7 @@ BOOLEAN SerialReadByte(PUCHAR px)
 ///************************************************************************
 // SerialSendByte()
 //
-// Output a character to the serial port 
+// Output a character to the serial port
 //************************************************************************
 BOOLEAN SerialSendByte(UCHAR x)
 {
@@ -179,7 +178,7 @@ BOOLEAN SerialSendByte(UCHAR x)
 
     timeout = 0x00FFFFL;
 
-    // Wait for transmitter to clear 
+    // Wait for transmitter to clear
     while ((inportb((USHORT)(usSerialPortBase + LSR)) & XMTRDY) == 0)
         if (!(--timeout))
         {
@@ -244,14 +243,14 @@ BOOLEAN SendPacket(PSERIAL_PACKET p)
 
         do
         {
-            c = 0;                
+            c = 0;
             SerialReadByte(&c);
             if(c != ACK)
                 ucLastKeyRead = c;
         }while(c != ACK && timeout--);
 
     }while(c != ACK);
-    
+
     return TRUE;
 }
 
@@ -297,9 +296,9 @@ PSERIAL_PACKET AssemblePacket(PUCHAR pData,ULONG ulSize)
 {
     PSERIAL_PACKET p;
     ULONG ulCheckSum;
-    
+
     p = (PSERIAL_PACKET)assemble_packet;
-    
+
     // fill in header
     p->header.packet_chksum = CheckSum(pData,ulSize);
     p->header.packet_size = ulSize;
@@ -307,8 +306,8 @@ PSERIAL_PACKET AssemblePacket(PUCHAR pData,ULONG ulSize)
     ulCheckSum = (ULONG)CheckSum((PUCHAR)p,sizeof(SERIAL_PACKET_HEADER));
     p->header.packet_header_chksum = ulCheckSum;
     // attach data to packet
-    PICE_memcpy(p->data,pData,ulSize); 
-        
+    PICE_memcpy(p->data,pData,ulSize);
+
     return p;
 }
 
@@ -340,7 +339,7 @@ void SetBackgroundColorSerial(ECOLORS col)
 //*************************************************************************
 void PrintGrafSerial(ULONG x,ULONG y,UCHAR c)
 {
-    // put this into memory 
+    // put this into memory
     pScreenBufferSerial[y*GLOBAL_SCREEN_WIDTH + x] = c;
 
     // put this into cache
@@ -387,7 +386,7 @@ void ShowCursorSerial(void)
     PSERIAL_PACKET p;
 
     ENTER_FUNC();
-	
+
     bCursorEnabled = TRUE;
 
     pCursor = (PSERIAL_DATA_PACKET_CURSOR)packet;
@@ -413,7 +412,7 @@ void HideCursorSerial(void)
     PSERIAL_PACKET p;
 
     ENTER_FUNC();
-	
+
     bCursorEnabled = FALSE;
 
     pCursor = (PSERIAL_DATA_PACKET_CURSOR)packet;
@@ -536,7 +535,7 @@ UCHAR GetKeyPolledSerial(void)
     pPoll->type             = PACKET_TYPE_POLL;
     pPoll->major_version    = PICE_MAJOR_VERSION;
     pPoll->minor_version    = PICE_MINOR_VERSION;
-    pPoll->build_number     = PICE_BUILD;         
+    pPoll->build_number     = PICE_BUILD;
 
     p = AssemblePacket((PUCHAR)pPoll,sizeof(SERIAL_DATA_PACKET_POLL));
     SendPacket(p);
@@ -580,7 +579,7 @@ BOOLEAN Connect(USHORT xSize,USHORT ySize)
 //
 // init terminal screen
 //*************************************************************************
-BOOLEAN ConsoleInitSerial(void) 
+BOOLEAN ConsoleInitSerial(void)
 {
 	BOOLEAN bResult = FALSE;
 
@@ -609,7 +608,7 @@ BOOLEAN ConsoleInitSerial(void)
     GLOBAL_SCREEN_WIDTH = 80;
     GLOBAL_SCREEN_HEIGHT = 60;
 
-	pScreenBufferSerial = PICE_malloc(FRAMEBUFFER_SIZE, NONPAGEDPOOL); 
+	pScreenBufferSerial = PICE_malloc(FRAMEBUFFER_SIZE, NONPAGEDPOOL);
 
     if(pScreenBufferSerial)
     {
@@ -639,7 +638,7 @@ BOOLEAN ConsoleInitSerial(void)
 //
 // exit terminal screen
 //*************************************************************************
-void ConsoleShutdownSerial(void) 
+void ConsoleShutdownSerial(void)
 {
     ENTER_FUNC();
 

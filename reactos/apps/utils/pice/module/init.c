@@ -35,11 +35,6 @@ Copyright notice:
 #include "remods.h"
 #include "precomp.h"
 
-#include <linux/fs.h>
-#include <asm/uaccess.h>
-#include <asm/io.h>
-#include <asm/delay.h>
-
 ////////////////////////////////////////////////////
 // GLOBALS
 ULONG ulDoInitialBreak=1;
@@ -49,6 +44,9 @@ char tempInit[256];
 PDIRECTORY_OBJECT *pNameSpaceRoot = NULL;
 PDEBUG_MODULE pdebug_module_tail = NULL;
 PDEBUG_MODULE pdebug_module_head = NULL;
+PMADDRESS_SPACE mm_init_mm;
+
+ULONG KeyboardIRQL;
 
 //*************************************************************************
 // InitPICE()
@@ -58,8 +56,19 @@ BOOLEAN InitPICE(void)
 {
     ULONG ulHandleScancode=0,ulHandleKbdEvent=0;
 	ARGS Args;
+    KIRQL Dirql;
+    KAFFINITY Affinity;
 
     ENTER_FUNC();
+
+	DPRINT((0,"InitPICE(): trace step 0.5\n"));
+    KeyboardIRQL = HalGetInterruptVector(Internal,
+				     0,
+				     0,
+				     KEYBOARD_IRQ,
+				     &Dirql,
+				     &Affinity);
+	DPRINT((0,"KeyboardIRQL: %x\n", KeyboardIRQL));
 
     DPRINT((0,"InitPICE(): trace step 1\n"));
     // enable monochrome passthrough on BX type chipset
@@ -103,9 +112,9 @@ BOOLEAN InitPICE(void)
 	}
 
     DPRINT((0,"InitPICE(): trace step 6\n"));
-    // get kernel mm_struct
-    my_init_mm = GetInitMm();
-    if(!my_init_mm)
+
+	ScanExport(_KernelAddressSpace,(PULONG)&mm_init_mm);
+	if(!my_init_mm)
 	{
 		Print(OUTPUT_WINDOW,"pICE: ABORT (initial memory map not found)\n");
 		Print(OUTPUT_WINDOW,"pICE: press any key to continue...\n");
@@ -116,6 +125,21 @@ BOOLEAN InitPICE(void)
 		return FALSE;
 	}
     DPRINT((0,"init_mm @ %X\n",my_init_mm));
+
+    DPRINT((0,"InitPICE(): trace step 6.1\n"));
+
+	ScanExport(_PsProcessListHead,(PULONG)&pPsProcessListHead);
+	if(!pPsProcessListHead)
+	{
+		Print(OUTPUT_WINDOW,"pICE: ABORT (PsProcessListHead not found)\n");
+		Print(OUTPUT_WINDOW,"pICE: press any key to continue...\n");
+        while(!GetKeyPolled());
+        UnloadSymbols();
+		ConsoleShutdown();
+        LEAVE_FUNC();
+		return FALSE;
+	}
+    DPRINT((0,"PsProcessListHead @ %X\n",pPsProcessListHead));
 
     DPRINT((0,"InitPICE(): trace step 7\n"));
     // load the file /boot/System.map.
@@ -133,7 +157,8 @@ BOOLEAN InitPICE(void)
 
     DPRINT((0,"InitPICE(): trace step 8\n"));
     // end of the kernel
-    ScanExports("_end",(PULONG)&kernel_end);
+	/*
+	ScanExports("_end",(PULONG)&kernel_end);
     if(!kernel_end)
 	{
 		Print(OUTPUT_WINDOW,"pICE: ABORT (kernel size is unknown)\n");
@@ -145,6 +170,7 @@ BOOLEAN InitPICE(void)
         LEAVE_FUNC();
 		return FALSE;
 	}
+	*/
 
     DPRINT((0,"InitPICE(): trace step 9\n"));
 

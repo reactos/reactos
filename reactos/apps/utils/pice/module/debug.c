@@ -15,7 +15,7 @@ Environment:
     LINUX 2.2.X
     Kernel mode only
 
-Author: 
+Author:
 
     Klaus P. Gerlicher
 
@@ -37,9 +37,8 @@ Copyright notice:
 #include "remods.h"
 
 #include "precomp.h"
-#include <asm/io.h>
 #include <stdarg.h>
-#include "serial.h" 
+#include "serial.h"
 #include "serial_port.h"
 
 #define STANDARD_DEBUG_PREFIX "pICE: "
@@ -58,13 +57,13 @@ USHORT usDebugPortBase;
 void DebugSendString(LPSTR s);
 
 
-//************************************************************************* 
-// Pice_dprintf() 
-// 
+//*************************************************************************
+// Pice_dprintf()
+//
 // internal debug print
-//************************************************************************* 
+//*************************************************************************
 VOID Pice_dprintf(ULONG DebugLevel, PCHAR DebugMessage, ...)
-{	
+{
 	va_list         ap;
 
 	va_start(ap, DebugMessage);
@@ -82,7 +81,7 @@ VOID Pice_dprintf(ULONG DebugLevel, PCHAR DebugMessage, ...)
 //************************************************************************
 // SendByte()
 //
-// Output a character to the serial port 
+// Output a character to the serial port
 //************************************************************************
 BOOLEAN DebugSendByte(UCHAR x)
 {
@@ -90,7 +89,7 @@ BOOLEAN DebugSendByte(UCHAR x)
 
     timeout = 0x00FFFFL;
 
-    // Wait for transmitter to clear 
+    // Wait for transmitter to clear
     while ((inportb((USHORT)(usDebugPortBase + LSR)) & XMTRDY) == 0)
         if (!(--timeout))
         {
@@ -129,17 +128,17 @@ void DebugSetSpeed(ULONG baudrate)
     divisor = (ULONG) (115200L/baudrate);
 
     c = inportb((USHORT)(usDebugPortBase + LCR));
-    outportb((USHORT)(usDebugPortBase + LCR), (UCHAR)(c | 0x80)); // Set DLAB 
+    outportb((USHORT)(usDebugPortBase + LCR), (UCHAR)(c | 0x80)); // Set DLAB
     outportb((USHORT)(usDebugPortBase + DLL), (UCHAR)(divisor & 0x00FF));
     outportb((USHORT)(usDebugPortBase + DLH), (UCHAR)((divisor >> 8) & 0x00FF));
-    outportb((USHORT)(usDebugPortBase + LCR), c);          // Reset DLAB 
+    outportb((USHORT)(usDebugPortBase + LCR), c);          // Reset DLAB
 
 }
 
 ///************************************************************************
 // DebugSetOthers()
 //
-// Set other communications parameters 
+// Set other communications parameters
 //************************************************************************
 void DebugSetOthers(ULONG Parity, ULONG Bits, ULONG StopBit)
 {
@@ -157,7 +156,7 @@ void DebugSetOthers(ULONG Parity, ULONG Bits, ULONG StopBit)
     setting |= Parity;
 
     c = inportb((USHORT)(usDebugPortBase + LCR));
-    outportb((USHORT)(usDebugPortBase + LCR), (UCHAR)(c & ~0x80)); // Reset DLAB 
+    outportb((USHORT)(usDebugPortBase + LCR), (UCHAR)(c & ~0x80)); // Reset DLAB
 
     // no ints
     outportb((USHORT)(usDebugPortBase + IER), (UCHAR)0);

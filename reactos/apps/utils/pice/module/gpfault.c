@@ -14,7 +14,7 @@ Environment:
 
     Kernel mode only
 
-Author: 
+Author:
 
     Klaus P. Gerlicher
 
@@ -33,8 +33,6 @@ Copyright notice:
 // INCLUDES
 ////
 #include "remods.h"
-#include <asm/delay.h>
-
 #include "precomp.h"
 
 ////////////////////////////////////////////////////
@@ -48,30 +46,30 @@ char tempGP[1024];
 // FUNCTIONS
 ////
 
-//************************************************************************* 
-// NewGPFaultHandler() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// NewGPFaultHandler()
+//
+//*************************************************************************
 void HandleGPFault(FRAME* ptr)
 {
     DPRINT((0,"HandleGPFault(): ptr = %x\n",ptr));
 }
 
-//************************************************************************* 
-// NewGPFaultHandler() 
-// 
-//************************************************************************* 
-__asm__ (" 
+//*************************************************************************
+// NewGPFaultHandler()
+//
+//*************************************************************************
+__asm__ ("
 NewGPFaultHandler:
 		pushfl
         cli
         cld
         pushal
-	    pushl %ds 
+	    pushl %ds
 
-	    // setup default data selectors 
+	    // setup default data selectors
 	    movw %ss,%ax
-	    movw %ax,%ds 
+	    movw %ax,%ds
 
         // get frame ptr
         lea 40(%esp),%eax
@@ -79,7 +77,7 @@ NewGPFaultHandler:
         call HandleGPFault
         addl $4,%esp
 
-	    popl %ds 
+	    popl %ds
         popal
 		popfl
 		// remove error code from stack and replace with reason code
@@ -88,10 +86,10 @@ NewGPFaultHandler:
 		jmp NewInt31Handler");
 
 
-//************************************************************************* 
-// InstallGPFaultHook() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// InstallGPFaultHook()
+//
+//*************************************************************************
 void InstallGPFaultHook(void)
 {
 	ULONG LocalGPFaultHandler;
@@ -112,10 +110,10 @@ void InstallGPFaultHook(void)
     LEAVE_FUNC();
 }
 
-//************************************************************************* 
-// DeInstallGPFaultHook() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// DeInstallGPFaultHook()
+//
+//*************************************************************************
 void DeInstallGPFaultHook(void)
 {
 	ENTER_FUNC();

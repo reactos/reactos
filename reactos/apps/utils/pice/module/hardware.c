@@ -7,7 +7,7 @@ Module Name:
     hardware.c
 
 Abstract:
-	
+
     output to console
 
 Environment:
@@ -22,7 +22,7 @@ Revision History:
 
     04-Aug-1998:	created
     15-Nov-2000:    general cleanup of source files
-    
+
 Copyright notice:
 
   This file may be distributed under the terms of the GNU Public License.
@@ -34,10 +34,6 @@ Copyright notice:
 ////
 #include "remods.h"
 #include "precomp.h"
-
-#include <asm/io.h>
-#include <linux/ctype.h>
-#include <asm/delay.h>
 
 ////////////////////////////////////////////////////
 // PROTOTYPES
@@ -210,7 +206,7 @@ BOOLEAN AddToRingBuffer(LPSTR p)
     }
     // it's a debug print and the current line is starting with ':'
     else if(aBuffers[ulInPos][0]==':' &&
-			( (*p=='<' && isdigit(*(p+1)) && *(p+2)=='>') || bIsDebugPrint) )
+			( (*p=='<' && PICE_isdigit(*(p+1)) && *(p+2)=='>') || bIsDebugPrint) )
     {
 		if(j==1)
 		{
@@ -232,7 +228,7 @@ BOOLEAN AddToRingBuffer(LPSTR p)
 		j = 0;
     }
     // it's a debug print
-    else if(( (*p=='<' && isdigit(*(p+1)) && *(p+2)=='>') || bIsDebugPrint) )
+    else if(( (*p=='<' && PICE_isdigit(*(p+1)) && *(p+2)=='>') || bIsDebugPrint) )
     {
         p += 3;
     }
@@ -289,7 +285,7 @@ BOOLEAN AddToRingBuffer(LPSTR p)
 		{
 			if((UCHAR)p[i]<0x20 && (UCHAR)p[i]>0x7f)
 				p[i]=0x20;
-			
+
 			aBuffers[ulInPos][j++] = p[i];
 		}
 	}
@@ -329,7 +325,7 @@ void PrintRingBuffer(ULONG ulLines)
         LEAVE_FUNC();
         return;
     }
-    
+
 	if(!ulDelta)
     {
         DPRINT((0,"PrintRingBuffer(): no lines in ring buffer\n"));
@@ -491,7 +487,7 @@ BOOLEAN PrintRingBufferHome(ULONG ulLines)
 		Print(OUTPUT_WINDOW_UNBUFFERED,aBuffers[ulInPos]);
     	wWindow[OUTPUT_WINDOW].usCurX = PICE_strlen(aBuffers[ulInPos])+1;
     }
-    
+
 //    LEAVE_FUNC();
 
     return TRUE;
@@ -729,7 +725,7 @@ void PrintCaption(void)
     SetForegroundColor(COLOR_TEXT);
 	SetBackgroundColor(COLOR_CAPTION);
 
-	ClrLine(0);	
+	ClrLine(0);
 	PutChar((LPSTR)title,
 		   (GLOBAL_SCREEN_WIDTH-sizeof(title))/2,
            0);
@@ -763,9 +759,9 @@ void PrintTemplate(void)
 	SetForegroundColor(COLOR_TEXT);
 	SetBackgroundColor(COLOR_CAPTION);
 
-	ClrLine(wWindow[DATA_WINDOW].y-1);	
-	ClrLine(wWindow[SOURCE_WINDOW].y-1);	
-	ClrLine(wWindow[OUTPUT_WINDOW].y-1);	
+	ClrLine(wWindow[DATA_WINDOW].y-1);
+	ClrLine(wWindow[SOURCE_WINDOW].y-1);
+	ClrLine(wWindow[OUTPUT_WINDOW].y-1);
 
     ResetColor();
 
@@ -811,7 +807,7 @@ void Print(USHORT Window,LPSTR p)
     }
 
 
-    // the OUTPUT_WINDOW is specially handled 
+    // the OUTPUT_WINDOW is specially handled
 	if(Window == OUTPUT_WINDOW)
 	{
         DPRINT((0,"Print(): OUTPUT_WINDOW\n"));
@@ -830,7 +826,7 @@ void Print(USHORT Window,LPSTR p)
 	}
 	else
 	{
-        BOOLEAN bOutput = TRUE; 
+        BOOLEAN bOutput = TRUE;
 
 		if(Window == OUTPUT_WINDOW_UNBUFFERED)
         {
@@ -945,7 +941,7 @@ void FlushKeyboardQueue(void)
 //
 // init terminal screen
 //*************************************************************************
-BOOLEAN ConsoleInit(void) 
+BOOLEAN ConsoleInit(void)
 {
     BOOLEAN bResult = FALSE;
 
@@ -975,7 +971,7 @@ BOOLEAN ConsoleInit(void)
     }
 
     // check that outputhandlers have all been set
-    // ohandlers.Flush may be zero on return 
+    // ohandlers.Flush may be zero on return
     if( !ohandlers.ClrLine              ||
         !ohandlers.CopyLineTo           ||
         !ohandlers.HatchLine            ||
@@ -1012,14 +1008,14 @@ BOOLEAN ConsoleInit(void)
 //
 // exit terminal screen
 //*************************************************************************
-void ConsoleShutdown(void) 
+void ConsoleShutdown(void)
 {
     ENTER_FUNC();
 
     // sleep for a few seconds
-    __udelay(1000*5000);
+    Sleep(1000*5000);
 
-    switch(eTerminalMode)
+	switch(eTerminalMode)
     {
         case TERMINAL_MODE_HERCULES_GRAPHICS:
             ConsoleShutdownHercules();

@@ -14,7 +14,7 @@ Environment:
 
     Kernel mode only
 
-Author: 
+Author:
 
     Klaus P. Gerlicher
 
@@ -57,11 +57,11 @@ asmlinkage int printk(const char *fmt, ...);
 
 EXPORT_SYMBOL(printk);
 
-//************************************************************************* 
-// printk() 
-// 
+//*************************************************************************
+// printk()
+//
 // this function overrides printk() in the kernel
-//************************************************************************* 
+//*************************************************************************
 asmlinkage int printk(const char *fmt, ...)
 {
 	ULONG len,ulRingBufferLock;
@@ -100,12 +100,12 @@ asmlinkage int printk(const char *fmt, ...)
     return 0;
 }
 
-//************************************************************************* 
-// CountArgs() 
-// 
+//*************************************************************************
+// CountArgs()
+//
 // count occurrence of '%' in format string (except %%)
 // validity of whole format string must have been enforced
-//************************************************************************* 
+//*************************************************************************
 ULONG CountArgs(LPSTR fmt)
 {
 	ULONG count=0;
@@ -119,16 +119,17 @@ ULONG CountArgs(LPSTR fmt)
 	return count;
 }
 
-//************************************************************************* 
-// PrintkCallback() 
-// 
+//*************************************************************************
+// PrintkCallback()
+//
 // called from RealIsr() when processing INT3 placed
-//************************************************************************* 
+//*************************************************************************
 void PrintkCallback(void)
 {
 	LPSTR fmt,args;
 	ULONG ulAddress;
 	ULONG countArgs,i,len;
+	PANSI_STRING temp;
 
 	bInPrintk = TRUE;
 
@@ -138,7 +139,9 @@ void PrintkCallback(void)
 	{
 		if(IsAddressValid(ulAddress+sizeof(char *)) )
 		{
-			fmt = (LPSTR)*(PULONG)(ulAddress+sizeof(char *));
+			//KdpPrintString has PANSI_STRING as a parameter
+			temp = (PANSI_STRING)*(PULONG)(ulAddress+sizeof(char *));
+			fmt = temp->Buffer;
 
 			// validate format string
 			if((len = PICE_strlen(fmt)) )
@@ -149,7 +152,7 @@ void PrintkCallback(void)
 
 				if((countArgs = CountArgs(fmt))>0)
 				{
-					
+
 					args = (LPSTR)(ulAddress+2*sizeof(char *));
 					if(IsAddressValid((ULONG)args))
 					{
@@ -182,12 +185,12 @@ void PrintkCallback(void)
 	bInPrintk = FALSE;
 }
 
-//************************************************************************* 
-// PiceRunningTimer() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// PiceRunningTimer()
+//
+//*************************************************************************
 
-KTIMER PiceTimer; 
+KTIMER PiceTimer;
 KDPC PiceTimerDPC;
 
 // do I need it here? Have to keep DPC memory resident #pragma code_seg()
@@ -203,7 +206,7 @@ VOID PiceRunningTimer(IN PKDPC Dpc,
         ulCountTimerEvents = 0;
 
 		LARGE_INTEGER jiffies;
-		
+
 		KeQuerySystemTime(&jiffies);
         SetForegroundColor(COLOR_TEXT);
 	    SetBackgroundColor(COLOR_CAPTION);
@@ -213,48 +216,49 @@ VOID PiceRunningTimer(IN PKDPC Dpc,
     }
 }
 
-//************************************************************************* 
-// InitPiceRunningTimer() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// InitPiceRunningTimer()
+//
+//*************************************************************************
 void InitPiceRunningTimer(void)
 {
 	LARGE_INTEGER   Interval;
-    
-	ENTER_FUNC();	  
-ÿÿ
+
+	ENTER_FUNC();
+#if 0  //won't work. we have to intercept timer interrupt so dpc will never fire while we are in pice
 	KeInitializeTimer( &PiceTimer );
 	KeInitializeDpc( &PiceTimerDPC, PiceRunningTimer, NULL );
-    
+
 	Interval.QuadPart=-1000000L;  // 100 millisec. (unit is 100 nanosec.)
 
     KeSetTimerEx(&PiceTimer,
                         Interval, 1000000L,
                         &PiceTimerDpc);
+#endif
     LEAVE_FUNC();
 }
 
-//************************************************************************* 
-// RemovePiceRunningTimer() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// RemovePiceRunningTimer()
+//
+//*************************************************************************
 void RemovePiceRunningTimer(void)
 {
 	KeCancelTimer( &PiceTimer );
 }
 
-//************************************************************************* 
-// InstallPrintkHook() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// InstallPrintkHook()
+//
+//*************************************************************************
 void InstallPrintkHook(void)
 {
     ENTER_FUNC();
     DPRINT((0,"installing PrintString hook\n"));
 
     ScanExports("_KdpPrintString",(PULONG)&ulPrintk);
-	
-	ASSERT( ulPrintk );                 // temporary
+
+	assert( ulPrintk );                 // temporary
 
     if(ulPrintk)
     {
@@ -264,10 +268,10 @@ void InstallPrintkHook(void)
     LEAVE_FUNC();
 }
 
-//************************************************************************* 
-// DeInstallPrintkHook() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// DeInstallPrintkHook()
+//
+//*************************************************************************
 void DeInstallPrintkHook(void)
 {
     ENTER_FUNC();

@@ -7,7 +7,7 @@ Module Name:
     hooks.c
 
 Abstract:
-    
+
     hooking of interrupts
 
 Environment:
@@ -34,8 +34,6 @@ Copyright notice:
 ////
 #include "remods.h"
 #include "precomp.h"
-
-#include <asm/io.h>
 
 ////////////////////////////////////////////////////
 // PROTOTYPES
@@ -67,28 +65,28 @@ ULONG ulOldFlags;
 // MaskIrqs()
 //
 //*************************************************************************
-void MaskIrqs(void) 
-{ 
+void MaskIrqs(void)
+{
     ENTER_FUNC();
 
     save_flags(ulOldFlags);
     cli();
 
     LEAVE_FUNC();
-} 
- 
+}
+
 //*************************************************************************
 // UnmaskIrqs()
 //
 //*************************************************************************
-void UnmaskIrqs(void) 
-{ 
+void UnmaskIrqs(void)
+{
     ENTER_FUNC();
 
     restore_flags(ulOldFlags);
 
     LEAVE_FUNC();
-} 
+}
 
 //*************************************************************************
 // SetGlobalInt()

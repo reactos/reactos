@@ -5,6 +5,7 @@
 
 //#include <ddk/winnt.h>
 #include <windows.h>
+#include <ddk/kefuncs.h>
 
 //#include <winnt.h>
 #include <sys/types.h>

@@ -96,6 +96,7 @@ extern char szCurrentFile[256];
 extern PDEBUG_MODULE pCurrentMod;
 extern PICE_SYMBOLFILE_HEADER* pCurrentSymbols;
 extern LONG ulCurrentlyDisplayedLineNumber;
+extern LIST_ENTRY* pPsProcessListHead;
 
 BOOLEAN AsciiToHex(LPSTR p,PULONG pValue);
 void Parse(LPSTR pCmdLine,BOOLEAN bInvokedByFkey);
@@ -165,3 +166,15 @@ COMMAND_PROTOTYPE(SetKeyboardLayout);
 COMMAND_PROTOTYPE(ShowSysCallTable);
 COMMAND_PROTOTYPE(SetAltKey);
 COMMAND_PROTOTYPE(ShowContext);
+
+//ei make sure the following correspond to ntoskrnl/mm/i386/page.c
+#define PAGETABLE_MAP     (0xf0000000)
+#define PAGEDIRECTORY_MAP (0xf0000000 + (PAGETABLE_MAP / (1024)))
+#define PAGE_SHIFT      12
+#define PTRS_PER_PTE    1024
+#define PAGE_SIZE       (1UL << PAGE_SHIFT)
+#define ADDR_TO_PAGE_TABLE(v) (((ULONG)(v)) / (4 * 1024 * 1024))
+#define ADDR_TO_PDE(v) (PULONG)(PAGEDIRECTORY_MAP + \
+                                (((ULONG)v / (1024 * 1024))&(~0x3)))
+#define ADDR_TO_PTE(v) (PULONG)(PAGETABLE_MAP + ((((ULONG)v / 1024))&(~0x3)))
+#define ADDR_TO_PDE_OFFSET(v) (((ULONG)v / (4 * 1024 * 1024)))

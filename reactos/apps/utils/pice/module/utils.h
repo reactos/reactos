@@ -131,8 +131,6 @@ typedef struct tagPageDir
 	ULONG PTBase	:20;
 }PAGEDIR,*PPAGEDIR;
 
-extern struct mm_struct* my_init_mm;
-
 typedef struct tagGdt
 {
 	ULONG Limit_15_0		:16;
@@ -168,7 +166,6 @@ typedef struct tagDESCRIPTOR
 	USHORT Val	:13;	// index into table
 }DESCRIPTOR,*PDESCRIPTOR;
 
-extern struct module **pmodule_list;
 
 void PICE_memset(void* p,unsigned char c,int sz);
 void PICE_memcpy(void* t,void* s,int sz);
@@ -182,6 +179,9 @@ BOOLEAN PICE_isprint(char c);
 char* PICE_strcpy(char* s1,char* s2);
 char* PICE_strncpy(char* s1,char* s2,int len);
 char* PICE_strchr(char* s,char c);
+int PICE_isdigit( int c );
+int PICE_isxdigit( int c );
+int PICE_islower( int c );
 
 int PICE_sprintf(char * buf, const char *fmt, ...);
 int PICE_vsprintf(char *buf, const char *fmt, va_list args);
@@ -214,8 +214,9 @@ void SetHardwareBreakPoint(ULONG ulAddress,ULONG ulReg);
 BOOLEAN Disasm(PULONG pOffset, PUCHAR pchDst);
 //////////////////////////////////////////////////////////////////
 
-#define GLOBAL_CODE_SEGMENT (__KERNEL_CS)
-#define GLOBAL_DATA_SEGMENT (__KERNEL_DS)
+//segments defined in \include\napi\i386\segment.h
+#define GLOBAL_CODE_SEGMENT (KERNEL_CS)
+#define GLOBAL_DATA_SEGMENT (KERNEL_DS)
 
 //#define OVR_CS .byte 0x2e
 //#define OVR_FS .byte 0x64
@@ -228,9 +229,15 @@ BOOLEAN CheckLoadAbort(void);
 UCHAR KeyboardGetKeyPolled(void);
 void KeyboardFlushKeyboardQueue(void);
 
-#if REAL_LINUX_VERSION_CODE >= 0x020400
+#define _PAGE_PRESENT   0x001
+#define _PAGE_RW        0x002
+#define _PAGE_USER      0x004
+#define _PAGE_PWT       0x008
+#define _PAGE_PCD       0x010
+#define _PAGE_ACCESSED  0x020
+#define _PAGE_DIRTY     0x040
+#define _PAGE_PSE       0x080
 #define _PAGE_4M _PAGE_PSE
-#endif
 
 UCHAR AsciiFromScan(UCHAR s);
 UCHAR AsciiToScan(UCHAR s);
@@ -251,9 +258,12 @@ ULONG  inl(PULONG port);
 #define sti()                 __asm__ __volatile__("sti": : :"memory")
 
 
-extern unsigned long sys_call_table[];
+//extern unsigned long sys_call_table[];
 
-struct mm_struct *GetInitMm(void);
+//struct mm_struct *GetInitMm(void);
+
+PEPROCESS my_init_mm;
+LIST_ENTRY* pPsProcessListHead;
 
 void EnablePassThrough(void);
 

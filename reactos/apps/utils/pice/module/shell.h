@@ -15,7 +15,7 @@ Environment:
     LINUX 2.2.X
     Kernel mode only
 
-Author: 
+Author:
 
     Klaus P. Gerlicher
 
@@ -91,3 +91,5 @@ void ShowStatusLine(void);
 #define USA     (0)
 #define GERMANY (1)
 extern UCHAR ucKeyboardLayout;
+
+#define KEYBOARD_IRQ       1

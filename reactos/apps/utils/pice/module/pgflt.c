@@ -7,14 +7,14 @@ Module Name:
     pgflt.c
 
 Abstract:
-    
+
     page fault handling on x86
 
 Environment:
 
     Kernel mode only
 
-Author: 
+Author:
 
     Klaus P. Gerlicher
 
@@ -35,13 +35,6 @@ Copyright notice:
 #include "remods.h"
 
 #include "precomp.h"
-#include <asm/io.h>
-#include <asm/page.h>
-#include <asm/pgtable.h>
-#include <linux/fs.h>
-#include <asm/uaccess.h>
-#include <asm/delay.h>
-#include <linux/interrupt.h>
 
 ////////////////////////////////////////////////////
 // GLOBALS
@@ -57,20 +50,18 @@ BOOLEAN bInPageFaultHandler = FALSE;
 // FUNCTIONS
 ////
 
-//************************************************************************* 
-// HandleInDebuggerFault() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// HandleInDebuggerFault()
+//
+//*************************************************************************
 ULONG HandleInDebuggerFault(FRAME* ptr,ULONG address)
 {
-	struct task_struct *tsk;
-	struct mm_struct *mm;
-	struct mm_struct *p = NULL;
+	PEPROCESS tsk;
 
     ENTER_FUNC();
 
 	DPRINT((0,"HandleInDebuggerFault(): ###### page fault @ %.8X while inside debugger\n",address));
-  
+
 	// fault in this page fault handler
 	if(bInPageFaultHandler)
 	{
@@ -88,10 +79,9 @@ ULONG HandleInDebuggerFault(FRAME* ptr,ULONG address)
 
     // when we come here from DebuggerShell() we live on a different stack
     // so the current task is different as well
-    tsk = (struct task_struct *)(0xFFFFE000 & ulRealStackPtr);
-    mm = tsk->mm;
+    tsk = IoGetCurrentProcess();
 
-    DPRINT((0,"%.8X (%.4X:%.8X %.8X %s %s %s task=%.8X mm=%.8X)\n",
+    DPRINT((0,"%.8X (%.4X:%.8X %.8X %s %s %s task=%.8X )\n",
         address,
         ptr->cs,
         ptr->eip,
@@ -99,8 +89,7 @@ ULONG HandleInDebuggerFault(FRAME* ptr,ULONG address)
         (ptr->error_code&1)?"PLP":"NP",
         (ptr->error_code&2)?"WRITE":"READ",
         (ptr->error_code&4)?"USER-MODE":"KERNEL-MODE",
-        (ULONG)tsk,
-        (ULONG)mm));
+        (ULONG)tsk);
 
 	if(!bInPrintk)
     {
@@ -111,39 +100,24 @@ ULONG HandleInDebuggerFault(FRAME* ptr,ULONG address)
     	DPRINT((0,"HandleInDebuggerFault(): unexpected pagefault in command handler while in PrintkCallback()!\n",address));
     }
 
-
-    if(address < TASK_SIZE)
+    if(tsk)
     {
-        p = mm;
-    }
-    else
-    {
-        p = my_init_mm;
-    }
-    
-    if(p)
-    {
-	    pgd_t * pPGD;
-	    pmd_t * pPMD;
-	    pte_t * pPTE;
+	    PULONG pPGD;
+	    PULONG pPTE;
 
-        pPGD = pgd_offset(p,address);
+        pPGD = ADDR_TO_PDE(address);
 
-        DPRINT((0,"PGD for %.8X @ %.8X = %.8X\n",address,(ULONG)pPGD,(ULONG)pgd_val(*pPGD) ));
+        DPRINT((0,"PGD for %.8X @ %.8X = %.8X\n",address,(ULONG)pPGD,(ULONG)(*pPGD) ));
 
-        if(pPGD && pgd_val(*pPGD)&_PAGE_PRESENT)
+        if(pPGD && (*pPGD)&_PAGE_PRESENT)
         {
             // not large page
-            if(!(pgd_val(*pPGD)&_PAGE_4M))
+            if(!((*pPGD)&_PAGE_4M))
             {
-                pPMD = pmd_offset(pPGD,address);
-                if(pPMD)
+                pPTE = ADDR_TO_PTE(address);
+                if(pPTE)
                 {
-                    pPTE = pte_offset(pPMD,address);
-                    if(pPTE)
-                    {
-                        DPRINT((0,"PTE for %.8X @ %.8X = %.8X\n",address,(ULONG)pPTE,(ULONG)pte_val(*pPTE) ));
-                    }
+                    DPRINT((0,"PTE for %.8X @ %.8X = %.8X\n",address,(ULONG)pPTE,(ULONG)(*pPTE) ));
                 }
             }
         }
@@ -160,26 +134,27 @@ ULONG HandleInDebuggerFault(FRAME* ptr,ULONG address)
 	return 2;
 }
 
-//************************************************************************* 
-// HandlePageFault() 
-// 
+//*************************************************************************
+// HandlePageFault()
+//
 // returns:
 // 0    =       let the system handle it
 // 1    =       call DebuggerShell()
 // 2    =       FATAL error inside debugger
-//************************************************************************* 
+//*************************************************************************
 ULONG HandlePageFault(FRAME* ptr)
 {
     ULONG address;
-	struct task_struct *tsk;
-	struct mm_struct *mm;
-	struct vm_area_struct * vma;
+	PEPROCESS tsk;
+	PMADDRESS_SPACE vma;
+    PLIST_ENTRY current_entry;
+	MEMORY_AREA* current;
 
     // get linear address of page fault
 	__asm__("movl %%cr2,%0":"=r" (address));
 
     // current process
-    tsk = current;
+    tsk = IoGetCurrentProcess();
 
     // there's something terribly wrong if we get a fault in our command handler
     if(bInDebuggerShell)
@@ -190,116 +165,77 @@ ULONG HandlePageFault(FRAME* ptr)
     // remember error code so we can push it back on the stack
     error_code = ptr->error_code;
 
-    //////////////////////////////////////
-    // kernel page fault 
-
-    // since LINUX kernel is not pageable this is death
-    // so call handler
-    if(address >= TASK_SIZE)
-    {
-        // 
-        if(error_code & 4)
-        {
-            PICE_sprintf(tempPageFault,"pICE: kernel page fault from user-mode code (error code %x)!\n",error_code);
-            Print(OUTPUT_WINDOW,tempPageFault);
-        }
-        else
-        {
-            PICE_sprintf(tempPageFault,"pICE: kernel page fault from kernel-mode code (error code %x)!\n",error_code);
-            Print(OUTPUT_WINDOW,tempPageFault);
-        }
-        return 1;
-    }
-
-    // and it's memory environment
-	mm = tsk->mm;
-
-    //////////////////////////////////////
-    // user page fault
-    // fault address is below TASK_SIZE
-
-    // no user context, i.e. no pages below TASK_SIZE are mapped
-    if(mm == my_init_mm)
-    {
-        Print(OUTPUT_WINDOW,"pICE: there's no user context!\n");
-        return 1;
-    }
-
     // interrupt handlers can't have page faults
+/*
     if(in_interrupt())
     {
         Print(OUTPUT_WINDOW,"pICE: system is currently processing an interrupt!\n");
         return 1;
     }
-
+*/
     // lookup VMA for this address
-    vma = find_vma(mm, address);
-    if(!vma)
-    {
-        Print(OUTPUT_WINDOW,"pICE: no virtual memory arena at this address!\n");
-        return 1;
-    }
+	vma = &(my_current->AddressSpace);
+	current_entry = vma->MAreaListHead.Flink;
+	while(current_entry != &vma->MAreaListHead)
+	{
+		current = CONTAINING_RECORD(current_entry,
+						MEMORY_AREA,
+						Entry);
+		if( (address >= current->BaseAddress) && (address <= current->BaseAddress + current->Length ))
+		{
+	        if(error_code & 2)
+	        {
+	            // area was not writable
+	            if(!(current->Attributes & PAGE_READONLY))
+	            {
+	                Print(OUTPUT_WINDOW,"pICE: virtual memory arena is not writeable!\n");
+	                return 1;
+	            }
+	        }
+	        // READ ACCESS
+	        else
+	        {
+	            // test EXT bit in error code
+			    if (error_code & 1)
+	            {
+	                Print(OUTPUT_WINDOW,"pICE: page-level protection fault!\n");
+	                return 1;
+	            }
+	            //
+			    if (!(current->Attributes & PAGE_EXECUTE_READ))
+	            {
+	                Print(OUTPUT_WINDOW,"pICE: VMA is not readable!\n");
+	                return 1;
+	            }
+	        }
+	        // let the system handle it
+	        return 0;
+		}
+		current_entry = current_entry->Flink;
+	}
 
-    // address is greater than the start of this VMA
-	if (address >= vma->vm_start)
-    {
-        // WRITE ACCESS
-        // write bit set in error_code
-        if(error_code & 2)
-        {
-            // area was not writable
-            if(!(vma->vm_flags & VM_WRITE))
-            {
-                Print(OUTPUT_WINDOW,"pICE: virtual memory arena is not writeable!\n");
-                return 1;
-            }
-        }
-        // READ ACCESS
-        else
-        {
-            // test EXT bit in error code
-		    if (error_code & 1)
-            {
-                Print(OUTPUT_WINDOW,"pICE: page-level protection fault!\n");
-                return 1;
-            }
-            //
-		    if (!(vma->vm_flags & (VM_READ | VM_EXEC)))
-            {
-                Print(OUTPUT_WINDOW,"pICE: VMA is not readable!\n");
-                return 1;
-            }
-        }
-        // let the system handle it
-        return 0;
-    }
-
-    // 
-	if (!(vma->vm_flags & VM_GROWSDOWN))
-    {
-        Print(OUTPUT_WINDOW,"pICE: virtual memory arena doesn't grow down!\n");
-        return 1;
-    }
+    Print(OUTPUT_WINDOW,"pICE: no virtual memory arena at this address!\n");
+    return 1;
 
     // let the system handle it
-    return 0;
+//    return 0;
 }
 
-//************************************************************************* 
-// NewIntEHandler() 
-// 
-//************************************************************************* 
-__asm__ (" 
+//*************************************************************************
+// NewIntEHandler()
+//
+//*************************************************************************
+__asm__ ("
 NewIntEHandler:
 		pushfl
         cli
         cld
         pushal
-	    pushl %ds 
+	    pushl %ds
 
-	    // setup default data selectors 
+	    // setup default data selectors
 	    movw %ss,%ax
-	    movw %ax,%ds 
+	    movw %ax,%ds
 
         // get frame ptr
         lea 40(%esp),%eax
@@ -313,18 +249,18 @@ NewIntEHandler:
         cmpl $2,%eax
         je call_handler_unknown_reason
 
-	    popl %ds 
+	    popl %ds
         popal
 		popfl
         // remove error code. will be restored later when we call
         // original handler again.
-        addl $4,%esp 
+        addl $4,%esp
 		// call debugger loop
         pushl $" STR(REASON_PAGEFAULT) "
 		jmp NewInt31Handler
 
 call_old_inte_handler:
-	    popl %ds 
+	    popl %ds
         popal
 		popfl
 		// chain to old handler
@@ -332,22 +268,22 @@ call_old_inte_handler:
 		jmp *OldIntEHandler
 
 call_handler_unknown_reason:
-	    popl %ds 
+	    popl %ds
         popal
 		popfl
         // remove error code. will be restored later when we call
         // original handler again.
-        addl $4,%esp 
+        addl $4,%esp
 		// call debugger loop
         pushl $" STR(REASON_INTERNAL_ERROR) "
 		jmp NewInt31Handler
         ");
 
 
-//************************************************************************* 
-// InstallIntEHook() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// InstallIntEHook()
+//
+//*************************************************************************
 void InstallIntEHook(void)
 {
 	ULONG LocalIntEHandler;
@@ -368,10 +304,10 @@ void InstallIntEHook(void)
     LEAVE_FUNC();
 }
 
-//************************************************************************* 
-// DeInstallIntEHook() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// DeInstallIntEHook()
+//
+//*************************************************************************
 void DeInstallIntEHook(void)
 {
 	ENTER_FUNC();

@@ -7,7 +7,7 @@ Module Name:
     hercules.c
 
 Abstract:
-	
+
     HW dependent draw routines
 
 Environment:
@@ -22,7 +22,7 @@ Revision History:
 
     04-Aug-1998:	created
     15-Nov-2000:    general cleanup of source files
-    
+
 Copyright notice:
 
   This file may be distributed under the terms of the GNU Public License.
@@ -34,10 +34,6 @@ Copyright notice:
 ////
 #include "remods.h"
 #include "precomp.h"
-#include <linux/pci.h>
-#include <asm/io.h>
-#include <asm/delay.h>
-#include <linux/ctype.h>
 
 #include "charset.h"
 #include "logo.h"
@@ -88,7 +84,7 @@ struct _attr
     {
         struct
         {
-    
+
             UCHAR fgcol : 4;
             UCHAR bkcol : 3;
             UCHAR blink : 1;
@@ -126,7 +122,7 @@ void PrintGrafHercules(ULONG x,ULONG y,UCHAR c)
     ULONG i;
     PUCHAR p;
     ULONG _line = y<<3;
-        
+
 	if(!pScreenBufferHercules)
 		return;
 
@@ -162,9 +158,9 @@ void FlushHercules(void)
 void ShowCursorHercules(void)
 {
     ENTER_FUNC();
-	
+
     bCursorEnabled=TRUE;
-    
+
     LEAVE_FUNC();
 }
 
@@ -176,7 +172,7 @@ void ShowCursorHercules(void)
 void HideCursorHercules(void)
 {
     ENTER_FUNC();
-	
+
     bCursorEnabled=FALSE;
 
     LEAVE_FUNC();
@@ -373,7 +369,7 @@ void PrintCursorHercules(BOOLEAN bForce)
         count=0;
     }
 
-    __udelay(2500);
+	KeStallExecutionProcessor(2500);
 }
 
 //*************************************************************************
@@ -399,7 +395,7 @@ void RestoreGraphicsStateHercules(void)
 //
 // init terminal screen
 //*************************************************************************
-BOOLEAN ConsoleInitHercules(void) 
+BOOLEAN ConsoleInitHercules(void)
 {
 	BOOLEAN bResult = FALSE;
 	PUCHAR pMGATable = MGATable43;
@@ -428,40 +424,40 @@ BOOLEAN ConsoleInitHercules(void)
     // init HERCULES adapter
 	outb_p(0,0x3b8);
 	outb_p(0x03,0x3bf);
-	for(i=0;i<sizeof(MGATable43);i++) 
-	{ 
-		reg=i; 
+	for(i=0;i<sizeof(MGATable43);i++)
+	{
+		reg=i;
 		outb_p(reg,0x3b4);
-		data=pMGATable[i]; 
+		data=pMGATable[i];
 		outb_p(data,0x3b5);
 	}
 	outb_p(0x0a,0x3b8);
 
-    SetWindowGeometry(wWindowHercGraph); 
+    SetWindowGeometry(wWindowHercGraph);
 
     GLOBAL_SCREEN_WIDTH = 90;
     GLOBAL_SCREEN_HEIGHT = 45;
 
     attr.u.Asuchar = 0x07;
 
-	pScreenBufferHercules=MmMapIoSpace(0xb0000,FRAMEBUFFER_SIZE,MmWriteCombined); 
+	pScreenBufferHercules=MmMapIoSpace(0xb0000,FRAMEBUFFER_SIZE,MmWriteCombined);
 
-    DPRINT((0,"VGA memory phys. 0xb0000 mapped to virt. 0x%x\n",pScreenBufferHercules)); 
+    DPRINT((0,"VGA memory phys. 0xb0000 mapped to virt. 0x%x\n",pScreenBufferHercules));
 
 	if(pScreenBufferHercules)
 	{
         for(i=0;i<4;i++)
         {
             pVgaOffset[i] = (PUCHAR)pScreenBufferHercules+0x2000*i;
-        	DPRINT((0,"VGA offset %u = 0x%.8X\n",i,pVgaOffset[i])); 
+        	DPRINT((0,"VGA offset %u = 0x%.8X\n",i,pVgaOffset[i]));
         }
 		bResult = TRUE;
 
 		PICE_memset(pScreenBufferHercules,0x0,FRAMEBUFFER_SIZE);
 
         EmptyRingBuffer();
-    
-        DPRINT((0,"ConsoleInitHercules() SUCCESS!\n")); 
+
+        DPRINT((0,"ConsoleInitHercules() SUCCESS!\n"));
 	}
 
     LEAVE_FUNC();
@@ -474,16 +470,16 @@ BOOLEAN ConsoleInitHercules(void)
 //
 // exit terminal screen
 //*************************************************************************
-void ConsoleShutdownHercules(void) 
-{ 
+void ConsoleShutdownHercules(void)
+{
     ENTER_FUNC();
- 
-	// HERC video off 
+
+	// HERC video off
 	outb_p(0,0x3b8);
 	outb_p(0,0x3bf);
 
 	if(pScreenBufferHercules)
-		MmUnmapIoSpace(pScreenBufferHercules,FRAMEBUFFER_SIZE); 
+		MmUnmapIoSpace(pScreenBufferHercules,FRAMEBUFFER_SIZE);
 
     LEAVE_FUNC();
 }

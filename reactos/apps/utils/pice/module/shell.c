@@ -36,8 +36,6 @@ Copyright notice:
 ////
 #include "remods.h"
 #include "precomp.h"
-#include <asm/io.h>
-#include <linux/interrupt.h>
 
 
 ////////////////////////////////////////////////////
@@ -133,7 +131,10 @@ volatile BOOLEAN bSingleStep=FALSE;
 // the last command lines
 char aszCommandLines[LINES_IN_COMMAND_BUFFER][sizeof(ucCommandBuffer)+2];
 ULONG ulCommandInPos=0,ulCommandLastPos=0;
-ULONG ulCommandCurrentPos=0; 
+ULONG ulCommandCurrentPos=0;
+
+
+extern ULONG KeyboardIRQL;
 
 //*************************************************************************
 // GetLinesInCommandHistory()
@@ -200,7 +201,7 @@ LPSTR GetFromCommandLineHistory(ULONG ulCurrentCommandPos)
 
     // skip leading ':'
     pRet = aszCommandLines[ulCurrentCommandPos] + 1;
-    
+
     DPRINT((0,"GetFromCommandLineHistory(%s)\n",pRet));
 
     LEAVE_FUNC();
@@ -214,12 +215,10 @@ LPSTR GetFromCommandLineHistory(ULONG ulCurrentCommandPos)
 //*************************************************************************
 void ShowStatusLine(void)
 {
-    struct task_struct* pCurrentProcess;
+	PEPROCESS pCurrentProcess = IoGetCurrentProcess();
     LPSTR pProcessName;
 
     ENTER_FUNC();
-
-    pCurrentProcess = (struct task_struct*)(0xFFFFE000&ulRealStackPtr);
 
     if(IsAddressValid((ULONG)pCurrentProcess))
     {
@@ -228,7 +227,7 @@ void ShowStatusLine(void)
 
 		ClrLine(wWindow[OUTPUT_WINDOW].y-1);
 
-        pProcessName = pCurrentProcess->comm;
+        pProcessName = pCurrentProcess->ImageFileName;
         if(IsAddressValid((ULONG)pProcessName) )
         {
 		    PICE_sprintf(tempShell,
@@ -296,52 +295,52 @@ void ProcessBootParams(void)
 //*************************************************************************
 BOOLEAN inline bNoCtrlKeys(void)
 {
-    return (!bControl && !bAlt && !bShift); 
+    return (!bControl && !bAlt && !bShift);
 }
 
 
 //*************************************************************************
 // DebuggerShell()
 //
-// handle user interface when stopped system 
+// handle user interface when stopped system
 //*************************************************************************
-void DebuggerShell(void) 
-{ 
+void DebuggerShell(void)
+{
 	ARGS Args;
     UCHAR speaker;
-    struct task_struct* pCurrentProcess;
+	PEPROCESS pCurrentProcess;
 
     ENTER_FUNC();
 
     // save the graphics state
     SaveGraphicsState();
 
-	// tell USER we are stopped 
-	ShowStoppedMsg(); 
+	// tell USER we are stopped
+	ShowStoppedMsg();
 
     FlushKeyboardQueue();
 
 	CheckRingBuffer();
 
-    // kill the speakers annoying beep 
+    // kill the speakers annoying beep
 	speaker = inb_p(0x61);
 	speaker &= 0xFC;
 	outb_p(speaker,0x61);
 
     ProcessBootParams();
 
-    DPRINT((0,"DebuggerShell(): DisplayRegs()\n"));        
+    DPRINT((0,"DebuggerShell(): DisplayRegs()\n"));
 	// display register contents
 	DisplayRegs();
 
-    DPRINT((0,"DebuggerShell(): DisplayMemory()\n"));        
+    DPRINT((0,"DebuggerShell(): DisplayMemory()\n"));
 	// display data window
 	Args.Value[0]=OldSelector;
 	Args.Value[1]=OldOffset;
 	Args.Count=2;
 	DisplayMemory(&Args);
 
-    DPRINT((0,"DebuggerShell(): Unassemble()\n"));        
+    DPRINT((0,"DebuggerShell(): Unassemble()\n"));
 
     // disassembly from current address
     PICE_memset(&Args,0,sizeof(ARGS));
@@ -351,14 +350,14 @@ void DebuggerShell(void)
 	Unassemble(&Args);
 
     // try to find current process's name
-    pCurrentProcess = (struct task_struct*)(0xFFFFE000&ulRealStackPtr);
+    pCurrentProcess = = IoGetCurrentProcess();
     CurrentProcess = (ULONG)pCurrentProcess;
 
     // display status line
     ShowStatusLine();
 
-	// switch on cursor 
-	ShowCursor(); 
+	// switch on cursor
+	ShowCursor();
 
     // while we are not told to exit
 	while(bNotifyToExit==FALSE)
@@ -416,7 +415,7 @@ void DebuggerShell(void)
                 if(ucConverted == 'f')
                     bNotifyToExit = TRUE;
             }
-            // normal key while holding down ALT 
+            // normal key while holding down ALT
             else if(!bControl && bAlt && !bShift && ucConverted)
             {
             }
@@ -426,9 +425,9 @@ void DebuggerShell(void)
             }
 			// we didn't get a converted key
 			// so this must be a control key
-			else 
+			else
 			{
-				// RETURN 
+				// RETURN
 				if(bNoCtrlKeys() && ucKeyPressedWhileIdle == SCANCODE_ENTER)
 				{
                     DPRINT((0,"DebuggerShell(): RETURN\n"));
@@ -451,7 +450,7 @@ void DebuggerShell(void)
                             pushl %%eax
                             call Parse
                             movl %0,%%ebx
-                            movl %%ebx,%%esp" 
+                            movl %%ebx,%%esp"
                             :"=m" (ulOldStack)
                             :"m" (ulOldStack),"m" (ucCommandBuffer)
                             :"eax","ebx");
@@ -492,7 +491,7 @@ void DebuggerShell(void)
 					if(usCurrentPosInInputBuffer)
 					{
 						LPSTR pCmd;
-						
+
 						if((pCmd=FindCommand(ucCommandBuffer)) )
 						{
 							ULONG i;
@@ -540,7 +539,7 @@ void DebuggerShell(void)
                                 pushl %%eax
                                 call Parse
                                 movl %0,%%ebx
-                                movl %%ebx,%%esp" 
+                                movl %%ebx,%%esp"
                                 :"=m" (ulOldStack)
                                 :"m" (ulOldStack),"m" (ucCommandBuffer)
                                 :"eax","ebx");
@@ -702,7 +701,7 @@ void DebuggerShell(void)
                                         // if it has a string attached
                                         if((len = PICE_strlen(pCurrentCmd)))
                                         {
-                                            // replace the current command line 
+                                            // replace the current command line
                                             PICE_sprintf(tempShell,":");
                                             ReplaceRingBufferCurrent(tempShell);
                         					PICE_memset(&ucCommandBuffer,0,sizeof(ucCommandBuffer));
@@ -780,7 +779,7 @@ void DebuggerShell(void)
                                         // if it has a string attached
                                         if((len = PICE_strlen(pCurrentCmd)))
                                         {
-                                            // replace the current command line 
+                                            // replace the current command line
                                             PICE_sprintf(tempShell,":");
                                             ReplaceRingBufferCurrent(tempShell);
                              				PICE_memset(&ucCommandBuffer,0,sizeof(ucCommandBuffer));
@@ -995,32 +994,32 @@ void DebuggerShell(void)
 
     PrintLogo(TRUE);
 
-    ShowRunningMsg(); 
+    ShowRunningMsg();
 
     if(bRev)
 		PrintCursor(TRUE);
 
-	// hide the cursor 
-	HideCursor(); 
+	// hide the cursor
+	HideCursor();
 
-    FlushKeyboardQueue(); 
+    FlushKeyboardQueue();
 
     RestoreGraphicsState();
 
 	LEAVE_FUNC();
-} 
+}
 
 //*************************************************************************
 // RealIsr()
 //
 //*************************************************************************
-void RealIsr(ULONG dwReasonForBreak) 
-{ 
-	DPRINT((0,"#################################################################\n")); 
+void RealIsr(ULONG dwReasonForBreak)
+{
+	DPRINT((0,"#################################################################\n"));
     ENTER_FUNC();
 
-    // in handler 
-	bInDebuggerShell = TRUE; 
+    // in handler
+	bInDebuggerShell = TRUE;
 
     bStepping = FALSE;
 
@@ -1030,18 +1029,18 @@ void RealIsr(ULONG dwReasonForBreak)
     bEnterNow = FALSE;
 
     // reset trace flag (TF) on the stack
-    CurrentEFL&=(~0x100); 
+    CurrentEFL&=(~0x100);
 
     InstallPrintkHook();
 
     // control is not depressed
-	bControl=FALSE; 
+	bControl=FALSE;
 
     bIrqStateAtBreak = ((CurrentEFL&(1<<9))!=0);
 
     // came in because TF flag was set
-	if(dwReasonForBreak == REASON_SINGLESTEP) 
-	{ 
+	if(dwReasonForBreak == REASON_SINGLESTEP)
+	{
 		ULONG ulAddress,ulAddressCurrent;
 
         DPRINT((0,"REASON_SINGLESTEP\n"));
@@ -1076,11 +1075,11 @@ void RealIsr(ULONG dwReasonForBreak)
                 if(bStepThroughSource)
                 {
                     // set TF flag
-                    CurrentEFL |= 0x100; 
+                    CurrentEFL |= 0x100;
                 }
 
             	LEAVE_FUNC();
-				DPRINT((0,"-----------------------------------------------------------------\n")); 
+				DPRINT((0,"-----------------------------------------------------------------\n"));
                 return;
             }
             bPreviousCommandWasGo = FALSE;
@@ -1118,32 +1117,32 @@ void RealIsr(ULONG dwReasonForBreak)
 
 			    bInDebuggerShell = FALSE;
             	LEAVE_FUNC();
-				DPRINT((0,"-----------------------------------------------------------------\n")); 
+				DPRINT((0,"-----------------------------------------------------------------\n"));
                 return;
             }
             bStepThroughSource = FALSE;
-            bNotifyToExit = FALSE; 
+            bNotifyToExit = FALSE;
             bSkipMainLoop = FALSE;
         }
-	} 
+	}
     // came in because hardware register triggered a breakpoint
-	else if(dwReasonForBreak == REASON_HARDWARE_BP) 
-	{ 
+	else if(dwReasonForBreak == REASON_HARDWARE_BP)
+	{
         ULONG ulReason;
 
         DPRINT((0,"REASON_HARDWARE_BP\n"));
 
         // disable HW breakpoints
-		__asm__(" 
+		__asm__("
             movl %%dr6,%%eax
             movl %%eax,%0
 			xorl %%eax,%%eax
-			movl %%eax,%%dr6 
+			movl %%eax,%%dr6
 			movl %%eax,%%dr7"
 			:"=m" (ulReason)
             :
             :"eax"
-			); 
+			);
 
         DPRINT((0,"REASON_HARDWARE_BP: %x\n",(ulReason&0xF)));
 
@@ -1193,19 +1192,19 @@ void RealIsr(ULONG dwReasonForBreak)
 
 			        bInDebuggerShell = FALSE;
                     LEAVE_FUNC();
-					DPRINT((0,"-----------------------------------------------------------------\n")); 
+					DPRINT((0,"-----------------------------------------------------------------\n"));
                     return;
                 }
-                bNotifyToExit = FALSE; 
+                bNotifyToExit = FALSE;
                 bSkipMainLoop = FALSE;
                 bStepThroughSource = FALSE;
             }
         }
-	} 
-	else if(dwReasonForBreak==REASON_INT3) 
-	{ 
+	}
+	else if(dwReasonForBreak==REASON_INT3)
+	{
 		ULONG ulAddress;
-        
+
         DPRINT((0,"REASON_INT3\n"));
 
 		// must subtract one cause INT3s are generated after instructions execution
@@ -1227,8 +1226,8 @@ void RealIsr(ULONG dwReasonForBreak)
             // do a callback
             if( (p = IsPermanentSWBreakpoint(ulAddress)) )
             {
-    			DPRINT((0,"permanent breakpoint\n")); 
-               
+    			DPRINT((0,"permanent breakpoint\n"));
+
                 OldCS = CurrentCS;
                 OldEIP = CurrentEIP;
 
@@ -1242,49 +1241,51 @@ void RealIsr(ULONG dwReasonForBreak)
                 LPSTR pFind;
                 if(ScanExportsByAddress(&pFind,GetLinearAddress(CurrentCS,CurrentEIP)))
                 {
-			        PICE_sprintf(tempShell,"pICE: SW Breakpoint at %s (%.4X:%.8X)\n",pFind,CurrentCS,CurrentEIP); 
+			        PICE_sprintf(tempShell,"pICE: SW Breakpoint at %s (%.4X:%.8X)\n",pFind,CurrentCS,CurrentEIP);
                 }
                 else
                 {
-			        PICE_sprintf(tempShell,"pICE: SW Breakpoint at %.4X:%.8X\n",CurrentCS,CurrentEIP); 
+			        PICE_sprintf(tempShell,"pICE: SW Breakpoint at %.4X:%.8X\n",CurrentCS,CurrentEIP);
                 }
-			    Print(OUTPUT_WINDOW,tempShell); 
+			    Print(OUTPUT_WINDOW,tempShell);
             }
             CurrentEFL &= ~(1<<16); // clear resume flag
         }
         else
         {
             LPSTR pFind;
-	        struct task_struct* my_current = (struct task_struct*)0xFFFFE000;
-
-	        (ULONG)my_current &= ulRealStackPtr;
+			PEPROCESS my_current = IoGetCurrentProcess();
 
             // if no other debugger is running on this process and the address is
             // above TASK_SIZE we assume this to be a hard embedded INT3
-#if REAL_LINUX_VERSION_CODE < 0x020400                                                    
-            if(ulAddress<TASK_SIZE && !(my_current->flags & PF_PTRACED) )            
-#else                                                                                
-            if(ulAddress<TASK_SIZE && !(my_current->ptrace & PT_PTRACED) )           
-#endif                                                                               
+/*
+#if REAL_LINUX_VERSION_CODE < 0x020400
+            if(ulAddress<TASK_SIZE && !(my_current->flags & PF_PTRACED) )
+#else
+            if(ulAddress<TASK_SIZE && !(my_current->ptrace & PT_PTRACED) )
+#endif
+*/
+			if( ulAddress )
             {
                 if(ScanExportsByAddress(&pFind,GetLinearAddress(CurrentCS,CurrentEIP)))
                 {
-			        PICE_sprintf(tempShell,"pICE: break due to embedded INT 3 at %s (%.4X:%.8X)\n",pFind,CurrentCS,CurrentEIP); 
+			        PICE_sprintf(tempShell,"pICE: break due to embedded INT 3 at %s (%.4X:%.8X)\n",pFind,CurrentCS,CurrentEIP);
                 }
                 else
                 {
-			        PICE_sprintf(tempShell,"pICE: break due to embedded INT 3 at user-mode address %.4X:%.8X\n",CurrentCS,CurrentEIP); 
+			        PICE_sprintf(tempShell,"pICE: break due to embedded INT 3 at user-mode address %.4X:%.8X\n",CurrentCS,CurrentEIP);
                 }
-			    Print(OUTPUT_WINDOW,tempShell); 
+			    Print(OUTPUT_WINDOW,tempShell);
 	            CurrentEFL &= ~(1<<16); // clear resume flag
             }
             // well someone is already debugging this, we must pass the INT3 on to old handler
             // but only when it's a user-mode address
+/*
             else
             {
                 if(ulAddress<TASK_SIZE || !bInt3Here)
                 {
-			        DPRINT((0,"SW Breakpoint but debugged by other process at %.4X:%.8X\n",CurrentCS,CurrentEIP)); 
+			        DPRINT((0,"SW Breakpoint but debugged by other process at %.4X:%.8X\n",CurrentCS,CurrentEIP));
                     // call the old handler on return from RealIsr()
                     dwCallOldInt3Handler = 1;
                     // and skip DebuggerShell()
@@ -1295,59 +1296,60 @@ void RealIsr(ULONG dwReasonForBreak)
                     if(ScanExportsByAddress(&pFind,GetLinearAddress(CurrentCS,CurrentEIP)))
                     {
 	    		        PICE_sprintf(tempShell,"pICE: break due to embedded INT 3 at (%s) %.4X:%.8X\n",
-                                     pFind,CurrentCS,CurrentEIP); 
+                                     pFind,CurrentCS,CurrentEIP);
                     }
                     else
                     {
 	    		        PICE_sprintf(tempShell,"pICE: break due to embedded INT 3 at kernel-mode address %.4X:%.8X\n",
-                                     CurrentCS,CurrentEIP); 
+                                     CurrentCS,CurrentEIP);
                     }
-			        Print(OUTPUT_WINDOW,tempShell); 
+			        Print(OUTPUT_WINDOW,tempShell);
 	                CurrentEFL &= ~(1<<16); // clear resume flag
                 }
             }
+*/
             // skip INT3
             CurrentEIP++;
         }
-	} 
-	else if(dwReasonForBreak == REASON_PAGEFAULT) 
-	{ 
+	}
+	else if(dwReasonForBreak == REASON_PAGEFAULT)
+	{
         LPSTR pSymbolName;
 
         DPRINT((0,"REASON_PAGEFAULT\n"));
 
         if( ScanExportsByAddress(&pSymbolName,GetLinearAddress(CurrentCS,CurrentEIP)) )
         {
-		    PICE_sprintf(tempShell,"pICE: Breakpoint due to page fault at %.4X:%.8X (%s)\n",CurrentCS,CurrentEIP,pSymbolName); 
+		    PICE_sprintf(tempShell,"pICE: Breakpoint due to page fault at %.4X:%.8X (%s)\n",CurrentCS,CurrentEIP,pSymbolName);
         }
         else
         {
-		    PICE_sprintf(tempShell,"pICE: Breakpoint due to page fault at %.4X:%.8X\n",CurrentCS,CurrentEIP); 
+		    PICE_sprintf(tempShell,"pICE: Breakpoint due to page fault at %.4X:%.8X\n",CurrentCS,CurrentEIP);
         }
-		Print(OUTPUT_WINDOW,tempShell); 
-		PICE_sprintf(tempShell,"pICE: memory referenced %x\n",CurrentCR2); 
-        Print(OUTPUT_WINDOW,tempShell); 
+		Print(OUTPUT_WINDOW,tempShell);
+		PICE_sprintf(tempShell,"pICE: memory referenced %x\n",CurrentCR2);
+        Print(OUTPUT_WINDOW,tempShell);
         dwCallOldIntEHandler = 1;
-	} 
-	else if(dwReasonForBreak == REASON_GP_FAULT) 
-	{ 
+	}
+	else if(dwReasonForBreak == REASON_GP_FAULT)
+	{
         LPSTR pSymbolName;
 
         DPRINT((0,"REASON_GPFAULT\n"));
 
         if( ScanExportsByAddress(&pSymbolName,GetLinearAddress(CurrentCS,CurrentEIP)) )
         {
-    		PICE_sprintf(tempShell,"pICE: Breakpoint due to general protection fault at %.4X:%.8X (%s)\n",CurrentCS,CurrentEIP,pSymbolName); 
+    		PICE_sprintf(tempShell,"pICE: Breakpoint due to general protection fault at %.4X:%.8X (%s)\n",CurrentCS,CurrentEIP,pSymbolName);
         }
         else
         {
-    		PICE_sprintf(tempShell,"pICE: Breakpoint due to general protection fault at %.4X:%.8X\n",CurrentCS,CurrentEIP); 
+    		PICE_sprintf(tempShell,"pICE: Breakpoint due to general protection fault at %.4X:%.8X\n",CurrentCS,CurrentEIP);
         }
-		Print(OUTPUT_WINDOW,tempShell); 
+		Print(OUTPUT_WINDOW,tempShell);
         dwCallOldGPFaultHandler = 1;
-	} 
-	else if(dwReasonForBreak == REASON_CTRLF) 
-	{ 
+	}
+	else if(dwReasonForBreak == REASON_CTRLF)
+	{
         DPRINT((0,"REASON_CTRLF\n"));
         // nothing to do
     }
@@ -1355,8 +1357,8 @@ void RealIsr(ULONG dwReasonForBreak)
     {
         DPRINT((0,"REASON_DOUBLE_FAULT\n"));
 
-        PICE_sprintf(tempShell,"pICE: Breakpoint due to double fault at %.4X:%.8X\n",CurrentCS,CurrentEIP); 
-		Print(OUTPUT_WINDOW,tempShell); 
+        PICE_sprintf(tempShell,"pICE: Breakpoint due to double fault at %.4X:%.8X\n",CurrentCS,CurrentEIP);
+		Print(OUTPUT_WINDOW,tempShell);
     }
     else if(dwReasonForBreak == REASON_INTERNAL_ERROR)
     {
@@ -1370,8 +1372,8 @@ void RealIsr(ULONG dwReasonForBreak)
     {
         DPRINT((0,"REASON_UNKNOWN\n"));
 
-        PICE_sprintf(tempShell,"pICE: Breakpoint due to unknown reason at %.4X:%.8X (code %x)\n",CurrentCS,CurrentEIP,dwReasonForBreak); 
-		Print(OUTPUT_WINDOW,tempShell); 
+        PICE_sprintf(tempShell,"pICE: Breakpoint due to unknown reason at %.4X:%.8X (code %x)\n",CurrentCS,CurrentEIP,dwReasonForBreak);
+		Print(OUTPUT_WINDOW,tempShell);
         Print(OUTPUT_WINDOW,"pICE: Please report this error to klauspg@diamondmm.com!\n");
         Print(OUTPUT_WINDOW,"pICE: !!! SYSTEM HALTED !!!\n");
         __asm__ __volatile__("hlt");
@@ -1379,7 +1381,7 @@ void RealIsr(ULONG dwReasonForBreak)
 
     // we don't single-step yet
     DPRINT((0,"RealIsr(): not stepping yet\n"));
-	bSingleStep=FALSE; 
+	bSingleStep=FALSE;
 
     // process commands
     if(bSkipMainLoop == FALSE)
@@ -1389,29 +1391,29 @@ void RealIsr(ULONG dwReasonForBreak)
 	    __asm__ __volatile__
 	    ("
             pushl %eax
-		    movw %es,%ax 
+		    movw %es,%ax
 		    movw %ax,CurrentES
 		    movw %fs,%ax
 		    movw %ax,CurrentFS
-		    movw %gs,%ax 
+		    movw %gs,%ax
 		    movw %ax,CurrentGS
-		    movl %dr0,%eax 
+		    movl %dr0,%eax
 		    movl %eax,CurrentDR0
-		    movl %dr1,%eax 
+		    movl %dr1,%eax
 		    movl %eax,CurrentDR1
-		    movl %dr2,%eax 
+		    movl %dr2,%eax
 		    movl %eax,CurrentDR2
-		    movl %dr3,%eax 
+		    movl %dr3,%eax
 		    movl %eax,CurrentDR3
-		    movl %dr6,%eax 
+		    movl %dr6,%eax
 		    movl %eax,CurrentDR6
-		    movl %dr7,%eax 
+		    movl %dr7,%eax
 		    movl %eax,CurrentDR7
-		    movl %cr0,%eax 
+		    movl %cr0,%eax
 		    movl %eax,CurrentCR0
-		    movl %cr2,%eax 
+		    movl %cr2,%eax
 		    movl %eax,CurrentCR2
-		    movl %cr3,%eax 
+		    movl %cr3,%eax
 		    movl %eax,CurrentCR3
             popl %eax"
 	    );
@@ -1430,7 +1432,7 @@ void RealIsr(ULONG dwReasonForBreak)
 		// remember how we restarted last time
         bPreviousCommandWasGo = !bSingleStep;
         // do a single step to reinstall breakpoint
-	    // modify trace flag 
+	    // modify trace flag
 	    CurrentEFL|=0x100; // set trace flag (TF)
 
 	    bSingleStep=TRUE;
@@ -1439,21 +1441,21 @@ void RealIsr(ULONG dwReasonForBreak)
 
 common_return_point:
 
-    // reset the global flags 
-    bNotifyToExit = FALSE; 
+    // reset the global flags
+    bNotifyToExit = FALSE;
     bSkipMainLoop = FALSE;
 
     // not in handler anymore
-    bInDebuggerShell = FALSE; 
+    bInDebuggerShell = FALSE;
 
     LEAVE_FUNC();
-	DPRINT((0,"-----------------------------------------------------------------\n")); 
-} 
+	DPRINT((0,"-----------------------------------------------------------------\n"));
+}
 
 __asm__("
-NewInt31Handler:	
-	cli	
-    cld	
+NewInt31Handler:
+	cli
+    cld
 
 	pushl %eax
 	pushl %ds
@@ -1461,60 +1463,60 @@ NewInt31Handler:
 	movw %ss,%ax
 	mov %ax,%ds
 
-	mov 0x4(%esp),%eax 
+	mov 0x4(%esp),%eax
 	movl %eax,CurrentEAX
-	movl %ebx,CurrentEBX	
+	movl %ebx,CurrentEBX
 	movl %ecx,CurrentECX
 	movl %edx,CurrentEDX
 	movl %esi,CurrentESI
 	movl %edi,CurrentEDI
 	movl %ebp,CurrentEBP
-	movl (%esp),%eax 
+	movl (%esp),%eax
 	movw %ax,CurrentDS
 
     // test for V86 mode
-	testl $0x20000,5*4(%esp) 
-	jz notV86 
+	testl $0x20000,5*4(%esp)
+	jz notV86
 
-	int $0x03 
+	int $0x03
 
-notV86: 
+notV86:
     // test if stack switched (ring3->ring0 transition)
     // stack is switched if orig. SS is not global kernel code segment
-    movl 4*4(%esp),%eax 
-    cmpw $" STR(GLOBAL_CODE_SEGMENT) ",%ax 
-	je notswitched 
+    movl 4*4(%esp),%eax
+    cmpw $" STR(GLOBAL_CODE_SEGMENT) ",%ax
+	je notswitched
 
     // switched stack
 	movl 6*4(%esp),%eax
 	mov %eax,CurrentESP
-	mov 7*4(%esp),%eax 
-	movzwl %ax,%eax 
-	mov %ax,CurrentSS 
-	jmp afterswitch 
+	mov 7*4(%esp),%eax
+	movzwl %ax,%eax
+	mov %ax,CurrentSS
+	jmp afterswitch
 
-notswitched: 
+notswitched:
     // didn't switch stack
 	movl %esp,CurrentESP
-	addl $24,CurrentESP 
-	movw %ss,%ax 
-	movzwl %ax,%eax 
-	mov %ax,CurrentSS 
+	addl $24,CurrentESP
+	movw %ss,%ax
+	movzwl %ax,%eax
+	mov %ax,CurrentSS
 
-afterswitch: 
+afterswitch:
     // save EIP
 	mov 3*4(%esp),%eax
 	mov %eax,CurrentEIP
     //save CS
-	mov 4*4(%esp),%eax 
+	mov 4*4(%esp),%eax
 	movzwl %ax,%eax
-	movw %ax,CurrentCS 
+	movw %ax,CurrentCS
     // save flags
-	movl 5*4(%esp),%eax 
-	andl $0xFFFFFEFF,%eax 
+	movl 5*4(%esp),%eax
+	andl $0xFFFFFEFF,%eax
 	movl %eax,CurrentEFL
 
-	pushal 
+	pushal
 
     // get reason code
     mov 0x28(%esp),%ebx
@@ -1528,77 +1530,77 @@ afterswitch:
     addl $4,%esp
 
     // restore all regs
-	popal 
+	popal
 
 	// do an EOI to IRQ controller (because we definitely pressed some key)
 	// TODO: SMP APIC support
 	movb $0x20,%al
 	outb %al,$0x20
 
-	popl %ds 
-	popl %eax 
+	popl %ds
+	popl %eax
 
     // remove reason code
     addl $4,%esp
 
     // make EAX available
-	pushl %eax 
+	pushl %eax
 
-	// modify or restore EFLAGS 
-	.byte 0x2e 
+	// modify or restore EFLAGS
+	.byte 0x2e
 	mov CurrentEFL,%eax
-	mov %eax,3*4(%esp) 
-	.byte 0x2e 
+	mov %eax,3*4(%esp)
+	.byte 0x2e
 	movzwl CurrentCS,%eax
-	mov %eax,2*4(%esp) 
-	.byte 0x2e 
+	mov %eax,2*4(%esp)
+	.byte 0x2e
 	mov CurrentEIP,%eax
-	mov %eax,1*4(%esp) 
+	mov %eax,1*4(%esp)
 
     // restore EAX
-	popl %eax 
+	popl %eax
 
     // do we need to call old INT1 handler
-    .byte 0x2e 
+    .byte 0x2e
     cmp $0,dwCallOldInt1Handler
     je do_iret2
 
     // call INT3 handler
-    .byte 0x2e 
+    .byte 0x2e
     jmp *OldInt1Handler
 
 do_iret2:
     // do we need to call old INT3 handler
-    .byte 0x2e 
+    .byte 0x2e
     cmp $0,dwCallOldInt3Handler
     je do_iret1
-	
+
     // call INT3 handler
-    .byte 0x2e 
+    .byte 0x2e
     jmp *OldInt3Handler
-	
+
 do_iret1:
     // do we need to call old pagefault handler
-    .byte 0x2e 
+    .byte 0x2e
     cmp $0,dwCallOldIntEHandler
     je do_iret3
 
     // call old pagefault handler
-	.byte 0x2e 
+	.byte 0x2e
     pushl error_code
-	.byte 0x2e 
+	.byte 0x2e
     jmp *OldIntEHandler
 
 do_iret3:
     // do we need to call old general protection fault handler
-    .byte 0x2e 
+    .byte 0x2e
     cmp $0,dwCallOldGPFaultHandler
     je do_iret
 
     // call old pagefault handler
-	.byte 0x2e 
+	.byte 0x2e
     pushl error_code
-	.byte 0x2e 
+	.byte 0x2e
     jmp *OldGPFaultHandler
 
 do_iret:
@@ -1609,17 +1611,17 @@ do_iret:
 //
 // IDTs keyboard IRQ points here
 //
-__asm__ (" 
+__asm__ ("
 NewGlobalInt31Handler:
 		.byte 0x2e
-		cmpb $0,bEnterNow 
-		jne dotheenter 
+		cmpb $0,bEnterNow
+		jne dotheenter
 
-        // chain to old handler 
+        // chain to old handler
 		.byte 0x2e
 		jmp *OldGlobalInt31Handler
 
-dotheenter: 
+dotheenter:
         pushl $" STR(REASON_CTRLF) "
         jmp NewInt31Handler "
 );
@@ -1637,7 +1639,7 @@ void InstallGlobalKeyboardHook(void)
 			:"=r" (LocalNewGlobalInt31Handler)
 			:
 			:"eax");
-		OldGlobalInt31Handler=SetGlobalInt(0x21,(ULONG)LocalNewGlobalInt31Handler);
+		OldGlobalInt31Handler=SetGlobalInt(KeyboardIRQL,(ULONG)LocalNewGlobalInt31Handler);
 	}
 	UnmaskIrqs();
 
@@ -1651,7 +1653,7 @@ void DeInstallGlobalKeyboardHook(void)
 	MaskIrqs();
 	if(OldGlobalInt31Handler)
 	{
-		SetGlobalInt(0x21,(ULONG)OldGlobalInt31Handler);
+		SetGlobalInt(KeyboardIRQL,(ULONG)OldGlobalInt31Handler);
 		OldGlobalInt31Handler=0;
 	}
 	UnmaskIrqs();

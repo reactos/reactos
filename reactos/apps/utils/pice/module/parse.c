@@ -36,14 +36,6 @@ Copyright notice:
 #include "precomp.h"
 #include "pci_ids.h"
 
-#include <linux/sched.h>
-#include <asm/io.h>
-#include <asm/page.h>
-#include <asm/pgtable.h>
-#include <linux/utsname.h>
-#include <linux/timer.h>
-#include <linux/ctype.h>
-
 ///////////////////////////////////////////////////
 // GLOBALS
 
@@ -56,7 +48,7 @@ USHORT usOldDisasmSegment = 0;
 ULONG ulOldDisasmOffset = 0;
 static ULONG ulCountForWaitKey = 0;
 
-extern unsigned long sys_call_table[];
+//extern unsigned long sys_call_table[];
 
 BOOLEAN (*DisplayMemory)(PARGS) = DisplayMemoryDword;
 
@@ -842,7 +834,7 @@ COMMAND_PROTOTYPE(ShowIdt)
 
 	ENTER_FUNC();
 
-    // get GDT register
+	// get GDT register
 	__asm__ ("sidt %0\n"
 	 	:"=m" (idtr));
 	// info out
@@ -905,35 +897,17 @@ COMMAND_PROTOTYPE(ShowPageDirs)
 {
 	ULONG i;
 	PPAGEDIR pPageDir;
-	pgd_t * pPGD;
-	pmd_t * pPMD;
-	pte_t * pPTE;
-    struct mm_struct* mm;
-	struct task_struct* my_current = (struct task_struct*)0xFFFFE000;
+	PULONG pPGD;
+	PULONG pPTE;
+	PEPROCESS my_current = IoGetCurrentProcess();
 
     ENTER_FUNC();
-
-    // get current process pointer
-	(ULONG)my_current &= ulRealStackPtr;
 
     DPRINT((0,"ShowPageDirs(): my_current = %.8X\n",(ULONG)my_current));
 
     // don't touch if not valid process
 	if(my_current)
 	{
-		if(my_current->mm)
-		{
-			pPageDir = (PPAGEDIR)pgd_offset(my_current->mm,0);
-            mm = my_current->mm;
-            DPRINT((0,"ShowPageDirs(): (1) pPageDir = %.8X\n",(ULONG)pPageDir));
-		}
-		else
-		{
-            mm = my_init_mm;
-			pPageDir = (PPAGEDIR)my_init_mm->pgd;
-            DPRINT((0,"ShowPageDirs(): (2) pPageDir = %.8X\n",(ULONG)pPageDir));
-		}
-
         // no arguments supplied -> show all page directories
 		if(!pArgs->Count)
 		{
@@ -943,12 +917,12 @@ COMMAND_PROTOTYPE(ShowPageDirs)
 			{
                 ULONG ulAddress = i<<22;
                 // from the mm_struct get pointer to page directory for this address
-                pPGD = pgd_offset(mm,ulAddress);
+                pPGD = ADDR_TO_PDE(ulAddress);
+                // create a structurized pointer from PGD
+                pPageDir = (PPAGEDIR)pPGD;
 
-                if(pPGD)
+                if(pPageDir->PTBase)
                 {
-                    // create a structurized pointer from PGD
-                    pPageDir = (PPAGEDIR)pPGD;
 
 				    PICE_sprintf(tempCmd,"%.8X-%.8X %.8X %s %s %s\n",
 							    ulAddress, ulAddress + 0x400000,
@@ -962,18 +936,19 @@ COMMAND_PROTOTYPE(ShowPageDirs)
                 }
 			}
 		}
-        // one arg supplied -> show individual page
+
+	  // one arg supplied -> show individual page
 		else if(pArgs->Count == 1)
 		{
-            pPGD = pgd_offset(mm,pArgs->Value[0]);
+            pPGD = (ULONG)PAGEDIRECTORY_MAP+(((ULONG)pArgs->Value[0] / (1024 * 1024))&(~0x3));
 
             DPRINT((0,"ShowPageDirs(): VA = %.8X\n",pArgs->Value[0]));
             DPRINT((0,"ShowPageDirs(): pPGD = %.8X\n",(ULONG)pPGD));
 
-            if(pPGD && pgd_val(*pPGD)&_PAGE_PRESENT)
+            if(pPGD && ((*pPGD)&_PAGE_PRESENT))
             {
                 // 4M page
-                if(pgd_val(*pPGD)&_PAGE_4M)
+                if((*pPGD)&_PAGE_4M)
                 {
                     PPAGEDIR pPage = (PPAGEDIR)pPGD;
 
@@ -989,15 +964,11 @@ COMMAND_PROTOTYPE(ShowPageDirs)
                 }
                 else
                 {
-                    pPMD = pmd_offset(pPGD,pArgs->Value[0]);
-                    DPRINT((0,"ShowPageDirs(): pPMD = %.8X\n",(ULONG)pPMD));
-                    pPTE = pte_offset(pPMD,pArgs->Value[0]);
+                    pPTE = ADDR_TO_PTE(pArgs->Value[0]);
                     DPRINT((0,"ShowPageDirs(): pPTE = %.8X\n",(ULONG)pPTE));
                     if(pPTE)
                     {
                         PPAGEDIR pPage = (PPAGEDIR)pPTE;
-
-                        DPRINT((0,"ShowPageDirs(): pte_val = %.8X\n",(ULONG)pte_val(*pPTE)));
                         DPRINT((0,"ShowPageDirs(): pPage->PTBase = %.8X\n",(ULONG)pPage->PTBase));
 
                         PutStatusText("Linear    Physical   Attributes");
@@ -1031,33 +1002,32 @@ COMMAND_PROTOTYPE(ShowPageDirs)
 //*************************************************************************
 COMMAND_PROTOTYPE(ShowProcesses)
 {
-	struct task_struct* p;
- 	struct task_struct* my_current = (struct task_struct*)0xFFFFE000;
-	ULONG i;
-														  \
-	(ULONG)my_current &= ulRealStackPtr;
+	PEPROCESS my_current = IoGetCurrentProcess();
+    PLIST_ENTRY current_entry;
+	PEPROCESS currentps;
 
 	ENTER_FUNC();
 
- 	if(my_current)
-	{
-		DPRINT((0,"current = %x current->prev_task = %x current->next_task = %x\n",
-			my_current,
-			my_current->prev_task,
-			my_current->next_task));
+	current_entry = pPsProcessListHead->Flink;
 
-        PutStatusText("NAME             TASK         PID");
+	if( current_entry ){
 
-		for(i=0,p = my_current; (p = p->next_task) != my_current;i++)
-		{
-			DPRINT((0,"p = %x\n",p));
-			PICE_sprintf(tempCmd,"%-16.16s %-12x %x\n",(LPSTR)&(p->comm),(ULONG)p,p->pid);
-			Print(OUTPUT_WINDOW,tempCmd);
-			if(WaitForKey()==FALSE)
-				break;
+	    PutStatusText("NAME             TASK         PID");
+
+		while( current_entry != pPsProcessListHead ){
+				currentps = CONTAINING_RECORD(current_entry,
+					  EPROCESS,
+					  ProcessListEntry);
+			    DPRINT((0,"currentps = %x\n",currentps));
+				//ei would be nice to mark current process!
+				PICE_sprintf(tempCmd,"%-16.16s %-12x %x\n",currentps->ImageFileName,
+						(ULONG)currentps,currentps->UniqueProcessId);
+				Print(OUTPUT_WINDOW,tempCmd);
+				if(WaitForKey()==FALSE)
+					break;
+				current_entry = current_entry->Flink;
 		}
 	}
-
     LEAVE_FUNC();
 	return TRUE;
 }
@@ -1904,6 +1874,7 @@ COMMAND_PROTOTYPE(ShowModules)
 // DecodeVmFlags()
 //
 //*************************************************************************
+//ei FIX THIS!!!!!!!!!!!!!!!!!!
 LPSTR DecodeVmFlags(ULONG flags)
 {
     ULONG i;
@@ -1961,44 +1932,48 @@ LPSTR DecodeVmFlags(ULONG flags)
 //*************************************************************************
 COMMAND_PROTOTYPE(ShowVirtualMemory)
 {
-	struct task_struct* my_current = (struct task_struct*)0xFFFFE000;
-	struct mm_struct *mm;
-    struct vm_area_struct * vma;
-    char filename[32];
+	PEPROCESS my_current = IoGetCurrentProcess();
+    PLIST_ENTRY current_entry;
+	PMADDRESS_SPACE vma;
+	MEMORY_AREA* current;
+    char filename[64];
 
 	DPRINT((0,"ShowVirtualMemory()\n"));
 
-    (ULONG)my_current &= ulRealStackPtr;
-
-    mm = my_current->mm;
-    if(mm != my_init_mm)
+    vma = &(my_current->AddressSpace);
+    if(vma)
     {
         if(pArgs->Count == 0)
         {
-            PutStatusText("START    END      VMA      FLAGS");
-            for(vma = mm->mmap;vma;vma = vma->vm_next)
+            PutStatusText("START    END   LENGTH   VMA      TYPE   ATTR");
+			current_entry = vma->MAreaListHead.Flink;
+			while (current_entry != &vma->MAreaListHead)
             {
                 *filename = 0;
-                // find the filename
-                if((vma->vm_flags&VM_EXECUTABLE) &&
-                    vma->vm_file)
+
+				current = CONTAINING_RECORD(current_entry,
+							    MEMORY_AREA,
+							    Entry);
+				// find the filename
+                if(((current->Type == MEMORY_AREA_SECTION_VIEW_COMMIT) ||
+					(current->Type == MEMORY_AREA_SECTION_VIEW_RESERVE) )&&
+                    current->Data.SectionData.Section->FileObject)
                 {
-    		        if (vma->vm_file->f_dentry)
-                    {
-                        if(IsAddressValid((ULONG)vma->vm_file->f_dentry->d_iname) )
-                            PICE_sprintf(filename,"%15s",vma->vm_file->f_dentry->d_iname);
-                    }
+                    if(IsAddressValid((ULONG)current->Data.SectionData.Section->FileObject->FileName.Buffer) )
+                        PICE_sprintf(filename,"%.64S",current->Data.SectionData.Section->FileObject->FileName.Buffer);
                 }
 
-                PICE_sprintf(tempCmd,"%.8X %.8X %.8X %s     %s\n",
-                        (ULONG)vma->vm_start,
-                        (ULONG)vma->vm_end,
-                        (ULONG)vma,
-                        DecodeVmFlags(vma->vm_flags),
+                PICE_sprintf(tempCmd,"%.8X %.8X %.8X %.8X %x %x    %s\n",
+                        (ULONG)current->BaseAddress,
+                        (ULONG)current->BaseAddress+current->Length,
+						current->Length,
+                        (ULONG)current,
+                        current->Type, current->Attributes,//DecodeVmFlags(current->Type, current->Attributes),
                         filename);
                 Print(OUTPUT_WINDOW,tempCmd);
 
                 if(WaitForKey()==FALSE)break;
+				current_entry = current_entry->Flink;
             }
         }
     }
@@ -2012,18 +1987,20 @@ COMMAND_PROTOTYPE(ShowVirtualMemory)
 //*************************************************************************
 COMMAND_PROTOTYPE(Ver)
 {
-    PICE_sprintf(tempCmd,"pICE: version %u.%u (build %u) for Linux kernel release %s\n",
+	//ei add kernel version info??!!
+    PICE_sprintf(tempCmd,"pICE: version %u.%u (build %u) for Reactos\n",
                  PICE_MAJOR_VERSION,
                  PICE_MINOR_VERSION,
-                 PICE_BUILD,
-                 UTS_RELEASE);
+                 PICE_BUILD);
+
 	Print(OUTPUT_WINDOW,tempCmd);
 
-    PICE_sprintf(tempCmd,"pICE: loaded on %s kernel release %s\n",
+/*    PICE_sprintf(tempCmd,"pICE: loaded on %s kernel release %s\n",
 		system_utsname.sysname,
 		system_utsname.release);
+ */
 	Print(OUTPUT_WINDOW,tempCmd);
-	Print(OUTPUT_WINDOW,"pICE: written by Klaus P. Gerlicher and Goran Devic\n");
+	Print(OUTPUT_WINDOW,"pICE: written by Klaus P. Gerlicher and Goran Devic. Ported to Reactos by Eugene Ingerman.\n");
 
 	return TRUE;
 }
@@ -2106,7 +2083,6 @@ COMMAND_PROTOTYPE(I3here)
 	return TRUE;
 }
 
-#ifndef LINUX
 COMMAND_PROTOTYPE(I1here)
 {
 	if(pArgs->Count==1)
@@ -2146,7 +2122,6 @@ COMMAND_PROTOTYPE(I1here)
 	// never gets here
 	return TRUE;
 }
-#endif // LINUX
 
 COMMAND_PROTOTYPE(NextInstr)
 {
@@ -2857,6 +2832,7 @@ COMMAND_PROTOTYPE(ClearScreen)
 //*************************************************************************
 COMMAND_PROTOTYPE(ShowMappings)
 {
+#if 0
 	ULONG ulPageDir;
 	ULONG ulPageTable;
 	ULONG address;
@@ -2947,7 +2923,9 @@ COMMAND_PROTOTYPE(ShowMappings)
 			}
 		}
 	}
-
+#endif
+	PICE_sprintf(tempCmd,"Not implemented yet!\n");
+	Print(OUTPUT_WINDOW,tempCmd);
 	return TRUE;
 }
 
@@ -3155,6 +3133,7 @@ COMMAND_PROTOTYPE(SetKeyboardLayout)
 //*************************************************************************
 COMMAND_PROTOTYPE(ShowSysCallTable)
 {
+#if 0
     LPSTR pName;
     ULONG i;
 
@@ -3198,8 +3177,10 @@ COMMAND_PROTOTYPE(ShowSysCallTable)
     }
 
     LEAVE_FUNC();
-
-    return TRUE;
+#endif
+	PICE_sprintf(tempCmd,"Not implemented yet!\n");
+	Print(OUTPUT_WINDOW,tempCmd);
+	return TRUE;
 }
 
 //*************************************************************************

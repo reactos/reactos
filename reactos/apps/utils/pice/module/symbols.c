@@ -2335,7 +2335,7 @@ BOOLEAN FindGlobalStabSymbol(LPSTR pExpression,PULONG pValue,PULONG pulTypeNumbe
 //*************************************************************************
 void ExtractToken(LPSTR pStringToken)
 {
-	while(isalpha(pExpression[ulIndex]) || isdigit(pExpression[ulIndex]) || pExpression[ulIndex]=='_')
+	while(isalpha(pExpression[ulIndex]) || PICE_isdigit(pExpression[ulIndex]) || pExpression[ulIndex]=='_')
 	{
 		*pStringToken++=pExpression[ulIndex++];
 		*pStringToken=0;
@@ -2406,7 +2406,7 @@ LONG ExtractNumber(LPSTR p)
         return 0;
     }
 
-    while(isdigit(*p))
+    while(PICE_isdigit(*p))
     {
         lNumber *= lBase;
         lNumber += *p-'0';
@@ -2717,7 +2717,7 @@ BOOLEAN EvaluateSymbol(PVRET pvr,LPSTR pToken)
                     DPRINT((0,"%x struct size = %x\n",pvr->type,lLowerRange));
 
                     // skip over the digits
-                    while(isdigit(*pTypeBase))
+                    while(PICE_isdigit(*pTypeBase))
                         pTypeBase++;
 
                     // the structs address is is value

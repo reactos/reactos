@@ -33,14 +33,6 @@ Copyright notice:
 #include "remods.h"
 #include "precomp.h"
 
-#include <linux/sched.h>
-#include <asm/io.h>
-#include <asm/page.h>
-#include <asm/pgtable.h>
-#include <linux/utsname.h>
-#include <linux/sched.h>
-#include <asm/unistd.h>
-
 char syscallTemp[1024];
 
 typedef struct _FRAME_SYSCALL
@@ -75,11 +67,12 @@ void other_module_cleanup_module(void)
         RevirtualizeBreakpointsForModule(pModJustFreed);
     }
 }
-#error fix that
+
 void CSyscallHandler(FRAME_SYSCALL* ptr,ULONG ulSysCall,ULONG ebx)
 {
 //	DPRINT((0,"CSyscallHandler(): %.4X:%.8X (syscall = %u)\n",ptr->cs,ptr->eip,ulSysCall));
-    switch(ulSysCall)
+/*
+	switch(ulSysCall)
     {
         case 1: // sys_exit
             DPRINT((0,"CSysCallHandler(): 1\n"));
@@ -160,6 +153,7 @@ void CSyscallHandler(FRAME_SYSCALL* ptr,ULONG ulSysCall,ULONG ebx)
             }
 			break;
     }
+ */
 }
 
 __asm__ ("
@@ -202,7 +196,7 @@ void InstallSyscallHook(void)
 	ULONG LocalSyscallHandler;
 
 	ENTER_FUNC();
-
+/*ei  fix later
 	MaskIrqs();
 	if(!OldSyscallHandler)
 	{
@@ -210,28 +204,28 @@ void InstallSyscallHook(void)
 			:"=r" (LocalSyscallHandler)
 			:
 			:"eax");
-		OldSyscallHandler=SetGlobalInt(0x80,(ULONG)LocalSyscallHandler);
+		OldSyscallHandler=SetGlobalInt(0x2e,(ULONG)LocalSyscallHandler);
 
 		ScanExports("free_module",(PULONG)&ulFreeModule);
 
 		DPRINT((0,"InstallSyscallHook(): free_module @ %x\n",ulFreeModule));
 	}
 	UnmaskIrqs();
-
+ */
     LEAVE_FUNC();
 }
 
 void DeInstallSyscallHook(void)
 {
 	ENTER_FUNC();
-
+/*ei
 	MaskIrqs();
 	if(OldSyscallHandler)
 	{
-		SetGlobalInt(0x80,(ULONG)OldSyscallHandler);
+		SetGlobalInt(0x2e,(ULONG)OldSyscallHandler);
         (ULONG)OldSyscallHandler=0;
 	}
 	UnmaskIrqs();
-
+*/
     LEAVE_FUNC();
 }

@@ -32,16 +32,6 @@ Copyright notice:
 ////
 #include "remods.h"
 #include "precomp.h"
-#include <asm/io.h>
-#include <asm/page.h>
-#include <asm/pgtable.h>
-#include <linux/fs.h>
-#include <asm/uaccess.h>
-#include <asm/delay.h>
-#include <linux/types.h>
-#include <linux/string.h>
-#include <linux/ctype.h>
-
 #include <defines.h>
 
 
@@ -52,8 +42,7 @@ Copyright notice:
 char tempUtil[1024];
 char tempFlowChanges[256];
 
-struct mm_struct* my_init_mm=(struct mm_struct*)NULL;
-struct module **pmodule_list=NULL;
+//PMADDRESS_SPACE my_init_mm=NULL;
 
 ULONG TwoPagesForPhysMem[2*PAGE_SIZE];
 
@@ -243,6 +232,21 @@ char PICE_toupper(char c)
 	return c;
 }
 
+int PICE_isdigit( int c )
+{
+	return ((c>=0x30) && (c<=0x39));
+}
+
+int PICE_isxdigit( int c )
+{
+	return (PICE_isdigit(c) || ((c>=0x41) && (c<=0x46)) || ((c>=0x61) && (c<=0x66)));
+}
+
+int PICE_islower( int c )
+{
+	return ((c>=0x61) && (c<=0x7a));
+}
+
 //*************************************************************************
 // PICE_strncmpi()
 //
@@ -401,46 +405,25 @@ ULONG j;
 //*************************************************************************
 BOOLEAN IsAddressValid(ULONG address)
 {
-	pgd_t * pPGD;
-	pmd_t * pPMD;
-	pte_t * pPTE;
+	PULONG pPGD;
+	PULONG pPTE;
 	BOOLEAN bResult = FALSE;
-	struct mm_struct* p = NULL;
-	struct task_struct* my_current = (struct task_struct*)0xFFFFE000;
+	PEPROCESS my_current = IoGetCurrentProcess();
 
 	address &= (~(PAGE_SIZE-1));
 
-    // if we're in DebuggerShell() we live on a different stack
-    if(bInDebuggerShell)
-	    (ULONG)my_current &= ulRealStackPtr;
-    else
-	    my_current = current;
-
-    if(address < TASK_SIZE)
+	if(my_current)
 	{
-		p = my_current->mm;
-	}
-    else
-    {
-        p = my_init_mm;
-    }
-
-	if(p)
-	{
-		pPGD = pgd_offset(p,address);
-        if(pPGD && pgd_val(*pPGD)&_PAGE_PRESENT)
+		pPGD = ADDR_TO_PDE(address);
+        if(pPGD && ((*pPGD)&_PAGE_PRESENT))
         {
             // not large page
-            if(!(pgd_val(*pPGD)&_PAGE_4M))
+            if(!((*pPGD)&_PAGE_4M))
 			{
-				pPMD = pmd_offset(pPGD,address);
-				if(pPMD)
+				pPTE = ADDR_TO_PTE(address);
+				if(pPTE)
 				{
-					pPTE = pte_offset(pPMD,address);
-					if(pPTE)
-					{
-						bResult = pte_present(*pPTE);
-					}
+					bResult = (*pPTE)&(_PAGE_PRESENT | _PAGE_PSE);
 				}
 			}
 			// large page
@@ -465,57 +448,34 @@ BOOLEAN IsAddressValid(ULONG address)
 //*************************************************************************
 BOOLEAN IsAddressWriteable(ULONG address)
 {
-	pgd_t * pPGD;
-	pmd_t * pPMD;
-	pte_t * pPTE;
+	PULONG pPGD;
+	PULONG pPTE;
 	BOOLEAN bResult = FALSE;
-	struct mm_struct* p = NULL;
-	struct task_struct* my_current = (struct task_struct*)0xFFFFE000;
+	PEPROCESS my_current = IoGetCurrentProcess();
 
 	address &= (~(PAGE_SIZE-1));
 
-    // if we're in DebuggerShell() we live on a different stack
-    if(bInDebuggerShell)
-	    (ULONG)my_current &= ulRealStackPtr;
-    else
-	    my_current = current;
-
-    if(address < TASK_SIZE)
+	if(my_current)
 	{
-		p = my_current->mm;
-	}
-    else
-    {
-        p = my_init_mm;
-    }
-
-	if(p)
-	{
-		pPGD = pgd_offset(p,address);
-        if(pPGD && pgd_val(*pPGD)&_PAGE_PRESENT)
+		pPGD = ADDR_TO_PDE(address);
+        if(pPGD && ((*pPGD)&_PAGE_PRESENT))
         {
             // not large page
-            if(!(pgd_val(*pPGD)&_PAGE_4M))
+            if(!((*pPGD)&_PAGE_4M))
 			{
-		        bResult |= pgd_val(*pPGD) & _PAGE_RW;
+		        bResult |= (*pPGD) & _PAGE_RW;
 
-				pPMD = pmd_offset(pPGD,address);
-				if(pPMD)
+				pPTE = ADDR_TO_PTE(address);
+				if(pPTE)
 				{
-		    		bResult |= pmd_val(*pPMD) & _PAGE_RW;
-
-					pPTE = pte_offset(pPMD,address);
-					if(pPTE)
-					{
-						if( pte_present(*pPTE) )
-						    bResult |= pte_write(*pPTE);
-					}
+					if( (*pPTE)&(_PAGE_PRESENT | _PAGE_PSE) )
+						bResult |= (*pPTE) & _PAGE_RW;
 				}
 			}
 			// large page
 			else
 			{
-				bResult |= pgd_val(*pPGD) & _PAGE_RW;
+				bResult |= (*pPGD) & _PAGE_RW;
 			}
 		}
 	}
@@ -530,62 +490,41 @@ BOOLEAN IsAddressWriteable(ULONG address)
 //*************************************************************************
 BOOLEAN SetAddressWriteable(ULONG address,BOOLEAN bSet)
 {
-	pgd_t * pPGD;
-	pmd_t * pPMD;
-	pte_t * pPTE;
+	PULONG pPGD;
+	PULONG pPTE;
 	BOOLEAN bResult = FALSE;
-	struct mm_struct* p = NULL;
-	struct task_struct* my_current = (struct task_struct*)0xFFFFE000;
+	PEPROCESS my_current = IoGetCurrentProcess();
 
 	address &= (~(PAGE_SIZE-1));
 
-    // if we're in DebuggerShell() we live on a different stack
-    if(bInDebuggerShell)
-	    (ULONG)my_current &= ulRealStackPtr;
-    else
-	    my_current = current;
-
-    if(address < TASK_SIZE)
+	if(my_current)
 	{
-		p = my_current->mm;
-	}
-    else
-    {
-        p = my_init_mm;
-    }
-
-	if(p)
-	{
-		pPGD = pgd_offset(p,address);
-        if(pPGD && pgd_val(*pPGD)&_PAGE_PRESENT)
+		pPGD = ADDR_TO_PDE(address);
+        if(pPGD && ((*pPGD)&_PAGE_PRESENT))
         {
             // not large page
-            if(!(pgd_val(*pPGD)&_PAGE_4M))
+            if(!((*pPGD)&_PAGE_4M))
 			{
-				pPMD = pmd_offset(pPGD,address);
-				if(pPMD)
+				pPTE = ADDR_TO_PTE(address);
+				if(pPTE)
 				{
-					pPTE = pte_offset(pPMD,address);
-					if(pPTE)
+					if( (*pPTE)&(_PAGE_PRESENT | _PAGE_PSE) )
 					{
-						if( pte_present(*pPTE) )
-						{
-                            if( bSet )
-								pte_mkwrite(*pPTE);
-                            else
-								pte_wrprotect(*pPTE);
-                            bResult = TRUE;
-                        }
-					}
+                        if( bSet )
+							*pPTE |= _PAGE_RW;
+                        else
+							*pPTE &= ~_PAGE_RW;
+                        bResult = TRUE;
+                    }
 				}
 			}
 			// large page
 			else
 			{
                 if( bSet )
-                    pgd_val(*pPGD) |= _PAGE_RW;
+                    *pPGD |= _PAGE_RW;
                 else
-                    pgd_val(*pPGD) &= ~_PAGE_RW;
+                    *pPGD &= ~_PAGE_RW;
                 bResult = TRUE;
 			}
 		}
@@ -1320,11 +1259,13 @@ UCHAR KeyboardGetKeyPolled(void)
 //*************************************************************************
 void KeyboardFlushKeyboardQueue(void)
 {
-	__udelay(10);
+	//__udelay(10);
+	KeStallExecutionProcessor(10);
     while(GetKeyStatus()&OUTPUT_BUFFER_FULL)
     {
         GetKeyData();
-		__udelay(10);
+		//__udelay(10);
+		KeStallExecutionProcessor(10);
     }
 }
 
@@ -1368,7 +1309,7 @@ UCHAR ucKey;
             else
                 goto load;
         }
-        __udelay(1000);
+        Sleep(1000);
     }
 load:
 	Clear(REGISTER_WINDOW);
@@ -1436,48 +1377,28 @@ void IntelStackWalk(ULONG pc,ULONG ebp,ULONG esp)
 //*************************************************************************
 pte_t * FindPteForLinearAddress(ULONG address)
 {
-	pgd_t * pPGD;
-	pmd_t * pPMD;
-	pte_t * pPTE;
-	struct mm_struct* p = NULL;
-	struct task_struct* my_current = (struct task_struct*)0xFFFFE000;
+	PULONG pPGD;
+	PULONG pPTE;
+	BOOLEAN bResult = FALSE;
+	PEPROCESS my_current = IoGetCurrentProcess();
 
     ENTER_FUNC();
 
 	address &= (~(PAGE_SIZE-1));
 
-    // if we're in DebuggerShell() we live on a different stack
-    if(bInDebuggerShell)
-	    (ULONG)my_current &= ulRealStackPtr;
-    else
-	    my_current = current;
-
-    if(address < TASK_SIZE)
+	if(my_current)
 	{
-		p = my_current->mm;
-	}
-    else
-    {
-        p = my_init_mm;
-    }
-
-	if(p)
-	{
-		pPGD = pgd_offset(p,address);
-        if(pPGD && pgd_val(*pPGD)&_PAGE_PRESENT)
+		pPGD = ADDR_TO_PDE(address);
+        if(pPGD && ((*pPGD)&_PAGE_PRESENT))
         {
             // not large page
-            if(!(pgd_val(*pPGD)&_PAGE_4M))
+            if(!((*pPGD)&_PAGE_4M))
 			{
-				pPMD = pmd_offset(pPGD,address);
-				if(pPMD)
+				pPTE = ADDR_TO_PTE(address);
+				if(pPTE)
 				{
-					pPTE = pte_offset(pPMD,address);
-					if(pPTE)
-					{
-                        LEAVE_FUNC();
-						return pPTE;
-					}
+                    LEAVE_FUNC();
+					return pPTE;
 				}
 			}
 			// large page
@@ -1602,14 +1523,14 @@ unsigned long simple_strtoul(const char *cp,char **endp,unsigned int base)
 		if (*cp == '0') {
 			base = 8;
 			cp++;
-			if ((*cp == 'x') && isxdigit(cp[1])) {
+			if ((*cp == 'x') && PICE_isxdigit(cp[1])) {
 				cp++;
 				base = 16;
 			}
 		}
 	}
-	while (isxdigit(*cp) && (value = isdigit(*cp) ? *cp-'0' : (islower(*cp)
-	    ? toupper(*cp) : *cp)-'A'+10) < base) {
+	while (PICE_isxdigit(*cp) && (value = PICE_isdigit(*cp) ? *cp-'0' : (PICE_islower(*cp)
+	    ? PICE_toupper(*cp) : *cp)-'A'+10) < base) {
 		result = result*base + value;
 		cp++;
 	}
@@ -2041,7 +1962,7 @@ ULONG  inl(PULONG port)
 	return READ_PORT_ULONG(port);
 }
 
-
+#if 0
 //*************************************************************************
 // GetInitMm()
 //
@@ -2072,6 +1993,7 @@ struct mm_struct *GetInitMm(void)
 	return NULL;
 #endif
 }
+#endif
 
 //*************************************************************************
 // EnablePassThrough()
