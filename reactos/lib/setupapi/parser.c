@@ -568,7 +568,7 @@ static void close_current_line( struct parser *parser )
 static const WCHAR *line_start_state( struct parser *parser, const WCHAR *pos )
 {
     const WCHAR *p;
-
+    
     for (p = pos; !is_eof( parser, p ); p++)
     {
         switch(*p)
@@ -795,7 +795,7 @@ static const WCHAR *quotes_state( struct parser *parser, const WCHAR *pos )
 static const WCHAR *leading_spaces_state( struct parser *parser, const WCHAR *pos )
 {
     const WCHAR *p;
-
+ 
     for (p = pos; !is_eol( parser, p ); p++)
     {
         if (*p == '\\')
@@ -945,7 +945,7 @@ static struct inf_file *parse_file( HANDLE handle, const WCHAR *class, UINT *err
     file->string_pos = file->strings;
     file->strings_section = -1;
 
-    if (!RtlIsTextUnicode( buffer, size, NULL ))
+    if (TRUE)//(!RtlIsTextUnicode( buffer, size, NULL )) // Fireball, 07 Feb 04, temp fix
     {
         WCHAR *new_buff = HeapAlloc( GetProcessHeap(), 0, size * sizeof(WCHAR) );
         if (new_buff)
@@ -1067,7 +1067,6 @@ HINF WINAPI SetupOpenInfFileW( PCWSTR name, PCWSTR class, DWORD style, UINT *err
             handle = CreateFileW( path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, 0 );
         }
     }
-
     if (handle != INVALID_HANDLE_VALUE)
     {
         file = parse_file( handle, class, error );
