@@ -1,1 +1,1 @@
-loadros ntoskrnl.exe ide.sys vfatfsd.sys
+loadros ntoskrnl.exe ide.sys vfatfs.sys

@@ -149,7 +149,7 @@ typedef struct __DOSDATE
 extern PVfatFCB pFirstFcb;
 
 // functions called by i/o manager :
-NTSTATUS DriverEntry(PDRIVER_OBJECT _DriverObject,PUNICODE_STRING RegistryPath);
+NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT _DriverObject,PUNICODE_STRING RegistryPath);
 NTSTATUS FsdDirectoryControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 NTSTATUS FsdRead(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 NTSTATUS FsdWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp);
