@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.244.2.6 2004/09/12 19:21:07 weiden Exp $
+/* $Id: window.c,v 1.244.2.7 2004/09/13 21:28:17 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -767,7 +767,7 @@ IntCreateWindow(DWORD dwExStyle,
   /* Lookup and reference the class object */
   if(!IntReferenceClassByNameOrAtom(&ClassObject, ClassName, hInstance))
   {
-    DbgPrint("Failed to reference class: 0x%x, %S\n", (ClassName ? ClassName->Buffer : NULL), (ClassName ? ClassName->Buffer : L"?!"));
+    DPRINT1("Failed to reference class: 0x%x, %S\n", (ClassName ? ClassName->Buffer : NULL), (ClassName ? ClassName->Buffer : L"<NULL>"));
     ObDereferenceObject(WinStaObject);
     return NULL;
   }

@@ -420,7 +420,7 @@ typedef struct _MENU_OBJECT
   do { \
     if(InterlockedDecrement(&(MsgQueue)->References) == 0) \
     { \
-      DPRINT("Free message queue 0x%x\n", (MsgQueue)); \
+      DPRINT1("Free message queue 0x%x\n", (MsgQueue)); \
       ExFreePool((MsgQueue)); \
     } \
   } while(0)

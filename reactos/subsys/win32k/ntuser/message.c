@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.71.4.4 2004/08/31 14:34:39 weiden Exp $
+/* $Id: message.c,v 1.71.4.5 2004/09/13 21:28:17 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -670,7 +670,7 @@ IntWaitMessage(PWINDOW_OBJECT Window,
       /* Nothing found. Wait for new messages. */
       Status = MsqWaitForNewMessages(ThreadQueue);
     }
-  while (STATUS_WAIT_0 <= STATUS_WAIT_0 && Status <= STATUS_WAIT_63);
+  while (STATUS_WAIT_0 <= Status && Status <= STATUS_WAIT_63);
 
   SetLastNtError(Status);
 
@@ -696,7 +696,10 @@ IntGetMessage(PUSER_MESSAGE Msg, PWINDOW_OBJECT FilterWindow,
     *GotMessage = IntPeekMessage(Msg, FilterWindow, MsgFilterMin, MsgFilterMax, PM_REMOVE);
     if(!(*GotMessage))
     {
-      IntWaitMessage(FilterWindow, MsgFilterMin, MsgFilterMax);
+      if(!IntWaitMessage(FilterWindow, MsgFilterMin, MsgFilterMax))
+      {
+        return (BOOL)-1;
+      }
     }
   } while(!GotMessage);
   

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.100.12.3 2004/08/31 11:38:56 weiden Exp $
+/* $Id: msgqueue.c,v 1.100.12.4 2004/09/13 21:28:17 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -374,7 +374,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWINDOW_OBJECT FilterWi
   do
     {
       WaitStatus = KeWaitForMultipleObjects(2, WaitObjects, WaitAny, UserRequest,
-                                            UserMode, TRUE, NULL, NULL);
+                                            UserMode, FALSE, NULL, NULL);
       while (MsqDispatchOneSentMessage(MessageQueue));
     }
   while (NT_SUCCESS(WaitStatus) && STATUS_WAIT_0 != WaitStatus);
@@ -1036,7 +1036,7 @@ MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue)
 				  WaitAny,
 				  Executive,
 				  UserMode,
-				  TRUE,
+				  FALSE,
 				  NULL,
 				  NULL));
 }

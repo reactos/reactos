@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: surface.c,v 1.44.4.1 2004/09/12 19:21:06 weiden Exp $
+/* $Id: surface.c,v 1.44.4.2 2004/09/13 21:28:16 weiden Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -90,10 +90,13 @@ EngCreateDeviceBitmap(IN DHSURF dhsurf,
   SURFOBJ *SurfObj;
 
   NewBitmap = EngCreateBitmap(Size, DIB_GetDIBWidthBytes(Size.cx, BitsPerFormat(Format)), Format, 0, NULL);
-  SurfObj = EngLockSurface((HSURF)NewBitmap);
-  SurfObj->dhsurf = dhsurf;
-  EngUnlockSurface(SurfObj);
-
+  if(NewBitmap != NULL &&
+     (SurfObj = EngLockSurface((HSURF)NewBitmap)))
+  {
+    SurfObj->dhsurf = dhsurf;
+    EngUnlockSurface(SurfObj);
+  }
+  
   return NewBitmap;
 }
 
@@ -356,20 +359,23 @@ EngCreateDeviceSurface(IN DHSURF dhsurf,
   GDIOBJ_SetOwnership(NewSurface, NULL);
 
   BitmapObj = BITMAPOBJ_LockBitmap(NewSurface);
-  SurfObj = &BitmapObj->SurfObj;
+  if(BitmapObj != NULL)
+  {
+    SurfObj = &BitmapObj->SurfObj;
 
-  SurfObj->dhsurf = dhsurf;
-  SurfObj->hsurf = NewSurface;
-  SurfObj->sizlBitmap = Size;
-  SurfObj->iBitmapFormat = Format;
-  SurfObj->lDelta = DIB_GetDIBWidthBytes(Size.cx, BitsPerFormat(Format));
-  SurfObj->iType = STYPE_DEVICE;
-  SurfObj->iUniq = 0;
+    SurfObj->dhsurf = dhsurf;
+    SurfObj->hsurf = NewSurface;
+    SurfObj->sizlBitmap = Size;
+    SurfObj->iBitmapFormat = Format;
+    SurfObj->lDelta = DIB_GetDIBWidthBytes(Size.cx, BitsPerFormat(Format));
+    SurfObj->iType = STYPE_DEVICE;
+    SurfObj->iUniq = 0;
 
-  BitmapObj->flHooks = 0;
+    BitmapObj->flHooks = 0;
 
-  BITMAPOBJ_UnlockBitmap(BitmapObj);
-
+    BITMAPOBJ_UnlockBitmap(BitmapObj);
+  }
+  
   return NewSurface;
 }
 
@@ -400,18 +406,20 @@ EngAssociateSurface(IN HSURF Surface,
   Device = (GDIDEVICE*)Dev;
 
   BitmapObj = BITMAPOBJ_LockBitmap(Surface);
-  ASSERT(BitmapObj);
-  SurfObj = &BitmapObj->SurfObj;
+  if(BitmapObj != NULL)
+  {
+    SurfObj = &BitmapObj->SurfObj;
 
-  /* Associate the hdev */
-  SurfObj->hdev = Dev;
-  SurfObj->dhpdev = Device->PDev;
+    /* Associate the hdev */
+    SurfObj->hdev = Dev;
+    SurfObj->dhpdev = Device->PDev;
 
-  /* Hook up specified functions */
-  BitmapObj->flHooks = Hooks;
+    /* Hook up specified functions */
+    BitmapObj->flHooks = Hooks;
 
-  BITMAPOBJ_UnlockBitmap(BitmapObj);
-
+    BITMAPOBJ_UnlockBitmap(BitmapObj);
+  }
+  
   return TRUE;
 }
 
@@ -493,7 +501,7 @@ EngUnlockSurface(IN SURFOBJ *Surface)
   /* FIXME - Determine the address of the PBITMAPOBJ structure, this is just a hack
              as we know that the PSURFOBJ is the first field so we can just typecast it.
              But it might change some day, so please fix this! */
-
+  ASSERT(Surface);
   BITMAPOBJ_UnlockBitmap ( (BITMAPOBJ*)Surface );
 }
 /* EOF */

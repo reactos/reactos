@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.144.2.2 2004/09/12 19:21:08 weiden Exp $
+/* $Id: dc.c,v 1.144.2.3 2004/09/13 21:28:17 weiden Exp $
  *
  * DC.C - Device context functions
  *
@@ -647,9 +647,12 @@ IntCreatePrimarySurface()
       }
 
       SurfObj = EngLockSurface((HSURF)PrimarySurface.Handle);
-      SurfObj->dhpdev = PrimarySurface.PDev;
-      SurfSize = SurfObj->sizlBitmap;
-      EngUnlockSurface(SurfObj);
+      if(SurfObj != NULL)
+      {
+        SurfObj->dhpdev = PrimarySurface.PDev;
+        SurfSize = SurfObj->sizlBitmap;
+        EngUnlockSurface(SurfObj);
+      }
       IntShowDesktop(IntGetInputDesktop(), SurfSize.cx, SurfSize.cy);
       break;
    }
@@ -740,6 +743,8 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
 
   NewDC->DMW.dmLogPixels = 96;
   SurfObj = EngLockSurface((HSURF)PrimarySurface.Handle);
+  DbgPrint("PrimarySurface.Handle: 0x%x\n", PrimarySurface.Handle);
+  ASSERT(SurfObj);
   NewDC->DMW.dmBitsPerPel = BitsPerFormat(SurfObj->iBitmapFormat);
   NewDC->DMW.dmPelsWidth = SurfObj->sizlBitmap.cx;
   NewDC->DMW.dmPelsHeight = SurfObj->sizlBitmap.cy;

@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.71.4.1 2004/09/12 19:21:08 weiden Exp $
+ * $Id: gdiobj.c,v 1.71.4.2 2004/09/13 21:28:17 weiden Exp $
  */
 #include <w32k.h>
 
@@ -28,7 +28,7 @@
 
 /* FIXME - This is a HACK!!!!!! If you don't get the warnings anymore, this hack
            should be removed immediately!! */
-#define IGNORE_PID_WHILE_LOCKING
+//#define IGNORE_PID_WHILE_LOCKING
 
 #ifdef __USE_W32API
 /* F*(&#$ header mess!!!! */
@@ -940,9 +940,9 @@ GDIOBJ_SetOwnership(HGDIOBJ ObjectHandle, PEPROCESS NewOwner)
   PGDI_TABLE_ENTRY Entry;
   LONG ProcessId, LockedProcessId, PrevProcId;
 
-  DPRINT("GDIOBJ_SetOwnership: hObj: 0x%x, NewProcess: 0x%x\n", ObjectHandle, NewOwner);
+  DPRINT1("GDIOBJ_SetOwnership: hObj: 0x%x, NewProcess: 0x%x\n", ObjectHandle, (NewOwner ? PsGetProcessId(NewOwner) : 0));
 
-  if(!GDI_HANDLE_IS_STOCKOBJ(ObjectHandle) && NewOwner != NULL)
+  if(!GDI_HANDLE_IS_STOCKOBJ(ObjectHandle))
   {
     /* shift the process id to the left so we can use the first bit to lock the object.
        FIXME - don't shift once ROS' PIDs match with nt! */

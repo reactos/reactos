@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ntuser.c,v 1.1.4.9 2004/09/12 19:21:07 weiden Exp $
+/* $Id: ntuser.c,v 1.1.4.10 2004/09/13 21:28:17 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -602,7 +602,8 @@ NtUserDestroyWindow(HWND hWnd)
     LEAVE_CRITICAL();
     NTUSER_FAIL_ERROR(ERROR_ACCESS_DENIED);
   }
-  
+  ASSERT(W32Process);
+  ASSERT(Thread->Win32Thread);
   /* FIXME - send messages if the thread is already terminating? */
   Result = IntDestroyWindow(Window, W32Process, Thread->Win32Thread, TRUE);
   

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.59.8.2 2004/08/27 15:56:05 weiden Exp $
+/* $Id: class.c,v 1.59.8.3 2004/09/13 21:28:17 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -293,26 +293,26 @@ IntRegisterClass(CONST WNDCLASSEXW *lpwcx, PUNICODE_STRING ClassName, PUNICODE_S
   {
     if(IS_ATOM(ClassName->Buffer))
     {
-      DbgPrint("XUnable to register class 0x%x (process %d), window station is inaccessible\n", ClassName->Buffer, PsGetCurrentProcessId());
+      DPRINT1("Unable to register class 0x%x (process %d), window station is inaccessible\n", ClassName->Buffer, PsGetCurrentProcessId());
     }
     else
     {
-      DbgPrint("XUnable to register class %wZ (process %d), window station is inaccessible\n", ClassName, PsGetCurrentProcessId());
+      DPRINT1("Unable to register class %wZ (process %d), window station is inaccessible\n", ClassName, PsGetCurrentProcessId());
     }
     return NULL;
   }
   
   /* FIXME - check the rights of the thread's desktop if we're allowed to register a class? */
   
-  if(ClassName->Length)
+  if(ClassName->Length > 0)
   {
-    DPRINT1("IntRegisterClass(%wZ)\n", ClassName);
+    DPRINT("IntRegisterClass(%wZ)\n", ClassName);
     Status = RtlAddAtomToAtomTable(WinStaObject->AtomTable,
                                    ClassName->Buffer,
                                    &Atom);
     if (!NT_SUCCESS(Status))
     {
-      DPRINT("Failed adding class name (%wZ) to atom table\n", ClassName);
+      DPRINT1("Failed adding class name (%wZ) to atom table\n", ClassName);
       SetLastNtError(Status);      
       return NULL;
     }
@@ -325,7 +325,7 @@ IntRegisterClass(CONST WNDCLASSEXW *lpwcx, PUNICODE_STRING ClassName, PUNICODE_S
   Ret = IntCreateClass(lpwcx, Flags, wpExtra, MenuName, Atom);
   if(Ret == NULL)
   {
-    if(ClassName->Length)
+    if(ClassName->Length > 0)
     {
       RtlDeleteAtomFromAtomTable(WinStaObject->AtomTable, Atom);
     }
