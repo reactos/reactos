@@ -5,7 +5,7 @@ ULONG STDCALL
 NtUserGetSystemMetrics(ULONG Index);
 DWORD STDCALL
 NtUserGetClassLong(HWND hWnd, DWORD Offset);
-DWORD STDCALL
+LONG STDCALL
 NtUserGetWindowLong(HWND hWnd, DWORD Index);
 INT STDCALL
 NtUserReleaseDC(HWND hWnd, HDC hDc);
@@ -1429,13 +1429,13 @@ NtUserSetWindowFNID(
   DWORD Unknown0,
   DWORD Unknown1);
 
-DWORD
+LONG
 STDCALL
 NtUserSetWindowLong(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+  HWND hWnd,
+  DWORD Index,
+  LONG NewValue,
+  BOOL Ansi);
 
 DWORD
 STDCALL
