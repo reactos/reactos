@@ -29,8 +29,9 @@ exe explorer :
 	utility/shellbrowserimpl.cpp
 	utility/shellclasses.cpp
 	utility/utility.cpp
-	utility/window.cpp	
-	dialogs/searchprogram.cpp	
+	utility/window.cpp
+	dialogs/searchprogram.cpp
+	i386-stub-win32.c
  :	<define>WIN32 <define>_ROS_ <define>_WIN32_IE=0x0501 <define>_WIN32_WINNT=0x0501
 	<cxxflags>-I$(INCLUDE)
 #nur für GCC:	<cxxflags>-fexceptions <cxxflags>-Wall
@@ -38,5 +39,6 @@ exe explorer :
 	<find-shared-library>ole32
 	<find-shared-library>comctl32
 	<find-shared-library>uuid
+	<find-shared-library>wsock32
  ;
 

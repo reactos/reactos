@@ -46,6 +46,9 @@
 #endif
 
 
+extern "C" int initialize_gdb_stub();	// start up GDB stub
+
+
 ExplorerGlobals g_Globals;
 
 
@@ -256,9 +259,21 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 		g_Globals._log = fdopen(1, "w");
 		setvbuf(g_Globals._log, 0, _IONBF, 0);
 
-		LOG(TEXT("starting explore debug log\n"));
+		LOG(TEXT("starting explorer debug log\n"));
 	}
 #endif
+
+	bool use_gdb_stub = false;	// !IsDebuggerPresent();
+
+	if (_tcsstr(lpCmdLine,TEXT("-debug")))
+		use_gdb_stub = true;
+
+	 // activate GDB remote debugging stub if no other debugger is running
+	if (use_gdb_stub) {
+		LOG(TEXT("waiting for debugger connection...\n"));
+
+		initialize_gdb_stub();
+	}
 
 	g_Globals._hInstance = hInstance;
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)

@@ -62,9 +62,10 @@ OBJECTS = \
 	startmenu.o \
 	traynotify.o \
 	quicklaunch.o \
-	searchprogram.o
+	searchprogram.o \
+	i386-stub-win32.o
 
-LIBS = gdi32 comctl32 ole32 uuid
+LIBS = gdi32 comctl32 ole32 uuid wsock32
 
 all: buildno.h $(TARGET)
 

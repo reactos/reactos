@@ -46,3 +46,4 @@ If you search for more information, look into the CVS repository.
 28.09.2003	m. fuchs	open cabinet windows then clicking on desktop folders
 18.10.2003	m. fuchs	Program search dialog with interactive filtering and sorting does now work.
 19.10.2003	m. fuchs	implemented floating start menus
+29.11.2003	m. fuchs	implemented GDB stub for remote debugging

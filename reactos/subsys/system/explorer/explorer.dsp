@@ -591,5 +591,9 @@ SOURCE=.\externals.h
 
 SOURCE=.\globals.h
 # End Source File
+# Begin Source File
+
+SOURCE=".\i386-stub-win32.c"
+# End Source File
 # End Target
 # End Project
