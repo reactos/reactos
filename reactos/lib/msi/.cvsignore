@@ -6,3 +6,6 @@
 *.sym
 *.map
 *.tmp
+Makefile.ros
+msi.spec.def
+msi.stubs.c
