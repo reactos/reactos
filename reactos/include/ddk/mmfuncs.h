@@ -36,7 +36,6 @@ BOOLEAN MmIsThisAnNtAsSystem(VOID);
  *          Size = Size of range
  * RETURNS: The number of pages
  */
-#if 0
 extern inline unsigned int ADDRESS_AND_SIZE_TO_SPAN_PAGES(PVOID Va,
 							  ULONG Size)
 {
@@ -47,7 +46,6 @@ extern inline unsigned int ADDRESS_AND_SIZE_TO_SPAN_PAGES(PVOID Va,
    LowestAddr = PAGE_ROUND_DOWN((ULONG)Va);
    return((HighestAddr - LowestAddr) / PAGESIZE);
 }
-#endif
 
 /*
  * FUNCTION: Returns FALSE is the pointer is NULL, TRUE otherwise

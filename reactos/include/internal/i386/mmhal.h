@@ -5,8 +5,6 @@
 #ifndef __INTERNAL_HAL_I386_MMHAL_H
 #define __INTERNAL_HAL_I386_MMHAL_H
 
-#include <ddk/ntddk.h>
-
 #define PAGESIZE (4096)
 
 PULONG MmGetPageEntry(PVOID Address);

@@ -10,8 +10,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <internal/mmhal.h>
 #include <ddk/ntddk.h>
+#include <internal/mmhal.h>
 
 #include <internal/debug.h>
 

@@ -12,12 +12,12 @@
 /* INCLUDES ****************************************************************/
 
 #include <internal/stddef.h>
-#include <internal/mmhal.h>
+#include <ddk/ntddk.h>
 #include <internal/mm.h>
+#include <internal/mmhal.h>
 #include <internal/ntoskrnl.h>
 #include <internal/bitops.h>
 #include <internal/i386/io.h>
-#include <ddk/ntddk.h>
 
 #define NDEBUG
 #include <internal/debug.h>
