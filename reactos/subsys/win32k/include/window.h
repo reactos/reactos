@@ -129,7 +129,7 @@ typedef struct _WINDOW_OBJECT
   (hWnd == HWND_BROADCAST || hWnd == HWND_TOPMOST)
 
 #define IntGetWindowObject(hWnd) \
-  IntGetProcessWindowObject(PsGetWin32Process(), hWnd)
+  IntGetProcessWindowObject(PsGetWin32Thread(), hWnd)
 
 #define IntReferenceWindowObject(WndObj) \
   ObmReferenceObjectByPointer(WndObj, otWindow)
@@ -161,7 +161,7 @@ typedef struct _WINDOW_OBJECT
 
 
 PWINDOW_OBJECT FASTCALL
-IntGetProcessWindowObject(PW32PROCESS ProcessData, HWND hWnd);
+IntGetProcessWindowObject(PW32THREAD Thread, HWND hWnd);
 
 BOOL FASTCALL
 IntIsWindow(HWND hWnd);

@@ -1231,8 +1231,7 @@ extern IMPORTED ULONG NtBuildNumber;
 #define ProcessWow64Information			26
 /* ReactOS private. */
 #define ProcessImageFileName			27
-#define ProcessDesktop                          28
-#define MaxProcessInfoClass			29
+#define MaxProcessInfoClass			28
 
 /*
  * thread query / set information class

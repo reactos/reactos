@@ -1,4 +1,4 @@
-/* $Id: csr.c,v 1.2 2004/07/12 20:09:35 gvg Exp $
+/* $Id: csr.c,v 1.3 2004/11/20 16:46:06 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -10,7 +10,7 @@
 #include <w32k.h>
 
 static HANDLE WindowsApiPort = NULL;
-static PEPROCESS CsrProcess = NULL;
+PEPROCESS CsrProcess = NULL;
 
 NTSTATUS FASTCALL
 CsrInit(void)
@@ -71,6 +71,62 @@ CsrNotify(PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply)
   if (NT_SUCCESS(Status))
     {
       Status = Reply->Status;
+    }
+
+  return Status;
+}
+
+NTSTATUS STDCALL
+CsrInsertObject(PVOID Object,
+                PACCESS_STATE PassedAccessState,
+                ACCESS_MASK DesiredAccess,
+                ULONG AdditionalReferences,
+                PVOID* ReferencedObject,
+                PHANDLE Handle)
+{
+  NTSTATUS Status;
+  PEPROCESS OldProcess;
+
+  /* Switch to the process in which the handle is valid */
+  OldProcess = PsGetCurrentProcess();
+  if (CsrProcess != OldProcess)
+    {
+      KeAttachProcess(CsrProcess);
+    }
+
+  Status = ObInsertObject(Object,
+                          PassedAccessState,
+                          DesiredAccess,
+                          AdditionalReferences,
+                          ReferencedObject,
+                          Handle);
+
+  if (CsrProcess != OldProcess)
+    {
+      KeDetachProcess();
+    }
+
+  return Status;
+}
+
+NTSTATUS FASTCALL
+CsrCloseHandle(HANDLE Handle)
+{
+  NTSTATUS Status;
+  PEPROCESS OldProcess;
+  
+  /* Switch to the process in which the handle is valid */
+  OldProcess = PsGetCurrentProcess();
+  if (CsrProcess != OldProcess)
+    {
+      KeAttachProcess(CsrProcess);
+    }
+
+  Status = ZwClose(Handle);
+
+  if (CsrProcess != OldProcess)
+    {
+      KeDetachProcess();
     }
 
   return Status;

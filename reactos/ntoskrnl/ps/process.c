@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.151 2004/11/13 22:27:15 hbirr Exp $
+/* $Id: process.c,v 1.152 2004/11/20 16:46:05 weiden Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -26,6 +26,7 @@ POBJECT_TYPE EXPORTED PsProcessType = NULL;
 LIST_ENTRY PsProcessListHead;
 static KSPIN_LOCK PsProcessListLock;
 static ULONG PiNextProcessUniqueId = 0; /* TODO */
+static LARGE_INTEGER ShortPsLockDelay, PsLockTimeout;
 
 static GENERIC_MAPPING PiProcessMapping = {PROCESS_READ,
 					   PROCESS_WRITE,
@@ -245,6 +246,8 @@ PsInitProcessManagment(VOID)
    KIRQL oldIrql;
    NTSTATUS Status;
    
+   ShortPsLockDelay.QuadPart = -100LL;
+   PsLockTimeout.QuadPart = -10000000LL; /* one second */
    /*
     * Register the process object type
     */
@@ -314,6 +317,10 @@ PsInitProcessManagment(VOID)
    MmInitializeAddressSpace(PsInitialSystemProcess,
 			    &PsInitialSystemProcess->AddressSpace);
    ObCreateHandleTable(NULL,FALSE,PsInitialSystemProcess);
+   
+   KeInitializeEvent(&PsInitialSystemProcess->LockEvent, SynchronizationEvent, FALSE);
+   PsInitialSystemProcess->LockCount = 0;
+   PsInitialSystemProcess->LockOwner = NULL;
 
 #if defined(__GNUC__)
    KProcess->DirectoryTableBase = 
@@ -329,7 +336,6 @@ PsInitProcessManagment(VOID)
    PsInitialSystemProcess->UniqueProcessId = 
      InterlockedIncrement((LONG *)&PiNextProcessUniqueId); /* TODO */
    PsInitialSystemProcess->Win32WindowStation = (HANDLE)0;
-   PsInitialSystemProcess->Win32Desktop = (HANDLE)0;
    
    KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
    InsertHeadList(&PsProcessListHead, 
@@ -418,6 +424,12 @@ PiDeleteProcess(PVOID ObjectBody)
           KeWaitForSingleObject(&Context.Event, Executive, KernelMode, FALSE, NULL);
 	}
     }
+
+  if(((PEPROCESS)ObjectBody)->Win32Process != NULL)
+  {
+    /* delete the W32PROCESS structure if there's one associated */
+    ExFreePool (((PEPROCESS)ObjectBody)->Win32Process);
+  }
 }
 
 static NTSTATUS
@@ -694,47 +706,13 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
    ObCreateHandleTable(pParentProcess,
 		       InheritObjectTable,
 		       Process);
-   MmCopyMmInfo(pParentProcess, Process);
-   if (pParentProcess->Win32WindowStation != (HANDLE)0)
-     {
-       /* Always duplicate the process window station. */
-       Process->Win32WindowStation = 0;
-       Status = ObDuplicateObject(pParentProcess,
-				  Process,
-				  pParentProcess->Win32WindowStation,
-				  &Process->Win32WindowStation,
-				  0,
-				  FALSE,
-				  DUPLICATE_SAME_ACCESS);
-       if (!NT_SUCCESS(Status))
-	 {
-	   KEBUGCHECK(0);
-	 }
-     }
-   else
-     {
-       Process->Win32WindowStation = (HANDLE)0;
-     }
-   if (pParentProcess->Win32Desktop != (HANDLE)0)
-     {
-       /* Always duplicate the process window station. */
-       Process->Win32Desktop = 0;
-       Status = ObDuplicateObject(pParentProcess,
-				  Process,
-				  pParentProcess->Win32Desktop,
-				  &Process->Win32Desktop,
-				  0,
-				  FALSE,
-				  DUPLICATE_SAME_ACCESS);
-       if (!NT_SUCCESS(Status))
-	 {
-	   KEBUGCHECK(0);
-	 }
-     }
-   else
-     {
-       Process->Win32Desktop = (HANDLE)0;
-     }
+   MmCopyMmInfo(ParentProcess, Process);
+   
+   KeInitializeEvent(&Process->LockEvent, SynchronizationEvent, FALSE);
+   Process->LockCount = 0;
+   Process->LockOwner = NULL;
+   
+   Process->Win32WindowStation = (HANDLE)0;
 
    KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
    InsertHeadList(&PsProcessListHead, &Process->ProcessListEntry);
@@ -1381,11 +1359,6 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
       case ProcessWow64Information:
       default:
 	Status = STATUS_INVALID_INFO_CLASS;
-
-     case ProcessDesktop:
-       Process->Win32Desktop = *(PHANDLE)ProcessInformation;
-       Status = STATUS_SUCCESS;
-       break;
      }
    ObDereferenceObject(Process);
    return(Status);
@@ -1977,7 +1950,7 @@ PsSetProcessSecurityPort(
 
 /*
  * @implemented
- */                       
+ */
 VOID
 STDCALL
 PsSetProcessWin32Process(
@@ -1990,7 +1963,7 @@ PsSetProcessWin32Process(
 
 /*
  * @implemented
- */                       
+ */
 VOID
 STDCALL
 PsSetProcessWin32WindowStation(
@@ -2151,4 +2124,76 @@ PsReturnProcessPagedPoolQuota(
 {
 	UNIMPLEMENTED;
 }
+
+NTSTATUS
+PsLockProcess(PEPROCESS Process, BOOL Timeout)
+{
+  ULONG Attempts = 0;
+  PKTHREAD PrevLockOwner;
+  NTSTATUS Status = STATUS_UNSUCCESSFUL;
+  PLARGE_INTEGER Delay = (Timeout ? &PsLockTimeout : NULL);
+  PKTHREAD CallingThread = KeGetCurrentThread();
+  
+  KeEnterCriticalRegion();
+  
+  for(;;)
+  {
+    if(Process->Pcb.State == PROCESS_STATE_TERMINATED)
+    {
+      KeLeaveCriticalRegion();
+      return STATUS_PROCESS_IS_TERMINATING;
+    }
+
+    /* FIXME - why don't we have InterlockedCompareExchangePointer in ntoskrnl?! */
+    PrevLockOwner = (PKTHREAD)InterlockedCompareExchange((LONG*)&Process->LockOwner, (LONG)CallingThread, (LONG)NULL);
+    if(PrevLockOwner == NULL || PrevLockOwner == CallingThread)
+    {
+      /* we got the lock or already locked it */
+      if(InterlockedIncrement((LONG*)&Process->LockCount) == 1)
+      {
+        KeClearEvent(&Process->LockEvent);
+      }
+
+      return STATUS_SUCCESS;
+    }
+    else
+    {
+      if(++Attempts > 2)
+      {
+        Status = KeWaitForSingleObject(&Process->LockEvent,
+                                       Executive,
+                                       KernelMode,
+                                       FALSE,
+                                       Delay);
+        if(Status == STATUS_TIMEOUT)
+        {
+          KeLeaveCriticalRegion();
+          break;
+        }
+      }
+      else
+      {
+        KeDelayExecutionThread(KernelMode, FALSE, &ShortPsLockDelay);
+      }
+    }
+  }
+  
+  return Status;
+}
+
+VOID
+PsUnlockProcess(PEPROCESS Process)
+{
+  assert(Process->LockOwner == KeGetCurrentThread());
+  
+  if(InterlockedDecrement((LONG*)&Process->LockCount) == 0)
+  {
+    /* FIXME - why don't we have InterlockedExchangePointer in ntoskrnl?! */
+    InterlockedExchange((LONG*)&Process->LockOwner, (LONG)NULL);
+    KeSetEvent(&Process->LockEvent, IO_NO_INCREMENT, FALSE);
+  }
+  
+  KeLeaveCriticalRegion();
+}
+
 /* EOF */

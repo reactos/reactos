@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.59 2004/06/21 20:56:53 hbirr Exp $
+/* $Id: class.c,v 1.60 2004/11/20 16:46:06 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -99,21 +99,10 @@ ClassReferenceClassByName(
    BOOL Found;
    RTL_ATOM ClassAtom;
 
-   if (!ClassName)
+   if (!ClassName || !PsGetWin32Thread()->Desktop)
       return FALSE;
 
-   Status = IntValidateWindowStationHandle(
-      PROCESS_WINDOW_STATION(),
-      KernelMode,
-      0,
-      &WinStaObject);
-
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("Validation of window station handle (0x%X) failed\n",
-	     PROCESS_WINDOW_STATION());
-      return FALSE;
-   }
+   WinStaObject = PsGetWin32Thread()->Desktop->WindowStation;
 
    Status = RtlLookupAtomInAtomTable(
       WinStaObject->AtomTable,
@@ -122,12 +111,10 @@ ClassReferenceClassByName(
 
    if (!NT_SUCCESS(Status))
    {
-      ObDereferenceObject(WinStaObject);  
       return FALSE;
    }
 
    Found = ClassReferenceClassByAtom(Class, ClassAtom, hInstance);
-   ObDereferenceObject(WinStaObject);  
 
    return Found;
 }
@@ -205,14 +192,13 @@ IntGetClassName(struct _WINDOW_OBJECT *WindowObject, LPWSTR lpClassName,
    PWINSTATION_OBJECT WinStaObject;
    NTSTATUS Status;
 
-   Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-      KernelMode, 0, &WinStaObject);
-   if (!NT_SUCCESS(Status))
+   if(!PsGetWin32Thread()->Desktop)
    {
-      DPRINT("Validation of window station handle (0x%X) failed\n",
-         PROCESS_WINDOW_STATION());
       return 0;
    }
+
+   WinStaObject = PsGetWin32Thread()->Desktop->WindowStation;
+   
    Length = 0;
    Status = RtlQueryAtomInAtomTable(WinStaObject->AtomTable,
       WindowObject->Class->Atom, NULL, NULL, NULL, &Length);
@@ -233,7 +219,6 @@ IntGetClassName(struct _WINDOW_OBJECT *WindowObject, LPWSTR lpClassName,
    /* FIXME: Check buffer size before doing this! */
    *(lpClassName + Length) = 0;
    ExFreePool(Name);
-   ObDereferenceObject(WinStaObject);
 
    return Length;
 }
@@ -426,18 +411,8 @@ NtUserRegisterClassExWOW(
       return (RTL_ATOM)0;
    }
   
-  DPRINT("About to open window station handle (0x%X)\n", 
-    PROCESS_WINDOW_STATION());
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-    KernelMode,
-    0,
-    &WinStaObject);
-  if (!NT_SUCCESS(Status))
-  {
-    DPRINT("Validation of window station handle (0x%X) failed\n",
-      PROCESS_WINDOW_STATION());
-    return((RTL_ATOM)0);
-  }
+  WinStaObject = PsGetWin32Thread()->Desktop->WindowStation;
+  
   if (ClassName->Length)
   {
     DPRINT("NtUserRegisterClassExWOW(%S)\n", ClassName->Buffer);
@@ -447,7 +422,6 @@ NtUserRegisterClassExWOW(
       &Atom);
     if (!NT_SUCCESS(Status))
     {
-      ObDereferenceObject(WinStaObject);
       DPRINT("Failed adding class name (%S) to atom table\n",
 	ClassName->Buffer);
       SetLastNtError(Status);      
@@ -465,14 +439,12 @@ NtUserRegisterClassExWOW(
     {
       RtlDeleteAtomFromAtomTable(WinStaObject->AtomTable, Atom);
     }
-    ObDereferenceObject(WinStaObject);
     DPRINT("Failed creating window class object\n");
     return((RTL_ATOM)0);
   }
   IntLockProcessClasses(PsGetWin32Process());
   InsertTailList(&PsGetWin32Process()->ClassListHead, &ClassObject->ListEntry);
   IntUnLockProcessClasses(PsGetWin32Process());
-  ObDereferenceObject(WinStaObject);
   return(Atom);
 }
 
@@ -668,32 +640,21 @@ NtUserUnregisterClass(
 	 HINSTANCE hInstance,
 	 DWORD Unknown)
 {
-   NTSTATUS Status;
    PWNDCLASS_OBJECT Class;
    PWINSTATION_OBJECT WinStaObject;
   
    DPRINT("NtUserUnregisterClass(%S)\n", ClassNameOrAtom);
    
-   if (!ClassNameOrAtom)
+   if (!ClassNameOrAtom || !PsGetWin32Thread()->Desktop)
    {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return FALSE;
    }
   
-   Status = IntValidateWindowStationHandle(
-      PROCESS_WINDOW_STATION(),
-      KernelMode,
-      0,
-      &WinStaObject);
-   if (!NT_SUCCESS(Status))
-   {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return FALSE;
-   }
+   WinStaObject = PsGetWin32Thread()->Desktop->WindowStation;
 
    if (!ClassReferenceClassByNameOrAtom(&Class, ClassNameOrAtom, hInstance))
    {
-      ObDereferenceObject(WinStaObject);
       SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
       return FALSE;
    }
@@ -701,7 +662,6 @@ NtUserUnregisterClass(
    if (Class->hInstance && Class->hInstance != hInstance)
    {
       ClassDereferenceObject(Class);
-      ObDereferenceObject(WinStaObject);
       SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
       return FALSE;
    }
@@ -712,7 +672,6 @@ NtUserUnregisterClass(
       IntUnLockClassWindows(Class);
       /* Dereference the ClassReferenceClassByNameOrAtom() call */
       ObmDereferenceObject(Class);
-      ObDereferenceObject(WinStaObject);
       SetLastWin32Error(ERROR_CLASS_HAS_WINDOWS);
       return FALSE;
    }
@@ -727,8 +686,6 @@ NtUserUnregisterClass(
   
    /* Free the object */
    ClassDereferenceObject(Class);
-   
-   ObDereferenceObject(WinStaObject);
   
    return TRUE;
 }

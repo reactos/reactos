@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.55 2004/05/13 20:21:27 navaraf Exp $
+/* $Id: menu.c,v 1.56 2004/11/20 16:46:06 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -135,16 +135,15 @@ PMENU_OBJECT FASTCALL
 IntGetMenuObject(HMENU hMenu)
 {
   PMENU_OBJECT MenuObject;
-  PW32PROCESS W32Process = PsGetWin32Process();
+  PW32THREAD W32Thread = PsGetWin32Thread();
   
-  if(!W32Process)
+  if(!W32Thread)
   {
     return NULL;
   }
   
-  NTSTATUS Status = ObmReferenceObjectByHandle(W32Process->
-                      WindowStation->HandleTable, hMenu, otMenu, 
-                      (PVOID*)&MenuObject);
+  NTSTATUS Status = ObmReferenceObjectByHandle(W32Thread->Desktop->WindowStation->HandleTable,
+                                               hMenu, otMenu, (PVOID*)&MenuObject);
   if (!NT_SUCCESS(Status))
   {
     return NULL;
@@ -225,6 +224,9 @@ IntDestroyMenuObject(PMENU_OBJECT MenuObject,
 {
   if(MenuObject)
   {
+    PWINSTATION_OBJECT WindowStation;
+    NTSTATUS Status;
+    
     /* remove all menu items */
     IntLockMenuItems(MenuObject);
     IntDeleteMenuItems(MenuObject, bRecurse); /* do not destroy submenus */
@@ -232,14 +234,23 @@ IntDestroyMenuObject(PMENU_OBJECT MenuObject,
     
     if(RemoveFromProcess)
     {
-      IntLockProcessMenus(MenuObject->W32Process);
+      IntLockProcessMenus(MenuObject->Process->Win32Process);
       RemoveEntryList(&MenuObject->ListEntry);
-      IntUnLockProcessMenus(MenuObject->W32Process);
+      IntUnLockProcessMenus(MenuObject->Process->Win32Process);
     }
     
-    ObmCloseHandle(MenuObject->W32Process->WindowStation->HandleTable, MenuObject->MenuInfo.Self);
-  
-    return TRUE;
+    Status = ObReferenceObjectByHandle(MenuObject->Process->Win32WindowStation,
+                                       0,
+                                       ExWindowStationObjectType,
+                                       KernelMode,
+                                       (PVOID*)&WindowStation,
+                                       NULL);
+    if(NT_SUCCESS(Status))
+    {
+      ObmCloseHandle(WindowStation->HandleTable, MenuObject->MenuInfo.Self);
+      ObDereferenceObject(WindowStation);
+      return TRUE;
+    }
   }
   return FALSE;
 }
@@ -248,10 +259,10 @@ PMENU_OBJECT FASTCALL
 IntCreateMenu(PHANDLE Handle, BOOL IsMenuBar)
 {
   PMENU_OBJECT MenuObject;
-  PW32PROCESS Win32Process = PsGetWin32Process();
+  PW32THREAD Win32Thread = PsGetWin32Thread();
 
   MenuObject = (PMENU_OBJECT)ObmCreateObject(
-      Win32Process->WindowStation->HandleTable, Handle, 
+      Win32Thread->Desktop->WindowStation->HandleTable, Handle,
       otMenu, sizeof(MENU_OBJECT));
 
   if(!MenuObject)
@@ -260,7 +271,7 @@ IntCreateMenu(PHANDLE Handle, BOOL IsMenuBar)
     return NULL;
   }
   
-  MenuObject->W32Process = Win32Process;
+  MenuObject->Process = PsGetCurrentProcess();
   MenuObject->RtoL = FALSE; /* default */
   MenuObject->MenuInfo.cbSize = sizeof(MENUINFO); /* not used */
   MenuObject->MenuInfo.fMask = 0; /* not used */
@@ -284,9 +295,9 @@ IntCreateMenu(PHANDLE Handle, BOOL IsMenuBar)
   ExInitializeFastMutex(&MenuObject->MenuItemsLock);
 
   /* Insert menu item into process menu handle list */
-  IntLockProcessMenus(Win32Process);
-  InsertTailList(&Win32Process->MenuListHead, &MenuObject->ListEntry);
-  IntUnLockProcessMenus(Win32Process);
+  IntLockProcessMenus(PsGetWin32Process());
+  InsertTailList(&PsGetWin32Process()->MenuListHead, &MenuObject->ListEntry);
+  IntUnLockProcessMenus(PsGetWin32Process());
 
   return MenuObject;
 }
@@ -363,18 +374,17 @@ IntCloneMenu(PMENU_OBJECT Source)
 {
   HANDLE Handle;
   PMENU_OBJECT MenuObject;
-  PW32PROCESS Process = PsGetWin32Process();
   
   if(!Source)
     return NULL;
     
   MenuObject = (PMENU_OBJECT)ObmCreateObject(
-    Process->WindowStation->HandleTable, &Handle, 
+    PsGetWin32Thread()->Desktop->WindowStation->HandleTable, &Handle,
     otMenu, sizeof(MENU_OBJECT));  
   if(!MenuObject)
     return NULL;
   
-  MenuObject->W32Process = Process;
+  MenuObject->Process = PsGetCurrentProcess();
   MenuObject->RtoL = Source->RtoL;
   MenuObject->MenuInfo.cbSize = sizeof(MENUINFO); /* not used */
   MenuObject->MenuInfo.fMask = Source->MenuInfo.fMask;
@@ -396,9 +406,9 @@ IntCloneMenu(PMENU_OBJECT Source)
   ExInitializeFastMutex(&MenuObject->MenuItemsLock);
   
   /* Insert menu item into process menu handle list */
-  IntLockProcessMenus(Process);
-  InsertTailList(&Process->MenuListHead, &MenuObject->ListEntry);
-  IntUnLockProcessMenus(Process);
+  IntLockProcessMenus(PsGetWin32Process());
+  InsertTailList(&PsGetWin32Process()->MenuListHead, &MenuObject->ListEntry);
+  IntUnLockProcessMenus(PsGetWin32Process());
 
   IntCloneMenuItems(MenuObject, Source);
 
@@ -1328,7 +1338,7 @@ NtUserCreateMenu(BOOL PopupMenu)
   PWINSTATION_OBJECT WinStaObject;
   HANDLE Handle;
 
-  NTSTATUS Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+  NTSTATUS Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
 				       KernelMode,
 				       0,
 				       &WinStaObject);
@@ -1387,7 +1397,7 @@ NtUserDestroyMenu(
     SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
     return FALSE;
   }
-  if(MenuObject->W32Process != PsGetWin32Process())
+  if(MenuObject->Process != PsGetCurrentProcess())
   {
     IntReleaseMenuObject(MenuObject);
     SetLastWin32Error(ERROR_ACCESS_DENIED);

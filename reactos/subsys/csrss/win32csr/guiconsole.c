@@ -1,4 +1,4 @@
-/* $Id: guiconsole.c,v 1.21 2004/09/26 15:55:53 weiden Exp $
+/* $Id: guiconsole.c,v 1.22 2004/11/20 16:46:05 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -875,30 +875,7 @@ GuiConsoleGuiThread(PVOID Data)
 static BOOL FASTCALL
 GuiInit(VOID)
 {
-  HDESK Desktop;
-  NTSTATUS Status;
   WNDCLASSEXW wc;
-
-  Desktop = OpenDesktopW(L"Default", 0, FALSE, GENERIC_ALL);
-  if (NULL == Desktop)
-    {
-      DPRINT1("Failed to open desktop\n");
-      return FALSE;
-    }
-  Status = NtSetInformationProcess(NtCurrentProcess(),
-                                   ProcessDesktop,
-                                   &Desktop,
-                                   sizeof(Desktop));
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("Cannot set default desktop.\n");
-      return FALSE;
-    }
-  if (! SetThreadDesktop(Desktop))
-    {
-      DPRINT1("Failed to set thread desktop\n");
-      return FALSE;
-    }
 
   if (NULL == NotifyWnd)
     {

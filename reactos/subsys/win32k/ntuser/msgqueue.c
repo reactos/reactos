@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.107 2004/09/28 15:02:30 weiden Exp $
+/* $Id: msgqueue.c,v 1.108 2004/11/20 16:46:06 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -175,18 +175,15 @@ MsqIsDblClk(LPMSG Msg, BOOL Remove)
 {
   PWINSTATION_OBJECT WinStaObject;
   PSYSTEM_CURSORINFO CurInfo;
-  NTSTATUS Status;
   LONG dX, dY;
   BOOL Res;
   
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-                                          KernelMode,
-                                          0,
-                                          &WinStaObject);
-  if (!NT_SUCCESS(Status))
+  if (PsGetWin32Thread()->Desktop == NULL)
   {
     return FALSE;
   }
+  WinStaObject = PsGetWin32Thread()->Desktop->WindowStation;
+  
   CurInfo = IntGetSysCursorInfo(WinStaObject);
   Res = (Msg->hwnd == (HWND)CurInfo->LastClkWnd) && 
         ((Msg->time - CurInfo->LastBtnDown) < CurInfo->DblClickSpeed);
@@ -220,7 +217,6 @@ MsqIsDblClk(LPMSG Msg, BOOL Remove)
     }
   }
   
-  ObDereferenceObject(WinStaObject);
   return Res;
 }
 
@@ -616,7 +612,7 @@ MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
   PWINDOW_OBJECT Window;
   PW32THREAD Win32Thread;
-  PW32PROCESS Win32Process;
+  PWINSTATION_OBJECT WinSta;
   MSG Mesg;
   NTSTATUS Status;
 
@@ -634,14 +630,8 @@ MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
       return;
     }
 
-  Win32Process = ((PETHREAD)Thread)->ThreadsProcess->Win32Process;
-  if (Win32Process == NULL || Win32Process->WindowStation == NULL)
-    {
-      ObDereferenceObject ((PETHREAD)Thread);
-      return;
-    }
-
-  Status = ObmReferenceObjectByHandle(Win32Process->WindowStation->HandleTable,
+  WinSta = Win32Thread->Desktop->WindowStation;
+  Status = ObmReferenceObjectByHandle(WinSta->HandleTable,
                                       hWnd, otWindow, (PVOID*)&Window);
   if (!NT_SUCCESS(Status))
     {

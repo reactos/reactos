@@ -91,7 +91,7 @@ IntCreateMonitorObject()
   HANDLE Handle;
   PMONITOR_OBJECT Monitor;
 
-  Monitor = ObmCreateObject(PsGetWin32Process()->WindowStation->HandleTable, &Handle, otMonitor, sizeof (MONITOR_OBJECT));
+  Monitor = ObmCreateObject(PsGetWin32Thread()->Desktop->WindowStation->HandleTable, &Handle, otMonitor, sizeof (MONITOR_OBJECT));
   if (Monitor == NULL)
     {
       return NULL;
@@ -141,7 +141,7 @@ IntGetMonitorObject(IN HMONITOR hMonitor)
   PMONITOR_OBJECT Monitor;
   NTSTATUS Status;
 
-  Status = ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable, hMonitor, otMonitor, (PVOID *)&Monitor);
+  Status = ObmReferenceObjectByHandle(PsGetWin32Thread()->Desktop->WindowStation->HandleTable, hMonitor, otMonitor, (PVOID *)&Monitor);
   if (!NT_SUCCESS(Status) || Monitor == NULL)
     {
       /* FIXME: SetLastNtError( status ); ? */

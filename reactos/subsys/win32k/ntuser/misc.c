@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.87 2004/10/19 08:25:25 gvg Exp $
+/* $Id: misc.c,v 1.88 2004/11/20 16:46:06 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -215,7 +215,7 @@ NtUserCallOneParam(
       NTSTATUS Status;
       DWORD Result;
       
-      Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+      Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
                                               KernelMode,
                                               0,
                                               &WinStaObject);
@@ -265,7 +265,7 @@ NtUserCallOneParam(
       
       if(!Param)
         return (DWORD)FALSE;
-      Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+      Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
                                               KernelMode,
                                               0,
                                               &WinStaObject);
@@ -686,7 +686,7 @@ IntSystemParametersInfo(
     {
       PSYSTEM_CURSORINFO CurInfo;
       
-      Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+      Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
                                               KernelMode,
                                               0,
                                               &WinStaObject);
@@ -1038,7 +1038,7 @@ NtUserGetDoubleClickTime(VOID)
   PWINSTATION_OBJECT WinStaObject;
   PSYSTEM_CURSORINFO CurInfo;
   
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+  Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
                                           KernelMode,
                                           0,
                                           &WinStaObject);

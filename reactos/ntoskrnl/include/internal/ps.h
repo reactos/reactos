@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.74 2004/11/11 22:23:52 ion Exp $
+/* $Id: ps.h,v 1.75 2004/11/20 16:46:05 weiden Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -283,6 +283,27 @@ typedef struct _KPROCESS
 
 typedef struct _KPROCESS *PKPROCESS;
 
+typedef struct _HARDWARE_PTE_X86 {
+    ULONG Valid             : 1;
+    ULONG Write             : 1;
+    ULONG Owner             : 1;
+    ULONG WriteThrough      : 1;
+    ULONG CacheDisable      : 1;
+    ULONG Accessed          : 1;
+    ULONG Dirty             : 1;
+    ULONG LargePage         : 1;
+    ULONG Global            : 1;
+    ULONG CopyOnWrite       : 1;
+    ULONG Prototype         : 1;
+    ULONG reserved          : 1;
+    ULONG PageFrameNumber   : 20;
+} HARDWARE_PTE_X86, *PHARDWARE_PTE_X86;
+
+typedef struct _WOW64_PROCESS
+{
+  PVOID Wow64;
+} WOW64_PROCESS, *PWOW64_PROCESS;
+
 #endif /* __USE_W32API */
 
 struct _EPROCESS
@@ -306,7 +327,7 @@ struct _EPROCESS
   /* Time of process exit. */
   TIME                  ExitTime;                     /* 088 */
   /* Unknown. */
-  PVOID                 LockOwner;                    /* 090 */
+  PKTHREAD              LockOwner;                    /* 090 */
   /* Process id. */
   ULONG                 UniqueProcessId;              /* 094 */
   /* Unknown. */
@@ -325,30 +346,15 @@ struct _EPROCESS
   ULONG                 PeakVirtualSize;              /* 0BC */
   /* Unknown. */
   LARGE_INTEGER         VirtualSize;                  /* 0C0 */
-  struct
-  {
-    ULONG               LastTrimTime;
-    ULONG               LastTrimFaultCount;
-    ULONG               PageFaultCount;
-    ULONG               PeakWorkingSetSize;
-    ULONG               WorkingSetSize;
-    ULONG               MinimumWorkingSetSize;
-    ULONG               MaximumWorkingSetSize;
-    ULONG               VmWorkingSetList;
-    LIST_ENTRY          WorkingSetExpansionList;
-    UCHAR               AllowWorkingSetAdjustment;
-    UCHAR               AddressSpaceBeingDeleted;
-    UCHAR               ForegroundPrioritySwitch;
-    UCHAR               MemoryPriority;
-  } Vm;
-  PVOID                 LastProtoPteFault;
-  struct _EPORT*        DebugPort;
-  struct _EPORT*        ExceptionPort;
-  PVOID                 ObjectTable;
+
+  MMSUPPORT             Vm;
+  LIST_ENTRY            SessionProcessLinks;
+  struct _EPORT         *DebugPort;
+  struct _EPORT         *ExceptionPort;
+  HANDLE_TABLE          HandleTable;
   PVOID                 Token;
-  /*  FAST_MUTEX            WorkingSetLock; */
-  KMUTEX                WorkingSetLock;
-  PVOID                 WorkingSetPage;
+  FAST_MUTEX            WorkingSetLock;
+  ULONG                 WorkingSetPage;
   UCHAR                 ProcessOutswapEnabled;
   UCHAR                 ProcessOutswapped;
   UCHAR                 AddressSpaceInitialized;
@@ -360,14 +366,15 @@ struct _EPROCESS
   UCHAR                 ForkWasSuccessful;
   UCHAR                 MmAgressiveWsTrimMask;
   PKEVENT               VmOperationEvent;
-  PVOID                 PageDirectoryPte;
+  PVOID                 PaeTop;
   ULONG                 LastFaultCount;
+  ULONG                 ModifiedPageCount;
   PVOID                 VadRoot;
   PVOID                 VadHint;
   PVOID                 CloneRoot;
   ULONG                 NumberOfPrivatePages;
   ULONG                 NumberOfLockedPages;
-  USHORT                NextProcessColour;
+  USHORT                NextPageColor;
   UCHAR                 ExitProcessCalled;
   UCHAR                 CreateProcessReported;
   HANDLE                SectionHandle;
@@ -375,14 +382,20 @@ struct _EPROCESS
   PVOID                 SectionBaseAddress;
   PEPROCESS_QUOTA_BLOCK QuotaBlock;
   NTSTATUS              LastThreadExitStatus;
-  PVOID                 WorkingSetWatch;
+  PPAGEFAULT_HISTORY    WorkingSetWatch;
+  HANDLE                Win32WindowStation;
   HANDLE                InheritedFromUniqueProcessId;
-  ACCESS_MASK           GrantedAccess;
+  ULONG                 GrantedAccess;
   ULONG                 DefaultHardErrorProcessing;
   PVOID                 LdtInformation;
-  ULONG                 VadFreeHint;
+  PVOID                 VadFreeHint;
   PVOID                 VdmObjects;
-  KMUTANT               ProcessMutant;
+  PVOID                 DeviceObjects;
+  ULONG                 SessionId;
+  LIST_ENTRY            PhysicalVadList;
+  HARDWARE_PTE_X86      PageDirectoryPte;
+  ULONGLONG             Filler;
+  ULONG                 PaePageDirectoryPage;
   CHAR                  ImageFileName[16];
   ULONG                 VmTrimFaultValue;
   UCHAR                 SetTimerResolution;
@@ -390,29 +403,31 @@ struct _EPROCESS
   UCHAR                 SubSystemMinorVersion;
   UCHAR                 SubSystemMajorVersion;
   USHORT                SubSystemVersion;
-  struct _W32PROCESS*   Win32Process;
-  HANDLE                Win32WindowStation;
-   
-   /*
-    * Added by David Welch (welch@mcmail.com)
-    */
-  HANDLE                Win32Desktop;
+  struct _W32PROCESS    *Win32Process;
+  struct _EJOB          *Job;
+  ULONG                 JobStatus;
+  LIST_ENTRY            JobLinks;
+  PVOID                 LockedPagesList;
+  struct _EPORT         *SecurityPort;
+  PWOW64_PROCESS        Wow64;
+  LARGE_INTEGER         ReadOperationCount;
+  LARGE_INTEGER         WriteOperationCount;
+  LARGE_INTEGER         OtherOperationCount;
+  LARGE_INTEGER         ReadTransferCount;
+  LARGE_INTEGER         WriteTransferCount;
+  LARGE_INTEGER         OtherTransferCount;
+  ULONG                 CommitChargeLimit;
+  ULONG                 CommitChargePeak;
+  LIST_ENTRY            ThreadListHead;
+  PRTL_BITMAP           VadPhysicalPagesBitMap;
+  ULONG                 VadPhysicalPages;
+  KSPIN_LOCK            AweLock;
+
+  /*
+   * FIXME - ReactOS specified - remove the following fields ASAP!!!
+   */
   MADDRESS_SPACE        AddressSpace;
-  HANDLE_TABLE          HandleTable;
   LIST_ENTRY            ProcessListEntry;
-   
-   /*
-    * Added by Philip Susi for list of threads in process
-    */
-  LIST_ENTRY           ThreadListHead;
-
-  /* Added by Alex Ionescu (alex@relsoft.net)*/
-  ULONG					SessionId;
-  struct _EPORT*		SecurityPort;
-  
-  struct _EJOB*         Job;
-  UINT                  JobStatus;
-
   FAST_MUTEX            TebLock;
   PVOID                 TebBlock;
   PVOID                 TebLastAllocated;
@@ -651,6 +666,8 @@ NTSTATUS PsCreateCidHandle(PVOID Object, POBJECT_TYPE ObjectType, PHANDLE Handle
 NTSTATUS PsDeleteCidHandle(HANDLE CidHandle, POBJECT_TYPE ObjectType);
 PCID_OBJECT PsLockCidHandle(HANDLE CidHandle, POBJECT_TYPE ObjectType);
 VOID PsUnlockCidObject(PCID_OBJECT CidObject);
+NTSTATUS PsLockProcess(PEPROCESS Process, BOOL Timeout);
+VOID PsUnlockProcess(PEPROCESS Process);
 
 #define ETHREAD_TO_KTHREAD(pEThread) (&(pEThread)->Tcb)
 #define KTHREAD_TO_ETHREAD(pKThread) (CONTAINING_RECORD((pKThread), ETHREAD, Tcb))

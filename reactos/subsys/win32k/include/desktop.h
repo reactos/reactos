@@ -59,6 +59,12 @@ IntValidateDesktopHandle(
    ACCESS_MASK DesiredAccess,
    PDESKTOP_OBJECT *Object);
 
+NTSTATUS FASTCALL
+IntParseDesktopPath(PEPROCESS Process,
+                    PUNICODE_STRING DesktopPath,
+                    HWINSTA *hWinSta,
+                    HDESK *hDesktop);
+
 #define IntIsActiveDesktop(Desktop) \
   ((Desktop)->WindowStation->ActiveDesktop == (Desktop))
 

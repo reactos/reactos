@@ -1,4 +1,4 @@
-/* $Id: caret.c,v 1.14 2004/08/04 22:31:17 weiden Exp $
+/* $Id: caret.c,v 1.15 2004/11/20 16:46:06 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -54,18 +54,7 @@ BOOL FASTCALL
 IntSetCaretBlinkTime(UINT uMSeconds)
 {
   /* Don't save the new value to the registry! */
-  NTSTATUS Status;
-  PWINSTATION_OBJECT WinStaObject;
-  
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-	                                  KernelMode,
-				          0,
-				          &WinStaObject);
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastNtError(Status);
-    return FALSE;
-  }
+  PWINSTATION_OBJECT WinStaObject = PsGetWin32Thread()->Desktop->WindowStation;
   
   /* windows doesn't do this check */
   if((uMSeconds < MIN_CARETBLINKRATE) || (uMSeconds > MAX_CARETBLINKRATE))
@@ -77,7 +66,6 @@ IntSetCaretBlinkTime(UINT uMSeconds)
   
   WinStaObject->CaretBlinkRate = uMSeconds;
   
-  ObDereferenceObject(WinStaObject);
   return TRUE;
 }
 
@@ -151,19 +139,10 @@ IntQueryCaretBlinkRate(VOID)
 UINT FASTCALL
 IntGetCaretBlinkTime(VOID)
 {
-  NTSTATUS Status;
   PWINSTATION_OBJECT WinStaObject;
   UINT Ret;
   
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-	                                  KernelMode,
-				          0,
-				          &WinStaObject);
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastNtError(Status);
-    return 0;
-  }
+  WinStaObject = PsGetWin32Thread()->Desktop->WindowStation;
   
   Ret = WinStaObject->CaretBlinkRate;
   if(!Ret)
@@ -178,7 +157,6 @@ IntGetCaretBlinkTime(VOID)
     Ret = DEFAULT_CARETBLINKRATE;
   }
   
-  ObDereferenceObject(WinStaObject);
   return Ret;
 }
 

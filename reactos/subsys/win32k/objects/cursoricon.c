@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.64 2004/08/07 00:25:10 navaraf Exp $ */
+/* $Id: cursoricon.c,v 1.65 2004/11/20 16:46:06 weiden Exp $ */
 #include <w32k.h>
 
 PCURICON_OBJECT FASTCALL
@@ -371,20 +371,20 @@ IntCleanupCurIcons(struct _EPROCESS *Process, PW32PROCESS Win32Process)
   PCURICON_OBJECT Current;
   PLIST_ENTRY CurrentEntry, NextEntry;
   
-  if(!(WinStaObject = Win32Process->WindowStation))
-    return;
-  
-  IntLockProcessCursorIcons(Win32Process);
-  CurrentEntry = Win32Process->CursorIconListHead.Flink;
-  while(CurrentEntry != &Win32Process->CursorIconListHead)
+  WinStaObject = IntGetWinStaObj();
+  if(WinStaObject != NULL)
   {
-    NextEntry = CurrentEntry->Flink;
-    Current = CONTAINING_RECORD(CurrentEntry, CURICON_OBJECT, ListEntry);
-    RemoveEntryList(&Current->ListEntry);
-    IntDestroyCurIconObject(WinStaObject, Current->Self, FALSE);
-    CurrentEntry = NextEntry;
+    CurrentEntry = Win32Process->CursorIconListHead.Flink;
+    while(CurrentEntry != &Win32Process->CursorIconListHead)
+    {
+      NextEntry = CurrentEntry->Flink;
+      Current = CONTAINING_RECORD(CurrentEntry, CURICON_OBJECT, ListEntry);
+      RemoveEntryList(&Current->ListEntry);
+      IntDestroyCurIconObject(WinStaObject, Current->Self, FALSE);
+      CurrentEntry = NextEntry;
+    }
+    ObDereferenceObject(WinStaObject);
   }
-  IntUnLockProcessCursorIcons(Win32Process);
 }
 
 /*
@@ -400,14 +400,9 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo, BOOL Indirect)
   NTSTATUS Status;
   HANDLE Ret;
   
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-				                               KernelMode,
-				                               0,
-				                               &WinStaObject);
-  
-  if(!NT_SUCCESS(Status))
+  WinStaObject = IntGetWinStaObj();
+  if(WinStaObject == NULL)
   {
-    SetLastNtError(Status);
     return (HANDLE)0;
   }
   
@@ -475,14 +470,9 @@ NtUserGetCursorIconInfo(
   NTSTATUS Status;
   BOOL Ret = FALSE;
   
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-				                               KernelMode,
-				                               0,
-				                               &WinStaObject);
-  
-  if(!NT_SUCCESS(Status))
+  WinStaObject = IntGetWinStaObj();
+  if(WinStaObject == NULL)
   {
-    SetLastNtError(Status);
     return FALSE;
   }
   
@@ -537,14 +527,9 @@ NtUserGetCursorIconSize(
   BOOL Ret = FALSE;
   SIZE SafeSize;
   
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-				                               KernelMode,
-				                               0,
-				                               &WinStaObject);
-  
-  if(!NT_SUCCESS(Status))
+  WinStaObject = IntGetWinStaObj();
+  if(WinStaObject == NULL)
   {
-    SetLastNtError(Status);
     return FALSE;
   }
   
@@ -629,14 +614,9 @@ NtUserGetCursorInfo(
     return FALSE;
   }
   
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-				                               KernelMode,
-				                               0,
-				                               &WinStaObject);
-  
-  if(!NT_SUCCESS(Status))
+  WinStaObject = IntGetWinStaObj();
+  if(WinStaObject == NULL)
   {
-    SetLastNtError(Status);
     return FALSE;
   }
   
@@ -676,15 +656,9 @@ NtUserClipCursor(
   RECT Rect;
   PWINDOW_OBJECT DesktopWindow = NULL;
 
-  NTSTATUS Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-				       KernelMode,
-				       0,
-				       &WinStaObject);
-  if (!NT_SUCCESS(Status))
+  WinStaObject = IntGetWinStaObj();
+  if (WinStaObject == NULL)
   {
-    DPRINT1("Validation of window station handle (0x%X) failed\n",
-      PROCESS_WINDOW_STATION());
-    SetLastNtError(Status);
     return FALSE;
   }
 
@@ -739,16 +713,10 @@ NtUserDestroyCursorIcon(
   DWORD Unknown)
 {
   PWINSTATION_OBJECT WinStaObject;
-  NTSTATUS Status;
   
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-				                               KernelMode,
-				                               0,
-				                               &WinStaObject);
-  
-  if(!NT_SUCCESS(Status))
+  WinStaObject = IntGetWinStaObj();
+  if(WinStaObject == NULL)
   {
-    SetLastNtError(Status);
     return FALSE;
   }
   
@@ -777,17 +745,11 @@ NtUserFindExistingCursorIcon(
 {
   PCURICON_OBJECT CurIconObject;
   PWINSTATION_OBJECT WinStaObject;
-  NTSTATUS Status;
   HANDLE Ret = (HANDLE)0;
   
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-				                               KernelMode,
-				                               0,
-				                               &WinStaObject);
-  
-  if(!NT_SUCCESS(Status))
+  WinStaObject = IntGetWinStaObj();
+  if(WinStaObject == NULL)
   {
-    SetLastNtError(Status);
     return Ret;
   }
   
@@ -824,11 +786,8 @@ NtUserGetClipCursor(
   if(!lpRect)
     return FALSE;
 
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-	       KernelMode,
-	       0,
-	       &WinStaObject);
-  if (!NT_SUCCESS(Status))
+  WinStaObject = IntGetWinStaObj();
+  if (WinStaObject == NULL)
   {
     DPRINT("Validation of window station handle (0x%X) failed\n",
       PROCESS_WINDOW_STATION());
@@ -877,15 +836,10 @@ NtUserSetCursor(
   PCURICON_OBJECT CurIconObject;
   HICON OldCursor = (HCURSOR)0;
   PWINSTATION_OBJECT WinStaObject;
-  NTSTATUS Status;
   
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-				                               KernelMode,
-				                               0,
-				                               &WinStaObject);
-  if(!NT_SUCCESS(Status))
+  WinStaObject = IntGetWinStaObj();
+  if(WinStaObject == NULL)
   {
-    SetLastNtError(Status);
     return (HCURSOR)0;
   }
   
@@ -918,14 +872,9 @@ NtUserSetCursorIconContents(
   NTSTATUS Status;
   BOOL Ret = FALSE;
   
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-				                               KernelMode,
-				                               0,
-				                               &WinStaObject);
-  
-  if(!NT_SUCCESS(Status))
+  WinStaObject = IntGetWinStaObj();
+  if(WinStaObject == NULL)
   {
-    SetLastNtError(Status);
     return FALSE;
   }
   
@@ -992,14 +941,9 @@ NtUserSetCursorIconData(
   POINT SafeHotspot;
   BOOL Ret = FALSE;
   
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-				                               KernelMode,
-				                               0,
-				                               &WinStaObject);
-  
-  if(!NT_SUCCESS(Status))
+  WinStaObject = IntGetWinStaObj();
+  if(WinStaObject == NULL)
   {
-    SetLastNtError(Status);
     return FALSE;
   }
   
@@ -1091,7 +1035,6 @@ NtUserDrawIconEx(
 {
   PCURICON_OBJECT CurIconObject;
   PWINSTATION_OBJECT WinStaObject;
-  NTSTATUS Status;
   HBITMAP hbmMask, hbmColor;
   BITMAP bmpMask, bmpColor;
   BOOL DoFlickerFree;
@@ -1105,14 +1048,9 @@ NtUserDrawIconEx(
   INT nStretchMode;
   #endif
   
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-				                               KernelMode,
-				                               0,
-				                               &WinStaObject);
-  
-  if(!NT_SUCCESS(Status))
+  WinStaObject = IntGetWinStaObj();
+  if(WinStaObject == NULL)
   {
-    SetLastNtError(Status);
     return FALSE;
   }
   

@@ -152,6 +152,19 @@ ULONG           PagefileUsage;
 ULONG           PagefileLimit;
 } EPROCESS_QUOTA_BLOCK, *PEPROCESS_QUOTA_BLOCK;
 
+/*
+ * header mess....
+ */
+
+typedef struct _PAGEFAULT_HISTORY
+{
+    ULONG                                 CurrentIndex;
+    ULONG                                 MaxIndex;
+    KSPIN_LOCK                            SpinLock;
+    PVOID                                 Reserved;
+    struct _PROCESS_WS_WATCH_INFORMATION  WatchInfo[1];
+} PAGEFAULT_HISTORY, *PPAGEFAULT_HISTORY;
+
 #endif /* __USE_W32API */
 
 typedef struct

@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.83 2004/11/13 22:27:15 hbirr Exp $
+/* $Id: kill.c,v 1.84 2004/11/20 16:46:05 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -20,6 +20,7 @@
 extern KSPIN_LOCK PiThreadLock;
 
 VOID PsTerminateCurrentThread(NTSTATUS ExitStatus);
+NTSTATUS STDCALL NtCallTerminatePorts(PETHREAD Thread);
 
 #define TAG_TERMINATE_APC   TAG('T', 'A', 'P', 'C')
 
@@ -135,12 +136,14 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
    CurrentThread->ExitStatus = ExitStatus;
    KeQuerySystemTime((PLARGE_INTEGER)&CurrentThread->ExitTime);
    KeCancelTimer(&CurrentThread->Tcb.Timer);
+   
+   KeReleaseSpinLock(&PiThreadLock, oldIrql);
  
+   PsLockProcess(CurrentProcess, FALSE);
    /* Remove the thread from the thread list of its process */
    RemoveEntryList(&CurrentThread->ThreadListEntry);
    Last = IsListEmpty(&CurrentProcess->ThreadListHead);
-
-   KeReleaseSpinLock(&PiThreadLock, oldIrql);
+   PsUnlockProcess(CurrentProcess);
 
    /* Notify subsystems of the thread termination */
    PspRunCreateThreadNotifyRoutines(CurrentThread, FALSE);
@@ -188,6 +191,9 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
    /* The last thread shall close the door on exit */
    if(Last)
    {
+    /* save the last thread exit status */
+    CurrentProcess->LastThreadExitStatus = ExitStatus;
+    
     PspRunCreateProcessNotifyRoutines(CurrentProcess, FALSE);
     PsTerminateWin32Process(CurrentProcess);
     PiTerminateProcess(CurrentProcess, ExitStatus);

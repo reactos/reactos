@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.36 2004/11/20 15:55:45 ekohl Exp $
+/* $Id: winlogon.c,v 1.37 2004/11/20 16:46:05 weiden Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -555,7 +555,6 @@ WinMain(HINSTANCE hInstance,
   LSA_OPERATIONAL_MODE Mode;
   ULONG AuthenticationPackage;
 #endif
-  NTSTATUS Status;
 
   hAppInstance = hInstance;
   
@@ -598,14 +597,6 @@ WinMain(HINSTANCE hInstance,
    * Switch to winlogon desktop
    */
   /* FIXME: Do start up in the application desktop for now. */
-  Status = NtSetInformationProcess(NtCurrentProcess(),
-                                   ProcessDesktop,
-                                   &WLSession->ApplicationDesktop,
-                                   sizeof(HDESK));
-  if(!NT_SUCCESS(Status))
-  {
-    DbgPrint("WL: Cannot set default desktop for winlogon.\n");
-  }
   SetThreadDesktop(WLSession->ApplicationDesktop);
   if(!SwitchDesktop(WLSession->ApplicationDesktop))
   {

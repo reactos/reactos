@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.74 2004/09/28 15:02:30 weiden Exp $
+/* $Id: message.c,v 1.75 2004/11/20 16:46:06 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1126,7 +1126,7 @@ NtUserPostMessage(HWND Wnd,
           SetLastWin32Error(ERROR_INVALID_PARAMETER);
           return FALSE;
         }
-      CurInfo = IntGetSysCursorInfo(PsGetWin32Process()->WindowStation);
+      CurInfo = IntGetSysCursorInfo(PsGetWin32Thread()->Desktop->WindowStation);
       KernelModeMsg.pt.x = CurInfo->x;
       KernelModeMsg.pt.y = CurInfo->y;
       KeQueryTickCount(&LargeTickCount);

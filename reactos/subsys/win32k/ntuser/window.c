@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.248 2004/11/15 23:10:42 gvg Exp $
+/* $Id: window.c,v 1.249 2004/11/20 16:46:06 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -106,18 +106,21 @@ IntIsWindow(HWND hWnd)
  */
 
 PWINDOW_OBJECT FASTCALL
-IntGetProcessWindowObject(PW32PROCESS ProcessData, HWND hWnd)
+IntGetProcessWindowObject(PW32THREAD Thread, HWND hWnd)
 {
    PWINDOW_OBJECT WindowObject;
    NTSTATUS Status;
-
-   Status = ObmReferenceObjectByHandle(ProcessData->WindowStation->HandleTable,
-      hWnd, otWindow, (PVOID*)&WindowObject);
-   if (!NT_SUCCESS(Status))
+   
+   if(Thread->Desktop != NULL)
    {
-      return NULL;
+     Status = ObmReferenceObjectByHandle(Thread->Desktop->WindowStation->HandleTable,
+                                         hWnd, otWindow, (PVOID*)&WindowObject);
+     if (NT_SUCCESS(Status))
+     {
+        return WindowObject;
+     }
    }
-   return WindowObject;
+   return NULL;
 }
 
 
@@ -328,13 +331,13 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
     }
 
   /* reset shell window handles */
-  if(ProcessData->WindowStation)
+  if(ThreadData->Desktop)
   {
-    if (Window->Self == ProcessData->WindowStation->ShellWindow)
-      ProcessData->WindowStation->ShellWindow = NULL;
+    if (Window->Self == ThreadData->Desktop->WindowStation->ShellWindow)
+      ThreadData->Desktop->WindowStation->ShellWindow = NULL;
 
-    if (Window->Self == ProcessData->WindowStation->ShellListView)
-      ProcessData->WindowStation->ShellListView = NULL;
+    if (Window->Self == ThreadData->Desktop->WindowStation->ShellListView)
+      ThreadData->Desktop->WindowStation->ShellListView = NULL;
   }
   
   /* Unregister hot keys */
@@ -378,7 +381,7 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
   IntUnlinkWindow(Window);
   
   IntReferenceWindowObject(Window);
-  ObmCloseHandle(ProcessData->WindowStation->HandleTable, Window->Self);
+  ObmCloseHandle(ThreadData->Desktop->WindowStation->HandleTable, Window->Self);
   
   IntDestroyScrollBars(Window);
   
@@ -613,15 +616,15 @@ PMENU_OBJECT FASTCALL
 IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert, BOOL RetMenu)
 {
   PMENU_OBJECT MenuObject, NewMenuObject, SysMenuObject, ret = NULL;
-  PW32PROCESS W32Process;
+  PW32THREAD W32Thread;
   HMENU NewMenu, SysMenu;
   ROSMENUITEMINFO ItemInfo;
 
   if(bRevert)
   {
-    W32Process = PsGetWin32Process();
+    W32Thread = PsGetWin32Thread();
     
-    if(!W32Process->WindowStation)
+    if(!W32Thread->Desktop)
       return NULL;
       
     if(WindowObject->SystemMenu)
@@ -635,10 +638,10 @@ IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert, BOOL RetMenu)
       }
     }
       
-    if(W32Process->WindowStation->SystemMenuTemplate)
+    if(W32Thread->Desktop->WindowStation->SystemMenuTemplate)
     {
       /* clone system menu */
-      MenuObject = IntGetMenuObject(W32Process->WindowStation->SystemMenuTemplate);
+      MenuObject = IntGetMenuObject(W32Thread->Desktop->WindowStation->SystemMenuTemplate);
       if(!MenuObject)
         return NULL;
 
@@ -1415,7 +1418,7 @@ IntCreateWindowEx(DWORD dwExStyle,
   BOOL MenuChanged;
   BOOL ClassFound;
   PWSTR ClassNameString;
-  
+  DPRINT1("PsGetWin32Thread()->Desktop == 0x%x\n", PsGetWin32Thread()->Desktop);
   ParentWindowHandle = PsGetWin32Thread()->Desktop->DesktopWindow;
   OwnerWindowHandle = NULL;
 
@@ -1487,27 +1490,22 @@ IntCreateWindowEx(DWORD dwExStyle,
   }
 
   /* Check the window station. */
-  DPRINT("IoGetCurrentProcess() %X\n", IoGetCurrentProcess());
-  DPRINT("PROCESS_WINDOW_STATION %X\n", PROCESS_WINDOW_STATION());
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-					  KernelMode,
-					  0,
-					  &WinStaObject);
-  if (!NT_SUCCESS(Status))
+  if (PsGetWin32Thread()->Desktop == NULL)
     {
       ClassDereferenceObject(ClassObject);
       if (NULL != ParentWindow)
         {
           IntReleaseWindowObject(ParentWindow);
         }
-      DPRINT("Validation of window station handle (0x%X) failed\n",
-	     PROCESS_WINDOW_STATION());
+      DPRINT("Thread is not attached to a desktop! Cannot create window!\n");
       return (HWND)0;
     }
+  WinStaObject = PsGetWin32Thread()->Desktop->WindowStation;
+  ObReferenceObjectByPointer(WinStaObject, KernelMode, ExWindowStationObjectType, 0);
 
   /* Create the window object. */
   WindowObject = (PWINDOW_OBJECT)
-    ObmCreateObject(PsGetWin32Process()->WindowStation->HandleTable, &Handle,
+    ObmCreateObject(PsGetWin32Thread()->Desktop->WindowStation->HandleTable, &Handle,
         otWindow, sizeof(WINDOW_OBJECT) + ClassObject->cbWndExtra
         );
 
@@ -2872,7 +2870,7 @@ NtUserGetShellWindow()
   PWINSTATION_OBJECT WinStaObject;
   HWND Ret;
 
-  NTSTATUS Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+  NTSTATUS Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
 				       KernelMode,
 				       0,
 				       &WinStaObject);
@@ -2904,7 +2902,7 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
 {
   PWINSTATION_OBJECT WinStaObject;
 
-  NTSTATUS Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+  NTSTATUS Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
 				       KernelMode,
 				       0,
 				       &WinStaObject);
@@ -3255,7 +3253,6 @@ LONG STDCALL
 NtUserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
 {
    PWINDOW_OBJECT WindowObject, Parent;
-   PW32PROCESS Process;
    PWINSTATION_OBJECT WindowStation;
    LONG OldValue;
    STYLESTRUCT Style;
@@ -3296,8 +3293,7 @@ NtUserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
             /*
              * Remove extended window style bit WS_EX_TOPMOST for shell windows.
              */
-            Process = WindowObject->OwnerThread->ThreadsProcess->Win32Process;
-            WindowStation = Process->WindowStation;
+            WindowStation = WindowObject->OwnerThread->Tcb.Win32Thread->Desktop->WindowStation;
             if(WindowStation)
             {
               if (hWnd == WindowStation->ShellWindow || hWnd == WindowStation->ShellListView)

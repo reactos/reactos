@@ -31,8 +31,6 @@ typedef struct _W32PROCESS
   FAST_MUTEX CursorIconListLock;
   LIST_ENTRY CursorIconListHead;
   struct _KBDTABLES* KeyboardLayout;
-  struct _WINSTATION_OBJECT* WindowStation;
-  HANDLE hWindowStation;
   ULONG Flags;
   WORD GDIObjects;
   WORD UserObjects;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: win32.c,v 1.9 2004/09/28 15:02:29 weiden Exp $
+/* $Id: win32.c,v 1.10 2004/11/20 16:46:05 weiden Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -100,17 +100,20 @@ PsInitWin32Thread (PETHREAD Thread)
 
   if (Process->Win32Process == NULL)
     {
+      /* FIXME - lock the process */
       Process->Win32Process = ExAllocatePool (NonPagedPool,
 					      PspWin32ProcessSize);
+
       if (Process->Win32Process == NULL)
 	return STATUS_NO_MEMORY;
 
       RtlZeroMemory (Process->Win32Process,
 		     PspWin32ProcessSize);
+      /* FIXME - unlock the process */
 
       if (PspWin32ProcessCallback != NULL)
 	{
-	  PspWin32ProcessCallback (Process, TRUE);
+          PspWin32ProcessCallback (Process, TRUE);
 	}
     }
 
@@ -145,7 +148,8 @@ PsTerminateWin32Process (PEPROCESS Process)
       PspWin32ProcessCallback (Process, FALSE);
     }
 
-  ExFreePool (Process->Win32Process);
+  /* don't delete the W32PROCESS structure at this point, wait until the
+     EPROCESS structure is being freed */
 }
 
 
@@ -159,7 +163,8 @@ PsTerminateWin32Thread (PETHREAD Thread)
       PspWin32ThreadCallback (Thread, FALSE);
     }
 
-    ExFreePool (Thread->Tcb.Win32Thread);
+    /* don't delete the W32THREAD structure at this point, wait until the
+       ETHREAD structure is being freed */
   }
 }
 

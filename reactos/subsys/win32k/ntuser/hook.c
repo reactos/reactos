@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: hook.c,v 1.9 2004/09/28 15:02:30 weiden Exp $
+/* $Id: hook.c,v 1.10 2004/11/20 16:46:06 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -289,7 +289,7 @@ HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam)
   Result = IntCallHookProc(HookId, Code, wParam, lParam, Hook->Proc,
                            Hook->Ansi, &Hook->ModuleName);
 
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+  Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
 				          KernelMode,
 				          0,
 				          &WinStaObj);
@@ -319,11 +319,11 @@ HOOK_DestroyThreadHooks(PETHREAD Thread)
 
   if (NULL != GlobalHooks)
     {
-      Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+      Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
                                               KernelMode,
                                               0,
                                               &WinStaObj);
-  
+
       if(! NT_SUCCESS(Status))
         {
           DPRINT1("Invalid window station????\n");
@@ -367,11 +367,11 @@ NtUserCallNextHookEx(
   PWINSTATION_OBJECT WinStaObj;
   NTSTATUS Status;
 
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+  Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
 				          KernelMode,
 				          0,
 				          &WinStaObj);
-  
+
   if(! NT_SUCCESS(Status))
     {
       SetLastNtError(Status);
@@ -509,7 +509,7 @@ NtUserSetWindowsHookEx(
       return NULL;
     }
   
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+  Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
 				          KernelMode,
 				          0,
 				          &WinStaObj);
@@ -613,7 +613,7 @@ NtUserUnhookWindowsHookEx(
   PHOOK HookObj;
   NTSTATUS Status;
 
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+  Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
 				          KernelMode,
 				          0,
 				          &WinStaObj);

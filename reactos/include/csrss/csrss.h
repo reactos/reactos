@@ -524,7 +524,7 @@ typedef struct
 
 typedef struct
 {
-  WCHAR DesktopName[1];
+  HDESK DesktopHandle;
 } CSRSS_CREATE_DESKTOP_REQUEST, *PCSRSS_CREATE_DESKTOP_REQUEST;
 
 typedef struct

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.122 2004/11/15 23:10:42 gvg Exp $
+/* $Id: winpos.c,v 1.123 2004/11/20 16:46:06 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1193,7 +1193,7 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
 //  HRGN VisibleRgn;
 
   Status = 
-    ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable,
+    ObmReferenceObjectByHandle(PsGetWin32Thread()->Desktop->WindowStation->HandleTable,
 			       Wnd,
 			       otWindow,
 			       (PVOID*)&Window);

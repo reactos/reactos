@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.85 2004/11/10 02:51:00 ion Exp $
+/* $Id: create.c,v 1.86 2004/11/20 16:46:05 weiden Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -386,6 +386,12 @@ PiDeleteThread(PVOID ObjectBody)
   Thread->ThreadsProcess = NULL;
 
   PsDeleteCidHandle(Thread->Cid.UniqueThread, PsThreadType);
+  
+  if(Thread->Tcb.Win32Thread != NULL)
+  {
+    /* Free the W32THREAD structure if present */
+    ExFreePool (Thread->Tcb.Win32Thread);
+  }
 
   KeReleaseThread(ETHREAD_TO_KTHREAD(Thread));
   

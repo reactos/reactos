@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: hotkey.c,v 1.10 2004/05/25 15:52:44 navaraf Exp $
+/* $Id: hotkey.c,v 1.11 2004/11/20 16:46:06 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -114,9 +114,8 @@ UnregisterWindowHotKeys(PWINDOW_OBJECT Window)
   PHOT_KEY_ITEM HotKeyItem;
   PWINSTATION_OBJECT WinStaObject = NULL;
   
-  if(Window->OwnerThread && Window->OwnerThread->ThreadsProcess &&
-     Window->OwnerThread->ThreadsProcess->Win32Process)
-    WinStaObject = Window->OwnerThread->ThreadsProcess->Win32Process->WindowStation;
+  if(Window->OwnerThread && Window->OwnerThread->ThreadsProcess)
+    WinStaObject = Window->OwnerThread->Tcb.Win32Thread->Desktop->WindowStation;
 
   if(!WinStaObject)
     return;
@@ -148,8 +147,8 @@ UnregisterThreadHotKeys(struct _ETHREAD *Thread)
   PHOT_KEY_ITEM HotKeyItem;
   PWINSTATION_OBJECT WinStaObject = NULL;
   
-  if(Thread->ThreadsProcess && Thread->ThreadsProcess->Win32Process)
-    WinStaObject = Thread->ThreadsProcess->Win32Process->WindowStation;
+  if(Thread->Tcb.Win32Thread && Thread->Tcb.Win32Thread->Desktop)
+    WinStaObject = Thread->Tcb.Win32Thread->Desktop->WindowStation;
   
   if(!WinStaObject)
     return;
@@ -230,7 +229,7 @@ NtUserRegisterHotKey(HWND hWnd,
 
   
   if(HotKeyThread->ThreadsProcess && HotKeyThread->ThreadsProcess->Win32Process)
-    WinStaObject = HotKeyThread->ThreadsProcess->Win32Process->WindowStation;
+    WinStaObject = HotKeyThread->Tcb.Win32Thread->Desktop->WindowStation;
   
   if(!WinStaObject)
   {
@@ -285,7 +284,7 @@ NtUserUnregisterHotKey(HWND hWnd,
   }
   
   if(Window->OwnerThread->ThreadsProcess && Window->OwnerThread->ThreadsProcess->Win32Process)
-    WinStaObject = Window->OwnerThread->ThreadsProcess->Win32Process->WindowStation;
+    WinStaObject = Window->OwnerThread->Tcb.Win32Thread->Desktop->WindowStation;
   
   if(!WinStaObject)
   {

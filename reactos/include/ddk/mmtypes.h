@@ -1,4 +1,4 @@
-/* $Id: mmtypes.h,v 1.19 2004/07/17 03:04:45 ion Exp $ */
+/* $Id: mmtypes.h,v 1.20 2004/11/20 16:46:04 weiden Exp $ */
 
 #ifndef _INCLUDE_DDK_MMTYPES_H
 #define _INCLUDE_DDK_MMTYPES_H
@@ -105,5 +105,37 @@ typedef enum _MEMORY_CACHING_TYPE
 	MmHardwareCoherentCached,
 	MmMaximumCacheType
 } MEMORY_CACHING_TYPE;
+
+typedef struct _MMWSL *PMMWSL;
+
+typedef struct _MMSUPPORT_FLAGS {
+    ULONG SessionSpace              : 1;
+    ULONG BeingTrimmed              : 1;
+    ULONG SessionLeader             : 1;
+    ULONG TrimHard                  : 1;
+    ULONG WorkingSetHard            : 1;
+    ULONG AddressSpaceBeingDeleted  : 1;
+    ULONG Available                 : 10;
+    ULONG AllowWorkingSetAdjustment : 8;
+    ULONG MemoryPriority            : 8;
+} MMSUPPORT_FLAGS, *PMMSUPPORT_FLAGS;
+
+typedef struct _MMSUPPORT
+{
+    LARGE_INTEGER   LastTrimTime;
+    MMSUPPORT_FLAGS Flags;
+    ULONG           PageFaultCount;
+    ULONG           PeakWorkingSetSize;
+    ULONG           WorkingSetSize;
+    ULONG           MinimumWorkingSetSize;
+    ULONG           MaximumWorkingSetSize;
+    PMMWSL          VmWorkingSetList;
+    LIST_ENTRY      WorkingSetExpansionLinks;
+    ULONG           Claim;
+    ULONG           NextEstimationSlot;
+    ULONG           NextAgingSlot;
+    ULONG           EstimatedAvailable;
+    ULONG           GrowthSinceLastEstimate;
+} MMSUPPORT, *PMMSUPPORT;
 
 #endif

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: metric.c,v 1.22 2004/10/04 19:23:31 jc Exp $
+/* $Id: metric.c,v 1.23 2004/11/20 16:46:06 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -68,7 +68,7 @@ NtUserGetSystemMetrics(ULONG Index)
     case SM_SWAPBUTTON:
     {
       PSYSTEM_CURSORINFO CurInfo;
-      Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+      Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
                                               KernelMode,
                                               0,
                                               &WinStaObject);
