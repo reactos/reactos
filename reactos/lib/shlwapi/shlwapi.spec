@@ -22,10 +22,10 @@
 22  stdcall -noname SHFindDataBlock(ptr long)
 23  stdcall -noname SHStringFromGUIDA(ptr ptr long)
 24  stdcall -noname SHStringFromGUIDW(ptr ptr long)
-25  stdcall -noname IsCharAlphaWrapW(long)
-26  stdcall -noname IsCharUpperWrapW(long)
-27  stdcall -noname IsCharLowerWrapW(long)
-28  stdcall -noname IsCharAlphaNumericWrapW(long)
+25  stdcall -noname IsCharAlphaWrapW(long) user32.IsCharAlphaW
+26  stdcall -noname IsCharUpperWrapW(long) user32.IsCharUpperW
+27  stdcall -noname IsCharLowerWrapW(long) user32.IsCharLowerW
+28  stdcall -noname IsCharAlphaNumericWrapW(long) user32.IsCharAlphaNumericW
 29  stdcall -noname IsCharSpaceW(long)
 30  stdcall -noname IsCharBlankW(long)
 31  stdcall -noname IsCharPunctW(long)

@@ -9,7 +9,7 @@ TARGET_CFLAGS = -DWINSHLWAPI= -D__REACTOS__ @EXTRADEFS@
 # FIXME: we don't do delayed imports yet so oleaut32.a is listed explicitly
 # NOTE: msvcrt.a must be listed before ntdll.a, because sprintf that is
 #       exported from ntdll doesn't support printing of float types (%f)
-TARGET_SDKLIBS = msvcrt.a @IMPORTS@ oleaut32.a wine.a wine_uuid.a wine_unicode.a msvcrt.a ntdll.a
+TARGET_SDKLIBS = msvcrt.a @IMPORTS@ oleaut32.a wine.a wine_uuid.a msvcrt.a ntdll.a
 
 TARGET_NORC = yes
 

@@ -74,6 +74,7 @@ lib\dinput\dinput.dll                   1
 lib\dinput8\dinput8.dll                 1
 lib\dsound\dsound.dll                   1
 lib\dxdiagn\dxdiagn.dll                 1
+lib\expat\expat.dll                     1
 lib\fmifs\fmifs.dll                     1
 lib\freetype\freetype.dll               1
 lib\gdi32\gdi32.dll                     1
@@ -119,7 +120,6 @@ lib\smdll\smdll.dll                     1
 lib\syssetup\syssetup.dll               1
 lib\twain\twain_32.dll                  1
 lib\urlmon\urlmon.dll                   1
-lib\unicode\wine_unicode.dll            1
 lib\user32\user32.dll                   1
 lib\userenv\userenv.dll                 1
 lib\version\version.dll                 1
