@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.59 2004/10/30 22:18:17 weiden Exp $
+/* $Id: file.c,v 1.60 2004/10/31 01:36:37 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -1448,6 +1448,8 @@ CheckNameLegalDOS8Dot3A(
     *pbNameLegal = RtlIsNameLegalDOS8Dot3(&Name,
                                           (lpOemName ? &AnsiName : NULL),
                                           (BOOLEAN*)pbNameContainsSpaces);
+
+    RtlFreeUnicodeString(&Name);
 
     return TRUE;
 }
