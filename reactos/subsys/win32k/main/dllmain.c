@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.22 2002/01/13 22:52:08 dwelch Exp $
+/* $Id: dllmain.c,v 1.23 2002/01/27 01:11:24 dwelch Exp $
  * 
  *  Entry Point for win32k.sys
  */
@@ -10,6 +10,7 @@
 #include <ddk/winddi.h>
 #include <ddk/service.h>
 
+#include <napi/win32.h>
 #include <win32k/win32k.h>
 
 #include <include/winsta.h>
@@ -50,6 +51,11 @@ DllMain (
 
   DbgPrint("System services added successfully!\n");
 
+  /*
+   * Register our per-process and per-thread structures.
+   */
+  PsEstablishWin32Callouts(0, 0, 0, 0, sizeof(W32THREAD), sizeof(W32PROCESS));
+
   Status = InitWindowStationImpl();
   if (!NT_SUCCESS(Status))
   {
@@ -71,7 +77,7 @@ DllMain (
     return STATUS_UNSUCCESSFUL;
   }
 
-   Status = InitInputImpl();
+  Status = InitInputImpl();
   if (!NT_SUCCESS(Status))
     {
       DbgPrint("Failed to initialize input implementation.\n");

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.111 2002/01/13 22:52:07 dwelch Exp $
+; $Id: ntoskrnl.edf,v 1.112 2002/01/27 01:11:23 dwelch Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -551,6 +551,7 @@ NtSetSecurityObject=NtSetSecurityObject@12
 NtSetSystemTime=NtSetSystemTime@8
 NtUnlockFile=NtUnlockFile@20
 NtVdmControl=NtVdmControl@8
+NtW32Call=NtW32Call@20
 NtWaitForSingleObject=NtWaitForSingleObject@12
 NtWriteFile=NtWriteFile@36
 ;ObAssignSecurity=ObAssignSecurity@16
@@ -593,9 +594,12 @@ PsAssignImpersonationToken=PsAssignImpersonationToken@8
 ;PsChargePoolQuota=PsChargePoolQuota@12
 PsCreateSystemProcess=PsCreateSystemProcess@12
 PsCreateSystemThread=PsCreateSystemThread@28
+PsCreateWin32Thread=PsCreateWin32Thread@4
 PsCreateWin32Process=PsCreateWin32Process@4
 PsGetWin32Thread=PsGetWin32Thread@0
+PsGetWin32Process=PsGetWin32Process@0
 PsEstablishWin32Callouts=PsEstablishWin32Callouts@24
+PsGetCurrentProcess=PsGetCurrentProcess@0
 PsGetCurrentProcessId=PsGetCurrentProcessId@0
 PsGetCurrentThreadId=PsGetCurrentThreadId@0
 PsGetCurrentThread=PsGetCurrentThread@0

@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.3 2002/01/13 22:52:07 dwelch Exp $
+/* $Id: window.c,v 1.4 2002/01/27 01:11:23 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -15,8 +15,26 @@
 #include <user32.h>
 #include <window.h>
 #include <debug.h>
+#include <user32/callback.h>
 
 /* FUNCTIONS *****************************************************************/
+
+NTSTATUS STDCALL
+User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
+{
+  PWINDOWPROC_CALLBACK_ARGUMENTS CallbackArgs;
+  LRESULT Result;
+
+  CallbackArgs = (PWINDOWPROC_CALLBACK_ARGUMENTS)Arguments;
+  if (ArgumentLength != sizeof(WINDOWPROC_CALLBACK_ARGUMENTS))
+    {
+      return(STATUS_INFO_LENGTH_MISMATCH);
+    }
+  Result = CallbackArgs->Proc(CallbackArgs->Wnd, CallbackArgs->Msg,
+			      CallbackArgs->wParam, CallbackArgs->lParam);
+  ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS);
+  /* Doesn't return. */
+}
 
 WINBOOL STDCALL
 AdjustWindowRect(LPRECT lpRect,

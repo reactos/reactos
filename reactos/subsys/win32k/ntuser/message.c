@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.3 2002/01/13 22:52:08 dwelch Exp $
+/* $Id: message.c,v 1.4 2002/01/27 01:11:24 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -20,6 +20,7 @@
 #include <include/error.h>
 #include <include/object.h>
 #include <include/winsta.h>
+#include <include/callback.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -40,11 +41,43 @@ W32kCleanupMessageImpl(VOID)
 
 
 LRESULT STDCALL
-NtUserDispatchMessage(LPMSG lpmsg)
+NtUserDispatchMessage(LPMSG lpMsg)
 {
-  UNIMPLEMENTED;
-    
-  return 0;
+  LRESULT Result;
+
+  /* Process timer messages. */
+  if (lpMsg->message == WM_TIMER)
+    {
+      if (lpMsg->lParam)
+	{
+	  /* FIXME: Call hooks. */
+
+	  /* FIXME: Check for continuing validity of timer. */
+
+	  return(W32kCallWindowProc((WNDPROC)lpMsg->lParam,
+				      lpMsg->hwnd,
+				      lpMsg->message,
+				      lpMsg->wParam,
+				      0 /* GetTickCount() */));
+	}
+    }
+
+  /* 
+   * FIXME: Check for valid window handle, valid window and valid window 
+   * proc. 
+   */
+
+  /* FIXME: Check for paint message. */
+
+  Result = W32kCallWindowProc(NULL /* WndProc */,
+			      lpMsg->hwnd,
+			      lpMsg->message,
+			      lpMsg->wParam,
+			      lpMsg->lParam);
+
+  /* FIXME: Check for paint message. */
+
+  return(Result);
 }
 
 BOOL STDCALL
@@ -68,6 +101,7 @@ NtUserGetMessage(LPMSG lpMsg,
   PUSER_MESSAGE Message;
   NTSTATUS Status;
 
+  /* Initialize the thread's win32 state if necessary. */ 
   W32kGuiCheck();
 
   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
@@ -205,15 +239,6 @@ NtUserSendNotifyMessage(HWND hWnd,
 			UINT Msg,
 			WPARAM wParam,
 			LPARAM lParam)
-{
-  UNIMPLEMENTED;
-
-  return 0;
-}
-
-BOOL STDCALL
-NtUserTranslateMessage(LPMSG lpMsg,
-		       DWORD Unknown1)
 {
   UNIMPLEMENTED;
 

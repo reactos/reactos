@@ -20,7 +20,6 @@ typedef struct _USER_OBJECT_HEADER
   CSHORT Size;
 } USER_OBJECT_HEADER, *PUSER_OBJECT_HEADER;
 
-
 typedef struct _USER_HANDLE
 {
   PVOID ObjectBody;

@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <debug.h>
+#include <user32/callback.h>
 
 #ifdef DBG
 
@@ -21,6 +22,10 @@ Init(VOID)
 
   ProcessHeap = RtlGetProcessHeap();
 
+  /* Set up the kernel callbacks. */
+  NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_WINDOWPROC] =
+    (PVOID)User32CallWindowProcFromKernel;
+
   //ProcessWindowStation = CreateWindowStationW(L"WinStaName",0,GENERIC_ALL,NULL);
   //Desktop = CreateDesktopA(NULL,NULL,NULL,0,0,NULL);
 
@@ -41,29 +46,26 @@ Cleanup(VOID)
   return Status;
 }
 
-INT
-STDCALL
-DllMain(
-	PVOID	hinstDll,
+INT STDCALL
+DllMain(PVOID	hinstDll,
 	ULONG	dwReason,
-	PVOID	reserved
-	)
+	PVOID	reserved)
 {
   D(MAX_TRACE, ("hinstDll (0x%X)  dwReason (0x%X)\n", hinstDll, dwReason));
 
-	switch (dwReason)
-	{
-		case DLL_PROCESS_ATTACH:
+  switch (dwReason)
+    {
+    case DLL_PROCESS_ATTACH:
       Init();
-			break;
-		case DLL_THREAD_ATTACH:
-			break;
-		case DLL_THREAD_DETACH:
-			break;
-		case DLL_PROCESS_DETACH:
+      break;
+    case DLL_THREAD_ATTACH:
+      break;
+    case DLL_THREAD_DETACH:
+      break;
+    case DLL_PROCESS_DETACH:
       Cleanup();
-			break;
-	}
-	return(1);
+      break;
+    }
+  return(1);
 }
 

@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.3 2002/01/13 22:52:08 dwelch Exp $
+/* $Id: class.c,v 1.4 2002/01/27 01:11:24 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -12,28 +12,20 @@
 
 #include <ddk/ntddk.h>
 #include <win32k/win32k.h>
-#include <win32k/userobj.h>
+#include <napi/win32.h>
 #include <include/class.h>
 #include <include/error.h>
 #include <include/winsta.h>
+#include <include/object.h>
 
 #define NDEBUG
 #include <debug.h>
-
-/* GLOBALS *******************************************************************/
-
-/* List of system classes */
-static  LIST_ENTRY  SystemClassListHead;
-static  FAST_MUTEX  SystemClassListLock;
 
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
 InitClassImpl(VOID)
 {
-  ExInitializeFastMutex(&SystemClassListLock);
-  InitializeListHead(&SystemClassListHead);
-
   return(STATUS_SUCCESS);
 }
 
@@ -44,83 +36,33 @@ CleanupClassImpl(VOID)
 }
 
 
-DWORD
-CliFindClassByName(PWNDCLASS_OBJECT* Class,
-		   LPWSTR ClassName,
-		   PLIST_ENTRY ListHead)
+NTSTATUS
+ClassReferenceClassByName(PW32PROCESS Process,
+			  PWNDCLASS_OBJECT* Class,
+			  LPWSTR ClassName)
 {
   PWNDCLASS_OBJECT Current;
   PLIST_ENTRY CurrentEntry;
   
-  ExAcquireFastMutexUnsafe (&SystemClassListLock);
-  CurrentEntry = ListHead->Flink;
-  while (CurrentEntry != ListHead)
+  ExAcquireFastMutexUnsafe (&Process->ClassListLock);
+  CurrentEntry = Process->ClassListHead.Flink;
+  while (CurrentEntry != &Process->ClassListHead)
     {
       Current = CONTAINING_RECORD(CurrentEntry, WNDCLASS_OBJECT, ListEntry);
       
       if (_wcsicmp(ClassName, Current->Class.lpszClassName) == 0)
 	{
 	  *Class = Current;
-	  ExReleaseFastMutexUnsafe (&SystemClassListLock);
+	  ObmReferenceObject(Current);
+	  ExReleaseFastMutexUnsafe (&Process->ClassListLock);
 	  return(STATUS_SUCCESS);
 	}
 
       CurrentEntry = CurrentEntry->Flink;
     }
-  ExReleaseFastMutexUnsafe (&SystemClassListLock);
+  ExReleaseFastMutexUnsafe (&Process->ClassListLock);
   
   return(STATUS_NOT_FOUND);
-}
-
-NTSTATUS
-CliReferenceClassByNameWinSta(PWINSTATION_OBJECT WinStaObject,
-			      PWNDCLASS_OBJECT *Class,
-			      LPWSTR ClassName)
-{
-  /*
-    if (NT_SUCCESS(CliFindClassByName(Class, ClassName, &LocalClassListHead)))
-    {
-    return STATUS_SUCCESS;
-    }
-    
-    if (NT_SUCCESS(CliFindClassByName(Class, ClassName, &GlobalClassListHead)))
-    {
-    return STATUS_SUCCESS;
-    }
-  */
-  return(CliFindClassByName(Class, ClassName, &SystemClassListHead));
-}
-
-NTSTATUS
-ClassReferenceClassByName(PWNDCLASS_OBJECT *Class,
-			  LPWSTR ClassName)
-{
-  PWINSTATION_OBJECT WinStaObject;
-  NTSTATUS Status;
-  
-  if (!ClassName)
-    {
-      return(STATUS_INVALID_PARAMETER);
-    }
-  
-  Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-				       KernelMode,
-				       0,
-				       &WinStaObject);
-  if (!NT_SUCCESS(Status))
-    {
-    DPRINT("Validation of window station handle (0x%X) failed\n",
-	   PROCESS_WINDOW_STATION());
-    return(STATUS_UNSUCCESSFUL);
-  }
-  
-  Status = CliReferenceClassByNameWinSta(WinStaObject,
-					 Class,
-					 ClassName);
-
-  ObDereferenceObject(WinStaObject);
-
-  return Status;
 }
 
 NTSTATUS
@@ -156,9 +98,9 @@ ClassReferenceClassByAtom(PWNDCLASS_OBJECT *Class,
 				   &ClassName[0],
 				   &ClassNameLength);
   
-  Status = CliReferenceClassByNameWinSta(WinStaObject,
-					 Class,
-					 &ClassName[0]);
+  Status = ClassReferenceClassByName(PsGetWin32Process(),
+				     Class,
+				     &ClassName[0]);
   
   ObDereferenceObject(WinStaObject);
   
@@ -178,7 +120,8 @@ ClassReferenceClassByNameOrAtom(PWNDCLASS_OBJECT *Class,
   }
   else
     {
-      Status = ClassReferenceClassByName(Class, ClassNameOrAtom);
+      Status = ClassReferenceClassByName(PsGetWin32Process(), Class, 
+					 ClassNameOrAtom);
     }
 
   if (!NT_SUCCESS(Status))
@@ -190,11 +133,11 @@ ClassReferenceClassByNameOrAtom(PWNDCLASS_OBJECT *Class,
 }
 
 DWORD STDCALL
-NtUserGetClassInfo(DWORD Unknown0,
-		   DWORD Unknown1,
-		   DWORD Unknown2,
-		   DWORD Unknown3,
-		   DWORD Unknown4)
+NtUserGetClassInfo(IN LPWSTR ClassName,
+		   IN ULONG InfoClass,
+		   OUT PVOID Info,
+		   IN ULONG InfoLength,
+		   OUT PULONG ReturnedLength)
 {
   UNIMPLEMENTED;
     
@@ -220,6 +163,13 @@ NtUserGetWOWClass(DWORD Unknown0,
   return(0);
 }
 
+RTL_ATOM STDCALL
+NtUserRegisterClassExWOW(LPWNDCLASSEX lpwcx,
+			 BOOL bUnicodeClass,
+			 DWORD Unknown2,
+			 DWORD Unknown3,
+			 DWORD Unknown4,
+			 DWORD Unknown5)
 /*
  * FUNCTION:
  *   Registers a new class with the window manager
@@ -230,13 +180,6 @@ NtUserGetWOWClass(DWORD Unknown0,
  * RETURNS:
  *   Atom identifying the new class
  */
-RTL_ATOM STDCALL
-NtUserRegisterClassExWOW(LPWNDCLASSEX lpwcx,
-			 BOOL bUnicodeClass,
-			 DWORD Unknown2,
-			 DWORD Unknown3,
-			 DWORD Unknown4,
-			 DWORD Unknown5)
 {
   PWINSTATION_OBJECT WinStaObject;
   PWNDCLASS_OBJECT ClassObject;
@@ -244,7 +187,7 @@ NtUserRegisterClassExWOW(LPWNDCLASSEX lpwcx,
   RTL_ATOM Atom;
   WORD  objectSize;
   LPTSTR  namePtr;
-
+  
   DPRINT("About to open window station handle (0x%X)\n", 
 	 PROCESS_WINDOW_STATION());
 
@@ -275,7 +218,7 @@ NtUserRegisterClassExWOW(LPWNDCLASSEX lpwcx,
   objectSize = sizeof(WNDCLASS_OBJECT) +
     (lpwcx->lpszMenuName != 0 ? wcslen (lpwcx->lpszMenuName) + 1 : 0) +
     wcslen (lpwcx->lpszClassName) + 1;
-  ClassObject = USEROBJ_AllocObject (objectSize, UO_CLASS_MAGIC);
+  ClassObject = ObmCreateObject(NULL, NULL, otClass, objectSize);
   if (ClassObject == 0)
     {
       RtlDeleteAtomFromAtomTable(WinStaObject->AtomTable, Atom);
@@ -297,16 +240,9 @@ NtUserRegisterClassExWOW(LPWNDCLASSEX lpwcx,
     }
   ClassObject->Class.lpszClassName = namePtr;
   wcscpy (namePtr, lpwcx->lpszClassName);
-  
-  if (lpwcx->style & CS_GLOBALCLASS)
-    {
-      InsertTailList(&SystemClassListHead, &ClassObject->ListEntry);
-    }
-  else
-    {
-      /* FIXME: Put on local list */
-      InsertTailList(&SystemClassListHead, &ClassObject->ListEntry);
-    }
+  ExAcquireFastMutex(&PsGetWin32Process()->ClassListLock);
+  InsertTailList(&PsGetWin32Process()->ClassListHead, &ClassObject->ListEntry);
+  ExReleaseFastMutex(&PsGetWin32Process()->ClassListLock);
   
   ObDereferenceObject(WinStaObject);
   

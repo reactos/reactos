@@ -2,5 +2,5 @@
 /sbin/modprobe loop
 echo "Installing to disk."
 mount -t vfat /mnt/hda3/bochs/10M.vga.dos /mnt/floppy -o loop,offset=8704,rw
-./install.sh /mnt/floppy
+cp -rv reactos/system32 /mnt/floppy/reactos
 umount /mnt/floppy

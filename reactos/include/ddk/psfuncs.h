@@ -1,4 +1,4 @@
-/* $Id: psfuncs.h,v 1.19 2002/01/26 21:22:48 dwelch Exp $
+/* $Id: psfuncs.h,v 1.20 2002/01/27 01:11:22 dwelch Exp $
  */
 #ifndef _INCLUDE_DDK_PSFUNCS_H
 #define _INCLUDE_DDK_PSFUNCS_H
@@ -38,7 +38,8 @@ NTSTATUS STDCALL PsCreateSystemProcess(PHANDLE ProcessHandle,
 				       ACCESS_MASK DesiredAccess,
 				       POBJECT_ATTRIBUTES ObjectAttributes);
 
-NTSTATUS STDCALL PsCreateWin32Process(PEPROCESS Process);
+NTSTATUS STDCALL PsCreateWin32Process(struct _EPROCESS* Process);
+NTSTATUS STDCALL PsCreateWin32Thread(struct _ETHREAD* Thread);
 
 VOID STDCALL PsEstablishWin32Callouts(PVOID Param1,
 				      PVOID Param2,
@@ -69,8 +70,6 @@ BOOLEAN STDCALL PsGetVersion (PULONG		MajorVersion	OPTIONAL,
 			      PULONG		MinorVersion	OPTIONAL,
 			      PULONG		BuildNumber	OPTIONAL,
 			      PUNICODE_STRING	CSDVersion	OPTIONAL);
-
-VOID STDCALL PsDispatchThread(ULONG NewThreadStatus);
 
 LARGE_INTEGER STDCALL PsGetProcessExitTime(VOID);
 BOOLEAN STDCALL PsIsThreadTerminating(struct _ETHREAD* Thread);
