@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.66 2004/02/03 17:53:55 navaraf Exp $
+ *  $Id: painting.c,v 1.67 2004/02/04 23:01:07 gvg Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -52,7 +52,7 @@
 #include <include/intgdi.h>
 
 #define NDEBUG
-#include <debug.h>
+#include <win32k/debug1.h>
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -68,6 +68,7 @@ IntValidateParent(PWINDOW_OBJECT Child, HRGN ValidRegion)
       ParentWindow = IntGetWindowObject(Parent);
       if (ParentWindow && !(ParentWindow->Style & WS_CLIPCHILDREN))
       {
+         ExAcquireFastMutex(&ParentWindow->UpdateLock);
          if (ParentWindow->UpdateRegion != 0)
          {
             INT OffsetX, OffsetY;
@@ -84,6 +85,7 @@ IntValidateParent(PWINDOW_OBJECT Child, HRGN ValidRegion)
             /* FIXME: If the resulting region is empty, remove fake posted paint message */
             NtGdiOffsetRgn(ValidRegion, -OffsetX, -OffsetY);
          }
+         ExReleaseFastMutex(&ParentWindow->UpdateLock);
       }
       IntReleaseWindowObject(ParentWindow);
       Parent = NtUserGetAncestor(Parent, GA_PARENT);
@@ -104,11 +106,13 @@ IntValidateParent(PWINDOW_OBJECT Child, HRGN ValidRegion)
  *    as valid, clears the WINDOWOBJECT_NEED_NCPAINT flag.
  */
 
-HRGN FASTCALL
+STATIC HRGN FASTCALL
 IntGetNCUpdateRegion(PWINDOW_OBJECT Window)
 {
    HRGN WindowRgn;
    HRGN NonclientRgn;
+
+   ASSERT(! ExTryToAcquireFastMutex(&Window->UpdateLock));
 
    /*
     * Generate the update region.
@@ -148,7 +152,7 @@ IntGetNCUpdateRegion(PWINDOW_OBJECT Window)
  * Internal function used by IntRedrawWindow.
  */
 
-VOID FASTCALL
+STATIC VOID FASTCALL
 IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
 {
   HDC hDC;
@@ -163,6 +167,7 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
     {
       if (Window->Flags & WINDOWOBJECT_NEED_NCPAINT)
         {
+          ExAcquireFastMutex(&Window->UpdateLock);
           if (Window->NCUpdateRegion)
             {
               IntValidateParent(Window, Window->NCUpdateRegion);
@@ -171,6 +176,7 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
           Window->NCUpdateRegion = NULL;
           Window->Flags &= ~WINDOWOBJECT_NEED_NCPAINT;
           MsqDecPaintCountQueue(Window->MessageQueue);
+          ExReleaseFastMutex(&Window->UpdateLock);
         }
 
       if (Window->Flags & WINDOWOBJECT_NEED_ERASEBKGND)
@@ -197,6 +203,7 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
               Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
             {
               IntSendMessage(hWnd, WM_PAINT, 0, 0);
+              ExAcquireFastMutex(&Window->UpdateLock);
               if (Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
                 {
                   Window->Flags &= ~WINDOWOBJECT_NEED_INTERNALPAINT;
@@ -205,6 +212,7 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
                       MsqDecPaintCountQueue(Window->MessageQueue);
                     }
                 }
+              ExReleaseFastMutex(&Window->UpdateLock);
             }
         }
     }
@@ -282,6 +290,7 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
     * Save current state of pending updates
     */
 
+   ExAcquireFastMutex(&Window->UpdateLock);
    HadPaintMessage = Window->UpdateRegion != NULL ||
       Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT;
    HadNCPaintMessage = Window->Flags & WINDOWOBJECT_NEED_NCPAINT;
@@ -418,6 +427,8 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
       else
          MsqIncPaintCountQueue(Window->MessageQueue);
    }
+
+   ExReleaseFastMutex(&Window->UpdateLock);
 }
 
 /*
@@ -614,15 +625,17 @@ IntGetPaintMessage(HWND hWnd, PW32THREAD Thread, MSG *Message,
 #if 0
       DPRINT1("PAINTING BUG: Thread marked as containing dirty windows, but no dirty windows found!\n");
 #endif
-      /* FIXME: Lock the queue! */
+      ExAcquireFastMutex(&MessageQueue->Lock);
       MessageQueue->PaintPosted = 0;
       MessageQueue->PaintCount = 0;
+      ExReleaseFastMutex(&MessageQueue->Lock);
       return FALSE;
    }
 
    Window = IntGetWindowObject(Message->hwnd);
    if (Window != NULL)
    {
+      ExAcquireFastMutex(&Window->UpdateLock);
       if (Window->Flags & WINDOWOBJECT_NEED_NCPAINT)
       {
          Message->message = WM_NCPAINT;
@@ -647,6 +660,7 @@ IntGetPaintMessage(HWND hWnd, PW32THREAD Thread, MSG *Message,
             }
          }
       }
+      ExReleaseFastMutex(&Window->UpdateLock);
 
       IntReleaseWindowObject(Window);
       return TRUE;
@@ -724,6 +738,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
       return NULL;
    }
 
+   ExAcquireFastMutex(&Window->UpdateLock);
    if (Window->UpdateRegion != NULL)
    {
       MsqDecPaintCountQueue(Window->MessageQueue);
@@ -739,6 +754,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
    {
       NtUserGetClientRect(Window, &lPs->rcPaint);
    }
+   ExReleaseFastMutex(&Window->UpdateLock);
 
    if (Window->Flags & WINDOWOBJECT_NEED_ERASEBKGND)
    {
