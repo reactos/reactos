@@ -128,28 +128,37 @@ NtCreateSemaphore(OUT PHANDLE SemaphoreHandle,
      KeInitializeSemaphore(Semaphore,
 			   InitialCount,
 			   MaximumCount);
+   }
 
-     Status = ObInsertObject ((PVOID)Semaphore,
+   Status = ObInsertObject ((PVOID)Semaphore,
 			      NULL,
 			      DesiredAccess,
 			      0,
 			      NULL,
 			      &hSemaphore);
 
-     ObDereferenceObject(Semaphore);
-   
-     if(NT_SUCCESS(Status))
+   if(NT_SUCCESS(Status))
+   {
+     _SEH_TRY
      {
-       _SEH_TRY
-       {
-         *SemaphoreHandle = hSemaphore;
-       }
-       _SEH_HANDLE
-       {
-         Status = _SEH_GetExceptionCode();
-       }
-       _SEH_END;
+       ObDereferenceObject(Semaphore);
+       *SemaphoreHandle = hSemaphore;
      }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+   } else {
+     _SEH_TRY
+     {
+       *SemaphoreHandle = INVALID_HANDLE_VALUE;
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
    }
 
    return Status;
