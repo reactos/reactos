@@ -7,5 +7,5 @@
 *.map
 *.tmp
 Makefile.ros
-olepro32.spec.def
-olepro32.stubs.c
+dxdiagn.spec.def
+dxdiagn.stubs.c
