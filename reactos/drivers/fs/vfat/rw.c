@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.28 2001/08/05 16:35:52 hbirr Exp $
+/* $Id: rw.c,v 1.29 2001/08/07 15:38:04 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -835,9 +835,12 @@ VfatWriteFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	}
       FirstCluster = CurrentCluster;
     }
-  Status = OffsetToCluster(DeviceExt, FirstCluster, WriteOffset,
-			   &CurrentCluster, TRUE);
-  
+  Status = OffsetToCluster(DeviceExt,
+			   FirstCluster,
+			   ROUND_DOWN(WriteOffset, ChunkSize),
+			   &CurrentCluster,
+			   TRUE);
+
   if (WriteOffset + Length > Fcb->entry.FileSize &&
       !(Fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY))
     {
