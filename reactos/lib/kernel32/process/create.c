@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.78 2004/01/05 13:49:18 weiden Exp $
+/* $Id: create.c,v 1.79 2004/01/06 13:47:01 mf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -680,9 +680,11 @@ static NTSTATUS KlInitPeb
  * Helper for CreateProcessW: retrieve the file name to load from the
  * app name and command line. Store the file name in buffer, and
  * return a possibly modified command line.
+ *
+ * FIXME: use CurDir to search for the executable file in the new working directory
  */
 static LPWSTR FASTCALL
-GetFileName(LPCWSTR AppName, LPWSTR CmdLine, LPWSTR Buffer,
+GetFileName(LPCWSTR CurDir, LPCWSTR AppName, LPWSTR CmdLine, LPWSTR Buffer,
             unsigned BufLen)
 {
   WCHAR *Name, *Pos, *Ret = NULL;
@@ -830,7 +832,7 @@ CreateProcessW
    DPRINT("CreateProcessW(lpApplicationName '%S', lpCommandLine '%S')\n",
 	   lpApplicationName, lpCommandLine);
 
-   TidyCmdLine = GetFileName(lpApplicationName, lpCommandLine, Name,
+   TidyCmdLine = GetFileName(lpCurrentDirectory, lpApplicationName, lpCommandLine, Name,
                              sizeof(Name) / sizeof(WCHAR));
    if (NULL == TidyCmdLine)
      {
