@@ -220,7 +220,7 @@ TDI_STATUS InfoNetworkLayerTdiSetEx( UINT InfoClass,
 
     TI_DbgPrint(MID_TRACE,("Called\n"));
 
-    OskitDumpBuffer( Buffer, BufferSize );
+    OskitDumpBuffer( (OSK_PCHAR)Buffer, BufferSize );
 
     if( InfoClass == INFO_CLASS_PROTOCOL &&
 	InfoType == INFO_TYPE_PROVIDER &&

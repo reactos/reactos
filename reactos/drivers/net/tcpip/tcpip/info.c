@@ -19,7 +19,7 @@ TDI_STATUS InfoCopyOut( PCHAR DataOut, UINT SizeOut,
     if( RememberedCBSize < SizeOut )
 	return TDI_BUFFER_TOO_SMALL;
     else {
-	CopyBufferToBufferChain( ClientBuf, 0, (PUCHAR)DataOut, SizeOut );
+	CopyBufferToBufferChain( ClientBuf, 0, (PCHAR)DataOut, SizeOut );
 	return TDI_SUCCESS;
     }
 }
@@ -99,7 +99,7 @@ TDI_STATUS InfoTdiQueryListEntities(PNDIS_BUFFER Buffer,
     for( Count = 0; Count < EntityCount; Count++ ) {
 	CopyBufferToBufferChain(Buffer, 
 				Count * sizeof(TDIEntityID), 
-				(PUCHAR)&EntityList[Count], 
+				(PCHAR)&EntityList[Count], 
 				sizeof(TDIEntityID));
     }
     

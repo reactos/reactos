@@ -246,7 +246,7 @@ int main(int argc, char* argv[])
   for (Idx = 0; Idx < PEFileHeader.NumberOfSections; Idx++)
     {
       //printf("section: '%.08s'\n", PESectionHeaders[Idx].Name);
-      if ((strncmp(PESectionHeaders[Idx].Name, ".stab", 5) == 0)
+      if ((strncmp((char*)PESectionHeaders[Idx].Name, ".stab", 5) == 0)
         && (PESectionHeaders[Idx].Name[5] == 0))
         {
 	   //printf(".stab section found. Size %d\n",
@@ -259,7 +259,7 @@ int main(int argc, char* argv[])
            n_in = fread(SymbolsBase, 1, SymbolsLength, in);
         }
 
-      if (strncmp(PESectionHeaders[Idx].Name, ".stabstr", 8) == 0)
+      if (strncmp((char*)PESectionHeaders[Idx].Name, ".stabstr", 8) == 0)
         {
 	   //printf(".stabstr section found. Size %d\n",
            //  PESectionHeaders[Idx].SizeOfRawData);

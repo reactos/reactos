@@ -1049,7 +1049,7 @@ VOID DispTdiQueryInformationExComplete(
         Count = CopyBufferToBufferChain(
             QueryContext->InputMdl,
             FIELD_OFFSET(TCP_REQUEST_QUERY_INFORMATION_EX, Context),
-            (PUCHAR)&QueryContext->QueryInfo.Context,
+            (PCHAR)&QueryContext->QueryInfo.Context,
             CONTEXT_SIZE);
     }
 
