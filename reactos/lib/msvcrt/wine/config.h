@@ -419,6 +419,7 @@
 
 /* Define to 1 if you have the `pread' function. */
 /* #undef HAVE_PREAD */
+#define HAVE_PREAD 1
 
 /* Define to 1 if you have the <process.h> header file. */
 #define HAVE_PROCESS_H 1
@@ -443,6 +444,7 @@
 
 /* Define to 1 if you have the `pwrite' function. */
 /* #undef HAVE_PWRITE */
+#define HAVE_PWRITE 1
 
 /* Define to 1 if you have the <regex.h> header file. */
 /* #undef HAVE_REGEX_H */
