@@ -257,4 +257,6 @@ typedef struct _KSYSTEM_TIME
    LONG High2Part;
 } KSYSTEM_TIME, *PKSYSTEM_TIME;
 
+typedef struct _EPROCESS EPROCESS, *PEPROCESS;
+
 #endif /* __INCLUDE_DDK_KETYPES_H */
