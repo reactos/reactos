@@ -20,27 +20,11 @@
 #ifndef __TUI_H
 #define __TUI_H
 
-#define	SCREEN_MEM	0xB8000
+#define	SCREEN_MEM				0xB8000
+#define TITLE_BOX_HEIGHT		5
 
-extern	int		nScreenWidth;		// Screen Width
-extern	int		nScreenHeight;		// Screen Height
-
-extern	char	cStatusBarFgColor;			// Status bar foreground color
-extern	char	cStatusBarBgColor;			// Status bar background color
-extern	char	cBackdropFgColor;			// Backdrop foreground color
-extern	char	cBackdropBgColor;			// Backdrop background color
-extern	char	cBackdropFillStyle;			// Backdrop fill style
-extern	char	cTitleBoxFgColor;			// Title box foreground color
-extern	char	cTitleBoxBgColor;			// Title box background color
-extern	char	cMessageBoxFgColor;			// Message box foreground color
-extern	char	cMessageBoxBgColor;			// Message box background color
-extern	char	cMenuFgColor;				// Menu foreground color
-extern	char	cMenuBgColor;				// Menu background color
-extern	char	cTextColor;					// Normal text color
-extern	char	cSelectedTextColor;			// Selected text color
-extern	char	cSelectedTextBgColor;		// Selected text background color
-extern	char	szTitleBoxTitleText[260];	// Title box's title text
-
+// Initialize Textual-User-Interface
+BOOL	InitUserInterface(VOID);
 // Fills the entire screen with a backdrop
 void	DrawBackdrop(void);
 // Fills the area specified with cFillChar and cAttr

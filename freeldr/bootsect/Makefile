@@ -17,13 +17,12 @@
 #  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 
-
-export CC = gcc
-export LD = ld
-export AR = ar
-export RM = cmd /C del
-export CP = cmd /C copy
-export NASM_CMD = nasm
+export CC		= gcc
+export LD		= ld
+export AR		= ar
+export RM		= cmd /C del
+export CP		= cmd /C copy
+export NASM_CMD	= nasm
 
 .PHONY : clean
 

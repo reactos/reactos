@@ -23,7 +23,7 @@
 #include "options.h"
 #include "miscboot.h"
 
-
+#if 0
 void DoOptionsMenu(void)
 {
 	int		OptionsMenuItemCount = 1; // Count is 1 because we don't show the "Set ReactOS Boot Flags" menu item yet
@@ -101,7 +101,7 @@ void DoBootOptionsMenu(int BootDriveNum, char *BootDriveText)
 	char	BootOptionsMenuItems[2][80] = {	"Boot To ", "Pick A Boot Partition"	};
 	int		BootOptionsMenuItemSelected = 0;
 
-	strcat(BootOptionsMenuItems[0], BootDriveText);
+	/*strcat(BootOptionsMenuItems[0], BootDriveText);
 
 	while (BootOptionsMenuItemSelected != -1)
 	{
@@ -144,7 +144,7 @@ void DoBootOptionsMenu(int BootDriveNum, char *BootDriveText)
 
 			break;
 		}
-	}
+	}*/
 }
 
 void DoBootPartitionOptionsMenu(int BootDriveNum)
@@ -164,7 +164,7 @@ void DoBootPartitionOptionsMenu(int BootDriveNum)
 	char	temp[25];
 
 
-	BootDrive = BootDriveNum;
+	/*BootDrive = BootDriveNum;
 
 	if (!biosdisk(_DISK_READ, BootDrive, 0, 0, 1, 1, SectorBuffer))
 	{
@@ -244,7 +244,7 @@ void DoBootPartitionOptionsMenu(int BootDriveNum)
 			stop_floppy();
 			JumpToBootCode();
 		}
-	}
+	}*/
 }
 
 int RunOptionsMenu(char OptionsMenuItems[][80], int OptionsMenuItemCount, int nOptionSelected, char *OptionsMenuTitle)
@@ -345,7 +345,7 @@ int RunOptionsMenu(char OptionsMenuItems[][80], int OptionsMenuItemCount, int nO
 
 void InitOptionsMenu(int *nOptionsMenuBoxLeft, int *nOptionsMenuBoxTop, int *nOptionsMenuBoxRight, int *nOptionsMenuBoxBottom, int OptionsMenuItemCount)
 {
-	int		height = OptionsMenuItemCount;
+	/*int		height = OptionsMenuItemCount;
 	int		width = 20;
 
 	height += 1; // Allow room for top & bottom borders
@@ -355,7 +355,7 @@ void InitOptionsMenu(int *nOptionsMenuBoxLeft, int *nOptionsMenuBoxTop, int *nOp
 	*nOptionsMenuBoxLeft = (nScreenWidth - width) / 2;
 	*nOptionsMenuBoxRight = *nOptionsMenuBoxLeft + width;
 	*nOptionsMenuBoxTop = (nScreenHeight - height) / 2 + 1;
-	*nOptionsMenuBoxBottom = *nOptionsMenuBoxTop + height;
+	*nOptionsMenuBoxBottom = *nOptionsMenuBoxTop + height;*/
 }
 
 void DrawOptionsMenu(char OptionsMenuItems[][80], int OptionsMenuItemCount, int nOptionSelected, char *OptionsMenuTitle, int nOptionsMenuBoxLeft, int nOptionsMenuBoxTop, int nOptionsMenuBoxRight, int nOptionsMenuBoxBottom)
@@ -365,7 +365,7 @@ void DrawOptionsMenu(char OptionsMenuItems[][80], int OptionsMenuItemCount, int 
 	int		space, space_left, space_right;
 
 	// Update the status bar
-	DrawStatusText(" Use \x18\x19 to select, then press ENTER. Press ESC to go back.");
+	/*DrawStatusText(" Use \x18\x19 to select, then press ENTER. Press ESC to go back.");
 
 	DrawBox(nOptionsMenuBoxLeft, nOptionsMenuBoxTop, nOptionsMenuBoxRight, nOptionsMenuBoxBottom, D_VERT, D_HORZ, TRUE, TRUE, ATTR(cMenuFgColor, cMenuBgColor));
 	DrawText(nOptionsMenuBoxLeft + (((nOptionsMenuBoxRight - nOptionsMenuBoxLeft) - strlen(OptionsMenuTitle)) / 2) + 1, nOptionsMenuBoxTop, OptionsMenuTitle, ATTR(cMenuFgColor, cMenuBgColor));
@@ -391,5 +391,6 @@ void DrawOptionsMenu(char OptionsMenuItems[][80], int OptionsMenuItemCount, int 
 		{
 			DrawText(nOptionsMenuBoxLeft+1, nOptionsMenuBoxTop+1+i, text, ATTR(cTextColor, cMenuBgColor));
 		}
-	}
+	}*/
 }
+#endif

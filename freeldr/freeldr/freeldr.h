@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1999, 2000  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1999, 2000, 2001  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -54,33 +54,27 @@
 #define PWORD	WORD *
 #define VOID	void
 #define PVOID	VOID*
+#define INT8	char
+#define UINT8	unsigned char
+#define INT16	short
+#define UINT16	unsigned short
+#define INT32	long
+#define UINT32	unsigned long
+#define PUINT32	UINT32 *
+#define INT64	long long
+#define UINT64	unsigned long long
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 
-#define	OSTYPE_REACTOS		1
-#define OSTYPE_LINUX		2
-#define OSTYPE_BOOTSECTOR	3
-#define OSTYPE_PARTITION	4
-#define OSTYPE_DRIVE		5
-
-typedef struct
-{
-	char	name[260];
-	int		nOSType;			// ReactOS or Linux or a bootsector, etc.
-} OSTYPE, *POSTYPE;
+#define PACKED __attribute__((packed))
 
 extern ULONG		BootDrive;			// BIOS boot drive, 0-A:, 1-B:, 0x80-C:, 0x81-D:, etc.
 extern ULONG		BootPartition;		// Boot Partition, 1-4
 extern BOOL			UserInterfaceUp;	// Tells us if the user interface is displayed
 
 extern PUCHAR		ScreenBuffer;		// Save buffer for screen contents
-extern int			CursorXPos;			// Cursor's X Position
-extern int			CursorYPos;			// Cursor's Y Position
-
-extern OSTYPE		OSList[16]; // The OS list
-extern int			nNumOS;		// Number of OSes listed
-
-extern int			nTimeOut;		// Time to wait for the user before booting
+extern ULONG		CursorXPos;			// Cursor's X Position
+extern ULONG		CursorYPos;			// Cursor's Y Position
 
 void	BootMain(void);
 

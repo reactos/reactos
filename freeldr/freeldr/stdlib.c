@@ -253,6 +253,17 @@ char *strcpy(char *dest, char *src)
 	return ret;
 }
 
+char *strncpy(char *dest, char *src, size_t count)
+{
+	char	*ret = dest;
+
+	while((*src) && (count--))
+		*dest++ = *src++;
+	*dest = 0;
+
+	return ret;
+}
+
 char *strcat(char *dest, char *src)
 {
 	char	*ret = dest;
@@ -324,19 +335,19 @@ int _strnicmp(const char *string1, const char *string2, size_t length)
 	return 0;
 }
 
-char *fgets(char *string, int n, FILE *stream)
+char *fgets(char *string, int n, PFILE stream)
 {
 	int	i;
 
 	for(i=0; i<(n-1); i++)
 	{
-		if(feof(stream))
+		if(IsEndOfFile(stream))
 		{
 			i++;
 			break;
 		}
 
-		ReadFile(stream, 1, string+i);
+		ReadFile(stream, 1, NULL, string+i);
 
 		if(string[i] == '\n')
 		{

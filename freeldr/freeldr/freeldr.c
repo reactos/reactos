@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1999, 2000  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1999, 2000, 2001  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -29,41 +29,42 @@
 #include "memory.h"
 #include "parseini.h"
 #include "debug.h"
+#include "oslist.h"
 
 // Variable BootDrive moved to asmcode.S
-//ULONG			BootDrive = 0;		// BIOS boot drive, 0-A:, 1-B:, 0x80-C:, 0x81-D:, etc.
-ULONG			BootPartition = 0;	// Boot Partition, 1-4
-BOOL			UserInterfaceUp = FALSE; // Tells us if the user interface is displayed
+//ULONG			BootDrive = 0;							// BIOS boot drive, 0-A:, 1-B:, 0x80-C:, 0x81-D:, etc.
+ULONG			BootPartition = 0;						// Boot Partition, 1-4
 
-PUCHAR			ScreenBuffer = (PUCHAR)(SCREENBUFFER); // Save buffer for screen contents
-int				CursorXPos = 0;	// Cursor's X Position
-int				CursorYPos = 0;	// Cursor's Y Position
+PUCHAR			ScreenBuffer = (PUCHAR)(SCREENBUFFER);	// Save buffer for screen contents
+ULONG			CursorXPos = 0;							// Cursor's X Position
+ULONG			CursorYPos = 0;							// Cursor's Y Position
 
-OSTYPE			OSList[16];
-int				nNumOS = 0;
+ULONG	GetDefaultOperatingSystem(PUCHAR OperatingSystemList[], ULONG OperatingSystemCount);
+LONG	GetTimeOut(VOID);
 
-int				nTimeOut = -1;		// Time to wait for the user before booting
-
-void BootMain(void)
+VOID BootMain(VOID)
 {
-	int		i;
-	char	name[1024];
-	char	value[1024];
-	int		nOSToBoot;
+	ULONG	Idx;
+	UCHAR	SettingName[80];
+	UCHAR	SettingValue[80];
+	ULONG	SectionId;
+	ULONG	OperatingSystemCount;
+	PUCHAR	*OperatingSystemSectionNames;
+	PUCHAR	*OperatingSystemDisplayNames;
+	ULONG	DefaultOperatingSystem;
+	LONG	TimeOut;
+	ULONG	SelectedOperatingSystem;
 
 	enable_a20();
 
-	SaveScreen(ScreenBuffer);
-	CursorXPos = wherex();
-	CursorYPos = wherey();
-
-	printf("Loading FreeLoader...\n");
+	CursorXPos = (ULONG) *((PUCHAR)(SCREENXCOORD));
+	CursorYPos = (ULONG) *((PUCHAR)(SCREENYCOORD));
 
 #ifdef DEBUG
 	DebugInit();
 #endif
 
-	InitMemoryManager((PVOID)0x100000, 0x20000);
+	InitMemoryManager( (PVOID) 0x20000 /* BaseAddress */, 0x70000 /* Length */);
 
 	if (!ParseIniFile())
 	{
@@ -72,39 +73,63 @@ void BootMain(void)
 		return;
 	}
 
-	clrscr();
-	hidecursor();
-	// Draw the backdrop and title box
-	DrawBackdrop();
-	UserInterfaceUp = TRUE;
-
-	if (nNumOS == 0)
+	if (!OpenSection("FreeLoader", &SectionId))
 	{
-		DrawStatusText(" Press ENTER to reboot");
-		MessageBox("Error: there were no operating systems listed in freeldr.ini.\nPress ENTER to reboot.");
-		clrscr();
-		showcursor();
-		RestoreScreen(ScreenBuffer);
+		printf("Section [FreeLoader] not found in freeldr.ini.\n");
+		getch();
 		return;
 	}
-	
 
-	DrawStatusText(" Press ENTER to continue");
-	// Find all the message box settings and run them
-	for (i=1; i<=GetNumSectionItems("FREELOADER"); i++)
+	if (!InitUserInterface())
 	{
-		ReadSectionSettingByNumber("FREELOADER", i, name, value);
-		if (stricmp(name, "MessageBox") == 0)
-			MessageBox(value);
-		if (stricmp(name, "MessageLine") == 0)
-			MessageLine(value);
+		printf("Press any key to reboot.\n");
+		getch();
+		return;
+	}
+
+	if (!InitOperatingSystemList(&OperatingSystemSectionNames, &OperatingSystemDisplayNames, &OperatingSystemCount))
+	{
+		MessageBox("Press ENTER to reboot.\n");
+		goto reboot;
+	}
+	
+	if (OperatingSystemCount == 0)
+	{
+		MessageBox("There were no operating systems listed in freeldr.ini.\nPress ENTER to reboot.");
+		goto reboot;
+	}
+
+	DefaultOperatingSystem = GetDefaultOperatingSystem(OperatingSystemSectionNames, OperatingSystemCount);
+	TimeOut = GetTimeOut();
+	
+	//
+	// Find all the message box settings and run them
+	//
+	for (Idx=0; Idx<GetNumSectionItems(SectionId); Idx++)
+	{
+		ReadSectionSettingByNumber(SectionId, Idx, SettingName, 80, SettingValue, 80);
+		
+		if (stricmp(SettingName, "MessageBox") == 0)
+		{
+			MessageBox(SettingValue);
+		}
+		else if (stricmp(SettingName, "MessageLine") == 0)
+		{
+			MessageLine(SettingValue);
+		}
 	}
 
 	for (;;)
 	{
-		nOSToBoot = RunMenu();
+		if (!DisplayMenu(OperatingSystemDisplayNames, OperatingSystemCount, DefaultOperatingSystem, TimeOut, &SelectedOperatingSystem))
+		{
+			MessageBox("Press ENTER to reboot.\n");
+			return;
+		}
 
-		switch (OSList[nOSToBoot].nOSType)
+		LoadAndBootReactOS(OperatingSystemSectionNames[SelectedOperatingSystem]);
+
+		/*switch (OSList[nOSToBoot].nOSType)
 		{
 		case OSTYPE_REACTOS:
 			LoadAndBootReactOS(OSList[nOSToBoot].name);
@@ -121,13 +146,67 @@ void BootMain(void)
 		case OSTYPE_DRIVE:
 			LoadAndBootDrive(nOSToBoot);
 			break;
-		}
-
-		DrawBackdrop();
+		}*/
 	}
 
-	MessageBox("Press any key to reboot.");
+	
+reboot:
 	RestoreScreen(ScreenBuffer);
 	showcursor();
 	gotoxy(CursorXPos, CursorYPos);
+	return;
+}
+
+ULONG GetDefaultOperatingSystem(PUCHAR OperatingSystemList[], ULONG OperatingSystemCount)
+{
+	UCHAR	DefaultOSText[80];
+	ULONG	SectionId;
+	ULONG	DefaultOS;
+	ULONG	Idx;
+
+	if (!OpenSection("FreeLoader", &SectionId))
+	{
+		return 0;
+	}
+
+	if (ReadSectionSettingByName(SectionId, "DefaultOS", DefaultOSText, 80))
+	{
+		for (Idx=0; Idx<OperatingSystemCount; Idx++)
+		{
+			if (stricmp(DefaultOSText, OperatingSystemList[Idx]) == 0)
+			{
+				DefaultOS = Idx;
+				break;
+			}
+		}
+	}
+	else
+	{
+		DefaultOS = 0;
+	}
+
+	return DefaultOS;
+}
+
+LONG GetTimeOut(VOID)
+{
+	UCHAR	TimeOutText[20];
+	ULONG	TimeOut;
+	ULONG	SectionId;
+
+	if (!OpenSection("FreeLoader", &SectionId))
+	{
+		return -1;
+	}
+
+	if (ReadSectionSettingByName(SectionId, "TimeOut", TimeOutText, 20))
+	{
+		TimeOut = atoi(TimeOutText);
+	}
+	else
+	{
+		TimeOut = -1;
+	}
+
+	return TimeOut;
 }

@@ -20,57 +20,193 @@
 #include "freeldr.h"
 #include "stdlib.h"
 #include "tui.h"
+#include "memory.h"
+#include "debug.h"
+#include "parseini.h"
 
-int		nScreenWidth = 80;		// Screen Width
-int		nScreenHeight = 25;		// Screen Height
+ULONG	nScreenWidth = 80;		// Screen Width
+ULONG	nScreenHeight = 25;		// Screen Height
 
-char	cStatusBarFgColor = COLOR_BLACK;		// Status bar foreground color
-char	cStatusBarBgColor = COLOR_CYAN;			// Status bar background color
-char	cBackdropFgColor = COLOR_WHITE;			// Backdrop foreground color
-char	cBackdropBgColor = COLOR_BLUE;			// Backdrop background color
-char	cBackdropFillStyle = MEDIUM_FILL;		// Backdrop fill style
-char	cTitleBoxFgColor = COLOR_WHITE;			// Title box foreground color
-char	cTitleBoxBgColor = COLOR_RED;			// Title box background color
-char	cMessageBoxFgColor = COLOR_WHITE;		// Message box foreground color
-char	cMessageBoxBgColor = COLOR_BLUE;		// Message box background color
-char	cMenuFgColor = COLOR_WHITE;				// Menu foreground color
-char	cMenuBgColor = COLOR_BLUE;				// Menu background color
-char	cTextColor = COLOR_YELLOW;				// Normal text color
-char	cSelectedTextColor = COLOR_BLACK;		// Selected text color
-char	cSelectedTextBgColor = COLOR_GRAY;		// Selected text background color
-char	szTitleBoxTitleText[260] = "Boot Menu";	// Title box's title text
+CHAR	cStatusBarFgColor			= COLOR_BLACK;			// Status bar foreground color
+CHAR	cStatusBarBgColor			= COLOR_CYAN;			// Status bar background color
+CHAR	cBackdropFgColor			= COLOR_WHITE;			// Backdrop foreground color
+CHAR	cBackdropBgColor			= COLOR_BLUE;			// Backdrop background color
+CHAR	cBackdropFillStyle			= MEDIUM_FILL;			// Backdrop fill style
+CHAR	cTitleBoxFgColor			= COLOR_WHITE;			// Title box foreground color
+CHAR	cTitleBoxBgColor			= COLOR_RED;			// Title box background color
+CHAR	cMessageBoxFgColor			= COLOR_WHITE;			// Message box foreground color
+CHAR	cMessageBoxBgColor			= COLOR_BLUE;			// Message box background color
+CHAR	cMenuFgColor				= COLOR_WHITE;			// Menu foreground color
+CHAR	cMenuBgColor				= COLOR_BLUE;			// Menu background color
+CHAR	cTextColor					= COLOR_YELLOW;			// Normal text color
+CHAR	cSelectedTextColor			= COLOR_BLACK;			// Selected text color
+CHAR	cSelectedTextBgColor		= COLOR_GRAY;			// Selected text background color
+CHAR	szTitleBoxTitleText[260]	= "Boot Menu";			// Title box's title text
 
-char	szMessageBoxLineText[4000] = "";
+PUCHAR	szMessageBoxLineText		= NULL;
+
+BOOL	UserInterfaceUp				= FALSE;				// Tells us if the user interface is displayed
+
+
+BOOL InitUserInterface(VOID)
+{
+	ULONG	SectionId;
+	UCHAR	SettingText[260];
+
+	DbgPrint((DPRINT_UI, "Initializing User Interface.\n"));
+	
+	szMessageBoxLineText = AllocateMemory(4096);
+	
+	if (szMessageBoxLineText == NULL)
+	{
+		return FALSE;
+	}
+
+	DbgPrint((DPRINT_UI, "Reading in UI settings from [Display] section.\n"));
+
+	if (OpenSection("Display", &SectionId))
+	{
+		if (ReadSectionSettingByName(SectionId, "TitleText", SettingText, 260))
+		{
+			strcpy(szTitleBoxTitleText, SettingText);
+		}
+		if (ReadSectionSettingByName(SectionId, "StatusBarColor", SettingText, 260))
+		{
+			cStatusBarBgColor = TextToColor(SettingText);
+		}
+		if (ReadSectionSettingByName(SectionId, "StatusBarTextColor", SettingText, 260))
+		{
+			cStatusBarFgColor = TextToColor(SettingText);
+		}
+		if (ReadSectionSettingByName(SectionId, "BackdropTextColor", SettingText, 260))
+		{
+			cBackdropFgColor = TextToColor(SettingText);
+		}
+		if (ReadSectionSettingByName(SectionId, "BackdropColor", SettingText, 260))
+		{
+			cBackdropBgColor = TextToColor(SettingText);
+		}
+		if (ReadSectionSettingByName(SectionId, "BackdropFillStyle", SettingText, 260))
+		{
+			cBackdropFillStyle = TextToFillStyle(SettingText);
+		}
+		if (ReadSectionSettingByName(SectionId, "TitleBoxTextColor", SettingText, 260))
+		{
+			cTitleBoxFgColor = TextToColor(SettingText);
+		}
+		if (ReadSectionSettingByName(SectionId, "TitleBoxColor", SettingText, 260))
+		{
+			cTitleBoxBgColor = TextToColor(SettingText);
+		}
+		if (ReadSectionSettingByName(SectionId, "MessageBoxTextColor", SettingText, 260))
+		{
+			cMessageBoxFgColor = TextToColor(SettingText);
+		}
+		if (ReadSectionSettingByName(SectionId, "MessageBoxColor", SettingText, 260))
+		{
+			cMessageBoxBgColor = TextToColor(SettingText);
+		}
+		if (ReadSectionSettingByName(SectionId, "MenuTextColor", SettingText, 260))
+		{
+			cMenuFgColor = TextToColor(SettingText);
+		}
+		if (ReadSectionSettingByName(SectionId, "MenuColor", SettingText, 260))
+		{
+			cMenuBgColor = TextToColor(SettingText);
+		}
+		if (ReadSectionSettingByName(SectionId, "TextColor", SettingText, 260))
+		{
+			cTextColor = TextToColor(SettingText);
+		}
+		if (ReadSectionSettingByName(SectionId, "SelectedTextColor", SettingText, 260))
+		{
+			cSelectedTextColor = TextToColor(SettingText);
+		}
+		if (ReadSectionSettingByName(SectionId, "SelectedColor", SettingText, 260))
+		{
+			cSelectedTextBgColor = TextToColor(SettingText);
+		}
+	}
+
+	clrscr();
+	hidecursor();
+
+	// Draw the backdrop and title box
+	DrawBackdrop();
+	
+	UserInterfaceUp = TRUE;
+
+	DbgPrint((DPRINT_UI, "InitUserInterface() returning TRUE.\n"));
+
+	return TRUE;
+}
 
 void DrawBackdrop(void)
 {
-	// Fill in the backdrop
-	FillArea(0, 0, nScreenWidth-1, nScreenHeight-1, cBackdropFillStyle, ATTR(cBackdropFgColor, cBackdropBgColor));
+	//
+	// Fill in the background (excluding title box & status bar)
+	//
+	FillArea(0,
+			TITLE_BOX_HEIGHT,
+			nScreenWidth - 1,
+			nScreenHeight - 1,
+			cBackdropFillStyle,
+			ATTR(cBackdropFgColor, cBackdropBgColor));
 
+	//
 	// Draw the title box
-	DrawBox(1, 1, nScreenWidth, 5, D_VERT, D_HORZ, TRUE, FALSE, ATTR(cTitleBoxFgColor, cTitleBoxBgColor));
+	//
+	DrawBox(1,
+			1,
+			nScreenWidth,
+			5,
+			D_VERT,
+			D_HORZ,
+			TRUE,
+			FALSE,
+			ATTR(cTitleBoxFgColor, cTitleBoxBgColor));
 
-	// Draw version
-	DrawText(3, 2, VERSION, ATTR(cTitleBoxFgColor, cTitleBoxBgColor));
+	//
+	// Draw version text
+	//
+	DrawText(3,
+			2,
+			VERSION,
+			ATTR(cTitleBoxFgColor, cTitleBoxBgColor));
+
+	//
 	// Draw copyright
-	DrawText(3, 3, "by Brian Palmer", ATTR(cTitleBoxFgColor, cTitleBoxBgColor));
-	DrawText(3, 4, "<brianp@sginet.com>", ATTR(cTitleBoxFgColor, cTitleBoxBgColor));
+	//
+	DrawText(3,
+			3,
+			"by Brian Palmer",
+			ATTR(cTitleBoxFgColor, cTitleBoxBgColor));
+	DrawText(3,
+			4,
+			"<brianp@sginet.com>",
+			ATTR(cTitleBoxFgColor, cTitleBoxBgColor));
 
+	//
 	// Draw help text
+	//
 	//DrawText(nScreenWidth-15, 4, /*"F1 for Help"*/"F8 for Options", ATTR(cTitleBoxFgColor, cTitleBoxBgColor));
 
-	// Draw title
-	DrawText((nScreenWidth/2)-(strlen(szTitleBoxTitleText)/2), 3, szTitleBoxTitleText, ATTR(cTitleBoxFgColor, cTitleBoxBgColor));
+	//
+	// Draw title text
+	//
+	DrawText( (nScreenWidth / 2) - (strlen(szTitleBoxTitleText)/2),
+			3,
+			szTitleBoxTitleText,
+			ATTR(cTitleBoxFgColor, cTitleBoxBgColor));
 
-	// Draw date
-	DrawText(nScreenWidth-9, 2, "01/02/03", ATTR(cTitleBoxFgColor, cTitleBoxBgColor));
-	// Draw time
-	DrawText(nScreenWidth-9, 3, "10:12:34", ATTR(cTitleBoxFgColor, cTitleBoxBgColor));
-
+	//
 	// Draw status bar
+	//
 	DrawStatusText("");
 
+	//
 	// Update the date & time
+	//
 	UpdateDateTime();
 }
 
@@ -234,8 +370,8 @@ void DrawStatusText(char *text)
 
 void UpdateDateTime(void)
 {
-	char	date[260];
-	char	time[260];
+	char	date[40];
+	char	time[40];
 	char	temp[20];
 	int		hour, minute, second, bPM=FALSE;
 
@@ -353,10 +489,19 @@ void MessageBox(char *text)
 	int		curline = 0;
 	int		i , j, k;
 	int		x1, x2, y1, y2;
-	char	savebuffer[8000];
+	PVOID	savebuffer;
 	char	temp[260];
 	char	key;
 
+	if (!UserInterfaceUp)
+	{
+		printf("%s", text);
+		printf("Press any key.\n");
+		getch();
+		return;
+	}
+
+	savebuffer = AllocateMemory(8000);
 	SaveScreen(savebuffer);
 	strcat(szMessageBoxLineText, text);
 
@@ -428,6 +573,7 @@ void MessageBox(char *text)
 	}
 
 	RestoreScreen(savebuffer);
+	FreeMemory(savebuffer);
 	UpdateDateTime();
 	strcpy(szMessageBoxLineText, "");
 }

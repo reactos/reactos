@@ -40,6 +40,7 @@ int		wherey(void);			// Implemented in asmcode.S
 
 int	strlen(char *str);
 char	*strcpy(char *dest, char *src);
+char	*strncpy(char *dest, char *src, size_t count);
 char	*strcat(char *dest, char *src);
 char	*strchr(const char *s, int c);
 int	strcmp(const char *string1, const char *string2);
@@ -51,7 +52,7 @@ int	tolower(int c);
 int	memcmp(const void *buf1, const void *buf2, size_t count);
 void	*memcpy(void *dest, const void *src, size_t count);
 void	*memset(void *dest, int c, size_t count);
-char	*fgets(char *string, int n, FILE *stream);
+char	*fgets(char *string, int n, PFILE stream);
 int	atoi(char *string);
 
 #define ZeroMemory(Destination, Length) memset(Destination, 0, Length)
@@ -64,18 +65,15 @@ void	sprintf(char *buffer, char *format, ...);
 char *convert_to_ascii(char *buf, int c, ...);
 
 int	biosdisk(int cmd, int drive, int head, int track, int sector, int nsects, void *buffer); // Implemented in asmcode.S
+
+BOOL BiosInt13Read(ULONG Drive, ULONG Head, ULONG Track, ULONG Sector, ULONG SectorCount, PVOID Buffer); // Implemented in asmcode.S
+BOOL BiosInt13ReadExtended(ULONG Drive, ULONG Sector, ULONG SectorCount, PVOID Buffer); // Implemented in asmcode.S
+BOOL BiosInt13ExtensionsSupported(ULONG Drive);
+
 void	stop_floppy(void);		// Implemented in asmcode.S
 int	get_heads(int drive);		// Implemented in asmcode.S
 int	get_cylinders(int drive);	// Implemented in asmcode.S
 int	get_sectors(int drive);		// Implemented in asmcode.S
-
-/* Values for biosdisk() */
-#define _DISK_RESET		0	// Unimplemented
-#define _DISK_STATUS	1	// Unimplemented
-#define _DISK_READ		2	// Reads a sector into memory
-#define _DISK_WRITE		3	// Unimplemented
-#define _DISK_VERIFY	4	// Unimplemented
-#define _DISK_FORMAT	5	// Unimplemented
 
 
 #endif  // defined __STDLIB_H

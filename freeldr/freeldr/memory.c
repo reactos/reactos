@@ -21,6 +21,15 @@
 #include "memory.h"
 #include "stdlib.h"
 #include "debug.h"
+#include "tui.h"
+
+
+//
+// Define this to 1 if you want the entire contents
+// of the memory allocation bitmap displayed
+// when a chunk is allocated or freed
+//
+#define DUMP_MEM_MAP_ON_VERIFY	0
 
 #define MEM_BLOCK_SIZE	256
 
@@ -39,6 +48,7 @@ PMEMBLOCK	HeapMemBlockArray = NULL;
 ULONG		AllocationCount = 0;
 
 VOID		VerifyHeap(VOID);
+VOID		DumpMemoryAllocMap(VOID);
 VOID		IncrementAllocationCount(VOID);
 VOID		DecrementAllocationCount(VOID);
 VOID		MemAllocTest(VOID);
@@ -66,7 +76,7 @@ VOID InitMemoryManager(PVOID BaseAddress, ULONG Length)
 	ZeroMemory(HeapMemBlockArray, (HeapMemBlockCount * sizeof(MEMBLOCK)));
 
 #ifdef DEBUG
-	DebugPrint(DPRINT_MEMORY, "Memory Manager initialized. BaseAddress = 0x%x Length = 0x%x. %d blocks in heap.\n", BaseAddress, Length, HeapMemBlockCount);
+	DbgPrint((DPRINT_MEMORY, "Memory Manager initialized. BaseAddress = 0x%x Length = 0x%x. %d blocks in heap.\n", BaseAddress, Length, HeapMemBlockCount));
 	//MemAllocTest();
 #endif
 }
@@ -78,9 +88,11 @@ PVOID AllocateMemory(ULONG NumberOfBytes)
 	ULONG	NumFree;
 	PVOID	MemPointer;
 
-#ifdef DEBUG
-	VerifyHeap();
-#endif DEBUG
+	if (NumberOfBytes == 0)
+	{
+		DbgPrint((DPRINT_MEMORY, "AllocateMemory() called for 0 bytes. Returning NULL.\n"));
+		return NULL;
+	}
 
 	// Find out how many blocks it will take to
 	// satisfy this allocation
@@ -116,6 +128,8 @@ PVOID AllocateMemory(ULONG NumberOfBytes)
 	// then return NULL
 	if (NumFree < BlocksNeeded)
 	{
+		DbgPrint((DPRINT_MEMORY, "Memory allocation failed. Not enough free memory to allocate %d bytes. AllocationCount: %d\n", NumberOfBytes, AllocationCount));
+		MessageBox("Memory allocation failed: out of memory.");
 		return NULL;
 	}
 
@@ -135,7 +149,8 @@ PVOID AllocateMemory(ULONG NumberOfBytes)
 
 #ifdef DEBUG
 	IncrementAllocationCount();
-	DebugPrint(DPRINT_MEMORY, "Allocated %d bytes (%d blocks) of memory starting at block %d. AllocationCount: %d\n", NumberOfBytes, BlocksNeeded, Idx, AllocationCount);
+	DbgPrint((DPRINT_MEMORY, "Allocated %d bytes (%d blocks) of memory starting at block %d. AllocCount: %d\n", NumberOfBytes, BlocksNeeded, Idx, AllocationCount));
+	VerifyHeap();
 #endif DEBUG
 
 	// Now return the pointer
@@ -149,12 +164,11 @@ VOID FreeMemory(PVOID MemBlock)
 	ULONG	Idx;
 
 #ifdef DEBUG
-	VerifyHeap();
 
 	// Make sure we didn't get a bogus pointer
 	if ((MemBlock < HeapBaseAddress) || (MemBlock > (HeapBaseAddress + HeapLengthInBytes)))
 	{
-		BugCheck1("Bogus memory pointer (0x%x) passed to FreeMemory()\n", MemBlock);
+		BugCheck((DPRINT_MEMORY, "Bogus memory pointer (0x%x) passed to FreeMemory()\n", MemBlock));
 	}
 #endif DEBUG
 
@@ -167,7 +181,7 @@ VOID FreeMemory(PVOID MemBlock)
 	// Make sure we didn't get a bogus pointer
 	if ((BlockCount < 1) || (BlockCount > HeapMemBlockCount))
 	{
-		BugCheck1("Invalid block count in heap page header. HeapMemBlockArray[BlockNumber].BlocksAllocated = %d\n", HeapMemBlockArray[BlockNumber].BlocksAllocated);
+		BugCheck((DPRINT_MEMORY, "Invalid block count in heap page header. HeapMemBlockArray[BlockNumber].BlocksAllocated = %d\n", HeapMemBlockArray[BlockNumber].BlocksAllocated));
 	}
 #endif
 
@@ -181,7 +195,8 @@ VOID FreeMemory(PVOID MemBlock)
 
 #ifdef DEBUG
 	DecrementAllocationCount();
-	DebugPrint(DPRINT_MEMORY, "Freed %d blocks of memory starting at block %d. AllocationCount: %d\n", BlockCount, BlockNumber, AllocationCount);
+	DbgPrint((DPRINT_MEMORY, "Freed %d blocks of memory starting at block %d. AllocationCount: %d\n", BlockCount, BlockNumber, AllocationCount));
+	VerifyHeap();
 #endif DEBUG
 }
 
@@ -191,6 +206,11 @@ VOID VerifyHeap(VOID)
 	ULONG	Idx;
 	ULONG	Idx2;
 	ULONG	Count;
+
+	if (DUMP_MEM_MAP_ON_VERIFY)
+	{
+		DumpMemoryAllocMap();
+	}
 
 	// Loop through the array and verify that
 	// everything is kosher
@@ -203,7 +223,7 @@ VOID VerifyHeap(VOID)
 			// had better have a length that is within range
 			if ((HeapMemBlockArray[Idx].BlocksAllocated < 1) || (HeapMemBlockArray[Idx].BlocksAllocated > (HeapMemBlockCount - Idx)))
 			{
-				BugCheck1("Allocation length out of range in heap table. HeapMemBlockArray[Idx].BlocksAllocated = %d\n", HeapMemBlockArray[Idx].BlocksAllocated);
+				BugCheck((DPRINT_MEMORY, "Allocation length out of range in heap table. HeapMemBlockArray[Idx].BlocksAllocated = %d\n", HeapMemBlockArray[Idx].BlocksAllocated));
 			}
 
 			// Now go through and verify that the rest of
@@ -216,28 +236,58 @@ VOID VerifyHeap(VOID)
 				// Make sure it's allocated
 				if (HeapMemBlockArray[Idx + Idx2].MemBlockAllocated != TRUE)
 				{
-					BugCheck0("Heap table indicates hole in memory allocation. HeapMemBlockArray[Idx + Idx2].MemBlockAllocated != TRUE\n");
+					BugCheck((DPRINT_MEMORY, "Heap table indicates hole in memory allocation. HeapMemBlockArray[Idx + Idx2].MemBlockAllocated != TRUE\n"));
 				}
 
 				// Make sure the length is zero
 				if (HeapMemBlockArray[Idx + Idx2].BlocksAllocated != 0)
 				{
-					BugCheck0("Allocation chain has non-zero value in non-first block in heap table. HeapMemBlockArray[Idx + Idx2].BlocksAllocated != 0\n");
+					BugCheck((DPRINT_MEMORY, "Allocation chain has non-zero value in non-first block in heap table. HeapMemBlockArray[Idx + Idx2].BlocksAllocated != 0\n"));
 				}
 			}
 
 			// Move on to the next run
-			Idx += Count;
+			Idx += (Count - 1);
 		}
 		else
 		{
 			// Nope, not allocated so make sure the length is zero
 			if (HeapMemBlockArray[Idx].BlocksAllocated != 0)
 			{
-				BugCheck0("Free block is start of memory allocation. HeapMemBlockArray[Idx].BlocksAllocated != 0\n");
+				BugCheck((DPRINT_MEMORY, "Free block is start of memory allocation. HeapMemBlockArray[Idx].BlocksAllocated != 0\n"));
 			}
 		}
 	}
+}
+
+VOID DumpMemoryAllocMap(VOID)
+{
+	ULONG	Idx;
+
+	DbgPrint((DPRINT_MEMORY, "----------- Memory Allocation Bitmap -----------\n"));
+
+	for (Idx=0; Idx<HeapMemBlockCount; Idx++)
+	{
+		if ((Idx % 32) == 0)
+		{
+			DbgPrint((DPRINT_MEMORY, "\n%x:\t", (Idx * 256)));
+		}
+		else if ((Idx % 4) == 0)
+		{
+			DbgPrint((DPRINT_MEMORY, " "));
+		}
+
+		if (HeapMemBlockArray[Idx].MemBlockAllocated)
+		{
+			DbgPrint((DPRINT_MEMORY, "X"));
+		}
+		else
+		{
+			DbgPrint((DPRINT_MEMORY, "*"));
+		}
+	}
+
+	DbgPrint((DPRINT_MEMORY, "\n"));
 }
 
 VOID IncrementAllocationCount(VOID)
@@ -266,6 +316,8 @@ VOID MemAllocTest(VOID)
 	getch();
 	MemPtr3 = AllocateMemory(4096);
 	printf("MemPtr3: 0x%x\n", (int)MemPtr3);
+	DumpMemoryAllocMap();
+	VerifyHeap();
 	getch();
 
 	FreeMemory(MemPtr2);

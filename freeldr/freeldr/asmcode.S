@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1999, 2000  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1999, 2000, 2001  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -376,10 +376,8 @@ EXTERN(_gotoxy)
 	ret
 
 /*
- * int biosdisk(int cmd, int drive, int head, int track, int sector, int nsects, void *buffer);
+ * BOOL BiosInt13Read(ULONG Drive, ULONG Head, ULONG Track, ULONG Sector, ULONG SectorCount, PVOID Buffer);
  */
-_biosdisk_cmd:
-	.long	0
 _biosdisk_drive:
 	.long	0
 _biosdisk_head:
@@ -396,7 +394,7 @@ _biosdisk_retval:
 	.long	0
 _biosdisk_retrycount:
 	.byte	0
-EXTERN(_biosdisk)
+EXTERN(_BiosInt13Read)
 	.code32
 
 	push	%ebp
@@ -408,18 +406,16 @@ EXTERN(_biosdisk)
 
 	/* Get parameters */
 	movl	0x1c(%esp),%eax
-	movl	%eax,_biosdisk_cmd
-	movl	0x20(%esp),%eax
 	movl	%eax,_biosdisk_drive
-	movl	0x24(%esp),%eax
+	movl	0x20(%esp),%eax
 	movl	%eax,_biosdisk_head
-	movl	0x28(%esp),%eax
+	movl	0x24(%esp),%eax
 	movl	%eax,_biosdisk_track
-	movl	0x2c(%esp),%eax
+	movl	0x28(%esp),%eax
 	movl	%eax,_biosdisk_sector
-	movl	0x30(%esp),%eax
+	movl	0x2c(%esp),%eax
 	movl	%eax,_biosdisk_nsects
-	movl	0x34(%esp),%eax
+	movl	0x30(%esp),%eax
 	movl	%eax,_biosdisk_buffer
 
 	call	switch_to_real
@@ -429,9 +425,11 @@ EXTERN(_biosdisk)
 	movb	$3,_biosdisk_retrycount	// Set the retry count to 3
 
 _biosdisk_read:
-	movw	$SCRATCHSEG,%ax			// Load ES with 7000
-	movw	%ax,%es					//  and BX with 0
-	movw	$SCRATCHOFF,%bx			//  so that the sector gets loaded to 7000:0000
+	movl	_biosdisk_buffer,%eax	// Get buffer address in eax
+	shrl	$4,%eax					// Make linear address into segment
+	movw	%ax,%es					// Load ES with segment
+	movl	_biosdisk_buffer,%ebx	//  and BX with offset
+	andl	$0x0f,%ebx				//  so that data gets loaded to [ES:BX]
 	movb	_biosdisk_sector,%cl	// Get the sector in CL
     movw	_biosdisk_track,%ax		// Cylinder in AX
 	movb	%al,%ch					// Now put it in CH
@@ -487,19 +485,178 @@ _biosdisk_done:
 
 	.code32
 
-	/* Copy the sector contents from 7000:0000 to the buffer */
-	cld
-	movl	$SCRATCHAREA,%esi
-	movl	_biosdisk_buffer,%edi
-	movl	_biosdisk_nsects,%eax
-	movl	$0x100,%ebx
-	mull	%ebx
-	movl	%eax,%ecx
-	rep
-	movsw
-
 	movl	_biosdisk_retval,%eax	// Get return value
 	//movl	$1,%eax
+
+	pop		%edx
+	pop		%ecx
+	pop		%ebx
+	pop		%edi
+	pop		%esi
+	pop		%ebp
+	ret
+
+/*
+ * BOOL BiosInt13ReadExtended(ULONG Drive, ULONG Sector, ULONG SectorCount, PVOID Buffer);
+ */
+_disk_address_packet:
+_packet_size:
+	.byte	0x10
+_packet_reserved:
+	.byte	0
+_packet_sector_count:
+	.word	0
+_packet_transfer_buffer_segment:
+	.word	0
+_packet_transfer_buffer_offset:
+	.word	0
+_packet_lba_sector_number:
+	.quad	0
+_packet_64bit_flat_address:
+	.quad	0
+_int13_extended_drive:
+	.long	0
+_int13_extended_sector_count:
+	.long	0
+_int13_extended_retval:
+	.long	0
+_int13_extended_retrycount:
+	.byte	0
+EXTERN(_BiosInt13ReadExtended)
+	.code32
+
+	push	%ebp
+	push	%esi
+	push	%edi
+	push	%ebx
+	push	%ecx
+	push	%edx
+
+	/* Get parameters */
+	movl	0x1c(%esp),%eax
+	movl	%eax,_int13_extended_drive
+	movl	0x20(%esp),%eax
+	movl	%eax,_packet_lba_sector_number
+	movl	0x24(%esp),%eax
+	movw	%ax,_packet_sector_count
+	movl	%eax,_int13_extended_sector_count
+	movl	0x28(%esp),%eax							// Get buffer address in eax
+	shrl	$4,%eax									// Make linear address into segment
+	movw	%ax,_packet_transfer_buffer_segment		// Save segment
+	movl	0x28(%esp),%eax							// Get buffer address in eax
+	andl	$0x0f,%eax								// Make linear address into offset
+	movw	%ax,_packet_transfer_buffer_offset		// Save offset
+
+	call	switch_to_real
+
+	.code16
+	pushw	%es										// Save this just in case
+	movb	$3,_int13_extended_retrycount			// Set the retry count to 3
+
+_int13_extended_read:
+	movb	_int13_extended_drive,%dl				// Get the drive
+	movb	$42,%ah									// BIOS int 0x13, function 42h - IBM/MS INT 13 Extensions - EXTENDED READ
+	movw	$_disk_address_packet,%si				// DS:SI -> disk address packet
+	int		$0x13									// Read sectors
+
+	movb	$1,%al									// Set the return value to be one (will be set to zero later if needed)
+	jc		_int13_extended_error					// Jump if error (CF = 1 on error)
+
+	movl	_int13_extended_sector_count,%eax		// Get the sector count in eax
+	cmpw	_packet_sector_count,%ax				// See how many sectors we actually read (returned in disk address packet sector count)
+	jne		_int13_extended_error					// Jump if not equal
+
+	jmp		_int13_extended_done
+
+
+_int13_extended_error:
+	cmpb	$0x11,%ah								// Check and see if it was a corrected ECC error
+	je		_int13_extended_done					// If so then the data is still good, if not fail
+
+	movb	_int13_extended_retrycount,%al			// Get the current retry count
+	decb	%al										// Decrement it
+	movb	%al,_int13_extended_retrycount			// Save it
+	cmpb	$0,%al									// Is it zero?
+	jz		_int13_extended_zero					// Yes, return zero
+
+	movb	$0,%ah									// BIOS int 0x13, function 0 - Reset Disk System
+	movb	_int13_extended_drive,%dl				// Get the drive
+	int		$0x13									// Reset the disk system
+	jmp		_int13_extended_read					// Try reading again
+
+_int13_extended_zero:
+	movb	$0,%al									// We will return zero
+
+_int13_extended_done:
+	movzbl	%al,%eax								// Put the number of sectors read into EAX
+	movl	%eax,_int13_extended_retval				// Save it as the return value
+
+	popw	%es										// Restore ES
+	call	switch_to_prot
+
+	.code32
+
+	movl	_int13_extended_retval,%eax				// Get return value
+	//movl	$1,%eax
+
+	pop		%edx
+	pop		%ecx
+	pop		%ebx
+	pop		%edi
+	pop		%esi
+	pop		%ebp
+	ret
+
+/*
+ * BOOL BiosInt13ExtensionsSupported(ULONG Drive);
+ */
+_int13_extension_check_drive:
+	.long	0
+_int13_extension_check_retval:
+	.long	0
+EXTERN(_BiosInt13ExtensionsSupported)
+	.code32
+
+	push	%ebp
+	push	%esi
+	push	%edi
+	push	%ebx
+	push	%ecx
+	push	%edx
+
+	/* Get parameters */
+	movl	0x1c(%esp),%eax
+	movl	%eax,_int13_extension_check_drive
+
+	call	switch_to_real
+
+	.code16
+												// Now make sure this computer supports extended reads
+	movb	$0x41,%ah							// AH = 41h
+	movw	$0x55aa,%bx							// BX = 55AAh
+	movb	_int13_extension_check_drive,%dl	// DL = drive (80h-FFh)
+	int		$0x13								// IBM/MS INT 13 Extensions - INSTALLATION CHECK
+	jc		_int13_extension_check_error		// CF set on error (extensions not supported)
+	cmpw	$0x55aa,%bx							// BX = AA55h if installed
+	jne		_int13_extension_check_error
+	testb	$1,%cl								// CX = API subset support bitmap
+	jz		_int13_extension_check_error		// Bit 0, extended disk access functions (AH=42h-44h,47h,48h) supported
+
+												// If we get here then we passed all the int13 extension tests
+	movl	$1,_int13_extension_check_retval	// Set return value to TRUE
+	jmp		_int13_extension_check_done
+
+_int13_extension_check_error:
+
+	movl	$0,_int13_extension_check_retval	// The tests failed so return FALSE
+
+_int13_extension_check_done:
+
+	call	switch_to_prot
+
+	.code32
+
+	movl	_int13_extension_check_retval,%eax				// Get return value
 
 	pop		%edx
 	pop		%ecx
@@ -996,7 +1153,7 @@ EXTERN(_get_heads)
 	jmp		_get_heads_done
 
 _get_heads_error:
-	movl	$0x0e,_biosdisk_retval
+	movl	$0xff,_biosdisk_retval
 
 _get_heads_done:
 
@@ -1049,7 +1206,7 @@ EXTERN(_get_cylinders)
 	jmp		_get_cylinders_done
 
 _get_cylinders_error:
-	movl	$0x00,_biosdisk_retval
+	movl	$0xff,_biosdisk_retval
 
 _get_cylinders_done:
 
@@ -1098,7 +1255,7 @@ EXTERN(_get_sectors)
 	jmp		_get_sectors_done
 
 _get_sectors_error:
-	movl	$0x00,_biosdisk_retval
+	movl	$0xff,_biosdisk_retval
 
 _get_sectors_done:
 

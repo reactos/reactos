@@ -22,20 +22,26 @@
 #include "stdlib.h"
 #include "rs232.h"
 #include "parseini.h"
+#include "portio.h"
 
 #ifdef DEBUG
 
-ULONG	DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY;
+ULONG	DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY | DPRINT_FILESYSTEM | DPRINT_UI;
 
-#define	SCREEN		0
-#define	RS232		1
+#define	SCREEN				0
+#define	RS232				1
+#define BOCHS				2
 
-#define	COM1		1
-#define	COM2		2
-#define	COM3		3
-#define	COM4		4
+#define	COM1				1
+#define	COM2				2
+#define	COM3				3
+#define	COM4				4
 
-ULONG	DebugPort = RS232; //SCREEN;
+#define BOCHS_OUTPUT_PORT	0xe9
+
+//ULONG	DebugPort = RS232;
+//ULONG	DebugPort = SCREEN;
+ULONG	DebugPort = BOCHS;
 ULONG	ComPort = COM1;
 ULONG	BaudRate = 19200;
 
@@ -47,13 +53,30 @@ VOID DebugInit(VOID)
 	}
 }
 
-void DebugPrint(ULONG Mask, char *format, ...)
+VOID DebugPrintChar(UCHAR Character)
+{
+	if (DebugPort == RS232)
+	{
+		Rs232PortPutByte(Character);
+		if (Character == '\n')
+		{
+			Rs232PortPutByte('\r');
+		}
+	}
+	else if (DebugPort == BOCHS)
+	{
+		WRITE_PORT_UCHAR((PUCHAR)BOCHS_OUTPUT_PORT, Character);
+	}
+	else
+	{
+		putchar(Character);
+	}
+}
+
+VOID DebugPrint(ULONG Mask, char *format, ...)
 {
 	int *dataptr = (int *) &format;
 	char c, *ptr, str[16];
-	char buffer[512];
-	char *p = buffer;
-	int i;
 	
 	// Mask out unwanted debug messages
 	if (!(Mask & DebugPrintMask))
@@ -65,60 +88,50 @@ void DebugPrint(ULONG Mask, char *format, ...)
 
 	while ((c = *(format++)))
 	{
-	  if (c != '%')
-	  {
-	*p = c;
-	p++;
-	  }
-	  else
-	switch (c = *(format++))
-	  {
-	  case 'd': case 'u': case 'x':
-		*convert_to_ascii(str, c, *((unsigned long *) dataptr++)) = 0;
-
-		ptr = str;
-
-		while (*ptr)
+		if (c != '%')
 		{
-		  *p = *(ptr++);
-		  p++;
+			DebugPrintChar(c);
 		}
-		break;
-
-	  case 'c':
-		*p = (*(dataptr++))&0xff;
-		p++;
-		break;
-
-	  case 's':
-		ptr = (char *)(*(dataptr++));
-
-		while ((c = *(ptr++)))
+		else
 		{
-		  *p = c;
-		  p++;
-		}
-		break;
-	  }
-	}
-	*p=0;
-
-
-	if (DebugPort == RS232)
-	{
-		for (i=0; buffer[i] != 0; i++)
-		{
-			Rs232PortPutByte(buffer[i]);
-			if (buffer[i] == '\n')
+			switch (c = *(format++))
 			{
-				Rs232PortPutByte('\r');
+			case 'd': case 'u': case 'x':
+				
+				*convert_to_ascii(str, c, *((unsigned long *) dataptr++)) = 0;
+
+				ptr = str;
+
+				while (*ptr)
+				{
+					DebugPrintChar(*(ptr++));
+				}
+				break;
+
+			case 'c':
+
+				DebugPrintChar((*(dataptr++))&0xff);
+				break;
+
+			case 's':
+
+				ptr = (char *)(*(dataptr++));
+
+				while ((c = *(ptr++)))
+				{
+					DebugPrintChar(c);
+				}
+				break;
 			}
 		}
 	}
-	else
+
+
+	if (DebugPort == SCREEN)
 	{
-		print(buffer);
+		//getch();
 	}
+
 }
 
 #endif // defined DEBUG

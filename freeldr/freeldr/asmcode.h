@@ -39,18 +39,13 @@
 #define	NR_TASKS	128		/* Space reserved in the GDT for TSS descriptors */
 
 #define STACK16ADDR	0x7000	/* The 16-bit stack top will be at 0000:7000 */
-#define STACK32ADDR	0x60000	/* The 32-bit stack top will be at 6000:0000, or 0x60000 */
+#define STACK32ADDR	0xA0000	/* The 32-bit stack top will be at 9000:FFFF, or 0x9FFFF */
 
-#define FILESYSADDR	0x80000	/* The filesystem data address will be at 8000:0000, or 0x80000 */
+#define DISKREADBUFFER	0x90000	/* Buffer to store data read in from the disk via the BIOS */
 
-#define FATCLUSTERBUF	0x60000	/* The fat filesystem's cluster buffer */
-
-#define SCREENBUFFER	0x68000	/* The screen contents will be saved here */
-#define FREELDRINIADDR	0x6C000	/* The freeldr.ini load address will be at 6000:C000, or 0x6C000 */
-
-#define	SCRATCHSEG	0x7000	/* The 512-byte fixed scratch area will be at 7000:0000, or 0x70000 */
-#define	SCRATCHOFF	0x0000	/* The 512-byte fixed scratch area will be at 7000:0000, or 0x70000 */
-#define	SCRATCHAREA	0x70000	/* The 512-byte fixed scratch area will be at 7000:0000, or 0x70000 */
+#define SCREENBUFFER	0x98000	/* The screen contents will be saved here */
+#define SCREENXCOORD	0x98FA0 /* Address of the byte that contains the current column of the cursor */
+#define SCREENYCOORD	0x98FA1 /* Address of the byte that contains the current row of the cursor */
 
 /* Makes "x" a global variable or label */
 #define EXTERN(x)	.global x; x:

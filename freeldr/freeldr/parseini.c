@@ -23,16 +23,17 @@
 #include "fs.h"
 #include "stdlib.h"
 #include "memory.h"
+#include "debug.h"
 
 PUCHAR	FreeLoaderIniFileData = NULL;
 ULONG	FreeLoaderIniFileSize = 0;
 
-BOOL ParseIniFile(void)
+BOOL ParseIniFile(VOID)
 {
-	int		i;
-	char	name[1024];
-	char	value[1024];
-	FILE	Freeldr_Ini;	// File handle for freeldr.ini
+	//int		i;
+	//char	name[1024];
+	//char	value[1024];
+	PFILE	Freeldr_Ini;	// File handle for freeldr.ini
 
 	// Open the boot drive for file access
 	if (!OpenDiskDrive(BootDrive, 0))
@@ -42,28 +43,31 @@ BOOL ParseIniFile(void)
 	}
 
 	// Try to open freeldr.ini or fail
-	if (!OpenFile("freeldr.ini", &Freeldr_Ini))
+	Freeldr_Ini = OpenFile("freeldr.ini");
+	if (Freeldr_Ini == NULL)
 	{
 		printf("FREELDR.INI not found.\nYou need to re-install FreeLoader.\n");
 		return FALSE;
 	}
 
 	// Get the file size & allocate enough memory for it
-	FreeLoaderIniFileSize = GetFileSize(&Freeldr_Ini);
+	FreeLoaderIniFileSize = GetFileSize(Freeldr_Ini);
 	FreeLoaderIniFileData = AllocateMemory(FreeLoaderIniFileSize);
 
 	// If we are out of memory then return FALSE
 	if (FreeLoaderIniFileData == NULL)
 	{
 		printf("Out of memory while loading FREELDR.INI.\n");
+		CloseFile(Freeldr_Ini);
 		return FALSE;
 	}
 
 	// Read freeldr.ini off the disk
-	ReadFile(&Freeldr_Ini, FreeLoaderIniFileSize, FreeLoaderIniFileData);
+	ReadFile(Freeldr_Ini, FreeLoaderIniFileSize, NULL, FreeLoaderIniFileData);
+	CloseFile(Freeldr_Ini);
 
 	// Make sure the [FREELOADER] section exists
-	if (!GetNumSectionItems("FREELOADER"))
+	/*if (OpenSection("FREELOADER", NULL))
 	{
 		printf("Section [FREELOADER] not found in FREELDR.INI.\nYou need to re-install FreeLoader.\n");
 		return FALSE;
@@ -81,7 +85,7 @@ BOOL ParseIniFile(void)
 		}
 		else
 			SetSetting(name, value);
-	}
+	}*/
 
 	return TRUE;
 }
@@ -122,208 +126,202 @@ ULONG GetNextLineOfFileData(PUCHAR Buffer, ULONG BufferSize, ULONG CurrentOffset
 	return CurrentOffset;
 }
 
-ULONG GetOffsetOfFirstLineOfSection(PUCHAR SectionName)
+BOOL OpenSection(PUCHAR SectionName, PULONG SectionId)
 {
-	char	str[1024];
-	char	real_section[1024];
-	ULONG	freeldr_ini_offset;
+	UCHAR	TempString[80];
+	UCHAR	RealSectionName[80];
+	ULONG	FileOffset;
 	BOOL	SectionFound = FALSE;
 
+	//
 	// Get the real section name
-	strcpy(real_section, "[");
-	strcat(real_section, SectionName);
-	strcat(real_section, "]");
+	//
+	strcpy(RealSectionName, "[");
+	strcat(RealSectionName, SectionName);
+	strcat(RealSectionName, "]");
 
+	//
 	// Get to the beginning of the file
-	freeldr_ini_offset = 0;
+	//
+	FileOffset = 0;
 
+	//
 	// Find the section
-	while (freeldr_ini_offset < FreeLoaderIniFileSize)
+	//
+	while (FileOffset < FreeLoaderIniFileSize)
 	{
+		//
 		// Read a line
-		freeldr_ini_offset = GetNextLineOfFileData(str, 1024, freeldr_ini_offset);
+		//
+		FileOffset = GetNextLineOfFileData(TempString, 80, FileOffset);
 
-		// Skip comments
-		if (str[0] == '#')
-			continue;
-
-		// Skip blank lines
-		if (!strlen(str))
-			continue;
-
+		//
 		// If it isn't a section header then continue on
-		if (str[0] != '[')
+		//
+		if (TempString[0] != '[')
 			continue;
 
+		//
 		// Check and see if we found it
-		if (stricmp(str, real_section) == 0)
+		//
+		if (stricmp(TempString, RealSectionName) == 0)
 		{
 			SectionFound = TRUE;
 			break;
 		}
 	}
 
-	// If we didn't find the section then we're outta here
-	if (!SectionFound)
-		return 0;
+	if (SectionId)
+	{
+		*SectionId = FileOffset;
+	}
 
-	return freeldr_ini_offset;
+	return SectionFound;
 }
 
-ULONG GetNumSectionItems(PUCHAR SectionName)
+ULONG GetNumSectionItems(ULONG SectionId)
 {
-	UCHAR	str[1024];
-	ULONG	num_items = 0;
-	ULONG	freeldr_ini_offset;
-
-	// Get to the beginning of the section
-	freeldr_ini_offset = GetOffsetOfFirstLineOfSection(SectionName);
-
-	// If the section wasn't found then exit
-	if (freeldr_ini_offset == 0)
-	{
-		return 0;
-	}
+	UCHAR	TempString[80];
+	ULONG	SectionItemCount = 0;
 
 	// Now count how many settings are in this section
-	while (freeldr_ini_offset < FreeLoaderIniFileSize)
+	while (SectionId < FreeLoaderIniFileSize)
 	{
 		// Read a line
-		freeldr_ini_offset = GetNextLineOfFileData(str, 1024, freeldr_ini_offset);
+		SectionId = GetNextLineOfFileData(TempString, 80, SectionId);
+
+		// If we hit a new section then we're done
+		if (TempString[0] == '[')
+			break;
 
 		// Skip comments
-		if (str[0] == '#')
+		if (TempString[0] == '#')
 			continue;
 
 		// Skip blank lines
-		if (!strlen(str))
+		if (!strlen(TempString))
 			continue;
 
-		// If we hit a new section then we're done
-		if (str[0] == '[')
-			break;
-
-		num_items++;
+		SectionItemCount++;
 	}
 
-	return num_items;
+	return SectionItemCount;
 }
 
-BOOL ReadSectionSettingByNumber(PUCHAR SectionName, ULONG SettingNumber, PUCHAR SettingName, PUCHAR SettingValue)
+BOOL ReadSectionSettingByNumber(ULONG SectionId, ULONG SettingNumber, PUCHAR SettingName, ULONG NameSize, PUCHAR SettingValue, ULONG ValueSize)
 {
-	UCHAR	str[1024];
-	ULONG	num_items = 0;
-	ULONG	i;
-	ULONG	freeldr_ini_offset;
+	UCHAR	TempString[1024];
+	ULONG	SectionItemCount = 0;
+	ULONG	Idx;
+	ULONG	FileOffset;
 
+	//
 	// Get to the beginning of the section
-	freeldr_ini_offset = GetOffsetOfFirstLineOfSection(SectionName);
+	//
+	FileOffset = SectionId;
 
-	// If the section wasn't found then exit
-	if (freeldr_ini_offset == 0)
-	{
-		return 0;
-	}
-
+	//
 	// Now find the setting we are looking for
-	while (freeldr_ini_offset < FreeLoaderIniFileSize)
+	//
+	do
 	{
 		// Read a line
-		freeldr_ini_offset = GetNextLineOfFileData(str, 1024, freeldr_ini_offset);
+		FileOffset = GetNextLineOfFileData(TempString, 1024, FileOffset);
 
 		// Skip comments
-		if (str[0] == '#')
+		if (TempString[0] == '#')
 			continue;
 
 		// Skip blank lines
-		if (!strlen(str))
+		if (!strlen(TempString))
 			continue;
 
 		// If we hit a new section then we're done
-		if (str[0] == '[')
+		if (TempString[0] == '[')
 			break;
 
-		// Increment setting number
-		num_items++;
-
 		// Check and see if we found the setting
-		if (num_items == SettingNumber)
+		if (SectionItemCount == SettingNumber)
 		{
-			for (i=0; i<strlen(str); i++)
+			for (Idx=0; Idx<strlen(TempString); Idx++)
 			{
 				// Check and see if this character is the separator
-				if (str[i] == '=')
+				if (TempString[Idx] == '=')
 				{
-					SettingName[i] = '\0';
+					SettingName[Idx] = '\0';
 
-					strcpy(SettingValue, str+i+1);
+					strncpy(SettingValue, TempString + Idx + 1, ValueSize);
 
 					return TRUE;
 				}
-				else
-					SettingName[i] = str[i];
+				else if (Idx < NameSize)
+				{
+					SettingName[Idx] = TempString[Idx];
+				}
 			}
 		}
+
+		// Increment setting number
+		SectionItemCount++;
 	}
+	while (FileOffset < FreeLoaderIniFileSize);
 
 	return FALSE;
 }
 
-BOOL ReadSectionSettingByName(PUCHAR SectionName, PUCHAR SettingName, PUCHAR SettingValue)
+BOOL ReadSectionSettingByName(ULONG SectionId, PUCHAR SettingName, PUCHAR Buffer, ULONG BufferSize)
 {
-	UCHAR	str[1024];
-	UCHAR	temp[1024];
-	ULONG	i;
-	ULONG	freeldr_ini_offset;
+	UCHAR	TempString[1024];
+	UCHAR	TempBuffer[80];
+	ULONG	Idx;
+	ULONG	FileOffset;
 
+	//
 	// Get to the beginning of the section
-	freeldr_ini_offset = GetOffsetOfFirstLineOfSection(SectionName);
+	//
+	FileOffset = SectionId;
 
-	// If the section wasn't found then exit
-	if (freeldr_ini_offset == 0)
-	{
-		return 0;
-	}
-
+	//
 	// Now find the setting we are looking for
-	while (freeldr_ini_offset < FreeLoaderIniFileSize)
+	//
+	while (FileOffset < FreeLoaderIniFileSize)
 	{
 		// Read a line
-		freeldr_ini_offset = GetNextLineOfFileData(str, 1024, freeldr_ini_offset);
+		FileOffset = GetNextLineOfFileData(TempString, 1024, FileOffset);
 
 		// Skip comments
-		if (str[0] == '#')
+		if (TempString[0] == '#')
 			continue;
 
 		// Skip blank lines
-		if (!strlen(str))
+		if (!strlen(TempString))
 			continue;
 
 		// If we hit a new section then we're done
-		if (str[0] == '[')
+		if (TempString[0] == '[')
 			break;
 
 		// Extract the setting name
-		for (i=0; i<strlen(str); i++)
+		for (Idx=0; Idx<strlen(TempString); Idx++)
 		{
-			if (str[i] != '=')
-				temp[i] = str[i];
+			if (TempString[Idx] != '=')
+				TempBuffer[Idx] = TempString[Idx];
 			else
 			{
-				temp[i] = '\0';
+				TempBuffer[Idx] = '\0';
 				break;
 			}
 		}
 
 		// Check and see if we found the setting
-		if (stricmp(temp, SettingName) == 0)
+		if (stricmp(TempBuffer, SettingName) == 0)
 		{
-			for (i=0; i<strlen(str); i++)
+			for (Idx=0; Idx<strlen(TempString); Idx++)
 			{
 				// Check and see if this character is the separator
-				if (str[i] == '=')
+				if (TempString[Idx] == '=')
 				{
-					strcpy(SettingValue, str+i+1);
+					strcpy(Buffer, TempString + Idx + 1);
 
 					return TRUE;
 				}
@@ -434,7 +432,7 @@ BOOL IsValidSetting(char *setting, char *value)
 	return FALSE;
 }
 
-void SetSetting(char *setting, char *value)
+/*void SetSetting(char *setting, char *value)
 {
 	char	v[260];
 
@@ -519,4 +517,4 @@ void SetSetting(char *setting, char *value)
 	}
 	else if(stricmp(setting, "TimeOut") == 0)
 		nTimeOut = atoi(value);
-}
+}*/

@@ -18,13 +18,13 @@
 #
 	
 
-export CC	= gcc
-export LD	= ld
-export AR	= ar
-export RM	= cmd /C del
-export CP	= cmd /C copy
+export CC		= gcc
+export LD		= ld
+export AR		= ar
+export RM		= cmd /C del
+export CP		= cmd /C copy
 export NASM_CMD	= nasm
-export MAKE	= make
+export MAKE		= make
 
 .PHONY : bootsect freeldr install clean
 

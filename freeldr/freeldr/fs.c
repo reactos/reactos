@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1999, 2000  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1999, 2000, 2001  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,251 +19,238 @@
 
 #include "freeldr.h"
 #include "fs.h"
+#include "fat.h"
 #include "stdlib.h"
 #include "tui.h"
 #include "asmcode.h"
-
-#define	FS_DO_ERROR(s)	\
-	{ \
-		if (UserInterfaceUp) \
-			MessageBox(s); \
-		else \
-		{ \
-			printf(s); \
-			printf("\nPress any key\n"); \
-			getch(); \
-		} \
-	}
+#include "debug.h"
 
 
-int		nSectorBuffered  = -1;	// Tells us which sector was read into SectorBuffer[]
+/////////////////////////////////////////////////////////////////////////////////////////////
+// DATA
+/////////////////////////////////////////////////////////////////////////////////////////////
 
-BYTE	SectorBuffer[512];		// 512 byte buffer space for read operations, ReadOneSector reads to here
+GEOMETRY	DriveGeometry;
+ULONG		VolumeHiddenSectors;
+ULONG		CurrentlyOpenDriveNumber;
+ULONG		FileSystemType = 0;			// Type of filesystem on boot device, set by OpenDiskDrive()
 
-int		FSType = NULL;			// Type of filesystem on boot device, set by OpenDiskDrive()
+/////////////////////////////////////////////////////////////////////////////////////////////
+// FUNCTIONS
+/////////////////////////////////////////////////////////////////////////////////////////////
 
-char	*pFileSysData = (char *)(FILESYSADDR); // Load address for filesystem data
-char	*pFat32FATCacheIndex = (char *)(FILESYSADDR); // Load address for filesystem data
-
-BOOL OpenDiskDrive(int nDrive, int nPartition)
+VOID FileSystemError(PUCHAR ErrorString)
 {
-	int		num_bootable_partitions = 0;
-	int		boot_partition = 0;
-	int		partition_type = 0;
-	int		head, sector, cylinder;
-	int		offset;
+	DbgPrint((DPRINT_FILESYSTEM, "%s\n", ErrorString));
 
-	// Check and see if it is a floppy drive
-	if (nDrive < 0x80)
+	if (UserInterfaceUp)
 	{
-		// Read boot sector
-		if (!biosdisk(_DISK_READ, nDrive, 0, 0, 1, 1, SectorBuffer))
-		{
-			FS_DO_ERROR("Disk Read Error");
-			return FALSE;
-		}
-
-		// Check for validity
-		if (*((WORD*)(SectorBuffer + 0x1fe)) != 0xaa55)//(SectorBuffer[0x1FE] != 0x55) || (SectorBuffer[0x1FF] != 0xAA))
-		{
-			FS_DO_ERROR("Invalid boot sector magic (0xaa55)");
-			return FALSE;
-		}
+		MessageBox(ErrorString);
 	}
 	else
 	{
-		// Read master boot record
-		if (!biosdisk(_DISK_READ, nDrive, 0, 0, 1, 1, SectorBuffer))
+		printf("%s", ErrorString);
+		printf("\nPress any key\n");
+		getch();
+	}
+}
+
+/*
+ *
+ * BOOL OpenDiskDrive(ULONG DriveNumber, ULONG PartitionNumber);
+ *
+ * This function is called to open a disk drive for file access.
+ * It must be called before any of the file functions will work.
+ * It takes two parameters:
+ *
+ * Drive: The BIOS drive number of the disk to open
+ * Partition: This is zero for floppy drives.
+ *            If the disk is a hard disk then this specifies
+ *            The partition number to open (1 - 4)
+ *            If it is zero then it opens the active (bootable) partition
+ *
+ */
+BOOL OpenDiskDrive(ULONG DriveNumber, ULONG PartitionNumber)
+{
+	ULONG				BootablePartitionCount = 0;
+	ULONG				BootPartition = 0;
+	ULONG				PartitionStartHead;
+	ULONG				PartitionStartSector;
+	ULONG				PartitionStartCylinder;
+	MASTER_BOOT_RECORD	DriveMasterBootRecord;
+
+	DbgPrint((DPRINT_FILESYSTEM, "OpenDiskDrive() DriveNumber: 0x%x PartitionNumber: 0x%x\n", DriveNumber, PartitionNumber));
+
+	CurrentlyOpenDriveNumber = DriveNumber;
+
+	//
+	// Check and see if it is a floppy drive
+	// If so then just assume FAT12 file system type
+	//
+	if (DriveNumber < 0x80)
+	{
+		DbgPrint((DPRINT_FILESYSTEM, "Drive is a floppy diskette drive. Assuming FAT12 file system.\n"));
+
+		FileSystemType = FS_FAT;
+		return FatOpenVolume(DriveNumber, 0, 0, 1, FAT12);
+	}
+
+	//
+	// Read master boot record
+	//
+	if (!BiosInt13Read(DriveNumber, 0, 0, 1, 1, &DriveMasterBootRecord))
+	{
+		FileSystemError("Disk read error.");
+		return FALSE;
+	}
+
+
+#ifdef DEBUG
+
+	DbgPrint((DPRINT_FILESYSTEM, "Drive is a hard disk, dumping partition table:\n"));
+	DbgPrint((DPRINT_FILESYSTEM, "sizeof(MASTER_BOOT_RECORD) = 0x%x.\n", sizeof(MASTER_BOOT_RECORD)));
+
+	for (BootPartition=0; BootPartition<4; BootPartition++)
+	{
+		DbgPrint((DPRINT_FILESYSTEM, "-------------------------------------------\n"));
+		DbgPrint((DPRINT_FILESYSTEM, "Partition %d\n", (BootPartition + 1)));
+		DbgPrint((DPRINT_FILESYSTEM, "BootIndicator: 0x%x\n", DriveMasterBootRecord.PartitionTable[BootPartition].BootIndicator));
+		DbgPrint((DPRINT_FILESYSTEM, "StartHead: 0x%x\n", DriveMasterBootRecord.PartitionTable[BootPartition].StartHead));
+		DbgPrint((DPRINT_FILESYSTEM, "StartSector (Plus 2 cylinder bits): 0x%x\n", DriveMasterBootRecord.PartitionTable[BootPartition].StartSector));
+		DbgPrint((DPRINT_FILESYSTEM, "StartCylinder: 0x%x\n", DriveMasterBootRecord.PartitionTable[BootPartition].StartCylinder));
+		DbgPrint((DPRINT_FILESYSTEM, "SystemIndicator: 0x%x\n", DriveMasterBootRecord.PartitionTable[BootPartition].SystemIndicator));
+		DbgPrint((DPRINT_FILESYSTEM, "EndHead: 0x%x\n", DriveMasterBootRecord.PartitionTable[BootPartition].EndHead));
+		DbgPrint((DPRINT_FILESYSTEM, "EndSector (Plus 2 cylinder bits): 0x%x\n", DriveMasterBootRecord.PartitionTable[BootPartition].EndSector));
+		DbgPrint((DPRINT_FILESYSTEM, "EndCylinder: 0x%x\n", DriveMasterBootRecord.PartitionTable[BootPartition].EndCylinder));
+		DbgPrint((DPRINT_FILESYSTEM, "SectorCountBeforePartition: 0x%x\n", DriveMasterBootRecord.PartitionTable[BootPartition].SectorCountBeforePartition));
+		DbgPrint((DPRINT_FILESYSTEM, "PartitionSectorCount: 0x%x\n", DriveMasterBootRecord.PartitionTable[BootPartition].PartitionSectorCount));
+	}
+
+#endif // defined DEBUG
+
+
+	//
+	// Check the partition table magic value
+	//
+	if (DriveMasterBootRecord.MasterBootRecordMagic != 0xaa55)
+	{
+		FileSystemError("Invalid partition table magic (0xaa55)");
+		return FALSE;
+	}
+
+	if (PartitionNumber == 0)
+	{
+		//
+		// Count the bootable partitions
+		//
+		if (DriveMasterBootRecord.PartitionTable[0].BootIndicator == 0x80)
 		{
-			FS_DO_ERROR("Disk Read Error");
-			return FALSE;
+			BootablePartitionCount++;
+			BootPartition = 1;
+		}
+		if (DriveMasterBootRecord.PartitionTable[1].BootIndicator == 0x80)
+		{
+			BootablePartitionCount++;
+			BootPartition = 2;
+		}
+		if (DriveMasterBootRecord.PartitionTable[2].BootIndicator == 0x80)
+		{
+			BootablePartitionCount++;
+			BootPartition = 3;
+		}
+		if (DriveMasterBootRecord.PartitionTable[3].BootIndicator == 0x80)
+		{
+			BootablePartitionCount++;
+			BootPartition = 4;
 		}
 
-		// Check for validity
-		if (*((WORD*)(SectorBuffer + 0x1fe)) != 0xaa55)//(SectorBuffer[0x1FE] != 0x55) || (SectorBuffer[0x1FF] != 0xAA))
+		//
+		// Make sure there was only one bootable partition
+		//
+		if (BootablePartitionCount != 1)
 		{
-			FS_DO_ERROR("Invalid partition table magic (0xaa55)");
+			FileSystemError("Too many bootable partitions or none found.");
 			return FALSE;
-		}
-
-		if (nPartition == 0)
-		{
-			// Check for bootable partitions
-			if (SectorBuffer[0x1BE] == 0x80)
-				num_bootable_partitions++;
-			if (SectorBuffer[0x1CE] == 0x80)
-			{
-				num_bootable_partitions++;
-				boot_partition = 1;
-			}
-			if (SectorBuffer[0x1DE] == 0x80)
-			{
-				num_bootable_partitions++;
-				boot_partition = 2;
-			}
-			if (SectorBuffer[0x1EE] == 0x80)
-			{
-				num_bootable_partitions++;
-				boot_partition = 3;
-			}
-
-			// Make sure there was only one bootable partition
-			if (num_bootable_partitions > 1)
-			{
-				FS_DO_ERROR("Too many boot partitions");
-				return FALSE;
-			}
-
-			offset = 0x1BE + (boot_partition * 0x10);
 		}
 		else
-			offset = 0x1BE + ((nPartition-1) * 0x10);
-
-		partition_type = SectorBuffer[offset + 4];
-
-		// Check for valid partition
-		if (partition_type == 0)
 		{
-			FS_DO_ERROR("Invalid boot partition");
-			return FALSE;
-		}
-
-		head = SectorBuffer[offset + 1];
-		sector = (SectorBuffer[offset + 2] & 0x3F);
-		cylinder = SectorBuffer[offset + 3];
-		if (SectorBuffer[offset + 2] & 0x80)
-			cylinder += 0x200;
-		if (SectorBuffer[offset + 2] & 0x40)
-			cylinder += 0x100;
-
-		// Read partition boot sector
-		if (!biosdisk(_DISK_READ, nDrive, head, cylinder, sector, 1, SectorBuffer))
-		{
-			FS_DO_ERROR("Disk Read Error");
-			return FALSE;
-		}
-
-		// Check for validity
-		if (*((WORD*)(SectorBuffer + 0x1fe)) != 0xaa55)//(SectorBuffer[0x1FE] != 0x55) || (SectorBuffer[0x1FF] != 0xAA))
-		{
-			FS_DO_ERROR("Invalid boot sector magic (0xaa55)");
-			return FALSE;
+			//
+			// We found the boot partition, so set the partition number
+			//
+			PartitionNumber = BootPartition;
 		}
 	}
 
+	//
+	// Right now the partition number is one-based
+	// and we need zero based
+	//
+	PartitionNumber--;
 
-	// Reset data
-	nBytesPerSector = 0;
-	nSectorsPerCluster = 0;
-	nReservedSectors = 0;
-	nNumberOfFATs = 0;
-	nRootDirEntries = 0;
-	nTotalSectors16 = 0;
-	nSectorsPerFAT16 = 0;
-	nSectorsPerTrack = 0;
-	nNumberOfHeads = 0;
-	nHiddenSectors = 0;
-	nTotalSectors32 = 0;
-
-	nSectorsPerFAT32 = 0;
-	nExtendedFlags = 0;
-	nFileSystemVersion = 0;
-	nRootDirStartCluster = 0;
-
-	nRootDirSectorStart = 0;
-	nDataSectorStart = 0;
-	nSectorsPerFAT = 0;
-	nRootDirSectors = 0;
-	nTotalSectors = 0;
-	nNumberOfClusters = 0;
-
-	// Get data
-	memcpy(&nBytesPerSector, SectorBuffer + BPB_BYTESPERSECTOR, 2);
-	memcpy(&nSectorsPerCluster, SectorBuffer + BPB_SECTORSPERCLUSTER, 1);
-	memcpy(&nReservedSectors, SectorBuffer + BPB_RESERVEDSECTORS, 2);
-	memcpy(&nNumberOfFATs, SectorBuffer + BPB_NUMBEROFFATS, 1);
-	memcpy(&nRootDirEntries, SectorBuffer + BPB_ROOTDIRENTRIES, 2);
-	memcpy(&nTotalSectors16, SectorBuffer + BPB_TOTALSECTORS16, 2);
-	memcpy(&nSectorsPerFAT16, SectorBuffer + BPB_SECTORSPERFAT16, 2);
-	memcpy(&nSectorsPerTrack, SectorBuffer + BPB_SECTORSPERTRACK, 2);
-	memcpy(&nNumberOfHeads, SectorBuffer + BPB_NUMBEROFHEADS, 2);
-	memcpy(&nHiddenSectors, SectorBuffer + BPB_HIDDENSECTORS, 4);
-	memcpy(&nTotalSectors32, SectorBuffer + BPB_TOTALSECTORS32, 4);
-
-	memcpy(&nSectorsPerFAT32, SectorBuffer + BPB_SECTORSPERFAT32, 4);
-	memcpy(&nExtendedFlags, SectorBuffer + BPB_EXTENDEDFLAGS32, 2);
-	memcpy(&nFileSystemVersion, SectorBuffer + BPB_FILESYSTEMVERSION32, 2);
-	memcpy(&nRootDirStartCluster, SectorBuffer + BPB_ROOTDIRSTARTCLUSTER32, 4);
-
-	// Calc some stuff
-	if (nTotalSectors16 != 0)
-		nTotalSectors = nTotalSectors16;
-	else
-		nTotalSectors = nTotalSectors32; 
-
-	if (nSectorsPerFAT16 != 0)
-		nSectorsPerFAT = nSectorsPerFAT16;
-	else
-		nSectorsPerFAT = nSectorsPerFAT32; 
-
-	nRootDirSectorStart = (nNumberOfFATs * nSectorsPerFAT) + nReservedSectors;
-	nRootDirSectors = ((nRootDirEntries * 32) + (nBytesPerSector - 1)) / nBytesPerSector;
-	nDataSectorStart = nReservedSectors + (nNumberOfFATs * nSectorsPerFAT) + nRootDirSectors;
-	nNumberOfClusters = (nTotalSectors - nDataSectorStart) / nSectorsPerCluster;
-
-	// Determine FAT type
-	if (nNumberOfClusters < 4085)
+	//
+	// Check for valid partition
+	//
+	if (DriveMasterBootRecord.PartitionTable[PartitionNumber].SystemIndicator == PARTITION_ENTRY_UNUSED)
 	{
-		/* Volume is FAT12 */
-		nFATType = FAT12;
-	}
-	else if (nNumberOfClusters < 65525)
-	{
-		/* Volume is FAT16 */
-		nFATType = FAT16;
-	}
-	else
-	{
-		/* Volume is FAT32 */
-		nFATType = FAT32;
-
-		// Check version
-		// we only work with version 0
-		if (*((WORD*)(SectorBuffer + BPB_FILESYSTEMVERSION32)) != 0)
-		{
-			FS_DO_ERROR("Error: FreeLoader is too old to work with this FAT32 filesystem.\nPlease update FreeLoader.");
-			return FALSE;
-		}
+		FileSystemError("Invalid partition.");
+		return FALSE;
 	}
 
-	FSType = FS_FAT;
+	PartitionStartHead = DriveMasterBootRecord.PartitionTable[PartitionNumber].StartHead;
+	PartitionStartSector = DriveMasterBootRecord.PartitionTable[PartitionNumber].StartSector & 0x3F;
+	PartitionStartCylinder = MAKE_CYLINDER(
+		DriveMasterBootRecord.PartitionTable[PartitionNumber].StartCylinder,
+		DriveMasterBootRecord.PartitionTable[PartitionNumber].StartSector);
 
-	// Buffer the FAT table if it is small enough
-	if ((FSType == FS_FAT) && (nFATType == FAT12))
+	DbgPrint((DPRINT_FILESYSTEM, "PartitionStartHead: %d\n", PartitionStartHead));
+	DbgPrint((DPRINT_FILESYSTEM, "PartitionStartSector: %d\n", PartitionStartSector));
+	DbgPrint((DPRINT_FILESYSTEM, "PartitionStartCylinder: %d\n", PartitionStartCylinder));
+	DbgPrint((DPRINT_FILESYSTEM, "PartitionNumber: %d\n", PartitionNumber));
+
+	switch (DriveMasterBootRecord.PartitionTable[PartitionNumber].SystemIndicator)
 	{
-		if (!ReadMultipleSectors(nReservedSectors, nSectorsPerFAT, pFileSysData))
-			return FALSE;
-	}
-	else if ((FSType == FS_FAT) && (nFATType == FAT16))
-	{
-		if (!ReadMultipleSectors(nReservedSectors, nSectorsPerFAT, pFileSysData))
-			return FALSE;
-	}
-	else if ((FSType == FS_FAT) && (nFATType == FAT32))
-	{
-		// The FAT table is too big to be buffered so
-		// we will initialize our cache and cache it
-		// on demand
-		for (offset=0; offset<256; offset++)
-			((int*)pFat32FATCacheIndex)[offset] = -1;
+	case PARTITION_FAT_12:
+		FileSystemType = FS_FAT;
+		return FatOpenVolume(DriveNumber, PartitionStartHead, PartitionStartCylinder, PartitionStartSector, FAT12);
+	case PARTITION_FAT_16:
+	case PARTITION_HUGE:
+	case PARTITION_XINT13:
+		FileSystemType = FS_FAT;
+		return FatOpenVolume(DriveNumber, PartitionStartHead, PartitionStartCylinder, PartitionStartSector, FAT16);
+	case PARTITION_FAT32:
+	case PARTITION_FAT32_XINT13:
+		FileSystemType = FS_FAT;
+		return FatOpenVolume(DriveNumber, PartitionStartHead, PartitionStartCylinder, PartitionStartSector, FAT32);
+	default:
+		FileSystemType = 0;
+		FileSystemError("Unsupported file system.");
+		return FALSE;
 	}
 
 	return TRUE;
 }
 
-BOOL ReadMultipleSectors(int nSect, int nNumberOfSectors, void *pBuffer)
+VOID SetDriveGeometry(ULONG Cylinders, ULONG Heads, ULONG Sectors, ULONG BytesPerSector)
 {
-	BOOL	bRetVal;
+	DriveGeometry.Cylinders = Cylinders;
+	DriveGeometry.Heads = Heads;
+	DriveGeometry.Sectors = Sectors;
+	DriveGeometry.BytesPerSector = BytesPerSector;
+
+	DbgPrint((DPRINT_FILESYSTEM, "DriveGeometry.Cylinders: %d\n", DriveGeometry.Cylinders));
+	DbgPrint((DPRINT_FILESYSTEM, "DriveGeometry.Heads: %d\n", DriveGeometry.Heads));
+	DbgPrint((DPRINT_FILESYSTEM, "DriveGeometry.Sectors: %d\n", DriveGeometry.Sectors));
+	DbgPrint((DPRINT_FILESYSTEM, "DriveGeometry.BytesPerSector: %d\n", DriveGeometry.BytesPerSector));
+}
+
+VOID SetVolumeProperties(ULONG HiddenSectors)
+{
+	VolumeHiddenSectors = HiddenSectors;
+}
+
+BOOL ReadMultipleLogicalSectors(ULONG SectorNumber, ULONG SectorCount, PVOID Buffer)
+{
+	/*BOOL	bRetVal;
 	int		PhysicalSector;
 	int		PhysicalHead;
 	int		PhysicalTrack;
@@ -292,7 +279,7 @@ BOOL ReadMultipleSectors(int nSect, int nNumberOfSectors, void *pBuffer)
 				nNum = nNumberOfSectors;
 		}
 
-		bRetVal = biosdisk(_DISK_READ, BootDrive, PhysicalHead, PhysicalTrack, PhysicalSector, nNum, pBuffer);
+		bRetVal = biosdisk(CurrentlyOpenDriveNumber, PhysicalHead, PhysicalTrack, PhysicalSector, nNum, pBuffer);
 
 		if (!bRetVal)
 		{
@@ -303,124 +290,203 @@ BOOL ReadMultipleSectors(int nSect, int nNumberOfSectors, void *pBuffer)
 		pBuffer += (nNum * 512);
 		nNumberOfSectors -= nNum;
 		nSect += nNum;
-	}
+	}*/
 
-	return TRUE;
-}
+	ULONG	CurrentSector;
+	PVOID	RealBuffer = Buffer;
 
-BOOL ReadOneSector(int nSect)
-{
-	BOOL	bRetVal;
-	int		PhysicalSector;
-	int		PhysicalHead;
-	int		PhysicalTrack;
-
-	nSectorBuffered = nSect;
-
-	nSect += nHiddenSectors;
-	PhysicalSector = 1 + (nSect % nSectorsPerTrack);
-	PhysicalHead = (nSect / nSectorsPerTrack) % nNumberOfHeads;
-	PhysicalTrack = nSect / (nSectorsPerTrack * nNumberOfHeads);
-
-
-	bRetVal = biosdisk(_DISK_READ, BootDrive, PhysicalHead, PhysicalTrack, PhysicalSector, 1, SectorBuffer);
-
-	if (!bRetVal)
+	for (CurrentSector=SectorNumber; CurrentSector<(SectorNumber + SectorCount); CurrentSector++)
 	{
-		FS_DO_ERROR("Disk Error");
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-BOOL OpenFile(char *filename, FILE *pFile)
-{
-	switch(FSType)
-	{
-	case FS_FAT:
-		if(!FATOpenFile(filename, &(pFile->fat)))
+		if (!ReadLogicalSector(CurrentSector, RealBuffer) )
+		{
 			return FALSE;
-		pFile->filesize = pFile->fat.dwSize;
-		break;
-	default:
-		FS_DO_ERROR("Error: Unknown filesystem.");
-		return FALSE;
-		break;
+		}
+
+		RealBuffer += DriveGeometry.BytesPerSector;
 	}
 
 	return TRUE;
+}
+
+BOOL ReadLogicalSector(ULONG SectorNumber, PVOID Buffer)
+{
+	ULONG	PhysicalSector;
+	ULONG	PhysicalHead;
+	ULONG	PhysicalTrack;
+
+	DbgPrint((DPRINT_FILESYSTEM, "ReadLogicalSector() SectorNumber: %d Buffer: 0x%x\n", SectorNumber, Buffer));
+
+	SectorNumber += VolumeHiddenSectors;
+	PhysicalSector = 1 + (SectorNumber % DriveGeometry.Sectors);
+	PhysicalHead = (SectorNumber / DriveGeometry.Sectors) % DriveGeometry.Heads;
+	PhysicalTrack = (SectorNumber / DriveGeometry.Sectors) / DriveGeometry.Heads;
+
+	//DbgPrint((DPRINT_FILESYSTEM, "Calling BiosInt13Read() with PhysicalHead: %d\n", PhysicalHead));
+	//DbgPrint((DPRINT_FILESYSTEM, "Calling BiosInt13Read() with PhysicalTrack: %d\n", PhysicalTrack));
+	//DbgPrint((DPRINT_FILESYSTEM, "Calling BiosInt13Read() with PhysicalSector: %d\n", PhysicalSector));
+	if (PhysicalHead >= DriveGeometry.Heads)
+	{
+		BugCheck((DPRINT_FILESYSTEM, "PhysicalHead >= DriveGeometry.Heads\nPhysicalHead = %d\nDriveGeometry.Heads = %d\n", PhysicalHead, DriveGeometry.Heads));
+	}
+	if (PhysicalTrack >= DriveGeometry.Cylinders)
+	{
+		BugCheck((DPRINT_FILESYSTEM, "PhysicalTrack >= DriveGeometry.Cylinders\nPhysicalTrack = %d\nDriveGeometry.Cylinders = %d\n", PhysicalTrack, DriveGeometry.Cylinders));
+	}
+	if (PhysicalSector > DriveGeometry.Sectors)
+	{
+		BugCheck((DPRINT_FILESYSTEM, "PhysicalSector > DriveGeometry.Sectors\nPhysicalSector = %d\nDriveGeometry.Sectors = %d\n", PhysicalSector, DriveGeometry.Sectors));
+	}
+
+	if ((CurrentlyOpenDriveNumber >= 0x80) &&
+		(BiosInt13ExtensionsSupported(CurrentlyOpenDriveNumber)) &&
+		(SectorNumber > (DriveGeometry.Cylinders * DriveGeometry.Heads * DriveGeometry.Sectors)))
+	{
+		DbgPrint((DPRINT_FILESYSTEM, "Using Int 13 Extensions for read. BiosInt13ExtensionsSupported(%d) = %s\n", CurrentlyOpenDriveNumber, BiosInt13ExtensionsSupported(CurrentlyOpenDriveNumber) ? "TRUE" : "FALSE"));
+		if ( !BiosInt13ReadExtended(CurrentlyOpenDriveNumber, SectorNumber, 1, Buffer) )
+		{
+			FileSystemError("Disk read error.");
+			return FALSE;
+		}
+	}
+	else
+	{
+		if ( !BiosInt13Read(CurrentlyOpenDriveNumber, PhysicalHead, PhysicalTrack, PhysicalSector, 1, Buffer) )
+		{
+			FileSystemError("Disk read error.");
+			return FALSE;
+		}
+	}
+
+	return TRUE;
+}
+
+PFILE OpenFile(PUCHAR FileName)
+{
+	PFILE	FileHandle = NULL;
+
+	//
+	// Print status message
+	//
+	DbgPrint((DPRINT_FILESYSTEM, "Opening file '%s'...\n", FileName));
+	
+	//
+	// Check file system type and pass off to appropriate handler
+	//
+	if (FileSystemType == FS_FAT)
+	{
+		FileHandle = FatOpenFile(FileName);
+	}
+	else
+	{
+		FileSystemError("Error: Unknown filesystem.");
+	}
+
+#ifdef DEBUG
+	//
+	// Check return value
+	//
+	if (FileHandle != NULL)
+	{
+		DbgPrint((DPRINT_FILESYSTEM, "OpenFile() succeeded. FileHandle: 0x%x\n", FileHandle));
+	}
+	else
+	{
+		DbgPrint((DPRINT_FILESYSTEM, "OpenFile() failed.\n"));
+	}
+#endif // defined DEBUG
+
+	return FileHandle;
+}
+
+VOID CloseFile(PFILE FileHandle)
+{
 }
 
 /*
  * ReadFile()
  * returns number of bytes read or EOF
  */
-int ReadFile(FILE *pFile, int count, void *buffer)
+BOOL ReadFile(PFILE FileHandle, ULONG BytesToRead, PULONG BytesRead, PVOID Buffer)
 {
-	switch(FSType)
+	//
+	// Set the number of bytes read equal to zero
+	//
+	if (BytesRead !=NULL)
+	{
+		*BytesRead = 0;
+	}
+
+	switch (FileSystemType)
 	{
 	case FS_FAT:
-		return FATRead(&(pFile->fat), count, buffer);
+
+		return FatReadFile(FileHandle, BytesToRead, BytesRead, Buffer);
+
 	default:
-		FS_DO_ERROR("Error: Unknown filesystem.");
-		return EOF;
+
+		FileSystemError("Unknown file system.");
+		return FALSE;
+	}
+
+	return FALSE;
+}
+
+ULONG GetFileSize(PFILE FileHandle)
+{
+	switch (FileSystemType)
+	{
+	case FS_FAT:
+
+		return FatGetFileSize(FileHandle);
+
+	default:
+		FileSystemError("Unknown file system.");
+		break;
 	}
 
 	return 0;
 }
 
-DWORD GetFileSize(FILE *pFile)
+VOID SetFilePointer(PFILE FileHandle, ULONG NewFilePointer)
 {
-	return pFile->filesize;
-}
-
-DWORD Rewind(FILE *pFile)
-{
-	switch (FSType)
+	switch (FileSystemType)
 	{
 	case FS_FAT:
-		pFile->fat.dwCurrentCluster = pFile->fat.dwStartCluster;
-		pFile->fat.dwCurrentReadOffset = 0;
+
+		FatSetFilePointer(FileHandle, NewFilePointer);
 		break;
+
 	default:
-		FS_DO_ERROR("Error: Unknown filesystem.");
+		FileSystemError("Unknown file system.");
+		break;
+	}
+}
+
+ULONG GetFilePointer(PFILE FileHandle)
+{
+	switch (FileSystemType)
+	{
+	case FS_FAT:
+
+		return FatGetFilePointer(FileHandle);
+		break;
+
+	default:
+		FileSystemError("Unknown file system.");
 		break;
 	}
 
-	return pFile->filesize;
+	return 0;
 }
 
-int feof(FILE *pFile)
+BOOL IsEndOfFile(PFILE FileHandle)
 {
-	switch (FSType)
+	if (GetFilePointer(FileHandle) >= GetFileSize(FileHandle))
 	{
-	case FS_FAT:
-		if (pFile->fat.dwCurrentReadOffset >= pFile->fat.dwSize)
-			return TRUE;
-		else
-			return FALSE;
-		break;
-	default:
-		FS_DO_ERROR("Error: Unknown filesystem.");
 		return TRUE;
-		break;
 	}
-
-	return TRUE;
-}
-
-int fseek(FILE *pFile, DWORD offset)
-{
-	switch (FSType)
+	else
 	{
-	case FS_FAT:
-		return FATfseek(&(pFile->fat), offset);
-		break;
-	default:
-		FS_DO_ERROR("Error: Unknown filesystem.");
-		break;
+		return FALSE;
 	}
-
-	return -1;
 }

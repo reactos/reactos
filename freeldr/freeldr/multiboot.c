@@ -36,12 +36,13 @@ BOOL MultiBootLoadKernel(FILE *KernelImage)
 	DWORD				dwFileLoadOffset;
 	DWORD				dwDataSize;
 	DWORD				dwBssSize;
+	ULONG				BytesRead;
 
 	/*
 	 * Load the first 8192 bytes of the kernel image
 	 * so we can search for the multiboot header
 	 */
-	ReadFile(KernelImage, 8192, ImageHeaders);
+	ReadFile(KernelImage, 8192, NULL, ImageHeaders);
 
 	/*
 	 * Now find the multiboot header and copy it
@@ -95,13 +96,13 @@ BOOL MultiBootLoadKernel(FILE *KernelImage)
 	 * Get the file offset, this should be 0, and move the file pointer
 	 */
 	dwFileLoadOffset = (Idx * sizeof(DWORD)) - (mb_header.header_addr - mb_header.load_addr);
-	fseek(KernelImage, dwFileLoadOffset);
+	SetFilePointer(KernelImage, dwFileLoadOffset);
 	
 	/*
 	 * Load the file image
 	 */
 	dwDataSize = (mb_header.load_end_addr - mb_header.load_addr);
-	ReadFile(KernelImage, dwDataSize, (void*)mb_header.load_addr);
+	ReadFile(KernelImage, dwDataSize, NULL, (void*)mb_header.load_addr);
 
 	/*
 	 * Initialize bss area
@@ -142,7 +143,7 @@ BOOL MultiBootLoadModule(FILE *ModuleImage, char *ModuleName)
 	/*
 	 * Load the file image
 	 */
-	ReadFile(ModuleImage, dwModuleSize, (void*)next_module_load_base);
+	ReadFile(ModuleImage, dwModuleSize, NULL, (void*)next_module_load_base);
 
 	next_module_load_base = ROUND_UP(pModule->mod_end, /*PAGE_SIZE*/4096);
 	mb_info.mods_count++;
@@ -154,10 +155,14 @@ int GetBootPartition(char *OperatingSystemName)
 {
 	int		BootPartitionNumber = -1;
 	char	value[1024];
+	ULONG	SectionId;
 
-	if (ReadSectionSettingByName(OperatingSystemName, "BootPartition", value))
+	if (OpenSection(OperatingSystemName, &SectionId))
 	{
-		BootPartitionNumber = atoi(value);
+		if (ReadSectionSettingByName(SectionId, "BootPartition", value, 1024))
+		{
+			BootPartitionNumber = atoi(value);
+		}
 	}
 
 	return BootPartitionNumber;

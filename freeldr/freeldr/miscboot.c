@@ -28,14 +28,15 @@
 
 void LoadAndBootBootSector(int nOSToBoot)
 {
-	FILE	file;
+	FILE*	FilePointer;
 	char	name[260];
 	char	value[260];
 	char	szFileName[1024];
 	int		i;
+	ULONG	BytesRead;
 
 	// Find all the message box settings and run them
-	for (i=1; i<=GetNumSectionItems(OSList[nOSToBoot].name); i++)
+	/*for (i=1; i<=GetNumSectionItems(OSList[nOSToBoot].name); i++)
 	{
 		ReadSectionSettingByNumber(OSList[nOSToBoot].name, i, name, value);
 		if (stricmp(name, "MessageBox") == 0)
@@ -69,7 +70,9 @@ void LoadAndBootBootSector(int nOSToBoot)
 	}
 
 	strcpy(szFileName, value);
-	if (!OpenFile(szFileName, &file))
+
+	FilePointer = OpenFile(szFileName);
+	if (FilePointer == NULL)
 	{
 		strcat(value, " not found.");
 		MessageBox(value);
@@ -77,7 +80,7 @@ void LoadAndBootBootSector(int nOSToBoot)
 	}
 
 	// Read boot sector
-	if (ReadFile(&file, 512, (void*)0x7c00) != 512)
+	if (!ReadFile(FilePointer, 512, &BytesRead, (void*)0x7c00) || (BytesRead != 512))
 	{
 		MessageBox("Disk Read Error");
 		return;
@@ -95,7 +98,7 @@ void LoadAndBootBootSector(int nOSToBoot)
 	gotoxy(CursorXPos, CursorYPos);
 
 	stop_floppy();
-	JumpToBootCode();
+	JumpToBootCode();*/
 }
 
 void LoadAndBootPartition(int nOSToBoot)
@@ -107,7 +110,7 @@ void LoadAndBootPartition(int nOSToBoot)
 	int		i;
 
 	// Find all the message box settings and run them
-	for (i=1; i<=GetNumSectionItems(OSList[nOSToBoot].name); i++)
+	/*for (i=1; i<=GetNumSectionItems(OSList[nOSToBoot].name); i++)
 	{
 		ReadSectionSettingByNumber(OSList[nOSToBoot].name, i, name, value);
 		if (stricmp(name, "MessageBox") == 0)
@@ -132,14 +135,14 @@ void LoadAndBootPartition(int nOSToBoot)
 
 	BootPartition = atoi(value);
 
-	if (!biosdisk(_DISK_READ, BootDrive, 0, 0, 1, 1, SectorBuffer))
+	if (!BiosInt13Read(BootDrive, 0, 0, 1, 1, DISKREADBUFFER))
 	{
 		MessageBox("Disk Read Error");
 		return;
 	}
 
 	// Check for validity
-	if (*((WORD*)(SectorBuffer + 0x1fe)) != 0xaa55)
+	if (*((WORD*)(DISKREADBUFFER + 0x1fe)) != 0xaa55)
 	{
 		MessageBox("Invalid partition table magic (0xaa55)");
 		return;
@@ -181,7 +184,7 @@ void LoadAndBootPartition(int nOSToBoot)
 	gotoxy(CursorXPos, CursorYPos);
 
 	stop_floppy();
-	JumpToBootCode();
+	JumpToBootCode();*/
 }
 
 void LoadAndBootDrive(int nOSToBoot)
@@ -191,7 +194,7 @@ void LoadAndBootDrive(int nOSToBoot)
 	int		i;
 
 	// Find all the message box settings and run them
-	for (i=1; i<=GetNumSectionItems(OSList[nOSToBoot].name); i++)
+	/*for (i=1; i<=GetNumSectionItems(OSList[nOSToBoot].name); i++)
 	{
 		ReadSectionSettingByNumber(OSList[nOSToBoot].name, i, name, value);
 		if (stricmp(name, "MessageBox") == 0)
@@ -226,5 +229,5 @@ void LoadAndBootDrive(int nOSToBoot)
 	gotoxy(CursorXPos, CursorYPos);
 
 	stop_floppy();
-	JumpToBootCode();
+	JumpToBootCode();*/
 }

@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1999, 2000  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1999, 2000, 2001  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,148 +17,89 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef __FS_FAT_H
-#define __FS_FAT_H
+#ifndef __FS_H
+#define __FS_H
 
-// Bootsector BPB defines
-#define BPB_JMPBOOT					0
-#define BPB_OEMNAME					3
-#define BPB_BYTESPERSECTOR			11
-#define BPB_SECTORSPERCLUSTER		13
-#define BPB_RESERVEDSECTORS			14
-#define BPB_NUMBEROFFATS			16
-#define BPB_ROOTDIRENTRIES			17
-#define BPB_TOTALSECTORS16			19
-#define BPB_MEDIADESCRIPTOR			21
-#define BPB_SECTORSPERFAT16			22
-#define BPB_SECTORSPERTRACK			24
-#define BPB_NUMBEROFHEADS			26
-#define BPB_HIDDENSECTORS			28
-#define BPB_TOTALSECTORS32			32
-
-// Fat12/16 extended BPB defines
-#define BPB_DRIVENUMBER16			36
-#define BPB_RESERVED16_1			37
-#define BPB_BOOTSIGNATURE16			38
-#define BPB_VOLUMESERIAL16			39
-#define BPB_VOLUMELABEL16			43
-#define BPB_FILESYSTEMTYPE16		54
-
-// Fat32 extended BPB defines
-#define BPB_SECTORSPERFAT32			36
-#define BPB_EXTENDEDFLAGS32			40
-#define BPB_FILESYSTEMVERSION32		42
-#define BPB_ROOTDIRSTARTCLUSTER32	44
-#define BPB_FILESYSTEMINFOSECTOR32	48
-#define BPB_BACKUPBOOTSECTOR32		50
-#define BPB_RESERVED32_1			52
-#define BPB_DRIVENUMBER32			64
-#define BPB_RESERVED32_2			65
-#define BPB_BOOTSIGNATURE32			66
-#define BPB_VOLUMESERIAL32			67
-#define BPB_VOLUMELABEL32			71
-#define BPB_FILESYSTEMTYPE32		82
-
-/*
- * Structure of MSDOS directory entry
- */
-typedef struct //_DIRENTRY
+//
+// Define the structure of a partition table entry
+//
+typedef struct _PARTITION_TABLE_ENTRY
 {
-	BYTE	cFileName[11];	/* Filename + extension */
-	BYTE	cAttr;			/* File attributes */
-	BYTE	cReserved[10];	/* Reserved area */
-	WORD	wTime;			/* Time last modified */
-	WORD	wData;			/* Date last modified */
-	WORD	wCluster;		/* First cluster number */
-	DWORD	dwSize;			/* File size */
-} DIRENTRY, * PDIRENTRY;
+	BYTE	BootIndicator;					// 0x00 - non-bootable partition, 0x80 - bootable partition (one partition only)
+	BYTE	StartHead;						// Beginning head number
+	BYTE	StartSector;					// Beginning sector (2 high bits of cylinder #)
+	BYTE	StartCylinder;					// Beginning cylinder# (low order bits of cylinder #)
+	BYTE	SystemIndicator;				// System indicator
+	BYTE	EndHead;						// Ending head number
+	BYTE	EndSector;						// Ending sector (2 high bits of cylinder #)
+	BYTE	EndCylinder;					// Ending cylinder# (low order bits of cylinder #)
+	DWORD	SectorCountBeforePartition;		// Number of sectors preceding the partition
+	DWORD	PartitionSectorCount;			// Number of sectors in the partition
 
-/*
- * Structure of internal file control block
- */
-typedef struct //_FCB
+} PACKED PARTITION_TABLE_ENTRY, *PPARTITION_TABLE_ENTRY;
+
+//
+// This macro will return the cylinder when you pass it a cylinder/sector
+// pair where the high 2 bits of the cylinder are stored in the sector byte
+//
+#define MAKE_CYLINDER(cylinder, sector) ( cylinder + ((((WORD)sector) & 0xC0) << 2) )
+
+//
+// Define the structure of the master boot record
+//
+typedef struct _MASTER_BOOT_RECORD
 {
-	BYTE	 	cAttr;			/* Open attributes */
-	BYTE	 	cSector;		/* Sector within cluster */
-	PDIRENTRY	pDirptr;		/* Pointer to directory entry */
-	WORD		wDirSector;		/* Directory sector */
-	WORD		wFirstCluster;	/* First cluster in file */
-	WORD		wLastCluster;	/* Last cluster read/written */
-	WORD		wNextCluster;	/* Next cluster to read/write */
-	WORD		wOffset;		/* Read/Write offset within sector */
-	DWORD		dwSize;			/* File size */
-	BYTE		cBuffer[512];	/* Data transfer buffer */
-} FCB, * PFCB;
+	BYTE					MasterBootRecordCodeAndData[0x1be];
+	PARTITION_TABLE_ENTRY	PartitionTable[4];
+	WORD					MasterBootRecordMagic;
 
-typedef struct //_FAT_STRUCT
+} PACKED MASTER_BOOT_RECORD, *PMASTER_BOOT_RECORD;
+
+//
+// Partition type defines
+//
+#define PARTITION_ENTRY_UNUSED          0x00      // Entry unused
+#define PARTITION_FAT_12                0x01      // 12-bit FAT entries
+#define PARTITION_XENIX_1               0x02      // Xenix
+#define PARTITION_XENIX_2               0x03      // Xenix
+#define PARTITION_FAT_16                0x04      // 16-bit FAT entries
+#define PARTITION_EXTENDED              0x05      // Extended partition entry
+#define PARTITION_HUGE                  0x06      // Huge partition MS-DOS V4
+#define PARTITION_IFS                   0x07      // IFS Partition
+#define PARTITION_OS2BOOTMGR            0x0A      // OS/2 Boot Manager/OPUS/Coherent swap
+#define PARTITION_FAT32                 0x0B      // FAT32
+#define PARTITION_FAT32_XINT13          0x0C      // FAT32 using extended int13 services
+#define PARTITION_XINT13                0x0E      // Win95 partition using extended int13 services
+#define PARTITION_XINT13_EXTENDED       0x0F      // Same as type 5 but uses extended int13 services
+#define PARTITION_PREP                  0x41      // PowerPC Reference Platform (PReP) Boot Partition
+#define PARTITION_LDM                   0x42      // Logical Disk Manager partition
+#define PARTITION_UNIX                  0x63      // Unix
+
+typedef struct _GEOMETRY
 {
-	DWORD	dwStartCluster;		// File's starting cluster
-	DWORD	dwCurrentCluster;	// Current read cluster number
-	DWORD	dwSize;				// File size
-	DWORD	dwCurrentReadOffset;// Amount of data already read
-} FAT_STRUCT, * PFAT_STRUCT;
+	ULONG	Cylinders;
+	ULONG	Heads;
+	ULONG	Sectors;
+	ULONG	BytesPerSector;
 
-typedef struct //_FILE
-{
-	//DIRENTRY		de;
-	//FCB				fcb;
-	FAT_STRUCT		fat;
-	unsigned long	filesize;
-} FILE;
+} GEOMETRY, *PGEOMETRY;
 
-extern	int		nSectorBuffered;	// Tells us which sector was read into SectorBuffer[]
-extern	BYTE	SectorBuffer[512];	// 512 byte buffer space for read operations, ReadOneSector reads to here
+#define FILE VOID
+#define PFILE FILE *
 
-extern	int		nFATType;
-
-extern	DWORD	nBytesPerSector;		// Bytes per sector
-extern	DWORD	nSectorsPerCluster;		// Number of sectors in a cluster
-extern	DWORD	nReservedSectors;		// Reserved sectors, usually 1 (the bootsector)
-extern	DWORD	nNumberOfFATs;			// Number of FAT tables
-extern	DWORD	nRootDirEntries;		// Number of root directory entries (fat12/16)
-extern	DWORD	nTotalSectors16;		// Number of total sectors on the drive, 16-bit
-extern	DWORD	nSectorsPerFAT16;		// Sectors per FAT table (fat12/16)
-extern	DWORD	nSectorsPerTrack;		// Number of sectors in a track
-extern	DWORD	nNumberOfHeads;			// Number of heads on the disk
-extern	DWORD	nHiddenSectors;			// Hidden sectors (sectors before the partition start like the partition table)
-extern	DWORD	nTotalSectors32;		// Number of total sectors on the drive, 32-bit
-
-extern	DWORD	nSectorsPerFAT32;		// Sectors per FAT table (fat32)
-extern	DWORD	nExtendedFlags;			// Extended flags (fat32)
-extern	DWORD	nFileSystemVersion;		// File system version (fat32)
-extern	DWORD	nRootDirStartCluster;	// Starting cluster of the root directory (fat32)
-
-extern	DWORD	nRootDirSectorStart;	// Starting sector of the root directory (fat12/16)
-extern	DWORD	nDataSectorStart;		// Starting sector of the data area
-extern	DWORD	nSectorsPerFAT;			// Sectors per FAT table
-extern	DWORD	nRootDirSectors;		// Number of sectors of the root directory (fat32)
-extern	DWORD	nTotalSectors;			// Total sectors on the drive
-extern	DWORD	nNumberOfClusters;		// Number of clusters on the drive
-
-extern	int	FSType;						// Type of filesystem on boot device, set by OpenDiskDrive()
-
-extern	char *pFileSysData;				// Load address for filesystem data
-extern	char *pFat32FATCacheIndex;		// Load address for filesystem data
-
-BOOL	OpenDiskDrive(int nDrive, int nPartition);	// Opens the disk drive device for reading
-BOOL	ReadMultipleSectors(int nSect, int nNumberOfSectors, void *pBuffer);// Reads a sector from the open device
-BOOL	ReadOneSector(int nSect);				// Reads one sector from the open device
-BOOL	OpenFile(char *filename, FILE *pFile);	// Opens a file
-int		ReadFile(FILE *pFile, int count, void *buffer); // Reads count bytes from pFile into buffer
-DWORD	GetFileSize(FILE *pFile);
-DWORD	Rewind(FILE *pFile);	// Rewinds a file and returns it's size
-int		feof(FILE *pFile);
-int		fseek(FILE *pFILE, DWORD offset);
-
-BOOL	FATLookupFile(char *file, PFAT_STRUCT pFatStruct);
-int		FATGetNumPathParts(char *name);
-BOOL	FATGetFirstNameFromPath(char *buffer, char *name);
-void	FATParseFileName(char *buffer, char *name);
-DWORD	FATGetFATEntry(DWORD nCluster);
-BOOL	FATOpenFile(char *szFileName, PFAT_STRUCT pFatStruct);
-int		FATReadCluster(DWORD nCluster, char *cBuffer);
-int		FATRead(PFAT_STRUCT pFatStruct, int nNumBytes, char *cBuffer);
-int		FATfseek(PFAT_STRUCT pFatStruct, DWORD offset);
+VOID	FileSystemError(PUCHAR ErrorString);
+BOOL	OpenDiskDrive(ULONG DriveNumber, ULONG PartitionNumber);
+VOID	SetDriveGeometry(ULONG Cylinders, ULONG Heads, ULONG Sectors, ULONG BytesPerSector);
+VOID	SetVolumeProperties(ULONG HiddenSectors);
+BOOL	ReadMultipleLogicalSectors(ULONG SectorNumber, ULONG SectorCount, PVOID Buffer);
+BOOL	ReadLogicalSector(ULONG SectorNumber, PVOID Buffer);
+PFILE	OpenFile(PUCHAR FileName);
+VOID	CloseFile(PFILE FileHandle);
+BOOL	ReadFile(PFILE FileHandle, ULONG BytesToRead, PULONG BytesRead, PVOID Buffer);
+ULONG	GetFileSize(PFILE FileHandle);
+VOID	SetFilePointer(PFILE FileHandle, ULONG NewFilePointer);
+ULONG	GetFilePointer(PFILE FileHandle);
+BOOL	IsEndOfFile(PFILE FileHandle);
 
 
 #define	EOF	-1
@@ -179,4 +120,4 @@ int		FATfseek(PFAT_STRUCT pFatStruct, DWORD offset);
 #define	FAT16			2
 #define	FAT32			3
 
-#endif // #defined __FS_FAT_H
+#endif // #defined __FS_H

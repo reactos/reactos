@@ -25,17 +25,17 @@ export RM = cmd /C del
 export CP = cmd /C copy
 
 #FLAGS = -Wall -nostdinc -fno-builtin
-#FLAGS = -Wall -fno-builtin -DDEBUG
-FLAGS = -Wall -fno-builtin
+FLAGS = -Wall -fno-builtin -DDEBUG
+#FLAGS = -Wall -fno-builtin
 
 # asmcode.o has to be first in the link line because it contains the startup code
-OBJS = asmcode.a asmcode.o mb.o boot.o freeldr.o stdlib.o fs.a fs.o fs_fat.o \
+OBJS = asmcode.a asmcode.o mb.o boot.o freeldr.o stdlib.o fs.a fs.o fat.o \
 	reactos.o tui.o menu.o miscboot.o options.o linux.o multiboot.o arcname.o \
 	mem.o memory.o debug.o parseini.o
 ASM_OBJS = asmcode.o mb.o boot.o mem.o
 C_OBJS = freeldr.o stdlib.o fs.a reactos.o tui.o menu.o miscboot.o options.o linux.o \
 	multiboot.o
-C_OBJS2 = arcname.o memory.o debug.o parseini.o rs232.o portio.o
+C_OBJS2 = arcname.o memory.o debug.o parseini.o rs232.o portio.o oslist.o
 
 .PHONY : clean
 
@@ -66,14 +66,14 @@ freeldr.o:	freeldr.c freeldr.h stdlib.h fs.h reactos.h tui.h asmcode.h menu.h mi
 stdlib.o:	stdlib.c freeldr.h stdlib.h Makefile
 	$(CC) $(FLAGS) -o stdlib.o -c stdlib.c
 
-fs.a:	fs.o fs_fat.o Makefile
-	$(LD) -r -o fs.a fs.o fs_fat.o
+fs.a:	fs.o fat.o Makefile
+	$(LD) -r -o fs.a fs.o fat.o
 
 fs.o:	fs.c freeldr.h fs.h stdlib.h tui.h asmcode.h Makefile
 	$(CC) $(FLAGS) -o fs.o -c fs.c
 
-fs_fat.o:	fs_fat.c freeldr.h fs.h stdlib.h tui.h Makefile
-	$(CC) $(FLAGS) -o fs_fat.o -c fs_fat.c
+fat.o:	fat.c fat.h freeldr.h fs.h stdlib.h tui.h Makefile
+	$(CC) $(FLAGS) -o fat.o -c fat.c
 
 reactos.o:	reactos.c freeldr.h reactos.h stdlib.h fs.h tui.h multiboot.h Makefile
 	$(CC) $(FLAGS) -o reactos.o -c reactos.c
@@ -122,6 +122,9 @@ rs232.o:	rs232.c rs232.h Makefile
 
 portio.o:	portio.c portio.h Makefile
 	$(CC) $(FLAGS) -o portio.o -c portio.c
+
+oslist.o:	oslist.c oslist.h Makefile
+	$(CC) $(FLAGS) -o oslist.o -c oslist.c
 
 clean:
 	$(RM) *.o

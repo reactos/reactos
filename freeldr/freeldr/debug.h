@@ -23,39 +23,22 @@
 
 #ifdef DEBUG
 
-#define DPRINT_WARNING		0x00000001		// OR this with DebugPrintMask to enable debugger messages and other misc stuff
-#define DPRINT_MEMORY		0x00000002		// OR this with DebugPrintMask to enable memory management messages
+	#define DPRINT_WARNING		0x00000001		// OR this with DebugPrintMask to enable debugger messages and other misc stuff
+	#define DPRINT_MEMORY		0x00000002		// OR this with DebugPrintMask to enable memory management messages
+	#define DPRINT_FILESYSTEM	0x00000004		// OR this with DebugPrintMask to enable file system messages
+	#define DPRINT_INIFILE		0x00000008		// OR this with DebugPrintMask to enable .ini file messages
+	#define DPRINT_UI			0x00000010		// OR this with DebugPrintMask to enable user interface messages
 
-VOID	DebugInit(VOID);
-void	DebugPrint(ULONG Mask, char *format, ...);
+	VOID	DebugInit(VOID);
+	VOID	DebugPrint(ULONG Mask, char *format, ...);
 
-#define BugCheck0(format) \
-			{ \
-				DebugPrint(DPRINT_WARNING, "Fatal Error: %s:%d\n", __FILE__, __LINE__); \
-				DebugPrint(DPRINT_WARNING, format); \
-				for (;;); \
-			}
+	#define DbgPrint(_x_)	DebugPrint _x_
+	#define BugCheck(_x_) { DebugPrint(DPRINT_WARNING, "Fatal Error: %s:%d\n", __FILE__, __LINE__); DebugPrint _x_ ; for (;;); }
 
-#define BugCheck1(format, arg1) \
-			{ \
-				DebugPrint(DPRINT_WARNING, "Fatal Error: %s:%d\n", __FILE__, __LINE__); \
-				DebugPrint(DPRINT_WARNING, format, arg1); \
-				for (;;); \
-			}
+#else
 
-#define BugCheck2(format, arg1, arg2) \
-			{ \
-				DebugPrint(DPRINT_WARNING, "Fatal Error: %s:%d\n", __FILE__, __LINE__); \
-				DebugPrint(DPRINT_WARNING, format, arg1, arg2); \
-				for (;;); \
-			}
-
-#define BugCheck3(format, arg1, arg2, arg3) \
-			{ \
-				DebugPrint(DPRINT_WARNING, "Fatal Error: %s:%d\n", __FILE__, __LINE__); \
-				DebugPrint(DPRINT_WARNING, format, arg1, arg2, arg3); \
-				for (;;); \
-			}
+	#define DbgPrint(_x_)
+	#define BugCheck(_x_)
 
 #endif // defined DEBUG
 

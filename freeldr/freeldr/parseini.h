@@ -20,12 +20,21 @@
 #ifndef __PARSEINI_H
 #define __PARSEINI_H
 
-BOOL	ParseIniFile(void);
+/*BOOL	ParseIniFile(void);
 ULONG	GetNextLineOfFileData(PUCHAR Buffer, ULONG BufferSize, ULONG CurrentOffset); // Gets the next line of text (up to BufferSize) after CurrentOffset and returns the offset of the next line
 ULONG	GetOffsetOfFirstLineOfSection(PUCHAR SectionName); // Returns the offset of the first line in the section or zero if the section wasn't found
 ULONG	GetNumSectionItems(PUCHAR SectionName); // returns the number of items in a particular section (i.e. [FREELOADER])
 BOOL	ReadSectionSettingByNumber(PUCHAR SectionName, ULONG SettingNumber, PUCHAR SettingName, PUCHAR SettingValue); // Reads the num'th value from section
 BOOL	ReadSectionSettingByName(PUCHAR SectionName, PUCHAR SettingName, PUCHAR SettingValue); // Reads the value named name from section
+BOOL	IsValidSetting(char *setting, char *value);
+void	SetSetting(char *setting, char *value);*/
+
+BOOL	ParseIniFile(VOID);
+ULONG	GetNextLineOfFileData(PUCHAR Buffer, ULONG BufferSize, ULONG CurrentOffset);
+BOOL	OpenSection(PUCHAR SectionName, PULONG SectionId);
+ULONG	GetNumSectionItems(ULONG SectionId);
+BOOL	ReadSectionSettingByNumber(ULONG SectionId, ULONG SettingNumber, PUCHAR SettingName, ULONG NameSize, PUCHAR SettingValue, ULONG ValueSize);
+BOOL	ReadSectionSettingByName(ULONG SectionId, PUCHAR SettingName, PUCHAR Buffer, ULONG BufferSize);
 BOOL	IsValidSetting(char *setting, char *value);
 void	SetSetting(char *setting, char *value);
 

@@ -34,7 +34,7 @@ BOOL	LoadReactOSDrivers(PUCHAR OperatingSystemName);
 
 void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 {
-	FILE		file;
+	PFILE		FilePointer;
 	char		name[1024];
 	char		value[1024];
 	char		szFileName[1024];
@@ -43,6 +43,18 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	int			nNumDriverFiles=0;
 	int			nNumFilesLoaded=0;
 	char		MsgBuffer[256];
+	ULONG		SectionId;
+
+	//
+	// Open the operating system section
+	// specified in the .ini file
+	//
+	if (!OpenSection(OperatingSystemName, &SectionId))
+	{
+		sprintf(MsgBuffer,"Operating System section '%s' not found in freeldr.ini", OperatingSystemName);
+		MessageBox(MsgBuffer);
+		return;
+	}
 
 	/*
 	 * Setup multiboot information structure
@@ -73,7 +85,7 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	/*
 	 * Make sure the system path is set in the .ini file
 	 */
-	if (!ReadSectionSettingByName(OperatingSystemName, "SystemPath", value))
+	if (!ReadSectionSettingByName(SectionId, "SystemPath", value, 1024))
 	{
 		MessageBox("System path not specified for selected operating system.");
 		return;
@@ -99,7 +111,7 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	/*
 	 * Read the optional kernel parameters (if any)
 	 */
-	if (ReadSectionSettingByName(OperatingSystemName, "Options", value))
+	if (ReadSectionSettingByName(SectionId, "Options", value, 1024))
 	{
 		strcat(multiboot_kernel_cmdline, " ");
 		strcat(multiboot_kernel_cmdline, value);
@@ -113,7 +125,7 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	/*
 	 * Find the kernel image name
 	 */
-	if(!ReadSectionSettingByName(OperatingSystemName, "Kernel", value))
+	if(!ReadSectionSettingByName(SectionId, "Kernel", value, 1024))
 	{
 		MessageBox("Kernel image file not specified for selected operating system.");
 		return;
@@ -136,12 +148,12 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	/*
 	 * Parse the ini file and count the kernel and drivers
 	 */
-	for (i=1; i<=GetNumSectionItems(OperatingSystemName); i++)
+	for (i=1; i<=GetNumSectionItems(SectionId); i++)
 	{
 		/*
 		 * Read the setting and check if it's a driver
 		 */
-		ReadSectionSettingByNumber(OperatingSystemName, i, name, value);
+		ReadSectionSettingByNumber(SectionId, i, name, 1024, value, 1024);
 		if ((stricmp(name, "Kernel") == 0) || (stricmp(name, "Driver") == 0))
 			nNumDriverFiles++;
 	}
@@ -150,14 +162,17 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	 * Find the kernel image name
 	 * and try to load the kernel off the disk
 	 */
-	if(ReadSectionSettingByName(OperatingSystemName, "Kernel", value))
+	if(ReadSectionSettingByName(SectionId, "Kernel", value, 1024))
 	{
 		/*
 		 * Set the name and try to open the PE image
 		 */
-		strcpy(szFileName, szBootPath);
-		strcat(szFileName, value);
-		if (!OpenFile(szFileName, &file))
+		//strcpy(szFileName, szBootPath);
+		//strcat(szFileName, value);
+		strcpy(szFileName, value);
+
+		FilePointer = OpenFile(szFileName);
+		if (FilePointer == NULL)
 		{
 			strcat(value, " not found.");
 			MessageBox(value);
@@ -176,7 +191,7 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 		/*
 		 * Load the kernel image
 		 */
-		MultiBootLoadKernel(&file);
+		MultiBootLoadKernel(FilePointer);
 		
 		nNumFilesLoaded++;
 		DrawProgressBar((nNumFilesLoaded * 100) / nNumDriverFiles);
@@ -186,20 +201,23 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	 * Parse the ini file and load the kernel and
 	 * load all the drivers specified
 	 */
-	for (i=1; i<=GetNumSectionItems(OperatingSystemName); i++)
+	for (i=1; i<=GetNumSectionItems(SectionId); i++)
 	{
 		/*
 		 * Read the setting and check if it's a driver
 		 */
-		ReadSectionSettingByNumber(OperatingSystemName, i, name, value);
+		ReadSectionSettingByNumber(SectionId, i, name, 1024, value, 1024);
 		if (stricmp(name, "Driver") == 0)
 		{
 			/*
 			 * Set the name and try to open the PE image
 			 */
-			strcpy(szFileName, szBootPath);
-			strcat(szFileName, value);
-			if (!OpenFile(szFileName, &file))
+			//strcpy(szFileName, szBootPath);
+			//strcat(szFileName, value);
+			strcpy(szFileName, value);
+
+			FilePointer = OpenFile(szFileName);
+			if (FilePointer == NULL)
 			{
 				strcat(value, " not found.");
 				MessageBox(value);
@@ -218,7 +236,7 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 			/*
 			 * Load the driver
 			 */
-			MultiBootLoadModule(&file, szFileName);
+			MultiBootLoadModule(FilePointer, szFileName);
 
 
 			nNumFilesLoaded++;

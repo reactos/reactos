@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1999, 2000, 2001  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 2001  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,9 +17,12 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef __MENU_H
-#define __MENU_H
+#ifndef __OSLIST_H
+#define __OSLIST_H
 
-BOOL	DisplayMenu(PUCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, PULONG SelectedMenuItem);
+BOOL	InitOperatingSystemList(PUCHAR **SectionNamesPointer, PUCHAR **DisplayNamesPointer, PULONG OperatingSystemCountPointer);
+ULONG	CountOperatingSystems(ULONG SectionId);
+BOOL	AllocateListMemory(PUCHAR **SectionNamesPointer, PUCHAR **DisplayNamesPointer, ULONG OperatingSystemCount);
+BOOL	RemoveQuotes(PUCHAR QuotedString);
 
-#endif // #defined __MENU_H
+#endif // #defined __OSLIST_H

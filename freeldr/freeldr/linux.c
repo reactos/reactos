@@ -28,7 +28,7 @@
 
 void LoadAndBootLinux(int DriveNum, int Partition, char *vmlinuz, char *cmd_line)
 {
-	FILE	file;
+	/*FILE	file;
 	char	temp[260];
 	char	bootsector[512];
 	char	setup[2048];
@@ -97,5 +97,5 @@ void LoadAndBootLinux(int DriveNum, int Partition, char *vmlinuz, char *cmd_line
 	gotoxy(CursorXPos, CursorYPos);
 
 	stop_floppy();
-	JumpToLinuxBootCode();
+	JumpToLinuxBootCode();*/
 }
