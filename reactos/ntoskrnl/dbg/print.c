@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: print.c,v 1.12 2001/03/16 18:11:21 dwelch Exp $
+/* $Id: print.c,v 1.13 2002/02/25 22:45:04 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -57,7 +57,7 @@ ULONG
 DbgPrint(PCH Format, ...)
 {
    ANSI_STRING DebugString;
-   CHAR Buffer[512];
+   CHAR Buffer[1024];
    va_list ap;
 
    /* init ansi string */
@@ -65,7 +65,7 @@ DbgPrint(PCH Format, ...)
    DebugString.MaximumLength = 512;
 
    va_start (ap, Format);
-   DebugString.Length = vsprintf (Buffer, Format, ap);
+   DebugString.Length = _vsnprintf (Buffer, sizeof( Buffer ), Format, ap);
    va_end (ap);
 
    KdpPrintString (&DebugString);
