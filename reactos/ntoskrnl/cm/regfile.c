@@ -33,6 +33,8 @@
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 #define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
 
+#define ABS_VALUE(V) (((V) < 0) ? -(V) : (V))
+
 BOOLEAN CmiDoVerify = FALSE;
 
 static ULONG
@@ -2425,10 +2427,10 @@ CmiGetValueFromKeyByIndex(IN PREGISTRY_HIVE RegistryHive,
 
 NTSTATUS
 CmiAddValueToKey(IN PREGISTRY_HIVE RegistryHive,
-	IN PKEY_CELL KeyCell,
-	IN PUNICODE_STRING ValueName,
-	OUT PVALUE_CELL *pValueCell,
-	OUT BLOCK_OFFSET *pVBOffset)
+		 IN PKEY_CELL KeyCell,
+		 IN PUNICODE_STRING ValueName,
+		 OUT PVALUE_CELL *pValueCell,
+		 OUT BLOCK_OFFSET *pVBOffset)
 {
   PVALUE_LIST_CELL NewValueListCell;
   PVALUE_LIST_CELL ValueListCell;
@@ -2438,9 +2440,9 @@ CmiAddValueToKey(IN PREGISTRY_HIVE RegistryHive,
   NTSTATUS Status;
 
   Status = CmiAllocateValueCell(RegistryHive,
-		&NewValueCell,
-		&VBOffset,
-		ValueName);
+				&NewValueCell,
+				&VBOffset,
+				ValueName);
   *pVBOffset = VBOffset;
 
   if (!NT_SUCCESS(Status))
@@ -2458,38 +2460,39 @@ CmiAddValueToKey(IN PREGISTRY_HIVE RegistryHive,
 	      &VLBOffset);
 
       if (!NT_SUCCESS(Status))
-        {
-          CmiDestroyValueCell(RegistryHive, NewValueCell, VBOffset);
-          return Status;
-        }
+	{
+	  CmiDestroyValueCell(RegistryHive, NewValueCell, VBOffset);
+	  return Status;
+	}
       KeyCell->ValuesOffset = VLBOffset;
     }
-  else if ((KeyCell->NumberOfValues
-		>= (ULONG) ((LONG) (ValueListCell->CellSize - 4)) / (LONG) sizeof(BLOCK_OFFSET)))
+  else if (KeyCell->NumberOfValues >= 
+	   (((ULONG)ABS_VALUE(ValueListCell->CellSize) - 4) / sizeof(BLOCK_OFFSET)))
     {
       Status = CmiAllocateBlock(RegistryHive,
-	      (PVOID) &NewValueListCell,
-	      sizeof(BLOCK_OFFSET) * (KeyCell->NumberOfValues + REG_VALUE_LIST_CELL_MULTIPLE),
-	      &VLBOffset);
-
+				(PVOID) &NewValueListCell,
+				(KeyCell->NumberOfValues + REG_VALUE_LIST_CELL_MULTIPLE) *
+				  sizeof(BLOCK_OFFSET),
+				&VLBOffset);
       if (!NT_SUCCESS(Status))
-        {
-          CmiDestroyValueCell(RegistryHive, NewValueCell, VBOffset);
-          return Status;
-        }
+	{
+	  CmiDestroyValueCell(RegistryHive, NewValueCell, VBOffset);
+	  return Status;
+	}
 
       RtlCopyMemory(&NewValueListCell->Values[0],
-        &ValueListCell->Values[0],
-        sizeof(BLOCK_OFFSET) * KeyCell->NumberOfValues);
+		    &ValueListCell->Values[0],
+		    sizeof(BLOCK_OFFSET) * KeyCell->NumberOfValues);
       CmiDestroyBlock(RegistryHive, ValueListCell, KeyCell->ValuesOffset);
       KeyCell->ValuesOffset = VLBOffset;
       ValueListCell = NewValueListCell;
     }
 
-  DPRINT("KeyCell->NumberOfValues %d, ValueListCell->CellSize %d (%d %x)\n",
-	 KeyCell->NumberOfValues, ValueListCell->CellSize,
-	 -(ValueListCell->CellSize - 4) / sizeof(BLOCK_OFFSET),
-	 -(ValueListCell->CellSize - 4) / sizeof(BLOCK_OFFSET));
+  DPRINT("KeyCell->NumberOfValues %lu, ValueListCell->CellSize %lu (%lu %lx)\n",
+	 KeyCell->NumberOfValues,
+	 (ULONG)ABS_VALUE(ValueListCell->CellSize),
+	 ((ULONG)ABS_VALUE(ValueListCell->CellSize) - 4) / sizeof(BLOCK_OFFSET),
+	 ((ULONG)ABS_VALUS(ValueListCell->CellSize) - 4) / sizeof(BLOCK_OFFSET));
 
   ValueListCell->Values[KeyCell->NumberOfValues] = VBOffset;
   KeyCell->NumberOfValues++;
