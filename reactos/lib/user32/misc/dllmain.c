@@ -33,6 +33,10 @@ Init(VOID)
     (PVOID)User32SendGETMINMAXINFOMessageForKernel;
   NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_SENDNCCALCSIZE] =
     (PVOID)User32SendNCCALCSIZEMessageForKernel;
+  NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_SENDWINDOWPOSCHANGING] =
+    (PVOID)User32SendWINDOWPOSCHANGINGMessageForKernel;
+  NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_SENDWINDOWPOSCHANGED] =
+    (PVOID)User32SendWINDOWPOSCHANGEDMessageForKernel;
 
   UserSetupInternalPos();
 

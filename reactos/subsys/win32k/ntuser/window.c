@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.43 2003/05/17 09:20:23 gvg Exp $
+/* $Id: window.c,v 1.44 2003/05/17 14:30:28 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -879,7 +879,7 @@ NtUserMoveWindow(
         pWinPos.cy = pWinPos.x + nHeight;
     else
         pWinPos.cy = pWinPos.y + NtUserGetSystemMetrics(SM_CYMIN);
-    NtUserSendMessage(hWnd, WM_WINDOWPOSCHANGING, 0, (LPARAM)&pWinPos);
+    W32kSendWINDOWPOSCHANGINGMessage(Window->Self, &pWinPos);
     
     Window->WindowRect.top = Window->ClientRect.top = pWinPos.y;
     Window->WindowRect.left = Window->ClientRect.left = pWinPos.x;
@@ -908,7 +908,7 @@ NtUserMoveWindow(
         Window->ClientRect.top += NtUserGetSystemMetrics(SM_CYMENU);
     }
 
-    NtUserSendMessage(hWnd, WM_WINDOWPOSCHANGED, 0, (LPARAM)&pWinPos);
+    W32kSendWINDOWPOSCHANGEDMessage(Window->Self, &pWinPos);
     
     NtUserSendMessage(hWnd, WM_MOVE, 0, MAKEWORD(Window->ClientRect.left,
                                                  Window->ClientRect.top));

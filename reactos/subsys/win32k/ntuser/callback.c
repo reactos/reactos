@@ -1,4 +1,4 @@
-/* $Id: callback.c,v 1.7 2002/08/31 23:18:46 dwelch Exp $
+/* $Id: callback.c,v 1.8 2003/05/17 14:30:28 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -208,6 +208,56 @@ W32kSendGETMINMAXINFOMessage(HWND Wnd, MINMAXINFO* MinMaxInfo)
 }
 
 LRESULT STDCALL
+W32kSendWINDOWPOSCHANGINGMessage(HWND Wnd, WINDOWPOS* WindowPos)
+{
+  SENDWINDOWPOSCHANGING_CALLBACK_ARGUMENTS Arguments;
+  LRESULT Result;
+  NTSTATUS Status;
+  PVOID ResultPointer;
+  ULONG ResultLength;
+
+  Arguments.Wnd = Wnd;
+  Arguments.WindowPos = *WindowPos;
+  ResultPointer = &Result;
+  ResultLength = sizeof(LRESULT);
+  Status = NtW32Call(USER32_CALLBACK_SENDWINDOWPOSCHANGING,
+		     &Arguments,
+		     sizeof(SENDWINDOWPOSCHANGING_CALLBACK_ARGUMENTS),
+		     &ResultPointer,
+		     &ResultLength);
+  if (!NT_SUCCESS(Status))
+    {
+      return(0);
+    }
+  return(Result);
+}
+
+LRESULT STDCALL
+W32kSendWINDOWPOSCHANGEDMessage(HWND Wnd, WINDOWPOS* WindowPos)
+{
+  SENDWINDOWPOSCHANGED_CALLBACK_ARGUMENTS Arguments;
+  LRESULT Result;
+  NTSTATUS Status;
+  PVOID ResultPointer;
+  ULONG ResultLength;
+
+  Arguments.Wnd = Wnd;
+  Arguments.WindowPos = *WindowPos;
+  ResultPointer = &Result;
+  ResultLength = sizeof(LRESULT);
+  Status = NtW32Call(USER32_CALLBACK_SENDWINDOWPOSCHANGED,
+		     &Arguments,
+		     sizeof(SENDWINDOWPOSCHANGED_CALLBACK_ARGUMENTS),
+		     &ResultPointer,
+		     &ResultLength);
+  if (!NT_SUCCESS(Status))
+    {
+      return(0);
+    }
+  return(Result);
+}
+
+LRESULT STDCALL
 W32kCallTrampolineWindowProc(WNDPROC Proc,
 			     HWND Wnd,
 			     UINT Message,
@@ -217,26 +267,32 @@ W32kCallTrampolineWindowProc(WNDPROC Proc,
   switch (Message)
     {
     case WM_NCCREATE:
-      return(W32kSendNCCREATEMessage(Wnd, (CREATESTRUCTW*)lParam));
+      return W32kSendNCCREATEMessage(Wnd, (CREATESTRUCTW*)lParam);
      
     case WM_CREATE:
-      return(W32kSendCREATEMessage(Wnd, (CREATESTRUCTW*)lParam));
+      return W32kSendCREATEMessage(Wnd, (CREATESTRUCTW*)lParam);
 
     case WM_GETMINMAXINFO:
-      return(W32kSendGETMINMAXINFOMessage(Wnd, (MINMAXINFO*)lParam));
+      return W32kSendGETMINMAXINFOMessage(Wnd, (MINMAXINFO*)lParam);
 
     case WM_NCCALCSIZE:
       {
 	if (wParam)
 	  {
-	    return(W32kSendNCCALCSIZEMessage(Wnd, TRUE, NULL, 
-					     (NCCALCSIZE_PARAMS*)lParam));
+	    return W32kSendNCCALCSIZEMessage(Wnd, TRUE, NULL, 
+					     (NCCALCSIZE_PARAMS*)lParam);
 	  }
 	else
 	  {
-	    return(W32kSendNCCALCSIZEMessage(Wnd, FALSE, (RECT*)lParam, NULL));
+	    return W32kSendNCCALCSIZEMessage(Wnd, FALSE, (RECT*)lParam, NULL);
 	  }
       }
+     
+    case WM_WINDOWPOSCHANGING:
+      return W32kSendWINDOWPOSCHANGINGMessage(Wnd, (WINDOWPOS*) lParam);
+
+    case WM_WINDOWPOSCHANGED:
+      return W32kSendWINDOWPOSCHANGEDMessage(Wnd, (WINDOWPOS*) lParam);
 
     default:
       return(W32kCallWindowProc(Proc, Wnd, Message, wParam, lParam));

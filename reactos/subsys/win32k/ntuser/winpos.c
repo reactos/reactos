@@ -1,4 +1,4 @@
-/* $Id: winpos.c,v 1.7 2002/11/01 11:29:58 dwelch Exp $
+/* $Id: winpos.c,v 1.8 2003/05/17 14:30:28 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -339,8 +339,7 @@ WinPosDoWinPosChanging(PWINDOW_OBJECT WindowObject,
 {
   if (!(WinPos->flags & SWP_NOSENDCHANGING))
     {
-      NtUserSendMessage(WindowObject->Self, WM_WINDOWPOSCHANGING, 0,
-			(LPARAM)WinPos);
+      W32kSendWINDOWPOSCHANGINGMessage(WindowObject->Self, WinPos);
     }
   
   *WindowRect = WindowObject->WindowRect;
@@ -538,7 +537,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
     }
 
   /* FIXME: Check some conditions before doing this. */
-  NtUserSendMessage(WinPos.hwnd, WM_WINDOWPOSCHANGED, 0, (LPARAM)&WinPos);
+  W32kSendWINDOWPOSCHANGEDMessage(Window->Self, &WinPos);
 
   ObmDereferenceObject(Window);
   return(TRUE);
