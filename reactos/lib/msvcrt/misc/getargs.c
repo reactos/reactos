@@ -4,6 +4,7 @@
 
 extern char *_acmdln;
 extern char *_pgmptr;
+#undef _environ
 extern char **_environ;
 
 #undef __argv
