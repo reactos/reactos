@@ -33,6 +33,7 @@ copy ..\wine\dlls\shlwapi\shlwapi.dll	%WINE_INSTALL%
 REM
 echo Installing winelib programs to C:\bin
 REM
+mkdir C:\bin
 copy ..\wine\programs\clock\winclock.exe		C:\bin
 copy ..\wine\programs\cmdlgtst\cmdlgtst.exe		C:\bin
 copy ..\wine\programs\control\control.exe		C:\bin
