@@ -267,10 +267,11 @@ void NtObjDirectory::read_directory(int scan_flags)
 				}
 
 				else if (type == KEY_OBJECT) {
-#if 0 ///@todo mount registry hives
-					TLVEntry *entry, **pnext = pchild();
-					TLVController* tlvctrlr = system()->tlvctrlr();
+					w32fd.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
 
+					entry = new NtObjDirectory(this, buffer);
+
+#if 0 ///@todo mount registry hives
 					*pnext = entry = new RegRootEntry(tlvctrlr, HKEY_CURRENT_USER);
 					*entry->pparent() = this;
 
@@ -510,4 +511,9 @@ bool NtObjEntry::get_path(PTSTR path) const
 	path[len] = TEXT('\0');
 
 	return true;
+}
+
+BOOL NtObjEntry::launch_entry(HWND hwnd, UINT nCmdShow)
+{
+	return FALSE;
 }

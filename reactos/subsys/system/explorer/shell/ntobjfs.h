@@ -98,6 +98,7 @@ protected:
 	NtObjEntry(OBJECT_TYPE type) : Entry(ET_NTOBJS), _type(type) {}
 
 	virtual bool get_path(PTSTR path) const;
+	virtual BOOL launch_entry(HWND hwnd, UINT nCmdShow);
 };
 
 
