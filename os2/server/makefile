@@ -1,6 +1,6 @@
-# $Id: makefile,v 1.2 2003/01/07 16:23:12 robd Exp $
+# $Id: makefile,v 1.3 2003/01/12 02:03:06 robd Exp $
 
-PATH_TO_TOP = ../../../reactos
+PATH_TO_TOP = ../../reactos
 
 TARGET_TYPE = program
 
