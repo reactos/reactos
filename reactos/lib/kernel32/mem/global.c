@@ -1,4 +1,4 @@
-/* $Id: global.c,v 1.20 2004/01/23 21:16:03 ekohl Exp $
+/* $Id: global.c,v 1.21 2004/02/18 23:20:14 gvg Exp $
  *
  * Win32 Global/Local heap functions (GlobalXXX, LocalXXX).
  * These functions included in Win32 for compatibility with 16 bit Windows
@@ -68,10 +68,6 @@ GlobalAlloc(UINT uFlags,
     PGLOBAL_HANDLE phandle    = 0;
     PVOID          palloc     = 0;
     UINT           heap_flags = 0;
-    /*Fixme: When we are sure all allocations are 8-byte aligned,
-    **we can remove this hack.
-    */
-    PGLOBAL_HANDLE hack_fix   = 0;
 
     if (uFlags & GMEM_ZEROINIT)
     {
@@ -83,24 +79,20 @@ GlobalAlloc(UINT uFlags,
     //Changed hProcessHeap to GetProcessHeap()
     if ((uFlags & GMEM_MOVEABLE)==0) /* POINTER */
     {
-        return ((HGLOBAL)RtlAllocateHeap(GetProcessHeap(), heap_flags, dwBytes));
+        palloc = RtlAllocateHeap(GetProcessHeap(), heap_flags, dwBytes);
+        if (! ISPOINTER(palloc))
+        {
+            DPRINT1("GlobalAlloced pointer which is not 8-byte aligned\n");
+            RtlFreeHeap(GetProcessHeap(), 0, palloc);
+            return NULL;
+        }
+        return (HGLOBAL) palloc;
     }
     else  /* HANDLE */
     {
         HeapLock(hProcessHeap);
 
         phandle = RtlAllocateHeap(GetProcessHeap(), 0,  sizeof(GLOBAL_HANDLE));
-        /* This little hack is to make sure that we get a pointer with 8-byte
-        ** alignment.
-        ** Fixme: When we are sure all allocations are 8-byte aligned,
-        ** we can remove this hack.
-        */
-        if (ISPOINTER(INTERN_TO_HANDLE(phandle)))
-        {
-            hack_fix = RtlAllocateHeap(GetProcessHeap(), 0,  sizeof(GLOBAL_HANDLE));
-            RtlFreeHeap(GetProcessHeap(), 0, phandle);
-            phandle = hack_fix;
-        }
         if (phandle)
         {
             phandle->Magic     = MAGIC_GLOBAL_USED;
@@ -133,7 +125,16 @@ GlobalAlloc(UINT uFlags,
         HeapUnlock(hProcessHeap);
 
         if (phandle)
+        {
+            if (ISPOINTER(INTERN_TO_HANDLE(phandle)))
+            {
+                DPRINT1("GlobalAlloced handle which is 8-byte aligned but shouldn't be\n");
+                RtlFreeHeap(GetProcessHeap(), 0, palloc);
+                RtlFreeHeap(GetProcessHeap(), 0, phandle);
+                return NULL;
+            }
             return INTERN_TO_HANDLE(phandle);	
+        }
         else
             return (HGLOBAL)0;
     }
