@@ -7,13 +7,43 @@ namespace TechBot.Library
 	{
 		public bool Error = false;
 		
+		private const string SpecialHexCharacters = "ABCDEF";
+
+		private bool IsSpecialHexCharacter(char ch)
+		{
+			foreach (char specialChar in SpecialHexCharacters)
+			{
+				if (ch.ToString().ToUpper() == specialChar.ToString())
+					return true;
+			}
+			return false;
+		}
+
+		private bool HasSpecialHexCharacters(string s)
+		{
+			foreach (char ch in s)
+			{
+				if (IsSpecialHexCharacter(ch))
+					return true;
+			}
+			return false;
+		}
+		
 		public long Parse(string s)
 		{
 			try
 			{
 				Error = false;
+				bool useHex = false;
 				if (s.StartsWith("0x"))
-					return Int64.Parse(s.Substring(2),
+				{
+					s = s.Substring(2);
+					useHex = true;
+				}
+				if (HasSpecialHexCharacters(s))
+					useHex = true;
+				if (useHex)
+					return Int64.Parse(s,
 					                   NumberStyles.HexNumber);
 				else
 					return Int64.Parse(s);
