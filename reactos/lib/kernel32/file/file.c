@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.42 2003/03/06 13:00:51 ekohl Exp $
+/* $Id: file.c,v 1.43 2003/03/23 04:01:16 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -523,36 +523,64 @@ GetFileAttributesA(LPCSTR lpFileName)
 DWORD STDCALL
 GetFileAttributesW(LPCWSTR lpFileName)
 {
-   IO_STATUS_BLOCK IoStatusBlock;
-   FILE_BASIC_INFORMATION FileBasic;
-   HANDLE hFile;
-   NTSTATUS errCode;
+  FILE_BASIC_INFORMATION FileInformation;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  IO_STATUS_BLOCK IoStatusBlock;
+  UNICODE_STRING FileName;
+  HANDLE FileHandle;
+  NTSTATUS Status;
 
-   hFile = CreateFileW(lpFileName,
-		       FILE_READ_ATTRIBUTES,
-		       FILE_SHARE_READ,
-		       NULL,
-		       OPEN_EXISTING,
-		       FILE_ATTRIBUTE_NORMAL,
-		       NULL);
-   if (hFile == INVALID_HANDLE_VALUE)
-     {
-	return 0xFFFFFFFF;
-     }
+  DPRINT ("GetFileAttributeW(%S) called\n", lpFileName);
 
-   errCode = NtQueryInformationFile(hFile,
-				    &IoStatusBlock,
-				    &FileBasic,
-				    sizeof(FILE_BASIC_INFORMATION),
-				    FileBasicInformation);
-   if (!NT_SUCCESS(errCode))
-     {
-	CloseHandle(hFile);
-	SetLastErrorByStatus(errCode);
-	return 0xFFFFFFFF;
-     }
-   CloseHandle(hFile);
-   return (DWORD)FileBasic.FileAttributes;
+  /* Validate and translate the filename */
+  if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpFileName,
+				     &FileName,
+				     NULL,
+				     NULL))
+    {
+      DPRINT ("Invalid path\n");
+      SetLastError (ERROR_BAD_PATHNAME);
+      return 0xFFFFFFFF;
+    }
+  DPRINT ("FileName: \'%wZ\'\n", &FileName);
+
+  /* build the object attributes */
+  InitializeObjectAttributes (&ObjectAttributes,
+			      &FileName,
+			      OBJ_CASE_INSENSITIVE,
+			      NULL,
+			      NULL);
+
+  /* Open the file */
+  Status = NtOpenFile (&FileHandle,
+		       SYNCHRONIZE | FILE_READ_ATTRIBUTES,
+		       &ObjectAttributes,
+		       &IoStatusBlock,
+		       FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+		       FILE_SYNCHRONOUS_IO_NONALERT);
+  RtlFreeUnicodeString (&FileName);
+  if (!NT_SUCCESS (Status))
+    {
+      DPRINT ("NtOpenFile() failed (Status %lx)\n", Status);
+      SetLastErrorByStatus (Status);
+      return 0xFFFFFFFF;
+    }
+
+  /* Get file attributes */
+  Status = NtQueryInformationFile (FileHandle,
+				   &IoStatusBlock,
+				   &FileInformation,
+				   sizeof(FILE_BASIC_INFORMATION),
+				   FileBasicInformation);
+  NtClose (FileHandle);
+  if (!NT_SUCCESS (Status))
+    {
+      DPRINT ("NtQueryInformationFile() failed (Status %lx)\n", Status);
+      SetLastErrorByStatus (Status);
+      return 0xFFFFFFFF;
+    }
+
+  return (DWORD)FileInformation.FileAttributes;
 }
 
 
@@ -560,29 +588,29 @@ WINBOOL STDCALL
 SetFileAttributesA(LPCSTR lpFileName,
 		   DWORD dwFileAttributes)
 {
-   UNICODE_STRING FileNameU;
-   ANSI_STRING FileName;
-   WINBOOL Result;
+  UNICODE_STRING FileNameU;
+  ANSI_STRING FileName;
+  WINBOOL Result;
 
-   RtlInitAnsiString(&FileName,
+  RtlInitAnsiString (&FileName,
 		     (LPSTR)lpFileName);
 
-   /* convert ansi (or oem) string to unicode */
-   if (bIsFileApiAnsi)
-     RtlAnsiStringToUnicodeString(&FileNameU,
+  /* convert ansi (or oem) string to unicode */
+  if (bIsFileApiAnsi)
+    RtlAnsiStringToUnicodeString (&FileNameU,
 				  &FileName,
 				  TRUE);
    else
-     RtlOemStringToUnicodeString(&FileNameU,
+    RtlOemStringToUnicodeString (&FileNameU,
 				 &FileName,
 				 TRUE);
 
-   Result = SetFileAttributesW(FileNameU.Buffer,
+  Result = SetFileAttributesW (FileNameU.Buffer,
 			       dwFileAttributes);
 
-   RtlFreeUnicodeString(&FileNameU);
+  RtlFreeUnicodeString (&FileNameU);
 
-   return Result;
+  return Result;
 }
 
 
@@ -590,51 +618,77 @@ WINBOOL STDCALL
 SetFileAttributesW(LPCWSTR lpFileName,
 		   DWORD dwFileAttributes)
 {
-   IO_STATUS_BLOCK IoStatusBlock;
-   FILE_BASIC_INFORMATION FileBasic;
-   HANDLE hFile;
-   NTSTATUS errCode;
-   
-   hFile = CreateFileW(lpFileName,
-		       FILE_READ_ATTRIBUTES | FILE_WRITE_ATTRIBUTES,
-		       FILE_SHARE_READ,
-		       NULL,
-		       OPEN_EXISTING,
-		       FILE_ATTRIBUTE_NORMAL,
-		       NULL);
-   if (INVALID_HANDLE_VALUE == hFile)
-     {
-	DPRINT("SetFileAttributes CreateFileW failed with code %d\n", GetLastError());
-	return FALSE;
-     }
+  FILE_BASIC_INFORMATION FileInformation;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  IO_STATUS_BLOCK IoStatusBlock;
+  UNICODE_STRING FileName;
+  HANDLE FileHandle;
+  NTSTATUS Status;
 
-   errCode = NtQueryInformationFile(hFile,
-				    &IoStatusBlock,
-				    &FileBasic,
-				    sizeof(FILE_BASIC_INFORMATION),
-				    FileBasicInformation);
-   if (!NT_SUCCESS(errCode))
-     {
-	CloseHandle(hFile);
-	DPRINT("SetFileAttributes NtQueryInformationFile failed with status 0x%08x\n", errCode);
-	SetLastErrorByStatus(errCode);
-	return FALSE;
-     }
-   FileBasic.FileAttributes = dwFileAttributes;
-   errCode = NtSetInformationFile(hFile,
+  DPRINT ("SetFileAttributeW(%S, 0x%lx) called\n", lpFileName, dwFileAttributes);
+
+  /* Validate and translate the filename */
+  if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpFileName,
+				     &FileName,
+				     NULL,
+				     NULL))
+    {
+      DPRINT ("Invalid path\n");
+      SetLastError (ERROR_BAD_PATHNAME);
+      return FALSE;
+    }
+  DPRINT ("FileName: \'%wZ\'\n", &FileName);
+
+  /* build the object attributes */
+  InitializeObjectAttributes (&ObjectAttributes,
+			      &FileName,
+			      OBJ_CASE_INSENSITIVE,
+			      NULL,
+			      NULL);
+
+  /* Open the file */
+  Status = NtOpenFile (&FileHandle,
+		       SYNCHRONIZE | FILE_READ_ATTRIBUTES | FILE_WRITE_ATTRIBUTES,
+		       &ObjectAttributes,
+		       &IoStatusBlock,
+		       FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+		       FILE_SYNCHRONOUS_IO_NONALERT);
+  RtlFreeUnicodeString (&FileName);
+  if (!NT_SUCCESS (Status))
+    {
+      DPRINT ("NtOpenFile() failed (Status %lx)\n", Status);
+      SetLastErrorByStatus (Status);
+      return FALSE;
+    }
+
+  Status = NtQueryInformationFile(FileHandle,
 				  &IoStatusBlock,
-				  &FileBasic,
+				  &FileInformation,
 				  sizeof(FILE_BASIC_INFORMATION),
 				  FileBasicInformation);
-   if (!NT_SUCCESS(errCode))
-     {
-	CloseHandle(hFile);
-	DPRINT("SetFileAttributes NtSetInformationFile failed with status 0x%08x\n", errCode);
-	SetLastErrorByStatus(errCode);
-	return FALSE;
-     }
-   CloseHandle(hFile);
-   return TRUE;
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT ("SetFileAttributes NtQueryInformationFile failed with status 0x%08x\n", Status);
+      NtClose (FileHandle);
+      SetLastErrorByStatus (Status);
+      return FALSE;
+    }
+
+  FileInformation.FileAttributes = dwFileAttributes;
+  Status = NtSetInformationFile(FileHandle,
+				&IoStatusBlock,
+				&FileInformation,
+				sizeof(FILE_BASIC_INFORMATION),
+				FileBasicInformation);
+  NtClose (FileHandle);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT ("SetFileAttributes NtSetInformationFile failed with status 0x%08x\n", Status);
+      SetLastErrorByStatus (Status);
+      return FALSE;
+    }
+
+  return TRUE;
 }
 
 
