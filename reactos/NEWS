@@ -1,3 +1,7 @@
+0.0.14 (so far):     
+
+0.0.13:      Mostly bugfixes (I think)
+
 0.0.12:      Added support for multiple processes (not really tested)
 	     System calls
 	     kernel32 now compiles (only as a static library)

@@ -17,9 +17,9 @@
 ;  DISCLAMED. This includes but is not limited to warrenties of
 ;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ;
-; $Revision: 1.2 $
+; $Revision: 1.3 $
 ; $Author: dwelch $
-; $Date: 1999/01/16 21:02:58 $
+; $Date: 1999/01/17 17:27:24 $
 ;
 ; These three functions appear to be name mangled in some way, so GCC is
 ; probably not going to be able to use them in any case.
@@ -713,3 +713,4 @@ wcsxfrm
 wctomb
 wprintf
 wscanf
+

@@ -1,21 +1,58 @@
-DIRECTORIES
+* Introduction
 
-system           : compiled versions of the various system components and
-                   libraries
-ntoskrnl          : microkernel source
-ntoskrnl/hal      : hardware abstraction layer source
-ntoskrnl/mm       : memory managment subsystem source
-ntoskrnl/io      : IO manager subsystem source
-include          : win32 headers
-include/internal : kernel private header files
-include/ntdll    : system library private header files
-include/kernel32 : system library private header files
-include/user32   : user interface private header files
-include/gdi32    : graphics interface private header files
-include/ddk      : header files for modules
-lib/ntdll        : NT dll source
-lib/kernel32     : kernel32 source
-doc              : documentation
-loaders/dos      : DOS based loader
-loaders/boot     : boot loader
-services         : various services (device drivers, filesystems etc)
+These are the sources for the ReactOS kernel, system libraries and
+applications. ReactOS is the beginnings of a free clone of Windows NT
+(aiming at version 4 right now). ReactOS isn't usuable for anything but 
+further development, please don't uninstall your existing OSs just yet. 
+
+* Compilation
+
+ReactOS currently only compiles using the djgpp compiler for DOS (or a djgpp
+cross compiler with some fiddling). This will change in the near future to
+using the mingw32 compiler. It also needs the NASM assembler installed. 
+To compile 
+
+1) copy libgcc.a from the djgpp distribution to the ntoskrnl directory
+2) make
+
+* Installation
+
+By default ReactOS tries to execute 'c:\reactos\system\shell.bin' on
+startup, if you want to see a user program running, copy either
+'apps\hello\hello.bin' or 'apps\shell\shell.bin' to 
+'c:\reactos\system\shell.bin'. 'hello.bin' will write 'hello world' to the
+console, 'shell.bin' will allow you to enter simple commands including
+'dir', 'cd' and to execute additional processes e.g. 'hello.bin'.
+
+* Running
+
+Type 'boot.bat' from this directory. ReactOS won't start if a DPMI or VCPI
+program is running e.g. Windows or EMM386.
+
+* Further information
+
+See the doc subdirectory, and these websites
+
+       http://www.sid-dis.com/reactos (main project website)
+       http://mok.lvcm.com/ (some more information including web based access
+                             to the cvs server)
+
+And also
+      
+       http://www.delorie.com/djgpp/ (for DJGPP)
+       http://?? (for NASM)
+       http://www.microsoft.com/hwdev/ (Information on NT driver development)
+       http://www.sysinternals.com/  (NT internals)
+       http://www.osr.com/ (Information on NT internals, also get an NT
+                            insider subscription)
+       http://www.internals.com/ (Some information)
+       http://www.winehq.com/ (Windows emulators for Unix)
+
+Competitors
+
+       http://www.freedows.org/ (Aiming at an OS able to emulate various
+                                 systems including windows, vapourware so far)
+       http://www.solarmoon.org/ (Makers of a FreeBSD based NT clone, site now
+                                  blank)
+       http://www.genericwindows.com/  (Aiming to make a Windows 3.1 clone
+                                        based on FreeBSD and Wine)

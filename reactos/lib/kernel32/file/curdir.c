@@ -84,11 +84,7 @@ BOOL STDCALL SetCurrentDirectoryA(LPCSTR lpPathName)
 }
 
 
-WINBOOL
-STDCALL
-SetCurrentDirectoryW(
-    LPCWSTR lpPathName
-    )
+WINBOOL STDCALL SetCurrentDirectoryW(LPCWSTR lpPathName)
 {
    if ( lpPathName == NULL )
 	return FALSE;
@@ -188,12 +184,8 @@ GetWindowsDirectoryA(
    return uPathSize;
 }
 
-UINT
-STDCALL
-GetSystemDirectoryW(
-    LPWSTR lpBuffer,
-    UINT uSize
-    )
+UINT STDCALL GetSystemDirectoryW(LPWSTR lpBuffer,
+				 UINT uSize)
 {
    UINT uPathSize;
    if ( lpBuffer == NULL ) 
@@ -206,12 +198,8 @@ GetSystemDirectoryW(
    return uPathSize;
 }
 
-UINT
-STDCALL
-GetWindowsDirectoryW(
-    LPWSTR lpBuffer,
-    UINT uSize
-    )
+UINT STDCALL GetWindowsDirectoryW(LPWSTR lpBuffer,
+				  UINT uSize)
 {
    UINT uPathSize;
    if ( lpBuffer == NULL ) 

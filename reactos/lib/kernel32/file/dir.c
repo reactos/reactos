@@ -8,30 +8,25 @@
  *                  Created 01/11/98
  */
 
+/* INCLUDES ******************************************************************/
+
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <string.h>
 #include <wstring.h>
 #include <ddk/rtl.h>
 
+/* FUNCTIONS *****************************************************************/
 
-WINBOOL
-STDCALL
-CreateDirectoryA(
-    LPCSTR lpPathName,
-    LPSECURITY_ATTRIBUTES lpSecurityAttributes
-    )
+WINBOOL STDCALL CreateDirectoryA(LPCSTR lpPathName,
+				 LPSECURITY_ATTRIBUTES lpSecurityAttributes)
 {
 	return CreateDirectoryExA(NULL,lpPathName,lpSecurityAttributes);
 }
 
-WINBOOL
-STDCALL
-CreateDirectoryExA(
-    LPCSTR lpTemplateDirectory,
-    LPCSTR lpNewDirectory,
-    LPSECURITY_ATTRIBUTES lpSecurityAttributes
-    )
+WINBOOL STDCALL CreateDirectoryExA(LPCSTR lpTemplateDirectory,
+				   LPCSTR lpNewDirectory,
+				   LPSECURITY_ATTRIBUTES lpSecurityAttributes)
 {
 	WCHAR TemplateDirectoryW[MAX_PATH];
 	WCHAR NewDirectoryW[MAX_PATH];
@@ -350,16 +345,45 @@ SearchPathA(
 	return RetValue;
 }
 
-DWORD 
-STDCALL
-SearchPathW(
-    LPCWSTR lpPath,	 
-    LPCWSTR lpFileName,	 
-    LPCWSTR lpExtension, 
-    DWORD nBufferLength, 
-    LPWSTR lpBuffer,	
-    LPWSTR *lpFilePart 	  
-   )
+DWORD STDCALL SearchPathW(LPCWSTR lpPath,	 
+			  LPCWSTR lpFileName,	 
+			  LPCWSTR lpExtension, 
+			  DWORD nBufferLength, 
+			  LPWSTR lpBuffer,	
+			  LPWSTR *lpFilePart)
+/*
+ * FUNCTION: Searches for the specified file
+ * ARGUMENTS:
+ *       lpPath = Points to a null-terminated string that specified the
+ *                path to be searched. If this parameters is NULL then
+ *                the following directories are searched
+ *                          The directory from which the application loaded
+ *                          The current directory
+ *                          The system directory
+ *                          The 16-bit system directory
+ *                          The windows directory
+ *                          The directories listed in the PATH environment
+ *                          variable
+ *        lpFileName = Specifies the filename to search for
+ *        lpExtension = Points to the null-terminated string that specifies
+ *                      an extension to be added to the filename when
+ *                      searching for the file. The first character of the
+ *                      filename extension must be a period (.). The
+ *                      extension is only added if the specified filename
+ *                      doesn't end with an extension
+ *                      
+ *                      If the filename extension is not required or if the
+ *                      filename contains an extension, this parameters can be
+ *                      NULL
+ *        nBufferLength = The length in characters of the buffer for output
+ *        lpBuffer = Points to the buffer for the valid path and filename of
+ *                   file found
+ *        lpFilePart = Points to the last component of the valid path and
+ *                     filename 
+ * RETURNS: On success, the length, in characters, of the string copied to the
+ *          buffer
+ *          On failure, zero.
+ */
 {
 	
 

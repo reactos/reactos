@@ -8,6 +8,14 @@
  *                  Created 22/05/98
  */
 
+/*
+ * NOTES:
+ * 
+ * An article on System Internals (http://www.sysinternals.com) reports
+ * that these functions are unimplemented on nt version 3-5.
+ * 
+ */
+
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>

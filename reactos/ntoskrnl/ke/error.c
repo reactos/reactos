@@ -10,41 +10,9 @@
 
 /* INCLUDE *****************************************************************/
 
-#include <windows.h>
 #include <ddk/ntddk.h>
 
-/* GLOBALS *****************************************************************/
-
-/*
- * Last error code (this should be per process)
- */
-DWORD error_code = 0;
-
 /* FUNCTIONS ***************************************************************/
-
-DWORD STDCALL GetLastError(VOID)
-/*
- * FUNCTION: Get the detailed error (if any) from the last function
- * RECEIVES: Nothing
- * RETURNS:
- *           The error code
- */
-{
-        return(error_code);
-}
-
-
-VOID STDCALL SetLastError(DWORD dwErrCode)
-/*
- * FUNCTION: Set the last error code
- * RECEIVES:
- *           dwErrCode = the error code to set
- * RETURNS: Nothing
- */
-{
-        error_code=dwErrCode;
-}
-
 
 NTSTATUS STDCALL NtRaiseHardError(VOID)
 {

@@ -1,9 +1,9 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ke/bug.c
- * PURPOSE:         Graceful system shutdown if a bug is detected
- * PROGRAMMER:      David Welch (welch@mcmail.com)
+ * FILE:            ntoskrnl/nt/atom.c
+ * PURPOSE:         Atom managment
+ * PROGRAMMER:      Nobody
  * UPDATE HISTORY:
  *                  Created 22/05/98
  */
@@ -19,60 +19,41 @@
 NTSTATUS STDCALL NtAddAtom(OUT ATOM *Atom,
 			   IN PUNICODE_STRING AtomString)
 {
+   return(ZwAddAtom(Atom, AtomString));
 }
 
-NTSTATUS
-STDCALL
-ZwAddAtom(
-	OUT ATOM *Atom,
-	IN PUNICODE_STRING AtomString
-	)
+NTSTATUS STDCALL ZwAddAtom(OUT ATOM *Atom,
+			   IN PUNICODE_STRING AtomString)
 {
+   UNIMPLEMENTED;
 }
 
-NTSTATUS
-STDCALL
-NtDeleteAtom(
-	IN ATOM Atom
-	)
+NTSTATUS STDCALL NtDeleteAtom(IN ATOM Atom)
 {
+   return(ZwDeleteAtom(Atom));
 }
 
-NTSTATUS
-STDCALL
-ZwDeleteAtom(
-	IN ATOM Atom
-	)
+NTSTATUS STDCALL ZwDeleteAtom(IN ATOM Atom)
 {
+   UNIMPLEMENTED;
 }
 
-NTSTATUS
-STDCALL
-NtFindAtom(
-	OUT ATOM *Atom,
-	IN PUNICODE_STRING AtomString
-	)
+NTSTATUS STDCALL NtFindAtom(OUT ATOM *Atom, IN PUNICODE_STRING AtomString)
 {
+   return(ZwFindAtom(Atom, AtomString));
 }
 
-NTSTATUS
-STDCALL
-ZwFindAtom(
-	OUT ATOM *Atom,
-	IN PUNICODE_STRING AtomString
-	)
+NTSTATUS STDCALL ZwFindAtom(OUT ATOM *Atom, IN PUNICODE_STRING AtomString)
 {
+   UNIMPLEMENTED;
 }
 
 
-NTSTATUS
-STDCALL
-NtQueryInformationAtom(
-	IN HANDLE AtomHandle,
-	IN CINT AtomInformationClass,
-	OUT PVOID AtomInformation,
-	IN ULONG AtomInformationLength,
-	OUT PULONG ReturnLength
-	)
+NTSTATUS STDCALL NtQueryInformationAtom(IN HANDLE AtomHandle,
+					IN CINT AtomInformationClass,
+					OUT PVOID AtomInformation,
+					IN ULONG AtomInformationLength,
+					OUT PULONG ReturnLength)
 {
+   UNIMPLEMENTED;
 }

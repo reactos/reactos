@@ -73,7 +73,7 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
    if (Status != STATUS_SUCCESS)
      {
 	DPRINT("ZwReadFile() =");
-	DbgPrintErrorMessage(Status);
+//	DbgPrintErrorMessage(Status);
 	return(Status);
      }
    assert(FileObject != NULL);

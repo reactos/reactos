@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ke/bug.c
- * PURPOSE:         Graceful system shutdown if a bug is detected
+ * FILE:            ntoskrnl/nt/plugplay.c
+ * PURPOSE:         Mysterious nt4 support for plug-and-play
  * PROGRAMMER:      David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
  *                  Created 22/05/98
@@ -18,8 +18,10 @@
 
 NTSTATUS STDCALL NtGetPlugPlayEvent(VOID)
 {
+   UNIMPLEMENTED;
 }
 
 NTSTATUS STDCALL NtPlugPlayControl(VOID)
 {
+   UNIMPLEMENTED;
 }
