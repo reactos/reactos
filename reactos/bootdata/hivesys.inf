@@ -604,8 +604,8 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE103
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0000","BusNumber",0x00000000,"0"
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E972-E325-11CE-BFC1-08002BE10318}\{RANDOMCFGGUIDFOR_PCNET1}",,0x00000000,"Network Adapters"
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E972-E325-11CE-BFC1-08002BE10318}\{RANDOMCFGGUIDFOR_PCNET1}\Connection","Name",0x00000000,"AMD PCNet (static Registry entry)"
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters\Tcpip","DefaultGateway",0x00010000,"10.0.0.1"
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters\Tcpip","IPAddress",0x00010000,"10.0.0.100"
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters\Tcpip","DefaultGateway",0x00010000,"192.168.0.1"
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters\Tcpip","IPAddress",0x00010000,"192.168.0.101"
 HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters\Tcpip","SubnetMask",0x00010000,"255.255.255.0"
 
 ; Named Pipe filesystem driver
@@ -707,7 +707,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Route",0x00010000,"PCNet
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","DataBasePath",0x00010000,"DataBasePath"
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","Domain",0x00010000,""
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","Hostname",0x00010000,"ROSHost"
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","NameServer",0x00010000,"10.0.0.1"
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","NameServer",0x00010000,"4.2.2.1"
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","ForwardBroadcasts",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","IPEnableRouter",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","SearchList",0x00010000,""
