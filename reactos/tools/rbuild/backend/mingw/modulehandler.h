@@ -108,4 +108,14 @@ private:
 	void GenerateKernelModeDLLModuleTarget ( const Module& module );
 };
 
+
+class MingwNativeDLLModuleHandler : public MingwModuleHandler
+{
+public:
+	MingwNativeDLLModuleHandler ();
+	virtual void Process ( const Module& module );
+private:
+	void GenerateNativeDLLModuleTarget ( const Module& module );
+};
+
 #endif /* MINGW_MODULEHANDLER_H */

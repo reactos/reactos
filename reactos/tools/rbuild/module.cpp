@@ -152,6 +152,8 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return Kernel;
 	if ( attribute.value == "kernelmodedll" )
 		return KernelModeDLL;
+	if ( attribute.value == "nativedll" )
+		return NativeDLL;
 	throw InvalidAttributeValueException ( location,
 	                                       attribute.name,
 	                                       attribute.value );
@@ -169,6 +171,8 @@ Module::GetDefaultModuleExtension () const
 		case Kernel:
 			return ".exe";
 		case KernelModeDLL:
+			return ".dll";
+		case NativeDLL:
 			return ".dll";
 	}
 	throw InvalidOperationException (__FILE__,

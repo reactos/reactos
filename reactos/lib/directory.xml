@@ -1,6 +1,9 @@
 <directory name="kjs">
 	<xi:include href="kjs/kjs.xml" />
 </directory>
+<directory name="ntdll">
+	<xi:include href="ntdll/ntdll.xml" />
+</directory>
 <directory name="pseh">
 	<xi:include href="pseh/pseh.xml" />
 </directory>

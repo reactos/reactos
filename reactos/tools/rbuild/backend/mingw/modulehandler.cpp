@@ -719,3 +719,65 @@ MingwKernelModeDLLModuleHandler::GenerateKernelModeDLLModuleTarget ( const Modul
 		          target.c_str ());
 	}
 }
+
+
+static MingwNativeDLLModuleHandler nativedll_handler;
+
+MingwNativeDLLModuleHandler::MingwNativeDLLModuleHandler ()
+	: MingwModuleHandler ( NativeDLL )
+{
+}
+
+void
+MingwNativeDLLModuleHandler::Process ( const Module& module )
+{
+	GeneratePreconditionDependencies ( module );
+	GenerateNativeDLLModuleTarget ( module );
+	GenerateInvocations ( module );
+}
+
+void
+MingwNativeDLLModuleHandler::GenerateNativeDLLModuleTarget ( const Module& module )
+{
+	static string ros_junk ( "$(ROS_TEMPORARY)" );
+	string target ( FixupTargetFilename ( module.GetPath () ) );
+	string workingDirectory = GetWorkingDirectory ( );
+	string archiveFilename = GetModuleArchiveFilename ( module );
+	string importLibraryDependencies = GetImportLibraryDependencies ( module );
+
+	if (module.importLibrary != NULL)
+	{
+		fprintf ( fMakefile, "%s:\n",
+		          module.GetDependencyPath ().c_str () );
+
+		fprintf ( fMakefile,
+		          "\t${dlltool} --dllname %s --def %s --output-lib %s --kill-at\n\n",
+		          module.GetTargetName ().c_str (),
+		          FixupTargetFilename ( module.GetBasePath () + SSEP + module.importLibrary->definition ).c_str (),
+		          FixupTargetFilename ( module.GetDependencyPath () ).c_str () );
+	}
+
+	if (module.files.size () > 0)
+	{
+		fprintf ( fMakefile, "%s: %s %s\n",
+		          target.c_str (),
+		          archiveFilename.c_str (),
+		          importLibraryDependencies.c_str () );
+	
+		fprintf ( fMakefile,
+		          "\t${gcc} -Wl,--subsystem,native -Wl,--entry,_DllMainCRTStartup@12 -Wl,--image-base,0x10000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -nostdlib -mdll -o %s %s %s\n",
+		          target.c_str (),
+		          archiveFilename.c_str (),
+		          importLibraryDependencies.c_str () );
+		
+		GenerateArchiveTargetTarget ( module );
+		GenerateObjectFileTargetsTarget ( module );
+	}
+	else
+	{
+		fprintf ( fMakefile, "%s:\n\n",
+		          target.c_str ());
+		fprintf ( fMakefile, ".PHONY: %s\n\n",
+		          target.c_str ());
+	}
+}

@@ -65,7 +65,8 @@ enum ModuleType
 	BuildTool,
 	StaticLibrary,
 	Kernel,
-	KernelModeDLL
+	KernelModeDLL,
+	NativeDLL
 };
 
 
