@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scrollbar.c,v 1.6 2003/05/18 22:11:41 gvg Exp $
+/* $Id: scrollbar.c,v 1.7 2003/05/26 10:52:15 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -78,10 +78,10 @@ SCROLL_GetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect)
       break;
 
     case SB_VERT:
-      lprect->left = ClientRect.right - WindowRect.left;
-      lprect->top = ClientRect.top - WindowRect.top;
-      lprect->right = lprect->left + NtUserGetSystemMetrics (SM_CXVSCROLL);
-      lprect->bottom = ClientRect.bottom - WindowRect.top;
+      lprect->left = (ClientRect.right - WindowRect.left);
+      lprect->top = (ClientRect.top - WindowRect.top) + 1;
+      lprect->right = (lprect->left + NtUserGetSystemMetrics (SM_CXVSCROLL));
+      lprect->bottom = (ClientRect.bottom - WindowRect.top) - 1;
       if (Window->Style & WS_BORDER)
 	{
 	  lprect->top--;
@@ -101,52 +101,6 @@ SCROLL_GetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect)
       W32kReleaseWindowObject(Window);
       return FALSE;
     }
-
-#if 0 /* The code below computes all kind of stuff without using it */
-  if (vertical)
-    pixels = lprect->bottom - lprect->top;
-  else
-    pixels = lprect->right - lprect->left;
-
-  info.cbSize = sizeof(SCROLLBARINFO);
-  SCROLL_GetScrollBarInfo (Window, nBar, &info);
-
-  if (pixels <= 2 * NtUserGetSystemMetrics (SM_CXVSCROLL) + SCROLL_MIN_RECT)
-    {
-      info.dxyLineButton = info.xyThumbTop = info.xyThumbBottom = 0;
-    }
-  else
-    {
-      arrowSize = NtUserGetSystemMetrics (SM_CXVSCROLL);
-      pixels -= (2 * (NtUserGetSystemMetrics (SM_CXVSCROLL) - SCROLL_ARROW_THUMB_OVERLAP));
-
-      /* Temporary initialization - to be removed once proper code is in */
-      info.dxyLineButton = info.xyThumbTop = info.xyThumbBottom = 0;
-
-/*        if (info->Page)
-        {
-	    thumbSize = MulDiv(pixels,info->Page,(info->MaxVal-info->MinVal+1));
-            if (*thumbSize < SCROLL_MIN_THUMB) *thumbSize = SCROLL_MIN_THUMB;
-        }
-        else *thumbSize = NtUserGetSystemMetrics(SM_CXVSCROLL); */
-/*
-        if (((pixels -= *thumbSize ) < 0) ||
-            ((info->flags & ESB_DISABLE_BOTH) == ESB_DISABLE_BOTH))
-        { */
-      /* Rectangle too small or scrollbar disabled -> no thumb */
-/*            *thumbPos = *thumbSize = 0;
-        }
-        else
-        { */
-/*            INT max = info->MaxVal - max( info->Page-1, 0 );
-            if (info->MinVal >= max)
-                *thumbPos = *arrowSize - SCROLL_ARROW_THUMB_OVERLAP;
-            else
-                *thumbPos = *arrowSize - SCROLL_ARROW_THUMB_OVERLAP
-		  + MulDiv(pixels, (info->CurVal-info->MinVal),(max - info->MinVal));
-        } */
-  }
-#endif
 
   return vertical;
 }

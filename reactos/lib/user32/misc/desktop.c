@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.11 2003/05/12 19:30:00 jfilby Exp $
+/* $Id: desktop.c,v 1.12 2003/05/26 10:52:15 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -39,7 +39,7 @@ SystemParametersInfoW(UINT uiAction,
   /* FIXME: This should be obtained from the registry */
   static LOGFONT CaptionFont =
   { 12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, OEM_CHARSET,
-    0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"Helmet" };
+    0, 0, DEFAULT_QUALITY, FF_MODERN, L"Bitstream Vera Sans Bold" };
 
   switch (uiAction)
     {

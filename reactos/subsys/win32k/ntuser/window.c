@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.49 2003/05/23 23:12:02 rcampbell Exp $
+/* $Id: window.c,v 1.50 2003/05/26 10:52:15 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -923,7 +923,7 @@ NtUserMoveWindow(
     }
 
     if (uStyle & WS_CAPTION)
-       Window->ClientRect.top += NtUserGetSystemMetrics(SM_CYCAPTION);
+       Window->ClientRect.top += NtUserGetSystemMetrics(SM_CYCAPTION) + 1;
     if ( Window->Class->Class.lpszMenuName)
     {
         Window->ClientRect.top += NtUserGetSystemMetrics(SM_CYMENU);

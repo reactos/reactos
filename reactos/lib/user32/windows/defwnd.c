@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.48 2003/05/25 21:05:38 rcampbell Exp $
+/* $Id: defwnd.c,v 1.49 2003/05/26 10:52:15 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -431,7 +431,7 @@ static void UserDrawCaptionNC( HDC hDC, RECT *rect, HWND hWnd,
         else
             hFont = CreateFontIndirectW(&nclm.lfCaptionFont);
         hOldFont = SelectObject(hDC, hFont);
-        TextOutA(hDC, r.left + (GetSystemMetrics(SM_CXDLGFRAME) * 2), (r.top / 2) + (((int) nclm.lfCaptionFont.lfHeight) / 2) + (GetSystemMetrics(SM_CXDLGFRAME) / 2), buffer, strlen(buffer));
+        TextOutA(hDC, r.left + (GetSystemMetrics(SM_CXDLGFRAME) * 2), rect->top + (nclm.lfCaptionFont.lfHeight / 2), buffer, strlen(buffer));
         DeleteObject (SelectObject (hDC, hOldFont));
     }
 }
