@@ -45,8 +45,6 @@ typedef struct _SYSTEM_CURSORINFO
 
 typedef struct _WINSTATION_OBJECT
 {
-  HANDLE Self;
-
   CSHORT Type;
   CSHORT Size;
   KSPIN_LOCK Lock;
@@ -68,8 +66,6 @@ typedef struct _WINSTATION_OBJECT
 
 typedef struct _DESKTOP_OBJECT
 {
-  HANDLE Self;
-
   CSHORT Type;
   CSHORT Size;
   LIST_ENTRY ListEntry;

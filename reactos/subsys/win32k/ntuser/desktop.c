@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: desktop.c,v 1.11 2004/05/01 16:43:15 weiden Exp $
+ *  $Id: desktop.c,v 1.12 2004/05/05 22:47:06 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -48,6 +48,19 @@
 
 #define NDEBUG
 #include <debug.h>
+
+#if 0
+/* not yet defined in w32api... */
+NTSTATUS STDCALL
+ObFindHandleForObject(IN PEPROCESS Process,
+                      IN PVOID Object,
+                      IN POBJECT_TYPE ObjectType,
+                      IN POBJECT_HANDLE_INFORMATION HandleInformation,
+                      OUT PHANDLE Handle);
+#else
+#define ObFindHandleForObject(Process, Object, ObjectType, HandleInformation, Handle) \
+  (STATUS_UNSUCCESSFUL)
+#endif
 
 /* GLOBALS *******************************************************************/
 
@@ -131,7 +144,44 @@ IntGetDesktopWorkArea(PDESKTOP_OBJECT Desktop)
 PDESKTOP_OBJECT FASTCALL
 IntGetActiveDesktop(VOID)
 {
-   return InputDesktop;
+  return InputDesktop;
+}
+
+/*
+ * returns or creates a handle to the desktop object
+ */
+HDESK FASTCALL
+IntGetDesktopObjectHandle(PDESKTOP_OBJECT DesktopObject)
+{
+  NTSTATUS Status;
+  HDESK Ret;
+  
+  ASSERT(DesktopObject);
+  
+  Status = ObFindHandleForObject(PsGetCurrentProcess(),
+                                 DesktopObject,
+                                 ExDesktopObjectType,
+                                 NULL,
+                                 (PHANDLE)&Ret);
+   
+  if(!NT_SUCCESS(Status))
+  {
+    Status = ObOpenObjectByPointer(DesktopObject,
+                                   0,
+                                   NULL,
+                                   0,
+                                   ExDesktopObjectType,
+                                   UserMode,
+                                   (PHANDLE)&Ret);
+    if(!NT_SUCCESS(Status))
+    {
+     /* unable to create a handle */
+     DPRINT1("Unable to create a desktop handle\n"); 
+     return NULL;
+    }
+  }
+  
+  return Ret;
 }
 
 PUSER_MESSAGE_QUEUE FASTCALL
@@ -394,8 +444,6 @@ NtUserCreateDesktop(
     0,
     NULL,
     (HANDLE*)&Desktop);
-
-  DesktopObject->Self = (HANDLE)Desktop;
   
   ObDereferenceObject(DesktopObject);
   ExFreePool(DesktopName.Buffer);
@@ -774,10 +822,11 @@ NtUserResolveDesktopForWOW(DWORD Unknown0)
 HDESK STDCALL
 NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
 {
-  PDESKTOP_OBJECT Desktop;
   NTSTATUS Status;
   PETHREAD Thread;
-  HDESK Ret;
+  PDESKTOP_OBJECT DesktopObject;
+  HDESK Ret, hThreadDesktop;
+  OBJECT_HANDLE_INFORMATION HandleInformation;
   
   if(!dwThreadId)
   {
@@ -792,27 +841,52 @@ NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
     return 0;
   }
   
-  Desktop = Thread->Win32Thread->Desktop;
-  
-  if(Desktop)
+  if(Thread->ThreadsProcess == PsGetCurrentProcess())
   {
-    Status = ObReferenceObjectByPointer(Desktop,
-                                        0,
-                                        ExDesktopObjectType,
-                                        UserMode);
-    if(!NT_SUCCESS(Status))
-    {
-      SetLastNtError(Status);
-      return 0;
-    }
-    
-    Ret = (HDESK)Desktop->Self;
-    
-    ObDereferenceObject(Desktop);
+    /* just return the handle, we queried the desktop handle of a thread running
+       in the same context */
+    Ret = Thread->Win32Thread->hDesktop;
+    ObDereferenceObject(Thread);
     return Ret;
   }
   
-  return 0;
+  /* get the desktop handle and the desktop of the thread */
+  if(!(hThreadDesktop = Thread->Win32Thread->hDesktop) ||
+     !(DesktopObject = Thread->Win32Thread->Desktop))
+  {
+    ObDereferenceObject(Thread);
+    DPRINT1("Desktop information of thread 0x%x broken!?\n", dwThreadId);
+    return NULL;
+  }
+  
+  /* we could just use DesktopObject instead of looking up the handle, but latter
+     may be a bit safer (e.g. when the desktop is being destroyed */
+  /* switch into the context of the thread we're trying to get the desktop from,
+     so we can use the handle */
+  KeAttachProcess(Thread->ThreadsProcess);
+  Status = ObReferenceObjectByHandle(hThreadDesktop,
+                                     GENERIC_ALL,
+				     ExDesktopObjectType,
+				     UserMode,
+				     (PVOID*)&DesktopObject,
+				     &HandleInformation);
+  KeDetachProcess();
+  
+  /* the handle couldn't be found, there's nothing to get... */
+  if(!NT_SUCCESS(Status))
+  {
+    ObDereferenceObject(Thread);
+    return NULL;                                               
+  }
+  
+  /* lookup our handle table if we can find a handle to the desktop object,
+     if not, create one */
+  Ret = IntGetDesktopObjectHandle(DesktopObject);
+  
+  /* all done, we got a valid handle to the desktop */
+  ObDereferenceObject(DesktopObject);
+  ObDereferenceObject(Thread);
+  return Ret;
 }
 
 /*
@@ -825,6 +899,7 @@ NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
 BOOL STDCALL
 NtUserSetThreadDesktop(HDESK hDesktop)
 {
+   PW32THREAD W32Thread;
    PDESKTOP_OBJECT DesktopObject;
    NTSTATUS Status;
 
@@ -841,21 +916,24 @@ NtUserSetThreadDesktop(HDESK hDesktop)
       return FALSE;
    }
 
+   W32Thread = PsGetWin32Thread();
    /* Check for setting the same desktop as before. */
-   if (DesktopObject == PsGetWin32Thread()->Desktop)
+   if (DesktopObject == W32Thread->Desktop)
    {
+      W32Thread->hDesktop = hDesktop;
       ObDereferenceObject(DesktopObject);
       return TRUE;
    }
 
    /* FIXME: Should check here to see if the thread has any windows. */
 
-   if (PsGetWin32Thread()->Desktop != NULL)
+   if (W32Thread->Desktop != NULL)
    {
-      ObDereferenceObject(PsGetWin32Thread()->Desktop);
+      ObDereferenceObject(W32Thread->Desktop);
    }
 
-   PsGetWin32Thread()->Desktop = DesktopObject;
+   W32Thread->Desktop = DesktopObject;
+   W32Thread->hDesktop = hDesktop;
 
    return TRUE;
 }

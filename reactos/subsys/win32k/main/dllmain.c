@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.70 2004/05/01 16:43:14 weiden Exp $
+/* $Id: dllmain.c,v 1.71 2004/05/05 22:47:06 weiden Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -182,6 +182,7 @@ Win32kThreadCallback (struct _ETHREAD *Thread,
 
       /* By default threads get assigned their process's desktop. */
       Win32Thread->Desktop = NULL;
+      Win32Thread->hDesktop = NULL;
       if (Process->Win32Desktop != NULL)
 	{
 	  Status = ObReferenceObjectByHandle(Process->Win32Desktop,
@@ -194,6 +195,8 @@ Win32kThreadCallback (struct _ETHREAD *Thread,
 	    {
 	      DbgPrint("Win32K: Failed to reference a desktop for thread.\n");
 	    }
+	  
+	  Win32Thread->hDesktop = Process->Win32Desktop;
 	}
     }
   else

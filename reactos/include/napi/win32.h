@@ -10,6 +10,7 @@ typedef struct _W32THREAD
   LIST_ENTRY WindowListHead;
   struct _KBDTABLES* KeyboardLayout;
   struct _DESKTOP_OBJECT* Desktop;
+  HANDLE hDesktop;
   DWORD MessagePumpHookValue;
   BOOLEAN IsExiting;
 } W32THREAD, *PW32THREAD;
@@ -29,6 +30,7 @@ typedef struct _W32PROCESS
   LIST_ENTRY CursorIconListHead;
   struct _KBDTABLES* KeyboardLayout;
   struct _WINSTATION_OBJECT* WindowStation;
+  HANDLE hWindowStation;
   WORD GDIObjects;
   WORD UserObjects;
   BOOLEAN CreatedWindowOrDC;

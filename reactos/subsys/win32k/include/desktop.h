@@ -46,6 +46,16 @@ IntShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height);
 NTSTATUS FASTCALL
 IntHideDesktop(PDESKTOP_OBJECT Desktop);
 
+HDESK FASTCALL
+IntGetDesktopObjectHandle(PDESKTOP_OBJECT DesktopObject);
+
+NTSTATUS FASTCALL
+IntValidateDesktopHandle(
+   HDESK Desktop,
+   KPROCESSOR_MODE AccessMode,
+   ACCESS_MASK DesiredAccess,
+   PDESKTOP_OBJECT *Object);
+
 #define IntIsActiveDesktop(Desktop) \
   ((Desktop)->WindowStation->ActiveDesktop == (Desktop))
 
