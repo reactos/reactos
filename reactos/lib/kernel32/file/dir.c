@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.31 2002/09/08 10:22:41 chorns Exp $
+/* $Id: dir.c,v 1.32 2002/11/12 00:45:16 mdill Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -138,6 +138,13 @@ CreateDirectoryExW (
 
 	DPRINT ("lpTemplateDirectory %S lpNewDirectory %S lpSecurityAttributes %p\n",
 	        lpTemplateDirectory, lpNewDirectory, lpSecurityAttributes);
+  
+  // Can't create empty directory
+  if(lpNewDirectory == NULL || *lpNewDirectory == 0)
+  {
+    SetLastError(ERROR_PATH_NOT_FOUND);
+    return FALSE;
+  }
 
 	if (lpTemplateDirectory != NULL && *lpTemplateDirectory != 0)
 	{
