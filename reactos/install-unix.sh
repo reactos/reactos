@@ -144,6 +144,7 @@ cp apps/tests/restest/restest.exe $ROS_INSTALL_TESTS
 cp apps/tests/tokentest/tokentest.exe $ROS_INSTALL_TESTS
 cp apps/tests/icontest/icontest.exe $ROS_INSTALL_TESTS
 cp apps/tests/icontest/icon.ico $ROS_INSTALL_TESTS
+cp apps/tests/palbitblt/palbitblt.exe $ROS_INSTALL_TESTS
 cp apps/testsets/msvcrt/fileio/fileio.exe $ROS_INSTALL_TESTS
 cp apps/testsets/msvcrt/mbtowc/mbtowc.exe $ROS_INSTALL_TESTS
 cp apps/testsets/test/test.exe $ROS_INSTALL_TESTS

@@ -221,6 +221,7 @@ copy apps\tests\wm_erasebkgnd\BACKBITMAP.BMP %ROS_INSTALL_TESTS%
 copy apps\tests\stretchblt\stretchblt.exe %ROS_INSTALL_TESTS%
 copy apps\tests\txtscale\txtscale.exe %ROS_INSTALL_TESTS%
 copy apps\tests\linetest\linetest.exe %ROS_INSTALL_TESTS%
+copy apps\tests\palbitblt\palbitblt.exe %ROS_INSTALL_TESTS%
 rem copy apps\tests\restest\restest.exe %ROS_INSTALL_TESTS%
 rem copy apps\testsets\msvcrt\fileio\fileio.exe %ROS_INSTALL_TESTS%
 rem copy apps\testsets\msvcrt\mbtowc\mbtowc.exe %ROS_INSTALL_TESTS%
