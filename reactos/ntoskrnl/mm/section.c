@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.42 2001/01/13 18:38:09 dwelch Exp $
+/* $Id: section.c,v 1.43 2001/01/28 15:17:52 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -24,6 +24,12 @@
 /* GLOBALS *******************************************************************/
 
 POBJECT_TYPE EXPORTED MmSectionObjectType = NULL;
+
+static GENERIC_MAPPING MmpSectionMapping = {
+	STANDARD_RIGHTS_READ | SECTION_MAP_READ | SECTION_QUERY,
+	STANDARD_RIGHTS_WRITE | SECTION_MAP_WRITE,
+	STANDARD_RIGHTS_EXECUTE | SECTION_MAP_EXECUTE,
+	SECTION_ALL_ACCESS};
 
 /* FUNCTIONS *****************************************************************/
 
@@ -231,7 +237,7 @@ MmWaitForPendingOperationSection(PMADDRESS_SPACE AddressSpace,
 	 * page-in again so we have to wait again.
 	 */
 	Entry = MmGetPageEntrySection(Section,
-				      Offset.u.LowPart);					   
+				      Offset.u.LowPart);
      } while (Entry & SPE_PAGEIN_PENDING);
    
    /*
@@ -370,7 +376,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	     MmWaitForFreePages();
 	     MmLockAddressSpace(AddressSpace);
 	     MmLockSection(Section);
-	     Entry1 = MmGetPageEntrySection(Section, Offset.u.LowPart);	     
+	     Entry1 = MmGetPageEntrySection(Section, Offset.u.LowPart);
 	     if (Entry1 & SPE_PAGEIN_PENDING)
 	       {
 		  return(MmWaitForPendingOperationSection(AddressSpace,
@@ -411,7 +417,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	 * Clear the wait state (Since we are holding the only reference to
 	 * page this is safe)
 	 */
-	MmClearWaitPage(Page);	
+	MmClearWaitPage(Page);
 	
 	/*
 	 * Notify any other threads that fault on the same section offset
@@ -597,14 +603,14 @@ MmCreatePhysicalMemorySection(VOID)
    */
   SectionSize.QuadPart = 0xFFFFFFFF;
   RtlInitUnicodeString(&Name, L"\\Device\\PhysicalMemory");
-  InitializeObjectAttributes(&Obj,			
+  InitializeObjectAttributes(&Obj,
 			     &Name,
 			     0,
 			     NULL,
 			     NULL);
   Status = NtCreateSection(&PhysSectionH,
 			   SECTION_ALL_ACCESS,
-			   &Obj,			   
+			   &Obj,
 			   &SectionSize,
 			   PAGE_EXECUTE_READWRITE,
 			   0,
@@ -634,36 +640,37 @@ MmCreatePhysicalMemorySection(VOID)
 NTSTATUS 
 MmInitSectionImplementation(VOID)
 {
-  MmSectionObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
-  
-  RtlInitUnicodeString(&MmSectionObjectType->TypeName, L"Section");
-  
-  MmSectionObjectType->TotalObjects = 0;
-  MmSectionObjectType->TotalHandles = 0;
-  MmSectionObjectType->MaxObjects = ULONG_MAX;
-  MmSectionObjectType->MaxHandles = ULONG_MAX;
-  MmSectionObjectType->PagedPoolCharge = 0;
-  MmSectionObjectType->NonpagedPoolCharge = sizeof(SECTION_OBJECT);
-  MmSectionObjectType->Dump = NULL;
-  MmSectionObjectType->Open = NULL;
-  MmSectionObjectType->Close = MmpCloseSection;
-  MmSectionObjectType->Delete = MmpDeleteSection;
-  MmSectionObjectType->Parse = NULL;
-  MmSectionObjectType->Security = NULL;
-  MmSectionObjectType->QueryName = NULL;
-  MmSectionObjectType->OkayToClose = NULL;
-  MmSectionObjectType->Create = MmpCreateSection;
+   MmSectionObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
    
-  return(STATUS_SUCCESS);
+   RtlInitUnicodeString(&MmSectionObjectType->TypeName, L"Section");
+   
+   MmSectionObjectType->TotalObjects = 0;
+   MmSectionObjectType->TotalHandles = 0;
+   MmSectionObjectType->MaxObjects = ULONG_MAX;
+   MmSectionObjectType->MaxHandles = ULONG_MAX;
+   MmSectionObjectType->PagedPoolCharge = 0;
+   MmSectionObjectType->NonpagedPoolCharge = sizeof(SECTION_OBJECT);
+   MmSectionObjectType->Mapping = &MmpSectionMapping;
+   MmSectionObjectType->Dump = NULL;
+   MmSectionObjectType->Open = NULL;
+   MmSectionObjectType->Close = MmpCloseSection;
+   MmSectionObjectType->Delete = MmpDeleteSection;
+   MmSectionObjectType->Parse = NULL;
+   MmSectionObjectType->Security = NULL;
+   MmSectionObjectType->QueryName = NULL;
+   MmSectionObjectType->OkayToClose = NULL;
+   MmSectionObjectType->Create = MmpCreateSection;
+   
+   return(STATUS_SUCCESS);
 }
 
 
 /* FIXME: NtCS should call MmCS */
-NTSTATUS STDCALL 
-NtCreateSection (OUT PHANDLE SectionHandle, 
+NTSTATUS STDCALL
+NtCreateSection (OUT PHANDLE SectionHandle,
 		 IN ACCESS_MASK DesiredAccess,
 		 IN POBJECT_ATTRIBUTES	ObjectAttributes OPTIONAL,
-		 IN PLARGE_INTEGER MaximumSize	OPTIONAL,  
+		 IN PLARGE_INTEGER MaximumSize	OPTIONAL,
 		 IN ULONG SectionPageProtection OPTIONAL,
 		 IN ULONG AllocationAttributes,
 		 IN HANDLE FileHandle OPTIONAL)
@@ -768,35 +775,23 @@ NtCreateSection (OUT PHANDLE SectionHandle,
  * REVISIONS
  *
  */
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 NtOpenSection(PHANDLE			SectionHandle,
 	      ACCESS_MASK		DesiredAccess,
 	      POBJECT_ATTRIBUTES	ObjectAttributes)
 {
-   PVOID Object;
    NTSTATUS Status;
    
    *SectionHandle = 0;
 
-   Status = ObReferenceObjectByName(ObjectAttributes->ObjectName,
-				    ObjectAttributes->Attributes,
-				    NULL,
-				    DesiredAccess,
-				    MmSectionObjectType,
-				    UserMode,
-				    NULL,
-				    &Object);
-   if (!NT_SUCCESS(Status))
-     {
-	return Status;
-     }
-   
-   Status = ObCreateHandle(PsGetCurrentProcess(),
-			   Object,
-			   DesiredAccess,
-			   FALSE,
-			   SectionHandle);
-   ObDereferenceObject(Object);
+   Status = ObOpenObjectByName(ObjectAttributes,
+			       MmSectionObjectType,
+			       NULL,
+			       UserMode,
+			       DesiredAccess,
+			       NULL,
+			       SectionHandle);
+
    return(Status);
 }
 
@@ -886,7 +881,7 @@ NtMapViewOfSection(HANDLE SectionHandle,
 				      NULL);
    if (!(NT_SUCCESS(Status)))
      {
-	DPRINT("ObReference failed rc=%x\n",Status);	   
+	DPRINT("ObReference failed rc=%x\n",Status);
 	return(Status);
      }
    

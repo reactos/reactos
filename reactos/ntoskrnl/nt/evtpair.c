@@ -1,4 +1,4 @@
-/* $Id: evtpair.c,v 1.5 2000/10/22 11:30:00 ekohl Exp $
+/* $Id: evtpair.c,v 1.6 2001/01/28 15:14:19 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -24,6 +24,11 @@
 
 POBJECT_TYPE EXPORTED ExEventPairObjectType = NULL;
 
+static GENERIC_MAPPING ExEventPairMapping = {
+	STANDARD_RIGHTS_READ,
+	STANDARD_RIGHTS_WRITE,
+	STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE,
+	EVENT_PAIR_ALL_ACCESS};
 
 /* FUNCTIONS *****************************************************************/
 
@@ -59,6 +64,7 @@ VOID NtInitializeEventPairImplementation(VOID)
    ExEventPairObjectType->TotalHandles = 0;
    ExEventPairObjectType->PagedPoolCharge = 0;
    ExEventPairObjectType->NonpagedPoolCharge = sizeof(KEVENT_PAIR);
+   ExEventPairObjectType->Mapping = &ExEventPairMapping;
    ExEventPairObjectType->Dump = NULL;
    ExEventPairObjectType->Open = NULL;
    ExEventPairObjectType->Close = NULL;
@@ -99,31 +105,19 @@ NtOpenEventPair(OUT PHANDLE EventPairHandle,
 		IN ACCESS_MASK DesiredAccess,
 		IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
-   PKEVENT_PAIR EventPair;
    NTSTATUS Status;
 
    DPRINT("NtOpenEventPair()\n");
-   Status = ObReferenceObjectByName(ObjectAttributes->ObjectName,
-				    ObjectAttributes->Attributes,
-				    NULL,
-				    DesiredAccess,
-				    ExEventPairObjectType,
-				    UserMode,
-				    NULL,
-				    (PVOID*)&EventPair);
-   if (!NT_SUCCESS(Status))
-     {
-	return(Status);
-     }
 
-   Status = ObCreateHandle(PsGetCurrentProcess(),
-			   EventPair,
-			   DesiredAccess,
-			   FALSE,
-			   EventPairHandle);
-   ObDereferenceObject(EventPair);
+   Status = ObOpenObjectByName(ObjectAttributes,
+			       ExEventPairObjectType,
+			       NULL,
+			       UserMode,
+			       DesiredAccess,
+			       NULL,
+			       EventPairHandle);
 
-   return(STATUS_SUCCESS);
+   return Status;
 }
 
 

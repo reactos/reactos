@@ -1,4 +1,5 @@
-/*
+/* $Id: ntsem.c,v 1.9 2001/01/28 15:15:07 ekohl Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/nt/ntsem.c
@@ -21,6 +22,12 @@
 /* GLOBALS ******************************************************************/
 
 POBJECT_TYPE ExSemaphoreType;
+
+static GENERIC_MAPPING ExSemaphoreMapping = {
+	STANDARD_RIGHTS_READ | SEMAPHORE_QUERY_STATE,
+	STANDARD_RIGHTS_WRITE | SEMAPHORE_MODIFY_STATE,
+	STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE | SEMAPHORE_QUERY_STATE,
+	SEMAPHORE_ALL_ACCESS};
 
 /* FUNCTIONS *****************************************************************/
 
@@ -57,6 +64,7 @@ VOID NtInitializeSemaphoreImplementation(VOID)
    ExSemaphoreType->TotalHandles = 0;
    ExSemaphoreType->PagedPoolCharge = 0;
    ExSemaphoreType->NonpagedPoolCharge = sizeof(KSEMAPHORE);
+   ExSemaphoreType->Mapping = &ExSemaphoreMapping;
    ExSemaphoreType->Dump = NULL;
    ExSemaphoreType->Open = NULL;
    ExSemaphoreType->Close = NULL;
@@ -68,11 +76,12 @@ VOID NtInitializeSemaphoreImplementation(VOID)
    ExSemaphoreType->Create = NtpCreateSemaphore;
 }
 
-NTSTATUS STDCALL NtCreateSemaphore(OUT PHANDLE SemaphoreHandle,
-				   IN ACCESS_MASK DesiredAccess,
-				   IN POBJECT_ATTRIBUTES ObjectAttributes,
-				   IN LONG InitialCount,
-				   IN LONG MaximumCount)
+NTSTATUS STDCALL
+NtCreateSemaphore(OUT PHANDLE SemaphoreHandle,
+		  IN ACCESS_MASK DesiredAccess,
+		  IN POBJECT_ATTRIBUTES ObjectAttributes,
+		  IN LONG InitialCount,
+		  IN LONG MaximumCount)
 {
    PKSEMAPHORE Semaphore;
    
@@ -89,42 +98,31 @@ NTSTATUS STDCALL NtCreateSemaphore(OUT PHANDLE SemaphoreHandle,
 }
 
 
-NTSTATUS STDCALL NtOpenSemaphore(IN HANDLE SemaphoreHandle,
-				 IN ACCESS_MASK	DesiredAccess,
-				 IN POBJECT_ATTRIBUTES ObjectAttributes)
+NTSTATUS STDCALL
+NtOpenSemaphore(IN HANDLE SemaphoreHandle,
+		IN ACCESS_MASK	DesiredAccess,
+		IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
    NTSTATUS Status;
-   PKSEMAPHORE Semaphore;
    
-   Status = ObReferenceObjectByName(ObjectAttributes->ObjectName,
-				    ObjectAttributes->Attributes,
-				    NULL,
-				    DesiredAccess,
-				    ExSemaphoreType,
-				    UserMode,
-				    NULL,
-				    (PVOID*)&Semaphore);
-   if (Status != STATUS_SUCCESS)
-     {
-	return(Status);
-     }
+   Status = ObOpenObjectByName(ObjectAttributes,
+			       ExSemaphoreType,
+			       NULL,
+			       UserMode,
+			       DesiredAccess,
+			       NULL,
+			       SemaphoreHandle);
    
-   Status = ObCreateHandle(PsGetCurrentProcess(),
-			   Semaphore,
-			   DesiredAccess,
-			   FALSE,
-			   SemaphoreHandle);
-   ObDereferenceObject(Semaphore);
-   
-   return(STATUS_SUCCESS);
+   return Status;
 }
 
 
-NTSTATUS STDCALL NtQuerySemaphore(IN	HANDLE	SemaphoreHandle,
-				  IN	SEMAPHORE_INFORMATION_CLASS SemaphoreInformationClass,
-				  OUT	PVOID	SemaphoreInformation,
-				  IN	ULONG	SemaphoreInformationLength,
-				  OUT	PULONG	ReturnLength)
+NTSTATUS STDCALL
+NtQuerySemaphore(IN HANDLE SemaphoreHandle,
+		 IN SEMAPHORE_INFORMATION_CLASS SemaphoreInformationClass,
+		 OUT PVOID SemaphoreInformation,
+		 IN ULONG SemaphoreInformationLength,
+		 OUT PULONG ReturnLength)
 {
    PSEMAPHORE_BASIC_INFORMATION Info;
    PKSEMAPHORE Semaphore;
@@ -157,9 +155,10 @@ NTSTATUS STDCALL NtQuerySemaphore(IN	HANDLE	SemaphoreHandle,
    return STATUS_SUCCESS;
 }
 
-NTSTATUS STDCALL NtReleaseSemaphore(IN	HANDLE	SemaphoreHandle,
-				    IN	LONG	ReleaseCount,
-				    OUT	PLONG	PreviousCount)
+NTSTATUS STDCALL
+NtReleaseSemaphore(IN HANDLE SemaphoreHandle,
+		   IN LONG ReleaseCount,
+		   OUT PLONG PreviousCount)
 {
    PKSEMAPHORE Semaphore;
    NTSTATUS Status;
@@ -181,3 +180,5 @@ NTSTATUS STDCALL NtReleaseSemaphore(IN	HANDLE	SemaphoreHandle,
    ObDereferenceObject(Semaphore);
    return(STATUS_SUCCESS);
 }
+
+/* EOF */

@@ -13,8 +13,8 @@
 #include <limits.h>
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
-#include <ntos/synch.h>
 #include <internal/id.h>
+#include <ntos/synch.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -23,14 +23,21 @@
 
 POBJECT_TYPE EXPORTED ExEventObjectType = NULL;
 
+static GENERIC_MAPPING ExpEventMapping = {
+	STANDARD_RIGHTS_READ | SYNCHRONIZE | EVENT_QUERY_STATE,
+	STANDARD_RIGHTS_WRITE | SYNCHRONIZE | EVENT_MODIFY_STATE,
+	STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE | EVENT_QUERY_STATE,
+	EVENT_ALL_ACCESS};
+
+
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS NtpCreateEvent(PVOID ObjectBody,
-			PVOID Parent,
-			PWSTR RemainingPath,
-			POBJECT_ATTRIBUTES ObjectAttributes)
+NTSTATUS
+NtpCreateEvent(PVOID ObjectBody,
+	       PVOID Parent,
+	       PWSTR RemainingPath,
+	       POBJECT_ATTRIBUTES ObjectAttributes)
 {
-   
    DPRINT("NtpCreateEvent(ObjectBody %x, Parent %x, RemainingPath %S)\n",
 	  ObjectBody, Parent, RemainingPath);
    
@@ -46,7 +53,9 @@ NTSTATUS NtpCreateEvent(PVOID ObjectBody,
    return(STATUS_SUCCESS);
 }
 
-VOID NtInitializeEventImplementation(VOID)
+
+VOID
+NtInitializeEventImplementation(VOID)
 {
    ExEventObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
    
@@ -58,6 +67,7 @@ VOID NtInitializeEventImplementation(VOID)
    ExEventObjectType->TotalHandles = 0;
    ExEventObjectType->PagedPoolCharge = 0;
    ExEventObjectType->NonpagedPoolCharge = sizeof(KEVENT);
+   ExEventObjectType->Mapping = &ExpEventMapping;
    ExEventObjectType->Dump = NULL;
    ExEventObjectType->Open = NULL;
    ExEventObjectType->Close = NULL;
@@ -69,7 +79,9 @@ VOID NtInitializeEventImplementation(VOID)
    ExEventObjectType->Create = NtpCreateEvent;
 }
 
-NTSTATUS STDCALL NtClearEvent (IN HANDLE EventHandle)
+
+NTSTATUS STDCALL
+NtClearEvent(IN HANDLE EventHandle)
 {
    PKEVENT Event;
    NTSTATUS Status;
@@ -90,11 +102,12 @@ NTSTATUS STDCALL NtClearEvent (IN HANDLE EventHandle)
 }
 
 
-NTSTATUS STDCALL NtCreateEvent (OUT PHANDLE		EventHandle,
-				IN ACCESS_MASK		DesiredAccess,
-				IN POBJECT_ATTRIBUTES	ObjectAttributes,
-				IN BOOLEAN		ManualReset,
-				IN BOOLEAN		InitialState)
+NTSTATUS STDCALL
+NtCreateEvent(OUT PHANDLE EventHandle,
+	      IN ACCESS_MASK DesiredAccess,
+	      IN POBJECT_ATTRIBUTES ObjectAttributes,
+	      IN BOOLEAN ManualReset,
+	      IN BOOLEAN InitialState)
 {
    PKEVENT Event;
 
@@ -103,8 +116,8 @@ NTSTATUS STDCALL NtCreateEvent (OUT PHANDLE		EventHandle,
 			  DesiredAccess,
 			  ObjectAttributes,
 			  ExEventObjectType);
-   KeInitializeEvent(Event, 
-		     ManualReset ? NotificationEvent : SynchronizationEvent, 
+   KeInitializeEvent(Event,
+		     ManualReset ? NotificationEvent : SynchronizationEvent,
 		     InitialState );
    ObDereferenceObject(Event);
    return(STATUS_SUCCESS);
@@ -132,8 +145,9 @@ NtOpenEvent(OUT PHANDLE EventHandle,
 }
 
 
-NTSTATUS STDCALL NtPulseEvent(IN	HANDLE	EventHandle,
-			      IN	PULONG	PulseCount	OPTIONAL)
+NTSTATUS STDCALL
+NtPulseEvent(IN HANDLE EventHandle,
+	     IN PULONG PulseCount OPTIONAL)
 {
    PKEVENT Event;
    NTSTATUS Status;
@@ -157,11 +171,12 @@ NTSTATUS STDCALL NtPulseEvent(IN	HANDLE	EventHandle,
 }
 
 
-NTSTATUS STDCALL NtQueryEvent (IN	HANDLE	EventHandle,
-			       IN	EVENT_INFORMATION_CLASS	EventInformationClass,
-			       OUT	PVOID	EventInformation,
-			       IN	ULONG	EventInformationLength,
-			       OUT	PULONG	ReturnLength)
+NTSTATUS STDCALL
+NtQueryEvent(IN HANDLE EventHandle,
+	     IN EVENT_INFORMATION_CLASS EventInformationClass,
+	     OUT PVOID EventInformation,
+	     IN ULONG EventInformationLength,
+	     OUT PULONG ReturnLength)
 {
    PEVENT_BASIC_INFORMATION Info;
    PKEVENT Event;
@@ -198,8 +213,9 @@ NTSTATUS STDCALL NtQueryEvent (IN	HANDLE	EventHandle,
 }
 
 
-NTSTATUS STDCALL NtResetEvent(HANDLE	EventHandle,
-			      PULONG	NumberOfWaitingThreads	OPTIONAL)
+NTSTATUS STDCALL
+NtResetEvent(IN HANDLE EventHandle,
+	     OUT PULONG NumberOfWaitingThreads OPTIONAL)
 {
    PKEVENT Event;
    NTSTATUS Status;
@@ -222,8 +238,9 @@ NTSTATUS STDCALL NtResetEvent(HANDLE	EventHandle,
 }
 
 
-NTSTATUS STDCALL NtSetEvent(IN	HANDLE	EventHandle,
-			    OUT	PULONG	NumberOfThreadsReleased)
+NTSTATUS STDCALL
+NtSetEvent(IN HANDLE EventHandle,
+	   OUT PULONG NumberOfThreadsReleased)
 {
    PKEVENT Event;
    NTSTATUS Status;
@@ -244,3 +261,5 @@ NTSTATUS STDCALL NtSetEvent(IN	HANDLE	EventHandle,
    ObDereferenceObject(Event);
    return(STATUS_SUCCESS);
 }
+
+/* EOF */

@@ -14,6 +14,18 @@
 
 #include <internal/debug.h>
 
+
+/* GLOBALS ******************************************************************/
+
+#if 0
+static GENERIC_MAPPING ExpTimerMapping = {
+	STANDARD_RIGHTS_READ | TIMER_QUERY_STATE,
+	STANDARD_RIGHTS_WRITE | TIMER_MODIFY_STATE,
+	STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE,
+	TIMER_ALL_ACCESS};
+#endif
+
+
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
