@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.117 2003/10/22 21:10:24 gvg Exp $
+/* $Id: window.c,v 1.118 2003/10/23 09:07:54 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -664,6 +664,59 @@ IntLinkWindow(
 
 }
 
+/*****************************************************************
+ *              set_focus_window
+ *
+ * Change the focus window, sending the WM_SETFOCUS and WM_KILLFOCUS messages
+ */
+static HWND FASTCALL
+set_focus_window(HWND New, PWINDOW_OBJECT Window, HWND Previous)
+{
+  PDESKTOP_OBJECT Desktop;
+
+  ASSERT(NULL == Window || New == Window->Self);
+
+  Desktop = IntGetActiveDesktop();
+  ASSERT(NULL != Desktop);
+
+  if (Window != NULL)
+    {
+      Window->MessageQueue->FocusWindow = New;
+      (PUSER_MESSAGE_QUEUE)Desktop->ActiveMessageQueue =
+        Window->MessageQueue;
+    }
+  else
+    {
+      (PUSER_MESSAGE_QUEUE) Desktop->ActiveMessageQueue = NULL;
+    }
+
+  if (Previous == New)
+    {
+      return Previous;
+    }
+
+  if (NULL != Previous)
+    {
+      NtUserSendMessage(Previous, WM_KILLFOCUS, (WPARAM) New, 0);
+
+      if ((NULL == Desktop->ActiveMessageQueue && NULL != New)
+          || (NULL != Desktop->ActiveMessageQueue
+              && ((PUSER_MESSAGE_QUEUE)(Desktop->ActiveMessageQueue))->FocusWindow != New))
+        {
+          /* changed by the message */
+          return Previous;
+        }
+    }
+
+#if 0 /* FIXME */
+  if (IsWindow(New))
+#endif
+    {
+      NtUserSendMessage(New, WM_SETFOCUS, (WPARAM) Previous, 0);
+    }
+
+  return Previous;
+}
 
 HWND FASTCALL
 IntSetFocusWindow(HWND hWnd)
@@ -672,6 +725,7 @@ IntSetFocusWindow(HWND hWnd)
   PDESKTOP_OBJECT DesktopObject;
   PWINDOW_OBJECT WindowObject;
   HWND hWndOldFocus;
+  HWND hWndTop;
 
   DPRINT("IntSetFocusWindow(hWnd 0x%x)\n", hWnd);
 
@@ -686,20 +740,20 @@ IntSetFocusWindow(HWND hWnd)
         }
     }
   else
-  {
-    WindowObject = NULL;
-  }
+    {
+      WindowObject = NULL;
+    }
 
   DesktopObject = IntGetActiveDesktop();
-  if (!DesktopObject)
+  if (! DesktopObject)
     {
       DPRINT("No active desktop\n");
       if (WindowObject != NULL)
         {
-    	    IntReleaseWindowObject(WindowObject);
+          IntReleaseWindowObject(WindowObject);
         }
       SetLastWin32Error(ERROR_INVALID_HANDLE);
-  	  return (HWND)0;
+      return (HWND)0;
     }
 
   hWndOldFocus = (HWND)0;
@@ -709,16 +763,74 @@ IntSetFocusWindow(HWND hWnd)
       hWndOldFocus = OldMessageQueue->FocusWindow;
     }
 
-  if (WindowObject != NULL)
+  if (hWndOldFocus == hWnd)
     {
-      WindowObject->MessageQueue->FocusWindow = hWnd;
-      (PUSER_MESSAGE_QUEUE)DesktopObject->ActiveMessageQueue =
-        WindowObject->MessageQueue;
+      /* Nothing to do */
       IntReleaseWindowObject(WindowObject);
+      return hWndOldFocus;
     }
+
+  if (NULL != WindowObject)
+    {
+      hWndTop = hWnd;
+      for (;;)
+        {
+          LONG style = NtUserGetWindowLong(hWndTop, GWL_STYLE, FALSE);
+          if (style & (WS_MINIMIZE | WS_DISABLED))
+            {
+              IntReleaseWindowObject(WindowObject);
+              return NULL;
+            }
+          if (! (style & WS_CHILD))
+            {
+              break;
+            }
+          hWndTop = NtUserGetAncestor(hWndTop, GA_PARENT);
+        }
+
+#if 0 /* FIXME */
+      /* call hooks */
+      if (HOOK_CallHooks(WH_CBT, HCBT_SETFOCUS, (WPARAM)hwnd, (LPARAM)previous, TRUE))
+        {
+          IntReleaseWindowObject(WindowObject);
+          return NULL;
+        }
+#endif
+
+      /* activate hWndTop if needed. */
+      if (hWndTop != NtUserGetActiveWindow())
+        {
+#ifdef TODO
+          if (! set_active_window(hWndTop, NULL, FALSE, FALSE))
+            {
+              return NULL;
+            }
+#endif
+#if 0 /* FIXME */
+          if (! NtUserIsWindow(hWnd))
+            {
+              /* Abort if window destroyed */
+              return NULL;
+            }
+#endif
+        }
+    }
+#if 0 /* FIXME */
   else
     {
-      (PUSER_MESSAGE_QUEUE)DesktopObject->ActiveMessageQueue = NULL;
+      /* call hooks */
+      if (HOOK_CallHooks(WH_CBT, HCBT_SETFOCUS, (WPARAM)hwnd, (LPARAM)previous, TRUE))
+        {
+          IntReleaseWindowObject(WindowObject);
+          return NULL;
+        }
+    }
+#endif
+
+  hWndOldFocus = set_focus_window(hWnd, WindowObject, hWndOldFocus);
+  if (WindowObject != NULL)
+    {
+      IntReleaseWindowObject(WindowObject);
     }
 
   DPRINT("hWndOldFocus = 0x%x\n", hWndOldFocus);
@@ -1517,7 +1629,7 @@ NtUserDestroyWindow(HWND Wnd)
       	{
       	  Parent = NULL;
       	}
-        IntSetFocusWindow(Parent);
+      IntSetFocusWindow(Parent);
     }
 
   /* Call hooks */
@@ -1553,12 +1665,14 @@ NtUserDestroyWindow(HWND Wnd)
   /* Hide the window */
   if (! WinPosShowWindow(Wnd, SW_HIDE ))
     {
-#if 0 /* FIXME */
-      if (hwnd == GetActiveWindow())
+      if (Wnd == NtUserGetActiveWindow())
 	{
-	  WINPOS_ActivateOtherWindow( hwnd );
+          PWINDOW_OBJECT ActiveWindow = IntGetWindowObject(Wnd);
+          if (NULL != ActiveWindow)
+            {
+              WinPosActivateOtherWindow(ActiveWindow);
+            }
 	}
-#endif
     }
 
 #if 0 /* FIXME */

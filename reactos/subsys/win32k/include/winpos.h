@@ -17,3 +17,4 @@ WinPosShowWindow(HWND Wnd, INT Cmd);
 USHORT STDCALL
 WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, POINT WinPoint, 
 		      PWINDOW_OBJECT* Window);
+VOID FASTCALL WinPosActivateOtherWindow(PWINDOW_OBJECT Window);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.35 2003/10/21 19:40:05 weiden Exp $
+/* $Id: winpos.c,v 1.36 2003/10/23 09:07:54 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -95,10 +95,82 @@ NtUserGetClientOrigin(HWND hWnd, LPPOINT Point)
   return(TRUE);
 }
 
-BOOL FASTCALL
+/*******************************************************************
+ *         can_activate_window
+ *
+ * Check if we can activate the specified window.
+ */
+static BOOL FASTCALL
+can_activate_window(HWND hwnd)
+{
+  LONG style;
+
+  if (! hwnd)
+    {
+      return FALSE;
+    }
+  style = NtUserGetWindowLong(hwnd, GWL_STYLE, FALSE);
+  if (! (style & WS_VISIBLE))
+    {
+      return FALSE;
+    }
+  if ((style & (WS_POPUP|WS_CHILD)) == WS_CHILD)
+    {
+      return FALSE;
+    }
+  return ! (style & WS_DISABLED);
+}
+
+/*******************************************************************
+ *         WinPosActivateOtherWindow
+ *
+ *  Activates window other than pWnd.
+ */
+void FASTCALL
 WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
 {
-	return FALSE;
+  HWND hwndTo;
+#if 0
+  HWND fg;
+#endif
+
+  if ((NtUserGetWindowLong(Window->Self, GWL_STYLE, FALSE) & WS_POPUP)
+      && (hwndTo = NtUserGetWindow(Window->Self, GW_OWNER)))
+    {
+      hwndTo = NtUserGetAncestor(hwndTo, GA_ROOT);
+      if (can_activate_window(hwndTo)) goto done;
+    }
+
+  hwndTo = Window->Self;
+  for (;;)
+    {
+      if (!(hwndTo = NtUserGetWindow(hwndTo, GW_HWNDNEXT)))
+        {
+          break;
+        }
+      if (can_activate_window(hwndTo))
+        {
+          break;
+        }
+    }
+
+done:
+#ifdef TODO
+  fg = NtUserGetForegroundWindow();
+/*    TRACE("win = %p fg = %p\n", hwndTo, fg); */
+  if (! fg || (hwnd == fg))
+    {
+      if (NtUserSetForegroundWindow(hwndTo))
+        {
+          return;
+        }
+    }
+#endif
+
+  if (! NtUserSetActiveWindow(hwndTo))
+    {
+      NtUserSetActiveWindow(NULL);
+    }
 }
 
 POINT STATIC FASTCALL
