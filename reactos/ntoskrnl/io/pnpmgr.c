@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.50 2004/11/08 01:46:12 weiden Exp $
+/* $Id: pnpmgr.c,v 1.51 2004/11/09 00:38:37 ion Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -161,7 +161,7 @@ IoGetDeviceProperty(
         KeyNameBuffer = ExAllocatePool(PagedPool,
           (49 * sizeof(WCHAR)) + DeviceNode->InstancePath.Length);
 	
-	DPRINT1("KeyNameBuffer: %x, value %S\n", 
+	DPRINT("KeyNameBuffer: %x, value %S\n", 
 		KeyNameBuffer, RegistryPropertyName);
 
         if (KeyNameBuffer == NULL)
@@ -1050,7 +1050,7 @@ IopActionInterrogateDeviceStack(
       /* FIXME: Cleanup and disable device */
    }
 
-   DPRINT1("InstancePath is %S\n", DeviceNode->InstancePath.Buffer);
+   DPRINT("InstancePath is %S\n", DeviceNode->InstancePath.Buffer);
 
    /*
     * Create registry key for the instance id, if it doesn't exist yet
