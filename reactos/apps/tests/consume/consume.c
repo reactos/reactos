@@ -2,7 +2,7 @@
 #include <string.h>
 #include <windows.h>
 
-#define SIZE (128*1024*1024)
+#define SIZE (65*1024*1024)
 
 ULONG x[SIZE / 4096];
 

@@ -1,4 +1,4 @@
-/* $Id: guicheck.c,v 1.2 2001/07/04 20:40:24 chorns Exp $
+/* $Id: guicheck.c,v 1.3 2002/01/13 22:52:08 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -12,7 +12,11 @@
  * REVISION HISTORY:
  *       06-06-2001  CSH  Created
  */
+
+/* INCLUDES ******************************************************************/
+
 #include <ddk/ntddk.h>
+#include <napi/teb.h>
 #include <win32k/win32k.h>
 #include <include/guicheck.h>
 #include <include/msgqueue.h>
@@ -20,14 +24,15 @@
 #define NDEBUG
 #include <debug.h>
 
+/* FUNCTIONS *****************************************************************/
 
 VOID
-GuiCheck(VOID)
+W32kGuiCheck(VOID)
 {
-/*  if (NtCurrentTeb()->MessageQueue)
+  if (PsGetWin32Thread()->MessageQueue != NULL)
     return;
-
-  NtCurrentTeb()->MessageQueue = MsqCreateMessageQueue();*/
+  
+  PsGetWin32Thread()->MessageQueue = MsqCreateMessageQueue();
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.20 2001/08/21 20:13:07 chorns Exp $
+# $Id: makefile_rex,v 1.21 2002/01/13 22:52:07 dwelch Exp $
 
 PATH_TO_TOP = ../..
 
@@ -32,7 +32,8 @@ MISC_OBJECTS = \
 WINDOWS_OBJECTS = \
 	windows/class.o    \
 	windows/message.o  \
-	windows/window.o
+	windows/window.o \
+	windows/defwnd.o
 
 OBJECTS = \
   $(MISC_OBJECTS) \

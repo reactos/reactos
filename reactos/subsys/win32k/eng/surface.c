@@ -177,7 +177,7 @@ BOOL EngAssociateSurface(HSURF Surface, HDEV Dev, ULONG Hooks)
   // Hook up specified functions
   if(Hooks & HOOK_BITBLT)            SurfGDI->BitBlt            = Dc->DriverFunctions.BitBlt;
   if(Hooks & HOOK_TRANSPARENTBLT)    SurfGDI->TransparentBlt	= Dc->DriverFunctions.TransparentBlt;
-  if(Hooks & HOOK_STRETCHBLT)        SurfGDI->StretchBlt        = Dc->DriverFunctions.StretchBlt;
+  if(Hooks & HOOK_STRETCHBLT)        SurfGDI->StretchBlt        = (PFN_StretchBlt)Dc->DriverFunctions.StretchBlt;
   if(Hooks & HOOK_TEXTOUT)           SurfGDI->TextOut           = Dc->DriverFunctions.TextOut;
   if(Hooks & HOOK_PAINT)             SurfGDI->Paint             = Dc->DriverFunctions.Paint;
   if(Hooks & HOOK_STROKEPATH)        SurfGDI->StrokePath        = Dc->DriverFunctions.StrokePath;
@@ -191,7 +191,7 @@ BOOL EngAssociateSurface(HSURF Surface, HDEV Dev, ULONG Hooks)
   SurfGDI->CreateDeviceBitmap = Dc->DriverFunctions.CreateDeviceBitmap;
   SurfGDI->SetPalette = Dc->DriverFunctions.SetPalette;
   SurfGDI->MovePointer = Dc->DriverFunctions.MovePointer;
-  SurfGDI->SetPointerShape = Dc->DriverFunctions.SetPointerShape;
+  SurfGDI->SetPointerShape = (PFN_SetPointerShape)Dc->DriverFunctions.SetPointerShape;
 
   return TRUE;
 }

@@ -5,7 +5,7 @@
 #include <ddk/ntddk.h>
 
 VOID
-GuiCheck(VOID);
+W32kGuiCheck(VOID);
 
 #endif /* __WIN32K_GUICHECK_H */
 

@@ -38,7 +38,7 @@ HPALETTE EngCreatePalette(ULONG  Mode,
   if(Mode==PAL_INDEXED)
   {
     PalGDI->NumColors     = NumColors;
-    PalGDI->IndexedColors = Colors;
+    PalGDI->IndexedColors = (PULONG)Colors;
   } else
   if(Mode==PAL_BITFIELDS)
   {

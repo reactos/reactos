@@ -318,8 +318,10 @@ typedef enum _SID_NAME_USE {
 
 #define HIBYTE(w)   ((BYTE) (((WORD) (w) >> 8) & 0xFF)) 
 #define HIWORD(l)   ((WORD) (((DWORD) (l) >> 16) & 0xFFFF)) 
+#define SHIWORD(l)   ((INT16) (((DWORD) (l) >> 16) & 0xFFFF)) 
 #define LOBYTE(w)   ((BYTE) (w)) 
 #define LOWORD(l)   ((WORD) (l)) 
+#define SLOWORD(l)   ((INT16) (l)) 
 #define MAKELONG(a, b) ((LONG) (((WORD) (a)) | ((DWORD) ((WORD) (b))) << 16)) 
 #define MAKEWORD(a, b) ((WORD) (((BYTE) (a)) | ((WORD) ((BYTE) (b))) << 8)) 
 

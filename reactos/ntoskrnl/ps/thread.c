@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.83 2002/01/08 00:49:01 dwelch Exp $
+/* $Id: thread.c,v 1.84 2002/01/13 22:52:07 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -462,7 +462,6 @@ NtAlertResumeThread(IN	HANDLE ThreadHandle,
 
 NTSTATUS STDCALL NtAlertThread (IN HANDLE ThreadHandle)
 {
-#if 0
    PETHREAD Thread;
    NTSTATUS Status;
    NTSTATUS ThreadStatus;
@@ -483,8 +482,6 @@ NTSTATUS STDCALL NtAlertThread (IN HANDLE ThreadHandle)
    
    ObDereferenceObject(Thread);
    return(STATUS_SUCCESS);
-#endif
-   UNIMPLEMENTED;
 }
 
 NTSTATUS STDCALL 

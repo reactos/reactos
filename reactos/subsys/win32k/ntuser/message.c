@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.2 2001/12/20 03:56:10 dwelch Exp $
+/* $Id: message.c,v 1.3 2002/01/13 22:52:08 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -8,8 +8,13 @@
  * REVISION HISTORY:
  *       06-06-2001  CSH  Created
  */
+
+/* INCLUDES ******************************************************************/
+
 #include <ddk/ntddk.h>
 #include <win32k/win32k.h>
+#include <include/guicheck.h>
+#include <include/msgqueue.h>
 #include <include/window.h>
 #include <include/class.h>
 #include <include/error.h>
@@ -19,27 +24,26 @@
 #define NDEBUG
 #include <debug.h>
 
+/* FUNCTIONS *****************************************************************/
 
 NTSTATUS
-InitMessageImpl(VOID)
+W32kInitMessageImpl(VOID)
 {
-  return STATUS_SUCCESS;
+  return(STATUS_SUCCESS);
 }
 
 NTSTATUS
-CleanupMessageImpl(VOID)
+W32kCleanupMessageImpl(VOID)
 {
-  return STATUS_SUCCESS;
+  return(STATUS_SUCCESS);
 }
 
 
-LRESULT
-STDCALL
-NtUserDispatchMessage(
-  LPMSG lpmsg)
+LRESULT STDCALL
+NtUserDispatchMessage(LPMSG lpmsg)
 {
-  UNIMPLEMENTED
-
+  UNIMPLEMENTED;
+    
   return 0;
 }
 
@@ -48,8 +52,81 @@ NtUserGetMessage(LPMSG lpMsg,
 		 HWND hWnd,
 		 UINT wMsgFilterMin,
 		 UINT wMsgFilterMax)
+/*
+ * FUNCTION: Get a message from the calling thread's message queue.
+ * ARGUMENTS:
+ *      lpMsg - Pointer to the structure which receives the returned message.
+ *      hWnd - Window whose messages are to be retrieved.
+ *      wMsgFilterMin - Integer value of the lowest message value to be
+ *                      retrieved.
+ *      wMsgFilterMax - Integer value of the highest message value to be
+ *                      retrieved.
+ */
 {
-  return FALSE;
+  PUSER_MESSAGE_QUEUE ThreadQueue;
+  BOOLEAN Present;
+  PUSER_MESSAGE Message;
+  NTSTATUS Status;
+
+  W32kGuiCheck();
+
+  ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
+
+  do
+    {
+      /* FIXME: Dispatch sent messages here. */
+      
+      /* Now look for a quit message. */
+      /* FIXME: WINE checks the message number filter here. */
+      if (ThreadQueue->QuitPosted)
+	{
+	  lpMsg->hwnd = hWnd;
+	  lpMsg->message = WM_QUIT;
+	  lpMsg->wParam = ThreadQueue->QuitExitCode;
+	  lpMsg->lParam = 0;
+	  ThreadQueue->QuitPosted = FALSE;
+	  return(FALSE);
+	}
+
+      /* Now check for normal messages. */
+      Present = MsqFindMessage(ThreadQueue,
+			       FALSE,
+			       TRUE,
+			       hWnd,
+			       wMsgFilterMin,
+			       wMsgFilterMax,
+			       &Message);
+      if (Present)
+	{
+	  RtlCopyMemory(lpMsg, &Message->Msg, sizeof(MSG));
+	  ExFreePool(Message);
+	  return(TRUE);
+	}
+
+      /* Check for hardware events. */
+      Present = MsqFindMessage(ThreadQueue,
+			       TRUE,
+			       TRUE,
+			       hWnd,
+			       wMsgFilterMin,
+			       wMsgFilterMax,
+			       &Message);
+      if (Present)
+	{
+	  RtlCopyMemory(lpMsg, &Message->Msg, sizeof(MSG));
+	  ExFreePool(Message);
+	  return(TRUE);
+	}
+
+      /* FIXME: Check for sent messages again. */
+
+      /* FIXME: Check for paint messages. */
+
+      /* Nothing found so far. Wait for new messages. */
+      Status = MsqWaitForNewMessages(ThreadQueue);
+    }
+  while (Status == STATUS_WAIT_0);
+  return((BOOLEAN)(-1));
 }
 
 DWORD
@@ -68,100 +145,85 @@ NtUserMessageCall(
   return 0;
 }
 
-BOOL
-STDCALL
-NtUserPeekMessage(
-  LPMSG lpMsg,
-  HWND hWnd,
-  UINT wMsgFilterMin,
-  UINT wMsgFilterMax,
-  UINT wRemoveMsg)
+BOOL STDCALL
+NtUserPeekMessage(LPMSG lpMsg,
+		  HWND hWnd,
+		  UINT wMsgFilterMin,
+		  UINT wMsgFilterMax,
+		  UINT wRemoveMsg)
 {
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
+    
+  return 0;
+}
+
+BOOL STDCALL
+NtUserPostMessage(HWND hWnd,
+		  UINT Msg,
+		  WPARAM wParam,
+		  LPARAM lParam)
+{
+  UNIMPLEMENTED;
+    
+  return 0;
+}
+
+BOOL STDCALL
+NtUserPostThreadMessage(DWORD idThread,
+			UINT Msg,
+			WPARAM wParam,
+			LPARAM lParam)
+{
+  UNIMPLEMENTED;
 
   return 0;
 }
 
-BOOL
-STDCALL
-NtUserPostMessage(
-  HWND hWnd,
-  UINT Msg,
-  WPARAM wParam,
-  LPARAM lParam)
+DWORD STDCALL
+NtUserQuerySendMessage(DWORD Unknown0)
 {
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
 
   return 0;
 }
 
-BOOL
-STDCALL
-NtUserPostThreadMessage(
-  DWORD idThread,
-  UINT Msg,
-  WPARAM wParam,
-  LPARAM lParam)
+BOOL STDCALL
+NtUserSendMessageCallback(HWND hWnd,
+			  UINT Msg,
+			  WPARAM wParam,
+			  LPARAM lParam,
+			  SENDASYNCPROC lpCallBack,
+			  ULONG_PTR dwData)
 {
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
+  
+  return 0;
+}
+
+BOOL STDCALL
+NtUserSendNotifyMessage(HWND hWnd,
+			UINT Msg,
+			WPARAM wParam,
+			LPARAM lParam)
+{
+  UNIMPLEMENTED;
 
   return 0;
 }
 
-DWORD
-STDCALL
-NtUserQuerySendMessage(
-  DWORD Unknown0)
+BOOL STDCALL
+NtUserTranslateMessage(LPMSG lpMsg,
+		       DWORD Unknown1)
 {
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
 
   return 0;
 }
 
-BOOL
-STDCALL
-NtUserSendMessageCallback(
-  HWND hWnd,
-  UINT Msg,
-  WPARAM wParam,
-  LPARAM lParam,
-  SENDASYNCPROC lpCallBack,
-  ULONG_PTR dwData)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-BOOL
-STDCALL
-NtUserSendNotifyMessage(
-  HWND hWnd,
-  UINT Msg,
-  WPARAM wParam,
-  LPARAM lParam)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-BOOL
-STDCALL
-NtUserTranslateMessage(
-  LPMSG lpMsg,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-BOOL
-STDCALL
+BOOL STDCALL
 NtUserWaitMessage(VOID)
 {
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
 
   return 0;
 }

@@ -12,6 +12,7 @@
 #include <ddk/ntddk.h>
 #include "objects.h"
 #include "clip.h"
+#include <include/object.h>
 
 // FIXME: Complex clipping doesn't work
 

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.124 2002/01/13 22:02:30 ea Exp $
+; $Id: ntoskrnl.def,v 1.125 2002/01/13 22:52:07 dwelch Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -503,6 +503,7 @@ NlsMbOemCodePageTag DATA
 NlsOemLeadByteInfo DATA
 NtAddAtom@8
 NtAdjustPrivilegesToken@24
+NtAlertThread@4
 NtAllocateLocallyUniqueId@4
 NtAllocateUuids@12
 NtAllocateVirtualMemory@24
@@ -593,7 +594,7 @@ PsAssignImpersonationToken@8
 PsCreateSystemProcess@12
 PsCreateSystemThread@28
 PsCreateWin32Process@4
-PsDispatchThread@4
+PsGetWin32Thread@0
 PsEstablishWin32Callouts@24
 PsGetCurrentProcessId@0
 PsGetCurrentThreadId@0

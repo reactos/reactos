@@ -15,7 +15,8 @@
 
 BOOL FillSolid(SURFOBJ *Surface, PRECTL Dimensions, ULONG iColor)
 {
-  ULONG x, y, LineWidth, leftOfBitmap;
+  LONG y;
+  ULONG x, LineWidth, leftOfBitmap;
   SURFGDI *SurfaceGDI;
 
   SurfaceGDI = (SURFGDI*)AccessInternalObjectFromUserObject(Surface);

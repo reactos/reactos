@@ -12,6 +12,9 @@
 #include "objects.h"
 #include "enum.h"
 #include "../dib/dib.h"
+#include <include/mouse.h>
+#include <include/object.h>
+#include <include/eng.h>
 
 BOOLEAN CopyBitsCopy(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                      SURFGDI *DestGDI,  SURFGDI *SourceGDI,
@@ -108,7 +111,7 @@ BOOL EngCopyBits(SURFOBJ *Dest, SURFOBJ *Source,
     // If CopyBits wasn't hooked, BitBlt must be
     ret = EngBitBlt(Dest, Source,
                     NULL, Clip, ColorTranslation, DestRect, SourcePoint,
-                    NULL, NULL, NULL, NULL);
+                    NULL, NULL, NULL, 0);
 
     MouseSafetyOnDrawEnd(Source, SourceGDI);
     MouseSafetyOnDrawEnd(Dest, DestGDI);

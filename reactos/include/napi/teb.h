@@ -154,11 +154,13 @@ typedef struct _GDI_TEB_BATCH
    ULONG Buffer[0x136];
 } GDI_TEB_BATCH, *PGDI_TEB_BATCH;
 
-// FIXME: Redundant definition of W32THREAD also in ntoskrnl\include\internal\ps.h
 typedef struct _W32THREAD
 {
   PVOID MessageQueue;
 } __attribute__((packed)) W32THREAD, *PW32THREAD;
+
+PW32THREAD STDCALL
+PsGetWin32Thread(VOID);
 
 typedef struct _TEB
 {

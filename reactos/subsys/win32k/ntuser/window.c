@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.3 2001/08/28 18:16:32 jfilby Exp $
+/* $Id: window.c,v 1.4 2002/01/13 22:52:08 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -93,7 +93,7 @@ NtUserCreateWindowEx(
   NTSTATUS Status;
   HANDLE Handle;
 
-  GuiCheck();
+  W32kGuiCheck();
 
   Status = ClassReferenceClassByNameOrAtom(&ClassObject, lpClassName->Buffer);
   if (!NT_SUCCESS(Status))
@@ -222,7 +222,7 @@ NtUserFindWindowEx(
   PLIST_ENTRY  currentEntry;
   PWNDCLASS_OBJECT  classObject;
   
-  GuiCheck();
+  W32kGuiCheck();
 
   status = ClassReferenceClassByNameOrAtom(&classObject, ucClassName->Buffer);
   if (!NT_SUCCESS(status))
@@ -567,7 +567,7 @@ NtUserShowWindow(
 {
   PWINDOW_OBJECT WindowObject;
 
-  GuiCheck();
+  W32kGuiCheck();
 
   WindowObject = USEROBJ_HandleToPtr (hWnd, UO_WINDOW_MAGIC);
 

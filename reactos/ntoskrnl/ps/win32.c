@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: win32.c,v 1.1 2002/01/04 13:09:11 ekohl Exp $
+/* $Id: win32.c,v 1.2 2002/01/13 22:52:07 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -38,8 +38,13 @@
 
 static ULONG PspWin32ProcessSize = 0;
 
-
 /* FUNCTIONS ***************************************************************/
+
+PW32THREAD STDCALL
+PsGetWin32Thread(VOID)
+{
+  return(PsGetCurrentThread()->Win32Thread);
+}
 
 NTSTATUS STDCALL
 PsCreateWin32Process(PEPROCESS Process)

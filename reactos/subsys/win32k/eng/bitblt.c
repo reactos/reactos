@@ -14,6 +14,11 @@
 #include "brush.h"
 #include "enum.h"
 #include "objects.h"
+#include <include/mouse.h>
+#include <include/object.h>
+#include <include/dib.h>
+#include <include/surface.h>
+#include <include/copybits.h>
 
 BOOL EngIntersectRect(PRECTL prcDst, PRECTL prcSrc1, PRECTL prcSrc2)
 {
@@ -96,7 +101,7 @@ BOOL EngBitBlt(SURFOBJ *Dest, SURFOBJ *Source,
         hTemp = EngCreateBitmap(TempSize,
                      DIB_GetDIBWidthBytes(DestRect->right - DestRect->left, BitsPerFormat(Dest->iBitmapFormat)),
                      Dest->iBitmapFormat, 0, NULL);
-        TempSurf = (PSURFOBJ)AccessUserObject(hTemp);
+        TempSurf = (PSURFOBJ)AccessUserObject((ULONG)hTemp);
 
         // FIXME: Skip creating a TempSurf if we have the same BPP and palette
         EngBitBlt(TempSurf, Source, NULL, NULL, ColorTranslation, &TempRect, SourcePoint, NULL, NULL, NULL, 0);

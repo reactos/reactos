@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.21 2001/11/02 06:10:11 rex Exp $
+/* $Id: dllmain.c,v 1.22 2002/01/13 22:52:08 dwelch Exp $
  * 
  *  Entry Point for win32k.sys
  */
@@ -70,6 +70,20 @@ DllMain (
     DbgPrint("Failed to initialize window implementation!\n");
     return STATUS_UNSUCCESSFUL;
   }
+
+   Status = InitInputImpl();
+  if (!NT_SUCCESS(Status))
+    {
+      DbgPrint("Failed to initialize input implementation.\n");
+      return(Status);
+    }
+
+  Status = MsqInitializeImpl();
+  if (!NT_SUCCESS(Status))
+    {
+      DbgPrint("Failed to initialize message queue implementation.\n");
+      return(Status);
+    }
 
   return STATUS_SUCCESS;
 }
