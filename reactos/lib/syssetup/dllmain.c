@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.4 2004/08/28 11:08:50 ekohl Exp $
+/* $Id: dllmain.c,v 1.5 2004/11/02 15:42:09 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -48,7 +48,11 @@ DllMain (HINSTANCE hInstance,
 {
   if (dwReason == DLL_PROCESS_ATTACH)
   {
-    InitCommonControls();
+    INITCOMMONCONTROLSEX InitControls;
+
+    InitControls.dwSize = sizeof(INITCOMMONCONTROLSEX);
+    InitControls.dwICC = ICC_DATE_CLASSES | ICC_PROGRESS_CLASS | ICC_UPDOWN_CLASS;
+    InitCommonControlsEx(&InitControls);
     hDllInstance = hInstance;
   }
 

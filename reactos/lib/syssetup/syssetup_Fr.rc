@@ -91,6 +91,24 @@ BEGIN
 END
 
 
+IDD_DATETIMEPAGE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Date and Time", IDC_STATIC, 53, 7, 253, 8
+    CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
+            DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 29, 137, 14
+    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32",
+            DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 29, 54, 14
+    LTEXT "Timezone", IDC_STATIC, 53, 80, 253, 8
+    COMBOBOX "", IDC_TIMEZONELIST, 53, 96, 201, 42,
+             CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    AUTOCHECKBOX "Daylight savings",
+                 IDC_DAYLIGHTSAVINGS, 53, 124, 201, 10
+END
+
+
 IDD_PROCESSPAGE DIALOG 0, 0, 317, 143
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS Setup"
@@ -132,12 +150,14 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_OWNERTITLE       "Owner page title"
-    IDS_OWNERSUBTITLE    "Owner page subtitle"
-    IDS_COMPUTERTITLE    "Computer page title"
-    IDS_COMPUTERSUBTITLE "Computer page subtitle"
-    IDS_LOCALETITLE      "Locale page title"
-    IDS_LOCALESUBTITLE   "Locale page subtitle"
+    IDS_OWNERTITLE       "Personalize your Software"
+    IDS_OWNERSUBTITLE    "Setup uses this information about yourself to personalize ReactOS."
+    IDS_COMPUTERTITLE    "Computer Name and Administrator Password"
+    IDS_COMPUTERSUBTITLE "You must provide a name and an Administrator Password for your computer."
+    IDS_LOCALETITLE      "Regional settings"
+    IDS_LOCALESUBTITLE   "You can customize ReactOS for different regions and languages."
+    IDS_DATETIMETITLE    "Date and Time"
+    IDS_DATETIMESUBTITLE "Set the correct date and time for your computer."
     IDS_PROCESSTITLE     "Process page title"
     IDS_PROCESSSUBTITLE  "Process page subtitle"
 END

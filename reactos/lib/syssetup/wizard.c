@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: wizard.c,v 1.9 2004/10/11 21:08:04 weiden Exp $
+/* $Id: wizard.c,v 1.10 2004/11/02 15:42:09 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -355,6 +355,99 @@ ComputerPageDlgProc(HWND hwndDlg,
 }
 
 
+static VOID
+SetKeyboardLayoutName(HWND hwnd)
+{
+#if 0
+  WCHAR szLayoutPath[256];
+  WCHAR szLocaleName[32];
+  DWORD dwLocaleSize;
+  HKEY hKey;
+
+  if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+		    L"SYSTEM\\CurrentControlSet\\Control\\NLS\\Locale",
+		    0,
+		    KEY_ALL_ACCESS,
+		    &hKey))
+    return;
+
+  dwValueSize = 16 * sizeof(WCHAR);
+  if (RegQueryValueExW(hKey,
+		       NULL,
+		       NULL,
+		       NULL,
+		       szLocaleName,
+		       &dwLocaleSize))
+    {
+      RegCloseKey(hKey);
+      return;
+    }
+
+  wcscpy(szLayoutPath,
+	 L"SYSTEM\\CurrentControlSet\\Control\\KeyboardLayouts\\"
+  wcscat(szLayoutPath,
+	 szLocaleName);
+
+  if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+		    szLayoutPath,
+		    0,
+		    KEY_ALL_ACCESS,
+		    &hKey))
+    return;
+
+  dwValueSize = 32 * sizeof(WCHAR);
+  if (RegQueryValueExW(hKey,
+		       L"Layout Text",
+		       NULL,
+		       NULL,
+		       szLocaleName,
+		       &dwLocaleSize))
+    {
+      RegCloseKey(hKey);
+      return;
+    }
+
+  RegCloseKey(hKey);
+#endif
+}
+
+static VOID
+RunLocalePage(VOID)
+{
+  PROPSHEETPAGE psp;
+  PROPSHEETHEADER psh;
+  HMODULE hDll;
+//  TCHAR Caption[256];
+
+  hDll = LoadLibraryW(L"intl.cpl");
+
+  ZeroMemory(&psp, sizeof(PROPSHEETPAGE));
+  psp.dwSize = sizeof(PROPSHEETPAGE);
+  psp.dwFlags = PSP_DEFAULT;
+  psp.hInstance = hDll;
+  psp.pszTemplate = MAKEINTRESOURCE(IDD_LOCALEPAGE);
+  psp.pfnDlgProc = GetProcAddress(hDll, "LocalePageProc");
+
+
+//  LoadString(hDll, IDS_CPLNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
+
+  ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
+  psh.dwSize = sizeof(PROPSHEETHEADER);
+  psh.dwFlags =  PSH_PROPSHEETPAGE; // | PSH_PROPTITLE;
+  psh.hwndParent = NULL;
+  psh.hInstance = hDll;
+//  psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON));
+//  psh.pszCaption = Caption;
+  psh.nPages = 1;
+  psh.nStartPage = 0;
+  psh.ppsp = &psp;
+
+  PropertySheet(&psh);
+
+  FreeLibrary(hDll);
+}
+
+
 INT_PTR CALLBACK
 LocalePageDlgProc(HWND hwndDlg,
                   UINT uMsg,
@@ -374,6 +467,196 @@ LocalePageDlgProc(HWND hwndDlg,
           SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
           SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)SetupData);
 
+
+          SetKeyboardLayoutName(GetDlgItem(hwndDlg, IDC_LAYOUTTEXT));
+
+        }
+        break;
+
+      case WM_COMMAND:
+	if (HIWORD(wParam) == BN_CLICKED)
+	  {
+	    switch (LOWORD(wParam))
+	      {
+		case IDC_CUSTOMLOCALE:
+		  {
+		    RunLocalePage();
+		  }
+		  break;
+	      }
+	  }
+	break;
+
+      case WM_NOTIFY:
+        {
+          LPNMHDR lpnm = (LPNMHDR)lParam;
+
+          switch (lpnm->code)
+            {
+              case PSN_SETACTIVE:
+                /* Enable the Back and Next buttons */
+                PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
+                break;
+
+              case PSN_WIZNEXT:
+                break;
+
+              default:
+                break;
+            }
+        }
+        break;
+
+      default:
+        break;
+    }
+
+  return FALSE;
+}
+
+
+static VOID
+InitTimeZoneList(HWND hwnd)
+{
+  WCHAR szKeyName[256];
+  WCHAR szValue[256];
+  DWORD dwIndex;
+  DWORD dwNameSize;
+  DWORD dwValueSize;
+  LONG lError;
+  HKEY hZonesKey;
+  HKEY hZoneKey;
+
+  if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+		    L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones",
+		    0,
+		    KEY_ALL_ACCESS,
+		    &hZonesKey))
+    return;
+
+  dwIndex = 0;
+  while (TRUE)
+    {
+      dwNameSize = 256;
+      lError = RegEnumKeyExW(hZonesKey,
+			     dwIndex,
+			     szKeyName,
+			     &dwNameSize,
+			     NULL,
+			     NULL,
+			     NULL,
+			     NULL);
+      if (lError != ERROR_SUCCESS && lError != ERROR_MORE_DATA)
+	break;
+
+      if (RegOpenKeyExW(hZonesKey,
+			szKeyName,
+			0,
+			KEY_ALL_ACCESS,
+			&hZoneKey))
+	break;
+
+      dwValueSize = 256 * sizeof(WCHAR);
+      if (RegQueryValueExW(hZoneKey,
+			   L"Display",
+			   NULL,
+			   NULL,
+			   (LPBYTE)szValue,
+			   &dwValueSize))
+	{
+	  RegCloseKey(hZoneKey);
+	  break;
+	}
+
+      SendMessageW(hwnd,
+		   CB_ADDSTRING,
+		   0,
+		   (LPARAM)szValue);
+
+      RegCloseKey(hZoneKey);
+
+      dwIndex++;
+    }
+
+  RegCloseKey(hZonesKey);
+
+  SendMessageW(hwnd,
+	       CB_SETCURSEL,
+	       (WPARAM)0, // index
+	       0);
+
+#if 0
+      SendMessage(hwnd,
+		  CB_ADDSTRING,
+		  0,
+		  (LPARAM)"Test0");
+      SendMessage(hwnd,
+		  CB_ADDSTRING,
+		  0,
+		  (LPARAM)"Test1");
+      SendMessage(hwnd,
+		  CB_ADDSTRING,
+		  0,
+		  (LPARAM)"Test2");
+      SendMessage(hwnd,
+		  CB_ADDSTRING,
+		  0,
+		  (LPARAM)"Test3");
+
+      SendMessage(hwnd,
+		  CB_SETCURSEL,
+		  (WPARAM)0, // index
+		  0);
+#endif
+}
+
+
+static VOID
+SetLocalDateTime(HWND hwnd)
+{
+  SYSTEMTIME Date;
+  SYSTEMTIME Time;
+  SYSTEMTIME SystemTime;
+
+  if (DateTime_GetSystemTime(GetDlgItem(hwnd, IDC_DATEPICKER), &Date) == GDT_VALID)
+    {
+      if (DateTime_GetSystemTime(GetDlgItem(hwnd, IDC_TIMEPICKER), &Time) == GDT_VALID)
+        {
+          SystemTime.wYear = Date.wYear;
+          SystemTime.wMonth = Date.wMonth;
+          SystemTime.wDayOfWeek = Date.wDayOfWeek;
+          SystemTime.wDay = Date.wDay;
+          SystemTime.wHour = Time.wHour;
+          SystemTime.wMinute = Time.wMinute;
+          SystemTime.wSecond = Time.wSecond;
+          SystemTime.wMilliseconds = Time.wMilliseconds;
+
+          SetLocalTime(&SystemTime);
+        }
+    }
+}
+
+
+INT_PTR CALLBACK
+DateTimePageDlgProc(HWND hwndDlg,
+                    UINT uMsg,
+                    WPARAM wParam,
+                    LPARAM lParam)
+{
+  PSETUPDATA SetupData;
+
+  /* Retrieve pointer to the global setup data */
+  SetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+
+  switch (uMsg)
+    {
+      case WM_INITDIALOG:
+        {
+          /* Save pointer to the global setup data */
+          SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+          SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)SetupData);
+
+          InitTimeZoneList(GetDlgItem(hwndDlg, IDC_TIMEZONELIST));
         }
         break;
 
@@ -390,6 +673,11 @@ LocalePageDlgProc(HWND hwndDlg,
                 break;
 
               case PSN_WIZNEXT:
+                {
+//                SetTimeZoneInformation();
+
+                  SetLocalDateTime(hwndDlg);
+                }
                 break;
 
               default:
@@ -585,27 +873,36 @@ InstallWizard(VOID)
   ahpsp[3] = CreatePropertySheetPage(&psp);
 
 
+  /* Create the DateTime page */
+  psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
+  psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_DATETIMETITLE);
+  psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_DATETIMESUBTITLE);
+  psp.pfnDlgProc = DateTimePageDlgProc;
+  psp.pszTemplate = MAKEINTRESOURCE(IDD_DATETIMEPAGE);
+  ahpsp[4] = CreatePropertySheetPage(&psp);
+
+
   /* Create the Process page */
   psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
   psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_PROCESSTITLE);
   psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_PROCESSSUBTITLE);
   psp.pfnDlgProc = ProcessPageDlgProc;
   psp.pszTemplate = MAKEINTRESOURCE(IDD_PROCESSPAGE);
-  ahpsp[4] = CreatePropertySheetPage(&psp);
+  ahpsp[5] = CreatePropertySheetPage(&psp);
 
 
   /* Create the Finish page */
   psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
   psp.pfnDlgProc = FinishDlgProc;
   psp.pszTemplate = MAKEINTRESOURCE(IDD_FINISHPAGE);
-  ahpsp[5] = CreatePropertySheetPage(&psp);
+  ahpsp[6] = CreatePropertySheetPage(&psp);
 
   /* Create the property sheet */
   psh.dwSize = sizeof(PROPSHEETHEADER);
   psh.dwFlags = PSH_WIZARD97 | PSH_WATERMARK | PSH_HEADER;
   psh.hInstance = hDllInstance;
   psh.hwndParent = NULL;
-  psh.nPages = 6;
+  psh.nPages = 7;
   psh.nStartPage = 0;
   psh.phpage = ahpsp;
   psh.pszbmWatermark = MAKEINTRESOURCE(IDB_WATERMARK);
