@@ -834,6 +834,8 @@ _end_mem:
         dd 0
 _module_lengths:
         times 64 dd 0
+_kernel_parameters:
+        times 256 db 0
 _end_boot_param_struct
              
 ;
