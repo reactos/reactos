@@ -476,9 +476,9 @@ RETERR16 WINAPI CtlSetLdd16(LPLOGDISKDESC pldd)
     else
     {
         pCurrLDD = pCurr->pldd;
-	if (pCurrLDD->pszPath)		HeapFree(heap, 0, pCurrLDD->pszPath);
-	if (pCurrLDD->pszVolLabel)	HeapFree(heap, 0, pCurrLDD->pszVolLabel);
-	if (pCurrLDD->pszDiskName)	HeapFree(heap, 0, pCurrLDD->pszDiskName);
+        HeapFree(heap, 0, pCurrLDD->pszPath);
+        HeapFree(heap, 0, pCurrLDD->pszVolLabel);
+        HeapFree(heap, 0, pCurrLDD->pszDiskName);
     }
 
     memcpy(pCurrLDD, pldd, sizeof(LOGDISKDESC_S));

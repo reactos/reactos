@@ -658,7 +658,7 @@ void VCP_UI_RegisterProgressClass(void)
     registered = TRUE;
     ZeroMemory (&wndClass, sizeof(WNDCLASSA));
     wndClass.style         = CS_GLOBALCLASS | CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW;
-    wndClass.lpfnWndProc   = (WNDPROC)VCP_UI_FileCopyWndProc;
+    wndClass.lpfnWndProc   = VCP_UI_FileCopyWndProc;
     wndClass.cbClsExtra    = 0;
     wndClass.cbWndExtra    = 0;
     wndClass.hCursor       = LoadCursorA (0, (LPSTR)IDC_ARROW);

@@ -19,7 +19,7 @@
  *
  *
  * Many useful traces are commented in code, uncomment them if you have
- * trouble and run with --debugmsg +setupapi
+ * trouble and run with WINEDEBUG=+setupapi
  * 
  */
 
@@ -39,8 +39,8 @@
 #include "fdi.h"
 #include "wine/unicode.h"
 
-#include <fcntl.h>
-#include <share.h>
+#include "fcntl.h"
+#include "share.h"
 
 #include "wine/debug.h"
 
@@ -312,7 +312,7 @@ static INT_PTR sc_FNNOTIFY_A(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION pfdin)
     if (err == FILEOP_DOIT) {
       TRACE("  Callback specified filename: %s\n", debugstr_a(&(fici.FullTargetName[0])));
       if (!fici.FullTargetName[0]) {
-        WARN("  Empty return string causing abort.");
+        WARN("  Empty return string causing abort.\n");
         SetLastError(ERROR_PATH_NOT_FOUND);
         return -1;
       }
@@ -597,11 +597,11 @@ BOOL WINAPI SetupIterateCabinetA(PCSTR CabinetFile, DWORD Reserved,
 BOOL WINAPI SetupIterateCabinetW(PCWSTR CabinetFile, DWORD Reserved,
                                  PSP_FILE_CALLBACK_W MsgHandler, PVOID Context)
 {
-  CHAR CabinetFile_A[MAX_PATH];
-  unsigned int len;
+  CHAR pszCabinet[MAX_PATH], pszCabPath[MAX_PATH];
+  UINT len;
   SC_HSC_W my_hsc;
   ERF erf;
-  CHAR pszCabinet[MAX_PATH], pszCabPath[MAX_PATH], *p;
+  WCHAR pszCabPathW[MAX_PATH], *p;
   DWORD fpnsize;
   BOOL ret;
 
@@ -612,36 +612,33 @@ BOOL WINAPI SetupIterateCabinetW(PCWSTR CabinetFile, DWORD Reserved,
     return FALSE;
 
   if (!CabinetFile) return FALSE;
-  if (!WideCharToMultiByte(CP_ACP, 0, CabinetFile, -1, CabinetFile_A, MAX_PATH, 0, 0))
-      return FALSE;
 
   memset(&my_hsc, 0, sizeof(SC_HSC_W));
-  pszCabinet[0] = '\0';
-  pszCabPath[0] = '\0';
 
-  fpnsize = GetFullPathNameA(CabinetFile_A, MAX_PATH, &(pszCabPath[0]), &p);
+  fpnsize = GetFullPathNameW(CabinetFile, MAX_PATH, pszCabPathW, &p);
   if (fpnsize > MAX_PATH) {
     SetLastError(ERROR_BAD_PATHNAME);
     return FALSE;
   }
 
   if (p) {
-    strcpy(pszCabinet, p);
-    *p = '\0';
+    strcpyW(my_hsc.most_recent_cabinet_name, p);
+    *p = 0;
+    len = WideCharToMultiByte(CP_ACP, 0, pszCabPathW, -1, pszCabPath,
+				MAX_PATH, 0, 0);
+    if (!len) return FALSE;
   } else {
-    strcpy(pszCabinet, CabinetFile_A);
+    strcpyW(my_hsc.most_recent_cabinet_name, CabinetFile);
     pszCabPath[0] = '\0';
   }
 
-  TRACE("path: %s, cabfile: %s\n", debugstr_a(pszCabPath), debugstr_a(pszCabinet));
+  len = WideCharToMultiByte(CP_ACP, 0, my_hsc.most_recent_cabinet_name, -1,
+				pszCabinet, MAX_PATH, 0, 0);
+  if (!len) return FALSE;
 
-  /* remember the cabinet name */
-  len = 1 + MultiByteToWideChar(CP_ACP, 0, pszCabinet, -1,
-             &(my_hsc.most_recent_cabinet_name[0]), MAX_PATH);
-  if (len > MAX_PATH)
-    return FALSE;
-  else if (len <= 1)
-    my_hsc.most_recent_cabinet_name[0] = '\0';
+  TRACE("path: %s, cabfile: %s\n",
+	debugstr_a(pszCabPath), debugstr_a(pszCabinet));
+
   my_hsc.magic = SC_HSC_W_MAGIC;
   my_hsc.msghandler = MsgHandler;
   my_hsc.context = Context;

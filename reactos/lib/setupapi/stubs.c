@@ -113,6 +113,19 @@ DWORD WINAPI CM_Disconnect_Machine(DWORD handle)
 }
 
 /***********************************************************************
+ *             CM_Get_Device_ID_ListA  (SETUPAPI.@)
+ */
+
+DWORD WINAPI CM_Get_Device_ID_ListA(
+    PCSTR pszFilter, PCHAR Buffer, ULONG BufferLen, ULONG ulFlags )
+{
+    FIXME("%p %p %ld %ld\n", pszFilter, Buffer, BufferLen, ulFlags );
+    memset(Buffer,0,2);
+    return CR_SUCCESS;
+}
+
+
+/***********************************************************************
  *		SetupCopyOEMInfA  (SETUPAPI.@)
  */
 BOOL WINAPI SetupCopyOEMInfA(PCSTR sourceinffile, PCSTR sourcemedialoc,

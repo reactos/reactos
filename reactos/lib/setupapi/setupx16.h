@@ -21,6 +21,7 @@
 
 #include "wine/windef16.h"
 
+typedef UINT16 DI_FUNCTION16;
 typedef UINT16 HINF16;
 typedef UINT16 LOGDISKID16;
 typedef UINT16 VHSTR;

@@ -342,7 +342,7 @@ static BOOL do_reg_operation( HKEY hkey, const WCHAR *value, INFCONTEXT *context
         {
             TRACE( "setting value %s to %s\n", debugstr_w(value), debugstr_w(str) );
             if (str) RegSetValueExW( hkey, value, 0, type, (BYTE *)str, size * sizeof(WCHAR) );
-            else RegSetValueExW( hkey, value, 0, type, (BYTE *)&empty, sizeof(WCHAR) );
+            else RegSetValueExW( hkey, value, 0, type, (const BYTE *)&empty, sizeof(WCHAR) );
         }
         HeapFree( GetProcessHeap(), 0, str );
         return TRUE;
