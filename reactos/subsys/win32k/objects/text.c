@@ -1493,7 +1493,7 @@ NtGdiExtTextOut(
    LONGLONG TextLeft, RealXStart;
    ULONG TextTop, pitch, previous, BackgroundLeft;
    FT_Bool use_kerning;
-   RECTL DestRect, MaskRect;
+   RECTL DestRect, MaskRect, SpecifiedDestRect;
    POINTL SourcePoint, BrushOrigin;
    HBRUSH hBrushFg = NULL;
    PGDIBRUSHOBJ BrushFg = NULL;
@@ -1517,6 +1517,20 @@ NtGdiExtTextOut(
    NTSTATUS Status;
    INT *Dx = NULL;
    POINT Start;
+   BOOL DoBreak = FALSE;
+
+   // TODO: Write test-cases to exactly match real Windows in different
+   // bad parameters (e.g. does Windows check the DC or the RECT first?).
+   if (lprc && (fuOptions & (ETO_OPAQUE | ETO_CLIPPED)))
+   {
+      // At least one of the two flags were specified. Copy lprc. Once.
+      Status = MmCopyFromCaller(&SpecifiedDestRect, lprc, sizeof(RECT));
+      if (!NT_SUCCESS(Status))
+      {
+         SetLastWin32Error(ERROR_INVALID_PARAMETER);
+         return FALSE;
+      }
+   }
 
    dc = DC_LockDc(hDC);
    if (!dc)
@@ -1607,11 +1621,10 @@ NtGdiExtTextOut(
 
    if ((fuOptions & ETO_OPAQUE) && lprc)
    {
-      MmCopyFromCaller(&DestRect, lprc, sizeof(RECT));
-      DestRect.left += dc->w.DCOrgX;
-      DestRect.top += dc->w.DCOrgY;
-      DestRect.right += dc->w.DCOrgX;
-      DestRect.bottom += dc->w.DCOrgY;
+      DestRect.left   = SpecifiedDestRect.left   + dc->w.DCOrgX;
+      DestRect.top    = SpecifiedDestRect.top    + dc->w.DCOrgY;
+      DestRect.right  = SpecifiedDestRect.right  + dc->w.DCOrgX;
+      DestRect.bottom = SpecifiedDestRect.bottom + dc->w.DCOrgY;
       IntEngBitBlt(
          BitmapObj,
          NULL,
@@ -1880,6 +1893,17 @@ NtGdiExtTextOut(
        * brush.
        */
 
+      if (lprc &&
+          (fuOptions & ETO_CLIPPED) &&
+          DestRect.right >= SpecifiedDestRect.right + dc->w.DCOrgX)
+      {
+         // We do the check '>=' instead of '>' to possibly save an iteration
+         // through this loop, since it's breaking after the drawing is done,
+         // and x is always incremented.
+         DestRect.right = SpecifiedDestRect.right + dc->w.DCOrgX;
+         DoBreak = TRUE;
+      }
+
       IntEngMaskBlt(
          SurfObj,
          SourceGlyphSurf,
@@ -1894,6 +1918,11 @@ NtGdiExtTextOut(
 
       EngUnlockSurface(SourceGlyphSurf);
       EngDeleteSurface((HSURF)HSourceGlyph);
+
+      if (DoBreak)
+      {
+         break;
+      }
 
       if (NULL == Dx)
       {
