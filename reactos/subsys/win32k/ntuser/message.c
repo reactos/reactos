@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.14 2003/05/10 21:47:04 gvg Exp $
+/* $Id: message.c,v 1.15 2003/05/11 10:47:33 jfilby Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -329,21 +329,23 @@ NtUserPostMessage(HWND hWnd,
 {
   PUSER_MESSAGE_QUEUE ThreadQueue;
 
-  if (WM_QUIT == Msg)
-    {
-    ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
+  switch (Msg)
+  {
+    case WM_NULL:
+      break;
 
-    ThreadQueue->QuitPosted = TRUE;
-    ThreadQueue->QuitExitCode = wParam;
+    case WM_QUIT:
+      ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
+      ThreadQueue->QuitPosted = TRUE;
+      ThreadQueue->QuitExitCode = wParam;
+      break;
 
-    return TRUE;
-    }
-  else
-    {
-    UNIMPLEMENTED;
-    
-    return FALSE;
-    }
+    default:
+      DPRINT1("Unhandled message: %u\n", Msg);
+      return FALSE;
+  }
+
+  return TRUE;
 }
 
 BOOL STDCALL
