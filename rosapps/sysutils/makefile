@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1 1999/05/16 07:27:35 ea Exp $
+# $Id: makefile,v 1.2 1999/10/03 22:12:07 ekohl Exp $
 #
 # ReactOS System Utilities
 #
@@ -15,9 +15,12 @@
 
 ROSINC=../../reactos/include
 
-all: chkdsk.exe format.exe \
-	chklib.exe shutdown.exe regnav.exe
+TARGET=regnav.exe
+# chkdsk.exe format.exe \
+#        chklib.exe shutdown.exe regnav.exe
 #	login.exe chklib.exe shutdown.exe regnav.exe
+
+all: $(TARGET)
 
 # By Mark Russinovich
 
@@ -53,8 +56,8 @@ chklib.exe: chklib.o win32err.o
 	$(NM) --numeric-sort chklib.exe > chklib.sym
 
 
-regnav.exe: regnav.o
-	$(CC) regnav.o \
+regnav.exe: regnav.o win32err.o
+	$(CC) regnav.o win32err.o \
 		-o regnav.exe \
 		-lkernel32 \
 		-lcrtdll
@@ -80,6 +83,25 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 
 .phony: clean $(CLEAN_FILES:%=%_clean)
 
+
+floppy: $(TARGET:%=$(FLOPPY_DIR)/apps/%)
+
+$(TARGET:%=$(FLOPPY_DIR)/apps/%): $(FLOPPY_DIR)/apps/%: %
+ifeq ($(DOSCLI),yes)
+	$(CP) $* $(FLOPPY_DIR)\apps\$*
+else
+	$(CP) $* $(FLOPPY_DIR)/apps/$*
+endif
+
+
+dist: $(TARGET:%=../$(DIST_DIR)/apps/%)
+
+$(TARGET:%=../$(DIST_DIR)/apps/%): ../$(DIST_DIR)/apps/%: %
+ifeq ($(DOSCLI),yes)
+	$(CP) $* ..\$(DIST_DIR)\apps\$*
+else
+	$(CP) $* ../$(DIST_DIR)/apps/$*
+endif
 	
 include ../rules.mak
 	

@@ -13,8 +13,7 @@ include rules.mak
 #
 # Available applications
 #
-APPS = cmd cmdutils
-# APPS = sysutils notevil
+APPS = cmd cmdutils notevil sysutils
 
 all: $(APPS)
 .PHONY: all
@@ -67,8 +66,9 @@ endif
 
 clean_dist_dir:
 ifeq ($(DOSCLI),yes)
-	$(RM) $(DIST_DIR)\*.*
-	$(RMDIR) $(DIST_DIR)
+#	$(RM) $(DIST_DIR)\apps\*.*
+#	$(RMDIR) $(DIST_DIR)\apps
+#	$(RMDIR) $(DIST_DIR)
 else
 	$(RM) -r $(DIST_DIR)
 endif
@@ -76,8 +76,10 @@ endif
 make_dist_dirs:
 ifeq ($(DOSCLI),yes)
 	mkdir $(DIST_DIR)
+	mkdir $(DIST_DIR)\apps
 else
 	mkdir $(DIST_DIR)
+	mkdir $(DIST_DIR)/apps
 endif
 
 .PHONY: clean_dist_dir make_dist_dirs
