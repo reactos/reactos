@@ -1,4 +1,4 @@
-; $Id: undis.def,v 1.1 2004/09/30 05:40:14 arty Exp $
+; $Id: undis.def,v 1.1.4.1 2004/10/25 03:25:44 ion Exp $
 ;
 ; reactos/drivers/lib/undis/undis.def
 ;
@@ -37,8 +37,6 @@ NdisFreeBuffer@4
 NdisQueryBuffer@12
 NdisFreePacket@4
 MmMapLockedPages@8
-KeLowerIrql@4
-KeRaiseIrql@8
 @ExReleaseFastMutex@4
 @ExAcquireFastMutex@4
 @InterlockedPushEntrySList@8
@@ -46,3 +44,9 @@ KeRaiseIrql@8
 RecursiveMutexLeave
 RecursiveMutexEnter
 RecursiveMutexInit
+AllocatePacketWithBufferX
+FreeNdisPacketX
+GetDataPtr
+CopyPacketToBuffer
+AdjustPacket
+ExpInitLookasideLists

@@ -160,7 +160,7 @@ NTSTATUS STDCALL DriverEntry(IN PDRIVER_OBJECT DriverObject,
   Status = NtCreateEvent( &event,
 			  0,
 			  &objattr,
-			  TRUE,
+			  NotificationEvent,
 			  FALSE );
   if( !NT_SUCCESS( Status ) )
     {

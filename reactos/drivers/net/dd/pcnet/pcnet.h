@@ -1,30 +1,26 @@
 /*
- *  ReactOS AMD PCNet Driver
- *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
+ * ReactOS AMD PCNet Driver
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * Copyright (C) 2003 Vizzini <vizzini@plasmic.com>
+ * Copyright (C) 2004 Filip Navara <navaraf@reactos.com>
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * PROJECT:         ReactOS AMD PCNet Driver
- * FILE:            pcnet/pcnet.h
- * PURPOSE:         PCNet Device Driver
- * PROGRAMMER:      Vizzini (vizzini@plasmic.com)
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
  * REVISIONS:
- *                  1-Sept-2003 vizzini - Created
+ *     01-Sep-2003 vizzini - Created
  * NOTES:
- *     - this is hard-coded to NDIS4
- *     - this assumes a little-endian machine
  *     - this assumes a 32-bit machine, where sizeof(PVOID) = 32 and sizeof(USHORT) = 16
  *     - this assumes 32-bit physical addresses
  */
@@ -32,30 +28,56 @@
 #ifndef _PCNET_H_
 #define _PCNET_H_
 
+/* statistics struct */
+typedef struct _ADAPTER_STATS
+{
+  ULONG XmtGoodFrames;
+  ULONG XmtRetryErrors;
+  ULONG XmtLossesOfCarrier;
+  ULONG XmtCollisions;
+  ULONG XmtLateCollisions;
+  ULONG XmtExcessiveDefferals;
+  ULONG XmtBufferUnderflows;
+  ULONG XmtBufferErrors;
+  ULONG XmtOneRetry;
+  ULONG XmtMoreThanOneRetry;
+  ULONG RcvGoodFrames;
+  ULONG RcvBufferErrors;
+  ULONG RcvCrcErrors;
+  ULONG RcvOverflowErrors;
+  ULONG RcvFramingErrors;
+} ADAPTER_STATS, *PADAPTER_STATS;
+
 /* adapter struct */
 typedef struct _ADAPTER 
 {
+  NDIS_SPIN_LOCK Lock;
+  
   NDIS_HANDLE MiniportAdapterHandle;
   ULONG Flags;
-  ULONG BusNumber;
-  ULONG SlotNumber;
   ULONG InterruptVector;
   ULONG IoBaseAddress;
   PVOID PortOffset;
   NDIS_MINIPORT_INTERRUPT InterruptObject;
+  NDIS_MEDIA_STATE MediaState;
+  NDIS_MINIPORT_TIMER MediaDetectionTimer;
   ULONG CurrentReceiveDescriptorIndex;
   ULONG CurrentPacketFilter;
   ULONG CurrentLookaheadSize;
 
+  /* circular indexes to transmit descriptors */
+  ULONG CurrentTransmitStartIndex;
+  ULONG CurrentTransmitEndIndex;
+
   /* initialization block */
   ULONG InitializationBlockLength;
   PINITIALIZATION_BLOCK InitializationBlockVirt;
-  PINITIALIZATION_BLOCK  InitializationBlockPhys;
+  PINITIALIZATION_BLOCK InitializationBlockPhys;
 
   /* transmit descriptor ring */
   ULONG TransmitDescriptorRingLength;
   PTRANSMIT_DESCRIPTOR TransmitDescriptorRingVirt;
-  PTRANSMIT_DESCRIPTOR  TransmitDescriptorRingPhys;
+  PTRANSMIT_DESCRIPTOR TransmitDescriptorRingPhys;
 
   /* transmit buffers */
   ULONG TransmitBufferLength;
@@ -72,6 +94,7 @@ typedef struct _ADAPTER
   PCHAR ReceiveBufferPtrVirt;
   PCHAR ReceiveBufferPtrPhys;
 
+  ADAPTER_STATS Statistics;
 } ADAPTER, *PADAPTER;
 
 /* forward declarations */
@@ -95,10 +118,23 @@ MiniportSetInformation(
     OUT PULONG BytesRead,
     OUT PULONG BytesNeeded);
 
+NDIS_STATUS
+STDCALL
+MiSetMulticast(
+    PADAPTER Adapter,
+    UCHAR *Addresses,
+    UINT AddressCount);
+
+NDIS_MEDIA_STATE
+STDCALL
+MiGetMediaState(PADAPTER Adapter);
+
 /* operational constants */
 #define NUMBER_OF_BUFFERS     0x20
 #define LOG_NUMBER_OF_BUFFERS 5         /* log2(NUMBER_OF_BUFFERS) */
 #define BUFFER_SIZE           0x600
+#define MAX_MULTICAST_ADDRESSES 32
+#define MEDIA_DETECTION_INTERVAL 5000
 
 /* flags */
 #define RESET_IN_PROGRESS 0x1
@@ -122,16 +158,6 @@ MiniportSetInformation(
 
 /* memory pool tag */
 #define PCNET_TAG 0xbaadf00d
-
-/* stack validation */
-#define STACKENTER __asm__("movl %%esp, %0\n" : "=m" (esp));
-
-#define STACKLEAVE {\
-  unsigned long esptemp = esp; \
-  __asm__ ("movl %%esp, %0\n": "=m" (esp)); \
-  if(esp != esptemp) \
-    __asm__ ("int $3\n"); \
-}
 
 #endif // _PCNET_H_
 

@@ -1,31 +1,33 @@
 /*
- *  ReactOS AMD PCNet Driver
- *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
+ * ReactOS AMD PCNet Driver
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * Copyright (C) 2003 Vizzini <vizzini@plasmic.com>
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * PROJECT:         ReactOS AMD PCNet Driver
- * FILE:            drivers/net/dd/pcnet/pcnethw.h
- * PURPOSE:         PCNet hardware configuration constants
- * PROGRAMMER:      Vizzini (vizzini@plasmic.com)
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ * PURPOSE:
+ *     PCNet hardware configuration constants
  * REVISIONS:
- *                  1-Sept-2003 vizzini - Created
+ *     01-Sept-2003 vizzini - Created
  * NOTES:
  *     - This file represents a clean re-implementation from the AMD
  *       PCNet II chip documentation (Am79C790A, pub# 19436).
  */
+
+#ifndef _PCNETHW_
+#define _PCNETHW_
 
 /* when in 32-bit mode, most registers require the top 16 bits be 0. */
 #define MASK16(__x__) ((__x__) & 0x0000ffff)
@@ -408,4 +410,4 @@ typedef struct _TRANSMIT_DESCRIPTOR
 #define TD2_UFLO        0x4000  /* buffer underflow */
 #define TD2_BUFF        0x8000  /* buffer error */
 
-
+#endif /* _PCNETHW_ */

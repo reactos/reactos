@@ -1,4 +1,4 @@
-/* $Id: pdo.c,v 1.9 2004/08/20 13:33:51 ekohl Exp $
+/* $Id: pdo.c,v 1.9.6.1 2004/10/25 03:25:40 ion Exp $
  *
  * PROJECT:         ReactOS PCI bus driver
  * FILE:            pdo.c
@@ -169,8 +169,10 @@ PdoQueryCapabilities(
   DeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
   DeviceCapabilities = IrpSp->Parameters.DeviceCapabilities.Capabilities;
 
+  if (DeviceCapabilities->Version != 1)
+    return STATUS_UNSUCCESSFUL;
+  
   DeviceCapabilities->UniqueID = FALSE;
-
   DeviceCapabilities->Address = DeviceExtension->SlotNumber.u.AsULONG;
   DeviceCapabilities->UINumber = (ULONG)-1; /* FIXME */
 
@@ -935,12 +937,6 @@ PdoPnpControl(
 
   switch (IrpSp->MinorFunction) {
 #if 0
-  case IRP_MN_CANCEL_REMOVE_DEVICE:
-    break;
-
-  case IRP_MN_CANCEL_STOP_DEVICE:
-    break;
-
   case IRP_MN_DEVICE_USAGE_NOTIFICATION:
     break;
 
@@ -975,9 +971,6 @@ PdoPnpControl(
 #if 0
   case IRP_MN_QUERY_PNP_DEVICE_STATE:
     break;
-
-  case IRP_MN_QUERY_REMOVE_DEVICE:
-    break;
 #endif
 
   case IRP_MN_QUERY_RESOURCE_REQUIREMENTS:
@@ -991,24 +984,20 @@ PdoPnpControl(
     break;
 
 #if 0
-  case IRP_MN_QUERY_STOP_DEVICE:
-    break;
-
-  case IRP_MN_REMOVE_DEVICE:
-    break;
-
   case IRP_MN_SET_LOCK:
     break;
+#endif
 
   case IRP_MN_START_DEVICE:
-    break;
-
+  case IRP_MN_QUERY_STOP_DEVICE:
+  case IRP_MN_CANCEL_STOP_DEVICE:
   case IRP_MN_STOP_DEVICE:
-    break;
-
+  case IRP_MN_QUERY_REMOVE_DEVICE:
+  case IRP_MN_CANCEL_REMOVE_DEVICE:
+  case IRP_MN_REMOVE_DEVICE:
   case IRP_MN_SURPRISE_REMOVAL:
+    Status = STATUS_SUCCESS;
     break;
-#endif
 
   case IRP_MN_READ_CONFIG:
     DPRINT1("IRP_MN_READ_CONFIG received\n");

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.3 2004/09/30 22:04:13 arty Exp $
+# $Id: makefile,v 1.3.4.1 2004/10/25 03:25:43 ion Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -11,6 +11,7 @@ TARGET_PCH = $(PATH_TO_TOP)/drivers/lib/ip/include/precomp.h
 # -DMEMTRACK
 TARGET_CFLAGS = \
 	-D__USE_W32API \
+	-DMEMTRACK \
 	-Wall -Werror \
 	-Iinclude \
 	-I../../net/tcpip/include \
@@ -42,6 +43,10 @@ TARGET_OBJECTS = \
 	transport/tcp/if.o \
 	transport/tcp/tcp.o \
 	transport/udp/udp.o
+
+preall: all
+
+$(TARGET_OBJECTS):: makefile
 
 include $(PATH_TO_TOP)/rules.mak
 

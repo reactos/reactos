@@ -18,13 +18,9 @@
 #ifdef DBG
 
 /* See debug.h for debug/trace constants */
-DWORD DebugTraceLevel = MIN_TRACE;
+DWORD DebugTraceLevel = /*MIN_TRACE*/DEBUG_ULTRA;
 
 #endif /* DBG */
-
-/* see miniport.c */
-extern KSPIN_LOCK OrphanAdapterListLock;
-extern LIST_ENTRY OrphanAdapterListHead;
 
 
 VOID STDCALL MainUnload(
@@ -63,9 +59,6 @@ DriverEntry(
 
   InitializeListHead(&AdapterListHead);
   KeInitializeSpinLock(&AdapterListLock);
-
-  InitializeListHead(&OrphanAdapterListHead);
-  KeInitializeSpinLock(&OrphanAdapterListLock);
 
   DriverObject->DriverUnload = MainUnload;
 

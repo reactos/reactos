@@ -1,31 +1,38 @@
 /*
- *  ReactOS AMD PCNet Driver
- *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
+ * ReactOS AMD PCNet Driver
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * Copyright (C) 2000 Casper Hornstroup <chorns@users.sourceforge.net>
+ * Copyright (C) 2003 Vizzini <vizzini@plasmic.com>
+ * Copyright (C) 2004 Filip Navara <navaraf@reactos.com>
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * PROJECT:         ReactOS AMD PCNet Driver
- * FILE:            drivers/net/dd/pcnet/pcnet.c
- * PURPOSE:         PCNet Device Driver
- * PROGRAMMERS:     Vizzini (vizzini@plasmic.com), 
- *                  borrowed very heavily from the ReactOS ne2000 driver by 
- *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ * PROGRAMMERS:
+ *     Vizzini (vizzini@plasmic.com), 
+ *     borrowed very heavily from the ReactOS ne2000 driver by 
+ *     Casper S. Hornstrup (chorns@users.sourceforge.net)
  * REVISIONS:
- *                  14-Sept-2003 vizzini - Created
- * NOTES:
+ *     14-Sep-2003 vizzini - Created
+ *     17-Oct-2004 navaraf - Add multicast support.
+ *                         - Add media state detection support.
+ *                         - Protect the adapter context with spinlock
+ *                           and move code talking to card to inside
+ *                           NdisMSynchronizeWithInterrupt calls where
+ *                           necessary.
  */
+
 #include <ndis.h>
 #include "pcnethw.h"
 #include "pcnet.h"
@@ -55,11 +62,20 @@ static ULONG MiniportOIDList[] =
   OID_GEN_MAC_OPTIONS,
   OID_GEN_MEDIA_CONNECT_STATUS,
   OID_GEN_MAXIMUM_SEND_PACKETS,
+  OID_GEN_XMIT_OK,
+  OID_GEN_RCV_OK,
+  OID_GEN_XMIT_ERROR,
+  OID_GEN_RCV_ERROR,
+  OID_GEN_RCV_NO_BUFFER,
+  OID_GEN_RCV_CRC_ERROR,
   OID_802_3_PERMANENT_ADDRESS,
   OID_802_3_CURRENT_ADDRESS,
   OID_802_3_MULTICAST_LIST,
   OID_802_3_MAXIMUM_LIST_SIZE,
-  OID_802_3_MAC_OPTIONS
+  OID_802_3_MAC_OPTIONS,
+  OID_802_3_RCV_ERROR_ALIGNMENT,
+  OID_802_3_XMIT_ONE_COLLISION,
+  OID_802_3_XMIT_MORE_COLLISIONS
 };
 
 
@@ -101,6 +117,8 @@ MiniportQueryInformation(
 
   ASSERT(Adapter);
 
+  NdisAcquireSpinLock(&Adapter->Lock);
+
   Status   = NDIS_STATUS_SUCCESS;
   CopyFrom = (PVOID)&GenericULONG;
   CopySize = sizeof(ULONG);
@@ -124,12 +142,13 @@ MiniportQueryInformation(
     case OID_GEN_MEDIA_SUPPORTED:
     case OID_GEN_MEDIA_IN_USE:
         {
-          NDIS_MEDIUM Medium   = NdisMedium802_3;
+          static const NDIS_MEDIUM Medium = NdisMedium802_3;
           CopyFrom = (PVOID)&Medium;
           CopySize = sizeof(NDIS_MEDIUM);
           break;
         }
 
+    case OID_GEN_CURRENT_LOOKAHEAD:
     case OID_GEN_MAXIMUM_LOOKAHEAD:
         {
           GenericULONG = 1500;
@@ -138,8 +157,12 @@ MiniportQueryInformation(
 
     case OID_GEN_MAXIMUM_FRAME_SIZE:
         {
-          /* XXX I'm not sure this is correct */
-          GenericULONG = 1514;
+          /*
+           * The value returned by this OID must be equal to
+           * OID_GEN_MAXIMUM_TOTAL_SIZE - sizeof(ETHERNET_HEADER)
+           * where sizeof(ETHERNET_HEADER) is 14.
+           */
+          GenericULONG = 1500;
           break;
         }
 
@@ -177,15 +200,20 @@ MiniportQueryInformation(
 
     case OID_GEN_VENDOR_ID:
         {
-          GenericULONG = 0x1022;
+          UCHAR *CharPtr = (UCHAR *)&GenericULONG;
+          GenericULONG = 0;
+          /* Read the first three bytes of the permanent MAC address */
+          NdisRawReadPortUchar(Adapter->PortOffset, CharPtr);
+          NdisRawReadPortUchar(Adapter->PortOffset + 1, CharPtr + 1);
+          NdisRawReadPortUchar(Adapter->PortOffset + 2, CharPtr + 2);
           break;
         }
 
     case OID_GEN_VENDOR_DESCRIPTION:
         {
-          /* XXX implement me */
-          CopyFrom = 0;
-          CopySize = 0;
+          static UCHAR VendorDesc[] = "ReactOS Team";
+          CopyFrom = VendorDesc;
+          CopySize = sizeof(VendorDesc);
           break;
         }
 
@@ -202,21 +230,19 @@ MiniportQueryInformation(
           break;
         }
 
-    case OID_GEN_CURRENT_LOOKAHEAD:
-        {
-          /* XXX make me a constant */
-          GenericULONG = 1500;
-          break;
-        }
-
     case OID_GEN_DRIVER_VERSION:
         {
-          GenericULONG = 1;
+          /* NDIS version used by the driver. */
+          static const USHORT DriverVersion =
+            (NDIS_MINIPORT_MAJOR_VERSION << 8) + NDIS_MINIPORT_MINOR_VERSION;
+          CopyFrom = (PVOID)&DriverVersion;
+          CopySize = sizeof(DriverVersion);
           break;
         }
 
     case OID_GEN_MAXIMUM_TOTAL_SIZE:
         {
+          /* See comment in OID_GEN_MAXIMUM_FRAME_SIZE. */
           GenericULONG = 1514;
           break;
         }
@@ -232,14 +258,13 @@ MiniportQueryInformation(
         {
           GenericULONG = NDIS_MAC_OPTION_COPY_LOOKAHEAD_DATA |
                          NDIS_MAC_OPTION_RECEIVE_SERIALIZED  |           
-                         NDIS_MAC_OPTION_TRANSFERS_NOT_PEND  |
-                         NDIS_MAC_OPTION_NO_LOOPBACK;
+                         NDIS_MAC_OPTION_TRANSFERS_NOT_PEND;
           break;
         }
 
     case OID_GEN_MEDIA_CONNECT_STATUS:
         {
-          GenericULONG = (ULONG)NdisMediaStateConnected;
+          GenericULONG = Adapter->MediaState;
           break;
         }
 
@@ -257,33 +282,62 @@ MiniportQueryInformation(
           break;
         }
 
-    case OID_802_3_MULTICAST_LIST:
-        {
-          /* XXX Implement me */
-          PCNET_DbgPrint(("OID_802_3_MULTICAST_LIST.\n"));
-          Status = NDIS_STATUS_NOT_SUPPORTED;
-          break;
-        }
-
     case OID_802_3_MAXIMUM_LIST_SIZE:
         {
-          /* XXX Implement me */
-          GenericULONG = 0;
+          GenericULONG = MAX_MULTICAST_ADDRESSES;
           break;
         }
 
-    case OID_802_3_MAC_OPTIONS:
-        {
-          /* XXX Implement me */
-          PCNET_DbgPrint(("OID_802_3_MAC_OPTIONS.\n"));
-          Status = NDIS_STATUS_NOT_SUPPORTED;
-          break;
-        }
-      
+    case OID_GEN_XMIT_OK:
+        GenericULONG = Adapter->Statistics.XmtGoodFrames;
+        break;
+
+    case OID_GEN_RCV_OK:
+        GenericULONG = Adapter->Statistics.RcvGoodFrames;
+        break;
+
+    case OID_GEN_XMIT_ERROR:
+        GenericULONG = Adapter->Statistics.XmtRetryErrors +
+                       Adapter->Statistics.XmtLossesOfCarrier +
+                       Adapter->Statistics.XmtCollisions +
+                       Adapter->Statistics.XmtLateCollisions +
+                       Adapter->Statistics.XmtExcessiveDefferals +
+                       Adapter->Statistics.XmtBufferUnderflows +
+                       Adapter->Statistics.XmtBufferErrors;
+        break;
+
+    case OID_GEN_RCV_ERROR:
+        GenericULONG = Adapter->Statistics.RcvBufferErrors +
+                       Adapter->Statistics.RcvCrcErrors +
+                       Adapter->Statistics.RcvOverflowErrors +
+                       Adapter->Statistics.RcvFramingErrors;
+        break;
+
+    case OID_GEN_RCV_NO_BUFFER:
+        GenericULONG = Adapter->Statistics.RcvBufferErrors + 
+                       Adapter->Statistics.RcvOverflowErrors;
+        break;
+
+    case OID_GEN_RCV_CRC_ERROR:
+        GenericULONG = Adapter->Statistics.RcvCrcErrors;
+        break;
+
+    case OID_802_3_RCV_ERROR_ALIGNMENT:
+        GenericULONG = Adapter->Statistics.RcvFramingErrors;
+        break;
+
+    case OID_802_3_XMIT_ONE_COLLISION:
+        GenericULONG = Adapter->Statistics.XmtOneRetry;
+        break;
+
+    case OID_802_3_XMIT_MORE_COLLISIONS:
+        GenericULONG = Adapter->Statistics.XmtMoreThanOneRetry;
+        break;
+
     default:
         {
           PCNET_DbgPrint(("Unknown OID\n"));
-          Status = NDIS_STATUS_INVALID_OID;
+          Status = NDIS_STATUS_NOT_SUPPORTED;
           break;
         }
     }
@@ -294,15 +348,17 @@ MiniportQueryInformation(
         {
           *BytesNeeded  = (CopySize - InformationBufferLength);
           *BytesWritten = 0;
-          Status        = NDIS_STATUS_INVALID_LENGTH;
+          Status        = NDIS_STATUS_BUFFER_TOO_SHORT;
         } 
       else 
         {
           NdisMoveMemory(InformationBuffer, CopyFrom, CopySize);
           *BytesWritten = CopySize;
-          *BytesNeeded  = 0;
+          *BytesNeeded  = CopySize;
          }
     }
+
+  NdisReleaseSpinLock(&Adapter->Lock);
 
   PCNET_DbgPrint(("Leaving. Status is 0x%x\n", Status));
 
@@ -342,6 +398,8 @@ MiniportSetInformation(
   ASSERT(Adapter);
 
   PCNET_DbgPrint(("Called, OID 0x%x\n", Oid));
+
+  NdisAcquireSpinLock(&Adapter->Lock);
 
   switch (Oid) 
     {
@@ -413,10 +471,13 @@ MiniportSetInformation(
             break;
           }
 
+        ASSERT((InformationBufferLength / 6) <= MAX_MULTICAST_ADDRESSES);
+
         /* Set new multicast address list */
         //NdisMoveMemory(Adapter->Addresses, InformationBuffer, InformationBufferLength);
 
-        /* FIXME: Update hardware */
+        /* Update hardware */
+        Status = MiSetMulticast(Adapter, InformationBuffer, InformationBufferLength / 6);
 
         break;
       }
@@ -426,7 +487,7 @@ MiniportSetInformation(
         PCNET_DbgPrint(("Invalid object ID (0x%X).\n", Oid));
         *BytesRead   = 0;
         *BytesNeeded = 0;
-        Status       = NDIS_STATUS_INVALID_OID;
+        Status       = NDIS_STATUS_NOT_SUPPORTED;
         break;
       }
     }
@@ -436,6 +497,8 @@ MiniportSetInformation(
       *BytesRead   = InformationBufferLength;
       *BytesNeeded = 0;
     }
+
+  NdisReleaseSpinLock(&Adapter->Lock);
 
   PCNET_DbgPrint(("Leaving. Status (0x%X).\n", Status));
 

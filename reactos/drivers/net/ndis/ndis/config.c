@@ -31,6 +31,7 @@
  *     - All the routines in this file are PASSIVE_LEVEL only, and all memory is PagedPool
  */
 
+#include <roscfg.h>
 #include "ndissys.h"
 
 #define NDIS_VERSION 0x00040000          /* the version of NDIS we claim to be to miniport drivers */
@@ -168,21 +169,18 @@ NdisOpenConfiguration(
  *     I think this is the parameters key; please verify.
  */
 {
-    OBJECT_ATTRIBUTES KeyAttributes;
-    UNICODE_STRING KeyNameU;
     HANDLE KeyHandle;
     PMINIPORT_CONFIGURATION_CONTEXT ConfigurationContext;
     HANDLE RootKeyHandle = (HANDLE)WrapperConfigurationContext;
 
     NDIS_DbgPrint(MAX_TRACE, ("Called\n"));
 
-    RtlInitUnicodeString(&KeyNameU, PARAMETERS_KEY);
-    InitializeObjectAttributes(&KeyAttributes, &KeyNameU, OBJ_CASE_INSENSITIVE, RootKeyHandle, NULL);
-
-    *Status = ZwOpenKey(&KeyHandle, KEY_ALL_ACCESS, &KeyAttributes);
-    if(*Status != STATUS_SUCCESS)
+    *Status = ZwDuplicateObject(NtCurrentProcess(), RootKeyHandle,
+                                NtCurrentProcess(), &KeyHandle, 0, FALSE,
+                                DUPLICATE_SAME_ACCESS);
+    if(!NT_SUCCESS(*Status))
     {
-      NDIS_DbgPrint(MID_TRACE, ("Failed to open registry configuration for this miniport\n"));
+        NDIS_DbgPrint(MID_TRACE, ("Failed to open registry configuration for this miniport\n"));
         *ConfigurationHandle = NULL;
         *Status = NDIS_STATUS_FAILURE;
         return;
