@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.9 2003/12/26 09:52:37 navaraf Exp $
+/* $Id: cmd.c,v 1.10 2004/01/28 20:52:57 gvg Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -129,10 +129,19 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <stdio.h>
+#include <winnt.h>
+#include <winternl.h>
+
+#ifndef NT_SUCCESS
+#define NT_SUCCESS(StatCode)  ((NTSTATUS)(StatCode) >= 0)
+#endif
 
 #include "cmd.h"
 #include "batch.h"
 
+typedef NTSTATUS (STDCALL *NtQueryInformationProcessProc)(HANDLE, PROCESSINFOCLASS,
+                                                          PVOID, ULONG, PULONG);
+typedef NTSTATUS (STDCALL *NtReadVirtualMemoryProc)(HANDLE, PVOID, PVOID, ULONG, PULONG);
 
 BOOL bExit = FALSE;       /* indicates EXIT was typed */
 BOOL bCanExit = TRUE;     /* indicates if this shell is exitable */
@@ -145,6 +154,10 @@ OSVERSIONINFO osvi;
 HANDLE hIn;
 HANDLE hOut;
 HANDLE hConsole;
+
+static NtQueryInformationProcessProc NtQueryInformationProcessPtr;
+static NtReadVirtualMemoryProc       NtReadVirtualMemoryPtr;
+static BOOL NtDllChecked = FALSE;
 
 #ifdef INCLUDE_CMD_COLOR
 WORD wColor;              /* current color */
@@ -160,6 +173,65 @@ WORD wDefColor;           /* default color */
 static BOOL IsDelimiter (TCHAR c)
 {
 	return (c == _T('/') || c == _T('=') || c == _T('\0') || _istspace (c));
+}
+
+/*
+ * Is a process a console process?
+ */
+static BOOL IsConsoleProcess(HANDLE Process)
+{
+	NTSTATUS Status;
+	PROCESS_BASIC_INFORMATION Info;
+	PEB ProcessPeb;
+	ULONG BytesRead;
+	HMODULE NtDllModule;
+
+	/* Some people like to run ReactOS cmd.exe on Win98, it helps in the
+           build process. So don't link implicitly against ntdll.dll, load it
+           dynamically instead */
+	if (! NtDllChecked)
+	{
+		NtDllChecked = TRUE;
+		NtDllModule = LoadLibrary(_T("ntdll.dll"));
+		if (NULL == NtDllModule)
+		{
+			/* Probably non-WinNT system. Just wait for the commands
+                           to finish. */
+			NtQueryInformationProcessPtr = NULL;
+			NtReadVirtualMemoryPtr = NULL;
+			return TRUE;
+		}
+		NtQueryInformationProcessPtr = (NtQueryInformationProcessProc)
+                                               GetProcAddress(NtDllModule, "NtQueryInformationProcess");
+		NtReadVirtualMemoryPtr = (NtReadVirtualMemoryProc)
+		                         GetProcAddress(NtDllModule, "NtReadVirtualMemory");
+	}
+
+	if (NULL == NtQueryInformationProcessPtr || NULL == NtReadVirtualMemoryPtr)
+	{
+		return FALSE;
+	}
+
+	Status = NtQueryInformationProcessPtr(Process, ProcessBasicInformation,
+                                              &Info, sizeof(PROCESS_BASIC_INFORMATION), NULL);
+	if (! NT_SUCCESS(Status))
+	{
+#ifdef _DEBUG
+		DebugPrintf (_T("NtQueryInformationProcess failed with status %08x\n"), Status);
+#endif
+		return TRUE;
+	}
+	Status = NtReadVirtualMemoryPtr(Process, Info.PebBaseAddress, &ProcessPeb,
+                                        sizeof(PEB), &BytesRead);
+	if (! NT_SUCCESS(Status) || sizeof(PEB) != BytesRead)
+	{
+#ifdef _DEBUG
+		DebugPrintf (_T("Couldn't read virt mem status %08x bytes read %lu\n"), Status, BytesRead);
+#endif
+		return TRUE;
+	}
+
+	return IMAGE_SUBSYSTEM_WINDOWS_CUI == ProcessPeb.ImageSubSystem;
 }
 
 
@@ -260,17 +332,20 @@ Execute (LPTSTR first, LPTSTR rest)
 		                   &stui,
 		                   &prci))
 		{
-			/* FIXME: Protect this with critical section */
-			bChildProcessRunning = TRUE;
-			dwChildProcessId = prci.dwProcessId;
+			if (IsConsoleProcess(prci.hProcess))
+			{
+				/* FIXME: Protect this with critical section */
+				bChildProcessRunning = TRUE;
+				dwChildProcessId = prci.dwProcessId;
 
-			WaitForSingleObject (prci.hProcess, INFINITE);
+				WaitForSingleObject (prci.hProcess, INFINITE);
 
-			/* FIXME: Protect this with critical section */
-			bChildProcessRunning = FALSE;
+				/* FIXME: Protect this with critical section */
+				bChildProcessRunning = FALSE;
 
-			GetExitCodeProcess (prci.hProcess, &dwExitCode);
-			nErrorLevel = (INT)dwExitCode;
+				GetExitCodeProcess (prci.hProcess, &dwExitCode);
+				nErrorLevel = (INT)dwExitCode;
+			}
 			CloseHandle (prci.hThread);
 			CloseHandle (prci.hProcess);
 		}

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.80 2004/01/23 21:16:04 ekohl Exp $
+/* $Id: create.c,v 1.81 2004/01/28 20:52:57 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -559,7 +559,8 @@ static NTSTATUS KlInitPeb
 (
  HANDLE ProcessHandle,
  PRTL_USER_PROCESS_PARAMETERS Ppb,
- PVOID * ImageBaseAddress
+ PVOID * ImageBaseAddress,
+ ULONG ImageSubSystem
 )
 {
  NTSTATUS Status;
@@ -660,6 +661,14 @@ static NTSTATUS KlInitPeb
 			(PVOID)(PEB_BASE + Offset),
 			&PpbBase,
 			sizeof(PpbBase),
+			&BytesWritten);
+
+   /* Write image subsystem */
+   Offset = FIELD_OFFSET(PEB, ImageSubSystem);
+   NtWriteVirtualMemory(ProcessHandle,
+			(PVOID)(PEB_BASE + Offset),
+			&ImageSubSystem,
+			sizeof(ImageSubSystem),
 			&BytesWritten);
 
    /* Read image base address. */
@@ -1358,7 +1367,7 @@ CreateProcessW
     */
    DPRINT("Creating peb\n");
 
-   KlInitPeb(hProcess, Ppb, &ImageBaseAddress);
+   KlInitPeb(hProcess, Ppb, &ImageBaseAddress, Sii.Subsystem);
 
    RtlDestroyProcessParameters (Ppb);
 
