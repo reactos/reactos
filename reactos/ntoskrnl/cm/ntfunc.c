@@ -2054,10 +2054,10 @@ NtSetInformationKey (IN HANDLE KeyHandle,
   PKEY_OBJECT KeyObject;
   NTSTATUS Status;
 
-  if (KeyInformationClass != KeyLastWriteTimeInformation)
+  if (KeyInformationClass != KeyWriteTimeInformation)
     return STATUS_INVALID_INFO_CLASS;
 
-  if (KeyInformationLength != sizeof (KEY_LAST_WRITE_TIME_INFORMATION))
+  if (KeyInformationLength != sizeof (KEY_WRITE_TIME_INFORMATION))
     return STATUS_INFO_LENGTH_MISMATCH;
 
   /* Verify that the handle is valid and is a registry key */
@@ -2080,7 +2080,7 @@ NtSetInformationKey (IN HANDLE KeyHandle,
   VERIFY_KEY_OBJECT(KeyObject);
 
   KeyObject->KeyCell->LastWriteTime.QuadPart =
-    ((PKEY_LAST_WRITE_TIME_INFORMATION)KeyInformation)->LastWriteTime.QuadPart;
+    ((PKEY_WRITE_TIME_INFORMATION)KeyInformation)->LastWriteTime.QuadPart;
 
   CmiMarkBlockDirty (KeyObject->RegistryHive,
 		     KeyObject->KeyCellOffset);

@@ -49,15 +49,19 @@ typedef struct _KEY_NODE_INFORMATION
 
 /* key set information class */
 
-typedef enum _KEY_SET_INFORMATION_CLASS
-{
-  KeyLastWriteTimeInformation
+typedef enum _KEY_SET_INFORMATION_CLASS {
+    KeyWriteTimeInformation,
+    KeyUserFlagsInformation,
+    MaxKeySetInfoClass
 } KEY_SET_INFORMATION_CLASS;
 
-typedef struct _KEY_LAST_WRITE_TIME_INFORMATION
-{
-  LARGE_INTEGER  LastWriteTime;
-} KEY_LAST_WRITE_TIME_INFORMATION, *PKEY_LAST_WRITE_TIME_INFORMATION;
+typedef struct _KEY_WRITE_TIME_INFORMATION {
+    LARGE_INTEGER LastWriteTime;
+} KEY_WRITE_TIME_INFORMATION, *PKEY_WRITE_TIME_INFORMATION;
+
+typedef struct _KEY_USER_FLAGS_INFORMATION {
+    ULONG   UserFlags;
+} KEY_USER_FLAGS_INFORMATION, *PKEY_USER_FLAGS_INFORMATION;
 
 
 /* key value information class */
