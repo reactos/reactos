@@ -38,8 +38,8 @@ WSPRecv(
     IN      LPWSATHREADID lpThreadId,
     OUT     LPINT lpErrno)
 {
-  PFILE_REQUEST_RECV Request;
-  FILE_REPLY_RECV Reply;
+  PFILE_REQUEST_RECVFROM Request;
+  FILE_REPLY_RECVFROM Reply;
   IO_STATUS_BLOCK Iosb;
   NTSTATUS Status;
   DWORD Size;
@@ -48,8 +48,8 @@ WSPRecv(
 
   Size = dwBufferCount * sizeof(WSABUF);
 
-  Request = (PFILE_REQUEST_RECV)HeapAlloc(
-    GlobalHeap, 0, sizeof(FILE_REQUEST_RECV) + Size);
+  Request = (PFILE_REQUEST_RECVFROM)HeapAlloc(
+    GlobalHeap, 0, sizeof(FILE_REQUEST_RECVFROM) + Size);
   if (!Request) {
     AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
     *lpErrno = WSAENOBUFS;
@@ -71,9 +71,9 @@ WSPRecv(
 		&Iosb,
 		IOCTL_AFD_RECV,
 		Request,
-		sizeof(FILE_REQUEST_RECV) + Size,
+		sizeof(FILE_REQUEST_RECVFROM) + Size,
 		&Reply,
-		sizeof(FILE_REPLY_RECV));
+		sizeof(FILE_REPLY_RECVFROM));
 
   HeapFree(GlobalHeap, 0, Request);
 
@@ -90,7 +90,7 @@ WSPRecv(
 	}
 
   AFD_DbgPrint(MAX_TRACE, ("Receive successful (0x%X).\n",
-    Reply.NumberOfBytesRecvd));
+			   Reply.NumberOfBytesRecvd));
 
   *lpNumberOfBytesRecvd = Reply.NumberOfBytesRecvd;
   //*lpFlags = 0;
@@ -215,40 +215,45 @@ WSPSend(
   AFD_DbgPrint(MAX_TRACE, ("Called.\n"));
 
   Size = dwBufferCount * sizeof(WSABUF);
-
+CP
   Request = (PFILE_REQUEST_SENDTO)HeapAlloc(
-    GlobalHeap, 0, sizeof(FILE_REQUEST_SEND) + Size);
+    GlobalHeap, 0, sizeof(FILE_REQUEST_SENDTO) + Size);
   if (!Request) {
     *lpErrno = WSAENOBUFS;
     return SOCKET_ERROR;
   }
+CP
 
   /* Put buffer pointers after request structure */
   Request->Buffers     = (LPWSABUF)(Request + 1);
   Request->BufferCount = dwBufferCount;
   Request->Flags       = dwFlags;
+CP
 
   RtlCopyMemory(Request->Buffers, lpBuffers, Size);
+CP
 
-  Status = NtDeviceIoControlFile(
-    (HANDLE)s,
-    NULL,
-		NULL,
-		NULL,
-		&Iosb,
-		IOCTL_AFD_SEND,
-		Request,
-		sizeof(FILE_REQUEST_SEND) + Size,
-		&Reply,
-		sizeof(FILE_REPLY_SEND));
+  Status = NtDeviceIoControlFile
+      ( (HANDLE)s,
+	NULL,
+	NULL,
+	NULL,
+	&Iosb,
+	IOCTL_AFD_SEND,
+	Request,
+	sizeof(FILE_REQUEST_SENDTO) + Size,
+	&Reply,
+	sizeof(FILE_REPLY_SENDTO));
+CP
 
-  HeapFree(GlobalHeap, 0, Request);
-
+    /* HeapFree(GlobalHeap, 0, Request); */
+CP
 	if (Status == STATUS_PENDING) {
     AFD_DbgPrint(MAX_TRACE, ("Waiting on transport.\n"));
     /* FIXME: Wait only for blocking sockets */
     Status = NtWaitForSingleObject((HANDLE)s, FALSE, NULL);
   }
+CP
 
   if (!NT_SUCCESS(Status)) {
     AFD_DbgPrint(MAX_TRACE, ("Status (0x%X).\n", Status));

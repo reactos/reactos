@@ -10,6 +10,19 @@
 #include <afd.h>
 #include <debug.h>
 
+#ifndef DONT_USE_ME_THIS_WAY_IM_LIFTED_FROM_NTOSKRNL_XXX_DO_THIS_THE_RIGHT_WAY
+LONG FASTCALL
+XxInterlockedExchange(PLONG Target,
+		    LONG Value);
+
+__asm__("\n\t.global @XxInterlockedExchange@8\n\t"
+	"@XxInterlockedExchange@8:\n\t"
+	"xchgl %edx,(%ecx)\n\t"
+	"movl  %edx,%eax\n\t"
+	"ret\n\t");
+
+#define InterlockedExchange XxInterlockedExchange
+#endif
 
 VOID DumpName(
   LPSOCKADDR Name)
@@ -84,6 +97,49 @@ NTSTATUS MergeWSABuffers(
   return STATUS_SUCCESS;
 }
 
+VOID TryToSatisfyRecvRequest( PAFDFCB FCB, BOOL Continuous ) {
+    PAFD_READ_REQUEST ReadRequest;
+    PLIST_ENTRY Entry;
+    NTSTATUS Status;
+    ULONG Count = 0;
+    
+    AFD_DbgPrint(MAX_TRACE, ("Satisfying read request.\n"));
+    
+    while (!IsListEmpty(&FCB->ReadRequestQueue) && 
+	   !IsListEmpty(&FCB->ReceiveQueue)) {
+	AFD_DbgPrint(MAX_TRACE, ("Satisfying read request.\n"));
+	
+	Entry = RemoveHeadList(&FCB->ReadRequestQueue);
+	ReadRequest = CONTAINING_RECORD(Entry, AFD_READ_REQUEST, ListEntry);
+	
+	AFD_DbgPrint(MAX_TRACE,("ReadRequest: (li) %x %x %x\n",
+				ReadRequest->Irp,
+				ReadRequest->RecvFromRequest,
+				ReadRequest->RecvFromReply));
+
+	Status = FillWSABuffers(
+	    FCB,
+	    ReadRequest->RecvFromRequest->Buffers,
+	    ReadRequest->RecvFromRequest->BufferCount,
+	    &Count,
+	    Continuous );
+	
+	ReadRequest->RecvFromReply->NumberOfBytesRecvd = Count;
+	ReadRequest->RecvFromReply->Status = NO_ERROR;
+	
+	ReadRequest->Irp->IoStatus.Information =
+	    sizeof(*ReadRequest->RecvFromReply);
+	ReadRequest->Irp->IoStatus.Status = Status;
+	
+	AFD_DbgPrint(MAX_TRACE, ("Completing IRP at (0x%X).\n", ReadRequest->Irp));
+	
+	IoSetCancelRoutine(ReadRequest->Irp, NULL);
+	IoCompleteRequest(ReadRequest->Irp, IO_NETWORK_INCREMENT);
+    }
+
+    AFD_DbgPrint(MAX_TRACE, ("Bytes received (0x%X).\n", Count));
+}
+
 /*
  * NOTES: ReceiveQueueLock must be acquired for the FCB when called
  */
@@ -98,6 +154,7 @@ NTSTATUS FillWSABuffers(
   UINT DstSize, SrcSize;
   UINT Count, Total;
   PAFD_BUFFER SrcBuffer;
+  PMDL Mdl;
   PLIST_ENTRY Entry;
 
   *BytesCopied = 0;
@@ -112,7 +169,9 @@ NTSTATUS FillWSABuffers(
   SrcData = SrcBuffer->Buffer.buf + SrcBuffer->Offset;
   SrcSize = SrcBuffer->Buffer.len - SrcBuffer->Offset;
 
-  DstData = Buffers->buf;
+  /* First buffer: map the pages so we can access them */
+  Mdl = (PMDL)Buffers->buf;
+  DstData = MmMapLockedPages( Mdl, KernelMode );
   DstSize = Buffers->len;
 
   /* Copy the data */
@@ -157,20 +216,27 @@ NTSTATUS FillWSABuffers(
       BufferCount--;
       if (BufferCount < 1)
         break;
+
+      /* And cleanup the pages. */
+      MmUnmapLockedPages( DstData, Mdl );
+      MmUnlockPages( Mdl );
+      IoFreeMdl( Mdl );
+
       Buffers++;
-      DstData = Buffers->buf;
+      Mdl = (PMDL)Buffers->buf;
+      DstData = MmMapLockedPages( Mdl, KernelMode );
       DstSize = Buffers->len;
     }
   }
 
   if (SrcSize > 0) {
+    SrcBuffer->Offset += Total;
     InsertHeadList(&FCB->ReceiveQueue, Entry);
   } else if (SrcBuffer != NULL) {
     ExFreePool(SrcBuffer->Buffer.buf);
     ExFreePool(SrcBuffer);
   }
 
-  SrcBuffer->Offset += Total;
   *BytesCopied = Total;
 
   return STATUS_SUCCESS;

@@ -71,7 +71,6 @@ typedef struct _AFDFCB {
     LIST_ENTRY          ReceiveQueue;
     KSPIN_LOCK          ReceiveQueueLock;
     LIST_ENTRY          ReadRequestQueue;
-    KSPIN_LOCK          ReadRequestQueueLock;
     LIST_ENTRY          ListenRequestQueue;
     /* For WSAEventSelect() */
     WSANETWORKEVENTS    NetworkEvents;
@@ -309,6 +308,9 @@ NTSTATUS STDCALL AfdWrite(
 
 VOID DumpName(
   LPSOCKADDR Name);
+
+/* Requires caller to hold the recv queue lock */
+VOID TryToSatisfyRecvRequest( PAFDFCB FCB, BOOL Continuous );
 
 ULONG WSABufferSize(
     LPWSABUF Buffers,

@@ -42,7 +42,6 @@ PAFDFCB AfdInitializeFCB(
   KeInitializeSpinLock(&NewFCB->ReceiveQueueLock);
 
   InitializeListHead(&NewFCB->ReadRequestQueue);
-  KeInitializeSpinLock(&NewFCB->ReadRequestQueueLock);
 
   InitializeListHead(&NewFCB->ListenRequestQueue);
 

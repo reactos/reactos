@@ -45,13 +45,9 @@ NTSTATUS AfdEventReceive(
     OUT PIRP *IoRequestPacket)
 {
   PAFDFCB FCB = (PAFDFCB)TdiEventContext;
-  PAFD_READ_REQUEST ReadRequest;
   PVOID ReceiveBuffer;
   PAFD_BUFFER Buffer;
-  PLIST_ENTRY Entry;
-  NTSTATUS Status;
   KIRQL OldIrql;
-  ULONG Count;
 
   AFD_DbgPrint(MAX_TRACE, ("Called.\n"));
 
@@ -77,38 +73,13 @@ NTSTATUS AfdEventReceive(
   Buffer->Buffer.buf = ReceiveBuffer;
   Buffer->Offset = 0;
 
-  ExInterlockedInsertTailList(
-    &FCB->ReceiveQueue,
-    &Buffer->ListEntry,
-    &FCB->ReceiveQueueLock);
+  KeAcquireSpinLock(&FCB->ReceiveQueueLock, &OldIrql);
 
-  KeAcquireSpinLock(&FCB->ReadRequestQueueLock, &OldIrql);
+  InsertTailList( &FCB->ReceiveQueue, &Buffer->ListEntry );
 
-  while (!IsListEmpty(&FCB->ReadRequestQueue) && 
-	 !IsListEmpty(&FCB->ReceiveQueue)) {
-    AFD_DbgPrint(MAX_TRACE, ("Satisfying read request.\n"));
+  TryToSatisfyRecvRequest( FCB, TRUE );
 
-    Entry = RemoveHeadList(&FCB->ReceiveQueue);
-    ReadRequest = CONTAINING_RECORD(Entry, AFD_READ_REQUEST, ListEntry);
-
-    Status = FillWSABuffers(
-      FCB,
-      ReadRequest->RecvFromRequest->Buffers,
-      ReadRequest->RecvFromRequest->BufferCount,
-      &Count,
-      TRUE ); /* Continuous */
-    ReadRequest->RecvFromReply->NumberOfBytesRecvd = Count;
-    ReadRequest->RecvFromReply->Status = NO_ERROR;
-
-    ReadRequest->Irp->IoStatus.Information = 0;
-    ReadRequest->Irp->IoStatus.Status = Status;
-
-    AFD_DbgPrint(MAX_TRACE, ("Completing IRP at (0x%X).\n", ReadRequest->Irp));
-
-    IoCompleteRequest(ReadRequest->Irp, IO_NETWORK_INCREMENT);
-  }
-
-  KeReleaseSpinLock(&FCB->ReadRequestQueueLock, OldIrql);
+  KeReleaseSpinLock(&FCB->ReceiveQueueLock, OldIrql);
 
   *BytesTaken = BytesAvailable;
 
@@ -200,7 +171,7 @@ NTSTATUS AfdEventReceiveDatagramHandler(
     &Buffer->ListEntry,
     &FCB->ReceiveQueueLock);
 
-  KeAcquireSpinLock(&FCB->ReadRequestQueueLock, &OldIrql);
+  KeAcquireSpinLock(&FCB->ReceiveQueueLock, &OldIrql);
 
   if (!IsListEmpty(&FCB->ReadRequestQueue)) {
     AFD_DbgPrint(MAX_TRACE, ("Satisfying read request.\n"));
@@ -225,7 +196,7 @@ NTSTATUS AfdEventReceiveDatagramHandler(
     IoCompleteRequest(ReadRequest->Irp, IO_NETWORK_INCREMENT);
   }
 
-  KeReleaseSpinLock(&FCB->ReadRequestQueueLock, OldIrql);
+  KeReleaseSpinLock(&FCB->ReceiveQueueLock, OldIrql);
 
   *BytesTaken = BytesAvailable;
 

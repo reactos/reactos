@@ -29,51 +29,54 @@ NTSTATUS AfdpDispRecv(
   PAFD_READ_REQUEST ReadRequest;
   NTSTATUS Status;
   KIRQL OldIrql;
-  ULONG Count;
+  PMDL Mdl;
+  UINT i;
 
   KeAcquireSpinLock(&FCB->ReceiveQueueLock, &OldIrql);
-  if (IsListEmpty(&FCB->ReceiveQueue)) {
-    KeReleaseSpinLock(&FCB->ReceiveQueueLock, OldIrql);
-
-    /* Queue a read request and return STATUS_PENDING */
-
-    AFD_DbgPrint(MAX_TRACE, ("Queueing read request.\n"));
-
-    /*ReadRequest = (PAFD_READ_REQUEST)ExAllocateFromNPagedLookasideList(
-        &ReadRequestLookasideList);*/
-    ReadRequest = (PAFD_READ_REQUEST)ExAllocatePool(
+  /* Queue a read request and return STATUS_PENDING */
+  
+  AFD_DbgPrint(MAX_TRACE, ("Queueing read request.\n"));
+  
+  /*ReadRequest = (PAFD_READ_REQUEST)ExAllocateFromNPagedLookasideList(
+    &ReadRequestLookasideList);*/
+  ReadRequest = (PAFD_READ_REQUEST)ExAllocatePool(
       NonPagedPool,
       sizeof(AFD_READ_REQUEST));
-    if (ReadRequest) {
+  if (ReadRequest) {
       ReadRequest->Irp = Irp;
       ReadRequest->RecvFromRequest = Request;
       ReadRequest->RecvFromReply = Reply;
+      AFD_DbgPrint(MAX_TRACE,("Reply to %x (%x)\n", Reply, 
+			      ReadRequest->RecvFromReply));
+      
+      for( i = 0; 
+	   i < ReadRequest->RecvFromRequest->BufferCount; 
+	   i++ ) {
+	  /* These will be cleaned up in routines.c:FillWSABuffers */
+	  Mdl = IoAllocateMdl( ReadRequest->RecvFromRequest->Buffers[i].buf,
+			       ReadRequest->RecvFromRequest->Buffers[i].len,
+			       FALSE,
+			       FALSE,
+			       Irp );
+	  MmProbeAndLockPages( Mdl, KernelMode, IoWriteAccess );
+	  ReadRequest->RecvFromRequest->Buffers[i].buf = (PCHAR)Mdl;
+      }
 
-      ExInterlockedInsertTailList(
-        &FCB->ReadRequestQueue,
-        &ReadRequest->ListEntry,
-        &FCB->ReadRequestQueueLock);
+      InsertTailList( &FCB->ReadRequestQueue, &ReadRequest->ListEntry );
+
       Status = STATUS_PENDING;
-    } else {
-      Status = STATUS_INSUFFICIENT_RESOURCES;
-    }
   } else {
-    AFD_DbgPrint(MAX_TRACE, ("Satisfying read request.\n"));
-
-    /* Satisfy the request at once */
-    Status = FillWSABuffers(
-      FCB,
-      Request->Buffers,
-      Request->BufferCount,
-      &Count,
-      Continuous); /* I.E. Packets are exhausted on short recv if not */
-    KeReleaseSpinLock(&FCB->ReceiveQueueLock, OldIrql);
-
-    Reply->NumberOfBytesRecvd = Count;
-    Reply->Status = NO_ERROR;
-
-    AFD_DbgPrint(MAX_TRACE, ("Bytes received (0x%X).\n", Count));
+      Status = STATUS_INSUFFICIENT_RESOURCES;
   }
+
+  TryToSatisfyRecvRequest( FCB, Continuous );
+
+  if (IsListEmpty(&FCB->ReadRequestQueue)) /* All recv requests handled */
+      Status = STATUS_SUCCESS;
+  else
+      IoMarkIrpPending( Irp );
+  
+  KeReleaseSpinLock(&FCB->ReceiveQueueLock, OldIrql);
 
   return Status;
 }
@@ -767,8 +770,8 @@ NTSTATUS AfdDispRecv(
   NTSTATUS Status;
   UINT InputBufferLength;
   UINT OutputBufferLength;
-  PFILE_REQUEST_RECV Request;
-  PFILE_REPLY_RECV Reply;
+  PFILE_REQUEST_RECVFROM Request;
+  PFILE_REPLY_RECVFROM Reply;
   DWORD NumberOfBytesRecvd;
   PAFDFCB FCB;
 
@@ -782,14 +785,14 @@ NTSTATUS AfdDispRecv(
     (OutputBufferLength >= sizeof(FILE_REPLY_RECV))) {
     FCB = IrpSp->FileObject->FsContext;
 
-    Request = (PFILE_REQUEST_RECV)Irp->AssociatedIrp.SystemBuffer;
-    Reply   = (PFILE_REPLY_RECV)Irp->AssociatedIrp.SystemBuffer;
+    Request = (PFILE_REQUEST_RECVFROM)Irp->AssociatedIrp.SystemBuffer;
+    Reply   = (PFILE_REPLY_RECVFROM)Irp->AssociatedIrp.SystemBuffer;
 
     Status = AfdpDispRecv(
       Irp,
       FCB,
-      (PFILE_REQUEST_RECVFROM)Request,
-      (PFILE_REPLY_RECVFROM)Reply,
+      Request,
+      Reply,
       TRUE);
     Reply->NumberOfBytesRecvd = NumberOfBytesRecvd;
     Reply->Status = NO_ERROR;
