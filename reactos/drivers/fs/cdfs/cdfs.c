@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdfs.c,v 1.7 2002/09/09 17:27:14 hbirr Exp $
+/* $Id: cdfs.c,v 1.8 2002/09/15 22:23:22 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -92,6 +92,8 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     CdfsDirectoryControl;
   DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] =
     CdfsQueryInformation;
+  DriverObject->MajorFunction[IRP_MJ_SET_INFORMATION] = 
+    CdfsSetInformation;
   DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] =
     CdfsQueryVolumeInformation;
   DriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION] =

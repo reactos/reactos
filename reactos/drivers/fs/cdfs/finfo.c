@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: finfo.c,v 1.4 2002/07/20 11:44:24 ekohl Exp $
+/* $Id: finfo.c,v 1.5 2002/09/15 22:23:23 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -277,6 +277,19 @@ CdfsGetAllInformation(PFILE_OBJECT FileObject,
   return STATUS_SUCCESS;
 }
 
+static NTSTATUS
+CdfsSetPositionInformation(PFILE_OBJECT FileObject,
+			   PFILE_POSITION_INFORMATION PositionInfo)
+{
+  DPRINT ("CdfsSetPositionInformation()\n");
+
+  DPRINT ("PositionInfo %x\n", PositionInfo);
+  DPRINT ("Setting position %d\n", PositionInfo->CurrentByteOffset.u.LowPart);
+  memcpy (&FileObject->CurrentByteOffset, &PositionInfo->CurrentByteOffset,
+	  sizeof (LARGE_INTEGER));
+
+  return (STATUS_SUCCESS);
+}
 
 NTSTATUS STDCALL
 CdfsQueryInformation(PDEVICE_OBJECT DeviceObject,
@@ -369,6 +382,52 @@ CdfsQueryInformation(PDEVICE_OBJECT DeviceObject,
       Stack->Parameters.QueryFile.Length - BufferLength;
   else
     Irp->IoStatus.Information = 0;
+
+  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+  return(Status);
+}
+
+NTSTATUS STDCALL
+CdfsSetInformation(PDEVICE_OBJECT DeviceObject,
+		   PIRP Irp)
+/*
+ * FUNCTION: Retrieve the specified file information
+ */
+{
+  FILE_INFORMATION_CLASS FileInformationClass;
+  PIO_STACK_LOCATION Stack;
+  PFILE_OBJECT FileObject;
+  PFCB Fcb;
+  PVOID SystemBuffer;
+
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  DPRINT1("CdfsSetInformation() called\n");
+
+  Stack = IoGetCurrentIrpStackLocation(Irp);
+  FileInformationClass = Stack->Parameters.SetFile.FileInformationClass;
+  FileObject = Stack->FileObject;
+  Fcb = FileObject->FsContext;
+
+  SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
+
+  switch (FileInformationClass)
+    {
+    case FilePositionInformation:
+      Status = CdfsSetPositionInformation(FileObject,
+				          SystemBuffer);
+      break;
+    case FileBasicInformation:
+    case FileRenameInformation:
+      Status = STATUS_NOT_IMPLEMENTED;
+      break;
+    default:
+      Status = STATUS_NOT_SUPPORTED;
+    }
+
+  Irp->IoStatus.Status = Status;
+  Irp->IoStatus.Information = 0;
 
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
