@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.26 2000/09/03 14:46:49 ekohl Exp $
+/* $Id: registry.c,v 1.27 2000/09/05 23:03:09 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -408,6 +408,7 @@ NtCreateKey (
   Status = CmiBuildKeyPath(&KeyNameBuf, ObjectAttributes);
   if (!NT_SUCCESS(Status))
     {
+CHECKPOINT1;
       return  Status;
     }
 
@@ -429,6 +430,7 @@ NtCreateKey (
                               KeyHandle);
       ExFreePool(KeyNameBuf);
 
+CHECKPOINT1;
       return  Status;
     }
 
@@ -445,6 +447,7 @@ NtCreateKey (
     {
       ExFreePool(KeyNameBuf);
       
+CHECKPOINT1;
       return  Status;
     }
 
@@ -455,6 +458,7 @@ NtCreateKey (
                           CmiKeyType);
   if (NewKey == NULL)
     {
+CHECKPOINT1;
       return  STATUS_UNSUCCESSFUL;
     }
   NewKey->Flags = 0;
@@ -468,6 +472,7 @@ NtCreateKey (
                           FALSE,
                           KeyHandle);
 
+CHECKPOINT1;
   return  Status;
 #else
   UNIMPLEMENTED;
@@ -698,10 +703,10 @@ NtFlushKey (
 }
 
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 NtOpenKey (
-	OUT	PHANDLE			KeyHandle, 
+	OUT	PHANDLE			KeyHandle,
 	IN	ACCESS_MASK		DesiredAccess,
 	IN	POBJECT_ATTRIBUTES	ObjectAttributes
 	)
@@ -744,6 +749,7 @@ NtOpenKey (
     }
 
   /*  Open the key in the registry file  */
+CHECKPOINT1;
   FileToUse = CmiSystemFile;
   Status = CmiFindKey(FileToUse,
                       KeyNameBuf,
@@ -751,8 +757,10 @@ NtOpenKey (
                       DesiredAccess,
                       0,
                       NULL);
+CHECKPOINT1;
   if (!NT_SUCCESS(Status))
     {
+CHECKPOINT1;
       FileToUse = CmiVolatileFile;
       Status = CmiFindKey(FileToUse,
                           KeyNameBuf,
@@ -760,13 +768,16 @@ NtOpenKey (
                           DesiredAccess,
                           0,
                           NULL);
+CHECKPOINT1;
       if (!NT_SUCCESS(Status))
         {
+CHECKPOINT1;
           ExFreePool(KeyNameBuf);
       
           return  Status;
         }
     }
+CHECKPOINT1;
 
   /*  Create new key object and put into linked list  */
   NewKey = ObCreateObject(KeyHandle, 
@@ -1498,6 +1509,8 @@ CmiBuildKeyPath(PWSTR  *KeyPath, POBJECT_ATTRIBUTES  ObjectAttributes)
   ObjectHeader = 0;
   if (ObjectAttributes->RootDirectory != NULL)
     {
+DbgPrint ("RootDirectory %x\n", ObjectAttributes->RootDirectory);
+DbgPrint ("KeyName %wZ\n", ObjectAttributes->ObjectName);
       /* FIXME: determine type of object for RootDirectory  */
       Status = ObReferenceObjectByHandle(ObjectAttributes->RootDirectory,
                                          KEY_READ,
@@ -1507,6 +1520,7 @@ CmiBuildKeyPath(PWSTR  *KeyPath, POBJECT_ATTRIBUTES  ObjectAttributes)
                                          NULL);
       if (!NT_SUCCESS(Status))
         {
+CHECKPOINT1;
           return  Status;
         }
       ObjectHeader = BODY_TO_HEADER(ObjectBody);
@@ -1853,6 +1867,13 @@ CmiFindKey(IN PREGISTRY_FILE  RegistryFile,
   PWSTR  Remainder, NextSlash;
   PKEY_BLOCK  CurKeyBlock, SubKeyBlock;
 
+DbgPrint("KeyNameBuf %S\n", KeyNameBuf);
+
+CHECKPOINT1;
+  if (RegistryFile == NULL)
+    return STATUS_UNSUCCESSFUL;
+CHECKPOINT1;
+
   /* FIXME:  Should handle search by Class/TitleIndex  */
 
   /*  Loop through each key level and find the needed subkey  */
@@ -1860,12 +1881,14 @@ CmiFindKey(IN PREGISTRY_FILE  RegistryFile,
   /* FIXME: this access of RootKeyBlock should be guarded by spinlock  */
   CurKeyBlock = CmiGetKeyBlock(RegistryFile, RegistryFile->HeaderBlock->RootKeyBlock);
   Remainder = KeyNameBuf;
+  wcscpy(CurKeyName, Remainder);
   while (NT_SUCCESS(Status) &&
          (NextSlash = wcschr(Remainder, L'\\')) != NULL)
     {
       /*  Copy just the current subkey name to a buffer  */
       wcsncpy(CurKeyName, Remainder, NextSlash - Remainder);
       CurKeyName[NextSlash - Remainder] = 0;
+DbgPrint("CurKeyName %S\n", CurKeyName);
 
       /* Verify existance of CurKeyName  */
       Status = CmiScanForSubKey(RegistryFile, 
@@ -1879,6 +1902,7 @@ CmiFindKey(IN PREGISTRY_FILE  RegistryFile,
         }
       if (SubKeyBlock == NULL)
         {
+CHECKPOINT1;
           Status = STATUS_UNSUCCESSFUL;
           continue;
         }
@@ -1889,6 +1913,7 @@ CmiFindKey(IN PREGISTRY_FILE  RegistryFile,
     }
   if (NT_SUCCESS(Status))
     {
+DbgPrint("CurKeyName %S\n", CurKeyName);
       Status = CmiScanForSubKey(RegistryFile, 
                                 CurKeyBlock, 
                                 &SubKeyBlock,
@@ -1898,6 +1923,7 @@ CmiFindKey(IN PREGISTRY_FILE  RegistryFile,
         {
           if (SubKeyBlock == NULL)
             {
+CHECKPOINT1;
               Status = STATUS_UNSUCCESSFUL;
             }
           else
@@ -1907,6 +1933,7 @@ CmiFindKey(IN PREGISTRY_FILE  RegistryFile,
         }
     }
   CmiReleaseBlock(RegistryFile, CurKeyBlock);
+CHECKPOINT1;
   
   return  Status;
 }
@@ -2052,21 +2079,27 @@ CmiScanForSubKey(IN PREGISTRY_FILE  RegistryFile,
   PHASH_TABLE_BLOCK  HashBlock;
   PKEY_BLOCK  CurSubKeyBlock;
 
+CHECKPOINT1;
   HashBlock = CmiGetHashTableBlock(RegistryFile, KeyBlock->HashTableOffset);
   *SubKeyBlock = NULL;
   if (HashBlock == 0)
     {
+CHECKPOINT1;
       return  STATUS_SUCCESS;
     }
+CHECKPOINT1;
   for (Idx = 0; Idx < HashBlock->HashTableSize; Idx++)
     {
+DbgPrint ("KeyName %S HashValue %x\n", KeyName, HashBlock->Table[Idx].HashValue);
       if (HashBlock->Table[Idx].KeyOffset != 0 &&
-          !wcsncmp(KeyName, (PWSTR) &HashBlock->Table[Idx].HashValue, 4))
+          !wcsncmp(KeyName, (PWSTR) &HashBlock->Table[Idx].HashValue, 2))
+//          !wcsncmp(KeyName, (PWSTR) &HashBlock->Table[Idx].HashValue, 4))
         {
           CurSubKeyBlock = CmiGetKeyBlock(RegistryFile,
                                           HashBlock->Table[Idx].KeyOffset);
           if (!wcscmp(KeyName, CurSubKeyBlock->Name))
             {
+CHECKPOINT1;
               *SubKeyBlock = CurSubKeyBlock;
               break;
             }

@@ -1,4 +1,5 @@
-/*
+/* $Id: reg.c,v 1.8 2000/09/05 23:00:27 ekohl Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/advapi32/reg/reg.c
@@ -8,9 +9,156 @@
  *                  Created 01/11/98
  *                  19990309 EA Stubs
  */
-#include <windows.h>
 #include <ddk/ntddk.h>
+#include <ntdll/rtl.h>
+#include <windows.h>
 #include <wchar.h>
+
+#define NDEBUG
+#include <debug.h>
+
+/* GLOBALS *******************************************************************/
+
+#define MAX_DEFAULT_HANDLES   7
+
+static CRITICAL_SECTION HandleTableCS;
+static HANDLE DefaultHandleTable[MAX_DEFAULT_HANDLES];
+
+
+/* PROTOTYPES ****************************************************************/
+
+static NTSTATUS MapDefaultKey (PHKEY ParentKey, HKEY Key);
+static VOID CloseDefaultHandles(VOID);
+
+static NTSTATUS OpenLocalMachineKey (PHANDLE KeyHandle);
+
+
+/* FUNCTIONS *****************************************************************/
+
+/************************************************************************
+ *	RegInitDefaultHandles
+ */
+
+BOOL
+RegInitialize (VOID)
+{
+   DPRINT1("RegInitialize()\n");
+
+   RtlZeroMemory (DefaultHandleTable,
+		  MAX_DEFAULT_HANDLES * sizeof(HANDLE));
+
+   RtlInitializeCriticalSection(&HandleTableCS);
+   return TRUE;
+}
+
+
+/************************************************************************
+ *	RegInit
+ */
+BOOL
+RegCleanup(VOID)
+{
+   DPRINT1("RegCleanup()\n");
+
+   CloseDefaultHandles();
+   RtlDeleteCriticalSection(&HandleTableCS);
+   return TRUE;
+}
+
+
+static NTSTATUS
+MapDefaultKey (PHKEY ParentKey,
+               HKEY Key)
+{
+   PHANDLE Handle;
+   ULONG Index;
+   NTSTATUS Status = STATUS_SUCCESS;
+
+   DPRINT1("MapDefaultKey (Key %x)\n", Key);
+
+   if (((ULONG)Key & 0xF0000000) != 0x80000000)
+     {
+        *ParentKey = Key;
+        return STATUS_SUCCESS;
+     }
+
+   /* Handle special cases here */
+   Index = (ULONG)Key & 0x0FFFFFFF;
+DPRINT1("Index %x\n", Index);
+
+   if (Index >= MAX_DEFAULT_HANDLES)
+     return STATUS_INVALID_PARAMETER;
+
+   RtlEnterCriticalSection(&HandleTableCS);
+
+   Handle = &DefaultHandleTable[Index];
+   if (*Handle == NULL)
+     {
+        /* create/open the default handle */
+        switch (Index)
+          {
+            case 2: /*HKEY_LOCAL_MACHINE */
+              Status = OpenLocalMachineKey(Handle);
+              break;
+
+            default:
+              DPRINT1("MapDefaultHandle() no handle creator\n");
+              Status = STATUS_INVALID_PARAMETER;
+          }
+     }
+
+   RtlLeaveCriticalSection(&HandleTableCS);
+
+DPRINT1("Status %x\n", Status);
+
+   if (NT_SUCCESS(Status))
+     {
+        *ParentKey = (HKEY)*Handle;
+     }
+
+   return Status;
+}
+
+
+static VOID CloseDefaultHandles(VOID)
+{
+   ULONG i;
+
+   RtlEnterCriticalSection(&HandleTableCS);
+
+   for (i = 0; i < MAX_DEFAULT_HANDLES; i++)
+     {
+        if (DefaultHandleTable[i] != NULL)
+          {
+//            NtClose (DefaultHandleTable[i]);
+             DefaultHandleTable[i] = NULL;
+          }
+     }
+
+   RtlLeaveCriticalSection(&HandleTableCS);
+}
+
+
+static NTSTATUS
+OpenLocalMachineKey (PHANDLE KeyHandle)
+{
+   OBJECT_ATTRIBUTES Attributes;
+   UNICODE_STRING KeyName;
+
+   DPRINT1("OpenLocalMachineKey()\n");
+
+   RtlInitUnicodeString(&KeyName,
+                        L"\\Registry\\Machine");
+
+   InitializeObjectAttributes(&Attributes,
+                              &KeyName,
+                              OBJ_CASE_INSENSITIVE,
+                              NULL,
+                              NULL);
+
+   return (NtOpenKey (KeyHandle, 0x200000, &Attributes));
+}
+
 
 /************************************************************************
  *	RegCloseKey
@@ -61,7 +209,7 @@ RegCreateKeyA(
 		0,
 		NULL,
 		0,
-		MAXIMUM_ALLOWED,
+		KEY_ALL_ACCESS,
 		NULL,
 		phkResult,
 		NULL);
@@ -84,7 +232,7 @@ RegCreateKeyW(
 		0,
 		NULL,
 		0,
-		MAXIMUM_ALLOWED,
+		KEY_ALL_ACCESS,
 		NULL,
 		phkResult,
 		NULL);
@@ -130,8 +278,49 @@ RegCreateKeyExW(
 	LPDWORD			lpdwDisposition
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
+	UNICODE_STRING SubKeyString;
+	UNICODE_STRING ClassString;
+	OBJECT_ATTRIBUTES Attributes;
+	NTSTATUS Status;
+	HKEY ParentKey;
+
+	DPRINT1("RegCreateKeyExW() called\n");
+
+	/* get the real parent key */
+	Status = MapDefaultKey (&ParentKey, hKey);
+	if (!NT_SUCCESS(Status))
+	{
+		SetLastError (RtlNtStatusToDosError(Status));
+		return (RtlNtStatusToDosError(Status));
+	}
+
+	DPRINT1("ParentKey %x\n", (ULONG)ParentKey);
+
+	RtlInitUnicodeString (&ClassString, lpClass);
+	RtlInitUnicodeString (&SubKeyString, lpSubKey);
+
+	InitializeObjectAttributes (&Attributes,
+				    &SubKeyString,
+				    OBJ_CASE_INSENSITIVE,
+				    (HANDLE)ParentKey,
+				    (PSECURITY_DESCRIPTOR)lpSecurityAttributes);
+
+	Status = NtCreateKey (phkResult,
+			      samDesired,
+			      &Attributes,
+			      0,
+			      (lpClass == NULL)? NULL : &ClassString,
+			      dwOptions,
+			      (PULONG)lpdwDisposition);
+	DPRINT1("Status %x\n", Status);
+	if (!NT_SUCCESS(Status))
+	{
+		SetLastError (RtlNtStatusToDosError(Status));
+		return (RtlNtStatusToDosError(Status));
+	}
+	DPRINT1("Returned handle %x\n", (ULONG)*phkResult);
+
+	return ERROR_SUCCESS;
 }
 
 
@@ -655,6 +844,5 @@ RegUnLoadKeyA(
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
-
 
 /* EOF */
