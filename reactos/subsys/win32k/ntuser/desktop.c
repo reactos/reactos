@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: desktop.c,v 1.22 2004/09/28 15:02:30 weiden Exp $
+ *  $Id: desktop.c,v 1.23 2004/11/06 22:28:11 gvg Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -700,7 +700,7 @@ static NTSTATUS STDCALL PaintDesktopVersionCallback(
   DPRINT("PaintDesktopVersionCallback ValueType=%d ValueLength=%d\n", ValueType, ValueLength);
 
   if (ValueType==REG_DWORD && ValueLength==sizeof(DWORD))
-	*((DWORD*)Context) = *(DWORD*)ValueData;
+	*((DWORD*)EntryContext) = *(DWORD*)ValueData;
 
   return STATUS_SUCCESS;
 }
