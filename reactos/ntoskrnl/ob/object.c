@@ -178,37 +178,41 @@ failbasiccleanup:
         }
         _SEH_END;
         
-        if(OriginalCopy.Length > 0)
+        if(NT_SUCCESS(Status))
         {
-          ObjectName->MaximumLength = OriginalCopy.Length + sizeof(WCHAR);
-          ObjectName->Buffer = ExAllocatePool(NonPagedPool,
-                                              ObjectName->MaximumLength);
-          if(ObjectName->Buffer != NULL)
+          if(OriginalCopy.Length > 0)
           {
-            _SEH_TRY
+            ObjectName->MaximumLength = OriginalCopy.Length + sizeof(WCHAR);
+            ObjectName->Buffer = ExAllocatePool(NonPagedPool,
+                                                ObjectName->MaximumLength);
+            if(ObjectName->Buffer != NULL)
             {
-              /* no need to probe OriginalCopy.Buffer again, we already did that
-                 when capturing the UNICODE_STRING structure itself */
-              RtlCopyMemory(ObjectName->Buffer, OriginalCopy.Buffer, OriginalCopy.Length);
-              ObjectName->Buffer[OriginalCopy.Length / sizeof(WCHAR)] = L'\0';
+              _SEH_TRY
+              {
+                /* no need to probe OriginalCopy.Buffer again, we already did that
+                   when capturing the UNICODE_STRING structure itself */
+                RtlCopyMemory(ObjectName->Buffer, OriginalCopy.Buffer, OriginalCopy.Length);
+                ObjectName->Buffer[OriginalCopy.Length / sizeof(WCHAR)] = L'\0';
+              }
+              _SEH_HANDLE
+              {
+                Status = _SEH_GetExceptionCode();
+              }
+              _SEH_END;
             }
-            _SEH_HANDLE
+            else
             {
-              Status = _SEH_GetExceptionCode();
+              Status = STATUS_INSUFFICIENT_RESOURCES;
             }
-            _SEH_END;
           }
-          else
+          else if(AttributesCopy.RootDirectory != NULL /* && OriginalCopy.Length == 0 */)
           {
-            Status = STATUS_INSUFFICIENT_RESOURCES;
+            /* if the caller specified a root directory, there must be an object name! */
+            Status = STATUS_OBJECT_NAME_INVALID;
           }
-        }
-        else if(AttributesCopy.RootDirectory != NULL /* && OriginalCopy.Length == 0 */)
-        {
-          /* if the caller specified a root directory, there must be an object name! */
-          Status = STATUS_OBJECT_NAME_INVALID;
         }
 
+        /* handle failure */
         if(!NT_SUCCESS(Status))
         {
 failallocatedcleanup:
