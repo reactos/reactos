@@ -1,4 +1,4 @@
-/* $Id: ppool.c,v 1.18 2003/08/19 05:24:07 royce Exp $
+/* $Id: ppool.c,v 1.19 2003/08/25 18:51:50 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -169,12 +169,15 @@ ExAllocatePagedPoolWithTag (IN	POOL_TYPE	PoolType,
   PVOID BlockAddress;
   ULONG Alignment;
 
+  ExAcquireFastMutex(&MmPagedPoolLock);
+
   /*
    * Don't bother allocating anything for a zero-byte block.
    */
   if (NumberOfBytes == 0)
     {
       MmDbgPagedPoolRedZoneCheck(__FILE__,__LINE__);
+      ExReleaseFastMutex(&MmPagedPoolLock);
       return(NULL);
     }
 
@@ -204,7 +207,6 @@ ExAllocatePagedPoolWithTag (IN	POOL_TYPE	PoolType,
     BlockSize = sizeof(MM_PPOOL_FREE_BLOCK_HEADER);
   }
 
-  ExAcquireFastMutex(&MmPagedPoolLock);
 
   /*
    * Find the best-fitting block.
