@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.7 1999/10/07 23:45:07 ekohl Exp $
+/* $Id: stubs.c,v 1.8 1999/10/17 18:18:44 ariadne Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -1059,15 +1059,7 @@ FormatMessageA (
 }
 
 
-VOID
-STDCALL
-FreeLibraryAndExitThread (
-	HMODULE	hLibModule,
-	DWORD	dwExitCode
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-}
+
 
 
 WINBOOL
@@ -3176,19 +3168,7 @@ RaiseException (
 }
 
 
-WINBOOL
-STDCALL
-ReadProcessMemory (
-	HANDLE	hProcess,
-	LPCVOID	lpBaseAddress,
-	LPVOID	lpBuffer,
-	DWORD	nSize,
-	LPDWORD	lpNumberOfBytesRead
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
+
 
 
 WINBOOL
@@ -3258,56 +3238,6 @@ ReleaseSemaphore (
 }
 
 
-/* FIXME: KERNEL32.RtlFillMemory == NTDLL.RtlFillMemory */
-DWORD
-STDCALL
-RtlFillMemory (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
-{
-	return 0;
-}
-
-
-/* FIXME: KERNEL32.RtlMoveMemory == NTDLL.RtlMoveMemory */
-DWORD
-STDCALL
-RtlMoveMemory (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
-{
-	return 0;
-}
-
-
-/* FIXME: KERNEL32.RtlUnwind == NTDLL.RtlUnwind */
-DWORD
-STDCALL
-RtlUnwind (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
-	)
-{
-	return 0;
-}
-
-
-/* FIXME: KERNEL32.RtlZeroMemory == NTDLL.RtlZeroMemory */
-DWORD
-STDCALL
-RtlZeroMemory (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	)
-{
-	return 0;
-}
 
 
 WINBOOL
@@ -4089,19 +4019,6 @@ WritePrivateProfileStructW (
 }
 
 
-WINBOOL
-STDCALL
-WriteProcessMemory (
-	HANDLE	hProcess,
-	LPVOID	lpBaseAddress,
-	LPVOID	lpBuffer,
-	DWORD	nSize,
-	LPDWORD	lpNumberOfBytesWritten
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
 WINBOOL

@@ -8,7 +8,6 @@
 
 /* INCLUDES ******************************************************************/
 
-
 #include <windows.h>
 
 typedef DWORD ( *RtlFillMemoryType) (DWORD Unknown0, DWORD Unknown1, DWORD Unknown2 );

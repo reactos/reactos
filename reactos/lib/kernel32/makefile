@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.26 1999/10/02 20:20:42 ariadne Exp $
+# $Id: makefile,v 1.27 1999/10/17 18:18:43 ariadne Exp $
 #
 # ReactOS Operating System
 #
@@ -25,14 +25,14 @@ all: $(DLLTARGET)
 SYNCH_OBJECTS = synch/critical.o synch/event.o synch/wait.o synch/intrlck.o synch/timer.o
 
 MISC_OBJECTS = misc/error.o misc/atom.o misc/handle.o misc/env.o misc/dllmain.o \
-		misc/console.o misc/time.o misc/stubs.o
+		misc/console.o misc/time.o misc/stubs.o misc/rtl.o misc/ldr.o
 
 FILE_OBJECTS = file/file.o file/curdir.o file/lfile.o file/dir.o \
                file/iocompl.o file/volume.o file/deviceio.o file/dosdev.o \
 	       file/create.o file/find.o file/copy.o file/pipe.o \
 	       file/move.o file/lock.o file/rw.o file/delete.o
 
-MEM_OBJECTS = mem/virtual.o mem/heap.o mem/utils.o mem/section.o mem/isbad.o
+MEM_OBJECTS = mem/virtual.o mem/heap.o mem/utils.o mem/section.o mem/isbad.o mem/procmem.o
 
 NLS_OBJECTS =  nls/codepage.o nls/cpmisc.o nls/cptable.o\
  nls/cp37.o nls/cp437.o nls/cp500.o nls/cp737.o nls/cp775.o nls/cp850.o nls/cp852.o nls/cp855.o nls/cp857.o\

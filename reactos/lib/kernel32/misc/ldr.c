@@ -4,16 +4,7 @@
 #include <ddk/ntddk.h>
 #include <pe.h>
 #include <ntdll/ldr.h>
-#if 0
-typedef struct _DLL
-{
-   PIMAGE_NT_HEADERS Headers;
-   PVOID BaseAddress;
-   HANDLE SectionHandle;
-   struct _DLL* Prev;
-   struct _DLL* Next;
-} DLL, *PDLL;
-#endif
+
 
 HINSTANCE LoadLibraryA( LPCSTR lpLibFileName )
 {
@@ -28,20 +19,20 @@ HINSTANCE LoadLibraryA( LPCSTR lpLibFileName )
 	i = lstrlen(lpLibFileName);
 	if ( lpLibFileName[i-1] == '.' ) {
 		lpDllName = HeapAlloc(GetProcessHeap(),0,i+1);
-		lpstrcpy(lpDllName,lpLibFileName);
+		lstrcpy(lpDllName,lpLibFileName);
 		lpDllName[i-1] = 0;
 	}
 	else if (i > 3 && lpLibFileName[i-3] != '.' ) {
 		lpDllName = HeapAlloc(GetProcessHeap(),0,i+4);
-		lpstrcpy(lpDllName,lpLibFileName);
-		lpstrcat(lpDllName,".dll");	
+		lstrcpy(lpDllName,lpLibFileName);
+		lstrcat(lpDllName,".dll");	
 	}
 	else {
 		lpDllName = HeapAlloc(GetProcessHeap(),0,i+1);
-		lpstrcpy(lpDllName,lpLibFileName);
+		lstrcpy(lpDllName,lpLibFileName);
 	}
 	
-	if ( !NT_SUCCESS(LdrLoadDll(&hInst,lpDllName ))
+	if ( !NT_SUCCESS(LdrLoadDll((PDLL *)&hInst,lpDllName )))
 	{
 		return NULL;
 	}
@@ -54,12 +45,11 @@ FARPROC GetProcAddress( HMODULE hModule, LPCSTR lpProcName )
 {
 	
 	FARPROC fnExp;
-	ULONG Ordinal;
 	
-	if ( LOWORD(lpProcName ) 
-		fnExp = LdrGetExportByOrdinal (hModule,Ordinal);
+	if ( HIWORD(lpProcName )  != 0 )
+		fnExp = LdrGetExportByName (hModule,(LPSTR)lpProcName);
 	else
-		fnExp = LdrGetExportByName (hModule,lpProcName);
+		fnExp = LdrGetExportByOrdinal (hModule,(ULONG)lpProcName);
 
 	return fnExp;
 }
@@ -70,7 +60,20 @@ WINBOOL FreeLibrary( HMODULE hLibModule )
 	return TRUE;
 }
 
-
-HMODULE GetModuleHandle ( LPCTSTR lpModuleName )
+VOID
+STDCALL
+FreeLibraryAndExitThread(
+			 HMODULE hLibModule,
+			 DWORD dwExitCode
+			 )
 {
+
+	if ( FreeLibrary(hLibModule) )
+		ExitThread(dwExitCode);
+	return;
+}
+
+HMODULE GetModuleHandleA ( LPCSTR lpModuleName )
+{
+	return LoadLibraryA(lpModuleName);
 }
