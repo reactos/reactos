@@ -616,4 +616,18 @@ CmiCompareKeyNamesI(PUNICODE_STRING KeyName,
 VOID
 CmiSyncHives(VOID);
 
+
+NTSTATUS
+CmiCreateTempHive(PREGISTRY_HIVE *RegistryHive);
+
+NTSTATUS
+CmiCopyKey (PREGISTRY_HIVE DstHive,
+	    PKEY_CELL DstKeyCell,
+	    PREGISTRY_HIVE SrcHive,
+	    PKEY_CELL SrcKeyCell);
+
+NTSTATUS
+CmiSaveTempHive (PREGISTRY_HIVE Hive,
+		 HANDLE FileHandle);
+
 #endif /*__INCLUDE_CM_H*/

@@ -1697,8 +1697,81 @@ NTSTATUS STDCALL
 NtSaveKey (IN HANDLE KeyHandle,
 	   IN HANDLE FileHandle)
 {
-	UNIMPLEMENTED;
-	return(STATUS_NOT_IMPLEMENTED);
+  PREGISTRY_HIVE TempHive;
+  PKEY_OBJECT KeyObject;
+  NTSTATUS Status;
+
+  DPRINT ("NtSaveKey() called\n");
+
+#if 0
+  if (!SeSinglePrivilegeCheck (SeBackupPrivilege, KeGetPreviousMode ()))
+    return STATUS_PRIVILEGE_NOT_HELD;
+#endif
+
+  Status = ObReferenceObjectByHandle (KeyHandle,
+				      0,
+				      CmiKeyType,
+				      KeGetPreviousMode(),
+				      (PVOID *)&KeyObject,
+				      NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1 ("ObReferenceObjectByHandle() failed (Status %lx)\n", Status);
+      return Status;
+    }
+
+  /* Acquire hive lock exclucively */
+  ExAcquireResourceExclusiveLite (&KeyObject->RegistryHive->HiveResource,
+				  TRUE);
+
+  /* Refuse to save a volatile key */
+  if (KeyObject->RegistryHive == CmiVolatileHive)
+    {
+      DPRINT1 ("Cannot save a volatile key\n");
+      ExReleaseResourceLite (&KeyObject->RegistryHive->HiveResource);
+      ObDereferenceObject (KeyObject);
+      return STATUS_ACCESS_DENIED;
+    }
+
+  Status = CmiCreateTempHive(&TempHive);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1 ("CmiCreateTempHive() failed (Status %lx)\n", Status);
+      ExReleaseResourceLite (&KeyObject->RegistryHive->HiveResource);
+      ObDereferenceObject (KeyObject);
+      return(Status);
+    }
+
+  Status = CmiCopyKey (TempHive,
+		       NULL,
+		       KeyObject->RegistryHive,
+		       KeyObject->KeyCell);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1 ("CmiCopyKey() failed (Status %lx)\n", Status);
+      CmiRemoveRegistryHive (TempHive);
+      ExReleaseResourceLite (&KeyObject->RegistryHive->HiveResource);
+      ObDereferenceObject (KeyObject);
+      return(Status);
+    }
+
+  Status = CmiSaveTempHive (TempHive,
+			    FileHandle);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1 ("CmiSaveTempHive() failed (Status %lx)\n", Status);
+    }
+
+  CmiRemoveRegistryHive (TempHive);
+
+  /* Release hive lock */
+  ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+
+  ObDereferenceObject (KeyObject);
+
+  DPRINT ("NtSaveKey() done\n");
+
+  return STATUS_SUCCESS;
 }
 
 
@@ -1726,6 +1799,11 @@ NtUnloadKey (IN POBJECT_ATTRIBUTES KeyObjectAttributes)
 
   DPRINT ("NtUnloadKey() called\n");
 
+#if 0
+  if (!SeSinglePrivilegeCheck (SeRestorePrivilege, KeGetPreviousMode ()))
+    return STATUS_PRIVILEGE_NOT_HELD;
+#endif
+
   Status = CmiDisconnectHive (KeyObjectAttributes,
 			      &RegistryHive);
   if (!NT_SUCCESS (Status))
@@ -1746,35 +1824,10 @@ NtUnloadKey (IN POBJECT_ATTRIBUTES KeyObjectAttributes)
     CmiFlushRegistryHive (RegistryHive);
 #endif
 
-  /* Remove hive from hive list */
-  RemoveEntryList (&RegistryHive->HiveList);
-
   /* Release hive list lock */
   ExReleaseResourceLite (&CmiHiveListLock);
 
-  /* Release file names */
-  RtlFreeUnicodeString (&RegistryHive->HiveFileName);
-  RtlFreeUnicodeString (&RegistryHive->LogFileName);
-
-  /* Release hive bitmap */
-  ExFreePool (RegistryHive->BitmapBuffer);
-
-  /* Release free cell list */
-  ExFreePool (RegistryHive->FreeList);
-  ExFreePool (RegistryHive->FreeListOffset);
-
-  /* Release hive resource */
-  ExDeleteResource (&RegistryHive->HiveResource);
-
-  /* Release bins and bin list */
-  CmiFreeHiveBins (RegistryHive);
-  ExFreePool (RegistryHive->BlockList);
-
-  /* Release hive header */
-  ExFreePool (RegistryHive->HiveHeader);
-
-  /* Release hive */
-  ExFreePool (RegistryHive);
+  CmiRemoveRegistryHive (RegistryHive);
 
   DPRINT ("NtUnloadKey() done\n");
 
