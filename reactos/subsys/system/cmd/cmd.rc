@@ -38,3 +38,4 @@ BEGIN
     END
 END
 
+1	ICON	DISCARDABLE	res/terminal.ico
