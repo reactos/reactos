@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.10 2001/02/28 22:33:23 ekohl Exp $
+/* $Id: dir.c,v 1.11 2001/07/11 20:26:58 ekohl Exp $
  *
  *  DIR.C - dir internal command.
  *
@@ -810,8 +810,8 @@ DirList (LPTSTR szPath, LPTSTR szFilespec, LPINT pLine, DWORD dwFlags)
 				count = 0;
 			}
 
-			uliSize.u.LowPart = file.nFileSizeLow;
-			uliSize.u.HighPart = file.nFileSizeHigh;
+			uliSize.LowPart = file.nFileSizeLow;
+			uliSize.HighPart = file.nFileSizeHigh;
 			bytecount.QuadPart += uliSize.QuadPart;
 		}
 		else if (dwFlags & DIR_BARE)
@@ -841,8 +841,8 @@ DirList (LPTSTR szPath, LPTSTR szFilespec, LPINT pLine, DWORD dwFlags)
 			if (IncLine (pLine, dwFlags))
 				return 1;
 
-			uliSize.u.LowPart = file.nFileSizeLow;
-			uliSize.u.HighPart = file.nFileSizeHigh;
+			uliSize.LowPart = file.nFileSizeLow;
+			uliSize.HighPart = file.nFileSizeHigh;
 			bytecount.QuadPart += uliSize.QuadPart;
 		}
 		else
@@ -866,8 +866,8 @@ DirList (LPTSTR szPath, LPTSTR szFilespec, LPINT pLine, DWORD dwFlags)
 				{
 					ULARGE_INTEGER uliSize;
 
-					uliSize.u.LowPart = file.nFileSizeLow;
-					uliSize.u.HighPart = file.nFileSizeHigh;
+					uliSize.LowPart = file.nFileSizeLow;
+					uliSize.HighPart = file.nFileSizeHigh;
 
 					ConvertULargeInteger (uliSize, buffer, sizeof(buffer));
 					ConOutPrintf (_T("   %20s"), buffer);
@@ -918,8 +918,8 @@ DirList (LPTSTR szPath, LPTSTR szFilespec, LPINT pLine, DWORD dwFlags)
 				{
 					ULARGE_INTEGER uliSize;
 
-					uliSize.u.LowPart = file.nFileSizeLow;
-					uliSize.u.HighPart = file.nFileSizeHigh;
+					uliSize.LowPart = file.nFileSizeLow;
+					uliSize.HighPart = file.nFileSizeHigh;
 					ConvertULargeInteger (uliSize, buffer, sizeof(buffer));
 					ConOutPrintf (_T("   %10s "), buffer);
 					bytecount.QuadPart += uliSize.QuadPart;
