@@ -52,6 +52,11 @@ VOID ConInDummy (VOID)
 	ReadConsoleInput (hInput, &dummy, 1, &dwRead);
 }
 
+VOID ConInFlush (VOID)
+{
+        FlushConsoleInputBuffer (GetStdHandle (STD_INPUT_HANDLE));
+}
+
 
 VOID ConInKey (PINPUT_RECORD lpBuffer)
 {
@@ -232,7 +237,7 @@ VOID SetCursorType (BOOL bInsert, BOOL bVisible)
 {
 	CONSOLE_CURSOR_INFO cci;
 
-	cci.dwSize = bInsert ? 10 : 100;
+	cci.dwSize = bInsert ? 10 : 99;
 	cci.bVisible = bVisible;
 
 	SetConsoleCursorInfo (GetStdHandle (STD_OUTPUT_HANDLE), &cci);

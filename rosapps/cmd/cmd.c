@@ -854,10 +854,10 @@ static VOID Initialize (int argc, char *argv[])
 #endif
 
 	/* get version information */
-    osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    GetVersionEx (&osvi);
+        osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+        GetVersionEx (&osvi);
 
-    InitLocale ();
+        InitLocale ();
 
 	/* get default input and output console handles */
 	hOut = GetStdHandle (STD_OUTPUT_HANDLE);
@@ -867,7 +867,7 @@ static VOID Initialize (int argc, char *argv[])
 	InitLastPath ();
 #endif
 
-    if (argc >= 2)
+        if (argc >= 2)
 	{
 		if (!_tcsncmp (argv[1], _T("/?"), 2))
 		{
@@ -944,6 +944,9 @@ static VOID Initialize (int argc, char *argv[])
         if (argv)
                 SetEnvironmentVariable (_T("COMSPEC"), argv[0]);
 #endif
+
+#if 0
+        /* Experimental ReactOS code */
         ConOutPrintf("argc: %d\n", argc);
         if (!argv)
         {
@@ -953,7 +956,7 @@ static VOID Initialize (int argc, char *argv[])
         {
 
         }
-
+#endif /* 0 */
 
 	/* add ctrl handler */
 #if 0

@@ -9,10 +9,12 @@
  *
  */
 
+/* undefine only if used under ReactOS */
 #define __REACTOS__
 
 #ifndef _CONFIG_H_INCLUDED_
 #define _CONFIG_H_INCLUDED_
+
 
 #ifndef __REACTOS__
 #define WIN32_LEAN_AND_MEAN
@@ -59,6 +61,7 @@
 /*#define INCLUDE_CMD_BREAK*/
 #define INCLUDE_CMD_CHCP
 #define INCLUDE_CMD_CHDIR
+#define INCLUDE_CMD_CHOICE
 #define INCLUDE_CMD_CLS
 #define INCLUDE_CMD_COLOR
 #define INCLUDE_CMD_COPY
@@ -86,7 +89,7 @@
 #define INCLUDE_CMD_VOL
 
 /*
-command that do not have a define:
+commands that do not have a define:
 
 exit
 call
