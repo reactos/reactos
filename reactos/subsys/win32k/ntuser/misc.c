@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.43 2004/01/26 08:44:51 weiden Exp $
+/* $Id: misc.c,v 1.44 2004/01/26 10:09:04 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -15,6 +15,7 @@
 #include <internal/safe.h>
 #include <include/error.h>
 #include <include/window.h>
+#include <include/menu.h>
 #include <include/painting.h>
 #include <include/dce.h>
 #include <include/mouse.h>
@@ -196,8 +197,24 @@ NtUserCallTwoParam(
   switch(Routine)
   {
     case TWOPARAM_ROUTINE_SETMENUITEMRECT:
-      UNIMPLEMENTED
-      return 0;
+    {
+      BOOL Ret;
+      SETMENUITEMRECT smir;
+      PMENU_OBJECT MenuObject = IntGetMenuObject((HMENU)Param1);
+      if(!MenuObject)
+        return 0;
+      
+      if(!NT_SUCCESS(MmCopyFromCaller(&smir, (PVOID)Param2, sizeof(SETMENUITEMRECT))))
+      {
+        IntReleaseMenuObject(MenuObject);
+        return 0;
+      }
+      
+      Ret = IntSetMenuItemRect(MenuObject, smir.uItem, smir.fByPosition, &smir.rcRect);
+      
+      IntReleaseMenuObject(MenuObject);
+      return (DWORD)Ret;
+    }
     
     case TWOPARAM_ROUTINE_SETGUITHRDHANDLE:
     {

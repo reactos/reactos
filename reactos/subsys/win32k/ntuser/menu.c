@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.40 2004/01/24 08:26:25 ekohl Exp $
+/* $Id: menu.c,v 1.41 2004/01/26 10:09:04 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1045,6 +1045,19 @@ IntTrackPopupMenu(PMENU_OBJECT MenuObject, PWINDOW_OBJECT WindowObject,
 DbgPrint("IntTrackPopupMenu: unimplemented\n");
 SetLastWin32Error(ERROR_CALL_NOT_IMPLEMENTED);
   
+  return FALSE;
+}
+
+BOOL FASTCALL
+IntSetMenuItemRect(PMENU_OBJECT MenuObject, UINT Item, BOOL fByPos, RECT *rcRect)
+{
+  PMENU_ITEM mi;
+  if(IntGetMenuItemByFlag(MenuObject, Item, (fByPos ? MF_BYPOSITION : MF_BYCOMMAND), 
+                          &mi, NULL) > -1)
+  {
+    mi->Rect = *rcRect;
+    return TRUE;
+  }
   return FALSE;
 }
 

@@ -107,6 +107,9 @@ BOOL FASTCALL
 IntSetMenuDefaultItem(PMENU_OBJECT MenuObject, UINT uItem, UINT fByPos);
 
 BOOL FASTCALL
+IntSetMenuItemRect(PMENU_OBJECT MenuObject, UINT Item, BOOL fByPos, RECT *rcRect);
+
+BOOL FASTCALL
 IntCleanupMenus(struct _EPROCESS *Process, PW32PROCESS Win32Process);
 
 

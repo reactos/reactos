@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.42 2004/01/26 08:44:51 weiden Exp $
+/* $Id: menu.c,v 1.43 2004/01/26 10:09:04 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -378,6 +378,7 @@ MenuDrawMenuBar(HDC hDC, LPRECT Rect, HWND hWnd, BOOL Draw)
   PVOID Buf, hBuf;
   DWORD BufSize, Items, Items2;
   MENUITEMINFOW *mii;
+  SETMENUITEMRECT smir;
   RECT *omir, *mir = NULL;
   LPWSTR str;
   
@@ -400,6 +401,8 @@ MenuDrawMenuBar(HDC hDC, LPRECT Rect, HWND hWnd, BOOL Draw)
     /* copy menu items into buffer */
     Items = Items2 = NtUserBuildMenuItemList(mnu, Buf, BufSize, 0);
     
+    smir.fByPosition = TRUE;
+    smir.uItem = 0;
     /* calculate menu item rectangles */
     while(Items > 0)
     {
@@ -428,10 +431,13 @@ MenuDrawMenuBar(HDC hDC, LPRECT Rect, HWND hWnd, BOOL Draw)
         mir->top = Rect->top;
       }
       MeasureMenuItem(hWnd, mnu, hDC, mii, mir, str);
+      smir.rcRect = *mir;
+      NtUserSetMenuItemRect(mnu, &smir);
       
       height = max(height, mir->top + mir->bottom);
       /* DbgPrint("Measure menu item %ws: (%d, %d, %d, %d)\n", str, mir->left, mir->top, mir->right, mir->bottom); */
       Items--;
+      smir.uItem++;
     }
     height = max(height, GetSystemMetrics(SM_CYMENU));
     
