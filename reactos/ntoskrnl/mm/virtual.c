@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: virtual.c,v 1.68 2003/07/11 01:23:15 royce Exp $
+/* $Id: virtual.c,v 1.69 2003/08/14 10:40:51 ekohl Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/virtual.c
@@ -333,7 +333,7 @@ NtWriteVirtualMemory(IN	HANDLE	ProcessHandle,
    ObDereferenceObject(Process);
 
    if (Mdl->MappedSystemVa != NULL)
-     {	     
+     {
        MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
      }
    MmUnlockPages(Mdl);
@@ -376,6 +376,68 @@ MmUnsecureVirtualMemory(PVOID SecureMem)
     }
 
   UNIMPLEMENTED;
+}
+
+
+/*
+ * @implemented
+ */
+VOID STDCALL
+ProbeForRead (IN PVOID Address,
+	      IN ULONG Length,
+	      IN ULONG Alignment)
+{
+  assert (Alignment ==1 || Alignment == 2 || Alignment == 4 || Alignment == 8);
+
+  if (Length == 0)
+    return;
+
+  if (((ULONG_PTR)Address & (Alignment - 1)) != 0)
+    {
+      ExRaiseStatus (STATUS_DATATYPE_MISALIGNMENT);
+    }
+  else if ((ULONG_PTR)Address + Length < (ULONG_PTR)Address ||
+	   (ULONG_PTR)Address + Length > (ULONG_PTR)MmUserProbeAddress)
+    {
+      ExRaiseStatus (STATUS_ACCESS_VIOLATION);
+    }
+}
+
+
+/*
+ * @implemented
+ */
+VOID STDCALL
+ProbeForWrite (IN PVOID Address,
+	       IN ULONG Length,
+	       IN ULONG Alignment)
+{
+  PULONG Ptr;
+  ULONG x;
+  ULONG i;
+
+  assert (Alignment ==1 || Alignment == 2 || Alignment == 4 || Alignment == 8);
+
+  if (Length == 0)
+    return;
+
+  if (((ULONG_PTR)Address & (Alignment - 1)) != 0)
+    {
+      ExRaiseStatus (STATUS_DATATYPE_MISALIGNMENT);
+    }
+  else if ((ULONG_PTR)Address + Length < (ULONG_PTR)Address ||
+	   (ULONG_PTR)Address + Length > (ULONG_PTR)MmUserProbeAddress)
+    {
+      ExRaiseStatus (STATUS_ACCESS_VIOLATION);
+    }
+
+  /* Check for accessible pages */
+  for (i = 0; i < Length; i += PAGE_SIZE)
+    {
+      Ptr = (PULONG)(((ULONG_PTR)Address & ~(PAGE_SIZE - 1)) + i);
+      x = *Ptr;
+      *Ptr = x;
+    }
 }
 
 /* EOF */

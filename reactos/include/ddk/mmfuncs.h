@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_MMFUNCS_H
 #define _INCLUDE_DDK_MMFUNCS_H
-/* $Id: mmfuncs.h,v 1.16 2003/06/19 17:13:27 gvg Exp $ */
+/* $Id: mmfuncs.h,v 1.17 2003/08/14 10:40:08 ekohl Exp $ */
 /* MEMORY MANAGMENT ******************************************************/
 
 
@@ -550,4 +550,17 @@ STDCALL
 MmUnsecureVirtualMemory (
 	PVOID	SecureMem
 	);
-#endif
+
+VOID STDCALL
+ProbeForRead (IN PVOID Address,
+	      IN ULONG Length,
+	      IN ULONG Alignment);
+
+VOID STDCALL
+ProbeForWrite (IN PVOID Address,
+	       IN ULONG Length,
+	       IN ULONG Alignment);
+
+#endif /* _INCLUDE_DDK_MMFUNCS_H */
+
+/* EOF */

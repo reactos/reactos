@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.160 2003/08/11 18:50:12 chorns Exp $
+; $Id: ntoskrnl.def,v 1.161 2003/08/14 10:41:36 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -640,7 +640,8 @@ PoSetPowerState@12
 PoSetSystemState@4
 PoStartNextPowerIrp@4
 PoUnregisterSystemState@4
-;ProbeForWrite@12
+ProbeForRead@12
+ProbeForWrite@12
 PsAssignImpersonationToken@8
 ;PsChargePoolQuota@12
 PsCreateSystemProcess@12
