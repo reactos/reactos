@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.21 2004/05/11 20:44:30 gvg Exp $
+/* $Id: dllmain.c,v 1.22 2004/05/27 11:49:48 hbirr Exp $
  *
  * dllmain.c
  *
@@ -14,9 +14,9 @@
  *  DISCLAMED. This includes but is not limited to warrenties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.21 $
- * $Author: gvg $
- * $Date: 2004/05/11 20:44:30 $
+ * $Revision: 1.22 $
+ * $Author: hbirr $
+ * $Date: 2004/05/27 11:49:48 $
  *
  */
 
@@ -48,8 +48,6 @@ extern char** __initenv;    /* pointer to initial environment block */
 
 /* LIBRARY GLOBAL VARIABLES ***************************************************/
 
-static int nAttachCount = 0;
-
 HANDLE hHeap = NULL;        /* handle for heap */
 
 
@@ -69,22 +67,11 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
         _winminor = _osver & 0xFF;
         _winver = (_winmajor << 8) + _winminor;
         _osver = (_osver >> 16) & 0xFFFF;
-        if (hHeap == NULL || hHeap == INVALID_HANDLE_VALUE)
-        {
-            hHeap = HeapCreate(0, 100000, 0);
-            if (hHeap == NULL || hHeap == INVALID_HANDLE_VALUE)
-            {
-                return FALSE;
-            }
-        }
-        if (nAttachCount==0)
-        {
-            if (!__fileno_init()) {
-                HeapDestroy(hHeap);
-                hHeap = NULL;
-                return FALSE;
-            }
-        }
+        hHeap = HeapCreate(0, 100000, 0);
+        if (hHeap == NULL)
+            return FALSE;
+        if (!__fileno_init()) 
+            return FALSE;
 
         /* create tls stuff */
         if (!CreateThreadData())
@@ -102,7 +89,6 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
         msvcrt_init_mt_locks();
         msvcrt_init_args();
 
-        nAttachCount++;
         DPRINT("Attach done\n");
         break;
 
@@ -115,42 +101,26 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
 
     case DLL_PROCESS_DETACH://0
         DPRINT("Detach %d\n", nAttachCount);
-        if (nAttachCount > 0)
-        {
-            nAttachCount--;
+        /* FIXME: more cleanup... */
+        _fcloseall();
 
-            /* Deinitialization of the WINE code */
-            msvcrt_free_args();
-            msvcrt_free_mt_locks();
+        /* destroy tls stuff */
+        DestroyThreadData();
 
-            /* FIXME: more cleanup... */
-            _fcloseall();
+	if (__initenv && __initenv != _environ)
+	  {
+            free(__initenv[0]);
+	    free(__initenv);
+	  }
+        if (_environ)
+          {
+            free(_environ[0]);
+            free(_environ);
+          }
+        /* destroy heap */
+        HeapDestroy(hHeap);
 
-            /* destroy tls stuff */
-            DestroyThreadData();
-
-            /* destroy heap */
-            if (nAttachCount == 0)
-            {
-		if (__initenv && __initenv != _environ)
-		{
-                    FreeEnvironmentStringsA(__initenv[0]);
-		    free(__initenv);
-		    __initenv = NULL;
-		}
-                if (_environ)
-                {
-                    FreeEnvironmentStringsA(_environ[0]);
-                    free(_environ);
-                    _environ = NULL;
-                }
-#if 1
-                HeapDestroy(hHeap);
-                hHeap = NULL;
-#endif
-            }
         DPRINT("Detach done\n");
-        }
         break;
     }
 
