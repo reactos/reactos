@@ -82,31 +82,31 @@ static BOOL SHELL_ArgifyW(WCHAR* out, int len, const WCHAR* fmt, const WCHAR* lp
 {
     WCHAR   xlpFile[1024];
     BOOL    done = FALSE;
-    LPVOID  pv;
     PWSTR   res = out;
     PCWSTR  cmd;
+    LPVOID  pv;
 
     while (*fmt)
     {
-        if (*fmt == '%')
-        {
-            switch (*++fmt)
-            {
-              case '\0':
-              case '%':
-                *res++ = '%';
-                break;
+	if (*fmt == '%')
+	{
+	    switch (*++fmt)
+	    {
+	      case '\0':
+	      case '%':
+		*res++ = '%';
+		break;
 
-              case '2':
-              case '3':
+	      case '2':
+	      case '3':
 	      case '4':
 	      case '5':
-              case '6':
-              case '7':
+	      case '6':
+	      case '7':
 	      case '8':
 	      case '9':
 	      case '0':
-              case '*':
+	      case '*':
 		if (args)
 		{
 		    if (*fmt == '*')
@@ -124,64 +124,65 @@ static BOOL SHELL_ArgifyW(WCHAR* out, int len, const WCHAR* fmt, const WCHAR* lp
 			while(isspace(*args))
 			    ++args;
 		    }
+		    break;
 		}
-		else
+		/* else fall through */
+	      case '1':
+		if (!done || (*fmt == '1'))
 		{
-              case '1':
-		    if (!done || (*fmt == '1'))
-		    {
-			/*FIXME Is the call to SearchPathW() really needed? We already have separated out the parameter string in args. */
-			if (SearchPathW(NULL, lpFile, wszExe, sizeof(xlpFile)/sizeof(WCHAR), xlpFile, NULL))
-			    cmd = xlpFile;
-			else
-			    cmd = lpFile;
+		    /*FIXME Is the call to SearchPathW() really needed? We already have separated out the parameter string in args. */
+		    if (SearchPathW(NULL, lpFile, wszExe, sizeof(xlpFile)/sizeof(WCHAR), xlpFile, NULL))
+			cmd = xlpFile;
+		    else
+			cmd = lpFile;
 
-			/* Add double quotation marks unless we already have them (e.g.: "%1" %* for exefile) */
-			if (res != out && *(res - 1) == '"')
-			{
-			    strcpyW(res, cmd);
-			    res += strlenW(cmd);
-			}
-			else
-			{
-			    strcpyW(res, cmd);
-			    res += strlenW(cmd);
-			}
+		    /* Add double quotation marks unless we already have them (e.g.: "%1" %* for exefile) */
+		    if (res==out || res[-1]!='"')
+		    {
+			*res++ = '"';
+			strcpyW(res, cmd);
+			res += strlenW(cmd);
+			*res++ = '"';
+		    }
+		    else
+		    {
+			strcpyW(res, cmd);
+			res += strlenW(cmd);
 		    }
 		}
-                break;
+		break;
 
-              /*
-               * IE uses this alot for activating things such as windows media
-               * player. This is not verified to be fully correct but it appears
-               * to work just fine.
-               */
-              case 'l':
-              case 'L':
+	      /*
+	       * IE uses this alot for activating things such as windows media
+	       * player. This is not verified to be fully correct but it appears
+	       * to work just fine.
+	       */
+	      case 'l':
+	      case 'L':
 		if (lpFile) {
 		    strcpyW(res, lpFile);
 		    res += strlenW(lpFile);
 		}
-                break;
+		break;
 
-              case 'i':
-              case 'I':
+	      case 'i':
+	      case 'I':
 		if (pidl) {
 		    HGLOBAL hmem = SHAllocShared(pidl, ILGetSize(pidl), 0);
 		    pv = SHLockShared(hmem, 0);
 		    res += sprintfW(res, wszILPtr, pv);
 		    SHUnlockShared(pv);
 		}
-                break;
+		break;
 
-            default: FIXME("Unknown escape sequence %%%c\n", *fmt);
-            }
+	    default: FIXME("Unknown escape sequence %%%c\n", *fmt);
+	    }
 
-            fmt++;
-            done = TRUE;
-        }
-        else
-            *res++ = *fmt++;
+	    fmt++;
+	    done = TRUE;
+	}
+	else
+	    *res++ = *fmt++;
     }
 
     *res = '\0';
@@ -804,7 +805,7 @@ static unsigned dde_connect(WCHAR * key, WCHAR* start, WCHAR* ddeexec,
             TRACE("Couldn't connect. ret=%d\n", ret);
             DdeUninitialize(ddeInst);
             SetLastError(ERROR_DDE_FAIL);
-            return ret = 30; /* whatever */
+            return 30; /* whatever */
         }
         strcpyW(endkey, wIfexec);
         ifexeclen = sizeof(ifexec);
@@ -820,8 +821,10 @@ static unsigned dde_connect(WCHAR * key, WCHAR* start, WCHAR* ddeexec,
     ret = (DdeClientTransaction((LPBYTE)res, (strlenW(res) + 1) * sizeof(WCHAR), hConv, 0L, 0,
                                 XTYP_EXECUTE, 10000, &tid) != DMLERR_NO_ERROR) ? 31 : 33;
     DdeDisconnect(hConv);
+
  error:
     DdeUninitialize(ddeInst);
+
     return ret;
 }
 
@@ -943,8 +946,9 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW psei, SHELL_ExecuteW32 execfu
     static const WCHAR wExtLnk[] = {'.','l','n','k',0};
     static const WCHAR wExplorer[] = {'e','x','p','l','o','r','e','r','.','e','x','e',0};
 
-    WCHAR wszApplicationName[MAX_PATH+2], wszParameters[1024], wfileName[MAX_PATH], wszDir[MAX_PATH];
+    WCHAR wszApplicationName[MAX_PATH+2], wszParameters[1024], wszDir[MAX_PATH];
     SHELLEXECUTEINFOW sei_tmp;	/* modifyable copy of SHELLEXECUTEINFO struct */
+    WCHAR wfileName[MAX_PATH];
     void *env;
     WCHAR wszProtocol[256];
     LPCWSTR lpFile;
