@@ -410,8 +410,26 @@ for(;;);
     }
 
 
+  /* Get ANSI codepage file */
+  if (!InfFindFirstLine (InfHandle,
+			 "NLS",
+			 "AnsiCodepage",
+			 &InfContext))
+    {
+      printf("Failed to find 'NLS/AnsiCodepage'\n");
+      return;
+    }
+
+  if (!InfGetDataField (&InfContext,
+			1,
+			&LoadOptions))
+    {
+      printf("Failed to get load options\n");
+      return;
+    }
+
   /* Load ANSI codepage file */
-  if (!LoadNlsFile(SourcePath, "c_1252.nls", "ansi.nls"))
+  if (!LoadNlsFile(SourcePath, LoadOptions, "ansi.nls"))
     {
 #ifdef USE_UI
       UiMessageBox("Failed to load the ANSI codepage file.");
@@ -421,8 +439,26 @@ for(;;);
       return;
     }
 
+  /* Get OEM codepage file */
+  if (!InfFindFirstLine (InfHandle,
+			 "NLS",
+			 "OemCodepage",
+			 &InfContext))
+    {
+      printf("Failed to find 'NLS/AnsiCodepage'\n");
+      return;
+    }
+
+  if (!InfGetDataField (&InfContext,
+			1,
+			&LoadOptions))
+    {
+      printf("Failed to get load options\n");
+      return;
+    }
+
   /* Load OEM codepage file */
-  if (!LoadNlsFile(SourcePath, "c_437.nls", "oem.nls"))
+  if (!LoadNlsFile(SourcePath, LoadOptions, "oem.nls"))
     {
 #ifdef USE_UI
       UiMessageBox("Failed to load the OEM codepage file.");
@@ -432,8 +468,26 @@ for(;;);
       return;
     }
 
+  /* Get Unicode Casemap file */
+  if (!InfFindFirstLine (InfHandle,
+			 "NLS",
+			 "UnicodeCasetable",
+			 &InfContext))
+    {
+      printf("Failed to find 'NLS/AnsiCodepage'\n");
+      return;
+    }
+
+  if (!InfGetDataField (&InfContext,
+			1,
+			&LoadOptions))
+    {
+      printf("Failed to get load options\n");
+      return;
+    }
+
   /* Load Unicode casemap file */
-  if (!LoadNlsFile(SourcePath, "l_intl.nls", "casemap.nls"))
+  if (!LoadNlsFile(SourcePath, LoadOptions, "casemap.nls"))
     {
 #ifdef USE_UI
       UiMessageBox("Failed to load the Unicode casemap file.");
