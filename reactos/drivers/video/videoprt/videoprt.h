@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.h,v 1.5 2004/03/08 08:05:26 navaraf Exp $
+ * $Id: videoprt.h,v 1.6 2004/03/09 18:56:32 navaraf Exp $
  */
 
 #ifndef VIDEOPRT_H
@@ -28,7 +28,7 @@
 #include <ddk/video.h>
 #include <ddk/ntddvdeo.h>
 #include "internal/ps.h"
-/* #define NDEBUG */
+#define NDEBUG
 #include <debug.h>
 
 /*
