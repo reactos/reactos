@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.43 2004/03/28 17:08:55 navaraf Exp $
+/* $Id: driver.c,v 1.44 2004/04/11 15:31:21 jfilby Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -1515,7 +1515,10 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
     */
 
    if (!SeSinglePrivilegeCheck(SeLoadDriverPrivilege, KeGetPreviousMode()))
+   {
+      DPRINT("Privilege not held\n");
       return STATUS_PRIVILEGE_NOT_HELD;
+   }
 
    RtlInitUnicodeString(&ImagePath, NULL);
 
@@ -1579,6 +1582,7 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
    ModuleObject = LdrGetModuleObject(&ImagePath);
    if (ModuleObject != NULL)
    {
+      DPRINT("Image already loaded\n");
       return STATUS_IMAGE_ALREADY_LOADED;
    }
 
