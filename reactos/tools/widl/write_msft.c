@@ -27,9 +27,6 @@
  *
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
@@ -39,13 +36,6 @@
 
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
-
-#include "winerror.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winnls.h"
-
-#include "wine/unicode.h"
 
 #include "widltypes.h"
 #include "typelib.h"
@@ -87,12 +77,12 @@ typedef struct _msft_typelib_t
     char *typelib_segment_data[MSFT_SEG_MAX];
     int typelib_segment_block_length[MSFT_SEG_MAX];
 
-    INT typelib_typeinfo_offsets[0x200]; /* Hope that's enough. */
+    int typelib_typeinfo_offsets[0x200]; /* Hope that's enough. */
 
-    INT *typelib_namehash_segment;
-    INT *typelib_guidhash_segment;
+    int *typelib_namehash_segment;
+    int *typelib_guidhash_segment;
 
-    INT help_string_dll_offset;
+    int help_string_dll_offset;
 
     struct _msft_typeinfo_t *typeinfos;
     struct _msft_typeinfo_t *last_typeinfo;

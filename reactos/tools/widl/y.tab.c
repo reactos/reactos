@@ -157,8 +157,6 @@
 #include <alloca.h>
 #endif
 
-#include "windef.h"
-
 #include "widl.h"
 #include "utils.h"
 #include "parser.h"

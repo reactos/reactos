@@ -24,6 +24,7 @@
 #include <stdarg.h>
 #include "guiddef.h"
 #include "wine/rpcfc.h"
+#include "winglue.h"
 
 #ifndef UUID_DEFINED
 #define UUID_DEFINED
