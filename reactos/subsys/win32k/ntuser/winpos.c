@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.78 2004/01/12 00:07:34 navaraf Exp $
+/* $Id: winpos.c,v 1.79 2004/01/12 22:26:00 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -121,19 +121,34 @@ NtUserGetClientOrigin(HWND hWnd, LPPOINT Point)
 VOID FASTCALL
 WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
 {
-   for (;;)
-   {
-      Window = IntGetParent(Window);
-      if (!Window || IntIsDesktopWindow(Window))
-      {
-         IntSetFocusMessageQueue(NULL);
-         return;
-      }
-      if (IntSetForegroundWindow(Window))
-      {
-         return;
-      }
-   }
+  PWINDOW_OBJECT Child;
+  PWINDOW_OBJECT TabooWindow = Window;
+
+  for (;;)
+    {
+      if (NULL == Window || IntIsDesktopWindow(Window))
+        {
+          IntSetFocusMessageQueue(NULL);
+          return;
+        }
+      Window = Window->Parent;
+      ExAcquireFastMutex(&(Window->ChildrenListLock));
+      Child = Window->FirstChild;
+      while (NULL != Child)
+        {
+          if (Child != TabooWindow)
+            {
+              ExReleaseFastMutex(&(Window->ChildrenListLock));
+              if (IntSetForegroundWindow(Child))
+                {
+                  return;
+                }
+              ExAcquireFastMutex(&(Window->ChildrenListLock));
+            }
+          Child = Child->NextSibling;
+        }
+      ExReleaseFastMutex(&(Window->ChildrenListLock));
+    }
 }
 
 VOID STATIC FASTCALL
