@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.35 2004/02/26 00:33:09 sedwards Exp $
+# $Id: makefile,v 1.36 2004/02/26 16:16:18 navaraf Exp $
 
 PATH_TO_TOP = ../..
 
@@ -21,7 +21,6 @@ MISC_OBJECTS = \
 	misc/logon.o \
 	misc/shutdown.o \
 	misc/sysfunc.o \
-	misc/text.o
 
 REGISTRY_OBJECTS = \
 	reg/reg.o
