@@ -11,6 +11,7 @@
 
 #include <ddk/ntddk.h>
 #include <internal/string.h>
+#include <wstring.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -20,7 +21,7 @@
 /* FUNCTIONS ***************************************************************/
 
 BOOLEAN VFATReadSectors(IN PDEVICE_OBJECT pDeviceObject,
-			IN ULONG	DiskSector,
+            IN ULONG    DiskSector,
                         IN ULONG        SectorCount,
 			IN UCHAR*	Buffer)
 {
@@ -31,20 +32,14 @@ BOOLEAN VFATReadSectors(IN PDEVICE_OBJECT pDeviceObject,
     NTSTATUS        status;
     ULONG           sectorSize;
     PULONG          mbr;
-    int j;
    
    DPRINT("VFATReadSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
    	    pDeviceObject,DiskSector,Buffer);
 
-    SET_LARGE_INTEGER_HIGH_PART(sectorNumber, 0);
-    SET_LARGE_INTEGER_LOW_PART(sectorNumber, DiskSector * BLOCKSIZE);
-
-DPRINT("DiskSector:%ld BLKSZ:%ld sectorNumber:%ld:%ld\n", 
-       (unsigned long) DiskSector,
-       (unsigned long) BLOCKSIZE,
-       (unsigned long) GET_LARGE_INTEGER_HIGH_PART(sectorNumber),
-       (unsigned long) GET_LARGE_INTEGER_LOW_PART(sectorNumber));
-
+//    sectorNumber.HighPart = 0;
+//    sectorNumber.LowPart = DiskSector * BLOCKSIZE;
+    sectorNumber.LowPart=DiskSector<<9;
+    sectorNumber.HighPart=DiskSector>>23;
     KeInitializeEvent(&event, NotificationEvent, FALSE);
 
     sectorSize = BLOCKSIZE*SectorCount;
@@ -87,7 +82,9 @@ DPRINT("DiskSector:%ld BLKSZ:%ld sectorNumber:%ld:%ld\n",
     }
 
     if (!NT_SUCCESS(status)) {
-        DbgPrint("IO failed!!! Error code: %d(%x)\n", status, status);
+        DbgPrint("IO failed!!! VFATREadSectors : Error code: %x\n", status);
+        DbgPrint("(pDeviceObject %x, DiskSector %x, Buffer %x, offset 0x%x%x)\n",
+           pDeviceObject,DiskSector,Buffer,sectorNumber.HighPart,sectorNumber.LowPart);
         ExFreePool(mbr);
         return FALSE;
     }
@@ -101,7 +98,7 @@ DPRINT("DiskSector:%ld BLKSZ:%ld sectorNumber:%ld:%ld\n",
 }
 
 BOOLEAN VFATWriteSectors(IN PDEVICE_OBJECT pDeviceObject,
-		     	 IN ULONG	DiskSector,
+                 IN ULONG   DiskSector,
                          IN ULONG       SectorCount,
 			 IN UCHAR*	Buffer)
 {
@@ -112,13 +109,12 @@ BOOLEAN VFATWriteSectors(IN PDEVICE_OBJECT pDeviceObject,
     NTSTATUS        status;
     ULONG           sectorSize;
     PULONG          mbr;
-    int j;
    
    DPRINT("VFATWriteSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
    	    pDeviceObject,DiskSector,Buffer);
 
-    SET_LARGE_INTEGER_HIGH_PART(sectorNumber, 0);
-    SET_LARGE_INTEGER_LOW_PART(sectorNumber, DiskSector * BLOCKSIZE);
+    sectorNumber.HighPart = 0;
+    sectorNumber.LowPart = DiskSector * BLOCKSIZE;
 
     KeInitializeEvent(&event, NotificationEvent, FALSE);
 
@@ -162,7 +158,7 @@ BOOLEAN VFATWriteSectors(IN PDEVICE_OBJECT pDeviceObject,
     }
 
     if (!NT_SUCCESS(status)) {
-        DbgPrint("IO failed!!! Error code: %d(%x)\n", status, status);
+        DbgPrint("IO failed!!! VFATWriteSectors : Error code: %x\n", status);
         ExFreePool(mbr);
         return FALSE;
     }

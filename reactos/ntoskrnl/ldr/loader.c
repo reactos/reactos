@@ -107,7 +107,10 @@ LdrLoadDriver(PUNICODE_STRING Filename)
                              0,
                              NULL,
                              NULL);
-  Status = ZwOpenFile(&FileHandle, 0, &FileObjectAttributes, NULL, 0, 0);
+  Status = ZwOpenFile(&FileHandle, 
+                      FILE_ALL_ACCESS, 
+                      &FileObjectAttributes, 
+                      NULL, 0, 0);
   if (!NT_SUCCESS(Status))
     {
       return Status;

@@ -1,12 +1,5 @@
-BOOLEAN VFATReadSectors(IN PDEVICE_OBJECT pDeviceObject,
-			IN ULONG	DiskSector,
-                        IN ULONG        SectorCount,
-			IN UCHAR*	Buffer);
 
-BOOLEAN VFATWriteSectors(IN PDEVICE_OBJECT pDeviceObject,
-			 IN ULONG	DiskSector,
-                         IN ULONG        SectorCount,
-			 IN UCHAR*	Buffer);
+
 
 struct _BootSector { 
   unsigned char  magic0, res0, magic1;
@@ -45,9 +38,11 @@ struct _BootSector32 {
 typedef struct _BootSector BootSector;
 
 struct _FATDirEntry {
-  unsigned char  Filename[8], Ext[3], Attrib, Res[8];
+  unsigned char  Filename[8], Ext[3], Attrib, Res[2];
+  unsigned short CreationTime,CreationDate,AccessDate;
   unsigned short FirstClusterHigh;// higher
-  unsigned char Res2[4];
+  unsigned short UpdateTime;//time create/update
+  unsigned short UpdateDate;//date create/update
   unsigned short FirstCluster;
   unsigned long  FileSize;
 } __attribute__((packed));
@@ -108,3 +103,59 @@ typedef struct _SFsdFileControlBlock {
 } SFsdFCB, *PtrSFsdFCB;
 
 */
+#define FAT16 (1)
+#define FAT12 (2)
+#define FAT32 (3)
+
+typedef struct
+{
+   PDEVICE_OBJECT StorageDevice;
+   BootSector *Boot;
+   int rootDirectorySectors, FATStart, rootStart, dataStart;
+   int FATEntriesPerSector, FATUnit;
+   ULONG BytesPerCluster;
+   ULONG FatType;
+   unsigned char* FAT;
+} DEVICE_EXTENSION, *PDEVICE_EXTENSION;
+
+typedef struct
+{
+   FATDirEntry entry;
+   WCHAR ObjectName[251];// filename has 250 characters max
+   ULONG StartSector;
+   ULONG StartEntry;//for DirectoryControl
+} FCB, *PFCB;
+
+
+#define ENTRIES_PER_SECTOR (BLOCKSIZE / sizeof(FATDirEntry))
+
+
+
+// functions called by i/o manager :
+NTSTATUS DriverEntry(PDRIVER_OBJECT _DriverObject,PUNICODE_STRING RegistryPath);
+NTSTATUS FsdDirectoryControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS FsdRead(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS FsdWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS FsdCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS FsdClose(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS FsdFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS FsdQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+
+
+// internal functions in blockdev.c
+BOOLEAN VFATReadSectors(IN PDEVICE_OBJECT pDeviceObject,
+            IN ULONG   DiskSector,
+                        IN ULONG       SectorCount,
+			IN UCHAR*	Buffer);
+
+BOOLEAN VFATWriteSectors(IN PDEVICE_OBJECT pDeviceObject,
+             IN ULONG   DiskSector,
+                         IN ULONG        SectorCount,
+			 IN UCHAR*	Buffer);
+
+//internal functions in iface.c :
+NTSTATUS FsdGetStandardInformation(PFCB FCB, PDEVICE_OBJECT DeviceObject,
+                                   PFILE_STANDARD_INFORMATION StandardInfo);
+NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PFCB Fcb,
+          PFCB Parent, PWSTR FileToFind,ULONG *StartSector,ULONG *Entry);
+wchar_t * vfat_wcsncpy(wchar_t * dest, const wchar_t *src,size_t wcount);

@@ -164,4 +164,124 @@ __OUTS(l)
 	__inlc_p(port) : \
 	__inl_p(port))
 
+/*  HAL port mapped I/O functions  */
+#define READ_PORT_UCHAR(port) inb_p(port)
+#define READ_PORT_USHORT(port) inw_p(port)
+#define READ_PORT_ULONG(port) inl_p(port)
+#define READ_PORT_BUFFER_UCHAR(port, buffer, count) insb(port, buffer, count)
+#define READ_PORT_BUFFER_USHORT(port, buffer, count) insw(port, buffer, count)
+#define READ_PORT_BUFFER_ULONG(port, buffer, count) insl(port, buffer, count)
+#define WRITE_PORT_UCHAR(port, value) outb_p(port, value)
+#define WRITE_PORT_USHORT(port, value) outw_p(port, value)
+#define WRITE_PORT_ULONG(port, value) outl_p(port, value)
+#define WRITE_PORT_BUFFER_UCHAR(port, buffer, count) outsb(port, buffer, count)
+#define WRITE_PORT_BUFFER_USHORT(port, buffer, count) outsw(port, buffer, count)
+#define WRITE_PORT_BUFFER_ULONG(port, buffer, count) outsl(port, buffer, count)
+
+/*  HAL Memory mapped I/O functions  */
+/* FIXME: these ops should be 'lock' prefixed */
+extern inline unsigned char 
+READ_REGISTER_UCHAR(unsigned char *Register) 
+{
+  return *Register;
+}
+
+extern inline unsigned short 
+READ_REGISTER_USHORT(unsigned short *Register) 
+{
+  return *Register;
+}
+
+extern inline unsigned long 
+READ_REGISTER_ULONG(unsigned long *Register) 
+{
+  return *Register;
+}
+
+extern inline void 
+READ_REGISTER_BUFFER_UCHAR(unsigned char *Register, 
+                           unsigned char *Buffer, 
+                           unsigned long Count)
+{
+  while (Count--)
+    {
+      *Buffer++  = *Register++;
+    }
+}
+
+extern inline void 
+READ_REGISTER_BUFFER_USHORT(unsigned short *Register, 
+                            unsigned short *Buffer, 
+                            unsigned long  Count)
+{
+  while (Count--)
+    {
+      *Buffer++  = *Register++;
+    }
+}
+
+extern inline void 
+READ_REGISTER_BUFFER_ULONG(unsigned long *Register, 
+                           unsigned long *Buffer, 
+                           unsigned long Count)
+{
+  while (Count--)
+    {
+      *Buffer++  = *Register++;
+    }
+}
+
+extern inline void 
+WRITE_REGISTER_UCHAR(unsigned char *Register, unsigned char Value)
+{
+  *Register = Value;
+}
+
+extern inline void 
+WRITE_REGISTER_USHORT(unsigned short *Register, unsigned short Value)
+{
+  *Register = Value;
+}
+
+extern inline void 
+WRITE_REGISTER_ULONG(unsigned long *Register, unsigned long Value)
+{
+  *Register = Value;
+}
+
+extern inline void 
+WRITE_REGISTER_BUFFER_UCHAR(unsigned char *Register, 
+                            unsigned char *Buffer, 
+                            unsigned long Count)
+{
+  while (Count--)
+    {
+      *Buffer++  = *Register++;
+    }
+}
+
+extern inline void
+WRITE_REGISTER_BUFFER_USHORT(unsigned short *Register, 
+                             unsigned short *Buffer, 
+                             unsigned long Count)
+{
+  while (Count--)
+    {
+      *Buffer++  = *Register++;
+    }
+}
+
+extern inline void 
+WRITE_REGISTER_BUFFER_ULONG(unsigned long *Register, 
+                            unsigned long *Buffer, 
+                            unsigned long Count)
+{
+  while (Count--)
+    {
+      *Buffer++  = *Register++;
+    }
+}
+
 #endif
+
+

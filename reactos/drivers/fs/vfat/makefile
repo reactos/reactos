@@ -3,7 +3,10 @@
 %.o: %.asm
 	$(NASM) $(NFLAGS) $< -o $@
 
-all: blockdev.o iface.o
-	$(LD) iface.o blockdev.o -r -o vfatfsd.o 
+OBJECTS= blockdev.o iface.o dir.o
+
+all: $(OBJECTS)
+	$(LD) $(OBJECTS) -r -o vfatfsd.o 
+	$(NM) --numeric-sort vfatfsd.o > vfatfsd.sym
 
 include ../../../rules.mak

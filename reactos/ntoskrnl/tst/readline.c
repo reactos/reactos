@@ -28,7 +28,9 @@ static unsigned char TstReadLineReadChar(VOID)
    KEY_EVENT_RECORD key[2];
    IO_STATUS_BLOCK IoStatusBlock;
    
-   ZwReadFile(KeyboardHandle,
+   key[0].AsciiChar=0;
+   while(!key[0].AsciiChar)
+      ZwReadFile(KeyboardHandle,
 	      NULL,
 	      NULL,
 	      NULL,
@@ -37,7 +39,6 @@ static unsigned char TstReadLineReadChar(VOID)
 	      sizeof(KEY_EVENT_RECORD)*2,
 	      0,
 	      0);
-//   DbgPrint("%c",key[0].AsciiChar);
    return(key[0].AsciiChar);
 }
 
@@ -50,7 +51,6 @@ VOID TstReadLine(ULONG Length, PCHAR Buffer)
    for (i=0;i<Length;i++)
      {
 	tmp = TstReadLineReadChar();
-//	DbgPrint("%x %x ",tmp,'\n');
 	switch (tmp)
 	  {
 	   case 0xd:
