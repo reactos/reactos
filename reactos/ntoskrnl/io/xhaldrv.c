@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.27 2003/03/01 00:00:32 ekohl Exp $
+/* $Id: xhaldrv.c,v 1.28 2003/03/04 21:58:05 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -54,6 +54,12 @@ typedef struct _MBR
   PARTITION Partition[PARTITION_TBL_SIZE];	/* 0x1BE */
   USHORT Magic;					/* 0x1FE */
 } PACKED MBR, *PMBR;
+
+typedef enum _DISK_MANAGER
+{
+  NoDiskManager,
+  OntrackDiskManager
+} DISK_MANAGER;
 
 
 /* FUNCTIONS *****************************************************************/
@@ -620,6 +626,8 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
   ULONG Count = 0;
   ULONG Number = 1;
   BOOLEAN ExtendedFound = FALSE;
+  PVOID MbrBuffer;
+  DISK_MANAGER DiskManager = NoDiskManager;
 
   DPRINT("xHalIoReadPartitionTable(%p %lu %x %p)\n",
 	 DeviceObject,
@@ -628,6 +636,18 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 	 PartitionBuffer);
 
   *PartitionBuffer = NULL;
+
+  /* Check for 'Ontrack Disk Manager' */
+  xHalExamineMBR(DeviceObject,
+		 SectorSize,
+		 0x55,
+		 &MbrBuffer);
+  if (MbrBuffer != NULL)
+    {
+      DPRINT1("Found 'Ontrack Disk Manager'\n");
+      DiskManager = OntrackDiskManager;
+      ExFreePool(MbrBuffer);
+    }
 
   SectorBuffer = (PUCHAR)ExAllocatePool(PagedPool,
 					SectorSize);
@@ -652,6 +672,9 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 
   do
     {
+      if (DiskManager == OntrackDiskManager)
+	PartitionOffset.QuadPart += (63 * 512);
+
       KeInitializeEvent(&Event,
 			NotificationEvent,
 			FALSE);
