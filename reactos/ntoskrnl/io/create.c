@@ -209,6 +209,8 @@ NTSTATUS ZwCreateFile(PHANDLE FileHandle,
    StackLoc->Control = 0;
    StackLoc->DeviceObject = DeviceObject;
    StackLoc->FileObject=FileObject;
+   StackLoc->Parameters.Create.Options=CreateOptions&FILE_VALID_OPTION_FLAGS;
+   StackLoc->Parameters.Create.Options|=CreateDisposition<<24;
    Status = IoCallDriver(DeviceObject,Irp);
    if (Status==STATUS_PENDING)
      {
