@@ -5,3 +5,6 @@ Release
 *.dll
 *.gch
 *.h.pch
+notifyhook.map
+notifyhook.sym
+notifyhook.coff
