@@ -25,6 +25,7 @@ extern ULONG_PTR FirstKrnlPhysAddr;
 extern ULONG_PTR LastKrnlPhysAddr;
 extern ULONG_PTR LastKernelAddress;
 extern LOADER_MODULE KeLoaderModules[64];
+extern PRTL_MESSAGE_RESOURCE_DATA KiBugCodeMessages;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -119,7 +120,7 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
                                       &ObjectAttributes);
     
     /* Free the String */
-    RtlFreeUnicodeString (&ArcName);
+    RtlFreeUnicodeString(&ArcName);
     
     /* Check for Success */
     if (!NT_SUCCESS(Status)) {
@@ -373,6 +374,9 @@ ExpInitializeExecutive(VOID)
     LARGE_INTEGER Timeout;
     HANDLE ProcessHandle;
     HANDLE ThreadHandle;
+    PRTL_MESSAGE_RESOURCE_DATA BugCheckData;
+    LDR_RESOURCE_INFO ResourceInfo;
+    PIMAGE_RESOURCE_DATA_ENTRY ResourceDataEntry;
     NTSTATUS Status;
 
     /* Check if the structures match the ASM offset constants */
@@ -409,6 +413,36 @@ ExpInitializeExecutive(VOID)
 
     /* Bring back the IRQL to Passive */
     KeLowerIrql(PASSIVE_LEVEL);
+    
+    /* Cache the Bugcheck Message Strings. Prepare the Lookup Data */
+    ResourceInfo.Type = 11;
+    ResourceInfo.Name = 1;
+    ResourceInfo.Language = 9;
+    
+    /* Do the lookup. Note that NTOSKRNL must be the first module! */
+    Status = LdrFindResource_U((PVOID)KeLoaderModules[0].ModStart,
+                               &ResourceInfo,
+                               RESOURCE_DATA_LEVEL,
+                               &ResourceDataEntry);
+    
+    /* Make sure it worked */
+    if (NT_SUCCESS(Status)) {
+        
+        DPRINT1("Found Bugcheck Resource Data!\n");
+        
+        /* Now actually get a pointer to it */
+        Status = LdrAccessResource((PVOID)KeLoaderModules[0].ModStart,
+                                   ResourceDataEntry,
+                                   (PVOID*)&BugCheckData,
+                                   NULL);
+        
+        /* Make sure it worked */
+        if (NT_SUCCESS(Status)) {
+
+            DPRINT1("Got Pointer to Bugcheck Resource Data!\n");
+            KiBugCodeMessages = BugCheckData;
+        }
+    }
     
     /* Load basic Security for other Managers */
     if (!SeInit1()) KEBUGCHECK(SECURITY_INITIALIZATION_FAILED);

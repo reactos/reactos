@@ -767,8 +767,6 @@ KiIsObjectSignaled(PDISPATCHER_HEADER Object,
     /* Mutants are...well...mutants! */
    if (Object->Type == MutantObject) {
 
-        ASSERT(hdr->SignalState <= 1);
-
         /* 
          * Because Cutler hates mutants, they are actually signaled if the Signal State is <= 0
          * Well, only if they are recursivly acquired (i.e if we own it right now).

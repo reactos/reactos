@@ -995,6 +995,14 @@ Language=English
 WORKER_THREAD_RETURNED_AT_BAD_IRQL
 .
 
+MessageId=0xE2
+Severity=Success
+Facility=System
+SymbolicName=MANUALLY_INITIATED_CRASH
+Language=English
+MANUALLY_INITIATED_CRASH
+.
+
 MessageId=0xFA
 Severity=Success
 Facility=System

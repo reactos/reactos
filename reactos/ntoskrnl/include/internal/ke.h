@@ -220,7 +220,7 @@ VOID KeInitDpc(struct _KPCR* Pcr);
 VOID KeInitDispatcher(VOID);
 VOID inline FASTCALL KeInitializeDispatcher(VOID);
 VOID KiInitializeSystemClock(VOID);
-VOID KeInitializeBugCheck(VOID);
+VOID STDCALL KiInitializeBugCheckCallbacks(VOID);
 VOID Phase1Initialization(PVOID Context);
 
 VOID KeInit1(PCHAR CommandLine, PULONG LastKernelAddress);

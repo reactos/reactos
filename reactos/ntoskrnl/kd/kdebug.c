@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -118,7 +118,6 @@ KdInitSystem(ULONG BootPhase,
 	      if (!_strnicmp(p2, "SCREEN", 6) && BootPhase > 0)
 		{
 		  p2 += 6;
-		  KdDebuggerEnabled = TRUE;
 		  KdDebugState |= KD_DEBUG_SCREEN;
 		}
 	      else if (!_strnicmp(p2, "BOCHS", 5) && BootPhase == 0)
@@ -150,7 +149,7 @@ KdInitSystem(ULONG BootPhase,
 		  Value = (ULONG)atol(p2);
 		  if (Value > 0 && Value < 5)
 		    {
-		      KdDebuggerEnabled = TRUE;
+          //KdDebuggerEnabled = TRUE;
 			  KdDebugState |= KD_DEBUG_SERIAL;
 		      LogPortInfo.ComPort = Value;
 		    }
@@ -158,7 +157,6 @@ KdInitSystem(ULONG BootPhase,
 	      else if (!_strnicmp(p2, "BOOTLOG", 4) && BootPhase > 0)
 		{
 		  p2 += 4;
-		  KdDebuggerEnabled = TRUE;
 		  KdDebugState |= KD_DEBUG_BOOTLOG;
 		}
 	      else if (!_strnicmp(p2, "MDA", 3) && BootPhase > 0)
@@ -253,8 +251,6 @@ KdInitSystem(ULONG BootPhase,
     }
 
   /* Perform any initialization nescessary */
-  if (KdDebuggerEnabled == TRUE)
-    {
       if (KdDebugState & KD_DEBUG_GDB && BootPhase == 0)
 	    KdPortInitializeEx(&GdbPortInfo, 0, 0);
 
@@ -266,7 +262,6 @@ KdInitSystem(ULONG BootPhase,
 
       if (KdDebugState & KD_DEBUG_MDA && BootPhase > 0)
 	    KdInitializeMda();
-    }
 }
 
 
@@ -298,8 +293,6 @@ VOID INIT_FUNCTION
 KdInit3(VOID)
 {
   /* Print some information */
-  if (KdDebuggerEnabled == TRUE)
-    {
       if (KdDebugState & KD_DEBUG_GDB)
 	    PrintString("\n   GDB debugging enabled. COM%ld %ld Baud\n\n",
 			GdbPortInfo.ComPort, GdbPortInfo.BaudRate);
@@ -321,7 +314,6 @@ KdInit3(VOID)
 	    PrintString("\n   File log debugging enabled\n\n");
       if (KdDebugState & KD_DEBUG_MDA)
 	    PrintString("\n   MDA debugging enabled\n\n");
-    }
 }
 
 
@@ -455,7 +447,11 @@ KdSystemDebugControl(ULONG Code)
   /* B - Bug check the system. */
   else if (Code == 1)
     {
-      KEBUGCHECK(0xDEADDEAD);
+      /* FIXME: This is needed to allow Int10 to attach to csrss until
+       * bugchecks are done properly with Inbv, which i'll implement soon -- Alex
+       */
+      KeGetCurrentKPCR()->PrcbData.DpcRoutineActive = FALSE;
+      KEBUGCHECK(MANUALLY_INITIATED_CRASH);
     }
   /* 
    * C -  Dump statistics about the distribution of tagged blocks in 

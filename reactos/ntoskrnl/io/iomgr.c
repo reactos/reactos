@@ -641,7 +641,7 @@ IoInit3(VOID)
 #endif /* KDBG */
 
     /* I/O is now setup for disk access, so start the debugging logger thread. */
-    if ((KdDebuggerEnabled == TRUE) && (KdDebugState & KD_DEBUG_BOOTLOG)) DebugLogInit2();
+    if (KdDebugState & KD_DEBUG_BOOTLOG) DebugLogInit2();
 
     /* Load services for devices found by PnP manager */
     IopInitializePnpServices(IopRootDeviceNode, FALSE);

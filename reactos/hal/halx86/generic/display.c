@@ -502,7 +502,7 @@ HalRestoreFont(VOID)
       HalWriteGc(0x05, 0x00); /* Write mode 0; read mode 0. */
       HalWriteGc(0x06, 0x05); /* Set graphics. */
       memcpy(GraphVideoBuffer, SavedTextFont[i], FONT_AMOUNT);
-    }
+  }
 
   HalBlankScreen(TRUE);
 
@@ -518,6 +518,7 @@ HalRestoreFont(VOID)
   HalWriteSeq(0x02, Seq2);
   HalWriteSeq(0x04, Seq4);
 }
+
 
 VOID STATIC
 HalRestoreMode(VOID)
@@ -628,7 +629,6 @@ HalInitializeDisplay (PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 }
 
-
 /* PUBLIC FUNCTIONS *********************************************************/
 
 VOID STDCALL
@@ -637,6 +637,7 @@ HalReleaseDisplayOwnership(VOID)
  * FUNCTION: Release ownership of display back to HAL
  */
 {
+
   if (HalResetDisplayParameters == NULL)
     return;
 
@@ -645,12 +646,14 @@ HalReleaseDisplayOwnership(VOID)
 
   if (!HalResetDisplayParameters(SizeX, SizeY))
     {
+
       HalRestoreMode();
       HalRestoreFont();
-      HalRestorePalette();
+      HalRestorePalette();                
     }
   HalOwnsDisplay = TRUE;
   HalClearDisplay(CHAR_ATTRIBUTE);
+
 }
 
 

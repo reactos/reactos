@@ -216,7 +216,12 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
                 /* Exit if we're continuing */
                 if (Action == kdContinue) return;
 #endif
-                KEBUGCHECKWITHTF(KMODE_EXCEPTION_NOT_HANDLED, 0, 0, 0, 0, Tf);
+                KEBUGCHECKWITHTF(KMODE_EXCEPTION_NOT_HANDLED, 
+                                 ExceptionRecord->ExceptionCode, 
+                                 (ULONG)ExceptionRecord->ExceptionAddress,
+                                 ExceptionRecord->ExceptionInformation[0],
+                                 ExceptionRecord->ExceptionInformation[1],
+                                 Tf);
             }
         }
     }

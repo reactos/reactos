@@ -57,7 +57,7 @@ clean:
 	@-$(RM) setupldr.sys
 	@-$(RM) setupldr.map
 	@$(MAKE) --no-print-directory -C $(FREELDR_TOOLS_PATH)
-	@echo Clean ALL done.
+	@echo freeldr: Clean ALL done.
 
 #############################################
 
@@ -259,11 +259,11 @@ ALL_OBJS = $(COMMON_OBJS) \
 
 
 all : freeldr.sys setupldr.sys
-	@echo Make ALL done.
+	@echo freeldr: Make ALL done.
 
 
 freeldr.sys : $(ALL_OBJS) $(PATH_TO_TOP)/dk/w32/lib/librossym.a
-	@echo ===================================================== LINKING $@
+	@echo freeldr: LINKING $@
 	@$(LD) $(LFLAGS) -o freeldr.exe $(F_OBJS) $(PATH_TO_TOP)/dk/w32/lib/librossym.a
 ifeq ($(FULL_MAP),yes)
 	@$(OBJDUMP) -d -S freeldr.exe > freeldr.map
@@ -274,7 +274,7 @@ endif
 
 
 setupldr.sys : $(ALL_OBJS)
-	@echo ===================================================== LINKING $@
+	@echo freeldr: LINKING $@
 	@$(LD) $(LFLAGS) -Map setupldr.map -o setupldr.exe $(S_OBJS)
 ifeq ($(FULL_MAP),yes)
 	@$(OBJDUMP) -d -S setupldr.exe > setupldr.map
@@ -285,15 +285,15 @@ endif
 
 
 %.o :: %.c
-	@echo ===================================================== Compiling $*
+	@echo freeldr: Compiling $*
 	@$(CC) $(CFLAGS) -o $@ -c $<
 	@$(DEPTOOL) $*.d
 
 %.o :: %.S
-	@echo ===================================================== Assembling $*
+	@echo freeldr: Assembling $*
 	@$(CC) $(CFLAGS) -o $@ -c $<
 	@$(DEPTOOL) $*.d
 
 %.o :: %.asm
-	@echo ===================================================== Assembling $*
+	@echo freeldr: Assembling $*
 	@$(NASM_CMD) $(NASMFLAGS) -o $@ $<

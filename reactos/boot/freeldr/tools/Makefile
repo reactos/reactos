@@ -25,16 +25,16 @@ TOOLS	=	deptool$(EXE_POSTFIX)	\
 			bin2c$(EXE_POSTFIX)
 
 all : $(TOOLS)
-	@echo Tools are up to date.
+	@echo freeldr: Tools are up to date.
 
 % :: all
 
 %$(EXE_POSTFIX): %.c
-	@echo ===================================================== Compiling $*
+	@echo freeldr: Compiling $*
 	@$(HOST_CC) -Wall -O3 -o $@ $<
 
 
 .PHONY : clean
 clean:
 	@-$(RM) $(TOOLS)
-	@echo Clean ALL done.
+	@echo freeldr: Clean ALL done.

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// Deutsch (Austria) 
+// Deutsch (Austria)
 // resources by Klemens Friedl   frik85 at hotmail dot com  http://www.reactos.net.tc
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
@@ -166,7 +166,7 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Info über Task-Manager"
 FONT 8, "Tahoma"
 BEGIN
-    CONTROL         "Task Manager v1.0\nCopyright (C) 1999 - 2001\nby Brian Palmer (brianp@reactos.org)",
+    CONTROL         "Task Manager v1.0\nCopyright (C) 1999 - 2001\nvon Brian Palmer (brianp@reactos.org)",
                     IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,53,28,
                     122,26
     DEFPUSHBUTTON   "OK",IDOK,183,189,44,14,WS_GROUP
@@ -183,7 +183,7 @@ CAPTION "Task-Manager"
 MENU IDR_TASKMANAGER
 FONT 8, "Tahoma"
 BEGIN
-    CONTROL         
+    CONTROL
 "Tab1",IDC_TAB,"SysTabControl32",WS_TABSTOP,3,3,257,228
 END
 
@@ -192,7 +192,7 @@ STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "Tahoma"
 BEGIN
     CONTROL         "List2",IDC_APPLIST,"SysListView32",LVS_REPORT |
-                    LVS_SHOWSELALWAYS | WS_BORDER | 
+                    LVS_SHOWSELALWAYS | WS_BORDER |
 WS_TABSTOP,7,7,233,177
     PUSHBUTTON      "&Neuer Task...",IDC_NEWTASK,187,189,53,14
     PUSHBUTTON      "&Wechseln zu",IDC_SWITCHTO,131,189,53,14,WS_DISABLED
@@ -203,7 +203,7 @@ IDD_PROCESS_PAGE DIALOG DISCARDABLE  0, 0, 247, 210
 STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "Tahoma"
 BEGIN
-    CONTROL         "List2",IDC_PROCESSLIST,"SysListView32",LVS_REPORT 
+    CONTROL         "List2",IDC_PROCESSLIST,"SysListView32",LVS_REPORT
 |
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_OWNERDATA |
                     WS_BORDER | WS_TABSTOP,7,7,233,177
@@ -246,7 +246,7 @@ BEGIN
     LTEXT           "Systemcache",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,137,149,46,8 //46
     EDITTEXT        IDC_PHYSICAL_MEMORY_TOTAL,185,131,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
-    EDITTEXT        IDC_PHYSICAL_MEMORY_AVAILABLE,185,140,48,8,ES_RIGHT 
+    EDITTEXT        IDC_PHYSICAL_MEMORY_AVAILABLE,185,140,48,8,ES_RIGHT
 |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
     EDITTEXT        IDC_PHYSICAL_MEMORY_SYSTEM_CACHE,185,149,48,8,ES_RIGHT |
@@ -278,7 +278,7 @@ CAPTION "Debug-Kanäle"
 FONT 8, "Tahoma"
 BEGIN
     CONTROL         "List2",IDC_DEBUG_CHANNELS_LIST,"SysListView32",LVS_REPORT |
-                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | 
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER |
 WS_TABSTOP |
 		    LVS_SORTASCENDING,7,7,233,177
     PUSHBUTTON      "Schließen",IDOK,171,189,69,14
@@ -369,7 +369,7 @@ BEGIN
     LTEXT           "Wählen Sie die Spalten aus, die auf der Registerkarte Prozesse angezeigt werden sollen.",
                     IDC_STATIC,7,7,221,17 //181
     CONTROL         "&Name",IDC_IMAGENAME,"Button",BS_AUTOCHECKBOX |
-                    WS_DISABLED | WS_TABSTOP,7,28,56,10 
+                    WS_DISABLED | WS_TABSTOP,7,28,56,10
     CONTROL         "&PID (Prozess-ID)",IDC_PID,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,39,88,10
     CONTROL         "&CPU-Auslastung",IDC_CPUUSAGE,"Button",BS_AUTOCHECKBOX |
@@ -557,12 +557,12 @@ BEGIN
         BLOCK "040904b0"
         BEGIN
             VALUE "CompanyName", "Brian Palmer\0"
-            VALUE "FileDescription", "Task Manager by Brian Palmer\0"
+            VALUE "FileDescription", "Task Manager von Brian Palmer\0"
             VALUE "FileVersion", "1.0.0.1\0"
             VALUE "InternalName", "taskmgr\0"
             VALUE "LegalCopyright", "Copyright © Brian Palmer 2000\0"
             VALUE "OriginalFilename", "taskmgr.exe\0"
-            VALUE "ProductName", "Task Manager by Brian Palmer\0"
+            VALUE "ProductName", "Task Manager von Brian Palmer\0"
             VALUE "ProductVersion", "1.0.0.1\0"
         END
     END
@@ -649,5 +649,5 @@ BEGIN
     IDS_LICENSE             "Dieses Programm ist kostenlos; Sie können es frei verteilen mit od. ohne Änderungen unter der GNU Lesser General Public License wie es von der Free Software Foundation veröffentlicht wurde; entweder Version 2.1 der Lizenz, oder eine spätere Version (ihrer Wahl).\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA."
 END
 
-#endif    // Deutsch (Austria) resources by Klemens Friedl 
+#endif    // Deutsch (Austria) resources by Klemens Friedl
 /////////////////////////////////////////////////////////////////////////////

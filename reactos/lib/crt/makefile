@@ -274,7 +274,9 @@ STDIO_OBJECTS = \
 	stdio/fileno.o \
 	stdio/flsbuf.o \
 	stdio/fopen.o \
+	stdio/wfopen.o \
 	stdio/fprintf.o \
+	stdio/fwprintf.o \
 	stdio/fputc.o \
 	stdio/fputchar.o \
 	stdio/fputs.o \

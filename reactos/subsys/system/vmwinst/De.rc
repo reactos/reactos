@@ -11,7 +11,7 @@ END
 
 IDD_INSERT_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Video Treiber Installation"
+CAPTION "Grafikreiberinstallation"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
   LTEXT "ReactOS wird nicht mit dem VMware(r) SVGA Treiber ausgeliefert.\n\nGehen Sie bitte zu  'VM' in der Menüleiste von VMware(r) Workstation und wählen Sie 'VMware Tools installieren...'\n\n\nKlicken Sie auf 'Weiter' um fortzufahren, ansonsten auf 'Abbrechen'",-1,25,25,225,85
@@ -19,7 +19,7 @@ END
 
 IDD_INSTALLING_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Video Driver Installation"
+CAPTION "Grafikreiberinstallation"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
   LTEXT "{STATUS}",IDC_INSTALLINGSTATUS,25,68,225,8

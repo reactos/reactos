@@ -25,7 +25,7 @@ VOID PsTerminateCurrentThread(NTSTATUS ExitStatus);
  * @implemented NT4
  *
  *     The KeEnterCriticalRegion routine temporarily disables the delivery of 
- *      normal kernel APCs; special kernel-mode APCs are still delivered.
+ *     normal kernel APCs; special kernel-mode APCs are still delivered.
  *
  * Params:
  *     None.

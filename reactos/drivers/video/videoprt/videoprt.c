@@ -492,7 +492,7 @@ IntVideoPortFindAdapter(
 
 VOID FASTCALL 
 IntAttachToCSRSS(PEPROCESS *CallingProcess, PEPROCESS *PrevAttachedProcess) 
-{ 
+{    
    *CallingProcess = PsGetCurrentProcess(); 
    if (*CallingProcess != Csrss) 
    { 
