@@ -9,7 +9,7 @@ TARGET_APPTYPE = native
 
 TARGET_NAME = csrss
 
-TARGET_SDKLIBS = rosrtl.a ntdll.a 
+TARGET_SDKLIBS = rosrtl.a ntdll.a smdll.a
 
 TARGET_INSTALLDIR = system32
 

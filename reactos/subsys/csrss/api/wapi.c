@@ -178,7 +178,7 @@ ServerApiPortThead(PVOID PortHandle)
 	Status = NtAcceptConnectPort(&ServerPort,
 				     PortHandle,
 				     NULL,
-				     1,
+				     TRUE,
 				     0,
 				     &LpcRead);
 	if (!NT_SUCCESS(Status))
