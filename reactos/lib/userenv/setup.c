@@ -1,4 +1,4 @@
-/* $Id: setup.c,v 1.1 2004/01/09 19:52:01 ekohl Exp $ 
+/* $Id: setup.c,v 1.2 2004/01/13 12:34:09 ekohl Exp $ 
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -9,11 +9,12 @@
 
 #include <windows.h>
 #include <string.h>
+#include <stdarg.h>
+#include <stdio.h>
 
 #include <userenv.h>
 
 #include "internal.h"
-
 
 typedef struct _DIRDATA
 {
@@ -33,6 +34,7 @@ DefaultUserDirectories[] =
   {TRUE,  L"Recent"},
   {FALSE, L"Start Menu"},
   {FALSE, L"Start Menu\\Programs"},
+  {FALSE, L"Start Menu\\Programs\\Startup"},
 
   {FALSE, NULL}
 };
@@ -47,7 +49,9 @@ AllUsersDirectories[] =
   {FALSE, L"My Documents"},
   {FALSE, L"Start Menu"},
   {FALSE, L"Start Menu\\Programs"},
-
+  {FALSE, L"Start Menu\\Programs\\Startup"},
+  {FALSE, L"Start Menu\\Programs\\Administrative Tools"},
+  {TRUE,  L"Templates"},
   {FALSE, NULL}
 };
 
@@ -69,101 +73,226 @@ AppendBackslash(LPWSTR String)
 }
 
 
+void
+DebugPrint(char* fmt,...)
+{
+  char buffer[512];
+  va_list ap;
+
+  va_start(ap, fmt);
+  vsprintf(buffer, fmt, ap);
+  va_end(ap);
+
+  OutputDebugStringA(buffer);
+}
+
+
 BOOL WINAPI
 InitializeProfiles (VOID)
 {
-  WCHAR SystemRoot[MAX_PATH];
-  WCHAR Path[MAX_PATH];
-  LPWSTR Postfix;
-  LPWSTR Ptr;
-  PDIRDATA DirData;
+  WCHAR szProfilesPath[MAX_PATH];
+  WCHAR szProfilePath[MAX_PATH];
+  WCHAR szSystemRoot[MAX_PATH];
+  WCHAR szBuffer[MAX_PATH];
+  LPWSTR lpszPostfix;
+  LPWSTR lpszPtr;
+  DWORD dwLength;
+  PDIRDATA lpDirData;
+
+  HKEY hKey;
+
+  if (RegOpenKeyExW (HKEY_LOCAL_MACHINE,
+		     L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
+		     0,
+		     KEY_ALL_ACCESS,
+		     &hKey))
+    {
+      DPRINT1("Error: %lu\n", GetLastError());
+      return FALSE;
+    }
+
+  /* Get profiles path */
+  dwLength = MAX_PATH * sizeof(WCHAR);
+  if (RegQueryValueExW (hKey,
+			L"ProfilesDirectory",
+			NULL,
+			NULL,
+			(LPBYTE)szBuffer,
+			&dwLength))
+    {
+      DPRINT1("Error: %lu\n", GetLastError());
+      RegCloseKey (hKey);
+      return FALSE;
+    }
+
+  /* Expand it */
+  if (!ExpandEnvironmentStringsW (szBuffer,
+				  szProfilesPath,
+				  MAX_PATH))
+    {
+      DPRINT1("Error: %lu\n", GetLastError());
+      RegCloseKey (hKey);
+      return FALSE;
+    }
+
+  /* Create profiles directory */
+  if (!CreateDirectoryW (szProfilesPath, NULL))
+    {
+      if (GetLastError () != ERROR_ALREADY_EXISTS)
+	{
+	  DPRINT1("Error: %lu\n", GetLastError());
+	  RegCloseKey (hKey);
+	  return FALSE;
+	}
+    }
 
   /* Build profile name postfix */
   if (!ExpandEnvironmentStringsW (L"%SystemRoot%",
-				  SystemRoot,
+				  szSystemRoot,
 				  MAX_PATH))
-    return FALSE;
-
-  SystemRoot[2] = L'.';
-  Postfix = &SystemRoot[2];
-  Ptr = Postfix;
-  while (*Ptr != (WCHAR)0)
     {
-      if (*Ptr == L'\\')
-	*Ptr = '_';
-      Ptr++;
+      DPRINT1("Error: %lu\n", GetLastError());
+      RegCloseKey (hKey);
+      return FALSE;
     }
-  _wcsupr (Postfix);
 
-  /* Create 'Documents and Settings' directory */
-  if (!ExpandEnvironmentStringsW (L"%SystemDrive%\\Documents and Settings",
-				  Path,
-				  MAX_PATH))
-    return FALSE;
+  /* Get name postfix */
+  szSystemRoot[2] = L'.';
+  lpszPostfix = &szSystemRoot[2];
+  lpszPtr = lpszPostfix;
+  while (*lpszPtr != (WCHAR)0)
+    {
+      if (*lpszPtr == L'\\')
+	*lpszPtr = '_';
+      lpszPtr++;
+    }
+  _wcsupr (lpszPostfix);
 
-  if (!CreateDirectoryW (Path, NULL))
-    return FALSE;
+  /* Set 'DefaultUserProfile' value */
+  wcscpy (szBuffer, L"Default User");
+  wcscat (szBuffer, lpszPostfix);
 
-  /* Create 'Default User' directory */
-  if (!ExpandEnvironmentStringsW (L"%SystemDrive%\\Documents and Settings\\Default User",
-				  Path,
-				  MAX_PATH))
-    return FALSE;
+  dwLength = (wcslen (szBuffer) + 1) * sizeof(WCHAR);
+  if (RegSetValueExW (hKey,
+		      L"DefaultUserProfile",
+		      0,
+		      REG_SZ,
+		      (LPBYTE)szBuffer,
+		      dwLength))
+    {
+      DPRINT1("Error: %lu\n", GetLastError());
+      RegCloseKey (hKey);
+      return FALSE;
+    }
 
-  wcscat (Path, Postfix);
-
-  if (!CreateDirectoryW (Path, NULL))
-    return FALSE;
+  /* Create 'Default User' profile directory */
+  wcscpy (szProfilePath, szProfilesPath);
+  wcscat (szProfilePath, L"\\");
+  wcscat (szProfilePath, szBuffer);
+  if (!CreateDirectoryW (szProfilePath, NULL))
+    {
+      if (GetLastError () != ERROR_ALREADY_EXISTS)
+	{
+	  DPRINT1("Error: %lu\n", GetLastError());
+	  RegCloseKey (hKey);
+	  return FALSE;
+	}
+    }
 
   /* Set current user profile */
-  SetEnvironmentVariableW (L"USERPROFILE", Path);
+  SetEnvironmentVariableW (L"USERPROFILE", szProfilePath);
 
-  /* Create default user subdirectories */
-  Ptr = AppendBackslash (Path);
-  DirData = &DefaultUserDirectories[0];
-  while (DirData->DirName != NULL)
+  /* Create 'Default User' subdirectories */
+  /* FIXME: Get these paths from the registry */
+  lpszPtr = AppendBackslash (szProfilePath);
+  lpDirData = &DefaultUserDirectories[0];
+  while (lpDirData->DirName != NULL)
     {
-      wcscpy (Ptr, DirData->DirName);
+      wcscpy (lpszPtr, lpDirData->DirName);
 
-      if (!CreateDirectoryW (Path, NULL))
-	return FALSE;
-
-      if (DirData->Hidden == TRUE)
+      if (!CreateDirectoryW (szProfilePath, NULL))
 	{
-	  SetFileAttributesW (Path, FILE_ATTRIBUTE_HIDDEN);
+	  if (GetLastError () != ERROR_ALREADY_EXISTS)
+	    {
+	      DPRINT1("Error: %lu\n", GetLastError());
+	      RegCloseKey (hKey);
+	      return FALSE;
+	    }
 	}
 
-      DirData++;
-    }
-
-  /* Create 'All Users' directory */
-  if (!ExpandEnvironmentStringsW (L"%SystemDrive%\\Documents and Settings\\All Users",
-				  Path,
-				  MAX_PATH))
-    return FALSE;
-
-  wcscat (Path, Postfix);
-
-  if (!CreateDirectoryW (Path, NULL))
-    return FALSE;
-
-  /* Create all users subdirectories */
-  Ptr = AppendBackslash (Path);
-  DirData = &AllUsersDirectories[0];
-  while (DirData->DirName != NULL)
-    {
-      wcscpy (Ptr, DirData->DirName);
-
-      if (!CreateDirectoryW (Path, NULL))
-	return FALSE;
-
-      if (DirData->Hidden == TRUE)
+      if (lpDirData->Hidden == TRUE)
 	{
-	  SetFileAttributesW (Path, FILE_ATTRIBUTE_HIDDEN);
+	  SetFileAttributesW (szProfilePath,
+			      FILE_ATTRIBUTE_HIDDEN);
 	}
 
-      DirData++;
+      lpDirData++;
     }
+
+  /* Set 'AllUsersProfile' value */
+  wcscpy (szBuffer, L"All Users");
+  wcscat (szBuffer, lpszPostfix);
+
+  dwLength = (wcslen (szBuffer) + 1) * sizeof(WCHAR);
+  if (RegSetValueExW (hKey,
+		      L"AllUsersProfile",
+		      0,
+		      REG_SZ,
+		      (LPBYTE)szBuffer,
+		      dwLength))
+    {
+      DPRINT1("Error: %lu\n", GetLastError());
+      RegCloseKey (hKey);
+      return FALSE;
+    }
+
+  /* Create 'All Users' profile directory */
+  wcscpy (szProfilePath, szProfilesPath);
+  wcscat (szProfilePath, L"\\");
+  wcscat (szProfilePath, szBuffer);
+  if (!CreateDirectoryW (szProfilePath, NULL))
+    {
+      if (GetLastError () != ERROR_ALREADY_EXISTS)
+	{
+	  DPRINT1("Error: %lu\n", GetLastError());
+	  RegCloseKey (hKey);
+	  return FALSE;
+	}
+    }
+
+  /* Set 'All Users' profile */
+  SetEnvironmentVariableW (L"ALLUSERSPROFILE", szProfilePath);
+
+  /* Create 'All Users' subdirectories */
+  /* FIXME: Take these paths from the registry */
+  lpszPtr = AppendBackslash (szProfilePath);
+  lpDirData = &AllUsersDirectories[0];
+  while (lpDirData->DirName != NULL)
+    {
+      wcscpy (lpszPtr, lpDirData->DirName);
+
+      if (!CreateDirectoryW (szProfilePath, NULL))
+	{
+	  if (GetLastError () != ERROR_ALREADY_EXISTS)
+	    {
+	      DPRINT1("Error: %lu\n", GetLastError());
+	      RegCloseKey (hKey);
+	      return FALSE;
+	    }
+	}
+
+      if (lpDirData->Hidden == TRUE)
+	{
+	  SetFileAttributesW (szProfilePath,
+			      FILE_ATTRIBUTE_HIDDEN);
+	}
+
+      lpDirData++;
+    }
+
+  RegCloseKey (hKey);
+
+  DPRINT1("Success\n");
 
   return TRUE;
 }

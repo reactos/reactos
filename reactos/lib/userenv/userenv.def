@@ -1,4 +1,9 @@
 LIBRARY userenv.dll
 EXPORTS
-InitializeProfiles@0
+InitializeProfiles@0 @100 NONAME
+GetAllUsersProfileDirectoryW@8
+GetDefaultUserProfileDirectoryW@8
+GetProfilesDirectoryW@8
+GetUserProfileDirectoryW@12
+CreateUserProfileW@8
 ;EOF
