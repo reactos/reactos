@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.34 2003/09/06 19:44:00 jimtabor Exp $
+/* $Id: stubs.c,v 1.35 2003/09/09 15:49:59 gvg Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -643,26 +643,6 @@ STDCALL
 RectVisible(
 	HDC		a0,
 	CONST RECT	*a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-RoundRect(
-	HDC	a0,
-	int	a1,
-	int	a2,
-	int	a3,
-	int	a4,
-	int	a5,
-	int	a6
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

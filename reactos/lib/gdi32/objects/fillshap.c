@@ -39,6 +39,24 @@ Rectangle(HDC  hDC,
  */
 BOOL
 STDCALL
+RoundRect(
+	HDC hdc,
+	int left,
+	int top,
+	int right,
+	int bottom,
+	int width,
+	int height
+	)
+{
+  return NtGdiRoundRect ( hdc, left, top, right, bottom, width, height );
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
 PolyPolygon(
 	HDC		a0,
 	CONST POINT	*a1,

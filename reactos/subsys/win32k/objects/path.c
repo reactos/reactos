@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: path.c,v 1.15 2003/08/20 07:45:02 gvg Exp $ */
+/* $Id: path.c,v 1.16 2003/09/09 15:49:59 gvg Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -371,6 +371,14 @@ PATH_Rectangle ( PDC dc, INT x1, INT y1, INT x2, INT y2 )
   }
 
   return TRUE;
+}
+
+BOOL
+FASTCALL
+PATH_RoundRect (PDC dc, INT x1, INT y1, INT x2, INT y2, INT xradius, INT yradius)
+{
+  UNIMPLEMENTED;
+  return FALSE;
 }
 
 /* PATH_Ellipse

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fillshap.c,v 1.30 2003/08/28 19:41:37 gvg Exp $ */
+/* $Id: fillshap.c,v 1.31 2003/09/09 15:49:59 gvg Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -33,7 +33,7 @@
 #include <include/paint.h>
 #include <internal/safe.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <win32k/debug1.h>
 
 BOOL
@@ -405,24 +405,279 @@ NtGdiRectangle(HDC  hDC,
   return ret;
 }
 
+/*
+ * a couple macros used by IntRoundRect()
+ */
+#define RRPUTPIXEL(x,y,brushObj)      \
+  ret = ret && IntEngLineTo(SurfObj,  \
+       dc->CombinedClip,              \
+       brushObj,                      \
+       x, y, (x)+1, y,                \
+       RectBounds,                    \
+       dc->w.ROPmode);
+
+#define RRLINE(x1,y1,x2,y2,brushObj)  \
+  ret = ret && IntEngLineTo(SurfObj,  \
+       dc->CombinedClip,              \
+       brushObj,                      \
+       x1, y1, x2, y2,                \
+       RectBounds,                    \
+       dc->w.ROPmode);
+
+BOOL
+FASTCALL
+IntRoundRect(
+	PDC  dc,
+	int  left,
+	int  top,
+	int  right,
+	int  bottom,
+	int  xradius,
+	int  yradius)
+{
+  SURFOBJ   *SurfObj;
+  BRUSHOBJ   PenBrush, *PenBrushObj, *FillBrushObj;
+  PRECTL     RectBounds;
+  int i, col, row, width, height, x1, x1start, x2, x2start, y1, y2;
+  //float aspect_square;
+  long a_square, b_square,
+    two_a_square, two_b_square,
+    four_a_square, four_b_square,
+    d, dinc, ddec;
+  BOOL first,
+    ret = TRUE; // default to success
+
+  ASSERT ( dc ); // caller's responsibility to set this up
+
+  if ( PATH_IsPathOpen(dc->w.path) )
+    return PATH_RoundRect ( dc, left, top, right, bottom, xradius, yradius );
+
+  left += dc->w.DCOrgX;
+  right += dc->w.DCOrgX;
+  top += dc->w.DCOrgY;
+  bottom += dc->w.DCOrgY;
+
+  RectBounds = (PRECTL) RGNDATA_LockRgn(dc->w.hGCClipRgn);
+
+  SurfObj = (SURFOBJ*)AccessUserObject((ULONG)dc->Surface);
+
+  FillBrushObj = BRUSHOBJ_LockBrush(dc->w.hBrush);
+  ASSERT(FillBrushObj);
+  if ( FillBrushObj->logbrush.lbStyle == BS_NULL )
+    FillBrushObj = NULL; // make null brush check simpler...
+
+  HPenToBrushObj ( &PenBrush, dc->w.hPen );
+  if ( PenBrush.logbrush.lbStyle != BS_NULL )
+    PenBrushObj = &PenBrush;
+  else
+    PenBrushObj = NULL;
+
+  right--;
+  bottom--;
+
+  width = right - left;
+  height = bottom - top;
+
+  if ( (xradius<<1) > width )
+    xradius = width >> 1;
+  if ( (yradius<<1) > height )
+    yradius = height >> 1;
+
+  b_square = yradius * yradius;
+  a_square = xradius * xradius;
+  row = yradius;
+  col = 0;
+  two_a_square = a_square << 1;
+  four_a_square = a_square << 2;
+  four_b_square = b_square << 2;
+  two_b_square = b_square << 1;
+  d = two_a_square * ((row - 1) * (row))
+    + a_square
+    + two_b_square * (1 - a_square);
+
+  x1 = left+xradius;
+  x2 = right-xradius;
+  y1 = top;
+  y2 = bottom;
+
+  x1start = x1;
+  x2start = x2;
+
+  dinc = two_b_square*3; /* two_b_square * (3 + (col << 1)); */
+  ddec = four_a_square * row;
+
+  first = TRUE;
+  for ( ;; )
+  {
+    if ( d >= 0 )
+    {
+      if ( FillBrushObj )
+        RRLINE ( x1, y1, x2, y1, FillBrushObj );
+      if ( first )
+      {
+	if ( PenBrushObj )
+	{
+	  if ( x1start > x1 )
+	  {
+	    RRLINE ( x1, y1, x1start, y1, PenBrushObj );
+	    RRLINE ( x2start+1, y2, x2+1, y2, PenBrushObj );
+	  }
+	  else
+	  {
+	    RRPUTPIXEL ( x1, y1, PenBrushObj );
+	    RRPUTPIXEL ( x2, y2, PenBrushObj );
+	  }
+	}
+	first = FALSE;
+      }
+      else
+      {
+	if ( FillBrushObj )
+	  RRLINE ( x1, y2, x2, y2, FillBrushObj );
+	if ( PenBrushObj )
+	{
+	  if ( x1start >= x1 )
+	  {
+	    RRLINE ( x1, y1, x1start+1, y1, PenBrushObj );
+	    RRLINE ( x2start, y2, x2+1, y2, PenBrushObj );
+	  }
+	  else
+	  {
+	    RRPUTPIXEL ( x1, y1, PenBrushObj );
+	    RRPUTPIXEL ( x2, y2, PenBrushObj );
+	  }
+	}
+      }
+      if ( PenBrushObj )
+      {
+	if ( x1start > x1 )
+	{
+	  RRLINE ( x1, y2, x1start+1, y2, PenBrushObj );
+	  RRLINE ( x2start, y1, x2+1, y1, PenBrushObj );
+	}
+	else
+	{
+	  RRPUTPIXEL ( x1, y2, PenBrushObj );
+	  RRPUTPIXEL ( x2, y1, PenBrushObj );
+	}
+      }
+      x1start = x1-1;
+      x2start = x2+1;
+      row--, y1++, y2--, ddec -= four_a_square;
+      d -= ddec;
+    }
+
+    int potential_steps = ( a_square * row ) / b_square - col + 1;
+    while ( d < 0 && potential_steps-- )
+    {
+      d += dinc; /* two_b_square * (3 + (col << 1)); */
+      col++, x1--, x2++, dinc += four_b_square;
+    }
+
+    if ( a_square * row <= b_square * col )
+      break;
+  };
+
+  d = two_b_square * (col + 1) * col
+    + two_a_square * (row * (row - 2) + 1)
+    + (1 - two_a_square) * b_square;
+  dinc = ddec; /* four_b_square * col; */
+  ddec = two_a_square * ((row << 1) - 3);
+
+  while ( row )
+  {
+    if ( FillBrushObj )
+    {
+      RRLINE ( x1, y1, x2, y1, FillBrushObj );
+      RRLINE ( x1, y2, x2, y2, FillBrushObj );
+    }
+    if ( PenBrushObj )
+    {
+      RRPUTPIXEL ( x2, y1, PenBrushObj );
+      RRPUTPIXEL ( x1, y2, PenBrushObj );
+      RRPUTPIXEL ( x2, y2, PenBrushObj );
+      RRPUTPIXEL ( x1, y1, PenBrushObj );
+    }
+
+    if ( d <= 0 )
+    {
+      col++, x1--, x2++, dinc += four_b_square;
+      d += dinc; //four_b_square * col;
+    }
+
+    row--, y1++, y2--, ddec -= four_a_square;
+    d -= ddec; //two_a_square * ((row << 1) - 3);
+  }
+
+  if ( FillBrushObj )
+  {
+    RRLINE ( left, y1, right, y1, FillBrushObj );
+    RRLINE ( left, y2, right, y2, FillBrushObj );
+  }
+  if ( PenBrushObj )
+  {
+    if ( x1 > (left+1) )
+    {
+      RRLINE ( left, y1, x1, y1, PenBrushObj );
+      RRLINE ( x2+1, y1, right, y1, PenBrushObj );
+      RRLINE ( left+1, y2, x1, y2, PenBrushObj );
+      RRLINE ( x2+1, y2, right+1, y2, PenBrushObj );
+    }
+    else
+    {
+      RRPUTPIXEL ( left, y1, PenBrushObj );
+      RRPUTPIXEL ( right, y2, PenBrushObj );
+    }
+  }
+
+  x1 = left+xradius;
+  x2 = right-xradius;
+  y1 = top+yradius;
+  y2 = bottom-yradius;
+
+  if ( FillBrushObj )
+  {
+    for ( i = y1+1; i < y2; i++ )
+      RRLINE ( left, i, right, i, FillBrushObj );
+  }
+
+  if ( PenBrushObj )
+  {
+    RRLINE ( x1,    top,    x2,    top,    PenBrushObj );
+    RRLINE ( right, y1,     right, y2,     PenBrushObj );
+    RRLINE ( x2,    bottom, x1,    bottom, PenBrushObj );
+    RRLINE ( left,  y2,     left,  y1,     PenBrushObj );
+  }
+
+  BRUSHOBJ_UnlockBrush(dc->w.hBrush);
+
+  return ret;
+}
+
 BOOL
 STDCALL
-NtGdiRoundRect(HDC  hDC,
-                    int  LeftRect,
-                    int  TopRect,
-                    int  RightRect,
-                    int  BottomRect,
-                    int  Width,
-                    int  Height)
+NtGdiRoundRect(
+	HDC  hDC,
+	int  LeftRect,
+	int  TopRect,
+	int  RightRect,
+	int  BottomRect,
+	int  Width,
+	int  Height)
 {
-  // FIXME - drawing a rectangle until someone can implement
-  // RoundRect properly...
   DC   *dc = DC_LockDc(hDC);
-  BOOL  ret = FALSE; // default to failure
+  BOOL  ret = FALSE; /* default to failure */
 
-  if ( dc )
+__asm__("int $3\n");
+  DPRINT("NtGdiRoundRect(0x%x,%i,%i,%i,%i,%i,%i)\n",hDC,LeftRect,TopRect,RightRect,BottomRect,Width,Height);
+  if ( !dc )
   {
-    ret = IntRectangle ( dc, LeftRect, TopRect, RightRect, BottomRect );
+    DPRINT1("NtGdiRoundRect() - hDC is invalid\n");
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+  }
+  else
+  {
+    ret = IntRoundRect ( dc, LeftRect, TopRect, RightRect, BottomRect, Width, Height );
     DC_UnlockDc ( hDC );
   }
 
