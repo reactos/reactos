@@ -19,9 +19,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.2 $
- * $Author: ekohl $
- * $Date: 2001/07/03 22:16:07 $
+ * $Revision: 1.3 $
+ * $Author: hbirr $
+ * $Date: 2001/11/01 10:39:54 $
  *
  */
 
@@ -88,7 +88,7 @@ typedef __WCHAR_TYPE__		wchar_t;
  */
 struct stat
 {
-	short	st_dev;		/* Equivalent to drive number 0=A 1=B ... */
+	long	st_dev;		/* Equivalent to drive number 0=A 1=B ... */
 	short	st_ino;		/* Always zero ? */
 	short	st_mode;	/* See above constants */
 	short	st_nlink;	/* Number of links. */
