@@ -12,7 +12,7 @@ WINE_RC = calc
 
 TARGET_TYPE = program
 
-TARGET_APPTYPE = console
+TARGET_APPTYPE = windows
 
 TARGET_NAME = calc
 
