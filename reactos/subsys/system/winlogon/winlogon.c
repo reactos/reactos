@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.14 2003/01/23 00:16:47 gvg Exp $
+/* $Id: winlogon.c,v 1.15 2003/02/02 22:38:54 gvg Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -30,7 +30,7 @@ HDESK ScreenSaverDesktop;           /* WinSta0\Screen-Saver */
 
 /* FUNCTIONS *****************************************************************/
 
-void PrintString (char* fmt,...)
+static void PrintString (char* fmt,...)
 {
    char buffer[512];
    va_list ap;
@@ -43,7 +43,7 @@ void PrintString (char* fmt,...)
 }
 
 
-BOOLEAN StartServices(VOID)
+static BOOLEAN StartServices(VOID)
 {
    HANDLE ServicesInitEvent;
    BOOLEAN Result;
@@ -113,7 +113,7 @@ BOOLEAN StartServices(VOID)
    return TRUE;
 }
 
-BOOLEAN StartLsass(VOID)
+static BOOLEAN StartLsass(VOID)
 {
    HANDLE LsassInitEvent;
    BOOLEAN Result;
@@ -168,7 +168,46 @@ BOOLEAN StartLsass(VOID)
    return(TRUE);
 }
 
-PCHAR GetShell(PCHAR CommandLine)
+static BOOLEAN OpenRegistryKey(HANDLE *WinLogonKey)
+{
+   return ERROR_SUCCESS == RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                                        _T("SOFTWARE\\ReactOS\\Windows NT\\CurrentVersion\\WinLogon"),
+                                        0,
+                                        KEY_QUERY_VALUE,
+                                        WinLogonKey);
+}
+
+static BOOLEAN StartProcess(PCHAR ValueName)
+{
+   BOOL StartIt;
+   HANDLE WinLogonKey;
+   DWORD Type;
+   DWORD Size;
+   DWORD StartValue;
+
+   StartIt = TRUE;
+   if (OpenRegistryKey(&WinLogonKey))
+     {
+	Size = sizeof(DWORD);
+	if (ERROR_SUCCESS == RegQueryValueEx(WinLogonKey,
+                                             ValueName,
+	                                     NULL,
+	                                     &Type,
+	                                     (LPBYTE) &StartValue,
+                                             &Size))
+	   {
+	   if (REG_DWORD == Type)
+	     {
+		StartIt = (0 != StartValue);
+	     }
+	   }
+	RegCloseKey(WinLogonKey);
+     }
+
+   return StartIt;
+}
+
+static PCHAR GetShell(PCHAR CommandLine)
 {
    HANDLE WinLogonKey;
    BOOL GotCommandLine;
@@ -177,18 +216,14 @@ PCHAR GetShell(PCHAR CommandLine)
    CHAR Shell[_MAX_PATH];
 
    GotCommandLine = FALSE;
-   if (ERROR_SUCCESS == RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                                     _T("SOFTWARE\\ReactOS\\Windows NT\\CurrentVersion\\WinLogon"),
-                                     0,
-                                     KEY_QUERY_VALUE,
-                                     &WinLogonKey))
+   if (OpenRegistryKey(&WinLogonKey))
      {
 	Size = MAX_PATH;
 	if (ERROR_SUCCESS == RegQueryValueEx(WinLogonKey,
                                              _T("Shell"),
 	                                     NULL,
 	                                     &Type,
-	                                     Shell,
+	                                     (LPBYTE) Shell,
                                              &Size))
 	   {
 	   if (REG_EXPAND_SZ == Type)
@@ -214,7 +249,7 @@ PCHAR GetShell(PCHAR CommandLine)
    return CommandLine;
 }
 
-BOOL DoLoginUser(PCHAR Name, PCHAR Password)
+static BOOL DoLoginUser(PCHAR Name, PCHAR Password)
 {
    PROCESS_INFORMATION ProcessInformation;
    STARTUPINFO StartupInfo;
@@ -350,16 +385,20 @@ WinMain(HINSTANCE hInstance,
    AllocConsole();
    SetConsoleTitle( "Winlogon" );
    /* start system processes (services.exe & lsass.exe) */
-   Success = StartServices();
-   if (!Success)
+   if (StartProcess("StartServices"))
      {
-       DbgPrint("WL: Failed to Start Services (0x%X)\n", GetLastError());
+	if (!StartServices())
+	  {
+	     DbgPrint("WL: Failed to Start Services (0x%X)\n", GetLastError());
+	  }
      }
 #if 0
-   Success = StartLsass();
-   if (!Success)
+   if (StartProcess("StartLsass"))
      {
-       DbgPrint("WL: Failed to Start Security System (0x%X)\n", GetLastError());
+	if (!StartLsass())
+	  {
+	     DbgPrint("WL: Failed to Start Security System (0x%X)\n", GetLastError());
+	  }
      }
 #endif
    

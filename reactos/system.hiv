@@ -327,3 +327,4 @@ REGEDIT4
 
 [\Registry\Machine\SOFTWARE\ReactOS\Windows NT\CurrentVersion\WinLogon]
 "Shell"=expand:"%SystemRoot%\System32\Shell.exe"
+"StartServices"=dword:00000001
