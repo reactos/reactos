@@ -194,6 +194,11 @@ relocate:
 %endif
 
 .boot_cdrom:
+%ifdef WAIT_FOR_KEY
+	call	crlf
+	call	crlf
+%endif
+
 	; Save and display the boot drive number
 	mov	[DriveNo], dl
 %ifdef DEBUG_MESSAGES
