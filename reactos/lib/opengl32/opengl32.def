@@ -1,108 +1,18 @@
-/* $Id: stubs.c,v 1.3 2004/02/03 14:23:42 royce Exp $
- *
- * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              ReactOS kernel
- * FILE:                 lib/opengl32/stubs.c
- * PURPOSE:              OpenGL32 lib
- * PROGRAMMER:           Royce Mitchell III (Royce3)
- * UPDATE HISTORY:
- *                       Feb 1, 2004: Created
- */
+; $Id: opengl32.def,v 1.1 2004/02/03 14:23:42 royce Exp $
+;
+; opengl32.edf
+;
+; ReactOS Operating System
+;
+LIBRARY opengl32.dll
+EXPORTS
+;DllInitialize
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-/*#include <gl/gl.h>*/
-#include "opengl32.h"
-
-GLFUNCLIST*
-OPENGL32_GetFuncList(); // see bottom of this file...
-
-/*
- * @implemented
- */
-void
-WINAPI
-glAccum (
-	GLenum op,
-	GLfloat value )
-{
-	GLFUNCLIST* list = OPENGL32_GetFuncList();
-	/* FIXME - jump directly to target... */
-	if ( list )
-		(*list->glAccum)(op,value);
-}
-
-/*
- * @implemented
- */
-static // not exported, except via wglGetProcAddress
-void
-WINAPI
-glAddSwapHintRectWIN (
-	GLint x,
-	GLint y,
-	GLsizei width,
-	GLsizei height )
-{
-	(*OPENGL32_GetFuncList()->glAddSwapHintRectWIN)(x,y,width,height);
-}
-
-/*
- * @implemented
- */
-void
-WINAPI
-glAlphaFunc (
-	GLenum func,
-	GLclampf ref )
-{
-	(*OPENGL32_GetFuncList()->glAlphaFunc)(func,ref);
-}
-
-/*
- * @unimplemented
- */
-GLboolean
-WINAPI
-glAreTexturesResident (
-	GLsizei n,
-	GLuint * textures
-	GLboolean * residences )
-{
-	UNIMPLEMENTED; /* FIXME */
-}
-
-/*
- * @unimplemented
- */
-void
-WINAPI
-glArrayElement ( GLint index )
-{
-	UNIMPLEMENTED; /* FIXME */
-}
-
-/*
- * @unimplemented
- */
-void
-WINAPI
-glBegin ( GLenum mode )
-{
-	UNIMPLEMENTED; /* FIXME */
-}
-
-/*
- * @unimplemented
- */
-void
-WINAPI
-glBindTexture ( GLenum target, GLuint texture )
-{
-	UNIMPLEMENTED; /* FIXME */
-}
-
-/*
+glAccum=glAccum@8
+glAlphaFunc=glAlphaFunc@8
+glAreTexturesResident=glAreTexturesResident@12
+glArrayElement=glArrayElement@4
+glBegin=glBegin@4
 glBindTexture=glBindTexture@8
 glBitmap=glBitmap@28
 glBlendFunc=glBlendFunc@8
@@ -176,19 +86,7 @@ glEdgeFlagPointer=glEdgeFlagPointer@8
 glEdgeFlagv=glEdgeFlagv@4
 glEnable=glEnable@4
 glEnableClientState=glEnableClientState@4
-*/
-
-/*
- * @unimplemented
- */
-void
-WINAPI
-glEnd ( void )
-{
-	UNIMPLEMENTED; /* FIXME */
-}
-
-/*
+glEnd=glEnd@0
 glEndList=glEndList@0
 
 glEvalCoord1d=glEvalCoord1d@8
@@ -296,6 +194,12 @@ glMateriali=glMateriali@12
 glMaterialiv=glMaterialiv@12
 
 glMatrixMode=glMatrixMode@4
+;GlmfBeginGlsBlock
+;GlmfCloseMetaFile
+;GlmfEndGlsBlock
+;GlmfEndPlayback
+;GlmfInitPlayback
+;GlmfPlayGlsRecord
 glMultMatrixd=glMultMatrixd@4
 glMultMatrixf=glMultMatrixf@4
 glNewList=glNewList@8
@@ -479,25 +383,10 @@ wglDescribeLayerPlane=wglDescribeLayerPlane@20
 wglDescribePixelFormat=GDI32.DescribePixelFormat
 wglGetCurrentContext=wglGetCurrentContext@0
 wglGetCurrentDC=wglGetCurrentDC@0
+;wglGetDefaultProcAddress=wglGetDefaultProcAddress@
 wglGetLayerPaletteEntries=wglGetLayerPaletteEntries@20
 wglGetPixelFormat=GDI32.GetPixelFormat
-*/
-
-/*
- * @unimplemented
- */
-PROC wglGetProcAddress ( LPCSTR lpszProc )
-{
-	/* FIXME - what is the right strcmp() variant to use here? */
-	/* NOTE - lpszProc comparisons *ARE* case-sensitive */
-	GLFUNCLIST* funclist = OPENGL32_GetFuncList();
-	if ( !strcmp ( lpszProc, "glAddSwapHintRectWIN" ) )
-		return (PROC)(funclist->glAddSwapHintRectWIN);
-	/* FIXME - fill in the rest of the functions returned by wglGetProcAddress */
-	return NULL;
-}
-
-/*
+wglGetProcAddress=wglGetProcAddress@4
 wglMakeCurrent=wglMakeCurrent@8
 wglRealizeLayerPalette=wglRealizeLayerPalette@12
 wglSetLayerPaletteEntries=wglSetLayerPaletteEntries@20
@@ -505,16 +394,8 @@ wglSetPixelFormat=GDI32.SetPixelFormat
 wglShareLists=wglShareLists@8
 wglSwapBuffers=GDI32.SwapBuffers
 wglSwapLayerBuffers=wglSwapLayerBuffers@8
+;wglSwapMultipleBuffers=wglSwapMultipleBuffers@
 wglUseFontBitmapsA=wglUseFontBitmapsA@16
 wglUseFontBitmapsW=wglUseFontBitmapsW@16
 wglUseFontOutlinesA=wglUseFontOutlinesA@32
 wglUseFontOutlinesW=wglUseFontOutlinesW@32
-*/
-
-GLFUNCLIST*
-OPENGL32_GetFuncList()
-{
-	threaddata = (OPENGL32_ThreadData*)TlsGetValue ( OPENGL32_tls );
-	ASSERT(threaddata);
-	return threaddata->list;
-}

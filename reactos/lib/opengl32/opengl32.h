@@ -1,4 +1,4 @@
-/* $Id: opengl32.h,v 1.6 2004/02/02 17:59:23 navaraf Exp $
+/* $Id: opengl32.h,v 1.7 2004/02/03 14:23:42 royce Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -14,17 +14,27 @@
 
 /* debug flags */
 #define DEBUG_OPENGL32
-#define DEBUG_OPENGL32_ICD_EXPORTS	/* dumps the list of supported glXXX
+#define DEBUG_OPENGL32_ICD_EXPORTS	/* dumps the list of (un)supported glXXX
                                        functions when an ICD is loaded. */
 
-#ifdef DEBUG_OPENGL32
-ULONG DbgPrint(PCH Format,...);
-# define DBGPRINT DbgPrint( "OpenGL32.DLL: " ), DbgPrint
+/* debug macros */
+#if 0//def DEBUG_OPENGL32
+# include <debug.h>
+# define DBGPRINT( fmt, args... ) \
+         DPRINT( "OpenGL32.DLL: %s: "fmt, __FUNCTION__, ##args )
 #else
 # define DBGPRINT( ... ) do {} while (0)
 #endif
 
+/* function/data attributes */
+#define EXPORT __declspec(dllexport)
+#define NAKED __attribute__((naked))
+#define SHARED __attribute__((section("shared"), shared))
+
+
 /* gl function list */
+#include "glfuncs.h"
+#if 0
 #define GLFUNCS_MACRO \
 	X(glAccum) \
 	X(glAddSwapHintRectWIN) \
@@ -364,12 +374,13 @@ ULONG DbgPrint(PCH Format,...);
 	X(glVertex4sv) \
 	X(glVertexPointer) \
 	X(glViewport)
+#endif /* 0 */
 
 /* table indices for funcnames and function pointers */
 enum glfunc_indices
 {
 	GLIDX_INVALID = -1,
-#define X(X) GLIDX_##X,
+#define X(func, ret, args) GLIDX_##func,
 	GLFUNCS_MACRO
 #undef X
 	GLIDX_COUNT
@@ -422,7 +433,8 @@ typedef struct tagGLRC
 	GLDRIVERDATA *icd;  /* driver used for this context */
 	INT     iFormat;    /* current pixel format index - ? */
 	HDC     hdc;        /* DC handle */
-	DWORD   threadid;   /* thread holding this context */
+	BOOL    is_current; /* wether this context is current for some DC */
+	DWORD   thread_id;  /* thread holding this context */
 
 	HGLRC   hglrc;      /* GLRC from DrvCreateContext */
 	PVOID   func_list[GLIDX_COUNT];  /* glXXX function pointers */
@@ -440,14 +452,17 @@ typedef struct tagGLPROCESSDATA
 /* TLS data */
 typedef struct tagGLTHREADDATA
 {
-	GLRC   *hglrc;      /* current GL rendering context */
+	GLRC   *glrc;      /* current GL rendering context */
 } GLTHREADDATA;
 
 extern DWORD OPENGL32_tls;
 extern GLPROCESSDATA OPENGL32_processdata;
+#define OPENGL32_threaddata ((GLTHREADDATA *)TlsGetValue( OPENGL32_tls ))
 
 /* function prototypes */
 GLDRIVERDATA *OPENGL32_LoadICD( LPCWSTR driver );
 BOOL OPENGL32_UnloadICD( GLDRIVERDATA *icd );
 
 #endif//OPENGL32_PRIVATE_H
+
+/* EOF */
