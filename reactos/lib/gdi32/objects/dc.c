@@ -20,6 +20,14 @@ GetClipBox(HDC hDc, LPRECT Rect)
   return(W32kGetClipBox(hDc, Rect));
 }
 
+int
+STDCALL
+GetPolyFillMode(
+	HDC	a0
+	)
+{
+	return W32kGetPolyFillMode(a0);
+}
 
 HDC
 STDCALL
@@ -206,4 +214,14 @@ LPtoDP(
 	)
 {
 	return W32kLPtoDP(a0, a1, a2);
+}
+
+int
+STDCALL
+SetPolyFillMode(
+	HDC	a0,
+	int	a1
+	)
+{
+	return W32kSetPolyFillMode(a0, a1);
 }
