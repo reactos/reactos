@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.69 2004/09/28 15:02:29 weiden Exp $
+/* $Id: ps.h,v 1.70 2004/10/01 20:26:04 gvg Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -428,6 +428,10 @@ struct _EPROCESS
   
   struct _EJOB*         Job;
   UINT                  JobStatus;
+
+  FAST_MUTEX            TebLock;
+  PVOID                 TebBlock;
+  PVOID                 TebLastAllocated;
 };
 
 #define PROCESS_STATE_TERMINATED (1)

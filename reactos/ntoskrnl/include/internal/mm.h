@@ -359,6 +359,10 @@ MEMORY_AREA* MmOpenMemoryAreaByRegion(PMADDRESS_SPACE AddressSpace,
 
 PVOID MmFindGap(PMADDRESS_SPACE AddressSpace, ULONG Length, ULONG Granularity, BOOL TopDown);
 
+void MmReleaseMemoryAreaIfDecommitted(PEPROCESS Process,
+                                      PMADDRESS_SPACE AddressSpace,
+                                      PVOID BaseAddress);
+
 /* npool.c *******************************************************************/
 
 VOID MiDebugDumpNonPagedPool(BOOLEAN NewOnly);

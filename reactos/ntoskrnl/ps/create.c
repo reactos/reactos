@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.81 2004/09/28 15:02:29 weiden Exp $
+/* $Id: create.c,v 1.82 2004/10/01 20:26:05 gvg Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -504,51 +504,76 @@ PsCreateTeb(HANDLE ProcessHandle,
 	    PETHREAD Thread,
 	    PUSER_STACK UserStack)
 {
-   MEMORY_BASIC_INFORMATION Info;
+   PEPROCESS Process;
    NTSTATUS Status;
    ULONG ByteCount;
    ULONG RegionSize;
    ULONG TebSize;
    PVOID TebBase;
    TEB Teb;
-   ULONG ResultLength;
 
-   TebBase = (PVOID)0x7FFDE000;
    TebSize = PAGE_SIZE;
 
-   while (TRUE)
+   if (NULL == Thread->ThreadsProcess)
      {
-	Status = ZwQueryVirtualMemory(ProcessHandle,
-				      TebBase,
-				      MemoryBasicInformation,
-				      &Info,
-				      sizeof(Info),
-				      &ResultLength);
-	if (!NT_SUCCESS(Status))
-	  {
-	     CPRINT("ZwQueryVirtualMemory (Status %x)\n", Status);
-	     KEBUGCHECK(0);
-	  }
-	/* FIXME: Race between this and the above check */
-	if (Info.State == MEM_FREE)
-	  {
-	     /* The TEB must reside in user space */
-	     Status = ZwAllocateVirtualMemory(ProcessHandle,
-					      &TebBase,
-					      0,
-					      &TebSize,
-					      MEM_RESERVE | MEM_COMMIT,
-					      PAGE_READWRITE);
-	     if (NT_SUCCESS(Status))
-	       {
-		  break;
-	       }
-	  }
-	     
-	TebBase = (char*)TebBase - TebSize;
+       /* We'll be allocating a 64k block here and only use 4k of it, but this
+          path should almost never be taken. Actually, I never saw it was taken,
+          so maybe we should just assert(NULL != Thread->ThreadsProcess) and
+          move on */
+       TebBase = NULL;
+       Status = ZwAllocateVirtualMemory(ProcessHandle,
+                                        &TebBase,
+                                        0,
+                                        &TebSize,
+                                        MEM_RESERVE | MEM_COMMIT | MEM_TOP_DOWN,
+                                        PAGE_READWRITE);
+       if (! NT_SUCCESS(Status))
+         {
+           DPRINT1("Failed to allocate virtual memory for TEB\n");
+           return Status;
+         }
+     }
+   else
+     {
+       Process = Thread->ThreadsProcess;
+       ExAcquireFastMutex(&Process->TebLock);
+       if (NULL == Process->TebBlock ||
+           Process->TebBlock == Process->TebLastAllocated)
+         {
+           Process->TebBlock = NULL;
+           RegionSize = MM_VIRTMEM_GRANULARITY;
+           Status = ZwAllocateVirtualMemory(ProcessHandle,
+                                            &Process->TebBlock,
+                                            0,
+                                            &RegionSize,
+                                            MEM_RESERVE | MEM_TOP_DOWN,
+                                            PAGE_READWRITE);
+           if (! NT_SUCCESS(Status))
+             {
+               ExReleaseFastMutex(&Process->TebLock);
+               DPRINT1("Failed to reserve virtual memory for TEB\n");
+               return Status;
+             }
+           Process->TebLastAllocated = (PVOID) ((char *) Process->TebBlock + RegionSize);
+         }
+       TebBase = (PVOID) ((char *) Process->TebLastAllocated - PAGE_SIZE);
+       Status = ZwAllocateVirtualMemory(ProcessHandle,
+                                        &TebBase,
+                                        0,
+                                        &TebSize,
+                                        MEM_COMMIT,
+                                        PAGE_READWRITE);
+       if (! NT_SUCCESS(Status))
+         {
+           DPRINT1("Failed to commit virtual memory for TEB\n");
+           return Status;
+         }
+       Process->TebLastAllocated = TebBase;
+       ExReleaseFastMutex(&Process->TebLock);
      }
 
    DPRINT ("TebBase %p TebSize %lu\n", TebBase, TebSize);
+   assert(NULL != TebBase && PAGE_SIZE <= TebSize);
 
    RtlZeroMemory(&Teb, sizeof(TEB));
    /* set all pointers to and from the TEB */

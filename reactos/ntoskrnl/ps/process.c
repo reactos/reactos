@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.143 2004/09/28 19:49:21 gvg Exp $
+/* $Id: process.c,v 1.144 2004/10/01 20:26:05 gvg Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -417,6 +417,7 @@ PsCreatePeb(HANDLE ProcessHandle,
 	    PEPROCESS Process,
 	    PVOID ImageBase)
 {
+  ULONG AllocSize;
   ULONG PebSize;
   PPEB Peb;
   LARGE_INTEGER SectionOffset;
@@ -425,12 +426,12 @@ PsCreatePeb(HANDLE ProcessHandle,
   NTSTATUS Status;
 
   /* Allocate the Process Environment Block (PEB) */
-  Peb = (PPEB)PEB_BASE;
-  PebSize = PAGE_SIZE;
+  Process->TebBlock = (PVOID) MM_ROUND_DOWN(PEB_BASE, MM_VIRTMEM_GRANULARITY);
+  AllocSize = MM_VIRTMEM_GRANULARITY;
   Status = NtAllocateVirtualMemory(ProcessHandle,
-				   (PVOID*)&Peb,
+				   &Process->TebBlock,
 				   0,
-				   &PebSize,
+				   &AllocSize,
 				   MEM_RESERVE,
 				   PAGE_READWRITE);
   if (!NT_SUCCESS(Status))
@@ -438,6 +439,8 @@ PsCreatePeb(HANDLE ProcessHandle,
       DPRINT1("NtAllocateVirtualMemory() failed (Status %lx)\n", Status);
       return(Status);
     }
+  assert((ULONG_PTR) Process->TebBlock <= PEB_BASE &&
+         PEB_BASE + PAGE_SIZE <= (ULONG_PTR) Process->TebBlock + AllocSize);
   Peb = (PPEB)PEB_BASE;
   PebSize = PAGE_SIZE;
   Status = NtAllocateVirtualMemory(ProcessHandle,
@@ -452,6 +455,8 @@ PsCreatePeb(HANDLE ProcessHandle,
       return(Status);
     }
   DPRINT("Peb %p  PebSize %lu\n", Peb, PebSize);
+  assert((PPEB) PEB_BASE == Peb && PAGE_SIZE <= PebSize);
+  Process->TebLastAllocated = (PVOID) Peb;
 
   ViewSize = 0;
 #if defined(__GNUC__)
@@ -730,6 +735,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
    InitializeListHead(&Process->ThreadListHead);
    KeReleaseSpinLock(&PsProcessListLock, oldIrql);
 
+   ExInitializeFastMutex(&Process->TebLock);
    Process->Pcb.State = PROCESS_STATE_ACTIVE;
    
    /*

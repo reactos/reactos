@@ -201,9 +201,6 @@ static VOID MmInsertMemoryArea(PMADDRESS_SPACE AddressSpace,
    InsertTailList(ListHead,inserted_entry);
 }
 
-#define ROUND_DOWN_POW2(Addr, Boundary) ((ULONG_PTR) (Addr) & ~ ((Boundary) - 1))
-#define ROUND_UP_POW2(Addr, Boundary) ROUND_DOWN_POW2((ULONG_PTR) (Addr) + (Boundary) - 1, Boundary)
-
 static PVOID MmFindGapBottomUp(PMADDRESS_SPACE AddressSpace, ULONG Length, ULONG Granularity)
 {
    PLIST_ENTRY ListHead;
@@ -230,7 +227,7 @@ static PVOID MmFindGapBottomUp(PMADDRESS_SPACE AddressSpace, ULONG Length, ULONG
 #ifdef DBG
       Address = (PVOID) ((char *) Address + PAGE_SIZE); /* For a guard page preceding the area */
 #endif
-      Address = (PVOID) ROUND_UP_POW2(Address, Granularity);
+      Address = (PVOID) MM_ROUND_UP(Address, Granularity);
       if (Address < next->BaseAddress)
       {
          Gap = (char*)next->BaseAddress - ((char*)current->BaseAddress + PAGE_ROUND_UP(current->Length));
@@ -244,7 +241,7 @@ static PVOID MmFindGapBottomUp(PMADDRESS_SPACE AddressSpace, ULONG Length, ULONG
 
    if (current_entry == ListHead)
    {
-      Address = (PVOID) ROUND_UP_POW2(AddressSpace->LowestAddress, Granularity);
+      Address = (PVOID) MM_ROUND_UP(AddressSpace->LowestAddress, Granularity);
    }
    else
    {
@@ -253,7 +250,7 @@ static PVOID MmFindGapBottomUp(PMADDRESS_SPACE AddressSpace, ULONG Length, ULONG
 #ifdef DBG
       Address = (PVOID) ((char *) Address + PAGE_SIZE); /* For a guard page preceding the area */
 #endif
-      Address = (PVOID) ROUND_UP_POW2(Address, Granularity);
+      Address = (PVOID) MM_ROUND_UP(Address, Granularity);
    }
    /* Check if enough space for the block */
    if (AddressSpace->LowestAddress < KERNEL_BASE)
@@ -313,7 +310,7 @@ static PVOID MmFindGapTopDown(PMADDRESS_SPACE AddressSpace, ULONG Length, ULONG 
 #ifdef DBG
       BottomAddress = (PVOID) ((char *) BottomAddress + PAGE_SIZE); /* For a guard page preceding the area */
 #endif
-      BottomAddress = (PVOID) ROUND_UP_POW2(BottomAddress, Granularity);
+      BottomAddress = (PVOID) MM_ROUND_UP(BottomAddress, Granularity);
       DPRINT("Base %p  Length %lx\n", current->BaseAddress, PAGE_ROUND_UP(current->Length));
 
       if (BottomAddress < TopAddress && BottomAddress < HighestAddress)
@@ -323,7 +320,7 @@ static PVOID MmFindGapTopDown(PMADDRESS_SPACE AddressSpace, ULONG Length, ULONG 
          if (Gap >= Length)
          {
             DPRINT("Found gap at %p\n", (char*) TopAddress - Length);
-            return (PVOID) ROUND_DOWN_POW2((char*) TopAddress - Length + 1, Granularity);
+            return (PVOID) MM_ROUND_DOWN((char*) TopAddress - Length + 1, Granularity);
          }
       }
       TopAddress = (char*)current->BaseAddress - 1;
@@ -332,11 +329,11 @@ static PVOID MmFindGapTopDown(PMADDRESS_SPACE AddressSpace, ULONG Length, ULONG 
 
    if (current_entry == ListHead)
    {
-      Address = (PVOID) ROUND_DOWN_POW2((char*) HighestAddress - Length + 1, Granularity);
+      Address = (PVOID) MM_ROUND_DOWN((char*) HighestAddress - Length + 1, Granularity);
    }
    else
    {
-      Address = (PVOID) ROUND_DOWN_POW2((char*)TopAddress - Length + 1, Granularity);
+      Address = (PVOID) MM_ROUND_DOWN((char*)TopAddress - Length + 1, Granularity);
    }
 
    /* Check if enough space for the block */
@@ -596,8 +593,9 @@ NTSTATUS MmCreateMemoryArea(PEPROCESS Process,
    }
    else
    {
-      tmpLength =  Length + ((ULONG_PTR) *BaseAddress - ROUND_DOWN_POW2(*BaseAddress, Granularity));
-      (*BaseAddress) = (PVOID) ROUND_DOWN_POW2(*BaseAddress, Granularity);
+      tmpLength =  Length + ((ULONG_PTR) *BaseAddress
+                             - (ULONG_PTR) MM_ROUND_DOWN(*BaseAddress, Granularity));
+      *BaseAddress = MM_ROUND_DOWN(*BaseAddress, Granularity);
 
       if (AddressSpace->LowestAddress == KERNEL_BASE &&
             (*BaseAddress) < (PVOID)KERNEL_BASE)
@@ -643,3 +641,36 @@ NTSTATUS MmCreateMemoryArea(PEPROCESS Process,
    DPRINT("MmCreateMemoryArea() succeeded\n");
    return STATUS_SUCCESS;
 }
+
+
+void
+MmReleaseMemoryAreaIfDecommitted(PEPROCESS Process,
+                                 PMADDRESS_SPACE AddressSpace,
+                                 PVOID BaseAddress)
+{
+  PMEMORY_AREA MemoryArea;
+  PLIST_ENTRY Entry;
+  PMM_REGION Region;
+  BOOLEAN Reserved;
+  
+  MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace, BaseAddress);
+  if (NULL != MemoryArea)
+    {
+      Entry = MemoryArea->Data.VirtualMemoryData.RegionListHead.Flink;
+      Reserved = TRUE;
+      while (Reserved && Entry != &MemoryArea->Data.VirtualMemoryData.RegionListHead)
+        {
+          Region = CONTAINING_RECORD(Entry, MM_REGION, RegionListEntry);
+          Reserved = (MEM_RESERVE == Region->Type);
+          Entry = Entry->Flink;
+        }
+
+      if (Reserved)
+        {
+          DPRINT("Release TebBlock at %p\n", TebBlock);
+          MmFreeVirtualMemory(Process, MemoryArea);
+        }
+    }
+}
+
+/* EOF */
