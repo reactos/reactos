@@ -1,6 +1,11 @@
 #ifndef __WIN32K_COLOR_H
 #define __WIN32K_COLOR_H
 
+#define CLR_INVALID         0xffffffff
+#define PC_SYS_USED     0x80		// palentry is used (both system and logical)
+#define PC_SYS_RESERVED 0x40		// system palentry is not to be mapped to
+#define PC_SYS_MAPPED   0x10		// logical palentry is a direct alias for system palentry
+
 BOOL
 STDCALL
 W32kAnimatePalette (

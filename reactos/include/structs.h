@@ -185,7 +185,7 @@ typedef struct tagRGBTRIPLE {
   BYTE rgbtBlue; 
   BYTE rgbtGreen; 
   BYTE rgbtRed; 
-} RGBTRIPLE; 
+} RGBTRIPLE, *PRGBTRIPLE; 
  
 typedef struct _BITMAPCOREINFO {
   BITMAPCOREHEADER  bmciHeader; 

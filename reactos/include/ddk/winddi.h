@@ -644,9 +644,23 @@ typedef struct _IFIMETRICS
   PANOSE panose;
 } IFIMETRICS, *PIFIMETRICS;
 
+#define NB_RESERVED_COLORS              20 // number of fixed colors in system palette
+
+typedef struct _XLATEOBJ 
+{
+  ULONG  iUniq;
+  ULONG  flXlate;
+  USHORT  iSrcType;
+  USHORT  iDstType;
+  ULONG  cEntries;
+  ULONG  *pulXlate;
+} XLATEOBJ, *PXLATEOBJ;
+
 typedef struct _PALOBJ
 {
-  ULONG   ulReserved;
+  PXLATEOBJ logicalToSystem;
+  int *mapping;
+  LOGPALETTE logpalette; // _MUST_ be the last field
 } PALOBJ, *PPALOBJ;
 
 typedef struct _PATHOBJ
@@ -685,16 +699,6 @@ typedef struct _XFORMOBJ
 {
   /* FIXME: what does this beast look like?  */
 } XFORMOBJ, *PXFORMOBJ;
-
-typedef struct _XLATEOBJ 
-{
-  ULONG  iUniq;
-  ULONG  flXlate;
-  USHORT  iSrcType;
-  USHORT  iDstType;
-  ULONG  cEntries;
-  ULONG  *pulXlate;
-} XLATEOBJ, *PXLATEOBJ;
 
 /*
  * Functions Prefixed with Drv are calls made from GDI to DDI, and
