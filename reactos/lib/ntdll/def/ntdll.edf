@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.22 1999/12/27 15:06:13 ekohl Exp $
+; $Id: ntdll.edf,v 1.23 1999/12/29 17:10:41 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -519,6 +519,10 @@ RtlxAnsiStringToUnicodeSize=RtlxAnsiStringToUnicodeSize@4
 RtlxOemStringToUnicodeSize=RtlxOemStringToUnicodeSize@4
 RtlxUnicodeStringToAnsiSize=RtlxUnicodeStringToAnsiSize@4
 RtlxUnicodeStringToOemSize=RtlxUnicodeStringToOemSize@4
+__isascii
+__iscsym
+__iscsymf
+__toascii
 _memccpy
 _memicmp
 _splitpath
@@ -534,8 +538,13 @@ _wcslwr
 _wcsnicmp
 _wcsupr
 abs
+atan
 atoi
 atol
+ceil
+cos
+fabs
+floor
 isalpha
 isalnum
 iscntrl
@@ -546,14 +555,20 @@ isprint
 ispunct
 isspace
 isupper
+iswalpha
+iswctype
 isxdigit
 labs
+log
 memchr
 memcmp
 memcpy
 memmove
 memset
+pow
+sin
 sprintf
+sqrt
 strcat
 strchr
 strcmp
@@ -569,6 +584,7 @@ strspn
 strstr
 strtol
 strtoul
+tan
 tolower
 toupper
 towlower

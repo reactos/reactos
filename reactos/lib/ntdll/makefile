@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.29 1999/12/12 00:20:29 ekohl Exp $
+# $Id: makefile,v 1.30 1999/12/29 17:10:23 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -23,8 +23,10 @@ endif
 
 all: $(DLLTARGET)
 
+DBG_OBJECTS = dbg/brkpoint.o
+
 RTL_OBJECTS = rtl/critical.o rtl/error.o rtl/heap.o rtl/largeint.o \
-              rtl/mem.o rtl/nls.o rtl/process.o rtl/security.o \
+              rtl/math.o rtl/mem.o rtl/nls.o rtl/process.o rtl/security.o \
               rtl/thread.o rtl/unicode.o rtl/env.o
 
 STDLIB_OBJECTS = stdlib/abs.o stdlib/atoi.o stdlib/atol.o stdlib/labs.o \
@@ -40,18 +42,18 @@ STRING_OBJECTS = string/ctype.o string/memccpy.o string/memchr.o \
                  string/strpbrk.o string/strrchr.o string/strspn.o \
                  string/strstr.o string/strupr.o string/wstring.o
 
-OBJECTS = napi.o ldr/startup.o $(RTL_OBJECTS) \
+OBJECTS = napi.o ldr/startup.o $(DBG_OBJECTS) $(RTL_OBJECTS) \
           stdio/vsprintf.o $(STDLIB_OBJECTS) $(STRING_OBJECTS) \
           stubs/stubs.o ldr/utils.o $(TARGET).coff
 
 ifeq ($(DOSCLI),yes)
 CLEAN_FILES = napi.o ldr\*.o rtl\*.o stdio\*.o stdlib\*.o string\*.o stubs\*.o \
               $(TARGET).a main\dllmain.o $(TARGET).o $(TARGET).dll junk.tmp \
-	      base.tmp temp.exp $(TARGET).sym $(TARGET).coff
+              base.tmp temp.exp $(TARGET).sym $(TARGET).coff
 else
 CLEAN_FILES = napi.o ldr/*.o rtl/*.o stdio/*.o stdlib/*.o string/*.o stubs/*.o \
               $(TARGET).a main/dllmain.o $(TARGET).o $(TARGET).dll junk.tmp \
-	      base.tmp temp.exp $(TARGET).sym $(TARGET).coff
+              base.tmp temp.exp $(TARGET).sym $(TARGET).coff
 endif
 
 $(TARGET).coff: $(TARGET).rc ../../include/reactos/resource.h
