@@ -1,4 +1,4 @@
-/* $Id: ppool.c,v 1.6 2001/12/31 01:53:45 dwelch Exp $
+/* $Id: ppool.c,v 1.7 2002/02/14 00:07:23 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -87,6 +87,11 @@ ExAllocatePagedPoolWithTag (IN	POOL_TYPE	PoolType,
    * Calculate the total number of bytes we will need.
    */
   BlockSize = NumberOfBytes + sizeof(MM_PPOOL_USED_BLOCK_HEADER);
+  if (BlockSize < sizeof(MM_PPOOL_FREE_BLOCK_HEADER))
+  {
+    /* At least we need the size of the free block header. */
+    BlockSize = sizeof(MM_PPOOL_FREE_BLOCK_HEADER);
+  }
 
   ExAcquireFastMutex(&MmPagedPoolLock);
 
