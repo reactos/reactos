@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.32 2003/09/12 17:51:47 vizzini Exp $
+/* $Id: volume.c,v 1.33 2003/10/22 20:06:32 sedwards Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -430,7 +430,7 @@ GetDriveTypeW(LPCWSTR lpRootPathName)
 	hFile = InternalOpenDirW(lpRootPathName, FALSE);
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
-	    return 0;
+	    return DRIVE_NO_ROOT_DIR;	/* According to WINE regression tests */
 	}
 
 	errCode = NtQueryVolumeInformationFile (hFile,
@@ -442,7 +442,7 @@ GetDriveTypeW(LPCWSTR lpRootPathName)
 	{
 		CloseHandle(hFile);
 		SetLastErrorByStatus (errCode);
-		return 0;
+		return 0;	
 	}
 	CloseHandle(hFile);
 	return (UINT)FileFsDevice.DeviceType;
