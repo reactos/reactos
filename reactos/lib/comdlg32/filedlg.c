@@ -841,7 +841,7 @@ HRESULT FILEDLG95_Handle_GetFilePath(HWND hwnd, DWORD size, LPVOID buffer)
 
     /* get path and filenames */
     SHGetPathFromIDListW(fodInfos->ShellInfos.pidlAbsCurrent,lpstrCurrentDir);
-    n = FILEDLG95_FILENAME_GetFileNames(hwnd, &lpstrFileList, &sizeUsed);
+    n = FILEDLG95_FILENAME_GetFileNames(hwnd, &lpstrFileList, &sizeUsed, ' ');
 
     TRACE("path >%s< filespec >%s< %d files\n",
          debugstr_w(lpstrCurrentDir),debugstr_w(lpstrFileList),n);
@@ -897,7 +897,7 @@ HRESULT FILEDLG95_Handle_GetFileSpec(HWND hwnd, DWORD size, LPVOID buffer)
 
     TRACE("CDM_GETSPEC:\n");
 
-    FILEDLG95_FILENAME_GetFileNames(hwnd, &lpstrFileList, &sizeUsed);
+    FILEDLG95_FILENAME_GetFileNames(hwnd, &lpstrFileList, &sizeUsed, ' ');
     if( fodInfos->unicode )
     {
         LPWSTR bufW = buffer;
@@ -1650,7 +1650,7 @@ BOOL FILEDLG95_OnOpenMultipleFiles(HWND hwnd, LPWSTR lpstrFileList, UINT nFileCo
 
     if (ofn->lpstrFile != NULL)
     {
-      WideCharToMultiByte(CP_ACP, 0, lpstrPathSpec, -1,
+      nSizePath = WideCharToMultiByte(CP_ACP, 0, lpstrPathSpec, -1,
 			  ofn->lpstrFile, ofn->nMaxFile, NULL, NULL);
       if (ofn->nMaxFile > nSizePath)
       {
@@ -1661,7 +1661,7 @@ BOOL FILEDLG95_OnOpenMultipleFiles(HWND hwnd, LPWSTR lpstrFileList, UINT nFileCo
     }
   }
 
-  fodInfos->ofnInfos->nFileOffset = nSizePath + 1;
+  fodInfos->ofnInfos->nFileOffset = nSizePath;
   fodInfos->ofnInfos->nFileExtension = 0;
 
   if ( !FILEDLG95_SendFileOK(hwnd, fodInfos) )
@@ -1709,7 +1709,7 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
   TRACE("hwnd=%p\n", hwnd);
 
   /* get the files from the edit control */
-  nFileCount = FILEDLG95_FILENAME_GetFileNames(hwnd, &lpstrFileList, &sizeUsed);
+  nFileCount = FILEDLG95_FILENAME_GetFileNames(hwnd, &lpstrFileList, &sizeUsed, '\0');
 
   /* try if the user selected a folder in the shellview */
   if(nFileCount == 0)
@@ -3029,9 +3029,11 @@ static HRESULT COMDLG32_StrRetToStrNA (LPVOID dest, DWORD len, LPSTRRET src, LPI
 /***********************************************************************
  * FILEDLG95_FILENAME_GetFileNames
  *
- * copies the filenames to a 0-delimited string list (A\0B\0C\0\0)
+ * Copies the filenames to a delimited string list.
+ * The delimiter is specified by the parameter 'separator',
+ *  usually either a space or a nul
  */
-int FILEDLG95_FILENAME_GetFileNames (HWND hwnd, LPWSTR * lpstrFileList, UINT * sizeUsed)
+int FILEDLG95_FILENAME_GetFileNames (HWND hwnd, LPWSTR * lpstrFileList, UINT * sizeUsed, char separator)
 {
 	FileOpenDlgInfos *fodInfos  = (FileOpenDlgInfos *) GetPropA(hwnd,FileOpenDlgInfosStr);
 	UINT nStrCharCount = 0;	/* index in src buffer */
@@ -3054,7 +3056,7 @@ int FILEDLG95_FILENAME_GetFileNames (HWND hwnd, LPWSTR * lpstrFileList, UINT * s
 	*lpstrFileList = MemAlloc( (nStrLen+2)*sizeof(WCHAR) );
 	*sizeUsed = 0;
 
-	/* build 0-delimited file list from filenames */
+	/* build delimited file list from filenames */
 	while ( nStrCharCount <= nStrLen )
 	{
 	  if ( lpstrEdit[nStrCharCount]=='"' )
@@ -3066,7 +3068,7 @@ int FILEDLG95_FILENAME_GetFileNames (HWND hwnd, LPWSTR * lpstrFileList, UINT * s
 	      (*sizeUsed)++;
 	      nStrCharCount++;
 	    }
-	    (*lpstrFileList)[nFileIndex++] = '\0';
+	    (*lpstrFileList)[nFileIndex++] = separator;
 	    (*sizeUsed)++;
 	    nFileCount++;
 	  }
