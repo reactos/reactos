@@ -1,34 +1,10 @@
-Only in ./: ,
-Only in /root/wine/wine/dlls/msi/: .#action.c.1.39
-diff -u /root/wine/wine/dlls/msi/.cvsignore ./.cvsignore
---- /root/wine/wine/dlls/msi/.cvsignore	2004-05-18 15:41:47.000000000 -0500
-+++ ./.cvsignore	2004-12-02 14:11:19.000000000 -0600
-@@ -1,8 +1,11 @@
--Makefile
--cond.tab.c
--cond.tab.h
--msi.dll.dbg.c
-+*.coff
-+*.dll
-+*.d
-+*.a
-+*.o
-+*.sym
-+*.map
-+*.tmp
-+Makefile.ros
- msi.spec.def
--sql.tab.c
--sql.tab.h
--version.res
-+msi.stubs.c
-Only in ./: .cvsignore~
-Common subdirectories: /root/wine/wine/dlls/msi/CVS and ./CVS
-Only in ./: Makefile
-Only in ./: Makefile.ros-template
-diff -u /root/wine/wine/dlls/msi/action.c ./action.c
---- /root/wine/wine/dlls/msi/action.c	2004-12-06 00:10:02.000000000 -0600
-+++ ./action.c	2004-12-07 01:19:47.000000000 -0600
+Index: action.c
+===================================================================
+RCS file: /home/wine/wine/dlls/msi/action.c,v
+retrieving revision 1.40
+diff -u -r1.40 action.c
+--- action.c	3 Nov 2004 22:16:53 -0000	1.40
++++ action.c	7 Dec 2004 22:53:54 -0000
 @@ -28,7 +28,7 @@
  
  #include <stdarg.h>
@@ -56,9 +32,13 @@ diff -u /root/wine/wine/dlls/msi/action.c ./action.c
  
                      sprintfW(filever,name_fmt,
                          HIWORD(lpVer->dwFileVersionMS),
-diff -u /root/wine/wine/dlls/msi/msi.c ./msi.c
---- /root/wine/wine/dlls/msi/msi.c	2004-10-18 13:20:12.000000000 -0500
-+++ ./msi.c	2004-12-07 00:24:30.000000000 -0600
+Index: msi.c
+===================================================================
+RCS file: /home/wine/wine/dlls/msi/msi.c,v
+retrieving revision 1.42
+diff -u -r1.42 msi.c
+--- msi.c	7 Oct 2004 03:06:50 -0000	1.42
++++ msi.c	7 Dec 2004 22:53:55 -0000
 @@ -40,6 +40,9 @@
  
  #include "initguid.h"
@@ -93,24 +73,13 @@ diff -u /root/wine/wine/dlls/msi/msi.c ./msi.c
              wsprintfW(tmp, szVersionFormat, HIWORD(ffi->dwFileVersionMS), LOWORD(ffi->dwFileVersionMS), HIWORD(ffi->dwFileVersionLS), LOWORD(ffi->dwFileVersionLS));
              lstrcpynW(lpVersionBuf, tmp, *pcchVersionBuf);
              *pcchVersionBuf = strlenW(lpVersionBuf);
-Only in ./: patch.diff
-diff -u /root/wine/wine/dlls/msi/record.c ./record.c
---- /root/wine/wine/dlls/msi/record.c	2004-12-07 00:09:28.000000000 -0600
-+++ ./record.c	2004-10-21 16:00:54.000000000 -0500
-@@ -534,10 +534,7 @@
-     count = 0;
-     r = IStream_Read( stm, buf, *sz, &count );
-     if( FAILED( r ) )
--    {
--        *sz = 0;
-         return ERROR_FUNCTION_FAILED;
--    }
- 
-     *sz = count;
- 
-diff -u /root/wine/wine/dlls/msi/suminfo.c ./suminfo.c
---- /root/wine/wine/dlls/msi/suminfo.c	2004-10-18 13:20:12.000000000 -0500
-+++ ./suminfo.c	2004-12-07 00:58:14.000000000 -0600
+Index: suminfo.c
+===================================================================
+RCS file: /home/wine/wine/dlls/msi/suminfo.c,v
+retrieving revision 1.9
+diff -u -r1.9 suminfo.c
+--- suminfo.c	7 Oct 2004 03:06:50 -0000	1.9
++++ suminfo.c	7 Dec 2004 22:53:55 -0000
 @@ -23,6 +23,8 @@
  #define COBJMACROS
  #define NONAMELESSUNION
@@ -128,4 +97,3 @@ diff -u /root/wine/wine/dlls/msi/suminfo.c ./suminfo.c
      r = IPropertySetStorage_Open( psstg, &FMTID_SummaryInformation, grfMode, &ps );
      if( FAILED( r ) )
      {
-Only in ./: winehq2ros.patch

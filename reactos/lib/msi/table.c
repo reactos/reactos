@@ -466,8 +466,8 @@ UINT read_table_from_storage( MSIDATABASE *db, LPCWSTR name, MSITABLE **ptable)
                 t->data[i][ofs] = rawdata[ofs*t->row_count + i ];
                 break;
             case 4:
-                t->data[i][ofs] = rawdata[ofs*t->row_count + i*2 ];
-                t->data[i][ofs+1] = rawdata[ofs*t->row_count + i*2 + 1];
+                t->data[i][ofs] = rawdata[ofs*t->row_count + i ];
+                t->data[i][ofs+1] = rawdata[ofs*t->row_count + i + 1];
                 break;
             default:
                 ERR("oops - unknown column width %d\n", n);
