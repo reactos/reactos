@@ -16,13 +16,15 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib1bpp.c,v 1.16 2004/03/28 23:24:57 navaraf Exp $ */
+/* $Id: dib1bpp.c,v 1.17 2004/04/05 21:26:24 navaraf Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
 #include <win32k/bitmaps.h>
+#include <win32k/brush.h>
 #include <win32k/debug.h>
+#include <include/object.h>
 #include <debug.h>
 #include <ddk/winddi.h>
 #include "../eng/objects.h"
@@ -351,68 +353,175 @@ DIB_1BPP_BitBlt(
 	PBRUSHOBJ Brush, PPOINTL BrushOrigin,
 	XLATEOBJ *ColorTranslation, ULONG Rop4)
 {
-	LONG     i, j, k, sx, sy;
-	ULONG    Dest, Source, Pattern;
-	PULONG   DestBits;
-	BOOL     UsesSource = ((Rop4 & 0xCC0000) >> 2) != (Rop4 & 0x330000);
-	BOOL     UsesPattern = ((Rop4 & 0xF00000) >> 4) != (Rop4 & 0x0F0000);  
-	LONG    RoundedRight = DestRect->right - ((DestRect->right - DestRect->left) & 0x7);
+   ULONG X, Y, SourceX, SourceY, k;
+   ULONG Dest, Source, Pattern;
+   PULONG DestBits;
+   BOOL UsesSource;
+   BOOL UsesPattern;
+   LONG RoundedRight;
+   BYTE NoBits;
+   /* Pattern brushes */
+   PGDIBRUSHOBJ GdiBrush;
+   HBITMAP PatternSurface = NULL;
+   PSURFOBJ PatternObj;
+   ULONG PatternWidth, PatternHeight;
 
-	if (Rop4 == SRCCOPY)
-	{
-		return(DIB_1BPP_BitBltSrcCopy(DestSurf, SourceSurf, DestGDI, SourceGDI, DestRect, SourcePoint, ColorTranslation));
-	}
-	else
-	{
-		sy = SourcePoint->y;
+   if (Rop4 == SRCCOPY)
+   {
+      return DIB_1BPP_BitBltSrcCopy(
+         DestSurf,
+         SourceSurf,
+         DestGDI,
+         SourceGDI,
+         DestRect,
+         SourcePoint,
+         ColorTranslation);
+   }
 
-		for (j=DestRect->top; j<DestRect->bottom; j++)
-		{
-			sx = SourcePoint->x;
-			DestBits = (PULONG)(DestSurf->pvScan0 + (DestRect->left>>3) + j * DestSurf->lDelta);
-			for (i=DestRect->left; i<RoundedRight; i+=32, DestBits++)
-			{
-				Dest = *DestBits;
-				if (UsesSource)
-				{
-					Source = 0;
-					for (k = 0; k < 8; k++)
-					{
-						Source |= (DIB_GetSource(SourceSurf, SourceGDI, sx + (i - DestRect->left) + k, sy, ColorTranslation) << (7 - k));
-						Source |= (DIB_GetSource(SourceSurf, SourceGDI, sx + (i - DestRect->left) + k + 8, sy, ColorTranslation) << (8 + (7 - k)));
-						Source |= (DIB_GetSource(SourceSurf, SourceGDI, sx + (i - DestRect->left) + k + 16, sy, ColorTranslation) << (16 + (7 - k)));
-						Source |= (DIB_GetSource(SourceSurf, SourceGDI, sx + (i - DestRect->left) + k + 24, sy, ColorTranslation) << (24 + (7 - k)));
-					}
-				}
-				if (UsesPattern)
-				{
-					/* FIXME: No support for pattern brushes. */
-					Pattern = Brush->iSolidColor ? 0xFFFFFFFF : 0x00000000;
-				}
-				*DestBits = DIB_DoRop(Rop4, Dest, Source, Pattern);	    
-			}
-			if (i < DestRect->right)
-			{
-				Dest = *DestBits;
-				for (; i < DestRect->right; i++)
-				{
-					if (UsesSource)
-					{
-						Source = DIB_GetSource(SourceSurf, SourceGDI, sx + (i - DestRect->left), sy, ColorTranslation);
-					}
-					if (UsesPattern)
-					{
-						/* FIXME: No support for pattern brushes. */
-						Pattern = Brush->iSolidColor ? 0xFFFFFFFF : 0x00000000;
-					}
-					DIB_1BPP_PutPixel(DestSurf, i, j, DIB_DoRop(Rop4, Dest, Source, Pattern) & 0xF);
-					Dest >>= 1;
-				}
-			}
-			sy++;
-		}
-	}
-	return TRUE;
+   if (UsesPattern)
+   {
+      if (Brush == NULL)
+      {
+         UsesPattern = FALSE;
+      } else
+      if (Brush->iSolidColor == 0xFFFFFFFF)
+      {
+         PBITMAPOBJ PatternBitmap;
+
+         GdiBrush = CONTAINING_RECORD(
+            Brush,
+            GDIBRUSHOBJ,
+            BrushObject);
+
+         PatternBitmap = BITMAPOBJ_LockBitmap(GdiBrush->hbmPattern);
+         PatternSurface = BitmapToSurf(PatternBitmap, NULL);
+         BITMAPOBJ_UnlockBitmap(GdiBrush->hbmPattern);
+
+         PatternObj = (PSURFOBJ)AccessUserObject((ULONG)PatternSurface);
+         PatternWidth = PatternObj->sizlBitmap.cx;
+         PatternHeight = PatternObj->sizlBitmap.cy;
+      }
+   }
+
+   UsesSource = ((Rop4 & 0xCC0000) >> 2) != (Rop4 & 0x330000);
+   UsesPattern = ((Rop4 & 0xF00000) >> 4) != (Rop4 & 0x0F0000);  
+   RoundedRight = DestRect->right - ((DestRect->right - DestRect->left) & 0x7);
+   SourceY = SourcePoint->y;
+
+   for (Y = DestRect->top; Y < DestRect->bottom; Y++)
+   {
+      SourceX = SourcePoint->x;
+      DestBits = (PULONG)(
+         DestSurf->pvScan0 +
+         (DestRect->left >> 3) +
+         Y * DestSurf->lDelta);
+
+      X = DestRect->left;
+      if (X & 7)
+      {
+         Dest = *((PBYTE)DestBits);
+         NoBits = 7 - (X & 7);
+
+         if (UsesSource)
+         {
+            Source = 0;
+            for (k = 7 - NoBits; k < NoBits; k++)
+               Source |= (DIB_GetSource(SourceSurf, SourceGDI, SourceX + k, SourceY, ColorTranslation) << (7 - k));
+         }
+
+         if (UsesPattern)
+         {
+            if (Brush->iSolidColor == 0xFFFFFFFF)
+            {
+               Pattern = 0;
+               for (k = 7 - NoBits; k < NoBits; k++)
+                  Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + k) % PatternWidth, Y % PatternHeight) << (7 - k));
+            }
+            else
+            {
+               Pattern = Brush->iSolidColor ? 0xFFFFFFFF : 0x00000000;
+            }
+         }
+
+         Dest = DIB_DoRop(Rop4, Dest, Source, Pattern);	    
+         Dest &= ~((1 << (7 - NoBits)) - 1);
+         Dest |= *((PBYTE)DestBits) & ((1 << (7 - NoBits)) - 1);
+         
+         X += NoBits;
+         SourceX += NoBits;
+      }
+
+      for (; X < RoundedRight; X += 32, DestBits++, SourceX++)
+      {
+         Dest = *DestBits;
+
+         if (UsesSource)
+         {
+            Source = 0;
+            for (k = 0; k < 8; k++)
+            {
+               Source |= (DIB_GetSource(SourceSurf, SourceGDI, SourceX + k, SourceY, ColorTranslation) << (7 - k));
+               Source |= (DIB_GetSource(SourceSurf, SourceGDI, SourceX + k + 8, SourceY, ColorTranslation) << (8 + (7 - k)));
+               Source |= (DIB_GetSource(SourceSurf, SourceGDI, SourceX + k + 16, SourceY, ColorTranslation) << (16 + (7 - k)));
+               Source |= (DIB_GetSource(SourceSurf, SourceGDI, SourceX + k + 24, SourceY, ColorTranslation) << (24 + (7 - k)));
+            }
+         }
+
+         if (UsesPattern)
+         {
+            if (Brush->iSolidColor == 0xFFFFFFFF)
+            {
+               Pattern = 0;
+               for (k = 0; k < 8; k++)
+               {
+                  Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + k) % PatternWidth, Y % PatternHeight) << (7 - k));
+                  Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + k + 8) % PatternWidth, Y % PatternHeight) << (8 + (7 - k)));
+                  Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + k + 16) % PatternWidth, Y % PatternHeight) << (16 + (7 - k)));
+                  Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + k + 24) % PatternWidth, Y % PatternHeight) << (24 + (7 - k)));
+               }
+            }
+            else
+            {
+               Pattern = Brush->iSolidColor ? 0xFFFFFFFF : 0x00000000;
+            }
+         }
+
+         *DestBits = DIB_DoRop(Rop4, Dest, Source, Pattern);	    
+      }
+
+      if (X < DestRect->right)
+      {
+//         Dest = *DestBits;
+         for (; X < DestRect->right; X++, SourceX++)
+         {
+//            Dest = *DestBits;
+            Dest = DIB_1BPP_GetPixel(DestSurf, X, Y);
+
+            if (UsesSource)
+            {
+               Source = DIB_GetSource(SourceSurf, SourceGDI, SourceX, SourceY, ColorTranslation);
+            }
+
+            if (UsesPattern)
+            {
+               if (Brush->iSolidColor == 0xFFFFFFFF)
+                  Pattern = DIB_1BPP_GetPixel(PatternObj, X % PatternWidth, Y % PatternHeight);
+               else
+                  Pattern = Brush->iSolidColor ? 0xFFFFFFFF : 0x00000000;
+            }
+
+            DIB_1BPP_PutPixel(DestSurf, X, Y, DIB_DoRop(Rop4, Dest, Source, Pattern) & 0xF);
+//            Dest >>= 1;
+         }
+      }
+
+      SourceY++;
+   }
+
+   if (PatternSurface != NULL)
+      EngDeleteSurface(PatternSurface);
+  
+   return TRUE;
 }
 
 BOOLEAN

@@ -132,14 +132,6 @@ PPOINT FASTCALL GDI_Bezier (const POINT *Points, INT count, PINT nPtsOut);
 
 /* objects/objconv.c */
 
-BRUSHOBJ*
-FASTCALL
-PenToBrushObj(BRUSHOBJ *brush, PENOBJ *pen);
-
-BRUSHOBJ*
-FASTCALL
-HPenToBrushObj ( BRUSHOBJ *brush, HPEN hpen );
-
 HBITMAP
 FASTCALL
 BitmapToSurf ( PBITMAPOBJ BitmapObj, HDEV GDIDevice );

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: line.c,v 1.27 2004/02/19 21:12:10 weiden Exp $ */
+/* $Id: line.c,v 1.28 2004/04/05 21:26:25 navaraf Exp $ */
 
 // Some code from the WINE project source (www.winehq.com)
 
@@ -71,7 +71,7 @@ IntGdiLineTo(DC  *dc,
 {
   SURFOBJ *SurfObj;
   BOOL     Ret;
-  BRUSHOBJ PenBrushObj;
+  PGDIBRUSHOBJ PenBrushObj;
   RECT     Bounds;
 
   SurfObj = (SURFOBJ*)AccessUserObject ( (ULONG)dc->Surface );
@@ -119,16 +119,22 @@ IntGdiLineTo(DC  *dc,
       Bounds.top += dc->w.DCOrgY;
       Bounds.bottom += dc->w.DCOrgY;
 
-      /* make BRUSHOBJ from current pen. */
-      HPenToBrushObj ( &PenBrushObj, dc->w.hPen );
+      /* get BRUSHOBJ from current pen. */
+      PenBrushObj = PENOBJ_LockPen( dc->w.hPen );
+      ASSERT(PenBrushObj);
 
-      Ret = IntEngLineTo(SurfObj,
-                         dc->CombinedClip,
-                         &PenBrushObj,
-                         dc->w.DCOrgX + dc->w.CursPosX, dc->w.DCOrgY + dc->w.CursPosY,
-                         dc->w.DCOrgX + XEnd,           dc->w.DCOrgY + YEnd,
-                         &Bounds,
-                         dc->w.ROPmode);
+      if (!(PenBrushObj->flAttrs & GDIBRUSH_IS_NULL))
+      {
+        Ret = IntEngLineTo(SurfObj,
+                           dc->CombinedClip,
+                           &PenBrushObj->BrushObject,
+                           dc->w.DCOrgX + dc->w.CursPosX, dc->w.DCOrgY + dc->w.CursPosY,
+                           dc->w.DCOrgX + XEnd,           dc->w.DCOrgY + YEnd,
+                           &Bounds,
+                           dc->w.ROPmode);
+      }
+
+      PENOBJ_UnlockPen( dc->w.hPen );
     }
 
   if (Ret)
@@ -209,7 +215,7 @@ IntGdiPolyline(DC      *dc,
   BOOL         ret = FALSE; // default to failure
   LONG         i;
   PROSRGNDATA  reg;
-  BRUSHOBJ     PenBrushObj;
+  PGDIBRUSHOBJ PenBrushObj;
   POINT       *pts;
 
   SurfObj = (SURFOBJ*)AccessUserObject((ULONG)dc->Surface);
@@ -236,16 +242,22 @@ IntGdiPolyline(DC      *dc,
 	pts[i].y += dc->w.DCOrgY;
       }
 
-      /* make BRUSHOBJ from current pen. */
-      HPenToBrushObj ( &PenBrushObj, dc->w.hPen );
+      /* get BRUSHOBJ from current pen. */
+      PenBrushObj = PENOBJ_LockPen( dc->w.hPen );
+      ASSERT(PenBrushObj);
 
-      //get IntEngPolyline to do the drawing.
-      ret = IntEngPolyline(SurfObj,
-			   dc->CombinedClip,
-			   &PenBrushObj,
-			   pts,
-			   Count,
-			   dc->w.ROPmode);
+      if (!(PenBrushObj->flAttrs & GDIBRUSH_IS_NULL))
+      {
+        //get IntEngPolyline to do the drawing.
+        ret = IntEngPolyline(SurfObj,
+  			   dc->CombinedClip,
+  			   &PenBrushObj->BrushObject,
+  			   pts,
+  			   Count,
+  			   dc->w.ROPmode);
+      }
+
+      PENOBJ_UnlockPen( dc->w.hPen );
     }
 
     ExFreePool ( pts );

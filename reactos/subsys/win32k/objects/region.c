@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.46 2004/04/03 20:36:56 gvg Exp $ */
+/* $Id: region.c,v 1.47 2004/04/05 21:26:25 navaraf Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -2005,7 +2005,7 @@ NtGdiPaintRgn(HDC  hDC,
   PROSRGNDATA visrgn;
   CLIPOBJ* ClipRegion;
   BOOL bRet = FALSE;
-  PBRUSHOBJ pBrush;
+  PGDIBRUSHOBJ pBrush;
   POINTL BrushOrigin;
   SURFOBJ	*SurfObj;
 
@@ -2048,7 +2048,7 @@ NtGdiPaintRgn(HDC  hDC,
 
   bRet = IntEngPaint(SurfObj,
 	 ClipRegion,
-	 pBrush,
+	 &pBrush->BrushObject,
 	 &BrushOrigin,
 	 0xFFFF);//FIXME:don't know what to put here
 

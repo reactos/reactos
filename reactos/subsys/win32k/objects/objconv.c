@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: objconv.c,v 1.15 2004/02/01 15:45:41 gvg Exp $ */
+/* $Id: objconv.c,v 1.16 2004/04/05 21:26:25 navaraf Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -38,35 +38,6 @@
 //#define NDEBUG
 #include <win32k/debug1.h>
 
-
-BRUSHOBJ*
-FASTCALL
-PenToBrushObj ( BRUSHOBJ *brush, PENOBJ *pen )
-{
-  ASSERT ( pen );
-  ASSERT ( brush );
-  memset ( brush, 0, sizeof(BRUSHOBJ) );
-  if ( pen->logpen.lopnStyle == PS_NULL )
-    brush->logbrush.lbStyle = BS_NULL;
-  else
-    brush->iSolidColor = pen->iSolidColor;
-  return brush;
-}
-
-BRUSHOBJ*
-FASTCALL
-HPenToBrushObj ( BRUSHOBJ *brush, HPEN hpen )
-{
-  PENOBJ *pen;
-  ASSERT ( hpen );
-  ASSERT ( brush );
-  pen = PENOBJ_LockPen(hpen);
-  ASSERT ( pen );
-  PenToBrushObj ( brush, pen );
-  PENOBJ_UnlockPen(hpen);
-  return brush;
-}
-
 HBITMAP FASTCALL BitmapToSurf(PBITMAPOBJ BitmapObj, HDEV GDIDevice)
 {
   HBITMAP BitmapHandle;
@@ -87,11 +58,12 @@ HBITMAP FASTCALL BitmapToSurf(PBITMAPOBJ BitmapObj, HDEV GDIDevice)
                                    BitmapFormat(BitmapObj->bitmap.bmBitsPixel, BI_RGB),
                                    0, BitmapObj->bitmap.bmBits);
     }
-  if (NULL != BitmapHandle)
+  if (NULL != BitmapHandle && NULL != GDIDevice)
     {
       EngAssociateSurface(BitmapHandle, GDIDevice, 0);
     }
 
   return BitmapHandle;
 }
+
 /* EOF */

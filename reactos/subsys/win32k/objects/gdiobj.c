@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.64 2004/04/03 20:33:39 gvg Exp $
+ * $Id: gdiobj.c,v 1.65 2004/04/05 21:26:25 navaraf Exp $
  *
  */
 
@@ -110,8 +110,8 @@ GDI_OBJ_SIZE ObjSizes[] =
   {GDI_OBJECT_TYPE_BITMAP,      sizeof(BITMAPOBJ)},
   {GDI_OBJECT_TYPE_DC,          sizeof(DC)},
   {GDI_OBJECT_TYPE_PALETTE,     sizeof(PALGDI)},
-  {GDI_OBJECT_TYPE_BRUSH,       sizeof(BRUSHOBJ)},
-  {GDI_OBJECT_TYPE_PEN,         sizeof(PENOBJ)},
+  {GDI_OBJECT_TYPE_BRUSH,       sizeof(GDIBRUSHOBJ)},
+  {GDI_OBJECT_TYPE_PEN,         sizeof(GDIBRUSHOBJ)},
   {GDI_OBJECT_TYPE_FONT,        sizeof(TEXTOBJ)},
   {GDI_OBJECT_TYPE_DCE,         sizeof(DCE)},
 /*

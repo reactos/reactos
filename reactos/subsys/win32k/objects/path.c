@@ -16,10 +16,11 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: path.c,v 1.18 2004/02/19 21:12:10 weiden Exp $ */
+/* $Id: path.c,v 1.19 2004/04/05 21:26:25 navaraf Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
+#include <ddk/winddi.h>
 #include <win32k/brush.h>
 #include <win32k/dc.h>
 #include <win32k/path.h>

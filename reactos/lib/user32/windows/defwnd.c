@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.128 2004/04/02 19:00:56 weiden Exp $
+/* $Id: defwnd.c,v 1.129 2004/04/05 21:26:24 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -902,7 +902,6 @@ DefWndHandleWindowPosChanged(HWND hWnd, WINDOWPOS* Pos)
 HBRUSH
 DefWndControlColor(HDC hDC, UINT ctlType)
 {
-#if 0 /* FIXME: Re-enable when pattern brushes are implemented */
   if (CTLCOLOR_SCROLLBAR == ctlType)
     {
       HBRUSH hb = GetSysColorBrush(COLOR_SCROLLBAR);
@@ -933,7 +932,6 @@ DefWndControlColor(HDC hDC, UINT ctlType)
       UnrealizeObject(hb);
       return hb;
     }
-#endif
 
   SetTextColor(hDC, GetSysColor(COLOR_WINDOWTEXT));
 

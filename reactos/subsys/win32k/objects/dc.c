@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.125 2004/03/23 19:46:50 gvg Exp $
+/* $Id: dc.c,v 1.126 2004/04/05 21:26:25 navaraf Exp $
  *
  * DC.C - Device context functions
  *
@@ -995,13 +995,16 @@ NtGdiSetBkColor(HDC hDC, COLORREF color)
 {
   COLORREF oldColor;
   PDC  dc = DC_LockDc(hDC);
+  HBRUSH hBrush;
 
   if ( !dc )
     return 0x80000000;
 
   oldColor = dc->w.backgroundColor;
   dc->w.backgroundColor = color;
+  hBrush = dc->w.hBrush;
   DC_UnlockDc ( hDC );
+  NtGdiSelectObject(hDC, hBrush);
   return oldColor;
 }
 
@@ -1702,8 +1705,8 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
   HGDIOBJ objOrg = NULL; // default to failure
   BITMAPOBJ *pb;
   PDC dc;
-  PPENOBJ pen;
-  PBRUSHOBJ brush;
+  PGDIBRUSHOBJ pen;
+  PGDIBRUSHOBJ brush;
   PXLATEOBJ XlateObj;
   PPALGDI PalGDI;
   DWORD objectType;
@@ -1740,7 +1743,17 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
               pen = PENOBJ_LockPen((HPEN) hGDIObj);
               if (NULL != pen)
                 {
-                  pen->iSolidColor = XLATEOBJ_iXlate(XlateObj, pen->logpen.lopnColor);
+                  if (pen->flAttrs & GDIBRUSH_IS_SOLID)
+                    {
+                      pen->BrushObject.iSolidColor = 
+                        XLATEOBJ_iXlate(XlateObj, pen->BrushAttr.lbColor);
+                    }
+                  else
+                    {
+                      pen->BrushObject.iSolidColor = 0xFFFFFFFF;
+                    }
+                  pen->crBack = XLATEOBJ_iXlate(XlateObj, dc->w.backgroundColor);
+                  pen->crFore = XLATEOBJ_iXlate(XlateObj, dc->w.textColor);
                   PENOBJ_UnlockPen((HPEN) hGDIObj);
                   objOrg = (HGDIOBJ)dc->w.hPen;
                   dc->w.hPen = hGDIObj;
@@ -1776,7 +1789,17 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
               brush = BRUSHOBJ_LockBrush((HBRUSH) hGDIObj);
               if (NULL != brush)
                 {
-                  brush->iSolidColor = XLATEOBJ_iXlate(XlateObj, brush->logbrush.lbColor);
+                  if (brush->flAttrs & GDIBRUSH_IS_SOLID)
+                    {
+                      brush->BrushObject.iSolidColor = 
+                        XLATEOBJ_iXlate(XlateObj, brush->BrushAttr.lbColor);
+                    }
+                  else
+                    {
+                      brush->BrushObject.iSolidColor = 0xFFFFFFFF;
+                    }
+                  brush->crBack = XLATEOBJ_iXlate(XlateObj, dc->w.backgroundColor);
+                  brush->crFore = XLATEOBJ_iXlate(XlateObj, dc->w.textColor);
                   BRUSHOBJ_UnlockBrush((HBRUSH) hGDIObj);
                   objOrg = (HGDIOBJ)dc->w.hBrush;
                   dc->w.hBrush = (HBRUSH) hGDIObj;

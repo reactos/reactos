@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.43 2004/03/22 14:58:56 weiden Exp $
+/* $Id: bitblt.c,v 1.44 2004/04/05 21:26:24 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -109,41 +109,74 @@ BltMask(SURFOBJ* Dest,
 	POINTL* BrushPoint,
 	ROP4 Rop4)
 {
-  LONG i, j, dx, dy, c8;
-  BYTE *tMask, *lMask;
-  static BYTE maskbit[8] = { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
+   LONG i, j, dx, dy, c8;
+   BYTE *tMask, *lMask;
+   static BYTE maskbit[8] = { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
+   /* Pattern brushes */
+   PGDIBRUSHOBJ GdiBrush;
+   HBITMAP PatternSurface = NULL;
+   PSURFOBJ PatternObj;
+   ULONG PatternWidth, PatternHeight;
   
-  dx = DestRect->right  - DestRect->left;
-  dy = DestRect->bottom - DestRect->top;
+   if (Mask == NULL)
+   {
+      return FALSE;
+   }
 
-  if (Mask != NULL)
-    {
-      tMask = Mask->pvBits + SourcePoint->y * Mask->lDelta + (SourcePoint->x >> 3);
-      for (j = 0; j < dy; j++)
-	{
-	  lMask = tMask;
-	  c8 = SourcePoint->x & 0x07;
-	  for (i = 0; i < dx; i++)
-	    {
-	      if (0 != (*lMask & maskbit[c8]))
-		{
-		  DestGDI->DIB_PutPixel(Dest, DestRect->left + i, DestRect->top + j, Brush->iSolidColor);
-		}
-	      c8++;
-	      if (8 == c8)
-		{
-		  lMask++;
-		  c8=0;
-		}
-	    }
-	  tMask += Mask->lDelta;
-	}
-      return TRUE;
-    }
-  else
-    {
-    return FALSE;
-    }
+   dx = DestRect->right  - DestRect->left;
+   dy = DestRect->bottom - DestRect->top;
+
+   if (Brush->iSolidColor == 0xFFFFFFFF)
+   {
+      PBITMAPOBJ PatternBitmap;
+
+      GdiBrush = CONTAINING_RECORD(
+         Brush,
+         GDIBRUSHOBJ,
+         BrushObject);
+
+      PatternBitmap = BITMAPOBJ_LockBitmap(GdiBrush->hbmPattern);
+      PatternSurface = BitmapToSurf(PatternBitmap, Dest->hdev);
+      BITMAPOBJ_UnlockBitmap(GdiBrush->hbmPattern);
+
+      PatternObj = (PSURFOBJ)AccessUserObject((ULONG)PatternSurface);
+      PatternWidth = PatternObj->sizlBitmap.cx;
+      PatternHeight = PatternObj->sizlBitmap.cy;
+   }
+
+   tMask = Mask->pvScan0 + SourcePoint->y * Mask->lDelta + (SourcePoint->x >> 3);
+   for (j = 0; j < dy; j++)
+   {
+      lMask = tMask;
+      c8 = SourcePoint->x & 0x07;
+      for (i = 0; i < dx; i++)
+      {
+         if (0 != (*lMask & maskbit[c8]))
+         {
+            if (PatternSurface == NULL)
+            {
+               DestGDI->DIB_PutPixel(Dest, DestRect->left + i, DestRect->top + j, Brush->iSolidColor);
+            }
+            else
+            {
+               DestGDI->DIB_PutPixel(Dest, DestRect->left + i, DestRect->top + j,
+                  DIB_1BPP_GetPixel(PatternObj, (DestRect->left + i) % PatternWidth, (DestRect->top + j) % PatternHeight) ? GdiBrush->crFore : GdiBrush->crBack);
+            }
+         }
+         c8++;
+         if (8 == c8)
+         {
+            lMask++;
+            c8 = 0;
+         }
+      }
+      tMask += Mask->lDelta;
+   }
+
+   if (PatternSurface != NULL)
+      EngDeleteSurface(PatternSurface);
+
+   return TRUE;
 }
 
 static BOOLEAN STDCALL
@@ -345,7 +378,14 @@ EngBitBlt(SURFOBJ *DestObj,
     }
   else if (PATCOPY == Rop4)
     {
+#if 0
       BltRectFunc = BltPatCopy;
+#else
+      if (Brush->iSolidColor == 0xFFFFFFFF)
+        BltRectFunc = CallDibBitBlt;
+      else
+        BltRectFunc = BltPatCopy;
+#endif
     }
   else
     {

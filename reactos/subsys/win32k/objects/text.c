@@ -22,12 +22,13 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.87 2004/04/04 15:28:43 gvg Exp $ */
+/* $Id: text.c,v 1.88 2004/04/05 21:26:25 navaraf Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
+#include <ddk/winddi.h>
 #include <napi/win32.h>
 #include <internal/safe.h>
 #include <win32k/brush.h>
@@ -1493,9 +1494,9 @@ NtGdiExtTextOut(
    RECTL DestRect, MaskRect;
    POINTL SourcePoint, BrushOrigin;
    HBRUSH hBrushFg = NULL;
-   PBRUSHOBJ BrushFg = NULL;
+   PGDIBRUSHOBJ BrushFg = NULL;
    HBRUSH hBrushBg = NULL;
-   PBRUSHOBJ BrushBg = NULL;
+   PGDIBRUSHOBJ BrushBg = NULL;
    HBITMAP HSourceGlyph;
    PSURFOBJ SourceGlyphSurf;
    SIZEL bitSize;
@@ -1638,7 +1639,7 @@ NtGdiExtTextOut(
          &DestRect,
          &SourcePoint,
          &SourcePoint,
-         BrushBg,
+         &BrushBg->BrushObject,
          &BrushOrigin,
          PATCOPY);
       fuOptions &= ~ETO_OPAQUE;
@@ -1799,7 +1800,7 @@ NtGdiExtTextOut(
             &DestRect,
             &SourcePoint,
             &SourcePoint,
-            BrushBg,
+            &BrushBg->BrushObject,
             &BrushOrigin,
             PATCOPY);
          BackgroundLeft = DestRect.right;
@@ -1838,7 +1839,7 @@ NtGdiExtTextOut(
          &DestRect,
          &SourcePoint,
          (PPOINTL)&MaskRect,
-         BrushFg,
+         &BrushFg->BrushObject,
          &BrushOrigin);
 
       EngDeleteSurface(HSourceGlyph);
@@ -2578,6 +2579,7 @@ NtGdiSetTextColor(HDC hDC,
 {
   COLORREF  oldColor;
   PDC  dc = DC_LockDc(hDC);
+  HBRUSH hBrush;
 
   if (!dc)
   {
@@ -2586,7 +2588,9 @@ NtGdiSetTextColor(HDC hDC,
 
   oldColor = dc->w.textColor;
   dc->w.textColor = color;
+  hBrush = dc->w.hBrush;
   DC_UnlockDc( hDC );
+  NtGdiSelectObject(hDC, hBrush);
   return  oldColor;
 }
 

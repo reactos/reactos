@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.66 2004/04/03 21:25:20 weiden Exp $ */
+/* $Id: bitmaps.c,v 1.67 2004/04/05 21:26:25 navaraf Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -62,7 +62,7 @@ NtGdiBitBlt(
 	PXLATEOBJ XlateObj = NULL;
 	HPALETTE SourcePalette, DestPalette;
 	ULONG SourceMode, DestMode;
-	PBRUSHOBJ BrushObj;
+	PGDIBRUSHOBJ BrushObj;
 	BOOL UsesSource = ((ROP & 0xCC0000) >> 2) != (ROP & 0x330000);
 	BOOL UsesPattern = TRUE;//((ROP & 0xF00000) >> 4) != (ROP & 0x0F0000);
 	HPALETTE Mono = NULL;
@@ -244,7 +244,7 @@ NtGdiBitBlt(
 
 	/* Perform the bitblt operation */
 	Status = IntEngBitBlt(SurfDest, SurfSrc, NULL, DCDest->CombinedClip, XlateObj,
-		&DestRect, &SourcePoint, NULL, BrushObj, NULL, ROP);
+		&DestRect, &SourcePoint, NULL, &BrushObj->BrushObject, NULL, ROP);
 
 	EngDeleteXlate(XlateObj);
 	if (NULL != Mono)
@@ -1099,7 +1099,7 @@ NtGdiStretchBlt(
 	PXLATEOBJ XlateObj = NULL;
 	HPALETTE SourcePalette, DestPalette;
 	ULONG SourceMode, DestMode;
-	PBRUSHOBJ BrushObj;
+	PGDIBRUSHOBJ BrushObj;
 	BOOL UsesSource = ((ROP & 0xCC0000) >> 2) != (ROP & 0x330000);
 	BOOL UsesPattern = ((ROP & 0xF00000) >> 4) != (ROP & 0x0F0000);
 
@@ -1307,7 +1307,7 @@ BITMAPOBJ_GetWidthBytes (INT bmWidth, INT bpp)
 	return -1;
 #endif
 
-	return ((bmWidth * bpp + 31) & ~31) >> 3;
+	return ((bmWidth * bpp + 15) & ~15) >> 3;
 }
 
 HBITMAP FASTCALL
