@@ -1,4 +1,4 @@
-/* $Id: fmutex.c,v 1.1 2001/08/21 20:18:27 chorns Exp $
+/* $Id: fmutex.c,v 1.2 2001/12/20 03:56:08 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -22,32 +22,15 @@ VOID FASTCALL
 ExAcquireFastMutex (PFAST_MUTEX	FastMutex)
 {
    KeEnterCriticalRegion();
-   if (InterlockedDecrement(&(FastMutex->Count))==0)
-     {
-	return;
-     }
-   FastMutex->Contention++;
-   KeWaitForSingleObject(&(FastMutex->Event),
-			 Executive,
-			 KernelMode,
-			 FALSE,
-			 NULL);
-   FastMutex->Owner=KeGetCurrentThread();
+   ExAcquireFastMutexUnsafe(FastMutex);
 }
 
 
 VOID FASTCALL
 ExReleaseFastMutex (PFAST_MUTEX	FastMutex)
 {
-   assert(FastMutex->Owner == KeGetCurrentThread());
-   FastMutex->Owner=NULL;
-   if (InterlockedIncrement(&(FastMutex->Count))<=0)
-     {
-	return;
-     }
-   KeSetEvent(&(FastMutex->Event),0,FALSE);
-
-   KeLeaveCriticalRegion();
+  ExReleaseFastMutexUnsafe(FastMutex);
+  KeLeaveCriticalRegion();
 }
 
 

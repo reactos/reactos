@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.1 2001/06/12 17:50:29 chorns Exp $
+/* $Id: message.c,v 1.2 2001/12/20 03:56:10 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -43,16 +43,12 @@ NtUserDispatchMessage(
   return 0;
 }
 
-BOOL
-STDCALL
-NtUserGetMessage(
-  LPMSG lpMsg,
-  HWND hWnd,
-  UINT wMsgFilterMin,
-  UINT wMsgFilterMax)
+BOOL STDCALL
+NtUserGetMessage(LPMSG lpMsg,
+		 HWND hWnd,
+		 UINT wMsgFilterMin,
+		 UINT wMsgFilterMax)
 {
-  UNIMPLEMENTED
-
   return FALSE;
 }
 

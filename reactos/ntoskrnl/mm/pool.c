@@ -1,4 +1,4 @@
-/* $Id: pool.c,v 1.12 2001/03/07 08:57:09 dwelch Exp $
+/* $Id: pool.c,v 1.13 2001/12/20 03:56:09 dwelch Exp $
  * 
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -51,9 +51,7 @@ EiAllocatePool(POOL_TYPE PoolType,
 	
       case PagedPool:
       case PagedPoolCacheAligned:
-	//	Block = ExAllocatePagedPoolWithTag(PoolType,NumberOfBytes,Tag);
-	Block = ExAllocateNonPagedPoolWithTag(PoolType, NumberOfBytes,
-					      Tag, Caller);
+	Block = ExAllocatePagedPoolWithTag(PoolType,NumberOfBytes,Tag);
 	break;
 	
       default:
@@ -68,8 +66,7 @@ EiAllocatePool(POOL_TYPE PoolType,
    return(Block);
 }
 
-PVOID
-STDCALL
+PVOID STDCALL
 ExAllocatePool (POOL_TYPE PoolType, ULONG NumberOfBytes)
 /*
  * FUNCTION: Allocates pool memory of a specified type and returns a pointer
@@ -114,19 +111,10 @@ ExAllocatePoolWithTag (ULONG PoolType, ULONG NumberOfBytes, ULONG Tag)
 }
 
 
-PVOID
-STDCALL
+PVOID STDCALL
 ExAllocatePoolWithQuota (POOL_TYPE PoolType, ULONG NumberOfBytes)
 {
-#if 0
-  PVOID Block;
-  Block = EiAllocatePool(PoolType,
-			 NumberOfBytes,
-			 TAG_NONE,
-			 (PVOID)__builtin_return_address(0));
-  return(Block);
-#endif
-  UNIMPLEMENTED;
+  return(ExAllocatePoolWithQuotaTag(PoolType, NumberOfBytes, TAG_NONE));
 }
 
 
@@ -146,5 +134,21 @@ ExAllocatePoolWithQuotaTag (IN	POOL_TYPE	PoolType,
   UNIMPLEMENTED;
 }
 
+VOID STDCALL
+ExFreePool(IN PVOID Block)
+{
+  if (Block >= MmPagedPoolBase && Block < (MmPagedPoolBase + MmPagedPoolSize))
+    {
+      ExFreePagedPool(Block);
+    }
+  else
+    {
+      ExFreeNonPagedPool(Block);
+    }
+}
 
 /* EOF */
+
+
+
+

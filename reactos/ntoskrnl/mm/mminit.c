@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.27 2001/12/06 00:54:54 dwelch Exp $
+/* $Id: mminit.c,v 1.28 2001/12/20 03:56:09 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -19,6 +19,7 @@
 #include <internal/io.h>
 #include <internal/ps.h>
 #include <napi/shared_data.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -46,6 +47,7 @@ static MEMORY_AREA* kernel_data_desc = NULL;
 static MEMORY_AREA* kernel_param_desc = NULL;
 static MEMORY_AREA* kernel_pool_desc = NULL;
 static MEMORY_AREA* kernel_shared_data_desc = NULL;
+static MEMORY_AREA* MiPagedPoolDescriptor = NULL;
 
 PVOID MmSharedDataPagePhysicalAddress = NULL;
 
@@ -85,9 +87,7 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
    LastKernelAddress = PAGE_ROUND_UP(LastKernelAddress);
    
    MmInitMemoryAreas();
-//   ExInitNonPagedPool(KERNEL_BASE + PAGE_ROUND_UP(kernel_len) + PAGESIZE);
    ExInitNonPagedPool(LastKernelAddress + PAGESIZE);
-   
 
    /*
     * Setup the system area descriptor list
@@ -151,6 +151,21 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
 		      0,
 		      &kernel_pool_desc,
 		      FALSE);
+
+   MmPagedPoolSize = MM_PAGED_POOL_SIZE;
+   BaseAddress = (PVOID)(LastKernelAddress + PAGESIZE + NONPAGED_POOL_SIZE +
+			 PAGESIZE);
+   MmPagedPoolBase = BaseAddress;
+   Length = MM_PAGED_POOL_SIZE;
+   MmCreateMemoryArea(NULL,
+		      MmGetKernelAddressSpace(),
+		      MEMORY_AREA_PAGED_POOL,
+		      &BaseAddress,
+		      Length,
+		      0,
+		      &MiPagedPoolDescriptor,
+		      FALSE);
+   MmInitializePagedPool();
 
    /*
     * Create the kernel mapping of the user/kernel shared memory.

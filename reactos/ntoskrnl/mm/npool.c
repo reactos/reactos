@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.50 2001/12/06 00:54:54 dwelch Exp $
+/* $Id: npool.c,v 1.51 2001/12/20 03:56:09 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -825,7 +825,7 @@ static void* take_block(BLOCK_HDR* current, unsigned int size,
 
 #endif /* not WHOLE_PAGE_ALLOCATIONS */
 
-VOID STDCALL ExFreePool (PVOID block)
+VOID STDCALL ExFreeNonPagedPool (PVOID block)
 /*
  * FUNCTION: Releases previously allocated memory
  * ARGUMENTS:

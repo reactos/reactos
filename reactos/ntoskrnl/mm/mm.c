@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mm.c,v 1.49 2001/12/06 00:54:54 dwelch Exp $
+/* $Id: mm.c,v 1.50 2001/12/20 03:56:09 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -210,6 +210,10 @@ NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
       case MEMORY_AREA_SYSTEM:
 	Status = STATUS_UNSUCCESSFUL;
 	break;
+
+     case MEMORY_AREA_PAGED_POOL:
+       Status = STATUS_SUCCESS;
+       break;
 	
       case MEMORY_AREA_SECTION_VIEW_COMMIT:
 	Status = MmAccessFaultSectionView(AddressSpace,
@@ -236,6 +240,18 @@ NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
        MmUnlockAddressSpace(AddressSpace);
      }
    return(Status);
+}
+
+NTSTATUS MmCommitPagedPoolAddress(PVOID Address)
+{
+  NTSTATUS Status;
+  PVOID AllocatedPage = MmAllocPage(0);
+  Status = 
+    MmCreateVirtualMapping(NULL,
+			   (PVOID)PAGE_ROUND_DOWN(Address),
+			   PAGE_READONLY,
+			   (ULONG)AllocatedPage);  
+  return(Status);
 }
 
 NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
@@ -303,6 +319,12 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
 
        switch (MemoryArea->Type)
 	 {
+	 case MEMORY_AREA_PAGED_POOL:
+	   {
+	     Status = MmCommitPagedPoolAddress((PVOID)Address);
+	     break;
+	   }
+
 	 case MEMORY_AREA_SYSTEM:
 	   Status = STATUS_UNSUCCESSFUL;
 	   break;
@@ -323,7 +345,7 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
 	       
 	 case MEMORY_AREA_SHARED_DATA:
 	   Status = 
-		MmCreateVirtualMapping(PsGetCurrentProcess(),
+	     MmCreateVirtualMapping(PsGetCurrentProcess(),
 				       (PVOID)PAGE_ROUND_DOWN(Address),
 				       PAGE_READONLY,
 				       (ULONG)MmSharedDataPagePhysicalAddress);
