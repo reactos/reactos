@@ -57,12 +57,15 @@ DlgMainProc(
               {
                 GetCurrentDirectory(MAX_PATH, selected);
                 len = strlen(selected);
-                if(selected[len - 1] != '\\')
+                if(strlen(file))
                 {
-                  lstrcat(selected, "\\");
+                  if(selected[len - 1] != '\\')
+                  {
+                    lstrcat(selected, "\\");
+                  }
+                  lstrcat(selected, file);
+                  EndDialog(hwndDlg, IDC_OK);
                 }
-                lstrcat(selected, file);
-                EndDialog(hwndDlg, IDC_OK);
               }
               break;
             }
