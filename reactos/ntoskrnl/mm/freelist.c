@@ -249,12 +249,13 @@ VOID MiParseBIOSMemoryMap(
     }
 }
 
-PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
-			   PVOID LastPhysKernelAddress,
-			   ULONG MemorySizeInPages,
-			   ULONG LastKernelAddress,
-         PADDRESS_RANGE BIOSMemoryMap,
-         ULONG AddressRangeCount)
+PVOID 
+MmInitializePageList(PVOID FirstPhysKernelAddress,
+		     PVOID LastPhysKernelAddress,
+		     ULONG MemorySizeInPages,
+		     ULONG LastKernelAddress,
+		     PADDRESS_RANGE BIOSMemoryMap,
+		     ULONG AddressRangeCount)
 /*
  * FUNCTION: Initializes the page list with all pages free
  * except those known to be reserved and those used by the kernel
@@ -284,6 +285,8 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
    InitializeListHead(&FreeUnzeroedPageListHead);
    InitializeListHead(&FreeZeroedPageListHead);
    InitializeListHead(&BiosPageListHead);
+
+   LastKernelAddress = PAGE_ROUND_UP(LastKernelAddress);
    
    Reserved = 
      PAGE_ROUND_UP((MemorySizeInPages * sizeof(PHYSICAL_PAGE))) / PAGESIZE;
@@ -322,6 +325,7 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 		  KeBugCheck(0);
 	       }
 	  }
+	memset((PVOID)MmPageArray + (i * PAGESIZE), 0, PAGESIZE);
      }
 
    /*
