@@ -428,11 +428,38 @@ struct _SYSTEM_RESOURCE_LOCK_INFO
 // UNKNOWN
 
 // SystemHandleInformation (16)
+#if 0 
+#define OBJECT_TYPE_0			0
+#define OBJECT_TYPE_1			1
+#define OBJECT_TYPE_OBJDIRECTORY	2
+#define OBJECT_TYPE_SYMLINK		3
+#define OBJECT_TYPE_TOKEN		4
+#define OBJECT_TYPE_PROCESS		5
+#define OBJECT_TYPE_THREAD		6
+#define OBJECT_TYPE_EVENT		7
+#define OBJECT_TYPE_8			8
+#define OBJECT_TYPE_MUTANT		9
+#define OBJECT_TYPE_SEMAPHORE		10
+#define OBJECT_TYPE_TIMER		11
+#define OBJECT_TYPE_12			12
+#define OBJECT_TYPE_WINSTATION		13
+#define OBJECT_TYPE_DESKTOP		14
+#define OBJECT_TYPE_SECTION		15
+#define OBJECT_TYPE_KEY			16
+#define OBJECT_TYPE_PORT		17
+#define OBJECT_TYPE_18			18
+#define OBJECT_TYPE_19			19
+#define OBJECT_TYPE_20			20
+#define OBJECT_TYPE_21			21
+#define OBJECT_TYPE_IOCOMPLETION	22
+#define OBJECT_TYPE_FILE		23
+#endif
 typedef
 struct _SYSTEM_HANDLE_ENTRY
 {
 	ULONG	OwnerPid;
-	USHORT	ObjectType;
+	BYTE	ObjectType;
+	BYTE	HandleFlags;
 	USHORT	HandleValue;
 	PVOID	ObjectPointer;
 	ULONG	AccessMask;

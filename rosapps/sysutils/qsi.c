@@ -1,4 +1,4 @@
-/* $Id: qsi.c,v 1.1 2000/04/25 23:22:57 ea Exp $
+/* $Id: qsi.c,v 1.2 2000/04/27 23:39:49 ea Exp $
  *
  * PROJECT    : ReactOS Operating System (see http://www.reactos.com/)
  * DESCRIPTION: Tool to query system information
@@ -82,6 +82,26 @@ struct _COMMAND_DESCRIPTOR
 } COMMAND_DESCRIPTOR, * PCOMMAND_DESCRIPTOR;
 
 
+/* Fast BYTE to binary representation */
+
+#define BIT(n,m) (((n)&(m))?'1':'0')
+LPSTR
+STDCALL
+ByteToBinaryString (
+	BYTE	Byte,
+	CHAR	Binary [8]
+	)
+{
+	Binary [7] = BIT(Byte,0x01);
+	Binary [6] = BIT(Byte,0x02);
+	Binary [5] = BIT(Byte,0x04);
+	Binary [4] = BIT(Byte,0x08);
+	Binary [3] = BIT(Byte,0x10);
+	Binary [2] = BIT(Byte,0x20);
+	Binary [1] = BIT(Byte,0x40);
+	Binary [0] = BIT(Byte,0x80);
+	return (LPSTR) Binary;
+}
 
 /* --- */
 VOID
@@ -1171,7 +1191,8 @@ CMD_DEF(Handle)
 	LONG				Length = 0;
 	INT				Index;
 	const PCHAR			hr =
-		"-------- -------- -------- -------- --------\n";
+		"-------- -------- ---- -------- -------- --------\n";
+	CHAR				FlagsString [9] = {0};
 
 	pInfo = GlobalAlloc (GMEM_ZEROINIT, BUFFER_SIZE_DEFAULT);
 
@@ -1224,7 +1245,7 @@ CMD_DEF(Handle)
 		GlobalFree (pInfo);
 		return EXIT_FAILURE;
 	}
-	printf ("Handle   OwnerPID ObjType  ObjPtr   Access\n");
+	printf ("Handle   OwnerPID Type ObjPtr   Access   Flags\n");
 	printf (hr);
 
 	for (	Index = 0;
@@ -1233,12 +1254,16 @@ CMD_DEF(Handle)
 		)
 	{
 		printf (
-			"%8x %8x %8x %8x %8x\n",
+			"%8x %8x %4d %8x %8x %s\n",
 			pInfo->Handle[Index].HandleValue,
 			pInfo->Handle[Index].OwnerPid,
 			pInfo->Handle[Index].ObjectType,
 			pInfo->Handle[Index].ObjectPointer,
-			pInfo->Handle[Index].AccessMask
+			pInfo->Handle[Index].AccessMask,
+			ByteToBinaryString (
+				pInfo->Handle[Index].HandleFlags,
+				FlagsString
+				)
 			);
 	}
 	printf (hr);
@@ -2138,7 +2163,7 @@ CMD_DEF(credits)
 		"\tPrasad Dabak, Sandeep Phadke, and Milind Borate\n\n"
 
 		"Windows NT/2000 Native API Reference:\n"
-		"\tGary Nebbet\n\n"
+		"\tGary Nebbett\n\n"
 
 		"comp.os.ms-windows.programmer.nt.kernel-mode\n"
 		"\t(many postings with sample code)\n"
