@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.53 2002/09/08 10:22:41 chorns Exp $
+# $Id: makefile,v 1.54 2002/12/06 13:14:13 robd Exp $
 
 PATH_TO_TOP = ../..
 
@@ -31,9 +31,10 @@ SYNCH_OBJECTS = synch/critical.o synch/event.o synch/intrlck.o synch/mutex.o \
                 synch/sem.o synch/timer.o synch/wait.o
 
 MISC_OBJECTS = misc/error.o misc/atom.o misc/handle.o misc/env.o \
-	       misc/dllmain.o misc/comm.o \
+	       misc/dllmain.o misc/comm.o misc/errormsg.o \
 	       misc/console.o misc/time.o misc/stubs.o misc/ldr.o misc/res.o \
-	       misc/debug.o misc/sysinfo.o misc/profile.o
+	       misc/debug.o misc/sysinfo.o misc/profile.o \
+		misc/mbchars.o misc/muldiv.o misc/getname.o
 
 FILE_OBJECTS = file/file.o file/curdir.o file/lfile.o file/dir.o \
                file/iocompl.o file/volume.o file/deviceio.o file/dosdev.o \
