@@ -129,6 +129,10 @@ INT_PTR CALLBACK RunDlgProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
             SetClassLongA (hwnd, GCL_HICON, (LPARAM)prfdp->hIcon) ;
             SendMessageA (GetDlgItem (hwnd, 12297), STM_SETICON,
                           (WPARAM)LoadIconA (NULL, (LPSTR)IDI_WINLOGO), 0);
+            if (NULL != prfdp->lpstrDescription)
+                {
+                SetWindowTextA (GetDlgItem(hwnd, 12289), prfdp->lpstrDescription) ;
+                }
             FillList (GetDlgItem (hwnd, 12298), NULL) ;
             SetFocus (GetDlgItem (hwnd, 12298)) ;
             return TRUE ;
