@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.104 2004/08/25 22:31:01 gvg Exp $
+/* $Id: msgqueue.c,v 1.105 2004/08/28 15:01:46 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -813,6 +813,7 @@ Notified:
   {
     /* only dereference our message queue if the message has not been timed out */
     IntDereferenceMessageQueue(MessageQueue);
+    IntDereferenceMessageQueue(Message->SenderQueue);
   }
   
   /* only free the message if not freed already */
@@ -867,6 +868,7 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
   Message->CompletionEvent = &CompletionEvent;
   Message->Result = &Result;
   Message->SenderQueue = ThreadQueue;
+  IntReferenceMessageQueue(ThreadQueue);
   Message->CompletionCallback = NULL;
   
   IntReferenceMessageQueue(MessageQueue);
@@ -928,6 +930,7 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
                 Message->Result = NULL;
                 RemoveEntryList(&Message->DispatchingListEntry);
                 IntDereferenceMessageQueue(MessageQueue);
+                IntDereferenceMessageQueue(ThreadQueue);
                 break;
               }
             Entry = Entry->Flink;
@@ -986,6 +989,7 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
                     Message->Result = NULL;
                     RemoveEntryList(&Message->DispatchingListEntry);
                     IntDereferenceMessageQueue(MessageQueue);
+                    IntDereferenceMessageQueue(ThreadQueue);
                     break;
                   }
                 Entry = Entry->Flink;
@@ -1192,6 +1196,17 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
       
       /* free the message */
       ExFreePool(CurrentSentMessage);
+    }
+
+  /* tell other threads not to bother returning any info to us */
+  while (! IsListEmpty(&MessageQueue->DispatchingMessagesHead))
+    {
+      CurrentEntry = RemoveHeadList(&MessageQueue->DispatchingMessagesHead);
+      CurrentSentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE,
+                                             DispatchingListEntry);
+      CurrentSentMessage->CompletionEvent = NULL;
+      CurrentSentMessage->Result = NULL;
+      IntDereferenceMessageQueue(MessageQueue);
     }
   
   IntUnLockMessageQueue(MessageQueue);
