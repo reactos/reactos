@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.50 2001/12/29 14:32:22 dwelch Exp $
+/* $Id: virtual.c,v 1.51 2001/12/31 01:53:45 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -95,67 +95,56 @@ MmWritePageVirtualMemory(PMADDRESS_SPACE AddressSpace,
 }
 
 
-ULONG MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
-			     PMEMORY_AREA MemoryArea,
-			     PVOID Address,
-			     PBOOLEAN Ul)
+NTSTATUS 
+MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
+		       PMEMORY_AREA MemoryArea,
+		       PVOID Address,
+		       PMM_PAGEOP PageOp)
 {
-   ULONG PhysicalAddress;
+   PVOID PhysicalAddress;
    BOOL WasDirty;
    SWAPENTRY SwapEntry;
    NTSTATUS Status;
    PMDL Mdl;
-   PMM_PAGEOP PageOp;
 
-   /*
-    * Get or create a pageop
-    */
-   PageOp = MmGetPageOp(MemoryArea, AddressSpace->Process->UniqueProcessId,
-			(PVOID)PAGE_ROUND_DOWN(Address), NULL, 0, 
-			MM_PAGEOP_PAGEOUT);
-   if (PageOp->Thread != PsGetCurrentThread())
-     {
-       /*
-	* On the assumption that handling pageouts speedly rather than
-	* in strict order is better abandon this one.
-	*/
-       (*Ul) = FALSE;
-       MmReleasePageOp(PageOp);
-       return(STATUS_UNSUCCESSFUL);
-     }
-   
+   DPRINT("MmPageOutVirtualMemory(Address 0x%.8X) PID %d\n",
+	   Address, MemoryArea->Process->UniqueProcessId);
+
    /*
     * Paging out code or readonly data is easy.
     */
    if ((MemoryArea->Attributes & PAGE_READONLY) ||
        (MemoryArea->Attributes & PAGE_EXECUTE_READ))
-     {
-       MmRemovePageFromWorkingSet(AddressSpace->Process, Address);
-       MmDeleteVirtualMapping(PsGetCurrentProcess(), Address, FALSE,
-			      NULL, &PhysicalAddress);
-       MmDereferencePage((PVOID)PhysicalAddress);
+     {       
+       MmDeleteVirtualMapping(MemoryArea->Process, Address, FALSE,
+			      NULL, (PULONG)&PhysicalAddress);
+       MmDeleteAllRmaps(PhysicalAddress, NULL, NULL);
+       MmReleasePageMemoryConsumer(MC_USER, PhysicalAddress);
        
-       *Ul = TRUE;
        PageOp->Status = STATUS_SUCCESS;
        KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
        MmReleasePageOp(PageOp);
-       return(1);
+       return(STATUS_SUCCESS);
      }
 
    /*
     * Otherwise this is read-write data
     */
-   MmDeleteVirtualMapping(PsGetCurrentProcess(), Address, FALSE,
-			  &WasDirty, &PhysicalAddress);
+   MmDisableVirtualMapping(MemoryArea->Process, Address,
+			   &WasDirty, (PULONG)&PhysicalAddress);
+   if (PhysicalAddress == 0)
+     {
+       KeBugCheck(0);
+     }
    if (!WasDirty)
      {
-       MmRemovePageFromWorkingSet(AddressSpace->Process, Address);
-       MmDereferencePage((PVOID)PhysicalAddress);
-       *Ul = TRUE;
+       MmDeleteVirtualMapping(MemoryArea->Process, Address, FALSE, NULL, NULL);
+       MmDeleteAllRmaps(PhysicalAddress, NULL, NULL);
+       MmReleasePageMemoryConsumer(MC_USER, PhysicalAddress);
        PageOp->Status = STATUS_SUCCESS;
        KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
        MmReleasePageOp(PageOp);
-       return(1);
+       return(STATUS_SUCCESS);
      }
 
    /*
@@ -167,15 +156,12 @@ ULONG MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
        SwapEntry = MmAllocSwapPage();
        if (SwapEntry == 0)
 	 {
-	   Status = MmCreateVirtualMapping(PsGetCurrentProcess(),   
-					   Address,
-					   MemoryArea->Attributes,
-					   PhysicalAddress);
-	   *Ul = FALSE;
+	   DPRINT("MM: Out of swap space.\n");
+	   MmEnableVirtualMapping(MemoryArea->Process, Address);
 	   PageOp->Status = STATUS_UNSUCCESSFUL;
 	   KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
 	   MmReleasePageOp(PageOp);
-	   return(0);
+	   return(STATUS_UNSUCCESSFUL);
 	 }
      }
    
@@ -183,32 +169,28 @@ ULONG MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
     * Write the page to the pagefile
     */
    Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
-   MmBuildMdlFromPages(Mdl, &PhysicalAddress);
+   MmBuildMdlFromPages(Mdl, (PULONG)&PhysicalAddress);
    Status = MmWriteToSwapPage(SwapEntry, Mdl);
    if (!NT_SUCCESS(Status))
      {
        DPRINT1("MM: Failed to write to swap page\n");
-       Status = MmCreateVirtualMapping(PsGetCurrentProcess(),   
-				       Address,
-				       MemoryArea->Attributes,
-				       PhysicalAddress);
-       *Ul = FALSE;
+       MmEnableVirtualMapping(MemoryArea->Process, Address);
        PageOp->Status = STATUS_UNSUCCESSFUL;
        KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
        MmReleasePageOp(PageOp);
-       return(0);
+       return(STATUS_UNSUCCESSFUL);
      }
 
    /*
     * Otherwise we have succeeded, free the page
     */
-   MmRemovePageFromWorkingSet(AddressSpace->Process, Address);
-   MmDereferencePage((PVOID)PhysicalAddress);
-   *Ul = TRUE;
+   MmDeleteVirtualMapping(MemoryArea->Process, Address, FALSE, NULL, NULL);
+   MmDeleteAllRmaps(PhysicalAddress, NULL, NULL);
+   MmReleasePageMemoryConsumer(MC_USER, PhysicalAddress);
    PageOp->Status = STATUS_SUCCESS;
    KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
    MmReleasePageOp(PageOp);
-   return(1);
+   return(STATUS_SUCCESS);
 }
 
 NTSTATUS
@@ -324,20 +306,13 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
    /*
     * Try to allocate a page
     */
-   Page = MmAllocPage(0);
-   while (Page == NULL)
+   Status = MmRequestPageMemoryConsumer(MC_USER, FALSE, &Page);
+   if (Status == STATUS_NO_MEMORY)
      {
-	MmUnlockAddressSpace(AddressSpace);
-	MmWaitForFreePages();
-	MmLockAddressSpace(AddressSpace);
-	Page = MmAllocPage(0);
+       MmUnlockAddressSpace(AddressSpace);
+       Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
+       MmLockAddressSpace(AddressSpace);
      }
-
-   /*
-    * Add the page to the process's working set
-    */
-   MmAddPageToWorkingSet(PsGetCurrentProcess(), 
-			 (PVOID)PAGE_ROUND_DOWN(Address));
    
    /*
     * Set the page. If we fail because we are out of memory then
@@ -350,7 +325,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
    while (Status == STATUS_NO_MEMORY)
      {
 	MmUnlockAddressSpace(AddressSpace);
-	MmWaitForFreePages();
+	KeBugCheck(0);
 	MmLockAddressSpace(AddressSpace);
 	Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
 					Address,
@@ -363,6 +338,11 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
        KeBugCheck(0);
        return(Status);
      }
+
+   /*
+    * Add the page to the process's working set
+    */
+   MmInsertRmap(Page, PsGetCurrentProcess(), (PVOID)PAGE_ROUND_DOWN(Address));
 
    /*
     * Finish the operation
@@ -407,8 +387,8 @@ MmModifyAttributes(PMADDRESS_SPACE AddressSpace,
 				 FALSE, NULL, NULL);
 	  if (PhysicalAddr.u.LowPart != 0)
 	    {
-	      MmRemovePageFromWorkingSet(AddressSpace->Process,
-					 BaseAddress + (i*PAGESIZE));
+	      MmDeleteRmap((PVOID)PhysicalAddr.u.LowPart, AddressSpace->Process,
+			   BaseAddress + (i * PAGESIZE));
 	      MmDereferencePage((PVOID)(ULONG)(PhysicalAddr.u.LowPart));
 	    }
 	}
@@ -1025,13 +1005,14 @@ VOID STATIC
 MmFreeVirtualMemoryPage(PVOID Context,
 			MEMORY_AREA* MemoryArea,
 			PVOID Address,
-			ULONG PhysicalAddr)
+			ULONG PhysicalAddr,
+			BOOLEAN Dirty)
 {
   PEPROCESS Process = (PEPROCESS)Context;
   
   if (PhysicalAddr != 0)
     {
-      MmRemovePageFromWorkingSet(Process, Address);
+      MmDeleteRmap((PVOID)PhysicalAddr, Process, Address);
       MmDereferencePage((PVOID)PhysicalAddr);
     }
 }

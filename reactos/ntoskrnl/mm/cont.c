@@ -1,4 +1,4 @@
-/* $Id: cont.c,v 1.14 2001/12/29 14:32:22 dwelch Exp $
+/* $Id: cont.c,v 1.15 2001/12/31 01:53:45 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -20,7 +20,8 @@
 /* FUNCTIONS *****************************************************************/
 
 VOID STATIC
-MmFreeContinuousPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, ULONG PhysAddr)
+MmFreeContinuousPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, ULONG PhysAddr,
+		     BOOLEAN Dirty)
 {
   if (PhysAddr != 0)
     {

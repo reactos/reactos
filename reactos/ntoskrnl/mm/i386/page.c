@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.29 2001/04/17 04:11:01 dwelch Exp $
+/* $Id: page.c,v 1.30 2001/12/31 01:53:46 dwelch Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -239,10 +239,11 @@ NTSTATUS MmGetPageEntry2(PVOID PAddress, PULONG* Pte)
 	 }
        else
 	 {
-	   npage = (ULONG)MmAllocPage(0);
-	   if (npage == 0)
+	   NTSTATUS Status;
+	   Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, (PVOID*)&npage);
+	   if (!NT_SUCCESS(Status))
 	     {
-	       return(STATUS_NO_MEMORY);
+	       return(Status);
 	     }
 	   (*Pde) = npage | 0x7;		
 	   if (Address >= KERNEL_BASE)
@@ -336,6 +337,75 @@ ULONG MmGetPhysicalAddressForProcess(PEPROCESS Process,
 }
 
 VOID
+MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOL* WasDirty, ULONG* PhysicalAddr)
+/*
+ * FUNCTION: Delete a virtual mapping 
+ */
+{
+   ULONG Pte;
+   PULONG Pde;
+   PEPROCESS CurrentProcess = PsGetCurrentProcess();
+   BOOLEAN WasValid;
+
+   /*
+    * If we are setting a page in another process we need to be in its
+    * context.
+    */
+   if (Process != NULL && Process != CurrentProcess)
+     {
+	KeAttachProcess(Process);
+     }
+
+   /*
+    * Set the page directory entry, we may have to copy the entry from
+    * the global page directory.
+    */
+   Pde = ADDR_TO_PDE(Address);
+   if ((*Pde) == 0 && 
+       MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] != 0)
+     {
+       (*Pde) = MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)];
+       FLUSH_TLB;
+     }
+   if ((*Pde) == 0)
+     {
+       KeBugCheck(0);
+     }
+
+   /*
+    * Atomically set the entry to zero and get the old value.
+    */
+   Pte = *ADDR_TO_PTE(Address);
+   *ADDR_TO_PTE(Address) = Pte & (~PA_PRESENT);
+   FLUSH_TLB;
+   WasValid = (PAGE_MASK(Pte) != 0);
+   if (!WasValid)
+     {
+       KeBugCheck(0);
+     }
+
+   /*
+    * If necessary go back to the original context
+    */
+   if (Process != NULL && Process != CurrentProcess)
+     {
+	KeDetachProcess();
+     }
+
+   /*
+    * Return some information to the caller
+    */
+   if (WasDirty != NULL)
+     {
+       *WasDirty = Pte & PA_DIRTY;
+     }
+   if (PhysicalAddr != NULL)
+     {
+       *PhysicalAddr = PAGE_MASK(Pte);
+     }
+}
+
+VOID
 MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage,
 		       BOOL* WasDirty, ULONG* PhysicalAddr)
 /*
@@ -373,6 +443,14 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage,
 	  {
 	     KeDetachProcess();
 	  }	
+	if (WasDirty != NULL)
+	  {
+	    *WasDirty = FALSE;
+	  }
+	if (PhysicalAddr != NULL)
+	  {
+	    *PhysicalAddr = 0;
+	  }
 	return;
      }
 
@@ -380,6 +458,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage,
     * Atomically set the entry to zero and get the old value.
     */
    Pte = (ULONG)InterlockedExchange((PLONG)ADDR_TO_PTE(Address), 0);
+   FLUSH_TLB;
    WasValid = (PAGE_MASK(Pte) != 0);
    if (WasValid)
      {
@@ -402,12 +481,10 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage,
 	Ptrc = Process->AddressSpace.PageTableRefCountTable;
 	
 	Ptrc[ADDR_TO_PAGE_TABLE(Address)]--;
-#if 1
 	if (Ptrc[ADDR_TO_PAGE_TABLE(Address)] == 0)
 	  {
 	     MmFreePageTable(Process, Address);
 	  }
-#endif
      }
 
    /*
@@ -481,14 +558,15 @@ NTSTATUS MmCreatePageTable(PVOID PAddress)
      }
    if ((*page_dir) == 0)
      {
-	npage = (ULONG)MmAllocPage(0);
-	if (npage == 0)
-	  {
-	     return(STATUS_UNSUCCESSFUL);
-	  }
-	(*page_dir) = npage | 0x7;
-	memset((PVOID)PAGE_ROUND_DOWN(ADDR_TO_PTE(Address)), 0, PAGESIZE);
-	FLUSH_TLB;
+       NTSTATUS Status;
+       Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, (PVOID*)&npage);
+       if (!NT_SUCCESS(Status))
+	 {
+	   return(Status);
+	 }
+       (*page_dir) = npage | 0x7;
+       memset((PVOID)PAGE_ROUND_DOWN(ADDR_TO_PTE(Address)), 0, PAGESIZE);
+       FLUSH_TLB;
      }
    return(STATUS_SUCCESS);
 }
@@ -515,14 +593,15 @@ PULONG MmGetPageEntry(PVOID PAddress)
      }
    if ((*page_dir) == 0)
      {
-	npage = (ULONG)MmAllocPage(0);
-	if (npage == 0)
-	  {
-	     KeBugCheck(0);
-	  }
-	(*page_dir) = npage | 0x7;
-	memset((PVOID)PAGE_ROUND_DOWN(ADDR_TO_PTE(Address)), 0, PAGESIZE);
-	FLUSH_TLB;
+       NTSTATUS Status;
+       Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, (PVOID*)&npage);
+       if (!NT_SUCCESS(Status))
+	 {
+	   KeBugCheck(0);
+	 }
+       (*page_dir) = npage | 0x7;
+       memset((PVOID)PAGE_ROUND_DOWN(ADDR_TO_PTE(Address)), 0, PAGESIZE);
+       FLUSH_TLB;
      }
    page_tlb = ADDR_TO_PTE(Address);
    DPRINT("page_tlb %x\n",page_tlb);
@@ -571,6 +650,24 @@ VOID MmSetCleanPage(PEPROCESS Process, PVOID Address)
      }
    PageEntry = MmGetPageEntry(Address);
    (*PageEntry) = (*PageEntry) & (~PA_DIRTY);
+   FLUSH_TLB;
+   if (Process != CurrentProcess)
+     {
+	KeDetachProcess();
+     }
+}
+
+VOID MmEnableVirtualMapping(PEPROCESS Process, PVOID Address)
+{
+   PULONG PageEntry;
+   PEPROCESS CurrentProcess = PsGetCurrentProcess();
+   
+   if (Process != CurrentProcess)
+     {
+	KeAttachProcess(Process);
+     }
+   PageEntry = MmGetPageEntry(Address);
+   (*PageEntry) = (*PageEntry) | PA_PRESENT;
    FLUSH_TLB;
    if (Process != CurrentProcess)
      {

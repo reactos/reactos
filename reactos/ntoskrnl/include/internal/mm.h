@@ -11,6 +11,9 @@
 /* TYPES *********************************************************************/
 
 struct _EPROCESS;
+
+struct _MM_RMAP_ENTRY;
+struct _MM_PAGEOP;
 typedef ULONG SWAPENTRY;
 
 #define MEMORY_AREA_INVALID              (0)
@@ -186,7 +189,7 @@ NTSTATUS MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
 			  PVOID BaseAddress,
 			  ULONG Length,
 			  VOID (*FreePage)(PVOID Context, MEMORY_AREA* MemoryArea, 
-					   PVOID Address, ULONG PhysAddr),
+					   PVOID Address, ULONG PhysAddr, BOOLEAN Dirty),
 			  PVOID FreePageContext);
 VOID MmDumpMemoryAreas(PLIST_ENTRY ListHead);
 NTSTATUS MmLockMemoryArea(MEMORY_AREA* MemoryArea);
@@ -209,7 +212,8 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
          PADDRESS_RANGE BIOSMemoryMap,
          ULONG AddressRangeCount);
 
-PVOID MmAllocPage(SWAPENTRY SavedSwapEntry);
+PVOID 
+MmAllocPage(ULONG Consumer, SWAPENTRY SavedSwapEntry);
 VOID MmDereferencePage(PVOID PhysicalAddress);
 VOID MmReferencePage(PVOID PhysicalAddress);
 VOID MmDeletePageTable(struct _EPROCESS* Process, 
@@ -280,31 +284,22 @@ VOID MmClearWaitPage(PVOID Page);
 VOID MmSetWaitPage(PVOID Page);
 BOOLEAN MmIsPageDirty(struct _EPROCESS* Process, PVOID Address);
 BOOLEAN MmIsPageTablePresent(PVOID PAddress);
-ULONG MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
-			   MEMORY_AREA* MemoryArea, 
-			   PVOID Address,
-			   PBOOLEAN Ul);
-ULONG MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
-			     PMEMORY_AREA MemoryArea,
-			     PVOID Address,
-			     PBOOLEAN Ul);
+NTSTATUS 
+MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
+		       PMEMORY_AREA MemoryArea,
+		       PVOID Address,
+		       struct _MM_PAGEOP* PageOp);
+NTSTATUS 
+MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
+		       PMEMORY_AREA MemoryArea,
+		       PVOID Address,
+		       struct _MM_PAGEOP* PageOp);
 MEMORY_AREA* MmOpenMemoryAreaByRegion(PMADDRESS_SPACE AddressSpace, 
 				      PVOID Address,
 				      ULONG Length);
 
 VOID ExUnmapPage(PVOID Addr);
 PVOID ExAllocatePage(VOID);
-
-VOID MmLockWorkingSet(struct _EPROCESS* Process);
-VOID MmUnlockWorkingSet(struct _EPROCESS* Process);
-VOID MmInitializeWorkingSet(struct _EPROCESS* Process,
-			    PMADDRESS_SPACE AddressSpace);
-ULONG MmTrimWorkingSet(struct _EPROCESS* Process,
-		       ULONG ReduceHint);
-VOID MmRemovePageFromWorkingSet(struct _EPROCESS* Process,
-				PVOID Address);
-VOID MmAddPageToWorkingSet(struct _EPROCESS* Process,
-			      PVOID Address);
 
 VOID MmInitPagingFile(VOID);
 BOOLEAN MmReserveSwapPages(ULONG Nr);
@@ -322,10 +317,6 @@ VOID MmInit3(VOID);
 NTSTATUS MmInitPagerThread(VOID);
 
 VOID MmInitKernelMap(PVOID BaseAddress);
-
-VOID MmWaitForFreePages(VOID);
-PVOID MmMustAllocPage(SWAPENTRY SavedSwapEntry);
-PVOID MmAllocPageMaybeSwap(SWAPENTRY SavedSwapEntry);
 NTSTATUS MmCreatePageTable(PVOID PAddress);
 
 typedef struct
@@ -477,7 +468,7 @@ NTSTATUS MmCommitPagedPoolAddress(PVOID Address);
 VOID
 MmInitializeMemoryConsumer(ULONG Consumer, 
 			   NTSTATUS (*Trim)(ULONG Target, ULONG Priority, 
-					    PULONG NrFreed, PVOID* FreedPages));
+					    PULONG NrFreed));
 VOID
 MmInitializeBalancer(ULONG NrAvailablePages);
 NTSTATUS
@@ -490,5 +481,31 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait, PVOID* AllocatedPag
 #define MC_PPOOL          (2)
 #define MC_NPPOOL         (3)
 #define MC_MAXIMUM        (4)
+
+VOID 
+MmSetRmapListHeadPage(PVOID PhysicalAddress, struct _MM_RMAP_ENTRY* ListHead);
+struct _MM_RMAP_ENTRY*
+MmGetRmapListHeadPage(PVOID PhysicalAddress);
+VOID
+MmInsertRmap(PVOID PhysicalAddress, PEPROCESS Process, PVOID Address);
+VOID
+MmDeleteAllRmaps(PVOID PhysicalAddress, PVOID Context, 
+		 VOID (*DeleteMapping)(PVOID Context, PEPROCESS Process, PVOID Address));
+VOID
+MmDeleteRmap(PVOID PhysicalAddress, PEPROCESS Process, PVOID Address);
+VOID
+MmInitializeRmapList(VOID);
+PVOID
+MmGetLRUNextUserPage(PVOID PreviousPhysicalAddress);
+PVOID
+MmGetLRUFirstUserPage(VOID);
+NTSTATUS
+MmPageOutPhysicalAddress(PVOID PhysicalAddress);
+NTSTATUS
+MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages);
+
+VOID
+MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOL* WasDirty, ULONG* PhysicalAddr);
+VOID MmEnableVirtualMapping(PEPROCESS Process, PVOID Address);
 
 #endif

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mm.c,v 1.51 2001/12/27 23:56:42 dwelch Exp $
+/* $Id: mm.c,v 1.52 2001/12/31 01:53:45 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -245,7 +245,14 @@ NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
 NTSTATUS MmCommitPagedPoolAddress(PVOID Address)
 {
   NTSTATUS Status;
-  PVOID AllocatedPage = MmAllocPage(0);
+  PVOID AllocatedPage;
+  Status = MmRequestPageMemoryConsumer(MC_PPOOL, FALSE, &AllocatedPage);
+  if (!NT_SUCCESS(Status))
+    {
+      MmUnlockAddressSpace(MmGetKernelAddressSpace());
+      Status = MmRequestPageMemoryConsumer(MC_PPOOL, TRUE, &AllocatedPage);
+      MmLockAddressSpace(MmGetKernelAddressSpace());
+    }
   Status = 
     MmCreateVirtualMapping(NULL,
 			   (PVOID)PAGE_ROUND_DOWN(Address),

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: balance.c,v 1.2 2001/12/29 14:32:22 dwelch Exp $
+/* $Id: balance.c,v 1.3 2001/12/31 01:53:45 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -41,8 +41,15 @@ typedef struct _MM_MEMORY_CONSUMER
 {
   ULONG PagesUsed;
   ULONG PagesTarget;
-  NTSTATUS (*Trim)(ULONG Target, ULONG Priority, PULONG NrFreed, PVOID* FreedPages);
+  NTSTATUS (*Trim)(ULONG Target, ULONG Priority, PULONG NrFreed);
 } MM_MEMORY_CONSUMER, *PMM_MEMORY_CONSUMER;
+
+typedef struct _MM_ALLOCATION_REQUEST
+{
+  PVOID Page;
+  LIST_ENTRY ListEntry;
+  KEVENT Event;
+} MM_ALLOCATION_REQUEST, *PMM_ALLOCATION_REQUEST;
 
 /* GLOBALS ******************************************************************/
 
@@ -50,6 +57,8 @@ static MM_MEMORY_CONSUMER MiMemoryConsumers[MC_MAXIMUM];
 static ULONG MiMinimumAvailablePages;
 static ULONG MiNrAvailablePages;
 static ULONG MiNrTotalPages;
+static LIST_ENTRY AllocationListHead;
+static KSPIN_LOCK AllocationListLock;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -57,6 +66,8 @@ VOID
 MmInitializeBalancer(ULONG NrAvailablePages)
 {
   memset(MiMemoryConsumers, 0, sizeof(MiMemoryConsumers));
+  InitializeListHead(&AllocationListHead);
+  KeInitializeSpinLock(&AllocationListLock);
 
   MiNrAvailablePages = MiNrTotalPages = NrAvailablePages;
 
@@ -71,7 +82,7 @@ MmInitializeBalancer(ULONG NrAvailablePages)
 VOID
 MmInitializeMemoryConsumer(ULONG Consumer, 
 			   NTSTATUS (*Trim)(ULONG Target, ULONG Priority, 
-					    PULONG NrFreed, PVOID* FreedPages))
+					    PULONG NrFreed))
 {
   MiMemoryConsumers[Consumer].Trim = Trim;
 }
@@ -79,9 +90,26 @@ MmInitializeMemoryConsumer(ULONG Consumer,
 NTSTATUS
 MmReleasePageMemoryConsumer(ULONG Consumer, PVOID Page)
 {
+  PMM_ALLOCATION_REQUEST Request;
+  PLIST_ENTRY Entry;
+  KIRQL oldIrql;
+
   InterlockedDecrement(&MiMemoryConsumers[Consumer].PagesUsed);
   InterlockedIncrement(&MiNrAvailablePages);
-  MmDereferencePage(Page);
+  KeAcquireSpinLock(&AllocationListLock, &oldIrql);
+  if (IsListEmpty(&AllocationListHead))
+    {
+      KeReleaseSpinLock(&AllocationListLock, oldIrql);
+      MmDereferencePage(Page);
+    }
+  else
+    {
+      Entry = RemoveHeadList(&AllocationListHead);
+      Request = CONTAINING_RECORD(Entry, MM_ALLOCATION_REQUEST, ListEntry);
+      KeReleaseSpinLock(&AllocationListLock, oldIrql);
+      Request->Page = Page;
+      KeSetEvent(&Request->Event, IO_NO_INCREMENT, FALSE);
+    }
   return(STATUS_SUCCESS);
 }
 
@@ -98,19 +126,17 @@ MiTrimMemoryConsumer(ULONG Consumer)
 
   if (MiMemoryConsumers[Consumer].Trim != NULL)
     {
-      MiMemoryConsumers[Consumer].Trim(Target, 0, NULL, NULL);
+      MiMemoryConsumers[Consumer].Trim(Target, 0, NULL);
     }
 }
 
 VOID
-MiRebalanceMemoryConsumers(PVOID* Page)
+MiRebalanceMemoryConsumers(VOID)
 {
   LONG Target;
   ULONG i;
-  PVOID* FreedPages;
   ULONG NrFreedPages;
-  ULONG TotalFreedPages;
-  PVOID* OrigFreedPages;
+  NTSTATUS Status;
 
   Target = MiMinimumAvailablePages - MiNrAvailablePages;
   if (Target < 0)
@@ -118,35 +144,21 @@ MiRebalanceMemoryConsumers(PVOID* Page)
       Target = 1;
     }
 
-  OrigFreedPages = FreedPages = alloca(sizeof(PVOID) * Target);
-  TotalFreedPages = 0;
-
   for (i = 0; i < MC_MAXIMUM && Target > 0; i++)
     {
       if (MiMemoryConsumers[i].Trim != NULL)
 	{
-	  MiMemoryConsumers[i].Trim(Target, 0, &NrFreedPages, FreedPages);
+	  Status = MiMemoryConsumers[i].Trim(Target, 0, &NrFreedPages);
+	  if (!NT_SUCCESS(Status))
+	    {
+	      KeBugCheck(0);
+	    }
 	  Target = Target - NrFreedPages;
-	  FreedPages = FreedPages + NrFreedPages;
-	  TotalFreedPages = TotalFreedPages + NrFreedPages;
 	}
     }
   if (Target > 0)
     {
       KeBugCheck(0);
-    }
-  if (Page != NULL)
-    {
-      *Page = OrigFreedPages[0];
-      i = 1;
-    }
-  else
-    {
-      i = 0;
-    }
-  for (; i < TotalFreedPages; i++)
-    {
-      MmDereferencePage(OrigFreedPages[i]);
     }
 }
 
@@ -183,15 +195,18 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait, PVOID* AllocatedPag
 	  InterlockedDecrement(&MiMemoryConsumers[Consumer].PagesUsed);
 	  return(STATUS_NO_MEMORY);
 	}
-      MiRebalanceMemoryConsumers(NULL);
+      MiRebalanceMemoryConsumers();
     }
 
   /*
    * Actually allocate the page.
    */
-  Page = MmAllocPage(0);
+  Page = MmAllocPage(Consumer, 0);
   if (Page == NULL)
     {
+      MM_ALLOCATION_REQUEST Request;
+      KIRQL oldIrql;
+
       /* Still not trimmed enough. */
       if (!CanWait)
 	{
@@ -199,7 +214,19 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait, PVOID* AllocatedPag
 	  InterlockedDecrement(&MiMemoryConsumers[Consumer].PagesUsed);
 	  return(STATUS_NO_MEMORY);
 	}
-      MiRebalanceMemoryConsumers(&Page);
+
+      /* Insert an allocation request. */
+      Request.Page = NULL;
+      KeInitializeEvent(&Request.Event, NotificationEvent, FALSE);
+      KeAcquireSpinLock(&AllocationListLock, &oldIrql);
+      InsertTailList(&AllocationListHead, &Request.ListEntry);
+      KeReleaseSpinLock(&AllocationListLock, oldIrql);
+      MiRebalanceMemoryConsumers();
+      Page = Request.Page;
+      if (Page == NULL)
+	{
+	  KeBugCheck(0);
+	}
     }
   *AllocatedPage = Page;
 

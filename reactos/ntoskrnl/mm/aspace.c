@@ -1,4 +1,4 @@
-/* $Id: aspace.c,v 1.7 2001/11/25 15:21:11 dwelch Exp $
+/* $Id: aspace.c,v 1.8 2001/12/31 01:53:45 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -87,10 +87,6 @@ MmInitializeAddressSpace(PEPROCESS Process,
 	AddressSpace->LowestAddress = KERNEL_BASE;
      }
    AddressSpace->Process = Process;
-   if (Process != NULL)
-     {
-	MmInitializeWorkingSet(Process, AddressSpace);
-     }
    if (Process != NULL)
      {
 	AddressSpace->PageTableRefCountTable = 

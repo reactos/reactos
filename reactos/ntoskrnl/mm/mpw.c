@@ -1,4 +1,4 @@
-/* $Id: mpw.c,v 1.6 2001/08/26 17:29:09 ekohl Exp $
+/* $Id: mpw.c,v 1.7 2001/12/31 01:53:45 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -24,69 +24,9 @@
 static HANDLE MpwThreadHandle;
 static CLIENT_ID MpwThreadId;
 static KEVENT MpwThreadEvent;
-static PEPROCESS LastProcess;
 static volatile BOOLEAN MpwThreadShouldTerminate;
-static ULONG CountToWrite;
 
 /* FUNCTIONS *****************************************************************/
-
-VOID MmStartWritingPages(VOID)
-{
-   CountToWrite = CountToWrite + MmStats.NrDirtyPages;
-}
-
-ULONG MmWritePage(PMADDRESS_SPACE AddressSpace,
-		  PVOID Address)
-{
-   PMEMORY_AREA MArea;
-   NTSTATUS Status;
-   
-   MArea = MmOpenMemoryAreaByAddress(AddressSpace, Address);
-   
-   switch(MArea->Type)
-     {
-      case MEMORY_AREA_SYSTEM:
-	return(STATUS_UNSUCCESSFUL);
-	     
-      case MEMORY_AREA_SECTION_VIEW_COMMIT:
-	Status = MmWritePageSectionView(AddressSpace,
-					MArea,
-					Address);
-	return(Status);
-		  
-      case MEMORY_AREA_VIRTUAL_MEMORY:
-	Status = MmWritePageVirtualMemory(AddressSpace,
-					  MArea,
-					  Address);
-	return(Status);
-	
-     }
-   return(STATUS_UNSUCCESSFUL);
-}
-
-VOID MmWritePagesInProcess(PEPROCESS Process)
-{
-   PVOID Address;
-   NTSTATUS Status;
-   
-   MmLockAddressSpace(&Process->AddressSpace);
-   
-   while ((Address = MmGetDirtyPagesFromWorkingSet(Process)) != NULL)
-     {
-	Status = MmWritePage(&Process->AddressSpace, Address);
-	if (NT_SUCCESS(Status))
-	  {
-	     CountToWrite = CountToWrite - 1;
-	     if (CountToWrite == 0)
-	       {
-		  MmUnlockAddressSpace(&Process->AddressSpace);
-		  return;
-	       }	     
-	  }
-     }
-   
-   MmUnlockAddressSpace(&Process->AddressSpace);
-}
 
 NTSTATUS STDCALL
 MmMpwThreadMain(PVOID Ignored)
@@ -111,18 +51,6 @@ MmMpwThreadMain(PVOID Ignored)
 	     DbgPrint("MpwThread: Terminating\n");
 	     return(STATUS_SUCCESS);
 	  }
-	
-	do
-	  {
-	     KeAttachProcess(LastProcess);
-	     MmWritePagesInProcess(LastProcess);
-	     KeDetachProcess();
-	     if (CountToWrite != 0)
-	       {
-		  LastProcess = PsGetNextProcess(LastProcess);
-	       }
-	  } while (CountToWrite > 0 &&
-		   LastProcess != PsInitialSystemProcess);
      }
 }
 
@@ -130,8 +58,6 @@ NTSTATUS MmInitMpwThread(VOID)
 {
    NTSTATUS Status;
    
-   CountToWrite = 0;
-   LastProcess = PsInitialSystemProcess;
    MpwThreadShouldTerminate = FALSE;
    KeInitializeEvent(&MpwThreadEvent,
 		     SynchronizationEvent,

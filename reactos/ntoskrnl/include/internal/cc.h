@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_INTERNAL_CC_H
 #define __INCLUDE_INTERNAL_CC_H
-/* $Id: cc.h,v 1.8 2001/12/29 14:32:22 dwelch Exp $ */
+/* $Id: cc.h,v 1.9 2001/12/31 01:53:44 dwelch Exp $ */
 #include <ddk/ntifs.h>
 
 typedef struct _BCB
@@ -62,5 +62,9 @@ NTSTATUS ReadCacheSegment(PCACHE_SEGMENT CacheSeg);
 NTSTATUS WriteCacheSegment(PCACHE_SEGMENT CacheSeg);
 
 VOID CcInit(VOID);
+NTSTATUS
+CcRosUnmapCacheSegment(PBCB Bcb, ULONG FileOffset, BOOLEAN NowDirty);
+NTSTATUS
+CcRosSuggestFreeCacheSegment(PBCB Bcb, ULONG FileOffset, BOOLEAN NowDirty);
 
 #endif

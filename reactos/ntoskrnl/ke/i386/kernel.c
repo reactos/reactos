@@ -47,7 +47,7 @@ static PVOID PcrPages[MAXIMUM_PROCESSORS];
 VOID
 KePrepareForApplicationProcessorInit(ULONG Id)
 {
-  PcrPages[Id] = MmAllocPage(0);
+  MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &PcrPages[Id]);
   KiGdtPrepareForApplicationProcessorInit(Id);
 }
 

@@ -43,7 +43,8 @@
 /* FUNCTIONS *****************************************************************/
 
 VOID
-KeFreeStackPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, ULONG PhysAddr)
+KeFreeStackPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, ULONG PhysAddr,
+		BOOLEAN Dirty)
 {
   if (PhysAddr != 0)
     {
@@ -116,10 +117,16 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
 	}
       for (i = 0; i < (MM_STACK_SIZE / PAGESIZE); i++)
 	{
+	  PVOID Page;
+	  Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &Page);
+	  if (!NT_SUCCESS(Status))
+	    {
+	      KeBugCheck(0);
+	    }
 	  Status = MmCreateVirtualMapping(NULL,
 					  KernelStack + (i * PAGESIZE),
 					  PAGE_EXECUTE_READWRITE,
-					  (ULONG)MmAllocPage(0));
+					  (ULONG)Page);
 	}
       Thread->InitialStack = KernelStack + MM_STACK_SIZE;
       Thread->StackBase = KernelStack + MM_STACK_SIZE;

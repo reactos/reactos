@@ -1,4 +1,4 @@
-/* $Id: ppool.c,v 1.5 2001/12/26 23:34:07 dwelch Exp $
+/* $Id: ppool.c,v 1.6 2001/12/31 01:53:45 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -122,7 +122,7 @@ ExAllocatePagedPoolWithTag (IN	POOL_TYPE	PoolType,
   /*
    * Is there enough space to create a second block from the unused portion.
    */
-  if ((BestBlock->Size - BlockSize) > sizeof(PMM_PPOOL_USED_BLOCK_HEADER))
+  if ((BestBlock->Size - BlockSize) > sizeof(MM_PPOOL_FREE_BLOCK_HEADER))
     {
       ULONG NewSize = BestBlock->Size - BlockSize;
 

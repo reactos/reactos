@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.51 2001/12/20 03:56:09 dwelch Exp $
+/* $Id: npool.c,v 1.52 2001/12/31 01:53:45 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -703,10 +703,16 @@ static BLOCK_HDR* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
    
    for (i=0;i<nr_pages;i++)
      {
-	Status = MmCreateVirtualMapping(NULL,
-					(PVOID)(start + (i*PAGESIZE)),
-					PAGE_READWRITE,
-					(ULONG)MmAllocPage(0));
+       PVOID Page;
+       Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &Page);
+       if (!NT_SUCCESS(Status))
+	 {
+	   return(NULL);
+	 }
+       Status = MmCreateVirtualMapping(NULL,
+				       (PVOID)(start + (i*PAGESIZE)),
+				       PAGE_READWRITE,
+				       (ULONG)Page);
 	if (!NT_SUCCESS(Status))
 	  {
 	     DbgPrint("Unable to create virtual mapping\n");

@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.28 2001/12/20 03:56:09 dwelch Exp $
+/* $Id: mminit.c,v 1.29 2001/12/31 01:53:45 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -180,7 +180,7 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
 		      0,
 		      &kernel_shared_data_desc,
 		      FALSE);
-   MmSharedDataPagePhysicalAddress = MmAllocPage(0);
+   Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &MmSharedDataPagePhysicalAddress);
    Status = MmCreateVirtualMapping(NULL,
 				   (PVOID)KERNEL_SHARED_DATA_BASE,
 				   PAGE_READWRITE,
@@ -191,6 +191,11 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
 	KeBugCheck(0);
      }
    ((PKUSER_SHARED_DATA)KERNEL_SHARED_DATA_BASE)->TickCountLow = 0xdeadbeef;
+
+   /*
+    *
+    */
+   MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
 }
 
 VOID MmInit1(ULONG FirstKrnlPhysAddr,
@@ -345,6 +350,7 @@ VOID MmInit3(VOID)
 {
    MmInitPagerThread();
    MmCreatePhysicalMemorySection();
+   MmInitializeRmapList();
 
    /* FIXME: Read parameters from memory */
 }

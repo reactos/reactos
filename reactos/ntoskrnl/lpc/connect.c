@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.8 2001/12/02 23:34:42 dwelch Exp $
+/* $Id: connect.c,v 1.9 2001/12/31 01:53:45 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,8 +16,8 @@
 #include <internal/port.h>
 #include <internal/dbg.h>
 #include <internal/pool.h>
-#include <internal/mm.h>
 #include <internal/safe.h>
+#include <internal/mm.h>
 
 #define NDEBUG
 #include <internal/debug.h>

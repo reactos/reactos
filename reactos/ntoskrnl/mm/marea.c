@@ -295,7 +295,7 @@ MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
 		 PVOID BaseAddress,
 		 ULONG Length,
 		 VOID (*FreePage)(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, 
-				  ULONG PhysAddr),
+				  ULONG PhysAddr, BOOLEAN Dirty),
 		 PVOID FreePageContext)
 {
    MEMORY_AREA* MemoryArea;
@@ -314,17 +314,15 @@ MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
    for (i=0; i<(PAGE_ROUND_UP(MemoryArea->Length)/PAGESIZE); i++)
      {
        ULONG PhysAddr;
+       BOOL Dirty;
 
-       PhysAddr = 
-	 MmGetPhysicalAddressForProcess(AddressSpace->Process,
-					MemoryArea->BaseAddress + (i*PAGESIZE));
-	MmDeleteVirtualMapping(AddressSpace->Process, 
-			       MemoryArea->BaseAddress + (i*PAGESIZE),
-			       FALSE, NULL, NULL);
-	if (FreePage != NULL)
+       MmDeleteVirtualMapping(AddressSpace->Process, 
+			      MemoryArea->BaseAddress + (i*PAGESIZE),
+			      FALSE, &Dirty, &PhysAddr);
+       if (FreePage != NULL)
 	 {
 	   FreePage(FreePageContext, MemoryArea,
-		    MemoryArea->BaseAddress + (i * PAGESIZE), PhysAddr);
+		    MemoryArea->BaseAddress + (i * PAGESIZE), PhysAddr, Dirty);
 	 }
      }
    

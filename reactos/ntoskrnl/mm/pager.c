@@ -1,4 +1,4 @@
-/* $Id: pager.c,v 1.8 2001/08/26 17:29:09 ekohl Exp $
+/* $Id: pager.c,v 1.9 2001/12/31 01:53:45 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -24,43 +24,9 @@
 static HANDLE PagerThreadHandle;
 static CLIENT_ID PagerThreadId;
 static KEVENT PagerThreadEvent;
-static PEPROCESS LastProcess;
-static volatile BOOLEAN PagerThreadShouldTerminate;
-static volatile ULONG PageCount;
-static volatile ULONG WaiterCount;
-static KEVENT FreedMemEvent;
+static BOOLEAN PagerThreadShouldTerminate;
 
 /* FUNCTIONS *****************************************************************/
-
-VOID MmWaitForFreePages(VOID)
-{
-   InterlockedIncrement((PULONG)&PageCount);
-   KeClearEvent(&FreedMemEvent);
-   KeSetEvent(&PagerThreadEvent,
-	      IO_NO_INCREMENT,
-	      FALSE);
-   InterlockedIncrement((PULONG)&WaiterCount);
-   KeWaitForSingleObject(&FreedMemEvent,
-			 0,
-			 KernelMode,
-			 FALSE,
-			 NULL);
-   InterlockedDecrement((PULONG)&WaiterCount);
-}
-
-static VOID MmTryPageOutFromProcess(PEPROCESS Process)
-{
-   ULONG P;
-   
-   MmLockAddressSpace(&Process->AddressSpace);
-   P = MmTrimWorkingSet(Process, PageCount);
-   if (P > 0)
-     {
-	InterlockedExchangeAdd((PULONG)&PageCount, -P);
-	KeSetEvent(&FreedMemEvent, IO_NO_INCREMENT, FALSE);
-     }
-   MmUnlockAddressSpace(&Process->AddressSpace);
-}
 
 static NTSTATUS STDCALL
 MmPagerThreadMain(PVOID Ignored)
@@ -84,22 +50,6 @@ MmPagerThreadMain(PVOID Ignored)
 	     DbgPrint("PagerThread: Terminating\n");
 	     return(STATUS_SUCCESS);
 	  }
-	
-	while (WaiterCount > 0)
-	  {
-	     while (PageCount > 0)
-	       {
-		  KeAttachProcess(LastProcess);
-		  MmTryPageOutFromProcess(LastProcess);
-		  KeDetachProcess();
-		  if (PageCount != 0)
-		    {
-		       LastProcess = PsGetNextProcess(LastProcess);
-		    }
-	       }
-	     DbgPrint("Out of memory\n");
-	     KeSetEvent(&FreedMemEvent, IO_NO_INCREMENT, FALSE);
-	  }
      }
 }
 
@@ -107,15 +57,9 @@ NTSTATUS MmInitPagerThread(VOID)
 {
    NTSTATUS Status;
    
-   PageCount = 0;
-   WaiterCount = 0;
-   LastProcess = PsInitialSystemProcess;
    PagerThreadShouldTerminate = FALSE;
    KeInitializeEvent(&PagerThreadEvent,
 		     SynchronizationEvent,
-		     FALSE);
-   KeInitializeEvent(&FreedMemEvent,
-		     NotificationEvent,
 		     FALSE);
    
    Status = PsCreateSystemThread(&PagerThreadHandle,

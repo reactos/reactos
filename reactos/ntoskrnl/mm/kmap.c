@@ -1,4 +1,4 @@
-/* $Id: kmap.c,v 1.12 2001/12/06 00:54:54 dwelch Exp $
+/* $Id: kmap.c,v 1.13 2001/12/31 01:53:45 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -51,9 +51,10 @@ PVOID
 ExAllocatePage(VOID)
 {
   ULONG PhysPage;
+  NTSTATUS Status;
 
-  PhysPage = (ULONG)MmAllocPage(0);
-  if (PhysPage == 0)
+  Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, (PVOID*)&PhysPage);
+  if (!NT_SUCCESS(Status))
     {
       return(NULL);
     }
