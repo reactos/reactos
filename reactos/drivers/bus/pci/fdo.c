@@ -1,4 +1,4 @@
-/* $Id: fdo.c,v 1.2 2002/05/05 14:57:45 chorns Exp $
+/* $Id: fdo.c,v 1.3 2003/09/25 15:21:11 navaraf Exp $
  *
  * PROJECT:         ReactOS PCI bus driver
  * FILE:            fdo.c
@@ -9,7 +9,7 @@
  */
 #include <pci.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /*** PRIVATE *****************************************************************/
@@ -208,7 +208,8 @@ FdoQueryBusRelations(
         L"PCI\\VEN_%04X&DEV_%04X&SUBSYS_%08X&REV_%02X",
         Device->PciConfig.VendorID,
         Device->PciConfig.DeviceID,
-        Device->PciConfig.u.type0.SubSystemID,
+        (Device->PciConfig.u.type0.SubSystemID << 16) +
+        Device->PciConfig.u.type0.SubVendorID,
         Device->PciConfig.RevisionID);
 
       if (!PciCreateUnicodeString(
