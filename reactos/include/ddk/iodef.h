@@ -314,6 +314,7 @@ enum
 #define IO_SERIAL_INCREMENT             2
 #define IO_SOUND_INCREMENT              8
 #define IO_VIDEO_INCREMENT              1
+#define MUTANT_INCREMENT                1
 #define SEMAPHORE_INCREMENT             1
 
 #define FILE_BYTE_ALIGNMENT             0x00000000

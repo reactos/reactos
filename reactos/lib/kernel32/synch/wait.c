@@ -1,4 +1,4 @@
-/* $Id: wait.c,v 1.14 2001/01/20 12:20:43 ekohl Exp $
+/* $Id: wait.c,v 1.15 2001/11/07 02:17:22 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -16,6 +16,7 @@
 #include <windows.h>
 #include <wchar.h>
 
+#define NDEBUG
 #include <kernel32/kernel32.h>
 
 /* FUNCTIONS ****************************************************************/
@@ -63,7 +64,7 @@ WaitForSingleObjectEx(HANDLE hHandle,
 
    SetLastErrorByStatus (errCode);
 
-   return 0xFFFFFFFF;
+   return(WAIT_FAILED);
 }
 
 
@@ -92,6 +93,8 @@ WaitForMultipleObjectsEx(DWORD nCount,
    LARGE_INTEGER Time;
    PLARGE_INTEGER TimePtr;
 
+   DPRINT("nCount %lu\n", nCount);
+
    if (dwMilliseconds == INFINITE)
      {
         TimePtr = NULL;
@@ -112,15 +115,18 @@ WaitForMultipleObjectsEx(DWORD nCount,
      {
          return WAIT_TIMEOUT;
      }
-   else if ((errCode >= WAIT_OBJECT_0) &&
-            (errCode <= WAIT_OBJECT_0 + nCount - 1))
+   else if (((errCode >= WAIT_OBJECT_0) &&
+             (errCode <= WAIT_OBJECT_0 + nCount - 1)) ||
+            ((errCode >= WAIT_ABANDONED_0) &&
+             (errCode <= WAIT_ABANDONED_0 + nCount - 1)))
      {
-        return errCode;
+        return(errCode);
      }
 
+   DPRINT("errCode %lx\n", errCode);
    SetLastErrorByStatus (errCode);
 
-   return 0xFFFFFFFF;
+   return(WAIT_FAILED);
 }
 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mutex.c,v 1.9 2001/11/04 00:17:24 ekohl Exp $
+/* $Id: mutex.c,v 1.10 2001/11/07 02:14:10 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/mutex.c
@@ -30,6 +30,7 @@
 
 #include <ddk/ntddk.h>
 #include <internal/ke.h>
+#include <internal/ps.h>
 #include <internal/id.h>
 
 #include <internal/debug.h>
@@ -44,6 +45,8 @@ KeInitializeMutex(IN PKMUTEX Mutex,
 			       InternalMutexType,
 			       sizeof(KMUTEX) / sizeof(ULONG),
 			       1);
+  Mutex->MutantListEntry.Flink = NULL;
+  Mutex->MutantListEntry.Blink = NULL;
   Mutex->OwnerThread = NULL;
   Mutex->Abandoned = FALSE;
   Mutex->ApcDisable = 1;
@@ -59,23 +62,31 @@ LONG STDCALL
 KeReleaseMutex(IN PKMUTEX Mutex,
 	       IN BOOLEAN Wait)
 {
-   KeAcquireDispatcherDatabaseLock(Wait);
-   Mutex->Header.SignalState++;
-   assert(Mutex->Header.SignalState <= 1);
-   if (Mutex->Header.SignalState == 1)
-     {
-	KeDispatcherObjectWake(&Mutex->Header);
-     }
-   KeReleaseDispatcherDatabaseLock(Wait);
-   return(0);
+  KeAcquireDispatcherDatabaseLock(Wait);
+  if (Mutex->OwnerThread != KeGetCurrentThread())
+    {
+      DbgPrint("THREAD_NOT_MUTEX_OWNER: Mutex %p\n", Mutex);
+      KeBugCheck(0); /* THREAD_NOT_MUTEX_OWNER */
+    }
+  Mutex->Header.SignalState++;
+  assert(Mutex->Header.SignalState <= 1);
+  if (Mutex->Header.SignalState == 1)
+    {
+      Mutex->OwnerThread = NULL;
+      if (Mutex->MutantListEntry.Flink && Mutex->MutantListEntry.Blink)
+	RemoveEntryList(&Mutex->MutantListEntry);
+      KeDispatcherObjectWake(&Mutex->Header);
+    }
+  KeReleaseDispatcherDatabaseLock(Wait);
+  return(0);
 }
 
 NTSTATUS STDCALL
-KeWaitForMutexObject(PKMUTEX		Mutex,
-		     KWAIT_REASON	WaitReason,
-		     KPROCESSOR_MODE	WaitMode,
-		     BOOLEAN		Alertable,
-		     PLARGE_INTEGER	Timeout)
+KeWaitForMutexObject(IN PKMUTEX Mutex,
+		     IN KWAIT_REASON WaitReason,
+		     IN KPROCESSOR_MODE WaitMode,
+		     IN BOOLEAN Alertable,
+		     IN PLARGE_INTEGER Timeout)
 {
   return(KeWaitForSingleObject(Mutex,WaitReason,WaitMode,Alertable,Timeout));
 }
@@ -85,16 +96,24 @@ VOID STDCALL
 KeInitializeMutant(IN PKMUTANT Mutant,
 		   IN BOOLEAN InitialOwner)
 {
-  KeInitializeDispatcherHeader(&Mutant->Header,
-			       InternalMutexType,
-			       sizeof(KMUTANT) / sizeof(ULONG),
-			       1);
   if (InitialOwner == TRUE)
     {
+      KeInitializeDispatcherHeader(&Mutant->Header,
+				   InternalMutexType,
+				   sizeof(KMUTANT) / sizeof(ULONG),
+				   0);
+      InsertTailList(&KeGetCurrentThread()->MutantListHead,
+		     &Mutant->MutantListEntry);
       Mutant->OwnerThread = KeGetCurrentThread();
     }
   else
     {
+      KeInitializeDispatcherHeader(&Mutant->Header,
+				   InternalMutexType,
+				   sizeof(KMUTANT) / sizeof(ULONG),
+				   1);
+      Mutant->MutantListEntry.Flink = NULL;
+      Mutant->MutantListEntry.Blink = NULL;
       Mutant->OwnerThread = NULL;
     }
   Mutant->Abandoned = FALSE;
@@ -109,17 +128,40 @@ KeReadStateMutant(IN PKMUTANT Mutant)
 
 LONG STDCALL
 KeReleaseMutant(IN PKMUTANT Mutant,
-		ULONG Param2,
-		ULONG Param3,
+		IN KPRIORITY Increment,
+		IN BOOLEAN Abandon,
 		IN BOOLEAN Wait)
 {
   KeAcquireDispatcherDatabaseLock(Wait);
-  Mutant->Header.SignalState++;
-  assert(Mutant->Header.SignalState <= 1);
+  if (Abandon == FALSE)
+    {
+      if (Mutant->OwnerThread != NULL && Mutant->OwnerThread != KeGetCurrentThread())
+	{
+	  DbgPrint("THREAD_NOT_MUTEX_OWNER: Mutant->OwnerThread %p CurrentThread %p\n",
+		   Mutant->OwnerThread,
+		   KeGetCurrentThread());
+	  KeBugCheck(0); /* THREAD_NOT_MUTEX_OWNER */
+	}
+      Mutant->Header.SignalState++;
+      assert(Mutant->Header.SignalState <= 1);
+    }
+  else
+    {
+      if (Mutant->OwnerThread != NULL)
+	{
+	  Mutant->Header.SignalState = 1;
+	  Mutant->Abandoned = TRUE;
+	}
+    }
+
   if (Mutant->Header.SignalState == 1)
     {
+      Mutant->OwnerThread = NULL;
+      if (Mutant->MutantListEntry.Flink && Mutant->MutantListEntry.Blink)
+	RemoveEntryList(&Mutant->MutantListEntry);
       KeDispatcherObjectWake(&Mutant->Header);
     }
+
   KeReleaseDispatcherDatabaseLock(Wait);
   return(0);
 }

@@ -266,8 +266,8 @@ LONG
 STDCALL
 KeReleaseMutant(
 	IN PKMUTANT Mutant,
-	ULONG Param2,
-	ULONG Param3,
+	IN KPRIORITY Increment,
+	IN BOOLEAN Abandon,
 	IN BOOLEAN Wait
 	);
 

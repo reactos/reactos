@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.47 2001/08/27 01:22:21 ekohl Exp $
+/* $Id: kill.c,v 1.48 2001/11/07 02:16:25 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -129,6 +129,9 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
 {
    KIRQL oldIrql;
    PETHREAD CurrentThread;
+   PKTHREAD Thread;
+   PLIST_ENTRY current_entry;
+   PKMUTANT Mutant;
    
    CurrentThread = PsGetCurrentThread();
    
@@ -136,7 +139,22 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
    KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
    
    CurrentThread->ExitStatus = ExitStatus;
-   KeCancelTimer(&KeGetCurrentThread()->Timer);
+   Thread = KeGetCurrentThread();
+   KeCancelTimer(&Thread->Timer);
+   
+   /* abandon all owned mutants */
+   current_entry = Thread->MutantListHead.Flink;
+   while (current_entry != &Thread->MutantListHead)
+     {
+	Mutant = CONTAINING_RECORD(current_entry, KMUTANT,
+				   MutantListEntry);
+	KeReleaseMutant(Mutant,
+			MUTANT_INCREMENT,
+			TRUE,
+			FALSE);
+	current_entry = Thread->MutantListHead.Flink;
+     }
+   
    KeAcquireDispatcherDatabaseLock(FALSE);
    CurrentThread->Tcb.DispatcherHeader.SignalState = TRUE;
    KeDispatcherObjectWake(&CurrentThread->Tcb.DispatcherHeader);

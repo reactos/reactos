@@ -33,6 +33,7 @@
 #include <ntos/synch.h>
 #include <internal/ob.h>
 
+#define NDEBUG
 #include <internal/debug.h>
 
 POBJECT_TYPE ExMutantObjectType = NULL;
@@ -52,7 +53,7 @@ NtpCreateMutant(PVOID ObjectBody,
 		PWSTR RemainingPath,
 		POBJECT_ATTRIBUTES ObjectAttributes)
 {
-  DPRINT("NtpCreateEvent(ObjectBody %x, Parent %x, RemainingPath %S)\n",
+  DPRINT("NtpCreateMutant(ObjectBody %x, Parent %x, RemainingPath %S)\n",
 	 ObjectBody, Parent, RemainingPath);
 
   if (RemainingPath != NULL && wcschr(RemainingPath+1, '\\') != NULL)
@@ -71,9 +72,11 @@ NtpCreateMutant(PVOID ObjectBody,
 VOID STDCALL
 NtpDeleteMutant(PVOID ObjectBody)
 {
+  DPRINT("NtpDeleteMutant(ObjectBody %x)\n", ObjectBody);
+
   KeReleaseMutant((PKMUTANT)ObjectBody,
-		  0,
-		  0,
+		  MUTANT_INCREMENT,
+		  TRUE,
 		  FALSE);
 }
 
@@ -139,7 +142,7 @@ NtOpenMutant(OUT PHANDLE MutantHandle,
   return(ObOpenObjectByName(ObjectAttributes,
 			    ExMutantObjectType,
 			    NULL,
-			    UserMode,
+			    ExGetPreviousMode(),
 			    DesiredAccess,
 			    NULL,
 			    MutantHandle));
@@ -168,7 +171,7 @@ NtQueryMutant(IN HANDLE MutantHandle,
   Status = ObReferenceObjectByHandle(MutantHandle,
 				     MUTANT_QUERY_STATE,
 				     ExMutantObjectType,
-				     UserMode,
+				     ExGetPreviousMode(),
 				     (PVOID*)&Mutant,
 				     NULL);
   if (!NT_SUCCESS(Status))
@@ -197,7 +200,7 @@ NtReleaseMutant(IN HANDLE MutantHandle,
   Status = ObReferenceObjectByHandle(MutantHandle,
 				     MUTANT_ALL_ACCESS,
 				     ExMutantObjectType,
-				     UserMode,
+				     ExGetPreviousMode(),
 				     (PVOID*)&Mutant,
 				     NULL);
   if (!NT_SUCCESS(Status))
@@ -206,7 +209,7 @@ NtReleaseMutant(IN HANDLE MutantHandle,
     }
 
   Count = KeReleaseMutant(Mutant,
-			  0,
+			  MUTANT_INCREMENT,
 			  0,
 			  FALSE);
   ObDereferenceObject(Mutant);
