@@ -1,4 +1,4 @@
-/* $Id: ppb.c,v 1.9 2000/12/28 20:38:27 ekohl Exp $
+/* $Id: ppb.c,v 1.10 2001/08/07 14:10:41 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -146,7 +146,7 @@ RtlCreateProcessParameters(PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
 				    (PVOID*)&Param,
 				    0,
 				    &RegionSize,
-				    MEM_COMMIT,
+				    MEM_RESERVE | MEM_COMMIT,
 				    PAGE_READWRITE);
    if (!NT_SUCCESS(Status))
      {

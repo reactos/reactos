@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.8 2001/08/04 10:40:38 hbirr Exp $
+/* $Id: copy.c,v 1.9 2001/08/07 14:12:34 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -125,7 +125,7 @@ CopyFileExW (
 				     (PVOID *)&lpBuffer,
 				     2,
 				     &RegionSize,
-				     MEM_COMMIT,
+				     MEM_RESERVE | MEM_COMMIT,
 				     PAGE_READWRITE);
 
    if (!NT_SUCCESS(errCode))

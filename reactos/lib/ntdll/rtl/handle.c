@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.1 2001/05/26 16:49:51 ekohl Exp $
+/* $Id: handle.c,v 1.2 2001/08/07 14:10:41 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -71,7 +71,7 @@ RtlAllocateHandle(PRTL_HANDLE_TABLE HandleTable,
 					      (PVOID*)&ArrayPointer,
 					      0,
 					      &ArraySize,
-					      MEM_COMMIT,
+					      MEM_RESERVE | MEM_COMMIT,
 					      PAGE_READWRITE);
 	     if (!NT_SUCCESS(Status))
 	       return NULL;

@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.47 2001/05/05 19:13:10 chorns Exp $
+/* $Id: virtual.c,v 1.48 2001/08/07 14:07:33 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -501,6 +501,7 @@ MmSplitSegment(PMADDRESS_SPACE AddressSpace,
    ULONG OldProtect;
    ULONG OldLength;
    
+   DPRINT("MmSplitSegment()\n");
    /*
     * Save the type and protection and length of the current segment
     */
@@ -513,7 +514,7 @@ MmSplitSegment(PMADDRESS_SPACE AddressSpace,
     * there is nothing to do.
     */
    if (FirstSegment->Type == Type && FirstSegment->Protect == Protect)
-     {       
+     {
        return(STATUS_SUCCESS);
      }
    
@@ -672,7 +673,7 @@ NTSTATUS MmGatherSegment(PMADDRESS_SPACE AddressSpace,
 	 */
 	
 	ULONG OldType;
-	ULONG OldProtect;		
+	ULONG OldProtect;
 	
 	OldType = FirstSegment->Type;
 	OldProtect = FirstSegment->Protect;
@@ -823,12 +824,12 @@ NTSTATUS MmComplexVirtualMemoryOperation(PMADDRESS_SPACE AddressSpace,
 }
 
 
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
 			IN OUT	PVOID*  UBaseAddress,
 			IN	ULONG	ZeroBits,
 			IN OUT	PULONG	URegionSize,
-			IN	ULONG	AllocationType, 
+			IN	ULONG	AllocationType,
 			IN	ULONG	Protect)
 /*
  * FUNCTION: Allocates a block of virtual memory in the process address space
@@ -843,8 +844,8 @@ NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
  *                      allocated at a address below a certain value.
  *      RegionSize = The number of bytes to allocate
  *      AllocationType = Indicates the type of virtual memory you like to 
- *                       allocated, can be one of the values : MEM_COMMIT, 
- *                       MEM_RESERVE, MEM_RESET, MEM_TOP_DOWN
+ *                       allocated, can be a combination of MEM_COMMIT, 
+ *                       MEM_RESERVE, MEM_RESET, MEM_TOP_DOWN.
  *      Protect = Indicates the protection type of the pages allocated, can be
  *                a combination of PAGE_READONLY, PAGE_READWRITE, 
  *                PAGE_EXECUTE_READ, PAGE_EXECUTE_READWRITE, PAGE_GUARD, 
@@ -882,6 +883,16 @@ NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
      {
        return(STATUS_INVALID_PAGE_PROTECTION);
      }
+   if ((AllocationType & (MEM_COMMIT | MEM_RESERVE)) == 0)
+     {
+       return(STATUS_INVALID_PARAMETER);
+     }
+   if (((AllocationType & (MEM_COMMIT | MEM_RESERVE)) == MEM_COMMIT) &&
+       (*UBaseAddress == 0))
+     {
+       return(STATUS_INVALID_PARAMETER);
+     }
+   
    PBaseAddress = *UBaseAddress;
    PRegionSize = *URegionSize;
    
@@ -902,19 +913,14 @@ NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
 	return(Status);
      }
    
-   if (AllocationType & MEM_RESERVE)
-     {
-	Type = MEM_RESERVE;
-     }
-   else
-     {
-	Type = MEM_COMMIT;
-     }
+   Type = (AllocationType & MEM_COMMIT) ? MEM_COMMIT : MEM_RESERVE;
+   DPRINT("Type %x\n", Type);
    
    AddressSpace = &Process->AddressSpace;
    MmLockAddressSpace(AddressSpace);
    
-   if (PBaseAddress != 0)
+   if ((PBaseAddress != 0) &&
+       ((AllocationType & (MEM_COMMIT | MEM_RESERVE)) == MEM_COMMIT))
      {
 	MemoryArea = MmOpenMemoryAreaByAddress(&Process->AddressSpace,
 					       BaseAddress);
@@ -932,6 +938,7 @@ NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
 	     /* FIXME: Reserve/dereserve swap pages */
 	     MmUnlockAddressSpace(AddressSpace);
 	     ObDereferenceObject(Process);
+	     DPRINT("NtAllocateVirtualMemory() = %x\n",Status);
 	     return(Status);
 	  }
 	else if (MemoryArea != NULL)
@@ -941,8 +948,9 @@ NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
 	     return(STATUS_UNSUCCESSFUL);
 	  }
      }
-
-   Segment = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_SEGMENT),
+   
+   Segment = ExAllocatePoolWithTag(NonPagedPool,
+				   sizeof(MM_SEGMENT),
 				   TAG_MM_SEGMENT);
    if (Segment == NULL)
      {
@@ -962,9 +970,9 @@ NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
    
    if (!NT_SUCCESS(Status))
      {
-	DPRINT("NtAllocateVirtualMemory() = %x\n",Status);
-	MmUnlockAddressSpace(AddressSpace);	
+	MmUnlockAddressSpace(AddressSpace);
 	ObDereferenceObject(Process);
+	DPRINT("NtAllocateVirtualMemory() = %x\n",Status);
 	return(Status);
      }
    
@@ -976,16 +984,16 @@ NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
    InsertTailList(&MemoryArea->Data.VirtualMemoryData.SegmentListHead,
 		  &Segment->SegmentListEntry);
    
-   DPRINT("*UBaseAddress %x\n",*UBaseAddress);
    if ((AllocationType & MEM_COMMIT) &&
        ((Protect & PAGE_READWRITE) ||
 	(Protect & PAGE_EXECUTE_READWRITE)))
      {
 	MmReserveSwapPages(RegionSize);
      }
-      
+   
    *UBaseAddress = BaseAddress;
    *URegionSize = RegionSize;
+   DPRINT("*UBaseAddress %x  *URegionSize %x\n", BaseAddress, RegionSize);
    
    MmUnlockAddressSpace(AddressSpace);
    ObDereferenceObject(Process);
@@ -1013,7 +1021,9 @@ NtFlushVirtualMemory(IN	HANDLE	ProcessHandle,
 }
 
 VOID STATIC
-MmFreeVirtualMemoryPage(PVOID Context, PVOID Address, ULONG PhysicalAddr)
+MmFreeVirtualMemoryPage(PVOID Context,
+			PVOID Address,
+			ULONG PhysicalAddr)
 {
   PEPROCESS Process = (PEPROCESS)Context;
   
@@ -1024,17 +1034,21 @@ MmFreeVirtualMemoryPage(PVOID Context, PVOID Address, ULONG PhysicalAddr)
     }
 }
 
-VOID 
-MmFreeVirtualMemory(PEPROCESS Process, PMEMORY_AREA MemoryArea)
+VOID
+MmFreeVirtualMemory(PEPROCESS Process,
+		    PMEMORY_AREA MemoryArea)
 {
   PLIST_ENTRY current_entry;
   PMM_SEGMENT current;
+  
+  DPRINT("MmFreeVirtualMemory(Process %p  MemoryArea %p)\n", Process, MemoryArea);
   
   current_entry = MemoryArea->Data.VirtualMemoryData.SegmentListHead.Flink;
   while (current_entry != &MemoryArea->Data.VirtualMemoryData.SegmentListHead)
     {
       current = CONTAINING_RECORD(current_entry, MM_SEGMENT, SegmentListEntry);
       current_entry = current_entry->Flink;
+      DPRINT("ExFreePool(%p)\n", current);
       ExFreePool(current);
     }
 
@@ -1124,7 +1138,7 @@ NtFreeVirtualMemory(IN	HANDLE	ProcessHandle,
 	ObDereferenceObject(Process);
 	return(STATUS_SUCCESS);
 	
-      case MEM_DECOMMIT:	
+      case MEM_DECOMMIT:
 	Status = MmComplexVirtualMemoryOperation(AddressSpace,
 						 MemoryArea,
 						 BaseAddress,
@@ -1171,11 +1185,12 @@ MmChangeAreaProtection(PEPROCESS Process,
 }
 
 
-NTSTATUS STDCALL NtProtectVirtualMemory(IN	HANDLE	ProcessHandle,
-					IN	PVOID	BaseAddress,
-					IN	ULONG	NumberOfBytesToProtect,
-					IN	ULONG	NewAccessProtection,
-					OUT	PULONG	OldAccessProtection)
+NTSTATUS STDCALL
+NtProtectVirtualMemory(IN	HANDLE	ProcessHandle,
+		       IN	PVOID	BaseAddress,
+		       IN	ULONG	NumberOfBytesToProtect,
+		       IN	ULONG	NewAccessProtection,
+		       OUT	PULONG	OldAccessProtection)
 {
    PMEMORY_AREA MemoryArea;
    PEPROCESS Process;
@@ -1206,13 +1221,13 @@ NTSTATUS STDCALL NtProtectVirtualMemory(IN	HANDLE	ProcessHandle,
 	ObDereferenceObject(Process);
 	return(STATUS_UNSUCCESSFUL);
      }
-
+#if 0
    *OldAccessProtection = MemoryArea->Attributes;
 
    if (MemoryArea->BaseAddress == BaseAddress &&
        MemoryArea->Length == NumberOfBytesToProtect)
      {
-	MemoryArea->Attributes = NewAccessProtection;	
+	MemoryArea->Attributes = NewAccessProtection;
      }
    else
      {
@@ -1228,6 +1243,7 @@ NTSTATUS STDCALL NtProtectVirtualMemory(IN	HANDLE	ProcessHandle,
 			  BaseAddress,
 			  NumberOfBytesToProtect,
 			  NewAccessProtection);
+#endif
    MmUnlockAddressSpace(AddressSpace);
    ObDereferenceObject(Process);
    return(STATUS_SUCCESS);

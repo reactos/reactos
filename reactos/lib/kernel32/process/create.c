@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.40 2001/08/03 17:20:06 ekohl Exp $
+/* $Id: create.c,v 1.41 2001/08/07 14:11:41 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -157,8 +157,12 @@ KlCreateFirstThread(HANDLE ProcessHandle,
   else
     CreateSuspended = FALSE;
 
-  InitialTeb.StackCommit = (StackCommit < PAGESIZE) ? PAGESIZE : StackCommit;
   InitialTeb.StackReserve = (StackReserve < 0x100000) ? 0x100000 : StackReserve;
+  /* FIXME: use correct commit size */
+#if 0
+  InitialTeb.StackCommit = (StackCommit < PAGESIZE) ? PAGESIZE : StackCommit;
+#endif
+  InitialTeb.StackCommit = InitialTeb.StackReserve - PAGESIZE;
 
   /* size of guard page */
   InitialTeb.StackCommit += PAGESIZE;
@@ -169,7 +173,7 @@ KlCreateFirstThread(HANDLE ProcessHandle,
 				   &InitialTeb.StackAllocate,
 				   0,
 				   &InitialTeb.StackReserve,
-				   MEM_COMMIT, // MEM_RESERVE,
+				   MEM_RESERVE,
 				   PAGE_READWRITE);
   if (!NT_SUCCESS(Status))
     {
@@ -186,7 +190,7 @@ KlCreateFirstThread(HANDLE ProcessHandle,
 
   DPRINT("StackBase: %p\nStackCommit: %p\n",
 	 InitialTeb.StackBase, InitialTeb.StackCommit);
-#if 0
+
   /* Commit stack page(s) */
   Status = NtAllocateVirtualMemory(ProcessHandle,
 				   &InitialTeb.StackLimit,
@@ -228,7 +232,6 @@ KlCreateFirstThread(HANDLE ProcessHandle,
       SetLastErrorByStatus(Status);
       return(NULL);
     }
-#endif
 
   memset(&ThreadContext,0,sizeof(CONTEXT));
   ThreadContext.Eip = (ULONG)lpStartAddress;
@@ -384,7 +387,7 @@ KlInitPeb (HANDLE ProcessHandle,
 					 &EnvPtr,
 					 0,
 					 &EnvSize,
-					 MEM_COMMIT,
+					 MEM_RESERVE | MEM_COMMIT,
 					 PAGE_READWRITE);
 	if (!NT_SUCCESS(Status))
 	  {
@@ -405,7 +408,7 @@ KlInitPeb (HANDLE ProcessHandle,
 				    &PpbBase,
 				    0,
 				    &PpbSize,
-				    MEM_COMMIT,
+				    MEM_RESERVE | MEM_COMMIT,
 				    PAGE_READWRITE);
    if (!NT_SUCCESS(Status))
      {

@@ -95,7 +95,7 @@ typedef struct tagSUBHEAP
     struct tagHEAP     *heap;       /* Main heap structure */
     DWORD               magic;      /* Magic number */
     WORD                selector;   /* Selector for HEAP_WINE_SEGPTR heaps */
-} SUBHEAP;
+} SUBHEAP, *PSUBHEAP;
 
 #define SUBHEAP_MAGIC    ((DWORD)('S' | ('U'<<8) | ('B'<<16) | ('H'<<24)))
 
@@ -108,7 +108,7 @@ typedef struct tagHEAP
     DWORD            flags;         /* Heap flags */
     DWORD            magic;         /* Magic number */
     void            *private;       /* Private pointer for the user of the heap */
-} HEAP;
+} HEAP, *PHEAP;
 
 #define HEAP_MAGIC       ((DWORD)('H' | ('E'<<8) | ('A'<<16) | ('P'<<24)))
 
@@ -131,7 +131,8 @@ static BOOL HEAP_IsRealArena( HANDLE heap, DWORD flags, LPCVOID block, BOOL quie
 /***********************************************************************
  *           HEAP_Dump
  */
-void HEAP_Dump( HEAP *heap )
+void
+HEAP_Dump(PHEAP heap)
 {
     int i;
     SUBHEAP *subheap;
@@ -213,9 +214,9 @@ void HEAP_Dump( HEAP *heap )
  *	Pointer to the heap
  *	NULL: Failure
  */
-static HEAP *HEAP_GetPtr(
-             HANDLE heap /* [in] Handle to the heap */
-) {
+static PHEAP
+HEAP_GetPtr(HANDLE heap) /* [in] Handle to the heap */
+{
     HEAP *heapPtr = (HEAP *)heap;
     if (!heapPtr || (heapPtr->magic != HEAP_MAGIC))
     {
@@ -237,7 +238,9 @@ static HEAP *HEAP_GetPtr(
  *
  * Insert a free block into the free list.
  */
-static void HEAP_InsertFreeBlock( HEAP *heap, ARENA_FREE *pArena )
+static VOID
+HEAP_InsertFreeBlock(PHEAP heap,
+		     ARENA_FREE *pArena)
 {
     FREE_LIST_ENTRY *pEntry = heap->freeList;
     while (pEntry->size < pArena->size) pEntry++;
@@ -257,10 +260,10 @@ static void HEAP_InsertFreeBlock( HEAP *heap, ARENA_FREE *pArena )
  *	Pointer: Success
  *	NULL: Failure
  */
-static SUBHEAP *HEAP_FindSubHeap(
-                HEAP *heap, /* [in] Heap pointer */
-                LPCVOID ptr /* [in] Address */
-) {
+static PSUBHEAP
+HEAP_FindSubHeap(HEAP *heap,  /* [in] Heap pointer */
+		 LPCVOID ptr) /* [in] Address */
+{
     SUBHEAP *sub = &heap->subheap;
     while (sub)
     {
@@ -277,7 +280,9 @@ static SUBHEAP *HEAP_FindSubHeap(
  *
  * Make sure the heap storage is committed up to (not including) ptr.
  */
-static inline BOOL HEAP_Commit( SUBHEAP *subheap, void *ptr )
+static inline BOOL
+HEAP_Commit(SUBHEAP *subheap,
+	    void *ptr)
 {
     DWORD size = (DWORD)((char *)ptr - (char *)subheap);
     NTSTATUS Status;
@@ -291,7 +296,7 @@ static inline BOOL HEAP_Commit( SUBHEAP *subheap, void *ptr )
     address = (PVOID)((char *)subheap + subheap->commitSize);
     commitsize = size - subheap->commitSize;
 
-    Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
 				     &address,
 				     0,
 				     &commitsize,
@@ -586,7 +591,7 @@ static SUBHEAP *HEAP_CreateSubHeap(PVOID BaseAddress,
 				     &address,
 				     0,
 				     (PULONG)&totalSize,
-				     MEM_RESERVE,
+				     MEM_RESERVE | MEM_COMMIT,
 				     PAGE_EXECUTE_READWRITE);
     if (!NT_SUCCESS(Status))
     {
@@ -1011,7 +1016,8 @@ RtlCreateHeap(ULONG flags,
  *	TRUE: Success
  *	FALSE: Failure
  */
-BOOL STDCALL RtlDestroyHeap( HANDLE heap /* [in] Handle of heap */ )
+BOOL STDCALL
+RtlDestroyHeap(HANDLE heap) /* [in] Handle of heap */
 {
     HEAP *heapPtr = HEAP_GetPtr( heap );
     SUBHEAP *subheap;
@@ -1054,11 +1060,11 @@ BOOL STDCALL RtlDestroyHeap( HANDLE heap /* [in] Handle of heap */ )
  *	Pointer to allocated memory block
  *	NULL: Failure
  */
-PVOID STDCALL RtlAllocateHeap(
-              HANDLE heap, /* [in] Handle of private heap block */
-              ULONG flags,   /* [in] Heap allocation control flags */
-              ULONG size     /* [in] Number of bytes to allocate */
-) {
+PVOID STDCALL
+RtlAllocateHeap(HANDLE heap,   /* [in] Handle of private heap block */
+                ULONG flags,   /* [in] Heap allocation control flags */
+                ULONG size)    /* [in] Number of bytes to allocate */
+{
     ARENA_FREE *pArena;
     ARENA_INUSE *pInUse;
     SUBHEAP *subheap;
@@ -1511,75 +1517,8 @@ HW_end:
 
     return ret;
 }
-
-
-/***********************************************************************
- *           HEAP_CreateSystemHeap
- *
- * Create the system heap.
- */
-BOOL HEAP_CreateSystemHeap(void)
-{
-    SYSTEM_HEAP_DESCR *descr;
-    HANDLE heap;
-    HEAP *heapPtr;
-    int created;
-
-    HANDLE map = CreateFileMappingA( INVALID_HANDLE_VALUE, NULL, SEC_COMMIT | PAGE_READWRITE,
-                                     0, HEAP_DEF_SIZE, "__SystemHeap" );
-    if (!map) return FALSE;
-    created = (GetLastError() != ERROR_ALREADY_EXISTS);
-
-    if (!(heapPtr = MapViewOfFileEx( map, FILE_MAP_ALL_ACCESS, 0, 0, 0, SYSTEM_HEAP_BASE )))
-    {
-        /* pre-defined address not available, use any one */
-        fprintf( stderr, "Warning: system heap base address %p not available\n",
-                 SYSTEM_HEAP_BASE );
-        if (!(heapPtr = MapViewOfFile( map, FILE_MAP_ALL_ACCESS, 0, 0, 0 )))
-        {
-            CloseHandle( map );
-            return FALSE;
-        }
-    }
-    heap = (HANDLE)heapPtr;
-
-    if (created)  /* newly created heap */
-    {
-        HEAP_InitSubHeap( heapPtr, heapPtr, HEAP_WINE_SHARED, 0, HEAP_DEF_SIZE );
-        HeapLock( heap );
-        descr = heapPtr->private = HeapAlloc( heap, HEAP_ZERO_MEMORY, sizeof(*descr) );
-        assert( descr );
-    }
-    else
-    {
-        /* wait for the heap to be initialized */
-        while (!heapPtr->private) Sleep(1);
-        HeapLock( heap );
-        /* remap it to the right address if necessary */
-        if (heapPtr->subheap.heap != heapPtr)
-        {
-            void *base = heapPtr->subheap.heap;
-            HeapUnlock( heap );
-            UnmapViewOfFile( heapPtr );
-            if (!(heapPtr = MapViewOfFileEx( map, FILE_MAP_ALL_ACCESS, 0, 0, 0, base )))
-            {
-                fprintf( stderr, "Couldn't map system heap at the correct address (%p)\n", base );
-                CloseHandle( map );
-                return FALSE;
-            }
-            heap = (HANDLE)heapPtr;
-            HeapLock( heap );
-        }
-        descr = heapPtr->private;
-        assert( descr );
-    }
-    SystemHeap = heap;
-    SystemHeapDescr = descr;
-    HeapUnlock( heap );
-    CloseHandle( map );
-    return TRUE;
-}
 #endif
+
 
 HANDLE STDCALL
 RtlGetProcessHeap(VOID)
@@ -1664,3 +1603,5 @@ RtlValidateProcessHeaps(VOID)
 
    return Result;
 }
+
+/* EOF */

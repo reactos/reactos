@@ -51,6 +51,7 @@ NTSTATUS LdrLoadInitialProcess (VOID)
    CONTEXT Context;
    HANDLE ThreadHandle;
    INITIAL_TEB InitialTeb;
+   ULONG OldPageProtection;
    
    /*
     * Get the absolute path to smss.exe using the
@@ -153,22 +154,24 @@ NTSTATUS LdrLoadInitialProcess (VOID)
    NTHeaders = RtlImageNtHeader(Peb->ImageBaseAddress);
    DPRINT("NTHeaders %x\n", NTHeaders);
    InitialTeb.StackReserve = NTHeaders->OptionalHeader.SizeOfStackReserve;
-   InitialTeb.StackCommit = NTHeaders->OptionalHeader.SizeOfStackCommit;
+   /* FIXME: use correct commit size */
+   InitialTeb.StackCommit = NTHeaders->OptionalHeader.SizeOfStackReserve - PAGESIZE;
+//   InitialTeb.StackCommit = NTHeaders->OptionalHeader.SizeOfStackCommit;
    /* add guard page size */
    InitialTeb.StackCommit += PAGESIZE;
    DPRINT("StackReserve 0x%lX  StackCommit 0x%lX\n",
 	  InitialTeb.StackReserve, InitialTeb.StackCommit);
    KeDetachProcess();
    DPRINT("Dereferencing process\n");
-//   ObDereferenceObject(Process);
+   ObDereferenceObject(Process);
    
   DPRINT("Allocating stack\n");
   InitialTeb.StackAllocate = NULL;
-  Status = ZwAllocateVirtualMemory(ProcessHandle,
+  Status = NtAllocateVirtualMemory(ProcessHandle,
 				   &InitialTeb.StackAllocate,
 				   0,
 				   &InitialTeb.StackReserve,
-				   MEM_COMMIT, // MEM_RESERVE,
+				   MEM_RESERVE,
 				   PAGE_READWRITE);
   if (!NT_SUCCESS(Status))
     {
@@ -184,7 +187,7 @@ NTSTATUS LdrLoadInitialProcess (VOID)
 
   DPRINT("StackBase: %p  StackCommit: 0x%lX\n",
 	 InitialTeb.StackBase, InitialTeb.StackCommit);
-#if 0
+
   /* Commit stack */
   Status = NtAllocateVirtualMemory(ProcessHandle,
 				   &InitialTeb.StackLimit,
@@ -225,45 +228,44 @@ NTSTATUS LdrLoadInitialProcess (VOID)
       DPRINT("Error protecting guard page!\n");
       return(Status);
     }
-#endif
-   
-   DPRINT("Attaching to process\n");
-   KeAttachProcess(Process);
-   Peb = (PPEB)PEB_BASE;
-   DPRINT("Peb %x\n", Peb);
-   DPRINT("CurrentProcess %x Peb->ImageBaseAddress %x\n", 
-	  PsGetCurrentProcess(),
-	  Peb->ImageBaseAddress);
-   KeDetachProcess();
+  
+  DPRINT("Attaching to process\n");
+  KeAttachProcess(Process);
+  Peb = (PPEB)PEB_BASE;
+  DPRINT("Peb %x\n", Peb);
+  DPRINT("CurrentProcess %x Peb->ImageBaseAddress %x\n", 
+	 PsGetCurrentProcess(),
+	 Peb->ImageBaseAddress);
+  KeDetachProcess();
 
-   /*
-    * Initialize context to point to LdrStartup
-    */
-   memset(&Context,0,sizeof(CONTEXT));
-   Context.Eip = (ULONG)LdrStartupAddr;
-   Context.SegCs = USER_CS;
-   Context.SegDs = USER_DS;
-   Context.SegEs = USER_DS;
-   Context.SegFs = TEB_SELECTOR;
-   Context.SegGs = USER_DS;
-   Context.SegSs = USER_DS;
-   Context.EFlags = 0x202;
-   Context.Esp = (ULONG)InitialTeb.StackBase - 20;
+  /*
+   * Initialize context to point to LdrStartup
+   */
+  memset(&Context,0,sizeof(CONTEXT));
+  Context.Eip = (ULONG)LdrStartupAddr;
+  Context.SegCs = USER_CS;
+  Context.SegDs = USER_DS;
+  Context.SegEs = USER_DS;
+  Context.SegFs = TEB_SELECTOR;
+  Context.SegGs = USER_DS;
+  Context.SegSs = USER_DS;
+  Context.EFlags = 0x202;
+  Context.Esp = (ULONG)InitialTeb.StackBase - 20;
 
-   DPRINT("LdrStartupAddr %x\n",LdrStartupAddr);
-   
-   /*
-    * FIXME: Create process and let 'er rip
-    */
-   DPRINT("Creating thread for initial process\n");
-   Status = ZwCreateThread(&ThreadHandle,
-			   THREAD_ALL_ACCESS,
-			   NULL,
-			   ProcessHandle,
-			   NULL,
-			   &Context,
-			   &InitialTeb,
-			   FALSE);
+  DPRINT("LdrStartupAddr %x\n",LdrStartupAddr);
+  
+  /*
+   * FIXME: Create process and let 'er rip
+   */
+  DPRINT("Creating thread for initial process\n");
+  Status = ZwCreateThread(&ThreadHandle,
+			  THREAD_ALL_ACCESS,
+			  NULL,
+			  ProcessHandle,
+			  NULL,
+			  &Context,
+			  &InitialTeb,
+			  FALSE);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("Thread creation failed (Status %x)\n", Status);
@@ -273,22 +275,22 @@ NTSTATUS LdrLoadInitialProcess (VOID)
 			  &InitialTeb.StackReserve,
 			  MEM_RELEASE);
 
-	/* FIXME: unmap the section here  */
-	/* FIXME: destroy the section here  */
-	
-	return Status;
-     }
-   
-   DPRINT("Attaching to process\n");
-   KeAttachProcess(Process);
-   Peb = (PPEB)PEB_BASE;
-   DPRINT("Peb %x\n", Peb);
-   DPRINT("CurrentProcess %x Peb->ImageBaseAddress %x\n", 
-	  PsGetCurrentProcess(),
-	  Peb->ImageBaseAddress);
-   KeDetachProcess();
-   
-   return STATUS_SUCCESS;
+      /* FIXME: unmap the section here  */
+      /* FIXME: destroy the section here  */
+
+      return(Status);
+    }
+  
+  DPRINT("Attaching to process\n");
+  KeAttachProcess(Process);
+  Peb = (PPEB)PEB_BASE;
+  DPRINT("Peb %x\n", Peb);
+  DPRINT("CurrentProcess %x Peb->ImageBaseAddress %x\n", 
+	 PsGetCurrentProcess(),
+	 Peb->ImageBaseAddress);
+  KeDetachProcess();
+  
+  return(STATUS_SUCCESS);
 }
 
 /* EOF */

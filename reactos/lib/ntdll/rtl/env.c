@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.12 2000/12/28 20:38:27 ekohl Exp $
+/* $Id: env.c,v 1.13 2001/08/07 14:10:41 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -55,7 +55,7 @@ RtlCreateEnvironment(BOOLEAN Inherit,
 			                                  &EnvPtr,
 			                                  0,
 			                                  &RegionSize,
-			                                  MEM_COMMIT,
+			                                  MEM_RESERVE | MEM_COMMIT,
 			                                  PAGE_READWRITE);
 			if (!NT_SUCCESS(Status))
 			{
@@ -79,7 +79,7 @@ RtlCreateEnvironment(BOOLEAN Inherit,
 		                                  &EnvPtr,
 		                                  0,
 		                                  &RegionSize,
-		                                  MEM_COMMIT,
+		                                  MEM_RESERVE | MEM_COMMIT,
 		                                  PAGE_READWRITE);
 		if (NT_SUCCESS(Status))
 		{
@@ -322,7 +322,7 @@ found:
 				                                  (VOID**)&new_env,
 				                                  0,
 				                                  &new_size,
-				                                  MEM_COMMIT,
+				                                  MEM_RESERVE | MEM_COMMIT,
 				                                  PAGE_READWRITE);
 				if (!NT_SUCCESS(Status))
 				{

@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.6 2000/07/01 17:07:00 ea Exp $
+/* $Id: virtual.c,v 1.7 2001/08/07 14:12:58 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -15,170 +15,187 @@
 
 /* FUNCTIONS *****************************************************************/
 
-LPVOID STDCALL VirtualAllocEx(HANDLE hProcess,
-			      LPVOID lpAddress,
-			      DWORD dwSize,
-			      DWORD flAllocationType,
-			      DWORD flProtect)
+LPVOID STDCALL
+VirtualAllocEx(HANDLE hProcess,
+	       LPVOID lpAddress,
+	       DWORD dwSize,
+	       DWORD flAllocationType,
+	       DWORD flProtect)
 {
-   NTSTATUS Status;
-   
-   Status = ZwAllocateVirtualMemory(hProcess,
-				    (PVOID *)&lpAddress,
-				    0,
-				    (PULONG)&dwSize,
-				    flAllocationType,
-				    flProtect);
-   if (!NT_SUCCESS(Status))
-     {
-        SetLastErrorByStatus (Status);
-	return(NULL);
-     }
-   return(lpAddress);
-}
+  NTSTATUS Status;
 
-LPVOID STDCALL VirtualAlloc(LPVOID lpAddress,
-			    DWORD dwSize,
-			    DWORD flAllocationType,
-			    DWORD flProtect)
-{
-   return(VirtualAllocEx(GetCurrentProcess(),lpAddress,dwSize,flAllocationType,
-			 flProtect));
-}
-
-WINBOOL STDCALL VirtualFreeEx(HANDLE hProcess,
-			      LPVOID lpAddress,
-			      DWORD dwSize,
-			      DWORD dwFreeType)
-{
-   NTSTATUS Status;
-   
-   Status = ZwFreeVirtualMemory(hProcess,
-				(PVOID *)&lpAddress,
-				(PULONG)&dwSize,
-				dwFreeType);
-   if (!NT_SUCCESS(Status))
-     {
-	SetLastErrorByStatus (Status);
-	return(FALSE);
-     }
-   return(TRUE);
-}
-
-WINBOOL STDCALL VirtualFree(LPVOID lpAddress, DWORD dwSize, DWORD dwFreeType)
-{
-   return(VirtualFreeEx(GetCurrentProcess(),lpAddress,dwSize,dwFreeType));
-}
-
-WINBOOL STDCALL VirtualProtect(LPVOID lpAddress,
-			       DWORD dwSize,
-			       DWORD flNewProtect,
-			       PDWORD lpflOldProtect)
-{
-   return(VirtualProtectEx(GetCurrentProcess(),
-			   lpAddress, 
-			   dwSize, 
-			   flNewProtect, 
-			   lpflOldProtect));
+  Status = NtAllocateVirtualMemory(hProcess,
+				   (PVOID *)&lpAddress,
+				   0,
+				   (PULONG)&dwSize,
+				   flAllocationType,
+				   flProtect);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return(NULL);
+    }
+  return(lpAddress);
 }
 
 
-WINBOOL STDCALL VirtualProtectEx(HANDLE hProcess,
-				 LPVOID lpAddress,
-				 DWORD dwSize,
-				 DWORD flNewProtect,
-				 PDWORD lpflOldProtect)
+LPVOID STDCALL
+VirtualAlloc(LPVOID lpAddress,
+	     DWORD dwSize,
+	     DWORD flAllocationType,
+	     DWORD flProtect)
 {
-   NTSTATUS Status;
-   
-   Status = ZwProtectVirtualMemory(hProcess,
-				   (PVOID)lpAddress,
-				   dwSize,
-				   flNewProtect,
-				   (PULONG)lpflOldProtect);
-   if (Status != STATUS_SUCCESS)
-     {
-	SetLastErrorByStatus (Status);
-	return(FALSE);
-     }
-   return(TRUE);
+  return(VirtualAllocEx(GetCurrentProcess(),
+			lpAddress,
+			dwSize,
+			flAllocationType,
+			flProtect));
 }
 
 
-WINBOOL
-STDCALL
-VirtualLock (
-	LPVOID	lpAddress,
-	DWORD	dwSize
-	)
+WINBOOL STDCALL
+VirtualFreeEx(HANDLE hProcess,
+	      LPVOID lpAddress,
+	      DWORD dwSize,
+	      DWORD dwFreeType)
 {
-	ULONG BytesLocked;
-	NTSTATUS Status;
-	Status = NtLockVirtualMemory(NtCurrentProcess(),lpAddress,dwSize, &BytesLocked);
-	if (!NT_SUCCESS(Status))
-        {
-		SetLastErrorByStatus (Status);
-		return FALSE;
-     	}
-	return TRUE;
+  NTSTATUS Status;
+
+  Status = NtFreeVirtualMemory(hProcess,
+			       (PVOID *)&lpAddress,
+			       (PULONG)&dwSize,
+			       dwFreeType);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return(FALSE);
+    }
+  return(TRUE);
 }
 
 
-DWORD
-STDCALL
-VirtualQuery (
-	LPCVOID				lpAddress,
-	PMEMORY_BASIC_INFORMATION	lpBuffer,
-	DWORD				dwLength
-	)
+WINBOOL STDCALL
+VirtualFree(LPVOID lpAddress,
+	    DWORD dwSize,
+	    DWORD dwFreeType)
 {
-	return VirtualQueryEx (NtCurrentProcess(),lpAddress, lpBuffer, dwLength );
-}
-
-#define MemoryBasicInformation 0
-DWORD
-STDCALL
-VirtualQueryEx (
-	HANDLE				hProcess,
-	LPCVOID				lpAddress,
-	PMEMORY_BASIC_INFORMATION	lpBuffer,
-	DWORD				dwLength
-	)
-{
-	NTSTATUS Status;
-	ULONG ResultLength;
-	
-	Status = NtQueryVirtualMemory(
-		hProcess,(LPVOID)lpAddress,
-		MemoryBasicInformation, lpBuffer,
-		sizeof(MEMORY_BASIC_INFORMATION),
-		&ResultLength );
-	
-	if (!NT_SUCCESS(Status))
-        {
-		SetLastErrorByStatus (Status);
-		return ResultLength;
-     	}
-	return ResultLength;
+  return(VirtualFreeEx(GetCurrentProcess(),
+		       lpAddress,
+		       dwSize,
+		       dwFreeType));
 }
 
 
-WINBOOL
-STDCALL
-VirtualUnlock (
-	LPVOID	lpAddress,
-	DWORD	dwSize
-	)
+WINBOOL STDCALL
+VirtualProtect(LPVOID lpAddress,
+	       DWORD dwSize,
+	       DWORD flNewProtect,
+	       PDWORD lpflOldProtect)
 {
-	ULONG BytesLocked;
-	NTSTATUS Status;
-	Status = NtUnlockVirtualMemory(NtCurrentProcess(),lpAddress,dwSize, &BytesLocked);
-	if (!NT_SUCCESS(Status))
-        {
-		SetLastErrorByStatus (Status);
-		return FALSE;
-     	}
-	return TRUE;
+  return(VirtualProtectEx(GetCurrentProcess(),
+			  lpAddress,
+			  dwSize,
+			  flNewProtect,
+			  lpflOldProtect));
+}
+
+
+WINBOOL STDCALL
+VirtualProtectEx(HANDLE hProcess,
+		 LPVOID lpAddress,
+		 DWORD dwSize,
+		 DWORD flNewProtect,
+		 PDWORD lpflOldProtect)
+{
+  NTSTATUS Status;
+
+  Status = NtProtectVirtualMemory(hProcess,
+				  (PVOID)lpAddress,
+				  dwSize,
+				  flNewProtect,
+				  (PULONG)lpflOldProtect);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return(FALSE);
+    }
+  return(TRUE);
+}
+
+
+WINBOOL STDCALL
+VirtualLock(LPVOID lpAddress,
+	    DWORD dwSize)
+{
+  ULONG BytesLocked;
+  NTSTATUS Status;
+
+  Status = NtLockVirtualMemory(NtCurrentProcess(),
+			       lpAddress,
+			       dwSize,
+			       &BytesLocked);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return(FALSE);
+    }
+  return(TRUE);
+}
+
+
+DWORD STDCALL
+VirtualQuery(LPCVOID lpAddress,
+	     PMEMORY_BASIC_INFORMATION lpBuffer,
+	     DWORD dwLength)
+{
+  return(VirtualQueryEx(NtCurrentProcess(),
+			lpAddress,
+			lpBuffer,
+			dwLength));
+}
+
+
+DWORD STDCALL
+VirtualQueryEx(HANDLE hProcess,
+	       LPCVOID lpAddress,
+	       PMEMORY_BASIC_INFORMATION lpBuffer,
+	       DWORD dwLength)
+{
+  NTSTATUS Status;
+  ULONG ResultLength;
+
+  Status = NtQueryVirtualMemory(hProcess,
+				(LPVOID)lpAddress,
+				MemoryBasicInformation,
+				lpBuffer,
+				sizeof(MEMORY_BASIC_INFORMATION),
+				&ResultLength );
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return(ResultLength);
+    }
+  return(ResultLength);
+}
+
+
+WINBOOL STDCALL
+VirtualUnlock(LPVOID lpAddress,
+	      DWORD dwSize)
+{
+  ULONG BytesLocked;
+  NTSTATUS Status;
+
+  Status = NtUnlockVirtualMemory(NtCurrentProcess(),
+				 lpAddress,
+				 dwSize,
+				 &BytesLocked);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return(FALSE);
+    }
+  return(TRUE);
 }
 
 /* EOF */

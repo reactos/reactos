@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.26 2001/08/03 17:18:50 ekohl Exp $
+/* $Id: process.c,v 1.27 2001/08/07 14:10:42 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -43,15 +43,22 @@ RtlpCreateFirstThread(HANDLE ProcessHandle,
   ObjectAttributes.Attributes = 0;
   ObjectAttributes.SecurityQualityOfService = NULL;
 
-  if (StackCommit > PAGESIZE)
-    InitialTeb.StackCommit = StackCommit;
-  else
-    InitialTeb.StackCommit = PAGESIZE;
-
   if (StackReserve > 0x100000)
     InitialTeb.StackReserve = StackReserve;
   else
     InitialTeb.StackReserve = 0x100000; /* 1MByte */
+
+  /* FIXME */
+#if 0
+  if (StackCommit > PAGESIZE)
+    InitialTeb.StackCommit = StackCommit;
+  else
+    InitialTeb.StackCommit = PAGESIZE;
+#endif
+  InitialTeb.StackCommit = InitialTeb.StackReserve - PAGESIZE;
+
+  /* add guard page size */
+  InitialTeb.StackCommit += PAGESIZE;
 
   /* Reserve stack */
   InitialTeb.StackAllocate = NULL;
@@ -59,7 +66,7 @@ RtlpCreateFirstThread(HANDLE ProcessHandle,
 				   &InitialTeb.StackAllocate,
 				   0,
 				   &InitialTeb.StackReserve,
-				   MEM_COMMIT, //MEM_RESERVE,
+				   MEM_RESERVE,
 				   PAGE_READWRITE);
   if (!NT_SUCCESS(Status))
     {
@@ -71,12 +78,11 @@ RtlpCreateFirstThread(HANDLE ProcessHandle,
 	 InitialTeb.StackAllocate, InitialTeb.StackReserve);
 
   InitialTeb.StackBase = (PVOID)((ULONG)InitialTeb.StackAllocate + InitialTeb.StackReserve);
-  InitialTeb.StackLimit = (PVOID)((ULONG)InitialTeb.StackBase - InitialTeb.StackCommit - PAGESIZE);
-  InitialTeb.StackCommit += PAGESIZE;
+  InitialTeb.StackLimit = (PVOID)((ULONG)InitialTeb.StackBase - InitialTeb.StackCommit);
 
   DPRINT("StackBase: %p StackCommit: 0x%lX\n",
 	 InitialTeb.StackBase, InitialTeb.StackCommit);
-#if 0
+
   /* Commit stack */
   Status = NtAllocateVirtualMemory(ProcessHandle,
 				   &InitialTeb.StackLimit,
@@ -115,7 +121,7 @@ RtlpCreateFirstThread(HANDLE ProcessHandle,
       DPRINT("Error comitting guard page!\n");
       return(Status);
     }
-#endif
+
   memset(&ThreadContext,0,sizeof(CONTEXT));
   ThreadContext.Eip = (ULONG)lpStartAddress;
   ThreadContext.SegGs = USER_DS;
@@ -281,7 +287,7 @@ static NTSTATUS KlInitPeb (HANDLE ProcessHandle,
 					 &EnvPtr,
 					 0,
 					 &EnvSize,
-					 MEM_COMMIT,
+					 MEM_RESERVE | MEM_COMMIT,
 					 PAGE_READWRITE);
 	if (!NT_SUCCESS(Status))
 	  {
@@ -303,7 +309,7 @@ static NTSTATUS KlInitPeb (HANDLE ProcessHandle,
 				    &PpbBase,
 				    0,
 				    &PpbSize,
-				    MEM_COMMIT,
+				    MEM_RESERVE | MEM_COMMIT,
 				    PAGE_READWRITE);
    if (!NT_SUCCESS(Status))
      {

@@ -1,4 +1,4 @@
-/* $Id: npipe.c,v 1.5 2001/05/10 23:37:06 ekohl Exp $
+/* $Id: npipe.c,v 1.6 2001/08/07 14:12:34 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -13,11 +13,13 @@
 #include <ddk/ntddk.h>
 #include <ntdll/rtl.h>
 #include <windows.h>
+#include <kernel32/error.h>
 //#include <wchar.h>
 //#include <string.h>
+#include <limits.h>
 
+//#define NDEBUG
 #include <kernel32/kernel32.h>
-#include <kernel32/error.h>
 
 /* FUNCTIONS ****************************************************************/
 
@@ -51,6 +53,7 @@ CreateNamedPipeA(LPCSTR lpName,
    
    return(NamedPipeHandle);
 }
+
 
 HANDLE STDCALL
 CreateNamedPipeW(LPCWSTR lpName,
@@ -88,6 +91,7 @@ CreateNamedPipeW(LPCWSTR lpName,
      }
    
    DPRINT("Pipe name: %wZ\n", &NamedPipeName);
+   DPRINT("Pipe name: %S\n", NamedPipeName.Buffer);
    
    InitializeObjectAttributes(&ObjectAttributes,
 			      &NamedPipeName,
@@ -109,6 +113,18 @@ CreateNamedPipeW(LPCWSTR lpName,
    if (dwOpenMode & FILE_FLAG_OVERLAPPED)
      {
 	CreateOptions = CreateOptions | FILE_SYNCHRONOUS_IO_ALERT;
+     }
+   if (dwOpenMode & PIPE_ACCESS_DUPLEX)
+     {
+	CreateOptions = CreateOptions | FILE_PIPE_FULL_DUPLEX;
+     }
+   else if (dwOpenMode & PIPE_ACCESS_INBOUND)
+     {
+	CreateOptions = CreateOptions | FILE_PIPE_INBOUND;
+     }
+   else if (dwOpenMode & PIPE_ACCESS_OUTBOUND)
+     {
+	CreateOptions = CreateOptions | FILE_PIPE_OUTBOUND;
      }
    
    if (dwPipeMode & PIPE_TYPE_BYTE)
@@ -150,6 +166,11 @@ CreateNamedPipeW(LPCWSTR lpName,
 	NonBlocking = FALSE;
      }
    
+   if (nMaxInstances >= PIPE_UNLIMITED_INSTANCES)
+     {
+	nMaxInstances = ULONG_MAX;
+     }
+   
    DefaultTimeOut.QuadPart = nDefaultTimeOut * 10000;
    
    Status = NtCreateNamedPipeFile(&PipeHandle,
@@ -179,6 +200,7 @@ CreateNamedPipeW(LPCWSTR lpName,
    return(PipeHandle);
 }
 
+
 BOOL STDCALL
 WaitNamedPipeA(LPCSTR lpNamedPipeName,
 	       DWORD nTimeOut)
@@ -196,6 +218,7 @@ WaitNamedPipeA(LPCSTR lpNamedPipeName,
    
    return(r);
 }
+
 
 BOOL STDCALL
 WaitNamedPipeW(LPCWSTR lpNamedPipeName,
@@ -260,6 +283,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
    return(TRUE);
 }
 
+
 BOOL STDCALL
 ConnectNamedPipe(HANDLE hNamedPipe,
 		 LPOVERLAPPED lpOverlapped)
@@ -310,6 +334,7 @@ ConnectNamedPipe(HANDLE hNamedPipe,
      }
    return(TRUE);
 }
+
 
 BOOL STDCALL
 SetNamedPipeHandleState(HANDLE hNamedPipe,
@@ -407,17 +432,15 @@ SetNamedPipeHandleState(HANDLE hNamedPipe,
    return(TRUE);
 }
 
-WINBOOL
-STDCALL
-CallNamedPipeA (
-	LPCSTR	lpNamedPipeName,
-	LPVOID	lpInBuffer,
-	DWORD	nInBufferSize,
-	LPVOID	lpOutBuffer,
-	DWORD	nOutBufferSize,
-	LPDWORD	lpBytesRead,
-	DWORD	nTimeOut
-	)
+
+WINBOOL STDCALL
+CallNamedPipeA(LPCSTR lpNamedPipeName,
+	       LPVOID lpInBuffer,
+	       DWORD nInBufferSize,
+	       LPVOID lpOutBuffer,
+	       DWORD nOutBufferSize,
+	       LPDWORD lpBytesRead,
+	       DWORD nTimeOut)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -425,15 +448,13 @@ CallNamedPipeA (
 
 
 WINBOOL STDCALL
-CallNamedPipeW (
-	LPCWSTR	lpNamedPipeName,
-	LPVOID	lpInBuffer,
-	DWORD	nInBufferSize,
-	LPVOID	lpOutBuffer,
-	DWORD	nOutBufferSize,
-	LPDWORD	lpBytesRead,
-	DWORD	nTimeOut
-	)
+CallNamedPipeW(LPCWSTR lpNamedPipeName,
+	       LPVOID lpInBuffer,
+	       DWORD nInBufferSize,
+	       LPVOID lpOutBuffer,
+	       DWORD nOutBufferSize,
+	       LPDWORD lpBytesRead,
+	       DWORD nTimeOut)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -478,15 +499,13 @@ DisconnectNamedPipe(HANDLE hNamedPipe)
 
 
 WINBOOL STDCALL
-GetNamedPipeHandleStateW (
-	HANDLE	hNamedPipe,
-	LPDWORD	lpState,
-	LPDWORD	lpCurInstances,
-	LPDWORD	lpMaxCollectionCount,
-	LPDWORD	lpCollectDataTimeout,
-	LPWSTR	lpUserName,
-	DWORD	nMaxUserNameSize
-	)
+GetNamedPipeHandleStateW(HANDLE hNamedPipe,
+			 LPDWORD lpState,
+			 LPDWORD lpCurInstances,
+			 LPDWORD lpMaxCollectionCount,
+			 LPDWORD lpCollectDataTimeout,
+			 LPWSTR lpUserName,
+			 DWORD nMaxUserNameSize)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -494,15 +513,13 @@ GetNamedPipeHandleStateW (
 
 
 WINBOOL STDCALL
-GetNamedPipeHandleStateA (
-	HANDLE	hNamedPipe,
-	LPDWORD	lpState,
-	LPDWORD	lpCurInstances,
-	LPDWORD	lpMaxCollectionCount,
-	LPDWORD	lpCollectDataTimeout,
-	LPSTR	lpUserName,
-	DWORD	nMaxUserNameSize
-	)
+GetNamedPipeHandleStateA(HANDLE hNamedPipe,
+			 LPDWORD lpState,
+			 LPDWORD lpCurInstances,
+			 LPDWORD lpMaxCollectionCount,
+			 LPDWORD lpCollectDataTimeout,
+			 LPSTR lpUserName,
+			 DWORD nMaxUserNameSize)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -516,8 +533,42 @@ GetNamedPipeInfo(HANDLE hNamedPipe,
 		 LPDWORD lpInBufferSize,
 		 LPDWORD lpMaxInstances)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  FILE_PIPE_LOCAL_INFORMATION PipeLocalInformation;
+  IO_STATUS_BLOCK StatusBlock;
+  NTSTATUS Status;
+  
+  Status = NtQueryInformationFile(hNamedPipe,
+				  &StatusBlock,
+				  &PipeLocalInformation,
+				  sizeof(FILE_PIPE_LOCAL_INFORMATION),
+				  FilePipeLocalInformation);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return(FALSE);
+    }
+  
+  if (lpFlags != NULL)
+    {
+      *lpFlags = (PipeLocalInformation.NamedPipeEnd == FILE_PIPE_SERVER_END) ? PIPE_SERVER_END : PIPE_CLIENT_END;
+      *lpFlags |= (PipeLocalInformation.NamedPipeType == 1) ? PIPE_TYPE_MESSAGE : PIPE_TYPE_BYTE;
+    }
+  
+  if (lpOutBufferSize != NULL)
+    *lpOutBufferSize = PipeLocalInformation.OutboundQuota;
+  
+  if (lpInBufferSize != NULL)
+    *lpInBufferSize = PipeLocalInformation.InboundQuota;
+  
+  if (lpMaxInstances != NULL)
+    {
+      if (PipeLocalInformation.MaximumInstances >= 255)
+	*lpMaxInstances = PIPE_UNLIMITED_INSTANCES;
+      else
+	*lpMaxInstances = PipeLocalInformation.MaximumInstances;
+    }
+  
+  return(TRUE);
 }
 
 

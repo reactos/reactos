@@ -35,68 +35,72 @@ RtlCreateUserThread(HANDLE ProcessHandle,
                     PHANDLE ThreadHandle,
                     PCLIENT_ID ClientId)
 {
-    HANDLE LocalThreadHandle;
-    CLIENT_ID LocalClientId;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    INITIAL_TEB InitialTeb;
-    CONTEXT ThreadContext;
-    ULONG OldPageProtection;
-    NTSTATUS Status;
+  HANDLE LocalThreadHandle;
+  CLIENT_ID LocalClientId;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  INITIAL_TEB InitialTeb;
+  CONTEXT ThreadContext;
+  ULONG OldPageProtection;
+  NTSTATUS Status;
 
-    /* initialize initial teb */
-    if ((StackCommit != NULL) && (*StackCommit > PAGESIZE))
-       InitialTeb.StackCommit = *StackCommit;
-    else
-       InitialTeb.StackCommit = PAGESIZE;
+  /* initialize initial teb */
+  if ((StackReserve != NULL) && (*StackReserve > 0x100000))
+    InitialTeb.StackReserve = *StackReserve;
+  else
+    InitialTeb.StackReserve = 0x100000; /* 1MByte */
 
-    if ((StackReserve != NULL) && (*StackReserve > 0x100000))
-       InitialTeb.StackReserve = *StackReserve;
-    else
-       InitialTeb.StackReserve = 0x100000; /* 1MByte */
+  /* FIXME: use correct commit size */
+#if 0
+  if ((StackCommit != NULL) && (*StackCommit > PAGESIZE))
+    InitialTeb.StackCommit = *StackCommit;
+  else
+    InitialTeb.StackCommit = PAGESIZE;
+#endif
+  InitialTeb.StackCommit = InitialTeb.StackReserve - PAGESIZE;
 
-    /* add size of guard page */
-    InitialTeb.StackCommit += PAGESIZE;
+  /* add size of guard page */
+  InitialTeb.StackCommit += PAGESIZE;
 
-    /* Reserve stack */
-    InitialTeb.StackAllocate = NULL;
-    Status = NtAllocateVirtualMemory(ProcessHandle,
-                                     &InitialTeb.StackAllocate,
-                                     0,
-                                     &InitialTeb.StackReserve,
-                                     MEM_COMMIT, //MEM_RESERVE,
-                                     PAGE_READWRITE);
-    if (!NT_SUCCESS(Status))
+  /* Reserve stack */
+  InitialTeb.StackAllocate = NULL;
+  Status = NtAllocateVirtualMemory(ProcessHandle,
+				   &InitialTeb.StackAllocate,
+				   0,
+				   &InitialTeb.StackReserve,
+				   MEM_RESERVE,
+				   PAGE_READWRITE);
+  if (!NT_SUCCESS(Status))
     {
-        DPRINT("Error reserving stack space!\n");
-        return Status;
+      DPRINT("Error reserving stack space!\n");
+      return(Status);
     }
 
-    DPRINT("StackAllocate: %p ReserveSize: 0x%lX\n",
-           InitialTeb.StackAllocate, InitialTeb.StackReserve);
+  DPRINT("StackAllocate: %p ReserveSize: 0x%lX\n",
+	 InitialTeb.StackAllocate, InitialTeb.StackReserve);
 
-    InitialTeb.StackBase = (PVOID)((ULONG)InitialTeb.StackAllocate + InitialTeb.StackReserve);
-    InitialTeb.StackLimit = (PVOID)((ULONG)InitialTeb.StackBase - InitialTeb.StackCommit);
+  InitialTeb.StackBase = (PVOID)((ULONG)InitialTeb.StackAllocate + InitialTeb.StackReserve);
+  InitialTeb.StackLimit = (PVOID)((ULONG)InitialTeb.StackBase - InitialTeb.StackCommit);
 
-    DPRINT("StackBase: %p  StackCommit: 0x%lX\n",
-           InitialTeb.StackBase, InitialTeb.StackCommit);
-#if 0
-    /* Commit stack */
-    Status = NtAllocateVirtualMemory(ProcessHandle,
-                                     &InitialTeb.StackLimit,
-                                     0,
-                                     &InitialTeb.StackCommit,
-                                     MEM_COMMIT,
-                                     PAGE_READWRITE);
-    if (!NT_SUCCESS(Status))
+  DPRINT("StackBase: %p  StackCommit: 0x%lX\n",
+	 InitialTeb.StackBase, InitialTeb.StackCommit);
+
+  /* Commit stack */
+  Status = NtAllocateVirtualMemory(ProcessHandle,
+				   &InitialTeb.StackLimit,
+				   0,
+				   &InitialTeb.StackCommit,
+				   MEM_COMMIT,
+				   PAGE_READWRITE);
+  if (!NT_SUCCESS(Status))
     {
-        /* release the stack space */
-        NtFreeVirtualMemory(ProcessHandle,
-                            InitialTeb.StackAllocate,
-                            &InitialTeb.StackReserve,
-                            MEM_RELEASE);
+      /* release the stack space */
+      NtFreeVirtualMemory(ProcessHandle,
+			  InitialTeb.StackAllocate,
+			  &InitialTeb.StackReserve,
+			  MEM_RELEASE);
 
-        DPRINT("Error comitting stack page!\n");
-        return Status;
+      DPRINT("Error comitting stack page!\n");
+      return(Status);
     }
 
   DPRINT("StackLimit: %p\nStackCommit: 0x%lX\n",
@@ -120,63 +124,62 @@ RtlCreateUserThread(HANDLE ProcessHandle,
       DPRINT("Error protecting guard page!\n");
       return(Status);
     }
-#endif
-    /* initialize thread context */
-    RtlInitializeContext (ProcessHandle,
-                          &ThreadContext,
-                          Parameter,
-                          StartAddress,
-                          &InitialTeb);
 
-    /* create the thread */
-    ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-    ObjectAttributes.RootDirectory = NULL;
-    ObjectAttributes.ObjectName = NULL;
-    ObjectAttributes.Attributes = OBJ_INHERIT;
-    ObjectAttributes.SecurityDescriptor = SecurityDescriptor;
-    ObjectAttributes.SecurityQualityOfService = NULL;
+  /* initialize thread context */
+  RtlInitializeContext(ProcessHandle,
+		       &ThreadContext,
+		       Parameter,
+		       StartAddress,
+		       &InitialTeb);
 
-    Status = NtCreateThread(&LocalThreadHandle,
-                            THREAD_ALL_ACCESS,
-                            &ObjectAttributes,
-                            ProcessHandle,
-                            &LocalClientId,
-                            &ThreadContext,
-                            &InitialTeb,
-                            CreateSuspended);
+  /* create the thread */
+  ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
+  ObjectAttributes.RootDirectory = NULL;
+  ObjectAttributes.ObjectName = NULL;
+  ObjectAttributes.Attributes = OBJ_INHERIT;
+  ObjectAttributes.SecurityDescriptor = SecurityDescriptor;
+  ObjectAttributes.SecurityQualityOfService = NULL;
 
-    if (!NT_SUCCESS(Status))
+  Status = NtCreateThread(&LocalThreadHandle,
+			  THREAD_ALL_ACCESS,
+			  &ObjectAttributes,
+			  ProcessHandle,
+			  &LocalClientId,
+			  &ThreadContext,
+			  &InitialTeb,
+			  CreateSuspended);
+  if (!NT_SUCCESS(Status))
     {
-        /* release the stack space */
-        NtFreeVirtualMemory(ProcessHandle,
-                            InitialTeb.StackAllocate,
-                            &InitialTeb.StackReserve,
-                            MEM_RELEASE);
+      /* release the stack space */
+      NtFreeVirtualMemory(ProcessHandle,
+			  InitialTeb.StackAllocate,
+			  &InitialTeb.StackReserve,
+			  MEM_RELEASE);
 
-        DPRINT("Error creating thread!\n");
-        return Status;
+      DPRINT("Error creating thread!\n");
+      return(Status);
     }
 
-    /* return committed stack size */
-    if (StackCommit)
-        *StackCommit = InitialTeb.StackCommit;
+  /* return committed stack size */
+  if (StackCommit)
+    *StackCommit = InitialTeb.StackCommit;
 
-    /* return reserved stack size */
-    if (StackReserve)
-        *StackReserve = InitialTeb.StackReserve;
+  /* return reserved stack size */
+  if (StackReserve)
+    *StackReserve = InitialTeb.StackReserve;
 
-    /* return thread handle */
-    if (ThreadHandle)
-        *ThreadHandle = LocalThreadHandle;
+  /* return thread handle */
+  if (ThreadHandle)
+    *ThreadHandle = LocalThreadHandle;
 
-    /* return client id */
-    if (ClientId)
+  /* return client id */
+  if (ClientId)
     {
-        ClientId->UniqueProcess = LocalClientId.UniqueProcess;
-        ClientId->UniqueThread  = LocalClientId.UniqueThread;
+      ClientId->UniqueProcess = LocalClientId.UniqueProcess;
+      ClientId->UniqueThread  = LocalClientId.UniqueThread;
     }
 
-    return(STATUS_SUCCESS);
+  return(STATUS_SUCCESS);
 }
 
 

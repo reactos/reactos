@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.24 2001/08/03 17:20:46 ekohl Exp $
+/* $Id: thread.c,v 1.25 2001/08/07 14:13:45 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -141,8 +141,12 @@ HANDLE STDCALL CreateRemoteThread(HANDLE hProcess,
    else
      CreateSuspended = FALSE;
 
-  InitialTeb.StackCommit = (dwStackSize == 0) ? PAGESIZE : dwStackSize;
   InitialTeb.StackReserve = 0x100000; /* 1MByte */
+  /* FIXME: use correct commit size */
+#if 0
+  InitialTeb.StackCommit = (dwStackSize == 0) ? PAGESIZE : dwStackSize;
+#endif
+  InitialTeb.StackCommit = InitialTeb.StackReserve - PAGESIZE;
 
   /* size of guard page */
   InitialTeb.StackCommit += PAGESIZE;
@@ -153,7 +157,7 @@ HANDLE STDCALL CreateRemoteThread(HANDLE hProcess,
 				   &InitialTeb.StackAllocate,
 				   0,
 				   &InitialTeb.StackReserve,
-				   MEM_COMMIT, //MEM_RESERVE,
+				   MEM_RESERVE,
 				   PAGE_READWRITE);
   if (!NT_SUCCESS(Status))
     {
@@ -171,7 +175,7 @@ HANDLE STDCALL CreateRemoteThread(HANDLE hProcess,
   DPRINT("StackBase: %p\nStackCommit: 0x%lX\n",
 	 InitialTeb.StackBase,
 	 InitialTeb.StackCommit);
-#if 0
+
   /* Commit stack pages */
   Status = NtAllocateVirtualMemory(hProcess,
 				   &InitialTeb.StackLimit,
@@ -213,7 +217,6 @@ HANDLE STDCALL CreateRemoteThread(HANDLE hProcess,
       SetLastErrorByStatus(Status);
       return(NULL);
     }
-#endif
 
   memset(&ThreadContext,0,sizeof(CONTEXT));
   ThreadContext.Eip = (LONG)ThreadStartup;
