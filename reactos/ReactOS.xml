@@ -1,4 +1,4 @@
-<project name="ReactOS">
+<project name="ReactOS" output="Makefile.auto">
 	<directory name="tools">
 		<module name="depends" type="buildtool">
 			<file>depends.c</file>
