@@ -1,0 +1,21 @@
+# $Id: Makefile.ros-template,v 1.1 2004/03/10 15:22:45 silverblade Exp $
+
+TARGET_NAME = midimap
+
+TARGET_OBJECTS = @C_SRCS@
+
+TARGET_CFLAGS = @EXTRADEFS@ -D__REACTOS__
+
+TARGET_SDKLIBS = @IMPORTS@ winmm.a libwine.a wine_uuid.a ntdll.a
+
+TARGET_BASE = 0x76160000
+
+TARGET_RC_SRCS = @RC_SRCS@
+TARGET_RC_BINSRC = @RC_BINSRC@
+TARGET_RC_BINARIES = @RC_BINARIES@
+
+default: all
+
+DEP_OBJECTS = $(TARGET_OBJECTS)
+
+include $(TOOLS_PATH)/depend.mk

@@ -1,0 +1,21 @@
+# $Id: Makefile.ros,v 1.1 2004/03/10 15:22:44 silverblade Exp $
+
+TARGET_NAME = msacm32
+
+TARGET_OBJECTS = driver.o filter.o format.o internal.o msacm32_main.o pcmconverter.o stream.o
+
+TARGET_CFLAGS =  -D__REACTOS__
+
+TARGET_SDKLIBS =  winmm.a libwine.a advapi32.a kernel32.a ws2_32.a wine_uuid.a ntdll.a
+
+TARGET_BASE = 0x77300000
+
+TARGET_RC_SRCS = msacm.rc
+TARGET_RC_BINSRC = msacm.rc
+TARGET_RC_BINARIES = 
+
+default: all
+
+DEP_OBJECTS = $(TARGET_OBJECTS)
+
+include $(TOOLS_PATH)/depend.mk

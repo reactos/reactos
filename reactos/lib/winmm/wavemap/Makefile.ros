@@ -1,0 +1,21 @@
+# $Id: Makefile.ros,v 1.1 2004/03/10 15:22:45 silverblade Exp $
+
+TARGET_NAME = wavemap
+
+TARGET_OBJECTS = wavemap.o
+
+TARGET_CFLAGS =  -D__REACTOS__
+
+TARGET_SDKLIBS = winmm.a libwine.a ws2_32.a wine_uuid.a ntdll.a msacm32.a
+
+TARGET_BASE = 0x77300000
+
+TARGET_RC_SRCS = wavemap.rc
+TARGET_RC_BINSRC = wavemap.rc
+TARGET_RC_BINARIES = 
+
+default: all
+
+DEP_OBJECTS = $(TARGET_OBJECTS)
+
+include $(TOOLS_PATH)/depend.mk

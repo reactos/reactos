@@ -165,6 +165,7 @@ extern "C" {
 #define MF_USECHECKBITMAPS	(0x200L)
 #define MF_RIGHTJUSTIFY MF_HELP
 
+
 /* Ternary Raster Operations - BitBlt */
 #define BLACKNESS	0x00000042
 #define NOTSRCERASE	0x001100A6
@@ -253,6 +254,13 @@ extern "C" {
 #define DISP_CHANGE_BADMODE	(-2)
 #define DISP_CHANGE_NOTUPDATED	(-3)
 #define DISP_CHANGE_BADPARAM	(-5)
+
+/* ChangeMenu */
+#define MF_INSERT 0
+#define MF_CHANGE 128
+#define MF_APPEND 256
+#define MF_DELETE 512
+#define MF_REMOVE 4096
 
 /* ChangeServiceConfig */
 #define SERVICE_NO_CHANGE	(-1)

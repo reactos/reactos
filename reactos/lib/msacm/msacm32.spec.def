@@ -1,0 +1,48 @@
+; File generated automatically from msacm32.spec; do not edit!
+
+LIBRARY msacm32.dll
+
+EXPORTS
+  acmDriverAddA@20 @2
+  acmDriverAddW@20 @3
+  acmDriverClose@8 @4
+  acmDriverDetailsA@12 @5
+  acmDriverDetailsW@12 @6
+  acmDriverEnum@12 @7
+  acmDriverID@12 @8
+  acmDriverMessage@16 @9
+  acmDriverOpen@12 @10
+  acmDriverPriority@12 @11
+  acmDriverRemove@8 @12
+  acmFilterChooseA@4 @13
+  acmFilterChooseW@4 @14
+  acmFilterDetailsA@12 @15
+  acmFilterDetailsW@12 @16
+  acmFilterEnumA@20 @17
+  acmFilterEnumW@20 @18
+  acmFilterTagDetailsA@12 @19
+  acmFilterTagDetailsW@12 @20
+  acmFilterTagEnumA@20 @21
+  acmFilterTagEnumW@20 @22
+  acmFormatChooseA@4 @23
+  acmFormatChooseW@4 @24
+  acmFormatDetailsA@12 @25
+  acmFormatDetailsW@12 @26
+  acmFormatEnumA@20 @27
+  acmFormatEnumW@20 @28
+  acmFormatSuggest@20 @29
+  acmFormatTagDetailsA@12 @30
+  acmFormatTagDetailsW@12 @31
+  acmFormatTagEnumA@20 @32
+  acmFormatTagEnumW@20 @33
+  acmGetVersion@0 @34
+  acmMetrics@12 @36
+  acmStreamClose@8 @37
+  acmStreamConvert@12 @38
+  acmStreamMessage@16 @39
+  acmStreamOpen@32 @40
+  acmStreamPrepareHeader@12 @41
+  acmStreamReset@8 @42
+  acmStreamSize@16 @43
+  acmStreamUnprepareHeader@12 @44
+  DriverProc@20=PCM_DriverProc@20 @1

@@ -118,6 +118,8 @@ static DWORD OpenMidiDevice(UINT DeviceType, DWORD ID, DWORD User, DWORD Param1,
 static DWORD WriteMidi(PBYTE pData, ULONG Length, PMIDIALLOC pClient)
 {
     DWORD BytesReturned;
+
+    printf("IOCTL_MIDI_PLAY == %d [%x]\n", IOCTL_MIDI_PLAY, IOCTL_MIDI_PLAY);
     
     if ( !DeviceIoControl(pClient->DeviceHandle, IOCTL_MIDI_PLAY, (PVOID)pData,
                           Length, NULL, 0, &BytesReturned, NULL))

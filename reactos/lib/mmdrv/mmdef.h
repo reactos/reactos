@@ -2,38 +2,35 @@
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
- * FILE:                 lib/mmdrv/mmdrv.h
- * PURPOSE:              Multimedia User Mode Driver (header)
+ * FILE:                 lib/mmdrv/mmdef.h
+ * PURPOSE:              Multimedia Definitions (for mmdrv.dll)
  * PROGRAMMER:           Andrew Greenwood
- * UPDATE HISTORY:
- *                       Jan 30, 2004: Imported into ReactOS tree
+ *
  */
 
-#ifndef __INCLUDES_MMDRV_H__
-#define __INCLUDES_MMDRV_H__
+#ifndef __INCLUDES_MMDEF_H__
+#define __INCLUDES_MMDEF_H__
 
 //#define UNICODE
 
 #define EXPORT __declspec(dllexport)
 
 
-#include <stdio.h>
-#include <windows.h>
-#include <mmsystem.h>
-#include <mmddk.h>
+//#include <stdio.h>
+//#include <windows.h>
+//#include <mmsystem.h>
+//#include <mmddk.h>
 
 // This needs to be done to get winioctl.h to work:
 //typedef unsigned __int64 DWORD64, *PDWORD64;
 
-#include <winioctl.h>
+//#include <winioctl.h>
 //#include "mmddk.h"
 
-#include "mmdef.h"
 
-/*
 #define SOUND_MAX_DEVICE_NAME 1024   // GUESSWORK
 #define SOUND_MAX_DEVICES 256       // GUESSWORK
-*/
+
 
 // If the root is \Device and the Device type is
 // WaveIn and the device number is 2, the full name is \Device\WaveIn2
@@ -51,7 +48,7 @@
 #define AUX_DEVICE_NAME     "\\Device\\MMAux"
 #define AUX_DEVICE_NAME_U  L"\\Device\\MMAux"
 
-/*
+
 #define IOCTL_SOUND_BASE    FILE_DEVICE_SOUND
 #define IOCTL_WAVE_BASE     0x0000
 #define IOCTL_MIDI_BASE     0x0080
@@ -86,31 +83,5 @@
 #define IOCTL_MIDI_RECORD             CTL_CODE(IOCTL_SOUND_BASE, IOCTL_MIDI_BASE + 0x0007, METHOD_BUFFERED, FILE_WRITE_ACCESS)
 #define IOCTL_MIDI_CACHE_PATCHES      CTL_CODE(IOCTL_SOUND_BASE, IOCTL_MIDI_BASE + 0x0008, METHOD_BUFFERED, FILE_WRITE_ACCESS)
 #define IOCTL_MIDI_CACHE_DRUM_PATCHES CTL_CODE(IOCTL_SOUND_BASE, IOCTL_MIDI_BASE + 0x0009, METHOD_BUFFERED, FILE_WRITE_ACCESS)
-*/
-
-
-CRITICAL_SECTION CS;  // Serialize access to device lists
-
-HANDLE Heap;
-
- enum {
-      InvalidDevice,
-      WaveInDevice,
-      WaveOutDevice,
-      MidiInDevice,
-      MidiOutDevice,
-      AuxDevice
-};
-
-
-MMRESULT OpenDevice(UINT DeviceType, DWORD ID, PHANDLE pDeviceHandle,
-                    DWORD Access);
-
-MMRESULT FindDevices();
-
-DWORD GetDeviceCount(UINT DeviceType);
-
-DWORD TranslateStatus(void);
-
 
 #endif

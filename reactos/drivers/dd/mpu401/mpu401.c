@@ -150,12 +150,12 @@ MPU401Create(PDEVICE_OBJECT DeviceObject,
 
 
     // Play a note to say we're alive:
-/*    WaitToSend(MPU401_PORT);
+    WaitToSend(MPU401_PORT);
     MPU401_WRITE_DATA(MPU401_PORT, 0x90);
     WaitToSend(MPU401_PORT);
     MPU401_WRITE_DATA(MPU401_PORT, 0x50);
     WaitToSend(MPU401_PORT);
-    MPU401_WRITE_DATA(MPU401_PORT, 0x7f);*/
+    MPU401_WRITE_DATA(MPU401_PORT, 0x7f);
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
@@ -248,6 +248,9 @@ MPU401DeviceControl(PDEVICE_OBJECT DeviceObject,
 
     DeviceExtension = DeviceObject->DeviceExtension;
     Stack = IoGetCurrentIrpStackLocation(Irp);
+    
+    DPRINT("Control code %d [0x%x]\n", Stack->Parameters.DeviceIoControl.IoControlCode,
+                Stack->Parameters.DeviceIoControl.IoControlCode);
 
     switch(Stack->Parameters.DeviceIoControl.IoControlCode)
     {

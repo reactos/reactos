@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.59 2004/03/04 23:14:01 dwelch Exp $
+# $Id: helper.mk,v 1.60 2004/03/10 15:22:44 silverblade Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -442,6 +442,38 @@ ifeq ($(TARGET_TYPE),winedll)
   MK_MODE := user
   MK_EXETYPE := dll
   MK_DEFEXT := .dll
+  MK_DEFENTRY := _DllMain@12
+  MK_DDKLIBS :=
+  MK_SDKLIBS :=
+  MK_CFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D__need_offsetof -DCOBJMACROS -I$(PATH_TO_TOP)/include/wine
+  MK_CPPFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D__need_offsetof -DCOBJMACROS -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/include/wine
+  MK_RCFLAGS := --define __USE_W32API --include-dir $(PATH_TO_TOP)/include/wine
+  MK_IMPLIB := yes
+  MK_IMPLIBONLY := no
+  MK_IMPLIBDEFPATH := $(SDK_PATH_LIB)
+  MK_IMPLIB_EXT := .a
+  MK_INSTALLDIR := system32
+  MK_BOOTCDDIR := system32
+  MK_DISTDIR := dlls
+  MK_RES_BASE := $(TARGET_NAME)
+ifeq ($(TARGET_DEFNAME),)
+  MK_DEFBASENAME := $(TARGET_NAME).spec
+  MK_SPECDEF := $(MK_DEFBASENAME).def
+else
+  MK_DEFBASENAME := $(TARGET_DEFNAME)
+endif
+  MK_KILLAT := --kill-at
+  TARGET_DEFONLY := yes
+  MK_RC_BINARIES = $(TARGET_RC_BINARIES)
+endif
+
+ifeq ($(TARGET_TYPE),winedrv)
+-include Makefile.ros
+  MK_GENERATED_MAKEFILE = Makefile.ros
+  MK_MODE := user
+  MK_EXETYPE := drv
+  MK_DEFEXT := .drv
+# does this need changing?:
   MK_DEFENTRY := _DllMain@12
   MK_DDKLIBS :=
   MK_SDKLIBS :=
@@ -1029,6 +1061,8 @@ endif # ROS_USE_PCH
 %.coff: %.rc
 	$(RC) $(TARGET_RCFLAGS) $< -o $@
 %.spec.def: %.spec
+	$(WINEBUILD) $(DEFS) -o $@ --def $<
+%.drv.spec.def: %.spec
 	$(WINEBUILD) $(DEFS) -o $@ --def $<
 # Kill implicit rule
 .o:;

@@ -12,6 +12,12 @@
 #ifndef __INCLUDES_MPU401_H__
 #define __INCLUDES_MPU401_H__
 
+#include <windows.h>
+//#include <mmsystem.h>
+//#include <mmddk.h>
+//#include <winioctl.h>
+#include "../../../lib/mmdrv/mmdef.h"
+
 #define DEFAULT_PORT    0x330
 #define DEFAULT_IRQ     9
 
@@ -26,6 +32,7 @@
 
 #define MPU401_TIMEOUT  10000
 
+/* OBSOLETE - see mmdef.h instead:
 #define IOCTL_SOUND_BASE FILE_DEVICE_SOUND
 // wave base 0
 #define IOCTL_MIDI_BASE  0x0080
@@ -39,7 +46,7 @@
 #define IOCTL_MIDI_RECORD CTL_CODE(IOCTL_SOUND_BASE, IOCTL_MIDI_BASE + 0x0007, METHOD_BUFFERED, FILE_WRITE_ACCESS)
 #define IOCTL_MIDI_CACHE_PATCHES CTL_CODE(IOCTL_SOUND_BASE, IOCTL_MIDI_BASE + 0x0008, METHOD_BUFFERED, FILE_WRITE_ACCESS)
 #define IOCTL_MIDI_CACHE_DRUM_PATCHES CTL_CODE(IOCTL_SOUND_BASE, IOCTL_MIDI_BASE + 0x0009, METHOD_BUFFERED, FILE_WRITE_ACCESS)
-
+*/
 
 // The MPU-401 has 2 ports, usually 0x330 and 0x331, which are known as
 // "data" and "status/command", respectively. These macros deal with

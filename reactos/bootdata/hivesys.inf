@@ -238,6 +238,59 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Keyboard","ImagePath",0x00020000,"system
 HKLM,"SYSTEM\CurrentControlSet\Services\Keyboard","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Keyboard","Type",0x00010001,0x00000001
 
+; SB16 driver
+;HKLM,"SYSTEM\CurrentControlSet\Services\sb16snd","Group",0x00000000,"Base"
+;HKLM,"SYSTEM\CurrentControlSet\Services\sb16snd","ServiceType",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Services\sb16snd","Type",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Services\sb16snd","Start",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Services\sb16snd","ErrorControl",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Services\sb16snd","ImagePath",0x00020000,"system32\drivers\sb16snd.sys"
+;HKLM,"SYSTEM\CurrentControlSet\Services\sb16snd\Parameters\Device0","DmaChannel",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Services\sb16snd\Parameters\Device0","DmaChannel16",0x00010001,0x00000005
+;HKLM,"SYSTEM\CurrentControlSet\Services\sb16snd\Parameters\Device0","Port",0x00010001,0x00000220
+;HKLM,"SYSTEM\CurrentControlSet\Services\sb16snd\Parameters\Device0","Interrupt",0x00010001,0x00000005
+;HKLM,"SYSTEM\CurrentControlSet\Services\sb16snd\Parameters\Device0","DSP Version",0x00010001,0x00000401
+;HKLM,"SYSTEM\CurrentControlSet\Services\sb16snd\Parameters\Device0\Devices","SBWaveIn0",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Services\sb16snd\Parameters\Device0\Devices","SBWaveOut0",0x00010001,0x00000002
+
+
+HKLM,"SYSTEM\CurrentControlSet\Services\sb16snd","Group",0x00000000,"Base"
+HKLM,"SYSTEM\CurrentControlSet\Services\sb16snd","ServiceType",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\sb16snd","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\sb16snd","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\sb16snd","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\sb16snd","ImagePath",0x00020000,"system32\drivers\sndblst.sys"
+
+
+HKLM,"SYSTEM\CurrentControlSet\Services\es137140","Group",0x00000000,"Base"
+HKLM,"SYSTEM\CurrentControlSet\Services\es137140","ServiceType",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\es137140","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\es137140","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\es137140","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\es137140","ImagePath",0x00020000,"system32\drivers\es137140.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\es137140","DisplayName",0x00020000,"ENSONIQ AudioPCI"
+HKLM,"SYSTEM\CurrentControlSet\Services\es137140\Parameters\Device0","Configuration Error",0x00010001,0xffffffff
+HKLM,"SYSTEM\CurrentControlSet\Services\es137140\Parameters\Device0","Joystick",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\es137140\Parameters\Device0","Port",0x00010001,0x00001080
+HKLM,"SYSTEM\CurrentControlSet\Services\es137140\Parameters\Device0","Interrupt",0x00010001,0x00000044
+HKLM,"SYSTEM\CurrentControlSet\Services\es137140\Parameters\Device0","RequestedSystemResources",0x00000001,88,00,00,00,05,00,00,00,00,00,00,00,11,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,01,00,00,00,01,00,01,00,03,00,00,00,00,02,03,00,00,00,00,00,44,00,00,00,44,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,01,01,01,00,01,00,00,00,40,00,00,00,40,00,00,00,80,10,00,00,00,00,00,00,bf,10,00,00,00,00,00,00,08,01,01,00,01,00,00,00,40,00,00,00,40,00,00,00,80,10,00,00,00,00,00,00,bf,10,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\es137140\Parameters\Device0\Devices","EAPWaveIn0",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\es137140\Parameters\Device0\Devices","EAPWaveOut0",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\es137140\Parameters\Device0\Devices","EAPMidiIn0",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\es137140\Parameters\Device0\Devices","EAPMidiOut0",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\es137140\Parameters\Device0\Devices","EAPMidiOut1",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\es137140\Parameters\Device0\Devices","EAPMixer0",0x00010001,0x00000006
+HKLM,"SYSTEM\CurrentControlSet\Services\es137140\Parameters\Device0\Devices","EAPAux0",0x00010001,0x00000005
+
+
+; MPU-401 MIDI driver
+HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","Group",0x00000000,"Base"
+HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","ServiceType",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","ImagePath",0x00020000,"system32\drivers\mpu401.sys"
+
 ; Mouse driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Mouse","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Mouse","Group",0x00000000,"Pointer Class"

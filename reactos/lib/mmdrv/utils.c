@@ -60,28 +60,42 @@ MMRESULT OpenDevice(UINT DeviceType, DWORD ID, PHANDLE pDeviceHandle,
                     DWORD Access)
 {
     printf("OpenDevice()\n");
-    WCHAR Name[SOUND_MAX_DEVICE_NAME];
+    WCHAR DeviceName[SOUND_MAX_DEVICE_NAME];
     *pDeviceHandle = INVALID_HANDLE_VALUE;
 
     if (ID > SOUND_MAX_DEVICES)
         return MMSYSERR_BADDEVICEID;
 
-    wsprintf(Name, L"\\\\.%ls%d",
-             (DeviceType == WaveOutDevice ? WAVE_OUT_DEVICE_NAME_U :
-              DeviceType == WaveInDevice ? WAVE_IN_DEVICE_NAME_U :
-              DeviceType == MidiOutDevice ? MIDI_OUT_DEVICE_NAME_U :
-              DeviceType == MidiInDevice ? MIDI_IN_DEVICE_NAME_U :
-              AUX_DEVICE_NAME_U) + strlen("\\Device"), ID);
-              
-    printf("Attempting to open %S\n", Name);
+    switch(DeviceType)
+    {
+        case WaveOutDevice :
+            wsprintf(DeviceName, L"\\\\.%ls%d", WAVE_OUT_DEVICE_NAME_U + strlen("\\Device"), ID);
+            break;
+        case WaveInDevice :
+            wsprintf(DeviceName, L"\\\\.%ls%d", WAVE_IN_DEVICE_NAME_U + strlen("\\Device"), ID);
+            break;
+        case MidiOutDevice :
+            wsprintf(DeviceName, L"\\\\.%ls%d", MIDI_OUT_DEVICE_NAME_U + strlen("\\Device"), ID);
+            break;
+        case MidiInDevice :
+            wsprintf(DeviceName, L"\\\\.%ls%d", MIDI_IN_DEVICE_NAME_U + strlen("\\Device"), ID);
+            break;
+        default : // Aux
+            wsprintf(DeviceName, L"\\\\.%ls%d", AUX_DEVICE_NAME_U + strlen("\\Device"), ID);
+    };
 
-    *pDeviceHandle = CreateFile(Name, Access, FILE_SHARE_WRITE, NULL,
+    printf("Attempting to open %S\n", DeviceName);
+
+    *pDeviceHandle = CreateFile(DeviceName, Access, FILE_SHARE_WRITE, NULL,
                                 OPEN_EXISTING, Access != GENERIC_READ ? FILE_FLAG_OVERLAPPED : 0,
                                 NULL);
 
     printf("DeviceHandle == 0x%x\n", (int)*pDeviceHandle);
 
-    return *pDeviceHandle != INVALID_HANDLE_VALUE ? MMSYSERR_NOERROR : TranslateStatus();
+    if (pDeviceHandle == INVALID_HANDLE_VALUE)
+        return TranslateStatus();
+
+    return MMSYSERR_NOERROR;
 }
 
 

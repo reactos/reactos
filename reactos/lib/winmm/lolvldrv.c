@@ -746,9 +746,15 @@ static BOOL	MMDRV_InitHardcoded(void)
 #ifndef __REACTOS__
     MMDRV_Install("wineoss.drv",   	"wineoss.drv",	FALSE);
 #endif /* __REACTOS__ */
+
+#ifdef __REACTOS__
+    // AG: TESTING:
+    MMDRV_Install("mmdrv.dll", "mmdrv.dll", FALSE);
+#endif
+
     /* finish with mappers */
-    MMDRV_Install("wavemapper",	   	"msacm.drv",	TRUE);
-    MMDRV_Install("midimapper",   	"midimap.drv",	TRUE);
+    MMDRV_Install("wavemapper",     "msacm32.dll",    TRUE);
+    MMDRV_Install("midimapper",     "midimap.dll",  TRUE);
 
     return TRUE;
 }

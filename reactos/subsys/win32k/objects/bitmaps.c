@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.58 2004/02/25 01:25:51 sedwards Exp $ */
+/* $Id: bitmaps.c,v 1.59 2004/03/10 15:22:43 silverblade Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -268,6 +268,7 @@ HBITMAP STDCALL NtGdiCreateBitmap(INT  Width,
 {
   PBITMAPOBJ  bmp;
   HBITMAP  hBitmap;
+  int Pixel;
 
   Planes = (BYTE) Planes;
   BitsPerPel = (BYTE) BitsPerPel;
@@ -321,6 +322,12 @@ HBITMAP STDCALL NtGdiCreateBitmap(INT  Width,
   bmp->bitmap.bmBits = ExAllocatePoolWithTag(PagedPool, bmp->bitmap.bmWidthBytes * bmp->bitmap.bmHeight, TAG_BITMAP);
 
   BITMAPOBJ_UnlockBitmap( hBitmap );
+  
+  // Initialize the bitmap (fixes bug 244?)
+  for (Pixel = 0; Pixel < Height * bmp->bitmap.bmWidthBytes; Pixel ++)
+  {
+    ((char*)Bits)[Pixel] = 0;
+  }
 
   if (Bits) /* Set bitmap bits */
   {

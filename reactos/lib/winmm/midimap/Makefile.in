@@ -1,0 +1,13 @@
+TOPSRCDIR = @top_srcdir@
+TOPOBJDIR = ../../..
+SRCDIR    = @srcdir@
+VPATH     = @srcdir@
+MODULE    = midimap.drv
+IMPORTS   = winmm user32 advapi32 kernel32
+
+C_SRCS = \
+	midimap.c
+
+@MAKE_DLL_RULES@
+
+### Dependencies:
