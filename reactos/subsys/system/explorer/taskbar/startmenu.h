@@ -33,6 +33,7 @@
 #define	STARTMENU_WIDTH_MIN		120
 #define	STARTMENU_LINE_HEIGHT	22
 #define	STARTMENU_SEP_HEIGHT	(STARTMENU_LINE_HEIGHT/2)
+#define	STARTMENU_TOP_BTN_SPACE	8
 
 
  // private message constants
@@ -117,9 +118,20 @@ struct StartMenuSeparator : public Static
 
 
 typedef list<ShellPath> StartMenuFolders;
-#define STARTMENU_CREATOR(WND_CLASS) WINDOW_CREATOR_INFO(WND_CLASS, StartMenuFolders)
+
+struct StartMenuCreateInfo
+{
+	StartMenuCreateInfo() : _border_top(0) {}
+
+	StartMenuFolders _folders;
+	int		_border_top;
+	String	_title;
+};
+
+#define STARTMENU_CREATOR(WND_CLASS) WINDOW_CREATOR_INFO(WND_CLASS, StartMenuCreateInfo)
 
 typedef map<UINT, StartMenuEntry> ShellEntryMap;
+
 
 
  /**
@@ -130,11 +142,10 @@ struct StartMenu : public OwnerDrawParent<DialogWindow>
 	typedef OwnerDrawParent<DialogWindow> super;
 
 	StartMenu(HWND hwnd);
-	StartMenu(HWND hwnd, const StartMenuFolders& info);
+	StartMenu(HWND hwnd, const StartMenuCreateInfo& create_info);
 	~StartMenu();
 
-//	static HWND Create(int x, int y, HWND hwndParent=0);
-	static HWND Create(int x, int y, const StartMenuFolders&, HWND hwndParent=0, CREATORFUNC creator=s_def_creator);
+	static HWND Create(int x, int y, const StartMenuFolders&, HWND hwndParent, LPCTSTR title, CREATORFUNC creator=s_def_creator);
 	static CREATORFUNC s_def_creator;
 
 protected:
@@ -155,6 +166,11 @@ protected:
 	WindowHandle _submenu;
 
 	int		_border_left;	// left border in pixels
+	int		_border_top;	// top border in pixels
+
+	POINT	_last_pos;
+
+	StartMenuCreateInfo _create_info;	// copy of the original create info
 
 	 // member functions
 	void	ResizeButtons(int cx);
@@ -170,12 +186,15 @@ protected:
 	void	AddSeparator();
 
 	bool	CloseOtherSubmenus(int id);
-	void	CreateSubmenu(int id, CREATORFUNC creator=s_def_creator);
-	void	CreateSubmenu(int id, int folder, CREATORFUNC creator=s_def_creator);
-	void	CreateSubmenu(int id, int folder1, int folder2, CREATORFUNC creator=s_def_creator);
-	void	CreateSubmenu(int id, const StartMenuFolders& new_folders, CREATORFUNC creator=s_def_creator);
+	void	CreateSubmenu(int id, LPCTSTR title, CREATORFUNC creator=s_def_creator);
+	void	CreateSubmenu(int id, int folder, LPCTSTR title, CREATORFUNC creator=s_def_creator);
+	void	CreateSubmenu(int id, int folder1, int folder2, LPCTSTR title, CREATORFUNC creator=s_def_creator);
+	void	CreateSubmenu(int id, const StartMenuFolders& new_folders, LPCTSTR title, CREATORFUNC creator=s_def_creator);
 	void	ActivateEntry(int id, const ShellEntrySet& entries);
 	void	CloseStartMenu(int id=0);
+
+	void	DrawFloatingButton(HDC hdc);
+	void	GetFloatingButonRect(LPRECT prect);
 };
 
 
@@ -232,8 +251,8 @@ struct SettingsMenu : public StartMenu
 {
 	typedef StartMenu super;
 
-	SettingsMenu(HWND hwnd, const StartMenuFolders& info)
-	 :	super(hwnd, info)
+	SettingsMenu(HWND hwnd, const StartMenuCreateInfo& create_info)
+	 :	super(hwnd, create_info)
 	{
 	}
 
@@ -250,8 +269,8 @@ struct BrowseMenu : public StartMenu
 {
 	typedef StartMenu super;
 
-	BrowseMenu(HWND hwnd, const StartMenuFolders& info)
-	 :	super(hwnd, info)
+	BrowseMenu(HWND hwnd, const StartMenuCreateInfo& create_info)
+	 :	super(hwnd, create_info)
 	{
 	}
 
@@ -267,7 +286,7 @@ struct RecentStartMenu : public StartMenu
 {
 	typedef StartMenu super;
 
-	RecentStartMenu(HWND hwnd, const StartMenuFolders& info);
+	RecentStartMenu(HWND hwnd, const StartMenuCreateInfo& create_info);
 
 protected:
 	virtual void AddEntries();

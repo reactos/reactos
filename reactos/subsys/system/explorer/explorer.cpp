@@ -81,6 +81,11 @@ SmallIcon::SmallIcon(UINT nid)
 	_hIcon = (HICON)LoadImage(g_Globals._hInstance, MAKEINTRESOURCE(nid), IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED);
 }
 
+ResIconEx::ResIconEx(UINT nid, int w, int h)
+{
+	_hIcon = (HICON)LoadImage(g_Globals._hInstance, MAKEINTRESOURCE(nid), IMAGE_ICON, w, h, LR_SHARED);
+}
+
 
 void SetWindowIcon(HWND hwnd, UINT nid)
 {

@@ -346,6 +346,7 @@ IDI_LOGOFF              ICON    DISCARDABLE     "res/logoff.ico"
 IDI_ARROW               ICON    DISCARDABLE     "res/arrow.ico"
 IDI_ARROW_SELECTED      ICON    DISCARDABLE     "res/arrowsel.ico"
 IDI_APPICON             ICON    DISCARDABLE     "res/appicon.ico"
+IDI_FLOATING            ICON    DISCARDABLE     "res/floating.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //

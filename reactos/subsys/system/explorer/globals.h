@@ -68,6 +68,16 @@ protected:
 	HICON	_hIcon;
 };
 
+struct ResIconEx
+{
+	ResIconEx(UINT nid, int w, int h);
+
+	operator HICON() const {return _hIcon;}
+
+protected:
+	HICON	_hIcon;
+};
+
 extern void SetWindowIcon(HWND hwnd, UINT nid);
 
 struct ResBitmap

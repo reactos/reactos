@@ -46,18 +46,23 @@ StartMenu::StartMenu(HWND hwnd)
 	_next_id = IDC_FIRST_MENU;
 	_submenu_id = 0;
 	_border_left = 0;
+	_border_top = 0;
+	_last_pos = WindowRect(hwnd).pos();
 }
 
-StartMenu::StartMenu(HWND hwnd, const StartMenuFolders& info)
- :	super(hwnd)
+StartMenu::StartMenu(HWND hwnd, const StartMenuCreateInfo& create_info)
+ :	super(hwnd),
+	_create_info(create_info)
 {
-	for(StartMenuFolders::const_iterator it=info.begin(); it!=info.end(); ++it)
+	for(StartMenuFolders::const_iterator it=create_info._folders.begin(); it!=create_info._folders.end(); ++it)
 		if (*it)
 			_dirs.push_back(ShellDirectory(Desktop(), *it, _hwnd));
 
 	_next_id = IDC_FIRST_MENU;
 	_submenu_id = 0;
 	_border_left = 0;
+	_border_top = create_info._border_top;
+	_last_pos = WindowRect(hwnd).pos();
 }
 
 StartMenu::~StartMenu()
@@ -75,21 +80,41 @@ BtnWindowClass& StartMenu::GetWndClasss()
 	return s_wcStartMenu;
 }
 
-/*
-HWND StartMenu::Create(int x, int y, HWND hwndParent)
-{
-	return Window::Create(WINDOW_CREATOR(StartMenu), NULL, GetWndClasss(), TITLE_STARTMENU,
-							WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE, x, y, STARTMENU_WIDTH_MIN, 4, hwndParent);
-}
-*/
 
 Window::CREATORFUNC StartMenu::s_def_creator = STARTMENU_CREATOR(StartMenu);
 
-HWND StartMenu::Create(int x, int y, const StartMenuFolders& folders, HWND hwndParent, CREATORFUNC creator)
+HWND StartMenu::Create(int x, int y, const StartMenuFolders& folders, HWND hwndParent, LPCTSTR title, CREATORFUNC creator)
 {
-	//TODO: check, if coordinates x/y are visible on the screen
-	return Window::Create(creator, &folders, 0, GetWndClasss(), NULL,
-							WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE, x, y, STARTMENU_WIDTH_MIN, 4/*start height*/, hwndParent);
+	UINT style;
+	int top_height;
+
+	if (hwndParent) {
+		style = WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE;
+		top_height = STARTMENU_TOP_BTN_SPACE;
+	} else {
+		style = WS_POPUP|WS_CAPTION|WS_SYSMENU|WS_CLIPCHILDREN|WS_VISIBLE;
+		top_height = 0;
+	}
+
+	RECT rect = {x, y, x+STARTMENU_WIDTH_MIN, y+top_height};	// start height before adding an menu button
+
+	AdjustWindowRect(&rect, style, FALSE);
+
+	StartMenuCreateInfo create_info;
+
+	create_info._folders = folders;
+	create_info._border_top = top_height;
+
+	if (title)
+		create_info._title = title;
+
+	HWND hwnd = Window::Create(creator, &create_info, 0, GetWndClasss(), title,
+								style, rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, hwndParent);
+
+	 // make sure the window is not off the screen
+	MoveVisible(hwnd);
+
+	return hwnd;
 }
 
 
@@ -168,9 +193,32 @@ void StartMenu::AddShellEntries(const ShellDirectory& dir, int max, bool subfold
 LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	switch(nmsg) {
+	  case WM_PAINT:
+		DrawFloatingButton(PaintCanvas(_hwnd));
+		break;
+
 	  case WM_SIZE:
 		ResizeButtons(LOWORD(lparam)-_border_left);
 		break;
+
+	  case WM_MOVE: {
+		POINTS& pos = MAKEPOINTS(lparam);
+
+		 // move open submenus of floating menus
+		if (_submenu) {
+			int dx = pos.x - _last_pos.x;
+			int dy = pos.y - _last_pos.y;
+
+			if (dx || dy) {
+				WindowRect rt(_submenu);
+				SetWindowPos(_submenu, 0, rt.left+dx, rt.top+dy, 0, 0, SWP_NOSIZE|SWP_NOACTIVATE);
+				//MoveVisible(_submenu);
+			}
+		}
+
+		_last_pos.x = pos.x;
+		_last_pos.y = pos.y;
+		goto def;}
 
 	  case WM_NCHITTEST: {
 		LRESULT res = super::WndProc(nmsg, wparam, lparam);
@@ -179,6 +227,21 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			return HTCLIENT;	// disable window resizing
 
 		return res;}
+
+	  case WM_LBUTTONDOWN: {
+		RECT rect;
+
+		 // check mouse cursor for coordinates of floating button
+		GetFloatingButonRect(&rect);
+
+		if (PtInRect(&rect, Point(lparam))) {
+			 // create a floating copy of the current start menu
+ 			WindowRect pos(_hwnd);
+
+			StartMenu::Create(pos.left, pos.top, _create_info._folders, 0, _create_info._title);
+			CloseStartMenu();
+		}
+		break;}
 
 	  case WM_SYSCOMMAND:
 		if ((wparam&0xFFF0) == SC_SIZE)
@@ -225,6 +288,25 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	}
 
 	return 0;
+}
+
+
+void StartMenu::DrawFloatingButton(HDC hdc)
+{
+	static ResIconEx floatingIcon(IDI_FLOATING, 8, 4);
+
+	ClientRect clnt(_hwnd);
+
+	DrawIconEx(hdc, clnt.right-12, 0, floatingIcon, 8, 4, 0, 0, DI_NORMAL);
+}
+
+void StartMenu::GetFloatingButonRect(LPRECT prect)
+{
+	GetClientRect(_hwnd, prect);
+
+	prect->right -= 4;
+	prect->left = prect->right - 8;
+	prect->bottom = 4;
 }
 
 
@@ -320,10 +402,12 @@ StartMenuEntry& StartMenu::AddEntry(const ShellFolder folder, const ShellEntry* 
 void StartMenu::AddButton(LPCTSTR title, HICON hIcon, bool hasSubmenu, UINT id, DWORD style)
 {
 	WindowRect rect(_hwnd);
+	ClientRect clnt(_hwnd);
 
 	 // increase window height to make room for the new button
 	rect.top -= STARTMENU_LINE_HEIGHT;
 
+	 // move down if we are too high now
 	if (rect.top < 0) {
 		rect.top += STARTMENU_LINE_HEIGHT;
 		rect.bottom += STARTMENU_LINE_HEIGHT;
@@ -332,23 +416,25 @@ void StartMenu::AddButton(LPCTSTR title, HICON hIcon, bool hasSubmenu, UINT id, 
 	 // widen window, if it is too small
 	int text_width = StartMenuButton::GetTextWidth(title,_hwnd) + 16/*icon*/ + 10/*placeholder*/ + 16/*arrow*/;
 
-	ClientRect clnt(_hwnd);
 	int cx = clnt.right - _border_left;
 	if (text_width > cx)
 		rect.right += text_width-cx;
 
 	MoveWindow(_hwnd, rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, TRUE);
 
-	StartMenuCtrl(_hwnd, _border_left, rect.bottom-rect.top-STARTMENU_LINE_HEIGHT-6, rect.right-rect.left-_border_left,
+	StartMenuCtrl(_hwnd, _border_left, clnt.bottom, rect.right-rect.left-_border_left,
 					title, id, hIcon, hasSubmenu, style);
 }
 
 void StartMenu::AddSeparator()
 {
 	WindowRect rect(_hwnd);
+	ClientRect clnt(_hwnd);
 
+	 // increase window height to make room for the new separator
 	rect.top -= STARTMENU_SEP_HEIGHT;
 
+	 // move down if we are too high now
 	if (rect.top < 0) {
 		rect.top += STARTMENU_LINE_HEIGHT;
 		rect.bottom += STARTMENU_LINE_HEIGHT;
@@ -356,7 +442,7 @@ void StartMenu::AddSeparator()
 
 	MoveWindow(_hwnd, rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, TRUE);
 
-	StartMenuSeparator(_hwnd, _border_left, rect.bottom-rect.top-STARTMENU_SEP_HEIGHT-6, rect.right-rect.left-_border_left);
+	StartMenuSeparator(_hwnd, _border_left, clnt.bottom, rect.right-rect.left-_border_left);
 }
 
 
@@ -380,12 +466,12 @@ bool StartMenu::CloseOtherSubmenus(int id)
 }
 
 
-void StartMenu::CreateSubmenu(int id, CREATORFUNC creator)
+void StartMenu::CreateSubmenu(int id, LPCTSTR title, CREATORFUNC creator)
 {
-	CreateSubmenu(id, StartMenuFolders(), creator);
+	CreateSubmenu(id, StartMenuFolders(), title, creator);
 }
 
-void StartMenu::CreateSubmenu(int id, int folder_id, CREATORFUNC creator)
+void StartMenu::CreateSubmenu(int id, int folder_id, LPCTSTR title, CREATORFUNC creator)
 {
 	try {
 		SpecialFolderPath folder(folder_id, _hwnd);
@@ -393,13 +479,13 @@ void StartMenu::CreateSubmenu(int id, int folder_id, CREATORFUNC creator)
 		StartMenuFolders new_folders;
 		new_folders.push_back(folder);
 
-		CreateSubmenu(id, new_folders, creator);
+		CreateSubmenu(id, new_folders, title, creator);
 	} catch(COMException&) {
 		// ignore Exception and don't display anything
 	}
 }
 
-void StartMenu::CreateSubmenu(int id, int folder_id1, int folder_id2, CREATORFUNC creator)
+void StartMenu::CreateSubmenu(int id, int folder_id1, int folder_id2, LPCTSTR title, CREATORFUNC creator)
 {
 	StartMenuFolders new_folders;
 
@@ -414,10 +500,10 @@ void StartMenu::CreateSubmenu(int id, int folder_id1, int folder_id2, CREATORFUN
 	}
 
 	if (!new_folders.empty())
-		CreateSubmenu(id, new_folders, creator);
+		CreateSubmenu(id, new_folders, title, creator);
 }
 
-void StartMenu::CreateSubmenu(int id, const StartMenuFolders& new_folders, CREATORFUNC creator)
+void StartMenu::CreateSubmenu(int id, const StartMenuFolders& new_folders, LPCTSTR title, CREATORFUNC creator)
 {
 	 // Only open one submenu at a time.
 	if (!CloseOtherSubmenus(id))
@@ -429,30 +515,34 @@ void StartMenu::CreateSubmenu(int id, const StartMenuFolders& new_folders, CREAT
 	if (btn) {
 		WindowRect pos(btn);
 
-		x = pos.right-3;	// Submenus should overlap their parent a bit.
-		y = pos.top+STARTMENU_LINE_HEIGHT-3;
+		x = pos.right;	// Submenus should overlap their parent a bit.
+		y = pos.top+STARTMENU_LINE_HEIGHT-_border_top;
 	} else {
 		WindowRect pos(_hwnd);
 
-		x = pos.right-3;
+		x = pos.right;
 		y = pos.top;
 	}
 
 	_submenu_id = id;
-	_submenu = StartMenu::Create(x, y, new_folders, _hwnd, creator);
+	_submenu = StartMenu::Create(x, y, new_folders, _hwnd, title, creator);
 }
 
 
 void StartMenu::ActivateEntry(int id, const ShellEntrySet& entries)
 {
 	StartMenuFolders new_folders;
+	String title;
 
 	for(ShellEntrySet::const_iterator it=entries.begin(); it!=entries.end(); ++it) {
 		ShellEntry* entry = const_cast<ShellEntry*>(*it);
 
-		if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+		if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 			new_folders.push_back(entry->create_absolute_pidl());
-		else {
+
+			if (title.empty())
+				title = entry->_display_name;
+		} else {
 			 // If the entry is no subdirectory, there can only be one shell entry.
 			assert(entries.size()==1);
 
@@ -471,7 +561,7 @@ void StartMenu::ActivateEntry(int id, const ShellEntrySet& entries)
 		if (!CloseOtherSubmenus(id))
 			return;
 
-		CreateSubmenu(id, new_folders);
+		CreateSubmenu(id, new_folders, title);
 	}
 }
 
@@ -746,6 +836,7 @@ LRESULT	StartMenuRoot::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		bool logo256 = clr_bits<=8;
 
 		PaintCanvas canvas(_hwnd);
+
 		MemCanvas mem_dc;
 		ResBitmap bmp(logo256? IDB_LOGOV256: IDB_LOGOV);
 		BitmapSelection sel(mem_dc, bmp);
@@ -783,7 +874,7 @@ int StartMenuRoot::Command(int id, int code)
 {
 	switch(id) {
 	  case IDC_PROGRAMS:
-		CreateSubmenu(id, CSIDL_COMMON_PROGRAMS, CSIDL_PROGRAMS);
+		CreateSubmenu(id, CSIDL_COMMON_PROGRAMS, CSIDL_PROGRAMS, ResString(IDS_PROGRAMS));
 		break;
 
 	  case IDC_SEARCH_PROGRAM:
@@ -803,23 +894,23 @@ int StartMenuRoot::Command(int id, int code)
 		break;}
 
 	  case IDC_DOCUMENTS:
-		CreateSubmenu(id, CSIDL_PERSONAL);
+		CreateSubmenu(id, CSIDL_PERSONAL, ResString(IDS_DOCUMENTS));
 		break;
 
 	  case IDC_RECENT:
-		CreateSubmenu(id, CSIDL_RECENT, STARTMENU_CREATOR(RecentStartMenu));
+		CreateSubmenu(id, CSIDL_RECENT, ResString(IDS_RECENT), STARTMENU_CREATOR(RecentStartMenu));
 		break;
 
 	  case IDC_FAVORITES:
-		CreateSubmenu(id, CSIDL_FAVORITES);
+		CreateSubmenu(id, CSIDL_FAVORITES, ResString(IDS_FAVORITES));
 		break;
 
 	  case IDC_BROWSE:
-		CreateSubmenu(id, STARTMENU_CREATOR(BrowseMenu));
+		CreateSubmenu(id, ResString(IDS_BROWSE), STARTMENU_CREATOR(BrowseMenu));
 		break;
 
 	  case IDC_SETTINGS:
-		CreateSubmenu(id, STARTMENU_CREATOR(SettingsMenu));
+		CreateSubmenu(id, ResString(IDS_SETTINGS), STARTMENU_CREATOR(SettingsMenu));
 		break;
 
 	  case IDC_SEARCH:
@@ -924,11 +1015,11 @@ int SettingsMenu::Command(int id, int code)
 {
 	switch(id) {
 	  case IDC_SETTINGS_MENU:
-		CreateSubmenu(id, CSIDL_CONTROLS);
+		CreateSubmenu(id, CSIDL_CONTROLS, ResString(IDS_SETTINGS_MENU));
 		break;
 
 	  case IDC_PRINTERS:
-		CreateSubmenu(id, CSIDL_PRINTERS, CSIDL_PRINTHOOD);
+		CreateSubmenu(id, CSIDL_PRINTERS, CSIDL_PRINTHOOD, ResString(IDS_PRINTERS));
 		break;
 
 	  case IDC_CONTROL_PANEL:
@@ -937,11 +1028,11 @@ int SettingsMenu::Command(int id, int code)
 		break;
 
 	  case IDC_ADMIN:
-		CreateSubmenu(id, CSIDL_COMMON_ADMINTOOLS, CSIDL_ADMINTOOLS);
+		CreateSubmenu(id, CSIDL_COMMON_ADMINTOOLS, CSIDL_ADMINTOOLS, ResString(IDS_ADMIN));
 		break;
 
 	  case IDC_CONNECTIONS:
-		CreateSubmenu(id, CSIDL_CONNECTIONS);
+		CreateSubmenu(id, CSIDL_CONNECTIONS, ResString(IDS_CONNECTIONS));
 		break;
 
 	  default:
@@ -964,12 +1055,12 @@ int BrowseMenu::Command(int id, int code)
 {
 	switch(id) {
 	  case IDC_NETWORK:
-		CreateSubmenu(id, CSIDL_NETWORK);
+		CreateSubmenu(id, CSIDL_NETWORK, ResString(IDS_NETWORK));
 		break;
 
 	  case IDC_DRIVES:
 		//TODO: exclude removeable drives
-		CreateSubmenu(id, CSIDL_DRIVES);
+		CreateSubmenu(id, CSIDL_DRIVES, ResString(IDS_DRIVES));
 		break;
 
 	  default:
@@ -980,8 +1071,8 @@ int BrowseMenu::Command(int id, int code)
 }
 
 
-RecentStartMenu::RecentStartMenu(HWND hwnd, const StartMenuFolders& info)
- :	super(hwnd, info)
+RecentStartMenu::RecentStartMenu(HWND hwnd, const StartMenuCreateInfo& create_info)
+ :	super(hwnd, create_info)
 {
 }
 

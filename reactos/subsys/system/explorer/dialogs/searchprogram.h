@@ -96,7 +96,6 @@ protected:
 
 	ListSort _sort;
 
-	virtual LRESULT WndProc(UINT message, WPARAM wparam, LPARAM lparam);
 	virtual int	Command(int id, int code);
 	virtual int	Notify(int id, NMHDR* pnmh);
 

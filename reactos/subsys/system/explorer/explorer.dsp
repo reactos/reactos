@@ -581,6 +581,10 @@ SOURCE=.\externals.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\floating.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\globals.h
 # End Source File
 # End Target

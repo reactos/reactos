@@ -89,7 +89,9 @@ void CollectProgramsThread::free_dirs()
 }
 
 
+#ifdef _MSC_VER
 #pragma warning(disable: 4355)
+#endif
 
 FindProgramDlg::FindProgramDlg(HWND hwnd)
  :	super(hwnd),
@@ -256,16 +258,6 @@ void FindProgramDlg::add_entry(const FPDEntry& cache_entry)
 	item.iSubItem = 2;
 	item.pszText = (LPTSTR)(LPCTSTR)cache_entry._menu_path;
 	ListView_SetItem(_list_ctrl, &item);
-}
-
-LRESULT FindProgramDlg::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
-{
-	switch(message) {
-	  default:
-		return super::WndProc(message, wparam, lparam);
-	}
-
-	return FALSE;
 }
 
 int FindProgramDlg::Command(int id, int code)

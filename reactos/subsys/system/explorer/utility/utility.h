@@ -241,6 +241,8 @@ struct ClientRect : public RECT
 	}
 
 	operator LPRECT() {return this;}
+
+	POINT& pos() {return *(LPPOINT)this;}
 };
 
 struct WindowRect : public RECT
@@ -251,6 +253,8 @@ struct WindowRect : public RECT
 	}
 
 	operator LPRECT() {return this;}
+
+	POINT& pos() {return *(LPPOINT)this;}
 };
 
 struct Point : public POINT
