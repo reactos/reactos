@@ -332,6 +332,7 @@ VOID MmInit1(ULONG FirstKernelPhysAddress,
 VOID MmInit2(VOID);
 VOID MmInit3(VOID);
 NTSTATUS MmInitPagerThread(VOID);
+NTSTATUS MmInitZeroPageThread(VOID);
 
 VOID MiInitKernelMap(VOID);
 NTSTATUS MmCreatePageTable(PVOID PAddress);

@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.50 2003/07/05 18:10:50 hbirr Exp $
+/* $Id: mminit.c,v 1.51 2003/07/06 10:34:32 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -413,6 +413,7 @@ VOID MmInit3(VOID)
       if all processors are started. */
    MmDeletePageTable(NULL, 0);
 #endif
+   MmInitZeroPageThread();
    MmInitPagerThread();
    MmCreatePhysicalMemorySection();
    MmInitializeRmapList();
