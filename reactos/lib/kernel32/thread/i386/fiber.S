@@ -1,4 +1,4 @@
-/* $Id: fiber.S,v 1.1 2003/05/29 00:36:41 hyperion Exp $
+/* $Id: fiber.S,v 1.2 2003/06/09 22:39:48 hyperion Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS system libraries
@@ -15,12 +15,12 @@
 
 .globl _SwitchToFiber@4
 
-_SwitchToFiber@4:
-
 ErrStr:
  .ascii \
 "(KERNEL32:" __FILE__ ") Saving and restoring the floating point context \
 currently unimplemented\n\0"
+
+_SwitchToFiber@4:
 
  movl %fs:0x18, %ecx           /* Teb = NtCurrentTeb() */
 
@@ -35,9 +35,9 @@ currently unimplemented\n\0"
  movl 0x8(%ecx),   %edx
  movl %edx,        0xC(%eax)   /* Fiber->StackLimit = Teb->StackLimit */
  movl 0xE0C(%ecx), %edx
- movl %edx,        0x10(%eax)  /* Fiber->StackBottom = Teb->StackBottom */
+ movl %edx,        0x10(%eax)  /* Fiber->StackBottom = Teb->DeallocationStack */
  movl 0x0(%esp),   %edx
- movl %edx,        0x18(%eax)  /* Fiber->Eip = [esp] */
+ movl %edx,        0x18(%eax)  /* Fiber->Eip = [esp + 0] */
  movl %esp,        %edx
  addl $0x8,        %edx        
  movl %edx,        0x1C(%eax)  /* Fiber->Esp = esp + 8 */
@@ -69,7 +69,7 @@ l_NoFloatSave:
  movl 0xC(%eax),   %edx
  movl %edx,        0x8(%ecx)   /* Teb->StackLimit = Fiber->StackLimit */
  movl 0x10(%eax),  %edx
- movl %edx,        0xE0C(%ecx) /* Teb->StackBottom = Fiber->StackBottom */
+ movl %edx,        0xE0C(%ecx) /* Teb->StackBottom = Fiber->DeallocationStack */
  movl 0x18(%eax),  %edx        /* edx = Fiber->Eip */
  movl 0x1C(%eax),  %esp        /* esp = Fiber->Esp */
  movl 0x20(%eax),  %ebp        /* ebp = Fiber->Ebp */

@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.40 2003/05/29 00:36:41 hyperion Exp $
+/* $Id: thread.c,v 1.41 2003/06/09 22:39:48 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -41,7 +41,7 @@ __declspec(noreturn) void STDCALL ThreadStartup
  LPVOID lpParameter
 )
 {
-  UINT uExitCode;
+  volatile UINT uExitCode = 0;
 
   __try1(_except_handler)
   {
