@@ -577,8 +577,6 @@ RtlFormatCurrentUserKeyPath(IN OUT PUNICODE_STRING KeyPath)
 /*  ------------------------------------------  Private Implementation  */
 
 
-#define HACK
-
 NTSTATUS
 RtlpGetRegistryHandle(ULONG RelativeTo,
 		      PWSTR Path,
@@ -592,13 +590,6 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
 
   if (RelativeTo & RTL_REGISTRY_HANDLE)
     {
-#ifdef HACK
-      ULONG PreviousMode;
-      extern VOID KeSetPreviousMode(ULONG Mode);
-
-      PreviousMode = KeGetPreviousMode();
-      KeSetPreviousMode(KernelMode);
-#endif
       Status = NtDuplicateObject(NtCurrentProcess(),
 				 (HANDLE)Path,
 				 NtCurrentProcess(),
@@ -606,9 +597,6 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
 				 0,
 				 FALSE,
 				 DUPLICATE_SAME_ACCESS);
-#ifdef HACK
-      KeSetPreviousMode(PreviousMode);
-#endif
       return(Status);
     }
 

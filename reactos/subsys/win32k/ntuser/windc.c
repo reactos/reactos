@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.28 2003/10/06 17:53:55 navaraf Exp $
+/* $Id: windc.c,v 1.29 2003/10/06 18:24:54 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -383,7 +383,6 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
   else
     {
       Dce = Window->Dce;
-      DbgPrint("FIXME\n");
       /* FIXME: Implement this. */
       DbgBreakPoint();
     }

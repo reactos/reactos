@@ -267,7 +267,7 @@ StretchBlt(
 	}
 	
 	DPRINT1("FIXME: StretchBlt can only Blt, not Stretch!\n");
-	return TRUE;
+	return FALSE;
 }
 
 
