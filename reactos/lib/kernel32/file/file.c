@@ -88,22 +88,31 @@ WINBOOL STDCALL WriteFile(HANDLE  hFile,
 		       LPOVERLAPPED lpOverLapped)
 {
 
-   LARGE_INTEGER Offset;
+   PLARGE_INTEGER Offset;
+   LARGE_INTEGER ByteOffset;
    HANDLE hEvent = NULL;
    NTSTATUS errCode;
-	
-   if (lpOverLapped != NULL ) 
+   PIO_STATUS_BLOCK IoStatusBlock;
+   IO_STATUS_BLOCK IIosb;
+   if ( lpOverLapped != NULL )
      {
-	SET_LARGE_INTEGER_LOW_PART(Offset, lpOverLapped->Offset);
-	SET_LARGE_INTEGER_HIGH_PART(Offset, lpOverLapped->OffsetHigh);
+	SET_LARGE_INTEGER_LOW_PART(ByteOffset, lpOverLapped->Offset);
+	SET_LARGE_INTEGER_HIGH_PART(ByteOffset, lpOverLapped->OffsetHigh);
+	Offset = &ByteOffset;
 	lpOverLapped->Internal = STATUS_PENDING;
-	hEvent= lpOverLapped->hEvent;
+	hEvent = lpOverLapped->hEvent;
+	IoStatusBlock = (PIO_STATUS_BLOCK)lpOverLapped;
+     }
+   else
+     {
+	IoStatusBlock = &IIosb;
+	Offset = NULL;
      }
    errCode = NtWriteFile(hFile,hEvent,NULL,NULL,
 			 (PIO_STATUS_BLOCK)lpOverLapped,
 			 (PVOID)lpBuffer, 
 			 nNumberOfBytesToWrite,
-			 &Offset,
+             Offset,
 			 NULL);
    if (!NT_SUCCESS(errCode))
      {
