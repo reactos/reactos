@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.14 2002/11/05 20:27:56 hbirr Exp $
+/* $Id: connect.c,v 1.15 2003/01/11 15:33:49 hbirr Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -479,7 +479,6 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
   /*
    * All done.
    */
-  ObDereferenceObject(ConnectedPort);
 
   return(STATUS_SUCCESS);
 }
