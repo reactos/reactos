@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.6 2001/01/12 21:00:08 dwelch Exp $
+/* $Id: volume.c,v 1.7 2001/03/01 07:48:17 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -83,13 +83,11 @@ FsdGetFsSizeInformation (PDEVICE_OBJECT DeviceObject,
       struct _BootSector32 *BootSect =
 	(struct _BootSector32 *) DeviceExt->Boot;
 
-      if (BootSect->Sectors)
-	FsSizeInfo->TotalAllocationUnits.QuadPart = BootSect->Sectors;
-      else
-	FsSizeInfo->TotalAllocationUnits.QuadPart = BootSect->SectorsHuge;
+      FsSizeInfo->TotalAllocationUnits.QuadPart = ((BootSect->Sectors ? BootSect->Sectors : BootSect->SectorsHuge)-DeviceExt->dataStart)/BootSect->SectorsPerCluster;
 
-      /*      FsSizeInfo->AvailableAllocationUnits.QuadPart =
-	      FAT32CountAvailableClusters (DeviceExt); */
+
+
+      FsSizeInfo->AvailableAllocationUnits.QuadPart = FAT32CountAvailableClusters (DeviceExt);
 
       FsSizeInfo->SectorsPerAllocationUnit = BootSect->SectorsPerCluster;
       FsSizeInfo->BytesPerSector = BootSect->BytesPerSector;
@@ -98,18 +96,18 @@ FsdGetFsSizeInformation (PDEVICE_OBJECT DeviceObject,
     {
       struct _BootSector *BootSect = (struct _BootSector *) DeviceExt->Boot;
 
-      if (BootSect->Sectors)
-	FsSizeInfo->TotalAllocationUnits.QuadPart = BootSect->Sectors;
-      else
-	FsSizeInfo->TotalAllocationUnits.QuadPart = BootSect->SectorsHuge;
-      /*
+      FsSizeInfo->TotalAllocationUnits.QuadPart = ((BootSect->Sectors ? BootSect->Sectors : BootSect->SectorsHuge)-DeviceExt->dataStart)/BootSect->SectorsPerCluster;
+
       if (DeviceExt->FatType == FAT16)
 	FsSizeInfo->AvailableAllocationUnits.QuadPart =
+#if 0
 	  FAT16CountAvailableClusters (DeviceExt);
+#else
+0;
+#endif
       else
 	FsSizeInfo->AvailableAllocationUnits.QuadPart =
 	  FAT12CountAvailableClusters (DeviceExt);
-      */
       FsSizeInfo->SectorsPerAllocationUnit = BootSect->SectorsPerCluster;
       FsSizeInfo->BytesPerSector = BootSect->BytesPerSector;
     }
