@@ -328,7 +328,7 @@ void ProcessPage_OnViewSelectColumns(void)
 {
     int        i;
 
-    if (DialogBox(hInst, MAKEINTRESOURCE(IDD_COLUMNS_DIALOG), hMainWnd, (DLGPROC)ColumnsDialogWndProc) == IDOK)
+    if (DialogBox(hInst, MAKEINTRESOURCE(IDD_COLUMNS_DIALOG), hMainWnd, ColumnsDialogWndProc) == IDOK)
     {
         for (i=Header_GetItemCount(hProcessPageHeaderCtrl)-1; i>=0; i--)
         {

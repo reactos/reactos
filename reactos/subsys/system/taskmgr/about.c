@@ -34,7 +34,7 @@ INT_PTR CALLBACK AboutDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 
 void OnAbout(void)
 {
-    DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hMainWnd, (DLGPROC)AboutDialogWndProc);
+    DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hMainWnd, AboutDialogWndProc);
 }
 
 INT_PTR CALLBACK
