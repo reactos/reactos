@@ -47,7 +47,7 @@ CC = $(PREFIX)gcc
 NATIVE_CC = gcc
 CFLAGS = -O2 -I../../../include -I../../include -I../include -fno-builtin $(DEFINES) -Wall -Wstrict-prototypes
 CXXFLAGS = $(CFLAGS)
-NASM = nasm
+ASM = nasm
 NFLAGS = -i../include/ -f$(NASM_FORMAT)
 LD = $(PREFIX)ld
 NM = $(PREFIX)nm
@@ -59,7 +59,7 @@ CPP = $(PREFIX)cpp
 %.o: %.cc
 	$(CC) $(CFLAGS) -c $< -o $@
 %.o: %.asm
-	$(NASM) $(NFLAGS) $< -o $@
+	$(ASM) $(NFLAGS) $< -o $@
 
 
 RULES_MAK_INCLUDED = 1
