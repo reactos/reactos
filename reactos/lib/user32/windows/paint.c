@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: paint.c,v 1.24 2004/03/23 16:32:20 weiden Exp $
+/* $Id: paint.c,v 1.25 2004/03/23 21:47:37 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/paint.c
@@ -256,7 +256,7 @@ ValidateRgn(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 STDCALL
@@ -264,9 +264,22 @@ GetWindowRgn(
   HWND hWnd,
   HRGN hRgn)
 {
-  UNIMPLEMENTED;
-  return 0;
+  return (int)NtUserCallTwoParam((DWORD)hWnd, (DWORD)hRgn, TWOPARAM_ROUTINE_GETWINDOWRGN);
 }
+
+
+/*
+ * @implemented
+ */
+int
+STDCALL
+GetWindowRgnBox(
+    HWND hWnd,
+    LPRECT lprc)
+{
+  return (int)NtUserCallTwoParam((DWORD)hWnd, (DWORD)lprc, TWOPARAM_ROUTINE_GETWINDOWRGNBOX);
+}
+
 
 const BYTE MappingTable[33] = {5,9,2,3,5,7,0,0,0,7,5,5,3,2,7,5,3,3,0,5,7,10,5,0,11,4,1,1,3,8,6,12,7};
 /*

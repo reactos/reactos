@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.56 2004/01/23 23:38:26 ekohl Exp $
+/* $Id: stubs.c,v 1.57 2004/03/23 21:47:36 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -797,19 +797,6 @@ GetRegisteredRawInputDevices(
     PRAWINPUTDEVICE pRawInputDevices,
     PUINT puiNumDevices,
     UINT cbSize)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-GetWindowRgnBox(
-    HWND hWnd,
-    LPRECT lprc)
 {
   UNIMPLEMENTED;
   return FALSE;

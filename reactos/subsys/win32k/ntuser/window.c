@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.200 2004/03/23 16:32:20 weiden Exp $
+/* $Id: window.c,v 1.201 2004/03/23 21:47:37 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -3391,6 +3391,92 @@ NtUserSetWindowPos(
     UINT uFlags)
 {
    return WinPosSetWindowPos(hWnd, hWndInsertAfter, X, Y, cx, cy, uFlags);
+}
+
+
+INT FASTCALL
+IntGetWindowRgn(HWND hWnd, HRGN hRgn)
+{
+  INT Ret;
+  PWINDOW_OBJECT WindowObject;
+  HRGN VisRgn;
+  ROSRGNDATA *pRgn;
+  
+  if(!(WindowObject = IntGetWindowObject(hWnd)))
+  {
+    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+    return ERROR;
+  }
+  if(!hRgn)
+  {
+    IntReleaseWindowObject(WindowObject);
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return ERROR;
+  }
+  
+  /* Create a new window region using the window rectangle */
+  VisRgn = UnsafeIntCreateRectRgnIndirect(&WindowObject->WindowRect);
+  NtGdiOffsetRgn(VisRgn, -WindowObject->WindowRect.left, -WindowObject->WindowRect.top);
+  /* if there's a region assigned to the window, combine them both */
+  if(WindowObject->WindowRegion && !(WindowObject->Style & WS_MINIMIZE))
+    NtGdiCombineRgn(VisRgn, VisRgn, WindowObject->WindowRegion, RGN_AND);
+  /* Copy the region into hRgn */
+  NtGdiCombineRgn(hRgn, VisRgn, NULL, RGN_COPY);
+  
+  if((pRgn = RGNDATA_LockRgn(hRgn)))
+  {
+    Ret = pRgn->rdh.iType;
+    RGNDATA_UnlockRgn(hRgn);
+  }
+  else
+    Ret = ERROR;
+  
+  NtGdiDeleteObject(VisRgn);
+  
+  IntReleaseWindowObject(WindowObject);
+  return Ret;
+}
+
+INT FASTCALL
+IntGetWindowRgnBox(HWND hWnd, RECT *Rect)
+{
+  INT Ret;
+  PWINDOW_OBJECT WindowObject;
+  HRGN VisRgn;
+  ROSRGNDATA *pRgn;
+  
+  if(!(WindowObject = IntGetWindowObject(hWnd)))
+  {
+    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+    return ERROR;
+  }
+  if(!Rect)
+  {
+    IntReleaseWindowObject(WindowObject);
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return ERROR;
+  }
+  
+  /* Create a new window region using the window rectangle */
+  VisRgn = UnsafeIntCreateRectRgnIndirect(&WindowObject->WindowRect);
+  NtGdiOffsetRgn(VisRgn, -WindowObject->WindowRect.left, -WindowObject->WindowRect.top);
+  /* if there's a region assigned to the window, combine them both */
+  if(WindowObject->WindowRegion && !(WindowObject->Style & WS_MINIMIZE))
+    NtGdiCombineRgn(VisRgn, VisRgn, WindowObject->WindowRegion, RGN_AND);
+  
+  if((pRgn = RGNDATA_LockRgn(VisRgn)))
+  {
+    Ret = pRgn->rdh.iType;
+    *Rect = pRgn->rdh.rcBound;
+    RGNDATA_UnlockRgn(VisRgn);
+  }
+  else
+    Ret = ERROR;
+  
+  NtGdiDeleteObject(VisRgn);
+  
+  IntReleaseWindowObject(WindowObject);
+  return Ret;
 }
 
 

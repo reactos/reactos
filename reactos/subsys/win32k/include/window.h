@@ -188,6 +188,12 @@ IntGetParent(PWINDOW_OBJECT Wnd);
 PWINDOW_OBJECT FASTCALL
 IntGetParentObject(PWINDOW_OBJECT Wnd);
 
+INT FASTCALL
+IntGetWindowRgn(HWND hWnd, HRGN hRgn);
+
+INT FASTCALL
+IntGetWindowRgnBox(HWND hWnd, RECT *Rect);
+
 DWORD IntRemoveWndProcHandle(WNDPROC Handle);
 DWORD IntRemoveProcessWndProcHandles(HANDLE ProcessID);
 DWORD IntAddWndProcHandle(WNDPROC WindowProc, BOOL IsUnicode);

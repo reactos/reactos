@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.54 2004/03/07 11:59:43 navaraf Exp $
+/* $Id: misc.c,v 1.55 2004/03/23 21:47:37 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -197,6 +197,23 @@ NtUserCallTwoParam(
   
   switch(Routine)
   {
+    case TWOPARAM_ROUTINE_GETWINDOWRGNBOX:
+    {
+      DWORD Ret;
+      RECT rcRect;
+      Ret = (DWORD)IntGetWindowRgnBox((HWND)Param1, &rcRect);
+      Status = MmCopyToCaller((PVOID)Param2, &rcRect, sizeof(RECT));
+      if(!NT_SUCCESS(Status))
+      {
+        SetLastNtError(Status);
+        return ERROR;
+      }
+      return Ret;
+    }
+    case TWOPARAM_ROUTINE_GETWINDOWRGN:
+    {
+      return (DWORD)IntGetWindowRgn((HWND)Param1, (HRGN)Param2);
+    }
     case TWOPARAM_ROUTINE_SETMENUBARHEIGHT:
     {
       DWORD Ret;
