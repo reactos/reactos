@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: palette.c,v 1.18 2003/09/25 14:32:55 fireball Exp $
+/* $Id: palette.c,v 1.19 2003/11/26 22:24:04 gvg Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -46,7 +46,15 @@ EngCreatePalette(ULONG Mode,
 		 ULONG Green,
 		 ULONG Blue)
 {
-  return PALETTE_AllocPalette(Mode, NumColors, Colors, Red, Green, Blue);
+  HPALETTE Palette;
+
+  Palette = PALETTE_AllocPalette(Mode, NumColors, Colors, Red, Green, Blue);
+  if (NULL != Palette)
+    {
+      GDIOBJ_SetOwnership(Palette, NULL);
+    }
+
+  return Palette;
 }
 
 /*
@@ -55,6 +63,8 @@ EngCreatePalette(ULONG Mode,
 BOOL STDCALL
 EngDeletePalette(IN HPALETTE Palette)
 {
+  GDIOBJ_SetOwnership(Palette, PsGetCurrentProcess());
+
   return PALETTE_FreePalette(Palette);
 }
 

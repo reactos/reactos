@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.102 2003/11/26 21:48:35 gvg Exp $
+/* $Id: dc.c,v 1.103 2003/11/26 22:24:04 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -617,7 +617,6 @@ IntCreatePrimarySurface()
       DPRINT("Adjusting GDIInfo.ulLogPixelsY\n");
       PrimarySurface.GDIInfo.ulLogPixelsY = 96;
     }
-  GDIOBJ_SetOwnership(PrimarySurface.DevInfo.hpalDefault, NULL);
 
   DPRINT("calling completePDev\n");
 
