@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.47 2004/01/30 15:53:36 rcampbell Exp $
+/* $Id: misc.c,v 1.48 2004/01/31 14:57:58 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -455,6 +455,9 @@ NtUserSystemParametersInfo(
   static BOOL GradientCaptions = TRUE;
   /* FIXME: This should be obtained from the registry */
   static LOGFONTW CaptionFont =
+     { 11, 0, 0, 0, FW_HEAVY, FALSE, FALSE, FALSE, ANSI_CHARSET,
+       0, 0, DEFAULT_QUALITY, VARIABLE_PITCH, L"Bitstream Vera Sans" };
+   static LOGFONTW IconFont =
      { 10, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
        0, 0, DEFAULT_QUALITY, VARIABLE_PITCH, L"Bitstream Vera Sans" };
   NTSTATUS Status;
@@ -537,7 +540,7 @@ NtUserSystemParametersInfo(
       }
     case SPI_GETICONTITLELOGFONT:
       {
-        Status = MmCopyToCaller(pvParam, &CaptionFont, sizeof(CaptionFont));
+        Status = MmCopyToCaller(pvParam, &IconFont, sizeof(IconFont));
         if(!NT_SUCCESS(Status))
         {
           SetLastNtError(Status);
