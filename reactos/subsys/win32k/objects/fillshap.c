@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fillshap.c,v 1.34 2003/09/23 21:48:18 gvg Exp $ */
+/* $Id: fillshap.c,v 1.35 2003/10/04 20:04:10 gvg Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -465,13 +465,9 @@ IntRectangle(PDC dc,
   SURFOBJ   *SurfObj = (SURFOBJ*)AccessUserObject((ULONG)dc->Surface);
   BRUSHOBJ   PenBrushObj, *FillBrushObj;
   BOOL       ret = FALSE; // default to failure
-  PRECTL     RectBounds;
   RECTL      DestRect;
 
   ASSERT ( dc ); // caller's responsibility to set this up
-
-  RectBounds = (PRECTL) RGNDATA_LockRgn(dc->w.hGCClipRgn);
-  //ei not yet implemented ASSERT(RectBounds);
 
   if ( PATH_IsPathOpen(dc->w.path) )
   {
@@ -484,29 +480,28 @@ IntRectangle(PDC dc,
     TopRect    += dc->w.DCOrgY;
     BottomRect += dc->w.DCOrgY - 1;
 
+    DestRect.left = LeftRect;
+    DestRect.right = RightRect;
+    DestRect.top = TopRect;
+    DestRect.bottom = BottomRect;
+
     FillBrushObj = BRUSHOBJ_LockBrush(dc->w.hBrush);
 
-    ASSERT(FillBrushObj); // FIXME - I *think* this should always happen...
-    // it would be nice to remove the following if statement if that proves to be true
     if ( FillBrushObj )
     {
       if ( FillBrushObj->logbrush.lbStyle != BS_NULL )
       {
-	DestRect.left = LeftRect;
-	DestRect.right = RightRect;
-	DestRect.top = TopRect;
-	DestRect.bottom = BottomRect;
-	ret = ret && IntEngBitBlt(SurfObj,
-				  NULL,
-				  NULL,
-				  NULL,
-				  NULL,
-				  &DestRect,
-				  NULL,
-				  NULL,
-				  FillBrushObj,
-				  NULL,
-				  PATCOPY);
+	ret = IntEngBitBlt(SurfObj,
+                           NULL,
+                           NULL,
+                           dc->CombinedClip,
+                           NULL,
+                           &DestRect,
+                           NULL,
+                           NULL,
+                           FillBrushObj,
+                           NULL,
+                           PATCOPY);
       }
     }
 
@@ -525,35 +520,35 @@ IntRectangle(PDC dc,
 			 dc->CombinedClip,
 			 &PenBrushObj,
 			 LeftRect, TopRect, RightRect, TopRect,
-			 RectBounds, // Bounding rectangle
+			 &DestRect, // Bounding rectangle
 			 dc->w.ROPmode); // MIX
 
       ret = ret && IntEngLineTo(SurfObj,
 			 dc->CombinedClip,
 			 &PenBrushObj,
 			 RightRect, TopRect, RightRect, BottomRect,
-			 RectBounds, // Bounding rectangle
+			 &DestRect, // Bounding rectangle
 			 dc->w.ROPmode); // MIX
 
       ret = ret && IntEngLineTo(SurfObj,
 			 dc->CombinedClip,
 			 &PenBrushObj,
 			 RightRect, BottomRect, LeftRect, BottomRect,
-			 RectBounds, // Bounding rectangle
+			 &DestRect, // Bounding rectangle
 			 dc->w.ROPmode); // MIX
 
       ret = ret && IntEngLineTo(SurfObj,
 			 dc->CombinedClip,
 			 &PenBrushObj,
 			 LeftRect, BottomRect, LeftRect, TopRect,
-			 RectBounds, // Bounding rectangle
+			 &DestRect, // Bounding rectangle
 			 dc->w.ROPmode); // MIX */
     }
   }
 
-  // Move current position in DC?
-  // MSDN: The current position is neither used nor updated by Rectangle.
-  RGNDATA_UnlockRgn(dc->w.hGCClipRgn);
+  /* Move current position in DC?
+     MSDN: The current position is neither used nor updated by Rectangle. */
+
   return TRUE;
 }
 
