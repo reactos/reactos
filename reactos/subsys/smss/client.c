@@ -27,18 +27,10 @@
 #include <ntos.h>
 #include "smss.h"
 
-/* Private ADT */
+#define NDEBUG
+#include <debug.h>
 
-typedef struct _SM_CLIENT_DATA
-{
-	USHORT	SubsystemId;
-	BOOL	Initialized;
-	HANDLE	ServerProcess;
-	HANDLE	ApiPort;
-	HANDLE	SbApiPort;
-	struct _SM_CLIENT_DATA * Next;
-	
-} SM_CLIENT_DATA, *PSM_CLIENT_DATA;
+/* Private ADT */
 
 
 struct _SM_CLIENT_DIRECTORY
@@ -55,6 +47,7 @@ struct _SM_CLIENT_DIRECTORY
 NTSTATUS
 SmInitializeClientManagement (VOID)
 {
+	DPRINT("SM: %s called\n", __FUNCTION__);
 	RtlInitializeCriticalSection(& SmpClientDirectory.Lock);
 	SmpClientDirectory.Count = 0;
 	SmpClientDirectory.Client = NULL;
@@ -64,22 +57,24 @@ SmInitializeClientManagement (VOID)
 /**********************************************************************
  *	SmpLookupClient/1
  */
-PSM_CLIENT_DATA STDCALL
+static PSM_CLIENT_DATA STDCALL
 SmpLookupClient (USHORT SubsystemId)
 {
 	PSM_CLIENT_DATA Client = NULL;
 
+	DPRINT("SM: %s called\n", __FUNCTION__);
+
+	RtlEnterCriticalSection (& SmpClientDirectory.Lock);
 	if (SmpClientDirectory.Count > 0)
 	{
-		RtlEnterCriticalSection (& SmpClientDirectory.Lock);
 		Client = SmpClientDirectory.Client;
-		while (NULL != Client->Next)
+		while (NULL != Client)
 		{
 			if (SubsystemId == Client->SubsystemId) break;
 			Client = Client->Next;
 		}
-		RtlLeaveCriticalSection (& SmpClientDirectory.Lock);
 	}
+	RtlLeaveCriticalSection (& SmpClientDirectory.Lock);
 	return Client;
 }
 
@@ -87,14 +82,17 @@ SmpLookupClient (USHORT SubsystemId)
  *	SmpCreateClient/1
  */
 NTSTATUS STDCALL
-SmpCreateClient(SM_PORT_MESSAGE Request)
+SmCreateClient(PSM_PORT_MESSAGE Request, PSM_CLIENT_DATA * ClientData)
 {
 	PSM_CLIENT_DATA pClient = NULL;
+	PSM_CONNECT_DATA ConnectData = (PSM_CONNECT_DATA) ((PBYTE) Request) + sizeof (LPC_REQUEST);
+
+	DPRINT("SM: %s called\n", __FUNCTION__);
 
 	/*
 	 * Check if a client for the ID already exist.
 	 */
-	if (SmpLookupClient(0)) //FIXME
+	if (SmpLookupClient(ConnectData->Subsystem))
 	{
 		DbgPrint("SMSS: %s: attempt to register again subsystem %d.\n",__FUNCTION__,0);
 		return STATUS_UNSUCCESSFUL;
@@ -105,11 +103,15 @@ SmpCreateClient(SM_PORT_MESSAGE Request)
 	pClient = RtlAllocateHeap (SmpHeap,
 				   HEAP_ZERO_MEMORY,
 				   sizeof (SM_CLIENT_DATA));
-	if (NULL == pClient) return STATUS_NO_MEMORY;
+	if (NULL == pClient)
+	{
+		DPRINT("SM: %s: out of memory!\n",__FUNCTION__);
+		return STATUS_NO_MEMORY;
+	}
 	/*
 	 * Initialize the client data
 	 */
-//	pClient->SubsystemId = Request->Subsystem;
+	pClient->SubsystemId = ConnectData->Subsystem;
 	pClient->Initialized = FALSE;
 	// TODO
 	/*
@@ -128,8 +130,10 @@ SmpCreateClient(SM_PORT_MESSAGE Request)
 			pCD = pCD->Next);
 		pCD->Next = pClient;
 	}
+	pClient->Next = NULL;
 	++ SmpClientDirectory.Count;
 	RtlLeaveCriticalSection (& SmpClientDirectory.Lock);
+	if (ClientData) *ClientData = pClient;
 	return STATUS_SUCCESS;
 }
 
@@ -137,8 +141,10 @@ SmpCreateClient(SM_PORT_MESSAGE Request)
  * 	SmpDestroyClient/1
  */
 NTSTATUS STDCALL
-SmpDestroyClient (ULONG SubsystemId)
+SmDestroyClient (ULONG SubsystemId)
 {
+	DPRINT("SM: %s called\n", __FUNCTION__);
+
 	RtlEnterCriticalSection (& SmpClientDirectory.Lock);
 	/* TODO */
 	RtlLeaveCriticalSection (& SmpClientDirectory.Lock);

@@ -36,7 +36,7 @@ NtProcessStartup(PPEB Peb)
 {
   NTSTATUS Status;
 
-  Status = InitSessionManager(Children);
+  Status = InitSessionManager();
   if (!NT_SUCCESS(Status))
     {
       int i;

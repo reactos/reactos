@@ -1,19 +1,16 @@
 /* $Id$
  *
- * Reactos Session Manager
+ * smapi.c - \SmApiPort LPC port message management
  *
+ * Reactos Session Manager
  *
  */
 
-/*#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>*/
-#define NTOS_MODE_USER
-#include <ntos.h>
-#include <sm/api.h>
-#include <rosrtl/string.h>
 #include "smss.h"
+#include <rosrtl/string.h>
 
 #define NDEBUG
+#include <debug.h>
 
 /* GLOBAL VARIABLES *********************************************************/
 
@@ -26,20 +23,20 @@ NTSTATUS FASTCALL n (PSM_PORT_MESSAGE Request)
 
 SMAPI(SmInvalid)
 {
-	DbgPrint("SMSS: %s called\n",__FUNCTION__);
+	DPRINT("SM: %s called\n",__FUNCTION__);
 	Request->Status = STATUS_NOT_IMPLEMENTED;
 	return STATUS_SUCCESS;
 }
 
 SMAPI(SmCompSes)
 {
-	DbgPrint("SMSS: %s called\n",__FUNCTION__);
+	DPRINT("SM: %s called\n",__FUNCTION__);
 	Request->Status = STATUS_NOT_IMPLEMENTED;
 	return STATUS_SUCCESS;
 }
 SMAPI(SmExecPgm)
 {
-	DbgPrint("SMSS: %s called\n",__FUNCTION__);
+	DPRINT("SM: %s called\n",__FUNCTION__);
 	Request->Status = STATUS_NOT_IMPLEMENTED;
 	return STATUS_SUCCESS;
 }
@@ -67,8 +64,54 @@ SM_PORT_API SmApi [] =
 NTSTATUS STDCALL
 SmpHandleConnectionRequest (HANDLE Port, PSM_PORT_MESSAGE Request)
 {
-	DbgPrint("SMSS: %s called\n",__FUNCTION__);
-	return STATUS_SUCCESS;
+	NTSTATUS         Status = STATUS_SUCCESS;
+	PSM_CLIENT_DATA  ClientData = NULL;
+	PVOID            Context = NULL;
+	
+	DPRINT("SM: %s called\n",__FUNCTION__);
+
+	Status = SmCreateClient (Request, & ClientData);
+	if(STATUS_SUCCESS == Status)
+	{
+#ifdef __USE_NT_LPC__
+		Status = NtAcceptConnectPort (& ClientData->ApiPort,
+					      Context,
+					      SmApiPort,
+					      TRUE, //accept
+					      NULL,
+					      NULL);
+#else
+		Status = NtAcceptConnectPort (& ClientData->ApiPort,
+					      Context,
+					      (PLPC_MESSAGE) Request,
+					      TRUE, //accept
+					      NULL,
+					      NULL);
+#endif
+		if(NT_SUCCESS(Status))
+		{
+			Status = NtCompleteConnectPort(ClientData->ApiPort);
+		}
+		return STATUS_SUCCESS;
+	} else {
+		/* Reject the subsystem */
+#ifdef __USE_NT_LPC__
+		Status = NtAcceptConnectPort (& ClientData->ApiPort,
+					      Context,
+					      SmApiPort,
+					      FALSE, //reject
+					      NULL,
+					      NULL);
+#else
+		Status = NtAcceptConnectPort (& ClientData->ApiPort,
+					      Context,
+					      (PLPC_MESSAGE) Request,
+					      FALSE, //reject
+					      NULL,
+					      NULL);
+#endif
+	}
+	return Status;
 }
 
 /**********************************************************************
@@ -82,23 +125,25 @@ VOID STDCALL
 SmpApiThread(HANDLE Port)
 {
 	NTSTATUS	Status = STATUS_SUCCESS;
-	ULONG		Unknown = 0;
+	PVOID		Unknown = NULL;
 	PLPC_MESSAGE	Reply = NULL;
 	SM_PORT_MESSAGE	Request = {{0}};
 
-	DbgPrint("SMSS: %s running.\n",__FUNCTION__);
+	DPRINT("SM: %s running\n",__FUNCTION__);
 
 	while (TRUE)
 	{
-		DbgPrint("SMSS: %s: waiting for message\n",__FUNCTION__);
+		DPRINT("SM: %s: waiting for message\n",__FUNCTION__);
 
 		Status = NtReplyWaitReceivePort(Port,
-						& Unknown,
+						(PULONG) & Unknown,
 						Reply,
 						(PLPC_MESSAGE) & Request);
 		if (NT_SUCCESS(Status))
 		{
-			DbgPrint("SMSS: %s: message received\n",__FUNCTION__);
+			DPRINT("SM: %s: message received (type=%d)\n",
+				__FUNCTION__,
+				PORT_MESSAGE_TYPE(Request));
 
 			switch (Request.Header.MessageType)
 			{
