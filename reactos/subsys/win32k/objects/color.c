@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: color.c,v 1.44 2004/06/28 17:03:35 navaraf Exp $ */
+/* $Id: color.c,v 1.45 2004/06/29 20:08:05 navaraf Exp $ */
 #include <w32k.h>
 
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
@@ -44,14 +44,14 @@ const PALETTEENTRY COLOR_sysPalTemplate[NB_RESERVED_COLORS] =
   { 0x00, 0x80, 0x80, PC_SYS_USED },
   { 0xc0, 0xc0, 0xc0, PC_SYS_USED },
   { 0xc0, 0xdc, 0xc0, PC_SYS_USED },
-  { 0xa6, 0xca, 0xf0, PC_SYS_USED },
+  { 0xd4, 0xd0, 0xc7, PC_SYS_USED },
 
   // ... c_min/2 dynamic colorcells
   // ... gap (for sparse palettes)
   // ... c_min/2 dynamic colorcells
 
   { 0xff, 0xfb, 0xf0, PC_SYS_USED },
-  { 0xa0, 0xa0, 0xa4, PC_SYS_USED },
+  { 0x3a, 0x6e, 0xa5, PC_SYS_USED },
   { 0x80, 0x80, 0x80, PC_SYS_USED },
   { 0xff, 0x00, 0x00, PC_SYS_USED },
   { 0x00, 0xff, 0x00, PC_SYS_USED },
