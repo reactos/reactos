@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.39 2002/09/17 23:43:29 dwelch Exp $
+/* $Id: dc.c,v 1.40 2002/09/18 23:56:48 dwelch Exp $
  *
  * DC.C - Device context functions
  *
@@ -80,6 +80,7 @@ INT STDCALL  func_name( HDC hdc, INT mode ) \
   DC_ReleasePtr( hdc );						\
   return prevMode;                          \
 }
+
 
 VOID BitmapToSurf(HDC hdc, PSURFGDI SurfGDI, PSURFOBJ SurfObj, PBITMAPOBJ Bitmap);
 
@@ -183,17 +184,104 @@ HDC STDCALL  W32kCreateCompatableDC(HDC  hDC)
 
 #include <ddk/ntddvid.h>
 
+static GDIDEVICE PrimarySurface;
+static BOOL PrimarySurfaceCreated = FALSE;
+
+BOOL STDCALL W32kCreatePrimarySurface(LPCWSTR Driver,
+				      LPCWSTR Device)
+{
+  PGD_ENABLEDRIVER  GDEnableDriver;
+  HANDLE DeviceDriver;
+  DRVENABLEDATA  DED;
+  PSURFOBJ SurfObj;
+
+  /*  Open the miniport driver  */
+  if ((DeviceDriver = DRIVER_FindMPDriver(Driver)) == NULL)
+  {
+    DPRINT("FindMPDriver failed\n");
+    return(FALSE);
+  }
+
+  /*  Get the DDI driver's entry point  */
+  /*  FIXME: Retrieve DDI driver name from registry */
+  if ((GDEnableDriver = DRIVER_FindDDIDriver(L"\\SystemRoot\\system32\\drivers\\vgaddi.dll")) == NULL)
+  {
+    DPRINT("FindDDIDriver failed\n");
+    return(FALSE);
+  }
+
+  /*  Call DDI driver's EnableDriver function  */
+  RtlZeroMemory(&DED, sizeof(DED));
+
+  if (!GDEnableDriver(DDI_DRIVER_VERSION, sizeof(DED), &DED))
+  {
+    DPRINT("DrvEnableDriver failed\n");
+    return(FALSE);
+  }
+  DPRINT("Building DDI Functions\n");
+
+  /*  Construct DDI driver function dispatch table  */
+  if (!DRIVER_BuildDDIFunctions(&DED, &PrimarySurface.DriverFunctions))
+  {
+    DPRINT("BuildDDIFunctions failed\n");
+    return(FALSE);
+  }
+
+  /*  Allocate a phyical device handle from the driver  */
+  if (Device != NULL)
+  {
+    DPRINT("Device in u: %u\n", Device);
+//    wcsncpy(NewDC->DMW.dmDeviceName, Device, DMMAXDEVICENAME); FIXME: this crashes everything?
+  }
+
+  DPRINT("Enabling PDev\n");
+
+  PrimarySurface.PDev = 
+    PrimarySurface.DriverFunctions.EnablePDev(&PrimarySurface.DMW,
+					     L"",
+					     HS_DDI_MAX,
+					     PrimarySurface.FillPatterns,
+					     sizeof(PrimarySurface.GDIInfo),
+					     (ULONG *) &PrimarySurface.GDIInfo,
+					     sizeof(PrimarySurface.DevInfo),
+					     &PrimarySurface.DevInfo,
+					     NULL,
+					     L"",
+					     DeviceDriver);
+  if (PrimarySurface.PDev == NULL)
+  {
+    DPRINT("DrvEnablePDEV failed\n");
+    return(FALSE);
+  }
+
+  DPRINT("calling completePDev\n");
+
+  /*  Complete initialization of the physical device  */
+  PrimarySurface.DriverFunctions.CompletePDev(PrimarySurface.PDev, 
+					      &PrimarySurface);
+
+  DPRINT("calling DRIVER_ReferenceDriver\n");
+
+  DRIVER_ReferenceDriver (Driver);
+
+  DPRINT("calling EnableSurface\n");
+
+  /*  Enable the drawing surface  */
+  PrimarySurface.Handle = 
+    PrimarySurface.DriverFunctions.EnableSurface(PrimarySurface.PDev); 
+
+  SurfObj = (PSURFOBJ)AccessUserObject(PrimarySurface.Handle);
+  SurfObj->dhpdev = PrimarySurface.PDev;
+}
+
 HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
                   LPCWSTR  Device,
                   LPCWSTR  Output,
                   CONST PDEVMODEW  InitData)
-{
-  PGD_ENABLEDRIVER  GDEnableDriver;
+{  
   HDC  hNewDC;
   PDC  NewDC;
-  HDC  hDC = NULL;
-  DRVENABLEDATA  DED;
-  PSURFOBJ SurfObj;
+  HDC  hDC = NULL;    
 
   /*  Check for existing DC object  */
   if ((hNewDC = DC_FindOpenDC(Driver)) != NULL)
@@ -213,44 +301,25 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
   NewDC = DC_HandleToPtr( hNewDC );
   ASSERT( NewDC );
 
-  /*  Open the miniport driver  */
-  if ((NewDC->DeviceDriver = DRIVER_FindMPDriver(Driver)) == NULL)
-  {
-    DPRINT("FindMPDriver failed\n");
-    goto Failure;
-  }
+  if (!PrimarySurfaceCreated)
+    {
+      if (!W32kCreatePrimarySurface(Driver, Device))
+	{
+	  DC_ReleasePtr( hNewDC );
+	  DC_FreeDC(hNewDC);
+	  return  NULL;
+	}
+    }
+  PrimarySurfaceCreated = TRUE;
+  NewDC->DMW = PrimarySurface.DMW;
+  NewDC->DevInfo = PrimarySurface.DevInfo;
+  NewDC->GDIInfo = PrimarySurface.GDIInfo;
+  memcpy(NewDC->FillPatternSurfaces, PrimarySurface.FillPatterns,
+	 sizeof(NewDC->FillPatternSurfaces));
+  NewDC->PDev = PrimarySurface.PDev;
+  NewDC->Surface = PrimarySurface.Handle;
+  NewDC->DriverFunctions = PrimarySurface.DriverFunctions;
 
-  /*  Get the DDI driver's entry point  */
-  /*  FIXME: Retrieve DDI driver name from registry */
-  if ((GDEnableDriver = DRIVER_FindDDIDriver(L"\\SystemRoot\\system32\\drivers\\vgaddi.dll")) == NULL)
-  {
-    DPRINT("FindDDIDriver failed\n");
-    goto Failure;
-  }
-
-  /*  Call DDI driver's EnableDriver function  */
-  RtlZeroMemory(&DED, sizeof(DED));
-
-  if (!GDEnableDriver(DDI_DRIVER_VERSION, sizeof(DED), &DED))
-  {
-    DPRINT("DrvEnableDriver failed\n");
-    goto Failure;
-  }
-  DPRINT("Building DDI Functions\n");
-
-  /*  Construct DDI driver function dispatch table  */
-  if (!DRIVER_BuildDDIFunctions(&DED, &NewDC->DriverFunctions))
-  {
-    DPRINT("BuildDDIFunctions failed\n");
-    goto Failure;
-  }
-
-  /*  Allocate a phyical device handle from the driver  */
-  if (Device != NULL)
-  {
-    DPRINT("Device in u: %u\n", Device);
-//    wcsncpy(NewDC->DMW.dmDeviceName, Device, DMMAXDEVICENAME); FIXME: this crashes everything?
-  }
   NewDC->DMW.dmSize = sizeof(NewDC->DMW);
   NewDC->DMW.dmFields = 0x000fc000;
 
@@ -264,43 +333,8 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
   NewDC->DMW.dmDisplayFrequency = 0;
 
   NewDC->w.bitsPerPixel = 4; // FIXME: set this here??
-
-  DPRINT("Enabling PDev\n");
-
-  NewDC->PDev = NewDC->DriverFunctions.EnablePDev(&NewDC->DMW,
-                                                  L"",
-                                                  HS_DDI_MAX,
-                                                  NewDC->FillPatternSurfaces,
-                                                  sizeof(NewDC->GDIInfo),
-                                                  (ULONG *) &NewDC->GDIInfo,
-                                                  sizeof(NewDC->DevInfo),
-                                                  &NewDC->DevInfo,
-                                                  NULL,
-                                                  L"",
-                                                  NewDC->DeviceDriver);
-  if (NewDC->PDev == NULL)
-  {
-    DPRINT("DrvEnablePDEV failed\n");
-    goto Failure;
-  }
-
-  DPRINT("calling completePDev\n");
-
-  /*  Complete initialization of the physical device  */
-  NewDC->DriverFunctions.CompletePDev(NewDC->PDev, NewDC);
-
-  DPRINT("calling DRIVER_ReferenceDriver\n");
-
-  DRIVER_ReferenceDriver (Driver);
-
-  DPRINT("calling EnableSurface\n");
-
-  /*  Enable the drawing surface  */
-  NewDC->Surface = NewDC->DriverFunctions.EnableSurface(NewDC->PDev); // hsurf
-  NewDC->w.hPalette = NewDC->DevInfo.hpalDefault;
-
-  SurfObj = (PSURFOBJ)AccessUserObject(NewDC->Surface);
-  SurfObj->dhpdev = NewDC->PDev;
+  
+  NewDC->w.hPalette = NewDC->DevInfo.hpalDefault;  
 
   DPRINT("Bits per pel: %u\n", NewDC->w.bitsPerPixel);
 
@@ -313,11 +347,6 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
   DC_ReleasePtr( hNewDC );
 
   return hNewDC;
-
-Failure:
-  DC_ReleasePtr( hNewDC );
-  DC_FreeDC(hNewDC);
-  return  NULL;
 }
 
 HDC STDCALL W32kCreateIC(LPCWSTR  Driver,

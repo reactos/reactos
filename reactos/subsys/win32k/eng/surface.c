@@ -190,8 +190,9 @@ EngAssociateSurface(IN HSURF Surface,
 {
   SURFOBJ *SurfObj;
   SURFGDI *SurfGDI;
+  GDIDEVICE* Device;
 
-  PDC Dc = (PDC)Dev;
+  Device = (GDIDEVICE*)Dev;
 
   SurfGDI = (PVOID)AccessInternalObject((ULONG)Surface);
   SurfObj = (PVOID)AccessUserObject((ULONG)Surface);
@@ -200,23 +201,23 @@ EngAssociateSurface(IN HSURF Surface,
   SurfObj->hdev = Dev;
 
   // Hook up specified functions
-  if(Hooks & HOOK_BITBLT)            SurfGDI->BitBlt            = Dc->DriverFunctions.BitBlt;
-  if(Hooks & HOOK_TRANSPARENTBLT)    SurfGDI->TransparentBlt	= Dc->DriverFunctions.TransparentBlt;
-  if(Hooks & HOOK_STRETCHBLT)        SurfGDI->StretchBlt        = (PFN_StretchBlt)Dc->DriverFunctions.StretchBlt;
-  if(Hooks & HOOK_TEXTOUT)           SurfGDI->TextOut           = Dc->DriverFunctions.TextOut;
-  if(Hooks & HOOK_PAINT)             SurfGDI->Paint             = Dc->DriverFunctions.Paint;
-  if(Hooks & HOOK_STROKEPATH)        SurfGDI->StrokePath        = Dc->DriverFunctions.StrokePath;
-  if(Hooks & HOOK_FILLPATH)          SurfGDI->FillPath          = Dc->DriverFunctions.FillPath;
-  if(Hooks & HOOK_STROKEANDFILLPATH) SurfGDI->StrokeAndFillPath = Dc->DriverFunctions.StrokeAndFillPath;
-  if(Hooks & HOOK_LINETO)            SurfGDI->LineTo            = Dc->DriverFunctions.LineTo;
-  if(Hooks & HOOK_COPYBITS)          SurfGDI->CopyBits          = Dc->DriverFunctions.CopyBits;
-  if(Hooks & HOOK_SYNCHRONIZE)       SurfGDI->Synchronize       = Dc->DriverFunctions.Synchronize;
+  if(Hooks & HOOK_BITBLT)            SurfGDI->BitBlt            = Device->DriverFunctions.BitBlt;
+  if(Hooks & HOOK_TRANSPARENTBLT)    SurfGDI->TransparentBlt	= Device->DriverFunctions.TransparentBlt;
+  if(Hooks & HOOK_STRETCHBLT)        SurfGDI->StretchBlt        = (PFN_StretchBlt)Device->DriverFunctions.StretchBlt;
+  if(Hooks & HOOK_TEXTOUT)           SurfGDI->TextOut           = Device->DriverFunctions.TextOut;
+  if(Hooks & HOOK_PAINT)             SurfGDI->Paint             = Device->DriverFunctions.Paint;
+  if(Hooks & HOOK_STROKEPATH)        SurfGDI->StrokePath        = Device->DriverFunctions.StrokePath;
+  if(Hooks & HOOK_FILLPATH)          SurfGDI->FillPath          = Device->DriverFunctions.FillPath;
+  if(Hooks & HOOK_STROKEANDFILLPATH) SurfGDI->StrokeAndFillPath = Device->DriverFunctions.StrokeAndFillPath;
+  if(Hooks & HOOK_LINETO)            SurfGDI->LineTo            = Device->DriverFunctions.LineTo;
+  if(Hooks & HOOK_COPYBITS)          SurfGDI->CopyBits          = Device->DriverFunctions.CopyBits;
+  if(Hooks & HOOK_SYNCHRONIZE)       SurfGDI->Synchronize       = Device->DriverFunctions.Synchronize;
   if(Hooks & HOOK_SYNCHRONIZEACCESS) SurfGDI->SynchronizeAccess = TRUE;
 
-  SurfGDI->CreateDeviceBitmap = Dc->DriverFunctions.CreateDeviceBitmap;
-  SurfGDI->SetPalette = Dc->DriverFunctions.SetPalette;
-  SurfGDI->MovePointer = Dc->DriverFunctions.MovePointer;
-  SurfGDI->SetPointerShape = (PFN_SetPointerShape)Dc->DriverFunctions.SetPointerShape;
+  SurfGDI->CreateDeviceBitmap = Device->DriverFunctions.CreateDeviceBitmap;
+  SurfGDI->SetPalette = Device->DriverFunctions.SetPalette;
+  SurfGDI->MovePointer = Device->DriverFunctions.MovePointer;
+  SurfGDI->SetPointerShape = (PFN_SetPointerShape)Device->DriverFunctions.SetPointerShape;
 
   return TRUE;
 }

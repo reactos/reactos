@@ -7,6 +7,17 @@
 #include <win32k/gdiobj.h>
 #include <win32k/path.h>
 
+typedef struct
+{
+  HANDLE Handle;
+  DHPDEV PDev;
+  DEVMODEW DMW;
+  HSURF FillPatterns[HS_DDI_MAX];
+  GDIINFO GDIInfo;
+  DEVINFO DevInfo;
+  DRIVER_FUNCTIONS DriverFunctions;
+} GDIDEVICE;
+
 /*  (RJJ) Taken from WINE  */
 typedef struct _DEVICECAPS
 {

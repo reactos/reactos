@@ -1,7 +1,7 @@
 #include "../vgaddi.h"
 
 ULONG oldx, oldy;
-PUCHAR behindCursor;
+static PUCHAR ImageBehindCursor;
 
 void vgaHideCursor(PPDEV ppdev);
 void vgaShowCursor(PPDEV ppdev);
@@ -26,7 +26,8 @@ BOOL InitPointer(PPDEV ppdev)
   ppdev->pPointerAttributes->Row = 0;
 
   // Allocate memory for the pixels behind the cursor
-  behindCursor = EngAllocMem(0, ppdev->pPointerAttributes->WidthInBytes * ppdev->pPointerAttributes->Height, ALLOC_TAG);
+  ImageBehindCursor = 
+    EngAllocMem(0, ppdev->pPointerAttributes->WidthInBytes * ppdev->pPointerAttributes->Height, ALLOC_TAG);
 
   return TRUE;
 }
@@ -81,8 +82,8 @@ DrvSetPointerShape(PSURFOBJ pso,
   if(psoColor != NULL) RtlCopyMemory(ppdev->pPointerAttributes->Pixels + 256, psoColor->pvBits, psoColor->cjBits);
   ppdev->pPointerAttributes->WidthInBytes = psoMask->lDelta;
 
-  EngFreeMem(behindCursor);
-  behindCursor = EngAllocMem(0, ppdev->pPointerAttributes->WidthInBytes * ppdev->pPointerAttributes->Height, ALLOC_TAG);
+  EngFreeMem(ImageBehindCursor);
+  ImageBehindCursor = EngAllocMem(0, ppdev->pPointerAttributes->WidthInBytes * ppdev->pPointerAttributes->Height, ALLOC_TAG);
 
   // Set the new cursor position
   ppdev->xyCursor.x = x;
@@ -111,7 +112,7 @@ void vgaHideCursor(PPDEV ppdev)
   DFB_BltToVGA(oldx, oldy,
                ppdev->pPointerAttributes->Width,
                ppdev->pPointerAttributes->Height,
-               behindCursor,
+               ImageBehindCursor,
                ppdev->pPointerAttributes->WidthInBytes);
 
   ppdev->pPointerAttributes->Enable = 0;
@@ -130,7 +131,7 @@ void vgaShowCursor(PPDEV ppdev)
   // Used to repaint background
   DFB_BltFromVGA(ppdev->xyCursor.x, ppdev->xyCursor.y,
                  ppdev->pPointerAttributes->Width, ppdev->pPointerAttributes->Height,
-                 behindCursor, ppdev->pPointerAttributes->WidthInBytes);
+                 ImageBehindCursor, ppdev->pPointerAttributes->WidthInBytes);
 
   // Display the cursor
   DFB_BltToVGA_Transparent(ppdev->xyCursor.x, ppdev->xyCursor.y,
