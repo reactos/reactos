@@ -1,8 +1,11 @@
 #undef WIN32_LEAN_AND_MEAN
+#include <win32k/win32k.h>
 #include <windows.h>
 #include <stdlib.h>
 #include <win32k/cursoricon.h>
 #include <win32k/bitmaps.h>
+#include <include/winsta.h>
+#include <include/error.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -218,16 +221,40 @@ NtUserGetCursorInfo(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 NtUserClipCursor(
   RECT *lpRect)
 {
-  UNIMPLEMENTED
+  PWINSTATION_OBJECT WinStaObject;
 
-  return 0;
+  NTSTATUS Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+				       KernelMode,
+				       0,
+				       &WinStaObject);
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT("Validation of window station handle (0x%X) failed\n",
+      PROCESS_WINDOW_STATION());
+    SetLastWin32Error(Status);
+    return FALSE;
+  }
+  if(lpRect)
+  {
+    WinStaObject->SystemCursor.CursorClipInfo.IsClipped = TRUE;
+    WinStaObject->SystemCursor.CursorClipInfo.Left = lpRect->left;
+    WinStaObject->SystemCursor.CursorClipInfo.Top = lpRect->top;
+    WinStaObject->SystemCursor.CursorClipInfo.Right = lpRect->right;
+    WinStaObject->SystemCursor.CursorClipInfo.Bottom = lpRect->bottom;
+  }
+  else
+    WinStaObject->SystemCursor.CursorClipInfo.IsClipped = FALSE;
+    
+  ObDereferenceObject(WinStaObject);
+  
+  return TRUE;
 }
 
 
@@ -263,16 +290,48 @@ NtUserFindExistingCursorIcon(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 NtUserGetClipCursor(
   RECT *lpRect)
 {
-  UNIMPLEMENTED
+  PWINSTATION_OBJECT WinStaObject;
+  
+  if(!lpRect)
+    return FALSE;
 
-  return 0;
+  NTSTATUS Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+				       KernelMode,
+				       0,
+				       &WinStaObject);
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT("Validation of window station handle (0x%X) failed\n",
+      PROCESS_WINDOW_STATION());
+    SetLastWin32Error(Status);
+    return FALSE;
+  }
+  
+  if(WinStaObject->SystemCursor.CursorClipInfo.IsClipped)
+  {
+    lpRect->left = WinStaObject->SystemCursor.CursorClipInfo.Left;
+    lpRect->top = WinStaObject->SystemCursor.CursorClipInfo.Top;
+    lpRect->right = WinStaObject->SystemCursor.CursorClipInfo.Right;
+    lpRect->bottom = WinStaObject->SystemCursor.CursorClipInfo.Bottom;
+  }
+  else
+  {
+    lpRect->left = 0;
+    lpRect->top = 0;
+    lpRect->right = NtUserGetSystemMetrics(SM_CXSCREEN);
+    lpRect->bottom = NtUserGetSystemMetrics(SM_CYSCREEN);
+  }
+    
+  ObDereferenceObject(WinStaObject);
+  
+  return TRUE;
 }
 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursor.c,v 1.8 2003/07/27 11:54:41 dwelch Exp $
+/* $Id: cursor.c,v 1.9 2003/08/24 01:12:15 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/cursor.c
@@ -30,6 +30,7 @@
 
 #include <windows.h>
 #include <user32.h>
+#include <string.h>
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -65,13 +66,25 @@ DestroyCursor(HCURSOR hCursor)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL STDCALL
 GetClipCursor(LPRECT lpRect)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  RECT rc;
+  WINBOOL res;
+  
+  if(!lpRect)
+  {
+    SetLastError(ERROR_NOACCESS);
+    return FALSE;
+  }
+  
+  RtlCopyMemory(&rc, lpRect, sizeof(RECT));
+  res = NtUserGetClipCursor(&rc);
+  RtlCopyMemory(lpRect, &rc, sizeof(RECT));
+  
+  return res;
 }
 
 
@@ -156,6 +169,25 @@ LoadCursorW(HINSTANCE hInstance,
 {
   return(LoadImageW(hInstance, lpCursorName, IMAGE_CURSOR, 0, 0,
 		    LR_DEFAULTSIZE));
+}
+
+
+/*
+ * @implemented
+ */
+WINBOOL
+STDCALL
+ClipCursor(
+  CONST RECT *lpRect)
+{
+  RECT rc;
+  if(lpRect)
+  {
+    RtlCopyMemory(&rc, lpRect, sizeof(RECT));
+    return NtUserClipCursor(&rc);
+  }
+  else
+    return NtUserClipCursor(NULL);
 }
 
 

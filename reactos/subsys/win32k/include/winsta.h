@@ -13,6 +13,8 @@
 
 #define SET_PROCESS_WINDOW_STATION(WinSta) \
   ((IoGetCurrentProcess()->Win32WindowStation) = (PVOID)(WinSta))
+  
+WINSTATION_OBJECT *InputWindowStation;
 
 
 NTSTATUS FASTCALL
@@ -52,6 +54,9 @@ struct _WINDOW_OBJECT* STDCALL
 IntGetCaptureWindow(VOID);
 VOID STDCALL
 IntSetCaptureWindow(struct _WINDOW_OBJECT* Window);
+
+BOOL FASTCALL
+IntGetWindowStationObject(PWINSTATION_OBJECT Object);
 
 #endif /* __WIN32K_WINSTA_H */
 

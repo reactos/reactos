@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winsta.c,v 1.26 2003/08/19 11:48:50 weiden Exp $
+/* $Id: winsta.c,v 1.27 2003/08/24 01:12:15 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -62,7 +62,7 @@ STATIC PWNDCLASS_OBJECT DesktopWindowClass;
 /* Currently active desktop */
 STATIC HDESK InputDesktopHandle = NULL; 
 STATIC PDESKTOP_OBJECT InputDesktop = NULL;
-STATIC PWINSTATION_OBJECT InputWindowStation = NULL;
+//STATIC PWINSTATION_OBJECT InputWindowStation = NULL;
 
 static HDC ScreenDeviceContext = NULL;
 
@@ -135,7 +135,9 @@ InitWindowStationImpl(VOID)
   UNICODE_STRING UnicodeString;
   NTSTATUS Status;
   WNDCLASSEXW wcx;
-
+  
+  InputWindowStation = NULL;
+  
   /*
    * Create the '\Windows\WindowStations' directory
    */
@@ -349,6 +351,14 @@ NtUserCreateWindowStation(PUNICODE_STRING lpszWindowStationName,
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       return((HWINSTA)0);
     }
+    
+  WinStaObject->SystemCursor.Visible = TRUE;
+  WinStaObject->SystemCursor.hCursor = (HANDLE)0;
+  WinStaObject->SystemCursor.x = 0;
+  WinStaObject->SystemCursor.y = 0;
+  WinStaObject->SystemCursor.cx = 32;
+  WinStaObject->SystemCursor.cy = 32;
+  WinStaObject->SystemCursor.CursorClipInfo.IsClipped = FALSE;
   
   DPRINT("Window station successfully created (%wZ)\n", &WindowStationName);
   
@@ -952,6 +962,19 @@ IntDesktopWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     default:
       return(0);
     }
+}
+
+BOOL FASTCALL
+IntGetWindowStationObject(PWINSTATION_OBJECT Object)
+{
+  NTSTATUS Status;
+
+  Status = ObReferenceObjectByPointer(Object,
+				     KernelMode,
+				     ExWindowStationObjectType,
+				     0);
+  
+  return NT_SUCCESS(Status);
 }
 
 /* EOF */

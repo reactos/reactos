@@ -2,6 +2,7 @@
 #define __WIN32K_MOUSE_H
 
 #include "../eng/misc.h"
+#include <include/winsta.h>
 //#include <ddk/ntddmou.h>
 
 INT  STDCALL  MouseSafetyOnDrawStart(PSURFOBJ SurfObj, PSURFGDI SurfGDI, LONG HazardX1, LONG HazardY1, LONG HazardX2, LONG HazardY2);

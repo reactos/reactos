@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.29 2003/08/20 07:45:01 gvg Exp $
+/* $Id: mouse.c,v 1.30 2003/08/24 01:12:15 weiden Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -45,8 +45,8 @@
 static BOOLEAN SafetySwitch = FALSE;
 static BOOLEAN SafetySwitch2 = FALSE;
 static BOOLEAN MouseEnabled = FALSE;
-static LONG mouse_x, mouse_y;
-static LONG mouse_width = 0, mouse_height = 0;
+//static LONG mouse_x, mouse_y;
+//static LONG mouse_width = 0, mouse_height = 0;
 static ULONG PointerStatus;
 
 static UCHAR DefaultCursor[256] = {
@@ -118,6 +118,24 @@ static UCHAR DefaultCursor[256] = {
 
 /* FUNCTIONS *****************************************************************/
 
+BOOL FASTCALL
+CheckClipCursor(LONG *x, LONG *y, PWINSTATION_OBJECT WinSta)
+{
+  if(WinSta->SystemCursor.CursorClipInfo.IsClipped)
+  {
+    if(*x > WinSta->SystemCursor.CursorClipInfo.Right)
+      *x = WinSta->SystemCursor.CursorClipInfo.Right;
+    if(*x < WinSta->SystemCursor.CursorClipInfo.Left)
+      *x = WinSta->SystemCursor.CursorClipInfo.Left;
+    if(*y > WinSta->SystemCursor.CursorClipInfo.Bottom)
+      *y = WinSta->SystemCursor.CursorClipInfo.Bottom;
+    if(*y < WinSta->SystemCursor.CursorClipInfo.Top)
+      *y = WinSta->SystemCursor.CursorClipInfo.Top;
+    return TRUE;
+  }
+  return TRUE;
+}
+
 INT STDCALL
 MouseSafetyOnDrawStart(PSURFOBJ SurfObj, PSURFGDI SurfGDI, LONG HazardX1,
 		       LONG HazardY1, LONG HazardX2, LONG HazardY2)
@@ -128,6 +146,8 @@ MouseSafetyOnDrawStart(PSURFOBJ SurfObj, PSURFGDI SurfGDI, LONG HazardX1,
 {
   RECTL MouseRect;
   LONG tmp;
+  LONG mouse_x, mouse_y;
+  LONG mouse_width, mouse_height;
 
 
   /* Mouse is not allowed to move if GDI is busy drawing */
@@ -137,6 +157,16 @@ MouseSafetyOnDrawStart(PSURFOBJ SurfObj, PSURFGDI SurfGDI, LONG HazardX1,
     {
       return(FALSE);
     }
+    
+  if(IntGetWindowStationObject(InputWindowStation))
+  {
+    mouse_x = InputWindowStation->SystemCursor.x;
+    mouse_y = InputWindowStation->SystemCursor.y;
+    mouse_width = InputWindowStation->SystemCursor.cx;
+    mouse_height = InputWindowStation->SystemCursor.cy;
+    /* Dereference window station in MouseSafetyOnDrawEnd() */
+  }
+
 
   if (SurfObj->iType != STYPE_DEVICE || MouseEnabled == FALSE)
     {
@@ -175,12 +205,18 @@ MouseSafetyOnDrawEnd(PSURFOBJ SurfObj, PSURFGDI SurfGDI)
  */
 {
   RECTL MouseRect;
+  LONG mouse_x, mouse_y;
 
-  if (SurfObj == NULL)
+  if ((SurfObj == NULL) || !InputWindowStation)
     {
       SafetySwitch2 = FALSE;
       return(FALSE);
     }
+    
+  mouse_x = InputWindowStation->SystemCursor.x;
+  mouse_y = InputWindowStation->SystemCursor.y;
+  
+  ObDereferenceObject(InputWindowStation);
 
   if (SurfObj->iType != STYPE_DEVICE || MouseEnabled == FALSE)
     {
@@ -213,6 +249,7 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
  */
 {
   ULONG i;
+  LONG mouse_x, mouse_y, mouse_ox, mouse_oy;
   LONG mouse_cx = 0, mouse_cy = 0;
   HDC hDC = IntGetScreenDC();
   PDC dc;
@@ -223,14 +260,24 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
   LARGE_INTEGER LargeTickCount;
   ULONG TickCount;
   static ULONG ButtonsDown = 0;
-
-  KeQueryTickCount(&LargeTickCount);
-  TickCount = LargeTickCount.u.LowPart;
-
-  if (hDC == 0)
+  
+  if ((hDC == 0) || !InputWindowStation)
   {
     return;
   }
+  
+  if(IntGetWindowStationObject(InputWindowStation))
+  {
+    mouse_ox = mouse_x = InputWindowStation->SystemCursor.x;
+    mouse_oy = mouse_y = InputWindowStation->SystemCursor.y;
+    ObDereferenceObject(InputWindowStation);
+  }
+  else
+    return;
+
+
+  KeQueryTickCount(&LargeTickCount);
+  TickCount = LargeTickCount.u.LowPart;
 
   dc = DC_LockDc(hDC);
   SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface);
@@ -249,6 +296,13 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
     Msg.time = TickCount;
     Msg.pt.x = mouse_x + mouse_cx;
     Msg.pt.y = mouse_y + mouse_cy;
+    
+    if(IntGetWindowStationObject(InputWindowStation))
+    {
+      CheckClipCursor(&Msg.pt.x, &Msg.pt.y, InputWindowStation);
+      ObDereferenceObject(InputWindowStation);
+    }
+    
     if ((0 != Data[i].LastX) || (0 != Data[i].LastY))
     {
       MsqInsertSystemMessage(&Msg);
@@ -295,6 +349,11 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
   /* If the mouse moved then move the pointer. */
   if ((mouse_cx != 0 || mouse_cy != 0) && MouseEnabled)
   {
+    if(!IntGetWindowStationObject(InputWindowStation))
+    {
+       return;
+    }
+    
     mouse_x += mouse_cx;
     mouse_y += mouse_cy;
 
@@ -302,9 +361,16 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
     mouse_y = max(mouse_y, 0);
     mouse_x = min(mouse_x, SurfObj->sizlBitmap.cx - 20);
     mouse_y = min(mouse_y, SurfObj->sizlBitmap.cy - 20);
+    
+    CheckClipCursor(&mouse_x, &mouse_y, InputWindowStation);
+    
+    InputWindowStation->SystemCursor.x = mouse_x;
+    InputWindowStation->SystemCursor.y = mouse_y;
+    
+    ObDereferenceObject(InputWindowStation);
 
-
-    if (SafetySwitch == FALSE && SafetySwitch2 == FALSE)
+    if (SafetySwitch == FALSE && SafetySwitch2 == FALSE &&
+        ((mouse_ox != mouse_x) || (mouse_oy != mouse_y)))
     {
       SurfGDI->MovePointer(SurfObj, mouse_x, mouse_y, &MouseRect);
     }
@@ -322,31 +388,44 @@ EnableMouse(HDC hDisplayDC)
   SIZEL MouseSize;
   RECTL MouseRect;
 
-  if( hDisplayDC )
+  if( hDisplayDC && InputWindowStation)
   {
+    if(!IntGetWindowStationObject(InputWindowStation))
+    {
+       MouseEnabled = FALSE;
+       return;
+    }
     dc = DC_LockDc(hDisplayDC);
     SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface);
     SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
     DC_UnlockDc( hDisplayDC );
 
     /* Create the default mouse cursor. */
-    mouse_width = 32;
-    mouse_height = 32;
+    InputWindowStation->SystemCursor.cx = 32;
+    InputWindowStation->SystemCursor.cy = 32;
     MouseSize.cx = 32;
     MouseSize.cy = 64;
     hMouseSurf = EngCreateBitmap(MouseSize, 4, BMF_1BPP, BMF_TOPDOWN, DefaultCursor);
     MouseSurf = (PSURFOBJ)AccessUserObject((ULONG) hMouseSurf);
 
     /* Tell the display driver to set the pointer shape. */
-#if 0
-    mouse_x = SurfObj->sizlBitmap.cx / 2;
-    mouse_y = SurfObj->sizlBitmap.cy / 2;
+#if 1
+    InputWindowStation->SystemCursor.x = SurfObj->sizlBitmap.cx / 2;
+    InputWindowStation->SystemCursor.y = SurfObj->sizlBitmap.cy / 2;
 #else
-    mouse_x = 320;
-    mouse_y = 240;
+    InputWindowStation->SystemCursor.x = 320;
+    InputWindowStation->SystemCursor.y = 240;
 #endif
+    CheckClipCursor(&InputWindowStation->SystemCursor.x, 
+                    &InputWindowStation->SystemCursor.y,
+                    InputWindowStation);
+    ObDereferenceObject(InputWindowStation);
+
     PointerStatus = SurfGDI->SetPointerShape(SurfObj, MouseSurf, NULL, NULL,
-                                             0, 0, mouse_x, mouse_y, &MouseRect,
+                                             0, 0, 
+                                             InputWindowStation->SystemCursor.x, 
+                                             InputWindowStation->SystemCursor.y, 
+                                             &MouseRect,
                                              SPS_CHANGE);
 
     MouseEnabled = (SPS_ACCEPT_EXCLUDE == PointerStatus ||

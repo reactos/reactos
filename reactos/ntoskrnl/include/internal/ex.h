@@ -8,6 +8,24 @@
 #define NTOS_MODE_KERNEL
 #include <ntos.h>
 
+typedef struct _CURSORCLIP_INFO
+{
+  BOOL IsClipped;
+  UINT Left;
+  UINT Top;
+  UINT Right;
+  UINT Bottom;
+} CURSORCLIP_INFO, *PCURSORCLIP_INFO;
+
+typedef struct _SYSTEM_CURSORINFO
+{
+  BOOL Visible;
+  HANDLE hCursor;
+  LONG x, y;
+  LONG cx, cy;
+  CURSORCLIP_INFO CursorClipInfo;
+} SYSTEM_CURSORINFO, *PSYSTEM_CURSORINFO;
+
 typedef struct _WINSTATION_OBJECT
 {   
   CSHORT Type;
@@ -19,6 +37,7 @@ typedef struct _WINSTATION_OBJECT
   PRTL_ATOM_TABLE AtomTable;
   PVOID HandleTable;
   HANDLE SystemMenuTemplate;
+  SYSTEM_CURSORINFO SystemCursor;
   struct _DESKTOP_OBJECT* ActiveDesktop;
   /* FIXME: Clipboard */
 } WINSTATION_OBJECT, *PWINSTATION_OBJECT;
