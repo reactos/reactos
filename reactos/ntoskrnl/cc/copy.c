@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.26 2004/06/20 02:10:07 vizzini Exp $
+/* $Id: copy.c,v 1.27 2004/06/21 04:11:44 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -284,7 +284,6 @@ WriteCacheSegment(PCACHE_SEGMENT CacheSeg)
   return(STATUS_SUCCESS);
 }
 
-/* STUBS */
 
 /*
  * @unimplemented
@@ -300,442 +299,6 @@ CcCanIWrite (
 	return FALSE;
 }
 
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-CcDeferWrite (
-	IN	PFILE_OBJECT		FileObject,
-	IN	PCC_POST_DEFERRED_WRITE	PostRoutine,
-	IN	PVOID			Context1,
-	IN	PVOID			Context2,
-	IN	ULONG			BytesToWrite,
-	IN	BOOLEAN			Retrying
-	)
-{
-	UNIMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-BOOLEAN
-STDCALL
-CcFastCopyRead (
-	IN	PFILE_OBJECT		FileObject,
-	IN	ULONG			FileOffset,
-	IN	ULONG			Length,
-	IN	ULONG			PageCount,
-	OUT	PVOID			Buffer,
-	OUT	PIO_STATUS_BLOCK	IoStatus
-	)
-{
-	UNIMPLEMENTED;
-	return FALSE;
-}
-/*
- * @unimplemented
- */
-BOOLEAN
-STDCALL
-CcFastCopyWrite (
-	IN	PFILE_OBJECT		FileObject,
-	IN	PLARGE_INTEGER		FileOffset,
-	IN	ULONG			Length,
-	IN	PVOID			Buffer
-	)
-{
-	UNIMPLEMENTED;
-	return FALSE;
-}
-/*
- * @unimplemented
- */
-LARGE_INTEGER
-STDCALL
-CcGetDirtyPages (
-	IN	PVOID			LogHandle,
-	IN	PDIRTY_PAGE_ROUTINE	DirtyPageRoutine,
-	IN	PVOID			Context1,
-	IN	PVOID			Context2
-	)
-{
-	UNIMPLEMENTED;
-
-	LARGE_INTEGER i; 
-	i.QuadPart = 0;
-	return i;
-}
-/*
- * @unimplemented
- */
-PFILE_OBJECT
-STDCALL
-CcGetFileObjectFromBcb (
-	IN	PVOID	Bcb
-	)
-{
-	UNIMPLEMENTED;
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-CcInitializeCacheMap (
-	IN	PFILE_OBJECT			FileObject,
-	IN	PCC_FILE_SIZES			FileSizes,
-	IN	BOOLEAN				PinAccess,
-	IN	PCACHE_MANAGER_CALLBACKS	CallBacks,
-	IN	PVOID				LazyWriterContext
-	)
-{
-	UNIMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-BOOLEAN
-STDCALL
-CcIsThereDirtyData (
-	IN	PVPB	Vpb
-	)
-{
-	UNIMPLEMENTED;
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-LARGE_INTEGER
-STDCALL
-CcGetLsnForFileObject (
-	IN	PFILE_OBJECT	FileObject,
-	OUT	PLARGE_INTEGER	OldestLsn OPTIONAL
-	)
-{
-	UNIMPLEMENTED;
-
-	LARGE_INTEGER i; 
-	i.QuadPart = 0;
-	return i;
-}
-
-/*
- * @unimplemented
- */
-LARGE_INTEGER
-STDCALL
-CcGetFlushedValidData (
-    IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
-    IN BOOLEAN BcbListHeld
-    )
-{
-	UNIMPLEMENTED;
-
-	LARGE_INTEGER i; 
-	i.QuadPart = 0;
-	return i;
-}
-
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-CcMdlRead (
-	IN	PFILE_OBJECT		FileObject,
-	IN	PLARGE_INTEGER		FileOffset,
-	IN	ULONG			Length,
-	OUT	PMDL			* MdlChain,
-	OUT	PIO_STATUS_BLOCK	IoStatus
-	)
-{
-	UNIMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-CcMdlWriteComplete (
-	IN	PFILE_OBJECT		FileObject,
-	IN	PLARGE_INTEGER		FileOffset,
-	IN	PMDL			MdlChain
-	)
-{
-	UNIMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-CcMdlWriteAbort (
-    IN PFILE_OBJECT FileObject,
-    IN PMDL MdlChain
-    )
-{
-	UNIMPLEMENTED;
-}
-
-
-/*
- * @unimplemented
- */
-BOOLEAN
-STDCALL
-CcPinMappedData (
-	IN	PFILE_OBJECT		FileObject,
-	IN	PLARGE_INTEGER		FileOffset,
-	IN	ULONG			Length,
-	IN	BOOLEAN			Wait,
-	OUT	PVOID			* Bcb
-	)
-{
-	UNIMPLEMENTED;
-	return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOLEAN
-STDCALL
-CcPinRead (
-	IN	PFILE_OBJECT		FileObject,
-	IN	PLARGE_INTEGER		FileOffset,
-	IN	ULONG			Length,
-	IN	BOOLEAN			Wait,
-	OUT	PVOID			* Bcb,
-	OUT	PVOID			* Buffer
-	)
-{
-	UNIMPLEMENTED;
-	return FALSE;
-}
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-CcPrepareMdlWrite (
-	IN	PFILE_OBJECT		FileObject,
-	IN	PLARGE_INTEGER		FileOffset,
-	IN	ULONG			Length,
-	OUT	PMDL			* MdlChain,
-	OUT	PIO_STATUS_BLOCK	IoStatus
-	)
-{
-	UNIMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-BOOLEAN
-STDCALL
-CcPreparePinWrite (
-	IN	PFILE_OBJECT		FileObject,
-	IN	PLARGE_INTEGER		FileOffset,
-	IN	ULONG			Length,
-	IN	BOOLEAN			Zero,
-	IN	BOOLEAN			Wait,
-	OUT	PVOID			* Bcb,
-	OUT	PVOID			* Buffer
-	)
-{
-	UNIMPLEMENTED;
-	return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOLEAN
-STDCALL
-CcPurgeCacheSection (
-	IN	PSECTION_OBJECT_POINTERS	SectionObjectPointer,
-	IN	PLARGE_INTEGER			FileOffset OPTIONAL,
-	IN	ULONG				Length,
-	IN	BOOLEAN				UninitializeCacheMaps
-	)
-{
-	UNIMPLEMENTED;
-	return FALSE;
-}
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-CcRepinBcb (
-	IN	PVOID	Bcb
-	)
-{
-	UNIMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-CcRemapBcb (
-    IN PVOID Bcb
-    )
-{
-	UNIMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-CcScheduleReadAhead (
-	IN	PFILE_OBJECT		FileObject,
-	IN	PLARGE_INTEGER		FileOffset,
-	IN	ULONG			Length
-	)
-{
-	UNIMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-CcSetAdditionalCacheAttributes (
-	IN	PFILE_OBJECT	FileObject,
-	IN	BOOLEAN		DisableReadAhead,
-	IN	BOOLEAN		DisableWriteBehind
-	)
-{
-	UNIMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-CcSetBcbOwnerPointer (
-	IN	PVOID	Bcb,
-	IN	PVOID	Owner
-	)
-{
-	UNIMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-CcSetDirtyPageThreshold (
-	IN	PFILE_OBJECT	FileObject,
-	IN	ULONG		DirtyPageThreshold
-	)
-{
-	UNIMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-CcSetLogHandleForFile (
-	IN	PFILE_OBJECT	FileObject,
-	IN	PVOID		LogHandle,
-	IN	PFLUSH_TO_LSN	FlushToLsnRoutine
-	)
-{
-	UNIMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-CcSetReadAheadGranularity (
-	IN	PFILE_OBJECT	FileObject,
-	IN	ULONG		Granularity
-	)
-{
-	UNIMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-BOOLEAN
-STDCALL
-CcUninitializeCacheMap (
-	IN	PFILE_OBJECT			FileObject,
-	IN	PLARGE_INTEGER			TruncateSize OPTIONAL,
-	IN	PCACHE_UNINITIALIZE_EVENT	UninitializeCompleteEvent OPTIONAL
-	)
-{
-	UNIMPLEMENTED;
-	return FALSE;
-}
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-CcUnpinDataForThread (
-	IN	PVOID			Bcb,
-	IN	ERESOURCE_THREAD	ResourceThreadId
-	)
-{
-	UNIMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-CcUnpinRepinnedBcb (
-	IN	PVOID			Bcb,
-	IN	BOOLEAN			WriteThrough,
-	IN	PIO_STATUS_BLOCK	IoStatus
-	)
-{
-	UNIMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-CcWaitForCurrentLazyWriterActivity (
-    VOID
-    )
-{
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
-}
-
-/* STUBS END!!! */
 
 /*
  * @implemented
@@ -979,6 +542,69 @@ CcCopyWrite (IN PFILE_OBJECT FileObject,
 }
 
 /*
+ * @unimplemented
+ */
+VOID
+STDCALL
+CcDeferWrite (
+	IN	PFILE_OBJECT		FileObject,
+	IN	PCC_POST_DEFERRED_WRITE	PostRoutine,
+	IN	PVOID			Context1,
+	IN	PVOID			Context2,
+	IN	ULONG			BytesToWrite,
+	IN	BOOLEAN			Retrying
+	)
+{
+	UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+STDCALL
+CcFastCopyRead (
+	IN	PFILE_OBJECT		FileObject,
+	IN	ULONG			FileOffset,
+	IN	ULONG			Length,
+	IN	ULONG			PageCount,
+	OUT	PVOID			Buffer,
+	OUT	PIO_STATUS_BLOCK	IoStatus
+	)
+{
+	UNIMPLEMENTED;
+	return FALSE;
+}
+/*
+ * @unimplemented
+ */
+BOOLEAN
+STDCALL
+CcFastCopyWrite (
+	IN	PFILE_OBJECT		FileObject,
+	IN	PLARGE_INTEGER		FileOffset,
+	IN	ULONG			Length,
+	IN	PVOID			Buffer
+	)
+{
+	UNIMPLEMENTED;
+	return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+CcWaitForCurrentLazyWriterActivity (
+    VOID
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
  * @implemented
  */
 BOOLEAN STDCALL
@@ -1139,4 +765,3 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
     }
   return(TRUE);
 }
-

@@ -1,4 +1,4 @@
-/* $Id: pin.c,v 1.14 2003/12/30 18:52:03 fireball Exp $
+/* $Id: pin.c,v 1.15 2004/06/21 04:11:44 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -113,15 +113,57 @@ CcMapData (IN PFILE_OBJECT FileObject,
 }
 
 /*
- * @implemented
+ * @unimplemented
  */
-VOID STDCALL
-CcUnpinData (IN PVOID Bcb)
+BOOLEAN
+STDCALL
+CcPinMappedData (
+	IN	PFILE_OBJECT		FileObject,
+	IN	PLARGE_INTEGER		FileOffset,
+	IN	ULONG			Length,
+	IN	BOOLEAN			Wait,
+	OUT	PVOID			* Bcb
+	)
 {
-  PINTERNAL_BCB iBcb = Bcb;
-  CcRosReleaseCacheSegment(iBcb->CacheSegment->Bcb, iBcb->CacheSegment, TRUE, 
-			   iBcb->Dirty, FALSE);
-  ExFreeToNPagedLookasideList(&iBcbLookasideList, iBcb);
+	UNIMPLEMENTED;
+	return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+STDCALL
+CcPinRead (
+	IN	PFILE_OBJECT		FileObject,
+	IN	PLARGE_INTEGER		FileOffset,
+	IN	ULONG			Length,
+	IN	BOOLEAN			Wait,
+	OUT	PVOID			* Bcb,
+	OUT	PVOID			* Buffer
+	)
+{
+	UNIMPLEMENTED;
+	return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+STDCALL
+CcPreparePinWrite (
+	IN	PFILE_OBJECT		FileObject,
+	IN	PLARGE_INTEGER		FileOffset,
+	IN	ULONG			Length,
+	IN	BOOLEAN			Zero,
+	IN	BOOLEAN			Wait,
+	OUT	PVOID			* Bcb,
+	OUT	PVOID			* Buffer
+	)
+{
+	UNIMPLEMENTED;
+	return FALSE;
 }
 
 /*
@@ -135,3 +177,28 @@ CcSetDirtyPinnedData (IN PVOID Bcb,
    iBcb->Dirty = TRUE;
 }
 
+
+/*
+ * @implemented
+ */
+VOID STDCALL
+CcUnpinData (IN PVOID Bcb)
+{
+  PINTERNAL_BCB iBcb = Bcb;
+  CcRosReleaseCacheSegment(iBcb->CacheSegment->Bcb, iBcb->CacheSegment, TRUE, 
+			   iBcb->Dirty, FALSE);
+  ExFreeToNPagedLookasideList(&iBcbLookasideList, iBcb);
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+CcUnpinDataForThread (
+	IN	PVOID			Bcb,
+	IN	ERESOURCE_THREAD	ResourceThreadId
+	)
+{
+	UNIMPLEMENTED;
+}

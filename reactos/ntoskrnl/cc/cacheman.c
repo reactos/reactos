@@ -40,3 +40,125 @@ CcInit(VOID)
 {
   CcInitView();
 }
+
+/*
+ * @unimplemented
+ */
+LARGE_INTEGER
+STDCALL
+CcGetFlushedValidData (
+    IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
+    IN BOOLEAN BcbListHeld
+    )
+{
+	UNIMPLEMENTED;
+
+	LARGE_INTEGER i; 
+	i.QuadPart = 0;
+	return i;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+CcRepinBcb (
+	IN	PVOID	Bcb
+	)
+{
+	UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+CcRemapBcb (
+    IN PVOID Bcb
+    )
+{
+	UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+CcScheduleReadAhead (
+	IN	PFILE_OBJECT		FileObject,
+	IN	PLARGE_INTEGER		FileOffset,
+	IN	ULONG			Length
+	)
+{
+	UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+CcSetAdditionalCacheAttributes (
+	IN	PFILE_OBJECT	FileObject,
+	IN	BOOLEAN		DisableReadAhead,
+	IN	BOOLEAN		DisableWriteBehind
+	)
+{
+	UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+CcSetBcbOwnerPointer (
+	IN	PVOID	Bcb,
+	IN	PVOID	Owner
+	)
+{
+	UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+CcSetDirtyPageThreshold (
+	IN	PFILE_OBJECT	FileObject,
+	IN	ULONG		DirtyPageThreshold
+	)
+{
+	UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+CcSetReadAheadGranularity (
+	IN	PFILE_OBJECT	FileObject,
+	IN	ULONG		Granularity
+	)
+{
+	UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+CcUnpinRepinnedBcb (
+	IN	PVOID			Bcb,
+	IN	BOOLEAN			WriteThrough,
+	IN	PIO_STATUS_BLOCK	IoStatus
+	)
+{
+	UNIMPLEMENTED;
+}
