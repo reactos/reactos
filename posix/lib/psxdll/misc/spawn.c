@@ -1,4 +1,4 @@
-/* $Id: spawn.c,v 1.3 2002/03/10 17:09:46 hyperion Exp $
+/* $Id: spawn.c,v 1.4 2002/03/11 20:46:38 hyperion Exp $
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -27,9 +27,10 @@
 #include <stddef.h>
 #include <string.h>
 #include <inttypes.h>
-#include <pthread.h>
+#include <unistd.h>
 #include <psx/debug.h>
 #include <psx/pdata.h>
+#include <psx/spawn.h>
 #include <psx/stdlib.h>
 
 NTSTATUS STDCALL __PdxSpawnPosixProcess
@@ -42,22 +43,28 @@ NTSTATUS STDCALL __PdxSpawnPosixProcess
  IN __PPDX_PDATA ProcessData
 )
 {
- __PPDX_SERIALIZED_PDATA   pspdProcessData;
- IO_STATUS_BLOCK           isbStatus;
- PROCESS_BASIC_INFORMATION pbiProcessInfo;
- ANSI_STRING               strStartEntry;
- PVOID                     pStartAddress;
- INITIAL_TEB               itInitialTeb;
- CONTEXT   ctxThreadContext;
- CLIENT_ID ciClientId;
+ __PPDX_SERIALIZED_PDATA      pspdProcessData;
+ IO_STATUS_BLOCK              isbStatus;
+ PROCESS_BASIC_INFORMATION    pbiProcessInfo;
+ ANSI_STRING                  strStartEntry;
+ PVOID                        pStartAddress;
+ INITIAL_TEB                  itInitialTeb;
+ PRTL_USER_PROCESS_PARAMETERS pppProcessParameters;
+ CONTEXT    ctxThreadContext;
+ CLIENT_ID  ciClientId;
  NTSTATUS nErrCode;
  HANDLE   hExeFile;
  HANDLE   hExeImage;
  HANDLE   hProcess;
  HANDLE   hThread;
- PVOID    pDestBuffer;
+ PVOID    pPdataBuffer = 0;
+ PVOID    pParamsBuffer = 0;
  ULONG    nDestBufferSize;
  ULONG    nCurFilDesOffset;
+ ULONG    nVirtualSize;
+ ULONG    nCommitSize;
+ PVOID    pCommitBottom;
+ ULONG    nOldProtect;
  int      i;
 
  /* STEP 1: map executable image in memory */
@@ -79,7 +86,7 @@ NTSTATUS STDCALL __PdxSpawnPosixProcess
   return (nErrCode);
  }
 
- /* 1.2: create a memory section for the file */
+ /* 1.2: create an image section for the file */
  nErrCode = NtCreateSection
  (
   &hExeImage,
@@ -124,22 +131,31 @@ NTSTATUS STDCALL __PdxSpawnPosixProcess
   return (nErrCode);
  }
 
- /* STEP 3: write process environment */
- /* 3.1: serialize the process data for transfer */
+ /* STEP 3: write process environment and process parameters */
+ /* 3.1: convert process data into process parameters */
+ __PdxProcessDataToProcessParameters
+ (
+  &pppProcessParameters,
+  ProcessData,
+  FileObjectAttributes->ObjectName
+ );
+
+ /* 3.2: serialize the process data for transfer */
  /* FIXME: the serialized data can be allocated and written directly in the
     destination process */
  __PdxSerializeProcessData(ProcessData, &pspdProcessData);
 
- /* 3.1.1: adjust some fields */
+ /* 3.2.1: adjust some fields */
  pspdProcessData->ProcessData.Spawned = TRUE;
 
- /* 3.2: allocate memory in the destination process */
+ /* 3.3: allocate memory in the destination process */
+ /* 3.3.1: process data */
  nDestBufferSize = pspdProcessData->AllocSize;
 
  nErrCode = NtAllocateVirtualMemory
  (
   hProcess,
-  &pDestBuffer,
+  &pPdataBuffer,
   0,
   &nDestBufferSize,
   MEM_COMMIT,
@@ -153,7 +169,27 @@ NTSTATUS STDCALL __PdxSpawnPosixProcess
   goto undoPData;
  }
 
- /* 3.3: get pointer to the PEB */
+ /* 3.3.2: process parameters */
+ nDestBufferSize = pppProcessParameters->Length;
+
+ nErrCode = NtAllocateVirtualMemory
+ (
+  hProcess,
+  &pParamsBuffer,
+  0,
+  &nDestBufferSize,
+  MEM_COMMIT,
+  PAGE_READWRITE
+ );
+
+ /* failure */
+ if(!NT_SUCCESS(nErrCode))
+ {
+  ERR("NtAllocateVirtualMemory() failed with status 0x%08X\n", nErrCode);
+  goto undoPData;
+ }
+
+ /* 3.4: get pointer to the PEB */
  nErrCode = NtQueryInformationProcess
  (
   hProcess,
@@ -170,12 +206,13 @@ NTSTATUS STDCALL __PdxSpawnPosixProcess
   goto undoPData;
  }
 
- /* 3.4: write pointer to process data in the SubSystemData field of the PEB */
+ /* 3.5: write pointers in the PEB */
+ /* 3.5.1: process data */
  nErrCode = NtWriteVirtualMemory
  (
   hProcess,
   (PVOID)((ULONG)pbiProcessInfo.PebBaseAddress + offsetof(PEB, SubSystemData)),
-  &pDestBuffer,
+  &pPdataBuffer,
   sizeof(PVOID),
   NULL
  );
@@ -187,11 +224,28 @@ NTSTATUS STDCALL __PdxSpawnPosixProcess
   goto undoPData;
  }
 
- /* 3.5: write the process data */
+ /* 3.5.2: process parameters */
  nErrCode = NtWriteVirtualMemory
  (
   hProcess,
-  pDestBuffer,
+  (PVOID)((ULONG)pbiProcessInfo.PebBaseAddress + offsetof(PEB, ProcessParameters)),
+  &pParamsBuffer,
+  sizeof(PVOID),
+  NULL
+ );
+
+ /* failure */
+ if(!NT_SUCCESS(nErrCode))
+ {
+  ERR("NtWriteVirtualMemory() failed with status 0x%08X\n", nErrCode);
+  goto undoPData;
+ }
+
+ /* 3.6: write the process data */
+ nErrCode = NtWriteVirtualMemory
+ (
+  hProcess,
+  pPdataBuffer,
   pspdProcessData,
   pspdProcessData->AllocSize,
   NULL
@@ -207,9 +261,12 @@ undoPData:
    MEM_RELEASE
   );
 
+ /* destroy process parameters */
+ RtlDestroyProcessParameters(pppProcessParameters);
+
  /* failure */
  if(!NT_SUCCESS(nErrCode))
-  return (nErrCode);
+  goto failProcess;
 
  /* STEP 4: duplicate handles */
  /* 4.1: handles in the structure itself */
@@ -219,7 +276,7 @@ undoPData:
   NtCurrentProcess(),
   ProcessData->RootHandle,
   hProcess,
-  (PHANDLE)((ULONG)pDestBuffer + offsetof(__PDX_PDATA, RootHandle)),
+  (PHANDLE)((ULONG)pPdataBuffer + offsetof(__PDX_PDATA, RootHandle)),
   0,
   0,
   DUPLICATE_SAME_ACCESS | 4 /* | DUPLICATE_SAME_ATTRIBUTES */ /* FIXME */
@@ -260,18 +317,83 @@ undoPData:
     ProcessData->FdTable.Descriptors[i].FileHandle,
     hProcess,
     (PHANDLE)(
-     (ULONG)pDestBuffer + nCurFilDesOffset + offsetof(__fildes_t, FileHandle)
+     (ULONG)pPdataBuffer + nCurFilDesOffset + offsetof(__fildes_t, FileHandle)
     ),
     0,
     0,
     DUPLICATE_SAME_ACCESS | 4 /* | DUPLICATE_SAME_ATTRIBUTES */ /* FIXME */
    );  
- 
+
    /* failure */
    if(!NT_SUCCESS(nErrCode))
    {
     ERR("NtDuplicateObject() failed with status 0x%08X\n", nErrCode);
     goto failProcess;
+   }
+
+   /* duplicate standard handles */
+   /* standard input */
+   if(i == STDIN_FILENO)
+   {
+    nErrCode = NtDuplicateObject
+    (
+     NtCurrentProcess(),
+     ProcessData->FdTable.Descriptors[i].FileHandle,
+     hProcess,
+     (PHANDLE)((ULONG)pParamsBuffer + offsetof(RTL_USER_PROCESS_PARAMETERS, InputHandle)),
+     0,
+     0,
+     DUPLICATE_SAME_ACCESS | 4 /* | DUPLICATE_SAME_ATTRIBUTES */ /* FIXME */
+    );  
+ 
+    /* failure */
+    if(!NT_SUCCESS(nErrCode))
+    {
+     ERR("NtDuplicateObject() failed with status 0x%08X\n", nErrCode);
+     goto failProcess;
+    }
+   }
+   /* standard output */
+   else if(i == STDOUT_FILENO)
+   {
+    nErrCode = NtDuplicateObject
+    (
+     NtCurrentProcess(),
+     ProcessData->FdTable.Descriptors[i].FileHandle,
+     hProcess,
+     (PHANDLE)((ULONG)pParamsBuffer + offsetof(RTL_USER_PROCESS_PARAMETERS, OutputHandle)),
+     0,
+     0,
+     DUPLICATE_SAME_ACCESS | 4 /* | DUPLICATE_SAME_ATTRIBUTES */ /* FIXME */
+    );  
+ 
+    /* failure */
+    if(!NT_SUCCESS(nErrCode))
+    {
+     ERR("NtDuplicateObject() failed with status 0x%08X\n", nErrCode);
+     goto failProcess;
+    }
+   }
+   /* standard error */
+   else if(i == STDERR_FILENO)
+   {
+    nErrCode = NtDuplicateObject
+    (
+     NtCurrentProcess(),
+     ProcessData->FdTable.Descriptors[i].FileHandle,
+     hProcess,
+     (PHANDLE)((ULONG)pParamsBuffer + offsetof(RTL_USER_PROCESS_PARAMETERS, ErrorHandle)),
+     0,
+     0,
+     DUPLICATE_SAME_ACCESS | 4 /* | DUPLICATE_SAME_ATTRIBUTES */ /* FIXME */
+    );  
+ 
+    /* failure */
+    if(!NT_SUCCESS(nErrCode))
+    {
+     ERR("NtDuplicateObject() failed with status 0x%08X\n", nErrCode);
+     goto failProcess;
+    }
    }
   }
 
@@ -279,9 +401,10 @@ undoPData:
  /* 5.1: get thunk routine's address */
  RtlInitAnsiString(&strStartEntry, "LdrInitializeThunk");
 
+#if 1
  nErrCode = LdrGetProcedureAddress
  (
-  (PVOID)NTDLL_BASE,
+  (PVOID)0x78460000, /* NTDLL_BASE */
   &strStartEntry,
   0,
   &pStartAddress
@@ -293,25 +416,22 @@ undoPData:
   ERR("LdrGetProcedureAddress() failed with status 0x%08X\n", nErrCode);
   goto failProcess;
  }
+#else
+ pStartAddress = LdrGetProcedureAddress;
+#endif
 
- /* 5.2: set up the initial TEB */
+ /* 5.2: set up the stack */
  itInitialTeb.StackAllocate = NULL;
+ nVirtualSize = 0x100000;
+ nCommitSize = 0x100000 - PAGESIZE;
 
- /* FIXME: allow the caller to specify these values */
- itInitialTeb.StackReserve = 0x100000;
- itInitialTeb.StackCommit = itInitialTeb.StackReserve - PAGESIZE;
-
- /* guard page */
- itInitialTeb.StackCommit += PAGESIZE;
-
- /* 5.2.1: set up the stack */
- /* 5.2.1.1: reserve the stack */
+ /* 5.2.1: reserve the stack */
  nErrCode = NtAllocateVirtualMemory
  (
   hProcess,
   &itInitialTeb.StackAllocate,
   0,
-  &itInitialTeb.StackReserve,
+  &nVirtualSize,
   MEM_RESERVE,
   PAGE_READWRITE
  );
@@ -324,18 +444,22 @@ undoPData:
  }
 
  itInitialTeb.StackBase =
-  (PVOID)((ULONG)itInitialTeb.StackAllocate + itInitialTeb.StackReserve);
+  (PVOID)((ULONG)itInitialTeb.StackAllocate + nVirtualSize);
 
  itInitialTeb.StackLimit =
-  (PVOID)((ULONG)itInitialTeb.StackBase - itInitialTeb.StackCommit);
+  (PVOID)((ULONG)itInitialTeb.StackBase - nCommitSize);
 
- /* 5.2.1.2: commit the stack */
+ /* 5.2.2: commit the stack */
+ nVirtualSize = nCommitSize + PAGESIZE;
+ pCommitBottom =
+  (PVOID)((ULONG)itInitialTeb.StackBase - nVirtualSize);
+
  nErrCode = NtAllocateVirtualMemory
  (
   hProcess,
-  &itInitialTeb.StackLimit,
+  &pCommitBottom,
   0,
-  &itInitialTeb.StackCommit,
+  &nVirtualSize,
   MEM_COMMIT,
   PAGE_READWRITE
  );
@@ -347,14 +471,16 @@ undoPData:
   goto failProcess;
  }
 
- /* 5.2.1.3: set up the guard page */
+ /* 5.2.3: set up the guard page */
+ nVirtualSize = PAGESIZE;
+
  nErrCode = NtProtectVirtualMemory
  (
   hProcess,
-  itInitialTeb.StackLimit,
-  PAGESIZE,
+  &pCommitBottom,
+  &nVirtualSize,
   PAGE_GUARD | PAGE_READWRITE,
-  NULL
+  &nOldProtect
  );
 
  /* failure */
@@ -364,7 +490,7 @@ undoPData:
   goto failProcess;
  }
 
- /* 5.2.1.4: initialize the thread context */
+ /* 5.3: initialize the thread context */
  memset(&ctxThreadContext, 0, sizeof(ctxThreadContext));
 
  ctxThreadContext.Eip = (ULONG)pStartAddress;
@@ -379,10 +505,10 @@ undoPData:
  ctxThreadContext.Esp = (ULONG)itInitialTeb.StackBase - 5 * 4;
  ctxThreadContext.EFlags = (1 << 1) + (1 << 9);
 
- /* 5.3: create the thread object */
+ /* 5.4: create the thread object */
  nErrCode = NtCreateThread
  (
-  NULL,
+  ThreadHandle,
   THREAD_ALL_ACCESS,
   NULL,
   hProcess,
