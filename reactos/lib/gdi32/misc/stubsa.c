@@ -1,4 +1,4 @@
-/* $Id: stubsa.c,v 1.16 2003/07/21 19:05:52 royce Exp $
+/* $Id: stubsa.c,v 1.17 2003/07/21 19:21:48 royce Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -737,7 +737,7 @@ GetEnhMetaFileDescriptionA(
 {
   HANDLE hHeap;
   NTSTATUS Status;
-  LPWSTR lpszDescriptionW;
+  LPWSTR lpszDescriptionW = NULL;
   UINT rc;
 
   if ( lpszDescription && cchBuffer )
