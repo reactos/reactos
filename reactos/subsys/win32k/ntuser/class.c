@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.34 2003/08/19 11:48:49 weiden Exp $
+/* $Id: class.c,v 1.35 2003/08/19 23:41:20 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -182,10 +182,23 @@ NtUserGetClassInfo(HINSTANCE hInst,
 	wcex->hCursor = Class->hCursor;
 	wcex->hbrBackground = Class->hbrBackground;
 	if(Class->lpszMenuName)
-  	  RtlCopyUnicodeString((PUNICODE_STRING)wcex->lpszMenuName, Class->lpszMenuName);
+	{
+	  if(!IS_INTRESOURCE((LPCWSTR)Class->lpszMenuName))
+  	    RtlCopyUnicodeString((PUNICODE_STRING)wcex->lpszMenuName, Class->lpszMenuName);
+      else
+        wcex->lpszMenuName = (LPCWSTR)Class->lpszMenuName;
+    }
     else
       wcex->lpszMenuName = (LPCWSTR)NULL;
-	wcex->lpszClassName = (LPCWSTR)Class->lpszClassName;
+	if(Class->lpszClassName)
+	{
+	  if(!IS_ATOM((LPCWSTR)Class->lpszClassName))
+  	    RtlCopyUnicodeString((PUNICODE_STRING)wcex->lpszClassName, Class->lpszClassName);
+      else
+        wcex->lpszClassName = (LPCWSTR)Class->lpszClassName;
+    }
+    else
+      wcex->lpszClassName = (LPCWSTR)NULL;
 	wcex->hIconSm = Class->hIconSm;
 	return 1;
 }
