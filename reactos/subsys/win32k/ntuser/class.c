@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.62.2.1 2004/12/24 17:43:23 weiden Exp $
+/* $Id: class.c,v 1.62.2.2 2004/12/27 00:39:23 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -158,7 +158,7 @@ NtUserGetClassInfo(
       return 0;
    }
 
-   lpWndClassEx->cbSize = sizeof(LPWNDCLASSEXW);
+   lpWndClassEx->cbSize = sizeof(WNDCLASSEXW);
    lpWndClassEx->style = Class->style;
    if (Ansi)
       lpWndClassEx->lpfnWndProc = Class->lpfnWndProcA;
