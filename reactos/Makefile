@@ -81,17 +81,8 @@ SYS_APPS = autochk services shell winlogon gstart usetup
 # rpcss eventlog
 SYS_SVC = rpcss eventlog
 
-# Test applications
-# alive apc args atomtest bench consume copymove count dump_shared_data
-# event file gditest hello isotest lpc mstest mutex nptest
-# pteb regtest sectest shm simple thread vmtest winhello
-TEST_APPS = alive apc args atomtest bench consume copymove count dump_shared_data \
-            event file gditest hello isotest lpc mstest mutex nptest \
-            pteb regtest sectest shm simple thread tokentest vmtest winhello dibtest
+APPS = tests testsets utils
 
-# Console system utilities
-# cabman cat net objdir partinfo pice ps sc stats
-UTIL_APPS = cat objdir partinfo sc stats
 
 # External (sub)systems for ReactOS
 # rosapps wine posix os2 (requires c++) java (non-existant)
@@ -108,7 +99,7 @@ KERNEL_DRIVERS = $(DRIVERS_LIB) $(DEVICE_DRIVERS) $(INPUT_DRIVERS) $(FS_DRIVERS)
 
 all: tools dk implib $(COMPONENTS) $(HALS) $(BUS) $(DLLS) $(SUBSYS) \
      $(LOADERS) $(KERNEL_DRIVERS) $(SYS_APPS) $(SYS_SVC) \
-     $(TEST_APPS) $(UTIL_APPS) $(EXT_MODULES)
+     $(APPS) $(EXT_MODULES)
 
 #config: $(TOOLS:%=%_config)
 
@@ -119,14 +110,14 @@ implib: $(COMPONENTS:%=%_implib) $(HALS:%=%_implib) $(BUS:%=%_implib) \
         $(DLLS:%=%_implib) $(LOADERS:%=%_implib) \
         $(KERNEL_DRIVERS:%=%_implib) $(SUBSYS:%=%_implib) \
         $(SYS_APPS:%=%_implib) $(SYS_SVC:%=%_implib) \
-        $(TEST_APPS:%=%_implib) $(UTIL_APPS:%=%_implib) \
-        $(EXT_MODULES:%=%_implib)
+        $(APPS:%=%_implib) $(EXT_MODULES:%=%_implib)
 
 clean: tools dk_clean $(HALS:%=%_clean) \
        $(COMPONENTS:%=%_clean) $(BUS:%=%_clean) $(DLLS:%=%_clean) \
        $(LOADERS:%=%_clean) $(KERNEL_DRIVERS:%=%_clean) $(SUBSYS:%=%_clean) \
-       $(SYS_APPS:%=%_clean) $(SYS_SVC:%=%_clean) $(TEST_APPS:%=%_clean) \
-       $(UTIL_APPS:%=%_clean) $(NET_APPS:%=%_clean) $(EXT_MODULES:%=%_clean) \
+       $(SYS_APPS:%=%_clean) $(SYS_SVC:%=%_clean) \
+       $(NET_APPS:%=%_clean) \
+       $(APPS:%=%_clean) $(EXT_MODULES:%=%_clean) \
        clean_after tools_clean
 
 clean_after:
@@ -137,14 +128,14 @@ install: tools install_dirs install_before \
          $(DLLS:%=%_install) $(LOADERS:%=%_install) \
          $(KERNEL_DRIVERS:%=%_install) $(SUBSYS:%=%_install) \
          $(SYS_APPS:%=%_install) $(SYS_SVC:%=%_install) \
-         $(TEST_APPS:%=%_install) $(UTIL_APPS:%=%_install) \
-         $(EXT_MODULES:%=%_install)
+         $(APPS:%=%_install) $(EXT_MODULES:%=%_install)
 
 dist: $(TOOLS_PATH)/rcopy$(EXE_POSTFIX) dist_clean dist_dirs \
       $(HALS:%=%_dist) $(COMPONENTS:%=%_dist) $(BUS:%=%_dist) $(DLLS:%=%_dist) \
       $(LOADERS:%=%_dist) $(KERNEL_DRIVERS:%=%_dist) $(SUBSYS:%=%_dist) \
-      $(SYS_APPS:%=%_dist) $(SYS_SVC:%=%_dist) $(TEST_APPS:%=%_dist) \
-      $(UTIL_APPS:%=%_dist) $(NET_APPS:%=%_dist) $(EXT_MODULES:%=%_dist)
+      $(SYS_APPS:%=%_dist) $(SYS_SVC:%=%_dist) \
+      $(NET_APPS:%=%_dist) \
+      $(APPS:%=%_dist) $(EXT_MODULES:%=%_dist)
 
 .PHONY: all depends implib clean clean_before install dist
 
@@ -194,45 +185,27 @@ $(SYS_SVC:%=%_install): %_install:
 
 
 #
-# Test Applications
+# Applications
 #
-$(TEST_APPS): %:
-	make -C apps/tests/$*
-
-$(TEST_APPS:%=%_implib): %_implib:
-	make -C apps/tests/$* implib
-
-$(TEST_APPS:%=%_clean): %_clean:
-	make -C apps/tests/$* clean
-
-$(TEST_APPS:%=%_dist): %_dist:
-	make -C apps/tests/$* dist
-
-$(TEST_APPS:%=%_install): %_install:
-	make -C apps/tests/$* install
-
-.PHONY: $(TEST_APPS) $(TEST_APPS:%=%_implib) $(TEST_APPS:%=%_clean) $(TEST_APPS:%=%_install) $(TEST_APPS:%=%_dist)
-
-
 #
-# Utility Applications
+# Extra (optional system) Applications
 #
-$(UTIL_APPS): %:
-	make -C apps/utils/$*
+$(APPS): %:
+	make -C apps/$*
 
-$(UTIL_APPS:%=%_implib): %_implib:
-	make -C apps/utils/$* implib
+$(APPS:%=%_implib): %_implib:
+	make -C apps/$* implib
 
-$(UTIL_APPS:%=%_clean): %_clean:
-	make -C apps/utils/$* clean
+$(APPS:%=%_clean): %_clean:
+	make -C apps/$* clean
 
-$(UTIL_APPS:%=%_dist): %_dist:
-	make -C apps/utils/$* dist
+$(APPS:%=%_dist): %_dist:
+	make -C apps/$* dist
 
-$(UTIL_APPS:%=%_install): %_install:
-	make -C apps/utils/$* install
+$(APPS:%=%_install): %_install:
+	make -C apps/$* install
 
-.PHONY: $(UTIL_APPS) $(UTIL_APPS:%=%_implib) $(UTIL_APPS:%=%_clean) $(UTIL_APPS:%=%_install) $(UTIL_APPS:%=%_dist)
+.PHONY: $(APPS) $(APPS:%=%_implib) $(APPS:%=%_clean) $(APPS:%=%_install) $(APPS:%=%_dist)
 
 
 #
