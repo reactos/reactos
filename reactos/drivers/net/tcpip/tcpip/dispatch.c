@@ -202,6 +202,8 @@ VOID DispDataRequestComplete(
     TI_DbgPrint(DEBUG_IRP, ("Completing IRP at (0x%X).\n", Irp));
 
     IRPFinish(Irp, Irp->IoStatus.Status);
+
+    TI_DbgPrint(DEBUG_IRP, ("Done Completing IRP\n"));
 }
 
 

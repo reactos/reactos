@@ -409,8 +409,6 @@ NTSTATUS TCPSendData
     TI_DbgPrint(MID_TRACE,("Connection->SocketContext = %x\n",
 			   Connection->SocketContext));
 
-    OskitDumpBuffer( BufferData, PacketSize );
-
     Status = OskitTCPSend( Connection->SocketContext, 
 			   BufferData, PacketSize, (PUINT)DataUsed, 0 );
 

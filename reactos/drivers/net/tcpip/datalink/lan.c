@@ -225,6 +225,8 @@ VOID STDCALL LanReceiveWorker( PVOID Context ) {
 		     IPPacket.ContigSize, IPPacket.TotalSize,
 		     BytesTransferred));
 
+	/*OskitDumpBuffer( IPPacket.Header, IPPacket.TotalSize );*/
+
         PacketType = ((PETH_HEADER)IPPacket.Header)->EType;
 	IPPacket.Header = ((PCHAR)IPPacket.Header) + sizeof(ETH_HEADER);
 	IPPacket.Position = sizeof(ETH_HEADER);
@@ -373,17 +375,17 @@ NDIS_STATUS STDCALL ProtocolReceive(
     if ((LookaheadBufferSize + HeaderBufferSize) < PacketSize)
     {
         TI_DbgPrint(DEBUG_DATALINK, ("pretransfer LookaheadBufferSize %d packsize %d bufferdata %x\n",LookaheadBufferSize,PacketSize, BufferData));
-        /* Get the data */
-
-	*BufferData = 0;
-
-	TI_DbgPrint(DEBUG_DATALINK, ("Poked the buffer\n"));
-
+	/* The following is this way because we want a nice, whole packet
+	 * in NdisPacket, including ethernet header (which this code assumes)
+	 * is in there.  We are indeed retransferring some bytes.  Eventually,
+	 * I will change the downstream functions to take the payload only. 
+	 * 
+	 * Below: Count the ethernet header size, but don't count the crc */
         NdisTransferData(&NdisStatus,
                          Adapter->NdisHandle,
                          MacReceiveContext,
-                         0,
-                         PacketSize,
+			 0,
+                         PacketSize + sizeof(ETH_HEADER) - sizeof(ULONG),
                          NdisPacket,
                          &BytesTransferred);
     } else {
@@ -574,7 +576,7 @@ VOID LANTransmit(
 		   ((PCHAR)LinkAddress)[5] & 0xff));
 	}
 
-	OskitDumpBuffer( Data, Size );
+	/*OskitDumpBuffer( Data, Size );*/
 
 	TcpipAcquireSpinLock( &Adapter->Lock, &OldIrql );
 	TI_DbgPrint(MID_TRACE, ("NdisSend\n"));

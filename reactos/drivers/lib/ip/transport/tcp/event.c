@@ -43,7 +43,9 @@ int TCPSocketState(void *ClientData,
 	    Complete = Bucket->Request.RequestNotifyObject;
 	    TI_DbgPrint(MID_TRACE,
 			("Completing Connect Request %x\n", Bucket->Request));
+	    TcpipRecursiveMutexLeave( &TCPLock );
 	    Complete( Bucket->Request.RequestContext, STATUS_SUCCESS, 0 );
+	    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
 	    /* Frees the bucket allocated in TCPConnect */
 	    PoolFreeBuffer( Bucket );
 	}
@@ -107,8 +109,10 @@ int TCPSocketState(void *ClientData,
 			    ("Completing Receive Request: %x\n", 
 			     Bucket->Request));
 
+		TcpipRecursiveMutexLeave( &TCPLock );
 		Complete( Bucket->Request.RequestContext,
 			  STATUS_SUCCESS, Received );
+		TcpipRecursiveMutexEnter( &TCPLock, TRUE );
 	    } else if( Status == STATUS_PENDING || 
 		       (Status == STATUS_SUCCESS && Received == 0) ) {
 		InsertHeadList( &Connection->ReceiveRequest,
@@ -118,7 +122,9 @@ int TCPSocketState(void *ClientData,
 		TI_DbgPrint(MID_TRACE,
 			    ("Completing Receive request: %x %x\n",
 			     Bucket->Request, Status));
+		TcpipRecursiveMutexLeave( &TCPLock );
 		Complete( Bucket->Request.RequestContext, Status, 0 );
+		TcpipRecursiveMutexEnter( &TCPLock, TRUE );
 	    }
 	}
     } 
@@ -145,9 +151,6 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
     IP_PACKET Packet = { 0 };
     IP_ADDRESS RemoteAddress, LocalAddress;
     PIPv4_HEADER Header;
-
-    TI_DbgPrint(MID_TRACE,("TCP OUTPUT (%x:%d):\n", data, len));
-    OskitDumpBuffer( data, len );
 
     if( *data == 0x45 ) { /* IPv4 */
 	Header = (PIPv4_HEADER)data;

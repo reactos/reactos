@@ -150,7 +150,7 @@ UINT CommonPrefixLength(
 
     /* Find first non-matching bit */
     Bitmask = 0x80;
-    for (j = 0; (Addr1[i] & Bitmask) != (Addr2[i] & Bitmask); j++)
+    for (j = 0; (Addr1[i] & Bitmask) == (Addr2[i] & Bitmask); j++)
         Bitmask >>= 1;
 
     return 8 * i + j;

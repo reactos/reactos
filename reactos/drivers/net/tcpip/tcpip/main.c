@@ -9,12 +9,12 @@
  */
 #include "precomp.h"
 
-//#define NDEBUG
+#define NDEBUG
 
 #ifndef NDEBUG
 DWORD DebugTraceLevel = 0x7fffffff;
 #else
-DWORD DebugTraceLevel = 0;
+DWORD DebugTraceLevel = 0; /*DEBUG_IP | DEBUG_PBUFFER | DEBUG_DATALINK;*/
 #endif /* NDEBUG */
 
 PDEVICE_OBJECT TCPDeviceObject   = NULL;
