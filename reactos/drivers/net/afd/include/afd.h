@@ -1,4 +1,4 @@
-/* $Id: afd.h,v 1.18.10.1 2004/07/09 04:41:18 arty Exp $
+/* $Id: afd.h,v 1.18.10.2 2004/07/14 16:54:14 arty Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -49,12 +49,17 @@
 
 #define FUNCTION_CONNECT                0
 #define FUNCTION_RECV                   1
-#define FUNCTION_SEND                   2
-#define FUNCTION_CLOSE                  3
-#define MAX_FUNCTIONS                   4
+#define FUNCTION_RECV_DATAGRAM          2
+#define FUNCTION_SEND                   3
+#define FUNCTION_CLOSE                  4
+#define MAX_FUNCTIONS                   5
+
+#define IN_FLIGHT_REQUESTS              3
 
 #define DEFAULT_SEND_WINDOW_SIZE        16384
 #define DEFAULT_RECEIVE_WINDOW_SIZE     16384
+
+#define SGID_CONNECTIONLESS             1 /* XXX Find this flag */
 
 typedef struct _AFD_MAPBUF {
     PVOID BufferAddress;
@@ -96,9 +101,16 @@ typedef struct _AFD_DATA_WINDOW {
     UINT BytesUsed, Size, Content;
 } AFD_DATA_WINDOW, *PAFD_DATA_WINDOW;
 
+typedef struct _AFD_STORED_DATAGRAM {
+    LIST_ENTRY ListEntry;
+    UINT Len;
+    PTA_ADDRESS Address;
+    CHAR Buffer[1];
+} AFD_STORED_DATAGRAM, *PAFD_STORED_DATAGRAM;
+
 typedef struct _AFD_FCB {
     BOOLEAN Locked;
-    UINT State;
+    UINT State, Flags;
     KIRQL OldIrql;
     UINT LockCount;
     PVOID CurrentThread;
@@ -106,9 +118,8 @@ typedef struct _AFD_FCB {
     PFILE_OBJECT FileObject;
     PAFD_DEVICE_EXTENSION DeviceExt;
     BOOLEAN DelayedAccept;
-    PTRANSPORT_ADDRESS LocalAddress;
-    PTRANSPORT_ADDRESS RemoteAddress;
-    IO_STATUS_BLOCK ReceiveIosb;
+    PTRANSPORT_ADDRESS LocalAddress, RemoteAddress;
+    PTDI_CONNECTION_INFORMATION AddressFrom;
     AFD_TDI_OBJECT AddressFile, Connection;
     AFD_IN_FLIGHT_REQUEST ListenIrp, ReceiveIrp, SendIrp;
     AFD_DATA_WINDOW Send, Recv;
@@ -120,6 +131,7 @@ typedef struct _AFD_FCB {
     UINT ContextSize;
     PIRP PendingTdiIrp;
     LIST_ENTRY PendingIrpList[MAX_FUNCTIONS];
+    LIST_ENTRY DatagramList;
 } AFD_FCB, *PAFD_FCB;
 
 /* bind.c */
@@ -179,11 +191,18 @@ NTSTATUS DDKAPI ReceiveComplete
 ( PDEVICE_OBJECT DeviceObject,
   PIRP Irp,
   PVOID Context );
+
+NTSTATUS DDKAPI PacketSocketRecvComplete
+( PDEVICE_OBJECT DeviceObject,
+  PIRP Irp,
+  PVOID Context );
+
 NTSTATUS STDCALL
 AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp, 
 			   PIO_STACK_LOCATION IrpSp, BOOLEAN Short);
 NTSTATUS STDCALL
-AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp );
+AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp, 
+			PIO_STACK_LOCATION IrpSp );
 
 /* select.c */
 
@@ -232,12 +251,34 @@ NTSTATUS TdiSend
   PIO_COMPLETION_ROUTINE  CompletionRoutine,
   PVOID CompletionContext);
 
+NTSTATUS TdiReceiveDatagram(
+    PIRP *Irp,
+    PFILE_OBJECT TransportObject,
+    USHORT Flags,
+    PCHAR Buffer,
+    UINT BufferLength,
+    PTDI_CONNECTION_INFORMATION From,
+    PIO_STATUS_BLOCK Iosb,
+    PIO_COMPLETION_ROUTINE CompletionRoutine,
+    PVOID CompletionContext);
+
+NTSTATUS TdiSendDatagram(
+    PIRP *Irp,
+    PFILE_OBJECT TransportObject,
+    PCHAR Buffer,
+    UINT BufferLength,
+    PTDI_CONNECTION_INFORMATION To,
+    PIO_STATUS_BLOCK Iosb,
+    PIO_COMPLETION_ROUTINE CompletionRoutine,
+    PVOID CompletionContext);
+
 /* write.c */
 
 NTSTATUS STDCALL
 AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp, 
 			    PIO_STACK_LOCATION IrpSp, BOOLEAN Short);
 NTSTATUS STDCALL
-AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp, 
+			 PIO_STACK_LOCATION IrpSp);
 
 #endif/*_AFD_H*/

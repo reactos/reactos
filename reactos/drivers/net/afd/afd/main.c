@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.1.2.1 2004/07/09 04:41:18 arty Exp $
+/* $Id: main.c,v 1.1.2.2 2004/07/14 16:54:14 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/main.c
@@ -89,28 +89,14 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("Initializing the new FCB @ %x (FileObject %x)\n", FCB, FileObject));
 
-    FCB->Locked = FALSE;
-    FCB->PollState = 0;
+    RtlZeroMemory( FCB, sizeof( *FCB ) );
+
+    FCB->Flags = ConnectInfo->Flags;
     FCB->State = SOCKET_STATE_CREATED;
     FCB->FileObject = FileObject;
     FCB->DeviceExt = DeviceExt;
-    FCB->CurrentThread = NULL;
-    FCB->LockCount = 0;
-    FCB->DelayedAccept = FALSE;
-    FCB->LocalAddress = FCB->RemoteAddress = NULL;
     FCB->Recv.Size = DEFAULT_RECEIVE_WINDOW_SIZE;
-    FCB->Recv.BytesUsed = 0;
-    FCB->Recv.Content = 0;
-    FCB->Recv.Window = NULL;
     FCB->Send.Size = DEFAULT_SEND_WINDOW_SIZE;
-    FCB->Send.BytesUsed = 0;
-    FCB->Send.Content = 0;
-    FCB->Send.Window = NULL;
-    FCB->Context = 0;
-    FCB->ContextSize = 0;
-
-    RtlZeroMemory( &FCB->Connection, sizeof(FCB->Connection) );
-    RtlZeroMemory( &FCB->AddressFile, sizeof(FCB->AddressFile) );
 
     KeInitializeSpinLock( &FCB->SpinLock );
     ExInitializeFastMutex( &FCB->Mutex );
@@ -153,22 +139,45 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    
+    UINT i;
+    PAFD_IN_FLIGHT_REQUEST InFlightRequest[IN_FLIGHT_REQUESTS];
+
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );    
+
+    InFlightRequest[0] = &FCB->ListenIrp;
+    InFlightRequest[1] = &FCB->ReceiveIrp;
+    InFlightRequest[2] = &FCB->SendIrp;
 
     AFD_DbgPrint(MID_TRACE,
 		 ("AfdClose(DeviceObject %p Irp %p)\n", DeviceObject, Irp));
     
     AFD_DbgPrint(MID_TRACE,("FCB %x\n", FCB));
 
-    FCB->PollState |= AFD_EVENT_CLOSE;
-    FCB->State = SOCKET_STATE_CLOSED;
-    PollReeval( FCB->DeviceExt, FCB->FileObject );
-
     FileObject->FsContext = NULL;
-    
+    FCB->PollState |= AFD_EVENT_CLOSE;
+    PollReeval( FCB->DeviceExt, FCB->FileObject ); 
+    /* After PoolReeval, this FCB should not be involved in any outstanding
+     * poll requests */
+
+    /* Cancel our pending requests */
+    for( i = 0; i < IN_FLIGHT_REQUESTS; i++ ) {
+	NTSTATUS Status = STATUS_NO_SUCH_FILE;
+	InFlightRequest[i]->InFlightRequest->IoStatus.Status = Status;
+	InFlightRequest[i]->InFlightRequest->IoStatus.Information = 0;
+	IoCancelIrp( InFlightRequest[i]->InFlightRequest );
+    }
+
     SocketStateUnlock( FCB );
     
+    if( FCB->Recv.Window ) 
+	ExFreePool( FCB->Recv.Window );
+    if( FCB->Send.Window )
+	ExFreePool( FCB->Send.Window );
+    if( FCB->AddressFrom ) 
+	ExFreePool( FCB->AddressFrom );
+    if( FCB->LocalAddress )
+	ExFreePool( FCB->LocalAddress );
+
     ExFreePool(FCB->TdiDeviceName.Buffer);
     ExFreePool(FCB);
     
@@ -234,14 +243,14 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	    return AfdSelect( DeviceObject, Irp, IrpSp );
 
 	case IOCTL_AFD_RECVFROM:
-	    return AfdPacketSocketReadData( DeviceObject, Irp );
+	    return AfdPacketSocketReadData( DeviceObject, Irp, IrpSp );
 
 	case IOCTL_AFD_SEND:
 	    return AfdConnectedSocketWriteData( DeviceObject, Irp, IrpSp, 
 						FALSE );
 
 	case IOCTL_AFD_SENDTO:
-	    return AfdPacketSocketWriteData( DeviceObject, Irp );
+	    return AfdPacketSocketWriteData( DeviceObject, Irp, IrpSp );
 
 	case IOCTL_AFD_GET_INFO:
 	    return AfdGetInfo( DeviceObject, Irp, IrpSp );

@@ -1,4 +1,4 @@
-/* $Id: read.c,v 1.1.2.1 2004/07/09 04:41:18 arty Exp $
+/* $Id: read.c,v 1.1.2.2 2004/07/14 16:54:14 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/read.c
@@ -6,6 +6,8 @@
  * PROGRAMMER:       Art Yerkes (ayerkes@speakeasy.net)
  * UPDATE HISTORY:
  * 20040708 Created
+ *
+ * Improve buffering code
  */
 #include "afd.h"
 #include "tdi_proto.h"
@@ -118,6 +120,7 @@ NTSTATUS DDKAPI ReceiveComplete
 	if( FCB->Recv.Window && !FCB->Recv.Content ) {
 	    AFD_DbgPrint(MID_TRACE,
 			 ("Exhausted our buffer.  Requesting new: %x\n", FCB));
+
 	    Status = TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
 				 IrpSp->FileObject,
 				 TDI_RECEIVE_NORMAL,
@@ -184,9 +187,142 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     }
 }
 
+
 NTSTATUS STDCALL
-AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp ) {
-    Irp->IoStatus.Information = 0;
-    return STATUS_END_OF_FILE;
+SatisfyPacketRecvRequest( PAFD_FCB FCB, PIRP Irp, 
+			  PAFD_STORED_DATAGRAM DatagramRecv ) {
+    NTSTATUS Status = STATUS_SUCCESS;
+    PAFD_RECV_REQ RecvReq = Irp->AssociatedIrp.SystemBuffer;
+    UINT CopyLen = 0;
+
+    CopyLen = MIN(DatagramRecv->Len, RecvReq->BufferArray[0].len);
+    RtlCopyMemory( RecvReq->BufferArray[0].buf, DatagramRecv->Buffer,
+		   CopyLen );
+    
+    Status = Irp->IoStatus.Status = STATUS_SUCCESS;
+    Irp->IoStatus.Information = CopyLen;
+    ExFreePool( DatagramRecv );
+    
+    return Status;
 }
 
+NTSTATUS DDKAPI
+PacketSocketRecvComplete(
+  PDEVICE_OBJECT DeviceObject,
+  PIRP Irp,
+  PVOID Context ) {
+    NTSTATUS Status = STATUS_SUCCESS;
+    PAFD_FCB FCB = Context;
+    PIRP NextIrp;
+    PLIST_ENTRY ListEntry;
+    PAFD_RECV_REQ RecvReq;
+    PAFD_STORED_DATAGRAM DatagramRecv;
+    UINT DGSize = Irp->IoStatus.Information + sizeof( AFD_STORED_DATAGRAM );
+
+    AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
+
+    if( !SocketAcquireStateLock( FCB ) ) {
+	SocketStateUnlock( FCB );
+	return STATUS_UNSUCCESSFUL;
+    }
+    
+    DatagramRecv = ExAllocatePool( NonPagedPool, DGSize );
+
+    if( DatagramRecv ) {
+	DatagramRecv->Len = Irp->IoStatus.Information;
+	RtlCopyMemory( DatagramRecv->Buffer, FCB->Recv.Window,
+		       DatagramRecv->Len );
+	InsertTailList( &FCB->DatagramList, &DatagramRecv->ListEntry );
+    } else Status = STATUS_NO_MEMORY;
+
+    /* Satisfy as many requests as we can */
+
+    while( NT_SUCCESS(Status) && 
+	   !IsListEmpty( &FCB->DatagramList ) && 
+	   !IsListEmpty( &FCB->PendingIrpList[FUNCTION_RECV_DATAGRAM] ) ) {
+	ListEntry = RemoveHeadList( &FCB->DatagramList );
+	DatagramRecv = CONTAINING_RECORD( ListEntry, AFD_STORED_DATAGRAM,
+					  ListEntry );
+	ListEntry = RemoveHeadList
+	    ( &FCB->PendingIrpList[FUNCTION_RECV_DATAGRAM] );
+	NextIrp = CONTAINING_RECORD( ListEntry, IRP, Tail.Overlay.ListEntry );
+	RecvReq = NextIrp->AssociatedIrp.SystemBuffer;
+
+	if( DatagramRecv->Len > RecvReq->BufferArray[0].len && 
+	    !(RecvReq->TdiFlags & TDI_RECEIVE_PARTIAL) ) {
+	    InsertHeadList( &FCB->DatagramList,
+			    &DatagramRecv->ListEntry );
+	    Status = NextIrp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+	    NextIrp->IoStatus.Information = DatagramRecv->Len;
+	    UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount );
+	    IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
+	} else {
+	    Status = SatisfyPacketRecvRequest( FCB, NextIrp, DatagramRecv );
+	    UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount );
+	    IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
+	}
+    }
+
+    if( !IsListEmpty( &FCB->DatagramList ) ) { 
+	FCB->PollState |= AFD_EVENT_RECEIVE;
+	PollReeval( FCB->DeviceExt, FCB->FileObject );
+    }
+
+    /* Now relaunch the datagram request */
+    Status = TdiReceiveDatagram
+	( &FCB->ReceiveIrp.InFlightRequest,
+	  FCB->AddressFile.Object,
+	  0,
+	  FCB->Recv.Window,
+	  FCB->Recv.Size,
+	  FCB->AddressFrom,
+	  &FCB->ReceiveIrp.Iosb,
+	  PacketSocketRecvComplete,
+	  FCB );
+
+    SocketStateUnlock( FCB );
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS STDCALL
+AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp, 
+			PIO_STACK_LOCATION IrpSp ) {
+    NTSTATUS Status = STATUS_SUCCESS;
+    PFILE_OBJECT FileObject = IrpSp->FileObject;
+    PAFD_FCB FCB = FileObject->FsContext;
+    PAFD_RECV_REQ RecvReq = Irp->AssociatedIrp.SystemBuffer;
+    PLIST_ENTRY ListEntry;
+    PAFD_STORED_DATAGRAM DatagramRecv;
+
+    AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
+
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
+    
+    if( !IsListEmpty( &FCB->DatagramList ) ) {
+	ListEntry = RemoveHeadList( &FCB->DatagramList );
+	DatagramRecv = CONTAINING_RECORD( ListEntry, AFD_STORED_DATAGRAM,
+					  ListEntry );
+	if( DatagramRecv->Len > RecvReq->BufferArray[0].len && 
+	    !(RecvReq->TdiFlags & TDI_RECEIVE_PARTIAL) ) {
+	    InsertHeadList( &FCB->DatagramList,
+			    &DatagramRecv->ListEntry );
+	    Status = Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+	    Irp->IoStatus.Information = DatagramRecv->Len;
+	    return UnlockAndMaybeComplete
+		( FCB, Status, Irp, RecvReq->BufferArray[0].len, NULL );
+	} else {
+	    if( IsListEmpty( &FCB->DatagramList ) ) 
+		FCB->PollState &= ~AFD_EVENT_RECEIVE;
+
+	    Status = SatisfyPacketRecvRequest( FCB, Irp, DatagramRecv );
+	    return UnlockAndMaybeComplete
+		( FCB, Status, Irp, Irp->IoStatus.Information, NULL );
+	}
+    } else {
+	RecvReq->BufferArray = LockBuffers( RecvReq->BufferArray, 
+					    RecvReq->BufferCount,
+					    TRUE );
+	return LeaveIrpUntilLater( FCB, Irp, FUNCTION_RECV_DATAGRAM );
+    }
+}

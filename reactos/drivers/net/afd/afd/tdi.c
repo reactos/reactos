@@ -847,115 +847,6 @@ NTSTATUS TdiSend
     return Status;
 }
 
-
-NTSTATUS TdiSendDatagram(
-    PFILE_OBJECT TransportObject,
-    PTA_ADDRESS Address,
-    PMDL Mdl,
-    ULONG BufferSize)
-/*
- * FUNCTION: Sends a datagram
- * ARGUMENTS:
- *     TransportObject = Pointer to transport object
- *     Address         = Remote address to send data to
- *     Mdl             = MDL of buffer to send
- *     BufferSize      = Length of buffer
- * RETURNS:
- *     Status of operation
- */
-{
-    PTDI_CONNECTION_INFORMATION ConnectInfo;
-    PDEVICE_OBJECT DeviceObject;
-    IO_STATUS_BLOCK Iosb;
-    NTSTATUS Status;
-    KEVENT Event;
-    PIRP Irp;
-
-    AFD_DbgPrint(MAX_TRACE, ("Called.\n"));
-
-    DeviceObject = IoGetRelatedDeviceObject(TransportObject);
-    if (!DeviceObject) {
-        AFD_DbgPrint(MIN_TRACE, ("Bad device object.\n"));
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    AFD_DbgPrint(MAX_TRACE, 
-		 ("TdiSendDatagram: TansportObject = %08x\n", TransportObject));
-
-    TdiBuildConnectionInfo( &ConnectInfo, Address );
-
-    AFD_DbgPrint(MAX_TRACE, ("Point B\n"));
-
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-
-    AFD_DbgPrint(MAX_TRACE, ("Point 0\n"));
-
-    Irp = TdiBuildInternalDeviceControlIrp(TDI_SEND_DATAGRAM,   /* Sub function */
-                                           DeviceObject,        /* Device object */
-                                           TransportObject,     /* File object */
-                                           &Event,              /* Event */
-                                           &Iosb);              /* Status */
-    if (!Irp) {
-        AFD_DbgPrint(MIN_TRACE, ("TdiBuildInternalDeviceControlIrp() failed.\n"));
-        ExFreePool(ConnectInfo);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    AFD_DbgPrint(MAX_TRACE, ("Point 1\n"));
-
-#if 0
-    Mdl = IoAllocateMdl(Buffer,     /* Virtual address of buffer */
-                        BufferSize, /* Length of buffer */
-                        FALSE,      /* Not secondary */
-                        FALSE,      /* Don't charge quota */
-                        NULL);      /* Don't use IRP */
-    if (!Mdl) {
-        AFD_DbgPrint(MIN_TRACE, ("IoAllocateMdl() failed.\n"));
-        IoFreeIrp(Irp);
-        ExFreePool(ConnectInfo);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-#ifdef _MSC_VER
-    try {
-#endif
-        MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
-#ifdef _MSC_VER
-    } except(EXCEPTION_EXECUTE_HANDLER) {
-        AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
-        IoFreeIrp(Irp);
-        ExFreePool(ConnectInfo);
-        return STATUS_UNSUCCESSFUL;
-    }
-#endif
-#endif
-
-    AFD_DbgPrint(MAX_TRACE, ("TdiBuildSendDatagram()\n"));
-    TdiBuildSendDatagram(Irp,               /* I/O Request Packet */
-                         DeviceObject,      /* Device object */
-                         TransportObject,   /* File object */
-                         NULL,              /* Completion routine */
-                         NULL,              /* Completion context */
-                         Mdl,               /* Descriptor for data buffer */
-                         BufferSize,        /* Size of data to send */
-                         ConnectInfo);      /* Connection information */
-    AFD_DbgPrint(MAX_TRACE, ("Returned from TdiBuildSendDatagram\n"));
-
-    Status = TdiCall(Irp, DeviceObject, &Event, &Iosb);
-    AFD_DbgPrint(MAX_TRACE, ("Returned from TdiCall\n"));
-
-#if 0
-    MmUnlockPages(Mdl);
-
-    IoFreeMdl(Mdl);
-#endif
-
-    ExFreePool(ConnectInfo);
-    AFD_DbgPrint(MAX_TRACE, ("Leaving %08x.\n", Status));
-
-    return Status;
-}
-
-
 NTSTATUS TdiReceive(
     PIRP *Irp,
     PFILE_OBJECT TransportObject,
@@ -1034,11 +925,15 @@ NTSTATUS TdiReceive(
 
 
 NTSTATUS TdiReceiveDatagram(
+    PIRP *Irp,
     PFILE_OBJECT TransportObject,
-    PTA_ADDRESS From,
-    PTA_ADDRESS Address,
-    PUCHAR Buffer,
-    PULONG BufferSize)
+    USHORT Flags,
+    PCHAR Buffer,
+    UINT BufferLength,
+    PTDI_CONNECTION_INFORMATION Addr,
+    PIO_STATUS_BLOCK Iosb,
+    PIO_COMPLETION_ROUTINE CompletionRoutine,
+    PVOID CompletionContext)
 /*
  * FUNCTION: Receives a datagram
  * ARGUMENTS:
@@ -1051,18 +946,9 @@ NTSTATUS TdiReceiveDatagram(
  *     Status of operation
  */
 {
-    PTDI_CONNECTION_INFORMATION ReceiveInfo;
-    PTDI_CONNECTION_INFORMATION ReturnInfo = NULL;
     PDEVICE_OBJECT DeviceObject;
-    IO_STATUS_BLOCK Iosb;
     NTSTATUS Status;
-    KEVENT Event;
-    PIRP Irp;
     PMDL Mdl;
-
-    if (From != NULL) {
-        /* FIXME: Check that the socket type match the socket */
-    }
 
     DeviceObject = IoGetRelatedDeviceObject(TransportObject);
     if (!DeviceObject) {
@@ -1070,30 +956,28 @@ NTSTATUS TdiReceiveDatagram(
         return STATUS_INVALID_PARAMETER;
     }
 
-    TdiBuildConnectionInfoPair( &ReceiveInfo, From, Address );
-    
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+    *Irp = TdiBuildInternalDeviceControlIrp
+	( TDI_RECEIVE_DATAGRAM,    /* Sub function */
+	  DeviceObject,            /* Device object */
+	  TransportObject,         /* File object */
+	  NULL,                    /* Event */
+	  Iosb );                  /* Status */
 
-    Irp = TdiBuildInternalDeviceControlIrp(TDI_RECEIVE_DATAGRAM,    /* Sub function */
-                                           DeviceObject,            /* Device object */
-                                           TransportObject,         /* File object */
-                                           &Event,                  /* Event */
-                                           &Iosb);                  /* Status */
-    if (!Irp) {
+    if (!*Irp) {
         AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-        ExFreePool(ReceiveInfo);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
+    AFD_DbgPrint(MID_TRACE, ("Allocating irp for %x:%d\n", Buffer,BufferLength));
+
     Mdl = IoAllocateMdl(Buffer,         /* Virtual address */
-                        *BufferSize,    /* Length of buffer */
+                        BufferLength,   /* Length of buffer */
                         FALSE,          /* Not secondary */
                         FALSE,          /* Don't charge quota */
-                        NULL);          /* Don't use IRP */
+                        *Irp);          /* Don't use IRP */
     if (!Mdl) {
         AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-        IoFreeIrp(Irp);
-        ExFreePool(ReceiveInfo);
+        IoFreeIrp(*Irp);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -1105,33 +989,117 @@ NTSTATUS TdiReceiveDatagram(
     } except (EXCEPTION_EXECUTE_HANDLER) {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
         IoFreeMdl(Mdl);
-        IoFreeIrp(Irp);
-        ExFreePool(ReceiveInfo);
+        IoFreeIrp(*Irp);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 #endif
 
-    TdiBuildReceiveDatagram(Irp,                    /* I/O Request Packet */
-                            DeviceObject,           /* Device object */
-                            TransportObject,        /* File object */
-                            NULL,                   /* Completion routine */
-                            NULL,                   /* Completion context */
-                            Mdl,                    /* Data buffer */
-                            *BufferSize,            /* Size of data buffer */
-                            ReceiveInfo,            /* Connection information */
-                            ReturnInfo,             /* Connection information */
-                            TDI_RECEIVE_NORMAL);    /* Flags */
-    Status = TdiCall(Irp, DeviceObject, &Event, &Iosb);
-    if (NT_SUCCESS(Status)) {
-        *BufferSize = Iosb.Information;
-	TaCopyAddressInPlace( Address, TdiGetRemoteAddress(ReturnInfo) );
+    AFD_DbgPrint(MID_TRACE,("AFD>>> Got an MDL: %x\n", Mdl));
+
+    TdiBuildReceiveDatagram
+	(*Irp,                   /* I/O Request Packet */
+	 DeviceObject,           /* Device object */
+	 TransportObject,        /* File object */
+	 CompletionRoutine,      /* Completion routine */
+	 CompletionContext,      /* Completion context */
+	 Mdl,                    /* Data buffer */
+	 BufferLength,
+	 Addr,
+	 Addr,
+	 Flags);                 /* Length of data */
+
+    Status = TdiCall(*Irp, DeviceObject, NULL, Iosb);
+    /* Does not block...  The MDL is deleted in the receive completion
+       routine. */
+
+    return Status;
+}
+
+
+NTSTATUS TdiSendDatagram(
+    PIRP *Irp,
+    PFILE_OBJECT TransportObject,
+    PCHAR Buffer,
+    UINT BufferLength,
+    PTDI_CONNECTION_INFORMATION Addr,
+    PIO_STATUS_BLOCK Iosb,
+    PIO_COMPLETION_ROUTINE CompletionRoutine,
+    PVOID CompletionContext)
+/*
+ * FUNCTION: Sends a datagram
+ * ARGUMENTS:
+ *     TransportObject = Pointer to transport object
+ *     From            = Send filter (NULL if none)
+ *     Address         = Address of buffer to place remote address
+ *     Buffer          = Address of buffer to place sendd data
+ *     BufferSize      = Address of buffer with length of Buffer (updated)
+ * RETURNS:
+ *     Status of operation
+ */
+{
+    PDEVICE_OBJECT DeviceObject;
+    NTSTATUS Status;
+    PMDL Mdl;
+
+    DeviceObject = IoGetRelatedDeviceObject(TransportObject);
+    if (!DeviceObject) {
+        AFD_DbgPrint(MIN_TRACE, ("Bad device object.\n"));
+        return STATUS_INVALID_PARAMETER;
     }
 
-    MmUnlockPages(Mdl);
+    *Irp = TdiBuildInternalDeviceControlIrp
+	( TDI_SEND_DATAGRAM,       /* Sub function */
+	  DeviceObject,            /* Device object */
+	  TransportObject,         /* File object */
+	  NULL,                    /* Event */
+	  Iosb );                  /* Status */
 
-    IoFreeMdl(Mdl);
+    if (!*Irp) {
+        AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
-    ExFreePool(ReceiveInfo);
+    AFD_DbgPrint(MID_TRACE, ("Allocating irp for %x:%d\n", Buffer,BufferLength));
+
+    Mdl = IoAllocateMdl(Buffer,         /* Virtual address */
+                        BufferLength,   /* Length of buffer */
+                        FALSE,          /* Not secondary */
+                        FALSE,          /* Don't charge quota */
+                        *Irp);          /* Don't use IRP */
+    if (!Mdl) {
+        AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+        IoFreeIrp(*Irp);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+#ifdef _MSC_VER
+    try {
+#endif
+        MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
+#ifdef _MSC_VER
+    } except (EXCEPTION_EXECUTE_HANDLER) {
+        AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
+        IoFreeMdl(Mdl);
+        IoFreeIrp(*Irp);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+#endif
+
+    AFD_DbgPrint(MID_TRACE,("AFD>>> Got an MDL: %x\n", Mdl));
+
+    TdiBuildSendDatagram
+	(*Irp,                   /* I/O Request Packet */
+	 DeviceObject,           /* Device object */
+	 TransportObject,        /* File object */
+	 CompletionRoutine,      /* Completion routine */
+	 CompletionContext,      /* Completion context */
+	 Mdl,                    /* Data buffer */
+	 BufferLength,           /* Bytes to send */
+	 Addr);                  /* Address */
+
+    Status = TdiCall(*Irp, DeviceObject, NULL, Iosb);
+    /* Does not block...  The MDL is deleted in the send completion
+       routine. */
 
     return Status;
 }

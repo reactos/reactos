@@ -1,4 +1,4 @@
-/* $Id: select.c,v 1.1.2.1 2004/07/09 04:41:18 arty Exp $
+/* $Id: select.c,v 1.1.2.2 2004/07/14 16:54:14 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/select.c
@@ -52,6 +52,7 @@ ScanForImmediateTrigger( PAFD_POLL_HANDLE HandleArray,
 	      KernelMode,
 	      (PVOID*)&FileObject,
 	      NULL );
+
 	if( NT_SUCCESS(Status) ) {
 	    FCB = FileObject->FsContext;
 	    /* Check select bits */

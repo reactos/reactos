@@ -1,4 +1,4 @@
-/* $Id: write.c,v 1.1.2.2 2004/07/11 23:04:35 arty Exp $
+/* $Id: write.c,v 1.1.2.3 2004/07/14 16:54:14 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/write.c
@@ -224,8 +224,34 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 }
 
 NTSTATUS STDCALL
-AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
-    Irp->IoStatus.Information = 0;
-    return STATUS_SUCCESS;
+AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp, 
+			 PIO_STACK_LOCATION IrpSp) {
+    NTSTATUS Status = STATUS_SUCCESS;
+    PFILE_OBJECT FileObject = IrpSp->FileObject;
+    PAFD_FCB FCB = FileObject->FsContext;
+    PAFD_SEND_REQ SendReq = Irp->AssociatedIrp.SystemBuffer;
+   
+    AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
+
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
+    
+    /* Check the size of the Address given ... */
+
+    Status = TdiSendDatagram
+	( &FCB->SendIrp.InFlightRequest,
+	  FCB->AddressFile.Object,
+	  SendReq->BufferArray[0].buf,
+	  SendReq->BufferArray[0].len,
+	  &SendReq->Address,
+	  &FCB->SendIrp.Iosb,
+	  NULL,
+	  NULL );
+
+    if( Status == STATUS_PENDING ) Status = STATUS_SUCCESS;
+    
+    AFD_DbgPrint(MID_TRACE,("Dismissing request: %x\n", Status));
+    
+    return UnlockAndMaybeComplete
+	( FCB, Status, Irp, SendReq->BufferArray[0].len, NULL );
 }
 

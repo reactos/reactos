@@ -1,4 +1,4 @@
-/* $Id: bind.c,v 1.1.2.1 2004/07/09 04:41:18 arty Exp $
+/* $Id: bind.c,v 1.1.2.2 2004/07/14 16:54:14 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/bind.c
@@ -57,6 +57,27 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( NT_SUCCESS(Status) ) 
 	FCB->State = SOCKET_STATE_BOUND;
+
+    if( FCB->Flags & SGID_CONNECTIONLESS ) {
+	/* This will be the from address for subsequent recvfrom calls */
+	TdiBuildConnectionInfo( &FCB->AddressFrom,
+				&FCB->LocalAddress->Address[0] );
+	/* Allocate our backup buffer */
+	FCB->Recv.Window = ExAllocatePool( NonPagedPool, FCB->Recv.Size );
+	FCB->PollState |= AFD_EVENT_SEND; 
+	/* A datagram socket is always sendable */
+	
+	Status = TdiReceiveDatagram
+	    ( &FCB->ReceiveIrp.InFlightRequest,
+	      FCB->AddressFile.Object,
+	      0,
+	      FCB->Recv.Window,
+	      FCB->Recv.Size,
+	      FCB->AddressFrom,
+	      &FCB->ReceiveIrp.Iosb,
+	      PacketSocketRecvComplete,
+	      FCB );
+    }
 
     return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
 }
