@@ -23,6 +23,18 @@ BOOL STDCALL IntEngBitBlt(SURFOBJ *DestObj,
 	                  BRUSHOBJ *Brush,
 	                  POINTL *BrushOrigin,
 	                  ROP4 rop4);
+BOOL STDCALL
+IntEngStretchBlt(SURFOBJ *DestObj,
+                 SURFOBJ *SourceObj,
+                 SURFOBJ *Mask,
+                 CLIPOBJ *ClipRegion,
+                 XLATEOBJ *ColorTranslation,
+                 RECTL *DestRect,
+                 RECTL *SourceRect,
+                 POINTL *pMaskOrigin,
+                 BRUSHOBJ *Brush,
+                 POINTL *BrushOrigin,
+                 ULONG Mode);
 
 XLATEOBJ * STDCALL IntEngCreateXlate(USHORT DestPalType,
                             USHORT SourcePalType,
