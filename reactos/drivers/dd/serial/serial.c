@@ -1,4 +1,4 @@
-/* $Id: serial.c,v 1.9 2002/08/25 06:59:34 robd Exp $
+/* $Id: serial.c,v 1.10 2002/10/06 13:16:26 robd Exp $
  *
  * Serial driver
  * Written by Jason Filby (jasonfilby@yahoo.com)
@@ -154,7 +154,7 @@ NTSTATUS STDCALL
 DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
         DbgPrint("Serial Driver 0.0.2\n");
-        InitializeSerial();
+//        InitializeSerial();
 //        testserial();
         return(STATUS_SUCCESS);
 };
