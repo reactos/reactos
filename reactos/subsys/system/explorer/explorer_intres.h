@@ -151,6 +151,8 @@
 #define IDC_CHECK_ENTRIES               1028
 #define ID_REFRESH                      1704
 #define ID_ABOUT_WINEFILE               1705
+#define IDS_VERSION_STR                 5000
+#define IDS_EXPLORER_VERSION_STR        5001
 #define IDC_FILETREE                    10001
 #define ID_EXPLORER_FAQ                 10002
 #define ID_WEB_WINDOW                   10003

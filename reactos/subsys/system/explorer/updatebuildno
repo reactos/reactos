@@ -1,3 +1,0 @@
-test -r ../../../include/reactos/buildno.h && cp ../../../include/reactos/buildno.h .
-test ! -r buildno.h && cp buildno.h.templ buildno.h
-exit 0

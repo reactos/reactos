@@ -768,10 +768,6 @@ SOURCE=.\dialogs\settings.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\buildno.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\explorer.cpp
 # End Source File
 # Begin Source File
