@@ -8,3 +8,4 @@ depends.exe
 mkconfig
 mkconfig.exe
 ntoskrnl.dbg
+config
