@@ -1,5 +1,49 @@
 2003-08-24  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* Makefile: Support creating compressed bootable CDs.
+	* rules.mak (HOST_CXX, HOST_AR, CABMAN): Define.
+	* bootdata/txtsetup.sif: Add Cabinets section.
+	Remove files that are put in reactos.cab.
+	* subsys/system/usetup/filequeue.c (SetupCloseFileQueue): Release
+	memory allocated for SourceCabinet.
+	(SetupQueueCopy): Support copying files in cabinets.
+	(SetupCommitFileQueue): Support copying files in cabinets.
+	* subsys/system/usetup/filequeue.h (SetupQueueCopy): Add SourceCabinet
+	parameter.
+	* subsys/system/usetup/filesup.c (SetupExtractFile): New function.
+	* subsys/system/usetup/filesup.h (SetupExtractFile): Prototype.
+	* subsys/system/usetup/infcache.c (InfOpenBufferedFile): New function.
+	* subsys/system/usetup/infcache.h (InfOpenBufferedFile): Prototype.
+	* subsys/system/usetup/makefile (TARGET_SDKLIBS): Add zlib.a.
+	(TARGET_CFLAGS): Add zlib to include path.
+	(TARGET_OBJECTS): Add cabinet.o.
+	* subsys/system/usetup/usetup.c (PrepareCopyPageInfFile): New function.
+	(PrepareCopyPage): Process Cabinets section.
+	* tools/helper.mk: Support C++ applications.
+	* rosbin.txt: Remove.
+	* bootdata/packages: New directory.
+	* bootdata/packages/reactos.dff: New file.
+	* lib/zlib/Makefile.host: New file.
+	* subsys/system/usetup/cabinet.c: Ditto.
+	* subsys/system/usetup/cabinet.h: Ditto.
+	* tools/cabman: New directory.
+	* tools/cabman/.cvsignore: New file.
+	* tools/cabman/cabinet.cxx: Ditto.
+	* tools/cabman/cabinet.h: Ditto.
+	* tools/cabman/cabman.h: Ditto.
+	* tools/cabman/dff.txt: Ditto.
+	* tools/cabman/dfp.cxx: Ditto.
+	* tools/cabman/dfp.h: Ditto.
+	* tools/cabman/main.cxx: Ditto.
+	* tools/cabman/makefile: Ditto.
+	* tools/cabman/makefile.win32: Ditto.
+	* tools/cabman/mszip.cxx: Ditto.
+	* tools/cabman/mszip.h: Ditto.
+	* tools/cabman/raw.cxx: Ditto.
+	* tools/cabman/raw.h: Ditto.
+
+2003-08-24  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* include/structs.h: Apply packed attribute to the typedef, not the
 	type's name.
 	* include/ntos/keyboard.h: Ditto.

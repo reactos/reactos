@@ -42,6 +42,7 @@
 #include "registry.h"
 #include "format.h"
 #include "fslist.h"
+#include "cabinet.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -1811,7 +1812,7 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
 	    PartitionList->CurrentPartition->PartInfo[0].PartitionNumber);
   RtlCreateUnicodeString (&DestinationRootPath,
 			  PathBuffer);
-  DPRINT1 ("DestinationRootPath: %wZ\n", &DestinationRootPath);
+  DPRINT ("DestinationRootPath: %wZ\n", &DestinationRootPath);
 
   /* Set SystemRootPath */
   RtlFreeUnicodeString (&SystemRootPath);
@@ -1821,7 +1822,7 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
 	    PartitionList->ActiveBootPartition->PartInfo[0].PartitionNumber);
   RtlCreateUnicodeString (&SystemRootPath,
 			  PathBuffer);
-  DPRINT1 ("SystemRootPath: %wZ\n", &SystemRootPath);
+  DPRINT ("SystemRootPath: %wZ\n", &SystemRootPath);
 
 
   while(TRUE)
@@ -1977,8 +1978,8 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
 }
 
 
-static PAGE_NUMBER
-PrepareCopyPage(PINPUT_RECORD Ir)
+static BOOLEAN
+PrepareCopyPageInfFile(HINF InfFile, PWCHAR SourceCabinet, PINPUT_RECORD Ir)
 {
   WCHAR PathBuffer[MAX_PATH];
   INFCONTEXT FilesContext;
@@ -1987,25 +1988,16 @@ PrepareCopyPage(PINPUT_RECORD Ir)
   PWCHAR KeyValue;
   ULONG Length;
   NTSTATUS Status;
-
   PWCHAR FileKeyName;
   PWCHAR FileKeyValue;
   PWCHAR DirKeyName;
   PWCHAR DirKeyValue;
 
-  SetTextXY(6, 8, "Setup prepares your computer for copying the ReactOS files. ");
-
-
-  /*
-   * Build the file copy list
-   */
-  SetStatusText("   Building the file copy list...");
-
   /* Search for the 'SourceFiles' section */
-  if (!InfFindFirstLine (SetupInf, L"SourceFiles", NULL, &FilesContext))
+  if (!InfFindFirstLine (InfFile, L"SourceFiles", NULL, &FilesContext))
     {
       PopupError("Setup failed to find the 'SourceFiles' section\n"
-		 "in TXTSETUP.SIF.\n",
+		 "in TXTSETUP.SIF.\n",  // FIXME
 		 "ENTER = Reboot computer");
 
       while(TRUE)
@@ -2014,26 +2006,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
-	      return(QUIT_PAGE);
-	    }
-	}
-    }
-
-
-  /* Create the file queue */
-  SetupFileQueue = SetupOpenFileQueue();
-  if (SetupFileQueue == NULL)
-    {
-      PopupError("Setup failed to open the copy file queue.\n",
-		 "ENTER = Reboot computer");
-
-      while(TRUE)
-	{
-	  ConInKey(Ir);
-
-	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return(QUIT_PAGE);
+	      return(FALSE);
 	    }
 	}
     }
@@ -2045,12 +2018,15 @@ PrepareCopyPage(PINPUT_RECORD Ir)
   do
     {
       if (!InfGetData (&FilesContext, &FileKeyName, &FileKeyValue))
-	break;
+        {
+          DPRINT("break\n");
+        	break;
+        }
 
       DPRINT ("FileKeyName: '%S'  FileKeyValue: '%S'\n", FileKeyName, FileKeyValue);
 
       /* Lookup target directory */
-      if (!InfFindFirstLine (SetupInf, L"Directories", FileKeyValue, &DirContext))
+      if (!InfFindFirstLine (InfFile, L"Directories", FileKeyValue, &DirContext))
 	{
 	  /* FIXME: Handle error! */
 	  DPRINT1("InfFindFirstLine() failed\n");
@@ -2065,6 +2041,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 	}
 
       if (!SetupQueueCopy(SetupFileQueue,
+        SourceCabinet,
 			  SourceRootPath.Buffer,
 			  L"\\reactos",
 			  FileKeyName,
@@ -2079,7 +2056,6 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 
 
   /* Create directories */
-  SetStatusText("   Creating directories...");
 
   /*
    * FIXME:
@@ -2110,18 +2086,25 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
-	      return(QUIT_PAGE);
+	      return(FALSE);
 	    }
 	}
     }
 
 
   /* Search for the 'Directories' section */
-  if (!InfFindFirstLine(SetupInf, L"Directories", NULL, &DirContext))
+  if (!InfFindFirstLine(InfFile, L"Directories", NULL, &DirContext))
     {
-      PopupError("Setup failed to find the 'Directories' section\n"
-		 "in TXTSETUP.SIF.\n",
-		 "ENTER = Reboot computer");
+      if (SourceCabinet)
+        {
+          PopupError("Setup failed to find the 'Directories' section\n"
+    		    "in the cabinet.\n", "ENTER = Reboot computer");
+        }
+      else
+        {
+          PopupError("Setup failed to find the 'Directories' section\n"
+    		    "in TXTSETUP.SIF.\n", "ENTER = Reboot computer");
+        }
 
       while(TRUE)
 	{
@@ -2129,7 +2112,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
-	      return(QUIT_PAGE);
+	      return(FALSE);
 	    }
 	}
     }
@@ -2138,7 +2121,10 @@ PrepareCopyPage(PINPUT_RECORD Ir)
   do
     {
       if (!InfGetData (&DirContext, NULL, &KeyValue))
-	break;
+        {
+          DPRINT1("break\n");
+	        break;
+        }
 
       if (KeyValue[0] == L'\\' && KeyValue[1] != 0)
 	{
@@ -2171,13 +2157,166 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 
 		  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 		    {
-		      return(QUIT_PAGE);
+		      return(FALSE);
 		    }
 		}
 	    }
 	}
     }
   while (InfFindNextLine (&DirContext, &DirContext));
+
+  return(TRUE);
+}
+
+
+static PAGE_NUMBER
+PrepareCopyPage(PINPUT_RECORD Ir)
+{
+  INT CabStatus;
+  HINF InfHandle;
+  WCHAR PathBuffer[MAX_PATH];
+  INFCONTEXT CabinetsContext;
+  ULONG InfFileSize;
+  PWCHAR KeyValue;
+  NTSTATUS Status;
+  ULONG ErrorLine;
+  PVOID InfFileData;
+
+  SetTextXY(6, 8, "Setup prepares your computer for copying the ReactOS files. ");
+
+
+  /*
+   * Build the file copy list
+   */
+  SetStatusText("   Building the file copy list...");
+
+  /* Create the file queue */
+  SetupFileQueue = SetupOpenFileQueue();
+  if (SetupFileQueue == NULL)
+    {
+      PopupError("Setup failed to open the copy file queue.\n",
+		 "ENTER = Reboot computer");
+
+      while(TRUE)
+	{
+	  ConInKey(Ir);
+
+	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	    {
+	      return(QUIT_PAGE);
+	    }
+	}
+    }
+
+
+  if (!PrepareCopyPageInfFile(SetupInf, NULL, Ir))
+    {
+      return(QUIT_PAGE);
+    }
+
+
+  /* Search for the 'Cabinets' section */
+  if (!InfFindFirstLine (SetupInf, L"Cabinets", NULL, &CabinetsContext))
+    {
+      PopupError("Setup failed to find the 'Cabinets' section\n"
+		 "in TXTSETUP.SIF.\n",
+		 "ENTER = Reboot computer");
+
+      while(TRUE)
+	{
+	  ConInKey(Ir);
+
+	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	    {
+	      return(QUIT_PAGE);
+	    }
+	}
+    }
+
+
+  /*
+   * Enumerate the directory values in the 'Cabinets'
+   * section and parse their inf files.
+   */
+  do
+    {
+      if (!InfGetData (&CabinetsContext, NULL, &KeyValue))
+    break;
+
+	  wcscpy(PathBuffer, SourcePath.Buffer);
+	  wcscat(PathBuffer, L"\\");
+	  wcscat(PathBuffer, KeyValue);
+
+    CabinetInitialize();
+    CabinetSetEventHandlers(NULL, NULL, NULL);
+    CabinetSetCabinetName(PathBuffer);
+
+    if (CabinetOpen() == CAB_STATUS_SUCCESS)
+      {
+        DPRINT("Cabinet %S\n", CabinetGetCabinetName());
+
+        InfFileData = CabinetGetCabinetReservedArea(&InfFileSize);
+        if (InfFileData == NULL)
+          {
+            PopupError("Cabinet has no setup script.\n",
+      		    "ENTER = Reboot computer");
+
+            while(TRUE)
+            	{
+            	  ConInKey(Ir);
+            
+            	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+            	    {
+            	      return(QUIT_PAGE);
+            	    }
+            	}
+          }
+      }
+    else
+      {
+        DPRINT("Cannot open cabinet: %S.\n", CabinetGetCabinetName());
+
+        PopupError("Cabinet not found.\n", "ENTER = Reboot computer");
+  
+        while(TRUE)
+        	{
+        	  ConInKey(Ir);
+        
+        	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+        	    {
+        	      return(QUIT_PAGE);
+        	    }
+        	}
+      }
+
+    Status = InfOpenBufferedFile(&InfHandle,
+	    InfFileData,
+      InfFileSize,
+	    &ErrorLine);
+    if (!NT_SUCCESS(Status))
+      {
+        PopupError("Cabinet has no valid inf file.\n",
+  		 "ENTER = Reboot computer");
+  
+        while(TRUE)
+  	{
+  	  ConInKey(Ir);
+  
+  	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+  	    {
+  	      return(QUIT_PAGE);
+  	    }
+  	}
+      }
+
+      CabinetCleanup();
+
+      if (!PrepareCopyPageInfFile(InfHandle, KeyValue, Ir))
+        {
+          return(QUIT_PAGE);
+        }
+    }
+  while (InfFindNextLine (&CabinetsContext, &CabinetsContext));
 
   return(FILE_COPY_PAGE);
 }
@@ -2388,7 +2527,6 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
   SetStatusText("   Please wait...");
 
-
   if (PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_ENTRY_UNUSED)
     {
       DPRINT1("Error: active partition invalid (unused)\n");
@@ -2405,7 +2543,6 @@ BootLoaderPage(PINPUT_RECORD Ir)
 	    }
 	}
     }
-
   if (PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == 0x0A)
     {
       /* OS/2 boot manager partition */

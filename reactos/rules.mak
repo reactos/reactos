@@ -73,6 +73,8 @@ BOOTCD_DIR=$(TOPDIR)/../bootcd/disk
 CC = $(PREFIX)gcc
 CXX = $(PREFIX)g++
 HOST_CC = gcc
+HOST_CXX = g++
+HOST_AR = ar
 HOST_NM = nm
 LD = $(PREFIX)ld
 NM = $(PREFIX)nm
@@ -96,6 +98,7 @@ RSYM = $(TOOLS_PATH)/rsym
 RTOUCH = $(TOOLS_PATH)/rtouch
 REGTESTS = $(TOOLS_PATH)/regtests
 MC = $(TOOLS_PATH)/wmc/wmc
+CABMAN = $(TOOLS_PATH)/cabman/cabman
 XSLTPROC = xsltproc
 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: filequeue.h,v 1.1 2002/11/23 01:55:27 ekohl Exp $
+/* $Id: filequeue.h,v 1.2 2003/08/24 10:36:06 chorns Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/filequeue.h
@@ -69,6 +69,7 @@ SetupCloseFileQueue(HSPFILEQ QueueHandle);
 
 BOOL
 SetupQueueCopy(HSPFILEQ QueueHandle,
+         PCWSTR SourceCabinet,
 	       PCWSTR SourceRootPath,
 	       PCWSTR SourcePath,
 	       PCWSTR SourceFilename,

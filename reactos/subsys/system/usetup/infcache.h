@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: infcache.h,v 1.3 2003/03/15 19:36:11 ekohl Exp $
+/* $Id: infcache.h,v 1.4 2003/08/24 10:36:06 chorns Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/infcache.h
@@ -48,6 +48,12 @@ typedef struct _INFCONTEXT
 
 
 /* FUNCTIONS ****************************************************************/
+
+NTSTATUS
+InfOpenBufferedFile(PHINF InfHandle,
+	    PVOID Buffer,
+      ULONG BufferSize,
+	    PULONG ErrorLine);
 
 NTSTATUS
 InfOpenFile (PHINF InfHandle,

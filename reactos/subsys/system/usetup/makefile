@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.12 2003/08/09 16:32:25 ekohl Exp $
+# $Id: makefile,v 1.13 2003/08/24 10:36:06 chorns Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -12,15 +12,15 @@ TARGET_APPTYPE = native
 
 TARGET_NAME = usetup
 
-TARGET_SDKLIBS = vfatlib.a ntdll.a
+TARGET_SDKLIBS = zlib.a vfatlib.a ntdll.a
 
 TARGET_INSTALLDIR = system32
 
-TARGET_CFLAGS = -D__NTAPP__
+TARGET_CFLAGS = -D__NTAPP__ -I$(PATH_TO_TOP)/lib/zlib
 
-TARGET_OBJECTS = $(TARGET_NAME).o bootsup.o console.o drivesup.o filequeue.o \
-                 filesup.o format.o fslist.o infcache.o inicache.o partlist.o \
-                 progress.o registry.o
+TARGET_OBJECTS = $(TARGET_NAME).o bootsup.o cabinet.o console.o drivesup.o \
+                 filequeue.o filesup.o format.o fslist.o infcache.o \
+                 inicache.o partlist.o progress.o registry.o
 
 include $(PATH_TO_TOP)/rules.mak
 

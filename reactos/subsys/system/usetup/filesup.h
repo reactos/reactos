@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: filesup.h,v 1.3 2003/01/17 13:18:15 ekohl Exp $
+/* $Id: filesup.h,v 1.4 2003/08/24 10:36:06 chorns Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/filesup.h
@@ -32,6 +32,11 @@ CreateDirectory(PWCHAR DirectoryName);
 
 NTSTATUS
 SetupCopyFile(PWCHAR SourceFileName,
+	      PWCHAR DestinationFileName);
+
+NTSTATUS
+SetupExtractFile(PWCHAR CabinetFileName,
+        PWCHAR SourceFileName,
 	      PWCHAR DestinationFileName);
 
 BOOLEAN

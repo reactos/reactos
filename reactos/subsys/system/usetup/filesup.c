@@ -16,12 +16,13 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: filesup.c,v 1.6 2003/05/18 12:50:17 ekohl Exp $
+/* $Id: filesup.c,v 1.7 2003/08/24 10:36:06 chorns Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/filesup.c
  * PURPOSE:         File support functions
  * PROGRAMMER:      Eric Kohl
+ *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
 /* INCLUDES *****************************************************************/
@@ -31,10 +32,14 @@
 
 #include "usetup.h"
 #include "filesup.h"
+#include "cabinet.h"
 
 
 /* FUNCTIONS ****************************************************************/
 
+
+static BOOLEAN HasCurrentCabinet = FALSE;
+static WCHAR CurrentCabinetName[MAX_PATH];
 
 NTSTATUS
 CreateDirectory(PWCHAR DirectoryName)
@@ -271,6 +276,65 @@ SetupCopyFile(PWCHAR SourceFileName,
   NtClose(FileHandleDest);
 
   return(Status);
+}
+
+
+NTSTATUS
+SetupExtractFile(PWCHAR CabinetFileName,
+        PWCHAR SourceFileName,
+	      PWCHAR DestinationPathName)
+{
+  ULONG CabStatus;
+
+  DPRINT("SetupExtractFile(CabinetFileName %S, SourceFileName %S, DestinationPathName %S)\n",
+    CabinetFileName, SourceFileName, DestinationPathName);
+
+  if (HasCurrentCabinet)
+    {
+      DPRINT("CurrentCabinetName: %S\n", CurrentCabinetName);
+    }
+
+  if ((HasCurrentCabinet) && (wcscmp(CabinetFileName, CurrentCabinetName) == 0))
+    {
+      DPRINT("Using same cabinet as last time\n");
+    }
+  else
+    {
+      DPRINT("Using new cabinet\n");
+
+      if (HasCurrentCabinet)
+        {
+          CabinetCleanup();
+        }
+
+      wcscpy(CurrentCabinetName, CabinetFileName); 
+
+      CabinetInitialize();
+      CabinetSetEventHandlers(NULL, NULL, NULL);
+      CabinetSetCabinetName(CabinetFileName);
+
+      CabStatus = CabinetOpen();
+      if (CabStatus == CAB_STATUS_SUCCESS)
+        {
+          DPRINT("Opened cabinet %S\n", CabinetGetCabinetName());
+          HasCurrentCabinet = TRUE;
+        }
+      else
+        {
+          DPRINT("Cannot open cabinet (%d)\n", CabStatus);
+          return STATUS_UNSUCCESSFUL;
+        }
+    }
+
+  CabinetSetDestinationPath(DestinationPathName);
+  CabStatus = CabinetExtractFile(SourceFileName);
+  if (CabStatus != CAB_STATUS_SUCCESS)
+    {
+      DPRINT("Cannot extract file %S (%d)\n", SourceFileName, CabStatus);
+      return STATUS_UNSUCCESSFUL;
+    }
+
+  return STATUS_SUCCESS;
 }
 
 

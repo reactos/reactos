@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: infcache.c,v 1.4 2003/05/18 12:50:17 ekohl Exp $
+/* $Id: infcache.c,v 1.5 2003/08/24 10:36:06 chorns Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/infcache.c
@@ -892,6 +892,75 @@ InfpParseBuffer (PINFCACHE file,
 
 
 /* PUBLIC FUNCTIONS *********************************************************/
+
+NTSTATUS
+InfOpenBufferedFile(PHINF InfHandle,
+	    PVOID Buffer,
+      ULONG BufferSize,
+	    PULONG ErrorLine)
+{
+  NTSTATUS Status;
+  PINFCACHE Cache;
+  PCHAR FileBuffer;
+
+  *InfHandle = NULL;
+  *ErrorLine = (ULONG)-1;
+
+  /* Allocate file buffer */
+  FileBuffer = RtlAllocateHeap(ProcessHeap,
+			       0,
+			       BufferSize + 1);
+  if (FileBuffer == NULL)
+    {
+      DPRINT1("RtlAllocateHeap() failed\n");
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
+
+  RtlCopyMemory(FileBuffer, Buffer, BufferSize);
+
+  /* Append string terminator */
+  FileBuffer[BufferSize] = 0;
+
+  /* Allocate infcache header */
+  Cache = (PINFCACHE)RtlAllocateHeap(ProcessHeap,
+				      0,
+				      sizeof(INFCACHE));
+  if (Cache == NULL)
+    {
+      DPRINT("RtlAllocateHeap() failed\n");
+      RtlFreeHeap(ProcessHeap,
+  		  0,
+  		  FileBuffer);
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
+
+  /* Initialize inicache header */
+  RtlZeroMemory(Cache,
+		sizeof(INFCACHE));
+
+  /* Parse the inf buffer */
+  Status = InfpParseBuffer (Cache,
+			    FileBuffer,
+			    FileBuffer + BufferSize,
+			    ErrorLine);
+  if (!NT_SUCCESS(Status))
+    {
+      RtlFreeHeap(ProcessHeap,
+  		  0,
+  		  Cache);
+      Cache = NULL;
+    }
+
+  /* Free file buffer */
+  RtlFreeHeap(ProcessHeap,
+	      0,
+	      FileBuffer);
+
+  *InfHandle = (HINF)Cache;
+
+  return(Status);
+}
+
 
 NTSTATUS
 InfOpenFile(PHINF InfHandle,

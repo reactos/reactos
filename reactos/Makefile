@@ -158,8 +158,23 @@ bootcd_bootstrap_files: $(COMPONENTS:%=%_bootcd) $(HALS:%=%_bootcd) $(BUS:%=%_bo
 	$(LIB_STATIC:%=%_bootcd) $(LIB_FSLIB:%=%_bootcd) $(DLLS:%=%_bootcd) $(KERNEL_DRIVERS:%=%_bootcd) \
 	$(SUBSYS:%=%_bootcd) $(SYS_APPS:%=%_bootcd)
 
-bootcd: all bootcd_directory_layout bootcd_bootstrap_files
-	$(MAKE) install INSTALL_DIR=$(BOOTCD_DIR)/reactos INSTALL_SYMBOLS=no BOOTCD_INSTALL=yes
+bootcd_install_before:
+	$(RLINE) bootdata/autorun.inf $(BOOTCD_DIR)/autorun.inf
+	$(RLINE) bootdata/readme.txt $(BOOTCD_DIR)/readme.txt
+	$(RLINE) bootdata/hivecls.inf $(BOOTCD_DIR)/reactos/hivecls.inf
+	$(RLINE) bootdata/hivedef.inf $(BOOTCD_DIR)/reactos/hivedef.inf
+	$(RLINE) bootdata/hivesft.inf $(BOOTCD_DIR)/reactos/hivesft.inf
+	$(RLINE) bootdata/hivesys.inf $(BOOTCD_DIR)/reactos/hivesys.inf
+	$(RLINE) bootdata/txtsetup.sif $(BOOTCD_DIR)/reactos/txtsetup.sif
+	$(CP) bootdata/icon.ico $(BOOTCD_DIR)/icon.ico
+	$(CP) media/nls/c_1252.nls $(BOOTCD_DIR)/reactos/c_1252.nls
+	$(CP) media/nls/c_437.nls $(BOOTCD_DIR)/reactos/c_437.nls
+	$(CP) media/nls/l_intl.nls $(BOOTCD_DIR)/reactos/l_intl.nls
+
+bootcd: all bootcd_directory_layout bootcd_bootstrap_files bootcd_install_before
+	$(CABMAN) /C bootdata/packages/reactos.dff /L $(BOOTCD_DIR)/reactos /I
+	$(CABMAN) /C bootdata/packages/reactos.dff /RC $(BOOTCD_DIR)/reactos/reactos.inf /L $(BOOTCD_DIR)/reactos /N
+	- $(RM) $(BOOTCD_DIR)/reactos/reactos.inf
 
 .PHONY: all depends implib clean clean_before install dist bootcd_directory_layout \
 bootcd_bootstrap_files bootcd

@@ -15,7 +15,7 @@ TOOLS = \
 
 CLEAN_FILES = $(TOOLS)
 
-all: $(TOOLS) wmc_target cdmake_target mkhive_target rgenstat_target
+all: $(TOOLS) zlib_target wmc_target cabman_target cdmake_target mkhive_target rgenstat_target
 
 buildno$(EXE_POSTFIX): buildno.c ../include/reactos/version.h
 	$(HOST_CC) $(CFLAGS) -o buildno$(EXE_POSTFIX) buildno.c
@@ -94,8 +94,14 @@ mkflpimg$(EXE_POSTFIX): mkflpimg.c
 endif
 
 
+zlib_target:
+	$(MAKE) -C ../lib/zlib -f Makefile.host
+
 wmc_target:
 	$(MAKE) -C wmc wmc$(EXE_POSTFIX)
+
+cabman_target:
+	$(MAKE) -C cabman cabman$(EXE_POSTFIX)
 
 cdmake_target:
 	$(MAKE) -C cdmake cdmake$(EXE_POSTFIX)

@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.42 2003/08/09 17:08:14 mf Exp $
+# $Id: helper.mk,v 1.43 2003/08/24 10:36:07 chorns Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -19,6 +19,7 @@
 #   $TARGET_APPTYPE    = Application type (windows,native,console)
 #   $TARGET_NAME       = Base name of output file and .rc, .def, and .edf files
 #   $TARGET_OBJECTS    = Object files that compose the module
+#   $TARGET_CPPAPP     = C++ application (no,yes) (optional)
 #   $TARGET_HEADERS    = Header files that the object files depend on (optional)
 #   $TARGET_DEFNAME    = Base name of .def and .edf files (optional)
 #   $TARGET_BASENAME   = Base name of output file (overrides $TARGET_NAME if it exists) (optional)
@@ -42,7 +43,7 @@
 #   $TARGET_LIBPATH    = Destination path for import libraries (optional)
 #   $TARGET_INSTALLDIR = Destination path when installed (optional)
 #   $TARGET_PCH        = Filename of header to use to generate a PCH if supported by the compiler (optional)
-#   $TARGET_BOOTSTRAP   = Wether this file is needed to bootstrap the installation (no,yes) (optional)
+#   $TARGET_BOOTSTRAP  = Wether this file is needed to bootstrap the installation (no,yes) (optional)
 #   $TARGET_BOOTSTRAP_NAME = Name on the installation medium (optional)
 #   $TARGET_GENREGTESTS = Generate regression test registrations (optional)
 #   $WINE_MODE         = Compile using WINE headers (no,yes) (optional)
@@ -530,7 +531,14 @@ MK_NOSTRIPNAME := $(MK_BASENAME).nostrip$(MK_EXT)
 
 # We don't want to link header files
 MK_OBJECTS := $(filter-out %.h,$(TARGET_OBJECTS))
-MK_STRIPPED_OBJECT := $(MK_BASENAME).stripped.o
+
+# There is problems with C++ applications and ld -r. Ld can cause errors like:
+#   reloc refers to symbol `.text$_ZN9CCABCodecC2Ev' which is not being output
+ifeq ($(TARGET_CPPAPP),yes)
+  MK_STRIPPED_OBJECT := $(MK_OBJECTS)
+else
+  MK_STRIPPED_OBJECT := $(MK_BASENAME).stripped.o
+endif
 
 ifeq ($(MK_IMPLIBONLY),yes)
 
@@ -620,8 +628,11 @@ else
 endif
 
 $(MK_FULLNAME): $(MK_NOSTRIPNAME) $(MK_EXTRADEP)
+	-
+ifneq ($(TARGET_CPPAPP),yes)
 	$(LD) -r -o $(MK_STRIPPED_OBJECT) $(MK_OBJECTS)
 	$(STRIP) --strip-debug $(MK_STRIPPED_OBJECT)
+endif
 ifeq ($(MK_EXETYPE),dll)
 	$(LD_CC) -Wl,--base-file,base.tmp \
 		-Wl,--entry,$(TARGET_ENTRY) \
@@ -653,7 +664,11 @@ endif
 		$(MK_EXTRACMD2) \
 	  	-o $(MK_FULLNAME) \
 	  	$(MK_FULLRES) $(MK_STRIPPED_OBJECT) $(MK_LIBS) $(MK_GCCLIBS)
+ifneq ($(TARGET_CPPAPP),yes)
 	- $(RM) temp.exp $(MK_STRIPPED_OBJECT)
+else
+	- $(RM) temp.exp
+endif
 
 endif # KM_MODE
 
@@ -699,8 +714,11 @@ else
 endif
 
 $(MK_FULLNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_EXTRADEP) $(MK_LIBS) $(MK_NOSTRIPNAME)
+	-
+ifneq ($(TARGET_CPPAPP),yes)
 	$(LD) -r -o $(MK_STRIPPED_OBJECT) $(MK_OBJECTS)
 	$(STRIP) --strip-debug $(MK_STRIPPED_OBJECT)
+endif
 	$(LD_CC) -Wl,--base-file,base.tmp \
 		-Wl,--entry,$(TARGET_ENTRY) \
 		$(TARGET_LFLAGS) \
@@ -722,7 +740,11 @@ $(MK_FULLNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_EXTRADEP) $(MK_LIBS) $(MK_N
 		-mdll -nostartfiles -nostdlib \
 		-o $(MK_FULLNAME) \
 	  	$(MK_FULLRES) $(MK_STRIPPED_OBJECT) $(MK_LIBS) $(MK_GCCLIBS)
+ifneq ($(TARGET_CPPAPP),yes)
+	- $(RM) temp.exp $(MK_STRIPPED_OBJECT)
+else
 	- $(RM) temp.exp
+endif
 
 endif # MK_MODE
 
@@ -883,6 +905,8 @@ endif # ROS_USE_PCH
 %.o: %.c $(MK_PCHNAME)
 	$(CC) $(TARGET_CFLAGS) -c $< -o $@
 %.o: %.cc
+	$(CXX) $(TARGET_CPPFLAGS) -c $< -o $@
+%.o: %.cxx
 	$(CXX) $(TARGET_CPPFLAGS) -c $< -o $@
 %.o: %.cpp
 	$(CXX) $(TARGET_CPPFLAGS) -c $< -o $@
