@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.68 2004/12/12 01:40:37 weiden Exp $
+/* $Id: windc.c,v 1.69 2004/12/17 14:44:19 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -138,6 +138,8 @@ DceAllocDCE(HWND hWnd, DCE_TYPE Type)
       defaultDCstate = NtGdiGetDCState(Dce->hDC);
       GDIOBJ_SetOwnership(defaultDCstate, NULL);
     }
+  GDIOBJ_SetOwnership(Dce->Self, NULL);
+  DC_SetOwnership(Dce->hDC, NULL);
   Dce->hwndCurrent = hWnd;
   Dce->hClipRgn = NULL;
   DCE_LockList();
@@ -467,18 +469,13 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
       
       if (Dce == NULL)
 	{
-	  Dce = (DceEmpty == NULL) ? DceEmpty : DceUnused;
+	  Dce = (DceEmpty == NULL) ? DceUnused : DceEmpty;
 	}
 
       if (Dce == NULL)
 	{
 	  Dce = DceAllocDCE(NULL, DCE_CACHE_DC);
 	}
-      else if (! GDIOBJ_OwnedByCurrentProcess(Dce->Self))
-        {
-          GDIOBJ_SetOwnership(Dce->Self, PsGetCurrentProcess());
-          DC_SetOwnership(Dce->hDC, PsGetCurrentProcess());
-        }
     }
   else
     {
@@ -669,7 +666,6 @@ PDCE FASTCALL
 DceFreeDCE(PDCE dce, BOOLEAN Force)
 {
   DCE *ret;
-  HANDLE hDce;
 
   if (NULL == dce)
     {
@@ -684,8 +680,7 @@ DceFreeDCE(PDCE dce, BOOLEAN Force)
 
   if(Force && !GDIOBJ_OwnedByCurrentProcess(dce->hDC))
   {
-    /* FIXME - changing ownership to current process only works for global objects! */
-    GDIOBJ_SetOwnership(dce->hDC, PsGetCurrentProcess());
+    GDIOBJ_SetOwnership(dce->Self, PsGetCurrentProcess());
     DC_SetOwnership(dce->hDC, PsGetCurrentProcess());
   }
 
@@ -695,13 +690,7 @@ DceFreeDCE(PDCE dce, BOOLEAN Force)
       NtGdiDeleteObject(dce->hClipRgn);
     }
 
-  hDce = dce->Self;
-  if(Force && !GDIOBJ_OwnedByCurrentProcess(hDce))
-  {
-    /* FIXME - changing ownership to current process only works for global objects! */
-    GDIOBJ_SetOwnership(hDce, PsGetCurrentProcess());
-  }
-  DCEOBJ_FreeDCE(hDce);
+  DCEOBJ_FreeDCE(dce->Self);
 
   return ret;
 }
