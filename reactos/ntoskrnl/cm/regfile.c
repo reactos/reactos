@@ -1124,7 +1124,7 @@ CmiCreateRegistryHive(PWSTR Filename,
   ExAcquireResourceExclusiveLite(&CmiHiveListLock, TRUE);
 
   /* Add the new hive to the hive list */
-  InsertHeadList(&CmiHiveListHead, &Hive->HiveList);
+  InsertTailList(&CmiHiveListHead, &Hive->HiveList);
 
   /* Release hive list lock */
   ExReleaseResourceLite(&CmiHiveListLock);
@@ -2492,7 +2492,7 @@ CmiAddValueToKey(IN PREGISTRY_HIVE RegistryHive,
 	 KeyCell->NumberOfValues,
 	 (ULONG)ABS_VALUE(ValueListCell->CellSize),
 	 ((ULONG)ABS_VALUE(ValueListCell->CellSize) - 4) / sizeof(BLOCK_OFFSET),
-	 ((ULONG)ABS_VALUS(ValueListCell->CellSize) - 4) / sizeof(BLOCK_OFFSET));
+	 ((ULONG)ABS_VALUE(ValueListCell->CellSize) - 4) / sizeof(BLOCK_OFFSET));
 
   ValueListCell->Values[KeyCell->NumberOfValues] = VBOffset;
   KeyCell->NumberOfValues++;
