@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.97 2004/12/03 23:37:44 blight Exp $
+# $Id: helper.mk,v 1.98 2004/12/05 16:27:45 gvg Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -1030,7 +1030,7 @@ ifeq ($(TARGET_BOOTSTRAP),yes)
 ifneq ($(TARGET_BOOTSTRAP_NAME),)
 MK_BOOTSTRAP_NAME := $(TARGET_BOOTSTRAP_NAME)
 else # TARGET_BOOTSTRAP_NAME
-MK_BOOTSTRAP_NAME := $(MK_FULLNAME)
+MK_BOOTSTRAP_NAME := $(MK_INSTALL_FULLNAME)
 endif # TARGET_BOOTSTRAP_NAME
 
 bootcd: $(SUBDIRS:%=%_bootcd)
