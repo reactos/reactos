@@ -1,0 +1,19 @@
+#ifndef __INCLUDE_NTOS_DBGFUNCS_H
+#define __INCLUDE_NTOS_DBGFUNCS_H
+/* $Id: dbgfuncs.h,v 1.1 2003/06/07 16:23:46 chorns Exp $ */
+
+#define DBG_STATUS_CONTROL_C       1
+#define DBG_STATUS_SYSRQ           2
+#define DBG_STATUS_BUGCHECK_FIRST  3
+#define DBG_STATUS_BUGCHECK_SECOND 4
+#define DBG_STATUS_FATAL           5
+
+
+#define DBG_GET_SHOW_FACILITY 0x0001
+#define DBG_GET_SHOW_SEVERITY 0x0002
+#define DBG_GET_SHOW_ERRCODE  0x0004
+#define DBG_GET_SHOW_ERRTEXT  0x0008
+VOID DbgGetErrorText(NTSTATUS ErrorCode, PUNICODE_STRING ErrorText, ULONG Flags);
+VOID DbgPrintErrorMessage(NTSTATUS ErrorCode);
+
+#endif /* __INCLUDE_NTOS_DBGFUNCS_H */
