@@ -1,4 +1,4 @@
-/* $Id: setypes.h,v 1.13 2004/02/02 12:03:43 ekohl Exp $
+/* $Id: setypes.h,v 1.14 2004/07/07 17:20:35 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory for details
  * PROJECT:           ReactOS kernel
@@ -178,6 +178,30 @@ typedef enum _SECURITY_OPERATION_CODE
   DeleteSecurityDescriptor,
   AssignSecurityDescriptor
 } SECURITY_OPERATION_CODE, *PSECURITY_OPERATION_CODE;
+
+typedef struct _ACCESS_STATE
+{
+  LUID OperationID;
+  BOOLEAN SecurityEvaluated;
+  BOOLEAN GenerateAudit;
+  BOOLEAN GenerateClose;
+  BOOLEAN PrivilegesAllocated;
+  ULONG Flags;
+  ACCESS_MASK RemainingDesiredAccess;
+  ACCESS_MASK PreviouslyGrantedAccess;
+  ACCESS_MASK OriginallyDesiredAccess;
+  SECURITY_SUBJECT_CONTEXT SubjectSecurityContext; /* 0x1C */
+  PSECURITY_DESCRIPTOR SecurityDescriptor; /* 0x2C */
+  PVOID AuxData; /* 0x30 */
+  union
+  {
+    INITIAL_PRIVILEGE_SET InitialPrivilegeSet;
+    PRIVILEGE_SET PrivilegeSet;
+  } Privileges;
+  BOOLEAN AuditPrivileges;
+  UNICODE_STRING ObjectName;
+  UNICODE_STRING ObjectTypeName;
+} ACCESS_STATE, *PACCESS_STATE;
 
 #endif
 

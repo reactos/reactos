@@ -1,13 +1,10 @@
 #ifndef _INCLUDE_DDK_OBTYPES_H
 #define _INCLUDE_DDK_OBTYPES_H
-/* $Id: obtypes.h,v 1.7 2003/10/21 15:49:19 ekohl Exp $ */
+/* $Id: obtypes.h,v 1.8 2004/07/07 17:20:16 ekohl Exp $ */
 struct _DIRECTORY_OBJECT;
 struct _OBJECT_ATTRIBUTES;
 
 #ifndef __USE_W32API
-
-typedef ULONG ACCESS_STATE, *PACCESS_STATE;
-
 
 typedef struct _OBJECT_HANDLE_INFORMATION
 {
