@@ -2,6 +2,7 @@
 Signature = "$ReactOS$"
 
 [Directories]
+; <directory_id> = <path>
 1 = "\"
 2 = system32
 3 = system32\drivers
@@ -11,6 +12,7 @@ Signature = "$ReactOS$"
 7 = bin
 
 [SourceFiles]
+; <filename> = <directory_id>
 atapi.sys     = 3
 blue.sys      = 3
 c_437.nls     = 2
@@ -42,7 +44,35 @@ OsLoadOptions = "/NOGUIBOOT /NODEBUG"
 AnsiCodepage     = c_1252.nls
 OemCodepage      = c_437.nls
 UnicodeCasetable = l_intl.nls
-;DefaultLayout    =
+DefaultLayout    = 00000409
+
+[Computer]
+pci_up = "Standard-PC"
+
+[Display]
+vga = "VGA display"
+vbe = "VESA display"
+
+[Keyboard]
+Default = "XT-, AT- or extended keyboard (83-105 keys)"
+
+[KeyboardLayout]
+00000809 = "English (United Kingdom)"
+00000409 = "English (US)"
+0000040C = "French (France)"
+00000407 = "German (Germany)"
+0000041D = "Swedish"
+
+[Files.KeyboardLayout]
+00000407 = kbdgr.dll
+00000409 = kbdus.dll
+0000040C = kbdfr.dll
+0000041D = kbdse.dll
+00000809 = kgbgb.dll
+
+[Mouse]
+ps2mouse = "Mouse Port mouse (PS/2 mouse)"
+sermouse = "Serial mouse"
 
 [HiveInfs.Install]
 AddReg=hivecls.inf,AddReg
