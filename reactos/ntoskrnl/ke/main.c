@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
  * PURPOSE:         Initalizes the kernel
@@ -705,7 +704,7 @@ ExpInitializeExecutive(VOID)
     KEBUGCHECK(INACCESSIBLE_BOOT_DEVICE);
   }
 
-#ifdef KDBG
+#if defined(KDBG) || defined(DBG)
   KdbInitProfiling2();
 #endif /* KDBG */
 

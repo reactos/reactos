@@ -1,5 +1,4 @@
-/* $Id: kdebug.c,v 1.58 2004/12/14 10:18:57 gvg Exp $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/kd/kdebug.c
@@ -243,7 +242,7 @@ KdInitSystem(ULONG BootPhase,
 		}
 	    }
 	}
-#ifdef KDBG
+#if defined(KDBG) || defined(DBG)
     else if (!_strnicmp(p2, "PROFILE", 7)  && BootPhase > 0)
       {
         KdbInitProfiling();

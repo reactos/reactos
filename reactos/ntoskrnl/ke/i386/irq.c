@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/irq.c
  * PURPOSE:         IRQ handling
@@ -37,7 +36,7 @@
 /* INCLUDES ****************************************************************/
 
 #include <ntoskrnl.h>
-#ifdef KDBG
+#if defined(KDBG) || defined(DBG)
 #include <../dbg/kdb.h>
 #endif /* KDBG */
 
@@ -358,7 +357,7 @@ KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
    {
       KeIRQTrapFrameToTrapFrame(Trapframe, &KernelTrapFrame);
       KeUpdateSystemTime(&KernelTrapFrame, old_level);
-#ifdef KDBG
+#if defined(KDBG) || defined(DBG)
       KdbProfileInterrupt(Trapframe->Eip);
 #endif /* KDBG */
    }
