@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.49 2004/01/12 00:07:34 navaraf Exp $
+/* $Id: windc.c,v 1.50 2004/01/13 17:13:48 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -61,9 +61,7 @@ HRGN STDCALL
 DceGetVisRgn(HWND hWnd, ULONG Flags, HWND hWndChild, ULONG CFlags)
 {
   PWINDOW_OBJECT Window;
-  PWINDOW_OBJECT Child;
   HRGN VisRgn;
-  HRGN VisChild;
 
   Window = IntGetWindowObject(hWnd);
 
@@ -76,33 +74,6 @@ DceGetVisRgn(HWND hWnd, ULONG Flags, HWND hWndChild, ULONG CFlags)
                                     0 == (Flags & DCX_WINDOW),
                                     0 != (Flags & DCX_CLIPCHILDREN),
                                     0 != (Flags & DCX_CLIPSIBLINGS));
-  if (NULL != hWndChild && 0 != (CFlags & DCX_CLIPCHILDREN))
-    {
-      NtGdiOffsetRgn(VisRgn,
-         Window->WindowRect.left,
-         Window->WindowRect.top);
-      /* We need to filter out the child windows of hWndChild */
-      Child = IntGetWindowObject(hWndChild);
-      if (NULL != Child)
- 	{
-          if (Child->FirstChild)
-	    {
-	      /* Compute the visible region of the child */
-	      VisChild = VIS_ComputeVisibleRegion(PsGetWin32Thread()->Desktop,
-	                                          Child, FALSE, TRUE, FALSE);
-	      NtGdiOffsetRgn(VisChild,
-                 Child->WindowRect.left,
-                 Child->WindowRect.top);
-
-	      /* Clip the childs children */
-	      NtGdiCombineRgn(VisRgn, VisRgn, VisChild, RGN_DIFF);
-	    }
-	  IntReleaseWindowObject(Child);
-	}
-      NtGdiOffsetRgn(VisRgn,
-         -Window->WindowRect.left,
-         -Window->WindowRect.top);
-    }
 
   IntReleaseWindowObject(Window);
 

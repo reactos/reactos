@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.60 2004/01/12 21:24:20 navaraf Exp $
+ *  $Id: painting.c,v 1.61 2004/01/13 17:13:48 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -421,15 +421,11 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
 
                if (Window->UpdateRegion != NULL)
                {
-                  RECT TempRect;
-
-                  UnsafeIntGetRgnBox(Window->UpdateRegion, &TempRect);
                   NtGdiCombineRgn(hRgnTemp, Child->UpdateRegion, 0, RGN_COPY);
                   NtGdiCombineRgn(hRgnTemp, hRgnTemp, Child->NCUpdateRegion, RGN_OR);
                   NtGdiOffsetRgn(hRgnTemp,
                      Child->WindowRect.left - Window->WindowRect.left,
                      Child->WindowRect.top - Window->WindowRect.top);
-                  UnsafeIntGetRgnBox(hRgnTemp, &TempRect);
                   if (NtGdiCombineRgn(Window->UpdateRegion, Window->UpdateRegion,
                       hRgnTemp, RGN_DIFF) == NULLREGION)
                   {
