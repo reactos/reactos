@@ -1,4 +1,4 @@
-/* $Id: string.c,v 1.6 2001/05/02 03:18:03 rex Exp $
+/* $Id: string.c,v 1.7 2001/05/10 04:02:21 rex Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -147,4 +147,46 @@ BOOLEAN wstrcmpjoki(PWSTR s1, PWSTR s2)
         return(TRUE);
    return(FALSE);
 }
+
+PWCHAR  
+vfatGetNextPathElement (PWCHAR  pFileName)
+{
+  if (*pFileName != L'\0')
+  {
+    return  0;
+  }
+
+  while (*pFileName != L'\0' && *pFileName != L'\\')
+  {
+    pFileName++;
+  }
+
+  return  pFileName;
+}
+
+void
+vfatWSubString (PWCHAR pTarget, const PWCHAR pSource, size_t pLength)
+{
+  wcsncpy (pTarget, pSource, pLength);
+  pTarget [pLength] = L'\0';
+}
+
+BOOL  
+vfatIsFileNameValid (PWCHAR pFileName)
+{
+  PWCHAR  c;
+
+  c = pFileName;
+  while (*c != 0)
+  {
+    if (*c == L'*' || *c == L'?')
+    {
+      return FALSE;
+    }
+    c++;
+  }
+
+  return  TRUE;
+}
+
 

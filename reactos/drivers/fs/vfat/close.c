@@ -1,4 +1,4 @@
-/* $Id: close.c,v 1.6 2001/05/04 01:21:45 rex Exp $
+/* $Id: close.c,v 1.7 2001/05/10 04:02:21 rex Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -26,7 +26,6 @@ VfatCloseFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject)
 {
   PVFATFCB pFcb;
   PVFATCCB pCcb;
-  KIRQL oldIrql;
 
   DPRINT ("VfatCloseFile(DeviceExt %x, FileObject %x)\n",
 	  DeviceExt, FileObject);
@@ -36,26 +35,15 @@ VfatCloseFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject)
 
   DPRINT ("pCcb %x\n", pCcb);
   if (pCcb == NULL)
-    {
-      return (STATUS_SUCCESS);
-    }
+  {
+    return  STATUS_SUCCESS;
+  }
 
   pFcb = pCcb->pFcb;
-
-  pFcb->RefCount--;
-  CHECKPOINT;
-  if (pFcb->RefCount <= 0)
-    {
-      CcRosReleaseFileCache(FileObject, pFcb->RFCB.Bcb);
-      KeAcquireSpinLock (&DeviceExt->FcbListLock, &oldIrql);
-  CHECKPOINT;
-      RemoveEntryList (&pFcb->FcbListEntry);
-      KeReleaseSpinLock (&DeviceExt->FcbListLock, oldIrql);
-      ExFreePool (pFcb);
-  CHECKPOINT;
-    }
+  vfatReleaseFCB (DeviceExt, pFcb);
   ExFreePool (pCcb);
-  return STATUS_SUCCESS;
+
+  return  STATUS_SUCCESS;
 }
 
 NTSTATUS STDCALL

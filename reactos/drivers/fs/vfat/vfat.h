@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.28 2001/05/02 03:18:03 rex Exp $ */
+/* $Id: vfat.h,v 1.29 2001/05/10 04:02:21 rex Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -240,6 +240,9 @@ BOOLEAN
 wstrcmpi(PWSTR s1, PWSTR s2);
 BOOLEAN 
 wstrcmpjoki(PWSTR s1, PWSTR s2);
+PWCHAR  vfatGetNextPathElement (PWCHAR  pFileName);
+void  vfatWSubString (PWCHAR pTarget, const PWCHAR pSource, size_t pLength);
+BOOL  vfatIsFileNameValid (PWCHAR pFileName);
 
 /*
  * functions from fat.c
@@ -283,8 +286,24 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 /*  -----------------------------------------------------  FCB Functions */
 
 PVFATFCB  vfatNewFCB (PWCHAR pFileName);
-void  vfatAddFCBToTable (PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB);
+void  vfatDestroyFCB (PVFATFCB  pFCB);
+void  vfatGrabFCB (PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB);
+void  vfatReleaseFCB (PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB);
+void  vfatAddFCBToTable (PDEVICE_EXTENSION  pVCB,  
+                         PVFATFCB  pFCB);
 PVFATFCB  vfatGrabFCBFromTable (PDEVICE_EXTENSION  pDeviceExt, 
                                 PWSTR  pFileName);
+PVFATFCB  vfatMakeRootFCB (PDEVICE_EXTENSION  pVCB);
+PVFATFCB  vfatOpenRootFCB (PDEVICE_EXTENSION  pVCB);
+BOOL  vfatFCBIsDirectory (PDEVICE_EXTENSION pVCB, PVFATFCB FCB);
+PVFATFCB  vfatDirFindFile (PDEVICE_EXTENSION pVCB, 
+                           PVFATFCB parentFCB, 
+                           const PWSTR elementName);
+NTSTATUS  vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB, 
+                             PVFATFCB  *pParentFCB, 
+                             PVFATFCB  *pFCB, 
+                             const PWSTR  pFileName);
+
+
 
 
