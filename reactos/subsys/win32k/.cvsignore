@@ -1,8 +1,0 @@
-temp.exp
-*.tmp
-*.sys
-*.coff
-*.sym
-*.map
-*.d
-*.o
