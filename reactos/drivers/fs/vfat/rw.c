@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.64 2004/01/28 20:53:46 ekohl Exp $
+/* $Id: rw.c,v 1.65 2004/03/31 03:30:36 jimtabor Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -460,7 +460,7 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
    PERESOURCE Resource = NULL;
    LARGE_INTEGER ByteOffset;
    PVOID Buffer;
-   /*PDEVICE_OBJECT DeviceToVerify;*/
+   PDEVICE_OBJECT DeviceToVerify;
    ULONG BytesPerSector;
 
    assert(IrpContext);
@@ -629,21 +629,22 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
       }
 
       Status = VfatReadFileData(IrpContext, Buffer, Length, ByteOffset, &ReturnedLength);
-/*
+/**/
       if (Status == STATUS_VERIFY_REQUIRED)
       {
          DPRINT("VfatReadFile returned STATUS_VERIFY_REQUIRED\n");
-         DeviceToVerify = IoGetDeviceToVerify(KeGetCurrentThread());
-         IoSetDeviceToVerify(KeGetCurrentThread(), NULL);
+         DeviceToVerify = IoGetDeviceToVerify((struct _ETHREAD*)KeGetCurrentThread());
+         IoSetDeviceToVerify((struct _ETHREAD*)KeGetCurrentThread(), NULL);
          Status = IoVerifyVolume (DeviceToVerify, FALSE);
 
          if (NT_SUCCESS(Status))
          {
             Status = VfatReadFileData(IrpContext, Buffer, Length,
-                                      ByteOffset.u.LowPart, &ReturnedLength);
+                                      ByteOffset, &ReturnedLength);
          }
+
       }
-*/
+/**/
       if (NT_SUCCESS(Status))
       {
          IrpContext->Irp->IoStatus.Information = ReturnedLength;

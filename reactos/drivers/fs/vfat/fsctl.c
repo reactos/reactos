@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.28 2004/03/16 08:30:28 arty Exp $
+/* $Id: fsctl.c,v 1.29 2004/03/31 03:30:36 jimtabor Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -66,12 +66,15 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
 				     &DiskGeometry,
 				     &Size,
 				     FALSE);
+  DPRINT("VfatHasFileSystem start\n");
+  
+
    if (!NT_SUCCESS(Status))
    {
       DPRINT("VfatBlockDeviceIoControl faild (%x)\n", Status);
       return Status;
    }
-   if (DiskGeometry.MediaType == FixedMedia)
+   if (DiskGeometry.MediaType == FixedMedia || RemovableMedia)
    {
       // We have found a hard disk
       Size = sizeof(PARTITION_INFORMATION);
@@ -87,7 +90,7 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
          DPRINT("VfatBlockDeviceIoControl faild (%x)\n", Status);
          return Status;
       }
-#ifndef NDEBUG
+/*#ifndef NDEBUG*/
       DbgPrint("Partition Information:\n");
       DbgPrint("StartingOffset      %u\n", PartitionInfo.StartingOffset.QuadPart  / 512);
       DbgPrint("PartitionLength     %u\n", PartitionInfo.PartitionLength.QuadPart / 512);
@@ -97,7 +100,7 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
       DbgPrint("BootIndicator       %u\n", PartitionInfo.BootIndicator);
       DbgPrint("RecognizedPartition %u\n", PartitionInfo.RecognizedPartition);
       DbgPrint("RewritePartition    %u\n", PartitionInfo.RewritePartition);
-#endif
+/*#endif*/
       if (PartitionInfo.PartitionType == PARTITION_FAT_12       ||
           PartitionInfo.PartitionType == PARTITION_FAT_16       ||
           PartitionInfo.PartitionType == PARTITION_HUGE         ||
@@ -108,7 +111,7 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
          *RecognizedFS = TRUE;
       }
    }
-   else if (DiskGeometry.MediaType > Unknown && DiskGeometry.MediaType <= RemovableMedia)
+   else if (DiskGeometry.MediaType > Unknown && DiskGeometry.MediaType <= RemovableMedia )
    {
       *RecognizedFS = TRUE;
    }
@@ -120,13 +123,19 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
    Boot = ExAllocatePool(NonPagedPool, DiskGeometry.BytesPerSector);
    if (Boot == NULL)
    {
+  DPRINT("VfatHasFileSystem 1\n");
+
       *RecognizedFS=FALSE;
       return STATUS_INSUFFICIENT_RESOURCES;
    }
+
    Offset.QuadPart = 0;
+
    Status = VfatReadDisk(DeviceToMount, &Offset, DiskGeometry.BytesPerSector, (PUCHAR) Boot, FALSE);
    if (NT_SUCCESS(Status))
    {
+      DPRINT("VfatHasFileSystem 2\n");
+
       if (Boot->BytesPerSector != 0)
       {
          FatInfo.VolumeID = Boot->VolumeID;
@@ -167,9 +176,13 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
       }
       else
       {
+        DPRINT("VfatHasFileSystem 3\n");
+
       	Status = STATUS_INSUFFICIENT_RESOURCES;
       }
    }
+     DPRINT("VfatHasFileSystem end\n");
+
    ExFreePool(Boot);
    return Status;
 }
@@ -191,6 +204,7 @@ VfatMountDevice(PDEVICE_EXTENSION DeviceExt,
    {
       return(Status);
    }
+   DPRINT("MountVfatdev %d, PAGE_SIZE = %d\n", DeviceExt->FatInfo.BytesPerCluster, PAGE_SIZE);
 
    if (DeviceExt->FatInfo.BytesPerCluster >= PAGE_SIZE &&
       (DeviceExt->FatInfo.BytesPerCluster % PAGE_SIZE) != 0)
@@ -398,7 +412,8 @@ VfatVerify (PVFAT_IRP_CONTEXT IrpContext)
  */
 {
   PDEVICE_OBJECT DeviceToVerify;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
+
 
   DPRINT("VfatVerify(IrpContext %x)\n", IrpContext);
 
@@ -412,16 +427,17 @@ VfatVerify (PVFAT_IRP_CONTEXT IrpContext)
 				    FALSE);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("VfatBlockDeviceIoControl() failed (Status %lx)\n", Status);
+      DPRINT("VfatBlockDeviceIoControl() failed (Status %lx)\n", Status);
 
       /* FIXME: Compare volume label */
 
-      DPRINT1("  returning STATUS_WRONG_VOLUME\n");
+      DPRINT("  returning STATUS_WRONG_VOLUME\n");
 
-      return STATUS_WRONG_VOLUME;
+      Status = STATUS_WRONG_VOLUME;
     }
-
-  return STATUS_SUCCESS;
+  DeviceToVerify->Flags &= ~DO_VERIFY_VOLUME;
+    
+  return Status;
 }
 
 
@@ -598,6 +614,7 @@ NTSTATUS VfatFileSystemControl(PVFAT_IRP_CONTEXT IrpContext)
 	 break;
 
       case IRP_MN_VERIFY_VOLUME:
+	DPRINT("VFATFS: IRP_MN_VERIFY_VOLUME\n");
 	 Status = VfatVerify(IrpContext);
 	 break;
 

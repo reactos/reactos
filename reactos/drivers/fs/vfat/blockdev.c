@@ -161,7 +161,7 @@ VfatWriteDisk (IN PDEVICE_OBJECT pDeviceObject,
 
   if (!NT_SUCCESS (Status))
     {
-      DPRINT1 ("IO failed!!! VfatWriteSectors : Error code: %x\n", Status);
+      DPRINT ("IO failed!!! VfatWriteSectors : Error code: %x\n", Status);
       return (Status);
     }
 

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.4 2003/11/13 14:19:23 ekohl Exp $
+# $Id: makefile,v 1.5 2004/03/31 03:33:48 jimtabor Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -12,7 +12,7 @@ TARGET_DDKLIBS = class2.a
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 
-TARGET_CFLAGS = -Werror -Wall
+TARGET_CFLAGS =  -Wall
 
 include $(PATH_TO_TOP)/rules.mak
 
