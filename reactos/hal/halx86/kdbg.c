@@ -1,4 +1,4 @@
-/* $Id: kdbg.c,v 1.7 2003/12/28 22:38:09 fireball Exp $
+/* $Id: kdbg.c,v 1.8 2004/04/29 17:06:21 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -34,6 +34,10 @@
 #define     SR_IER_ALL    0x0F
 #define   SER_DLM(x)   ((x)+1)
 #define   SER_IIR(x)   ((x)+2)
+#define   SER_FCR(x)   ((x)+2)
+#define     SR_FCR_ENABLE_FIFO 0x01
+#define     SR_FCR_CLEAR_RCVR  0x02
+#define     SR_FCR_CLEAR_XMIT  0x04
 #define   SER_LCR(x)   ((x)+3)
 #define     SR_LCR_CS5 0x00
 #define     SR_LCR_CS6 0x01
@@ -118,7 +122,18 @@ KdpDoesComPortExist (PUCHAR BaseAddress)
                  * equal to the lower nibble of the MCR (modem input bits)
                  */
                 if ((msr & 0xF0) == 0xF0)
+                {
+                        /*
+                         * setup a resonable state for the port:
+                         * enable fifo and clear recieve/transmit buffers
+                         */
+                        WRITE_PORT_UCHAR (SER_FCR(BaseAddress),
+                                (SR_FCR_ENABLE_FIFO | SR_FCR_CLEAR_RCVR | SR_FCR_CLEAR_XMIT));
+                        WRITE_PORT_UCHAR (SER_FCR(BaseAddress), 0);
+                        READ_PORT_UCHAR (SER_RBR(BaseAddress));
+                        WRITE_PORT_UCHAR (SER_IER(BaseAddress), 0);
                         found = TRUE;
+                }
         }
 
         /* restore MCR */
