@@ -614,6 +614,42 @@ MingwModuleHandler::GenerateMacros (
 		}
 	}
 
+	const vector<If*>& ifs = data.ifs;
+	for ( i = 0; i < ifs.size(); i++ )
+	{
+		If& rIf = *ifs[i];
+		if ( rIf.data.defines.size()
+			|| rIf.data.includes.size()
+			|| rIf.data.libraries.size()
+			|| rIf.data.files.size()
+			|| rIf.data.ifs.size() )
+		{
+			fprintf (
+				fMakefile,
+				"ifeq (\"$(%s)\",\"%s\")\n",
+				rIf.property.c_str(),
+				rIf.value.c_str() );
+			GenerateMacros (
+				"+=",
+				rIf.data,
+				NULL,
+				NULL );
+			fprintf ( 
+				fMakefile,
+				"endif\n\n" );
+		}
+	}
+}
+
+void
+MingwModuleHandler::GenerateObjectMacros (
+	const char* assignmentOperation,
+	const IfableData& data,
+	const vector<CompilerFlag*>* compilerFlags,
+	const vector<LinkerFlag*>* linkerFlags )
+{
+	size_t i;
+
 	const vector<File*>& files = data.files;
 	if ( files.size () > 0 )
 	{
@@ -666,7 +702,7 @@ MingwModuleHandler::GenerateMacros (
 				"ifeq (\"$(%s)\",\"%s\")\n",
 				rIf.property.c_str(),
 				rIf.value.c_str() );
-			GenerateMacros (
+			GenerateObjectMacros (
 				"+=",
 				rIf.data,
 				NULL,
@@ -887,7 +923,7 @@ MingwModuleHandler::GenerateLinkerCommand (
 	const string& libsMacro )
 {
 	string target ( GetTargetMacro ( module ) );
-	string target_folder ( GetDirectory(GetTargetFilename(module,NULL)) );
+	string target_folder ( GetDirectory ( GetTargetFilename ( module, NULL ) ) );
 
 	fprintf ( fMakefile,
 		"%s: %s %s $(RSYM_TARGET)\n",
@@ -1107,13 +1143,37 @@ MingwModuleHandler::GetLinkerMacro () const
 	                  module.name.c_str () );
 }
 
+string
+MingwModuleHandler::GetModuleTargets ( const Module& module )
+{
+	if ( module.type == ObjectLibrary )
+		return GetObjectsMacro ( module );
+	else
+		return GetTargetFilename ( module, NULL );
+}
+
+void
+MingwModuleHandler::GenerateObjectMacro ()
+{
+	objectsMacro = ssprintf ("%s_OBJS", module.name.c_str ());
+
+	GenerateObjectMacros (
+		"=",
+		module.non_if_data,
+		&module.compilerFlags,
+		&module.linkerFlags );
+
+	// future references to the macro will be to get its values
+	objectsMacro = ssprintf ("$(%s)", objectsMacro.c_str ());
+}
+
 void
 MingwModuleHandler::GenerateTargetMacro ()
 {
 	fprintf ( fMakefile,
 		"%s := %s\n",
-		GetTargetMacro(module,false).c_str (),
-		GetTargetFilename(module,NULL).c_str () );
+		GetTargetMacro ( module, false ).c_str (),
+		GetModuleTargets ( module ).c_str () );
 }
 
 void
@@ -1123,7 +1183,6 @@ MingwModuleHandler::GenerateOtherMacros ()
 	nasmflagsMacro = ssprintf ("%s_NASMFLAGS", module.name.c_str ());
 	windresflagsMacro = ssprintf ("%s_RCFLAGS", module.name.c_str ());
 	linkerflagsMacro = ssprintf ("%s_LFLAGS", module.name.c_str ());
-	objectsMacro = ssprintf ("%s_OBJS", module.name.c_str ());
 	libsMacro = ssprintf("%s_LIBS", module.name.c_str ());
 	linkDepsMacro = ssprintf ("%s_LINKDEPS", module.name.c_str ());
 
@@ -1202,7 +1261,6 @@ MingwModuleHandler::GenerateOtherMacros ()
 	// future references to the macros will be to get their values
 	cflagsMacro = ssprintf ("$(%s)", cflagsMacro.c_str ());
 	nasmflagsMacro = ssprintf ("$(%s)", nasmflagsMacro.c_str ());
-	objectsMacro = ssprintf ("$(%s)", objectsMacro.c_str ());
 }
 
 void

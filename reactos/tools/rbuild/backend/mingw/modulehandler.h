@@ -36,6 +36,8 @@ public:
 		const Module& module,
 		string_list* pclean_files );
 
+	std::string GetModuleTargets ( const Module& module );
+	void GenerateObjectMacro();
 	void GenerateTargetMacro();
 	void GenerateOtherMacros();
 
@@ -101,6 +103,10 @@ private:
 	                      const IfableData& data,
 	                      const std::vector<CompilerFlag*>* compilerFlags,
 	                      const std::vector<LinkerFlag*>* linkerFlags );
+	void GenerateObjectMacros ( const char* assignmentOperation,
+	                            const IfableData& data,
+	                            const std::vector<CompilerFlag*>* compilerFlags,
+	                            const std::vector<LinkerFlag*>* linkerFlags );
 	std::string GenerateGccIncludeParameters () const;
 	std::string GenerateGccParameters () const;
 	std::string GenerateNasmParameters () const;

@@ -142,6 +142,8 @@ MingwBackend::Process ()
 	size_t iend = v.size ();
 
 	for ( i = 0; i < iend; i++ )
+		v[i]->GenerateObjectMacro();
+	for ( i = 0; i < iend; i++ )
 		v[i]->GenerateTargetMacro();
 	fprintf ( fMakefile, "\n" );
 
@@ -419,26 +421,6 @@ MingwBackend::GenerateDirectoryTargets ()
 		d.CreateRule ( fMakefile, "" );
 		if ( i ) fprintf ( fMakefile, "endif\n" );
 	}
-	/*if ( directories.size () == 0 )
-		return;
-	
-	set_string::iterator i;
-	for ( i = directories.begin ();
-	      i != directories.end ();
-	      i++ )
-	{
-		if ( IncludeDirectoryTarget ( *i ) )
-		{
-			fprintf ( fMakefile,
-			          "%s: $(RMKDIR_TARGET)\n",
-			          i->c_str () );
-			fprintf ( fMakefile, 
-			          "\t${mkdir} %s\n\n",
-			          i->c_str () );
-		}
-	}
-
-	directories.clear ();*/
 }
 
 string
