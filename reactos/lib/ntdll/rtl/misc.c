@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.10 2004/08/05 18:17:36 ion Exp $
+/* $Id: misc.c,v 1.11 2004/12/13 23:11:13 navaraf Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -84,7 +84,10 @@ RtlGetNtVersionNumbers(LPDWORD major, LPDWORD minor, LPDWORD build)
 
 	if (minor)
 	{
-		*minor = pPeb->OSMinorVersion;
+		if (pPeb->OSMinorVersion <= 5)
+			*minor = pPeb->OSMinorVersion < 1 ? 1 : pPeb->OSMinorVersion;
+		else
+			*minor = pPeb->OSMinorVersion;
 	}
 
 	if (build)
