@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.52 2003/07/10 15:47:00 royce Exp $
+/* $Id: irp.c,v 1.53 2003/08/07 11:47:33 silverblade Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -267,7 +267,7 @@ IofCompleteRequest(PIRP Irp,
       {
          Status = Irp->Stack[i].CompletionRoutine(DeviceObject,
                                                   Irp,
-                                                  Irp->Stack[i].CompletionContext);
+                                                  Irp->Stack[i].Context);
 
          if (Status == STATUS_MORE_PROCESSING_REQUIRED)
          {

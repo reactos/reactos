@@ -27,18 +27,7 @@ VOID STDCALL KeAcquireSpinLock (PKSPIN_LOCK	SpinLock,
 
 VOID STDCALL KeAcquireSpinLockAtDpcLevel (IN PKSPIN_LOCK	SpinLock);
 
-//NTOSAPI
-//DDKFASTAPI
-
-//STDCALL
-//VOID
-//KefAcquireSpinLockAtDpcLevel(
-// IN PKSPIN_LOCK  SpinLock);
-  
 #define KefAcquireSpinLockAtDpcLevel KeAcquireSpinLockAtDpcLevel
-
-//NTOSAPI
-//DDKFASTAPI
 
 VOID
 STDCALL
@@ -58,7 +47,6 @@ KeReleaseSpinLockFromDpcLevel(
  * knows what file/line number where the bug check occured
  */
 VOID STDCALL KeBugCheck (ULONG	BugCheckCode);
-#define KEBUGCHECK(a) DbgPrint("KeBugCheck at %s:%i\n",__FILE__,__LINE__), KeBugCheck(a)
 
 /*
  * FUNCTION: Brings the system down in a controlled manner when an 
@@ -76,7 +64,6 @@ VOID STDCALL KeBugCheckEx (ULONG	BugCheckCode,
 			   ULONG	BugCheckParameter2,
 			   ULONG	BugCheckParameter3,
 			   ULONG	BugCheckParameter4);
-#define KEBUGCHECKEX(a,b,c,d,e) DbgPrint("KeBugCheckEx at %s:%i\n",__FILE__,__LINE__), KeBugCheckEx(a,b,c,d,e)
 
 BOOLEAN STDCALL KeCancelTimer (PKTIMER	Timer);
 

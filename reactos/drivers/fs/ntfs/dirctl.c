@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dirctl.c,v 1.5 2003/02/13 22:24:16 hbirr Exp $
+/* $Id: dirctl.c,v 1.6 2003/08/07 11:47:32 silverblade Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -494,14 +494,14 @@ NtfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
   PCCB Ccb;
   FCB TempFcb;
   BOOLEAN First = FALSE;
-  PIO_STACK_LOCATION Stack;
+  PEXTENDED_IO_STACK_LOCATION Stack;
   PFILE_OBJECT FileObject;
   NTSTATUS Status = STATUS_SUCCESS;
 
   DPRINT1("NtfsQueryDirectory() called\n");
 
   DeviceExtension = DeviceObject->DeviceExtension;
-  Stack = IoGetCurrentIrpStackLocation(Irp);
+  Stack = (PEXTENDED_IO_STACK_LOCATION) IoGetCurrentIrpStackLocation(Irp);
   FileObject = Stack->FileObject;
 
   Ccb = (PCCB)FileObject->FsContext2;

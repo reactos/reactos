@@ -3,6 +3,7 @@
 
 #ifdef __USE_W32API
 #include <ddk/ntapi.h>
+#include <napi/types.h>
 #endif /* !__USE_W32API */
 
 #include <ntos/security.h>
@@ -52,9 +53,9 @@ typedef struct _LPC_MESSAGE
    USHORT MessageSize;
    USHORT MessageType;
    USHORT VirtualRangesOffset;
-   CLIENT_ID Cid;
+   CLIENT_ID ClientId;
    ULONG MessageId;
-   ULONG SharedSectionSize; // CallbackID
+   ULONG SectionSize; // CallbackID
 } LPC_MESSAGE, *PLPC_MESSAGE;
 
 #endif /* !__USE_W32API */

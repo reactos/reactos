@@ -1,4 +1,4 @@
-/* $Id: filelock.c,v 1.9 2003/07/11 01:23:14 royce Exp $
+/* $Id: filelock.c,v 1.10 2003/08/07 11:47:33 silverblade Exp $
  *
  * reactos/ntoskrnl/fs/filelock.c
  *
@@ -540,14 +540,14 @@ FsRtlpCompletePendingLocks(
    //walk pending list, FIFO order, try 2 complete locks
    PLIST_ENTRY                   EnumEntry;
    PIRP                          Irp;
-   PIO_STACK_LOCATION            Stack;
+   PEXTENDED_IO_STACK_LOCATION            Stack;
 
    EnumEntry = LockToc->PendingListHead.Blink;
    while (EnumEntry != &LockToc->PendingListHead) 
    {
       Irp = CONTAINING_RECORD(EnumEntry,IRP, Tail.Overlay.ListEntry);
 
-      Stack = IoGetCurrentIrpStackLocation(Irp);
+      Stack = (PEXTENDED_IO_STACK_LOCATION) IoGetCurrentIrpStackLocation(Irp);
       if (FsRtlpAddLock(LockToc,
                         Stack->FileObject,
                         &Stack->Parameters.LockControl.ByteOffset,
@@ -734,7 +734,7 @@ FsRtlpDumpFileLocks(
    PFILE_LOCK_GRANTED   Granted;
    PIRP                 Irp;
    PLIST_ENTRY          EnumEntry;
-   PIO_STACK_LOCATION   Stack;
+   PEXTENDED_IO_STACK_LOCATION   Stack;
 
    assert(FileLock);
    LockToc = FileLock->LockInformation;
@@ -774,7 +774,7 @@ FsRtlpDumpFileLocks(
    {
       Irp = CONTAINING_RECORD(EnumEntry, IRP , Tail.Overlay.ListEntry );
 
-      Stack = IoGetCurrentIrpStackLocation(Irp);
+      Stack = (PEXTENDED_IO_STACK_LOCATION) IoGetCurrentIrpStackLocation(Irp);
 
       DPRINT1("%s, start: %i, len: %i, end: %i, key: %i, proc: 0x%X, fob: 0x%X\n",
          (Stack->Flags & SL_EXCLUSIVE_LOCK) ? "EXCL" : "SHRD",
@@ -1083,12 +1083,12 @@ FsRtlProcessFileLock (
    IN PVOID        Context OPTIONAL
    )
 {
-   PIO_STACK_LOCATION   Stack;
+   PEXTENDED_IO_STACK_LOCATION   Stack;
    NTSTATUS             Status;
    IO_STATUS_BLOCK      LocalIoStatus;
 
    assert(FileLock);
-   Stack = IoGetCurrentIrpStackLocation(Irp);
+   Stack = (PEXTENDED_IO_STACK_LOCATION) IoGetCurrentIrpStackLocation(Irp);
    Irp->IoStatus.Information = 0;
 
    switch(Stack->MinorFunction)

@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.18 2003/07/11 01:23:14 royce Exp $
+/* $Id: dir.c,v 1.19 2003/08/07 11:47:33 silverblade Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -91,7 +91,7 @@ NtQueryDirectoryFile(
    PDEVICE_OBJECT DeviceObject;
    PFILE_OBJECT FileObject;
    NTSTATUS Status;
-   PIO_STACK_LOCATION IoStack;
+   PEXTENDED_IO_STACK_LOCATION IoStack;
    IO_STATUS_BLOCK IoSB;
    
    DPRINT("NtQueryDirectoryFile()\n");
@@ -125,7 +125,7 @@ NtQueryDirectoryFile(
    KeResetEvent( &FileObject->Event );
    Irp->UserBuffer=FileInformation;
    
-   IoStack = IoGetNextIrpStackLocation(Irp);
+   IoStack = (PEXTENDED_IO_STACK_LOCATION) IoGetNextIrpStackLocation(Irp);
    
    IoStack->MajorFunction = IRP_MJ_DIRECTORY_CONTROL;
    IoStack->MinorFunction = IRP_MN_QUERY_DIRECTORY;
@@ -146,7 +146,7 @@ NtQueryDirectoryFile(
      {
 	IoStack->Flags = IoStack->Flags | SL_INDEX_SPECIFIED;
      }
-   
+
    IoStack->Parameters.QueryDirectory.FileInformationClass = 
      FileInformationClass;
    IoStack->Parameters.QueryDirectory.FileName = FileName;

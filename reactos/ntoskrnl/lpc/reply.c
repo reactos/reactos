@@ -1,4 +1,4 @@
-/* $Id: reply.c,v 1.18 2003/07/21 21:53:52 royce Exp $
+/* $Id: reply.c,v 1.19 2003/08/07 11:47:33 silverblade Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -61,8 +61,8 @@ EiReplyOrRequestPort (IN	PEPORT		Port,
 	memcpy(&MessageReply->Message, LpcReply, LpcReply->MessageSize);
      }
    
-   MessageReply->Message.Cid.UniqueProcess = PsGetCurrentProcessId();
-   MessageReply->Message.Cid.UniqueThread = PsGetCurrentThreadId();
+   MessageReply->Message.ClientId.UniqueProcess = PsGetCurrentProcessId();
+   MessageReply->Message.ClientId.UniqueThread = PsGetCurrentThreadId();
    MessageReply->Message.MessageType = MessageType;
    MessageReply->Message.MessageId = InterlockedIncrement((LONG *)&EiNextLpcMessageId);
    

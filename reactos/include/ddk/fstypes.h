@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_FSTYPES_H
 #define __INCLUDE_DDK_FSTYPES_H
-/* $Id: fstypes.h,v 1.11 2003/06/07 10:14:39 chorns Exp $ */
+/* $Id: fstypes.h,v 1.12 2003/08/07 11:47:32 silverblade Exp $ */
 
 #define FSRTL_TAG 	TAG('F','S','r','t')
 
@@ -9,6 +9,9 @@ typedef LBN *PLBN;
 
 typedef ULONG VBN;
 typedef VBN *PVBN;
+
+
+#ifndef __USE_W32API
 
 typedef struct _FILE_LOCK_INFO {
     LARGE_INTEGER   StartingByte;
@@ -19,11 +22,6 @@ typedef struct _FILE_LOCK_INFO {
     PEPROCESS       Process;
     LARGE_INTEGER   EndingByte;
 } FILE_LOCK_INFO, *PFILE_LOCK_INFO;
-
-typedef struct _FILE_LOCK_GRANTED {
-	LIST_ENTRY			ListEntry;
-	FILE_LOCK_INFO		Lock;
-} FILE_LOCK_GRANTED, *PFILE_LOCK_GRANTED;
 
 typedef NTSTATUS (*PCOMPLETE_LOCK_IRP_ROUTINE) (
     IN PVOID    Context,
@@ -91,5 +89,13 @@ typedef VOID
 			  PIRP Irp);
 
 typedef PVOID OPLOCK, *POPLOCK;
+
+#endif /* __USE_W32API */
+
+typedef struct _FILE_LOCK_GRANTED {
+	LIST_ENTRY			ListEntry;
+	FILE_LOCK_INFO		Lock;
+} FILE_LOCK_GRANTED, *PFILE_LOCK_GRANTED;
+
 
 #endif /* __INCLUDE_DDK_FSFUNCS_H */

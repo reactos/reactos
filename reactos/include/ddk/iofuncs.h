@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.38 2003/06/07 10:14:39 chorns Exp $ */
+/* $Id: iofuncs.h,v 1.39 2003/08/07 11:47:32 silverblade Exp $ */
 
 /* --- EXPORTED BY NTOSKRNL --- */
 
@@ -939,13 +939,17 @@ IoReportResourceUsage (
 	((PDRIVER_CANCEL)InterlockedExchangePointer(&(Irp)->CancelRoutine, \
 					     NewCancelRoutine))
 
-#define IoSetCompletionRoutine(Irp,Routine,Context,Success,Error,Cancel) \
+// AG: Context is now NewContext, otherwise we end up with this:
+// param->LocalLength=(LocalLength)
+// ...which isn't possible.
+
+#define IoSetCompletionRoutine(Irp,Routine,NewContext,Success,Error,Cancel) \
 	{ \
 		PIO_STACK_LOCATION param; \
 		assert((Success)||(Error)||(Cancel)?(Routine)!=NULL:TRUE); \
 		param = IoGetNextIrpStackLocation((Irp)); \
 		param->CompletionRoutine=(Routine); \
-		param->CompletionContext=(Context); \
+		param->Context=(NewContext); \
 		param->Control = 0; \
 		if ((Success)) \
 			param->Control = SL_INVOKE_ON_SUCCESS; \

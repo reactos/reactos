@@ -1,4 +1,4 @@
-/* $Id: lpcsrv.c,v 1.11 2002/09/08 10:21:58 chorns Exp $
+/* $Id: lpcsrv.c,v 1.12 2003/08/07 11:47:32 silverblade Exp $
  *
  * DESCRIPTION: Simple LPC Server
  * PROGRAMMER:  David Welch
@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
      printf("%s: Received connection request 0x%08x on port 0x%x.\n", MyName,
         ConnectMsg.Header.MessageId, NamedPortHandle);
      printf("%s: Request from: PID=%x, TID=%x.\n", MyName,
-        ConnectMsg.Header.Cid.UniqueProcess, ConnectMsg.Header.Cid.UniqueThread);
+        ConnectMsg.Header.ClientId.UniqueProcess, ConnectMsg.Header.ClientId.UniqueThread);
    
      printf("%s: Accepting connection request 0x%08x...\n", MyName, 
         ConnectMsg.Header.MessageId);

@@ -57,7 +57,7 @@ NtLockFile (
 	PLARGE_INTEGER	LocalLength = NULL;
 	PKEVENT Event = NULL;
 	PIRP Irp = NULL;
-	PIO_STACK_LOCATION StackPtr;
+	PEXTENDED_IO_STACK_LOCATION StackPtr;
 	IO_STATUS_BLOCK		LocalIoStatusBlock;
 	PIO_STATUS_BLOCK IoStatusBlock;
 	PDEVICE_OBJECT	DeviceObject;
@@ -127,7 +127,7 @@ NtLockFile (
 	Irp->UserIosb = IoStatusBlock;
 	Irp->Tail.Overlay.Thread = PsGetCurrentThread();
 
-	StackPtr = IoGetNextIrpStackLocation(Irp);
+	StackPtr = (PEXTENDED_IO_STACK_LOCATION) IoGetNextIrpStackLocation(Irp);
 	StackPtr->MajorFunction = IRP_MJ_LOCK_CONTROL;
 	StackPtr->MinorFunction = IRP_MN_LOCK;
 	StackPtr->FileObject = FileObject;
@@ -150,7 +150,7 @@ NtLockFile (
 	StackPtr->Parameters.LockControl.Length = LocalLength;
 	StackPtr->Parameters.LockControl.ByteOffset = *ByteOffset;
 	StackPtr->Parameters.LockControl.Key = Key ? *Key : 0;
-
+	
 	IoSetCompletionRoutine(  
 					Irp,  
 					NtLockFileCompletionRoutine,  
@@ -221,7 +221,7 @@ NtUnlockFile (
 	PFILE_OBJECT FileObject = NULL;
 	PLARGE_INTEGER	LocalLength = NULL;
 	PIRP Irp  = NULL;
-	PIO_STACK_LOCATION StackPtr;
+	PEXTENDED_IO_STACK_LOCATION StackPtr;
 	IO_STATUS_BLOCK		LocalIoStatusBlock;
 	PDEVICE_OBJECT	DeviceObject;
 
@@ -265,7 +265,7 @@ NtUnlockFile (
 	Irp->UserIosb = &LocalIoStatusBlock;
 	Irp->Tail.Overlay.Thread = PsGetCurrentThread();
 
-	StackPtr = IoGetNextIrpStackLocation(Irp);
+	StackPtr = (PEXTENDED_IO_STACK_LOCATION) IoGetNextIrpStackLocation(Irp);
 	StackPtr->MajorFunction = IRP_MJ_LOCK_CONTROL;
 	StackPtr->MinorFunction = IRP_MN_UNLOCK_SINGLE;
 	StackPtr->DeviceObject = DeviceObject;

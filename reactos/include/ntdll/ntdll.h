@@ -3,10 +3,14 @@
 
 #define UNIMPLEMENTED DbgPrint("%s in %s:%d is unimplemented\n",__FUNCTION__,__FILE__,__LINE__);
 
+#ifndef __USE_W32API
+
 #ifndef NASSERT
 #define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); for(;;);}
 #else
 #define assert(x)
+#endif
+
 #endif
 
 #ifdef NDEBUG

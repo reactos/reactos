@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.18 2003/07/11 01:23:15 royce Exp $
+/* $Id: connect.c,v 1.19 2003/08/07 11:47:33 silverblade Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -96,7 +96,7 @@ EiConnectPort(IN PEPORT* ConnectedPort,
     sizeof(EPORT_CONNECT_REQUEST_MESSAGE) + RequestConnectDataLength;
   DPRINT("RequestMessageSize %d\n",
 	 RequestMessage->MessageHeader.MessageSize);
-  RequestMessage->MessageHeader.SharedSectionSize = 0;
+  RequestMessage->MessageHeader.SectionSize = 0;
   RequestMessage->ConnectingProcess = PsGetCurrentProcess();
   ObReferenceObjectByPointer(RequestMessage->ConnectingProcess,
 			     PROCESS_VM_OPERATION,

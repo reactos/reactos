@@ -1,5 +1,5 @@
 /*
- * $Id: dir.c,v 1.30 2003/07/24 20:52:58 chorns Exp $
+ * $Id: dir.c,v 1.31 2003/08/07 11:47:32 silverblade Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -207,6 +207,8 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
   VFATFCB tmpFcb;
   PVFATCCB pCcb;
   BOOLEAN First = FALSE;
+  
+  PEXTENDED_IO_STACK_LOCATION Stack = (PEXTENDED_IO_STACK_LOCATION) IrpContext->Stack;
 
   pCcb = (PVFATCCB) IrpContext->FileObject->FsContext2;
   pFcb = (PVFATFCB) IrpContext->FileObject->FsContext;
@@ -218,11 +220,11 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
   }
 
   // Obtain the callers parameters
-  BufferLength = IrpContext->Stack->Parameters.QueryDirectory.Length;
-  pSearchPattern = IrpContext->Stack->Parameters.QueryDirectory.FileName;
+  BufferLength = Stack->Parameters.QueryDirectory.Length;
+  pSearchPattern = Stack->Parameters.QueryDirectory.FileName;
   FileInformationClass =
-    IrpContext->Stack->Parameters.QueryDirectory.FileInformationClass;
-  FileIndex = IrpContext->Stack->Parameters.QueryDirectory.FileIndex;
+    Stack->Parameters.QueryDirectory.FileInformationClass;
+  FileIndex = Stack->Parameters.QueryDirectory.FileIndex;
   if (pSearchPattern)
   {
     if (!pCcb->DirectorySearchPattern)

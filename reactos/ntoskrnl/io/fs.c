@@ -1,4 +1,4 @@
-/* $Id: fs.c,v 1.35 2003/07/10 15:47:00 royce Exp $
+/* $Id: fs.c,v 1.36 2003/08/07 11:47:33 silverblade Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -75,7 +75,7 @@ NtFsControlFile (
    PFILE_OBJECT FileObject;
    PDEVICE_OBJECT DeviceObject;
    PIRP Irp;
-   PIO_STACK_LOCATION StackPtr;
+   PEXTENDED_IO_STACK_LOCATION StackPtr;
    PKEVENT ptrEvent;
    IO_STATUS_BLOCK IoSB;
 
@@ -138,7 +138,7 @@ NtFsControlFile (
    Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
    Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
 
-   StackPtr = IoGetNextIrpStackLocation(Irp);
+   StackPtr = (PEXTENDED_IO_STACK_LOCATION) IoGetNextIrpStackLocation(Irp);
    StackPtr->FileObject = FileObject;
    StackPtr->DeviceObject = DeviceObject;
    StackPtr->Parameters.FileSystemControl.InputBufferLength = InputBufferSize;

@@ -1,4 +1,4 @@
-/* $Id: wapi.c,v 1.29 2003/07/29 23:03:01 jimtabor Exp $
+/* $Id: wapi.c,v 1.30 2003/08/07 11:47:33 silverblade Exp $
  * 
  * reactos/subsys/csrss/api/wapi.c
  *
@@ -96,7 +96,7 @@ static void Thread_Api2(HANDLE ServerPort)
 	if ( LpcRequest.Header.MessageType == LPC_PORT_CLOSED )
 
 	  {
-	     CsrFreeProcessData( (ULONG)LpcRequest.Header.Cid.UniqueProcess );
+	     CsrFreeProcessData( (ULONG)LpcRequest.Header.ClientId.UniqueProcess );
 	     NtClose(ServerPort);
 	     NtTerminateThread(NtCurrentThread(), STATUS_SUCCESS);
 	     continue;
@@ -106,7 +106,7 @@ static void Thread_Api2(HANDLE ServerPort)
 	Reply = (PCSRSS_API_REPLY)&LpcReply;
 	
 	ProcessData = CsrGetProcessData(
-				  (ULONG)LpcRequest.Header.Cid.UniqueProcess);
+				  (ULONG)LpcRequest.Header.ClientId.UniqueProcess);
 	
 //	DisplayString(L"CSR: Received request\n");
 	if( Request->Type >= (sizeof( CsrFuncs ) / sizeof( CsrFunc )) - 1 )
@@ -156,7 +156,7 @@ void Thread_Api(PVOID PortHandle)
 	     NtTerminateThread(NtCurrentThread(), Status);
 	  }
 
-	ProcessData = CsrGetProcessData((ULONG)Request.Header.Cid.UniqueProcess);
+	ProcessData = CsrGetProcessData((ULONG)Request.Header.ClientId.UniqueProcess);
 	ProcessData->CsrSectionViewBase = LpcRead.ViewBase;
 	ProcessData->CsrSectionViewSize = LpcRead.ViewSize;
 	

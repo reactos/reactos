@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.22 2003/07/24 20:52:58 chorns Exp $
+/* $Id: volume.c,v 1.23 2003/08/07 11:47:32 silverblade Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -248,6 +248,7 @@ NTSTATUS VfatSetVolumeInformation(PVFAT_IRP_CONTEXT IrpContext)
   NTSTATUS Status = STATUS_SUCCESS;
   PVOID SystemBuffer;
   ULONG BufferLength;
+  PEXTENDED_IO_STACK_LOCATION Stack = (PEXTENDED_IO_STACK_LOCATION) IrpContext->Stack;
 
   /* PRECONDITION */
   assert(IrpContext);
@@ -260,8 +261,8 @@ NTSTATUS VfatSetVolumeInformation(PVFAT_IRP_CONTEXT IrpContext)
      return VfatQueueRequest (IrpContext);
   }
 
-  FsInformationClass = IrpContext->Stack->Parameters.SetVolume.FsInformationClass;
-  BufferLength = IrpContext->Stack->Parameters.SetVolume.Length;
+  FsInformationClass = Stack->Parameters.SetVolume.FsInformationClass;
+  BufferLength = Stack->Parameters.SetVolume.Length;
   SystemBuffer = IrpContext->Irp->AssociatedIrp.SystemBuffer;
 
   DPRINT1("FsInformationClass %d\n", FsInformationClass);

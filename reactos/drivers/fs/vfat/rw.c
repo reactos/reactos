@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.59 2003/07/24 20:52:58 chorns Exp $
+/* $Id: rw.c,v 1.60 2003/08/07 11:47:32 silverblade Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -14,6 +14,8 @@
 #include <ddk/ntddk.h>
 #include <wchar.h>
 #include <ntos/minmax.h>
+
+#include <ntos.h>
 
 #define NDEBUG
 #include <debug.h>

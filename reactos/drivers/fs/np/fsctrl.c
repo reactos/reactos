@@ -1,4 +1,4 @@
-/* $Id: fsctrl.c,v 1.10 2002/09/08 10:22:11 chorns Exp $
+/* $Id: fsctrl.c,v 1.11 2003/08/07 11:47:32 silverblade Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -395,7 +395,7 @@ NTSTATUS STDCALL
 NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 		      PIRP Irp)
 {
-  PIO_STACK_LOCATION IoStack;
+  PEXTENDED_IO_STACK_LOCATION IoStack;
   PFILE_OBJECT FileObject;
   NTSTATUS Status;
   PNPFS_DEVICE_EXTENSION DeviceExt;
@@ -405,7 +405,7 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
   DPRINT("NpfsFileSystemContol(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
   DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-  IoStack = IoGetCurrentIrpStackLocation(Irp);
+  IoStack = (PEXTENDED_IO_STACK_LOCATION) IoGetCurrentIrpStackLocation(Irp);
   DPRINT("IoStack: %p\n", IoStack);
   FileObject = IoStack->FileObject;
   DPRINT("FileObject: %p\n", FileObject);
@@ -415,7 +415,7 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
   DPRINT("Pipe: %p\n", Pipe);
   DPRINT("PipeName: %wZ\n", &Pipe->PipeName);
 
-  switch (IoStack->Parameters.FileSystemControl.IoControlCode)
+  switch (IoStack->Parameters.FileSystemControl.FsControlCode)
     {
       case FSCTL_PIPE_ASSIGN_EVENT:
 	DPRINT("Assign event\n");
