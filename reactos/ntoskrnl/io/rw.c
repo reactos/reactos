@@ -53,8 +53,7 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
 		    PULONG Key)
 {
    NTSTATUS Status;
-   COMMON_BODY_HEADER* hdr = ObGetObjectByHandle(FileHandle);
-   PFILE_OBJECT FileObject = (PFILE_OBJECT)hdr;
+   PFILE_OBJECT FileObject;
    PIRP Irp;
    PIO_STACK_LOCATION StackPtr;
    KEVENT Event;
@@ -67,7 +66,7 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
 				      FILE_READ_DATA,
 				      NULL,
 				      UserMode,
-				      &FileObject,
+				      (PVOID *) &FileObject,
 				      NULL);
    if (Status != STATUS_SUCCESS)
      {
@@ -160,15 +159,20 @@ NTSTATUS ZwWriteFile(HANDLE FileHandle,
 		     PULONG Key)
 {
    NTSTATUS Status;
-   COMMON_BODY_HEADER* hdr = ObGetObjectByHandle(FileHandle);
-   PFILE_OBJECT FileObject = (PFILE_OBJECT)hdr;
+   PFILE_OBJECT FileObject;
    PIRP Irp;
    PIO_STACK_LOCATION StackPtr;
    KEVENT Event;
    
-   if (hdr==NULL)
+   Status = ObReferenceObjectByHandle(FileHandle,
+				      FILE_WRITE_DATA,
+				      NULL,
+				      UserMode,
+				      (PVOID *) &FileObject,
+				      NULL);
+   if (Status != STATUS_SUCCESS)
      {
-	return(STATUS_INVALID_HANDLE);
+	return(Status);
      }
    
    KeInitializeEvent(&Event,NotificationEvent,FALSE);
