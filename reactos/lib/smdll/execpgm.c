@@ -12,7 +12,7 @@
 #include <string.h>
 
 NTSTATUS STDCALL
-SmExecPgm (HANDLE hSmApiPort, PUNICODE_STRING Pgm)
+SmExecuteProgram (HANDLE hSmApiPort, PUNICODE_STRING Pgm)
 {
   NTSTATUS         Status;
   SM_PORT_MESSAGE  SmReqMsg;
