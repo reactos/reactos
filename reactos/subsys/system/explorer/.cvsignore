@@ -10,6 +10,7 @@ DRelease
 UDebug
 URelease
 _NO_COMUTIL
+doxy-doc
 *.ncb
 *.opt
 *.aps
