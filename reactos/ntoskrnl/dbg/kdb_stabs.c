@@ -410,6 +410,7 @@ LdrpGetFileName(IN PIMAGE_SYMBOL_INFO  SymbolInfo,
 {
   PSYMBOL NextSymbol;
   ULONG_PTR NextAddress;
+  ULONG_PTR AddrFound = 0;
   PSYMBOL Symbol;
 
   Symbol = SymbolInfo->FileNameSymbols.Symbols;
@@ -425,19 +426,20 @@ LdrpGetFileName(IN PIMAGE_SYMBOL_INFO  SymbolInfo,
         Symbol->SymbolType, RelativeAddress, Symbol->RelativeAddress, NextAddress);
 
       if ((Symbol->SymbolType == ST_FILENAME) &&
-        (RelativeAddress >= Symbol->RelativeAddress) &&
-        (RelativeAddress < NextAddress))
+	  (RelativeAddress >= Symbol->RelativeAddress) &&
+	  (RelativeAddress < NextAddress) &&
+	  Symbol->RelativeAddress > AddrFound)
         {
           DPRINT("FN found\n");
           strcpy(FileName, Symbol->Name.Buffer);
-          return STATUS_SUCCESS;
+	  AddrFound = Symbol->RelativeAddress;
         }
       Symbol = NextSymbol;
     }
 
   DPRINT("FN not found\n");
 
-  return STATUS_UNSUCCESSFUL;
+  return AddrFound ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 }
 
 static NTSTATUS
@@ -484,7 +486,6 @@ LdrpGetFunctionName(IN PIMAGE_SYMBOL_INFO  SymbolInfo,
           strncpy(FunctionName, Symbol->Name.Buffer, Length);
 	  FunctionName[Length]=0;
 	  AddrFound = Symbol->RelativeAddress;
-          /* return STATUS_SUCCESS; */
         }
       Symbol = NextSymbol;
     }
@@ -501,6 +502,7 @@ LdrpGetLineNumber(IN PIMAGE_SYMBOL_INFO  SymbolInfo,
 {
   PSYMBOL NextSymbol;
   ULONG_PTR NextAddress;
+  ULONG_PTR AddrFound = 0;
   PSYMBOL Symbol;
 
   Symbol = SymbolInfo->LineNumberSymbols.Symbols;
@@ -518,19 +520,20 @@ LdrpGetLineNumber(IN PIMAGE_SYMBOL_INFO  SymbolInfo,
 #endif
 
       if ((Symbol->SymbolType == ST_LINENUMBER) &&
-        (RelativeAddress >= Symbol->RelativeAddress) &&
-        (RelativeAddress < NextAddress))
+	  (RelativeAddress >= Symbol->RelativeAddress) &&
+	  (RelativeAddress < NextAddress) &&
+	  Symbol->RelativeAddress > AddrFound) 
         {
           DPRINT("LN found\n");
           *LineNumber = Symbol->LineNumber;
-          return STATUS_SUCCESS;
+	  AddrFound = Symbol->RelativeAddress;
         }
       Symbol = NextSymbol;
     }
 
   DPRINT("LN not found\n");
 
-  return STATUS_UNSUCCESSFUL;
+  return AddrFound ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 }
 
 NTSTATUS
