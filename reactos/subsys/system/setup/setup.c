@@ -115,7 +115,16 @@ CreateCmdLink()
 
   CoInitialize(NULL);
 
+  /* At this point, if we ask for the desktop folder we get the path to the
+   * Default User desktop. Since we've already copied the Default User profile
+   * (including desktop) to the Administrator profile, this won't do. Would
+   * be better to use CSIDL_COMMON_DESKTOPDIR, but RosExplorer doesn't seem to
+   * scan that one. So, for now, just use a hardcoded path */
+#if 0
   SHGetSpecialFolderPathA(0, path, CSIDL_DESKTOP, TRUE);
+#else
+  strcpy(path, "C:\\Documents and Settings\\Administrator.REACTOS\\Desktop");
+#endif
   p = PathAddBackslashA(path);
 
   strcpy(p, "Command Prompt.lnk");
