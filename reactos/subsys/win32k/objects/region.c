@@ -1566,15 +1566,24 @@ W32kCreateRectRgn(INT  LeftRect,
   return NULL;
 }
 
-HRGN
-STDCALL
-W32kCreateRectRgnIndirect(CONST PRECT  rc)
+HRGN STDCALL
+W32kCreateRectRgnIndirect(CONST PRECT rc)
 {
   RECT SafeRc;
-  if( NT_SUCCESS( MmCopyFromCaller( &SafeRc, rc, sizeof( RECT ) ) ) )
-  	  return W32kCreateRectRgn(SafeRc.left, SafeRc.top, SafeRc.right, SafeRc.bottom);
+  NTSTATUS Status;
 
-  return NULL;
+  Status = MmCopyFromCaller(&SafeRc, rc, sizeof(RECT));
+  if (!NT_SUCCESS(Status))
+    {
+      return(NULL);
+    }
+  return(UnsafeW32kCreateRectRgnIndirect(&SafeRc));
+}
+
+HRGN STDCALL
+UnsafeW32kCreateRectRgnIndirect(CONST PRECT  rc)
+{
+  return(W32kCreateRectRgn(rc->left, rc->top, rc->right, rc->bottom));
 }
 
 HRGN

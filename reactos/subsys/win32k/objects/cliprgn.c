@@ -67,9 +67,19 @@ int STDCALL W32kExtSelectClipRgn(HDC  hDC,
 }
 
 int STDCALL W32kGetClipBox(HDC  hDC,
-                    LPRECT  rc)
+			   LPRECT  rc)
 {
-  UNIMPLEMENTED;
+  int retval;
+  DC *dc;
+
+  if (!(dc = DC_HandleToPtr(hDC))) return ERROR;
+  retval = W32kGetRgnBox(dc->w.hGCClipRgn, rc);
+  rc->left -= dc->w.DCOrgX;
+  rc->right -= dc->w.DCOrgX;
+  rc->top -= dc->w.DCOrgY;
+  rc->bottom -= dc->w.DCOrgY;
+  W32kDPtoLP(hDC, (LPPOINT)rc, 2);
+  return(retval);
 }
 
 int STDCALL W32kGetMetaRgn(HDC  hDC,

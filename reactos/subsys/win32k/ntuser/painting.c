@@ -1,4 +1,4 @@
-/* $Id: painting.c,v 1.3 2002/08/26 23:20:54 dwelch Exp $
+/* $Id: painting.c,v 1.4 2002/08/27 23:29:40 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -162,7 +162,7 @@ PaintValidateParent(PWINDOW_OBJECT Child)
       Rect.right = Child->WindowRect.right - Child->WindowRect.left;
       Rect.bottom = Child->WindowRect.bottom - Child->WindowRect.top;
 
-      hRgn = W32kCreateRectRgnIndirect(&Rect);
+      hRgn = UnsafeW32kCreateRectRgnIndirect(&Rect);
     }
   else
     {
@@ -187,7 +187,8 @@ PaintValidateParent(PWINDOW_OBJECT Child)
 		  Rect1.bottom = Parent->WindowRect.bottom -
 		    Parent->WindowRect.top;
 
-		  Parent->UpdateRegion = W32kCreateRectRgnIndirect(&Rect1);
+		  Parent->UpdateRegion = 
+		    UnsafeW32kCreateRectRgnIndirect(&Rect1);
 		}
 	      Offset.x = Child->WindowRect.left - Parent->WindowRect.left;
 	      Offset.y = Child->WindowRect.top - Parent->WindowRect.top;
@@ -297,7 +298,7 @@ PaintUpdateRgns(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
 	      if (Window->UpdateRegion == (HANDLE)1)
 		{
 		  Window->UpdateRegion = 
-		    W32kCreateRectRgnIndirect(&Rect);
+		    UnsafeW32kCreateRectRgnIndirect(&Rect);
 		}
 	      if (W32kCombineRgn(Window->UpdateRegion, 
 				 Window->UpdateRegion, hRgn, 
@@ -475,11 +476,12 @@ PaintRedrawWindow(HWND hWnd, const RECT* UpdateRect, HRGN UpdateRgn,
 	    }
 	  if (Window->UpdateRegion == NULL)
 	    {
-	      Window->UpdateRegion = W32kCreateRectRgnIndirect(&Rect2);
+	      Window->UpdateRegion = 
+		UnsafeW32kCreateRectRgnIndirect(&Rect2);
 	    }
 	  else
 	    {
-	      hRgn = W32kCreateRectRgnIndirect(&Rect2);
+	      hRgn = UnsafeW32kCreateRectRgnIndirect(&Rect2);
 	    }
 	}
       else
@@ -491,7 +493,7 @@ PaintRedrawWindow(HWND hWnd, const RECT* UpdateRect, HRGN UpdateRgn,
 	  else
 	    {
 	      W32kGetClientRect(hWnd, &Rect2);
-	      hRgn = W32kCreateRectRgnIndirect(&Rect2);
+	      hRgn = UnsafeW32kCreateRectRgnIndirect(&Rect2);
 	    }
 	}
     }
@@ -672,7 +674,8 @@ PaintUpdateNCRegion(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
 	{
 	  if (Flags & UNC_UPDATE)
 	    {
-	      Window->UpdateRegion = W32kCreateRectRgnIndirect(&ClientRect);
+	      Window->UpdateRegion = 
+		UnsafeW32kCreateRectRgnIndirect(&ClientRect);
 	    }
 	  if (Flags & UNC_REGION)
 	    {
@@ -690,7 +693,8 @@ PaintUpdateNCRegion(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
       else if (Window->UpdateRegion == (HANDLE)1 && Flags & UNC_UPDATE)
 	{
 	  W32kGetClientRect(Window, &ClientRect);
-	  Window->UpdateRegion = W32kCreateRectRgnIndirect(&ClientRect);
+	  Window->UpdateRegion = 
+	    UnsafeW32kCreateRectRgnIndirect(&ClientRect);
 	  if (Flags & UNC_REGION)
 	    {
 	      hRgnRet = (HANDLE)1;
@@ -768,9 +772,10 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
 
   UpdateRegion = Window->UpdateRegion;
   Window->UpdateRegion = 0;
-  if (UpdateRegion != NULL || Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
+  if (UpdateRegion != NULL || 
+      (Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT))
     {
-      MsqDecPaintCountQueue(&Window->MessageQueue);
+      MsqDecPaintCountQueue(Window->MessageQueue);
     }
   Window->Flags &= ~WINDOWOBJECT_NEED_INTERNALPAINT;
 
@@ -802,7 +807,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
 
   /* FIXME: Check for DC creation failure. */
 
-  W32kGetClientRect(hWnd, &ClientRect);
+  W32kGetClientRect(Window, &ClientRect);
   W32kGetClipBox(lPs->hdc, &ClipRect);
   W32kLPtoDP(lPs->hdc, (LPPOINT)&ClipRect, 2);
   W32kIntersectRect(&lPs->rcPaint, &ClientRect, &ClipRect);

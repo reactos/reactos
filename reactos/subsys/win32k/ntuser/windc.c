@@ -1,4 +1,4 @@
-/* $Id: windc.c,v 1.4 2002/08/27 21:20:45 jfilby Exp $
+/* $Id: windc.c,v 1.5 2002/08/27 23:29:40 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -349,7 +349,7 @@ NtUserGetDCEx(HWND hWnd, HANDLE hRegion, ULONG Flags)
             }
             dce = DCEOBJ_LockDCE(hdce);
             dce->type = DCE_CACHE_DC;
-            dce->hDC = hdce;
+            dce->hDC = W32kCreateDC(L"DISPLAY", NULL, NULL, NULL);
         }
     }
     else
