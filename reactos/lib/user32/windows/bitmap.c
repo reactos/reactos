@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmap.c,v 1.29 2004/04/13 00:06:50 weiden Exp $
+/* $Id: bitmap.c,v 1.30 2004/06/23 05:04:30 ion Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -41,7 +41,6 @@ HICON ICON_CreateCursorFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, 
 HICON ICON_CreateIconFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxDesired, int cyDesired, int xHotspot, int yHotspot);
 CURSORICONDIRENTRY *CURSORICON_FindBestIcon( CURSORICONDIR *dir, int width, int height, int colors);
 CURSORICONDIRENTRY *CURSORICON_FindBestCursor( CURSORICONDIR *dir, int width, int height, int colors);
-
 
 /* FUNCTIONS *****************************************************************/
 
@@ -661,39 +660,53 @@ LoadBitmapW(HINSTANCE hInstance, LPCWSTR lpBitmapName)
 
 
 /*
- * @implemented
+ * @unimplemented
  */
 HANDLE WINAPI
 CopyImage(HANDLE hnd, UINT type, INT desiredx, INT desiredy, UINT flags)
 {
-   switch (type)
-   {
-      case IMAGE_BITMAP:
-         {
-         	DbgPrint("WARNING:  Incomplete implementation of CopyImage!\n");
-         	/* FIXME:  support flags LR_COPYDELETEORG, LR_COPYFROMRESOURCE,
-         	   						 LR_COPYRETURNORG, LR_CREATEDIBSECTION,
-         	   						 and LR_MONOCHROME; */
-            HBITMAP res;
-            BITMAP bm;
+	switch (type)
+	{
+        case IMAGE_BITMAP:
+			{
+				DbgPrint("WARNING:  Incomplete implementation of CopyImage!\n");
+        		/* FIXME:  support flags LR_COPYDELETEORG, LR_COPYFROMRESOURCE,
+     	   							 LR_COPYRETURNORG, LR_CREATEDIBSECTION,
+     	   							 and LR_MONOCHROME; */
+				HBITMAP res;
+				BITMAP bm;
 
-            if (!GetObjectW(hnd, sizeof(bm), &bm)) return 0;
-            bm.bmBits = NULL;
-            if ((res = CreateBitmapIndirect(&bm)))
-            {
-               char *buf = HeapAlloc(GetProcessHeap(), 0, bm.bmWidthBytes * bm.bmHeight);
-               GetBitmapBits(hnd, bm.bmWidthBytes * bm.bmHeight, buf);
-               SetBitmapBits(res, bm.bmWidthBytes * bm.bmHeight, buf);
-               HeapFree(GetProcessHeap(), 0, buf);
-            }
-            return res;
-        }
-     case IMAGE_ICON:
-        DbgPrint("FIXME: CopyImage doesn't support IMAGE_ICON correctly!\n");
-        return CopyIcon(hnd);
-     case IMAGE_CURSOR:
-        DbgPrint("FIXME: CopyImage doesn't support IMAGE_CURSOR correctly!\n");
-        return CopyCursor(hnd);
-    }
-    return 0;
+				if (!GetObjectW(hnd, sizeof(bm), &bm)) return 0;
+				bm.bmBits = NULL;
+				if ((res = CreateBitmapIndirect(&bm)))
+				{
+                    char *buf = HeapAlloc(GetProcessHeap(), 0, bm.bmWidthBytes * bm.bmHeight);
+					GetBitmapBits(hnd, bm.bmWidthBytes * bm.bmHeight, buf);
+					SetBitmapBits(res, bm.bmWidthBytes * bm.bmHeight, buf);
+					HeapFree(GetProcessHeap(), 0, buf);
+				}
+                return res;
+			}
+		case IMAGE_ICON: 
+			{
+				static BOOL IconMsgDisplayed = FALSE;
+				/* FIXME: support loading the image as shared from an instance */
+				if (!IconMsgDisplayed) {
+					DbgPrint("FIXME: CopyImage doesn't support IMAGE_ICON correctly!\n");
+					IconMsgDisplayed = TRUE;
+				}
+		        return CopyIcon(hnd);
+			}
+		case IMAGE_CURSOR: 
+			{
+				static BOOL IconMsgDisplayed = FALSE;
+				/* FIXME: support loading the image as shared from an instance */
+				if (!IconMsgDisplayed) {
+					DbgPrint("FIXME: CopyImage doesn't support IMAGE_CURSOR correctly!\n");
+					IconMsgDisplayed = TRUE;
+				}
+				return CopyCursor(hnd);
+			}
+	}
+	return 0;
 }
