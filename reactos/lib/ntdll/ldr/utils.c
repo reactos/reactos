@@ -18,7 +18,7 @@
 #include <wchar.h>
 #include <ntdll/ldr.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <ntdll/ntdll.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -170,9 +170,10 @@ static NTSTATUS LdrFindDll(PDLL* Dll, PCHAR Name)
    return(LdrLoadDll(Dll, Name));
 }
 
-static NTSTATUS LdrMapSections(PVOID ImageBase, 
-			       HANDLE SectionHandle,
-			       PIMAGE_NT_HEADERS NTHeaders)
+NTSTATUS LdrMapSections(HANDLE ProcessHandle,
+			PVOID ImageBase,
+			HANDLE SectionHandle,
+			PIMAGE_NT_HEADERS NTHeaders)
 {
    ULONG i;
    NTSTATUS Status;
@@ -188,7 +189,7 @@ static NTSTATUS LdrMapSections(PVOID ImageBase,
 	SET_LARGE_INTEGER_HIGH_PART(Offset,0);
 	SET_LARGE_INTEGER_LOW_PART(Offset,Sections[i].PointerToRawData);
 	Status = ZwMapViewOfSection(SectionHandle,
-				    NtCurrentProcess(),
+				    ProcessHandle,
 				    (PVOID *)&Base,
 				    0,
 				    Sections[i].Misc.VirtualSize,
@@ -351,7 +352,7 @@ static NTSTATUS LdrFixupImports(PIMAGE_NT_HEADERS NTHeaders,
 				    ImportModuleDirectory->dwRVAModuleName));
 	if (!NT_SUCCESS(Status))
 	  {
-	     return 0;
+	     return(Status);
 	  }    
 	
 	/*  Get the import address list  */
@@ -411,7 +412,7 @@ PEPFUNC LdrPEStartup(PVOID ImageBase, HANDLE SectionHandle)
    NTHeaders = (PIMAGE_NT_HEADERS)(ImageBase + DosHeader->e_lfanew);
    
    /*  Initialize Image sections  */
-   LdrMapSections(ImageBase, SectionHandle, NTHeaders);
+   LdrMapSections(NtCurrentProcess(), ImageBase, SectionHandle, NTHeaders);
    
    if (ImageBase != (PVOID)NTHeaders->OptionalHeader.ImageBase)
      {

@@ -4,13 +4,11 @@ void InterlockedIncrement(void);
        "_InterlockedIncrement:\n\t"
        "pushl %ebp\n\t"
        "movl  %esp,%ebp\n\t"
-       "pushl %eax\n\t"
        "pushl %ebx\n\t"
        "movl $1,%eax\n\t"
        "movl 8(%ebp),%ebx\n\t"
        "xaddl %eax,(%ebx)\n\t"
        "popl %ebx\n\t"
-       "popl %eax\n\t"
        "movl %ebp,%esp\n\t"
        "popl %ebp\n\t"
        "ret\n\t");

@@ -910,7 +910,8 @@ NTSTATUS LdrLoadImage(HANDLE ProcessHandle, PUNICODE_STRING Filename)
   ULONG ImageSize, StackSize;
   NTSTATUS Status;
   OBJECT_ATTRIBUTES FileObjectAttributes;
-  HANDLE FileHandle, SectionHandle, ThreadHandle;
+  HANDLE FileHandle, SectionHandle, NTDllSectionHandle, ThreadHandle;
+   HANDLE DupNTDllSectionHandle;
   CONTEXT Context;
   UNICODE_STRING DllPathname;
   PIMAGE_DOS_HEADER DosHeader;
@@ -964,7 +965,7 @@ NTSTATUS LdrLoadImage(HANDLE ProcessHandle, PUNICODE_STRING Filename)
   LdrStartupAddr = ImageBase + NTHeaders->OptionalHeader.AddressOfEntryPoint;
 
     /* Create a section for NTDLL */
-  Status = ZwCreateSection(&SectionHandle,
+  Status = ZwCreateSection(&NTDllSectionHandle,
                            SECTION_ALL_ACCESS,
                            NULL,
                            NULL,
@@ -983,7 +984,7 @@ NTSTATUS LdrLoadImage(HANDLE ProcessHandle, PUNICODE_STRING Filename)
   /*  Map the NTDLL into the process  */
    InitialViewSize = DosHeader->e_lfanew + sizeof(IMAGE_NT_HEADERS) 
      + sizeof(IMAGE_SECTION_HEADER) * NTHeaders->FileHeader.NumberOfSections;
-  Status = ZwMapViewOfSection(SectionHandle,
+  Status = ZwMapViewOfSection(NTDllSectionHandle,
                               ProcessHandle,
                               (PVOID *)&ImageBase,
                               0,
@@ -1014,7 +1015,7 @@ NTSTATUS LdrLoadImage(HANDLE ProcessHandle, PUNICODE_STRING Filename)
 	Base = Sections[i].VirtualAddress + ImageBase;
 	SET_LARGE_INTEGER_HIGH_PART(Offset,0);
 	SET_LARGE_INTEGER_LOW_PART(Offset,Sections[i].PointerToRawData);
-	Status = ZwMapViewOfSection(SectionHandle,
+	Status = ZwMapViewOfSection(NTDllSectionHandle,
 				    ProcessHandle,
 				    (PVOID *)&Base,
 				    0,
@@ -1150,14 +1151,26 @@ NTSTATUS LdrLoadImage(HANDLE ProcessHandle, PUNICODE_STRING Filename)
 		     0,
 		     FALSE,
 		     DUPLICATE_SAME_ACCESS);
+   ZwDuplicateObject(NtCurrentProcess(),
+		     &NTDllSectionHandle,
+		     ProcessHandle,
+		     &DupNTDllSectionHandle,
+		     0,
+		     FALSE,
+		     DUPLICATE_SAME_ACCESS);
    
    ZwWriteVirtualMemory(ProcessHandle,
 			(PVOID)(STACK_TOP - 4),
+			&DupNTDllSectionHandle,
+			sizeof(DupNTDllSectionHandle),
+			&BytesWritten);
+   ZwWriteVirtualMemory(ProcessHandle,
+			(PVOID)(STACK_TOP - 8),
 			&ImageBase,
 			sizeof(ImageBase),
 			&BytesWritten);
    ZwWriteVirtualMemory(ProcessHandle,
-			(PVOID)(STACK_TOP - 8),
+			(PVOID)(STACK_TOP - 12),
 			&DupSectionHandle,
 			sizeof(DupSectionHandle),
 			&BytesWritten);
@@ -1165,7 +1178,7 @@ NTSTATUS LdrLoadImage(HANDLE ProcessHandle, PUNICODE_STRING Filename)
     /*  Initialize context to point to LdrStartup  */
   memset(&Context,0,sizeof(CONTEXT));
   Context.SegSs = USER_DS;
-  Context.Esp = STACK_TOP - 12;
+  Context.Esp = STACK_TOP - 16;
   Context.EFlags = 0x202;
   Context.SegCs = USER_CS;
   Context.Eip = LdrStartupAddr;

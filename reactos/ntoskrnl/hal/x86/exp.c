@@ -3,7 +3,7 @@
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/hal/x86/exp.c
  * PURPOSE:              Handling exceptions
- * PROGRAMMER:           David Welch (welch@mcmail.com)
+ * PROGRAMMER:           David Welch (welch@cwcom.net)
  * REVISION HISTORY:
  *              ??/??/??: Created
  */
@@ -203,35 +203,38 @@ asmlinkage void exception_handler(unsigned int edi,
     */
    if (type < 19)
      {
-       printk("%s Exception: %d(%x)\n",TypeStrings[type],type,error_code&0xffff);
+	DbgPrint("%s Exception: %d(%x)\n",TypeStrings[type],type,
+		 error_code&0xffff);
      }
    else
      {
-       printk("Exception: %d(%x)\n",type,error_code&0xffff);
+	DbgPrint("Exception: %d(%x)\n",type,error_code&0xffff);
      }
-   printk("CS:EIP %x:%x\n",cs&0xffff,eip);
-   printk("DS %x ES %x FS %x GS %x\n",ds&0xffff,es&0xffff,fs&0xffff,
-	  gs&0xfff);
-//   for(;;);
-   printk("EAX: %.8x   EBX: %.8x   ECX: %.8x\n",eax,ebx,ecx);
-   printk("EDX: %.8x   EBP: %.8x   ESI: %.8x\n",edx,ebp,esi);
-   printk("EDI: %.8x   EFLAGS: %.8x ",edi,eflags);
-   if ((cs&0xffff)==KERNEL_CS)
+   DbgPrint("Process: %x\n",PsGetCurrentThread()->Cid.UniqueProcess);
+   DbgPrint("Thread: %x\n",PsGetCurrentThread()->Cid.UniqueThread);
+   DbgPrint("CS:EIP %x:%x\n",cs&0xffff,eip);
+   DbgPrint("DS %x ES %x FS %x GS %x\n",ds&0xffff,es&0xffff,fs&0xffff,
+	    gs&0xfff);
+   //   for(;;);
+   DbgPrint("EAX: %.8x   EBX: %.8x   ECX: %.8x\n",eax,ebx,ecx);
+   DbgPrint("EDX: %.8x   EBP: %.8x   ESI: %.8x\n",edx,ebp,esi);
+   DbgPrint("EDI: %.8x   EFLAGS: %.8x ",edi,eflags);
+   if ((cs&0xffff) == KERNEL_CS)
      {
-	printk("ESP %.8x\n",esp);
+	DbgPrint("ESP %.8x\n",esp);
      }
    else
      {
-	printk("ESP %.8x\n",esp);
+	DbgPrint("ESP %.8x\n",esp);
      }
    
    __asm__("movl %%cr2,%0\n\t"
 	   : "=d" (cr2));
-   printk("cr2 %x\n",cr2);
+   DbgPrint("cr2 %x\n",cr2);
    
    if ((cs&0xffff)==KERNEL_CS)
      {
-	printk("ESP %x\n",esp);
+	DbgPrint("ESP %x\n",esp);
         stack=(unsigned int *)(esp+24);
 	
 //        #if 0
