@@ -138,7 +138,7 @@ struct StartMenuSeparator : public Static
 
 typedef list<ShellPath> StartMenuFolders;
 
- /// structor containing information for creating start menus
+ /// structor containing information for creating of start menus
 struct StartMenuCreateInfo
 {
 	StartMenuCreateInfo() : _border_top(0) {}
@@ -147,6 +147,7 @@ struct StartMenuCreateInfo
 	int		_border_top;
 	String	_title;
 	Window::CREATORFUNC_INFO _creator;
+	void*	_info;
 };
 
 #define STARTMENU_CREATOR(WND_CLASS) WINDOW_CREATOR_INFO(WND_CLASS, StartMenuCreateInfo)
@@ -216,7 +217,8 @@ struct StartMenu :
 	StartMenu(HWND hwnd, const StartMenuCreateInfo& create_info);
 	~StartMenu();
 
-	static HWND Create(int x, int y, const StartMenuFolders&, HWND hwndParent, LPCTSTR title, CREATORFUNC_INFO creator=s_def_creator);
+	static HWND Create(int x, int y, const StartMenuFolders&, HWND hwndParent, LPCTSTR title,
+						CREATORFUNC_INFO creator=s_def_creator, void* info=NULL);
 	static CREATORFUNC_INFO s_def_creator;
 
 protected:
@@ -266,10 +268,10 @@ protected:
 
 	virtual void AddEntries();
 
-	StartMenuEntry& AddEntry(const String& title, ICON_ID icon_id, Entry* entry);
-	StartMenuEntry& AddEntry(const String& title, ICON_ID icon_id=ICID_NONE, int id=-1);
-	StartMenuEntry& AddEntry(const ShellFolder folder, ShellEntry* entry);
-	StartMenuEntry& AddEntry(const ShellFolder folder, Entry* entry);
+	ShellEntryMap::iterator AddEntry(const String& title, ICON_ID icon_id, Entry* entry);
+	ShellEntryMap::iterator AddEntry(const String& title, ICON_ID icon_id=ICID_NONE, int id=-1);
+	ShellEntryMap::iterator AddEntry(const ShellFolder folder, ShellEntry* entry);
+	ShellEntryMap::iterator AddEntry(const ShellFolder folder, Entry* entry);
 
 	void	AddShellEntries(const ShellDirectory& dir, int max=-1, bool subfolders=true);
 
@@ -278,10 +280,10 @@ protected:
 
 	bool	CloseSubmenus() {return CloseOtherSubmenus();}
 	bool	CloseOtherSubmenus(int id=0);
-	void	CreateSubmenu(int id, LPCTSTR title, CREATORFUNC_INFO creator=s_def_creator);
-	bool	CreateSubmenu(int id, int folder, LPCTSTR title, CREATORFUNC_INFO creator=s_def_creator);
-	bool	CreateSubmenu(int id, int folder1, int folder2, LPCTSTR title, CREATORFUNC_INFO creator=s_def_creator);
-	void	CreateSubmenu(int id, const StartMenuFolders& new_folders, LPCTSTR title, CREATORFUNC_INFO creator=s_def_creator);
+	void	CreateSubmenu(int id, LPCTSTR title, CREATORFUNC_INFO creator=s_def_creator, void*info=NULL);
+	bool	CreateSubmenu(int id, int folder, LPCTSTR title, CREATORFUNC_INFO creator=s_def_creator, void*info=NULL);
+	bool	CreateSubmenu(int id, int folder1, int folder2, LPCTSTR title, CREATORFUNC_INFO creator=s_def_creator, void*info=NULL);
+	void	CreateSubmenu(int id, const StartMenuFolders& new_folders, LPCTSTR title, CREATORFUNC_INFO creator=s_def_creator, void*info=NULL);
 	void	ActivateEntry(int id, const ShellEntrySet& entries);
 	virtual void CloseStartMenu(int id=0);
 
@@ -357,10 +359,11 @@ protected:
 
 	SIZE	_logo_size;
 
-	void	AddEntries();
+	virtual void AddEntries();
+	virtual void ProcessKey(int vk);
+
 	void	Paint(PaintCanvas& canvas);
 	void	CloseStartMenu(int id=0);
-	virtual void ProcessKey(int vk);
 };
 
 
@@ -375,7 +378,7 @@ struct SettingsMenu : public StartMenuHandler
 	}
 
 protected:
-	void	AddEntries();
+	virtual void AddEntries();
 };
 
 
@@ -390,7 +393,7 @@ struct BrowseMenu : public StartMenuHandler
 	}
 
 protected:
-	void	AddEntries();
+	virtual void AddEntries();
 };
 
 
@@ -405,7 +408,7 @@ struct SearchMenu : public StartMenuHandler
 	}
 
 protected:
-	void	AddEntries();
+	virtual void AddEntries();
 };
 
 
@@ -424,3 +427,29 @@ struct RecentStartMenu : public StartMenu
 protected:
 	virtual void AddEntries();
 };
+
+
+#ifndef _SHELL32_FAVORITES
+
+typedef map<int, BookmarkNode> BookmarkMap;
+
+ /// Bookmarks sub-startmenu
+struct FavoritesMenu : public StartMenu
+{
+	typedef StartMenu super;
+
+	FavoritesMenu(HWND hwnd, const StartMenuCreateInfo& create_info)
+	 :	super(hwnd, create_info),
+		_bookmarks(*(BookmarkList*)create_info._info)
+	{
+	}
+
+protected:
+	virtual int Command(int id, int code);
+	virtual void AddEntries();
+
+	BookmarkList _bookmarks;
+	BookmarkMap	_entries;
+};
+
+#endif

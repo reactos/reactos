@@ -219,8 +219,8 @@ CAPTION "スタートメニューからプログラムを検索"
 FONT 9, "MS UI Gothic", 0, 0, 0x1
 BEGIN
     LTEXT           "&Filter:",IDC_STATIC,7,9,18,8
-    EDITTEXT        IDC_TOPIC,34,7,103,14,ES_AUTOHSCROLL
-    CONTROL         "List1",IDC_MAILS_FOUND,"SysListView32",LVS_REPORT | 
+    EDITTEXT        IDC_FILTER,34,7,103,14,ES_AUTOHSCROLL
+    CONTROL         "List1",IDC_PROGRAMS_FOUND,"SysListView32",LVS_REPORT | 
                     LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | 
                     WS_TABSTOP,7,25,130,33
 END

@@ -134,8 +134,8 @@
 #define IDC_ICON_ALIGN_10               1012
 #define IDC_WWW                         1012
 #define IDC_ICON_ALIGN_11               1013
-#define IDC_TOPIC                       1017
-#define IDC_MAILS_FOUND                 1018
+#define IDC_FILTER                      1017
+#define IDC_PROGRAMS_FOUND              1018
 #define IDC_PICTURE                     1019
 #define IDC_NOTIFY_SHOW                 1020
 #define IDC_NOTIFY_HIDE                 1021
@@ -144,6 +144,8 @@
 #define ID_HIDE_INACTIVE_ICONS          1025
 #define ID_SHOW_CLOCK                   1026
 #define ID_DESKTOP_VERSION              1027
+#define IDC_BUTTON1                     1028
+#define IDC_CHECK_ENTRIES               1028
 #define ID_REFRESH                      1704
 #define ID_ABOUT_WINEFILE               1705
 #define IDC_FILETREE                    10001
@@ -195,7 +197,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        166
 #define _APS_NEXT_COMMAND_VALUE         40019
-#define _APS_NEXT_CONTROL_VALUE         1028
+#define _APS_NEXT_CONTROL_VALUE         1029
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -777,7 +777,7 @@ int MainFrame::Notify(int id, NMHDR* pnmh)
 				 // display tooltips for bookmark folders
 				if (!node._pfolder->_description.empty())
 					lstrcpyn(pnmgit->pszText, node._pfolder->_description.c_str(), pnmgit->cchTextMax);
-			} else {	// BookmarkNode::BMNT_BOOKMARK
+			} else if (node._type == BookmarkNode::BMNT_BOOKMARK) {
 				 // display tooltips for bookmark folders
 				String txt = node._pbookmark->_description;
 
@@ -1050,19 +1050,15 @@ void MainFrame::FillBookmarks()
 
 	TreeView_DeleteAllItems(_hsidebar);
 
+	COLORREF bk_color = RGB(255,255,255);
 	HBRUSH hbr_bkgnd = GetStockBrush(WHITE_BRUSH);
-	ImageList_AddAlphaIcon(_himl, SmallIcon(IDI_FAVORITES), hbr_bkgnd, canvas);
-	ImageList_AddAlphaIcon(_himl, SmallIcon(IDI_DOT_TRANS), hbr_bkgnd, canvas);
+
+	g_Globals._icon_cache.get_icon(ICID_FAVORITES).add_to_imagelist(_himl, canvas);
+	g_Globals._icon_cache.get_icon(ICID_BOOKMARK).add_to_imagelist(_himl, canvas);
 	ImageList_AddAlphaIcon(_himl, SmallIcon(IDI_DOT), hbr_bkgnd, canvas);
-	ImageList_AddAlphaIcon(_himl, SmallIcon(IDI_FOLDER), hbr_bkgnd, canvas);
-	ImageList_AddAlphaIcon(_himl, SmallIcon(IDI_FOLDER), hbr_bkgnd, canvas);
-/*@@ This does not produce the expected result because CopyImage() seems not to duplicate 32 BIT alpha blended images:
-	ImageList_AddAlphaIcon(_himl, g_Globals._icon_cache.get_icon(ICID_FAVORITES), canvas);
-	ImageList_AddAlphaIcon(_himl, SmallIcon(IDI_DOT_TRANS), hbr_bkgnd, canvas);
-	ImageList_AddAlphaIcon(_himl, SmallIcon(IDI_DOT), hbr_bkgnd, canvas);
-	ImageList_AddAlphaIcon(_himl, g_Globals._icon_cache.get_icon(ICID_FOLDER), canvas);
-	ImageList_AddAlphaIcon(_himl, g_Globals._icon_cache.get_icon(ICID_FOLDER), canvas);
-*/
+	g_Globals._icon_cache.get_icon(ICID_FOLDER).add_to_imagelist(_himl, canvas);
+	g_Globals._icon_cache.get_icon(ICID_FOLDER).add_to_imagelist(_himl, canvas);
+
 	TV_INSERTSTRUCT tvi;
 
 	tvi.hParent = TVI_ROOT;

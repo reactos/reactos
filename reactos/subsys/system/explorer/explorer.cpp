@@ -282,15 +282,18 @@ HBITMAP	Icon::create_bitmap(COLORREF bk_color, HBRUSH hbrBkgnd, HDC hdc_wnd) con
 		ImageList_DrawEx(himl, _sys_idx, hdc, 0, 0, cx, cy, bk_color, CLR_DEFAULT, ILD_NORMAL);
 		SelectBitmap(hdc, hbmp_old);
 		DeleteDC(hdc);
+
 		return hbmp;
 	} else
 		return create_bitmap_from_icon(_hicon, hbrBkgnd, hdc_wnd);
 }
 
-HICON Icon::create_icon(COLORREF bk_color, HDC hdc_wnd) const
+
+int Icon::add_to_imagelist(HIMAGELIST himl, HDC hdc_wnd, COLORREF bk_color, HBRUSH bk_brush) const
 {
+	int ret;
+
 	if (_itype == IT_SYSCACHE) {
-		return 0;	/*@@todo
 		HIMAGELIST himl = g_Globals._icon_cache.get_sys_imagelist();
 
 		int cx, cy;
@@ -302,9 +305,14 @@ HICON Icon::create_icon(COLORREF bk_color, HDC hdc_wnd) const
 		ImageList_DrawEx(himl, _sys_idx, hdc, 0, 0, cx, cy, bk_color, CLR_DEFAULT, ILD_NORMAL);
 		SelectBitmap(hdc, hbmp_old);
 		DeleteDC(hdc);
-		return hbmp;
-*/	} else
-		return (HICON) CopyImage(_hicon, IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), 0);
+
+		ret = ImageList_Add(himl, hbmp, 0);
+
+		DeleteObject(hbmp);
+	} else
+		ret = ImageList_AddAlphaIcon(himl, _hicon, bk_brush, hdc_wnd);
+
+	return ret;
 }
 
 HBITMAP create_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd)
@@ -335,17 +343,6 @@ int ImageList_AddAlphaIcon(HIMAGELIST himl, HICON hIcon, HBRUSH hbrush_bkgnd, HD
 	return ret;
 }
 
-int ImageList_AddAlphaIcon(HIMAGELIST himl, const Icon& icon, HDC hdc_wnd)
-{
-	HICON hicon = icon.create_icon(ImageList_GetBkColor(himl), hdc_wnd);
-
-	int ret = ImageList_AddIcon(himl, hicon);
-
-	DeleteObject(hicon);
-
-	return ret;
-}
-
 
 int IconCache::s_next_id = ICID_DYNAMIC;
 
@@ -371,6 +368,7 @@ void IconCache::init()
 	_icons[ICID_NETWORK]	= Icon(ICID_NETWORK,	IDI_NETWORK);
 	_icons[ICID_COMPUTER]	= Icon(ICID_COMPUTER,	IDI_COMPUTER);
 	_icons[ICID_LOGOFF]		= Icon(ICID_LOGOFF,		IDI_LOGOFF);
+	_icons[ICID_BOOKMARK]	= Icon(ICID_BOOKMARK,	IDI_DOT_TRANS);
 }
 
 
@@ -424,8 +422,12 @@ const Icon& IconCache::extract(LPCTSTR path, int idx)
 		_pathIdxMap[key] = icon;
 
 		return icon;
-	} else
+	} else {
+
+		///@todo retreive "http://.../favicon.ico" format icons
+
 		return _icons[ICID_NONE];
+	}
 }
 
 const Icon& IconCache::extract(IExtractIcon* pExtract, LPCTSTR path, int idx)

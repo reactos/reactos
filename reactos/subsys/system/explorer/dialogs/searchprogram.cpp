@@ -93,14 +93,15 @@ void CollectProgramsThread::free_dirs()
 
 FindProgramDlg::FindProgramDlg(HWND hwnd)
  :	super(hwnd),
-	_list_ctrl(GetDlgItem(hwnd, IDC_MAILS_FOUND)),
+	_list_ctrl(GetDlgItem(hwnd, IDC_PROGRAMS_FOUND)),
 	_thread(collect_programs_callback, hwnd, this),
 	_sort(_list_ctrl, CompareFunc/*, (LPARAM)this*/)
 {
 	SetWindowIcon(hwnd, IDI_REACTOS/*IDI_SEARCH*/);
 
-	_resize_mgr.Add(IDC_TOPIC,		RESIZE_X);
-	_resize_mgr.Add(IDC_MAILS_FOUND,RESIZE);
+	_resize_mgr.Add(IDC_FILTER,			RESIZE_X);
+	_resize_mgr.Add(IDC_CHECK_ENTRIES,	MOVE_X);
+	_resize_mgr.Add(IDC_PROGRAMS_FOUND,	RESIZE);
 
 	_resize_mgr.Resize(+520, +300);
 
@@ -151,7 +152,7 @@ void FindProgramDlg::Refresh(bool delete_cache)
 	_thread.Stop();
 
 	TCHAR buffer[1024];
-	GetWindowText(GetDlgItem(_hwnd, IDC_TOPIC), buffer, 1024);
+	GetWindowText(GetDlgItem(_hwnd, IDC_FILTER), buffer, 1024);
 #ifndef __WINE__ ///@todo
 	_tcslwr(buffer);
 #endif
@@ -290,6 +291,10 @@ int FindProgramDlg::Command(int id, int code)
 			LaunchSelected();
 			break;
 
+		  case IDC_CHECK_ENTRIES:
+			CheckEntries();
+			break;
+
 		  default:
 			return super::Command(id, code);
 		}
@@ -298,7 +303,7 @@ int FindProgramDlg::Command(int id, int code)
 	}
 	else if (code == EN_CHANGE) {
 		switch(id) {
-		  case IDC_TOPIC:
+		  case IDC_FILTER:
 			Refresh();
 			break;
 		}
@@ -406,4 +411,9 @@ int CALLBACK FindProgramDlg::CompareFunc(LPARAM lparam1, LPARAM lparam2, LPARAM 
 	}
 
 	return sort->_direction? -cmp: cmp;
+}
+
+void FindProgramDlg::CheckEntries()
+{
+	///@todo check all entries for existing targets, display a list of not working entries and ask the user for permission to delete them
 }

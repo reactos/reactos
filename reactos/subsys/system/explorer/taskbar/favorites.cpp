@@ -106,7 +106,7 @@ bool Bookmark::read(const_XMLPos& pos)
 }
 
  /// write XBEL bookmark node
-void Bookmark::write(XMLPos& pos)
+void Bookmark::write(XMLPos& pos) const
 {
 	pos.create("bookmark");
 
@@ -157,7 +157,7 @@ void BookmarkFolder::read(const_XMLPos& pos)
 }
 
  /// write bookmark folder conten from XBEL formated XML tree
-void BookmarkFolder::write(XMLPos& pos)
+void BookmarkFolder::write(XMLPos& pos) const
 {
 	pos.create("folder");
 
@@ -177,6 +177,12 @@ void BookmarkFolder::write(XMLPos& pos)
 }
 
 
+BookmarkNode::BookmarkNode()
+ :	_type(BMNT_NONE)
+{
+	_pbookmark = NULL;
+}
+
 BookmarkNode::BookmarkNode(const Bookmark& bm)
  :	_type(BMNT_BOOKMARK)
 {
@@ -192,18 +198,66 @@ BookmarkNode::BookmarkNode(const BookmarkFolder& bmf)
 BookmarkNode::BookmarkNode(const BookmarkNode& other)
  :	_type(other._type)
 {
-	if (_type == BMNT_BOOKMARK)
+	if (other._type == BMNT_BOOKMARK)
 		_pbookmark = new Bookmark(*other._pbookmark);
-	else
+	else if (other._type == BMNT_FOLDER)
 		_pfolder = new BookmarkFolder(*other._pfolder);
+	else
+		_pbookmark = NULL;
 }
 
 BookmarkNode::~BookmarkNode()
 {
 	if (_type == BMNT_BOOKMARK)
 		delete _pbookmark;
-	else
+	else if (_type == BMNT_FOLDER)
 		delete _pfolder;
+}
+
+BookmarkNode& BookmarkNode::operator=(const Bookmark& bm)
+{
+	clear();
+
+	_pbookmark = new Bookmark(bm);
+
+	return *this;
+}
+
+BookmarkNode& BookmarkNode::operator=(const BookmarkFolder& bmf)
+{
+	clear();
+
+	_pfolder = new BookmarkFolder(bmf);
+
+	return *this;
+}
+
+BookmarkNode& BookmarkNode::operator=(const BookmarkNode& other)
+{
+	clear();
+
+	_type = other._type;
+
+	if (other._type == BMNT_BOOKMARK)
+		_pbookmark = new Bookmark(*other._pbookmark);
+	else if (other._type == BMNT_FOLDER)
+		_pfolder = new BookmarkFolder(*other._pfolder);
+
+	return *this;
+}
+
+void BookmarkNode::clear()
+{
+	if (_type == BMNT_BOOKMARK) {
+		delete _pbookmark;
+		_pbookmark = NULL;
+	}
+	else if (_type == BMNT_FOLDER) {
+		delete _pfolder;
+		_pfolder = NULL;
+	}
+
+	_type = BMNT_NONE;
 }
 
 
@@ -238,13 +292,13 @@ void BookmarkList::write(XMLPos& pos) const
 		const BookmarkNode& node = *it;
 
 		if (node._type == BookmarkNode::BMNT_FOLDER) {
-			BookmarkFolder& folder = *node._pfolder;
+			const BookmarkFolder& folder = *node._pfolder;
 
 			folder.write(pos);
 
 			pos.back();
-		} else {	// BookmarkNode::BMNT_BOOKMARK
-			Bookmark& bookmark = *node._pbookmark;
+		} else if (node._type == BookmarkNode::BMNT_BOOKMARK) {
+			const Bookmark& bookmark = *node._pbookmark;
 
 			if (!bookmark._url.empty())
 				bookmark.write(pos);
@@ -278,7 +332,7 @@ void BookmarkList::fill_tree(HWND hwnd, HTREEITEM parent, HIMAGELIST himagelist,
 			HTREEITEM hitem = TreeView_InsertItem(hwnd, &tvi);
 
 			folder._bookmarks.fill_tree(hwnd, hitem, himagelist, hdc_wnd);
-		} else {
+		} else if (node._type == BookmarkNode::BMNT_BOOKMARK) {
 			const Bookmark& bookmark = *node._pbookmark;
 
 			tv.pszText = (LPTSTR)bookmark._name.c_str();
@@ -286,11 +340,10 @@ void BookmarkList::fill_tree(HWND hwnd, HTREEITEM parent, HIMAGELIST himagelist,
 			tv.iSelectedImage = 2;	// selected bookmark
 
 			if (!bookmark._icon_path.empty()) {
-				///@todo retreive "http://.../favicon.ico" icons
 				const Icon& icon = g_Globals._icon_cache.extract(bookmark._icon_path, bookmark._icon_idx);
 
 				if ((ICON_ID)icon != ICID_NONE)
-					tv.iImage = tv.iSelectedImage = ImageList_AddAlphaIcon(himagelist, icon, hdc_wnd);
+					tv.iImage = tv.iSelectedImage = icon.add_to_imagelist(himagelist, hdc_wnd);
 			}
 
 			TreeView_InsertItem(hwnd, &tvi);

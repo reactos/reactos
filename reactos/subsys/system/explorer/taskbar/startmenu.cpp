@@ -95,7 +95,7 @@ BtnWindowClass& StartMenu::GetWndClasss()
 
 Window::CREATORFUNC_INFO StartMenu::s_def_creator = STARTMENU_CREATOR(StartMenu);
 
-HWND StartMenu::Create(int x, int y, const StartMenuFolders& folders, HWND hwndParent, LPCTSTR title, CREATORFUNC_INFO creator)
+HWND StartMenu::Create(int x, int y, const StartMenuFolders& folders, HWND hwndParent, LPCTSTR title, CREATORFUNC_INFO creator, void* info)
 {
 	UINT style, ex_style;
 	int top_height;
@@ -123,6 +123,7 @@ HWND StartMenu::Create(int x, int y, const StartMenuFolders& folders, HWND hwndP
 	create_info._folders = folders;
 	create_info._border_top = top_height;
 	create_info._creator = creator;
+	create_info._info = info;
 
 	if (title)
 		create_info._title = title;
@@ -862,7 +863,7 @@ int StartMenu::Command(int id, int code)
 }
 
 
-StartMenuEntry& StartMenu::AddEntry(const String& title, ICON_ID icon_id, Entry* entry)
+ShellEntryMap::iterator StartMenu::AddEntry(const String& title, ICON_ID icon_id, Entry* entry)
 {
 	 // search for an already existing subdirectory entry with the same name
 	if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
@@ -874,32 +875,35 @@ StartMenuEntry& StartMenu::AddEntry(const String& title, ICON_ID icon_id, Entry*
 					if ((*it2)->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 						 // merge the new shell entry with the existing of the same name
 						sme._entries.insert(entry);
-						return sme;
+
+						return it;
 					}
 				}
 		}
 
-	StartMenuEntry& sme = AddEntry(title, icon_id);
+	ShellEntryMap::iterator sme = AddEntry(title, icon_id);
 
-	sme._entries.insert(entry);
+	sme->second._entries.insert(entry);
 
 	return sme;
 }
 
-StartMenuEntry& StartMenu::AddEntry(const String& title, ICON_ID icon_id, int id)
+ShellEntryMap::iterator StartMenu::AddEntry(const String& title, ICON_ID icon_id, int id)
 {
 	if (id == -1)
 		id = ++_next_id;
 
-	StartMenuEntry& sme = _entries[id];
+	StartMenuEntry sme;
 
 	sme._title = title;
 	sme._icon_id = icon_id;
 
-	return sme;
+	ShellEntryMap::iterator it = _entries.insert(make_pair(id, sme)).first;
+
+	return it;
 }
 
-StartMenuEntry& StartMenu::AddEntry(const ShellFolder folder, ShellEntry* entry)
+ShellEntryMap::iterator StartMenu::AddEntry(const ShellFolder folder, ShellEntry* entry)
 {
 	ICON_ID icon_id;
 
@@ -911,7 +915,7 @@ StartMenuEntry& StartMenu::AddEntry(const ShellFolder folder, ShellEntry* entry)
 	return AddEntry(folder.get_name(entry->_pidl), icon_id, entry);
 }
 
-StartMenuEntry& StartMenu::AddEntry(const ShellFolder folder, Entry* entry)
+ShellEntryMap::iterator StartMenu::AddEntry(const ShellFolder folder, Entry* entry)
 {
 	ICON_ID icon_id;
 
@@ -1004,12 +1008,12 @@ bool StartMenu::CloseOtherSubmenus(int id)
 }
 
 
-void StartMenu::CreateSubmenu(int id, LPCTSTR title, CREATORFUNC_INFO creator)
+void StartMenu::CreateSubmenu(int id, LPCTSTR title, CREATORFUNC_INFO creator, void* info)
 {
-	CreateSubmenu(id, StartMenuFolders(), title, creator);
+	CreateSubmenu(id, StartMenuFolders(), title, creator, info);
 }
 
-bool StartMenu::CreateSubmenu(int id, int folder_id, LPCTSTR title, CREATORFUNC_INFO creator)
+bool StartMenu::CreateSubmenu(int id, int folder_id, LPCTSTR title, CREATORFUNC_INFO creator, void* info)
 {
 	try {
 		SpecialFolderPath folder(folder_id, _hwnd);
@@ -1017,7 +1021,7 @@ bool StartMenu::CreateSubmenu(int id, int folder_id, LPCTSTR title, CREATORFUNC_
 		StartMenuFolders new_folders;
 		new_folders.push_back(folder);
 
-		CreateSubmenu(id, new_folders, title, creator);
+		CreateSubmenu(id, new_folders, title, creator, info);
 
 		return true;
 	} catch(COMException&) {
@@ -1028,7 +1032,7 @@ bool StartMenu::CreateSubmenu(int id, int folder_id, LPCTSTR title, CREATORFUNC_
 	}
 }
 
-bool StartMenu::CreateSubmenu(int id, int folder_id1, int folder_id2, LPCTSTR title, CREATORFUNC_INFO creator)
+bool StartMenu::CreateSubmenu(int id, int folder_id1, int folder_id2, LPCTSTR title, CREATORFUNC_INFO creator, void* info)
 {
 	StartMenuFolders new_folders;
 
@@ -1043,7 +1047,7 @@ bool StartMenu::CreateSubmenu(int id, int folder_id1, int folder_id2, LPCTSTR ti
 	}
 
 	if (!new_folders.empty()) {
-		CreateSubmenu(id, new_folders, title, creator);
+		CreateSubmenu(id, new_folders, title, creator, info);
 		return true;
 	} else {
 		CloseOtherSubmenus(id);
@@ -1052,7 +1056,7 @@ bool StartMenu::CreateSubmenu(int id, int folder_id1, int folder_id2, LPCTSTR ti
 	}
 }
 
-void StartMenu::CreateSubmenu(int id, const StartMenuFolders& new_folders, LPCTSTR title, CREATORFUNC_INFO creator)
+void StartMenu::CreateSubmenu(int id, const StartMenuFolders& new_folders, LPCTSTR title, CREATORFUNC_INFO creator, void* info)
 {
 	 // Only open one submenu at a time.
 	if (!CloseOtherSubmenus(id))
@@ -1074,7 +1078,7 @@ void StartMenu::CreateSubmenu(int id, const StartMenuFolders& new_folders, LPCTS
 	}
 
 	_submenu_id = id;
-	_submenu = StartMenu::Create(x, y, new_folders, _hwnd, title, creator);
+	_submenu = StartMenu::Create(x, y, new_folders, _hwnd, title, creator, info);
 }
 
 
@@ -1108,7 +1112,7 @@ void StartMenu::ActivateEntry(int id, const ShellEntrySet& entries)
 			HWND hparent = GetParent(_hwnd);
 			ShellPath shell_path = entry->create_absolute_pidl();
 
-			 // close start menus after launching the selected entry
+			 // close start menus when launching the selected entry
 			CloseStartMenu(id);
 
 			///@todo launch in the background; specify correct HWND for error message box titles
@@ -1616,7 +1620,11 @@ int StartMenuHandler::Command(int id, int code)
 		break;
 
 	  case IDC_FAVORITES:
+#ifndef _SHELL32_FAVORITES
+		CreateSubmenu(id, ResString(IDS_FAVORITES), STARTMENU_CREATOR(FavoritesMenu), &static_cast<BookmarkList&>(g_Globals._favorites));
+#else
 		CreateSubmenu(id, CSIDL_COMMON_FAVORITES, CSIDL_FAVORITES, ResString(IDS_FAVORITES));
+#endif
 		break;
 
 	  case IDC_BROWSE:
@@ -1805,13 +1813,13 @@ void SettingsMenu::AddEntries()
 		AddButton(ResString(IDS_CONTROL_PANEL),	ICID_CONFIG, false, IDC_CONTROL_PANEL);
 
 #ifdef _ROS_	// to be removed when printer/network will be implemented
-	AddButton(ResString(IDS_PRINTERS),		ICID_PRINTER, false, IDC_PRINTERS);
-	AddButton(ResString(IDS_CONNECTIONS),	ICID_NETWORK, false, IDC_CONNECTIONS);
+	AddButton(ResString(IDS_PRINTERS),			ICID_PRINTER, false, IDC_PRINTERS);
+	AddButton(ResString(IDS_CONNECTIONS),		ICID_NETWORK, false, IDC_CONNECTIONS);
 #else
-	AddButton(ResString(IDS_PRINTERS),		ICID_PRINTER, true, IDC_PRINTERS);
-	AddButton(ResString(IDS_CONNECTIONS),	ICID_NETWORK, true, IDC_CONNECTIONS);
+	AddButton(ResString(IDS_PRINTERS),			ICID_PRINTER, true, IDC_PRINTERS);
+	AddButton(ResString(IDS_CONNECTIONS),		ICID_NETWORK, true, IDC_CONNECTIONS);
 #endif
-	AddButton(ResString(IDS_ADMIN),			ICID_CONFIG, true, IDC_ADMIN);
+	AddButton(ResString(IDS_ADMIN),				ICID_CONFIG, true, IDC_ADMIN);
 
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 	if (!g_Globals._SHRestricted || !SHRestricted(REST_NOCONTROLPANEL))
@@ -1829,26 +1837,26 @@ void BrowseMenu::AddEntries()
 	if (!g_Globals._SHRestricted || !SHRestricted(REST_NONETHOOD))	// or REST_NOENTIRENETWORK ?
 #endif
 #ifdef _ROS_	// to be removed when printer/network will be implemented
-		AddButton(ResString(IDS_NETWORK),	ICID_NETWORK, false, IDC_NETWORK);
+		AddButton(ResString(IDS_NETWORK),		ICID_NETWORK, false, IDC_NETWORK);
 #else
-		AddButton(ResString(IDS_NETWORK),	ICID_NETWORK, true, IDC_NETWORK);
+		AddButton(ResString(IDS_NETWORK),		ICID_NETWORK, true, IDC_NETWORK);
 #endif
 
-	AddButton(ResString(IDS_DRIVES),	ICID_FOLDER, true, IDC_DRIVES);
+	AddButton(ResString(IDS_DRIVES),			ICID_FOLDER, true, IDC_DRIVES);
 }
 
 void SearchMenu::AddEntries()
 {
 	super::AddEntries();
 
-	AddButton(ResString(IDS_SEARCH_PRG),	ICID_APPS, false, IDC_SEARCH_PROGRAM);
-
-	AddButton(ResString(IDS_SEARCH_FILES),	ICID_SEARCH_DOC, false, IDC_SEARCH_FILES);
+	AddButton(ResString(IDS_SEARCH_FILES),		ICID_SEARCH_DOC, false, IDC_SEARCH_FILES);
 
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 	if (!g_Globals._SHRestricted || !SHRestricted(REST_HASFINDCOMPUTERS))
 #endif
-		AddButton(ResString(IDS_SEARCH_COMPUTER),	ICID_COMPUTER, false, IDC_SEARCH_COMPUTER);
+		AddButton(ResString(IDS_SEARCH_COMPUTER),ICID_COMPUTER, false, IDC_SEARCH_COMPUTER);
+
+	AddButton(ResString(IDS_SEARCH_PRG),		ICID_APPS, false, IDC_SEARCH_PROGRAM);
 }
 
 
@@ -1872,3 +1880,62 @@ void RecentStartMenu::AddEntries()
 		AddShellEntries(dir, RECENT_DOCS_COUNT, smd._subfolders);
 	}
 }
+
+
+#ifndef _SHELL32_FAVORITES
+
+void FavoritesMenu::AddEntries()
+{
+	super::AddEntries();
+
+	for(BookmarkList::iterator it=_bookmarks.begin(); it!=_bookmarks.end(); ++it) {
+		BookmarkNode& node = *it;
+
+		int id = ++_next_id;
+
+		_entries[id] = node;
+
+		if (node._type == BookmarkNode::BMNT_FOLDER) {
+			BookmarkFolder& folder = *node._pfolder;
+
+			AddButton(folder._name, ICID_FOLDER, true, id);
+		} else if (node._type == BookmarkNode::BMNT_BOOKMARK) {
+			Bookmark& bookmark = *node._pbookmark;
+
+			ICON_ID icon = ICID_NONE;
+
+			if (!bookmark._icon_path.empty())
+				icon = g_Globals._icon_cache.extract(bookmark._icon_path, bookmark._icon_idx);
+
+			AddButton(bookmark._name, icon!=ICID_NONE?icon:ICID_BOOKMARK, false, id);
+		}
+	}
+}
+
+int FavoritesMenu::Command(int id, int code)
+{
+	BookmarkMap::iterator found = _entries.find(id);
+
+	if (found != _entries.end()) {
+		BookmarkNode& node = found->second;
+
+		if (node._type == BookmarkNode::BMNT_FOLDER) {
+			BookmarkFolder& folder = *node._pfolder;
+
+			if (CloseOtherSubmenus(id))
+				CreateSubmenu(id, folder._name, STARTMENU_CREATOR(FavoritesMenu), &static_cast<BookmarkList&>(folder._bookmarks));
+		} else if (node._type == BookmarkNode::BMNT_BOOKMARK) {
+			Bookmark& bookmark = *node._pbookmark;
+
+			String url = bookmark._url;
+			CloseStartMenu(id);
+			launch_file(GetParent(_hwnd), url, SW_SHOWNORMAL);
+		}
+
+		return 0;
+	}
+
+	return super::Command(id, code);
+}
+
+#endif

@@ -38,26 +38,34 @@ struct Bookmark
 
 	bool	read_url(LPCTSTR path);
 	bool	read(const_XMLPos& pos);
-	void	write(XMLPos& pos);
+	void	write(XMLPos& pos) const;
 };
 
 struct BookmarkFolder;
 
 struct BookmarkNode
 {
+	BookmarkNode();
 	BookmarkNode(const Bookmark& bm);
 	BookmarkNode(const BookmarkFolder& bmf);
 	BookmarkNode(const BookmarkNode& other);
+
 	~BookmarkNode();
 
+	BookmarkNode& operator=(const Bookmark& bm);
+	BookmarkNode& operator=(const BookmarkFolder& bmf);
+	BookmarkNode& operator=(const BookmarkNode& other);
+
+	void	clear();
+
 	enum BOOKMARKNODE_TYPE {
-		BMNT_BOOKMARK, BMNT_FOLDER
+		BMNT_NONE, BMNT_BOOKMARK, BMNT_FOLDER
 	};
 
 	BOOKMARKNODE_TYPE	_type;
 
 	union {
-		Bookmark*	_pbookmark;
+		Bookmark*		_pbookmark;
 		BookmarkFolder* _pfolder;
 	};
 };
@@ -79,7 +87,7 @@ struct BookmarkFolder
 	BookmarkList _bookmarks;
 
 	void	read(const_XMLPos& pos);
-	void	write(XMLPos& pos);
+	void	write(XMLPos& pos) const;
 };
 
 struct Favorites : public BookmarkList
