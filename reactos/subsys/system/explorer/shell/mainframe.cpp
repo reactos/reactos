@@ -41,8 +41,7 @@ MainFrame::MainFrame(HWND hwnd)
 	_hMenuFrame = GetMenu(hwnd);
 	_hMenuWindow = GetSubMenu(_hMenuFrame, GetMenuItemCount(_hMenuFrame)-2);
 
-	_menu_info._hMenuView = GetSubMenu(_hMenuFrame, 3);
-	_menu_info._hMenuOptions = GetSubMenu(_hMenuFrame, 4);
+	_menu_info._hMenuView = GetSubMenu(_hMenuFrame, 1);
 
 	_hAccel = LoadAccelerators(g_Globals._hInstance, MAKEINTRESOURCE(IDA_EXPLORER));
 
@@ -67,11 +66,11 @@ MainFrame::MainFrame(HWND hwnd)
 		IDW_TOOLBAR, 2, g_Globals._hInstance, IDB_TOOLBAR, toolbarBtns,
 		sizeof(toolbarBtns)/sizeof(TBBUTTON), 16, 15, 16, 15, sizeof(TBBUTTON));
 
-	CheckMenuItem(_menu_info._hMenuOptions, ID_VIEW_TOOL_BAR, MF_BYCOMMAND|MF_CHECKED);
+	CheckMenuItem(_menu_info._hMenuView, ID_VIEW_TOOL_BAR, MF_BYCOMMAND|MF_CHECKED);
 
 
 	_hstatusbar = CreateStatusWindow(WS_CHILD|WS_VISIBLE, 0, hwnd, IDW_STATUSBAR);
-	CheckMenuItem(_menu_info._hMenuOptions, ID_VIEW_STATUSBAR, MF_BYCOMMAND|MF_CHECKED);
+	CheckMenuItem(_menu_info._hMenuView, ID_VIEW_STATUSBAR, MF_BYCOMMAND|MF_CHECKED);
 
 	update_explorer_view();
 }
@@ -452,11 +451,12 @@ void MainFrame::toggle_child(HWND hwnd, UINT cmd, HWND hchild)
 {
 	BOOL vis = IsWindowVisible(hchild);
 
-	CheckMenuItem(_menu_info._hMenuOptions, cmd, vis?MF_BYCOMMAND:MF_BYCOMMAND|MF_CHECKED);
+	CheckMenuItem(_menu_info._hMenuView, cmd, vis?MF_BYCOMMAND:MF_BYCOMMAND|MF_CHECKED);
 
 	ShowWindow(hchild, vis?SW_HIDE:SW_SHOW);
 
-	resize_frame_client();
+	ClientRect rect(_hwnd);
+	resize_frame(rect.right, rect.bottom);
 }
 
 
