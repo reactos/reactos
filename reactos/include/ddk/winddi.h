@@ -1248,7 +1248,14 @@ EngSetLastError
 EngSetPointerShape
 EngSetPointerTag
 EngSetPrinterData
-EngSort
+*/
+
+typedef int CDECL (*SORTCOMP)(const void *Elem1, const void *Elem2);
+
+void STDCALL
+EngSort(IN OUT PBYTE Buf, IN ULONG ElemSize, IN ULONG ElemCount, IN SORTCOMP CompFunc);
+
+/*
 EngStretchBlt
 EngStrokeAndFillPath
 EngStrokePath

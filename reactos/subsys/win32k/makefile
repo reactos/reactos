@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.68 2003/06/21 18:06:11 ekohl Exp $
+# $Id: makefile,v 1.69 2003/07/12 12:45:29 gvg Exp $
 
 PATH_TO_TOP = ../..
 
@@ -31,12 +31,13 @@ TARGET_CFLAGS =\
 
 TARGET_LFLAGS =\
  $(PATH_TO_TOP)/dk/nkm/lib/freetype.a \
+ $(PATH_TO_TOP)/dk/w32/lib/rosrtl.a \
  --disable-stdcall-fixup
 
 ENG_OBJECTS= eng/debug.o eng/mem.o eng/brush.o eng/bitblt.o eng/clip.o \
     eng/copybits.o eng/device.o eng/handle.o eng/lineto.o eng/paint.o \
     eng/palette.o eng/perfcnt.o eng/surface.o eng/xlate.o eng/transblt.o \
-    eng/mouse.o eng/misc.o eng/nls.o
+    eng/mouse.o eng/misc.o eng/nls.o eng/sort.o
 
 MAIN_OBJECTS = main/dllmain.o main/svctabm.o
 
