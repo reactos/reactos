@@ -650,15 +650,16 @@ typedef struct ext3_dir_entry_2	EXT2_DIR_ENTRY, *PEXT2_DIR_ENTRY;
 #define EXT2_S_IFDIR	0x4000	// Directory
 #define EXT2_S_IFBLK	0x6000	// Block device
 #define EXT2_S_IFREG	0x8000	// Regular file
-#define EXT2_S_IFSOCK	0xA000	// Socket
-#define EXT2_S_IFLNK	0xC000	// Symbolic link
+#define EXT2_S_IFLNK	0xA000	// Symbolic link
+#define EXT2_S_IFSOCK	0xC000	// Socket
 
 typedef struct
 {
-	U64		FileSize;			// File size
-	U64		FilePointer;		// File pointer
-	U32*	FileBlockList;		// File block list
-	U8		DriveNumber;		// Drive number of open file
+	U64			FileSize;			// File size
+	U64			FilePointer;		// File pointer
+	U32*		FileBlockList;		// File block list
+	U8			DriveNumber;		// Drive number of open file
+	EXT2_INODE	Inode;				// File's inode
 } EXT2_FILE_INFO, * PEXT2_FILE_INFO;
 
 

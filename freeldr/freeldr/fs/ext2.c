@@ -90,24 +90,96 @@ FILE* Ext2OpenFile(PUCHAR FileName)
 {
 	EXT2_FILE_INFO		TempExt2FileInfo;
 	PEXT2_FILE_INFO		FileHandle;
+	UCHAR				SymLinkPath[EXT3_NAME_LEN];
+	UCHAR				FullPath[EXT3_NAME_LEN * 2];
+	U32					Index;
 
 	DbgPrint((DPRINT_FILESYSTEM, "Ext2OpenFile() FileName = %s\n", FileName));
 
+	RtlZeroMemory(SymLinkPath, EXT3_NAME_LEN);
+
+	// Lookup the file in the file system
 	if (!Ext2LookupFile(FileName, &TempExt2FileInfo))
 	{
 		return NULL;
 	}
 
-	FileHandle = MmAllocateMemory(sizeof(EXT2_FILE_INFO));
-
-	if (FileHandle == NULL)
+	// If we got a symbolic link then fix up the path
+	// and re-call this function
+	if ((TempExt2FileInfo.Inode.i_mode & EXT2_S_IFMT) == EXT2_S_IFLNK)
 	{
-		return NULL;
+		DbgPrint((DPRINT_FILESYSTEM, "File is a symbolic link\n"));
+
+		// Now read in the symbolic link path
+		if (!Ext2ReadFile(&TempExt2FileInfo, TempExt2FileInfo.FileSize, NULL, SymLinkPath))
+		{
+			if (TempExt2FileInfo.FileBlockList != NULL)
+			{
+				MmFreeMemory(TempExt2FileInfo.FileBlockList);
+			}
+
+			return NULL;
+		}
+
+		DbgPrint((DPRINT_FILESYSTEM, "Symbolic link path = %s\n", SymLinkPath));
+
+		// Get the full path
+		if (SymLinkPath[0] == '/' || SymLinkPath[0] == '\\')
+		{
+			// Symbolic link is an absolute path
+			// So copy it to FullPath, but skip over
+			// the '/' char at the beginning
+			strcpy(FullPath, &SymLinkPath[1]);
+		}
+		else
+		{
+			// Symbolic link is a relative path
+			// Copy the first part of the path
+			strcpy(FullPath, FileName);
+
+			// Remove the last part of the path
+			for (Index=strlen(FullPath); Index>0; )
+			{
+				Index--;
+				if (FullPath[Index] == '/' || FullPath[Index] == '\\')
+				{
+					break;
+				}
+			}
+			FullPath[Index] = '\0';
+
+			// Concatenate the symbolic link
+			strcat(FullPath, "/");
+			strcat(FullPath, SymLinkPath);
+		}
+
+		DbgPrint((DPRINT_FILESYSTEM, "Full file path = %s\n", FullPath));
+
+		if (TempExt2FileInfo.FileBlockList != NULL)
+		{
+			MmFreeMemory(TempExt2FileInfo.FileBlockList);
+		}
+
+		return Ext2OpenFile(FullPath);
 	}
+	else
+	{
+		FileHandle = MmAllocateMemory(sizeof(EXT2_FILE_INFO));
 
-	RtlCopyMemory(FileHandle, &TempExt2FileInfo, sizeof(EXT2_FILE_INFO));
+		if (FileHandle == NULL)
+		{
+			if (TempExt2FileInfo.FileBlockList != NULL)
+			{
+				MmFreeMemory(TempExt2FileInfo.FileBlockList);
+			}
 
-	return (FILE*)FileHandle;
+			return NULL;
+		}
+
+		RtlCopyMemory(FileHandle, &TempExt2FileInfo, sizeof(EXT2_FILE_INFO));
+
+		return (FILE*)FileHandle;
+	}
 }
 
 /*
@@ -181,21 +253,37 @@ BOOL Ext2LookupFile(PUCHAR FileName, PEXT2_FILE_INFO Ext2FileInfoPointer)
 		return FALSE;
 	}
 
-	if ((InodeData.i_mode & EXT2_S_IFMT) != EXT2_S_IFREG)
+	if (((InodeData.i_mode & EXT2_S_IFMT) != EXT2_S_IFREG) &&
+		((InodeData.i_mode & EXT2_S_IFMT) != EXT2_S_IFLNK))
 	{
-		FileSystemError("Inode is not a regular file.");
+		FileSystemError("Inode is not a regular file or symbolic link.");
 		return FALSE;
 	}
 
+	// Set the drive number
 	Ext2FileInfoPointer->DriveNumber = Ext2DriveNumber;
-	Ext2FileInfoPointer->FileBlockList = Ext2ReadBlockPointerList(&InodeData);
+
+	// If it's a regular file or a regular symbolic link
+	// then get the block pointer list otherwise it must
+	// be a fast symbolic link which doesn't have a block list
+	if (((InodeData.i_mode & EXT2_S_IFMT) == EXT2_S_IFREG) ||
+		((InodeData.i_mode & EXT2_S_IFMT) == EXT2_S_IFLNK && InodeData.i_size > 60))
+	{
+		Ext2FileInfoPointer->FileBlockList = Ext2ReadBlockPointerList(&InodeData);
+
+		if (Ext2FileInfoPointer->FileBlockList == NULL)
+		{
+			return FALSE;
+		}
+	}
+	else
+	{
+		Ext2FileInfoPointer->FileBlockList = NULL;
+	}
+
 	Ext2FileInfoPointer->FilePointer = 0;
 	Ext2FileInfoPointer->FileSize = Ext2GetInodeFileSize(&InodeData);
-
-	if (Ext2FileInfoPointer->FileBlockList == NULL)
-	{
-		return FALSE;
-	}
+	RtlCopyMemory(&Ext2FileInfoPointer->Inode, &InodeData, sizeof(EXT2_INODE));
 
 	return TRUE;
 }
@@ -272,6 +360,19 @@ BOOL Ext2ReadFile(FILE *FileHandle, U64 BytesToRead, U64* BytesRead, PVOID Buffe
 		*BytesRead = 0;
 	}
 
+	// Make sure we have the block pointer list if we need it
+	if (Ext2FileInfo->FileBlockList == NULL)
+	{
+		// Block pointer list is NULL
+		// so this better be a fast symbolic link or else
+		if (((Ext2FileInfo->Inode.i_mode & EXT2_S_IFMT) != EXT2_S_IFLNK) ||
+			(Ext2FileInfo->FileSize > 60))
+		{
+			FileSystemError("Block pointer list is NULL and file is not a fast symbolic link.");
+			return FALSE;
+		}
+	}
+
 	//
 	// If they are trying to read past the
 	// end of the file then return success
@@ -289,6 +390,24 @@ BOOL Ext2ReadFile(FILE *FileHandle, U64 BytesToRead, U64* BytesRead, PVOID Buffe
 	if ((Ext2FileInfo->FilePointer + BytesToRead) > Ext2FileInfo->FileSize)
 	{
 		BytesToRead = (Ext2FileInfo->FileSize - Ext2FileInfo->FilePointer);
+	}
+
+	// Check if this is a fast symbolic link
+	// if so then the read is easy
+	if (((Ext2FileInfo->Inode.i_mode & EXT2_S_IFMT) == EXT2_S_IFLNK) &&
+		(Ext2FileInfo->FileSize <= 60))
+	{
+		DbgPrint((DPRINT_FILESYSTEM, "Reading fast symbolic link data\n"));
+
+		// Copy the data from the link
+		RtlCopyMemory(Buffer, (PVOID)(Ext2FileInfo->Inode.i_block) + Ext2FileInfo->FilePointer, BytesToRead);
+
+		if (BytesRead != NULL)
+		{
+			*BytesRead = BytesToRead;
+		}
+
+		return TRUE;
 	}
 
 	//
