@@ -29,10 +29,12 @@
 #include "precomp.h"
 #include <ntdll/rtl.h>
 #include <fslib/vfatlib.h>
+#include <fslib/ext2lib.h>
 
 #include "usetup.h"
 #include "console.h"
 #include "progress.h"
+#include "fslist.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -96,7 +98,7 @@ FormatCallback (CALLBACKCOMMAND Command,
 
 
 NTSTATUS
-FormatPartition (PUNICODE_STRING DriveRoot)
+FormatPartition (PUNICODE_STRING DriveRoot, FILE_SYSTEM FsType)
 {
   NTSTATUS Status;
   SHORT xScreen;
@@ -111,16 +113,26 @@ FormatPartition (PUNICODE_STRING DriveRoot)
 
   ProgressSetStepCount (ProgressBar, 100);
 
-  VfatInitialize ();
-
-  Status = VfatFormat (DriveRoot,
-		       0,               /* MediaFlag */
-		       NULL,            /* Label */
-		       TRUE,            /* QuickFormat */
-		       0,               /* ClusterSize */
-		       (PFMIFSCALLBACK)FormatCallback); /* Callback */
-
-  VfatCleanup ();
+  if (FsType == FsFat)
+    {
+      VfatInitialize ();
+      Status = VfatFormat (DriveRoot,
+                           0,               /* MediaFlag */
+                           NULL,            /* Label */
+                           TRUE,            /* QuickFormat */
+                           0,               /* ClusterSize */
+                           FormatCallback); /* Callback */
+      VfatCleanup ();
+    }
+  else if (FsType == FsExt2)
+    {
+      Status = Ext2Format (DriveRoot,
+                           0,               /* MediaFlag */
+                           NULL,            /* Label */
+                           TRUE,            /* QuickFormat */
+                           0,               /* ClusterSize */
+                           FormatCallback); /* Callback */
+    }
 
   DestroyProgressBar (ProgressBar);
   ProgressBar = NULL;
@@ -129,5 +141,26 @@ FormatPartition (PUNICODE_STRING DriveRoot)
 
   return Status;
 }
+
+
+#if 0
+NTSTATUS STDCALL
+InstallFileSystemDriver (PUNICODE_STRING Name)
+{ 
+  ULONG StartValue = 0; /* Boot start driver. */
+
+  Status = RtlWriteRegistryValue(RTL_REGISTRY_SERVICES,
+				 Name,
+				 L"Start",
+				 REG_DWORD,
+				 &StartValue,
+				 sizeof(ULONG));
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("RtlWriteRegistryValue() failed (Status %lx)\n", Status);
+      return FALSE;
+    }
+}
+#endif
 
 /* EOF */

@@ -52,7 +52,7 @@ CreateFileSystemList (SHORT Left,
   List->Top = Top;
 
   List->ForceFormat = ForceFormat;
-  List->FileSystemCount = 1;
+  List->FileSystemCount = 2;
   if (ForceFormat)
     {
       List->CurrentFileSystem = ForceFileSystem;
@@ -105,6 +105,20 @@ DrawFileSystemList (PFILE_SYSTEM_LIST List)
       SetTextXY (List->Left,
 		 List->Top + Index,
 		 " Format partition as FAT file system ");
+    }
+  Index++;
+
+  if (List->CurrentFileSystem == FsExt2)
+    {
+      SetInvertedTextXY (List->Left,
+			 List->Top + Index,
+			 " Format partition as EXT2 file system ");
+    }
+  else
+    {
+      SetTextXY (List->Left,
+		 List->Top + Index,
+		 " Format partition as EXT2 file system ");
     }
   Index++;
 

@@ -66,6 +66,14 @@ InstallFat32BootCodeToDisk(PWSTR SrcPath,
 			   PWSTR RootPath);
 
 NTSTATUS
+InstallExt2BootCodeToDisk(PWSTR SrcPath,
+			   PWSTR RootPath);
+
+NTSTATUS
+InstallExt2BootCodeToDisk(PWSTR SrcPath,
+			   PWSTR RootPath);
+
+NTSTATUS
 UpdateBootIni(PWSTR BootIniPath,
 	      PWSTR EntryName,
 	      PWSTR EntryValue);

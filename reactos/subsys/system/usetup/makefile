@@ -14,7 +14,7 @@ TARGET_NAME = usetup
 
 TARGET_PCH = precomp.h
 
-TARGET_SDKLIBS = zlib.a vfatlib.a ntdll.a
+TARGET_SDKLIBS = zlib.a vfatlib.a ext2lib.a ntdll.a
 
 TARGET_INSTALLDIR = system32
 

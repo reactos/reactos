@@ -297,6 +297,10 @@ AddPartitionToList (ULONG DiskNumber,
 #endif
 	  PartEntry->FormatState = Preformatted;
 	}
+      else if (PartEntry->PartInfo[0].PartitionType == PARTITION_EXT2)
+	{
+	  PartEntry->FormatState = Preformatted;
+	}
       else
 	{
 	  PartEntry->FormatState = Unknown;
@@ -811,6 +815,10 @@ PrintPartitionData (PPARTLIST List,
 		   (PartEntry->PartInfo[0].PartitionType == PARTITION_FAT32_XINT13))
 	    {
 	      PartType = "FAT32";
+	    }
+	  else if (PartEntry->PartInfo[0].PartitionType == PARTITION_EXT2)
+	    {
+	      PartType = "EXT2";
 	    }
 	  else if (PartEntry->PartInfo[0].PartitionType == PARTITION_IFS)
 	    {

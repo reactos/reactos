@@ -27,9 +27,10 @@
 
 /* INCLUDES *****************************************************************/
 
+#include <roscfg.h>
 #include <ddk/ntddk.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 #include "fs_rec.h"
@@ -79,6 +80,10 @@ FsRecFsControl(IN PDEVICE_OBJECT DeviceObject,
     {
       case FS_TYPE_VFAT:
 	Status = FsRecVfatFsControl(DeviceObject, Irp);
+	break;
+
+      case FS_TYPE_EXT2:
+	Status = FsRecExt2FsControl(DeviceObject, Irp);
 	break;
 
       case FS_TYPE_NTFS:

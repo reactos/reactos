@@ -31,7 +31,8 @@
 typedef enum
 {
   FsFat = 0,
-  FsKeep = 1
+  FsExt2 = 1,
+  FsKeep = 2
 } FILE_SYSTEM;
 
 typedef struct _FILE_SYSTEM_LIST

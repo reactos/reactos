@@ -34,6 +34,7 @@
 #include <rosrtl/string.h>
 
 #include "usetup.h"
+#include "bootsup.h"
 #include "console.h"
 #include "partlist.h"
 #include "inicache.h"
@@ -42,8 +43,8 @@
 #include "progress.h"
 #include "bootsup.h"
 #include "registry.h"
-#include "format.h"
 #include "fslist.h"
+#include "format.h"
 #include "cabinet.h"
 #include "filesup.h"
 #include "drivesup.h"
@@ -2139,6 +2140,10 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
     {
       PartType = "FAT32";
     }
+  else if (PartEntry->PartInfo[0].PartitionType == PARTITION_EXT2)
+    {
+      PartType = "FAT32";
+    }
   else if (PartEntry->PartInfo[0].PartitionType == PARTITION_IFS)
     {
       PartType = "NTFS"; /* FIXME: Not quite correct! */
@@ -2301,6 +2306,7 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 #ifndef NDEBUG
   ULONG Line;
   ULONG i;
+  PLIST_ENTRY Entry;
 #endif
 
 
@@ -2384,6 +2390,10 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 			    PartEntry->PartInfo[0].PartitionType = PARTITION_FAT32_XINT13;
 			  }
 		      }
+		    break;
+
+		  case FsExt2:
+		    PartEntry->PartInfo[0].PartitionType = PARTITION_EXT2;
 		    break;
 
 		  case FsKeep:
@@ -2477,27 +2487,24 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 				  PathBuffer);
 	  DPRINT ("SystemRootPath: %wZ\n", &SystemRootPath);
 
+	  if (FileSystemList->CurrentFileSystem != FsKeep)
+	    {
+              Status = FormatPartition (&DestinationRootPath,
+                                        FileSystemList->CurrentFileSystem);
+              if (!NT_SUCCESS (Status))
+                {
+                  DPRINT1 ("FormatPartition() failed with status 0x%.08x\n", Status);
+                  /* FIXME: show an error dialog */
+                  return QUIT_PAGE;
+                }
+
+              PartEntry->New = FALSE;
+              CheckActiveBootPartition (PartitionList);
+	    }
 
 	  switch (FileSystemList->CurrentFileSystem)
 	    {
 	      case FsFat:
-		Status = FormatPartition (&DestinationRootPath);
-		if (!NT_SUCCESS (Status))
-		  {
-		    DPRINT1 ("FormatPartition() failed with status 0x%.08x\n", Status);
-		    /* FIXME: show an error dialog */
-		    return QUIT_PAGE;
-		  }
-
-		PartEntry->New = FALSE;
-		if (FileSystemList != NULL)
-		  {
-		    DestroyFileSystemList (FileSystemList);
-		    FileSystemList = NULL;
-		  }
-
-		CheckActiveBootPartition (PartitionList);
-
 		/* FIXME: Install boot code. This is a hack! */
 		if ((PartEntry->PartInfo[0].PartitionType == PARTITION_FAT32_XINT13) ||
 		    (PartEntry->PartInfo[0].PartitionType == PARTITION_FAT32))
@@ -2534,12 +2541,33 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 		  }
 		break;
 
+        case FsExt2: 
+          {
+		    wcscpy (PathBuffer, SourceRootPath.Buffer);
+		    wcscat (PathBuffer, L"\\loader\\ext2.bin");
+            
+		    DPRINT ("Install EXT2 bootcode: %S ==> %S\n", PathBuffer,
+                    DestinationRootPath.Buffer);
+		    Status = InstallExt2BootCodeToDisk (PathBuffer,
+                                                 DestinationRootPath.Buffer);
+		    if (!NT_SUCCESS (Status))
+            {
+		        DPRINT1 ("InstallExt2BootCodeToDisk() failed with status 0x%.08x\n", Status);
+		        /* FIXME: show an error dialog */
+		        return QUIT_PAGE;
+            }
+          }
+          break;
+
 	      case FsKeep:
 		break;
 
-	      default:
-		return QUIT_PAGE;
+        default:
+            return QUIT_PAGE;
 	    }
+
+          DestroyFileSystemList (FileSystemList);
+          FileSystemList = NULL;
 
 #ifndef NDEBUG
 	  SetStatusText ("   Done.  Press any key ...");

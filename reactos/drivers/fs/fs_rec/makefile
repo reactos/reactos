@@ -11,6 +11,7 @@ TARGET_OBJECTS = \
   fs_rec.o \
   cdfs.o \
   fat.o \
+  ext2.o \
   ntfs.o \
   udfs.o
 

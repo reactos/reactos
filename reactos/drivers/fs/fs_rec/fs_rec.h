@@ -33,6 +33,7 @@
 #define FS_TYPE_NTFS		2
 #define FS_TYPE_CDFS		3
 #define FS_TYPE_UDFS		4
+#define FS_TYPE_EXT2            5
 
 
 typedef struct _DEVICE_EXTENSION
@@ -90,6 +91,12 @@ NTSTATUS
 FsRecVfatFsControl(IN PDEVICE_OBJECT DeviceObject,
 		   IN PIRP Irp);
 
+
+/* ext2.c */
+
+NTSTATUS
+FsRecExt2FsControl(IN PDEVICE_OBJECT DeviceObject,
+		   IN PIRP Irp);
 
 /* ntfs.c */
 
