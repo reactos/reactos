@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.18 2001/03/06 17:28:25 dwelch Exp $
+/* $Id: create.c,v 1.19 2001/03/06 23:28:42 cnettel Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -14,7 +14,7 @@
 #include <wchar.h>
 #include <limits.h>
 
-#define NDEBUG
+#define NDEBUGN
 #include <debug.h>
 
 #include "vfat.h"
@@ -383,6 +383,7 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   PWSTR current = NULL;
   PWSTR next;
   PWSTR string;
+  PWSTR buffer; // used to store a pointer while checking MAX_PATH conformance
   PVFATFCB ParentFcb;
   PVFATFCB Fcb, pRelFcb;
   PVFATFCB Temp;
@@ -472,11 +473,12 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   ParentFcb = NULL;
   Fcb = ExAllocatePool (NonPagedPool, sizeof (VFATFCB));
   memset (Fcb, 0, sizeof (VFATFCB));
-  Fcb->ObjectName = Fcb->PathName;
+  Fcb->ObjectName = &Fcb->PathName[1];
+  Fcb->PathName[0]='\\';
   next = &string[0];
 
   CHECKPOINT;
-  if (*next == 0)		// root
+  if (*next == 0 || *(next+1) == 0)		// root
     {
       memset (Fcb->entry.Filename, ' ', 11);
       Fcb->entry.FileSize = DeviceExt->rootDirectorySectors * BLOCKSIZE;
@@ -486,7 +488,9 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
       else
 	Fcb->entry.FirstCluster = 1;
       /* FIXME : is 1 the good value for mark root? */
+      Fcb->ObjectName--;
       ParentFcb = Fcb;
+      DPRINT("%S filename, PathName: %S \n",FileName, ParentFcb->PathName);
       Fcb = NULL;
     }
   else
@@ -530,10 +534,32 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	      CHECKPOINT;
 	      Fcb = ExAllocatePool (NonPagedPool, sizeof (VFATFCB));
 	      memset (Fcb, 0, sizeof (VFATFCB));
-	      Fcb->ObjectName = Fcb->PathName;
+              Fcb->ObjectName = &Fcb->PathName[1];
+	      Fcb->PathName[0] = '\\';
 	    }
 	  else
-	    Fcb = ParentFcb;
+	      Fcb = ParentFcb;
+
+	  buffer=Fcb->ObjectName;
+	  Fcb->ObjectName = Fcb->PathName + (Temp->ObjectName-Temp->PathName) + wcslen(Temp->ObjectName)+1;
+// The line above should be possible to optimize. I was tired when writing it and always did something wrong
+	  if (Fcb->ObjectName - Fcb->PathName >= MAX_PATH)
+	    {
+	      if (Fcb != NULL)
+		  ExFreePool (Fcb);
+	      if (ParentFcb != NULL)
+		 ExFreePool (ParentFcb);
+	      if (AbsFileName)
+		 ExFreePool (AbsFileName);
+
+	      return STATUS_OBJECT_PATH_NOT_FOUND;
+	// Which error code? It's no input buffer limit, it's the MAX_PATH limit.
+	// However, the current one is still wrong. Fix it!
+	    }
+	  wcscat(buffer, Temp->ObjectName-1);
+	  Fcb->ObjectName[-1]='\\';
+	  Fcb->ObjectName[0]=0;
+	  
 	  CHECKPOINT;
 	  ParentFcb = Temp;
 	}
@@ -542,7 +568,7 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
       DPRINT ("current '%S'\n", current);
       Status = FindFile (DeviceExt, Fcb, ParentFcb, current, NULL, NULL);
       if (Status != STATUS_SUCCESS)
-	{
+        {
 	  /* file does not exist */
 	  CHECKPOINT;
 	  if (Fcb != NULL)
@@ -552,20 +578,14 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	  if (AbsFileName)
 	    ExFreePool (AbsFileName);
 
-	  return STATUS_OBJECT_NAME_NOT_FOUND;
+          return STATUS_OBJECT_NAME_NOT_FOUND;
 	}
 
       Temp = Fcb;
-      if (ParentFcb == NULL)
-	{
-	  CHECKPOINT;
-	  Fcb = ExAllocatePool (NonPagedPool, sizeof (VFATFCB));
-	  memset (Fcb, 0, sizeof (VFATFCB));
-	  Fcb->ObjectName = Fcb->PathName;
-	}
-      else
-	Fcb = ParentFcb;
+
+      Fcb = ParentFcb;
       ParentFcb = Temp;
+      ParentFcb->ObjectName = wcschr (ParentFcb->ObjectName, '\\');
     }
 
   FileObject->Flags = FileObject->Flags | 
@@ -586,8 +606,8 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   InsertTailList (&DeviceExt->FcbListHead, &ParentFcb->FcbListEntry);
   KeReleaseSpinLock (&DeviceExt->FcbListLock, oldIrql);
 
-  vfat_wcsncpy (ParentFcb->PathName, FileName, MAX_PATH);
-  ParentFcb->ObjectName = ParentFcb->PathName + (current - FileName);
+/*  vfat_wcsncpy (ParentFcb->PathName, FileName, MAX_PATH);
+  ParentFcb->ObjectName = ParentFcb->PathName + (current - FileName); */
   ParentFcb->pDevExt = DeviceExt;
   BytesPerCluster = DeviceExt->Boot->SectorsPerCluster * BLOCKSIZE;
   if (BytesPerCluster >= PAGESIZE)
