@@ -23,6 +23,7 @@
 #                  15-Feb-2004 vizzini - Created/
 
 PATH_TO_TOP = ../../..
+TARGET_BOOTSTRAP = yes
 TARGET_TYPE = driver
 TARGET_NAME = floppy
 TARGET_CFLAGS = -Wall -Werror 

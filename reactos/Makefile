@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.230 2004/06/07 17:31:50 navaraf Exp $
+# $Id: Makefile,v 1.231 2004/06/15 22:33:45 gvg Exp $
 #
 # Global makefile
 #
@@ -64,12 +64,12 @@ LOADERS = dos
 
 # Driver support libraries
 #bzip2 zlib oskittcp
-DRIVERS_LIB = bzip2 oskittcp
+DRIVERS_LIB = bzip2 oskittcp csq
 
 # Kernel mode device drivers
 # Obsolete: ide
 # beep blue floppy null parallel ramdrv serenum serial
-DEVICE_DRIVERS = beep blue debugout floppy null serial bootvid
+DEVICE_DRIVERS = beep blue debugout null serial bootvid
 
 # Kernel mode input drivers
 INPUT_DRIVERS = keyboard mouclass psaux sermouse
@@ -88,7 +88,7 @@ NET_DEVICE_DRIVERS = ne2000 pcnet
 
 # Kernel mode storage drivers
 # atapi cdrom class2 disk scsiport
-STORAGE_DRIVERS = atapi cdrom class2 disk scsiport diskdump
+STORAGE_DRIVERS = atapi cdrom class2 disk floppy scsiport diskdump
 
 # System applications
 # autochk cmd format services setup usetup welcome winlogon
