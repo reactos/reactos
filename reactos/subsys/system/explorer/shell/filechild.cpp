@@ -31,6 +31,7 @@
 #include "../explorer.h"
 #include "../globals.h"
 #include "ntobjfs.h"
+#include "regfs.h"
 
 #include "../explorer_intres.h"
 
@@ -71,6 +72,13 @@ NtObjChildWndInfo::NtObjChildWndInfo(LPCTSTR path)
  :	FileChildWndInfo(path)
 {
 	_etype = ET_NTOBJS;
+}
+
+
+RegistryChildWndInfo::RegistryChildWndInfo(LPCTSTR path)
+ :	FileChildWndInfo(path)
+{
+	_etype = ET_REGISTRY;
 }
 
 
@@ -121,6 +129,18 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 		lstrcpy(_root._fs, TEXT("NTOBJ"));
 		lstrcpy(_root._path, drv);
 		_root._entry = new NtObjDirectory(_root._path);
+		entry = _root._entry->read_tree(info._path, SORT_NAME/*_sortOrder*/);
+	}
+	else if (info._etype == ET_REGISTRY)
+	{
+		_root._drive_type = DRIVE_UNKNOWN;
+
+		_tsplitpath(info._path, drv, NULL, NULL, NULL);
+		lstrcat(drv, TEXT("\\"));
+		lstrcpy(_root._volname, TEXT("Registry"));
+		lstrcpy(_root._fs, TEXT("Registry"));
+		lstrcpy(_root._path, drv);
+		_root._entry = new RegistryRoot();
 		entry = _root._entry->read_tree(info._path, SORT_NAME/*_sortOrder*/);
 	}
 	else //if (info._etype == ET_WINDOWS)

@@ -463,3 +463,20 @@ void Entry::free_subentries()
 		} while(next);
 	}
 }
+
+
+const void* Directory::get_next_path_component(const void* p)
+{
+	LPCTSTR s = (LPCTSTR) p;
+
+	while(*s && *s!=TEXT('\\') && *s!=TEXT('/'))
+		++s;
+
+	while(*s==TEXT('\\') || *s==TEXT('/'))
+		++s;
+
+	if (!*s)
+		return NULL;
+
+	return s;
+}

@@ -124,6 +124,13 @@ MainFrame::MainFrame(HWND hwnd)
 		++drivebarBtn.iString;
 	}
 
+	 // insert Registry button
+	SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)TEXT("Registry\0"));
+
+	drivebarBtn.idCommand = ID_DRIVE_REGISTRY;
+	SendMessage(_hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
+	++drivebarBtn.iString;
+
 	 // register windows drive root strings
 	SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)_drives);
 
@@ -495,7 +502,7 @@ int MainFrame::Command(int id, int code)
 		TCHAR path[MAX_PATH];
 		FileChildWindow* child;
 
-		if (activate_fs_window(TEXT("unixfs")))
+		if (activate_child_window(TEXT("unixfs")))
 			break;
 
 		getcwd(path, MAX_PATH);
@@ -510,7 +517,7 @@ int MainFrame::Command(int id, int code)
 	  case ID_DRIVE_SHELL_NS: {
 		TCHAR path[MAX_PATH];
 
-		if (activate_fs_window(TEXT("Shell")))
+		if (activate_child_window(TEXT("Shell")))
 			break;
 
 		GetCurrentDirectory(MAX_PATH, path);
@@ -523,7 +530,7 @@ int MainFrame::Command(int id, int code)
 		break;}
 
 	  case ID_DRIVE_NTOBJ_NS: {
-		if (activate_fs_window(TEXT("NTOBJ")))
+		if (activate_child_window(TEXT("NTOBJ")))
 			break;
 
 #ifndef _NO_MDI
@@ -533,10 +540,21 @@ int MainFrame::Command(int id, int code)
 #endif
 	  break;}
 
+	  case ID_DRIVE_REGISTRY: {
+		if (activate_child_window(TEXT("Registry")))
+			break;
+
+#ifndef _NO_MDI
+		FileChildWindow::create(_hmdiclient, RegistryChildWndInfo(TEXT("\\")));
+#else
+		///@todo SDI implementation
+#endif
+	  break;}
+
 	  case ID_DRIVE_DESKTOP: {
 		TCHAR path[MAX_PATH];
 
-		if (activate_fs_window(TEXT("Desktop")))
+		if (activate_child_window(TEXT("Desktop")))
 			break;
 
 		GetCurrentDirectory(MAX_PATH, path);
@@ -753,7 +771,7 @@ bool MainFrame::activate_drive_window(LPCTSTR path)
 	return false;
 }
 
-bool MainFrame::activate_fs_window(LPCTSTR filesys)
+bool MainFrame::activate_child_window(LPCTSTR filesys)
 {
 	HWND child_wnd;
 

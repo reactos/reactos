@@ -32,7 +32,8 @@ enum ENTRY_TYPE {
 	ET_UNIX,
 #endif
 	ET_SHELL,
-	ET_NTOBJS
+	ET_NTOBJS,
+	ET_REGISTRY
 };
 
 enum SORT_ORDER {
@@ -104,6 +105,9 @@ struct Directory {
 protected:
 	Directory() : _path(NULL) {}
 	virtual ~Directory() {}
+
+	 // default implementation like that of Windows file systems
+	virtual const void* get_next_path_component(const void*);
 
 	void*	_path;
 };

@@ -81,6 +81,7 @@ OBJECTS = \
 	unixfs.o \
 	shellfs.o \
 	ntobjfs.o \
+	regfs.o \
 	mainframe.o \
 	filechild.o \
 	pane.o \

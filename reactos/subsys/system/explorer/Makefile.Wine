@@ -30,6 +30,7 @@ CPP_SRCS = \
 	shell/pane.cpp \
 	shell/shellbrowser.cpp \
 	shell/ntobjfs.cpp \
+	shell/regfs.cpp \
 	taskbar/desktopbar.cpp \
 	taskbar/taskbar.cpp \
 	taskbar/startmenu.cpp \

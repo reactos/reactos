@@ -20,40 +20,31 @@
  //
  // Explorer clone
  //
- // winfs.h
+ // regfs.h
  //
- // Martin Fuchs, 23.07.2003
+ // Martin Fuchs, 31.01.2004
  //
 
 
- /// Windows file system file-entry
-struct WinEntry : public Entry
+ /// Registry entry
+struct RegEntry : public Entry
 {
-	WinEntry(Entry* parent) : Entry(parent, ET_WINDOWS) {}
+	RegEntry(Entry* parent) : Entry(parent, ET_REGISTRY) {}
 
 protected:
-	WinEntry() : Entry(ET_WINDOWS) {}
+	RegEntry() : Entry(ET_REGISTRY) {}
 
 	virtual bool get_path(PTSTR path) const;
+	virtual BOOL launch_entry(HWND hwnd, UINT nCmdShow);
 };
 
 
- /// Windows file system directory-entry
-struct WinDirectory : public WinEntry, public Directory
+ /// Registry key entry
+struct RegDirectory : public RegEntry, public Directory
 {
-	WinDirectory(LPCTSTR root_path)
-	 :	WinEntry()
-	{
-		_path = _tcsdup(root_path);
-	}
+	RegDirectory(Entry* parent, LPCTSTR path, HKEY hKeyRoot);
 
-	WinDirectory(Entry* parent, LPCTSTR path)
-	 :	WinEntry(parent)
-	{
-		_path = _tcsdup(path);
-	}
-
-	~WinDirectory()
+	~RegDirectory()
 	{
 		free(_path);
 		_path = NULL;
@@ -61,6 +52,30 @@ struct WinDirectory : public WinEntry, public Directory
 
 	virtual void read_directory(int scan_flags=SCAN_ALL);
 	virtual Entry* find_entry(const void*);
+
+protected:
+	HKEY	_hKeyRoot;
 };
 
-extern int ScanNTFSStreams(Entry* entry, HANDLE hFile);
+
+ /// Registry key entry
+struct RegistryRoot : public RegEntry, public Directory
+{
+	RegistryRoot()
+	{
+	}
+
+	RegistryRoot(Entry* parent, LPCTSTR path)
+	 :	RegEntry(parent)
+	{
+		_path = _tcsdup(path);
+	}
+
+	~RegistryRoot()
+	{
+		free(_path);
+		_path = NULL;
+	}
+
+	virtual void read_directory(int scan_flags=SCAN_ALL);
+};

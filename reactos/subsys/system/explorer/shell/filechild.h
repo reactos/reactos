@@ -53,6 +53,12 @@ struct NtObjChildWndInfo : public FileChildWndInfo
 	NtObjChildWndInfo(LPCTSTR path);
 };
 
+ /// information structure for creation of FileChildWindow for the Registry
+struct RegistryChildWndInfo : public FileChildWndInfo
+{
+	RegistryChildWndInfo(LPCTSTR path);
+};
+
 
  /// MDI child window displaying file lists
 struct FileChildWindow : public ChildWindow

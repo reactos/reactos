@@ -68,7 +68,7 @@ protected:
 
 	void	toggle_child(HWND hwnd, UINT cmd, HWND hchild);
 	bool	activate_drive_window(LPCTSTR path);
-	bool	activate_fs_window(LPCTSTR filesys);
+	bool	activate_child_window(LPCTSTR filesys);
 
 	void	resize_frame_rect(PRECT prect);
 	void	resize_frame(int cx, int cy);

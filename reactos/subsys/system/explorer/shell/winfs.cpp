@@ -80,7 +80,6 @@ int ScanNTFSStreams(Entry* entry, HANDLE hFile)
 				stream_entry->_expanded = false;
 				stream_entry->_scanned = false;
 				stream_entry->_level = entry->_level + 1;
-				stream_entry->_bhfi_valid = false;
 
 				*pnext = stream_entry;
 				pnext = &stream_entry->_next;
@@ -159,7 +158,6 @@ void WinDirectory::read_directory(int scan_flags)
 			entry->_expanded = false;
 			entry->_scanned = false;
 			entry->_level = level;
-			entry->_bhfi_valid = false;
 
 			if (scan_flags & SCAN_DO_ACCESS) {
 				HANDLE hFile = CreateFile(buffer, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
@@ -186,23 +184,6 @@ void WinDirectory::read_directory(int scan_flags)
 
 	_down = first_entry;
 	_scanned = true;
-}
-
-
-const void* WinDirectory::get_next_path_component(const void* p)
-{
-	LPCTSTR s = (LPCTSTR) p;
-
-	while(*s && *s!=TEXT('\\') && *s!=TEXT('/'))
-		++s;
-
-	while(*s==TEXT('\\') || *s==TEXT('/'))
-		++s;
-
-	if (!*s)
-		return NULL;
-
-	return s;
 }
 
 

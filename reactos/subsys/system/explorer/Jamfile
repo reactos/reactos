@@ -22,6 +22,7 @@ exe explorer :
 	shell/unixfs.cpp
 	shell/winfs.cpp
 	shell/ntobjfs.cpp
+	shell/regfs.cpp
 	shell/startup.c
 	taskbar/desktopbar.cpp
 	taskbar/quicklaunch.cpp

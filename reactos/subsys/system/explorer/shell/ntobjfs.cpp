@@ -31,6 +31,7 @@
 
 #include "entries.h"
 #include "ntobjfs.h"
+#include "regfs.h"
 
 
 #define	CONSTRUCT_NTDLLFCT(x) x(TEXT("NTDLL"), #x)
@@ -222,7 +223,7 @@ void NtObjDirectory::read_directory(int scan_flags)
 		if (!(*g_NTDLL->NtQueryDirectoryObject)(dir_handle, info, 0x800, TRUE, TRUE, &idx1, &idx2)) {
 			WIN32_FIND_DATA w32fd;
 			Entry* last = NULL;
-			NtObjEntry* entry;
+			Entry* entry;
 
 			do {
 				memset(&w32fd, 0, sizeof(WIN32_FIND_DATA));
@@ -269,42 +270,10 @@ void NtObjDirectory::read_directory(int scan_flags)
 				else if (type == KEY_OBJECT) {
 					w32fd.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
 
-					entry = new NtObjDirectory(this, buffer);
-
-#if 0 ///@todo mount registry hives
-					*pnext = entry = new RegRootEntry(tlvctrlr, HKEY_CURRENT_USER);
-					*entry->pparent() = this;
-
-					pnext = entry->pnext();
-					*pnext = entry = new RegRootEntry(tlvctrlr, HKEY_LOCAL_MACHINE);
-					*entry->pparent() = this;
-
-					pnext = entry->pnext();
-					*pnext = entry = new RegRootEntry(tlvctrlr, HKEY_CLASSES_ROOT);
-					*entry->pparent() = this;
-
-					pnext = entry->pnext();
-					*pnext = entry = new RegRootEntry(tlvctrlr, HKEY_USERS);
-					*entry->pparent() = this;
-					/*
-					pnext = entry->pnext();
-					*pnext = entry = new RegRootEntry(tlvctrlr, HKEY_PERFORMANCE_DATA);
-					*entry->pparent() = this;
-					*/
-					pnext = entry->pnext();
-					*pnext = entry = new RegRootEntry(tlvctrlr, HKEY_CURRENT_CONFIG);
-					*entry->pparent() = this;
-					/*
-					pnext = entry->pnext();
-					*pnext = entry = new RegRootEntry(tlvctrlr, HKEY_DYN_DATA);
-					*entry->pparent() = this;
-					*/
-#endif
+					entry = new RegistryRoot(this, buffer);
 				}
 				else
 					entry = new NtObjEntry(this, type);
-
-				entry->_bhfi_valid = false;
 
 				HANDLE handle;
 
@@ -403,23 +372,6 @@ void NtObjDirectory::read_directory(int scan_flags)
 }
 
 
-const void* NtObjDirectory::get_next_path_component(const void* p)
-{
-	LPCTSTR s = (LPCTSTR) p;
-
-	while(*s && *s!=TEXT('\\') && *s!=TEXT('/'))
-		++s;
-
-	while(*s==TEXT('\\') || *s==TEXT('/'))
-		++s;
-
-	if (!*s)
-		return NULL;
-
-	return s;
-}
-
-
 Entry* NtObjDirectory::find_entry(const void* p)
 {
 	LPCTSTR name = (LPCTSTR)p;
@@ -490,10 +442,7 @@ bool NtObjEntry::get_path(PTSTR path) const
 			memcpy(path+1, name, l*sizeof(TCHAR));
 			len += l+1;
 
-			if (entry->_up && !(entry->_up->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))	// a NTFS stream?
-				path[0] = TEXT(':');
-			else
-				path[0] = TEXT('\\');
+			path[0] = TEXT('\\');
 		}
 
 		entry = entry->_up;

@@ -760,6 +760,14 @@ SOURCE=.\shell\pane.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\shell\regfs.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\shell\regfs.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\shell\shellbrowser.cpp
 # End Source File
 # Begin Source File
