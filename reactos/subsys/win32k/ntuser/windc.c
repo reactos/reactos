@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.62 2004/04/05 20:46:15 weiden Exp $
+/* $Id: windc.c,v 1.63 2004/04/05 21:15:34 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -55,8 +55,10 @@ static FAST_MUTEX DceListLock;
 static PDCE FirstDce = NULL;
 static HDC defaultDCstate;
 
-#define DCE_LockList ExAcquireFastMutex(&DceListLock)
-#define DCE_UnlockList ExReleaseFastMutex(&DceListLock)
+#define DCE_LockList() \
+  ExAcquireFastMutex(&DceListLock)
+#define DCE_UnlockList() \
+  ExReleaseFastMutex(&DceListLock)
 
 #define DCX_CACHECOMPAREMASK (DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN | \
                               DCX_CACHE | DCX_WINDOW | DCX_PARENTCLIP)
@@ -123,10 +125,10 @@ DceAllocDCE(HWND hWnd, DCE_TYPE Type)
     }
   Dce->hwndCurrent = hWnd;
   Dce->hClipRgn = NULL;
-  DCE_LockList;
+  DCE_LockList();
   Dce->next = FirstDce;
   FirstDce = Dce;
-  DCE_UnlockList;
+  DCE_UnlockList();
 
   if (Type != DCE_CACHE_DC)
     {
@@ -423,7 +425,7 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
       DCE* DceEmpty = NULL;
       DCE* DceUnused = NULL;
       
-      DCE_LockList;
+      DCE_LockList();
 
       for (Dce = FirstDce; Dce != NULL; Dce = Dce->next)
 	{
@@ -446,7 +448,7 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
 	    }
 	}
 
-      DCE_UnlockList;
+      DCE_UnlockList();
       
       if (Dce == NULL)
 	{
@@ -574,7 +576,7 @@ DCE_InternalDelete(PDCE Dce)
 {
   PDCE PrevInList;
   
-  DCE_LockList;
+  DCE_LockList();
   
   if (Dce == FirstDce)
     {
@@ -594,7 +596,7 @@ DCE_InternalDelete(PDCE Dce)
       assert(NULL != PrevInList);
     }
 
-  DCE_UnlockList;
+  DCE_UnlockList();
   
   return NULL != PrevInList;
 }
@@ -604,16 +606,16 @@ IntWindowFromDC(HDC hDc)
 {
   DCE *Dce;
   
-  DCE_LockList;
+  DCE_LockList();
   for (Dce = FirstDce; Dce != NULL; Dce = Dce->next)
   {
     if(Dce->hDC == hDc)
     {
-      DCE_UnlockList;
+      DCE_UnlockList();
       return Dce->hwndCurrent;
     }
   }
-  DCE_UnlockList;
+  DCE_UnlockList();
   return 0;
 }
 
@@ -623,7 +625,7 @@ NtUserReleaseDC(HWND hWnd, HDC hDc)
   DCE *dce;
   INT nRet = 0;
 
-  DCE_LockList;
+  DCE_LockList();
   
   dce = FirstDce;
 
@@ -639,7 +641,7 @@ NtUserReleaseDC(HWND hWnd, HDC hDc)
       nRet = DceReleaseDC(dce);
     }
 
-  DCE_UnlockList;
+  DCE_UnlockList();
 
   return nRet;
 }
@@ -687,7 +689,7 @@ DceFreeWindowDCE(PWINDOW_OBJECT Window)
 {
   DCE *pDCE;
 
-  DCE_LockList;
+  DCE_LockList();
   
   pDCE = FirstDce;
   while (pDCE)
@@ -730,18 +732,18 @@ DceFreeWindowDCE(PWINDOW_OBJECT Window)
         }
       pDCE = pDCE->next;
     }
-    DCE_UnlockList;
+    DCE_UnlockList();
 }
 
 void FASTCALL
 DceEmptyCache()
 {
-  DCE_LockList;
+  DCE_LockList();
   while (FirstDce != NULL)
     {
       DceFreeDCE(FirstDce);
     }
-  DCE_UnlockList;
+  DCE_UnlockList();
 }
 
 VOID FASTCALL 
@@ -756,7 +758,7 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window, int DeltaX, int DeltaY)
       return;
     }
 
-  DCE_LockList;
+  DCE_LockList();
   
   pDCE = FirstDce;
   while (pDCE)
@@ -809,10 +811,11 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window, int DeltaX, int DeltaY)
               IntReleaseWindowObject(CurrentWindow);
             }
         }
+      
       pDCE = pDCE->next;
     }
   
-  DCE_UnlockList;
+  DCE_UnlockList();
 }
 
 /* EOF */
