@@ -54,3 +54,18 @@ What I need are the get** functions from ipstats (which I think are ok)
 And then to change the detritus in ifenum to be all based on
 getInterfaceIndexTable and getInterfaceMibByIndex, getInterfaceMibByName
 
+Implementing name functions:
+
+Ok here's what i can synthesize from unclegarlic and vizzini:
+
+the IP_ADAPTER_INFO struct should contain the guid part of the registry key
+name that holds the adapter
+
+the snmp-style info functions should return a nice name, which is also from
+the registry.
+
+In no case is the adapter OID for name used.  According to vizzini, this
+OID is never used and probably almost never implemented.
+
+This is different from the wine case because there are two different names
+returned from the underlying layer.
