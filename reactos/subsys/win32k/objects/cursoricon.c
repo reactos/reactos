@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.62 2004/07/07 08:39:54 gvg Exp $ */
+/* $Id: cursoricon.c,v 1.63 2004/07/09 20:09:35 navaraf Exp $ */
 #include <w32k.h>
 
 PCURICON_OBJECT FASTCALL
@@ -1236,6 +1236,8 @@ NtUserDrawIconEx(
     #if CANSTRETCHBLT
     SetStretchBltMode(hdcOff, nStretchMode);
     #endif
+
+    Ret = TRUE;
     
     cleanup:
     if(DoFlickerFree)
