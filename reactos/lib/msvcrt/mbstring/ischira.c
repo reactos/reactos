@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crtdll/mbstring/ischira.c
+ * FILE:        lib/msvcrt/mbstring/ischira.c
  * PURPOSE:     
  * PROGRAMER:   Boudewijn Dekker
  * UPDATE HISTORY:

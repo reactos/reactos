@@ -1,8 +1,8 @@
-/* $Id: open.c,v 1.10 2002/09/08 10:22:50 chorns Exp $
+/* $Id: open.c,v 1.11 2002/11/18 03:19:42 robd Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crtdll/io/open.c
+ * FILE:        lib/msvcrt/io/open.c
  * PURPOSE:     Opens a file and translates handles to fileno
  * PROGRAMER:   Boudewijn Dekker
  * UPDATE HISTORY:

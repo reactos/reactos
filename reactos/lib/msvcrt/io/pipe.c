@@ -1,8 +1,8 @@
-/* $Id: pipe.c,v 1.4 2002/09/08 10:22:50 chorns Exp $
+/* $Id: pipe.c,v 1.5 2002/11/18 03:19:42 robd Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crtdll/io/pipe.c
+ * FILE:        lib/msvcrt/io/pipe.c
  * PURPOSE:     Creates a pipe
  * PROGRAMER:   DJ Delorie
  * UPDATE HISTORY:

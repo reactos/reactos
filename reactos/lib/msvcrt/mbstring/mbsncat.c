@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crtdll/mbstring/mbsset.c 
+ * FILE:        lib/msvcrt/mbstring/mbsncat.c 
  * PURPOSE:     Concatenate two multi byte string to maximum of n characters or bytes
  * PROGRAMER:   Boudewijn Dekker
  * UPDATE HISTORY:

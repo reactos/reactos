@@ -1,8 +1,8 @@
-/* $Id: setmode.c,v 1.6 2002/09/08 10:22:50 chorns Exp $
+/* $Id: setmode.c,v 1.7 2002/11/18 03:19:42 robd Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crtdll/io/setmode.c
+ * FILE:        lib/msvcrt/io/setmode.c
  * PURPOSE:     Sets the file translation mode
  * PROGRAMER:   Boudewijn Dekker
  * UPDATE HISTORY:

@@ -2,7 +2,7 @@
  * COPYRIGHT:   See COPYING in the top level directory
  * 		Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details 
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crtdll/conio/ungetch.c
+ * FILE:        lib/msvcrt/conio/ungetch.c
  * PURPOSE:     Ungets a character from stdin
  * PROGRAMER:   DJ Delorie
 		Boudewijn Dekker [ Adapted from djgpp libc ]

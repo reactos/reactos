@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crtdll/mbstring/mbsncoll.c
+ * FILE:        lib/msvcrt/mbstring/mbsncoll.c
  * PURPOSE:     
  * PROGRAMER:   Boudewijn Dekker
  * UPDATE HISTORY:

@@ -2,7 +2,7 @@
  * COPYRIGHT:   See COPYING in the top level directory
  * 		Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details 
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crtdll/conio/getche.c
+ * FILE:        lib/msvcrt/conio/getche.c
  * PURPOSE:     Reads a character from stdin
  * PROGRAMER:   DJ Delorie
 				Boudewijn Dekker

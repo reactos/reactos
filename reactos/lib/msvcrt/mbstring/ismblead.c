@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crtdll/mbstring/ismblead.c
+ * FILE:        lib/msvcrt/mbstring/ismblead.c
  * PURPOSE:     Checks for a lead byte 
  * PROGRAMER:   Boudewijn Dekker
  * UPDATE HISTORY:

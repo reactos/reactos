@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crtdll/conio/getch.c
+ * FILE:        lib/msvcrt/conio/getch.c
  * PURPOSE:     Writes a character to stdout
  * PROGRAMER:   Boudewijn Dekker
  * UPDATE HISTORY:
@@ -38,3 +38,15 @@ int _getch(void)
 
   return c;
 }
+
+#if 0
+int _getche(void)
+{
+    int c;
+
+    c = _getch();
+    _putch(c);
+
+    return c;
+}
+#endif

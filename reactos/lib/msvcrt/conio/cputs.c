@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crtdll/conio/cputs.c
+ * FILE:        lib/msvcrt/conio/cputs.c
  * PURPOSE:     Writes a character to stdout
  * PROGRAMER:   Boudewijn Dekker
  * UPDATE HISTORY:

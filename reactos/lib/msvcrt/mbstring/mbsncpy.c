@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crtdll/mbstring/mbsncpy.c
+ * FILE:        lib/msvcrt/mbstring/mbsncpy.c
  * PURPOSE:     Copies a string to a maximum of n bytes or characters
  * PROGRAMER:   Boudewijn Dekker
  * UPDATE HISTORY:
