@@ -211,7 +211,7 @@ NTSTATUS HalInitTaskWithContext(PETHREAD Thread, PCONTEXT Context)
    
    stack_start = kernel_stack + 6*PAGESIZE - sizeof(CONTEXT);
    
-   DPRINT1("stack_start %x kernel_stack %x\n",
+   DPRINT("stack_start %x kernel_stack %x\n",
 	  stack_start, kernel_stack);
    
    Context->SegFs = TEB_SELECTOR;
