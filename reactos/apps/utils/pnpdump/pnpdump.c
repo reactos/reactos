@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <conio.h>
 
+#include <pshpack1.h>
 
 typedef struct _CM_PNP_BIOS_DEVICE_NODE
 {
@@ -16,7 +17,7 @@ typedef struct _CM_PNP_BIOS_DEVICE_NODE
   ULONG ProductId;
   UCHAR DeviceType[3];
   USHORT DeviceAttributes;
-} PACKED CM_PNP_BIOS_DEVICE_NODE,*PCM_PNP_BIOS_DEVICE_NODE;
+} CM_PNP_BIOS_DEVICE_NODE,*PCM_PNP_BIOS_DEVICE_NODE;
 
 typedef struct _CM_PNP_BIOS_INSTALLATION_CHECK
 {
@@ -33,7 +34,9 @@ typedef struct _CM_PNP_BIOS_INSTALLATION_CHECK
   ULONG OemDeviceId;
   USHORT RealModeDataBaseAddress;
   ULONG ProtectedModeDataBaseAddress;
-} PACKED CM_PNP_BIOS_INSTALLATION_CHECK, *PCM_PNP_BIOS_INSTALLATION_CHECK;
+} CM_PNP_BIOS_INSTALLATION_CHECK, *PCM_PNP_BIOS_INSTALLATION_CHECK;
+
+#include <poppack.h>
 
 typedef struct _PNP_ID_NAME_
 {
