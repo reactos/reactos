@@ -6,3 +6,4 @@
 *.sys
 *.map
 _regtests.c
+*.sys

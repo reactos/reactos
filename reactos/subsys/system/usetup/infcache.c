@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: infcache.c,v 1.5 2003/08/24 10:36:06 chorns Exp $
+/* $Id: infcache.c,v 1.6 2003/09/27 09:14:15 robd Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/infcache.c
@@ -1153,7 +1153,8 @@ InfFindFirstLine (HINF InfHandle,
 
   /* Iterate through list of sections */
   CacheSection = Cache->FirstSection;
-  while (Section != NULL)
+//  while (Section != NULL)  // RobD - this looks like an error, Section variable never changes inside the while loop...
+  while (CacheSection != NULL)
     {
       DPRINT("Comparing '%S' and '%S'\n", CacheSection->Name, Section);
 
