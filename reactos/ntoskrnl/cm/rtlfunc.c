@@ -621,7 +621,7 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
 
   InitializeObjectAttributes(&ObjectAttributes,
 			     &KeyName,
-			     OBJ_CASE_INSENSITIVE,
+			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
 			     NULL,
 			     NULL);
 

@@ -124,11 +124,11 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 		CreateOptions);
 
   if (!NT_SUCCESS(Status))
-	  {
+    {
       ObDereferenceObject(KeyObject);
-	    ObDereferenceObject(Object);
-	    return STATUS_UNSUCCESSFUL;
-	  }
+      ObDereferenceObject(Object);
+      return STATUS_UNSUCCESSFUL;
+    }
 
   KeyObject->Name = KeyObject->KeyCell->Name;
   KeyObject->NameSize = KeyObject->KeyCell->NameSize;
@@ -1193,16 +1193,16 @@ NtSetValueKey(
 	IN	PVOID			Data,
 	IN	ULONG			DataSize)
 {
-	NTSTATUS  Status;
-	PKEY_OBJECT  KeyObject;
-	PREGISTRY_HIVE  RegistryHive;
-	PKEY_CELL  KeyCell;
-	PVALUE_CELL  ValueCell;
-	BLOCK_OFFSET VBOffset;
-	char ValueName2[MAX_PATH];
-	PDATA_CELL DataCell;
+  NTSTATUS  Status;
+  PKEY_OBJECT  KeyObject;
+  PREGISTRY_HIVE  RegistryHive;
+  PKEY_CELL  KeyCell;
+  PVALUE_CELL  ValueCell;
+  BLOCK_OFFSET VBOffset;
+  char ValueName2[MAX_PATH];
+  PDATA_CELL DataCell;
   PDATA_CELL NewDataCell;
-	PHBIN pBin;
+  PHBIN pBin;
 // KIRQL  OldIrql;
 
   DPRINT("KeyHandle %x  ValueName %S  Type %d\n",
@@ -1218,9 +1218,8 @@ NtSetValueKey(
 		UserMode,
 		(PVOID *) &KeyObject,
 		NULL);
-
   if (!NT_SUCCESS(Status))
-    return Status;
+    return(Status);
 
   VERIFY_KEY_OBJECT(KeyObject);
 
@@ -1228,103 +1227,104 @@ NtSetValueKey(
   KeyCell = KeyObject->KeyCell;
   RegistryHive = KeyObject->RegistryHive;
   Status = CmiScanKeyForValue(RegistryHive,
-	  KeyCell,
-	  ValueName2,
-	  &ValueCell,
-    &VBOffset);
-
+			      KeyCell,
+			      ValueName2,
+			      &ValueCell,
+			      &VBOffset);
   if (!NT_SUCCESS(Status))
-	  {
-	    DPRINT1("Value not found. Status 0x%X\n", Status);
-	
-	    ObDereferenceObject(KeyObject);
-	    return Status;
-	  }
+    {
+      DPRINT1("Value not found. Status 0x%X\n", Status);
+
+      ObDereferenceObject(KeyObject);
+      return(Status);
+    }
 
 //  KeAcquireSpinLock(&RegistryHive->RegLock, &OldIrql);
 
   if (ValueCell == NULL)
-	  {
-	    Status = CmiAddValueToKey(RegistryHive,
-	      KeyCell,
-	      ValueName2,
+    {
+      Status = CmiAddValueToKey(RegistryHive,
+				KeyCell,
+				ValueName2,
 				&ValueCell,
 				&VBOffset);
-	  }
+    }
 
   if (!NT_SUCCESS(Status))
-	  {
-	    DPRINT1("Cannot add value. Status 0x%X\n", Status);
-	    ObDereferenceObject(KeyObject);
-	    return Status;
-	  }
+    {
+      DPRINT1("Cannot add value. Status 0x%X\n", Status);
+
+      ObDereferenceObject(KeyObject);
+      return(Status);
+    }
   else
-	  {
+    {
       DPRINT("DataSize (%d)\n", DataSize);
 
-	    /* If datasize <= 4 then write in valueblock directly */
-	    if (DataSize <= 4)
-		    {
-		      if ((ValueCell->DataSize < 0)
-			      && (DataCell = CmiGetBlock(RegistryHive, ValueCell->DataOffset, NULL)))
-		        {
-		          CmiDestroyBlock(RegistryHive, DataCell, ValueCell->DataOffset);
-		        }
+      /* If datasize <= 4 then write in valueblock directly */
+      if (DataSize <= 4)
+	{
+	  DPRINT("ValueCell->DataSize %lu\n", ValueCell->DataSize);
+	  if ((ValueCell->DataSize >= 0) &&
+	      (DataCell = CmiGetBlock(RegistryHive, ValueCell->DataOffset, NULL)))
+	    {
+	      CmiDestroyBlock(RegistryHive, DataCell, ValueCell->DataOffset);
+	    }
 
-		      RtlCopyMemory(&ValueCell->DataOffset, Data, DataSize);
-		      ValueCell->DataSize = DataSize | 0x80000000;
-		      ValueCell->DataType = Type;
-		      RtlMoveMemory(&ValueCell->DataOffset, Data, DataSize);
-		    }
-		    /* If new data size is <= current then overwrite current data */
-		    else if (DataSize <= (ValueCell->DataSize & 0x7fffffff))
-			    {
-			      DataCell = CmiGetBlock(RegistryHive, ValueCell->DataOffset,&pBin);
-			      RtlCopyMemory(DataCell->Data, Data, DataSize);
-			      ValueCell->DataSize = DataSize;
-			      ValueCell->DataType = Type;
-			      CmiReleaseBlock(RegistryHive, DataCell);
-			      /* Update time of heap */
-			      if (IsPermanentHive(RegistryHive))
-		          {
-			          ZwQuerySystemTime((PTIME) &pBin->DateModified);
-		          }
-			    }
-		    else
-		    {
-		      BLOCK_OFFSET NewOffset;
+	  RtlCopyMemory(&ValueCell->DataOffset, Data, DataSize);
+	  ValueCell->DataSize = DataSize | 0x80000000;
+	  ValueCell->DataType = Type;
+	  RtlMoveMemory(&ValueCell->DataOffset, Data, DataSize);
+	}
+      /* If new data size is <= current then overwrite current data */
+      else if (DataSize <= (ValueCell->DataSize & 0x7fffffff))
+	{
+	  DataCell = CmiGetBlock(RegistryHive, ValueCell->DataOffset,&pBin);
+	  RtlCopyMemory(DataCell->Data, Data, DataSize);
+	  ValueCell->DataSize = DataSize;
+	  ValueCell->DataType = Type;
+	  CmiReleaseBlock(RegistryHive, DataCell);
+	  /* Update time of heap */
+	  if (IsPermanentHive(RegistryHive))
+	    {
+	      ZwQuerySystemTime((PTIME) &pBin->DateModified);
+	    }
+	}
+      else
+	{
+	  BLOCK_OFFSET NewOffset;
 
-		      /* Destroy current data block and allocate a new one */
-		      if ((ValueCell->DataSize < 0)
-			      && (DataCell = CmiGetBlock(RegistryHive, ValueCell->DataOffset, NULL)))
-		        {
-		          CmiDestroyBlock(RegistryHive, DataCell, ValueCell->DataOffset);
-		        }
-		      Status = CmiAllocateBlock(RegistryHive,
-		        (PVOID *) &NewDataCell,
-		        DataSize,
-		        &NewOffset);
-		      RtlCopyMemory(&NewDataCell->Data[0], Data, DataSize);
-		      ValueCell->DataSize = DataSize;
-		      ValueCell->DataType = Type;
-		      CmiReleaseBlock(RegistryHive, NewDataCell);
-		      ValueCell->DataOffset = NewOffset;
-		    }
+	  /* Destroy current data block and allocate a new one */
+	  if ((ValueCell->DataSize >= 0) &&
+	      (DataCell = CmiGetBlock(RegistryHive, ValueCell->DataOffset, NULL)))
+	    {
+	      CmiDestroyBlock(RegistryHive, DataCell, ValueCell->DataOffset);
+	    }
+	  Status = CmiAllocateBlock(RegistryHive,
+				    (PVOID *)&NewDataCell,
+				    DataSize,
+				    &NewOffset);
+	  RtlCopyMemory(&NewDataCell->Data[0], Data, DataSize);
+	  ValueCell->DataSize = DataSize;
+	  ValueCell->DataType = Type;
+	  CmiReleaseBlock(RegistryHive, NewDataCell);
+	  ValueCell->DataOffset = NewOffset;
+	}
 
-	    /* Update time of heap */
-	    if (IsPermanentHive(RegistryHive) && CmiGetBlock(RegistryHive, VBOffset, &pBin))
-	      {
-	        ZwQuerySystemTime((PTIME) &pBin->DateModified);
-	      }
-	  }
+      /* Update time of heap */
+      if (IsPermanentHive(RegistryHive) && CmiGetBlock(RegistryHive, VBOffset, &pBin))
+	{
+	  ZwQuerySystemTime((PTIME) &pBin->DateModified);
+	}
+    }
 
 //  KeReleaseSpinLock(&RegistryHive->RegLock, OldIrql);
 
-  ObDereferenceObject (KeyObject);
-  
+  ObDereferenceObject(KeyObject);
+
   DPRINT("Return Status 0x%X\n", Status);
 
-  return Status;
+  return(Status);
 }
 
 
