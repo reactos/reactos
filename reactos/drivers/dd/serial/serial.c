@@ -103,22 +103,22 @@ void InitializeSerial(void)
         {
                 if(uart_detect(comports[i])==0)
                 {
-                          printk("%s not detected\n", comname[i]);
+                          DbgPrint("%s not detected\n", comname[i]);
                 } else {
                           uart_init(comports[i]);
                           irq_level=irq_setup(comports[i]);
                           if(irq_level==-1)
                           {
-                                    printk("Warning: IRQ not detected!\n");
+                                    DbgPrint("Warning: IRQ not detected!\n");
                           } else {
-                                    printk("%s hooked to interrupt level %d\n", comname[i], irq_level);
+                                    DbgPrint("%s hooked to interrupt level %d\n", comname[i], irq_level);
                           };
                 };
         };
 };
 
 // For testing purposes
-void testserial()
+void testserial(void)
 {
         int i=0;
         char testc;
@@ -128,7 +128,7 @@ void testserial()
           char character;
         } x;
 
-        printk("Testing serial input...\n");
+        DbgPrint("Testing serial input...\n");
 
         while(i==0) {
           x.val=uart_getchar(COM1);
@@ -137,13 +137,13 @@ void testserial()
 
                 testc=inb_p(COM1);
 
-//    printk("(%x-%c)  %c\n", x.val, x.character, testc);
+//    DbgPrint("(%x-%c)  %c\n", x.val, x.character, testc);
         };
 };
 
 NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
-        printk("Serial Driver 0.0.2\n");
+        DbgPrint("Serial Driver 0.0.2\n");
         InitializeSerial();
 //        testserial();
         return(STATUS_SUCCESS);

@@ -240,7 +240,7 @@ void ReadLine(char* line)
    *line = 0;
 }
 
-void main()
+void main(void)
 {
    static char line[255];
 

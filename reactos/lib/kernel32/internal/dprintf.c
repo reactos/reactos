@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 VOID STDCALL OutputDebugStringA(LPCSTR lpOutputString)
 {
