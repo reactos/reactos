@@ -1,4 +1,4 @@
-/* $Id: dirobj.c,v 1.21 2003/10/04 07:48:11 navaraf Exp $
+/* $Id: dirobj.c,v 1.22 2003/12/14 14:29:44 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -152,6 +152,12 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
     /* FIXME: if previous mode == user, use ProbeForWrite
      * on user params. */
 
+    /* Check Context is not NULL */
+    if (NULL == Context)
+      {
+        return (STATUS_INVALID_PARAMETER);
+      }
+
     /* Reference the DIRECTORY_OBJECT */
     Status = ObReferenceObjectByHandle(DirectoryHandle,
 				      DIRECTORY_QUERY,
@@ -163,11 +169,7 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
       {
         return (Status);
       }
-    /* Check Context is not NULL */
-    if (NULL == Context)
-      {
-        return (STATUS_INVALID_PARAMETER);
-      }
+
     /*
      * Compute the number of directory entries
      * and the size of the array (in bytes).
@@ -191,6 +193,7 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
     DirectorySize = (DirectoryCount + 1) * sizeof (DIRECTORY_BASIC_INFORMATION);
     if (DirectorySize > SpaceLeft)
     {
+        ObDereferenceObject(dir);
 	return (STATUS_BUFFER_TOO_SMALL);
     }
     /*
@@ -211,6 +214,7 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
 		);
 	if ((EntriesToSkip) && (current_entry == & dir->head))
 	  {
+            ObDereferenceObject(dir);
             return (STATUS_NO_MORE_ENTRIES);
 	  }
       }
@@ -238,6 +242,7 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
       /* Any data? */
 	    if (i) break; /* DONE */
 	    /* FIXME: better error handling here! */
+            ObDereferenceObject(dir);
 	    return (STATUS_NO_MORE_ENTRIES);
           }
   /*
@@ -260,6 +265,7 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
 	 */
 	if (SpaceRequired > SpaceLeft)
 	{
+                ObDereferenceObject(dir);
 		return (STATUS_BUFFER_TOO_SMALL);
 	}
   /*
@@ -300,6 +306,7 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
       {
         *ReturnLength = (BufferLength - SpaceLeft);
       }
+    ObDereferenceObject(dir);
     return (STATUS_SUCCESS);
 }
 
