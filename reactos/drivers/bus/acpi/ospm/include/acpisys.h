@@ -16,8 +16,56 @@ typedef ACPI_STATUS (*ACPI_DRIVER_FUNCTION)(VOID);
 
 typedef enum {
   dsStopped,
-  dsStarted
+  dsStarted,
+  dsPaused,
+  dsRemoved,
+  dsSurpriseRemoved
 } ACPI_DEVICE_STATE;
+
+
+typedef struct _COMMON_DEVICE_EXTENSION
+{
+  // Pointer to device object, this device extension is associated with
+  PDEVICE_OBJECT DeviceObject;
+  // Wether this device extension is for an FDO or PDO
+  BOOLEAN IsFDO;
+  // Wether the device is removed
+  BOOLEAN Removed;
+  // Current device power state for the device
+  DEVICE_POWER_STATE DevicePowerState;
+  // Lower device object
+  PDEVICE_OBJECT Ldo;
+} COMMON_DEVICE_EXTENSION, *PCOMMON_DEVICE_EXTENSION;
+
+/* Physical Device Object device extension for a child device */
+typedef struct _PDO_DEVICE_EXTENSION
+{
+  // Common device data
+  COMMON_DEVICE_EXTENSION;
+  // Hardware IDs
+  UNICODE_STRING HardwareIDs;
+  // Compatible IDs
+  UNICODE_STRING CompatibleIDs;
+} PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
+
+typedef struct _FDO_DEVICE_EXTENSION
+{
+  // Common device data
+  COMMON_DEVICE_EXTENSION;
+  // Physical Device Object
+  PDEVICE_OBJECT Pdo;
+  // Current state of the driver
+  ACPI_DEVICE_STATE State;
+  // Supported system states
+  BOOLEAN SystemStates[ACPI_S_STATE_COUNT];
+  // Namespace device list
+  LIST_ENTRY DeviceListHead;
+  // Number of devices in device list
+  ULONG DeviceListCount;
+  // Lock for namespace device list
+  KSPIN_LOCK DeviceListLock;
+} FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
+
 
 typedef struct _ACPI_DEVICE
 {
@@ -33,30 +81,44 @@ typedef struct _ACPI_DEVICE
   ACPI_DRIVER_FUNCTION Terminate;
 } ACPI_DEVICE, *PACPI_DEVICE;
 
-typedef struct _ACPI_DEVICE_EXTENSION
-{
-  // Physical Device Object
-  PDEVICE_OBJECT Pdo;
-  // Lower device object
-  PDEVICE_OBJECT Ldo;
-  // Current state of the driver
-  ACPI_DEVICE_STATE State;
-  // Supported system states
-  BOOLEAN SystemStates[ACPI_S_STATE_COUNT];
-  // Namespace device list
-  LIST_ENTRY DeviceListHead;
-  // Number of devices in device list
-  ULONG DeviceListCount;
-  // Lock for namespace device list
-  KSPIN_LOCK DeviceListLock;
-} ACPI_DEVICE_EXTENSION, *PACPI_DEVICE_EXTENSION;
+
+/* acpienum.c */
 
 NTSTATUS
 ACPIEnumerateRootBusses(
-  PACPI_DEVICE_EXTENSION DeviceExtension);
+  PFDO_DEVICE_EXTENSION DeviceExtension);
 
 NTSTATUS
 ACPIEnumerateNamespace(
-  PACPI_DEVICE_EXTENSION DeviceExtension);
+  PFDO_DEVICE_EXTENSION DeviceExtension);
+
+
+/* fdo.c */
+
+NTSTATUS
+STDCALL
+FdoPnpControl(
+  PDEVICE_OBJECT DeviceObject,
+  PIRP Irp);
+
+NTSTATUS
+STDCALL
+FdoPowerControl(
+  PDEVICE_OBJECT DeviceObject,
+  PIRP Irp);
+
+/* pdo.c */
+
+NTSTATUS
+STDCALL
+PdoPnpControl(
+  PDEVICE_OBJECT DeviceObject,
+  PIRP Irp);
+
+NTSTATUS
+STDCALL
+PdoPowerControl(
+  PDEVICE_OBJECT DeviceObject,
+  PIRP Irp);
 
 /* EOF */

@@ -27,20 +27,31 @@
 #define NDEBUG
 #include <debug.h>
 
-
-typedef struct _ACPI_OS_DPC
-{
-  OSD_EXECUTION_CALLBACK Routine;
-  PVOID Context;
-} ACPI_OS_DPC, *PACPI_OS_DPC;
-
 static PKINTERRUPT AcpiInterrupt;
 static BOOLEAN AcpiInterruptHandlerRegistered = FALSE;
 static OSD_HANDLER AcpiIrqHandler = NULL;
 static PVOID AcpiIrqContext = NULL;
 static ULONG AcpiIrqNumber = 0;
+static KDPC AcpiDpc;
 static PVOID IVTVirtualAddress = NULL;
 static PVOID BDAVirtualAddress = NULL;
+
+
+VOID
+OslDpcStub(
+  IN PKDPC Dpc,
+  IN PVOID DeferredContext,
+  IN PVOID SystemArgument1,
+  IN PVOID SystemArgument2)
+{
+  OSD_EXECUTION_CALLBACK Routine = (OSD_EXECUTION_CALLBACK)SystemArgument1;
+
+  DPRINT("OslDpcStub()\n");
+
+  DPRINT("Calling [%p]([%p])\n", Routine, SystemArgument2);
+
+  (*Routine)(SystemArgument2);
+}
 
 
 ACPI_STATUS
@@ -53,6 +64,8 @@ ACPI_STATUS
 acpi_os_initialize(void)
 {
   DPRINT("acpi_os_initialize()\n");
+
+  KeInitializeDpc(&AcpiDpc, OslDpcStub, NULL);
 
 	return AE_OK;
 }
@@ -444,32 +457,12 @@ acpi_os_unload_module (
   return AE_OK;
 }
 
-VOID
-OslDpcStub(
-  IN PKDPC Dpc,
-  IN PVOID DeferredContext,
-  IN PVOID SystemArgument1,
-  IN PVOID SystemArgument2)
-{
-  PACPI_OS_DPC DpcContext = (PACPI_OS_DPC)DeferredContext;
-
-  DPRINT("OslDpcStub()\n");
-
-  DPRINT("Calling [%p]([%p])\n", DpcContext->Routine, DpcContext->Context);
-
-  (*DpcContext->Routine)(DpcContext->Context);
-
-  ExFreePool(Dpc);
-}
-
 ACPI_STATUS
 acpi_os_queue_for_execution(
 	u32                     priority,
 	OSD_EXECUTION_CALLBACK  function,
 	void                    *context)
 {
-  PKDPC Dpc;
-  PACPI_OS_DPC DpcContext;
   ACPI_STATUS Status = AE_OK;
 
   DPRINT("acpi_os_queue_for_execution()\n");
@@ -479,27 +472,20 @@ acpi_os_queue_for_execution(
 
   DPRINT("Scheduling task [%p](%p) for execution.\n", function, context);
 
-  Dpc = ExAllocatePool(NonPagedPool, sizeof(KDPC) + sizeof(ACPI_OS_DPC));
-  if (!Dpc)
-    return AE_NO_MEMORY;
-
-  DpcContext = (PACPI_OS_DPC)((ULONG)Dpc + sizeof(KDPC));
-
-  DpcContext->Routine = function;
-  DpcContext->Context = context;
-
-  KeInitializeDpc(Dpc, OslDpcStub, DpcContext);
 #if 0
   switch (priority) {
   case OSD_PRIORITY_MED:
-    KeSetImportanceDpc(Dpc, MediumImportance);
+    KeSetImportanceDpc(&AcpiDpc, MediumImportance);
   case OSD_PRIORITY_LO:
-    KeSetImportanceDpc(Dpc, LowImportance);
+    KeSetImportanceDpc(&AcpiDpc, LowImportance);
   case OSD_PRIORITY_HIGH:
   default:
-    KeSetImportanceDpc(Dpc, HighImportance);
+    KeSetImportanceDpc(&AcpiDpc, HighImportance);
   }
 #endif
+
+  KeInsertQueueDpc(&AcpiDpc, (PVOID)function, (PVOID)context);
+
   return Status;
 }
 

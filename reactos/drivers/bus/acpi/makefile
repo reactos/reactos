@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.6 2001/08/21 20:13:10 chorns Exp $
+# $Id: makefile,v 1.7 2001/08/23 17:32:03 chorns Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -42,7 +42,9 @@ OBJECTS_OSPM = \
   ospm/acpienum.o \
   ospm/acpisys.o \
   ospm/bn.o \
-  ospm/osl.o
+  ospm/fdo.o \
+  ospm/osl.o \
+  ospm/pdo.o
 
 OBJECTS_DISPATCHER = \
   dispatcher/dsfield.o \

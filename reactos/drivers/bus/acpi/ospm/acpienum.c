@@ -1,4 +1,4 @@
-/* $Id: acpienum.c,v 1.2 2001/05/05 19:15:44 chorns Exp $
+/* $Id: acpienum.c,v 1.3 2001/08/23 17:32:04 chorns Exp $
  *
  * PROJECT:         ReactOS ACPI bus driver
  * FILE:            acpi/ospm/acpienum.c
@@ -104,7 +104,7 @@ bm_print1 (
 
 NTSTATUS
 ACPIEnumerateRootBusses(
-  PACPI_DEVICE_EXTENSION DeviceExtension)
+  PFDO_DEVICE_EXTENSION DeviceExtension)
 {
   BM_HANDLE_LIST HandleList;
   PACPI_DEVICE AcpiDevice;
@@ -132,7 +132,7 @@ ACPIEnumerateRootBusses(
       if (ACPI_SUCCESS(AcpiStatus)) {
         DPRINT("Got BM node information: (Node 0x%X)\n", Node);
         bm_print1(Node, BM_PRINT_ALL - BM_PRINT_PRESENT);
-#if 0
+#if 1
         for (j=0; j < 4*1000;j++)
           KeStallExecutionProcessor(1000);
 #endif
@@ -146,6 +146,8 @@ ACPIEnumerateRootBusses(
         return STATUS_INSUFFICIENT_RESOURCES;
       }
 
+      RtlZeroMemory(AcpiDevice, sizeof(ACPI_DEVICE));
+
       AcpiDevice->Pdo = NULL;
       AcpiDevice->BmHandle = HandleList.handles[i];
 
@@ -158,6 +160,8 @@ ACPIEnumerateRootBusses(
   } else {
     DPRINT("Got no devices (Status 0x%X)\n", AcpiStatus);
   }
+        for (j=0; j < 4*10*1000;j++)
+          KeStallExecutionProcessor(1000);
 
   return STATUS_SUCCESS;
 }
@@ -165,15 +169,16 @@ ACPIEnumerateRootBusses(
 
 NTSTATUS
 ACPIEnumerateNamespace(
-  PACPI_DEVICE_EXTENSION DeviceExtension)
+  PFDO_DEVICE_EXTENSION DeviceExtension)
 {
-  ACPI_STATUS AcpiStatus;
-	BM_DEVICE_ID Criteria;
   BM_HANDLE_LIST HandleList;
-  ULONG i;
-
+  PACPI_DEVICE AcpiDevice;
+  ACPI_STATUS AcpiStatus;
+  BM_HANDLE DeviceHandle;
+	BM_DEVICE_ID Criteria;
   BM_NODE *Node;
-  ULONG j, q;
+  KIRQL OldIrql;
+  ULONG i;
 
   DPRINT("Called\n");
 
@@ -191,13 +196,34 @@ ACPIEnumerateNamespace(
       if (ACPI_SUCCESS(AcpiStatus)) {
         DPRINT("Got BM node information: (Node 0x%X)\n", Node);
 #if 0
-        bm_print1(Node, BM_PRINT_ALL - BM_PRINT_PRESENT);
-        for (j=0; j < 4*1000;j++)
-          KeStallExecutionProcessor(1000);*/
+        {
+          ULONG j;
+
+          bm_print1(Node, BM_PRINT_ALL - BM_PRINT_PRESENT);
+          for (j=0; j < 4*1000;j++)
+            KeStallExecutionProcessor(1000);
+        }
 #endif
       } else {
         DPRINT("Could not get BM node\n");
       }
+
+      AcpiDevice = (PACPI_DEVICE)ExAllocatePool(
+          NonPagedPool, sizeof(ACPI_DEVICE));
+      if (!AcpiDevice) {
+        return STATUS_INSUFFICIENT_RESOURCES;
+      }
+
+      RtlZeroMemory(AcpiDevice, sizeof(ACPI_DEVICE));
+
+      AcpiDevice->Pdo = NULL;
+      AcpiDevice->BmHandle = HandleList.handles[i];
+
+      KeAcquireSpinLock(&DeviceExtension->DeviceListLock, &OldIrql);
+      InsertHeadList(&DeviceExtension->DeviceListHead,
+        &AcpiDevice->DeviceListEntry);
+      DeviceExtension->DeviceListCount++;
+      KeReleaseSpinLock(&DeviceExtension->DeviceListLock, OldIrql);
     }
   } else {
     DPRINT("Got no devices (Status 0x%X)\n", AcpiStatus);
