@@ -1,20 +1,17 @@
 
-// ------------------------------------------------------------------
-// Windows 2000 Graphics API Black Book
-// Chapter 1 - Listing 1.3 (BitBlt Bitmap Rendering Demo)
-//
-// Created by Damon Chandler <dmc27@ee.cornell.edu>
-// Updates can be downloaded at: <www.coriolis.com>
-//
-// Please do not hesistate to e-mail me at dmc27@ee.cornell.edu 
-// if you have any questions about this code.
-// ------------------------------------------------------------------
+/*
+ * Windows 2000 Graphics API Black Book
+ * (BitBlt Bitmap Rendering Demo)
+ *
+ * Created by Damon Chandler <dmc27@ee.cornell.edu>
+ * Updates can be downloaded at: <www.coriolis.com>
+ *
+ * Please do not hesistate to e-mail me at dmc27@ee.cornell.edu 
+ * if you have any questions about this code.
+ */
 
 
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 #include <windows.h>
-//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
 
 HINSTANCE HInst;
 const char* WndClassName = "GMainWnd";
@@ -34,7 +31,8 @@ int APIENTRY WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance,
    wc.lpfnWndProc = MainWndProc;
    wc.hInstance = HInstance;
    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-   wc.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_BTNFACE + 1);
+  /* wc.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_BTNFACE + 1); */
+   wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
    wc.lpszClassName = WndClassName;
 
    if (RegisterClass(&wc))
@@ -63,10 +61,8 @@ int APIENTRY WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance,
     }
     return 0;
 }
-//------------------------------------------------------------------
 
-
-// image related
+/* image related */
 BITMAP bmp;
 LPCSTR filename = TEXT("lena.bmp");
 HDC HMemDC = NULL;
@@ -79,24 +75,24 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
    {
       case WM_CREATE:
       {         
-         // create a memory DC
+         /* create a memory DC */
          HMemDC = CreateCompatibleDC(NULL);
          if (HMemDC)
          {
-            // load a bitmap from file
+            /* load a bitmap from file */
             HBITMAP HBmp = 
-               static_cast<HBITMAP>(
+               /* static_cast<HBITMAP> */(
                   LoadImage(HInst, filename, IMAGE_BITMAP, 
                             0, 0, LR_LOADFROMFILE)
                             );  
             if (HBmp)
             { 
-               // extract dimensions of the bitmap
+               /* extract dimensions of the bitmap */
                GetObject(HBmp, sizeof(BITMAP), &bmp);
 
-               // associate the bitmap with the memory DC
-               HOldBmp = static_cast<HBITMAP>(
-                  SelectObject(HMemDC, HBmp)
+               /* associate the bitmap with the memory DC */
+               /* HOldBmp = static_cast<HBITMAP> */
+		(SelectObject(HMemDC, HBmp)
                   );
             }
          }         
@@ -109,9 +105,9 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
          try
 #endif
          {
-            //
-            // TODO: add palette support (see Chapter 9)...
-            //
+            
+            /* TODO: add palette support (see Chapter 9)... */
+            
 
             BitBlt(Hdc, 20, 15, 
                    bmp.bmWidth, bmp.bmHeight,
@@ -129,7 +125,7 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
       }
       case WM_DESTROY:
       {
-         // clean up
+         /* clean up */
          DeleteObject(SelectObject(HMemDC, HOldBmp));
          DeleteDC(HMemDC);
 
@@ -139,4 +135,3 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
    }
    return DefWindowProc(HWnd, Msg, WParam, LParam);
 }
-//------------------------------------------------------------------
