@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.36 2004/10/11 18:36:20 navaraf Exp $
+/* $Id: pnpmgr.c,v 1.37 2004/10/11 19:07:25 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -221,7 +221,7 @@ IoGetDeviceProperty(
     case DevicePropertyBootConfigurationTranslated:
     case DevicePropertyCompatibleIDs:
     case DevicePropertyDeviceDescription:
-    case DevicePropertyEnumeratorName: 
+    case DevicePropertyEnumeratorName:
     case DevicePropertyHardwareID:
     case DevicePropertyLocationInformation:
     case DevicePropertyPhysicalDeviceObjectName:
@@ -692,7 +692,8 @@ IopTraverseDeviceTree(
 
 
 static NTSTATUS
-IopCreateDeviceKeyPath(PWSTR Path)
+IopCreateDeviceKeyPath(PWSTR Path,
+		       PHANDLE Handle)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   WCHAR KeyBuffer[MAX_PATH];
@@ -701,6 +702,8 @@ IopCreateDeviceKeyPath(PWSTR Path)
   NTSTATUS Status;
   PWCHAR Current;
   PWCHAR Next;
+
+  *Handle = NULL;
 
   if (_wcsnicmp(Path, L"\\Registry\\", 10) != 0)
     {
@@ -715,8 +718,8 @@ IopCreateDeviceKeyPath(PWSTR Path)
   Current = wcschr (Current, '\\') + 1;
   Current = wcschr (Current, '\\') + 1;
 
-  do
-   {
+  while (TRUE)
+    {
       Next = wcschr (Current, '\\');
       if (Next == NULL)
 	{
@@ -748,16 +751,154 @@ IopCreateDeviceKeyPath(PWSTR Path)
 	  return Status;
 	}
 
-      NtClose (KeyHandle);
-
-      if (Next != NULL)
+      if (Next == NULL)
 	{
+	  *Handle = KeyHandle;
+	  return STATUS_SUCCESS;
+	}
+      else
+	{
+	  NtClose (KeyHandle);
 	  *Next = L'\\';
 	}
 
       Current = Next + 1;
     }
-   while (Next != NULL);
+
+  return STATUS_UNSUCCESSFUL;
+}
+
+
+static NTSTATUS
+IopSetDeviceInstanceData(HANDLE InstanceKey,
+			 PDEVICE_NODE DeviceNode)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING KeyName;
+  HANDLE LogConfKey;
+  ULONG ResCount;
+  ULONG ListSize;
+  NTSTATUS Status;
+
+  DPRINT("IopSetDeviceInstanceData() called\n");
+
+  RtlInitUnicodeString(&KeyName,
+		       L"CompatibleIDs");
+  Status = NtSetValueKey(InstanceKey,
+			 &KeyName,
+			 0,
+			 REG_MULTI_SZ,
+			 DeviceNode->CompatibleIDs.Buffer,
+			 DeviceNode->CompatibleIDs.MaximumLength);
+
+  RtlInitUnicodeString(&KeyName,
+		       L"HardwareID");
+  Status = NtSetValueKey(InstanceKey,
+			 &KeyName,
+			 0,
+			 REG_MULTI_SZ,
+			 DeviceNode->HardwareIDs.Buffer,
+			 DeviceNode->HardwareIDs.MaximumLength);
+
+  /* Set 'DeviceDesc' value */
+  RtlInitUnicodeString(&KeyName,
+		       L"DeviceDesc");
+  Status = NtSetValueKey(InstanceKey,
+			 &KeyName,
+			 0,
+			 REG_SZ,
+			 DeviceNode->DeviceText.Buffer,
+			 DeviceNode->DeviceText.MaximumLength);
+
+  /* Set 'LocationInformation' value */
+  DPRINT("LocationInformation: %wZ\n", &DeviceNode->DeviceTextLocation);
+  RtlInitUnicodeString(&KeyName,
+		       L"LocationInformation");
+  Status = NtSetValueKey(InstanceKey,
+			 &KeyName,
+			 0,
+			 REG_SZ,
+			 DeviceNode->DeviceTextLocation.Buffer,
+			 DeviceNode->DeviceTextLocation.MaximumLength);
+
+  /* Set 'Capabilities' value */
+  RtlInitUnicodeString(&KeyName,
+		       L"Capabilities");
+  Status = NtSetValueKey(InstanceKey,
+			 &KeyName,
+			 0,
+			 REG_DWORD,
+			 (PVOID)((ULONG_PTR)&DeviceNode->CapabilityFlags + 4),
+			 sizeof(ULONG));
+
+  /* Set 'UINumber' value */
+  if (DeviceNode->CapabilityFlags->UINumber != (ULONG)-1)
+  {
+    RtlInitUnicodeString(&KeyName,
+			 L"UINumber");
+    Status = NtSetValueKey(InstanceKey,
+			   &KeyName,
+			   0,
+			   REG_DWORD,
+			   &DeviceNode->CapabilityFlags->UINumber,
+			   sizeof(ULONG));
+  }
+
+  /* Create the 'LogConf' key */
+  RtlInitUnicodeString(&KeyName,
+		       L"LogConf");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &KeyName,
+			     OBJ_CASE_INSENSITIVE,
+			     InstanceKey,
+			     NULL);
+  Status = NtCreateKey(&LogConfKey,
+		       KEY_ALL_ACCESS,
+		       &ObjectAttributes,
+		       0,
+		       NULL,
+		       0,
+		       NULL);
+  if (NT_SUCCESS(Status))
+  {
+    /* Set 'BootConfig' value */
+    if (DeviceNode->BootResourcesList != NULL)
+    {
+      ResCount = DeviceNode->BootResourcesList->List[0].PartialResourceList.Count;
+      if (ResCount != 0)
+      {
+	ListSize = sizeof(CM_RESOURCE_LIST) +
+		   ((ResCount - 1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
+
+	RtlInitUnicodeString(&KeyName,
+			     L"BootConfig");
+	Status = NtSetValueKey(LogConfKey,
+			       &KeyName,
+			       0,
+			       REG_RESOURCE_LIST,
+			       &DeviceNode->BootResourcesList,
+			       ListSize);
+      }
+    }
+
+    /* Set 'BasicConfigVector' value */
+    if (DeviceNode->ResourceRequirementsList != NULL &&
+	DeviceNode->ResourceRequirementsList->ListSize != 0)
+    {
+      RtlInitUnicodeString(&KeyName,
+			   L"BasicConfigVector");
+      Status = NtSetValueKey(LogConfKey,
+			     &KeyName,
+			     0,
+			     REG_RESOURCE_REQUIREMENTS_LIST,
+			     &DeviceNode->ResourceRequirementsList,
+			     DeviceNode->ResourceRequirementsList->ListSize);
+    }
+
+    NtClose(LogConfKey);
+  }
+
+  DPRINT("IopSetDeviceInstanceData() done\n");
 
   return STATUS_SUCCESS;
 }
@@ -796,6 +937,7 @@ IopActionInterrogateDeviceStack(
    PWSTR Ptr;
    USHORT Length;
    USHORT TotalLength;
+   HANDLE InstanceKey = NULL;
 
    DPRINT("IopActionInterrogateDeviceStack(%p, %p)\n", DeviceNode, Context);
    DPRINT("PDO %x\n", DeviceNode->Pdo);
@@ -1092,8 +1234,16 @@ IopActionInterrogateDeviceStack(
       (49 * sizeof(WCHAR)) + DeviceNode->InstancePath.Length);
    wcscpy(KeyBuffer, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
    wcscat(KeyBuffer, DeviceNode->InstancePath.Buffer);
-   IopCreateDeviceKeyPath(KeyBuffer);
+   Status = IopCreateDeviceKeyPath(KeyBuffer,
+				   &InstanceKey);
    ExFreePool(KeyBuffer);
+
+   if (InstanceKey != NULL)
+   {
+      IopSetDeviceInstanceData(InstanceKey, DeviceNode);
+      NtClose(InstanceKey);
+   }
+
    DeviceNode->Flags |= DNF_PROCESSED;
 
    return STATUS_SUCCESS;
