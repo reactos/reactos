@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.33 2004/03/13 19:25:47 jfilby Exp $
+/* $Id: token.c,v 1.34 2004/03/19 12:47:17 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -500,7 +500,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
   PVOID UnusedInfo;
   PVOID EndMem;
   PACCESS_TOKEN Token;
-  ULONG uLength;
+  ULONG Length;
   PTOKEN_GROUPS PtrTokenGroups;
   PTOKEN_DEFAULT_DACL PtrDefaultDacl;
   PTOKEN_STATISTICS PtrTokenStatistics;
@@ -519,11 +519,11 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
   switch (TokenInformationClass)
     {
       case TokenUser:
-        DPRINT("NtQueryInformationToken(TokenUser)\n");
-	uLength = RtlLengthSidAndAttributes(1, Token->UserAndGroups);
-	if (TokenInformationLength < uLength)
+	DPRINT("NtQueryInformationToken(TokenUser)\n");
+	Length = RtlLengthSidAndAttributes(1, Token->UserAndGroups);
+	if (TokenInformationLength < Length)
 	  {
-	    Status = MmCopyToCaller(ReturnLength, &uLength, sizeof(ULONG));
+	    Status = MmCopyToCaller(ReturnLength, &Length, sizeof(ULONG));
 	    if (NT_SUCCESS(Status))
 	      Status = STATUS_BUFFER_TOO_SMALL;
 	  }
@@ -535,21 +535,21 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 						  TokenInformation,
 						  (char*)TokenInformation + 8,
 						  &UnusedInfo,
-						  &uLength);
+						  &Length);
 	    if (NT_SUCCESS(Status))
 	      {
-		uLength = TokenInformationLength - uLength;
-		Status = MmCopyToCaller(ReturnLength, &uLength, sizeof(ULONG));
+		Length = TokenInformationLength - Length;
+		Status = MmCopyToCaller(ReturnLength, &Length, sizeof(ULONG));
 	      }
 	  }
 	break;
 	
       case TokenGroups:
-        DPRINT("NtQueryInformationToken(TokenGroups)\n");
-	uLength = RtlLengthSidAndAttributes(Token->UserAndGroupCount - 1, &Token->UserAndGroups[1]) + sizeof(DWORD);
-	if (TokenInformationLength < uLength)
+	DPRINT("NtQueryInformationToken(TokenGroups)\n");
+	Length = RtlLengthSidAndAttributes(Token->UserAndGroupCount - 1, &Token->UserAndGroups[1]) + sizeof(ULONG);
+	if (TokenInformationLength < Length)
 	  {
-	    Status = MmCopyToCaller(ReturnLength, &uLength, sizeof(ULONG));
+	    Status = MmCopyToCaller(ReturnLength, &Length, sizeof(ULONG));
 	    if (NT_SUCCESS(Status))
 	      Status = STATUS_BUFFER_TOO_SMALL;
 	  }
@@ -564,21 +564,21 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 						  PtrTokenGroups->Groups,
 						  EndMem,
 						  &UnusedInfo,
-						  &uLength);
+						  &Length);
 	    if (NT_SUCCESS(Status))
 	      {
-		uLength = TokenInformationLength - uLength;
-		Status = MmCopyToCaller(ReturnLength, &uLength, sizeof(ULONG));
+		Length = TokenInformationLength - Length;
+		Status = MmCopyToCaller(ReturnLength, &Length, sizeof(ULONG));
 	      }
 	  }
 	break;
 
       case TokenPrivileges:
-        DPRINT("NtQueryInformationToken(TokenPrivileges)\n");
-	uLength = sizeof(DWORD) + Token->PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES);
-	if (TokenInformationLength < uLength)
+	DPRINT("NtQueryInformationToken(TokenPrivileges)\n");
+	Length = sizeof(ULONG) + Token->PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES);
+	if (TokenInformationLength < Length)
 	  {
-	    Status = MmCopyToCaller(ReturnLength, &uLength, sizeof(ULONG));
+	    Status = MmCopyToCaller(ReturnLength, &Length, sizeof(ULONG));
 	    if (NT_SUCCESS(Status))
 	      Status = STATUS_BUFFER_TOO_SMALL;
 	  }
@@ -598,11 +598,11 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 	break;
 
       case TokenOwner:
-        DPRINT("NtQueryInformationToken(TokenOwner)\n");
-	uLength = RtlLengthSid(Token->UserAndGroups[Token->DefaultOwnerIndex].Sid) + sizeof(TOKEN_OWNER);
-	if (TokenInformationLength < uLength)
+	DPRINT("NtQueryInformationToken(TokenOwner)\n");
+	Length = RtlLengthSid(Token->UserAndGroups[Token->DefaultOwnerIndex].Sid) + sizeof(TOKEN_OWNER);
+	if (TokenInformationLength < Length)
 	  {
-	    Status = MmCopyToCaller(ReturnLength, &uLength, sizeof(ULONG));
+	    Status = MmCopyToCaller(ReturnLength, &Length, sizeof(ULONG));
 	    if (NT_SUCCESS(Status))
 	      Status = STATUS_BUFFER_TOO_SMALL;
 	  }
@@ -618,12 +618,12 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 	break;
 
       case TokenPrimaryGroup:
-        DPRINT("NtQueryInformationToken(TokenPrimaryGroup),"
+	DPRINT("NtQueryInformationToken(TokenPrimaryGroup),"
 	       "Token->PrimaryGroup = 0x%08x\n", Token->PrimaryGroup);
-	uLength = RtlLengthSid(Token->PrimaryGroup) + sizeof(TOKEN_PRIMARY_GROUP);
-	if (TokenInformationLength < uLength)
+	Length = RtlLengthSid(Token->PrimaryGroup) + sizeof(TOKEN_PRIMARY_GROUP);
+	if (TokenInformationLength < Length)
 	  {
-	    Status = MmCopyToCaller(ReturnLength, &uLength, sizeof(ULONG));
+	    Status = MmCopyToCaller(ReturnLength, &Length, sizeof(ULONG));
 	    if (NT_SUCCESS(Status))
 	      Status = STATUS_BUFFER_TOO_SMALL;
 	  }
@@ -639,19 +639,19 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 	break;
 
       case TokenDefaultDacl:
-        DPRINT("NtQueryInformationToken(TokenDefaultDacl)\n");
+	DPRINT("NtQueryInformationToken(TokenDefaultDacl)\n");
 	PtrDefaultDacl = (PTOKEN_DEFAULT_DACL) TokenInformation;
-	uLength = (Token->DefaultDacl ? Token->DefaultDacl->AclSize : 0) + sizeof(TOKEN_DEFAULT_DACL);
-	if (TokenInformationLength < uLength)
+	Length = (Token->DefaultDacl ? Token->DefaultDacl->AclSize : 0) + sizeof(TOKEN_DEFAULT_DACL);
+	if (TokenInformationLength < Length)
 	  {
-	    Status = MmCopyToCaller(ReturnLength, &uLength, sizeof(ULONG));
+	    Status = MmCopyToCaller(ReturnLength, &Length, sizeof(ULONG));
 	    if (NT_SUCCESS(Status))
 	      Status = STATUS_BUFFER_TOO_SMALL;
 	  }
 	else if (!Token->DefaultDacl)
 	  {
 	    PtrDefaultDacl->DefaultDacl = 0;
-	    Status = MmCopyToCaller(ReturnLength, &uLength, sizeof(ULONG));
+	    Status = MmCopyToCaller(ReturnLength, &Length, sizeof(ULONG));
 	  }
 	else
 	  {
@@ -659,16 +659,16 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 	    memmove(PtrDefaultDacl->DefaultDacl,
 		    Token->DefaultDacl,
 		    Token->DefaultDacl->AclSize);
-	    Status = MmCopyToCaller(ReturnLength, &uLength, sizeof(ULONG));
+	    Status = MmCopyToCaller(ReturnLength, &Length, sizeof(ULONG));
 	  }
 	break;
 
       case TokenSource:
-        DPRINT("NtQueryInformationToken(TokenSource)\n");
+	DPRINT("NtQueryInformationToken(TokenSource)\n");
 	if (TokenInformationLength < sizeof(TOKEN_SOURCE))
 	  {
-	    uLength = sizeof(TOKEN_SOURCE);
-	    Status = MmCopyToCaller(ReturnLength, &uLength, sizeof(ULONG));
+	    Length = sizeof(TOKEN_SOURCE);
+	    Status = MmCopyToCaller(ReturnLength, &Length, sizeof(ULONG));
 	    if (NT_SUCCESS(Status))
 	      Status = STATUS_BUFFER_TOO_SMALL;
 	  }
@@ -679,11 +679,11 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 	break;
 
       case TokenType:
-        DPRINT("NtQueryInformationToken(TokenType)\n");
+	DPRINT("NtQueryInformationToken(TokenType)\n");
 	if (TokenInformationLength < sizeof(TOKEN_TYPE))
 	  {
-	    uLength = sizeof(TOKEN_TYPE);
-	    Status = MmCopyToCaller(ReturnLength, &uLength, sizeof(ULONG));
+	    Length = sizeof(TOKEN_TYPE);
+	    Status = MmCopyToCaller(ReturnLength, &Length, sizeof(ULONG));
 	    if (NT_SUCCESS(Status))
 	      Status = STATUS_BUFFER_TOO_SMALL;
 	  }
@@ -694,11 +694,11 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 	break;
 
       case TokenImpersonationLevel:
-        DPRINT("NtQueryInformationToken(TokenImpersonationLevel)\n");
+	DPRINT("NtQueryInformationToken(TokenImpersonationLevel)\n");
 	if (TokenInformationLength < sizeof(SECURITY_IMPERSONATION_LEVEL))
 	  {
-	    uLength = sizeof(SECURITY_IMPERSONATION_LEVEL);
-	    Status = MmCopyToCaller(ReturnLength, &uLength, sizeof(ULONG));
+	    Length = sizeof(SECURITY_IMPERSONATION_LEVEL);
+	    Status = MmCopyToCaller(ReturnLength, &Length, sizeof(ULONG));
 	    if (NT_SUCCESS(Status))
 	      Status = STATUS_BUFFER_TOO_SMALL;
 	  }
@@ -709,11 +709,11 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 	break;
 
       case TokenStatistics:
-        DPRINT("NtQueryInformationToken(TokenStatistics)\n");
+	DPRINT("NtQueryInformationToken(TokenStatistics)\n");
 	if (TokenInformationLength < sizeof(TOKEN_STATISTICS))
 	  {
-	    uLength = sizeof(TOKEN_STATISTICS);
-	    Status = MmCopyToCaller(ReturnLength, &uLength, sizeof(ULONG));
+	    Length = sizeof(TOKEN_STATISTICS);
+	    Status = MmCopyToCaller(ReturnLength, &Length, sizeof(ULONG));
 	    if (NT_SUCCESS(Status))
 	      Status = STATUS_BUFFER_TOO_SMALL;
 	  }
