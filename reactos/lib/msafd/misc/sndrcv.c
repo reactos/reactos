@@ -33,7 +33,7 @@ WSPAsyncSelect(
 	Socket = GetSocketStructure(Handle);
 
 	/* Allocate the Async Data Structure to pass on to the Thread later */
-	HeapAlloc(GetProcessHeap(), 0, sizeof(*AsyncData));
+	AsyncData = HeapAlloc(GetProcessHeap(), 0, sizeof(*AsyncData));
 
 	/* Change the Socket to Non Blocking */
 	BlockMode = 1;
