@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.59 2003/12/28 10:27:51 weiden Exp $
+/* $Id: msgqueue.c,v 1.60 2003/12/29 10:09:33 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -49,6 +49,8 @@
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
+
+#define TAG_MSGQ TAG('M', 'S', 'G', 'Q')
 
 #define SYSTEM_MESSAGE_QUEUE_SIZE           (256)
 
@@ -788,14 +790,49 @@ MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue,
   ExReleaseFastMutex(&MessageQueue->Lock);
 }
 
-VOID FASTCALL
+LRESULT FASTCALL
 MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
-	       PUSER_SENT_MESSAGE Message)
+	       HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
+  PUSER_SENT_MESSAGE Message;
+  KEVENT CompletionEvent;
+  PVOID WaitObjects[2];
+  NTSTATUS WaitStatus;
+  LRESULT Result;
+  PUSER_MESSAGE_QUEUE ThreadQueue;
+
+  KeInitializeEvent(&CompletionEvent, NotificationEvent, FALSE);
+
+  Message = ExAllocatePoolWithTag(PagedPool, sizeof(USER_SENT_MESSAGE), TAG_MSGQ);
+  Message->Msg.hwnd = Wnd;
+  Message->Msg.message = Msg;
+  Message->Msg.wParam = wParam;
+  Message->Msg.lParam = lParam;
+  Message->CompletionEvent = &CompletionEvent;
+  Message->Result = &Result;
+  Message->CompletionQueue = NULL;
+  Message->CompletionCallback = NULL;
+
   ExAcquireFastMutex(&MessageQueue->Lock);
   InsertTailList(&MessageQueue->SentMessagesListHead, &Message->ListEntry);
   KeSetEvent(&MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
   ExReleaseFastMutex(&MessageQueue->Lock);
+
+  ThreadQueue = PsGetWin32Thread()->MessageQueue;
+  WaitObjects[1] = &ThreadQueue->NewMessages;
+  WaitObjects[0] = &CompletionEvent;
+  do
+    {
+      WaitStatus = KeWaitForMultipleObjects(2, WaitObjects, WaitAny, UserRequest,
+                                            UserMode, TRUE, NULL, NULL);
+      while (MsqDispatchOneSentMessage(ThreadQueue))
+        {
+          ;
+        }
+    }
+  while (NT_SUCCESS(WaitStatus) && STATUS_WAIT_0 != WaitStatus);
+
+  return (STATUS_WAIT_0 == WaitStatus ? Result : -1);
 }
 
 VOID FASTCALL

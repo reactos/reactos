@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.45 2003/12/28 14:21:03 weiden Exp $
+/* $Id: message.c,v 1.46 2003/12/29 10:09:33 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -707,7 +707,6 @@ IntSendMessage(HWND hWnd,
 		LPARAM lParam)
 {
   LRESULT Result;
-  NTSTATUS Status;
   PWINDOW_OBJECT Window;
   PMSGMEMORY MsgMemoryEntry;
   INT lParamBufferSize;
@@ -767,37 +766,10 @@ IntSendMessage(HWND hWnd,
     }
   else
     {
-      PUSER_SENT_MESSAGE Message;
-      PKEVENT CompletionEvent;
-
-      CompletionEvent = ExAllocatePoolWithTag(NonPagedPool, sizeof(KEVENT), TAG_MSG);
-      KeInitializeEvent(CompletionEvent, NotificationEvent, FALSE);
-
-      Message = ExAllocatePoolWithTag(NonPagedPool, sizeof(USER_SENT_MESSAGE), TAG_MSG);
-      Message->Msg.hwnd = hWnd;
-      Message->Msg.message = Msg;
-      Message->Msg.wParam = wParam;
-      Message->Msg.lParam = lParam;
-      Message->CompletionEvent = CompletionEvent;
-      Message->Result = &Result;
-      Message->CompletionQueue = NULL;
-      Message->CompletionCallback = NULL;
-      MsqSendMessage(Window->MessageQueue, Message);
+      Result = MsqSendMessage(Window->MessageQueue, hWnd, Msg, wParam, lParam);
 
       IntReleaseWindowObject(Window);
-      Status = KeWaitForSingleObject(CompletionEvent,
-                                     UserRequest,
-                                     UserMode,
-                                     FALSE,
-                                     NULL);
-      if (Status == STATUS_WAIT_0)
-        {
-          return Result;
-        }
-      else
-        {
-          return FALSE;
-        }
+      return Result;
     }
 }
 

@@ -92,9 +92,9 @@ typedef struct _USER_MESSAGE_QUEUE
 
 } USER_MESSAGE_QUEUE, *PUSER_MESSAGE_QUEUE;
 
-VOID FASTCALL
+LRESULT FASTCALL
 MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
-	       PUSER_SENT_MESSAGE Message);
+	       HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 VOID FASTCALL
 MsqInitializeMessage(PUSER_MESSAGE Message,
 		     LPMSG Msg);
