@@ -14,6 +14,7 @@ APPS = 	calc \
 	dflat32 \
 	hcalc \
 	mc \
+	notepad \
 	notevil \
 	sysutils \
 	demos$(SEP)maze\
