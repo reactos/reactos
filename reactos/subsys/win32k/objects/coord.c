@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: coord.c,v 1.11 2003/05/18 17:16:18 ea Exp $
+/* $Id: coord.c,v 1.12 2003/05/27 07:23:05 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -32,6 +32,7 @@
 #include <internal/safe.h>
 #include <win32k/coord.h>
 #include <win32k/dc.h>
+#include <include/error.h>
 #define NDEBUG
 #include <win32k/debug1.h>
 
@@ -259,12 +260,40 @@ W32kModifyWorldTransform(HDC  hDC,
 
 BOOL
 STDCALL
-W32kOffsetViewportOrgEx(HDC  hDC,
-                              int  XOffset,
-                              int  YOffset,
-                              LPPOINT  Point)
+W32kOffsetViewportOrgEx(HDC hDC,
+                        int XOffset,
+                        int YOffset,
+                        LPPOINT UnsafePoint)
 {
-  UNIMPLEMENTED;
+  DC *dc = DC_HandleToPtr(hDC);
+  POINT Point;
+  NTSTATUS Status;
+
+  if (NULL == dc)
+    {
+    return FALSE;
+    }
+
+  if (NULL != UnsafePoint)
+    {
+      Point.x = dc->vportOrgX;
+      Point.y = dc->vportOrgY;
+      Status = MmCopyToCaller(UnsafePoint, &Point, sizeof(POINT));
+      if (! NT_SUCCESS(Status))
+	{
+	  SetLastNtError(Status);
+	  return FALSE;
+	}
+    }
+
+  dc->vportOrgX += XOffset;
+  dc->vportOrgY += YOffset;
+  DC_UpdateXforms(dc);
+
+  dc->w.DCOrgX += XOffset;
+  dc->w.DCOrgY += YOffset;
+
+  return TRUE;
 }
 
 BOOL

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: painting.c,v 1.15 2003/05/26 18:52:37 gvg Exp $
+/* $Id: painting.c,v 1.16 2003/05/27 07:23:05 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -315,7 +315,6 @@ PaintUpdateRgns(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
 	    {
 	      if ((HRGN) 1 == Window->UpdateRegion)
 		{
-#if 0
 		  /* If no NCPAINT needed or if we're going to turn it off
 		     the special value 1 means the whole client rect */
 		  if (0 == (Window->Flags & WINDOWOBJECT_NEED_NCPAINT) ||
@@ -326,7 +325,6 @@ PaintUpdateRgns(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
 		      Rect.right = Window->ClientRect.right - Window->WindowRect.left;
 		      Rect.bottom = Window->ClientRect.bottom - Window->WindowRect.top;
 		    }
-#endif
 		  Window->UpdateRegion = 
 		    UnsafeW32kCreateRectRgnIndirect(&Rect);
 		}

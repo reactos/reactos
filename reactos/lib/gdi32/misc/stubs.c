@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.17 2003/05/03 13:39:06 gvg Exp $
+/* $Id: stubs.c,v 1.18 2003/05/27 07:23:04 gvg Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -2117,22 +2117,6 @@ SetWindowExtEx(
 	int	a1,
 	int	a2,
 	LPSIZE	a3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-
-
-BOOL
-STDCALL
-OffsetViewportOrgEx(
-	HDC	a0,
-	int	a1,
-	int	a2,
-	LPPOINT	a3
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

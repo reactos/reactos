@@ -164,6 +164,18 @@ SetViewportOrgEx(
 
 BOOL
 STDCALL
+OffsetViewportOrgEx(
+	HDC	DC,
+	int	XOffset,
+	int	YOffset,
+	LPPOINT	Point
+	)
+{
+  return W32kOffsetViewportOrgEx(DC, XOffset, YOffset, Point);
+}
+
+BOOL
+STDCALL
 SetWindowOrgEx(
 	HDC	a0,
 	int	a1,
