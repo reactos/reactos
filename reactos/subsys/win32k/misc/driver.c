@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: driver.c,v 1.28 2003/08/19 11:48:49 weiden Exp $
+/* $Id: driver.c,v 1.29 2003/10/24 08:22:29 gvg Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -273,7 +273,8 @@ HANDLE DRIVER_FindMPDriver(LPCWSTR  Name)
 
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("ZwOpenFile() failed (Status %lx)\n", Status);
+      DPRINT1("Unable to connect to miniport (Status %lx)\n", Status);
+      DPRINT1("Perhaps the miniport wasn't loaded?\n");
       return(NULL);
     }
 

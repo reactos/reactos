@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.89 2003/10/20 17:57:05 gvg Exp $
+/* $Id: dc.c,v 1.90 2003/10/24 08:22:29 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -136,6 +136,11 @@ NtGdiCreateCompatableDC(HDC  hDC)
 
   if (hDC == NULL)
   {
+    if (! PrimarySurfaceCreated)
+      {
+        DPRINT1("Can't create compatible DC because initialization of primary surface failed\n");
+        return NULL;
+      }
     OrigDC = NULL;
     hNewDC = DC_AllocDC(L"DISPLAY");
   }
@@ -288,6 +293,22 @@ FindDriverFileNames(PUNICODE_STRING DriverFileNames)
   return TRUE;
 }
 
+static void FASTCALL
+CloseMiniport()
+{
+  PEPROCESS CurrentProcess;
+
+  CurrentProcess = PsGetCurrentProcess();
+  if (CurrentProcess != Win32kDeviceProcess)
+    {
+      KeAttachProcess(Win32kDeviceProcess);
+    }
+  ZwClose(PrimarySurface.DisplayDevice);
+  if (CurrentProcess != Win32kDeviceProcess)
+    {
+      KeDetachProcess();
+    }
+}
 
 BOOL STDCALL
 NtGdiCreatePrimarySurface(LPCWSTR Driver,
@@ -305,7 +326,7 @@ NtGdiCreatePrimarySurface(LPCWSTR Driver,
   /*  Open the miniport driver  */
   if ((PrimarySurface.DisplayDevice = DRIVER_FindMPDriver(Driver)) == NULL)
   {
-    DPRINT("FindMPDriver failed\n");
+    DPRINT1("FindMPDriver failed\n");
     return(FALSE);
   }
 
@@ -313,7 +334,7 @@ NtGdiCreatePrimarySurface(LPCWSTR Driver,
   RtlInitUnicodeString(&DriverFileNames, NULL);
   if (! FindDriverFileNames(&DriverFileNames))
   {
-    DPRINT("FindDriverFileNames failed\n");
+    DPRINT1("FindDriverFileNames failed\n");
     return(FALSE);
   }
 
@@ -361,7 +382,8 @@ NtGdiCreatePrimarySurface(LPCWSTR Driver,
   RtlFreeUnicodeString(&DriverFileNames);
   if (! GotDriver)
   {
-    DPRINT("No suitable driver found\n");
+    CloseMiniport();
+    DPRINT1("No suitable DDI driver found\n");
     return FALSE;
   }
 
@@ -372,7 +394,8 @@ NtGdiCreatePrimarySurface(LPCWSTR Driver,
   /*  Construct DDI driver function dispatch table  */
   if (!DRIVER_BuildDDIFunctions(&DED, &PrimarySurface.DriverFunctions))
   {
-    DPRINT("BuildDDIFunctions failed\n");
+    CloseMiniport();
+    DPRINT1("BuildDDIFunctions failed\n");
     return(FALSE);
   }
 
@@ -399,7 +422,9 @@ NtGdiCreatePrimarySurface(LPCWSTR Driver,
 					     PrimarySurface.DisplayDevice);
   if (PrimarySurface.PDev == NULL)
   {
-    DPRINT("DrvEnablePDEV failed\n");
+    CloseMiniport();
+    DPRINT1("DrvEnablePDEV failed\n");
+    DPRINT1("Perhaps DDI driver doesn't match miniport driver?\n");
     return(FALSE);
   }
 
@@ -430,6 +455,12 @@ NtGdiCreatePrimarySurface(LPCWSTR Driver,
   /*  Enable the drawing surface  */
   PrimarySurface.Handle =
     PrimarySurface.DriverFunctions.EnableSurface(PrimarySurface.PDev);
+  if (NULL == PrimarySurface.Handle)
+    {
+      CloseMiniport();
+      DPRINT1("DrvEnableSurface failed\n");
+      return FALSE;
+    }
 
   SurfObj = (PSURFOBJ)AccessUserObject((ULONG) PrimarySurface.Handle);
   SurfObj->dhpdev = PrimarySurface.PDev;
@@ -551,7 +582,6 @@ NtGdiDeleteDC(HDC  DCHandle)
   {
     if (!DRIVER_UnreferenceDriver (DCToDelete->DriverName))
     {
-      PEPROCESS CurrentProcess;
       DPRINT( "No more references to driver, reseting display\n" );
       DCToDelete->DriverFunctions.AssertMode( DCToDelete->PDev, FALSE );
       CHECKPOINT;
@@ -559,16 +589,7 @@ NtGdiDeleteDC(HDC  DCHandle)
       CHECKPOINT;
       DCToDelete->DriverFunctions.DisablePDev(DCToDelete->PDev);
 
-      CurrentProcess = PsGetCurrentProcess();
-      if (CurrentProcess != Win32kDeviceProcess)
-        {
-          KeAttachProcess(Win32kDeviceProcess);
-	}
-      ZwClose(PrimarySurface.DisplayDevice);
-      if (CurrentProcess != Win32kDeviceProcess)
-        {
-          KeDetachProcess();
-	}
+      CloseMiniport();
 
       PrimarySurfaceCreated = FALSE;
     }
