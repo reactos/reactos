@@ -2,7 +2,7 @@
  * MPR Password Cache functions
  *
  * Copyright 1999 Ulrich Weigand
- * Copyright 2003 Mike McCormack for CodeWeavers
+ * Copyright 2003,2004 Mike McCormack for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -32,21 +32,42 @@ WINE_DEFAULT_DEBUG_CHANNEL(mpr);
 
 static const char mpr_key[] = "Software\\Wine\\Wine\\Mpr\\";
 
+static inline BYTE hex( BYTE x )
+{
+    if( x <= 9 )
+        return x + '0';
+    return x + 'A' - 10;
+}
+
+static inline CHAR ctox( CHAR x )
+{
+    if( ( x >= '0' ) && ( x <= '9' ) )
+        return x - '0';
+    if( ( x >= 'A' ) && ( x <= 'F' ) )
+        return x - 'A' + 10;
+    if( ( x >= 'a' ) && ( x <= 'a' ) )
+        return x - 'a' + 10;
+    return -1;
+}
+
 static LPSTR MPR_GetValueName( LPSTR pbResource, WORD cbResource, BYTE nType )
 {
     LPSTR name;
-    DWORD  i, x = 0;
+    DWORD  i;
 
-    /* just a hash so the value name doesn't get too large */
-    for( i=0; i<cbResource; i++ )
-        x = ((x<<7) | (x >> 25)) ^ toupper(pbResource[i]);
-
-    name = HeapAlloc( GetProcessHeap(), 0, 0x10 );
+    name = HeapAlloc( GetProcessHeap(), 0, 6+cbResource*2 );
     if( name )
-        sprintf( name, "I-%08lX-%02X", x, nType );
+        sprintf( name, "X-%02X-", nType );
+    for(i=0; i<cbResource; i++)
+    {
+        name[5+i*2]=hex((pbResource[i]&0xf0)>>4);
+        name[6+i*2]=hex(pbResource[i]&0x0f);
+    }
+    name[5+i*2]=0;
     TRACE( "Value is %s\n", name );
     return name;
 }
+
 
 /**************************************************************************
  * WNetCachePassword [MPR.@]  Saves password in cache
@@ -88,7 +109,7 @@ DWORD WINAPI WNetCachePassword(
         r = RegSetValueExA( hkey, valname, 0, REG_BINARY, 
                             pbPassword, cbPassword );
         if( r )
-            r = WN_ACCESS_DENIED;
+            r = WN_CANCEL;
         else
             r = WN_SUCCESS;
         HeapFree( GetProcessHeap(), 0, valname );
@@ -104,8 +125,10 @@ DWORD WINAPI WNetCachePassword(
 /*****************************************************************
  *  WNetRemoveCachedPassword [MPR.@]
  */
-UINT WINAPI WNetRemoveCachedPassword( LPSTR pbResource, WORD cbResource,
-                                      BYTE nType )
+UINT WINAPI WNetRemoveCachedPassword(
+      LPSTR pbResource,   /* [in] resource ID to delete */
+      WORD cbResource,    /* [in] number of bytes in the resource ID */
+      BYTE nType )        /* [in] Type of the resource to delete */
 {
     HKEY hkey;
     DWORD r;
@@ -162,9 +185,11 @@ DWORD WINAPI WNetGetCachedPassword(
     DWORD r, type = 0, sz;
     LPSTR valname;
 
-    WARN( "(%p(%s), %d, %p, %p, %d): stub\n",
+    WARN( "(%p(%s), %d, %p, %p, %d): totally insecure\n",
            pbResource, debugstr_a(pbResource), cbResource,
 	   pbPassword, pcbPassword, nType );
+
+    memset( pbPassword, 0, *pcbPassword);
 
     r = RegCreateKeyA( HKEY_CURRENT_USER, mpr_key, &hkey );
     if( r )
@@ -177,7 +202,7 @@ DWORD WINAPI WNetGetCachedPassword(
         r = RegQueryValueExA( hkey, valname, 0, &type, pbPassword, &sz );
         *pcbPassword = sz;
         if( r )
-            r = WN_ACCESS_DENIED;
+            r = WN_CANCEL;
         else
             r = WN_SUCCESS;
         HeapFree( GetProcessHeap(), 0, valname );
@@ -198,22 +223,93 @@ DWORD WINAPI WNetGetCachedPassword(
  * it to grab all the passwords in the cache.  It's bad enough to 
  * store the passwords (insecurely).
  *
- *  observed values:
- *	arg1	ptr	0x40xxxxxx -> (no string)
- *	arg2	int	32
- *	arg3	type?	4
- *	arg4	enumPasswordProc (verifyed)
- *	arg5	ptr	0x40xxxxxx -> 0x0
+ *  bpPrefix and cbPrefix are used to filter the returned passwords
+ *   the first cbPrefix bytes of the password resource identifier
+ *   should match the same number of bytes in bpPrefix
  *
- *	---- everything below this line might be wrong (js) -----
+ * RETURNS
+ *   Success: WN_SUCCESS   (even if no entries were enumerated)
+ *   Failure: WN_ACCESS_DENIED, WN_BAD_PASSWORD, WN_BAD_VALUE,
+ *             WN_NET_ERROR, WN_NOT_SUPPORTED, WN_OUT_OF_MEMORY
  */
 
-UINT WINAPI WNetEnumCachedPasswords( LPSTR pbPrefix, WORD cbPrefix,
-                                     BYTE nType, ENUMPASSWORDPROC enumPasswordProc, DWORD x)
+UINT WINAPI WNetEnumCachedPasswords(
+      LPSTR pbPrefix,  /* [in] prefix to filter cache entries */
+      WORD cbPrefix,   /* [in] number of bytes in Prefix substring */
+      BYTE nType,      /* [in] match the Type ID of the entry */
+      ENUMPASSWORDPROC enumPasswordProc,  /* [in] callback function */
+      DWORD param)     /* [in] parameter passed to enum function */
 {
-    WARN( "(%p(%s), %d, %d, %p, 0x%08lx): don't implement this\n",
-           pbPrefix, debugstr_a(pbPrefix), cbPrefix,
-	   nType, enumPasswordProc, x );
+    HKEY hkey;
+    DWORD r, type, val_sz, data_sz, i, j, size;
+    PASSWORD_CACHE_ENTRY *entry;
+    CHAR val[256], prefix[6];
 
-    return WN_NOT_SUPPORTED;
+    WARN( "(%s, %d, %d, %p, 0x%08lx) totally insecure\n",
+           debugstr_an(pbPrefix,cbPrefix), cbPrefix,
+	   nType, enumPasswordProc, param );
+
+    r = RegCreateKeyA( HKEY_CURRENT_USER, mpr_key, &hkey );
+    if( r )
+        return WN_ACCESS_DENIED;
+
+    sprintf(prefix, "X-%02X-", nType );
+
+    i = 0;
+    for( i=0;  ; i++ )
+    {
+        val_sz  = sizeof val;
+        data_sz = 0;
+        type    = 0;
+        val[0] = 0;
+        r = RegEnumValueA( hkey, i, val, &val_sz, NULL, &type, NULL, &data_sz );
+        if( r != ERROR_SUCCESS )
+            break;
+        if( type != REG_BINARY )
+            continue;
+
+        /* check the value is in the format we expect */
+        if( val_sz < sizeof prefix )
+            continue;
+        if( memcmp( prefix, val, 5 ) )
+            continue;
+
+        /* decode the value */
+        for(j=5; j<val_sz; j+=2 )
+        {
+            CHAR hi = ctox( val[j] ), lo = ctox( val[j+1] );
+            if( ( hi < 0 ) || ( lo < 0 ) )
+                break;
+            val[(j-5)/2] = (hi<<4) | lo;
+        }
+
+        /* find the decoded length */
+        val_sz = (j - 5)/2;
+        val[val_sz]=0;
+        if( val_sz < cbPrefix )
+            continue;
+
+        /* check the prefix matches */
+        if( memcmp(val, pbPrefix, cbPrefix) )
+            continue;
+
+        /* read the value data */
+        size = sizeof *entry - sizeof entry->abResource[0] + val_sz + data_sz;
+        entry = HeapAlloc( GetProcessHeap(), 0, sizeof *entry + val_sz + data_sz );
+        memcpy( entry->abResource, val, val_sz );
+        entry->cbEntry = size;
+        entry->cbResource = val_sz;
+        entry->cbPassword = data_sz;
+        entry->iEntry = i;
+        entry->nType = nType;
+        r = RegEnumValueA( hkey, i, NULL, &val_sz, NULL, &type, 
+                           &entry->abResource[val_sz], &data_sz );
+        if( r == ERROR_SUCCESS )
+            enumPasswordProc( entry, param );
+        HeapFree( GetProcessHeap(), 0, entry );
+    }
+
+    RegCloseKey( hkey );
+
+    return WN_SUCCESS;
 }
