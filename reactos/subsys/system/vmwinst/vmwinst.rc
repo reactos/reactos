@@ -16,7 +16,14 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 IDB_WATERMARK BITMAP "resources/watermark.bmp"
 IDB_HEADER    BITMAP "resources/header.bmp"
 
+
+/*
+ * Everything specific to any language goes in one of the specific
+ * files. Note that you can and may override resources which also have
+ * a neutral version. This is to get localized bitmaps for example.
+ */
+
 #include "En.rc"
-#include "Es.rc"
 #include "De.rc"
+#include "Es.rc"
 

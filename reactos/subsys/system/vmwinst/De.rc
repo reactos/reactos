@@ -5,8 +5,8 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Grafikreiberinstallation"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Das ReactOS Setup hat festgestellt, das Sie ReactOS in VMware(r) installieren.", -1, 115, 8, 160, 24
-  LTEXT "Wenn Sie den VMware(r) SVGA Treiber installieren möchten, klicken Sie auf 'Weiter', ansonsten auf 'Abbrechen'.", -1, 115, 140, 160, 17
+  LTEXT "Das ReactOS Setup hat festgestellt, das Sie ReactOS in VMware(r) installieren.", -1, 100, 8, 160, 24
+  LTEXT "Wenn Sie den VMware(r) SVGA Treiber installieren möchten, klicken Sie auf 'Weiter', ansonsten auf 'Abbrechen'.", -1, 100, 140, 160, 17
 END
 
 IDD_INSERT_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
@@ -111,3 +111,20 @@ BEGIN
   IDS_ENABLINGDRIVER    "Aktiviere den VMware(r) SVGA driver..."
 END
 
+STRINGTABLE
+BEGIN
+  IDD_INSERT_VMWARE_TOOLSTITLE     	"VMware (r) SVGA Treiber Installationsassistent"
+  IDD_INSERT_VMWARE_TOOLSSUBTITLE       "Bitte legen Sie die VMware-Tool CD-Rom ein."
+  IDD_INSTALLING_VMWARE_TOOLSTITLE      "VMware (r) SVGA Treiber Installationsassistent"
+  IDD_INSTALLING_VMWARE_TOOLSSUBTITLE   "Suchen und kopieren des VMware (r) SVGA Treibers."
+  IDD_CONFIGTITLE     			"VMware (r) SVGA Treiber Installationsassistent"
+  IDD_CONFIGSUBTITLE     		"Wählen Sie die Bildschrimauflösung aus."
+  IDD_INSTALLATION_FAILEDTITLE     	"VMware (r) SVGA Treiber Installationsassistent"
+  IDD_INSTALLATION_FAILEDSUBTITLE       "Die VMware (r) SVGA Treiber installation ist fehlgeschlagen."
+  IDD_CHOOSEACTIONTITLE    	        "VMware (r) SVGA Treiber Installationsassistent"
+  IDD_CHOOSEACTIONSUBTITLE              "Wählen Sie eine Option aus."
+  IDD_SELECTDRIVERTITLE                 "VMware (r) SVGA Treiber Installationsassistent"
+  IDD_SELECTDRIVERSUBTITLE              "Wählen Sie einen Treiber aus."
+  IDD_DOUNINSTALLTITLE                  "VMware (r) SVGA Treiber Installationsassistent"
+  IDD_DOUNINSTALLSUBTITLE               "De-Installieren des Treibers."
+END

@@ -5,8 +5,8 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Video Driver Installation"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "The ReactOS setup detected that you run ReactOS inside of VMware(r).", -1, 115, 8, 160, 24
-  LTEXT "If you like to install the VMware(r) SVGA driver click 'Next', otherwise click 'Cancel'.", -1, 115, 140, 160, 17
+  LTEXT "The ReactOS setup detected that you run ReactOS inside of VMware(r).", -1, 100, 8, 160, 24
+  LTEXT "If you like to install the VMware(r) SVGA driver click 'Next', otherwise click 'Cancel'.", -1, 100, 140, 160, 17
 END
 
 IDD_INSERT_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
@@ -111,3 +111,20 @@ BEGIN
   IDS_ENABLINGDRIVER    "Enabling VMware(r) SVGA driver..."
 END
 
+STRINGTABLE
+BEGIN
+  IDD_INSERT_VMWARE_TOOLSTITLE     	"VMware (r) SVGA driver installation wizard"
+  IDD_INSERT_VMWARE_TOOLSSUBTITLE       "Please insert the VMware tool CD-Rom."
+  IDD_INSTALLING_VMWARE_TOOLSTITLE      "VMware (r) SVGA driver installation wizard"
+  IDD_INSTALLING_VMWARE_TOOLSSUBTITLE   "Search and copy the VMware (r) SVGA driver."
+  IDD_CONFIGTITLE     			"VMware (r) SVGA driver installation wizard"
+  IDD_CONFIGSUBTITLE     		"Select your favorite screen resolution."
+  IDD_INSTALLATION_FAILEDTITLE     	"VMware (r) SVGA driver installation wizard"
+  IDD_INSTALLATION_FAILEDSUBTITLE       "The VMware (r) SVGA driver installation failed."
+  IDD_CHOOSEACTIONTITLE    	        "VMware (r) SVGA driver installation wizard"
+  IDD_CHOOSEACTIONSUBTITLE              "Choose what you like to do."
+  IDD_SELECTDRIVERTITLE                 "VMware (r) SVGA driver installation wizard"
+  IDD_SELECTDRIVERSUBTITLE              "Select a driver."
+  IDD_DOUNINSTALLTITLE                  "VMware (r) SVGA driver installation wizard"
+  IDD_DOUNINSTALLSUBTITLE               "Uninstall the driver."
+END
