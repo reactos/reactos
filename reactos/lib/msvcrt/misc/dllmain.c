@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.9 2001/07/27 23:54:05 ekohl Exp $
+/* $Id: dllmain.c,v 1.10 2001/07/29 16:42:35 ekohl Exp $
  * 
  * ReactOS MSVCRT.DLL Compatibility Library
  */
@@ -34,28 +34,33 @@ static int envAlloced = 0;
 
 int BlockEnvToEnviron()
 {
-char * ptr;
-int i;
+  char * ptr;
+  int i;
+
   if (!envAlloced)
   {
     envAlloced = 50;
     _environ = malloc (envAlloced * sizeof (char **));
-    if (!_environ) return -1;
-    _environ[0] =NULL;
+    if (_environ == NULL)
+      return -1;
+    _environ[0] = NULL;
   }
   ptr = (char *)GetEnvironmentStringsA();
-  if (!ptr) return -1;
-  for (i = 0 ; *ptr ; i++)
+  if (!ptr)
+    return -1;
+
+  for (i = 0 ; *ptr && (i < envAlloced) ; i++)
   {
     _environ[i] = ptr;
     while(*ptr) ptr++;
     ptr++;
   }
-  _environ[i] =0;
+  _environ[i] = 0;
+
   return 0;
 }
 
-BOOLEAN __stdcall
+BOOL __stdcall
 DllMain(PVOID hinstDll,
 	ULONG dwReason,
 	PVOID reserved)
@@ -77,8 +82,8 @@ DllMain(PVOID hinstDll,
 			_acmdln = (char *)GetCommandLineA();
 
 			/* FIXME: This crashes all applications */
-//			if( BlockEnvToEnviron() )
-//			  return FALSE;
+			if (BlockEnvToEnviron() < 0)
+			  return FALSE;
 
 			/* FIXME: more initializations... */
 
