@@ -1,4 +1,4 @@
-/* $Id: objdir.c,v 1.10 2002/09/08 10:22:01 chorns Exp $
+/* $Id: objdir.c,v 1.11 2003/06/07 16:16:38 chorns Exp $
  *
  * DESCRIPTION: Object Manager Simple Explorer
  * PROGRAMMER:  David Welch
@@ -75,7 +75,7 @@ StatusToName (NTSTATUS Status)
 			return "STATUS_OBJECT_NAME_INVALID";
 		case STATUS_OBJECT_NAME_NOT_FOUND:
 			return "STATUS_OBJECT_NAME_NOT_FOUND";
-		case STATUS_PATH_SYNTAX_BAD:
+		case STATUS_OBJECT_PATH_SYNTAX_BAD:
 			return "STATUS_PATH_SYNTAX_BAD";
 		case STATUS_NO_MORE_ENTRIES:
 			return "STATUS_NO_MORE_ENTRIES";

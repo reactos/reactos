@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.11 2003/04/26 23:13:27 hyperion Exp $
+/* $Id: zw.h,v 1.12 2003/06/07 16:16:38 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -4303,14 +4303,8 @@ NTSTATUS STDCALL ZwContinue(IN PCONTEXT Context, IN CINT IrqLevel);
 
 NTSTATUS
 STDCALL
-NtQuerySystemTime (
-	OUT TIME *CurrentTime
-	);
-
-NTSTATUS
-STDCALL
 ZwQuerySystemTime (
-	OUT TIME *CurrentTime
+	OUT PLARGE_INTEGER CurrentTime
 	);
 
 /*
@@ -4673,31 +4667,6 @@ ZwLoadKey(
 	);
 
 /*
- * FUNCTION: Loads a registry key.
- * ARGUMENTS:
- *       KeyObjectAttributes = Key to be loaded
- *       FileObjectAttributes = File to load the key from
- *       Flags = ???
- * REMARK:
- *       This procedure maps to the win32 procedure RegLoadKey
- * RETURNS: Status
- */
-NTSTATUS
-STDCALL
-NtLoadKey2(
-	IN	POBJECT_ATTRIBUTES	KeyObjectAttributes,
-	IN	POBJECT_ATTRIBUTES	FileObjectAttributes,
-	IN	ULONG			Flags
-	);
-NTSTATUS
-STDCALL
-ZwLoadKey2(
-	IN	POBJECT_ATTRIBUTES	KeyObjectAttributes,
-	IN	POBJECT_ATTRIBUTES	FileObjectAttributes,
-	IN	ULONG			Flags
-	);
-
-/*
  * FUNCTION: Locks a range of virtual memory.
  * ARGUMENTS: 
  *       ProcessHandle = Handle to the process
@@ -4945,16 +4914,6 @@ ZwQueryIntervalProfile(
 	Length = Size of the supplied storage 
  	ResultLength = Bytes written
  */
-
-NTSTATUS
-STDCALL
-NtQueryObject(
-	IN HANDLE ObjectHandle,
-	IN CINT ObjectInformationClass,
-	OUT PVOID ObjectInformation,
-	IN ULONG Length,
-	OUT PULONG ResultLength
-	);
 
 NTSTATUS
 STDCALL
@@ -5419,5 +5378,165 @@ typedef struct _SECTION_IMAGE_INFORMATION
 } SECTION_IMAGE_INFORMATION, *PSECTION_IMAGE_INFORMATION;
 
 #endif /* !__USE_W32API */
+
+/*
+ * FUNCTION: Loads a registry key.
+ * ARGUMENTS:
+ *       KeyObjectAttributes = Key to be loaded
+ *       FileObjectAttributes = File to load the key from
+ *       Flags = ???
+ * REMARK:
+ *       This procedure maps to the win32 procedure RegLoadKey
+ * RETURNS: Status
+ */
+NTSTATUS
+STDCALL
+NtLoadKey2(
+	IN	POBJECT_ATTRIBUTES	KeyObjectAttributes,
+	IN	POBJECT_ATTRIBUTES	FileObjectAttributes,
+	IN	ULONG			Flags
+	);
+
+NTSTATUS
+STDCALL
+ZwLoadKey2(
+	IN	POBJECT_ATTRIBUTES	KeyObjectAttributes,
+	IN	POBJECT_ATTRIBUTES	FileObjectAttributes,
+	IN	ULONG			Flags
+	);
+
+/*
+ * FUNCTION: Retrieves the system time
+ * ARGUMENTS: 
+ *        CurrentTime (OUT) = Caller should supply storage for the resulting time.
+ * RETURNS: Status
+ *
+*/
+
+NTSTATUS
+STDCALL
+NtQuerySystemTime (
+	OUT PLARGE_INTEGER CurrentTime
+	);
+
+/*
+ * FUNCTION: Queries the information of a  object.
+ * ARGUMENTS: 
+	ObjectHandle = Handle to a object
+	ObjectInformationClass = Index to a certain information structure
+
+	ObjectBasicInformation  	
+	ObjectTypeInformation 		OBJECT_TYPE_INFORMATION 
+	ObjectNameInformation		OBJECT_NAME_INFORMATION
+	ObjectDataInformation		OBJECT_DATA_INFORMATION
+
+	ObjectInformation = Caller supplies storage for resulting information
+	Length = Size of the supplied storage 
+ 	ResultLength = Bytes written
+ */
+
+NTSTATUS
+STDCALL
+NtQueryObject(
+	IN HANDLE ObjectHandle,
+	IN CINT ObjectInformationClass,
+	OUT PVOID ObjectInformation,
+	IN ULONG Length,
+	OUT PULONG ResultLength
+	);
+
+/* BEGIN REACTOS ONLY */
+
+BOOLEAN STDCALL
+ExInitializeBinaryTree(IN PBINARY_TREE  Tree,
+  IN PKEY_COMPARATOR  Compare,
+  IN BOOLEAN  UseNonPagedPool);
+
+VOID STDCALL
+ExDeleteBinaryTree(IN PBINARY_TREE  Tree);
+
+VOID STDCALL
+ExInsertBinaryTree(IN PBINARY_TREE  Tree,
+  IN PVOID  Key,
+  IN PVOID  Value);
+
+BOOLEAN STDCALL
+ExSearchBinaryTree(IN PBINARY_TREE  Tree,
+  IN PVOID  Key,
+  OUT PVOID  * Value);
+
+BOOLEAN STDCALL
+ExRemoveBinaryTree(IN PBINARY_TREE  Tree,
+  IN PVOID  Key,
+  IN PVOID  * Value);
+
+BOOLEAN STDCALL
+ExTraverseBinaryTree(IN PBINARY_TREE  Tree,
+  IN TRAVERSE_METHOD  Method,
+  IN PTRAVERSE_ROUTINE  Routine,
+  IN PVOID  Context);
+
+BOOLEAN STDCALL
+ExInitializeSplayTree(IN PSPLAY_TREE  Tree,
+  IN PKEY_COMPARATOR  Compare,
+  IN BOOLEAN  Weighted,
+  IN BOOLEAN  UseNonPagedPool);
+
+VOID STDCALL
+ExDeleteSplayTree(IN PSPLAY_TREE  Tree);
+
+VOID STDCALL
+ExInsertSplayTree(IN PSPLAY_TREE  Tree,
+  IN PVOID  Key,
+  IN PVOID  Value);
+
+BOOLEAN STDCALL
+ExSearchSplayTree(IN PSPLAY_TREE  Tree,
+  IN PVOID  Key,
+  OUT PVOID  * Value);
+
+BOOLEAN STDCALL
+ExRemoveSplayTree(IN PSPLAY_TREE  Tree,
+  IN PVOID  Key,
+  IN PVOID  * Value);
+
+BOOLEAN STDCALL
+ExWeightOfSplayTree(IN PSPLAY_TREE  Tree,
+  OUT PULONG  Weight);
+
+BOOLEAN STDCALL
+ExTraverseSplayTree(IN PSPLAY_TREE  Tree,
+  IN TRAVERSE_METHOD  Method,
+  IN PTRAVERSE_ROUTINE  Routine,
+  IN PVOID  Context);
+
+BOOLEAN STDCALL
+ExInitializeHashTable(IN PHASH_TABLE  HashTable,
+  IN ULONG  HashTableSize,
+  IN PKEY_COMPARATOR  Compare  OPTIONAL,
+  IN BOOLEAN  UseNonPagedPool);
+
+VOID STDCALL
+ExDeleteHashTable(IN PHASH_TABLE  HashTable);
+
+VOID STDCALL
+ExInsertHashTable(IN PHASH_TABLE  HashTable,
+  IN PVOID  Key,
+  IN ULONG  KeyLength,
+  IN PVOID  Value);
+
+BOOLEAN STDCALL
+ExSearchHashTable(IN PHASH_TABLE  HashTable,
+  IN PVOID  Key,
+  IN ULONG  KeyLength,
+  OUT PVOID  * Value);
+
+BOOLEAN STDCALL
+ExRemoveHashTable(IN PHASH_TABLE  HashTable,
+  IN PVOID  Key,
+  IN ULONG  KeyLength,
+  IN PVOID  * Value);
+
+/* END REACTOS ONLY */
 
 #endif /* __DDK_ZW_H */

@@ -1,5 +1,37 @@
 2003-06-07  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* include/ddk/dbgfuncs.h: Move ...
+	* include/ntos/dbgfuncs.h: ... here.
+	* include/basetsd.h (LONG32): Make it a long.
+	* include/ntos.h: Include ntos/dbgfuncs.h.
+	* include/ddk/dbgfuncs.h (DBG_STATUS_*, DBG_GET_SHOW_*): Move to
+	include/ntos/dbgfuncs.h.
+	* include/ddk/exfuncs.h (ExNotifyCallback): Match w32api prototype.
+	(*BinaryTree, *SplayTree, *HashTable): Move to include/ntos/zw.h.
+	* include/ddk/extypes.h (TRAVERSE_METHOD, PKEY_COMPARATOR,
+	PTRAVERSE_ROUTINE, _BINARY_TREE_NODE, BINARY_TREE, SPLAY_TREE_NODE,
+	SPLAY_TREE, HASH_TABLE): Move to include/ntos/zwtypes.h.
+	* include/ddk/status.h (STATUS_PATH_SYNTAX_BAD): Rename to
+	STATUS_OBJECT_PATH_SYNTAX_BAD.
+	* apps/utils/objdir/objdir.c (StatusToName): Change
+	STATUS_PATH_SYNTAX_BAD to STATUS_OBJECT_PATH_SYNTAX_BAD.
+	* ntoskrnl/dbg/errinfo.c: Use STATUS_OBJECT_PATH_SYNTAX_BAD.
+	* include/ntos/rtl.h (RtlQueryRegistryValues, RtlWriteRegistryValue,
+	RtlDeleteRegistryValue): Match w32api prototypes.
+	* include/ntos/zw.h (ZwQuerySystemTime): Ditto.
+	* lib/kernel32/file/cnotify.c (FindFirstChangeNotificationW): Use
+	STATUS_OBJECT_PATH_SYNTAX_BAD.
+	* lib/ntdll/rtl/registry.c (RtlDeleteRegistryValue,
+	RtlQueryRegistryValues, RtlWriteRegistryValue): Match w32api prototypes.
+	* ntoskrnl/cm/cm.h, ntoskrnl/cm/ntfunc.c, ntoskrnl/cm/regfile.c: Change
+	FILETIME to LARGE_INTEGER.
+	* ntoskrnl/cm/rtlfunc.c (RtlDeleteRegistryValue, RtlQueryRegistryValues,
+	RtlWriteRegistryValue): Match w32api prototypes.
+	* ntoskrnl/ex/callback.c (ExNotifyCallback): Ditto.
+	* ntoskrnl/ex/time.c (NtQuerySystemTime): Ditto.
+
+2003-06-07  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* hal/halx86/dma.c (AdapterObjects): Don't put braces on scalar
 	initializers.
 

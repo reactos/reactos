@@ -70,15 +70,15 @@ RtlCreateRegistryKey(IN ULONG RelativeTo,
 
 NTSTATUS STDCALL
 RtlDeleteRegistryValue(IN ULONG RelativeTo,
-		       IN PWSTR Path,
-		       IN PWSTR ValueName)
+		       IN PCWSTR Path,
+		       IN PCWSTR ValueName)
 {
   HANDLE KeyHandle;
   NTSTATUS Status;
   UNICODE_STRING Name;
 
   Status = RtlpGetRegistryHandle(RelativeTo,
-				 Path,
+				 (PWSTR) Path,
 				 TRUE,
 				 &KeyHandle);
   if (!NT_SUCCESS(Status))
@@ -134,7 +134,7 @@ RtlOpenCurrentUser(IN ACCESS_MASK DesiredAccess,
 
 NTSTATUS STDCALL
 RtlQueryRegistryValues(IN ULONG RelativeTo,
-		       IN PWSTR Path,
+		       IN PCWSTR Path,
 		       IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
 		       IN PVOID Context,
 		       IN PVOID Environment)
@@ -160,7 +160,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 #endif
 
   Status = RtlpGetRegistryHandle(RelativeTo,
-				 Path,
+				 (PWSTR) Path,
 				 FALSE,
 				 &BaseKeyHandle);
   if (!NT_SUCCESS(Status))
@@ -545,8 +545,8 @@ ByeBye:
 
 NTSTATUS STDCALL
 RtlWriteRegistryValue(IN ULONG RelativeTo,
-		      IN PWSTR Path,
-		      IN PWSTR ValueName,
+		      IN PCWSTR Path,
+		      IN PCWSTR ValueName,
 		      IN ULONG ValueType,
 		      IN PVOID ValueData,
 		      IN ULONG ValueLength)
@@ -556,7 +556,7 @@ RtlWriteRegistryValue(IN ULONG RelativeTo,
   UNICODE_STRING Name;
 
   Status = RtlpGetRegistryHandle(RelativeTo,
-				 Path,
+				 (PWSTR) Path,
 				 TRUE,
 				 &KeyHandle);
   if (!NT_SUCCESS(Status))

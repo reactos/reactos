@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.15 2002/12/09 20:13:12 hbirr Exp $
+/* $Id: time.c,v 1.16 2003/06/07 16:16:39 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -89,7 +89,7 @@ NtSetSystemTime (IN	PLARGE_INTEGER	UnsafeNewSystemTime,
 
 
 NTSTATUS STDCALL
-NtQuerySystemTime (OUT TIME* UnsafeCurrentTime)
+NtQuerySystemTime (OUT PLARGE_INTEGER UnsafeCurrentTime)
      /*
       * FUNCTION: Retrieves the system time.
       * PARAMETERS:

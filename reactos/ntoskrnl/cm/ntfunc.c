@@ -379,8 +379,8 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 	  {
 	    /* Fill buffer with requested info */
 	    BasicInformation = (PKEY_BASIC_INFORMATION) KeyInformation;
-	    BasicInformation->LastWriteTime.u.LowPart = SubKeyCell->LastWriteTime.dwLowDateTime;
-	    BasicInformation->LastWriteTime.u.HighPart = SubKeyCell->LastWriteTime.dwHighDateTime;
+	    BasicInformation->LastWriteTime.u.LowPart = SubKeyCell->LastWriteTime.u.LowPart;
+	    BasicInformation->LastWriteTime.u.HighPart = SubKeyCell->LastWriteTime.u.HighPart;
 	    BasicInformation->TitleIndex = Index;
 	    BasicInformation->NameLength = NameSize;
 
@@ -420,8 +420,8 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 	  {
 	    /* Fill buffer with requested info */
 	    NodeInformation = (PKEY_NODE_INFORMATION) KeyInformation;
-	    NodeInformation->LastWriteTime.u.LowPart = SubKeyCell->LastWriteTime.dwLowDateTime;
-	    NodeInformation->LastWriteTime.u.HighPart = SubKeyCell->LastWriteTime.dwHighDateTime;
+	    NodeInformation->LastWriteTime.u.LowPart = SubKeyCell->LastWriteTime.u.LowPart;
+	    NodeInformation->LastWriteTime.u.HighPart = SubKeyCell->LastWriteTime.u.HighPart;
 	    NodeInformation->TitleIndex = Index;
 	    NodeInformation->ClassOffset = sizeof(KEY_NODE_INFORMATION) + NameSize;
 	    NodeInformation->ClassLength = SubKeyCell->ClassSize;
@@ -465,8 +465,8 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 	  {
 	    /* Fill buffer with requested info */
 	    FullInformation = (PKEY_FULL_INFORMATION) KeyInformation;
-	    FullInformation->LastWriteTime.u.LowPart = SubKeyCell->LastWriteTime.dwLowDateTime;
-	    FullInformation->LastWriteTime.u.HighPart = SubKeyCell->LastWriteTime.dwHighDateTime;
+	    FullInformation->LastWriteTime.u.LowPart = SubKeyCell->LastWriteTime.u.LowPart;
+	    FullInformation->LastWriteTime.u.HighPart = SubKeyCell->LastWriteTime.u.HighPart;
 	    FullInformation->TitleIndex = Index;
 	    FullInformation->ClassOffset = sizeof(KEY_FULL_INFORMATION) -
 	      sizeof(WCHAR);
@@ -491,6 +491,10 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 			SubKeyCell->ClassSize);
 	      }
 	  }
+	break;
+
+  default:
+    DPRINT1("Not handling 0x%x\n", KeyInformationClass);
 	break;
     }
 
@@ -706,6 +710,10 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
                 }
             }
           break;
+
+          default:
+            DPRINT1("Not handling 0x%x\n", KeyValueInformationClass);
+        	break;
         }
     }
   else
@@ -885,8 +893,8 @@ NtQueryKey(IN HANDLE KeyHandle,
 	  {
 	    /* Fill buffer with requested info */
 	    BasicInformation = (PKEY_BASIC_INFORMATION) KeyInformation;
-	    BasicInformation->LastWriteTime.u.LowPart = KeyCell->LastWriteTime.dwLowDateTime;
-	    BasicInformation->LastWriteTime.u.HighPart = KeyCell->LastWriteTime.dwHighDateTime;
+	    BasicInformation->LastWriteTime.u.LowPart = KeyCell->LastWriteTime.u.LowPart;
+	    BasicInformation->LastWriteTime.u.HighPart = KeyCell->LastWriteTime.u.HighPart;
 	    BasicInformation->TitleIndex = 0;
 	    BasicInformation->NameLength = KeyObject->Name.Length;
 	    RtlCopyMemory(BasicInformation->Name,
@@ -908,8 +916,8 @@ NtQueryKey(IN HANDLE KeyHandle,
 	  {
 	    /* Fill buffer with requested info */
 	    NodeInformation = (PKEY_NODE_INFORMATION) KeyInformation;
-	    NodeInformation->LastWriteTime.u.LowPart = KeyCell->LastWriteTime.dwLowDateTime;
-	    NodeInformation->LastWriteTime.u.HighPart = KeyCell->LastWriteTime.dwHighDateTime;
+	    NodeInformation->LastWriteTime.u.LowPart = KeyCell->LastWriteTime.u.LowPart;
+	    NodeInformation->LastWriteTime.u.HighPart = KeyCell->LastWriteTime.u.HighPart;
 	    NodeInformation->TitleIndex = 0;
 	    NodeInformation->ClassOffset = sizeof(KEY_NODE_INFORMATION) +
 	      KeyObject->Name.Length;
@@ -944,8 +952,8 @@ NtQueryKey(IN HANDLE KeyHandle,
 	  {
 	    /* Fill buffer with requested info */
 	    FullInformation = (PKEY_FULL_INFORMATION) KeyInformation;
-	    FullInformation->LastWriteTime.u.LowPart = KeyCell->LastWriteTime.dwLowDateTime;
-	    FullInformation->LastWriteTime.u.HighPart = KeyCell->LastWriteTime.dwHighDateTime;
+	    FullInformation->LastWriteTime.u.LowPart = KeyCell->LastWriteTime.u.LowPart;
+	    FullInformation->LastWriteTime.u.HighPart = KeyCell->LastWriteTime.u.HighPart;
 	    FullInformation->TitleIndex = 0;
 	    FullInformation->ClassOffset = sizeof(KEY_FULL_INFORMATION) - sizeof(WCHAR);
 	    FullInformation->ClassLength = KeyCell->ClassSize;
@@ -969,6 +977,9 @@ NtQueryKey(IN HANDLE KeyHandle,
 			KeyCell->ClassSize);
 	      }
 	  }
+	break;
+  default:
+    DPRINT1("Not handling 0x%x\n", KeyInformationClass);
 	break;
     }
 
@@ -1176,6 +1187,9 @@ NtQueryValueKey(IN HANDLE KeyHandle,
                 }
             }
           break;
+          default:
+            DPRINT1("Not handling 0x%x\n", KeyValueInformationClass);
+        	break;
         }
     }
   else
@@ -1303,7 +1317,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
       /* Update time of heap */
       if (!IsNoFileHive(RegistryHive))
 	{
-	  NtQuerySystemTime((PTIME) &pBin->DateModified);
+	  NtQuerySystemTime(&pBin->DateModified);
 	}
       CmiMarkBlockDirty(RegistryHive, ValueCell->DataOffset);
     }
@@ -1358,7 +1372,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
   /* Update time of heap */
   if (!IsNoFileHive(RegistryHive) && CmiGetBlock(RegistryHive, VBOffset, &pBin))
     {
-      NtQuerySystemTime((PTIME) &pBin->DateModified);
+      NtQuerySystemTime(&pBin->DateModified);
     }
 
   ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);

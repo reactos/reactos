@@ -18,7 +18,7 @@ typedef enum _DEBUG_CONTROL_CODE
 {
   DebugGetTraceInformation = 1,
   DebugSetInternalBreakpoint,
-  DebugSetSpecialCalls,
+  DebugSetSpecialCall,
   DebugClearSpecialCalls,
   DebugQuerySpecialCalls,
   DebugDbgBreakPoint,
@@ -1672,5 +1672,80 @@ ObRosCreateObject(OUT PHANDLE Handle,
   IN POBJECT_ATTRIBUTES ObjectAttributes,
   IN POBJECT_TYPE Type,
   OUT PVOID *Object);
+
+/* BEGIN REACTOS ONLY */
+
+typedef enum _TRAVERSE_METHOD {
+  TraverseMethodPreorder,
+  TraverseMethodInorder,
+  TraverseMethodPostorder
+} TRAVERSE_METHOD;
+
+typedef LONG STDCALL_FUNC
+(*PKEY_COMPARATOR)(IN PVOID  Key1,
+  IN PVOID  Key2);
+
+typedef BOOLEAN STDCALL_FUNC
+(*PTRAVERSE_ROUTINE)(IN PVOID  Context,
+  IN PVOID  Key,
+  IN PVOID  Value);
+
+struct _BINARY_TREE_NODE;
+
+typedef struct _BINARY_TREE
+{
+  struct _BINARY_TREE_NODE  * RootNode;
+  PKEY_COMPARATOR  Compare;
+  BOOLEAN  UseNonPagedPool;
+  union {
+    NPAGED_LOOKASIDE_LIST  NonPaged;
+    PAGED_LOOKASIDE_LIST  Paged;
+  } List;
+  union {
+    KSPIN_LOCK  NonPaged;
+    FAST_MUTEX  Paged;
+  } Lock;
+} BINARY_TREE, *PBINARY_TREE;
+
+
+struct _SPLAY_TREE_NODE;
+
+typedef struct _SPLAY_TREE
+{
+  struct _SPLAY_TREE_NODE  * RootNode;
+  PKEY_COMPARATOR  Compare;
+  BOOLEAN  Weighted;
+  BOOLEAN  UseNonPagedPool;
+  union {
+    NPAGED_LOOKASIDE_LIST  NonPaged;
+    PAGED_LOOKASIDE_LIST  Paged;
+  } List;
+  union {
+    KSPIN_LOCK  NonPaged;
+    FAST_MUTEX  Paged;
+  } Lock;
+  PVOID  Reserved[4];
+} SPLAY_TREE, *PSPLAY_TREE;
+
+
+typedef struct _HASH_TABLE
+{
+  // Size of hash table in number of bits
+  ULONG  HashTableSize;
+
+  // Use non-paged pool memory?
+  BOOLEAN  UseNonPagedPool;
+
+  // Lock for this structure
+  union {
+    KSPIN_LOCK  NonPaged;
+    FAST_MUTEX  Paged;
+  } Lock;
+
+  // Pointer to array of hash buckets with splay trees
+  PSPLAY_TREE  HashTrees;
+} HASH_TABLE, *PHASH_TABLE;
+
+/* END REACTOS ONLY */
 
 #endif

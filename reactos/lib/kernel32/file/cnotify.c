@@ -1,4 +1,4 @@
-/* $Id: cnotify.c,v 1.5 2003/03/23 19:51:11 gdalsnes Exp $
+/* $Id: cnotify.c,v 1.6 2003/06/07 16:16:39 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -87,7 +87,7 @@ FindFirstChangeNotificationW (
                                           NULL,
                                           NULL))
    {
-      SetLastErrorByStatus(STATUS_PATH_SYNTAX_BAD);
+      SetLastErrorByStatus(STATUS_OBJECT_PATH_SYNTAX_BAD);
       return INVALID_HANDLE_VALUE;
    }
 

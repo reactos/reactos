@@ -3,15 +3,6 @@
 
 #ifndef __ASM__
 
-#define NTSTAT_SEVERITY_SHIFT 30
-#define NTSTAT_SEVERITY_MASK  0x00000003
-#define NTSTAT_FACILITY_SHIFT 16
-#define NTSTAT_FACILITY_MASK  0x00000FFF
-#define NTSTAT_CUSTOMER_MASK  0x20000000
-
-#define NT_SEVERITY(StatCode) (((StatCode) >> NTSTAT_SEVERITY_SHIFT) & NTSTAT_SEVERITY_MASK)
-#define NT_FACILITY(StatCode) (((StatCode) >> NTSTAT_FACILITY_SHIFT) & NTSTAT_FACILITY_MASK)
-#define NT_CUSTOMER(StatCode) ((StatCode) & NTSTAT_CUSTOMER_MASK)
 #define NT_SUCCESS(StatCode)  ((NTSTATUS)(StatCode) >= 0)
 
 /*
@@ -192,7 +183,7 @@
 #define STATUS_DEVICE_ALREADY_ATTACHED              ((NTSTATUS)0xc0000038)
 #define STATUS_OBJECT_PATH_INVALID                  ((NTSTATUS)0xc0000039)
 #define STATUS_OBJECT_PATH_NOT_FOUND                ((NTSTATUS)0xc000003a)
-#define STATUS_PATH_SYNTAX_BAD                      ((NTSTATUS)0xc000003b)
+#define STATUS_OBJECT_PATH_SYNTAX_BAD               ((NTSTATUS)0xc000003b)
 #define STATUS_DATA_OVERRUN                         ((NTSTATUS)0xc000003c)
 #define STATUS_DATA_LATE_ERROR                      ((NTSTATUS)0xc000003d)
 #define STATUS_DATA_ERROR                           ((NTSTATUS)0xc000003e)
@@ -696,15 +687,6 @@
 
 
 #define RPC_NT_SS_IN_NULL_CONTEXT                   ((NTSTATUS)0xC0030004)
-
-
-/* FIXME: Are these official values ?? */
-#define STATUS_FS_QUERY_REQUIRED                    ((NTSTATUS)0xC1000001)
-#define STATUS_HANDLE_NOT_WAITABLE                  ((NTSTATUS)0xC1000002)
-#define STATUS_OBJECT_FILE_MISMATCH                 ((NTSTATUS)0xC1000003)
-#define STATUS_INVALID_PARAMETER_MAX                ((NTSTATUS)0xC1000004)
-#define STATUS_CONFLICTING_ADDRESS                  ((NTSTATUS)0xC1000005)
-#define STATUS_NO_MEDIA_IN_DRIVE                    ((NTSTATUS)0xC1000006)
 
 #else /* !__ASM__ */
 

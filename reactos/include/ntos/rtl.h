@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.11 2003/06/07 11:29:30 ekohl Exp $
+/* $Id: rtl.h,v 1.12 2003/06/07 16:16:38 chorns Exp $
  * 
  */
 
@@ -394,7 +394,7 @@ NTSTATUS
 STDCALL
 RtlQueryRegistryValues (
 	IN	ULONG				RelativeTo,
-	IN	PWSTR				Path,
+	IN	PCWSTR				Path,
 	IN	PRTL_QUERY_REGISTRY_TABLE	QueryTable,
 	IN	PVOID				Context,
 	IN	PVOID				Environment
@@ -404,8 +404,8 @@ NTSTATUS
 STDCALL
 RtlWriteRegistryValue (
 	ULONG	RelativeTo,
-	PWSTR	Path,
-	PWSTR	ValueName,
+	PCWSTR	Path,
+	PCWSTR	ValueName,
 	ULONG	ValueType,
 	PVOID	ValueData,
 	ULONG	ValueLength
@@ -413,8 +413,8 @@ RtlWriteRegistryValue (
 
 NTSTATUS STDCALL
 RtlDeleteRegistryValue(IN ULONG RelativeTo,
-		       IN PWSTR Path,
-		       IN PWSTR ValueName);
+		       IN PCWSTR Path,
+		       IN PCWSTR ValueName);
 
 VOID STDCALL
 RtlMoveMemory (PVOID Destination, CONST VOID* Source, ULONG Length);

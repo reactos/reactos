@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.19 2002/10/28 15:50:25 robd Exp $
+/* $Id: registry.c,v 1.20 2003/06/07 16:16:39 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -72,8 +72,8 @@ RtlCreateRegistryKey(IN ULONG RelativeTo,
 
 NTSTATUS STDCALL
 RtlDeleteRegistryValue(IN ULONG RelativeTo,
-		       IN PWSTR Path,
-		       IN PWSTR ValueName)
+		       IN PCWSTR Path,
+		       IN PCWSTR ValueName)
 {
   HANDLE KeyHandle;
   NTSTATUS Status;
@@ -149,7 +149,7 @@ RtlOpenCurrentUser(IN ACCESS_MASK DesiredAccess,
 
 NTSTATUS STDCALL
 RtlQueryRegistryValues(IN ULONG RelativeTo,
-		       IN PWSTR Path,
+		       IN PCWSTR Path,
 		       IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
 		       IN PVOID Context,
 		       IN PVOID Environment)
@@ -658,8 +658,8 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 
 NTSTATUS STDCALL
 RtlWriteRegistryValue(IN ULONG RelativeTo,
-		      IN PWSTR Path,
-		      IN PWSTR ValueName,
+		      IN PCWSTR Path,
+		      IN PCWSTR ValueName,
 		      IN ULONG ValueType,
 		      IN PVOID ValueData,
 		      IN ULONG ValueLength)

@@ -5,8 +5,8 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_EXECUTIVE_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_EXECUTIVE_H
 
-#include <ddk/ntddk.h>
-#include <ntos/time.h>
+#define NTOS_MODE_KERNEL
+#include <ntos.h>
 
 typedef struct _WINSTATION_OBJECT
 {   

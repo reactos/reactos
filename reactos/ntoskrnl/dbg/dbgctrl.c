@@ -46,7 +46,7 @@ NtSystemDebugControl(DEBUG_CONTROL_CODE ControlCode,
   switch (ControlCode) {
     case DebugGetTraceInformation:
     case DebugSetInternalBreakpoint:
-    case DebugSetSpecialCalls:
+    case DebugSetSpecialCall:
     case DebugClearSpecialCalls:
     case DebugQuerySpecialCalls:
     case DebugDbgBreakPoint:

@@ -47,7 +47,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-typedef int LONG32, *PLONG32;
+typedef long LONG32, *PLONG32;
 #ifndef XFree86Server
 typedef int INT32, *PINT32;
 #endif /* ndef XFree86Server */

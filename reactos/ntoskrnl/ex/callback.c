@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: callback.c,v 1.8 2002/09/08 10:23:19 chorns Exp $
+/* $Id: callback.c,v 1.9 2003/06/07 16:16:39 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/callback.c
@@ -56,7 +56,7 @@ ExCreateCallback (
 VOID
 STDCALL
 ExNotifyCallback (
-	IN	PVOID	CallbackObject,
+	IN	PCALLBACK_OBJECT	CallbackObject,
 	IN	PVOID	Argument1,
 	IN	PVOID	Argument2
 	)

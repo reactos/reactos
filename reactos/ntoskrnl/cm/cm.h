@@ -64,7 +64,7 @@ typedef struct _HIVE_HEADER
   ULONG  UpdateCounter2;
 
   /* When this hive file was last modified */
-  FILETIME  DateModified;
+  LARGE_INTEGER  DateModified;
 
   /* Registry format version ? (1?) */
   ULONG  Unused3;
@@ -113,7 +113,7 @@ typedef struct _HBIN
   ULONG  Unused1;
 
   /* When this bin was last modified */
-  FILETIME  DateModified;
+  LARGE_INTEGER  DateModified;
 
   /* ? */
   ULONG  Unused2;
@@ -137,7 +137,7 @@ typedef struct _KEY_CELL
   USHORT  Flags;
 
   /* Time of last flush */
-  FILETIME  LastWriteTime;
+  LARGE_INTEGER  LastWriteTime;
 
   /* ? */
   ULONG  UnUsed1;
