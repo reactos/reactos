@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.92 2004/06/25 19:05:20 ekohl Exp $
+/* $Id: utils.c,v 1.93 2004/06/26 11:23:32 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1289,6 +1289,7 @@ LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders,
               RelocationRVA += RelocationDir->SizeOfBlock;
               RelocationDir =
                 (PRELOCATION_DIRECTORY) (ImageBase + RelocationRVA);
+              RelocationBlockOffset += RelocationDir->SizeOfBlock;
               continue;
             }
 
@@ -1333,6 +1334,7 @@ LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders,
                       return(Status);
                     }
               }
+
           for (i = 0; i < NumberOfEntries; i++)
             {
               Offset = (RelocationBlock[i].TypeOffset & 0xfff);
