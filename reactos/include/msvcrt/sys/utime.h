@@ -18,9 +18,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.1 $
+ * $Revision: 1.2 $
  * $Author: ekohl $
- * $Date: 2001/07/03 13:07:12 $
+ * $Date: 2001/07/03 22:16:07 $
  *
  */
 
@@ -48,10 +48,10 @@ struct _utimbuf
 };
 
 int	_utime (const char* szFileName, struct _utimbuf* pTimes);
-int     _futime (int nHandle, struct _utimbuf *pTimes);
+int	_futime (int nHandle, struct _utimbuf *pTimes);
 
 /* Wide character version */
-int     _wutime (const wchar_t *szFileName, struct _utimbuf *times);
+int	_wutime (const wchar_t *szFileName, struct _utimbuf *times);
 
 #ifndef	_NO_OLDNAMES
 

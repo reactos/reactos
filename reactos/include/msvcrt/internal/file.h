@@ -52,6 +52,7 @@ int _doscan(FILE *iop, const char *fmt, va_list argp);
 
 
 int __fileno_dup2( int handle1, int handle2 );
+int __fileno_getmode(int _fd);
 int __fileno_setmode(int _fd, int _newmode);
 int __fileno_close(int _fd);
 

@@ -41,9 +41,6 @@ char __is_text_file(FILE *p)
 }
 
 
-int __fileno_alloc(HANDLE hFile, int mode);
-
-
 int _open(const char *_path, int _oflag,...)
 {
    HANDLE hFile;

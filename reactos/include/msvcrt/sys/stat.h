@@ -19,9 +19,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.1 $
+ * $Revision: 1.2 $
  * $Author: ekohl $
- * $Date: 2001/07/03 13:07:12 $
+ * $Date: 2001/07/03 22:16:07 $
  *
  */
 
@@ -35,6 +35,19 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif
+
+#ifndef _WCHAR_T_
+#define _WCHAR_T_
+#define _WCHAR_T
+#define _WCHAR_T_DEFINED
+#ifndef __WCHAR_TYPE__
+#define	__WCHAR_TYPE__		short unsigned int
+#endif
+#ifndef __cplusplus
+typedef __WCHAR_TYPE__		wchar_t;
+#endif	/* C++ */
+#endif	/* wchar_t not already defined */
+
 
 /*
  * Constants for the stat st_mode member.
@@ -89,17 +102,33 @@ struct stat
 	time_t	st_ctime;	/* Creation time */
 };
 
+struct _stati64
+{
+	short	st_dev;		/* Equivalent to drive number 0=A 1=B ... */
+	short	st_ino;		/* Always zero ? */
+	short	st_mode;	/* See above constants */
+	short	st_nlink;	/* Number of links. */
+	int	st_uid;		/* User: Maybe significant on NT ? */
+	short	st_gid;		/* Group: Ditto */
+	short	st_rdev;	/* Seems useless (not even filled in) */
+	__int64	st_size;	/* File size in bytes */
+	time_t	st_atime;	/* Accessed date (always 00:00 hrs local
+				 * on FAT) */
+	time_t	st_mtime;	/* Modified time */
+	time_t	st_ctime;	/* Creation time */
+};
 
 int	_fstat (int nFileNo, struct stat* pstat);
-int	_chmod (const char* szPath, int nMode);
+__int64	_fstati64 (int nFileNo, struct _stati64* pstat);
 int	_stat (const char* szPath, struct stat* pstat);
-
+__int64	_stati64 (const char* szPath, struct _stati64* pstat);
+int	_wstat (const wchar_t* szPath, struct stat* pstat);
+__int64	_wstati64 (const wchar_t* szPath, struct _stati64* pstat);
 
 #ifndef	_NO_OLDNAMES
 
-#define	fstat(nFileNo, pstat)   _fstat(nFileNo, pstat)
-#define	chmod(szPath,nMode) 	_chmod(szPath,nMode)
-#define	stat(szPath,pstat) 	_stat(szPath,pstat)
+#define	fstat(nFileNo, pstat)	_fstat(nFileNo, pstat)
+#define	stat(szPath,pstat)	_stat(szPath,pstat)
 
 #endif	/* Not _NO_OLDNAMES */
 

@@ -18,14 +18,19 @@
  *  DISCLAMED. This includes but is not limited to warrenties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.1 $
+ * $Revision: 1.2 $
  * $Author: ekohl $
- * $Date: 2001/07/03 13:07:12 $
+ * $Date: 2001/07/03 22:16:07 $
  *
  */
 
 #ifndef	_TYPES_H_
 #define	_TYPES_H_
+
+#ifdef	__GNUC__
+#undef	__int64
+#define	__int64	long long
+#endif
 
 #ifndef	_TIME_T_
 #define	_TIME_T_

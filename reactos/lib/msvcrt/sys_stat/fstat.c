@@ -16,8 +16,7 @@
 #include <msvcrt/internal/file.h>
 
 
-int
-_fstat(int fd, struct stat *statbuf)
+int _fstat(int fd, struct stat *statbuf)
 {
   BY_HANDLE_FILE_INFORMATION  FileInformation;
 
@@ -38,5 +37,31 @@ _fstat(int fd, struct stat *statbuf)
 
   statbuf->st_dev = fd;
   statbuf->st_size = FileInformation.nFileSizeLow;
+  return 0;
+}
+
+__int64 _fstati64 (int fd, struct _stati64* statbuf)
+{
+  BY_HANDLE_FILE_INFORMATION FileInformation;
+
+  if (!statbuf)
+    {
+      __set_errno(EINVAL);
+      return -1;
+    }
+
+  if (!GetFileInformationByHandle(_get_osfhandle(fd),
+				  &FileInformation))
+    {
+      __set_errno(EBADF);
+      return -1;
+    }
+  statbuf->st_ctime = FileTimeToUnixTime(&FileInformation.ftCreationTime,NULL);
+  statbuf->st_atime = FileTimeToUnixTime(&FileInformation.ftLastAccessTime,NULL);
+  statbuf->st_mtime = FileTimeToUnixTime(&FileInformation.ftLastWriteTime,NULL);
+
+  statbuf->st_dev = fd;
+  statbuf->st_size = (((__int64)FileInformation.nFileSizeHigh) << 32) +
+		     FileInformation.nFileSizeLow;
   return 0;
 }

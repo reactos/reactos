@@ -18,9 +18,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.1 $
+ * $Revision: 1.2 $
  * $Author: ekohl $
- * $Date: 2001/07/03 12:55:00 $
+ * $Date: 2001/07/03 22:15:02 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
@@ -66,13 +66,15 @@ extern "C" {
 #endif
 
 int		_access (const char* szFileName, int nAccessMode);
+int		_chmod (const char* szPath, int nMode);
 int		_chsize (int nHandle, long lnNewSize);
 int		_close (int nHandle);
-int 		_commit(int _fd);
+int		_commit(int _fd);
 int		_creat (const char* szFileName, int nAccessMode);
 int		_dup (int nHandle);
 int		_dup2 (int nOldHandle, int nNewHandle);
 long		_filelength (int nHandle);
+__int64		_filelengthi64(int nHandle);
 int		_fileno (FILE* fileGetHandle);
 void*		_get_osfhandle (int nHandle);
 int		_isatty (int nHandle);
@@ -90,6 +92,7 @@ int		_eof (int nHandle);
 int		_locking (int nHandle, int nCmd, long lnLockRegionLength);
 
 off_t		_lseek(int _fd, off_t _offset, int _whence);
+__int64		_lseeki64(int _fildes, __int64 _offset, int _whence);
 int		_open (const char* szFileName, int nFlags, ...);
 int		_open_osfhandle (void *lnOSHandle, int nFlags);
 int		_pipe (int *naHandles, unsigned int unSize, int nMode);
@@ -98,10 +101,22 @@ size_t		_read(int _fd, void *_buf, size_t _nbyte);
 /* SH_... flags for nFlag defined in share.h */
 int		_sopen (char* szFileName, int nAccess, int nFlag, int nMode);
 
-long		_tell (int nHandle);
-unsigned	_umask (unsigned unMode);
-int		_unlink (const char* szFileName);
+long		_tell(int nHandle);
+__int64		_telli64(int nHandle);
+unsigned	_umask(unsigned unMode);
+int		_unlink(const char* szFileName);
 size_t		_write(int _fd, const void *_buf, size_t _nbyte);
+
+
+/* wide character functions */
+int		_waccess(const wchar_t *_path, int _amode);
+int		_wchmod(const wchar_t *filename, int mode);
+int		_wcreat(const wchar_t *filename, int mode);
+
+int		_wopen(const wchar_t *_path, int _oflag,...);
+int		_wsopen(wchar_t *path, int access, int shflag, int mode);
+int		_wunlink(const wchar_t *filename);
+
 
 #ifndef	_NO_OLDNAMES
 /*
@@ -109,25 +124,25 @@ size_t		_write(int _fd, const void *_buf, size_t _nbyte);
  * These functions live in libmoldname.a.
  */
 
-#define access 		_access
-#define chsize 		_chsize 
-#define close		_close
-#define creat 		_creat
-#define	dup 		_dup
-#define	dup2 		_dup2
+#define	access		_access
+#define	chmod		_chmod
+#define	chsize		_chsize
+#define	close		_close
+#define	creat		_creat
+#define	dup		_dup
+#define	dup2		_dup2
 #define	eof		_eof
-#define	filelength 	_filelength
-#define fileno(f)	((f)->_file)
-#define	isatty 		_isatty
-#define	lseek 		_lseek
-#define	open 		_open
-#define	read 		_read
-#define	sopen(path,access,shflag,mode) 	_open((path), (access)|(shflag), (mode))
-#define	tell(file) 			_lseek(_file, 0, SEEK_CUR)
-#define	umask 		_umask
+#define	filelength	_filelength
+#define	fileno(f)	((f)->_file)
+#define	isatty		_isatty
+#define	lseek		_lseek
+#define	open		_open
+#define	read		_read
+#define	sopen(path,access,shflag,mode)	_open((path), (access)|(shflag), (mode))
+#define	tell(file)			_lseek(_file, 0, SEEK_CUR)
+#define	umask		_umask
 #define	unlink		_unlink
-#define	write 		_write
-		
+#define	write		_write
 
 #endif	/* Not _NO_OLDNAMES */
 

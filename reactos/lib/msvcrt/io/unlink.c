@@ -17,3 +17,10 @@ int _unlink(const char *filename)
     return -1;
   return 0;
 }
+
+int _wunlink(const wchar_t *filename)
+{
+  if (!DeleteFileW(filename))
+    return -1;
+  return 0;
+}
