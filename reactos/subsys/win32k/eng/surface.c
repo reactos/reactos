@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: surface.c,v 1.47 2004/12/18 17:12:32 royce Exp $
+/* $Id: surface.c,v 1.48 2004/12/27 16:45:19 navaraf Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -60,6 +60,7 @@ ULONG FASTCALL BitmapFormat(WORD Bits, DWORD Compression)
   switch(Compression)
   {
     case BI_RGB:
+    case BI_BITFIELDS:
       switch(Bits)
       {
         case 1: return BMF_1BPP;
