@@ -119,9 +119,11 @@ typedef struct _HANDLE_TABLE
     ERESOURCE HandleTableLock;
     LIST_ENTRY HandleTableList;
     KEVENT HandleContentionEvent;
-} HANDLE_TABLE, *PHANDLE_TABLE;
+} HANDLE_TABLE;
 
 #ifndef __USE_W32API
+
+typedef struct _HANDLE_TABLE *PHANDLE_TABLE;
 
 /*
  * FIXME: These will eventually become centerfold in the compliant Ob Manager
