@@ -819,7 +819,10 @@ static BOOL PROFILE_Open( LPCWSTR filename )
                 MRUProfile[j] = MRUProfile[j-1];
              CurProfile=tempProfile;
           }
-          GetFileTime(hFile, NULL, NULL, &LastWriteTime);
+          if (hFile != INVALID_HANDLE_VALUE)
+             GetFileTime(hFile, NULL, NULL, &LastWriteTime);
+          else
+             LastWriteTime.dwHighDateTime = LastWriteTime.dwLowDateTime = 0;
           if (memcmp(&CurProfile->LastWriteTime, &LastWriteTime, sizeof(FILETIME)))
           {
              DPRINT("(%S): already opened (mru = %d)\n",
@@ -830,9 +833,10 @@ static BOOL PROFILE_Open( LPCWSTR filename )
               DPRINT("(%S): already opened, needs refreshing (mru = %d)\n",
                      buffer, i );
           }
-          CloseHandle(hFile);
+          if (hFile != INVALID_HANDLE_VALUE)
+             CloseHandle(hFile);
           return TRUE;
-        }
+       }
     }
 
     /* Flush the old current profile */
