@@ -376,7 +376,7 @@ UINT
 STDCALL
 W32kGetOutlineTextMetrics(HDC  hDC,
                                 UINT  Data,
-                                LPOUTLINETEXTMETRIC  otm)
+                                LPOUTLINETEXTMETRICW  otm)
 {
   UNIMPLEMENTED;
 }
@@ -485,13 +485,13 @@ W32kGetTextFace(HDC  hDC,
 BOOL
 STDCALL
 W32kGetTextMetrics(HDC  hDC,
-                         LPTEXTMETRIC  tm)
+                         LPTEXTMETRICW  tm)
 {
   PDC dc = (PDC)AccessUserObject(hDC);
   PFONTGDI FontGDI;
 
   FontGDI = (PFONTGDI)AccessInternalObject(dc->w.hFont);
-  memcpy(tm, &FontGDI->TextMetric, sizeof(TEXTMETRIC));
+  memcpy(tm, &FontGDI->TextMetric, sizeof(TEXTMETRICW));
 
   return TRUE;
 }

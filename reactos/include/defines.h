@@ -957,6 +957,7 @@ extern "C" {
 #define DT_TOP	(0)
 #define DT_VCENTER	(4)
 #define DT_WORDBREAK	(16)
+#define DT_WORD_ELLIPSIS	(262144)
 #define DT_INTERNAL	(4096)
 
 

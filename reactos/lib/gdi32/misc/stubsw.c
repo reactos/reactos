@@ -1,4 +1,4 @@
-/* $Id: stubsw.c,v 1.7 2002/09/08 10:22:40 chorns Exp $
+/* $Id: stubsw.c,v 1.8 2003/03/25 22:35:19 gvg Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -236,7 +236,7 @@ APIENTRY
 GetOutlineTextMetricsW(
 	HDC			a0,
 	UINT			a1,
-	LPOUTLINETEXTMETRIC	a2
+	LPOUTLINETEXTMETRICW	a2
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

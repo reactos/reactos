@@ -2715,7 +2715,7 @@ typedef struct tagNEWCPLINFO {
   TCHAR  szHelpFile[128];
 } NEWCPLINFO;
 
-typedef struct tagNEWTEXTMETRIC {
+typedef struct tagNEWTEXTMETRICA {
   LONG   tmHeight;
   LONG   tmAscent;
   LONG   tmDescent;
@@ -2740,13 +2740,56 @@ typedef struct tagNEWTEXTMETRIC {
   UINT   ntmSizeEM;
   UINT   ntmCellHeight;
   UINT   ntmAvgWidth;
-} NEWTEXTMETRIC;
+} NEWTEXTMETRICA;
 
+typedef struct tagNEWTEXTMETRICW {
+  LONG   tmHeight;
+  LONG   tmAscent;
+  LONG   tmDescent;
+  LONG   tmInternalLeading;
+  LONG   tmExternalLeading;
+  LONG   tmAveCharWidth;
+  LONG   tmMaxCharWidth;
+  LONG   tmWeight;
+  LONG   tmOverhang;
+  LONG   tmDigitizedAspectX;
+  LONG   tmDigitizedAspectY;
+  WCHAR  tmFirstChar;
+  WCHAR  tmLastChar;
+  WCHAR  tmDefaultChar;
+  WCHAR  tmBreakChar;
+  BYTE   tmItalic;
+  BYTE   tmUnderlined;
+  BYTE   tmStruckOut;
+  BYTE   tmPitchAndFamily;
+  BYTE   tmCharSet;
+  DWORD  ntmFlags;
+  UINT   ntmSizeEM;
+  UINT   ntmCellHeight;
+  UINT   ntmAvgWidth;
+} NEWTEXTMETRICW;
 
-typedef struct tagNEWTEXTMETRICEX {
-  NEWTEXTMETRIC  ntmentm;
+#ifdef UNICODE
+typedef NEWTEXTMETRICA NEWTEXTMETRIC;
+#else
+typedef NEWTEXTMETRICW NEWTEXTMETRIC;
+#endif
+
+typedef struct tagNEWTEXTMETRICEXA {
+  NEWTEXTMETRICA ntmentm;
   FONTSIGNATURE  ntmeFontSignature;
-} NEWTEXTMETRICEX;
+} NEWTEXTMETRICEXA;
+
+typedef struct tagNEWTEXTMETRICEXW {
+  NEWTEXTMETRICW ntmentm;
+  FONTSIGNATURE  ntmeFontSignature;
+} NEWTEXTMETRICEXW;
+
+#ifdef UNICODE
+typedef NEWTEXTMETRICEXA NEWTEXTMETRICEX;
+#else
+typedef NEWTEXTMETRICEXW NEWTEXTMETRICEX;
+#endif
 
 typedef struct tagNM_LISTVIEW {
   NMHDR hdr;
@@ -2974,7 +3017,7 @@ typedef OSVERSIONINFOEXA OSVERSIONINFOEX;
 typedef OSVERSIONINFOEXW OSVERSIONINFOEX;
 #endif
 
-typedef struct tagTEXTMETRIC {
+typedef struct tagTEXTMETRICA {
   LONG tmHeight;
   LONG tmAscent;
   LONG tmDescent;
@@ -2995,11 +3038,42 @@ typedef struct tagTEXTMETRIC {
   BYTE tmStruckOut;
   BYTE tmPitchAndFamily;
   BYTE tmCharSet;
-} TEXTMETRIC, *LPTEXTMETRIC;
+} TEXTMETRICA, *LPTEXTMETRICA;
 
-typedef struct _OUTLINETEXTMETRIC {
+typedef struct tagTEXTMETRICW {
+  LONG tmHeight;
+  LONG tmAscent;
+  LONG tmDescent;
+  LONG tmInternalLeading;
+  LONG tmExternalLeading;
+  LONG tmAveCharWidth;
+  LONG tmMaxCharWidth;
+  LONG tmWeight;
+  LONG tmOverhang;
+  LONG tmDigitizedAspectX;
+  LONG tmDigitizedAspectY;
+  WCHAR tmFirstChar;
+  WCHAR tmLastChar;
+  WCHAR tmDefaultChar;
+  BCHAR tmBreakChar;
+  BYTE tmItalic;
+  BYTE tmUnderlined;
+  BYTE tmStruckOut;
+  BYTE tmPitchAndFamily;
+  BYTE tmCharSet;
+} TEXTMETRICW, *LPTEXTMETRICW;
+
+#ifdef UNICODE
+typedef TEXTMETRICA TEXTMETRIC;
+typedef LPTEXTMETRICA LPTEXTMETRIC;
+#else
+typedef TEXTMETRICW TEXTMETRIC;
+typedef LPTEXTMETRICA LPTEXTMETRIC;
+#endif
+
+typedef struct _OUTLINETEXTMETRICA {
   UINT   otmSize;
-  TEXTMETRIC otmTextMetrics;
+  TEXTMETRICA otmTextMetrics;
   BYTE   otmFiller;
   PANOSE otmPanoseNumber;
   UINT   otmfsSelection;
@@ -3030,7 +3104,50 @@ typedef struct _OUTLINETEXTMETRIC {
   PSTR   otmpFaceName;
   PSTR   otmpStyleName;
   PSTR   otmpFullName;
-} OUTLINETEXTMETRIC, *LPOUTLINETEXTMETRIC;
+} OUTLINETEXTMETRICA, *LPOUTLINETEXTMETRICA;
+
+typedef struct _OUTLINETEXTMETRICW {
+  UINT   otmSize;
+  TEXTMETRICW otmTextMetrics;
+  BYTE   otmFiller;
+  PANOSE otmPanoseNumber;
+  UINT   otmfsSelection;
+  UINT   otmfsType;
+  int    otmsCharSlopeRise;
+  int    otmsCharSlopeRun;
+  int    otmItalicAngle;
+  UINT   otmEMSquare;
+  int    otmAscent;
+  int    otmDescent;
+  UINT   otmLineGap;
+  UINT   otmsCapEmHeight;
+  UINT   otmsXHeight;
+  RECT   otmrcFontBox;
+  int    otmMacAscent;
+  int    otmMacDescent;
+  UINT   otmMacLineGap;
+  UINT   otmusMinimumPPEM;
+  POINT  otmptSubscriptSize;
+  POINT  otmptSubscriptOffset;
+  POINT  otmptSuperscriptSize;
+  POINT  otmptSuperscriptOffset;
+  UINT   otmsStrikeoutSize;
+  int    otmsStrikeoutPosition;
+  int    otmsUnderscoreSize;
+  int    otmsUnderscorePosition;
+  PSTR   otmpFamilyName;
+  PSTR   otmpFaceName;
+  PSTR   otmpStyleName;
+  PSTR   otmpFullName;
+} OUTLINETEXTMETRICW, *LPOUTLINETEXTMETRICW;
+
+#ifdef UNICODE
+typedef OUTLINETEXTMETRICA OUTLINETEXTMETRIC;
+typedef LPOUTLINETEXTMETRICA LPOUTLINETEXTMETRIC;
+#else
+typedef OUTLINETEXTMETRICW OUTLINETEXTMETRIC;
+typedef LPOUTLINETEXTMETRICA LPOUTLINETEXTMETRIC;
+#endif
 
 typedef struct _OVERLAPPED {
   DWORD  Internal;
@@ -4181,11 +4298,31 @@ typedef int CALLBACK (*ENUMMETAFILEPROC) (HDC, HANDLETABLE,
 typedef int CALLBACK (*ENHMETAFILEPROC) (HDC, HANDLETABLE,
 					 ENHMETARECORD, int, LPARAM);
 
-typedef int CALLBACK (*ENUMFONTSPROC) (LPLOGFONT, LPTEXTMETRIC, DWORD, LPARAM);
-typedef int CALLBACK (*FONTENUMPROC) (ENUMLOGFONT *, NEWTEXTMETRIC *,
-				      int, LPARAM);
-typedef int CALLBACK (*FONTENUMEXPROC) (ENUMLOGFONTEX *, NEWTEXTMETRICEX *,
-				      int, LPARAM);
+typedef int CALLBACK (*ENUMFONTSPROCA) (LPLOGFONT, LPTEXTMETRICA, DWORD, LPARAM);
+typedef int CALLBACK (*ENUMFONTSPROCW) (LPLOGFONT, LPTEXTMETRICW, DWORD, LPARAM);
+#ifdef UNICODE
+typedef ENUMFONTSPROCW ENUMFONTSPROC;
+#else
+typedef ENUMFONTSPROCA ENUMFONTSPROC;
+#endif
+typedef int CALLBACK (*FONTENUMPROCA) (ENUMLOGFONT *, NEWTEXTMETRICA *,
+				       int, LPARAM);
+typedef int CALLBACK (*FONTENUMPROCW) (ENUMLOGFONT *, NEWTEXTMETRICW *,
+				       int, LPARAM);
+#ifdef UNICODE
+typedef FONTENUMPROCW FONTENUMPROC;
+#else
+typedef FONTENUMPROCA FONTENUMPROC;
+#endif
+typedef int CALLBACK (*FONTENUMEXPROCA) (ENUMLOGFONTEX *, NEWTEXTMETRICEXA *,
+				         int, LPARAM);
+typedef int CALLBACK (*FONTENUMEXPROCW) (ENUMLOGFONTEX *, NEWTEXTMETRICEXW *,
+				         int, LPARAM);
+#ifdef UNICODE
+typedef FONTENUMEXPROCW FONTENUMEXPROC;
+#else
+typedef FONTENUMEXPROCA FONTENUMEXPROC;
+#endif
 
 typedef VOID CALLBACK (*LPOVERLAPPED_COMPLETION_ROUTINE) (DWORD, DWORD,
 							  LPOVERLAPPED);

@@ -55,17 +55,17 @@ BOOL
 STDCALL 
 GetTextMetricsA(
 	HDC		hdc, 
-	LPTEXTMETRIC	tm
+	LPTEXTMETRICA	tm
 	)
 {
-	return W32kGetTextMetrics(hdc, tm);
+	return W32kGetTextMetrics(hdc, (LPTEXTMETRICW) tm);
 }
 
 BOOL 
 STDCALL 
 GetTextMetricsW(
 	HDC		hdc, 
-	LPTEXTMETRIC	tm
+	LPTEXTMETRICW	tm
 	)
 {
 	return W32kGetTextMetrics(hdc, tm);

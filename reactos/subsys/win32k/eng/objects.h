@@ -69,7 +69,7 @@ typedef struct _FONTGDI {
 
   LPCWSTR Filename;
   FT_Face face;
-  TEXTMETRIC TextMetric;
+  TEXTMETRICW TextMetric;
 } FONTGDI, *PFONTGDI;
 
 typedef struct _PALGDI {

@@ -160,7 +160,7 @@ UINT
 STDCALL
 W32kGetOutlineTextMetrics(HDC  hDC,
                                 UINT  Data,
-                                LPOUTLINETEXTMETRIC  otm);
+                                LPOUTLINETEXTMETRICW otm);
 
 BOOL
 STDCALL
@@ -210,7 +210,7 @@ W32kGetTextFace(HDC  hDC,
 BOOL
 STDCALL
 W32kGetTextMetrics(HDC  hDC,
-                         LPTEXTMETRIC  tm);
+                         LPTEXTMETRICW  tm);
 
 BOOL
 STDCALL
