@@ -573,7 +573,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","Group",0x00000000,"Base"
-HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","Type",0x00020000,"System32\DRIVERS\usbuhci.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","ImagePath",0x00020000,"System32\DRIVERS\usbuhci.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","Tag",0x00010001,0x0000000f
 HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","DisplayName",0x00000000,"ReactOS USB UHCI controller miniport driver"
 ;hard coded values for VMWARE
@@ -581,6 +581,21 @@ HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci\Enum","0",0x00000000,"PCI\VEN_80
 HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci\Enum","Count",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci\Enum","NextInstance",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_8086&DEV_7112&SUBSYS_197615AD&REV_00\0000","Service",0x0000000,"usbuhci"
+
+;USB OHCI Driver (Cromwell), especially the same name as windows OHCI miniport
+HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","Group",0x00000000,"Base"
+HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","ImagePath",0x00020000,"System32\drivers\ohci.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","Tag",0x00010001,0x0000000f
+HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","DisplayName",0x00000000,"ReactOS USB OHCI cromwell-type driver"
+;hard coded values for Virtual PC 6/7 (Mac)
+HKLM,"SYSTEM\CurrentControlSet\Services\usbohci\Enum","0",0x00000000,"PCI\VEN_2955&DEV_6E61&SUBSYS_6E612955&REV_11\0000"
+HKLM,"SYSTEM\CurrentControlSet\Services\usbohci\Enum","Count",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\usbohci\Enum","NextInstance",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_2955&DEV_6E61&SUBSYS_6E612955&REV_11\0000","Service",0x0000000,"usbohci"
+
 
 ; ReactOS PCNet NIC driver 
 ; To use the AMD supplied driver change the driver name to pcntn5m.sys
