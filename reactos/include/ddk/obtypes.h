@@ -62,7 +62,7 @@ typedef struct _OBJECT_TYPE
    /*
     * PURPOSE: Called to close an object if OkayToClose returns true
     */
-   VOID (*Close)(VOID);
+   VOID (*Close)(PVOID ObjectBody);
 
    /*
     * PURPOSE: Called to close an object if OkayToClose returns true
@@ -91,15 +91,15 @@ typedef struct _OBJECT_TYPE
 } OBJECT_TYPE, *POBJECT_TYPE;
 
 
-typedef struct _OBJECT
+typedef struct _OBJECT_HEADER
 /*
  * PURPOSE: Header for every object managed by the object manager
  */
 {   
    UNICODE_STRING Name;
    LIST_ENTRY Entry;
-   ULONG RefCount;   
-   ULONG HandleCount;   
+   LONG RefCount;   
+   LONG HandleCount;   
    BOOLEAN Permanent;   
    struct _DIRECTORY_OBJECT* Parent;   
    POBJECT_TYPE ObjectType;

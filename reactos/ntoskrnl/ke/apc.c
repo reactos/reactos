@@ -61,7 +61,7 @@ VOID KeDeliverKernelApc(PKAPC Apc)
 	Stack[1] = TargetThread->Context.eip;
 	Stack[2] = TargetThread->Context.cs;
 	Stack[3] = TargetThread->Context.eflags;
-	TargetThread->Context.eip = KeApcProlog;
+	TargetThread->Context.eip = (ULONG)KeApcProlog;
 	TargetThread->Context.eax = (ULONG)Apc;
      }
    else
@@ -78,7 +78,7 @@ VOID KeDeliverKernelApc(PKAPC Apc)
 	Stack[2] = TargetThread->Context.cs;
 	Stack[1] = TargetThread->Context.eip;
 	Stack[0] = TargetThread->Context.eax;
-	TargetThread->Context.eip = KeApcProlog;
+	TargetThread->Context.eip = (ULONG)KeApcProlog;
 	TargetThread->Context.eax = (ULONG)Apc;
      }
 

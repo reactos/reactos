@@ -28,7 +28,7 @@ OBJECTS = $(MISC_OBJECTS) $(FILE_OBJECTS) $(THREAD_OBJECTS) \
   
 
 kernel32.a: $(OBJECTS)
-	$(AR) vrcs kernel32.a $(OBJECTS) 
+	$(AR) rcs kernel32.a $(OBJECTS) 
 
 dummy:
 

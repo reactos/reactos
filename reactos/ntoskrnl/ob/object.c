@@ -61,6 +61,14 @@ NTSTATUS STDCALL ZwQueryObject(IN HANDLE ObjectHandle,
    UNIMPLEMENTED
 }
 
+VOID ObMakeTemporaryObject(PVOID ObjectBody)
+{
+   POBJECT_HEADER ObjectHeader;
+   
+   ObjectHeader = BODY_TO_HEADER(ObjectBody);
+   ObjectHeader->Permanent = FALSE;
+}
+
 NTSTATUS NtMakeTemporaryObject(HANDLE Handle)
 {
    return(ZwMakeTemporaryObject(Handle));
@@ -148,14 +156,13 @@ PVOID ObGenericCreateObject(PHANDLE Handle,
 //   DbgPrint("ObjectAttributes->ObjectName->MaximumLength %d\n",
 //	    ObjectAttributes->ObjectName->MaximumLength);
    Buffer = ExAllocatePool(NonPagedPool,
-                           ((ObjectAttributes->ObjectName->Length + 1) * 
-                             sizeof(WCHAR)));   
+			   ((ObjectAttributes->ObjectName->Length+1)*2));   
    if (Buffer==NULL)
      {
 	return(NULL);	
      }
    memcpy(Buffer, ObjectAttributes->ObjectName->Buffer,
-	  (ObjectAttributes->ObjectName->Length + 1) * sizeof(WCHAR));
+	  (ObjectAttributes->ObjectName->Length+1)*2);
    
    /*
     * Seperate the name into a path and name 
@@ -255,13 +262,27 @@ NTSTATUS ObReferenceObjectByPointer(PVOID ObjectBody,
 
 NTSTATUS ObPerformRetentionChecks(POBJECT_HEADER Header)
 {
+   DPRINT("ObPerformRetentionChecks(Header %x), RefCount %d, HandleCount %d\n",
+	   Header,Header->RefCount,Header->HandleCount);
+   
+   if (Header->RefCount <  0 || Header->HandleCount < 0)
+     {
+	KeBugCheck(0);
+     }
+   
    if (Header->RefCount == 0 && Header->HandleCount == 0 &&
        !Header->Permanent)
      {
+	if (Header->ObjectType != NULL &&
+	    Header->ObjectType->Close != NULL)
+	  {
+	     Header->ObjectType->Close(HEADER_TO_BODY(Header));
+	  }
 	if (Header->Name.Buffer != NULL)
 	  {
 	     ObRemoveEntry(Header);
 	  }
+	DPRINT("ObPerformRetentionChecks() = Freeing object\n");
 	ExFreePool(Header);
      }
    return(STATUS_SUCCESS);
@@ -303,6 +324,8 @@ NTSTATUS ZwClose(HANDLE Handle)
    PHANDLE_REP HandleRep;
    
    assert_irql(PASSIVE_LEVEL);
+   
+   DPRINT("ZwClose(Handle %x)\n",Handle);
    
    HandleRep = ObTranslateHandle(KeGetCurrentProcess(),Handle);
    if (HandleRep == NULL)
@@ -386,4 +409,3 @@ NTSTATUS ObReferenceObjectByHandle(HANDLE Handle,
    
    return(STATUS_SUCCESS);
 }
-

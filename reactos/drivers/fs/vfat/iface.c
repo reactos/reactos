@@ -1274,8 +1274,8 @@ NTSTATUS FsdCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    Stack = IoGetCurrentIrpStackLocation(Irp);
    RequestedDisposition = ((Stack->Parameters.Create.Options>>24)&0xff);
    RequestedOptions=Stack->Parameters.Create.Options&FILE_VALID_OPTION_FLAGS;
-DbgPrint("CROptions=%x\n",Stack->Parameters.Create.Options);
-DbgPrint("REquestedOptions=%x\n",RequestedOptions);
+   DPRINT("CROptions=%x\n",Stack->Parameters.Create.Options);
+   DPRINT("REquestedOptions=%x\n",RequestedOptions);
    FileObject = Stack->FileObject;
    DeviceExt = DeviceObject->DeviceExtension;
    Status = FsdOpenFile(DeviceExt,FileObject,FileObject->FileName.Buffer);
@@ -1285,7 +1285,7 @@ DbgPrint("REquestedOptions=%x\n",RequestedOptions);
          ||RequestedDisposition==FILE_OPEN_IF
          ||RequestedDisposition==FILE_OVERWRITE_IF)
       {
-DbgPrint("try to create file\n");
+         DPRINT("try to create file\n");
          Status=addEntry(DeviceExt,FileObject,RequestedOptions);
       }
    }

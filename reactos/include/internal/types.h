@@ -50,7 +50,7 @@ typedef unsigned long long u64;
 #endif
 
 
-typedef unsigned int size_t;
+typedef int size_t;
 typedef size_t __kernel_size_t;
 
 #endif /* _LINUX_TYPES_H */

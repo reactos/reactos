@@ -18,17 +18,22 @@
 
 /* TYPES *********************************************************************/
 
+#define CACHE_SEGMENT_INVALID  (0)     // Isn't valid
+#define CACHE_SEGMENT_WRITTEN  (1)     // Written
+#define CACHE_SEGMENT_READ     (2)
+
 typedef struct _CACHE_SEGMENT
 {
-   ULONG Type;
+   ULONG Type;                    // Debugging
    ULONG Size;
-   LIST_ENTRY ListEntry;
-   PVOID BaseAddress;
-   ULONG Length;
-   ULONG State;
-   MEMORY_AREA* MemoryArea;
-   ULONG FileOffset;
-   ULONG InternalOffset;
+   LIST_ENTRY ListEntry;          // Entry in the per-open list of segments
+   PVOID BaseAddress;             // Base address of the mapping   
+   ULONG Length;                  // Length of the mapping
+   ULONG State;                   // Information
+   MEMORY_AREA* MemoryArea;       // Memory area for the mapping
+   ULONG FileOffset;              // Offset within the file of the mapping
+   KEVENT Event;
+   BOOLEAN Dirty;                 // Contains dirty data
 } CACHE_SEGMENT, *PCACHE_SEGMENT;
 
 typedef struct _CC1_CCB
@@ -36,35 +41,36 @@ typedef struct _CC1_CCB
    ULONG Type;
    ULONG Size;
    LIST_ENTRY CacheSegmentListHead;
+   KSPIN_LOCK CacheSegmentListLock;
    LIST_ENTRY ListEntry;
 } CC1_CCB, PCC1_CCB;
 
 /* FUNCTIONS *****************************************************************/
 
-PVOID Cc1FlushView(PFILE_OBJECT FileObject,
+PVOID Cc1FlushView(PCC1_CCB CacheDesc,
 		   ULONG FileOffset,
 		   ULONG Length)
 {
 }
 
-PVOID Cc1PurgeView(PFILE_OBJECT FileObject,
+PVOID Cc1PurgeView(PCC1_CCB CacheDesc,
 		   ULONG FileOffset,
 		   ULONG Length)
 {
 }
 
-VOID Cc1ViewIsUpdated(PFILE_OBJECT FileObject,
-		      ULONG FileOffset)
+BOOLEAN Cc1AcquireCacheSegment(PCACHE_SEGMENT CacheSegment,
+			       BOOLEAN AcquireForWrite,
+			       BOOLEAN Wait)
 {
+   
 }
-
-typedef 
-
-BOOLEAN Cc1RequestView(PFILE_OBJECT FileObject,
-		       ULONG FileOffset,
-		       ULONG Length,
-		       BOOLEAN Wait,
-		       BOOLEAN AcquireForWrite)
+ 
+PVOID Cc1RequestView(PCC1_CCB CacheDesc,
+		     ULONG FileOffset,
+		     ULONG Length,
+		     BOOLEAN Wait,
+		     BOOLEAN AcquireForWrite)
 /*
  * FUNCTION: Request a view for caching data
  * ARGUMENTS:
@@ -79,11 +85,41 @@ BOOLEAN Cc1RequestView(PFILE_OBJECT FileObject,
  *          False otherwise
  */
 {
+   PLIST_ENTRY current_entry;
+   PCACHE_SEGMENT current;
+   
+   KeAcquireSpinLock(&CacheDesc->CacheSegmentListLock);
+   
+   current_entry = CacheDesc->CacheSegmentListHead.Flink;
+   while (current_entry != &CacheDesc->CacheSegmentListHead)
+     {
+	current = CONTAING_RECORD(current_entry, CACHE_SEGMENT, ListEntry);       	
+	
+	if (current->FileOffset <= FileOffset &&
+	    (current->FileOffset + current->length) >= (FileOffset + Length))
+	  {
+	     if (!Cc1AcquireCacheSegment(AcquireForWrite, Wait))
+	       {
+		  return(NULL);
+	       }
+	     return(current->BaseAddress + (FileOffset - current->FileOffset));
+	  }
+	current_entry = current_entry->Flink;
+     }
+   
+   KeReleaseSpinLock(&CacheDesc->CacheSegmentListLock);
 }
 
-BOOLEAN Cc1InitializeFileCache(PFILE_OBJECT FileObject)
+PCC1_CCB Cc1InitializeFileCache(PFILE_OBJECT FileObject)
 /*
  * FUNCTION: Initialize caching for a file
  */
 {
+   PCC1_CCB CacheDesc;
+   
+   CacheDesc = ExAllocatePool(NonPagedPool, sizeof(CC1_CCB));
+   InitializeListHead(&CacheDesc->CacheSegmentListHead);
+   KeAcquireSpinLock(&CacheDesc->CacheSegmentListLock);
+   
+   return(CacheDesc);
 }

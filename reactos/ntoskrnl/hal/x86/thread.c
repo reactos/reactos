@@ -155,6 +155,17 @@ NTSTATUS KeValidateUserContext(PCONTEXT Context)
    return(STATUS_SUCCESS);
 }
 
+NTSTATUS HalReleaseTask(PETHREAD Thread)
+{
+   gdt[Thread->Tcb.Context.nr/8].a=0;
+   gdt[Thread->Tcb.Context.nr/8].b=0;
+   ExFreePool(Thread->Tcb.Context.KernelStackBase);
+   if (Thread->Tcb.Context.SavedKernelStackBase != NULL)
+     {
+	ExFreePool(Thread->Tcb.Context.KernelStackBase);
+     }
+}
+
 NTSTATUS HalInitTaskWithContext(PETHREAD Thread, PCONTEXT Context)
 /*
  * FUNCTION: Initialize a task with a user mode context
@@ -182,6 +193,11 @@ NTSTATUS HalInitTaskWithContext(PETHREAD Thread, PCONTEXT Context)
      }
    
    desc = allocate_tss_descriptor();
+   if (desc == 0)
+     {
+	return(STATUS_UNSUCCESSFUL);
+     }
+   
    length = sizeof(hal_thread_state) - 1;
    base = (unsigned int)(&(Thread->Tcb.Context));
    kernel_stack = ExAllocatePool(NonPagedPool,PAGESIZE);
@@ -203,7 +219,7 @@ NTSTATUS HalInitTaskWithContext(PETHREAD Thread, PCONTEXT Context)
    Thread->Tcb.Context.ldt = null_ldt_sel;
    Thread->Tcb.Context.eflags = (1<<1) + (1<<9);
    Thread->Tcb.Context.iomap_base = FIELD_OFFSET(hal_thread_state,io_bitmap);
-   Thread->Tcb.Context.esp0 = stack_start;
+   Thread->Tcb.Context.esp0 = (ULONG)stack_start;
    Thread->Tcb.Context.ss0 = KERNEL_DS;
    Thread->Tcb.Context.esp = stack_start;
    Thread->Tcb.Context.ss = KERNEL_DS;
@@ -218,7 +234,9 @@ NTSTATUS HalInitTaskWithContext(PETHREAD Thread, PCONTEXT Context)
    Thread->Tcb.Context.gs = KERNEL_DS;
 
    Thread->Tcb.Context.nr = desc * 8;
-   DPRINT("Allocated %x\n",desc*8);
+   Thread->Tcb.Context.KernelStackBase = kernel_stack;
+   Thread->Tcb.Context.SavedKernelEsp = 0;
+   Thread->Tcb.Context.SavedKernelStackBase = NULL;
    
    return(STATUS_SUCCESS);
 }
@@ -236,7 +254,7 @@ BOOLEAN HalInitTask(PETHREAD thread, PKSTART_ROUTINE fn, PVOID StartContext)
    unsigned int desc = allocate_tss_descriptor();
    unsigned int length = sizeof(hal_thread_state) - 1;
    unsigned int base = (unsigned int)(&(thread->Tcb.Context));
-   unsigned int* kernel_stack = ExAllocatePool(NonPagedPool,4096);
+   PULONG kernel_stack = ExAllocatePool(NonPagedPool,4096);
    
    DPRINT("HalInitTask(Thread %x, fn %x, StartContext %x)\n",
           thread,fn,StartContext);
@@ -290,6 +308,9 @@ BOOLEAN HalInitTask(PETHREAD thread, PKSTART_ROUTINE fn, PVOID StartContext)
    thread->Tcb.Context.fs = KERNEL_DS;
    thread->Tcb.Context.gs = KERNEL_DS;
    thread->Tcb.Context.nr = desc * 8;
+   thread->Tcb.Context.KernelStackBase = kernel_stack;
+   thread->Tcb.Context.SavedKernelEsp = 0;
+   thread->Tcb.Context.SavedKernelStackBase = NULL;
    DPRINT("Allocated %x\n",desc*8);
    
 

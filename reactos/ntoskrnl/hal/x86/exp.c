@@ -263,7 +263,7 @@ VOID KeDumpStackFrames(ULONG DummyArg)
    Stack = (PVOID)(((ULONG)Stack) & (~0x3));
    
    DbgPrint("Frames:\n");
-   for (i=0; i<1024; i++)
+   for (i=0; i<32; i++)
      {
 	if (Stack[i] > KERNEL_BASE && Stack[i] < ((ULONG)&etext))
 	  {

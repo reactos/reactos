@@ -13,7 +13,7 @@
 #include <kernel32/thread.h>
 #include <ddk/ntddk.h>
 #include <string.h>
-
+#include <internal/i386/segment.h>
 
 HANDLE
 STDCALL
@@ -45,47 +45,64 @@ CreateRemoteThread(
 		   LPDWORD lpThreadId
 		   )
 {	
-	NTSTATUS errCode;
-	HANDLE ThreadHandle;
-	OBJECT_ATTRIBUTES ObjectAttributes;
-	CLIENT_ID ClientId;
-	CONTEXT ThreadContext;
-	INITIAL_TEB InitialTeb;
-	BOOLEAN CreateSuspended = FALSE;
-
-	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-	ObjectAttributes.RootDirectory = NULL;
-	ObjectAttributes.ObjectName = NULL;
-	ObjectAttributes.Attributes = 0;
-	if ( lpThreadAttributes != NULL ) {
-		if ( lpThreadAttributes->bInheritHandle ) 
-			ObjectAttributes.Attributes = OBJ_INHERIT;
-		ObjectAttributes.SecurityDescriptor = lpThreadAttributes->lpSecurityDescriptor;
-	}
-	ObjectAttributes.SecurityQualityOfService = NULL;
-
-	if ( ( dwCreationFlags & CREATE_SUSPENDED ) == CREATE_SUSPENDED )
+   NTSTATUS errCode;
+   HANDLE ThreadHandle;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   CLIENT_ID ClientId;
+   CONTEXT ThreadContext;
+   INITIAL_TEB InitialTeb;
+   BOOLEAN CreateSuspended = FALSE;
+   ULONG BaseAddress;
+   
+   ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
+   ObjectAttributes.RootDirectory = NULL;
+   ObjectAttributes.ObjectName = NULL;
+   ObjectAttributes.Attributes = 0;
+   if ( lpThreadAttributes != NULL ) {
+      if ( lpThreadAttributes->bInheritHandle ) 
+	ObjectAttributes.Attributes = OBJ_INHERIT;
+      ObjectAttributes.SecurityDescriptor = lpThreadAttributes->lpSecurityDescriptor;
+   }
+   ObjectAttributes.SecurityQualityOfService = NULL;
+   
+   if ( ( dwCreationFlags & CREATE_SUSPENDED ) == CREATE_SUSPENDED )
 		CreateSuspended = TRUE;
-	else
-		CreateSuspended = FALSE;
-	// fix context
-	GetThreadContext(NtCurrentThread(),&ThreadContext);
-	// fix teb [ stack context ] --> check the image file 
+   else
+     CreateSuspended = FALSE;
 
-	errCode = NtCreateThread(
-		&ThreadHandle,
-		THREAD_ALL_ACCESS,
-		&ObjectAttributes,
-		hProcess,
-		&ClientId,
-		&ThreadContext,
-		&InitialTeb,
-		CreateSuspended
-	);
-	if ( lpThreadId != NULL )
-		memcpy(lpThreadId, &ClientId.UniqueThread,sizeof(ULONG));
+   BaseAddress = 0;
+   ZwAllocateVirtualMemory(hProcess,
+			   &BaseAddress,
+			   0,
+                           &dwStackSize,
+			   MEM_COMMIT,
+			   PAGE_READWRITE);
+   
 
-	return ThreadHandle;
+   memset(&ThreadContext,0,sizeof(CONTEXT));
+   ThreadContext.Eip = lpStartAddress;
+   ThreadContext.SegGs = USER_DS;
+   ThreadContext.SegFs = USER_DS;
+   ThreadContext.SegEs = USER_DS;
+   ThreadContext.SegDs = USER_DS;
+   ThreadContext.SegCs = USER_CS;
+   ThreadContext.SegSs = USER_DS;        
+   ThreadContext.Esp = BaseAddress + dwStackSize;
+   ThreadContext.EFlags = (1<<1) + (1<<9);
+
+
+   errCode = NtCreateThread(&ThreadHandle,
+			    THREAD_ALL_ACCESS,
+			    &ObjectAttributes,
+			    hProcess,
+			    &ClientId,
+			    &ThreadContext,
+			    &InitialTeb,
+			    CreateSuspended);
+   if ( lpThreadId != NULL )
+     memcpy(lpThreadId, &ClientId.UniqueThread,sizeof(ULONG));
+   
+   return ThreadHandle;
 }
 
 NT_TEB *GetTeb(VOID)
@@ -93,27 +110,20 @@ NT_TEB *GetTeb(VOID)
 	return NULL;
 }
 
-WINBOOL STDCALL
-SwitchToThread(VOID )
+WINBOOL STDCALL SwitchToThread(VOID )
 {
 	NTSTATUS errCode;
 	errCode = NtYieldExecution();
 	return TRUE;
 }
 
-DWORD
-STDCALL
-GetCurrentThreadId()
+DWORD STDCALL GetCurrentThreadId()
 {
 
 	return (DWORD)(GetTeb()->Cid).UniqueThread; 
 }
 
-VOID
-STDCALL
-ExitThread(
-	    UINT uExitCode
-	    ) 
+VOID STDCALL ExitThread(UINT uExitCode) 
 {
 	NTSTATUS errCode;	 
 

@@ -3,7 +3,7 @@
 #include 	<fcntl.h>
 #include	<string.h>
 #include	<windows.h>
-#include	<libc/file.h>
+//#include	<libc/file.h>
 
 void UnixTimeToFileTime( time_t unix_time, FILETIME *filetime, DWORD remainder );
 time_t FileTimeToUnixTime( const FILETIME *filetime, DWORD *remainder );

@@ -18,6 +18,9 @@
 #include <ddk/li.h>
 #include <ddk/rtl.h>
 
+#define NDEBUG
+#include <kernel32/kernel32.h>
+
 HANDLE STDCALL CreateFileA(LPCSTR lpFileName,
 			   DWORD dwDesiredAccess,
 			   DWORD dwShareMode,
@@ -141,7 +144,7 @@ HANDLE STDCALL CreateFileW(LPCWSTR lpFileName,
 			 NULL,
 			 0);
    
-   dprintf("After create file");
+   DPRINT("After create file\n");
    if (!NT_SUCCESS(Status))
    {
 	SetLastError(RtlNtStatusToDosError(Status));

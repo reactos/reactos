@@ -82,7 +82,7 @@ VOID PiTerminateProcessThreads(PEPROCESS Process, NTSTATUS ExitStatus)
              if (current->ThreadsProcess == Process &&
                  current != PsGetCurrentThread())
              {
-                  PsTerminateThread(current, ExitStatus);
+                  PsTerminateOtherThread(current, ExitStatus);
              }
              current_entry = current_entry->Flink;
         }

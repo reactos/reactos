@@ -22,6 +22,31 @@ extern ULONG PiNrThreads;
 
 /* FUNCTIONS *****************************************************************/
 
+VOID PsTerminateCurrentThread(NTSTATUS ExitStatus)
+{
+   KIRQL oldlvl;
+   PETHREAD CurrentThread;
+   
+   PiNrThreads--;
+   
+   CurrentThread = PsGetCurrentThread();
+   
+   CurrentThread->ExitStatus = ExitStatus;
+   
+   DPRINT("terminating %x\n",CurrentThread);
+   ObDereferenceObject(CurrentThread->ThreadsProcess);
+   KeRaiseIrql(DISPATCH_LEVEL,&oldlvl);
+   CurrentThread->Tcb.ThreadState = THREAD_STATE_TERMINATED;
+   ZwYieldExecution();
+   for(;;);
+}
+
+VOID PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus)
+{
+   UNIMPLEMENTED;
+}
+
+
 NTSTATUS STDCALL NtTerminateProcess(IN HANDLE ProcessHandle,
 				    IN NTSTATUS ExitStatus)
 {
@@ -54,7 +79,7 @@ NTSTATUS STDCALL ZwTerminateProcess(IN HANDLE ProcessHandle,
    if (PsGetCurrentThread()->ThreadsProcess == Process)
    {
       KeLowerIrql(oldlvl);
-      PsTerminateSystemThread(ExitStatus);
+      PsTerminateCurrentThread(ExitStatus);
    }
    KeLowerIrql(oldlvl);
    return(STATUS_SUCCESS);
@@ -84,18 +109,13 @@ NTSTATUS STDCALL ZwTerminateThread(IN HANDLE ThreadHandle,
 	return(Status);
      }
 
-   PsTerminateThread(Thread);
-}
-
-VOID PsTerminateThread(PETHREAD Thread, NTSTATUS ExitStatus)
-{
    if (Thread == PsGetCurrentThread())
      {
-	PsTerminateSystemThread(ExitStatus);
+	PsTerminateCurrentThread(ExitStatus);
      }
    else
      {
-	UNIMPLEMENTED;
+	PsTerminateOtherThread(Thread, ExitStatus);
      }
 }
 
@@ -104,6 +124,7 @@ VOID PsReleaseThread(PETHREAD Thread)
    DPRINT("PsReleaseThread(Thread %x)\n",Thread);
    
    RemoveEntryList(&Thread->Tcb.Entry);
+   HalReleaseTask(Thread);
    ObDereferenceObject(Thread);
 }
 
@@ -116,21 +137,7 @@ NTSTATUS PsTerminateSystemThread(NTSTATUS ExitStatus)
  * RETURNS: Doesn't
  */
 {
-   KIRQL oldlvl;
-   PETHREAD CurrentThread;
-   
-   PiNrThreads--;
-   
-   CurrentThread = PsGetCurrentThread();
-   
-   CurrentThread->ExitStatus = ExitStatus;
-   
-   DPRINT("terminating %x\n",CurrentThread);
-   ObDereferenceObject(CurrentThread->ThreadsProcess);
-   KeRaiseIrql(DISPATCH_LEVEL,&oldlvl);
-   CurrentThread->Tcb.ThreadState = THREAD_STATE_TERMINATED;
-   ZwYieldExecution();
-   for(;;);
+   PsTerminateCurrentThread(ExitStatus);
 }
 
 NTSTATUS STDCALL NtRegisterThreadTerminatePort(HANDLE TerminationPort)

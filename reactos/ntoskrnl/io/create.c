@@ -125,16 +125,14 @@ NTSTATUS ZwCreateFile(PHANDLE FileHandle,
    
    
    DeviceObject = (PDEVICE_OBJECT)Object;
-   DPRINT("DeviceObject %x\n",DeviceObject);
    DeviceObject = IoGetAttachedDevice(DeviceObject);
-   DPRINT("DeviceObject %x\n",DeviceObject);
    
    if (Status == STATUS_SUCCESS)
      {
 	CHECKPOINT;
 	FileObject->Flags = FileObject->Flags | FO_DIRECT_DEVICE_OPEN;
 	FileObject->FileName.Buffer = ExAllocatePool(NonPagedPool,
-					ObjectAttributes->ObjectName->Length);
+				   (ObjectAttributes->ObjectName->Length+1)*2);
 	FileObject->FileName.Length = ObjectAttributes->ObjectName->Length;
 	FileObject->FileName.MaximumLength = 
           ObjectAttributes->ObjectName->MaximumLength;
@@ -197,7 +195,6 @@ NTSTATUS ZwCreateFile(PHANDLE FileHandle,
    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
    if (Irp==NULL)
      {
-	ExFreePool(FileObject->FileName.Buffer);
 	ObDereferenceObject(FileObject);
 	ZwClose(*FileHandle);
 	*FileHandle=0;
@@ -223,13 +220,14 @@ NTSTATUS ZwCreateFile(PHANDLE FileHandle,
    if (Status!=STATUS_SUCCESS)
      {
 	DPRINT("FileObject->FileName.Buffer %x\n",FileObject->FileName.Buffer);
-	ExFreePool(FileObject->FileName.Buffer);
 	ObDereferenceObject(FileObject);
 	ZwClose(*FileHandle);
 	*FileHandle=0;
+	return(Status);
      }
    
    DPRINT("*FileHandle %x\n",*FileHandle);
+   ObDereferenceObject(FileObject);
    
    return(Status);
 

@@ -1,6 +1,6 @@
 #include <io.h>
 #include <windows.h>
-#include <libc/file.h>
+//#include <libc/file.h>
 
 
 int	close(int _fd)

@@ -26,6 +26,16 @@ POBJECT_TYPE IoFileType = NULL;
 
 /* FUNCTIONS ****************************************************************/
 
+VOID IopCloseFile(PVOID ObjectBody)
+{
+   PFILE_OBJECT FileObject = (PFILE_OBJECT)ObjectBody;
+    
+   if (FileObject->FileName.Buffer != NULL)
+     {
+	ExFreePool(FileObject->FileName.Buffer);
+     }
+}
+
 VOID IoInit(VOID)
 {
    OBJECT_ATTRIBUTES attr;
@@ -46,7 +56,7 @@ VOID IoInit(VOID)
    IoDeviceType->NonpagedPoolCharge = sizeof(DEVICE_OBJECT);
    IoDeviceType->Dump = NULL;
    IoDeviceType->Open = NULL;
-   IoDeviceType->Close = NULL;
+   IoDeviceType->Close = NULL;   
    IoDeviceType->Delete = NULL;
    IoDeviceType->Parse = NULL;
    IoDeviceType->Security = NULL;
@@ -66,7 +76,7 @@ VOID IoInit(VOID)
    IoFileType->NonpagedPoolCharge = sizeof(FILE_OBJECT);
    IoFileType->Dump = NULL;
    IoFileType->Open = NULL;
-   IoFileType->Close = NULL;
+   IoFileType->Close = IopCloseFile;
    IoFileType->Delete = NULL;
    IoFileType->Parse = NULL;
    IoFileType->Security = NULL;

@@ -1,6 +1,6 @@
 #include <windows.h>
 #include <io.h>
-#include <libc/file.h>
+//#include <libc/file.h>
 
 #undef lseek
 long lseek(int _fildes, long _offset, int _whence)

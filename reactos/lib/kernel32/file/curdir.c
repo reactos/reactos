@@ -13,14 +13,15 @@
 
 #include <windows.h>
 
+#define NDEBUG
+#include <kernel32/kernel32.h>
+
 /* GLOBALS *******************************************************************/
 
 
-WCHAR CurrentDirectoryW[MAX_PATH] = {0,};
-
-WCHAR SystemDirectoryW[MAX_PATH];
-
-WCHAR WindowsDirectoryW[MAX_PATH];
+static WCHAR CurrentDirectoryW[MAX_PATH] = {0,};
+static WCHAR SystemDirectoryW[MAX_PATH];
+static WCHAR WindowsDirectoryW[MAX_PATH];
 
 /* FUNCTIONS *****************************************************************/
  
@@ -46,7 +47,7 @@ DWORD STDCALL GetCurrentDirectoryW(DWORD nBufferLength, LPWSTR lpBuffer)
 {
    UINT uSize;
    
-   dprintf("CurrentDirectoryW %w\n",CurrentDirectoryW);
+   DPRINT("CurrentDirectoryW %w\n",CurrentDirectoryW);
    
    if ( lpBuffer == NULL ) 
 	return 0;
@@ -54,7 +55,7 @@ DWORD STDCALL GetCurrentDirectoryW(DWORD nBufferLength, LPWSTR lpBuffer)
    if ( nBufferLength > uSize )
    	lstrcpynW(lpBuffer,CurrentDirectoryW,uSize);
    
-   dprintf("GetCurrentDirectoryW() = %w\n",lpBuffer);
+   DPRINT("GetCurrentDirectoryW() = %w\n",lpBuffer);
    
    return uSize;
 }
@@ -63,7 +64,7 @@ BOOL STDCALL SetCurrentDirectoryA(LPCSTR lpPathName)
 {
    UINT i;
 
-   dprintf("SetCurrentDirectoryA(lpPathName %s)\n",lpPathName);
+   DPRINT("SetCurrentDirectoryA(lpPathName %s)\n",lpPathName);
    
    if ( lpPathName == NULL )
 	return FALSE;
@@ -77,7 +78,7 @@ BOOL STDCALL SetCurrentDirectoryA(LPCSTR lpPathName)
    }
    CurrentDirectoryW[i] = 0;
    
-   dprintf("CurrentDirectoryW = '%w'\n",CurrentDirectoryW);
+   DPRINT("CurrentDirectoryW = '%w'\n",CurrentDirectoryW);
    
    return(TRUE);
 }

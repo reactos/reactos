@@ -17,9 +17,9 @@
 ;  DISCLAMED. This includes but is not limited to warrenties of
 ;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ;
-; $Revision: 1.1 $
+; $Revision: 1.2 $
 ; $Author: dwelch $
-; $Date: 1999/01/04 23:01:18 $
+; $Date: 1999/01/16 21:02:58 $
 ;
 ; These three functions appear to be name mangled in some way, so GCC is
 ; probably not going to be able to use them in any case.

@@ -12,9 +12,11 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <stdlib.h>
-#include <libc/file.h>
+//#include <libc/file.h>
 #include <string.h>
 #include <share.h>
+
+#if 0
 
 typedef struct _fileno_modes_type
 {
@@ -252,3 +254,4 @@ int _open_osfhandle (void *osfhandle, int flags )
 {
 	return __fileno_alloc((HANDLE)osfhandle, flags);
 }	
+#endif

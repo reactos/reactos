@@ -1,7 +1,8 @@
 #include <windows.h>
 #include <io.h>
 #include <string.h>
-#include <libc/file.h>
+
+#if 0
 
 //UnixTimeToFileTime
 //FileTimeToUnixTime
@@ -251,3 +252,4 @@ time_t FileTimeToUnixTime( const FILETIME *filetime, DWORD *remainder )
 
 }
 
+#endif

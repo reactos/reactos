@@ -46,8 +46,7 @@ LONG KeSetEvent(PKEVENT Event, KPRIORITY Increment, BOOLEAN Wait)
 
    DPRINT("KeSetEvent(Event %x, Wait %x)\n",Event,Wait);
    KeAcquireDispatcherDatabaseLock(Wait);
-//   ret = InterlockedExchange(&(Event->Header.SignalState),1);
-   Event->Header.SignalState=1;
+   ret = InterlockedExchange(&(Event->Header.SignalState),1);
    KeDispatcherObjectWake((DISPATCHER_HEADER *)Event);
    KeReleaseDispatcherDatabaseLock(Wait);
 }

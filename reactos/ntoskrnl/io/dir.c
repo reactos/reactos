@@ -141,11 +141,12 @@ NTSTATUS STDCALL ZwQueryDirectoryFile(
 				      FILE_LIST_DIRECTORY,
 				      IoFileType,
 				      UserMode,
-                      (PVOID *)&FileObject,
+				      (PVOID *)&FileObject,
 				      NULL);
    
    if (Status != STATUS_SUCCESS)
      {
+	ObDereferenceObject(FileObject);
 	return(Status);
      }
    KeInitializeEvent(&Event,NotificationEvent,FALSE);
@@ -153,7 +154,10 @@ NTSTATUS STDCALL ZwQueryDirectoryFile(
    
    Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
    if (Irp==NULL)
-     return STATUS_UNSUCCESSFUL;
+     {
+	ObDereferenceObject(FileObject);
+	return STATUS_UNSUCCESSFUL;
+     }
    
    
    Irp->UserIosb = IoStatusBlock;
@@ -203,6 +207,7 @@ NTSTATUS STDCALL ZwQueryDirectoryFile(
 	  }
 	Status = IoStatusBlock->Status;
      }
+   ObDereferenceObject(FileObject);
    return(Status);
 }
 

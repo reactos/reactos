@@ -45,8 +45,11 @@ typedef struct
    unsigned short reserved11;
    unsigned short trap;
    unsigned short iomap_base;
-   
+
    unsigned short nr;
+   PVOID KernelStackBase;
+   PVOID SavedKernelEsp;
+   PVOID SavedKernelStackBase;
    
    unsigned char io_bitmap[1];
 } hal_thread_state;

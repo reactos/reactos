@@ -9,7 +9,6 @@
  */
 #include <io.h>
 #include <windows.h>
-#include <libc/file.h>
 
 int	write(int _fd, const void *_buf,int _nbyte)
 {
