@@ -18,7 +18,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dpc.c,v 1.29 2003/12/30 18:52:04 fireball Exp $
+/* $Id: dpc.c,v 1.30 2004/01/18 22:42:50 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -100,7 +100,7 @@ KiDispatchInterrupt(VOID)
      }
 
    KeRaiseIrql(HIGH_LEVEL, &oldlvl);
-   KeAcquireSpinLockAtDpcLevel(&DpcQueueLock);
+   KiAcquireSpinLock(&DpcQueueLock);
 
    while (!IsListEmpty(&DpcQueueHead))
    {
@@ -111,16 +111,16 @@ KiDispatchInterrupt(VOID)
 
       current = CONTAINING_RECORD(current_entry,KDPC,DpcListEntry);
       current->Lock=FALSE;
-      KeReleaseSpinLockFromDpcLevel(&DpcQueueLock);
+      KiReleaseSpinLock(&DpcQueueLock);
       KeLowerIrql(oldlvl);
       current->DeferredRoutine(current,current->DeferredContext,
 			       current->SystemArgument1,
 			       current->SystemArgument2);
 
       KeRaiseIrql(HIGH_LEVEL, &oldlvl);
-      KeAcquireSpinLockAtDpcLevel(&DpcQueueLock);
+      KiAcquireSpinLock(&DpcQueueLock);
    }
-   KeReleaseSpinLockFromDpcLevel(&DpcQueueLock);
+   KiReleaseSpinLock(&DpcQueueLock);
    KeLowerIrql(oldlvl);
 }
 
@@ -141,7 +141,7 @@ KeRemoveQueueDpc (PKDPC	Dpc)
    BOOLEAN WasInQueue;
 
    KeRaiseIrql(HIGH_LEVEL, &oldIrql);
-   KeAcquireSpinLockAtDpcLevel(&DpcQueueLock);
+   KiAcquireSpinLock(&DpcQueueLock);
    WasInQueue = Dpc->Lock ? TRUE : FALSE;
    if (WasInQueue)
      {
@@ -152,7 +152,7 @@ KeRemoveQueueDpc (PKDPC	Dpc)
 
    assert(DpcQueueSize || IsListEmpty(&DpcQueueHead));
 
-   KeReleaseSpinLockFromDpcLevel(&DpcQueueLock);
+   KiReleaseSpinLock(&DpcQueueLock);
    KeLowerIrql(oldIrql);
 
    return WasInQueue;
@@ -190,13 +190,13 @@ KeInsertQueueDpc (PKDPC	Dpc,
 	return(FALSE);
      }
    KeRaiseIrql(HIGH_LEVEL, &oldlvl);
-   KeAcquireSpinLockAtDpcLevel(&DpcQueueLock);
+   KiAcquireSpinLock(&DpcQueueLock);
    assert(DpcQueueSize || IsListEmpty(&DpcQueueHead));
    InsertHeadList(&DpcQueueHead,&Dpc->DpcListEntry);
    DPRINT("Dpc->DpcListEntry.Flink %x\n", Dpc->DpcListEntry.Flink);
    DpcQueueSize++;
    Dpc->Lock=(PULONG)1;
-   KeReleaseSpinLockFromDpcLevel(&DpcQueueLock);
+   KiReleaseSpinLock(&DpcQueueLock);
    KeLowerIrql(oldlvl);
    DPRINT("DpcQueueHead.Flink %x\n",DpcQueueHead.Flink);
    DPRINT("Leaving KeInsertQueueDpc()\n",0);
