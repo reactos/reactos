@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fillshap.c,v 1.38 2003/12/13 13:05:30 weiden Exp $ */
+/* $Id: fillshap.c,v 1.39 2004/02/04 22:10:00 navaraf Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -205,168 +205,196 @@ NtGdiChord(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL
-STDCALL
-NtGdiEllipse(HDC hDC,
-             int Left,
-             int Top,
-             int Right,
-             int Bottom)
-{
-  PDC dc;
-  int X, X18, X27, X36, X45;
-  int Y, Y14, Y23, Y58, Y67;
-  int d, Radius;
-  RECTL RectBounds;
-  PSURFOBJ SurfObj;
-  BRUSHOBJ PenBrushObj;
-  PBRUSHOBJ FillBrushObj;
-  BOOL Even;
-  BOOL ret = TRUE;
+/*
+ * NtGdiEllipse
+ * 
+ * Author
+ *    Filip Navara
+ *
+ * Remarks
+ *    This function uses optimized Bresenham's ellipse algorithm. It draws
+ *    four lines of the ellipse in one pass.
+ *
+ * Todo
+ *    Make it look like a Windows ellipse.
+ */
 
-  if (Right <= Left || Bottom <= Top)
-    {
+BOOL STDCALL
+NtGdiEllipse(
+   HDC hDC,
+   int nLeftRect,
+   int nTopRect,
+   int nRightRect,
+   int nBottomRect)
+{
+   int ix, iy;
+   int A, B, C, D;
+   int da, db;
+   int NewA, NewB, NewC, NewD;
+   int nx, ny;
+   int CenterX, CenterY;
+   int RadiusX, RadiusY;
+   int Temp;
+   BRUSHOBJ PenBrush;
+   PBRUSHOBJ FillBrush;
+   PSURFOBJ SurfObj;
+   RECTL RectBounds;
+   PDC dc;
+   BOOL ret = TRUE, Cond1, Cond2;
+
+   /*
+    * Check the parameters.
+    */
+
+   if (nRightRect <= nLeftRect || nBottomRect <= nTopRect)
+   {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return FALSE;
-    }
+   }
 
-  if (Right - Left != Bottom - Top)
-    {
-      UNIMPLEMENTED;
-    }
+   /*
+    * Get pointers to all necessary GDI objects.
+    */
 
-  dc = DC_LockDc ( hDC );
-  if (NULL == dc)
-    {
+   dc = DC_LockDc(hDC);
+   if (dc == NULL)
+   {
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
-    }
+   }
 
-  FillBrushObj = BRUSHOBJ_LockBrush(dc->w.hBrush);
-  if (NULL == FillBrushObj)
-    {
+   FillBrush = BRUSHOBJ_LockBrush(dc->w.hBrush);
+   if (NULL == FillBrush)
+   {
       DC_UnlockDc(hDC);
       SetLastWin32Error(ERROR_INTERNAL_ERROR);
       return FALSE;
-    }
+   }
 
-  Even = (0 == (Right - Left) % 2);
+   SurfObj = (PSURFOBJ)AccessUserObject((ULONG)dc->Surface);
+   HPenToBrushObj(&PenBrush, dc->w.hPen);
 
-  Left += dc->w.DCOrgX;
-  Right += dc->w.DCOrgX - 1;
-  Top += dc->w.DCOrgY;
-  Bottom += dc->w.DCOrgY - 1;
+   nLeftRect += dc->w.DCOrgX;
+   nRightRect += dc->w.DCOrgX;
+   nTopRect += dc->w.DCOrgY;
+   nBottomRect += dc->w.DCOrgY;
 
-  RectBounds.left = Left;
-  RectBounds.right = Right;
-  RectBounds.top = Top;
-  RectBounds.bottom = Bottom;
+   RadiusX = max((nRightRect - nLeftRect) >> 1, 1);
+   RadiusY = max((nBottomRect - nTopRect) >> 1, 1);
+   CenterX = nLeftRect + RadiusX;
+   CenterY = nTopRect + RadiusY;
 
-  SurfObj = (PSURFOBJ) AccessUserObject((ULONG)dc->Surface);
-  HPenToBrushObj(&PenBrushObj, dc->w.hPen);
+   RectBounds.left = nLeftRect;
+   RectBounds.right = nRightRect;
+   RectBounds.top = nTopRect;
+   RectBounds.bottom = nBottomRect;
 
-  if (Left == Right)
-    {
-      PUTPIXEL(Left, Top, &PenBrushObj);
-      BRUSHOBJ_UnlockBrush(dc->w.hBrush);
-      DC_UnlockDc(hDC);
+   if (RadiusX > RadiusY)
+   {
+      nx = RadiusX;
+      ny = RadiusY;
+   }
+   else
+   {
+      nx = RadiusY;
+      ny = RadiusX;
+   }
+   
+   da = -1;
+   db = 0xFFFF;
+   ix = 0; 
+   iy = nx * 64;
+   NewA = 0; 
+   NewB = (iy + 32) >> 6;
+   NewC = 0; 
+   NewD = (NewB * ny) / nx;
 
-      return ret;
-    }
+   do {
+      A = NewA; 
+      B = NewB; 
+      C = NewC; 
+      D = NewD;
 
-  Radius = (Right - Left) / 2;
-  if (Even)
-    {
-      X = 0;
-      Y = Radius;
-      d = 2 - Radius;
-      X18 = Right;
-      X27 = (Left + Right) / 2 + 1;
-      X36 = (Left + Right) / 2;
-      X45 = Left;
-      Y14 = Top + Radius;
-      Y23 = Top;
-      Y58 = Top + Radius + 1;
-      Y67 = Top + (Right - Left);
-      PUTLINE(X45 + 1, Y14, X18, Y14, FillBrushObj);
-      PUTLINE(X45 + 1, Y58, X18, Y58, FillBrushObj);
-      PUTPIXEL(X27, Y23, &PenBrushObj);
-      PUTPIXEL(X36, Y23, &PenBrushObj);
-      PUTPIXEL(X18, Y14, &PenBrushObj);
-      PUTPIXEL(X45, Y14, &PenBrushObj);
-      PUTPIXEL(X18, Y58, &PenBrushObj);
-      PUTPIXEL(X45, Y58, &PenBrushObj);
-      PUTPIXEL(X27, Y67, &PenBrushObj);
-      PUTPIXEL(X36, Y67, &PenBrushObj);
-    }
-  else
-    {
-      X = 0;
-      Y = Radius;
-      d = 1 - Radius;
-      X18 = Right;
-      X27 = (Left + Right) / 2;
-      X36 = (Left + Right) / 2;
-      X45 = Left;
-      Y14 = Top + Radius;
-      Y23 = Top;
-      Y58 = Top + Radius;
-      Y67 = Top + (Right - Left);
-      PUTLINE(X45 + 1, Y14, X18, Y58, FillBrushObj);
-      PUTPIXEL(X27, Y23, &PenBrushObj);
-      PUTPIXEL(X45, Y14, &PenBrushObj);
-      PUTPIXEL(X18, Y58, &PenBrushObj);
-      PUTPIXEL(X27, Y67, &PenBrushObj);
-    }
+      ix += iy / nx;
+      iy -= ix / nx;
+      NewA = (ix + 32) >> 6; 
+      NewB = (iy + 32) >> 6;
+      NewC = (NewA * ny) / nx; 
+      NewD = (NewB * ny) / nx;
 
-  while (X < Y)
-    {
-      if (d < 0)
-	{
-	  d += 2 * X + (Even ? 4 : 3);
-
-	  X27++;
-	  X36--;
-	  Y14--;
-	  Y58++;
-	}
+      if (RadiusX > RadiusY)
+      {
+         Temp = A; A = C; C = Temp;
+         Temp = B; B = D; D = Temp;
+         Cond1 = ((C != NewA) || (B != NewD)) && (NewC <= NewD);
+         Cond2 = ((D != NewB) || (A != NewC)) && (NewC <= B);
+      }
       else
-	{
-	  d += 2 * (X - Y) + 5;
-	  Y--;
+      {
+         Cond1 = ((C != NewC) || (B != NewB)) && (NewA <= NewB);
+         Cond2 = ((D != NewD) || (A != NewA)) && (NewA <= B);
+      }
 
-	  Y23++;
-	  Y67--;
-	  X18--;
-	  X45++;
-	  X27++;
-	  X36--;
-	  Y14--;
-	  Y58++;
-	  PUTLINE(X36 + 1, Y23, X27, Y23, FillBrushObj);
-	  PUTLINE(X36 + 1, Y67, X27, Y67, FillBrushObj);
-	}
-      X++;
+      /*
+       * Draw the lines going from inner to outer (+ mirrored).
+       */
+      
+      if ((A > da) && (A < db))
+      {
+         PUTLINE(CenterX - D, CenterY + A, CenterX + D, CenterY + A, FillBrush);
+         if (A)
+         {
+            PUTLINE(CenterX - D, CenterY - A, CenterX + D, CenterY - A, FillBrush);
+         }
+         da = A;
+      }
 
-      if (Y23 < Y14)
-	{
-	  PUTLINE(X45 + 1, Y14, X18, Y14, FillBrushObj);
-	  PUTLINE(X45 + 1, Y58, X18, Y58, FillBrushObj);
-	}
-      PUTPIXEL(X27, Y23, &PenBrushObj);
-      PUTPIXEL(X36, Y23, &PenBrushObj);
-      PUTPIXEL(X18, Y14, &PenBrushObj);
-      PUTPIXEL(X45, Y14, &PenBrushObj);
-      PUTPIXEL(X18, Y58, &PenBrushObj);
-      PUTPIXEL(X45, Y58, &PenBrushObj);
-      PUTPIXEL(X27, Y67, &PenBrushObj);
-      PUTPIXEL(X36, Y67, &PenBrushObj);
-    }
+      /*
+       * Draw the lines going from outer to inner (+ mirrored).
+       */
+      
+      if ((B < db) && (B > da))
+      { 
+         PUTLINE(CenterX - C, CenterY + B, CenterX + C, CenterY + B, FillBrush);
+         PUTLINE(CenterX - C, CenterY - B, CenterX + C, CenterY - B, FillBrush);
+         db = B;
+      }
 
-  BRUSHOBJ_UnlockBrush(dc->w.hBrush);
-  DC_UnlockDc(hDC);
+      /*
+       * Draw the pixels on the margin.
+       */
 
-  return ret;
+      if (Cond1)
+      {
+         PUTPIXEL(CenterX + C, CenterY + B, &PenBrush);
+         if (C)
+            PUTPIXEL(CenterX - C, CenterY + B, &PenBrush);
+         if (B)
+         {
+            PUTPIXEL(CenterX + C, CenterY - B, &PenBrush);
+            if (C)
+               PUTPIXEL(CenterX - C, CenterY - B, &PenBrush);
+         }
+      }
+
+      if (Cond2)
+      {
+         PUTPIXEL(CenterX + D, CenterY + A, &PenBrush);
+         if (D)
+            PUTPIXEL(CenterX - D, CenterY + A, &PenBrush);
+         if (A)
+         {
+            PUTPIXEL(CenterX + D, CenterY - A, &PenBrush);
+            if (D)
+               PUTPIXEL(CenterX - D, CenterY - A, &PenBrush);
+         }
+      }
+   } while (B > A);
+
+   BRUSHOBJ_UnlockBrush(dc->w.hBrush);
+   DC_UnlockDc(hDC);
+
+   return ret;
 }
 
 typedef struct tagSHAPEPOINT
