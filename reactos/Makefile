@@ -78,8 +78,8 @@ NET_DEVICE_DRIVERS = ne2000
 STORAGE_DRIVERS = atapi cdrom class2 disk scsiport
 
 # System applications
-# autochk lsass services shell winlogon
-SYS_APPS = autochk services cmd winlogon gstart usetup
+# autochk cmd services format gstart usetup winlogon
+SYS_APPS = autochk cmd services format gstart usetup winlogon
 
 # System services
 # rpcss eventlog

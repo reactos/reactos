@@ -24,6 +24,21 @@ VfatInitialize()
 
 
 NTSTATUS
+VfatFormat(
+	PUNICODE_STRING  DriveRoot,
+	DWORD  MediaFlag,
+	PUNICODE_STRING  Label,
+	BOOL  QuickFormat,
+	DWORD  ClusterSize,
+	PFMIFSCALLBACK  Callback)
+{
+  DPRINT1("VfatFormat()\n");
+
+  return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
 VfatCleanup()
 {
   DPRINT("VfatCleanup()\n");

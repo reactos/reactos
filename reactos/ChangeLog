@@ -1,3 +1,15 @@
+2003-04-06  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* Makefile: Add format.
+	* include/fslib/vfatlib.h (VfatFormat): Prototype.
+	* lib/fmifs/format.c (VfatFormat): Add stub.
+	* lib/fmifs/makefile (TARGET_LIBS): Add vfatlib.a.
+	* lib/fslib/vfatlib/vfatlib.c (VfatFormat): Add stub.
+	* tools/helper.mk: Do not install .sym files for static libraries.
+	* subsys/system/format: New directory.
+	* subsys/system/format/makefile: New file.
+	* subsys/system/format/format.c: Ditto.
+
 2003-04-05  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* include/fslib: New directory.

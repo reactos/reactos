@@ -7,10 +7,22 @@
 #ifndef __VFATLIB_H
 #define __VFATLIB_H
 
+#include <fmifs.h>
+
+
 NTSTATUS
 VfatInitialize();
 
 NTSTATUS
 VfatCleanup();
+
+NTSTATUS
+VfatFormat(
+	PUNICODE_STRING  DriveRoot,
+	DWORD  MediaFlag,
+	PUNICODE_STRING  Label,
+	BOOL  QuickFormat,
+	DWORD  ClusterSize,
+	PFMIFSCALLBACK  Callback);
 
 #endif /*__VFATLIB_H */

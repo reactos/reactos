@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.31 2003/04/05 19:40:41 chorns Exp $
+# $Id: helper.mk,v 1.32 2003/04/05 23:17:22 chorns Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -715,9 +715,19 @@ $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME):
 
 else # INSTALL_SYMBOLS
 
+# Static library targets do not have a .sym file
+ifeq ($(MK_MODE),static)
+
+$(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME): $(MK_FULLNAME)
+	$(CP) $(MK_FULLNAME) $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME)
+
+else # MK_MODE
+
 $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME): $(MK_FULLNAME) $(MK_BASENAME).sym
 	$(CP) $(MK_FULLNAME) $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME)
 	$(CP) $(MK_BASENAME).sym $(INSTALL_DIR)/symbols/$(MK_BASENAME).sym
+
+endif # MK_MODE
 
 endif # INSTALL_SYMBOLS
 

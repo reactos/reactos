@@ -1,4 +1,4 @@
-/* $Id: format.c,v 1.1 1999/05/11 21:19:41 ea Exp $
+/* $Id: format.c,v 1.2 2003/04/05 23:17:21 chorns Exp $
  *
  * COPYING:	See the top level directory
  * PROJECT:	ReactOS 
@@ -13,6 +13,11 @@
 #define _UNICODE
 #include <windows.h>
 #include <fmifs.h>
+#include <fslib/vfatlib.h>
+
+#define NDEBUG
+#include <debug.h>
+
 
 /* FMIFS.6 */
 VOID
@@ -35,14 +40,30 @@ FormatEx(
 	PFMIFSCALLBACK	Callback
 	)
 {
-	BOOL	Argument = FALSE;
+	UNICODE_STRING usDriveRoot;
+	UNICODE_STRING usLabel;
+	BOOL Argument = FALSE;
 
-	/* FAIL immediately */
-	Callback(
-		DONE,		/* Command */
-		0,		/* DWORD Modifier */
-		& Argument	/* Argument */
+	RtlInitUnicodeString(&usDriveRoot, DriveRoot);
+	RtlInitUnicodeString(&usLabel, Label);
+
+	if (_wcsnicmp(Format, L"FAT", 3) == 0)
+	{
+		DPRINT1("FormatEx - FAT\n");
+		VfatInitialize();
+
+		VfatFormat(&usDriveRoot, MediaFlag, &usLabel, QuickFormat, ClusterSize, Callback);
+
+		VfatCleanup();
+	}
+	else
+	{
+		/* Unknown file system */
+		Callback(DONE,		/* Command */
+			0,				/* DWORD Modifier */
+			&Argument		/* Argument */
 		);
+	}
 }
 
 
