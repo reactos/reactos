@@ -1,5 +1,13 @@
 2003-04-13  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* ntoskrnl/kd/gdbstub.c (KdEnterDebuggerException): Fix signed/unsigned
+	comparison warning.
+	* ntoskrnl/ke/i386/exp.c (KiKernelTrapHandler): Ditto.
+	* ntoskrnl/ke/i386/usertrap.c (KiUserTrapHandler): Ditto.
+	* tools/helper.mk: Do not install static libraries.
+
+2003-04-13  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* tools/Makefile: Fix rule for mkflpimg.
 
 2003-04-12  Casper S. Hornstrup  <chorns@users.sourceforge.net>

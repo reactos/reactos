@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.33 2003/04/13 03:24:26 hyperion Exp $
+# $Id: helper.mk,v 1.34 2003/04/13 17:38:27 chorns Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -170,9 +170,9 @@ ifeq ($(TARGET_TYPE),library)
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH :=
   MK_IMPLIB_EXT :=
-  MK_INSTALLDIR := system32
+  MK_INSTALLDIR := # none
   MK_BOOTCDDIR := system32
-  MK_DISTDIR := # FIXME
+  MK_DISTDIR := # none
   MK_RES_BASE :=
 endif
 
@@ -711,7 +711,18 @@ bootcd:
 else # MK_IMPLIBONLY
 
 
+# Don't install static libraries
+ifeq ($(MK_MODE),static)
+
+install:
+	-
+
+else # MK_MODE
+
 install: $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME)
+
+endif # MK_MODE
+
 
 ifeq ($(INSTALL_SYMBOLS),no)
 
@@ -720,11 +731,11 @@ $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME):
 
 else # INSTALL_SYMBOLS
 
-# Static library targets do not have a .sym file
+# Don't install static libraries
 ifeq ($(MK_MODE),static)
 
-$(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME): $(MK_FULLNAME)
-	$(CP) $(MK_FULLNAME) $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME)
+install:
+	-
 
 else # MK_MODE
 

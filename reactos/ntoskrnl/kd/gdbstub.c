@@ -996,7 +996,7 @@ KdEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
   /* Disable hardware debugging while we are inside the stub */
   __asm__("movl %0,%%db7" : /* no output */ : "r" (0));
 
-  if (STATUS_ACCESS_VIOLATION == ExceptionRecord->ExceptionCode &&
+  if (STATUS_ACCESS_VIOLATION == (NTSTATUS) ExceptionRecord->ExceptionCode &&
       NULL != GspAccessLocation &&
       (ULONG_PTR) GspAccessLocation ==
       (ULONG_PTR) ExceptionRecord->ExceptionInformation[1])
