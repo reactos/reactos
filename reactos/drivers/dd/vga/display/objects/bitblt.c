@@ -7,6 +7,36 @@
 #include "bitblt.h"
 
 typedef BOOL (*PFN_VGABlt)(SURFOBJ*, SURFOBJ*, XLATEOBJ*, RECTL*, POINTL*);
+typedef BOOL STDCALL (*PBLTRECTFUNC)(PSURFOBJ OutputObj,
+                                     PSURFOBJ InputObj,
+                                     PSURFOBJ Mask,
+                                     PXLATEOBJ ColorTranslation,
+                                     PRECTL OutputRect,
+                                     PPOINTL InputPoint,
+                                     PPOINTL MaskOrigin,
+                                     PBRUSHOBJ Brush,
+                                     PPOINTL BrushOrigin,
+                                     ROP4 Rop4);
+
+static BOOL FASTCALL VGADDI_IntersectRect(PRECTL prcDst, PRECTL prcSrc1, PRECTL prcSrc2)
+{
+  static const RECTL rclEmpty = { 0, 0, 0, 0 };
+
+  prcDst->left  = max(prcSrc1->left, prcSrc2->left);
+  prcDst->right = min(prcSrc1->right, prcSrc2->right);
+
+  if (prcDst->left < prcDst->right)
+  {
+    prcDst->top    = max(prcSrc1->top, prcSrc2->top);
+    prcDst->bottom = min(prcSrc1->bottom, prcSrc2->bottom);
+
+    if (prcDst->top < prcDst->bottom) return(TRUE);
+  }
+
+  *prcDst = rclEmpty;
+
+  return(FALSE);
+}
 
 BOOL
 DIBtoVGA(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
@@ -164,8 +194,10 @@ VGAtoVGA(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
 }
 
 BOOL STDCALL
-VGADDI_BltBrush(SURFOBJ* Dest, XLATEOBJ* ColorTranslation, RECTL* DestRect,
-		BRUSHOBJ* Brush, POINTL* BrushPoint, ROP4 Rop4)
+VGADDI_BltBrush(PSURFOBJ Dest, PSURFOBJ Source, PSURFOBJ MaskSurf,
+                PXLATEOBJ ColorTranslation, PRECT DestRect,
+                PPOINTL SourcePoint, PPOINTL MaskPoint,
+		PBRUSHOBJ Brush, PPOINTL BrushPoint, ROP4 Rop4)
 {
   UCHAR SolidColor;
   ULONG Left;
@@ -267,8 +299,9 @@ VGADDI_BltBrush(SURFOBJ* Dest, XLATEOBJ* ColorTranslation, RECTL* DestRect,
 }
 
 BOOL STDCALL
-VGADDI_BltSrc(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
-	      RECTL *DestRect, POINTL *SourcePoint)
+VGADDI_BltSrc(PSURFOBJ Dest, PSURFOBJ Source, PSURFOBJ Mask,
+              PXLATEOBJ ColorTranslation, PRECTL DestRect, PPOINTL SourcePoint,
+              PPOINTL MaskOrigin, PBRUSHOBJ Brush, PPOINTL BrushOrigin, ROP4 Rop4)
 {
   RECT_ENUM RectEnum;
   BOOL EnumMore;
@@ -308,9 +341,10 @@ VGADDI_BltSrc(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
 }
 
 BOOL STDCALL
-VGADDI_BltMask(SURFOBJ *Dest, SURFOBJ *Mask, XLATEOBJ *ColorTranslation,
-	       RECTL *DestRect, POINTL *MaskPoint, BRUSHOBJ* Brush,
-	       POINTL* BrushPoint)
+VGADDI_BltMask(PSURFOBJ Dest, PSURFOBJ Source, PSURFOBJ Mask,
+               PXLATEOBJ ColorTranslation, PRECTL DestRect,
+               PPOINTL SourcePoint, PPOINTL MaskPoint, BRUSHOBJ* Brush,
+	       PPOINTL BrushPoint, ROP4 Rop4)
 {
   LONG i, j, dx, dy, idxColor, RGBulong = 0, c8;
   BYTE *initial, *tMask, *lMask;
@@ -355,36 +389,71 @@ DrvBitBlt(SURFOBJ *Dest,
 	  POINTL *BrushPoint,
 	  ROP4 rop4)
 {
-  /* Punt bitblts with complex clipping to the GDI. */
-  if (Clip != NULL)
-    {
-      return(FALSE);
-    }
+  PBLTRECTFUNC BltRectFunc;
+  RECTL CombinedRect;
+  BOOL Ret;
+  RECT_ENUM RectEnum;
+  BOOL EnumMore;
+  unsigned i;
   
   switch (rop4)
     {
     case BLACKNESS:
     case PATCOPY:
     case WHITENESS:
-      return(VGADDI_BltBrush(Dest, ColorTranslation, DestRect, Brush,
-			     BrushPoint, rop4));
+      BltRectFunc = VGADDI_BltBrush;
+      break;
 
     case SRCCOPY:
       if (BMF_4BPP == Source->iBitmapFormat && BMF_4BPP == Dest->iBitmapFormat)
-        {
-	return(VGADDI_BltSrc(Dest, Source, ColorTranslation, DestRect,
-	                     SourcePoint));
+	{
+	  BltRectFunc = VGADDI_BltSrc;
 	}
       else
 	{
-	return FALSE;
+	  return FALSE;
 	}
 
     case 0xAACC:
-      return(VGADDI_BltMask(Dest, Mask, ColorTranslation, DestRect,
-			    MaskPoint, Brush, BrushPoint));
+      BltRectFunc = VGADDI_BltMask;
+      break;
 
     default:
-      return(FALSE);
+      return FALSE;
     }
+
+  switch(NULL == Clip ? DC_TRIVIAL : Clip->iDComplexity)
+  {
+    case DC_TRIVIAL:
+      Ret = (*BltRectFunc)(Dest, Source, Mask, ColorTranslation, DestRect,
+                           SourcePoint, MaskPoint, Brush, BrushPoint,
+	                   rop4);
+      break;
+    case DC_RECT:
+      // Clip the blt to the clip rectangle
+      VGADDI_IntersectRect(&CombinedRect, DestRect, &(Clip->rclBounds));
+      Ret = (*BltRectFunc)(Dest, Source, Mask, ColorTranslation, &CombinedRect,
+                           SourcePoint, MaskPoint, Brush, BrushPoint,
+	                   rop4);
+      break;
+    case DC_COMPLEX:
+      Ret = TRUE;
+      CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_ANY, ENUM_RECT_LIMIT);
+      do
+	{
+	  EnumMore = CLIPOBJ_bEnum(Clip, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
+
+	  for (i = 0; i < RectEnum.c; i++)
+	    {
+	      VGADDI_IntersectRect(&CombinedRect, DestRect, RectEnum.arcl + i);
+	      Ret = (*BltRectFunc)(Dest, Source, Mask, ColorTranslation, &CombinedRect,
+	                           SourcePoint, MaskPoint, Brush, BrushPoint, rop4) &&
+	            Ret;
+	    }
+	}
+      while (EnumMore);
+      break;
+  }
+
+  return Ret;
 }

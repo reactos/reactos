@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: brush.c,v 1.20 2003/05/18 17:16:17 ea Exp $
+/* $Id: brush.c,v 1.21 2003/06/28 08:39:18 gvg Exp $
  */
 
 
@@ -28,6 +28,7 @@
 //#include <win32k/debug.h>
 #include <include/object.h>
 #include <include/inteng.h>
+#include <include/error.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -211,6 +212,7 @@ BOOL STDCALL W32kPatBlt(HDC  hDC,
 
   if (dc == NULL)
     {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
       return(FALSE);
     }
 
@@ -243,7 +245,7 @@ BOOL STDCALL W32kPatBlt(HDC  hDC,
       ret = IntEngBitBlt(SurfObj,
 		         NULL,
 		         NULL,
-		         NULL,
+		         dc->CombinedClip,
 		         NULL,
 		         &DestRect,
 		         NULL,

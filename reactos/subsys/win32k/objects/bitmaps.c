@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.29 2003/06/06 10:17:44 gvg Exp $ */
+/* $Id: bitmaps.c,v 1.30 2003/06/28 08:39:18 gvg Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -110,7 +110,7 @@ BOOL STDCALL W32kBitBlt(HDC  hDCDest,
 
   // Perform the bitblt operation
 
-  Status = IntEngBitBlt(SurfDest, SurfSrc, NULL, NULL, XlateObj, &DestRect, &SourcePoint, NULL, NULL, NULL, ROP);
+  Status = IntEngBitBlt(SurfDest, SurfSrc, NULL, DCDest->CombinedClip, XlateObj, &DestRect, &SourcePoint, NULL, NULL, NULL, ROP);
 
   if (XlateAlloc) EngDeleteXlate(XlateObj);
   if (SurfDestAlloc) ExFreePool(SurfDest);

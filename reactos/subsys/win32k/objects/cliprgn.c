@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cliprgn.c,v 1.16 2003/06/26 21:52:40 gvg Exp $ */
+/* $Id: cliprgn.c,v 1.17 2003/06/28 08:39:18 gvg Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -26,6 +26,7 @@
 #include <win32k/cliprgn.h>
 #include <win32k/coord.h>
 #include <include/error.h>
+#include "../eng/clip.h"
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -33,6 +34,10 @@
 VOID FASTCALL
 CLIPPING_UpdateGCRegion(DC* Dc)
 {
+  HRGN Combined;
+  PROSRGNDATA CombinedRegion;
+
+#ifndef TODO
   if (Dc->w.hGCClipRgn == NULL)
     {
       Dc->w.hGCClipRgn = W32kCreateRectRgn(0, 0, 0, 0);
@@ -47,6 +52,36 @@ CLIPPING_UpdateGCRegion(DC* Dc)
       W32kCombineRgn(Dc->w.hGCClipRgn, Dc->w.hClipRgn, Dc->w.hVisRgn,
 		     RGN_AND);
     }
+#endif
+
+  Combined = W32kCreateRectRgn(0, 0, 0, 0);
+  ASSERT(NULL != Combined);
+
+  if (Dc->w.hClipRgn == NULL)
+    {
+      W32kCombineRgn(Combined, Dc->w.hVisRgn, 0, RGN_COPY);
+    }
+  else
+    {
+      W32kCombineRgn(Combined, Dc->w.hClipRgn, Dc->w.hVisRgn,
+		     RGN_AND);
+    }
+
+  CombinedRegion = RGNDATA_LockRgn(Combined);
+  ASSERT(NULL != CombinedRegion);
+
+  if (NULL != Dc->CombinedClip)
+    {
+      IntEngDeleteClipRegion(Dc->CombinedClip);
+    }
+
+  Dc->CombinedClip = IntEngCreateClipRegion(CombinedRegion->rdh.nCount,
+                                            CombinedRegion->Buffer,
+                                            CombinedRegion->rdh.rcBound);
+  ASSERT(NULL != Dc->CombinedClip);
+
+  RGNDATA_UnlockRgn(Combined);
+  W32kDeleteObject(Combined);
 }
 
 HRGN WINAPI SaveVisRgn(HDC hdc)
@@ -196,7 +231,7 @@ int STDCALL W32kSelectClipRgn(HDC  hDC,
 	  W32kDeleteObject(Copy);
 	  return ERROR;
 	}
-      W32kOffsetRgn(Copy, dc->w.DCOrgX, dc->w.DCOrgX);
+      W32kOffsetRgn(Copy, dc->w.DCOrgX, dc->w.DCOrgY);
     }
   else
     {

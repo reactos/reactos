@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.61 2003/06/21 14:25:30 gvg Exp $
+/* $Id: dc.c,v 1.62 2003/06/28 08:39:18 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -37,6 +37,7 @@
 #include <win32k/gdiobj.h>
 #include <win32k/pen.h>
 #include <win32k/text.h>
+#include "../eng/clip.h"
 #include "../eng/handle.h"
 #include <include/inteng.h>
 #include <include/eng.h>
@@ -534,6 +535,10 @@ BOOL STDCALL W32kDeleteDC(HDC  DCHandle)
   {
     W32kDeleteObject (DCToDelete->w.hVisRgn);
   }
+  if (NULL != DCToDelete->CombinedClip)
+    {
+      IntEngDeleteClipRegion(DCToDelete->CombinedClip);
+    }
   if (DCToDelete->w.hGCClipRgn)
   {
     W32kDeleteObject (DCToDelete->w.hGCClipRgn);

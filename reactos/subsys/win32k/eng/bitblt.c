@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.20 2003/05/18 17:16:17 ea Exp $
+/* $Id: bitblt.c,v 1.21 2003/06/28 08:39:18 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -46,6 +46,19 @@
 #define NDEBUG
 #include <win32k/debug1.h>
 
+typedef BOOLEAN STDCALL (*PBLTRECTFUNC)(PSURFOBJ OutputObj,
+                                        PSURFGDI OutputGDI,
+                                        PSURFOBJ InputObj,
+                                        PSURFGDI InputGDI,
+                                        PSURFOBJ Mask,
+                                        PXLATEOBJ ColorTranslation,
+                                        PRECTL OutputRect,
+                                        PPOINTL InputPoint,
+                                        PPOINTL MaskOrigin,
+                                        PBRUSHOBJ Brush,
+                                        PPOINTL BrushOrigin,
+                                        ROP4 Rop4);
+
 BOOL STDCALL EngIntersectRect(PRECTL prcDst, PRECTL prcSrc1, PRECTL prcSrc2)
 {
   static const RECTL rclEmpty = { 0, 0, 0, 0 };
@@ -66,10 +79,19 @@ BOOL STDCALL EngIntersectRect(PRECTL prcDst, PRECTL prcSrc1, PRECTL prcSrc2)
   return(FALSE);
 }
 
-static BOOL STDCALL
-BltMask(SURFOBJ *Dest, PSURFGDI DestGDI, SURFOBJ *Mask, 
-	RECTL *DestRect, POINTL *MaskPoint, BRUSHOBJ* Brush,
-	POINTL* BrushPoint)
+static BOOLEAN STDCALL
+BltMask(PSURFOBJ Dest,
+        PSURFGDI DestGDI,
+        PSURFOBJ Source,
+        PSURFGDI SourceGDI,
+        PSURFOBJ Mask, 
+        PXLATEOBJ ColorTranslation,
+	PRECTL DestRect,
+        PPOINTL SourcePoint,
+        PPOINTL MaskPoint,
+        PBRUSHOBJ Brush,
+	PPOINTL BrushPoint,
+        ROP4 Rop4)
 {
   LONG i, j, dx, dy, c8;
   BYTE *tMask, *lMask;
@@ -108,10 +130,19 @@ BltMask(SURFOBJ *Dest, PSURFGDI DestGDI, SURFOBJ *Mask,
     }
 }
 
-static BOOL STDCALL
-BltPatCopy(SURFOBJ *Dest, PSURFGDI DestGDI, SURFOBJ *Mask, 
-	   RECTL *DestRect, POINTL *MaskPoint, BRUSHOBJ* Brush,
-	   POINTL* BrushPoint)
+static BOOLEAN STDCALL
+BltPatCopy(PSURFOBJ Dest,
+           PSURFGDI DestGDI,
+           PSURFOBJ Source,
+           PSURFGDI SourceGDI,
+           PSURFOBJ Mask, 
+           PXLATEOBJ ColorTranslation,
+	   PRECTL DestRect,
+           PPOINTL SourcePoint,
+           PPOINTL MaskPoint,
+           PBRUSHOBJ Brush,
+	   PPOINTL BrushPoint,
+           ROP4 Rop4)
 {
   // These functions are assigned if we're working with a DIB
   // The assigned functions depend on the bitsPerPixel of the DIB
@@ -127,6 +158,23 @@ BltPatCopy(SURFOBJ *Dest, PSURFGDI DestGDI, SURFOBJ *Mask,
   return TRUE;
 }
 
+static BOOLEAN STDCALL
+CallDibBitBlt(PSURFOBJ OutputObj,
+              PSURFGDI OutputGDI,
+              PSURFOBJ InputObj,
+              PSURFGDI InputGDI,
+              PSURFOBJ Mask,
+              PXLATEOBJ ColorTranslation,
+              PRECTL OutputRect,
+              PPOINTL InputPoint,
+              PPOINTL MaskOrigin,
+              PBRUSHOBJ Brush,
+              PPOINTL BrushOrigin,
+              ROP4 Rop4)
+{
+  return OutputGDI->DIB_BitBlt(OutputObj, InputObj, OutputGDI, InputGDI, OutputRect, InputPoint, ColorTranslation);
+}
+
 INT abs(INT nm);
 
 BOOL STDCALL
@@ -140,12 +188,10 @@ EngBitBlt(SURFOBJ *DestObj,
 	  POINTL *MaskOrigin,
 	  BRUSHOBJ *Brush,
 	  POINTL *BrushOrigin,
-	  ROP4 rop4)
+	  ROP4 Rop4)
 {
-  BOOLEAN            ret;
   BYTE               clippingType;
-  RECTL              rclTmp;
-  POINTL             ptlTmp;
+  RECTL              CombinedRect;
   RECT_ENUM          RectEnum;
   BOOL               EnumMore;
   PSURFGDI           OutputGDI, InputGDI;
@@ -157,6 +203,10 @@ EngBitBlt(SURFOBJ *DestObj,
   INTENG_ENTER_LEAVE EnterLeaveDest;
   PSURFOBJ           InputObj;
   PSURFOBJ           OutputObj;
+  PBLTRECTFUNC       BltRectFunc;
+  BOOLEAN            Ret;
+  RECTL              ClipRect;
+  unsigned           i;
 
   /* Check for degenerate case: if height or width of DestRect is 0 pixels there's
      nothing to do */
@@ -222,7 +272,7 @@ EngBitBlt(SURFOBJ *DestObj,
 
   /* The code currently assumes there will be a source bitmap. This is not true when, for example, using this function to
    * paint a brush pattern on the destination. */
-  if (NULL == InputObj && 0xaacc != rop4 && PATCOPY != rop4)
+  if (NULL == InputObj && 0xaacc != Rop4 && PATCOPY != Rop4)
   {
     DbgPrint("EngBitBlt: A source is currently required, even though not all operations require one (FIXME)\n");
     return FALSE;
@@ -236,79 +286,65 @@ EngBitBlt(SURFOBJ *DestObj,
     clippingType = ClipRegion->iDComplexity;
   }
 
-  if (0xaacc == rop4)
-  {
-    ret = BltMask(OutputObj, OutputGDI, Mask, &OutputRect, MaskOrigin, Brush, BrushOrigin);
-    IntEngLeave(&EnterLeaveDest);
-    IntEngLeave(&EnterLeaveSource);
-    return ret;
-  } else if (PATCOPY == rop4) {
-    ret = BltPatCopy(OutputObj, OutputGDI, Mask, &OutputRect, MaskOrigin, Brush, BrushOrigin);
-    IntEngLeave(&EnterLeaveDest);
-    IntEngLeave(&EnterLeaveSource);
-    return ret;
-  }
+  if (0xaacc == Rop4)
+    {
+      BltRectFunc = BltMask;
+    }
+  else if (PATCOPY == Rop4)
+    {
+      BltRectFunc = BltPatCopy;
+    }
+  else
+    {
+      BltRectFunc = CallDibBitBlt;
+    }
 
 
   // We don't handle color translation just yet [we dont have to.. REMOVE REMOVE REMOVE]
   switch(clippingType)
   {
     case DC_TRIVIAL:
-      OutputGDI->DIB_BitBlt(OutputObj, InputObj, OutputGDI, InputGDI, &OutputRect, &InputPoint, ColorTranslation);
-
-      IntEngLeave(&EnterLeaveDest);
-      IntEngLeave(&EnterLeaveSource);
-
-      return(TRUE);
-
+      Ret = (*BltRectFunc)(OutputObj, OutputGDI, InputObj, InputGDI, Mask, ColorTranslation,
+                           &OutputRect, &InputPoint, MaskOrigin, Brush, BrushOrigin, Rop4);
+      break;
     case DC_RECT:
-
       // Clip the blt to the clip rectangle
-      EngIntersectRect(&rclTmp, &OutputRect, &ClipRegion->rclBounds);
-
-      ptlTmp.x = InputPoint.x + rclTmp.left - OutputRect.left;
-      ptlTmp.y = InputPoint.y + rclTmp.top  - OutputRect.top;
-
-      IntEngLeave(&EnterLeaveDest);
-      IntEngLeave(&EnterLeaveSource);
-
-      return(TRUE);
-
+      ClipRect.left = ClipRegion->rclBounds.left + Translate.x;
+      ClipRect.right = ClipRegion->rclBounds.right + Translate.x;
+      ClipRect.top = ClipRegion->rclBounds.top + Translate.y;
+      ClipRect.bottom = ClipRegion->rclBounds.bottom + Translate.y;
+      EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect);
+      Ret = (*BltRectFunc)(OutputObj, OutputGDI, InputObj, InputGDI, Mask, ColorTranslation,
+                           &CombinedRect, &InputPoint, MaskOrigin, Brush, BrushOrigin, Rop4);
+      break;
     case DC_COMPLEX:
-
+      Ret = TRUE;
       CLIPOBJ_cEnumStart(ClipRegion, FALSE, CT_RECTANGLES, CD_ANY, ENUM_RECT_LIMIT);
+      do
+	{
+	  EnumMore = CLIPOBJ_bEnum(ClipRegion,(ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
 
-      do {
-        EnumMore = CLIPOBJ_bEnum(ClipRegion,(ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
-
-        if (RectEnum.c > 0)
-        {
-          RECTL* prclEnd = &RectEnum.arcl[RectEnum.c];
-          RECTL* prcl    = &RectEnum.arcl[0];
-
-          do {
-            EngIntersectRect(prcl, prcl, &OutputRect);
-
-            ptlTmp.x = InputPoint.x + prcl->left - OutputRect.left;
-            ptlTmp.y = InputPoint.y + prcl->top - OutputRect.top;
-
-            prcl++;
-
-          } while (prcl < prclEnd);
-        }
-
-      } while(EnumMore);
-
-    IntEngLeave(&EnterLeaveDest);
-    IntEngLeave(&EnterLeaveSource);
-
-    return(TRUE);
+	  for (i = 0; i < RectEnum.c; i++)
+	    {
+	      ClipRect.left = RectEnum.arcl[i].left + Translate.x;
+	      ClipRect.right = RectEnum.arcl[i].right + Translate.x;
+	      ClipRect.top = RectEnum.arcl[i].top + Translate.y;
+	      ClipRect.bottom = RectEnum.arcl[i].bottom + Translate.y;
+	      EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect);
+	      Ret = (*BltRectFunc)(OutputObj, OutputGDI, InputObj, InputGDI, Mask, ColorTranslation,
+	                           &CombinedRect, &InputPoint, MaskOrigin, Brush, BrushOrigin, Rop4) &&
+	            Ret;
+	    }
+	}
+      while(EnumMore);
+      break;
   }
+
 
   IntEngLeave(&EnterLeaveDest);
   IntEngLeave(&EnterLeaveSource);
 
-  return(FALSE);
+  return Ret;
 }
 
 BOOL STDCALL
@@ -322,7 +358,7 @@ IntEngBitBlt(SURFOBJ *DestObj,
              POINTL *MaskOrigin,
              BRUSHOBJ *Brush,
              POINTL *BrushOrigin,
-             ROP4 rop4)
+             ROP4 Rop4)
 {
   BOOLEAN ret;
   SURFGDI *DestGDI;
@@ -345,12 +381,12 @@ IntEngBitBlt(SURFOBJ *DestObj,
   /* Call the driver's DrvBitBlt if available */
   if (NULL != DestGDI->BitBlt) {
     ret = DestGDI->BitBlt(DestObj, SourceObj, Mask, ClipRegion, ColorTranslation,
-                          DestRect, SourcePoint, MaskOrigin, Brush, BrushOrigin, rop4);
+                          DestRect, SourcePoint, MaskOrigin, Brush, BrushOrigin, Rop4);
   }
 
   if (! ret) {
     ret = EngBitBlt(DestObj, SourceObj, Mask, ClipRegion, ColorTranslation,
-                    DestRect, SourcePoint, MaskOrigin, Brush, BrushOrigin, rop4);
+                    DestRect, SourcePoint, MaskOrigin, Brush, BrushOrigin, Rop4);
   }
 
   MouseSafetyOnDrawEnd(DestObj, DestGDI);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.33 2003/06/22 21:33:48 gvg Exp $ */
+/* $Id: text.c,v 1.34 2003/06/28 08:39:18 gvg Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -1062,7 +1062,7 @@ W32kTextOut(HDC  hDC,
     SourceGlyphSurf = (PSURFOBJ)AccessUserObject((ULONG) HSourceGlyph);
 
     // Use the font data as a mask to paint onto the DCs surface using a brush
-    IntEngBitBlt(SurfObj, NULL, SourceGlyphSurf, NULL, NULL, &DestRect, &SourcePoint, &MaskRect, Brush, &BrushOrigin, 0xAACC);
+    IntEngBitBlt(SurfObj, NULL, SourceGlyphSurf, dc->CombinedClip, NULL, &DestRect, &SourcePoint, &MaskRect, Brush, &BrushOrigin, 0xAACC);
 
     EngDeleteSurface(HSourceGlyph);
 

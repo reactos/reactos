@@ -98,6 +98,8 @@ typedef struct _DC
   INT  vportExtX;        /* Viewport extent */
   INT  vportExtY;
 
+  CLIPOBJ *CombinedClip;
+
   INT  saveLevel;
 
   WIN_DC_INFO  w;
