@@ -139,6 +139,9 @@
 <directory name="mpr">
 	<xi:include href="mpr/mpr.xml" />
 </directory>
+<directory name="msacm">
+	<xi:include href="msacm/msacm32.xml" />
+</directory>
 <directory name="msafd">
 	<xi:include href="msafd/msafd.xml" />
 </directory>
