@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.31 2001/03/31 01:17:29 dwelch Exp $
+/* $Id: console.c,v 1.32 2001/04/04 22:21:30 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -26,12 +26,21 @@
 #include <kernel32/kernel32.h>
 #include <kernel32/error.h>
 
+/* GLOBALS *******************************************************************/
+
+static BOOL IgnoreCtrlEvents = FALSE;
+static ULONG NrCtrlHandlers = 0;
+static PHANDLER_ROUTINE* CtrlHandlers = NULL;
+
 /* FUNCTIONS *****************************************************************/
 
 BOOL STDCALL
 AddConsoleAliasA (DWORD a0,
 		  DWORD a1,
 		  DWORD a2)
+     /*
+      * Undocumented
+      */
 {
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return FALSE;
@@ -41,6 +50,9 @@ BOOL STDCALL
 AddConsoleAliasW (DWORD a0,
 		  DWORD a1,
 		  DWORD a2)
+     /*
+      * Undocumented
+      */
 {
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return FALSE;
@@ -50,589 +62,581 @@ BOOL STDCALL
 ConsoleMenuControl (HANDLE	hConsole,
 		    DWORD	Unknown1,
 		    DWORD	Unknown2)
+     /*
+      * Undocumented
+      */
 {
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return FALSE;
 }
 
-BOOL
-STDCALL
-DuplicateConsoleHandle (
-	HANDLE	hConsole,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
-	)
+BOOL STDCALL
+DuplicateConsoleHandle (HANDLE	hConsole,
+			DWORD	Unknown1,
+			DWORD	Unknown2,
+			DWORD	Unknown3)
+     /*
+      * Undocumented
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
 }
 
-DWORD
-STDCALL
-ExpungeConsoleCommandHistoryW (
-	DWORD	Unknown0
-	)
+DWORD STDCALL
+ExpungeConsoleCommandHistoryW (DWORD	Unknown0)
+     /*
+      * Undocumented
+      */
+{
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
+}
+
+
+DWORD STDCALL
+ExpungeConsoleCommandHistoryA (DWORD	Unknown0)
+     /*
+      * Undocumented
+      */
+{
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
+}
+
+DWORD STDCALL
+GetConsoleAliasW (DWORD	Unknown0,
+		  DWORD	Unknown1,
+		  DWORD	Unknown2,
+		  DWORD	Unknown3)
+     /*
+      * Undocumented
+      */
+{
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
+}
+
+
+DWORD STDCALL
+GetConsoleAliasA (DWORD	Unknown0,
+		  DWORD	Unknown1,
+		  DWORD	Unknown2,
+		  DWORD	Unknown3)
+     /*
+      * Undocumented
+      */
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+DWORD STDCALL
+GetConsoleAliasExesW (DWORD	Unknown0,
+		      DWORD	Unknown1)
+     /*
+      * Undocumented
+      */
+{
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
+}
+
+
+
+DWORD STDCALL
+GetConsoleAliasExesA (DWORD	Unknown0,
+		      DWORD	Unknown1)
+     /*
+      * Undocumented
+      */
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
 
 
-DWORD
-STDCALL
-ExpungeConsoleCommandHistoryA (
-	DWORD	Unknown0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
-DWORD
-STDCALL
-GetConsoleAliasW (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-GetConsoleAliasA (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
-DWORD
-STDCALL
-GetConsoleAliasExesW (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
-DWORD
-STDCALL
-GetConsoleAliasExesA (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
-DWORD
-STDCALL
+DWORD STDCALL
 GetConsoleAliasExesLengthA (VOID)
+     /*
+      * Undocumented
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
 }
 
-
-
-DWORD
-STDCALL
+DWORD STDCALL
 GetConsoleAliasExesLengthW (VOID)
+     /*
+      * Undocumented
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
 }
 
-
-
-DWORD
-STDCALL
-GetConsoleAliasesW (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
+DWORD STDCALL
+GetConsoleAliasesW (DWORD	Unknown0,
+		    DWORD	Unknown1,
+		    DWORD	Unknown2)
+     /*
+      * Undocumented
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
+}
+ 
+DWORD STDCALL
+GetConsoleAliasesA (DWORD	Unknown0,
+		    DWORD	Unknown1,
+		    DWORD	Unknown2)
+     /*
+      * Undocumented
+      */
+{
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
 }
 
-
-
-DWORD
-STDCALL
-GetConsoleAliasesA (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
+DWORD STDCALL
+GetConsoleAliasesLengthW (DWORD Unknown0)
+     /*
+      * Undocumented
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
 }
 
-
-
-DWORD
-STDCALL
-GetConsoleAliasesLengthW (
-	DWORD Unknown0
-	)
+DWORD STDCALL
+GetConsoleAliasesLengthA (DWORD Unknown0)
+     /*
+      * Undocumented
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
 }
 
-
-
-DWORD
-STDCALL
-GetConsoleAliasesLengthA (
-	DWORD Unknown0
-	)
+DWORD STDCALL
+GetConsoleCommandHistoryW (DWORD	Unknown0,
+			   DWORD	Unknown1,
+			   DWORD	Unknown2)
+     /*
+      * Undocumented
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
 }
 
-
-DWORD
-STDCALL
-GetConsoleCommandHistoryW (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
+DWORD STDCALL
+GetConsoleCommandHistoryA (DWORD	Unknown0,
+			   DWORD	Unknown1,
+			   DWORD	Unknown2)
+     /*
+      * Undocumented
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
 }
 
-
-DWORD
-STDCALL
-GetConsoleCommandHistoryA (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
+DWORD STDCALL
+GetConsoleCommandHistoryLengthW (DWORD	Unknown0)
+     /*
+      * Undocumented
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
 }
 
-
-DWORD
-STDCALL
-GetConsoleCommandHistoryLengthW (
-	DWORD	Unknown0
-	)
+DWORD STDCALL
+GetConsoleCommandHistoryLengthA (DWORD	Unknown0)
+     /*
+      * Undocumented
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
 }
 
-
-DWORD
-STDCALL
-GetConsoleCommandHistoryLengthA (
-	DWORD	Unknown0
-	)
+DWORD STDCALL
+GetConsoleDisplayMode (LPDWORD lpdwMode)
+     /*
+      * FUNCTION: Get the console display mode
+      * ARGUMENTS:
+      *      lpdwMode - Address of variable that receives the current value
+      *                 of display mode
+      * STATUS: Undocumented
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
 }
 
-
-DWORD
-STDCALL
-GetConsoleDisplayMode (
-	DWORD	Unknown0
-	)
+DWORD STDCALL
+GetConsoleFontInfo (DWORD	Unknown0,
+		    DWORD	Unknown1,
+		    DWORD	Unknown2,
+		    DWORD	Unknown3)
+     /*
+      * Undocumented
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
 }
 
-
-DWORD
-STDCALL
-GetConsoleFontInfo (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
-	)
+DWORD STDCALL
+GetConsoleFontSize (DWORD	Unknown0,
+		    DWORD	Unknown1)
+     /*
+      * Undocumented
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
 }
 
-
-DWORD
-STDCALL
-GetConsoleFontSize (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	)
+DWORD STDCALL
+GetConsoleHardwareState (DWORD	Unknown0,
+			 DWORD	Unknown1,
+			 DWORD	Unknown2)
+     /*
+      * Undocumented
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
 }
 
-
-DWORD
-STDCALL
-GetConsoleHardwareState (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
+DWORD STDCALL
 GetConsoleInputWaitHandle (VOID)
+     /*
+      * Undocumented
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
 }
 
-DWORD
-STDCALL
-GetCurrentConsoleFont (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
+DWORD STDCALL
+GetCurrentConsoleFont (DWORD	Unknown0,
+		       DWORD	Unknown1,
+		       DWORD	Unknown2)
+     /*
+      * Undocumented
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
 }
 
-int
-STDCALL
+ULONG STDCALL
 GetNumberOfConsoleFonts (VOID)
+     /*
+      * Undocumented
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 1; /* FIXME: call csrss.exe */
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 1; /* FIXME: call csrss.exe */
 }
 
-DWORD
-STDCALL
-InvalidateConsoleDIBits (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	)
+DWORD STDCALL
+InvalidateConsoleDIBits (DWORD	Unknown0,
+			 DWORD	Unknown1)
+     /*
+      * Undocumented
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
 }
 
-DWORD
-STDCALL
-OpenConsoleW (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
-	)
+DWORD STDCALL
+OpenConsoleW (DWORD	Unknown0,
+	      DWORD	Unknown1,
+	      DWORD	Unknown2,
+	      DWORD	Unknown3)
+     /*
+      * Undocumented
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
 }
 
-WINBOOL
-STDCALL
-SetConsoleCommandHistoryMode (
-	DWORD	dwMode
-	)
+WINBOOL STDCALL
+SetConsoleCommandHistoryMode (DWORD	dwMode)
+     /*
+      * Undocumented
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
 }
 
-
-WINBOOL
-STDCALL
-SetConsoleCursor (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	)
+WINBOOL STDCALL
+SetConsoleCursor (DWORD	Unknown0,
+		  DWORD	Unknown1)
+     /*
+      * Undocumented
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
 }
 
-
-WINBOOL
-STDCALL
-SetConsoleDisplayMode (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
+WINBOOL STDCALL
+SetConsoleDisplayMode (HANDLE hOut,
+		       DWORD dwNewMode,
+		       LPDWORD lpdwOldMode)
+     /*
+      * FUNCTION: Set the console display mode.
+      * ARGUMENTS:
+      *       hOut - Standard output handle.
+      *       dwNewMode - New mode.
+      *       lpdwOldMode - Address of a variable that receives the old mode.
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
 }
 
-
-WINBOOL
-STDCALL
-SetConsoleFont (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	)
+WINBOOL STDCALL
+SetConsoleFont (DWORD	Unknown0,
+		DWORD	Unknown1)
+     /*
+      * Undocumented
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
 }
 
-
-WINBOOL
-STDCALL
-SetConsoleHardwareState (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
+WINBOOL STDCALL
+SetConsoleHardwareState (DWORD	Unknown0,
+			 DWORD	Unknown1,
+			 DWORD	Unknown2)
+     /*
+      * Undocumented
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
 }
 
-
-WINBOOL
-STDCALL
-SetConsoleKeyShortcuts (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
-	)
+WINBOOL STDCALL
+SetConsoleKeyShortcuts (DWORD	Unknown0,
+			DWORD	Unknown1,
+			DWORD	Unknown2,
+			DWORD	Unknown3)
+     /*
+      * Undocumented
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
 }
 
-
-WINBOOL
-STDCALL
-SetConsoleMaximumWindowSize (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	)
+WINBOOL STDCALL
+SetConsoleMaximumWindowSize (DWORD	Unknown0,
+			     DWORD	Unknown1)
+     /*
+      * Undocumented
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
 }
 
-
-WINBOOL
-STDCALL
-SetConsoleMenuClose (
-	DWORD	Unknown0
-	)
+WINBOOL STDCALL
+SetConsoleMenuClose (DWORD	Unknown0)
+     /*
+      * Undocumented
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
 }
 
-
-WINBOOL
-STDCALL
-SetConsoleNumberOfCommandsA (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	)
+WINBOOL STDCALL
+SetConsoleNumberOfCommandsA (DWORD	Unknown0,
+			     DWORD	Unknown1)
+     /*
+      * Undocumented
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
 }
 
-
-WINBOOL
-STDCALL
-SetConsoleNumberOfCommandsW (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	)
+WINBOOL STDCALL
+SetConsoleNumberOfCommandsW (DWORD	Unknown0,
+			     DWORD	Unknown1)
+     /*
+      * Undocumented
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
 }
 
-
-WINBOOL
-STDCALL
-SetConsolePalette (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
+WINBOOL STDCALL
+SetConsolePalette (DWORD	Unknown0,
+		   DWORD	Unknown1,
+		   DWORD	Unknown2)
+     /*
+      * Undocumented
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
 }
 
-WINBOOL
-STDCALL
+WINBOOL STDCALL
 SetLastConsoleEventActive (VOID)
+     /*
+      * Undocumented
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
 }
 
-DWORD
-STDCALL
-ShowConsoleCursor (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	)
+DWORD STDCALL
+ShowConsoleCursor (DWORD	Unknown0,
+		   DWORD	Unknown1)
+     /*
+      * Undocumented
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
 }
 
-DWORD
-STDCALL
-VerifyConsoleIoHandle (
-	DWORD	Unknown0
-	)
+DWORD STDCALL
+VerifyConsoleIoHandle (DWORD	Unknown0)
+     /*
+      * Undocumented
+      */
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
 }
 
-DWORD
-STDCALL
-WriteConsoleInputVDMA (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
-	)
+DWORD STDCALL
+WriteConsoleInputVDMA (DWORD	Unknown0,
+		       DWORD	Unknown1,
+		       DWORD	Unknown2,
+		       DWORD	Unknown3)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
 }
 
-
-DWORD
-STDCALL
-WriteConsoleInputVDMW (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
-	)
+DWORD STDCALL
+WriteConsoleInputVDMW (DWORD	Unknown0,
+		       DWORD	Unknown1,
+		       DWORD	Unknown2,
+		       DWORD	Unknown3)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
 }
 
-/*--------------------------------------------------------------
- *	CloseConsoleHandle
- */
-WINBOOL STDCALL CloseConsoleHandle(HANDLE Handle)
+WINBOOL STDCALL 
+CloseConsoleHandle(HANDLE Handle)
+     /*
+      * Undocumented
+      */
 {
-	if (FALSE == IsConsoleHandle (Handle))
-	{
-		SetLastError (ERROR_INVALID_PARAMETER);
-		return FALSE;
-	}
-	/* FIXME: call CSRSS */
-	return FALSE;
+  if (IsConsoleHandle (Handle) == FALSE)
+    {
+      SetLastError (ERROR_INVALID_PARAMETER);
+      return FALSE;
+    }
+  /* FIXME: call CSRSS */
+  return FALSE;
 }
 
-/*--------------------------------------------------------------
- *	IsConsoleHandle
- */
-BOOLEAN STDCALL IsConsoleHandle(HANDLE Handle)
+BOOLEAN STDCALL 
+IsConsoleHandle(HANDLE Handle)
 {
-   if ((((ULONG)Handle) & 0x10000003) == 0x3)
-     {
-	return(TRUE);
-     }
-   return(FALSE);
+  if ((((ULONG)Handle) & 0x10000003) == 0x3)
+    {
+      return(TRUE);
+    }
+  return(FALSE);
 }
 
-
-/*--------------------------------------------------------------
- *	GetStdHandle
- */
-HANDLE STDCALL GetStdHandle(DWORD nStdHandle)
+HANDLE STDCALL 
+GetStdHandle(DWORD nStdHandle)
+     /*
+      * FUNCTION: Get a handle for the standard input, standard output
+      * and a standard error device.
+      * ARGUMENTS:
+      *       nStdHandle - Specifies the device for which to return the handle.
+      * RETURNS: If the function succeeds, the return value is the handle
+      * of the specified device. Otherwise the value is INVALID_HANDLE_VALUE.
+      */
 {
-   PRTL_USER_PROCESS_PARAMETERS Ppb;
+  PRTL_USER_PROCESS_PARAMETERS Ppb;
+  
+  Ppb = NtCurrentPeb()->ProcessParameters;  
+  switch (nStdHandle)
+    {
+    case STD_INPUT_HANDLE:	return Ppb->InputHandle;
+    case STD_OUTPUT_HANDLE:	return Ppb->OutputHandle;
+    case STD_ERROR_HANDLE:	return Ppb->ErrorHandle;
+    }
+  SetLastError (ERROR_INVALID_PARAMETER);
+  return INVALID_HANDLE_VALUE;
+}
+
+WINBASEAPI BOOL WINAPI 
+SetStdHandle(DWORD nStdHandle,
+	     HANDLE hHandle)
+     /*
+      * FUNCTION: Set the handle for the standard input, standard output or
+      * the standard error device.
+      * ARGUMENTS:
+      *        nStdHandle - Specifies the handle to be set.
+      *        hHandle - The handle to set.
+      * RETURNS: TRUE if the function succeeds, FALSE otherwise.
+      */
+{
+  PRTL_USER_PROCESS_PARAMETERS Ppb;
    
-   Ppb = NtCurrentPeb()->ProcessParameters;  
-   switch (nStdHandle)
-     {
-      case STD_INPUT_HANDLE:	return Ppb->InputHandle;
-      case STD_OUTPUT_HANDLE:	return Ppb->OutputHandle;
-      case STD_ERROR_HANDLE:	return Ppb->ErrorHandle;
-     }
-   SetLastError( ERROR_INVALID_PARAMETER );
-   return INVALID_HANDLE_VALUE;
-}
-
-
-/*--------------------------------------------------------------
- *	SetStdHandle
- */
-WINBASEAPI BOOL WINAPI SetStdHandle(DWORD nStdHandle,
-				    HANDLE hHandle)
-{
-   PRTL_USER_PROCESS_PARAMETERS Ppb;
+  Ppb = NtCurrentPeb()->ProcessParameters;
+  
+  /* More checking needed? */
+  if (hHandle == INVALID_HANDLE_VALUE)
+    {
+      SetLastError (ERROR_INVALID_HANDLE);
+      return FALSE;
+    }
    
-   Ppb = NtCurrentPeb()->ProcessParameters;
-   
-   /* More checking needed? */
-   if (hHandle == INVALID_HANDLE_VALUE)
-     {
-	SetLastError( ERROR_INVALID_HANDLE );
-	return FALSE;
-     }
-   
-   SetLastError(ERROR_SUCCESS); /* OK */
-   switch (nStdHandle)
-     {
-      case STD_INPUT_HANDLE:
-	Ppb->InputHandle = hHandle;
-	return TRUE;
-      case STD_OUTPUT_HANDLE:
-	Ppb->OutputHandle = hHandle;
-	return TRUE;
-      case STD_ERROR_HANDLE:
-	Ppb->ErrorHandle = hHandle;
-	return TRUE;
-     }
-   SetLastError( ERROR_INVALID_PARAMETER );
-   return FALSE;
+  SetLastError(ERROR_SUCCESS); /* OK */
+  switch (nStdHandle)
+    {
+    case STD_INPUT_HANDLE:
+      Ppb->InputHandle = hHandle;
+      return TRUE;
+    case STD_OUTPUT_HANDLE:
+      Ppb->OutputHandle = hHandle;
+      return TRUE;
+    case STD_ERROR_HANDLE:
+      Ppb->ErrorHandle = hHandle;
+      return TRUE;
+    }
+  SetLastError (ERROR_INVALID_PARAMETER);
+  return FALSE;
 }
 
 
@@ -1652,36 +1656,93 @@ SetConsoleTextAttribute(
    return TRUE;
 }
 
-
-/*--------------------------------------------------------------
- * 	SetConsoleCtrlHandler
- */
-WINBASEAPI
-BOOL
-WINAPI
-SetConsoleCtrlHandler(
-	PHANDLER_ROUTINE	HandlerRoutine,
-	BOOL			Add
-	)
+BOOL STATIC
+AddConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine)
 {
-/* TO DO */
-	return FALSE;
+  if (HandlerRoutine == NULL)
+    {
+      IgnoreCtrlEvents = TRUE;
+      return(TRUE);
+    }
+  else
+    {
+      NrCtrlHandlers++;
+      CtrlHandlers = 
+	RtlReAllocateHeap(RtlGetProcessHeap(),
+			   HEAP_ZERO_MEMORY,
+			   (PVOID)CtrlHandlers,
+			   NrCtrlHandlers * sizeof(PHANDLER_ROUTINE)); 
+      if (CtrlHandlers == NULL)
+	{
+	  SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+	  return(FALSE);
+	}
+      CtrlHandlers[NrCtrlHandlers - 1] = HandlerRoutine;
+      return(TRUE);
+    }
+}
+
+BOOL STATIC
+RemoveConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine)
+{
+  ULONG i;
+
+  if (HandlerRoutine == NULL)
+    {
+      IgnoreCtrlEvents = FALSE;
+      return(TRUE);
+    }
+  else
+    {
+      for (i = 0; i < NrCtrlHandlers; i++)
+	{
+	  if (CtrlHandlers[i] == HandlerRoutine)
+	    {
+	      CtrlHandlers[i] = CtrlHandlers[NrCtrlHandlers - 1];
+	      NrCtrlHandlers--;
+	      CtrlHandlers = 
+		RtlReAllocateHeap(RtlGetProcessHeap(),
+				  HEAP_ZERO_MEMORY,
+				  (PVOID)CtrlHandlers,
+				  NrCtrlHandlers * sizeof(PHANDLER_ROUTINE));
+	      return(TRUE);
+	    }
+	}
+    }
+  return(FALSE);
+}
+
+WINBASEAPI BOOL WINAPI
+SetConsoleCtrlHandler(PHANDLER_ROUTINE	HandlerRoutine,
+		      BOOL Add)
+{
+  BOOLEAN Ret;
+
+  RtlEnterCriticalSection(&DllLock);
+  if (Add)
+    {
+      Ret = AddConsoleCtrlHandler(HandlerRoutine);
+    }
+  else
+    {
+      Ret = RemoveConsoleCtrlHandler(HandlerRoutine);
+    }
+  RtlLeaveCriticalSection(&DllLock);
+  return(Ret);
 }
 
 
 /*--------------------------------------------------------------
  * 	GenerateConsoleCtrlEvent
  */
-WINBASEAPI
-BOOL
-WINAPI
+WINBASEAPI BOOL WINAPI
 GenerateConsoleCtrlEvent(
 	DWORD		dwCtrlEvent,
 	DWORD		dwProcessGroupId
 	)
 {
-/* TO DO */
-	return FALSE;
+  /* TO DO */
+  return FALSE;
 }
 
 

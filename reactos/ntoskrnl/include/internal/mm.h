@@ -389,6 +389,11 @@ MmGetReferenceCountPage(PVOID PhysicalAddress);
 BOOLEAN
 MmIsUsablePage(PVOID PhysicalAddress);
 
+#define MM_PAGEOP_PAGEIN        (1)
+#define MM_PAGEOP_PAGEOUT       (2)
+#define MM_PAGEOP_PAGESYNCH     (3)
+#define MM_PAGEOP_ACCESSFAULT   (4)
+
 typedef struct _MM_PAGEOP
 {
   /* Type of operation. */
@@ -425,7 +430,7 @@ MmReleasePageOp(PMM_PAGEOP PageOp);
 
 PMM_PAGEOP
 MmGetPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
-	    PMM_SECTION_SEGMENT Segment, ULONG Offset);
+	    PMM_SECTION_SEGMENT Segment, ULONG Offset, ULONG OpType);
 
 VOID
 MiDebugDumpNonPagedPool(BOOLEAN NewOnly);
@@ -454,5 +459,7 @@ BOOLEAN
 MmIsAccessedAndResetAccessPage(struct _EPROCESS* Process, PVOID Address);
 SWAPENTRY 
 MmGetSavedSwapEntryPage(PVOID PhysicalAddress);
+
+#define STATUS_MM_RESTART_OPERATION       (0xD0000001)
 
 #endif

@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.45 2001/03/25 02:34:29 dwelch Exp $
+/* $Id: virtual.c,v 1.46 2001/04/04 22:21:31 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -91,90 +91,7 @@ MmWritePageVirtualMemory(PMADDRESS_SPACE AddressSpace,
 			 PMEMORY_AREA MArea,
 			 PVOID Address)
 {
-   SWAPENTRY se;
-   ULONG Flags;
-   PHYSICAL_ADDRESS PhysicalAddress;
-   PMDL Mdl;
-   NTSTATUS Status;
-   
-   /*
-    * FIXME: What should we do if an i/o operation is pending on
-    * this page
-    */
-   
-   /*
-    * If the memory area is readonly then there is nothing to do
-    */
-   if (MArea->Attributes & PAGE_READONLY ||
-       MArea->Attributes & PAGE_EXECUTE_READ)
-     {
-	return(STATUS_SUCCESS);
-     }
-   /*
-    * Set the page to readonly. This ensures the current contents aren't
-    * modified while we are writing it to swap.
-    */
-   MmSetPageProtect(AddressSpace->Process,
-		    Address,
-		    PAGE_READONLY);
-   /*
-    * If the page isn't dirty then there is nothing to do.
-    */
-   if (!MmIsPageDirty(AddressSpace->Process, Address))
-     {
-	MmSetPageProtect(AddressSpace->Process,
-			 Address,
-			 MArea->Attributes);
-	return(STATUS_SUCCESS);	
-     }
-   PhysicalAddress = MmGetPhysicalAddress(Address);
-   /*
-    * If we haven't already allocated a swap entry for this page
-    * then allocate one
-    */
-   if ((se = MmGetSavedSwapEntryPage((PVOID)PhysicalAddress.u.LowPart)) != 0)
-     {
-	se = MmAllocSwapPage();
-	if (se == 0)
-	  {
-	     MmSetPageProtect(AddressSpace->Process,
-			      Address,
-			      MArea->Attributes);
-	     return(STATUS_UNSUCCESSFUL);
-	  }
-	MmSetSavedSwapEntryPage((PVOID)PhysicalAddress.u.LowPart, se);
-     }
-   /*
-    * Set the flags so other threads will know what we are doing
-    */
-   Flags = MmGetFlagsPage((PVOID)PhysicalAddress.u.LowPart);
-   Flags = Flags | MM_PHYSICAL_PAGE_MPW_PENDING;
-   MmSetFlagsPage((PVOID)PhysicalAddress.u.LowPart, Flags);
-   /*
-    * Build an mdl to hold the page for writeout
-    */
-   Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
-   MmBuildMdlFromPages(Mdl, (PULONG)&PhysicalAddress.u.LowPart);
-   /*
-    * Unlock the address space and write out the page to swap.
-    */
-   MmUnlockAddressSpace(AddressSpace);
-   Status = MmWriteToSwapPage(se, Mdl);
-   /*
-    * Cleanup 
-    */
-   MmLockAddressSpace(AddressSpace);
-   Flags = MmGetFlagsPage((PVOID)PhysicalAddress.u.LowPart);
-   Flags = Flags & (~MM_PHYSICAL_PAGE_MPW_PENDING);
-   MmSetFlagsPage((PVOID)PhysicalAddress.u.LowPart,Flags);
-   /*
-    * If we successfully wrote the page then reset the dirty bit
-    */
-   if (NT_SUCCESS(Status))
-     {
-	MmSetCleanPage(AddressSpace->Process, Address);
-     }
-   return(Status);
+   return(STATUS_UNSUCCESSFUL);
 }
 
 
@@ -188,6 +105,24 @@ ULONG MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
    SWAPENTRY SwapEntry;
    NTSTATUS Status;
    PMDL Mdl;
+   PMM_PAGEOP PageOp;
+
+   /*
+    * Get or create a pageop
+    */
+   PageOp = MmGetPageOp(MemoryArea, AddressSpace->Process->UniqueProcessId,
+			(PVOID)PAGE_ROUND_DOWN(Address), NULL, 0, 
+			MM_PAGEOP_PAGEOUT);
+   if (PageOp->Thread != PsGetCurrentThread())
+     {
+       /*
+	* On the assumption that handling pageouts speedly rather than
+	* in strict order is better abandon this one.
+	*/
+       (*Ul) = FALSE;
+       MmReleasePageOp(PageOp);
+       return(STATUS_UNSUCCESSFUL);
+     }
    
    /*
     * Paging out code or readonly data is easy.
@@ -199,7 +134,11 @@ ULONG MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
        MmDeleteVirtualMapping(PsGetCurrentProcess(), Address, FALSE,
 			      NULL, &PhysicalAddress);
        MmDereferencePage((PVOID)PhysicalAddress);
+       
        *Ul = TRUE;
+       PageOp->Status = STATUS_SUCCESS;
+       KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+       MmReleasePageOp(PageOp);
        return(1);
      }
 
@@ -213,6 +152,9 @@ ULONG MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
        MmRemovePageFromWorkingSet(AddressSpace->Process, Address);
        MmDereferencePage((PVOID)PhysicalAddress);
        *Ul = TRUE;
+       PageOp->Status = STATUS_SUCCESS;
+       KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+       MmReleasePageOp(PageOp);
        return(1);
      }
 
@@ -230,6 +172,9 @@ ULONG MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
 					   MemoryArea->Attributes,
 					   PhysicalAddress);
 	   *Ul = FALSE;
+	   PageOp->Status = STATUS_UNSUCCESSFUL;
+	   KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+	   MmReleasePageOp(PageOp);
 	   return(0);
 	 }
      }
@@ -248,6 +193,9 @@ ULONG MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
 				       MemoryArea->Attributes,
 				       PhysicalAddress);
        *Ul = FALSE;
+       PageOp->Status = STATUS_UNSUCCESSFUL;
+       KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+       MmReleasePageOp(PageOp);
        return(0);
      }
 
@@ -257,6 +205,9 @@ ULONG MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
    MmRemovePageFromWorkingSet(AddressSpace->Process, Address);
    MmDereferencePage((PVOID)PhysicalAddress);
    *Ul = TRUE;
+   PageOp->Status = STATUS_SUCCESS;
+   KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+   MmReleasePageOp(PageOp);
    return(1);
 }
 
@@ -312,7 +263,8 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
     * Get or create a page operation
     */
    PageOp = MmGetPageOp(MemoryArea, (ULONG)PsGetCurrentProcessId(), 
-			(PVOID)PAGE_ROUND_DOWN(Address), NULL, 0);
+			(PVOID)PAGE_ROUND_DOWN(Address), NULL, 0,
+			MM_PAGEOP_PAGEIN);
    if (PageOp == NULL)
      {
        DPRINT1("MmGetPageOp failed");
@@ -343,6 +295,14 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
 	 {
 	   DPRINT1("Woke for page op before completion\n");
 	   KeBugCheck(0);
+	 }
+       /*
+	* If this wasn't a pagein then we need to restart the handling
+	*/
+       if (PageOp->OpType != MM_PAGEOP_PAGEIN)
+	 {
+	   MmReleasePageOp(PageOp);
+	   return(STATUS_MM_RESTART_OPERATION);
 	 }
        /*
 	* If the thread handling this fault has failed then we don't retry

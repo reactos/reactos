@@ -695,26 +695,18 @@ NTSTATUS STDCALL KbdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
       case IRP_MJ_READ:
         DPRINT("Handling Read request\n");
 	DPRINT("Queueing packet\n");
+	IoMarkIrpPending(Irp);
 	IoStartPacket(DeviceObject,Irp,NULL,NULL);
-	Status = STATUS_PENDING;
-	break;
+	return(STATUS_PENDING);
 
       default:
         Status = STATUS_NOT_IMPLEMENTED;
 	break;
      }
 
-   if (Status==STATUS_PENDING)
-     {
-	DPRINT("Marking irp pending\n");
-	IoMarkIrpPending(Irp);
-     }
-   else
-     {
-        Irp->IoStatus.Status = Status;
-	Irp->IoStatus.Information = 0;
-	IoCompleteRequest(Irp,IO_NO_INCREMENT);
-     }
+   Irp->IoStatus.Status = Status;
+   Irp->IoStatus.Information = 0;
+   IoCompleteRequest(Irp,IO_NO_INCREMENT);
    DPRINT("Status %d\n",Status);
    return(Status);
 }

@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.17 2001/01/20 18:37:08 ekohl Exp $
+/* $Id: dllmain.c,v 1.18 2001/04/04 22:21:30 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -8,6 +8,8 @@
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
+
+/* INCLUDES ******************************************************************/
 
 #include <ddk/ntddk.h>
 #include <ntdll/csr.h>
@@ -19,6 +21,7 @@
 #define NDEBUG
 #include <kernel32/kernel32.h>
 
+/* GLOBALS *******************************************************************/
 
 extern UNICODE_STRING SystemDirectory;
 extern UNICODE_STRING WindowsDirectory;
@@ -32,8 +35,13 @@ WINBOOL STDCALL DllMain (HANDLE hInst,
 			 ULONG ul_reason_for_call,
 			 LPVOID lpReserved);
 
+/* Critical section for various kernel32 data structures */
+CRITICAL_SECTION DllLock;
 
-static NTSTATUS OpenBaseDirectory(PHANDLE DirHandle)
+/* FUNCTIONS *****************************************************************/
+
+static NTSTATUS 
+OpenBaseDirectory(PHANDLE DirHandle)
 {
    OBJECT_ATTRIBUTES ObjectAttributes;
    UNICODE_STRING Name;
@@ -68,15 +76,16 @@ static NTSTATUS OpenBaseDirectory(PHANDLE DirHandle)
 }
 
 
-BOOL WINAPI DllMainCRTStartup(HANDLE hDll, DWORD dwReason, LPVOID lpReserved)
+BOOL WINAPI 
+DllMainCRTStartup(HANDLE hDll, DWORD dwReason, LPVOID lpReserved)
 {
    return(DllMain(hDll,dwReason,lpReserved));
 }
 
-
-WINBOOL STDCALL DllMain(HANDLE hInst,
-			ULONG ul_reason_for_call,
-			LPVOID lpReserved)
+WINBOOL STDCALL 
+DllMain(HANDLE hInst,
+	ULONG ul_reason_for_call,
+	LPVOID lpReserved)
 {
    DPRINT("DllMain(hInst %x, ul_reason_for_call %d)\n",
 	  hInst, ul_reason_for_call);
@@ -127,6 +136,9 @@ WINBOOL STDCALL DllMain(HANDLE hInst,
 		  DbgPrint("Failed to open object base directory: expect trouble\n");
 	       }
 
+	     /* Initialize the DLL critical section */
+	     RtlInitializeCriticalSection(&DllLock);
+	     
 	     /* Insert more dll attach stuff here! */
 
 	     DllInitialized = TRUE;
@@ -138,13 +150,16 @@ WINBOOL STDCALL DllMain(HANDLE hInst,
 	     DPRINT("DLL_PROCESS_DETACH\n");
 	     if (DllInitialized == TRUE)
 	       {
-		  /* Insert more dll detach stuff here! */
+		 /* Insert more dll detach stuff here! */
+		 
+		 /* Delete DLL critical section */
+		 RtlDeleteCriticalSection (&DllLock);
 
-		  /* Close object base directory */
-		  NtClose(hBaseDir);
-
-		  RtlFreeUnicodeString (&SystemDirectory);
-		  RtlFreeUnicodeString (&WindowsDirectory);
+		 /* Close object base directory */
+		 NtClose(hBaseDir);
+		 
+		 RtlFreeUnicodeString (&SystemDirectory);
+		 RtlFreeUnicodeString (&WindowsDirectory);
 	       }
 	     break;
 	  }

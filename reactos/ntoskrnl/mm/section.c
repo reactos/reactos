@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.55 2001/04/03 17:25:49 dwelch Exp $
+/* $Id: section.c,v 1.56 2001/04/04 22:21:31 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -388,7 +388,8 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    /*
     * Get or create a page operation descriptor
     */
-   PageOp = MmGetPageOp(MemoryArea, 0, 0, Segment, Offset.u.LowPart);
+   PageOp = MmGetPageOp(MemoryArea, 0, 0, Segment, Offset.u.LowPart,
+			MM_PAGEOP_PAGEIN);
    if (PageOp == NULL)
      {
        DPRINT1("MmGetPageOp failed\n");
@@ -423,10 +424,20 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	   KeBugCheck(0);
 	 }
        /*
+	* If this wasn't a pagein then restart the operation
+	*/
+       if (PageOp->OpType != MM_PAGEOP_PAGEIN)
+	 {
+	   MmLockAddressSpace(AddressSpace);
+	   MmReleasePageOp(PageOp);
+	   return(STATUS_MM_RESTART_OPERATION);
+	 }
+       /*
 	* If the thread handling this fault has failed then we don't retry
 	*/
        if (!NT_SUCCESS(PageOp->Status))
 	 {
+	   MmLockAddressSpace(AddressSpace);
 	   return(PageOp->Status);
 	 }
        MmLockAddressSpace(AddressSpace);
@@ -670,6 +681,9 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
   PVOID NewPage;
   PVOID NewAddress;
   NTSTATUS Status;
+  ULONG PAddress;
+  LARGE_INTEGER Offset;
+  PMM_PAGEOP PageOp;
 
   /*
    * Check if the page has been paged out or has already been set readwrite
@@ -681,6 +695,13 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
      }  
 
    /*
+    * Find the offset of the page
+    */
+   PAddress = (ULONG)PAGE_ROUND_DOWN(((ULONG)Address));
+   Offset.QuadPart = (PAddress - (ULONG)MemoryArea->BaseAddress) +
+     MemoryArea->Data.SectionData.ViewOffset;
+
+   /*
     * Lock the segment
     */
    Segment = MemoryArea->Data.SectionData.Segment;
@@ -688,6 +709,9 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
    MmLockSection(Section);
    MmLockSectionSegment(Segment);
 
+   /*
+    * Check if we are doing COW
+    */
    if (!(Segment->Characteristics & IMAGE_SECTION_CHAR_DATA))
      {
        MmUnlockSection(Section);
@@ -696,33 +720,80 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
      }
 
    /*
+    * Get or create a pageop
+    */
+   PageOp = MmGetPageOp(MemoryArea, 0, 0, Segment, Offset.u.LowPart,
+			MM_PAGEOP_ACCESSFAULT);
+   if (PageOp == NULL)
+     {
+       DPRINT1("MmGetPageOp failed\n");
+       KeBugCheck(0);
+     }
+
+   /*
+    * Wait for any other operations to complete
+    */
+   if (PageOp->Thread != PsGetCurrentThread())
+     {
+       MmUnlockSectionSegment(Segment);
+       MmUnlockSection(Section);
+       MmUnlockAddressSpace(AddressSpace);
+       Status = KeWaitForSingleObject(&PageOp->CompletionEvent,
+				      0,
+				      KernelMode,
+				      FALSE,
+				      NULL);
+       /*
+	* Check for various strange conditions
+	*/
+       if (Status != STATUS_SUCCESS)
+	 {
+	   DPRINT1("Failed to wait for page op\n");
+	   KeBugCheck(0);
+	 }
+       if (PageOp->Status == STATUS_PENDING)
+	 {
+	   DPRINT1("Woke for page op before completion\n");
+	   KeBugCheck(0);
+	 }
+       /*
+	* Restart the operation
+	*/
+       MmLockAddressSpace(AddressSpace);
+       MmReleasePageOp(PageOp);
+       return(STATUS_MM_RESTART_OPERATION);       
+     }   
+
+   /*
+    * Release locks now we have the pageop
+    */
+   MmUnlockSectionSegment(Segment);
+   MmUnlockSection(Section);
+   MmUnlockAddressSpace(AddressSpace);
+
+   /*
     * Allocate a page
     */
    NewPage = MmAllocPage(0);
    while (NewPage == NULL)
      {
-       MmUnlockSectionSegment(Segment);
-       MmUnlockSection(Section);
-       MmUnlockAddressSpace(AddressSpace);
        MmWaitForFreePages();
-       MmLockAddressSpace(AddressSpace);
-       if (!MmIsPagePresent(NULL, Address) ||
-	   MmGetPageProtect(NULL, Address) & PAGE_READWRITE)
-	 {
-	   MmUnlockAddressSpace(AddressSpace);
-	   return(STATUS_SUCCESS);
-	 }
-       MmLockSection(Section);
-       MmLockSectionSegment(Segment);
        NewPage = MmAllocPage(0);
      }
 
+   /*
+    * Copy the old page
+    */
    OldPage = MmGetPhysicalAddressForProcess(NULL, Address);
  
    NewAddress = ExAllocatePageWithPhysPage((ULONG)NewPage);
    memcpy(NewAddress, (PVOID)PAGE_ROUND_DOWN(Address), PAGESIZE);
    ExUnmapPage(NewAddress);
 
+   /*
+    * Set the PTE to point to the new page
+    */
+   MmLockAddressSpace(AddressSpace);
    Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
 				   Address,
 				   MemoryArea->Attributes,
@@ -736,8 +807,9 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
      {
        MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
      }  
-   MmUnlockSectionSegment(Segment);
-   MmUnlockSection(Section);
+   PageOp->Status = STATUS_SUCCESS;
+   KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+   MmReleasePageOp(PageOp);
    return(STATUS_SUCCESS);
 }
 

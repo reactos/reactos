@@ -1,4 +1,4 @@
-/* $Id: pageop.c,v 1.4 2001/03/16 18:11:23 dwelch Exp $
+/* $Id: pageop.c,v 1.5 2001/04/04 22:21:31 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -71,7 +71,7 @@ MmReleasePageOp(PMM_PAGEOP PageOp)
 
 PMM_PAGEOP
 MmGetPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
-	    PMM_SECTION_SEGMENT Segment, ULONG Offset)
+	    PMM_SECTION_SEGMENT Segment, ULONG Offset, ULONG OpType)
      /*
       * FUNCTION: Get a page operation descriptor corresponding to
       * the memory area and either the segment, offset pair or the
@@ -160,6 +160,7 @@ MmGetPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
   PageOp->Thread = PsGetCurrentThread();
   PageOp->Abandoned = FALSE;
   PageOp->Status = STATUS_PENDING;
+  PageOp->OpType = OpType;
   KeInitializeEvent(&PageOp->CompletionEvent, NotificationEvent, FALSE);
   MmPageOpHashTable[Hash] = PageOp;
 

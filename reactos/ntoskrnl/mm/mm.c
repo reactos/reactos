@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mm.c,v 1.46 2001/03/16 18:11:23 dwelch Exp $
+/* $Id: mm.c,v 1.47 2001/04/04 22:21:31 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -285,49 +285,60 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
      {
        MmLockAddressSpace(AddressSpace);
      }
-   MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace, (PVOID)Address);
-   if (MemoryArea == NULL)
+
+   /*
+    * Call the memory area specific fault handler
+    */
+   do
      {
-	DbgPrint("%s:%d\n",__FILE__,__LINE__);
-	if (!FromMdl)
-	  {
-	    MmUnlockAddressSpace(AddressSpace);
-	  }
-	return(STATUS_UNSUCCESSFUL);
+       MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace, (PVOID)Address);
+       if (MemoryArea == NULL)
+	 {
+	   DbgPrint("%s:%d\n",__FILE__,__LINE__);
+	   if (!FromMdl)
+	     {
+	       MmUnlockAddressSpace(AddressSpace);
+	     }
+	   Status = STATUS_UNSUCCESSFUL;
+	 }
+       else
+	 {
+	   switch (MemoryArea->Type)
+	     {
+	     case MEMORY_AREA_SYSTEM:
+	       Status = STATUS_UNSUCCESSFUL;
+	       break;
+	       
+	     case MEMORY_AREA_SECTION_VIEW_COMMIT:
+	       Status = MmNotPresentFaultSectionView(AddressSpace,
+						     MemoryArea, 
+						     (PVOID)Address,
+						     Locked);
+	       break;
+	       
+	     case MEMORY_AREA_VIRTUAL_MEMORY:
+	       Status = MmNotPresentFaultVirtualMemory(AddressSpace,
+						       MemoryArea,
+						       (PVOID)Address,
+						       Locked);
+	       break;
+	       
+	     case MEMORY_AREA_SHARED_DATA:
+	       Status = 
+		MmCreateVirtualMapping(PsGetCurrentProcess(),
+				       (PVOID)PAGE_ROUND_DOWN(Address),
+				       PAGE_READONLY,
+				       (ULONG)MmSharedDataPagePhysicalAddress);
+	       break;
+	   
+	     default:
+	       Status = STATUS_UNSUCCESSFUL;
+	       break;
+	     }
+	 }
      }
-   
-   switch (MemoryArea->Type)
-     {
-      case MEMORY_AREA_SYSTEM:
-	Status = STATUS_UNSUCCESSFUL;
-	break;
-	
-      case MEMORY_AREA_SECTION_VIEW_COMMIT:
-	Status = MmNotPresentFaultSectionView(AddressSpace,
-					      MemoryArea, 
-					      (PVOID)Address,
-					      Locked);
-	break;
-	
-      case MEMORY_AREA_VIRTUAL_MEMORY:
-	Status = MmNotPresentFaultVirtualMemory(AddressSpace,
-						MemoryArea,
-						(PVOID)Address,
-						Locked);
-	break;
-	
-      case MEMORY_AREA_SHARED_DATA:
-	Status = 
-	  MmCreateVirtualMapping(PsGetCurrentProcess(),
-				 (PVOID)PAGE_ROUND_DOWN(Address),
-				 PAGE_READONLY,
-				 (ULONG)MmSharedDataPagePhysicalAddress);
-	break;
-	
-      default:
-	Status = STATUS_UNSUCCESSFUL;
-	break;
-     }
+   while (Status == STATUS_MM_RESTART_OPERATION);
+
    DPRINT("Completed page fault handling\n");
    if (!FromMdl)
      {

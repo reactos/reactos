@@ -27,17 +27,19 @@
 #define FIELD_OFFSET(type,fld)	((LONG)&(((type *)0)->fld))
 #endif
 
-
-/* GLOBAL VARIABLES ***********************************************************/
+/* GLOBAL VARIABLES **********************************************************/
 
 extern WINBOOL bIsFileApiAnsi;
 extern HANDLE hProcessHeap;
 extern HANDLE hBaseDir;
 
-/* FUNCTION PROTOTYPES ********************************************************/
+extern CRITICAL_SECTION DllLock;
+
+/* FUNCTION PROTOTYPES *******************************************************/
 
 BOOLEAN STDCALL IsConsoleHandle(HANDLE Handle);
 
 WINBOOL STDCALL CloseConsoleHandle(HANDLE Handle);
 
 #endif /* ndef _INCLUDE_KERNEL32_KERNEL32_H */
+
