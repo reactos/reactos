@@ -85,16 +85,6 @@ DF_HATCH BITMAP "resources/df_hatch.bmp"
 // Dialogs
 //
 
-MSGBOX DIALOG DISCARDABLE  100, 80, 180, 77
-STYLE DS_SYSMODAL | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
-    WS_SYSMENU
-FONT 8, "MS Sans Serif"
-CAPTION "Error"
-BEGIN
-        ICON "", 1088, 9, 20, 16, 16, WS_CHILD | WS_VISIBLE
-        LTEXT "", 100, 48, 16, 124, 48, WS_CHILD | WS_VISIBLE
-END
-
 SELWINDOW DIALOG DISCARDABLE 20, 20, 220, 140
 STYLE DS_SYSMODAL | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU
@@ -126,15 +116,39 @@ EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 
 SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 {
-  MENUITEM "&Restore", 61728
-  MENUITEM "&Move", 61456
-  MENUITEM "&Size", 61440
-  MENUITEM "Mi&nimize", 61472
-  MENUITEM "Ma&ximize", 61488
-  MENUITEM SEPARATOR
-  MENUITEM "&Close\tAlt-F4", 61536
-//MENUITEM SEPARATOR
-//MENUITEM "&Switch to ...\tCtrl-Esc", 61744
-//MENUITEM SEPARATOR
-//MENUITEM "&About ReactOS ...", 61761
+  POPUP ""
+  {
+    MENUITEM "&Restore", 61728
+    MENUITEM "&Move", 61456
+    MENUITEM "&Size", 61440
+    MENUITEM "Mi&nimize", 61472
+    MENUITEM "Ma&ximize", 61488
+    MENUITEM SEPARATOR
+    MENUITEM "&Close\tAlt-F4", 61536
+  //MENUITEM SEPARATOR
+  //MENUITEM "&Switch to ...\tCtrl-Esc", 61744
+  //MENUITEM SEPARATOR
+  //MENUITEM "&About ReactOS ...", 61761
+  }
 }
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Strings
+//
+
+STRINGTABLE
+{
+  IDS_ERROR,    "Error"
+  IDS_OK,       "OK"
+  IDS_CANCEL,   "Cancel"
+  IDS_ABORT,    "&Abort"
+  IDS_RETRY,    "&Retry"
+  IDS_IGNORE,   "&Ignore"
+  IDS_YES,      "&Yes"
+  IDS_NO,       "&No"
+  IDS_HELP,     "Help"
+  IDS_TRYAGAIN, "&Try Again"
+  IDS_CONTINUE, "&Continue"
+}
+

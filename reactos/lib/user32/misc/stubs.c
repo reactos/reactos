@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.44 2003/10/04 22:36:36 weiden Exp $
+/* $Id: stubs.c,v 1.45 2003/10/12 00:39:50 weiden Exp $
  *
  * COPYRIGHT:       See COPYING WINBOOLthe top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1564,40 +1564,6 @@ SendIMEMessageExW(HWND hwnd,LPARAM lparam)
 LRESULT 
 STDCALL
 SendIMEMessageExA(HWND hwnd, LPARAM lparam)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-MessageBoxTimeoutW(
-    HWND hWnd,
-    LPCWSTR lpText,
-    LPCWSTR lpCaption,
-    UINT uType,
-    WORD wLanguageId,
-    DWORD dwTime)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-MessageBoxTimeoutA(
-    HWND hWnd,
-    LPCSTR lpText,
-    LPCSTR lpCaption,
-    UINT uType,
-    WORD wLanguageId,
-    DWORD dwTime)
 {
   UNIMPLEMENTED;
   return FALSE;
