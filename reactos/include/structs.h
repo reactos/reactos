@@ -2778,8 +2778,8 @@ typedef struct _GUID
     unsigned short  Data3; 
     unsigned char Data4[8]; 
 } GUID, *LPGUID;
-#endif
 typedef GUID CLSID, *LPCLSID;
+#endif
  
 typedef struct _SERVICE_INFO { 
   LPGUID   lpServiceType; 
