@@ -5,3 +5,5 @@ objects
 temp.exp
 depends
 depends.exe
+mkconfig
+mkconfig.exe

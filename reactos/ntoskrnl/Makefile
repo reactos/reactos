@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.31 2001/04/10 17:48:16 dwelch Exp $
+# $Id: Makefile,v 1.32 2001/04/10 22:13:22 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -9,24 +9,9 @@
 PATH_TO_TOP := ..
 
 #
-# Architecture to build for
+# Include details of the kernel configuration
 #
-ARCH := i386
-
-#
-# Whether to compile in the kernel debugger
-#
-KDBG := 1
-
-#
-# Whether to compile for debugging
-#
-DBG := 1
-
-#
-# Whether to compile a multiprocessor or single processor version
-#
-MP := 0
+include config
 
 #
 #
@@ -62,7 +47,7 @@ CFLAGS = -Iinclude -D__NTOSKRNL__ $(CFLAGS_DBG) -Wall -Werror
 
 include $(PATH_TO_TOP)/rules.mak
 
-all: config $(EXE_PREFIX)depends$(EXE_POSTFIX) \
+all: $(EXE_PREFIX)depends$(EXE_POSTFIX) \
 	$(OBJECTS_PATH) \
 	$(TARGETNAME).nostrip.exe \
 	$(TARGETNAME).exe \
@@ -616,12 +601,12 @@ ke/main.o: ke/main.c ../include/reactos/buildno.h
 mkconfig$(EXE_SUFFIX): mkconfig.c
 	$(HOST_CC) -g -o mkconfig$(EXE_SUFFIX) mkconfig.c
 
-config:
-	$(EXE_PREFIX)mkconfig$(EXE_SUFFIX) include/internal/config.h $(CONFIG)
+include/internal/config.h: config mkconfig$(EXE_SUFFIX)
+	$(EXE_PREFIX)mkconfig$(EXE_SUFFIX) include/internal/config.h$(CONFIG)
 
-.PHONY: config
-
+ifneq ($(MAKECMDGOALS),clean)
 include $(D1_FILES)
+endif
 
 .%.d: %.c $(EXE_PREFIX)depends$(EXE_POSTFIX)
 	$(CC) $(CFLAGS) -M $< | $(EXE_PREFIX)depends$(EXE_POSTFIX) $(@D) $@
