@@ -1,4 +1,4 @@
-/* $Id: kmap.c,v 1.32 2004/04/10 22:35:25 gdalsnes Exp $
+/* $Id: kmap.c,v 1.33 2004/08/01 07:24:58 hbirr Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -54,24 +54,24 @@ ExUnmapPage(PVOID Addr)
 PVOID
 ExAllocatePage(VOID)
 {
-   PHYSICAL_ADDRESS PhysPage;
+   PFN_TYPE Page;
    NTSTATUS Status;
 
-   Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &PhysPage);
+   Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &Page);
    if (!NT_SUCCESS(Status))
    {
       return(NULL);
    }
 
-   return(ExAllocatePageWithPhysPage(PhysPage));
+   return(ExAllocatePageWithPhysPage(Page));
 }
 
 NTSTATUS
-MiZeroPage(PHYSICAL_ADDRESS PhysPage)
+MiZeroPage(PFN_TYPE Page)
 {
    PVOID TempAddress;
 
-   TempAddress = ExAllocatePageWithPhysPage(PhysPage);
+   TempAddress = ExAllocatePageWithPhysPage(Page);
    if (TempAddress == NULL)
    {
       return(STATUS_NO_MEMORY);
@@ -82,11 +82,11 @@ MiZeroPage(PHYSICAL_ADDRESS PhysPage)
 }
 
 NTSTATUS
-MiCopyFromUserPage(PHYSICAL_ADDRESS DestPhysPage, PVOID SourceAddress)
+MiCopyFromUserPage(PFN_TYPE DestPage, PVOID SourceAddress)
 {
    PVOID TempAddress;
 
-   TempAddress = ExAllocatePageWithPhysPage(DestPhysPage);
+   TempAddress = ExAllocatePageWithPhysPage(DestPage);
    if (TempAddress == NULL)
    {
       return(STATUS_NO_MEMORY);
@@ -97,7 +97,7 @@ MiCopyFromUserPage(PHYSICAL_ADDRESS DestPhysPage, PVOID SourceAddress)
 }
 
 PVOID
-ExAllocatePageWithPhysPage(PHYSICAL_ADDRESS PhysPage)
+ExAllocatePageWithPhysPage(PFN_TYPE Page)
 {
    KIRQL oldlvl;
    PVOID Addr;
@@ -114,8 +114,8 @@ ExAllocatePageWithPhysPage(PHYSICAL_ADDRESS PhysPage)
       Status = MmCreateVirtualMapping(NULL,
                                       Addr,
                                       PAGE_READWRITE | PAGE_SYSTEM,
-                                      PhysPage,
-                                      TRUE);
+                                      &Page,
+                                      1);
       if (!NT_SUCCESS(Status))
       {
          DbgPrint("Unable to create virtual mapping\n");

@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.65 2004/07/17 03:03:51 ion Exp $
+/* $Id: mdl.c,v 1.66 2004/08/01 07:24:58 hbirr Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -126,7 +126,7 @@ MmUnlockPages(PMDL Mdl)
 {
    ULONG i;
    PULONG MdlPages;
-   PHYSICAL_ADDRESS Page;
+   PFN_TYPE Page;
 
    /* 
     * MmProbeAndLockPages MUST have been called to lock this mdl!
@@ -166,7 +166,7 @@ MmUnlockPages(PMDL Mdl)
    MdlPages = (PULONG)(Mdl + 1);
    for (i=0; i<(PAGE_ROUND_UP(Mdl->ByteCount+Mdl->ByteOffset)/PAGE_SIZE); i++)
    {
-      Page.QuadPart = MdlPages[i] << PAGE_SHIFT;
+      Page = MdlPages[i];
       MmUnlockPage(Page);
       MmDereferencePage(Page);
    }
@@ -195,13 +195,12 @@ MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
  */
 {
    PVOID Base;
-   ULONG i;
    PULONG MdlPages;
    KIRQL oldIrql;
    ULONG PageCount;
    ULONG StartingOffset;
    PEPROCESS CurrentProcess;
-   PHYSICAL_ADDRESS Page;
+   NTSTATUS Status;
 
    DPRINT("MmMapLockedPages(Mdl %x, AccessMode %x)\n", Mdl, AccessMode);
 
@@ -289,24 +288,20 @@ MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
 
    /* Set the virtual mappings for the MDL pages. */
    MdlPages = (PULONG)(Mdl + 1);
-   for (i = 0; i < PageCount; i++)
+
+   Status = MmCreateVirtualMapping(CurrentProcess,
+                                   Base,
+                                   PAGE_READWRITE,
+                                   MdlPages,
+                                   PageCount);
+   if (!NT_SUCCESS(Status))
    {
-      NTSTATUS Status;
-      Page.QuadPart = MdlPages[i] << PAGE_SHIFT;
-      Status = MmCreateVirtualMapping(CurrentProcess,
-                                      (PVOID)((ULONG)Base+(i*PAGE_SIZE)),
-                                      PAGE_READWRITE,
-                                      Page,
-                                      FALSE);
-      if (!NT_SUCCESS(Status))
+      DbgPrint("Unable to create virtual mapping\n");
+      if (Mdl->MdlFlags & MDL_MAPPING_CAN_FAIL)
       {
-         DbgPrint("Unable to create virtual mapping\n");
-         if (Mdl->MdlFlags & MDL_MAPPING_CAN_FAIL)
-         {
-            return NULL;            
-         }
-         KEBUGCHECK(0);
+         return NULL;            
       }
+      KEBUGCHECK(0);
    }
 
    /* Mark the MDL has having being mapped. */
@@ -449,18 +444,10 @@ MmUnmapReservedMapping (
 
 
 VOID
-MmBuildMdlFromPages(PMDL Mdl, PULONG Pages)
+MmBuildMdlFromPages(PMDL Mdl, PPFN_TYPE Pages)
 {
-   ULONG i;
-   PULONG MdlPages;
+   memcpy(Mdl + 1, Pages, sizeof(PFN_TYPE) * (PAGE_ROUND_UP(Mdl->ByteOffset+Mdl->ByteCount)/PAGE_SIZE));
 
-   MdlPages = (PULONG)(Mdl + 1);
-
-   for (i=0;i<(PAGE_ROUND_UP(Mdl->ByteOffset+Mdl->ByteCount)/PAGE_SIZE);i++)
-   {
-      MdlPages[i] = Pages[i] >> PAGE_SHIFT;
-   }
-   
    //FIXME: this flag should be set by the caller perhaps?
    Mdl->MdlFlags |= MDL_IO_PAGE_READ;
 }
@@ -513,12 +500,12 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
  * work no matter what kind of mdl address you have.
  */
 {
-   PULONG MdlPages;
+   PPFN_TYPE MdlPages;
    ULONG i, j;
    ULONG NrPages;
    NTSTATUS Status;
    KPROCESSOR_MODE Mode;
-   PHYSICAL_ADDRESS Page;
+   PFN_TYPE Page;
    PEPROCESS CurrentProcess = PsGetCurrentProcess();
 
    DPRINT("MmProbeAndLockPages(Mdl %x)\n", Mdl);
@@ -526,21 +513,21 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
    assert(!(Mdl->MdlFlags & (MDL_PAGES_LOCKED|MDL_MAPPED_TO_SYSTEM_VA|MDL_PARTIAL|
             MDL_IO_SPACE|MDL_SOURCE_IS_NONPAGED_POOL)));
 
-   MdlPages = (ULONG *)(Mdl + 1);
+   MdlPages = (PPFN_TYPE)(Mdl + 1);
    NrPages = PAGE_ROUND_UP(Mdl->ByteOffset + Mdl->ByteCount) / PAGE_SIZE;
    
    /* mdl must have enough page entries */
-   assert(NrPages <= (Mdl->Size - sizeof(MDL))/sizeof(ULONG));
+   assert(NrPages <= (Mdl->Size - sizeof(MDL))/sizeof(PFN_TYPE));
 
 
    if (Mdl->StartVa >= (PVOID)KERNEL_BASE && 
-       (MmGetPhysicalAddressForProcess(NULL, Mdl->StartVa).QuadPart >> PAGE_SHIFT) > MmPageArraySize)
+       MmGetPfnForProcess(NULL, Mdl->StartVa) > MmPageArraySize)
    {
        /* phys addr is not phys memory so this must be io memory */
        
       for (i = 0; i < NrPages; i++)
       {
-         MdlPages[i] = MmGetPhysicalAddressForProcess(NULL, (char*)Mdl->StartVa + (i*PAGE_SIZE)).QuadPart >> PAGE_SHIFT;
+         MdlPages[i] = MmGetPfnForProcess(NULL, (char*)Mdl->StartVa + (i*PAGE_SIZE));
       }
       
       Mdl->MdlFlags |= MDL_PAGES_LOCKED|MDL_IO_SPACE;
@@ -585,7 +572,7 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
          {
             for (j = 0; j < i; j++)
             {
-	       Page.QuadPart = MdlPages[j] << PAGE_SHIFT;
+	       Page = MdlPages[j];
                MmUnlockPage(Page);
                MmDereferencePage(Page);
             }
@@ -594,26 +581,26 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
       }
       else
       {
-         MmLockPage(MmGetPhysicalAddressForProcess(NULL, Address));
+         MmLockPage(MmGetPfnForProcess(NULL, Address));
       }
       
       if ((Operation == IoWriteAccess || Operation == IoModifyAccess) &&
-            (!(MmGetPageProtect(NULL, (PVOID)Address) & PAGE_READWRITE)))
+          (!(MmGetPageProtect(NULL, (PVOID)Address) & PAGE_READWRITE)))
       {
          Status = MmAccessFault(Mode, (ULONG)Address, TRUE);
          if (!NT_SUCCESS(Status))
          {
             for (j = 0; j < i; j++)
             {
-	       Page.QuadPart = (ULONGLONG)MdlPages[j] << PAGE_SHIFT;
+	       Page = MdlPages[j];
                MmUnlockPage(Page);
                MmDereferencePage(Page);
             }
             ExRaiseStatus(Status);
          }
       }
-      Page = MmGetPhysicalAddressForProcess(NULL, Address);
-      MdlPages[i] = Page.QuadPart >> PAGE_SHIFT;
+      Page = MmGetPfnForProcess(NULL, Address);
+      MdlPages[i] = Page;
       MmReferencePage(Page);
    }
    
@@ -668,7 +655,7 @@ ULONG STDCALL MmSizeOfMdl (PVOID Base,
 
    len = ADDRESS_AND_SIZE_TO_SPAN_PAGES(Base,Length);
 
-   return(sizeof(MDL)+(len*sizeof(ULONG)));
+   return(sizeof(MDL)+(len*sizeof(PFN_TYPE)));
 }
 
 
@@ -690,6 +677,7 @@ MmBuildMdlForNonPagedPool (PMDL Mdl)
 {
    ULONG i;
    ULONG PageCount;
+   PPFN_TYPE MdlPages;
    
    /* 
     * mdl buffer must (at least) be in kernel space, thou this doesn't 
@@ -698,14 +686,14 @@ MmBuildMdlForNonPagedPool (PMDL Mdl)
    assert((ULONG)Mdl->StartVa >= KERNEL_BASE);
    
    PageCount = PAGE_ROUND_UP(Mdl->ByteOffset + Mdl->ByteCount) / PAGE_SIZE;
+   MdlPages = (PPFN_TYPE)(Mdl + 1);
    
    /* mdl must have enough page entries */
-   assert(PageCount <= (Mdl->Size - sizeof(MDL))/sizeof(ULONG));
+   assert(PageCount <= (Mdl->Size - sizeof(MDL))/sizeof(PFN_TYPE));
    
    for (i=0; i < PageCount; i++)
    {
-      ((PULONG)(Mdl + 1))[i] =
-         (MmGetPhysicalAddress((char*)Mdl->StartVa + (i * PAGE_SIZE))).QuadPart >> PAGE_SHIFT;
+      *MdlPages++ = MmGetPfnForProcess(NULL, (char*)Mdl->StartVa + (i * PAGE_SIZE));
    }
    
    Mdl->MdlFlags |= MDL_SOURCE_IS_NONPAGED_POOL;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kthread.c,v 1.47 2004/06/23 22:31:51 ion Exp $
+/* $Id: kthread.c,v 1.48 2004/08/01 07:24:59 hbirr Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Microkernel thread support
@@ -58,12 +58,12 @@ KeCapturePersistentThreadState(
 
 VOID
 KeFreeStackPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, 
-		PHYSICAL_ADDRESS PhysAddr, SWAPENTRY SwapEntry, BOOLEAN Dirty)
+		PFN_TYPE Page, SWAPENTRY SwapEntry, BOOLEAN Dirty)
 {
   assert(SwapEntry == 0);
-  if (PhysAddr.QuadPart  != 0)
+  if (Page != 0)
     {
-      MmReleasePageMemoryConsumer(MC_NPPOOL, PhysAddr);
+      MmReleasePageMemoryConsumer(MC_NPPOOL, Page);
     }
 }
 
@@ -143,6 +143,7 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
   InitializeListHead(&Thread->MutantListHead);
   if (!First)
     {
+      PFN_TYPE Page[MM_STACK_SIZE / PAGE_SIZE];
       KernelStack = NULL;
       
       MmLockAddressSpace(MmGetKernelAddressSpace());
@@ -165,17 +166,20 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
 	}
       for (i = 0; i < (MM_STACK_SIZE / PAGE_SIZE); i++)
 	{
-	  PHYSICAL_ADDRESS Page;
-	  Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &Page);
+	  Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &Page[i]);
 	  if (!NT_SUCCESS(Status))
 	    {
 	      KEBUGCHECK(0);
 	    }
-	  Status = MmCreateVirtualMapping(NULL,
-					  (char*)KernelStack + (i * PAGE_SIZE),
-					  PAGE_EXECUTE_READWRITE,
-					  Page,
-					  TRUE);
+	}
+      Status = MmCreateVirtualMapping(NULL,
+				      KernelStack,
+				      PAGE_READWRITE,
+				      Page,
+				      MM_STACK_SIZE / PAGE_SIZE);
+      if (!NT_SUCCESS(Status))
+        {
+          KEBUGCHECK(0);
 	}
       Thread->InitialStack = (char*)KernelStack + MM_STACK_SIZE;
       Thread->StackBase    = (char*)KernelStack + MM_STACK_SIZE;

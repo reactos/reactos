@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.15 2004/05/15 22:51:38 hbirr Exp $
+/* $Id: mdl.c,v 1.16 2004/08/01 07:24:57 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,6 +13,7 @@
 
 #include <ddk/ntddk.h>
 #include <internal/pool.h>
+#include <internal/mm.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -91,8 +92,8 @@ IoBuildPartialMdl(PMDL SourceMdl,
 		       PVOID VirtualAddress,
 		       ULONG Length)
 {
-   PULONG TargetPages = (PULONG)(TargetMdl + 1);
-   PULONG SourcePages = (PULONG)(SourceMdl + 1);
+   PPFN_TYPE TargetPages = (PPFN_TYPE)(TargetMdl + 1);
+   PPFN_TYPE SourcePages = (PPFN_TYPE)(SourceMdl + 1);
    ULONG Count;
    ULONG Delta;
 
@@ -116,7 +117,7 @@ IoBuildPartialMdl(PMDL SourceMdl,
 
    DPRINT("Delta %d, Count %d\n", Delta, Count);
 
-   memcpy(TargetPages, SourcePages, Count * sizeof(ULONG));
+   memcpy(TargetPages, SourcePages, Count * sizeof(PFN_TYPE));
 
 }
 

@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.63 2004/04/10 22:35:25 gdalsnes Exp $
+/* $Id: mminit.c,v 1.64 2004/08/01 07:24:58 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -95,7 +95,7 @@ MmInitVirtualMemory(ULONG LastKernelAddress,
    ULONG ParamLength = KernelLength;
    NTSTATUS Status;
    PHYSICAL_ADDRESS BoundaryAddressMultiple;
-   //ULONG i;
+   PFN_TYPE Pfn;
 
    DPRINT("MmInitVirtualMemory(%x, %x)\n",LastKernelAddress, KernelLength);
 
@@ -281,13 +281,13 @@ MmInitVirtualMemory(ULONG LastKernelAddress,
                       FALSE,
                       FALSE,
                       BoundaryAddressMultiple);
-   Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE,
-                                        &MmSharedDataPagePhysicalAddress);
+   Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &Pfn);
+   MmSharedDataPagePhysicalAddress.QuadPart = Pfn << PAGE_SHIFT;
    Status = MmCreateVirtualMapping(NULL,
                                    (PVOID)KI_USER_SHARED_DATA,
                                    PAGE_READWRITE,
-                                   MmSharedDataPagePhysicalAddress,
-                                   TRUE);
+                                   &Pfn,
+                                   1);
    if (!NT_SUCCESS(Status))
    {
       DbgPrint("Unable to create virtual mapping\n");
@@ -499,13 +499,13 @@ MmInit3(VOID)
 
 VOID STATIC
 MiFreeInitMemoryPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
-                     PHYSICAL_ADDRESS PhysAddr, SWAPENTRY SwapEntry,
+                     PFN_TYPE Page, SWAPENTRY SwapEntry,
                      BOOLEAN Dirty)
 {
    assert(SwapEntry == 0);
-   if (PhysAddr.QuadPart  != 0)
+   if (Page != 0)
    {
-      MmReleasePageMemoryConsumer(MC_NPPOOL, PhysAddr);
+      MmReleasePageMemoryConsumer(MC_NPPOOL, Page);
    }
 }
 

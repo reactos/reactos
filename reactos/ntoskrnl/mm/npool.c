@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.85 2004/04/10 22:35:25 gdalsnes Exp $
+/* $Id: npool.c,v 1.86 2004/08/01 07:24:58 hbirr Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -1248,54 +1248,58 @@ static BOOLEAN
 grow_block(BLOCK_HDR* blk, PVOID end)
 {
    NTSTATUS Status;
-   PHYSICAL_ADDRESS Page;
-   BOOLEAN result = TRUE;
-   ULONG index;
+   PFN_TYPE Page[32];
+   ULONG StartIndex, EndIndex;
+   ULONG i, j, k;
+   
+   StartIndex =  (ULONG)((char*)(PVOID)PAGE_ROUND_UP((ULONG)((char*)blk + BLOCK_HDR_SIZE)) - (char*)MiNonPagedPoolStart) / PAGE_SIZE;
+   EndIndex = (ULONG)((char*)PAGE_ROUND_UP(end) - (char*)MiNonPagedPoolStart) / PAGE_SIZE;
 
-   PVOID start = (PVOID)PAGE_ROUND_UP((ULONG)((char*)blk + BLOCK_HDR_SIZE));
-   end = (PVOID)PAGE_ROUND_UP(end);
-   index = (ULONG)((char*)start - (char*)MiNonPagedPoolStart) / PAGE_SIZE;
-   while (start < end)
+
+   for (i = StartIndex; i < EndIndex; i++)
    {
-      if (!(MiNonPagedPoolAllocMap[index / 32] & (1 << (index % 32))))
+      if (!(MiNonPagedPoolAllocMap[i / 32] & (1 << (i % 32))))
       {
-         Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &Page);
-         if (!NT_SUCCESS(Status))
-         {
-            result = FALSE;
-            break;
-         }
+         for (j = i + 1; j < EndIndex && j - i < 32; j++)
+	 {
+	    if (MiNonPagedPoolAllocMap[j / 32] & (1 << (j % 32)))
+	    {
+	       break;
+	    }
+	 }
+	 for (k = 0; k < j - i; k++)
+	 {
+            Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &Page[k]);
+            if (!NT_SUCCESS(Status))
+            {
+               for (i = 0; i < k; i++)
+	       {
+	         MmReleasePageMemoryConsumer(MC_NPPOOL, Page[i]);
+	       }
+	       return FALSE;
+	    }
+	 }
          Status = MmCreateVirtualMapping(NULL,
-                                         start,
+	                                 MiNonPagedPoolStart + i * PAGE_SIZE,
                                          PAGE_READWRITE|PAGE_SYSTEM,
                                          Page,
-                                         FALSE);
-         if (!NT_SUCCESS(Status))
-         {
-            DbgPrint("Unable to create virtual mapping\n");
-            MmReleasePageMemoryConsumer(MC_NPPOOL, Page);
-            result = FALSE;
-            break;
-         }
-         MiNonPagedPoolAllocMap[index / 32] |= (1 << (index % 32));
-         memset(start, 0xcc, PAGE_SIZE);
-         MiNonPagedPoolNrOfPages++;
+                                         k);
+	 if (!NT_SUCCESS(Status))
+	 {
+            for (i = 0; i < k; i++)
+	    {
+	      MmReleasePageMemoryConsumer(MC_NPPOOL, Page[i]);
+	    }
+	    return FALSE;
+	 }
+	 for (j = i; j < k + i; j++)
+	 {
+	    MiNonPagedPoolAllocMap[j / 32] |= (1 << (j % 32));
+	 }
+         i += k - 1;
       }
-      index++;
-#if defined(__GNUC__)
-
-      start += PAGE_SIZE;
-#else
-
-      {
-         char* pTemp = start;
-         pTemp += PAGE_SIZE;
-         start = pTemp;
-      }
-#endif
-
    }
-   return result;
+   return TRUE;
 }
 
 static BLOCK_HDR* get_block(unsigned int size, unsigned long alignment)
@@ -1729,7 +1733,7 @@ VOID INIT_FUNCTION
 MiInitializeNonPagedPool(VOID)
 {
    NTSTATUS Status;
-   PHYSICAL_ADDRESS Page;
+   PFN_TYPE Page;
    ULONG i;
    PVOID Address;
 #ifdef WHOLE_PAGE_ALLOCATIONS
@@ -1793,8 +1797,8 @@ MiInitializeNonPagedPool(VOID)
       Status = MmCreateVirtualMapping(NULL,
                                       Address,
                                       PAGE_READWRITE|PAGE_SYSTEM,
-                                      Page,
-                                      FALSE);
+                                      &Page,
+                                      1);
       if (!NT_SUCCESS(Status))
       {
          DbgPrint("Unable to create virtual mapping\n");

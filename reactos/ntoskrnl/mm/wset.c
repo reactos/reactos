@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: wset.c,v 1.19 2004/07/17 03:03:52 ion Exp $
+/* $Id: wset.c,v 1.20 2004/08/01 07:24:58 hbirr Exp $
  * 
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/wset.c
@@ -41,18 +41,18 @@
 NTSTATUS
 MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages)
 {
-   PHYSICAL_ADDRESS CurrentPhysicalAddress;
-   PHYSICAL_ADDRESS NextPhysicalAddress;
+   PFN_TYPE CurrentPage;
+   PFN_TYPE NextPage;
    NTSTATUS Status;
 
    (*NrFreedPages) = 0;
 
-   CurrentPhysicalAddress = MmGetLRUFirstUserPage();
-   while (CurrentPhysicalAddress.QuadPart != 0 && Target > 0)
+   CurrentPage = MmGetLRUFirstUserPage();
+   while (CurrentPage != 0 && Target > 0)
    {
-      NextPhysicalAddress = MmGetLRUNextUserPage(CurrentPhysicalAddress);
+      NextPage = MmGetLRUNextUserPage(CurrentPage);
 
-      Status = MmPageOutPhysicalAddress(CurrentPhysicalAddress);
+      Status = MmPageOutPhysicalAddress(CurrentPage);
       if (NT_SUCCESS(Status))
       {
          DPRINT("Succeeded\n");
@@ -61,10 +61,10 @@ MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages)
       }
       else if (Status == STATUS_PAGEFILE_QUOTA)
       {
-         MmSetLRULastPage(CurrentPhysicalAddress);
+         MmSetLRULastPage(CurrentPage);
       }
 
-      CurrentPhysicalAddress = NextPhysicalAddress;
+      CurrentPage = NextPage;
    }
    return(STATUS_SUCCESS);
 }

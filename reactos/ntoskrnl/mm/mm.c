@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mm.c,v 1.75 2004/07/17 03:03:51 ion Exp $
+/* $Id: mm.c,v 1.76 2004/08/01 07:24:58 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -312,7 +312,7 @@ NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
 NTSTATUS MmCommitPagedPoolAddress(PVOID Address, BOOLEAN Locked)
 {
    NTSTATUS Status;
-   PHYSICAL_ADDRESS AllocatedPage;
+   PFN_TYPE AllocatedPage;
    Status = MmRequestPageMemoryConsumer(MC_PPOOL, FALSE, &AllocatedPage);
    if (!NT_SUCCESS(Status))
    {
@@ -324,19 +324,8 @@ NTSTATUS MmCommitPagedPoolAddress(PVOID Address, BOOLEAN Locked)
       MmCreateVirtualMapping(NULL,
                              (PVOID)PAGE_ROUND_DOWN(Address),
                              PAGE_READWRITE,
-                             AllocatedPage,
-                             FALSE);
-   if (!NT_SUCCESS(Status))
-   {
-      MmUnlockAddressSpace(MmGetKernelAddressSpace());
-      Status =
-         MmCreateVirtualMapping(NULL,
-                                (PVOID)PAGE_ROUND_DOWN(Address),
-                                PAGE_READWRITE,
-                                AllocatedPage,
-                                FALSE);
-      MmLockAddressSpace(MmGetKernelAddressSpace());
-   }
+                             &AllocatedPage,
+                             1);
    if (Locked)
    {
       MmLockPage(AllocatedPage);
@@ -352,6 +341,7 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
    MEMORY_AREA* MemoryArea;
    NTSTATUS Status;
    BOOLEAN Locked = FromMdl;
+   PFN_TYPE Pfn;
 
    DPRINT("MmNotPresentFault(Mode %d, Address %x)\n", Mode, Address);
 
@@ -433,23 +423,13 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
             break;
 
          case MEMORY_AREA_SHARED_DATA:
+	    Pfn = MmSharedDataPagePhysicalAddress.QuadPart >> PAGE_SHIFT;
             Status =
                MmCreateVirtualMapping(PsGetCurrentProcess(),
                                       (PVOID)PAGE_ROUND_DOWN(Address),
                                       PAGE_READONLY,
-                                      MmSharedDataPagePhysicalAddress,
-                                      FALSE);
-            if (!NT_SUCCESS(Status))
-            {
-               MmUnlockAddressSpace(&PsGetCurrentProcess()->AddressSpace);
-               Status =
-                  MmCreateVirtualMapping(PsGetCurrentProcess(),
-                                         (PVOID)PAGE_ROUND_DOWN(Address),
-                                         PAGE_READONLY,
-                                         MmSharedDataPagePhysicalAddress,
-                                         TRUE);
-               MmLockAddressSpace(&PsGetCurrentProcess()->AddressSpace);
-            }
+                                      &Pfn,
+                                      1);
             break;
 
          default:

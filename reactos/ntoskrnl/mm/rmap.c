@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rmap.c,v 1.28 2004/04/10 22:35:25 gdalsnes Exp $
+/* $Id: rmap.c,v 1.29 2004/08/01 07:24:58 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -69,7 +69,7 @@ MmInitializeRmapList(VOID)
 }
 
 NTSTATUS
-MmWritePagePhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
+MmWritePagePhysicalAddress(PFN_TYPE Page)
 {
    PMM_RMAP_ENTRY entry;
    PMEMORY_AREA MemoryArea;
@@ -86,7 +86,7 @@ MmWritePagePhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
     * process so it isn't freed while we are working.
     */
    ExAcquireFastMutex(&RmapListLock);
-   entry = MmGetRmapListHeadPage(PhysicalAddress);
+   entry = MmGetRmapListHeadPage(Page);
    if (entry == NULL)
    {
       ExReleaseFastMutex(&RmapListLock);
@@ -202,7 +202,7 @@ MmWritePagePhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
 }
 
 NTSTATUS
-MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
+MmPageOutPhysicalAddress(PFN_TYPE Page)
 {
    PMM_RMAP_ENTRY entry;
    PMEMORY_AREA MemoryArea;
@@ -215,8 +215,8 @@ MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
    NTSTATUS Status = STATUS_SUCCESS;
 
    ExAcquireFastMutex(&RmapListLock);
-   entry = MmGetRmapListHeadPage(PhysicalAddress);
-   if (entry == NULL || MmGetLockCountPage(PhysicalAddress) != 0)
+   entry = MmGetRmapListHeadPage(Page);
+   if (entry == NULL || MmGetLockCountPage(Page) != 0)
    {
       ExReleaseFastMutex(&RmapListLock);
       return(STATUS_UNSUCCESSFUL);
@@ -324,12 +324,12 @@ MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
 }
 
 VOID
-MmSetCleanAllRmaps(PHYSICAL_ADDRESS PhysicalAddress)
+MmSetCleanAllRmaps(PFN_TYPE Page)
 {
    PMM_RMAP_ENTRY current_entry;
 
    ExAcquireFastMutex(&RmapListLock);
-   current_entry = MmGetRmapListHeadPage(PhysicalAddress);
+   current_entry = MmGetRmapListHeadPage(Page);
    if (current_entry == NULL)
    {
       DPRINT1("MmIsDirtyRmap: No rmaps.\n");
@@ -344,12 +344,12 @@ MmSetCleanAllRmaps(PHYSICAL_ADDRESS PhysicalAddress)
 }
 
 VOID
-MmSetDirtyAllRmaps(PHYSICAL_ADDRESS PhysicalAddress)
+MmSetDirtyAllRmaps(PFN_TYPE Page)
 {
    PMM_RMAP_ENTRY current_entry;
 
    ExAcquireFastMutex(&RmapListLock);
-   current_entry = MmGetRmapListHeadPage(PhysicalAddress);
+   current_entry = MmGetRmapListHeadPage(Page);
    if (current_entry == NULL)
    {
       DPRINT1("MmIsDirtyRmap: No rmaps.\n");
@@ -364,12 +364,12 @@ MmSetDirtyAllRmaps(PHYSICAL_ADDRESS PhysicalAddress)
 }
 
 BOOL
-MmIsDirtyPageRmap(PHYSICAL_ADDRESS PhysicalAddress)
+MmIsDirtyPageRmap(PFN_TYPE Page)
 {
    PMM_RMAP_ENTRY current_entry;
 
    ExAcquireFastMutex(&RmapListLock);
-   current_entry = MmGetRmapListHeadPage(PhysicalAddress);
+   current_entry = MmGetRmapListHeadPage(Page);
    if (current_entry == NULL)
    {
       ExReleaseFastMutex(&RmapListLock);
@@ -389,7 +389,7 @@ MmIsDirtyPageRmap(PHYSICAL_ADDRESS PhysicalAddress)
 }
 
 VOID
-MmInsertRmap(PHYSICAL_ADDRESS PhysicalAddress, PEPROCESS Process,
+MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
              PVOID Address)
 {
    PMM_RMAP_ENTRY current_entry;
@@ -405,25 +405,24 @@ MmInsertRmap(PHYSICAL_ADDRESS PhysicalAddress, PEPROCESS Process,
    new_entry->Address = Address;
    new_entry->Process = Process;
 
-   if (MmGetPhysicalAddressForProcess(Process, Address).QuadPart !=
-         PhysicalAddress.QuadPart)
+   if (MmGetPfnForProcess(Process, Address) != Page)
    {
       DPRINT1("Insert rmap (%d, 0x%.8X) 0x%.8X which doesn't match physical "
               "address 0x%.8X\n", Process->UniqueProcessId, Address,
-              MmGetPhysicalAddressForProcess(Process, Address).u.LowPart,
-              PhysicalAddress.u.LowPart);
+              MmGetPfnForProcess(Process, Address) << PAGE_SHIFT,
+              Page << PAGE_SHIFT);
       KEBUGCHECK(0);
    }
 
    ExAcquireFastMutex(&RmapListLock);
-   current_entry = MmGetRmapListHeadPage(PhysicalAddress);
+   current_entry = MmGetRmapListHeadPage(Page);
    new_entry->Next = current_entry;
-   MmSetRmapListHeadPage(PhysicalAddress, new_entry);
+   MmSetRmapListHeadPage(Page, new_entry);
    ExReleaseFastMutex(&RmapListLock);
 }
 
 VOID
-MmDeleteAllRmaps(PHYSICAL_ADDRESS PhysicalAddress, PVOID Context,
+MmDeleteAllRmaps(PFN_TYPE Page, PVOID Context,
                  VOID (*DeleteMapping)(PVOID Context, PEPROCESS Process,
                                        PVOID Address))
 {
@@ -431,13 +430,13 @@ MmDeleteAllRmaps(PHYSICAL_ADDRESS PhysicalAddress, PVOID Context,
    PMM_RMAP_ENTRY previous_entry;
 
    ExAcquireFastMutex(&RmapListLock);
-   current_entry = MmGetRmapListHeadPage(PhysicalAddress);
+   current_entry = MmGetRmapListHeadPage(Page);
    if (current_entry == NULL)
    {
       DPRINT1("MmDeleteAllRmaps: No rmaps.\n");
       KEBUGCHECK(0);
    }
-   MmSetRmapListHeadPage(PhysicalAddress, NULL);
+   MmSetRmapListHeadPage(Page, NULL);
    while (current_entry != NULL)
    {
       previous_entry = current_entry;
@@ -453,14 +452,14 @@ MmDeleteAllRmaps(PHYSICAL_ADDRESS PhysicalAddress, PVOID Context,
 }
 
 VOID
-MmDeleteRmap(PHYSICAL_ADDRESS PhysicalAddress, PEPROCESS Process,
+MmDeleteRmap(PFN_TYPE Page, PEPROCESS Process,
              PVOID Address)
 {
    PMM_RMAP_ENTRY current_entry, previous_entry;
 
    ExAcquireFastMutex(&RmapListLock);
    previous_entry = NULL;
-   current_entry = MmGetRmapListHeadPage(PhysicalAddress);
+   current_entry = MmGetRmapListHeadPage(Page);
    while (current_entry != NULL)
    {
       if (current_entry->Process == Process &&
@@ -468,7 +467,7 @@ MmDeleteRmap(PHYSICAL_ADDRESS PhysicalAddress, PEPROCESS Process,
       {
          if (previous_entry == NULL)
          {
-            MmSetRmapListHeadPage(PhysicalAddress, current_entry->Next);
+            MmSetRmapListHeadPage(Page, current_entry->Next);
          }
          else
          {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: process.c,v 1.20 2004/06/23 22:31:51 ion Exp $
+/* $Id: process.c,v 1.21 2004/08/01 07:24:59 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/process.c
@@ -73,7 +73,7 @@ KeAttachProcess (PEPROCESS Process)
       To prevent this, make sure the page directory of the process we're
       attaching to is up-to-date. */
 
-   AttachedProcessPageDir = ExAllocatePageWithPhysPage(Process->Pcb.DirectoryTableBase);
+   AttachedProcessPageDir = ExAllocatePageWithPhysPage(Process->Pcb.DirectoryTableBase.QuadPart >> PAGE_SHIFT);
    MmUpdateStackPageDir(AttachedProcessPageDir, &CurrentThread->Tcb);
    ExUnmapPage(AttachedProcessPageDir);
 

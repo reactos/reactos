@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: balance.c,v 1.30 2004/07/31 09:44:35 hbirr Exp $
+/* $Id: balance.c,v 1.31 2004/08/01 07:24:57 hbirr Exp $
  *
  * PROJECT:     ReactOS kernel 
  * FILE:        ntoskrnl/mm/balance.c
@@ -38,7 +38,7 @@
 /* TYPES ********************************************************************/
 typedef struct _MM_ALLOCATION_REQUEST
 {
-   PHYSICAL_ADDRESS Page;
+   PFN_TYPE Page;
    LIST_ENTRY ListEntry;
    KEVENT Event;
 }
@@ -98,19 +98,13 @@ MmInitializeMemoryConsumer(ULONG Consumer,
 }
 
 NTSTATUS
-MmReleasePageMemoryConsumer(ULONG Consumer, PHYSICAL_ADDRESS Page)
+MmReleasePageMemoryConsumer(ULONG Consumer, PFN_TYPE Page)
 {
    PMM_ALLOCATION_REQUEST Request;
    PLIST_ENTRY Entry;
    KIRQL oldIrql;
 
-#if defined(__GNUC__)
-
-   if (Page.QuadPart == 0LL)
-#else
-
-   if (Page.QuadPart == 0)
-#endif
+   if (Page == 0)
    {
       DPRINT1("Tried to release page zero.\n");
       KEBUGCHECK(0);
@@ -196,10 +190,10 @@ MiIsBalancerThread(VOID)
 
 NTSTATUS
 MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
-                            PHYSICAL_ADDRESS* AllocatedPage)
+                            PPFN_TYPE AllocatedPage)
 {
    ULONG OldUsed;
-   PHYSICAL_ADDRESS Page;
+   PFN_TYPE Page;
    KIRQL oldIrql;
 
    /*
@@ -223,14 +217,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
    if (Consumer == MC_NPPOOL || MiIsBalancerThread())
    {
       Page = MmAllocPage(Consumer, 0);
-#if defined(__GNUC__)
-
-      if (Page.QuadPart == 0LL)
-#else
-
-      if (Page.QuadPart == 0)
-#endif
-
+      if (Page == 0)
       {
          KEBUGCHECK(0);
       }
@@ -257,12 +244,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
       }
 
       /* Insert an allocation request. */
-#if defined(__GNUC__)
-      Request.Page.QuadPart = 0LL;
-#else
-
-      Request.Page.QuadPart = 0;
-#endif
+      Request.Page = 0;
 
       KeInitializeEvent(&Request.Event, NotificationEvent, FALSE);
       InterlockedIncrement((LONG *)&MiPagesRequired);
@@ -283,14 +265,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
                             NULL);
 
       Page = Request.Page;
-#if defined(__GNUC__)
-
-      if (Page.QuadPart == 0LL)
-#else
-
-      if (Page.QuadPart == 0)
-#endif
-
+      if (Page == 0)
       {
          KEBUGCHECK(0);
       }
@@ -304,14 +279,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
     * Actually allocate the page.
     */
    Page = MmAllocPage(Consumer, 0);
-#if defined(__GNUC__)
-
-   if (Page.QuadPart == 0LL)
-#else
-
-   if (Page.QuadPart == 0)
-#endif
-
+   if (Page == 0)
    {
       KEBUGCHECK(0);
    }

@@ -1,4 +1,4 @@
-/* $Id: cont.c,v 1.31 2004/04/10 22:35:25 gdalsnes Exp $
+/* $Id: cont.c,v 1.32 2004/08/01 07:24:57 hbirr Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -21,13 +21,13 @@
 
 VOID STATIC
 MmFreeContinuousPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
-                     PHYSICAL_ADDRESS PhysAddr, SWAPENTRY SwapEntry,
+                     PFN_TYPE Page, SWAPENTRY SwapEntry,
                      BOOLEAN Dirty)
 {
    assert(SwapEntry == 0);
-   if (PhysAddr.QuadPart != 0)
+   if (Page != 0)
    {
-      MmReleasePageMemoryConsumer(MC_NPPOOL, PhysAddr);
+      MmReleasePageMemoryConsumer(MC_NPPOOL, Page);
    }
 }
 
@@ -42,7 +42,7 @@ MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
    PMEMORY_AREA MArea;
    NTSTATUS Status;
    PVOID BaseAddress = 0;
-   PHYSICAL_ADDRESS PBase;
+   PFN_TYPE PBase;
    ULONG Attributes;
    ULONG i;
 
@@ -78,14 +78,7 @@ MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
                                 LowestAcceptableAddress,
                                 HighestAcceptableAddress,
                                 Alignment);
-#if defined(__GNUC__)
-
-   if (PBase.QuadPart == 0LL)
-#else
-
-   if (PBase.QuadPart == 0)
-#endif
-
+   if (PBase == 0)
    {
       MmLockAddressSpace(MmGetKernelAddressSpace());
       MmFreeMemoryArea(MmGetKernelAddressSpace(),
@@ -96,22 +89,13 @@ MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
       MmUnlockAddressSpace(MmGetKernelAddressSpace());
       return(NULL);
    }
-   for (i = 0; i < (PAGE_ROUND_UP(NumberOfBytes) / 4096); i++)
+   for (i = 0; i < (PAGE_ROUND_UP(NumberOfBytes) / PAGE_SIZE); i++, PBase++)
    {
-#if !defined(__GNUC__)
-      LARGE_INTEGER dummyJunkNeeded;
-      dummyJunkNeeded.QuadPart = PBase.QuadPart + (i * 4096);
-#endif
-
       MmCreateVirtualMapping(NULL,
                              (char*)BaseAddress + (i * 4096),
                              Attributes,
-#if defined(__GNUC__)
-                             (LARGE_INTEGER)(PBase.QuadPart + (i * 4096)),
-#else
-                             dummyJunkNeeded,
-#endif
-                             TRUE);
+                             &PBase,
+			     1);
    }
    return(BaseAddress);
 }

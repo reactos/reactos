@@ -40,7 +40,7 @@
 
 ULONG KiPcrInitDone = 0;
 static ULONG PcrsAllocated = 0;
-static PHYSICAL_ADDRESS PcrPages[MAXIMUM_PROCESSORS];
+static PFN_TYPE PcrPages[MAXIMUM_PROCESSORS];
 ULONG Ke386CpuidFlags, Ke386CpuidFlags2, Ke386CpuidExFlags;
 ULONG Ke386Cpuid = 300;
 
@@ -105,7 +105,7 @@ Ki386GetCpuId(VOID)
 VOID INIT_FUNCTION
 KePrepareForApplicationProcessorInit(ULONG Id)
 {
-  MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &PcrPages[Id]);
+  MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &PcrPages[Id]);
   KiGdtPrepareForApplicationProcessorInit(Id);
 }
 
@@ -122,7 +122,8 @@ KeApplicationProcessorInit(VOID)
   KPCR = (PKPCR)(KPCR_BASE + (Offset * PAGE_SIZE));
   MmCreateVirtualMappingForKernel((PVOID)KPCR,
 				  PAGE_READWRITE,
-				  PcrPages[Offset]);
+				  &PcrPages[Offset],
+				  1);
   memset(KPCR, 0, PAGE_SIZE);
   KPCR->ProcessorNumber = (UCHAR)Offset;
   KPCR->Self = KPCR;

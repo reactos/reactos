@@ -409,12 +409,12 @@ MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
                  PVOID BaseAddress,
                  ULONG Length,
                  VOID (*FreePage)(PVOID Context, MEMORY_AREA* MemoryArea,
-                                  PVOID Address, PHYSICAL_ADDRESS PhysAddr,
+                                  PVOID Address, PFN_TYPE Page,
                                   SWAPENTRY SwapEntry, BOOLEAN Dirty),
                  PVOID FreePageContext)
 {
    MEMORY_AREA* MemoryArea;
-   ULONG i;
+   PVOID Address, EndAddress;
    PEPROCESS CurrentProcess = PsGetCurrentProcess();
 
    DPRINT("MmFreeMemoryArea(AddressSpace %x, BaseAddress %x, Length %x,"
@@ -433,43 +433,33 @@ MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
    {
       KeAttachProcess(AddressSpace->Process);
    }
-   for (i=0; i<(PAGE_ROUND_UP(MemoryArea->Length)/PAGE_SIZE); i++)
+   EndAddress = MemoryArea->BaseAddress + PAGE_ROUND_UP(MemoryArea->Length); 
+   for (Address = MemoryArea->BaseAddress; Address < EndAddress; Address += PAGE_SIZE)
    {
-#if defined(__GNUC__)
-      PHYSICAL_ADDRESS PhysAddr = (PHYSICAL_ADDRESS)0LL;
-#else
-
-      PHYSICAL_ADDRESS PhysAddr = { 0 };
-#endif
 
       if (MemoryArea->Type == MEMORY_AREA_IO_MAPPING)
       {
-         MmRawDeleteVirtualMapping((char*)MemoryArea->BaseAddress + (i * PAGE_SIZE));
+         MmRawDeleteVirtualMapping(Address);
       }
       else
       {
 	 BOOL Dirty = FALSE;
          SWAPENTRY SwapEntry = 0;
+	 PFN_TYPE Page = 0;
 
-         if (MmIsPageSwapEntry(AddressSpace->Process,
-                               (char*)MemoryArea->BaseAddress + (i * PAGE_SIZE)))
+
+         if (MmIsPageSwapEntry(AddressSpace->Process, Address))
          {
-            MmDeletePageFileMapping(AddressSpace->Process,
-                                    (char*)MemoryArea->BaseAddress + (i * PAGE_SIZE),
-                                    &SwapEntry);
+            MmDeletePageFileMapping(AddressSpace->Process, Address, &SwapEntry);
          }
          else
          {
-            MmDeleteVirtualMapping(AddressSpace->Process,
-                                   (char*)MemoryArea->BaseAddress + (i*PAGE_SIZE),
-                                   FALSE, &Dirty, &PhysAddr);
-
+            MmDeleteVirtualMapping(AddressSpace->Process, Address, FALSE, &Dirty, &Page);
          }
          if (FreePage != NULL)
          {
-            FreePage(FreePageContext, MemoryArea,
-                     (char*)MemoryArea->BaseAddress + (i * PAGE_SIZE), PhysAddr,
-                     SwapEntry, (BOOLEAN)Dirty);
+            FreePage(FreePageContext, MemoryArea, Address, 
+		     Page, SwapEntry, (BOOLEAN)Dirty);
          }
       }
    }

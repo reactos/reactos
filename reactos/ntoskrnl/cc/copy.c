@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.27 2004/06/21 04:11:44 ion Exp $
+/* $Id: copy.c,v 1.28 2004/08/01 07:24:57 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -26,11 +26,7 @@
 
 #define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
 
-#if defined(__GNUC__)
-static PHYSICAL_ADDRESS CcZeroPage = (PHYSICAL_ADDRESS)0LL;
-#else
-static PHYSICAL_ADDRESS CcZeroPage = { 0 };
-#endif
+static PFN_TYPE CcZeroPage = 0;
 
 #define MAX_ZERO_LENGTH	(256 * 1024)
 #define MAX_RW_LENGTH	(64 * 1024)
@@ -54,7 +50,7 @@ CcInitCacheZeroPage(VOID)
 {
    NTSTATUS Status;
 
-   Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &CcZeroPage);
+   Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &CcZeroPage);
    if (!NT_SUCCESS(Status))
    {
        DbgPrint("Can't allocate CcZeroPage.\n");
@@ -122,7 +118,7 @@ ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
 	  PCACHE_SEGMENT current2;
 	  ULONG current_size;
 	  ULONG i;
-	  ULONG offset;
+	  PPFN_TYPE MdlPages;
 
 	  /*
 	   * Count the maximum number of bytes we could read starting
@@ -142,17 +138,13 @@ ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
           MmInitializeMdl(Mdl, NULL, current_size);
 	  Mdl->MdlFlags |= (MDL_PAGES_LOCKED | MDL_IO_PAGE_READ);
 	  current2 = current;
-	  offset = 0;
+	  MdlPages = (PPFN_TYPE)(Mdl + 1);
 	  while (current2 != NULL && !current2->Valid)
 	    {
-	      for (i = 0; i < (Bcb->CacheSegmentSize / PAGE_SIZE); i++)
+	      PVOID address = current2->BaseAddress;
+	      for (i = 0; i < (Bcb->CacheSegmentSize / PAGE_SIZE); i++, address += PAGE_SIZE)
 		{
-		  PVOID address;
-		  PHYSICAL_ADDRESS page;
-		  address = (char*)current2->BaseAddress + (i * PAGE_SIZE);
-		  page = MmGetPhysicalAddressForProcess(NULL, address);
-		  ((PULONG)(Mdl + 1))[offset] = page.QuadPart >> PAGE_SHIFT;
-		  offset++;
+		  *MdlPages++ = MmGetPfnForProcess(NULL, address);
 		}
 	      current2 = current2->NextInChain;
 	    }
@@ -649,7 +641,7 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
 	  Mdl->MdlFlags |= (MDL_PAGES_LOCKED | MDL_IO_PAGE_READ);
 	  for (i = 0; i < ((Mdl->Size - sizeof(MDL)) / sizeof(ULONG)); i++)
 	    {
-	      ((PULONG)(Mdl + 1))[i] = CcZeroPage.QuadPart >> PAGE_SHIFT;
+	      ((PPFN_TYPE)(Mdl + 1))[i] = CcZeroPage;
 	    }
           KeInitializeEvent(&Event, NotificationEvent, FALSE);
 	  Status = IoPageWrite(FileObject, Mdl, &WriteOffset, &Event, &Iosb);

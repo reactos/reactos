@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mpw.c,v 1.18 2004/04/10 22:35:25 gdalsnes Exp $
+/* $Id: mpw.c,v 1.19 2004/08/01 07:24:58 hbirr Exp $
  *
  * PROJECT:      ReactOS kernel
  * FILE:         ntoskrnl/mm/mpw.c
@@ -49,19 +49,12 @@ static volatile BOOLEAN MpwThreadShouldTerminate;
 NTSTATUS STDCALL
 MmWriteDirtyPages(ULONG Target, PULONG Actual)
 {
-   PHYSICAL_ADDRESS Page;
-   PHYSICAL_ADDRESS NextPage;
+   PFN_TYPE Page;
+   PFN_TYPE NextPage;
    NTSTATUS Status;
 
    Page = MmGetLRUFirstUserPage();
-#if defined(__GNUC__)
-
-   while (Page.QuadPart != 0LL && Target > 0)
-#else
-
-   while (Page.QuadPart && Target > 0)
-#endif
-
+   while (Page != 0 && Target > 0)
    {
       /*
        * FIXME: While the current page is write back it is possible

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.72 2004/02/26 19:29:55 hbirr Exp $
+/* $Id: view.c,v 1.73 2004/08/01 07:24:57 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/view.c
@@ -282,8 +282,8 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
 	     ExReleaseFastMutex(&ViewLock);
 	     for (i = 0; i < current->Bcb->CacheSegmentSize / PAGE_SIZE; i++)
 	       {
-	         PHYSICAL_ADDRESS Page;
-		 Page = MmGetPhysicalAddress((char*)current->BaseAddress + i * PAGE_SIZE);
+	         PFN_TYPE Page;
+		 Page = MmGetPhysicalAddress((char*)current->BaseAddress + i * PAGE_SIZE).QuadPart >> PAGE_SHIFT;
                  Status = MmPageOutPhysicalAddress(Page);
 		 if (!NT_SUCCESS(Status))
 		   {
@@ -488,8 +488,10 @@ CcRosCreateCacheSegment(PBCB Bcb,
   PLIST_ENTRY current_entry;
   NTSTATUS Status;
   KIRQL oldIrql;
+  PPFN_TYPE Pfn;
 #ifdef CACHE_BITMAP
   ULONG StartingOffset;
+#else
 #endif
   PHYSICAL_ADDRESS BoundaryAddressMultiple;
   
@@ -611,25 +613,23 @@ CcRosCreateCacheSegment(PBCB Bcb,
      KEBUGCHECK(0);
   }
 #endif
+  Pfn = alloca(sizeof(PFN_TYPE) * (Bcb->CacheSegmentSize / PAGE_SIZE));
   for (i = 0; i < (Bcb->CacheSegmentSize / PAGE_SIZE); i++)
   {
-     PHYSICAL_ADDRESS Page;
-      
-     Status = MmRequestPageMemoryConsumer(MC_CACHE, TRUE, &Page);
+     Status = MmRequestPageMemoryConsumer(MC_CACHE, TRUE, &Pfn[i]);
      if (!NT_SUCCESS(Status))
      {
 	KEBUGCHECK(0);
      }
-      
-     Status = MmCreateVirtualMapping(NULL,
-				     (char*)current->BaseAddress + (i * PAGE_SIZE),
-				     PAGE_READWRITE,
-				     Page,
-				     TRUE);
-     if (!NT_SUCCESS(Status))
-     {
-	KEBUGCHECK(0);
-     }
+  }
+  Status = MmCreateVirtualMapping(NULL,
+				  current->BaseAddress,
+				  PAGE_READWRITE,
+				  Pfn,
+				  Bcb->CacheSegmentSize / PAGE_SIZE);
+  if (!NT_SUCCESS(Status))
+  {
+    KEBUGCHECK(0);
   }
   return(STATUS_SUCCESS);
 }
@@ -770,12 +770,12 @@ CcRosRequestCacheSegment(PBCB Bcb,
 #else
 STATIC VOID 
 CcFreeCachePage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, 
-		PHYSICAL_ADDRESS PhysAddr, SWAPENTRY SwapEntry, BOOLEAN Dirty)
+		PFN_TYPE Page, SWAPENTRY SwapEntry, BOOLEAN Dirty)
 {
   assert(SwapEntry == 0);
-  if (PhysAddr.QuadPart != 0)
+  if (Page != 0)
     {
-      MmReleasePageMemoryConsumer(MC_CACHE, PhysAddr);
+      MmReleasePageMemoryConsumer(MC_CACHE, Page);
     }
 }
 #endif
@@ -789,7 +789,7 @@ CcRosInternalFreeCacheSegment(PCACHE_SEGMENT CacheSeg)
   ULONG i;
   ULONG RegionSize;
   ULONG Base;
-  PHYSICAL_ADDRESS PhysicalAddr;
+  PFN_TYPE Page;
   KIRQL oldIrql;
 #endif
   DPRINT("Freeing cache segment %x\n", CacheSeg);
@@ -803,8 +803,8 @@ CcRosInternalFreeCacheSegment(PCACHE_SEGMENT CacheSeg)
 			     CacheSeg->BaseAddress + (i * PAGE_SIZE),
 			     FALSE,
 			     NULL,
-			     &PhysicalAddr);
-      MmReleasePageMemoryConsumer(MC_CACHE, PhysicalAddr);
+			     &Page);
+      MmReleasePageMemoryConsumer(MC_CACHE, Page);
     }
 
   KeAcquireSpinLock(&CiCacheSegMappingRegionLock, &oldIrql);

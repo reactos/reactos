@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.48 2004/06/19 08:53:35 vizzini Exp $
+/* $Id: pagefile.c,v 1.49 2004/08/01 07:24:58 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -191,7 +191,7 @@ MmGetOffsetPageFile(PGET_RETRIEVAL_DESCRIPTOR RetrievalPointers, LARGE_INTEGER O
 #endif
 }
 
-NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PHYSICAL_ADDRESS* Page)
+NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
 {
    ULONG i, offset;
    LARGE_INTEGER file_offset;
@@ -225,7 +225,7 @@ NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PHYSICAL_ADDRESS* Page)
    }
 
    MmInitializeMdl(Mdl, NULL, PAGE_SIZE);
-   MmBuildMdlFromPages(Mdl, (PULONG)Page);
+   MmBuildMdlFromPages(Mdl, &Page);
 
    file_offset.QuadPart = offset * PAGE_SIZE;
    file_offset = MmGetOffsetPageFile(PagingFileList[i]->RetrievalPointers, file_offset);
@@ -245,7 +245,7 @@ NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PHYSICAL_ADDRESS* Page)
    return(Status);
 }
 
-NTSTATUS MmReadFromSwapPage(SWAPENTRY SwapEntry, PHYSICAL_ADDRESS* Page)
+NTSTATUS MmReadFromSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
 {
    ULONG i, offset;
    LARGE_INTEGER file_offset;
@@ -279,7 +279,7 @@ NTSTATUS MmReadFromSwapPage(SWAPENTRY SwapEntry, PHYSICAL_ADDRESS* Page)
    }
 
    MmInitializeMdl(Mdl, NULL, PAGE_SIZE);
-   MmBuildMdlFromPages(Mdl, (PULONG)Page);
+   MmBuildMdlFromPages(Mdl, &Page);
 
    file_offset.QuadPart = offset * PAGE_SIZE;
    file_offset = MmGetOffsetPageFile(PagingFileList[i]->RetrievalPointers, file_offset);
@@ -591,12 +591,11 @@ MmDumpToPagingFile(ULONG BugCode,
    {
       for (i = 0; i < MmStats.NrTotalPages; i++)
       {
-         LARGE_INTEGER PhysicalAddress;
-         PhysicalAddress.QuadPart = i * PAGE_SIZE;
          MdlMap[0] = i;
          MmCreateVirtualMappingForKernel(MmCoreDumpPageFrame, 
 	                                 PAGE_READWRITE,
-                                         PhysicalAddress);
+                                         MdlMap,
+					 1);
 #if defined(__GNUC__)
 
          DiskOffset = MmGetOffsetPageFile(RetrievalPointers,

@@ -1,4 +1,4 @@
-/* $Id: w32call.c,v 1.12 2004/02/29 11:51:49 hbirr Exp $
+/* $Id: w32call.c,v 1.13 2004/08/01 07:24:59 hbirr Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -31,6 +31,14 @@
 
 #define NDEBUG
 #include <internal/debug.h>
+
+#if defined(__GNUC__)
+void * alloca(size_t size);
+#elif defined(_MSC_VER)
+void* _alloca(size_t size);
+#else
+#error Unknown compiler for alloca intrinsic stack allocation "function"
+#endif
 
 /* TYPES *******************************************************************/
 
@@ -139,13 +147,13 @@ NtCallbackReturn (PVOID		Result,
 
 VOID STATIC
 PsFreeCallbackStackPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, 
-			PHYSICAL_ADDRESS PhysAddr, SWAPENTRY SwapEntry, 
+			PFN_TYPE Page, SWAPENTRY SwapEntry, 
 			BOOLEAN Dirty)
 {
   assert(SwapEntry == 0);
-  if (PhysAddr.QuadPart  != 0)
+  if (Page != 0)
     {
-      MmReleasePageMemoryConsumer(MC_NPPOOL, PhysAddr);
+      MmReleasePageMemoryConsumer(MC_NPPOOL, Page);
     }
 }
 
@@ -183,8 +191,10 @@ PsAllocateCallbackStack(ULONG StackSize)
   PVOID KernelStack = NULL;
   NTSTATUS Status;
   PMEMORY_AREA StackArea;
-  ULONG i;
+  ULONG i, j;
   PHYSICAL_ADDRESS BoundaryAddressMultiple;
+  PPFN_TYPE Pages = alloca(sizeof(PFN_TYPE) * (StackSize /PAGE_SIZE));
+
 
   BoundaryAddressMultiple.QuadPart = 0;
   StackSize = PAGE_ROUND_UP(StackSize);
@@ -207,17 +217,28 @@ PsAllocateCallbackStack(ULONG StackSize)
     }
   for (i = 0; i < (StackSize / PAGE_SIZE); i++)
     {
-      PHYSICAL_ADDRESS Page;
-      Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &Page);
+      Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &Pages[i]);
       if (!NT_SUCCESS(Status))
 	{
+	  for (j = 0; j < i; j++)
+	  {
+	    MmReleasePageMemoryConsumer(MC_NPPOOL, Pages[j]);
+	  }
 	  return(NULL);
 	}
-      Status = MmCreateVirtualMapping(NULL,
-				      (char*)KernelStack + (i * PAGE_SIZE),
-				      PAGE_EXECUTE_READWRITE,
-				      Page,
-				      TRUE);
+    }
+  Status = MmCreateVirtualMapping(NULL,
+				  KernelStack,
+				  PAGE_READWRITE,
+				  Pages,
+				  StackSize / PAGE_SIZE);
+  if (!NT_SUCCESS(Status))
+    {
+      for (i = 0; i < (StackSize / PAGE_SIZE); i++)
+        {
+	  MmReleasePageMemoryConsumer(MC_NPPOOL, Pages[i]);
+	}
+      return(NULL);
     }
   return(KernelStack);
 }
