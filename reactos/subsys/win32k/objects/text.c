@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.35 2003/07/21 17:43:46 jimtabor Exp $ */
+/* $Id: text.c,v 1.36 2003/07/24 16:56:59 rcampbell Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -646,7 +646,7 @@ W32kGetTextExtentExPoint(HDC  hDC,
                                LPINT  Dx,
                                LPSIZE  Size)
 {
-  UNIMPLEMENTED;
+  return W32kGetTextExtentPoint(hDC, String, Count, Size);
 }
 
 BOOL
