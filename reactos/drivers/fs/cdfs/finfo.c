@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: finfo.c,v 1.9 2004/03/08 08:51:26 ekohl Exp $
+/* $Id: finfo.c,v 1.10 2004/05/23 13:31:25 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -60,11 +60,20 @@ CdfsGetStandardInformation(PFCB Fcb,
   RtlZeroMemory(StandardInfo,
 		sizeof(FILE_STANDARD_INFORMATION));
 
-  StandardInfo->AllocationSize = Fcb->RFCB.AllocationSize;
-  StandardInfo->EndOfFile = Fcb->RFCB.FileSize;
+  if (CdfsFCBIsDirectory(Fcb))
+    {
+      StandardInfo->AllocationSize.QuadPart = 0LL;;
+      StandardInfo->EndOfFile.QuadPart = 0LL;
+      StandardInfo->Directory = TRUE;
+    }
+  else
+    {
+      StandardInfo->AllocationSize = Fcb->RFCB.AllocationSize;
+      StandardInfo->EndOfFile = Fcb->RFCB.FileSize;
+      StandardInfo->Directory = TRUE;
+    }
   StandardInfo->NumberOfLinks = 0;
   StandardInfo->DeletePending = FALSE;
-  StandardInfo->Directory = Fcb->Entry.FileFlags & 0x02 ? TRUE : FALSE;
 
   *BufferLength -= sizeof(FILE_STANDARD_INFORMATION);
   return(STATUS_SUCCESS);
@@ -207,8 +216,16 @@ CdfsGetNetworkOpenInformation(PFCB Fcb,
 			 &NetworkInfo->LastWriteTime);
   CdfsDateTimeToFileTime(Fcb,
 			 &NetworkInfo->ChangeTime);
-  NetworkInfo->AllocationSize = Fcb->RFCB.AllocationSize;
-  NetworkInfo->EndOfFile = Fcb->RFCB.FileSize;
+  if (CdfsFCBIsDirectory(Fcb))
+    {
+      NetworkInfo->AllocationSize.QuadPart = 0LL;;
+      NetworkInfo->EndOfFile.QuadPart = 0LL;
+    }
+  else
+    {
+      NetworkInfo->AllocationSize = Fcb->RFCB.AllocationSize;
+      NetworkInfo->EndOfFile = Fcb->RFCB.FileSize;
+    }
   CdfsFileFlagsToAttributes(Fcb,
 			    &NetworkInfo->FileAttributes);
 
@@ -249,11 +266,20 @@ CdfsGetAllInformation(PFILE_OBJECT FileObject,
 			    &Info->BasicInformation.FileAttributes);
 
   /* Standard Information */
-  Info->StandardInformation.AllocationSize = Fcb->RFCB.AllocationSize;
-  Info->StandardInformation.EndOfFile = Fcb->RFCB.FileSize;
+  if (CdfsFCBIsDirectory(Fcb))
+    {
+      Info->StandardInformation.AllocationSize.QuadPart = 0LL;
+      Info->StandardInformation.EndOfFile.QuadPart = 0LL;
+      Info->StandardInformation.Directory = TRUE;
+    }
+  else
+    {
+      Info->StandardInformation.AllocationSize = Fcb->RFCB.AllocationSize;
+      Info->StandardInformation.EndOfFile = Fcb->RFCB.FileSize;
+      Info->StandardInformation.Directory = FALSE;
+    }
   Info->StandardInformation.NumberOfLinks = 0;
   Info->StandardInformation.DeletePending = FALSE;
-  Info->StandardInformation.Directory = Fcb->Entry.FileFlags & FILE_FLAG_DIRECTORY ? TRUE : FALSE;
 
   /* Internal Information */
   Info->InternalInformation.IndexNumber.QuadPart = Fcb->IndexNumber.QuadPart;

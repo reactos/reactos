@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.34 2003/10/11 17:51:56 hbirr Exp $
+/* $Id: finfo.c,v 1.35 2004/05/23 13:34:32 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -37,14 +37,20 @@ VfatGetStandardInformation(PVFATFCB FCB,
   assert (StandardInfo != NULL);
   assert (FCB != NULL);
 
-  RtlZeroMemory(StandardInfo,
-		sizeof(FILE_STANDARD_INFORMATION));
-
-  StandardInfo->AllocationSize = FCB->RFCB.AllocationSize;
-  StandardInfo->EndOfFile = FCB->RFCB.FileSize;
+  if (vfatFCBIsDirectory(FCB))
+    {
+      StandardInfo->AllocationSize.QuadPart = 0LL;
+      StandardInfo->EndOfFile.QuadPart = 0LL;
+      StandardInfo->Directory = TRUE;
+    }
+  else
+    {
+      StandardInfo->AllocationSize = FCB->RFCB.AllocationSize;
+      StandardInfo->EndOfFile = FCB->RFCB.FileSize;
+      StandardInfo->Directory = FALSE;
+    }
   StandardInfo->NumberOfLinks = 0;
   StandardInfo->DeletePending = FCB->Flags & FCB_DELETE_PENDING ? TRUE : FALSE;
-  StandardInfo->Directory = FCB->entry.Attrib & 0x10 ? TRUE : FALSE;
 
   *BufferLength -= sizeof(FILE_STANDARD_INFORMATION);
   return(STATUS_SUCCESS);
@@ -148,7 +154,7 @@ VfatGetBasicInformation(PFILE_OBJECT FileObject,
 			   (TIME *)&BasicInfo->LastWriteTime);
   BasicInfo->ChangeTime = BasicInfo->LastWriteTime;
 
-  BasicInfo->FileAttributes = FCB->entry.Attrib;
+  BasicInfo->FileAttributes = FCB->entry.Attrib & 0x3f;
   /* Synthesize FILE_ATTRIBUTE_NORMAL */
   if (0 == (BasicInfo->FileAttributes & (FILE_ATTRIBUTE_DIRECTORY |
                                          FILE_ATTRIBUTE_ARCHIVE |
@@ -299,9 +305,17 @@ VfatGetNetworkOpenInformation(PVFATFCB Fcb,
 			   Fcb->entry.UpdateTime,
 			   &NetworkInfo->LastWriteTime);
   NetworkInfo->ChangeTime = NetworkInfo->LastWriteTime;
-  NetworkInfo->AllocationSize = Fcb->RFCB.AllocationSize;
-  NetworkInfo->EndOfFile = Fcb->RFCB.FileSize;
-  NetworkInfo->FileAttributes = Fcb->entry.Attrib;
+  if (vfatFCBIsDirectory(Fcb))
+    {
+      NetworkInfo->EndOfFile.QuadPart = 0L;
+      NetworkInfo->AllocationSize.QuadPart = 0L;
+    }
+  else
+    {
+      NetworkInfo->AllocationSize = Fcb->RFCB.AllocationSize;
+      NetworkInfo->EndOfFile = Fcb->RFCB.FileSize;
+    }
+  NetworkInfo->FileAttributes = Fcb->entry.Attrib & 0x3f;
 
   *BufferLength -= sizeof(FILE_NETWORK_OPEN_INFORMATION);
   return STATUS_SUCCESS;
@@ -335,14 +349,23 @@ VfatGetAllInformation(PFILE_OBJECT FileObject,
 			   Fcb->entry.UpdateTime,
 			   (TIME *)&Info->BasicInformation.LastWriteTime);
   Info->BasicInformation.ChangeTime = Info->BasicInformation.LastWriteTime;
-  Info->BasicInformation.FileAttributes = Fcb->entry.Attrib;
+  Info->BasicInformation.FileAttributes = Fcb->entry.Attrib & 0x3f;
 
   /* Standard Information */
-  Info->StandardInformation.AllocationSize = Fcb->RFCB.AllocationSize;
-  Info->StandardInformation.EndOfFile = Fcb->RFCB.FileSize;
+  if (vfatFCBIsDirectory(Fcb))
+    {
+      Info->StandardInformation.AllocationSize.QuadPart = 0LL;
+      Info->StandardInformation.EndOfFile.QuadPart = 0LL;
+      Info->StandardInformation.Directory = TRUE;
+    }
+  else
+    {
+      Info->StandardInformation.AllocationSize = Fcb->RFCB.AllocationSize;
+      Info->StandardInformation.EndOfFile = Fcb->RFCB.FileSize;
+      Info->StandardInformation.Directory = FALSE;
+    }
   Info->StandardInformation.NumberOfLinks = 0;
   Info->StandardInformation.DeletePending = Fcb->Flags & FCB_DELETE_PENDING ? TRUE : FALSE;
-  Info->StandardInformation.Directory = Fcb->entry.Attrib & 0x10 ? TRUE : FALSE;
 
   /* Internal Information */
   /* FIXME: get a real index, that can be used in a create operation */

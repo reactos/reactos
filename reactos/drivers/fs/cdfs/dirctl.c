@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dirctl.c,v 1.14 2003/11/13 15:25:08 ekohl Exp $
+/* $Id: dirctl.c,v 1.15 2004/05/23 13:31:25 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -420,11 +420,18 @@ CdfsGetDirectoryInformation(PFCB Fcb,
   /* Convert file flags */
   CdfsFileFlagsToAttributes(Fcb,
 			    &Info->FileAttributes);
+  if (CdfsFCBIsDirectory(Fcb))
+    {
+      Info->EndOfFile.QuadPart = 0LL;
+      Info->AllocationSize.QuadPart = 0LL;
+    }
+  else
+    {
+      Info->EndOfFile.QuadPart = Fcb->Entry.DataLengthL;
 
-  Info->EndOfFile.QuadPart = Fcb->Entry.DataLengthL;
-
-  /* Make AllocSize a rounded up multiple of the sector size */
-  Info->AllocationSize.QuadPart = ROUND_UP(Fcb->Entry.DataLengthL, BLOCKSIZE);
+      /* Make AllocSize a rounded up multiple of the sector size */
+      Info->AllocationSize.QuadPart = ROUND_UP(Fcb->Entry.DataLengthL, BLOCKSIZE);
+    }
 
 //  Info->FileIndex=;
 
@@ -465,10 +472,18 @@ CdfsGetFullDirectoryInformation(PFCB Fcb,
   CdfsFileFlagsToAttributes(Fcb,
 			    &Info->FileAttributes);
 
-  Info->EndOfFile.QuadPart = Fcb->Entry.DataLengthL;
+  if (CdfsFCBIsDirectory(Fcb))
+    {
+      Info->EndOfFile.QuadPart = 0LL;
+      Info->AllocationSize.QuadPart = 0LL;
+    }
+  else
+    {
+      Info->EndOfFile.QuadPart = Fcb->Entry.DataLengthL;
 
-  /* Make AllocSize a rounded up multiple of the sector size */
-  Info->AllocationSize.QuadPart = ROUND_UP(Fcb->Entry.DataLengthL, BLOCKSIZE);
+      /* Make AllocSize a rounded up multiple of the sector size */
+      Info->AllocationSize.QuadPart = ROUND_UP(Fcb->Entry.DataLengthL, BLOCKSIZE);
+    }
 
 //  Info->FileIndex=;
   Info->EaSize = 0;
@@ -510,10 +525,18 @@ CdfsGetBothDirectoryInformation(PFCB Fcb,
   CdfsFileFlagsToAttributes(Fcb,
 			    &Info->FileAttributes);
 
-  Info->EndOfFile.QuadPart = Fcb->Entry.DataLengthL;
+  if (CdfsFCBIsDirectory(Fcb))
+    {
+      Info->EndOfFile.QuadPart = 0LL;
+      Info->AllocationSize.QuadPart = 0LL;
+    }
+  else
+    {
+      Info->EndOfFile.QuadPart = Fcb->Entry.DataLengthL;
 
-  /* Make AllocSize a rounded up multiple of the sector size */
-  Info->AllocationSize.QuadPart = ROUND_UP(Fcb->Entry.DataLengthL, BLOCKSIZE);
+      /* Make AllocSize a rounded up multiple of the sector size */
+      Info->AllocationSize.QuadPart = ROUND_UP(Fcb->Entry.DataLengthL, BLOCKSIZE);
+    }
 
 //  Info->FileIndex=;
   Info->EaSize = 0;

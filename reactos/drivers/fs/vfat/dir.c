@@ -1,5 +1,5 @@
 /*
- * $Id: dir.c,v 1.33 2003/12/13 14:25:04 ekohl Exp $
+ * $Id: dir.c,v 1.34 2004/05/23 13:34:32 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -110,12 +110,20 @@ VfatGetFileDirectoryInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
   FsdDosDateTimeToFileTime (DirContext->FatDirEntry.UpdateDate, 
                             DirContext->FatDirEntry.UpdateTime, &pInfo->LastWriteTime);
   pInfo->ChangeTime = pInfo->LastWriteTime;
-  pInfo->EndOfFile.u.HighPart = 0;
-  pInfo->EndOfFile.u.LowPart = DirContext->FatDirEntry.FileSize;
-  /* Make allocsize a rounded up multiple of BytesPerCluster */
-  pInfo->AllocationSize.u.HighPart = 0;
-  pInfo->AllocationSize.u.LowPart = ROUND_UP(DirContext->FatDirEntry.FileSize, DeviceExt->FatInfo.BytesPerCluster);
-  pInfo->FileAttributes = DirContext->FatDirEntry.Attrib;
+  if (DirContext->FatDirEntry.Attrib & FILE_ATTRIBUTE_DIRECTORY)
+    {
+      pInfo->EndOfFile.QuadPart = 0LL;
+      pInfo->AllocationSize.QuadPart = 0LL;
+    }
+  else
+    {
+      pInfo->EndOfFile.u.HighPart = 0;
+      pInfo->EndOfFile.u.LowPart = DirContext->FatDirEntry.FileSize;
+      /* Make allocsize a rounded up multiple of BytesPerCluster */
+      pInfo->AllocationSize.u.HighPart = 0;
+      pInfo->AllocationSize.u.LowPart = ROUND_UP(DirContext->FatDirEntry.FileSize, DeviceExt->FatInfo.BytesPerCluster);
+    }
+  pInfo->FileAttributes = DirContext->FatDirEntry.Attrib & 0x3f;
 
   return STATUS_SUCCESS;
 }
@@ -145,7 +153,7 @@ VfatGetFileFullDirectoryInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
   /* Make allocsize a rounded up multiple of BytesPerCluster */
   pInfo->AllocationSize.u.HighPart = 0;
   pInfo->AllocationSize.u.LowPart = ROUND_UP(DirContext->FatDirEntry.FileSize, DeviceExt->FatInfo.BytesPerCluster);
-  pInfo->FileAttributes = DirContext->FatDirEntry.Attrib;
+  pInfo->FileAttributes = DirContext->FatDirEntry.Attrib & 0x3f;
 //      pInfo->EaSize=;
   return STATUS_SUCCESS;
 }
@@ -172,13 +180,21 @@ VfatGetFileBothInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
   FsdDosDateTimeToFileTime (DirContext->FatDirEntry.UpdateDate, 
                             DirContext->FatDirEntry.UpdateTime, &pInfo->LastWriteTime);
   pInfo->ChangeTime = pInfo->LastWriteTime;
-  pInfo->EndOfFile.u.HighPart = 0;
-  pInfo->EndOfFile.u.LowPart = DirContext->FatDirEntry.FileSize;
-  /* Make allocsize a rounded up multiple of BytesPerCluster */
-  pInfo->AllocationSize.u.HighPart = 0;
-  pInfo->AllocationSize.u.LowPart = ROUND_UP(DirContext->FatDirEntry.FileSize, DeviceExt->FatInfo.BytesPerCluster);
-  pInfo->FileAttributes = DirContext->FatDirEntry.Attrib;
-//      pInfo->EaSize=;
+  if (DirContext->FatDirEntry.Attrib & FILE_ATTRIBUTE_DIRECTORY)
+    {
+      pInfo->EndOfFile.QuadPart = 0LL;
+      pInfo->AllocationSize.QuadPart = 0LL;
+    }
+  else
+    {
+      pInfo->EndOfFile.u.HighPart = 0;
+      pInfo->EndOfFile.u.LowPart = DirContext->FatDirEntry.FileSize;
+      /* Make allocsize a rounded up multiple of BytesPerCluster */
+      pInfo->AllocationSize.u.HighPart = 0;
+      pInfo->AllocationSize.u.LowPart = ROUND_UP(DirContext->FatDirEntry.FileSize, DeviceExt->FatInfo.BytesPerCluster);
+    }
+  pInfo->FileAttributes = DirContext->FatDirEntry.Attrib & 0x3f;
+  pInfo->EaSize=0;
   return STATUS_SUCCESS;
 }
 
