@@ -123,6 +123,7 @@ BOOL	DiskGetExtendedDriveParameters(U32 DriveNumber, PVOID Buffer, U16 BufferSiz
 // FreeLoader Disk Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
+VOID	DiskReportError (BOOL bError);
 VOID	DiskError(PUCHAR ErrorString, U32 ErrorCode);
 PUCHAR	DiskGetErrorCodeString(U32 ErrorCode);
 BOOL	DiskGetDriveGeometry(U32 DriveNumber, PGEOMETRY DriveGeometry);

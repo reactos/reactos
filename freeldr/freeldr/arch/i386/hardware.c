@@ -342,6 +342,10 @@ DetectPnpBios(HKEY SystemKey, U32 *BusNumber)
 		    DeviceNode->Node,
 		    DeviceNode->Size,
 		    DeviceNode->Size));
+//	  printf("Node: %u  Size %u (0x%x)\n",
+//		 DeviceNode->Node,
+//		 DeviceNode->Size,
+//		 DeviceNode->Size);
 
 	  memcpy (Ptr,
 		  DeviceNode,
@@ -548,11 +552,13 @@ DetectBiosDisks(HKEY SystemKey,
   S32 Error;
 
   /* Count the number of visible drives */
+  DiskReportError(FALSE);
   DiskCount = 0;
-  while (DiskGetDriveParameters(0x80 + DiskCount, &Geometry))
+  while (DiskReadLogicalSectors(0x80 + DiskCount, 0ULL, 1, (PVOID)DISKREADBUFFER))
     {
       DiskCount++;
     }
+  DiskReportError(TRUE);
   DbgPrint((DPRINT_HWDETECT, "BIOS reports %d harddisk%s\n",
 	    (int)DiskCount, (DiskCount == 1) ? "": "s"));
 
@@ -711,13 +717,15 @@ DetectIsaBios(HKEY SystemKey, U32 *BusNumber)
 
   /* Detect ISA/BIOS devices */
   DetectBiosDisks(SystemKey, BusKey);
-//  DetectBiosFloppyDisks(SystemKey, BusKey);
+#if 0
+  DetectBiosFloppyDisks(SystemKey, BusKey);
 
-// DetectBiosSerialPorts
-// DetectBiosParallelPorts
+  DetectBiosSerialPorts();
+  DetectBiosParallelPorts();
 
-// DetectBiosKeyboard
-// DetectBiosMouse
+  DetectBiosKeyboard();
+  DetectBiosMouse();
+#endif
 
   /* FIXME: Detect more ISA devices */
 }
@@ -744,23 +752,29 @@ DetectHardware(VOID)
       return;
     }
 
-//  DetectSystemData ();
-  DetectCPUs (SystemKey);
+#if 0
+  DetectSystemData();
+#endif
+  DetectCPUs(SystemKey);
 
   /* Detect buses */
+#if 0
+  DetectPciBios(&BusNumber);
+  DetectApmBios(&BusNumber);
+#endif
+  DetectPnpBios(SystemKey, &BusNumber);
+  DetectIsaBios(SystemKey, &BusNumber);
+#if 0
+  DetectAcpiBios(&BusNumber);
+#endif
 
-//  DetectPciBios (&BusNumber);
-//  DetectApmBios (&BusNumber);
-  DetectPnpBios (SystemKey, &BusNumber);
-  DetectIsaBios (SystemKey, &BusNumber);
-//  DetectAcpiBios (&BusNumber);
 
+  DbgPrint((DPRINT_HWDETECT, "DetectHardware() Done\n"));
 
-
-  DbgPrint ((DPRINT_HWDETECT, "DetectHardware() Done\n"));
-
-//  printf ("*** System stopped ***\n");
-//  for (;;);
+#if 0
+  printf("*** System stopped ***\n");
+  for (;;);
+#endif
 }
 
 /* EOF */

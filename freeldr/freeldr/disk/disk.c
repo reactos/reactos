@@ -28,13 +28,23 @@
 #undef  UNIMPLEMENTED
 #define UNIMPLEMENTED   BugCheck((DPRINT_WARNING, "Unimplemented\n"));
 
+static BOOL bReportError = TRUE;
+
 /////////////////////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS
 /////////////////////////////////////////////////////////////////////////////////////////////
 
+VOID DiskReportError (BOOL bError)
+{
+	bReportError = bError;
+}
+
 VOID DiskError(PUCHAR ErrorString, U32 ErrorCode)
 {
 	UCHAR	ErrorCodeString[200];
+
+	if (bReportError == FALSE)
+		return;
 
 	sprintf(ErrorCodeString, "%s\n\nError Code: 0x%x\nError: %s", ErrorString, ErrorCode, DiskGetErrorCodeString(ErrorCode));
 
