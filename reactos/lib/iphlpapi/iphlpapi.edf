@@ -3,10 +3,15 @@
 LIBRARY iphlpapi.dll
 
 EXPORTS
-AddIPAddress=AddIPAddress@20
-SetIpNetEntry=SetIpNetEntry@4
-CreateIpForwardEntry=CreateIpForwardEntry@4
-GetNetworkParams=GetNetworkParams@8
-GetNumberOfInterfaces=GetNumberOfInterfaces@4
-GetInterfaceInfo=GetInterfaceInfo@8
+AddIPAddress=AddIPAddress@20 @1
+SetIpNetEntry=SetIpNetEntry@4 @107
+CreateIpForwardEntry=CreateIpForwardEntry@4 @9
+GetNetworkParams=GetNetworkParams@8 @43
+GetNumberOfInterfaces=GetNumberOfInterfaces@4 @44
+GetInterfaceInfo=GetInterfaceInfo@8 @34
+GetTcpStatistics=GetTcpStatistics@4 @47
+GetTcpTable=GetTcpTable@12 @49
+GetUdpStatistics=GetUdpStatistics@4 @51
+GetUdpTable=GetUdpTable@12 @53
+FlushIpNetTable=FlushIpNetTable@4 @17
 ; EOF
