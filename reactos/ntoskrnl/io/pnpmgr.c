@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.39 2004/10/19 23:23:04 hbirr Exp $
+/* $Id: pnpmgr.c,v 1.40 2004/10/21 03:39:37 arty Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -18,7 +18,7 @@ DEFINE_GUID(GUID_CLASS_COMPORT,          0x86e0d1e0L, 0x8089, 0x11d0, 0x9c, 0xe4
 DEFINE_GUID(GUID_SERENUM_BUS_ENUMERATOR, 0x4D36E978L, 0xE325, 0x11CE, 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x18);
 #endif // DEFINE_GUID
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 
@@ -78,7 +78,7 @@ IoGetDeviceProperty(
   ULONG Length;
   PVOID Data;
 
-  DPRINT("IoGetDeviceProperty called\n");
+  DPRINT("IoGetDeviceProperty(%x %d)\n", DeviceObject, DeviceProperty);
 
   if (DeviceNode == NULL)
     return STATUS_INVALID_DEVICE_REQUEST;
@@ -167,12 +167,15 @@ IoGetDeviceProperty(
 
         KeyNameBuffer = ExAllocatePool(PagedPool,
           (49 * sizeof(WCHAR)) + DeviceNode->InstancePath.Length);
+	
+	DPRINT1("KeyNameBuffer: %x, value %S\n", 
+		KeyNameBuffer, RegistryPropertyName);
+
         if (KeyNameBuffer == NULL)
           return STATUS_INSUFFICIENT_RESOURCES;
 
         wcscpy(KeyNameBuffer, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
         wcscat(KeyNameBuffer, DeviceNode->InstancePath.Buffer);
-        
         RtlInitUnicodeString(&KeyName, KeyNameBuffer);
         InitializeObjectAttributes(&ObjectAttributes, &KeyName,
                                    OBJ_CASE_INSENSITIVE, NULL, NULL);
@@ -1212,7 +1215,7 @@ IopActionInterrogateDeviceStack(
    wcscat(InstancePath, L"\\");
    wcscat(InstancePath, DeviceNode->InstanceID.Buffer);
 
-   if (!DeviceNode->CapabilityFlags->UniqueID)
+   if (!DeviceNode->CapabilityFlags || !DeviceNode->CapabilityFlags->UniqueID)
    {
       DPRINT("Instance ID is not unique\n");
       /* FIXME: Add information from parent bus driver to InstancePath */
