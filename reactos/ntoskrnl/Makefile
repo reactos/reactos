@@ -534,7 +534,8 @@ TARGET_LIBS = \
 	$(SDK_PATH_LIB)/librtl.a \
 	$(SDK_PATH_LIB)/libstring.a \
 	$(SDK_PATH_LIB)/librosrtl.a \
-	$(SDK_PATH_LIB)/libpseh.a
+	$(SDK_PATH_LIB)/libpseh.a \
+	$(PATH_TO_TOP)/drivers/lib/csq/csq.o
 
 TARGET_LFLAGS = \
 	-Wl,-T,ntoskrnl.lnk \

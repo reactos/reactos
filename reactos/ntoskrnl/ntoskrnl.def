@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.203 2004/12/11 00:13:37 royce Exp $
+; $Id: ntoskrnl.def,v 1.204 2004/12/17 07:31:11 fireball Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -360,6 +360,12 @@ IoCreateStreamFileObjectLite@8
 IoCreateSymbolicLink@8
 IoCreateSynchronizationEvent@8
 IoCreateUnprotectedSymbolicLink@8
+IoCsqInitialize@28
+IoCsqInitializeEx@28
+IoCsqInsertIrp@12
+IoCsqInsertIrpEx@16
+IoCsqRemoveIrp@8
+IoCsqRemoveNextIrp@8
 IoDeleteController@4
 IoDeleteDevice@4
 IoDeleteDriver@4
