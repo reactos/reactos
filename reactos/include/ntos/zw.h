@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.4 2002/11/15 23:26:15 chorns Exp $
+/* $Id: zw.h,v 1.5 2003/01/05 19:23:20 robd Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -21,7 +21,10 @@
 #include <ntos/zwtypes.h>
 #include <napi/npipe.h>
 
+#ifndef _RTLGETPROCESSHEAP_DEFINED_
+#define _RTLGETPROCESSHEAP_DEFINED_
 #define RtlGetProcessHeap() (NtCurrentPeb()->ProcessHeap)
+#endif
 
 // semaphore information
 
