@@ -1,4 +1,4 @@
-/* $Id: tinfo.c,v 1.19 2002/09/08 10:23:41 chorns Exp $
+/* $Id: tinfo.c,v 1.20 2003/04/30 21:56:22 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,6 +13,7 @@
 
 #include <ddk/ntddk.h>
 #include <internal/ps.h>
+#include <internal/safe.h>
 
 #include <internal/debug.h>
 
@@ -71,7 +72,14 @@ NtSetInformationThread(HANDLE		ThreadHandle,
 	  }
 	
       case ThreadBasePriority:
-	Status = STATUS_NOT_IMPLEMENTED;
+	if (ThreadInformationLength != sizeof(ULONG))
+	  {
+	    Status = STATUS_INFO_LENGTH_MISMATCH;
+	    break;
+	  }
+        Status = MmCopyFromCaller(&(Thread->Tcb.BasePriority),
+                                  ThreadInformation,
+                                  sizeof(ULONG));
 	break;
 	
       case ThreadAffinityMask:
