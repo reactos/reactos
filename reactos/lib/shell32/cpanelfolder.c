@@ -131,7 +131,7 @@ HRESULT WINAPI IControlPanel_Constructor(IUnknown* pUnkOuter, REFIID riid, LPVOI
     sf->lpVtblPersistFolder2 = &vt_PersistFolder2;
     sf->lpVtblShellExecuteHookW = &vt_ShellExecuteHookW;
     sf->lpVtblShellExecuteHookA = &vt_ShellExecuteHookA;
-    sf->pidlRoot = _ILCreateControl();	/* my qualified pidl */
+    sf->pidlRoot = _ILCreateControlPanel();	/* my qualified pidl */
     sf->pUnkOuter = pUnkOuter ? pUnkOuter : _IUnknown_ (sf);
 
     if (!SUCCEEDED(IUnknown_QueryInterface(_IUnknown_(sf), riid, ppv))) {

@@ -212,7 +212,7 @@ ISF_MyComputer_fnParseDisplayName (IShellFolder2 * iface,
 	szNext = GetNextElementW (lpszDisplayName, szElement, MAX_PATH);
 	TRACE ("-- element: %s\n", debugstr_w (szElement));
 	SHCLSIDFromStringW (szElement + 2, &clsid);
-	pidlTemp = _ILCreate (PT_MYCOMP, &clsid, sizeof (clsid));
+	pidlTemp = _ILCreateGuid (PT_GUID, &clsid);
     }
     /* do we have an absolute path name ? */
     else if (PathGetDriveNumberW (lpszDisplayName) >= 0 && lpszDisplayName[2] == (WCHAR) '\\') {
@@ -433,7 +433,7 @@ static HRESULT WINAPI ISF_MyComputer_fnGetDisplayNameOf (IShellFolder2 * iface, 
     ICOM_THIS (IGenericSFImpl, iface);
 
     char szPath[MAX_PATH],
-    szDrive[18];
+      szDrive[18];
     int len = 0;
     BOOL bSimplePidl;
     HRESULT hr = S_OK;
@@ -658,7 +658,7 @@ static HRESULT WINAPI ISF_MyComputer_fnMapColumnToSCID (IShellFolder2 * iface, U
 
 static ICOM_VTABLE (IShellFolder2) vt_ShellFolder2 =
 {
-	ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
+        ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
 	ISF_MyComputer_fnQueryInterface,
 	ISF_MyComputer_fnAddRef,
 	ISF_MyComputer_fnRelease,
@@ -673,7 +673,7 @@ static ICOM_VTABLE (IShellFolder2) vt_ShellFolder2 =
 	ISF_MyComputer_fnGetDisplayNameOf,
 	ISF_MyComputer_fnSetNameOf,
 	/* ShellFolder2 */
-	ISF_MyComputer_fnGetDefaultSearchGUID,
+        ISF_MyComputer_fnGetDefaultSearchGUID,
 	ISF_MyComputer_fnEnumSearches,
 	ISF_MyComputer_fnGetDefaultColumn,
 	ISF_MyComputer_fnGetDefaultColumnState,

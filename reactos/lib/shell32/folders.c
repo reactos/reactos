@@ -186,16 +186,19 @@ static HRESULT WINAPI IExtractIconW_fnGetIconLocation(
 	/* my computer and other shell extensions */
 	else if ((riid = _ILGetGUIDPointer(pSimplePidl)))
 	{
-	  char xriid[50];
+	  static WCHAR fmt[] = { 'C','L','S','I','D','\\','{','%','0','8','l','x',
+       '-','%','0','4','x','-','%','0','4','x','-','%','0','2','x',
+       '%','0','2','x','-','%','0','2','x', '%','0','2','x', '%','0','2','x',
+       '%','0','2','x','%','0','2','x','%','0','2','x','}',0 };
+	  WCHAR xriid[50];
 
-	  sprintf(xriid, "CLSID\\{%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
+	  sprintfW(xriid, fmt,
 	          riid->Data1, riid->Data2, riid->Data3,
 	          riid->Data4[0], riid->Data4[1], riid->Data4[2], riid->Data4[3],
 	          riid->Data4[4], riid->Data4[5], riid->Data4[6], riid->Data4[7]);
 
-	  if (HCR_GetDefaultIconA(xriid, sTemp, MAX_PATH, &dwNr))
+	  if (HCR_GetDefaultIconW(xriid, szIconFile, cchMax, &dwNr))
 	  {
-	    MultiByteToWideChar(CP_ACP, 0, sTemp, -1, szIconFile, cchMax);
 	    *piIndex = dwNr;
 	  }
 	  else
@@ -207,9 +210,10 @@ static HRESULT WINAPI IExtractIconW_fnGetIconLocation(
 
 	else if (_ILIsDrive (pSimplePidl))
 	{
-	  if (HCR_GetDefaultIconA("Drive", sTemp, MAX_PATH, &dwNr))
+	  static WCHAR drive[] = { 'D','r','i','v','e',0 };
+
+	  if (HCR_GetDefaultIconW(drive, szIconFile, cchMax, &dwNr))
 	  {
-	    MultiByteToWideChar(CP_ACP, 0, sTemp, -1, szIconFile, cchMax);
 	    *piIndex = dwNr;
 	  }
 	  else
@@ -221,11 +225,9 @@ static HRESULT WINAPI IExtractIconW_fnGetIconLocation(
 
 	else if (_ILIsFolder (pSimplePidl))
 	{
-	  if (HCR_GetDefaultIconA("Folder", sTemp, MAX_PATH, &dwNr))
-	  {
-	    MultiByteToWideChar(CP_ACP, 0, sTemp, -1, szIconFile, cchMax);
-	  }
-	  else
+	  static WCHAR folder[] = { 'F','o','l','d','e','r',0 };
+
+	  if (!HCR_GetDefaultIconW(folder, szIconFile, cchMax, &dwNr))
 	  {
 	    lstrcpynW(szIconFile, swShell32Name, cchMax);
 	    dwNr = 3;

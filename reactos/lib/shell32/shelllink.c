@@ -24,6 +24,7 @@
  */
 
 #include "config.h"
+#include "wine/port.h"
 
 #include <ctype.h>
 #include <string.h>
@@ -38,7 +39,6 @@
 # include <sys/wait.h>
 #endif
 #include "wine/debug.h"
-#include "wine/port.h"
 #include "winerror.h"
 #include "windef.h"
 #include "winbase.h"
@@ -135,14 +135,14 @@ typedef struct
 	SYSTEMTIME	time2;
 	SYSTEMTIME	time3;
 
-	DWORD		iShowCmd;
-	LPWSTR		sIcoPath;
-	INT		iIcoNdx;
-	LPWSTR		sPath;
-	LPWSTR		sArgs;
-	LPWSTR		sWorkDir;
-	LPWSTR		sDescription;
-	LPWSTR		sPathRel;
+	DWORD         iShowCmd;
+	LPWSTR        sIcoPath;
+	INT           iIcoNdx;
+	LPWSTR        sPath;
+	LPWSTR        sArgs;
+	LPWSTR        sWorkDir;
+	LPWSTR        sDescription;
+	LPWSTR        sPathRel;
 
 	BOOL		bDirty;
 } IShellLinkImpl;
@@ -303,7 +303,7 @@ static HRESULT WINAPI IPersistFile_fnSave(IPersistFile* iface, LPCOLESTR pszFile
 
             This->bDirty = FALSE;
         }
-        else
+	else
         {
             DeleteFileW( pszFileName );
             WARN("Failed to create shortcut %s\n", debugstr_w(pszFileName) );
@@ -1808,10 +1808,10 @@ static HRESULT WINAPI IShellLinkW_fnSetPath(IShellLinkW * iface, LPCWSTR pszFile
 
     This->sPath = HeapAlloc( GetProcessHeap(), 0,
                              (lstrlenW( buffer )+1) * sizeof (WCHAR) );
-    if ( !This->sPath )
+    if (!This->sPath)
         return E_OUTOFMEMORY;
 
-    lstrcpyW( This->sPath, buffer );
+    lstrcpyW(This->sPath, buffer);
     This->bDirty = TRUE;
 
     return S_OK;

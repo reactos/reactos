@@ -230,7 +230,7 @@ HRESULT SHELL_GetPathFromIDListForExecuteW(LPCITEMIDLIST pidl, LPWSTR pszPath, U
 
 /*************************************************************************
  *	SHELL_ResolveShortCutW [Internal]
- *	read shortcut file at 'wcmd' and fill psei with its content
+ *	read shortcut file at 'wcmd'
  */
 static HRESULT SHELL_ResolveShortCutW(LPWSTR wcmd, LPWSTR wargs, LPWSTR wdir, HWND hwnd, LPCWSTR lpVerb, int* pshowcmd, LPITEMIDLIST* ppidl)
 {

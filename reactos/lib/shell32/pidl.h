@@ -53,13 +53,13 @@
 *	object        ! first byte /  ! format       ! living space
 *	              ! size
 *	----------------------------------------------------------------
-*	my computer	0x1F/20		mycomp (2)	(usual)
-*	network		0x1F		mycomp
-*	bitbucket	0x1F		mycomp
+*	my computer	0x1F/20		guid (2)	(usual)
+*	network		0x1F		guid
+*	bitbucket	0x1F		guid
 *	drive		0x23/25		drive		(usual)
 *	drive		0x25/25		drive		(lnk/persistent)
 *	drive		0x29/25		drive
-*	shell extension	0x2E		mycomp
+*	shell extension	0x2E		guid
 *	drive		0x2F		drive		(lnk/persistent)
 *	folder/file	0x30		folder/file (1)	(lnk/persistent)
 *	folder		0x31		folder		(usual)
@@ -77,20 +77,20 @@
 *
 * (1) dummy byte is used, attributes are empty
 * (2) IID_MyComputer = 20D04FE0L-3AEA-1069-A2D8-08002B30309D
-* (3) two strings	"workgroup" "microsoft network"
-* (4) one string	"\\sirius"
-* (5) one string	"whole network"
-* (6) one string	"\\sirius\c"
+* (3) two strings	"workgroup" "Microsoft Network"
+* (4) two strings	"\\sirius" "Microsoft Network"
+* (5) one string	"Entire Network"
+* (6) two strings	"\\sirius\c" "Microsoft Network"
 * (7) contains string   "mk:@MSITStore:C:\path\file.chm::/path/filename.htm"
 *		GUID	871C5380-42A0-1069-A2EA-08002B30309D
 */
 
 #define PT_DESKTOP	0x00 /* internal */
-#define PT_MYCOMP	0x1F
+#define PT_GUID		0x1F
 #define PT_DRIVE	0x23
 #define PT_DRIVE2	0x25
 #define PT_DRIVE3	0x29
-#define PT_SPECIAL	0x2E
+#define PT_SHELLEXT	0x2E
 #define PT_DRIVE1	0x2F
 #define PT_FOLDER1	0x30
 #define PT_FOLDER	0x31
@@ -123,7 +123,7 @@ typedef struct tagPIDLDATA
 	  { BYTE dummy;			/*01*/
 	    GUID guid;			/*02*/
 	    BYTE dummy1;		/*18*/
-	  } mycomp;
+	  } guid;
 	  struct
 	  { CHAR szDriveName[20];	/*01*/
 	    DWORD dwUnknown;		/*21*/
@@ -136,7 +136,7 @@ typedef struct tagPIDLDATA
 	    WORD uFileTime;		/*08*/
 	    WORD uFileAttribs;		/*10*/
 	    CHAR szNames[1];		/*12*/
-	    /* Here are comming two strings. The first is the long name.
+	    /* Here are coming two strings. The first is the long name.
 	    The second the dos name when needed or just 0x00 */
 	  } file, folder, generic;
 	  struct
@@ -180,22 +180,35 @@ BOOL	_ILIsPidlSimple		(LPCITEMIDLIST pidl);
 BOOL	_ILIsCPanelStruct	(LPCITEMIDLIST pidl);
 
 /*
- * simple pidls from strings
+ * simple pidls
  */
-LPITEMIDLIST	_ILCreate	(PIDLTYPE,LPCVOID,UINT);
 
+/* Basic PIDL constructor.  Allocates size + 2 bytes (to include space for the
+ * NULL PIDL terminator), and sets type to type.
+ */
+LPITEMIDLIST	_ILCreateWithTypeAndSize(PIDLTYPE type, UINT size);
+
+/* Creates a PIDL with guid format and type type, which must be either PT_GUID
+ * or PT_SHELLEXT.
+ */
+LPITEMIDLIST	_ILCreateGuid(PIDLTYPE type, REFIID guid);
+
+/* Like _ILCreateGuid, but using the string szGUID. */
+LPITEMIDLIST	_ILCreateGuidFromStrA(LPCSTR szGUID);
+
+/* Commonly used PIDLs representing file system objects. */
 LPITEMIDLIST	_ILCreateDesktop	(void);
+LPITEMIDLIST	_ILCreateFromFindDataA(WIN32_FIND_DATAA *stffile);
+LPITEMIDLIST	_ILCreateFromPathA	(LPCSTR szPath);
+
+/* Other helpers */
 LPITEMIDLIST	_ILCreateMyComputer	(void);
 LPITEMIDLIST	_ILCreateIExplore	(void);
-LPITEMIDLIST	_ILCreateControl	(void);
-LPITEMIDLIST	_ILCreatePrinter	(void);
+LPITEMIDLIST	_ILCreateControlPanel	(void);
+LPITEMIDLIST	_ILCreatePrinters	(void);
 LPITEMIDLIST	_ILCreateNetwork	(void);
 LPITEMIDLIST	_ILCreateBitBucket	(void);
 LPITEMIDLIST	_ILCreateDrive		(LPCSTR);
-LPITEMIDLIST	_ILCreateFolder		(WIN32_FIND_DATAA * stffile);
-LPITEMIDLIST	_ILCreateValue		(WIN32_FIND_DATAA * stffile);
-LPITEMIDLIST	_ILCreateSpecial	(LPCSTR szGUID);
-LPITEMIDLIST	_ILCreateFromPathA	(LPCSTR szPath);
 LPITEMIDLIST	_ILCreateCPanel		(LPCSTR name, LPCSTR displayName, LPCSTR comment, int iconIdx);
 
 /*

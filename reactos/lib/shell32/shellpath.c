@@ -40,6 +40,7 @@
 #include "shlobj.h"
 #include "shell32_main.h"
 #include "undocshell.h"
+#include "pidl.h"
 #include "wine/unicode.h"
 #include "shlwapi.h"
 
@@ -714,6 +715,10 @@ typedef struct
 
 #define HKLM HKEY_LOCAL_MACHINE
 #define HKCU HKEY_CURRENT_USER
+#define HKEY_DISALLOWED    (HKEY)0
+#define HKEY_UNIMPLEMENTED (HKEY)1
+#define HKEY_WINDOWSPATH   (HKEY)2
+#define HKEY_NONEXISTENT   (HKEY)3
 static const CSIDL_DATA CSIDL_Data[] =
 {
     { /* CSIDL_DESKTOP */
@@ -722,14 +727,14 @@ static const CSIDL_DATA CSIDL_Data[] =
 	"Desktop"
     },
     { /* CSIDL_INTERNET */
-	0, (HKEY)1, /* FIXME */
+	0, HKEY_DISALLOWED,
 	NULL,
 	NULL,
     },
     { /* CSIDL_PROGRAMS */
-	9, HKCU,
-	"Programs",
-	"Start Menu\\Programs"
+	0, HKEY_DISALLOWED,
+	NULL,
+	NULL,
     },
     { /* CSIDL_CONTROLS (.CPL files) */
 	10, HKLM,
@@ -767,9 +772,9 @@ static const CSIDL_DATA CSIDL_Data[] =
 	"SendTo"
     },
     { /* CSIDL_BITBUCKET - Recycle Bin */
-	0, (HKEY)1, /* FIXME */
+	0, HKEY_DISALLOWED,
 	NULL,
-	"recycled"
+	NULL,
     },
     { /* CSIDL_STARTMENU */
 	9, HKCU,
@@ -777,7 +782,7 @@ static const CSIDL_DATA CSIDL_Data[] =
 	"Start Menu"
     },
     { /* CSIDL_MYDOCUMENTS */
-	0, (HKEY)1, /* FIXME */
+	0, HKEY_UNIMPLEMENTED, /* FIXME */
 	NULL,
 	NULL
     },
@@ -786,7 +791,7 @@ static const CSIDL_DATA CSIDL_Data[] =
 	"My Music",
 	"My Documents\\My Music"
     },
-    { /* CSIDL_MYMUSIC */
+    { /* CSIDL_MYVIDEO */
 	1, HKCU,
 	"My Video",
 	"My Documents\\My Video"
@@ -802,14 +807,14 @@ static const CSIDL_DATA CSIDL_Data[] =
 	"Desktop"
     },
     { /* CSIDL_DRIVES */
-	0, (HKEY)1, /* FIXME */
+	0, HKEY_DISALLOWED,
 	NULL,
-	"My Computer"
+	NULL,
     },
     { /* CSIDL_NETWORK */
-	0, (HKEY)1, /* FIXME */
+	0, HKEY_DISALLOWED,
 	NULL,
-	"Network Neighborhood"
+	NULL,
     },
     { /* CSIDL_NETHOOD */
 	9, HKCU,
@@ -862,12 +867,12 @@ static const CSIDL_DATA CSIDL_Data[] =
 	"Local Settings\\Application Data",
     },
     { /* CSIDL_ALTSTARTUP */
-	0, (HKEY)1, /* FIXME */
+	0, HKEY_NONEXISTENT,
 	NULL,
 	NULL
     },
     { /* CSIDL_COMMON_ALTSTARTUP */
-	0, (HKEY)1, /* FIXME */
+	0, HKEY_NONEXISTENT,
 	NULL,
 	NULL
     },
@@ -962,22 +967,22 @@ static const CSIDL_DATA CSIDL_Data[] =
 	"Start Menu\\Programs\\Administrative Tools"
     },
     { /* CSIDL_CONNECTIONS */
-	0, 0, /* FIXME */
+	0, HKEY_DISALLOWED,
 	NULL,
 	NULL
     },
     { /* unassigned 32 */
-	0, 0,
+	0, HKEY_DISALLOWED,
 	NULL,
 	NULL
     },
     { /* unassigned 33 */
-	0, 0,
+	0, HKEY_DISALLOWED,
 	NULL,
 	NULL
     },
     { /* unassigned 34 */
-	0, 0,
+	0, HKEY_DISALLOWED,
 	NULL,
 	NULL
     },
@@ -997,7 +1002,7 @@ static const CSIDL_DATA CSIDL_Data[] =
 	/*"Documents and Settings\\"*/"All Users\\Documents\\My Video"
     },
     { /* CSIDL_RESOURCES */
-	0, (HKEY)2,
+	0, HKEY_WINDOWSPATH,
 	NULL,
 	"Resources"
     },
@@ -1053,25 +1058,23 @@ HRESULT WINAPI SHGetFolderPathW(
 
 	TRACE("%p,%p,csidl=0x%04x\n", hwndOwner,pszPath,csidl);
 
+        if (!pszPath)
+            return E_INVALIDARG;
+
+        *pszPath = '\0';
 	if ((folder >= sizeof(CSIDL_Data) / sizeof(CSIDL_Data[0])) ||
-	    (CSIDL_Data[folder].hRootKey == 0))
-	{
-	    ERR("folder 0x%04lx unknown or not allowed\n", folder);
-	    return E_FAIL;
-	}
-	if (CSIDL_Data[folder].hRootKey == (HKEY)1)
+	    (CSIDL_Data[folder].hRootKey == HKEY_DISALLOWED))
+	    return E_INVALIDARG;
+	if (CSIDL_Data[folder].hRootKey == HKEY_UNIMPLEMENTED)
 	{
 	    FIXME("folder 0x%04lx unknown, please add.\n", folder);
 	    return E_FAIL;
 	}
-
-	dwCsidlFlags = CSIDL_Data[folder].dwFlags;
-	hRootKey = CSIDL_Data[folder].hRootKey;
-	MultiByteToWideChar(CP_ACP, 0, CSIDL_Data[folder].szValueName, -1, szValueName, MAX_PATH);
-	MultiByteToWideChar(CP_ACP, 0, CSIDL_Data[folder].szDefaultPath, -1, szDefaultPath, MAX_PATH);
+        if (CSIDL_Data[folder].hRootKey == HKEY_NONEXISTENT)
+            return S_FALSE;
 
 	/* Special case for some values that don't exist in registry */
-	if (CSIDL_Data[folder].hRootKey == (HKEY)2)
+	if (CSIDL_Data[folder].hRootKey == HKEY_WINDOWSPATH)
 	{
 	    GetWindowsDirectoryW(pszPath, MAX_PATH);
 	    PathAddBackslashW(pszPath);
@@ -1079,6 +1082,11 @@ HRESULT WINAPI SHGetFolderPathW(
 	    return S_OK;
 	}
         
+	dwCsidlFlags = CSIDL_Data[folder].dwFlags;
+	hRootKey = CSIDL_Data[folder].hRootKey;
+	MultiByteToWideChar(CP_ACP, 0, CSIDL_Data[folder].szValueName, -1, szValueName, MAX_PATH);
+	MultiByteToWideChar(CP_ACP, 0, CSIDL_Data[folder].szDefaultPath, -1, szDefaultPath, MAX_PATH);
+
 	if (dwCsidlFlags & CSIDL_MYFLAG_SHFOLDER)
 	{
 	  /*   user shell folders */
@@ -1203,19 +1211,21 @@ HRESULT WINAPI SHGetFolderPathA(
 	DWORD dwFlags,
 	LPSTR pszPath)
 {
-	WCHAR szTemp[MAX_PATH];
-	HRESULT hr;
+    WCHAR szTemp[MAX_PATH];
+    HRESULT hr;
 
-	hr = SHGetFolderPathW(hwndOwner, csidl, hToken, dwFlags, szTemp);
-	if (hr == S_OK)
-	{
-            if (!WideCharToMultiByte( CP_ACP, 0, szTemp, -1, pszPath, MAX_PATH, NULL, NULL ))
-                pszPath[MAX_PATH - 1] = 0;
-        }
+    if (!pszPath)
+        return E_INVALIDARG;
 
-	TRACE("%p,%p,csidl=0x%04x\n",hwndOwner,pszPath,csidl);
+    *pszPath = '\0';
+    hr = SHGetFolderPathW(hwndOwner, csidl, hToken, dwFlags, szTemp);
+    if (SUCCEEDED(hr))
+        WideCharToMultiByte(CP_ACP, 0, szTemp, -1, pszPath, MAX_PATH, NULL,
+         NULL);
 
-	return hr;
+    TRACE("%p,%p,csidl=0x%04x\n",hwndOwner,pszPath,csidl);
+
+    return hr;
 }
 
 /*************************************************************************
@@ -1265,4 +1275,135 @@ BOOL WINAPI SHGetSpecialFolderPathAW (
 	if (SHELL_OsIsUnicode())
 	  return SHGetSpecialFolderPathW (hwndOwner, szPath, csidl, bCreate);
 	return SHGetSpecialFolderPathA (hwndOwner, szPath, csidl, bCreate);
+}
+
+/*************************************************************************
+ * SHGetSpecialFolderLocation		[SHELL32.@]
+ *
+ * gets the folder locations from the registry and creates a pidl
+ * creates missing reg keys and directories
+ *
+ * PARAMS
+ *   hwndOwner [I]
+ *   nFolder   [I] CSIDL_xxxxx
+ *   ppidl     [O] PIDL of a special folder
+ *
+ * NOTES
+ *   In NT5, SHGetSpecialFolderLocation needs the <winntdir>/Recent
+ *   directory. If the directory is missing it returns a x80070002.
+ *   In most cases, this forwards to SHGetSpecialFolderPath, but
+ *   CSIDLs with virtual folders (not real paths) must be handled
+ *   here.
+ */
+HRESULT WINAPI SHGetSpecialFolderLocation(
+	HWND hwndOwner,
+	INT nFolder,
+	LPITEMIDLIST * ppidl)
+{
+    HRESULT hr = E_INVALIDARG;
+
+    TRACE("(%p,0x%x,%p)\n", hwndOwner,nFolder,ppidl);
+
+    if (!ppidl)
+        return E_INVALIDARG;
+
+    *ppidl = NULL;
+    switch (nFolder)
+    {
+        case CSIDL_DESKTOP:
+            *ppidl = _ILCreateDesktop();
+            break;
+
+        case CSIDL_INTERNET:
+            *ppidl = _ILCreateIExplore();
+            break;
+
+        case CSIDL_CONTROLS:
+            *ppidl = _ILCreateControlPanel();
+            break;
+
+        case CSIDL_FONTS:
+            FIXME("virtual font folder");         
+            break;
+
+        case CSIDL_PRINTERS:
+            *ppidl = _ILCreatePrinters();
+            break;
+
+        case CSIDL_BITBUCKET:
+            *ppidl = _ILCreateBitBucket();
+            break;
+
+        case CSIDL_DRIVES:
+            *ppidl = _ILCreateMyComputer();
+            break;
+
+        case CSIDL_NETWORK:
+            *ppidl = _ILCreateNetwork();
+            break;
+
+        case CSIDL_ALTSTARTUP:
+        case CSIDL_COMMON_ALTSTARTUP:
+            hr = E_FAIL;
+            break;
+
+        case CSIDL_COMPUTERSNEARME:
+            hr = E_FAIL;
+            break;
+
+        default:
+        {
+            WCHAR szPath[MAX_PATH];
+
+            if (SHGetSpecialFolderPathW(hwndOwner, szPath, nFolder, TRUE))
+            {
+                DWORD attributes=0;
+
+                TRACE("Value=%s\n", debugstr_w(szPath));
+                hr = SHILCreateFromPathW(szPath, ppidl, &attributes);
+            }
+        }
+    }
+    if(*ppidl)
+        hr = NOERROR;
+
+    TRACE("-- (new pidl %p)\n",*ppidl);
+    return hr;
+}
+
+/*************************************************************************
+ * SHGetFolderLocation [SHELL32.@]
+ *
+ * NOTES
+ *  the pidl can be a simple one. since we can't get the path out of the pidl
+ *  we have to take all data from the pidl
+ *  Mostly we forward to SHGetSpecialFolderLocation, but a few special cases
+ *  we handle here.
+ */
+HRESULT WINAPI SHGetFolderLocation(
+	HWND hwnd,
+	int csidl,
+	HANDLE hToken,
+	DWORD dwFlags,
+	LPITEMIDLIST *ppidl)
+{
+    HRESULT hr;
+
+    TRACE_(shell)("%p 0x%08x %p 0x%08lx %p\n",
+     hwnd, csidl, hToken, dwFlags, ppidl);
+    
+    if (!ppidl)
+        return E_INVALIDARG;
+
+    switch (csidl)
+    {
+        case CSIDL_ALTSTARTUP:
+        case CSIDL_COMMON_ALTSTARTUP:
+            *ppidl = NULL;
+            hr = S_FALSE;
+            break;
+        default:
+            hr = SHGetSpecialFolderLocation(hwnd, csidl, ppidl);
+    }
+    return hr;
 }

@@ -216,7 +216,7 @@ static HRESULT WINAPI ISF_Desktop_fnParseDisplayName (IShellFolder2 * iface,
 	szNext = GetNextElementW (lpszDisplayName, szElement, MAX_PATH);
 	TRACE ("-- element: %s\n", debugstr_w (szElement));
 	SHCLSIDFromStringW (szElement + 2, &clsid);
-	pidlTemp = _ILCreate (PT_MYCOMP, &clsid, sizeof (clsid));
+	pidlTemp = _ILCreateGuid (PT_GUID, &clsid);
     } else if (PathGetDriveNumberW (lpszDisplayName) >= 0) {
 	/* it's a filesystem path with a drive. Let MyComputer parse it */
 	pidlTemp = _ILCreateMyComputer ();
@@ -466,7 +466,7 @@ static HRESULT WINAPI ISF_Desktop_fnGetDisplayNameOf (IShellFolder2 * iface,
     GUID const *clsid;
     HRESULT hr = S_OK;
 
-	*szPath = '\0';
+    *szPath = '\0';
 
     TRACE ("(%p)->(pidl=%p,0x%08lx,%p)\n", This, pidl, dwFlags, strRet);
     pdump (pidl);
@@ -681,5 +681,4 @@ static ICOM_VTABLE (IShellFolder2) vt_MCFldr_ShellFolder2 =
 	ISF_Desktop_fnGetDefaultColumnState,
 	ISF_Desktop_fnGetDetailsEx,
 	ISF_Desktop_fnGetDetailsOf,
-	ISF_Desktop_fnMapColumnToSCID
-};
+	ISF_Desktop_fnMapColumnToSCID};
