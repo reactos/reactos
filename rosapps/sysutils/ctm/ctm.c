@@ -1,6 +1,3 @@
-#define UNICODE
-#define _UNICODE
-
 /* Console Task Manager
 
    ctm.c - main program file
@@ -90,6 +87,7 @@ PPERFDATA		pPerfData = NULL;		// Most recent copy of perf data
 int selection=0;
 int scrolled=0;		// offset from which process start showing
 int first = 0;		// first time in DisplayScreen
+SYSTEM_BASIC_INFORMATION    SystemBasicInfo;
 
 #define NEW_CONSOLE
 
@@ -287,7 +285,7 @@ int ProcessKeys(int numEvents)
 		do {
 			GetNumberOfConsoleInputEvents(hStdin, &pId);
 			key = GetKeyPressed(pId);
-		} while (key == 0);
+		} while (key != KEY_YES && key != KEY_NO);
 
 		if (key == KEY_YES)
 		{
@@ -341,6 +339,11 @@ int ProcessKeys(int numEvents)
 	return FALSE;
 }
 
+void PerfInit()
+{
+    NtQuerySystemInformation(SystemBasicInformation, &SystemBasicInfo, sizeof(SystemBasicInfo), 0);
+}
+
 void PerfDataRefresh()
 {
 	LONG							status;
@@ -371,15 +374,15 @@ void PerfDataRefresh()
 		return;
 #endif
 	// Get processor information	
-	SysProcessorTimeInfo = (PSYSTEM_PROCESSORTIME_INFO)malloc(sizeof(SYSTEM_PROCESSORTIME_INFO) * 1/*SystemBasicInfo.bKeNumberProcessors*/);
-	status = NtQuerySystemInformation(SystemProcessorTimes, SysProcessorTimeInfo, sizeof(SYSTEM_PROCESSORTIME_INFO) * 1/*SystemBasicInfo.bKeNumberProcessors*/, &ulSize);
+	SysProcessorTimeInfo = (PSYSTEM_PROCESSORTIME_INFO)malloc(sizeof(SYSTEM_PROCESSORTIME_INFO) * SystemBasicInfo.NumberProcessors);
+	status = NtQuerySystemInformation(SystemProcessorTimes, SysProcessorTimeInfo, sizeof(SYSTEM_PROCESSORTIME_INFO) * SystemBasicInfo.NumberProcessors, &ulSize);
 
 
 	// Get process information
 	PsaCaptureProcessesAndThreads((PSYSTEM_PROCESSES *)&pBuffer);
 
 #ifdef TIMES
-	for (CurrentKernelTime=0, Idx=0; Idx<1/*SystemBasicInfo.bKeNumberProcessors*/; Idx++) {
+	for (CurrentKernelTime=0, Idx=0; Idx<SystemBasicInfo.NumberProcessors; Idx++) {
 		CurrentKernelTime += Li2Double(SysProcessorTimeInfo[Idx].TotalProcessorTime);
 		CurrentKernelTime += Li2Double(SysProcessorTimeInfo[Idx].TotalDPCTime);
 		CurrentKernelTime += Li2Double(SysProcessorTimeInfo[Idx].TotalInterruptTime);
@@ -397,8 +400,8 @@ void PerfDataRefresh()
 		dbKernelTime = dbKernelTime / dbSystemTime;
 		
 		// CurrentCpuUsage% = 100 - (CurrentCpuIdle * 100) / NumberOfProcessors
-		dbIdleTime = 100.0 - dbIdleTime * 100.0; /* / (double)SystemBasicInfo.bKeNumberProcessors;// + 0.5; */
-		dbKernelTime = 100.0 - dbKernelTime * 100.0; /* / (double)SystemBasicInfo.bKeNumberProcessors;// + 0.5; */
+		dbIdleTime = 100.0 - dbIdleTime * 100.0 / (double)SystemBasicInfo.NumberProcessors;// + 0.5; 
+		dbKernelTime = 100.0 - dbKernelTime * 100.0 / (double)SystemBasicInfo.NumberProcessors;// + 0.5;
 	}
 
 	// Store new CPU's idle and system time
@@ -460,7 +463,7 @@ void PerfDataRefresh()
 			double	CurTime = Li2Double(pSPI->KernelTime) + Li2Double(pSPI->UserTime);
 			double	OldTime = Li2Double(pPDOld->KernelTime) + Li2Double(pPDOld->UserTime);
 			double	CpuTime = (CurTime - OldTime) / dbSystemTime;
-			CpuTime = CpuTime * 100.0; /* / (double)SystemBasicInfo.bKeNumberProcessors;// + 0.5;*/
+			CpuTime = CpuTime * 100.0 / (double)SystemBasicInfo.NumberProcessors; // + 0.5;
 
 			pPerfData[Idx].CPUUsage = (ULONG)CpuTime;
 #else
@@ -537,9 +540,6 @@ unsigned int GetKeyPressed(int events)
 
 	for (i=0; i<events; i++)
 	{
-		if (!ReadConsoleInput(hStdin, &record, 0, &bytesRead)) {
-			return 0;
-		}
 		if (!ReadConsoleInput(hStdin, &record, 1, &bytesRead)) {
 			return 0;
 		}
@@ -599,6 +599,8 @@ int main(int *argc, char **argv)
 		lpSeparator[columnRightPositions[i]] = _T('+');
 	}
 	lpSeparator[columnRightPositions[4] + 1] = _T('\0');
+	lpHeader[columnRightPositions[4] + 1] = _T('\0');
+
 	
 	if (!LoadString(hInst, IDS_APP_TITLE, lpTitle, 80))
 		lpTitle[0] = _T('\0');
@@ -644,6 +646,8 @@ int main(int *argc, char **argv)
 	SetConsoleMode(hStdin, 0); //FIXME: Should check for error!
 	SetConsoleMode(hStdout, 0); //FIXME: Should check for error!
 
+	PerfInit();
+
 	while (1)
 	{
 		DWORD numEvents;
@@ -651,12 +655,8 @@ int main(int *argc, char **argv)
 		PerfDataRefresh();
 		DisplayScreen();
 
-		//WriteConsole(hStdin, " ", 1, &numEvents, NULL); // TODO: Make another way (this is ugly, I know)
-#if 0
 		/* WaitForSingleObject for console handles is not implemented in ROS */
 		WaitForSingleObject(hStdin, 1000);
-#endif
-
 		GetNumberOfConsoleInputEvents(hStdin, &numEvents);
 
 		if (numEvents > 0)
@@ -664,13 +664,6 @@ int main(int *argc, char **argv)
 			if (ProcessKeys(numEvents) == TRUE)
 				break;
 		}
-#if 1
-		else
-		{
-		    /* Should be removed, if WaitForSingleObject is implemented for console handles */
-		    Sleep(40); // TODO: Should be done more efficient (might be another thread handling input/etc)*/
-		}
-#endif
 	}
 
 	RestoreConsole();

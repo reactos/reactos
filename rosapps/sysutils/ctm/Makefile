@@ -16,6 +16,8 @@ TARGET_SDKLIBS = epsapi.a ntdll.a
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 
+TARGET_CFLAGS = -DUNICODE -D_UNICODE
+
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
