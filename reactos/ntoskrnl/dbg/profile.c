@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: profile.c,v 1.2 2003/01/16 19:51:20 chorns Exp $
+/* $Id: profile.c,v 1.3 2003/05/06 08:45:10 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/profile.c
@@ -263,9 +263,9 @@ KdbProfilerWriteSampleGroups(PLIST_ENTRY SamplesListHead)
           PSAMPLE_GROUP_INFO sgi = CONTAINING_RECORD(
 		    Largest, SAMPLE_GROUP_INFO, ListEntry);
 
-		  //DbgPrint("%.08d  %s\n", sgi->Count, sgi->Description);
+		  //DbgPrint("%.08lu  %s\n", sgi->Count, sgi->Description);
 
-		  sprintf(Buffer, "%.08d  %s\r\n", sgi->Count, sgi->Description);
+		  sprintf(Buffer, "%.08lu  %s\r\n", sgi->Count, sgi->Description);
           KdbProfilerWriteString(Buffer);
 
           RemoveEntryList(Largest);
@@ -330,7 +330,7 @@ KdbProfilerAnalyzeSamples()
 	        }
 	      else
 		    {
-	          sprintf(NameBuffer, "(0x%.08x)", (ULONG) Address);
+	          sprintf(NameBuffer, "(0x%.08lx)", (ULONG) Address);
 		    }
 
 	      KeyLength = strlen(NameBuffer);
