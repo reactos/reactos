@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cliprgn.c,v 1.34 2004/04/25 16:06:20 weiden Exp $ */
+/* $Id: cliprgn.c,v 1.35 2004/04/25 16:40:39 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -153,7 +153,64 @@ int STDCALL NtGdiExtSelectClipRgn(HDC  hDC,
                           HRGN  hrgn,
                           int  fnMode)
 {
-  UNIMPLEMENTED;
+  int retval;
+  DC *dc;
+
+  if (!(dc = DC_LockDc(hDC)))
+  {
+  	SetLastWin32Error(ERROR_INVALID_HANDLE);
+  	return ERROR;
+  }
+  
+  dc->w.flags &= ~DC_DIRTY;
+  
+  if (!hrgn)
+  {
+    if (fnMode == RGN_COPY)
+    {
+      NtGdiDeleteObject(dc->w.hGCClipRgn);
+      dc->w.hGCClipRgn = NULL;
+    }
+    else
+    {
+      DC_UnlockDc( hDC );
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return ERROR;
+    }
+  }
+  else
+  {
+    if (!dc->w.hGCClipRgn)
+    {
+      PROSRGNDATA Rgn;
+      RECT rect;
+      if((Rgn = RGNDATA_LockRgn(dc->w.hVisRgn)))
+      {
+        UnsafeIntGetRgnBox(Rgn, &rect);
+        RGNDATA_UnlockRgn(dc->w.hVisRgn);
+        dc->w.hGCClipRgn = UnsafeIntCreateRectRgnIndirect(&rect);
+      }
+      else
+      {
+        dc->w.hGCClipRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
+      }
+    }
+    if(fnMode == RGN_COPY)
+      NtGdiCombineRgn(dc->w.hGCClipRgn, hrgn, 0, fnMode);
+    else
+      NtGdiCombineRgn(dc->w.hGCClipRgn, dc->w.hGCClipRgn, hrgn, fnMode);
+  }
+
+  if (dc->w.hVisRgn == NULL)
+    {
+      dc->w.hVisRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
+      GDIOBJ_CopyOwnership(hDC, dc->w.hVisRgn);
+    }
+  
+  CLIPPING_UpdateGCRegion(dc);
+  DC_UnlockDc( hDC );
+
+  return retval;
 }
 
 int FASTCALL

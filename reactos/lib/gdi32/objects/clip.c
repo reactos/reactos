@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: clip.c,v 1.6 2004/04/25 16:06:20 weiden Exp $
+/* $Id: clip.c,v 1.7 2004/04/25 16:40:39 weiden Exp $
  *
  * PROJECT:         ReactOS gdi32.dll
  * FILE:            lib/gdi32/objects/clip.c
@@ -70,3 +70,18 @@ ExcludeClipRect(
 {
   return NtGdiExcludeClipRect(hdc, nLeftRect, nTopRect, nRightRect, nBottomRect);
 }
+
+/*
+ * @implemented
+ */
+int
+STDCALL
+ExtSelectClipRgn(
+	HDC	hdc,
+	HRGN	hrgn,
+	int	fnMode
+	)
+{
+  return NtGdiExtSelectClipRgn(hdc, hrgn, fnMode);
+}
+

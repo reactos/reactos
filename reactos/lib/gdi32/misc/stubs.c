@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.58 2004/04/25 16:06:20 weiden Exp $
+/* $Id: stubs.c,v 1.59 2004/04/25 16:40:39 weiden Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -385,21 +385,6 @@ ResizePalette(
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
-}
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-ExtSelectClipRgn(
-	HDC	a0,
-	HRGN	a1,
-	int	a2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
 }
 
 
