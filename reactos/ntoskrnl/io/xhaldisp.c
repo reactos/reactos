@@ -1,4 +1,4 @@
-/* $Id: xhaldisp.c,v 1.11 2004/08/21 20:55:40 tamlin Exp $
+/* $Id: xhaldisp.c,v 1.12 2004/11/21 06:51:18 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -25,7 +25,7 @@ HAL_DISPATCH EXPORTED HalDispatchTable =
 	(pHalQuerySystemInformation) NULL,	// HalQuerySystemInformation
 	(pHalSetSystemInformation) NULL,	// HalSetSystemInformation
 	(pHalQueryBusSlots) NULL,			// HalQueryBusSlots
-	(pHalDeviceControl) NULL,			// HalDeviceControl
+	0,
 	(pHalExamineMBR) xHalExamineMBR,
 	(pHalIoAssignDriveLetters) xHalIoAssignDriveLetters,
 	(pHalIoReadPartitionTable) xHalIoReadPartitionTable,
@@ -33,7 +33,16 @@ HAL_DISPATCH EXPORTED HalDispatchTable =
 	(pHalIoWritePartitionTable) xHalIoWritePartitionTable,
 	(pHalHandlerForBus) NULL,			// HalReferenceHandlerForBus
 	(pHalReferenceBusHandler) NULL,		// HalReferenceBusHandler
-	(pHalReferenceBusHandler) NULL		// HalDereferenceBusHandler
+	(pHalReferenceBusHandler) NULL,		// HalDereferenceBusHandler
+	(pHalInitPnpDriver) NULL,               //HalInitPnpDriver;
+	(pHalInitPowerManagement) NULL,         //HalInitPowerManagement;
+	(pHalGetDmaAdapter) NULL,               //HalGetDmaAdapter;
+	(pHalGetInterruptTranslator) NULL,      //HalGetInterruptTranslator;
+	(pHalStartMirroring) NULL,              //HalStartMirroring;
+	(pHalEndMirroring) NULL,                //HalEndMirroring;
+	(pHalMirrorPhysicalMemory) NULL,        //HalMirrorPhysicalMemory;
+	(pHalEndOfBoot) NULL,                   //HalEndOfBoot;
+	(pHalMirrorVerify) NULL                //HalMirrorVerify;
 };
 
 

@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_OBTYPES_H
 #define _INCLUDE_DDK_OBTYPES_H
-/* $Id: obtypes.h,v 1.8 2004/07/07 17:20:16 ekohl Exp $ */
+/* $Id: obtypes.h,v 1.9 2004/11/21 06:51:17 ion Exp $ */
 struct _DIRECTORY_OBJECT;
 struct _OBJECT_ATTRIBUTES;
 
@@ -253,8 +253,36 @@ typedef struct _HANDLE_TABLE
 
 typedef struct _HANDLE_TABLE *PHANDLE_TABLE;
 
+/*
+ * FIXME: These will eventually become centerfold in the compliant Ob Manager
+ * For now, they are only here so Device Map is properly defined before the header
+ * changes
+ */
+typedef struct _OBJECT_DIRECTORY_ENTRY {
+    struct _OBJECT_DIRECTORY_ENTRY *ChainLink;
+    PVOID Object;
+    ULONG HashValue;
+} OBJECT_DIRECTORY_ENTRY, *POBJECT_DIRECTORY_ENTRY;
+
+#define NUMBER_HASH_BUCKETS 37
+typedef struct _OBJECT_DIRECTORY {
+    struct _OBJECT_DIRECTORY_ENTRY *HashBuckets[NUMBER_HASH_BUCKETS];
+    struct _EX_PUSH_LOCK *Lock;
+    struct _DEVICE_MAP *DeviceMap;
+    ULONG SessionId;
+} OBJECT_DIRECTORY, *POBJECT_DIRECTORY;
+
+typedef struct _DEVICE_MAP {
+    POBJECT_DIRECTORY   DosDevicesDirectory;
+    POBJECT_DIRECTORY   GlobalDosDevicesDirectory;
+    ULONG               ReferenceCount;
+    ULONG               DriveMap;
+    UCHAR               DriveType[32];
+} DEVICE_MAP, *PDEVICE_MAP; 
+
 #endif /* __USE_W32API */
 
 extern POBJECT_TYPE ObDirectoryType;
+extern PDEVICE_MAP ObSystemDeviceMap;
 
 #endif /* ndef _INCLUDE_DDK_OBTYPES_H */

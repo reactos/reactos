@@ -19,12 +19,13 @@
 /*
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/apc.c
- * PURPOSE:         Possible implementation of APCs
- * PROGRAMMER:      David Welch (welch@cwcom.net)
+ * PURPOSE:         NT Implementation of APCs
+ * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  * PORTABILITY:     Unchecked
  * UPDATE HISTORY:
  *                  Created 22/05/98
  *                  12/11/99:  Phillip Susi: Reworked the APC code
+ *                  11/11/04: Alex Ionescu - Total Rewrite
  */
 
 /* INCLUDES *****************************************************************/

@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.42 2004/10/05 07:51:11 gvg Exp $
+/* $Id: volume.c,v 1.43 2004/11/21 06:51:17 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -87,7 +87,7 @@ GetLogicalDriveStringsA(DWORD nBufferLength,
    DWORD drive, count;
    DWORD dwDriveMap;
 
-   dwDriveMap = SharedUserData->DosDeviceMap;
+   dwDriveMap = GetLogicalDrives();
 
    for (drive = count = 0; drive < MAX_DOS_DRIVES; drive++)
      {
@@ -124,7 +124,7 @@ GetLogicalDriveStringsW(DWORD nBufferLength,
    DWORD drive, count;
    DWORD dwDriveMap;
 
-   dwDriveMap = SharedUserData->DosDeviceMap;
+   dwDriveMap = GetLogicalDrives();
 
    for (drive = count = 0; drive < MAX_DOS_DRIVES; drive++)
      {
@@ -155,7 +155,22 @@ GetLogicalDriveStringsW(DWORD nBufferLength,
 DWORD STDCALL
 GetLogicalDrives(VOID)
 {
-  return(SharedUserData->DosDeviceMap);
+	NTSTATUS Status;
+	PROCESS_DEVICEMAP_INFORMATION ProcessDeviceMapInfo;
+
+	/* Get the Device Map for this Process */
+	Status = NtQueryInformationProcess(NtCurrentProcess(),
+					   ProcessDeviceMap,
+					   &ProcessDeviceMapInfo.Query,
+					   sizeof(ProcessDeviceMapInfo.Query),
+					   NULL);
+					   
+	/* Return the Drive Map */
+	if (!NT_SUCCESS(Status)) {
+		return 0;
+	} else {
+		return ProcessDeviceMapInfo.Query.DriveMap;
+	}
 }
 
 

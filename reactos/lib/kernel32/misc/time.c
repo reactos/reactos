@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.31 2004/11/14 18:53:11 hbirr Exp $
+/* $Id: time.c,v 1.32 2004/11/21 06:51:17 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -377,7 +377,7 @@ SetTimeZoneInformation(CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation)
 DWORD STDCALL
 GetTickCount(VOID)
 {
-  return (DWORD)((ULONGLONG)SharedUserData->TickCountLow * SharedUserData->TickCountMultiplier / 16777216);
+  return (DWORD)((ULONGLONG)SharedUserData->TickCountLowDeprecated * SharedUserData->TickCountMultiplier / 16777216);
 }
 
 

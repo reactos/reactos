@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.152 2004/11/20 16:46:05 weiden Exp $
+/* $Id: process.c,v 1.153 2004/11/21 06:51:18 ion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -14,7 +14,6 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* GLOBALS ******************************************************************/
 
@@ -1225,7 +1224,16 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	break;
 
       case ProcessDeviceMap:
-	Status = STATUS_NOT_IMPLEMENTED;
+	if (ProcessInformationLength != sizeof(PROCESS_DEVICEMAP_INFORMATION)) {
+	  Status = STATUS_INFO_LENGTH_MISMATCH;
+	} else {
+	  PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo;
+	  DeviceMapInfo = (PPROCESS_DEVICEMAP_INFORMATION)ProcessInformation;
+	  ObQueryDeviceMapInformation(Process, DeviceMapInfo);
+	  if (ReturnLength) {
+	    *ReturnLength = sizeof(PROCESS_DEVICEMAP_INFORMATION);
+	  }
+	}
 	break;
 
       case ProcessPriorityClass:

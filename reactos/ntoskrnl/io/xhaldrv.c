@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.49 2004/10/22 20:25:54 ekohl Exp $
+/* $Id: xhaldrv.c,v 1.50 2004/11/21 06:51:18 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -59,7 +59,6 @@ typedef enum _DISK_MANAGER
   OntrackDiskManager,
   EZ_Drive
 } DISK_MANAGER;
-
 
 /* FUNCTIONS *****************************************************************/
 
@@ -354,7 +353,7 @@ HalpAssignDrive(IN PUNICODE_STRING PartitionName,
   if ((DriveNumber != AUTO_DRIVE) && (DriveNumber < 24))
     {
       /* Force assignment */
-      if ((SharedUserData->DosDeviceMap & (1 << DriveNumber)) != 0)
+      if ((ObSystemDeviceMap->DriveMap & (1 << DriveNumber)) != 0)
 	{
 	  DbgPrint("Drive letter already used!\n");
 	  return;
@@ -367,7 +366,7 @@ HalpAssignDrive(IN PUNICODE_STRING PartitionName,
 
       for (i = 2; i < 24; i++)
 	{
-	  if ((SharedUserData->DosDeviceMap & (1 << i)) == 0)
+	  if ((ObSystemDeviceMap->DriveMap & (1 << i)) == 0)
 	    {
 	      DriveNumber = i;
 	      break;
@@ -383,9 +382,9 @@ HalpAssignDrive(IN PUNICODE_STRING PartitionName,
 
   DPRINT("DriveNumber %d\n", DriveNumber);
 
-  /* Update the shared user page */
-  SharedUserData->DosDeviceMap |= (1 << DriveNumber);
-  SharedUserData->DosDeviceDriveType[DriveNumber] = DriveType;
+  /* Update the System Device Map */
+  ObSystemDeviceMap->DriveMap |= (1 << DriveNumber);
+  ObSystemDeviceMap->DriveType[DriveNumber] = DriveType;
 
   /* Build drive name */
   swprintf(DriveNameBuffer,

@@ -36,7 +36,6 @@ typedef struct _DIRECTORY_OBJECT
    KSPIN_LOCK Lock;
 } DIRECTORY_OBJECT, *PDIRECTORY_OBJECT;
 
-
 typedef struct _SYMLINK_OBJECT
 {
   CSHORT Type;
@@ -138,6 +137,9 @@ ObDuplicateObject(PEPROCESS SourceProcess,
 ULONG
 ObpGetHandleCountByHandleTable(PHANDLE_TABLE HandleTable);
 
+VOID
+STDCALL
+ObQueryDeviceMapInformation(PEPROCESS Process, PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo);
 
 /* Security descriptor cache functions */
 

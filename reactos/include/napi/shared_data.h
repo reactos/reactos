@@ -29,37 +29,46 @@ typedef struct _KSYSTEM_TIME
    LONG High2Time;
 } KSYSTEM_TIME, *PKSYSTEM_TIME;
 
-typedef struct _KUSER_SHARED_DATA
-{
-   volatile ULONG TickCountLow;
-   ULONG TickCountMultiplier;
-   volatile KSYSTEM_TIME InterruptTime;
-   volatile KSYSTEM_TIME SystemTime;
-   volatile KSYSTEM_TIME TimeZoneBias;
-   USHORT ImageNumberLow;
-   USHORT ImageNumberHigh;
-   WCHAR NtSystemRoot[260];
-   ULONG DosDeviceMap;
-   ULONG CryptoExponent;
-   ULONG TimeZoneId;
-   UCHAR DosDeviceDriveType[32];
-   NT_PRODUCT_TYPE NtProductType;
-   BOOLEAN ProductTypeIsValid;
-   ULONG NtMajorVersion;
-   ULONG NtMinorVersion;
-   BOOLEAN ProcessorFeatures[PROCESSOR_FEATURES_MAX];
-
-   /* NT5 / Win2k specific ?? */
-   ULONG Reserved1;
-   ULONG Reserved3;
-   volatile ULONG TimeSlip;
-   ALTERNATIVE_ARCHITECTURE_TYPE AlternativeArchitecture;
-   ULONG SuiteMask;
-#ifdef REMOTE_BOOT
-   ULONG SystemFlags;
-   UCHAR RemoteBootServerPath[260];
-#endif
-   BOOLEAN KdDebuggerEnabled;
+#define PROCESSOR_FEATURE_MAX 64
+typedef struct _KUSER_SHARED_DATA {
+    ULONG TickCountLowDeprecated;
+    ULONG TickCountMultiplier;
+    volatile KSYSTEM_TIME InterruptTime;
+    volatile KSYSTEM_TIME SystemTime;
+    volatile KSYSTEM_TIME TimeZoneBias;
+    USHORT ImageNumberLow;
+    USHORT ImageNumberHigh;
+    WCHAR NtSystemRoot[260];
+    ULONG MaxStackTraceDepth;
+    ULONG CryptoExponent;
+    ULONG TimeZoneId;
+    ULONG LargePageMinimum;
+    ULONG Reserved2[7];
+    NT_PRODUCT_TYPE NtProductType;
+    BOOLEAN ProductTypeIsValid;
+    ULONG NtMajorVersion;
+    ULONG NtMinorVersion;
+    BOOLEAN ProcessorFeatures[PROCESSOR_FEATURE_MAX];
+    ULONG Reserved1;
+    ULONG Reserved3;
+    volatile ULONG TimeSlip;
+    ALTERNATIVE_ARCHITECTURE_TYPE AlternativeArchitecture;
+    LARGE_INTEGER SystemExpirationDate;
+    ULONG SuiteMask;
+    BOOLEAN KdDebuggerEnabled;
+    volatile ULONG ActiveConsoleId;
+    volatile ULONG DismountCount;
+    ULONG ComPlusPackage;
+    ULONG LastSystemRITEventTickCount;
+    ULONG NumberOfPhysicalPages;
+    BOOLEAN SafeBootMode;
+    ULONG TraceLogging;
+    ULONGLONG Fill0;
+    ULONGLONG SystemCall[4];
+    union {
+        volatile KSYSTEM_TIME TickCount;
+        volatile ULONG64 TickCountQuad;
+    };
 } KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
 
 /* Values for DosDeviceDriveType */

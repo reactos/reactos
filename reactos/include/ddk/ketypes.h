@@ -238,7 +238,7 @@ typedef struct _KDPC
    PVOID DeferredContext;
    PVOID SystemArgument1;
    PVOID SystemArgument2;
-   PULONG Lock;
+   PVOID DpcData;
 } KDPC, *PKDPC;
 
 #include <poppack.h>

@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.88 2004/11/06 16:05:49 ekohl Exp $
+/* $Id: timer.c,v 1.89 2004/11/21 06:51:18 ion Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -649,7 +649,7 @@ KeInitializeTimerImpl(VOID)
    HalQueryRealTimeClock(&TimeFields);
    RtlTimeFieldsToTime(&TimeFields, &SystemBootTime);
 
-   SharedUserData->TickCountLow = 0;
+   SharedUserData->TickCountLowDeprecated = 0;
    SharedUserData->TickCountMultiplier = 167783691; // 2^24 * 1193182 / 119310
    SharedUserData->InterruptTime.High2Time = 0;
    SharedUserData->InterruptTime.LowPart = 0;
@@ -795,7 +795,7 @@ KeUpdateSystemTime(
     * Increment the number of timers ticks 
     */
    KeTickCount++;
-   SharedUserData->TickCountLow++;
+   SharedUserData->TickCountLowDeprecated++;
    KiAcquireSpinLock(&TimerValueLock);
 
    Time.u.LowPart = SharedUserData->InterruptTime.LowPart;

@@ -187,7 +187,7 @@ typedef struct _KPRCB {
 	LARGE_INTEGER SpareField1;
 	FX_SAVE_AREA NpxSaveArea;
 	PROCESSOR_POWER_STATE PowerState;
-} KPRCB, *PKRCB;
+} KPRCB, *PKPRCB;
 
 #pragma pack(pop)
 
