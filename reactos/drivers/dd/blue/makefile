@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.23 2004/01/20 19:35:59 silverblade Exp $
+# $Id: makefile,v 1.24 2004/01/20 20:00:45 weiden Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -6,11 +6,9 @@ TARGET_BOOTSTRAP = yes
 
 TARGET_TYPE = driver
 
-TARGET_NAME = mpu401
+TARGET_NAME = blue
 
-TARGET_OBJECTS = mpu401.o \
-		portio.o \
-		settings.o
+TARGET_OBJECTS = blue.o
 
 TARGET_CFLAGS = -Wall -Werror
 
