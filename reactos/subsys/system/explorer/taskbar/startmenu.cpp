@@ -171,7 +171,7 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		 // close start menu when activating another application
 		if (!wparam)
 			CloseStartMenu();
-		goto def;
+		break;	// don't call super::WndProc in case "this" has been deleted
 
 	  case WM_CANCELMODE:
 		CloseStartMenu();

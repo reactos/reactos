@@ -105,10 +105,9 @@ bool ShellDirectory::fill_w32fdata_shell(LPCITEMIDLIST pidl, SFGAOF attribs, WIN
 LPITEMIDLIST ShellEntry::create_absolute_pidl(HWND hwnd)
 {
 	if (_up/* && _up->_etype==ET_SHELL*/) {
-		LPITEMIDLIST pidl = _pidl.create_absolute_pidl(static_cast<ShellDirectory*>(_up)->_folder, hwnd);
+		ShellDirectory* dir = static_cast<ShellDirectory*>(_up);
 
-		if (pidl)
-			return pidl;
+		return _pidl.create_absolute_pidl(dir->_pidl, hwnd);
 	}
 
 	return &*_pidl;
@@ -147,7 +146,7 @@ BOOL ShellEntry::launch_entry(HWND hwnd, UINT nCmdShow)
 	SHELLEXECUTEINFO shexinfo;
 
 	shexinfo.cbSize = sizeof(SHELLEXECUTEINFO);
-	shexinfo.fMask = SEE_MASK_INVOKEIDLIST;//@@SEE_MASK_IDLIST;
+	shexinfo.fMask = SEE_MASK_INVOKEIDLIST;	// SEE_MASK_IDLIST is also possible.
 	shexinfo.hwnd = hwnd;
 	shexinfo.lpVerb = NULL;
 	shexinfo.lpFile = NULL;

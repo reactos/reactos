@@ -240,7 +240,7 @@ protected:
 	}
 
 	T* _p;
-	ShellMalloc _malloc;	// IMalloc memory management object
+	mutable ShellMalloc _malloc;	// IMalloc memory management object
 
 private:
 	 // disallow copying of SShellPtr objects
@@ -599,23 +599,18 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 
 
 	 // convert an item id list from relative to absolute (=relative to the desktop) format
-	LPITEMIDLIST create_absolute_pidl(IShellFolder* parent_folder, HWND hwnd) const
+	LPITEMIDLIST create_absolute_pidl(LPCITEMIDLIST parent_pidl, HWND hwnd) const
 	{
-		WCHAR buffer[MAX_PATH];
+		 // create a new item id list with _p append behind parent_pidl
+		int l1 = _malloc->GetSize((void*)parent_pidl) - sizeof(USHORT/*SHITEMID::cb*/);
+		int l2 = _malloc->GetSize(_p);
 
-		HRESULT hr = path_from_pidlW(parent_folder, _p, buffer, MAX_PATH);
+		LPITEMIDLIST p = (LPITEMIDLIST) _malloc->Alloc(l1+l2);
 
-		if (SUCCEEDED(hr)) {
-			LPITEMIDLIST pidl;
-			ULONG len;
+		memcpy(p, parent_pidl, l1);
+		memcpy((LPBYTE)p+l1, _p, l2);
 
-			hr = Desktop()->ParseDisplayName(hwnd, NULL, buffer, &len, &pidl, NULL);
-
-			if (SUCCEEDED(hr))
-				return pidl;
-		}
-
-		return NULL;
+		return p;
 	}
 };
 

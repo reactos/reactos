@@ -373,12 +373,12 @@ template<typename BASE> struct OwnerDrawParent : public BASE
 	{
 		switch(nmsg) {
 		  case WM_DRAWITEM:
-			if (wparam) {	// ein Control?
+			if (wparam) {	// should there be drawn a control?
 				HWND hctl = GetDlgItem(_hwnd, wparam);
 
 				if (hctl)
 					return SendMessage(hctl, PM_DISPATCH_DRAWITEM, wparam, lparam);
-			} /*else	// oder ein Menüeintrag?
+			} /*else		// or is it a menu entry?
 				; */
 
 			return 0;

@@ -46,11 +46,14 @@
 
 
 #ifndef BTNS_BUTTON
-#define BTNS_BUTTON TBSTYLE_BUTTON //TODO: should be in mingw headers
+#define BTNS_BUTTON TBSTYLE_BUTTON //missing in old mingw headers
 #define BTNS_SEP TBSTYLE_SEP
 #endif
 #ifndef TB_HITTEST	//missing in mingw headers
 #define TB_HITTEST (WM_USER+69)
+#endif
+#ifndef TB_GETBUTTONINFO	//missing in mingw headers
+#define TB_GETBUTTONINFO (WM_USER+65)
 #endif
 
 

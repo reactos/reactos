@@ -151,13 +151,19 @@ int TaskBar::Notify(int id, NMHDR* pnmh)
 	if (pnmh->hwndFrom == _htoolbar)
 		switch(pnmh->code) {
 		  case NM_RCLICK: {
+			TBBUTTONINFO btninfo;
 			TaskBarMap::iterator it;
 			Point pt(GetMessagePos());
 			ScreenToClient(_htoolbar, &pt);
 
+			btninfo.cbSize = sizeof(TBBUTTONINFO);
+			btninfo.dwMask = TBIF_BYINDEX|TBIF_COMMAND;
+
 			int idx = SendMessage(_htoolbar, TB_HITTEST, 0, (LPARAM)&pt);
 
-			if (idx>=0 && (it=_map.find_by_idx(idx))!=_map.end()) {
+			if (idx>=0 &&
+				SendMessage(_htoolbar, TB_GETBUTTONINFO, idx, (LPARAM)&btninfo)!=-1 &&
+				(it=_map.find_id(btninfo.idCommand))!=_map.end()) {
 				TaskBarEntry& entry = it->second;
 
 				ActivateApp(it, false);
@@ -387,15 +393,6 @@ TaskBarMap::iterator TaskBarMap::find_id(int id)
 {
 	for(iterator it=begin(); it!=end(); ++it)
 		if (it->second._id == id)
-			return it;
-
-	return end();
-}
-
-TaskBarMap::iterator TaskBarMap::find_by_idx(int idx)
-{
-	for(iterator it=begin(); it!=end(); ++it)
-		if (it->second._btn_idx == idx)
 			return it;
 
 	return end();

@@ -186,12 +186,14 @@ LRESULT CALLBACK Window::WindowWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPAR
 
 LRESULT Window::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
+	HWND hwnd = _hwnd;
+
 	 // close startup menu and other popup menus
 	 // This functionality is for tray notification icons missing in MS Windows.
 	if (nmsg == WM_SETFOCUS)
 		CancelModes((HWND)wparam);
 
-	return DefWindowProc(_hwnd, nmsg, wparam, lparam);
+	return DefWindowProc(hwnd, nmsg, wparam, lparam);
 }
 
 int Window::Command(int id, int code)

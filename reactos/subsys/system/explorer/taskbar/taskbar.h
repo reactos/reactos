@@ -62,7 +62,6 @@ struct TaskBarMap : public map<HWND, TaskBarEntry>
 	~TaskBarMap();
 
 	iterator find_id(int id);
-	iterator find_by_idx(int idx);
 };
 
 
