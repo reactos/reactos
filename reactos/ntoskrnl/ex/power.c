@@ -168,7 +168,9 @@ NtShutdownSystem(IN SHUTDOWN_ACTION Action)
        "Just go forward in all your beliefs, and prove to me that I am not mistaken in mine.\n",
        "Lowest possible energy state reached! Switch off now to achive a Bose-Einstein condensate.\n",
        "Hasta la vista, BABY!\n",
-       "They live, we sleep!\n"
+       "They live, we sleep!\n",
+       "I have come here to chew bubble gum and kick ass.\n"
+       "And I'm all out of bubble gum!\n"
     };
    LARGE_INTEGER Now;
 
