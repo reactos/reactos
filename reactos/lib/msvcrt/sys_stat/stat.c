@@ -22,7 +22,7 @@ int _stat(const char* path, struct stat* buffer)
 
   if (strchr(path, '*') || strchr(path, '?'))
   {
-    __set_errno(EINVAL);
+    __set_errno(ENOENT);
     return -1;
   }
 
