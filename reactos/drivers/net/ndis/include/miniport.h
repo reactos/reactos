@@ -65,6 +65,7 @@ typedef struct _MINIPORT_SHARED_MEMORY {
 typedef struct _NDIS_WRAPPER_CONTEXT {
     HANDLE            RegistryHandle;
     PDEVICE_OBJECT    DeviceObject;
+    ULONG             BusNumber;
 } NDIS_WRAPPER_CONTEXT, *PNDIS_WRAPPER_CONTEXT;
 
 #define GET_MINIPORT_DRIVER(Handle)((PMINIPORT_DRIVER)Handle)

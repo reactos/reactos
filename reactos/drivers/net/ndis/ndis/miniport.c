@@ -1375,6 +1375,7 @@ NdisIPnPStartDevice(
       else
         Adapter->NdisMiniportBlock.BusNumber = 0;
     }
+  WrapperContext.BusNumber = Adapter->NdisMiniportBlock.BusNumber;
 
   Status = IoGetDeviceProperty(Adapter->NdisMiniportBlock.PhysicalDeviceObject,
                                DevicePropertyAddress, Size,
