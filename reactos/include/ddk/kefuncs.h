@@ -538,52 +538,52 @@ VOID STDCALL KiDispatchInterrupt(VOID);
 
 /* Stubs Start here */
 
-STDCALL
 VOID
+STDCALL
 KeReleaseInterruptSpinLock(
 	IN PKINTERRUPT Interrupt,
 	IN KIRQL OldIrql
 	);
 
-STDCALL
 BOOLEAN
+STDCALL
 KeAreApcsDisabled(
 	VOID
 	);
 
-STDCALL
 VOID
+STDCALL
 KeFlushQueuedDpcs(
 	VOID
 	);
 
-STDCALL
 ULONG
+STDCALL
 KeGetRecommendedSharedDataAlignment(
 	VOID
 	);
 
-STDCALL
 ULONG
+STDCALL
 KeQueryRuntimeThread(
 	IN PKTHREAD Thread,
 	OUT PULONG UserTime
 	);    
 
-STDCALL
 BOOLEAN
+STDCALL
 KeSetKernelStackSwapEnable(
 	IN BOOLEAN Enable
 	);
 
-STDCALL
 BOOLEAN
+STDCALL
 KeDeregisterBugCheckReasonCallback(
     IN PKBUGCHECK_REASON_CALLBACK_RECORD CallbackRecord
     );
 
-STDCALL
 BOOLEAN
+STDCALL
 KeRegisterBugCheckReasonCallback(
     IN PKBUGCHECK_REASON_CALLBACK_RECORD CallbackRecord,
     IN PKBUGCHECK_REASON_CALLBACK_ROUTINE CallbackRoutine,
@@ -591,27 +591,27 @@ KeRegisterBugCheckReasonCallback(
     IN PUCHAR Component
     );
 
-STDCALL
 VOID 
+STDCALL
 KeTerminateThread(
 	IN KPRIORITY   	 Increment  	 
 );
 
-STDCALL
 VOID 
+STDCALL
 KeIsExecutingDpc(
 	VOID
 );
 
-STDCALL
 VOID
+STDCALL
 KeSetEventBoostPriority(
 	IN PKEVENT Event,
 	IN PKTHREAD *Thread OPTIONAL
 );
 
-STDCALL
 PVOID
+STDCALL
 KeFindConfigurationEntry(
     IN PVOID Unknown,
     IN ULONG Class,
@@ -619,8 +619,8 @@ KeFindConfigurationEntry(
     IN PULONG RegKey
 );
 
-STDCALL
 PVOID
+STDCALL
 KeFindConfigurationNextEntry(
     IN PVOID Unknown,
     IN ULONG Class,
@@ -629,50 +629,50 @@ KeFindConfigurationNextEntry(
     IN PVOID *NextLink
 );
 
-STDCALL
 VOID
+STDCALL
 KeFlushEntireTb(
     IN ULONGLONG Flag
 );
 
-STDCALL
 VOID
+STDCALL
 KeRevertToUserAffinityThread(
     VOID
 );
 
-STDCALL
 VOID
+STDCALL
 KiCoprocessorError(
     VOID
 );
 
-STDCALL
 VOID
+STDCALL
 KiUnexpectedInterrupt(
     VOID
 );
 
-STDCALL
 VOID
+STDCALL
 KeSetDmaIoCoherency(
     IN ULONG Coherency
 );
 
-STDCALL
 VOID
+STDCALL
 KeSetProfileIrql(
     IN KIRQL ProfileIrql
 );
 
-STDCALL
 VOID
+STDCALL
 KeSetSystemAffinityThread(
     IN KAFFINITY Affinity
 );
 
-STDCALL
 NTSTATUS
+STDCALL
 KeUserModeCallback(
     IN ULONG	FunctionID,
     IN PVOID	InputBuffer,
@@ -681,15 +681,15 @@ KeUserModeCallback(
     OUT PULONG	OutputLength
 );
 
-STDCALL
 VOID
+STDCALL
 KeSetTimeIncrement(
     IN ULONG MaxIncrement,
     IN ULONG MinIncrement
 );
 
-STDCALL
 VOID
+STDCALL
 KeCapturePersistentThreadState(
 	IN PVOID	CurrentThread,
 	IN ULONG	Setting1,
@@ -700,8 +700,8 @@ KeCapturePersistentThreadState(
 	IN PVOID	ThreadState
 );
 
-STDCALL
 BOOLEAN
+STDCALL
 KeRemoveSystemServiceTable(
     IN PUCHAR Number
 );
@@ -713,8 +713,8 @@ KeI386FlatToGdtSelector(
 	IN USHORT	Selector
 );
 
-STDCALL
 CCHAR
+STDCALL
 KeSetIdealProcessorThread (
 	IN PKTHREAD Thread,
 	IN CCHAR Processor
@@ -733,15 +733,15 @@ KeSetTimeUpdateNotifyRoutine(
     IN PTIME_UPDATE_NOTIFY_ROUTINE NotifyRoutine
     );
 
-STDCALL
 PKDEVICE_QUEUE_ENTRY
+STDCALL
 KeRemoveByKeyDeviceQueueIfBusy (
     IN PKDEVICE_QUEUE DeviceQueue,
     IN ULONG SortKey
     );
 
-STDCALL
 KAFFINITY
+STDCALL
 KeQueryActiveProcessors (
     VOID
     );
@@ -759,14 +759,14 @@ KeReleaseInStackQueuedSpinLockFromDpcLevel(
     IN PKLOCK_QUEUE_HANDLE LockHandle
     );
 
-STDCALL
 KPRIORITY
+STDCALL
 KeQueryPriorityThread (
     IN PKTHREAD Thread
     );  
 
-STDCALL
 KIRQL
+STDCALL
 KeAcquireInterruptSpinLock(
     IN PKINTERRUPT Interrupt
     );
@@ -777,8 +777,8 @@ KeSaveStateForHibernate(
     IN PVOID State
 );
 
-STDCALL
 NTSTATUS
+STDCALL
 KeRaiseUserException(
 	IN NTSTATUS	ExceptionCode
 );

@@ -705,8 +705,8 @@ ExSetTimerResolution (
     IN BOOLEAN SetResolution
     );
 
-STDCALL
 BOOLEAN
+STDCALL
 ExVerifySuite(
     SUITE_TYPE SuiteType
     );
@@ -742,8 +742,8 @@ ExUnregisterCallback (
 
 typedef GUID UUID;
 
-STDCALL
 NTSTATUS
+STDCALL
 ExUuidCreate(
     OUT UUID *Uuid
     );

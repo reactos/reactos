@@ -46,28 +46,28 @@ DbgBreakPointNoBugCheck(VOID);
 VOID STDCALL KeRescheduleThread();
 
 
-STDCALL
 VOID
+STDCALL
 KeProfileInterrupt(
     PKTRAP_FRAME TrapFrame
 );
 
-STDCALL
 VOID
+STDCALL
 KeProfileInterruptWithSource(
 	IN PKTRAP_FRAME   		TrapFrame,
 	IN KPROFILE_SOURCE		Source
 );
 
-/*STDCALL
-BOOLEAN
+/*BOOLEAN
+STDCALL
 KiIpiServiceRoutine(
 	IN PKTRAP_FRAME   		TrapFrame,
 	IN PKEXCEPTION_FRAME  	ExceptionFrame
 );*/
 
-STDCALL
 VOID 
+STDCALL
 KeUpdateSystemTime(
 	IN PKTRAP_FRAME   	TrapFrame,
 	IN ULONG  			Increment
@@ -160,8 +160,8 @@ KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG ExceptionNr, ULONG cr2);
 VOID
 KiUpdateProcessThreadTime(VOID);
 
-STDCALL
 VOID
+STDCALL
 KeUpdateRunTime(
 	IN PKTRAP_FRAME	TrapFrame
 );
