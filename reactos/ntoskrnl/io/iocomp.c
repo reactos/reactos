@@ -99,8 +99,9 @@ IoSetIoCompletion (
 	return STATUS_NOT_IMPLEMENTED;
 }
 
-VOID 
-NtInitializeIoCompletionImplementation(VOID)
+VOID
+FASTCALL
+IopInitIoCompletionImplementation(VOID)
 {
    ExIoCompletionType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
    
