@@ -14,7 +14,7 @@
 #define SSEP "\\"
 #define SBAD_SEP "/"
 #else
-#define EXEPOSTFIX
+#define EXEPOSTFIX ""
 #define CSEP '/'
 #define CBAD_SEP '\\'
 #define SSEP "/"
