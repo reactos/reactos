@@ -198,6 +198,8 @@ FloppyDpcDetectMedia(PKDPC Dpc,
   if( ControllerExtension->St1 != 0 )
     {
       DPRINT1( "Read ID failed: ST1 = %2x\n", ControllerExtension->St1 );
+      IoFreeController( Controller );
+      Irp->IoStatus.Information = 0;
       Irp->IoStatus.Status = STATUS_DEVICE_NOT_READY;
       IoCompleteRequest( Irp, 0 );
       return;
