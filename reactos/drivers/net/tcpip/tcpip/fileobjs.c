@@ -141,7 +141,6 @@ VOID DeleteConnectionEndpoint(
 
   /* Dereference and remove the address file if it exists */
   if (Connection->AddressFile) {
-    RemoveEntryList(&Connection->AddrFileEntry);
     DereferenceObject(Connection->AddressFile);
   }
 
@@ -483,8 +482,8 @@ NTSTATUS FileCloseConnection(
 
   Connection = Request->Handle.ConnectionContext;
 
-  KeAcquireSpinLock(&Connection->Lock, &OldIrql);
 #if 0
+  KeAcquireSpinLock(&Connection->Lock, &OldIrql);
   if ((!AF_IS_BUSY(Connection)) && (Connection->RefCount == 1)) {
     /* Set connection endpoint file object exclusive to us */
     AF_SET_BUSY(Connection);

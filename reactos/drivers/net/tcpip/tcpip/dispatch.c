@@ -425,12 +425,10 @@ NTSTATUS DispTdiDisassociateAddress(
     return STATUS_INVALID_PARAMETER;
   }
 
-  KeAcquireSpinLock(&Connection->Lock, &OldIrql);
-  RemoveEntryList(&Connection->AddrFileEntry);
-  KeReleaseSpinLock(&Connection->Lock, OldIrql);
-
   /* Remove the reference put on the address file object */
+  KeAcquireSpinLock(&Connection->Lock, &OldIrql);
   DereferenceObject(Connection->AddressFile);
+  KeReleaseSpinLock(&Connection->Lock, OldIrql);
 
   return STATUS_SUCCESS;
 }

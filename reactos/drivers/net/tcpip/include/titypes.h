@@ -301,7 +301,6 @@ typedef enum {
    to this structure */
 typedef struct _CONNECTION_ENDPOINT {
   LIST_ENTRY ListEntry;       /* Entry on list */
-  LIST_ENTRY AddrFileEntry;   /* Entry on address file list */
   KSPIN_LOCK Lock;            /* Spin lock to protect this structure */
   ULONG RefCount;             /* Number of references to this object */
   PVOID ClientContext;        /* Pointer to client context information */
