@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c,v 1.3 2004/02/25 02:55:28 jimtabor Exp $
+ * $Id: videoprt.c,v 1.4 2004/02/25 05:38:33 jimtabor Exp $
  */
 
 #include "videoprt.h"
@@ -409,17 +409,37 @@ VideoPortGetRegistryParameters(IN PVOID  HwDeviceExtension,
 
 
 /*
- * @unimplemented
- */
+ * @implemented
+ */ 
 VP_STATUS
 STDCALL
 VideoPortGetVgaStatus(IN PVOID  HwDeviceExtension,
 		      OUT PULONG  VgaStatus)
 {
- DPRINT("VideoPortGetVgaStatus\n");
- UNIMPLEMENTED;
- return STATUS_NOT_IMPLEMENTED;
-      
+  PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+
+  DPRINT("VideoPortGetVgaStatus = %S \n", VgaStatus);
+
+  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
+				      VIDEO_PORT_DEVICE_EXTENSION,
+				      MiniPortDeviceExtension);
+
+ if(KeGetCurrentIrql() == PASSIVE_LEVEL)
+ {
+  if ( PCIBus == DeviceExtension->AdapterInterfaceType)
+	{
+/*
+  VgaStatus 0 == VGA not enabled, 1 == VGA enabled.
+ */
+	
+	/* Assumed for now */
+	
+	VgaStatus = (PULONG) 1;
+
+ 	return  STATUS_SUCCESS;
+ 	}
+  } 	
+  return ERROR_INVALID_FUNCTION;    
 }
 
 static BOOLEAN
