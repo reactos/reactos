@@ -458,3 +458,13 @@ STRINGTABLE DISCARDABLE /* Nomes de cores */
     IDS_COLOR_AQUA      "Azul-piscina"
     IDS_COLOR_WHITE     "Branco"
 }
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_FONT_SIZE   "Selecione o tamanho da fonte entre %d e %d pontos."
+    IDS_SAVE_BUTTON "&Salvar"
+    IDS_SAVE_IN     "Salvar &em:"
+    IDS_SAVE        "Salvar"
+    IDS_SAVE_AS     "Salvar como"
+    IDS_OPEN_FILE   "Abrir Arquivo"
+}

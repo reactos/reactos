@@ -102,7 +102,7 @@ LONG CC_WMInitDialog16( HWND hDlg, WPARAM wParam, LPARAM lParam )
    ch32->lpfnHook = (LPCCHOOKPROC) ch16->lpfnHook; /* only used as flag */
    ch32->Flags = ch16->Flags;
 
-   SetWindowLongA(hDlg, DWL_USER, (LONG)lpp);
+   SetWindowLongPtrW(hDlg, DWLP_USER, (LONG_PTR)lpp);
 
    if (!(lpp->lpcc->Flags & CC_SHOWHELP))
       ShowWindow( GetDlgItem(hDlg,0x40e), SW_HIDE);
@@ -196,7 +196,7 @@ LRESULT CC_WMCommand16( HWND hDlg, WPARAM wParam, LPARAM lParam, WORD notifyCode
     UINT cokmsg;
     HDC hdc;
     COLORREF *cr;
-    LCCPRIV lpp = (LCCPRIV)GetWindowLongA(hDlg, DWL_USER);
+    LCCPRIV lpp = (LCCPRIV)GetWindowLongPtrW(hDlg, DWLP_USER);
     TRACE("CC_WMCommand wParam=%x lParam=%lx\n", wParam, lParam);
     switch (wParam)
     {
@@ -334,7 +334,7 @@ BOOL16 CALLBACK ColorDlgProc16( HWND16 hDlg16, UINT16 message,
     BOOL16 res;
     HWND hDlg = HWND_32(hDlg16);
 
-    LCCPRIV lpp = (LCCPRIV)GetWindowLongA(hDlg, DWL_USER);
+    LCCPRIV lpp = (LCCPRIV)GetWindowLongPtrW(hDlg, DWLP_USER);
     if (message != WM_INITDIALOG)
     {
         if (!lpp)
@@ -360,7 +360,7 @@ BOOL16 CALLBACK ColorDlgProc16( HWND16 hDlg16, UINT16 message,
 	                DeleteObject(lpp->hbmMem);
                         HeapFree(GetProcessHeap(), 0, lpp->lpcc);
                         HeapFree(GetProcessHeap(), 0, lpp);
-	                SetWindowLongA(hDlg, DWL_USER, 0L); /* we don't need it anymore */
+	                SetWindowLongPtrW(hDlg, DWLP_USER, 0); /* we don't need it anymore */
 	                break;
 	  case WM_COMMAND:
 	                if (CC_WMCommand16(hDlg, wParam, lParam,

@@ -590,7 +590,7 @@ LRESULT CFn_WMInitDialog(HWND hDlg, WPARAM wParam, LPARAM lParam,
     HCURSOR hcursor=SetCursor(LoadCursorW(0,(LPWSTR)IDC_WAIT));
     static const WCHAR strColorName[] = {'[','c','o','l','o','r',' ','n','a','m','e',']',0};
 
-    SetPropW(hDlg, strWineFontData, (HANDLE)lParam);
+    SetPropW(hDlg, strWineFontData, (HANDLE)lpcf);
     lpxx=lpcf->lpLogFont;
     TRACE("WM_INITDIALOG lParam=%08lX\n", lParam);
 
@@ -697,7 +697,7 @@ LRESULT CFn_WMInitDialog(HWND hDlg, WPARAM wParam, LPARAM lParam,
         SendMessageW(hDlg, WM_COMMAND, MAKEWPARAM(cmb1, CBN_SELCHANGE),
                 (LPARAM)GetDlgItem(hDlg,cmb1));
     }
-    if (lpcf->Flags & CF_USESTYLE && lpcf->lpszStyle)
+    if ((lpcf->Flags & CF_USESTYLE) && lpcf->lpszStyle)
     {
         j=SendDlgItemMessageW(hDlg,cmb2,CB_FINDSTRING,-1,(LONG)lpcf->lpszStyle);
         if (j!=CB_ERR)
@@ -1041,7 +1041,7 @@ LRESULT CFn_WMDestroy(HWND hwnd, WPARAM wParam, LPARAM lParam, LPCHOOSEFONTW lpc
     WideCharToMultiByte(CP_ACP, 0, lpcfw->lpLogFont->lfFaceName,
                         LF_FACESIZE, lpcfa->lpLogFont->lfFaceName, LF_FACESIZE, 0, 0);
 
-    if(lpcfw->lpszStyle)  {
+    if((lpcfw->Flags & CF_USESTYLE) && lpcfw->lpszStyle) {
         len = WideCharToMultiByte(CP_ACP, 0, lpcfw->lpszStyle, -1, NULL, -1, 0, 0);
         WideCharToMultiByte(CP_ACP, 0, lpcfw->lpszStyle, -1, lpcfa->lpszStyle, len, 0, 0);
         HeapFree(GetProcessHeap(), 0, lpcfw->lpszStyle);
@@ -1135,13 +1135,13 @@ INT_PTR CALLBACK FormatCharDlgProcA(HWND hDlg, UINT uMsg, WPARAM wParam,
         MultiByteToWideChar(CP_ACP, 0, lpcfa->lpLogFont->lfFaceName,
                             LF_FACESIZE, lpcfw->lpLogFont->lfFaceName, LF_FACESIZE);
 
-        if(lpcfa->lpszStyle)  {
+        if((lpcfa->Flags & CF_USESTYLE) && lpcfa->lpszStyle)  {
             len = MultiByteToWideChar(CP_ACP, 0, lpcfa->lpszStyle, -1, NULL, 0);
             lpcfw->lpszStyle = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR));
             MultiByteToWideChar(CP_ACP, 0, lpcfa->lpszStyle, -1, lpcfw->lpszStyle, len);
         }
 
-        if(lpcfa->lpTemplateName)  {
+        if((lpcfa->Flags & CF_ENABLETEMPLATE) && lpcfa->lpTemplateName) {
             len = MultiByteToWideChar(CP_ACP, 0, lpcfa->lpTemplateName, -1, NULL, 0);
             lpcfw->lpTemplateName = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR));
             MultiByteToWideChar(CP_ACP, 0, lpcfa->lpTemplateName,
