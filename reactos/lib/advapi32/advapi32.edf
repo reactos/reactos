@@ -1,4 +1,4 @@
-; $Id: advapi32.edf,v 1.23 2003/07/20 22:11:41 ekohl Exp $
+; $Id: advapi32.edf,v 1.24 2003/08/18 22:19:25 silverblade Exp $
 ;
 ; advapi32.edf
 ;
@@ -152,7 +152,9 @@ GetSecurityDescriptorGroup=GetSecurityDescriptorGroup@12
 GetSecurityDescriptorLength=GetSecurityDescriptorLength@4
 GetSecurityDescriptorOwner=GetSecurityDescriptorOwner@12
 GetSecurityDescriptorSacl=GetSecurityDescriptorSacl@16
-;GetSecurityInfo=GetSecurityInfo@32
+GetSecurityInfo=GetSecurityInfo@32
+GetSecurityInfoExA=GetSecurityInfoExA@36
+GetSecurityInfoExW=GetSecurityInfoExW@36
 GetServiceDisplayNameA=GetServiceDisplayNameA@16
 GetServiceDisplayNameW=GetServiceDisplayNameW@16
 GetServiceKeyNameA=GetServiceKeyNameA@16

@@ -45,7 +45,8 @@
 #define SE_SELF_RELATIVE	(32768)
 #endif
 
-typedef ULONG ACCESS_MODE, *PACCESS_MODE;
+// This is defined in W32API:
+// typedef ULONG ACCESS_MODE, *PACCESS_MODE;
 
 #if 0
 typedef struct _ACE_HEADER

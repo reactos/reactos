@@ -4,15 +4,18 @@
  * FILE:            lib/advapi32/sec/sec.c
  * PURPOSE:         Registry functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
- *		    Steven Edwards ( Steven_Ed4153@yahoo.com )
+ *		            Steven Edwards ( Steven_Ed4153@yahoo.com )
+ *                  Andrew Greenwood ( silverblade_uk@hotmail.com )
  * UPDATE HISTORY:
  *                  Created 01/11/98
  *                  Added a few new stubs 6/27/03
+ *                  Added stubs for GetSecurityInfo/Ex 8/18/03
  */
 
 #define NTOS_MODE_USER
-#include <ntos.h>
 #include <windows.h>
+#include <accctrl.h>
+#include <ntos.h>
 
 
 /*
@@ -464,4 +467,62 @@ SetFileSecurityA (
 {
   return(FALSE);
 }
+
+
+/*
+ * @unimplemented
+ */
+STDCALL DWORD GetSecurityInfo (
+    HANDLE handle,
+    SE_OBJECT_TYPE ObjectType,
+    SECURITY_INFORMATION SecurityInfo,
+    PSID *ppsidOwner,
+    PSID *ppsidGroup,
+    PACL *ppDacl,
+    PACL *ppSacl,
+    PSECURITY_DESCRIPTOR *ppSecurityDescriptor
+    )
+{
+    return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+STDCALL DWORD GetSecurityInfoExA(
+    HANDLE hObject,
+    SE_OBJECT_TYPE ObjectType,
+    SECURITY_INFORMATION SecurityInfo,
+    LPCSTR lpProvider,
+    LPCSTR lpProperty,
+    PACTRL_ACCESS *ppAccessList,
+    PACTRL_AUDIT *ppAuditList,
+    LPCSTR *lppOwner,
+    LPCSTR *lppGroup
+    )
+{
+    return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+STDCALL DWORD GetSecurityInfoExW(
+    HANDLE hObject,
+    SE_OBJECT_TYPE ObjectType,
+    SECURITY_INFORMATION SecurityInfo,
+    LPCWSTR lpProvider,
+    LPCWSTR lpProperty,
+    PACTRL_ACCESS *ppAccessList,
+    PACTRL_AUDIT *ppAuditList,
+    LPWSTR *lppOwner,
+    LPWSTR *lppGroup
+    )
+{
+    return FALSE;
+}
+
+
 /* EOF */

@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.22 2003/07/16 13:29:01 royce Exp $
+; $Id: msvcrt.def,v 1.23 2003/08/18 22:19:25 silverblade Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -431,7 +431,7 @@ _rotr
 ; _safe_fprem1
 _scalb
 _searchenv
-; _seh_longjmp_unwind
+_seh_longjmp_unwind
 ; _set_error_mode
 ; _set_sbh_threshold
 _seterrormode
