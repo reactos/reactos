@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.35 2003/12/19 19:30:05 weiden Exp $
+/* $Id: misc.c,v 1.36 2003/12/20 15:42:47 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -588,8 +588,8 @@ NtUserGetGUIThreadInfo(
     return FALSE;
   }
   
-  CaretInfo = ThrdCaretInfo(Thread->Win32Thread);
   MsgQueue = (PUSER_MESSAGE_QUEUE)Desktop->ActiveMessageQueue;
+  CaretInfo = MsgQueue->CaretInfo;
   
   SafeGui.flags = (CaretInfo->Visible ? GUI_CARETBLINKING : 0);
   if(MsgQueue->MenuOwner)

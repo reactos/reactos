@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.51 2003/12/19 19:30:05 weiden Exp $
+/* $Id: msgqueue.c,v 1.52 2003/12/20 15:42:47 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -42,6 +42,7 @@
 #include <include/input.h>
 #include <include/cursoricon.h>
 #include <include/focus.h>
+#include <include/caret.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -810,6 +811,7 @@ VOID FASTCALL
 MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQueue)
 {
   MessageQueue->Thread = Thread;
+  MessageQueue->CaretInfo = (PTHRDCARETINFO)(MessageQueue + 1);
   InitializeListHead(&MessageQueue->PostedMessagesListHead);
   InitializeListHead(&MessageQueue->SentMessagesListHead);
   InitializeListHead(&MessageQueue->HardwareMessagesListHead);
@@ -846,7 +848,7 @@ MsqCreateMessageQueue(struct _ETHREAD *Thread)
   PUSER_MESSAGE_QUEUE MessageQueue;
 
   MessageQueue = (PUSER_MESSAGE_QUEUE)ExAllocatePool(PagedPool,
-				   sizeof(USER_MESSAGE_QUEUE));
+				   sizeof(USER_MESSAGE_QUEUE) + sizeof(THRDCARETINFO));
   if (!MessageQueue)
     {
       return NULL;

@@ -3,6 +3,7 @@
 
 #include <internal/ex.h>
 #include <windows.h>
+#include "caret.h"
 #include "hook.h"
 
 typedef struct _USER_MESSAGE
@@ -74,6 +75,9 @@ typedef struct _USER_MESSAGE_QUEUE
   HWND MenuOwner;
   /* Identifes the menu state */
   BYTE MenuState;
+  /* Caret information for this queue */
+  PTHRDCARETINFO CaretInfo;
+  
   /* Window hooks */
   PHOOKTABLE Hooks;
 

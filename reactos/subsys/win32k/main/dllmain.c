@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.62 2003/12/13 22:38:29 weiden Exp $
+/* $Id: dllmain.c,v 1.63 2003/12/20 15:42:47 weiden Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -216,7 +216,7 @@ DllMain (
 			    Win32kThreadCallback,
 			    0,
 			    0,
-			    sizeof(W32THREAD) + sizeof(THRDCARETINFO),
+			    sizeof(W32THREAD),
 			    sizeof(W32PROCESS));
 
   WinPosSetupInternalPos();
