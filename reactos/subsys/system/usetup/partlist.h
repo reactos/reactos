@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.h,v 1.7 2003/02/27 14:42:43 ekohl Exp $
+/* $Id: partlist.h,v 1.8 2003/04/05 15:36:34 chorns Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.h
@@ -106,6 +106,11 @@ CreatePartitionList(SHORT Left,
 		    SHORT Top,
 		    SHORT Right,
 		    SHORT Bottom);
+
+BOOLEAN
+MarkPartitionActive(ULONG DiskNumber,
+			ULONG PartitionNumber,
+			PPARTDATA ActivePartition);
 
 VOID
 DestroyPartitionList(PPARTLIST List);

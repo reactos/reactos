@@ -1,5 +1,27 @@
 2003-04-05  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* bootcd.bat: Install dosmbr.bin.
+	* drivers/storage/disk/disk.c (DiskClassDeviceControl): Pass physical
+	device object to IoWritePartitionTable().
+	* ntoskrnl/io/xhaldrv.c (xHalReadMBR): New function.
+	(xHalWriteMBR): Ditto.
+	(xHalExamineMBR): Use xHalReadMBR() to read MBR.
+	(xHalIoWritePartitionTable): Partial implement.
+	* subsys/system/usetup/bootsup.c (InstallMBRBootCodeToDisk): New function.
+	* subsys/system/usetup/bootsup.h (InstallMBRBootCodeToDisk): Prototype.
+	* subsys/system/usetup/partlist.c (CreatePartitionListNoGUI): New function.
+	(CreatePartitionList): Use CreatePartitionListNoGUI() to create partition
+	list.
+	(GetPartitionInformation): New function.
+	(MarkPartitionActive): Ditto.
+	* subsys/system/usetup/partlist.h (MarkPartitionActive): Prototype.
+	* subsys/system/usetup/usetup.c (SelectPartitionPage): Make SystemRootPath
+	point to the selected partition if no partitions are active.
+	(BootLoaderPage): If no partitions are active, then install a DOS MBR and
+	mark the selected partition active.
+
+2003-04-05  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* Makefile: Add bootcd target.
 	(BOOTCD_INSTALL): Set for bootcd install.
 	* rules.mak (TOPDIR): Define on windows.

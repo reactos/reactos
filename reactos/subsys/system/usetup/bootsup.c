@@ -922,6 +922,165 @@ CHECKPOINT1;
 
 
 NTSTATUS
+InstallMBRBootCodeToDisk(PWSTR SrcPath,
+			   PWSTR RootPath)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  IO_STATUS_BLOCK IoStatusBlock;
+  UNICODE_STRING Name;
+  HANDLE FileHandle;
+  NTSTATUS Status;
+  PUCHAR OrigBootSector;
+  PUCHAR NewBootSector;
+
+  /* Allocate buffer for original bootsector */
+  OrigBootSector = (PUCHAR)RtlAllocateHeap(ProcessHeap,
+					   0,
+					   SECTORSIZE);
+  if (OrigBootSector == NULL)
+    return(STATUS_INSUFFICIENT_RESOURCES);
+
+  /* Read current boot sector into buffer */
+  RtlInitUnicodeString(&Name,
+		       RootPath);
+
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &Name,
+			     OBJ_CASE_INSENSITIVE,
+			     NULL,
+			     NULL);
+
+  Status = NtOpenFile(&FileHandle,
+		      FILE_READ_ACCESS,
+		      &ObjectAttributes,
+		      &IoStatusBlock,
+		      0,
+		      FILE_SYNCHRONOUS_IO_ALERT);
+  if (!NT_SUCCESS(Status))
+  {
+    RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
+    return(Status);
+  }
+
+  Status = NtReadFile(FileHandle,
+		      NULL,
+		      NULL,
+		      NULL,
+		      &IoStatusBlock,
+		      OrigBootSector,
+		      SECTORSIZE,
+		      NULL,
+		      NULL);
+  NtClose(FileHandle);
+  if (!NT_SUCCESS(Status))
+  {
+    RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
+    return(Status);
+  }
+
+
+  /* Allocate buffer for new bootsector */
+  NewBootSector = (PUCHAR)RtlAllocateHeap(ProcessHeap,
+					  0,
+					  SECTORSIZE);
+  if (NewBootSector == NULL)
+  {
+    RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
+    return(STATUS_INSUFFICIENT_RESOURCES);
+  }
+
+  /* Read new bootsector from SrcPath */
+  RtlInitUnicodeString(&Name,
+		       SrcPath);
+
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &Name,
+			     OBJ_CASE_INSENSITIVE,
+			     NULL,
+			     NULL);
+
+  Status = NtOpenFile(&FileHandle,
+		      FILE_READ_ACCESS,
+		      &ObjectAttributes,
+		      &IoStatusBlock,
+		      0,
+		      FILE_SYNCHRONOUS_IO_ALERT);
+  if (!NT_SUCCESS(Status))
+  {
+    RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
+    RtlFreeHeap(ProcessHeap, 0, NewBootSector);
+    return(Status);
+  }
+
+  Status = NtReadFile(FileHandle,
+		      NULL,
+		      NULL,
+		      NULL,
+		      &IoStatusBlock,
+		      NewBootSector,
+		      SECTORSIZE,
+		      NULL,
+		      NULL);
+  NtClose(FileHandle);
+  if (!NT_SUCCESS(Status))
+  {
+    RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
+    RtlFreeHeap(ProcessHeap, 0, NewBootSector);
+    return(Status);
+  }
+
+  /* Copy partition table from old MBR to new */
+  memcpy((NewBootSector + 446), (OrigBootSector + 446), 4*16 /* Length of partition table */);
+
+  /* Free the original boot sector */
+  RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
+
+  /* Write new bootsector to RootPath */
+  RtlInitUnicodeString(&Name,
+		       RootPath);
+
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &Name,
+			     0,
+			     NULL,
+			     NULL);
+
+  Status = NtCreateFile(&FileHandle,
+			FILE_WRITE_ACCESS,
+			&ObjectAttributes,
+			&IoStatusBlock,
+			NULL,
+			FILE_ATTRIBUTE_NORMAL,
+			0,
+			FILE_OVERWRITE_IF,
+			FILE_SYNCHRONOUS_IO_ALERT | FILE_SEQUENTIAL_ONLY,
+			NULL,
+			0);
+  if (!NT_SUCCESS(Status))
+  {
+    RtlFreeHeap(ProcessHeap, 0, NewBootSector);
+    return(Status);
+  }
+
+  Status = NtWriteFile(FileHandle,
+		       NULL,
+		       NULL,
+		       NULL,
+		       &IoStatusBlock,
+		       NewBootSector,
+		       SECTORSIZE,
+		       NULL,
+		       NULL);
+  NtClose(FileHandle);
+
+  /* Free the new boot sector */
+  RtlFreeHeap(ProcessHeap, 0, NewBootSector);
+
+  return(Status);
+}
+
+
+NTSTATUS
 InstallFat16BootCodeToDisk(PWSTR SrcPath,
 			   PWSTR RootPath)
 {

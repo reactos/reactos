@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.23 2003/03/28 22:45:47 ekohl Exp $
+/* $Id: disk.c,v 1.24 2003/04/05 15:36:34 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -923,7 +923,7 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	      }
 	    else
 	      {
-		Status = IoWritePartitionTable(DeviceExtension->DeviceObject,
+		Status = IoWritePartitionTable(DeviceExtension->PhysicalDevice,
 					       DeviceExtension->DiskGeometry->BytesPerSector,
 					       DeviceExtension->DiskGeometry->SectorsPerTrack,
 					       DeviceExtension->DiskGeometry->TracksPerCylinder,

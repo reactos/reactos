@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.29 2003/03/28 22:47:33 ekohl Exp $
+/* $Id: xhaldrv.c,v 1.30 2003/04/05 15:36:34 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -30,16 +30,16 @@
 
 typedef struct _PARTITION
 {
-  unsigned char   BootFlags;
-  unsigned char   StartingHead;
-  unsigned char   StartingSector;
-  unsigned char   StartingCylinder;
-  unsigned char   PartitionType;
-  unsigned char   EndingHead;
-  unsigned char   EndingSector;
-  unsigned char   EndingCylinder;
-  unsigned int  StartingBlock;
-  unsigned int  SectorCount;
+  unsigned char   BootFlags;					/* bootable?  0=no, 128=yes  */
+  unsigned char   StartingHead;					/* beginning head number */
+  unsigned char   StartingSector;				/* beginning sector number */
+  unsigned char   StartingCylinder;				/* 10 bit nmbr, with high 2 bits put in begsect */
+  unsigned char   PartitionType;				/* Operating System type indicator code */
+  unsigned char   EndingHead;					/* ending head number */
+  unsigned char   EndingSector;					/* ending sector number */
+  unsigned char   EndingCylinder;				/* also a 10 bit nmbr, with same high 2 bit trick */
+  unsigned int  StartingBlock;					/* first sector relative to start of disk */
+  unsigned int  SectorCount;					/* number of sectors in partition */
 } PACKED PARTITION, *PPARTITION;
 
 typedef struct _PARTITION_TABLE
@@ -174,22 +174,23 @@ xHalQueryDriveLayout(IN PUNICODE_STRING DeviceName,
 }
 
 
-VOID FASTCALL
-xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
+static NTSTATUS
+xHalReadMBR(IN PDEVICE_OBJECT DeviceObject,
 	       IN ULONG SectorSize,
-	       IN ULONG MBRTypeIdentifier,
 	       OUT PVOID *Buffer)
 {
   KEVENT Event;
   IO_STATUS_BLOCK StatusBlock;
   LARGE_INTEGER Offset;
   PUCHAR Sector;
-  PULONG Shift;
-  PMBR Mbr;
   PIRP Irp;
   NTSTATUS Status;
 
-  DPRINT("xHalExamineMBR()\n");
+  DPRINT("xHalReadMBR()\n");
+
+  assert(DeviceObject);
+  assert(Buffer);
+
   *Buffer = NULL;
 
   if (SectorSize < 512)
@@ -200,7 +201,7 @@ xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
   Sector = (PUCHAR)ExAllocatePool(PagedPool,
 				  SectorSize);
   if (Sector == NULL)
-    return;
+    return STATUS_NO_MEMORY;
 
   KeInitializeEvent(&Event,
 		    NotificationEvent,
@@ -233,6 +234,90 @@ xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
       DPRINT("Reading MBR failed (Status 0x%08lx)\n",
 	     Status);
       ExFreePool(Sector);
+      return Status;
+    }
+
+  *Buffer = (PVOID)Sector;
+  return Status;
+}
+
+
+static NTSTATUS
+xHalWriteMBR(IN PDEVICE_OBJECT DeviceObject,
+	       IN ULONG SectorSize,
+	       OUT PVOID Sector)
+{
+  KEVENT Event;
+  IO_STATUS_BLOCK StatusBlock;
+  LARGE_INTEGER Offset;
+  PIRP Irp;
+  NTSTATUS Status;
+
+  DPRINT("xHalWriteMBR()\n");
+
+  if (SectorSize < 512)
+    SectorSize = 512;
+  if (SectorSize > 4096)
+    SectorSize = 4096;
+
+  KeInitializeEvent(&Event,
+		    NotificationEvent,
+		    FALSE);
+
+  /* Write MBR (Master Boot Record) */
+  Offset.QuadPart = 0;
+  Irp = IoBuildSynchronousFsdRequest(IRP_MJ_WRITE,
+				     DeviceObject,
+				     Sector,
+				     SectorSize,
+				     &Offset,
+				     &Event,
+				     &StatusBlock);
+
+  Status = IoCallDriver(DeviceObject,
+			Irp);
+  if (Status == STATUS_PENDING)
+    {
+      KeWaitForSingleObject(&Event,
+			    Executive,
+			    KernelMode,
+			    FALSE,
+			    NULL);
+      Status = StatusBlock.Status;
+    }
+
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("Writing MBR failed (Status 0x%08lx)\n",
+	     Status);
+      return Status;
+    }
+
+  return Status;
+}
+
+
+VOID FASTCALL
+xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
+	       IN ULONG SectorSize,
+	       IN ULONG MBRTypeIdentifier,
+	       OUT PVOID *Buffer)
+{
+  PUCHAR Sector;
+  PULONG Shift;
+  PMBR Mbr;
+  NTSTATUS Status;
+
+  DPRINT("xHalExamineMBR()\n");
+
+  *Buffer = NULL;
+
+  Status = xHalReadMBR(DeviceObject,
+	SectorSize,
+	(PVOID *) &Sector);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("\n");
       return;
     }
 
@@ -867,7 +952,125 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
 			  IN ULONG NumberOfHeads,
 			  IN PDRIVE_LAYOUT_INFORMATION PartitionBuffer)
 {
-  return(STATUS_NOT_IMPLEMENTED);
+  PPARTITION_TABLE PartitionTable;
+  NTSTATUS Status;
+  PMBR MbrBuffer;
+  ULONG i;
+
+  DPRINT("xHalIoWritePartitionTable(%p %lu %lu %p)\n",
+	 DeviceObject,
+	 SectorSize,
+     SectorsPerTrack,
+	 PartitionBuffer);
+
+  assert(DeviceObject);
+  assert(PartitionBuffer);
+
+  /* Check for 'Ontrack Disk Manager' */
+  xHalExamineMBR(DeviceObject,
+		 SectorSize,
+		 0x54,
+		 (PVOID *) &MbrBuffer);
+  if (MbrBuffer != NULL)
+    {
+      DPRINT1("Ontrack Disk Manager is not supported\n");
+      ExFreePool(MbrBuffer);
+      return STATUS_UNSUCCESSFUL;
+    }
+
+  /* Check for 'EZ-Drive' */
+  xHalExamineMBR(DeviceObject,
+		 SectorSize,
+		 0x55,
+		 (PVOID *) &MbrBuffer);
+  if (MbrBuffer != NULL)
+    {
+      DPRINT1("EZ-Drive is not supported\n");
+      ExFreePool(MbrBuffer);
+      return STATUS_UNSUCCESSFUL;
+    }
+
+
+  for (i = 0; i < PartitionBuffer->PartitionCount; i++)
+    {
+      if (IsContainerPartition(PartitionBuffer->PartitionEntry[i].PartitionType))
+        {
+          /* FIXME: Implement */
+          DPRINT1("Writing MBRs with extended partitions is not implemented\n");
+          ExFreePool(MbrBuffer);
+        }
+    }
+
+
+  ExFreePool(MbrBuffer);
+
+  Status = xHalReadMBR(DeviceObject,
+	SectorSize,
+	(PVOID *) &MbrBuffer);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("xHalReadMBR() failed with status 0x%.08x\n", Status);
+      return Status;
+    }
+
+  DPRINT1("WARNING: Only 'BootFlags' is implemented\n");
+
+  PartitionTable = (PPARTITION_TABLE)(&MbrBuffer->Partition[0]);
+
+  for (i = 0; i < PartitionBuffer->PartitionCount; i++)
+    {
+      //= PartitionBuffer->PartitionEntry[i].StartingOffset;
+      //= PartitionBuffer->PartitionEntry[i].PartitionLength;
+      //= PartitionBuffer->PartitionEntry[i].HiddenSectors;
+      //= PartitionBuffer->PartitionEntry[i].PartitionType;
+      //= PartitionBuffer->PartitionEntry[i].PartitionType;
+
+      if (PartitionBuffer->PartitionEntry[i].BootIndicator)
+        {
+          MbrBuffer->Partition[i].BootFlags |= 0x80;
+        }
+      else
+        {
+          MbrBuffer->Partition[i].BootFlags &= ~0x80;
+        }
+
+      //= PartitionBuffer->PartitionEntry[i].RecognizedPartition;
+      //= PartitionBuffer->PartitionEntry[i].RewritePartition;
+    }
+
+
+  Status = xHalWriteMBR(DeviceObject,
+	SectorSize,
+	(PVOID) MbrBuffer);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("xHalWriteMBR() failed with status 0x%.08x\n", Status);
+      ExFreePool(MbrBuffer);
+      return Status;
+    }
+
+#ifndef NDEBUG
+      for (i = 0; i < PARTITION_TBL_SIZE; i++)
+	{
+	  DPRINT1("  %d: flags:%2x type:%x start:%d:%d:%d end:%d:%d:%d stblk:%d count:%d\n",
+		  i,
+		  PartitionTable->Partition[i].BootFlags,
+		  PartitionTable->Partition[i].PartitionType,
+		  PartitionTable->Partition[i].StartingHead,
+		  PartitionTable->Partition[i].StartingSector & 0x3f,
+		  (((PartitionTable->Partition[i].StartingSector) & 0xc0) << 2) +
+		     PartitionTable->Partition[i].StartingCylinder,
+		  PartitionTable->Partition[i].EndingHead,
+		  PartitionTable->Partition[i].EndingSector,
+		  PartitionTable->Partition[i].EndingCylinder,
+		  PartitionTable->Partition[i].StartingBlock,
+		  PartitionTable->Partition[i].SectorCount);
+	}
+#endif
+
+  ExFreePool(MbrBuffer);
+
+  return(STATUS_SUCCESS);
 }
 
 /* EOF */

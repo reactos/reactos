@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.c,v 1.6 2003/01/17 13:18:15 ekohl Exp $
+/* $Id: partlist.c,v 1.7 2003/04/05 15:36:34 chorns Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.c
@@ -156,10 +156,7 @@ GetDriverName(PDISKENTRY DiskEntry)
 
 
 PPARTLIST
-CreatePartitionList(SHORT Left,
-		    SHORT Top,
-		    SHORT Right,
-		    SHORT Bottom)
+CreatePartitionListNoGUI()
 {
   PPARTLIST List;
   OBJECT_ATTRIBUTES ObjectAttributes;
@@ -179,10 +176,10 @@ CreatePartitionList(SHORT Left,
   if (List == NULL)
     return(NULL);
 
-  List->Left = Left;
-  List->Top = Top;
-  List->Right = Right;
-  List->Bottom = Bottom;
+  List->Left = 0;
+  List->Top = 0;
+  List->Right = 0;
+  List->Bottom = 0;
 
   List->Line = 0;
 
@@ -314,9 +311,188 @@ CreatePartitionList(SHORT Left,
   List->CurrentDisk = 0;
   List->CurrentPartition = 0;
 
+  return(List);
+}
+
+PPARTLIST
+CreatePartitionList(SHORT Left,
+		    SHORT Top,
+		    SHORT Right,
+		    SHORT Bottom)
+{
+  PPARTLIST List;
+
+  List = CreatePartitionListNoGUI();
+  if (List == NULL)
+    return(NULL);
+
+  List->Left = Left;
+  List->Top = Top;
+  List->Right = Right;
+  List->Bottom = Bottom;
+
   DrawPartitionList(List);
 
   return(List);
+}
+
+
+PPARTENTRY
+GetPartitionInformation(PPARTLIST List,
+			ULONG DiskNumber,
+			ULONG PartitionNumber,
+			PULONG PartEntryNumber)
+{
+  PPARTENTRY PartEntry;
+  ULONG i;
+
+  if (List->DiskArray == NULL)
+    {
+      return(FALSE);
+    }
+
+  if (DiskNumber >= List->DiskCount)
+    {
+      return(FALSE);
+    }
+
+  if (PartitionNumber >= List->DiskArray[DiskNumber].PartCount)
+    {
+      return(FALSE);
+    }
+
+  if (List->DiskArray[DiskNumber].FixedDisk != TRUE)
+    {
+      return(FALSE);
+    }
+
+  for (i = 0; i < List->DiskArray[DiskNumber].PartCount; i++)
+    {
+      PartEntry = &List->DiskArray[DiskNumber].PartArray[i];
+      if (PartEntry->PartNumber == PartitionNumber)
+        {
+          *PartEntryNumber = i;
+          return PartEntry;
+        }
+    }
+  return NULL;
+}
+
+BOOLEAN
+MarkPartitionActive(ULONG DiskNumber,
+			ULONG PartitionNumber,
+			PPARTDATA ActivePartition)
+{
+  PPARTLIST List;
+  PPARTENTRY PartEntry;
+  ULONG PartEntryNumber;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  DRIVE_LAYOUT_INFORMATION *LayoutBuffer;
+  IO_STATUS_BLOCK Iosb;
+  NTSTATUS Status;
+  WCHAR Buffer[MAX_PATH];
+  UNICODE_STRING Name;
+  HANDLE FileHandle;
+
+  List = CreatePartitionListNoGUI();
+  if (List == NULL)
+    {
+      return(FALSE);
+    }
+
+  PartEntry = GetPartitionInformation(List,
+			DiskNumber,
+			PartitionNumber,
+			&PartEntryNumber);
+  if (List == NULL)
+    {
+      DestroyPartitionList(List);
+      return(FALSE);
+    }
+
+
+  swprintf(Buffer,
+    L"\\Device\\Harddisk%d\\Partition0",
+    DiskNumber);
+  RtlInitUnicodeString(&Name, Buffer);
+
+  InitializeObjectAttributes(&ObjectAttributes,
+    &Name,
+    0,
+    NULL,
+    NULL);
+
+  Status = NtOpenFile(&FileHandle,
+    0x10001,
+    &ObjectAttributes,
+    &Iosb,
+    1,
+    FILE_SYNCHRONOUS_IO_NONALERT);
+  if (NT_SUCCESS(Status))
+    {
+	  LayoutBuffer = (DRIVE_LAYOUT_INFORMATION*)RtlAllocateHeap(ProcessHeap, 0, 8192);
+
+	  Status = NtDeviceIoControlFile(FileHandle,
+		NULL,
+		NULL,
+		NULL,
+		&Iosb,
+		IOCTL_DISK_GET_DRIVE_LAYOUT,
+		NULL,
+		0,
+		LayoutBuffer,
+		8192);
+	  if (!NT_SUCCESS(Status))
+	    {
+          NtClose(FileHandle);
+          RtlFreeHeap(ProcessHeap, 0, LayoutBuffer);
+          DestroyPartitionList(List);
+          return FALSE;
+        }
+
+
+      LayoutBuffer->PartitionEntry[PartEntryNumber].BootIndicator = TRUE;
+
+      Status = NtDeviceIoControlFile(FileHandle,
+        NULL,
+        NULL,
+        NULL,
+        &Iosb,
+        IOCTL_DISK_SET_DRIVE_LAYOUT,
+        LayoutBuffer,
+        8192,
+        NULL,
+        0);
+      if (!NT_SUCCESS(Status))
+        {
+          NtClose(FileHandle);
+          RtlFreeHeap(ProcessHeap, 0, LayoutBuffer);
+          DestroyPartitionList(List);
+          return FALSE;
+        }
+    }
+  else
+    {
+      NtClose(FileHandle);
+      RtlFreeHeap(ProcessHeap, 0, LayoutBuffer);
+      DestroyPartitionList(List);
+      return FALSE;
+    }
+
+  NtClose(FileHandle);
+  RtlFreeHeap(ProcessHeap, 0, LayoutBuffer);
+
+  PartEntry->Active = TRUE;
+  if (!GetActiveBootPartition(List, ActivePartition))
+  {
+    DestroyPartitionList(List);
+    DPRINT("GetActiveBootPartition() failed\n");
+    return FALSE;
+  }
+
+  DestroyPartitionList(List);
+
+  return TRUE;
 }
 
 
@@ -838,7 +1014,9 @@ GetSelectedPartition(PPARTLIST List,
   PartEntry = &DiskEntry->PartArray[List->CurrentPartition];
 
   if (PartEntry->Used == FALSE)
-    return(FALSE);
+    {
+      return(FALSE);
+    }
 
   /* Copy disk-specific data */
   Data->DiskSize = DiskEntry->DiskSize;
@@ -870,7 +1048,6 @@ GetSelectedPartition(PPARTLIST List,
   Data->PartNumber = PartEntry->PartNumber;
   Data->PartType = PartEntry->PartType;
   Data->DriveLetter = PartEntry->DriveLetter;
-
   return(TRUE);
 }
 
@@ -889,7 +1066,9 @@ GetActiveBootPartition(PPARTLIST List,
   DiskEntry = &List->DiskArray[0];
 
   if (DiskEntry->FixedDisk == FALSE)
+  {
     return(FALSE);
+  }
 
   for (i = 0; i < DiskEntry->PartCount; i++)
     {
@@ -898,7 +1077,9 @@ GetActiveBootPartition(PPARTLIST List,
 	  PartEntry = &DiskEntry->PartArray[i];
 
 	  if (PartEntry->Used == FALSE)
+      {
 	    return(FALSE);
+      }
 
 	  /* Copy disk-specific data */
 	  Data->DiskSize = DiskEntry->DiskSize;

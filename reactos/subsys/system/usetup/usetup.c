@@ -687,10 +687,22 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 				 PathBuffer);
 
 	  RtlFreeUnicodeString(&SystemRootPath);
-	  swprintf(PathBuffer,
-		   L"\\Device\\Harddisk%lu\\Partition%lu",
-		   ActivePartition.DiskNumber,
-		   ActivePartition.PartNumber);
+
+      if (ActivePartitionValid)
+        {
+	      swprintf(PathBuffer,
+		    L"\\Device\\Harddisk%lu\\Partition%lu",
+		    ActivePartition.DiskNumber,
+		    ActivePartition.PartNumber);
+        }
+      else
+        {
+          /* We mark the selected partition as bootable */
+	      swprintf(PathBuffer,
+		    L"\\Device\\Harddisk%lu\\Partition%lu",
+		    PartData.DiskNumber,
+		    PartData.PartNumber);
+        }
 	  RtlCreateUnicodeString(&SystemRootPath,
 				 PathBuffer);
 
@@ -1392,6 +1404,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
   PINICACHE IniCache;
   PINICACHESECTION IniSection;
   NTSTATUS Status;
+  BOOLEAN InstallMBR = FALSE;
 
   SetTextXY(6, 8, "Installing the boot loader");
 
@@ -1399,19 +1412,63 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
   if (ActivePartitionValid == FALSE)
     {
-      DPRINT1("Error: no active partition found\n");
-      PopupError("Setup could not find an active partiton\n",
-		 "ENTER = Reboot computer");
+      /* Mark the chosen partition as active since there is no active
+         partition now */
+     
+		if (!MarkPartitionActive(PartData.DiskNumber,
+			PartData.PartNumber, &ActivePartition))
+		{
+		      PopupError("Setup could not mark the system partiton active\n",
+				 "ENTER = Reboot computer");
+		
+		      while(TRUE)
+			{
+			  ConInKey(Ir);
+		
+			  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+			    {
+			      return(QUIT_PAGE);
+			    }
+			}
+		}
+        InstallMBR = TRUE;
+    }
 
-      while(TRUE)
-	{
-	  ConInKey(Ir);
+  if (InstallMBR)
+    {
+          WCHAR PathBuffer[MAX_PATH];
+	      UNICODE_STRING SystemRootMBRPath;
+	
+		  RtlFreeUnicodeString(&SystemRootMBRPath);
+		  swprintf(PathBuffer,
+			   L"\\Device\\Harddisk%lu\\Partition0",
+			   PartData.DiskNumber);
+		  RtlCreateUnicodeString(&SystemRootMBRPath,
+					 PathBuffer);
 
-	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return(QUIT_PAGE);
-	    }
-	}
+		  /* Install MBR bootcode */
+		  wcscpy(SrcPath, SourceRootPath.Buffer);
+		  wcscat(SrcPath, L"\\loader\\dosmbr.bin");
+	
+		  DPRINT1("Install MBR bootcode: %S ==> %S\n", SrcPath, SystemRootMBRPath.Buffer);
+		  Status = InstallMBRBootCodeToDisk(SrcPath,
+						      SystemRootMBRPath.Buffer);
+		  if (!NT_SUCCESS(Status))
+		  {
+		    DPRINT1("InstallMBRBootCodeToDisk() failed (Status %lx)\n", Status);
+		    PopupError("Setup failed to install the MBR bootcode.",
+			       "ENTER = Reboot computer");
+	
+		    while(TRUE)
+		    {
+		      ConInKey(Ir);
+	
+		      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+		      {
+			return(QUIT_PAGE);
+		      }
+		    }
+		  }
     }
 
   if (ActivePartition.PartType == PARTITION_ENTRY_UNUSED)

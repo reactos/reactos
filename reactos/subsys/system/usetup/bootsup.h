@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bootsup.h,v 1.3 2003/01/30 14:41:45 ekohl Exp $
+/* $Id: bootsup.h,v 1.4 2003/04/05 15:36:34 chorns Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/bootsup.h
@@ -51,6 +51,10 @@ InstallFat16BootCodeToFile(PWSTR SrcPath,
 NTSTATUS
 InstallFat32BootCodeToFile(PWSTR SrcPath,
 			   PWSTR DstPath,
+			   PWSTR RootPath);
+
+NTSTATUS
+InstallMBRBootCodeToDisk(PWSTR SrcPath,
 			   PWSTR RootPath);
 
 NTSTATUS

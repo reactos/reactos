@@ -15,6 +15,7 @@ rem copy FreeLoader files
 copy /Y	%FREELDR_DIR%\bootsect\isoboot.bin %BOOTCD_DIR%
 copy /Y %FREELDR_DIR%\freeldr\obj\i386\setupldr.sys %BOOTCD_DIR%\disk\reactos
 
+copy /Y %FREELDR_DIR%\bootsect\dosmbr.bin %BOOTCD_DIR%\disk\loader
 copy /Y %FREELDR_DIR%\bootsect\ext2.bin %BOOTCD_DIR%\disk\loader
 copy /Y %FREELDR_DIR%\bootsect\fat.bin %BOOTCD_DIR%\disk\loader
 copy /Y %FREELDR_DIR%\bootsect\fat32.bin %BOOTCD_DIR%\disk\loader
