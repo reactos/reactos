@@ -2020,6 +2020,7 @@ unsigned long CCabinet::ReadString(char* String, unsigned long MaxLength)
     /* Back up some bytes */
     Size = (BytesRead - Size) - 1;
 #if defined(WIN32)
+  	SetLastError(NO_ERROR);
   	(unsigned int)SetFilePointer(FileHandle,
   		-(long)Size,
   		NULL,
@@ -2055,12 +2056,14 @@ unsigned long CCabinet::ReadFileTable()
 
     /* Seek to file table */
 #if defined(WIN32)
+  	SetLastError(NO_ERROR);
   	(unsigned int)SetFilePointer(FileHandle,
   		CABHeader.FileTableOffset,
   		NULL,
   		FILE_BEGIN);
   	if (GetLastError() != NO_ERROR) {
   		DPRINT(MIN_TRACE, ("SetFilePointer() failed.\n"));
+  		DPRINT(MIN_TRACE, ("Error: %lu\n", GetLastError()));
   		return CAB_STATUS_INVALID_CAB;
   	}
 #else
@@ -2136,6 +2139,7 @@ unsigned long CCabinet::ReadDataBlocks(PCFFOLDER_NODE FolderNode)
 
         /* Seek to data block */
 #if defined(WIN32)
+    	SetLastError(NO_ERROR);
     	(unsigned int)SetFilePointer(FileHandle,
     		AbsoluteOffset,
     		NULL,
