@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: draw.c,v 1.19 2003/08/15 13:44:30 royce Exp $
+/* $Id: draw.c,v 1.20 2003/08/17 02:51:42 silverblade Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -30,6 +30,10 @@
 
 #include <windows.h>
 #include <user32.h>
+
+// Needed for DrawState
+#include <string.h>
+#include <unicode.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -1598,6 +1602,221 @@ DrawFocusRect(
 }
 
 
+// These are internal functions, based on the WINE sources. Currently they
+// are only implemented for DSS_NORMAL and DST_TEXT, although some handling
+// for DST_BITMAP has been included.
+
+WINBOOL DrawStateDraw(HDC hdc, UINT type, DRAWSTATEPROC func, LPARAM lData,
+                      WPARAM wData, LPRECT rc, UINT dtflags, BOOL unicode)
+{
+//    HDC MemDC;
+//    HBITMAP MemBMP;
+    BOOL retval = FALSE;
+//    INT cx = rc->right - rc->left;
+//    INT cy = rc->bottom - rc->top;
+    
+    switch(type)
+    {
+        case DST_TEXT :
+        case DST_PREFIXTEXT :
+        {
+            if (unicode)
+                return DrawTextW(hdc, (LPWSTR)lData, (INT)wData, rc, dtflags);
+            else
+                return DrawTextA(hdc, (LPSTR)lData, (INT)wData, rc, dtflags);
+        }
+        
+        case DST_ICON :
+        {
+            // TODO
+            return retval;
+        }
+        
+        case DST_BITMAP :
+        {
+            // TODO
+            return retval;
+        }
+        
+        case DST_COMPLEX :
+        {
+            // TODO
+            return retval;
+        }
+    }
+    
+    return FALSE;
+}
+
+
+WINBOOL DoDrawState(
+  HDC hdc,
+  HBRUSH hbr,
+  DRAWSTATEPROC lpOutputFunc,
+  LPARAM lData,
+  WPARAM wData,
+  int x,
+  int y,
+  int cx,
+  int cy,
+  UINT fuFlags,
+  BOOL unicode)
+{
+    // AG: Experimental, unfinished, and most likely buggy! I haven't been
+    // able to test this - my intention was to implement some things needed
+    // by the button control.
+
+    if ((! lpOutputFunc) && (fuFlags & DST_COMPLEX))
+        return FALSE;
+    
+    UINT type = fuFlags & 0xf;
+    UINT state = fuFlags & 0x7ff0;    // Correct?
+    INT len = wData;
+    RECT rect, subrect;
+    UINT dtflags = DT_NOCLIP;
+    BOOL retval = FALSE;
+//    HBRUSH ourbrush = NULL;
+
+    // Call lpOutputFunc, if necessary
+    if (((type == DST_COMPLEX) || (type == DST_TEXT)) && (lpOutputFunc))
+        lpOutputFunc(hdc, lData, wData, cx, cy);
+
+    
+    DbgPrint("[draw.c] In DrawState()\n");
+    
+    if ((type == DST_TEXT || type == DST_PREFIXTEXT) && ! len)
+    {
+        // The string is NULL-terminated
+        if (unicode)
+            len = lstrlenW((LPWSTR) lData);
+        else
+            len = strlen((LPSTR) lData);
+    }
+    
+    // Identify the image size if not specified
+    if (!cx || !cy)
+    {
+        SIZE s;
+//        CURSORICONINFO *ici;
+        BITMAP bm;
+        
+        switch(type)  // TODO
+        {
+            case DST_TEXT :
+            case DST_PREFIXTEXT :
+            {
+                BOOL success;
+                if (unicode)
+                    success = GetTextExtentPoint32W(hdc, (LPWSTR) lData, len, &s);
+                else
+                    success = GetTextExtentPoint32A(hdc, (LPSTR) lData, len, &s);
+                    
+                if (!success) return FALSE;
+                break;
+            }
+
+            case DST_ICON :
+            {
+                // TODO
+                break;
+            }
+
+            case DST_BITMAP :
+            {
+                if (!GetObjectA((HBITMAP) lData, sizeof(bm), &bm))
+                    return FALSE;
+                
+                s.cx = bm.bmWidth;
+                s.cy = bm.bmHeight;
+                break;
+            }
+
+            case DST_COMPLEX :  // cx and cy must be set in this mode
+                return FALSE;
+        }
+        
+        if (! cx) cx = s.cx;
+        if (! cy) cy = s.cy;
+    }
+
+    SetRect(&rect, x, y, x + cx, y + cy);
+    SetRect(&subrect, 0, 0, cx, cy);
+    
+    // Flags for DrawText
+//    if (fuFlags & DSS_RIGHT)  // Undocumented
+//        dtflags |= DT_RIGHT;
+    if (type == DST_TEXT)
+        dtflags |= DT_NOPREFIX;
+        
+    // We need to do additional processing if not DSS_NORMAL   
+    if (state == DSS_NORMAL)
+    {
+        return DrawStateDraw(hdc, type, lpOutputFunc, lData, wData, &rect, dtflags, unicode);    
+    }
+
+    HDC MemDC = NULL;
+    HBITMAP MemBMP = NULL, OldBMP = NULL;
+
+    MemDC = CreateCompatibleDC(hdc);
+    if (! MemDC) goto cleanup;
+    
+    MemBMP = CreateCompatibleBitmap(hdc, cx, cy);
+    if (! MemBMP) goto cleanup;
+    
+    OldBMP = (HBITMAP) SelectObject(MemDC, MemBMP);
+    if (! OldBMP) goto cleanup;
+
+    DbgPrint("[draw.c] MemDC = 0x%x  MemBMP = 0x%x  OldBMP = 0x%x\n", MemDC, MemBMP, OldBMP);
+
+    // Copy the actual image into the memory DC (necessary?)
+    BitBlt(MemDC, 0, 0, cx, cy, hdc, x, y, SRCCOPY);
+
+
+    // Apply state(s?)
+
+    if (state & DSS_UNION)
+    {
+        // Dither the image
+        // TODO
+    }
+    
+    if (state & DSS_DISABLED)
+    {
+        hbr = CreateSolidBrush(GetSysColor(COLOR_3DHILIGHT));
+        if (! hbr) goto cleanup;
+    }
+    else if (! hbr)
+    {
+        hbr = (HBRUSH) GetStockObject(BLACK_BRUSH);
+    }
+
+//    else if (state & DSS_DEFAULT)
+//    ....
+
+    if (state & (DSS_DISABLED /*|DSS_DEFAULT*/))
+    {
+        // TODO
+    }
+    
+//    HBRUSH oldbrush = (HBRUSH) SelectObject(MemDC, ourbrush);
+
+    // Copy to hdc from MemDC    
+    if (! BitBlt(hdc, x, y, cx, cy, MemDC, 0, 0, SRCCOPY)) goto cleanup;
+    
+    DbgPrint("[draw.c] Success!\n");
+    
+    retval = TRUE;
+
+    
+    cleanup :
+        if (OldBMP) SelectObject(MemDC, OldBMP);
+        if (MemBMP) DeleteObject(MemBMP);
+        if (MemDC)  DeleteDC(MemDC);
+        
+        return retval;
+}
+
+
 /*
  * @unimplemented
  */
@@ -1615,8 +1834,7 @@ DrawStateA(
   int cy,
   UINT fuFlags)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+    return DoDrawState(hdc, hbr, lpOutputFunc, lData, wData, x, y, cx, cy, fuFlags, FALSE);
 }
 
 
@@ -1637,54 +1855,5 @@ DrawStateW(
   int cy,
   UINT fuFlags)
 {
-    // AG: Experimental, unfinished, and most likely buggy! I haven't been
-    // able to test this - my intention was to implement some things needed
-    // by the button control.
-    
-    DbgPrint("[draw.c] In DrawState()\n");
-
-    if ((! lpOutputFunc) && (fuFlags &  DST_COMPLEX))
-        return FALSE;
-
-    RECT r;
-    SetRect(&r, x, y, cx, cy);
-
-    HBITMAP MemBMP = CreateCompatibleBitmap(hdc, cx, cy);
-    HDC MemDC = CreateCompatibleDC(hdc);
-
-    HBITMAP OldBMP = (HBITMAP) SelectObject(MemDC, MemBMP);
-
-    // Does this work?    
-    SetBkColor(MemDC, GetBkColor(hdc));
-    // Test stuff...
-    FillRect(MemDC, &r, WHITE_BRUSH);
-
-    // Do drawing first
-
-    if (lpOutputFunc)
-        lpOutputFunc(MemDC, lData, wData, cx, cy);
-
-    else if (fuFlags & DST_TEXT)
-    {
-        int count;
-        if (wData == 0) count = -1;
-        else count = wData;
-        DrawTextW(MemDC, (WCHAR*) lData, count, &r, 0);
-    }
-    
-    // Now apply state effect
-    // not implemented yet ...
-
-
-    // Copy to hdc
-    
-    BitBlt(hdc, x, y, cx, cy, MemDC, 0, 0, SRCCOPY);
-
-    SelectObject(MemDC, OldBMP);
-    DeleteObject(MemBMP);
-    DeleteDC(MemDC);
-    
-    DbgPrint("[draw.c] Success!\n");
-
-    return TRUE;
+    return DoDrawState(hdc, hbr, lpOutputFunc, lData, wData, x, y, cx, cy, fuFlags, TRUE);
 }
