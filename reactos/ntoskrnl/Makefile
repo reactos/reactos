@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.113 2004/02/02 00:35:24 ekohl Exp $
+# $Id: Makefile,v 1.114 2004/02/21 09:20:33 gvg Exp $
 #
 # ReactOS Operating System
 #
@@ -51,6 +51,10 @@ endif
 
 # require os code to explicitly request A/W version of structs/functions
 CFLAGS += -D_DISABLE_TIDENTS
+
+CFLAGS += $(STD_CFLAGS)
+ASFLAGS += $(STD_ASFLAGS)
+RCFLAGS += $(STD_RCFLAGS)
 
 #
 # Build configuration
@@ -742,7 +746,7 @@ ke/main.o: ke/main.c $(PATH_TO_TOP)/include/reactos/buildno.h
 %.o: %.asm
 	$(NASM_CMD) $(NFLAGS) $< -o $@
 %.coff: %.rc
-	$(RC) $(RCINC) $< -o $@
+	$(RC) $(RCFLAGS) $< -o $@
 
 #
 #

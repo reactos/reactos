@@ -32,14 +32,15 @@ EXE_POSTFIX := .exe
 endif
 
 PATH_TO_TOP = ../../..
+W32API_PATH = $(PATH_TO_TOP)/w32api
 TOOLS_PATH = $(PATH_TO_TOP)/tools
 
 ifndef UNICODE
 UNICODE = 1
 endif
 
-CFLAGS	= -DWIN32 -D_ROS_ -D_WIN32_IE=0x0501 -D_WIN32_WINNT=0x0501 -fexceptions -Wall
-RCFLAGS	= -DWIN32 -D_ROS_ -D__WINDRES__
+CFLAGS	= -DWIN32 -D_ROS_ -D_WIN32_IE=0x0501 -D_WIN32_WINNT=0x0501 -fexceptions -Wall -I$(W32API_PATH)/include
+RCFLAGS	= -DWIN32 -D_ROS_ -D__WINDRES__ --include-dir $(W32API_PATH)/include
 LFLAGS	= -Wl,--subsystem,windows
 
 ifdef DEBUG

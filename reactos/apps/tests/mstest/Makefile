@@ -10,7 +10,7 @@ CLT_OBJECTS = msclient.o
 
 PROGS = msserver.exe msclient.exe
 
-BASE_CFLAGS = -I$(PATH_TO_TOP)/include -Wall -Werror
+CFLAGS = $(STD_CFLAGS)
 
 LIBS = $(SDK_PATH_LIB)/kernel32.a \
   $(SDK_PATH_LIB)/ntdll.a

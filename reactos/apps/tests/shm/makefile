@@ -10,7 +10,7 @@ CLT_OBJECTS= shmclt.o
 
 PROGS= shmsrv.exe shmclt.exe
 
-BASE_CFLAGS = -I$(PATH_TO_TOP)/include -Werror -Wall
+CFLAGS = $(STD_CFLAGS)
 
 LIBS = $(SDK_PATH_LIB)/kernel32.a \
   $(SDK_PATH_LIB)/ntdll.a

@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.52 2004/02/20 08:33:37 gvg Exp $
+# $Id: helper.mk,v 1.53 2004/02/21 09:20:33 gvg Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -119,11 +119,11 @@ ifeq ($(TARGET_TYPE),program)
   MK_DDKLIBS :=
   MK_SDKLIBS :=
 ifneq ($(WINE_MODE),yes)
-  MK_CFLAGS := -I./ -I$(SDK_PATH_INC)
-  MK_CPPFLAGS := -I./ -I$(SDK_PATH_INC)
+  MK_CFLAGS := -I./
+  MK_CPPFLAGS := -I./
 else
-  MK_CFLAGS := -I$(PATH_TO_TOP)/include/wine -I./ -I$(WINE_INCLUDE)
-  MK_CPPFLAGS := -I$(PATH_TO_TOP)/include/wine -I./ -I$(WINE_INCLUDE)
+  MK_CFLAGS := -I$(PATH_TO_TOP)/include/wine
+  MK_CPPFLAGS := -I$(PATH_TO_TOP)/include/wine
   MK_RCFLAGS := --include-dir $(PATH_TO_TOP)/include/wine --include-dir $(WINE_INCLUDE)
 endif
   MK_IMPLIB := no
@@ -147,8 +147,8 @@ ifeq ($(TARGET_TYPE),proglib)
   MK_DEFENTRY := _WinMain@16
   MK_DDKLIBS :=
   MK_SDKLIBS :=
-  MK_CFLAGS := -I./ -I$(SDK_PATH_INC)
-  MK_CPPFLAGS := -I./ -I$(SDK_PATH_INC)
+  MK_CFLAGS := -I./
+  MK_CPPFLAGS := -I./
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH := $(SDK_PATH_LIB)
@@ -167,8 +167,8 @@ ifeq ($(TARGET_TYPE),dynlink)
   MK_DDKLIBS :=
   MK_SDKLIBS :=
 ifneq ($(WINE_MODE),yes)
-  MK_CFLAGS := -I./ -I$(SDK_PATH_INC)
-  MK_CPPFLAGS := -I./ -I$(SDK_PATH_INC)
+  MK_CFLAGS := -I./
+  MK_CPPFLAGS := -I./
 else
   MK_CFLAGS := -I$(PATH_TO_TOP)/include/wine -I./ -I$(WINE_INCLUDE)
   MK_CPPFLAGS := -I$(PATH_TO_TOP)/include/wine -I./ -I$(WINE_INCLUDE)
@@ -196,8 +196,8 @@ ifeq ($(TARGET_TYPE),library)
   MK_DEFENTRY :=
   MK_DDKLIBS :=
   MK_SDKLIBS :=
-  MK_CFLAGS := -I./ -I$(SDK_PATH_INC)
-  MK_CPPFLAGS := -I./ -I$(SDK_PATH_INC)
+  MK_CFLAGS := -I./
+  MK_CPPFLAGS := -I./
   MK_IMPLIB := no
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH :=
@@ -212,8 +212,8 @@ ifeq ($(TARGET_TYPE),kmlibrary)
   TARGET_NORC := yes
   MK_MODE := static
   MK_DEFEXT := .a
-  MK_CFLAGS := -I./ -I$(DDK_PATH_INC)
-  MK_CPPFLAGS := -I./ -I$(DDK_PATH_INC)
+  MK_CFLAGS := -I./
+  MK_CPPFLAGS := -I./
   MK_IMPLIB := no
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH := $(DDK_PATH_LIB)
@@ -226,8 +226,8 @@ ifeq ($(TARGET_TYPE),driver_library)
   MK_DEFENTRY :=
   MK_DDKLIBS :=
   MK_SDKLIBS :=
-  MK_CFLAGS := -I./ -I$(DDK_PATH_INC)
-  MK_CPPFLAGS := -I./ -I$(DDK_PATH_INC)
+  MK_CFLAGS := -I./
+  MK_CPPFLAGS := -I./
   MK_IMPLIB := no
   MK_IMPLIBONLY := yes
   MK_IMPLIBDEFPATH := $(DDK_PATH_LIB)
@@ -245,8 +245,8 @@ ifeq ($(TARGET_TYPE),driver)
   MK_DEFENTRY := _DriverEntry@8
   MK_DDKLIBS := ntoskrnl.a hal.a
   MK_SDKLIBS :=
-  MK_CFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
-  MK_CPPFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
+  MK_CFLAGS := -D__NTDRIVER__ -I./
+  MK_CPPFLAGS := -D__NTDRIVER__ -I./
   MK_IMPLIB := no
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH :=
@@ -264,8 +264,8 @@ ifeq ($(TARGET_TYPE),export_driver)
   MK_DEFENTRY := _DriverEntry@8
   MK_DDKLIBS := ntoskrnl.a hal.a
   MK_SDKLIBS :=
-  MK_CFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
-  MK_CPPFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
+  MK_CFLAGS := -D__NTDRIVER__ -I./
+  MK_CPPFLAGS := -D__NTDRIVER__ -I./
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH := $(DDK_PATH_LIB)
@@ -283,8 +283,8 @@ ifeq ($(TARGET_TYPE),hal)
   MK_DEFENTRY := _DriverEntry@8
   MK_DDKLIBS := ntoskrnl.a
   MK_SDKLIBS :=
-  MK_CFLAGS := -D__NTHAL__ -I./ -I$(DDK_PATH_INC)
-  MK_CPPFLAGS := -D__NTHAL__ -I./ -I$(DDK_PATH_INC)
+  MK_CFLAGS := -D__NTHAL__ -I./
+  MK_CPPFLAGS := -D__NTHAL__ -I./
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH :=
@@ -302,8 +302,8 @@ ifeq ($(TARGET_TYPE),bootpgm)
   MK_DEFENTRY := _DriverEntry@8
   MK_DDKLIBS :=
   MK_SDKLIBS :=
-  MK_CFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
-  MK_CPPFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
+  MK_CFLAGS := -D__NTDRIVER__ -I./
+  MK_CPPFLAGS := -D__NTDRIVER__ -I./
   MK_IMPLIB := no
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH :=
@@ -321,8 +321,8 @@ ifeq ($(TARGET_TYPE),miniport)
   MK_DEFENTRY := _DriverEntry@8
   MK_DDKLIBS :=
   MK_SDKLIBS :=
-  MK_CFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
-  MK_CPPFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
+  MK_CFLAGS := -D__NTDRIVER__ -I./
+  MK_CPPFLAGS := -D__NTDRIVER__ -I./
   MK_IMPLIB := no
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH :=
@@ -340,8 +340,8 @@ ifeq ($(TARGET_TYPE),gdi_driver)
   MK_DEFENTRY := _DrvEnableDriver@12
   MK_DDKLIBS := ntoskrnl.a hal.a win32k.a
   MK_SDKLIBS :=
-  MK_CFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
-  MK_CPPFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
+  MK_CFLAGS := -D__NTDRIVER__ -I./
+  MK_CPPFLAGS := -D__NTDRIVER__ -I./
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH := $(DDK_PATH_LIB)
@@ -404,8 +404,8 @@ ifeq ($(TARGET_TYPE),subsystem)
   MK_DEFENTRY := _DriverEntry@8
   MK_DDKLIBS := ntoskrnl.a hal.a
   MK_SDKLIBS :=
-  MK_CFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
-  MK_CPPFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
+  MK_CFLAGS := -D__NTDRIVER__ -I./
+  MK_CPPFLAGS := -D__NTDRIVER__ -I./
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH := $(DDK_PATH_LIB)
@@ -422,8 +422,8 @@ ifeq ($(TARGET_TYPE),kmdll)
   MK_DEFENTRY := 0x0
   MK_DDKLIBS := ntoskrnl.a hal.a
   MK_SDKLIBS :=
-  MK_CFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
-  MK_CPPFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
+  MK_CFLAGS := -D__NTDRIVER__ -I./
+  MK_CPPFLAGS := -D__NTDRIVER__ -I./
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH := $(DDK_PATH_LIB)
@@ -442,7 +442,7 @@ ifeq ($(TARGET_TYPE),winedll)
   MK_DEFENTRY := _DllMain@12
   MK_DDKLIBS :=
   MK_SDKLIBS :=
-  MK_CFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D__need_offsetof -DCOBJMACROS -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/include/wine
+  MK_CFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D__need_offsetof -DCOBJMACROS -I$(PATH_TO_TOP)/include/wine
   MK_CPPFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D__need_offsetof -DCOBJMACROS -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/include/wine
   MK_RCFLAGS := --define __USE_W32API --include-dir $(PATH_TO_TOP)/include/wine
   MK_IMPLIB := yes
@@ -565,22 +565,18 @@ endif
 include $(PATH_TO_TOP)/config
 
 
-TARGET_ASFLAGS += -march=$(ARCH) -D$(MK_ARCH_ID)
-TARGET_CFLAGS += $(MK_CFLAGS)
-TARGET_CFLAGS += -pipe -march=$(ARCH) -D$(MK_ARCH_ID)
+TARGET_CFLAGS += $(MK_CFLAGS) $(STD_CFLAGS)
 ifeq ($(DBG),1)
 TARGET_ASFLAGS += -g
 TARGET_CFLAGS += -g
 TARGET_LFLAGS += -g
 endif
 
-TARGET_CPPFLAGS += $(MK_CPPFLAGS)
-TARGET_CPPFLAGS += -pipe -march=$(ARCH) -D$(MK_ARCH_ID)
+TARGET_CPPFLAGS += $(MK_CPPFLAGS) $(STD_CPPFLAGS)
 
-TARGET_RCFLAGS += $(MK_RCFLAGS)
+TARGET_RCFLAGS += $(MK_RCFLAGS) $(STD_RCFLAGS)
 
-TARGET_ASFLAGS += $(MK_ASFLAGS)
-TARGET_ASFLAGS += -pipe -march=$(ARCH)
+TARGET_ASFLAGS += $(MK_ASFLAGS) $(STD_ASFLAGS)
 
 TARGET_NFLAGS += $(MK_NFLAGS)
 
@@ -992,7 +988,7 @@ endif # ROS_USE_PCH
 %.o: %.asm
 	$(NASM_CMD) $(NFLAGS) $(TARGET_NFLAGS) $< -o $@
 %.coff: %.rc
-	$(RC) $(TARGET_RCFLAGS) $(RCINC) $< -o $@
+	$(RC) $(TARGET_RCFLAGS) $< -o $@
 %.spec.def: %.spec
 	$(WINEBUILD) $(DEFS) -o $@ --def $<
 # Kill implicit rule

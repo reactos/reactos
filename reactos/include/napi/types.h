@@ -3,6 +3,7 @@
 
 /* these should be moved to a file like ntdef.h */
 
+#ifndef __USE_W32API
 enum
 {
    DIRECTORY_QUERY,
@@ -11,6 +12,7 @@ enum
    DIRECTORY_CREATE_SUBDIRECTORY,
    DIRECTORY_ALL_ACCESS,
 };
+#endif
 
 /*
  * General type for status information

@@ -1,5 +1,7 @@
 PATH_TO_TOP = ..
 
+include $(PATH_TO_TOP)/rules.mak
+
 CFLAGS += -Wall -Werror
 
 TOOLS = \
@@ -160,5 +162,3 @@ clean:
 endif
 
 .PHONY: all clean
-
-include $(PATH_TO_TOP)/rules.mak

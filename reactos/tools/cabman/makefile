@@ -11,7 +11,7 @@ OBJECTS = cabinet.o mszip.o raw.o  main.o dfp.o
 
 CLEAN_FILES = *.o cabman$(EXE_POSTFIX)
 
-HOST_CFLAGS = -g -I. -I $(PATH_TO_TOP)/lib/zlib -Werror -Wall
+HOST_CFLAGS = -g -I. -I$(PATH_TO_TOP)/lib/zlib -I$(W32API_PATH)/include -Werror -Wall
 
 HOST_LFLAGS = -g $(PATH_TO_TOP)/lib/zlib/zlib.host.a
 

@@ -18,6 +18,8 @@ WINE_RC = $(TARGET_NAME)
 
 WINE_INCLUDE = ./
 
+TARGET_CFLAGS = -D__USE_W32API
+
 TARGET_SDKLIBS = \
 	kernel32.a \
 	user32.a \

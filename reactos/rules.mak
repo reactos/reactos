@@ -19,14 +19,6 @@ endif
 # uncomment if you use bochs and it displays only 30 rows
 # BOCHS_30ROWS = yes
 
-ifeq ($(HOST),mingw32-linux)
-TOPDIR := $(shell if [ "$$PWD" != "" ]; then echo $$PWD; else pwd; fi)
-else
-TOPDIR := $(shell cd)
-endif
-
-TOPDIR := $(TOPDIR)/$(PATH_TO_TOP)
-
 #
 # Choose various options
 #
@@ -86,10 +78,10 @@ CPP = $(PREFIX)cpp
 AR = $(PREFIX)ar
 RC = $(PREFIX)windres
 WRC = $(WINE_TOP)/tools/wrc/wrc
-RCINC = --include-dir $(PATH_TO_TOP)/include
 OBJCOPY = $(PREFIX)objcopy
 OBJDUMP =$(PREFIX)objdump
 TOOLS_PATH = $(PATH_TO_TOP)/tools
+W32API_PATH = $(PATH_TO_TOP)/w32api
 CP = $(TOOLS_PATH)/rcopy
 RM = $(TOOLS_PATH)/rdel
 RLINE = $(TOOLS_PATH)/rline
@@ -104,21 +96,10 @@ WINEBUILD = $(TOOLS_PATH)/winebuild/winebuild
 WINE2ROS = $(TOOLS_PATH)/wine2ros/wine2ros
 XSLTPROC = xsltproc
 
-
-# Maybe we can delete these soon
-
-ifeq ($(HOST),mingw32-linux)
-CFLAGS := $(CFLAGS) -I$(PATH_TO_TOP)/include -pipe -march=i386 -D_M_IX86
-endif
-
-ifeq ($(HOST),mingw32-windows)
-CFLAGS := $(CFLAGS) -I$(PATH_TO_TOP)/include -pipe -march=i386 -D_M_IX86
-endif
-
-CXXFLAGS = $(CFLAGS)
-NFLAGS = -i$(PATH_TO_TOP)/include/ -f$(NASM_FORMAT) -d$(NASM_FORMAT)
-ASFLAGS := $(ASFLAGS) -I$(PATH_TO_TOP)/include -D__ASM__
-
+STD_CFLAGS = -I$(PATH_TO_TOP)/include -I$(W32API_PATH)/include -pipe -march=i386 -D_M_IX86
+STD_CPPFLAGS = $(STD_CFLAGS)
+STD_ASFLAGS = -I$(PATH_TO_TOP)/include -I$(W32API_PATH)/include -D__ASM__ -D_M_IX86
+STD_RCFLAGS = --include-dir $(PATH_TO_TOP)/include --include-dir $(W32API_PATH)/include
 
 # Developer Kits
 DK_PATH=$(PATH_TO_TOP)/dk

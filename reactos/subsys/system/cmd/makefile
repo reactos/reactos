@@ -15,7 +15,7 @@ TARGET_NAME = cmd
 
 TARGET_INSTALLDIR = system32
 
-TARGET_CFLAGS = -D__USE_W32API -DANONYMOUSUNIONS -Wall -Werror -I$(PATH_TO_TOP)/include \
+TARGET_CFLAGS = -D__USE_W32API -DANONYMOUSUNIONS -Wall -Werror \
                 -I$(PATH_TO_TOP)/include/msvcrt -D_WIN32_WINNT=0x0501
 
 WINE_MODE = yes

@@ -19,6 +19,8 @@ ifeq ($(HOST),mingw32-linux)
 TOPDIR := $(shell if [ "$$PWD" != "" ]; then echo $$PWD; else pwd; fi)
 endif
 
+W32API_PATH = $(PATH_TO_TOP)/../reactos/w32api
+
 #
 # Choose various options
 #
@@ -85,6 +87,7 @@ CFLAGS = \
 	-Wall \
 	-Wstrict-prototypes \
 	-fno-builtin \
+	-I$(W32API_PATH)/include \
 	$(LEAN_AND_MEAN_DEFINE) \
 	$(DEFINES) \
 	$(DEBUGGING_CFLAGS) \

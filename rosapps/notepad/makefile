@@ -26,8 +26,8 @@ TARGET_SDKLIBS = \
 	kernel32.a \
 	user32.a \
 	gdi32.a \
-	$(COMCTL32_TARGET).a \
-	$(COMDLG32_TARGET).a
+	comctl32.a \
+	comdlg32.a
 
 TARGET_OBJECTS = \
 	framewnd.o \
