@@ -315,7 +315,7 @@ protected:
 	String	_statusText;
 };
 
-#define	PM_SETSTATUSTEXT		(WM_APP+0x1D)
+#define	PM_SETSTATUSTEXT		(WM_APP+0x1E)
 
 
  /**
@@ -957,7 +957,7 @@ protected:
 
 enum {TRAYBUTTON_LEFT=0, TRAYBUTTON_RIGHT, TRAYBUTTON_MIDDLE};
 
-#define	PM_TRAYICON		(WM_APP+0x1E)
+#define	PM_TRAYICON		(WM_APP+0x20)
 
 #define	WINMSG_TASKBARCREATED	TEXT("TaskbarCreated")
 

@@ -34,6 +34,37 @@
 #include "traynotify.h"
 
 
+#include "../notifyhook/notifyhook.h"
+
+NotifyHook::NotifyHook()
+ :	WM_GETMODULEPATH(InstallNotifyHook())
+{
+}
+
+NotifyHook::~NotifyHook()
+{
+	DeinstallNotifyHook();
+}
+
+void NotifyHook::GetModulePath(HWND hwnd, HWND hwndCallback)
+{
+	PostMessage(hwnd, WM_GETMODULEPATH, (WPARAM)hwndCallback, 0);
+}
+
+bool NotifyHook::ModulePathCopyData(LPARAM lparam, HWND* phwnd, String& path)
+{
+	char buffer[MAX_PATH];
+
+	int l = GetWindowModulePathCopyData(lparam, phwnd, buffer, MAX_PATH);
+
+	if (l) {
+		path.assign(buffer, l);
+		return true;
+	} else
+		return false;
+}
+
+
 NotifyIconIndex::NotifyIconIndex(NOTIFYICONDATA* pnid)
 {
 	_hWnd = pnid->hWnd;
@@ -221,6 +252,17 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 	  case WM_CONTEXTMENU:
 		break;	// don't let WM_CONTEXTMENU go through to the desktop bar
+
+	  case WM_COPYDATA: {	// receive NotifyHook answers
+		String path;
+		HWND hwnd;
+
+		if (_hook.ModulePathCopyData(lparam, &hwnd, path)) {
+			_window_modules[hwnd] = path;
+			//@@ -> trigger DetermineHideState()
+		}
+
+		break;}
 
 	  default:
 		if (nmsg>=WM_MOUSEFIRST && nmsg<=WM_MOUSELAST) {
@@ -460,22 +502,13 @@ NotifyIconSet::iterator NotifyArea::IconHitTest(const POINT& pos)
 #if NOTIFYICON_VERSION>=3	// as of 21.08.2003 missing in MinGW headers
 bool NotifyArea::DetermineHideState(NotifyInfo& entry)
 {
-/*
-	DWORD pid;
-
-	if (GetWindowThreadProcessId(entry._hWnd, &pid)) {
-
-		//@@ look for executable path
-
-	}
-*/
-	TCHAR title[MAX_PATH];
-
 	if (entry._tipText == TEXT("FRITZ!fon"))
 		return true;
 
 	if (entry._tipText == TEXT("FRITZ!fax"))
 		return true;
+
+	TCHAR title[MAX_PATH];
 
 	if (GetWindowText(entry._hWnd, title, MAX_PATH)) {
 		if (_tcsstr(title, TEXT("Task Manager")))
@@ -490,6 +523,17 @@ bool NotifyArea::DetermineHideState(NotifyInfo& entry)
 		if (_tcsstr(title, TEXT("FRITZ!web")))
 			return true;
 	}
+
+	const String& modulePath = _window_modules[entry._hWnd];
+
+	 // request module path for new windows (We will get an asynchronous answer by a WM_COPYDATA message.)
+	if (modulePath.empty()) {
+		_hook.GetModulePath(entry._hWnd, _hwnd);
+		return false;
+	}
+
+	if (modulePath == TEXT("xyz"))	//@@
+		return true;
 
 	return false;
 }

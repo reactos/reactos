@@ -128,11 +128,14 @@ ever:
 buildno.h: ../../../include/reactos/buildno.h
 	$(CD_PREFIX)updatebuildno
 
-$(TARGET): $(OBJECTS) $(PROGRAM)$(RES_SUFFIX)
+$(TARGET): $(OBJECTS) $(PROGRAM)$(RES_SUFFIX) notifyhook.dll
 	$(LINK) $(LFLAGS) -o $@ $^ $(addprefix -l,$(LIBS)) $(addprefix -l,$(DELAYIMPORTS))
 
 explorer$(RES_SUFFIX): $(PROGRAM)_intres.rc res/*.bmp res/*.ico
 	$(RC) $(RCFLAGS) -o $@ $(PROGRAM)_intres.rc
+
+notifyhook.dll: notifyhook/notifyhook.c notifyhook/notifyhook.h
+	$(CC) -D_WIN32_IE=0x0600 -Wall -D_NOTIFYHOOK_IMPL -Os -s notifyhook/notifyhook.c -shared -o $@
 
 clean:
 	$(TOOLS_PATH)/rdel $(TARGET) $(OBJECTS) $(PROGRAM)$(RES_SUFFIX)
@@ -152,6 +155,7 @@ implib:
 
 install:
 	-$(TOOLS_PATH)/rcopy $(TARGET) $(INSTALL_DIR)/$(TARGET)
+	-$(TOOLS_PATH)/rcopy notifyhook.dll $(INSTALL_DIR)/$(TARGET)
 
 bootcd:
 

@@ -35,6 +35,8 @@
 #define	NOTIFYICON_DIST			20
 #define	NOTIFYAREA_SPACE		10
 
+#define	PM_GETMODULEPATH_CB		(WM_APP+0x21)
+
 
  /// NotifyIconIndex is used for maintaining the order of notification icons.
 struct NotifyIconIndex
@@ -75,6 +77,19 @@ typedef map<NotifyIconIndex, NotifyInfo> NotifyIconMap;
 typedef set<NotifyInfo> NotifyIconSet;
 
 
+struct NotifyHook
+{
+	NotifyHook();
+	~NotifyHook();
+
+	void	GetModulePath(HWND hwnd, HWND hwndCallback);
+	bool	ModulePathCopyData(LPARAM lparam, HWND* phwnd, String& path);
+
+protected:
+	const UINT WM_GETMODULEPATH;
+};
+
+
  /// tray notification area aka "tray"
 struct NotifyArea : public Window
 {
@@ -111,6 +126,9 @@ protected:
 
 	NotifyIconSet::iterator IconHitTest(const POINT& pos);
 	bool	DetermineHideState(NotifyInfo& entry);
+
+	NotifyHook _hook;
+	map<HWND, String> _window_modules;
 };
 
 

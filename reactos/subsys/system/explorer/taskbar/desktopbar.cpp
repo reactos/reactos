@@ -361,8 +361,6 @@ LRESULT DesktopBar::ProcessCopyData(COPYDATASTRUCT* pcd)
 	if (pcd->dwData == 1) {
 		TrayNotifyCDS* ptr = (TrayNotifyCDS*) pcd->lpData;
 
-		///@todo process the differnt versions of the NOTIFYICONDATA structure (look at cbSize to decide which one)
-
 		NotifyArea* notify_area = GET_WINDOW(NotifyArea, _hwndNotify);
 
 		if (notify_area)
