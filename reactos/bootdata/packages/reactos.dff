@@ -27,6 +27,7 @@ drivers\bus\acpi\acpi.sys               2
 drivers\bus\isapnp\isapnp.sys           2
 drivers\bus\pci\pci.sys                 2
 drivers\dd\beep\beep.sys                2
+drivers\dd\bootvid\bootvid.sys          2
 drivers\dd\null\null.sys                2
 drivers\dd\serial\serial.sys            2
 drivers\dd\vga\display\vgaddi.dll       1
