@@ -713,6 +713,13 @@ BOOL Ext2ReadSuperBlock(VOID)
 	DbgPrint((DPRINT_FILESYSTEM, "Ext2FragmentSizeInBytes: %d\n", Ext2FragmentSizeInBytes));
 	DbgPrint((DPRINT_FILESYSTEM, "Ext2FragmentSizeInSectors: %d\n", Ext2FragmentSizeInSectors));
 
+	// Verify that the fragment size and the block size are equal
+	if (Ext2BlockSizeInBytes != Ext2FragmentSizeInBytes)
+	{
+		FileSystemError("The fragment size must be equal to the block size.");
+		return FALSE;
+	}
+
 	// Calculate the number of inodes in one block
 	Ext2InodesPerBlock = Ext2BlockSizeInBytes / EXT3_INODE_SIZE(Ext2SuperBlock);
 	DbgPrint((DPRINT_FILESYSTEM, "Ext2InodesPerBlock: %d\n", Ext2InodesPerBlock));
