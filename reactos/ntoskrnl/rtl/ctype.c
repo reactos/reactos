@@ -1,4 +1,4 @@
-/* $Id: ctype.c,v 1.5 2001/04/16 02:02:07 dwelch Exp $
+/* $Id: ctype.c,v 1.6 2002/06/16 16:27:22 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,8 +11,10 @@
  *                              all functions to use ctype table
  */
 
+#define _CRT_
 #include <ctype.h>
 
+#undef _pctype
 
 #define upalpha ('A' - 'a')
 
