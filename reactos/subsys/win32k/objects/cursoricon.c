@@ -251,13 +251,17 @@ NtUserClipCursor(
   CurInfo = &WinStaObject->SystemCursor;
   if(lpRect)
   {
-    CurInfo->CursorClipInfo.IsClipped = TRUE;
-    CurInfo->CursorClipInfo.Left = lpRect->left;
-    CurInfo->CursorClipInfo.Top = lpRect->top;
-    CurInfo->CursorClipInfo.Right = lpRect->right;
-    CurInfo->CursorClipInfo.Bottom = lpRect->bottom;
+    if((lpRect->right >= lpRect->left) &&
+       (lpRect->bottom >= lpRect->top))
+    {
+      CurInfo->CursorClipInfo.IsClipped = TRUE;
+      CurInfo->CursorClipInfo.Left = lpRect->left;
+      CurInfo->CursorClipInfo.Top = lpRect->top;
+      CurInfo->CursorClipInfo.Right = lpRect->right;
+      CurInfo->CursorClipInfo.Bottom = lpRect->bottom;
     
-    MouseMoveCursor(CurInfo->x, CurInfo->y);  
+      MouseMoveCursor(CurInfo->x, CurInfo->y);  
+    }
   }
   else
     WinStaObject->SystemCursor.CursorClipInfo.IsClipped = FALSE;
