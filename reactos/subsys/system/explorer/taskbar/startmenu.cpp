@@ -364,7 +364,7 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 			int new_id = ButtonHitTest(pt);
 
-			if (new_id != _selected_id)
+			if (new_id > 0 && new_id != _selected_id)
 				SelectButton(new_id);
 
 			_last_mouse_pos = lparam;
@@ -490,7 +490,7 @@ int StartMenu::ButtonHitTest(POINT pt)
 
 void StartMenu::InvalidateSelection()
 {
-	if (!_selected_id)
+	if (_selected_id <= 0)
 		return;
 
 	ClientRect clnt(_hwnd);
