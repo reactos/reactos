@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.60 2003/02/16 18:47:41 hbirr Exp $
+# $Id: makefile,v 1.61 2003/02/17 16:27:31 ekohl Exp $
 
 PATH_TO_TOP = ../..
 
@@ -10,7 +10,7 @@ TARGET_BASE = 0x77f00000
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
 
-TARGET_SDKLIBS = ntdll.a kernel32.a
+TARGET_SDKLIBS = ntdll.a
 
 TARGET_GCCLIBS = gcc
 
