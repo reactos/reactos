@@ -14,12 +14,22 @@ endif
 
 all: $(DLLTARGET)
 
+STDLIB_OBJECTS = stdlib/atoi.o stdlib/atol.o stdlib/splitp.o \
+                 stdlib/strtol.o stdlib/strtoul.o
+
+STRING_OBJECTS = string/ctype.o string/memcpy.o string/memmove.o \
+                 string/memset.o string/strcat.o string/strchr.o \
+                 string/strcmp.o string/strcspn.o \
+                 string/strcpy.o string/stricmp.o string/strlen.o \
+                 string/strncat.o string/strncmp.o string/strncpy.o \
+                 string/strnicmp.o string/strnlen.o string/strrchr.o \
+                 string/strstr.o string/strupr.o string/wstring.o
+
 OBJECTS = napi.o ldr/startup.o rtl/largeint.o rtl/namespc.o rtl/unicode.o \
-          stdio/vsprintf.o string/ctype.o string/memcpy.o string/memset.o \
-          string/strcat.o string/strcmp.o string/strcpy.o string/stricmp.o \
-          string/strlen.o string/strncmp.o string/strncpy.o string/strnlen.o \
-          string/strrchr.o string/wstring.o stubs/stubs.o rtl/heap.o \
-	  rtl/critical.o rtl/mem.o ldr/utils.o
+          stdio/vsprintf.o $(STDLIB_OBJECTS) $(STRING_OBJECTS) \
+          stubs/stubs.o rtl/heap.o rtl/critical.o rtl/mem.o \
+          ldr/utils.o
+
 ifeq ($(DOSCLI),yes)
 CLEAN_FILES = napi.o ldr\*.o rtl\*.o stdio\*.o string\*.o stubs\*.o ntdll.a  \
               main\dllmain.o ntdll.o ntdll.dll junk.tmp base.tmp temp.exp ntdll.sym

@@ -30,7 +30,7 @@ lstrcmpiA(
 	  LPCSTR lpString2
 	  )
 {
-	return stricmp(lpString1,lpString2); 
+        return _stricmp(lpString1,lpString2); 
 }
 LPSTR
 STDCALL

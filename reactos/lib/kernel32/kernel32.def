@@ -127,7 +127,8 @@ DeleteFileW = DeleteFileW@4
 ;DisconnectNamedPipe@4
 ;DosDateTimeToFileTime@12
 ;DuplicateConsoleHandle@16
-;DuplicateHandle@28
+DuplicateHandle@28
+DuplicateHandle = DuplicateHandle@28
 ;EndUpdateResourceA@8
 ;EndUpdateResourceW@8
 ;EnterCriticalSection@4
@@ -164,8 +165,10 @@ ExitProcess = ExitProcess@4
 ;FileTimeToDosDateTime@12
 ;FileTimeToLocalFileTime@8
 ;FileTimeToSystemTime@8
-;FillConsoleOutputAttribute@20
-;FillConsoleOutputCharacterA@20
+FillConsoleOutputAttribute@20
+FillConsoleOutputAttribute = FillConsoleOutputAttribute@20
+FillConsoleOutputCharacterA@20
+FillConsoleOutputCharacterA = FillConsoleOutputCharacterA@20
 ;FillConsoleOutputCharacterW@20
 ;FindAtomA@4
 ;FindAtomW@4
@@ -196,8 +199,10 @@ FlushFileBuffers = FlushFileBuffers@4
 ;FoldStringW@20
 ;FormatMessageA@28
 ;FormatMessageW@28
-;FreeConsole@0
-;FreeEnvironmentStringsA@4
+FreeConsole@0
+FreeConsole = FreeConsole@0
+FreeEnvironmentStringsA@4
+FreeEnvironmentStringsA = FreeEnvironmentStringsA@4
 ;FreeEnvironmentStringsW@4
 FreeLibrary@4
 FreeLibrary = FreeLibrary@4
@@ -238,7 +243,8 @@ GetCompressedFileSizeW = GetCompressedFileSizeW@8
 ;GetConsoleAliasesLengthA@4
 ;GetConsoleAliasesLengthW@4
 ;GetConsoleAliasesW@12
-;GetConsoleCP@0
+GetConsoleCP@0
+GetConsoleCP = GetConsoleCP@0
 ;GetConsoleCommandHistoryA@12
 ;GetConsoleCommandHistoryLengthA@4
 ;GetConsoleCommandHistoryLengthW@4
@@ -249,9 +255,12 @@ GetCompressedFileSizeW = GetCompressedFileSizeW@8
 ;GetConsoleFontSize@8
 ;GetConsoleHardwareState@12
 ;GetConsoleInputWaitHandle@0
-;GetConsoleMode@8
-;GetConsoleOutputCP@0
-;GetConsoleScreenBufferInfo@8
+GetConsoleMode@8
+GetConsoleMode = GetConsoleMode@8
+GetConsoleOutputCP@0
+GetConsoleOutputCP = GetConsoleOutputCP@0
+GetConsoleScreenBufferInfo@8
+GetConsoleScreenBufferInfo = GetConsoleScreenBufferInfo@8
 ;GetConsoleTitleA@8
 ;GetConsoleTitleW@8
 ;GetCurrencyFormatA@24
@@ -310,7 +319,8 @@ GetFullPathNameW = GetFullPathNameW@16
 ;GetLargestConsoleWindowSize@4
 GetLastError@0
 GetLastError = GetLastError@0
-;GetLocalTime@4
+GetLocalTime@4
+GetLocalTime = GetLocalTime@4
 ;GetLocaleInfoA@16
 ;GetLocaleInfoW@16
 ;GetLogicalDriveStringsA@8
@@ -406,10 +416,14 @@ GetTempPathW = GetTempPathW@8
 ;GetVDMCurrentDirectories@8
 GetVersion@0
 GetVersion = GetVersion@0
-;GetVersionExA@4
-;GetVersionExW@4
-;GetVolumeInformationA@32
-;GetVolumeInformationW@32
+GetVersionExA@4
+GetVersionExA = GetVersionExA@4
+GetVersionExW@4
+GetVersionExW = GetVersionExW@4
+GetVolumeInformationA@32
+GetVolumeInformationA = GetVolumeInformationA@32
+GetVolumeInformationW@32
+GetVolumeInformationW = GetVolumeInformationW@32
 ;GetWindowsDirectoryA@8
 ;GetWindowsDirectoryW@8
 ;GlobalAddAtomA@4
@@ -544,7 +558,8 @@ PulseEvent = PulseEvent@4
 ;RaiseException@16
 ReadConsoleA@20
 ReadConsoleA = ReadConsoleA@20
-;ReadConsoleInputA@16
+ReadConsoleInputA@16
+ReadConsoleInputA = ReadConsoleInputA@16
 ;ReadConsoleInputW@16
 ;ReadConsoleOutputA@20
 ;ReadConsoleOutputAttribute@20
@@ -588,26 +603,32 @@ SearchPathW = SearchPathW@24
 ;SetComputerNameA@4
 ;SetComputerNameW@4
 ;SetConsoleActiveScreenBuffer@4
-;SetConsoleCP@4
+SetConsoleCP@4
+SetConsoleCP = SetConsoleCP@4
 ;SetConsoleCommandHistoryMode@4
 ;SetConsoleCtrlHandler@8
 ;SetConsoleCursor@8
 ;SetConsoleCursorInfo@8
-;SetConsoleCursorPosition@8
+SetConsoleCursorPosition@8
+SetConsoleCursorPosition = SetConsoleCursorPosition@8
 ;SetConsoleDisplayMode@12
 ;SetConsoleFont@8
 ;SetConsoleHardwareState@12
 ;SetConsoleKeyShortcuts@16
 ;SetConsoleMaximumWindowSize@8
 ;SetConsoleMenuClose@4
-;SetConsoleMode@8
+SetConsoleMode@8
+SetConsoleMode = SetConsoleMode@8
 ;SetConsoleNumberOfCommandsA@8
 ;SetConsoleNumberOfCommandsW@8
-;SetConsoleOutputCP@4
+SetConsoleOutputCP@4
+SetConsoleOutputCP = SetConsoleOutputCP@4
 ;SetConsolePalette@12
 ;SetConsoleScreenBufferSize@8
-;SetConsoleTextAttribute@8
-;SetConsoleTitleA@4
+SetConsoleTextAttribute@8
+SetConsoleTextAttribute = SetConsoleTextAttribute@8
+SetConsoleTitleA@4
+SetConsoleTitleA = SetConsoleTitleA@4
 ;SetConsoleTitleW@4
 ;SetConsoleWindowInfo@12
 SetCurrentDirectoryA@4
@@ -634,14 +655,16 @@ SetFileAttributesA@8
 SetFileAttributesA = SetFileAttributesA@8
 SetFileAttributesW@8
 SetFileAttributesW = SetFileAttributesW@8
-;SetFilePointer@16
+SetFilePointer@16
+SetFilePointer = SetFilePointer@16
 SetFileTime@16
 SetFileTime = SetFileTime@16
 ;SetHandleCount@4
 ;SetHandleInformation@12
 ;SetLastConsoleEventActive@0
 ;SetLastError@4
-;SetLocalTime@4
+SetLocalTime@4
+SetLocalTime = SetLocalTime@4
 ;SetLocaleInfoA@12
 ;SetLocaleInfoW@12
 ;SetMailslotInfo@8
@@ -649,7 +672,8 @@ SetFileTime = SetFileTime@16
 ;SetPriorityClass@8
 ;SetProcessShutdownParameters@8
 ;SetProcessWorkingSetSize@12
-;SetStdHandle@8
+SetStdHandle@8
+SetStdHandle = SetStdHandle@8
 ;SetSystemPowerState@8
 ;SetSystemTime@4
 ;SetSystemTimeAdjustment@8
@@ -664,7 +688,8 @@ SetFileTime = SetFileTime@16
 SetUnhandledExceptionFilter@4
 SetUnhandledExceptionFilter = SetUnhandledExceptionFilter@4
 ;SetVDMCurrentDirectories@8
-;SetVolumeLabelA@8
+SetVolumeLabelA@8
+SetVolumeLabelA = SetVolumeLabelA@8
 ;SetVolumeLabelW@8
 ;SetupComm@12
 ;ShowConsoleCursor@8

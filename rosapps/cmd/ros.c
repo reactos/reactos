@@ -1,11 +1,12 @@
 
+#include "config.h"
+
 #ifdef __REACTOS__
 
 #include <windows.h>
 #include <stdlib.h>
 #include <string.h>
-//#include <types.h>
-//#include <ddk/ntddk.h>
+
 
 void* malloc(size_t _size)
 {
@@ -14,6 +15,7 @@ void* malloc(size_t _size)
 		    _size));
 }
 
+
 void free(void* _ptr)
 {
    HeapFree(GetProcessHeap(),
@@ -21,14 +23,6 @@ void free(void* _ptr)
 	    _ptr);
 }
 
-#if 0
-void* calloc(size_t _nmemb, size_t _size)
-{
-   return(HeapAlloc(GetProcessHeap(),
-		       HEAP_ZERO_MEMORY,
-		       _nmemb*_size));
-}
-#endif
 
 void* realloc(void* _ptr, size_t _size)
 {
@@ -38,8 +32,8 @@ void* realloc(void* _ptr, size_t _size)
 		      _size));
 }
 
-char *
-_strdup(const char *_s)
+
+char *_strdup(const char *_s)
 {
   char *rv;
   if (_s == 0)
@@ -51,20 +45,8 @@ _strdup(const char *_s)
   return rv;
 }
 
-size_t
-strlen(const char *str)
-{
-  const char *s;
 
-  if (str == 0)
-    return 0;
-  for (s = str; *s; ++s);
-  return s-str;
-}
-
-
-void
-_makepath( char *path, const char *drive, const char *dir, const char *fname, const char *ext )
+void _makepath( char *path, const char *drive, const char *dir, const char *fname, const char *ext )
 {
 	int dir_len;
 	if ( drive != NULL ) {

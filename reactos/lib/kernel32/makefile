@@ -58,7 +58,7 @@ EXCEPT_OBJECTS = except/except.o
 
 OBJECTS = $(MISC_OBJECTS) $(FILE_OBJECTS) $(THREAD_OBJECTS) \
           $(PROCESS_OBJECTS) $(STRING_OBJECTS) $(MEM_OBJECTS) \
-	  $(INTERNAL_OBJECTS) $(SYNCH_OBJECTS) $(EXCEPT_OBJECTS)
+          $(INTERNAL_OBJECTS) $(SYNCH_OBJECTS) $(EXCEPT_OBJECTS)
 
 ifeq ($(DOSCLI),yes)
 CLEAN_FILES = except\*.o file\*.o internal\*.o mem\*.o misc\*.o nls\*.o  \
