@@ -1498,6 +1498,17 @@ typedef struct _MOVEFILE_DESCRIPTOR
 //	SynchronizationTimer
 //} TIMER_TYPE;
 
+typedef struct _TIMER_BASIC_INFORMATION
+{
+  LARGE_INTEGER TimeRemaining;
+  BOOLEAN SignalState;
+} TIMER_BASIC_INFORMATION, *PTIMER_BASIC_INFORMATION;
+
+typedef enum _TIMER_INFORMATION_CLASS
+{
+  TimerBasicInformation
+} TIMER_INFORMATION_CLASS;
+
 typedef
 struct _LPC_PORT_BASIC_INFORMATION
 {

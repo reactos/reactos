@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.78 2001/08/21 20:13:10 chorns Exp $
+/* $Id: thread.c,v 1.79 2001/09/06 22:47:39 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -429,8 +429,9 @@ KeSetPriorityThread (PKTHREAD Thread, KPRIORITY Priority)
 }
 
 
-NTSTATUS STDCALL NtAlertResumeThread(IN	HANDLE ThreadHandle,
-				     OUT PULONG	SuspendCount)
+NTSTATUS STDCALL 
+NtAlertResumeThread(IN	HANDLE ThreadHandle,
+		    OUT PULONG	SuspendCount)
 {
    UNIMPLEMENTED;
 }

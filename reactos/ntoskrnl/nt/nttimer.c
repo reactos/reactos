@@ -1,4 +1,4 @@
-/* $Id: nttimer.c,v 1.11 2001/08/26 17:29:36 ekohl Exp $
+/* $Id: nttimer.c,v 1.12 2001/09/06 22:47:39 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -17,6 +17,7 @@
 #include <internal/ke.h>
 #include <limits.h>
 #include <internal/pool.h>
+#include <internal/safe.h>
 
 #include <internal/debug.h>
 
@@ -219,11 +220,62 @@ NtOpenTimer(OUT PHANDLE TimerHandle,
 NTSTATUS STDCALL
 NtQueryTimer(IN HANDLE TimerHandle,
 	     IN CINT TimerInformationClass,
-	     OUT PVOID TimerInformation,
+	     OUT PVOID UnsafeTimerInformation,
 	     IN ULONG Length,
-	     OUT PULONG ResultLength)
+	     OUT PULONG UnsafeResultLength)
 {
-	UNIMPLEMENTED;
+  PNTTIMER Timer;
+  TIMER_BASIC_INFORMATION TimerInformation;
+  ULONG ResultLength;
+  NTSTATUS Status;
+
+  Status = ObReferenceObjectByHandle(TimerHandle,
+				     TIMER_QUERY_STATE,
+				     ExTimerType,
+				     KeGetPreviousMode(),
+				     (PVOID*)&Timer,
+				     NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status); 
+    }
+
+  if (TimerInformationClass != TimerBasicInformation)
+    {
+      ObDereferenceObject(Timer);
+      return(STATUS_INVALID_INFO_CLASS);
+    }
+  if (Length < sizeof(TIMER_BASIC_INFORMATION))
+    {
+      ObDereferenceObject(Timer);
+      return(STATUS_INFO_LENGTH_MISMATCH);
+    }
+  
+  memcpy(&TimerInformation.TimeRemaining, &Timer->Timer.DueTime,
+	 sizeof(LARGE_INTEGER));
+  TimerInformation.SignalState = Timer->Timer.Header.SignalState;
+  ResultLength = sizeof(TIMER_BASIC_INFORMATION);
+  
+  Status = MmCopyToCaller(UnsafeTimerInformation, &TimerInformation,
+			  sizeof(TIMER_BASIC_INFORMATION));
+  if (!NT_SUCCESS(Status))
+    {
+      ObDereferenceObject(Timer);
+      return(Status);
+    }
+  
+  if (UnsafeResultLength != NULL)
+    {
+      Status = MmCopyToCaller(UnsafeResultLength, &ResultLength,
+			      sizeof(ULONG));
+      if (!NT_SUCCESS(Status))
+	{
+	  ObDereferenceObject(Timer);
+	  return(Status);
+	}
+    }
+  ObDereferenceObject(Timer);
+  return(STATUS_SUCCESS);
 }
 
 
