@@ -1,4 +1,4 @@
-/* $Id: blue.c,v 1.13 1999/11/09 18:07:03 ekohl Exp $
+/* $Id: blue.c,v 1.14 1999/12/06 06:43:45 phreak Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -25,7 +25,7 @@
 #define IDMAP_BASE         0xd0000000
 #define VIDMEM_BASE        0xb8000
 
-#define NR_ROWS            50
+#define NR_ROWS            25
 #define NR_COLUMNS         80
 #define NR_SCANLINES       8
 
@@ -227,6 +227,11 @@ ScrWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
                 LinePtr[j] = DeviceExtension->CharAttribute << 8;
             }
             cursory = rows - 1;
+			for (j = 0; j < columns; j++)
+			{
+				vidmem[(j * 2) + (cursory * columns * 2)] = ' ';
+				vidmem[(j * 2) + (cursory * columns * 2) + 1] = (char) DeviceExtension->CharAttribute;
+			}
         }
     }
 
