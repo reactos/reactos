@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.67.14.1 2003/12/22 20:16:54 hyperion Exp $
+/* $Id: create.c,v 1.67.14.2 2003/12/23 00:39:04 hyperion Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -288,9 +288,6 @@ PiDeleteThread(PVOID ObjectBody)
 {
   KIRQL oldIrql;
   PETHREAD Thread;
-  ULONG i;
-  PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine[MAX_THREAD_NOTIFY_ROUTINE_COUNT];
-  ULONG NotifyRoutineCount;
 
   Thread = (PETHREAD)ObjectBody;
 
@@ -320,9 +317,6 @@ PsInitializeThread(HANDLE ProcessHandle,
    NTSTATUS Status;
    KIRQL oldIrql;
    PEPROCESS Process;
-   ULONG i;
-   ULONG NotifyRoutineCount;
-   PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine[MAX_THREAD_NOTIFY_ROUTINE_COUNT];
 
    /*
     * Reference process
@@ -713,9 +707,7 @@ PsCreateSystemThread(PHANDLE ThreadHandle,
 NTSTATUS STDCALL
 PsSetCreateThreadNotifyRoutine(IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine)
 {
-  KIRQL oldIrql;
-
-  if (PiThreadNotifyRoutineCount >= MAX_THREAD_NOTIFY_ROUTINE_COUNT)
+ if (PiThreadNotifyRoutineCount >= MAX_THREAD_NOTIFY_ROUTINE_COUNT)
   {
     return(STATUS_INSUFFICIENT_RESOURCES);
   }
