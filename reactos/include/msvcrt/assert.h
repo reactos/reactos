@@ -15,19 +15,20 @@
  *
  *  This code is distributed in the hope that it will be useful but
  *  WITHOUT ANY WARRANTY. ALL WARRANTIES, EXPRESS OR IMPLIED ARE HEREBY
- *  DISCLAMED. This includes but is not limited to warranties of
+ *  DISCLAIMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.3 $
- * $Author: chorns $
- * $Date: 2002/09/08 10:22:30 $
+ * $Revision: 1.4 $
+ * $Author: robd $
+ * $Date: 2002/11/24 18:06:00 $
  *
  */
 
 #ifndef _ASSERT_H_
-#define	_ASSERT_H_
+#define _ASSERT_H_
 
-#ifdef	__cplusplus
+
+#ifdef  __cplusplus
 extern "C" {
 #endif
 
@@ -36,7 +37,7 @@ extern "C" {
 /*
  * If not debugging, assert does nothing.
  */
-#define assert(x)	((void)0);
+#define assert(x)   ((void)0)
 
 #else /* debugging enabled */
 
@@ -44,26 +45,25 @@ extern "C" {
  * CRTDLL nicely supplies a function which does the actual output and
  * call to abort.
  */
-#ifndef  __ATTRIB_NORETURN
-#ifdef	__GNUC__
-#define	_ATTRIB_NORETURN	__attribute__ ((noreturn))
-#else	/* Not __GNUC__ */
-#define	_ATTRIB_NORETURN
-#endif	/* __GNUC__ */
+#ifndef __ATTRIB_NORETURN
+#ifdef  __GNUC__
+#define _ATTRIB_NORETURN    __attribute__ ((noreturn))
+#else   /* Not __GNUC__ */
+#define _ATTRIB_NORETURN
+#endif  /* __GNUC__ */
 #endif
 
-void	_assert (const char* szExpression, const char* szFileName, int nLine) 
-_ATTRIB_NORETURN
-;
+void _assert(const char* szExpression, const char* szFileName, int nLine) _ATTRIB_NORETURN;
 
 /*
  * Definition of the assert macro.
  */
-#define assert(x)	if(!(x)) _assert( #x , __FILE__, __LINE__);
-#endif	/* NDEBUG */
+#define assert(x)   if(!(x)) _assert( #x , __FILE__, __LINE__);
+#endif  /* NDEBUG */
 
-#ifdef	__cplusplus
+#ifdef  __cplusplus
 }
 #endif
 
-#endif
+#endif /* Not _ASSERT_H_ */
+

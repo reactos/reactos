@@ -25,12 +25,12 @@
  *
  *  This code is distributed in the hope that it will be useful but
  *  WITHOUT ANY WARRANTY. ALL WARRANTIES, EXPRESS OR IMPLIED ARE HEREBY
- *  DISCLAMED. This includes but is not limited to warranties of
+ *  DISCLAIMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.5 $
- * $Author: chorns $
- * $Date: 2002/09/08 10:22:31 $
+ * $Revision: 1.6 $
+ * $Author: robd $
+ * $Date: 2002/11/24 18:06:00 $
  *
  */
 
@@ -42,8 +42,8 @@
  * wants us just to define one data type.  So don't define
  * the symbols that indicate this file's entire job has been done.
  */
-#if (!defined(__need_wchar_t) && !defined(__need_wint_t)	\
-     && !defined(__need_size_t) && !defined(__need_ptrdiff_t)	\
+#if (!defined(__need_wchar_t) && !defined(__need_wint_t)    \
+     && !defined(__need_size_t) && !defined(__need_ptrdiff_t)   \
      && !defined(__need_NULL))
 #define __MSVCRT_STDDEF_H_
 #endif
@@ -69,13 +69,13 @@
 #ifndef _PTRDIFF_T_
 #define _PTRDIFF_T_
 #ifndef __PTRDIFF_TYPE__
-#define	__PTRDIFF_TYPE__	int
+#define __PTRDIFF_TYPE__    int
 #endif
-typedef __PTRDIFF_TYPE__	ptrdiff_t;
+typedef __PTRDIFF_TYPE__    ptrdiff_t;
 #endif
 
 /* If this symbol has done its job, get rid of it.  */
-#undef	__need_ptrdiff_t
+#undef  __need_ptrdiff_t
 
 #endif /* __MSVCRT_STDDEF_H_ or __need_ptrdiff_t.  */
 
@@ -93,12 +93,12 @@ typedef __PTRDIFF_TYPE__	ptrdiff_t;
 #define SIZE_T_DEFINED
 #define _SIZE_T
 #ifndef __SIZE_TYPE__
-#define	__SIZE_TYPE__		unsigned int
+#define __SIZE_TYPE__       unsigned int
 #endif
-typedef __SIZE_TYPE__		size_t;
+typedef __SIZE_TYPE__       size_t;
 #endif
 
-#undef	__need_size_t
+#undef  __need_size_t
 
 #endif /* __MSVCRT_STDDEF_H_ or __need_size_t.  */
 
@@ -116,16 +116,16 @@ typedef __SIZE_TYPE__		size_t;
 #define _WCHAR_T
 #define _WCHAR_T_DEFINED
 #ifndef __WCHAR_TYPE__
-#define	__WCHAR_TYPE__		short unsigned int
+#define __WCHAR_TYPE__      short unsigned int
 #endif
 #ifndef __cplusplus
-typedef __WCHAR_TYPE__		wchar_t;
-#endif	/* C++ */
-#endif	/* wchar_t not already defined */
+typedef __WCHAR_TYPE__      wchar_t;
+#endif  /* C++ */
+#endif  /* wchar_t not already defined */
 
-#undef	__need_wchar_t
+#undef  __need_wchar_t
 
-#endif	/* __MSVCRT_STDDEF_H_ or __need_wchar_t. */
+#endif  /* __MSVCRT_STDDEF_H_ or __need_wchar_t. */
 
 /*
  * wint_t, the equivalent of int in wchar ctype functions.
@@ -134,17 +134,17 @@ typedef __WCHAR_TYPE__		wchar_t;
 
 #ifndef _WINT_T_
 #define _WINT_T_
-#define _WINT_T		/* To satisfy libstdc++ */
+#define _WINT_T     /* To satisfy libstdc++ */
 #ifndef __WINT_TYPE__
-#define	__WINT_TYPE__		short int
-#endif	/* Not defined __WINT_TYPE__ */
+#define __WINT_TYPE__       short int
+#endif  /* Not defined __WINT_TYPE__ */
 
-typedef	__WINT_TYPE__		wint_t;
-#endif	/* Not defined _WINT_T_ */
+typedef __WINT_TYPE__       wint_t;
+#endif  /* Not defined _WINT_T_ */
 
-#undef	__need_wint_t
+#undef  __need_wint_t
 
-#endif	/* __MSVCRT_STDDEF_H_ or __need_wint_t. */
+#endif  /* __MSVCRT_STDDEF_H_ or __need_wint_t. */
 
 
 /*
@@ -157,7 +157,7 @@ typedef	__WINT_TYPE__		wint_t;
 #define NULL (0)
 #endif /* __MSVCRT_STDDEF_H_ or __need_NULL */
 
-#undef	__need_NULL
+#undef  __need_NULL
 
 
 /*
@@ -167,8 +167,8 @@ typedef	__WINT_TYPE__		wint_t;
  */
 
 #if defined (__MSVCRT_STDDEF_H_)
-#define	offsetof(TYPE, MEMBER)	((size_t) &( ((TYPE *) 0)->MEMBER ))
-#endif	/* __MSVCRT_STDDEF_H_ */
+#define offsetof(TYPE, MEMBER)  ((size_t) &( ((TYPE *) 0)->MEMBER ))
+#endif  /* __MSVCRT_STDDEF_H_ */
 
 
 #endif /* not __MSVCRT_STDDEF_H_ */

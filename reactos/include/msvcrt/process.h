@@ -15,82 +15,82 @@
  *
  *  This code is distributed in the hope that it will be useful but
  *  WITHOUT ANY WARRANTY. ALL WARRANTIES, EXPRESS OR IMPLIED ARE HEREBY
- *  DISCLAMED. This includes but is not limited to warranties of
+ *  DISCLAIMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.3 $
- * $Author: chorns $
- * $Date: 2002/09/08 10:22:31 $
+ * $Revision: 1.4 $
+ * $Author: robd $
+ * $Date: 2002/11/24 18:06:00 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
 /* changed second argument of cwait from nPID to hProc */
 
-#ifndef	_PROCESS_H_
-#define	_PROCESS_H_
+#ifndef __STRICT_ANSI__
 
-#ifndef	__STRICT_ANSI__
-
-#ifdef	__cplusplus
-extern "C" {
-#endif
-
-void	_cexit(void);
-void	_c_exit(void);
+#ifndef _PROCESS_H_
+#define _PROCESS_H_
 
 /*
  * Constants for cwait actions.
  * Obsolete for Win32.
  */
-#define	_WAIT_CHILD		0
-#define	_WAIT_GRANDCHILD	1
+#define _WAIT_CHILD      0
+#define _WAIT_GRANDCHILD 1
 
-#ifndef	_NO_OLDNAMES
-#define	WAIT_CHILD		_WAIT_CHILD
-#define	WAIT_GRANDCHILD		_WAIT_GRANDCHILD
-#endif	/* Not _NO_OLDNAMES */
-
-int	_cwait (int* pnStatus, int hProc, int nAction);
-
-int	_getpid(void);
-
-int	_execl		(const char* szPath, const char* szArgv0, ...);
-int	_execle		(const char* szPath, const char* szArgv0, ...);
-int	_execlp		(const char* szPath, const char* szArgv0, ...);
-int	_execlpe	(const char* szPath, const char* szArgv0, ...);
-int	_execv		(const char* szPath, char* const* szaArgv);
-int	_execve		(const char* szPath, char* const* szaArgv, char* const* szaEnv);
-int	_execvp		(const char* szPath, char* const* szaArgv);
-int	_execvpe	(const char* szPath, char* const* szaArgv, char* const* szaEnv);
-
+#ifndef _NO_OLDNAMES
+#define WAIT_CHILD      _WAIT_CHILD
+#define WAIT_GRANDCHILD _WAIT_GRANDCHILD
+#endif  /* Not _NO_OLDNAMES */
 
 /*
  * Mode constants for spawn functions.
  */
-#define	_P_WAIT		0
-#define	_P_NOWAIT	1
-#define	_P_OVERLAY	2
-#define	_OLD_P_OVERLAY	_P_OVERLAY
-#define	_P_NOWAITO	3
-#define	_P_DETACH	4
+#define _P_WAIT     0
+#define _P_NOWAIT   1
+#define _P_OVERLAY  2
+#define _OLD_P_OVERLAY  _P_OVERLAY
+#define _P_NOWAITO  3
+#define _P_DETACH   4
 
-#ifndef	_NO_OLDNAMES
-#define	P_WAIT		_P_WAIT
-#define	P_NOWAIT	_P_NOWAIT
-#define	P_OVERLAY	_P_OVERLAY
-#define	OLD_P_OVERLAY	_OLD_P_OVERLAY
-#define	P_NOWAITO	_P_NOWAITO
-#define	P_DETACH	_P_DETACH
-#endif	/* Not _NO_OLDNAMES */
+#ifndef _NO_OLDNAMES
+#define P_WAIT      _P_WAIT
+#define P_NOWAIT    _P_NOWAIT
+#define P_OVERLAY   _P_OVERLAY
+#define OLD_P_OVERLAY   _OLD_P_OVERLAY
+#define P_NOWAITO   _P_NOWAITO
+#define P_DETACH    _P_DETACH
+#endif  /* Not _NO_OLDNAMES */
 
-int	_spawnl		(int nMode, const char* szPath, const char* szArgv0, ...);
-int	_spawnle	(int nMode, const char* szPath, const char* szArgv0,...);
-int	_spawnlp	(int nMode, const char* szPath, const char* szArgv0,...);
-int	_spawnlpe	(int nMode, const char* szPath, const char* szArgv0,...);
-int	_spawnv		(int nMode, const char* szPath, char* const* szaArgv);
-int	_spawnve	(int nMode, const char* szPath, char* const* szaArgv, char* const* szaEnv);
-int	_spawnvp	(int nMode, const char* szPath, char* const* szaArgv);
-int	_spawnvpe	(int nMode, const char* szPath, char* const* szaArgv, char* const* szaEnv);
+
+#ifdef  __cplusplus
+extern "C" {
+#endif
+
+void    _cexit(void);
+void    _c_exit(void);
+
+int _cwait (int* pnStatus, int hProc, int nAction);
+
+int _getpid(void);
+
+int _execl      (const char* szPath, const char* szArgv0, ...);
+int _execle     (const char* szPath, const char* szArgv0, ...);
+int _execlp     (const char* szPath, const char* szArgv0, ...);
+int _execlpe    (const char* szPath, const char* szArgv0, ...);
+int _execv      (const char* szPath, char* const* szaArgv);
+int _execve     (const char* szPath, char* const* szaArgv, char* const* szaEnv);
+int _execvp     (const char* szPath, char* const* szaArgv);
+int _execvpe    (const char* szPath, char* const* szaArgv, char* const* szaEnv);
+
+int _spawnl     (int nMode, const char* szPath, const char* szArgv0, ...);
+int _spawnle    (int nMode, const char* szPath, const char* szArgv0,...);
+int _spawnlp    (int nMode, const char* szPath, const char* szArgv0,...);
+int _spawnlpe   (int nMode, const char* szPath, const char* szArgv0,...);
+int _spawnv     (int nMode, const char* szPath, char* const* szaArgv);
+int _spawnve    (int nMode, const char* szPath, char* const* szaArgv, char* const* szaEnv);
+int _spawnvp    (int nMode, const char* szPath, char* const* szaArgv);
+int _spawnvpe   (int nMode, const char* szPath, char* const* szaArgv, char* const* szaEnv);
 /*
  * The functions _beginthreadex and _endthreadex are not provided by CRTDLL.
  * They are provided by MSVCRT.
@@ -103,58 +103,58 @@ int	_spawnvpe	(int nMode, const char* szPath, char* const* szaArgv, char* const*
  * NOTE: No old names for these functions. Use the underscore.
  */
 unsigned long
-	_beginthread	(void (__cdecl *pfuncStart)(void *),
-			 unsigned unStackSize, void* pArgList);
-void	_endthread	(void);
+    _beginthread(void (__cdecl *pfuncStart)(void*),
+             unsigned unStackSize, void* pArgList);
+void    _endthread  (void);
 
-#if	__MSVCRT__
+#ifdef __MSVCRT__
 unsigned long
-	_beginthreadex	(void *pSecurity, unsigned unStackSize,
-			 unsigned (__stdcall *pfuncStart)(void*), void* pArgList,
-			 unsigned unInitFlags, unsigned* pThreadAddr);
-void	_endthreadex	(unsigned unExitCode);
+    _beginthreadex(void* pSecurity, unsigned unStackSize,
+             unsigned (__stdcall *pfuncStart)(void*), void* pArgList,
+             unsigned unInitFlags, unsigned* pThreadAddr);
+void _endthreadex(unsigned unExitCode);
 #endif
 
 
-void *_loaddll (char *name);
-int _unloaddll(void *handle);
+void* _loaddll(char* name);
+int _unloaddll(void* handle);
 
 unsigned long __threadid(void);
-#define _threadid     __threadid()
-void * __threadhandle(void);
+#define _threadid  __threadid()
+void* __threadhandle(void);
 
 
-#ifndef	_NO_OLDNAMES
+#ifndef _NO_OLDNAMES
 
-#define cwait		_cwait
-#define getpid		_getpid
-#define	execl		_execl
-#define execle		_execle
-#define execlp         _execlp
-#define execlpe        _execlpe
+#define cwait           _cwait
+#define getpid          _getpid
+#define execl           _execl
+#define execle          _execle
+#define execlp          _execlp
+#define execlpe         _execlpe
 
-#define execv          _execv
-#define execve         _execve
-#define execvp         _execvp
-#define execvpe        _execvpe
+#define execv           _execv
+#define execve          _execve
+#define execvp          _execvp
+#define execvpe         _execvpe
 
-#define	spawnl		_spawnl        
-#define spawnle         _spawnle       
-#define spawnlp         _spawnlp       
-#define spawnlpe        _spawnlpe      
+#define spawnl          _spawnl
+#define spawnle         _spawnle
+#define spawnlp         _spawnlp
+#define spawnlpe        _spawnlpe
 
 #define spawnv          _spawnv
 #define spawnve         _spawnve
 #define spawnvp         _spawnvp
 #define spawnvpe        _spawnvpe
 
+#endif  /* Not _NO_OLDNAMES */
 
-#endif	/* Not _NO_OLDNAMES */
-
-#ifdef	__cplusplus
+#ifdef  __cplusplus
 }
 #endif
 
-#endif	/* Not __STRICT_ANSI__ */
+#endif  /* _PROCESS_H_ not defined */
 
-#endif	/* _PROCESS_H_ not defined */
+#endif  /* Not __STRICT_ANSI__ */
+

@@ -13,11 +13,11 @@ extern "C" {
 #ifndef _POSIX_SOURCE
 
 struct __atexit {
-  struct __atexit *__next;
-  void (*__function)(void);
+    struct __atexit* __next;
+    void (*__function)(void);
 };
 
-extern struct __atexit *__atexit_ptr;
+extern struct __atexit* __atexit_ptr;
 
 #endif /* !_POSIX_SOURCE */
 #endif /* !__STRICT_ANSI__ */

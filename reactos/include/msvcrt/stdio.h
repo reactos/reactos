@@ -19,12 +19,12 @@
  *
  *  This code is distributed in the hope that it will be useful but
  *  WITHOUT ANY WARRANTY. ALL WARRANTIES, EXPRESS OR IMPLIED ARE HEREBY
- *  DISCLAMED. This includes but is not limited to warranties of
+ *  DISCLAIMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.4 $
- * $Author: chorns $
- * $Date: 2002/09/08 10:22:31 $
+ * $Revision: 1.5 $
+ * $Author: robd $
+ * $Date: 2002/11/24 18:06:00 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
@@ -33,7 +33,7 @@
 /* added filbuf and flsbuf and fwalk   */
 
 #ifndef _STDIO_H_
-#define	_STDIO_H_
+#define _STDIO_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -54,6 +54,9 @@ extern "C" {
 #define _IOERR    0x000200
 #define _IOSTRG   0x000400
 
+#define _IOBINARY 0x000800
+#define _IOTEXT   0x000000
+
 #define _IOAPPEND 0x002000
 #define _IORMONCL 0x004000  /* remove on close, for temp files */
 /* if _flag & _IORMONCL, ._name_to_remove needs freeing */
@@ -72,7 +75,7 @@ extern "C" {
  */
 //#ifndef _VA_LIST
 //#define _VA_LIST
-//typedef	char* va_list;
+//typedef   char* va_list;
 //#endif
 #include <msvcrt/stdarg.h>
 
@@ -82,14 +85,14 @@ extern "C" {
  */
 #ifndef _FILE_DEFINED
 typedef struct {
-  char *_ptr;
-  int   _cnt;
-  char *_base;
-  int   _flag;
-  int   _file;
-  int   _ungotchar;
-  int   _bufsiz;
-  char *_name_to_remove;
+    char* _ptr;
+    int   _cnt;
+    char* _base;
+    int   _flag;
+    int   _file;
+    int   _ungotchar;
+    int   _bufsiz;
+    char* _name_to_remove;
 } FILE;
 #define _FILE_DEFINED
 #endif
@@ -100,16 +103,15 @@ typedef struct {
  * The three standard file pointers provided by the run time library.
  * NOTE: These will go to the bit-bucket silently in GUI applications!
  */
-extern FILE _iob[];	/* an array of FILE */
-#define stdin	(&_iob[0])
-#define stdout	(&_iob[1])
-#define stderr	(&_iob[2])
-#define stdaux	(&_iob[3])
-#define stdprn	(&_iob[4])
+extern FILE _iob[]; /* an array of FILE */
+#define stdin   (&_iob[0])
+#define stdout  (&_iob[1])
+#define stderr  (&_iob[2])
+#define stdaux  (&_iob[3])
+#define stdprn  (&_iob[4])
 
 /* Returned by various functions on end of file condition or error. */
-#define	EOF	(-1)
-
+#define EOF (-1)
 
 /*
  * The maximum length of a file name. You should use GetVolumeInformation
@@ -118,45 +120,39 @@ extern FILE _iob[];	/* an array of FILE */
  * NOTE: This is used in the structure _finddata_t (see dir.h) so changing it
  *       is probably not a good idea.
  */
-#define	FILENAME_MAX	(260)
+#define FILENAME_MAX    (260)
 
 /*
  * The maximum number of files that may be open at once. I have set this to
  * a conservative number. The actual value may be higher.
  */
-#define FOPEN_MAX	(20)
-
+#define FOPEN_MAX   (20)
 
 /*
  * File Operations
  */
-FILE*	_fdopen(int handle, char *mode);
-FILE*	_wfdopen(int handle, wchar_t *mode);
+FILE* fopen(const char* szFileName, const char* szMode);
+FILE* freopen(const char* szNewFileName, const char* szNewMode, FILE* fileChangeAssociation);
+int fflush(FILE* fileFlush);
+int fclose(FILE* fileClose);
+#define fcloseall _fcloseall
+int remove(const char* szFileName);
+int rename(const char* szOldFileName, const char* szNewFileName);
+FILE* tmpfile(void);
 
-FILE*	fopen (const char* szFileName, const char* szMode);
-FILE*	_wfopen(const wchar_t *file, const wchar_t *mode);
+FILE* _fdopen(int handle, char *mode);
+FILE* _wfdopen(int handle, wchar_t *mode);
+FILE* _wfopen(const wchar_t *file, const wchar_t *mode);
+FILE* _wfreopen(const wchar_t *file, const wchar_t *mode, FILE *f);
+FILE* _fsopen(const char *file, const char *mode, int shflag);
+FILE* _wfsopen(const wchar_t *file, const wchar_t *mode, int shflag);
+int _wremove(const wchar_t* szFileName);
+int _wrename(const wchar_t *oldName, const wchar_t *newName);
 
-FILE*	freopen(const char* szNewFileName, const char* szNewMode,
-		FILE* fileChangeAssociation);
-FILE*	_wfreopen(const wchar_t *file, const wchar_t *mode, FILE *f);
-
-FILE*	_fsopen(const char *file, const char *mode, int shflag);
-FILE*	_wfsopen(const wchar_t *file, const wchar_t *mode, int shflag);
-
-int	fflush(FILE* fileFlush);
-int	fclose(FILE* fileClose);
-#define fcloseall 	_fcloseall
-int	remove(const char* szFileName);
-int	_wremove(const wchar_t* szFileName);
-int	rename(const char* szOldFileName, const char* szNewFileName);
-int	_wrename(const wchar_t *oldName, const wchar_t *newName);
-FILE*	tmpfile(void);
-
-int	_filbuf(FILE *f);
-int	_flsbuf(int c, FILE *f);
-void	_fwalk(void (*func)(FILE *)); // not exported
-int	_fcloseall(void);
-
+int _filbuf(FILE* f);
+int _flsbuf(int c, FILE* f);
+void _fwalk(void (*func)(FILE*)); // not exported
+int _fcloseall(void);
 
 /*
  * The maximum size of name (including NUL) that will be put in the user
@@ -165,16 +161,16 @@ int	_fcloseall(void);
  * maximum file name length above it is probably reasonable. I could be
  * wrong...
  */
-#define	L_tmpnam	(260)
+#define L_tmpnam    (260)
 
-char*	tmpnam (char caName[]);
+char* tmpnam(char caName[]);
+char* _tempnam(const char *szDir, const char *szPfx);
+
 wchar_t* _wtmpnam(wchar_t *s);
-
-char*	_tempnam (const char *szDir, const char *szPfx);
 wchar_t *_wtempnam(const wchar_t *dir,const wchar_t *prefix);
 
 #ifndef _NO_OLDNAMES
-#define	tempnam _tempnam
+#define tempnam _tempnam
 #endif  /* Not _NO_OLDNAMES */
 
 /*
@@ -182,120 +178,118 @@ wchar_t *_wtempnam(const wchar_t *dir,const wchar_t *prefix);
  * NOTE: _IOFBF works, but _IOLBF seems to work like unbuffered...
  * maybe I'm testing it wrong?
  */
-#define	_IOFBF	0	/* fully buffered */
-#define	_IOLBF	1	/* line buffered */
-#define	_IONBF	2	/* unbuffered */
+#define _IOFBF  0   /* fully buffered */
+#define _IOLBF  1   /* line buffered */
+#define _IONBF  2   /* unbuffered */
 
-int	setvbuf (FILE* fileSetBuffer, char* caBuffer, int nMode,
-		 size_t sizeBuffer);
-
+int setvbuf(FILE* fileSetBuffer, char* caBuffer, int nMode, size_t sizeBuffer);
 
 /*
  * The buffer size as used by setbuf such that it is equivalent to
  * (void) setvbuf(fileSetBuffer, caBuffer, _IOFBF, BUFSIZ).
  */
-#define	BUFSIZ	512
+#define BUFSIZ  512
 
-void	setbuf (FILE* fileSetBuffer, char* caBuffer);
+void setbuf(FILE* fileSetBuffer, char* caBuffer);
 
 /*
  * Pipe Operations
  */
   
-int	_pclose (FILE* pipeClose);
-FILE*	_popen (const char* szPipeName, const char* szMode);
-FILE*	_wpopen (const wchar_t *cm, const wchar_t *md);
+int _pclose(FILE* pipeClose);
+FILE* _popen(const char* szPipeName, const char* szMode);
+FILE* _wpopen(const wchar_t *cm, const wchar_t *md);
 
-#define	popen _popen
-#define	pclose _pclose
+#define popen  _popen
+#define pclose _pclose
 
 /* Wide character version */
-FILE*	_wpopen (const wchar_t* szPipeName, const wchar_t* szMode);
+FILE*   _wpopen(const wchar_t* szPipeName, const wchar_t* szMode);
 
 /*
  * Formatted Output
  */
 
-int	fprintf (FILE* filePrintTo, const char* szFormat, ...);
-int	printf (const char* szFormat, ...);
-int	sprintf (char* caBuffer, const char* szFormat, ...);
-int	vfprintf (FILE* filePrintTo, const char* szFormat, va_list varg);
-int	vprintf (const char* szFormat, va_list varg);
-int	vsprintf (char* caBuffer, const char* szFormat, va_list varg);
+int fprintf(FILE* filePrintTo, const char* szFormat, ...);
+int printf(const char* szFormat, ...);
+int sprintf(char* caBuffer, const char* szFormat, ...);
+int vfprintf(FILE* filePrintTo, const char* szFormat, va_list varg);
+int vprintf(const char* szFormat, va_list varg);
+int vsprintf(char* caBuffer, const char* szFormat, va_list varg);
 
 /* Wide character versions */
-int	fwprintf (FILE* filePrintTo, const wchar_t* wsFormat, ...);
-int	wprintf (const wchar_t* wsFormat, ...);
-int	swprintf (wchar_t* wcaBuffer, const wchar_t* wsFormat, ...);
-int	vfwprintf (FILE* filePrintTo, const wchar_t* wsFormat, va_list varg);
-int	vwprintf (const wchar_t* wsFormat, va_list varg);
-int	vswprintf (wchar_t* wcaBuffer, const wchar_t* wsFormat, va_list varg);
+int fwprintf(FILE* filePrintTo, const wchar_t* wsFormat, ...);
+int wprintf(const wchar_t* wsFormat, ...);
+int swprintf(wchar_t* wcaBuffer, const wchar_t* wsFormat, ...);
+int vfwprintf(FILE* filePrintTo, const wchar_t* wsFormat, va_list varg);
+int vwprintf(const wchar_t* wsFormat, va_list varg);
+int vswprintf(wchar_t* wcaBuffer, const wchar_t* wsFormat, va_list varg);
 
 /*
  * Formatted Input
  */
 
-int	fscanf (FILE* fileReadFrom, const char* szFormat, ...);
-int	scanf (const char* szFormat, ...);
-int	sscanf (const char* szReadFrom, const char* szFormat, ...);
+int fscanf(FILE* fileReadFrom, const char* szFormat, ...);
+int scanf(const char* szFormat, ...);
+int sscanf(const char* szReadFrom, const char* szFormat, ...);
 
 /* Wide character versions */
-int	fwscanf (FILE* fileReadFrom, const wchar_t* wsFormat, ...);
-int	wscanf (const wchar_t* wsFormat, ...);
-int	swscanf (const wchar_t* wsReadFrom, const wchar_t* wsFormat, ...);
+int fwscanf(FILE* fileReadFrom, const wchar_t* wsFormat, ...);
+int wscanf(const wchar_t* wsFormat, ...);
+int swscanf(const wchar_t* wsReadFrom, const wchar_t* wsFormat, ...);
 
 /*
  * Character Input and Output Functions
  */
 
-int	fgetc (FILE* fileRead);
-char*	fgets (char* caBuffer, int nBufferSize, FILE* fileRead);
-int	fputc (int c, FILE* fileWrite);
-int	fputs (const char* szOutput, FILE* fileWrite);
-int	getc (FILE* fileRead);
-int	getchar (void);
-char*	gets (char* caBuffer);	/* Unsafe: how does gets know how long the
-				 * buffer is? */
-int	putc (int c, FILE* fileWrite);
-int	putchar (int c);
-int	puts (const char* szOutput);
-int	ungetc (int c, FILE* fileWasRead);
+int fgetc(FILE* fileRead);
+char* fgets(char* caBuffer, int nBufferSize, FILE* fileRead);
+int fputc(int c, FILE* fileWrite);
+int fputs(const char* szOutput, FILE* fileWrite);
+int getc(FILE* fileRead);
+int getchar(void);
+char* gets(char* caBuffer);  /* Unsafe: how does gets know how long the buffer is? */
+int putc(int c, FILE* fileWrite);
+int putchar(int c);
+int puts(const char* szOutput);
+int ungetc(int c, FILE* fileWasRead);
 
 /* Wide character versions */
-wint_t	fgetwc (FILE* fileRead);
-wint_t	fputwc (wchar_t wc, FILE* fileWrite);
-wint_t	getwc (FILE *fileRead);
-wint_t	putwc (wint_t wc, FILE* fileWrite);
-wint_t	putwchar (wint_t c);
-int	_putws (const wchar_t* ws);
-wint_t	ungetwc (wchar_t wc, FILE* fileWasRead);
+wint_t fgetwc(FILE* fileRead);
+wint_t fputwc(wchar_t wc, FILE* fileWrite);
+wint_t getwc(FILE *fileRead); // not exported from crtdll
 
-wint_t	_filwbuf(FILE *f);
-wint_t	_flswbuf(wchar_t c, FILE *f); 
+// TODO: check type wint_t, why doesn't compare to WEOF correctly ???
+//wint_t putwc(wint_t wc, FILE* fileWrite);
+int putwc(wint_t wc, FILE* fileWrite);
+
+wint_t putwchar(wint_t c);
+int _putws(const wchar_t* ws);
+
+wint_t ungetwc(wchar_t wc, FILE* fileWasRead);
+
+wint_t _filwbuf(FILE *f);
+wint_t _flswbuf(wchar_t c, FILE *f);
 
 /*
  * Not exported by CRTDLL.DLL included for reference purposes.
  */
 #if 0
-wchar_t*	fgetws (wchar_t* wcaBuffer, int nBufferSize, FILE* fileRead);
-int		fputws (const wchar_t* wsOutput, FILE* fileWrite);
-int		getwc (FILE* fileRead);
-int		getwchar ();
-wchar_t*	getws (wchar_t* wcaBuffer);
-#endif	/* 0 */
+wchar_t* fgetws(wchar_t* wcaBuffer, int nBufferSize, FILE* fileRead);
+int fputws(const wchar_t* wsOutput, FILE* fileWrite);
+int getwc(FILE* fileRead);
+int getwchar();
+wchar_t* getws(wchar_t* wcaBuffer);
+#endif  /* 0 */
 
 /* NOTE: putchar has no wide char equivalent even in tchar.h */
-
 
 /*
  * Direct Input and Output Functions
  */
 
-size_t	fread (void* pBuffer, size_t sizeObject, size_t sizeObjCount,
-		FILE* fileRead);
-size_t	fwrite (const void* pObjArray, size_t sizeObject, size_t sizeObjCount,
-		FILE* fileWrite);
-
+size_t fread(void* pBuffer, size_t sizeObject, size_t sizeObjCount, FILE* fileRead);
+size_t fwrite(const void* pObjArray, size_t sizeObject, size_t sizeObjCount, FILE* fileWrite);
 
 /*
  * File Positioning Functions
@@ -304,21 +298,21 @@ size_t	fwrite (const void* pObjArray, size_t sizeObject, size_t sizeObjCount,
 /* Constants for nOrigin indicating the position relative to which fseek
  * sets the file position. Enclosed in ifdefs because io.h could also
  * define them. (Though not anymore since io.h includes this file now.) */
-#ifndef	SEEK_SET
-#define SEEK_SET	(0)
+#ifndef SEEK_SET
+#define SEEK_SET    (0)
 #endif
 
-#ifndef	SEEK_CUR
-#define	SEEK_CUR	(1)
+#ifndef SEEK_CUR
+#define SEEK_CUR    (1)
 #endif
 
-#ifndef	SEEK_END
-#define SEEK_END	(2)
+#ifndef SEEK_END
+#define SEEK_END    (2)
 #endif
 
-int	fseek	(FILE* fileSetPosition, long lnOffset, int nOrigin);
-long	ftell	(FILE* fileGetPosition);
-void	rewind	(FILE* fileRewind);
+int fseek(FILE* fileSetPosition, long lnOffset, int nOrigin);
+long ftell(FILE* fileGetPosition);
+void rewind(FILE* fileRewind);
 
 /*
  * An opaque data type used for storing file positions... The contents of
@@ -328,45 +322,45 @@ void	rewind	(FILE* fileRewind);
  * it is fairly evident that the fpos_t type is a long (in CRTDLL.DLL).
  * Perhaps an unsigned long? TODO?
  */
-typedef long	fpos_t;
+typedef long fpos_t;
 
-int	fgetpos	(FILE* fileGetPosition, fpos_t* pfpos);
-int	fsetpos (FILE* fileSetPosition, const fpos_t* pfpos);
-
+int fgetpos(FILE* fileGetPosition, fpos_t* pfpos);
+int fsetpos(FILE* fileSetPosition, const fpos_t* pfpos);
 
 /*
  * Error Functions
  */
 #if 0
-void	clearerr (FILE* fileClearErrors);
-int	feof (FILE* fileIsAtEnd);
-int	ferror (FILE* fileIsError);
-void	perror (const char* szErrorMessage);
-
+void clearerr(FILE* fileClearErrors);
+int feof(FILE* fileIsAtEnd);
+int ferror(FILE* fileIsError);
+void perror(const char* szErrorMessage);
 #endif
+
 void _wperror(const wchar_t *s);
 
+#define clearerr(f)  (((f)->_flag) &= ~(_IOERR|_IOEOF))
+#define feof(f)      (((f)->_flag&_IOEOF)!=0)
+//#define ferror(f)    (((f)->_flag&_IOERR)!=0)
+int ferror(FILE* fileIsError);
+#define perror(s)    (fprintf(stderr, "%s: %s\n", (s), _strerror(NULL)))
 
-#define  clearerr(f)     (((f)->_flag) &= ~(_IOERR|_IOEOF))
-#define feof(f)		(((f)->_flag&_IOEOF)!=0)
-#define ferror(f)	(((f)->_flag&_IOERR)!=0)
-#define  perror(s)	(fprintf(stderr, "%s: %s\n", (s), _strerror(NULL)))
 /*
  * Non ANSI functions
  */
 
 #ifndef __STRICT_ANSI__
-int	_fgetchar (void);
-int	_fputchar (int c);
-FILE*	_fdopen (int nHandle, char* szMode);
+int _fgetchar(void);
+int _fputchar(int c);
+FILE* _fdopen(int nHandle, char* szMode);
 
 #ifndef _NO_OLDNAMES
-#define	fgetchar 	_fgetchar
-#define	fputchar 	_fputchar
-#define	fdopen 		_fdopen
-#endif	/* Not _NO_OLDNAMES */
+#define fgetchar    _fgetchar
+#define fputchar    _fputchar
+#define fdopen      _fdopen
+#endif  /* Not _NO_OLDNAMES */
 
-#endif	/* Not __STRICT_ANSI__ */
+#endif  /* Not __STRICT_ANSI__ */
 
 #ifdef __cplusplus
 }

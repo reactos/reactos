@@ -15,18 +15,25 @@
  *
  *  This code is distributed in the hope that it will be useful but
  *  WITHOUT ANY WARRANTY. ALL WARRANTIES, EXPRESS OR IMPLIED ARE HEREBY
- *  DISCLAMED. This includes but is not limited to warranties of
+ *  DISCLAIMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.3 $
- * $Author: chorns $
- * $Date: 2002/09/08 10:22:31 $
+ * $Revision: 1.4 $
+ * $Author: robd $
+ * $Date: 2002/11/24 18:06:00 $
  *
  */
+
+#ifndef _WCHAR_H_
+#define _WCHAR_H_
+
 
 #include <msvcrt/ctype.h>
 #include <msvcrt/stdio.h>
 #include <msvcrt/stdlib.h>
 #include <msvcrt/string.h>
 #include <msvcrt/time.h>
+
+
+#endif /* not _WCHAR_H_ */
 

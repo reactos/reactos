@@ -22,25 +22,25 @@
  *
  *  This code is distributed in the hope that it will be useful but
  *  WITHOUT ANY WARRANTY. ALL WARRANTIES, EXPRESS OR IMPLIED ARE HEREBY
- *  DISCLAMED. This includes but is not limited to warranties of
+ *  DISCLAIMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.4 $
- * $Author: chorns $
- * $Date: 2002/09/08 10:22:30 $
+ * $Revision: 1.5 $
+ * $Author: robd $
+ * $Date: 2002/11/24 18:06:00 $
  *
  */
 
 #ifndef __STRICT_ANSI__
 
-#ifndef	_ALLOC_H_
-#define	_ALLOC_H_
+#ifndef _ALLOC_H_
+#define _ALLOC_H_
 
 #include <msvcrt/stdlib.h>
 
 #ifndef RC_INVOKED
 
-#ifdef	__cplusplus
+#ifdef  __cplusplus
 extern "C" {
 #endif
 
@@ -48,38 +48,39 @@ extern "C" {
  * The structure used to walk through the heap with _heapwalk.
  * TODO: This is a guess at the internals of this structure.
  */
-typedef	struct _heapinfo
+typedef struct _heapinfo
 {
-	void*		ptr;
-	unsigned int	size;
-	int		in_use;
+    void* ptr;
+    unsigned int size;
+    int in_use;
 } _HEAPINFO;
 
-int	_heapwalk (_HEAPINFO* pHeapinfo);
+int _heapwalk(_HEAPINFO* pHeapinfo);
  
 #ifdef __GNUC__
 #ifdef USE_C_ALLOCA
-void *	C_alloca(size_t size);
-#define	_alloca(x)	C_alloca(x)
-#else	/* USE_C_ALLOCA */
-#define _alloca(x)	__builtin_alloca(x)
-#endif	/* USE_C_ALLOCA */
-#else	/* __GNUC__ */
-void *	_alloca(size_t size);
-#endif	/* __GNUC__ */
+void* C_alloca(size_t size);
+#define _alloca(x)  C_alloca(x)
+#else   /* USE_C_ALLOCA */
+#define _alloca(x)  __builtin_alloca(x)
+#endif  /* USE_C_ALLOCA */
+#else   /* __GNUC__ */
+void* _alloca(size_t size);
+#endif  /* __GNUC__ */
 
-#ifndef	_NO_OLDNAMES
-#define heapwalk(x)	_heapwalk(x)
-#define alloca(s)	_alloca(s)
-#endif	/* Not _NO_OLDNAMES */
 
-#ifdef	__cplusplus
+#ifndef _NO_OLDNAMES
+#define heapwalk(x) _heapwalk(x)
+#define alloca(s)   _alloca(s)
+#endif  /* Not _NO_OLDNAMES */
+
+#ifdef  __cplusplus
 }
 #endif
 
-#endif	/* Not RC_INVOKED */
+#endif  /* Not RC_INVOKED */
 
-#endif	/* Not _ALLOC_H_ */
+#endif  /* Not _ALLOC_H_ */
 
-#endif	/* Not __STRICT_ANSI__ */
+#endif  /* Not __STRICT_ANSI__ */
 
