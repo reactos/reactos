@@ -1,4 +1,4 @@
-; $Id: advapi32.edf,v 1.28 2004/02/25 14:25:10 ekohl Exp $
+; $Id: advapi32.edf,v 1.29 2004/02/25 23:12:38 sedwards Exp $
 ;
 ; advapi32.edf
 ;
@@ -120,7 +120,7 @@ GetAclInformation=GetAclInformation@16
 ;GetAuditedPermissionsFromAclW=GetAuditedPermissionsFromAclW@16
 ;GetAuditedPermissionsFromSDA
 ;GetAuditedPermissionsFromSDW
-;GetCurrentHwProfileA=GetCurrentHwProfileA@4
+GetCurrentHwProfileA=GetCurrentHwProfileA@4
 ;GetCurrentHwProfileW=GetCurrentHwProfileW@4
 ;GetEffectiveAccessRightsA
 ;GetEffectiveAccessRightsW

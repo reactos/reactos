@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.33 2004/02/25 14:25:10 ekohl Exp $
+# $Id: makefile,v 1.34 2004/02/25 23:12:39 sedwards Exp $
 
 PATH_TO_TOP = ../..
 
@@ -17,6 +17,7 @@ TARGET_BASE = 0x77DB0000
 
 MISC_OBJECTS = \
 	misc/dllmain.o \
+	misc/hwprofiles.o \
 	misc/logon.o \
 	misc/shutdown.o \
 	misc/sysfunc.o

@@ -1,4 +1,4 @@
-; $Id: advapi32.def,v 1.12 2004/02/25 14:25:10 ekohl Exp $
+; $Id: advapi32.def,v 1.13 2004/02/25 23:12:38 sedwards Exp $
 ;
 ; advapi32.def
 ;
@@ -124,7 +124,7 @@ GetAclInformation@16
 ;GetAuditedPermissionsFromAclW@16
 ;GetAuditedPermissionsFromSDA
 ;GetAuditedPermissionsFromSDW
-;GetCurrentHwProfileA@4
+GetCurrentHwProfileA@4
 ;GetCurrentHwProfileW@4
 ;GetEffectiveAccessRightsA
 ;GetEffectiveAccessRightsW
