@@ -1,8 +1,16 @@
 LIBRARY WINMM.DLL
 EXPORTS
-; add more exports as needed
 midiOutReset=midiOutReset@4
+midiOutClose=midiOutClose@4
+midiOutUnprepareHeader=midiOutUnprepareHeader@12
 sndPlaySoundA=sndPlaySoundA@8
 sndPlaySoundW=sndPlaySoundW@8
 waveOutReset=waveOutReset@4
 waveOutWrite=waveOutWrite@12
+waveOutPrepareHeader=waveOutPrepareHeader@12
+waveOutGetErrorTextA=waveOutGetErrorTextA@12
+waveOutOpen=waveOutOpen@24
+waveOutClose=waveOutClose@4
+waveOutUnprepareHeader=waveOutUnprepareHeader@12
+midiOutPrepareHeader=midiOutPrepareHeader@12
+midiOutLongMsg=midiOutLongMsg@12

@@ -11,7 +11,7 @@
 #include <ddk/ntddk.h>
 #include <windows.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 INT STDCALL
