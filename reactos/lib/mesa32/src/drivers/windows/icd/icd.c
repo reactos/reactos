@@ -29,9 +29,8 @@ extern "C" {
 
 #include <windows.h>
 #define GL_GLEXT_PROTOTYPES
-#include <GL/gl.h>
-#include <GL/glext.h>
-//#include <GL/glu.h>
+#include "GL/gl.h"
+#include "GL/glext.h"
 
 #ifdef __cplusplus
 }
@@ -39,7 +38,7 @@ extern "C" {
 
 #include <stdio.h>
 #include <tchar.h>
-#include "wmesadef.h"
+#include "../gdi/wmesadef.h"
 #include "GL/wmesa.h"
 #include "mtypes.h"
 #include "glapi.h"
@@ -53,7 +52,7 @@ typedef struct _icdTable {
 } ICDTABLE, *PICDTABLE;
 
 static ICDTABLE icdTable = { 336, {
-#define ICD_ENTRY(func) mgl##func,
+#define ICD_ENTRY(func) (PROC)mgl##func,
 #include "icdlist.h"
 #undef ICD_ENTRY
 } };
@@ -218,13 +217,13 @@ WGLAPI BOOL GLAPIENTRY DrvShareLists(HGLRC hglrc1,HGLRC hglrc2)
     return(TRUE);
 }
 
-
+#if 0
 static FIXED FixedFromDouble(double d)
 {
    long l = (long) (d * 65536L);
    return *(FIXED *)&l;
 }
-
+#endif
 
 WGLAPI BOOL GLAPIENTRY DrvDescribeLayerPlane(HDC hdc,int iPixelFormat,
                                     int iLayerPlane,UINT nBytes,

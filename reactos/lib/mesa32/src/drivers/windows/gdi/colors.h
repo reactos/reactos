@@ -24,6 +24,9 @@
 
 /*
  * $Log: colors.h,v $
+ * Revision 1.2  2004/07/16 23:48:24  blight
+ * Fixed more warnings, compiles with -Werror now.
+ *
  * Revision 1.1  2004/07/16 22:12:32  blight
  * Import Mesa-6.0.1 for use as software OpenGL renderer.
  *
@@ -52,6 +55,9 @@
 
 /*
  * $Log: colors.h,v $
+ * Revision 1.2  2004/07/16 23:48:24  blight
+ * Fixed more warnings, compiles with -Werror now.
+ *
  * Revision 1.1  2004/07/16 22:12:32  blight
  * Import Mesa-6.0.1 for use as software OpenGL renderer.
  *
@@ -80,6 +86,9 @@
  
 /*
  * $Log: colors.h,v $
+ * Revision 1.2  2004/07/16 23:48:24  blight
+ * Fixed more warnings, compiles with -Werror now.
+ *
  * Revision 1.1  2004/07/16 22:12:32  blight
  * Import Mesa-6.0.1 for use as software OpenGL renderer.
  *
@@ -150,7 +159,7 @@ char ColorMap16[] = {
 0x1E,0x1E,0x1E,0x1E,0x1E,0x1E,0x1E,0x1E,
 0x1F,0x1F,0x1F,0x1F,0x1F,0x1F,0x1F,0x1F};
 
-#define BGR8(r,g,b)		(unsigned)(((BYTE)(b & 0xc0 | (g & 0xe0)>>2 | (r & 0xe0)>>5)))
+#define BGR8(r,g,b)		(unsigned)(((BYTE)((b & 0xc0) | ((g & 0xe0)>>2) | ((r & 0xe0)>>5))))
 #ifdef DDRAW
 #define BGR16(r,g,b)	((WORD)(((BYTE)(ColorMap16[b]) | ((BYTE)(g&0xfc) << 3)) | (((WORD)(BYTE)(ColorMap16[r])) << 11)))
 #else
