@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.45 2004/10/22 10:55:35 ekohl Exp $
+/* $Id: io.h,v 1.46 2004/10/23 14:46:04 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -65,24 +65,82 @@ typedef struct _PRIVATE_DRIVER_EXTENSIONS {
 
 typedef struct _DEVICE_NODE
 {
+  /* A tree structure. */
   struct _DEVICE_NODE *Parent;
   struct _DEVICE_NODE *PrevSibling;
   struct _DEVICE_NODE *NextSibling;
   struct _DEVICE_NODE *Child;
-  PDEVICE_OBJECT Pdo;
-  UNICODE_STRING InstancePath;
-  UNICODE_STRING ServiceName;
-  //TargetDeviceNotifyList?
-  PDEVICE_CAPABILITIES CapabilityFlags;
+  /* The level of deepness in the tree. */
+  UINT Level;
+  /* */
+//  PPO_DEVICE_NOTIFY Notify;
+  /* State machine. */
+//  PNP_DEVNODE_STATE State;
+//  PNP_DEVNODE_STATE PreviousState;
+//  PNP_DEVNODE_STATE StateHistory[20];
+  UINT StateHistoryEntry;
+  /* ? */
+  INT CompletionStatus;
+  /* ? */
+  PIRP PendingIrp;
+  /* See DNF_* flags below (WinDBG documentation has WRONG values) */
   ULONG Flags;
+  /* See DNUF_* flags below */
   ULONG UserFlags;
-  ULONG DisableableDepends;
+  /* See CM_PROB_* values are defined in cfg.h */
   ULONG Problem;
-  PCM_RESOURCE_LIST CmResourceList;
-  PCM_RESOURCE_LIST BootResourceList;
-  PIO_RESOURCE_REQUIREMENTS_LIST ResourceRequirementsList;
+  /* Pointer to the PDO corresponding to the device node. */
+  PDEVICE_OBJECT PhysicalDeviceObject;
+  /* Resource list as assigned by the PnP arbiter. See IRP_MN_START_DEVICE
+     and ARBITER_INTERFACE (not documented in DDK, but present in headers). */
+  PCM_RESOURCE_LIST ResourceList;
+  /* Resource list as assigned by the PnP arbiter (translated version). */
+  PCM_RESOURCE_LIST ResourceListTranslated;
+  /* Instance path relative to the Enum key in registry. */
+  UNICODE_STRING InstancePath;
+  /* Name of the driver service. */
+  UNICODE_STRING ServiceName;
+  /* ? */
+  PDEVICE_OBJECT DuplicatePDO;
+  /* See IRP_MN_QUERY_RESOURCE_REQUIREMENTS. */
+  PIO_RESOURCE_REQUIREMENTS_LIST ResourceRequirements;
+  /* Information about bus for bus drivers. */
+  INTERFACE_TYPE InterfaceType;
+  ULONG BusNumber;
+  /* Information about underlying bus for child devices. */
+  INTERFACE_TYPE ChildInterfaceType;
+  ULONG ChildBusNumber;
+  USHORT ChildBusTypeIndex;
+  /* ? */
+  UCHAR RemovalPolicy;
+  UCHAR HardwareRemovalPolicy;
+  LIST_ENTRY TargetDeviceNotify;
+  LIST_ENTRY DeviceArbiterList;
+  LIST_ENTRY DeviceTranslatorList;
+  USHORT NoTranslatorMask;
+  USHORT QueryTranslatorMask;
+  USHORT NoArbiterMask;
+  USHORT QueryArbiterMask;
+  ULONG OverUsed1;
+  ULONG OverUsed2;
+  /* See IRP_MN_QUERY_RESOURCES. */
+  PCM_RESOURCE_LIST BootResources;
+  /* See the bitfields in DEVICE_CAPABILITIES structure. */
+  ULONG CapabilityFlags;
+  struct
+  {
+    ULONG DockStatus;
+    LIST_ENTRY ListEntry;
+    WCHAR *SerialNumber;
+  } DockInfo;
+  ULONG DisableableDepends;
+  LIST_ENTRY PendedSetInterfaceState;
+  LIST_ENTRY LegacyBusListEntry;
+  ULONG DriverUnloadRetryCount;
+
   /* Not NT's */
-  PPNP_BUS_INFORMATION BusInformation;
+  GUID BusTypeGuid;
+  ULONG Address;
 } DEVICE_NODE, *PDEVICE_NODE;
 
 /* For Flags field */

@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.79 2004/10/22 20:25:53 ekohl Exp $
+/* $Id: device.c,v 1.80 2004/10/23 14:48:15 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -42,16 +42,16 @@ IopInitializeDevice(
          DriverObject->DriverExtension->AddDevice);
 
       Status = DriverObject->DriverExtension->AddDevice(
-         DriverObject, DeviceNode->Pdo);
+         DriverObject, DeviceNode->PhysicalDeviceObject);
 
       if (!NT_SUCCESS(Status))
       {
          return Status;
       }
 
-      Fdo = IoGetAttachedDeviceReference(DeviceNode->Pdo);
+      Fdo = IoGetAttachedDeviceReference(DeviceNode->PhysicalDeviceObject);
 
-      if (Fdo == DeviceNode->Pdo)
+      if (Fdo == DeviceNode->PhysicalDeviceObject)
       {
          /* FIXME: What do we do? Unload the driver or just disable the device? */
          DbgPrint("An FDO was not attached\n");
@@ -63,7 +63,7 @@ IopInitializeDevice(
 
       DPRINT("Sending IRP_MN_START_DEVICE to driver\n");
 
-      Stack.Parameters.StartDevice.AllocatedResources = DeviceNode->BootResourceList;
+      Stack.Parameters.StartDevice.AllocatedResources = DeviceNode->BootResources;
       /* FIXME: Translate the resource list */
       Stack.Parameters.StartDevice.AllocatedResourcesTranslated = NULL;
 
