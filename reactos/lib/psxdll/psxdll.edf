@@ -1,6 +1,6 @@
-; $Id: psxdll.def,v 1.2 1999/09/12 21:54:16 ea Exp $
+; $Id: psxdll.edf,v 1.1 1999/09/12 21:54:16 ea Exp $
 ;
-; psxdll.def
+; psxdll.edf
 ;
 ; ReactOS POSIX+ Subsystem
 ;
@@ -23,23 +23,23 @@ ntdll.RtlUpcaseUnicodeToMultiByteN@0
 ntdll.RtlZeroMemory@8
 
 EXPORTS
-GetProcessHeap@0
-HeapAlloc@12
-HeapFree@12
-HeapReAlloc@16
-HeapSize@12
-RtlAnsiCharToUnicodeChar@4
-RtlFillMemory@12
-RtlMoveMemory@12
-RtlMultiByteToUnicodeN@0
-RtlUnicodeToMultiByteN@0
-RtlUnicodeToMultiByteSize@0
-RtlUnwind@0
-RtlUpcaseUnicodeChar@0
-RtlUpcaseUnicodeToMultiByteN@0
-RtlZeroMemory@8
-__PdxGetCmdLine@0
-__PdxInitializeData@8
+GetProcessHeap=GetProcessHeap@0
+HeapAlloc=HeapAlloc@12
+HeapFree=HeapFree@12
+HeapReAlloc=HeapReAlloc@16
+HeapSize=HeapSize@12
+RtlAnsiCharToUnicodeChar=RtlAnsiCharToUnicodeChar@4
+RtlFillMemory=RtlFillMemory@12
+RtlMoveMemory=RtlMoveMemory@12
+RtlMultiByteToUnicodeN=RtlMultiByteToUnicodeN@0
+RtlUnicodeToMultiByteN=RtlUnicodeToMultiByteN@0
+RtlUnicodeToMultiByteSize=RtlUnicodeToMultiByteSize@0
+RtlUnwind=RtlUnwind@0
+RtlUpcaseUnicodeChar=RtlUpcaseUnicodeChar@0
+RtlUpcaseUnicodeToMultiByteN=RtlUpcaseUnicodeToMultiByteN@0
+RtlZeroMemory=RtlZeroMemory@8
+__PdxGetCmdLine=__PdxGetCmdLine@0
+__PdxInitializeData=__PdxInitializeData@8
 ;__findenv
 ;_exit
 ;_fdptcheck
