@@ -187,9 +187,9 @@ typedef struct _TEB
    PVOID SystemReserved1[0x36];        // CCh
    PVOID Spare1;                       // 1A4h
    LONG ExceptionCode;                 // 1A8h
-   ULONG SpareBytes1[0x28];            // 1ACh
+   UCHAR SpareBytes1[0x28];            // 1ACh
    PVOID SystemReserved2[0xA];         // 1D4h
-//   GDI_TEB_BATCH GdiTebBatch;          // 1FCh
+   GDI_TEB_BATCH GdiTebBatch;          // 1FCh
    ULONG gdiRgn;                       // 6DCh
    ULONG gdiPen;                       // 6E0h
    ULONG gdiBrush;                     // 6E4h
