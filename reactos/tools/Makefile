@@ -14,6 +14,8 @@ TOOLS = \
 	rsym$(EXE_POSTFIX) \
 	rtouch$(EXE_POSTFIX) \
 	mkflpimg$(EXE_POSTFIX) \
+	ppc-le2be$(EXE_POSTFIX) \
+	hack-coff$(EXE_POSTFIX) \
 	depends$(EXE_POSTFIX)
 
 LIBS = lib_unicode lib_wpp
@@ -94,6 +96,24 @@ endif
 ifeq ($(HOST),mingw32-windows)
 mkflpimg$(EXE_POSTFIX): mkflpimg.c
 	@$(HOST_CC) $(CFLAGS) -DDOS_PATHS mkflpimg.c -o mkflpimg$(EXE_POSTFIX)
+endif
+
+ifeq ($(HOST),mingw32-linux)
+hack-coff$(EXE_POSTFIX): hack-coff.c
+	@$(HOST_CC) $(CFLAGS) hack-coff.c -o hack-coff$(EXE_POSTFIX)
+endif
+ifeq ($(HOST),mingw32-windows)
+hack-coff$(EXE_POSTFIX): hack-coff.c
+	@$(HOST_CC) $(CFLAGS) hack-coff.c -o hack-coff$(EXE_POSTFIX)
+endif
+
+ifeq ($(HOST),mingw32-linux)
+ppc-le2be$(EXE_POSTFIX): ppc-le2be.c
+	@$(HOST_CC) $(CFLAGS) ppc-le2be.c -o ppc-le2be$(EXE_POSTFIX)
+endif
+ifeq ($(HOST),mingw32-windows)
+ppc-le2be$(EXE_POSTFIX): ppc-le2be.c
+	@$(HOST_CC) $(CFLAGS) ppc-le2be.c -o ppc-le2be$(EXE_POSTFIX)
 endif
 
 depends$(EXE_POSTFIX): depends.c
