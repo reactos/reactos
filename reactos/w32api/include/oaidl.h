@@ -31,11 +31,16 @@ extern "C" {
 #define FADF_STATIC (2)
 #define FADF_EMBEDDED (4)
 #define FADF_FIXEDSIZE (16)
+#define FADF_RECORD (32)
+#define FADF_HAVEIID (64)
+#define FADF_HAVEVARTYPE (128)
 #define FADF_BSTR (256)
 #define FADF_UNKNOWN (512)
 #define FADF_DISPATCH (1024)
 #define FADF_VARIANT (2048)
 #define FADF_RESERVED (0xf0e8)
+#define FADF_DATADELETED (0x1000)
+#define FADF_CREATEVECTOR (0x2000)
 #define PARAMFLAG_NONE (0)
 #define PARAMFLAG_FIN (1)
 #define PARAMFLAG_FOUT (2)
@@ -469,6 +474,16 @@ DECLARE_INTERFACE_(IDispatch,IUnknown)
 	STDMETHOD(Invoke)(THIS_ DISPID,REFIID,LCID,WORD,DISPPARAMS*,VARIANT*,EXCEPINFO*,UINT*) PURE;
 };
 #undef INTERFACE
+
+#ifdef COBJMACROS
+#define IDispatch_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IDispatch_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define IDispatch_Release(p) (p)->lpVtbl->Release(p)
+#define IDispatch_GetTypeInfoCount(p,a) (p)->lpVtbl->GetTypeInfoCount(p,a)
+#define IDispatch_GetTypeInfo(p,a,b,c) (p)->lpVtbl->GetTypeInfo(p,a,b,c)
+#define IDispatch_GetIDsOfNames(p,a,b,c,d,e) (p)->lpVtbl->GetIDsOfNames(p,a,b,c,d,e)
+#define IDispatch_Invoke(p,a,b,c,d,e,f,g,h) (p)->lpVtbl->Invoke(p,a,b,c,d,e,f,g,h)
+#endif
 
 #define INTERFACE IEnumVARIANT
 DECLARE_INTERFACE_(IEnumVARIANT,IUnknown)

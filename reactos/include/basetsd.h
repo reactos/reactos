@@ -1,5 +1,5 @@
-#ifndef _BASETSD_H
-#define _BASETSD_H
+#ifndef _ROS_BASETSD_H
+#define _ROS_BASETSD_H
 #if __GNUC__ >=3
 #pragma GCC system_header
 #endif
@@ -138,4 +138,4 @@ typedef unsigned __int64 UINT64,  *PUINT64;
 
 #endif /* !__USE_W32API */
 
-#endif /* _BASETSD_H */
+#endif /* _ROS_BASETSD_H */

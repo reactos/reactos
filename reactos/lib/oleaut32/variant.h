@@ -25,13 +25,6 @@
 #include <math.h>
 
 
-#ifdef __REACTOS__	/* FIXME */
-#define __int64 long long
-typedef __int64 LONG64;
-typedef unsigned __int64 ULONG64;
-#endif
-
-
 /* Get just the type from a variant pointer */
 #define V_TYPE(v)  (V_VT((v)) & VT_TYPEMASK)
 
