@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.47 2004/01/27 13:21:35 gvg Exp $
+/* $Id: message.c,v 1.48 2004/01/28 20:54:30 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -914,9 +914,14 @@ NtUserSendMessage(HWND Wnd,
         {
           if (0xFFFF0000 != ((DWORD) Window->WndProcA & 0xFFFF0000))
             {
-              /* Both Unicode and Ansi winprocs are real */
-              Info.Ansi = ! Window->Unicode;
-              Info.Proc = (Window->Unicode ? Window->WndProcW : Window->WndProcA);
+              /* Both Unicode and Ansi winprocs are real, see what usermode prefers */
+              Status = MmCopyFromCaller(&(Info.Ansi), &(UnsafeInfo->Ansi),
+                                        sizeof(BOOL));
+              if (! NT_SUCCESS(Status))
+                {
+                  Info.Ansi = ! Window->Unicode;
+                }
+              Info.Proc = (Info.Ansi ? Window->WndProcA : Window->WndProcW);
             }
           else
             {

@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.34 2004/01/26 08:44:51 weiden Exp $
+/* $Id: message.c,v 1.35 2004/01/28 20:54:30 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -703,6 +703,7 @@ SendMessageW(HWND Wnd,
   NTUSERSENDMESSAGEINFO Info;
   LRESULT Result;
 
+  Info.Ansi = FALSE;
   Result = NtUserSendMessage(Wnd, Msg, wParam, lParam, &Info);
   if (! Info.HandledByKernel)
     {
@@ -734,6 +735,7 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
       return FALSE;
     }
 
+  Info.Ansi = TRUE;
   Result = NtUserSendMessage(UcMsg.hwnd, UcMsg.message,
                              UcMsg.wParam, UcMsg.lParam, &Info);
   if (! Info.HandledByKernel)
