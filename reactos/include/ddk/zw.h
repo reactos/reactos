@@ -1,4 +1,3 @@
-
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -9,6 +8,7 @@
  *              ??/??/??: Complete implementation by Boudewijn Dekker
  *              13/07/98: Reorganised things a bit (David Welch)
  *              04/08/98: Added some documentation (Boudewijn Dekker)
+ *		14/08/98: Added type TIME and change variable type from [1] to [0]
  */
 
 #ifndef __DDK_ZW_H
@@ -207,18 +207,17 @@ typedef struct _OBJECT_ATTRIBUTES {
 	SECURITY_QUALITY_OF_SERVICE *SecurityQualityOfService;  
 } OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
 #endif
-   
+
+
+
+/*  
 #if IOTYPES_DIDNT_DECLARE_THIS
 typedef struct _IO_STATUS_BLOCK {
 	NTSTATUS Status;
 	ULONG Information;
 } IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
 #endif
-
-
-//typedef LARGE_INTEGER *PLARGE_INTEGER;
-
-//
+*/
 
 #define NtCurrentProcess() ( (HANDLE) 0xFFFFFFFF )
 #define NtCurrentThread() ( (HANDLE) 0xFFFFFFFE )
@@ -229,6 +228,52 @@ typedef struct _IO_STATUS_BLOCK {
 
 #define EVENT_READ_ACCESS			1
 #define EVENT_WRITE_ACCESS			2
+
+
+// file creation flags 
+
+#define FILE_DIRECTORY_FILE                     0x00000001
+#define FILE_WRITE_THROUGH                      0x00000002
+#define FILE_SEQUENTIAL_ONLY                    0x00000004
+#define FILE_NO_INTERMEDIATE_BUFFERING          0x00000008
+
+#define FILE_SYNCHRONOUS_IO_ALERT               0x00000010
+#define FILE_SYNCHRONOUS_IO_NONALERT            0x00000020
+#define FILE_NON_DIRECTORY_FILE                 0x00000040
+#define FILE_CREATE_TREE_CONNECTION             0x00000080
+
+#define FILE_COMPLETE_IF_OPLOCKED               0x00000100
+#define FILE_NO_EA_KNOWLEDGE                    0x00000200
+
+#define FILE_RANDOM_ACCESS                      0x00000800
+
+#define FILE_DELETE_ON_CLOSE                    0x00001000
+#define FILE_OPEN_BY_FILE_ID                    0x00002000
+#define FILE_OPEN_FOR_BACKUP_INTENT             0x00004000
+#define FILE_NO_COMPRESSION                     0x00008000
+
+#define FILE_RESERVE_OPFILTER                   0x00100000
+#define FILE_TRANSACTED_MODE                    0x00200000
+#define FILE_OPEN_OFFLINE_FILE                  0x00400000
+
+#define FILE_VALID_OPTION_FLAGS                 0x007fffff
+#define FILE_VALID_PIPE_OPTION_FLAGS            0x00000032
+#define FILE_VALID_MAILSLOT_OPTION_FLAGS        0x00000032
+#define FILE_VALID_SET_FLAGS                    0x00001036
+
+
+// file disposition values
+
+
+#define FILE_SUPERSEDE                  0x0000
+#define FILE_OPEN                       0x0001
+#define FILE_CREATE                     0x0002
+#define FILE_OPEN_IF                    0x0003
+#define FILE_OVERWRITE                  0x0004
+#define FILE_OVERWRITE_IF               0x0005
+#define FILE_MAXIMUM_DISPOSITION        0x0005
+
+
 
 
 //process query / set information class
@@ -258,7 +303,6 @@ typedef struct _IO_STATUS_BLOCK {
 #define MaxProcessInfoClass			22
 
 // thread query / set information class
-
 #define ThreadBasicInformation			0
 #define ThreadTimes				1
 #define ThreadPriority				2
@@ -275,6 +319,7 @@ typedef struct _IO_STATUS_BLOCK {
 #define ThreadIdealProcessor			13
 #define ThreadPriorityBoost			14
 #define MaxThreadInfoClass			15
+
 
 
 // key query information class
@@ -296,13 +341,23 @@ typedef struct _IO_STATUS_BLOCK {
 
 // object handle information
 
-#define HandleInformation			0
-#define HandleName				1
-#define HandleTypeInformation			2
-#define HandleAllInformation			3
-#define	HandleBasicInformation			4
+#define ObjectBasicInformation			0
+#define ObjectNameInformation			1
+#define ObjectTypeInformation			2
+#define ObjectAllInformation			3
+#define	ObjectDataInformation			4
+
+// semaphore information
+
+#define SemaphoreBasicInformation		0
+
+// event information
+
+#define EventBasicInformation			0
+
 
 // system information
+
 #define SystemPerformanceInformation		 5
 #define SystemCacheInformation			21
 #define SystemTimeAdjustmentInformation		28
@@ -372,7 +427,7 @@ typedef struct _IO_STATUS_BLOCK {
 
 // shutdown action
 
-typedef enum _SHUTDOWN_ACTION_ {
+typedef enum SHUTDOWN_ACTION_TAG {
 	ShutdownNoReboot,
 	ShutdownReboot,
 	ShutdownPowerOff
@@ -394,7 +449,7 @@ typedef enum _SHUTDOWN_ACTION_ {
 
 // object type  access rights
 
-#define OBJECT_TYPE_CREATE		0x00000001 
+#define OBJECT_TYPE_CREATE		0x0001 
 #define OBJECT_TYPE_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0x1)
 
 
@@ -412,33 +467,33 @@ typedef enum _SHUTDOWN_ACTION_ {
 #define SYMBOLIC_LINK_QUERY 			0x0001
 #define SYMBOLIC_LINK_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0x1)
    
-typedef struct _PROCESS_WS_WATCH_INFORMATION_ 
+typedef struct _PROCESS_WS_WATCH_INFORMATION
 {
 	PVOID FaultingPc;
 	PVOID FaultingVa;
 } PROCESS_WS_WATCH_INFORMATION, *PPROCESS_WS_WATCH_INFORMATION;
 
-typedef struct _PROCESS_BASIC_INFORMATION_
+typedef struct _PROCESS_BASIC_INFORMATION
 {
 	NTSTATUS ExitStatus;
-	PPEB PebBaseAddress;
+	PNT_PEB PebBaseAddress;
 	KAFFINITY AffinityMask;
 	KPRIORITY BasePriority;
 	ULONG UniqueProcessId;
 	ULONG InheritedFromUniqueProcessId;
 } PROCESS_BASIC_INFORMATION, *PPROCESS_BASIC_INFORMATION;
 
-typedef struct _QUOTA_LIMITS_ 
+typedef struct _QUOTA_LIMITS 
 {
 	ULONG PagedPoolLimit;
 	ULONG NonPagedPoolLimit;
 	ULONG MinimumWorkingSetSize;
 	ULONG MaximumWorkingSetSize;
 	ULONG PagefileLimit;
-	LARGE_INTEGER TimeLimit;
+	TIME TimeLimit;
 } QUOTA_LIMITS, *PQUOTA_LIMITS;
 
-typedef struct _IO_COUNTERS_
+typedef struct _IO_COUNTERS
 {
 	ULONG ReadOperationCount;
 	ULONG WriteOperationCount;
@@ -479,76 +534,87 @@ typedef struct _POOLED_USAGE_AND_LIMITS_
 } POOLED_USAGE_AND_LIMITS, *PPOOLED_USAGE_AND_LIMITS;
 
 
-typedef struct _PROCESS_ACCESS_TOKEN_ 
+typedef struct _PROCESS_ACCESS_TOKEN 
 {
 	HANDLE Token;
 	HANDLE Thread;
 } PROCESS_ACCESS_TOKEN, *PPROCESS_ACCESS_TOKEN;
 
-typedef struct _KERNEL_USER_TIMES_ 
+typedef struct _KERNEL_USER_TIMES 
 {
-	LARGE_INTEGER CreateTime;
-	LARGE_INTEGER ExitTime;
-	LARGE_INTEGER KernelTime;
-	LARGE_INTEGER UserTime;
+	TIME CreateTime;
+	TIME ExitTime;
+	TIME KernelTime;
+	TIME UserTime;
 } KERNEL_USER_TIMES;
 typedef KERNEL_USER_TIMES *PKERNEL_USER_TIMES;
 
+// thread information
+
+// incompatible with MS NT
+
+typedef struct _THREAD_BASIC_INFORMATION
+{
+	NTSTATUS ExitStatus;
+	PVOID TebBaseAddress;
+	KAFFINITY AffinityMask;
+	KPRIORITY BasePriority;
+	ULONG UniqueThreadId;
+} THREAD_BASIC_INFORMATION, *PTHREAD_BASIC_INFORMATION;
+
+// object information
    
-typedef struct _OBJECT_NAME_INFORMATION_ 
+typedef struct _OBJECT_NAME_INFORMATION 
 {               
     UNICODE_STRING Name;                                
 } OBJECT_NAME_INFORMATION, *POBJECT_NAME_INFORMATION;   
 
 
-// section information 
 
-
-// handle information 
-
-//HandleBasicInformation  HANDLE_BASIC_INFORMATION
-typedef struct _HANDLE_BASIC_INFORMATION_ 
+typedef struct _OBJECT_DATA_INFORMATION 
 {
 	BOOL bInheritHanlde;
 	BOOL bProtectFromClose;
-} HANDLE_BASIC_INFORMATION,  *PHANDLE_BASIC_INFORMATION;
+} OBJECT_DATA_INFORMATION,  *POBJECT_DATA_INFORMATION;
 
-//HandleTypeInormation HANDLE_TYPE_INFORMATION 
-typedef struct _HANDLE_TYPE_INFORMATION_ {
+
+typedef struct _OBJECT_TYPE_INFORMATION 
+{
 	UNICODE_STRING	Name;
 	UNICODE_STRING Type;
 	ULONG TotalHandles;
 	ULONG ReferenceCount;
-} HANDLE_TYPE_INFORMATION, *PHANDLE_TYPE_INFORMATION;
+} OBJECT_TYPE_INFORMATION, *POBJECT_TYPE_INFORMATION;
 
-typedef struct _SYSTEM_TIME_ADJUSTMENT_
+// system information
+
+typedef struct _SYSTEM_TIME_ADJUSTMENT
 {
 	ULONG TimeAdjustment;	
 	BOOL  TimeAdjustmentDisabled;
 } SYSTEM_TIME_ADJUSTMENT, *PSYSTEM_TIME_ADJUSTMENT;
-
-#ifdef __STRUCTS_H_DIDNT_DEFINE_THIS_ALREADY
-typedef struct _SYSTEM_INFO_ { 
+	
+typedef struct _SYSTEM_CONFIGURATION_INFO { 
     	union { 
-		DWORD  dwOemId; 
+		ULONG  	OemId; 
 		struct { 
-			WORD wProcessorArchitecture; 
-			WORD wReserved; 
-		}; 
-	}; 
-	DWORD  dwPageSize; 
-	LPVOID lpMinimumApplicationAddress; 
-	LPVOID lpMaximumApplicationAddress; 
-	DWORD  dwActiveProcessorMask; 
-	DWORD  dwNumberOfProcessors; 
-	DWORD  dwProcessorType; 
-	DWORD  dwAllocationGranularity; 
-	WORD  wProcessorLevel; 
-	WORD  wProcessorRevision; 
-} SYSTEM_INFO; 
-#endif
+			WORD ProcessorArchitecture; 
+			WORD Reserved; 
+		} tag1; 
+	} tag2; 
+	ULONG  PageSize; 
+	PVOID  MinimumApplicationAddress; 
+	PVOID  MaximumApplicationAddress; 
+	ULONG  ActiveProcessorMask; 
+	ULONG  NumberOfProcessors; 
+	ULONG  ProcessorType; 
+	ULONG  AllocationGranularity; 
+	WORD   ProcessorLevel; 
+	WORD   ProcessorRevision; 
+} SYSTEM_CONFIGURATION_INFO, *PSYSTEM_CONFIGURATION_INFO; 
 
-typedef struct _SYSTEM_CACHE_INFORMATION_ {
+
+typedef struct _SYSTEM_CACHE_INFORMATION {
 	ULONG    	CurrentSize;
 	ULONG    	PeakSize;
 	ULONG    	PageFaultCount;
@@ -561,16 +627,16 @@ typedef struct _SYSTEM_CACHE_INFORMATION_ {
 
 // file information
 
-typedef struct _FILE_BASIC_INFORMATION_ 
+typedef struct _FILE_BASIC_INFORMATION 
 {                    
-	LARGE_INTEGER CreationTime;                             
-	LARGE_INTEGER LastAccessTime;                           
-	LARGE_INTEGER LastWriteTime;                            
-	LARGE_INTEGER ChangeTime;                               
+	TIME CreationTime;                             
+	TIME LastAccessTime;                           
+	TIME LastWriteTime;                            
+	TIME ChangeTime;                               
 	ULONG FileAttributes;                                   
 } FILE_BASIC_INFORMATION, *PFILE_BASIC_INFORMATION;         
                                                             
-typedef struct _FILE_STANDARD_INFORMATION_ 
+typedef struct _FILE_STANDARD_INFORMATION 
 {                 
 	LARGE_INTEGER AllocationSize;                           
 	LARGE_INTEGER EndOfFile;                                
@@ -579,118 +645,111 @@ typedef struct _FILE_STANDARD_INFORMATION_
 	BOOLEAN Directory;                                      
 } FILE_STANDARD_INFORMATION, *PFILE_STANDARD_INFORMATION;   
                                                             
-typedef struct _FILE_POSITION_INFORMATION_ 
+typedef struct _FILE_POSITION_INFORMATION 
 {                 
 	LARGE_INTEGER CurrentByteOffset;                        
 } FILE_POSITION_INFORMATION, *PFILE_POSITION_INFORMATION;   
                                                             
-typedef struct _FILE_ALIGNMENT_INFORMATION_ 
+typedef struct _FILE_ALIGNMENT_INFORMATION 
 {                
 	ULONG AlignmentRequirement;                             
 } FILE_ALIGNMENT_INFORMATION, *PFILE_ALIGNMENT_INFORMATION; 
                                                             
-typedef struct _FILE_DISPOSITION_INFORMATION_
+typedef struct _FILE_DISPOSITION_INFORMATION
 {                  
 	BOOLEAN DeleteFile;                                         
 } FILE_DISPOSITION_INFORMATION, *PFILE_DISPOSITION_INFORMATION; 
                                                                 
-typedef struct _FILE_END_OF_FILE_INFORMATION_
+typedef struct _FILE_END_OF_FILE_INFORMATION
 {                  
 	LARGE_INTEGER EndOfFile;                                    
 } FILE_END_OF_FILE_INFORMATION, *PFILE_END_OF_FILE_INFORMATION; 
                                                                 
-typedef struct _FILE_NETWORK_OPEN_INFORMATION_ {
-	LARGE_INTEGER CreationTime;
-	LARGE_INTEGER LastAccessTime;
-	LARGE_INTEGER LastWriteTime;
-	LARGE_INTEGER ChangeTime;
+typedef struct _FILE_NETWORK_OPEN_INFORMATION {
+	TIME CreationTime;
+	TIME LastAccessTime;
+	TIME LastWriteTime;
+	TIME ChangeTime;
 	LARGE_INTEGER AllocationSize;
 	LARGE_INTEGER EndOfFile;
 	ULONG FileAttributes;
 } FILE_NETWORK_OPEN_INFORMATION, *PFILE_NETWORK_OPEN_INFORMATION;
 
-typedef struct _FILE_FULL_EA_INFORMATION_
+typedef struct _FILE_FULL_EA_INFORMATION
 {
 	ULONG NextEntryOffset;
 	UCHAR Flags;
 	UCHAR EaNameLength;
 	USHORT EaValueLength;
 	CHAR *EaName;
-} FILE_FULL_EA_INFORMATION;
-typedef FILE_FULL_EA_INFORMATION *PFILE_FULL_EA_INFORMATION; 
+} FILE_FULL_EA_INFORMATION, *PFILE_FULL_EA_INFORMATION;
 
 
-typedef struct _FILE_EA_INFORMATION_ {
+typedef struct _FILE_EA_INFORMATION {
 	ULONG EaSize;
-} FILE_EA_INFORMATION;
+} FILE_EA_INFORMATION, *PFILE_EA_INFORMATION;
 
-typedef struct _FILE_STREAM_INFORMATION_
-{
+
+typedef struct _FILE_GET_EA_INFORMATION {
+	ULONG NextEntryOffset;
+	UCHAR EaNameLength;
+	CHAR EaName[0];
+} FILE_GET_EA_INFORMATION, *PFILE_GET_EA_INFORMATION;
+
+typedef struct _FILE_STREAM_INFORMATION {
         ULONG NextEntryOffset;
         ULONG StreamNameLength;
         LARGE_INTEGER StreamSize;
         LARGE_INTEGER StreamAllocationSize;
-        WCHAR StreamName[1];
+        WCHAR StreamName[0];
 } FILE_STREAM_INFORMATION, *PFILE_STREAM_INFORMATION;
 
+typedef struct _FILE_ALLOCATION_INFORMATION {
+	LARGE_INTEGER AllocationSize;
+} FILE_ALLOCATION_INFORMATION, *PFILE_ALLOCATION_INFORMATION;
 
-#ifdef __IO_TYPE_DIDNT_DEFINE_THIS_ALREADY
-typedef struct _IO_COMPLETION_CONTEXT 
-{
-	PVOID Port;
-	ULONG Key; 
-} IO_COMPLETION_CONTEXT, *PIO_COMPLETION_CONTEXT;
-#endif
-
-typedef struct _FILE_ALLOCATION_INFORMATION_ {
-    LARGE_INTEGER AllocationSize;
-} FILE_ALLOCATION_INFORMATION;
-
-typedef struct _FILE_NAME_INFORMATION_ {
+typedef struct _FILE_NAME_INFORMATION {
 	ULONG FileNameLength;
-	WCHAR FileName[1];
-} FILE_NAME_INFORMATION;
+	WCHAR FileName[0];
+} FILE_NAME_INFORMATION, *PFILE_NAME_INFORMATION;
 
-typedef struct _FILE_RENAME_INFORMATION_ {
+typedef struct _FILE_NAMES_INFORMATION {
+	ULONG NextEntryOffset;
+	ULONG FileIndex;
+	ULONG FileNameLength;
+	WCHAR FileName[0];
+} FILE_NAMES_INFORMATION, *PFILE_NAMES_INFORMATION;
+
+
+typedef struct _FILE_RENAME_INFORMATION {
 	BOOLEAN Replace;
 	HANDLE RootDir;
         ULONG FileNameLength;
-	WCHAR FileName[1];
+	WCHAR FileName[0];
 } FILE_RENAME_INFORMATION, *PFILE_RENAME_INFORMATION;
 
 
-typedef struct _FILE_INTERNAL_INFORMATION_ {
+typedef struct _FILE_INTERNAL_INFORMATION {
 	LARGE_INTEGER IndexNumber;
-} FILE_INTERNAL_INFORMATION;
+} FILE_INTERNAL_INFORMATION, *PFILE_INTERNAL_INFORMATION;
 
-typedef struct _FILE_ACCESS_INFORMATION_ {
+typedef struct _FILE_ACCESS_INFORMATION {
 	ACCESS_MASK AccessFlags;
-} FILE_ACCESS_INFORMATION;
+} FILE_ACCESS_INFORMATION, *PFILE_ACCESS_INFORMATION;
 
-#ifdef __DEFINED_ABOVE
-typedef struct _FILE_POSITION_INFORMATION_ {
-	LARGE_INTEGER CurrentByteOffset;
-} FILE_POSITION_INFORMATION;
-#endif
 
-typedef struct _FILE_MODE_INFORMATION_ {
+typedef struct _FILE_MODE_INFORMATION {
 	ULONG Mode;
-} FILE_MODE_INFORMATION;
+} FILE_MODE_INFORMATION, *PFILE_MODE_INFORMATION;
 
-#ifdef __DEFINED_ABOVE
-typedef struct _FILE_ALIGNMENT_INFORMATION_ {
-	ULONG AlignmentRequirement;
-} FILE_ALIGNMENT_INFORMATION;
-#endif
-
-typedef struct _FILE_COMPRESSION_INFORMATION_ {
+typedef struct _FILE_COMPRESSION_INFORMATION {
 	LARGE_INTEGER CompressedFileSize;
 	USHORT CompressionFormat;
 	UCHAR CompressionUnitShift;
 	UCHAR ChunkShift;
 	UCHAR ClusterShift;
 	UCHAR Reserved[3];
-} FILE_COMPRESSION_INFORMATION;
+} FILE_COMPRESSION_INFORMATION, *PFILE_COMPRESSION_INFORMATION;
 
 typedef struct _FILE_ALL_INFORMATION {
 	FILE_BASIC_INFORMATION BasicInformation;
@@ -702,15 +761,63 @@ typedef struct _FILE_ALL_INFORMATION {
 	FILE_MODE_INFORMATION ModeInformation;
 	FILE_ALIGNMENT_INFORMATION AlignmentInformation;
 	FILE_NAME_INFORMATION NameInformation;
-} FILE_ALL_INFORMATION;
+} FILE_ALL_INFORMATION, *PFILE_ALL_INFORMATION;
 
 // file system information structures
 
-typedef struct _FILE_FS_DEVICE_INFORMATION_ {                    
+typedef struct _FILE_FS_DEVICE_INFORMATION {                    
 	DEVICE_TYPE DeviceType;                                     
 	ULONG Characteristics;                                      
-} FILE_FS_DEVICE_INFORMATION;
-typedef FILE_FS_DEVICE_INFORMATION *PFILE_FS_DEVICE_INFORMATION;
+} FILE_FS_DEVICE_INFORMATION,  *PFILE_FS_DEVICE_INFORMATION;
+
+
+/* 	device type can be one of the following values:
+
+	FILE_DEVICE_BEEP	        0x00000001
+	FILE_DEVICE_CD_ROM           	0x00000002
+	FILE_DEVICE_CD_ROM_FILE_SYSTEM 	0x00000003
+	FILE_DEVICE_CONTROLLER       	0x00000004
+	FILE_DEVICE_DATALINK         	0x00000005
+	FILE_DEVICE_DFS              	0x00000006
+	FILE_DEVICE_DISK             	0x00000007
+	FILE_DEVICE_DISK_FILE_SYSTEM 	0x00000008
+	FILE_DEVICE_FILE_SYSTEM      	0x00000009
+	FILE_DEVICE_INPORT_PORT      	0x0000000a
+	FILE_DEVICE_KEYBOARD         	0x0000000b
+	FILE_DEVICE_MAILSLOT         	0x0000000c
+	FILE_DEVICE_MIDI_IN          	0x0000000d
+	FILE_DEVICE_MIDI_OUT         	0x0000000e
+	FILE_DEVICE_MOUSE            	0x0000000f
+	FILE_DEVICE_MULTI_UNC_PROVIDER 	0x00000010
+	FILE_DEVICE_NAMED_PIPE       	0x00000011
+	FILE_DEVICE_NETWORK          	0x00000012
+	FILE_DEVICE_NETWORK_BROWSER  	0x00000013
+	FILE_DEVICE_NETWORK_FILE_SYSTEM 0x00000014
+	FILE_DEVICE_NULL             	0x00000015
+	FILE_DEVICE_PARALLEL_PORT    	0x00000016
+	FILE_DEVICE_PHYSICAL_NETCARD 	0x00000017
+	FILE_DEVICE_PRINTER          	0x00000018
+	FILE_DEVICE_SCANNER          	0x00000019
+	FILE_DEVICE_SERIAL_MOUSE_PORT 	0x0000001a
+	FILE_DEVICE_SERIAL_PORT      	0x0000001b
+	FILE_DEVICE_SCREEN           	0x0000001c
+	FILE_DEVICE_SOUND            	0x0000001d
+	FILE_DEVICE_STREAMS          	0x0000001e
+	FILE_DEVICE_TAPE             	0x0000001f
+	FILE_DEVICE_TAPE_FILE_SYSTEM 	0x00000020
+	FILE_DEVICE_TRANSPORT        	0x00000021
+	FILE_DEVICE_UNKNOWN          	0x00000022
+	FILE_DEVICE_VIDEO            	0x00000023
+	FILE_DEVICE_VIRTUAL_DISK     	0x00000024
+	FILE_DEVICE_WAVE_IN          	0x00000025
+	FILE_DEVICE_WAVE_OUT         	0x00000026
+	FILE_DEVICE_8042_PORT        	0x00000027
+	FILE_DEVICE_NETWORK_REDIRECTOR	0x00000028
+	FILE_DEVICE_BATTERY          	0x00000029
+	FILE_DEVICE_BUS_EXTENDER     	0x0000002a
+	FILE_DEVICE_MODEM            	0x0000002b
+	FILE_DEVICE_VDM              	0x0000002c
+ */
 
 /* 
 	characteristics  is one of the following values:
@@ -724,26 +831,26 @@ typedef FILE_FS_DEVICE_INFORMATION *PFILE_FS_DEVICE_INFORMATION;
         FILE_VIRTUAL_VOLUME             0x00000040
 */  
 
-typedef struct _FILE_FS_VOLUME_INFORMATION_ {
-	LARGE_INTEGER VolumeCreationTime;
+typedef struct _FILE_FS_VOLUME_INFORMATION {
+	TIME VolumeCreationTime;
 	ULONG VolumeSerialNumber;
 	ULONG VolumeLabelLength;
 	BOOLEAN SupportsObjects;
-	WCHAR VolumeLabel[1];
+	WCHAR VolumeLabel[0];
 } FILE_FS_VOLUME_INFORMATION;
 
-typedef struct _FILE_FS_SIZE_INFORMATION_ {
+typedef struct _FILE_FS_SIZE_INFORMATION {
 	LARGE_INTEGER TotalAllocationUnits;
 	LARGE_INTEGER AvailableAllocationUnits;
 	ULONG SectorsPerAllocationUnit;
 	ULONG BytesPerSector;
-} FILE_FS_SIZE_INFORMATION;
+} FILE_FS_SIZE_INFORMATION, *PFILE_FS_SIZE_INFORMATION;
 
-typedef struct _FILE_FS_ATTRIBUTE_INFORMATION_ {
+typedef struct _FILE_FS_ATTRIBUTE_INFORMATION {
 	ULONG FileSystemAttributes;
 	LONG MaximumComponentNameLength;
 	ULONG FileSystemNameLength;
-	WCHAR FileSystemName[1];
+	WCHAR FileSystemName[0]; 
 } FILE_FS_ATTRIBUTE_INFORMATION;
 
 /*
@@ -757,15 +864,74 @@ typedef struct _FILE_FS_ATTRIBUTE_INFORMATION_ {
         FILE_VOLUME_QUOTAS              0x00000020
         FILE_VOLUME_IS_COMPRESSED       0x00008000
 */
+typedef struct _FILE_FS_LABEL_INFORMATION {
+	ULONG VolumeLabelLength;
+	WCHAR VolumeLabel[0];
+} FILE_FS_LABEL_INFORMATION, *PFILE_FS_LABEL_INFORMATION;
 
+// read file scatter / write file scatter
+//FIXME I am a win32 struct aswell
+
+typedef union _FILE_SEGMENT_ELEMENT {     
+	PVOID Buffer; 
+	ULONG Alignment; 
+}FILE_SEGMENT_ELEMENT, *PFILE_SEGMENT_ELEMENT; 
 
 // directory information
 
-typedef struct _OBJDIR_INFORMATION_ {
+typedef struct _OBJDIR_INFORMATION {
 	UNICODE_STRING ObjectName;
 	UNICODE_STRING ObjectTypeName; // Directory, Device ...
-	UCHAR          Data[1];        // variable size
+	UCHAR          Data[0];        
 } OBJDIR_INFORMATION, *POBJDIR_INFORMATION;
+
+
+typedef struct _FILE_DIRECTORY_INFORMATION {
+	ULONG	NextEntryOffset;
+	ULONG	FileIndex;
+	TIME CreationTime;
+	TIME LastAccessTime;
+	TIME LastWriteTime;
+	TIME ChangeTime;
+	LARGE_INTEGER EndOfFile;
+	LARGE_INTEGER AllocationSize;
+	ULONG FileAttributes;
+	ULONG FileNameLength;
+	WCHAR FileName[0];
+} FILE_DIRECTORY_INFORMATION, *PFILE_DIRECTORY_INFORMATION;
+
+typedef struct _FILE_FULL_DIRECTORY_INFORMATION {
+	ULONG	NextEntryOffset;
+	ULONG	FileIndex;
+	TIME CreationTime;
+	TIME LastAccessTime;
+	TIME LastWriteTime;
+	TIME ChangeTime;
+	LARGE_INTEGER EndOfFile;
+	LARGE_INTEGER AllocationSize;
+	ULONG FileAttributes;
+	ULONG FileNameLength;
+	ULONG EaSize;
+	WCHAR FileName[0];
+} FILE_FULL_DIRECTORY_INFORMATION, *PFILE_FULL_DIRECTORY_INFORMATION;
+
+
+typedef struct _FILE_BOTH_DIRECTORY_INFORMATION {
+	ULONG		NextEntryOffset;
+	ULONG		FileIndex;
+	TIME 		CreationTime;
+	TIME 		LastAccessTime;
+	TIME 		LastWriteTime;
+	TIME 		ChangeTime;
+	LARGE_INTEGER 	EndOfFile;
+	LARGE_INTEGER 	AllocationSize;
+	ULONG 		FileAttributes;
+	ULONG 		FileNameLength;
+	ULONG 		EaSize;
+	CHAR 		ShortNameLength;
+	WCHAR 		ShortName[12]; // 8.3 name
+	WCHAR 		FileName[0];
+} FILE_BOTH_DIRECTORY_INFORMATION, *PFILE_BOTH_DIRECTORY_INFORMATION;
 
 
 /*
@@ -786,11 +952,11 @@ typedef struct _OBJDIR_INFORMATION_ {
 	FILE_NOTIFY_CHANGE_STREAM_WRITE     0x00000800
 */
 
-typedef struct _FILE_NOTIFY_INFORMATION_ {
+typedef struct _FILE_NOTIFY_INFORMATION {
 	ULONG NextEntryOffset;
 	ULONG Action;
 	ULONG FileNameLength;
-	WCHAR FileName[1]; // variable size
+	WCHAR FileName[0]; 
 } FILE_NOTIFY_INFORMATION;
 
 
@@ -809,7 +975,7 @@ typedef struct _FILE_NOTIFY_INFORMATION_ {
 */
 
 
-//FIXME: I belong somewhere in windows.h
+//FIXME: I am a win32 object 
 typedef 
 VOID 
 (*PTIMERAPCROUTINE)( 
@@ -820,14 +986,14 @@ VOID
 
 // NtProcessStartup parameters
 
-typedef struct _ENVIRONMENT_INFORMATION_ {
+typedef struct _ENVIRONMENT_INFORMATION {
        ULONG            Unknown[21];     
        UNICODE_STRING   CommandLine;
        UNICODE_STRING   ImageFile;
 } ENVIRONMENT_INFORMATION, *PENVIRONMENT_INFORMATION;
 
 
-typedef struct _STARTUP_ARGUMENT_ {
+typedef struct _STARTUP_ARGUMENT {
        ULONG                     Unknown[3];
        PENVIRONMENT_INFORMATION  Environment;
 } STARTUP_ARGUMENT, *PSTARTUP_ARGUMENT;
@@ -840,24 +1006,28 @@ typedef struct _STARTUP_ARGUMENT_ {
 #define FSCTL_GET_RETRIEVAL_POINTERS		0x90073
 #define FSCTL_MOVE_FILE				0x90074
 
-typedef struct _MAPPING_PAIR_ {
+typedef struct _MAPPING_PAIR 
+{
 	ULONGLONG	Vcn;
 	ULONGLONG	Lcn;
 } MAPPING_PAIR, *PMAPPING_PAIR;
 
-typedef struct _GET_RETRIEVAL_DESCRIPTOR_ {
+typedef struct _GET_RETRIEVAL_DESCRIPTOR
+{
 	ULONG		NumberOfPairs;
 	ULONGLONG	StartVcn;
-	MAPPING_PAIR	Pair[1];
+	MAPPING_PAIR	Pair[0];
 } GET_RETRIEVAL_DESCRIPTOR, *PGET_RETRIEVAL_DESCRIPTOR;
 
-typedef struct _BITMAP_DESCRIPTOR_ {
+typedef struct _BITMAP_DESCRIPTOR
+{
 	ULONGLONG	StartLcn;
 	ULONGLONG	ClustersToEndOfVol;
-	BYTE		Map[1];
+	BYTE		Map[0];
 } BITMAP_DESCRIPTOR, *PBITMAP_DESCRIPTOR; 
 
-typedef struct _MOVEFILE_DESCRIPTOR_ {
+typedef struct _MOVEFILE_DESCRIPTOR
+{
 	HANDLE            FileHandle; 
 	ULONG             Reserved;   
 	LARGE_INTEGER     StartVcn; 
@@ -867,12 +1037,29 @@ typedef struct _MOVEFILE_DESCRIPTOR_ {
 } MOVEFILE_DESCRIPTOR, *PMOVEFILE_DESCRIPTOR;
 
 
+// semaphore information
+
+typedef struct _SEMAPHORE_BASIC_INFORMATION
+{
+	ULONG CurrentCount;
+	ULONG MaximumCount;
+} SEMAPHORE_BASIC_INFORMATION, *PSEMAPHORE_BASIC_INFORMATION;
+
+// event information
+
+typedef struct _EVENT_BASIC_INFORMATION 
+{
+	BOOL AutomaticReset;
+	BOOL Signaled;
+} EVENT_BASIC_INFORMATION, *PEVENT_INFORMATION;
+
 
 
 
 /*
  * FUNCTION: Adds an atom to the global atom table
  * ARGUMENTS: 
+	  Atom (OUT) = Caller supplies storage for the resulting atom.
  *        AtomString = The string to add to the atom table.
  * REMARKS: The arguments map to the win32 add GlobalAddAtom. 
  * RETURNS: Status
@@ -881,15 +1068,16 @@ NTSTATUS
 STDCALL
 NtAddAtom(
 	OUT ATOM *Atom,
-	IN PUNICODE_STRING pString
+	IN PUNICODE_STRING AtomString
 	);
 /*
- * FUNCTION: Decrements a thread's resume count and places it in an alerted state.
+ * FUNCTION: Decrements a thread's suspend count and places it in an alerted 
+ *           state.
  * ARGUMENTS: 
  *        ThreadHandle = Handle to the thread that should be resumed
- *        SuspendCount =  The resulting resume count.
+ *        SuspendCount =  The resulting suspend count.
  * REMARK:
-	  A thread is resumed if its resume count is 0
+ *	  A thread is resumed if its suspend count is 0
  * RETURNS: Status
  */
 NTSTATUS
@@ -898,6 +1086,7 @@ NtAlertResumeThread(
 	IN HANDLE ThreadHandle,
 	OUT PULONG SuspendCount
 	);
+
 /*
  * FUNCTION: Puts the thread in a alerted state
  * ARGUMENTS: 
@@ -909,6 +1098,7 @@ STDCALL
 NtAlertThread(
 	IN HANDLE ThreadHandle
 	);
+
 /*
  * FUNCTION: Allocates a locally unique id
  * ARGUMENTS: 
@@ -925,12 +1115,15 @@ NtAllocateLocallyUniqueId(
  * FUNCTION: Allocates a block of virtual memory in the process address space
  * ARGUMENTS:
  *      ProcessHandle = The handle of the process which owns the virtual memory
- *      BaseAddress   = A pointer to the virtual memory allocated
- *      StartAddress  = (OPTIONAL) The requested start address 
- *      NumberOfBytesAllocated = The number of bytes to allocate
+ *      BaseAddress   = A pointer to the virtual memory allocated. If you supply a non zero
+ *			value the system will try to allocate the memory at the address supplied. It rounds
+ *			it down to a multiple if the page size.
+ *      ZeroBits  = (OPTIONAL) You can specify the number of high order bits that must be zero, ensuring that 
+ *			the memory will be allocated at a address below a certain value.
+ *      RegionSize = The number of bytes to allocate
  *      AllocationType = Indicates the type of virtual memory you like to allocated,
  *                       can be one of the values : MEM_COMMIT, MEM_RESERVE, MEM_RESET, MEM_TOP_DOWN
- *      ProtectionType = Indicates the protection type of the pages allocated, can be a combination of
+ *      Protect = Indicates the protection type of the pages allocated, can be a combination of
  *                      PAGE_READONLY, PAGE_READWRITE, PAGE_EXECUTE_READ,
  *                      PAGE_EXECUTE_READWRITE, PAGE_GUARD, PAGE_NOACCESS, PAGE_NOACCESS
  * REMARKS:
@@ -943,19 +1136,20 @@ NtAllocateLocallyUniqueId(
 NTSTATUS
 STDCALL
 NtAllocateVirtualMemory( 
-	IN HANDLE hProcess,
-	OUT PVOID  BaseAddress,
-	IN ULONG  StartAddress,
-	IN ULONG  NumberOfBytesAllocated,
+	IN HANDLE ProcessHandle,
+	OUT PVOID *BaseAddress,
+	IN ULONG  ZeroBits,
+	IN ULONG  RegionSize,
 	IN ULONG  AllocationType, 
-	IN ULONG  ProtectionType
+	IN ULONG  Protect
 	);
 
 /*
  * FUNCTION: Cancels a IO request
  * ARGUMENTS: 
  *        FileHandle = Handle to the file
- *        IoStatusBlock  = Specifies the status of the io request when it was cancelled
+ *        IoStatusBlock  = 
+			   
  * REMARKS:
  *        This function maps to the win32 CancelIo. 
  * RETURNS: Status
@@ -1001,7 +1195,7 @@ NtClearEvent(
  * ARGUMENTS:
  *         Handle = Handle to the object
  * REMARKS:
-         This function maps to the win32 function CloseHandle. 
+ *       This function maps to the win32 function CloseHandle. 
  * RETURNS: Status
  */
 
@@ -1017,7 +1211,7 @@ NtClose(
  * ARGUMENTS: 
  *        Context = Specifies the processor context
  * REMARKS
-          NtContinue can be used to continue after a exception.
+ *        NtContinue can be used to continue after a exception.
  * RETURNS: Status
  */
 //FIXME This function might need another parameter
@@ -1068,6 +1262,24 @@ NtCreateEvent(
 	IN BOOL ManualReset,
 	IN BOOL InitialState
 	);
+
+/*
+ * FUNCTION: Creates an eventpair object
+ * ARGUMENTS:
+ *        EventPairHandle (OUT) = Caller supplied storage for the resulting handle
+ *        DesiredAccess = Specifies access to the event
+ *        ObjectAttribute = Initialized attributes for the object
+ */
+
+NTSTATUS
+STDCALL
+NtCreateEventPair(
+	OUT PHANDLE FileHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes
+	);
+
+
 /*
  * FUNCTION: Creates or opens a file, directory or device object.
  * ARGUMENTS:
@@ -1201,7 +1413,7 @@ NtCreatePagingFile(
 	IN PUNICODE_STRING PageFileName,
 	IN ULONG MiniumSize,
 	IN ULONG MaxiumSize,
-	OUT PULONG ActualSize
+	OUT PULONG ActualSize 
 	);
 /*
  * FUNCTION: Creates a process.
@@ -1305,7 +1517,7 @@ NtCreateSymbolicLinkObject(
  *        DesiredAccess = Specifies the allowed or desired access to the thread. 
  *        ObjectAttributes = Initialized attributes for the object.
  *        ProcessHandle = Handle to the threads parent process.
- *        ClientId      = Caller supplies storage for process id and thread id.
+ *        ClientId (OUT) = Caller supplies storage for returned process id and thread id.
  *        ThreadContext = Initial processor context for the thread.
  *        InitialTeb = Initial Thread Environment Block for the Thread.
  *        CreateSuspended = Specifies if the thread is ready for scheduling
@@ -1320,7 +1532,7 @@ NtCreateThread(
 	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
 	IN HANDLE ProcessHandle,
-	IN PCLIENT_ID ClientId,
+	OUT PCLIENT_ID ClientId,
 	IN PCONTEXT ThreadContext,
 	IN PINITIAL_TEB InitialTeb,
 	IN BOOLEAN CreateSuspended
@@ -1389,15 +1601,17 @@ NtDeleteAtom(
 /*
  * FUNCTION: Deletes a file
  * ARGUMENTS:
- *        FileHandle = Handle to the file which should be deleted
+ *        ObjectAttributes = Handle to the file which should be deleted
  * REMARKS:
- *	 The function maps to the win32 DeleteFile
+	 This system call is functionally equivalent to NtSetInformationFile
+	 setting the disposition information.
+ *	 The function maps to the win32 DeleteFile. 
  * RETURNS: Status
  */
 NTSTATUS
 STDCALL
 NtDeleteFile(
-	IN HANDLE FileHandle
+	IN POBJECT_ATTRIBUTES ObjectAttributes
 	);
 
 /*
@@ -1572,6 +1786,9 @@ NtFindAtom(
  * FUNCTION: Flushes chached file data to disk
  * ARGUMENTS:
  *       FileHandle = Points to the file
+	 IoStatusBlock = Caller must supply storage to receive the result of the flush
+		buffers operation. The information field is set to number of bytes
+		flushed to disk.
  * RETURNS: Status 
  * REMARKS:
 	This funciton maps to the win32 FlushFileBuffers
@@ -1579,7 +1796,8 @@ NtFindAtom(
 NTSTATUS
 STDCALL
 NtFlushBuffersFile(
-	IN HANDLE FileHandle
+	IN HANDLE FileHandle,
+	OUT PIO_STATUS_BLOCK IoStatusBlock
 	);
 /*
  * FUNCTION: Flushes a the processors instruction cache
@@ -1651,9 +1869,9 @@ NtFlushWriteBuffer (
  * FUNCTION: Frees a range of virtual memory
  * ARGUMENTS:
  *        ProcessHandle = Points to the process that allocated the virtual memory
- *        BaseAddress = Points to the memory address
- *        NumberOfBytesToFree = Limits the range to free,
- *        NumberOfBytesFreed = Actual number of bytes freed
+ *        BaseAddress = Points to the memory address, rounded down to a multiple of the pagesize
+ *        RegionSize = Limits the range to free, rounded up to a multiple of the paging size
+ *        FreeType = Can be one of the values:  MEM_DECOMMIT, or MEM_RELEASE
  * RETURNS: Status 
  */
 
@@ -1661,9 +1879,9 @@ NTSTATUS
 STDCALL
 NtFreeVirtualMemory(
 	IN PHANDLE ProcessHandle,
-	IN PVOID  BaseAddress,	
-	IN ULONG  NumberOfBytesToFree,	
-	OUT PULONG  NumberOfBytesFreeed OPTIONAL
+	IN PVOID  *BaseAddress,	
+	IN ULONG  RegionSize,	
+	IN ULONG  FreeType
 	); 
 
 /*
@@ -1758,9 +1976,9 @@ NtLoadDriver(
  * FUNCTION: Loads a registry key. 
  * ARGUMENTS: 
  *       KeyHandle = Handle to the registry key
- *	 ObjectAttributes = ???
+	 ObjectAttributes = ???
  * REMARK:
- *	This procedure maps to the win32 procedure RegLoadKey 
+	This procedure maps to the win32 procedure RegLoadKey 
  * RETURNS: Status
  */	
 NTSTATUS
@@ -1778,13 +1996,13 @@ NtLoadKey(
  *       ApcContext = Argument to the callback
  *       IoStatusBlock (OUT) = Caller should supply storage for a structure containing
  *			 the completion status and information about the requested lock operation.
- *       ByteOffsetOfLock = Offset 
- *       LengthOfLock = Number of bytes to lock.
- *       KeyOfLock  = 
- *       DoNotWaitIfHeld =
- *       IsExclusiveLock =
+ *       ByteOffset = Offset 
+ *       Length = Number of bytes to lock.
+ *       Key  = 
+ *       FailImmediatedly =
+ *       ExclusiveLock =
  * REMARK:
- *	This procedure maps to the win32 procedure LockFileEx 
+	This procedure maps to the win32 procedure LockFileEx 
  * RETURNS: Status
  */	
 NTSTATUS 
@@ -1795,11 +2013,11 @@ NtLockFile(
   IN  PIO_APC_ROUTINE ApcRoutine OPTIONAL,
   IN  PVOID ApcContext OPTIONAL,
   OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN  PLARGE_INTEGER ByteOffsetOfLock,
-  IN  PLARGE_INTEGER LengthOfLock,
-  IN  ULONG KeyOfLock,
-  IN  BOOLEAN DoNotWaitIfHeld,
-  IN  BOOLEAN IsExclusiveLock
+  IN  PLARGE_INTEGER ByteOffset,
+  IN  PLARGE_INTEGER Length,
+  IN  ULONG Key,
+  IN  BOOLEAN FailImmediatedly,
+  IN  BOOLEAN ExclusiveLock
   );
 /*
  * FUNCTION: Locks a range of virtual memory. 
@@ -1809,7 +2027,7 @@ NtLockFile(
  *       NumberOfBytesLock = Offset to the upper boundary.
  *       NumberOfBytesLocked (OUT) = Number of bytes actually locked.
  * REMARK:
- *	This procedure maps to the win32 procedure VirtualLock 
+	This procedure maps to the win32 procedure VirtualLock 
  * RETURNS: Status
  */	
 NTSTATUS
@@ -1832,8 +2050,6 @@ STDCALL
 NtMakeTemporaryObject(
 	IN HANDLE Handle 
 	);
-
-  
 /*
  * FUNCTION: Maps a view of a section into the virtual address space of a 
  *           process
@@ -1873,15 +2089,28 @@ NtMapViewOfSection(
  * FUNCTION: Installs a notify for the change of a directory's contents
  * ARGUMENTS:
  *        FileHandle = Handle to the directory
- *	  Event = 
- *        UserApcRoutine   = Start address
- *        UserApcContext = Delimits the range of virtual memory
+	  Event = 
+ *        ApcRoutine   = Start address
+ *        ApcContext = Delimits the range of virtual memory
  *				for which the new access protection holds
  *        IoStatusBlock = The new access proctection for the pages
  *        Buffer = Caller supplies storage for resulting information --> FILE_NOTIFY_INFORMATION
  *	  BufferSize = 	Size of the buffer
- *	  NotifyFilter = // might be completionfileter
- *	  WatchSubtree =
+	  CompletionFilter = Can be one of the following values:
+			FILE_NOTIFY_CHANGE_FILE_NAME
+			FILE_NOTIFY_CHANGE_DIR_NAME
+			FILE_NOTIFY_CHANGE_NAME ( FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME ) 
+			FILE_NOTIFY_CHANGE_ATTRIBUTES
+			FILE_NOTIFY_CHANGE_SIZE
+			FILE_NOTIFY_CHANGE_LAST_WRITE
+			FILE_NOTIFY_CHANGE_LAST_ACCESS
+			FILE_NOTIFY_CHANGE_CREATION ( change of creation timestamp )
+			FILE_NOTIFY_CHANGE_EA
+			FILE_NOTIFY_CHANGE_SECURITY
+			FILE_NOTIFY_CHANGE_STREAM_NAME
+			FILE_NOTIFY_CHANGE_STREAM_SIZE
+			FILE_NOTIFY_CHANGE_STREAM_WRITE
+	  WatchTree = If true the notify will be installed recursively on the targetdirectory and all subdirectories.
  *
  * REMARKS:
  *	 The function maps to the win32 FindFirstChangeNotification, FindNextChangeNotification 
@@ -1892,16 +2121,29 @@ STDCALL
 NtNotifyChangeDirectoryFile(
 	IN HANDLE FileHandle,
 	IN HANDLE Event OPTIONAL, 
-	IN PIO_APC_ROUTINE UserApcRoutine OPTIONAL, 
-	IN PVOID UserApcContext OPTIONAL, 
+	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL, 
+	IN PVOID ApcContext OPTIONAL, 
 	OUT PIO_STATUS_BLOCK IoStatusBlock,
 	OUT PVOID Buffer,
 	IN ULONG BufferSize,
-	IN ULONG NotifyFilter,
-	IN BOOL WatchSubtree
+	IN ULONG CompletionFilter,
+	IN BOOL WatchTree
+	);
+NTSTATUS
+STDCALL
+NtNotifyChangeKey(
+	IN HANDLE KeyHandle,
+	IN HANDLE Event,
+	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL, 
+	IN PVOID ApcContext OPTIONAL, 
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	IN ULONG CompletionFilter,
+	IN BOOLEAN Asynchroneous, 
+	OUT PVOID ChangeBuffer,
+	IN ULONG Length,
+	IN BOOLEAN WatchSubtree
 	);
 
-//NtNotifyChangeKey
 /*
  * FUNCTION: Opens an existing directory object
  * ARGUMENTS:
@@ -1941,7 +2183,7 @@ NtOpenEvent(
  *        ObjectAttributes = Initialized attributes for the object
  *        IoStatusBlock =
  *        ShareAccess =
- *        FileAttributes =
+ *        OpenOptions =
  * RETURNS: Status
  */
 NTSTATUS
@@ -1952,15 +2194,32 @@ NtOpenFile(
 	IN POBJECT_ATTRIBUTES ObjectAttributes,
 	OUT PIO_STATUS_BLOCK IoStatusBlock,   
 	IN ULONG ShareAccess,         
-   	IN ULONG FileAttributes                                                                    
+   	IN ULONG OpenOptions                                                                    
 	);
-//--> NtOpenIoCompletion
+
+/*
+ * FUNCTION: Opens an existing io completion object
+ * ARGUMENTS:
+ *        CompletionPort (OUT) = Caller supplied storage for the resulting handle
+ *        DesiredAccess = Requested access to the io completion object
+ *        ObjectAttributes = Initialized attributes for the object
+ * RETURNS: Status
+ */
+
+NTSTATUS
+STDCALL
+NtOpenIoCompletion(
+	OUT PHANDLE CompetionPort,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes
+	);
+	
 /*
  * FUNCTION: Opens an existing key in the registry
  * ARGUMENTS:
  *        KeyHandle (OUT) = Caller supplied storage for the resulting handle
  *        DesiredAccess = Requested access to the key
- *        ObjectAttribute = Initialized attributes for the object
+ *        ObjectAttributes = Initialized attributes for the object
  * RETURNS: Status
  */
 NTSTATUS
@@ -1992,7 +2251,7 @@ NtOpenMutant(
  *        ProcessHandle (OUT) = Caller supplied storage for the resulting handle
  *        DesiredAccess = Requested access to the process
  *        ObjectAttribute = Initialized attributes for the object
- *        ClientId = storage for the process id and the thread id
+ *        ClientId = Identifies the process id to open
  * RETURNS: Status
  */
 NTSTATUS 
@@ -2054,6 +2313,7 @@ NtOpenSymbolicLinkObject(
  *        ThreadHandle (OUT) = Caller supplied storage for the resulting handle
  *        DesiredAccess = Requested access to the thread
  *        ObjectAttribute = Initialized attributes for the object
+ *	  ClientId = Identifies the thread to open.
  * RETURNS: Status
  */
 NTSTATUS
@@ -2061,7 +2321,8 @@ STDCALL
 NtOpenThread(
 	OUT PHANDLE ThreadHandle,
 	IN ACCESS_MASK DesiredAccess,
-	IN POBJECT_ATTRIBUTES ObjectAttributes
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
+	IN PCLIENT_ID ClientId
 	);
 /*
  * FUNCTION: Opens an existing timer
@@ -2130,7 +2391,25 @@ NtPulseEvent(
 	);
 
 //-- NtQueryAttributesFile
-//-- NtQueryDirectoryFile
+
+// FileNameInformation - FILE_NAMES_INFORMATION
+
+NTSTATUS 
+STDCALL 
+NtQueryDirectoryFile(
+	IN HANDLE FileHandle,
+	IN HANDLE Event OPTIONAL,
+	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+	IN PVOID ApcContext OPTIONAL,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	OUT PVOID FileInformation,
+	IN ULONG Length,
+	IN FILE_INFORMATION_CLASS FileInformationClass,
+	IN BOOLEAN ReturnSingleEntry,
+	IN PUNICODE_STRING FileName OPTIONAL,
+	IN BOOLEAN RestartScan
+	);
+	
 /*
  * FUNCTION: Query information about the content of a directory object
  * ARGUMENTS:
@@ -2155,13 +2434,27 @@ NtQueryDirectoryObject(
 	OUT PULONG              DataWritten OPTIONAL
 	); 
 
-
-//-- NtQueryEaFile
+NTSTATUS
+STDCALL
+NtQueryEaFile(
+	IN HANDLE FileHandle,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	OUT PVOID Buffer,
+	IN ULONG Length,
+	IN BOOLEAN ReturnSingleEntry,
+	IN PVOID EaList OPTIONAL,
+	IN ULONG EaListLength,
+	IN PULONG EaIndex OPTIONAL,
+	IN BOOLEAN RestartScan
+	);
 /*
  * FUNCTION: Queries an event
  * ARGUMENTS:
  *        EventHandle  = Handle to the event
  *        EventInformationClass = Index of the information structure
+	
+	  EventBasicInformation		EVENT_BASIC_INFORMATION
+
  *	  EventInformation = Caller supplies storage for the information structure
  *	  EventInformationLength =  Size of the information structure
  *	  ReturnLength = Data written
@@ -2193,9 +2486,9 @@ NtQueryEvent(
  *        Lenght = Size of the storage for the file information.
  *        FileInformationClass = Indicates which file information is queried
 
-	  FileDirectoryInformation 		
-	  FileFullDirectoryInformation		
-	  FileBothDirectoryInformation		
+	  FileDirectoryInformation 		FILE_DIRECTORY_INFORMATION
+	  FileFullDirectoryInformation		FILE_FULL_DIRECTORY_INFORMATION
+	  FileBothDirectoryInformation		FILE_BOTH_DIRECTORY_INFORMATION
 	  FileBasicInformation			FILE_BASIC_INFORMATION
 	  FileStandardInformation		FILE_STANDARD_INFORMATION
 	  FileInternalInformation		FILE_INTERNAL_INFORMATION
@@ -2204,7 +2497,7 @@ NtQueryEvent(
 	  FileNameInformation 			FILE_NAME_INFORMATION
 	  FileRenameInformation			FILE_RENAME_INFORMATION
 	  FileLinkInformation			
-	  FileNamesInformation			
+	  FileNamesInformation			FILE_NAMES_INFORMATION
 	  FileDispositionInformation		FILE_DISPOSITION_INFORMATION
 	  FilePositionInformation		FILE_POSITION_INFORMATION
 	  FileFullEaInformation			FILE_FULL_EA_INFORMATION		
@@ -2262,7 +2555,6 @@ NtQueryInformationFile(
 		ProcessVmCounters 		 VM_COUNTERS
 		ProcessTimes 			 KERNEL_USER_TIMES
 		ProcessBasePriority		 KPRIORITY
-		ProcessBasePriority		 KPRIORITY
 		ProcessRaisePriority		 KPRIORITY
 		ProcessDebugPort		 HANDLE
 		ProcessExceptionPort		 HANDLE	
@@ -2276,7 +2568,7 @@ NtQueryInformationFile(
 		ProcessUserModeIOPL		 (I/O Privilege Level)
 		ProcessEnableAlignmentFaultFixup BOOLEAN	
 		ProcessPriorityClass		 ULONG
-		ProcessWx86Information			
+		ProcessWx86Information		 ULONG	
 		ProcessHandleCount		 ULONG
 		ProcessAffinityMask		 ULONG	
 		ProcessPooledQuotaLimits 	 QUOTA_LIMITS
@@ -2295,6 +2587,7 @@ NtQueryInformationFile(
 
 
 
+
 NTSTATUS
 STDCALL
 NtQueryInformationProcess(
@@ -2305,13 +2598,15 @@ NtQueryInformationProcess(
 	OUT PULONG ReturnLength 
 	);
 
+
+
 /*
  * FUNCTION: Queries the information of a thread object.
  * ARGUMENTS: 
  *        ThreadHandle = Handle to the thread object
  *        ThreadInformationClass = Index to a certain information structure
 
-		ThreadBasicInformation			
+		ThreadBasicInformation		THREAD_BASIC_INFORMATION	
 		ThreadTimes 			KERNEL_USER_TIMES
 		ThreadPriority			KPRIORITY	
 		ThreadBasePriority		KPRIORITY	
@@ -2323,9 +2618,9 @@ NtQueryInformationProcess(
 		ThreadQuerySetWin32StartAddress		
 		ThreadZeroTlsCell			
 		ThreadPerformanceCount			
-		ThreadAmILastThread			
-		ThreadIdealProcessor			
-		ThreadPriorityBoost			
+		ThreadAmILastThread			BOOLEAN
+		ThreadIdealProcessor			ULONG
+		ThreadPriorityBoost			ULONG	
 		MaxThreadInfoClass			
 		
 
@@ -2349,8 +2644,18 @@ NtQueryInformationThread(
 	IN ULONG ThreadInformationLength,
 	OUT PULONG ReturnLength 
 	);
-// NtQueryInformationToken
-//-- NtQueryIoCompletion
+
+NTSTATUS
+STDCALL
+NtQueryIoCompletion(
+	IN HANDLE CompletionPort,
+	IN CINT CompletionInformationClass,
+	OUT PVOID CompletionInformation,
+	IN ULONG Length,
+	OUT PULONG ReturnLength 
+	);
+
+	
 /*
  * FUNCTION: Queries the information of a registry key object.
  * ARGUMENTS: 
@@ -2369,20 +2674,53 @@ NtQueryKey(
 	IN ULONG Length,
 	OUT PULONG ResultLength 
 	);
-//-- NtQueryMultipleValueKey
-//-- NtQueryMutant
 
 
+
+// preliminary guess
+
+NTSTATUS
+STDCALL
+NtQueryMultipleValueKey(
+   HANDLE KeyHandle,	
+   PVALENT ListOfValuesToQuery,	
+   ULONG NumberOfItems,	
+   PVOID MultipleValueInformation,		
+   ULONG Length,
+   PULONG  ReturnLength
+);	
+
+/*
+ * FUNCTION: Queries the information of a mutant object.
+ * ARGUMENTS: 
+	MutantHandle = Handle to a mutant
+	MutantInformationClass = Index to a certain information structure
+	MutantInformation = Caller supplies storage for resulting information
+	Length = Size of the supplied storage 
+	ResultLength = Bytes written
+ */
+NTSTATUS
+STDCALL
+NtQueryMutant(
+	IN HANDLE MutantHandle,
+	IN CINT MutantInformationClass,
+	OUT PVOID MutantInformation,
+	IN ULONG Length,
+	OUT PULONG ResultLength 
+	);
+	
 /*
  * FUNCTION: Queries the information of a  object.
  * ARGUMENTS: 
 	ObjectHandle = Handle to a object
-	HandleInformationClass = Index to a certain information structure
+	ObjectInformationClass = Index to a certain information structure
 
-	HandleBasicInformation  	HANDLE_BASIC_INFORMATION
-	HandleTypeInormation 		HANDLE_TYPE_INFORMATION 
+	ObjectBasicInformation  	
+	ObjectTypeInformation 		OBJECT_TYPE_INFORMATION 
+	ObjectNameInformation		OBJECT_NAME_INFORMATION
+	ObjectDataInformation		OBJECT_DATA_INFORMATION
 
-	HandleInformation = Caller supplies storage for resulting information
+	ObjectInformation = Caller supplies storage for resulting information
 	Length = Size of the supplied storage 
  	ResultLength = Bytes written
  */
@@ -2391,8 +2729,8 @@ NTSTATUS
 STDCALL
 NtQueryObject(
 	IN HANDLE ObjectHandle,
-	IN CINT HandleInformationClass,
-	OUT PVOID HandleInformationPtr,
+	IN CINT ObjectInformationClass,
+	OUT PVOID ObjectInformation,
 	IN ULONG Length,
 	OUT PULONG ResultLength
 	);
@@ -2436,7 +2774,28 @@ NtQuerySection(
 	);
 
 
-//-- NtQuerySemaphore
+/*
+ * FUNCTION: Queries the information of a semaphore.
+ * ARGUMENTS: 
+ *        SemaphoreHandle = Handle to the semaphore object
+ *        SemaphoreInformationClass = Index to a certain information structure
+
+	  SemaphoreBasicInformation	SEMAPHORE_BASIC_INFORMATION
+
+ *	  SemaphoreInformation = Caller supplies storage for the semaphore information structure
+ *	  Length = Size of the infomation structure
+ */
+
+NTSTATUS
+STDCALL
+NtQuerySemaphore(
+	HANDLE SemaphoreHandle,
+	CINT SemaphoreInformationClass,
+	OUT PVOID SemaphoreInformation,
+	ULONG Length,
+	PULONG ReturnLength
+	);
+
 /*
  * FUNCTION: Queries the information of a symbolic link object.
  * ARGUMENTS: 
@@ -2497,21 +2856,18 @@ NtQuerySystemTime (
 /*
  * FUNCTION: Queries the timer resolution
  * ARGUMENTS: 
- *        MinimumResolution (OUT) = Caller should supply storage for the 
- *                                  resulting time.
- *	  Maximum Resolution (OUT) = Caller should supply storage for the 
- *                                   resulting time.
- *	  ActualResolution (OUT) = Caller should supply storage for the 
- *                                 resulting time.
+ *        MinimumResolution (OUT) = Caller should supply storage for the resulting time.
+	  Maximum Resolution (OUT) = Caller should supply storage for the resulting time.
+	  ActualResolution (OUT) = Caller should supply storage for the resulting time.
  * RETURNS: Status
  *
- */        
+*/        
 
 
 NTSTATUS 
 NtQueryTimerResolution ( 
 	OUT PULONG MinimumResolution,
-	OUT PULONG MaximumResolution,
+	OUT PULONG MaximumResolution, 
 	OUT PULONG ActualResolution 
 	); 
 
@@ -2581,13 +2937,13 @@ NtQueryVirtualMemory(
 	  FSInformationClass = Index to a information structure
 
 		FileFsVolumeInformation		FILE_FS_VOLUME_INFORMATION
-		FileFsLabelInformation			
+		FileFsLabelInformation		FILE_FS_LABEL_INFORMATION	
 		FileFsSizeInformation		FILE_FS_SIZE_INFORMATION
 		FileFsDeviceInformation		FILE_FS_DEVICE_INFORMATION
 		FileFsAttributeInformation	FILE_FS_ATTRIBUTE_INFORMATION
 		FileFsControlInformation	
-		FileFsQuotaQueryInformation	
-		FileFsQuotaSetInformation	
+		FileFsQuotaQueryInformation	--
+		FileFsQuotaSetInformation	--
 		FileFsMaximumInformation	
 
  * RETURNS: Status
@@ -2676,7 +3032,7 @@ NtReadFileScatter(
 	IN PIO_APC_ROUTINE UserApcRoutine OPTIONAL, 
 	IN  PVOID UserApcContext OPTIONAL, 
 	OUT PIO_STATUS_BLOCK UserIoStatusBlock, 
-	IN LARGE_INTEGER BufferDescription[], 
+	IN FILE_SEGMENT_ELEMENT BufferDescription[], 
 	IN ULONG BufferLength, 
 	IN PLARGE_INTEGER ByteOffset, 
 	IN PULONG Key OPTIONAL	
@@ -2730,7 +3086,7 @@ NtReleaseMutant(
 /*
  * FUNCTION: Releases a semaphore 
  * ARGUMENTS: 
- *       SemaphoreHandle = 
+ *       SemaphoreHandle = Handle to the semaphore object
  *       ReleaseCount =
  *       PreviousCount =  
  * RETURNS: Status
@@ -2790,7 +3146,14 @@ NtResetEvent(
 	HANDLE EventHandle,
 	PULONG NumberOfWaitingThreads OPTIONAL
 	);
- //NtRestoreKey
+//Preliminary guess
+NTSTATUS
+STDCALL
+NtRestoreKey(
+	HANDLE KeyHandle,
+	HANDLE FileHandle,
+	ULONG RestoreFlags
+	);
 /*
  * FUNCTION: Decrements a thread's resume count
  * ARGUMENTS: 
@@ -2807,7 +3170,22 @@ NtResumeThread(
 	IN HANDLE ThreadHandle,
 	IN PULONG SuspendCount
 	);
- //NtSaveKey
+/*
+ * FUNCTION: Writes the content of a registry key to ascii file
+ * ARGUMENTS: 
+ *        KeyHandle = Handle to the key
+ *        FileHandle =  Handle of the file
+ * REMARKS:
+	  This function maps to the Win32 RegSaveKey.
+ * RETURNS: Status
+ */
+
+NTSTATUS
+STDCALL
+NtSaveKey(
+	IN HANDLE KeyHandle,
+	IN HANDLE FileHandle
+	);
 /*
  * FUNCTION: Sets the context of a specified thread.
  * ARGUMENTS: 
@@ -2841,8 +3219,10 @@ NtSetEaFile(
 	ULONG EaBufferSize
 	);
 
+//FIXME Shoud I have input EVENT_BASIC_INFORMATION ??
+
 /*
- * FUNCTION: Set an event to a signalled state.
+ * FUNCTION: Sets the attributes of an event.
  * ARGUMENTS: 
  *        EventHandle = Handle to the event
  *        Count =  The resulting count.
@@ -2854,8 +3234,33 @@ NtSetEaFile(
 NTSTATUS
 STDCALL
 NtSetEvent(
-	HANDLE EventHandle,
+	IN HANDLE EventHandle,
 	PULONG Count
+	);
+
+/*
+ * FUNCTION: Sets the high part of an event pair
+ * ARGUMENTS: 
+	EventPair = Handle to the event pair
+ * RETURNS: Status
+*/
+
+NTSTATUS
+STDCALL
+NtSetHighEventPair(
+	IN HANDLE EventPair
+	);
+
+/*
+ * FUNCTION: Sets the high part of an event pair and wait for the low part
+ * ARGUMENTS: 
+	EventPair = Handle to the event pair
+ * RETURNS: Status
+*/
+NTSTATUS
+STDCALL
+NtSetHighWaitLowEventPair(
+	IN HANDLE EventPair
 	);
 
 /*
@@ -2865,10 +3270,10 @@ NtSetEvent(
  *	  IoStatusBlock = Caller supplies storage for extended information 
  *                        on the current operation.
  *        FileInformation = Storage for the new file information
- *        Lenght = Size of the storage for the file information.
- *        FileInformationClass = Indicates which file information is set
+ *        Lenght = Size of the new file information.
+ *        FileInformationClass = Indicates to a certain information structure
 	 
-	  FileNameInformation 			PUNICODE_STRING
+	  FileNameInformation 			FILE_NAME_INFORMATION
 	  FileRenameInformation			FILE_RENAME_INFORMATION
 	  FileStreamInformation			FILE_STREAM_INFORMATION
  *	  FileCompletionInformation 		IO_COMPLETION_CONTEXT
@@ -2878,6 +3283,7 @@ NtSetEvent(
  *	  SetNamedPipeHandleState, SetMailslotInfo functions. 
  * RETURNS: Status
  */
+
 
 NTSTATUS
 STDCALL
@@ -2894,13 +3300,13 @@ NtSetInformationFile(
  * FUNCTION: Sets the information of a registry key.
  * ARGUMENTS: 
  *       KeyHandle = Handle to the registry key
- *       KeyInformationClass =  Index to the a certain set of parameter to set.
+ *       KeyInformationClass =  Index to the a certain information structure.
 			Can be one of the following values:
 
  *	 KeyWriteTimeInformation  KEY_WRITE_TIME_INFORMATION
 
-	 KeyInformation	= Storage for the new key information
- *       KeyInformationLength = Size of the storage allocated for the key information
+	 KeyInformation	= Storage for the new information
+ *       KeyInformationLength = Size of the information strucure
  * RETURNS: Status
  */
 
@@ -2916,16 +3322,17 @@ NtSetInformationKey(
  * FUNCTION: Changes a set of object specific parameters
  * ARGUMENTS: 
  *      ObjectHandle = 
- *	HandleInformationClass = Index to the set of parameters to change. 
+ *	ObjectInformationClass = Index to the set of parameters to change. 
 
-	HandleInformation			
-	HandleName				
-	HandleTypeInformation			
-	HandleAllInformation			
-	HandleBasicInformation			
+			
+	ObjectBasicInformation  	
+	ObjectTypeInformation 		OBJECT_TYPE_INFORMATION 
+	ObjectAllInformation		
+	ObjectDataInformation		OBJECT_DATA_INFORMATION
+	ObjectNameInformation		OBJECT_NAME_INFORMATION	
 
 
- *      HandleInformation = Caller supplies storage for parameters to set.
+ *      ObjectInformation = Caller supplies storage for parameters to set.
  *      Length = Size of the storage supplied
  * RETURNS: Status
 */
@@ -2933,8 +3340,8 @@ NTSTATUS
 STDCALL
 NtSetInformationObject(
 	IN HANDLE ObjectHandle,
-	IN CINT HandleInformationClass,
-	IN PVOID HandleInformationPtr,
+	IN CINT ObjectInformationClass,
+	IN PVOID ObjectInformation,
 	IN ULONG Length 
 	);
 
@@ -2947,13 +3354,13 @@ NtSetInformationObject(
  *	ProcessBasicInformation 		PROCESS_BASIC_INFORMATION
  *	ProcessQuotaLimits			QUOTA_LIMITS
  *	ProcessBasePriority			KPRIORITY
- *	ProcessRaisePriority			KPRIORITY
+ *	ProcessRaisePriority			KPRIORITY 
  *	ProcessDebugPort			HANDLE
  *	ProcessExceptionPort			HANDLE	
  *	ProcessAccessToken		 	PROCESS_ACCESS_TOKEN	
  *	ProcessDefaultHardErrorMode		ULONG
  *	ProcessPriorityClass			ULONG
- *	ProcessAffinityMask			KAFFINITY
+ *	ProcessAffinityMask			KAFFINITY //??
  *
  *      ProcessInformation = Caller supplies storage for information to set.
  *      ProcessInformationLength = Size of the information structure
@@ -2975,9 +3382,10 @@ NtSetInformationProcess(
  *	Can be one of the following values:
  *
  *	ThreadBasicInformation			THREAD_BASIC_INFORMATION
- *	ThreadPriority				KPRIORITY
+ *	ThreadPriority				KPRIORITY //???
  *	ThreadBasePriority			KPRIORITY
- *	ThreadAffinityMask			KAFFINITY
+ *	ThreadAffinityMask			KAFFINITY //??
+ *      ThreadImpersonationToken		ACCESS_TOKEN
  *	ThreadIdealProcessor			ULONG
  *	ThreadPriorityBoost			ULONG
  *
@@ -2994,8 +3402,9 @@ NtSetInformationThread(
 	IN ULONG ThreadInformationLength
 	);
 //FIXME: Are the arguments correct
+// Might be a ordinary set function
 /*
- * FUNCTION: Sets a io completion
+ * FUNCTION: Sets an io completion
  * ARGUMENTS: 
  *      CompletionPort = 
  *	CompletionKey = 
@@ -3014,23 +3423,43 @@ NtSetIoCompletion(
 	OUT PULONG NumberOfBytesTransferred
 	);
 //FIXME: Should I have more parameters ?
-
-typedef struct
- {    
- } LDT_ENTR, *PLDT_ENTR;
- 
 /*
  * FUNCTION: Initializes the Local Descriptor Table
  * ARGUMENTS: 
- *	ProcessHandle = 
- *	LdtEntry =
+	ProcessHandle = 
+	LdtEntry =
  * RETURNS: Status
- */
+*/
 NTSTATUS
 STDCALL
 NtSetLdtEntries(
 	HANDLE ProcessHandle,
-	PLDT_ENTR LdtEntry
+	PVOID LdtEntry // LDT_ENTR
+	);
+
+/*
+ * FUNCTION: Sets the low part of an event pair
+ * ARGUMENTS: 
+	EventPair = Handle to the event pair
+ * RETURNS: Status
+*/
+
+NTSTATUS
+STDCALL
+NtSetLowEventPair(
+	HANDLE EventPair
+	);
+
+/*
+ * FUNCTION: Sets the low part of an event pair and wait for the high part
+ * ARGUMENTS: 
+	EventPair = Handle to the event pair
+ * RETURNS: Status
+*/
+NTSTATUS
+STDCALL
+NtSetLowWaitHighEventPair(
+	HANDLE EventPair
 	);
 
 //FIXME: Should Value be a void pointer or a pointer to a unicode string ?
@@ -3200,7 +3629,7 @@ NtSignalAndWaitForSingleObject(
  * FUNCTION: Increments a thread's resume count
  * ARGUMENTS: 
  *        ThreadHandle = Handle to the thread that should be resumed
- *        SuspendCount =  The resulting suspend count.
+ *        PreviousSuspendCount =  The resulting/previous suspend count.
  * REMARK:
  *	  A thread will be suspended if its suspend count is greater than 0. This procedure maps to
  *        the win32 SuspendThread function. ( documentation about the the suspend count can be found here aswell )
@@ -3285,9 +3714,10 @@ NtUnloadKey(
  *       FileHandle = Handle to the file
  *       IoStatusBlock = Caller should supply storage for a structure containing
  *			 the completion status and information about the requested unlock operation.
- *       StartAddress = StartAddress of the range of bytes to unlock 
- *       NumberOfBytesToUnlock = Number of bytes to unlock.
- *       NumberOfBytesUnlocked (OUT) = Number of bytes actually unlocked.
+			The information field is set to the number of bytes unlocked.
+ *       ByteOffset = Offset to start the range of bytes to unlock 
+ *       Length = Number of bytes to unlock.
+ *       Key = 
  * REMARK:
 	This procedure maps to the win32 procedure UnlockFileEx 
  * RETURNS: Status
@@ -3297,9 +3727,9 @@ STDCALL
 NtUnlockFile(
 	IN HANDLE FileHandle,
 	OUT IO_STATUS_BLOCK IoStatusBlock,
-	IN LARGE_INTEGER StartAddress,
-	IN LARGE_INTEGER NumberOfBytesToUnlock,
-	OUT PLARGE_INTEGER NumberOfBytesUnlocked OPTIONAL
+	IN LARGE_INTEGER ByteOffset,
+	IN LARGE_INTEGER Lenght,
+	OUT PULONG Key OPTIONAL
 	);
 	
 /*
@@ -3352,7 +3782,7 @@ NTSTATUS
 STDCALL
 NtWaitForMultipleObjects (
 	IN ULONG Count,
-	IN PHANDLE Object[],
+	IN PHANDLE Object[0],
 	IN CINT WaitType,
 	IN BOOLEAN Alertable,
 	IN PLARGE_INTEGER Time 
@@ -3436,7 +3866,7 @@ STDCALL NtWriteFileScatter(
 	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL, 
 	IN PVOID ApcContext OPTIONAL, 
 	OUT PIO_STATUS_BLOCK IoStatusBlock,
-	IN LARGE_INTEGER BufferDescription[], 
+	IN FILE_SEGMENT_ELEMENT BufferDescription[], 
 	IN ULONG BufferLength, 
 	IN PLARGE_INTEGER ByteOffset, 
 	IN PULONG Key OPTIONAL

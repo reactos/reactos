@@ -12,8 +12,10 @@
 
 #include <windows.h>
 #include <ddk/ntddk.h>
-#include <internal/kernel.h>
 #include <internal/objmgr.h>
+
+#define NDEBUG
+#include <internal/debug.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -64,22 +66,28 @@ VOID IoInit(VOID)
    /*
     * Register iomgr types
     */
+   CHECKPOINT;
    RtlInitAnsiString(&astring,"Device");
+   CHECKPOINT;
    RtlAnsiStringToUnicodeString(&DeviceObjectType.TypeName,&astring,TRUE);
+   CHECKPOINT;
    ObRegisterType(OBJTYP_DEVICE,&DeviceObjectType);
-   
+   CHECKPOINT;
    RtlInitAnsiString(&astring,"File");
    RtlAnsiStringToUnicodeString(&FileObjectType.TypeName,&astring,TRUE);   
    ObRegisterType(OBJTYP_FILE,&FileObjectType);
-
+   CHECKPOINT;
    /*
     * Create the device directory
     */
    RtlInitAnsiString(&astring,"\\Device");
+   CHECKPOINT;
    RtlAnsiStringToUnicodeString(&string,&astring,TRUE);
+   CHECKPOINT;
    InitializeObjectAttributes(&attr,&string,0,NULL,NULL);
+   CHECKPOINT;
    ZwCreateDirectoryObject(&handle,0,&attr);
-   
+   CHECKPOINT;
    IoInitCancelHandling();
    IoInitSymbolicLinkImplementation();
 }

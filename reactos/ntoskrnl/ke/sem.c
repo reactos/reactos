@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            kernel/base/sem.c
+ * FILE:            ntoskrnl/ke/sem.c
  * PURPOSE:         Implements kernel semaphores
  * PROGRAMMER:      David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
@@ -10,9 +10,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <internal/kernel.h>
-#include <internal/linkage.h>
 #include <ddk/ntddk.h>
+#include <internal/ke.h>
 
 #include <internal/debug.h>
 
@@ -22,12 +21,15 @@ VOID KeInitializeSemaphore(PKSEMAPHORE Semaphore,
 			   LONG Count,
 			   LONG Limit)
 {
-   UNIMPLEMENTED;
+   KeInitializeDispatcherHeader(&Semaphore->Header,SemaphoreType,
+				sizeof(KSEMAPHORE)/sizeof(ULONG),
+				Count);
+   Semaphore->Limit=Limit;
 }
 
 LONG KeReadStateSemaphore(PKSEMAPHORE Semaphore)
 {
-   UNIMPLEMENTED;
+   return(Semaphore->Header.SignalState);
 }
 
 LONG KeReleaseSemaphore(PKSEMAPHORE Semaphore,
@@ -35,6 +37,5 @@ LONG KeReleaseSemaphore(PKSEMAPHORE Semaphore,
 			LONG Adjustment,
 			BOOLEAN Wait)
 {
-   UNIMPLEMENTED;
 }
 

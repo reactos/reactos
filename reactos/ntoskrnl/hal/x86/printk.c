@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            kernel/hal/x86/printk.c
+ * FILE:            ntoskrnl/hal/x86/printk.c
  * PURPOSE:         Writing to the console 
  * PROGRAMMER:      David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
@@ -11,7 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <internal/kernel.h>
+#include <internal/ntoskrnl.h>
 #include <internal/string.h>
 #include <internal/hal/page.h>
 #include <internal/hal/io.h>

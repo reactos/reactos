@@ -15,12 +15,13 @@
 
 /* INCLUDES ****************************************************************/
 
+#include <internal/string.h>
 #include <internal/stddef.h>
 #include <internal/mm.h>
 #include <internal/hal/page.h>
 #include <internal/pool.h>
 #include <internal/bitops.h>
-#include <internal/kernel.h>
+#include <internal/ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -44,7 +45,7 @@ typedef struct _block_hdr
 /*
  * Memory managment initalized symbol for the base of the pool
  */
-extern unsigned int kernel_pool_base;
+unsigned int kernel_pool_base = 0;
 
 /*
  * Pointer to the first block in the free list
@@ -63,6 +64,11 @@ static unsigned int nr_used_blocks = 0;
 static unsigned int alloc_map[ALLOC_MAP_SIZE/32]={0,};
 
 /* FUNCTIONS ***************************************************************/
+
+VOID ExInitNonPagedPool(ULONG BaseAddress)
+{
+   kernel_pool_base=BaseAddress;
+}
 
 static void validate_free_list(void)
 /*
@@ -572,6 +578,7 @@ static PVOID ExAllocatePagedPool(ULONG type, ULONG size)
 static PVOID ExAllocateNonPagedPool(ULONG type, ULONG size)
 {
    block_hdr* current=NULL;
+   void* block;
    
    DPRINT("kmalloc(size %d)\n",size);
    validate_kernel_pool();
@@ -596,7 +603,9 @@ static PVOID ExAllocateNonPagedPool(ULONG type, ULONG size)
 	if (current->size>=size)
 	  {
 	     DPRINT("found block %x of size %d\n",current,size);
-	     return(take_block(current,size));
+	     block=take_block(current,size);
+	     memset(block,0,size);
+	     return(block);
 	  }
 	current=current->next;
      }
@@ -604,7 +613,9 @@ static PVOID ExAllocateNonPagedPool(ULONG type, ULONG size)
    /*
     * Otherwise create a new block
     */
-   return(block_to_address(grow_kernel_pool(size)));
+   block=block_to_address(grow_kernel_pool(size));
+   memset(block,0,size);
+   return(block);
 }
 
 PVOID ExAllocatePoolWithQuota(POOL_TYPE PoolType, ULONG NumberOfBytes)

@@ -1,6 +1,5 @@
 
 
-typedef NTSTATUS (*PKSTART_ROUTINE)(PVOID StartContext);
 
 /*
  * FUNCTION: Creates a thread which executes in kernel mode
@@ -29,4 +28,4 @@ NTSTATUS PsTerminateSystemThread(NTSTATUS ExitStatus);
 NTSTATUS PsSuspendThread(VOID);
 NTSTATUS PsWakeThread(PETHREAD Thread);
 PETHREAD PsGetCurrentThread(VOID);
-PEPROCESS PsGetCurrentProcess(VOID);
+struct _EPROCESS* PsGetCurrentProcess(VOID);

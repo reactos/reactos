@@ -12,7 +12,6 @@
 
 #include <windows.h>
 #include <ddk/ntddk.h>
-#include <internal/kernel.h>
 #include <internal/string.h>
 
 #define NDEBUG
@@ -22,7 +21,8 @@
 
 /* GLOBALS ******************************************************************/
 
-static KEVENT event;
+static KEVENT event = {};
+//static KEVENT event2;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -48,15 +48,23 @@ NTSTATUS TstPlaySound(void)
 NTSTATUS TstFirstThread(PVOID start)
 {
    printk("Beginning Thread A\n");
-   KeClearEvent(&event);
-   KeSetEvent(&event,IO_NO_INCREMENT,TRUE);
+   for (;;)
+     {     
+	KeWaitForSingleObject(&event,Executive,KernelMode,FALSE,NULL);
+	printk("AAA ");
+        KeSetEvent(&event,IO_NO_INCREMENT,FALSE);   
+     }
 }
 
 NTSTATUS TstSecondThread(PVOID start)
 {
-   printk("Beginning Thread B\n");  
-   KeWaitForSingleObject(&event,Executive,KernelMode,FALSE,NULL);
-   printk("Ending Thread B\n");
+   printk("Beginning Thread B\n");
+   for (;;)
+     {
+        KeSetEvent(&event,IO_NO_INCREMENT,FALSE);
+	KeWaitForSingleObject(&event,Executive,KernelMode,FALSE,NULL);
+	printk("BBB ");
+     }
 }
 
 NTSTATUS TstThreadSupport()
@@ -64,9 +72,9 @@ NTSTATUS TstThreadSupport()
    HANDLE th1, th2;
    
    KeInitializeEvent(&event,SynchronizationEvent,FALSE);
-//   PsCreateSystemThread(&th1,0,NULL,NULL,NULL,TstFirstThread,NULL);
-   KeClearEvent(&event);
+   PsCreateSystemThread(&th1,0,NULL,NULL,NULL,TstFirstThread,NULL);
    PsCreateSystemThread(&th2,0,NULL,NULL,NULL,TstSecondThread,NULL);
+   printk("Ending main thread\n");
    for(;;);
 }
 
@@ -115,25 +123,44 @@ void TstParallelPortWrite()
 
 void TstKeyboardRead()
 {
-   KEY_EVENT_RECORD key;
+   OBJECT_ATTRIBUTES attr;
    HANDLE hfile;
+   ANSI_STRING afilename;
+   UNICODE_STRING ufilename;
+   KEY_EVENT_RECORD key[2];
    
-//   hfile = CreateFile("\\Device\\Keyboard",0,0,0,0,0,0);
-   if (hfile == NULL)
+   DbgPrint("Opening keyboard\n");
+   RtlInitAnsiString(&afilename,"\\Device\\Keyboard");
+   RtlAnsiStringToUnicodeString(&ufilename,&afilename,TRUE);
+   InitializeObjectAttributes(&attr,&ufilename,0,NULL,NULL);
+   ZwOpenFile(&hfile,0,&attr,NULL,0,0);
+   if (hfile==NULL)
      {
-	printk("Failed to open keyboard\n");
-	return;
+	DbgPrint("Failed to open keyboard\n");
+        return;
      }
-   for (;;)
+   for(;;)
      {
-//	ReadFile(hfile,&key,sizeof(KEY_EVENT_RECORD),NULL,NULL);
-	printk("%c",key.AsciiChar);
-	for(;;);
+	ZwReadFile(hfile,
+		   NULL,
+		   NULL,
+		   NULL,
+		   NULL,
+		   &key[0],
+		   sizeof(KEY_EVENT_RECORD)*2,
+		   0,
+		   0);
+	DbgPrint("%c",key[0].AsciiChar);
+//	DbgPrint("%c",key[1].AsciiChar);
      }
-}
+ }
+
+
 
 void TstBegin()
 {
-   TstGeneralWrite();
+//   TstGeneralWrite();
+//   TstThreadSupport();
+   TstKeyboardRead();
 }
 

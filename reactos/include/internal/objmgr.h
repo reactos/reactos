@@ -26,6 +26,7 @@ typedef struct _DIRECTORY_OBJECT
     * PURPOSE: Head of the list of our subdirectories
     */
    LIST_ENTRY head;
+   KSPIN_LOCK Lock;
 } DIRECTORY_OBJECT, *PDIRECTORY_OBJECT;
 
 

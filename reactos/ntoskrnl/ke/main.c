@@ -11,9 +11,8 @@
 /* INCLUDES *****************************************************************/
 
 #include <windows.h>
-#include <coff.h>
 
-#include <internal/kernel.h>
+#include <internal/ntoskrnl.h>
 #include <internal/version.h>
 #include <internal/mm.h>
 #include <internal/string.h>
@@ -101,6 +100,9 @@ void set_breakpoint(unsigned int i, unsigned int addr, unsigned int type,
 	   : "ax");
 }
 
+extern int edata;
+extern int end;
+
 asmlinkage void _main(boot_param* _bp)
 /*
  * FUNCTION: Called by the boot loader to start the kernel
@@ -112,11 +114,14 @@ asmlinkage void _main(boot_param* _bp)
 {
    unsigned int i;
    unsigned int start;
+   unsigned int start1;
+   boot_param bp;
+   
+//   memset((void *)&edata,0,((int)&end)-((int)&edata));
    
    /*
     * Copy the parameters to a local buffer because lowmem will go away
     */
-   boot_param bp;
    memcpy(&bp,_bp,sizeof(bp));
       
    /*
@@ -126,44 +131,51 @@ asmlinkage void _main(boot_param* _bp)
    
    printk("Starting ReactOS "KERNEL_VERSION"\n");
 
+   start = KERNEL_BASE + PAGE_ROUND_UP(bp.module_length[0]);
+   DPRINT("MmGetPhysicalAddress(start) = %x\n",MmGetPhysicalAddress(start));
+   DPRINT("bp.module_length[0] %x PAGE_ROUND_UP(bp.module_length[0]) %x\n",
+          bp.module_length[0],PAGE_ROUND_UP(bp.module_length[0]));
+   start1 = start+PAGE_ROUND_UP(bp.module_length[1]);
+   DPRINT("bp.module_length[1] %x PAGE_ROUND_UP(bp.module_length[1]) %x\n",
+          bp.module_length[1],PAGE_ROUND_UP(bp.module_length[1]));
+
+   DPRINT("start %x *start %x\n",start,*((unsigned int *)start));
+   DPRINT("start1 %x *start1 %x\n",start1,*((unsigned int *)start1));
+
+   
    /*
     * Initalize various critical subsystems
     */
    HalInit(&bp);
+//   set_breakpoint(0,start,HBP_READWRITE,HBP_DWORD);
    MmInitalize(&bp);
-   KeInitDpc();
-   KeInitializeBugCheck();
-   KeInitializeDispatcher();
-   InitializeTimer();
-
-   /*
-    * Allow interrupts
-    */
-   KeLowerIrql(PASSIVE_LEVEL);
-   
-   KeCalibrateTimerLoop();
-   ObjNamespcInit();
-   PsMgrInit();
-   IoInit();   
+   CHECKPOINT;
+   KeInit();
+   CHECKPOINT;
+   ObInit();
+   CHECKPOINT;
+   PsInit();
+   CHECKPOINT;
+   IoInit();  
+   CHECKPOINT;
       
    /*
-    * Initalize loaded modules
+    * Initalize services loaded at boot time
     */
    DPRINT("%d files loaded\n",bp.nr_files);
     
-
-   start = KERNEL_BASE + PAGE_ROUND_UP(bp.module_length[0]) +
-                        PAGESIZE;
+   start = KERNEL_BASE + PAGE_ROUND_UP(bp.module_length[0]);
    for (i=1;i<bp.nr_files;i++)
      {
-        DPRINT("start %x length %d\n",start,bp.module_length[i]);
-	process_boot_module(start);
-        start=start+PAGE_ROUND_UP(bp.module_length[i])+PAGESIZE;
+	DPRINT("start %x *start %x\n",start,*((unsigned int *)start));
+	CHECKPOINT;
+      	process_boot_module(start);
+	CHECKPOINT;
+        start=start+PAGE_ROUND_UP(bp.module_length[i]);
      }
    
-   
    /*
-    * Enter shell
+    * Test various features of the kernel
     */
    TstBegin();
    

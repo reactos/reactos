@@ -30,7 +30,6 @@
 /* INCLUDES ****************************************************************/
 
 #include <internal/string.h>
-#include <internal/kernel.h>
 #include <ddk/ntddk.h>
 
 #define NDEBUG

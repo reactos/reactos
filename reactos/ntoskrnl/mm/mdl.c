@@ -26,23 +26,39 @@ VOID MmUnlockPages(PMDL MemoryDescriptorList)
  * FUNCTION: Unlocks the physical pages described by a given MDL
  * ARGUMENTS:
  *      MemoryDescriptorList = MDL describing the buffer to be unlocked
+ * NOTES: The memory described by the specified MDL must have been locked
+ * previously by a call to MmProbeAndLockPages. As the pages unlocked, the
+ * MDL is updated
  */
 {
    UNIMPLEMENTED;
 }
 
 PVOID MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
+/*
+ * FUNCTION: Maps the physical pages described by a given MDL
+ * ARGUMENTS:
+ *       Mdl = Points to an MDL updated by MmProbeAndLockPages
+ *       AccessMode = Specifies the access mode in which to map the MDL
+ * RETURNS: The base virtual address that maps the locked pages for the
+ * range described by the MDL
+ */
 {
    PVOID base;
    unsigned int i;
    ULONG* mdl_pages=NULL;
+   MEMORY_AREA* Result;
    
    DPRINT("Mdl->ByteCount %x\n",Mdl->ByteCount);
    DPRINT("PAGE_ROUND_UP(Mdl->ByteCount)/PAGESIZE) %x\n",
 	  PAGE_ROUND_UP(Mdl->ByteCount)/PAGESIZE);
    
-   base = VirtualAlloc((LPVOID)0,Mdl->ByteCount,MEM_COMMIT,
-		       PAGE_SYSTEM + PAGE_EXECUTE_READWRITE);
+   MmCreateMemoryArea(KernelMode,
+		      MEMORY_AREA_MDL_MAPPING,
+		      &base,
+		      Mdl->ByteCount,
+		      0,
+		      &Result);
    mdl_pages = (ULONG *)(Mdl + 1);
    for (i=0; i<(PAGE_ROUND_UP(Mdl->ByteCount)/PAGESIZE); i++)
      {
@@ -57,8 +73,14 @@ PVOID MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
 }
 
 VOID MmUnmapLockedPages(PVOID BaseAddress, PMDL MemoryDescriptorList)
+/*
+ * FUNCTION: Releases a mapping set up by a preceding call to MmMapLockedPages
+ * ARGUMENTS:
+ *         BaseAddress = Base virtual address to which the pages were mapped
+ *         MemoryDescriptorList = MDL describing the mapped pages
+ */
 {
-   UNIMPLEMENTED;
+   (void)MmFreeMemoryArea(BaseAddress,MemoryDescriptorList->ByteCount,FALSE);
 }
 
 VOID MmPrepareMdlForReuse(PMDL Mdl)
@@ -84,24 +106,12 @@ VOID MmProbeAndLockPages(PMDL Mdl, KPROCESSOR_MODE AccessMode,
 {
    ULONG* mdl_pages=NULL;
    int i;
-   memory_area* marea;
+   MEMORY_AREA* marea;
    
    DPRINT("MmProbeAndLockPages(Mdl %x)\n",Mdl);
    DPRINT("StartVa %x\n",Mdl->StartVa);
    
-   if (Mdl->StartVa > KERNEL_BASE)
-     {
-   	marea=find_first_marea(system_memory_area_list_head,
-			       (ULONG)Mdl->StartVa,
-			       Mdl->ByteCount);   
-     }
-   else
-     {
-	marea=find_first_marea(memory_area_list_head,
-			       (ULONG)Mdl->StartVa,
-			       Mdl->ByteCount);      
-     }
-   
+   marea = MmOpenMemoryAreaByAddress((ULONG)Mdl->StartVa);
    DPRINT("marea %x\n",marea);
   
    
@@ -109,7 +119,7 @@ VOID MmProbeAndLockPages(PMDL Mdl, KPROCESSOR_MODE AccessMode,
    /*
     * Check the area is valid
     */
-   if (marea==NULL || (marea->base+marea->length) < ((ULONG)Mdl->StartVa))
+   if (marea==NULL )
      {
 	printk("Area is invalid\n");
 	ExRaiseStatus(STATUS_INVALID_PARAMETER);
@@ -118,6 +128,7 @@ VOID MmProbeAndLockPages(PMDL Mdl, KPROCESSOR_MODE AccessMode,
    /*
     * Check the permissions
     */
+   #if 0
    switch(Operation)
      {
       case IoReadAccess:
@@ -141,6 +152,7 @@ VOID MmProbeAndLockPages(PMDL Mdl, KPROCESSOR_MODE AccessMode,
 	       __FUNCTION__);
 	KeBugCheck(UNEXPECTED_KERNEL_MODE_TRAP);
      }
+   #endif
    
    /*
     * Lock the memory area
@@ -155,13 +167,8 @@ VOID MmProbeAndLockPages(PMDL Mdl, KPROCESSOR_MODE AccessMode,
    
    for (i=0;i<(PAGE_ROUND_UP(Mdl->ByteCount)/PAGESIZE);i++)
      {
-	if (!is_page_present(PAGE_ROUND_DOWN(Mdl->StartVa) + (i*PAGESIZE)))
-	  {
-	     marea->load_page(marea,PAGE_ROUND_DOWN(Mdl->StartVa) + (i*PAGESIZE)
-			      - marea->base);
-	  }
 	mdl_pages[i]=MmGetPhysicalAddress((PVOID)(PAGE_ROUND_DOWN(Mdl->StartVa)
-					  +(i*PAGESIZE)));
+					  +(i*PAGESIZE))).LowPart;
 	DPRINT("mdl_pages[i] %x\n",mdl_pages[i]);
 	DPRINT("&mdl_pages[i] %x\n",&mdl_pages[i]);
      }
@@ -239,7 +246,7 @@ VOID MmBuildMdlForNonPagedPool(PMDL Mdl)
    for (va=0; va<Mdl->Size; va++)
      {
 	((PULONG)(Mdl + 1))[va] = MmGetPhysicalAddress(
-					Mdl->StartVa+ (va * PAGESIZE));
+				     Mdl->StartVa+ (va * PAGESIZE)).LowPart;
      }
    Mdl->MappedSystemVa = Mdl->StartVa;
 }

@@ -1,5 +1,7 @@
 struct _DIRECTORY_OBJECT;
 
+typedef ULONG ACCESS_STATE, *PACCESS_STATE;
+
 typedef struct _OBJECT_HANDLE_INFORMATION {
     ULONG HandleAttributes;
     ACCESS_MASK GrantedAccess;
@@ -113,6 +115,8 @@ typedef struct _OBJECT
     */
    ULONG HandleCount;
    
+   struct _DIRECTORY_OBJECT* Parent;
+   
    /*
     * PURPOSE: Object type
     * NOTE: This overlaps the first member of the object body
@@ -124,6 +128,7 @@ typedef struct _OBJECT
     * NOTE: This overlaps the second member of the object body
     */
    CSHORT Size;
+   
    
 } OBJECT_HEADER, *POBJECT_HEADER;
 

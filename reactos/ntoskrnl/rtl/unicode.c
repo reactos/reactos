@@ -14,7 +14,7 @@
 #include <ddk/ntddk.h>
 
 #include <internal/string.h>
-#include <internal/kernel.h>
+#include <internal/ke.h>
 #include <internal/ctype.h>
 
 #define NDEBUG

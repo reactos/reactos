@@ -10,16 +10,18 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <internal/kernel.h>
-#include <internal/hal/hal.h>
+#include <internal/ntoskrnl.h>
+#include <internal/ke.h>
+#include <internal/hal.h>
 
 /* FUNCTIONS ***************************************************************/
 
 VOID HalInit(boot_param* bp)
 {
    
-   InitalizeExceptions();
-   InitalizeIRQ();
+   KeInitExceptions();
+   KeInitIRQ();
+   KeLowerIrql(DISPATCH_LEVEL);
    
    /*
     * Probe for a BIOS32 extension

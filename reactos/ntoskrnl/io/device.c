@@ -12,12 +12,11 @@
 
 #include <ddk/ntddk.h>
 
-#include <internal/kernel.h>
 #include <internal/iomgr.h>
 #include <internal/objmgr.h>
 #include <internal/string.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS ***************************************************************/
@@ -92,7 +91,7 @@ NTSTATUS InitalizeLoadedDriver(PDRIVER_INITIALIZE entry)
    DriverObject=ExAllocatePool(NonPagedPool,sizeof(DRIVER_OBJECT));
    if (DriverObject==NULL)
      {
-	printk("%s:%d\n",__FILE__,__LINE__);
+	DbgPrint("%s:%d\n",__FILE__,__LINE__);
 	return(STATUS_INSUFFICIENT_RESOURCES);
      }
    memset(DriverObject,sizeof(DRIVER_OBJECT),0);
@@ -195,6 +194,7 @@ NTSTATUS IoCreateDevice(PDRIVER_OBJECT DriverObject,
    dev->DeviceType=DeviceType;
    dev->StackSize=1;
    dev->AlignmentRequirement=1;
+   KeInitializeDeviceQueue(&dev->DeviceQueue);
    
    *DeviceObject=dev;
    DPRINT("dev->DriverObject %x\n",dev->DriverObject);

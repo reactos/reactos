@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            mkernel/hal/x86/irq.c
+ * FILE:            ntoskrnl/hal/x86/irq.c
  * PURPOSE:         IRQ handling
  * PROGRAMMER:      David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
@@ -20,7 +20,8 @@
 #include <ddk/ntddk.h>
 
 #include <internal/stddef.h>
-#include <internal/kernel.h>
+#include <internal/ntoskrnl.h>
+#include <internal/ke.h>
 #include <internal/bitops.h>
 #include <internal/linkage.h>
 #include <internal/string.h>
@@ -79,8 +80,8 @@ static unsigned int irq_handler[NR_IRQS]=
  * be accessed at any irq level.
  */
 static LIST_ENTRY isr_table[NR_IRQS]={{NULL,NULL},};
-static PKSPIN_LOCK isr_lock[NR_IRQS];
-static KSPIN_LOCK isr_table_lock;
+static PKSPIN_LOCK isr_lock[NR_IRQS] = {NULL,};
+static KSPIN_LOCK isr_table_lock = {0,};
 
 /* FUNCTIONS ****************************************************************/
 
@@ -88,7 +89,7 @@ static KSPIN_LOCK isr_table_lock;
 #define PRESENT (0x8000)
 #define I486_INTERRUPT_GATE (0xe00)
 
-asmlinkage void KiInterruptDispatch(unsigned int irq)
+asmlinkage VOID KiInterruptDispatch(ULONG irq)
 /*
  * FUNCTION: Calls the irq specific handler for an irq
  * ARGUMENTS:
@@ -103,7 +104,7 @@ asmlinkage void KiInterruptDispatch(unsigned int irq)
     * Notify the rest of the kernel of the raised irq level
     */
    old_level = KeGetCurrentIrql();
-   DPRINT("old_level %d\n",old_level);
+//   DPRINT("old_level %d\n",old_level);
    KeSetCurrentIrql(HIGH_LEVEL - irq);
    
    /*
@@ -114,23 +115,24 @@ asmlinkage void KiInterruptDispatch(unsigned int irq)
 
    if (irq==0)
    {
-        KeTimerInterrupt();
+        KiTimerInterrupt();
    }
    else
    {
-   DPRINT("KiInterruptDispatch(irq %x)\n",irq);
-   /*
-    * Iterate the list until one of the isr tells us its device interrupted
-    */
-   current = isr_table[irq].Flink;
-   isr = CONTAINING_RECORD(current,KINTERRUPT,Entry);
-   DPRINT("current %x isr %x\n",current,isr);
-   while (current!=NULL && !isr->ServiceRoutine(isr,isr->ServiceContext))
-     {
-        current = current->Flink; 
-        isr = CONTAINING_RECORD(current,KINTERRUPT,Entry);
-        DPRINT("current %x isr %x\n",current,isr);
-     }
+      DPRINT("KiInterruptDispatch(irq %x)\n",irq);
+      /*
+       * Iterate the list until one of the isr tells us its device interrupted
+       */
+      current = isr_table[irq].Flink;
+      isr = CONTAINING_RECORD(current,KINTERRUPT,Entry);
+      DPRINT("current %x isr %x\n",current,isr);
+      while (current!=(&isr_table[irq]) && 
+	     !isr->ServiceRoutine(isr,isr->ServiceContext))
+	{
+	   current = current->Flink; 
+	   isr = CONTAINING_RECORD(current,KINTERRUPT,Entry);
+	   DPRINT("current %x isr %x\n",current,isr);
+	}
    }
    
    /*
@@ -172,9 +174,11 @@ asmlinkage void KiInterruptDispatch(unsigned int irq)
    KeSetCurrentIrql(old_level);
 }
 
-void InitalizeIRQ(void)
+void KeInitIRQ(void)
 {
    int i;
+   
+   DPRINT("KeInitIrq()\n",0);
    
    /*
     * First mask off all interrupts from pic
@@ -192,6 +196,27 @@ void InitalizeIRQ(void)
 	idt[IRQ_BASE+i].b=(irq_handler[i]&0xffff0000)+PRESENT+
 	                  I486_INTERRUPT_GATE;
 	InitializeListHead(&isr_table[i]);
+     }
+}
+
+static VOID KeDumpIrqList(VOID)
+{
+   PKINTERRUPT current;
+   PLIST_ENTRY current_entry;
+   unsigned int i;
+   
+   for (i=0;i<NR_IRQS;i++)
+     {
+	DPRINT("For irq %x ",i);
+	current_entry = isr_table[i].Flink;
+	current = CONTAINING_RECORD(current,KINTERRUPT,Entry);
+	while (current_entry!=(&isr_table[i]))
+	  {
+	     DPRINT("Isr %x ",current);
+	     current_entry = current_entry->Flink;
+	     current = CONTAINING_RECORD(current_entry,KINTERRUPT,Entry);
+	  }
+	DPRINT("\n",0);
      }
 }
 
@@ -239,6 +264,8 @@ NTSTATUS IoConnectInterrupt(PKINTERRUPT* InterruptObject,
    PKINTERRUPT ListHead;
    
    ASSERT_IRQL(PASSIVE_LEVEL);
+   
+   DPRINT("IoConnectInterrupt(Vector %x)\n",Vector);
    
    /*
     * Check the parameters
@@ -305,6 +332,8 @@ NTSTATUS IoConnectInterrupt(PKINTERRUPT* InterruptObject,
     */
    KeReleaseSpinLock(&isr_table_lock,oldlvl);
    
+   KeDumpIrqList();
+   
    return(STATUS_SUCCESS);
 }
 
@@ -320,8 +349,7 @@ VOID IoDisconnectInterrupt(PKINTERRUPT InterruptObject)
    
    KeRaiseIrql(InterruptObject->SynchLevel,&oldlvl);
    KeAcquireSpinLockAtDpcLevel(InterruptObject->IrqLock);
-   RemoveEntryFromList(&isr_table[InterruptObject->Vector],
-		       &InterruptObject->Entry);
+   RemoveEntryList(&InterruptObject->Entry);
    KeReleaseSpinLockFromDpcLevel(InterruptObject->IrqLock);
    KeLowerIrql(oldlvl);
 }

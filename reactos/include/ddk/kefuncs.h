@@ -3,11 +3,25 @@
 
 /* KERNEL FUNCTIONS ********************************************************/
 
+struct _KAPC;
+
+void KeInitializeApc(
+	struct _KAPC *Apc,
+	PKTHREAD Thread,
+	UCHAR StateIndex,
+	PKKERNEL_ROUTINE KernelRoutine,
+	PKRUNDOWN_ROUTINE RundownRoutine,
+	PKNORMAL_ROUTINE NormalRoutine,
+	UCHAR Mode,
+	PVOID Context
+	);
+
+void KeInsertQueueApc(struct _KAPC *Apc, PVOID SystemArgument1,
+		      PVOID SystemArgument2, UCHAR Mode);
+void KeAttachProcess(struct _EPROCESS* Process);
+void KeDetachProcess(VOID);
 VOID KeDrainApcQueue(VOID);
-VOID KeInitializeApc(PKAPC Apc, PKNORMAL_ROUTINE NormalRoutine,
-		     PVOID NormalContext,
-		     PKTHREAD TargetThread);
-BOOLEAN KeInsertQueueApc(PKAPC Apc);
+PKPROCESS KeGetCurrentProcess(VOID);
 
 /*
  * FUNCTION: Acquires a spinlock so the caller can synchronize access to 

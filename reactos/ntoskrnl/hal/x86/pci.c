@@ -16,10 +16,6 @@
 
 #include <windows.h>
 #include <ddk/ntddk.h>
-#include <internal/kernel.h>
-#include <internal/mm.h>
-#include <internal/string.h>
-#include <internal/hal/page.h>
 
 /* FUNCTIONS **************************************************************/
 
@@ -33,7 +29,7 @@ BOOL HalPciProbe()
 {
    if (Hal_bios32_is_service_present(PCI_SERVICE))
      {
-	printk("Detected PCI service\n");
+	DbgPrint("Detected PCI service\n");
 	return(TRUE);
      }
    return(FALSE);

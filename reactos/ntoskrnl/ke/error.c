@@ -17,7 +17,7 @@
 /*
  * Last error code (this should be per process)
  */
-DWORD error_code;
+DWORD error_code = 0;
 
 /* FUNCTIONS ***************************************************************/
 

@@ -16,7 +16,6 @@
 
 #include <windows.h>
 #include <ddk/ntddk.h>
-#include <internal/kernel.h>
 #include <internal/mm.h>
 #include <internal/string.h>
 #include <internal/hal/page.h>
@@ -133,7 +132,7 @@ VOID Hal_bios32_probe()
 	  {
 	     continue;
 	  }
-	printk("BIOS32 detected at %x\n",i);
+	DbgPrint("BIOS32 detected at %x\n",i);
 	bios32_indirect.address = service_entry->entry;
 	bios32_detected=TRUE;
      }

@@ -1,3 +1,6 @@
+#ifndef __INCLUDE_DDK_IODEF_H
+#define __INCLUDE_DDK_IODEF_H
+
 typedef enum _IO_QUERY_DEVICE_DESCRIPTION
 {
    IoQueryDeviceIdentifier = 0,
@@ -282,3 +285,17 @@ enum
      IRP_MJ_MAXIMUM_FUNCTION,
 };
 
+enum
+/*
+ * PURPOSE: Details about the result of a file open or create
+ */
+{
+     FILE_CREATED,
+//     FILE_OPENED,
+     FILE_OVERWRITTEN,
+     FILE_SUPERSEDED,
+     FILE_EXISTS,
+     FILE_DOES_NOT_EXIST,
+};
+
+#endif

@@ -34,7 +34,7 @@ NTSTATUS LdrProcessImage(HANDLE SectionHandle, PVOID BaseAddress)
 
 NTSTATUS LdrLoadDriver(PUNICODE_STRING FileName)
 /*
- * FUNCTION: Loads a PE executable into the current process
+ * FUNCTION: Loads a PE executable into the kernel
  * ARGUMENTS:
  *         FileName = Driver to load
  * RETURNS: Status

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            mkernel/kernel/dpc.cc
+ * FILE:            ntoskrnl/ke/dpc.c
  * PURPOSE:         Handle DPCs (Delayed Procedure Calls)
  * PROGRAMMER:      David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
@@ -9,20 +9,22 @@
  */
 
 /*
- * NOTE: See also the higher level support routines in mkernel/iomgr/iodpc.cc
+ * NOTE: See also the higher level support routines in ntoskrnl/io/dpc.c
  */
 
 /* INCLUDES ***************************************************************/
 
 #include <ddk/ntddk.h>
 
-#include <internal/kernel.h>
+#define NDEBUG
+#include <internal/debug.h>
 
 /* TYPES *******************************************************************/
 
 /* GLOBALS ******************************************************************/
 
-LIST_ENTRY DpcQueueHead;
+static LIST_ENTRY DpcQueueHead={NULL,NULL};
+static KSPIN_LOCK DpcQueueLock={0,};
 
 /* FUNCTIONS ****************************************************************/
 
@@ -48,17 +50,25 @@ void KeDrainDpcQueue(void)
  * FUNCTION: Called to execute queued dpcs
  */
 {
-   PLIST_ENTRY current_entry = ExInterlockedRemoveHeadList(&DpcQueueHead,NULL);
-   PKDPC current = CONTAINING_RECORD(&current_entry,KDPC,DpcListEntry);
+   PLIST_ENTRY current_entry;
+   PKDPC current;
    
-   while (current_entry!=NULL)
+  
+   KeAcquireSpinLockAtDpcLevel(&DpcQueueLock);
+   current_entry = RemoveHeadList(&DpcQueueHead);
+   current = CONTAINING_RECORD(current_entry,KDPC,DpcListEntry);
+   while (current_entry!=(&DpcQueueHead))
      {
+	CHECKPOINT;
 	current->DeferredRoutine(current,current->DeferredContext,
 				 current->SystemArgument1,
 				 current->SystemArgument2);
-	current_entry = ExInterlockedRemoveHeadList(&DpcQueueHead,NULL);
+	current->Lock=FALSE;
+	current_entry = RemoveHeadList(&DpcQueueHead);
 	current = CONTAINING_RECORD(&current_entry,KDPC,DpcListEntry);
      }
+   KeReleaseSpinLockFromDpcLevel(&DpcQueueLock);
+//   DPRINT("Finished KeDrainDpcQueue()\n",0);
 }
 
 BOOLEAN KeRemoveQueueDpc(PKDPC Dpc)
@@ -74,8 +84,9 @@ BOOLEAN KeRemoveQueueDpc(PKDPC Dpc)
      {
 	return(FALSE);
      }
-   ExInterlockedRemoveEntryList(&DpcQueueHead,&Dpc->DpcListEntry,NULL);
+   RemoveEntryList(&Dpc->DpcListEntry);
    Dpc->Lock=0;
+   return(TRUE);
 }
 
 BOOLEAN KeInsertQueueDpc(PKDPC dpc, PVOID SystemArgument1,
@@ -90,6 +101,9 @@ BOOLEAN KeInsertQueueDpc(PKDPC dpc, PVOID SystemArgument1,
  *          FALSE otherwise
  */
 {
+   DPRINT("KeInsertQueueDpc()\n",0);
+   assert(KeGetCurrentIrql()==DISPATCH_LEVEL);
+   
    dpc->Number=0;
    dpc->Importance=Medium;
    dpc->SystemArgument1=SystemArgument1;
@@ -98,8 +112,12 @@ BOOLEAN KeInsertQueueDpc(PKDPC dpc, PVOID SystemArgument1,
      {
 	return(FALSE);
      }
-   ExInterlockedInsertHeadList(&DpcQueueHead,&dpc->DpcListEntry,NULL);
+   KeAcquireSpinLockAtDpcLevel(&DpcQueueLock);
+   InsertHeadList(&DpcQueueHead,&dpc->DpcListEntry);
+   KeReleaseSpinLockFromDpcLevel(&DpcQueueLock);
    dpc->Lock=1;
+   DPRINT("DpcQueueHead.Flink %x\n",DpcQueueHead.Flink);
+   DPRINT("Leaving KeInsertQueueDpc()\n",0);
    return(TRUE);
 }
 

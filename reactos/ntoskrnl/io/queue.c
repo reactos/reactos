@@ -10,7 +10,8 @@
 
 #include <windows.h>
 #include <ddk/ntddk.h>
-#include <internal/kernel.h>
+
+#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -53,6 +54,9 @@ VOID IoStartNextPacket(PDEVICE_OBJECT DeviceObject, BOOLEAN Cancelable)
    PKDEVICE_QUEUE_ENTRY entry;
    PIRP Irp;
    KIRQL oldirql;
+   
+   DPRINT("IoStartNextPacket(DeviceObject %x, Cancelable %d)\n",
+	  DeviceObject,Cancelable);
    
    entry = KeRemoveDeviceQueue(&DeviceObject->DeviceQueue);
    

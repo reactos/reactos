@@ -16,7 +16,6 @@
 #include <ddk/ntddk.h>
 
 #include <internal/iomgr.h>
-#include <internal/kernel.h>
 #include <internal/symbol.h>
 #include <internal/string.h>
 #include <internal/mm.h>
@@ -120,7 +119,7 @@ static int do_reloc32_reloc(module* mod, SCNHDR* scn, RELOC* reloc)
    val = get_kernel_symbol_addr(name);
    if (val==0)
      {
-	printk("Undefined symbol %s in module\n",name);
+	DbgPrint("Undefined symbol %s in module\n",name);
 	return(0);
      }
    //        DPRINT("REL32 value %x name %s\n",val,name);
@@ -204,7 +203,7 @@ static BOOLEAN do_reloc(module* mod, unsigned int scn_idx)
 	     break;
 
 	   default:
-	     printk("Unknown relocation type %x at %d in module\n",
+	     DbgPrint("Unknown relocation type %x at %d in module\n",
 		    reloc->r_type,j);
 	     return(0);
 	  }
@@ -234,8 +233,8 @@ BOOLEAN process_boot_module(unsigned int start)
    PDRIVER_INITIALIZE func;
    int i;
    
+   DPRINT("process_boot_module(start %x)\n",start);
    DPRINT("n = %x\n",*((unsigned int *)start));
-   
    mod=(module *)ExAllocatePool(NonPagedPool,sizeof(module));
    
    DPRINT("magic %x\n",((FILHDR *)start)->f_magic);
@@ -244,7 +243,7 @@ BOOLEAN process_boot_module(unsigned int start)
 
    if (I386BADMAG(hdr))
      {
-        printk("(%s:%d) Module has bad magic value (%x)\n",__FILE__,
+        DbgPrint("(%s:%d) Module has bad magic value (%x)\n",__FILE__,
                __LINE__,hdr.f_magic);
 	return(0);
      }
@@ -288,14 +287,14 @@ BOOLEAN process_boot_module(unsigned int start)
 	  }
         }
    
-   mod->base = (unsigned int)VirtualAlloc((LPVOID)0,mod->size,MEM_COMMIT,
-                            PAGE_SYSTEM + PAGE_EXECUTE_READWRITE);
+   CHECKPOINT;
+   mod->base = (unsigned int)MmAllocateSection(mod->size);
    if (mod->base == 0)
      {
-	printk("Failed to allocated section for module\n");
+	DbgPrint("Failed to alloc section for module\n");
 	return(0);
      }
-   
+   CHECKPOINT;
    
    /*
     * Adjust section vaddrs for allocated area
@@ -349,7 +348,7 @@ BOOLEAN process_boot_module(unsigned int start)
 
    if (!found_entry)
         {
-	   printk("No module entry point defined\n");
+	   DbgPrint("No module entry point defined\n");
 	   return(0);
         }
    

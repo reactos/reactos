@@ -16,13 +16,13 @@
 #ifndef __INTERNAL_DEBUG
 #define __INTERNAL_DEBUG
 
-#define UNIMPLEMENTED do {printk("%s at %s:%d is umimplemented, have a nice day\n",__FUNCTION__,__FILE__,__LINE__); for(;;);  } while(0);
+#define UNIMPLEMENTED do {DbgPrint("%s at %s:%d is umimplemented, have a nice day\n",__FUNCTION__,__FILE__,__LINE__); for(;;);  } while(0);
 
 #ifndef NDEBUG
-#define DPRINT(fmt,args...) do { printk("(%s:%d) ",__FILE__,__LINE__); printk(fmt,args); } while(0);
-//#define assert(x) if (!(x)) {printk("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); (*((unsigned int *)0))=1; for (;;); }
-#define assert(x) if (!(x)) {printk("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); for (;;); }
-#define CHECKPOINT printk("%s:%d\n",__FILE__,__LINE__)
+#define DPRINT(fmt,args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(fmt,args); } while(0);
+//#define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); (*((unsigned int *)0))=1; for (;;); }
+#define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); for (;;); }
+#define CHECKPOINT DbgPrint("%s:%d\n",__FILE__,__LINE__)
 #else
 #define DPRINT(fmt,args...)
 #define assert(x)

@@ -39,7 +39,7 @@ typedef struct _ERESOURCE
 typedef struct 
 {
    LONG Count;
-   PKTHREAD Owner;
+   struct _KTHREAD* Owner;
    ULONG Contention;
    KEVENT Event;
    ULONG OldIrql;

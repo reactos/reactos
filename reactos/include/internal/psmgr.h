@@ -1,9 +1,13 @@
 #ifndef __INCLUDE_INTERNAL_PSMGR_H
 #define __INCLUDE_INTERNAL_PSMGR_H
 
-#include <internal/hal/hal.h>
+#include <internal/hal.h>
+
+extern EPROCESS SystemProcess;
+extern HANDLE SystemProcessHandle;
 
 void PsInitThreadManagment(void);
+VOID PsInitIdleThread(VOID);
 
 /*
  * PURPOSE: Thread states
