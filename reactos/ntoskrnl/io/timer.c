@@ -12,7 +12,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS *******************************************************************/
