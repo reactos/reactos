@@ -347,7 +347,7 @@ public:
 		*lprcClipRect = rect;
 
 		assert(lpFrameInfo->cb>=sizeof(OLEINPLACEFRAMEINFO));
-		lpFrameInfo->fMDIApp = FALSE;
+		lpFrameInfo->fMDIApp = FALSE;	//@@
 		lpFrameInfo->hwndFrame = 0;
 		lpFrameInfo->haccel = 0;
 		lpFrameInfo->cAccelEntries = 0;
