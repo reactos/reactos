@@ -168,10 +168,16 @@ Root::~Root()
  // directories first...
 static int compareType(const WIN32_FIND_DATA* fd1, const WIN32_FIND_DATA* fd2)
 {
-	int dir1 = fd1->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
-	int dir2 = fd2->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+	int order1 = fd1->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+	int order2 = fd2->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
 
-	return dir2==dir1? 0: dir2<dir1? -1: 1;
+	/* Handle "." and ".." as special case and move them at the very first beginning. */
+	if (order1 && order2) {
+		order1 = fd1->cFileName[0]!='.'? 1: fd1->cFileName[1]=='.'? 2: fd1->cFileName[1]=='\0'? 3: 1;
+		order2 = fd2->cFileName[0]!='.'? 1: fd2->cFileName[1]=='.'? 2: fd2->cFileName[1]=='\0'? 3: 1;
+	}
+
+	return order2==order1? 0: order2<order1? -1: 1;
 }
 
 
