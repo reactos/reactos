@@ -50,7 +50,7 @@
 #include "debug.h"
 
 
-BOOL CALLBACK ExecuteDialogWndProg(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+BOOL CALLBACK ExecuteDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	static struct ExecuteDialog* dlg;
 
@@ -77,7 +77,7 @@ BOOL CALLBACK ExecuteDialogWndProg(HWND hDlg, UINT message, WPARAM wParam, LPARA
 }
 
 
-BOOL CALLBACK ExecuteOptionsConfirmationWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+BOOL CALLBACK OptionsConfirmationWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	static struct ExecuteDialog* dlg;
 	int id;
@@ -126,7 +126,7 @@ BOOL CALLBACK ExecuteOptionsConfirmationWndProc(HWND hDlg, UINT message, WPARAM 
 }
 
 
-BOOL CALLBACK ExecuteViewFileTypeWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+BOOL CALLBACK ViewFileTypeWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	static struct ExecuteDialog* dlg;
 	int id;

@@ -411,14 +411,14 @@ LRESULT _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case ID_VIEW_BY_FILE_TYPE:
 			{
 			struct ExecuteDialog dlg = {{0}};
-            if (DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_DIALOG_VIEW_TYPE), hWnd, ExecuteViewFileTypeWndProc, (LPARAM)&dlg) == IDOK) {
+            if (DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_DIALOG_VIEW_TYPE), hWnd, ViewFileTypeWndProc, (LPARAM)&dlg) == IDOK) {
             }
 			}
 			break;
         case ID_OPTIONS_CONFIRMATION:
 			{
 			struct ExecuteDialog dlg = {{0}};
-            if (DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_DIALOG_OPTIONS_CONFIRMATON), hWnd, ExecuteOptionsConfirmationWndProc, (LPARAM)&dlg) == IDOK) {
+            if (DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_DIALOG_OPTIONS_CONFIRMATON), hWnd, OptionsConfirmationWndProc, (LPARAM)&dlg) == IDOK) {
             }
 			}
             break;

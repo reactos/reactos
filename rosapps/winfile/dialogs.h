@@ -39,9 +39,9 @@ struct ExecuteDialog {
 };
 
 
-BOOL CALLBACK ExecuteDialogWndProg(HWND, UINT, WPARAM, LPARAM);
-BOOL CALLBACK ExecuteViewFileTypeWndProc(HWND, UINT, WPARAM, LPARAM);
-BOOL CALLBACK ExecuteOptionsConfirmationWndProc(HWND, UINT, WPARAM, LPARAM);
+BOOL CALLBACK ExecuteDialogWndProc(HWND, UINT, WPARAM, LPARAM);
+BOOL CALLBACK ViewFileTypeWndProc(HWND, UINT, WPARAM, LPARAM);
+BOOL CALLBACK OptionsConfirmationWndProc(HWND, UINT, WPARAM, LPARAM);
 
 
 #ifdef __cplusplus
