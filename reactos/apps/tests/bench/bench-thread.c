@@ -21,19 +21,19 @@ thread_main2(LPVOID param)
 
 int main (void)
 {
-   DWORD i;
+   DWORD i=0;
    DWORD id;
    
-   printf("Creating %d threads\n",NR_THREADS);
-   for (i=0;i<NR_THREADS;i++)
-     {
+   printf("Creating %d threads...\n",NR_THREADS);
+//   for (i=0;i<NR_THREADS;i++)
+//     {
 	CreateThread(NULL,
 		     0,
                      thread_main1,
                      (LPVOID)i,
 		     0,
 		     &id);
-
+#if 0
 	CreateThread(NULL,
 		     0,
                      thread_main2,
@@ -41,8 +41,11 @@ int main (void)
 		     0,
 		     &id);
      }
+#endif
+   printf("Threads created...\n");
 
-     Sleep (5000);
+//     Sleep (5000);
+   SuspendThread (GetCurrentThread());
 
-     return 0;
+   return 0;
 }

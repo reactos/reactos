@@ -17,6 +17,10 @@
 #include <string.h>
 #include <internal/i386/segment.h>
 
+//#define NDEBUG
+#include <kernel32/kernel32.h>
+
+
 /* FUNCTIONS *****************************************************************/
 
 HANDLE STDCALL CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes,
@@ -43,7 +47,6 @@ HANDLE STDCALL CreateRemoteThread(HANDLE hProcess,
 				  DWORD dwCreationFlags,
 				  LPDWORD lpThreadId)
 {	
-   NTSTATUS errCode;
    HANDLE ThreadHandle;
    OBJECT_ATTRIBUTES ObjectAttributes;
    CLIENT_ID ClientId;
@@ -51,6 +54,9 @@ HANDLE STDCALL CreateRemoteThread(HANDLE hProcess,
    INITIAL_TEB InitialTeb;
    BOOLEAN CreateSuspended = FALSE;
    PVOID BaseAddress;
+   DWORD StackSize;
+   ULONG BytesWritten;
+   NTSTATUS Status;
    
    ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
    ObjectAttributes.RootDirectory = NULL;
@@ -69,16 +75,24 @@ HANDLE STDCALL CreateRemoteThread(HANDLE hProcess,
      CreateSuspended = TRUE;
    else
      CreateSuspended = FALSE;
-   
-   BaseAddress = 0;
-   ZwAllocateVirtualMemory(hProcess,
-			   &BaseAddress,
-			   0,
-                           (PULONG)&dwStackSize,
-			   MEM_COMMIT,
-			   PAGE_READWRITE);
-   
 
+   StackSize = (dwStackSize == 0) ? 4096 : dwStackSize;
+
+   BaseAddress = 0;
+   Status = NtAllocateVirtualMemory(hProcess,
+                                    &BaseAddress,
+                                    0,
+                                    (PULONG)&StackSize,
+                                    MEM_COMMIT,
+                                    PAGE_READWRITE);
+   if (!NT_SUCCESS(Status))
+     {
+        DPRINT("Could not allocate stack space!\n");
+        return NULL;
+     }
+
+   DPRINT("Stack base address: %p\n", BaseAddress);
+   
    memset(&ThreadContext,0,sizeof(CONTEXT));
    ThreadContext.Eip = (LONG)lpStartAddress;
    ThreadContext.SegGs = USER_DS;
@@ -87,18 +101,27 @@ HANDLE STDCALL CreateRemoteThread(HANDLE hProcess,
    ThreadContext.SegDs = USER_DS;
    ThreadContext.SegCs = USER_CS;
    ThreadContext.SegSs = USER_DS;        
-   ThreadContext.Esp = (ULONG)(BaseAddress + dwStackSize);
+   ThreadContext.Esp = (ULONG)(BaseAddress + StackSize - 8);
    ThreadContext.EFlags = (1<<1) + (1<<9);
 
+   /* write lpParameter to highest stack address */
+   *((PBYTE)(BaseAddress + StackSize - 4)) = lpParameter;
 
-   errCode = NtCreateThread(&ThreadHandle,
-			    THREAD_ALL_ACCESS,
-			    &ObjectAttributes,
-			    hProcess,
-			    &ClientId,
-			    &ThreadContext,
-			    &InitialTeb,
-			    CreateSuspended);
+   Status = NtCreateThread(&ThreadHandle,
+                           THREAD_ALL_ACCESS,
+                           &ObjectAttributes,
+                           hProcess,
+                           &ClientId,
+                           &ThreadContext,
+                           &InitialTeb,
+                           CreateSuspended);
+
+   if (!NT_SUCCESS(Status))
+     {
+        DPRINT("NtCreateThread() failed!\n");
+        return NULL;
+     }
+
    if ( lpThreadId != NULL )
      memcpy(lpThreadId, &ClientId.UniqueThread,sizeof(ULONG));
    
