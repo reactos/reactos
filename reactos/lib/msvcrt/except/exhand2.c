@@ -2,11 +2,11 @@
 
 #ifdef __GNUC__
 #else
-#endif
 ULONG DbgPrint(PCH Format,...)
 {
     return 0;
 }
+#endif
 
 VOID STDCALL
 MsvcrtDebug(ULONG Value)
