@@ -275,7 +275,7 @@ protected:
 	void	CreateSubmenu(int id, int folder1, int folder2, LPCTSTR title, CREATORFUNC creator=s_def_creator);
 	void	CreateSubmenu(int id, const StartMenuFolders& new_folders, LPCTSTR title, CREATORFUNC creator=s_def_creator);
 	void	ActivateEntry(int id, const ShellEntrySet& entries);
-	void	CloseStartMenu(int id=0);
+	virtual void CloseStartMenu(int id=0);
 
 	bool	GetButtonRect(int id, PRECT prect) const;
 
@@ -351,6 +351,7 @@ protected:
 
 	void	AddEntries();
 	void	Paint(PaintCanvas& canvas);
+	void	CloseStartMenu(int id=0);
 };
 
 
@@ -363,8 +364,6 @@ struct SettingsMenu : public StartMenuHandler
 	 :	super(hwnd, create_info)
 	{
 	}
-
-	void	TrackStartmenu();
 
 protected:
 	void	AddEntries();
@@ -381,8 +380,6 @@ struct BrowseMenu : public StartMenuHandler
 	{
 	}
 
-	void	TrackStartmenu();
-
 protected:
 	void	AddEntries();
 };
@@ -397,8 +394,6 @@ struct SearchMenu : public StartMenuHandler
 	 :	super(hwnd, create_info)
 	{
 	}
-
-	void	TrackStartmenu();
 
 protected:
 	void	AddEntries();

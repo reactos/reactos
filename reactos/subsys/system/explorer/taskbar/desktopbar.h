@@ -91,4 +91,6 @@ protected:
 	WindowHandle _hwndTaskBar;
 	WindowHandle _hwndNotify;
 	WindowHandle _hwndQuickLaunch;
+
+	struct StartMenuRoot* _startMenuRoot;
 };

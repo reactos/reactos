@@ -104,6 +104,9 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 	 // notify all top level windows about the successfully created desktop bar
 	PostMessage(HWND_BROADCAST, WM_TASKBARCREATED, 0, 0);
 
+	 // prepare Startmenu, but hide it for now
+	_startMenuRoot = GET_WINDOW(StartMenuRoot, StartMenuRoot::Create(_hwnd));
+
 	return 0;
 }
 
@@ -213,11 +216,8 @@ int DesktopBar::Command(int id, int code)
 
 void DesktopBar::ShowStartMenu()
 {
-	 // create Startmenu
-	StartMenuRoot* startMenuRoot = GET_WINDOW(StartMenuRoot, StartMenuRoot::Create(_hwnd));
-
-	if (startMenuRoot)
-		startMenuRoot->TrackStartmenu();
+	if (_startMenuRoot)
+		_startMenuRoot->TrackStartmenu();
 }
 
 

@@ -345,7 +345,7 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 		 // route message to the parent menu and close menus after launching an entry
 		if (!SendParent(nmsg, wparam, lparam))
-			DestroyWindow(_hwnd);
+			CloseStartMenu();
 		return 1;	// signal that we have received and processed the message
 
 	  case PM_STARTMENU_CLOSED:
@@ -657,7 +657,7 @@ int StartMenu::Command(int id, int code)
 {
 	switch(id) {
 	  case IDCANCEL:
-		DestroyWindow(_hwnd);
+		CloseStartMenu(id);
 		break;
 
 	  default: {
@@ -907,12 +907,30 @@ void StartMenu::ActivateEntry(int id, const ShellEntrySet& entries)
 			 // If the entry is no subdirectory, there can only be one shell entry.
 			assert(entries.size()==1);
 
-			entry->launch_entry(_hwnd);	///@todo launch in the background; specify correct HWND for error message box titles
+			HWND hparent = GetParent(_hwnd);
+			ShellPath shell_path = entry->create_absolute_pidl();
 
 			 // close start menus after launching the selected entry
 			CloseStartMenu(id);
 
-			 // we deleted 'this' - ensure we leave loop and function
+			///@todo launch in the background; specify correct HWND for error message box titles
+			SHELLEXECUTEINFO shexinfo;
+
+			shexinfo.cbSize = sizeof(SHELLEXECUTEINFO);
+			shexinfo.fMask = SEE_MASK_INVOKEIDLIST;	// SEE_MASK_IDLIST is also possible.
+			shexinfo.hwnd = hparent;
+			shexinfo.lpVerb = NULL;
+			shexinfo.lpFile = NULL;
+			shexinfo.lpParameters = NULL;
+			shexinfo.lpDirectory = NULL;
+			shexinfo.nShow = SW_SHOWNORMAL;
+
+			shexinfo.lpIDList = &*shell_path;
+
+			if (!ShellExecuteEx(&shexinfo))
+				display_error(hparent, GetLastError());
+
+			 // we may have deleted 'this' - ensure we leave the loop and function
 			return;
 		}
 	}
@@ -1137,7 +1155,7 @@ HWND StartMenuRoot::Create(HWND hwndDesktopBar)
 	AdjustWindowRectEx(&rect, WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE, FALSE, 0);
 
 	return Window::Create(WINDOW_CREATOR(StartMenuRoot), 0, GetWndClasss(), TITLE_STARTMENU,
-							WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE,
+							WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN,
 							rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, hwndDesktopBar);
 }
 
@@ -1146,6 +1164,13 @@ void StartMenuRoot::TrackStartmenu()
 {
 	MSG msg;
 	HWND hwnd = _hwnd;
+
+#ifdef _LIGHT_STARTMENU
+	_selected_id = -1;
+#endif
+
+	 // show previously hidden start menu
+	ShowWindow(hwnd, SW_SHOW);
 
 	while(IsWindow(hwnd)) {
 		if (!GetMessage(&msg, 0, 0, 0)) {
@@ -1165,7 +1190,7 @@ void StartMenuRoot::TrackStartmenu()
 			}
 
 			if (!menu_wnd) {
-				DestroyWindow(_hwnd);
+				CloseStartMenu();
 				break;
 			}
 		}
@@ -1341,6 +1366,15 @@ void StartMenuRoot::Paint(PaintCanvas& canvas)
 	}
 
 	super::Paint(canvas);
+}
+
+
+void StartMenuRoot::CloseStartMenu(int id)
+{
+	if (_submenu)
+		CloseSubmenus();
+
+	ShowWindow(_hwnd, SW_HIDE);
 }
 
 
