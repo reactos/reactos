@@ -1,20 +1,22 @@
-# $Id: makefile,v 1.5 2001/07/15 21:19:00 rex Exp $
+# $Id: makefile,v 1.6 2001/07/24 18:38:04 ekohl Exp $
 #
 #
 TARGET = mouclass
 
 PATH_TO_TOP = ../../..
 
-OBJECTS = $(TARGET).o $(TARGET).coff ../../../ntoskrnl/ntoskrnl.a
+OBJECTS = $(TARGET).o $(TARGET).coff
+
+LIBS = $(PATH_TO_TOP)/ntoskrnl/ntoskrnl.a
 
 CFLAGS = -D__NTDRIVER__ -O2 -I.
 
-all: $(TARGET).sys
+all: $(TARGET).sys $(TARGET).sys.unstripped
 
 .phony: all
 
 clean:
-	- $(RM) $(TARGET).o $(TARGET).coff junk.tmp base.tmp temp.exp mouclass.sys
+	- $(RM) *.o *.sym $(TARGET).coff junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).sys.unstripped
 
 .phony: clean
 
@@ -23,38 +25,13 @@ install: $(FLOPPY_DIR)/drivers/$(TARGET).sys
 $(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
 	$(CP) $(TARGET).sys $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
-dist: ../../../$(DIST_DIR)/drivers/$(TARGET).sys
+dist: $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys
 
-../../../$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
-	$(CP) $(TARGET).sys ../../../$(DIST_DIR)/drivers/$(TARGET).sys
+$(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
+	$(CP) $(TARGET).sys $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys
 
-$(TARGET).sys: $(OBJECTS)
-	$(CC) \
-		-specs=../../svc_specs \
-		-mdll \
-		-o junk.tmp \
-		-Wl,--defsym,_end=end \
-		-Wl,--defsym,_edata=__data_end__ \
-		-Wl,--defsym,_etext=etext \
-		-Wl,--base-file,base.tmp \
-		$(OBJECTS)
-	- $(RM) junk.tmp
-	$(DLLTOOL) \
-		--dllname $(TARGET).sys \
-		--base-file base.tmp \
-		--output-exp temp.exp \
-		--kill-at
-	- $(RM) base.tmp
-	$(CC) \
-		--verbose \
-		-Wl,--image-base,0x10000 \
-		-Wl,-e,_DriverEntry@8 \
-		-Wl,temp.exp \
-		-specs=../../svc_specs \
-		-mdll \
-		-o $(TARGET).sys \
-		$(OBJECTS)
-	- $(RM) temp.exp
+$(TARGET).sys $(TARGET).sys.unstripped: $(OBJECTS) $(LIBS)
 
+$(TARGET).coff: $(PATH_TO_TOP)/include/reactos/buildno.h $(TARGET).rc
 
-include ../../../rules.mak
+include $(PATH_TO_TOP)/rules.mak

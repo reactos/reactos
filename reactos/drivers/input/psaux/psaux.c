@@ -36,7 +36,8 @@ BOOLEAN MouseSynchronizeRoutine(PVOID Context)
    return(FALSE);
 }
 
-VOID PS2MouseStartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+VOID STDCALL
+PS2MouseStartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
 
@@ -49,7 +50,8 @@ VOID PS2MouseStartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
      }
 }
 
-NTSTATUS PS2MouseDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL
+PS2MouseDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    PIO_STACK_LOCATION stk = IoGetCurrentIrpStackLocation(Irp);
    NTSTATUS Status;
@@ -100,7 +102,8 @@ VOID PS2MouseInitializeDataQueue(PVOID Context)
    DeviceExtension->MouseInputData = ExAllocatePool(NonPagedPool, sizeof(MOUSE_INPUT_DATA) * MOUSE_BUFFER_SIZE); */
 }
 
-NTSTATUS PS2MouseInternalDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+NTSTATUS STDCALL
+PS2MouseInternalDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
    PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
    PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);

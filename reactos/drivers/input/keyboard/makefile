@@ -1,11 +1,13 @@
-# $Id: makefile,v 1.5 2001/07/15 21:19:00 rex Exp $
+# $Id: makefile,v 1.6 2001/07/24 18:37:46 ekohl Exp $
 #
 #
 PATH_TO_TOP = ../../..
 
-TARGET=keyboard
+TARGET = keyboard
 
-OBJECTS = $(TARGET).o $(TARGET).coff ../../../ntoskrnl/ntoskrnl.a
+OBJECTS = $(TARGET).o $(TARGET).coff
+
+LIBS = $(PATH_TO_TOP)/ntoskrnl/ntoskrnl.a
 
 CFLAGS = -D__NTDRIVER__ -O2 -I. -g
 
@@ -14,7 +16,7 @@ all: $(TARGET).sys $(TARGET).sys.unstripped
 .phony: all
 
 clean:
-	- $(RM) $(TARGET).o $(TARGET).coff junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).sys.unstripped
+	- $(RM) *.o *.sym $(TARGET).coff junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).sys.unstripped
 
 .phony: clean
 
@@ -23,12 +25,14 @@ install: $(FLOPPY_DIR)/drivers/$(TARGET).sys
 $(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
 	$(CP) $(TARGET).sys $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
-dist: ../../../$(DIST_DIR)/drivers/$(TARGET).sys
+dist: $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys
 
-../../../$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
-	$(CP) $(TARGET).sys ../../../$(DIST_DIR)/drivers/$(TARGET).sys
+$(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
+	$(CP) $(TARGET).sys $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys
 
-$(TARGET).sys $(TARGET).sys.unstripped: $(OBJECTS)
+$(TARGET).sys $(TARGET).sys.unstripped: $(OBJECTS) $(LIBS)
+
+$(TARGET).coff: $(PATH_TO_TOP)/include/reactos/buildno.h $(TARGET).rc
 
 WARNINGS_ARE_ERRORS = yes
-include ../../../rules.mak
+include $(PATH_TO_TOP)/rules.mak

@@ -84,6 +84,9 @@ void controller_wait(void)
 int controller_wait_for_input(void)
 {
   int timeout;
+  LARGE_INTEGER Millisecond_Timeout;
+
+  Millisecond_Timeout.QuadPart = 1;
 
   for(timeout = KEYBOARD_INIT_TIMEOUT; timeout > 0; timeout--)
   {
@@ -92,7 +95,7 @@ int controller_wait_for_input(void)
     if(return_value >= 0) return return_value;
 
     // Sleep for one millisecond
-    KeDelayExecutionThread (KernelMode, FALSE, 1);
+    KeDelayExecutionThread (KernelMode, FALSE, &Millisecond_Timeout);
   }
 
   DbgPrint("PSAUX: Timed out on waiting for input from controller\n");

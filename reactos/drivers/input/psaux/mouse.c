@@ -148,6 +148,9 @@ BOOLEAN detect_ps2_port(void)
 {
   int loops;
   BOOLEAN return_value = FALSE;
+  LARGE_INTEGER Millisecond_Timeout;
+
+  Millisecond_Timeout.QuadPart = 1;
 
   return TRUE; // The rest of this code fails under BOCHs
 
@@ -177,7 +180,7 @@ BOOLEAN detect_ps2_port(void)
       break;
     }
 
-    KeDelayExecutionThread (KernelMode, FALSE, 1);
+    KeDelayExecutionThread (KernelMode, FALSE, &Millisecond_Timeout);
   }
   
   return return_value;
