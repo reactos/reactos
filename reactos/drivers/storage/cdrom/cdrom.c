@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdrom.c,v 1.7 2002/03/25 21:56:19 ekohl Exp $
+/* $Id: cdrom.c,v 1.8 2002/04/10 17:02:22 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -467,6 +467,7 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
     {
       /* Set ISO9660 defaults */
       DiskDeviceExtension->DiskGeometry->BytesPerSector = 2048;
+      DiskDeviceExtension->DiskGeometry->MediaType = RemovableMedia;
       DiskDeviceExtension->SectorShift = 11;
       DiskDeviceExtension->PartitionLength.QuadPart = (ULONGLONG)0x7fffffff;
     }
@@ -526,6 +527,31 @@ CdromClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 
   switch (ControlCode)
     {
+      case IOCTL_CDROM_GET_DRIVE_GEOMETRY:
+	DPRINT1("IOCTL_CDROM_GET_DRIVE_GEOMETRY\n");
+	if (IrpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(DISK_GEOMETRY))
+	  {
+	    Status = STATUS_INVALID_PARAMETER;
+	  }
+	else if (DeviceExtension->DiskGeometry == NULL)
+	  {
+	    DPRINT1("No cdrom geometry available!\n");
+	    Status = STATUS_NO_SUCH_DEVICE;
+	  }
+	else
+	  {
+	    PDISK_GEOMETRY Geometry;
+
+	    Geometry = (PDISK_GEOMETRY) Irp->AssociatedIrp.SystemBuffer;
+	    RtlMoveMemory(Geometry,
+			  DeviceExtension->DiskGeometry,
+			  sizeof(DISK_GEOMETRY));
+
+	    Status = STATUS_SUCCESS;
+	    Information = sizeof(DISK_GEOMETRY);
+	  }
+	break;
+
       default:
 	DPRINT1("Unhandled control code: %lx\n", ControlCode);
 	Status = STATUS_INVALID_DEVICE_REQUEST;
