@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.72 2003/07/29 19:00:34 royce Exp $
+/* $Id: npool.c,v 1.73 2003/07/29 19:43:13 royce Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -1014,8 +1014,8 @@ static void check_duplicates(BLOCK_HDR* blk)
  * NOTE: Bug checks if duplicates are found
  */
 {
-   unsigned int base = (unsigned int)blk;
-   unsigned int last = ((unsigned int)blk) + +sizeof(BLOCK_HDR) + blk->Size;
+   char* base = (char*)blk;
+   char* last = ((char*)blk) + +sizeof(BLOCK_HDR) + blk->Size;
    BLOCK_HDR* current;
    PLIST_ENTRY current_entry;
    
@@ -1031,13 +1031,13 @@ static void check_duplicates(BLOCK_HDR* blk)
 	   KEBUGCHECK(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
 	 }
        
-       if ( (unsigned int)current > base && (unsigned int)current < last ) 
+       if ( (char*)current > base && (char*)current < last ) 
 	 {
 	   DbgPrint("intersecting blocks on list\n");
 	   for(;;);
 	 }
-       if  ( (unsigned int)current < base &&
-	     ((unsigned int)current + current->Size + sizeof(BLOCK_HDR))
+       if  ( (char*)current < base &&
+	     ((char*)current + current->Size + sizeof(BLOCK_HDR))
 	     > base )
 	 {
 	   DbgPrint("intersecting blocks on list\n");
@@ -1052,13 +1052,13 @@ static void check_duplicates(BLOCK_HDR* blk)
      {
        current = CONTAINING_RECORD(current_entry, BLOCK_HDR, ListEntry);
 
-       if ( (unsigned int)current > base && (unsigned int)current < last ) 
+       if ( (char*)current > base && (char*)current < last ) 
 	 {
 	   DbgPrint("intersecting blocks on list\n");
 	   for(;;);
 	 }
-       if  ( (unsigned int)current < base &&
-	     ((unsigned int)current + current->Size + sizeof(BLOCK_HDR))
+       if  ( (char*)current < base &&
+	     ((char*)current + current->Size + sizeof(BLOCK_HDR))
 	     > base )
 	 {
 	   DbgPrint("intersecting blocks on list\n");
@@ -1209,13 +1209,13 @@ inline static void* block_to_address(BLOCK_HDR* blk)
  * address (internal)
  */
 {
-        return ( (void *) ((unsigned int)blk + sizeof(BLOCK_HDR)) );
+        return ( (void *) ((char*)blk + sizeof(BLOCK_HDR)) );
 }
 
 inline static BLOCK_HDR* address_to_block(void* addr)
 {
         return (BLOCK_HDR *)
-               ( ((unsigned int)addr) - sizeof(BLOCK_HDR) );
+               ( ((char*)addr) - sizeof(BLOCK_HDR) );
 }
 
 static BLOCK_HDR* lookup_block(unsigned int size)
@@ -1324,7 +1324,7 @@ static void* take_block(BLOCK_HDR* current, unsigned int size,
 	 * Replace the bigger block with a smaller block in the
 	 * same position in the list
 	 */
-        free_blk = (BLOCK_HDR *)(((unsigned int)current)
+        free_blk = (BLOCK_HDR *)(((char*)current)
 				 + sizeof(BLOCK_HDR) + size);		
 
 	free_blk->Size = current->Size - (sizeof(BLOCK_HDR) + size);
