@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.51 2000/11/27 14:54:28 jean Exp $
+/* $Id: registry.c,v 1.52 2000/12/01 12:44:15 jean Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1051,12 +1051,17 @@ NtFlushKey (
  int i;
  LARGE_INTEGER fileOffset;
  DWORD * pEntDword;
+  /*  Verify that the handle is valid and is a registry key  */
   Status = ObReferenceObjectByHandle(KeyHandle,
                                      KEY_QUERY_VALUE,
                                      CmiKeyType,
                                      UserMode,
                                      (PVOID *)&KeyObject,
                                      NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      return  Status;
+    }
   RegistryFile = KeyObject->RegistryFile;
 //  KeAcquireSpinLock(&RegistryFile->RegLock, &OldIrql);
   /* then write changed blocks in .log */
