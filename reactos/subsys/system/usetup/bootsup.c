@@ -46,13 +46,6 @@ CreateCommonFreeLoaderSections(PINICACHE IniCache)
   IniSection = IniCacheAppendSection(IniCache,
 				     L"FREELOADER");
 
-#if 0
-MessageLine=Welcome to FreeLoader!
-MessageLine=Copyright (c) 2002 by Brian Palmer <brianp@sginet.com>
-MessageLine=
-MessageBox=Edit your FREELDR.INI file to change your boot settings.
-#endif
-
   /* DefaultOS=ReactOS */
   IniCacheInsertKey(IniSection,
 		    NULL,
@@ -79,15 +72,6 @@ MessageBox=Edit your FREELDR.INI file to change your boot settings.
 		    INSERT_LAST,
 		    L"TitleText",
 		    L"ReactOS Boot Manager");
-
-#if 0
-  /* DisplayMode=NORMAL_VGA */
-  IniCacheInsertKey(IniSection,
-		    NULL,
-		    INSERT_LAST,
-		    L"DisplayMode",
-		    L"NORMAL_VGA");
-#endif
 
   /* StatusBarColor=Cyan */
   IniCacheInsertKey(IniSection,
@@ -211,6 +195,13 @@ CreateFreeLoaderIniForDos(PWCHAR IniPath,
 		    L"ReactOS",
 		    L"\"ReactOS\"");
 
+  /* ReactOS_Debug="ReactOS (Debug)" */
+  IniCacheInsertKey(IniSection,
+		    NULL,
+		    INSERT_LAST,
+		    L"ReactOS_Debug",
+		    L"\"ReactOS (Debug)\"");
+
   /* DOS=Dos/Windows */
   IniCacheInsertKey(IniSection,
 		    NULL,
@@ -229,7 +220,25 @@ CreateFreeLoaderIniForDos(PWCHAR IniPath,
 		    L"BootType",
 		    L"ReactOS");
 
-  /* SystemPath=multi(0)disk(0)rdisk(0)partition(1)\reactos */
+  /* SystemPath=<ArcPath> */
+  IniCacheInsertKey(IniSection,
+		    NULL,
+		    INSERT_LAST,
+		    L"SystemPath",
+		    ArcPath);
+
+  /* Create "ReactOS_Debug" section */
+  IniSection = IniCacheAppendSection(IniCache,
+				     L"ReactOS_Debug");
+
+  /* BootType=ReactOS */
+  IniCacheInsertKey(IniSection,
+		    NULL,
+		    INSERT_LAST,
+		    L"BootType",
+		    L"ReactOS");
+
+  /* SystemPath=<ArcPath> */
   IniCacheInsertKey(IniSection,
 		    NULL,
 		    INSERT_LAST,
@@ -242,25 +251,6 @@ CreateFreeLoaderIniForDos(PWCHAR IniPath,
 		    INSERT_LAST,
 		    L"Options",
 		    L"/DEBUGPORT=SCREEN");
-
-
-  /* Kernel=\REACTOS\SYSTEM32\NTOSKRNL.EXE */
-#if 0
-  IniCacheInsertKey(IniSection,
-		    NULL,
-		    INSERT_LAST,
-		    L"Options",
-		    L"/DEBUGPORT=SCREEN");
-#endif
-
-  /* Hal=\REACTOS\SYSTEM32\HAL.DLL */
-#if 0
-  IniCacheInsertKey(IniSection,
-		    NULL,
-		    INSERT_LAST,
-		    L"Hal",
-		    L"/DEBUGPORT=SCREEN");
-#endif
 
   /* Create "DOS" section */
   IniSection = IniCacheAppendSection(IniCache,
@@ -296,6 +286,8 @@ CreateFreeLoaderIniForDos(PWCHAR IniPath,
 
   IniCacheSave(IniCache, IniPath);
   IniCacheDestroy(IniCache);
+
+  return(STATUS_SUCCESS);
 }
 
 
@@ -321,6 +313,13 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
 		    L"ReactOS",
 		    L"\"ReactOS\"");
 
+  /* ReactOS_Debug="ReactOS (Debug)" */
+  IniCacheInsertKey(IniSection,
+		    NULL,
+		    INSERT_LAST,
+		    L"ReactOS_Debug",
+		    L"\"ReactOS (Debug)\"");
+
   /* Create "ReactOS" section */
   IniSection = IniCacheAppendSection(IniCache,
 				     L"ReactOS");
@@ -332,7 +331,25 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
 		    L"BootType",
 		    L"ReactOS");
 
-  /* SystemPath=multi(0)disk(0)rdisk(0)partition(1)\reactos */
+  /* SystemPath=<ArcPath> */
+  IniCacheInsertKey(IniSection,
+		    NULL,
+		    INSERT_LAST,
+		    L"SystemPath",
+		    ArcPath);
+
+  /* Create "ReactOS_Debug" section */
+  IniSection = IniCacheAppendSection(IniCache,
+				     L"ReactOS_Debug");
+
+  /* BootType=ReactOS */
+  IniCacheInsertKey(IniSection,
+		    NULL,
+		    INSERT_LAST,
+		    L"BootType",
+		    L"ReactOS");
+
+  /* SystemPath=<ArcPath> */
   IniCacheInsertKey(IniSection,
 		    NULL,
 		    INSERT_LAST,
@@ -346,27 +363,87 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
 		    L"Options",
 		    L"/DEBUGPORT=SCREEN");
 
+  /* Save the ini file */
+  IniCacheSave(IniCache, IniPath);
+  IniCacheDestroy(IniCache);
 
-  /* Kernel=\REACTOS\SYSTEM32\NTOSKRNL.EXE */
-#if 0
+  return(STATUS_SUCCESS);
+}
+
+
+NTSTATUS
+UpdateFreeLoaderIni(PWCHAR IniPath,
+		    PWCHAR ArcPath)
+{
+  UNICODE_STRING Name;
+  PINICACHE IniCache;
+  PINICACHESECTION IniSection;
+  WCHAR SectionName[80];
+  WCHAR OsName[80];
+  PWCHAR KeyData;
+  ULONG i;
+  NTSTATUS Status;
+
+  RtlInitUnicodeString(&Name,
+		       IniPath);
+
+  Status = IniCacheLoad(&IniCache,
+			&Name);
+  if (!NT_SUCCESS(Status))
+    return(Status);
+
+  /* Get "Operating Systems" section */
+  IniSection = IniCacheGetSection(IniCache,
+				  L"Operating Systems");
+  if (IniSection == NULL)
+    return(STATUS_UNSUCCESSFUL);
+
+  /* Find an unused section name */
+  i = 1;
+  wcscpy(SectionName, L"ReactOS");
+  wcscpy(OsName, L"\"ReactOS\"");
+  while(TRUE)
+  {
+    Status = IniCacheGetKey(IniSection,
+			    SectionName,
+			    &KeyData);
+    if (!NT_SUCCESS(Status))
+      break;
+
+    swprintf(SectionName, L"ReactOS_%lu", i);
+    swprintf(OsName, L"\"ReactOS %lu\"", i);
+    i++;
+  }
+
+  /* <SectionName>=<OsName> */
   IniCacheInsertKey(IniSection,
 		    NULL,
 		    INSERT_LAST,
-		    L"Kernel",
-		    L"/DEBUGPORT=SCREEN");
-#endif
+		    SectionName,
+		    OsName);
 
-  /* Hal=\REACTOS\SYSTEM32\HAL.DLL */
-#if 0
+  /* Create <SectionName> section */
+  IniSection = IniCacheAppendSection(IniCache,
+				     SectionName);
+
+  /* BootType=ReactOS */
   IniCacheInsertKey(IniSection,
 		    NULL,
 		    INSERT_LAST,
-		    L"Hal",
-		    L"/DEBUGPORT=SCREEN");
-#endif
+		    L"BootType",
+		    L"ReactOS");
+
+  /* SystemPath=<ArcPath> */
+  IniCacheInsertKey(IniSection,
+		    NULL,
+		    INSERT_LAST,
+		    L"SystemPath",
+		    ArcPath);
 
   IniCacheSave(IniCache, IniPath);
   IniCacheDestroy(IniCache);
+
+  return(STATUS_SUCCESS);
 }
 
 
@@ -406,7 +483,6 @@ SaveCurrentBootSector(PWSTR RootPath,
 		      FILE_SYNCHRONOUS_IO_ALERT);
   if (!NT_SUCCESS(Status))
   {
-CHECKPOINT1;
     RtlFreeHeap(ProcessHeap, 0, BootSector);
     return(Status);
   }
@@ -423,7 +499,6 @@ CHECKPOINT1;
   NtClose(FileHandle);
   if (!NT_SUCCESS(Status))
   {
-CHECKPOINT1;
     RtlFreeHeap(ProcessHeap, 0, BootSector);
     return(Status);
   }
@@ -451,7 +526,6 @@ CHECKPOINT1;
 			0);
   if (!NT_SUCCESS(Status))
   {
-CHECKPOINT1;
     RtlFreeHeap(ProcessHeap, 0, BootSector);
     return(Status);
   }
@@ -512,7 +586,6 @@ InstallFat16BootCodeToFile(PWSTR SrcPath,
 		      FILE_SYNCHRONOUS_IO_ALERT);
   if (!NT_SUCCESS(Status))
   {
-CHECKPOINT1;
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
     return(Status);
   }
@@ -529,7 +602,6 @@ CHECKPOINT1;
   NtClose(FileHandle);
   if (!NT_SUCCESS(Status))
   {
-CHECKPOINT1;
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
     return(Status);
   }
@@ -541,7 +613,6 @@ CHECKPOINT1;
 					  SECTORSIZE);
   if (NewBootSector == NULL)
   {
-CHECKPOINT1;
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
     return(STATUS_INSUFFICIENT_RESOURCES);
   }
@@ -564,7 +635,6 @@ CHECKPOINT1;
 		      FILE_SYNCHRONOUS_IO_ALERT);
   if (!NT_SUCCESS(Status))
   {
-CHECKPOINT1;
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
     RtlFreeHeap(ProcessHeap, 0, NewBootSector);
     return(Status);
@@ -582,7 +652,6 @@ CHECKPOINT1;
   NtClose(FileHandle);
   if (!NT_SUCCESS(Status))
   {
-CHECKPOINT1;
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
     RtlFreeHeap(ProcessHeap, 0, NewBootSector);
     return(Status);
@@ -617,7 +686,6 @@ CHECKPOINT1;
 			0);
   if (!NT_SUCCESS(Status))
   {
-CHECKPOINT1;
     RtlFreeHeap(ProcessHeap, 0, NewBootSector);
     return(Status);
   }
@@ -682,7 +750,6 @@ InstallFat32BootCodeToFile(PWSTR SrcPath,
 		      FILE_SYNCHRONOUS_IO_ALERT);
   if (!NT_SUCCESS(Status))
   {
-CHECKPOINT1;
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
     return(Status);
   }
@@ -710,7 +777,6 @@ CHECKPOINT1;
 					  2 * SECTORSIZE);
   if (NewBootSector == NULL)
   {
-CHECKPOINT1;
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
     return(STATUS_INSUFFICIENT_RESOURCES);
   }
@@ -733,7 +799,6 @@ CHECKPOINT1;
 		      FILE_SYNCHRONOUS_IO_ALERT);
   if (!NT_SUCCESS(Status))
   {
-CHECKPOINT1;
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
     RtlFreeHeap(ProcessHeap, 0, NewBootSector);
     return(Status);
@@ -751,7 +816,6 @@ CHECKPOINT1;
   NtClose(FileHandle);
   if (!NT_SUCCESS(Status))
   {
-CHECKPOINT1;
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
     RtlFreeHeap(ProcessHeap, 0, NewBootSector);
     return(Status);
@@ -792,7 +856,6 @@ CHECKPOINT1;
 			0);
   if (!NT_SUCCESS(Status))
   {
-CHECKPOINT1;
     RtlFreeHeap(ProcessHeap, 0, NewBootSector);
     return(Status);
   }
@@ -809,7 +872,6 @@ CHECKPOINT1;
   NtClose(FileHandle);
   if (!NT_SUCCESS(Status))
   {
-CHECKPOINT1;
     RtlFreeHeap(ProcessHeap, 0, NewBootSector);
     return(Status);
   }
@@ -832,7 +894,6 @@ CHECKPOINT1;
 		      FILE_SYNCHRONOUS_IO_ALERT);
   if (!NT_SUCCESS(Status))
   {
-CHECKPOINT1;
     RtlFreeHeap(ProcessHeap, 0, NewBootSector);
     return(Status);
   }
@@ -849,7 +910,6 @@ CHECKPOINT1;
 		       NULL);
   if (!NT_SUCCESS(Status))
   {
-CHECKPOINT1;
   }
   NtClose(FileHandle);
 
@@ -897,7 +957,6 @@ InstallFat16BootCodeToDisk(PWSTR SrcPath,
 		      FILE_SYNCHRONOUS_IO_ALERT);
   if (!NT_SUCCESS(Status))
   {
-CHECKPOINT1;
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
     return(Status);
   }
@@ -914,7 +973,6 @@ CHECKPOINT1;
   NtClose(FileHandle);
   if (!NT_SUCCESS(Status))
   {
-CHECKPOINT1;
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
     return(Status);
   }
@@ -926,7 +984,6 @@ CHECKPOINT1;
 					  SECTORSIZE);
   if (NewBootSector == NULL)
   {
-CHECKPOINT1;
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
     return(STATUS_INSUFFICIENT_RESOURCES);
   }
@@ -949,7 +1006,6 @@ CHECKPOINT1;
 		      FILE_SYNCHRONOUS_IO_ALERT);
   if (!NT_SUCCESS(Status))
   {
-CHECKPOINT1;
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
     RtlFreeHeap(ProcessHeap, 0, NewBootSector);
     return(Status);
@@ -967,7 +1023,6 @@ CHECKPOINT1;
   NtClose(FileHandle);
   if (!NT_SUCCESS(Status))
   {
-CHECKPOINT1;
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
     RtlFreeHeap(ProcessHeap, 0, NewBootSector);
     return(Status);
@@ -1002,7 +1057,6 @@ CHECKPOINT1;
 			0);
   if (!NT_SUCCESS(Status))
   {
-CHECKPOINT1;
     RtlFreeHeap(ProcessHeap, 0, NewBootSector);
     return(Status);
   }
@@ -1067,7 +1121,6 @@ InstallFat32BootCodeToDisk(PWSTR SrcPath,
 		      FILE_SYNCHRONOUS_IO_ALERT);
   if (!NT_SUCCESS(Status))
   {
-CHECKPOINT1;
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
     return(Status);
   }
@@ -1084,7 +1137,6 @@ CHECKPOINT1;
   NtClose(FileHandle);
   if (!NT_SUCCESS(Status))
   {
-CHECKPOINT1;
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
     return(Status);
   }
@@ -1096,7 +1148,6 @@ CHECKPOINT1;
 					  2 * SECTORSIZE);
   if (NewBootSector == NULL)
   {
-CHECKPOINT1;
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
     return(STATUS_INSUFFICIENT_RESOURCES);
   }
@@ -1119,7 +1170,6 @@ CHECKPOINT1;
 		      FILE_SYNCHRONOUS_IO_ALERT);
   if (!NT_SUCCESS(Status))
   {
-CHECKPOINT1;
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
     RtlFreeHeap(ProcessHeap, 0, NewBootSector);
     return(Status);
@@ -1137,7 +1187,6 @@ CHECKPOINT1;
   NtClose(FileHandle);
   if (!NT_SUCCESS(Status))
   {
-CHECKPOINT1;
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
     RtlFreeHeap(ProcessHeap, 0, NewBootSector);
     return(Status);
@@ -1150,10 +1199,6 @@ CHECKPOINT1;
 
   /* Get the location of the backup boot sector */
   BackupBootSector = (OrigBootSector[0x33] << 8) + OrigBootSector[0x33];
-
-  /* Disable the backup boot sector */
-//  NewBootSector[0x32] = 0xFF;
-//  NewBootSector[0x33] = 0xFF;
 
   /* Free the original boot sector */
   RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
