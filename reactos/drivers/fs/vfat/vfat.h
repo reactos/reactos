@@ -511,15 +511,8 @@ NTSTATUS VfatCleanup (PVFAT_IRP_CONTEXT IrpContext);
 
 /*  ---------------------------------------------------------  fastio.c  */
 
-BOOLEAN NTAPI
-VfatFastIoCheckIfPossible(IN PFILE_OBJECT FileObject,
-                          IN PLARGE_INTEGER FileOffset,
-                          IN ULONG Lenght,
-                          IN BOOLEAN Wait,
-                          IN ULONG LockKey,
-                          IN BOOLEAN CheckForReadOperation,
-                          OUT PIO_STATUS_BLOCK IoStatus,
-                          IN PDEVICE_OBJECT DeviceObject);
+VOID
+VfatInitFastIoRoutines(PFAST_IO_DISPATCH FastIoDispatch);
 
 BOOLEAN NTAPI
 VfatAcquireForLazyWrite(IN PVOID Context,

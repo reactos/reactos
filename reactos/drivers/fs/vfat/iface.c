@@ -49,7 +49,6 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 {
    PDEVICE_OBJECT DeviceObject;
    UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Fat");
-   PFAST_IO_DISPATCH pFastIoDispatch;
    NTSTATUS Status;
 
    Status = IoCreateDevice(DriverObject,
@@ -61,7 +60,23 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 			   &DeviceObject);
    if (!NT_SUCCESS(Status))
      {
-	return (Status);
+       if (Status == STATUS_OBJECT_NAME_EXISTS ||
+	   Status == STATUS_OBJECT_NAME_COLLISION)
+	 {
+	   /* Try an other name, if 'Fat' is already in use. 'Fat' is also used by fastfat.sys on W2K */
+	   RtlInitUnicodeString(&DeviceName, L"\\RosFat");
+           Status = IoCreateDevice(DriverObject,
+			           sizeof(VFAT_GLOBAL_DATA),
+			           &DeviceName,
+			           FILE_DEVICE_DISK_FILE_SYSTEM,
+			           0,
+			           FALSE,
+			           &DeviceObject);
+	   if (!NT_SUCCESS(Status))
+	     {
+               return (Status);
+	     }
+	 }
      }
    VfatGlobalData = DeviceObject->DeviceExtension;
    RtlZeroMemory (VfatGlobalData, sizeof(VFAT_GLOBAL_DATA));
@@ -95,9 +110,8 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
    VfatGlobalData->CacheMgrCallbacks.ReleaseFromReadAhead = VfatReleaseFromReadAhead;
    
    /* Fast I/O */
-   DriverObject->FastIoDispatch = pFastIoDispatch = &VfatGlobalData->FastIoDispatch;
-   pFastIoDispatch->SizeOfFastIoDispatch = sizeof(FAST_IO_DISPATCH);
-   pFastIoDispatch->FastIoCheckIfPossible = VfatFastIoCheckIfPossible;
+   VfatInitFastIoRoutines(&VfatGlobalData->FastIoDispatch);
+   DriverObject->FastIoDispatch = &VfatGlobalData->FastIoDispatch;
 
    /* Private lists */
    ExInitializeNPagedLookasideList(&VfatGlobalData->FcbLookasideList, 
