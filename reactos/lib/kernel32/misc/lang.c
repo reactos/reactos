@@ -1,4 +1,4 @@
-/* $Id: lang.c,v 1.15 2004/04/12 15:08:14 mf Exp $
+/* $Id: lang.c,v 1.16 2004/05/02 15:47:34 weiden Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -1068,18 +1068,13 @@ GetSystemDefaultUILanguage(VOID)
 #ifndef _OLE2NLS_IN_BUILD_
 
 /*
- * @unimplemented
+ * @implemented
  */
 LCID
 STDCALL
 GetThreadLocale (VOID)
 {
-    /* FIXME: ??? */
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return MAKELCID(
-        LANG_ENGLISH,
-        SORT_DEFAULT
-        );
+  return NtCurrentTeb()->CurrentLocale;
 }
 
 #endif
@@ -1563,7 +1558,7 @@ SetLocaleInfoW (
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -1571,8 +1566,10 @@ SetThreadLocale (
     LCID    Locale
     )
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+  /* FIXME - Check if locale is valid */
+  
+  NtCurrentTeb()->CurrentLocale = Locale;
+  return TRUE;
 }
 
 #endif
