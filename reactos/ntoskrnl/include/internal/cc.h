@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_INTERNAL_CC_H
 #define __INCLUDE_INTERNAL_CC_H
-/* $Id: cc.h,v 1.13 2002/08/14 20:58:34 dwelch Exp $ */
+/* $Id: cc.h,v 1.14 2002/08/17 15:14:26 hbirr Exp $ */
 #include <ddk/ntifs.h>
 
 typedef struct _BCB
@@ -11,6 +11,7 @@ typedef struct _BCB
   LARGE_INTEGER AllocationSize;
   LARGE_INTEGER FileSize;
   KSPIN_LOCK BcbLock;
+  ULONG RefCount;
 } BCB;
 
 typedef struct _CACHE_SEGMENT
@@ -81,5 +82,8 @@ NTSTATUS
 CcRosMarkDirtyCacheSegment(PBCB Bcb, ULONG FileOffset);
 NTSTATUS
 CcRosFlushDirtyPages(ULONG Target, PULONG Count);
+
+VOID CcRosDereferenceCache(PFILE_OBJECT FileObject);
+VOID CcRosReferenceCache(PFILE_OBJECT FileObject);
 
 #endif

@@ -1,4 +1,4 @@
-/* $Id: pin.c,v 1.4 2002/08/14 20:58:32 dwelch Exp $
+/* $Id: pin.c,v 1.5 2002/08/17 15:14:26 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -117,6 +117,10 @@ CcSetDirtyPinnedData (IN PVOID Bcb,
 		      IN PLARGE_INTEGER Lsn)
 {
    PINTERNAL_BCB iBcb = Bcb;
+#if 0
    iBcb->Dirty = TRUE;
+#else
+   WriteCacheSegment(iBcb->CacheSegment);
+#endif
 }
 

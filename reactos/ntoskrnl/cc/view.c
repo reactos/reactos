@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.46 2002/08/14 20:58:32 dwelch Exp $
+/* $Id: view.c,v 1.47 2002/08/17 15:14:26 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/view.c
@@ -641,11 +641,33 @@ CcRosDeleteFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
 	current_entry = current_entry->Flink;
 	CcRosFreeCacheSegment(Bcb, current);
      }
-
+   FileObject->SectionObjectPointers->SharedCacheMap = NULL;  
    ObDereferenceObject (Bcb->FileObject);
    ExFreePool(Bcb);
 
    return(STATUS_SUCCESS);
+}
+
+VOID CcRosReferenceCache(PFILE_OBJECT FileObject)
+{
+  KIRQL oldIrql;
+  PBCB Bcb = (PBCB)FileObject->SectionObjectPointers->SharedCacheMap;
+  KeAcquireSpinLock(&Bcb->BcbLock, &oldIrql);
+  Bcb->RefCount++;
+  KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
+}
+
+VOID CcRosDereferenceCache(PFILE_OBJECT FileObject)
+{
+  KIRQL oldIrql;
+  PBCB Bcb = (PBCB)FileObject->SectionObjectPointers->SharedCacheMap;
+  KeAcquireSpinLock(&Bcb->BcbLock, &oldIrql);
+  Bcb->RefCount--;
+  KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
+  if (Bcb->RefCount == 0)
+  {
+     CcRosDeleteFileCache(FileObject, Bcb);
+  }
 }
 
 NTSTATUS STDCALL 
@@ -655,6 +677,21 @@ CcRosReleaseFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
  * has been closed.
  */
 {
+  KIRQL oldIrql;
+  if (FileObject->SectionObjectPointers->SharedCacheMap != NULL)
+  {
+    KeAcquireSpinLock(&Bcb->BcbLock, &oldIrql);
+    if (FileObject->PrivateCacheMap != NULL)
+    {
+      FileObject->PrivateCacheMap = NULL;
+      Bcb->RefCount--;
+    }
+    KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
+    if (Bcb->RefCount == 0)
+    {
+      CcRosDeleteFileCache(FileObject, Bcb);
+    }
+  }
   return(STATUS_SUCCESS);
 }
 
@@ -665,29 +702,41 @@ CcRosInitializeFileCache(PFILE_OBJECT FileObject,
 /*
  * FUNCTION: Initializes a BCB for a file object
  */
-{   
-   (*Bcb) = ExAllocatePoolWithTag(NonPagedPool, sizeof(BCB), TAG_BCB);
-   if ((*Bcb) == NULL)
-     {
+{
+   KIRQL oldIrql;
+   if (*Bcb == NULL)
+   {
+      (*Bcb) = ExAllocatePoolWithTag(NonPagedPool, sizeof(BCB), TAG_BCB);
+      if ((*Bcb) == NULL)
+      {
 	return(STATUS_UNSUCCESSFUL);
-     }
+      }
    
-   ObReferenceObjectByPointer(FileObject,
-			      FILE_ALL_ACCESS,
-			      NULL,
-			      KernelMode);
-   (*Bcb)->FileObject = FileObject;
-   (*Bcb)->CacheSegmentSize = CacheSegmentSize;
-   if (FileObject->FsContext)
-     {
-       (*Bcb)->AllocationSize = 
-	 ((REACTOS_COMMON_FCB_HEADER*)FileObject->FsContext)->AllocationSize;
-       (*Bcb)->FileSize = 
-	 ((REACTOS_COMMON_FCB_HEADER*)FileObject->FsContext)->FileSize;
-     }
-   KeInitializeSpinLock(&(*Bcb)->BcbLock);
-   InitializeListHead(&(*Bcb)->BcbSegmentListHead);
-   
+      ObReferenceObjectByPointer(FileObject,
+			         FILE_ALL_ACCESS,
+			         NULL,
+			         KernelMode);
+      (*Bcb)->FileObject = FileObject;
+      (*Bcb)->CacheSegmentSize = CacheSegmentSize;
+      if (FileObject->FsContext)
+      {
+         (*Bcb)->AllocationSize = 
+	   ((REACTOS_COMMON_FCB_HEADER*)FileObject->FsContext)->AllocationSize;
+         (*Bcb)->FileSize = 
+	   ((REACTOS_COMMON_FCB_HEADER*)FileObject->FsContext)->FileSize;
+      }
+      KeInitializeSpinLock(&(*Bcb)->BcbLock);
+      InitializeListHead(&(*Bcb)->BcbSegmentListHead);
+      FileObject->SectionObjectPointers->SharedCacheMap = *Bcb;
+   }
+   KeAcquireSpinLock(&(*Bcb)->BcbLock, &oldIrql);
+   if (FileObject->PrivateCacheMap == NULL)
+   {
+      FileObject->PrivateCacheMap = *Bcb;
+      (*Bcb)->RefCount++;
+   }
+   KeReleaseSpinLock(&(*Bcb)->BcbLock, oldIrql);
+
    return(STATUS_SUCCESS);
 }
 

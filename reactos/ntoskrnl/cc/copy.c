@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.8 2002/08/08 17:54:13 dwelch Exp $
+/* $Id: copy.c,v 1.9 2002/08/17 15:14:26 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -454,7 +454,7 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
   /* 
    * FIXME: NT uses the shared cache map field for cached/non cached detection
    */
-  if (((PREACTOS_COMMON_FCB_HEADER)FileObject->FsContext)->Bcb == NULL)
+  if (FileObject->SectionObjectPointers->SharedCacheMap == NULL)
     {
       /* File is not cached */
       WriteOffset.QuadPart = StartOffset->QuadPart;
