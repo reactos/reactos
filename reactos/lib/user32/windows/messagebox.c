@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: messagebox.c,v 1.13 2003/08/22 00:37:36 weiden Exp $
+/* $Id: messagebox.c,v 1.14 2003/08/22 00:39:15 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/messagebox.c
@@ -720,7 +720,7 @@ MessageBeep(UINT uType)
       break;
   }
 
-  return PlaySoundW(EventName, NULL, SND_ALIAS | SND_NOWAIT | SND_NOSTOP | SND_ASYNC);
+  return PlaySoundW((LPCWSTR)EventName, NULL, SND_ALIAS | SND_NOWAIT | SND_NOSTOP | SND_ASYNC);
 #else
   return Beep(500, 100);    // Beep through speaker
 #endif
