@@ -412,19 +412,6 @@ EngGetPrinterDataFileName ( IN HDEV hdev )
 }
 
 /*
- * @unimplemented ( for NT4 only )
- */
-HANDLE
-STDCALL
-EngGetProcessHandle ( VOID )
-{
-  // www.osr.com/ddk/graphics/gdifncs_3tif.htm
-  // In Windows 2000 and later, the EngGetProcessHandle function always returns NULL.
-  // FIXME - what does NT4 return?
-  return NULL;
-}
-
-/*
  * @unimplemented
  */
 BOOL

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: misc.c,v 1.3 2004/02/10 23:40:55 gvg Exp $ */
+/* $Id: misc.c,v 1.4 2004/02/11 19:26:51 weiden Exp $ */
 #include <ddk/winddi.h>
 #include <include/dib.h>
 #include <include/object.h>
@@ -192,4 +192,28 @@ IntEngLeave(PINTENG_ENTER_LEAVE EnterLeave)
 
   return Result;
 }
+
+HANDLE STDCALL
+EngGetCurrentProcessId(VOID)
+{
+  /* http://www.osr.com/ddk/graphics/gdifncs_5ovb.htm */
+  return PsGetCurrentProcessId();
+}
+
+HANDLE STDCALL
+EngGetCurrentThreadId(VOID)
+{
+  /* http://www.osr.com/ddk/graphics/gdifncs_25rb.htm */
+  return PsGetCurrentThreadId();
+}
+
+HANDLE STDCALL
+EngGetProcessHandle(VOID)
+{
+  /* http://www.osr.com/ddk/graphics/gdifncs_3tif.htm
+     In Windows 2000 and later, the EngGetProcessHandle function always returns NULL.
+     FIXME - what does NT4 return? */
+  return NULL;
+}
+
 /* EOF */

@@ -1,4 +1,4 @@
-; $Id: win32k.def,v 1.23 2004/02/08 21:37:52 weiden Exp $
+; $Id: win32k.def,v 1.24 2004/02/11 19:26:51 weiden Exp $
 ;
 ; win32k.def
 ;
@@ -50,6 +50,8 @@ EngFreeMem@4
 EngFreeModule@4
 EngFreeUserMem@4
 EngGetCurrentCodePage@8
+EngGetCurrentProcessId@0
+EngGetCurrentThreadId@0
 EngGetDriverName@4
 EngGetFileChangeTime@8
 EngGetFilePath@8
