@@ -125,6 +125,31 @@ EthFilterIndicateReceiveComplete(
     UNIMPLEMENTED
 }
 
+VOID
+EXPORT
+EthFilterDprIndicateReceive(
+    IN	PETH_FILTER Filter,
+    IN	NDIS_HANDLE MacReceiveContext,
+    IN	PCHAR       Address,
+    IN	PVOID       HeaderBuffer,
+    IN	UINT        HeaderBufferSize,
+    IN	PVOID       LookaheadBuffer,
+    IN	UINT        LookaheadBufferSize,
+    IN	UINT        PacketSize)
+{
+    UNIMPLEMENTED
+}
+
+
+VOID
+EXPORT
+EthFilterDprIndicateReceiveComplete(
+    IN  PETH_FILTER Filter)
+{
+    UNIMPLEMENTED
+}
+
+
 
 BOOLEAN
 EXPORT
