@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.25 2004/09/26 20:26:13 gvg Exp $
+/* $Id: misc.c,v 1.26 2004/09/26 21:15:51 sedwards Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -477,30 +477,32 @@ RevertToSelf(VOID)
  *  lpszName [O]   Destination for the user name.
  *  lpSize   [I/O] Size of lpszName.
  *
- * RETURNS
- *  Success: The length of the user name, including terminating NUL.
- *  Failure: ERROR_MORE_DATA if *lpSize is too small.
  *
  * @unimplemented
  */
 BOOL WINAPI
 GetUserNameA( LPSTR lpszName, LPDWORD lpSize )
 {
-//  size_t len;
-//  char name[] = { "Administrator" };
-
-  /* We need to include the null character when determining the size of the buffer. */
-//  len = strlen(name) + 1;
-//  if (len > *lpSize)
-//  {
-//    SetLastError(ERROR_MORE_DATA);
-//    *lpSize = len;
-//    return 0;
-//  }
-
-//  *lpSize = len;
-//  strcpy(lpszName, name);
+  size_t len;
+  const char* name = "Administrator";
+ 
   DPRINT1("GetUserNameA: stub\n");
+  if ( !lpSize )
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+  /* We need to include the null character when determining the size of the buffer. */
+  len = strlen(name) + 1;
+  if (len > *lpSize)
+  {
+    SetLastError(ERROR_MORE_DATA);
+    *lpSize = len;
+    return FALSE;
+  }
+ 
+  *lpSize = len;
+  strcpy(lpszName, name);
   return TRUE;
 }
 
