@@ -240,7 +240,7 @@ typedef struct _PORT_CONFIGURATION_INFORMATION {
   BOOLEAN  DemandMode;
   BOOLEAN  MapBuffers;
   BOOLEAN  NeedPhysicalAddresses;
-  BOOLEAN  TaggedQueueing;
+  BOOLEAN  TaggedQueuing;
   BOOLEAN  AutoRequestSense;
   BOOLEAN  MultipleRequestPerLu;
   BOOLEAN  ReceiveEvent;
@@ -372,7 +372,7 @@ typedef struct _HW_INITIALIZATION_DATA {
   PVOID  Reserved; 
   BOOLEAN  MapBuffers; 
   BOOLEAN  NeedPhysicalAddresses; 
-  BOOLEAN  TaggedQueueing; 
+  BOOLEAN  TaggedQueuing; 
   BOOLEAN  AutoRequestSense; 
   BOOLEAN  MultipleRequestPerLu; 
   BOOLEAN  ReceiveEvent; 
