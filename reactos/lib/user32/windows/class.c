@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.44 2004/01/23 23:38:26 ekohl Exp $
+/* $Id: class.c,v 1.45 2004/04/08 21:14:21 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -15,6 +15,7 @@
 #include <debug.h>
 #include <window.h>
 #include <strpool.h>
+#include <user32/regcontrol.h>
 
 
 
@@ -40,6 +41,8 @@ static BOOL GetClassInfoExCommon(
     str = (LPWSTR)lpszClass;
   else
   {
+    extern BOOL ControlsInitialized;
+
     if (unicode)
     {
         str = HEAP_strdupW ( lpszClass, wcslen(lpszClass) );
@@ -60,6 +63,12 @@ static BOOL GetClassInfoExCommon(
             SetLastError(RtlNtStatusToDosError(Status));
             return FALSE;
         }
+    }
+
+    /* Register built-in controls if not already done */
+    if ( !ControlsInitialized )
+    {
+      ControlsInitialized = ControlsInit(str);
     }
   }
 
@@ -139,74 +148,6 @@ GetClassInfoExW(
   LPWNDCLASSEXW lpwcx)
 {
     return GetClassInfoExCommon(hinst, lpszClass, lpwcx, TRUE);
-
-    // AG: I've kept this here (commented out) in case of bugs with my
-    // own "common" routine (see above):
-
-/*LPWSTR str;
-  UNICODE_STRING str2;
-  WNDCLASSEXW w;
-  BOOL retval;
-
-  if ( !lpszClass || !lpwcx )
-  {
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return FALSE;
-  }
-
-  if(IS_ATOM(lpszClass))
-    str = (LPWSTR)lpszClass;
-  else
-  {
-    str = HEAP_strdupW ( lpszClass, wcslen(lpszClass) );
-    if ( !str )
-    {
-      SetLastError (RtlNtStatusToDosError(STATUS_NO_MEMORY));
-      return FALSE;
-    }
-  }
-
-  str2.Length = str3.Length = 0;
-  str2.MaximumLength = str3.MaximumLength = 255;
-  str2.Buffer = (PWSTR)HEAP_alloc ( str2.MaximumLength * sizeof(WCHAR) );
-  if ( !str2.Buffer )
-  {
-    SetLastError (RtlNtStatusToDosError(STATUS_NO_MEMORY));
-    if ( !IS_ATOM(str) )
-      HEAP_free ( str );
-    return FALSE;
-  }
-  
-  str3.Buffer = (PWSTR)HEAP_alloc ( str3.MaximumLength * sizeof(WCHAR) );
-  if ( !str3.Buffer )
-  {
-    SetLastError (RtlNtStatusToDosError(STATUS_NO_MEMORY));
-    if ( !IS_ATOM(str) )
-      HEAP_free ( str );
-    HEAP_free ( str2.Buffer );
-    return FALSE;
-  }
-
-  w.lpszMenuName = (LPCWSTR)&str2;
-  w.lpszClassName = (LPCWSTR)&str3;
-  retval = (BOOL)NtUserGetClassInfo(hinst, str, &w, TRUE, 0);
-  if ( !IS_ATOM(str) )
-    HEAP_free(str);
-  RtlCopyMemory ( lpwcx, &w, sizeof(WNDCLASSEXW) );
-
-  if ( !IS_INTRESOURCE(w.lpszMenuName) && w.lpszMenuName )
-  {
-    lpwcx->lpszMenuName = heap_string_poolW ( str2.Buffer, str2.Length );
-  }
-  if ( !IS_ATOM(w.lpszClassName) && w.lpszClassName )
-  {
-    lpwcx->lpszClassName = heap_string_poolW ( str3.Buffer, str3.Length );
-  }
-
-  HEAP_free ( str2.Buffer );
-  HEAP_free ( str3.Buffer );
-
-  return retval;*/
 }
 
 

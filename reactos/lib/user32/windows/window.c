@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.106 2004/04/07 08:25:40 gvg Exp $
+/* $Id: window.c,v 1.107 2004/04/08 21:14:21 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -22,7 +22,7 @@
 #define NDEBUG
 #include <debug.h>
 
-static BOOL ControlsInitialized = FALSE;
+BOOL ControlsInitialized = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 
