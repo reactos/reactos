@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dpc.c,v 1.46 2004/11/21 06:51:18 ion Exp $
+/* $Id: dpc.c,v 1.47 2004/11/21 10:48:33 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -214,18 +214,18 @@ KeInsertQueueDpc (PKDPC	Dpc,
 		return(FALSE);
 	}
 	
-	/* Now we can play with the DPC safely */
-	Dpc->SystemArgument1=SystemArgument1;
-	Dpc->SystemArgument2=SystemArgument2;
-	Pcr->PrcbData.DpcData[0].DpcQueueDepth++;
-	Pcr->PrcbData.DpcData[0].DpcCount++;
-   
 	/* Make sure the lists are free if the Queue is 0 */
 	if (Pcr->PrcbData.DpcData[0].DpcQueueDepth == 0) {
 		ASSERT(IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead));
 	} else {
 		ASSERT(!IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead));    
 	}
+
+	/* Now we can play with the DPC safely */
+	Dpc->SystemArgument1=SystemArgument1;
+	Dpc->SystemArgument2=SystemArgument2;
+	Pcr->PrcbData.DpcData[0].DpcQueueDepth++;
+	Pcr->PrcbData.DpcData[0].DpcCount++;
 	
 	/* Insert the DPC into the list. HighImportance DPCs go at the beginning  */
 	if (Dpc->Importance == HighImportance) {
