@@ -1,4 +1,4 @@
-/* $Id: lsa.c,v 1.6 2002/11/03 20:01:06 chorns Exp $
+/* $Id: lsa.c,v 1.7 2003/07/10 19:44:20 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -22,6 +22,9 @@ extern HANDLE Secur32Heap;
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 LsaDeregisterLogonProcess(HANDLE LsaHandle)
 {
@@ -48,12 +51,18 @@ LsaDeregisterLogonProcess(HANDLE LsaHandle)
    return(Status);
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 LsaConnectUntrusted(PHANDLE LsaHandle)
 {
   return(STATUS_UNSUCCESSFUL);
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 LsaCallAuthenticationPackage(HANDLE LsaHandle,
 			     ULONG AuthenticationPackage,
@@ -111,12 +120,20 @@ LsaCallAuthenticationPackage(HANDLE LsaHandle,
    return(Status);
 }
 
+
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 LsaFreeReturnBuffer(PVOID Buffer)
 {
    return(RtlFreeHeap(Secur32Heap, 0, Buffer));
 }
 
+
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 LsaLookupAuthenticationPackage(HANDLE LsaHandle,
 			       PLSA_STRING PackageName,
@@ -151,6 +168,10 @@ LsaLookupAuthenticationPackage(HANDLE LsaHandle,
    return(Reply.Status);
 }
 
+
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 LsaLogonUser(HANDLE LsaHandle,
 	     PLSA_STRING OriginName,
@@ -251,6 +272,10 @@ LsaLogonUser(HANDLE LsaHandle,
    return(Status);
 }
 
+
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 LsaRegisterLogonProcess(PLSA_STRING LsaLogonProcessName,
 			PHANDLE Handle,
