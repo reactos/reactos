@@ -748,7 +748,7 @@ install_before:
 	$(RLINE) bootdata/hivesft.inf $(INSTALL_DIR)/hivesft.inf
 	$(RLINE) bootdata/hivesys.inf $(INSTALL_DIR)/hivesys.inf
 	$(RLINE) bootdata/txtsetup.sif $(INSTALL_DIR)/txtsetup.sif
-  $(CP) media/fonts $(INSTALL_DIR)
+	$(CP) media/fonts $(INSTALL_DIR)
 	$(CP) media/nls $(INSTALL_DIR)
 
 else # BOOTCD_INSTALL
