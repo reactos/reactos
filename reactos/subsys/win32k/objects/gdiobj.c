@@ -1,7 +1,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.19 2002/10/01 06:41:55 ei Exp $
+ * $Id: gdiobj.c,v 1.20 2003/01/18 20:50:43 ei Exp $
  *
  */
 
@@ -101,14 +101,22 @@ static HGDIOBJ *StockObjects[NB_STOCK_OBJECTS]; // we dont assign these statical
                                                 // the way handles work, so it's more dynamic now
 
 
-HBITMAP hPseudoStockBitmap; /* 1x1 bitmap for memory DCs */
+HBITMAP hPseudoStockBitmap; /*! 1x1 bitmap for memory DCs */
 
 static PGDI_HANDLE_TABLE  HandleTable = 0;
 static FAST_MUTEX  HandleTableMutex;
 static FAST_MUTEX  RefCountHandling;
 
+/*! Size of the GDI handle table
+ * per http://www.wd-mag.com/articles/1999/9902/9902b/9902b.htm?topic=articles
+ * gdi handle table can hold 0x4000 handles
+*/
 #define GDI_HANDLE_NUMBER  0x4000
 
+/*!
+ * Allocate GDI object table.
+ * \param	Size - number of entries in the object table.
+*/
 static PGDI_HANDLE_TABLE
 GDIOBJ_iAllocHandleTable (WORD Size)
 {
@@ -128,6 +136,9 @@ GDIOBJ_iAllocHandleTable (WORD Size)
   return  handleTable;
 }
 
+/*!
+ * Returns the entry into the handle table by index.
+*/
 static PGDI_HANDLE_ENTRY
 GDIOBJ_iGetHandleEntryForIndex (WORD TableIndex)
 {
@@ -137,6 +148,10 @@ GDIOBJ_iGetHandleEntryForIndex (WORD TableIndex)
   return  ((PGDI_HANDLE_ENTRY)HandleTable->Handles+TableIndex);
 }
 
+/*!
+ * Finds next free entry in the GDI handle table.
+ * \return	index into the table is successful, zero otherwise.
+*/
 static WORD
 GDIOBJ_iGetNextOpenHandleIndex (void)
 {
@@ -156,10 +171,17 @@ GDIOBJ_iGetNextOpenHandleIndex (void)
   return  (tableIndex < HandleTable->wTableSize) ? tableIndex : 0;
 }
 
-/*-----------------7/12/2002 11:38AM----------------
- * Allocate memory for GDI object and return handle to it
- * Use GDIOBJ_Lock to obtain pointer to the new object.
- * --------------------------------------------------*/
+/*!
+ * Allocate memory for GDI object and return handle to it.
+ *
+ * \param Size - size of the GDI object. This shouldn't to include the size of GDIOBJHDR.
+ * The actual amount of allocated memory is sizeof(GDIOBJHDR)+Size
+ * \param Magic - object magic (see GDI Magic)
+ *
+ * \return Handle of the allocated object.
+ *
+ * \note Use GDIOBJ_Lock() to obtain pointer to the new object.
+*/
 HGDIOBJ GDIOBJ_AllocObj(WORD Size, WORD Magic)
 {
   	PGDIOBJHDR  newObject;
@@ -184,6 +206,20 @@ HGDIOBJ GDIOBJ_AllocObj(WORD Size, WORD Magic)
   	return  (HGDIOBJ) newObject->wTableIndex;
 }
 
+/*!
+ * Free memory allocated for the GDI object. For each object type this function calls the
+ * appropriate cleanup routine.
+ *
+ * \param hObj - handle of the object to be deleted.
+ * \param Magic - object magic or GO_MAGIC_DONTCARE.
+ * \param Flag - if set to GDIOBJFLAG_IGNOREPID then the routine doesn't check if the process that
+ * tries to delete the object is the same one that created it.
+ *
+ * \return Returns TRUE if succesful.
+ *
+ * \note You should only use GDIOBJFLAG_IGNOREPID if you are cleaning up after the process that terminated.
+ * \note This function deferres object deletion if it is still in use.
+*/
 BOOL  GDIOBJ_FreeObj(HGDIOBJ hObj, WORD Magic, DWORD Flag)
 {
   	PGDIOBJHDR  objectHeader;
@@ -193,8 +229,10 @@ BOOL  GDIOBJ_FreeObj(HGDIOBJ hObj, WORD Magic, DWORD Flag)
 
   	handleEntry = GDIOBJ_iGetHandleEntryForIndex ((WORD)hObj & 0xffff);
 	DPRINT("GDIOBJ_FreeObj: hObj: %d, magic: %x, handleEntry: %x\n", (WORD)hObj & 0xffff, Magic, handleEntry );
+
   	if (handleEntry == 0 || (handleEntry->wMagic != Magic && Magic != GO_MAGIC_DONTCARE )
 	     || ((handleEntry->hProcessId != PsGetCurrentProcessId()) && !(Flag & GDIOBJFLAG_IGNOREPID))){
+
 	  DPRINT("Can't Delete hObj: %d, magic: %x, pid:%d\n currpid:%d, flag:%d, hmm:%d\n",(WORD)hObj & 0xffff, handleEntry->wMagic, handleEntry->hProcessId, PsGetCurrentProcessId(), (Flag&GDIOBJFLAG_IGNOREPID), ((handleEntry->hProcessId != PsGetCurrentProcessId()) && !(Flag&GDIOBJFLAG_IGNOREPID)) );
   	  return  FALSE;
 	}
@@ -243,13 +281,22 @@ BOOL  GDIOBJ_FreeObj(HGDIOBJ hObj, WORD Magic, DWORD Flag)
   	handleEntry->hProcessId = 0;
 	ExFreePool (handleEntry->pObject);
 	handleEntry->pObject = 0;
-  	// (RJJ) set wMagic last to avoid race condition
   	handleEntry->wMagic = 0;
-
 
   	return  TRUE;
 }
 
+/*!
+ * Return pointer to the object by handle.
+ *
+ * \param hObj 		Object handle
+ * \param Magic		one of the magic numbers defined in \ref GDI Magic
+ * \return			Pointer to the object.
+ *
+ * \note Process can only get pointer to the objects it created or global objects.
+ *
+ * \todo Don't allow to lock the objects twice! Synchronization!
+*/
 PGDIOBJ GDIOBJ_LockObj( HGDIOBJ hObj, WORD Magic )
 {
   	PGDI_HANDLE_ENTRY handleEntry = GDIOBJ_iGetHandleEntryForIndex ((WORD) hObj & 0xffff);
@@ -265,15 +312,62 @@ PGDIOBJ GDIOBJ_LockObj( HGDIOBJ hObj, WORD Magic )
 
 	objectHeader = (PGDIOBJHDR) handleEntry->pObject;
 	ASSERT(objectHeader);
+	if( objectHeader->dwCount > 0 ){
+		DbgPrint("Caution! GDIOBJ_LockObj trying to lock object second time\n" );
+		DbgPrint("\t called from: %x\n", __builtin_return_address(0));
+	}
 
 	ExAcquireFastMutex(&RefCountHandling);
 	objectHeader->dwCount++;
 	ExReleaseFastMutex(&RefCountHandling);
-
-	DPRINT("GDIOBJ_LockObj: PGDIOBJ %x\n",  ((PCHAR)objectHeader + sizeof(GDIOBJHDR)) );
 	return (PGDIOBJ)((PCHAR)objectHeader + sizeof(GDIOBJHDR));
 }
 
+/*!
+ * Lock multiple objects. Use this function when you need to lock multiple objects and some of them may be
+ * duplicates. You should use this function to avoid trying to lock the same object twice!
+ *
+ * \param	pList 	pointer to the list that contains handles to the objects. You should set hObj and Magic fields.
+ * \param	nObj	number of objects to lock
+ * \return	for each entry in pList this function sets pObj field to point to the object.
+ *
+ * \note this function uses an O(n^2) algoritm because we shouldn't need to call it with more than 3 or 4 objects.
+*/
+BOOL GDIOBJ_LockMultipleObj( PGDIMULTILOCK pList, INT nObj )
+{
+	INT i, j;
+	ASSERT( pList );
+	//go through the list checking for duplicate objects
+	for( i = 0; i < nObj; i++ ){
+		(pList+i)->pObj = NULL;
+		for( j = 0; j < i; j++ ){
+			if( ((pList+i)->hObj == (pList+j)->hObj)
+			  && ((pList+i)->Magic == (pList+j)->Magic) ){
+				//already locked, so just copy the pointer to the object
+				(pList+i)->pObj = (pList+j)->pObj;
+				break;
+			}
+		}
+		if( (pList+i)->pObj == NULL ){
+			//object hasn't been locked, so lock it.
+			(pList+i)->pObj = GDIOBJ_LockObj( (pList+i)->hObj, (pList+i)->Magic );
+		}
+	}
+	return TRUE;
+}
+
+/*!
+ * Release GDI object. Every object locked by GDIOBJ_LockObj() must be unlocked. You should unlock the object
+ * as soon as you don't need to have access to it's data.
+
+ * \param hObj 		Object handle
+ * \param Magic		one of the magic numbers defined in \ref GDI Magic
+ *
+ * \note This function performs delayed cleanup. If the object is locked when GDI_FreeObj() is called
+ * then \em this function frees the object when reference count is zero.
+ *
+ * \todo Change synchronization algorithm.
+*/
 BOOL GDIOBJ_UnlockObj( HGDIOBJ hObj, WORD Magic )
 {
   	PGDI_HANDLE_ENTRY handleEntry = GDIOBJ_iGetHandleEntryForIndex ((WORD) hObj & 0xffff);
@@ -312,80 +406,43 @@ BOOL GDIOBJ_UnlockObj( HGDIOBJ hObj, WORD Magic )
 	return TRUE;
 }
 
-/*
-PGDIOBJ GDIOBJ_AllocObject(WORD Size, WORD Magic)
-{
-  PGDIOBJHDR  newObject;
-  PGDI_HANDLE_ENTRY  handleEntry;
 
-  newObject = ExAllocatePool (PagedPool, Size + sizeof (GDIOBJHDR));
-  if (newObject == NULL)
-  {
-    return  NULL;
-  }
-  RtlZeroMemory (newObject, Size + sizeof (GDIOBJHDR));
-
-  newObject->wTableIndex = GDIOBJ_iGetNextOpenHandleIndex ();
-  handleEntry = GDIOBJ_iGetHandleEntryForIndex (newObject->wTableIndex);
-  handleEntry->wMagic = Magic;
-  handleEntry->hProcessId = PsGetCurrentProcessId ();
-  handleEntry->pObject = newObject;
-
-  return  (PGDIOBJ)(((PCHAR) newObject) + sizeof (GDIOBJHDR));
-}
-
-BOOL  GDIOBJ_FreeObject (PGDIOBJ Obj, WORD Magic)
-{
-  PGDIOBJHDR  objectHeader;
-  PGDI_HANDLE_ENTRY  handleEntry;
-
-  objectHeader = (PGDIOBJHDR)(((PCHAR)Obj) - sizeof (GDIOBJHDR));
-  handleEntry = GDIOBJ_iGetHandleEntryForIndex (objectHeader->wTableIndex);
-  if (handleEntry == 0 || handleEntry->wMagic != Magic)
-    return  FALSE;
-  handleEntry->hProcessId = 0;
-  handleEntry->pObject = 0;
-  // (RJJ) set wMagic last to avoid race condition
-  handleEntry->wMagic = 0;
-  ExFreePool (objectHeader);
-
-  return  TRUE;
-}
-
-HGDIOBJ  GDIOBJ_PtrToHandle (PGDIOBJ Obj, WORD Magic)
-{
-  PGDIOBJHDR  objectHeader;
-  PGDI_HANDLE_ENTRY  handleEntry;
-
-  if (Obj == NULL)
-    return  NULL;
-  objectHeader = (PGDIOBJHDR) (((PCHAR)Obj) - sizeof (GDIOBJHDR));
-  handleEntry = GDIOBJ_iGetHandleEntryForIndex (objectHeader->wTableIndex);
-  if (handleEntry == 0 ||
-      handleEntry->wMagic != Magic ||
-      handleEntry->hProcessId != PsGetCurrentProcessId () )
-    return  NULL;
-
-  return  (HGDIOBJ) objectHeader->wTableIndex;
-}
-
-PGDIOBJ  GDIOBJ_HandleToPtr (HGDIOBJ ObjectHandle, WORD Magic)
-{
-  PGDI_HANDLE_ENTRY  handleEntry;
-
-  if (ObjectHandle == NULL)
-    return NULL;
-
-  handleEntry = GDIOBJ_iGetHandleEntryForIndex ((WORD)ObjectHandle & 0xffff);
-  if (handleEntry == 0 ||
-      (Magic != GO_MAGIC_DONTCARE && Magic != Magic) ||
-      handleEntry->hProcessId != PsGetCurrentProcessId () )
-    return  NULL;
-
-  return  (PGDIOBJ) (((PCHAR)handleEntry->pObject) + sizeof (GDIOBJHDR));
-}
+/*!
+ * Unlock multiple objects. Use this function when you need to unlock multiple objects and some of them may be
+ * duplicates.
+ *
+ * \param	pList 	pointer to the list that contains handles to the objects. You should set hObj and Magic fields.
+ * \param	nObj	number of objects to lock
+ *
+ * \note this function uses O(n^2) algoritm because we shouldn't need to call it with more than 3 or 4 objects.
 */
+BOOL GDIOBJ_UnlockMultipleObj( PGDIMULTILOCK pList, INT nObj )
+{
+	INT i, j;
+	ASSERT( pList );
+	//go through the list checking for duplicate objects
+	for( i = 0; i < nObj; i++ ){
+		if( (pList+i)->pObj != NULL ){
+			for( j = i+1; j < nObj; j++ ){
+				if( ((pList+i)->pObj == (pList+j)->pObj) ){
+					//set the pointer to zero for all duplicates
+					(pList+j)->pObj = NULL;
+				}
+			}
+			GDIOBJ_UnlockObj( (pList+i)->hObj, (pList+i)->Magic );
+			(pList+i)->pObj = NULL;
+		}
+	}
+	return TRUE;
+}
 
+/*!
+ * Marks the object as global. (Creator process ID is set to 0xFFFFFFFF). Global objects may be
+ * accessed by any process.
+ * \param 	ObjectHandle - handle of the object to make global.
+ *
+ * \note	Only stock objects should be marked global.
+*/
 VOID GDIOBJ_MarkObjectGlobal(HGDIOBJ ObjectHandle)
 {
   PGDI_HANDLE_ENTRY  handleEntry;
@@ -400,6 +457,11 @@ VOID GDIOBJ_MarkObjectGlobal(HGDIOBJ ObjectHandle)
   handleEntry->hProcessId = (HANDLE)0xFFFFFFFF;
 }
 
+/*!
+ * Get the type (magic value) of the object.
+ * \param 	ObjectHandle - handle of the object.
+ * \return 	GDI Magic value.
+*/
 WORD  GDIOBJ_GetHandleMagic (HGDIOBJ ObjectHandle)
 {
   PGDI_HANDLE_ENTRY  handleEntry;
@@ -416,20 +478,25 @@ WORD  GDIOBJ_GetHandleMagic (HGDIOBJ ObjectHandle)
   return  handleEntry->wMagic;
 }
 
+/*!
+ * Initialization of the GDI object engine.
+*/
 VOID
 InitGdiObjectHandleTable (void)
 {
   DPRINT ("InitGdiObjectHandleTable\n");
   ExInitializeFastMutex (&HandleTableMutex);
   ExInitializeFastMutex (&RefCountHandling);
-  //per http://www.wd-mag.com/articles/1999/9902/9902b/9902b.htm?topic=articles
-  //gdi handle table can hold 0x4000 handles
+
   HandleTable = GDIOBJ_iAllocHandleTable (GDI_HANDLE_NUMBER);
   DPRINT("HandleTable: %x\n", HandleTable );
 
   InitEngHandleTable();
 }
 
+/*!
+ * Creates a bunch of stock objects: brushes, pens, fonts.
+*/
 VOID CreateStockObjects(void)
 {
   // Create GDI Stock Objects from the logical structures we've defined
@@ -471,24 +538,33 @@ VOID CreateStockObjects(void)
   StockObjects[DEFAULT_PALETTE] = (HGDIOBJ*)PALETTE_Init();
 }
 
+/*!
+ * Return stock object.
+ * \param	Object - stock object id.
+ * \return	Handle to the object.
+*/
 HGDIOBJ STDCALL  W32kGetStockObject(INT  Object)
 {
-  HGDIOBJ ret;
-
-/*  if ((Object < 0) || (Object >= NB_STOCK_OBJECTS)) return 0;
-  if (!StockObjects[Object]) return 0;
-  ret = FIRST_STOCK_HANDLE + Object;
-
-  return ret; */
-
-  return StockObjects[Object]; // FIXME........
+  // check when adding new objects
+  if( (Object < 0) || (Object >= NB_STOCK_OBJECTS)  )
+	return NULL;
+  return StockObjects[Object];
 }
 
+/*!
+ * Delete GDI object
+ * \param	hObject object handle
+ * \return	if the function fails the returned value is NULL.
+*/
 BOOL STDCALL  W32kDeleteObject(HGDIOBJ hObject)
 {
   return GDIOBJ_FreeObj( hObject, GO_MAGIC_DONTCARE, GDIOBJFLAG_DEFAULT );
 }
 
+/*!
+ * Internal function. Called when the process is destroyed to free the remaining GDI handles.
+ * \param	Process - PID of the process that was destroyed.
+*/
 BOOL STDCALL W32kCleanupForProcess( INT Process )
 {
 	DWORD i;
@@ -506,7 +582,11 @@ BOOL STDCALL W32kCleanupForProcess( INT Process )
 	return TRUE;
 }
 
-// dump all the objects for process. if process == 0 dump all the objects
+/*!
+ *	Internal function. Dumps all the objects for the given process.
+ * \param	If process == 0 dump all the objects.
+ *
+*/
 VOID STDCALL W32kDumpGdiObjects( INT Process )
 {
 	DWORD i;

@@ -9,7 +9,12 @@
 
 #include <ddk/ntddk.h>
 
-  /* GDI objects magic numbers */
+/*! \defgroup GDI Magic
+ *
+ *  GDI object magic numbers
+ *
+ */
+//@{
 #define GO_PEN_MAGIC             0x4f47
 #define GO_BRUSH_MAGIC           0x4f48
 #define GO_FONT_MAGIC            0x4f49
@@ -25,12 +30,13 @@
 #define GO_ENHMETAFILE_DC_MAGIC  0x4f53
 #define GO_DCE_MAGIC             0x4f54
 #define GO_MAGIC_DONTCARE        0xffff
-
+//@}
 /* (RJJ) swiped stock handles from wine  */
   /* First handle possible for stock objects (must be >= GDI_HEAP_SIZE) */
 #define FIRST_STOCK_HANDLE          0xffffff00
 
-  /* Stock objects handles */
+/*! Stock object handles */
+//@{
 #define NB_STOCK_OBJECTS        (DEFAULT_GUI_FONT + 1)
 #define STOCK_WHITE_BRUSH       ((HBRUSH)(FIRST_STOCK_HANDLE+WHITE_BRUSH))
 #define STOCK_LTGRAY_BRUSH      ((HBRUSH)(FIRST_STOCK_HANDLE+LTGRAY_BRUSH))
@@ -53,11 +59,15 @@
 #define FIRST_STOCK_FONT        STOCK_OEM_FIXED_FONT
 #define LAST_STOCK_FONT         STOCK_DEFAULT_GUI_FONT
 #define LAST_STOCK_HANDLE       ((DWORD)STOCK_DEFAULT_GUI_FONT)
+//@}
 
+/*!
+ * GDI object header. This is a part of any GDI object
+*/
 typedef struct _GDIOBJHDR
 {
   WORD  wTableIndex;
-  DWORD dwCount; 		//reference count.
+  DWORD dwCount; 		/// reference count for the object
 } GDIOBJHDR, *PGDIOBJHDR;
 
 typedef PVOID PGDIOBJ;
@@ -75,10 +85,19 @@ typedef struct _GDI_HANDLE_TABLE
   GDI_HANDLE_ENTRY  Handles [1];
 } GDI_HANDLE_TABLE, *PGDI_HANDLE_TABLE;
 
+typedef struct _GDIMULTILOCK
+{
+	HGDIOBJ 	hObj;
+	PGDIOBJ		pObj;
+	WORD		Magic;
+} GDIMULTILOCK, *PGDIMULTILOCK;
+
 HGDIOBJ  GDIOBJ_AllocObj(WORD Size, WORD Magic);
 BOOL  GDIOBJ_FreeObj (HGDIOBJ Obj, WORD Magic, DWORD Flag);
 PGDIOBJ  GDIOBJ_LockObj (HGDIOBJ Obj, WORD Magic);
+BOOL GDIOBJ_LockMultipleObj( PGDIMULTILOCK pList, INT nObj );
 BOOL     GDIOBJ_UnlockObj (HGDIOBJ Obj, WORD Magic);
+BOOL GDIOBJ_UnlockMultipleObj( PGDIMULTILOCK pList, INT nObj );
 WORD  GDIOBJ_GetHandleMagic (HGDIOBJ ObjectHandle);
 VOID STDCALL W32kDumpGdiObjects( INT Process );
 BOOL STDCALL W32kCleanupForProcess( INT Process );
