@@ -1,4 +1,4 @@
-/* $Id: dirwr.c,v 1.24 2002/03/18 22:37:12 hbirr Exp $
+/* $Id: dirwr.c,v 1.25 2002/04/27 19:25:57 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -125,6 +125,7 @@ findDirSpace(PDEVICE_EXTENSION DeviceExt,
   if (Context)
   {
     CcUnpinData(Context);
+    Context = NULL;
   }
   if (nbFree == nbSlots)
   {
@@ -164,8 +165,11 @@ findDirSpace(PDEVICE_EXTENSION DeviceExt,
                  TRUE, &Context, (PVOID*)&pFatEntry);
       RtlZeroMemory(pFatEntry, sizeof(FATDirEntry));
     }
-    CcSetDirtyPinnedData(Context, NULL);
-    CcUnpinData(Context);
+    if (Context)
+    {
+      CcSetDirtyPinnedData(Context, NULL);
+      CcUnpinData(Context);
+    }
   }
   DPRINT ("nbSlots %d nbFree %d, entry number %d\n", nbSlots, nbFree, *start);
   return TRUE;
