@@ -1,9 +1,9 @@
 /*
  * entry.c
  *
- * $Revision: 1.1 $
- * $Author: navaraf $
- * $Date: 2004/01/10 14:39:20 $
+ * $Revision: 1.2 $
+ * $Author: dwelch $
+ * $Date: 2004/03/04 23:11:43 $
  *
  */
 
@@ -487,6 +487,9 @@ DrvEnableSurface(IN DHPDEV PDev)
   pdsurf->Scan0       = ppdev->fbScreen;
   pdsurf->BitmapStart = ppdev->fbScreen;
   pdsurf->StartBmp      = ppdev->fbScreen;
+  pdsurf->BankInfo      = NULL;
+  pdsurf->BankInfo2RW   = NULL;
+  pdsurf->BankBufferPlane0 = NULL;
 
 /*  pdsurf->Conv          = &ConvertBuffer[0]; */
 
