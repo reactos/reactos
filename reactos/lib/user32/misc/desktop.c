@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.25 2003/08/19 15:18:26 royce Exp $
+/* $Id: desktop.c,v 1.26 2003/08/28 18:04:59 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -92,6 +92,8 @@ SystemParametersInfoW(UINT uiAction,
     {
     case SPI_GETWORKAREA:
       {
+    /* FIXME we should obtain the information using GetMonitorInfo(),
+             besides it is not the whole screen size! */
 	((PRECT)pvParam)->left = 0;
 	((PRECT)pvParam)->top = 0;
 	((PRECT)pvParam)->right = 640;
@@ -104,6 +106,13 @@ SystemParametersInfoW(UINT uiAction,
         memcpy(&nclm->lfCaptionFont, &CaptionFont, sizeof(CaptionFont));
         memcpy(&nclm->lfSmCaptionFont, &CaptionFont, sizeof(CaptionFont));
 	return(TRUE);
+      }
+    default:
+      {
+        return NtUserSystemParametersInfo(uiAction,
+                                          uiParam,
+                                          pvParam,
+                                          fWinIni);
       }
     }
   return(FALSE);

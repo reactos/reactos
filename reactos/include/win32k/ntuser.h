@@ -156,6 +156,7 @@ NtUserCallNextHookEx(
   DWORD Unknown2,
   DWORD Unknown3);
 
+#define NOPARAM_ROUTINE_GETDOUBLECLICKTIME  0x01
 DWORD
 STDCALL
 NtUserCallNoParam(
@@ -1611,10 +1612,10 @@ NtUserSwitchDesktop(
 DWORD
 STDCALL
 NtUserSystemParametersInfo(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+  UINT uiAction,
+  UINT uiParam,
+  PVOID pvParam,
+  UINT fWinIni);
 
 DWORD
 STDCALL

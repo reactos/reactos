@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: metric.c,v 1.10 2003/08/20 00:41:04 silverblade Exp $
+/* $Id: metric.c,v 1.11 2003/08/28 18:04:59 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -47,9 +47,12 @@
 ULONG STDCALL
 NtUserGetSystemMetrics(ULONG Index)
 {
+  NTSTATUS Status;
+  PWINSTATION_OBJECT WinStaObject;
   PWINDOW_OBJECT DesktopWindow;
-  ULONG Width, Height;
+  ULONG Width, Height, Result;
 
+  Result = 0;
   switch (Index)
     {
     case SM_ARRANGE:
@@ -69,7 +72,30 @@ NtUserGetSystemMetrics(ULONG Index)
       return(3);
     case SM_CXDOUBLECLK:
     case SM_CYDOUBLECLK:
-      return(4);
+    case SM_SWAPBUTTON:
+      Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+                                           KernelMode,
+                                           0,
+                                           &WinStaObject);
+      if (!NT_SUCCESS(Status))
+        return 0xFFFFFFFF;
+      
+      switch(Index)
+      {
+        case SM_CXDOUBLECLK:
+          Result = WinStaObject->SystemCursor.DblClickWidth;
+          break;
+        case SM_CYDOUBLECLK:
+          Result = WinStaObject->SystemCursor.DblClickWidth;
+          break;
+        case SM_SWAPBUTTON:
+          Result = (UINT)WinStaObject->SystemCursor.SwapButtons;
+          break;
+      }
+      
+      ObDereferenceObject(WinStaObject);
+      return Result;
+
     case SM_CXDRAG:
     case SM_CYDRAG:
       return(2);
@@ -134,15 +160,15 @@ NtUserGetSystemMetrics(ULONG Index)
     case SM_CYSCREEN:
       DesktopWindow = IntGetWindowObject(IntGetDesktopWindow());
       if (NULL != DesktopWindow)
-	{
-	  Width = DesktopWindow->WindowRect.right;
-	  Height = DesktopWindow->WindowRect.bottom;
-	}
+	  {
+	    Width = DesktopWindow->WindowRect.right;
+	    Height = DesktopWindow->WindowRect.bottom;
+	  }
       else
-	{
-	  Width = 640;
-	  Height = 480;
-	}
+	  {
+	    Width = 640;
+	    Height = 480;
+	  }
       IntReleaseWindowObject(DesktopWindow);
       return SM_CXSCREEN == Index ? Width : Height;
     case SM_CXSIZE:
@@ -180,7 +206,6 @@ NtUserGetSystemMetrics(ULONG Index)
     case SM_SECURE:            
     case SM_SHOWSOUNDS:        
     case SM_SLOWMACHINE:       
-    case SM_SWAPBUTTON:        
       return(0);
     default:
       return(0xFFFFFFFF);

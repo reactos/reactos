@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.16 2003/08/28 16:33:22 weiden Exp $
+/* $Id: input.c,v 1.17 2003/08/28 18:04:59 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -101,14 +101,13 @@ GetAsyncKeyState(int vKey)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 UINT
 STDCALL
 GetDoubleClickTime(VOID)
 {
-  UNIMPLEMENTED;
-  return 0;
+  return (UINT)NtUserCallNoParam(NOPARAM_ROUTINE_GETDOUBLECLICKTIME);
 }
 
 
@@ -323,15 +322,17 @@ OemKeyScan(WORD wOemChar)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL
 STDCALL
 SetDoubleClickTime(
   UINT uInterval)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return (WINBOOL)NtUserSystemParametersInfo(SPI_SETDOUBLECLICKTIME,
+                                             uInterval,
+                                             NULL,
+                                             0);
 }
 
 

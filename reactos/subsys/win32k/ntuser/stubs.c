@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.26 2003/08/25 23:24:02 rcampbell Exp $
+/* $Id: stubs.c,v 1.27 2003/08/28 18:04:59 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1073,19 +1073,6 @@ DWORD
 STDCALL
 NtUserShowCaret(
   DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserSystemParametersInfo(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
 {
   UNIMPLEMENTED
 

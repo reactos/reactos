@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.13 2003/08/28 14:22:05 weiden Exp $
+/* $Id: misc.c,v 1.14 2003/08/28 18:04:59 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -23,25 +23,42 @@
 #include <debug.h>
 
 
+/*
+ * @implemented
+ */
 DWORD
 STDCALL
 NtUserCallNoParam(
   DWORD Routine)
 {
-/*
+  NTSTATUS Status;
+  DWORD Result = 0;
+  PWINSTATION_OBJECT WinStaObject;
+
   switch(Routine)
   {
-    case 1:
-      return 0;
+    case NOPARAM_ROUTINE_GETDOUBLECLICKTIME:
+      Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+                                           KernelMode,
+                                           0,
+                                           &WinStaObject);
+      if (!NT_SUCCESS(Status))
+        return (DWORD)FALSE;
+
+      Result = WinStaObject->SystemCursor.DblClickSpeed;
+      
+      ObDereferenceObject(WinStaObject);
+      return Result;
   }
   DPRINT1("Calling invalid routine number 0x%x in NtUserCallNoParam()\n", Routine);
   SetLastWin32Error(ERROR_INVALID_PARAMETER);
-*/
-  UNIMPLEMENTED
   return 0;
 }
 
 
+/*
+ * @implemented
+ */
 DWORD
 STDCALL
 NtUserCallOneParam(
@@ -115,6 +132,9 @@ NtUserCallOneParam(
 }
 
 
+/*
+ * @implemented
+ */
 DWORD
 STDCALL
 NtUserCallTwoParam(
@@ -205,4 +225,56 @@ NtUserCallTwoParam(
           Routine, Param1, Param2);
   SetLastWin32Error(ERROR_INVALID_PARAMETER);
   return 0;
+}
+
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+NtUserSystemParametersInfo(
+  UINT uiAction,
+  UINT uiParam,
+  PVOID pvParam,
+  UINT fWinIni)
+{
+  NTSTATUS Status;
+  PWINSTATION_OBJECT WinStaObject;
+  
+  switch(uiAction)
+  {
+    case SPI_SETDOUBLECLKWIDTH:
+    case SPI_SETDOUBLECLKHEIGHT:
+    case SPI_SETDOUBLECLICKTIME:
+      Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+                                           KernelMode,
+                                           0,
+                                           &WinStaObject);
+      if (!NT_SUCCESS(Status))
+        return (DWORD)FALSE;
+      
+      switch(uiAction)
+      {
+        case SPI_SETDOUBLECLKWIDTH:
+          /* FIXME limit the maximum value? */
+          WinStaObject->SystemCursor.DblClickWidth = uiParam;
+          break;
+        case SPI_SETDOUBLECLKHEIGHT:
+          /* FIXME limit the maximum value? */
+          WinStaObject->SystemCursor.DblClickHeight = uiParam;
+          break;
+        case SPI_SETDOUBLECLICKTIME:
+          /* FIXME limit the maximum time to 1000 ms? */
+          WinStaObject->SystemCursor.DblClickSpeed = uiParam;
+          break;
+      }
+      
+      /* FIXME save the value to the registry */
+      
+      ObDereferenceObject(WinStaObject);
+      return TRUE;
+    
+  }
+  return FALSE;
 }
