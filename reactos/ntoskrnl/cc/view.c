@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.57 2003/02/13 22:24:18 hbirr Exp $
+/* $Id: view.c,v 1.58 2003/02/18 22:06:53 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/view.c
@@ -197,7 +197,7 @@ CcRosFlushDirtyPages(ULONG Target, PULONG Count)
       PagesPerSegment = current->Bcb->CacheSegmentSize / PAGE_SIZE;
       Status = CcRosFlushCacheSegment(current);      
       ExReleaseFastMutex(&current->Lock);
-      if (!NT_SUCCESS(Status))
+      if (!NT_SUCCESS(Status) &&  (Status != STATUS_END_OF_FILE))
       {
 	 DPRINT1("CC: Failed to flush cache segment.\n");
       }

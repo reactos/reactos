@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.14 2003/02/13 22:24:18 hbirr Exp $
+/* $Id: copy.c,v 1.15 2003/02/18 22:06:53 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -234,7 +234,7 @@ WriteCacheSegment(PCACHE_SEGMENT CacheSeg)
      KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
      Status = IoStatus.Status;
   }
-  if (!NT_SUCCESS(Status))
+  if (!NT_SUCCESS(Status) && (Status != STATUS_END_OF_FILE))
     {
       DPRINT1("IoPageWrite failed, Status %x\n", Status);
       CacheSeg->Dirty = TRUE;

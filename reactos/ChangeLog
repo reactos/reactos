@@ -1,5 +1,11 @@
 2003-02-18  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* ntoskrnl/cc/view.c (CcRosFlushDirtyPages): Treat a write attempt with
+	a return value of STATUS_END_OF_FILE as a successful write.
+	* ntoskrnl/cc/copy.c (WriteCacheSegment): Ditto.
+
+2003-02-18  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* ntoskrnl/cm/regfile.c (CmiRemoveSubKey): Kill warnings.
 	(CmiMergeFree): Ditto.
 
