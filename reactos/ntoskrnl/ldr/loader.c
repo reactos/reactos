@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.70 2001/03/27 21:43:43 dwelch Exp $
+/* $Id: loader.c,v 1.71 2001/03/30 17:26:42 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -421,12 +421,13 @@ LdrProcessDriver(PVOID ModuleLoadBase, PCHAR FileName)
    RtlFreeUnicodeString(&ModuleName);
    if (ModuleObject == NULL)
      {
-	return STATUS_UNSUCCESSFUL;
+       DPRINT1("Driver load was unsuccessful\n");
+       return(STATUS_UNSUCCESSFUL);
      }
 
    /* FIXME: should we dereference the ModuleObject here?  */
 
-   return IoInitializeDriver(ModuleObject->EntryPoint);
+   return(IoInitializeDriver(ModuleObject->EntryPoint));
 }
 
 PMODULE_OBJECT
@@ -441,6 +442,7 @@ LdrProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING ModuleName)
       return LdrPEProcessModule(ModuleLoadBase, ModuleName);
     }
 
+  DPRINT1("Module wasn't PE\n");
   return 0;
 }
 

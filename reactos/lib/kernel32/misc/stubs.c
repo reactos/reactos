@@ -1,30 +1,9 @@
-/* $Id: stubs.c,v 1.24 2001/02/10 22:01:50 ea Exp $
+/* $Id: stubs.c,v 1.25 2001/03/30 17:26:42 dwelch Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
  */
 #include <windows.h>
-
-ATOM
-STDCALL
-AddAtomA (
-	LPCSTR	lpString
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-ATOM
-STDCALL
-AddAtomW (
-	LPCWSTR	lpString
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
 BOOL
 STDCALL
@@ -400,18 +379,6 @@ CreateVirtualBuffer (
 	return 0;
 }
 
-
-ATOM
-STDCALL
-DeleteAtom (
-	ATOM	nAtom
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
 WINBOOL
 STDCALL
 DisconnectNamedPipe (
@@ -747,29 +714,6 @@ ExtendVirtualBuffer (
 	return FALSE;
 }
 
-
-ATOM
-STDCALL
-FindAtomW (
-	LPCWSTR lpString
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-ATOM
-STDCALL
-FindAtomA (
-	LPCSTR lpString
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
 WINBOOL
 STDCALL
 FindCloseChangeNotification (
@@ -901,34 +845,6 @@ GetACP (VOID)
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
-
-
-
-UINT
-STDCALL
-GetAtomNameW (
-	ATOM	nAtom,
-	LPWSTR	lpBuffer,
-	int	nSize
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-UINT
-STDCALL
-GetAtomNameA (
-	ATOM	nAtom,
-	LPSTR	lpBuffer,
-	int	nSize
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
 
 WINBOOL
 STDCALL
@@ -2075,28 +1991,6 @@ GetVDMCurrentDirectories (
 	return 0;
 }
 
-
-ATOM
-STDCALL
-GlobalAddAtomW (
-	LPCWSTR	lpString
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-ATOM
-STDCALL
-GlobalAddAtomA (
-	LPCSTR	lpString
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
 /*
 HGLOBAL
 STDCALL
@@ -2119,40 +2013,6 @@ GlobalCompact (
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
-
-
-ATOM
-STDCALL
-GlobalDeleteAtom (
-	ATOM	nAtom
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-ATOM
-STDCALL
-GlobalFindAtomW (
-	LPCWSTR	lpString
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-ATOM
-STDCALL
-GlobalFindAtomA (
-	LPCSTR	lpString
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
 
 VOID
 STDCALL
@@ -2186,32 +2046,6 @@ GlobalFree (
 	return hMem;
 }
 */
-
-UINT
-STDCALL
-GlobalGetAtomNameA (
-	ATOM	nAtom,
-	LPSTR	lpBuffer,
-	int	nSize
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-UINT
-STDCALL
-GlobalGetAtomNameW (
-	ATOM	nAtom,
-	LPWSTR	lpBuffer,
-	int	nSize
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
 
 HGLOBAL
 STDCALL
@@ -2393,18 +2227,6 @@ HeapWalk (
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
-
-
-WINBOOL
-STDCALL
-InitAtomTable (
-	DWORD nSize
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
 
 DWORD
 STDCALL

@@ -1,4 +1,4 @@
-/* $Id: atom.c,v 1.10 2001/03/26 20:46:52 dwelch Exp $
+/* $Id: atom.c,v 1.11 2001/03/30 17:26:42 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -26,9 +26,12 @@
  * csrss.exe.
  */
 
-#if 0
+#define iswlower(c)	(c >= L'a' && c <= L'z')
+
+#if 1
 
 static ATOMTABLE GlobalAtomTable;
+static ATOMTABLE LocalAtomTable;
 
 /* internal functions */
 ATOM GLDeleteAtom(ATOMTABLE *at, ATOM nAtom);
@@ -45,57 +48,40 @@ int unicode2ansi( char *ansi,const WCHAR *uni, int s);
 int ansi2unicode( WCHAR *uni,const char *ansi, int s);
 
 
-ATOM
-STDCALL
-GlobalDeleteAtom(
-	ATOM	nAtom
-	)
+ATOM STDCALL
+GlobalDeleteAtom(ATOM	nAtom)
 {
-	return GLDeleteAtom(&GlobalAtomTable, nAtom);
+  return GLDeleteAtom(&GlobalAtomTable, nAtom);
 }
 
 
-BOOL
-STDCALL
-InitAtomTable(
-    DWORD nSize
-    )
+BOOL STDCALL
+InitAtomTable(DWORD nSize)
 {
-// nSize should be a prime number
+  /* nSize should be a prime number */
 	
-	if ( nSize < 4 || nSize >= 512 )
-	{
-		nSize = 37;
-	}
-	
-	if ( (GetCurrentPeb()->LocalAtomTable).lpDrvData == NULL )
-	{
-		(GetCurrentPeb()->LocalAtomTable).lpDrvData =
-			HeapAlloc(
-				GetProcessHeap(),
-				(HEAP_GENERATE_EXCEPTIONS | HEAP_ZERO_MEMORY),
-				(nSize * sizeof (ATOMENTRY))
-				);
-	}
-	
-	return TRUE;
+  if ( nSize < 4 || nSize >= 512 )
+    {
+      nSize = 37;
+    }
+  
+  if (LocalAtomTable.lpDrvData == NULL)
+    {
+      LocalAtomTable.lpDrvData =
+	RtlAllocateHeap(GetProcessHeap(),
+			(HEAP_GENERATE_EXCEPTIONS | HEAP_ZERO_MEMORY),
+			(nSize * sizeof (ATOMENTRY)));
+    }
+  
+  return TRUE;
 }
 
 
-ATOM
-STDCALL
-DeleteAtom(
-    ATOM nAtom
-    )
+ATOM STDCALL
+DeleteAtom(ATOM nAtom)
 {
-	return GLDeleteAtom(
-			& GetCurrentPeb()->LocalAtomTable,
-			nAtom
-			);
+  return GLDeleteAtom(&LocalAtomTable, nAtom);
 }
-
-
-
 
 ATOM STDCALL
 GlobalAddAtomA(LPCSTR lpString)
@@ -104,193 +90,141 @@ GlobalAddAtomA(LPCSTR lpString)
   WCHAR* lpBuffer;
   ATOM atom;
   
-  lpBuffer = (WCHAR *) HeapAlloc(GetProcessHeap(),
-				 (HEAP_GENERATE_EXCEPTIONS | HEAP_ZERO_MEMORY),
-				 (BufLen * sizeof (WCHAR)));
+  lpBuffer = 
+    (WCHAR *) RtlAllocateHeap(GetProcessHeap(),
+			      (HEAP_GENERATE_EXCEPTIONS | HEAP_ZERO_MEMORY),
+			      (BufLen * sizeof (WCHAR)));
   ansi2unicode(lpBuffer, lpString, BufLen);
   atom = AWGLAddAtom(&GlobalAtomTable, lpBuffer);
-  HeapFree(GetProcessHeap(), 0, lpBuffer);
+  RtlFreeHeap(GetProcessHeap(), 0, lpBuffer);
   return(atom);
 }
 
-
-
-
-
-ATOM
-STDCALL
-GlobalAddAtomW(
-    LPCWSTR lpString
-    )
+ATOM STDCALL
+GlobalAddAtomW(LPCWSTR lpString)
 {
-	return AWGLAddAtom(&GlobalAtomTable, lpString);	
+  return AWGLAddAtom(&GlobalAtomTable, lpString);	
 }
 
 
-ATOM
-STDCALL
-GlobalFindAtomA(
-    LPCSTR lpString
-    )
+ATOM STDCALL
+GlobalFindAtomA(LPCSTR lpString)
 {
-	ATOM 	a;
-	UINT	BufLen = strlen(lpString);
-	WCHAR *lpBuffer = (WCHAR *)HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,BufLen*sizeof(WCHAR));
-	ansi2unicode(lpBuffer, lpString,BufLen);
-	a = AWGLFindAtom(&GlobalAtomTable, lpBuffer);
-	HeapFree(GetProcessHeap(),0,lpBuffer);
-	return a;
+  ATOM 	a;
+  UINT	BufLen = strlen(lpString);
+  WCHAR *lpBuffer = (WCHAR *)RtlAllocateHeap(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,BufLen*sizeof(WCHAR));
+  ansi2unicode(lpBuffer, lpString,BufLen);
+  a = AWGLFindAtom(&GlobalAtomTable, lpBuffer);
+  RtlFreeHeap(GetProcessHeap(),0,lpBuffer);
+  return a;
 }
 
 
-ATOM
-STDCALL
-GlobalFindAtomW(
-    const WCHAR *lpString
-    )
+ATOM STDCALL
+GlobalFindAtomW(const WCHAR *lpString)
 {
-	return AWGLFindAtom(&GlobalAtomTable, lpString);	
+  return AWGLFindAtom(&GlobalAtomTable, lpString);	
 }
 
 
 
-UINT
-STDCALL
-GlobalGetAtomNameA(
-    ATOM nAtom,
-    char *lpBuffer,
-    int nSize
-    )
+UINT STDCALL
+GlobalGetAtomNameA(ATOM nAtom,
+		   char *lpBuffer,
+		   int nSize)
+{	
+  WCHAR *lpUnicode = (WCHAR *)RtlAllocateHeap(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,nSize *sizeof(WCHAR));
+  UINT x = AWGLGetAtomName(&GlobalAtomTable,nAtom, lpUnicode,nSize);	
+  unicode2ansi(lpBuffer,lpUnicode,nSize);
+  RtlFreeHeap(GetProcessHeap(),0,lpUnicode);
+  return x;
+}
+
+UINT STDCALL
+GlobalGetAtomNameW(ATOM nAtom,
+		   WCHAR * lpBuffer,
+		   int nSize)
 {
-	
-	WCHAR *lpUnicode = (WCHAR *)HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,nSize *sizeof(WCHAR));
-	UINT x = AWGLGetAtomName(&GlobalAtomTable,nAtom, lpUnicode,nSize);	
-	unicode2ansi(lpBuffer,lpUnicode,nSize);
-	HeapFree(GetProcessHeap(),0,lpUnicode);
-	return x;
+  return AWGLGetAtomName(&GlobalAtomTable, nAtom, lpBuffer, nSize);	
 }
 
 
-UINT
-STDCALL
-GlobalGetAtomNameW(
-    ATOM nAtom,
-    WCHAR * lpBuffer,
-    int nSize
-    )
+ATOM STDCALL
+AddAtomA(const char *lpString)
 {
-	return AWGLGetAtomName(&GlobalAtomTable, nAtom, lpBuffer, nSize);	
+  UINT	BufLen = strlen(lpString);
+  WCHAR *lpBuffer = (WCHAR*)RtlAllocateHeap(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,BufLen*2);
+  ATOM a;
+  ansi2unicode(lpBuffer, lpString,BufLen);
+  a = AWGLAddAtom(&LocalAtomTable, lpBuffer);
+  RtlFreeHeap(GetProcessHeap(),0,lpBuffer);
+  return a;	
 }
 
 
-ATOM
-STDCALL
-AddAtomA(
-    const char *lpString
-    )
+ATOM STDCALL
+AddAtomW(const WCHAR * lpString)
 {
-	UINT	BufLen = strlen(lpString);
-	WCHAR *lpBuffer = (WCHAR*)HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,BufLen*2);
-	ATOM a;
-	ansi2unicode(lpBuffer, lpString,BufLen);
-	a = AWGLAddAtom(&GetCurrentPeb()->LocalAtomTable, lpBuffer);
-	HeapFree(GetProcessHeap(),0,lpBuffer);
-	return a;
-	
+  return AWGLAddAtom(&LocalAtomTable, lpString);
 }
 
-
-ATOM
-STDCALL
-AddAtomW(
-    const WCHAR * lpString
-    )
+ATOM STDCALL
+FindAtomA(const char *lpString)
 {
-	return AWGLAddAtom(&GetCurrentPeb()->LocalAtomTable, lpString);
+  UINT	BufLen = strlen(lpString);
+  WCHAR *lpBuffer = (WCHAR *)RtlAllocateHeap(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,BufLen*2);
+  ATOM a;
+  ansi2unicode(lpBuffer, lpString,BufLen);
+  a = AWGLFindAtom(&LocalAtomTable, lpBuffer);
+  RtlFreeHeap(GetProcessHeap(),0,lpBuffer);
+  return a;
 }
 
-
-
-
-ATOM
-STDCALL
-FindAtomA(
-    const char *lpString
-    )
+ATOM STDCALL
+FindAtomW(const WCHAR * lpString)
 {
-	UINT	BufLen = strlen(lpString);
-	WCHAR *lpBuffer = (WCHAR *)HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,BufLen*2);
-	ATOM a;
-	ansi2unicode(lpBuffer, lpString,BufLen);
-	a = AWGLFindAtom(&GetCurrentPeb()->LocalAtomTable, lpBuffer);
-	HeapFree(GetProcessHeap(),0,lpBuffer);
-	return a;
+  return AWGLFindAtom(&LocalAtomTable, lpString);
 }
 
-
-ATOM
-STDCALL
-FindAtomW(
-    const WCHAR * lpString
-    )
+UINT STDCALL
+GetAtomNameA(ATOM nAtom,
+	     char  *lpBuffer,
+	     int nSize)
 {
-	return AWGLFindAtom(&GetCurrentPeb()->LocalAtomTable, lpString);
+  LPWSTR lpUnicode = (WCHAR *)RtlAllocateHeap(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,nSize *2);
+  UINT x = AWGLGetAtomName(&GlobalAtomTable, nAtom,lpUnicode,nSize);	
+  unicode2ansi(lpBuffer,lpUnicode,nSize);
+  RtlFreeHeap(GetProcessHeap(),0,lpUnicode);
+  return x;
 }
 
-
-
-UINT
-STDCALL
-GetAtomNameA(
-    ATOM nAtom,
-    char  *lpBuffer,
-    int nSize
-    )
+UINT STDCALL
+GetAtomNameW(ATOM nAtom,
+	     WCHAR * lpBuffer,
+	     int nSize)
 {
-	LPWSTR lpUnicode = (WCHAR *)HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,nSize *2);
-	UINT x = AWGLGetAtomName(&GlobalAtomTable, nAtom,lpUnicode,nSize);	
-	unicode2ansi(lpBuffer,lpUnicode,nSize);
-	HeapFree(GetProcessHeap(),0,lpUnicode);
-	return x;
-}
-
-
-UINT
-STDCALL
-GetAtomNameW(
-    ATOM nAtom,
-    WCHAR * lpBuffer,
-    int nSize
-    )
-{
-	return AWGLGetAtomName(&GetCurrentPeb()->LocalAtomTable,nAtom,lpBuffer,  nSize);
+  return AWGLGetAtomName(&LocalAtomTable,nAtom,lpBuffer,  nSize);
 }
 
 ATOM
-GLDeleteAtom(
-    ATOMTABLE *at, ATOM nAtom
-    )
+GLDeleteAtom(ATOMTABLE *at, ATOM nAtom)
 {
-
-	ATOMENTRY *lp;
-
-	/* a free slot has q == 0 && refcnt == 0 */
-	if((lp = GetAtomPointer(at,nAtom - ATOMBASE))) {
-		if(lp->idsize)
-			lp->refcnt--;
-
-		if(lp->refcnt == 0) {
-			HeapFree(GetProcessHeap(),0,at->AtomTable);
-			at->AtomTable = NULL;
-			HeapFree(GetProcessHeap(),0,at->AtomData);
-			at->AtomData = NULL;
-			return lp->q = 0;
-		}
-	}
-	return nAtom;
-
-
-
+  ATOMENTRY *lp;
+  
+  /* a free slot has q == 0 && refcnt == 0 */
+  if((lp = GetAtomPointer(at,nAtom - ATOMBASE))) {
+    if(lp->idsize)
+      lp->refcnt--;
+    
+    if(lp->refcnt == 0) {
+      RtlFreeHeap(GetProcessHeap(),0,at->AtomTable);
+      at->AtomTable = NULL;
+      RtlFreeHeap(GetProcessHeap(),0,at->AtomData);
+      at->AtomData = NULL;
+      return lp->q = 0;
+    }
+  }
+  return nAtom;
 }
 
 
@@ -347,7 +281,7 @@ AWGLAddAtom(ATOMTABLE *at, const WCHAR *lpString)
   /* so expand or create the table 				*/
   if(at->AtomTable == 0) 
     {
-      at->AtomTable = (ATOMENTRY *) HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,sizeof(ATOMENTRY));	
+      at->AtomTable = (ATOMENTRY *) RtlAllocateHeap(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,sizeof(ATOMENTRY));	
       at->TableSize = 1;
       lp = at->AtomTable;
       index = 0;
@@ -355,7 +289,7 @@ AWGLAddAtom(ATOMTABLE *at, const WCHAR *lpString)
   else 
     {
       at->TableSize++;
-      at->AtomTable = (ATOMENTRY *) HeapReAlloc(GetProcessHeap(),0,
+      at->AtomTable = (ATOMENTRY *) RtlReAllocateHeap(GetProcessHeap(),0,
 						(LPVOID) at->AtomTable,
 						at->TableSize * sizeof(ATOMENTRY));
       lp = &at->AtomTable[at->TableSize - 1];
@@ -372,11 +306,11 @@ AWGLAddAtom(ATOMTABLE *at, const WCHAR *lpString)
     newlen = at->DataSize + atomlen;
     
     if(at->AtomData == 0) {
-      at->AtomData = (WCHAR *) HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,newlen*2);
+      at->AtomData = (WCHAR *) RtlAllocateHeap(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,newlen*2);
       lp->idx = 0;
     } else {
       
-      at->AtomData = (WCHAR *) HeapReAlloc(GetProcessHeap(),0,at->AtomData,newlen*2);
+      at->AtomData = (WCHAR *) RtlReAllocateHeap(GetProcessHeap(),0,at->AtomData,newlen*2);
       lp->idx = at->DataSize;
     }
     

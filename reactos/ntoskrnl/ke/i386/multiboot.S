@@ -56,51 +56,7 @@ _multiboot_entry:
 	/*
 	 * This	must be PIC because we haven't set up paging yet
 	 */
-	movl	$(startup_pagedirectory - 0xc0000000 + 0x200000), %edx
-	movl	%edx, %cr3
-
-	/*
-	 * Enable paging
-	 */
-	movl	%cr0, %edx
-	orl	$0x80000000, %edx
-	movl	%edx, %cr0
-
-	/*
-	 * Do an absolute jump because we now want to execute at 0xc0000000
-	 */	
-	movl	$.l2, %edx
-	jmp	*%edx
-.l2:
 	
-	/*
-	 * Load the GDTR and IDTR with new tables located above
-	 * 0xc0000000
-	 */
-	lgdt	_gdt_descr
-	lidt	_idt_descr
-
-	/*
-	 * Reload the data segment registers 
-	 */
-	movl	$KERNEL_DS, %edx
-	movl	%edx, %ds
-	movl	%edx, %es
-	movl	%edx, %fs
-	movl	%edx, %gs
-	movl	%edx, %ss
-
-	/*
-	 * Load the initial ring0 stack
-	 */
-	movl	$_init_stack_top, %esp
-
-	/*
-	 * Initialize EFLAGS
-	 */
-	pushl	$0
-	popfl
-
 	/*
 	 * Gcc expects this at all times
 	 */
@@ -115,8 +71,58 @@ _multiboot_entry:
 	subl	$__bss_start__, %ecx
 	shr	$2, %ecx
 	movl	$__bss_start__, %edi
+	subl	$0xc0000000, %edi
+	addl	$0x200000, %edi
 	rep
 	stosl
+
+	/*
+	 * Set up the PDBR
+	 */	
+	movl	$(startup_pagedirectory - 0xc0000000 + 0x200000), %eax
+	movl	%eax, %cr3
+
+	/*
+	 * Enable paging
+	 */
+	movl	%cr0, %eax
+	orl	$0x80000000, %eax
+	movl	%eax, %cr0
+
+	/*
+	 * Do an absolute jump because we now want to execute at 0xc0000000
+	 */	
+	movl	$.l2, %eax
+	jmp	*%eax
+.l2:
+	
+	/*
+	 * Load the GDTR and IDTR with new tables located above
+	 * 0xc0000000
+	 */
+	lgdt	_gdt_descr
+	lidt	_idt_descr
+
+	/*
+	 * Reload the data segment registers 
+	 */
+	movl	$KERNEL_DS, %eax
+	movl	%eax, %ds
+	movl	%eax, %es
+	movl	%eax, %fs
+	movl	%eax, %gs
+	movl	%eax, %ss
+
+	/*
+	 * Load the initial ring0 stack
+	 */
+	movl	$_init_stack_top, %esp
+
+	/*
+	 * Initialize EFLAGS
+	 */
+	pushl	$0
+	popfl
 
 	/*
 	 * Call the main ring0 initialization
