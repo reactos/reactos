@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: palette.c,v 1.13 2003/09/25 15:15:03 fireball Exp $ */
+/* $Id: palette.c,v 1.14 2003/12/20 10:31:32 navaraf Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -185,9 +185,10 @@ INT STDCALL PALETTE_SetMapping(PPALOBJ palPtr, UINT uStart, UINT uNum, BOOL mapO
   int  index, iRemapped = 0;
   int *mapping;
   HPALETTE hSysPal = NtGdiGetStockObject(DEFAULT_PALETTE);
-  PPALOBJ pSysPal = (PPALOBJ)PALETTE_LockPalette(hSysPal);
+  PPALGDI pSysPal = PALETTE_LockPalette(hSysPal);
+  PPALGDI palGDI = (PPALGDI) palPtr;
 
-  COLOR_sysPal = pSysPal->logpalette->palPalEntry;
+  COLOR_sysPal = pSysPal->IndexedColors;
   PALETTE_UnlockPalette(hSysPal); // FIXME: Is this a right way to obtain pointer to the system palette?
 
 
@@ -200,7 +201,7 @@ INT STDCALL PALETTE_SetMapping(PPALOBJ palPtr, UINT uStart, UINT uNum, BOOL mapO
   //mapping = HeapReAlloc( GetProcessHeap(), 0, palPtr->mapping,
   //                       sizeof(int)*palPtr->logpalette->palNumEntries);
   ExFreePool(palPtr->mapping);
-  mapping = ExAllocatePool(NonPagedPool, sizeof(int)*palPtr->logpalette->palNumEntries);
+  mapping = ExAllocatePool(NonPagedPool, sizeof(int)*palGDI->NumColors);
 
   palPtr->mapping = mapping;
 
@@ -209,11 +210,11 @@ INT STDCALL PALETTE_SetMapping(PPALOBJ palPtr, UINT uStart, UINT uNum, BOOL mapO
     index = -1;
     flag = PC_SYS_USED;
 
-    switch( palPtr->logpalette->palPalEntry[uStart].peFlags & 0x07 )
+    switch( palGDI->IndexedColors[uStart].peFlags & 0x07 )
     {
       case PC_EXPLICIT:   // palette entries are indices into system palette
                           // The PC_EXPLICIT flag is used to copy an entry from the system palette into the logical palette
-        index = *(WORD*)(palPtr->logpalette->palPalEntry + uStart);
+        index = *(WORD*)(palGDI->IndexedColors + uStart);
         if(index > 255 || (index >= COLOR_gapStart && index <= COLOR_gapEnd))
         {
           DbgPrint("Win32k: PC_EXPLICIT: idx %d out of system palette, assuming black.\n", index); 
@@ -228,7 +229,7 @@ INT STDCALL PALETTE_SetMapping(PPALOBJ palPtr, UINT uStart, UINT uNum, BOOL mapO
       // fall through
       default: // try to collapse identical colors
         index = COLOR_PaletteLookupExactIndex(COLOR_sysPal, 256,  
-                                              *(COLORREF*)(palPtr->logpalette->palPalEntry + uStart));
+                                              *(COLORREF*)(palGDI->IndexedColors + uStart));
             // fall through
 
       case PC_NOCOLLAPSE:
@@ -271,9 +272,9 @@ INT STDCALL PALETTE_SetMapping(PPALOBJ palPtr, UINT uStart, UINT uNum, BOOL mapO
            // we have to map to existing entry in the system palette
 
            index = COLOR_PaletteLookupPixel(COLOR_sysPal, 256, NULL,
-                                            *(COLORREF*)(palPtr->logpalette->palPalEntry + uStart), TRUE);
+                                            *(COLORREF*)(palGDI->IndexedColors + uStart), TRUE);
            }
-           palPtr->logpalette->palPalEntry[uStart].peFlags |= PC_SYS_USED;
+           palGDI->IndexedColors[uStart].peFlags |= PC_SYS_USED;
 
 /*         if(PALETTE_PaletteToXPixel) index = PALETTE_PaletteToXPixel[index]; FIXME */
            break;

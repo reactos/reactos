@@ -721,7 +721,6 @@ typedef struct _PALOBJ
   ULONG   ulReserved;
   PXLATEOBJ logicalToSystem;
   int *mapping;
-  PLOGPALETTE logpalette; /* _MUST_ be the last field */
 } PALOBJ, *PPALOBJ;
 
 typedef struct _PATHOBJ

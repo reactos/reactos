@@ -19,7 +19,7 @@ typedef struct _PALGDI {
   HPALETTE Self;
   ULONG Mode; // PAL_INDEXED, PAL_BITFIELDS, PAL_RGB, PAL_BGR
   ULONG NumColors;
-  ULONG *IndexedColors;
+  PALETTEENTRY *IndexedColors;
   ULONG RedMask;
   ULONG GreenMask;
   ULONG BlueMask;

@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.37 2003/12/07 10:31:56 navaraf Exp $
+ * $Id: dib.c,v 1.38 2003/12/20 10:31:32 navaraf Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -44,12 +44,12 @@ UINT STDCALL NtGdiSetDIBColorTable(HDC  hDC,
 {
   PDC dc;
   PALETTEENTRY * palEntry;
-  PPALOBJ palette;
+  PPALGDI palette;
   const RGBQUAD *end;
 
   if (!(dc = (PDC)AccessUserObject((ULONG)hDC))) return 0;
 
-  if (!(palette = (PPALOBJ)PALETTE_LockPalette((ULONG)dc->DevInfo->hpalDefault)))
+  if (!(palette = PALETTE_LockPalette((ULONG)dc->DevInfo->hpalDefault)))
   {
 //    GDI_ReleaseObj( hdc );
     return 0;
@@ -59,12 +59,12 @@ UINT STDCALL NtGdiSetDIBColorTable(HDC  hDC,
 
   if (dc->w.bitsPerPixel <= 8)
   {
-    palEntry = palette->logpalette->palPalEntry + StartIndex;
+    palEntry = palette->IndexedColors + StartIndex;
     if (StartIndex + Entries > (UINT) (1 << dc->w.bitsPerPixel))
       Entries = (1 << dc->w.bitsPerPixel) - StartIndex;
 
-    if (StartIndex + Entries > palette->logpalette->palNumEntries)
-      Entries = palette->logpalette->palNumEntries - StartIndex;
+    if (StartIndex + Entries > palette->NumColors)
+      Entries = palette->NumColors - StartIndex;
 
     for (end = Colors + Entries; Colors < end; palEntry++, Colors++)
     {
@@ -892,11 +892,11 @@ DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
   RGBQUAD *lpRGB;
   ULONG nNumColors,i;
   DWORD *lpIndex;
-  PPALOBJ palObj;
+  PPALGDI palGDI;
 
-  palObj = (PPALOBJ) PALETTE_LockPalette(dc->DevInfo->hpalDefault);
+  palGDI = PALETTE_LockPalette(dc->DevInfo->hpalDefault);
 
-  if (NULL == palObj)
+  if (NULL == palGDI)
     {
 //      RELEASEDCINFO(hDC);
       return NULL;
@@ -913,9 +913,9 @@ DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
 
   for (i = 0; i < nNumColors; i++)
     {
-      lpRGB[i].rgbRed = palObj->logpalette->palPalEntry[*lpIndex].peRed;
-      lpRGB[i].rgbGreen = palObj->logpalette->palPalEntry[*lpIndex].peGreen;
-      lpRGB[i].rgbBlue = palObj->logpalette->palPalEntry[*lpIndex].peBlue;
+      lpRGB[i].rgbRed = palGDI->IndexedColors[*lpIndex].peRed;
+      lpRGB[i].rgbGreen = palGDI->IndexedColors[*lpIndex].peGreen;
+      lpRGB[i].rgbBlue = palGDI->IndexedColors[*lpIndex].peBlue;
       lpIndex++;
     }
 //    RELEASEDCINFO(hDC);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: palette.c,v 1.19 2003/11/26 22:24:04 gvg Exp $
+/* $Id: palette.c,v 1.20 2003/12/20 10:31:32 navaraf Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -85,7 +85,10 @@ PALOBJ_cGetColors(PALOBJ *PalObj,
 
   for(i=Start; i<Colors; i++)
   {
-    PaletteEntry[i] = PalGDI->IndexedColors[i];
+    PaletteEntry[i] = RGB(
+      PalGDI->IndexedColors[i].peRed,
+      PalGDI->IndexedColors[i].peGreen,
+      PalGDI->IndexedColors[i].peBlue);
   }
 
   return Colors;

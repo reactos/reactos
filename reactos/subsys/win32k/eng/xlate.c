@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: xlate.c,v 1.26 2003/12/19 22:58:47 navaraf Exp $
+/* $Id: xlate.c,v 1.27 2003/12/20 10:31:32 navaraf Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -83,11 +83,10 @@ static ULONG FASTCALL ShiftAndMask(XLATEGDI *XlateGDI, ULONG Color)
 
 // Takes indexed palette and a
 ULONG STDCALL 
-ClosestColorMatch(XLATEGDI *XlateGDI, ULONG SourceColor, ULONG *DestColors,
-                        ULONG NumColors)
+ClosestColorMatch(XLATEGDI *XlateGDI, ULONG SourceColor,
+   PALETTEENTRY *DestColors, ULONG NumColors)
 {
-  PVIDEO_CLUTDATA cSourceColor;
-  PVIDEO_CLUTDATA cDestColors;
+  LPPALETTEENTRY cSourceColor;
   LONG idx = 0;
   ULONG i;
   ULONG SourceRGB;
@@ -106,25 +105,23 @@ ClosestColorMatch(XLATEGDI *XlateGDI, ULONG SourceColor, ULONG *DestColors,
     {
       /* FIXME: must use bitfields */
       SourceRGB = ShiftAndMask(XlateGDI, SourceColor);
-      cSourceColor = (PVIDEO_CLUTDATA) &SourceRGB;
+      cSourceColor = (LPPALETTEENTRY) &SourceRGB;
     }
   else
     {
-      cSourceColor = (PVIDEO_CLUTDATA)&SourceColor;
+      cSourceColor = (LPPALETTEENTRY)&SourceColor;
     } 
-  SourceRed = cSourceColor->Red;
-  SourceGreen = cSourceColor->Green;
-  SourceBlue = cSourceColor->Blue;
+  SourceRed = cSourceColor->peRed;
+  SourceGreen = cSourceColor->peGreen;
+  SourceBlue = cSourceColor->peBlue;
 
   for (i=0; i<NumColors; i++)
   {
-    cDestColors = (PVIDEO_CLUTDATA)&DestColors[i];
-
-    cxRed = (SourceRed - cDestColors->Red);
+    cxRed = (SourceRed - DestColors[i].peRed);
 	cxRed *= cxRed;  //compute cxRed squared
-    cxGreen = (SourceGreen - cDestColors->Green);
+    cxGreen = (SourceGreen - DestColors[i].peGreen);
 	cxGreen *= cxGreen;
-    cxBlue = (SourceBlue - cDestColors->Blue);
+    cxBlue = (SourceBlue - DestColors[i].peBlue);
 	cxBlue *= cxBlue;
 
     rt = /* sqrt */ (cxRed + cxGreen + cxBlue);
@@ -152,7 +149,7 @@ IndexedToIndexedTranslationTable(XLATEGDI *XlateGDI, ULONG *TranslationTable,
   Trivial = TRUE;
   for(i=0; i<PalSource->NumColors; i++)
     {
-      TranslationTable[i] = ClosestColorMatch(XlateGDI, PalSource->IndexedColors[i], PalDest->IndexedColors, PalDest->NumColors);
+      TranslationTable[i] = ClosestColorMatch(XlateGDI, *((ULONG*)&PalSource->IndexedColors[i]), PalDest->IndexedColors, PalDest->NumColors);
       Trivial = Trivial && (TranslationTable[i] == i);
     }
   if (Trivial)
