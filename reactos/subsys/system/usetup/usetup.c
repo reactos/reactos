@@ -58,6 +58,8 @@ typedef enum _PAGE_NUMBER
   INTRO_PAGE,
   INSTALL_INTRO_PAGE,
 
+//  SCSI_CONTROLLER_PAGE,
+
   DEVICE_SETTINGS_PAGE,
   COMPUTER_SETTINGS_PAGE,
   DISPLAY_SETTINGS_PAGE,
@@ -78,6 +80,8 @@ typedef enum _PAGE_NUMBER
   FILE_COPY_PAGE,
   REGISTRY_PAGE,
   BOOT_LOADER_PAGE,
+  BOOT_LOADER_FLOPPY_PAGE,
+  BOOT_LOADER_HARDDISK_PAGE,
 
   REPAIR_INTRO_PAGE,
 
@@ -435,8 +439,7 @@ CheckUnattendedSetup(VOID)
   RtlInitUnicodeString(&FileName,
 		       UnattendInfPath);
 
-  /* Load txtsetup.sif from install media. */
-
+  /* Load 'unattend.inf' from install media. */
   Status = InfOpenFile(&UnattendInf,
 		       &FileName,
 		       &ErrorLine);
@@ -835,8 +838,44 @@ InstallIntroPage(PINPUT_RECORD Ir)
 
   if (IsUnattendedSetup)
     {
-      return(SELECT_PARTITION_PAGE);
+      return SELECT_PARTITION_PAGE;
     }
+
+  while(TRUE)
+    {
+      ConInKey(Ir);
+
+      if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
+	{
+	  if (ConfirmQuit(Ir) == TRUE)
+	    return QUIT_PAGE;
+	  break;
+	}
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
+	{
+	  return DEVICE_SETTINGS_PAGE;
+//	  return SCSI_CONTROLLER_PAGE;
+	}
+    }
+
+  return INSTALL_INTRO_PAGE;
+}
+
+
+#if 0
+static PAGE_NUMBER
+ScsiControllerPage(PINPUT_RECORD Ir)
+{
+  SetTextXY(6, 8, "Setup detected the following mass storage devices:");
+
+  /* FIXME: print loaded mass storage driver descriptions */
+#if 0
+  SetTextXY(8, 10, "TEST device");
+#endif
+
+
+  SetStatusText("   ENTER = Continue   F3 = Quit");
 
   while(TRUE)
     {
@@ -855,8 +894,9 @@ InstallIntroPage(PINPUT_RECORD Ir)
 	}
     }
 
-  return INSTALL_INTRO_PAGE;
+  return SCSI_CONTROLLER_PAGE;
 }
+#endif
 
 
 static PAGE_NUMBER
@@ -3245,596 +3285,224 @@ RegistryPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 BootLoaderPage(PINPUT_RECORD Ir)
 {
-  WCHAR SrcPath[MAX_PATH];
-  WCHAR DstPath[MAX_PATH];
-  NTSTATUS Status;
-
-  SetTextXY(6, 8, "Installing the boot loader");
+  UCHAR PartitionType;
+  BOOLEAN InstallOnFloppy;
+  USHORT Line = 12;
 
   SetStatusText("   Please wait...");
 
-  if (PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_ENTRY_UNUSED)
+  PartitionType = PartitionList->ActiveBootPartition->PartInfo[0].PartitionType;
+
+  if (PartitionType == PARTITION_ENTRY_UNUSED)
     {
-      DPRINT1("Error: active partition invalid (unused)\n");
-      PopupError("The active partition is unused (invalid).\n",
-		 "ENTER = Reboot computer");
-
-      while(TRUE)
-	{
-	  ConInKey(Ir);
-
-	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return QUIT_PAGE;
-	    }
-	}
+      DPRINT("Error: active partition invalid (unused)\n");
+      InstallOnFloppy = TRUE;
     }
-
-  if (PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == 0x0A)
+  else if (PartitionType == 0x0A)
     {
       /* OS/2 boot manager partition */
-      DPRINT1("Found OS/2 boot manager partition\n");
-      PopupError("Setup found an OS/2 boot manager partiton.\n"
-		 "The OS/2 boot manager is not supported yet!",
-		 "ENTER = Reboot computer");
-
-      while(TRUE)
-	{
-	  ConInKey(Ir);
-
-	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return QUIT_PAGE;
-	    }
-	}
+      DPRINT("Found OS/2 boot manager partition\n");
+      InstallOnFloppy = TRUE;
     }
-  else if (PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == 0x83)
+  else if (PartitionType == 0x83)
     {
       /* Linux ext2 partition */
-      DPRINT1("Found Linux ext2 partition\n");
-      PopupError("Setup found a Linux ext2 partiton.\n"
-		 "Linux ext2 partitions are not supported yet!",
-		 "ENTER = Reboot computer");
-
-      while(TRUE)
-	{
-	  ConInKey(Ir);
-
-	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return QUIT_PAGE;
-	    }
-	}
+      DPRINT("Found Linux ext2 partition\n");
+      InstallOnFloppy = TRUE;
     }
-  else if (PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_IFS)
+  else if (PartitionType == PARTITION_IFS)
     {
       /* NTFS partition */
-      DPRINT1("Found NTFS partition\n");
-      PopupError("Setup found an NTFS partiton.\n"
-		 "NTFS partitions are not supported yet!",
-		 "ENTER = Reboot computer");
-
-      while(TRUE)
-	{
-	  ConInKey(Ir);
-
-	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return QUIT_PAGE;
-	    }
-	}
+      DPRINT("Found NTFS partition\n");
+      InstallOnFloppy = TRUE;
     }
-  else if ((PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT_12) ||
-	   (PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT_16) ||
-	   (PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_HUGE) ||
-	   (PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_XINT13) ||
-	   (PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT32) ||
-	   (PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT32_XINT13))
-  {
-    /* FAT or FAT32 partition */
-    DPRINT1("System path: '%wZ'\n", &SystemRootPath);
-
-    if (DoesFileExist(SystemRootPath.Buffer, L"ntldr") == TRUE ||
-	DoesFileExist(SystemRootPath.Buffer, L"boot.ini") == TRUE)
+  else if ((PartitionType == PARTITION_FAT_12) ||
+	   (PartitionType == PARTITION_FAT_16) ||
+	   (PartitionType == PARTITION_HUGE) ||
+	   (PartitionType == PARTITION_XINT13) ||
+	   (PartitionType == PARTITION_FAT32) ||
+	   (PartitionType == PARTITION_FAT32_XINT13))
     {
-      /* Search root directory for 'ntldr' and 'boot.ini'. */
-      DPRINT1("Found Microsoft Windows NT/2000/XP boot loader\n");
-
-      /* Copy FreeLoader to the boot partition */
-      wcscpy(SrcPath, SourceRootPath.Buffer);
-      wcscat(SrcPath, L"\\loader\\freeldr.sys");
-      wcscpy(DstPath, SystemRootPath.Buffer);
-      wcscat(DstPath, L"\\freeldr.sys");
-
-      DPRINT1("Copy: %S ==> %S\n", SrcPath, DstPath);
-      Status = SetupCopyFile(SrcPath, DstPath);
-      if (!NT_SUCCESS(Status))
-      {
-	DPRINT1("SetupCopyFile() failed (Status %lx)\n", Status);
-	PopupError("Setup failed to copy 'freeldr.sys'.",
-		   "ENTER = Reboot computer");
-
-	while(TRUE)
-	{
-	  ConInKey(Ir);
-
-	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	  {
-	    return QUIT_PAGE;
-	  }
-	}
-      }
-
-      /* Create or update freeldr.ini */
-      if (DoesFileExist(SystemRootPath.Buffer, L"freeldr.ini") == FALSE)
-      {
-	/* Create new 'freeldr.ini' */
-	DPRINT1("Create new 'freeldr.ini'\n");
-	wcscpy(DstPath, SystemRootPath.Buffer);
-	wcscat(DstPath, L"\\freeldr.ini");
-
-	Status = CreateFreeLoaderIniForReactos(DstPath,
-					       DestinationArcPath.Buffer);
-	if (!NT_SUCCESS(Status))
-	{
-	  DPRINT1("CreateFreeLoaderIniForReactos() failed (Status %lx)\n", Status);
-	  PopupError("Setup failed to create 'freeldr.ini'.",
-		     "ENTER = Reboot computer");
-
-	  while(TRUE)
-	  {
-	    ConInKey(Ir);
-
-	    if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return QUIT_PAGE;
-	    }
-	  }
-	}
-
-	/* Install new bootcode */
-	if ((PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT32) ||
-	    (PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT32_XINT13))
-	{
-	  /* Install FAT32 bootcode */
-	  wcscpy(SrcPath, SourceRootPath.Buffer);
-	  wcscat(SrcPath, L"\\loader\\fat32.bin");
-	  wcscpy(DstPath, SystemRootPath.Buffer);
-	  wcscat(DstPath, L"\\bootsect.ros");
-
-	  DPRINT1("Install FAT32 bootcode: %S ==> %S\n", SrcPath, DstPath);
-	  Status = InstallFat32BootCodeToFile(SrcPath,
-					      DstPath,
-					      SystemRootPath.Buffer);
-	  if (!NT_SUCCESS(Status))
-	  {
-	    DPRINT1("InstallFat32BootCodeToFile() failed (Status %lx)\n", Status);
-	    PopupError("Setup failed to install the FAT32 bootcode.",
-		       "ENTER = Reboot computer");
-
-	    while(TRUE)
-	    {
-	      ConInKey(Ir);
-
-	      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	      {
-		return QUIT_PAGE;
-	      }
-	    }
-	  }
-	}
-	else
-	{
-	  /* Install FAT16 bootcode */
-	  wcscpy(SrcPath, SourceRootPath.Buffer);
-	  wcscat(SrcPath, L"\\loader\\fat.bin");
-	  wcscpy(DstPath, SystemRootPath.Buffer);
-	  wcscat(DstPath, L"\\bootsect.ros");
-
-	  DPRINT1("Install FAT bootcode: %S ==> %S\n", SrcPath, DstPath);
-	  Status = InstallFat16BootCodeToFile(SrcPath,
-					      DstPath,
-					      SystemRootPath.Buffer);
-	  if (!NT_SUCCESS(Status))
-	  {
-	    DPRINT1("InstallFat16BootCodeToFile() failed (Status %lx)\n", Status);
-	    PopupError("Setup failed to install the FAT bootcode.",
-		       "ENTER = Reboot computer");
-
-	    while(TRUE)
-	    {
-	      ConInKey(Ir);
-
-	      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	      {
-		return QUIT_PAGE;
-	      }
-	    }
-	  }
-	}
-
-	/* Update 'boot.ini' */
-	wcscpy(DstPath, SystemRootPath.Buffer);
-	wcscat(DstPath, L"\\boot.ini");
-
-	DPRINT1("Update 'boot.ini': %S\n", DstPath);
-	Status = UpdateBootIni(DstPath,
-			       L"C:\\bootsect.ros",
-			       L"\"ReactOS\"");
-	if (!NT_SUCCESS(Status))
-	{
-	  DPRINT1("UpdateBootIni() failed (Status %lx)\n", Status);
-	  PopupError("Setup failed to update \'boot.ini\'.",
-		     "ENTER = Reboot computer");
-
-	  while(TRUE)
-	  {
-	    ConInKey(Ir);
-
-	    if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return QUIT_PAGE;
-	    }
-	  }
-	}
-      }
-      else
-      {
-	/* Update existing 'freeldr.ini' */
-	DPRINT1("Update existing 'freeldr.ini'\n");
-	wcscpy(DstPath, SystemRootPath.Buffer);
-	wcscat(DstPath, L"\\freeldr.ini");
-
-	Status = UpdateFreeLoaderIni(DstPath,
-				     DestinationArcPath.Buffer);
-	if (!NT_SUCCESS(Status))
-	{
-	  DPRINT1("UpdateFreeLoaderIni() failed (Status %lx)\n", Status);
-	  PopupError("Setup failed to update 'freeldr.ini'.",
-		     "ENTER = Reboot computer");
-
-	  while(TRUE)
-	  {
-	    ConInKey(Ir);
-
-	    if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return QUIT_PAGE;
-	    }
-	  }
-	}
-      }
+      DPRINT("Found FAT partition\n");
+      InstallOnFloppy = FALSE;
     }
-    else if (DoesFileExist(SystemRootPath.Buffer, L"io.sys") == TRUE ||
-	     DoesFileExist(SystemRootPath.Buffer, L"msdos.sys") == TRUE)
-    {
-      /* Search for root directory for 'io.sys' and 'msdos.sys'. */
-      DPRINT1("Found Microsoft DOS or Windows 9x boot loader\n");
-
-      /* Copy FreeLoader to the boot partition */
-      wcscpy(SrcPath, SourceRootPath.Buffer);
-      wcscat(SrcPath, L"\\loader\\freeldr.sys");
-      wcscpy(DstPath, SystemRootPath.Buffer);
-      wcscat(DstPath, L"\\freeldr.sys");
-
-      DPRINT("Copy: %S ==> %S\n", SrcPath, DstPath);
-      Status = SetupCopyFile(SrcPath, DstPath);
-      if (!NT_SUCCESS(Status))
-      {
-	DPRINT1("SetupCopyFile() failed (Status %lx)\n", Status);
-	PopupError("Setup failed to copy 'freeldr.sys'.",
-		   "ENTER = Reboot computer");
-
-	while(TRUE)
-	{
-	  ConInKey(Ir);
-
-	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	  {
-	    return QUIT_PAGE;
-	  }
-	}
-      }
-
-      /* Create or update 'freeldr.ini' */
-      if (DoesFileExist(SystemRootPath.Buffer, L"freeldr.ini") == FALSE)
-      {
-	/* Create new 'freeldr.ini' */
-	DPRINT1("Create new 'freeldr.ini'\n");
-	wcscpy(DstPath, SystemRootPath.Buffer);
-	wcscat(DstPath, L"\\freeldr.ini");
-
-	Status = CreateFreeLoaderIniForDos(DstPath,
-					   DestinationArcPath.Buffer);
-	if (!NT_SUCCESS(Status))
-	{
-	  DPRINT1("CreateFreeLoaderIniForDos() failed (Status %lx)\n", Status);
-	  PopupError("Setup failed to create 'freeldr.ini'.",
-		     "ENTER = Reboot computer");
-
-	  while(TRUE)
-	  {
-	    ConInKey(Ir);
-
-	    if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return QUIT_PAGE;
-	    }
-	  }
-	}
-
-	/* Save current bootsector as 'BOOTSECT.DOS' */
-	wcscpy(SrcPath, SystemRootPath.Buffer);
-	wcscpy(DstPath, SystemRootPath.Buffer);
-	wcscat(DstPath, L"\\bootsect.dos");
-
-	DPRINT1("Save bootsector: %S ==> %S\n", SrcPath, DstPath);
-	Status = SaveCurrentBootSector(SrcPath,
-				       DstPath);
-	if (!NT_SUCCESS(Status))
-	{
-	  DPRINT1("SaveCurrentBootSector() failed (Status %lx)\n", Status);
-	  PopupError("Setup failed to save the current bootsector.",
-		     "ENTER = Reboot computer");
-
-	  while(TRUE)
-	  {
-	    ConInKey(Ir);
-
-	    if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return QUIT_PAGE;
-	    }
-	  }
-	}
-
-	/* Install new bootsector */
-	if ((PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT32) ||
-	    (PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT32_XINT13))
-	{
-	  wcscpy(SrcPath, SourceRootPath.Buffer);
-	  wcscat(SrcPath, L"\\loader\\fat32.bin");
-
-	  DPRINT1("Install FAT32 bootcode: %S ==> %S\n", SrcPath, SystemRootPath.Buffer);
-	  Status = InstallFat32BootCodeToDisk(SrcPath,
-					      SystemRootPath.Buffer);
-	  if (!NT_SUCCESS(Status))
-	  {
-	    DPRINT1("InstallFat32BootCodeToDisk() failed (Status %lx)\n", Status);
-	    PopupError("Setup failed to install the FAT32 bootcode.",
-		       "ENTER = Reboot computer");
-
-	    while(TRUE)
-	    {
-	      ConInKey(Ir);
-
-	      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	      {
-		return QUIT_PAGE;
-	      }
-	    }
-	  }
-	}
-	else
-	{
-	  wcscpy(SrcPath, SourceRootPath.Buffer);
-	  wcscat(SrcPath, L"\\loader\\fat.bin");
-
-	  DPRINT1("Install FAT bootcode: %S ==> %S\n", SrcPath, SystemRootPath.Buffer);
-	  Status = InstallFat16BootCodeToDisk(SrcPath,
-					      SystemRootPath.Buffer);
-	  if (!NT_SUCCESS(Status))
-	  {
-	    DPRINT1("InstallFat16BootCodeToDisk() failed (Status %lx)\n", Status);
-	    PopupError("Setup failed to install the FAT bootcode.",
-		       "ENTER = Reboot computer");
-
-	    while(TRUE)
-	    {
-	      ConInKey(Ir);
-
-	      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	      {
-		return QUIT_PAGE;
-	      }
-	    }
-	  }
-	}
-      }
-      else
-      {
-	/* Update existing 'freeldr.ini' */
-	wcscpy(DstPath, SystemRootPath.Buffer);
-	wcscat(DstPath, L"\\freeldr.ini");
-
-	Status = UpdateFreeLoaderIni(DstPath,
-				     DestinationArcPath.Buffer);
-	if (!NT_SUCCESS(Status))
-	{
-	  DPRINT1("UpdateFreeLoaderIni() failed (Status %lx)\n", Status);
-	  PopupError("Setup failed to update 'freeldr.ini'.",
-		     "ENTER = Reboot computer");
-
-	  while(TRUE)
-	  {
-	    ConInKey(Ir);
-
-	    if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return QUIT_PAGE;
-	    }
-	  }
-	}
-      }
-    }
-    else
-    {
-      /* No or unknown boot loader */
-      DPRINT1("No or unknown boot loader found\n");
-
-      /* Copy FreeLoader to the boot partition */
-      wcscpy(SrcPath, SourceRootPath.Buffer);
-      wcscat(SrcPath, L"\\loader\\freeldr.sys");
-      wcscpy(DstPath, SystemRootPath.Buffer);
-      wcscat(DstPath, L"\\freeldr.sys");
-
-      DPRINT1("Copy: %S ==> %S\n", SrcPath, DstPath);
-      Status = SetupCopyFile(SrcPath, DstPath);
-      if (!NT_SUCCESS(Status))
-      {
-	DPRINT1("SetupCopyFile() failed (Status %lx)\n", Status);
-	PopupError("Setup failed to copy 'freeldr.sys'.",
-		   "ENTER = Reboot computer");
-
-	while(TRUE)
-	{
-	  ConInKey(Ir);
-
-	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	  {
-	    return QUIT_PAGE;
-	  }
-	}
-      }
-
-      /* Create or update 'freeldr.ini' */
-      if (DoesFileExist(SystemRootPath.Buffer, L"freeldr.ini") == FALSE)
-      {
-	/* Create new freeldr.ini */
-	wcscpy(DstPath, SystemRootPath.Buffer);
-	wcscat(DstPath, L"\\freeldr.ini");
-
-	DPRINT1("Copy: %S ==> %S\n", SrcPath, DstPath);
-	Status = CreateFreeLoaderIniForReactos(DstPath,
-					       DestinationArcPath.Buffer);
-	if (!NT_SUCCESS(Status))
-	{
-	  DPRINT1("CreateFreeLoaderIniForReactos() failed (Status %lx)\n", Status);
-	  PopupError("Setup failed to create \'freeldr.ini\'.",
-		     "ENTER = Reboot computer");
-
-	  while(TRUE)
-	  {
-	    ConInKey(Ir);
-
-	    if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return QUIT_PAGE;
-	    }
-	  }
-	}
-
-	/* Save current bootsector as 'BOOTSECT.OLD' */
-	wcscpy(SrcPath, SystemRootPath.Buffer);
-	wcscpy(DstPath, SystemRootPath.Buffer);
-	wcscat(DstPath, L"\\bootsect.old");
-
-	DPRINT1("Save bootsector: %S ==> %S\n", SrcPath, DstPath);
-	Status = SaveCurrentBootSector(SrcPath,
-				       DstPath);
-	if (!NT_SUCCESS(Status))
-	{
-	  DPRINT1("SaveCurrentBootSector() failed (Status %lx)\n", Status);
-	  PopupError("Setup failed save the current bootsector.",
-		     "ENTER = Reboot computer");
-
-	  while(TRUE)
-	  {
-	    ConInKey(Ir);
-
-	    if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return QUIT_PAGE;
-	    }
-	  }
-	}
-
-	/* Install new bootsector */
-	if ((PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT32) ||
-	    (PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT32_XINT13))
-	{
-	  wcscpy(SrcPath, SourceRootPath.Buffer);
-	  wcscat(SrcPath, L"\\loader\\fat32.bin");
-
-	  DPRINT1("Install FAT32 bootcode: %S ==> %S\n", SrcPath, SystemRootPath.Buffer);
-	  Status = InstallFat32BootCodeToDisk(SrcPath,
-					      SystemRootPath.Buffer);
-	  if (!NT_SUCCESS(Status))
-	  {
-	    DPRINT1("InstallFat32BootCodeToDisk() failed (Status %lx)\n", Status);
-	    PopupError("Setup failed to install the FAT32 bootcode.",
-		       "ENTER = Reboot computer");
-
-	    while(TRUE)
-	    {
-	      ConInKey(Ir);
-
-	      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	      {
-		return QUIT_PAGE;
-	      }
-	    }
-	  }
-	}
-	else
-	{
-	  wcscpy(SrcPath, SourceRootPath.Buffer);
-	  wcscat(SrcPath, L"\\loader\\fat.bin");
-
-	  DPRINT1("Install FAT bootcode: %S ==> %S\n", SrcPath, SystemRootPath.Buffer);
-	  Status = InstallFat16BootCodeToDisk(SrcPath,
-					      SystemRootPath.Buffer);
-	  if (!NT_SUCCESS(Status))
-	  {
-	    DPRINT1("InstallFat16BootCodeToDisk() failed (Status %lx)\n", Status);
-	    PopupError("Setup failed to install the FAT bootcode.",
-		       "ENTER = Reboot computer");
-
-	    while(TRUE)
-	    {
-	      ConInKey(Ir);
-
-	      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	      {
-		return QUIT_PAGE;
-	      }
-	    }
-	  }
-	}
-      }
-      else
-      {
-	/* Update existing 'freeldr.ini' */
-	wcscpy(DstPath, SystemRootPath.Buffer);
-	wcscat(DstPath, L"\\freeldr.ini");
-
-	Status = UpdateFreeLoaderIni(DstPath,
-				     DestinationArcPath.Buffer);
-	if (!NT_SUCCESS(Status))
-	{
-	  DPRINT1("UpdateFreeLoaderIni() failed (Status %lx)\n", Status);
-	  PopupError("Setup failed to update 'freeldr.ini'.",
-		     "ENTER = Reboot computer");
-
-	  while(TRUE)
-	  {
-	    ConInKey(Ir);
-
-	    if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return QUIT_PAGE;
-	    }
-	  }
-	}
-      }
-    }
-  }
   else
     {
       /* Unknown partition */
-      DPRINT1("Unknown partition found\n");
-      PopupError("Setup found an unknown partiton type.\n"
-		 "This partition type is not supported!",
+      DPRINT("Unknown partition found\n");
+      InstallOnFloppy = TRUE;
+    }
+
+  if (InstallOnFloppy == TRUE)
+    {
+      return BOOT_LOADER_FLOPPY_PAGE;
+    }
+
+  SetTextXY(6, 8, "Setup is installing the boot loader");
+
+  SetTextXY(8, 12, "Install bootloader on the harddisk (MBR).");
+  SetTextXY(8, 13, "Install bootloader on a floppy disk.");
+  InvertTextXY (8, Line, 48, 1);
+
+  SetStatusText("   ENTER = Continue   F3 = Quit");
+
+  while(TRUE)
+    {
+      ConInKey(Ir);
+
+      if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN)) /* DOWN */
+	{
+	  NormalTextXY (8, Line, 48, 1);
+	  if (Line == 12)
+	    Line = 13;
+	  else if (Line == 13)
+	    Line = 12;
+#if 0
+	  else
+	    Line++;
+#endif
+	  InvertTextXY (8, Line, 48, 1);
+	}
+      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP)) /* UP */
+	{
+	  NormalTextXY (8, Line, 48, 1);
+	  if (Line == 12)
+	    Line = 13;
+	  else if (Line == 13)
+	    Line = 12;
+#if 0
+	  else
+	    Line--;
+#endif
+	  InvertTextXY (8, Line, 48, 1);
+	}
+      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
+	{
+	  if (ConfirmQuit(Ir) == TRUE)
+	    return QUIT_PAGE;
+	  break;
+	}
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	{
+	  if (Line == 12)
+	    {
+	      return BOOT_LOADER_HARDDISK_PAGE;
+	    }
+	  else if (Line == 13)
+	    {
+	      return BOOT_LOADER_FLOPPY_PAGE;
+	    }
+
+	  return BOOT_LOADER_PAGE;
+	}
+
+    }
+
+  return BOOT_LOADER_PAGE;
+}
+
+
+static PAGE_NUMBER
+BootLoaderFloppyPage(PINPUT_RECORD Ir)
+{
+  NTSTATUS Status;
+
+  SetTextXY(6, 8, "Setup cannot install the bootloader on your computers");
+  SetTextXY(6, 9, "harddisk");
+
+  SetTextXY(6, 13, "Please insert a formatted floppy disk in drive A: and");
+  SetTextXY(6, 14, "press ENTER.");
+
+
+  SetStatusText("   ENTER = Continue   F3 = Quit");
+//  SetStatusText("   Please wait...");
+
+  while(TRUE)
+    {
+      ConInKey(Ir);
+
+      if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
+	{
+	  if (ConfirmQuit(Ir) == TRUE)
+	    return QUIT_PAGE;
+	  break;
+	}
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	{
+	  if (DoesFileExist(L"\\Device\\Floppy0", L"\\") == FALSE)
+	    {
+	      PopupError("No disk in drive A:.",
+			 "ENTER = Continue");
+	      while(TRUE)
+		{
+		  ConInKey(Ir);
+
+		  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+		    break;
+		}
+
+	      return BOOT_LOADER_FLOPPY_PAGE;
+	    }
+
+	  Status = InstallFatBootcodeToFloppy(&SourceRootPath,
+					      &DestinationArcPath);
+	  if (!NT_SUCCESS(Status))
+	    {
+	      /* Print error message */
+	      return BOOT_LOADER_FLOPPY_PAGE;
+	    }
+
+	  return SUCCESS_PAGE;
+	}
+    }
+
+  return BOOT_LOADER_FLOPPY_PAGE;
+}
+
+
+static PAGE_NUMBER
+BootLoaderHarddiskPage(PINPUT_RECORD Ir)
+{
+  UCHAR PartitionType;
+  NTSTATUS Status;
+
+  PartitionType = PartitionList->ActiveBootPartition->PartInfo[0].PartitionType;
+  if ((PartitionType == PARTITION_FAT_12) ||
+      (PartitionType == PARTITION_FAT_16) ||
+      (PartitionType == PARTITION_HUGE) ||
+      (PartitionType == PARTITION_XINT13) ||
+      (PartitionType == PARTITION_FAT32) ||
+      (PartitionType == PARTITION_FAT32_XINT13))
+    {
+      Status = InstallFatBootcodeToPartition(&SystemRootPath,
+					     &SourceRootPath,
+					     &DestinationArcPath,
+					     PartitionType);
+      if (!NT_SUCCESS(Status))
+	{
+	  PopupError("Setup failed to install the FAT bootcode on the system partition.",
+		     "ENTER = Reboot computer");
+
+	  while(TRUE)
+	    {
+	      ConInKey(Ir);
+
+	      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+		{
+		  return QUIT_PAGE;
+		}
+	    }
+	}
+
+      return SUCCESS_PAGE;
+    }
+  else
+    {
+      PopupError("failed to install FAT bootcode on the system partition.",
 		 "ENTER = Reboot computer");
 
       while(TRUE)
@@ -3848,7 +3516,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 	}
     }
 
-  return SUCCESS_PAGE;
+  return BOOT_LOADER_HARDDISK_PAGE;
 }
 
 
@@ -4029,6 +3697,12 @@ NtProcessStartup(PPEB Peb)
 	    break;
 
 #if 0
+	  case SCSI_CONTROLLER_PAGE:
+	    Page = ScsiControllerPage(&Ir);
+	    break;
+#endif
+
+#if 0
 	  case OEM_DRIVER_PAGE:
 	    Page = OemDriverPage(&Ir);
 	    break;
@@ -4100,6 +3774,14 @@ NtProcessStartup(PPEB Peb)
 
 	  case BOOT_LOADER_PAGE:
 	    Page = BootLoaderPage(&Ir);
+	    break;
+
+	  case BOOT_LOADER_FLOPPY_PAGE:
+	    Page = BootLoaderFloppyPage(&Ir);
+	    break;
+
+	  case BOOT_LOADER_HARDDISK_PAGE:
+	    Page = BootLoaderHarddiskPage(&Ir);
 	    break;
 
 
