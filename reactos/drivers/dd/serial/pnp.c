@@ -320,7 +320,17 @@ SerialPnp(
 				Status = STATUS_SUCCESS;
 				break;
 			}
-			/* FIXME: second HACK: verify that we don't have resource conflict,
+			/* FIXME: second HACK: verify that we have some allocated resources.
+			 * It seems not to be always the case on some hardware
+			 */
+			if (Stack->Parameters.StartDevice.AllocatedResources == NULL)
+			{
+				DPRINT1("Serial: no allocated resources. Can't start COM%lu\n",
+					((PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->ComPort);
+				Status = STATUS_INSUFFICIENT_RESOURCES;
+				break;
+			}
+			/* FIXME: third HACK: verify that we don't have resource conflict,
 			 * because PnP manager doesn't do it automatically
 			 */
 			Status = IoReportResourceForDetection(
