@@ -604,7 +604,7 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 #endif
 
 	/*
-	 * retrieve hardware information and create the hardware hive
+	 * Retrieve hardware information and create the hardware hive
 	 */
 	DetectHardware();
 //	Base = MultiBootCreateModule(HARDWARE.HIV);
@@ -614,18 +614,20 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	DrawProgressBar(20);
 
 	/*
-	 * load NLS files
+	 * Load NLS files
 	 */
+#if 0
 	if (!LoadNlsFiles(szBootPath))
 	{
 		MessageBox("Failed to load NLS files\n");
 		return;
 	}
+#endif
 
 	DrawProgressBar(25);
 
 	/*
-	 * load boot drivers
+	 * Load boot drivers
 	 */
 	LoadBootDrivers(szBootPath, 25);
 
