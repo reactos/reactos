@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.19 2002/09/08 10:23:45 chorns Exp $
+/* $Id: process.c,v 1.20 2002/10/01 06:41:56 ei Exp $
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -14,6 +14,8 @@
 #include <csrss/csrss.h>
 #include <ntdll/rtl.h>
 #include "api.h"
+
+BOOL STDCALL W32kCleanupForProcess( INT Process );
 
 #define LOCK   RtlEnterCriticalSection(&ProcessDataLock)
 #define UNLOCK RtlLeaveCriticalSection(&ProcessDataLock)
@@ -58,7 +60,7 @@ PCSRSS_PROCESS_DATA STDCALL CsrGetProcessData(ULONG ProcessId)
    for (i=0; i<NrProcess; i++)
      {
 	if (ProcessData[i] == NULL)
-	  {	    
+	  {
 	     ProcessData[i] = RtlAllocateHeap(CsrssApiHeap,
 					      HEAP_ZERO_MEMORY,
 					      sizeof(CSRSS_PROCESS_DATA));
@@ -85,6 +87,8 @@ NTSTATUS STDCALL CsrFreeProcessData(ULONG Pid)
       {
 	 if( ProcessData[i] && ProcessData[i]->ProcessId == Pid )
 	    {
+		   //DbgPrint("CsrFreeProcessData pid: %d\n", Pid);
+   		   W32kCleanupForProcess( Pid );  //should check if win32k process
 	       if( ProcessData[i]->HandleTable )
 		  {
 		     int c;
@@ -119,17 +123,17 @@ CSR_API(CsrCreateProcess)
    NTSTATUS Status;
    HANDLE Process;
 
-   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - 
+   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
      sizeof(LPC_MESSAGE_HEADER);
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-   
+
    NewProcessData = CsrGetProcessData(Request->Data.CreateProcessRequest.NewProcessId);
    if (NewProcessData == NULL)
      {
 	Reply->Status = STATUS_NO_MEMORY;
 	return(STATUS_NO_MEMORY);
      }
-   
+
    if (Request->Data.CreateProcessRequest.Flags & DETACHED_PROCESS)
      {
 	NewProcessData->Console = NULL;
@@ -192,7 +196,7 @@ CSR_API(CsrCreateProcess)
        NtClose( Process );
      }
    else Reply->Data.CreateProcessReply.OutputHandle = Reply->Data.CreateProcessReply.InputHandle = INVALID_HANDLE_VALUE;
-   
+
    return(STATUS_SUCCESS);
 }
 
@@ -200,7 +204,7 @@ CSR_API(CsrTerminateProcess)
 {
    NTSTATUS Status;
 
-   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY) 
+   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY)
       - sizeof(LPC_MESSAGE_HEADER);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY);
 
@@ -213,11 +217,11 @@ CSR_API(CsrTerminateProcess)
 CSR_API(CsrConnectProcess)
 {
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - 
+   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
      sizeof(LPC_MESSAGE_HEADER);
-   
+
    Reply->Status = STATUS_SUCCESS;
-   
+
    return(STATUS_SUCCESS);
 }
 

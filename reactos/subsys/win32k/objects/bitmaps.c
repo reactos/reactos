@@ -5,7 +5,7 @@
 //#include <win32k/debug.h>
 #include "../eng/handle.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <win32k/debug1.h>
 
 BOOL STDCALL W32kBitBlt(HDC  hDCDest,
@@ -169,7 +169,8 @@ HBITMAP STDCALL W32kCreateBitmap(INT  Width,
 BOOL Bitmap_InternalDelete( PBITMAPOBJ pBmp )
 {
 	ASSERT( pBmp );
-	ExFreePool(pBmp->bitmap.bmBits);
+	if( pBmp->bitmap.bmBits )
+		ExFreePool(pBmp->bitmap.bmBits);
 	return TRUE;
 }
 
@@ -184,7 +185,7 @@ HBITMAP STDCALL W32kCreateCompatibleBitmap(HDC hDC,
   hbmpRet = 0;
   dc = DC_HandleToPtr (hDC);
 
-  DbgPrint("W32kCreateCompatibleBitmap(%04x,%d,%d, bpp:%d) = \n", hDC, Width, Height, dc->w.bitsPerPixel);
+  DPRINT("W32kCreateCompatibleBitmap(%04x,%d,%d, bpp:%d) = \n", hDC, Width, Height, dc->w.bitsPerPixel);
 
   if (!dc)
   {

@@ -1429,7 +1429,7 @@ HRGN RGNDATA_AllocRgn(INT n)
 
 	}
 	else
-		GDIOBJ_FreeObj( hReg, GO_REGION_MAGIC );
+		GDIOBJ_FreeObj( hReg, GO_REGION_MAGIC, GDIOBJFLAG_DEFAULT );
   }
   return NULL;
 }
@@ -1694,7 +1694,7 @@ UnsafeW32kGetRgnBox(HRGN  hRgn,
       *pRect = rgn->rdh.rcBound;
       ret = rgn->rdh.iType;
       RGNDATA_UnlockRgn( hRgn );
-      
+
       return ret;
     }
   return 0; //if invalid region return zero
@@ -1717,10 +1717,10 @@ W32kGetRgnBox(HRGN  hRgn,
       SafeRect.bottom = rgn->rdh.rcBound.bottom;
       ret = rgn->rdh.iType;
       RGNDATA_UnlockRgn( hRgn );
-      
+
       if(!NT_SUCCESS(MmCopyToCaller(pRect, &SafeRect, sizeof(RECT))))
 	return 0;
-      
+
       return ret;
     }
   return 0; //if invalid region return zero

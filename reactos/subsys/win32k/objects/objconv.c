@@ -22,6 +22,8 @@ PBRUSHOBJ PenToBrushObj(PDC dc, PENOBJ *pen)
   BRUSHOBJ *BrushObj;
   XLATEOBJ *RGBtoVGA16;
 
+  ASSERT( pen );
+
   BrushObj = ExAllocatePool(NonPagedPool, sizeof(BRUSHOBJ));
   BrushObj->iSolidColor = pen->logpen.lopnColor;
 

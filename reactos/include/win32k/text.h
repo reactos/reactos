@@ -12,7 +12,7 @@ typedef struct
 
 #define  TEXTOBJ_AllocText() \
   ((HFONT) GDIOBJ_AllocObj (sizeof (TEXTOBJ), GO_FONT_MAGIC))
-#define  TEXTOBJ_FreeText(hBMObj)  GDIOBJ_FreeObj((HGDIOBJ) hBMObj, GO_FONT_MAGIC)
+#define  TEXTOBJ_FreeText(hBMObj)  GDIOBJ_FreeObj((HGDIOBJ) hBMObj, GO_FONT_MAGIC, GDIOBJFLAG_DEFAULT)
 /*
 #define  TEXTOBJ_HandleToPtr(hBMObj)  \
   ((PTEXTOBJ) GDIOBJ_HandleToPtr ((HGDIOBJ) hBMObj, GO_FONT_MAGIC))

@@ -14,7 +14,7 @@ typedef struct
 
 #define  PENOBJ_AllocPen()  \
   ((HPEN) GDIOBJ_AllocObj (sizeof (PENOBJ), GO_PEN_MAGIC))
-#define  PENOBJ_FreePen(hBMObj)  GDIOBJ_FreeObj((HGDIOBJ) hBMObj)
+#define  PENOBJ_FreePen(hBMObj)  GDIOBJ_FreeObj((HGDIOBJ) hBMObj, GO_PEN_MAGIC, GDIOBJFLAG_DEFAULT)
 /*
 #define  PENOBJ_HandleToPtr(hBMObj)  \
   ((PPENOBJ) GDIOBJ_HandleToPtr ((HGDIOBJ) hBMObj, GO_PEN_MAGIC))

@@ -76,11 +76,16 @@ typedef struct _GDI_HANDLE_TABLE
 } GDI_HANDLE_TABLE, *PGDI_HANDLE_TABLE;
 
 HGDIOBJ  GDIOBJ_AllocObj(WORD Size, WORD Magic);
-BOOL  GDIOBJ_FreeObj (HGDIOBJ Obj, WORD Magic);
+BOOL  GDIOBJ_FreeObj (HGDIOBJ Obj, WORD Magic, DWORD Flag);
 PGDIOBJ  GDIOBJ_LockObj (HGDIOBJ Obj, WORD Magic);
 BOOL     GDIOBJ_UnlockObj (HGDIOBJ Obj, WORD Magic);
 WORD  GDIOBJ_GetHandleMagic (HGDIOBJ ObjectHandle);
 VOID STDCALL W32kDumpGdiObjects( INT Process );
+BOOL STDCALL W32kCleanupForProcess( INT Process );
+
+#define GDIOBJFLAG_DEFAULT		(0x0)
+#define GDIOBJFLAG_IGNOREPID 	(0x1)
+#define GDIOBJFLAG_IGNORELOCK 	(0x2)
 
 #endif
 

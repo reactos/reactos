@@ -11,7 +11,7 @@
 #include <ddk/winddi.h>
 #include "handle.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <win32k/debug1.h>
 
 

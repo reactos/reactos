@@ -1,7 +1,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.18 2002/09/08 10:23:53 chorns Exp $
+ * $Id: gdiobj.c,v 1.19 2002/10/01 06:41:55 ei Exp $
  *
  */
 
@@ -169,6 +169,7 @@ HGDIOBJ GDIOBJ_AllocObj(WORD Size, WORD Magic)
   	newObject = ExAllocatePool (PagedPool, Size + sizeof (GDIOBJHDR));
   	if (newObject == NULL)
   	{
+	  DPRINT("GDIOBJ_AllocObj: failed\n");
   	  return  NULL;
   	}
   	RtlZeroMemory (newObject, Size + sizeof (GDIOBJHDR));
@@ -183,7 +184,7 @@ HGDIOBJ GDIOBJ_AllocObj(WORD Size, WORD Magic)
   	return  (HGDIOBJ) newObject->wTableIndex;
 }
 
-BOOL  GDIOBJ_FreeObj(HGDIOBJ hObj, WORD Magic)
+BOOL  GDIOBJ_FreeObj(HGDIOBJ hObj, WORD Magic, DWORD Flag)
 {
   	PGDIOBJHDR  objectHeader;
   	PGDI_HANDLE_ENTRY  handleEntry;
@@ -191,24 +192,28 @@ BOOL  GDIOBJ_FreeObj(HGDIOBJ hObj, WORD Magic)
 	BOOL 	bRet = TRUE;
 
   	handleEntry = GDIOBJ_iGetHandleEntryForIndex ((WORD)hObj & 0xffff);
-	DPRINT("GDIOBJ_FreeObj: hObj: %d, magic: %x, handleEntry: %x\n", hObj, Magic, handleEntry );
-  	if (handleEntry == 0 || (handleEntry->wMagic != Magic && handleEntry->wMagic != GO_MAGIC_DONTCARE )
-	     || handleEntry->hProcessId != PsGetCurrentProcessId ())
+	DPRINT("GDIOBJ_FreeObj: hObj: %d, magic: %x, handleEntry: %x\n", (WORD)hObj & 0xffff, Magic, handleEntry );
+  	if (handleEntry == 0 || (handleEntry->wMagic != Magic && Magic != GO_MAGIC_DONTCARE )
+	     || ((handleEntry->hProcessId != PsGetCurrentProcessId()) && !(Flag & GDIOBJFLAG_IGNOREPID))){
+	  DPRINT("Can't Delete hObj: %d, magic: %x, pid:%d\n currpid:%d, flag:%d, hmm:%d\n",(WORD)hObj & 0xffff, handleEntry->wMagic, handleEntry->hProcessId, PsGetCurrentProcessId(), (Flag&GDIOBJFLAG_IGNOREPID), ((handleEntry->hProcessId != PsGetCurrentProcessId()) && !(Flag&GDIOBJFLAG_IGNOREPID)) );
   	  return  FALSE;
+	}
 
 	objectHeader = (PGDIOBJHDR) handleEntry->pObject;
 	ASSERT(objectHeader);
-
-  	// check that the reference count is zero. if not then set flag
-  	// and delete object when releaseobj is called
-  	ExAcquireFastMutex(&RefCountHandling);
-  	if( ( objectHeader->dwCount & ~0x80000000 ) > 0 ){
-  		objectHeader->dwCount |= 0x80000000;
-		DPRINT("GDIOBJ_FreeObj: delayed object deletion");
+	DPRINT("FreeObj: locks: %x\n", objectHeader->dwCount );
+	if( !(Flag & GDIOBJFLAG_IGNORELOCK) ){
+  		// check that the reference count is zero. if not then set flag
+  		// and delete object when releaseobj is called
+  		ExAcquireFastMutex(&RefCountHandling);
+  		if( ( objectHeader->dwCount & ~0x80000000 ) > 0 ){
+			DPRINT("GDIOBJ_FreeObj: delayed object deletion: count %d\n", objectHeader->dwCount);
+  			objectHeader->dwCount |= 0x80000000;
+  			ExReleaseFastMutex(&RefCountHandling);
+			return TRUE;
+  		}
   		ExReleaseFastMutex(&RefCountHandling);
-		return TRUE;
-  	}
-  	ExReleaseFastMutex(&RefCountHandling);
+	}
 
 	//allow object to delete internal data
 	Obj = (PGDIOBJ)((PCHAR)handleEntry->pObject + sizeof(GDIOBJHDR));
@@ -216,14 +221,14 @@ BOOL  GDIOBJ_FreeObj(HGDIOBJ hObj, WORD Magic)
  		case GO_REGION_MAGIC:
 			bRet = RGNDATA_InternalDelete( (PROSRGNDATA) Obj );
 			break;
- 		case GO_PEN_MAGIC:
- 		case GO_PALETTE_MAGIC:
  		case GO_BITMAP_MAGIC:
 			bRet = Bitmap_InternalDelete( (PBITMAPOBJ) Obj );
 			break;
  		case GO_DC_MAGIC:
 			bRet = DC_InternalDeleteDC( (PDC) Obj );
 			break;
+ 		case GO_PEN_MAGIC:
+ 		case GO_PALETTE_MAGIC:
  		case GO_DISABLED_DC_MAGIC:
  		case GO_META_DC_MAGIC:
  		case GO_METAFILE_MAGIC:
@@ -251,10 +256,12 @@ PGDIOBJ GDIOBJ_LockObj( HGDIOBJ hObj, WORD Magic )
   	PGDIOBJHDR  objectHeader;
 
 	DPRINT("GDIOBJ_LockObj: hObj: %d, magic: %x, \n handleEntry: %x, mag %x\n", hObj, Magic, handleEntry, handleEntry->wMagic);
-  	if (handleEntry == 0 || (handleEntry->wMagic != Magic && handleEntry->wMagic != GO_MAGIC_DONTCARE )
+  	if (handleEntry == 0 || (handleEntry->wMagic != Magic && Magic != GO_MAGIC_DONTCARE )
 	     || (handleEntry->hProcessId != (HANDLE)0xFFFFFFFF &&
-		 handleEntry->hProcessId != PsGetCurrentProcessId ()))
+		 handleEntry->hProcessId != PsGetCurrentProcessId ())){
+	  DPRINT("GDIBOJ_LockObj failed for %d, magic: %d, reqMagic\n",(WORD) hObj & 0xffff, handleEntry->wMagic, Magic);
   	  return  NULL;
+	}
 
 	objectHeader = (PGDIOBJHDR) handleEntry->pObject;
 	ASSERT(objectHeader);
@@ -273,10 +280,12 @@ BOOL GDIOBJ_UnlockObj( HGDIOBJ hObj, WORD Magic )
   	PGDIOBJHDR  objectHeader;
 
 	DPRINT("GDIOBJ_UnlockObj: hObj: %d, magic: %x, \n handleEntry: %x\n", hObj, Magic, handleEntry);
-  	if (handleEntry == 0 || (handleEntry->wMagic != Magic && handleEntry->wMagic != GO_MAGIC_DONTCARE )
+  	if (handleEntry == 0 || (handleEntry->wMagic != Magic && Magic != GO_MAGIC_DONTCARE )
 	      || (handleEntry->hProcessId != (HANDLE)0xFFFFFFFF &&
-		 handleEntry->hProcessId != PsGetCurrentProcessId ()))
-  	  return  FALSE;
+		 handleEntry->hProcessId != PsGetCurrentProcessId ())){
+	  DPRINT( "GDIOBJ_UnLockObj: failed\n");
+	  return  FALSE;
+	}
 
 	objectHeader = (PGDIOBJHDR) handleEntry->pObject;
 	ASSERT(objectHeader);
@@ -297,7 +306,7 @@ BOOL GDIOBJ_UnlockObj( HGDIOBJ hObj, WORD Magic )
 		objectHeader->dwCount = 0;
 		ExReleaseFastMutex(&RefCountHandling);
 		DPRINT("GDIOBJ_UnlockObj: delayed delete\n");
-		return GDIOBJ_FreeObj( hObj, Magic );
+		return GDIOBJ_FreeObj( hObj, Magic, GDIOBJFLAG_DEFAULT );
 	}
 	ExReleaseFastMutex(&RefCountHandling);
 	return TRUE;
@@ -369,7 +378,7 @@ PGDIOBJ  GDIOBJ_HandleToPtr (HGDIOBJ ObjectHandle, WORD Magic)
 
   handleEntry = GDIOBJ_iGetHandleEntryForIndex ((WORD)ObjectHandle & 0xffff);
   if (handleEntry == 0 ||
-      (Magic != GO_MAGIC_DONTCARE && handleEntry->wMagic != Magic) ||
+      (Magic != GO_MAGIC_DONTCARE && Magic != Magic) ||
       handleEntry->hProcessId != PsGetCurrentProcessId () )
     return  NULL;
 
@@ -451,7 +460,7 @@ VOID CreateStockObjects(void)
   GDIOBJ_MarkObjectGlobal(StockObjects[ANSI_FIXED_FONT]);
   StockObjects[SYSTEM_FONT] =         W32kCreateFontIndirect(&SystemFont);
   GDIOBJ_MarkObjectGlobal(StockObjects[SYSTEM_FONT]);
-  StockObjects[DEVICE_DEFAULT_FONT] = 
+  StockObjects[DEVICE_DEFAULT_FONT] =
     W32kCreateFontIndirect(&DeviceDefaultFont);
   GDIOBJ_MarkObjectGlobal(StockObjects[DEVICE_DEFAULT_FONT]);
   StockObjects[SYSTEM_FIXED_FONT] =   W32kCreateFontIndirect(&SystemFixedFont);
@@ -477,7 +486,24 @@ HGDIOBJ STDCALL  W32kGetStockObject(INT  Object)
 
 BOOL STDCALL  W32kDeleteObject(HGDIOBJ hObject)
 {
-  return GDIOBJ_FreeObj( hObject, GO_MAGIC_DONTCARE );
+  return GDIOBJ_FreeObj( hObject, GO_MAGIC_DONTCARE, GDIOBJFLAG_DEFAULT );
+}
+
+BOOL STDCALL W32kCleanupForProcess( INT Process )
+{
+	DWORD i;
+  	PGDI_HANDLE_ENTRY handleEntry;
+  	PGDIOBJHDR  objectHeader;
+
+	for( i=1; i < GDI_HANDLE_NUMBER; i++ ){
+		handleEntry = GDIOBJ_iGetHandleEntryForIndex ((WORD) i & 0xffff);
+		if( handleEntry && handleEntry->wMagic != 0 && handleEntry->hProcessId == Process){
+			objectHeader = (PGDIOBJHDR) handleEntry->pObject;
+			DPRINT("\nW32kCleanup: %d, magic: %x \n process: %d, locks: %d", i, handleEntry->wMagic, handleEntry->hProcessId, objectHeader->dwCount);
+			GDIOBJ_FreeObj( (WORD) i & 0xffff, GO_MAGIC_DONTCARE, GDIOBJFLAG_IGNOREPID|GDIOBJFLAG_IGNORELOCK );
+		}
+	}
+	return TRUE;
 }
 
 // dump all the objects for process. if process == 0 dump all the objects

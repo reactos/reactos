@@ -540,7 +540,7 @@ HBITMAP DIB_CreateDIBSection(
 
     if (dib) { ExFreePool(dib); dib = NULL; }
     if (bmp) { bmp = NULL; }
-    if (res) { GDIOBJ_FreeObj(res, GO_BITMAP_MAGIC); res = 0; }
+    if (res) { GDIOBJ_FreeObj(res, GO_BITMAP_MAGIC, GDIOBJFLAG_DEFAULT); res = 0; }
   }
 
   // Install fault handler, if possible

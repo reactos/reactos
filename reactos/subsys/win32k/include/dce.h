@@ -35,7 +35,7 @@ typedef struct tagDCE
 
 #define  DCEOBJ_AllocDCE()  \
   ((HDCE) GDIOBJ_AllocObj (sizeof (DCE), GO_DCE_MAGIC))
-#define  DCEOBJ_FreeDCE(hDCE)  GDIOBJ_FreeObj((HGDIOBJ)hDCE, GO_DCE_MAGIC)
+#define  DCEOBJ_FreeDCE(hDCE)  GDIOBJ_FreeObj((HGDIOBJ)hDCE, GO_DCE_MAGIC, GDIOBJFLAG_DEFAULT)
 #define  DCEOBJ_LockDCE(hDCE) ((PDCE)GDIOBJ_LockObj((HGDIOBJ)hDCE, GO_DCE_MAGIC))
 #define  DCEOBJ_UnlockDCE(hDCE) GDIOBJ_UnlockObj((HGDIOBJ)hDCE, GO_DCE_MAGIC)
 

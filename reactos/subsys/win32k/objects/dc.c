@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.42 2002/09/24 20:22:10 jfilby Exp $
+/* $Id: dc.c,v 1.43 2002/10/01 06:41:55 ei Exp $
  *
  * DC.C - Device context functions
  *
@@ -236,7 +236,7 @@ BOOL STDCALL W32kCreatePrimarySurface(LPCWSTR Driver,
 
   DPRINT("Enabling PDev\n");
 
-  PrimarySurface.PDev = 
+  PrimarySurface.PDev =
     PrimarySurface.DriverFunctions.EnablePDev(&PrimarySurface.DMW,
 					     L"",
 					     HS_DDI_MAX,
@@ -257,7 +257,7 @@ BOOL STDCALL W32kCreatePrimarySurface(LPCWSTR Driver,
   DPRINT("calling completePDev\n");
 
   /*  Complete initialization of the physical device  */
-  PrimarySurface.DriverFunctions.CompletePDev(PrimarySurface.PDev, 
+  PrimarySurface.DriverFunctions.CompletePDev(PrimarySurface.PDev,
 					      &PrimarySurface);
 
   DPRINT("calling DRIVER_ReferenceDriver\n");
@@ -267,8 +267,8 @@ BOOL STDCALL W32kCreatePrimarySurface(LPCWSTR Driver,
   DPRINT("calling EnableSurface\n");
 
   /*  Enable the drawing surface  */
-  PrimarySurface.Handle = 
-    PrimarySurface.DriverFunctions.EnableSurface(PrimarySurface.PDev); 
+  PrimarySurface.Handle =
+    PrimarySurface.DriverFunctions.EnableSurface(PrimarySurface.PDev);
 
   SurfObj = (PSURFOBJ)AccessUserObject(PrimarySurface.Handle);
   SurfObj->dhpdev = PrimarySurface.PDev;
@@ -278,10 +278,10 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
                   LPCWSTR  Device,
                   LPCWSTR  Output,
                   CONST PDEVMODEW  InitData)
-{  
+{
   HDC  hNewDC;
   PDC  NewDC;
-  HDC  hDC = NULL;    
+  HDC  hDC = NULL;
 
   /*  Check for existing DC object  */
   if ((hNewDC = DC_FindOpenDC(Driver)) != NULL)
@@ -333,8 +333,8 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
   NewDC->DMW.dmDisplayFrequency = 0;
 
   NewDC->w.bitsPerPixel = 4; // FIXME: set this here??
-  
-  NewDC->w.hPalette = NewDC->DevInfo.hpalDefault;  
+
+  NewDC->w.hPalette = NewDC->DevInfo.hpalDefault;
 
   DPRINT("Bits per pel: %u\n", NewDC->w.bitsPerPixel);
 
@@ -378,7 +378,8 @@ BOOL STDCALL W32kDeleteDC(HDC  DCHandle)
       DCToDelete->DriverFunctions.AssertMode( DCToDelete->PDev, FALSE );
       CHECKPOINT;
       DCToDelete->DriverFunctions.DisablePDev(DCToDelete->PDev);
-    }
+	  PrimarySurfaceCreated = FALSE;
+	}
   }
   CHECKPOINT;
   /*  First delete all saved DCs  */
@@ -972,7 +973,7 @@ HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
 	  if( PalGDI ){
       	XlateObj = (PXLATEOBJ)EngCreateXlate(PalGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
       	brush = GDIOBJ_LockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
-      	brush->iSolidColor = XLATEOBJ_iXlate(XlateObj, 
+      	brush->iSolidColor = XLATEOBJ_iXlate(XlateObj,
 					     brush->logbrush.lbColor);
 	  	GDIOBJ_UnlockObj( dc->w.hBrush, GO_BRUSH_MAGIC);
 	  }
@@ -1234,7 +1235,7 @@ void  DC_InitDC(HDC  DCHandle)
 
 void  DC_FreeDC(HDC  DCToFree)
 {
-  if (!GDIOBJ_FreeObj(DCToFree, GO_DC_MAGIC))
+  if (!GDIOBJ_FreeObj(DCToFree, GO_DC_MAGIC, GDIOBJFLAG_DEFAULT))
   {
     DPRINT("DC_FreeDC failed\n");
   }
@@ -1242,7 +1243,8 @@ void  DC_FreeDC(HDC  DCToFree)
 
 BOOL DC_InternalDeleteDC( PDC DCToDelete )
 {
-	ExFreePool(DCToDelete->DriverName);
+	if( DCToDelete->DriverName )
+		ExFreePool(DCToDelete->DriverName);
 	return TRUE;
 }
 

@@ -30,7 +30,7 @@ typedef struct _BITMAPOBJ
 #define  BITMAPOBJ_AllocBitmap()  \
   ((HBITMAP) GDIOBJ_AllocObj (sizeof (BITMAPOBJ), GO_BITMAP_MAGIC))
 #define  BITMAPOBJ_FreeBitmap(hBMObj)  \
-  GDIOBJ_FreeObj((HGDIOBJ) hBMObj, GO_BITMAP_MAGIC)
+  GDIOBJ_FreeObj((HGDIOBJ) hBMObj, GO_BITMAP_MAGIC, GDIOBJFLAG_DEFAULT)
 #define  BITMAPOBJ_HandleToPtr(hBMObj)  \
   ((PBITMAPOBJ) GDIOBJ_LockObj ((HGDIOBJ) hBMObj, GO_BITMAP_MAGIC))
 #define  BITMAPOBJ_ReleasePtr(hBMObj)  \
