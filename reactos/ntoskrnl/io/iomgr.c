@@ -11,7 +11,7 @@
 /* INCLUDES ****************************************************************/
 
 #include <ntoskrnl.h>
-#include <internal/kdb.h>
+#include "../dbg/kdb.h"
 #define NDEBUG
 #include <internal/debug.h>
 

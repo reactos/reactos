@@ -251,7 +251,7 @@ KeInitializeThread(PKPROCESS Process,
     Thread->ApcStatePointer[AttachedApcEnvironment] = &Thread->SavedApcState;
     Thread->ApcStateIndex = OriginalApcEnvironment;
     Thread->ApcQueueable = TRUE;
-    RtlZeroMemory(&Thread->SavedApcState, 0, sizeof(KAPC_STATE));
+    RtlZeroMemory(&Thread->SavedApcState, sizeof(KAPC_STATE));
     KeInitializeSpinLock(&Thread->ApcQueueLock);
     
     /* Setup Wait Fields */
@@ -263,8 +263,8 @@ KeInitializeThread(PKPROCESS Process,
     Thread->WaitListEntry.Blink = NULL;
     Thread->WaitTime = 0;
     Thread->WaitBlockList = NULL;
-    RtlZeroMemory(Thread->WaitBlock, 0, sizeof(KWAIT_BLOCK) * 4);
-    RtlZeroMemory(&Thread->Timer, 0, sizeof(KTIMER));
+    RtlZeroMemory(Thread->WaitBlock, sizeof(KWAIT_BLOCK) * 4);
+    RtlZeroMemory(&Thread->Timer, sizeof(KTIMER));
     KeInitializeTimer(&Thread->Timer);
     
     /* Setup scheduler Fields */
