@@ -16,6 +16,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+
+//20030118 RJJ added comment to test CVS
 	
 #include <freeldr.h>
 #include <rtl.h>
