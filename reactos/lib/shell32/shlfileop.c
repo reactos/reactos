@@ -52,7 +52,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 #define FO_MASK         0xF
 
-CHAR aWildcardFile[] = {'*','.','*',0};
+static const CHAR aWildcardFile[] = {'*','.','*',0};
 static const WCHAR wWildcardFile[] = {'*','.','*',0};
 static const WCHAR wWildcardChars[] = {'*','?',0};
 static const WCHAR wBackslash[] = {'\\',0};
@@ -148,7 +148,7 @@ BOOL SHELL_DeleteDirectoryA(LPCSTR pszDir, BOOL bShowUI)
 	if (hFind == INVALID_HANDLE_VALUE)
 	  return FALSE;
 
-	if (!bShowUI || SHELL_ConfirmDialog(ASK_DELETE_FOLDER, pszDir))
+	if (!bShowUI || (ret = SHELL_ConfirmDialog(ASK_DELETE_FOLDER, pszDir)))
 	{
 	  do
 	  {
@@ -183,7 +183,7 @@ BOOL SHELL_DeleteDirectoryW(LPCWSTR pszDir, BOOL bShowUI)
 	if (hFind == INVALID_HANDLE_VALUE)
 	  return FALSE;
 
-	if (!bShowUI || SHELL_ConfirmDialogW(ASK_DELETE_FOLDER, pszDir))
+	if (!bShowUI || (ret = SHELL_ConfirmDialogW(ASK_DELETE_FOLDER, pszDir)))
 	{
 	  do
 	  {
