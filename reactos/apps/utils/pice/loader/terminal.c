@@ -133,7 +133,7 @@ PSERIAL_PACKET ReadPacket(void)
         //printf("out of memory!\n");
         return NULL;
     }
-    memcpy(p,&header,sizeof(SERIAL_PACKET_HEADER));
+    PICE_memcpy(p,&header,sizeof(SERIAL_PACKET_HEADER));
 
     sprintf(temp,"size %X chksum %x\n",header.packet_size,header.packet_chksum);
     //printf(temp);

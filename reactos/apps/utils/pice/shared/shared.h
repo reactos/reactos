@@ -18,26 +18,33 @@ Environment:
 Author: 
 
     Klaus P. Gerlicher
+	
+	reactos port by:
+ 			Eugene Ingerman
 
 Revision History:
 
     13-Nov-1999:	created
     15-Nov-2000:    general cleanup of source files
+	
+	10/20/2001:		porting to reactos begins
 
 Copyright notice:
 
   This file may be distributed under the terms of the GNU Public License.
 
 --*/
-#ifdef LINUX
 
-#define PICE_IOCTL_MAGIC 'p'
+#include <ddk/ntddk.h>
 
-#define PICE_IOCTL_LOAD     _IO(PICE_IOCTL_MAGIC,0)
-#define PICE_IOCTL_UNLOAD   _IO(PICE_IOCTL_MAGIC,1)
-#define PICE_IOCTL_RELOAD   _IO(PICE_IOCTL_MAGIC,2)
-#define PICE_IOCTL_BREAK    _IO(PICE_IOCTL_MAGIC,3)
-#define PICE_IOCTL_STATUS   _IO(PICE_IOCTL_MAGIC,4)
+// define custom device type
+#define PICE_DEVICE_DEBUGGER	64787
+
+#define PICE_IOCTL_LOAD     CTL_CODE(PICE_DEVICE_DEBUGGER, 2049, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define PICE_IOCTL_UNLOAD   CTL_CODE(PICE_DEVICE_DEBUGGER, 2050, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define PICE_IOCTL_RELOAD   CTL_CODE(PICE_DEVICE_DEBUGGER, 2051, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define PICE_IOCTL_BREAK    CTL_CODE(PICE_DEVICE_DEBUGGER, 2052, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define PICE_IOCTL_STATUS   CTL_CODE(PICE_DEVICE_DEBUGGER, 2053, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 
 typedef struct _DEBUGGER_STATUS_BLOCK
@@ -79,7 +86,10 @@ typedef struct _PICE_SYMBOLFILE_SOURCE
     char filename[256];
     ULONG ulOffsetToNext;
 }PICE_SYMBOLFILE_SOURCE;
-#endif // LINUX
+
+
+
+
 
 ///////////////////////////////////////////////////////////////////////////////////
 // serial stuff
