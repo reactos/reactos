@@ -18,7 +18,7 @@
 #include <rosrtl/string.h>
 
 #ifdef DBG
-DWORD DebugTraceLevel = -1;
+DWORD DebugTraceLevel = MIN_TRACE;
 #endif /* DBG */
 
 PDEVICE_OBJECT TCPDeviceObject   = NULL;
