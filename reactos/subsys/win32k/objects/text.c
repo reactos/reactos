@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.60 2003/12/12 23:49:48 weiden Exp $ */
+/* $Id: text.c,v 1.61 2003/12/13 10:34:13 weiden Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -1374,7 +1374,7 @@ TextIntRealizeFont(HFONT FontHandle)
   NTSTATUS Status = STATUS_SUCCESS;
   PTEXTOBJ TextObj;
   UNICODE_STRING FaceName;
-  PLIST_ENTRY Entry, List;
+  PLIST_ENTRY Entry;
   PFONT_ENTRY CurrentEntry;
   PW32PROCESS Win32Process;
   BOOL Private = FALSE;
@@ -1408,9 +1408,8 @@ TextIntRealizeFont(HFONT FontHandle)
     /* find font in system fonts */
     ExAcquireFastMutex(&FontListLock);
     
-    Entry = (Private ? Win32Process->PrivateFontListHead.Flink : FontListHead.Flink);
-    List = (Private ? &Win32Process->PrivateFontListHead : &FontListHead);
-    while(Entry != List)
+    Entry = FontListHead.Flink;
+    while(Entry != &FontListHead)
     {
       CurrentEntry = (PFONT_ENTRY)CONTAINING_RECORD(Entry, FONT_ENTRY, ListEntry);
       
@@ -1425,8 +1424,9 @@ TextIntRealizeFont(HFONT FontHandle)
     check:
     if (NULL == TextObj->GDIFontHandle)
     {
-      Entry = FontListHead.Flink;
-      if(Entry != &FontListHead)
+      Entry = (Private ? Win32Process->PrivateFontListHead.Flink : FontListHead.Flink);
+      
+      if(Entry != (Private ? &Win32Process->PrivateFontListHead : &FontListHead))
       {
 	    DPRINT("Requested font %S not found, using first available font\n",
   	             TextObj->logfont.lfFaceName)
