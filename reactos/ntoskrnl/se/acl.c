@@ -1,4 +1,4 @@
-/* $Id: acl.c,v 1.10 2002/10/25 21:48:00 chorns Exp $
+/* $Id: acl.c,v 1.11 2003/02/15 21:05:15 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -134,41 +134,45 @@ BOOLEAN STDCALL
 RtlFirstFreeAce(PACL Acl,
 		PACE* Ace)
 {
-   PACE Current;
-   PVOID AclEnd;
-   ULONG i;
+  PACE Current;
+  PVOID AclEnd;
+  ULONG i;
 
-   Current = (PACE)(Acl + 1);
-   *Ace = NULL;
-   i = 0;
-   if (Acl->AceCount == 0)
-     {
-	*Ace = Current;
-	return(TRUE);
-     }
-   AclEnd = Acl->AclSize + Acl;
-   do
-     {
-	if ((PVOID)Current >= AclEnd)
-	  {
-	     return(FALSE);
-	  }
-	if (Current->Header.AceType == 4)
-	  {
-	     if (Acl->AclRevision < 3)
-	       {
-		  return(FALSE);
-	       }
-	  }
-	Current = (PACE)((PVOID)Current + (ULONG)Current->Header.AceSize);
-	i++;
-     } while (i < Acl->AceCount);
-   if ((PVOID)Current >= AclEnd)
-     {
-	return(FALSE);
-     }
-   *Ace = Current;
-   return(TRUE);
+  Current = (PACE)(Acl + 1);
+  *Ace = NULL;
+  i = 0;
+  if (Acl->AceCount == 0)
+    {
+      *Ace = Current;
+      return(TRUE);
+    }
+
+  AclEnd = Acl->AclSize + (PVOID)Acl;
+  do
+    {
+      if ((PVOID)Current >= AclEnd)
+	{
+	  return(FALSE);
+	}
+
+      if (Current->Header.AceType == 4)
+	{
+	  if (Acl->AclRevision < 3)
+	    {
+	      return(FALSE);
+	    }
+	}
+      Current = (PACE)((PVOID)Current + (ULONG)Current->Header.AceSize);
+      i++;
+    }
+  while (i < Acl->AceCount);
+
+  if ((PVOID)Current < AclEnd)
+    {
+      *Ace = Current;
+    }
+
+  return(TRUE);
 }
 
 
@@ -320,6 +324,29 @@ RtlCreateAcl(PACL Acl,
   Acl->Sbz1 = 0;
   Acl->Sbz2 = 0;
   return(STATUS_SUCCESS);
+}
+
+
+BOOLEAN STDCALL
+RtlValidAcl(PACL Acl)
+{
+  PACE Ace;
+  USHORT Size;
+
+  Size = (Acl->AclSize + 3) & ~3;
+
+  if (Acl->AclRevision != 2 &&
+      Acl->AclRevision != 3)
+    {
+      return(FALSE);
+    }
+
+  if (Size != Acl->AclSize)
+    {
+      return(FALSE);
+    }
+
+  return(RtlFirstFreeAce(Acl, &Ace));
 }
 
 /* EOF */

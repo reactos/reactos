@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.23 2002/10/25 21:48:00 chorns Exp $
+/* $Id: semgr.c,v 1.24 2003/02/15 21:05:15 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -59,6 +59,61 @@ BOOLEAN
 SeInit2(VOID)
 {
   SepInitializeTokenImplementation();
+
+  return(TRUE);
+}
+
+
+BOOLEAN
+SeInitSRM(VOID)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING Name;
+  HANDLE DirectoryHandle;
+  HANDLE EventHandle;
+  NTSTATUS Status;
+
+  /* Create '\Security' directory */
+  RtlInitUnicodeString(&Name,
+		       L"\\Security");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &Name,
+			     OBJ_PERMANENT,
+			     0,
+			     NULL);
+  Status = NtCreateDirectoryObject(&DirectoryHandle,
+				   DIRECTORY_ALL_ACCESS,
+				   &ObjectAttributes);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("Failed to create 'Security' directory!\n");
+      return(FALSE);
+    }
+
+  /* Create 'LSA_AUTHENTICATION_INITALIZED' event */
+  RtlInitUnicodeString(&Name,
+		       L"\\LSA_AUTHENTICATION_INITALIZED");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &Name,
+			     OBJ_PERMANENT,
+			     DirectoryHandle,
+			     SePublicDefaultSd);
+  Status = NtCreateEvent(&EventHandle,
+			 EVENT_ALL_ACCESS,
+			 &ObjectAttributes,
+			 FALSE,
+			 FALSE);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("Failed to create 'Security' directory!\n");
+      NtClose(DirectoryHandle);
+      return(FALSE);
+    }
+
+  NtClose(EventHandle);
+  NtClose(DirectoryHandle);
+
+  /* FIXME: Create SRM port and listener thread */
 
   return(TRUE);
 }
