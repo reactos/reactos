@@ -706,10 +706,10 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Export",0x00010000,"\Dev
 ;HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Export",0x00010000,"\Device\Tcpip_3c90x1"
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Route",0x00010000,"PCNet1", "Ne20001"
 ;HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Route",0x00010000,"3c90x1"
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","DataBasePath",0x00000000,"DataBasePath"
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","Domain",0x00000000,""
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","Hostname",0x00000000,"ROSHost"
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","NameServer",0x00000000,"10.0.0.1"
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","DataBasePath",0x00010000,"DataBasePath"
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","Domain",0x00010000,""
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","Hostname",0x00010000,"ROSHost"
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","NameServer",0x00010000,"10.0.0.1"
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","ForwardBroadcasts",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","IPEnableRouter",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","SearchList",0x00010000,""
@@ -720,7 +720,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\WinSock","MaxSockAddrLe
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\WinSock","MinSockAddrLength",0x00010001,0x00000010
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\WinSock","HelperDllName",0x00000000,"%SystemRoot%\System32\wshtcpip.dll"
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\WinSock","Mapping",0x00000001,0b,00,00,00,03,00,00,00,02,00,00,00,01,00,00,00,06,00,00,00,02,00,00,00,01,00,00,00,00,00,00,00,02,00,00,00,00,00,00,00,06,00,00,00,00,00,00,00,00,00,00,00,06,00,00,00,00,00,00,00,01,00,00,00,06,00,00,00,02,00,00,00,02,00,00,00,11,00,00,00,02,00,00,00,02,00,00,00,00,00,00,00,02,00,00,00,00,00,00,00,11,00,00,00,00,00,00,00,00,00,00,00,11,00,00,00,00,00,00,00,02,00,00,00,11,00,00,00,02,00,00,00,03,00,00,00,00,00,00,00
-HKLM,"SYSTEM\CurrentControlSet\Services\Winsock\Parameters","Transports",0x00000000,"Tcpip"
+HKLM,"SYSTEM\CurrentControlSet\Services\Winsock\Parameters","Transports",0x00010000,"Tcpip"
 
 ; Virtual FAT filesystem driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Vfatfs","ErrorControl",0x00010001,0x00000000
