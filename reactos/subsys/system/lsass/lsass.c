@@ -26,8 +26,8 @@
  * 	19990704 (Emanuele Aliberti)
  * 		Compiled successfully with egcs 1.1.2
  */
-//#include <ddk/ntddk.h>
-//#include <windows.h>
+#include <ddk/ntddk.h>
+#include <windows.h>
 #include <ddk/ntapi.h>
 #include <lsass/lsasrv.h>
 
