@@ -234,6 +234,7 @@ VOID DebugPrint(U32 Mask, char *format, ...)
 {
 	int *dataptr = (int *) &format;
 	char c, *ptr, str[16];
+	int ll;
 	
 	// Mask out unwanted debug messages
 	if (!(Mask & DebugPrintMask))
@@ -249,7 +250,7 @@ VOID DebugPrint(U32 Mask, char *format, ...)
 	}
 
 	dataptr++;
-
+	ll = 0;
 	while ((c = *(format++)))
 	{
 		if (c != '%')
@@ -258,11 +259,28 @@ VOID DebugPrint(U32 Mask, char *format, ...)
 		}
 		else
 		{
+			if (*format == 'I' && *(format+1) == '6' && *(format+2) == '4')
+			{
+				ll = 1;
+				format += 3;
+			}
+			else
+			{
+				ll = 0;
+			}
 			switch (c = *(format++))
 			{
 			case 'd': case 'u': case 'x':
 				
-				*convert_to_ascii(str, c, *((unsigned long *) dataptr++)) = 0;
+				if (ll)
+				{
+					*convert_i64_to_ascii(str, c, *((unsigned long long*) dataptr)) = 0;
+					dataptr += 2;
+				}
+				else
+				{
+					*convert_to_ascii(str, c, *((unsigned long *) dataptr++)) = 0;
+				}
 
 				ptr = str;
 

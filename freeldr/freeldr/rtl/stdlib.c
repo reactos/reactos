@@ -63,6 +63,46 @@ char *convert_to_ascii(char *buf, int c, ...)
   return ptr;
 }
 
+char *convert_i64_to_ascii(char *buf, int c, ...)
+{
+  unsigned long long num = *(long long*)((&c) + 1);
+  int mult = 10;
+  char *ptr = buf;
+
+  if (c == 'x')
+    mult = 16;
+
+  if ((num & 0x8000000000000000uLL) && c == 'd')
+    {
+      num = (~num)+1;
+      *(ptr++) = '-';
+      buf++;
+    }
+
+  do
+    {
+      int dig = num % mult;
+      *(ptr++) = ( (dig > 9) ? dig + 'a' - 10 : '0' + dig );
+    }
+  while (num /= mult);
+
+  /* reorder to correct direction!! */
+  {
+    char *ptr1 = ptr-1;
+    char *ptr2 = buf;
+    while (ptr1 > ptr2)
+      {
+	int c = *ptr1;
+	*ptr1 = *ptr2;
+	*ptr2 = c;
+	ptr1--;
+	ptr2++;
+      }
+  }
+
+  return ptr;
+}
+
 char *itoa(int value, char *string, int radix)
 {
 	if(radix == 16)
