@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.54 2003/10/20 18:02:04 gvg Exp $
+/* $Id: conio.c,v 1.55 2003/10/23 06:53:20 gvg Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -702,9 +702,12 @@ NTSTATUS STDCALL CsrpWriteConsole( PCSRSS_SCREEN_BUFFER Buff, CHAR *Buffer, DWOR
             if (Buff->CurrentX == Buff->MaxX)
               {
                 /* if end of line, go to next */
-                CsrpPhysicalToLogical(Buff, Buff->CurrentX, Buff->CurrentY,
-                                      &(UpdateRect.Right), &(UpdateRect.Bottom));
-                CsrpDrawRegion(Buff->Console, UpdateRect);
+                if (! TextMode && NULL != Buff->Console)
+                  {
+                    CsrpPhysicalToLogical(Buff, Buff->CurrentX, Buff->CurrentY,
+                                          &(UpdateRect.Right), &(UpdateRect.Bottom));
+                    CsrpDrawRegion(Buff->Console, UpdateRect);
+                  }
 
                 Buff->CurrentX = 0;
                 /* slide the viewable screen */
