@@ -80,8 +80,7 @@ BOOLEAN STDCALL KeRemoveQueueApc (PKAPC Apc);
 PLIST_ENTRY STDCALL KeRundownQueue(IN PKQUEUE Queue);
 
 NTSTATUS STDCALL
-KeRaiseUserException(NTSTATUS ExceptionCode);
-
+KeRaiseUserException(IN NTSTATUS ExceptionCode);
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 

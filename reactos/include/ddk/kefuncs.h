@@ -262,7 +262,7 @@ KeRaiseIrqlToDpcLevel (
  * ARGUMENTS:
  *	ExceptionCode = Status code of the exception
  */
-VOID
+NTSTATUS
 STDCALL
 KeRaiseUserException (
 	IN	NTSTATUS	ExceptionCode
