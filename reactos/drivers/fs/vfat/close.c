@@ -1,4 +1,4 @@
-/* $Id: close.c,v 1.18 2003/06/07 11:34:36 chorns Exp $
+/* $Id: close.c,v 1.19 2003/07/24 19:00:42 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -11,7 +11,9 @@
 
 #include <ddk/ntddk.h>
 
+#ifndef NDEBUG
 #define NDEBUG
+#endif
 #include <debug.h>
 
 #include "vfat.h"
@@ -84,7 +86,7 @@ NTSTATUS VfatClose (PVFAT_IRP_CONTEXT IrpContext)
 {
   NTSTATUS Status;
 
-  DPRINT ("VfatClose(DeviceObject %x, Irp %x)\n", DeviceObject, Irp);
+  DPRINT ("VfatClose(DeviceObject %x, Irp %x)\n", IrpContext->DeviceObject, IrpContext->Irp);
 
   if (IrpContext->DeviceObject == VfatGlobalData->DeviceObject)
     {

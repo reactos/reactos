@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.30 2003/06/07 11:34:36 chorns Exp $
+/* $Id: finfo.c,v 1.31 2003/07/24 19:00:42 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -13,7 +13,9 @@
 #include <ddk/ntddk.h>
 #include <wchar.h>
 
+#ifndef NDEBUG
 #define NDEBUG
+#endif
 #include <debug.h>
 
 #include "vfat.h"
@@ -110,13 +112,13 @@ VfatSetBasicInformation(PFILE_OBJECT FileObject,
                            &(FCB->entry.UpdateDate),
                            &(FCB->entry.UpdateTime));
 
-  FCB->entry.Attrib = (FCB->entry.Attrib &
+  FCB->entry.Attrib = (unsigned char)((FCB->entry.Attrib &
                        (FILE_ATTRIBUTE_DIRECTORY | 0x48)) |
                       (BasicInfo->FileAttributes &
                        (FILE_ATTRIBUTE_ARCHIVE |
                         FILE_ATTRIBUTE_SYSTEM |
                         FILE_ATTRIBUTE_HIDDEN |
-                        FILE_ATTRIBUTE_READONLY));
+                        FILE_ATTRIBUTE_READONLY)));
   DPRINT("Setting attributes 0x%02x\n", FCB->entry.Attrib);
 
   VfatUpdateEntry(DeviceExt, FileObject);
@@ -393,7 +395,7 @@ VOID UpdateFileSize(PFILE_OBJECT FileObject, PVFATFCB Fcb, ULONG Size, ULONG Clu
    }
    else
    {
-      Fcb->RFCB.AllocationSize.QuadPart = 0LL;
+      Fcb->RFCB.AllocationSize.QuadPart = (LONGLONG)0;
    }
    if (!vfatFCBIsDirectory(Fcb))
    {
@@ -416,7 +418,6 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
 {
   ULONG OldSize;
   ULONG Cluster, FirstCluster;
-  ULONG Offset;
   NTSTATUS Status;
 
   ULONG ClusterSize = DeviceExt->FatInfo.BytesPerCluster;
@@ -467,8 +468,8 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
 	 }
 	 return STATUS_DISK_FULL;
       }
-      Fcb->entry.FirstCluster = (FirstCluster & 0x0000FFFF);
-      Fcb->entry.FirstClusterHigh = (FirstCluster & 0xFFFF0000) >> 16;
+      Fcb->entry.FirstCluster = (unsigned short)(FirstCluster & 0x0000FFFF);
+      Fcb->entry.FirstClusterHigh = (unsigned short)((FirstCluster & 0xFFFF0000) >> 16);
     }
     else
     {
@@ -560,7 +561,8 @@ NTSTATUS VfatQueryInformation(PVFAT_IRP_CONTEXT IrpContext)
 
   if (!(FCB->Flags & FCB_IS_PAGE_FILE))
   {
-     if (!ExAcquireResourceSharedLite(&FCB->MainResource, IrpContext->Flags & IRPCONTEXT_CANWAIT))
+     if (!ExAcquireResourceSharedLite(&FCB->MainResource,
+                                      (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
      {
         return VfatQueueRequest (IrpContext);
      }
@@ -662,7 +664,8 @@ NTSTATUS VfatSetInformation(PVFAT_IRP_CONTEXT IrpContext)
   
   if (!(FCB->Flags & FCB_IS_PAGE_FILE))
     {
-      if (!ExAcquireResourceExclusiveLite(&FCB->MainResource, CanWait))
+      if (!ExAcquireResourceExclusiveLite(&FCB->MainResource,
+                                          (BOOLEAN)CanWait))
 	{
 	  return(VfatQueueRequest (IrpContext));
 	}

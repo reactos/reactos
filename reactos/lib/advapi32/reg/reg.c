@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.28 2003/07/21 03:38:42 royce Exp $
+/* $Id: reg.c,v 1.29 2003/07/24 19:00:42 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -1820,7 +1820,7 @@ RegQueryMultipleValuesW (HKEY hKey,
 			 LPWSTR lpValueBuf,
 			 LPDWORD ldwTotsize)
 {
-  int i;
+  ULONG i;
   DWORD maxBytes = *ldwTotsize;
   HRESULT status;
   LPSTR bufptr = (LPSTR)lpValueBuf;

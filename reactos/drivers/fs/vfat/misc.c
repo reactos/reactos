@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.8 2003/07/10 11:03:51 chorns Exp $
+/* $Id: misc.c,v 1.9 2003/07/24 19:00:42 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -13,7 +13,9 @@
 #include <ddk/ntddk.h>
 #include <wchar.h>
 
+#ifndef NDEBUG
 #define NDEBUG
+#endif
 #include <debug.h>
 
 #include "vfat.h"
@@ -57,7 +59,7 @@ NTSTATUS VfatLockControl(
 
 Fail:;
    IrpContext->Irp->IoStatus.Status = Status;
-   IofCompleteRequest(IrpContext->Irp, NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT);
+   IofCompleteRequest(IrpContext->Irp, (CCHAR)(NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT));
    VfatFreeIrpContext(IrpContext);
    return Status;
 }
@@ -152,7 +154,7 @@ VOID VfatFreeIrpContext (PVFAT_IRP_CONTEXT IrpContext)
 PVFAT_IRP_CONTEXT VfatAllocateIrpContext(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    PVFAT_IRP_CONTEXT IrpContext;
-   PIO_STACK_LOCATION Stack;
+   /*PIO_STACK_LOCATION Stack;*/
    UCHAR MajorFunction;
    DPRINT ("VfatAllocateIrpContext(DeviceObject %x, Irp %x)\n", DeviceObject, Irp);
 

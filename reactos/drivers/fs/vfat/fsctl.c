@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.18 2003/07/21 21:53:47 royce Exp $
+/* $Id: fsctl.c,v 1.19 2003/07/24 19:00:42 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -29,7 +29,9 @@
 #include <ddk/ntddk.h>
 #include <wchar.h>
 
+#ifndef NDEBUG
 #define NDEBUG
+#endif
 #include <debug.h>
 
 #include "vfat.h"
@@ -211,7 +213,6 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    PVFATFCB Fcb = NULL;
    PVFATFCB VolumeFcb = NULL;
    PVFATCCB Ccb = NULL;
-   LARGE_INTEGER timeout;
    PDEVICE_OBJECT DeviceToMount;
 
    DPRINT("VfatMount(IrpContext %x)\n", IrpContext);

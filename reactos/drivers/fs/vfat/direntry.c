@@ -1,4 +1,4 @@
-/* $Id: direntry.c,v 1.12 2002/12/22 11:26:01 gvg Exp $
+/* $Id: direntry.c,v 1.13 2003/07/24 19:00:42 chorns Exp $
  *
  *
  * FILE:             DirEntry.c
@@ -15,7 +15,9 @@
 #include <wchar.h>
 #include <limits.h>
 
+#ifndef NDEBUG
 #define NDEBUG
+#endif
 #include <debug.h>
 
 #include "vfat.h"

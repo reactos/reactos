@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.30 2003/07/21 21:53:47 royce Exp $
+/* $Id: fcb.c,v 1.31 2003/07/24 19:00:42 chorns Exp $
  *
  *
  * FILE:             fcb.c
@@ -15,7 +15,9 @@
 #include <wchar.h>
 #include <limits.h>
 
+#ifndef NDEBUG
 #define NDEBUG
+#endif
 #include <debug.h>
 
 #include "vfat.h"
@@ -205,12 +207,9 @@ vfatGrabFCBFromTable(PDEVICE_EXTENSION  pVCB, PWSTR  pFileName)
 {
   KIRQL  oldIrql;
   PVFATFCB  rcFCB;
-  PLIST_ENTRY  current_entry;
   ULONG Hash;
   PWCHAR ObjectName = NULL;
   ULONG len;
-  ULONG index;
-  ULONG currentindex;
   
   HASHENTRY* entry; 
 
@@ -323,8 +322,8 @@ vfatMakeRootFCB(PDEVICE_EXTENSION  pVCB)
   if (pVCB->FatInfo.FatType == FAT32)
   {
     CurrentCluster = FirstCluster = pVCB->FatInfo.RootCluster;
-    FCB->entry.FirstCluster = FirstCluster & 0xffff;
-    FCB->entry.FirstClusterHigh = FirstCluster >> 16;
+    FCB->entry.FirstCluster = (unsigned short)(FirstCluster & 0xffff);
+    FCB->entry.FirstClusterHigh = (unsigned short)(FirstCluster >> 16);
 
     while (CurrentCluster != 0xffffffff && NT_SUCCESS(Status))
     {
@@ -449,7 +448,6 @@ vfatAttachFCBToFileObject (PDEVICE_EXTENSION  vcb,
                            PVFATFCB  fcb,
                            PFILE_OBJECT  fileObject)
 {
-  NTSTATUS  status;
   PVFATCCB  newCCB;
 
   newCCB = ExAllocateFromNPagedLookasideList(&VfatGlobalData->CcbLookasideList);

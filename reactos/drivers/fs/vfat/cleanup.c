@@ -1,4 +1,4 @@
-/* $Id: cleanup.c,v 1.11 2003/02/13 22:24:16 hbirr Exp $
+/* $Id: cleanup.c,v 1.12 2003/07/24 19:00:42 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -11,7 +11,9 @@
 
 #include <ddk/ntddk.h>
 
+#ifndef NDEBUG
 #define NDEBUG
+#endif
 #include <debug.h>
 
 #include "vfat.h"
@@ -61,7 +63,7 @@ NTSTATUS VfatCleanup (PVFAT_IRP_CONTEXT IrpContext)
 {
    NTSTATUS Status;
 
-   DPRINT("VfatCleanup(DeviceObject %x, Irp %x)\n", DeviceObject, Irp);
+   DPRINT("VfatCleanup(DeviceObject %x, Irp %x)\n", IrpContext->DeviceObject, IrpContext->Irp);
 
   if (IrpContext->DeviceObject == VfatGlobalData->DeviceObject)
     {
@@ -69,7 +71,8 @@ NTSTATUS VfatCleanup (PVFAT_IRP_CONTEXT IrpContext)
       goto ByeBye;
     }
 
-   if (!ExAcquireResourceExclusiveLite (&IrpContext->DeviceExt->DirResource, IrpContext->Flags & IRPCONTEXT_CANWAIT))
+   if (!ExAcquireResourceExclusiveLite (&IrpContext->DeviceExt->DirResource,
+                                        (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
    {
      return VfatQueueRequest (IrpContext);
    }

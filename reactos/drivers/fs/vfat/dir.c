@@ -1,5 +1,5 @@
 /*
- * $Id: dir.c,v 1.28 2003/02/13 22:24:16 hbirr Exp $
+ * $Id: dir.c,v 1.29 2003/07/24 19:00:42 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -13,7 +13,9 @@
 #include <ddk/ntddk.h>
 #include <wchar.h>
 
+#ifndef NDEBUG
 #define NDEBUG
+#endif
 #include <debug.h>
 
 #include "vfat.h"
@@ -211,7 +213,8 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
   pCcb = (PVFATCCB) IrpContext->FileObject->FsContext2;
   pFcb = (PVFATFCB) IrpContext->FileObject->FsContext;
 
-  if (!ExAcquireResourceSharedLite(&pFcb->MainResource, IrpContext->Flags & IRPCONTEXT_CANWAIT))
+  if (!ExAcquireResourceSharedLite(&pFcb->MainResource,
+                                   (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
   {
      return STATUS_PENDING;
   }

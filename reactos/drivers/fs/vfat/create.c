@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.61 2003/07/09 19:59:21 hbirr Exp $
+/* $Id: create.c,v 1.62 2003/07/24 19:00:42 chorns Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/vfat/create.c
@@ -31,7 +31,9 @@
 #include <wchar.h>
 #include <limits.h>
 
+#ifndef NDEBUG
 #define NDEBUG
+#endif
 #include <debug.h>
 
 #include "vfat.h"
@@ -185,7 +187,6 @@ FindFile (PDEVICE_EXTENSION DeviceExt,
   ULONG len;
   ULONG DirIndex;
   ULONG FirstCluster;
-  ULONG Read;
   BOOL isRoot;
   PVOID Context = NULL;
   PVOID Page;
@@ -609,7 +610,7 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	  ULONG Attributes;
 	  Attributes = Stack->Parameters.Create.FileAttributes;
 	  Status = VfatAddEntry (DeviceExt, FileObject, RequestedOptions, 
-				 Attributes & FILE_ATTRIBUTE_VALID_FLAGS);
+				 (UCHAR)(Attributes & FILE_ATTRIBUTE_VALID_FLAGS));
 	  if (NT_SUCCESS (Status))
 	    {
 	      pFcb = FileObject->FsContext;
@@ -769,7 +770,7 @@ NTSTATUS VfatCreate (PVFAT_IRP_CONTEXT IrpContext)
 
   IrpContext->Irp->IoStatus.Status = Status;
   IoCompleteRequest (IrpContext->Irp, 
-		     NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT);
+		     (CCHAR)(NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT));
   VfatFreeIrpContext(IrpContext);
   return(Status);
 }

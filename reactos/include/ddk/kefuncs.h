@@ -40,8 +40,8 @@ VOID STDCALL KeAcquireSpinLockAtDpcLevel (IN PKSPIN_LOCK	SpinLock);
 //NTOSAPI
 //DDKFASTAPI
 
-STDCALL
 VOID
+STDCALL
 KeReleaseSpinLockFromDpcLevel(
   IN PKSPIN_LOCK  SpinLock);
 

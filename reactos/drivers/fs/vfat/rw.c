@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.57 2003/07/21 21:53:47 royce Exp $
+/* $Id: rw.c,v 1.58 2003/07/24 19:00:42 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -15,7 +15,9 @@
 #include <wchar.h>
 #include <ntos/minmax.h>
 
+#ifndef NDEBUG
 #define NDEBUG
+#endif
 #include <debug.h>
 
 #include "vfat.h"
@@ -76,9 +78,11 @@ OffsetToCluster(PDEVICE_EXTENSION DeviceExt,
   ULONG CurrentCluster;
   ULONG i;
   NTSTATUS Status;
+/*
   DPRINT("OffsetToCluster(DeviceExt %x, Fcb %x, FirstCluster %x,"
          " FileOffset %x, Cluster %x, Extend %d)\n", DeviceExt, 
          Fcb, FirstCluster, FileOffset, Cluster, Extend);
+*/
   if (FirstCluster == 0)
   {
     DbgPrint("OffsetToCluster is called with FirstCluster = 0!\n");
@@ -269,7 +273,15 @@ VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext, PVOID Buffer,
     if (NT_SUCCESS(Status))
     {
       *LengthRead += BytesDone;
+/* GCC allows arithmetics on the void type. Conforming compilers do not. */
+#ifdef __GNUC__
       Buffer += BytesDone;
+#else
+      {
+        char* pBuf = (char*)Buffer + BytesDone;
+        Buffer = (PVOID)pBuf;
+      }
+#endif
       Length -= BytesDone;
       ReadOffset.u.LowPart += BytesDone;
     }
@@ -422,7 +434,15 @@ NTSTATUS VfatWriteFileData(PVFAT_IRP_CONTEXT IrpContext,
       Status = VfatWriteDisk (DeviceExt->StorageDevice, &StartOffset, BytesDone, Buffer);
       if (NT_SUCCESS(Status))
       {
+/* GCC allows arithmetics on the void type. Conforming compilers do not. */
+#ifdef __GNUC__
          Buffer += BytesDone;
+#else
+         {
+            char* pBuf = (char*)Buffer + BytesDone;
+            Buffer = (PVOID)pBuf;
+         }
+#endif
          Length -= BytesDone;
          WriteOffset.u.LowPart += BytesDone;
       }
@@ -440,7 +460,7 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
    PERESOURCE Resource = NULL;
    LARGE_INTEGER ByteOffset;
    PVOID Buffer;
-   PDEVICE_OBJECT DeviceToVerify;
+   /*PDEVICE_OBJECT DeviceToVerify;*/
    ULONG BytesPerSector;
 
    assert(IrpContext);
@@ -531,7 +551,8 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
    {
       Resource = &Fcb->MainResource;
    }
-   if (!ExAcquireResourceSharedLite(Resource, IrpContext->Flags & IRPCONTEXT_CANWAIT))
+   if (!ExAcquireResourceSharedLite(Resource,
+                                    (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
    {
       Resource = NULL;
       Status = STATUS_PENDING;
@@ -579,7 +600,7 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
 	  CcRosInitializeFileCache(IrpContext->FileObject, CacheSize);
       }
       if (!CcCopyRead(IrpContext->FileObject, &ByteOffset, Length,
-                      IrpContext->Flags & IRPCONTEXT_CANWAIT, Buffer,
+                      (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT), Buffer,
                       &IrpContext->Irp->IoStatus))
       {
          Status = STATUS_PENDING;
@@ -597,7 +618,7 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
       CHECKPOINT;
       if (ByteOffset.QuadPart + Length > ROUND_UP(Fcb->RFCB.FileSize.QuadPart, BytesPerSector))
       {
-         Length = ROUND_UP(Fcb->RFCB.FileSize.QuadPart, BytesPerSector) - ByteOffset.QuadPart;
+         Length = (ULONG)(ROUND_UP(Fcb->RFCB.FileSize.QuadPart, BytesPerSector) - ByteOffset.QuadPart);
       }
 
       Buffer = VfatGetUserBuffer(IrpContext->Irp);
@@ -661,7 +682,7 @@ ByeBye:
       }
 
       IoCompleteRequest(IrpContext->Irp,
-                        NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT);
+                        (CCHAR)(NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT));
       VfatFreeIrpContext(IrpContext);
    }
    DPRINT("%x\n", Status);
@@ -787,7 +808,8 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
 
    if (Fcb->Flags & FCB_IS_PAGE_FILE)
    {
-      if (!ExAcquireResourceSharedLite(Resource, IrpContext->Flags & IRPCONTEXT_CANWAIT))
+      if (!ExAcquireResourceSharedLite(Resource,
+                                       (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
       {
          Resource = NULL;
          Status = STATUS_PENDING;
@@ -796,7 +818,8 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
    }
    else
    {
-      if (!ExAcquireResourceExclusiveLite(Resource, IrpContext->Flags & IRPCONTEXT_CANWAIT))
+      if (!ExAcquireResourceExclusiveLite(Resource,
+                                          (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
       {
          Resource = NULL;
          Status = STATUS_PENDING;
@@ -952,7 +975,7 @@ ByeBye:
       }
 
       IoCompleteRequest(IrpContext->Irp,
-                        NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT);
+                        (CCHAR)(NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT));
       VfatFreeIrpContext(IrpContext);
    }
    DPRINT("%x\n", Status);

@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.58 2003/06/07 11:34:36 chorns Exp $ */
+/* $Id: vfat.h,v 1.59 2003/07/24 19:00:42 chorns Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -433,6 +433,11 @@ NTSTATUS GetNextCluster (PDEVICE_EXTENSION DeviceExt,
 NTSTATUS CountAvailableClusters (PDEVICE_EXTENSION DeviceExt,
                                  PLARGE_INTEGER Clusters);
 
+NTSTATUS
+WriteCluster(PDEVICE_EXTENSION DeviceExt,
+	     ULONG ClusterToWrite,
+	     ULONG NewValue);
+
 /*  ------------------------------------------------------  direntry.c  */
 
 ULONG  vfatDirEntryGetFirstCluster (PDEVICE_EXTENSION  pDeviceExt,
@@ -461,6 +466,8 @@ PVFATFCB vfatNewFCB (PWCHAR pFileName);
 
 VOID vfatDestroyFCB (PVFATFCB  pFCB);
 
+VOID vfatDestroyCCB(PVFATCCB pCcb);
+
 VOID vfatGrabFCB (PDEVICE_EXTENSION  pVCB,
                   PVFATFCB  pFCB);
 
@@ -478,6 +485,8 @@ PVFATFCB vfatMakeRootFCB (PDEVICE_EXTENSION  pVCB);
 PVFATFCB vfatOpenRootFCB (PDEVICE_EXTENSION  pVCB);
 
 BOOL vfatFCBIsDirectory (PVFATFCB FCB);
+
+BOOL vfatFCBIsRoot(PVFATFCB FCB);
 
 NTSTATUS vfatAttachFCBToFileObject (PDEVICE_EXTENSION  vcb,
                                     PVFATFCB  fcb,

@@ -11,7 +11,9 @@
 
 #include <ddk/ntddk.h>
 
+#ifndef NDEBUG
 #define NDEBUG
+#endif
 #include <debug.h>
 
 #include "vfat.h"

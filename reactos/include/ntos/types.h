@@ -44,8 +44,13 @@ typedef short SHORT;
 #ifndef __USE_W32API
 
 #ifdef i386
+#ifdef __GNUC__
 #define STDCALL     __attribute__ ((stdcall))
 #define CDECL       __attribute__ ((cdecl))
+#else
+#define STDCALL __stdcall
+#define CDECL __cdecl
+#endif
 #define CALLBACK    WINAPI
 #define PASCAL      WINAPI
 #else

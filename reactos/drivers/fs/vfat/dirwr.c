@@ -1,4 +1,4 @@
-/* $Id: dirwr.c,v 1.36 2003/05/11 09:51:26 hbirr Exp $
+/* $Id: dirwr.c,v 1.37 2003/07/24 19:00:42 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -14,7 +14,9 @@
 #include <wchar.h>
 #include <string.h>
 
+#ifndef NDEBUG
 #define NDEBUG
+#endif
 #include <debug.h>
 
 #include "vfat.h"
@@ -42,8 +44,10 @@ VfatUpdateEntry (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT pFileObject)
   PVFATFCB pDirFcb, pFcb;
   LARGE_INTEGER Offset;
 
+/*
   DPRINT ("updEntry PathFileName \'%S\'\n", 
           ((PVFATCCB)(pFileObject->FsContext2))->pFcb->PathName);
+*/
 
   pFcb = (PVFATFCB)pFileObject->FsContext;
   assert (pFcb);
@@ -144,8 +148,8 @@ findDirSpace(PDEVICE_EXTENSION DeviceExt,
         return FALSE;
       }
       // clear the new dir cluster
-      FileOffset.u.LowPart = pDirFcb->RFCB.FileSize.QuadPart -
-                               DeviceExt->FatInfo.BytesPerCluster;
+      FileOffset.u.LowPart = (DWORD)(pDirFcb->RFCB.FileSize.QuadPart -
+                                     DeviceExt->FatInfo.BytesPerCluster);
       CcMapData (pDirFcb->FileObject, &FileOffset, DeviceExt->FatInfo.BytesPerCluster,
                  TRUE, &Context, (PVOID*)&pFatEntry);
       RtlZeroMemory(pFatEntry, DeviceExt->FatInfo.BytesPerCluster);
@@ -202,7 +206,7 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
   {
     if (PathFileName[i] == L'\\')
     {
-      posCar = i;
+      posCar = (short)i;
     }
   }
   if (posCar == -1)
@@ -243,7 +247,7 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
   {
     if (FileName[i] == '.')
     {
-      posCar = i;
+      posCar = (short)i;
       if (i == j)
       {
         j++;
@@ -252,11 +256,11 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
   }
   if (!posCar)
   {
-    posCar = i;
+    posCar = (short)i;
   }
   if (posCar < j)
   {
-    posCar = i;
+    posCar = (short)i;
     needTilde = TRUE;
   }
   if (posCar > 8)
@@ -332,8 +336,8 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
     //try first with xxxxxx~y.zzz
     for (i = 1; i < 10; i++)
     {
-      DirName[posCar-1] = '0' + i;
-      pEntry->Filename[posCar - 1] = '0' + i;
+      DirName[posCar-1] = (WCHAR)('0' + i);
+      pEntry->Filename[posCar - 1] = (unsigned char)('0' + i);
       Status = FindFile (DeviceExt, &FileFcb, pDirFcb, DirName, NULL, NULL);
       if (!NT_SUCCESS(Status))
       {
@@ -473,7 +477,7 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
   if (needLong)
   {
     // calculate checksum for 8.3 name
-    for (pSlots[0].alias_checksum = i = 0; i < 11; i++)
+    for (pSlots[0].alias_checksum = 0, i = 0; i < 11; i++)
     {
        pSlots[0].alias_checksum = (((pSlots[0].alias_checksum & 1) << 7
                                   | ((pSlots[0].alias_checksum & 0xfe) >> 1))
@@ -523,9 +527,9 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
     }
     if (DeviceExt->FatInfo.FatType == FAT32)
     {
-      pEntry->FirstClusterHigh = CurrentCluster >> 16;
+      pEntry->FirstClusterHigh = (unsigned short)(CurrentCluster >> 16);
     }
-    pEntry->FirstCluster = CurrentCluster;
+    pEntry->FirstCluster = (unsigned short)CurrentCluster;
   }
 
   size = DeviceExt->FatInfo.BytesPerCluster / sizeof(FATDirEntry);
@@ -554,7 +558,7 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
     CcMapData (pDirFcb->FileObject, &FileOffset,
                nbSlots * sizeof(FATDirEntry) - size,
                TRUE, &Context, (PVOID*)&pFatEntry);
-    memcpy(pFatEntry, (PVOID)Buffer + size, nbSlots * sizeof(FATDirEntry) - size);
+    memcpy(pFatEntry, (PVOID)(Buffer + size), nbSlots * sizeof(FATDirEntry) - size);
   }
   CcSetDirtyPinnedData(Context, NULL);
   CcUnpinData(Context);
@@ -616,8 +620,7 @@ delEntry (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT pFileObject)
   PVFATFCB pFcb = NULL, pDirFcb = NULL;
   NTSTATUS status;
   PWSTR pName;
-  ULONG Entry = 0, startEntry, Read, CurrentCluster, NextCluster, i;
-  FATDirEntry DirEntry;
+  ULONG Entry = 0, startEntry, CurrentCluster, NextCluster, i;
 
   DPRINT ("delEntry PathFileName \'%S\'\n", pFileObject->FileName.Buffer);
 

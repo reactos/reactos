@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.41 2003/01/04 02:07:18 hbirr Exp $
+ * $Id: fat.c,v 1.42 2003/07/24 19:00:42 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -15,7 +15,9 @@
 #include <wchar.h>
 #include <ntos/minmax.h>
 
+#ifndef NDEBUG
 #define NDEBUG
+#endif
 #include <debug.h>
 
 #include "vfat.h"
@@ -39,7 +41,6 @@ Fat32GetNextCluster(PDEVICE_EXTENSION DeviceExt,
  */
 {
   PVOID BaseAddress;
-  NTSTATUS Status;
   ULONG FATOffset;
   ULONG ChunkSize;
   PVOID Context;
@@ -52,7 +53,7 @@ Fat32GetNextCluster(PDEVICE_EXTENSION DeviceExt,
   {
     return STATUS_UNSUCCESSFUL;
   }
-  CurrentCluster = (*(PULONG)(BaseAddress + (FATOffset % ChunkSize))) & 0x0fffffff;
+  CurrentCluster = (*(PULONG)((char*)BaseAddress + (FATOffset % ChunkSize))) & 0x0fffffff;
   if (CurrentCluster >= 0xffffff8 && CurrentCluster <= 0xfffffff)
     CurrentCluster = 0xffffffff;
   CcUnpinData(Context);
@@ -69,7 +70,6 @@ Fat16GetNextCluster(PDEVICE_EXTENSION DeviceExt,
  */
 {
   PVOID BaseAddress;
-  NTSTATUS Status;
   ULONG FATOffset;
   ULONG ChunkSize;
   PVOID Context;
@@ -82,7 +82,7 @@ Fat16GetNextCluster(PDEVICE_EXTENSION DeviceExt,
   {
     return STATUS_UNSUCCESSFUL;
   }
-  CurrentCluster = *((PUSHORT)(BaseAddress + (FATOffset % ChunkSize)));
+  CurrentCluster = *((PUSHORT)((char*)BaseAddress + (FATOffset % ChunkSize)));
   if (CurrentCluster >= 0xfff8 && CurrentCluster <= 0xffff)
     CurrentCluster = 0xffffffff;
   CcUnpinData(Context);
@@ -99,9 +99,7 @@ Fat12GetNextCluster(PDEVICE_EXTENSION DeviceExt,
  */
 {
   PUSHORT CBlock;
-  ULONG FATOffset;
   ULONG Entry;
-  NTSTATUS Status;
   PVOID BaseAddress;
   PVOID Context;
   LARGE_INTEGER Offset;
@@ -114,7 +112,7 @@ Fat12GetNextCluster(PDEVICE_EXTENSION DeviceExt,
   {
     return STATUS_UNSUCCESSFUL;
   }
-  CBlock = (PUSHORT)(BaseAddress + (CurrentCluster * 12) / 8);
+  CBlock = (PUSHORT)((char*)BaseAddress + (CurrentCluster * 12) / 8);
   if ((CurrentCluster % 2) == 0)
     {
       Entry = *CBlock & 0x0fff;
@@ -143,7 +141,6 @@ FAT16FindAvailableCluster(PDEVICE_EXTENSION DeviceExt,
   ULONG FatLength;
   ULONG StartCluster;
   ULONG i, j;
-  NTSTATUS Status;
   PVOID BaseAddress;
   ULONG ChunkSize;
   PVOID Context = 0;
@@ -173,7 +170,7 @@ FAT16FindAvailableCluster(PDEVICE_EXTENSION DeviceExt,
           return STATUS_UNSUCCESSFUL;
         }
         CHECKPOINT;
-		Block = (PUSHORT)(BaseAddress + i % ChunkSize);
+		Block = (PUSHORT)((char*)BaseAddress + i % ChunkSize);
 	   }
 
       if (*Block == 0)
@@ -202,13 +199,11 @@ FAT12FindAvailableCluster(PDEVICE_EXTENSION DeviceExt, PULONG Cluster)
  */
 {
   ULONG FatLength;
-  ULONG FATOffset;
   ULONG StartCluster;
   ULONG Entry;
   PUSHORT CBlock;
   ULONG i, j;
   PVOID BaseAddress;
-  NTSTATUS Status;
   PVOID Context;
   LARGE_INTEGER Offset;
 
@@ -226,7 +221,7 @@ FAT12FindAvailableCluster(PDEVICE_EXTENSION DeviceExt, PULONG Cluster)
   {
     for (i = StartCluster; i < FatLength; i++)
     {
-      CBlock = (PUSHORT)(BaseAddress + (i * 12) / 8);
+      CBlock = (PUSHORT)((char*)BaseAddress + (i * 12) / 8);
       if ((i % 2) == 0)
 	   {
 	     Entry = *CBlock & 0xfff;
@@ -259,7 +254,6 @@ FAT32FindAvailableCluster (PDEVICE_EXTENSION DeviceExt, PULONG Cluster)
   ULONG FatLength;
   ULONG StartCluster;
   ULONG i, j;
-  NTSTATUS Status;
   PVOID BaseAddress;
   ULONG ChunkSize;
   PVOID Context = 0;
@@ -287,7 +281,7 @@ FAT32FindAvailableCluster (PDEVICE_EXTENSION DeviceExt, PULONG Cluster)
           DPRINT1("CcMapData(Offset %x, Length %d) failed\n", (ULONG)Offset.QuadPart, ChunkSize);
           return STATUS_UNSUCCESSFUL;
 	}
-	Block = (PULONG)(BaseAddress + i % ChunkSize);
+	Block = (PULONG)((char*)BaseAddress + i % ChunkSize);
       }
 
       if ((*Block & 0x0fffffff) == 0)
@@ -316,12 +310,10 @@ FAT12CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
  * FUNCTION: Counts free cluster in a FAT12 table
  */
 {
-  ULONG FATOffset;
   ULONG Entry;
   PVOID BaseAddress;
   ULONG ulCount = 0;
   ULONG i;
-  NTSTATUS Status;
   ULONG numberofclusters;
   LARGE_INTEGER Offset;
   PVOID Context;
@@ -337,7 +329,7 @@ FAT12CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
 
   for (i = 2; i < numberofclusters; i++)
     {
-    CBlock = (PUSHORT)(BaseAddress + (i * 12) / 8);
+    CBlock = (PUSHORT)((char*)BaseAddress + (i * 12) / 8);
       if ((i % 2) == 0)
 	{
       Entry = *CBlock & 0x0fff;
@@ -369,7 +361,6 @@ FAT16CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
   ULONG ulCount = 0;
   ULONG i;
   ULONG ChunkSize;
-  NTSTATUS Status;
   PVOID Context = NULL;
   LARGE_INTEGER Offset;
   ULONG FatLength;
@@ -391,7 +382,7 @@ FAT16CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
 	{
 			return STATUS_UNSUCCESSFUL;
 		}
-		Block = (PUSHORT)(BaseAddress + i % ChunkSize);
+		Block = (PUSHORT)((char*)BaseAddress + i % ChunkSize);
 	}
 	if (*Block == 0)
 	    ulCount++;
@@ -416,7 +407,6 @@ FAT32CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
   ULONG ulCount = 0;
   ULONG i;
   ULONG ChunkSize;
-  NTSTATUS Status;
   PVOID Context = NULL;
   LARGE_INTEGER Offset;
   ULONG FatLength;
@@ -437,7 +427,7 @@ FAT32CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
 	{
 	   return STATUS_UNSUCCESSFUL;
 	}
-	Block = (PULONG)(BaseAddress + i % ChunkSize);
+	Block = (PULONG)((char*)BaseAddress + i % ChunkSize);
      }
      if ((*Block & 0x0fffffff) == 0)
        ulCount++;
@@ -487,8 +477,6 @@ FAT12WriteCluster(PDEVICE_EXTENSION DeviceExt,
   ULONG FATsector;
   ULONG FATOffset;
   PUCHAR CBlock;
-  int i;
-  NTSTATUS Status;
   PVOID BaseAddress;
   PVOID Context;
   LARGE_INTEGER Offset;
@@ -506,7 +494,7 @@ FAT12WriteCluster(PDEVICE_EXTENSION DeviceExt,
   if ((ClusterToWrite % 2) == 0)
     {
       *OldValue = CBlock[FATOffset] + ((CBlock[FATOffset + 1] & 0x0f) << 8);
-      CBlock[FATOffset] = NewValue;
+      CBlock[FATOffset] = (UCHAR)NewValue;
       CBlock[FATOffset + 1] &= 0xf0;
       CBlock[FATOffset + 1] |= (NewValue & 0xf00) >> 8;
     }
@@ -515,7 +503,7 @@ FAT12WriteCluster(PDEVICE_EXTENSION DeviceExt,
       *OldValue = (CBlock[FATOffset] >> 4) + (CBlock[FATOffset + 1] << 4);
       CBlock[FATOffset] &= 0x0f;
       CBlock[FATOffset] |= (NewValue & 0xf) << 4;
-      CBlock[FATOffset + 1] = NewValue >> 4;
+      CBlock[FATOffset + 1] = (UCHAR)(NewValue >> 4);
     }
   /* Write the changed FAT sector(s) to disk */
   FATsector = FATOffset / DeviceExt->FatInfo.BytesPerSector;
@@ -534,9 +522,7 @@ FAT16WriteCluster(PDEVICE_EXTENSION DeviceExt,
  */
 {
   PVOID BaseAddress;
-  NTSTATUS Status;
   ULONG FATOffset;
-  ULONG i;
   ULONG ChunkSize;
   PVOID Context;
   LARGE_INTEGER Offset;
@@ -551,9 +537,9 @@ FAT16WriteCluster(PDEVICE_EXTENSION DeviceExt,
   }
   DPRINT("Writing 0x%x for offset 0x%x 0x%x\n", NewValue, FATOffset,
 	     ClusterToWrite);
-  Cluster = ((PUSHORT)(BaseAddress + (FATOffset % ChunkSize)));
+  Cluster = ((PUSHORT)((char*)BaseAddress + (FATOffset % ChunkSize)));
   *OldValue = *Cluster;
-  *Cluster = NewValue;
+  *Cluster = (USHORT)NewValue;
   CcSetDirtyPinnedData(Context, NULL);
   CcUnpinData(Context);
   return(STATUS_SUCCESS);
@@ -569,9 +555,7 @@ FAT32WriteCluster(PDEVICE_EXTENSION DeviceExt,
  */
 {
   PVOID BaseAddress;
-  NTSTATUS Status;
   ULONG FATOffset;
-  ULONG i;
   ULONG ChunkSize;
   PVOID Context;
   LARGE_INTEGER Offset;
@@ -587,7 +571,7 @@ FAT32WriteCluster(PDEVICE_EXTENSION DeviceExt,
   }
   DPRINT("Writing 0x%x for offset 0x%x 0x%x\n", NewValue, FATOffset,
 	     ClusterToWrite);
-  Cluster = ((PULONG)(BaseAddress + (FATOffset % ChunkSize)));
+  Cluster = ((PULONG)((char*)BaseAddress + (FATOffset % ChunkSize)));
   *OldValue = *Cluster & 0x0fffffff;
   *Cluster = (*Cluster & 0xf0000000) | (NewValue & 0x0fffffff);
 

@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.20 2003/07/20 23:09:01 hbirr Exp $
+/* $Id: volume.c,v 1.21 2003/07/24 19:00:42 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -12,7 +12,9 @@
 #include <ddk/ntddk.h>
 #include <wchar.h>
 
+#ifndef NDEBUG
 #define NDEBUG
+#endif
 #include <debug.h>
 
 #include "vfat.h"
@@ -181,7 +183,8 @@ NTSTATUS VfatQueryVolumeInformation(PVFAT_IRP_CONTEXT IrpContext)
 
   DPRINT("VfatQueryVolumeInformation(IrpContext %x)\n", IrpContext);
 
-  if (!ExAcquireResourceSharedLite(&((PDEVICE_EXTENSION)IrpContext->DeviceObject->DeviceExtension)->DirResource, IrpContext->Flags & IRPCONTEXT_CANWAIT))
+  if (!ExAcquireResourceSharedLite(&((PDEVICE_EXTENSION)IrpContext->DeviceObject->DeviceExtension)->DirResource,
+                                   (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
   {
      return VfatQueueRequest (IrpContext);
   }
@@ -253,7 +256,8 @@ NTSTATUS VfatSetVolumeInformation(PVFAT_IRP_CONTEXT IrpContext)
 
   DPRINT1("VfatSetVolumeInformation(IrpContext %x)\n", IrpContext);
 
-  if (!ExAcquireResourceExclusiveLite(&((PDEVICE_EXTENSION)IrpContext->DeviceObject->DeviceExtension)->DirResource, IrpContext->Flags & IRPCONTEXT_CANWAIT))
+  if (!ExAcquireResourceExclusiveLite(&((PDEVICE_EXTENSION)IrpContext->DeviceObject->DeviceExtension)->DirResource,
+                                      (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
   {
      return VfatQueueRequest (IrpContext);
   }

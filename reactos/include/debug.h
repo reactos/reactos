@@ -31,7 +31,12 @@
 #endif
 #endif
 
+/* TODO: Make the output of file/line and the debug message atomic */
+#ifdef __GNUC__
 #define DPRINT1(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);
+#else
+#define DPRINT1 DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint
+#endif
 #define CHECKPOINT1 do { DbgPrint("%s:%d\n",__FILE__,__LINE__); } while(0);
 
 
@@ -39,7 +44,11 @@
 #define DPRINT(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);
 #define CHECKPOINT do { DbgPrint("%s:%d\n",__FILE__,__LINE__); } while(0);
 #else
+#ifdef __GNUC__
 #define DPRINT(args...)
+#else
+#define DPRINT
+#endif	/* __GNUC__ */
 #define CHECKPOINT
 #endif /* NDEBUG */
 
