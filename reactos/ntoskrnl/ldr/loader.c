@@ -25,12 +25,10 @@
 
 #include <ddk/ntddk.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 /* MACROS ********************************************************************/
-
-#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 
 /* GLOBALS *******************************************************************/
 
@@ -38,10 +36,13 @@ POBJECT_TYPE ObModuleType = NULL;
 
 /* FORWARD DECLARATIONS ******************************************************/
 
-NTSTATUS LdrCOFFProcessDriver(PVOID ModuleLoadBase);
-NTSTATUS LdrPEProcessDriver(PVOID ModuleLoadBase);
+NTSTATUS LdrProcessDriver(PVOID ModuleLoadBase);
+
+/*  PE Driver load support  */
+static NTSTATUS LdrPEProcessDriver(PVOID ModuleLoadBase);
 
 /*  COFF Driver load support  */
+static NTSTATUS LdrCOFFProcessDriver(PVOID ModuleLoadBase);
 static BOOLEAN LdrCOFFDoRelocations(module *Module, unsigned int SectionIndex);
 static BOOLEAN LdrCOFFDoAddr32Reloc(module *Module, SCNHDR *Section, RELOC *Relocation);
 static BOOLEAN LdrCOFFDoReloc32Reloc(module *Module, SCNHDR *Section, RELOC *Relocation);
@@ -95,7 +96,6 @@ LdrLoadDriver(PUNICODE_STRING Filename)
   NTSTATUS Status;
   HANDLE FileHandle;
   OBJECT_ATTRIBUTES FileObjectAttributes;
-  PIMAGE_DOS_HEADER PEDosHeader;
   FILE_STANDARD_INFORMATION FileStdInfo;
 
   DbgPrint("Loading Driver %W...\n", Filename);
@@ -132,7 +132,7 @@ LdrLoadDriver(PUNICODE_STRING Filename)
 
   /*  Allocate nonpageable memory for driver  */
   ModuleLoadBase = ExAllocatePool(NonPagedPool, 
-                 GET_LARGE_INTEGER_LOW_PART(FileStdInfo.AllocationSize));
+                 GET_LARGE_INTEGER_LOW_PART(FileStdInfo.EndOfFile));
   if (ModuleLoadBase == NULL)
     {
       return STATUS_INSUFFICIENT_RESOURCES;
@@ -143,7 +143,7 @@ LdrLoadDriver(PUNICODE_STRING Filename)
   Status = ZwReadFile(FileHandle, 
                       0, 0, 0, 0, 
                       ModuleLoadBase, 
-                      GET_LARGE_INTEGER_LOW_PART(FileStdInfo.AllocationSize), 
+                      GET_LARGE_INTEGER_LOW_PART(FileStdInfo.EndOfFile), 
                       0, 0);
   if (!NT_SUCCESS(Status))
     {
@@ -154,31 +154,7 @@ LdrLoadDriver(PUNICODE_STRING Filename)
 
   ZwClose(FileHandle);
 
-  /*  If MZ header exists  */
-  PEDosHeader = (PIMAGE_DOS_HEADER) ModuleLoadBase;
-  if (PEDosHeader->e_magic == IMAGE_DOS_MAGIC && PEDosHeader->e_lfanew != 0L)
-    {
-      Status = LdrPEProcessDriver(ModuleLoadBase);
-      if (!NT_SUCCESS(Status))
-        {
-          ExFreePool(ModuleLoadBase);
-          return Status;
-        }
-    }
-  if (PEDosHeader->e_magic == IMAGE_DOS_MAGIC)
-    {
-      ExFreePool(ModuleLoadBase);
-      return STATUS_NOT_IMPLEMENTED;
-    }
-  else  /*  Assume COFF format and load  */
-    {
-      Status = LdrCOFFProcessDriver(ModuleLoadBase);
-      if (!NT_SUCCESS(Status))
-        {
-          ExFreePool(ModuleLoadBase);
-          return Status;
-        }
-    }
+  Status = LdrProcessDriver(ModuleLoadBase);
 
   /*  Cleanup  */
   ExFreePool(ModuleLoadBase);
@@ -186,15 +162,40 @@ LdrLoadDriver(PUNICODE_STRING Filename)
   return STATUS_SUCCESS;
 }
 
+NTSTATUS
+LdrProcessDriver(PVOID ModuleLoadBase)
+{
+  PIMAGE_DOS_HEADER PEDosHeader;
+
+  /*  If MZ header exists  */
+  PEDosHeader = (PIMAGE_DOS_HEADER) ModuleLoadBase;
+  if (PEDosHeader->e_magic == IMAGE_DOS_MAGIC && PEDosHeader->e_lfanew != 0L)
+    {
+      return LdrPEProcessDriver(ModuleLoadBase);
+    }
+  if (PEDosHeader->e_magic == IMAGE_DOS_MAGIC)
+    {
+      return STATUS_NOT_IMPLEMENTED;
+    }
+  else  /*  Assume COFF format and load  */
+    {
+      return LdrCOFFProcessDriver(ModuleLoadBase);
+    }
+}
+
 NTSTATUS 
 LdrPEProcessDriver(PVOID ModuleLoadBase)
 {
-  unsigned int DriverSize;
-  PVOID DriverBase, CodeBase, InitializedDataBase, UninitializedDataBase;
+  unsigned int DriverSize, Idx;
+  long int RelocDelta, NumRelocs;
+  PVOID DriverBase, RelocBase;
   PULONG PEMagic;
   PIMAGE_DOS_HEADER PEDosHeader;
   PIMAGE_FILE_HEADER PEFileHeader;
   PIMAGE_OPTIONAL_HEADER PEOptionalHeader;
+  PIMAGE_SECTION_HEADER PESectionHeaders;
+  PRELOCATION_DIRECTORY RelocDir;
+  PRELOCATION_ENTRY RelocEntry;
   
   DPRINT("Processing PE Driver at module base:%08lx\n", ModuleLoadBase);
 
@@ -206,19 +207,34 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
     PEDosHeader->e_lfanew + sizeof(ULONG));
   PEOptionalHeader = (PIMAGE_OPTIONAL_HEADER) ((unsigned int) ModuleLoadBase + 
     PEDosHeader->e_lfanew + sizeof(ULONG) + sizeof(IMAGE_FILE_HEADER));
+  PESectionHeaders = (PIMAGE_SECTION_HEADER) ((unsigned int) ModuleLoadBase + 
+    PEDosHeader->e_lfanew + sizeof(ULONG) + sizeof(IMAGE_FILE_HEADER) +
+    sizeof(IMAGE_OPTIONAL_HEADER));
   CHECKPOINT;
 
   /*  Check file magic numbers  */
-  if (PEDosHeader->e_magic != IMAGE_DOS_MAGIC || 
-      PEDosHeader->e_lfanew == 0 ||
-      *PEMagic != IMAGE_PE_MAGIC ||
-      PEFileHeader->Machine != IMAGE_FILE_MACHINE_I386)
+  if (PEDosHeader->e_magic != IMAGE_DOS_MAGIC)
     {
+      DPRINT("Incorrect MZ magic: %04x\n", PEDosHeader->e_magic);
+      return STATUS_UNSUCCESSFUL;
+    }
+  if (PEDosHeader->e_lfanew == 0)
+    {
+      DPRINT("Invalid lfanew offset: %08x\n", PEDosHeader->e_lfanew);
+      return STATUS_UNSUCCESSFUL;
+    }
+  if (*PEMagic != IMAGE_PE_MAGIC)
+    {
+      DPRINT("Incorrect PE magic: %08x\n", *PEMagic);
+      return STATUS_UNSUCCESSFUL;
+    }
+  if (PEFileHeader->Machine != IMAGE_FILE_MACHINE_I386)
+    {
+      DPRINT("Incorrect Architechture: %04x\n", PEFileHeader->Machine);
       return STATUS_UNSUCCESSFUL;
     }
   CHECKPOINT;
 
-#if 0
   /* FIXME: if image is fixed-address load, then fail  */
 
   /* FIXME: check/verify OS version number  */
@@ -227,25 +243,30 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
          PEOptionalHeader->Magic,
          PEOptionalHeader->MajorLinkerVersion,
          PEOptionalHeader->MinorLinkerVersion);
-  DPRINT("Size: CODE:%08lx(%d) DATA:%08lx(%d) BSS:%08lx(%d)\n",
-         PEOptionalHeader->SizeOfCode,
-         PEOptionalHeader->SizeOfCode,
-         PEOptionalHeader->SizeOfInitializedData,
-         PEOptionalHeader->SizeOfInitializedData,
-         PEOptionalHeader->SizeOfUninitializedData,
-         PEOptionalHeader->SizeOfUninitializedData);
   DPRINT("Entry Point:%08lx\n", PEOptionalHeader->AddressOfEntryPoint);
   CHECKPOINT;
 
   /*  Determine the size of the module  */
-  DriverSize = ROUND_UP(PEOptionalHeader->SizeOfCode, 
-                        PEOptionalHeader->SectionAlignment) +
-    ROUND_UP(PEOptionalHeader->SizeOfInitializedData, 
-             PEOptionalHeader->SectionAlignment) +
-    ROUND_UP(PEOptionalHeader->SizeOfUninitializedData, 
-             PEOptionalHeader->SectionAlignment);
-  CHECKPOINT;
-
+  DPRINT("Sections: (section align:%08lx)\n", 
+         PEOptionalHeader->SectionAlignment);
+  DriverSize = 0;
+  for (Idx = 0; Idx < PEFileHeader->NumberOfSections; Idx++)
+    {
+      DPRINT("Name: %-8.8s VA:%08lx RawSize:%6d Offset:%08lx CHAR:%08lx OfsAdr: %08lx\n",
+             PESectionHeaders[Idx].Name,
+             PESectionHeaders[Idx].VirtualAddress,
+             PESectionHeaders[Idx].SizeOfRawData,
+             PESectionHeaders[Idx].PointerToRawData,
+             PESectionHeaders[Idx].Characteristics,
+             DriverSize);
+      DriverSize += ROUND_UP(PESectionHeaders[Idx].SizeOfRawData,
+                             PEOptionalHeader->SectionAlignment);
+    }
+  DPRINT("DriverSize computed by using section headers: %d(%08lx)\n",
+         DriverSize,
+         DriverSize);
+       
+#if 0
   /*  Allocate a virtual section for the module  */  
   DriverBase = MmAllocateSection(DriverSize);
   if (DriverBase == 0)
@@ -255,25 +276,70 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
     }
   CHECKPOINT;
 
-  /*  Compute addresses for driver sections  */
-  CodeBase = DriverBase;
-  InitializedDataBase = (PUCHAR) DriverBase + 
-    (PUCHAR) ROUND_UP(PEOptionalHeader->SizeOfCode, 
-                     PEOptionalHeader->SectionAlignment);
-  UninitializedDataBase = (PUCHAR) InitializedDataBase + 
-    (PUCHAR) ROUND_UP(PEOptionalHeader->SizeOfInitializedData, 
-                     PEOptionalHeader->SectionAlignment);
+  CurrentBase = ModuleLoadBase;
+  for (Idx = 0; Idx < PEFileHeader->NumberOfSections; Idx++)
+    {
+      /* Copy current section into current offset of virtual section  */
+      if (PESectionHeaders[Idx].Characteristics & 
+          (IMAGE_SECTION_CHAR_CODE | IMAGE_SECTION_CHAR_DATA))
+        {
+          memcpy(CurrentBase,
+                 (PVOID)(ModuleLoadBase + PESectionHeaders[Idx].PointerToRawData),
+                 PESectionHeaders[Idx].SizeOfRawData);
+        }
+      else
+        {
+          memset(CurrentBase, '\0', PESectionHeaders[Idx].SizeOfRawData);
+        }
+      CurrentSize += ROUND_UP(PESectionHeaders[Idx].SizeOfRawData,
+                              PEOptionalHeader->SectionAlignment);
+    }
 
-  /* FIXME: Copy code section into virtual section  */
-  memcpy(CodeBase,
-         (PVOID)(ModuleLoadBase + ???),
-         ROUND_UP(PEOptionalHeader->SizeOfCode, 
-                  PEOptionalHeader->FileAlignment));
+#else
+  DriverBase = ModuleLoadBase;
 #endif
 
-  /* FIXME: Copy initialized data section into virtual section  */
-  /* FIXME: Perform relocations fixups  */
+  /* FIXME: Perform relocation fixups  */
+  RelocDelta = (DWORD) DriverBase - PEOptionalHeader->ImageBase;
+  RelocDir = (PRELOCATION_DIRECTORY) ((DWORD)ModuleLoadBase +
+    PEOptionalHeader->DataDirectory[
+    IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress);
+  DPRINT("Relocs: ModuleLoadBase: %08lx RelocDelta %08lx\n", 
+         ModuleLoadBase,
+         RelocDelta);
+  while (RelocDir->SizeOfBlock != 0)
+    {
+      NumRelocs = (RelocDir->SizeOfBlock - sizeof(RELOCATION_DIRECTORY)) / 
+        sizeof(WORD);
+      DPRINT("RelocDir at %08lx for VA %08lx with %08lx relocs\n",
+             RelocDir, 
+             RelocDir->VirtualAddress,
+             NumRelocs);
+      RelocEntry = (PRELOCATION_ENTRY) ((DWORD)RelocDir + 
+        sizeof(RELOCATION_DIRECTORY));
+      for (Idx = 0; Idx < NumRelocs; Idx++)
+        {
+          DPRINT("  reloc at %08lx %x %s old:%08lx new:%08lx\n", 
+                 DriverBase + RelocDir->VirtualAddress +  
+                   (RelocEntry[Idx].TypeOffset & 0x0fff),
+                 (RelocEntry[Idx].TypeOffset >> 12) & 0xf,
+                 (RelocEntry[Idx].TypeOffset >> 12) & 0xf ? "HIGHLOW" : "ABS",
+                 *(PDWORD)((DWORD) DriverBase + RelocDir->VirtualAddress +  
+                   (RelocEntry[Idx].TypeOffset & 0x0fff)),
+                 (*(PDWORD)((DWORD) DriverBase + RelocDir->VirtualAddress +  
+                   (RelocEntry[Idx].TypeOffset & 0x0fff))) + RelocDelta);
+        }
+      RelocDir = (PRELOCATION_DIRECTORY)((DWORD)RelocDir + 
+        RelocDir->SizeOfBlock);
+getchar();
+    }
+
+#if 0
+
+  /* FIXME: perform import fixups  */
   /* FIXME: compute address of entry point  */
+
+#endif
 
   /* return InitializeLoadedDriver(EntryPoint); */
   return STATUS_NOT_IMPLEMENTED;

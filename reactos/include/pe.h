@@ -1,4 +1,6 @@
 
+#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
+
 #ifndef PWORD
 typedef WORD *PWORD;
 #endif
@@ -7,7 +9,7 @@ typedef WORD *PWORD;
 typedef DWORD *PDWORD;
 #endif
 
-#define IMAGE_DOS_MAGIC  0x54ad
+#define IMAGE_DOS_MAGIC  0x5a4d
 #define IMAGE_PE_MAGIC   0x00004550
 
 typedef struct _IMAGE_DOS_HEADER {      // DOS .EXE header
@@ -65,7 +67,6 @@ typedef struct _IMAGE_FILE_HEADER {
 #define IMAGE_FILE_MACHINE_R10000            0x168   // MIPS little-endian
 #define IMAGE_FILE_MACHINE_ALPHA             0x184   // Alpha_AXP
 #define IMAGE_FILE_MACHINE_POWERPC           0x1F0   // IBM PowerPC Little-Endian
-
 
 //
 // Directory format.
@@ -125,14 +126,6 @@ typedef struct _IMAGE_OPTIONAL_HEADER {
     IMAGE_DATA_DIRECTORY DataDirectory[IMAGE_NUMBEROF_DIRECTORY_ENTRIES];
 } IMAGE_OPTIONAL_HEADER, *PIMAGE_OPTIONAL_HEADER;
 
-
-typedef struct _IMAGE_NT_HEADERS {
-    DWORD Signature;
-    IMAGE_FILE_HEADER FileHeader;
-    IMAGE_OPTIONAL_HEADER OptionalHeader;
-} IMAGE_NT_HEADERS, *PIMAGE_NT_HEADERS;
-
-
 // Directory Entries
 
 #define IMAGE_DIRECTORY_ENTRY_EXPORT         0   // Export Directory
@@ -148,6 +141,12 @@ typedef struct _IMAGE_NT_HEADERS {
 #define IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG   10   // Load Configuration Directory
 #define IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT  11   // Bound Import Directory in headers
 #define IMAGE_DIRECTORY_ENTRY_IAT           12   // Import Address Table
+
+typedef struct _IMAGE_NT_HEADERS {
+    DWORD Signature;
+    IMAGE_FILE_HEADER FileHeader;
+    IMAGE_OPTIONAL_HEADER OptionalHeader;
+} IMAGE_NT_HEADERS, *PIMAGE_NT_HEADERS;
 
 //
 // Section header format.
@@ -173,6 +172,16 @@ typedef struct _IMAGE_SECTION_HEADER {
 
 #define IMAGE_SIZEOF_SECTION_HEADER          40
 
+
+#define IMAGE_SECTION_CHAR_CODE          0x00000020
+#define IMAGE_SECTION_CHAR_DATA          0x00000040
+#define IMAGE_SECTION_CHAR_BSS           0x00000080
+#define IMAGE_SECTION_CHAR_NON_CACHABLE  0x04000000
+#define IMAGE_SECTION_CHAR_NON_PAGEABLE  0x08000000
+#define IMAGE_SECTION_CHAR_SHARED        0x10000000
+#define IMAGE_SECTION_CHAR_EXECUTABLE    0x20000000
+#define IMAGE_SECTION_CHAR_READABLE      0x40000000
+#define IMAGE_SECTION_CHAR_WRITABLE      0x80000000
 
 //
 // Export Format
