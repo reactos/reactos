@@ -2096,33 +2096,6 @@ NTSTATUS  STDCALL RtlFindCharInUnicodeString(
     USHORT *pos);
 NTSTATUS  STDCALL RtlInitUnicodeStringEx(PUNICODE_STRING target,PCWSTR source);
 
-ULONG
-__cdecl
-DbgPrintEx(
-    IN ULONG ComponentId,
-    IN ULONG Level,
-    IN PCH Format,
-    ...
-    );
-ULONG
-__cdecl
-DbgPrintReturnControlC(
-    PCH Format,
-    ...
-    );
-NTSTATUS
-STDCALL
-DbgQueryDebugFilterState(
-    IN ULONG ComponentId,
-    IN ULONG Level
-    );
-NTSTATUS
-STDCALL
-DbgSetDebugFilterState(
-    IN ULONG ComponentId,
-    IN ULONG Level,
-    IN BOOL State
-    );
 NTSTATUS
 STDCALL
 NtCancelDeviceWakeupRequest(
