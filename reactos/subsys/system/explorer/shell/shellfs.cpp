@@ -156,11 +156,13 @@ bool ShellDirectory::get_path(PTSTR path) const
 
 	path[0] = TEXT('\0');
 
-	SFGAOF attribs = 0;
+	if (_folder.empty())
+		return false;
 
-	if (!_folder.empty())
-		if (FAILED(const_cast<ShellFolder&>(_folder)->GetAttributesOf(1, (LPCITEMIDLIST*)&_pidl, &attribs)))
-			return false;
+	SFGAOF attribs = SFGAO_FILESYSTEM;
+
+	if (FAILED(const_cast<ShellFolder&>(_folder)->GetAttributesOf(1, (LPCITEMIDLIST*)&_pidl, &attribs)))
+		return false;
 
 	if (!(attribs & SFGAO_FILESYSTEM))
 		return false;

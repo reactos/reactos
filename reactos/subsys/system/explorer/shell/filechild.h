@@ -101,13 +101,13 @@ protected:
 	virtual void resize_children(int cx, int cy);
 	virtual String jump_to_int(LPCTSTR url);
 
-	void	scan_entry(Entry* entry, HWND hwnd);
+	void	scan_entry(Entry* entry);
 
 	bool	expand_entry(Entry* dir);
 	static void collapse_entry(Pane* pane, Entry* dir);
 
-	void	set_curdir(Entry* entry, HWND hwnd);
-	void	activate_entry(Pane* pane, HWND hwnd);
+	void	set_curdir(Entry* entry);
+	void	activate_entry(Pane* pane);
 
 protected:
 	Root	_root;

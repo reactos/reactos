@@ -257,14 +257,16 @@ protected:
 struct HiddenWindow : public WindowHandle
 {
 	HiddenWindow(HWND hwnd)
-	 :	WindowHandle(hwnd)
+	 :	WindowHandle(IsWindowVisible(hwnd)? hwnd: 0)
 	{
-		SetWindowPos(hwnd, 0, 0, 0, 0, 0, SWP_HIDEWINDOW|SWP_NOREDRAW|SWP_NOMOVE|SWP_NOSIZE|SWP_NOZORDER);
+		if (_hwnd)
+			SetWindowPos(_hwnd, 0, 0, 0, 0, 0, SWP_HIDEWINDOW|SWP_NOREDRAW|SWP_NOMOVE|SWP_NOSIZE|SWP_NOZORDER);
 	}
 
 	~HiddenWindow()
 	{
-		SetWindowPos(_hwnd, 0, 0, 0, 0, 0, SWP_SHOWWINDOW|SWP_NOMOVE|SWP_NOSIZE|SWP_NOZORDER);
+		if (_hwnd)
+			SetWindowPos(_hwnd, 0, 0, 0, 0, 0, SWP_SHOWWINDOW|SWP_NOMOVE|SWP_NOSIZE|SWP_NOZORDER);
 	}
 };
 

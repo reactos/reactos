@@ -136,20 +136,20 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 	_right = NULL;
 
 	switch(info._etype) {
-	  case ET_SHELL: {	//@@ evtl. Aufteilung von FileChildWindow in ShellChildWindow, WinChildWindow, UnixChildWindow
+	  case ET_SHELL: {	//@@ separate into FileChildWindow in ShellChildWindow, WinChildWindow, UnixChildWindow ?
 		_root._drive_type = DRIVE_UNKNOWN;
 		lstrcpy(drv, TEXT("\\"));
 		lstrcpy(_root._volname, TEXT("Desktop"));
 		_root._fs_flags = 0;
 		lstrcpy(_root._fs, TEXT("Shell"));
 
-		const ShellChildWndInfo& shell_info = static_cast<const ShellChildWndInfo&>(info);
 		_root._entry = new ShellDirectory(GetDesktopFolder(), DesktopFolderPath(), hwnd);
+		const ShellChildWndInfo& shell_info = static_cast<const ShellChildWndInfo&>(info);
 		entry = _root._entry->read_tree((LPCTSTR)&*shell_info._shell_path, SORT_NAME);
 		break;}
 
 #ifdef __WINE__
-	  case ET_UNIX: {
+	  case ET_UNIX:
 		_root._drive_type = GetDriveType(info._path);
 
 		_tsplitpath(info._path, drv, NULL, NULL, NULL);
@@ -160,8 +160,7 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 		lstrcpy(_root._path, TEXT("/"));
 		_root._entry = new UnixDirectory(_root._path);
 		entry = _root._entry->read_tree(info._path, SORT_NAME);
-		break;}
-
+		break;
 #endif
 
 	  case ET_NTOBJS:
@@ -235,22 +234,22 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 	_header_wdths_ok = false;
 
 	if (entry)
-		set_curdir(entry, hwnd);
+		set_curdir(entry);
 
 	if (_left_hwnd) {
 		int idx = ListBox_FindItemData(_left_hwnd, ListBox_GetCurSel(_left_hwnd), _left->_cur);
 		ListBox_SetCurSel(_left_hwnd, idx);
+
+		 ///@todo scroll to visibility
 	}
 
-	 ///@todo scroll to visibility
-
 	 // store path into history
-	if (*info._path)
+	if (info._path && *info._path)
 		_url_history.push(info._path);
 }
 
 
-void FileChildWindow::set_curdir(Entry* entry, HWND hwnd)
+void FileChildWindow::set_curdir(Entry* entry)
 {
 	CONTEXT("FileChildWindow::set_curdir()");
 
@@ -262,7 +261,7 @@ void FileChildWindow::set_curdir(Entry* entry, HWND hwnd)
 
 	if (entry) {
 		if (!entry->_scanned)
-			scan_entry(entry, hwnd);
+			scan_entry(entry);
 		else {
 			ListBox_ResetContent(_right_hwnd);
 			_right->insert_entries(entry->_down, -1);
@@ -273,8 +272,8 @@ void FileChildWindow::set_curdir(Entry* entry, HWND hwnd)
 		entry->get_path(_path);
 	}
 
-	if (hwnd)	// only change window title, if the window already exists
-		SetWindowText(hwnd, _path);
+	if (_hwnd)	// only change window title if the window already exists
+		SetWindowText(_hwnd, _path);
 
 	if (_path[0])
 		if (SetCurrentDirectory(_path))
@@ -459,14 +458,14 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			  case ID_REFRESH: {CONTEXT("ID_REFRESH");
 				bool expanded = _left->_cur->_expanded;
 
-				scan_entry(_left->_cur, _hwnd);
+				scan_entry(_left->_cur);
 
 				if (expanded)
 					expand_entry(_left->_cur);
 				break;}
 
 			  case ID_ACTIVATE: {CONTEXT("ID_ACTIVATE");
-				activate_entry(pane, _hwnd);
+				activate_entry(pane);
 				break;}
 
 			  default:
@@ -536,13 +535,13 @@ int FileChildWindow::Command(int id, int code)
 		Entry* entry = (Entry*) ListBox_GetItemData(*pane, idx);
 
 		if (pane == _left)
-			set_curdir(entry, _hwnd);
+			set_curdir(entry);
 		else
 			pane->_cur = entry;
 		break;}
 
 	  case LBN_DBLCLK:
-		activate_entry(pane, _hwnd);
+		activate_entry(pane);
 		break;
 	}
 
@@ -550,7 +549,7 @@ int FileChildWindow::Command(int id, int code)
 }
 
 
-void FileChildWindow::activate_entry(Pane* pane, HWND hwnd)
+void FileChildWindow::activate_entry(Pane* pane)
 {
 	Entry* entry = pane->_cur;
 
@@ -563,7 +562,7 @@ void FileChildWindow::activate_entry(Pane* pane, HWND hwnd)
 		int scanned_old = entry->_scanned;
 
 		if (!scanned_old)
-			scan_entry(entry, hwnd);
+			scan_entry(entry);
 
 		if (entry->_data.cFileName[0]==TEXT('.') && entry->_data.cFileName[1]==TEXT('\0'))
 			return;
@@ -580,7 +579,8 @@ void FileChildWindow::activate_entry(Pane* pane, HWND hwnd)
 			if (!pane->_treePane) focus_entry: {
 				int idx = ListBox_FindItemData(_left_hwnd, ListBox_GetCurSel(_left_hwnd), entry);
 				ListBox_SetCurSel(_left_hwnd, idx);
-				set_curdir(entry, _hwnd);
+
+				set_curdir(entry);
 			}
 		}
 
@@ -595,7 +595,7 @@ void FileChildWindow::activate_entry(Pane* pane, HWND hwnd)
 }
 
 
-void FileChildWindow::scan_entry(Entry* entry, HWND hwnd)
+void FileChildWindow::scan_entry(Entry* entry)
 {
 	CONTEXT("FileChildWindow::scan_entry()");
 
@@ -646,9 +646,49 @@ String FileChildWindow::jump_to_int(LPCTSTR url)
 	String dir, fname;
 
 	if (SplitFileSysURL(url, dir, fname)) {
-		//@@jump_to(path);
+		Entry* entry = NULL;
 
-		return FmtString(TEXT("file://%s"), (LPCTSTR)dir);
+		if (_root._entry)
+			switch(_root._entry->_etype) {
+			  case ET_SHELL: {	//@@ separate into FileChildWindow in ShellChildWindow, WinChildWindow, UnixChildWindow ?
+				ShellPath shell_path(dir);
+				entry = _root._entry->read_tree((LPCTSTR)&*shell_path, SORT_NAME);
+				break;}
+
+#ifdef __WINE__
+			  case ET_UNIX:
+				entry = _root._entry->read_tree(info._path, SORT_NAME);
+				break;
+#endif
+
+			  case ET_NTOBJS:
+				entry = _root._entry->read_tree(dir, SORT_NAME);
+				break;
+
+			  case ET_REGISTRY:
+				entry = _root._entry->read_tree(dir, SORT_NONE);
+				break;
+
+			  case ET_FAT: {
+				entry = _root._entry->read_tree(dir, SORT_NONE);
+				break;}
+
+			  default:	// ET_WINDOWS
+				entry = _root._entry->read_tree(dir, SORT_NAME);	//@@ smart_scan() ?!
+			}
+
+			if (entry) {
+				set_curdir(entry);
+
+				if (_left_hwnd) {
+					int idx = ListBox_FindItemData(_left_hwnd, ListBox_GetCurSel(_left_hwnd), entry);
+					ListBox_SetCurSel(_left_hwnd, idx);
+
+					 ///@todo scroll to visibility
+				}
+
+				return FmtString(TEXT("file://%s"), (LPCTSTR)dir);
+			}
 	}
 
 	return String();

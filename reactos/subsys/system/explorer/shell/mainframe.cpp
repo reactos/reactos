@@ -265,7 +265,7 @@ MainFrame::MainFrame(HWND hwnd)
 	new EditController(_haddressedit);
 
 	_hcommandedit = CreateWindow(TEXT("EDIT"), TEXT("> "), WS_CHILD|WS_VISIBLE, 0, 0, 0, rect.bottom,
-							hwnd, (HMENU)IDW_ADDRESSBAR, g_Globals._hInstance, 0);
+							hwnd, (HMENU)IDW_COMMANDBAR, g_Globals._hInstance, 0);
 	SetWindowFont(_hcommandedit, hfont, FALSE);
 	new EditController(_hcommandedit);
 
@@ -278,14 +278,12 @@ MainFrame::MainFrame(HWND hwnd)
 	CheckMenuItem(_menu_info._hMenuView, ID_VIEW_STATUSBAR, MF_BYCOMMAND|MF_CHECKED);
 
 	_hsidebar = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, TEXT("Sidebar"),
-					WS_CHILD|WS_TABSTOP|WS_BORDER|WS_VISIBLE|WS_CHILD|TVS_HASLINES|TVS_HASBUTTONS|TVS_SHOWSELALWAYS|TVS_INFOTIP,
+					WS_CHILD|WS_TABSTOP|WS_BORDER|/*WS_VISIBLE|*/WS_CHILD|TVS_HASLINES|TVS_HASBUTTONS|TVS_SHOWSELALWAYS|TVS_INFOTIP,
 					-1, -1, 200, 0, _hwnd, (HMENU)IDW_SIDEBAR, g_Globals._hInstance, 0);
 
 	TreeView_SetImageList(_hsidebar, _himl, TVSIL_NORMAL);
 
-	CheckMenuItem(_menu_info._hMenuView, ID_VIEW_SIDE_BAR, MF_BYCOMMAND|MF_CHECKED);
-
-	FillBookmarks();
+	CheckMenuItem(_menu_info._hMenuView, ID_VIEW_SIDE_BAR, MF_BYCOMMAND|MF_UNCHECKED/*MF_CHECKED*/);
 }
 
 
@@ -625,6 +623,10 @@ int MainFrame::Command(int id, int code)
 		break;
 
 	  case ID_VIEW_SIDE_BAR:
+		 // lazy initialization
+		if (!TreeView_GetCount(_hsidebar))
+			FillBookmarks();
+
 		toggle_child(_hwnd, id, _hsidebar);
 		break;
 

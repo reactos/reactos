@@ -44,7 +44,7 @@ ShellBrowserChild::ShellBrowserChild(HWND hwnd, const ShellChildWndInfo& info)
 	_last_sel = 0;
 
 	 // store path into history
-	if (*info._path)
+	if (info._path && *info._path)
 		_url_history.push(info._path);
 }
 
@@ -442,8 +442,8 @@ int ShellBrowserChild::Notify(int id, NMHDR* pnmh)
 {
 	switch(pnmh->code) {
 	  case TVN_GETDISPINFO:		OnTreeGetDispInfo(id, pnmh);					break;
-	  case TVN_ITEMEXPANDING:	OnTreeItemExpanding(id, (LPNMTREEVIEW)pnmh);	break;
 	  case TVN_SELCHANGED:		OnTreeItemSelected(id, (LPNMTREEVIEW)pnmh);		break;
+	  case TVN_ITEMEXPANDING:	OnTreeItemExpanding(id, (LPNMTREEVIEW)pnmh);	break;
 	  case NM_RCLICK:			OnTreeItemRClick(id, pnmh);						break;
 	  default:					return super::Notify(id, pnmh);
 	}
@@ -539,7 +539,10 @@ String ShellBrowserChild::jump_to_int(LPCTSTR url)
 bool ShellBrowserChild::jump_to_pidl(LPCITEMIDLIST pidl)
 {
 
-//@@
+/*@todo
+	we should call read_tree() here to iterate through the hierarchy and open all folders from shell_info._root_shell_path to shell_info._shell_path
+	-> see FileChildWindow::FileChildWindow()
+*/
 
 	return false;
 }
