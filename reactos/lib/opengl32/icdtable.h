@@ -14,7 +14,7 @@ enum icdoffsets_e
 
 typedef struct tagICDTable
 {
-	DWORD	num_funcs; /*!< Normally 336 (0x150) -- the number of functions in OpenGL 1.1 */
+	DWORD	num_funcs;           /*!< Normally 336 (0x150) -- the number of functions in OpenGL 1.1 */
 	PROC	dispatch_table[812]; /*!< Table containing \a num_funcs pointers to OpenGL functions */
 } ICDTable, *PICDTable;
 
