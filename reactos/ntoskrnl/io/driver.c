@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.20 2003/10/06 18:24:54 navaraf Exp $
+/* $Id: driver.c,v 1.21 2003/10/06 18:49:50 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
