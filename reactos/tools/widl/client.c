@@ -510,6 +510,9 @@ static void marshall_in_arguments(func_t *func, unsigned int *type_offset)
                         fprintf(client, "*");
                     write_name(client, var);
                     fprintf(client, ";\n");
+                    print_client("_StubMsg.Buffer += sizeof(");
+                    write_type(client, var->type, NULL, var->tname);
+                    fprintf(client, ");\n");
                     fprintf(client, "\n");
 
                     last_size = size;

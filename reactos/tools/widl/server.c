@@ -639,9 +639,13 @@ static void marshall_out_arguments(func_t *func)
                     fprintf(server, "\n");
                     print_server("*((");
                     write_type(server, var->type, NULL, var->tname);
-                    fprintf(server, " __RPC_FAR *)_StubMsg.Buffer)++ = *");
+                    fprintf(server, " __RPC_FAR *)_StubMsg.Buffer) = *");
                     write_name(server, var);
                     fprintf(server, ";\n");
+
+                    print_server("_StubMsg.Buffer += sizeof(");
+                    write_type(server, var->type, NULL, var->tname);
+                    fprintf(server, ");");
                 }
                 else
                 {
@@ -692,7 +696,10 @@ static void marshall_out_arguments(func_t *func)
             print_server("_StubMsg.Buffer += %u;\n", alignment);
         print_server("*((");
         write_type(server, def->type, def, def->tname);
-        fprintf(server, " __RPC_FAR *)_StubMsg.Buffer)++ = _RetVal;\n");
+        fprintf(server, " __RPC_FAR *)_StubMsg.Buffer) = _RetVal;\n");
+        print_server("_StubMsg.Buffer += sizeof(");
+        write_type(server, def->type, def, def->tname);
+        fprintf(server, ");\n");
     }
 }
 

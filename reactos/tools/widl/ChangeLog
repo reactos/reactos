@@ -1,5 +1,12 @@
 ChangeLog
 
+2005-03-20 navaraf
+
+   tools/widl/client.c
+   tools/widl/server.c
+
+Generate code without L-value casts.
+
 2005-03-20 ekohl
 
    tools/widl/client.c
