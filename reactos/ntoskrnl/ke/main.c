@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.200 2004/10/22 20:30:47 ekohl Exp $
+/* $Id: main.c,v 1.201 2004/10/24 12:00:01 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -112,7 +112,12 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
     *   There is NO need to do this again.
     */
 
+   Ki386SetProcessorFeatures();
+
    SharedUserData->NtProductType = NtProductWinNt;
+   SharedUserData->ProductTypeIsValid = TRUE;
+   SharedUserData->NtMajorVersion = 5;
+   SharedUserData->NtMinorVersion = 0;
 
    BootDriveFound = FALSE;
 

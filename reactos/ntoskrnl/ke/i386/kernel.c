@@ -45,6 +45,7 @@ ULONG Ke386L1CacheSize;
 ULONG Ke386L2CacheSize;
 BOOLEAN Ke386NoExecute = FALSE;
 BOOLEAN Ke386Pae = FALSE;
+BOOLEAN Ke386PaeEnabled = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -299,6 +300,7 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
    if ((Pae && (Ke386CpuidFlags & X86_FEATURE_PAE)) || NoExecute)
    {
       MiEnablePAE((PVOID*)LastKernelAddress);
+      Ke386PaeEnabled = TRUE;
    }
 }
 
@@ -319,7 +321,7 @@ KeInit2(VOID)
          if (Ke386NoExecute)
          {
             DPRINT1("NoExecute is enabled\n");
-	 }
+         }
       }
       else
       {
@@ -344,4 +346,26 @@ KeInit2(VOID)
    {
       DPRINT1("Ke386L2CacheSize: %dkB\n", Ke386L2CacheSize);
    }
+}
+
+VOID INIT_FUNCTION
+Ki386SetProcessorFeatures(VOID)
+{
+  SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_PRECISION_ERRATA] = FALSE;
+  SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_EMULATED] = FALSE;
+  SharedUserData->ProcessorFeatures[PF_COMPARE_EXCHANGE_DOUBLE] =
+    (Ke386CpuidFlags & X86_FEATURE_CX8);
+  SharedUserData->ProcessorFeatures[PF_MMX_INSTRUCTIONS_AVAILABLE] =
+    (Ke386CpuidFlags & X86_FEATURE_MMX);
+  SharedUserData->ProcessorFeatures[PF_PPC_MOVEMEM_64BIT_OK] = FALSE;
+  SharedUserData->ProcessorFeatures[PF_ALPHA_BYTE_INSTRUCTIONS] = FALSE;
+  SharedUserData->ProcessorFeatures[PF_XMMI_INSTRUCTIONS_AVAILABLE] = 
+    (Ke386CpuidFlags & X86_FEATURE_SSE);
+  SharedUserData->ProcessorFeatures[PF_3DNOW_INSTRUCTIONS_AVAILABLE] =
+    (Ke386CpuidExFlags & X86_EXT_FEATURE_3DNOW);
+  SharedUserData->ProcessorFeatures[PF_RDTSC_INSTRUCTION_AVAILABLE] =
+    (Ke386CpuidFlags & X86_FEATURE_TSC);
+  SharedUserData->ProcessorFeatures[PF_PAE_ENABLED] = Ke386PaeEnabled;
+  SharedUserData->ProcessorFeatures[PF_XMMI64_INSTRUCTIONS_AVAILABLE] =
+    (Ke386CpuidFlags & X86_FEATURE_SSE2);
 }

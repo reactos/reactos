@@ -69,14 +69,21 @@
 #define KTRAP_FRAME_RESERVED9      (0x8A)
 #define KTRAP_FRAME_SIZE           (0x8C)
 
-#define X86_EFLAGS_VM	    0x00020000 /* Virtual Mode */
-#define X86_EFLAGS_ID	    0x00200000 /* CPUID detection flag */
+#define X86_EFLAGS_VM           0x00020000 /* Virtual Mode */
+#define X86_EFLAGS_ID           0x00200000 /* CPUID detection flag */
 
-#define X86_CR4_PAE	    0x00000020 /* enable physical address extensions */
-#define X86_CR4_PGE	    0x00000080 /* enable global pages */
+#define X86_CR4_PAE             0x00000020 /* enable physical address extensions */
+#define X86_CR4_PGE             0x00000080 /* enable global pages */
 
-#define X86_FEATURE_PAE	    0x00000040 /* physical address extension is present */	
-#define X86_FEATURE_PGE	    0x00002000 /* Page Global Enable */
+#define X86_FEATURE_TSC         0x00000010 /* time stamp counters are present */
+#define X86_FEATURE_PAE         0x00000040 /* physical address extension is present */
+#define X86_FEATURE_CX8         0x00000100 /* CMPXCHG8B instruction present */
+#define X86_FEATURE_PGE         0x00002000 /* Page Global Enable */
+#define X86_FEATURE_MMX         0x00800000 /* MMX extension present */
+#define X86_FEATURE_SSE         0x02000000 /* SSE extension present */
+#define X86_FEATURE_SSE2        0x04000000 /* SSE2 extension present */
+
+#define X86_EXT_FEATURE_3DNOW   0x40000000 /* 3DNOW! extension present */
 
 #ifndef __ASM__
 
@@ -160,6 +167,8 @@ VOID
 KiGdtPrepareForApplicationProcessorInit(ULONG Id);
 VOID
 Ki386InitializeLdt(VOID);
+VOID
+Ki386SetProcessorFeatures(VOID);
 ULONG KeAllocateGdtSelector(ULONG Desc[2]);
 VOID KeFreeGdtSelector(ULONG Entry);
 VOID
