@@ -150,7 +150,7 @@ DWORD  W32kSetMapperFlags(HDC  hDC,
 UINT  W32kSetTextAlign(HDC  hDC,
                        UINT  Mode);
 
-COLORREF  W32kSetTextColor(HDC  hDC,
+COLORREF STDCALL W32kSetTextColor(HDC  hDC,
                            COLORREF  Color);
 
 BOOL  W32kSetTextJustification(HDC  hDC,

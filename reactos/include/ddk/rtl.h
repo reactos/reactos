@@ -1,4 +1,4 @@
-/*
+/* $Id: rtl.h,v 1.16 1999/10/31 22:44:39 ea Exp $
  * 
  */
 
@@ -340,6 +340,7 @@ RtlExtendedMagicDivide (
 	);
 
 VOID
+STDCALL
 RtlFillMemory (
 	PVOID	Destination,
 	ULONG	Length,
@@ -573,6 +574,7 @@ RtlLengthSecurityDescriptor (
 	);
 
 VOID
+STDCALL
 RtlMoveMemory (
 	PVOID		Destination,
 	CONST VOID	* Source,
@@ -646,6 +648,7 @@ RtlGetCallersAddress (
 	);
 
 VOID
+STDCALL
 RtlZeroMemory (
 	PVOID	Destination,
 	ULONG	Length
