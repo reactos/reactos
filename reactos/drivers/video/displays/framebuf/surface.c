@@ -111,6 +111,15 @@ DrvEnableSurface(
 
    ppdev->hSurfEng = hSurface;
 
+#ifdef EXPERIMENTAL_MOUSE_CURSOR_SUPPORT
+   ppdev->ScreenClipObj = EngCreateClip();
+   ppdev->ScreenClipObj->iDComplexity = DC_RECT;
+   ppdev->ScreenClipObj->rclBounds.left = 0;
+   ppdev->ScreenClipObj->rclBounds.top = 0;
+   ppdev->ScreenClipObj->rclBounds.right = ppdev->ScreenWidth;
+   ppdev->ScreenClipObj->rclBounds.bottom = ppdev->ScreenHeight;
+#endif
+
    return hSurface;
 }
 
@@ -130,9 +139,18 @@ DrvDisableSurface(
 {
    DWORD ulTemp;
    VIDEO_MEMORY VideoMemory;
+   PPDEV ppdev = (PPDEV)dhpdev;
 
-   EngDeleteSurface(((PPDEV)dhpdev)->hSurfEng);
-   ((PPDEV)dhpdev)->hSurfEng = NULL;
+   EngDeleteSurface(ppdev->hSurfEng);
+   ppdev->hSurfEng = NULL;
+
+#ifdef EXPERIMENTAL_MOUSE_CURSOR_SUPPORT
+   EngDeleteClip(ppdev->ScreenClipObj);
+   ppdev->ScreenClipObj = NULL;
+
+   /* Clear all mouse pointer surfaces. */
+   DrvSetPointerShape(NULL, NULL, NULL, NULL, 0, 0, 0, 0, NULL, 0);
+#endif
 
    /*
     * Unmap the framebuffer.
