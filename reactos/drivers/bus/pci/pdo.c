@@ -1,4 +1,4 @@
-/* $Id: pdo.c,v 1.1 2001/09/16 13:18:24 chorns Exp $
+/* $Id: pdo.c,v 1.2 2003/12/12 21:54:42 ekohl Exp $
  *
  * PROJECT:         ReactOS PCI bus driver
  * FILE:            pdo.c
@@ -7,7 +7,11 @@
  * UPDATE HISTORY:
  *      10-09-2001  CSH  Created
  */
-#include <pci.h>
+
+#include <ddk/ntddk.h>
+
+#include "pcidef.h"
+#include "pci.h"
 
 #define NDEBUG
 #include <debug.h>

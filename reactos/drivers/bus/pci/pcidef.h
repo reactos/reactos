@@ -1,5 +1,5 @@
 /*
- *	$Id: pcidef.h,v 1.2 2001/11/01 23:17:10 ekohl Exp $
+ *	$Id: pcidef.h,v 1.3 2003/12/12 21:54:42 ekohl Exp $
  *
  *	PCI defines and function prototypes
  *	Copyright 1994, Drew Eckhardt
@@ -298,18 +298,7 @@
 #define PCI_ROM_RESOURCE 6
 #define PCI_BRIDGE_RESOURCES 7
 #define PCI_NUM_RESOURCES 11
-  
+
 #define PCI_REGION_FLAG_MASK 0x0f	/* These bits of resource flags tell us the PCI region flags */
-
-
-
-#define CONFIG_CMD(bus, device_fn, where) \
-	(0x80000000 | (bus << 16) | (device_fn << 8) | (where & ~3))
-
-#define IOADDR(devfn, where) \
-	((0xC000 | ((devfn & 0x78) << 5)) + where)
-
-#define FUNC(devfn) \
-	(((devfn & 7) << 1) | 0xf0)
 
 #endif /* _PCIDEF_H */

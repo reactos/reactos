@@ -1,10 +1,7 @@
-/* $Id: pci.h,v 1.3 2003/11/14 17:13:24 weiden Exp $ */
+/* $Id: pci.h,v 1.4 2003/12/12 21:54:42 ekohl Exp $ */
 
 #ifndef __PCI_H
 #define __PCI_H
-
-#include <ddk/ntddk.h>
-#include <pcidef.h>
 
 
 typedef enum {
@@ -20,6 +17,8 @@ typedef struct _PCI_DEVICE
   LIST_ENTRY ListEntry;
   // Physical Device Object of device
   PDEVICE_OBJECT Pdo;
+  /* PCI Slot number */
+  PCI_SLOT_NUMBER SlotNumber;
   // PCI configuration data
   PCI_COMMON_CONFIG PciConfig;
   // Flag used during enumeration to locate removed devices
@@ -103,21 +102,9 @@ FdoPowerControl(
 
 /* pci.c */
 
-extern PCI_BUS_TYPE PciBusConfigType;
-
-PCI_BUS_TYPE
-PciGetBusConfigType(VOID);
-
-ULONG
-PciGetBusData(ULONG BusNumber,
-	       ULONG SlotNumber,
-	       PVOID Buffer,
-	       ULONG Offset,
-               ULONG Length);
-
 BOOLEAN
 PciCreateUnicodeString(
-  PUNICODE_STRING	Destination,
+  PUNICODE_STRING Destination,
   PWSTR Source,
   POOL_TYPE PoolType);
 
