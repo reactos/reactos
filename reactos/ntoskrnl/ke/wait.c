@@ -677,11 +677,78 @@ NTSTATUS STDCALL NtWaitForSingleObject (IN	HANDLE		Object,
 }
 
 
-NTSTATUS STDCALL NtSignalAndWaitForSingleObject (IN HANDLE EventHandle,
-						 IN BOOLEAN Alertable,
-						 IN PLARGE_INTEGER Time,
-						 PULONG	
-					      NumberOfWaitingThreads OPTIONAL)
+NTSTATUS STDCALL
+NtSignalAndWaitForSingleObject(IN HANDLE SignalObject,
+			       IN HANDLE WaitObject,
+			       IN BOOLEAN Alertable,
+			       IN PLARGE_INTEGER Time)
 {
-   UNIMPLEMENTED;
+   KPROCESSOR_MODE ProcessorMode;
+   DISPATCHER_HEADER* hdr;
+   PVOID SignalObj;
+   PVOID WaitObj;
+   NTSTATUS Status;
+
+   ProcessorMode = CURRENT_KPCR->CurrentThread->PreviousMode;
+   Status = ObReferenceObjectByHandle(SignalObject,
+				      0,
+				      NULL,
+				      ProcessorMode,
+				      &SignalObj,
+				      NULL);
+   if (!NT_SUCCESS(Status))
+     {
+	return Status;
+     }
+
+   Status = ObReferenceObjectByHandle(WaitObject,
+				      SYNCHRONIZE,
+				      NULL,
+				      ProcessorMode,
+				      &WaitObj,
+				      NULL);
+   if (!NT_SUCCESS(Status))
+     {
+	ObDereferenceObject(SignalObj);
+	return Status;
+     }
+
+   hdr = (DISPATCHER_HEADER *)SignalObj;
+   switch (hdr->Type)
+     {
+      case InternalNotificationEvent:
+      case InternalSynchronizationEvent:
+	KeSetEvent(SignalObj,
+		   EVENT_INCREMENT,
+		   TRUE);
+	break;
+
+      case InternalMutexType:
+	KeReleaseMutex(SignalObj,
+		       TRUE);
+	break;
+
+      case InternalSemaphoreType:
+	KeReleaseSemaphore(SignalObj,
+			   SEMAPHORE_INCREMENT,
+			   1,
+			   TRUE);
+	break;
+
+      default:
+	ObDereferenceObject(SignalObj);
+	ObDereferenceObject(WaitObj);
+	return STATUS_OBJECT_TYPE_MISMATCH;
+     }
+
+   Status = KeWaitForSingleObject(WaitObj,
+				  UserRequest,
+				  ProcessorMode,
+				  Alertable,
+				  Time);
+
+   ObDereferenceObject(SignalObj);
+   ObDereferenceObject(WaitObj);
+
+   return Status;
 }

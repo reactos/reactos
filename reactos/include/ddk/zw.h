@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.39 2000/12/23 02:37:36 dwelch Exp $
+/* $Id: zw.h,v 1.40 2001/01/02 00:46:10 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -4844,44 +4844,43 @@ ZwUnmapViewOfSection(
 /* --- OBJECT SYNCHRONIZATION --- */
 
 /*
- * FUNCTION: Signals an event and wait for it to be signaled again.
+ * FUNCTION: Signals an object and wait for an other one.
  * ARGUMENTS: 
- *        EventHandle = Handle to the event that should be signaled
- *        Alertable =  True if the wait is alertable
+ *        SignalObject = Handle to the object that should be signaled
+ *        WaitObject = Handle to the object that should be waited for
+ *        Alertable = True if the wait is alertable
  *        Time = The time to wait
- *        NumberOfWaitingThreads = Number of waiting threads
  * RETURNS: Status
- */ 
-
-NTSTATUS 
-STDCALL 
+ */
+NTSTATUS
+STDCALL
 NtSignalAndWaitForSingleObject(
-        IN HANDLE EventHandle,
-	IN BOOLEAN Alertable,
-	IN PLARGE_INTEGER Time,
-	PULONG NumberOfWaitingThreads OPTIONAL 
+	IN	HANDLE		SignalObject,
+	IN	HANDLE		WaitObject,
+	IN	BOOLEAN		Alertable,
+	IN	PLARGE_INTEGER	Time
 	);
 
-NTSTATUS 
-STDCALL 
-ZwSignalAndWaitForSingleObject(
-        IN HANDLE EventHandle,
-	IN BOOLEAN Alertable,
-	IN PLARGE_INTEGER Time,
-	PULONG NumberOfWaitingThreads OPTIONAL 
+NTSTATUS
+STDCALL
+NtSignalAndWaitForSingleObject(
+	IN	HANDLE		SignalObject,
+	IN	HANDLE		WaitObject,
+	IN	BOOLEAN		Alertable,
+	IN	PLARGE_INTEGER	Time
 	);
 
 /*
- * FUNCTION: Waits for multiple objects to become signalled. 
+ * FUNCTION: Waits for multiple objects to become signalled.
  * ARGUMENTS: 
  *       Count = The number of objects
  *       Object = The array of object handles
  *       WaitType = Can be one of the values UserMode or KernelMode
  *       Alertable = If true the wait is alertable.
- *       Time = The maximum wait time. 
+ *       Time = The maximum wait time.
  * REMARKS:
- * 	This function maps to the win32 WaitForMultipleObjectEx.
- * RETURNS: Status    
+ *       This function maps to the win32 WaitForMultipleObjectEx.
+ * RETURNS: Status
  */
 NTSTATUS
 STDCALL
@@ -4890,7 +4889,7 @@ NtWaitForMultipleObjects (
 	IN HANDLE Object[],
 	IN CINT WaitType,
 	IN BOOLEAN Alertable,
-	IN PLARGE_INTEGER Time 
+	IN PLARGE_INTEGER Time
 	);
 
 NTSTATUS
@@ -4900,24 +4899,25 @@ ZwWaitForMultipleObjects (
 	IN HANDLE Object[],
 	IN CINT WaitType,
 	IN BOOLEAN Alertable,
-	IN PLARGE_INTEGER Time 
+	IN PLARGE_INTEGER Time
 	);
+
 /*
- * FUNCTION: Waits for an object to become signalled. 
+ * FUNCTION: Waits for an object to become signalled.
  * ARGUMENTS: 
  *       Object = The object handle
  *       Alertable = If true the wait is alertable.
  *       Time = The maximum wait time.
  * REMARKS:
- * 	This function maps to the win32 WaitForSingleObjectEx. 
- * RETURNS: Status    
+ *       This function maps to the win32 WaitForSingleObjectEx.
+ * RETURNS: Status
  */
 NTSTATUS
 STDCALL
 NtWaitForSingleObject (
 	IN HANDLE Object,
 	IN BOOLEAN Alertable,
-	IN PLARGE_INTEGER Time 
+	IN PLARGE_INTEGER Time
 	);
 
 NTSTATUS
@@ -4925,16 +4925,16 @@ STDCALL
 ZwWaitForSingleObject (
 	IN HANDLE Object,
 	IN BOOLEAN Alertable,
-	IN PLARGE_INTEGER Time 
+	IN PLARGE_INTEGER Time
 	);
 
 /* --- EVENT PAIR OBJECT --- */
 
 /*
  * FUNCTION: Waits for the high part of an eventpair to become signalled
- * ARGUMENTS: 
+ * ARGUMENTS:
  *       EventPairHandle = Handle to the event pair.
- * RETURNS: Status    
+ * RETURNS: Status
  */
 
 NTSTATUS
@@ -4949,7 +4949,12 @@ ZwWaitHighEventPair(
 	IN HANDLE EventPairHandle
 	);
 
-
+/*
+ * FUNCTION: Waits for the low part of an eventpair to become signalled
+ * ARGUMENTS:
+ *       EventPairHandle = Handle to the event pair.
+ * RETURNS: Status
+ */
 NTSTATUS
 STDCALL
 NtWaitLowEventPair(
