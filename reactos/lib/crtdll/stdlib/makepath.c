@@ -4,7 +4,7 @@
 void _makepath( char *path, const char *drive, const char *dir, const char *fname, const char *ext )
 {
 	int dir_len;
-	if ( drive != NULL ) {
+	if ( drive != NULL  && (*drive)) {
 		strcpy(path,drive);
 		strcat(path,":");
 	}
@@ -27,6 +27,4 @@ void _makepath( char *path, const char *drive, const char *dir, const char *fnam
 			strcat(path,ext);
 		}
 	}
-	
-		
 }

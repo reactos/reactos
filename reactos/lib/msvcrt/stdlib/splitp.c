@@ -30,14 +30,19 @@ void _splitpath( const char *path, char *drive, char *dir, char *fname, char *ex
 		strcpy(ext,tmp_ext);
 	}
 	else
-		*ext = 0;
-
-	if ( tmp_dir != NULL ) {
+	{
+		*ext = 0; 
+		tmp_ext = path+strlen(path);
+	}
+    if ( tmp_dir != NULL ) {
 		strncpy(fname,tmp_dir+1,tmp_ext - tmp_dir - 1);
 		*(fname + (tmp_ext - tmp_dir -1)) = 0;
 	}
 	else
+	{
 		strncpy(fname,path,tmp_ext - path);
+		*(fname+(tmp_ext-path))=0;
+	}
 }
 
 void _wsplitpath( const wchar_t *path, wchar_t *drive, wchar_t *dir, wchar_t *fname, wchar_t *ext )
@@ -69,12 +74,18 @@ void _wsplitpath( const wchar_t *path, wchar_t *drive, wchar_t *dir, wchar_t *fn
 		wcscpy(ext,tmp_ext);
 	}
 	else
+	{
 		*ext = 0;
+		tmp_ext = path+wcslen(path);
+	}
 
 	if ( tmp_dir != NULL ) {
 		wcsncpy(fname,tmp_dir+1,tmp_ext - tmp_dir - 1);
 		*(fname + (tmp_ext - tmp_dir -1)) = 0;
 	}
 	else
+	{
 		wcsncpy(fname,path,tmp_ext - path);
+		*(fname+(tmp_ext-path))=0;
+	}
 }
