@@ -435,24 +435,33 @@ wchar_t * vfat_wcsncpy(wchar_t * dest, const wchar_t *src,size_t wcount)
    return(dest);
 }
 
-wchar_t * vfat_movstr(wchar_t * dest, const wchar_t *src, ULONG dpos,
+wchar_t * vfat_movstr(const wchar_t *src, ULONG dpos,
                       ULONG spos, ULONG len)
 /*
  * FUNCTION: Move the characters in a string to a new position in the same
  *           string
  */
 {
-  int i;
+ int i;
 
-  dest+=dpos;
-  for(i=spos; i<spos+len; i++)
+  if(dpos<=spos)
   {
-    *dest=src[i];
-    dest++;
+    for(i=0; i<len; i++)
+    {
+      src[dpos++]=src[spos++];
+    }
   }
-  dest-=(dpos+len);
+  else
+  {
+    dpos+=len-1;
+    spos+=len-1;
+    for(i=0; i<len; i++)
+    {
+      src[dpos--]=src[spos--];
+    }
+  }
 
-  return(dest);
+  return(src);
 }
 
 BOOLEAN IsLastEntry(PVOID Block, ULONG Offset)
@@ -520,18 +529,15 @@ BOOLEAN GetEntryName(PVOID Block, PULONG _Offset, PWSTR Name, PULONG _jloop,
 	     Offset++;
              if(Offset==ENTRIES_PER_SECTOR) {
                Offset=0;
-               StartingSector++;
+               StartingSector++;//FIXME : nor always the next sector
                jloop++;
                VFATReadSectors(DeviceExt->StorageDevice,StartingSector,1,Block);
                test2 = (slot *)Block;
              }
              cpos++;
-
-             vfat_initstr(tmp, 256);
-             vfat_movstr(tmp, Name, 13, 0, cpos*13);
-             vfat_wcsncpy(Name, tmp, 256);
+             vfat_movstr(Name, 13, 0, cpos*13);
              vfat_wcsncpy(Name, test2[Offset].name0_4, 5);
-	     vfat_wcsncat(Name,test2[Offset].name5_10,5,6);
+             vfat_wcsncat(Name,test2[Offset].name5_10,5,6);
              vfat_wcsncat(Name,test2[Offset].name11_12,11,2);
 
           }
@@ -761,20 +767,49 @@ NTSTATUS FsdOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
  * FUNCTION: Opens a file
  */
 {
-   PWSTR current;
-   PWSTR next;
-   PWSTR string;
-   PVfatFCB ParentFcb;
-   PVfatFCB Fcb;
-   PVfatFCB Temp;
-   PVfatCCB newCCB;
-   NTSTATUS Status;
+ PWSTR current;
+ PWSTR next;
+ PWSTR string;
+ PVfatFCB ParentFcb;
+ PVfatFCB Fcb,pRelFcb;
+ PVfatFCB Temp;
+ PVfatCCB newCCB,pRelCcb;
+ NTSTATUS Status;
+ PFILE_OBJECT pRelFileObject;
+ PWSTR AbsFileName=NULL;
+ short i,j;
 
    DPRINT("FsdOpenFile(%08lx, %08lx, %08lx)\n", 
           DeviceExt,
           FileObject,
           FileName);
   //FIXME : treat relative name
+   if(FileObject->RelatedFileObject)
+   {
+DbgPrint("try related for %w\n",FileName);
+     pRelFileObject=FileObject->RelatedFileObject;
+     pRelCcb=pRelFileObject->FsContext2;
+     assert(pRelCcb);
+     pRelFcb=pRelCcb->pFcb;
+     assert(pRelFcb);
+     // verify related object is a directory and target name don't start with \.
+     if( !(pRelFcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY)
+         || (FileName[0]!= '\\') )
+     {
+       Status=STATUS_INVALID_PARAMETER;
+       return Status;
+     }
+     // construct absolute path name
+     AbsFileName=ExAllocatePool(NonPagedPool,MAX_PATH);
+     for (i=0;pRelFcb->PathName[i];i++)
+       AbsFileName[i]=pRelFcb->PathName[i];
+     AbsFileName[i++]='\\';
+     for (j=0;FileName[j]&&i<MAX_PATH;j++)
+       AbsFileName[i++]=FileName[j];
+     assert(i<MAX_PATH);
+     AbsFileName[i]=0;
+     FileName=AbsFileName;
+   }
    // try first to find an existing FCB in memory
    for (Fcb=pFirstFcb;Fcb; Fcb=Fcb->nextFcb)
    {
@@ -788,6 +823,7 @@ NTSTATUS FsdOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
         FileObject->FsContext2 = newCCB;
         newCCB->pFcb=Fcb;
         newCCB->PtrFileObject=FileObject;
+        if(AbsFileName)ExFreePool(AbsFileName);
         return(STATUS_SUCCESS);
      }
    }
@@ -820,6 +856,7 @@ NTSTATUS FsdOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
          ExFreePool(Fcb);
        if (ParentFcb != NULL)
          ExFreePool(ParentFcb);
+       if(AbsFileName)ExFreePool(AbsFileName);
        return(Status);
      }
      Temp = Fcb;
@@ -848,6 +885,7 @@ NTSTATUS FsdOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    DPRINT("file open, fcb=%x\n",ParentFcb);
    DPRINT("FileSize %d\n",ParentFcb->entry.FileSize);
    if(Fcb) ExFreePool(Fcb);
+   if(AbsFileName)ExFreePool(AbsFileName);
    return(STATUS_SUCCESS);
 }
 
@@ -1099,11 +1137,16 @@ NTSTATUS FsdWriteFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    ULONG FileOffset;
    ULONG FirstCluster;
    PVfatFCB  Fcb;
+   PVfatCCB pCcb;
    PVOID Temp;
    ULONG TempLength,Length2=Length;
 
    /* Locate the first cluster of the file */
-   Fcb = ((PVfatCCB)(FileObject->FsContext2))->pFcb;
+   assert(FileObject);
+   pCcb=(PVfatCCB)(FileObject->FsContext2);
+   assert(pCcb);
+   Fcb = pCcb->pFcb;
+   assert(Fcb);
    if (DeviceExt->FatType == FAT32)
 	CurrentCluster = Fcb->entry.FirstCluster+Fcb->entry.FirstClusterHigh*65536;
    else
@@ -1112,6 +1155,7 @@ NTSTATUS FsdWriteFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    /* Allocate a buffer to hold 1 cluster of data */
 
    Temp = ExAllocatePool(NonPagedPool,DeviceExt->BytesPerCluster);
+   assert(Temp);
 
    /* Find the cluster according to the offset in the file */
 
@@ -1122,7 +1166,7 @@ NTSTATUS FsdWriteFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    }
    else
    if (CurrentCluster==0)
-   {// file of size 0
+   {// file of size 0 : allocate first cluster
      CurrentCluster=GetNextWriteCluster(DeviceExt,0);
      if (DeviceExt->FatType == FAT32)
      {
@@ -1146,6 +1190,7 @@ NTSTATUS FsdWriteFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 
    if ((WriteOffset % DeviceExt->BytesPerCluster)!=0)
    {
+   CHECKPOINT;
      TempLength = min(Length,DeviceExt->BytesPerCluster -
                         (WriteOffset % DeviceExt->BytesPerCluster));
      /* Read in the existing cluster data */
@@ -1180,6 +1225,7 @@ NTSTATUS FsdWriteFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 
    while (Length2 >= DeviceExt->BytesPerCluster)
    {
+   CHECKPOINT;
      if (CurrentCluster == 0)
      {
         ExFreePool(Temp);
@@ -1205,18 +1251,22 @@ NTSTATUS FsdWriteFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 
    if (Length2 > 0)
    {
+   CHECKPOINT;
      if (CurrentCluster == 0)
      {
         ExFreePool(Temp);
         return(STATUS_UNSUCCESSFUL);
      }
+   CHECKPOINT;
      /* Read in the existing cluster data */
      if (FirstCluster==1)
        VFATReadSectors(DeviceExt->StorageDevice,CurrentCluster
            ,DeviceExt->Boot->SectorsPerCluster,Temp);
      else
        VFATLoadCluster(DeviceExt,Temp,CurrentCluster);
+   CHECKPOINT;
      memcpy(Temp, Buffer, Length2);
+   CHECKPOINT;
      if (FirstCluster==1)
      {
        VFATWriteSectors(DeviceExt->StorageDevice,CurrentCluster
@@ -1225,6 +1275,7 @@ NTSTATUS FsdWriteFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
      else
        VFATWriteCluster(DeviceExt,Temp,CurrentCluster);
    }
+   CHECKPOINT;
 //FIXME : set  last write time and date
    if(Fcb->entry.FileSize<WriteOffset+Length
        && !(Fcb->entry.Attrib &FILE_ATTRIBUTE_DIRECTORY))
@@ -1261,40 +1312,82 @@ NTSTATUS FsdCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
  * FUNCTION: Create or open a file
  */
 {
-   PIO_STACK_LOCATION Stack;
-   PFILE_OBJECT FileObject;
-   NTSTATUS Status;
-   PDEVICE_EXTENSION DeviceExt;
-   ULONG RequestedDisposition,RequestedOptions;
+ PIO_STACK_LOCATION Stack;
+ PFILE_OBJECT FileObject;
+ NTSTATUS Status=STATUS_SUCCESS;
+ PDEVICE_EXTENSION DeviceExt;
+ ULONG RequestedDisposition,RequestedOptions;
+ PVfatCCB pCcb;
+ PVfatFCB pFcb;
 
-   DPRINT("FsdCreate(DeviceObject %08lx, Irp %08lx)\n",
-          DeviceObject,
-          Irp);
-
+   assert(DeviceObject);
+   assert(Irp);
+   if(DeviceObject->Size==sizeof(DEVICE_OBJECT))
+   {// DevieObject represent FileSystem instead of  logical volume
+     DbgPrint("FsdCreate called with file system\n");
+     Irp->IoStatus.Status=Status;
+     Irp->IoStatus.Information=FILE_OPENED;
+     IoCompleteRequest(Irp,IO_NO_INCREMENT);
+     return(Status);
+   }
    Stack = IoGetCurrentIrpStackLocation(Irp);
+   assert(Stack);
    RequestedDisposition = ((Stack->Parameters.Create.Options>>24)&0xff);
    RequestedOptions=Stack->Parameters.Create.Options&FILE_VALID_OPTION_FLAGS;
-   DPRINT("CROptions=%x\n",Stack->Parameters.Create.Options);
-   DPRINT("REquestedOptions=%x\n",RequestedOptions);
    FileObject = Stack->FileObject;
    DeviceExt = DeviceObject->DeviceExtension;
+   assert(DeviceExt);
+   ExAcquireResourceExclusiveLite(&(DeviceExt->Resource),TRUE);
    Status = FsdOpenFile(DeviceExt,FileObject,FileObject->FileName.Buffer);
+   Irp->IoStatus.Information = 0;
    if(!NT_SUCCESS(Status))
    {
       if(RequestedDisposition==FILE_CREATE
          ||RequestedDisposition==FILE_OPEN_IF
          ||RequestedDisposition==FILE_OVERWRITE_IF)
       {
-         DPRINT("try to create file\n");
-         Status=addEntry(DeviceExt,FileObject,RequestedOptions);
+         Status=addEntry(DeviceExt,FileObject,RequestedOptions
+             ,(Stack->Parameters.Create.FileAttributes & FILE_ATTRIBUTE_VALID_FLAGS));
+         if(NT_SUCCESS(Status))
+           Irp->IoStatus.Information = FILE_CREATED;
+         // FIXME set size if AllocationSize requested
+         // FIXME set extended attributes ?
+         // FIXME set share access
+         // IoSetShareAccess(DesiredAccess,ShareAccess,FileObject
+         //   ,((PVfatCCB)(FileObject->FsContext2))->pFcb->FCBShareAccess);
       }
+   }
+   else
+   {
+     if(RequestedDisposition==FILE_CREATE)
+     {
+       Irp->IoStatus.Information = FILE_EXISTS;
+       Status=STATUS_OBJECT_NAME_COLLISION;
+     }
+     pCcb=FileObject->FsContext2;
+     pFcb=pCcb->pFcb;
+     if( (RequestedOptions&FILE_NON_DIRECTORY_FILE)
+         && (pFcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY))
+     {
+       Status=STATUS_FILE_IS_A_DIRECTORY;
+     }
+     if( (RequestedOptions&FILE_DIRECTORY_FILE)
+         && !(pFcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY))
+     {
+       Status=STATUS_NOT_A_DIRECTORY;
+     }
+     // FIXME : test share access
+     // FIXME : test write access if requested
+     if(!NT_SUCCESS(Status))
+       FsdCloseFile(DeviceExt,FileObject);
+     else Irp->IoStatus.Information = FILE_OPENED;
+     // FIXME : make supersed or overwrite if requested
    }
    
    Irp->IoStatus.Status = Status;
-   Irp->IoStatus.Information = 0;
    
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
+   ExReleaseResourceForThreadLite(&(DeviceExt->Resource),ExGetCurrentResourceThread());
    return Status;
 }
 
