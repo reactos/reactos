@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rmap.c,v 1.15 2003/01/11 15:28:18 hbirr Exp $
+/* $Id: rmap.c,v 1.16 2003/05/17 13:46:05 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -72,6 +72,7 @@ MmWritePagePhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
 {
   PMM_RMAP_ENTRY entry;
   PMEMORY_AREA MemoryArea;
+  PMADDRESS_SPACE AddressSpace;
   ULONG Type;
   PVOID Address;
   PEPROCESS Process;
@@ -96,24 +97,35 @@ MmWritePagePhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
     {
       KeBugCheck(0);
     }
-  Status = ObReferenceObjectByPointer(Process, PROCESS_ALL_ACCESS, NULL, KernelMode);
-  ExReleaseFastMutex(&RmapListLock);
-  if (!NT_SUCCESS(Status))
-  {
-     return Status;
-  }
+  if (Address < (PVOID)KERNEL_BASE)
+    {
+      Status = ObReferenceObjectByPointer(Process, PROCESS_ALL_ACCESS, NULL, KernelMode);
+      ExReleaseFastMutex(&RmapListLock);
+      if (!NT_SUCCESS(Status))
+        {
+          return Status;
+        }
+      AddressSpace = &Process->AddressSpace;
+    }
+  else
+    {
+      AddressSpace = MmGetKernelAddressSpace();
+    }
 
   /*
    * Lock the address space; then check that the address we are using
    * still corresponds to a valid memory area (the page might have been
    * freed or paged out after we read the rmap entry.) 
    */
-  MmLockAddressSpace(&Process->AddressSpace);
-  MemoryArea = MmOpenMemoryAreaByAddress(&Process->AddressSpace, Address);
+  MmLockAddressSpace(AddressSpace);
+  MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace, Address);
   if (MemoryArea == NULL)
     {
-      MmUnlockAddressSpace(&Process->AddressSpace);
-      ObDereferenceObject(Process);
+      MmUnlockAddressSpace(AddressSpace);
+      if (Address < (PVOID)KERNEL_BASE)
+        {
+          ObDereferenceObject(Process);
+	}
       return(STATUS_UNSUCCESSFUL);
     }
 
@@ -139,52 +151,60 @@ MmWritePagePhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
       if (PageOp->Thread != PsGetCurrentThread())
 	{
 	  MmReleasePageOp(PageOp);
-	  MmUnlockAddressSpace(&Process->AddressSpace);
-          ObDereferenceObject(Process);
+	  MmUnlockAddressSpace(AddressSpace);
+	  if (Address < (PVOID)KERNEL_BASE)
+	    {
+              ObDereferenceObject(Process);
+	    }
 	  return(STATUS_UNSUCCESSFUL);
 	}
       
       /*
        * Release locks now we have a page op.
        */
-      MmUnlockAddressSpace(&Process->AddressSpace);      
+      MmUnlockAddressSpace(AddressSpace);      
 
       /*
        * Do the actual page out work.
        */
-      Status = MmWritePageSectionView(&Process->AddressSpace, MemoryArea, 
+      Status = MmWritePageSectionView(AddressSpace, MemoryArea, 
 				      Address, PageOp);
     }
   else if (Type == MEMORY_AREA_VIRTUAL_MEMORY)
     {
-      PageOp = MmGetPageOp(MemoryArea, Process->UniqueProcessId,
+      PageOp = MmGetPageOp(MemoryArea, Address < (PVOID)KERNEL_BASE ? Process->UniqueProcessId : 0,
 			   Address, NULL, 0, MM_PAGEOP_PAGEOUT);
       
-
       if (PageOp->Thread != PsGetCurrentThread())
 	{
 	  MmReleasePageOp(PageOp);
-	  MmUnlockAddressSpace(&Process->AddressSpace);
-          ObDereferenceObject(Process);
+	  MmUnlockAddressSpace(AddressSpace);
+	  if (Address < (PVOID)KERNEL_BASE)
+	    {
+              ObDereferenceObject(Process);
+	    }
 	  return(STATUS_UNSUCCESSFUL);
 	}
 
       /*
        * Release locks now we have a page op.
        */
-      MmUnlockAddressSpace(&Process->AddressSpace);
+      MmUnlockAddressSpace(AddressSpace);
 
       /*
        * Do the actual page out work.
        */
-      Status = MmWritePageVirtualMemory(&Process->AddressSpace, MemoryArea, 
+      Status = MmWritePageVirtualMemory(AddressSpace, MemoryArea, 
 					Address, PageOp);
     }
   else
     {
       KeBugCheck(0);
     }  
-  ObDereferenceObject(Process);
+  if (Address < (PVOID)KERNEL_BASE)
+    {
+      ObDereferenceObject(Process);
+    }
   return(Status);
 }
 
@@ -193,6 +213,7 @@ MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
 {
   PMM_RMAP_ENTRY entry;
   PMEMORY_AREA MemoryArea;
+  PMADDRESS_SPACE AddressSpace;
   ULONG Type;
   PVOID Address;
   PEPROCESS Process;
@@ -214,14 +235,23 @@ MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
       KeBugCheck(0);
     }
 
-  Status = ObReferenceObjectByPointer(Process, PROCESS_ALL_ACCESS, NULL, KernelMode);
-  ExReleaseFastMutex(&RmapListLock);
-  if (!NT_SUCCESS(Status))
-  {
-      return Status;
-  }
-  MmLockAddressSpace(&Process->AddressSpace);
-  MemoryArea = MmOpenMemoryAreaByAddress(&Process->AddressSpace, Address);
+  if (Address < (PVOID)KERNEL_BASE)
+    {
+      Status = ObReferenceObjectByPointer(Process, PROCESS_ALL_ACCESS, NULL, KernelMode);
+      ExReleaseFastMutex(&RmapListLock);
+      if (!NT_SUCCESS(Status))
+        {
+          return Status;
+        }
+      AddressSpace = &Process->AddressSpace;
+    }
+  else
+    {
+      AddressSpace = MmGetKernelAddressSpace();
+    }
+
+  MmLockAddressSpace(AddressSpace);
+  MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace, Address);
   Type = MemoryArea->Type;
   if (Type == MEMORY_AREA_SECTION_VIEW)
     {
@@ -243,50 +273,59 @@ MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
       if (PageOp->Thread != PsGetCurrentThread())
 	{
 	  MmReleasePageOp(PageOp);
-	  MmUnlockAddressSpace(&Process->AddressSpace);
-          ObDereferenceObject(Process);
+	  MmUnlockAddressSpace(AddressSpace);
+	  if (Address < (PVOID)KERNEL_BASE)
+	    {
+              ObDereferenceObject(Process);
+	    }
 	  return(STATUS_UNSUCCESSFUL);
 	}
       
       /*
        * Release locks now we have a page op.
        */
-      MmUnlockAddressSpace(&Process->AddressSpace);
+      MmUnlockAddressSpace(AddressSpace);
 
       /*
        * Do the actual page out work.
        */
-      Status = MmPageOutSectionView(&Process->AddressSpace, MemoryArea, 
+      Status = MmPageOutSectionView(AddressSpace, MemoryArea, 
 				    Address, PageOp);
     }
   else if (Type == MEMORY_AREA_VIRTUAL_MEMORY)
     {
-      PageOp = MmGetPageOp(MemoryArea, Process->UniqueProcessId,
+      PageOp = MmGetPageOp(MemoryArea, Address < (PVOID)KERNEL_BASE ? Process->UniqueProcessId : 0,
 			   Address, NULL, 0, MM_PAGEOP_PAGEOUT);
       if (PageOp->Thread != PsGetCurrentThread())
 	{
 	  MmReleasePageOp(PageOp);
-	  MmUnlockAddressSpace(&Process->AddressSpace);
-          ObDereferenceObject(Process);
+	  MmUnlockAddressSpace(AddressSpace);
+	  if (Address < (PVOID)KERNEL_BASE)
+	    {
+              ObDereferenceObject(Process);
+	    }
 	  return(STATUS_UNSUCCESSFUL);
 	}
 
       /*
        * Release locks now we have a page op.
        */
-      MmUnlockAddressSpace(&Process->AddressSpace);
+      MmUnlockAddressSpace(AddressSpace);
 
       /*
        * Do the actual page out work.
        */
-      Status = MmPageOutVirtualMemory(&Process->AddressSpace, MemoryArea, 
+      Status = MmPageOutVirtualMemory(AddressSpace, MemoryArea, 
 				      Address, PageOp);
     }
   else
     {
       KeBugCheck(0);
     }
-  ObDereferenceObject(Process);
+  if (Address < (PVOID)KERNEL_BASE)
+    {
+      ObDereferenceObject(Process);
+    }
   return(Status);
 }
 
