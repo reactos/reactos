@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.50 2001/11/08 01:09:20 ekohl Exp $
+/* $Id: kill.c,v 1.51 2002/03/05 11:33:12 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -101,7 +101,7 @@ PsReapThreads(VOID)
 	     
 	     DPRINT("PsProcessType %x\n", PsProcessType);
 	     DPRINT("Reaping thread %x\n", current);
-	     DPRINT("Ref count %d\n", ObGetReferenceCount(Process));
+	     DPRINT("Pointer count %d\n", ObGetObjectPointerCount(Process));
 	     current->Tcb.State = THREAD_STATE_TERMINATED_2;
 	     RemoveEntryList(&current->Tcb.ProcessThreadListEntry);
 	     if (IsListEmpty(&Process->ThreadListHead))
@@ -111,7 +111,7 @@ PsReapThreads(VOID)
 		  PiTerminateProcess(Process, Status);
 		  KeAcquireSpinLock( &PiThreadListLock, &oldIrql );
 	       }
-	     DPRINT("Ref count %d\n", ObGetReferenceCount(Process));
+	     DPRINT("Pointer count %d\n", ObGetObjectPointerCount(Process));
 	     KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 	     ObDereferenceObject(current);
 	     KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
@@ -224,9 +224,9 @@ NTSTATUS STDCALL
 PiTerminateProcess(PEPROCESS Process,
 		   NTSTATUS ExitStatus)
 {
-   DPRINT("PiTerminateProcess(Process %x, ExitStatus %x) RC %d HC %d\n",
-	   Process, ExitStatus, ObGetReferenceCount(Process),
-	   ObGetHandleCount(Process));
+   DPRINT("PiTerminateProcess(Process %x, ExitStatus %x) PC %d HC %d\n",
+	   Process, ExitStatus, ObGetObjectPointerCount(Process),
+	   ObGetObjectHandleCount(Process));
    
    if (InterlockedExchange((PLONG)&Process->Pcb.State, 
 			   PROCESS_STATE_TERMINATED) == 
