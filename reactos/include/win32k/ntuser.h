@@ -489,13 +489,27 @@ NtUserEnumDisplayDevices (
   PDISPLAY_DEVICE lpDisplayDevice, /* device information */
   DWORD dwFlags ); /* reserved */
 
-BOOL
+/*BOOL
 STDCALL
 NtUserEnumDisplayMonitors (
   HDC hdc,
   LPCRECT lprcClip,
   MONITORENUMPROC lpfnEnum,
-  LPARAM dwData );
+  LPARAM dwData );*/
+
+#define MONITORINFOF_PRIMARY 1
+#define MONITOR_DEFAULTTONULL 0
+#define MONITOR_DEFAULTTOPRIMARY 1
+#define MONITOR_DEFAULTTONEAREST 2
+INT
+STDCALL
+NtUserEnumDisplayMonitors(
+  OPTIONAL IN HDC hDC,
+  OPTIONAL IN LPCRECT pRect,
+  OPTIONAL OUT HMONITOR *hMonitorList,
+  OPTIONAL OUT LPRECT monitorRectList,
+  OPTIONAL IN DWORD listSize );
+
 
 BOOL
 STDCALL
@@ -762,6 +776,12 @@ NtUserGetMessage(
   UINT wMsgFilterMin,
   UINT wMsgFilterMax);
 
+BOOL
+STDCALL
+NtUserGetMonitorInfo(
+  IN HMONITOR hMonitor,
+  OUT LPMONITORINFO pMonitorInfo);
+
 DWORD
 STDCALL
 NtUserGetMouseMovePointsEx(
@@ -995,6 +1015,25 @@ STDCALL
 NtUserModifyUserStartupInfoFlags(
   DWORD Unknown0,
   DWORD Unknown1);
+
+HMONITOR
+STDCALL
+NtUserMonitorFromPoint(
+  IN POINT point,
+  IN DWORD dwFlags);
+
+HMONITOR
+STDCALL
+NtUserMonitorFromRect(
+  IN LPCRECT pRect,
+  IN DWORD dwFlags);
+
+HMONITOR
+STDCALL
+NtUserMonitorFromWindow(
+  IN HWND hWnd,
+  IN DWORD dwFlags);
+
 
 BOOL
 STDCALL

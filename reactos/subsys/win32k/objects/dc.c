@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.146 2004/08/03 19:55:58 blight Exp $
+/* $Id: dc.c,v 1.147 2004/11/16 16:27:49 blight Exp $
  *
  * DC.C - Device context functions
  *
@@ -648,6 +648,9 @@ IntCreatePrimarySurface()
          continue;
       }
 
+      /* attach monitor */
+      IntAttachMonitor(&PrimarySurface, DisplayNumber);
+
       SurfObj = EngLockSurface((HSURF)PrimarySurface.Handle);
       SurfObj->dhpdev = PrimarySurface.PDev;
       SurfSize = SurfObj->sizlBitmap;
@@ -663,6 +666,9 @@ VOID FASTCALL
 IntDestroyPrimarySurface()
   {
     DRIVER_UnreferenceDriver(L"DISPLAY");
+
+    /* detach monitor */
+    IntDetachMonitor(&PrimarySurface);
 
     /*
      * FIXME: Hide a mouse pointer there. Also because we have to prevent

@@ -345,7 +345,7 @@ NtUserEndDeferWindowPosEx               2
 NtUserEndMenu                           0
 NtUserEndPaint                          2
 NtUserEnumDisplayDevices                4
-NtUserEnumDisplayMonitors               4
+NtUserEnumDisplayMonitors               5
 NtUserEnumDisplaySettings               4
 NtUserEvent                             1
 NtUserExcludeUpdateRgn                  2
@@ -399,6 +399,7 @@ NtUserGetMenuIndex                      2
 NtUserGetMenuItemRect                   4
 NtUserGetMessage                        4
 NtUserGetMinMaxInfo                     3
+NtUserGetMonitorInfo                    2
 NtUserGetMouseMovePointsEx              5
 NtUserGetObjectInformation              5
 NtUserGetOpenClipboardWindow            0
@@ -443,6 +444,9 @@ NtUserMessageCall                       7
 NtUserMNDragLeave                       0
 NtUserMNDragOver                        2
 NtUserModifyUserStartupInfoFlags        2
+NtUserMonitorFromPoint                  3
+NtUserMonitorFromRect                   2
+NtUserMonitorFromWindow                 2
 NtUserMoveWindow                        6
 NtUserNotifyIMEStatus                   3
 NtUserNotifyWinEvent                    4

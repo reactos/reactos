@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: display.c,v 1.12 2004/08/15 21:36:28 chorns Exp $
+/* $Id: display.c,v 1.13 2004/11/16 16:27:48 blight Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/dde.c
@@ -110,7 +110,63 @@ EnumDisplayMonitors(
   MONITORENUMPROC lpfnEnum,
   LPARAM dwData)
 {
-  return NtUserEnumDisplayMonitors ( hdc, lprcClip, lpfnEnum, dwData );
+  INT iCount, i;
+  HMONITOR *hMonitorList;
+  LPRECT pRectList;
+  HANDLE hHeap;
+
+  /* get list of monitors/rects */
+  iCount = NtUserEnumDisplayMonitors(hdc, lprcClip, NULL, NULL, 0);
+  if (iCount < 0)
+    {
+      /* FIXME: SetLastError() */
+      return FALSE;
+    }
+  if (iCount == 0)
+    {
+      return TRUE;
+    }
+
+  hHeap = GetProcessHeap();
+  hMonitorList = HeapAlloc(hHeap, 0, sizeof (HMONITOR) * iCount);
+  if (hMonitorList == NULL)
+    {
+      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+      return FALSE;
+    }
+  pRectList = HeapAlloc(hHeap, 0, sizeof (RECT) * iCount);
+  if (pRectList == NULL)
+    {
+      HeapFree(hHeap, 0, hMonitorList);
+      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+      return FALSE;
+    }
+
+  iCount = NtUserEnumDisplayMonitors(hdc, lprcClip, hMonitorList, pRectList, iCount);
+  if (iCount <= 0)
+    {
+      /* FIXME: SetLastError() */
+      return FALSE;
+    }
+
+  /* enumerate list */
+  for (i = 0; i < iCount; i++)
+    {
+      HMONITOR hMonitor = hMonitorList[i];
+      LPRECT pMonitorRect = pRectList + i;
+      HDC hMonitorDC = NULL;
+
+      if (hdc != NULL)
+        {
+          /* make monitor DC */
+          hMonitorDC = hdc;
+        }
+
+      if (!lpfnEnum(hMonitor, hMonitorDC, pMonitorRect, dwData))
+        break;
+    }
+
+  return TRUE;
 }
 
 
@@ -156,7 +212,7 @@ EnumDisplaySettingsA(
   DWORD iModeNum,
   LPDEVMODEA lpDevMode)
 {
-	return EnumDisplaySettingsExA ( lpszDeviceName, iModeNum, lpDevMode, 0 );
+  return EnumDisplaySettingsExA ( lpszDeviceName, iModeNum, lpDevMode, 0 );
 }
 
 
@@ -194,12 +250,12 @@ EnumDisplaySettingsW(
   DWORD iModeNum,
   LPDEVMODEW lpDevMode)
 {
-	return EnumDisplaySettingsExW ( lpszDeviceName, iModeNum, lpDevMode, 0 );
+  return EnumDisplaySettingsExW ( lpszDeviceName, iModeNum, lpDevMode, 0 );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -207,13 +263,42 @@ GetMonitorInfoA(
   HMONITOR hMonitor,
   LPMONITORINFO lpmi)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  if (lpmi->cbSize == sizeof (MONITORINFO))
+    {
+      return NtUserGetMonitorInfo(hMonitor, lpmi);
+    }
+  else if (lpmi->cbSize != sizeof (MONITORINFOEXA))
+    {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return FALSE;
+    }
+  else
+    {
+      MONITORINFOEXW miExW;
+      INT res;
+
+      miExW.cbSize = sizeof (MONITORINFOEXW);
+      if (!NtUserGetMonitorInfo(hMonitor, (LPMONITORINFO)&miExW))
+        {
+          return FALSE;
+        }
+      memcpy(lpmi, &miExW, sizeof (MONITORINFO));
+      res = WideCharToMultiByte(CP_THREAD_ACP, 0, miExW.szDevice, -1,
+                                ((LPMONITORINFOEXA)lpmi)->szDevice, CCHDEVICENAME,
+                                NULL, NULL);
+      if (res == 0)
+        {
+          DPRINT("WideCharToMultiByte() failed!\n");
+          return FALSE;
+        }
+    }
+
+  return TRUE;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -221,8 +306,46 @@ GetMonitorInfoW(
   HMONITOR hMonitor,
   LPMONITORINFO lpmi)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return NtUserGetMonitorInfo(hMonitor, lpmi);
+}
+
+
+/*
+ * @implemented
+ */
+HMONITOR
+STDCALL
+MonitorFromPoint(
+	IN POINT ptPoint,
+	IN DWORD dwFlags )
+{
+  return NtUserMonitorFromPoint(ptPoint, dwFlags);
+}
+
+
+/*
+ * @implemented
+ */
+HMONITOR
+STDCALL
+MonitorFromRect(
+	IN LPCRECT lpcRect,
+	IN DWORD dwFlags )
+{
+  return NtUserMonitorFromRect(lpcRect, dwFlags);
+}
+
+
+/*
+ * @implemented
+ */
+HMONITOR
+STDCALL
+MonitorFromWindow(
+	IN HWND hWnd,
+	IN DWORD dwFlags )
+{
+  return NtUserMonitorFromWindow(hWnd, dwFlags);
 }
 
 

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.104 2004/10/20 20:51:21 chorns Exp $
+# $Id: makefile,v 1.105 2004/11/16 16:29:21 blight Exp $
 
 PATH_TO_TOP = ../..
 
@@ -64,9 +64,10 @@ NTUSER_OBJECTS = ntuser/accelerator.o ntuser/callback.o ntuser/caret.o ntuser/cl
                  ntuser/clipboard.o ntuser/csr.o ntuser/focus.o ntuser/desktop.o \
                  ntuser/guicheck.o ntuser/hook.o ntuser/hotkey.o ntuser/input.o \
                  ntuser/keyboard.o ntuser/menu.o ntuser/message.o ntuser/metric.o \
-                 ntuser/misc.o ntuser/msgqueue.o ntuser/painting.o ntuser/prop.o \
-                 ntuser/scrollbar.o ntuser/stubs.o ntuser/timer.o ntuser/useratom.o \
-                 ntuser/vis.o ntuser/windc.o ntuser/window.o ntuser/winpos.o ntuser/winsta.o
+                 ntuser/misc.o ntuser/monitor.o ntuser/msgqueue.o ntuser/painting.o \
+                 ntuser/prop.o ntuser/scrollbar.o ntuser/stubs.o ntuser/timer.o \
+                 ntuser/useratom.o ntuser/vis.o ntuser/windc.o ntuser/window.o \
+                 ntuser/winpos.o ntuser/winsta.o
 
 OBJECTS_OBJECTS = objects/bitmaps.o objects/brush.o objects/cliprgn.o  \
                   objects/color.o objects/coord.o objects/dc.o  \

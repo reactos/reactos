@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.46 2004/08/03 19:55:57 blight Exp $
+/* $Id: stubs.c,v 1.47 2004/11/16 16:27:49 blight Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -240,19 +240,6 @@ NtUserEnumDisplayDevices (
   DWORD iDevNum, /* display device */
   PDISPLAY_DEVICE lpDisplayDevice, /* device information */
   DWORD dwFlags ) /* reserved */
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-BOOL
-STDCALL
-NtUserEnumDisplayMonitors(
-  HDC hdc,
-  LPCRECT lprcClip,
-  MONITORENUMPROC lpfnEnum,
-  LPARAM dwData)
 {
   UNIMPLEMENTED
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.80 2004/09/28 15:02:30 weiden Exp $
+/* $Id: dllmain.c,v 1.81 2004/11/16 16:27:48 blight Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -104,6 +104,7 @@ Win32kProcessCallback (struct _EPROCESS *Process,
 	  IntRemoveProcessWndProcHandles((HANDLE)Process->UniqueProcessId);
       IntCleanupMenus(Process, Win32Process);
       IntCleanupCurIcons(Process, Win32Process);
+      CleanupMonitorImpl();
 
       CleanupForProcess(Process, Process->UniqueProcessId);
 
@@ -275,6 +276,13 @@ DllMain (
     {
       DbgPrint("Failed to initialize keyboard implementation.\n");
       return(Status);
+    }
+
+  Status = InitMonitorImpl();
+  if (!NT_SUCCESS(Status))
+    {
+      DbgPrint("Failed to initialize monitor implementation!\n");
+      return STATUS_UNSUCCESSFUL;
     }
 
   Status = MsqInitializeImpl();

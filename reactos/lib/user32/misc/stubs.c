@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.67 2004/09/12 19:47:49 weiden Exp $
+/* $Id: stubs.c,v 1.68 2004/11/16 16:27:48 blight Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -106,48 +106,6 @@ LockWorkStation(VOID)
 {
   UNIMPLEMENTED;
   return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-HMONITOR
-STDCALL
-MonitorFromPoint(
-  POINT pt,
-  DWORD dwFlags)
-{
-  UNIMPLEMENTED;
-  return (HMONITOR)0;
-}
-
-
-/*
- * @unimplemented
- */
-HMONITOR
-STDCALL
-MonitorFromRect(
-  LPRECT lprc,
-  DWORD dwFlags)
-{
-  UNIMPLEMENTED;
-  return (HMONITOR)0;
-}
-
-
-/*
- * @unimplemented
- */
-HMONITOR
-STDCALL
-MonitorFromWindow(
-  HWND hwnd,
-  DWORD dwFlags)
-{
-  UNIMPLEMENTED;
-  return (HMONITOR)0;
 }
 
 
