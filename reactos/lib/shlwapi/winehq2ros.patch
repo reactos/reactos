@@ -4,7 +4,7 @@ RCS file: /home/wine/wine/dlls/shlwapi/path.c,v
 retrieving revision 1.42
 diff -u -r1.42 path.c
 --- path.c	20 Apr 2004 00:34:52 -0000	1.42
-+++ path.c	8 May 2004 13:58:39 -0000
++++ path.c	20 Aug 2004 07:09:34 -0000
 @@ -32,6 +32,7 @@
  #include "wingdi.h"
  #include "winuser.h"
@@ -16,10 +16,10 @@ diff -u -r1.42 path.c
 Index: shlwapi.spec
 ===================================================================
 RCS file: /home/wine/wine/dlls/shlwapi/shlwapi.spec,v
-retrieving revision 1.90
-diff -u -r1.90 shlwapi.spec
---- shlwapi.spec	27 Mar 2004 01:38:26 -0000	1.90
-+++ shlwapi.spec	8 May 2004 13:58:39 -0000
+retrieving revision 1.93
+diff -u -r1.93 shlwapi.spec
+--- shlwapi.spec	19 Jul 2004 19:32:51 -0000	1.93
++++ shlwapi.spec	20 Aug 2004 07:09:34 -0000
 @@ -368,9 +368,9 @@
  368 stdcall @(wstr wstr ptr long wstr) kernel32.GetPrivateProfileStructW
  369 stdcall @(wstr wstr ptr ptr long long ptr wstr ptr ptr) kernel32.CreateProcessW
@@ -42,13 +42,24 @@ diff -u -r1.90 shlwapi.spec
  393 stdcall @(long ptr long ptr long) user32.CreateDialogIndirectParamW
  394 stdcall @(long ptr long ptr long) user32.CreateDialogIndirectParamA
  395 stub -noname MLWinHelpA
+@@ -456,8 +456,8 @@
+ 456 stub -noname PathIsValidCharW
+ 457 stub -noname GetLongPathNameWrapW
+ 458 stub -noname GetLongPathNameWrapA
+-459 stdcall -noname SHExpandEnvironmentStringsA(str ptr long) kernel32.ExpandEnvironmentStringsA
+-460 stdcall -noname SHExpandEnvironmentStringsW(wstr ptr long) kernel32.ExpandEnvironmentStringsW
++459 stdcall SHExpandEnvironmentStringsA(str ptr long) kernel32.ExpandEnvironmentStringsA
++460 stdcall SHExpandEnvironmentStringsW(wstr ptr long) kernel32.ExpandEnvironmentStringsW
+ 461 stdcall -noname SHGetAppCompatFlags()
+ 462 stub -noname UrlFixupW
+ 463 stub -noname SHExpandEnvironmentStringsForUserA
 Index: string.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/shlwapi/string.c,v
-retrieving revision 1.46
-diff -u -r1.46 string.c
---- string.c	20 Apr 2004 01:12:17 -0000	1.46
-+++ string.c	8 May 2004 13:58:40 -0000
+retrieving revision 1.47
+diff -u -r1.47 string.c
+--- string.c	21 Jul 2004 03:12:16 -0000	1.47
++++ string.c	20 Aug 2004 07:09:35 -0000
 @@ -528,7 +528,7 @@
  {
    TRACE("(%s,%s)\n", debugstr_w(lpszStr), debugstr_w(lpszSearch));
@@ -70,10 +81,10 @@ diff -u -r1.46 string.c
 Index: url.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/shlwapi/url.c,v
-retrieving revision 1.33
-diff -u -r1.33 url.c
---- url.c	27 Apr 2004 23:29:02 -0000	1.33
-+++ url.c	8 May 2004 13:58:41 -0000
+retrieving revision 1.35
+diff -u -r1.35 url.c
+--- url.c	4 Jul 2004 00:06:29 -0000	1.35
++++ url.c	20 Aug 2004 07:09:36 -0000
 @@ -1386,8 +1386,8 @@
   *  Success: TRUE. lpDest is filled with the computed hash value.
   *  Failure: FALSE, if any argument is invalid.
