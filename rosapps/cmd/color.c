@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.3 1999/11/04 11:29:36 ekohl Exp $
+/* $Id: color.c,v 1.4 1999/12/04 14:54:50 ekohl Exp $
  *
  *  COLOR.C - color internal command.
  *
@@ -75,12 +75,12 @@ VOID SetScreenColor (WORD wColor, BOOL bFill)
 		coPos.X = 0;
 		coPos.Y = 0;
 		FillConsoleOutputAttribute (hOut,
-		                            wColor & 0x00FF,
+		                            (WORD)(wColor & 0x00FF),
 		                            (csbi.dwSize.X)*(csbi.dwSize.Y),
 		                            coPos,
 		                            &dwWritten);
 	}
-	SetConsoleTextAttribute (hOut, wColor & 0x00FF);
+	SetConsoleTextAttribute (hOut, (WORD)(wColor & 0x00FF));
 }
 
 
