@@ -460,8 +460,7 @@ StartPage(PINPUT_RECORD Ir)
     }
 
   /* Check 'Signature' string */
-//  if (_wcsicmp(Value, L"$ReactOS$") != 0)
-  if (_wcsicmp(Value, L"\"$ReactOS$\"") != 0)
+  if (_wcsicmp(Value, L"$ReactOS$") != 0)
     {
       PopupError("Setup found an invalid signature in TXTSETUP.SIF.\n",
 		 "ENTER = Reboot computer");
@@ -1148,8 +1147,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
       if (!InfGetData (&DirContext, NULL, &KeyValue))
 	break;
 
-//      if (KeyValue[0] == L'\\' && KeyValue[1] != 0)
-      if (wcscmp (KeyValue, L"\"\\\"") == 0)
+      if (KeyValue[0] == L'\\' && KeyValue[1] != 0)
 	{
 	      DPRINT("Absolute Path: '%S'\n", KeyValue);
 

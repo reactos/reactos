@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: infcache.c,v 1.1 2003/03/13 09:51:11 ekohl Exp $
+/* $Id: infcache.c,v 1.2 2003/03/13 17:58:52 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/infcache.c
@@ -32,15 +32,35 @@
 #include "infcache.h"
 
 
+#define CONTROL_Z  '\x1a'
+#define MAX_SECTION_NAME_LEN  255
+#define MAX_FIELD_LEN         511  /* larger fields get silently truncated */
+/* actual string limit is MAX_INF_STRING_LENGTH+1 (plus terminating null) under Windows */
+#define MAX_STRING_LEN        (MAX_INF_STRING_LENGTH+1)
 
-typedef struct _INFCACHEKEY
+
+typedef struct _INFCACHEFIELD
 {
-  PWCHAR Name;
-  PWCHAR Data;
+  struct _INFCACHEFIELD *Next;
+  struct _INFCACHEFIELD *Prev;
 
-  struct _INFCACHEKEY *Next;
-  struct _INFCACHEKEY *Prev;
-} INFCACHEKEY, *PINFCACHEKEY;
+  WCHAR Data[1];
+} INFCACHEFIELD, *PINFCACHEFIELD;
+
+
+typedef struct _INFCACHELINE
+{
+  struct _INFCACHELINE *Next;
+  struct _INFCACHELINE *Prev;
+
+  LONG FieldCount;
+
+  PWCHAR Name;
+
+  PINFCACHEFIELD FirstField;
+  PINFCACHEFIELD LastField;
+
+} INFCACHELINE, *PINFCACHELINE;
 
 
 typedef struct _INFCACHESECTION
@@ -48,8 +68,8 @@ typedef struct _INFCACHESECTION
   struct _INFCACHESECTION *Next;
   struct _INFCACHESECTION *Prev;
 
-  PINFCACHEKEY FirstKey;
-  PINFCACHEKEY LastKey;
+  PINFCACHELINE FirstLine;
+  PINFCACHELINE LastLine;
 
   LONG LineCount;
 
@@ -61,253 +81,194 @@ typedef struct _INFCACHE
 {
   PINFCACHESECTION FirstSection;
   PINFCACHESECTION LastSection;
+
+  PINFCACHESECTION StringsSection;
 } INFCACHE, *PINFCACHE;
+
+
+/* parser definitions */
+
+enum parser_state
+{
+  LINE_START,      /* at beginning of a line */
+  SECTION_NAME,    /* parsing a section name */
+  KEY_NAME,        /* parsing a key name */
+  VALUE_NAME,      /* parsing a value name */
+  EOL_BACKSLASH,   /* backslash at end of line */
+  QUOTES,          /* inside quotes */
+  LEADING_SPACES,  /* leading spaces */
+  TRAILING_SPACES, /* trailing spaces */
+  COMMENT,         /* inside a comment */
+  NB_PARSER_STATES
+};
+
+struct parser
+{
+  const CHAR        *start;       /* start position of item being parsed */
+  const CHAR        *end;         /* end of buffer */
+  PINFCACHE         file;         /* file being built */
+  enum parser_state state;        /* current parser state */
+  enum parser_state stack[4];     /* state stack */
+  int               stack_pos;    /* current pos in stack */
+
+  PINFCACHESECTION cur_section;   /* pointer to the section being parsed*/
+  PINFCACHELINE    line;          /* current line */
+  unsigned int     line_pos;      /* current line position in file */
+  unsigned int     error;         /* error code */
+  unsigned int     token_len;     /* current token len */
+  WCHAR token[MAX_FIELD_LEN+1];   /* current token */
+};
+
+typedef const CHAR * (*parser_state_func)( struct parser *parser, const CHAR *pos );
+
+/* parser state machine functions */
+static const CHAR *line_start_state( struct parser *parser, const CHAR *pos );
+static const CHAR *section_name_state( struct parser *parser, const CHAR *pos );
+static const CHAR *key_name_state( struct parser *parser, const CHAR *pos );
+static const CHAR *value_name_state( struct parser *parser, const CHAR *pos );
+static const CHAR *eol_backslash_state( struct parser *parser, const CHAR *pos );
+static const CHAR *quotes_state( struct parser *parser, const CHAR *pos );
+static const CHAR *leading_spaces_state( struct parser *parser, const CHAR *pos );
+static const CHAR *trailing_spaces_state( struct parser *parser, const CHAR *pos );
+static const CHAR *comment_state( struct parser *parser, const CHAR *pos );
+
+static const parser_state_func parser_funcs[NB_PARSER_STATES] =
+{
+  line_start_state,      /* LINE_START */
+  section_name_state,    /* SECTION_NAME */
+  key_name_state,        /* KEY_NAME */
+  value_name_state,      /* VALUE_NAME */
+  eol_backslash_state,   /* EOL_BACKSLASH */
+  quotes_state,          /* QUOTES */
+  leading_spaces_state,  /* LEADING_SPACES */
+  trailing_spaces_state, /* TRAILING_SPACES */
+  comment_state          /* COMMENT */
+};
 
 
 /* PRIVATE FUNCTIONS ********************************************************/
 
-static PINFCACHEKEY
-InfpCacheFreeKey(PINFCACHEKEY Key)
+static PINFCACHELINE
+InfpCacheFreeLine (PINFCACHELINE Line)
 {
-  PINFCACHEKEY Next;
+  PINFCACHELINE Next;
+  PINFCACHEFIELD Field;
 
-  if (Key == NULL)
+  if (Line == NULL)
     {
-      return(NULL);
+      return NULL;
     }
 
-  Next = Key->Next;
-  if (Key->Name != NULL)
+  Next = Line->Next;
+  if (Line->Name != NULL)
     {
-      RtlFreeHeap(ProcessHeap,
-		  0,
-		  Key->Name);
-      Key->Name = NULL;
+      RtlFreeHeap (ProcessHeap,
+		   0,
+		   Line->Name);
+      Line->Name = NULL;
     }
 
-  if (Key->Data != NULL)
+  /* Remove data fields */
+  while (Line->FirstField != NULL)
     {
-      RtlFreeHeap(ProcessHeap,
-		  0,
-		  Key->Data);
-      Key->Data = NULL;
+      Field = Line->FirstField->Next;
+      RtlFreeHeap (ProcessHeap,
+		   0,
+		   Line->FirstField);
+      Line->FirstField = Field;
     }
+  Line->LastField = NULL;
 
-  RtlFreeHeap(ProcessHeap,
-	      0,
-	      Key);
+  RtlFreeHeap (ProcessHeap,
+	       0,
+	       Line);
 
-  return(Next);
+  return Next;
 }
 
 
 static PINFCACHESECTION
-InfpCacheFreeSection(PINFCACHESECTION Section)
+InfpCacheFreeSection (PINFCACHESECTION Section)
 {
   PINFCACHESECTION Next;
 
   if (Section == NULL)
     {
-      return(NULL);
+      return NULL;
     }
 
   /* Release all keys */
   Next = Section->Next;
-  while (Section->FirstKey != NULL)
+  while (Section->FirstLine != NULL)
     {
-      Section->FirstKey = InfpCacheFreeKey(Section->FirstKey);
+      Section->FirstLine = InfpCacheFreeLine (Section->FirstLine);
     }
-  Section->LastKey = NULL;
+  Section->LastLine = NULL;
 
-  RtlFreeHeap(ProcessHeap,
-	      0,
-	      Section);
+  RtlFreeHeap (ProcessHeap,
+	       0,
+	       Section);
 
-  return(Next);
-}
-
-
-static PINFCACHEKEY
-InfpCacheFindKey(PINFCACHESECTION Section,
-		PWCHAR Name,
-		ULONG NameLength)
-{
-  PINFCACHEKEY Key;
-
-  Key = Section->FirstKey;
-  while (Key != NULL)
-    {
-      if (NameLength == wcslen(Key->Name))
-	{
-	  if (_wcsnicmp(Key->Name, Name, NameLength) == 0)
-	    break;
-	}
-
-      Key = Key->Next;
-    }
-
-  return(Key);
-}
-
-
-static PINFCACHEKEY
-InfpCacheAddKey(PINFCACHESECTION Section,
-	       PCHAR Name,
-	       ULONG NameLength,
-	       PCHAR Data,
-	       ULONG DataLength)
-{
-  PINFCACHEKEY Key;
-  ULONG i;
-
-  Key = NULL;
-
-  if (Section == NULL ||
-      Name == NULL ||
-      NameLength == 0 ||
-      Data == NULL ||
-      DataLength == 0)
-    {
-      DPRINT("Invalid parameter\n");
-      return(NULL);
-    }
-
-  Key = (PINFCACHEKEY)RtlAllocateHeap(ProcessHeap,
-				      0,
-				      sizeof(INFCACHEKEY));
-  if (Key == NULL)
-    {
-      DPRINT("RtlAllocateHeap() failed\n");
-      return(NULL);
-    }
-
-  RtlZeroMemory(Key,
-		sizeof(INFCACHEKEY));
-
-  Key->Name = RtlAllocateHeap(ProcessHeap,
-			      0,
-			      (NameLength + 1) * sizeof(WCHAR));
-  if (Key->Name == NULL)
-    {
-      DPRINT("RtlAllocateHeap() failed\n");
-      RtlFreeHeap(ProcessHeap,
-		  0,
-		  Key);
-      return(NULL);
-    }
-
-  /* Copy value name */
-  for (i = 0; i < NameLength; i++)
-    {
-      Key->Name[i] = (WCHAR)Name[i];
-    }
-  Key->Name[NameLength] = 0;
-
-  Key->Data = RtlAllocateHeap(ProcessHeap,
-			      0,
-			      (DataLength + 1) * sizeof(WCHAR));
-  if (Key->Data == NULL)
-    {
-      DPRINT("RtlAllocateHeap() failed\n");
-      RtlFreeHeap(ProcessHeap,
-		  0,
-		  Key->Name);
-      RtlFreeHeap(ProcessHeap,
-		  0,
-		  Key);
-      return(NULL);
-    }
-
-  /* Copy value data */
-  for (i = 0; i < DataLength; i++)
-    {
-      Key->Data[i] = (WCHAR)Data[i];
-    }
-  Key->Data[DataLength] = 0;
-
-  /* Append key */
-  if (Section->FirstKey == NULL)
-    {
-      Section->FirstKey = Key;
-      Section->LastKey = Key;
-    }
-  else
-    {
-      Section->LastKey->Next = Key;
-      Key->Prev = Section->LastKey;
-      Section->LastKey = Key;
-    }
-  Section->LineCount++;
-
-  return(Key);
+  return Next;
 }
 
 
 static PINFCACHESECTION
-InfpCacheFindSection(PINFCACHE Cache,
-		    PWCHAR Name,
-		    ULONG NameLength)
+InfpCacheFindSection (PINFCACHE Cache,
+		      PWCHAR Name)
 {
   PINFCACHESECTION Section = NULL;
 
-  if (Cache == NULL || Name == NULL || NameLength == 0)
+  if (Cache == NULL || Name == NULL)
     {
-      return(NULL);
+      return NULL;
     }
 
-  Section = Cache->FirstSection;
-
   /* iterate through list of sections */
+  Section = Cache->FirstSection;
   while (Section != NULL)
     {
-      if (NameLength == wcslen(Section->Name))
+      if (_wcsicmp (Section->Name, Name) == 0)
 	{
-	  /* are the contents the same too? */
-	  if (_wcsnicmp(Section->Name, Name, NameLength) == 0)
-	    break;
+	  return Section;
 	}
 
       /* get the next section*/
       Section = Section->Next;
     }
 
-  return(Section);
+  return NULL;
 }
 
 
 static PINFCACHESECTION
-InfpCacheAddSection(PINFCACHE Cache,
-		   PCHAR Name,
-		   ULONG NameLength)
+InfpCacheAddSection (PINFCACHE Cache,
+		     PWCHAR Name)
 {
   PINFCACHESECTION Section = NULL;
-  ULONG i;
+  ULONG Size;
 
-  if (Cache == NULL || Name == NULL || NameLength == 0)
+  if (Cache == NULL || Name == NULL)
     {
       DPRINT("Invalid parameter\n");
-      return(NULL);
+      return NULL;
     }
 
   /* Allocate and initialize the new section */
-  i = sizeof(INFCACHESECTION) + (NameLength * sizeof(WCHAR));
-  Section = (PINFCACHESECTION)RtlAllocateHeap(ProcessHeap,
-					      0,
-					      i);
+  Size = sizeof(INFCACHESECTION) + (wcslen (Name) * sizeof(WCHAR));
+  Section = (PINFCACHESECTION)RtlAllocateHeap (ProcessHeap,
+					       0,
+					       Size);
   if (Section == NULL)
     {
       DPRINT("RtlAllocateHeap() failed\n");
-      return(NULL);
+      return NULL;
     }
-  RtlZeroMemory(Section,
-		i);
+  RtlZeroMemory (Section,
+		 Size);
 
   /* Copy section name */
-  for (i = 0; i < NameLength; i++)
-    {
-      Section->Name[i] = (WCHAR)Name[i];
-    }
-  Section->Name[NameLength] = 0;
+  wcscpy (Section->Name, Name);
 
   /* Append section */
   if (Cache->FirstSection == NULL)
@@ -322,278 +283,598 @@ InfpCacheAddSection(PINFCACHE Cache,
       Cache->LastSection = Section;
     }
 
-  return(Section);
+  return Section;
 }
 
 
-static PCHAR
-InfpCacheSkipWhitespace(PCHAR Ptr)
+static PINFCACHELINE
+InfpCacheAddLine (PINFCACHESECTION Section)
 {
-  while (*Ptr != 0 && isspace(*Ptr))
-    Ptr++;
+  PINFCACHELINE Line;
 
-  return((*Ptr == 0) ? NULL : Ptr);
-}
-
-
-static PCHAR
-InfpCacheSkipToNextSection(PCHAR Ptr)
-{
-  while (*Ptr != 0 && *Ptr != '[')
+  if (Section == NULL)
     {
-      while (*Ptr != 0 && *Ptr != L'\n')
-	{
-	  Ptr++;
-	}
-      Ptr++;
+      DPRINT("Invalid parameter\n");
+      return NULL;
     }
 
-  return((*Ptr == 0) ? NULL : Ptr);
-}
-
-
-static PCHAR
-InfpCacheGetSectionName(PCHAR Ptr,
-		       PCHAR *NamePtr,
-		       PULONG NameSize)
-{
-  ULONG Size = 0;
-  CHAR Name[256];
-
-  *NamePtr = NULL;
-  *NameSize = 0;
-
-  /* skip whitespace */
-  while (*Ptr != 0 && isspace(*Ptr))
+  Line = (PINFCACHELINE)RtlAllocateHeap (ProcessHeap,
+					 0,
+					 sizeof(INFCACHELINE));
+  if (Line == NULL)
     {
-      Ptr++;
+      DPRINT("RtlAllocateHeap() failed\n");
+      return NULL;
     }
+  RtlZeroMemory(Line,
+		sizeof(INFCACHELINE));
 
-  *NamePtr = Ptr;
-
-  while (*Ptr != 0 && *Ptr != ']')
+  /* Append line */
+  if (Section->FirstLine == NULL)
     {
-      Size++;
-      Ptr++;
-    }
-
-  Ptr++;
-
-  while (*Ptr != 0 && *Ptr != L'\n')
-    {
-      Ptr++;
-    }
-  Ptr++;
-
-  *NameSize = Size;
-
-  strncpy(Name, *NamePtr, Size);
-  Name[Size] = 0;
-
-  DPRINT("SectionName: '%s'\n", Name);
-
-  return(Ptr);
-}
-
-
-static PCHAR
-InfpCacheGetKeyName(PCHAR Ptr,
-		   PCHAR *NamePtr,
-		   PULONG NameSize)
-{
-  ULONG Size = 0;
-
-  *NamePtr = NULL;
-  *NameSize = 0;
-
-  while(Ptr && *Ptr)
-    {
-      *NamePtr = NULL;
-      *NameSize = 0;
-      Size = 0;
-
-      /* skip whitespace and empty lines */
-      while (isspace(*Ptr) || *Ptr == '\n' || *Ptr == '\r')
-	{
-	  Ptr++;
-	}
-      if (*Ptr == 0)
-	{
-	  continue;
-	}
-
-      *NamePtr = Ptr;
-
-      while (*Ptr != 0 && !isspace(*Ptr) && *Ptr != '=' && *Ptr != ';')
-	{
-	  Size++;
-	  Ptr++;
-	}
-      if (*Ptr == ';')
-	{
-	  while (*Ptr != 0 && *Ptr != '\r' && *Ptr != '\n')
-	    {
-	      Ptr++;
-	    }
-	}
-      else
-	{
-	  *NameSize = Size;
-	  break;
-	}
-    }
-
-  return(Ptr);
-}
-
-
-static PCHAR
-InfpCacheGetKeyValue(PCHAR Ptr,
-		    PCHAR *DataPtr,
-		    PULONG DataSize)
-{
-  ULONG Size = 0;
-
-  *DataPtr = NULL;
-  *DataSize = 0;
-
-  /* Skip whitespace */
-  while (*Ptr != 0 && isspace(*Ptr))
-    {
-      Ptr++;
-    }
-
-  /* Check and skip '=' */
-  if (*Ptr != '=')
-    {
-      return(NULL);
-    }
-  Ptr++;
-
-  /* Skip whitespace */
-  while (*Ptr != 0 && isspace(*Ptr))
-    {
-      Ptr++;
-    }
-
-#if 0
-  if (*Ptr == '"' && String)
-    {
-      Ptr++;
-
-      /* Get data */
-      *DataPtr = Ptr;
-      while (*Ptr != '"')
-	{
-	  Ptr++;
-	  Size++;
-	}
-      Ptr++;
-      while (*Ptr && *Ptr != '\r' && *Ptr != '\n')
-	{
-	  Ptr++;
-	}
+      Section->FirstLine = Line;
+      Section->LastLine = Line;
     }
   else
     {
-#endif
-      /* Get data */
-      *DataPtr = Ptr;
-      while (*Ptr != 0 && *Ptr != '\r' && *Ptr != ';')
-	{
-	  Ptr++;
-	  Size++;
-	}
-#if 0
+      Section->LastLine->Next = Line;
+      Line->Prev = Section->LastLine;
+      Section->LastLine = Line;
     }
-#endif
+  Section->LineCount++;
 
-  /* Skip to next line */
-  if (*Ptr == '\r')
-    Ptr++;
-  if (*Ptr == '\n')
-    Ptr++;
-
-  *DataSize = Size;
-
-  return(Ptr);
+  return Line;
 }
 
 
-NTSTATUS
-InfpParse (PINFCACHE Cache,
-	   PCHAR Start,
-	   PCHAR End,
-	   PULONG ErrorLine)
+static PVOID
+InfpAddKeyToLine (PINFCACHELINE Line,
+		  PWCHAR Name)
+{
+  if (Line == NULL)
+    return NULL;
+
+  if (Line->Name != NULL)
+    return NULL;
+
+  Line->Name = (PWCHAR)RtlAllocateHeap (ProcessHeap,
+					0,
+					(wcslen (Name) + 1) * sizeof(WCHAR));
+  if (Line->Name == NULL)
+    return NULL;
+
+  wcscpy (Line->Name, Name);
+
+  return (PVOID)Line->Name;
+}
+
+
+static PVOID
+InfpAddFieldToLine (PINFCACHELINE Line,
+		    PWCHAR Data)
+{
+  PINFCACHEFIELD Field;
+  ULONG Size;
+
+  Size = sizeof(INFCACHEFIELD) + (wcslen(Data) * sizeof(WCHAR));
+  Field = (PINFCACHEFIELD)RtlAllocateHeap (ProcessHeap,
+					   0,
+					   Size);
+  if (Field == NULL)
+    {
+      return NULL;
+    }
+  RtlZeroMemory (Field,
+		 Size);
+  wcscpy (Field->Data, Data);
+
+  /* Append key */
+  if (Line->FirstField == NULL)
+    {
+      Line->FirstField = Field;
+      Line->LastField = Field;
+    }
+  else
+    {
+      Line->LastField->Next = Field;
+      Field->Prev = Line->LastField;
+      Line->LastField = Field;
+    }
+  Line->FieldCount++;
+
+  return (PVOID)Field;
+}
+
+
+static PINFCACHELINE
+InfpCacheFindKeyLine (PINFCACHESECTION Section,
+		      PWCHAR Name)
+{
+  PINFCACHELINE Line;
+
+  Line = Section->FirstLine;
+  while (Line != NULL)
+    {
+      if (Line->Name != NULL && _wcsicmp (Line->Name, Name) == 0)
+	{
+	  return Line;
+	}
+
+      Line = Line->Next;
+    }
+
+  return NULL;
+}
+
+
+/* push the current state on the parser stack */
+inline static void push_state( struct parser *parser, enum parser_state state )
+{
+//  assert( parser->stack_pos < sizeof(parser->stack)/sizeof(parser->stack[0]) );
+  parser->stack[parser->stack_pos++] = state;
+}
+
+
+/* pop the current state */
+inline static void pop_state( struct parser *parser )
+{
+//  assert( parser->stack_pos );
+  parser->state = parser->stack[--parser->stack_pos];
+}
+
+
+/* set the parser state and return the previous one */
+inline static enum parser_state set_state( struct parser *parser, enum parser_state state )
+{
+  enum parser_state ret = parser->state;
+  parser->state = state;
+  return ret;
+}
+
+
+/* check if the pointer points to an end of file */
+inline static int is_eof( struct parser *parser, const CHAR *ptr )
+{
+  return (ptr >= parser->end || *ptr == CONTROL_Z);
+}
+
+
+/* check if the pointer points to an end of line */
+inline static int is_eol( struct parser *parser, const CHAR *ptr )
+{
+  return (ptr >= parser->end || *ptr == CONTROL_Z || *ptr == '\r' /*'\n'*/);
+}
+
+
+/* push data from current token start up to pos into the current token */
+static int push_token( struct parser *parser, const CHAR *pos )
+{
+  int len = pos - parser->start;
+  const CHAR *src = parser->start;
+  WCHAR *dst = parser->token + parser->token_len;
+
+  if (len > MAX_FIELD_LEN - parser->token_len)
+    len = MAX_FIELD_LEN - parser->token_len;
+
+  parser->token_len += len;
+  for ( ; len > 0; len--, dst++, src++)
+    *dst = *src ? (WCHAR)*src : L' ';
+  *dst = 0;
+  parser->start = pos;
+
+  return 0;
+}
+
+
+
+/* add a section with the current token as name */
+static PVOID add_section_from_token( struct parser *parser )
 {
   PINFCACHESECTION Section;
-  PINFCACHEKEY Key;
-  PCHAR SectionName;
-  ULONG SectionNameSize;
-  PCHAR KeyName;
-  ULONG KeyNameSize;
-  PCHAR KeyValue;
-  ULONG KeyValueSize;
-  PCHAR Ptr;
 
-  Section = NULL;
-  Ptr = Start;
-  while (Ptr != NULL && *Ptr != 0)
+  if (parser->token_len > MAX_SECTION_NAME_LEN)
     {
-      Ptr = InfpCacheSkipWhitespace(Ptr);
-      if (Ptr == NULL)
-	continue;
+      parser->error = STATUS_SECTION_NAME_TOO_LONG;
+      return NULL;
+    }
 
-      if (*Ptr == '[')
+  Section = InfpCacheFindSection (parser->file,
+				  parser->token);
+  if (Section == NULL)
+    {
+      /* need to create a new one */
+      Section= InfpCacheAddSection (parser->file,
+				    parser->token);
+      if (Section == NULL)
 	{
-	  Section = NULL;
-	  Ptr++;
-
-	  Ptr = InfpCacheGetSectionName(Ptr,
-				       &SectionName,
-				       &SectionNameSize);
-
-	  DPRINT1("[%.*s]\n", SectionNameSize, SectionName);
-
-	  Section = InfpCacheAddSection(Cache,
-				       SectionName,
-				       SectionNameSize);
-	  if (Section == NULL)
-	    {
-	      DPRINT("IniCacheAddSection() failed\n");
-	      Ptr = InfpCacheSkipToNextSection(Ptr);
-	      continue;
-	    }
+	  parser->error = STATUS_NOT_ENOUGH_MEMORY;
+	  return NULL;
 	}
-      else
+    }
+
+  parser->token_len = 0;
+  parser->cur_section = Section;
+
+  return (PVOID)Section;
+}
+
+
+/* add a field containing the current token to the current line */
+static struct field *add_field_from_token( struct parser *parser, int is_key )
+{
+  PVOID field;
+  WCHAR *text;
+
+  if (!parser->line)  /* need to start a new line */
+    {
+      if (parser->cur_section == NULL)  /* got a line before the first section */
 	{
-	  if (Section == NULL)
-	    {
-	      Ptr = InfpCacheSkipToNextSection(Ptr);
+	  parser->error = STATUS_WRONG_INF_STYLE;
+	  return NULL;
+	}
+
+      parser->line = InfpCacheAddLine (parser->cur_section);
+      if (parser->line == NULL)
+	goto error;
+    }
+  else
+    {
+//      assert(!is_key);
+    }
+
+  if (is_key)
+    {
+      field = InfpAddKeyToLine(parser->line, parser->token);
+    }
+  else
+    {
+      field = InfpAddFieldToLine(parser->line, parser->token);
+    }
+
+  if (field != NULL)
+    {
+      parser->token_len = 0;
+      return field;
+    }
+
+error:
+  parser->error = STATUS_NOT_ENOUGH_MEMORY;
+  return NULL;
+}
+
+
+/* close the current line and prepare for parsing a new one */
+static void close_current_line( struct parser *parser )
+{
+  parser->line = NULL;
+}
+
+
+
+/* handler for parser LINE_START state */
+static const CHAR *line_start_state( struct parser *parser, const CHAR *pos )
+{
+  const CHAR *p;
+
+  for (p = pos; !is_eof( parser, p ); p++)
+    {
+      switch(*p)
+	{
+//	  case '\n':
+	  case '\r':
+	    p++;
+	    parser->line_pos++;
+	    close_current_line( parser );
+	    break;
+	  case ';':
+	    push_state( parser, LINE_START );
+	    set_state( parser, COMMENT );
+	    return p + 1;
+	  case '[':
+	    parser->start = p + 1;
+	    set_state( parser, SECTION_NAME );
+	    return p + 1;
+	  default:
+	    if (!isspace(*p))
+	      {
+		parser->start = p;
+		set_state( parser, KEY_NAME );
+		return p;
+	      }
+	    break;
+	}
+    }
+  close_current_line( parser );
+  return NULL;
+}
+
+
+/* handler for parser SECTION_NAME state */
+static const CHAR *section_name_state( struct parser *parser, const CHAR *pos )
+{
+  const CHAR *p;
+
+  for (p = pos; !is_eol( parser, p ); p++)
+    {
+      if (*p == ']')
+	{
+	  push_token( parser, p );
+	  if (add_section_from_token( parser ) == NULL)
+	    return NULL;
+	  push_state( parser, LINE_START );
+	  set_state( parser, COMMENT );  /* ignore everything else on the line */
+	  return p + 1;
+	}
+    }
+  parser->error = STATUS_BAD_SECTION_NAME_LINE; /* unfinished section name */
+  return NULL;
+}
+
+
+/* handler for parser KEY_NAME state */
+static const CHAR *key_name_state( struct parser *parser, const CHAR *pos )
+{
+    const CHAR *p, *token_end = parser->start;
+
+    for (p = pos; !is_eol( parser, p ); p++)
+    {
+        if (*p == ',') break;
+        switch(*p)
+        {
+
+         case '=':
+            push_token( parser, token_end );
+            if (!add_field_from_token( parser, 1 )) return NULL;
+            parser->start = p + 1;
+            push_state( parser, VALUE_NAME );
+            set_state( parser, LEADING_SPACES );
+            return p + 1;
+        case ';':
+            push_token( parser, token_end );
+            if (!add_field_from_token( parser, 0 )) return NULL;
+            push_state( parser, LINE_START );
+            set_state( parser, COMMENT );
+            return p + 1;
+        case '"':
+            push_token( parser, token_end );
+            parser->start = p + 1;
+            push_state( parser, KEY_NAME );
+            set_state( parser, QUOTES );
+            return p + 1;
+        case '\\':
+            push_token( parser, token_end );
+            parser->start = p;
+            push_state( parser, KEY_NAME );
+            set_state( parser, EOL_BACKSLASH );
+            return p;
+        default:
+            if (!isspace(*p)) token_end = p + 1;
+            else
+            {
+                push_token( parser, p );
+                push_state( parser, KEY_NAME );
+                set_state( parser, TRAILING_SPACES );
+                return p;
+            }
+            break;
+        }
+    }
+    push_token( parser, token_end );
+    set_state( parser, VALUE_NAME );
+    return p;
+}
+
+
+/* handler for parser VALUE_NAME state */
+static const CHAR *value_name_state( struct parser *parser, const CHAR *pos )
+{
+    const CHAR *p, *token_end = parser->start;
+
+    for (p = pos; !is_eol( parser, p ); p++)
+    {
+        switch(*p)
+        {
+        case ';':
+            push_token( parser, token_end );
+            if (!add_field_from_token( parser, 0 )) return NULL;
+            push_state( parser, LINE_START );
+            set_state( parser, COMMENT );
+            return p + 1;
+        case ',':
+            push_token( parser, token_end );
+            if (!add_field_from_token( parser, 0 )) return NULL;
+            parser->start = p + 1;
+            push_state( parser, VALUE_NAME );
+            set_state( parser, LEADING_SPACES );
+            return p + 1;
+        case '"':
+            push_token( parser, token_end );
+            parser->start = p + 1;
+            push_state( parser, VALUE_NAME );
+            set_state( parser, QUOTES );
+            return p + 1;
+        case '\\':
+            push_token( parser, token_end );
+            parser->start = p;
+            push_state( parser, VALUE_NAME );
+            set_state( parser, EOL_BACKSLASH );
+            return p;
+        default:
+            if (!isspace(*p)) token_end = p + 1;
+            else
+            {
+                push_token( parser, p );
+                push_state( parser, VALUE_NAME );
+                set_state( parser, TRAILING_SPACES );
+                return p;
+            }
+            break;
+        }
+    }
+    push_token( parser, token_end );
+    if (!add_field_from_token( parser, 0 )) return NULL;
+    set_state( parser, LINE_START );
+    return p;
+}
+
+
+/* handler for parser EOL_BACKSLASH state */
+static const CHAR *eol_backslash_state( struct parser *parser, const CHAR *pos )
+{
+  const CHAR *p;
+
+  for (p = pos; !is_eof( parser, p ); p++)
+    {
+      switch(*p)
+	{
+//	  case '\n':
+	  case '\r':
+	    parser->line_pos++;
+//	    parser->start = p + 1;
+	    parser->start = p + 2;
+	    set_state( parser, LEADING_SPACES );
+//	    return p + 1;
+	    return p + 2;
+	  case '\\':
+	    continue;
+	  case ';':
+	    push_state( parser, EOL_BACKSLASH );
+	    set_state( parser, COMMENT );
+	    return p + 1;
+	  default:
+	    if (isspace(*p))
 	      continue;
-	    }
+	    push_token( parser, p );
+	    pop_state( parser );
+	    return p;
+	}
+    }
+  parser->start = p;
+  pop_state( parser );
 
-	  Ptr = InfpCacheGetKeyName(Ptr,
-				   &KeyName,
-				   &KeyNameSize);
+  return p;
+}
 
-	  Ptr = InfpCacheGetKeyValue(Ptr,
-				    &KeyValue,
-				    &KeyValueSize);
 
-	  DPRINT1("'%.*s' = '%.*s'\n", KeyNameSize, KeyName, KeyValueSize, KeyValue);
+/* handler for parser QUOTES state */
+static const CHAR *quotes_state( struct parser *parser, const CHAR *pos )
+{
+  const CHAR *p, *token_end = parser->start;
 
-	  Key = InfpCacheAddKey(Section,
-			       KeyName,
-			       KeyNameSize,
-			       KeyValue,
-			       KeyValueSize);
-	  if (Key == NULL)
+  for (p = pos; !is_eol( parser, p ); p++)
+    {
+      if (*p == '"')
+	{
+	  if (p+1 < parser->end && p[1] == '"')  /* double quotes */
 	    {
-	      DPRINT("IniCacheAddKey() failed\n");
+	      push_token( parser, p + 1 );
+	      parser->start = token_end = p + 2;
+	      p++;
+	    }
+	  else  /* end of quotes */
+	    {
+	      push_token( parser, p );
+	      parser->start = p + 1;
+	      pop_state( parser );
+	      return p + 1;
 	    }
 	}
     }
+  push_token( parser, p );
+  pop_state( parser );
+  return p;
+}
+
+
+/* handler for parser LEADING_SPACES state */
+static const CHAR *leading_spaces_state( struct parser *parser, const CHAR *pos )
+{
+  const CHAR *p;
+
+  for (p = pos; !is_eol( parser, p ); p++)
+    {
+      if (*p == '\\')
+	{
+	  parser->start = p;
+	  set_state( parser, EOL_BACKSLASH );
+	  return p;
+	}
+      if (!isspace(*p))
+	break;
+    }
+  parser->start = p;
+  pop_state( parser );
+  return p;
+}
+
+
+/* handler for parser TRAILING_SPACES state */
+static const CHAR *trailing_spaces_state( struct parser *parser, const CHAR *pos )
+{
+  const CHAR *p;
+
+  for (p = pos; !is_eol( parser, p ); p++)
+    {
+      if (*p == '\\')
+	{
+	  set_state( parser, EOL_BACKSLASH );
+	  return p;
+	}
+      if (!isspace(*p))
+	break;
+    }
+  pop_state( parser );
+  return p;
+}
+
+
+/* handler for parser COMMENT state */
+static const CHAR *comment_state( struct parser *parser, const CHAR *pos )
+{
+  const CHAR *p = pos;
+
+  while (!is_eol( parser, p ))
+     p++;
+  pop_state( parser );
+  return p;
+}
+
+
+/* parse a complete buffer */
+static NTSTATUS
+InfpParseBuffer (PINFCACHE file,
+		 const CHAR *buffer,
+		 const CHAR *end,
+		 PULONG error_line)
+{
+  struct parser parser;
+  const CHAR *pos = buffer;
+
+  parser.start       = buffer;
+  parser.end         = end;
+  parser.file        = file;
+  parser.line        = NULL;
+  parser.state       = LINE_START;
+  parser.stack_pos   = 0;
+  parser.cur_section = NULL;
+  parser.line_pos    = 1;
+  parser.error       = 0;
+  parser.token_len   = 0;
+
+  /* parser main loop */
+  while (pos)
+    pos = (parser_funcs[parser.state])(&parser, pos);
+
+  if (parser.error)
+    {
+      if (error_line)
+	*error_line = parser.line_pos;
+      return parser.error;
+    }
+
+  /* find the [strings] section */
+  file->StringsSection = InfpCacheFindSection (file,
+					       L"Strings");
 
   return STATUS_SUCCESS;
 }
@@ -726,10 +1007,10 @@ InfOpenFile(PHINF InfHandle,
 		sizeof(INFCACHE));
 
   /* Parse the inf buffer */
-  Status = InfpParse (Cache,
-		      FileBuffer,
-		      FileBuffer + FileLength,
-		      ErrorLine);
+  Status = InfpParseBuffer (Cache,
+			    FileBuffer,
+			    FileBuffer + FileLength,
+			    ErrorLine);
   if (!NT_SUCCESS(Status))
     {
       RtlFreeHeap(ProcessHeap,
@@ -781,7 +1062,7 @@ InfFindFirstLine (HINF InfHandle,
 {
   PINFCACHE Cache;
   PINFCACHESECTION CacheSection;
-  PINFCACHEKEY CacheKey;
+  PINFCACHELINE CacheLine;
 
   if (InfHandle == NULL || Section == NULL || Context == NULL)
     {
@@ -802,19 +1083,19 @@ InfFindFirstLine (HINF InfHandle,
 	{
 	  if (Key != NULL)
 	    {
-	      CacheKey = InfpCacheFindKey(CacheSection, (PWCHAR)Key, wcslen(Key));
+	      CacheLine = InfpCacheFindKeyLine (CacheSection, (PWCHAR)Key);
 	    }
 	  else
 	    {
-	      CacheKey = CacheSection->FirstKey;
+	      CacheLine = CacheSection->FirstLine;
 	    }
 
-	  if (CacheKey == NULL)
+	  if (CacheLine == NULL)
 	    return FALSE;
 
 	  Context->Inf = (PVOID)Cache;
 	  Context->Section = (PVOID)CacheSection;
-	  Context->Line = (PVOID)CacheKey;
+	  Context->Line = (PVOID)CacheLine;
 
 	  return TRUE;
 	}
@@ -833,7 +1114,7 @@ BOOLEAN
 InfFindNextLine (PINFCONTEXT ContextIn,
 		 PINFCONTEXT ContextOut)
 {
-  PINFCACHEKEY CacheKey;
+  PINFCACHELINE CacheLine;
 
   if (ContextIn == NULL || ContextOut == NULL)
     return FALSE;
@@ -841,11 +1122,11 @@ InfFindNextLine (PINFCONTEXT ContextIn,
   if (ContextIn->Line == NULL)
     return FALSE;
 
-  CacheKey = (PINFCACHEKEY)ContextIn->Line;
-  if (CacheKey->Next == NULL)
+  CacheLine = (PINFCACHELINE)ContextIn->Line;
+  if (CacheLine->Next == NULL)
     return FALSE;
 
-  ContextOut->Line = (PVOID)(CacheKey->Next);
+  ContextOut->Line = (PVOID)(CacheLine->Next);
 
   return TRUE;
 }
@@ -893,7 +1174,7 @@ InfGetData (PINFCONTEXT Context,
 	    PWCHAR *Key,
 	    PWCHAR *Data)
 {
-  PINFCACHEKEY CacheKey;
+  PINFCACHELINE CacheKey;
 
   if (Context == NULL || Context->Line == NULL || Data == NULL)
     {
@@ -901,13 +1182,21 @@ InfGetData (PINFCONTEXT Context,
       return FALSE;
     }
 
-  CacheKey = (PINFCACHEKEY)Context->Line;
-
+  CacheKey = (PINFCACHELINE)Context->Line;
   if (Key != NULL)
     *Key = CacheKey->Name;
 
   if (Data != NULL)
-    *Data = CacheKey->Data;
+    {
+      if (CacheKey->FirstField == NULL)
+	{
+	  *Data = NULL;
+	}
+      else
+	{
+	  *Data = CacheKey->FirstField->Data;
+	}
+    }
 
   return TRUE;
 }

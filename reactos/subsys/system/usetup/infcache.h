@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: infcache.h,v 1.1 2003/03/13 09:51:11 ekohl Exp $
+/* $Id: infcache.h,v 1.2 2003/03/13 17:58:52 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/infcache.h
@@ -27,6 +27,12 @@
 
 #ifndef __INFCACHE_H__
 #define __INFCACHE_H__
+
+
+#define STATUS_BAD_SECTION_NAME_LINE   (0xC0700001)
+#define STATUS_SECTION_NAME_TOO_LONG   (0xC0700002)
+#define STATUS_WRONG_INF_STYLE         (0xC0700003)
+#define STATUS_NOT_ENOUGH_MEMORY       (0xC0700004)
 
 
 typedef PVOID HINF, *PHINF;
