@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.9 2003/07/10 15:47:00 royce Exp $
+/* $Id: timer.c,v 1.10 2003/11/05 22:49:06 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -23,6 +23,17 @@
 
 /* FUNCTIONS *****************************************************************/
 
+static VOID STDCALL
+IoTimerCallback(IN PKDPC Dpc,
+                IN PVOID DeferredContext,
+                IN PVOID SystemArgument1,
+                IN PVOID SystemArgument2)
+{
+  PIO_TIMER Timer = (PIO_TIMER) DeferredContext;
+
+  Timer->TimerRoutine(Timer->DeviceObject, Timer->Context);
+}
+
 /*
  * @implemented
  */
@@ -44,9 +55,12 @@ IoInitializeTimer(PDEVICE_OBJECT DeviceObject,
 {
    DeviceObject->Timer = ExAllocatePoolWithTag(NonPagedPool, sizeof(IO_TIMER),
 					       TAG_IO_TIMER);
+   DeviceObject->Timer->DeviceObject = DeviceObject;
+   DeviceObject->Timer->TimerRoutine = TimerRoutine;
+   DeviceObject->Timer->Context = Context;
    KeInitializeTimer(&(DeviceObject->Timer->timer));
    KeInitializeDpc(&(DeviceObject->Timer->dpc),
-		   (PKDEFERRED_ROUTINE)TimerRoutine,Context);
+		   IoTimerCallback, DeviceObject->Timer);
    
    return(STATUS_SUCCESS);
 }

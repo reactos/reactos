@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.56 2003/09/28 07:37:11 navaraf Exp $
+/* $Id: iotypes.h,v 1.57 2003/11/05 22:49:06 gvg Exp $
  *
  */
 
@@ -37,6 +37,7 @@ struct _DEVICE_OBJECT;
 struct _IRP;
 struct _IO_STATUS_BLOCK;
 struct _SCSI_REQUEST_BLOCK;
+struct _IO_TIMER;
 
 /* SIMPLE TYPES *************************************************************/
 
@@ -101,16 +102,6 @@ typedef VOID STDCALL_FUNC
 /* STRUCTURE TYPES ***********************************************************/
 
 typedef struct _ADAPTER_OBJECT ADAPTER_OBJECT, *PADAPTER_OBJECT;
-
-/*
- * PURPOSE: Special timer associated with each device
- * NOTES: This is a guess
- */
-typedef struct _IO_TIMER
-{
-   KTIMER timer;
-   KDPC dpc;
-} IO_TIMER, *PIO_TIMER;
 
 typedef struct _IO_SECURITY_CONTEXT
 {
@@ -917,7 +908,7 @@ typedef struct _DEVICE_OBJECT
    struct _DEVICE_OBJECT* NextDevice;
    struct _DEVICE_OBJECT* AttachedDevice;
    struct _IRP* CurrentIrp;
-   PIO_TIMER Timer;
+   struct _IO_TIMER *Timer;
    ULONG Flags;
    ULONG Characteristics;
    PVPB Vpb;
@@ -1080,6 +1071,19 @@ typedef VOID STDCALL_FUNC
 typedef VOID STDCALL_FUNC
 (*PIO_TIMER_ROUTINE)(PDEVICE_OBJECT DeviceObject,
 		     PVOID Context);
+
+/*
+ * PURPOSE: Special timer associated with each device
+ * NOTES: This is a guess
+ */
+typedef struct _IO_TIMER
+{
+   KTIMER timer;
+   KDPC dpc;
+   PDEVICE_OBJECT DeviceObject;
+   PIO_TIMER_ROUTINE TimerRoutine;
+   PVOID Context;
+} IO_TIMER, *PIO_TIMER;
 
 typedef struct _IO_WORKITEM *PIO_WORKITEM;
 typedef VOID (*PIO_WORKITEM_ROUTINE)(IN PDEVICE_OBJECT DeviceObject, IN PVOID Context);
