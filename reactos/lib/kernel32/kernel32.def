@@ -556,7 +556,8 @@ OpenFile = OpenFile@12
 ;OpenFileMappingW@12
 ;OpenMutexA@12
 ;OpenMutexW@12
-;OpenProcess@12
+OpenProcess@12
+OpenProcess = OpenProcess@12
 ;OpenProfileUserMapping@0
 ;OpenSemaphoreA@12
 ;OpenSemaphoreW@12
