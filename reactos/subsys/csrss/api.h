@@ -136,6 +136,7 @@ CSR_API(CsrGetInputHandle);
 CSR_API(CsrGetOutputHandle);
 CSR_API(CsrCloseHandle);
 CSR_API(CsrVerifyHandle);
+CSR_API(CsrDuplicateHandle);
 
 /* print.c */
 VOID STDCALL DisplayString(LPCWSTR lpwString);

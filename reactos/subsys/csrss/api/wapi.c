@@ -1,4 +1,4 @@
-/* $Id: wapi.c,v 1.27 2003/03/05 22:50:24 ekohl Exp $
+/* $Id: wapi.c,v 1.28 2003/03/09 21:42:47 hbirr Exp $
  * 
  * reactos/subsys/csrss/api/wapi.c
  *
@@ -67,6 +67,7 @@ static const CsrFunc CsrFuncs[] = {
    CsrGetOutputHandle,
    CsrCloseHandle,
    CsrVerifyHandle,
+   CsrDuplicateHandle,
    0 };
 
 static void Thread_Api2(HANDLE ServerPort)
