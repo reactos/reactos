@@ -27,6 +27,7 @@
 #define	FS_NTFS			2
 #define	FS_EXT2			3
 #define FS_REISER		4
+#define FS_ISO9660		5
 
 #define FILE			VOID
 #define PFILE			FILE *

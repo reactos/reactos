@@ -19,7 +19,7 @@
 	
 include ../rules.mk
 
-OBJS = fs.o fat.o
+OBJS = fs.o fat.o iso.o
 
 .PHONY : clean
 
@@ -33,6 +33,9 @@ fs.o:	fs.c fat.h ../fs.h
 
 fat.o:	fat.c fat.h ../fs.h
 	$(CC) $(FLAGS) -o fat.o -c fat.c
+
+iso.o:	iso.c iso.h ../fs.h
+	$(CC) $(FLAGS) -o iso.o -c iso.c
 
 clean:
 	- $(RM) *.o

@@ -112,6 +112,7 @@ BOOL	DiskReadLogicalSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG SectorC
 //
 ///////////////////////////////////////////////////////////////////////////////////////
 BOOL	DiskIsDriveRemovable(ULONG DriveNumber);
+BOOL	DiskIsDriveCdRom(ULONG DriveNumber);
 BOOL	DiskGetActivePartitionEntry(ULONG DriveNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
 BOOL	DiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
 BOOL	DiskGetFirstPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry);

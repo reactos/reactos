@@ -20,6 +20,7 @@
 #include <freeldr.h>
 #include <fs.h>
 #include "fat.h"
+#include "iso.h"
 #include <disk.h>
 #include <rtl.h>
 #include <ui.h>
@@ -84,6 +85,16 @@ BOOL OpenDiskDrive(ULONG DriveNumber, ULONG PartitionNumber)
 		return FatOpenVolume(DriveNumber, 0);
 	}
 
+	// Check and see if it is a cdrom drive
+	// If so then just assume ISO9660 file system type
+	if (DiskIsDriveCdRom(DriveNumber))
+	{
+		DbgPrint((DPRINT_FILESYSTEM, "Drive is a cdrom drive. Assuming ISO-9660 file system.\n"));
+
+		FileSystemType = FS_ISO9660;
+		return IsoOpenVolume(DriveNumber);
+	}
+
 	// Set the boot partition
 	BootPartition = PartitionNumber;
 
@@ -93,6 +104,7 @@ BOOL OpenDiskDrive(ULONG DriveNumber, ULONG PartitionNumber)
 		// Partition requested was zero which means the boot partition
 		if (DiskGetActivePartitionEntry(DriveNumber, &PartitionTableEntry) == FALSE)
 		{
+			FileSystemError("No active partition.");
 			return FALSE;
 		}
 	}
@@ -101,6 +113,7 @@ BOOL OpenDiskDrive(ULONG DriveNumber, ULONG PartitionNumber)
 		// Get requested partition
 		if (DiskGetPartitionEntry(DriveNumber, PartitionNumber, &PartitionTableEntry) == FALSE)
 		{
+			FileSystemError("Partition not found.");
 			return FALSE;
 		}
 	}
@@ -146,6 +159,10 @@ PFILE OpenFile(PUCHAR FileName)
 	if (FileSystemType == FS_FAT)
 	{
 		FileHandle = FatOpenFile(FileName);
+	}
+	else if (FileSystemType == FS_ISO9660)
+	{
+		FileHandle = IsoOpenFile(FileName);
 	}
 	else
 	{
@@ -193,6 +210,10 @@ BOOL ReadFile(PFILE FileHandle, ULONG BytesToRead, PULONG BytesRead, PVOID Buffe
 
 		return FatReadFile(FileHandle, BytesToRead, BytesRead, Buffer);
 
+	case FS_ISO9660:
+
+		return IsoReadFile(FileHandle, BytesToRead, BytesRead, Buffer);
+
 	default:
 
 		FileSystemError("Unknown file system.");
@@ -209,6 +230,10 @@ ULONG GetFileSize(PFILE FileHandle)
 	case FS_FAT:
 
 		return FatGetFileSize(FileHandle);
+
+	case FS_ISO9660:
+
+		return IsoGetFileSize(FileHandle);
 
 	default:
 		FileSystemError("Unknown file system.");
@@ -227,6 +252,11 @@ VOID SetFilePointer(PFILE FileHandle, ULONG NewFilePointer)
 		FatSetFilePointer(FileHandle, NewFilePointer);
 		break;
 
+	case FS_ISO9660:
+
+		IsoSetFilePointer(FileHandle, NewFilePointer);
+		break;
+
 	default:
 		FileSystemError("Unknown file system.");
 		break;
@@ -240,6 +270,11 @@ ULONG GetFilePointer(PFILE FileHandle)
 	case FS_FAT:
 
 		return FatGetFilePointer(FileHandle);
+		break;
+
+	case FS_ISO9660:
+
+		return IsoGetFilePointer(FileHandle);
 		break;
 
 	default:

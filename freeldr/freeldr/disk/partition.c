@@ -40,6 +40,43 @@ BOOL DiskIsDriveRemovable(ULONG DriveNumber)
 	return TRUE;
 }
 
+
+BOOL DiskIsDriveCdRom(ULONG DriveNumber)
+{
+	PUCHAR Sector;
+	BOOL Result;
+
+	// Hard disks use drive numbers >= 0x80
+	// So if the drive number indicates a hard disk
+	// then return FALSE
+	if ((DriveNumber >= 0x80) && (BiosInt13ExtensionsSupported(DriveNumber)))
+	{
+		Sector = AllocateMemory(2048);
+
+		if (!BiosInt13ReadExtended(DriveNumber, 16, 1, Sector))
+		{
+			DiskError("Disk read error.");
+			FreeMemory(Sector);
+			return FALSE;
+		}
+
+		Result = (Sector[0] == 1 &&
+			  Sector[1] == 'C' &&
+			  Sector[2] == 'D' &&
+			  Sector[3] == '0' &&
+			  Sector[4] == '0' &&
+			  Sector[5] == '1');
+
+		FreeMemory(Sector);
+
+		return Result;
+	}
+
+	// Drive is not CdRom so return FALSE
+	return FALSE;
+}
+
+
 BOOL DiskGetActivePartitionEntry(ULONG DriveNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
 {
 	ULONG				BootablePartitionCount = 0;
