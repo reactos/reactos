@@ -790,7 +790,7 @@ NTSTATUS TdiSend
   PVOID CompletionContext )
 {
     PDEVICE_OBJECT DeviceObject;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
     PMDL Mdl;
 
     DeviceObject = IoGetRelatedDeviceObject(TransportObject);
@@ -829,8 +829,13 @@ NTSTATUS TdiSend
     } _SEH_HANDLE {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
         IoFreeIrp(*Irp);
-        return STATUS_INSUFFICIENT_RESOURCES;
+        Status = STATUS_INSUFFICIENT_RESOURCES;
     } _SEH_END;
+
+    if( !NT_SUCCESS(Status) ) {
+	IoFreeIrp(*Irp);
+	return Status;
+    }
 
     AFD_DbgPrint(MID_TRACE,("AFD>>> Got an MDL: %x\n", Mdl));
 
@@ -905,7 +910,10 @@ NTSTATUS TdiReceive(
 	Status = STATUS_INSUFFICIENT_RESOURCES;
     } _SEH_END;
 
-    if( !NT_SUCCESS(Status) ) return Status;
+    if( !NT_SUCCESS(Status) ) {
+	IoFreeIrp(*Irp);
+	return Status;
+    }
 
     AFD_DbgPrint(MID_TRACE,("AFD>>> Got an MDL: %x\n", Mdl));
 
