@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: surface.c,v 1.21 2003/07/27 18:37:23 dwelch Exp $
+/* $Id: surface.c,v 1.22 2003/08/04 19:57:47 royce Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -33,6 +33,7 @@
 
 #include <ddk/winddi.h>
 #include <win32k/dc.h>
+#include <win32k/gdiobj.h>
 #include <include/dib.h>
 #include <include/object.h>
 #include <include/paint.h>
@@ -336,7 +337,11 @@ EngEraseSurface(SURFOBJ *Surface,
 SURFOBJ * STDCALL
 EngLockSurface(IN HSURF Surface)
 {
-  // FIXME: Call GDI_LockObject (see subsys/win32k/objects/gdi.c)
+  /*
+   * FIXME - don't know if GDIOBJ_LockObj's return value is a SURFOBJ or not...
+   * also, what is HSURF's correct magic #?
+   */
+  GDIOBJ_LockObj ( Surface, GO_MAGIC_DONTCARE );
   return (SURFOBJ*)AccessUserObject((ULONG)Surface);
 }
 
@@ -346,6 +351,9 @@ EngLockSurface(IN HSURF Surface)
 VOID STDCALL
 EngUnlockSurface(IN SURFOBJ *Surface)
 {
-  // FIXME: Call GDI_UnlockObject
+  /*
+   * FIXME what is HSURF's correct magic #?
+   */
+  GDIOBJ_UnlockObj ( Surface->hsurf, GO_MAGIC_DONTCARE );
 }
 /* EOF */
