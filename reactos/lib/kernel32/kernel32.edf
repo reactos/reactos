@@ -1,4 +1,4 @@
-; $Id: kernel32.edf,v 1.4 1999/12/12 07:59:41 phreak Exp $
+; $Id: kernel32.edf,v 1.5 2000/04/07 21:45:32 phreak Exp $
 ;
 ; kernel32.edf
 ;
@@ -417,7 +417,6 @@ LeaveCriticalSection=LeaveCriticalSection@4
 LoadLibraryA=LoadLibraryA@4
 LoadLibraryExA=LoadLibraryExA@12
 LoadLibraryExW=LoadLibraryExW@12
-LoadLibraryW=LoadLibraryW@4
 LoadModule=LoadModule@8
 LoadResource=LoadResource@8
 LocalAlloc=LocalAlloc@8
