@@ -5,4 +5,5 @@ reactos
 *.dll
 *.a
 *.o
+*.d
 *.coff

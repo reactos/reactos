@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.66 2001/09/23 22:14:09 chorns Exp $
+# $Id: makefile,v 1.67 2001/11/03 16:48:05 chorns Exp $
 
 PATH_TO_TOP = ../..
 
@@ -22,7 +22,7 @@ TARGET_ENTRY = _LdrInitializeThunk@16
 
 CSR_OBJECTS = csr/lpc.o csr/capture.o csr/probe.o csr/thread.o
 
-DBG_OBJECTS = dbg/brkpoint.o dbg/debug.o dbg/print.o
+DBG_OBJECTS = dbg/brkpoint.o dbg/debug.o dbg/print.o dbg/winedbg.o
 
 RTL_OBJECTS = rtl/critical.o rtl/error.o rtl/heap.o rtl/largeint.o \
               rtl/math.o rtl/mem.o rtl/nls.o rtl/process.o rtl/sd.o \

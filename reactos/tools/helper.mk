@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.7 2001/09/01 11:55:38 dwelch Exp $
+# $Id: helper.mk,v 1.8 2001/11/03 16:48:07 chorns Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -30,6 +30,7 @@
 #   $TARGET_CPPFLAGS   = G++ flags (optional)
 #   $TARGET_ASFLAGS    = GCC assembler flags (optional)
 #   $TARGET_NFLAGS     = NASM flags (optional)
+#   $TARGET_RCFLAGS    = Windres flags (optional)
 #   $TARGET_CLEAN      = Files that are part of the clean rule (optional)
 #   $TARGET_PATH       = Relative path for *.def, *.edf, and *.rc (optional)
 #   $TARGET_BASE       = Default base address (optional)
@@ -38,13 +39,14 @@
 #   $TARGET_NORC       = Do not include standard resource file (no,yes) (optional)
 #   $TARGET_LIBPATH    = Destination path for import libraries (optional)
 #   $TARGET_INSTALLDIR = Destination path when installed (optional)
+#   $WINE_MODE         = Compile using WINE headers (no,yes) (optional)
+#   $WINE_RC           = Name of .rc file for WINE modules (optional)
 
 ifeq ($(TARGET_PATH),)
 TARGET_PATH := .
 endif
 
 
-# FIXME: MK_DEFENTRY may not be correct
 ifeq ($(TARGET_TYPE),program)
   MK_MODE := user
   MK_EXETYPE := exe
@@ -52,15 +54,26 @@ ifeq ($(TARGET_TYPE),program)
   MK_DEFENTRY := _DEFINE_TARGET_APPTYPE
   MK_DDKLIBS :=
   MK_SDKLIBS :=
+ifneq ($(WINE_MODE),yes)
   MK_CFLAGS := -I./ -I$(SDK_PATH_INC)
   MK_CPPFLAGS := -I./ -I$(SDK_PATH_INC)
+  MK_RCFLAGS := --include-dir $(SDK_PATH_INC)
+else
+  MK_CFLAGS := -I$(PATH_TO_TOP)/include/wine -I./ -I$(WINE_INCLUDE)
+  MK_CPPFLAGS := -I$(PATH_TO_TOP)/include/wine -I./ -I$(WINE_INCLUDE)
+  MK_RCFLAGS := --include-dir $(PATH_TO_TOP)/include/wine --include-dir $(WINE_INCLUDE)
+endif
   MK_IMPLIB := no
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH :=
   MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := bin
   MK_DISTDIR := apps
-  MK_RESOURCE := $(TARGET_PATH)/$(TARGET_NAME).coff
+ifeq ($(WINE_RC),)
+  MK_RES_BASE := $(TARGET_NAME)
+else
+  MK_RES_BASE := $(WINE_RC)
+endif
 endif
 
 ifeq ($(TARGET_TYPE),proglib)
@@ -72,13 +85,14 @@ ifeq ($(TARGET_TYPE),proglib)
   MK_SDKLIBS :=
   MK_CFLAGS := -I./ -I$(SDK_PATH_INC)
   MK_CPPFLAGS := -I./ -I$(SDK_PATH_INC)
+  MK_RCFLAGS := --include-dir $(SDK_PATH_INC)
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH := $(SDK_PATH_LIB)
   MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := bin
   MK_DISTDIR := apps
-  MK_RESOURCE := $(TARGET_PATH)/$(TARGET_NAME).coff
+  MK_RES_BASE := $(TARGET_NAME)
 endif
 
 ifeq ($(TARGET_TYPE),dynlink)
@@ -88,15 +102,26 @@ ifeq ($(TARGET_TYPE),dynlink)
   MK_DEFENTRY := _DllMain@12
   MK_DDKLIBS :=
   MK_SDKLIBS :=
+ifneq ($(WINE_MODE),yes)
   MK_CFLAGS := -I./ -I$(SDK_PATH_INC)
   MK_CPPFLAGS := -I./ -I$(SDK_PATH_INC)
+  MK_RCFLAGS := --include-dir $(SDK_PATH_INC)
+else
+  MK_CFLAGS := -I$(PATH_TO_TOP)/include/wine -I./ -I$(WINE_INCLUDE)
+  MK_CPPFLAGS := -I$(PATH_TO_TOP)/include/wine -I./ -I$(WINE_INCLUDE)
+  MK_RCFLAGS := --include-dir $(PATH_TO_TOP)/include/wine --include-dir $(WINE_INCLUDE)
+endif
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH := $(SDK_PATH_LIB)
   MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := system32
   MK_DISTDIR := dlls
-  MK_RESOURCE := $(TARGET_PATH)/$(TARGET_NAME).coff
+ifeq ($(WINE_RC),)
+  MK_RES_BASE := $(TARGET_NAME)
+else
+  MK_RES_BASE := $(WINE_RC)
+endif
 endif
 
 ifeq ($(TARGET_TYPE),library)
@@ -108,13 +133,14 @@ ifeq ($(TARGET_TYPE),library)
   MK_SDKLIBS :=
   MK_CFLAGS := -I./ -I$(SDK_PATH_INC)
   MK_CPPFLAGS := -I./ -I$(SDK_PATH_INC)
+  MK_RCFLAGS := --include-dir $(SDK_PATH_INC)
   MK_IMPLIB := no
   MK_IMPLIBONLY := yes
   MK_IMPLIBDEFPATH := $(SDK_PATH_LIB)
   MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := $(SDK_PATH_INC)
   MK_DISTDIR := # FIXME
-  MK_RESOURCE := 
+  MK_RES_BASE := 
 endif
 
 ifeq ($(TARGET_TYPE),driver_library)
@@ -126,13 +152,14 @@ ifeq ($(TARGET_TYPE),driver_library)
   MK_SDKLIBS :=
   MK_CFLAGS := -I./ -I$(DDK_PATH_INC)
   MK_CPPFLAGS := -I./ -I$(DDK_PATH_INC)
+  MK_RCFLAGS := --include-dir $(SDK_PATH_INC)
   MK_IMPLIB := no
   MK_IMPLIBONLY := yes
   MK_IMPLIBDEFPATH := $(DDK_PATH_LIB)
   MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := $(DDK_PATH_INC)
   MK_DISTDIR := # FIXME
-  MK_RESOURCE :=
+  MK_RES_BASE :=
 endif
 
 ifeq ($(TARGET_TYPE),driver)
@@ -144,13 +171,14 @@ ifeq ($(TARGET_TYPE),driver)
   MK_SDKLIBS :=
   MK_CFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
   MK_CPPFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
+  MK_RCFLAGS := --include-dir $(SDK_PATH_INC)
   MK_IMPLIB := no
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH :=
   MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := system32/drivers
   MK_DISTDIR := drivers
-  MK_RESOURCE := $(TARGET_PATH)/$(TARGET_NAME).coff
+  MK_RES_BASE := $(TARGET_NAME)
 endif
 
 ifeq ($(TARGET_TYPE),export_driver)
@@ -162,13 +190,14 @@ ifeq ($(TARGET_TYPE),export_driver)
   MK_SDKLIBS :=
   MK_CFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
   MK_CPPFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
+  MK_RCFLAGS := --include-dir $(SDK_PATH_INC)
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH := $(DDK_PATH_LIB)
   MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := system32/drivers
   MK_DISTDIR := drivers
-  MK_RESOURCE := $(TARGET_PATH)/$(TARGET_NAME).coff
+  MK_RES_BASE := $(TARGET_NAME)
 endif
 
 ifeq ($(TARGET_TYPE),hal)
@@ -180,13 +209,14 @@ ifeq ($(TARGET_TYPE),hal)
   MK_SDKLIBS :=
   MK_CFLAGS := -D__NTHAL__ -I./ -I$(DDK_PATH_INC)
   MK_CPPFLAGS := -D__NTHAL__ -I./ -I$(DDK_PATH_INC)
+  MK_RCFLAGS := --include-dir $(SDK_PATH_INC)
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH :=
   MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := system32
   MK_DISTDIR := dlls
-  MK_RESOURCE := $(TARGET_PATH)/$(TARGET_NAME).coff
+  MK_RES_BASE := $(TARGET_NAME)
 endif
 
 ifeq ($(TARGET_TYPE),bootpgm)
@@ -198,13 +228,14 @@ ifeq ($(TARGET_TYPE),bootpgm)
   MK_SDKLIBS :=
   MK_CFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
   MK_CPPFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
+  MK_RCFLAGS := --include-dir $(SDK_PATH_INC)
   MK_IMPLIB := no
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH :=
   MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := system32
   MK_DISTDIR := # FIXME
-  MK_RESOURCE := $(TARGET_PATH)/$(TARGET_NAME).coff
+  MK_RES_BASE := $(TARGET_NAME)
 endif
 
 ifeq ($(TARGET_TYPE),miniport)
@@ -216,13 +247,14 @@ ifeq ($(TARGET_TYPE),miniport)
   MK_SDKLIBS :=
   MK_CFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
   MK_CPPFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
+  MK_RCFLAGS := --include-dir $(SDK_PATH_INC)
   MK_IMPLIB := no
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH :=
   MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := system32/drivers
   MK_DISTDIR := drivers
-  MK_RESOURCE := $(TARGET_PATH)/$(TARGET_NAME).coff
+  MK_RES_BASE := $(TARGET_NAME)
 endif
 
 ifeq ($(TARGET_TYPE),gdi_driver)
@@ -230,25 +262,25 @@ ifeq ($(TARGET_TYPE),gdi_driver)
   MK_EXETYPE := dll
   MK_DEFEXT := .dll
   MK_DEFENTRY := _DrvEnableDriver@12
-#  MK_DEFENTRY := _DriverEntry@8
   MK_DDKLIBS := ntoskrnl.a hal.a win32k.a
   MK_SDKLIBS :=
   MK_CFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
   MK_CPPFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
+  MK_RCFLAGS := --include-dir $(SDK_PATH_INC)
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH := $(DDK_PATH_LIB)
   MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := system32/drivers
   MK_DISTDIR := drivers
-  MK_RESOURCE := $(TARGET_PATH)/$(TARGET_NAME).coff
+  MK_RES_BASE := $(TARGET_NAME)
 endif
 
 
 ifeq ($(TARGET_TYPE),program)
   ifeq ($(TARGET_APPTYPE),windows)
     MK_DEFENTRY := _WinMainCRTStartup
-    MK_SDKLIBS :=
+    MK_SDKLIBS := ntdll.a kernel32.a gdi32.a user32.a
     TARGET_LFLAGS += -Wl,--subsystem,windows
   endif
 
@@ -264,6 +296,9 @@ ifeq ($(TARGET_TYPE),program)
     TARGET_LFLAGS += -Wl,--subsystem,console
   endif
 endif
+
+
+MK_RESOURCE := $(MK_RES_BASE).coff
 
 
 ifneq ($(TARGET_INSTALLDIR),)
@@ -293,7 +328,9 @@ endif
 
 
 ifeq ($(TARGET_NORC),yes)
-  MK_RESOURCE :=
+  MK_FULLRES :=
+else
+  MK_FULLRES := $(TARGET_PATH)/$(MK_RESOURCE)
 endif
 
 
@@ -343,6 +380,8 @@ TARGET_CFLAGS += -pipe -march=$(ARCH)
 
 TARGET_CPPFLAGS += $(MK_CPPFLAGS)
 TARGET_CPPFLAGS += -pipe -march=$(ARCH)
+
+TARGET_RCFLAGS += $(MK_RCFLAGS)
 
 TARGET_ASFLAGS += $(MK_ASFLAGS)
 TARGET_ASFLAGS += -pipe -march=$(ARCH)
@@ -395,19 +434,13 @@ else
   MK_EXTRACMD2 :=
 endif
 
-$(MK_NOSTRIPNAME): $(MK_RESOURCE) $(TARGET_OBJECTS) $(MK_LIBS)
-ifeq ($(MK_IMPLIB),yes)
-	$(DLLTOOL) --dllname $(MK_FULLNAME) \
-		--def $(MK_DEFNAME) \
-		--output-lib $(MK_IMPLIBPATH)/$(MK_BASENAME).a \
-		--kill-at
-endif
+$(MK_NOSTRIPNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_LIBS)
 ifeq ($(MK_EXETYPE),dll)
 	$(CC) -Wl,--base-file,base.tmp \
 		-Wl,--entry,$(TARGET_ENTRY) \
 		$(TARGET_LFLAGS) \
 		-o junk.tmp $(MK_GCCLIBS) \
-		$(MK_RESOURCE) $(MK_OBJECTS) $(MK_LIBS)
+		$(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS)
 	- $(RM) junk.tmp
 	$(DLLTOOL) --dllname $(MK_FULLNAME) \
 		--base-file base.tmp \
@@ -417,7 +450,7 @@ endif
 	$(CC) $(TARGET_LFLAGS) \
 		-Wl,--entry,$(TARGET_ENTRY) $(MK_EXTRACMD2) \
 	  -o $(MK_NOSTRIPNAME) $(MK_GCCLIBS) \
-	  $(MK_RESOURCE) $(MK_OBJECTS) $(MK_LIBS)
+	  $(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS)
 	- $(RM) temp.exp
 	- $(NM) --numeric-sort $(MK_NOSTRIPNAME) > $(MK_BASENAME).sym
 endif # KM_MODE
@@ -431,19 +464,13 @@ else
   MK_EXTRACMD :=
 endif
 
-$(MK_NOSTRIPNAME): $(MK_RESOURCE) $(TARGET_OBJECTS) $(MK_LIBS)
-ifeq ($(MK_IMPLIB),yes)
-	$(DLLTOOL) --dllname $(MK_FULLNAME) \
-		--def $(MK_DEFNAME) \
-		--output-lib $(MK_IMPLIBPATH)/$(MK_BASENAME).a \
-		--kill-at
-endif
+$(MK_NOSTRIPNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_LIBS)
 	$(CC) -Wl,--base-file,base.tmp \
 		-Wl,--entry,$(TARGET_ENTRY) \
 		$(TARGET_LFLAGS) \
 		-nostartfiles -nostdlib \
 		-o junk.tmp $(MK_GCCLIBS) \
-		$(MK_RESOURCE) $(MK_OBJECTS) $(MK_LIBS)
+		$(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS)
 	- $(RM) junk.tmp
 	$(DLLTOOL) --dllname $(MK_FULLNAME) \
 		--base-file base.tmp \
@@ -458,7 +485,7 @@ endif
 		-Wl,temp.exp \
 		-mdll -nostartfiles -nostdlib \
 		-o $(MK_NOSTRIPNAME) $(MK_GCCLIBS) \
-	  $(MK_RESOURCE) $(MK_OBJECTS) $(MK_LIBS)
+	  $(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS)
 	- $(RM) temp.exp
 	- $(NM) --numeric-sort $(MK_NOSTRIPNAME) > $(MK_BASENAME).sym
 
@@ -471,13 +498,21 @@ $(MK_FULLNAME): $(MK_NOSTRIPNAME)
 endif # MK_IMPLIBONLY
 
 
-$(MK_RESOURCE): $(PATH_TO_TOP)/include/reactos/buildno.h $(TARGET_PATH)/$(TARGET_NAME).rc
+$(MK_FULLRES): $(PATH_TO_TOP)/include/reactos/buildno.h $(TARGET_PATH)/$(MK_RES_BASE).rc
+
+implib:
+ifeq ($(MK_IMPLIB),yes)
+	$(DLLTOOL) --dllname $(MK_FULLNAME) \
+		--def $(MK_DEFNAME) \
+		--output-lib $(MK_IMPLIBPATH)/$(MK_BASENAME).a \
+		--kill-at
+endif
 
 # Be carefull not to clean non-object files
 MK_CLEANFILES := $(filter %.o,$(MK_OBJECTS)) 
 
 clean:
-	- $(RM) *.o $(MK_BASENAME).sym $(MK_BASENAME).a $(TARGET_PATH)/$(TARGET_NAME).coff \
+	- $(RM) *.o $(MK_BASENAME).sym $(MK_BASENAME).a $(TARGET_PATH)/$(MK_RES_BASE).coff \
 	  $(MK_FULLNAME) $(MK_NOSTRIPNAME) $(MK_CLEANFILES) \
 	  junk.tmp base.tmp temp.exp \
 	  $(TARGET_CLEAN)
@@ -515,7 +550,7 @@ $(DIST_DIR)/$(MK_DISTDIR)/$(MK_FULLNAME): $(MK_FULLNAME)
 endif # MK_IMPLIBONLY
 
 
-.phony: all clean install dist
+.phony: all implib clean install dist
 
 
 %.o: %.c
@@ -531,7 +566,7 @@ endif # MK_IMPLIBONLY
 %.o: %.asm
 	$(NASM_CMD) $(TARGET_NFLAGS) $< -o $@
 %.coff: %.rc
-	$(RC) $(RCINC) $< -o $@
+	$(RC) $(TARGET_RCFLAGS) $(RCINC) $< -o $@
 
 
 # Compatibility

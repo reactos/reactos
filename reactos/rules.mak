@@ -96,3 +96,8 @@ SDK_PATH_INC=$(PATH_TO_TOP)/include
 XDK_PATH=$(DK_PATH)/psx
 XDK_PATH_LIB=$(XDK_PATH)/lib
 XDK_PATH_INC=$(XDK_PATH)/include
+
+# Wine Integration
+WINE_PATH=$(PATH_TO_TOP)/../wine
+WINE_PATH_LIB=$(WINE_PATH)/lib
+WINE_PATH_INC=$(WINE_PATH)/include

@@ -211,6 +211,7 @@ typedef struct _TEB
    ULONG Spare4;                       // F7Ch
    PVOID ReservedForOle;               // F80h
    ULONG WaitingOnLoaderLock;          // F84h
+   PVOID WineDebugInfo;                // Needed for WINE DLL's
 } TEB, *PTEB;
 
 

@@ -329,6 +329,7 @@ GetScrollRange@16
 GetSubMenu@8
 GetSysColor@4
 GetSysColorBrush@4
+GetSysColorPen@4 ; ReactOS extension
 GetSystemMenu@8
 GetSystemMetrics@4
 GetTabbedTextExtentA@20

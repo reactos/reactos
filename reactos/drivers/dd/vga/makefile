@@ -1,9 +1,13 @@
-# $Id: makefile,v 1.9 2000/08/11 12:43:33 ekohl Exp $
+# $Id: makefile,v 1.10 2001/11/03 16:48:07 chorns Exp $
 #
 #
 all:
 	make -C display
 	make -C miniport
+
+implib:
+	make -C display implib
+	make -C miniport implib
 	
 clean:
 	make -C display clean

@@ -4,6 +4,15 @@
 
 PATH_TO_TOP = .
 
+#
+# Define to build WINE modules
+#
+ifeq ($(ROS_BUILD_WINE),)
+ROS_BUILD_WINE = no
+else
+ROS_BUILD_WINE = yes
+endif
+
 include $(PATH_TO_TOP)/rules.mak
 
 #
@@ -13,7 +22,7 @@ COMPONENTS = iface_native iface_additional hallib ntoskrnl
 HALS = halx86
 BUS = acpi isapnp pci
 DLLS = ntdll kernel32 advapi32 crtdll msvcrt fmifs gdi32 msafd \
-	user32 oleaut32 secur32 shell32 ws2_32 version
+	user32 secur32 ws2_32 version
 SUBSYS = smss win32k csrss
 
 #
@@ -64,17 +73,41 @@ APPS = args hello test cat bench apc shm lpc thread event file gditest \
 #NET_APPS = ping roshttpd telnet
 NET_APPS = ping roshttpd
 
+#lzexpand mapi32 (missing imports)
+#dsound (missing winmm.dll)
+WINE_DLLS = rpcrt4 ole32 oleaut32 oledlg olepro32 olecli olesvr \
+            shell32 shlwapi comctl32 shfolder shdocvw commdlg \
+            ddraw dinput dplay dplayx \
+            psapi richedit serialui winspool
+
+WINE_PROGS = clock cmdlgtst control notepad osversioncheck \
+             progman uninstaller view wcmd winemine \
+             winver
+
+ifeq ($(ROS_BUILD_WINE),yes)
+WINE_MODULES = $(WINE_DLLS) $(WINE_PROGS)
+else
+WINE_MODULES =
+endif
 
 KERNEL_SERVICES = $(DEVICE_DRIVERS) $(INPUT_DRIVERS) $(FS_DRIVERS) \
 	$(NET_DRIVERS) $(NET_DEVICE_DRIVERS) $(STORAGE_DRIVERS)
 
-all: tools dk $(COMPONENTS) $(HALS) $(BUS) $(DLLS) $(SUBSYS) \
-     $(LOADERS) $(KERNEL_SERVICES) $(SYS_APPS) $(APPS) $(NET_APPS)
+all: tools dk implib $(COMPONENTS) $(HALS) $(BUS) $(DLLS) $(SUBSYS) \
+     $(LOADERS) $(KERNEL_SERVICES) $(SYS_APPS) $(APPS) $(NET_APPS) \
+     $(WINE_MODULES)
+
+implib: $(COMPONENTS:%=%_implib) $(HALS:%=%_implib) $(BUS:%=%_implib) \
+        $(DLLS:%=%_implib) $(LOADERS:%=%_implib) \
+        $(KERNEL_SERVICES:%=%_implib) $(SUBSYS:%=%_implib) \
+        $(SYS_APPS:%=%_implib) $(APPS:%=%_implib) \
+        $(WINE_MODULES:%=%_implib)
 
 clean: dk_clean $(HALS:%=%_clean) \
        $(COMPONENTS:%=%_clean) $(BUS:%=%_clean) $(DLLS:%=%_clean) \
        $(LOADERS:%=%_clean) $(KERNEL_SERVICES:%=%_clean) $(SUBSYS:%=%_clean) \
-       $(SYS_APPS:%=%_clean) $(APPS:%=%_clean) $(NET_APPS:%=%_clean) clean_after tools_clean
+       $(SYS_APPS:%=%_clean) $(APPS:%=%_clean) $(NET_APPS:%=%_clean) \
+       $(WINE_MODULES:%=%_clean) clean_after tools_clean
 
 clean_after:
 	$(RM) $(PATH_TO_TOP)/include/roscfg.h
@@ -83,20 +116,25 @@ install: tools install_dirs install_before \
          $(COMPONENTS:%=%_install) $(HALS:%=%_install) $(BUS:%=%_install) \
          $(DLLS:%=%_install) $(LOADERS:%=%_install) \
          $(KERNEL_SERVICES:%=%_install) $(SUBSYS:%=%_install) \
-         $(SYS_APPS:%=%_install) $(APPS:%=%_install)
+         $(SYS_APPS:%=%_install) $(APPS:%=%_install) \
+         $(WINE_MODULES:%=%_install)
 
 dist: $(TOOLS_PATH)/rcopy$(EXE_POSTFIX) dist_clean dist_dirs \
       $(HALS:%=%_dist) $(COMPONENTS:%=%_dist) $(BUS:%=%_dist) $(DLLS:%=%_dist) \
       $(LOADERS:%=%_dist) $(KERNEL_SERVICES:%=%_dist) $(SUBSYS:%=%_dist) \
-      $(SYS_APPS:%=%_dist) $(APPS:%=%_dist) $(NET_APPS:%=%_dist)
+      $(SYS_APPS:%=%_dist) $(APPS:%=%_dist) $(NET_APPS:%=%_dist) \
+      $(WINE_MODULES:%=%_dist)
 
-.PHONY: all clean clean_before install dist
+.PHONY: all implib clean clean_before install dist
 
 #
 # System Applications
 #
 $(SYS_APPS): %:
 	make -C apps/system/$*
+
+$(SYS_APPS:%=%_implib): %_implib:
+	make -C apps/system/$* implib
 
 $(SYS_APPS:%=%_clean): %_clean:
 	make -C apps/system/$* clean
@@ -107,13 +145,16 @@ $(SYS_APPS:%=%_dist): %_dist:
 $(SYS_APPS:%=%_install): %_install:
 	make -C apps/system/$* install
 
-.PHONY: $(SYS_APPS) $(SYS_APPS:%=%_clean) $(SYS_APPS:%=%_install) $(SYS_APPS:%=%_dist)
+.PHONY: $(SYS_APPS) $(SYS_APPS:%=%_implib) $(SYS_APPS:%=%_clean) $(SYS_APPS:%=%_install) $(SYS_APPS:%=%_dist)
 
 #
 # Applications
 #
 $(APPS): %:
 	make -C apps/$*
+
+$(APPS:%=%_implib): %_implib:
+	make -C apps/$* implib
 
 $(APPS:%=%_clean): %_clean:
 	make -C apps/$* clean
@@ -124,13 +165,16 @@ $(APPS:%=%_dist): %_dist:
 $(APPS:%=%_install): %_install:
 	make -C apps/$* install
 
-.PHONY: $(APPS) $(APPS:%=%_clean) $(APPS:%=%_install) $(APPS:%=%_dist)
+.PHONY: $(APPS) $(APPS:%=%_implib) $(APPS:%=%_clean) $(APPS:%=%_install) $(APPS:%=%_dist)
 
 #
 # Network applications
 #
 $(NET_APPS): %:
 	make -C apps/net/$*
+
+$(NET_APPS:%=%_implib): %_implib:
+	make -C apps/net/$* implib
 
 $(NET_APPS:%=%_clean): %_clean:
 	make -C apps/net/$* clean
@@ -141,7 +185,49 @@ $(NET_APPS:%=%_dist): %_dist:
 $(NET_APPS:%=%_install): %_install:
 	make -C apps/net/$* install
 
-.PHONY: $(NET_APPS) $(NET_APPS:%=%_clean) $(NET_APPS:%=%_install) $(NET_APPS:%=%_dist)
+.PHONY: $(NET_APPS) $(NET_APPS:%=%_implib) $(NET_APPS:%=%_clean) $(NET_APPS:%=%_install) $(NET_APPS:%=%_dist)
+
+
+#
+# Wine DLLs
+#
+$(WINE_DLLS): %:
+	make -f makefile.ros -C $(WINE_PATH)/dlls/$*
+
+$(WINE_DLLS:%=%_implib): %_implib:
+	make -f makefile.ros -C $(WINE_PATH)/dlls/$* implib
+
+$(WINE_DLLS:%=%_clean): %_clean:
+	make -f makefile.ros -C $(WINE_PATH)/dlls/$* clean
+
+$(WINE_DLLS:%=%_dist): %_dist:
+	make -f makefile.ros -C $(WINE_PATH)/dlls/$* dist
+
+$(WINE_DLLS:%=%_install): %_install:
+	make -f makefile.ros -C $(WINE_PATH)/dlls/$* install
+
+.PHONY: $(WINE_DLLS) $(WINE_DLLS:%=%_implib) $(WINE_DLLS:%=%_clean) $(WINE_DLLS:%=%_install) $(WINE_DLLS:%=%_dist)
+
+
+#
+# Wine programs
+#
+$(WINE_PROGS): %:
+	make -f makefile.ros -C $(WINE_PATH)/programs/$*
+
+$(WINE_PROGS:%=%_implib): %_implib:
+	make -f makefile.ros -C $(WINE_PATH)/programs/$* implib
+
+$(WINE_PROGS:%=%_clean): %_clean:
+	make -f makefile.ros -C $(WINE_PATH)/programs/$* clean
+
+$(WINE_PROGS:%=%_dist): %_dist:
+	make -f makefile.ros -C $(WINE_PATH)/programs/$* dist
+
+$(WINE_PROGS:%=%_install): %_install:
+	make -f makefile.ros -C $(WINE_PATH)/programs/$* install
+
+.PHONY: $(WINE_PROGS) $(WINE_PROGS:%=%_implib) $(WINE_PROGS:%=%_clean) $(WINE_PROGS:%=%_install) $(WINE_PROGS:%=%_dist)
 
 
 #
@@ -150,6 +236,8 @@ $(NET_APPS:%=%_install): %_install:
 tools:
 	make -C tools
 
+tools_implib:
+
 tools_clean:
 	make -C tools clean
 
@@ -157,7 +245,7 @@ tools_install:
 
 tools_dist:
 
-.PHONY: tools tools_clean tools_install tools_dist
+.PHONY: tools tools_implib tools_clean tools_install tools_dist
 
 
 #
@@ -174,6 +262,8 @@ dk:
 	$(RMKDIR) $(XDK_PATH)
 	$(RMKDIR) $(XDK_PATH_LIB)
 	$(RMKDIR) $(XDK_PATH_INC)
+
+dk_implib:
 
 # WARNING! Be very sure that there are no important files
 #          in these directories before cleaning them!!!
@@ -195,7 +285,7 @@ dk_install:
 
 dk_dist:
 
-.PHONY: dk dk_clean dk_install dk_dist
+.PHONY: dk dk_implib dk_clean dk_install dk_dist
 
 
 #
@@ -203,6 +293,8 @@ dk_dist:
 #
 iface_native:
 	make -C iface/native
+
+iface_native_implib:
 
 iface_native_clean:
 	make -C iface/native clean
@@ -214,6 +306,8 @@ iface_native_dist:
 iface_additional:
 	make -C iface/addsys
 
+iface_additional_implib:
+
 iface_additional_clean:
 	make -C iface/addsys clean
 
@@ -221,16 +315,19 @@ iface_additional_install:
 
 iface_additional_dist:
 
-.PHONY: iface_native iface_native_clean iface_native_install \
+.PHONY: iface_native iface_native_implib iface_native_clean iface_native_install \
         iface_native_dist \
-        iface_additional iface_additional_clean iface_additional_install \
-        iface_additional_dist
+        iface_additional iface_additional_implib iface_additional_clean \
+        iface_additional_install iface_additional_dist
 
 #
 # Bus driver rules
 #
 $(BUS): %:
 	make -C services/bus/$*
+
+$(BUS:%=%_implib): %_implib:
+	make -C services/bus/$* implib
 
 $(BUS:%=%_clean): %_clean:
 	make -C services/bus/$* clean
@@ -241,7 +338,7 @@ $(BUS:%=%_install): %_install:
 $(BUS:%=%_dist): %_dist:
 	make -C services/bus/$* dist
 
-.PHONY: $(BUS) $(BUS:%=%_clean) \
+.PHONY: $(BUS) $(BUS:%=%_implib) $(BUS:%=%_clean) \
         $(BUS:%=%_install) $(BUS:%=%_dist)
 
 #
@@ -249,6 +346,9 @@ $(BUS:%=%_dist): %_dist:
 #
 $(DEVICE_DRIVERS): %:
 	make -C services/dd/$*
+
+$(DEVICE_DRIVERS:%=%_implib): %_implib:
+	make -C services/dd/$* implib
 
 $(DEVICE_DRIVERS:%=%_clean): %_clean:
 	make -C services/dd/$* clean
@@ -259,7 +359,7 @@ $(DEVICE_DRIVERS:%=%_install): %_install:
 $(DEVICE_DRIVERS:%=%_dist): %_dist:
 	make -C services/dd/$* dist
 
-.PHONY: $(DEVICE_DRIVERS) $(DEVICE_DRIVERS:%=%_clean) \
+.PHONY: $(DEVICE_DRIVERS) $(DEVICE_DRIVERS:%=%_implib) $(DEVICE_DRIVERS:%=%_clean) \
         $(DEVICE_DRIVERS:%=%_install) $(DEVICE_DRIVERS:%=%_dist)
 
 #
@@ -267,6 +367,9 @@ $(DEVICE_DRIVERS:%=%_dist): %_dist:
 #
 $(INPUT_DRIVERS): %:
 	make -C services/input/$*
+
+$(INPUT_DRIVERS:%=%_implib): %_implib:
+	make -C services/input/$* implib
 
 $(INPUT_DRIVERS:%=%_clean): %_clean:
 	make -C services/input/$* clean
@@ -277,11 +380,14 @@ $(INPUT_DRIVERS:%=%_install): %_install:
 $(INPUT_DRIVERS:%=%_dist): %_dist:
 	make -C services/input/$* dist
 
-.PHONY: $(INPUT_DRIVERS) $(INPUT_DRIVERS:%=%_clean) \
+.PHONY: $(INPUT_DRIVERS) $(INPUT_DRIVERS:%=%_implib) $(INPUT_DRIVERS:%=%_clean)\
         $(INPUT_DRIVERS:%=%_install) $(INPUT_DRIVERS:%=%_dist)
 
 $(FS_DRIVERS): %:
 	make -C services/fs/$*
+
+$(FS_DRIVERS:%=%_implib): %_implib:
+	make -C services/fs/$* implib
 
 $(FS_DRIVERS:%=%_clean): %_clean:
 	make -C services/fs/$* clean
@@ -292,7 +398,7 @@ $(FS_DRIVERS:%=%_install): %_install:
 $(FS_DRIVERS:%=%_dist): %_dist:
 	make -C services/fs/$* dist
 
-.PHONY: $(FS_DRIVERS) $(FS_DRIVERS:%=%_clean) \
+.PHONY: $(FS_DRIVERS) $(FS_DRIVERS:%=%_implib) $(FS_DRIVERS:%=%_clean) \
         $(FS_DRIVERS:%=%_install) $(FS_DRIVERS:%=%_dist)
 
 #
@@ -300,6 +406,9 @@ $(FS_DRIVERS:%=%_dist): %_dist:
 #
 $(NET_DRIVERS): %:
 	make -C services/net/$*
+
+$(NET_DRIVERS:%=%_implib): %_implib:
+	make -C services/net/$* implib
 
 $(NET_DRIVERS:%=%_clean): %_clean:
 	make -C services/net/$* clean
@@ -310,11 +419,14 @@ $(NET_DRIVERS:%=%_install): %_install:
 $(NET_DRIVERS:%=%_dist): %_dist:
 	make -C services/net/$* dist
 
-.PHONY: $(NET_DRIVERS) $(NET_DRIVERS:%=%_clean) \
+.PHONY: $(NET_DRIVERS) $(NET_DRIVERS:%=%_implib) $(NET_DRIVERS:%=%_clean) \
         $(NET_DRIVERS:%=%_install) $(NET_DRIVERS:%=%_dist)
 
 $(NET_DEVICE_DRIVERS): %:
 	make -C services/net/dd/$*
+
+$(NET_DEVICE_DRIVERS:%=%_implib): %_implib:
+	make -C services/net/dd/$* implib
 
 $(NET_DEVICE_DRIVERS:%=%_clean): %_clean:
 	make -C services/net/dd/$* clean
@@ -325,7 +437,7 @@ $(NET_DEVICE_DRIVERS:%=%_install): %_install:
 $(NET_DEVICE_DRIVERS:%=%_dist): %_dist:
 	make -C services/net/dd/$* dist
 
-.PHONY: $(NET_DEVICE_DRIVERS) $(NET_DEVICE_DRIVERS:%=%_clean) \
+.PHONY: $(NET_DEVICE_DRIVERS) $(NET_DEVICE_DRIVERS:%=%_clean) $(NET_DEVICE_DRIVERS:%=%_implib) \
         $(NET_DEVICE_DRIVERS:%=%_install) $(NET_DEVICE_DRIVERS:%=%_dist)
 
 #
@@ -333,6 +445,9 @@ $(NET_DEVICE_DRIVERS:%=%_dist): %_dist:
 #
 $(STORAGE_DRIVERS): %:
 	make -C services/storage/$*
+
+$(STORAGE_DRIVERS:%=%_implib): %_implib:
+	make -C services/storage/$* implib
 
 $(STORAGE_DRIVERS:%=%_clean): %_clean:
 	make -C services/storage/$* clean
@@ -353,6 +468,8 @@ $(STORAGE_DRIVERS:%=%_dist): %_dist:
 $(LOADERS): %:
 	make -C loaders/$*
 
+$(LOADERS:%=%_implib): %_implib:
+
 $(LOADERS:%=%_clean): %_clean:
 	make -C loaders/$* clean
 
@@ -362,7 +479,7 @@ $(LOADERS:%=%_install): %_install:
 $(LOADERS:%=%_dist): %_dist:
 	make -C loaders/$* dist
 
-.PHONY: $(LOADERS) $(LOADERS:%=%_clean) $(LOADERS:%=%_install) \
+.PHONY: $(LOADERS) $(LOADERS:%=%_implib) $(LOADERS:%=%_clean) $(LOADERS:%=%_install) \
         $(LOADERS:%=%_dist)
 
 #
@@ -371,6 +488,9 @@ $(LOADERS:%=%_dist): %_dist:
 
 ntoskrnl:
 	make -C ntoskrnl
+
+ntoskrnl_implib:
+	make -C ntoskrnl implib
 
 ntoskrnl_clean:
 	make -C ntoskrnl clean
@@ -381,7 +501,7 @@ ntoskrnl_install:
 ntoskrnl_dist:
 	make -C ntoskrnl dist
 
-.PHONY: ntoskrnl ntoskrnl_clean ntoskrnl_install ntoskrnl_dist
+.PHONY: ntoskrnl ntoskrnl_implib ntoskrnl_clean ntoskrnl_install ntoskrnl_dist
 
 #
 # Hardware Abstraction Layer import library
@@ -389,6 +509,9 @@ ntoskrnl_dist:
 
 hallib:
 	make -C hal/hal
+
+hallib_implib:
+	make -C hal/hal implib
 
 hallib_clean:
 	make -C hal/hal clean
@@ -399,7 +522,7 @@ hallib_install:
 hallib_dist:
 	make -C hal/hal dist
 
-.PHONY: hallib hallib_clean hallib_install hallib_dist
+.PHONY: hallib hallib_implib hallib_clean hallib_install hallib_dist
 
 #
 # Hardware Abstraction Layers
@@ -407,6 +530,9 @@ hallib_dist:
 
 $(HALS): %:
 	make -C hal/$*
+
+$(HALS:%=%_implib): %_implib:
+	make -C hal/$* implib
 
 $(HALS:%=%_clean): %_clean:
 	make -C hal/$* clean
@@ -417,7 +543,7 @@ $(HALS:%=%_install): %_install:
 $(HALS:%=%_dist): %_dist:
 	make -C hal/$* dist
 
-.PHONY: $(HALS) $(HALS:%=%_clean) $(HALS:%=%_install) $(HALS:%=%_dist)
+.PHONY: $(HALS) $(HALS:%=%_implib) $(HALS:%=%_clean) $(HALS:%=%_install) $(HALS:%=%_dist)
 
 #
 # Required DLLs
@@ -425,6 +551,9 @@ $(HALS:%=%_dist): %_dist:
 
 $(DLLS): %:
 	make -C lib/$*
+
+$(DLLS:%=%_implib): %_implib:
+	make -C lib/$* implib
 
 $(DLLS:%=%_clean): %_clean:
 	make -C lib/$* clean
@@ -435,7 +564,7 @@ $(DLLS:%=%_install): %_install:
 $(DLLS:%=%_dist): %_dist:
 	make -C lib/$* dist
 
-.PHONY: $(DLLS) $(DLLS:%=%_clean) $(DLLS:%=%_install) $(DLLS:%=%_dist)
+.PHONY: $(DLLS) $(DLLS:%=%_implib) $(DLLS:%=%_clean) $(DLLS:%=%_install) $(DLLS:%=%_dist)
 
 #
 # Kernel Subsystems
@@ -443,6 +572,9 @@ $(DLLS:%=%_dist): %_dist:
 
 $(SUBSYS): %:
 	make -C subsys/$*
+
+$(SUBSYS:%=%_implib): %_implib:
+	make -C subsys/$* implib
 
 $(SUBSYS:%=%_clean): %_clean:
 	make -C subsys/$* clean
@@ -453,7 +585,7 @@ $(SUBSYS:%=%_install): %_install:
 $(SUBSYS:%=%_dist): %_dist:
 	make -C subsys/$* dist
 
-.PHONY: $(SUBSYS) $(SUBSYS:%=%_clean) $(SUBSYS:%=%_install) \
+.PHONY: $(SUBSYS) $(SUBSYS:%=%_implib) $(SUBSYS:%=%_clean) $(SUBSYS:%=%_install) \
         $(SUBSYS:%=%_dist)
 
 #

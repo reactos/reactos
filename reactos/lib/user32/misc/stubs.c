@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.5 2001/06/29 19:31:59 ekohl Exp $
+/* $Id: stubs.c,v 1.6 2001/11/03 16:48:06 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -2366,6 +2366,15 @@ GetSysColorBrush(
   int nIndex)
 {
   return (HBRUSH)0;
+}
+
+/* ReactOS extension */
+HPEN
+STDCALL
+GetSysColorPen(
+  int nIndex)
+{
+  return (HPEN)0;
 }
 
 HMENU

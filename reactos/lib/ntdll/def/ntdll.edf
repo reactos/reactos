@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.68 2001/09/08 12:05:30 ekohl Exp $
+; $Id: ntdll.edf,v 1.69 2001/11/03 16:48:06 chorns Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -937,4 +937,10 @@ wcsstr
 wcstol
 wcstombs
 wcstoul
+wine_dbgstr_an
+wine_dbgstr_wn
+wine_dbgstr_guid
+wine_dbg_vprintf
+wine_dbg_printf
+wine_dbg_log
 ;EOF

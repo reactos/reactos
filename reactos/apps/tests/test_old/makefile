@@ -10,10 +10,12 @@ all: $(PROGS:%=%.exe)
 
 .phony: all
 
+implib:
+
 clean:
 	- $(RM) *.o *.exe *.sym
 
-.phony: clean
+.phony: implib clean
 
 install: # $(PROGS:%=$(FLOPPY_DIR)/apps/%.exe)
 

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.56 2001/10/10 22:08:27 hbirr Exp $
+# $Id: Makefile,v 1.57 2001/11/03 16:48:07 chorns Exp $
 #
 # ReactOS Operating System
 #
@@ -488,7 +488,7 @@ CLEAN_FILES = $(OBJECTS_PATH)/*.o cc/*.o cm/*.o dbg/*.o dbg/i386/*.o ex/*.o \
               $(TARGETNAME).exe $(TARGETNAME).nostrip.exe $(TARGETNAME).sym \
 	            $(TARGETNAME).coff $(DEP_FILES)
 
-$(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(DDK_PATH_LIB)/$(TARGETNAME).a $(IE_DATA)
+$(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(IE_DATA)
 	$(CC) \
 		-Wl,-T,ntoskrnl.lnk \
 		-nostartfiles \
@@ -525,7 +525,7 @@ $(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(DDK_PATH_LIB)/$(TARGETNAME).a $(IE_
 		$(DDK_PATH_LIB)/hal.a
 	- $(RM) temp.exp
 
-$(TARGETNAME).exe: $(TARGETNAME).o $(DDK_PATH_LIB)/$(TARGETNAME).a $(LINKER_SCRIPT) $(DDK_PATH_LIB)/hal.a
+$(TARGETNAME).exe: $(TARGETNAME).o $(LINKER_SCRIPT) $(DDK_PATH_LIB)/hal.a
 	- $(CC) \
 		-Wl,-T,$(LINKER_SCRIPT) \
 		-nostartfiles \
@@ -611,8 +611,8 @@ $(TARGETNAME).o: $(OBJECTS)
 		-o $(TARGETNAME).o \
 		$(OBJECTS)
 
-$(DDK_PATH_LIB)/$(TARGETNAME).a: $(TARGETNAME).def
-	$(DLLTOOL) \
+implib:
+	- $(DLLTOOL) \
 		--dllname $(TARGETNAME).exe \
 		--def $(TARGETNAME).def \
 		--output-lib $(DDK_PATH_LIB)/$(TARGETNAME).a \

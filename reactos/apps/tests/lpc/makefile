@@ -19,10 +19,12 @@ all: $(PROGS)
 
 .phony: all
 
+implib:
+
 clean:
 	- $(RM) lpcsrv.o lpcsrv.exe lpcsrv.sym lpcclt.o lpcclt.exe lpcsrv.sym
 	
-.phony: clean
+.phony: implib clean
 
 install: $(PROGS:%=$(INSTALL_DIR)/bin/%)
 
