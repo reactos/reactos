@@ -1,4 +1,4 @@
-/* $Id: event.c,v 1.15 2003/09/12 17:51:47 vizzini Exp $
+/* $Id: event.c,v 1.16 2004/01/10 13:54:52 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -76,6 +76,17 @@ CreateEventW(LPSECURITY_ATTRIBUTES lpEventAttributes,
    ObjectAttributes.Attributes = 0;
    ObjectAttributes.SecurityDescriptor = NULL;
    ObjectAttributes.SecurityQualityOfService = NULL;
+
+   if (NULL != lpEventAttributes)
+     {
+       if (sizeof(SECURITY_ATTRIBUTES) < lpEventAttributes->nLength)
+         {
+           SetLastError(ERROR_INVALID_PARAMETER);
+           return NULL;
+         }
+       ObjectAttributes.SecurityDescriptor = lpEventAttributes->lpSecurityDescriptor;
+       ObjectAttributes.Attributes = lpEventAttributes->bInheritHandle ? OBJ_INHERIT : 0;
+     }
 
    if (lpName != NULL)
      {
