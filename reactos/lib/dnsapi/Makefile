@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2003/12/18 10:54:48 arty Exp $
+# $Id: Makefile,v 1.2 2003/12/18 11:37:46 arty Exp $
 
 PATH_TO_TOP = ../..
 
@@ -25,7 +25,7 @@ TARGET_CFLAGS += -D_DISABLE_TIDENTS -DADNS_JGAA_WIN32
 
 TARGET_OBJECTS = \
 	dnsapi/context.o dnsapi/names.o dnsapi/query.o dnsapi/free.o \
-	dnsapi/adns.o
+	dnsapi/adns.o dnsapi/stubs.o
 
 include $(PATH_TO_TOP)/rules.mak
 
